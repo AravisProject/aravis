@@ -1,12 +1,17 @@
 #include <gio/gio.h>
 #include <glib/gprintf.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <stdlib.h>
+#include <netdb.h>
+#include <string.h>
+#include <stdio.h>
 
 #define ARV_GVCP_PORT	3596
 
 typedef enum {
-	ARV_GV_HEADER_1_COMMAND = 	0x0000,
-	ARV_GV_HEADER_1_ANSWER = 	0x4201
+	ARV_GV_HEADER_1_ANSWER = 	0x0000,
+	ARV_GV_HEADER_1_COMMAND = 	0x4201
 } ArvGVHeader1;
 
 typedef enum {
@@ -16,11 +21,11 @@ typedef enum {
 } ArvGVHeader2;
 
 typedef struct {
-	ArvGVHeader1 header1;
-	ArvGVHeader2 header2;
-	unsigned int length;
-	unsigned int address;
-} ArvGVHeader;
+	guint16 header1;
+	guint16 header2;
+	guint16 length;
+	guint16 address;
+}  __attribute__((__packed__)) ArvGVHeader;
 
 typedef struct {
 	ArvGVHeader header;
@@ -29,11 +34,25 @@ typedef struct {
 
 static const ArvControlPacket arv_discover_packet = {
 	{
-		ARV_GV_HEADER_1_COMMAND,
-		ARV_GV_HEADER_2_DISCOVER,
-		0, 0xffff
+		g_htons (ARV_GV_HEADER_1_COMMAND),
+		g_htons (ARV_GV_HEADER_2_DISCOVER),
+		g_htons (0x0000),
+		g_htons (0xffff)
 	}
 };
+
+gboolean
+arv_socket_set_broadcast (GSocket *socket, gboolean enable)
+{
+	int socket_fd;
+	int result;
+
+	socket_fd = g_socket_get_fd (socket);
+
+	result = setsockopt (socket_fd, SOL_SOCKET, SO_BROADCAST, (char*)&enable, sizeof (enable));
+
+	return result == 0;
+}
 
 int
 main (int argc, char **argv)
@@ -53,14 +72,19 @@ main (int argc, char **argv)
 	gvcp_address = g_inet_socket_address_new (inet_address, 0);
 	g_object_unref (inet_address);
 
-	inet_address = g_inet_address_new_any (G_SOCKET_FAMILY_IPV4);
-	broadcast_address = g_inet_socket_address_new (inet_address, 3596);
+	inet_address = g_inet_address_new_from_string ("255.255.255.255");
+	broadcast_address = g_inet_socket_address_new (inet_address, ARV_GVCP_PORT);
 	g_object_unref (inet_address);
 
 	g_socket_bind (socket, gvcp_address, TRUE, &error);
 
+	if (error != NULL)
+		g_message ("%s", error->message);
+
+	arv_socket_set_broadcast (socket, TRUE);
 	g_socket_send_to (socket, broadcast_address,
 			  (const char *) &arv_discover_packet, sizeof (arv_discover_packet), NULL, &error);
+	arv_socket_set_broadcast (socket, FALSE);
 
 	while (1) {
 		gsize count, i;
