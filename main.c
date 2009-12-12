@@ -2,6 +2,8 @@
 #include <glib/gprintf.h>
 #include <stdlib.h>
 
+#define ARV_GVCP_PORT	3596
+
 typedef enum {
 	ARV_GV_HEADER_1_COMMAND = 	0x0000,
 	ARV_GV_HEADER_1_ANSWER = 	0x4201
@@ -20,7 +22,6 @@ typedef struct {
 	unsigned int address;
 } ArvGVHeader;
 
-
 typedef struct {
 	ArvGVHeader header;
 	unsigned char data[];
@@ -38,18 +39,28 @@ int
 main (int argc, char **argv)
 {
 	GSocket *socket;
-	GInetAddress *address;
-	GSocketAddress *socket_address;
+	GInetAddress *inet_address;
+	GSocketAddress *gvcp_address;
+	GSocketAddress *broadcast_address;
 	GError *error = NULL;
 	char buffer[1024];
 
 	g_type_init ();
 
 	socket = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, &error);
-	address = g_inet_address_new_any (G_SOCKET_FAMILY_IPV4);
-	socket_address = g_inet_socket_address_new (address, 3956);
 
-	g_socket_bind (socket, socket_address, TRUE, &error);
+	inet_address = g_inet_address_new_any (G_SOCKET_FAMILY_IPV4);
+	gvcp_address = g_inet_socket_address_new (inet_address, 0);
+	g_object_unref (inet_address);
+
+	inet_address = g_inet_address_new_any (G_SOCKET_FAMILY_IPV4);
+	broadcast_address = g_inet_socket_address_new (inet_address, 3596);
+	g_object_unref (inet_address);
+
+	g_socket_bind (socket, gvcp_address, TRUE, &error);
+
+	g_socket_send_to (socket, broadcast_address,
+			  (const char *) &arv_discover_packet, sizeof (arv_discover_packet), NULL, &error);
 
 	while (1) {
 		gsize count, i;
@@ -62,8 +73,8 @@ main (int argc, char **argv)
 		g_printf ("\n");
 	}
 
-	g_object_unref (socket_address);
-	g_object_unref (address);
+	g_object_unref (gvcp_address);
+	g_object_unref (broadcast_address);
 	g_object_unref (socket);
 
 	return EXIT_SUCCESS;
