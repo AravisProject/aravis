@@ -7,7 +7,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#define ARV_GVCP_PORT	3596
+#define ARV_GVCP_PORT	3956
 
 typedef enum {
 	ARV_GV_HEADER_1_ANSWER = 	0x0000,
