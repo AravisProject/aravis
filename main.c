@@ -1,24 +1,38 @@
 #include <gio/gio.h>
+#include <glib/gprintf.h>
 #include <stdlib.h>
 
 typedef enum {
-	ARV_CONTROL_HEADER_1_COMMAND = 	0x0000,
-	ARV_CONTROL_HEADER_1_ANSWER = 	0x4201
-} ArvControlHeader1;
+	ARV_GV_HEADER_1_COMMAND = 	0x0000,
+	ARV_GV_HEADER_1_ANSWER = 	0x4201
+} ArvGVHeader1;
 
 typedef enum {
-	ARV_CONTROL_HEADER_2_DISCOVER =	0x0002,
-	ARV_CONTROL_HEADER_2_HELLO =	0x0003,
-	ARV_CONTROL_HEADER_2_BYE = 	0x0004
-} ArvControlHeader2;
+	ARV_GV_HEADER_2_DISCOVER =	0x0002,
+	ARV_GV_HEADER_2_HELLO =		0x0003,
+	ARV_GV_HEADER_2_BYE = 		0x0004
+} ArvGVHeader2;
 
 typedef struct {
-	ArvControlHeader1 header1;
-	ArvControlHeader2 header2;
+	ArvGVHeader1 header1;
+	ArvGVHeader2 header2;
 	unsigned int length;
 	unsigned int address;
+} ArvGVHeader;
+
+
+typedef struct {
+	ArvGVHeader header;
 	unsigned char data[];
 } ArvControlPacket;
+
+static const ArvControlPacket arv_discover_packet = {
+	{
+		ARV_GV_HEADER_1_COMMAND,
+		ARV_GV_HEADER_2_DISCOVER,
+		0, 0xffff
+	}
+};
 
 int
 main (int argc, char **argv)
@@ -27,7 +41,7 @@ main (int argc, char **argv)
 	GInetAddress *address;
 	GSocketAddress *socket_address;
 	GError *error = NULL;
-	unsigned char buffer[1024];
+	char buffer[1024];
 
 	g_type_init ();
 
@@ -44,7 +58,7 @@ main (int argc, char **argv)
 		if (count != 0)
 			g_message ("packet received");
 		for (i = 0; i < count; i++)
-			g_printf ("0x%02x ", buffer[i]);
+			g_printf ("0x%02x ", (unsigned char) buffer[i]);
 		g_printf ("\n");
 	}
 
