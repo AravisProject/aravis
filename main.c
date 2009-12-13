@@ -3,9 +3,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <stdlib.h>
-#include <netdb.h>
-#include <string.h>
-#include <stdio.h>
 
 #define ARV_GVCP_PORT	3956
 
@@ -30,9 +27,9 @@ typedef struct {
 typedef struct {
 	ArvGVHeader header;
 	unsigned char data[];
-} ArvControlPacket;
+} ArvGVControlPacket;
 
-static const ArvControlPacket arv_discover_packet = {
+static const ArvGVControlPacket arv_gv_discover_packet = {
 	{
 		g_htons (ARV_GV_HEADER_1_COMMAND),
 		g_htons (ARV_GV_HEADER_2_DISCOVER),
@@ -83,7 +80,7 @@ main (int argc, char **argv)
 
 	arv_socket_set_broadcast (socket, TRUE);
 	g_socket_send_to (socket, broadcast_address,
-			  (const char *) &arv_discover_packet, sizeof (arv_discover_packet), NULL, &error);
+			  (const char *) &arv_gv_discover_packet, sizeof (arv_gv_discover_packet), NULL, &error);
 	arv_socket_set_broadcast (socket, FALSE);
 
 	while (1) {
