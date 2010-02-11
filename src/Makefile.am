@@ -23,11 +23,19 @@ libaravis_la_LIBADD = 				\
 	$(ARAVIS_LIBS)
 
 libaravis_la_SOURCES =				\
-	arvcamera.c
+	arvcamera.c				\
+	arvdevice.c				\
+	arvinterface.c				\
+	arvgvdevice.c				\
+	arvgvinterface.c
 
 ARAVIS_HDRS = \
 	arv.h					\
-	arvcamera.h
+	arvcamera.h				\
+	arvdevice.h				\
+	arvinterface.h				\
+	arvgvdevice.h				\
+	arvgvinterface.h
 
 libaravis_ladir = $(includedir)/aravis
 libaravis_la_HEADERS = $(ARAVIS_HDRS)
@@ -56,7 +64,7 @@ introspection_files = $(libaravis_la_SOURCES) \
 		      $(libaravis_la_HEADERS)
 
 Aravis-1.0.gir: $(INTROSPECTION_SCANNER) libaravis.la Makefile
-Aravis_1_0_gir_INCLUDES = GObject-2.0 cairo-1.0
+Aravis_1_0_gir_INCLUDES = GObject-2.0 Gio-2.0
 Aravis_1_0_gir_SCANNERFLAGS = --strip-prefix=Lsm
 Aravis_1_0_gir_CFLAGS = $(INCLUDES)
 Aravis_1_0_gir_LIBS = libaravis.la

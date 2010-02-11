@@ -27,3 +27,4 @@ mkinstalldirs
 stamp*
 autom4te*
 manugen
+tmp-introspect*
