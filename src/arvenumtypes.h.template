@@ -1,0 +1,26 @@
+/*** BEGIN file-header ***/
+#ifndef ARV_ENUM_TYPES_H
+#define ARV_ENUM_TYPES_H
+
+#include <glib-object.h>
+
+G_BEGIN_DECLS
+
+/*** END file-header ***/
+
+/*** BEGIN file-production ***/
+/* Enumerations from "@filename@" */
+
+/*** END file-production ***/
+
+/*** BEGIN enumeration-production ***/
+#define ARV_TYPE_@ENUMSHORT@	(@enum_name@_get_type())
+GType @enum_name@_get_type	(void) G_GNUC_CONST;
+
+/*** END enumeration-production ***/
+
+/*** BEGIN file-tail ***/
+G_END_DECLS
+
+#endif /* ARV_ENUM_TYPES_H */
+/*** END file-tail ***/
