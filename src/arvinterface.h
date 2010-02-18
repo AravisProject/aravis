@@ -20,13 +20,9 @@ struct _ArvInterface {
 
 struct _ArvInterfaceClass {
 	GObjectClass parent_class;
-
-	void		(*get_devices)		(ArvInterface *interface);
 };
 
 GType arv_interface_get_type (void);
-
-void 			arv_interface_get_devices 		(ArvInterface *interface);
 
 G_END_DECLS
 

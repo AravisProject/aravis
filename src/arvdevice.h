@@ -20,9 +20,16 @@ struct _ArvDevice {
 
 struct _ArvDeviceClass {
 	GObjectClass parent_class;
+
+	size_t 		(*read_register)	(ArvDevice *device, guint64 address, size_t size, void *buffer);
+	size_t 		(*write_register)	(ArvDevice *device, guint64 address, size_t size, void *buffer);
 };
 
 GType arv_device_get_type (void);
+
+void 		arv_device_load_genicam 		(ArvDevice *device);
+size_t 		arv_device_read_register 		(ArvDevice *device, guint64 address, size_t size, void *buffer);
+size_t 		arv_device_write_register 		(ArvDevice *device, guint64 address, size_t size, void *buffer);
 
 G_END_DECLS
 

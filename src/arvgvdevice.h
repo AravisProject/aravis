@@ -19,7 +19,11 @@ typedef struct _ArvGvDeviceClass ArvGvDeviceClass;
 struct _ArvGvDevice {
 	ArvDevice device;
 
-	GInetAddress	*inet_address;
+	guint32 packet_count;
+
+	GSocket *socket;
+	GSocketAddress	*control_address;
+	GSocketAddress	*device_address;
 };
 
 struct _ArvGvDeviceClass {
@@ -28,7 +32,7 @@ struct _ArvGvDeviceClass {
 
 GType arv_gv_device_get_type (void);
 
-ArvDevice * 		arv_gv_device_new_with_address 	(const char *address);
+ArvDevice * 		arv_gv_device_new 		(GInetAddress *inet_address);
 
 G_END_DECLS
 

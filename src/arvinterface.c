@@ -2,14 +2,6 @@
 
 static GObjectClass *parent_class = NULL;
 
-void
-arv_interface_get_devices (ArvInterface *interface)
-{
-	ArvInterfaceClass *interface_class = ARV_INTERFACE_GET_CLASS (interface);
-
-	interface_class->get_devices (interface);
-}
-
 static void
 arv_interface_init (ArvInterface *interface)
 {
