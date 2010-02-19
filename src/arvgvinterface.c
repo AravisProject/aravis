@@ -163,7 +163,7 @@ arv_gv_interface_init (ArvGvInterface *gv_interface)
 	g_object_unref (inet_address);
 
 	inet_address = g_inet_address_new_from_string ("255.255.255.255");
-	gv_interface->broadcast_address = g_inet_socket_address_new (inet_address, ARV_GV_CONTROL_PORT);
+	gv_interface->broadcast_address = g_inet_socket_address_new (inet_address, ARV_GVCP_PORT);
 	g_object_unref (inet_address);
 
 	g_socket_bind (gv_interface->socket, gv_interface->control_address, TRUE, NULL);

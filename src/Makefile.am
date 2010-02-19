@@ -27,14 +27,16 @@ libaravis_la_SOURCES =				\
 	arvcamera.c				\
 	arvdevice.c				\
 	arvinterface.c				\
+	arvgvcp.c				\
 	arvgvdevice.c				\
 	arvgvinterface.c
 
-ARAVIS_HDRS = \
+ARAVIS_HDRS = 					\
 	arv.h					\
 	arvcamera.h				\
 	arvdevice.h				\
 	arvinterface.h				\
+	arvgvcp.h				\
 	arvgvdevice.h				\
 	arvgvinterface.h
 

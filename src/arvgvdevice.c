@@ -65,7 +65,7 @@ arv_gv_device_new (GInetAddress *inet_address)
 	gv_device->control_address = g_inet_socket_address_new (incoming_inet_address, 0);
 	g_object_unref (incoming_inet_address);
 
-	gv_device->device_address = g_inet_socket_address_new (inet_address, ARV_GV_CONTROL_PORT);
+	gv_device->device_address = g_inet_socket_address_new (inet_address, ARV_GVCP_PORT);
 
 	g_socket_bind (gv_device->socket, gv_device->control_address, TRUE, NULL);
 
