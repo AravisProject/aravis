@@ -104,35 +104,31 @@ arv_gv_interface_receive_hello_packet (ArvGvInterface *gv_interface)
 }
 
 static void
-arv_gv_interface_update_device_list (ArvGvInterface *gv_interface)
+arv_gv_interface_update_device_list (ArvInterface *interface)
 {
-	arv_gv_interface_send_discover_packet (gv_interface);
-	arv_gv_interface_receive_hello_packet (gv_interface);
+	arv_gv_interface_send_discover_packet (ARV_GV_INTERFACE (interface));
+	arv_gv_interface_receive_hello_packet (ARV_GV_INTERFACE (interface));
 }
 
-ArvDevice *
-arv_gv_interface_get_device_by_address (ArvGvInterface *gv_interface, const char *address)
+static ArvDevice *
+arv_gv_interface_get_device (ArvInterface *interface, int property, const char *value)
 {
+	ArvGvInterface *gv_interface;
 	ArvDevice *device;
+	GList *devices;
 
-	g_return_val_if_fail (ARV_IS_GV_INTERFACE (gv_interface), NULL);
-	g_return_val_if_fail (address != NULL, NULL);
+	gv_interface = ARV_GV_INTERFACE (interface);
 
-	device = g_hash_table_lookup (gv_interface->devices, address);
-	if (device != NULL) {
+	devices = g_hash_table_get_values (gv_interface->devices);
+
+	device = devices != NULL ? devices->data : NULL;
+
+	g_list_free (devices);
+
+	if (device != NULL)
 		g_object_ref (device);
-		return device;
-	}
 
-	arv_gv_interface_update_device_list (gv_interface);
-
-	device = g_hash_table_lookup (gv_interface->devices, address);
-	if (device != NULL) {
-		g_object_ref (device);
-		return device;
-	}
-
-	return NULL;
+	return device;
 }
 
 ArvInterface *
@@ -194,10 +190,14 @@ static void
 arv_gv_interface_class_init (ArvGvInterfaceClass *gv_interface_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (gv_interface_class);
+	ArvInterfaceClass *interface_class = ARV_INTERFACE_CLASS (gv_interface_class);
 
 	parent_class = g_type_class_peek_parent (gv_interface_class);
 
 	object_class->finalize = arv_gv_interface_finalize;
+
+	interface_class->update_device_list = arv_gv_interface_update_device_list;
+	interface_class->get_device = arv_gv_interface_get_device;
 }
 
 G_DEFINE_TYPE (ArvGvInterface, arv_gv_interface, ARV_TYPE_INTERFACE)

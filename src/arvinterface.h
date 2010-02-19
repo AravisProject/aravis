@@ -2,6 +2,7 @@
 #define ARV_INTERFACE_H
 
 #include <arv.h>
+#include <arvdevice.h>
 
 G_BEGIN_DECLS
 
@@ -20,9 +21,17 @@ struct _ArvInterface {
 
 struct _ArvInterfaceClass {
 	GObjectClass parent_class;
+
+	void 		(*update_device_list)		(ArvInterface *interface);
+	ArvDevice *	(*get_device)			(ArvInterface *interface, int property, const char *value);
 };
 
 GType arv_interface_get_type (void);
+
+void 			arv_interface_update_device_list 	(ArvInterface *interface);
+ArvDevice * 		arv_interface_get_first_device 		(ArvInterface *interface);
+ArvDevice * 		arv_interface_get_device 		(ArvInterface *interface, int property,
+								 const char *value);
 
 G_END_DECLS
 

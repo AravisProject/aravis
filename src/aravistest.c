@@ -11,7 +11,7 @@ main (int argc, char **argv)
 
 	interface = arv_gv_interface_get_instance ();
 
-	device = arv_gv_interface_get_device_by_address (ARV_GV_INTERFACE (interface), "192.168.0.9");
+	device = arv_interface_get_first_device (interface);
 
 	g_object_unref (device);
 	g_object_unref (interface);
