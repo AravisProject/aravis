@@ -1,10 +1,8 @@
 /*** BEGIN file-header ***/
 #include "arvenumtypes.h"
-
 /*** END file-header ***/
 
 /*** BEGIN file-production ***/
-/* enumerations from "@filename@" */
 #include "@filename@"
 
 /*** END file-production ***/

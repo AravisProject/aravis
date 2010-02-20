@@ -3,46 +3,59 @@
 
 static GObjectClass *parent_class = NULL;
 
-size_t
-arv_gv_device_read_register (ArvDevice *device, guint64 address, size_t size, void *buffer)
+static size_t
+_read_register (ArvDevice *device, guint32 address, guint32 size, void *buffer)
 {
 	ArvGvDevice *gv_device = ARV_GV_DEVICE (device);
-	ArvGvHeader command;
-	ArvGvControlPacket *answer;
+	ArvGvcpPacket *packet;
+	GPollFD poll_fd;
+	size_t packet_size;
+	char  local_buffer[1024];
+	int count;
 
 	gv_device->packet_count++;
 
-	command.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_COMMAND);
-	command.command = g_htons (ARV_GVCP_COMMAND_REGISTER_READ_CMD);
-	command.size = g_htons (size);
-	command.count = g_htons (gv_device->packet_count);
+	packet = arv_gvcp_read_packet_new (address, size, gv_device->packet_count, &packet_size);
 
-	answer = g_malloc (sizeof (ArvGvHeader) + size);
+	arv_gvcp_packet_dump (packet);
 
-	g_free (answer);
+	g_socket_send_to (gv_device->socket, gv_device->device_address, (const char *) packet, packet_size,
+			  NULL, NULL);
 
-	return 0;
+	arv_gvcp_packet_free (packet);
+
+	poll_fd.fd = g_socket_get_fd (gv_device->socket);
+	poll_fd.events =  G_IO_IN;
+	poll_fd.revents = 0;
+
+	if (g_poll (&poll_fd, 1, 1000) == 0)
+		return 0;
+
+	count = g_socket_receive (gv_device->socket, local_buffer, 1024, NULL, NULL);
+
+	arv_gvcp_packet_dump ((ArvGvcpPacket *) local_buffer);
+
+	return packet_size;
 }
 
 size_t
-arv_gv_device_write_register (ArvDevice *device, guint64 address, size_t size, void *buffer)
+arv_gv_device_read_register (ArvDevice *device, guint32 address, guint32 size, void *buffer)
 {
-	ArvGvDevice *gv_device = ARV_GV_DEVICE (device);
-	ArvGvControlPacket *command;
+	guint i;
+	gint32 block_size;
 
-	gv_device->packet_count++;
+	for (i = 0; i < (size + ARV_GVCP_DATA_SIZE_MAX - 1) / ARV_GVCP_DATA_SIZE_MAX; i++) {
+		block_size = MIN (ARV_GVCP_DATA_SIZE_MAX, size - i * ARV_GVCP_DATA_SIZE_MAX);
+		_read_register (device, address + i * ARV_GVCP_DATA_SIZE_MAX,
+				block_size, buffer + i * ARV_GVCP_DATA_SIZE_MAX);
+	}
 
-	command = g_malloc (sizeof (ArvGvHeader) + size);
+	return size;
+}
 
-	command->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_COMMAND);
-	command->header.command = g_htons (ARV_GVCP_COMMAND_REGISTER_WRITE_CMD);
-	command->header.size = size;
-	command->header.count = gv_device->packet_count;
-
-	memcpy (&command->data, buffer, size);
-
-	g_free (command);
-
+size_t
+arv_gv_device_write_register (ArvDevice *device, guint32 address, guint32 size, void *buffer)
+{
 	return 0;
 }
 

@@ -1,5 +1,6 @@
 #include <arvgvinterface.h>
 #include <arvgvdevice.h>
+#include <arvgvcp.h>
 #include <glib/gprintf.h>
 #include <gio/gio.h>
 #include <sys/types.h>
@@ -24,19 +25,19 @@ arv_gv_interface_socket_set_broadcast (GSocket *socket, gboolean enable)
 static void
 arv_gv_interface_send_discover_packet (ArvGvInterface *gv_interface)
 {
-	static ArvGvHeader arv_gv_discover_packet;
+	ArvGvcpPacket *packet;
+	size_t size;
 
-	arv_gv_discover_packet.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_COMMAND);
-	arv_gv_discover_packet.command = g_htons (ARV_GVCP_COMMAND_DISCOVER_CMD);
-	arv_gv_discover_packet.size = g_htons (0x0000);
-	arv_gv_discover_packet.count = g_htons (0xffff);
+	packet = arv_gvcp_discover_packet_new (&size);
 
 	arv_gv_interface_socket_set_broadcast (gv_interface->socket, TRUE);
 	g_socket_send_to (gv_interface->socket,
 			  gv_interface->broadcast_address,
-			  (const char *) &arv_gv_discover_packet,
-			  sizeof (arv_gv_discover_packet), NULL, NULL);
+			  (const char *) packet, size,
+			  NULL, NULL);
 	arv_gv_interface_socket_set_broadcast (gv_interface->socket, FALSE);
+
+	arv_gvcp_packet_free (packet);
 }
 
 static void
@@ -59,32 +60,24 @@ arv_gv_interface_receive_hello_packet (ArvGvInterface *gv_interface)
 		g_socket_set_blocking (gv_interface->socket, TRUE);
 
 		if (count != 0) {
-			ArvGvHeader *header = (ArvGvHeader *) buffer;
+			ArvGvcpPacket *packet = (ArvGvcpPacket *) buffer;
+			char *packet_string;
 
-			g_message ("packet_type = %d", g_ntohs (header->packet_type));
-			g_message ("command     = %d", g_ntohs (header->command));
-			g_message ("size        = %d", g_ntohs (header->size));
-			g_message ("count       = 0x%4x", g_ntohs (header->count));
+			packet_string = arv_gvcp_packet_to_string (packet);
+			g_message ("%s", packet_string);
+			g_free (packet_string);
 
-			if (g_ntohs (header->command) == ARV_GVCP_COMMAND_DISCOVER_ANS &&
-			    g_ntohs (header->count) == 0xffff) {
+			if (g_ntohs (packet->header.command) == ARV_GVCP_COMMAND_DISCOVER_ANS &&
+			    g_ntohs (packet->header.count) == 0xffff) {
 				ArvDevice *device;
-				char *data = buffer + sizeof (ArvGvHeader);
+				char *data = buffer + sizeof (ArvGvcpHeader);
 				char *address;
 
-				g_message ("Hello packet");
-
-				g_message ("Supplier = %s", &data[ARV_GVCP_DISCOVER_SUPPLIER_NAME_OFFSET]);
-				g_message ("Name     = %s", &data[ARV_GVCP_DISCOVER_CAMERA_NAME_OFFSET]);
-				g_message ("Model    = %s", &data[ARV_GVCP_DISCOVER_MODEL_NAME_OFFSET]);
-
 				address = g_strdup_printf ("%d.%d.%d.%d",
-							   data[ARV_GVCP_DISCOVER_IP_OFFSET] & 0xff,
-							   data[ARV_GVCP_DISCOVER_IP_OFFSET + 1] & 0xff,
-							   data[ARV_GVCP_DISCOVER_IP_OFFSET + 2] & 0xff,
-							   data[ARV_GVCP_DISCOVER_IP_OFFSET + 3] & 0xff);
-
-				g_message ("Address  = %s", address);
+							   data[ARV_GVCP_IP_ADDRESS] & 0xff,
+							   data[ARV_GVCP_IP_ADDRESS + 1] & 0xff,
+							   data[ARV_GVCP_IP_ADDRESS + 2] & 0xff,
+							   data[ARV_GVCP_IP_ADDRESS + 3] & 0xff);
 
 				device = g_hash_table_lookup (gv_interface->devices, address);
 
