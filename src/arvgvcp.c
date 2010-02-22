@@ -151,10 +151,10 @@ arv_gvcp_packet_to_string (const ArvGvcpPacket *packet)
 			break;
 		case ARV_GVCP_COMMAND_READ_CMD:
 			value = g_ntohl (*((guint32 *) &data[0]));
-			g_string_append_printf (string, "size        = %10d (0x%08x)\n",
+			g_string_append_printf (string, "address     = %10d (0x%08x)\n",
 						value, value);
 			value = g_ntohl (*((guint32 *) &data[4]));
-			g_string_append_printf (string, "address     = %10d (0x%08x)\n",
+			g_string_append_printf (string, "size        = %10d (0x%08x)\n",
 						value, value);
 			break;
 		case ARV_GVCP_COMMAND_READ_ANS:
