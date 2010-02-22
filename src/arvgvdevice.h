@@ -14,6 +14,8 @@ G_BEGIN_DECLS
 #define ARV_IS_GV_DEVICE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GV_DEVICE))
 #define ARV_GV_DEVICE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GV_DEVICE, ArvGvDeviceClass))
 
+#define ARV_GV_DEVICE_BUFFER_SIZE	1024
+
 typedef struct _ArvGvDeviceClass ArvGvDeviceClass;
 
 struct _ArvGvDevice {
@@ -24,6 +26,8 @@ struct _ArvGvDevice {
 	GSocket *socket;
 	GSocketAddress	*control_address;
 	GSocketAddress	*device_address;
+
+	void *socket_buffer;
 };
 
 struct _ArvGvDeviceClass {

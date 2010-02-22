@@ -17,30 +17,39 @@ arv_gvcp_read_packet_new (guint32 address, guint32 size, guint32 packet_count, s
 
 	g_return_val_if_fail (packet_size != NULL, NULL);
 
-	if (size == 4) {
-		*packet_size = sizeof (ArvGvcpHeader) + sizeof (guint32);
+	*packet_size = sizeof (ArvGvcpHeader) + 2 * sizeof (guint32);
 
-		packet = g_malloc (*packet_size);
+	packet = g_malloc (*packet_size);
 
-		packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_COMMAND);
-		packet->header.command = g_htons (ARV_GVCP_COMMAND_READ_REGISTER_CMD);
-		packet->header.size = g_htons (sizeof (guint32));
-		packet->header.count = g_htons (packet_count);
+	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_COMMAND);
+	packet->header.command = g_htons (ARV_GVCP_COMMAND_READ_CMD);
+	packet->header.size = g_htons (2 * sizeof (guint32));
+	packet->header.count = g_htons (packet_count);
 
-		memcpy (&packet->data, &n_address, sizeof (guint32));
-	} else {
-		*packet_size = sizeof (ArvGvcpHeader) + 2 * sizeof (guint32);
+	memcpy (&packet->data, &n_address, sizeof (guint32));
+	memcpy (&packet->data[sizeof(guint32)], &n_size, sizeof (guint32));
 
-		packet = g_malloc (*packet_size);
+	return packet;
+}
 
-		packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_COMMAND);
-		packet->header.command = g_htons (ARV_GVCP_COMMAND_READ_CMD);
-		packet->header.size = g_htons (2 * sizeof (guint32));
-		packet->header.count = g_htons (packet_count);
+ArvGvcpPacket *
+arv_gvcp_read_register_packet_new (guint32 address, guint32 packet_count, size_t *packet_size)
+{
+	ArvGvcpPacket *packet;
+	guint32 n_address = g_htonl (address);
 
-		memcpy (&packet->data, &n_address, sizeof (guint32));
-		memcpy (&packet->data[sizeof(guint32)], &n_size, sizeof (guint32));
-	}
+	g_return_val_if_fail (packet_size != NULL, NULL);
+
+	*packet_size = sizeof (ArvGvcpHeader) + sizeof (guint32);
+
+	packet = g_malloc (*packet_size);
+
+	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_COMMAND);
+	packet->header.command = g_htons (ARV_GVCP_COMMAND_READ_REGISTER_CMD);
+	packet->header.size = g_htons (sizeof (guint32));
+	packet->header.count = g_htons (packet_count);
+
+	memcpy (&packet->data, &n_address, sizeof (guint32));
 
 	return packet;
 }

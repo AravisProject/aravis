@@ -56,9 +56,23 @@ typedef struct {
 void 			arv_gvcp_packet_free 			(ArvGvcpPacket *packet);
 ArvGvcpPacket * 	arv_gvcp_read_packet_new 		(guint32 address, guint32 size,
 								 guint32 packet_count, size_t *packet_size);
+ArvGvcpPacket * 	arv_gvcp_read_register_packet_new 	(guint32 address,
+								 guint32 packet_count, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_discover_packet_new 		(size_t *size);
 char * 			arv_gvcp_packet_to_string 		(const ArvGvcpPacket *packet);
 void 			arv_gvcp_packet_dump 			(const ArvGvcpPacket *packet);
+
+static inline size_t
+arv_gvcp_read_packet_get_answer_size (guint32 data_size)
+{
+	return sizeof (ArvGvcpHeader) + sizeof (guint32) + data_size;
+}
+
+static inline void *
+arv_gvcp_read_packet_get_answer_data (const ArvGvcpPacket *packet)
+{
+	return (void *) packet + sizeof (guint32);
+}
 
 G_END_DECLS
 
