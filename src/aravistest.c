@@ -6,7 +6,7 @@ main (int argc, char **argv)
 {
 	ArvInterface *interface;
 	ArvDevice *device;
-	char buffer[1024];
+	char buffer[100000];
 
 	g_type_init ();
 
@@ -25,6 +25,8 @@ main (int argc, char **argv)
 				 ARV_GVCP_GENICAM_FILENAME_SIZE, buffer);
 		arv_device_read (device,
 				 0x00100000, 0x00015904, buffer);
+
+		g_file_set_contents ("/tmp/genicam.xml", buffer, 0x00015904, NULL);
 
 		g_object_unref (device);
 	} else
