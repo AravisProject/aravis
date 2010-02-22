@@ -71,7 +71,7 @@ arv_gvcp_read_packet_get_answer_size (guint32 data_size)
 static inline void *
 arv_gvcp_read_packet_get_answer_data (const ArvGvcpPacket *packet)
 {
-	return (void *) packet + sizeof (guint32);
+	return (void *) packet + sizeof (ArvGvcpHeader) + sizeof (guint32);
 }
 
 G_END_DECLS
