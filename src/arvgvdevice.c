@@ -51,7 +51,7 @@ _read (ArvDevice *device, guint32 address, guint32 size, void *buffer)
 size_t
 arv_gv_device_read (ArvDevice *device, guint32 address, guint32 size, void *buffer)
 {
-	guint i;
+	int i;
 	gint32 block_size;
 
 	for (i = 0; i < (size + ARV_GVCP_DATA_SIZE_MAX - 1) / ARV_GVCP_DATA_SIZE_MAX; i++) {
