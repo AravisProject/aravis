@@ -20,6 +20,9 @@ struct _ArvGvStream {
 
 	GSocket *socket;
 	GSocketAddress *incoming_address;
+
+	GThread *thread;
+	void *thread_data;
 };
 
 struct _ArvGvStreamClass {
@@ -27,6 +30,9 @@ struct _ArvGvStreamClass {
 };
 
 GType arv_gv_stream_get_type (void);
+
+ArvStream * 		arv_gv_stream_new 		(guint16 port);
+guint16 		arv_gv_stream_get_port		(ArvGvStream *gv_stream);
 
 G_END_DECLS
 

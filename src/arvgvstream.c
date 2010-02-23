@@ -2,11 +2,52 @@
 
 static GObjectClass *parent_class = NULL;
 
+/* Acquisition thread */
+
+typedef struct {
+	GSocket *socket;
+	gboolean cancel;
+} ArvGvStreamThreadData;
+
+static void *
+arv_gv_stream_thread (void *data)
+{
+	ArvGvStreamThreadData *thread_data = data;
+	GPollFD poll_fd;
+
+	g_message ("hello");
+
+	poll_fd.fd = g_socket_get_fd (thread_data->socket);
+	poll_fd.events =  G_IO_IN;
+	poll_fd.revents = 0;
+
+	do {
+		g_poll (&poll_fd, 1, 50);
+	} while (!thread_data->cancel);
+
+	return NULL;
+}
+
+/* ArvGvStream implemenation */
+
+guint16
+arv_gv_stream_get_port (ArvGvStream *gv_stream)
+{
+	GInetSocketAddress *local_address;
+
+	g_return_val_if_fail (ARV_IS_GV_STREAM (gv_stream), 0);
+
+	local_address = G_INET_SOCKET_ADDRESS (g_socket_get_local_address (gv_stream->socket, NULL));
+
+	return g_inet_socket_address_get_port (local_address);
+}
+
 ArvStream *
 arv_gv_stream_new (guint16 port)
 {
 	ArvGvStream *gv_stream;
 	GInetAddress *incoming_inet_address;
+	ArvGvStreamThreadData *thread_data;
 
 	gv_stream = g_object_new (ARV_TYPE_GV_STREAM, NULL);
 
@@ -20,8 +61,18 @@ arv_gv_stream_new (guint16 port)
 
 	g_socket_bind (gv_stream->socket, gv_stream->incoming_address, TRUE, NULL);
 
+	thread_data = g_new (ArvGvStreamThreadData, 1);
+	thread_data->socket = gv_stream->socket;
+	thread_data->cancel = FALSE;
+
+	gv_stream->thread_data = thread_data;
+
+	gv_stream->thread = g_thread_create (arv_gv_stream_thread, gv_stream->thread_data, TRUE, NULL);
+
 	return ARV_STREAM (gv_stream);
 }
+
+/* ArvStream implementation */
 
 static void
 arv_gv_stream_init (ArvGvStream *gv_stream)
@@ -32,6 +83,19 @@ static void
 arv_gv_stream_finalize (GObject *object)
 {
 	ArvGvStream *gv_stream = ARV_GV_STREAM (object);
+
+	if (gv_stream->thread != NULL) {
+		ArvGvStreamThreadData *thread_data;
+
+		thread_data = gv_stream->thread_data;
+
+		thread_data->cancel = TRUE;
+		g_thread_join (gv_stream->thread);
+		g_free (thread_data);
+
+		gv_stream->thread_data = NULL;
+		gv_stream->thread = NULL;
+	}
 
 	g_object_unref (gv_stream->incoming_address);
 	g_object_unref (gv_stream->socket);

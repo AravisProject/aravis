@@ -1,11 +1,13 @@
 #include <arv.h>
 #include <arvgvinterface.h>
+#include <arvgvstream.h>
 
 int
 main (int argc, char **argv)
 {
 	ArvInterface *interface;
 	ArvDevice *device;
+	ArvStream *stream;
 	char buffer[100000];
 
 	g_type_init ();
@@ -31,6 +33,14 @@ main (int argc, char **argv)
 		g_object_unref (device);
 	} else
 		g_message ("No device found");
+
+	stream = arv_gv_stream_new (0);
+
+	g_usleep (10000000);
+
+	g_message ("port = %d", arv_gv_stream_get_port (ARV_GV_STREAM (stream)));
+
+	g_object_unref (stream);
 
 	g_object_unref (interface);
 
