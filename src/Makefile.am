@@ -25,20 +25,24 @@ libaravis_la_LIBADD = 				\
 libaravis_la_SOURCES =				\
 	arvenumtypes.c				\
 	arvcamera.c				\
-	arvdevice.c				\
 	arvinterface.c				\
+	arvdevice.c				\
+	arvstream.c				\
 	arvgvcp.c				\
+	arvgvinterface.c			\
 	arvgvdevice.c				\
-	arvgvinterface.c
+	arvgvstream.c
 
 ARAVIS_HDRS = 					\
 	arv.h					\
 	arvcamera.h				\
-	arvdevice.h				\
 	arvinterface.h				\
+	arvdevice.h				\
+	arvstream.h				\
 	arvgvcp.h				\
+	arvgvinterface.h			\
 	arvgvdevice.h				\
-	arvgvinterface.h
+	arvgvstream.h
 
 libaravis_ladir = $(includedir)/aravis
 libaravis_la_HEADERS = $(ARAVIS_HDRS)

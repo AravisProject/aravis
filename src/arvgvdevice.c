@@ -77,7 +77,6 @@ arv_gv_device_new (GInetAddress *inet_address)
 
 	g_return_val_if_fail (G_IS_INET_ADDRESS (inet_address), NULL);
 
-
 	gv_device = g_object_new (ARV_TYPE_GV_DEVICE, NULL);
 
 	gv_device->socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
