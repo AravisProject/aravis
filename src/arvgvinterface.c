@@ -142,7 +142,7 @@ arv_gv_interface_receive_hello_packet (ArvGvInterface *gv_interface)
 	}
 
 	do {
-		if (g_poll (poll_fd, gv_interface->n_discover_infos, ARV_GV_INTERFACE_DISCOVER_TIMEOUT_MS) == 0) {
+		if (g_poll (poll_fd, gv_interface->n_discover_infos, ARV_GV_INTERFACE_DISCOVERY_TIMEOUT_MS) == 0) {
 			g_free (poll_fd);
 			return;
 		}
@@ -158,7 +158,7 @@ arv_gv_interface_receive_hello_packet (ArvGvInterface *gv_interface)
 			if (count != 0) {
 				ArvGvcpPacket *packet = (ArvGvcpPacket *) buffer;
 
-				if (g_ntohs (packet->header.command) == ARV_GVCP_COMMAND_DISCOVER_ANS &&
+				if (g_ntohs (packet->header.command) == ARV_GVCP_COMMAND_DISCOVERY_ACK &&
 				    g_ntohs (packet->header.count) == 0xffff) {
 					ArvDevice *device;
 					char *data = buffer + sizeof (ArvGvcpHeader);
