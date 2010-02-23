@@ -157,17 +157,14 @@ arv_gv_interface_receive_hello_packet (ArvGvInterface *gv_interface)
 
 			if (count != 0) {
 				ArvGvcpPacket *packet = (ArvGvcpPacket *) buffer;
-				char *packet_string;
-
-				packet_string = arv_gvcp_packet_to_string (packet);
-				g_message ("%s", packet_string);
-				g_free (packet_string);
 
 				if (g_ntohs (packet->header.command) == ARV_GVCP_COMMAND_DISCOVER_ANS &&
 				    g_ntohs (packet->header.count) == 0xffff) {
 					ArvDevice *device;
 					char *data = buffer + sizeof (ArvGvcpHeader);
 					char *address;
+
+					arv_gvcp_packet_dump (packet);
 
 					address = g_strdup_printf ("%d.%d.%d.%d",
 								   data[ARV_GVCP_IP_ADDRESS] & 0xff,
