@@ -51,17 +51,20 @@ arv_gv_interface_build_discover_infos_list (ArvGvInterface *gv_interface)
 		    (ifap->ifa_flags & (IFF_LOOPBACK | IFF_POINTOPOINT)) == 0 &&
 		    (ifap->ifa_addr->sa_family == AF_INET)) {
 			ArvGvInterfaceDiscoverInfos *infos = g_new (ArvGvInterfaceDiscoverInfos, 1);
-			GSocketAddress *broadcast_address;
+			GSocketAddress *socket_address;
 			GInetAddress *inet_address;
 			GError *error = NULL;
 
-			infos->interface_address = g_socket_address_new_from_native (ifap->ifa_addr,
-										     sizeof (ifap->ifa_addr));
-			broadcast_address = g_socket_address_new_from_native (ifap->ifa_broadaddr,
-									      sizeof (ifap->ifa_broadaddr));
-			inet_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (broadcast_address));
+			socket_address = g_socket_address_new_from_native (ifap->ifa_addr, sizeof (ifap->ifa_addr));
+			inet_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address));
+			infos->interface_address = g_inet_socket_address_new (inet_address, 0);
+			g_object_unref (socket_address);
+
+			socket_address = g_socket_address_new_from_native (ifap->ifa_broadaddr,
+									   sizeof (ifap->ifa_broadaddr));
+			inet_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address));
 			infos->broadcast_address = g_inet_socket_address_new (inet_address, ARV_GVCP_PORT);
-			g_object_unref (broadcast_address);
+			g_object_unref (socket_address);
 
 			infos->socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
 						      G_SOCKET_TYPE_DATAGRAM,
