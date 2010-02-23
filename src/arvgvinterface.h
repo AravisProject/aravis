@@ -9,6 +9,7 @@
 G_BEGIN_DECLS
 
 #define ARV_GV_INTERFACE_DISCOVER_TIMEOUT_MS	1000
+#define ARV_GV_INTERFACE_SOCKET_BUFFER_SIZE	1024
 
 #define ARV_TYPE_GV_INTERFACE             (arv_gv_interface_get_type ())
 #define ARV_GV_INTERFACE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GV_INTERFACE, ArvGvInterface))

@@ -124,7 +124,7 @@ arv_gv_interface_receive_hello_packet (ArvGvInterface *gv_interface)
 {
 	GPollFD *poll_fd;
 	GSList *iter;
-	char buffer[1024];
+	char buffer[ARV_GV_INTERFACE_SOCKET_BUFFER_SIZE];
 	int count;
 	int i;
 
@@ -151,7 +151,8 @@ arv_gv_interface_receive_hello_packet (ArvGvInterface *gv_interface)
 			ArvGvInterfaceDiscoverInfos *infos = iter->data;
 
 			g_socket_set_blocking (infos->socket, FALSE);
-			count = g_socket_receive (infos->socket, buffer, 1024, NULL, NULL);
+			count = g_socket_receive (infos->socket, buffer, ARV_GV_INTERFACE_SOCKET_BUFFER_SIZE,
+						  NULL, NULL);
 			g_socket_set_blocking (infos->socket, TRUE);
 
 			if (count != 0) {
