@@ -164,7 +164,7 @@ arv_gv_interface_receive_hello_packet (ArvGvInterface *gv_interface)
 					char *data = buffer + sizeof (ArvGvcpHeader);
 					char *address;
 
-					arv_gvcp_packet_dump (packet);
+					arv_gvcp_packet_debug (packet);
 
 					address = g_strdup_printf ("%d.%d.%d.%d",
 								   data[ARV_GVBS_CURRENT_IP_ADDRESS] & 0xff,

@@ -22,6 +22,22 @@ arv_device_write_memory (ArvDevice *device, guint32 address, guint32 size, void 
 	return ARV_DEVICE_GET_CLASS (device)->write_memory (device, address, size, buffer);
 }
 
+guint32
+arv_device_read_register (ArvDevice *device, guint32 address)
+{
+	g_return_val_if_fail (ARV_IS_DEVICE (device), 0);
+
+	return ARV_DEVICE_GET_CLASS (device)->read_register (device, address);
+}
+
+void
+arv_device_write_register (ArvDevice *device, guint32 address, guint32 value)
+{
+	g_return_if_fail (ARV_IS_DEVICE (device));
+
+	return ARV_DEVICE_GET_CLASS (device)->write_register (device, address, value);
+}
+
 void
 arv_device_load_genicam (ArvDevice *device)
 {

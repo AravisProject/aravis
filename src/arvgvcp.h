@@ -30,7 +30,8 @@ G_BEGIN_DECLS
 
 typedef enum {
 	ARV_GVCP_PACKET_TYPE_ACK =		0x0000,
-	ARV_GVCP_PACKET_TYPE_CMD = 		0x4201
+	ARV_GVCP_PACKET_TYPE_CMD = 		0x4201,
+	ARV_GVCP_PACKET_TYPE_ERROR =		0x8006
 } ArvGvcpPacketType;
 
 typedef enum {
@@ -67,9 +68,11 @@ ArvGvcpPacket * 	arv_gvcp_packet_new_write_memory_cmd	(guint32 address, guint32 
 								 guint32 packet_count, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_read_register_cmd 	(guint32 address,
 								 guint32 packet_count, size_t *packet_size);
+ArvGvcpPacket * 	arv_gvcp_packet_new_write_register_cmd 	(guint32 address, guint32 value,
+								 guint32 packet_count, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_discovery_cmd 	(size_t *size);
 char * 			arv_gvcp_packet_to_string 		(const ArvGvcpPacket *packet);
-void 			arv_gvcp_packet_dump 			(const ArvGvcpPacket *packet);
+void 			arv_gvcp_packet_debug 			(const ArvGvcpPacket *packet);
 
 static inline size_t
 arv_gvcp_packet_get_read_memory_ack_size (guint32 data_size)
@@ -87,6 +90,12 @@ static inline void *
 arv_gvcp_packet_get_write_memory_cmd_data (const ArvGvcpPacket *packet)
 {
 	return (void *) packet + sizeof (ArvGvcpPacket) + sizeof (guint32);
+}
+
+static inline guint32
+arv_gvcp_packet_get_read_register_ack_value (const ArvGvcpPacket *packet)
+{
+	return g_ntohl (*((guint32 *) ((void *) packet + sizeof (ArvGvcpPacket))));
 }
 
 G_END_DECLS

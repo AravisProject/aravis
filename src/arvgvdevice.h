@@ -7,6 +7,8 @@
 
 G_BEGIN_DECLS
 
+#define ARV_GV_DEVICE_ACKNOWLEDGE_TIMEOUT	1000
+
 #define ARV_TYPE_GV_DEVICE             (arv_gv_device_get_type ())
 #define ARV_GV_DEVICE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GV_DEVICE, ArvGvDevice))
 #define ARV_GV_DEVICE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GV_DEVICE, ArvGvDeviceClass))

@@ -21,8 +21,10 @@ struct _ArvDevice {
 struct _ArvDeviceClass {
 	GObjectClass parent_class;
 
-	size_t 		(*read_memory)	(ArvDevice *device, guint32 address, guint32 size, void *buffer);
-	size_t 		(*write_memory)	(ArvDevice *device, guint32 address, guint32 size, void *buffer);
+	size_t 		(*read_memory)		(ArvDevice *device, guint32 address, guint32 size, void *buffer);
+	size_t 		(*write_memory)		(ArvDevice *device, guint32 address, guint32 size, void *buffer);
+	guint32		(*read_register)	(ArvDevice *device, guint32 address);
+	void		(*write_register)	(ArvDevice *device, guint32 address, guint32 value);
 };
 
 GType arv_device_get_type (void);
@@ -32,6 +34,8 @@ size_t 		arv_device_read_memory 			(ArvDevice *device, guint32 address, guint32 
 							 void *buffer);
 size_t 		arv_device_write_memory	 		(ArvDevice *device, guint32 address, guint32 size,
 							 void *buffer);
+guint32 	arv_device_read_register		(ArvDevice *device, guint32 address);
+void		arv_device_write_register 		(ArvDevice *device, guint32 address, guint32 value);
 
 G_END_DECLS
 

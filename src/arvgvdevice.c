@@ -24,7 +24,7 @@ _read_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer)
 						       / sizeof (guint32)) * sizeof (guint32),
 						      gv_device->packet_count, &packet_size);
 
-	arv_gvcp_packet_dump (packet);
+	arv_gvcp_packet_debug (packet);
 
 	g_socket_send_to (gv_device->socket, gv_device->device_address, (const char *) packet, packet_size,
 			  NULL, NULL);
@@ -35,7 +35,7 @@ _read_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer)
 	poll_fd.events =  G_IO_IN;
 	poll_fd.revents = 0;
 
-	if (g_poll (&poll_fd, 1, 1000) == 0)
+	if (g_poll (&poll_fd, 1, ARV_GV_DEVICE_ACKNOWLEDGE_TIMEOUT) == 0)
 		return 0;
 
 	count = g_socket_receive (gv_device->socket, gv_device->socket_buffer,
@@ -45,7 +45,7 @@ _read_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer)
 		memcpy (buffer, arv_gvcp_packet_get_read_memory_ack_data (gv_device->socket_buffer),
 			size);
 
-	arv_gvcp_packet_dump ((ArvGvcpPacket *) gv_device->socket_buffer);
+	arv_gvcp_packet_debug ((ArvGvcpPacket *) gv_device->socket_buffer);
 
 	return packet_size;
 }
@@ -68,7 +68,7 @@ _write_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer)
 
 	memcpy (arv_gvcp_packet_get_write_memory_cmd_data (packet), buffer, size);
 
-	arv_gvcp_packet_dump (packet);
+	arv_gvcp_packet_debug (packet);
 
 	g_socket_send_to (gv_device->socket, gv_device->device_address, (const char *) packet, packet_size,
 			  NULL, NULL);
@@ -79,13 +79,13 @@ _write_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer)
 	poll_fd.events =  G_IO_IN;
 	poll_fd.revents = 0;
 
-	if (g_poll (&poll_fd, 1, 1000) == 0)
+	if (g_poll (&poll_fd, 1, ARV_GV_DEVICE_ACKNOWLEDGE_TIMEOUT) == 0)
 		return 0;
 
 	count = g_socket_receive (gv_device->socket, gv_device->socket_buffer,
 				  ARV_GV_DEVICE_BUFFER_SIZE, NULL, NULL);
 
-	arv_gvcp_packet_dump ((ArvGvcpPacket *) gv_device->socket_buffer);
+	arv_gvcp_packet_debug ((ArvGvcpPacket *) gv_device->socket_buffer);
 
 	return size;
 }
@@ -118,6 +118,77 @@ arv_gv_device_write_memory (ArvDevice *device, guint32 address, guint32 size, vo
 	}
 
 	return size;
+}
+
+guint32
+arv_gv_device_read_register (ArvDevice *device, guint32 address)
+{
+	ArvGvDevice *gv_device = ARV_GV_DEVICE (device);
+	ArvGvcpPacket *packet;
+	size_t packet_size;
+	GPollFD poll_fd;
+	int count;
+	guint32 value;
+
+	gv_device->packet_count++;
+
+	packet = arv_gvcp_packet_new_read_register_cmd (address, gv_device->packet_count, &packet_size);
+
+	arv_gvcp_packet_debug (packet);
+
+	g_socket_send_to (gv_device->socket, gv_device->device_address, (const char *) packet, packet_size,
+			  NULL, NULL);
+
+	arv_gvcp_packet_free (packet);
+
+	poll_fd.fd = g_socket_get_fd (gv_device->socket);
+	poll_fd.events =  G_IO_IN;
+	poll_fd.revents = 0;
+
+	if (g_poll (&poll_fd, 1, ARV_GV_DEVICE_ACKNOWLEDGE_TIMEOUT) == 0)
+		return 0;
+
+	count = g_socket_receive (gv_device->socket, gv_device->socket_buffer,
+				  ARV_GV_DEVICE_BUFFER_SIZE, NULL, NULL);
+
+	value = arv_gvcp_packet_get_read_register_ack_value (packet);
+
+	arv_gvcp_packet_debug ((ArvGvcpPacket *) gv_device->socket_buffer);
+
+	return value;
+}
+
+void
+arv_gv_device_write_register (ArvDevice *device, guint32 address, guint32 value)
+{
+	ArvGvDevice *gv_device = ARV_GV_DEVICE (device);
+	ArvGvcpPacket *packet;
+	size_t packet_size;
+	GPollFD poll_fd;
+	int count;
+
+	gv_device->packet_count++;
+
+	packet = arv_gvcp_packet_new_write_register_cmd (address, value, gv_device->packet_count, &packet_size);
+
+	arv_gvcp_packet_debug (packet);
+
+	g_socket_send_to (gv_device->socket, gv_device->device_address, (const char *) packet, packet_size,
+			  NULL, NULL);
+
+	arv_gvcp_packet_free (packet);
+
+	poll_fd.fd = g_socket_get_fd (gv_device->socket);
+	poll_fd.events =  G_IO_IN;
+	poll_fd.revents = 0;
+
+	if (g_poll (&poll_fd, 1, ARV_GV_DEVICE_ACKNOWLEDGE_TIMEOUT) == 0)
+		return;
+
+	count = g_socket_receive (gv_device->socket, gv_device->socket_buffer,
+				  ARV_GV_DEVICE_BUFFER_SIZE, NULL, NULL);
+
+	arv_gvcp_packet_debug ((ArvGvcpPacket *) gv_device->socket_buffer);
 }
 
 ArvDevice *
@@ -180,6 +251,8 @@ arv_gv_device_class_init (ArvGvDeviceClass *node_class)
 
 	device_class->read_memory = arv_gv_device_read_memory;
 	device_class->write_memory = arv_gv_device_write_memory;
+	device_class->read_register = arv_gv_device_read_register;
+	device_class->write_register = arv_gv_device_write_register;
 }
 
 G_DEFINE_TYPE (ArvGvDevice, arv_gv_device, ARV_TYPE_DEVICE)
