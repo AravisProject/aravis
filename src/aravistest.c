@@ -21,41 +21,41 @@ main (int argc, char **argv)
 	stream = arv_gv_stream_new (0);
 
 	if (device != NULL) {
-		arv_device_read (device, 0x00014150, 8, buffer);
-		arv_device_read (device, 0x000000e8, 16, buffer);
-		arv_device_read (device,
-				 ARV_GVBS_USER_DEFINED_NAME,
-				 ARV_GVBS_USER_DEFINED_NAME_SIZE, buffer);
-		arv_device_read (device,
-				 ARV_GVBS_SECOND_XML_URL,
-				 ARV_GVBS_XML_URL_SIZE, buffer);
-		arv_device_read (device,
-				 0x00100000, 0x00015904, buffer);
+		arv_device_read_memory (device, 0x00014150, 8, buffer);
+		arv_device_read_memory (device, 0x000000e8, 16, buffer);
+		arv_device_read_memory (device,
+					ARV_GVBS_USER_DEFINED_NAME,
+					ARV_GVBS_USER_DEFINED_NAME_SIZE, buffer);
+		arv_device_read_memory (device,
+					ARV_GVBS_SECOND_XML_URL,
+					ARV_GVBS_XML_URL_SIZE, buffer);
+		arv_device_read_memory (device,
+					0x00100000, 0x00015904, buffer);
 
 		value = g_htonl (2);
-		arv_device_write (device,
-				  ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE,
-				  sizeof (value), &value);
-		arv_device_write (device,
-				  ARV_GVBS_USER_DEFINED_NAME,
-				  ARV_GVBS_USER_DEFINED_NAME_SIZE, name);
+		arv_device_write_memory (device,
+					 ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE,
+					 sizeof (value), &value);
+		arv_device_write_memory (device,
+					 ARV_GVBS_USER_DEFINED_NAME,
+					 ARV_GVBS_USER_DEFINED_NAME_SIZE, name);
 
 		value = g_htonl (arv_gv_stream_get_port (ARV_GV_STREAM (stream)));
 		g_message ("port = %d", arv_gv_stream_get_port (ARV_GV_STREAM (stream)));
 
-		arv_device_write (device,
-				  ARV_GVBS_FIRST_STREAM_CHANNEL_PORT,
-				  sizeof (value), &value);
-		arv_device_read (device,
-				 ARV_GVBS_FIRST_STREAM_CHANNEL_PORT,
-				 sizeof (value), &value);
+		arv_device_write_memory (device,
+					 ARV_GVBS_FIRST_STREAM_CHANNEL_PORT,
+					 sizeof (value), &value);
+		arv_device_read_memory (device,
+					ARV_GVBS_FIRST_STREAM_CHANNEL_PORT,
+					sizeof (value), &value);
 
 		g_usleep (10000000);
 
 		value = g_htonl (0);
-		arv_device_write (device,
-				  ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE,
-				  sizeof (value), &value);
+		arv_device_write_memory (device,
+					 ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE,
+					 sizeof (value), &value);
 
 		g_file_set_contents ("/tmp/genicam.xml", buffer, 0x00015904, NULL);
 

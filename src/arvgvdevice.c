@@ -4,7 +4,7 @@
 static GObjectClass *parent_class = NULL;
 
 static size_t
-_read (ArvDevice *device, guint32 address, guint32 size, void *buffer)
+_read_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer)
 {
 	ArvGvDevice *gv_device = ARV_GV_DEVICE (device);
 	ArvGvcpPacket *packet;
@@ -51,7 +51,7 @@ _read (ArvDevice *device, guint32 address, guint32 size, void *buffer)
 }
 
 static size_t
-_write (ArvDevice *device, guint32 address, guint32 size, void *buffer)
+_write_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer)
 {
 	ArvGvDevice *gv_device = ARV_GV_DEVICE (device);
 	ArvGvcpPacket *packet;
@@ -91,30 +91,30 @@ _write (ArvDevice *device, guint32 address, guint32 size, void *buffer)
 }
 
 size_t
-arv_gv_device_read (ArvDevice *device, guint32 address, guint32 size, void *buffer)
+arv_gv_device_read_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer)
 {
 	int i;
 	gint32 block_size;
 
 	for (i = 0; i < (size + ARV_GVCP_DATA_SIZE_MAX - 1) / ARV_GVCP_DATA_SIZE_MAX; i++) {
 		block_size = MIN (ARV_GVCP_DATA_SIZE_MAX, size - i * ARV_GVCP_DATA_SIZE_MAX);
-		_read (device, address + i * ARV_GVCP_DATA_SIZE_MAX,
-		       block_size, buffer + i * ARV_GVCP_DATA_SIZE_MAX);
+		_read_memory (device, address + i * ARV_GVCP_DATA_SIZE_MAX,
+			      block_size, buffer + i * ARV_GVCP_DATA_SIZE_MAX);
 	}
 
 	return size;
 }
 
 size_t
-arv_gv_device_write (ArvDevice *device, guint32 address, guint32 size, void *buffer)
+arv_gv_device_write_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer)
 {
 	int i;
 	gint32 block_size;
 
 	for (i = 0; i < (size + ARV_GVCP_DATA_SIZE_MAX - 1) / ARV_GVCP_DATA_SIZE_MAX; i++) {
 		block_size = MIN (ARV_GVCP_DATA_SIZE_MAX, size - i * ARV_GVCP_DATA_SIZE_MAX);
-		_write (device, address + i * ARV_GVCP_DATA_SIZE_MAX,
-			block_size, buffer + i * ARV_GVCP_DATA_SIZE_MAX);
+		_write_memory (device, address + i * ARV_GVCP_DATA_SIZE_MAX,
+			       block_size, buffer + i * ARV_GVCP_DATA_SIZE_MAX);
 	}
 
 	return size;
@@ -178,8 +178,8 @@ arv_gv_device_class_init (ArvGvDeviceClass *node_class)
 
 	object_class->finalize = arv_gv_device_finalize;
 
-	device_class->read = arv_gv_device_read;
-	device_class->write = arv_gv_device_write;
+	device_class->read_memory = arv_gv_device_read_memory;
+	device_class->write_memory = arv_gv_device_write_memory;
 }
 
 G_DEFINE_TYPE (ArvGvDevice, arv_gv_device, ARV_TYPE_DEVICE)

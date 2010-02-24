@@ -3,23 +3,23 @@
 static GObjectClass *parent_class = NULL;
 
 size_t
-arv_device_read (ArvDevice *device, guint32 address, guint32 size, void *buffer)
+arv_device_read_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer)
 {
 	g_return_val_if_fail (ARV_IS_DEVICE (device), 0);
 	g_return_val_if_fail (buffer != NULL, 0);
 	g_return_val_if_fail (size > 0, 0);
 
-	return ARV_DEVICE_GET_CLASS (device)->read (device, address, size, buffer);
+	return ARV_DEVICE_GET_CLASS (device)->read_memory (device, address, size, buffer);
 }
 
 size_t
-arv_device_write (ArvDevice *device, guint32 address, guint32 size, void *buffer)
+arv_device_write_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer)
 {
 	g_return_val_if_fail (ARV_IS_DEVICE (device), 0);
 	g_return_val_if_fail (buffer != NULL, 0);
 	g_return_val_if_fail (size > 0, 0);
 
-	return ARV_DEVICE_GET_CLASS (device)->write (device, address, size, buffer);
+	return ARV_DEVICE_GET_CLASS (device)->write_memory (device, address, size, buffer);
 }
 
 void
