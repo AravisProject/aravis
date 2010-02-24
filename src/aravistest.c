@@ -9,7 +9,7 @@ main (int argc, char **argv)
 	ArvDevice *device;
 	ArvStream *stream;
 	char buffer[100000];
-	char name[ARV_GVCP_GENICAM_USER_DEFINED_NAME_SIZE] = "lapp-vicam02";
+	char name[ARV_GVBS_USER_DEFINED_NAME_SIZE] = "lapp-vicam02";
 	guint32 value;
 
 	g_type_init ();
@@ -24,37 +24,37 @@ main (int argc, char **argv)
 		arv_device_read (device, 0x00014150, 8, buffer);
 		arv_device_read (device, 0x000000e8, 16, buffer);
 		arv_device_read (device,
-				 ARV_GVCP_GENICAM_FILENAME_ADDRESS_1,
-				 ARV_GVCP_GENICAM_FILENAME_SIZE, buffer);
+				 ARV_GVBS_USER_DEFINED_NAME,
+				 ARV_GVBS_USER_DEFINED_NAME_SIZE, buffer);
 		arv_device_read (device,
-				 ARV_GVCP_GENICAM_FILENAME_ADDRESS_2,
-				 ARV_GVCP_GENICAM_FILENAME_SIZE, buffer);
+				 ARV_GVBS_SECOND_XML_URL,
+				 ARV_GVBS_XML_URL_SIZE, buffer);
 		arv_device_read (device,
 				 0x00100000, 0x00015904, buffer);
 
 		value = g_htonl (2);
 		arv_device_write (device,
-				  ARV_GVCP_GENICAM_CONTROL_CHANNEL_PRIVILEGE_ADDRESS,
+				  ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE,
 				  sizeof (value), &value);
 		arv_device_write (device,
-				  ARV_GVCP_GENICAM_USER_DEFINED_NAME_ADDRESS,
-				  ARV_GVCP_GENICAM_USER_DEFINED_NAME_SIZE, name);
+				  ARV_GVBS_USER_DEFINED_NAME,
+				  ARV_GVBS_USER_DEFINED_NAME_SIZE, name);
 
 		value = g_htonl (arv_gv_stream_get_port (ARV_GV_STREAM (stream)));
 		g_message ("port = %d", arv_gv_stream_get_port (ARV_GV_STREAM (stream)));
 
 		arv_device_write (device,
-				  ARV_GVCP_GENICAM_FIRST_STREAM_CHANNEL_PORT_ADDRESS,
+				  ARV_GVBS_FIRST_STREAM_CHANNEL_PORT,
 				  sizeof (value), &value);
 		arv_device_read (device,
-				 ARV_GVCP_GENICAM_FIRST_STREAM_CHANNEL_PORT_ADDRESS,
+				 ARV_GVBS_FIRST_STREAM_CHANNEL_PORT,
 				 sizeof (value), &value);
 
 		g_usleep (10000000);
 
 		value = g_htonl (0);
 		arv_device_write (device,
-				  ARV_GVCP_GENICAM_CONTROL_CHANNEL_PRIVILEGE_ADDRESS,
+				  ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE,
 				  sizeof (value), &value);
 
 		g_file_set_contents ("/tmp/genicam.xml", buffer, 0x00015904, NULL);

@@ -13,15 +13,16 @@ _read (ArvDevice *device, guint32 address, guint32 size, void *buffer)
 	size_t answer_size;
 	int count;
 
-	answer_size = arv_gvcp_packet_get_read_ack_size (size);
+	answer_size = arv_gvcp_packet_get_read_memory_ack_size (size);
 
 	g_return_val_if_fail (answer_size <= ARV_GV_DEVICE_BUFFER_SIZE, 0);
 
 	gv_device->packet_count++;
 
-	packet = arv_gvcp_packet_new_read_cmd (address,
-					       ((size + sizeof (guint32) - 1) / sizeof (guint32)) * sizeof (guint32),
-					       gv_device->packet_count, &packet_size);
+	packet = arv_gvcp_packet_new_read_memory_cmd (address,
+						      ((size + sizeof (guint32) - 1)
+						       / sizeof (guint32)) * sizeof (guint32),
+						      gv_device->packet_count, &packet_size);
 
 	arv_gvcp_packet_dump (packet);
 
@@ -41,7 +42,7 @@ _read (ArvDevice *device, guint32 address, guint32 size, void *buffer)
 				  ARV_GV_DEVICE_BUFFER_SIZE, NULL, NULL);
 
 	if (count >= answer_size)
-		memcpy (buffer, arv_gvcp_packet_get_read_ack_data (gv_device->socket_buffer),
+		memcpy (buffer, arv_gvcp_packet_get_read_memory_ack_data (gv_device->socket_buffer),
 			size);
 
 	arv_gvcp_packet_dump ((ArvGvcpPacket *) gv_device->socket_buffer);
@@ -60,11 +61,12 @@ _write (ArvDevice *device, guint32 address, guint32 size, void *buffer)
 
 	gv_device->packet_count++;
 
-	packet = arv_gvcp_packet_new_write_cmd (address,
-						((size + sizeof (guint32) - 1) / sizeof (guint32)) * sizeof (guint32),
-						gv_device->packet_count, &packet_size);
+	packet = arv_gvcp_packet_new_write_memory_cmd (address,
+						       ((size + sizeof (guint32) - 1) /
+							sizeof (guint32)) * sizeof (guint32),
+						       gv_device->packet_count, &packet_size);
 
-	memcpy (arv_gvcp_packet_get_write_cmd_data (packet), buffer, size);
+	memcpy (arv_gvcp_packet_get_write_memory_cmd_data (packet), buffer, size);
 
 	arv_gvcp_packet_dump (packet);
 

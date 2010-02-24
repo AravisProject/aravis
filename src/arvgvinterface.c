@@ -167,10 +167,10 @@ arv_gv_interface_receive_hello_packet (ArvGvInterface *gv_interface)
 					arv_gvcp_packet_dump (packet);
 
 					address = g_strdup_printf ("%d.%d.%d.%d",
-								   data[ARV_GVCP_IP_ADDRESS] & 0xff,
-								   data[ARV_GVCP_IP_ADDRESS + 1] & 0xff,
-								   data[ARV_GVCP_IP_ADDRESS + 2] & 0xff,
-								   data[ARV_GVCP_IP_ADDRESS + 3] & 0xff);
+								   data[ARV_GVBS_CURRENT_IP_ADDRESS] & 0xff,
+								   data[ARV_GVBS_CURRENT_IP_ADDRESS + 1] & 0xff,
+								   data[ARV_GVBS_CURRENT_IP_ADDRESS + 2] & 0xff,
+								   data[ARV_GVBS_CURRENT_IP_ADDRESS + 3] & 0xff);
 
 					device = g_hash_table_lookup (gv_interface->devices, address);
 

@@ -9,7 +9,7 @@ arv_gvcp_packet_free (ArvGvcpPacket *packet)
 }
 
 ArvGvcpPacket *
-arv_gvcp_packet_new_read_cmd (guint32 address, guint32 size, guint32 packet_count, size_t *packet_size)
+arv_gvcp_packet_new_read_memory_cmd (guint32 address, guint32 size, guint32 packet_count, size_t *packet_size)
 {
 	ArvGvcpPacket *packet;
 	guint32 n_address = g_htonl (address);
@@ -22,7 +22,7 @@ arv_gvcp_packet_new_read_cmd (guint32 address, guint32 size, guint32 packet_coun
 	packet = g_malloc (*packet_size);
 
 	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_CMD);
-	packet->header.command = g_htons (ARV_GVCP_COMMAND_READ_CMD);
+	packet->header.command = g_htons (ARV_GVCP_COMMAND_READ_MEMORY_CMD);
 	packet->header.size = g_htons (2 * sizeof (guint32));
 	packet->header.count = g_htons (packet_count);
 
@@ -33,7 +33,7 @@ arv_gvcp_packet_new_read_cmd (guint32 address, guint32 size, guint32 packet_coun
 }
 
 ArvGvcpPacket *
-arv_gvcp_packet_new_write_cmd (guint32 address, guint32 size, guint32 packet_count, size_t *packet_size)
+arv_gvcp_packet_new_write_memory_cmd (guint32 address, guint32 size, guint32 packet_count, size_t *packet_size)
 {
 	ArvGvcpPacket *packet;
 	guint32 n_address = g_htonl (address);
@@ -45,7 +45,7 @@ arv_gvcp_packet_new_write_cmd (guint32 address, guint32 size, guint32 packet_cou
 	packet = g_malloc (*packet_size);
 
 	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_CMD);
-	packet->header.command = g_htons (ARV_GVCP_COMMAND_WRITE_CMD);
+	packet->header.command = g_htons (ARV_GVCP_COMMAND_WRITE_MEMORY_CMD);
 	packet->header.size = g_htons (sizeof (guint32) + size);
 	packet->header.count = g_htons (packet_count);
 
@@ -139,12 +139,12 @@ arv_gvcp_packet_to_string (const ArvGvcpPacket *packet)
 
 	string = g_string_new ("");
 
-	g_string_append_printf (string, "packet_type = %s\n",
+	g_string_append_printf (string, "packet_type  = %s\n",
 				arv_gvcp_packet_type_to_string (g_ntohs (packet->header.packet_type)));
-	g_string_append_printf (string, "command     = %s\n",
+	g_string_append_printf (string, "command      = %s\n",
 				arv_gvcp_command_to_string (g_ntohs (packet->header.command)));
-	g_string_append_printf (string, "size        = %d\n", g_ntohs (packet->header.size));
-	g_string_append_printf (string, "count       = %d\n", g_ntohs (packet->header.count));
+	g_string_append_printf (string, "size         = %d\n", g_ntohs (packet->header.size));
+	g_string_append_printf (string, "count        = %d\n", g_ntohs (packet->header.count));
 
 	data = (char *) &packet->data;
 
@@ -152,35 +152,35 @@ arv_gvcp_packet_to_string (const ArvGvcpPacket *packet)
 		case ARV_GVCP_COMMAND_DISCOVERY_CMD:
 			break;
 		case ARV_GVCP_COMMAND_DISCOVERY_ACK:
-			g_string_append_printf (string, "supplier    = %s\n",
-						&data[ARV_GVCP_SUPPLIER_NAME_ADDRESS]);
-			g_string_append_printf (string, "name        = %s\n",
-						&data[ARV_GVCP_GENICAM_USER_DEFINED_NAME_ADDRESS]);
-			g_string_append_printf (string, "model       = %s\n",
-						&data[ARV_GVCP_MODEL_NAME_ADDRESS]);
-			g_string_append_printf (string, "address     = %d.%d.%d.%d\n",
-						data[ARV_GVCP_IP_ADDRESS] & 0xff,
-						data[ARV_GVCP_IP_ADDRESS + 1] & 0xff,
-						data[ARV_GVCP_IP_ADDRESS + 2] & 0xff,
-						data[ARV_GVCP_IP_ADDRESS + 3] & 0xff);
+			g_string_append_printf (string, "manufacturer = %s\n",
+						&data[ARV_GVBS_MANUFACTURER_NAME]);
+			g_string_append_printf (string, "name         = %s\n",
+						&data[ARV_GVBS_USER_DEFINED_NAME]);
+			g_string_append_printf (string, "model        = %s\n",
+						&data[ARV_GVBS_MODEL_NAME]);
+			g_string_append_printf (string, "address      = %d.%d.%d.%d\n",
+						data[ARV_GVBS_CURRENT_IP_ADDRESS] & 0xff,
+						data[ARV_GVBS_CURRENT_IP_ADDRESS + 1] & 0xff,
+						data[ARV_GVBS_CURRENT_IP_ADDRESS + 2] & 0xff,
+						data[ARV_GVBS_CURRENT_IP_ADDRESS + 3] & 0xff);
 			break;
 		case ARV_GVCP_COMMAND_READ_REGISTER_CMD:
 			value = g_ntohl (*((guint32 *) &data[0]));
-			g_string_append_printf (string, "address     = %10d (0x%08x)\n",
+			g_string_append_printf (string, "address      = %10d (0x%08x)\n",
 						value, value);
 			break;
 		case ARV_GVCP_COMMAND_READ_REGISTER_ACK:
 			break;
-		case ARV_GVCP_COMMAND_READ_CMD:
+		case ARV_GVCP_COMMAND_READ_MEMORY_CMD:
 			value = g_ntohl (*((guint32 *) &data[0]));
-			g_string_append_printf (string, "address     = %10d (0x%08x)\n",
+			g_string_append_printf (string, "address      = %10d (0x%08x)\n",
 						value, value);
 			value = g_ntohl (*((guint32 *) &data[4]));
-			g_string_append_printf (string, "size        = %10d (0x%08x)\n",
+			g_string_append_printf (string, "size         = %10d (0x%08x)\n",
 						value, value);
 			break;
-		case ARV_GVCP_COMMAND_READ_ACK:
-			g_string_append_printf (string, "value     = %s\n", &data[0]);
+		case ARV_GVCP_COMMAND_READ_MEMORY_ACK:
+			g_string_append_printf (string, "value      = %s\n", &data[0]);
 			break;
 	}
 
