@@ -12,12 +12,15 @@ G_BEGIN_DECLS
 #define ARV_GVCP_SUPPLIER_NAME_SIZE			16
 #define ARV_GVCP_MODEL_NAME_ADDRESS			0x00000068
 #define ARV_GVCP_MODEL_NAME_SIZE			16
-#define ARV_GVCP_CAMERA_NAME_ADDRESS			0x000000E8
-#define ARV_GVCP_CAMERA_NAME_SIZE			16
+#define ARV_GVCP_GENICAM_USER_DEFINED_NAME_ADDRESS	0x000000e8
+#define ARV_GVCP_GENICAM_USER_DEFINED_NAME_SIZE		16
 
 #define ARV_GVCP_GENICAM_FILENAME_ADDRESS_1		0x00000200
 #define ARV_GVCP_GENICAM_FILENAME_ADDRESS_2		0x00000400
 #define ARV_GVCP_GENICAM_FILENAME_SIZE			512
+
+#define ARV_GVCP_GENICAM_CONTROL_CHANNEL_PRIVILEGE_ADDRESS	0x00000a00
+#define ARV_GVCP_GENICAM_FIRST_STREAM_CHANNEL_PORT_ADDRESS	0x00000d00
 
 #define ARV_GVCP_DATA_SIZE_MAX				512
 
@@ -54,24 +57,32 @@ typedef struct {
 } ArvGvcpPacket;
 
 void 			arv_gvcp_packet_free 			(ArvGvcpPacket *packet);
-ArvGvcpPacket * 	arv_gvcp_read_packet_new 		(guint32 address, guint32 size,
+ArvGvcpPacket * 	arv_gvcp_packet_new_read_cmd 		(guint32 address, guint32 size,
 								 guint32 packet_count, size_t *packet_size);
-ArvGvcpPacket * 	arv_gvcp_read_register_packet_new 	(guint32 address,
+ArvGvcpPacket * 	arv_gvcp_packet_new_write_cmd		(guint32 address, guint32 size,
 								 guint32 packet_count, size_t *packet_size);
-ArvGvcpPacket * 	arv_gvcp_discover_packet_new 		(size_t *size);
+ArvGvcpPacket * 	arv_gvcp_packet_new_read_register_cmd 	(guint32 address,
+								 guint32 packet_count, size_t *packet_size);
+ArvGvcpPacket * 	arv_gvcp_packet_new_discovery_cmd 	(size_t *size);
 char * 			arv_gvcp_packet_to_string 		(const ArvGvcpPacket *packet);
 void 			arv_gvcp_packet_dump 			(const ArvGvcpPacket *packet);
 
 static inline size_t
-arv_gvcp_read_packet_get_answer_size (guint32 data_size)
+arv_gvcp_packet_get_read_ack_size (guint32 data_size)
 {
 	return sizeof (ArvGvcpHeader) + sizeof (guint32) + data_size;
 }
 
 static inline void *
-arv_gvcp_read_packet_get_answer_data (const ArvGvcpPacket *packet)
+arv_gvcp_packet_get_read_ack_data (const ArvGvcpPacket *packet)
 {
 	return (void *) packet + sizeof (ArvGvcpHeader) + sizeof (guint32);
+}
+
+static inline void *
+arv_gvcp_packet_get_write_cmd_data (const ArvGvcpPacket *packet)
+{
+	return (void *) packet + sizeof (ArvGvcpPacket) + sizeof (guint32);
 }
 
 G_END_DECLS

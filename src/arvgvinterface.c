@@ -100,7 +100,7 @@ arv_gv_interface_send_discover_packet (ArvGvInterface *gv_interface)
 
 	arv_gv_interface_build_discover_infos_list (gv_interface);
 
-	packet = arv_gvcp_discover_packet_new (&size);
+	packet = arv_gvcp_packet_new_discovery_cmd (&size);
 
 	for (iter = gv_interface->discover_infos_list; iter != NULL; iter = iter->next) {
 		ArvGvInterfaceDiscoverInfos *infos = iter->data;
