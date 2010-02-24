@@ -151,7 +151,7 @@ arv_gv_device_read_register (ArvDevice *device, guint32 address)
 	count = g_socket_receive (gv_device->socket, gv_device->socket_buffer,
 				  ARV_GV_DEVICE_BUFFER_SIZE, NULL, NULL);
 
-	value = arv_gvcp_packet_get_read_register_ack_value (packet);
+	value = arv_gvcp_packet_get_read_register_ack_value (gv_device->socket_buffer);
 
 	arv_gvcp_packet_debug ((ArvGvcpPacket *) gv_device->socket_buffer);
 
