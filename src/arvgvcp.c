@@ -223,7 +223,7 @@ arv_gvcp_packet_to_string (const ArvGvcpPacket *packet)
 			break;
 	}
 
-	packet_size = sizeof (ArvGvcpHeader) + g_ntohs (packet->header.size); 
+	packet_size = sizeof (ArvGvcpHeader) + g_ntohs (packet->header.size);
 	for (i = 0; i < (packet_size + 15) / 16; i++) {
 		for (j = 0; j < 16; j++) {
 			index = i * 16 + j;

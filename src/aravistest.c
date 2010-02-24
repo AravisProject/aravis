@@ -2,6 +2,11 @@
 #include <arvgvinterface.h>
 #include <arvgvstream.h>
 
+#define ARV_GC1380_ACQUISITION_CONTROL		0x000130f4
+#define ARV_GC1380_ACQUISITION_STOP		0
+#define ARV_GC1380_ACQUISITION_START		1
+#define ARV_GC1380_ACQUISITION_ABORT		2
+
 int
 main (int argc, char **argv)
 {
@@ -10,7 +15,7 @@ main (int argc, char **argv)
 	ArvStream *stream;
 	char buffer[100000];
 	char name[ARV_GVBS_USER_DEFINED_NAME_SIZE] = "lapp-vicam02";
-	guint16 stream_port;
+	guint32 stream_port;
 
 	g_type_init ();
 
@@ -41,9 +46,32 @@ main (int argc, char **argv)
 		g_message ("stream port = %d", stream_port);
 
 		arv_device_write_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, stream_port);
-		arv_device_read_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT);
+		g_message ("written stream port = %d", arv_device_read_register (device,
+										 ARV_GVBS_FIRST_STREAM_CHANNEL_PORT));
 
-		g_usleep (10000000);
+		arv_device_write_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_IP_ADDRESS, 0x0a2a2b01);
+
+		g_usleep (100000);
+
+		arv_device_write_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PACKET_SIZE, 0xf0000200);
+
+		arv_device_write_register (device, ARV_GC1380_ACQUISITION_CONTROL, ARV_GC1380_ACQUISITION_START);
+
+		g_usleep (3000000);
+
+		arv_device_read_register (device, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE);
+
+		g_usleep (3000000);
+
+		arv_device_read_register (device, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE);
+
+		g_usleep (3000000);
+
+		arv_device_read_register (device, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE);
+
+		g_usleep (3000000);
+
+		arv_device_write_register (device, ARV_GC1380_ACQUISITION_CONTROL, ARV_GC1380_ACQUISITION_STOP);
 
 		arv_device_write_register (device, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE, 0);
 

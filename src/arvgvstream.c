@@ -1,4 +1,5 @@
 #include <arvgvstream.h>
+#include <arvgvsp.h>
 
 static GObjectClass *parent_class = NULL;
 
@@ -14,15 +15,20 @@ arv_gv_stream_thread (void *data)
 {
 	ArvGvStreamThreadData *thread_data = data;
 	GPollFD poll_fd;
-
-	g_message ("hello");
+	int n_events;
+	char buffer[1024];
 
 	poll_fd.fd = g_socket_get_fd (thread_data->socket);
 	poll_fd.events =  G_IO_IN;
 	poll_fd.revents = 0;
 
 	do {
-		g_poll (&poll_fd, 1, 50);
+		n_events = g_poll (&poll_fd, 1, 50);
+
+		if (n_events > 0) {
+			g_socket_receive (thread_data->socket, buffer, 1024, NULL, NULL);
+			arv_gvsp_packet_debug ((ArvGvspPacket *)buffer);
+		}
 	} while (!thread_data->cancel);
 
 	return NULL;
