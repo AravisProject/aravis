@@ -24,6 +24,10 @@ main (int argc, char **argv)
 	device = arv_interface_get_first_device (interface);
 
 	stream = arv_gv_stream_new (0);
+	arv_stream_push_buffer (stream, arv_buffer_new (200, NULL));
+	arv_stream_push_buffer (stream, arv_buffer_new (200, NULL));
+	arv_stream_push_buffer (stream, arv_buffer_new (200, NULL));
+	arv_stream_push_buffer (stream, arv_buffer_new (200, NULL));
 
 	if (device != NULL) {
 		arv_device_read_memory (device, 0x00014150, 8, buffer);

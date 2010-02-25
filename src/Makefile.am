@@ -29,6 +29,7 @@ libaravis_la_SOURCES =				\
 	arvinterface.c				\
 	arvdevice.c				\
 	arvstream.c				\
+	arvbuffer.c				\
 	arvgvcp.c				\
 	arvgvsp.c				\
 	arvgvinterface.c			\
@@ -42,6 +43,7 @@ ARAVIS_HDRS = 					\
 	arvinterface.h				\
 	arvdevice.h				\
 	arvstream.h				\
+	arvbuffer.h				\
 	arvgvcp.h				\
 	arvgvsp.h				\
 	arvgvinterface.h			\

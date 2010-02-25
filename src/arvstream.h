@@ -2,6 +2,7 @@
 #define ARV_STREAM_H
 
 #include <arv.h>
+#include <arvbuffer.h>
 
 G_BEGIN_DECLS
 
@@ -16,6 +17,9 @@ typedef struct _ArvStreamClass ArvStreamClass;
 
 struct _ArvStream {
 	GObject	object;
+
+	GAsyncQueue *input_queue;
+	GAsyncQueue *output_queue;
 };
 
 struct _ArvStreamClass {
@@ -23,6 +27,10 @@ struct _ArvStreamClass {
 };
 
 GType arv_stream_get_type (void);
+
+void			arv_stream_push_buffer 			(ArvStream *stream, ArvBuffer *buffer);
+ArvBuffer *		arv_stream_pop_buffer			(ArvStream *stream);
+int			arv_stream_get_n_available_buffers	(ArvStream *stream);
 
 G_END_DECLS
 

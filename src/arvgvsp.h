@@ -6,9 +6,9 @@
 G_BEGIN_DECLS
 
 typedef enum {
-	ARV_GVSP_PACKET_TYPE_START = 	0x0100,
-	ARV_GVSP_PACKET_TYPE_STOP = 	0x0200,
-	ARV_GVSP_PACKET_TYPE_DATA =	0x0300
+	ARV_GVSP_PACKET_TYPE_DATA_LEADER = 	0x0100,
+	ARV_GVSP_PACKET_TYPE_DATA_TRAILER = 	0x0200,
+	ARV_GVSP_PACKET_TYPE_DATA_BLOCK =	0x0300
 } ArvGvspPacketType;
 
 typedef struct {
@@ -24,12 +24,12 @@ typedef struct {
 	guint32 data3;
 	guint32 width;
 	guint32 height;
-} __attribute__((__packed__)) ArvGvspStartData;
+} __attribute__((__packed__)) ArvGvspDataLeader;
 
 typedef struct {
 	guint32 data0;
 	guint32 data1;
-} __attribute__((__packed__)) ArvGvspStopData;
+} __attribute__((__packed__)) ArvGvspDataTrailer;
 
 typedef struct {
 	ArvGvspHeader header;
@@ -37,6 +37,12 @@ typedef struct {
 } ArvGvspPacket;
 
 void 			arv_gvsp_packet_debug 			(const ArvGvspPacket *packet);
+
+static inline ArvGvspPacketType
+arv_gvsp_packet_get_packet_type	(const ArvGvspPacket *packet)
+{
+	return g_ntohs (packet->header.packet_type);
+}
 
 G_END_DECLS
 

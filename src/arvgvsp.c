@@ -30,7 +30,7 @@ arv_gvsp_packet_type_to_string (ArvGvspPacketType value)
 char *
 arv_gvsp_packet_to_string (const ArvGvspPacket *packet)
 {
-	ArvGvspStartData *start_data;
+	ArvGvspDataLeader *leader;
 	GString *string;
 	char *c_string;
 
@@ -40,14 +40,14 @@ arv_gvsp_packet_to_string (const ArvGvspPacket *packet)
 				arv_gvsp_packet_type_to_string (g_ntohs (packet->header.packet_type)));
 
 	switch (g_ntohs (packet->header.packet_type)) {
-		case ARV_GVSP_PACKET_TYPE_START:
-			start_data = (ArvGvspStartData *) &packet->data;
-			g_string_append_printf (string, "width        = %d\n", g_ntohl (start_data->width));
-			g_string_append_printf (string, "height       = %d\n", g_ntohl (start_data->height));
+		case ARV_GVSP_PACKET_TYPE_DATA_LEADER:
+			leader = (ArvGvspDataLeader *) &packet->data;
+			g_string_append_printf (string, "width        = %d\n", g_ntohl (leader->width));
+			g_string_append_printf (string, "height       = %d\n", g_ntohl (leader->height));
 			break;
-		case ARV_GVSP_PACKET_TYPE_STOP:
+		case ARV_GVSP_PACKET_TYPE_DATA_TRAILER:
 			break;
-		case ARV_GVSP_PACKET_TYPE_DATA:
+		case ARV_GVSP_PACKET_TYPE_DATA_BLOCK:
 			break;
 	}
 

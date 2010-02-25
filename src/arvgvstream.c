@@ -1,4 +1,5 @@
 #include <arvgvstream.h>
+#include <arvbuffer.h>
 #include <arvgvsp.h>
 
 static GObjectClass *parent_class = NULL;
@@ -8,6 +9,8 @@ static GObjectClass *parent_class = NULL;
 typedef struct {
 	GSocket *socket;
 	gboolean cancel;
+	GAsyncQueue *input_queue;
+	GAsyncQueue *output_queue;
 } ArvGvStreamThreadData;
 
 static void *
@@ -16,7 +19,11 @@ arv_gv_stream_thread (void *data)
 	ArvGvStreamThreadData *thread_data = data;
 	GPollFD poll_fd;
 	int n_events;
-	char buffer[1024];
+	char packet_buffer[1024];
+	ArvGvspPacket *packet;
+	ArvBuffer *buffer = NULL;
+
+	packet = (ArvGvspPacket *) packet_buffer;
 
 	poll_fd.fd = g_socket_get_fd (thread_data->socket);
 	poll_fd.events =  G_IO_IN;
@@ -26,10 +33,34 @@ arv_gv_stream_thread (void *data)
 		n_events = g_poll (&poll_fd, 1, 50);
 
 		if (n_events > 0) {
-			g_socket_receive (thread_data->socket, buffer, 1024, NULL, NULL);
-			arv_gvsp_packet_debug ((ArvGvspPacket *)buffer);
+			g_socket_receive (thread_data->socket, packet_buffer, 1024, NULL, NULL);
+
+			switch (arv_gvsp_packet_get_packet_type (packet)) {
+				case ARV_GVSP_PACKET_TYPE_DATA_LEADER:
+					if (buffer != NULL)
+						g_async_queue_push (thread_data->output_queue, buffer);
+					buffer = g_async_queue_try_pop (thread_data->input_queue);
+					if (buffer == NULL)
+						break;
+					break;
+				case ARV_GVSP_PACKET_TYPE_DATA_TRAILER:
+					if (buffer == NULL)
+						break;
+					break;
+				case ARV_GVSP_PACKET_TYPE_DATA_BLOCK:
+					if (buffer != NULL) {
+						g_async_queue_push (thread_data->output_queue, buffer);
+						buffer = NULL;
+					}
+					break;
+			}
 		}
 	} while (!thread_data->cancel);
+
+	if (buffer != NULL) {
+		buffer->status = ARV_BUFFER_STATUS_ABORTED;
+		g_async_queue_push (thread_data->output_queue, buffer);
+	}
 
 	return NULL;
 }
@@ -52,10 +83,13 @@ ArvStream *
 arv_gv_stream_new (guint16 port)
 {
 	ArvGvStream *gv_stream;
+	ArvStream *stream;
 	GInetAddress *incoming_inet_address;
 	ArvGvStreamThreadData *thread_data;
 
 	gv_stream = g_object_new (ARV_TYPE_GV_STREAM, NULL);
+
+	stream = ARV_STREAM (gv_stream);
 
 	gv_stream->socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
 					  G_SOCKET_TYPE_DATAGRAM,
@@ -70,6 +104,8 @@ arv_gv_stream_new (guint16 port)
 	thread_data = g_new (ArvGvStreamThreadData, 1);
 	thread_data->socket = gv_stream->socket;
 	thread_data->cancel = FALSE;
+	thread_data->input_queue = stream->input_queue;
+	thread_data->output_queue = stream->output_queue;
 
 	gv_stream->thread_data = thread_data;
 
