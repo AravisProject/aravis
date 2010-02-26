@@ -39,8 +39,12 @@ arv_device_write_register (ArvDevice *device, guint32 address, guint32 value)
 }
 
 void
-arv_device_load_genicam (ArvDevice *device)
+arv_device_set_genicam (ArvDevice *device, char *genicam)
 {
+	g_return_if_fail (ARV_IS_DEVICE (device));
+
+	g_free (device->genicam);
+	device->genicam = genicam;
 }
 
 static void
@@ -51,6 +55,11 @@ arv_device_init (ArvDevice *device)
 static void
 arv_device_finalize (GObject *object)
 {
+	ArvDevice *device = ARV_DEVICE (object);
+
+	g_free (device->genicam);
+	device->genicam = NULL;
+
 	parent_class->finalize (object);
 }
 

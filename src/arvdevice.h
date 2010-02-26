@@ -16,6 +16,8 @@ typedef struct _ArvDeviceClass ArvDeviceClass;
 
 struct _ArvDevice {
 	GObject	object;
+
+	char *genicam;
 };
 
 struct _ArvDeviceClass {
@@ -29,13 +31,14 @@ struct _ArvDeviceClass {
 
 GType arv_device_get_type (void);
 
-void 		arv_device_load_genicam 		(ArvDevice *device);
 size_t 		arv_device_read_memory 			(ArvDevice *device, guint32 address, guint32 size,
 							 void *buffer);
 size_t 		arv_device_write_memory	 		(ArvDevice *device, guint32 address, guint32 size,
 							 void *buffer);
 guint32 	arv_device_read_register		(ArvDevice *device, guint32 address);
 void		arv_device_write_register 		(ArvDevice *device, guint32 address, guint32 value);
+
+void 		arv_device_set_genicam 			(ArvDevice *device, char *genicam);
 
 G_END_DECLS
 

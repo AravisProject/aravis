@@ -36,11 +36,6 @@ main (int argc, char **argv)
 		arv_device_read_memory (device,
 					ARV_GVBS_USER_DEFINED_NAME,
 					ARV_GVBS_USER_DEFINED_NAME_SIZE, memory_buffer);
-		arv_device_read_memory (device,
-					ARV_GVBS_SECOND_XML_URL,
-					ARV_GVBS_XML_URL_SIZE, memory_buffer);
-		arv_device_read_memory (device,
-					0x00100000, 0x00015904, memory_buffer);
 
 		arv_device_write_register (device, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE, 2);
 		arv_device_write_memory (device,
@@ -93,8 +88,6 @@ main (int argc, char **argv)
 		arv_device_write_register (device, ARV_GC1380_ACQUISITION_CONTROL, ARV_GC1380_ACQUISITION_STOP);
 
 		arv_device_write_register (device, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE, 0);
-
-		g_file_set_contents ("/tmp/genicam.xml", memory_buffer, 0x00015904, NULL);
 
 		g_object_unref (device);
 	} else
