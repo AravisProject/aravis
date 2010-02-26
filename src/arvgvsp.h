@@ -12,7 +12,7 @@ typedef enum {
 } ArvGvspPacketType;
 
 typedef struct {
-	guint32 count;
+	guint32 frame_id;
 	guint16 packet_type;
 	guint16 block_id;
 } __attribute__((__packed__)) ArvGvspHeader;
@@ -36,7 +36,7 @@ typedef struct {
 	guint8 data[];
 } ArvGvspPacket;
 
-void 			arv_gvsp_packet_debug 			(const ArvGvspPacket *packet);
+void 			arv_gvsp_packet_debug 			(const ArvGvspPacket *packet, size_t packet_size);
 
 static inline ArvGvspPacketType
 arv_gvsp_packet_get_packet_type	(const ArvGvspPacket *packet)
@@ -50,22 +50,28 @@ arv_gvsp_packet_get_block_id (const ArvGvspPacket *packet)
 	return g_ntohs (packet->header.block_id);
 }
 
-static inline guint16
+static inline guint32
+arv_gvsp_packet_get_frame_id (const ArvGvspPacket *packet)
+{
+	return g_ntohl (packet->header.frame_id);
+}
+
+static inline guint32
 arv_gvsp_packet_get_width (const ArvGvspPacket *packet)
 {
 	ArvGvspDataLeader *leader;
 
 	leader = (ArvGvspDataLeader *) &packet->data;
-	return g_ntohs (leader->width);
+	return g_ntohl (leader->width);
 }
 
-static inline guint16
+static inline guint32
 arv_gvsp_packet_get_height (const ArvGvspPacket *packet)
 {
 	ArvGvspDataLeader *leader;
 
 	leader = (ArvGvspDataLeader *) &packet->data;
-	return g_ntohs (leader->height);
+	return g_ntohl (leader->height);
 }
 
 static inline size_t

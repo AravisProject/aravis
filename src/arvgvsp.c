@@ -28,11 +28,12 @@ arv_gvsp_packet_type_to_string (ArvGvspPacketType value)
 }
 
 char *
-arv_gvsp_packet_to_string (const ArvGvspPacket *packet)
+arv_gvsp_packet_to_string (const ArvGvspPacket *packet, size_t packet_size)
 {
 	ArvGvspDataLeader *leader;
 	GString *string;
 	char *c_string;
+	int i, j, index;
 
 	string = g_string_new ("");
 
@@ -51,6 +52,31 @@ arv_gvsp_packet_to_string (const ArvGvspPacket *packet)
 			break;
 	}
 
+	for (i = 0; i < (packet_size + 15) / 16; i++) {
+		for (j = 0; j < 16; j++) {
+			index = i * 16 + j;
+			if (j == 0)
+				g_string_append_printf (string, "%04x", i * 16);
+			if (index < packet_size)
+				g_string_append_printf (string, " %02x", *((guint8 *) ((void *) packet) + index));
+			else
+				g_string_append (string, "   ");
+		}
+		for (j = 0; j < 16; j++) {
+			index = i * 16 + j;
+			if (j == 0)
+				g_string_append (string, "  ");
+			if (index < packet_size)
+				if (*((char *) ((void *) packet) + index) >= ' ')
+					g_string_append_c (string, *((char *) ((void *) packet) + index));
+				else g_string_append_c (string, '.');
+			else
+				g_string_append_c (string, ' ');
+		}
+		if (index < packet_size)
+			g_string_append (string, "\n");
+	}
+
 	c_string = string->str;
 
 	g_string_free (string, FALSE);
@@ -59,11 +85,11 @@ arv_gvsp_packet_to_string (const ArvGvspPacket *packet)
 }
 
 void
-arv_gvsp_packet_debug (const ArvGvspPacket *packet)
+arv_gvsp_packet_debug (const ArvGvspPacket *packet, size_t packet_size)
 {
 	char *string;
 
-	string = arv_gvsp_packet_to_string (packet);
+	string = arv_gvsp_packet_to_string (packet, packet_size);
 	arv_debug ("%s", string);
 	g_free (string);
 }

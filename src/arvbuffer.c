@@ -10,7 +10,7 @@ arv_buffer_new (size_t size, void *preallocated)
 	buffer = g_object_new (ARV_TYPE_BUFFER, NULL);
 	buffer->size = size;
 
-	if (preallocated == NULL) {
+	if (preallocated != NULL) {
 		buffer->is_preallocated = TRUE;
 		buffer->data = preallocated;
 	} else {

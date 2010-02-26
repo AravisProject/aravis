@@ -40,6 +40,8 @@ arv_gv_stream_thread (void *data)
 		if (n_events > 0) {
 			read_count = g_socket_receive (thread_data->socket, packet_buffer, 1024, NULL, NULL);
 
+			arv_gvsp_packet_debug (packet, read_count);
+
 			switch (arv_gvsp_packet_get_packet_type (packet)) {
 				case ARV_GVSP_PACKET_TYPE_DATA_LEADER:
 					if (buffer != NULL)
@@ -49,11 +51,13 @@ arv_gv_stream_thread (void *data)
 						break;
 					buffer->width = arv_gvsp_packet_get_width (packet);
 					buffer->height = arv_gvsp_packet_get_height (packet);
+					buffer->frame_id = arv_gvsp_packet_get_frame_id (packet);
 					buffer->status = ARV_BUFFER_STATUS_FILLING;
 					block_id = 0;
 					offset = 0;
 					break;
-				case ARV_GVSP_PACKET_TYPE_DATA_TRAILER:
+
+				case ARV_GVSP_PACKET_TYPE_DATA_BLOCK:
 					if (buffer == NULL ||
 					    buffer->status != ARV_BUFFER_STATUS_FILLING)
 						break;
@@ -72,9 +76,13 @@ arv_gv_stream_thread (void *data)
 
 					if (offset == buffer->size)
 						buffer->status = ARV_BUFFER_STATUS_SUCCESS;
+
 					break;
-				case ARV_GVSP_PACKET_TYPE_DATA_BLOCK:
+
+				case ARV_GVSP_PACKET_TYPE_DATA_TRAILER:
 					if (buffer != NULL) {
+						if (buffer->status == ARV_BUFFER_STATUS_FILLING)
+							buffer->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
 						g_async_queue_push (thread_data->output_queue, buffer);
 						buffer = NULL;
 					}

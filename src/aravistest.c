@@ -13,7 +13,8 @@ main (int argc, char **argv)
 	ArvInterface *interface;
 	ArvDevice *device;
 	ArvStream *stream;
-	char buffer[100000];
+	ArvBuffer *buffer;
+	char memory_buffer[100000];
 	char name[ARV_GVBS_USER_DEFINED_NAME_SIZE] = "lapp-vicam02";
 	guint32 stream_port;
 
@@ -30,16 +31,16 @@ main (int argc, char **argv)
 	arv_stream_push_buffer (stream, arv_buffer_new (200, NULL));
 
 	if (device != NULL) {
-		arv_device_read_memory (device, 0x00014150, 8, buffer);
-		arv_device_read_memory (device, 0x000000e8, 16, buffer);
+		arv_device_read_memory (device, 0x00014150, 8, memory_buffer);
+		arv_device_read_memory (device, 0x000000e8, 16, memory_buffer);
 		arv_device_read_memory (device,
 					ARV_GVBS_USER_DEFINED_NAME,
-					ARV_GVBS_USER_DEFINED_NAME_SIZE, buffer);
+					ARV_GVBS_USER_DEFINED_NAME_SIZE, memory_buffer);
 		arv_device_read_memory (device,
 					ARV_GVBS_SECOND_XML_URL,
-					ARV_GVBS_XML_URL_SIZE, buffer);
+					ARV_GVBS_XML_URL_SIZE, memory_buffer);
 		arv_device_read_memory (device,
-					0x00100000, 0x00015904, buffer);
+					0x00100000, 0x00015904, memory_buffer);
 
 		arv_device_write_register (device, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE, 2);
 		arv_device_write_memory (device,
@@ -65,6 +66,20 @@ main (int argc, char **argv)
 
 		arv_device_read_register (device, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE);
 
+		buffer = arv_stream_pop_buffer (stream);
+		if (buffer != NULL) {
+			g_message ("Image %dx%d (id: %d - status: %d)",
+				   buffer->width, buffer->height, buffer->frame_id, buffer->status);
+			arv_stream_push_buffer (stream, buffer);
+		}
+
+		buffer = arv_stream_pop_buffer (stream);
+		if (buffer != NULL) {
+			g_message ("Image %dx%d (id: %d - status: %d)",
+				   buffer->width, buffer->height, buffer->frame_id, buffer->status);
+			arv_stream_push_buffer (stream, buffer);
+		}
+
 		g_usleep (3000000);
 
 		arv_device_read_register (device, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE);
@@ -79,7 +94,7 @@ main (int argc, char **argv)
 
 		arv_device_write_register (device, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE, 0);
 
-		g_file_set_contents ("/tmp/genicam.xml", buffer, 0x00015904, NULL);
+		g_file_set_contents ("/tmp/genicam.xml", memory_buffer, 0x00015904, NULL);
 
 		g_object_unref (device);
 	} else

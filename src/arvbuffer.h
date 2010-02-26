@@ -32,7 +32,7 @@ struct _ArvBuffer {
 
 	ArvBufferStatus status;
 
-	guint32 time_stamp;
+	guint32 frame_id;
 	guint32 width;
 	guint32 height;
 };
