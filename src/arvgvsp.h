@@ -14,7 +14,7 @@ typedef enum {
 typedef struct {
 	guint32 count;
 	guint16 packet_type;
-	guint16 sub_count;
+	guint16 block_id;
 } __attribute__((__packed__)) ArvGvspHeader;
 
 typedef struct {
@@ -42,6 +42,36 @@ static inline ArvGvspPacketType
 arv_gvsp_packet_get_packet_type	(const ArvGvspPacket *packet)
 {
 	return g_ntohs (packet->header.packet_type);
+}
+
+static inline guint16
+arv_gvsp_packet_get_block_id (const ArvGvspPacket *packet)
+{
+	return g_ntohs (packet->header.block_id);
+}
+
+static inline guint16
+arv_gvsp_packet_get_width (const ArvGvspPacket *packet)
+{
+	ArvGvspDataLeader *leader;
+
+	leader = (ArvGvspDataLeader *) &packet->data;
+	return g_ntohs (leader->width);
+}
+
+static inline guint16
+arv_gvsp_packet_get_height (const ArvGvspPacket *packet)
+{
+	ArvGvspDataLeader *leader;
+
+	leader = (ArvGvspDataLeader *) &packet->data;
+	return g_ntohs (leader->height);
+}
+
+static inline size_t
+arv_gvsp_packet_get_data_size (size_t packet_size)
+{
+	return packet_size - sizeof (ArvGvspHeader);
 }
 
 G_END_DECLS

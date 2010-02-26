@@ -1,6 +1,7 @@
 #include <arvgvstream.h>
 #include <arvbuffer.h>
 #include <arvgvsp.h>
+#include <string.h>
 
 static GObjectClass *parent_class = NULL;
 
@@ -22,6 +23,10 @@ arv_gv_stream_thread (void *data)
 	char packet_buffer[1024];
 	ArvGvspPacket *packet;
 	ArvBuffer *buffer = NULL;
+	guint16 block_id = 0;
+	size_t read_count;
+	size_t block_size;
+	ptrdiff_t offset = 0;
 
 	packet = (ArvGvspPacket *) packet_buffer;
 
@@ -33,7 +38,7 @@ arv_gv_stream_thread (void *data)
 		n_events = g_poll (&poll_fd, 1, 50);
 
 		if (n_events > 0) {
-			g_socket_receive (thread_data->socket, packet_buffer, 1024, NULL, NULL);
+			read_count = g_socket_receive (thread_data->socket, packet_buffer, 1024, NULL, NULL);
 
 			switch (arv_gvsp_packet_get_packet_type (packet)) {
 				case ARV_GVSP_PACKET_TYPE_DATA_LEADER:
@@ -42,10 +47,31 @@ arv_gv_stream_thread (void *data)
 					buffer = g_async_queue_try_pop (thread_data->input_queue);
 					if (buffer == NULL)
 						break;
+					buffer->width = arv_gvsp_packet_get_width (packet);
+					buffer->height = arv_gvsp_packet_get_height (packet);
+					buffer->status = ARV_BUFFER_STATUS_FILLING;
+					block_id = 0;
+					offset = 0;
 					break;
 				case ARV_GVSP_PACKET_TYPE_DATA_TRAILER:
-					if (buffer == NULL)
+					if (buffer == NULL ||
+					    buffer->status != ARV_BUFFER_STATUS_FILLING)
 						break;
+					block_id++;
+					if (arv_gvsp_packet_get_block_id (packet) != block_id) {
+						buffer->status = ARV_BUFFER_STATUS_MISSING_BLOCK;
+						break;
+					}
+					block_size = arv_gvsp_packet_get_data_size (read_count);
+					if (block_size + offset > buffer->size) {
+						buffer->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
+						break;
+					}
+					memcpy (buffer->data + offset, &packet->data, block_size);
+					offset += block_size;
+
+					if (offset == buffer->size)
+						buffer->status = ARV_BUFFER_STATUS_SUCCESS;
 					break;
 				case ARV_GVSP_PACKET_TYPE_DATA_BLOCK:
 					if (buffer != NULL) {
