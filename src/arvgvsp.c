@@ -89,6 +89,9 @@ arv_gvsp_packet_debug (const ArvGvspPacket *packet, size_t packet_size)
 {
 	char *string;
 
+	if (!arv_debug_check (ARV_DEBUG_LEVEL_GVSP))
+		return;
+
 	string = arv_gvsp_packet_to_string (packet, packet_size);
 	arv_debug (ARV_DEBUG_LEVEL_GVSP, "%s", string);
 	g_free (string);
