@@ -6,6 +6,7 @@
 G_BEGIN_DECLS
 
 typedef struct _ArvCamera ArvCamera;
+typedef struct _ArvGenicamNode ArvGenicamNode;
 typedef struct _ArvInterface ArvInterface;
 typedef struct _ArvDevice ArvDevice;
 typedef struct _ArvStream ArvStream;

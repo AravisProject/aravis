@@ -26,6 +26,7 @@ libaravis_la_SOURCES =				\
 	arvenumtypes.c				\
 	arvdebug.c				\
 	arvcamera.c				\
+	arvgenicamnode.c			\
 	arvinterface.c				\
 	arvdevice.c				\
 	arvstream.c				\
@@ -40,6 +41,7 @@ ARAVIS_HDRS = 					\
 	arv.h					\
 	arvdebug.h				\
 	arvcamera.h				\
+	arvgenicamnode.h			\
 	arvinterface.h				\
 	arvdevice.h				\
 	arvstream.h				\
