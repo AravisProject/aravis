@@ -40,7 +40,7 @@ arv_gv_stream_thread (void *data)
 		if (n_events > 0) {
 			read_count = g_socket_receive (thread_data->socket, packet_buffer, 1024, NULL, NULL);
 
-			arv_gvsp_packet_debug (packet, read_count);
+/*                        arv_gvsp_packet_debug (packet, read_count);*/
 
 			switch (arv_gvsp_packet_get_packet_type (packet)) {
 				case ARV_GVSP_PACKET_TYPE_DATA_LEADER:

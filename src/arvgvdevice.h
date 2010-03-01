@@ -23,15 +23,12 @@ typedef struct _ArvGvDeviceClass ArvGvDeviceClass;
 struct _ArvGvDevice {
 	ArvDevice device;
 
-	guint32 packet_count;
-
-	GSocket *socket;
-	GSocketAddress	*control_address;
-	GSocketAddress	*device_address;
-
-	void *socket_buffer;
-
 	gboolean is_controller;
+
+	void *io_data;
+
+	void *heartbeat_thread;
+	void *heartbeat_data;
 };
 
 struct _ArvGvDeviceClass {
@@ -42,7 +39,7 @@ GType arv_gv_device_get_type (void);
 
 ArvDevice * 		arv_gv_device_new 		(GInetAddress *inet_address);
 
-gboolean 		arv_gv_device_heartbeat 	(ArvGvDevice *gv_device);
+//gboolean 		arv_gv_device_heartbeat 	(ArvGvDevice *gv_device);
 
 G_END_DECLS
 

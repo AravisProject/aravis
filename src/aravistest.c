@@ -7,6 +7,7 @@
 #define ARV_GC1380_ACQUISITION_STOP		0
 #define ARV_GC1380_ACQUISITION_START		1
 #define ARV_GC1380_ACQUISITION_ABORT		2
+#define ARV_GC1380_ACQUISITION_IMAGE_SIZE	(1360*1024)
 
 int
 main (int argc, char **argv)
@@ -29,10 +30,10 @@ main (int argc, char **argv)
 
 		stream = arv_device_get_stream (device);
 
-		arv_stream_push_buffer (stream, arv_buffer_new (200, NULL));
-		arv_stream_push_buffer (stream, arv_buffer_new (200, NULL));
-		arv_stream_push_buffer (stream, arv_buffer_new (200, NULL));
-		arv_stream_push_buffer (stream, arv_buffer_new (200, NULL));
+		arv_stream_push_buffer (stream, arv_buffer_new (ARV_GC1380_ACQUISITION_IMAGE_SIZE, NULL));
+		arv_stream_push_buffer (stream, arv_buffer_new (ARV_GC1380_ACQUISITION_IMAGE_SIZE, NULL));
+		arv_stream_push_buffer (stream, arv_buffer_new (ARV_GC1380_ACQUISITION_IMAGE_SIZE, NULL));
+		arv_stream_push_buffer (stream, arv_buffer_new (ARV_GC1380_ACQUISITION_IMAGE_SIZE, NULL));
 
 		arv_device_read_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, &stream_port);
 		g_message ("stream port = %d (%d)", stream_port, arv_gv_stream_get_port (ARV_GV_STREAM (stream)));
@@ -56,7 +57,7 @@ main (int argc, char **argv)
 
 		g_usleep (3000000);
 
-		g_message ("Heartbeat %s", arv_gv_device_heartbeat (ARV_GV_DEVICE (device)) ? "OK" : "ERROR");
+/*                g_message ("Heartbeat %s", arv_gv_device_heartbeat (ARV_GV_DEVICE (device)) ? "OK" : "ERROR");*/
 
 		buffer = arv_stream_pop_buffer (stream);
 		if (buffer != NULL) {
@@ -74,11 +75,11 @@ main (int argc, char **argv)
 
 		g_usleep (3000000);
 
-		g_message ("Heartbeat %s", arv_gv_device_heartbeat (ARV_GV_DEVICE (device)) ? "OK" : "ERROR");
+/*                g_message ("Heartbeat %s", arv_gv_device_heartbeat (ARV_GV_DEVICE (device)) ? "OK" : "ERROR");*/
 
 		g_usleep (3000000);
 
-		g_message ("Heartbeat %s", arv_gv_device_heartbeat (ARV_GV_DEVICE (device)) ? "OK" : "ERROR");
+/*                g_message ("Heartbeat %s", arv_gv_device_heartbeat (ARV_GV_DEVICE (device)) ? "OK" : "ERROR");*/
 
 		g_usleep (3000000);
 
