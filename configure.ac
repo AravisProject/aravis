@@ -1,4 +1,4 @@
-AC_PREREQ(2.63.2)
+AC_PREREQ(2.63.0)
 
 m4_define([aravis_version_major], [0])
 m4_define([aravis_version_minor], [1])
