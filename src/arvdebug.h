@@ -5,8 +5,15 @@
 
 G_BEGIN_DECLS
 
-void arv_debug 		(char const *format, ...);
-void arv_debug_enable 	(void);
+typedef enum {
+	ARV_DEBUG_LEVEL_NONE,
+	ARV_DEBUG_LEVEL_STANDARD,
+	ARV_DEBUG_LEVEL_GVCP,
+	ARV_DEBUG_LEVEL_GVSP
+} ArvDebugLevel;
+
+void arv_debug 		(ArvDebugLevel level, char const *format, ...);
+void arv_debug_enable 	(ArvDebugLevel level);
 
 G_END_DECLS
 

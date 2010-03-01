@@ -219,7 +219,7 @@ arv_gv_device_heartbeat_thread (void *data)
 	do {
 		g_usleep (thread_data->period_us);
 		_read_register (io_data, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE, &value);
-		g_message ("Baboom (%d)", value);
+		arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[GvDevice::Heartbeat] (%d)", value);
 	} while (!thread_data->cancel);
 
 	return NULL;
@@ -258,7 +258,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address)
 	arv_device_read_memory (ARV_DEVICE (gv_device), address, ARV_GVBS_XML_URL_SIZE, filename);
 	filename[ARV_GVBS_XML_URL_SIZE - 1] = '\0';
 
-	arv_debug ("GvDevice::load_genicam] xml url = '%s' at 0x%x", filename, address);
+	arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[GvDevice::load_genicam] xml url = '%s' at 0x%x", filename, address);
 
 	tokens = g_regex_split (arv_gv_device_url_regex, filename, 0);
 
@@ -275,7 +275,8 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address)
 			file_address = strtoul (tokens[3], NULL, 16);
 			file_size = strtoul (tokens[4], NULL, 16);
 
-			arv_debug ("[GvDevice::load_genicam] Xml address = 0x%x - size = 0x%x",
+			arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+				   "[GvDevice::load_genicam] Xml address = 0x%x - size = 0x%x",
 				   file_address, file_size);
 
 			if (file_size > 0) {

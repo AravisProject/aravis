@@ -2,32 +2,32 @@
 #include <glib/gprintf.h>
 #include <stdlib.h>
 
-static gboolean debug_checked = FALSE;
-static gboolean debug_enabled = FALSE;
+static gboolean arv_debug_checked = FALSE;
+static gboolean arv_debug_level = ARV_DEBUG_LEVEL_NONE;
 
 static gboolean
-_is_debug_enabled ()
+_get_debug_level ()
 {
 	const char *debug_var;
 
-	if (debug_checked)
-		return debug_enabled;
+	if (arv_debug_checked)
+		return arv_debug_level;
 
 	debug_var = g_getenv ("ARV_DEBUG");
 
-	debug_enabled = debug_var != NULL ? atoi (debug_var) != 0 : FALSE;
+	arv_debug_level = debug_var != NULL ? atoi (debug_var) != 0 : ARV_DEBUG_LEVEL_NONE;
 
-	debug_checked = TRUE;
+	arv_debug_checked = TRUE;
 
-	return debug_enabled;
+	return arv_debug_level;
 }
 
 void
-arv_debug (char const *format, ...)
+arv_debug (ArvDebugLevel level, char const *format, ...)
 {
 	va_list args;
 
-	if (!_is_debug_enabled())
+	if (_get_debug_level () < level)
 		return;
 
 	va_start (args, format);
@@ -37,8 +37,8 @@ arv_debug (char const *format, ...)
 }
 
 void
-arv_debug_enable (void)
+arv_debug_enable (ArvDebugLevel level)
 {
-	debug_enabled = TRUE;
-	debug_checked = TRUE;
+	arv_debug_level = level;
+	arv_debug_checked = TRUE;
 }

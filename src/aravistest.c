@@ -7,7 +7,7 @@
 #define ARV_GC1380_ACQUISITION_STOP		0
 #define ARV_GC1380_ACQUISITION_START		1
 #define ARV_GC1380_ACQUISITION_ABORT		2
-#define ARV_GC1380_ACQUISITION_IMAGE_SIZE	(1360*1024)
+#define ARV_GC1380_ACQUISITION_IMAGE_SIZE	(200*100)
 
 int
 main (int argc, char **argv)
@@ -57,8 +57,6 @@ main (int argc, char **argv)
 
 		g_usleep (3000000);
 
-/*                g_message ("Heartbeat %s", arv_gv_device_heartbeat (ARV_GV_DEVICE (device)) ? "OK" : "ERROR");*/
-
 		buffer = arv_stream_pop_buffer (stream);
 		if (buffer != NULL) {
 			g_message ("Image %dx%d (id: %d - status: %d)",
@@ -75,11 +73,9 @@ main (int argc, char **argv)
 
 		g_usleep (3000000);
 
-/*                g_message ("Heartbeat %s", arv_gv_device_heartbeat (ARV_GV_DEVICE (device)) ? "OK" : "ERROR");*/
 
 		g_usleep (3000000);
 
-/*                g_message ("Heartbeat %s", arv_gv_device_heartbeat (ARV_GV_DEVICE (device)) ? "OK" : "ERROR");*/
 
 		g_usleep (3000000);
 

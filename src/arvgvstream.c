@@ -1,6 +1,7 @@
 #include <arvgvstream.h>
 #include <arvbuffer.h>
 #include <arvgvsp.h>
+#include <arvdebug.h>
 #include <string.h>
 
 static GObjectClass *parent_class = NULL;
@@ -40,7 +41,7 @@ arv_gv_stream_thread (void *data)
 		if (n_events > 0) {
 			read_count = g_socket_receive (thread_data->socket, packet_buffer, 1024, NULL, NULL);
 
-/*                        arv_gvsp_packet_debug (packet, read_count);*/
+			arv_gvsp_packet_debug (packet, read_count);
 
 			switch (arv_gvsp_packet_get_packet_type (packet)) {
 				case ARV_GVSP_PACKET_TYPE_DATA_LEADER:
@@ -63,6 +64,10 @@ arv_gv_stream_thread (void *data)
 						break;
 					block_id++;
 					if (arv_gvsp_packet_get_block_id (packet) != block_id) {
+						arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+							   "[GvStream::thread] Missing block (expected %d - %d)",
+							   block_id,
+							   arv_gvsp_packet_get_block_id (packet));
 						buffer->status = ARV_BUFFER_STATUS_MISSING_BLOCK;
 						break;
 					}

@@ -262,6 +262,6 @@ arv_gvcp_packet_debug (const ArvGvcpPacket *packet)
 	char *string;
 
 	string = arv_gvcp_packet_to_string (packet);
-	arv_debug ("%s", string);
+	arv_debug (ARV_DEBUG_LEVEL_GVCP, "%s", string);
 	g_free (string);
 }
