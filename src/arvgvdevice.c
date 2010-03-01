@@ -1,5 +1,6 @@
 #include <arvgvdevice.h>
 #include <arvdebug.h>
+#include <arvgvstream.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -7,6 +8,41 @@ static GObjectClass *parent_class = NULL;
 static GRegex *arv_gv_device_url_regex = NULL;
 
 /* ArvGvDevice implemenation */
+
+static gboolean
+arv_gv_device_take_control (ArvGvDevice *gv_device)
+{
+	gv_device->is_controller = arv_device_write_register (ARV_DEVICE (gv_device),
+							      ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE, 2);
+
+	return gv_device->is_controller;
+}
+
+static gboolean
+arv_gv_device_leave_control (ArvGvDevice *gv_device)
+{
+	gboolean result;
+
+	result = arv_device_write_register (ARV_DEVICE (gv_device),
+					    ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE, 0);
+	gv_device->is_controller = FALSE;
+
+	return result;
+}
+
+gboolean
+arv_gv_device_heartbeat (ArvGvDevice *gv_device)
+{
+	guint32 value;
+
+	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), FALSE);
+
+	if (!arv_device_read_register (ARV_DEVICE (gv_device), ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE, &value) ||
+	    value != 0)
+		gv_device->is_controller = FALSE;
+
+	return gv_device->is_controller;
+}
 
 static char *
 _load_genicam (ArvGvDevice *gv_device, guint32 address)
@@ -66,6 +102,26 @@ arv_gv_device_load_genicam (ArvGvDevice *gv_device)
 }
 
 /* ArvDevice implemenation */
+
+static ArvStream *
+arv_gv_device_create_stream (ArvDevice *device)
+{
+	ArvStream *stream;
+	guint32 stream_port;
+
+	stream = arv_gv_stream_new (0);
+
+	stream_port = arv_gv_stream_get_port (ARV_GV_STREAM (stream));
+
+	arv_device_write_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, stream_port);
+	arv_device_read_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, &stream_port);
+	g_message ("stream port = %d", stream_port);
+	arv_device_write_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_IP_ADDRESS, 0x869E61B4);
+	arv_device_read_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, &stream_port);
+	g_message ("stream port = %d", stream_port);
+
+	return stream;
+}
 
 static size_t
 _read_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer)
@@ -154,38 +210,40 @@ _write_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer)
 	return size;
 }
 
-size_t
+gboolean
 arv_gv_device_read_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer)
 {
 	int i;
 	gint32 block_size;
+	size_t read_size = 0;
 
 	for (i = 0; i < (size + ARV_GVCP_DATA_SIZE_MAX - 1) / ARV_GVCP_DATA_SIZE_MAX; i++) {
 		block_size = MIN (ARV_GVCP_DATA_SIZE_MAX, size - i * ARV_GVCP_DATA_SIZE_MAX);
-		_read_memory (device, address + i * ARV_GVCP_DATA_SIZE_MAX,
-			      block_size, buffer + i * ARV_GVCP_DATA_SIZE_MAX);
+		read_size += _read_memory (device, address + i * ARV_GVCP_DATA_SIZE_MAX,
+					   block_size, buffer + i * ARV_GVCP_DATA_SIZE_MAX);
 	}
 
-	return size;
+	return (size == read_size);
 }
 
-size_t
+gboolean
 arv_gv_device_write_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer)
 {
 	int i;
 	gint32 block_size;
+	size_t written_size = 0;
 
 	for (i = 0; i < (size + ARV_GVCP_DATA_SIZE_MAX - 1) / ARV_GVCP_DATA_SIZE_MAX; i++) {
 		block_size = MIN (ARV_GVCP_DATA_SIZE_MAX, size - i * ARV_GVCP_DATA_SIZE_MAX);
-		_write_memory (device, address + i * ARV_GVCP_DATA_SIZE_MAX,
-			       block_size, buffer + i * ARV_GVCP_DATA_SIZE_MAX);
+		written_size += _write_memory (device, address + i * ARV_GVCP_DATA_SIZE_MAX,
+					       block_size, buffer + i * ARV_GVCP_DATA_SIZE_MAX);
 	}
 
-	return size;
+	return (size == written_size);
 }
 
-guint32
-arv_gv_device_read_register (ArvDevice *device, guint32 address)
+gboolean
+arv_gv_device_read_register (ArvDevice *device, guint32 address, guint32 *value_placeholder)
 {
 	ArvGvDevice *gv_device = ARV_GV_DEVICE (device);
 	ArvGvcpPacket *packet;
@@ -209,8 +267,10 @@ arv_gv_device_read_register (ArvDevice *device, guint32 address)
 	poll_fd.events =  G_IO_IN;
 	poll_fd.revents = 0;
 
-	if (g_poll (&poll_fd, 1, ARV_GV_DEVICE_ACKNOWLEDGE_TIMEOUT) == 0)
-		return 0;
+	if (g_poll (&poll_fd, 1, ARV_GV_DEVICE_ACKNOWLEDGE_TIMEOUT) == 0) {
+		*value_placeholder = 0;
+		return FALSE;
+	}
 
 	count = g_socket_receive (gv_device->socket, gv_device->socket_buffer,
 				  ARV_GV_DEVICE_BUFFER_SIZE, NULL, NULL);
@@ -219,10 +279,12 @@ arv_gv_device_read_register (ArvDevice *device, guint32 address)
 
 	arv_gvcp_packet_debug ((ArvGvcpPacket *) gv_device->socket_buffer);
 
-	return value;
+	*value_placeholder = value;
+
+	return TRUE;
 }
 
-void
+gboolean
 arv_gv_device_write_register (ArvDevice *device, guint32 address, guint32 value)
 {
 	ArvGvDevice *gv_device = ARV_GV_DEVICE (device);
@@ -247,12 +309,14 @@ arv_gv_device_write_register (ArvDevice *device, guint32 address, guint32 value)
 	poll_fd.revents = 0;
 
 	if (g_poll (&poll_fd, 1, ARV_GV_DEVICE_ACKNOWLEDGE_TIMEOUT) == 0)
-		return;
+		return FALSE;
 
 	count = g_socket_receive (gv_device->socket, gv_device->socket_buffer,
 				  ARV_GV_DEVICE_BUFFER_SIZE, NULL, NULL);
 
 	arv_gvcp_packet_debug ((ArvGvcpPacket *) gv_device->socket_buffer);
+
+	return TRUE;
 }
 
 ArvDevice *
@@ -279,6 +343,8 @@ arv_gv_device_new (GInetAddress *inet_address)
 
 	arv_gv_device_load_genicam (gv_device);
 
+	arv_gv_device_take_control (gv_device);
+
 	return ARV_DEVICE (gv_device);
 }
 
@@ -293,6 +359,8 @@ static void
 arv_gv_device_finalize (GObject *object)
 {
 	ArvGvDevice *gv_device = ARV_GV_DEVICE (object);
+
+	arv_gv_device_leave_control (gv_device);
 
 	g_object_unref (gv_device->device_address);
 	g_object_unref (gv_device->control_address);
@@ -313,6 +381,7 @@ arv_gv_device_class_init (ArvGvDeviceClass *gv_device_class)
 
 	object_class->finalize = arv_gv_device_finalize;
 
+	device_class->create_stream = arv_gv_device_create_stream;
 	device_class->read_memory = arv_gv_device_read_memory;
 	device_class->write_memory = arv_gv_device_write_memory;
 	device_class->read_register = arv_gv_device_read_register;

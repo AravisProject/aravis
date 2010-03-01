@@ -2,6 +2,7 @@
 #define ARV_DEVICE_H
 
 #include <arv.h>
+#include <arvstream.h>
 
 G_BEGIN_DECLS
 
@@ -18,25 +19,31 @@ struct _ArvDevice {
 	GObject	object;
 
 	char *genicam;
+
+	ArvStream *stream;
 };
 
 struct _ArvDeviceClass {
 	GObjectClass parent_class;
 
-	size_t 		(*read_memory)		(ArvDevice *device, guint32 address, guint32 size, void *buffer);
-	size_t 		(*write_memory)		(ArvDevice *device, guint32 address, guint32 size, void *buffer);
-	guint32		(*read_register)	(ArvDevice *device, guint32 address);
-	void		(*write_register)	(ArvDevice *device, guint32 address, guint32 value);
+	ArvStream *	(*create_stream)	(ArvDevice *device);
+
+	gboolean	(*read_memory)		(ArvDevice *device, guint32 address, guint32 size, void *buffer);
+	gboolean	(*write_memory)		(ArvDevice *device, guint32 address, guint32 size, void *buffer);
+	gboolean	(*read_register)	(ArvDevice *device, guint32 address, guint32 *value);
+	gboolean	(*write_register)	(ArvDevice *device, guint32 address, guint32 value);
 };
 
 GType arv_device_get_type (void);
 
-size_t 		arv_device_read_memory 			(ArvDevice *device, guint32 address, guint32 size,
+ArvStream *	arv_device_get_stream			(ArvDevice *device);
+
+gboolean	arv_device_read_memory 			(ArvDevice *device, guint32 address, guint32 size,
 							 void *buffer);
-size_t 		arv_device_write_memory	 		(ArvDevice *device, guint32 address, guint32 size,
+gboolean	arv_device_write_memory	 		(ArvDevice *device, guint32 address, guint32 size,
 							 void *buffer);
-guint32 	arv_device_read_register		(ArvDevice *device, guint32 address);
-void		arv_device_write_register 		(ArvDevice *device, guint32 address, guint32 value);
+gboolean 	arv_device_read_register		(ArvDevice *device, guint32 address, guint32 *value);
+gboolean	arv_device_write_register 		(ArvDevice *device, guint32 address, guint32 value);
 
 void 		arv_device_set_genicam 			(ArvDevice *device, char *genicam);
 

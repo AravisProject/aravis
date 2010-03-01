@@ -1,6 +1,7 @@
 #include <arv.h>
 #include <arvgvinterface.h>
 #include <arvgvstream.h>
+#include <arvgvdevice.h>
 
 #define ARV_GC1380_ACQUISITION_CONTROL		0x000130f4
 #define ARV_GC1380_ACQUISITION_STOP		0
@@ -16,7 +17,6 @@ main (int argc, char **argv)
 	ArvBuffer *buffer;
 	char memory_buffer[100000];
 	char name[ARV_GVBS_USER_DEFINED_NAME_SIZE] = "lapp-vicam02";
-	guint32 stream_port;
 
 	g_thread_init (NULL);
 	g_type_init ();
@@ -24,14 +24,19 @@ main (int argc, char **argv)
 	interface = arv_gv_interface_get_instance ();
 
 	device = arv_interface_get_first_device (interface);
-
-	stream = arv_gv_stream_new (0);
-	arv_stream_push_buffer (stream, arv_buffer_new (200, NULL));
-	arv_stream_push_buffer (stream, arv_buffer_new (200, NULL));
-	arv_stream_push_buffer (stream, arv_buffer_new (200, NULL));
-	arv_stream_push_buffer (stream, arv_buffer_new (200, NULL));
-
 	if (device != NULL) {
+		guint32 stream_port;
+
+		stream = arv_device_get_stream (device);
+
+		arv_stream_push_buffer (stream, arv_buffer_new (200, NULL));
+		arv_stream_push_buffer (stream, arv_buffer_new (200, NULL));
+		arv_stream_push_buffer (stream, arv_buffer_new (200, NULL));
+		arv_stream_push_buffer (stream, arv_buffer_new (200, NULL));
+
+		arv_device_read_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, &stream_port);
+		g_message ("stream port = %d (%d)", stream_port, arv_gv_stream_get_port (ARV_GV_STREAM (stream)));
+
 		arv_device_read_memory (device, 0x00014150, 8, memory_buffer);
 		arv_device_read_memory (device, 0x000000e8, 16, memory_buffer);
 		arv_device_read_memory (device,
@@ -43,15 +48,6 @@ main (int argc, char **argv)
 					 ARV_GVBS_USER_DEFINED_NAME,
 					 ARV_GVBS_USER_DEFINED_NAME_SIZE, name);
 
-		stream_port = arv_gv_stream_get_port (ARV_GV_STREAM (stream));
-		g_message ("stream port = %d", stream_port);
-
-		arv_device_write_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, stream_port);
-		g_message ("written stream port = %d", arv_device_read_register (device,
-										 ARV_GVBS_FIRST_STREAM_CHANNEL_PORT));
-
-		arv_device_write_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_IP_ADDRESS, 0x0a2a2b01);
-
 		g_usleep (100000);
 
 		arv_device_write_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PACKET_SIZE, 0xf0000200);
@@ -60,7 +56,7 @@ main (int argc, char **argv)
 
 		g_usleep (3000000);
 
-		arv_device_read_register (device, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE);
+		g_message ("Heartbeat %s", arv_gv_device_heartbeat (ARV_GV_DEVICE (device)) ? "OK" : "ERROR");
 
 		buffer = arv_stream_pop_buffer (stream);
 		if (buffer != NULL) {
@@ -78,11 +74,11 @@ main (int argc, char **argv)
 
 		g_usleep (3000000);
 
-		arv_device_read_register (device, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE);
+		g_message ("Heartbeat %s", arv_gv_device_heartbeat (ARV_GV_DEVICE (device)) ? "OK" : "ERROR");
 
 		g_usleep (3000000);
 
-		arv_device_read_register (device, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE);
+		g_message ("Heartbeat %s", arv_gv_device_heartbeat (ARV_GV_DEVICE (device)) ? "OK" : "ERROR");
 
 		g_usleep (3000000);
 
@@ -90,11 +86,11 @@ main (int argc, char **argv)
 
 		arv_device_write_register (device, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE, 0);
 
+		g_object_unref (stream);
+
 		g_object_unref (device);
 	} else
 		g_message ("No device found");
-
-	g_object_unref (stream);
 
 	g_object_unref (interface);
 

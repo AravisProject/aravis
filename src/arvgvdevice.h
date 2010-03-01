@@ -30,6 +30,8 @@ struct _ArvGvDevice {
 	GSocketAddress	*device_address;
 
 	void *socket_buffer;
+
+	gboolean is_controller;
 };
 
 struct _ArvGvDeviceClass {
@@ -39,6 +41,8 @@ struct _ArvGvDeviceClass {
 GType arv_gv_device_get_type (void);
 
 ArvDevice * 		arv_gv_device_new 		(GInetAddress *inet_address);
+
+gboolean 		arv_gv_device_heartbeat 	(ArvGvDevice *gv_device);
 
 G_END_DECLS
 
