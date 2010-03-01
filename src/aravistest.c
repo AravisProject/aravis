@@ -18,6 +18,7 @@ main (int argc, char **argv)
 	char name[ARV_GVBS_USER_DEFINED_NAME_SIZE] = "lapp-vicam02";
 	guint32 stream_port;
 
+	g_thread_init (NULL);
 	g_type_init ();
 
 	interface = arv_gv_interface_get_instance ();
