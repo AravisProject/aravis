@@ -322,6 +322,8 @@ arv_gv_device_create_stream (ArvDevice *device)
 	arv_device_read_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, &stream_port);
 	g_message ("stream port = %d", stream_port);
 	arv_device_write_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_IP_ADDRESS, 0x869E61B4);
+/*        arv_device_write_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_IP_ADDRESS, 0x0a2a2b01);*/
+	arv_device_write_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PACKET_SIZE, 0xf00005dc);
 	arv_device_read_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, &stream_port);
 	g_message ("stream port = %d", stream_port);
 

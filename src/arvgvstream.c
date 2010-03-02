@@ -21,7 +21,7 @@ arv_gv_stream_thread (void *data)
 	ArvGvStreamThreadData *thread_data = data;
 	GPollFD poll_fd;
 	int n_events;
-	char packet_buffer[1024];
+	char packet_buffer[65536];
 	ArvGvspPacket *packet;
 	ArvBuffer *buffer = NULL;
 	guint16 block_id = 0;
@@ -36,12 +36,10 @@ arv_gv_stream_thread (void *data)
 	poll_fd.revents = 0;
 
 	do {
-		n_events = g_poll (&poll_fd, 1, 50);
+		n_events = g_poll (&poll_fd, 1, 1000);
 
 		if (n_events > 0) {
-			read_count = g_socket_receive (thread_data->socket, packet_buffer, 1024, NULL, NULL);
-
-			arv_gvsp_packet_debug (packet, read_count);
+			read_count = g_socket_receive (thread_data->socket, packet_buffer, 65536, NULL, NULL);
 
 			switch (arv_gvsp_packet_get_packet_type (packet)) {
 				case ARV_GVSP_PACKET_TYPE_DATA_LEADER:
@@ -59,20 +57,26 @@ arv_gv_stream_thread (void *data)
 					break;
 
 				case ARV_GVSP_PACKET_TYPE_DATA_BLOCK:
-					if (buffer == NULL ||
-					    buffer->status != ARV_BUFFER_STATUS_FILLING)
+					if (buffer == NULL)
 						break;
 					block_id++;
 					if (arv_gvsp_packet_get_block_id (packet) != block_id) {
+						arv_gvsp_packet_debug (packet, read_count);
 						arv_debug (ARV_DEBUG_LEVEL_STANDARD,
-							   "[GvStream::thread] Missing block (expected %d - %d)",
+							   "[GvStream::thread] Missing block (expected %d - %d)"
+							   " frame %d",
 							   block_id,
-							   arv_gvsp_packet_get_block_id (packet));
+							   arv_gvsp_packet_get_block_id (packet),
+							   arv_gvsp_packet_get_frame_id (packet));
 						buffer->status = ARV_BUFFER_STATUS_MISSING_BLOCK;
+						block_id =  arv_gvsp_packet_get_block_id (packet);
 						break;
 					}
+					if (buffer->status != ARV_BUFFER_STATUS_FILLING)
+						break;
 					block_size = arv_gvsp_packet_get_data_size (read_count);
 					if (block_size + offset > buffer->size) {
+						arv_gvsp_packet_debug (packet, read_count);
 						buffer->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
 						break;
 					}
