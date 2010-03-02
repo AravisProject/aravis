@@ -10,7 +10,7 @@ AC_INIT([aravis],[aravis_version],[http://bugzilla.gnome.org/enter_bug.cgi?produ
 AM_INIT_AUTOMAKE([-Wno-portability])
 AM_MAINTAINER_MODE
 
-AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_HEADERS([src/arvconfig.h])
 AC_CONFIG_MACRO_DIR([m4])
 
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
@@ -28,7 +28,24 @@ IT_PROG_INTLTOOL([0.31.2])
 
 LT_INIT()
 
-PKG_CHECK_MODULES(ARAVIS, [gobject-2.0 glib-2.0 >= 2.22 gio-2.0 libxml-2.0 gthread-2.0])
+AC_ARG_ENABLE(cairo, [  --enable-cairo          Enable cairo support], [enable_cairo=$enableval], [enable_cairo=no])
+
+PKG_PROG_PKG_CONFIG([0.14])
+
+ARAVIS_REQUIRES="[gobject-2.0 glib-2.0 >= 2.22 gio-2.0 libxml-2.0 gthread-2.0]"
+
+with_cairo=no
+if test "x$enable_cairo" = "xyes"; then
+	PKG_CHECK_MODULES([CAIRO],   [cairo >= 1.2],
+			  [AC_DEFINE([ARAVIS_WITH_CAIRO], [1], [Cairo support])
+			  ARAVIS_REQUIRES+=" [cairo >= 1.2]"
+			  with_cairo=yes],
+			  [echo -n])
+fi
+AM_CONDITIONAL(ARAVIS_WITH_CAIRO, test "x$with_cairo" = "xyes")
+
+PKG_CHECK_MODULES(ARAVIS, $ARAVIS_REQUIRES)
+
 AC_SUBST(ARAVIS_CFLAGS)
 AC_SUBST(ARAVIS_LIBS)
 
@@ -47,7 +64,7 @@ AC_OUTPUT
 echo ""
 echo "Configuration:"
 echo ""
+echo "	Cairo support:		$with_cairo"
 echo "	Compiler:		${CC}"
 echo "	Compiler flags:		${ARAVIS_CFLAGS}"
 echo ""
-

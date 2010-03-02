@@ -2,6 +2,7 @@
 #define ARV_H
 
 #include <glib-object.h>
+#include <arvconfig.h>
 
 G_BEGIN_DECLS
 

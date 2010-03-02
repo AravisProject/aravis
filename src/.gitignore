@@ -1,3 +1,5 @@
 aravistest
 arvenumtypes.c
 arvenumtypes.h
+arvconfig.h
+arvconfig.h.in

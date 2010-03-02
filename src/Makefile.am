@@ -17,10 +17,10 @@ AM_CFLAGS =\
 
 lib_LTLIBRARIES = libaravis.la
 
-BUILT_SOURCES = arvenumtypes.c arvenumtypes.h
+BUILT_SOURCES = arvenumtypes.h arvenumtypes.c
 
-EXTRA_DIST = arvenumtypes.c.template \
-	     arvenumtypes.h.template
+EXTRA_DIST = arvenumtypes.h.template \
+	     arvenumtypes.c.template
 
 libaravis_la_LIBADD = 				\
 	$(ARAVIS_LIBS)
@@ -57,7 +57,7 @@ ARAVIS_HDRS = 					\
 
 libaravis_ladir = $(includedir)/aravis
 libaravis_la_HEADERS = $(ARAVIS_HDRS)
-libaravis_la_HEADERS += arvenumtypes.h
+libaravis_la_HEADERS += arvenumtypes.h arvconfig.h
 
 arvenumtypes.h: arvenumtypes.h.template $(ARAVIS_HDRS) $(GLIB_MKENUMS)
 	$(AM_V_GEN) (cd $(srcdir) && $(GLIB_MKENUMS) --template arvenumtypes.h.template $(libaravis_la_HEADERS)) > $@
