@@ -37,9 +37,7 @@ struct _ArvGvDeviceClass {
 
 GType arv_gv_device_get_type (void);
 
-ArvDevice * 		arv_gv_device_new 		(GInetAddress *inet_address);
-
-//gboolean 		arv_gv_device_heartbeat 	(ArvGvDevice *gv_device);
+ArvDevice * 		arv_gv_device_new 		(GInetAddress *interface_address, GInetAddress *device_address);
 
 G_END_DECLS
 

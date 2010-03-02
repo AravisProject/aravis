@@ -177,12 +177,16 @@ arv_gv_interface_receive_hello_packet (ArvGvInterface *gv_interface)
 					if (device != NULL)
 						g_free (address);
 					else {
-						GInetAddress *inet_address;
+						GInetAddress *interface_address;
+						GInetAddress *device_address;
 
-						inet_address = g_inet_address_new_from_string (address);
-						device = arv_gv_device_new (inet_address);
+						interface_address = g_inet_socket_address_get_address
+							(G_INET_SOCKET_ADDRESS (infos->interface_address));
+
+						device_address = g_inet_address_new_from_string (address);
+						device = arv_gv_device_new (interface_address, device_address);
 						g_hash_table_insert (gv_interface->devices, address, device);
-						g_object_unref (inet_address);
+						g_object_unref (device_address);
 					}
 				}
 			}

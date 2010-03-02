@@ -15,7 +15,7 @@ typedef struct {
 	guint32 packet_count;
 
 	GSocket *socket;
-	GSocketAddress	*control_address;
+	GSocketAddress	*interface_address;
 	GSocketAddress	*device_address;
 
 	void *buffer;
@@ -311,21 +311,26 @@ arv_gv_device_load_genicam (ArvGvDevice *gv_device)
 static ArvStream *
 arv_gv_device_create_stream (ArvDevice *device)
 {
+	ArvGvDevice *gv_device = ARV_GV_DEVICE (device);
+	ArvGvDeviceIOData *io_data = gv_device->io_data;
 	ArvStream *stream;
+	const guint8 *address_bytes;
 	guint32 stream_port;
+	GInetAddress *interface_address;
 
 	stream = arv_gv_stream_new (0);
 
 	stream_port = arv_gv_stream_get_port (ARV_GV_STREAM (stream));
 
+	interface_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (io_data->interface_address));
+	address_bytes = g_inet_address_to_bytes (interface_address);
+
+	arv_device_write_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PACKET_SIZE, 0x000005dc);
+	arv_device_write_memory (device, ARV_GVBS_FIRST_STREAM_CHANNEL_IP_ADDRESS, 4, (guint8 *) address_bytes);
 	arv_device_write_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, stream_port);
 	arv_device_read_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, &stream_port);
-	g_message ("stream port = %d", stream_port);
-	arv_device_write_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_IP_ADDRESS, 0x869E61B4);
-/*        arv_device_write_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_IP_ADDRESS, 0x0a2a2b01);*/
-	arv_device_write_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PACKET_SIZE, 0xf00005dc);
-	arv_device_read_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, &stream_port);
-	g_message ("stream port = %d", stream_port);
+
+	arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[GvDevice::create_stream] stream port = %d", stream_port);
 
 	return stream;
 }
@@ -383,14 +388,14 @@ arv_gv_device_write_register (ArvDevice *device, guint32 address, guint32 value)
 }
 
 ArvDevice *
-arv_gv_device_new (GInetAddress *inet_address)
+arv_gv_device_new (GInetAddress *interface_address, GInetAddress *device_address)
 {
 	ArvGvDevice *gv_device;
 	ArvGvDeviceIOData *io_data;
 	ArvGvDeviceHeartbeatData *heartbeat_data;
-	GInetAddress *incoming_inet_address;
 
-	g_return_val_if_fail (G_IS_INET_ADDRESS (inet_address), NULL);
+	g_return_val_if_fail (G_IS_INET_ADDRESS (interface_address), NULL);
+	g_return_val_if_fail (G_IS_INET_ADDRESS (device_address), NULL);
 
 	gv_device = g_object_new (ARV_TYPE_GV_DEVICE, NULL);
 
@@ -398,14 +403,14 @@ arv_gv_device_new (GInetAddress *inet_address)
 
 	io_data->mutex = g_mutex_new ();
 	io_data->packet_count = 0;
+
+	io_data->interface_address = g_inet_socket_address_new (interface_address, 0);
+	io_data->device_address = g_inet_socket_address_new (device_address, ARV_GVCP_PORT);
 	io_data->socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
-						   G_SOCKET_TYPE_DATAGRAM,
-						   G_SOCKET_PROTOCOL_UDP, NULL);
-	incoming_inet_address = g_inet_address_new_any (G_SOCKET_FAMILY_IPV4);
-	io_data->control_address = g_inet_socket_address_new (incoming_inet_address, 0);
-	g_object_unref (incoming_inet_address);
-	io_data->device_address = g_inet_socket_address_new (inet_address, ARV_GVCP_PORT);
-	g_socket_bind (io_data->socket, io_data->control_address, TRUE, NULL);
+					G_SOCKET_TYPE_DATAGRAM,
+					G_SOCKET_PROTOCOL_UDP, NULL);
+	g_socket_bind (io_data->socket, io_data->interface_address, TRUE, NULL);
+
 	io_data->buffer = g_malloc (ARV_GV_DEVICE_BUFFER_SIZE);
 
 	gv_device->io_data = io_data;
@@ -455,7 +460,7 @@ arv_gv_device_finalize (GObject *object)
 
 	io_data = gv_device->io_data;
 	g_object_unref (io_data->device_address);
-	g_object_unref (io_data->control_address);
+	g_object_unref (io_data->interface_address);
 	g_object_unref (io_data->socket);
 	g_free (io_data->buffer);
 	g_mutex_free (io_data->mutex);
