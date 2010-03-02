@@ -45,12 +45,9 @@ main (int argc, char **argv)
 					ARV_GVBS_USER_DEFINED_NAME,
 					ARV_GVBS_USER_DEFINED_NAME_SIZE, memory_buffer);
 
-		arv_device_write_register (device, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE, 2);
 		arv_device_write_memory (device,
 					 ARV_GVBS_USER_DEFINED_NAME,
 					 ARV_GVBS_USER_DEFINED_NAME_SIZE, name);
-
-		g_usleep (100000);
 
 		arv_device_write_register (device, ARV_GC1380_ACQUISITION_CONTROL, ARV_GC1380_ACQUISITION_START);
 
@@ -70,20 +67,11 @@ main (int argc, char **argv)
 			arv_stream_push_buffer (stream, buffer);
 		}
 
-		g_usleep (3000000);
-
-
-		g_usleep (3000000);
-
-
-		g_usleep (3000000);
+		g_usleep (10000000);
 
 		arv_device_write_register (device, ARV_GC1380_ACQUISITION_CONTROL, ARV_GC1380_ACQUISITION_STOP);
 
-		arv_device_write_register (device, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE, 0);
-
 		g_object_unref (stream);
-
 		g_object_unref (device);
 	} else
 		g_message ("No device found");
