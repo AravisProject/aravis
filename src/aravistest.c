@@ -2,6 +2,9 @@
 #include <arvgvinterface.h>
 #include <arvgvstream.h>
 #include <arvgvdevice.h>
+#ifdef ARAVIS_WITH_CAIRO
+#include <cairo.h>
+#endif
 
 #define ARV_GC1380_PAYLOAD_SIZE			0x00012200
 #define ARV_GC1380_ACQUISITION_CONTROL		0x000130f4
@@ -19,6 +22,9 @@ main (int argc, char **argv)
 	char memory_buffer[100000];
 	char name[ARV_GVBS_USER_DEFINED_NAME_SIZE] = "lapp-vicam02";
 	int i;
+#ifdef ARAVIS_WITH_CAIRO
+	gboolean snapshot_done = FALSE;
+#endif
 
 	g_thread_init (NULL);
 	g_type_init ();
@@ -57,6 +63,22 @@ main (int argc, char **argv)
 		do  {
 			buffer = arv_stream_pop_buffer (stream);
 			if (buffer != NULL) {
+#ifdef ARAVIS_WITH_CAIRO
+				if (!snapshot_done &&
+				    buffer->status == ARV_BUFFER_STATUS_SUCCESS) {
+					snapshot_done = TRUE;
+
+					cairo_surface_t *surface;
+
+					surface = cairo_image_surface_create_for_data (buffer->data,
+										       CAIRO_FORMAT_A8,
+										       buffer->width,
+										       buffer->height,
+										       buffer->width);
+					cairo_surface_write_to_png (surface, "test.png");
+					cairo_surface_destroy (surface);
+				}
+#endif
 				g_message ("Image %dx%d (id: %d - status: %d)",
 					   buffer->width, buffer->height, buffer->frame_id, buffer->status);
 				arv_stream_push_buffer (stream, buffer);
