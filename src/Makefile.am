@@ -19,6 +19,9 @@ lib_LTLIBRARIES = libaravis.la
 
 BUILT_SOURCES = arvenumtypes.c arvenumtypes.h
 
+EXTRA_DIST = arvenumtypes.c.template \
+	     arvenumtypes.h.template
+
 libaravis_la_LIBADD = 				\
 	$(ARAVIS_LIBS)
 
