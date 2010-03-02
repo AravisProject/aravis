@@ -167,7 +167,7 @@ _write_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 value)
 	size_t packet_size;
 	GPollFD poll_fd;
 	int count;
-	gboolean result;
+	gboolean result = TRUE;
 
 	g_mutex_lock (io_data->mutex);
 
