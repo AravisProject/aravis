@@ -7,7 +7,9 @@
 #define ARV_GC1380_ACQUISITION_STOP		0
 #define ARV_GC1380_ACQUISITION_START		1
 #define ARV_GC1380_ACQUISITION_ABORT		2
-#define ARV_GC1380_ACQUISITION_IMAGE_SIZE	(200*100)
+/*#define ARV_GC1380_ACQUISITION_IMAGE_SIZE	(200*100)*/
+#define ARV_GC1380_ACQUISITION_IMAGE_SIZE	(680*512)
+/*#define ARV_GC1380_ACQUISITION_IMAGE_SIZE	(1360*1024)*/
 
 int
 main (int argc, char **argv)
@@ -18,6 +20,7 @@ main (int argc, char **argv)
 	ArvBuffer *buffer;
 	char memory_buffer[100000];
 	char name[ARV_GVBS_USER_DEFINED_NAME_SIZE] = "lapp-vicam02";
+	int i;
 
 	g_thread_init (NULL);
 	g_type_init ();
@@ -30,10 +33,8 @@ main (int argc, char **argv)
 
 		stream = arv_device_get_stream (device);
 
-		arv_stream_push_buffer (stream, arv_buffer_new (ARV_GC1380_ACQUISITION_IMAGE_SIZE, NULL));
-		arv_stream_push_buffer (stream, arv_buffer_new (ARV_GC1380_ACQUISITION_IMAGE_SIZE, NULL));
-		arv_stream_push_buffer (stream, arv_buffer_new (ARV_GC1380_ACQUISITION_IMAGE_SIZE, NULL));
-		arv_stream_push_buffer (stream, arv_buffer_new (ARV_GC1380_ACQUISITION_IMAGE_SIZE, NULL));
+		for (i = 0; i < 30; i++)
+			arv_stream_push_buffer (stream, arv_buffer_new (ARV_GC1380_ACQUISITION_IMAGE_SIZE, NULL));
 
 		arv_device_read_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, &stream_port);
 		g_message ("stream port = %d (%d)", stream_port, arv_gv_stream_get_port (ARV_GV_STREAM (stream)));
@@ -50,8 +51,6 @@ main (int argc, char **argv)
 					 ARV_GVBS_USER_DEFINED_NAME_SIZE, name);
 
 		g_usleep (100000);
-
-		arv_device_write_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PACKET_SIZE, 0xf0000200);
 
 		arv_device_write_register (device, ARV_GC1380_ACQUISITION_CONTROL, ARV_GC1380_ACQUISITION_START);
 
