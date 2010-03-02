@@ -3,13 +3,11 @@
 #include <arvgvstream.h>
 #include <arvgvdevice.h>
 
+#define ARV_GC1380_PAYLOAD_SIZE			0x00012200
 #define ARV_GC1380_ACQUISITION_CONTROL		0x000130f4
 #define ARV_GC1380_ACQUISITION_STOP		0
 #define ARV_GC1380_ACQUISITION_START		1
 #define ARV_GC1380_ACQUISITION_ABORT		2
-/*#define ARV_GC1380_ACQUISITION_IMAGE_SIZE	(200*100)*/
-#define ARV_GC1380_ACQUISITION_IMAGE_SIZE	(680*512)
-/*#define ARV_GC1380_ACQUISITION_IMAGE_SIZE	(1360*1024)*/
 
 int
 main (int argc, char **argv)
@@ -29,15 +27,18 @@ main (int argc, char **argv)
 
 	device = arv_interface_get_first_device (interface);
 	if (device != NULL) {
-		guint32 stream_port;
+		guint32 value;
 
 		stream = arv_device_get_stream (device);
 
-		for (i = 0; i < 30; i++)
-			arv_stream_push_buffer (stream, arv_buffer_new (ARV_GC1380_ACQUISITION_IMAGE_SIZE, NULL));
+		arv_device_read_register (device, ARV_GC1380_PAYLOAD_SIZE, &value);
+		g_message ("payload size = %d", value);
 
-		arv_device_read_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, &stream_port);
-		g_message ("stream port = %d (%d)", stream_port, arv_gv_stream_get_port (ARV_GV_STREAM (stream)));
+		for (i = 0; i < 30; i++)
+			arv_stream_push_buffer (stream, arv_buffer_new (value, NULL));
+
+		arv_device_read_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, &value);
+		g_message ("stream port = %d (%d)", value, arv_gv_stream_get_port (ARV_GV_STREAM (stream)));
 
 		arv_device_read_memory (device, 0x00014150, 8, memory_buffer);
 		arv_device_read_memory (device, 0x000000e8, 16, memory_buffer);
@@ -53,19 +54,14 @@ main (int argc, char **argv)
 
 		g_usleep (3000000);
 
-		buffer = arv_stream_pop_buffer (stream);
-		if (buffer != NULL) {
-			g_message ("Image %dx%d (id: %d - status: %d)",
-				   buffer->width, buffer->height, buffer->frame_id, buffer->status);
-			arv_stream_push_buffer (stream, buffer);
-		}
-
-		buffer = arv_stream_pop_buffer (stream);
-		if (buffer != NULL) {
-			g_message ("Image %dx%d (id: %d - status: %d)",
-				   buffer->width, buffer->height, buffer->frame_id, buffer->status);
-			arv_stream_push_buffer (stream, buffer);
-		}
+		do  {
+			buffer = arv_stream_pop_buffer (stream);
+			if (buffer != NULL) {
+				g_message ("Image %dx%d (id: %d - status: %d)",
+					   buffer->width, buffer->height, buffer->frame_id, buffer->status);
+				arv_stream_push_buffer (stream, buffer);
+			}
+		} while (buffer != NULL);
 
 		g_usleep (10000000);
 
