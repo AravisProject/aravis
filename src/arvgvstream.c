@@ -13,6 +13,13 @@ typedef struct {
 	gboolean cancel;
 	GAsyncQueue *input_queue;
 	GAsyncQueue *output_queue;
+
+	/* Statistics */
+
+	guint n_completed_frames;
+	guint n_missed_frames;
+	guint n_size_mismatch_errors;
+	guint n_missing_blocks;
 } ArvGvStreamThreadData;
 
 static void *
@@ -46,8 +53,10 @@ arv_gv_stream_thread (void *data)
 					if (buffer != NULL)
 						g_async_queue_push (thread_data->output_queue, buffer);
 					buffer = g_async_queue_try_pop (thread_data->input_queue);
-					if (buffer == NULL)
+					if (buffer == NULL) {
+						thread_data->n_missed_frames++;
 						break;
+					}
 					buffer->width = arv_gvsp_packet_get_width (packet);
 					buffer->height = arv_gvsp_packet_get_height (packet);
 					buffer->frame_id = arv_gvsp_packet_get_frame_id (packet);
@@ -57,7 +66,8 @@ arv_gv_stream_thread (void *data)
 					break;
 
 				case ARV_GVSP_PACKET_TYPE_DATA_BLOCK:
-					if (buffer == NULL)
+					if (buffer == NULL ||
+					    buffer->status != ARV_BUFFER_STATUS_FILLING)
 						break;
 					block_id++;
 					if (arv_gvsp_packet_get_block_id (packet) != block_id) {
@@ -70,14 +80,14 @@ arv_gv_stream_thread (void *data)
 							   arv_gvsp_packet_get_frame_id (packet));
 						buffer->status = ARV_BUFFER_STATUS_MISSING_BLOCK;
 						block_id =  arv_gvsp_packet_get_block_id (packet);
+						thread_data->n_missing_blocks++;
 						break;
 					}
-					if (buffer->status != ARV_BUFFER_STATUS_FILLING)
-						break;
 					block_size = arv_gvsp_packet_get_data_size (read_count);
 					if (block_size + offset > buffer->size) {
 						arv_gvsp_packet_debug (packet, read_count);
 						buffer->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
+						thread_data->n_size_mismatch_errors++;
 						break;
 					}
 					memcpy (buffer->data + offset, &packet->data, block_size);
@@ -92,6 +102,8 @@ arv_gv_stream_thread (void *data)
 					if (buffer != NULL) {
 						if (buffer->status == ARV_BUFFER_STATUS_FILLING)
 							buffer->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
+						if (buffer->status == ARV_BUFFER_STATUS_SUCCESS)
+							thread_data->n_completed_frames++;
 						g_async_queue_push (thread_data->output_queue, buffer);
 						buffer = NULL;
 					}
@@ -150,6 +162,11 @@ arv_gv_stream_new (guint16 port)
 	thread_data->input_queue = stream->input_queue;
 	thread_data->output_queue = stream->output_queue;
 
+	thread_data->n_completed_frames = 0;
+	thread_data->n_missed_frames = 0;
+	thread_data->n_size_mismatch_errors = 0;
+	thread_data->n_missing_blocks = 0;
+
 	gv_stream->thread_data = thread_data;
 
 	gv_stream->thread = g_thread_create (arv_gv_stream_thread, gv_stream->thread_data, TRUE, NULL);
@@ -173,6 +190,15 @@ arv_gv_stream_finalize (GObject *object)
 		ArvGvStreamThreadData *thread_data;
 
 		thread_data = gv_stream->thread_data;
+
+		arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+			   "[GvStream::finalize] n_completed_frames     = %d", thread_data->n_completed_frames);
+		arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+			   "[GvStream::finalize] n_missed_frames        = %d", thread_data->n_missed_frames);
+		arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+			   "[GvStream::finalize] n_size_mismatch_errors = %d", thread_data->n_size_mismatch_errors);
+		arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+			   "[GvStream::finalize] n_missing_blocks       = %d", thread_data->n_missing_blocks);
 
 		thread_data->cancel = TRUE;
 		g_thread_join (gv_stream->thread);
