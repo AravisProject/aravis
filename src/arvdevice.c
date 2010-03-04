@@ -55,12 +55,24 @@ arv_device_write_register (ArvDevice *device, guint32 address, guint32 value)
 }
 
 void
-arv_device_set_genicam (ArvDevice *device, char *genicam)
+arv_device_set_genicam (ArvDevice *device, char *genicam, size_t size)
 {
 	g_return_if_fail (ARV_IS_DEVICE (device));
 
-	g_free (device->genicam);
-	device->genicam = genicam;
+	g_free (device->genicam_data);
+	device->genicam_data = genicam;
+	device->genicam_size = size;
+}
+
+const char *
+arv_device_get_genicam (ArvDevice *device, size_t *size)
+{
+	g_return_val_if_fail (ARV_IS_DEVICE (device), NULL);
+
+	if (size != NULL)
+		*size = device->genicam_size;
+
+	return device->genicam_data;
 }
 
 static void
@@ -76,7 +88,7 @@ arv_device_finalize (GObject *object)
 	if (ARV_IS_STREAM (device->stream))
 		g_object_unref (device->stream);
 
-	g_free (device->genicam);
+	g_free (device->genicam_data);
 
 	parent_class->finalize (object);
 }

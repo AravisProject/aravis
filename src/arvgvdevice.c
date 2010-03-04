@@ -249,11 +249,15 @@ arv_gv_device_leave_control (ArvGvDevice *gv_device)
 }
 
 static char *
-_load_genicam (ArvGvDevice *gv_device, guint32 address)
+_load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 {
 	char filename[ARV_GVBS_XML_URL_SIZE];
 	char **tokens;
 	char *genicam = NULL;
+
+	g_return_val_if_fail (size != NULL, NULL);
+
+	*size = 0;
 
 	arv_device_read_memory (ARV_DEVICE (gv_device), address, ARV_GVBS_XML_URL_SIZE, filename);
 	filename[ARV_GVBS_XML_URL_SIZE - 1] = '\0';
@@ -284,6 +288,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address)
 				arv_device_read_memory (ARV_DEVICE (gv_device), file_address, file_size,
 							genicam);
 				genicam [file_size - 1] = '\0';
+				*size = file_size;
 			}
 		}
 	}
@@ -297,13 +302,14 @@ static void
 arv_gv_device_load_genicam (ArvGvDevice *gv_device)
 {
 	char *genicam;
+	size_t size;
 
-	genicam = _load_genicam (gv_device, ARV_GVBS_FIRST_XML_URL);
+	genicam = _load_genicam (gv_device, ARV_GVBS_FIRST_XML_URL, &size);
 	if (genicam == NULL)
-		genicam = _load_genicam (gv_device, ARV_GVBS_SECOND_XML_URL);
+		genicam = _load_genicam (gv_device, ARV_GVBS_SECOND_XML_URL, &size);
 
 	if (genicam != NULL)
-		arv_device_set_genicam (ARV_DEVICE (gv_device), genicam);
+		arv_device_set_genicam (ARV_DEVICE (gv_device), genicam, size);
 }
 
 /* ArvDevice implemenation */
@@ -486,7 +492,7 @@ arv_gv_device_class_init (ArvGvDeviceClass *gv_device_class)
 	device_class->read_register = arv_gv_device_read_register;
 	device_class->write_register = arv_gv_device_write_register;
 
-	arv_gv_device_url_regex = g_regex_new ("^(local:|file:)(.+\\.xml);?([0-9:a-f]*)?;?([0-9:a-f]*)?$",
+	arv_gv_device_url_regex = g_regex_new ("^(local:|file:|http:)(.+\\.[^;]+);?([0-9:a-f]*)?;?([0-9:a-f]*)?$",
 					       G_REGEX_CASELESS, 0, NULL);
 }
 
