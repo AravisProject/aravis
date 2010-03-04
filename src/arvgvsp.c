@@ -67,7 +67,8 @@ arv_gvsp_packet_to_string (const ArvGvspPacket *packet, size_t packet_size)
 			if (j == 0)
 				g_string_append (string, "  ");
 			if (index < packet_size)
-				if (*((char *) ((void *) packet) + index) >= ' ')
+				if (*((char *) ((void *) packet) + index) >= ' ' &&
+				    *((char *) ((void *) packet) + index) <  '\x7f')
 					g_string_append_c (string, *((char *) ((void *) packet) + index));
 				else g_string_append_c (string, '.');
 			else
