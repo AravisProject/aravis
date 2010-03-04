@@ -6,11 +6,17 @@
 #include <cairo.h>
 #endif
 
-#define ARV_GC1380_PAYLOAD_SIZE			0x00012200
-#define ARV_GC1380_ACQUISITION_CONTROL		0x000130f4
-#define ARV_GC1380_ACQUISITION_STOP		0
-#define ARV_GC1380_ACQUISITION_START		1
-#define ARV_GC1380_ACQUISITION_ABORT		2
+#ifdef PROSILICA		/* Prosilica */
+#define ARV_PAYLOAD_SIZE		0x00012200
+#define ARV_ACQUISITION_CONTROL		0x000130f4
+#define ARV_ACQUISITION_STOP		0
+#define ARV_ACQUISITION_START		1
+#else				/* Basler */
+#define ARV_PAYLOAD_SIZE		0xf1f0003c
+#define ARV_ACQUISITION_CONTROL		0xf0f00614
+#define ARV_ACQUISITION_STOP		0
+#define ARV_ACQUISITION_START		0x80000000
+#endif
 
 int
 main (int argc, char **argv)
@@ -20,7 +26,11 @@ main (int argc, char **argv)
 	ArvStream *stream;
 	ArvBuffer *buffer;
 	char memory_buffer[100000];
+#ifdef PROSILICA
 	char name[ARV_GVBS_USER_DEFINED_NAME_SIZE] = "lapp-vicam02";
+#else
+	char name[ARV_GVBS_USER_DEFINED_NAME_SIZE] = "lapp-vicam01";
+#endif
 	int i;
 #ifdef ARAVIS_WITH_CAIRO
 	gboolean snapshot_done = FALSE;
@@ -28,6 +38,12 @@ main (int argc, char **argv)
 
 	g_thread_init (NULL);
 	g_type_init ();
+
+#ifdef PROSILICA
+	g_message ("Testing Prosilica camera");
+#else
+	g_message ("Testing Basler camera");
+#endif
 
 	interface = arv_gv_interface_get_instance ();
 
@@ -37,7 +53,7 @@ main (int argc, char **argv)
 
 		stream = arv_device_get_stream (device);
 
-		arv_device_read_register (device, ARV_GC1380_PAYLOAD_SIZE, &value);
+		arv_device_read_register (device, ARV_PAYLOAD_SIZE, &value);
 		g_message ("payload size = %d", value);
 
 		for (i = 0; i < 30; i++)
@@ -56,7 +72,7 @@ main (int argc, char **argv)
 					 ARV_GVBS_USER_DEFINED_NAME,
 					 ARV_GVBS_USER_DEFINED_NAME_SIZE, name);
 
-		arv_device_write_register (device, ARV_GC1380_ACQUISITION_CONTROL, ARV_GC1380_ACQUISITION_START);
+		arv_device_write_register (device, ARV_ACQUISITION_CONTROL, ARV_ACQUISITION_START);
 
 		g_usleep (3000000);
 
@@ -87,7 +103,10 @@ main (int argc, char **argv)
 
 		g_usleep (10000000);
 
-		arv_device_write_register (device, ARV_GC1380_ACQUISITION_CONTROL, ARV_GC1380_ACQUISITION_STOP);
+		arv_device_read_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, &value);
+		g_message ("stream port = %d (%d)", value, arv_gv_stream_get_port (ARV_GV_STREAM (stream)));
+
+		arv_device_write_register (device, ARV_ACQUISITION_CONTROL, ARV_ACQUISITION_STOP);
 
 		g_object_unref (stream);
 		g_object_unref (device);
