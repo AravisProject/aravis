@@ -65,14 +65,15 @@ arvenumtypes.h: arvenumtypes.h.template $(ARAVIS_HDRS) $(GLIB_MKENUMS)
 arvenumtypes.c: arvenumtypes.c.template $(ARAVIS_HDRS) $(GLIB_MKENUMS)
 	$(AM_V_GEN) (cd $(srcdir) && $(GLIB_MKENUMS) --template arvenumtypes.c.template $(libaravis_la_HEADERS)) > $@
 
-bin_PROGRAMS = aravistest
+bin_PROGRAMS = arv-test arv-load-xml
 
-aravistest_SOURCES = 				\
-	aravistest.c
+arv_test_SOURCES = arvtest.c
+arv_test_LDFLAGS =
+arv_test_LDADD = $(ARAVIS_LIBS) libaravis.la
 
-aravistest_LDFLAGS =
-
-aravistest_LDADD = $(ARAVIS_LIBS) libaravis.la
+arv_load_xml_SOURCES = arvloadxml.c
+arv_load_xml_LDFLAGS =
+arv_load_xml_LDADD = $(ARAVIS_LIBS) libaravis.la
 
 CLEANFILES = $(BUILT_SOURCES)
 
