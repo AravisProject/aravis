@@ -192,33 +192,33 @@ arv_gvcp_packet_to_string (const ArvGvcpPacket *packet)
 			break;
 		case ARV_GVCP_COMMAND_WRITE_REGISTER_CMD:
 			value = g_ntohl (*((guint32 *) &data[0]));
-			g_string_append_printf (string, "address      = %10d (0x%08x)\n",
+			g_string_append_printf (string, "address      = %10u (0x%08x)\n",
 						value, value);
 			value = g_ntohl (*((guint32 *) &data[4]));
-			g_string_append_printf (string, "value        = %10d (0x%08x)\n",
+			g_string_append_printf (string, "value        = %10u (0x%08x)\n",
 						value, value);
 			break;
 		case ARV_GVCP_COMMAND_READ_REGISTER_CMD:
 			value = g_ntohl (*((guint32 *) &data[0]));
-			g_string_append_printf (string, "address      = %10d (0x%08x)\n",
+			g_string_append_printf (string, "address      = %10u (0x%08x)\n",
 						value, value);
 			break;
 		case ARV_GVCP_COMMAND_READ_REGISTER_ACK:
 			value = g_ntohl (*((guint32 *) &data[0]));
-			g_string_append_printf (string, "success       = %10d (0x%08x)\n",
+			g_string_append_printf (string, "success      = %10u (0x%08x)\n",
 						value, value);
 			break;
 		case ARV_GVCP_COMMAND_READ_MEMORY_CMD:
 			value = g_ntohl (*((guint32 *) &data[0]));
-			g_string_append_printf (string, "address      = %10d (0x%08x)\n",
+			g_string_append_printf (string, "address      = %10u (0x%08x)\n",
 						value, value);
 			value = g_ntohl (*((guint32 *) &data[4]));
-			g_string_append_printf (string, "size         = %10d (0x%08x)\n",
+			g_string_append_printf (string, "size         = %10u (0x%08x)\n",
 						value, value);
 			break;
 		case ARV_GVCP_COMMAND_READ_MEMORY_ACK:
 			value = g_ntohl (*((guint32 *) &data[0]));
-			g_string_append_printf (string, "size         = %10d (0x%08x)\n",
+			g_string_append_printf (string, "address      = %10u (0x%08x)\n",
 						value, value);
 			break;
 	}
@@ -239,7 +239,8 @@ arv_gvcp_packet_to_string (const ArvGvcpPacket *packet)
 			if (j == 0)
 				g_string_append (string, "  ");
 			if (index < packet_size)
-				if (*((char *) ((void *) packet) + index) >= ' ')
+				if (*((char *) ((void *) packet) + index) >= ' ' &&
+				    *((char *) ((void *) packet) + index) <  '\x7f')
 					g_string_append_c (string, *((char *) ((void *) packet) + index));
 				else g_string_append_c (string, '.');
 			else
