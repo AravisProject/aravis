@@ -1,6 +1,7 @@
 #include <arvgvstream.h>
 #include <arvbuffer.h>
 #include <arvgvsp.h>
+#include <arvgvcp.h>
 #include <arvdebug.h>
 #include <string.h>
 
@@ -10,6 +11,8 @@ static GObjectClass *parent_class = NULL;
 
 typedef struct {
 	GSocket *socket;
+	GSocketAddress *device_address;
+
 	gboolean cancel;
 	GAsyncQueue *input_queue;
 	GAsyncQueue *output_queue;
@@ -135,12 +138,14 @@ arv_gv_stream_get_port (ArvGvStream *gv_stream)
 }
 
 ArvStream *
-arv_gv_stream_new (guint16 port)
+arv_gv_stream_new (GInetAddress *device_address, guint16 port)
 {
 	ArvGvStream *gv_stream;
 	ArvStream *stream;
 	GInetAddress *incoming_inet_address;
 	ArvGvStreamThreadData *thread_data;
+
+	g_return_val_if_fail (G_IS_INET_ADDRESS (device_address), NULL);
 
 	gv_stream = g_object_new (ARV_TYPE_GV_STREAM, NULL);
 
@@ -158,6 +163,7 @@ arv_gv_stream_new (guint16 port)
 
 	thread_data = g_new (ArvGvStreamThreadData, 1);
 	thread_data->socket = gv_stream->socket;
+	thread_data->device_address = g_inet_socket_address_new (device_address, ARV_GVCP_PORT);
 	thread_data->cancel = FALSE;
 	thread_data->input_queue = stream->input_queue;
 	thread_data->output_queue = stream->output_queue;
@@ -202,6 +208,9 @@ arv_gv_stream_finalize (GObject *object)
 
 		thread_data->cancel = TRUE;
 		g_thread_join (gv_stream->thread);
+
+		g_object_unref (thread_data->device_address);
+
 		g_free (thread_data);
 
 		gv_stream->thread_data = NULL;

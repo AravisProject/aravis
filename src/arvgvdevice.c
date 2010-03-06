@@ -323,13 +323,15 @@ arv_gv_device_create_stream (ArvDevice *device)
 	const guint8 *address_bytes;
 	guint32 stream_port;
 	GInetAddress *interface_address;
-
-	stream = arv_gv_stream_new (0);
-
-	stream_port = arv_gv_stream_get_port (ARV_GV_STREAM (stream));
+	GInetAddress *device_address;
 
 	interface_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (io_data->interface_address));
+	device_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (io_data->device_address));
 	address_bytes = g_inet_address_to_bytes (interface_address);
+
+	stream = arv_gv_stream_new (device_address, 0);
+
+	stream_port = arv_gv_stream_get_port (ARV_GV_STREAM (stream));
 
 	arv_device_write_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PACKET_SIZE, 0x000005dc);
 	arv_device_write_memory (device, ARV_GVBS_FIRST_STREAM_CHANNEL_IP_ADDRESS, 4, (guint8 *) address_bytes);

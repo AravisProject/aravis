@@ -31,7 +31,7 @@ struct _ArvGvStreamClass {
 
 GType arv_gv_stream_get_type (void);
 
-ArvStream * 		arv_gv_stream_new 		(guint16 port);
+ArvStream * 		arv_gv_stream_new 		(GInetAddress *device_address, guint16 port);
 guint16 		arv_gv_stream_get_port		(ArvGvStream *gv_stream);
 
 G_END_DECLS
