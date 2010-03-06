@@ -2,21 +2,50 @@
 #include <arvgvinterface.h>
 #include <arvgvstream.h>
 #include <arvgvdevice.h>
+#include <arvdebug.h>
 #ifdef ARAVIS_WITH_CAIRO
 #include <cairo.h>
 #endif
+#include <stdlib.h>
 
-#ifdef PROSILICA		/* Prosilica */
-#define ARV_PAYLOAD_SIZE		0x00012200
-#define ARV_ACQUISITION_CONTROL		0x000130f4
-#define ARV_ACQUISITION_STOP		0
-#define ARV_ACQUISITION_START		1
-#else				/* Basler */
-#define ARV_PAYLOAD_SIZE		0xf1f0003c
-#define ARV_ACQUISITION_CONTROL		0xf0f00614
-#define ARV_ACQUISITION_STOP		0
-#define ARV_ACQUISITION_START		0x80000000
-#endif
+typedef struct {
+	guint32 payload_size;
+	guint32 acquisition_control;
+	guint32 acquisition_stop;
+	guint32 acquisition_start;
+} ArvCameraRegisters;
+
+static ArvCameraRegisters arv_cameras[] = {
+	{
+		.payload_size = 		0xf1f0003c,
+		.acquisition_control = 		0xf0f00614,
+		.acquisition_stop =		0x00000000,
+		.acquisition_start =		0x80000000
+	},
+	{
+		.payload_size = 		0x00012200,
+		.acquisition_control = 		0x000130f4,
+		.acquisition_stop =		0x00000000,
+		.acquisition_start =		0x00000001
+	}
+};
+
+static char *arv_option_camera_type = "prosilica";
+static int arv_option_debug_level;
+
+static const GOptionEntry arv_option_entries[] =
+{
+	{ "type",		't', 0, G_OPTION_ARG_STRING,
+		&arv_option_camera_type,	"Camera type", NULL},
+	{ "debug", 		'd', 0, G_OPTION_ARG_INT,
+		&arv_option_debug_level, 	"Debug mode", NULL },
+	{ NULL }
+};
+
+typedef enum {
+	ARV_CAMERA_TYPE_BASLER,
+	ARV_CAMERA_TYPE_PROSILICA
+} ArvCameraType;
 
 int
 main (int argc, char **argv)
@@ -25,6 +54,9 @@ main (int argc, char **argv)
 	ArvDevice *device;
 	ArvStream *stream;
 	ArvBuffer *buffer;
+	ArvCameraType camera_type;
+	GOptionContext *context;
+	GError *error = NULL;
 	char memory_buffer[100000];
 #ifdef PROSILICA
 	char name[ARV_GVBS_USER_DEFINED_NAME_SIZE] = "lapp-vicam02";
@@ -39,11 +71,30 @@ main (int argc, char **argv)
 	g_thread_init (NULL);
 	g_type_init ();
 
-#ifdef PROSILICA
-	g_message ("Testing Prosilica camera");
-#else
-	g_message ("Testing Basler camera");
-#endif
+	context = g_option_context_new (NULL);
+	g_option_context_add_main_entries (context, arv_option_entries, NULL);
+
+	if (!g_option_context_parse (context, &argc, &argv, &error)) {
+		g_option_context_free (context);
+		g_print ("Option parsing failed: %s\n", error->message);
+		g_error_free (error);
+		return EXIT_FAILURE;
+	}
+
+	g_option_context_free (context);
+
+	arv_debug_enable (arv_option_debug_level);
+
+	if (g_strcmp0 (arv_option_camera_type, "basler") == 0)
+		camera_type = ARV_CAMERA_TYPE_BASLER;
+	else if (g_strcmp0 (arv_option_camera_type, "prosilica") == 0)
+		camera_type = ARV_CAMERA_TYPE_PROSILICA;
+	else {
+		g_print ("Unknow camera type: %s\n", arv_option_camera_type);
+		return EXIT_FAILURE;
+	}
+
+	g_print ("Testing %s camera\n", arv_option_camera_type);
 
 	interface = arv_gv_interface_get_instance ();
 
@@ -53,14 +104,14 @@ main (int argc, char **argv)
 
 		stream = arv_device_get_stream (device);
 
-		arv_device_read_register (device, ARV_PAYLOAD_SIZE, &value);
-		g_message ("payload size = %d", value);
+		arv_device_read_register (device, arv_cameras[camera_type].payload_size, &value);
+		g_print ("payload size = %d\n", value);
 
 		for (i = 0; i < 30; i++)
 			arv_stream_push_buffer (stream, arv_buffer_new (value, NULL));
 
 		arv_device_read_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, &value);
-		g_message ("stream port = %d (%d)", value, arv_gv_stream_get_port (ARV_GV_STREAM (stream)));
+		g_print ("stream port = %d (%d)\n", value, arv_gv_stream_get_port (ARV_GV_STREAM (stream)));
 
 		arv_device_read_memory (device, 0x00014150, 8, memory_buffer);
 		arv_device_read_memory (device, 0x000000e8, 16, memory_buffer);
@@ -72,7 +123,9 @@ main (int argc, char **argv)
 					 ARV_GVBS_USER_DEFINED_NAME,
 					 ARV_GVBS_USER_DEFINED_NAME_SIZE, name);
 
-		arv_device_write_register (device, ARV_ACQUISITION_CONTROL, ARV_ACQUISITION_START);
+		arv_device_write_register (device,
+					  arv_cameras[camera_type].acquisition_control,
+					  arv_cameras[camera_type].acquisition_start);
 
 		g_usleep (3000000);
 
@@ -95,7 +148,7 @@ main (int argc, char **argv)
 					cairo_surface_destroy (surface);
 				}
 #endif
-				g_message ("Image %dx%d (id: %d - status: %d)",
+				g_print ("Image %dx%d (id: %d - status: %d)\n",
 					   buffer->width, buffer->height, buffer->frame_id, buffer->status);
 				arv_stream_push_buffer (stream, buffer);
 			}
@@ -104,14 +157,16 @@ main (int argc, char **argv)
 		g_usleep (10000000);
 
 		arv_device_read_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, &value);
-		g_message ("stream port = %d (%d)", value, arv_gv_stream_get_port (ARV_GV_STREAM (stream)));
+		g_print ("stream port = %d (%d)\n", value, arv_gv_stream_get_port (ARV_GV_STREAM (stream)));
 
-		arv_device_write_register (device, ARV_ACQUISITION_CONTROL, ARV_ACQUISITION_STOP);
+		arv_device_write_register (device,
+					  arv_cameras[camera_type].acquisition_control,
+					  arv_cameras[camera_type].acquisition_stop);
 
 		g_object_unref (stream);
 		g_object_unref (device);
 	} else
-		g_message ("No device found");
+		g_print ("No device found\n");
 
 	g_object_unref (interface);
 

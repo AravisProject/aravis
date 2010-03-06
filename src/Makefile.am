@@ -70,7 +70,6 @@ arvenumtypes.c: arvenumtypes.c.template $(ARAVIS_HDRS) $(GLIB_MKENUMS)
 bin_PROGRAMS = arv-test arv-load-xml
 
 arv_test_SOURCES = arvtest.c
-arv_test_CFLAGS = -DPROSILICA
 arv_test_LDFLAGS =
 arv_test_LDADD = $(ARAVIS_LIBS) libaravis.la
 
