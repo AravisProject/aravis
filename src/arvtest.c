@@ -32,11 +32,14 @@ static ArvCameraRegisters arv_cameras[] = {
 
 static char *arv_option_camera_type = "prosilica";
 static int arv_option_debug_level;
+static gboolean arv_option_snaphot = FALSE;
 
 static const GOptionEntry arv_option_entries[] =
 {
 	{ "type",		't', 0, G_OPTION_ARG_STRING,
 		&arv_option_camera_type,	"Camera type", NULL},
+	{ "snapshot",		's', 0, G_OPTION_ARG_NONE,
+		&arv_option_snaphot,	"Snapshot", NULL},
 	{ "debug", 		'd', 0, G_OPTION_ARG_INT,
 		&arv_option_debug_level, 	"Debug mode", NULL },
 	{ NULL }
@@ -133,7 +136,8 @@ main (int argc, char **argv)
 			buffer = arv_stream_pop_buffer (stream);
 			if (buffer != NULL) {
 #ifdef ARAVIS_WITH_CAIRO
-				if (!snapshot_done &&
+				if (arv_option_snaphot &&
+				    !snapshot_done &&
 				    buffer->status == ARV_BUFFER_STATUS_SUCCESS) {
 					snapshot_done = TRUE;
 
