@@ -17,6 +17,8 @@ typedef struct {
 	GAsyncQueue *input_queue;
 	GAsyncQueue *output_queue;
 
+	guint32 packet_count;
+
 	/* Statistics */
 
 	guint n_completed_frames;
@@ -24,6 +26,29 @@ typedef struct {
 	guint n_size_mismatch_errors;
 	guint n_missing_blocks;
 } ArvGvStreamThreadData;
+
+static void
+arv_gv_stream_send_packet_request (ArvGvStreamThreadData *thread_data,
+				   guint32 frame_id,
+				   guint32 first_block,
+				   guint32 last_block)
+{
+	ArvGvcpPacket *packet;
+	guint32 packet_size;
+
+	packet = arv_gvcp_packet_new_packet_resend_cmd (frame_id, first_block, last_block,
+							thread_data->packet_count++, &packet_size);
+
+	arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[GvStream::send_packet_request] frame_id = %d (%d - %d)",
+		   frame_id, first_block, last_block);
+
+	arv_gvcp_packet_debug (packet);
+
+	g_socket_send_to (thread_data->socket, thread_data->device_address, (const char *) packet, packet_size,
+			  NULL, NULL);
+
+	arv_gvcp_packet_free (packet);
+}
 
 static void *
 arv_gv_stream_thread (void *data)
@@ -167,6 +192,8 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port)
 	thread_data->cancel = FALSE;
 	thread_data->input_queue = stream->input_queue;
 	thread_data->output_queue = stream->output_queue;
+
+	thread_data->packet_count = 1;
 
 	thread_data->n_completed_frames = 0;
 	thread_data->n_missed_frames = 0;
