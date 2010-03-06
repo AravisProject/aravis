@@ -121,6 +121,34 @@ arv_gvcp_packet_new_discovery_cmd (size_t *packet_size)
 	return packet;
 }
 
+ArvGvcpPacket *
+arv_gvcp_packet_new_packet_resend_cmd (guint32 frame_id,
+				       guint32 first_block, guint32 last_block,
+				       guint32 packet_count, size_t *packet_size)
+{
+	ArvGvcpPacket *packet;
+	guint32 *data;
+
+	g_return_val_if_fail (packet_size != NULL, NULL);
+
+	*packet_size = sizeof (ArvGvcpHeader) + 3 * sizeof (guint32);
+
+	packet = g_malloc (*packet_size);
+
+	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_RESEND);
+	packet->header.command = g_htons (ARV_GVCP_COMMAND_PACKET_RESEND_CMD);
+	packet->header.size = g_htons (3 * sizeof (guint32));
+	packet->header.count = g_htons (packet_count);
+
+	data = (guint32 *) &packet->data;
+
+	data[0] = g_htonl (frame_id);
+	data[1] = g_htonl (first_block);
+	data[2] = g_htonl (last_block);
+
+	return packet;
+}
+
 static const char *
 arv_enum_to_string (GType type,
 		    guint enum_value)

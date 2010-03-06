@@ -76,6 +76,9 @@ ArvGvcpPacket * 	arv_gvcp_packet_new_read_register_cmd 	(guint32 address,
 ArvGvcpPacket * 	arv_gvcp_packet_new_write_register_cmd 	(guint32 address, guint32 value,
 								 guint32 packet_count, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_discovery_cmd 	(size_t *size);
+ArvGvcpPacket * 	arv_gvcp_packet_new_packet_resend_cmd 	(guint32 frame_id,
+								 guint32 first_block, guint32 last_block,
+								 guint32 packet_count, size_t *packet_size);
 char * 			arv_gvcp_packet_to_string 		(const ArvGvcpPacket *packet);
 void 			arv_gvcp_packet_debug 			(const ArvGvcpPacket *packet);
 
