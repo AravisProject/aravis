@@ -27,6 +27,7 @@ typedef struct {
 	guint n_missing_blocks;
 } ArvGvStreamThreadData;
 
+#if 0
 static void
 arv_gv_stream_send_packet_request (ArvGvStreamThreadData *thread_data,
 				   guint32 frame_id,
@@ -49,6 +50,7 @@ arv_gv_stream_send_packet_request (ArvGvStreamThreadData *thread_data,
 
 	arv_gvcp_packet_free (packet);
 }
+#endif
 
 static void *
 arv_gv_stream_thread (void *data)
