@@ -1,5 +1,6 @@
 arv-test
 arv-load-xml
+arv-genicam-test
 arvenumtypes.c
 arvenumtypes.h
 arvconfig.h
