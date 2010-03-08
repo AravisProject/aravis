@@ -65,11 +65,6 @@ arv_gc_parser_start_element(void *user_data,
 			int i;
 			for (i = 0; attrs[i] != NULL && attrs[i+1] != NULL; i += 2)
 				arv_gc_node_set_attribute (node, (char *) attrs[i], (char *) attrs[i+1]);
-			g_hash_table_insert (state->genicam->nodes,
-					     (char *) arv_gc_node_get_name (node),
-					     node);
-			arv_debug (ARV_DEBUG_LEVEL_STANDARD,
-				   "[GcParser::start_element] Insert node '%s'", arv_gc_node_get_name (node));
 
 			state->current_node = node;
 			state->current_node_level = state->level;
@@ -84,6 +79,15 @@ arv_gc_parser_end_element (void *user_data,
 	ArvGcParserState *state = user_data;
 
 	if (state->current_node_level == state->level) {
+		const char *node_name;
+
+		node_name = arv_gc_node_get_name (state->current_node);
+		if (node_name != NULL) {
+			g_hash_table_insert (state->genicam->nodes, (char *) name, state->current_node);
+			arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+				   "[GcParser::start_element] Insert node '%s'", name);
+		}
+
 		state->current_node_level = -1;
 		state->current_node = NULL;
 	}
