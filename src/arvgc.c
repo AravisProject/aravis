@@ -1,5 +1,7 @@
 #include <arvgc.h>
 #include <arvgcregisternode.h>
+#include <arvgcintegernode.h>
+#include <arvgcportnode.h>
 #include <arvdebug.h>
 #include <libxml/parser.h>
 #include <string.h>
@@ -15,6 +17,12 @@ arv_gc_create_node (ArvGc *genicam, const char *type)
 
 	if (strcmp (type, "IntReg") == 0)
 		node = arv_gc_register_node_new ();
+	else if (strcmp (type, "MaskedIntReg") == 0)
+		node = arv_gc_register_node_new ();
+	else if (strcmp (type, "Integer") == 0)
+		node = arv_gc_integer_node_new ();
+	else if (strcmp (type, "Port") == 0)
+		node = arv_gc_port_node_new ();
 	else
 		arv_debug (ARV_DEBUG_LEVEL_STANDARD,
 			   "[Gc::create_node] Unknown node type (%s)", type);
