@@ -33,8 +33,8 @@ libaravis_la_SOURCES =				\
 	arvgc.c					\
 	arvgcnode.c				\
 	arvgcregisternode.c			\
-	arvgcintegernode.c			\
 	arvgcportnode.c				\
+	arvgcinteger.c				\
 	arvinterface.c				\
 	arvdevice.c				\
 	arvstream.c				\
@@ -53,8 +53,8 @@ ARAVIS_HDRS = 					\
 	arvgc.h					\
 	arvgcnode.h				\
 	arvgcregisternode.h			\
-	arvgcintegernode.h			\
 	arvgcportnode.h				\
+	arvgcinteger.h				\
 	arvinterface.h				\
 	arvdevice.h				\
 	arvstream.h				\

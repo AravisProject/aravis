@@ -9,10 +9,12 @@ G_BEGIN_DECLS
 typedef struct _ArvCamera 		ArvCamera;
 
 typedef struct _ArvGc 			ArvGc;
+
 typedef struct _ArvGcNode 		ArvGcNode;
 typedef struct _ArvGcRegisterNode 	ArvGcRegisterNode;
-typedef struct _ArvGcIntegerNode 	ArvGcIntegerNode;
 typedef struct _ArvGcPortNode		ArvGcPortNode;
+
+typedef struct _ArvGcInteger		ArvGcInteger;
 
 typedef struct _ArvInterface 		ArvInterface;
 typedef struct _ArvDevice 		ArvDevice;
