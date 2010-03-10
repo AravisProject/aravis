@@ -15,12 +15,30 @@ arv_gc_create_node (ArvGc *genicam, const char *type)
 
 	g_return_val_if_fail (type != NULL, NULL);
 
-	if (strcmp (type, "IntReg") == 0)
+	if (strcmp (type, "Category") == 0)
+		node = arv_gc_node_new ();
+	else if (strcmp (type, "Command") == 0)
+		node = arv_gc_node_new ();
+	else if (strcmp (type, "Converter") == 0)
+		node = arv_gc_node_new ();
+	else if (strcmp (type, "IntConverter") == 0)
+		node = arv_gc_node_new ();
+	else if (strcmp (type, "IntReg") == 0)
 		node = arv_gc_register_node_new ();
 	else if (strcmp (type, "MaskedIntReg") == 0)
 		node = arv_gc_register_node_new ();
+	else if (strcmp (type, "StringReg") == 0)
+		node = arv_gc_node_new ();
 	else if (strcmp (type, "Integer") == 0)
 		node = arv_gc_integer_node_new ();
+	else if (strcmp (type, "Float") == 0)
+		node = arv_gc_node_new ();
+	else if (strcmp (type, "Enumeration") == 0)
+		node = arv_gc_node_new ();
+	else if (strcmp (type, "SwissKnife") == 0)
+		node = arv_gc_node_new ();
+	else if (strcmp (type, "IntSwissKnife") == 0)
+		node = arv_gc_node_new ();
 	else if (strcmp (type, "Port") == 0)
 		node = arv_gc_port_node_new ();
 	else
@@ -66,7 +84,7 @@ arv_gc_parser_start_element(void *user_data,
 
 	state->level++;
 
-	if (state->current_node == NULL) {
+	if (state->current_node == NULL && state->level > 1) {
 		node = arv_gc_create_node (state->genicam, (char *) name);
 
 		if (node != NULL) {

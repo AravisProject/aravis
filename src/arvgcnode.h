@@ -28,6 +28,7 @@ struct _ArvGcNodeClass {
 
 GType arv_gc_node_get_type (void);
 
+ArvGcNode * 	arv_gc_node_new 			(void);
 const char *	arv_gc_node_get_name			(ArvGcNode *node);
 void		arv_gc_node_set_attribute 		(ArvGcNode *node, const char *name, const char *value);
 

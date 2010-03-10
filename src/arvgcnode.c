@@ -29,6 +29,16 @@ arv_gc_node_set_attribute (ArvGcNode *node, const char *name, const char *value)
 	ARV_GC_NODE_GET_CLASS (node)->set_attribute (node, name, value);
 }
 
+ArvGcNode *
+arv_gc_node_new (void)
+{
+	ArvGcNode *node;
+
+	node = g_object_new (ARV_TYPE_GC_NODE, NULL);
+
+	return node;
+}
+
 static void
 arv_gc_node_init (ArvGcNode *gc_node)
 {
