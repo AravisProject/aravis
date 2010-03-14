@@ -24,6 +24,7 @@
 #define ARV_GC_NODE_H
 
 #include <arv.h>
+#include <arvgc.h>
 
 G_BEGIN_DECLS
 
@@ -39,20 +40,29 @@ typedef struct _ArvGcNodeClass ArvGcNodeClass;
 struct _ArvGcNode {
 	GObject	object;
 
+	ArvGc *genicam;
 	char *name;
+	ArvGcNameSpace name_space;
+	char *tooltip;
 };
 
 struct _ArvGcNodeClass {
 	GObjectClass parent_class;
 
 	void		(*set_attribute)		(ArvGcNode *node, const char *name, const char *value);
+	void 		(*add_element)			(ArvGcNode *node, const char *name, const char *content,
+							 const char **attributes);
 };
 
 GType arv_gc_node_get_type (void);
 
 ArvGcNode * 	arv_gc_node_new 			(void);
+void		arv_gc_node_set_genicam			(ArvGcNode *node, ArvGc *genicam);
+ArvGc * 	arv_gc_node_get_genicam			(ArvGcNode *node);
 const char *	arv_gc_node_get_name			(ArvGcNode *node);
 void		arv_gc_node_set_attribute 		(ArvGcNode *node, const char *name, const char *value);
+void 		arv_gc_node_add_element 		(ArvGcNode *node, const char *name, const char *content,
+							 const char **attributes);
 
 G_END_DECLS
 

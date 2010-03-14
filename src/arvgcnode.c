@@ -21,6 +21,7 @@
  */
 
 #include <arvgcnode.h>
+#include <arvdebug.h>
 #include <string.h>
 
 static GObjectClass *parent_class = NULL;
@@ -39,7 +40,12 @@ _set_attribute (ArvGcNode *node, const char *name, const char *value)
 	if (strcmp (name, "Name") == 0) {
 		g_free (node->name);
 		node->name = g_strdup (value);
-	}
+	} if (strcmp (name, "NameSpace") == 0) {
+		if (g_strcmp0 (value, "Standard") == 0)
+			node->name_space = ARV_GC_NAME_SPACE_STANDARD;
+		else
+			node->name_space = ARV_GC_NAME_SPACE_CUSTOM;
+	      }
 }
 
 void
@@ -49,6 +55,27 @@ arv_gc_node_set_attribute (ArvGcNode *node, const char *name, const char *value)
 	g_return_if_fail (name != NULL);
 
 	ARV_GC_NODE_GET_CLASS (node)->set_attribute (node, name, value);
+}
+
+static void
+_add_element (ArvGcNode *node, const char *name, const char *content, const char **attributes)
+{
+	if (strcmp (name, "ToolTip") == 0) {
+		g_free (node->tooltip);
+		node->tooltip = g_strdup (content);
+	}
+}
+
+void
+arv_gc_node_add_element (ArvGcNode *node, const char *name, const char *content, const char **attributes)
+{
+	g_return_if_fail (ARV_IS_GC_NODE (node));
+	g_return_if_fail (name != NULL);
+
+	arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[GcNode::add_element] Add %s [%s]",
+		   name, content);
+
+	ARV_GC_NODE_GET_CLASS (node)->add_element (node, name, content, attributes);
 }
 
 ArvGcNode *
@@ -61,6 +88,23 @@ arv_gc_node_new (void)
 	return node;
 }
 
+void
+arv_gc_node_set_genicam	(ArvGcNode *node, ArvGc *genicam)
+{
+	g_return_if_fail (ARV_IS_GC_NODE (node));
+	g_return_if_fail (genicam == NULL || ARV_IS_GC (genicam));
+
+	node->genicam = genicam;
+}
+
+ArvGc *
+arv_gc_node_get_genicam	(ArvGcNode *node)
+{
+	g_return_val_if_fail (ARV_IS_GC_NODE (node), NULL);
+
+	return node->genicam;
+}
+
 static void
 arv_gc_node_init (ArvGcNode *gc_node)
 {
@@ -69,6 +113,11 @@ arv_gc_node_init (ArvGcNode *gc_node)
 static void
 arv_gc_node_finalize (GObject *object)
 {
+	ArvGcNode *node = ARV_GC_NODE (object);
+
+	g_free (node->name);
+	g_free (node->tooltip);
+
 	parent_class->finalize (object);
 }
 
@@ -82,6 +131,7 @@ arv_gc_node_class_init (ArvGcNodeClass *node_class)
 	object_class->finalize = arv_gc_node_finalize;
 
 	node_class->set_attribute = _set_attribute;
+	node_class->add_element = _add_element;
 }
 
 G_DEFINE_TYPE (ArvGcNode, arv_gc_node, G_TYPE_OBJECT)

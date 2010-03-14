@@ -24,6 +24,7 @@
 #define ARV_GC_H
 
 #include <arv.h>
+#include <arvdevice.h>
 #include <arvgcnode.h>
 
 G_BEGIN_DECLS
@@ -41,6 +42,7 @@ struct _ArvGc {
 	GObject	object;
 
 	GHashTable *nodes;
+	ArvDevice *device;
 };
 
 struct _ArvGcClass {
@@ -49,7 +51,9 @@ struct _ArvGcClass {
 
 GType arv_gc_get_type (void);
 
-ArvGc * 			arv_gc_new 		(char *xml, size_t size);
+ArvGc * 			arv_gc_new 		(ArvDevice *device, char *xml, size_t size);
+
+ArvGcNode *			arv_gc_get_node		(ArvGc *genicam, const char *name);
 
 G_END_DECLS
 

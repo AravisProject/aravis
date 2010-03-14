@@ -41,16 +41,12 @@ G_BEGIN_DECLS
 #define ARV_GV_DEVICE_BUFFER_SIZE	1024
 
 typedef struct _ArvGvDeviceClass ArvGvDeviceClass;
+typedef struct _ArvGvDevicePrivate ArvGvDevicePrivate;
 
 struct _ArvGvDevice {
 	ArvDevice device;
 
-	gboolean is_controller;
-
-	void *io_data;
-
-	void *heartbeat_thread;
-	void *heartbeat_data;
+	ArvGvDevicePrivate *priv;
 };
 
 struct _ArvGvDeviceClass {

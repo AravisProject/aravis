@@ -25,6 +25,7 @@
 
 #include <arv.h>
 #include <arvstream.h>
+#include <arvgc.h>
 
 G_BEGIN_DECLS
 
@@ -36,14 +37,12 @@ G_BEGIN_DECLS
 #define ARV_DEVICE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_DEVICE, ArvDeviceClass))
 
 typedef struct _ArvDeviceClass ArvDeviceClass;
+typedef struct _ArvDevicePrivate ArvDevicePrivate;
 
 struct _ArvDevice {
 	GObject	object;
 
-	char *genicam_data;
-	size_t genicam_size;
-
-	ArvStream *stream;
+	ArvDevicePrivate *priv;
 };
 
 struct _ArvDeviceClass {
@@ -68,8 +67,9 @@ gboolean	arv_device_write_memory	 		(ArvDevice *device, guint32 address, guint32
 gboolean 	arv_device_read_register		(ArvDevice *device, guint32 address, guint32 *value);
 gboolean	arv_device_write_register 		(ArvDevice *device, guint32 address, guint32 value);
 
-void 		arv_device_set_genicam 			(ArvDevice *device, char *genicam, size_t size);
-const char * 	arv_device_get_genicam 			(ArvDevice *device, size_t *size);
+void 		arv_device_set_genicam_data		(ArvDevice *device, char *genicam, size_t size);
+const char * 	arv_device_get_genicam_data		(ArvDevice *device, size_t *size);
+ArvGc *		arv_device_get_genicam			(ArvDevice *device);
 
 G_END_DECLS
 

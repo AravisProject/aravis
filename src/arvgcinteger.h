@@ -36,6 +36,9 @@ typedef struct _ArvGcIntegerInterface ArvGcIntegerInterface;
 
 struct _ArvGcIntegerInterface {
 	GTypeInterface parent;
+
+	guint64		(*get_value)		(ArvGcInteger *gc_integer);
+	void		(*set_value)		(ArvGcInteger *gc_integer, guint64 value);
 };
 
 GType arv_gc_integer_get_type (void);

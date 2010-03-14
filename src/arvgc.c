@@ -21,8 +21,8 @@
  */
 
 #include <arvgc.h>
-#include <arvgcregisternode.h>
-#include <arvgcportnode.h>
+#include <arvgcregister.h>
+#include <arvgcport.h>
 #include <arvdebug.h>
 #include <libxml/parser.h>
 #include <string.h>
@@ -45,9 +45,9 @@ arv_gc_create_node (ArvGc *genicam, const char *type)
 	else if (strcmp (type, "IntConverter") == 0)
 		node = arv_gc_node_new ();
 	else if (strcmp (type, "IntReg") == 0)
-		node = arv_gc_register_node_new ();
+		node = arv_gc_register_new ();
 	else if (strcmp (type, "MaskedIntReg") == 0)
-		node = arv_gc_register_node_new ();
+		node = arv_gc_register_new ();
 	else if (strcmp (type, "StringReg") == 0)
 		node = arv_gc_node_new ();
 	else if (strcmp (type, "Integer") == 0)
@@ -61,14 +61,16 @@ arv_gc_create_node (ArvGc *genicam, const char *type)
 	else if (strcmp (type, "IntSwissKnife") == 0)
 		node = arv_gc_node_new ();
 	else if (strcmp (type, "Port") == 0)
-		node = arv_gc_port_node_new ();
+		node = arv_gc_port_new ();
 	else
 		arv_debug (ARV_DEBUG_LEVEL_STANDARD,
 			   "[Gc::create_node] Unknown node type (%s)", type);
 
-	if (node != NULL)
+	if (node != NULL) {
+		arv_gc_node_set_genicam (node, genicam);
 		arv_debug (ARV_DEBUG_LEVEL_STANDARD,
 			   "[Gc::create_node] Node '%s' created", type);
+	}
 
 	return node;
 }
@@ -78,6 +80,10 @@ typedef struct {
 	ArvGc *genicam;
 	ArvGcNode *current_node;
 	int current_node_level;
+
+	const char *current_element;
+	const char **current_attrs;
+	GString *current_content;
 } ArvGcParserState;
 
 static void
@@ -88,11 +94,17 @@ arv_gc_parser_start_document (void *user_data)
 	state->level = 0;
 	state->current_node = NULL;
 	state->current_node_level = -1;
+	state->current_element = NULL;
+	state->current_attrs = NULL;
+	state->current_content = g_string_new ("");
 }
 
 static void
 arv_gc_parser_end_document (void *user_data)
 {
+	ArvGcParserState *state = user_data;
+
+	g_string_free (state->current_content, TRUE);
 }
 
 static void
@@ -105,17 +117,23 @@ arv_gc_parser_start_element(void *user_data,
 
 	state->level++;
 
-	if (state->current_node == NULL && state->level > 1) {
-		node = arv_gc_create_node (state->genicam, (char *) name);
+	if (state->current_node == NULL) {
+	       if (state->level > 1) {
+		       node = arv_gc_create_node (state->genicam, (char *) name);
 
-		if (node != NULL) {
-			int i;
-			for (i = 0; attrs[i] != NULL && attrs[i+1] != NULL; i += 2)
-				arv_gc_node_set_attribute (node, (char *) attrs[i], (char *) attrs[i+1]);
+		       if (node != NULL) {
+			       int i;
+			       for (i = 0; attrs[i] != NULL && attrs[i+1] != NULL; i += 2)
+				       arv_gc_node_set_attribute (node, (char *) attrs[i], (char *) attrs[i+1]);
 
-			state->current_node = node;
-			state->current_node_level = state->level;
-		}
+			       state->current_node = node;
+			       state->current_node_level = state->level;
+		       }
+	       }
+	} else {
+		state->current_element = (const char *) name;
+		state->current_attrs = (const char **) attrs;
+		g_string_erase (state->current_content, 0, -1);
 	}
 }
 
@@ -130,13 +148,18 @@ arv_gc_parser_end_element (void *user_data,
 
 		node_name = arv_gc_node_get_name (state->current_node);
 		if (node_name != NULL) {
-			g_hash_table_insert (state->genicam->nodes, (char *) name, state->current_node);
+			g_hash_table_insert (state->genicam->nodes, (char *) node_name, state->current_node);
 			arv_debug (ARV_DEBUG_LEVEL_STANDARD,
-				   "[GcParser::start_element] Insert node '%s'", name);
-		}
+				   "[GcParser::start_element] Insert node '%s'", node_name);
+		} else
+			g_object_unref (state->current_node);
 
 		state->current_node_level = -1;
 		state->current_node = NULL;
+	} else if (state->current_node_level < state->level &&
+		   state->current_node != NULL) {
+		arv_gc_node_add_element (state->current_node, state->current_element,
+					 state->current_content->str, state->current_attrs);
 	}
 
 	state->level--;
@@ -144,9 +167,13 @@ arv_gc_parser_end_element (void *user_data,
 
 static void
 arv_gc_parser_characters (void *user_data,
-			       const xmlChar *ch,
-			       int len)
+			  const xmlChar *text,
+			  int length)
 {
+	ArvGcParserState *state = user_data;
+
+	if (state->current_node != NULL)
+		g_string_append_len (state->current_content, (char *) text, length);
 }
 
 static void
@@ -200,8 +227,16 @@ arv_gc_parse_xml (ArvGc *genicam, const char *xml, size_t size)
 	xmlSAXUserParseMemory (&sax_handler, &state, xml, size);
 }
 
+ArvGcNode *
+arv_gc_get_node	(ArvGc *genicam, const char *name)
+{
+	g_return_val_if_fail (ARV_IS_GC (genicam), NULL);
+
+	return g_hash_table_lookup (genicam->nodes, name);
+}
+
 ArvGc *
-arv_gc_new (char *xml, size_t size)
+arv_gc_new (ArvDevice *device, char *xml, size_t size)
 {
 	ArvGc *genicam;
 
@@ -211,6 +246,7 @@ arv_gc_new (char *xml, size_t size)
 
 	genicam = g_object_new (ARV_TYPE_GC, NULL);
 	g_return_val_if_fail (genicam != NULL, NULL);
+	genicam->device = device;
 
 	arv_gc_parse_xml (genicam, xml, size);
 

@@ -1,6 +1,7 @@
 #include <arv.h>
 #include <arvdebug.h>
 #include <arvgc.h>
+#include <arvgcregister.h>
 #include <stdlib.h>
 
 static char **arv_option_filenames = NULL;
@@ -50,9 +51,18 @@ main (int argc, char **argv)
 		g_file_get_contents (arv_option_filenames[i], &xml, &size, NULL);
 
 		if (xml != NULL) {
+			ArvGcNode *node;
+
 			g_print ("Loading '%s'.\n", arv_option_filenames[i]);
 
-			genicam = arv_gc_new (xml, size);
+			genicam = arv_gc_new (NULL, xml, size);
+
+			node = arv_gc_get_node (genicam, "RegMemoryFileDefault");
+			if (node != NULL) {
+				g_print ("RegMemoryFileDefault address = 0x%Lx - length = 0x%Lx\n",
+					 arv_gc_register_get_address (ARV_GC_REGISTER (node)),
+					 arv_gc_register_get_length (ARV_GC_REGISTER (node)));
+			}
 
 			g_free (xml);
 

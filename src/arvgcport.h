@@ -20,34 +20,37 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#ifndef ARV_GC_PORT_NODE_H
-#define ARV_GC_PORT_NODE_H
+#ifndef ARV_GC_PORT_H
+#define ARV_GC_PORT_H
 
 #include <arv.h>
 #include <arvgcnode.h>
 
 G_BEGIN_DECLS
 
-#define ARV_TYPE_GC_PORT_NODE             (arv_gc_port_node_get_type ())
-#define ARV_GC_PORT_NODE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_PORT_NODE, ArvGcPortNode))
-#define ARV_GC_PORT_NODE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GC_PORT_NODE, ArvGcPortNodeClass))
-#define ARV_IS_GC_PORT_NODE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GC_PORT_NODE))
-#define ARV_IS_GC_PORT_NODE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GC_PORT_NODE))
-#define ARV_GC_PORT_NODE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GC_PORT_NODE, ArvGcPortNodeClass))
+#define ARV_TYPE_GC_PORT             (arv_gc_port_get_type ())
+#define ARV_GC_PORT(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_PORT, ArvGcPort))
+#define ARV_GC_PORT_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GC_PORT, ArvGcPortClass))
+#define ARV_IS_GC_PORT(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GC_PORT))
+#define ARV_IS_GC_PORT_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GC_PORT))
+#define ARV_GC_PORT_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GC_PORT, ArvGcPortClass))
 
-typedef struct _ArvGcPortNodeClass ArvGcPortNodeClass;
+typedef struct _ArvGcPortClass ArvGcPortClass;
 
-struct _ArvGcPortNode {
+struct _ArvGcPort {
 	ArvGcNode	node;
 };
 
-struct _ArvGcPortNodeClass {
+struct _ArvGcPortClass {
 	ArvGcNodeClass parent_class;
 };
 
-GType arv_gc_port_node_get_type (void);
+GType arv_gc_port_get_type (void);
 
-ArvGcNode * 		arv_gc_port_node_new 		(void);
+ArvGcNode * 		arv_gc_port_new 	(void);
+
+void 			arv_gc_port_read	(ArvGcPort *port, guint8 *buffer, guint64 address, guint64 length);
+void 			arv_gc_port_write	(ArvGcPort *port, guint8 *buffer, guint64 address, guint64 length);
 
 G_END_DECLS
 

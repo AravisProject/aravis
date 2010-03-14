@@ -28,13 +28,30 @@
 
 G_BEGIN_DECLS
 
+typedef enum {
+	ARV_GC_NAME_SPACE_STANDARD,
+	ARV_GC_NAME_SPACE_CUSTOM
+} ArvGcNameSpace;
+
+typedef enum {
+	ARV_GC_ACCESS_MODE_RO,
+	ARV_GC_ACCESS_MODE_WO,
+	ARV_GC_ACCESS_MODE_RW
+} ArvGcAccessMode;
+
+typedef enum {
+	ARV_GC_CACHEABLE_NO_CACHE,
+	ARV_GC_CACHEABLE_WRITE_TRHOUGH,
+	ARV_GC_CACHEABLE_WRITE_AROUND
+} ArvGcCacheable;
+
 typedef struct _ArvCamera 		ArvCamera;
 
 typedef struct _ArvGc 			ArvGc;
 
 typedef struct _ArvGcNode 		ArvGcNode;
-typedef struct _ArvGcRegisterNode 	ArvGcRegisterNode;
-typedef struct _ArvGcPortNode		ArvGcPortNode;
+typedef struct _ArvGcRegister 		ArvGcRegister;
+typedef struct _ArvGcPort		ArvGcPort;
 
 typedef struct _ArvGcInteger		ArvGcInteger;
 

@@ -17,7 +17,7 @@ main (int argc, char **argv)
 
 	device = arv_interface_get_first_device (interface);
 	if (device != NULL) {
-		genicam_data = arv_device_get_genicam (device, &genicam_size);
+		genicam_data = arv_device_get_genicam_data (device, &genicam_size);
 		g_file_set_contents ("genicam.xml", genicam_data, genicam_size, NULL);
 	} else
 		g_message ("No device found");

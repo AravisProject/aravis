@@ -29,6 +29,15 @@
 static GObjectClass *parent_class = NULL;
 static GRegex *arv_gv_device_url_regex = NULL;
 
+struct _ArvGvDevicePrivate {
+	gboolean is_controller;
+
+	void *io_data;
+
+	void *heartbeat_thread;
+	void *heartbeat_data;
+};
+
 /* Shared data (main thread - heartbeat) */
 
 typedef struct {
@@ -252,10 +261,10 @@ arv_gv_device_heartbeat_thread (void *data)
 static gboolean
 arv_gv_device_take_control (ArvGvDevice *gv_device)
 {
-	gv_device->is_controller = arv_device_write_register (ARV_DEVICE (gv_device),
-							      ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE, 2);
+	gv_device->priv->is_controller = arv_device_write_register (ARV_DEVICE (gv_device),
+								    ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE, 2);
 
-	return gv_device->is_controller;
+	return gv_device->priv->is_controller;
 }
 
 static gboolean
@@ -265,7 +274,7 @@ arv_gv_device_leave_control (ArvGvDevice *gv_device)
 
 	result = arv_device_write_register (ARV_DEVICE (gv_device),
 					    ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE, 0);
-	gv_device->is_controller = FALSE;
+	gv_device->priv->is_controller = FALSE;
 
 	return result;
 }
@@ -331,7 +340,7 @@ arv_gv_device_load_genicam (ArvGvDevice *gv_device)
 		genicam = _load_genicam (gv_device, ARV_GVBS_SECOND_XML_URL, &size);
 
 	if (genicam != NULL)
-		arv_device_set_genicam (ARV_DEVICE (gv_device), genicam, size);
+		arv_device_set_genicam_data (ARV_DEVICE (gv_device), genicam, size);
 }
 
 /* ArvDevice implemenation */
@@ -340,7 +349,7 @@ static ArvStream *
 arv_gv_device_create_stream (ArvDevice *device)
 {
 	ArvGvDevice *gv_device = ARV_GV_DEVICE (device);
-	ArvGvDeviceIOData *io_data = gv_device->io_data;
+	ArvGvDeviceIOData *io_data = gv_device->priv->io_data;
 	ArvStream *stream;
 	const guint8 *address_bytes;
 	guint32 stream_port;
@@ -375,7 +384,7 @@ arv_gv_device_read_memory (ArvDevice *device, guint32 address, guint32 size, voi
 
 	for (i = 0; i < (size + ARV_GVCP_DATA_SIZE_MAX - 1) / ARV_GVCP_DATA_SIZE_MAX; i++) {
 		block_size = MIN (ARV_GVCP_DATA_SIZE_MAX, size - i * ARV_GVCP_DATA_SIZE_MAX);
-		read_size += _read_memory (gv_device->io_data,
+		read_size += _read_memory (gv_device->priv->io_data,
 					   address + i * ARV_GVCP_DATA_SIZE_MAX,
 					   block_size, buffer + i * ARV_GVCP_DATA_SIZE_MAX);
 	}
@@ -393,7 +402,7 @@ arv_gv_device_write_memory (ArvDevice *device, guint32 address, guint32 size, vo
 
 	for (i = 0; i < (size + ARV_GVCP_DATA_SIZE_MAX - 1) / ARV_GVCP_DATA_SIZE_MAX; i++) {
 		block_size = MIN (ARV_GVCP_DATA_SIZE_MAX, size - i * ARV_GVCP_DATA_SIZE_MAX);
-		written_size += _write_memory (gv_device->io_data,
+		written_size += _write_memory (gv_device->priv->io_data,
 					       address + i * ARV_GVCP_DATA_SIZE_MAX,
 					       block_size, buffer + i * ARV_GVCP_DATA_SIZE_MAX);
 	}
@@ -406,7 +415,7 @@ arv_gv_device_read_register (ArvDevice *device, guint32 address, guint32 *value)
 {
 	ArvGvDevice *gv_device = ARV_GV_DEVICE (device);
 
-	return _read_register (gv_device->io_data, address, value);
+	return _read_register (gv_device->priv->io_data, address, value);
 }
 
 gboolean
@@ -414,7 +423,7 @@ arv_gv_device_write_register (ArvDevice *device, guint32 address, guint32 value)
 {
 	ArvGvDevice *gv_device = ARV_GV_DEVICE (device);
 
-	return _write_register (gv_device->io_data, address, value);
+	return _write_register (gv_device->priv->io_data, address, value);
 }
 
 ArvDevice *
@@ -443,7 +452,7 @@ arv_gv_device_new (GInetAddress *interface_address, GInetAddress *device_address
 
 	io_data->buffer = g_malloc (ARV_GV_DEVICE_BUFFER_SIZE);
 
-	gv_device->io_data = io_data;
+	gv_device->priv->io_data = io_data;
 
 	arv_gv_device_load_genicam (gv_device);
 
@@ -454,10 +463,11 @@ arv_gv_device_new (GInetAddress *interface_address, GInetAddress *device_address
 	heartbeat_data->period_us = 1000000;
 	heartbeat_data->cancel = FALSE;
 
-	gv_device->heartbeat_data = heartbeat_data;
+	gv_device->priv->heartbeat_data = heartbeat_data;
 
-	gv_device->heartbeat_thread = g_thread_create (arv_gv_device_heartbeat_thread, gv_device->heartbeat_data,
-						       TRUE, NULL);
+	gv_device->priv->heartbeat_thread = g_thread_create (arv_gv_device_heartbeat_thread,
+							     gv_device->priv->heartbeat_data,
+							     TRUE, NULL);
 
 	return ARV_DEVICE (gv_device);
 }
@@ -465,6 +475,7 @@ arv_gv_device_new (GInetAddress *interface_address, GInetAddress *device_address
 static void
 arv_gv_device_init (ArvGvDevice *gv_device)
 {
+	gv_device->priv = G_TYPE_INSTANCE_GET_PRIVATE (gv_device, ARV_TYPE_GV_DEVICE, ArvGvDevicePrivate);
 }
 
 static void
@@ -473,29 +484,29 @@ arv_gv_device_finalize (GObject *object)
 	ArvGvDevice *gv_device = ARV_GV_DEVICE (object);
 	ArvGvDeviceIOData *io_data;
 
-	if (gv_device->heartbeat_thread != NULL) {
+	if (gv_device->priv->heartbeat_thread != NULL) {
 		ArvGvDeviceHeartbeatData *heartbeat_data;
 
-		heartbeat_data = gv_device->heartbeat_data;
+		heartbeat_data = gv_device->priv->heartbeat_data;
 
 		heartbeat_data->cancel = TRUE;
-		g_thread_join (gv_device->heartbeat_thread);
+		g_thread_join (gv_device->priv->heartbeat_thread);
 		g_free (heartbeat_data);
 
-		gv_device->heartbeat_data = NULL;
-		gv_device->heartbeat_thread = NULL;
+		gv_device->priv->heartbeat_data = NULL;
+		gv_device->priv->heartbeat_thread = NULL;
 	}
 
 	arv_gv_device_leave_control (gv_device);
 
-	io_data = gv_device->io_data;
+	io_data = gv_device->priv->io_data;
 	g_object_unref (io_data->device_address);
 	g_object_unref (io_data->interface_address);
 	g_object_unref (io_data->socket);
 	g_free (io_data->buffer);
 	g_mutex_free (io_data->mutex);
 
-	g_free (gv_device->io_data);
+	g_free (gv_device->priv->io_data);
 
 	parent_class->finalize (object);
 }
@@ -505,6 +516,8 @@ arv_gv_device_class_init (ArvGvDeviceClass *gv_device_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (gv_device_class);
 	ArvDeviceClass *device_class = ARV_DEVICE_CLASS (gv_device_class);
+
+	g_type_class_add_private (gv_device_class, sizeof (ArvGvDevicePrivate));
 
 	parent_class = g_type_class_peek_parent (gv_device_class);
 
