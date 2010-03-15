@@ -49,6 +49,8 @@ typedef struct {
 	GSocketAddress	*interface_address;
 	GSocketAddress	*device_address;
 
+	GPollFD poll_in_event;
+
 	void *buffer;
 
 	unsigned int gvcp_n_retries;
@@ -59,7 +61,6 @@ static gboolean
 _read_memory (ArvGvDeviceIOData *io_data, guint32 address, guint32 size, void *buffer)
 {
 	ArvGvcpPacket *packet;
-	GPollFD poll_fd;
 	size_t packet_size;
 	size_t answer_size;
 	int count;
@@ -71,10 +72,6 @@ _read_memory (ArvGvDeviceIOData *io_data, guint32 address, guint32 size, void *b
 	g_return_val_if_fail (answer_size <= ARV_GV_DEVICE_BUFFER_SIZE, FALSE);
 
 	g_mutex_lock (io_data->mutex);
-
-	poll_fd.fd = g_socket_get_fd (io_data->socket);
-	poll_fd.events =  G_IO_IN;
-	poll_fd.revents = 0;
 
 	packet = arv_gvcp_packet_new_read_memory_cmd (address,
 						      ((size + sizeof (guint32) - 1)
@@ -90,7 +87,7 @@ _read_memory (ArvGvDeviceIOData *io_data, guint32 address, guint32 size, void *b
 				  (const char *) packet, packet_size,
 				  NULL, NULL);
 
-		if (g_poll (&poll_fd, 1, io_data->gvcp_timeout_ms) > 0) {
+		if (g_poll (&io_data->poll_in_event, 1, io_data->gvcp_timeout_ms) > 0) {
 			count = g_socket_receive (io_data->socket, io_data->buffer,
 						  ARV_GV_DEVICE_BUFFER_SIZE, NULL, NULL);
 			if (count >= answer_size) {
@@ -120,16 +117,11 @@ _write_memory (ArvGvDeviceIOData *io_data, guint32 address, guint32 size, void *
 {
 	ArvGvcpPacket *packet;
 	size_t packet_size;
-	GPollFD poll_fd;
 	int count;
 	unsigned int n_retries = 0;
 	gboolean success = FALSE;
 
 	g_mutex_lock (io_data->mutex);
-
-	poll_fd.fd = g_socket_get_fd (io_data->socket);
-	poll_fd.events =  G_IO_IN;
-	poll_fd.revents = 0;
 
 	packet = arv_gvcp_packet_new_write_memory_cmd (address,
 						       ((size + sizeof (guint32) - 1) /
@@ -147,7 +139,7 @@ _write_memory (ArvGvDeviceIOData *io_data, guint32 address, guint32 size, void *
 				  (const char *) packet, packet_size,
 				  NULL, NULL);
 
-		if (g_poll (&poll_fd, 1, io_data->gvcp_timeout_ms) > 0) {
+		if (g_poll (&io_data->poll_in_event, 1, io_data->gvcp_timeout_ms) > 0) {
 			count = g_socket_receive (io_data->socket, io_data->buffer,
 						  ARV_GV_DEVICE_BUFFER_SIZE, NULL, NULL);
 			if (count > arv_gvcp_packet_get_write_memory_ack_size ()) {
@@ -173,7 +165,6 @@ _read_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 *value_plac
 {
 	ArvGvcpPacket *packet;
 	size_t packet_size;
-	GPollFD poll_fd;
 	int count;
 	guint32 value;
 	gboolean result = TRUE;
@@ -191,11 +182,7 @@ _read_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 *value_plac
 
 	arv_gvcp_packet_free (packet);
 
-	poll_fd.fd = g_socket_get_fd (io_data->socket);
-	poll_fd.events =  G_IO_IN;
-	poll_fd.revents = 0;
-
-	if (g_poll (&poll_fd, 1, io_data->gvcp_timeout_ms) > 0) {
+	if (g_poll (&io_data->poll_in_event, 1, io_data->gvcp_timeout_ms) > 0) {
 		count = g_socket_receive (io_data->socket, io_data->buffer,
 					  ARV_GV_DEVICE_BUFFER_SIZE, NULL, NULL);
 
@@ -219,7 +206,6 @@ _write_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 value)
 {
 	ArvGvcpPacket *packet;
 	size_t packet_size;
-	GPollFD poll_fd;
 	int count;
 	gboolean result = TRUE;
 
@@ -236,11 +222,7 @@ _write_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 value)
 
 	arv_gvcp_packet_free (packet);
 
-	poll_fd.fd = g_socket_get_fd (io_data->socket);
-	poll_fd.events =  G_IO_IN;
-	poll_fd.revents = 0;
-
-	if (g_poll (&poll_fd, 1, io_data->gvcp_timeout_ms) > 0) {
+	if (g_poll (&io_data->poll_in_event, 1, io_data->gvcp_timeout_ms) > 0) {
 		count = g_socket_receive (io_data->socket, io_data->buffer,
 					  ARV_GV_DEVICE_BUFFER_SIZE, NULL, NULL);
 
@@ -483,6 +465,10 @@ arv_gv_device_new (GInetAddress *interface_address, GInetAddress *device_address
 	io_data->buffer = g_malloc (ARV_GV_DEVICE_BUFFER_SIZE);
 	io_data->gvcp_n_retries = ARV_GV_DEVICE_GVCP_N_RETRIES_DEFAULT;
 	io_data->gvcp_timeout_ms = ARV_GV_DEVICE_GVCP_TIMEOUT_MS_DEFAULT;
+	io_data->poll_in_event.fd = g_socket_get_fd (io_data->socket);
+	io_data->poll_in_event.events =  G_IO_IN;
+	io_data->poll_in_event.revents = 0;
+
 
 	gv_device->priv->io_data = io_data;
 
