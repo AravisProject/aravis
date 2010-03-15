@@ -104,6 +104,22 @@ ArvGvcpPacket * 	arv_gvcp_packet_new_packet_resend_cmd 	(guint32 frame_id,
 char * 			arv_gvcp_packet_to_string 		(const ArvGvcpPacket *packet);
 void 			arv_gvcp_packet_debug 			(const ArvGvcpPacket *packet);
 
+static inline void
+arv_gvcp_packet_set_packet_count (ArvGvcpPacket *packet, guint16 count)
+{
+	if (packet != NULL)
+		packet->header.count = g_htons (count);
+}
+
+static inline guint16
+arv_gvcp_packet_get_packet_count (ArvGvcpPacket *packet)
+{
+	if (packet == NULL)
+		return 0;
+
+	return g_ntohs (packet->header.count);
+}
+
 static inline size_t
 arv_gvcp_packet_get_read_memory_ack_size (guint32 data_size)
 {
