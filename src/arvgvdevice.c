@@ -126,7 +126,7 @@ _write_memory (ArvGvDeviceIOData *io_data, guint32 address, guint32 size, void *
 	packet = arv_gvcp_packet_new_write_memory_cmd (address,
 						       ((size + sizeof (guint32) - 1) /
 							sizeof (guint32)) * sizeof (guint32),
-						       io_data->packet_count, &packet_size);
+						       0, &packet_size);
 
 	memcpy (arv_gvcp_packet_get_write_memory_cmd_data (packet), buffer, size);
 
@@ -166,39 +166,44 @@ _read_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 *value_plac
 	ArvGvcpPacket *packet;
 	size_t packet_size;
 	int count;
-	guint32 value;
-	gboolean result = TRUE;
+	unsigned int n_retries = 0;
+	gboolean success = FALSE;
 
 	g_mutex_lock (io_data->mutex);
 
-	io_data->packet_count++;
-
-	packet = arv_gvcp_packet_new_read_register_cmd (address, io_data->packet_count, &packet_size);
+	packet = arv_gvcp_packet_new_read_register_cmd (address, 0, &packet_size);
 
 	arv_gvcp_packet_debug (packet);
 
-	g_socket_send_to (io_data->socket, io_data->device_address, (const char *) packet, packet_size,
-			  NULL, NULL);
+	do {
+		arv_gvcp_packet_set_packet_count (packet, ++io_data->packet_count);
+
+		g_socket_send_to (io_data->socket, io_data->device_address,
+				  (const char *) packet, packet_size,
+				  NULL, NULL);
+
+		if (g_poll (&io_data->poll_in_event, 1, io_data->gvcp_timeout_ms) > 0) {
+			count = g_socket_receive (io_data->socket, io_data->buffer,
+						  ARV_GV_DEVICE_BUFFER_SIZE, NULL, NULL);
+			if (count > 0) {
+				arv_gvcp_packet_debug ((ArvGvcpPacket *) io_data->buffer);
+				*value_placeholder = arv_gvcp_packet_get_read_register_ack_value (io_data->buffer);
+				success = TRUE;
+			}
+		}
+
+		n_retries++;
+
+	} while (!success && n_retries < io_data->gvcp_n_retries);
 
 	arv_gvcp_packet_free (packet);
 
-	if (g_poll (&io_data->poll_in_event, 1, io_data->gvcp_timeout_ms) > 0) {
-		count = g_socket_receive (io_data->socket, io_data->buffer,
-					  ARV_GV_DEVICE_BUFFER_SIZE, NULL, NULL);
-
-		value = arv_gvcp_packet_get_read_register_ack_value (io_data->buffer);
-
-		arv_gvcp_packet_debug ((ArvGvcpPacket *) io_data->buffer);
-
-		*value_placeholder = value;
-	} else {
-		*value_placeholder = 0;
-		result = FALSE;
-	}
-
 	g_mutex_unlock (io_data->mutex);
 
-	return result;
+	if (!success)
+		*value_placeholder = 0;
+
+	return success;
 }
 
 gboolean
@@ -207,32 +212,39 @@ _write_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 value)
 	ArvGvcpPacket *packet;
 	size_t packet_size;
 	int count;
-	gboolean result = TRUE;
+	unsigned int n_retries = 0;
+	gboolean success = FALSE;
 
 	g_mutex_lock (io_data->mutex);
-
-	io_data->packet_count++;
 
 	packet = arv_gvcp_packet_new_write_register_cmd (address, value, io_data->packet_count, &packet_size);
 
 	arv_gvcp_packet_debug (packet);
 
-	g_socket_send_to (io_data->socket, io_data->device_address, (const char *) packet, packet_size,
-			  NULL, NULL);
+	do {
+		arv_gvcp_packet_set_packet_count (packet, ++io_data->packet_count);
+
+		g_socket_send_to (io_data->socket, io_data->device_address, (const char *) packet, packet_size,
+				  NULL, NULL);
+
+		if (g_poll (&io_data->poll_in_event, 1, io_data->gvcp_timeout_ms) > 0) {
+			count = g_socket_receive (io_data->socket, io_data->buffer,
+						  ARV_GV_DEVICE_BUFFER_SIZE, NULL, NULL);
+			if (count > 0) {
+				arv_gvcp_packet_debug ((ArvGvcpPacket *) io_data->buffer);
+				success = TRUE;
+			}
+		}
+
+		n_retries++;
+
+	} while (!success && n_retries < io_data->gvcp_n_retries);
 
 	arv_gvcp_packet_free (packet);
 
-	if (g_poll (&io_data->poll_in_event, 1, io_data->gvcp_timeout_ms) > 0) {
-		count = g_socket_receive (io_data->socket, io_data->buffer,
-					  ARV_GV_DEVICE_BUFFER_SIZE, NULL, NULL);
-
-		arv_gvcp_packet_debug ((ArvGvcpPacket *) io_data->buffer);
-	} else
-		result = FALSE;
-
 	g_mutex_unlock (io_data->mutex);
 
-	return result;
+	return success;
 }
 
 /* Heartbeat thread */
