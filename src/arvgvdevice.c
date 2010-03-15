@@ -150,7 +150,7 @@ _write_memory (ArvGvDeviceIOData *io_data, guint32 address, guint32 size, void *
 		if (g_poll (&poll_fd, 1, io_data->gvcp_timeout_ms) > 0) {
 			count = g_socket_receive (io_data->socket, io_data->buffer,
 						  ARV_GV_DEVICE_BUFFER_SIZE, NULL, NULL);
-			if (count > 0) {
+			if (count > arv_gvcp_packet_get_write_memory_ack_size ()) {
 				arv_gvcp_packet_debug ((ArvGvcpPacket *) io_data->buffer);
 				if (arv_gvcp_packet_get_packet_count (io_data->buffer) == io_data->packet_count)
 					success = TRUE;

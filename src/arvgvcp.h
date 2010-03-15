@@ -138,6 +138,12 @@ arv_gvcp_packet_get_write_memory_cmd_data (const ArvGvcpPacket *packet)
 	return (void *) packet + sizeof (ArvGvcpPacket) + sizeof (guint32);
 }
 
+static inline size_t
+arv_gvcp_packet_get_write_memory_ack_size (void)
+{
+	return sizeof (ArvGvcpPacket) + sizeof (guint32);
+}
+
 static inline guint32
 arv_gvcp_packet_get_read_register_ack_value (const ArvGvcpPacket *packet)
 {
