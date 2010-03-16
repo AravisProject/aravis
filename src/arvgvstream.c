@@ -26,6 +26,7 @@
 #include <arvgvcp.h>
 #include <arvdebug.h>
 #include <string.h>
+#include <sys/socket.h>
 
 static GObjectClass *parent_class = NULL;
 
@@ -212,6 +213,19 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port)
 	g_object_unref (incoming_inet_address);
 
 	g_socket_bind (gv_stream->socket, gv_stream->incoming_address, TRUE, NULL);
+
+#if 0
+	{
+		int rcvbuf, fd;
+		size_t rcvbuf_size = sizeof (rcvbuf);
+
+		fd = g_socket_get_fd (gv_stream->socket);
+		rcvbuf = 10000000;
+		setsockopt (fd, SOL_SOCKET, SO_RCVBUF, &rcvbuf, sizeof (rcvbuf));
+		getsockopt (fd, SOL_SOCKET, SO_RCVBUF, &rcvbuf, &rcvbuf_size);
+		g_message ("RCVBUF = %d", rcvbuf);
+	}
+#endif
 
 	thread_data = g_new (ArvGvStreamThreadData, 1);
 	thread_data->socket = gv_stream->socket;
