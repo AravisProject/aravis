@@ -156,6 +156,9 @@ arv_gv_stream_thread (void *data)
 							buffer->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
 						if (buffer->status == ARV_BUFFER_STATUS_SUCCESS)
 							thread_data->n_completed_frames++;
+
+						arv_buffer_run_callback (buffer);
+
 						g_async_queue_push (thread_data->output_queue, buffer);
 						buffer = NULL;
 					}
