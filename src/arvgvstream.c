@@ -25,6 +25,7 @@
 #include <arvgvsp.h>
 #include <arvgvcp.h>
 #include <arvdebug.h>
+#include <arvtools.h>
 #include <string.h>
 #include <sys/socket.h>
 
@@ -48,6 +49,8 @@ typedef struct {
 	guint n_missed_frames;
 	guint n_size_mismatch_errors;
 	guint n_missing_blocks;
+
+	ArvStatistic *statistic;
 } ArvGvStreamThreadData;
 
 #if 0
@@ -88,12 +91,18 @@ arv_gv_stream_thread (void *data)
 	size_t read_count;
 	size_t block_size;
 	ptrdiff_t offset = 0;
+	GTimeVal current_time;
+	gint64 current_time_us;
+	gint64 last_time_us;
 
 	packet = (ArvGvspPacket *) packet_buffer;
 
 	poll_fd.fd = g_socket_get_fd (thread_data->socket);
 	poll_fd.events =  G_IO_IN;
 	poll_fd.revents = 0;
+
+	g_get_current_time (&current_time);
+	last_time_us = current_time.tv_sec * 1000000 + current_time.tv_usec;
 
 	do {
 		n_events = g_poll (&poll_fd, 1, 1000);
@@ -160,6 +169,12 @@ arv_gv_stream_thread (void *data)
 
 						arv_buffer_run_callback (buffer);
 
+						g_get_current_time (&current_time);
+						current_time_us = current_time.tv_sec * 1000000 + current_time.tv_usec;
+						arv_statistic_fill (thread_data->statistic,
+								    0, (current_time_us - last_time_us) / 1000,
+								    buffer->frame_id);
+						last_time_us = current_time_us;
 						g_async_queue_push (thread_data->output_queue, buffer);
 						buffer = NULL;
 					}
@@ -241,6 +256,8 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port)
 	thread_data->n_size_mismatch_errors = 0;
 	thread_data->n_missing_blocks = 0;
 
+	thread_data->statistic = arv_statistic_new (1, 100, 1, 10);
+
 	gv_stream->thread_data = thread_data;
 
 	gv_stream->thread = g_thread_create (arv_gv_stream_thread, gv_stream->thread_data, TRUE, NULL);
@@ -262,6 +279,7 @@ arv_gv_stream_finalize (GObject *object)
 
 	if (gv_stream->thread != NULL) {
 		ArvGvStreamThreadData *thread_data;
+		char *statistic_string;
 
 		thread_data = gv_stream->thread_data;
 
@@ -278,6 +296,12 @@ arv_gv_stream_finalize (GObject *object)
 		g_thread_join (gv_stream->thread);
 
 		g_object_unref (thread_data->device_address);
+
+		statistic_string = arv_statistic_to_string (thread_data->statistic);
+		arv_debug (ARV_DEBUG_LEVEL_STANDARD, statistic_string);
+		g_free (statistic_string);
+
+		arv_statistic_free (thread_data->statistic);
 
 		g_free (thread_data);
 
