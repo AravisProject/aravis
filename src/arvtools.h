@@ -27,6 +27,24 @@
 
 G_BEGIN_DECLS
 
+typedef struct _ArvStatistic ArvStatistic;
+
+ArvStatistic *		arv_statistic_new 		(guint n_histograms, guint n_bins, guint bin_step, int offset);
+void			arv_statistic_free		(ArvStatistic *statistic);
+void 			arv_statistic_reset 		(ArvStatistic *statistic);
+gboolean 		arv_statistic_fill 		(ArvStatistic *statistic, guint histogram_id, int value,
+							 guint64 counter);
+void 			arv_statistic_set_name 		(ArvStatistic *statistic, guint histogram_id, char const *name);
+
+char *			arv_statistic_to_string 	(const ArvStatistic *statistic);
+
+/*
+   Compatibility with glib < 2.23
+   	Define 	G_DEFINE_INTERFACE
+		G_DEFINE_INTERFACE_WITH_CODE
+       		G_IMPLEMENT_INTERFACE
+ */
+
 #if !GLIB_CHECK_VERSION(2,23,0)
 
 #define G_DEFINE_INTERFACE(TN, t_n, T_P)		    G_DEFINE_INTERFACE_WITH_CODE(TN, t_n, T_P, ;)
