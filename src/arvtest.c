@@ -41,6 +41,7 @@ static ArvCameraRegisters arv_cameras[] = {
 static char *arv_option_camera_type = "prosilica";
 static int arv_option_debug_level;
 static gboolean arv_option_snaphot = FALSE;
+static gboolean arv_option_auto_buffer = FALSE;
 
 static const GOptionEntry arv_option_entries[] =
 {
@@ -48,6 +49,8 @@ static const GOptionEntry arv_option_entries[] =
 		&arv_option_camera_type,	"Camera type", NULL},
 	{ "snapshot",		's', 0, G_OPTION_ARG_NONE,
 		&arv_option_snaphot,	"Snapshot", NULL},
+	{ "auto",		'a', 0, G_OPTION_ARG_NONE,
+		&arv_option_auto_buffer,	"AutoBufferSize", NULL},
 	{ "debug", 		'd', 0, G_OPTION_ARG_INT,
 		&arv_option_debug_level, 	"Debug mode", NULL },
 	{ NULL }
@@ -114,6 +117,10 @@ main (int argc, char **argv)
 		guint32 value;
 
 		stream = arv_device_get_stream (device);
+		if (arv_option_auto_buffer)
+			arv_gv_stream_set_option (ARV_GV_STREAM (stream),
+						  ARV_GV_STREAM_OPTION_SOCKET_BUFFER_AUTO,
+						  0);
 
 		arv_device_read_register (device, arv_cameras[camera_type].payload_size, &value);
 		g_print ("payload size = %d\n", value);
