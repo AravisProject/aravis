@@ -8,6 +8,14 @@
 #endif
 #include <stdlib.h>
 
+static gboolean cancel = FALSE;
+
+static void
+set_cancel (int signal)
+{
+	cancel = TRUE;
+}
+
 typedef struct {
 	guint32 payload_size;
 	guint32 acquisition_control;
@@ -130,35 +138,35 @@ main (int argc, char **argv)
 					  arv_cameras[camera_type].acquisition_control,
 					  arv_cameras[camera_type].acquisition_start);
 
-		g_usleep (3000000);
+		signal (SIGINT, set_cancel);
 
-		do  {
-			buffer = arv_stream_pop_buffer (stream);
-			if (buffer != NULL) {
+		do {
+			g_usleep (100000);
+
+			do  {
+				buffer = arv_stream_pop_buffer (stream);
+				if (buffer != NULL) {
 #ifdef ARAVIS_WITH_CAIRO
-				if (arv_option_snaphot &&
-				    !snapshot_done &&
-				    buffer->status == ARV_BUFFER_STATUS_SUCCESS) {
-					snapshot_done = TRUE;
+					if (arv_option_snaphot &&
+					    !snapshot_done &&
+					    buffer->status == ARV_BUFFER_STATUS_SUCCESS) {
+						snapshot_done = TRUE;
 
-					cairo_surface_t *surface;
+						cairo_surface_t *surface;
 
-					surface = cairo_image_surface_create_for_data (buffer->data,
-										       CAIRO_FORMAT_A8,
-										       buffer->width,
-										       buffer->height,
-										       buffer->width);
-					cairo_surface_write_to_png (surface, "test.png");
-					cairo_surface_destroy (surface);
-				}
+						surface = cairo_image_surface_create_for_data (buffer->data,
+											       CAIRO_FORMAT_A8,
+											       buffer->width,
+											       buffer->height,
+											       buffer->width);
+						cairo_surface_write_to_png (surface, "test.png");
+						cairo_surface_destroy (surface);
+					}
 #endif
-				g_print ("Image %dx%d (id: %d - status: %d)\n",
-					   buffer->width, buffer->height, buffer->frame_id, buffer->status);
-				arv_stream_push_buffer (stream, buffer);
-			}
-		} while (buffer != NULL);
-
-		g_usleep (10000000);
+					arv_stream_push_buffer (stream, buffer);
+				}
+			} while (buffer != NULL);
+		} while (!cancel);
 
 		arv_device_read_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, &value);
 		g_print ("stream port = %d (%d)\n", value, arv_gv_stream_get_port (ARV_GV_STREAM (stream)));
