@@ -51,6 +51,10 @@ typedef struct {
 	guint n_missing_blocks;
 
 	ArvStatistic *statistic;
+
+	ArvGvStreamOption socket_buffer_option;
+	int socket_buffer_size;
+	int current_socket_buffer_size;
 } ArvGvStreamThreadData;
 
 #if 0
@@ -78,6 +82,37 @@ arv_gv_stream_send_packet_request (ArvGvStreamThreadData *thread_data,
 }
 #endif
 
+static void
+arv_gv_stream_update_socket (ArvGvStreamThreadData *thread_data, ArvBuffer *buffer)
+{
+	int buffer_size, fd;
+
+	if (thread_data->socket_buffer_option == ARV_GV_STREAM_OPTION_SOCKET_BUFFER_FIXED &&
+	    thread_data->socket_buffer_size <= 0)
+		return;
+
+	fd = g_socket_get_fd (thread_data->socket);
+
+	switch (thread_data->socket_buffer_option) {
+		case ARV_GV_STREAM_OPTION_SOCKET_BUFFER_FIXED:
+			buffer_size = thread_data->socket_buffer_size;
+			break;
+		case ARV_GV_STREAM_OPTION_SOCKET_BUFFER_AUTO:
+			if (thread_data->socket_buffer_size <= 0)
+				buffer_size = buffer->size;
+			else
+				buffer_size = MIN (buffer->size, thread_data->socket_buffer_size);
+			break;
+	}
+
+	if (buffer_size != thread_data->current_socket_buffer_size) {
+		setsockopt (fd, SOL_SOCKET, SO_RCVBUF, &buffer_size, sizeof (buffer_size));
+		thread_data->current_socket_buffer_size = buffer_size;
+		arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[GvStream::update_socket] Socket buffer size set to %d",
+			 buffer_size);
+	}
+}
+
 static void *
 arv_gv_stream_thread (void *data)
 {
@@ -94,6 +129,7 @@ arv_gv_stream_thread (void *data)
 	GTimeVal current_time;
 	gint64 current_time_us;
 	gint64 last_time_us;
+	gboolean statistic_count = 0;
 
 	packet = (ArvGvspPacket *) packet_buffer;
 
@@ -119,6 +155,9 @@ arv_gv_stream_thread (void *data)
 						thread_data->n_missed_frames++;
 						break;
 					}
+
+					arv_gv_stream_update_socket (thread_data, buffer);
+
 					buffer->width = arv_gvsp_packet_get_width (packet);
 					buffer->height = arv_gvsp_packet_get_height (packet);
 					buffer->frame_id = arv_gvsp_packet_get_frame_id (packet);
@@ -171,9 +210,11 @@ arv_gv_stream_thread (void *data)
 
 						g_get_current_time (&current_time);
 						current_time_us = current_time.tv_sec * 1000000 + current_time.tv_usec;
-						arv_statistic_fill (thread_data->statistic,
-								    0, (current_time_us - last_time_us) / 1000,
-								    buffer->frame_id);
+						statistic_count++;
+						if (statistic_count > 5)
+							arv_statistic_fill (thread_data->statistic,
+									    0, (current_time_us - last_time_us) / 1000,
+									    buffer->frame_id);
 						last_time_us = current_time_us;
 						g_async_queue_push (thread_data->output_queue, buffer);
 						buffer = NULL;
@@ -205,6 +246,26 @@ arv_gv_stream_get_port (ArvGvStream *gv_stream)
 	return g_inet_socket_address_get_port (local_address);
 }
 
+void
+arv_gv_stream_set_option (ArvGvStream *gv_stream, ArvGvStreamOption option, int value)
+{
+	ArvGvStreamThreadData *thread_data;
+
+	g_return_if_fail (ARV_IS_GV_STREAM (gv_stream));
+
+	thread_data = gv_stream->thread_data;
+	switch (option) {
+		case ARV_GV_STREAM_OPTION_SOCKET_BUFFER_AUTO:
+			thread_data->socket_buffer_size = value;
+			thread_data->socket_buffer_option = option;
+			break;
+		case ARV_GV_STREAM_OPTION_SOCKET_BUFFER_FIXED:
+			thread_data->socket_buffer_option = option;
+			thread_data->socket_buffer_size = 0;
+			break;
+	}
+}
+
 ArvStream *
 arv_gv_stream_new (GInetAddress *device_address, guint16 port)
 {
@@ -229,19 +290,6 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port)
 
 	g_socket_bind (gv_stream->socket, gv_stream->incoming_address, TRUE, NULL);
 
-#if 0
-	{
-		int rcvbuf, fd;
-		size_t rcvbuf_size = sizeof (rcvbuf);
-
-		fd = g_socket_get_fd (gv_stream->socket);
-		rcvbuf = 10000000;
-		setsockopt (fd, SOL_SOCKET, SO_RCVBUF, &rcvbuf, sizeof (rcvbuf));
-		getsockopt (fd, SOL_SOCKET, SO_RCVBUF, &rcvbuf, &rcvbuf_size);
-		g_message ("RCVBUF = %d", rcvbuf);
-	}
-#endif
-
 	thread_data = g_new (ArvGvStreamThreadData, 1);
 	thread_data->socket = gv_stream->socket;
 	thread_data->device_address = g_inet_socket_address_new (device_address, ARV_GVCP_PORT);
@@ -256,7 +304,11 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port)
 	thread_data->n_size_mismatch_errors = 0;
 	thread_data->n_missing_blocks = 0;
 
-	thread_data->statistic = arv_statistic_new (1, 100, 1, 10);
+	thread_data->statistic = arv_statistic_new (1, 1000, 1, 10);
+
+	thread_data->socket_buffer_option = ARV_GV_STREAM_OPTION_SOCKET_BUFFER_FIXED;
+	thread_data->socket_buffer_size = 0;
+	thread_data->current_socket_buffer_size = 0;
 
 	gv_stream->thread_data = thread_data;
 

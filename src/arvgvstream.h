@@ -28,6 +28,11 @@
 
 G_BEGIN_DECLS
 
+typedef enum {
+	ARV_GV_STREAM_OPTION_SOCKET_BUFFER_FIXED,
+	ARV_GV_STREAM_OPTION_SOCKET_BUFFER_AUTO
+} ArvGvStreamOption;
+
 #define ARV_TYPE_GV_STREAM             (arv_gv_stream_get_type ())
 #define ARV_GV_STREAM(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GV_STREAM, ArvGvStream))
 #define ARV_GV_STREAM_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GV_STREAM, ArvGvStreamClass))
@@ -55,6 +60,8 @@ GType arv_gv_stream_get_type (void);
 
 ArvStream * 		arv_gv_stream_new 		(GInetAddress *device_address, guint16 port);
 guint16 		arv_gv_stream_get_port		(ArvGvStream *gv_stream);
+void			arv_gv_stream_set_option	(ArvGvStream *gv_stream, ArvGvStreamOption option,
+							 int value);
 
 G_END_DECLS
 
