@@ -1,4 +1,4 @@
-#include <arvexpression.h>
+#include <arvevaluator.h>
 #include <arvdebug.h>
 #include <stdlib.h>
 
@@ -17,6 +17,7 @@ static const GOptionEntry arv_option_entries[] =
 int
 main (int argc, char **argv)
 {
+	ArvEvaluator *evaluator;
 	GOptionContext *context;
 	GError *error = NULL;
 	int i;
@@ -37,14 +38,19 @@ main (int argc, char **argv)
 
 	arv_debug_enable (arv_option_debug_level);
 
+	evaluator = arv_evaluator_new (NULL);
+
 	if (arv_option_expressions == NULL) {
 		g_print ("Missing expression.\n");
 		return EXIT_FAILURE;
 	}
 
 	for (i = 0; arv_option_expressions[i] != NULL; i++) {
-		parse_expression (arv_option_expressions[i]);
+		arv_evaluator_set_expression (evaluator, arv_option_expressions[i]);
+		arv_evaluator_evaluate_as_double (evaluator, NULL);
 	}
+
+	g_object_unref (evaluator);
 
 	return EXIT_SUCCESS;
 }

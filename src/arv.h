@@ -47,6 +47,8 @@ typedef enum {
 
 typedef struct _ArvCamera 		ArvCamera;
 
+typedef struct _ArvEvaluator 		ArvEvaluator;
+
 typedef struct _ArvGc 			ArvGc;
 
 typedef struct _ArvGcNode 		ArvGcNode;

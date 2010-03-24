@@ -29,7 +29,7 @@ libaravis_la_SOURCES =				\
 	arvenumtypes.c				\
 	arvdebug.c				\
 	arvtools.c				\
-	arvexpression.c				\
+	arvevaluator.c				\
 	arvcamera.c				\
 	arvgc.c					\
 	arvgcnode.c				\
@@ -50,7 +50,7 @@ ARAVIS_HDRS = 					\
 	arv.h					\
 	arvdebug.h				\
 	arvtools.h				\
-	arvexpression.h				\
+	arvevaluator.h				\
 	arvcamera.h				\
 	arvgc.h					\
 	arvgcnode.h				\
@@ -77,7 +77,7 @@ arvenumtypes.h: arvenumtypes.h.template $(ARAVIS_HDRS) $(GLIB_MKENUMS)
 arvenumtypes.c: arvenumtypes.c.template $(ARAVIS_HDRS) $(GLIB_MKENUMS)
 	$(AM_V_GEN) (cd $(srcdir) && $(GLIB_MKENUMS) --template arvenumtypes.c.template $(libaravis_la_HEADERS)) > $@
 
-bin_PROGRAMS = arv-test arv-load-xml arv-genicam-test arv-expression-test
+bin_PROGRAMS = arv-test arv-load-xml arv-genicam-test arv-evaluator-test
 
 arv_test_SOURCES = arvtest.c
 arv_test_LDADD = $(ARAVIS_LIBS) libaravis.la
@@ -88,8 +88,8 @@ arv_load_xml_LDADD = $(ARAVIS_LIBS) libaravis.la
 arv_genicam_test_SOURCES = arvgenicamtest.c
 arv_genicam_test_LDADD = $(ARAVIS_LIBS) libaravis.la
 
-arv_expression_test_SOURCES = arvexpressiontest.c
-arv_expression_test_LDADD = $(ARAVIS_LIBS) libaravis.la
+arv_evaluator_test_SOURCES = arvevaluatortest.c
+arv_evaluator_test_LDADD = $(ARAVIS_LIBS) libaravis.la
 
 CLEANFILES = $(BUILT_SOURCES)
 
