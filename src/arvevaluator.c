@@ -37,7 +37,8 @@ typedef enum {
 	ARV_EVALUATOR_STATUS_UNKNOWN_OPERATOR,
 	ARV_EVALUATOR_STATUS_UNKNOWN_VARIABLE,
 	ARV_EVALUATOR_STATUS_MISSING_ARGUMENTS,
-	ARV_EVALUATOR_STATUS_REMAINING_OPERANDS
+	ARV_EVALUATOR_STATUS_REMAINING_OPERANDS,
+	ARV_EVALUATOR_STATUS_DIVISION_BY_ZERO
 } ArvEvaluatorStatus;
 
 static const char *arv_evaluator_status_strings[] = {
@@ -48,7 +49,8 @@ static const char *arv_evaluator_status_strings[] = {
 	"unknown operator",
 	"unknown variable",
 	"missing arguments",
-	"remaining operands"
+	"remaining operands",
+	"division by zero"
 };
 
 struct _ArvEvaluatorPrivate {
@@ -417,13 +419,65 @@ arv_get_next_token (char **expression, ArvEvaluatorToken *previous_token)
 	return token;
 }
 
+typedef struct {
+	GType type;
+	union {
+		gint64 v_int64;
+		double v_double;
+	} value;
+} StackItem;
+
+static void
+stack_item_set_int64 (StackItem *item, gint64 value)
+{
+	item->type = G_TYPE_INT64;
+	item->value.v_int64 = value;
+}
+
+static void
+stack_item_set_double (StackItem *item, double value)
+{
+	item->type = G_TYPE_DOUBLE;
+	item->value.v_double = value;
+}
+
+static gint64
+stack_item_get_int64 (StackItem *item)
+{
+	if (item->type == G_TYPE_INT64)
+		return item->value.v_int64;
+	else
+		return (gint64) item->value.v_double;
+}
+
+static double
+stack_item_get_double (StackItem *item)
+{
+	if (item->type == G_TYPE_INT64)
+		return (double) item->value.v_int64;
+	else
+		return item->value.v_double;
+}
+
+static gboolean
+stack_item_holds_int64 (StackItem *item)
+{
+	return item->type == G_TYPE_INT64;
+}
+
+static double
+stack_item_holds_double (StackItem *item)
+{
+	return item->type == G_TYPE_DOUBLE;
+}
+
 ArvEvaluatorStatus
-evaluate (GSList *token_stack, double *value)
+evaluate (GSList *token_stack, gint64 *v_int64, double *v_double)
 {
 	ArvEvaluatorToken *token;
 	ArvEvaluatorStatus status;
 	GSList *iter;
-	double stack[128];
+	StackItem stack[ARV_EVALUATOR_STACK_SIZE];
 	int index = -1;
 
 	for (iter = token_stack; iter != NULL; iter = iter->next) {
@@ -437,81 +491,206 @@ evaluate (GSList *token_stack, double *value)
 		arv_evaluator_token_debug (token);
 
 		switch (token->token_id) {
-			case ARV_EVALUATOR_TOKEN_UNKNOWN:
-				status = ARV_EVALUATOR_STATUS_UNKNOWN_OPERATOR;
-				goto CLEANUP;
+			case ARV_EVALUATOR_TOKEN_LOGICAL_AND:
+				stack_item_set_int64 (&stack[index-1],
+						      stack_item_get_int64 (&stack[index-1]) &&
+						      stack_item_get_int64 (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_LOGICAL_OR:
-				stack[index - 1] = (gint64) stack[index - 1] | (gint64) stack[index];
+				stack_item_set_int64 (&stack[index-1],
+						      stack_item_get_int64 (&stack[index-1]) ||
+						      stack_item_get_int64 (&stack[index]));
+				break;
+			case ARV_EVALUATOR_TOKEN_BITWISE_NOT:
+				stack_item_set_int64 (&stack[index],
+						      ~stack_item_get_int64 (&stack[index]));
+				break;
+			case ARV_EVALUATOR_TOKEN_BITWISE_AND:
+				stack_item_set_int64 (&stack[index-1],
+						      stack_item_get_int64 (&stack[index-1]) &
+						      stack_item_get_int64 (&stack[index]));
+				break;
+			case ARV_EVALUATOR_TOKEN_BITWISE_OR:
+				stack_item_set_int64 (&stack[index-1],
+						      stack_item_get_int64 (&stack[index-1]) |
+						      stack_item_get_int64 (&stack[index]));
+				break;
+			case ARV_EVALUATOR_TOKEN_BITWISE_XOR:
+				stack_item_set_int64 (&stack[index-1],
+						      stack_item_get_int64 (&stack[index-1]) ^
+						      stack_item_get_int64 (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_EQUAL:
-				stack[index - 1] = (stack[index - 1] == stack[index]);
+				if (stack_item_holds_int64 (&stack[index-1]) ||
+				    stack_item_holds_int64 (&stack[index]))
+					stack_item_set_int64 (&stack[index-1],
+							      stack_item_get_int64 (&stack[index-1]) == 
+							      stack_item_get_int64 (&stack[index]));
+				else
+					stack_item_set_int64 (&stack[index - 1],
+							      stack_item_get_double (&stack[index-1]) == 
+							      stack_item_get_double (&stack[index]));
+				break;
+			case ARV_EVALUATOR_TOKEN_NOT_EQUAL:
+				if (stack_item_holds_int64 (&stack[index-1]) ||
+				    stack_item_holds_int64 (&stack[index]))
+					stack_item_set_int64 (&stack[index-1],
+							      stack_item_get_int64 (&stack[index-1]) != 
+							      stack_item_get_int64 (&stack[index]));
+				else
+					stack_item_set_int64 (&stack[index - 1],
+							      stack_item_get_double (&stack[index-1]) != 
+							      stack_item_get_double (&stack[index]));
+				break;
+			case ARV_EVALUATOR_TOKEN_LESS_OR_EQUAL:
+				if (stack_item_holds_int64 (&stack[index-1]) ||
+				    stack_item_holds_int64 (&stack[index]))
+					stack_item_set_int64 (&stack[index-1],
+							      stack_item_get_int64 (&stack[index-1]) <= 
+							      stack_item_get_int64 (&stack[index]));
+				else
+					stack_item_set_int64 (&stack[index - 1],
+							      stack_item_get_double (&stack[index-1]) <= 
+							      stack_item_get_double (&stack[index]));
+				break;
+			case ARV_EVALUATOR_TOKEN_GREATER_OR_EQUAL:
+				if (stack_item_holds_int64 (&stack[index-1]) ||
+				    stack_item_holds_int64 (&stack[index]))
+					stack_item_set_int64 (&stack[index-1],
+							      stack_item_get_int64 (&stack[index-1]) >= 
+							      stack_item_get_int64 (&stack[index]));
+				else
+					stack_item_set_int64 (&stack[index - 1],
+							      stack_item_get_double (&stack[index-1]) >= 
+							      stack_item_get_double (&stack[index]));
+				break;
+			case ARV_EVALUATOR_TOKEN_LESS:
+				if (stack_item_holds_int64 (&stack[index-1]) ||
+				    stack_item_holds_int64 (&stack[index]))
+					stack_item_set_int64 (&stack[index-1],
+							      stack_item_get_int64 (&stack[index-1]) < 
+							      stack_item_get_int64 (&stack[index]));
+				else
+					stack_item_set_int64 (&stack[index - 1],
+							      stack_item_get_double (&stack[index-1]) < 
+							      stack_item_get_double (&stack[index]));
+				break;
+			case ARV_EVALUATOR_TOKEN_GREATER:
+				if (stack_item_holds_int64 (&stack[index-1]) ||
+				    stack_item_holds_int64 (&stack[index]))
+					stack_item_set_int64 (&stack[index-1],
+							      stack_item_get_int64 (&stack[index-1]) > 
+							      stack_item_get_int64 (&stack[index]));
+				else
+					stack_item_set_int64 (&stack[index - 1],
+							      stack_item_get_double (&stack[index-1]) > 
+							      stack_item_get_double (&stack[index]));
+				break;
+			case ARV_EVALUATOR_TOKEN_SHIFT_RIGHT:
+				stack_item_set_int64 (&stack[index-1],
+						      stack_item_get_int64 (&stack[index-1]) >>
+						      stack_item_get_int64 (&stack[index]));
+				break;
+			case ARV_EVALUATOR_TOKEN_SHIFT_LEFT:
+				stack_item_set_int64 (&stack[index-1],
+						      stack_item_get_int64 (&stack[index-1]) <<
+						      stack_item_get_int64 (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_SUBSTRACTION:
-				stack[index - 1] -= stack[index];
+				if (stack_item_holds_double (&stack[index-1]) ||
+				    stack_item_holds_double (&stack[index]))
+					stack_item_set_double (&stack[index-1],
+							       stack_item_get_double (&stack[index-1]) -
+							       stack_item_get_double (&stack[index]));
+				else
+					stack_item_set_int64 (&stack[index-1],
+							      stack_item_get_int64 (&stack[index-1]) -
+							      stack_item_get_int64 (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_ADDITION:
-				stack[index - 1] += stack[index];
+				if (stack_item_holds_double (&stack[index-1]) ||
+				    stack_item_holds_double (&stack[index]))
+					stack_item_set_double (&stack[index-1],
+							       stack_item_get_double (&stack[index-1]) +
+							       stack_item_get_double (&stack[index]));
+				else
+					stack_item_set_int64 (&stack[index-1],
+							      stack_item_get_int64 (&stack[index-1]) +
+							      stack_item_get_int64 (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_REMAINDER:
-				stack[index - 1] = (gint64) stack[index - 1] % (gint64) stack[index];
+				if (stack_item_get_int64 (&stack[index]) == 0) {
+					status = ARV_EVALUATOR_STATUS_DIVISION_BY_ZERO;
+					goto CLEANUP;
+				}
+				stack_item_set_int64 (&stack[index-1],
+						      stack_item_get_int64 (&stack[index-1]) %
+						      stack_item_get_int64 (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_DIVISION:
-				stack[index - 1] /= stack[index];
+				if (stack_item_holds_double (&stack[index-1]) ||
+				    stack_item_holds_double (&stack[index])) {
+					if (stack_item_get_double (&stack[index]) == 0.0) {
+						status = ARV_EVALUATOR_STATUS_DIVISION_BY_ZERO;
+						goto CLEANUP;
+					}
+					stack_item_set_double (&stack[index-1],
+							       stack_item_get_double (&stack[index-1]) /
+							       stack_item_get_double (&stack[index]));
+				} else {
+					if (stack_item_get_int64 (&stack[index]) == 0) {
+						status = ARV_EVALUATOR_STATUS_DIVISION_BY_ZERO;
+						goto CLEANUP;
+					}
+					stack_item_set_int64 (&stack[index-1],
+							      stack_item_get_int64 (&stack[index-1]) /
+							      stack_item_get_int64 (&stack[index]));
+				}
 				break;
 			case ARV_EVALUATOR_TOKEN_MULTIPLICATION:
-				stack[index - 1] *= stack[index];
+				if (stack_item_holds_double (&stack[index-1]) ||
+				    stack_item_holds_double (&stack[index]))
+					stack_item_set_double (&stack[index-1],
+							       stack_item_get_double (&stack[index-1]) *
+							       stack_item_get_double (&stack[index]));
+				else
+					stack_item_set_int64 (&stack[index-1],
+							      stack_item_get_int64 (&stack[index-1]) *
+							      stack_item_get_int64 (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_POWER:
-				stack[index - 1] = pow (stack[index - 1], stack[index]);
+				stack_item_set_double (&stack[index-1],
+						       pow (stack_item_get_double(&stack[index-1]),
+							    stack_item_get_double(&stack[index])));
 				break;
 			case ARV_EVALUATOR_TOKEN_MINUS:
-				stack[index] = -stack[index];
+				if (stack_item_holds_double (&stack[index])) 
+					stack_item_set_double (&stack[index],
+							       -stack_item_get_double (&stack[index-1]));
+				else
+					stack_item_set_int64 (&stack[index],
+							      -stack_item_get_int64 (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_PLUS:
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_SIN:
-				stack[index] = sin (stack[index]);
+				stack_item_set_double (&stack[index], sin (stack_item_get_double (&stack[index])));
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_COS:
-				stack[index] = cos (stack[index]);
+				stack_item_set_double (&stack[index], cos (stack_item_get_double (&stack[index])));
 				break;
 			case ARV_EVALUATOR_TOKEN_CONSTANT_INT64:
-				stack[index + 1] = token->value.int64_value;
+				stack_item_set_int64 (&stack[index+1], token->value.int64_value);
 				break;
 			case ARV_EVALUATOR_TOKEN_CONSTANT_DOUBLE:
-				stack[index + 1] = token->value.double_value;
+				stack_item_set_double (&stack[index+1], token->value.double_value);
 				break;
 			case ARV_EVALUATOR_TOKEN_VARIABLE:
-				stack[index + 1] = token->value.double_value;
+				stack_item_set_double (&stack[index+1], token->value.double_value);
 				break;
-#if 0
-	ARV_EVALUATOR_TOKEN_LOGICAL_AND,
-	ARV_EVALUATOR_TOKEN_BITWISE_NOT,
-	ARV_EVALUATOR_TOKEN_BITWISE_OR,
-	ARV_EVALUATOR_TOKEN_BITWISE_XOR,
-	ARV_EVALUATOR_TOKEN_BITWISE_AND,
-	ARV_EVALUATOR_TOKEN_NOT_EQUAL,
-	ARV_EVALUATOR_TOKEN_LESS_OR_EQUAL,
-	ARV_EVALUATOR_TOKEN_GREATER_OR_EQUAL,
-	ARV_EVALUATOR_TOKEN_LESS,
-	ARV_EVALUATOR_TOKEN_GREATER,
-	ARV_EVALUATOR_TOKEN_SHIFT_RIGHT,
-	ARV_EVALUATOR_TOKEN_SHIFT_LEFT,
-	ARV_EVALUATOR_TOKEN_SUBSTRACTION,
-	ARV_EVALUATOR_TOKEN_ADDITION,
-	ARV_EVALUATOR_TOKEN_REMAINDER,
-	ARV_EVALUATOR_TOKEN_DIVISOR,
-	ARV_EVALUATOR_TOKEN_MULTIPLIER,
-	ARV_EVALUATOR_TOKEN_POWER,
-	ARV_EVALUATOR_TOKEN_MINUS,
-	ARV_EVALUATOR_TOKEN_PLUS,
-	ARV_EVALUATOR_TOKEN_RIGHT_PARENTHESIS,
-	ARV_EVALUATOR_TOKEN_LEFT_PARENTHESIS,
-	ARV_EVALUATOR_TOKEN_CONSTANT,
-	ARV_EVALUATOR_TOKEN_VARIABLE
-#endif
 			default:
+				status = ARV_EVALUATOR_STATUS_UNKNOWN_OPERATOR;
+				goto CLEANUP;
 				break;
 		}
 
@@ -523,13 +702,27 @@ evaluate (GSList *token_stack, double *value)
 		goto CLEANUP;
 	}
 
-	*value = stack[index];
+	if (v_double != NULL)
+		*v_double = stack_item_get_double (stack);
+	
+	if (v_int64 != NULL)
+		*v_int64 = stack_item_get_int64 (stack);
 
-	arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[Evaluator::evaluate] Result = %g", *value);
+	if (stack_item_holds_int64 (stack))
+		arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[Evaluator::evaluate] Result = (int64) %Ld",
+			   stack_item_get_int64 (stack));
+	else
+		arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[Evaluator::evaluate] Result = (double) %g",
+			   stack_item_get_double (stack));
 
 	return ARV_EVALUATOR_STATUS_SUCCESS;
-
 CLEANUP:
+	if (v_double != NULL)
+		*v_double = G_NAN;
+	
+	if (v_int64 != NULL)
+		*v_int64 = G_NAN;
+
 	return status;
 }
 
@@ -645,7 +838,7 @@ arv_evaluator_evaluate_as_double (ArvEvaluator *evaluator, GError **error)
 		return 0.0;
 	}
 
-	status = evaluate (evaluator->priv->rpn_stack, &value);
+	status = evaluate (evaluator->priv->rpn_stack, NULL, &value);
 	if (status != ARV_EVALUATOR_STATUS_SUCCESS) {
 		arv_evaluator_set_error (error, status);
 		return 0.0;
@@ -657,9 +850,23 @@ arv_evaluator_evaluate_as_double (ArvEvaluator *evaluator, GError **error)
 gint64
 arv_evaluator_evaluate_as_int64 (ArvEvaluator *evaluator, GError **error)
 {
+	ArvEvaluatorStatus status;
+	gint64 value;
+
 	g_return_val_if_fail (ARV_IS_EVALUATOR (evaluator), 0.0);
 
-	return 0;
+	if (evaluator->priv->parsing_status != ARV_EVALUATOR_STATUS_SUCCESS) {
+		arv_evaluator_set_error (error, evaluator->priv->parsing_status);
+		return 0.0;
+	}
+
+	status = evaluate (evaluator->priv->rpn_stack, &value, NULL);
+	if (status != ARV_EVALUATOR_STATUS_SUCCESS) {
+		arv_evaluator_set_error (error, status);
+		return 0.0;
+	}
+
+	return value;
 }
 
 void
