@@ -106,7 +106,8 @@ typedef enum {
 #endif
 	ARV_EVALUATOR_TOKEN_RIGHT_PARENTHESIS,
 	ARV_EVALUATOR_TOKEN_LEFT_PARENTHESIS,
-	ARV_EVALUATOR_TOKEN_CONSTANT,
+	ARV_EVALUATOR_TOKEN_CONSTANT_INT64,
+	ARV_EVALUATOR_TOKEN_CONSTANT_DOUBLE,
 	ARV_EVALUATOR_TOKEN_VARIABLE
 } ArvEvaluatorTokenId;
 
@@ -171,7 +172,8 @@ static ArvEvaluatorTokenInfos arv_evaluator_token_infos[] = {
 #endif
 	{")",	990, 	0, 0}, /* RIGHT_PARENTHESIS */
 	{"(",	-1, 	0, 0}, /* LEFT_PARENTHESIS */
-	{"cnst",200,	0, 0}, /* CONSTANT */
+	{"int64" ,200,	0, 0}, /* CONSTANT_INT64 */
+	{"double",200,	0, 0}, /* CONSTANT_DOUBLE */
 	{"var",	200,	0, 0}, /* VARIABLE */
 };
 
@@ -179,6 +181,7 @@ typedef struct {
 	ArvEvaluatorTokenId	token_id;
 	union {
 		double		double_value;
+		gint64		int64_value;
 		char * 		string_value;
 	} value;
 } ArvEvaluatorToken;
@@ -193,8 +196,12 @@ arv_evaluator_token_debug (ArvEvaluatorToken *token)
 			arv_debug (ARV_DEBUG_LEVEL_STANDARD, "%s",
 				   token->value.string_value);
 			break;
-		case ARV_EVALUATOR_TOKEN_CONSTANT:
-			arv_debug (ARV_DEBUG_LEVEL_STANDARD, "%g",
+		case ARV_EVALUATOR_TOKEN_CONSTANT_INT64:
+			arv_debug (ARV_DEBUG_LEVEL_STANDARD, "(int64) %Ld",
+				   token->value.int64_value);
+			break;
+		case ARV_EVALUATOR_TOKEN_CONSTANT_DOUBLE:
+			arv_debug (ARV_DEBUG_LEVEL_STANDARD, "(double) %g",
 				   token->value.double_value);
 			break;
 		default:
@@ -276,19 +283,30 @@ arv_get_next_token (char **expression, ArvEvaluatorToken *previous_token)
 
 	if (g_ascii_isdigit (**expression)) {
 		char *end;
-		double value;
+		gint64 value_int64;
+		double value_double;
+		ptrdiff_t length_int64;
+		ptrdiff_t length_double;
 
-		value = g_ascii_strtoll (*expression, &end, 0);
-		if (end != *expression) {
-			*expression = end;
+		value_int64 = g_ascii_strtoll (*expression, &end, 0);
+		length_int64 = end - *expression;
 
-			token = g_new (ArvEvaluatorToken, 1);
-			token->token_id = ARV_EVALUATOR_TOKEN_CONSTANT;
-			token->value.double_value = value;
-		} else if (arv_str_parse_double (expression, &value)) {
-			token = g_new (ArvEvaluatorToken, 1);
-			token->token_id = ARV_EVALUATOR_TOKEN_CONSTANT;
-			token->value.double_value = value;
+		end = *expression;
+		arv_str_parse_double (&end, &value_double);
+		length_double = end - *expression;
+
+		if (length_double > 0 || length_int64 > 0) {
+			if (length_double > length_int64) {
+				token = g_new (ArvEvaluatorToken, 1);
+				token->token_id = ARV_EVALUATOR_TOKEN_CONSTANT_DOUBLE;
+				token->value.double_value = value_double;
+				*expression += length_double;
+			} else {
+				token = g_new (ArvEvaluatorToken, 1);
+				token->token_id = ARV_EVALUATOR_TOKEN_CONSTANT_INT64;
+				token->value.int64_value = value_int64;
+				*expression += length_int64;
+			}
 		}
 	} else if (g_ascii_isalpha (**expression)) {
 		char *end = *expression;
@@ -416,6 +434,8 @@ evaluate (GSList *token_stack, double *value)
 			goto CLEANUP;
 		}
 
+		arv_evaluator_token_debug (token);
+
 		switch (token->token_id) {
 			case ARV_EVALUATOR_TOKEN_UNKNOWN:
 				status = ARV_EVALUATOR_STATUS_UNKNOWN_OPERATOR;
@@ -456,7 +476,10 @@ evaluate (GSList *token_stack, double *value)
 			case ARV_EVALUATOR_TOKEN_FUNCTION_COS:
 				stack[index] = cos (stack[index]);
 				break;
-			case ARV_EVALUATOR_TOKEN_CONSTANT:
+			case ARV_EVALUATOR_TOKEN_CONSTANT_INT64:
+				stack[index + 1] = token->value.int64_value;
+				break;
+			case ARV_EVALUATOR_TOKEN_CONSTANT_DOUBLE:
 				stack[index + 1] = token->value.double_value;
 				break;
 			case ARV_EVALUATOR_TOKEN_VARIABLE:
@@ -529,8 +552,6 @@ parse_expression (char *expression, GSList **rpn_stack)
 		token = arv_get_next_token (&expression, previous_token);
 		previous_token = token;
 		if (token != NULL) {
-			arv_evaluator_token_debug (token);
-
 			if (arv_evaluator_token_is_operand (token)) {
 				token_stack = g_slist_prepend (token_stack, token);
 			} else if (arv_evaluator_token_is_comma (token)) {
