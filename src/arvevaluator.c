@@ -119,59 +119,60 @@ typedef struct {
 	const char *		tag;
 	int			precedence;
 	int			n_args;
+	ArvEvaluatorTokenAssociativity	associativity;
 } ArvEvaluatorTokenInfos;
 
 static ArvEvaluatorTokenInfos arv_evaluator_token_infos[] = {
-	{"",	0,	1}, /* ARV_EVALUATOR_TOKEN_UNKNOWN */
-	{",",	0, 	0}, /* ARV_EVALUATOR_TOKEN_COMMA */
-	{"?",	5,	3}, /* ARV_EVALUATOR_TOKEN_TERNARY_QUESTION_MARK */
-	{":",	5,	0}, /* ARV_EVALUATOR_TOKEN_TERNARY_COLON */
-	{"||",	10,	2}, /* ARV_EVALUATOR_TOKEN_LOGICAL_OR */
-	{"&&",	20,	2}, /* ARV_EVALUATOR_TOKEN_LOGICAL_AND */
-	{"~",	30,	1}, /* ARV_EVALUATOR_TOKEN_BITWISE_NOT */
-	{"|",	40,	2}, /* ARV_EVALUATOR_TOKEN_BITWISE_OR */
-	{"^",	50,	2}, /* ARV_EVALUATOR_TOKEN_BITWISE_XOR */
-	{"&",	60,	2}, /* ARV_EVALUATOR_TOKEN_BITWISE_AND */
-	{"==",	70,	2}, /* ARV_EVALUATOR_TOKEN_EQUAL, */
-	{"!=",	70,	2}, /* ARV_EVALUATOR_TOKEN_NOT_EQUAL */
-	{"<=",	80,	2}, /* ARV_EVALUATOR_TOKEN_LESS_OR_EQUAL */
-	{">=",	80,	2}, /* ARV_EVALUATOR_TOKEN_GREATER_OR_EQUAL */
-	{"<",	80,	2}, /* ARV_EVALUATOR_TOKEN_LESS */
-	{">",	80,	2}, /* ARV_EVALUATOR_TOKEN_GREATER */
-	{">>",	90,	2}, /* ARV_EVALUATOR_TOKEN_SHIFT_RIGHT */
-	{"<<",	90,	2}, /* ARV_EVALUATOR_TOKEN_SHIFT_LEFT */
-	{"-",	100, 	2}, /* ARV_EVALUATOR_TOKEN_SUBSTRACTION */
-	{"+",	100, 	2}, /* ARV_EVALUATOR_TOKEN_ADDITION */
-	{"%",	110,	2}, /* ARV_EVALUATOR_TOKEN_REMAINDER */
-	{"/",	110,	2}, /* ARV_EVALUATOR_TOKEN_DIVISION */
-	{"*",	110, 	2}, /* ARV_EVALUATOR_TOKEN_MULTIPLICATION */
-	{"**",	120,	2}, /* ARV_EVALUATOR_TOKEN_POWER */
-	{"min",	130, 	1}, /* ARV_EVALUATOR_TOKEN_MINUS */
-	{"pls",	130, 	1}, /* ARV_EVALUATOR_TOKEN_PLUS */
-	{"sin",	200,	1}, /* ARV_EVALUATOR_TOKEN_FUNCTION_SIN */
-	{"cos",	200,	1}, /* ARV_EVALUATOR_TOKEN_FUNCTION_COS */
+	{"",	0,	1, 0}, /* UNKNOWN */
+	{",",	0, 	0, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* COMMA */
+	{"?",	5,	3, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_RIGHT_TO_LEFT}, /* TERNARY_QUESTION_MARK */
+	{":",	5,	0, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_RIGHT_TO_LEFT}, /* TERNARY_COLON */
+	{"||",	10,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* LOGICAL_OR */
+	{"&&",	20,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* LOGICAL_AND */
+	{"~",	30,	1, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* BITWISE_NOT */
+	{"|",	40,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* BITWISE_OR */
+	{"^",	50,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* BITWISE_XOR */
+	{"&",	60,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* BITWISE_AND */
+	{"==",	70,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* EQUAL, */
+	{"!=",	70,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* NOT_EQUAL */
+	{"<=",	80,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* LESS_OR_EQUAL */
+	{">=",	80,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* GREATER_OR_EQUAL */
+	{"<",	80,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* LESS */
+	{">",	80,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* GREATER */
+	{">>",	90,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* SHIFT_RIGHT */
+	{"<<",	90,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* SHIFT_LEFT */
+	{"-",	100, 	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* SUBSTRACTION */
+	{"+",	100, 	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* ADDITION */
+	{"%",	110,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* REMAINDER */
+	{"/",	110,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* DIVISION */
+	{"*",	110, 	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* MULTIPLICATION */
+	{"**",	120,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_RIGHT_TO_LEFT}, /* POWER */
+	{"min",	130, 	1, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_RIGHT_TO_LEFT}, /* MINUS */
+	{"pls",	130, 	1, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_RIGHT_TO_LEFT}, /* PLUS */
+	{"sin",	200,	1, 0}, /* FUNCTION_SIN */
+	{"cos",	200,	1, 0}, /* FUNCTION_COS */
 #if 0
-	ARV_EVALUATOR_TOKEN_FUNCTION_SGN,
-	ARV_EVALUATOR_TOKEN_FUNCTION_NEG,
-	ARV_EVALUATOR_TOKEN_FUNCTION_ATAN,
-	ARV_EVALUATOR_TOKEN_FUNCTION_TAN,
-	ARV_EVALUATOR_TOKEN_FUNCTION_ABS,
-	ARV_EVALUATOR_TOKEN_FUNCTION_EXP,
-	ARV_EVALUATOR_TOKEN_FUNCTION_LN,
-	ARV_EVALUATOR_TOKEN_FUNCTION_LG,
-	ARV_EVALUATOR_TOKEN_FUNCTION_SQRT,
-	ARV_EVALUATOR_TOKEN_FUNCTION_TRUNC,
-	ARV_EVALUATOR_TOKEN_FUNCTION_FLOOR,
-	ARV_EVALUATOR_TOKEN_FUNCTION_CEIL,
-	ARV_EVALUATOR_TOKEN_FUNCTION_ASIN,
-	ARV_EVALUATOR_TOKEN_FUNCTION_ACOS,
-	ARV_EVALUATOR_TOKEN_FUNCTION_E,
-	ARV_EVALUATOR_TOKEN_FUNCTION_PI
+	FUNCTION_SGN,
+	FUNCTION_NEG,
+	FUNCTION_ATAN,
+	FUNCTION_TAN,
+	FUNCTION_ABS,
+	FUNCTION_EXP,
+	FUNCTION_LN,
+	FUNCTION_LG,
+	FUNCTION_SQRT,
+	FUNCTION_TRUNC,
+	FUNCTION_FLOOR,
+	FUNCTION_CEIL,
+	FUNCTION_ASIN,
+	FUNCTION_ACOS,
+	FUNCTION_E,
+	FUNCTION_PI
 #endif
-	{")",	990, 	0}, /* ARV_EVALUATOR_TOKEN_RIGHT_PARENTHESIS */
-	{"(",	-1, 	0}, /* ARV_EVALUATOR_TOKEN_LEFT_PARENTHESIS */
-	{"cnst",200,	0}, /* ARV_EVALUATOR_TOKEN_CONSTANT */
-	{"var",	200,	0}, /* ARV_EVALUATOR_TOKEN_VARIABLE */
+	{")",	990, 	0, 0}, /* RIGHT_PARENTHESIS */
+	{"(",	-1, 	0, 0}, /* LEFT_PARENTHESIS */
+	{"cnst",200,	0, 0}, /* CONSTANT */
+	{"var",	200,	0, 0}, /* VARIABLE */
 };
 
 typedef struct {
@@ -217,6 +218,13 @@ arv_evaluator_token_is_operator (ArvEvaluatorToken *token)
 }
 
 static gboolean
+arv_evaluator_token_is_comma (ArvEvaluatorToken *token)
+{
+	return (token != NULL &&
+		token->token_id == ARV_EVALUATOR_TOKEN_COMMA);
+}
+
+static gboolean
 arv_evaluator_token_is_left_parenthesis (ArvEvaluatorToken *token)
 {
 	return (token != NULL &&
@@ -230,14 +238,28 @@ arv_evaluator_token_is_right_parenthesis (ArvEvaluatorToken *token)
 		token->token_id == ARV_EVALUATOR_TOKEN_RIGHT_PARENTHESIS);
 }
 
-static int
-arv_evaluator_token_get_precedence (ArvEvaluatorToken *token)
+gboolean
+arv_evaluator_token_compare_precedence (ArvEvaluatorToken *a, ArvEvaluatorToken *b)
 {
-	if (token != NULL &&
-	    token->token_id < G_N_ELEMENTS (arv_evaluator_token_infos))
-		return arv_evaluator_token_infos[token->token_id].precedence;
+	gint a_precedence;
+	gint b_precedence;
+	ArvEvaluatorTokenAssociativity a_associativity;
+	ArvEvaluatorTokenAssociativity b_associativity;
+	
+	if (a == NULL || b == NULL ||
+	    a->token_id >= G_N_ELEMENTS (arv_evaluator_token_infos) ||
+	    b->token_id >= G_N_ELEMENTS (arv_evaluator_token_infos))
+		return FALSE;
 
-	return 0;
+	a_precedence = arv_evaluator_token_infos[a->token_id].precedence;
+	b_precedence = arv_evaluator_token_infos[b->token_id].precedence;
+	a_associativity = arv_evaluator_token_infos[a->token_id].associativity;
+	b_associativity = arv_evaluator_token_infos[b->token_id].associativity;
+
+	return (((a_precedence <= b_precedence) &&
+		 a_associativity == ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT) ||
+		((a_precedence < b_precedence) &&
+		 a_associativity == ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_RIGHT_TO_LEFT));
 }
 
 ArvEvaluatorToken *
@@ -291,9 +313,6 @@ arv_get_next_token (char **expression, ArvEvaluatorToken *previous_token)
 		}
 
 		*expression = end;
-
-		g_message ("exp = '%s'", *expression);
-
 	} else {
 		switch (**expression) {
 			case '(': token_id = ARV_EVALUATOR_TOKEN_LEFT_PARENTHESIS; break;
@@ -405,6 +424,9 @@ evaluate (GSList *token_stack, double *value)
 			case ARV_EVALUATOR_TOKEN_LOGICAL_OR:
 				stack[index - 1] = (gint64) stack[index - 1] | (gint64) stack[index];
 				break;
+			case ARV_EVALUATOR_TOKEN_EQUAL:
+				stack[index - 1] = (stack[index - 1] == stack[index]);
+				break;
 			case ARV_EVALUATOR_TOKEN_SUBSTRACTION:
 				stack[index - 1] -= stack[index];
 				break;
@@ -428,6 +450,12 @@ evaluate (GSList *token_stack, double *value)
 				break;
 			case ARV_EVALUATOR_TOKEN_PLUS:
 				break;
+			case ARV_EVALUATOR_TOKEN_FUNCTION_SIN:
+				stack[index] = sin (stack[index]);
+				break;
+			case ARV_EVALUATOR_TOKEN_FUNCTION_COS:
+				stack[index] = cos (stack[index]);
+				break;
 			case ARV_EVALUATOR_TOKEN_CONSTANT:
 				stack[index + 1] = token->value.double_value;
 				break;
@@ -440,7 +468,6 @@ evaluate (GSList *token_stack, double *value)
 	ARV_EVALUATOR_TOKEN_BITWISE_OR,
 	ARV_EVALUATOR_TOKEN_BITWISE_XOR,
 	ARV_EVALUATOR_TOKEN_BITWISE_AND,
-	ARV_EVALUATOR_TOKEN_EQUAL,
 	ARV_EVALUATOR_TOKEN_NOT_EQUAL,
 	ARV_EVALUATOR_TOKEN_LESS_OR_EQUAL,
 	ARV_EVALUATOR_TOKEN_GREATER_OR_EQUAL,
@@ -456,8 +483,6 @@ evaluate (GSList *token_stack, double *value)
 	ARV_EVALUATOR_TOKEN_POWER,
 	ARV_EVALUATOR_TOKEN_MINUS,
 	ARV_EVALUATOR_TOKEN_PLUS,
-	ARV_EVALUATOR_TOKEN_FUNCTION_SIN,
-	ARV_EVALUATOR_TOKEN_FUNCTION_COS,
 	ARV_EVALUATOR_TOKEN_RIGHT_PARENTHESIS,
 	ARV_EVALUATOR_TOKEN_LEFT_PARENTHESIS,
 	ARV_EVALUATOR_TOKEN_CONSTANT,
@@ -497,20 +522,32 @@ parse_expression (char *expression, GSList **rpn_stack)
 
 	arv_debug (ARV_DEBUG_LEVEL_STANDARD, expression);
 
+	/* Dijkstra's "shunting yard" algorithm */
+	/* http://en.wikipedia.org/wiki/Shunting-yard_algorithm */
+
 	do {
 		token = arv_get_next_token (&expression, previous_token);
 		previous_token = token;
 		if (token != NULL) {
-			int precedence = arv_evaluator_token_get_precedence (token);
-
 			arv_evaluator_token_debug (token);
 
-			if (arv_evaluator_token_is_operand (token))
+			if (arv_evaluator_token_is_operand (token)) {
 				token_stack = g_slist_prepend (token_stack, token);
-			else if (arv_evaluator_token_is_operator (token)) {
+			} else if (arv_evaluator_token_is_comma (token)) {
 				while (operator_stack != NULL &&
-				       precedence <=
-				       arv_evaluator_token_get_precedence (operator_stack->data)) {
+				       !arv_evaluator_token_is_left_parenthesis (operator_stack->data)) {
+					token_stack = g_slist_prepend (token_stack, operator_stack->data);
+					operator_stack = g_slist_delete_link (operator_stack, operator_stack);
+				}
+				if (operator_stack == NULL ||
+				    !arv_evaluator_token_is_left_parenthesis (operator_stack->data)) {
+					status = ARV_EVALUATOR_STATUS_PARENTHESES_MISMATCH;
+					goto CLEANUP;
+				}
+				g_free (token);
+			} else if (arv_evaluator_token_is_operator (token)) {
+				while (operator_stack != NULL &&
+				       arv_evaluator_token_compare_precedence (token, operator_stack->data)) {
 					token_stack = g_slist_prepend (token_stack, operator_stack->data);
 					operator_stack = g_slist_delete_link (operator_stack, operator_stack);
 				}
