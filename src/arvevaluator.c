@@ -24,6 +24,7 @@
 #include <arvtools.h>
 #include <arvdebug.h>
 #include <math.h>
+#include <stdlib.h>
 
 #define ARV_EVALUATOR_STACK_SIZE	128
 
@@ -88,7 +89,6 @@ typedef enum {
 	ARV_EVALUATOR_TOKEN_PLUS,
 	ARV_EVALUATOR_TOKEN_FUNCTION_SIN,
 	ARV_EVALUATOR_TOKEN_FUNCTION_COS,
-#if 0
 	ARV_EVALUATOR_TOKEN_FUNCTION_SGN,
 	ARV_EVALUATOR_TOKEN_FUNCTION_NEG,
 	ARV_EVALUATOR_TOKEN_FUNCTION_ATAN,
@@ -104,8 +104,7 @@ typedef enum {
 	ARV_EVALUATOR_TOKEN_FUNCTION_ASIN,
 	ARV_EVALUATOR_TOKEN_FUNCTION_ACOS,
 	ARV_EVALUATOR_TOKEN_FUNCTION_E,
-	ARV_EVALUATOR_TOKEN_FUNCTION_PI
-#endif
+	ARV_EVALUATOR_TOKEN_FUNCTION_PI,
 	ARV_EVALUATOR_TOKEN_RIGHT_PARENTHESIS,
 	ARV_EVALUATOR_TOKEN_LEFT_PARENTHESIS,
 	ARV_EVALUATOR_TOKEN_CONSTANT_INT64,
@@ -154,24 +153,22 @@ static ArvEvaluatorTokenInfos arv_evaluator_token_infos[] = {
 	{"pls",	130, 	1, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_RIGHT_TO_LEFT}, /* PLUS */
 	{"sin",	200,	1, 0}, /* FUNCTION_SIN */
 	{"cos",	200,	1, 0}, /* FUNCTION_COS */
-#if 0
-	FUNCTION_SGN,
-	FUNCTION_NEG,
-	FUNCTION_ATAN,
-	FUNCTION_TAN,
-	FUNCTION_ABS,
-	FUNCTION_EXP,
-	FUNCTION_LN,
-	FUNCTION_LG,
-	FUNCTION_SQRT,
-	FUNCTION_TRUNC,
-	FUNCTION_FLOOR,
-	FUNCTION_CEIL,
-	FUNCTION_ASIN,
-	FUNCTION_ACOS,
-	FUNCTION_E,
-	FUNCTION_PI
-#endif
+	{"sgn",	200,	1, 0}, /* FUNCTION_SGN */
+	{"neg",	200,	1, 0}, /* FUNCTION_NEG */
+	{"atan",200,	1, 0}, /* FUNCTION_ATAN */
+	{"tan" ,200,	1, 0}, /* FUNCTION_TAN */
+	{"abs" ,200,	1, 0}, /* FUNCTION_ABS */
+	{"exp" ,200,	1, 0}, /* FUNCTION_EXP */
+	{"ln",  200,	1, 0}, /* FUNCTION_LN */
+	{"lg",  200,	1, 0}, /* FUNCTION_LG */
+	{"sqrt",200,	1, 0}, /* FUNCTION_SQRT */
+	{"trunc",200,	1, 0}, /* FUNCTION_TRUNC */
+	{"floor",200,	1, 0}, /* FUNCTION_FLOOR */
+	{"ceil",200, 	1, 0}, /* FUNCTION_CEIL */
+	{"asin",200, 	1, 0}, /* FUNCTION_ASIN */
+	{"acos",200, 	1, 0}, /* FUNCTION_ACOS */
+	{"e"   ,200, 	0, 0}, /* FUNCTION_E */
+	{"pi"  ,200, 	0, 0}, /* FUNCTION_PI */
 	{")",	990, 	0, 0}, /* RIGHT_PARENTHESIS */
 	{"(",	-1, 	0, 0}, /* LEFT_PARENTHESIS */
 	{"int64" ,200,	0, 0}, /* CONSTANT_INT64 */
@@ -323,6 +320,38 @@ arv_get_next_token (char **expression, ArvEvaluatorToken *previous_token)
 			token_id = ARV_EVALUATOR_TOKEN_FUNCTION_SIN;
 		else if (g_ascii_strncasecmp ("cos", *expression, token_length) == 0)
 			token_id = ARV_EVALUATOR_TOKEN_FUNCTION_COS;
+		else if (g_ascii_strncasecmp ("sgn", *expression, token_length) == 0)
+			token_id = ARV_EVALUATOR_TOKEN_FUNCTION_SGN;
+		else if (g_ascii_strncasecmp ("neg", *expression, token_length) == 0)
+			token_id = ARV_EVALUATOR_TOKEN_FUNCTION_NEG;
+		else if (g_ascii_strncasecmp ("atan", *expression, token_length) == 0)
+			token_id = ARV_EVALUATOR_TOKEN_FUNCTION_ATAN;
+		else if (g_ascii_strncasecmp ("tan", *expression, token_length) == 0)
+			token_id = ARV_EVALUATOR_TOKEN_FUNCTION_TAN;
+		else if (g_ascii_strncasecmp ("abs", *expression, token_length) == 0)
+			token_id = ARV_EVALUATOR_TOKEN_FUNCTION_ABS;
+		else if (g_ascii_strncasecmp ("exp", *expression, token_length) == 0)
+			token_id = ARV_EVALUATOR_TOKEN_FUNCTION_EXP;
+		else if (g_ascii_strncasecmp ("ln", *expression, token_length) == 0)
+			token_id = ARV_EVALUATOR_TOKEN_FUNCTION_LN;
+		else if (g_ascii_strncasecmp ("lg", *expression, token_length) == 0)
+			token_id = ARV_EVALUATOR_TOKEN_FUNCTION_LG;
+		else if (g_ascii_strncasecmp ("sqrt", *expression, token_length) == 0)
+			token_id = ARV_EVALUATOR_TOKEN_FUNCTION_SQRT;
+		else if (g_ascii_strncasecmp ("trunc", *expression, token_length) == 0)
+			token_id = ARV_EVALUATOR_TOKEN_FUNCTION_TRUNC;
+		else if (g_ascii_strncasecmp ("floor", *expression, token_length) == 0)
+			token_id = ARV_EVALUATOR_TOKEN_FUNCTION_FLOOR;
+		else if (g_ascii_strncasecmp ("ceil", *expression, token_length) == 0)
+			token_id = ARV_EVALUATOR_TOKEN_FUNCTION_CEIL;
+		else if (g_ascii_strncasecmp ("asin", *expression, token_length) == 0)
+			token_id = ARV_EVALUATOR_TOKEN_FUNCTION_ASIN;
+		else if (g_ascii_strncasecmp ("acos", *expression, token_length) == 0)
+			token_id = ARV_EVALUATOR_TOKEN_FUNCTION_ACOS;
+		else if (g_ascii_strncasecmp ("e", *expression, token_length) == 0)
+			token_id = ARV_EVALUATOR_TOKEN_FUNCTION_E;
+		else if (g_ascii_strncasecmp ("PI", *expression, token_length) == 0)
+			token_id = ARV_EVALUATOR_TOKEN_FUNCTION_PI;
 
 		token = g_new (ArvEvaluatorToken, 1);
 		if (token_id != ARV_EVALUATOR_TOKEN_UNKNOWN)
@@ -679,6 +708,80 @@ evaluate (GSList *token_stack, gint64 *v_int64, double *v_double)
 			case ARV_EVALUATOR_TOKEN_FUNCTION_COS:
 				stack_item_set_double (&stack[index], cos (stack_item_get_double (&stack[index])));
 				break;
+			case ARV_EVALUATOR_TOKEN_FUNCTION_SGN:
+				if (stack_item_holds_double (&stack[index])) {
+					double value = stack_item_get_double (&stack[index]);
+					if (value < 0.0)
+						stack_item_set_int64 (&stack[index], -1);
+					else if (value > 0.0)
+						stack_item_set_int64 (&stack[index], 1);
+					else
+						stack_item_set_int64 (&stack[index], 0);
+				} else {
+					gint64 value = stack_item_get_int64 (&stack[index]);
+					if (value < 0)
+						stack_item_set_int64 (&stack[index], -1);
+					else if (value > 0)
+						stack_item_set_int64 (&stack[index], 1);
+					else
+						stack_item_set_int64 (&stack[index], 0);
+				}
+				break;
+			case ARV_EVALUATOR_TOKEN_FUNCTION_NEG:
+				if (stack_item_holds_double (&stack[index])) 
+					stack_item_set_double (&stack[index],
+							       -stack_item_get_double (&stack[index-1]));
+				else
+					stack_item_set_int64 (&stack[index],
+							      -stack_item_get_int64 (&stack[index]));
+				break;
+			case ARV_EVALUATOR_TOKEN_FUNCTION_ATAN:
+				stack_item_set_double (&stack[index], atan (stack_item_get_double (&stack[index])));
+				break;
+			case ARV_EVALUATOR_TOKEN_FUNCTION_TAN:
+				stack_item_set_double (&stack[index], tan (stack_item_get_double (&stack[index])));
+				break;
+			case ARV_EVALUATOR_TOKEN_FUNCTION_ABS:
+				if (stack_item_holds_double (&stack[index])) 
+					stack_item_set_double (&stack[index],
+							       fabs (stack_item_get_double (&stack[index-1])));
+				else
+					stack_item_set_int64 (&stack[index],
+							      abs (stack_item_get_int64 (&stack[index])));
+				break;
+			case ARV_EVALUATOR_TOKEN_FUNCTION_EXP:
+				stack_item_set_double (&stack[index], exp (stack_item_get_double (&stack[index])));
+				break;
+			case ARV_EVALUATOR_TOKEN_FUNCTION_LN:
+				stack_item_set_double (&stack[index], log (stack_item_get_double (&stack[index])));
+				break;
+			case ARV_EVALUATOR_TOKEN_FUNCTION_LG:
+				stack_item_set_double (&stack[index], log10 (stack_item_get_double (&stack[index])));
+				break;
+			case ARV_EVALUATOR_TOKEN_FUNCTION_SQRT:
+				stack_item_set_double (&stack[index], sqrt (stack_item_get_double (&stack[index])));
+				break;
+			case ARV_EVALUATOR_TOKEN_FUNCTION_TRUNC:
+				stack_item_set_double (&stack[index], trunc (stack_item_get_double (&stack[index])));
+				break;
+			case ARV_EVALUATOR_TOKEN_FUNCTION_FLOOR:
+				stack_item_set_double (&stack[index], floor (stack_item_get_double (&stack[index])));
+				break;
+			case ARV_EVALUATOR_TOKEN_FUNCTION_CEIL:
+				stack_item_set_double (&stack[index], ceil (stack_item_get_double (&stack[index])));
+				break;
+			case ARV_EVALUATOR_TOKEN_FUNCTION_ASIN:
+				stack_item_set_double (&stack[index], asin (stack_item_get_double (&stack[index])));
+				break;
+			case ARV_EVALUATOR_TOKEN_FUNCTION_ACOS:
+				stack_item_set_double (&stack[index], acos (stack_item_get_double (&stack[index])));
+				break;
+			case ARV_EVALUATOR_TOKEN_FUNCTION_E:
+				stack_item_set_double (&stack[index+1], M_E);
+				break;
+			case ARV_EVALUATOR_TOKEN_FUNCTION_PI:
+				stack_item_set_double (&stack[index+1], M_PI);
+				break;
 			case ARV_EVALUATOR_TOKEN_CONSTANT_INT64:
 				stack_item_set_int64 (&stack[index+1], token->value.int64_value);
 				break;
@@ -718,10 +821,10 @@ evaluate (GSList *token_stack, gint64 *v_int64, double *v_double)
 	return ARV_EVALUATOR_STATUS_SUCCESS;
 CLEANUP:
 	if (v_double != NULL)
-		*v_double = G_NAN;
+		*v_double = 0.0;
 	
 	if (v_int64 != NULL)
-		*v_int64 = G_NAN;
+		*v_int64 = 0.0;
 
 	return status;
 }
