@@ -41,6 +41,9 @@ main (int argc, char **argv)
 
 	evaluator = arv_evaluator_new (NULL);
 
+	arv_evaluator_set_double_variable (evaluator, "TDBL", 124.2);
+	arv_evaluator_set_int64_variable (evaluator, "TINT", 3200);
+
 	if (arv_option_expressions == NULL) {
 		g_print ("Missing expression.\n");
 		return EXIT_FAILURE;

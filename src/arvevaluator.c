@@ -266,9 +266,56 @@ typedef struct {
 	union {
 		double		v_double;
 		gint64		v_int64;
-		char * 		v_string;
-	} value;
+		char * 		name;
+	} data;
 } ArvEvaluatorToken;
+
+static ArvEvaluatorToken *
+arv_evaluator_token_new (ArvEvaluatorTokenId token_id)
+{
+	ArvEvaluatorToken *token = g_new0 (ArvEvaluatorToken, 1);
+	token->token_id = token_id;
+
+	return token;
+}
+
+static ArvEvaluatorToken *
+arv_evaluator_token_new_double (double v_double)
+{
+	ArvEvaluatorToken *token = arv_evaluator_token_new (ARV_EVALUATOR_TOKEN_CONSTANT_DOUBLE);
+	token->data.v_double = v_double;
+
+	return token;
+}
+
+static ArvEvaluatorToken *
+arv_evaluator_token_new_int64 (double v_int64)
+{
+	ArvEvaluatorToken *token = arv_evaluator_token_new (ARV_EVALUATOR_TOKEN_CONSTANT_INT64);
+	token->data.v_int64 = v_int64;
+
+	return token;
+}
+
+static ArvEvaluatorToken *
+arv_evaluator_token_new_variable (const char *name)
+{
+	ArvEvaluatorToken *token = arv_evaluator_token_new (ARV_EVALUATOR_TOKEN_VARIABLE);
+	token->data.name = g_strdup (name);
+
+	return token;
+}
+
+static void
+arv_evaluator_token_free (ArvEvaluatorToken *token)
+{
+	if (token == NULL)
+		return;
+
+	if (token->token_id == ARV_EVALUATOR_TOKEN_VARIABLE)
+		g_free (token->data.name);
+	g_free (token);
+}
 
 void
 arv_evaluator_token_debug (ArvEvaluatorToken *token)
@@ -278,15 +325,15 @@ arv_evaluator_token_debug (ArvEvaluatorToken *token)
 	switch (token->token_id) {
 		case ARV_EVALUATOR_TOKEN_VARIABLE:
 			arv_debug (ARV_DEBUG_LEVEL_STANDARD, "%s",
-				   token->value.v_string);
+				   token->data.name);
 			break;
 		case ARV_EVALUATOR_TOKEN_CONSTANT_INT64:
 			arv_debug (ARV_DEBUG_LEVEL_STANDARD, "(int64) %Ld",
-				   token->value.v_int64);
+				   token->data.v_int64);
 			break;
 		case ARV_EVALUATOR_TOKEN_CONSTANT_DOUBLE:
 			arv_debug (ARV_DEBUG_LEVEL_STANDARD, "(double) %g",
-				   token->value.v_double);
+				   token->data.v_double);
 			break;
 		default:
 			arv_debug (ARV_DEBUG_LEVEL_STANDARD, "%s", arv_evaluator_token_infos[token->token_id]);
@@ -367,28 +414,24 @@ arv_get_next_token (char **expression, ArvEvaluatorToken *previous_token)
 
 	if (g_ascii_isdigit (**expression)) {
 		char *end;
-		gint64 value_int64;
-		double value_double;
+		gint64 v_int64;
+		double v_double;
 		ptrdiff_t length_int64;
 		ptrdiff_t length_double;
 
-		value_int64 = g_ascii_strtoll (*expression, &end, 0);
+		v_int64 = g_ascii_strtoll (*expression, &end, 0);
 		length_int64 = end - *expression;
 
 		end = *expression;
-		arv_str_parse_double (&end, &value_double);
+		arv_str_parse_double (&end, &v_double);
 		length_double = end - *expression;
 
 		if (length_double > 0 || length_int64 > 0) {
 			if (length_double > length_int64) {
-				token = g_new (ArvEvaluatorToken, 1);
-				token->token_id = ARV_EVALUATOR_TOKEN_CONSTANT_DOUBLE;
-				token->value.v_double = value_double;
+				token = arv_evaluator_token_new_double (v_double);
 				*expression += length_double;
 			} else {
-				token = g_new (ArvEvaluatorToken, 1);
-				token->token_id = ARV_EVALUATOR_TOKEN_CONSTANT_INT64;
-				token->value.v_int64 = value_int64;
+				token = arv_evaluator_token_new_int64 (v_int64);
 				*expression += length_int64;
 			}
 		}
@@ -438,12 +481,12 @@ arv_get_next_token (char **expression, ArvEvaluatorToken *previous_token)
 		else if (g_ascii_strncasecmp ("PI", *expression, token_length) == 0)
 			token_id = ARV_EVALUATOR_TOKEN_FUNCTION_PI;
 
-		token = g_new (ArvEvaluatorToken, 1);
 		if (token_id != ARV_EVALUATOR_TOKEN_UNKNOWN)
-			token->token_id = token_id;
+			token = arv_evaluator_token_new (token_id);
 		else {
-			token->token_id = ARV_EVALUATOR_TOKEN_VARIABLE;
-			token->value.v_string = *expression;
+			char *name = g_strndup (*expression, token_length);
+			token = arv_evaluator_token_new_variable (name);
+			g_free (name);
 		}
 
 		*expression = end;
@@ -525,12 +568,13 @@ arv_get_next_token (char **expression, ArvEvaluatorToken *previous_token)
 }
 
 ArvEvaluatorStatus
-evaluate (GSList *token_stack, gint64 *v_int64, double *v_double)
+evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v_double)
 {
 	ArvEvaluatorToken *token;
 	ArvEvaluatorStatus status;
 	GSList *iter;
 	ArvValue stack[ARV_EVALUATOR_STACK_SIZE];
+	ArvValue *value;
 	int index = -1;
 
 	for (iter = token_stack; iter != NULL; iter = iter->next) {
@@ -812,13 +856,17 @@ evaluate (GSList *token_stack, gint64 *v_int64, double *v_double)
 				arv_value_set_double (&stack[index+1], M_PI);
 				break;
 			case ARV_EVALUATOR_TOKEN_CONSTANT_INT64:
-				arv_value_set_int64 (&stack[index+1], token->value.v_int64);
+				arv_value_set_int64 (&stack[index+1], token->data.v_int64);
 				break;
 			case ARV_EVALUATOR_TOKEN_CONSTANT_DOUBLE:
-				arv_value_set_double (&stack[index+1], token->value.v_double);
+				arv_value_set_double (&stack[index+1], token->data.v_double);
 				break;
 			case ARV_EVALUATOR_TOKEN_VARIABLE:
-				arv_value_set_double (&stack[index+1], token->value.v_double);
+				value = g_hash_table_lookup (variables, token->data.name);
+				if (value != NULL)
+					arv_value_copy (&stack[index+1], value);
+				else
+					arv_value_set_int64 (&stack[index+1], 0);
 				break;
 			case ARV_EVALUATOR_TOKEN_TERNARY_COLON:
 				break;
@@ -898,7 +946,7 @@ parse_expression (char *expression, GSList **rpn_stack)
 					status = ARV_EVALUATOR_STATUS_PARENTHESES_MISMATCH;
 					goto CLEANUP;
 				}
-				g_free (token);
+				arv_evaluator_token_free (token);
 			} else if (arv_evaluator_token_is_operator (token)) {
 				while (operator_stack != NULL &&
 				       arv_evaluator_token_compare_precedence (token, operator_stack->data)) {
@@ -919,7 +967,7 @@ parse_expression (char *expression, GSList **rpn_stack)
 					goto CLEANUP;
 				}
 
-				g_free (operator_stack->data);
+				arv_evaluator_token_free (operator_stack->data);
 				operator_stack = g_slist_delete_link (operator_stack, operator_stack);
 			} else {
 				status = ARV_EVALUATOR_STATUS_SYNTAX_ERROR;
@@ -945,10 +993,10 @@ parse_expression (char *expression, GSList **rpn_stack)
 CLEANUP:
 
 	for (iter = token_stack; iter != NULL; iter = iter->next)
-		g_free (iter->data);
+		arv_evaluator_token_free (iter->data);
 	g_slist_free (token_stack);
 	for (iter = operator_stack; iter != NULL; iter = iter->next)
-		g_free (iter->data);
+		arv_evaluator_token_free (iter->data);
 	g_slist_free (operator_stack);
 
 	return status;
@@ -978,7 +1026,7 @@ arv_evaluator_evaluate_as_double (ArvEvaluator *evaluator, GError **error)
 		return 0.0;
 	}
 
-	status = evaluate (evaluator->priv->rpn_stack, NULL, &value);
+	status = evaluate (evaluator->priv->rpn_stack, evaluator->priv->variables, NULL, &value);
 	if (status != ARV_EVALUATOR_STATUS_SUCCESS) {
 		arv_evaluator_set_error (error, status);
 		return 0.0;
@@ -1000,7 +1048,7 @@ arv_evaluator_evaluate_as_int64 (ArvEvaluator *evaluator, GError **error)
 		return 0.0;
 	}
 
-	status = evaluate (evaluator->priv->rpn_stack, &value, NULL);
+	status = evaluate (evaluator->priv->rpn_stack, evaluator->priv->variables, &value, NULL);
 	if (status != ARV_EVALUATOR_STATUS_SUCCESS) {
 		arv_evaluator_set_error (error, status);
 		return 0.0;
@@ -1022,7 +1070,7 @@ arv_evaluator_set_expression (ArvEvaluator *evaluator, const char *expression)
 	g_free (evaluator->priv->expression);
 	evaluator->priv->expression = NULL;
 	for (iter = evaluator->priv->rpn_stack; iter != NULL; iter = iter->next)
-		g_free (iter->data);
+		arv_evaluator_token_free (iter->data);
 	g_slist_free (evaluator->priv->rpn_stack);
 	evaluator->priv->rpn_stack = NULL;
 
