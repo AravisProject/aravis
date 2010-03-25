@@ -237,9 +237,9 @@ arv_value_holds_double (ArvValue *value)
 typedef struct {
 	ArvEvaluatorTokenId	token_id;
 	union {
-		double		double_value;
-		gint64		int64_value;
-		char * 		string_value;
+		double		v_double;
+		gint64		v_int64;
+		char * 		v_string;
 	} value;
 } ArvEvaluatorToken;
 
@@ -251,15 +251,15 @@ arv_evaluator_token_debug (ArvEvaluatorToken *token)
 	switch (token->token_id) {
 		case ARV_EVALUATOR_TOKEN_VARIABLE:
 			arv_debug (ARV_DEBUG_LEVEL_STANDARD, "%s",
-				   token->value.string_value);
+				   token->value.v_string);
 			break;
 		case ARV_EVALUATOR_TOKEN_CONSTANT_INT64:
 			arv_debug (ARV_DEBUG_LEVEL_STANDARD, "(int64) %Ld",
-				   token->value.int64_value);
+				   token->value.v_int64);
 			break;
 		case ARV_EVALUATOR_TOKEN_CONSTANT_DOUBLE:
 			arv_debug (ARV_DEBUG_LEVEL_STANDARD, "(double) %g",
-				   token->value.double_value);
+				   token->value.v_double);
 			break;
 		default:
 			arv_debug (ARV_DEBUG_LEVEL_STANDARD, "%s", arv_evaluator_token_infos[token->token_id]);
@@ -356,12 +356,12 @@ arv_get_next_token (char **expression, ArvEvaluatorToken *previous_token)
 			if (length_double > length_int64) {
 				token = g_new (ArvEvaluatorToken, 1);
 				token->token_id = ARV_EVALUATOR_TOKEN_CONSTANT_DOUBLE;
-				token->value.double_value = value_double;
+				token->value.v_double = value_double;
 				*expression += length_double;
 			} else {
 				token = g_new (ArvEvaluatorToken, 1);
 				token->token_id = ARV_EVALUATOR_TOKEN_CONSTANT_INT64;
-				token->value.int64_value = value_int64;
+				token->value.v_int64 = value_int64;
 				*expression += length_int64;
 			}
 		}
@@ -416,7 +416,7 @@ arv_get_next_token (char **expression, ArvEvaluatorToken *previous_token)
 			token->token_id = token_id;
 		else {
 			token->token_id = ARV_EVALUATOR_TOKEN_VARIABLE;
-			token->value.string_value = *expression;
+			token->value.v_string = *expression;
 		}
 
 		*expression = end;
@@ -785,13 +785,13 @@ evaluate (GSList *token_stack, gint64 *v_int64, double *v_double)
 				arv_value_set_double (&stack[index+1], M_PI);
 				break;
 			case ARV_EVALUATOR_TOKEN_CONSTANT_INT64:
-				arv_value_set_int64 (&stack[index+1], token->value.int64_value);
+				arv_value_set_int64 (&stack[index+1], token->value.v_int64);
 				break;
 			case ARV_EVALUATOR_TOKEN_CONSTANT_DOUBLE:
-				arv_value_set_double (&stack[index+1], token->value.double_value);
+				arv_value_set_double (&stack[index+1], token->value.v_double);
 				break;
 			case ARV_EVALUATOR_TOKEN_VARIABLE:
-				arv_value_set_double (&stack[index+1], token->value.double_value);
+				arv_value_set_double (&stack[index+1], token->value.v_double);
 				break;
 			case ARV_EVALUATOR_TOKEN_TERNARY_COLON:
 				break;
