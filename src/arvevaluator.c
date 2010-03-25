@@ -128,15 +128,15 @@ static ArvEvaluatorTokenInfos arv_evaluator_token_infos[] = {
 	{"",	0,	1, 0}, /* UNKNOWN */
 	{",",	0, 	0, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* COMMA */
 	{"?",	5,	3, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_RIGHT_TO_LEFT}, /* TERNARY_QUESTION_MARK */
-	{":",	5,	0, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_RIGHT_TO_LEFT}, /* TERNARY_COLON */
+	{":",	5,	1, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_RIGHT_TO_LEFT}, /* TERNARY_COLON */
 	{"||",	10,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* LOGICAL_OR */
 	{"&&",	20,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* LOGICAL_AND */
 	{"~",	30,	1, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* BITWISE_NOT */
 	{"|",	40,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* BITWISE_OR */
 	{"^",	50,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* BITWISE_XOR */
 	{"&",	60,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* BITWISE_AND */
-	{"==",	70,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* EQUAL, */
-	{"!=",	70,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* NOT_EQUAL */
+	{"=",	70,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* EQUAL, */
+	{"<>",	70,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* NOT_EQUAL */
 	{"<=",	80,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* LESS_OR_EQUAL */
 	{">=",	80,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* GREATER_OR_EQUAL */
 	{"<",	80,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* LESS */
@@ -426,16 +426,7 @@ arv_get_next_token (char **expression, ArvEvaluatorToken *previous_token)
 				  } else
 					  token_id = ARV_EVALUATOR_TOKEN_GREATER;
 				  break;
-			case '=': if ((*expression)[1] == '=') {
-					  (*expression)++;
-					  token_id = ARV_EVALUATOR_TOKEN_EQUAL;
-				  }
-				  break;
-			case '!': if ((*expression)[1] == '=') {
-					  (*expression)++;
-					  token_id = ARV_EVALUATOR_TOKEN_NOT_EQUAL;
-				  }
-				  break;
+			case '=': token_id = ARV_EVALUATOR_TOKEN_EQUAL; break;
 		}
 
 		if (token_id != ARV_EVALUATOR_TOKEN_UNKNOWN) {
@@ -455,6 +446,12 @@ typedef struct {
 		double v_double;
 	} value;
 } StackItem;
+
+static void
+stack_item_copy (StackItem *to, const StackItem *from)
+{
+	*to = *from;
+}
 
 static void
 stack_item_set_int64 (StackItem *item, gint64 value)
@@ -762,7 +759,12 @@ evaluate (GSList *token_stack, gint64 *v_int64, double *v_double)
 				stack_item_set_double (&stack[index], sqrt (stack_item_get_double (&stack[index])));
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_TRUNC:
-				stack_item_set_double (&stack[index], trunc (stack_item_get_double (&stack[index])));
+				if (stack_item_get_double (&stack[index]) > 0.0)
+					stack_item_set_double (&stack[index],
+							       floor (stack_item_get_double (&stack[index])));
+				else
+					stack_item_set_double (&stack[index],
+							       ceil (stack_item_get_double (&stack[index])));
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_FLOOR:
 				stack_item_set_double (&stack[index], floor (stack_item_get_double (&stack[index])));
@@ -790,6 +792,14 @@ evaluate (GSList *token_stack, gint64 *v_int64, double *v_double)
 				break;
 			case ARV_EVALUATOR_TOKEN_VARIABLE:
 				stack_item_set_double (&stack[index+1], token->value.double_value);
+				break;
+			case ARV_EVALUATOR_TOKEN_TERNARY_COLON:
+				break;
+			case ARV_EVALUATOR_TOKEN_TERNARY_QUESTION_MARK:
+				if (stack_item_get_int64 (&stack[index-2]) != 0)
+					stack_item_copy (&stack[index-2], &stack[index-1]);
+				else
+					stack_item_copy (&stack[index-2], &stack[index]);
 				break;
 			default:
 				status = ARV_EVALUATOR_STATUS_UNKNOWN_OPERATOR;

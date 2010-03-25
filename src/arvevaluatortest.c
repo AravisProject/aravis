@@ -21,6 +21,7 @@ main (int argc, char **argv)
 	GOptionContext *context;
 	GError *error = NULL;
 	int i;
+	double value;
 
 	g_type_init ();
 
@@ -47,7 +48,15 @@ main (int argc, char **argv)
 
 	for (i = 0; arv_option_expressions[i] != NULL; i++) {
 		arv_evaluator_set_expression (evaluator, arv_option_expressions[i]);
-		arv_evaluator_evaluate_as_double (evaluator, NULL);
+		value = arv_evaluator_evaluate_as_double (evaluator, &error);
+
+		if (error != NULL) {
+			g_print ("Error in '%s': %s\n", arv_option_expressions[i],
+				 error->message);
+			g_error_free (error);
+			error = NULL;
+		} else
+			g_print ("%s = %g\n", arv_option_expressions[i], value);
 	}
 
 	g_object_unref (evaluator);
