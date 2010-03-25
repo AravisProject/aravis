@@ -54,6 +54,8 @@ void 		arv_evaluator_set_expression		(ArvEvaluator *evaluator, const char *expre
 const char *	arv_evaluator_get_expression		(ArvEvaluator *evaluator);
 double		arv_evaluator_evaluate_as_double	(ArvEvaluator *evaluator, GError **error);
 gint64		arv_evaluator_evaluate_as_int64		(ArvEvaluator *evaluator, GError **error);
+void		arv_evaluator_set_double_variable	(ArvEvaluator *evaluator, const char *name, double v_double);
+void		arv_evaluator_set_int64_variable	(ArvEvaluator *evaluator, const char *name, gint64 v_int64);
 
 G_END_DECLS
 

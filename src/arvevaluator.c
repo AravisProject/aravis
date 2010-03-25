@@ -58,6 +58,7 @@ struct _ArvEvaluatorPrivate {
 	char *expression;
 	GSList *rpn_stack;
 	ArvEvaluatorStatus parsing_status;
+	GHashTable *variables;
 };
 
 typedef enum {
@@ -183,6 +184,32 @@ typedef struct {
 		double v_double;
 	} data;
 } ArvValue;
+
+static ArvValue *
+arv_value_new_double (double v_double)
+{
+	ArvValue *value = g_new (ArvValue, 1);
+	value->type = G_TYPE_DOUBLE;
+	value->data.v_double = v_double;
+
+	return value;
+}
+
+static ArvValue *
+arv_value_new_int64 (double v_int64)
+{
+	ArvValue *value = g_new (ArvValue, 1);
+	value->type = G_TYPE_INT64;
+	value->data.v_int64 = v_int64;
+
+	return value;
+}
+
+static void
+arv_value_free (ArvValue *value)
+{
+	g_free (value);
+}
 
 static void
 arv_value_copy (ArvValue *to, const ArvValue *from)
@@ -1018,6 +1045,40 @@ arv_evaluator_get_expression (ArvEvaluator *evaluator)
 	return evaluator->priv->expression;
 }
 
+void
+arv_evaluator_set_double_variable (ArvEvaluator *evaluator, const char *name, double v_double)
+{
+	ArvValue *old_value;
+
+	g_return_if_fail (ARV_IS_EVALUATOR (evaluator));
+	g_return_if_fail (name != NULL);
+
+	old_value = g_hash_table_lookup (evaluator->priv->variables, name);
+	if (old_value != NULL && (arv_value_get_double (old_value) == v_double))
+		return;
+
+	g_hash_table_insert (evaluator->priv->variables,
+			     g_strdup (name),
+			     arv_value_new_double (v_double));
+}
+
+void
+arv_evaluator_set_int64_variable (ArvEvaluator *evaluator, const char *name, gint64 v_int64)
+{
+	ArvValue *old_value;
+
+	g_return_if_fail (ARV_IS_EVALUATOR (evaluator));
+	g_return_if_fail (name != NULL);
+
+	old_value = g_hash_table_lookup (evaluator->priv->variables, name);
+	if (old_value != NULL && (arv_value_get_int64 (old_value) == v_int64))
+		return;
+
+	g_hash_table_insert (evaluator->priv->variables,
+			     g_strdup (name),
+			     arv_value_new_int64 (v_int64));
+}
+
 ArvEvaluator *
 arv_evaluator_new (const char *expression)
 {
@@ -1037,6 +1098,7 @@ arv_evaluator_init (ArvEvaluator *evaluator)
 
 	evaluator->priv->expression = NULL;
 	evaluator->priv->rpn_stack = NULL;
+	evaluator->priv->variables = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, (GDestroyNotify) arv_value_free);
 }
 
 static void
@@ -1045,6 +1107,7 @@ arv_evaluator_finalize (GObject *object)
 	ArvEvaluator *evaluator = ARV_EVALUATOR (object);
 
 	arv_evaluator_set_expression (evaluator, NULL);
+	g_hash_table_unref (evaluator->priv->variables);
 
 	parent_class->finalize (object);
 }
