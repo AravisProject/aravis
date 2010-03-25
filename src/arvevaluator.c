@@ -251,7 +251,7 @@ arv_evaluator_token_compare_precedence (ArvEvaluatorToken *a, ArvEvaluatorToken 
 	gint b_precedence;
 	ArvEvaluatorTokenAssociativity a_associativity;
 	ArvEvaluatorTokenAssociativity b_associativity;
-	
+
 	if (a == NULL || b == NULL ||
 	    a->token_id >= G_N_ELEMENTS (arv_evaluator_token_infos) ||
 	    b->token_id >= G_N_ELEMENTS (arv_evaluator_token_infos))
@@ -553,66 +553,66 @@ evaluate (GSList *token_stack, gint64 *v_int64, double *v_double)
 				if (stack_item_holds_int64 (&stack[index-1]) ||
 				    stack_item_holds_int64 (&stack[index]))
 					stack_item_set_int64 (&stack[index-1],
-							      stack_item_get_int64 (&stack[index-1]) == 
+							      stack_item_get_int64 (&stack[index-1]) ==
 							      stack_item_get_int64 (&stack[index]));
 				else
 					stack_item_set_int64 (&stack[index - 1],
-							      stack_item_get_double (&stack[index-1]) == 
+							      stack_item_get_double (&stack[index-1]) ==
 							      stack_item_get_double (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_NOT_EQUAL:
 				if (stack_item_holds_int64 (&stack[index-1]) ||
 				    stack_item_holds_int64 (&stack[index]))
 					stack_item_set_int64 (&stack[index-1],
-							      stack_item_get_int64 (&stack[index-1]) != 
+							      stack_item_get_int64 (&stack[index-1]) !=
 							      stack_item_get_int64 (&stack[index]));
 				else
 					stack_item_set_int64 (&stack[index - 1],
-							      stack_item_get_double (&stack[index-1]) != 
+							      stack_item_get_double (&stack[index-1]) !=
 							      stack_item_get_double (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_LESS_OR_EQUAL:
 				if (stack_item_holds_int64 (&stack[index-1]) ||
 				    stack_item_holds_int64 (&stack[index]))
 					stack_item_set_int64 (&stack[index-1],
-							      stack_item_get_int64 (&stack[index-1]) <= 
+							      stack_item_get_int64 (&stack[index-1]) <=
 							      stack_item_get_int64 (&stack[index]));
 				else
 					stack_item_set_int64 (&stack[index - 1],
-							      stack_item_get_double (&stack[index-1]) <= 
+							      stack_item_get_double (&stack[index-1]) <=
 							      stack_item_get_double (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_GREATER_OR_EQUAL:
 				if (stack_item_holds_int64 (&stack[index-1]) ||
 				    stack_item_holds_int64 (&stack[index]))
 					stack_item_set_int64 (&stack[index-1],
-							      stack_item_get_int64 (&stack[index-1]) >= 
+							      stack_item_get_int64 (&stack[index-1]) >=
 							      stack_item_get_int64 (&stack[index]));
 				else
 					stack_item_set_int64 (&stack[index - 1],
-							      stack_item_get_double (&stack[index-1]) >= 
+							      stack_item_get_double (&stack[index-1]) >=
 							      stack_item_get_double (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_LESS:
 				if (stack_item_holds_int64 (&stack[index-1]) ||
 				    stack_item_holds_int64 (&stack[index]))
 					stack_item_set_int64 (&stack[index-1],
-							      stack_item_get_int64 (&stack[index-1]) < 
+							      stack_item_get_int64 (&stack[index-1]) <
 							      stack_item_get_int64 (&stack[index]));
 				else
 					stack_item_set_int64 (&stack[index - 1],
-							      stack_item_get_double (&stack[index-1]) < 
+							      stack_item_get_double (&stack[index-1]) <
 							      stack_item_get_double (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_GREATER:
 				if (stack_item_holds_int64 (&stack[index-1]) ||
 				    stack_item_holds_int64 (&stack[index]))
 					stack_item_set_int64 (&stack[index-1],
-							      stack_item_get_int64 (&stack[index-1]) > 
+							      stack_item_get_int64 (&stack[index-1]) >
 							      stack_item_get_int64 (&stack[index]));
 				else
 					stack_item_set_int64 (&stack[index - 1],
-							      stack_item_get_double (&stack[index-1]) > 
+							      stack_item_get_double (&stack[index-1]) >
 							      stack_item_get_double (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_SHIFT_RIGHT:
@@ -693,7 +693,7 @@ evaluate (GSList *token_stack, gint64 *v_int64, double *v_double)
 							    stack_item_get_double(&stack[index])));
 				break;
 			case ARV_EVALUATOR_TOKEN_MINUS:
-				if (stack_item_holds_double (&stack[index])) 
+				if (stack_item_holds_double (&stack[index]))
 					stack_item_set_double (&stack[index],
 							       -stack_item_get_double (&stack[index-1]));
 				else
@@ -728,7 +728,7 @@ evaluate (GSList *token_stack, gint64 *v_int64, double *v_double)
 				}
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_NEG:
-				if (stack_item_holds_double (&stack[index])) 
+				if (stack_item_holds_double (&stack[index]))
 					stack_item_set_double (&stack[index],
 							       -stack_item_get_double (&stack[index-1]));
 				else
@@ -742,7 +742,7 @@ evaluate (GSList *token_stack, gint64 *v_int64, double *v_double)
 				stack_item_set_double (&stack[index], tan (stack_item_get_double (&stack[index])));
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_ABS:
-				if (stack_item_holds_double (&stack[index])) 
+				if (stack_item_holds_double (&stack[index]))
 					stack_item_set_double (&stack[index],
 							       fabs (stack_item_get_double (&stack[index-1])));
 				else
@@ -807,7 +807,7 @@ evaluate (GSList *token_stack, gint64 *v_int64, double *v_double)
 
 	if (v_double != NULL)
 		*v_double = stack_item_get_double (stack);
-	
+
 	if (v_int64 != NULL)
 		*v_int64 = stack_item_get_int64 (stack);
 
@@ -822,7 +822,7 @@ evaluate (GSList *token_stack, gint64 *v_int64, double *v_double)
 CLEANUP:
 	if (v_double != NULL)
 		*v_double = 0.0;
-	
+
 	if (v_int64 != NULL)
 		*v_int64 = 0.0;
 
