@@ -115,12 +115,44 @@ arv_gc_integer_node_set_integer_value (ArvGcInteger *gc_integer, gint64 value)
 {
 }
 
+static gint64
+arv_gc_integer_node_get_min (ArvGcInteger *gc_integer)
+{
+	return 0;
+}
+
+static gint64
+arv_gc_integer_node_get_max (ArvGcInteger *gc_integer)
+{
+	return 0;
+}
+
+static const char *
+arv_gc_integer_node_get_unit (ArvGcInteger *gc_integer)
+{
+	return NULL;
+}
+
+static void
+arv_gc_integer_node_impose_min (ArvGcInteger *gc_integer, gint64 minimum)
+{
+}
+
+static void
+arv_gc_integer_node_impose_max (ArvGcInteger *gc_integer, gint64 maximum)
+{
+}
 
 static void
 arv_gc_integer_node_integer_interface_init (ArvGcIntegerInterface *interface)
 {
 	interface->get_value = arv_gc_integer_node_get_integer_value;
 	interface->set_value = arv_gc_integer_node_set_integer_value;
+	interface->get_min = arv_gc_integer_node_get_min;
+	interface->get_max = arv_gc_integer_node_get_max;
+	interface->get_unit = arv_gc_integer_node_get_unit;
+	interface->impose_min = arv_gc_integer_node_impose_min;
+	interface->impose_max = arv_gc_integer_node_impose_max;
 }
 
 G_DEFINE_TYPE_WITH_CODE (ArvGcIntegerNode, arv_gc_integer_node, ARV_TYPE_GC_NODE,
