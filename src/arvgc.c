@@ -22,6 +22,7 @@
 
 #include <arvgc.h>
 #include <arvgcregister.h>
+#include <arvgcinteger.h>
 #include <arvgcswissknife.h>
 #include <arvgcport.h>
 #include <arvdebug.h>
@@ -234,6 +235,25 @@ arv_gc_get_node	(ArvGc *genicam, const char *name)
 	g_return_val_if_fail (ARV_IS_GC (genicam), NULL);
 
 	return g_hash_table_lookup (genicam->nodes, name);
+}
+
+gint64
+arv_gc_get_int64_from_value (ArvGc *genicam, GValue *value)
+{
+	g_return_val_if_fail (ARV_IS_GC (genicam), 0);
+	g_return_val_if_fail (G_IS_VALUE (value), 0);
+
+	if (G_VALUE_HOLDS_INT64 (value))
+		return g_value_get_int64 (value);
+	else if (G_VALUE_HOLDS_STRING (value)) {
+		ArvGcNode *node;
+
+		node = arv_gc_get_node (genicam, g_value_get_string (value));
+		if (ARV_IS_GC_INTEGER (node))
+			return arv_gc_integer_get_value (ARV_GC_INTEGER (node));
+	}
+
+	return 0;
 }
 
 ArvGc *

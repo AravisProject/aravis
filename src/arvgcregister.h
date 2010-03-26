@@ -28,11 +28,6 @@
 
 G_BEGIN_DECLS
 
-typedef struct {
-	guint64 value;
-	char *node_name;
-} ArvGcUint64;
-
 #define ARV_TYPE_GC_REGISTER             (arv_gc_register_get_type ())
 #define ARV_GC_REGISTER(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_REGISTER, ArvGcRegister))
 #define ARV_GC_REGISTER_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GC_REGISTER, ArvGcRegisterClass))
@@ -46,7 +41,7 @@ struct _ArvGcRegister {
 	ArvGcNode	node;
 
 	GList *			addresses;
-	ArvGcUint64 *		length;
+	GValue			length;
 	ArvGcAccessMode 	access_mode;
 	ArvGcCacheable 		cacheable;
 	guint64  		polling_time;

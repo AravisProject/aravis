@@ -469,6 +469,37 @@ arv_value_holds_double (ArvValue *value)
 
 /* GValue utilities */
 
+GValue *
+arv_new_g_value_int64 (gint64 v_int64)
+{
+	GValue *value = g_new0 (GValue, 1);
+
+	g_value_init (value, G_TYPE_INT64);
+	g_value_set_int64 (value, v_int64);
+
+	return value;
+}
+
+GValue *
+arv_new_g_value_string (const char *v_string)
+{
+	GValue *value = g_new0 (GValue, 1);
+
+	g_value_init (value, G_TYPE_STRING);
+	g_value_set_string (value, v_string);
+
+	return value;
+}
+
+void
+arv_free_g_value (GValue *value)
+{
+	g_return_if_fail (G_IS_VALUE (value));
+
+	g_value_unset (value);
+	g_free (value);
+}
+
 void
 arv_force_g_value_to_int64 (GValue *value, gint64 v_int64)
 {

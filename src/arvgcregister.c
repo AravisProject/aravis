@@ -23,83 +23,27 @@
 #include <arvgcregister.h>
 #include <arvgcinteger.h>
 #include <arvgcport.h>
+#include <arvtools.h>
 #include <string.h>
 
 static GObjectClass *parent_class = NULL;
 
 /* ArvGcNode implementation */
 
-ArvGcUint64 *
-arv_gc_uint64_new (guint64 value)
-{
-	ArvGcUint64 *address;
-
-	address = g_new (ArvGcUint64, 1);
-	address->value = value;
-	address->node_name = NULL;
-
-	return address;
-}
-
-ArvGcUint64 *
-arv_gc_uint64_new_with_node_name (const char *node_name)
-{
-	ArvGcUint64 *address;
-
-	address = g_new (ArvGcUint64, 1);
-	address->value = 0;
-	address->node_name = g_strdup (node_name);
-
-	return address;
-}
-
-guint64
-arv_gc_get_uint64_value (ArvGc *genicam, ArvGcUint64 *gc_uint64)
-{
-	if (gc_uint64 == NULL)
-		return 0;
-
-	if (gc_uint64->node_name == NULL)
-		return gc_uint64->value;
-	else {
-		ArvGcNode *node;
-
-		node = arv_gc_get_node (genicam, gc_uint64->node_name);
-		if (ARV_IS_GC_INTEGER (node))
-			return arv_gc_integer_get_value (ARV_GC_INTEGER (node));
-	}
-
-	return 0;
-}
-
-void
-arv_gc_uint64_free (ArvGcUint64 *value)
-{
-	if (value == NULL)
-		return;
-
-	g_free (value->node_name);
-	g_free (value);
-}
-
 static void
 arv_gc_register_add_element (ArvGcNode *node, const char *name, const char *content, const char **attributes)
 {
 	ArvGcRegister *gc_register = ARV_GC_REGISTER (node);
-	ArvGcUint64 *address;
 
 	if (strcmp (name, "Address") == 0) {
-		address = arv_gc_uint64_new (g_ascii_strtoull (content, NULL, 0));
-		gc_register->addresses = g_list_prepend (gc_register->addresses, address);
+		gc_register->addresses = g_list_prepend (gc_register->addresses,
+							 arv_new_g_value_int64 (g_ascii_strtoull (content, NULL, 0)));
 	} else if (strcmp (name, "pAddress") == 0) {
-		address = arv_gc_uint64_new_with_node_name (content);
-		gc_register->addresses = g_list_prepend (gc_register->addresses, address);
+		gc_register->addresses = g_list_prepend (gc_register->addresses, arv_new_g_value_string (content));
 	} else if (strcmp (name, "Length") == 0) {
-		arv_gc_uint64_free (gc_register->length);
-		gc_register->length = arv_gc_uint64_new (g_ascii_strtoull (content, NULL, 0));
+		arv_force_g_value_to_int64 (&gc_register->length, g_ascii_strtoull (content, NULL, 0));
 	} else if (strcmp (name, "pLength") == 0) {
-		arv_gc_uint64_free (gc_register->length);
-		gc_register->length = arv_gc_uint64_new_with_node_name (content);
+		arv_force_g_value_to_string (&gc_register->length, content);
 	} else if (strcmp (name, "AccessMode") == 0) {
 		if (g_strcmp0 (content, "RW") == 0)
 			gc_register->access_mode = ARV_GC_ACCESS_MODE_RW;
@@ -171,7 +115,7 @@ arv_gc_register_get_address (ArvGcRegister *gc_register)
 	g_return_val_if_fail (ARV_IS_GC (genicam), 0);
 
 	for (iter = gc_register->addresses; iter != NULL; iter = iter->next)
-		value += arv_gc_get_uint64_value (genicam, iter->data);
+		value += arv_gc_get_int64_from_value (genicam, iter->data);
 
 	return value;
 }
@@ -185,7 +129,7 @@ arv_gc_register_get_length (ArvGcRegister *gc_register)
 	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_register));
 	g_return_val_if_fail (ARV_IS_GC (genicam), 0);
 
-	return arv_gc_get_uint64_value (genicam, gc_register->length);
+	return arv_gc_get_int64_from_value (genicam, &gc_register->length);
 }
 
 ArvGcNode *
@@ -201,6 +145,8 @@ arv_gc_register_new (void)
 static void
 arv_gc_register_init (ArvGcRegister *gc_register)
 {
+	g_value_init (&gc_register->length, G_TYPE_INT64);
+	g_value_set_int64 (&gc_register->length, 4);
 	gc_register->access_mode = ARV_GC_ACCESS_MODE_RO;
 	gc_register->cacheable = ARV_GC_CACHEABLE_NO_CACHE;
 }
@@ -212,9 +158,9 @@ arv_gc_register_finalize (GObject *object)
 	GList *iter;
 
 	for (iter = gc_register->addresses; iter != NULL; iter = iter->next)
-		arv_gc_uint64_free (iter->data);
+		arv_free_g_value (iter->data);
 	g_list_free (gc_register->addresses);
-	arv_gc_uint64_free (gc_register->length);
+	g_value_unset (&gc_register->length);
 	g_free (gc_register->port_name);
 
 	parent_class->finalize (object);
@@ -247,8 +193,8 @@ arv_gc_register_get_integer_value (ArvGcInteger *gc_integer)
 
 	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_integer));
 
-	size = MIN (sizeof (value), arv_gc_get_uint64_value (genicam, gc_register->length));
-	address = arv_gc_get_uint64_value (genicam, gc_register->length);
+	size = MIN (sizeof (value), arv_gc_get_int64_from_value (genicam, &gc_register->length));
+	address = arv_gc_register_get_address (gc_register);
 
 	port_node = arv_gc_get_node (genicam, gc_register->port_name);
 	arv_gc_port_read (ARV_GC_PORT (port_node), &value, address, size);
@@ -267,8 +213,8 @@ arv_gc_register_set_integer_value (ArvGcInteger *gc_integer, guint64 value)
 
 	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_integer));
 
-	size = MIN (sizeof (value), arv_gc_get_uint64_value (genicam, gc_register->length));
-	address = arv_gc_get_uint64_value (genicam, gc_register->length);
+	size = MIN (sizeof (value), arv_gc_get_int64_from_value (genicam, &gc_register->length));
+	address = arv_gc_register_get_address (gc_register);
 
 	port_node = arv_gc_get_node (genicam, gc_register->port_name);
 	arv_gc_port_write (ARV_GC_PORT (port_node), &value, address, size);
