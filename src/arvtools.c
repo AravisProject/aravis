@@ -513,7 +513,7 @@ arv_force_g_value_to_int64 (GValue *value, gint64 v_int64)
 void
 arv_force_g_value_to_string (GValue *value, const char * v_string)
 {
-	if (!G_VALUE_HOLDS_INT64 (value)) {
+	if (!G_VALUE_HOLDS_STRING (value)) {
 		g_value_unset (value);
 		g_value_init (value, G_TYPE_STRING);
 	}
