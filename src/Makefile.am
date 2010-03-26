@@ -33,6 +33,7 @@ libaravis_la_SOURCES =				\
 	arvcamera.c				\
 	arvgc.c					\
 	arvgcnode.c				\
+	arvgcintegernode.c			\
 	arvgcregister.c				\
 	arvgcswissknife.c			\
 	arvgcport.c				\
@@ -56,6 +57,7 @@ ARAVIS_HDRS = 					\
 	arvcamera.h				\
 	arvgc.h					\
 	arvgcnode.h				\
+	arvgcintegernode.h			\
 	arvgcregister.h				\
 	arvgcswissknife.h			\
 	arvgcport.h				\

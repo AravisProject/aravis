@@ -20,37 +20,38 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#ifndef ARV_GC_PORT_H
-#define ARV_GC_PORT_H
+#ifndef ARV_GC_INTEGER_NODE_H
+#define ARV_GC_INTEGER_NODE_H
 
 #include <arv.h>
 #include <arvgcnode.h>
 
 G_BEGIN_DECLS
 
-#define ARV_TYPE_GC_PORT             (arv_gc_port_get_type ())
-#define ARV_GC_PORT(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_PORT, ArvGcPort))
-#define ARV_GC_PORT_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GC_PORT, ArvGcPortClass))
-#define ARV_IS_GC_PORT(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GC_PORT))
-#define ARV_IS_GC_PORT_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GC_PORT))
-#define ARV_GC_PORT_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GC_PORT, ArvGcPortClass))
+#define ARV_TYPE_GC_INTEGER_NODE             (arv_gc_integer_node_get_type ())
+#define ARV_GC_INTEGER_NODE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_INTEGER_NODE, ArvGcIntegerNode))
+#define ARV_GC_INTEGER_NODE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GC_INTEGER_NODE, ArvGcIntegerNodeClass))
+#define ARV_IS_GC_INTEGER_NODE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GC_INTEGER_NODE))
+#define ARV_IS_GC_INTEGER_NODE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GC_INTEGER_NODE))
+#define ARV_GC_INTEGER_NODE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GC_INTEGER_NODE, ArvGcIntegerNodeClass))
 
-typedef struct _ArvGcPortClass ArvGcPortClass;
+typedef struct _ArvGcIntegerNodeClass ArvGcIntegerNodeClass;
 
-struct _ArvGcPort {
+struct _ArvGcIntegerNode {
 	ArvGcNode	node;
+
+	GValue minimum;
+	GValue maximum;
+	GValue increment;
 };
 
-struct _ArvGcPortClass {
+struct _ArvGcIntegerNodeClass {
 	ArvGcNodeClass parent_class;
 };
 
-GType arv_gc_port_get_type (void);
+GType 		arv_gc_integer_node_get_type 	(void);
 
-ArvGcNode * 		arv_gc_port_new 	(void);
-
-void 			arv_gc_port_read	(ArvGcPort *port, void *buffer, guint64 address, guint64 length);
-void 			arv_gc_port_write	(ArvGcPort *port, void *buffer, guint64 address, guint64 length);
+ArvGcNode * 	arv_gc_integer_node_new 	(void);
 
 G_END_DECLS
 

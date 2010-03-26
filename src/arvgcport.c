@@ -25,12 +25,12 @@
 static GObjectClass *parent_class = NULL;
 
 void
-arv_gc_port_read (ArvGcPort *port, guint8 *buffer, guint64 address, guint64 length)
+arv_gc_port_read (ArvGcPort *port, void *buffer, guint64 address, guint64 length)
 {
 }
 
 void
-arv_gc_port_write (ArvGcPort *port, guint8 *buffer, guint64 address, guint64 length)
+arv_gc_port_write (ArvGcPort *port, void *buffer, guint64 address, guint64 length)
 {
 }
 

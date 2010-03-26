@@ -52,6 +52,7 @@ typedef struct _ArvEvaluator 		ArvEvaluator;
 typedef struct _ArvGc 			ArvGc;
 
 typedef struct _ArvGcNode 		ArvGcNode;
+typedef struct _ArvGcIntegerNode	ArvGcIntegerNode;
 typedef struct _ArvGcRegister 		ArvGcRegister;
 typedef struct _ArvGcSwissKnife		ArvGcSwissKnife;
 typedef struct _ArvGcPort		ArvGcPort;

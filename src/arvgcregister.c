@@ -233,11 +233,53 @@ arv_gc_register_class_init (ArvGcRegisterClass *register_class)
 	node_class->add_element = arv_gc_register_add_element;
 }
 
+/* ArvGcInteger interface implementation */
+
+static guint64
+arv_gc_register_get_integer_value (ArvGcInteger *gc_integer)
+{
+	ArvGcRegister *gc_register = ARV_GC_REGISTER (gc_integer);
+	ArvGc *genicam;
+	ArvGcNode *port_node;
+	guint64 value = 0;
+	guint64 address;
+	size_t size;
+
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_integer));
+
+	size = MIN (sizeof (value), arv_gc_get_uint64_value (genicam, gc_register->length));
+	address = arv_gc_get_uint64_value (genicam, gc_register->length);
+
+	port_node = arv_gc_get_node (genicam, gc_register->port_name);
+	arv_gc_port_read (ARV_GC_PORT (port_node), &value, address, size);
+
+	return value;
+}
+
+static void
+arv_gc_register_set_integer_value (ArvGcInteger *gc_integer, guint64 value)
+{
+	ArvGcRegister *gc_register = ARV_GC_REGISTER (gc_integer);
+	ArvGc *genicam;
+	ArvGcNode *port_node;
+	guint64 address;
+	size_t size;
+
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_integer));
+
+	size = MIN (sizeof (value), arv_gc_get_uint64_value (genicam, gc_register->length));
+	address = arv_gc_get_uint64_value (genicam, gc_register->length);
+
+	port_node = arv_gc_get_node (genicam, gc_register->port_name);
+	arv_gc_port_write (ARV_GC_PORT (port_node), &value, address, size);
+}
+
+
 static void
 arv_gc_register_integer_interface_init (ArvGcIntegerInterface *interface)
 {
-	interface->get_value = NULL;
-	interface->set_value = NULL;
+	interface->get_value = arv_gc_register_get_integer_value;
+	interface->set_value = arv_gc_register_set_integer_value;
 }
 
 G_DEFINE_TYPE_WITH_CODE (ArvGcRegister, arv_gc_register, ARV_TYPE_GC_NODE,

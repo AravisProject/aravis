@@ -299,6 +299,8 @@ arv_statistic_to_string (const ArvStatistic *statistic)
 	return str;
 }
 
+/* ArvStr implementation */
+
 gboolean
 arv_str_parse_double (char **str, double *x)
 {
@@ -387,3 +389,102 @@ arv_str_parse_double (char **str, double *x)
 	return TRUE;
 }
 
+/* ArvValue implementation */
+
+ArvValue *
+arv_value_new_double (double v_double)
+{
+	ArvValue *value = g_new (ArvValue, 1);
+	value->type = G_TYPE_DOUBLE;
+	value->data.v_double = v_double;
+
+	return value;
+}
+
+ArvValue *
+arv_value_new_int64 (double v_int64)
+{
+	ArvValue *value = g_new (ArvValue, 1);
+	value->type = G_TYPE_INT64;
+	value->data.v_int64 = v_int64;
+
+	return value;
+}
+
+void
+arv_value_free (ArvValue *value)
+{
+	g_free (value);
+}
+
+void
+arv_value_copy (ArvValue *to, const ArvValue *from)
+{
+	*to = *from;
+}
+
+void
+arv_value_set_int64 (ArvValue *value, gint64 v_int64)
+{
+	value->type = G_TYPE_INT64;
+	value->data.v_int64 = v_int64;
+}
+
+void
+arv_value_set_double (ArvValue *value, double v_double)
+{
+	value->type = G_TYPE_DOUBLE;
+	value->data.v_double = v_double;
+}
+
+gint64
+arv_value_get_int64 (ArvValue *value)
+{
+	if (value->type == G_TYPE_INT64)
+		return value->data.v_int64;
+	else
+		return (gint64) value->data.v_double;
+}
+
+double
+arv_value_get_double (ArvValue *value)
+{
+	if (value->type == G_TYPE_INT64)
+		return (double) value->data.v_int64;
+	else
+		return value->data.v_double;
+}
+
+gboolean
+arv_value_holds_int64 (ArvValue *value)
+{
+	return value->type == G_TYPE_INT64;
+}
+
+double
+arv_value_holds_double (ArvValue *value)
+{
+	return value->type == G_TYPE_DOUBLE;
+}
+
+/* GValue utilities */
+
+void
+arv_force_g_value_to_int64 (GValue *value, gint64 v_int64)
+{
+	if (!G_VALUE_HOLDS_INT64 (value)) {
+		g_value_unset (value);
+		g_value_init (value, G_TYPE_INT64);
+	}
+	g_value_set_int64 (value, v_int64);
+}
+
+void
+arv_force_g_value_to_string (GValue *value, const char * v_string)
+{
+	if (!G_VALUE_HOLDS_INT64 (value)) {
+		g_value_unset (value);
+		g_value_init (value, G_TYPE_STRING);
+	}
+	g_value_set_string (value, v_string);
+}
