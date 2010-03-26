@@ -34,7 +34,10 @@ arv_gc_integer_node_add_element (ArvGcNode *node, const char *name, const char *
 {
 	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (node);
 
-	if (strcmp (name, "Min") == 0) {
+	if (strcmp (name, "Value") == 0) {
+		arv_force_g_value_to_int64 (&gc_integer_node->value,
+					    g_ascii_strtoll (content, NULL, 0));
+	} else if (strcmp (name, "Min") == 0) {
 		arv_force_g_value_to_int64 (&gc_integer_node->minimum,
 					    g_ascii_strtoll (content, NULL, 0));
 	} else if (strcmp (name, "Max") == 0) {
@@ -43,12 +46,17 @@ arv_gc_integer_node_add_element (ArvGcNode *node, const char *name, const char *
 	} else if (strcmp (name, "Inc") == 0) {
 		arv_force_g_value_to_int64 (&gc_integer_node->increment,
 					    g_ascii_strtoll (content, NULL, 0));
+	} else if (strcmp (name, "pValue") == 0) {
+		arv_force_g_value_to_string (&gc_integer_node->value, content);
 	} else if (strcmp (name, "pMin") == 0) {
 		arv_force_g_value_to_string (&gc_integer_node->minimum, content);
 	} else if (strcmp (name, "pMax") == 0) {
 		arv_force_g_value_to_string (&gc_integer_node->maximum, content);
 	} else if (strcmp (name, "pInc") == 0) {
 		arv_force_g_value_to_string (&gc_integer_node->increment, content);
+	} else if (strcmp (name, "Unit") == 0) {
+		g_free (gc_integer_node->unit);
+		gc_integer_node->unit = g_strdup (content);
 	} else
 		ARV_GC_NODE_CLASS (parent_class)->add_element (node, name, content, attributes);
 }
@@ -68,13 +76,17 @@ arv_gc_integer_node_new (void)
 static void
 arv_gc_integer_node_init (ArvGcIntegerNode *gc_integer_node)
 {
+	g_value_init (&gc_integer_node->value, G_TYPE_INT64);
 	g_value_init (&gc_integer_node->minimum, G_TYPE_INT64);
 	g_value_init (&gc_integer_node->maximum, G_TYPE_INT64);
 	g_value_init (&gc_integer_node->increment, G_TYPE_INT64);
 
+	g_value_set_int64 (&gc_integer_node->value, 0);
 	g_value_set_int64 (&gc_integer_node->minimum, G_MININT64);
 	g_value_set_int64 (&gc_integer_node->maximum, G_MAXINT64);
 	g_value_set_int64 (&gc_integer_node->increment, 1);
+
+	gc_integer_node->unit = NULL;
 }
 
 static void
@@ -82,6 +94,9 @@ arv_gc_integer_node_finalize (GObject *object)
 {
 	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (object);
 
+	g_free (gc_integer_node->unit);
+
+	g_value_unset (&gc_integer_node->value);
 	g_value_unset (&gc_integer_node->minimum);
 	g_value_unset (&gc_integer_node->maximum);
 	g_value_unset (&gc_integer_node->increment);
@@ -107,40 +122,77 @@ arv_gc_integer_node_class_init (ArvGcIntegerNodeClass *integer_node_class)
 static gint64
 arv_gc_integer_node_get_integer_value (ArvGcInteger *gc_integer)
 {
-	return 0;
+	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (gc_integer);
+	ArvGc *genicam;
+
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_integer));
+
+	return arv_gc_get_int64_from_value (genicam, &gc_integer_node->value);
 }
 
 static void
 arv_gc_integer_node_set_integer_value (ArvGcInteger *gc_integer, gint64 value)
 {
+	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (gc_integer);
+
+	arv_force_g_value_to_int64 (&gc_integer_node->value, value);
 }
 
 static gint64
 arv_gc_integer_node_get_min (ArvGcInteger *gc_integer)
 {
-	return 0;
+	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (gc_integer);
+	ArvGc *genicam;
+
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_integer));
+
+	return arv_gc_get_int64_from_value (genicam, &gc_integer_node->minimum);
 }
 
 static gint64
 arv_gc_integer_node_get_max (ArvGcInteger *gc_integer)
 {
-	return 0;
+	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (gc_integer);
+	ArvGc *genicam;
+
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_integer));
+
+	return arv_gc_get_int64_from_value (genicam, &gc_integer_node->maximum);
+}
+
+static gint64
+arv_gc_integer_node_get_inc (ArvGcInteger *gc_integer)
+{
+	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (gc_integer);
+	ArvGc *genicam;
+
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_integer));
+
+	return arv_gc_get_int64_from_value (genicam, &gc_integer_node->increment);
 }
 
 static const char *
 arv_gc_integer_node_get_unit (ArvGcInteger *gc_integer)
 {
-	return NULL;
+	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (gc_integer);
+
+	return gc_integer_node->unit;
 }
 
 static void
 arv_gc_integer_node_impose_min (ArvGcInteger *gc_integer, gint64 minimum)
 {
+	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (gc_integer);
+
+	arv_force_g_value_to_int64 (&gc_integer_node->minimum, minimum);
 }
 
 static void
 arv_gc_integer_node_impose_max (ArvGcInteger *gc_integer, gint64 maximum)
 {
+	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (gc_integer);
+
+	arv_force_g_value_to_int64 (&gc_integer_node->minimum, maximum);
 }
 
 static void
@@ -150,6 +202,7 @@ arv_gc_integer_node_integer_interface_init (ArvGcIntegerInterface *interface)
 	interface->set_value = arv_gc_integer_node_set_integer_value;
 	interface->get_min = arv_gc_integer_node_get_min;
 	interface->get_max = arv_gc_integer_node_get_max;
+	interface->get_inc = arv_gc_integer_node_get_inc;
 	interface->get_unit = arv_gc_integer_node_get_unit;
 	interface->impose_min = arv_gc_integer_node_impose_min;
 	interface->impose_max = arv_gc_integer_node_impose_max;

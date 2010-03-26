@@ -27,11 +27,29 @@ static GObjectClass *parent_class = NULL;
 void
 arv_gc_port_read (ArvGcPort *port, void *buffer, guint64 address, guint64 length)
 {
+	ArvGc *genicam;
+	ArvDevice *device;
+
+	g_return_if_fail (ARV_IS_GC_PORT (port));
+
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (port));
+	device = arv_gc_get_device (genicam);
+
+	arv_device_read_memory (device, address, length, buffer);
 }
 
 void
 arv_gc_port_write (ArvGcPort *port, void *buffer, guint64 address, guint64 length)
 {
+	ArvGc *genicam;
+	ArvDevice *device;
+
+	g_return_if_fail (ARV_IS_GC_PORT (port));
+
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (port));
+	device = arv_gc_get_device (genicam);
+
+	arv_device_write_memory (device, address, length, buffer);
 }
 
 ArvGcNode *

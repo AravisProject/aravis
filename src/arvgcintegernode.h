@@ -40,9 +40,11 @@ typedef struct _ArvGcIntegerNodeClass ArvGcIntegerNodeClass;
 struct _ArvGcIntegerNode {
 	ArvGcNode	node;
 
+	GValue value;
 	GValue minimum;
 	GValue maximum;
 	GValue increment;
+	char *unit;
 };
 
 struct _ArvGcIntegerNodeClass {

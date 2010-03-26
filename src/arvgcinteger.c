@@ -76,6 +76,21 @@ arv_gc_integer_get_max (ArvGcInteger *gc_integer)
 		return G_MAXINT64;
 }
 
+gint64
+arv_gc_integer_get_inc (ArvGcInteger *gc_integer)
+{
+	ArvGcIntegerInterface *integer_interface;
+
+	g_return_val_if_fail (ARV_IS_GC_INTEGER (gc_integer), 0);
+
+	integer_interface = ARV_GC_INTEGER_GET_INTERFACE (gc_integer);
+
+	if (integer_interface->get_inc != NULL)
+		return integer_interface->get_inc (gc_integer);
+	else
+		return 1;
+}
+
 const char *
 arv_gc_integer_get_unit	(ArvGcInteger *gc_integer)
 {

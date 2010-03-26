@@ -2,6 +2,7 @@
 #include <arvgvinterface.h>
 #include <arvgvstream.h>
 #include <arvgvdevice.h>
+#include <arvgcinteger.h>
 #include <arvdebug.h>
 #ifdef ARAVIS_WITH_CAIRO
 #include <cairo.h>
@@ -114,6 +115,8 @@ main (int argc, char **argv)
 
 	device = arv_interface_get_first_device (interface);
 	if (device != NULL) {
+		ArvGc *genicam;
+		ArvGcNode *node;
 		guint32 value;
 
 		stream = arv_device_get_stream (device);
@@ -121,6 +124,11 @@ main (int argc, char **argv)
 			arv_gv_stream_set_option (ARV_GV_STREAM (stream),
 						  ARV_GV_STREAM_OPTION_SOCKET_BUFFER_AUTO,
 						  0);
+
+		genicam = arv_device_get_genicam (device);
+		node = arv_gc_get_node (genicam, "PayloadSize");
+		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
+		g_print ("payload size = %d\n", value);
 
 		arv_device_read_register (device, arv_cameras[camera_type].payload_size, &value);
 		g_print ("payload size = %d\n", value);

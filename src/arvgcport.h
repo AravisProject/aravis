@@ -25,6 +25,7 @@
 
 #include <arv.h>
 #include <arvgcnode.h>
+#include <arvdevice.h>
 
 G_BEGIN_DECLS
 
@@ -38,7 +39,7 @@ G_BEGIN_DECLS
 typedef struct _ArvGcPortClass ArvGcPortClass;
 
 struct _ArvGcPort {
-	ArvGcNode	node;
+	ArvGcNode node;
 };
 
 struct _ArvGcPortClass {
