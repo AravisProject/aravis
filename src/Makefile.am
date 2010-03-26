@@ -37,6 +37,7 @@ libaravis_la_SOURCES =				\
 	arvgcswissknife.c			\
 	arvgcport.c				\
 	arvgcinteger.c				\
+	arvgcfloat.c				\
 	arvinterface.c				\
 	arvdevice.c				\
 	arvstream.c				\
@@ -59,6 +60,7 @@ ARAVIS_HDRS = 					\
 	arvgcswissknife.h			\
 	arvgcport.h				\
 	arvgcinteger.h				\
+	arvgcfloat.h				\
 	arvinterface.h				\
 	arvdevice.h				\
 	arvstream.h				\

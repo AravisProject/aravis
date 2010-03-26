@@ -21,6 +21,8 @@
  */
 
 #include <arvgcswissknife.h>
+#include <arvgcinteger.h>
+#include <arvgcfloat.h>
 #include <arvgcport.h>
 #include <string.h>
 
@@ -132,15 +134,14 @@ arv_gc_swiss_knife_class_init (ArvGcSwissKnifeClass *swiss_knife_class)
 
 /* ArvGcInteger interface implementation */
 
-guint64
-arv_gc_swiss_knife_get_integer_value (ArvGcInteger *gc_integer)
+static void
+_update_variables (ArvGcSwissKnife *gc_swiss_knife)
 {
-	ArvGcSwissKnife *gc_swiss_knife = ARV_GC_SWISS_KNIFE (gc_integer);
 	ArvGc *genicam;
 	ArvGcNode *node;
 	GSList *iter;
 
-	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_integer));
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_swiss_knife));
 
 	for (iter = gc_swiss_knife->variables; iter != NULL; iter = iter->next) {
 		ArvGcSwissKnifeVariableInfos *variable_infos = iter->data;
@@ -150,12 +151,25 @@ arv_gc_swiss_knife_get_integer_value (ArvGcInteger *gc_integer)
 			arv_evaluator_set_int64_variable (gc_swiss_knife->formula,
 							  variable_infos->name,
 							  arv_gc_integer_get_value (ARV_GC_INTEGER (node)));
+		else if (ARV_IS_GC_FLOAT (node))
+			arv_evaluator_set_double_variable (gc_swiss_knife->formula,
+							   variable_infos->name,
+							   arv_gc_float_get_value (ARV_GC_FLOAT (node)));
 	}
+
+}
+
+static guint64
+arv_gc_swiss_knife_get_integer_value (ArvGcInteger *gc_integer)
+{
+	ArvGcSwissKnife *gc_swiss_knife = ARV_GC_SWISS_KNIFE (gc_integer);
+
+	_update_variables (gc_swiss_knife);
 
 	return arv_evaluator_evaluate_as_int64 (gc_swiss_knife->formula, NULL);
 }
 
-void
+static void
 arv_gc_swiss_knife_set_integer_value (ArvGcInteger *gc_integer, guint64 value)
 {
 }
@@ -167,5 +181,28 @@ arv_gc_swiss_knife_integer_interface_init (ArvGcIntegerInterface *interface)
 	interface->set_value = arv_gc_swiss_knife_set_integer_value;
 }
 
+static double
+arv_gc_swiss_knife_get_float_value (ArvGcFloat *gc_float)
+{
+	ArvGcSwissKnife *gc_swiss_knife = ARV_GC_SWISS_KNIFE (gc_float);
+
+	_update_variables (gc_swiss_knife);
+
+	return arv_evaluator_evaluate_as_double (gc_swiss_knife->formula, NULL);
+}
+
+static void
+arv_gc_swiss_knife_set_float_value (ArvGcFloat *gc_float, double value)
+{
+}
+
+static void
+arv_gc_swiss_knife_float_interface_init (ArvGcFloatInterface *interface)
+{
+	interface->get_value = arv_gc_swiss_knife_get_float_value;
+	interface->set_value = arv_gc_swiss_knife_set_float_value;
+}
+
 G_DEFINE_TYPE_WITH_CODE (ArvGcSwissKnife, arv_gc_swiss_knife, ARV_TYPE_GC_NODE,
-			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_swiss_knife_integer_interface_init))
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_swiss_knife_integer_interface_init)
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_FLOAT,   arv_gc_swiss_knife_float_interface_init))

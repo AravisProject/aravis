@@ -2,6 +2,8 @@
 #include <arvdebug.h>
 #include <arvgc.h>
 #include <arvgcregister.h>
+#include <arvgcfloat.h>
+#include <arvgcinteger.h>
 #include <stdlib.h>
 
 static char **arv_option_filenames = NULL;
@@ -68,6 +70,12 @@ main (int argc, char **argv)
 			if (node != NULL) {
 				g_print ("IntWidthIncrement value = %Ld\n",
 					 arv_gc_integer_get_value (ARV_GC_INTEGER (node)));
+			}
+
+			node = arv_gc_get_node (genicam, "WhitebalValueMin");
+			if (node != NULL) {
+				g_print ("WhitebalValueMin value = %g\n",
+					 arv_gc_float_get_value (ARV_GC_FLOAT (node)));
 			}
 
 			g_free (xml);

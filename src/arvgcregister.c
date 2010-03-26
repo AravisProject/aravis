@@ -21,6 +21,7 @@
  */
 
 #include <arvgcregister.h>
+#include <arvgcinteger.h>
 #include <arvgcport.h>
 #include <string.h>
 

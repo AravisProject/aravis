@@ -57,10 +57,24 @@
   <Endianess>BigEndian</Endianess>
  </IntReg>
 
+ <IntReg Name="RegWhitebalValueMax" NameSpace="Custom">
+  <Address>0x1418C</Address>
+  <Length>4</Length>
+  <AccessMode>RW</AccessMode>
+  <pPort>Device</pPort>
+  <Sign>Unsigned</Sign>
+  <Endianess>BigEndian</Endianess>
+ </IntReg>
+
  <IntSwissKnife Name="IntWidthIncrement" NameSpace="Custom">
   <pVariable Name="FORMAT">RegPixelFormat</pVariable>
   <Formula>((FORMAT=35127328) || (FORMAT=34603039) || (FORMAT=34340894)) ? 4 : 1</Formula>
  </IntSwissKnife>
+
+ <SwissKnife Name="WhitebalValueMin" NameSpace="Custom">
+  <pVariable Name="VALUE">RegWhitebalValueMin</pVariable>
+  <Formula>(VALUE / 100)</Formula>
+ </SwissKnife>
 
  <Port Name="Device" NameSpace="Standard">
  </Port>

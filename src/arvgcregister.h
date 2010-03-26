@@ -25,7 +25,6 @@
 
 #include <arv.h>
 #include <arvgcnode.h>
-#include <arvgcinteger.h>
 
 G_BEGIN_DECLS
 
