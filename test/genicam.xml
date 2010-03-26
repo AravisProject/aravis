@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RegisterDescription
+ ModelName="Model"
+ VendorName="Emmanuel"
+ StandardNameSpace="None"
+ SchemaMajorVersion="1"
+ SchemaMinorVersion="0"
+ SchemaSubMinorVersion="0"
+ MajorVersion="292"
+ MinorVersion="0"
+ SubMinorVersion="0"
+ ToolTip="TestTooltip"
+ ProductGuid="111-222"
+ VersionGuid="222-333"
+ xmlns="http://www.genicam.org/GenApi/Version_1_0"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://www.genicam.org/GenApi/Version_1_0 GenApiSchema.xsd">
+ <Category Name="Root" NameSpace="Standard">
+  <pFeature>AcquisitionControl</pFeature>
+ </Category>
+
+ <Category Name="AcquisitionControl" NameSpace="Custom">
+  <pFeature>AcquisitionStart</pFeature>
+  <pFeature>AcquisitionStop</pFeature>
+ </Category>
+
+ <Command Name="AcquisitionStart" NameSpace="Standard">
+  <Description>Start acquisition. Before image acquisition can occur, acquisition must be started, either by a hardware trigger or this software command.</Description>
+  <pValue>RegAcquisitionCommand</pValue>
+  <CommandValue>1</CommandValue>
+ </Command>
+
+ <Command Name="AcquisitionStop" NameSpace="Standard">
+  <Description>Stop acquisition. Acquisition will stop after acquisition of the current frame is complete.</Description>
+  <pValue>RegAcquisitionCommand</pValue>
+  <CommandValue>0</CommandValue>
+ </Command>
+
+ <IntReg Name="RegAcquisitionCommand" NameSpace="Custom">
+  <Address>0x130F4</Address>
+  <Length>4</Length>
+  <AccessMode>WO</AccessMode>
+  <pPort>Device</pPort>
+  <Sign>Unsigned</Sign>
+  <Endianess>BigEndian</Endianess>
+ </IntReg>
+
+ <IntReg Name="RegPixelFormat" NameSpace="Custom">
+  <Address>0x12120</Address>
+  <Length>4</Length>
+  <AccessMode>RW</AccessMode>
+  <pPort>Device</pPort>
+  <pInvalidator>BinningHorizontal</pInvalidator>
+  <pInvalidator>BinningVertical</pInvalidator>
+  <Sign>Unsigned</Sign>
+  <Endianess>BigEndian</Endianess>
+ </IntReg>
+
+ <IntSwissKnife Name="IntWidthIncrement" NameSpace="Custom">
+  <pVariable Name="FORMAT">RegPixelFormat</pVariable>
+  <Formula>((FORMAT=35127328) || (FORMAT=34603039) || (FORMAT=34340894)) ? 4 : 1</Formula>
+ </IntSwissKnife>
+
+ <Port Name="Device" NameSpace="Standard">
+ </Port>
+
+</RegisterDescription>

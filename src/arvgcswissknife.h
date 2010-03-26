@@ -30,11 +30,6 @@
 
 G_BEGIN_DECLS
 
-typedef struct {
-	guint64 value;
-	char *node_name;
-} ArvGcUint64;
-
 #define ARV_TYPE_GC_SWISS_KNIFE             (arv_gc_swiss_knife_get_type ())
 #define ARV_GC_SWISS_KNIFE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_SWISS_KNIFE, ArvGcSwissKnife))
 #define ARV_GC_SWISS_KNIFE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GC_SWISS_KNIFE, ArvGcSwissKnifeClass))

@@ -22,6 +22,7 @@
 
 #include <arvgc.h>
 #include <arvgcregister.h>
+#include <arvgcswissknife.h>
 #include <arvgcport.h>
 #include <arvdebug.h>
 #include <libxml/parser.h>
@@ -57,9 +58,9 @@ arv_gc_create_node (ArvGc *genicam, const char *type)
 	else if (strcmp (type, "Enumeration") == 0)
 		node = arv_gc_node_new ();
 	else if (strcmp (type, "SwissKnife") == 0)
-		node = arv_gc_node_new ();
+		node = arv_gc_swiss_knife_new ();
 	else if (strcmp (type, "IntSwissKnife") == 0)
-		node = arv_gc_node_new ();
+		node = arv_gc_int_swiss_knife_new ();
 	else if (strcmp (type, "Port") == 0)
 		node = arv_gc_port_new ();
 	else

@@ -135,7 +135,24 @@ arv_gc_swiss_knife_class_init (ArvGcSwissKnifeClass *swiss_knife_class)
 guint64
 arv_gc_swiss_knife_get_integer_value (ArvGcInteger *gc_integer)
 {
-	return 0;
+	ArvGcSwissKnife *gc_swiss_knife = ARV_GC_SWISS_KNIFE (gc_integer);
+	ArvGc *genicam;
+	ArvGcNode *node;
+	GSList *iter;
+
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_integer));
+
+	for (iter = gc_swiss_knife->variables; iter != NULL; iter = iter->next) {
+		ArvGcSwissKnifeVariableInfos *variable_infos = iter->data;
+
+		node = arv_gc_get_node (genicam, variable_infos->node_name);
+		if (ARV_IS_GC_INTEGER (node))
+			arv_evaluator_set_int64_variable (gc_swiss_knife->formula,
+							  variable_infos->name,
+							  arv_gc_integer_get_value (ARV_GC_INTEGER (node)));
+	}
+
+	return arv_evaluator_evaluate_as_int64 (gc_swiss_knife->formula, NULL);
 }
 
 void

@@ -57,11 +57,17 @@ main (int argc, char **argv)
 
 			genicam = arv_gc_new (NULL, xml, size);
 
-			node = arv_gc_get_node (genicam, "RegMemoryFileDefault");
+			node = arv_gc_get_node (genicam, "RegAcquisitionCommand");
 			if (node != NULL) {
-				g_print ("RegMemoryFileDefault address = 0x%Lx - length = 0x%Lx\n",
+				g_print ("RegAcquisitionCommand address = 0x%Lx - length = 0x%Lx\n",
 					 arv_gc_register_get_address (ARV_GC_REGISTER (node)),
 					 arv_gc_register_get_length (ARV_GC_REGISTER (node)));
+			}
+
+			node = arv_gc_get_node (genicam, "IntWidthIncrement");
+			if (node != NULL) {
+				g_print ("IntWidthIncrement value = %Ld\n",
+					 arv_gc_integer_get_value (ARV_GC_INTEGER (node)));
 			}
 
 			g_free (xml);
