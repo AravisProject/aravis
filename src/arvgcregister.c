@@ -181,7 +181,7 @@ arv_gc_register_class_init (ArvGcRegisterClass *register_class)
 
 /* ArvGcInteger interface implementation */
 
-static guint64
+static gint64
 arv_gc_register_get_integer_value (ArvGcInteger *gc_integer)
 {
 	ArvGcRegister *gc_register = ARV_GC_REGISTER (gc_integer);
@@ -203,7 +203,7 @@ arv_gc_register_get_integer_value (ArvGcInteger *gc_integer)
 }
 
 static void
-arv_gc_register_set_integer_value (ArvGcInteger *gc_integer, guint64 value)
+arv_gc_register_set_integer_value (ArvGcInteger *gc_integer, gint64 value)
 {
 	ArvGcRegister *gc_register = ARV_GC_REGISTER (gc_integer);
 	ArvGc *genicam;

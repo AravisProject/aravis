@@ -30,7 +30,7 @@ arv_gc_integer_default_init (ArvGcIntegerInterface *gc_integer_iface)
 
 G_DEFINE_INTERFACE (ArvGcInteger, arv_gc_integer, G_TYPE_OBJECT)
 
-guint64
+gint64
 arv_gc_integer_get_value (ArvGcInteger *gc_integer)
 {
 	g_return_val_if_fail (ARV_IS_GC_INTEGER (gc_integer), 0);
@@ -39,14 +39,14 @@ arv_gc_integer_get_value (ArvGcInteger *gc_integer)
 }
 
 void
-arv_gc_integer_set_value (ArvGcInteger *gc_integer, guint64 value)
+arv_gc_integer_set_value (ArvGcInteger *gc_integer, gint64 value)
 {
 	g_return_if_fail (ARV_IS_GC_INTEGER (gc_integer));
 
 	ARV_GC_INTEGER_GET_INTERFACE (gc_integer)->set_value (gc_integer, value);
 }
 
-guint64
+gint64
 arv_gc_integer_get_min (ArvGcInteger *gc_integer)
 {
 	ArvGcIntegerInterface *integer_interface;
@@ -58,10 +58,10 @@ arv_gc_integer_get_min (ArvGcInteger *gc_integer)
 	if (integer_interface->get_min != NULL)
 		return integer_interface->get_min (gc_integer);
 	else
-		return 0;
+		return G_MININT64;
 }
 
-guint64
+gint64
 arv_gc_integer_get_max (ArvGcInteger *gc_integer)
 {
 	ArvGcIntegerInterface *integer_interface;
@@ -73,7 +73,7 @@ arv_gc_integer_get_max (ArvGcInteger *gc_integer)
 	if (integer_interface->get_max != NULL)
 		return integer_interface->get_max (gc_integer);
 	else
-		return G_MAXUINT64;
+		return G_MAXINT64;
 }
 
 const char *
@@ -91,7 +91,7 @@ arv_gc_integer_get_unit	(ArvGcInteger *gc_integer)
 		return NULL;
 }
 
-void arv_gc_integer_impose_min (ArvGcInteger *gc_integer, guint64 minimum)
+void arv_gc_integer_impose_min (ArvGcInteger *gc_integer, gint64 minimum)
 {
 	ArvGcIntegerInterface *integer_interface;
 
@@ -103,7 +103,7 @@ void arv_gc_integer_impose_min (ArvGcInteger *gc_integer, guint64 minimum)
 		integer_interface->impose_min (gc_integer, minimum);
 }
 
-void arv_gc_integer_impose_max (ArvGcInteger *gc_integer, guint64 maximum)
+void arv_gc_integer_impose_max (ArvGcInteger *gc_integer, gint64 maximum)
 {
 	ArvGcIntegerInterface *integer_interface;
 

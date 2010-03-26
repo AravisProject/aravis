@@ -104,14 +104,14 @@ arv_gc_integer_node_class_init (ArvGcIntegerNodeClass *integer_node_class)
 
 /* ArvGcInteger interface implementation */
 
-static guint64
+static gint64
 arv_gc_integer_node_get_integer_value (ArvGcInteger *gc_integer)
 {
 	return 0;
 }
 
 static void
-arv_gc_integer_node_set_integer_value (ArvGcInteger *gc_integer, guint64 value)
+arv_gc_integer_node_set_integer_value (ArvGcInteger *gc_integer, gint64 value)
 {
 }
 

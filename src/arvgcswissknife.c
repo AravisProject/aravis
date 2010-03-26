@@ -159,7 +159,7 @@ _update_variables (ArvGcSwissKnife *gc_swiss_knife)
 
 }
 
-static guint64
+static gint64
 arv_gc_swiss_knife_get_integer_value (ArvGcInteger *gc_integer)
 {
 	ArvGcSwissKnife *gc_swiss_knife = ARV_GC_SWISS_KNIFE (gc_integer);
@@ -170,7 +170,7 @@ arv_gc_swiss_knife_get_integer_value (ArvGcInteger *gc_integer)
 }
 
 static void
-arv_gc_swiss_knife_set_integer_value (ArvGcInteger *gc_integer, guint64 value)
+arv_gc_swiss_knife_set_integer_value (ArvGcInteger *gc_integer, gint64 value)
 {
 }
 
