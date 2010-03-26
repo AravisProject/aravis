@@ -30,7 +30,7 @@ G_BEGIN_DECLS
 #define ARV_TYPE_GC_INTEGER             	(arv_gc_integer_get_type ())
 #define ARV_GC_INTEGER(obj)             	(G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_INTEGER, ArvGcInteger))
 #define ARV_IS_GC_INTEGER(obj)          	(G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GC_INTEGER))
-#define ARV_GC_INTEGER_GET_INTERFFACE(obj)   	(G_TYPE_INSTANCE_GET_INTERFACE((obj), ARV_TYPE_GC_INTEGER, ArvGcIntegerInterface))
+#define ARV_GC_INTEGER_GET_INTERFACE(obj)   	(G_TYPE_INSTANCE_GET_INTERFACE((obj), ARV_TYPE_GC_INTEGER, ArvGcIntegerInterface))
 
 typedef struct _ArvGcIntegerInterface ArvGcIntegerInterface;
 
@@ -39,6 +39,11 @@ struct _ArvGcIntegerInterface {
 
 	guint64		(*get_value)		(ArvGcInteger *gc_integer);
 	void		(*set_value)		(ArvGcInteger *gc_integer, guint64 value);
+	guint64		(*get_min)		(ArvGcInteger *gc_integer);
+	guint64		(*get_max)		(ArvGcInteger *gc_integer);
+	const char *	(*get_unit)		(ArvGcInteger *gc_integer);
+	void		(*impose_min)		(ArvGcInteger *gc_integer, guint64 minimum);
+	void		(*impose_max)		(ArvGcInteger *gc_integer, guint64 maximum);
 };
 
 GType arv_gc_integer_get_type (void);
