@@ -28,6 +28,18 @@
 
 G_BEGIN_DECLS
 
+typedef enum
+{
+	ARV_GC_ENDIANESS_LITTLE_ENDIAN,
+	ARV_GC_ENDIANESS_BIG_ENDIAN
+} ArvGcEndianess;
+
+typedef enum
+{
+	ARV_GC_SIGN_SIGNED,
+	ARV_GC_SIGN_UNSIGNED
+} ArvGcSign;
+
 #define ARV_TYPE_GC_REGISTER             (arv_gc_register_get_type ())
 #define ARV_GC_REGISTER(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_REGISTER, ArvGcRegister))
 #define ARV_GC_REGISTER_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GC_REGISTER, ArvGcRegisterClass))
@@ -46,6 +58,11 @@ struct _ArvGcRegister {
 	ArvGcCacheable 		cacheable;
 	guint64  		polling_time;
 	char *			port_name;
+	ArvGcEndianess		endianess;
+	ArvGcSign		sign;
+
+	void *cache;
+	size_t cache_size;
 };
 
 struct _ArvGcRegisterClass {
@@ -55,8 +72,8 @@ struct _ArvGcRegisterClass {
 GType 		arv_gc_register_get_type 	(void);
 
 ArvGcNode * 	arv_gc_register_new 		(void);
-void 		arv_gc_register_get		(ArvGcRegister *gc_register, guint8 *buffer, guint64 Length);
-void 		arv_gc_register_set		(ArvGcRegister *gc_register, guint8 *buffer, guint64 Length);
+void 		arv_gc_register_get		(ArvGcRegister *gc_register, void *buffer, guint64 Length);
+void 		arv_gc_register_set		(ArvGcRegister *gc_register, void *buffer, guint64 Length);
 guint64 	arv_gc_register_get_address 	(ArvGcRegister *gc_register);
 guint64 	arv_gc_register_get_length	(ArvGcRegister *gc_register);
 

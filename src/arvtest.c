@@ -128,10 +128,10 @@ main (int argc, char **argv)
 		genicam = arv_device_get_genicam (device);
 		node = arv_gc_get_node (genicam, "PayloadSize");
 		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
-		g_print ("payload size = %d\n", value);
+		g_print ("payload size = %d (0x%x)\n", value, value);
 
 		arv_device_read_register (device, arv_cameras[camera_type].payload_size, &value);
-		g_print ("payload size = %d\n", value);
+		g_print ("payload size = %d (0x%x)\n", value, value);
 
 		for (i = 0; i < 30; i++)
 			arv_stream_push_buffer (stream, arv_buffer_new (value, NULL));
