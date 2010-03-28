@@ -210,11 +210,56 @@ arv_gc_register_get_length (ArvGcRegister *gc_register)
 ArvGcNode *
 arv_gc_register_new (void)
 {
-	ArvGcNode *node;
+	ArvGcRegister *gc_register;
 
-	node = g_object_new (ARV_TYPE_GC_REGISTER, NULL);
+	gc_register = g_object_new (ARV_TYPE_GC_REGISTER, NULL);
+	gc_register->type = ARV_GC_REGISTER_TYPE_REGISTER;
 
-	return node;
+	return ARV_GC_NODE (gc_register);
+}
+
+ArvGcNode *
+arv_gc_integer_register_new (void)
+{
+	ArvGcRegister *gc_register;
+
+	gc_register = g_object_new (ARV_TYPE_GC_REGISTER, NULL);
+	gc_register->type = ARV_GC_REGISTER_TYPE_INTEGER;
+
+	return ARV_GC_NODE (gc_register);
+}
+
+ArvGcNode *
+arv_gc_masked_integer_register_new (void)
+{
+	ArvGcRegister *gc_register;
+
+	gc_register = g_object_new (ARV_TYPE_GC_REGISTER, NULL);
+	gc_register->type = ARV_GC_REGISTER_TYPE_MASKED_INTEGER;
+
+	return ARV_GC_NODE (gc_register);
+}
+
+ArvGcNode *
+arv_gc_float_register_new (void)
+{
+	ArvGcRegister *gc_register;
+
+	gc_register = g_object_new (ARV_TYPE_GC_REGISTER, NULL);
+	gc_register->type = ARV_GC_REGISTER_TYPE_FLOAT;
+
+	return ARV_GC_NODE (gc_register);
+}
+
+ArvGcNode *
+arv_gc_string_register_new (void)
+{
+	ArvGcRegister *gc_register;
+
+	gc_register = g_object_new (ARV_TYPE_GC_REGISTER, NULL);
+	gc_register->type = ARV_GC_REGISTER_TYPE_STRING;
+
+	return ARV_GC_NODE (gc_register);
 }
 
 static void
@@ -276,23 +321,24 @@ arv_gc_register_get_integer_value (ArvGcInteger *gc_integer)
 	arv_copy_memory_with_endianess (&value, sizeof (value), G_BYTE_ORDER,
 					gc_register->cache, gc_register->cache_size, gc_register->endianess);
 
-	if (gc_register->endianess == G_BYTE_ORDER) {
-		lsb = gc_register->lsb;
-		msb = gc_register->msb;
-	} else {
-		msb = gc_register->lsb;
-		lsb = gc_register->msb;
+	if (gc_register->type == ARV_GC_REGISTER_TYPE_MASKED_INTEGER) {
+		if (gc_register->endianess == G_BYTE_ORDER) {
+			lsb = gc_register->lsb;
+			msb = gc_register->msb;
+		} else {
+			msb = gc_register->lsb;
+			lsb = gc_register->msb;
+		}
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+		value = (value >> lsb);
+		if (msb - lsb < 63)
+			value = value & ((1 << (msb - lsb + 1)) - 1);
+#else
+		value = (value << lsb);
+		if (lsb - msb < 63)
+			value = value & ((1 >> (lsb - msb + 1)) - 1);
+#endif
 	}
-
-/*#if G_BYTE_ORDER == G_LITTLE_ENDIAN*/
-/*        value = (value >> lsb);*/
-/*        if (msb - lsb < 63)*/
-/*                value = value & ((1 << (msb - lsb + 1)) - 1);*/
-/*#else*/
-/*        value = (value << lsb);*/
-/*        if (lsb - msb < 63)*/
-/*                value = value & ((1 >> (lsb - msb + 1)) - 1);*/
-/*#endif*/
 
 	return value;
 }
@@ -304,25 +350,24 @@ arv_gc_register_set_integer_value (ArvGcInteger *gc_integer, gint64 value)
 	guint lsb;
 	guint msb;
 
-	if (gc_register->endianess == G_BYTE_ORDER) {
-		lsb = gc_register->lsb;
-		msb = gc_register->msb;
-	} else {
-		msb = gc_register->lsb;
-		lsb = gc_register->msb;
-	}
-
-#if 0
+	if (gc_register->type == ARV_GC_REGISTER_TYPE_MASKED_INTEGER) {
+		if (gc_register->endianess == G_BYTE_ORDER) {
+			lsb = gc_register->lsb;
+			msb = gc_register->msb;
+		} else {
+			msb = gc_register->lsb;
+			lsb = gc_register->msb;
+		}
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-	if (msb - lsb < 63)
-		value = value & ((1 << (msb - lsb + 1)) - 1);
-	value = (value << lsb);
+		if (msb - lsb < 63)
+			value = value & ((1 << (msb - lsb + 1)) - 1);
+		value = (value << lsb);
 #else
-	if (lsb - msb < 63)
-		value = value & ((1 >> (lsb - msb + 1)) - 1);
-	value = (value >> lsb);
+		if (lsb - msb < 63)
+			value = value & ((1 >> (lsb - msb + 1)) - 1);
+		value = (value >> lsb);
 #endif
-#endif
+	}
 
 	arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[GcRegister::set_integer_value] address = 0x%x, value = 0x%Lx",
 		   arv_gc_register_get_address (gc_register),

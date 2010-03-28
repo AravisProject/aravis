@@ -49,11 +49,13 @@ arv_gc_create_node (ArvGc *genicam, const char *type)
 	else if (strcmp (type, "IntConverter") == 0)
 		node = arv_gc_node_new ();
 	else if (strcmp (type, "IntReg") == 0)
-		node = arv_gc_register_new ();
+		node = arv_gc_integer_register_new ();
 	else if (strcmp (type, "MaskedIntReg") == 0)
-		node = arv_gc_register_new ();
+		node = arv_gc_masked_integer_register_new ();
+	else if (strcmp (type, "FloatReg") == 0)
+		node = arv_gc_float_register_new ();
 	else if (strcmp (type, "StringReg") == 0)
-		node = arv_gc_register_new ();
+		node = arv_gc_string_register_new ();
 	else if (strcmp (type, "Integer") == 0)
 		node = arv_gc_integer_node_new ();
 	else if (strcmp (type, "Float") == 0)

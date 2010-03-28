@@ -34,6 +34,14 @@ typedef enum
 	ARV_GC_SIGN_UNSIGNED
 } ArvGcSign;
 
+typedef enum {
+	ARV_GC_REGISTER_TYPE_REGISTER,
+	ARV_GC_REGISTER_TYPE_INTEGER,
+	ARV_GC_REGISTER_TYPE_MASKED_INTEGER,
+	ARV_GC_REGISTER_TYPE_FLOAT,
+	ARV_GC_REGISTER_TYPE_STRING
+} ArvGcRegisterType;
+
 #define ARV_TYPE_GC_REGISTER             (arv_gc_register_get_type ())
 #define ARV_GC_REGISTER(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_REGISTER, ArvGcRegister))
 #define ARV_GC_REGISTER_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GC_REGISTER, ArvGcRegisterClass))
@@ -45,6 +53,8 @@ typedef struct _ArvGcRegisterClass ArvGcRegisterClass;
 
 struct _ArvGcRegister {
 	ArvGcNode	node;
+
+	ArvGcRegisterType type;
 
 	GList *			addresses;
 	GValue			length;
@@ -65,13 +75,16 @@ struct _ArvGcRegisterClass {
 	ArvGcNodeClass parent_class;
 };
 
-GType 		arv_gc_register_get_type 	(void);
-
-ArvGcNode * 	arv_gc_register_new 		(void);
-void 		arv_gc_register_get		(ArvGcRegister *gc_register, void *buffer, guint64 Length);
-void 		arv_gc_register_set		(ArvGcRegister *gc_register, void *buffer, guint64 Length);
-guint64 	arv_gc_register_get_address 	(ArvGcRegister *gc_register);
-guint64 	arv_gc_register_get_length	(ArvGcRegister *gc_register);
+GType 		arv_gc_register_get_type 		(void);
+ArvGcNode * 	arv_gc_register_new 			(void);
+ArvGcNode * 	arv_gc_integer_register_new 		(void);
+ArvGcNode * 	arv_gc_masked_integer_register_new 	(void);
+ArvGcNode * 	arv_gc_float_register_new 		(void);
+ArvGcNode * 	arv_gc_string_register_new 		(void);
+void 		arv_gc_register_get			(ArvGcRegister *gc_register, void *buffer, guint64 Length);
+void 		arv_gc_register_set			(ArvGcRegister *gc_register, void *buffer, guint64 Length);
+guint64 	arv_gc_register_get_address 		(ArvGcRegister *gc_register);
+guint64 	arv_gc_register_get_length		(ArvGcRegister *gc_register);
 
 G_END_DECLS
 
