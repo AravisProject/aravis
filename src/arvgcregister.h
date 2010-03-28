@@ -30,12 +30,6 @@ G_BEGIN_DECLS
 
 typedef enum
 {
-	ARV_GC_ENDIANESS_LITTLE_ENDIAN,
-	ARV_GC_ENDIANESS_BIG_ENDIAN
-} ArvGcEndianess;
-
-typedef enum
-{
 	ARV_GC_SIGN_SIGNED,
 	ARV_GC_SIGN_UNSIGNED
 } ArvGcSign;
@@ -58,7 +52,7 @@ struct _ArvGcRegister {
 	ArvGcCacheable 		cacheable;
 	guint64  		polling_time;
 	char *			port_name;
-	ArvGcEndianess		endianess;
+	guint			endianess;
 	ArvGcSign		sign;
 
 	void *cache;

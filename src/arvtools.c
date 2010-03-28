@@ -519,3 +519,46 @@ arv_force_g_value_to_string (GValue *value, const char * v_string)
 	}
 	g_value_set_string (value, v_string);
 }
+
+void
+arv_copy_memory_with_endianess (void *to, size_t to_size, guint to_endianess,
+				void *from, size_t from_size, guint from_endianess)
+{
+	char *to_ptr;
+	char *from_ptr;
+	int i;
+
+	g_return_if_fail (to != NULL);
+	g_return_if_fail (from != NULL);
+
+	if (to_endianess == from_endianess) {
+		if (to_size <= from_size)
+			memcpy (to, from, to_size);
+		else {
+			memcpy (to, from, from_size);
+			memset (to + from_size, 0, to_size - from_size);
+		}
+	} else if (to_endianess == G_LITTLE_ENDIAN) {
+		to_ptr = to;
+		from_ptr = from + from_size - 1;
+		if (to_size <= from_size) {
+			for (i = 0; i < to_size; i++, to_ptr++, from_ptr--)
+				*to_ptr = *from_ptr;
+		} else {
+			for (i = 0; i < from_size; i++, to_ptr++, from_ptr--)
+				*to_ptr = *from_ptr;
+			memset (to + from_size, 0, to_size - from_size);
+		}
+	} else {
+		to_ptr = to + to_size - 1;
+		from_ptr = from;
+		if (to_size <= from_size) {
+			for (i = 0; i < to_size; i++, to_ptr--, from_ptr++)
+				*to_ptr = *from_ptr;
+		} else {
+			for (i = 0; i < from_size; i++, to_ptr--, from_ptr++)
+				*to_ptr = *from_ptr;
+			memset (to, 0, to_size - from_size);
+		}
+	}
+}

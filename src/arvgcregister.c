@@ -66,9 +66,9 @@ arv_gc_register_add_element (ArvGcNode *node, const char *name, const char *cont
 		gc_register->polling_time = g_ascii_strtoull (content, NULL, 0);
 	} else if (strcmp (name, "Endianess") == 0) {
 		if (g_strcmp0 (content, "BigEndian") == 0)
-			gc_register->endianess = ARV_GC_ENDIANESS_BIG_ENDIAN;
+			gc_register->endianess = G_BIG_ENDIAN;
 		else
-			gc_register->endianess = ARV_GC_ENDIANESS_LITTLE_ENDIAN;
+			gc_register->endianess = G_LITTLE_ENDIAN;
 	} else if (strcmp (name, "Sign") == 0) {
 		if (g_strcmp0 (content, "Unsigned") == 0)
 			gc_register->sign = ARV_GC_SIGN_UNSIGNED;
@@ -197,6 +197,7 @@ arv_gc_register_init (ArvGcRegister *gc_register)
 	gc_register->cacheable = ARV_GC_CACHEABLE_NO_CACHE;
 	gc_register->cache = NULL;
 	gc_register->cache_size = 0;
+	gc_register->endianess = G_LITTLE_ENDIAN;
 }
 
 static void
@@ -234,21 +235,12 @@ static gint64
 arv_gc_register_get_integer_value (ArvGcInteger *gc_integer)
 {
 	ArvGcRegister *gc_register = ARV_GC_REGISTER (gc_integer);
-	gint64 value = 0;
-	char *to;
-	char *from;
+	gint64 value;
 
 	_update_cache (gc_register);
 
-	if (gc_register->endianess == ARV_GC_ENDIANESS_BIG_ENDIAN) {
-		int i;
-		from = gc_register->cache;
-		from += gc_register->cache_size - 1;
-		to = (char *) &value;
-		for (i = 0; i < sizeof (value) && i < gc_register->cache_size; i++, to++, from--)
-			*to = *from;
-	} else
-		memcpy (&value, gc_register->cache, MIN (gc_register->cache_size, sizeof(value)));
+	arv_copy_memory_with_endianess (&value, sizeof (value), G_BYTE_ORDER,
+					gc_register->cache, gc_register->cache_size, gc_register->endianess);
 
 	return value;
 }

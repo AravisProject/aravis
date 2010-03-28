@@ -101,6 +101,8 @@ void 		arv_free_g_value 		(GValue *value);
 void		arv_force_g_value_to_int64	(GValue *value, gint64 v_int64);
 void		arv_force_g_value_to_string	(GValue *value, const char * v_string);
 
+void 		arv_copy_memory_with_endianess 	(void *to, size_t to_size, guint to_endianess,
+						 void *from, size_t from_size, guint from_endianess);
 /*
    Compatibility with glib < 2.23
    	Define 	G_DEFINE_INTERFACE
