@@ -25,6 +25,7 @@
 #include <arvgcport.h>
 #include <arvtools.h>
 #include <arvdebug.h>
+#include <stdlib.h>
 #include <string.h>
 
 static GObjectClass *parent_class = NULL;
@@ -74,6 +75,13 @@ arv_gc_register_add_element (ArvGcNode *node, const char *name, const char *cont
 			gc_register->sign = ARV_GC_SIGN_UNSIGNED;
 		else
 			gc_register->sign = ARV_GC_SIGN_SIGNED;
+	} else if (strcmp (name, "LSB") == 0) {
+		gc_register->lsb = content != NULL ? atoi (content) : 0;
+	} else if (strcmp (name, "MSB") == 0) {
+		gc_register->msb = content != NULL ? atoi (content) : 0;
+	} else if (strcmp (name, "Bit") == 0) {
+		gc_register->msb = content != NULL ? atoi (content) : 0;
+		gc_register->lsb = content != NULL ? atoi (content) : 0;
 	} else
 		ARV_GC_NODE_CLASS (parent_class)->add_element (node, name, content, attributes);
 }
@@ -191,13 +199,16 @@ arv_gc_register_new (void)
 static void
 arv_gc_register_init (ArvGcRegister *gc_register)
 {
+	/* Set default to read only 32 bits little endian integer register */
 	g_value_init (&gc_register->length, G_TYPE_INT64);
 	g_value_set_int64 (&gc_register->length, 4);
 	gc_register->access_mode = ARV_GC_ACCESS_MODE_RO;
 	gc_register->cacheable = ARV_GC_CACHEABLE_NO_CACHE;
-	gc_register->cache = NULL;
-	gc_register->cache_size = 0;
+	gc_register->cache = g_malloc0(4);
+	gc_register->cache_size = 4;
 	gc_register->endianess = G_LITTLE_ENDIAN;
+	gc_register->msb = 31;
+	gc_register->lsb = 0;
 }
 
 static void
@@ -236,11 +247,31 @@ arv_gc_register_get_integer_value (ArvGcInteger *gc_integer)
 {
 	ArvGcRegister *gc_register = ARV_GC_REGISTER (gc_integer);
 	gint64 value;
+	guint lsb;
+	guint msb;
 
 	_update_cache (gc_register);
 
 	arv_copy_memory_with_endianess (&value, sizeof (value), G_BYTE_ORDER,
 					gc_register->cache, gc_register->cache_size, gc_register->endianess);
+
+	if (gc_register->endianess == G_BYTE_ORDER) {
+		lsb = gc_register->lsb;
+		msb = gc_register->msb;
+	} else {
+		msb = gc_register->lsb;
+		lsb = gc_register->msb;
+	}
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+	value = (value >> lsb);
+	if (msb - lsb < 63)
+		value = value & ((1 << (msb - lsb + 1)) - 1);
+#else
+	value = (value << lsb);
+	if (lsb - msb < 63)
+		value = value & ((1 >> (lsb - msb + 1)) - 1);
+#endif
 
 	return value;
 }

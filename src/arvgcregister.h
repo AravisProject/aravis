@@ -54,6 +54,8 @@ struct _ArvGcRegister {
 	char *			port_name;
 	guint			endianess;
 	ArvGcSign		sign;
+	guint			msb;
+	guint			lsb;
 
 	void *cache;
 	size_t cache_size;
