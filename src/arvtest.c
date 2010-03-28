@@ -25,20 +25,20 @@ typedef struct {
 	guint32 acquisition_start;
 } ArvCameraRegisters;
 
-static ArvCameraRegisters arv_cameras[] = {
-	{
-		.payload_size = 		0xf1f0003c,
-		.acquisition_control = 		0xf0f00614,
-		.acquisition_stop =		0x00000000,
-		.acquisition_start =		0x80000000
-	},
-	{
-		.payload_size = 		0x00012200,
-		.acquisition_control = 		0x000130f4,
-		.acquisition_stop =		0x00000000,
-		.acquisition_start =		0x00000001
-	}
-};
+/*static ArvCameraRegisters arv_cameras[] = {*/
+/*        {*/
+/*                .payload_size = 		0xf1f0003c,*/
+/*                .acquisition_control = 		0xf0f00614,*/
+/*                .acquisition_stop =		0x00000000,*/
+/*                .acquisition_start =		0x80000000*/
+/*        },*/
+/*        {*/
+/*                .payload_size = 		0x00012200,*/
+/*                .acquisition_control = 		0x000130f4,*/
+/*                .acquisition_stop =		0x00000000,*/
+/*                .acquisition_start =		0x00000001*/
+/*        }*/
+/*};*/
 
 static char *arv_option_camera_type = "prosilica";
 static int arv_option_debug_level;
