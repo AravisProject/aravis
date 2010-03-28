@@ -126,7 +126,6 @@ arv_gc_integer_node_get_integer_value (ArvGcInteger *gc_integer)
 	ArvGc *genicam;
 
 	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_integer));
-
 	return arv_gc_get_int64_from_value (genicam, &gc_integer_node->value);
 }
 
@@ -134,8 +133,10 @@ static void
 arv_gc_integer_node_set_integer_value (ArvGcInteger *gc_integer, gint64 value)
 {
 	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (gc_integer);
+	ArvGc *genicam;
 
-	arv_force_g_value_to_int64 (&gc_integer_node->value, value);
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_integer));
+	arv_gc_set_int64_to_value (genicam, &gc_integer_node->value, value);
 }
 
 static gint64
@@ -145,7 +146,6 @@ arv_gc_integer_node_get_min (ArvGcInteger *gc_integer)
 	ArvGc *genicam;
 
 	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_integer));
-
 	return arv_gc_get_int64_from_value (genicam, &gc_integer_node->minimum);
 }
 
@@ -156,7 +156,6 @@ arv_gc_integer_node_get_max (ArvGcInteger *gc_integer)
 	ArvGc *genicam;
 
 	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_integer));
-
 	return arv_gc_get_int64_from_value (genicam, &gc_integer_node->maximum);
 }
 
@@ -167,7 +166,6 @@ arv_gc_integer_node_get_inc (ArvGcInteger *gc_integer)
 	ArvGc *genicam;
 
 	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_integer));
-
 	return arv_gc_get_int64_from_value (genicam, &gc_integer_node->increment);
 }
 
@@ -183,16 +181,20 @@ static void
 arv_gc_integer_node_impose_min (ArvGcInteger *gc_integer, gint64 minimum)
 {
 	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (gc_integer);
+	ArvGc *genicam;
 
-	arv_force_g_value_to_int64 (&gc_integer_node->minimum, minimum);
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_integer));
+	arv_gc_set_int64_to_value (genicam, &gc_integer_node->minimum, minimum);
 }
 
 static void
 arv_gc_integer_node_impose_max (ArvGcInteger *gc_integer, gint64 maximum)
 {
 	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (gc_integer);
+	ArvGc *genicam;
 
-	arv_force_g_value_to_int64 (&gc_integer_node->minimum, maximum);
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_integer));
+	arv_gc_set_int64_to_value (genicam, &gc_integer_node->minimum, maximum);
 }
 
 static void

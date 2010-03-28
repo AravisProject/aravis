@@ -160,10 +160,6 @@ _update_variables (ArvGcSwissKnife *gc_swiss_knife)
 			arv_evaluator_set_double_variable (gc_swiss_knife->formula,
 							   variable_infos->name,
 							   arv_gc_float_get_value (ARV_GC_FLOAT (node)));
-		else
-			arv_debug (ARV_DEBUG_LEVEL_STANDARD,
-				   " (GcSwissKnife::update_variables] Node '%s' not found",
-				   arv_gc_node_get_name (node));
 	}
 
 }

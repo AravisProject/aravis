@@ -205,6 +205,18 @@ _update_to_variables (ArvGcConverter *gc_converter)
 							   variable_infos->name,
 							   arv_gc_float_get_value (ARV_GC_FLOAT (node)));
 	}
+
+	node = arv_gc_get_node (genicam, gc_converter->value);
+	if (ARV_IS_GC_INTEGER (node))
+		arv_gc_integer_set_value (ARV_GC_INTEGER (node),
+					  arv_evaluator_evaluate_as_int64 (gc_converter->formula_to, NULL));
+	else if (ARV_IS_GC_FLOAT (node))
+		arv_gc_float_set_value (ARV_GC_FLOAT (node),
+					arv_evaluator_evaluate_as_double (gc_converter->formula_to, NULL));
+	else
+		arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+			   "[GcConverter::set_value] Invalid pValue node '%s'",
+			   gc_converter->value);
 }
 
 static gint64
@@ -221,6 +233,9 @@ static void
 arv_gc_converter_set_integer_value (ArvGcInteger *gc_integer, gint64 value)
 {
 	ArvGcConverter *gc_converter = ARV_GC_CONVERTER (gc_integer);
+
+	arv_evaluator_set_int64_variable (gc_converter->formula_to,
+					  "FROM", value);
 
 	_update_to_variables (gc_converter);
 }
@@ -246,6 +261,9 @@ static void
 arv_gc_converter_set_float_value (ArvGcFloat *gc_float, double value)
 {
 	ArvGcConverter *gc_converter = ARV_GC_CONVERTER (gc_float);
+
+	arv_evaluator_set_int64_variable (gc_converter->formula_to,
+					  "FROM", value);
 
 	_update_to_variables (gc_converter);
 }

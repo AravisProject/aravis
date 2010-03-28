@@ -44,6 +44,10 @@ static char *arv_option_camera_type = "prosilica";
 static int arv_option_debug_level;
 static gboolean arv_option_snaphot = FALSE;
 static gboolean arv_option_auto_buffer = FALSE;
+static int arv_option_width = -1;
+static int arv_option_height = -1;
+static int arv_option_horizontal_binning = -1;
+static int arv_option_vertical_binning = -1;
 
 static const GOptionEntry arv_option_entries[] =
 {
@@ -53,6 +57,14 @@ static const GOptionEntry arv_option_entries[] =
 		&arv_option_snaphot,	"Snapshot", NULL},
 	{ "auto",		'a', 0, G_OPTION_ARG_NONE,
 		&arv_option_auto_buffer,	"AutoBufferSize", NULL},
+	{ "width", 		'w', 0, G_OPTION_ARG_INT,
+		&arv_option_width,		"Width", NULL },
+	{ "height", 		'h', 0, G_OPTION_ARG_INT,
+		&arv_option_height, 		"Height", NULL },
+	{ "h-binning", 		'\0', 0, G_OPTION_ARG_INT,
+		&arv_option_horizontal_binning,"Horizontal binning", NULL },
+	{ "v-binning", 		'\0', 0, G_OPTION_ARG_INT,
+		&arv_option_vertical_binning, 	"Vertical binning", NULL },
 	{ "debug", 		'd', 0, G_OPTION_ARG_INT,
 		&arv_option_debug_level, 	"Debug mode", NULL },
 	{ NULL }
@@ -121,13 +133,25 @@ main (int argc, char **argv)
 		guint32 value;
 		guint32 maximum;
 
-		stream = arv_device_get_stream (device);
-		if (arv_option_auto_buffer)
-			arv_gv_stream_set_option (ARV_GV_STREAM (stream),
-						  ARV_GV_STREAM_OPTION_SOCKET_BUFFER_AUTO,
-						  0);
-
 		genicam = arv_device_get_genicam (device);
+
+		if (arv_option_width > 0) {
+			node = arv_gc_get_node (genicam, "Width");
+			arv_gc_integer_set_value (ARV_GC_INTEGER (node), arv_option_width);
+		}
+		if (arv_option_height > 0) {
+			node = arv_gc_get_node (genicam, "Height");
+			arv_gc_integer_set_value (ARV_GC_INTEGER (node), arv_option_height);
+		}
+		if (arv_option_horizontal_binning > 0) {
+			node = arv_gc_get_node (genicam, "BinningHorizontal");
+			arv_gc_integer_set_value (ARV_GC_INTEGER (node), arv_option_horizontal_binning);
+		}
+		if (arv_option_vertical_binning > 0) {
+			node = arv_gc_get_node (genicam, "BinningVertical");
+			arv_gc_integer_set_value (ARV_GC_INTEGER (node), arv_option_vertical_binning);
+		}
+
 		node = arv_gc_get_node (genicam, "PayloadSize");
 		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
 		g_print ("payload size  = %d (0x%x)\n", value, value);
@@ -156,6 +180,12 @@ main (int argc, char **argv)
 
 /*                arv_device_read_register (device, arv_cameras[camera_type].payload_size, &value);*/
 /*                g_print ("payload size = %d (0x%x)\n", value, value);*/
+
+		stream = arv_device_get_stream (device);
+		if (arv_option_auto_buffer)
+			arv_gv_stream_set_option (ARV_GV_STREAM (stream),
+						  ARV_GV_STREAM_OPTION_SOCKET_BUFFER_AUTO,
+						  0);
 
 		for (i = 0; i < 30; i++)
 			arv_stream_push_buffer (stream, arv_buffer_new (value, NULL));
