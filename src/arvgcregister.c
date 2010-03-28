@@ -340,6 +340,10 @@ arv_gc_register_get_integer_value (ArvGcInteger *gc_integer)
 #endif
 	}
 
+	arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[GcRegister::get_integer_value] address = 0x%x, value = 0x%Lx",
+		   arv_gc_register_get_address (gc_register),
+		   value);
+
 	return value;
 }
 

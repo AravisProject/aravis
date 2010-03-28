@@ -26,6 +26,7 @@
 #include <arvgccommand.h>
 #include <arvgcinteger.h>
 #include <arvgcswissknife.h>
+#include <arvgcconverter.h>
 #include <arvgcport.h>
 #include <arvdebug.h>
 #include <libxml/parser.h>
@@ -45,9 +46,9 @@ arv_gc_create_node (ArvGc *genicam, const char *type)
 	else if (strcmp (type, "Command") == 0)
 		node = arv_gc_command_new ();
 	else if (strcmp (type, "Converter") == 0)
-		node = arv_gc_node_new ();
+		node = arv_gc_converter_new ();
 	else if (strcmp (type, "IntConverter") == 0)
-		node = arv_gc_node_new ();
+		node = arv_gc_int_converter_new ();
 	else if (strcmp (type, "IntReg") == 0)
 		node = arv_gc_integer_register_new ();
 	else if (strcmp (type, "MaskedIntReg") == 0)
