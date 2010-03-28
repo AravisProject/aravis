@@ -89,7 +89,7 @@ typedef struct {
 	int current_node_level;
 
 	const char *current_element;
-	const char **current_attrs;
+	char **current_attrs;
 	GString *current_content;
 } ArvGcParserState;
 
@@ -112,6 +112,7 @@ arv_gc_parser_end_document (void *user_data)
 	ArvGcParserState *state = user_data;
 
 	g_string_free (state->current_content, TRUE);
+	g_strfreev (state->current_attrs);
 }
 
 static void
@@ -138,8 +139,23 @@ arv_gc_parser_start_element(void *user_data,
 		       }
 	       }
 	} else {
+		int n_elements, i;
 		state->current_element = (const char *) name;
-		state->current_attrs = (const char **) attrs;
+
+		g_strfreev (state->current_attrs);
+
+		if (attrs != NULL) {
+			for (n_elements = 0; attrs[n_elements] != NULL; n_elements++);
+			n_elements++;
+
+			state->current_attrs = g_new (char *, n_elements);
+			for (i = 0; i < n_elements; i++)
+				state->current_attrs[i] = g_strdup ((char *) attrs[i]);
+		} else {
+			state->current_attrs = g_new (char *, 1);
+			state->current_attrs[0] = NULL;
+		}
+
 		g_string_erase (state->current_content, 0, -1);
 	}
 }
@@ -166,7 +182,7 @@ arv_gc_parser_end_element (void *user_data,
 	} else if (state->current_node_level < state->level &&
 		   state->current_node != NULL) {
 		arv_gc_node_add_element (state->current_node, state->current_element,
-					 state->current_content->str, state->current_attrs);
+					 state->current_content->str, (const char **) state->current_attrs);
 	}
 
 	state->level--;

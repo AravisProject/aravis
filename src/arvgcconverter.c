@@ -24,6 +24,7 @@
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
 #include <arvgcport.h>
+#include <arvdebug.h>
 #include <string.h>
 
 static GObjectClass *parent_class = NULL;
@@ -44,8 +45,8 @@ arv_gc_converter_add_element (ArvGcNode *node, const char *name, const char *con
 		const char *variable_name = NULL;
 		int i;
 
-		for (i = 0; attributes[i] != NULL; i = i+2)
-			if (g_strcmp0 (attributes[i], "Name")) {
+		for (i = 0; attributes[i] != NULL && attributes[i+1] != NULL; i += 2)
+			if (g_strcmp0 (attributes[i], "Name") == 0) {
 				variable_name = attributes[i+1];
 				break;
 			}
@@ -58,6 +59,10 @@ arv_gc_converter_add_element (ArvGcNode *node, const char *name, const char *con
 			variable_infos->node_name = g_strdup (content);
 			gc_converter->variables = g_slist_prepend (gc_converter->variables,
 								     variable_infos);
+
+			arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+				   "[GcConverter::add_element] Add pVariable '%s' named '%s'",
+				   content, variable_name);
 		}
 	} else if (strcmp (name, "FormulaTo") == 0) {
 		arv_evaluator_set_expression (gc_converter->formula_to, content);

@@ -24,6 +24,7 @@
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
 #include <arvgcport.h>
+#include <arvdebug.h>
 #include <string.h>
 
 static GObjectClass *parent_class = NULL;
@@ -44,8 +45,8 @@ arv_gc_swiss_knife_add_element (ArvGcNode *node, const char *name, const char *c
 		const char *variable_name = NULL;
 		int i;
 
-		for (i = 0; attributes[i] != NULL; i = i+2)
-			if (g_strcmp0 (attributes[i], "Name")) {
+		for (i = 0; attributes[i] != NULL && attributes[i+1] != NULL; i += 2)
+			if (g_strcmp0 (attributes[i], "Name") == 0) {
 				variable_name = attributes[i+1];
 				break;
 			}
@@ -58,6 +59,10 @@ arv_gc_swiss_knife_add_element (ArvGcNode *node, const char *name, const char *c
 			variable_infos->node_name = g_strdup (content);
 			gc_swiss_knife->variables = g_slist_prepend (gc_swiss_knife->variables,
 								     variable_infos);
+
+			arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+				   "[GcSwissKnife::add_element] Add pVariable '%s' named '%s'",
+				   content, variable_name);
 		}
 	} else if (strcmp (name, "Formula") == 0) {
 		arv_evaluator_set_expression (gc_swiss_knife->formula, content);
@@ -155,6 +160,10 @@ _update_variables (ArvGcSwissKnife *gc_swiss_knife)
 			arv_evaluator_set_double_variable (gc_swiss_knife->formula,
 							   variable_infos->name,
 							   arv_gc_float_get_value (ARV_GC_FLOAT (node)));
+		else
+			arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+				   " (GcSwissKnife::update_variables] Node '%s' not found",
+				   arv_gc_node_get_name (node));
 	}
 
 }

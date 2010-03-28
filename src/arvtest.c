@@ -139,18 +139,20 @@ main (int argc, char **argv)
 		g_print ("sensor height = %d\n", value);
 		node = arv_gc_get_node (genicam, "Width");
 		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
-		g_print ("image width   = %d\n", value);
+		maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node));
+		g_print ("image width   = %d (max %d)\n", value, maximum);
 		node = arv_gc_get_node (genicam, "Height");
 		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
-		g_print ("image height  = %d\n", value);
+		maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node));
+		g_print ("image height  = %d (max %d)\n", value, maximum);
 		node = arv_gc_get_node (genicam, "BinningHorizontal");
 		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
 		maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node));
-		g_print ("horizontal binning  = %d (%d)\n", value, maximum);
+		g_print ("horizontal binning  = %d (max %d)\n", value, maximum);
 		node = arv_gc_get_node (genicam, "BinningVertical");
 		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
 		maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node));
-		g_print ("vertical binning    = %d (%d)\n", value, maximum);
+		g_print ("vertical binning    = %d (max %d)\n", value, maximum);
 
 /*                arv_device_read_register (device, arv_cameras[camera_type].payload_size, &value);*/
 /*                g_print ("payload size = %d (0x%x)\n", value, value);*/
