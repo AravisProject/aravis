@@ -3,6 +3,7 @@
 #include <arvgvstream.h>
 #include <arvgvdevice.h>
 #include <arvgcinteger.h>
+#include <arvgccommand.h>
 #include <arvdebug.h>
 #ifdef ARAVIS_WITH_CAIRO
 #include <cairo.h>
@@ -130,8 +131,8 @@ main (int argc, char **argv)
 		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
 		g_print ("payload size = %d (0x%x)\n", value, value);
 
-		arv_device_read_register (device, arv_cameras[camera_type].payload_size, &value);
-		g_print ("payload size = %d (0x%x)\n", value, value);
+/*                arv_device_read_register (device, arv_cameras[camera_type].payload_size, &value);*/
+/*                g_print ("payload size = %d (0x%x)\n", value, value);*/
 
 		for (i = 0; i < 30; i++)
 			arv_stream_push_buffer (stream, arv_buffer_new (value, NULL));
@@ -149,9 +150,12 @@ main (int argc, char **argv)
 					 ARV_GVBS_USER_DEFINED_NAME,
 					 ARV_GVBS_USER_DEFINED_NAME_SIZE, name);
 
-		arv_device_write_register (device,
-					  arv_cameras[camera_type].acquisition_control,
-					  arv_cameras[camera_type].acquisition_start);
+		node = arv_gc_get_node (genicam, "AcquisitionStart");
+		arv_gc_command_execute (ARV_GC_COMMAND (node));
+
+/*                arv_device_write_register (device,*/
+/*                                          arv_cameras[camera_type].acquisition_control,*/
+/*                                          arv_cameras[camera_type].acquisition_start);*/
 
 		signal (SIGINT, set_cancel);
 
@@ -186,9 +190,12 @@ main (int argc, char **argv)
 		arv_device_read_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, &value);
 		g_print ("stream port = %d (%d)\n", value, arv_gv_stream_get_port (ARV_GV_STREAM (stream)));
 
-		arv_device_write_register (device,
-					  arv_cameras[camera_type].acquisition_control,
-					  arv_cameras[camera_type].acquisition_stop);
+		node = arv_gc_get_node (genicam, "AcquisitionStop");
+		arv_gc_command_execute (ARV_GC_COMMAND (node));
+
+/*                arv_device_write_register (device,*/
+/*                                          arv_cameras[camera_type].acquisition_control,*/
+/*                                          arv_cameras[camera_type].acquisition_stop);*/
 
 		g_object_unref (stream);
 		g_object_unref (device);
