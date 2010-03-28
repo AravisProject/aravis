@@ -103,7 +103,7 @@ _update_cache_size (ArvGcRegister *gc_register, ArvGc *genicam)
 }
 
 static void
-_update_cache (ArvGcRegister *gc_register)
+_read_cache (ArvGcRegister *gc_register)
 {
 	ArvGc *genicam;
 	ArvGcNode *port;
@@ -123,12 +123,33 @@ _update_cache (ArvGcRegister *gc_register)
 			  gc_register->cache_size);
 }
 
+static void
+_write_cache (ArvGcRegister *gc_register)
+{
+	ArvGc *genicam;
+	ArvGcNode *port;
+
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_register));
+	g_return_if_fail (ARV_IS_GC (genicam));
+
+	port = arv_gc_get_node (genicam, gc_register->port_name);
+	if (!ARV_IS_GC_PORT (port))
+		return;
+
+	_update_cache_size (gc_register, genicam);
+
+	arv_gc_port_write (ARV_GC_PORT (port),
+			   gc_register->cache,
+			   arv_gc_register_get_address (gc_register),
+			   gc_register->cache_size);
+}
+
 void
 arv_gc_register_get (ArvGcRegister *gc_register, void *buffer, guint64 length)
 {
 	g_return_if_fail (ARV_IS_GC_REGISTER (gc_register));
 
-	_update_cache (gc_register);
+	_read_cache (gc_register);
 
 	if (length > gc_register->cache_size) {
 		memcpy (buffer, gc_register->cache, gc_register->cache_size);
@@ -143,18 +164,18 @@ arv_gc_register_get (ArvGcRegister *gc_register, void *buffer, guint64 length)
 void
 arv_gc_register_set (ArvGcRegister *gc_register, void *buffer, guint64 length)
 {
-	ArvGc *genicam;
-	ArvGcNode *port;
-
 	g_return_if_fail (ARV_IS_GC_REGISTER (gc_register));
-	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_register));
-	g_return_if_fail (ARV_IS_GC (genicam));
 
-	port = arv_gc_get_node (genicam, gc_register->port_name);
-	if (!ARV_IS_GC_PORT (port))
-		return;
+	if (gc_register->cache_size > length) {
+		memcpy (gc_register->cache, buffer, length);
+		memset (gc_register->cache + length, 0, gc_register->cache_size - length);
+	} else
+		memcpy (gc_register->cache, buffer, gc_register->cache_size);
 
-	arv_gc_port_write (ARV_GC_PORT (port), buffer, arv_gc_register_get_address (gc_register), length);
+	_write_cache (gc_register);
+
+	arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[GcRegister::set] 0x%Lx,%Ld",
+		   arv_gc_register_get_address (gc_register), length);
 }
 
 guint64
@@ -250,7 +271,7 @@ arv_gc_register_get_integer_value (ArvGcInteger *gc_integer)
 	guint lsb;
 	guint msb;
 
-	_update_cache (gc_register);
+	_read_cache (gc_register);
 
 	arv_copy_memory_with_endianess (&value, sizeof (value), G_BYTE_ORDER,
 					gc_register->cache, gc_register->cache_size, gc_register->endianess);
@@ -263,15 +284,15 @@ arv_gc_register_get_integer_value (ArvGcInteger *gc_integer)
 		lsb = gc_register->msb;
 	}
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-	value = (value >> lsb);
-	if (msb - lsb < 63)
-		value = value & ((1 << (msb - lsb + 1)) - 1);
-#else
-	value = (value << lsb);
-	if (lsb - msb < 63)
-		value = value & ((1 >> (lsb - msb + 1)) - 1);
-#endif
+/*#if G_BYTE_ORDER == G_LITTLE_ENDIAN*/
+/*        value = (value >> lsb);*/
+/*        if (msb - lsb < 63)*/
+/*                value = value & ((1 << (msb - lsb + 1)) - 1);*/
+/*#else*/
+/*        value = (value << lsb);*/
+/*        if (lsb - msb < 63)*/
+/*                value = value & ((1 >> (lsb - msb + 1)) - 1);*/
+/*#endif*/
 
 	return value;
 }
@@ -280,8 +301,37 @@ static void
 arv_gc_register_set_integer_value (ArvGcInteger *gc_integer, gint64 value)
 {
 	ArvGcRegister *gc_register = ARV_GC_REGISTER (gc_integer);
+	guint lsb;
+	guint msb;
 
-	arv_gc_register_set (gc_register, &value, sizeof (value));
+	if (gc_register->endianess == G_BYTE_ORDER) {
+		lsb = gc_register->lsb;
+		msb = gc_register->msb;
+	} else {
+		msb = gc_register->lsb;
+		lsb = gc_register->msb;
+	}
+
+#if 0
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+	if (msb - lsb < 63)
+		value = value & ((1 << (msb - lsb + 1)) - 1);
+	value = (value << lsb);
+#else
+	if (lsb - msb < 63)
+		value = value & ((1 >> (lsb - msb + 1)) - 1);
+	value = (value >> lsb);
+#endif
+#endif
+
+	arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[GcRegister::set_integer_value] address = 0x%x, value = 0x%Lx",
+		   arv_gc_register_get_address (gc_register),
+		   value);
+
+	arv_copy_memory_with_endianess (gc_register->cache, gc_register->cache_size, gc_register->endianess,
+					&value, sizeof (value), G_BYTE_ORDER);
+
+	_write_cache (gc_register);
 }
 
 

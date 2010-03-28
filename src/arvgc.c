@@ -23,6 +23,7 @@
 #include <arvgc.h>
 #include <arvgcintegernode.h>
 #include <arvgcregister.h>
+#include <arvgccommand.h>
 #include <arvgcinteger.h>
 #include <arvgcswissknife.h>
 #include <arvgcport.h>
@@ -42,7 +43,7 @@ arv_gc_create_node (ArvGc *genicam, const char *type)
 	if (strcmp (type, "Category") == 0)
 		node = arv_gc_node_new ();
 	else if (strcmp (type, "Command") == 0)
-		node = arv_gc_node_new ();
+		node = arv_gc_command_new ();
 	else if (strcmp (type, "Converter") == 0)
 		node = arv_gc_node_new ();
 	else if (strcmp (type, "IntConverter") == 0)
@@ -260,9 +261,32 @@ arv_gc_get_int64_from_value (ArvGc *genicam, GValue *value)
 		node = arv_gc_get_node (genicam, g_value_get_string (value));
 		if (ARV_IS_GC_INTEGER (node))
 			return arv_gc_integer_get_value (ARV_GC_INTEGER (node));
+		else
+			arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[Gc::set_int64_to_value] Invalid node '%s'",
+				   arv_gc_node_get_name (node));
 	}
 
 	return 0;
+}
+
+void
+arv_gc_set_int64_to_value (ArvGc *genicam, GValue *value, gint64 v_int64)
+{
+	g_return_if_fail (ARV_IS_GC (genicam));
+	g_return_if_fail (G_IS_VALUE (value));
+
+	if (G_VALUE_HOLDS_INT64 (value))
+		return g_value_set_int64 (value, v_int64);
+	else if (G_VALUE_HOLDS_STRING (value)) {
+		ArvGcNode *node;
+
+		node = arv_gc_get_node (genicam, g_value_get_string (value));
+		if (ARV_IS_GC_INTEGER (node))
+			arv_gc_integer_set_value (ARV_GC_INTEGER (node), v_int64);
+		else
+			arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[Gc::set_int64_to_value] Invalid node '%s'",
+				   arv_gc_node_get_name (node));
+	}
 }
 
 ArvGc *

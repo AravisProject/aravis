@@ -54,6 +54,7 @@ GType arv_gc_get_type (void);
 ArvGc * 		arv_gc_new 			(ArvDevice *device, char *xml, size_t size);
 
 gint64 			arv_gc_get_int64_from_value 	(ArvGc *genicam, GValue *value);
+void 			arv_gc_set_int64_to_value 	(ArvGc *genicam, GValue *value, gint64 v_int64);
 ArvGcNode *		arv_gc_get_node			(ArvGc *genicam, const char *name);
 ArvDevice *		arv_gc_get_device		(ArvGc *genicam);
 

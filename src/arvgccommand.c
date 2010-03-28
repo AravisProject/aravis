@@ -51,6 +51,24 @@ arv_gc_command_add_element (ArvGcNode *node, const char *name, const char *conte
 
 /* ArvGcCommand implementation */
 
+void
+arv_gc_command_execute (ArvGcCommand *gc_command)
+{
+	ArvGc *genicam;
+	gint64 command_value;
+
+	g_return_if_fail (ARV_IS_GC_COMMAND (gc_command));
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_command));
+	g_return_if_fail (ARV_IS_GC (genicam));
+
+	command_value = arv_gc_get_int64_from_value (genicam, &gc_command->command_value);
+	arv_gc_set_int64_to_value (genicam, &gc_command->value, command_value);
+
+	arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[GcCommand::execute] %s (0x%x)",
+		   arv_gc_node_get_name (ARV_GC_NODE (gc_command)),
+		   command_value);
+}
+
 ArvGcNode *
 arv_gc_command_new (void)
 {
