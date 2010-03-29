@@ -23,9 +23,9 @@
 #ifndef ARV_GV_DEVICE_H
 #define ARV_GV_DEVICE_H
 
-#include <arv.h>
+#include <arvtypes.h>
 #include <arvdevice.h>
-#include <arvgvinterface.h>
+#include <gio/gio.h>
 
 G_BEGIN_DECLS
 

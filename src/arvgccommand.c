@@ -23,6 +23,7 @@
 #include <arvgccommand.h>
 #include <arvgcinteger.h>
 #include <arvgcport.h>
+#include <arvgc.h>
 #include <arvtools.h>
 #include <arvdebug.h>
 #include <stdlib.h>

@@ -1,9 +1,4 @@
 #include <arv.h>
-#include <arvdebug.h>
-#include <arvgc.h>
-#include <arvgcregister.h>
-#include <arvgcfloat.h>
-#include <arvgcinteger.h>
 #include <stdlib.h>
 
 static char **arv_option_filenames = NULL;

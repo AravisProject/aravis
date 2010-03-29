@@ -23,6 +23,7 @@
 #ifndef ARV_GV_STREAM_H
 #define ARV_GV_STREAM_H
 
+#include <arvtypes.h>
 #include <arvstream.h>
 #include <gio/gio.h>
 

@@ -23,8 +23,7 @@
 #ifndef ARV_INTERFACE_H
 #define ARV_INTERFACE_H
 
-#include <arv.h>
-#include <arvdevice.h>
+#include <arvtypes.h>
 
 G_BEGIN_DECLS
 

@@ -23,7 +23,7 @@
 #ifndef ARV_CAMERA_H
 #define ARV_CAMERA_H
 
-#include <arv.h>
+#include <arvtypes.h>
 
 G_BEGIN_DECLS
 

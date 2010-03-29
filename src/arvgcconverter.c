@@ -21,9 +21,11 @@
  */
 
 #include <arvgcconverter.h>
+#include <arvevaluator.h>
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
 #include <arvgcport.h>
+#include <arvgc.h>
 #include <arvdebug.h>
 #include <string.h>
 

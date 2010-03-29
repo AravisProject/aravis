@@ -23,7 +23,7 @@
 #ifndef ARV_GVSP_H
 #define ARV_GVSP_H
 
-#include <arv.h>
+#include <arvtypes.h>
 
 G_BEGIN_DECLS
 

@@ -23,8 +23,7 @@
 #ifndef ARV_GC_CONVERTER_H
 #define ARV_GC_CONVERTER_H
 
-#include <arv.h>
-#include <arvevaluator.h>
+#include <arvtypes.h>
 #include <arvgcnode.h>
 
 G_BEGIN_DECLS

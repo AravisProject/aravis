@@ -21,6 +21,7 @@
  */
 
 #include <arvcamera.h>
+#include <arvsystem.h>
 #include <arvgvinterface.h>
 #include <arvgccommand.h>
 #include <arvgcinteger.h>

@@ -23,6 +23,7 @@
 #include <arvgvdevice.h>
 #include <arvdebug.h>
 #include <arvgvstream.h>
+#include <arvgvcp.h>
 #include <string.h>
 #include <stdlib.h>
 

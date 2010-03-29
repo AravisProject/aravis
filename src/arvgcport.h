@@ -23,9 +23,8 @@
 #ifndef ARV_GC_PORT_H
 #define ARV_GC_PORT_H
 
-#include <arv.h>
+#include <arvtypes.h>
 #include <arvgcnode.h>
-#include <arvdevice.h>
 
 G_BEGIN_DECLS
 

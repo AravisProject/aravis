@@ -20,34 +20,31 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#ifndef ARV_H
-#define ARV_H
+#ifndef ARV_ENUMS_H
+#define ARV_ENUMS_H
 
-#include <arvtypes.h>
-#include <arvdebug.h>
-#include <arvtools.h>
-#include <arvsystem.h>
-#include <arvevaluator.h>
-#include <arvcamera.h>
-#include <arvgc.h>
-#include <arvgcnode.h>
-#include <arvgcintegernode.h>
-#include <arvgcfloatnode.h>
-#include <arvgcregister.h>
-#include <arvgccommand.h>
-#include <arvgcswissknife.h>
-#include <arvgcconverter.h>
-#include <arvgcport.h>
-#include <arvgcinteger.h>
-#include <arvgcfloat.h>
-#include <arvinterface.h>
-#include <arvdevice.h>
-#include <arvstream.h>
-#include <arvbuffer.h>
-#include <arvgvcp.h>
-#include <arvgvsp.h>
-#include <arvgvinterface.h>
-#include <arvgvdevice.h>
-#include <arvgvstream.h>
+#include <glib-object.h>
+#include <arvconfig.h>
+
+G_BEGIN_DECLS
+
+typedef enum {
+	ARV_GC_NAME_SPACE_STANDARD,
+	ARV_GC_NAME_SPACE_CUSTOM
+} ArvGcNameSpace;
+
+typedef enum {
+	ARV_GC_ACCESS_MODE_RO,
+	ARV_GC_ACCESS_MODE_WO,
+	ARV_GC_ACCESS_MODE_RW
+} ArvGcAccessMode;
+
+typedef enum {
+	ARV_GC_CACHEABLE_NO_CACHE,
+	ARV_GC_CACHEABLE_WRITE_TRHOUGH,
+	ARV_GC_CACHEABLE_WRITE_AROUND
+} ArvGcCacheable;
+
+G_END_DECLS
 
 #endif

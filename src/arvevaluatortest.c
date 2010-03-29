@@ -1,5 +1,4 @@
-#include <arvevaluator.h>
-#include <arvdebug.h>
+#include <arv.h>
 #include <stdlib.h>
 
 static char **arv_option_expressions = NULL;

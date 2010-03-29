@@ -22,6 +22,7 @@
 
 #include <arvgcfloatnode.h>
 #include <arvgcfloat.h>
+#include <arvgc.h>
 #include <arvtools.h>
 #include <string.h>
 

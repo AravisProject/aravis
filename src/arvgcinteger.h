@@ -23,7 +23,7 @@
 #ifndef ARV_GC_INTEGER_H
 #define ARV_GC_INTEGER_H
 
-#include <arv.h>
+#include <arvtypes.h>
 
 G_BEGIN_DECLS
 

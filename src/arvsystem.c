@@ -20,8 +20,9 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#include <arv.h>
+#include <arvsystem.h>
 #include <arvgvinterface.h>
+#include <arvdevice.h>
 
 ArvDevice *
 arv_new_device (const char *name)

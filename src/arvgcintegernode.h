@@ -23,7 +23,7 @@
 #ifndef ARV_GC_INTEGER_NODE_H
 #define ARV_GC_INTEGER_NODE_H
 
-#include <arv.h>
+#include <arvtypes.h>
 #include <arvgcnode.h>
 
 G_BEGIN_DECLS

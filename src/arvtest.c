@@ -1,11 +1,4 @@
 #include <arv.h>
-#include <arvgvinterface.h>
-#include <arvgvstream.h>
-#include <arvgvdevice.h>
-#include <arvgcinteger.h>
-#include <arvgcfloat.h>
-#include <arvgccommand.h>
-#include <arvdebug.h>
 #ifdef ARAVIS_WITH_CAIRO
 #include <cairo.h>
 #endif

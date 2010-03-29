@@ -21,6 +21,8 @@
  */
 
 #include <arvdevice.h>
+#include <arvgc.h>
+#include <arvstream.h>
 
 static GObjectClass *parent_class = NULL;
 

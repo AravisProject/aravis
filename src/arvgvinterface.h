@@ -23,8 +23,7 @@
 #ifndef ARV_GV_INTERFACE_H
 #define ARV_GV_INTERFACE_H
 
-#include <arv.h>
-#include <arvgvcp.h>
+#include <arvtypes.h>
 #include <arvinterface.h>
 #include <gio/gio.h>
 

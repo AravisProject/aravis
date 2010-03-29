@@ -21,6 +21,7 @@
  */
 
 #include <arvgcnode.h>
+#include <arvgc.h>
 #include <arvdebug.h>
 #include <string.h>
 

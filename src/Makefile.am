@@ -26,10 +26,10 @@ libaravis_la_LIBADD = 				\
 	$(ARAVIS_LIBS)
 
 libaravis_la_SOURCES =				\
-	arv.c					\
 	arvenumtypes.c				\
 	arvdebug.c				\
 	arvtools.c				\
+	arvsystem.c				\
 	arvevaluator.c				\
 	arvcamera.c				\
 	arvgc.c					\
@@ -55,8 +55,11 @@ libaravis_la_SOURCES =				\
 
 ARAVIS_HDRS = 					\
 	arv.h					\
+	arvtypes.h				\
+	arvenums.h				\
 	arvdebug.h				\
 	arvtools.h				\
+	arvsystem.h				\
 	arvevaluator.h				\
 	arvcamera.h				\
 	arvgc.h					\

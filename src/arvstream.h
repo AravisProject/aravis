@@ -23,8 +23,7 @@
 #ifndef ARV_STREAM_H
 #define ARV_STREAM_H
 
-#include <arv.h>
-#include <arvbuffer.h>
+#include <arvtypes.h>
 
 G_BEGIN_DECLS
 

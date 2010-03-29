@@ -23,7 +23,7 @@
 #ifndef ARV_EVALUATOR_H
 #define ARV_EVALUATOR_H
 
-#include <arv.h>
+#include <arvtypes.h>
 
 G_BEGIN_DECLS
 

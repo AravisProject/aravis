@@ -23,7 +23,7 @@
 #ifndef ARV_BUFFER_H
 #define ARV_BUFFER_H
 
-#include <arv.h>
+#include <arvtypes.h>
 
 G_BEGIN_DECLS
 

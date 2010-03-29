@@ -23,9 +23,7 @@
 #ifndef ARV_GC_H
 #define ARV_GC_H
 
-#include <arv.h>
-#include <arvdevice.h>
-#include <arvgcnode.h>
+#include <arvtypes.h>
 
 G_BEGIN_DECLS
 
