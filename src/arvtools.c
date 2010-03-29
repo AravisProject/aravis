@@ -23,6 +23,8 @@
 #include <arvtools.h>
 #include <string.h>
 #include <math.h>
+#include <stdio.h>
+#include <zlib.h>
 
 typedef struct _ArvHistogram ArvHistogram;
 
@@ -561,4 +563,87 @@ arv_copy_memory_with_endianess (void *to, size_t to_size, guint to_endianess,
 			memset (to, 0, to_size - from_size);
 		}
 	}
+}
+
+#define ARV_DECOMPRESS_CHUNK 16384
+
+void *
+arv_decompress (void *input_buffer, size_t input_size, size_t *output_size)
+{
+	z_stream stream;
+	GByteArray *output;
+	guchar z_stream_output[ARV_DECOMPRESS_CHUNK];
+	unsigned have;
+	int result;
+
+	g_return_val_if_fail (input_buffer != NULL, NULL);
+	g_return_val_if_fail (input_size > 0, NULL);
+
+	/* allocate inflate state */
+	stream.zalloc = Z_NULL;
+	stream.zfree = Z_NULL;
+	stream.opaque = Z_NULL;
+	stream.avail_in = 0;
+	stream.next_in = Z_NULL;
+
+	g_return_val_if_fail (inflateInit(&stream) == Z_OK, NULL);
+
+	output = g_byte_array_new ();
+	g_byte_array_set_size (output, input_size);
+
+	/* decompress until deflate stream ends or end of file */
+	do {
+		stream.avail_in = MIN (input_size, ARV_DECOMPRESS_CHUNK);
+		stream.next_in = input_buffer;
+
+		input_size -= stream.avail_in;
+		input_buffer += stream.avail_in;
+
+		/* run inflate() on input until output buffer not full */
+		do {
+			stream.avail_out = ARV_DECOMPRESS_CHUNK;
+			stream.next_out = z_stream_output;
+			result = inflate(&stream, Z_NO_FLUSH);
+			if (result == Z_STREAM_ERROR)
+				goto CLEANUP;
+
+			switch (result) {
+				case Z_NEED_DICT:
+					result = Z_DATA_ERROR;     /* and fall through */
+				case Z_DATA_ERROR:
+				case Z_MEM_ERROR:
+					goto CLEANUP;
+			}
+
+			have = ARV_DECOMPRESS_CHUNK - stream.avail_out;
+			g_byte_array_append (output, z_stream_output, have);
+		} while (stream.avail_out == 0);
+
+		/* done when inflate() says it's done */
+	} while (input_size > 0 && result != Z_STREAM_END);
+
+	/* clean up and return */
+	inflateEnd(&stream);
+
+	if (result != Z_STREAM_END) {
+		g_byte_array_free (output, TRUE);
+		if (output_size != NULL)
+			*output_size = 0;
+		return NULL;
+	}
+
+	if (output_size != NULL)
+		*output_size = output->len;
+
+	return g_byte_array_free (output, FALSE);
+
+CLEANUP:
+
+	if (output_size != NULL)
+		*output_size = 0;
+
+	g_byte_array_free (output, TRUE);
+	inflateEnd(&stream);
+
+	return NULL;
 }
