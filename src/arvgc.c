@@ -22,9 +22,11 @@
 
 #include <arvgc.h>
 #include <arvgcintegernode.h>
+#include <arvgcfloatnode.h>
 #include <arvgcregister.h>
 #include <arvgccommand.h>
 #include <arvgcinteger.h>
+#include <arvgcfloat.h>
 #include <arvgcswissknife.h>
 #include <arvgcconverter.h>
 #include <arvgcport.h>
@@ -60,7 +62,7 @@ arv_gc_create_node (ArvGc *genicam, const char *type)
 	else if (strcmp (type, "Integer") == 0)
 		node = arv_gc_integer_node_new ();
 	else if (strcmp (type, "Float") == 0)
-		node = arv_gc_node_new ();
+		node = arv_gc_float_node_new ();
 	else if (strcmp (type, "Enumeration") == 0)
 		node = arv_gc_node_new ();
 	else if (strcmp (type, "SwissKnife") == 0)
@@ -304,6 +306,48 @@ arv_gc_set_int64_to_value (ArvGc *genicam, GValue *value, gint64 v_int64)
 			arv_gc_integer_set_value (ARV_GC_INTEGER (node), v_int64);
 		else
 			arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[Gc::set_int64_to_value] Invalid node '%s'",
+				   arv_gc_node_get_name (node));
+	}
+}
+
+double
+arv_gc_get_double_from_value (ArvGc *genicam, GValue *value)
+{
+	g_return_val_if_fail (ARV_IS_GC (genicam), 0);
+	g_return_val_if_fail (G_IS_VALUE (value), 0);
+
+	if (G_VALUE_HOLDS_DOUBLE (value))
+		return g_value_get_double (value);
+	else if (G_VALUE_HOLDS_STRING (value)) {
+		ArvGcNode *node;
+
+		node = arv_gc_get_node (genicam, g_value_get_string (value));
+		if (ARV_IS_GC_FLOAT (node))
+			return arv_gc_float_get_value (ARV_GC_FLOAT (node));
+		else
+			arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[Gc::set_double_to_value] Invalid node '%s'",
+				   arv_gc_node_get_name (node));
+	}
+
+	return 0.0;
+}
+
+void
+arv_gc_set_double_to_value (ArvGc *genicam, GValue *value, double v_double)
+{
+	g_return_if_fail (ARV_IS_GC (genicam));
+	g_return_if_fail (G_IS_VALUE (value));
+
+	if (G_VALUE_HOLDS_DOUBLE (value))
+		return g_value_set_double (value, v_double);
+	else if (G_VALUE_HOLDS_STRING (value)) {
+		ArvGcNode *node;
+
+		node = arv_gc_get_node (genicam, g_value_get_string (value));
+		if (ARV_IS_GC_FLOAT (node))
+			arv_gc_float_set_value (ARV_GC_FLOAT (node), v_double);
+		else
+			arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[Gc::set_double_to_value] Invalid node '%s'",
 				   arv_gc_node_get_name (node));
 	}
 }

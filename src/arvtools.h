@@ -99,6 +99,7 @@ GValue * 	arv_new_g_value_int64 		(gint64 v_int64);
 GValue * 	arv_new_g_value_string 		(const char *v_string);
 void 		arv_free_g_value 		(GValue *value);
 void		arv_force_g_value_to_int64	(GValue *value, gint64 v_int64);
+void		arv_force_g_value_to_double	(GValue *value, double v_double);
 void		arv_force_g_value_to_string	(GValue *value, const char * v_string);
 
 void 		arv_copy_memory_with_endianess 	(void *to, size_t to_size, guint to_endianess,

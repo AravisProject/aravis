@@ -53,6 +53,7 @@ typedef struct _ArvGc 			ArvGc;
 
 typedef struct _ArvGcNode 		ArvGcNode;
 typedef struct _ArvGcIntegerNode	ArvGcIntegerNode;
+typedef struct _ArvGcFloatNode		ArvGcFloatNode;
 typedef struct _ArvGcRegister 		ArvGcRegister;
 typedef struct _ArvGcCommand		ArvGcCommand;
 typedef struct _ArvGcSwissKnife		ArvGcSwissKnife;

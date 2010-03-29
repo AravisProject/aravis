@@ -513,6 +513,16 @@ arv_force_g_value_to_int64 (GValue *value, gint64 v_int64)
 }
 
 void
+arv_force_g_value_to_double (GValue *value, double v_double)
+{
+	if (!G_VALUE_HOLDS_DOUBLE (value)) {
+		g_value_unset (value);
+		g_value_init (value, G_TYPE_DOUBLE);
+	}
+	g_value_set_double (value, v_double);
+}
+
+void
 arv_force_g_value_to_string (GValue *value, const char * v_string)
 {
 	if (!G_VALUE_HOLDS_STRING (value)) {

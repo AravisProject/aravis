@@ -76,6 +76,21 @@ arv_gc_float_get_max (ArvGcFloat *gc_float)
 		return G_MAXDOUBLE;
 }
 
+gint64
+arv_gc_float_get_inc (ArvGcFloat *gc_float)
+{
+	ArvGcFloatInterface *float_interface;
+
+	g_return_val_if_fail (ARV_IS_GC_FLOAT (gc_float), 0);
+
+	float_interface = ARV_GC_FLOAT_GET_INTERFACE (gc_float);
+
+	if (float_interface->get_inc != NULL)
+		return float_interface->get_inc (gc_float);
+	else
+		return 1;
+}
+
 const char *
 arv_gc_float_get_unit	(ArvGcFloat *gc_float)
 {
