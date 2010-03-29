@@ -40,15 +40,13 @@ G_BEGIN_DECLS
 #define ARV_IS_GV_INTERFACE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GV_INTERFACE))
 #define ARV_GV_INTERFACE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GV_INTERFACE, ArvGvInterfaceClass))
 
+typedef struct _ArvGvInterfacePrivate ArvGvInterfacePrivate;
 typedef struct _ArvGvInterfaceClass ArvGvInterfaceClass;
 
 struct _ArvGvInterface {
 	ArvInterface	interface;
 
-	unsigned int n_discover_infos;
-	GSList *discover_infos_list;
-
-	GHashTable *devices;
+	ArvGvInterfacePrivate *priv;
 };
 
 struct _ArvGvInterfaceClass {
@@ -58,8 +56,6 @@ struct _ArvGvInterfaceClass {
 GType arv_gv_interface_get_type (void);
 
 ArvInterface * 		arv_gv_interface_get_instance 		(void);
-
-ArvDevice * 		arv_gv_interface_get_device_by_address 	(ArvGvInterface *gv_interface, const char *address);
 
 G_END_DECLS
 

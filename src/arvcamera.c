@@ -127,14 +127,9 @@ ArvCamera *
 arv_camera_new (const char *name)
 {
 	ArvCamera *camera;
-	ArvInterface *interface;
 	ArvDevice *device;
 
-	interface = arv_gv_interface_get_instance ();
-
-	device = arv_interface_get_first_device (interface);
-
-	g_object_unref (interface);
+	device = arv_new_device (name);
 
 	if (!ARV_IS_DEVICE (device))
 		return NULL;

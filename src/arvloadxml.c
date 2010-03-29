@@ -15,7 +15,7 @@ main (int argc, char **argv)
 
 	interface = arv_gv_interface_get_instance ();
 
-	device = arv_interface_get_first_device (interface);
+	device = arv_new_device (NULL);
 	if (device != NULL) {
 		genicam_data = arv_device_get_genicam_data (device, &genicam_size);
 		g_file_set_contents ("genicam.xml", genicam_data, genicam_size, NULL);

@@ -33,26 +33,20 @@ arv_interface_update_device_list (ArvInterface *interface)
 }
 
 ArvDevice *
-arv_interface_get_device (ArvInterface *interface, int property, const char *value)
+arv_interface_new_device (ArvInterface *interface, const char *name)
 {
 	ArvDevice *device;
 
 	g_return_val_if_fail (ARV_IS_INTERFACE (interface), NULL);
 
-	device = ARV_INTERFACE_GET_CLASS (interface)->get_device (interface, property, value);
+	device = ARV_INTERFACE_GET_CLASS (interface)->new_device (interface, name);
 
 	if (device != NULL)
 		return device;
 
 	arv_interface_update_device_list (interface);
 
-	return ARV_INTERFACE_GET_CLASS (interface)->get_device (interface, property, value);
-}
-
-ArvDevice *
-arv_interface_get_first_device (ArvInterface *interface)
-{
-	return arv_interface_get_device (interface, 0, NULL);
+	return ARV_INTERFACE_GET_CLASS (interface)->new_device (interface, name);
 }
 
 static void

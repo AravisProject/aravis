@@ -45,15 +45,13 @@ struct _ArvInterfaceClass {
 	GObjectClass parent_class;
 
 	void 		(*update_device_list)		(ArvInterface *interface);
-	ArvDevice *	(*get_device)			(ArvInterface *interface, int property, const char *value);
+	ArvDevice *	(*new_device)			(ArvInterface *interface, const char *name);
 };
 
 GType arv_interface_get_type (void);
 
 void 			arv_interface_update_device_list 	(ArvInterface *interface);
-ArvDevice * 		arv_interface_get_first_device 		(ArvInterface *interface);
-ArvDevice * 		arv_interface_get_device 		(ArvInterface *interface, int property,
-								 const char *value);
+ArvDevice * 		arv_interface_new_device 		(ArvInterface *interface, const char *name);
 
 G_END_DECLS
 

@@ -71,6 +71,8 @@ typedef struct _ArvGvInterface 		ArvGvInterface;
 typedef struct _ArvGvDevice 		ArvGvDevice;
 typedef struct _ArvGvStream 		ArvGvStream;
 
+ArvDevice * 		arv_new_device 		(const char *name);
+
 G_END_DECLS
 
 #endif

@@ -18,6 +18,7 @@ set_cancel (int signal)
 	cancel = TRUE;
 }
 
+static char *arv_option_camera_name = NULL;
 static int arv_option_debug_level;
 static gboolean arv_option_snaphot = FALSE;
 static gboolean arv_option_auto_buffer = FALSE;
@@ -28,6 +29,8 @@ static int arv_option_vertical_binning = -1;
 
 static const GOptionEntry arv_option_entries[] =
 {
+	{ "name",		'n', 0, G_OPTION_ARG_STRING,
+		&arv_option_camera_name,"Camera name", NULL},
 	{ "snapshot",		's', 0, G_OPTION_ARG_NONE,
 		&arv_option_snaphot,	"Snapshot", NULL},
 	{ "auto",		'a', 0, G_OPTION_ARG_NONE,
@@ -53,7 +56,6 @@ typedef enum {
 int
 main (int argc, char **argv)
 {
-	ArvInterface *interface;
 	ArvDevice *device;
 	ArvStream *stream;
 	ArvBuffer *buffer;
@@ -82,9 +84,12 @@ main (int argc, char **argv)
 
 	arv_debug_enable (arv_option_debug_level);
 
-	interface = arv_gv_interface_get_instance ();
+	if (arv_option_camera_name == NULL)
+		g_print ("Looking for the first available camera\n");
+	else
+		g_print ("Looking for camera '%s'\n", arv_option_camera_name);
 
-	device = arv_interface_get_first_device (interface);
+	device = arv_new_device (arv_option_camera_name);
 	if (device != NULL) {
 		ArvGc *genicam;
 		ArvGcNode *node;
@@ -198,8 +203,6 @@ main (int argc, char **argv)
 		g_object_unref (device);
 	} else
 		g_print ("No device found\n");
-
-	g_object_unref (interface);
 
 	return 0;
 }
