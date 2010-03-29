@@ -3,6 +3,7 @@
 #include <arvgvstream.h>
 #include <arvgvdevice.h>
 #include <arvgcinteger.h>
+#include <arvgcfloat.h>
 #include <arvgccommand.h>
 #include <arvdebug.h>
 #ifdef ARAVIS_WITH_CAIRO
@@ -95,6 +96,10 @@ main (int argc, char **argv)
 		ArvGcNode *node;
 		guint32 value;
 		guint32 maximum;
+		guint32 minimum;
+		double v_double;
+		double v_double_min;
+		double v_double_max;
 
 		genicam = arv_device_get_genicam (device);
 
@@ -124,19 +129,31 @@ main (int argc, char **argv)
 		node = arv_gc_get_node (genicam, "Width");
 		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
 		maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node));
-		g_print ("image width   = %d (max %d)\n", value, maximum);
+		g_print ("image width   = %d (max:%d)\n", value, maximum);
 		node = arv_gc_get_node (genicam, "Height");
 		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
 		maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node));
-		g_print ("image height  = %d (max %d)\n", value, maximum);
+		g_print ("image height  = %d (max:%d)\n", value, maximum);
 		node = arv_gc_get_node (genicam, "BinningHorizontal");
 		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
 		maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node));
-		g_print ("horizontal binning  = %d (max %d)\n", value, maximum);
+		minimum = arv_gc_integer_get_min (ARV_GC_INTEGER (node));
+		g_print ("horizontal binning  = %d (min:%d - max:%d)\n", value, minimum, maximum);
 		node = arv_gc_get_node (genicam, "BinningVertical");
 		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
 		maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node));
-		g_print ("vertical binning    = %d (max %d)\n", value, maximum);
+		minimum = arv_gc_integer_get_min (ARV_GC_INTEGER (node));
+		g_print ("vertical binning    = %d (min:%d - max:%d)\n", value, minimum, maximum);
+		node = arv_gc_get_node (genicam, "ExposureTimeAbs");
+		v_double = arv_gc_float_get_value (ARV_GC_FLOAT (node));
+		v_double_min = arv_gc_float_get_min (ARV_GC_FLOAT (node));
+		v_double_max = arv_gc_float_get_max (ARV_GC_FLOAT (node));
+		g_print ("exposure            = %g (min:%g - max:%g)\n", v_double, v_double_min, v_double_max);
+		node = arv_gc_get_node (genicam, "GainRaw");
+		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
+		maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node));
+		minimum = arv_gc_integer_get_min (ARV_GC_INTEGER (node));
+		g_print ("gain                = %d (min:%d - max:%d)\n", value, minimum, maximum);
 
 		stream = arv_device_get_stream (device);
 		if (arv_option_auto_buffer)
