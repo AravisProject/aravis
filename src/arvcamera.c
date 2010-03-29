@@ -21,26 +21,155 @@
  */
 
 #include <arvcamera.h>
+#include <arvgvinterface.h>
+#include <arvgccommand.h>
+#include <arvgcinteger.h>
+#include <arvgc.h>
+#include <arvdevice.h>
 
 static GObjectClass *parent_class = NULL;
+
+struct _ArvCameraPrivate {
+	ArvDevice *device;
+	ArvGc *genicam;
+};
+
+ArvStream *
+arv_camera_get_stream (ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+
+	return arv_device_get_stream (camera->priv->device);
+}
+
+void
+arv_camera_start_acquisition (ArvCamera *camera)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_gc_command_execute (ARV_GC_COMMAND (arv_gc_get_node (camera->priv->genicam, "AcquisitionStart")));
+}
+
+void
+arv_camera_stop_acquisition (ArvCamera *camera)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_gc_command_execute (ARV_GC_COMMAND (arv_gc_get_node (camera->priv->genicam, "AcquisitionStop")));
+}
+
+guint
+arv_camera_get_payload (ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0);
+
+	return arv_gc_integer_get_value (ARV_GC_INTEGER (arv_gc_get_node (camera->priv->genicam, "PayloadSize")));
+}
+
+void
+arv_camera_set_region (ArvCamera *camera, int x, int y, int width, int height)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	/* FIXME check for limits */
+	if (width > 0)
+		arv_gc_integer_set_value (ARV_GC_INTEGER (arv_gc_get_node (camera->priv->genicam, "Width")), width);
+	if (height > 0)
+		arv_gc_integer_set_value (ARV_GC_INTEGER (arv_gc_get_node (camera->priv->genicam, "Height")), height);
+}
+
+void
+arv_camera_get_region (ArvCamera *camera, gint *x, gint *y, gint *width, gint *height)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	if (x != NULL)
+		*x = 0;
+	if (y != NULL)
+		*y = 0;
+
+	if (width != NULL)
+		*width = arv_gc_integer_get_value (ARV_GC_INTEGER (arv_gc_get_node (camera->priv->genicam,
+										    "Width")));
+	if (height != NULL)
+		*height = arv_gc_integer_get_value (ARV_GC_INTEGER (arv_gc_get_node (camera->priv->genicam,
+										     "Height")));
+}
+
+void
+arv_camera_set_binning (ArvCamera *camera, gint dx, gint dy)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	/* FIXME check for limits */
+	if (dx > 0)
+		arv_gc_integer_set_value (ARV_GC_INTEGER (arv_gc_get_node (camera->priv->genicam,
+									   "BinningHorizontal")), dx);
+	if (dy > 0)
+		arv_gc_integer_set_value (ARV_GC_INTEGER (arv_gc_get_node (camera->priv->genicam,
+									   "BinningVertical")), dy);
+}
+
+void
+arv_camera_get_binning (ArvCamera *camera, gint *dx, gint *dy)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	if (dx != NULL)
+		*dx = arv_gc_integer_get_value (ARV_GC_INTEGER (arv_gc_get_node (camera->priv->genicam,
+										 "BinningHorizontal")));
+	if (dy != NULL)
+		*dy = arv_gc_integer_get_value (ARV_GC_INTEGER (arv_gc_get_node (camera->priv->genicam,
+										 "BinningVertical")));
+}
+
+ArvCamera *
+arv_camera_new (const char *name)
+{
+	ArvCamera *camera;
+	ArvInterface *interface;
+	ArvDevice *device;
+
+	interface = arv_gv_interface_get_instance ();
+
+	device = arv_interface_get_first_device (interface);
+
+	g_object_unref (interface);
+
+	if (!ARV_IS_DEVICE (device))
+		return NULL;
+
+	camera = g_object_new (ARV_TYPE_CAMERA, NULL);
+	camera->priv->device = device;
+	camera->priv->genicam = arv_device_get_genicam (device);
+
+	return camera;
+}
 
 static void
 arv_camera_init (ArvCamera *camera)
 {
+	camera->priv = G_TYPE_INSTANCE_GET_PRIVATE (camera, ARV_TYPE_CAMERA, ArvCameraPrivate);
 }
 
 static void
 arv_camera_finalize (GObject *object)
 {
+	ArvCamera *camera = ARV_CAMERA (object);
+
+	g_object_unref (camera->priv->device);
+
 	parent_class->finalize (object);
 }
 
 static void
-arv_camera_class_init (ArvCameraClass *node_class)
+arv_camera_class_init (ArvCameraClass *camera_class)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS (node_class);
+	GObjectClass *object_class = G_OBJECT_CLASS (camera_class);
 
-	parent_class = g_type_class_peek_parent (node_class);
+	g_type_class_add_private (camera_class, sizeof (ArvCameraPrivate));
+
+	parent_class = g_type_class_peek_parent (camera_class);
 
 	object_class->finalize = arv_camera_finalize;
 }

@@ -34,10 +34,13 @@ G_BEGIN_DECLS
 #define ARV_IS_CAMERA_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_CAMERA))
 #define ARV_CAMERA_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_CAMERA, ArvCameraClass))
 
+typedef struct _ArvCameraPrivate ArvCameraPrivate;
 typedef struct _ArvCameraClass ArvCameraClass;
 
 struct _ArvCamera {
 	GObject	object;
+
+	ArvCameraPrivate *priv;
 };
 
 struct _ArvCameraClass {
@@ -45,6 +48,16 @@ struct _ArvCameraClass {
 };
 
 GType arv_camera_get_type (void);
+
+ArvCamera *	arv_camera_new			(const char *name);
+ArvStream *	arv_camera_get_stream		(ArvCamera *camera);
+void		arv_camera_start_acquisition	(ArvCamera *camera);
+void		arv_camera_stop_acquisition	(ArvCamera *camera);
+guint		arv_camera_get_payload		(ArvCamera *camera);
+void		arv_camera_set_region		(ArvCamera *camera, gint x, gint y, gint width, gint height);
+void		arv_camera_get_region		(ArvCamera *camera, gint *x, gint *y, gint *width, gint *height);
+void		arv_camera_set_binning		(ArvCamera *camera, gint dx, gint dy);
+void		arv_camera_get_binning		(ArvCamera *camera, gint *dx, gint *dy);
 
 G_END_DECLS
 
