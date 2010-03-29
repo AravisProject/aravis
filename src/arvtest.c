@@ -110,9 +110,6 @@ main (int argc, char **argv)
 			arv_gc_integer_set_value (ARV_GC_INTEGER (node), arv_option_vertical_binning);
 		}
 
-		node = arv_gc_get_node (genicam, "PayloadSize");
-		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
-		g_print ("payload size  = %d (0x%x)\n", value, value);
 		node = arv_gc_get_node (genicam, "SensorWidth");
 		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
 		g_print ("sensor width  = %d\n", value);
@@ -141,6 +138,10 @@ main (int argc, char **argv)
 			arv_gv_stream_set_option (ARV_GV_STREAM (stream),
 						  ARV_GV_STREAM_OPTION_SOCKET_BUFFER_AUTO,
 						  0);
+
+		node = arv_gc_get_node (genicam, "PayloadSize");
+		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
+		g_print ("payload size  = %d (0x%x)\n", value, value);
 
 		for (i = 0; i < 30; i++)
 			arv_stream_push_buffer (stream, arv_buffer_new (value, NULL));
