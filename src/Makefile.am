@@ -29,6 +29,7 @@ libaravis_la_SOURCES =				\
 	arvenumtypes.c				\
 	arvdebug.c				\
 	arvtools.c				\
+	arvzip.c				\
 	arvsystem.c				\
 	arvevaluator.c				\
 	arvcamera.c				\
@@ -59,6 +60,7 @@ ARAVIS_HDRS = 					\
 	arvenums.h				\
 	arvdebug.h				\
 	arvtools.h				\
+	arvzip.h				\
 	arvsystem.h				\
 	arvevaluator.h				\
 	arvcamera.h				\
@@ -93,7 +95,7 @@ arvenumtypes.h: arvenumtypes.h.template $(ARAVIS_HDRS) $(GLIB_MKENUMS)
 arvenumtypes.c: arvenumtypes.c.template $(ARAVIS_HDRS) $(GLIB_MKENUMS)
 	$(AM_V_GEN) (cd $(srcdir) && $(GLIB_MKENUMS) --template arvenumtypes.c.template $(libaravis_la_HEADERS)) > $@
 
-bin_PROGRAMS = arv-test arv-load-xml arv-genicam-test arv-evaluator-test
+bin_PROGRAMS = arv-test arv-load-xml arv-genicam-test arv-evaluator-test arv-zip-test
 
 arv_test_SOURCES = arvtest.c
 arv_test_LDADD = $(ARAVIS_LIBS) libaravis.la
@@ -106,6 +108,9 @@ arv_genicam_test_LDADD = $(ARAVIS_LIBS) libaravis.la
 
 arv_evaluator_test_SOURCES = arvevaluatortest.c
 arv_evaluator_test_LDADD = $(ARAVIS_LIBS) libaravis.la
+
+arv_zip_test_SOURCES = arvziptest.c
+arv_zip_test_LDADD = $(ARAVIS_LIBS) libaravis.la
 
 CLEANFILES = $(BUILT_SOURCES)
 

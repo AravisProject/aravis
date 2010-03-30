@@ -20,35 +20,21 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#ifndef ARV_H
-#define ARV_H
+#ifndef ARV_ZIP_H
+#define ARV_ZIP_H
 
 #include <arvtypes.h>
-#include <arvdebug.h>
-#include <arvtools.h>
-#include <arvzip.h>
-#include <arvsystem.h>
-#include <arvevaluator.h>
-#include <arvcamera.h>
-#include <arvgc.h>
-#include <arvgcnode.h>
-#include <arvgcintegernode.h>
-#include <arvgcfloatnode.h>
-#include <arvgcregister.h>
-#include <arvgccommand.h>
-#include <arvgcswissknife.h>
-#include <arvgcconverter.h>
-#include <arvgcport.h>
-#include <arvgcinteger.h>
-#include <arvgcfloat.h>
-#include <arvinterface.h>
-#include <arvdevice.h>
-#include <arvstream.h>
-#include <arvbuffer.h>
-#include <arvgvcp.h>
-#include <arvgvsp.h>
-#include <arvgvinterface.h>
-#include <arvgvdevice.h>
-#include <arvgvstream.h>
+
+G_BEGIN_DECLS
+
+ArvZip * 	arv_zip_new 		(const void *buffer, size_t size);
+void 		arv_zip_free		(ArvZip *zip);
+void *		arv_zip_get_file	(ArvZip *zip, const char *name, size_t *size);
+const GSList *	arv_zip_get_file_list	(ArvZip *zip);
+
+const char *	arv_zip_file_get_name			(ArvZipFile *zip_file);
+size_t		arv_zip_file_get_uncompressed_size	(ArvZipFile *zip_file);
+
+G_END_DECLS
 
 #endif
