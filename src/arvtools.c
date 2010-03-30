@@ -21,6 +21,7 @@
  */
 
 #include <arvtools.h>
+#include <arvdebug.h>
 #include <string.h>
 #include <math.h>
 #include <stdio.h>
@@ -595,16 +596,20 @@ arv_decompress (void *input_buffer, size_t input_size, size_t *output_size)
 	stream.opaque = Z_NULL;
 	stream.avail_in = 0;
 	stream.next_in = Z_NULL;
+	stream.data_type = Z_UNKNOWN;
 
-	g_return_val_if_fail (inflateInit(&stream) == Z_OK, NULL);
+	g_return_val_if_fail (inflateInit2(&stream, -MAX_WBITS) == Z_OK, NULL);
 
 	output = g_byte_array_new ();
-	g_byte_array_set_size (output, input_size);
 
 	/* decompress until deflate stream ends or end of file */
 	do {
 		stream.avail_in = MIN (input_size, ARV_DECOMPRESS_CHUNK);
 		stream.next_in = input_buffer;
+
+		arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+			   "[Decompress] Input ptr = 0x%x - Chunk size = %d - %c",
+			   stream.next_in, stream.avail_in, *stream.next_in);
 
 		input_size -= stream.avail_in;
 		input_buffer += stream.avail_in;
@@ -614,14 +619,20 @@ arv_decompress (void *input_buffer, size_t input_size, size_t *output_size)
 			stream.avail_out = ARV_DECOMPRESS_CHUNK;
 			stream.next_out = z_stream_output;
 			result = inflate(&stream, Z_NO_FLUSH);
-			if (result == Z_STREAM_ERROR)
+			if (result == Z_STREAM_ERROR) {
+				arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[Decompress] Z_STREAM_ERROR");
 				goto CLEANUP;
+			}
 
 			switch (result) {
 				case Z_NEED_DICT:
-					result = Z_DATA_ERROR;     /* and fall through */
+					arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[Decompress] Z_NEED_DICT");
+					goto CLEANUP;
 				case Z_DATA_ERROR:
+					arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[Decompress] Z_DATA_ERROR");
+					goto CLEANUP;
 				case Z_MEM_ERROR:
+					arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[Decompress] Z_MEM_ERROR");
 					goto CLEANUP;
 			}
 
@@ -636,6 +647,7 @@ arv_decompress (void *input_buffer, size_t input_size, size_t *output_size)
 	inflateEnd(&stream);
 
 	if (result != Z_STREAM_END) {
+		arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[Decompress] !Z_STREAM_END");
 		g_byte_array_free (output, TRUE);
 		if (output_size != NULL)
 			*output_size = 0;
