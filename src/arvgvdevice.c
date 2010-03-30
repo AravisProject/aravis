@@ -24,6 +24,7 @@
 #include <arvdebug.h>
 #include <arvgvstream.h>
 #include <arvgvcp.h>
+#include <arvzip.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -331,14 +332,42 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 			file_size = strtoul (tokens[4], NULL, 16);
 
 			arv_debug (ARV_DEBUG_LEVEL_STANDARD,
-				   "[GvDevice::load_genicam] Xml address = 0x%x - size = 0x%x",
-				   file_address, file_size);
+				   "[GvDevice::load_genicam] Xml address = 0x%x - size = 0x%x - %s",
+				   file_address, file_size, tokens[2]);
 
 			if (file_size > 0) {
 				genicam = g_malloc (file_size);
 				if (arv_device_read_memory (ARV_DEVICE (gv_device), file_address, file_size,
 							    genicam)) {
 					genicam [file_size - 1] = '\0';
+
+					if (g_str_has_suffix (tokens[2], ".zip")) {
+						ArvZip *zip;
+						const GSList *zip_files;
+
+						arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+							   "[GvDevice::load_genicam] Zipped xml data");
+
+						zip = arv_zip_new (genicam, file_size);
+						zip_files = arv_zip_get_file_list (zip);
+
+						if (zip_files != NULL) {
+							const char *zip_filename;
+							void *tmp_buffer;
+							size_t tmp_buffer_size;
+
+							zip_filename = arv_zip_file_get_name (zip_files->data);
+							tmp_buffer = arv_zip_get_file (zip, zip_filename,
+										       &tmp_buffer_size);
+
+							g_free (genicam);
+							file_size = tmp_buffer_size;
+							genicam = tmp_buffer;
+						} else
+							arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+								   "[GvDevice::load_genicam] Invalid format");
+						arv_zip_free (zip);
+					}
 					*size = file_size;
 				} else {
 					g_free (genicam);
