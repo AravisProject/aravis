@@ -544,14 +544,8 @@ arv_copy_memory_with_endianess (void *to, size_t to_size, guint to_endianess,
 	g_return_if_fail (to != NULL);
 	g_return_if_fail (from != NULL);
 
-	if (to_endianess == from_endianess) {
-		if (to_size <= from_size)
-			memcpy (to, from, to_size);
-		else {
-			memcpy (to, from, from_size);
-			memset (to + from_size, 0, to_size - from_size);
-		}
-	} else if (to_endianess == G_LITTLE_ENDIAN) {
+	if (to_endianess == G_LITTLE_ENDIAN &&
+	    from_endianess == G_BIG_ENDIAN) {
 		to_ptr = to;
 		from_ptr = from + from_size - 1;
 		if (to_size <= from_size) {
@@ -562,7 +556,8 @@ arv_copy_memory_with_endianess (void *to, size_t to_size, guint to_endianess,
 				*to_ptr = *from_ptr;
 			memset (to + from_size, 0, to_size - from_size);
 		}
-	} else {
+	} else if (to_endianess == G_BIG_ENDIAN &&
+		   from_endianess == G_LITTLE_ENDIAN) {
 		to_ptr = to + to_size - 1;
 		from_ptr = from;
 		if (to_size <= from_size) {
@@ -571,6 +566,22 @@ arv_copy_memory_with_endianess (void *to, size_t to_size, guint to_endianess,
 		} else {
 			for (i = 0; i < from_size; i++, to_ptr--, from_ptr++)
 				*to_ptr = *from_ptr;
+			memset (to, 0, to_size - from_size);
+		}
+	} else if (to_endianess == G_LITTLE_ENDIAN &&
+		   from_endianess == G_LITTLE_ENDIAN) {
+		if (to_size <= from_size)
+			memcpy (to, from, to_size);
+		else {
+			memcpy (to, from, from_size);
+			memset (to + from_size, 0, to_size - from_size);
+		}
+	} else if (to_endianess == G_BIG_ENDIAN &&
+		   from_endianess == G_BIG_ENDIAN) {
+		if (to_size <= from_size)
+			memcpy (to, from + from_size - to_size, to_size);
+		else {
+			memcpy (to + to_size - from_size, from, from_size);
 			memset (to, 0, to_size - from_size);
 		}
 	}
