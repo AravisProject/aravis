@@ -44,7 +44,7 @@ arv_gc_create_node (ArvGc *genicam, const char *type)
 	g_return_val_if_fail (type != NULL, NULL);
 
 	if (strcmp (type, "Category") == 0)
-		node = arv_gc_node_new ();
+		node = arv_gc_category_new ();
 	else if (strcmp (type, "Command") == 0)
 		node = arv_gc_command_new ();
 	else if (strcmp (type, "Converter") == 0)
@@ -64,7 +64,7 @@ arv_gc_create_node (ArvGc *genicam, const char *type)
 	else if (strcmp (type, "Float") == 0)
 		node = arv_gc_float_node_new ();
 	else if (strcmp (type, "Enumeration") == 0)
-		node = arv_gc_node_new ();
+		node = arv_gc_enumeration_new ();
 	else if (strcmp (type, "SwissKnife") == 0)
 		node = arv_gc_swiss_knife_new ();
 	else if (strcmp (type, "IntSwissKnife") == 0)
