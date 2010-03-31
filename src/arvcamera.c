@@ -25,6 +25,7 @@
 #include <arvgvinterface.h>
 #include <arvgccommand.h>
 #include <arvgcinteger.h>
+#include <arvgcfloat.h>
 #include <arvgc.h>
 #include <arvdevice.h>
 
@@ -122,6 +123,39 @@ arv_camera_get_binning (ArvCamera *camera, gint *dx, gint *dy)
 	if (dy != NULL)
 		*dy = arv_gc_integer_get_value (ARV_GC_INTEGER (arv_gc_get_node (camera->priv->genicam,
 										 "BinningVertical")));
+}
+
+void
+arv_camera_set_exposure_time (ArvCamera *camera, double exposure_time_us)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_gc_float_set_value (ARV_GC_FLOAT (arv_gc_get_node (camera->priv->genicam, "ExposureTimeAbs")),
+				exposure_time_us);
+}
+
+gboolean
+arv_camera_get_exposure_time (ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0.0);
+
+	return arv_gc_float_get_value (ARV_GC_FLOAT (arv_gc_get_node (camera->priv->genicam, "ExposureTimeAbs")));
+}
+
+void
+arv_camera_set_gain (ArvCamera *camera, gint64 gain)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (arv_gc_get_node (camera->priv->genicam, "GainRaw")), gain);
+}
+
+gint64
+arv_camera_get_gain (ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0.0);
+
+	return arv_gc_integer_get_value (ARV_GC_INTEGER (arv_gc_get_node (camera->priv->genicam, "GainRaw")));
 }
 
 ArvCamera *

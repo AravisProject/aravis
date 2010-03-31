@@ -58,6 +58,10 @@ void		arv_camera_set_region		(ArvCamera *camera, gint x, gint y, gint width, gin
 void		arv_camera_get_region		(ArvCamera *camera, gint *x, gint *y, gint *width, gint *height);
 void		arv_camera_set_binning		(ArvCamera *camera, gint dx, gint dy);
 void		arv_camera_get_binning		(ArvCamera *camera, gint *dx, gint *dy);
+void 		arv_camera_set_exposure_time 	(ArvCamera *camera, double exposure_time_us);
+gboolean 	arv_camera_get_exposure_time 	(ArvCamera *camera);
+void 		arv_camera_set_gain	 	(ArvCamera *camera, gint64 gain);
+gint64 		arv_camera_get_gain 		(ArvCamera *camera);
 
 G_END_DECLS
 
