@@ -21,6 +21,9 @@
  */
 
 #include <arvgc.h>
+#include <arvgccategory.h>
+#include <arvgcenumeration.h>
+#include <arvgcenumentry.h>
 #include <arvgcintegernode.h>
 #include <arvgcfloatnode.h>
 #include <arvgcregister.h>
@@ -64,6 +67,8 @@ arv_gc_create_node (ArvGc *genicam, const char *type)
 	else if (strcmp (type, "Float") == 0)
 		node = arv_gc_float_node_new ();
 	else if (strcmp (type, "Enumeration") == 0)
+		node = arv_gc_enum_entry_new ();
+	else if (strcmp (type, "EnumEntry") == 0)
 		node = arv_gc_enumeration_new ();
 	else if (strcmp (type, "SwissKnife") == 0)
 		node = arv_gc_swiss_knife_new ();
