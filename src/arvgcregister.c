@@ -22,6 +22,7 @@
 
 #include <arvgcregister.h>
 #include <arvgcinteger.h>
+#include <arvgcfloat.h>
 #include <arvgcport.h>
 #include <arvgc.h>
 #include <arvtools.h>
@@ -208,6 +209,14 @@ arv_gc_register_get_length (ArvGcRegister *gc_register)
 	return arv_gc_get_int64_from_value (genicam, &gc_register->length);
 }
 
+static GType
+arv_gc_register_get_value_type (ArvGcNode *node)
+{
+	ArvGcRegister *gc_register = ARV_GC_REGISTER (node);
+
+	return gc_register->value_type;
+}
+
 ArvGcNode *
 arv_gc_register_new (void)
 {
@@ -215,6 +224,7 @@ arv_gc_register_new (void)
 
 	gc_register = g_object_new (ARV_TYPE_GC_REGISTER, NULL);
 	gc_register->type = ARV_GC_REGISTER_TYPE_REGISTER;
+	gc_register->value_type = G_TYPE_BYTE_ARRAY;
 
 	return ARV_GC_NODE (gc_register);
 }
@@ -226,6 +236,7 @@ arv_gc_integer_register_new (void)
 
 	gc_register = g_object_new (ARV_TYPE_GC_REGISTER, NULL);
 	gc_register->type = ARV_GC_REGISTER_TYPE_INTEGER;
+	gc_register->value_type = G_TYPE_INT64;
 
 	return ARV_GC_NODE (gc_register);
 }
@@ -237,6 +248,7 @@ arv_gc_masked_integer_register_new (void)
 
 	gc_register = g_object_new (ARV_TYPE_GC_REGISTER, NULL);
 	gc_register->type = ARV_GC_REGISTER_TYPE_MASKED_INTEGER;
+	gc_register->value_type = G_TYPE_INT64;
 
 	return ARV_GC_NODE (gc_register);
 }
@@ -248,6 +260,7 @@ arv_gc_float_register_new (void)
 
 	gc_register = g_object_new (ARV_TYPE_GC_REGISTER, NULL);
 	gc_register->type = ARV_GC_REGISTER_TYPE_FLOAT;
+	gc_register->value_type = G_TYPE_DOUBLE;
 
 	return ARV_GC_NODE (gc_register);
 }
@@ -259,6 +272,7 @@ arv_gc_string_register_new (void)
 
 	gc_register = g_object_new (ARV_TYPE_GC_REGISTER, NULL);
 	gc_register->type = ARV_GC_REGISTER_TYPE_STRING;
+	gc_register->value_type = G_TYPE_STRING;
 
 	return ARV_GC_NODE (gc_register);
 }
@@ -305,6 +319,7 @@ arv_gc_register_class_init (ArvGcRegisterClass *register_class)
 	object_class->finalize = arv_gc_register_finalize;
 
 	node_class->add_element = arv_gc_register_add_element;
+	node_class->get_value_type = arv_gc_register_get_value_type;
 }
 
 /* ArvGcInteger interface implementation */
@@ -406,7 +421,6 @@ arv_gc_register_set_integer_value (ArvGcInteger *gc_integer, gint64 value)
 	_write_cache (gc_register);
 }
 
-
 static void
 arv_gc_register_integer_interface_init (ArvGcIntegerInterface *interface)
 {
@@ -414,6 +428,59 @@ arv_gc_register_integer_interface_init (ArvGcIntegerInterface *interface)
 	interface->set_value = arv_gc_register_set_integer_value;
 }
 
+static double
+arv_gc_register_get_float_value (ArvGcFloat *gc_float)
+{
+	ArvGcRegister *gc_register = ARV_GC_REGISTER (gc_float);
+
+	_read_cache (gc_register);
+
+	if (gc_register->cache_size == 4) {
+		float v_float;
+		arv_copy_memory_with_endianess (&v_float, sizeof (v_float), G_BYTE_ORDER,
+						gc_register->cache, gc_register->cache_size, gc_register->endianess);
+
+		return v_float;
+	} else if (gc_register->cache_size == 8) {
+		double v_double;
+		arv_copy_memory_with_endianess (&v_double, sizeof (v_double), G_BYTE_ORDER,
+						gc_register->cache, gc_register->cache_size, gc_register->endianess);
+
+		return v_double;
+	} else {
+		arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[GcFloatReg::get_value] Invalid register size");
+		return 0.0;
+	}
+}
+
+static void
+arv_gc_register_set_float_value (ArvGcFloat *gc_float, double v_double)
+{
+	ArvGcRegister *gc_register = ARV_GC_REGISTER (gc_float);
+
+	if (gc_register->cache_size == 4) {
+		float v_float = v_double;
+		arv_copy_memory_with_endianess (gc_register->cache, gc_register->cache_size, gc_register->endianess,
+						&v_float, sizeof (v_float), G_BYTE_ORDER);
+	} else if (gc_register->cache_size == 8) {
+		arv_copy_memory_with_endianess (gc_register->cache, gc_register->cache_size, gc_register->endianess,
+						&v_double, sizeof (v_double), G_BYTE_ORDER);
+	} else {
+		arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[GcFloatReg::set_value] Invalid register size");
+		return;
+	}
+
+	_write_cache (gc_register);
+}
+
+static void
+arv_gc_register_float_interface_init (ArvGcFloatInterface *interface)
+{
+	interface->get_value = arv_gc_register_get_float_value;
+	interface->set_value = arv_gc_register_set_float_value;
+}
+
 G_DEFINE_TYPE_WITH_CODE (ArvGcRegister, arv_gc_register, ARV_TYPE_GC_NODE,
-			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_register_integer_interface_init))
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_register_integer_interface_init)
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_FLOAT, arv_gc_register_float_interface_init))
 

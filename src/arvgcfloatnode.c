@@ -66,6 +66,12 @@ arv_gc_float_node_add_element (ArvGcNode *node, const char *name, const char *co
 
 /* ArvGcFloatNode implementation */
 
+static GType
+arv_gc_float_node_get_value_type (ArvGcNode *node)
+{
+	return G_TYPE_DOUBLE;
+}
+
 ArvGcNode *
 arv_gc_float_node_new (void)
 {
@@ -118,6 +124,7 @@ arv_gc_float_node_class_init (ArvGcFloatNodeClass *float_node_class)
 	object_class->finalize = arv_gc_float_node_finalize;
 
 	node_class->add_element = arv_gc_float_node_add_element;
+	node_class->get_value_type = arv_gc_float_node_get_value_type;
 }
 
 /* ArvGcFloat interface implementation */

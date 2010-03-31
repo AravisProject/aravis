@@ -106,6 +106,20 @@ arv_gc_node_get_genicam	(ArvGcNode *node)
 	return node->genicam;
 }
 
+GType
+arv_gc_node_get_value_type (ArvGcNode *node)
+{
+	ArvGcNodeClass *node_class;
+
+	g_return_val_if_fail (ARV_IS_GC_NODE (node), 0);
+
+	node_class = ARV_GC_NODE_GET_CLASS (node);
+	if (node_class->get_value_type != NULL)
+		return node_class->get_value_type (node);
+
+	return 0;
+}
+
 static void
 arv_gc_node_init (ArvGcNode *gc_node)
 {
@@ -133,6 +147,7 @@ arv_gc_node_class_init (ArvGcNodeClass *node_class)
 
 	node_class->set_attribute = _set_attribute;
 	node_class->add_element = _add_element;
+	node_class->get_value_type = NULL;
 }
 
 G_DEFINE_TYPE (ArvGcNode, arv_gc_node, G_TYPE_OBJECT)

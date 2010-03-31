@@ -64,6 +64,12 @@ arv_gc_integer_node_add_element (ArvGcNode *node, const char *name, const char *
 
 /* ArvGcIntegerNode implementation */
 
+static GType
+arv_gc_integer_node_get_value_type (ArvGcNode *node)
+{
+	return G_TYPE_INT64;
+}
+
 ArvGcNode *
 arv_gc_integer_node_new (void)
 {
@@ -116,6 +122,7 @@ arv_gc_integer_node_class_init (ArvGcIntegerNodeClass *integer_node_class)
 	object_class->finalize = arv_gc_integer_node_finalize;
 
 	node_class->add_element = arv_gc_integer_node_add_element;
+	node_class->get_value_type = arv_gc_integer_node_get_value_type;
 }
 
 /* ArvGcInteger interface implementation */

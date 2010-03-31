@@ -51,11 +51,13 @@ struct _ArvGcNodeClass {
 	void		(*set_attribute)		(ArvGcNode *node, const char *name, const char *value);
 	void 		(*add_element)			(ArvGcNode *node, const char *name, const char *content,
 							 const char **attributes);
+	GType		(*get_value_type)		(ArvGcNode *node);
 };
 
 GType arv_gc_node_get_type (void);
 
 ArvGcNode * 	arv_gc_node_new 			(void);
+GType 		arv_gc_node_get_value_type 		(ArvGcNode *node);
 void		arv_gc_node_set_genicam			(ArvGcNode *node, ArvGc *genicam);
 ArvGc * 	arv_gc_node_get_genicam			(ArvGcNode *node);
 const char *	arv_gc_node_get_name			(ArvGcNode *node);

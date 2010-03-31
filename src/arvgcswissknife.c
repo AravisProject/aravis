@@ -78,13 +78,21 @@ arv_gc_swiss_knife_add_element (ArvGcNode *node, const char *name, const char *c
 
 /* ArvGcSwissKnife implementation */
 
+static GType
+arv_gc_swiss_knife_node_get_value_type (ArvGcNode *node)
+{
+	ArvGcSwissKnife *gc_swiss_knife = ARV_GC_SWISS_KNIFE (node);
+
+	return gc_swiss_knife->value_type;
+}
+
 ArvGcNode *
 arv_gc_swiss_knife_new (void)
 {
 	ArvGcSwissKnife *swiss_knife;
 
 	swiss_knife = g_object_new (ARV_TYPE_GC_SWISS_KNIFE, NULL);
-	swiss_knife->is_integer = FALSE;
+	swiss_knife->value_type = G_TYPE_DOUBLE;
 
 	return ARV_GC_NODE (swiss_knife);
 }
@@ -95,7 +103,7 @@ arv_gc_int_swiss_knife_new (void)
 	ArvGcSwissKnife *swiss_knife;
 
 	swiss_knife = g_object_new (ARV_TYPE_GC_SWISS_KNIFE, NULL);
-	swiss_knife->is_integer = TRUE;
+	swiss_knife->value_type = G_TYPE_INT64;
 
 	return ARV_GC_NODE (swiss_knife);
 }
@@ -137,6 +145,7 @@ arv_gc_swiss_knife_class_init (ArvGcSwissKnifeClass *swiss_knife_class)
 	object_class->finalize = arv_gc_swiss_knife_finalize;
 
 	node_class->add_element = arv_gc_swiss_knife_add_element;
+	node_class->get_value_type = arv_gc_swiss_knife_node_get_value_type;
 }
 
 /* ArvGcInteger interface implementation */
@@ -154,11 +163,11 @@ _update_variables (ArvGcSwissKnife *gc_swiss_knife)
 		ArvGcSwissKnifeVariableInfos *variable_infos = iter->data;
 
 		node = arv_gc_get_node (genicam, variable_infos->node_name);
-		if (ARV_IS_GC_INTEGER (node))
+		if (arv_gc_node_get_value_type (node) == G_TYPE_INT64)
 			arv_evaluator_set_int64_variable (gc_swiss_knife->formula,
 							  variable_infos->name,
 							  arv_gc_integer_get_value (ARV_GC_INTEGER (node)));
-		else if (ARV_IS_GC_FLOAT (node))
+		else if (arv_gc_node_get_value_type (node) == G_TYPE_DOUBLE)
 			arv_evaluator_set_double_variable (gc_swiss_knife->formula,
 							   variable_infos->name,
 							   arv_gc_float_get_value (ARV_GC_FLOAT (node)));

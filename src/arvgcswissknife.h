@@ -40,7 +40,7 @@ typedef struct _ArvGcSwissKnifeClass ArvGcSwissKnifeClass;
 struct _ArvGcSwissKnife {
 	ArvGcNode	node;
 
-	gboolean is_integer;
+	GType value_type;
 	GSList *variables;
 	ArvEvaluator *formula;
 };

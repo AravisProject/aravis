@@ -35,11 +35,11 @@ typedef enum
 } ArvGcSign;
 
 typedef enum {
-	ARV_GC_REGISTER_TYPE_REGISTER,
-	ARV_GC_REGISTER_TYPE_INTEGER,
-	ARV_GC_REGISTER_TYPE_MASKED_INTEGER,
-	ARV_GC_REGISTER_TYPE_FLOAT,
-	ARV_GC_REGISTER_TYPE_STRING
+       ARV_GC_REGISTER_TYPE_REGISTER,
+       ARV_GC_REGISTER_TYPE_INTEGER,
+       ARV_GC_REGISTER_TYPE_MASKED_INTEGER,
+       ARV_GC_REGISTER_TYPE_FLOAT,
+       ARV_GC_REGISTER_TYPE_STRING
 } ArvGcRegisterType;
 
 #define ARV_TYPE_GC_REGISTER             (arv_gc_register_get_type ())
@@ -55,17 +55,17 @@ struct _ArvGcRegister {
 	ArvGcNode	node;
 
 	ArvGcRegisterType type;
-
-	GList *			addresses;
-	GValue			length;
-	ArvGcAccessMode 	access_mode;
-	ArvGcCacheable 		cacheable;
-	guint64  		polling_time;
-	char *			port_name;
-	guint			endianess;
-	ArvGcSign		sign;
-	guint			msb;
-	guint			lsb;
+	GType value_type;
+	GList *addresses;
+	GValue length;
+	ArvGcAccessMode access_mode;
+	ArvGcCacheable cacheable;
+	guint64 polling_time;
+	char *port_name;
+	guint endianess;
+	ArvGcSign sign;
+	guint msb;
+	guint lsb;
 
 	void *cache;
 	size_t cache_size;

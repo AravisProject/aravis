@@ -40,8 +40,7 @@ typedef struct _ArvGcConverterClass ArvGcConverterClass;
 struct _ArvGcConverter {
 	ArvGcNode	node;
 
-	gboolean is_integer;
-
+	GType value_type;
 	char *value;
 	GSList *variables;
 	ArvEvaluator *formula_to;

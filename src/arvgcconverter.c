@@ -20,6 +20,7 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+#include <arvgcnode.h>
 #include <arvgcconverter.h>
 #include <arvevaluator.h>
 #include <arvgcinteger.h>
@@ -83,13 +84,21 @@ arv_gc_converter_add_element (ArvGcNode *node, const char *name, const char *con
 
 /* ArvGcConverter implementation */
 
+static GType
+arv_gc_converter_node_get_value_type (ArvGcNode *node)
+{
+	ArvGcConverter *gc_converter = ARV_GC_CONVERTER (node);
+
+	return gc_converter->value_type;
+}
+
 ArvGcNode *
 arv_gc_converter_new (void)
 {
 	ArvGcConverter *converter;
 
 	converter = g_object_new (ARV_TYPE_GC_CONVERTER, NULL);
-	converter->is_integer = FALSE;
+	converter->value_type = G_TYPE_DOUBLE;
 
 	return ARV_GC_NODE (converter);
 }
@@ -100,7 +109,7 @@ arv_gc_int_converter_new (void)
 	ArvGcConverter *converter;
 
 	converter = g_object_new (ARV_TYPE_GC_CONVERTER, NULL);
-	converter->is_integer = TRUE;
+	converter->value_type = G_TYPE_INT64;
 
 	return ARV_GC_NODE (converter);
 }
@@ -147,6 +156,7 @@ arv_gc_converter_class_init (ArvGcConverterClass *converter_class)
 	object_class->finalize = arv_gc_converter_finalize;
 
 	node_class->add_element = arv_gc_converter_add_element;
+	node_class->get_value_type = arv_gc_converter_node_get_value_type;
 }
 
 /* ArvGcInteger interface implementation */
@@ -164,22 +174,22 @@ _update_from_variables (ArvGcConverter *gc_converter)
 		ArvGcConverterVariableInfos *variable_infos = iter->data;
 
 		node = arv_gc_get_node (genicam, variable_infos->node_name);
-		if (ARV_IS_GC_INTEGER (node))
+		if (arv_gc_node_get_value_type (node) == G_TYPE_INT64)
 			arv_evaluator_set_int64_variable (gc_converter->formula_from,
 							  variable_infos->name,
 							  arv_gc_integer_get_value (ARV_GC_INTEGER (node)));
-		else if (ARV_IS_GC_FLOAT (node))
+		else if (arv_gc_node_get_value_type (node) == G_TYPE_DOUBLE)
 			arv_evaluator_set_double_variable (gc_converter->formula_from,
 							   variable_infos->name,
 							   arv_gc_float_get_value (ARV_GC_FLOAT (node)));
 	}
 
 	node = arv_gc_get_node (genicam, gc_converter->value);
-	if (ARV_IS_GC_INTEGER (node))
+	if (arv_gc_node_get_value_type (node) == G_TYPE_INT64)
 		arv_evaluator_set_int64_variable (gc_converter->formula_from,
 						  "TO",
 						  arv_gc_integer_get_value (ARV_GC_INTEGER (node)));
-	else if (ARV_IS_GC_FLOAT (node))
+	else if (arv_gc_node_get_value_type (node) == G_TYPE_DOUBLE)
 		arv_evaluator_set_double_variable (gc_converter->formula_from,
 						   "TO",
 						   arv_gc_float_get_value (ARV_GC_FLOAT (node)));
@@ -198,21 +208,21 @@ _update_to_variables (ArvGcConverter *gc_converter)
 		ArvGcConverterVariableInfos *variable_infos = iter->data;
 
 		node = arv_gc_get_node (genicam, variable_infos->node_name);
-		if (ARV_IS_GC_INTEGER (node))
+		if (arv_gc_node_get_value_type (node) == G_TYPE_INT64)
 			arv_evaluator_set_int64_variable (gc_converter->formula_to,
 							  variable_infos->name,
 							  arv_gc_integer_get_value (ARV_GC_INTEGER (node)));
-		else if (ARV_IS_GC_FLOAT (node))
+		else if (arv_gc_node_get_value_type (node) == G_TYPE_DOUBLE)
 			arv_evaluator_set_double_variable (gc_converter->formula_from,
 							   variable_infos->name,
 							   arv_gc_float_get_value (ARV_GC_FLOAT (node)));
 	}
 
 	node = arv_gc_get_node (genicam, gc_converter->value);
-	if (ARV_IS_GC_INTEGER (node))
+	if (arv_gc_node_get_value_type (node) == G_TYPE_INT64)
 		arv_gc_integer_set_value (ARV_GC_INTEGER (node),
 					  arv_evaluator_evaluate_as_int64 (gc_converter->formula_to, NULL));
-	else if (ARV_IS_GC_FLOAT (node))
+	else if (arv_gc_node_get_value_type (node) == G_TYPE_DOUBLE)
 		arv_gc_float_set_value (ARV_GC_FLOAT (node),
 					arv_evaluator_evaluate_as_double (gc_converter->formula_to, NULL));
 	else
@@ -264,7 +274,7 @@ arv_gc_converter_set_float_value (ArvGcFloat *gc_float, double value)
 {
 	ArvGcConverter *gc_converter = ARV_GC_CONVERTER (gc_float);
 
-	arv_evaluator_set_int64_variable (gc_converter->formula_to,
+	arv_evaluator_set_double_variable (gc_converter->formula_to,
 					  "FROM", value);
 
 	_update_to_variables (gc_converter);
