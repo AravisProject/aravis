@@ -344,9 +344,10 @@ arv_gc_register_get_integer_value (ArvGcInteger *gc_integer)
 			lsb = gc_register->lsb;
 			msb = gc_register->msb;
 		} else {
-			msb = gc_register->lsb;
-			lsb = gc_register->msb;
+			lsb = 8 * gc_register->cache_size - gc_register->lsb + 1;
+			msb = 8 * gc_register->cache_size - gc_register->msb + 1;
 		}
+
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 		if (msb - lsb < 63)
 			mask = ((((guint64) 1) << (msb - lsb + 1)) - 1) << lsb;
@@ -355,12 +356,7 @@ arv_gc_register_get_integer_value (ArvGcInteger *gc_integer)
 
 		value = (value & mask) >> lsb;
 #else
-		if (lsb - msb < 63)
-			mask = ((((guint64) 1) << (lsb - msb + 1)) - 1) << msb;
-		else
-			mask = G_MAXUINT64;
-
-		value = (value & mask) >> msb;
+		g_assert_not_reached ();
 #endif
 	}
 
@@ -391,9 +387,10 @@ arv_gc_register_set_integer_value (ArvGcInteger *gc_integer, gint64 value)
 			lsb = gc_register->lsb;
 			msb = gc_register->msb;
 		} else {
-			msb = gc_register->lsb;
-			lsb = gc_register->msb;
+			lsb = 8 * gc_register->cache_size - gc_register->lsb + 1;
+			msb = 8 * gc_register->cache_size - gc_register->msb + 1;
 		}
+
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 		if (msb - lsb < 63)
 			mask = ((((guint64) 1) << (msb - lsb + 1)) - 1) << lsb;
@@ -402,12 +399,7 @@ arv_gc_register_set_integer_value (ArvGcInteger *gc_integer, gint64 value)
 
 		value = ((value << lsb) & mask) | (current_value & ~mask);
 #else
-		if (lsb - msb < 63)
-			mask = ((((guint64) 1) << (lsb - msb + 1)) - 1) << msb;
-		else
-			mask = G_MAXUINT64;
-
-		value = ((value << msb) & mask) | (current_value & ~mask);
+		g_assert_not_reached ();
 #endif
 	}
 
