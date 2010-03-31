@@ -36,6 +36,7 @@ libaravis_la_SOURCES =				\
 	arvgc.c					\
 	arvgcnode.c				\
 	arvgccategory.c				\
+	arvgcenumeration.c			\
 	arvgcintegernode.c			\
 	arvgcfloatnode.c			\
 	arvgcregister.c				\
@@ -68,6 +69,7 @@ ARAVIS_HDRS = 					\
 	arvgc.h					\
 	arvgcnode.h				\
 	arvgccategory.h				\
+	arvgcenumeration.h			\
 	arvgcintegernode.h			\
 	arvgcfloatnode.h			\
 	arvgcregister.h				\

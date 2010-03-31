@@ -35,6 +35,7 @@ typedef struct _ArvGc 			ArvGc;
 
 typedef struct _ArvGcNode 		ArvGcNode;
 typedef struct _ArvGcCategory		ArvGcCategory;
+typedef struct _ArvGcEnumeration	ArvGcEnumeration;
 typedef struct _ArvGcIntegerNode	ArvGcIntegerNode;
 typedef struct _ArvGcFloatNode		ArvGcFloatNode;
 typedef struct _ArvGcRegister 		ArvGcRegister;
