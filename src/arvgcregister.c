@@ -344,8 +344,8 @@ arv_gc_register_get_integer_value (ArvGcInteger *gc_integer)
 			lsb = gc_register->lsb;
 			msb = gc_register->msb;
 		} else {
-			lsb = 8 * gc_register->cache_size - gc_register->lsb + 1;
-			msb = 8 * gc_register->cache_size - gc_register->msb + 1;
+			lsb = 8 * gc_register->cache_size - gc_register->lsb - 1;
+			msb = 8 * gc_register->cache_size - gc_register->msb - 1;
 		}
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
@@ -387,8 +387,8 @@ arv_gc_register_set_integer_value (ArvGcInteger *gc_integer, gint64 value)
 			lsb = gc_register->lsb;
 			msb = gc_register->msb;
 		} else {
-			lsb = 8 * gc_register->cache_size - gc_register->lsb + 1;
-			msb = 8 * gc_register->cache_size - gc_register->msb + 1;
+			lsb = 8 * gc_register->cache_size - gc_register->lsb - 1;
+			msb = 8 * gc_register->cache_size - gc_register->msb - 1;
 		}
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
