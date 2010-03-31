@@ -349,11 +349,11 @@ arv_get_next_token (char **expression, ArvEvaluatorToken *previous_token)
 				*expression += length_int64;
 			}
 		}
-	} else if (g_ascii_isalpha (**expression)) {
+	} else if (g_ascii_isalpha (**expression) || **expression=='_') {
 		char *end = *expression;
 		ptrdiff_t token_length;
 
-		while (g_ascii_isalpha (*end))
+		while (g_ascii_isalpha (*end) || *end == '_')
 			end++;
 
 		token_length = end - *expression;
