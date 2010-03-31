@@ -43,6 +43,8 @@ struct _ArvGcNode {
 	char *name;
 	ArvGcNameSpace name_space;
 	char *tooltip;
+	char *description;
+	char *display_name;
 };
 
 struct _ArvGcNodeClass {
@@ -61,6 +63,8 @@ GType 		arv_gc_node_get_value_type 		(ArvGcNode *node);
 void		arv_gc_node_set_genicam			(ArvGcNode *node, ArvGc *genicam);
 ArvGc * 	arv_gc_node_get_genicam			(ArvGcNode *node);
 const char *	arv_gc_node_get_name			(ArvGcNode *node);
+const char *	arv_gc_node_get_tooltip			(ArvGcNode *node);
+const char *	arv_gc_node_get_description		(ArvGcNode *node);
 void		arv_gc_node_set_attribute 		(ArvGcNode *node, const char *name, const char *value);
 void 		arv_gc_node_add_element 		(ArvGcNode *node, const char *name, const char *content,
 							 const char **attributes);

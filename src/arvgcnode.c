@@ -35,6 +35,30 @@ arv_gc_node_get_name (ArvGcNode *node)
 	return node->name;
 }
 
+const char *
+arv_gc_node_get_tooltip (ArvGcNode *node)
+{
+	g_return_val_if_fail (ARV_IS_GC_NODE (node), NULL);
+
+	return node->tooltip;
+}
+
+const char *
+arv_gc_node_get_description (ArvGcNode *node)
+{
+	g_return_val_if_fail (ARV_IS_GC_NODE (node), NULL);
+
+	return node->description;
+}
+
+const char *
+arv_gc_node_get_display_name (ArvGcNode *node)
+{
+	g_return_val_if_fail (ARV_IS_GC_NODE (node), NULL);
+
+	return node->display_name;
+}
+
 static void
 _set_attribute (ArvGcNode *node, const char *name, const char *value)
 {
@@ -64,6 +88,12 @@ _add_element (ArvGcNode *node, const char *name, const char *content, const char
 	if (strcmp (name, "ToolTip") == 0) {
 		g_free (node->tooltip);
 		node->tooltip = g_strdup (content);
+	} else if (strcmp (name, "Description") == 0) {
+		g_free (node->description);
+		node->description = g_strdup (content);
+	} else if (strcmp (name, "DisplayName") == 0) {
+		g_free (node->display_name);
+		node->display_name = g_strdup (content);
 	}
 }
 
@@ -123,6 +153,10 @@ arv_gc_node_get_value_type (ArvGcNode *node)
 static void
 arv_gc_node_init (ArvGcNode *gc_node)
 {
+	gc_node->name = NULL;
+	gc_node->tooltip = NULL;
+	gc_node->description = NULL;
+	gc_node->display_name = NULL;
 }
 
 static void
@@ -132,6 +166,8 @@ arv_gc_node_finalize (GObject *object)
 
 	g_free (node->name);
 	g_free (node->tooltip);
+	g_free (node->description);
+	g_free (node->display_name);
 
 	parent_class->finalize (object);
 }
