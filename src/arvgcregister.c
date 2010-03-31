@@ -323,6 +323,8 @@ arv_gc_register_get_integer_value (ArvGcInteger *gc_integer)
 					gc_register->cache, gc_register->cache_size, gc_register->endianess);
 
 	if (gc_register->type == ARV_GC_REGISTER_TYPE_MASKED_INTEGER) {
+		guint64 mask;
+
 		if (gc_register->endianess == G_BYTE_ORDER) {
 			lsb = gc_register->lsb;
 			msb = gc_register->msb;
@@ -331,13 +333,19 @@ arv_gc_register_get_integer_value (ArvGcInteger *gc_integer)
 			lsb = gc_register->msb;
 		}
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-		value = (value >> lsb);
 		if (msb - lsb < 63)
-			value = value & ((1 << (msb - lsb + 1)) - 1);
+			mask = ((1 << (msb - lsb + 1)) - 1) << lsb;
+		else
+			mask = G_MAXUINT64;
+
+		value = (value & mask) >> lsb;
 #else
-		value = (value << lsb);
 		if (lsb - msb < 63)
-			value = value & ((1 >> (lsb - msb + 1)) - 1);
+			mask = ((1 << (lsb - msb + 1)) - 1) << msb;
+		else
+			mask = G_MAXUINT64;
+
+		value = (value & mask) >> msb;
 #endif
 	}
 
@@ -356,6 +364,14 @@ arv_gc_register_set_integer_value (ArvGcInteger *gc_integer, gint64 value)
 	guint msb;
 
 	if (gc_register->type == ARV_GC_REGISTER_TYPE_MASKED_INTEGER) {
+		gint64 current_value;
+		guint64 mask;
+
+		_read_cache (gc_register);
+
+		arv_copy_memory_with_endianess (&current_value, sizeof (current_value), G_BYTE_ORDER,
+						gc_register->cache, gc_register->cache_size, gc_register->endianess);
+
 		if (gc_register->endianess == G_BYTE_ORDER) {
 			lsb = gc_register->lsb;
 			msb = gc_register->msb;
@@ -365,12 +381,18 @@ arv_gc_register_set_integer_value (ArvGcInteger *gc_integer, gint64 value)
 		}
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 		if (msb - lsb < 63)
-			value = value & ((1 << (msb - lsb + 1)) - 1);
-		value = (value << lsb);
+			mask = ((1 << (msb - lsb + 1)) - 1) << lsb;
+		else
+			mask = G_MAXUINT64;
+
+		value = ((value << lsb) & mask) | (current_value & ~mask);
 #else
 		if (lsb - msb < 63)
-			value = value & ((1 >> (lsb - msb + 1)) - 1);
-		value = (value >> lsb);
+			mask = ((1 << (lsb - msb + 1)) - 1) << msb;
+		else
+			mask = G_MAXUINT64;
+
+		value = ((value << msb) & mask) | (current_value & ~mask);
 #endif
 	}
 
