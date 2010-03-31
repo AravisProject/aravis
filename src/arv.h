@@ -32,6 +32,7 @@
 #include <arvcamera.h>
 #include <arvgc.h>
 #include <arvgcnode.h>
+#include <arvgccategory.h>
 #include <arvgcintegernode.h>
 #include <arvgcfloatnode.h>
 #include <arvgcregister.h>
