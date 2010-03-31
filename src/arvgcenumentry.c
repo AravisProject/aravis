@@ -31,10 +31,10 @@ static GObjectClass *parent_class = NULL;
 static void
 arv_gc_enum_entry_add_element (ArvGcNode *node, const char *name, const char *content, const char **attributes)
 {
-/*        ArvGcEnumEntry *gc_enum_entry = ARV_GC_ENUM_ENTRY (node);*/
+	ArvGcEnumEntry *gc_enum_entry = ARV_GC_ENUM_ENTRY (node);
 
-	if (strcmp (name, "pFeature") == 0) {
-		g_warning ("TODO");
+	if (strcmp (name, "value") == 0) {
+		gc_enum_entry->value = g_ascii_strtoll (content, NULL, 0);
 	} else
 		ARV_GC_NODE_CLASS (parent_class)->add_element (node, name, content, attributes);
 }
@@ -54,6 +54,7 @@ arv_gc_enum_entry_new (void)
 static void
 arv_gc_enum_entry_init (ArvGcEnumEntry *gc_enum_entry)
 {
+	gc_enum_entry->value = 0;
 }
 
 static void

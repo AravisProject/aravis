@@ -39,6 +39,8 @@ typedef struct _ArvGcEnumEntryClass ArvGcEnumEntryClass;
 
 struct _ArvGcEnumEntry {
 	ArvGcNode	node;
+
+	gint64 value;
 };
 
 struct _ArvGcEnumEntryClass {
