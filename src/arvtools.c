@@ -584,7 +584,8 @@ arv_copy_memory_with_endianess (void *to, size_t to_size, guint to_endianess,
 			memcpy (to + to_size - from_size, from, from_size);
 			memset (to, 0, to_size - from_size);
 		}
-	}
+	} else
+		g_assert_not_reached ();
 }
 
 #define ARV_DECOMPRESS_CHUNK 16384
