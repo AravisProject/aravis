@@ -312,10 +312,10 @@ arv_gvcp_packet_debug (const ArvGvcpPacket *packet)
 {
 	char *string;
 
-	if (!arv_debug_check (ARV_DEBUG_LEVEL_GVCP))
+	if (!arv_debug_check ("gvcp"))
 		return;
 
 	string = arv_gvcp_packet_to_string (packet);
-	arv_debug (ARV_DEBUG_LEVEL_GVCP, "%s", string);
+	arv_debug ("gvcp", "%s", string);
 	g_free (string);
 }

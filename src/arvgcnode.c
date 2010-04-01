@@ -103,7 +103,7 @@ arv_gc_node_add_element (ArvGcNode *node, const char *name, const char *content,
 	g_return_if_fail (ARV_IS_GC_NODE (node));
 	g_return_if_fail (name != NULL);
 
-	arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[GcNode::add_element] Add %s [%s]",
+	arv_debug ("genicam", "[GcNode::add_element] Add %s [%s]",
 		   name, content);
 
 	ARV_GC_NODE_GET_CLASS (node)->add_element (node, name, content, attributes);

@@ -34,9 +34,9 @@ typedef enum {
 	ARV_DEBUG_LEVEL_GVSP
 } ArvDebugLevel;
 
-void 		arv_debug 			(ArvDebugLevel level, char const *format, ...);
-gboolean 	arv_debug_check 		(ArvDebugLevel level);
-void 		arv_debug_enable 		(ArvDebugLevel level);
+void 		arv_debug 			(const char *domain, char const *format, ...);
+gboolean 	arv_debug_check 		(const char *domain);
+void 		arv_debug_enable 		(const char *domains);
 
 G_END_DECLS
 

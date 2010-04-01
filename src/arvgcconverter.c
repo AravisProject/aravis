@@ -63,7 +63,7 @@ arv_gc_converter_add_element (ArvGcNode *node, const char *name, const char *con
 			gc_converter->variables = g_slist_prepend (gc_converter->variables,
 								     variable_infos);
 
-			arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+			arv_debug ("genicam",
 				   "[GcConverter::add_element] Add pVariable '%s' named '%s'",
 				   content, variable_name);
 		}
@@ -226,7 +226,7 @@ _update_to_variables (ArvGcConverter *gc_converter)
 		arv_gc_float_set_value (ARV_GC_FLOAT (node),
 					arv_evaluator_evaluate_as_double (gc_converter->formula_to, NULL));
 	else
-		arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+		arv_debug ("genicam",
 			   "[GcConverter::set_value] Invalid pValue node '%s'",
 			   gc_converter->value);
 }

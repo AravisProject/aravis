@@ -619,8 +619,7 @@ arv_decompress (void *input_buffer, size_t input_size, size_t *output_size)
 		stream.avail_in = MIN (input_size, ARV_DECOMPRESS_CHUNK);
 		stream.next_in = input_buffer;
 
-		arv_debug (ARV_DEBUG_LEVEL_STANDARD,
-			   "[Decompress] Input ptr = 0x%x - Chunk size = %d - %c",
+		arv_debug ("decompress", "[Decompress] Input ptr = 0x%x - Chunk size = %d - %c",
 			   stream.next_in, stream.avail_in, *stream.next_in);
 
 		input_size -= stream.avail_in;
@@ -632,19 +631,19 @@ arv_decompress (void *input_buffer, size_t input_size, size_t *output_size)
 			stream.next_out = z_stream_output;
 			result = inflate(&stream, Z_NO_FLUSH);
 			if (result == Z_STREAM_ERROR) {
-				arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[Decompress] Z_STREAM_ERROR");
+				arv_debug ("decompress", "[Decompress] Z_STREAM_ERROR");
 				goto CLEANUP;
 			}
 
 			switch (result) {
 				case Z_NEED_DICT:
-					arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[Decompress] Z_NEED_DICT");
+					arv_debug ("decompress", "[Decompress] Z_NEED_DICT");
 					goto CLEANUP;
 				case Z_DATA_ERROR:
-					arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[Decompress] Z_DATA_ERROR");
+					arv_debug ("decompress", "[Decompress] Z_DATA_ERROR");
 					goto CLEANUP;
 				case Z_MEM_ERROR:
-					arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[Decompress] Z_MEM_ERROR");
+					arv_debug ("decompress", "[Decompress] Z_MEM_ERROR");
 					goto CLEANUP;
 			}
 
@@ -659,7 +658,7 @@ arv_decompress (void *input_buffer, size_t input_size, size_t *output_size)
 	inflateEnd(&stream);
 
 	if (result != Z_STREAM_END) {
-		arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[Decompress] !Z_STREAM_END");
+		arv_debug ("decompress", "[Decompress] !Z_STREAM_END");
 		g_byte_array_free (output, TRUE);
 		if (output_size != NULL)
 			*output_size = 0;

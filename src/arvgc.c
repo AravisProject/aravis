@@ -77,12 +77,12 @@ arv_gc_create_node (ArvGc *genicam, const char *type)
 	else if (strcmp (type, "Port") == 0)
 		node = arv_gc_port_new ();
 	else
-		arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+		arv_debug ("genicam",
 			   "[Gc::create_node] Unknown node type (%s)", type);
 
 	if (node != NULL) {
 		arv_gc_node_set_genicam (node, genicam);
-		arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+		arv_debug ("genicam",
 			   "[Gc::create_node] Node '%s' created", type);
 	}
 
@@ -179,7 +179,7 @@ arv_gc_parser_end_element (void *user_data,
 		node_name = arv_gc_node_get_name (state->current_node);
 		if (node_name != NULL) {
 			g_hash_table_insert (state->genicam->nodes, (char *) node_name, state->current_node);
-			arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+			arv_debug ("genicam",
 				   "[GcParser::start_element] Insert node '%s'", node_name);
 		} else
 			g_object_unref (state->current_node);
@@ -288,7 +288,7 @@ arv_gc_get_int64_from_value (ArvGc *genicam, GValue *value)
 		if (ARV_IS_GC_INTEGER (node))
 			return arv_gc_integer_get_value (ARV_GC_INTEGER (node));
 		else
-			arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[Gc::set_int64_to_value] Invalid node '%s'",
+			arv_debug ("genicam", "[Gc::set_int64_to_value] Invalid node '%s'",
 				   arv_gc_node_get_name (node));
 	}
 
@@ -310,7 +310,7 @@ arv_gc_set_int64_to_value (ArvGc *genicam, GValue *value, gint64 v_int64)
 		if (ARV_IS_GC_INTEGER (node))
 			arv_gc_integer_set_value (ARV_GC_INTEGER (node), v_int64);
 		else
-			arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[Gc::set_int64_to_value] Invalid node '%s'",
+			arv_debug ("genicam", "[Gc::set_int64_to_value] Invalid node '%s'",
 				   arv_gc_node_get_name (node));
 	}
 }
@@ -330,7 +330,7 @@ arv_gc_get_double_from_value (ArvGc *genicam, GValue *value)
 		if (ARV_IS_GC_FLOAT (node))
 			return arv_gc_float_get_value (ARV_GC_FLOAT (node));
 		else
-			arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[Gc::set_double_to_value] Invalid node '%s'",
+			arv_debug ("genicam", "[Gc::set_double_to_value] Invalid node '%s'",
 				   arv_gc_node_get_name (node));
 	}
 
@@ -352,7 +352,7 @@ arv_gc_set_double_to_value (ArvGc *genicam, GValue *value, double v_double)
 		if (ARV_IS_GC_FLOAT (node))
 			arv_gc_float_set_value (ARV_GC_FLOAT (node), v_double);
 		else
-			arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[Gc::set_double_to_value] Invalid node '%s'",
+			arv_debug ("genicam", "[Gc::set_double_to_value] Invalid node '%s'",
 				   arv_gc_node_get_name (node));
 	}
 }

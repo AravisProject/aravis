@@ -13,7 +13,7 @@ set_cancel (int signal)
 }
 
 static char *arv_option_camera_name = NULL;
-static int arv_option_debug_level;
+static char *arv_option_debug_domains = NULL;
 static gboolean arv_option_snaphot = FALSE;
 static gboolean arv_option_auto_buffer = FALSE;
 static int arv_option_width = -1;
@@ -37,8 +37,8 @@ static const GOptionEntry arv_option_entries[] =
 		&arv_option_horizontal_binning,"Horizontal binning", NULL },
 	{ "v-binning", 		'\0', 0, G_OPTION_ARG_INT,
 		&arv_option_vertical_binning, 	"Vertical binning", NULL },
-	{ "debug", 		'd', 0, G_OPTION_ARG_INT,
-		&arv_option_debug_level, 	"Debug mode", NULL },
+	{ "debug", 		'd', 0, G_OPTION_ARG_STRING,
+		&arv_option_debug_domains, 	"Debug mode", NULL },
 	{ NULL }
 };
 
@@ -76,7 +76,7 @@ main (int argc, char **argv)
 
 	g_option_context_free (context);
 
-	arv_debug_enable (arv_option_debug_level);
+	arv_debug_enable (arv_option_debug_domains);
 
 	if (arv_option_camera_name == NULL)
 		g_print ("Looking for the first available camera\n");

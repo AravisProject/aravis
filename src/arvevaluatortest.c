@@ -2,14 +2,14 @@
 #include <stdlib.h>
 
 static char **arv_option_expressions = NULL;
-static int arv_option_debug_level;
+static char *arv_option_debug_domains = NULL;
 
 static const GOptionEntry arv_option_entries[] =
 {
 	{ G_OPTION_REMAINING,	' ', 0, G_OPTION_ARG_STRING_ARRAY,
 		&arv_option_expressions,		NULL, NULL},
-	{ "debug", 		'd', 0, G_OPTION_ARG_INT,
-		&arv_option_debug_level, 	"Debug mode", NULL },
+	{ "debug", 		'd', 0, G_OPTION_ARG_STRING,
+		&arv_option_debug_domains, 	"Debug mode", NULL },
 	{ NULL }
 };
 
@@ -36,7 +36,7 @@ main (int argc, char **argv)
 
 	g_option_context_free (context);
 
-	arv_debug_enable (arv_option_debug_level);
+	arv_debug_enable (arv_option_debug_domains);
 
 	evaluator = arv_evaluator_new (NULL);
 

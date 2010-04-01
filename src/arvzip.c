@@ -90,7 +90,7 @@ arv_zip_build_file_list (ArvZip *zip)
                 zip_file->offset = GUINT32_FROM_LE_PTR (ptr + 42);
 		zip_file->name = g_strndup ((char *) (ptr + 46), GUINT16_FROM_LE_PTR (ptr + 28));
 
-		arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[Zip::list_files] %s", zip_file->name);
+		arv_debug ("zip", "[Zip::list_files] %s", zip_file->name);
 
 		zip->files = g_slist_prepend (zip->files, zip_file);
 

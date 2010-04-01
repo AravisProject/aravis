@@ -2,14 +2,14 @@
 #include <stdlib.h>
 
 static char **arv_option_filenames = NULL;
-static int arv_option_debug_level;
+static char *arv_option_debug_domains;
 
 static const GOptionEntry arv_option_entries[] =
 {
 	{ G_OPTION_REMAINING,	' ', 0, G_OPTION_ARG_FILENAME_ARRAY,
 		&arv_option_filenames,		NULL, NULL},
-	{ "debug", 		'd', 0, G_OPTION_ARG_INT,
-		&arv_option_debug_level, 	"Debug mode", NULL },
+	{ "debug", 		'd', 0, G_OPTION_ARG_STRING,
+		&arv_option_debug_domains, 	"Debug mode", NULL },
 	{ NULL }
 };
 
@@ -37,7 +37,7 @@ main (int argc, char **argv)
 
 	g_option_context_free (context);
 
-	arv_debug_enable (arv_option_debug_level);
+	arv_debug_enable (arv_option_debug_domains);
 
 	if (arv_option_filenames == NULL) {
 		g_print ("Missing input filename.\n");

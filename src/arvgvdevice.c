@@ -269,7 +269,7 @@ arv_gv_device_heartbeat_thread (void *data)
 	do {
 		g_usleep (thread_data->period_us);
 		_read_register (io_data, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE, &value);
-		arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[GvDevice::Heartbeat] (%d)", value);
+		arv_debug ("device", "[GvDevice::Heartbeat] (%d)", value);
 	} while (!thread_data->cancel);
 
 	return NULL;
@@ -314,7 +314,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 
 	filename[ARV_GVBS_XML_URL_SIZE - 1] = '\0';
 
-	arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[GvDevice::load_genicam] xml url = '%s' at 0x%x", filename, address);
+	arv_debug ("device", "[GvDevice::load_genicam] xml url = '%s' at 0x%x", filename, address);
 
 	tokens = g_regex_split (arv_gv_device_url_regex, filename, 0);
 
@@ -331,7 +331,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 			file_address = strtoul (tokens[3], NULL, 16);
 			file_size = strtoul (tokens[4], NULL, 16);
 
-			arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+			arv_debug ("device",
 				   "[GvDevice::load_genicam] Xml address = 0x%x - size = 0x%x - %s",
 				   file_address, file_size, tokens[2]);
 
@@ -345,7 +345,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 						ArvZip *zip;
 						const GSList *zip_files;
 
-						arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+						arv_debug ("device",
 							   "[GvDevice::load_genicam] Zipped xml data");
 
 						zip = arv_zip_new (genicam, file_size);
@@ -364,7 +364,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 							file_size = tmp_buffer_size;
 							genicam = tmp_buffer;
 						} else
-							arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+							arv_debug ("device",
 								   "[GvDevice::load_genicam] Invalid format");
 						arv_zip_free (zip);
 					}
@@ -423,7 +423,7 @@ arv_gv_device_create_stream (ArvDevice *device)
 	arv_device_write_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, stream_port);
 	arv_device_read_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, &stream_port);
 
-	arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[GvDevice::create_stream] stream port = %d", stream_port);
+	arv_debug ("device", "[GvDevice::create_stream] stream port = %d", stream_port);
 
 	return stream;
 }

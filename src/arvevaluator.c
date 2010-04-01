@@ -238,19 +238,16 @@ arv_evaluator_token_debug (ArvEvaluatorToken *token)
 
 	switch (token->token_id) {
 		case ARV_EVALUATOR_TOKEN_VARIABLE:
-			arv_debug (ARV_DEBUG_LEVEL_STANDARD, "%s",
-				   token->data.name);
+			arv_debug ("evaluator", "%s", token->data.name);
 			break;
 		case ARV_EVALUATOR_TOKEN_CONSTANT_INT64:
-			arv_debug (ARV_DEBUG_LEVEL_STANDARD, "(int64) %Ld",
-				   token->data.v_int64);
+			arv_debug ("evaluator", "(int64) %Ld", token->data.v_int64);
 			break;
 		case ARV_EVALUATOR_TOKEN_CONSTANT_DOUBLE:
-			arv_debug (ARV_DEBUG_LEVEL_STANDARD, "(double) %g",
-				   token->data.v_double);
+			arv_debug ("evaluator", "(double) %g", token->data.v_double);
 			break;
 		default:
-			arv_debug (ARV_DEBUG_LEVEL_STANDARD, "%s", arv_evaluator_token_infos[token->token_id]);
+			arv_debug ("evaluator", "%s", arv_evaluator_token_infos[token->token_id]);
 	}
 }
 
@@ -810,11 +807,9 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 		*v_int64 = arv_value_get_int64 (stack);
 
 	if (arv_value_holds_int64 (stack))
-		arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[Evaluator::evaluate] Result = (int64) %Ld",
-			   arv_value_get_int64 (stack));
+		arv_debug ("evaluator", "[Evaluator::evaluate] Result = (int64) %Ld", arv_value_get_int64 (stack));
 	else
-		arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[Evaluator::evaluate] Result = (double) %g",
-			   arv_value_get_double (stack));
+		arv_debug ("evaluator", "[Evaluator::evaluate] Result = (double) %g", arv_value_get_double (stack));
 
 	return ARV_EVALUATOR_STATUS_SUCCESS;
 CLEANUP:
@@ -837,7 +832,7 @@ parse_expression (char *expression, GSList **rpn_stack)
 	GSList *operator_stack = NULL;
 	GSList *iter;
 
-	arv_debug (ARV_DEBUG_LEVEL_STANDARD, expression);
+	arv_debug ("evaluator", expression);
 
 	/* Dijkstra's "shunting yard" algorithm */
 	/* http://en.wikipedia.org/wiki/Shunting-yard_algorithm */
@@ -997,7 +992,7 @@ arv_evaluator_set_expression (ArvEvaluator *evaluator, const char *expression)
 	evaluator->priv->parsing_status = parse_expression (evaluator->priv->expression,
 							    &evaluator->priv->rpn_stack);
 
-	arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[Evaluator::set_expression] Parsing status = %d",
+	arv_debug ("evaluator", "[Evaluator::set_expression] Parsing status = %d",
 		   evaluator->priv->parsing_status);
 }
 
@@ -1025,8 +1020,7 @@ arv_evaluator_set_double_variable (ArvEvaluator *evaluator, const char *name, do
 			     g_strdup (name),
 			     arv_value_new_double (v_double));
 
-	arv_debug (ARV_DEBUG_LEVEL_STANDARD,
-		   "[Evaluator::set_double_variable] %s = %g",
+	arv_debug ("evaluator", "[Evaluator::set_double_variable] %s = %g",
 		   name, v_double);
 }
 
@@ -1046,8 +1040,7 @@ arv_evaluator_set_int64_variable (ArvEvaluator *evaluator, const char *name, gin
 			     g_strdup (name),
 			     arv_value_new_int64 (v_int64));
 
-	arv_debug (ARV_DEBUG_LEVEL_STANDARD,
-		   "[Evaluator::set_int64_variable] %s = %Ld",
+	arv_debug ("evaluator", "[Evaluator::set_int64_variable] %s = %Ld",
 		   name, v_int64);
 }
 

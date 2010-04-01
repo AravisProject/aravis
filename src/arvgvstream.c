@@ -72,7 +72,7 @@ arv_gv_stream_send_packet_request (ArvGvStreamThreadData *thread_data,
 	packet = arv_gvcp_packet_new_packet_resend_cmd (frame_id, first_block, last_block,
 							thread_data->packet_count++, &packet_size);
 
-	arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[GvStream::send_packet_request] frame_id = %d (%d - %d)",
+	arv_debug ("stream", "[GvStream::send_packet_request] frame_id = %d (%d - %d)",
 		   frame_id, first_block, last_block);
 
 	arv_gvcp_packet_debug (packet);
@@ -110,7 +110,7 @@ arv_gv_stream_update_socket (ArvGvStreamThreadData *thread_data, ArvBuffer *buff
 	if (buffer_size != thread_data->current_socket_buffer_size) {
 		setsockopt (fd, SOL_SOCKET, SO_RCVBUF, &buffer_size, sizeof (buffer_size));
 		thread_data->current_socket_buffer_size = buffer_size;
-		arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[GvStream::update_socket] Socket buffer size set to %d",
+		arv_debug ("stream", "[GvStream::update_socket] Socket buffer size set to %d",
 			 buffer_size);
 	}
 }
@@ -175,7 +175,7 @@ arv_gv_stream_thread (void *data)
 					block_id++;
 					if (arv_gvsp_packet_get_block_id (packet) != block_id) {
 						arv_gvsp_packet_debug (packet, read_count);
-						arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+						arv_debug ("stream",
 							   "[GvStream::thread] Missing block (expected %d - %d)"
 							   " frame %d",
 							   block_id,
@@ -356,15 +356,15 @@ arv_gv_stream_finalize (GObject *object)
 
 		thread_data = gv_stream->thread_data;
 
-		arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+		arv_debug ("stream",
 			   "[GvStream::finalize] n_processed_buffers    = %d", thread_data->n_processed_buffers);
-		arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+		arv_debug ("stream",
 			   "[GvStream::finalize] n_failures             = %d", thread_data->n_failures);
-		arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+		arv_debug ("stream",
 			   "[GvStream::finalize] n_underruns            = %d", thread_data->n_underruns);
-		arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+		arv_debug ("stream",
 			   "[GvStream::finalize] n_size_mismatch_errors = %d", thread_data->n_size_mismatch_errors);
-		arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+		arv_debug ("stream",
 			   "[GvStream::finalize] n_missing_blocks       = %d", thread_data->n_missing_blocks);
 
 		thread_data->cancel = TRUE;
@@ -373,7 +373,7 @@ arv_gv_stream_finalize (GObject *object)
 		g_object_unref (thread_data->device_address);
 
 		statistic_string = arv_statistic_to_string (thread_data->statistic);
-		arv_debug (ARV_DEBUG_LEVEL_STANDARD, statistic_string);
+		arv_debug ("stream", statistic_string);
 		g_free (statistic_string);
 
 		arv_statistic_free (thread_data->statistic);

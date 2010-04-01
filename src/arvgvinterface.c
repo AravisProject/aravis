@@ -246,7 +246,7 @@ arv_gv_interface_receive_hello_packet (ArvGvInterface *gv_interface)
 					device_infos = arv_gv_interface_device_infos_new (interface_address,
 											  data);
 
-					arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+					arv_debug ("interface",
 						   "[GvInterface::discovery] Device '%s' found",
 						   key);
 

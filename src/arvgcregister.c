@@ -159,7 +159,7 @@ arv_gc_register_get (ArvGcRegister *gc_register, void *buffer, guint64 length)
 	} else
 		memcpy (buffer, gc_register->cache, length);
 
-	arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[GcRegister::get] 0x%Lx,%Ld",
+	arv_debug ("genicam", "[GcRegister::get] 0x%Lx,%Ld",
 		   arv_gc_register_get_address (gc_register), length);
 }
 
@@ -176,7 +176,7 @@ arv_gc_register_set (ArvGcRegister *gc_register, void *buffer, guint64 length)
 
 	_write_cache (gc_register);
 
-	arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[GcRegister::set] 0x%Lx,%Ld",
+	arv_debug ("genicam", "[GcRegister::set] 0x%Lx,%Ld",
 		   arv_gc_register_get_address (gc_register), length);
 }
 
@@ -360,7 +360,7 @@ arv_gc_register_get_integer_value (ArvGcInteger *gc_integer)
 #endif
 	}
 
-	arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[GcRegister::get_integer_value] address = 0x%x, value = 0x%Lx",
+	arv_debug ("genicam", "[GcRegister::get_integer_value] address = 0x%x, value = 0x%Lx",
 		   arv_gc_register_get_address (gc_register),
 		   value);
 
@@ -403,7 +403,7 @@ arv_gc_register_set_integer_value (ArvGcInteger *gc_integer, gint64 value)
 #endif
 	}
 
-	arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[GcRegister::set_integer_value] address = 0x%x, value = 0x%Lx",
+	arv_debug ("genicam", "[GcRegister::set_integer_value] address = 0x%x, value = 0x%Lx",
 		   arv_gc_register_get_address (gc_register),
 		   value);
 
@@ -440,7 +440,7 @@ arv_gc_register_get_float_value (ArvGcFloat *gc_float)
 
 		return v_double;
 	} else {
-		arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[GcFloatReg::get_value] Invalid register size");
+		arv_debug ("genicam", "[GcFloatReg::get_value] Invalid register size");
 		return 0.0;
 	}
 }
@@ -458,7 +458,7 @@ arv_gc_register_set_float_value (ArvGcFloat *gc_float, double v_double)
 		arv_copy_memory_with_endianess (gc_register->cache, gc_register->cache_size, gc_register->endianess,
 						&v_double, sizeof (v_double), G_BYTE_ORDER);
 	} else {
-		arv_debug (ARV_DEBUG_LEVEL_STANDARD, "[GcFloatReg::set_value] Invalid register size");
+		arv_debug ("genicam", "[GcFloatReg::set_value] Invalid register size");
 		return;
 	}
 

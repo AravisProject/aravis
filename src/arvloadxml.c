@@ -2,14 +2,14 @@
 #include <stdlib.h>
 
 static char *arv_option_camera_name = NULL;
-static int arv_option_debug_level;
+static char *arv_option_debug_domains = NULL;
 
 static const GOptionEntry arv_option_entries[] =
 {
 	{ "name",		'n', 0, G_OPTION_ARG_STRING,
 		&arv_option_camera_name,"Camera name", NULL},
-	{ "debug", 		'd', 0, G_OPTION_ARG_INT,
-		&arv_option_debug_level, 	"Debug mode", NULL },
+	{ "debug", 		'd', 0, G_OPTION_ARG_STRING,
+		&arv_option_debug_domains, 	"Debug mode", NULL },
 	{ NULL }
 };
 
@@ -37,7 +37,7 @@ main (int argc, char **argv)
 
 	g_option_context_free (context);
 
-	arv_debug_enable (arv_option_debug_level);
+	arv_debug_enable (arv_option_debug_domains);
 
 	device = arv_new_device (arv_option_camera_name);
 	if (device != NULL) {

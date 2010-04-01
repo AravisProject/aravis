@@ -24,32 +24,49 @@
 #include <glib/gprintf.h>
 #include <stdlib.h>
 
-static gboolean arv_debug_checked = FALSE;
-static gboolean arv_debug_level = ARV_DEBUG_LEVEL_NONE;
+static GHashTable *arv_debug_domains = NULL;
 
-static gboolean
-arv_debug_get_level (void)
+static void
+arv_debug_initialize (const char *debug_var)
 {
-	const char *debug_var;
+	if (arv_debug_domains != NULL)
+		return;
 
-	if (arv_debug_checked)
-		return arv_debug_level;
+	arv_debug_domains = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 
-	debug_var = g_getenv ("ARV_DEBUG");
+	if (debug_var != NULL) {
+		char **domains;
+		int i;
 
-	arv_debug_level = debug_var != NULL ? atoi (debug_var) : ARV_DEBUG_LEVEL_NONE;
+		domains = g_strsplit (debug_var, ":", -1);
+		for (i = 0; domains[i] != NULL; i++) {
+			char *debug_domain;
 
-	arv_debug_checked = TRUE;
+			debug_domain = g_strdup (domains[i]);
+			g_hash_table_insert (arv_debug_domains, debug_domain, debug_domain);
+		}
+		g_strfreev (domains);
+	}
+}
 
-	return arv_debug_level;
+gboolean
+arv_debug_check (const char *domain)
+{
+	if (domain == NULL)
+		return FALSE;
+
+	if (arv_debug_domains == NULL)
+		arv_debug_initialize (g_getenv ("ARV_DEBUG"));
+
+	return g_hash_table_lookup (arv_debug_domains, domain) != NULL;
 }
 
 void
-arv_debug (ArvDebugLevel level, char const *format, ...)
+arv_debug (const char *domain, char const *format, ...)
 {
 	va_list args;
 
-	if (level > arv_debug_get_level ())
+	if (!arv_debug_check (domain))
 		return;
 
 	va_start (args, format);
@@ -58,15 +75,8 @@ arv_debug (ArvDebugLevel level, char const *format, ...)
 	va_end (args);
 }
 
-gboolean
-arv_debug_check (ArvDebugLevel level)
-{
-	return arv_debug_get_level () >= level;
-}
-
 void
-arv_debug_enable (ArvDebugLevel level)
+arv_debug_enable (const char *domains)
 {
-	arv_debug_level = level;
-	arv_debug_checked = TRUE;
+	arv_debug_initialize (domains);
 }

@@ -59,7 +59,7 @@ arv_stream_get_statistics (ArvStream *stream,
 {
 	ArvStreamClass *stream_class;
 	guint64 dummy;
-	
+
 	if (n_processed_buffers == NULL)
 		n_processed_buffers = &dummy;
 	if (n_failures == NULL)
@@ -91,10 +91,10 @@ arv_stream_finalize (GObject *object)
 	ArvStream *stream = ARV_STREAM (object);
 	ArvBuffer *buffer;
 
-	arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+	arv_debug ("stream",
 		   "[Stream::finalize] Flush %d buffer[s] in input queue",
 		   g_async_queue_length (stream->input_queue));
-	arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+	arv_debug ("stream",
 		   "[Stream::finalize] Flush %d buffer[s] in output queue",
 		   g_async_queue_length (stream->output_queue));
 
