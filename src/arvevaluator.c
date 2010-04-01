@@ -32,6 +32,7 @@ static GObjectClass *parent_class = NULL;
 
 typedef enum {
 	ARV_EVALUATOR_STATUS_SUCCESS,
+	ARV_EVALUATOR_STATUS_NOT_PARSED,
 	ARV_EVALUATOR_STATUS_EMPTY_EXPRESSION,
 	ARV_EVALUATOR_STATUS_PARENTHESES_MISMATCH,
 	ARV_EVALUATOR_STATUS_SYNTAX_ERROR,
@@ -45,6 +46,7 @@ typedef enum {
 
 static const char *arv_evaluator_status_strings[] = {
 	"success",
+	"not parsed",
 	"empty expression",
 	"parentheses mismatch",
 	"syntax error",
@@ -932,6 +934,13 @@ arv_evaluator_evaluate_as_double (ArvEvaluator *evaluator, GError **error)
 
 	g_return_val_if_fail (ARV_IS_EVALUATOR (evaluator), 0.0);
 
+	if (evaluator->priv->parsing_status == ARV_EVALUATOR_STATUS_NOT_PARSED) {
+		evaluator->priv->parsing_status = parse_expression (evaluator->priv->expression,
+								    &evaluator->priv->rpn_stack);
+		arv_debug ("evaluator", "[Evaluator::evaluate_as_double] Parsing status = %d",
+			   evaluator->priv->parsing_status);
+	}
+
 	if (evaluator->priv->parsing_status != ARV_EVALUATOR_STATUS_SUCCESS) {
 		arv_evaluator_set_error (error, evaluator->priv->parsing_status);
 		return 0.0;
@@ -953,6 +962,13 @@ arv_evaluator_evaluate_as_int64 (ArvEvaluator *evaluator, GError **error)
 	gint64 value;
 
 	g_return_val_if_fail (ARV_IS_EVALUATOR (evaluator), 0.0);
+
+	if (evaluator->priv->parsing_status == ARV_EVALUATOR_STATUS_NOT_PARSED) {
+		evaluator->priv->parsing_status = parse_expression (evaluator->priv->expression,
+								    &evaluator->priv->rpn_stack);
+		arv_debug ("evaluator", "[Evaluator::evaluate_as_int64] Parsing status = %d",
+			   evaluator->priv->parsing_status);
+	}
 
 	if (evaluator->priv->parsing_status != ARV_EVALUATOR_STATUS_SUCCESS) {
 		arv_evaluator_set_error (error, evaluator->priv->parsing_status);
@@ -985,15 +1001,13 @@ arv_evaluator_set_expression (ArvEvaluator *evaluator, const char *expression)
 	g_slist_free (evaluator->priv->rpn_stack);
 	evaluator->priv->rpn_stack = NULL;
 
-	if (expression == NULL)
+	if (expression == NULL) {
+		evaluator->priv->parsing_status = ARV_EVALUATOR_STATUS_EMPTY_EXPRESSION;
 		return;
+	}
 
+	evaluator->priv->parsing_status = ARV_EVALUATOR_STATUS_NOT_PARSED;
 	evaluator->priv->expression = g_strdup (expression);
-	evaluator->priv->parsing_status = parse_expression (evaluator->priv->expression,
-							    &evaluator->priv->rpn_stack);
-
-	arv_debug ("evaluator", "[Evaluator::set_expression] Parsing status = %d",
-		   evaluator->priv->parsing_status);
 }
 
 const char *
