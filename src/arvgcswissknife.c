@@ -111,7 +111,7 @@ arv_gc_int_swiss_knife_new (void)
 static void
 arv_gc_swiss_knife_init (ArvGcSwissKnife *gc_swiss_knife)
 {
-	gc_swiss_knife->formula = arv_evaluator_new ("");
+	gc_swiss_knife->formula = arv_evaluator_new (NULL);
 }
 
 static void

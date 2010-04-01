@@ -117,8 +117,8 @@ arv_gc_int_converter_new (void)
 static void
 arv_gc_converter_init (ArvGcConverter *gc_converter)
 {
-	gc_converter->formula_to = arv_evaluator_new ("");
-	gc_converter->formula_from = arv_evaluator_new ("");
+	gc_converter->formula_to = arv_evaluator_new (NULL);
+	gc_converter->formula_from = arv_evaluator_new (NULL);
 	gc_converter->value = NULL;
 }
 
