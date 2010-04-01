@@ -45,8 +45,10 @@ typedef struct {
 
 	/* Statistics */
 
-	guint n_completed_frames;
-	guint n_missed_frames;
+	guint n_processed_buffers;
+	guint n_failures;
+	guint n_underruns;
+
 	guint n_size_mismatch_errors;
 	guint n_missing_blocks;
 
@@ -152,7 +154,7 @@ arv_gv_stream_thread (void *data)
 						g_async_queue_push (thread_data->output_queue, buffer);
 					buffer = g_async_queue_try_pop (thread_data->input_queue);
 					if (buffer == NULL) {
-						thread_data->n_missed_frames++;
+						thread_data->n_underruns++;
 						break;
 					}
 
@@ -181,6 +183,7 @@ arv_gv_stream_thread (void *data)
 							   arv_gvsp_packet_get_frame_id (packet));
 						buffer->status = ARV_BUFFER_STATUS_MISSING_BLOCK;
 						block_id =  arv_gvsp_packet_get_block_id (packet);
+						thread_data->n_failures++;
 						thread_data->n_missing_blocks++;
 						break;
 					}
@@ -188,6 +191,7 @@ arv_gv_stream_thread (void *data)
 					if (block_size + offset > buffer->size) {
 						arv_gvsp_packet_debug (packet, read_count);
 						buffer->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
+						thread_data->n_failures++;
 						thread_data->n_size_mismatch_errors++;
 						break;
 					}
@@ -204,7 +208,7 @@ arv_gv_stream_thread (void *data)
 						if (buffer->status == ARV_BUFFER_STATUS_FILLING)
 							buffer->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
 						if (buffer->status == ARV_BUFFER_STATUS_SUCCESS)
-							thread_data->n_completed_frames++;
+							thread_data->n_processed_buffers++;
 
 						arv_buffer_run_callback (buffer);
 
@@ -299,8 +303,9 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port)
 
 	thread_data->packet_count = 1;
 
-	thread_data->n_completed_frames = 0;
-	thread_data->n_missed_frames = 0;
+	thread_data->n_processed_buffers = 0;
+	thread_data->n_failures = 0;
+	thread_data->n_underruns = 0;
 	thread_data->n_size_mismatch_errors = 0;
 	thread_data->n_missing_blocks = 0;
 
@@ -320,6 +325,22 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port)
 /* ArvStream implementation */
 
 static void
+arv_gv_stream_get_statistics (ArvStream *stream,
+			      guint64 *n_processed_buffers,
+			      guint64 *n_failures,
+			      guint64 *n_underruns)
+{
+	ArvGvStream *gv_stream = ARV_GV_STREAM (stream);
+	ArvGvStreamThreadData *thread_data;
+
+	thread_data = gv_stream->thread_data;
+
+	*n_processed_buffers = thread_data->n_processed_buffers;
+	*n_failures = thread_data->n_failures;
+	*n_underruns = thread_data->n_underruns;
+}
+
+static void
 arv_gv_stream_init (ArvGvStream *gv_stream)
 {
 }
@@ -336,9 +357,11 @@ arv_gv_stream_finalize (GObject *object)
 		thread_data = gv_stream->thread_data;
 
 		arv_debug (ARV_DEBUG_LEVEL_STANDARD,
-			   "[GvStream::finalize] n_completed_frames     = %d", thread_data->n_completed_frames);
+			   "[GvStream::finalize] n_processed_buffers    = %d", thread_data->n_processed_buffers);
 		arv_debug (ARV_DEBUG_LEVEL_STANDARD,
-			   "[GvStream::finalize] n_missed_frames        = %d", thread_data->n_missed_frames);
+			   "[GvStream::finalize] n_failures             = %d", thread_data->n_failures);
+		arv_debug (ARV_DEBUG_LEVEL_STANDARD,
+			   "[GvStream::finalize] n_underruns            = %d", thread_data->n_underruns);
 		arv_debug (ARV_DEBUG_LEVEL_STANDARD,
 			   "[GvStream::finalize] n_size_mismatch_errors = %d", thread_data->n_size_mismatch_errors);
 		arv_debug (ARV_DEBUG_LEVEL_STANDARD,
@@ -371,10 +394,13 @@ static void
 arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (gv_stream_class);
+	ArvStreamClass *stream_class = ARV_STREAM_CLASS (gv_stream_class);
 
 	parent_class = g_type_class_peek_parent (gv_stream_class);
 
 	object_class->finalize = arv_gv_stream_finalize;
+	
+	stream_class->get_statistics = arv_gv_stream_get_statistics;
 }
 
 G_DEFINE_TYPE (ArvGvStream, arv_gv_stream, ARV_TYPE_STREAM)

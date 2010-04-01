@@ -90,6 +90,9 @@ main (int argc, char **argv)
 		guint32 value;
 		guint32 maximum;
 		guint32 minimum;
+		guint64 n_processed_buffers;
+		guint64 n_failures;
+		guint64 n_underruns;
 		double v_double;
 		double v_double_min;
 		double v_double_max;
@@ -205,6 +208,12 @@ main (int argc, char **argv)
 
 		arv_device_read_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, &value);
 		g_print ("stream port = %d (%d)\n", value, arv_gv_stream_get_port (ARV_GV_STREAM (stream)));
+
+		arv_stream_get_statistics (stream, &n_processed_buffers, &n_failures, &n_underruns);
+
+		g_print ("Processed buffers = %Ld\n", n_processed_buffers);
+		g_print ("Failures          = %Ld\n", n_failures);
+		g_print ("Underruns         = %Ld\n", n_underruns);
 
 		node = arv_gc_get_node (genicam, "AcquisitionStop");
 		arv_gc_command_execute (ARV_GC_COMMAND (node));
