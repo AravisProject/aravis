@@ -67,9 +67,9 @@ arv_gc_create_node (ArvGc *genicam, const char *type)
 	else if (strcmp (type, "Float") == 0)
 		node = arv_gc_float_node_new ();
 	else if (strcmp (type, "Enumeration") == 0)
-		node = arv_gc_enum_entry_new ();
-	else if (strcmp (type, "EnumEntry") == 0)
 		node = arv_gc_enumeration_new ();
+	else if (strcmp (type, "EnumEntry") == 0)
+		node = arv_gc_enum_entry_new ();
 	else if (strcmp (type, "SwissKnife") == 0)
 		node = arv_gc_swiss_knife_new ();
 	else if (strcmp (type, "IntSwissKnife") == 0)
@@ -197,7 +197,8 @@ arv_gc_parser_end_element (void *user_data,
 		}
 	} else if (state->level > 2) {
 		if (state->level == 3 && state->level_3_node != NULL) {
-			if (state->level_2_node != NULL)
+			if (state->level_2_node != NULL &&
+			    arv_gc_node_can_add_child (state->level_2_node, state->level_3_node))
 				arv_gc_node_add_child (state->level_2_node, state->level_3_node);
 			else
 				g_object_unref (state->level_3_node);

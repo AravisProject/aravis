@@ -50,6 +50,7 @@ struct _ArvGcNodeClass {
 	void 		(*add_element)			(ArvGcNode *node, const char *name, const char *content,
 							 const char **attributes);
 	GType		(*get_value_type)		(ArvGcNode *node);
+	gboolean 	(*can_add_child) 		(ArvGcNode *node, ArvGcNode *child);
 };
 
 GType arv_gc_node_get_type (void);
@@ -64,6 +65,7 @@ const char *	arv_gc_node_get_description		(ArvGcNode *node);
 void		arv_gc_node_set_attribute 		(ArvGcNode *node, const char *name, const char *value);
 void 		arv_gc_node_add_element 		(ArvGcNode *node, const char *name, const char *content,
 							 const char **attributes);
+gboolean 	arv_gc_node_can_add_child 		(ArvGcNode *node, ArvGcNode *child);
 void 		arv_gc_node_add_child 			(ArvGcNode *node, ArvGcNode *child);
 const GSList *	arv_gc_node_get_childs 			(ArvGcNode *node);
 

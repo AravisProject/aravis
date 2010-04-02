@@ -41,6 +41,14 @@ arv_gc_enum_entry_add_element (ArvGcNode *node, const char *name, const char *co
 
 /* ArvGcEnumEntry implementation */
 
+gint64
+arv_gc_enum_entry_get_value (ArvGcEnumEntry *entry)
+{
+	g_return_val_if_fail (ARV_IS_GC_ENUM_ENTRY (entry), 0);
+
+	return entry->value;
+}
+
 ArvGcNode *
 arv_gc_enum_entry_new (void)
 {

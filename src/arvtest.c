@@ -96,6 +96,7 @@ main (int argc, char **argv)
 		double v_double;
 		double v_double_min;
 		double v_double_max;
+		const char *v_string;
 
 		genicam = arv_device_get_genicam (device);
 
@@ -150,6 +151,9 @@ main (int argc, char **argv)
 		maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node));
 		minimum = arv_gc_integer_get_min (ARV_GC_INTEGER (node));
 		g_print ("gain                = %d (min:%d - max:%d)\n", value, minimum, maximum);
+		node = arv_gc_get_node (genicam, "GainAuto");
+		v_string = arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (node));
+		g_print ("gain auto mode      = %s\n", v_string);
 
 		stream = arv_device_get_stream (device);
 		if (arv_option_auto_buffer)

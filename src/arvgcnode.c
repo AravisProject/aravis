@@ -120,6 +120,21 @@ arv_gc_node_add_element (ArvGcNode *node, const char *name, const char *content,
 	ARV_GC_NODE_GET_CLASS (node)->add_element (node, name, content, attributes);
 }
 
+gboolean
+arv_gc_node_can_add_child (ArvGcNode *node, ArvGcNode *child)
+{
+	ArvGcNodeClass *node_class;
+
+	g_return_val_if_fail (ARV_IS_GC_NODE (node), FALSE);
+	g_return_val_if_fail (ARV_IS_GC_NODE (child), FALSE);
+
+	node_class = ARV_GC_NODE_GET_CLASS (node);
+	if (node_class->can_add_child == NULL)
+		return FALSE;
+
+	return node_class->can_add_child (node, child);
+}
+
 void
 arv_gc_node_add_child (ArvGcNode *node, ArvGcNode *child)
 {

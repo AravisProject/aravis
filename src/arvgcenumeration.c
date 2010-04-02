@@ -21,6 +21,7 @@
  */
 
 #include <arvgcenumeration.h>
+#include <arvgcenumentry.h>
 #include <arvgc.h>
 #include <string.h>
 
@@ -28,18 +29,85 @@ static GObjectClass *parent_class = NULL;
 
 /* ArvGcNode implementation */
 
+static gboolean
+arv_gc_enumeration_can_add_child (ArvGcNode *node, ArvGcNode *child)
+{
+	if (ARV_IS_GC_ENUM_ENTRY (child))
+		return TRUE;
+
+	return FALSE;
+}
+
 static void
 arv_gc_enumeration_add_element (ArvGcNode *node, const char *name, const char *content, const char **attributes)
 {
 /*        ArvGcEnumeration *gc_enumeration = ARV_GC_ENUMERATION (node);*/
 
-	if (strcmp (name, "pFeature") == 0) {
+	if (strcmp (name, "pValue") == 0) {
 		g_warning ("TODO");
 	} else
 		ARV_GC_NODE_CLASS (parent_class)->add_element (node, name, content, attributes);
 }
 
 /* ArvGcEnumeration implementation */
+
+const char *
+arv_gc_enumeration_get_string_value (ArvGcEnumeration *enumeration)
+{
+	const GSList *iter;
+	gint64 value;
+
+	g_return_val_if_fail (ARV_IS_GC_ENUMERATION (enumeration), NULL);
+
+	value = arv_gc_get_int64_from_value (arv_gc_node_get_genicam (ARV_GC_NODE (enumeration)),
+								      &enumeration->value);
+
+	for (iter = arv_gc_node_get_childs (ARV_GC_NODE (enumeration)); iter != NULL; iter = iter->next)
+		if (arv_gc_enum_entry_get_value (iter->data) == value)
+			return arv_gc_node_get_name (iter->data);
+
+	return NULL;
+}
+
+void
+arv_gc_enumeration_set_string_value (ArvGcEnumeration *enumeration, const char *value)
+{
+	const GSList *iter;
+
+	g_return_if_fail (ARV_IS_GC_ENUMERATION (enumeration));
+
+	for (iter = arv_gc_node_get_childs (ARV_GC_NODE (enumeration)); iter != NULL; iter = iter->next)
+		if (g_strcmp0 (arv_gc_node_get_name (iter->data), value) ==0)
+			arv_gc_set_int64_to_value (arv_gc_node_get_genicam (ARV_GC_NODE (enumeration)),
+						   &enumeration->value,
+						   arv_gc_enum_entry_get_value (iter->data));
+}
+
+gint64
+arv_gc_enumeration_get_int_value (ArvGcEnumeration *enumeration)
+{
+	g_return_val_if_fail (ARV_IS_GC_ENUMERATION (enumeration), 0);
+
+	return arv_gc_get_int64_from_value (arv_gc_node_get_genicam (ARV_GC_NODE (enumeration)),
+					    &enumeration->value);
+}
+
+void
+arv_gc_enumeration_set_int_value (ArvGcEnumeration *enumeration, gint64 value)
+{
+	g_return_if_fail (ARV_IS_GC_ENUMERATION (enumeration));
+
+	arv_gc_set_int64_to_value (arv_gc_node_get_genicam (ARV_GC_NODE (enumeration)),
+				   &enumeration->value, value);
+}
+
+const GSList *
+arv_gc_enumeration_get_entries (ArvGcEnumeration *enumeration)
+{
+	g_return_val_if_fail (ARV_IS_GC_ENUMERATION (enumeration), NULL);
+
+	return arv_gc_node_get_childs (ARV_GC_NODE (enumeration));
+}
 
 ArvGcNode *
 arv_gc_enumeration_new (void)
@@ -54,12 +122,16 @@ arv_gc_enumeration_new (void)
 static void
 arv_gc_enumeration_init (ArvGcEnumeration *gc_enumeration)
 {
+	g_value_init (&gc_enumeration->value, G_TYPE_INT64);
+	g_value_set_int64 (&gc_enumeration->value, 0);
 }
 
 static void
 arv_gc_enumeration_finalize (GObject *object)
 {
-/*        ArvGcEnumeration *gc_enumeration = ARV_GC_ENUMERATION (object);*/
+	ArvGcEnumeration *gc_enumeration = ARV_GC_ENUMERATION (object);
+
+	g_value_unset (&gc_enumeration->value);
 
 	parent_class->finalize (object);
 }
@@ -75,6 +147,7 @@ arv_gc_enumeration_class_init (ArvGcEnumerationClass *enumeration_class)
 	object_class->finalize = arv_gc_enumeration_finalize;
 
 	node_class->add_element = arv_gc_enumeration_add_element;
+	node_class->can_add_child = arv_gc_enumeration_can_add_child;
 }
 
 G_DEFINE_TYPE (ArvGcEnumeration, arv_gc_enumeration, ARV_TYPE_GC_NODE)
