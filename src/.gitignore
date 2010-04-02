@@ -3,6 +3,7 @@ arv-load-xml
 arv-genicam-test
 arv-evaluator-test
 arv-zip-test
+arv-camera-test
 arvenumtypes.c
 arvenumtypes.h
 arvconfig.h
