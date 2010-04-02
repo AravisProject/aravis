@@ -146,6 +146,9 @@ main (int argc, char **argv)
 		v_double_min = arv_gc_float_get_min (ARV_GC_FLOAT (node));
 		v_double_max = arv_gc_float_get_max (ARV_GC_FLOAT (node));
 		g_print ("exposure            = %g (min:%g - max:%g)\n", v_double, v_double_min, v_double_max);
+		node = arv_gc_get_node (genicam, "ExposureAuto");
+		v_string = arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (node));
+		g_print ("exposure auto mode  = %s\n", v_string);
 		node = arv_gc_get_node (genicam, "GainRaw");
 		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
 		maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node));
@@ -154,6 +157,9 @@ main (int argc, char **argv)
 		node = arv_gc_get_node (genicam, "GainAuto");
 		v_string = arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (node));
 		g_print ("gain auto mode      = %s\n", v_string);
+		node = arv_gc_get_node (genicam, "TriggerSelector");
+		v_string = arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (node));
+		g_print ("trigger selector    = %s\n", v_string);
 
 		stream = arv_device_get_stream (device);
 		if (arv_option_auto_buffer)
