@@ -27,12 +27,23 @@
 
 static GObjectClass *parent_class = NULL;
 
+struct _ArvGcNodePrivate {
+	ArvGc *genicam;
+	char *name;
+	ArvGcNameSpace name_space;
+	char *tooltip;
+	char *description;
+	char *display_name;
+
+	GSList *childs;
+};
+
 const char *
 arv_gc_node_get_name (ArvGcNode *node)
 {
 	g_return_val_if_fail (ARV_IS_GC_NODE (node), NULL);
 
-	return node->name;
+	return node->priv->name;
 }
 
 const char *
@@ -40,7 +51,7 @@ arv_gc_node_get_tooltip (ArvGcNode *node)
 {
 	g_return_val_if_fail (ARV_IS_GC_NODE (node), NULL);
 
-	return node->tooltip;
+	return node->priv->tooltip;
 }
 
 const char *
@@ -48,7 +59,7 @@ arv_gc_node_get_description (ArvGcNode *node)
 {
 	g_return_val_if_fail (ARV_IS_GC_NODE (node), NULL);
 
-	return node->description;
+	return node->priv->description;
 }
 
 const char *
@@ -56,20 +67,20 @@ arv_gc_node_get_display_name (ArvGcNode *node)
 {
 	g_return_val_if_fail (ARV_IS_GC_NODE (node), NULL);
 
-	return node->display_name;
+	return node->priv->display_name;
 }
 
 static void
 _set_attribute (ArvGcNode *node, const char *name, const char *value)
 {
 	if (strcmp (name, "Name") == 0) {
-		g_free (node->name);
-		node->name = g_strdup (value);
+		g_free (node->priv->name);
+		node->priv->name = g_strdup (value);
 	} if (strcmp (name, "NameSpace") == 0) {
 		if (g_strcmp0 (value, "Standard") == 0)
-			node->name_space = ARV_GC_NAME_SPACE_STANDARD;
+			node->priv->name_space = ARV_GC_NAME_SPACE_STANDARD;
 		else
-			node->name_space = ARV_GC_NAME_SPACE_CUSTOM;
+			node->priv->name_space = ARV_GC_NAME_SPACE_CUSTOM;
 	      }
 }
 
@@ -86,14 +97,14 @@ static void
 _add_element (ArvGcNode *node, const char *name, const char *content, const char **attributes)
 {
 	if (strcmp (name, "ToolTip") == 0) {
-		g_free (node->tooltip);
-		node->tooltip = g_strdup (content);
+		g_free (node->priv->tooltip);
+		node->priv->tooltip = g_strdup (content);
 	} else if (strcmp (name, "Description") == 0) {
-		g_free (node->description);
-		node->description = g_strdup (content);
+		g_free (node->priv->description);
+		node->priv->description = g_strdup (content);
 	} else if (strcmp (name, "DisplayName") == 0) {
-		g_free (node->display_name);
-		node->display_name = g_strdup (content);
+		g_free (node->priv->display_name);
+		node->priv->display_name = g_strdup (content);
 	}
 }
 
@@ -107,6 +118,23 @@ arv_gc_node_add_element (ArvGcNode *node, const char *name, const char *content,
 		   name, content);
 
 	ARV_GC_NODE_GET_CLASS (node)->add_element (node, name, content, attributes);
+}
+
+void
+arv_gc_node_add_child (ArvGcNode *node, ArvGcNode *child)
+{
+	g_return_if_fail (ARV_IS_GC_NODE (node));
+	g_return_if_fail (ARV_IS_GC_NODE (child));
+
+	node->priv->childs = g_slist_append (node->priv->childs, child);
+}
+
+const GSList *
+arv_gc_node_get_childs (ArvGcNode *node)
+{
+	g_return_val_if_fail (ARV_IS_GC_NODE (node), NULL);
+
+	return node->priv->childs;
 }
 
 ArvGcNode *
@@ -125,7 +153,7 @@ arv_gc_node_set_genicam	(ArvGcNode *node, ArvGc *genicam)
 	g_return_if_fail (ARV_IS_GC_NODE (node));
 	g_return_if_fail (genicam == NULL || ARV_IS_GC (genicam));
 
-	node->genicam = genicam;
+	node->priv->genicam = genicam;
 }
 
 ArvGc *
@@ -133,7 +161,7 @@ arv_gc_node_get_genicam	(ArvGcNode *node)
 {
 	g_return_val_if_fail (ARV_IS_GC_NODE (node), NULL);
 
-	return node->genicam;
+	return node->priv->genicam;
 }
 
 GType
@@ -153,21 +181,29 @@ arv_gc_node_get_value_type (ArvGcNode *node)
 static void
 arv_gc_node_init (ArvGcNode *gc_node)
 {
-	gc_node->name = NULL;
-	gc_node->tooltip = NULL;
-	gc_node->description = NULL;
-	gc_node->display_name = NULL;
+	gc_node->priv = G_TYPE_INSTANCE_GET_PRIVATE (gc_node, ARV_TYPE_GC_NODE, ArvGcNodePrivate);
+
+	gc_node->priv->name = NULL;
+	gc_node->priv->tooltip = NULL;
+	gc_node->priv->description = NULL;
+	gc_node->priv->display_name = NULL;
+	gc_node->priv->childs = NULL;
 }
 
 static void
 arv_gc_node_finalize (GObject *object)
 {
 	ArvGcNode *node = ARV_GC_NODE (object);
+	GSList *iter;
 
-	g_free (node->name);
-	g_free (node->tooltip);
-	g_free (node->description);
-	g_free (node->display_name);
+	for (iter = node->priv->childs; iter != NULL; iter = iter->next)
+		g_object_unref (iter->data);
+	g_slist_free (node->priv->childs);
+
+	g_free (node->priv->name);
+	g_free (node->priv->tooltip);
+	g_free (node->priv->description);
+	g_free (node->priv->display_name);
 
 	parent_class->finalize (object);
 }
@@ -176,6 +212,8 @@ static void
 arv_gc_node_class_init (ArvGcNodeClass *node_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (node_class);
+
+	g_type_class_add_private (node_class, sizeof (ArvGcNodePrivate));
 
 	parent_class = g_type_class_peek_parent (node_class);
 

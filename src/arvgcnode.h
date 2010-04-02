@@ -34,17 +34,13 @@ G_BEGIN_DECLS
 #define ARV_IS_GC_NODE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GC_NODE))
 #define ARV_GC_NODE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GC_NODE, ArvGcNodeClass))
 
+typedef struct _ArvGcNodePrivate ArvGcNodePrivate;
 typedef struct _ArvGcNodeClass ArvGcNodeClass;
 
 struct _ArvGcNode {
 	GObject	object;
 
-	ArvGc *genicam;
-	char *name;
-	ArvGcNameSpace name_space;
-	char *tooltip;
-	char *description;
-	char *display_name;
+	ArvGcNodePrivate *priv;
 };
 
 struct _ArvGcNodeClass {
@@ -68,6 +64,8 @@ const char *	arv_gc_node_get_description		(ArvGcNode *node);
 void		arv_gc_node_set_attribute 		(ArvGcNode *node, const char *name, const char *value);
 void 		arv_gc_node_add_element 		(ArvGcNode *node, const char *name, const char *content,
 							 const char **attributes);
+void 		arv_gc_node_add_child 			(ArvGcNode *node, ArvGcNode *child);
+const GSList *	arv_gc_node_get_childs 			(ArvGcNode *node);
 
 G_END_DECLS
 

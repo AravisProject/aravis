@@ -76,9 +76,6 @@ arv_gc_create_node (ArvGc *genicam, const char *type)
 		node = arv_gc_int_swiss_knife_new ();
 	else if (strcmp (type, "Port") == 0)
 		node = arv_gc_port_new ();
-	else
-		arv_debug ("genicam",
-			   "[Gc::create_node] Unknown node type (%s)", type);
 
 	if (node != NULL) {
 		arv_gc_node_set_genicam (node, genicam);
@@ -92,8 +89,8 @@ arv_gc_create_node (ArvGc *genicam, const char *type)
 typedef struct {
 	int level;
 	ArvGc *genicam;
-	ArvGcNode *current_node;
-	int current_node_level;
+	ArvGcNode *level_2_node;
+	ArvGcNode *level_3_node;
 
 	const char *current_element;
 	char **current_attrs;
@@ -106,8 +103,8 @@ arv_gc_parser_start_document (void *user_data)
 	ArvGcParserState *state = user_data;
 
 	state->level = 0;
-	state->current_node = NULL;
-	state->current_node_level = -1;
+	state->level_2_node = NULL;
+	state->level_3_node = NULL;
 	state->current_element = NULL;
 	state->current_attrs = NULL;
 	state->current_content = g_string_new ("");
@@ -132,39 +129,59 @@ arv_gc_parser_start_element(void *user_data,
 
 	state->level++;
 
-	if (state->current_node == NULL) {
-	       if (state->level > 1) {
-		       node = arv_gc_create_node (state->genicam, (char *) name);
-
-		       if (node != NULL) {
-			       int i;
-			       for (i = 0; attrs[i] != NULL && attrs[i+1] != NULL; i += 2)
-				       arv_gc_node_set_attribute (node, (char *) attrs[i], (char *) attrs[i+1]);
-
-			       state->current_node = node;
-			       state->current_node_level = state->level;
-		       }
-	       }
-	} else {
-		int n_elements, i;
-		state->current_element = (const char *) name;
-
-		g_strfreev (state->current_attrs);
-
-		if (attrs != NULL) {
-			for (n_elements = 0; attrs[n_elements] != NULL; n_elements++);
-			n_elements++;
-
-			state->current_attrs = g_new (char *, n_elements);
-			for (i = 0; i < n_elements; i++)
-				state->current_attrs[i] = g_strdup ((char *) attrs[i]);
-		} else {
-			state->current_attrs = g_new (char *, 1);
-			state->current_attrs[0] = NULL;
-		}
-
-		g_string_erase (state->current_content, 0, -1);
+	node = arv_gc_create_node (state->genicam, (char *) name);
+	if (node != NULL) {
+		int i;
+		for (i = 0; attrs[i] != NULL && attrs[i+1] != NULL; i += 2)
+			arv_gc_node_set_attribute (node, (char *) attrs[i], (char *) attrs[i+1]);
 	}
+
+	if (state->level == 2) {
+		state->level_2_node = node;
+		if (node != NULL)
+			g_object_ref (node);
+	} else if (state->level > 2 && state->level_2_node != NULL) {
+		if (state->level == 3 && node != NULL) {
+			state->level_3_node = node;
+			g_object_ref (node);
+		} else {
+			int n_elements, i;
+			state->current_element = (const char *) name;
+
+			g_strfreev (state->current_attrs);
+
+			if (attrs != NULL) {
+				for (n_elements = 0; attrs[n_elements] != NULL; n_elements++);
+				n_elements++;
+
+				state->current_attrs = g_new (char *, n_elements);
+				for (i = 0; i < n_elements; i++)
+					state->current_attrs[i] = g_strdup ((char *) attrs[i]);
+			} else {
+				state->current_attrs = g_new (char *, 1);
+				state->current_attrs[0] = NULL;
+			}
+
+			g_string_erase (state->current_content, 0, -1);
+		}
+	}
+
+	if (node != NULL)
+		g_object_unref (node);
+}
+
+static void
+arv_gc_parser_insert_node (ArvGcParserState *state, ArvGcNode *node)
+{
+	const char *node_name;
+
+	node_name = arv_gc_node_get_name (node);
+	if (node_name != NULL) {
+		g_hash_table_insert (state->genicam->nodes, (char *) node_name, node);
+		arv_debug ("genicam",
+			   "[GcParser::end_element] Insert node '%s'", node_name);
+	} else
+		g_object_unref (node);
 }
 
 static void
@@ -173,23 +190,25 @@ arv_gc_parser_end_element (void *user_data,
 {
 	ArvGcParserState *state = user_data;
 
-	if (state->current_node_level == state->level) {
-		const char *node_name;
-
-		node_name = arv_gc_node_get_name (state->current_node);
-		if (node_name != NULL) {
-			g_hash_table_insert (state->genicam->nodes, (char *) node_name, state->current_node);
-			arv_debug ("genicam",
-				   "[GcParser::start_element] Insert node '%s'", node_name);
-		} else
-			g_object_unref (state->current_node);
-
-		state->current_node_level = -1;
-		state->current_node = NULL;
-	} else if (state->current_node_level < state->level &&
-		   state->current_node != NULL) {
-		arv_gc_node_add_element (state->current_node, state->current_element,
-					 state->current_content->str, (const char **) state->current_attrs);
+	if (state->level == 2) {
+		if (state->level_2_node != NULL) {
+			arv_gc_parser_insert_node (state, state->level_2_node);
+			state->level_2_node = NULL;
+		}
+	} else if (state->level > 2) {
+		if (state->level == 3 && state->level_3_node != NULL) {
+			if (state->level_2_node != NULL)
+				arv_gc_node_add_child (state->level_2_node, state->level_3_node);
+			else
+				g_object_unref (state->level_3_node);
+			state->level_3_node = NULL;
+		} else if (state->level == 3 && state->level_2_node != NULL) {
+			arv_gc_node_add_element (state->level_2_node, state->current_element,
+						 state->current_content->str, (const char **) state->current_attrs);
+		} else if (state->level == 4 && state->level_3_node != NULL) {
+			arv_gc_node_add_element (state->level_3_node, state->current_element,
+						 state->current_content->str, (const char **) state->current_attrs);
+		}
 	}
 
 	state->level--;
@@ -202,8 +221,7 @@ arv_gc_parser_characters (void *user_data,
 {
 	ArvGcParserState *state = user_data;
 
-	if (state->current_node != NULL)
-		g_string_append_len (state->current_content, (char *) text, length);
+	g_string_append_len (state->current_content, (char *) text, length);
 }
 
 static void
