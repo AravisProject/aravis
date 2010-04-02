@@ -33,6 +33,7 @@
 #include <arvgc.h>
 #include <arvgcnode.h>
 #include <arvgccategory.h>
+#include <arvgcboolean.h>
 #include <arvgcenumeration.h>
 #include <arvgcenumentry.h>
 #include <arvgcintegernode.h>

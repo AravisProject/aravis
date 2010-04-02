@@ -97,6 +97,7 @@ main (int argc, char **argv)
 		double v_double_min;
 		double v_double_max;
 		const char *v_string;
+		gboolean v_boolean;
 
 		genicam = arv_device_get_genicam (device);
 
@@ -160,6 +161,11 @@ main (int argc, char **argv)
 		node = arv_gc_get_node (genicam, "TriggerSelector");
 		v_string = arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (node));
 		g_print ("trigger selector    = %s\n", v_string);
+		node = arv_gc_get_node (genicam, "ReverseX");
+		if (node != NULL) {
+			v_boolean = arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node));
+			g_print ("reverse x          = %s\n", v_boolean ? "TRUE" : "FALSE");
+		}
 
 		stream = arv_device_get_stream (device);
 		if (arv_option_auto_buffer)
