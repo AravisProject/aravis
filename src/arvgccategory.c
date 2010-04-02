@@ -34,7 +34,7 @@ arv_gc_category_add_element (ArvGcNode *node, const char *name, const char *cont
 /*        ArvGcCategory *gc_category = ARV_GC_CATEGORY (node);*/
 
 	if (strcmp (name, "pFeature") == 0) {
-		g_warning ("TODO");
+		/* TODO */
 	} else
 		ARV_GC_NODE_CLASS (parent_class)->add_element (node, name, content, attributes);
 }
