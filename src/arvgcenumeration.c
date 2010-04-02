@@ -23,6 +23,7 @@
 #include <arvgcenumeration.h>
 #include <arvgcenumentry.h>
 #include <arvgc.h>
+#include <arvtools.h>
 #include <string.h>
 
 static GObjectClass *parent_class = NULL;
@@ -41,10 +42,13 @@ arv_gc_enumeration_can_add_child (ArvGcNode *node, ArvGcNode *child)
 static void
 arv_gc_enumeration_add_element (ArvGcNode *node, const char *name, const char *content, const char **attributes)
 {
-/*        ArvGcEnumeration *gc_enumeration = ARV_GC_ENUMERATION (node);*/
+	ArvGcEnumeration *gc_enumeration = ARV_GC_ENUMERATION (node);
 
-	if (strcmp (name, "pValue") == 0) {
-		g_warning ("TODO");
+	if (strcmp (name, "Value") == 0) {
+		arv_force_g_value_to_int64 (&gc_enumeration->value,
+					    g_ascii_strtoll (content, NULL, 0));
+	} else if (strcmp (name, "pValue") == 0) {
+		arv_force_g_value_to_string (&gc_enumeration->value, content);
 	} else
 		ARV_GC_NODE_CLASS (parent_class)->add_element (node, name, content, attributes);
 }
