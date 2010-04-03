@@ -167,7 +167,7 @@ main (int argc, char **argv)
 			g_print ("reverse x          = %s\n", v_boolean ? "TRUE" : "FALSE");
 		}
 
-		stream = arv_device_get_stream (device);
+		stream = arv_device_new_stream (device);
 		if (arv_option_auto_buffer)
 			arv_gv_stream_set_option (ARV_GV_STREAM (stream),
 						  ARV_GV_STREAM_OPTION_SOCKET_BUFFER_AUTO,

@@ -400,7 +400,7 @@ arv_gv_device_load_genicam (ArvGvDevice *gv_device)
 /* ArvDevice implemenation */
 
 static ArvStream *
-arv_gv_device_create_stream (ArvDevice *device)
+arv_gv_device_new_stream (ArvDevice *device)
 {
 	ArvGvDevice *gv_device = ARV_GV_DEVICE (device);
 	ArvGvDeviceIOData *io_data = gv_device->priv->io_data;
@@ -583,7 +583,7 @@ arv_gv_device_class_init (ArvGvDeviceClass *gv_device_class)
 
 	object_class->finalize = arv_gv_device_finalize;
 
-	device_class->create_stream = arv_gv_device_create_stream;
+	device_class->new_stream = arv_gv_device_new_stream;
 	device_class->read_memory = arv_gv_device_read_memory;
 	device_class->write_memory = arv_gv_device_write_memory;
 	device_class->read_register = arv_gv_device_read_register;

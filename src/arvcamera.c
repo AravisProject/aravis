@@ -37,11 +37,11 @@ struct _ArvCameraPrivate {
 };
 
 ArvStream *
-arv_camera_get_stream (ArvCamera *camera)
+arv_camera_new_stream (ArvCamera *camera)
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
-	return arv_device_get_stream (camera->priv->device);
+	return arv_device_new_stream (camera->priv->device);
 }
 
 void

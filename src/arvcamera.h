@@ -50,7 +50,7 @@ struct _ArvCameraClass {
 GType arv_camera_get_type (void);
 
 ArvCamera *	arv_camera_new			(const char *name);
-ArvStream *	arv_camera_get_stream		(ArvCamera *camera);
+ArvStream *	arv_camera_new_stream		(ArvCamera *camera);
 void		arv_camera_start_acquisition	(ArvCamera *camera);
 void		arv_camera_stop_acquisition	(ArvCamera *camera);
 guint		arv_camera_get_payload		(ArvCamera *camera);

@@ -98,7 +98,7 @@ main (int argc, char **argv)
 		g_print ("vertical binning    = %d\n", dy);
 		g_print ("exposure            = %g µs\n", exposure);
 
-		stream = arv_camera_get_stream (camera);
+		stream = arv_camera_new_stream (camera);
 		if (arv_option_auto_buffer)
 			arv_gv_stream_set_option (ARV_GV_STREAM (stream),
 						  ARV_GV_STREAM_OPTION_SOCKET_BUFFER_AUTO,

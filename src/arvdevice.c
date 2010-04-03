@@ -30,23 +30,14 @@ struct _ArvDevicePrivate {
 	ArvGc *genicam;
 	char *genicam_data;
 	size_t genicam_size;
-
-	ArvStream *stream;
 };
 
 ArvStream *
-arv_device_get_stream (ArvDevice *device)
+arv_device_new_stream (ArvDevice *device)
 {
 	g_return_val_if_fail (ARV_IS_DEVICE (device), NULL);
 
-	if (device->priv->stream != NULL) {
-		g_object_ref (device->priv->stream);
-		return device->priv->stream;
-	}
-
-	device->priv->stream = ARV_DEVICE_GET_CLASS (device)->create_stream (device);
-
-	return device->priv->stream;
+	return ARV_DEVICE_GET_CLASS (device)->new_stream (device);
 }
 
 gboolean
@@ -131,9 +122,6 @@ static void
 arv_device_finalize (GObject *object)
 {
 	ArvDevice *device = ARV_DEVICE (object);
-
-	if (ARV_IS_STREAM (device->priv->stream))
-		g_object_unref (device->priv->stream);
 
 	g_free (device->priv->genicam_data);
 	if (device->priv->genicam != NULL)
