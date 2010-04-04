@@ -30,6 +30,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef struct {
+	char *node;
+	gint modification_count;
+} ArvGcInvalidator;
+
 static GObjectClass *parent_class = NULL;
 
 /* ArvGcNode implementation */
@@ -40,10 +45,11 @@ arv_gc_register_add_element (ArvGcNode *node, const char *name, const char *cont
 	ArvGcRegister *gc_register = ARV_GC_REGISTER (node);
 
 	if (strcmp (name, "Address") == 0) {
-		gc_register->addresses = g_list_prepend (gc_register->addresses,
-							 arv_new_g_value_int64 (g_ascii_strtoull (content, NULL, 0)));
+		gc_register->addresses = g_slist_prepend (gc_register->addresses,
+							  arv_new_g_value_int64 (g_ascii_strtoull (content,
+												   NULL, 0)));
 	} else if (strcmp (name, "pAddress") == 0) {
-		gc_register->addresses = g_list_prepend (gc_register->addresses, arv_new_g_value_string (content));
+		gc_register->addresses = g_slist_prepend (gc_register->addresses, arv_new_g_value_string (content));
 	} else if (strcmp (name, "Length") == 0) {
 		arv_force_g_value_to_int64 (&gc_register->length, g_ascii_strtoull (content, NULL, 0));
 	} else if (strcmp (name, "pLength") == 0) {
@@ -55,13 +61,20 @@ arv_gc_register_add_element (ArvGcNode *node, const char *name, const char *cont
 			gc_register->access_mode = ARV_GC_ACCESS_MODE_RO;
 		else if (g_strcmp0 (content, "WO") == 0)
 			gc_register->access_mode = ARV_GC_ACCESS_MODE_WO;
-	} else if (strcmp (name, "Cacheable") == 0) {
+	} else if (strcmp (name, "Cachable") == 0) {
 		if (g_strcmp0 (content, "NoCache") == 0)
-			gc_register->cacheable = ARV_GC_CACHEABLE_NO_CACHE;
+			gc_register->cachable = ARV_GC_CACHABLE_NO_CACHE;
 		else if (g_strcmp0 (content, "WriteAround") == 0)
-			gc_register->cacheable = ARV_GC_CACHEABLE_WRITE_AROUND;
+			gc_register->cachable = ARV_GC_CACHABLE_WRITE_AROUND;
 		else if (g_strcmp0 (content, "WriteThrough") == 0)
-			gc_register->cacheable = ARV_GC_CACHEABLE_WRITE_TRHOUGH;
+			gc_register->cachable = ARV_GC_CACHABLE_WRITE_TRHOUGH;
+	} else if (strcmp (name, "pInvalidator") == 0) {
+		ArvGcInvalidator *invalidator = g_new (ArvGcInvalidator, 1);
+
+		invalidator->node = g_strdup (content);
+		invalidator->modification_count = 0;
+
+		gc_register->invalidators = g_slist_prepend (gc_register->invalidators, invalidator);
 	} else if (strcmp (name, "pPort") == 0) {
 		g_free (gc_register->port_name);
 		gc_register->port_name = g_strdup (content);
@@ -184,7 +197,7 @@ guint64
 arv_gc_register_get_address (ArvGcRegister *gc_register)
 {
 	ArvGc *genicam;
-	GList *iter;
+	GSList *iter;
 	guint64 value = 0;
 
 	g_return_val_if_fail (ARV_IS_GC_REGISTER (gc_register), 0);
@@ -284,26 +297,36 @@ arv_gc_register_init (ArvGcRegister *gc_register)
 	g_value_init (&gc_register->length, G_TYPE_INT64);
 	g_value_set_int64 (&gc_register->length, 4);
 	gc_register->access_mode = ARV_GC_ACCESS_MODE_RO;
-	gc_register->cacheable = ARV_GC_CACHEABLE_NO_CACHE;
+	gc_register->cachable = ARV_GC_CACHABLE_NO_CACHE;
 	gc_register->cache = g_malloc0(4);
 	gc_register->cache_size = 4;
 	gc_register->endianess = G_LITTLE_ENDIAN;
 	gc_register->msb = 31;
 	gc_register->lsb = 0;
+	gc_register->invalidators = NULL;
+	gc_register->is_cache_valid = FALSE;
 }
 
 static void
 arv_gc_register_finalize (GObject *object)
 {
 	ArvGcRegister *gc_register = ARV_GC_REGISTER (object);
-	GList *iter;
+	GSList *iter;
 
 	for (iter = gc_register->addresses; iter != NULL; iter = iter->next)
 		arv_free_g_value (iter->data);
-	g_list_free (gc_register->addresses);
+	g_slist_free (gc_register->addresses);
 	g_value_unset (&gc_register->length);
 	g_free (gc_register->port_name);
 	g_free (gc_register->cache);
+
+	for (iter = gc_register->invalidators; iter != NULL; iter = iter->next) {
+		ArvGcInvalidator *invalidator = iter->data;
+
+		g_free (invalidator->node);
+		g_free (invalidator);
+	}
+	g_slist_free (gc_register->addresses);
 
 	parent_class->finalize (object);
 }

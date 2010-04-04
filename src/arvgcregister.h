@@ -56,10 +56,10 @@ struct _ArvGcRegister {
 
 	ArvGcRegisterType type;
 	GType value_type;
-	GList *addresses;
+	GSList *addresses;
 	GValue length;
 	ArvGcAccessMode access_mode;
-	ArvGcCacheable cacheable;
+	ArvGcCachable cachable;
 	guint64 polling_time;
 	char *port_name;
 	guint endianess;
@@ -69,6 +69,9 @@ struct _ArvGcRegister {
 
 	void *cache;
 	size_t cache_size;
+	gboolean is_cache_valid;
+
+	GSList *invalidators;
 };
 
 struct _ArvGcRegisterClass {
