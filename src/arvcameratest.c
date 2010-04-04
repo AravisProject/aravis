@@ -1,7 +1,4 @@
 #include <arv.h>
-#ifdef ARAVIS_WITH_CAIRO
-#include <cairo.h>
-#endif
 #include <stdlib.h>
 
 static gboolean cancel = FALSE;
