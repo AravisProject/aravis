@@ -46,28 +46,30 @@ struct _ArvGcNode {
 struct _ArvGcNodeClass {
 	GObjectClass parent_class;
 
-	void		(*set_attribute)		(ArvGcNode *node, const char *name, const char *value);
-	void 		(*add_element)			(ArvGcNode *node, const char *name, const char *content,
+	void		(*set_attribute)		(ArvGcNode *gc_node, const char *name, const char *value);
+	void 		(*add_element)			(ArvGcNode *gc_node, const char *name, const char *content,
 							 const char **attributes);
-	GType		(*get_value_type)		(ArvGcNode *node);
-	gboolean 	(*can_add_child) 		(ArvGcNode *node, ArvGcNode *child);
+	GType		(*get_value_type)		(ArvGcNode *gc_node);
+	gboolean 	(*can_add_child) 		(ArvGcNode *gc_node, ArvGcNode *child);
 };
 
 GType arv_gc_node_get_type (void);
 
 ArvGcNode * 	arv_gc_node_new 			(void);
-GType 		arv_gc_node_get_value_type 		(ArvGcNode *node);
-void		arv_gc_node_set_genicam			(ArvGcNode *node, ArvGc *genicam);
-ArvGc * 	arv_gc_node_get_genicam			(ArvGcNode *node);
-const char *	arv_gc_node_get_name			(ArvGcNode *node);
-const char *	arv_gc_node_get_tooltip			(ArvGcNode *node);
-const char *	arv_gc_node_get_description		(ArvGcNode *node);
-void		arv_gc_node_set_attribute 		(ArvGcNode *node, const char *name, const char *value);
-void 		arv_gc_node_add_element 		(ArvGcNode *node, const char *name, const char *content,
+GType 		arv_gc_node_get_value_type 		(ArvGcNode *gc_node);
+void		arv_gc_node_set_genicam			(ArvGcNode *gc_node, ArvGc *genicam);
+ArvGc * 	arv_gc_node_get_genicam			(ArvGcNode *gc_node);
+const char *	arv_gc_node_get_name			(ArvGcNode *gc_node);
+const char *	arv_gc_node_get_tooltip			(ArvGcNode *gc_node);
+const char *	arv_gc_node_get_description		(ArvGcNode *gc_node);
+void		arv_gc_node_set_attribute 		(ArvGcNode *gc_node, const char *name, const char *value);
+void 		arv_gc_node_add_element 		(ArvGcNode *gc_node, const char *name, const char *content,
 							 const char **attributes);
-gboolean 	arv_gc_node_can_add_child 		(ArvGcNode *node, ArvGcNode *child);
-void 		arv_gc_node_add_child 			(ArvGcNode *node, ArvGcNode *child);
-const GSList *	arv_gc_node_get_childs 			(ArvGcNode *node);
+gboolean 	arv_gc_node_can_add_child 		(ArvGcNode *gc_node, ArvGcNode *child);
+void 		arv_gc_node_add_child 			(ArvGcNode *gc_node, ArvGcNode *child);
+const GSList *	arv_gc_node_get_childs 			(ArvGcNode *gc_node);
+void 		arv_gc_node_inc_modification_count 	(ArvGcNode *gc_node);
+gint 		arv_gc_node_get_modification_count 	(ArvGcNode *gc_node);
 
 G_END_DECLS
 

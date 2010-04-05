@@ -103,6 +103,29 @@ arv_gc_register_add_element (ArvGcNode *node, const char *name, const char *cont
 
 /* ArvGcRegister implementation */
 
+gboolean
+_get_cache_validity (ArvGcRegister *gc_register)
+{
+	ArvGc *genicam;
+	GSList *iter;
+	gint modification_count;
+	gboolean is_cache_valid = gc_register->is_cache_valid;
+
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_register));
+
+	for (iter = gc_register->invalidators; iter != NULL; iter = iter->next) {
+		ArvGcInvalidator *invalidator = iter->data;
+
+		modification_count = invalidator->modification_count;
+		invalidator->modification_count = arv_gc_node_get_modification_count
+			(arv_gc_get_node (genicam, invalidator->node));
+		if (modification_count != invalidator->modification_count)
+			is_cache_valid = FALSE;
+	}
+
+	return is_cache_valid;
+}
+
 static void
 _update_cache_size (ArvGcRegister *gc_register, ArvGc *genicam)
 {
@@ -123,6 +146,11 @@ _read_cache (ArvGcRegister *gc_register)
 	ArvGc *genicam;
 	ArvGcNode *port;
 
+	if (gc_register->is_cache_valid == TRUE) {
+		arv_debug ("genicam", "[GcRegister::read_cache] Cache is valid");
+		return;
+	}
+
 	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_register));
 	g_return_if_fail (ARV_IS_GC (genicam));
 
@@ -136,6 +164,8 @@ _read_cache (ArvGcRegister *gc_register)
 			  gc_register->cache,
 			  arv_gc_register_get_address (gc_register),
 			  gc_register->cache_size);
+
+	gc_register->is_cache_valid = TRUE;
 }
 
 static void
@@ -147,6 +177,8 @@ _write_cache (ArvGcRegister *gc_register)
 	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_register));
 	g_return_if_fail (ARV_IS_GC (genicam));
 
+	arv_gc_node_inc_modification_count (ARV_GC_NODE (gc_register));
+
 	port = arv_gc_get_node (genicam, gc_register->port_name);
 	if (!ARV_IS_GC_PORT (port))
 		return;
@@ -157,6 +189,9 @@ _write_cache (ArvGcRegister *gc_register)
 			   gc_register->cache,
 			   arv_gc_register_get_address (gc_register),
 			   gc_register->cache_size);
+
+	if (gc_register->cachable == ARV_GC_CACHABLE_WRITE_TRHOUGH)
+		gc_register->is_cache_valid = TRUE;
 }
 
 void

@@ -36,6 +36,8 @@ struct _ArvGcNodePrivate {
 	char *display_name;
 
 	GSList *childs;
+
+	gint modification_count;
 };
 
 const char *
@@ -193,6 +195,22 @@ arv_gc_node_get_value_type (ArvGcNode *node)
 	return 0;
 }
 
+void
+arv_gc_node_inc_modification_count (ArvGcNode *gc_node)
+{
+	g_return_if_fail (ARV_IS_GC_NODE (gc_node));
+
+	gc_node->priv->modification_count++;
+}
+
+gint
+arv_gc_node_get_modification_count (ArvGcNode *node)
+{
+	g_return_val_if_fail (ARV_IS_GC_NODE (node), 0);
+
+	return node->priv->modification_count;
+}
+
 static void
 arv_gc_node_init (ArvGcNode *gc_node)
 {
@@ -203,6 +221,8 @@ arv_gc_node_init (ArvGcNode *gc_node)
 	gc_node->priv->description = NULL;
 	gc_node->priv->display_name = NULL;
 	gc_node->priv->childs = NULL;
+
+	gc_node->priv->modification_count = 0;
 }
 
 static void
