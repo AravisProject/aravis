@@ -47,6 +47,7 @@ libaravis_la_SOURCES =				\
 	arvgcconverter.c			\
 	arvgcport.c				\
 	arvgcinteger.c				\
+	arvgcstring.c				\
 	arvgcfloat.c				\
 	arvinterface.c				\
 	arvdevice.c				\
@@ -82,6 +83,7 @@ ARAVIS_HDRS = 					\
 	arvgcconverter.h			\
 	arvgcport.h				\
 	arvgcinteger.h				\
+	arvgcstring.h				\
 	arvgcfloat.h				\
 	arvinterface.h				\
 	arvdevice.h				\

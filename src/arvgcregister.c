@@ -23,6 +23,7 @@
 #include <arvgcregister.h>
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
+#include <arvgcstring.h>
 #include <arvgcport.h>
 #include <arvgc.h>
 #include <arvtools.h>
@@ -507,6 +508,12 @@ static void
 arv_gc_register_set_float_value (ArvGcFloat *gc_float, double v_double)
 {
 	ArvGcRegister *gc_register = ARV_GC_REGISTER (gc_float);
+	ArvGc *genicam;
+
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_register));
+	g_return_if_fail (ARV_IS_GC (genicam));
+
+	_update_cache_size (gc_register, genicam);
 
 	if (gc_register->cache_size == 4) {
 		float v_float = v_double;
@@ -530,7 +537,55 @@ arv_gc_register_float_interface_init (ArvGcFloatInterface *interface)
 	interface->set_value = arv_gc_register_set_float_value;
 }
 
+static const char *
+arv_gc_register_get_string_value (ArvGcString *gc_string)
+{
+	ArvGcRegister *gc_register = ARV_GC_REGISTER (gc_string);
+
+	_read_cache (gc_register);
+
+	if (gc_register->cache_size > 0)
+		((char *) gc_register->cache)[gc_register->cache_size - 1] = '\0';
+
+	return gc_register->cache;
+}
+
+static void
+arv_gc_register_set_string_value (ArvGcString *gc_string, const char *value)
+{
+	ArvGcRegister *gc_register = ARV_GC_REGISTER (gc_string);
+	ArvGc *genicam;
+
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_register));
+	g_return_if_fail (ARV_IS_GC (genicam));
+
+	_update_cache_size (gc_register, genicam);
+
+	if (gc_register->cache_size > 0) {
+		strncpy (gc_register->cache, value, gc_register->cache_size);
+		((char *) gc_register->cache)[gc_register->cache_size - 1] = '\0';
+
+		_write_cache (gc_register);
+	}
+}
+
+static gint64
+arv_gc_register_get_max_string_length (ArvGcString *gc_string)
+{
+	ArvGcRegister *gc_register = ARV_GC_REGISTER (gc_string);
+
+	return arv_gc_register_get_length (gc_register);
+}
+
+static void
+arv_gc_register_string_interface_init (ArvGcStringInterface *interface)
+{
+	interface->get_value = arv_gc_register_get_string_value;
+	interface->set_value = arv_gc_register_set_string_value;
+	interface->get_max_length = arv_gc_register_get_max_string_length;
+}
+
 G_DEFINE_TYPE_WITH_CODE (ArvGcRegister, arv_gc_register, ARV_TYPE_GC_NODE,
 			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_register_integer_interface_init)
-			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_FLOAT, arv_gc_register_float_interface_init))
-
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_FLOAT, arv_gc_register_float_interface_init)
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_STRING, arv_gc_register_string_interface_init))

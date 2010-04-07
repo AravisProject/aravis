@@ -118,6 +118,15 @@ main (int argc, char **argv)
 			arv_gc_integer_set_value (ARV_GC_INTEGER (node), arv_option_vertical_binning);
 		}
 
+		node = arv_gc_get_node (genicam, "DeviceVendorName");
+		v_string = arv_gc_string_get_value (ARV_GC_STRING (node));
+		g_print ("vendor        = %s\n", v_string);
+		node = arv_gc_get_node (genicam, "DeviceModelName");
+		v_string = arv_gc_string_get_value (ARV_GC_STRING (node));
+		g_print ("model         = %s\n", v_string);
+		node = arv_gc_get_node (genicam, "DeviceID");
+		v_string = arv_gc_string_get_value (ARV_GC_STRING (node));
+		g_print ("device id     = %s\n", v_string);
 		node = arv_gc_get_node (genicam, "SensorWidth");
 		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
 		g_print ("sensor width  = %d\n", value);

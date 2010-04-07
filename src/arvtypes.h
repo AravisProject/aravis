@@ -48,6 +48,7 @@ typedef struct _ArvGcPort		ArvGcPort;
 
 typedef struct _ArvGcInteger		ArvGcInteger;
 typedef struct _ArvGcFloat		ArvGcFloat;
+typedef struct _ArvGcString		ArvGcString;
 
 typedef struct _ArvInterface 		ArvInterface;
 typedef struct _ArvDevice 		ArvDevice;

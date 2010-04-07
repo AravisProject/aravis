@@ -45,6 +45,7 @@
 #include <arvgcport.h>
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
+#include <arvgcstring.h>
 #include <arvinterface.h>
 #include <arvdevice.h>
 #include <arvstream.h>
