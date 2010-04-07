@@ -418,7 +418,7 @@ arv_gc_register_get_integer_value (ArvGcInteger *gc_integer)
 #endif
 	}
 
-	arv_debug ("genicam", "[GcRegister::get_integer_value] address = 0x%x, value = 0x%Lx",
+	arv_debug ("genicam", "[GcRegister::get_integer_value] address = 0x%Lx, value = 0x%Lx",
 		   arv_gc_register_get_address (gc_register),
 		   value);
 
@@ -461,7 +461,7 @@ arv_gc_register_set_integer_value (ArvGcInteger *gc_integer, gint64 value)
 #endif
 	}
 
-	arv_debug ("genicam", "[GcRegister::set_integer_value] address = 0x%x, value = 0x%Lx",
+	arv_debug ("genicam", "[GcRegister::set_integer_value] address = 0x%Lx, value = 0x%Lx",
 		   arv_gc_register_get_address (gc_register),
 		   value);
 
