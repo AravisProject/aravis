@@ -24,6 +24,7 @@
 #include <arvgcenumentry.h>
 #include <arvgc.h>
 #include <arvtools.h>
+#include <arvdebug.h>
 #include <string.h>
 
 static GObjectClass *parent_class = NULL;
@@ -66,9 +67,18 @@ arv_gc_enumeration_get_string_value (ArvGcEnumeration *enumeration)
 	value = arv_gc_get_int64_from_value (arv_gc_node_get_genicam (ARV_GC_NODE (enumeration)),
 								      &enumeration->value);
 
-	for (iter = arv_gc_node_get_childs (ARV_GC_NODE (enumeration)); iter != NULL; iter = iter->next)
-		if (arv_gc_enum_entry_get_value (iter->data) == value)
-			return arv_gc_node_get_name (iter->data);
+	for (iter = arv_gc_node_get_childs (ARV_GC_NODE (enumeration)); iter != NULL; iter = iter->next) {
+		if (arv_gc_enum_entry_get_value (iter->data) == value) {
+			const char *string;
+
+			string = arv_gc_node_get_name (iter->data);
+			arv_debug ("genicam", "[GcEnumeration::get_string_value] value = %Ld - string = %s",
+				   value, string);
+			return string;
+		}
+	}
+
+	arv_debug ("genicam", "[GcEnumeration::get_string_value] value = %Ld not found", value);
 
 	return NULL;
 }

@@ -33,7 +33,7 @@ arv_gc_enum_entry_add_element (ArvGcNode *node, const char *name, const char *co
 {
 	ArvGcEnumEntry *gc_enum_entry = ARV_GC_ENUM_ENTRY (node);
 
-	if (strcmp (name, "value") == 0) {
+	if (strcmp (name, "Value") == 0) {
 		gc_enum_entry->value = g_ascii_strtoll (content, NULL, 0);
 	} else
 		ARV_GC_NODE_CLASS (parent_class)->add_element (node, name, content, attributes);
