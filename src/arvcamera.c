@@ -26,6 +26,7 @@
 #include <arvgccommand.h>
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
+#include <arvgcstring.h>
 #include <arvgc.h>
 #include <arvdevice.h>
 
@@ -42,6 +43,30 @@ arv_camera_new_stream (ArvCamera *camera)
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
 	return arv_device_new_stream (camera->priv->device);
+}
+
+const char *
+arv_camera_get_vendor_name (ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+
+	return arv_gc_string_get_value (ARV_GC_STRING (arv_gc_get_node (camera->priv->genicam, "DeviceVendorName")));
+}
+
+const char *
+arv_camera_get_model_name (ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+
+	return arv_gc_string_get_value (ARV_GC_STRING (arv_gc_get_node (camera->priv->genicam, "DeviceModelName")));
+}
+
+const char *
+arv_camera_get_device_id (ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+
+	return arv_gc_string_get_value (ARV_GC_STRING (arv_gc_get_node (camera->priv->genicam, "DeviceID")));
 }
 
 void

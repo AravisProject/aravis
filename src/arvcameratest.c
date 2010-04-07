@@ -89,11 +89,14 @@ main (int argc, char **argv)
 		exposure = arv_camera_get_exposure_time (camera);
 		payload = arv_camera_get_payload (camera);
 
+		g_print ("vendor name         = %s\n", arv_camera_get_vendor_name (camera));
+		g_print ("model name          = %s\n", arv_camera_get_model_name (camera));
+		g_print ("device id           = %s\n", arv_camera_get_device_id (camera));
 		g_print ("image width         = %d\n", width);
 		g_print ("image height        = %d\n", height);
 		g_print ("horizontal binning  = %d\n", dx);
 		g_print ("vertical binning    = %d\n", dy);
-		g_print ("exposure            = %g µs\n", exposure);
+		g_print ("exposure            = %g us\n", exposure);
 
 		stream = arv_camera_new_stream (camera);
 		if (arv_option_auto_buffer)
