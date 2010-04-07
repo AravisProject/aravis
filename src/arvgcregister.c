@@ -361,7 +361,7 @@ arv_gc_register_finalize (GObject *object)
 		g_free (invalidator->node);
 		g_free (invalidator);
 	}
-	g_slist_free (gc_register->addresses);
+	g_slist_free (gc_register->invalidators);
 
 	parent_class->finalize (object);
 }
