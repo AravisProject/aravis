@@ -115,10 +115,15 @@ arv_gv_interface_build_discover_infos_list (ArvGvInterface *gv_interface)
 			ArvGvInterfaceDiscoverInfos *infos = g_new (ArvGvInterfaceDiscoverInfos, 1);
 			GSocketAddress *socket_address;
 			GInetAddress *inet_address;
+			char *inet_address_string;
 			GError *error = NULL;
 
 			socket_address = g_socket_address_new_from_native (ifap->ifa_addr, sizeof (ifap->ifa_addr));
 			inet_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address));
+			inet_address_string = g_inet_address_to_string (inet_address);
+			arv_debug ("interface", "[GvInterface::build_discover_infos_list] Add interface %s",
+				   inet_address_string);
+			g_free (inet_address_string);
 			infos->interface_address = g_inet_socket_address_new (inet_address, 0);
 			g_object_unref (socket_address);
 
