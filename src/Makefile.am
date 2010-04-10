@@ -134,7 +134,7 @@ introspection_files = $(libaravis_la_SOURCES) \
 
 Aravis-1.0.gir: $(INTROSPECTION_SCANNER) libaravis.la Makefile
 Aravis_1_0_gir_INCLUDES = GObject-2.0 Gio-2.0
-Aravis_1_0_gir_SCANNERFLAGS = --strip-prefix=Lsm
+Aravis_1_0_gir_SCANNERFLAGS = --strip-prefix=Arv
 Aravis_1_0_gir_CFLAGS = $(INCLUDES)
 Aravis_1_0_gir_LIBS = libaravis.la
 Aravis_1_0_gir_FILES = $(addprefix $(srcdir)/,$(introspection_files))
