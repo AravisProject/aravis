@@ -57,20 +57,17 @@ struct _ArvDeviceClass {
 
 GType arv_device_get_type (void);
 
-ArvStream *	arv_device_new_stream_with_callback	(ArvDevice *device, ArvStreamCallback callback,
-							 void *user_data);
-ArvStream *	arv_device_new_stream			(ArvDevice *device);
+ArvStream *	arv_device_new_stream		(ArvDevice *device, ArvStreamCallback callback, void *user_data);
+gboolean	arv_device_read_memory 		(ArvDevice *device, guint32 address, guint32 size,
+						 void *buffer);
+gboolean	arv_device_write_memory	 	(ArvDevice *device, guint32 address, guint32 size,
+						 void *buffer);
+gboolean 	arv_device_read_register	(ArvDevice *device, guint32 address, guint32 *value);
+gboolean	arv_device_write_register 	(ArvDevice *device, guint32 address, guint32 value);
 
-gboolean	arv_device_read_memory 			(ArvDevice *device, guint32 address, guint32 size,
-							 void *buffer);
-gboolean	arv_device_write_memory	 		(ArvDevice *device, guint32 address, guint32 size,
-							 void *buffer);
-gboolean 	arv_device_read_register		(ArvDevice *device, guint32 address, guint32 *value);
-gboolean	arv_device_write_register 		(ArvDevice *device, guint32 address, guint32 value);
-
-void 		arv_device_set_genicam_data		(ArvDevice *device, char *genicam, size_t size);
-const char * 	arv_device_get_genicam_data		(ArvDevice *device, size_t *size);
-ArvGc *		arv_device_get_genicam			(ArvDevice *device);
+void 		arv_device_set_genicam_data	(ArvDevice *device, char *genicam, size_t size);
+const char * 	arv_device_get_genicam_data	(ArvDevice *device, size_t *size);
+ArvGc *		arv_device_get_genicam		(ArvDevice *device);
 
 G_END_DECLS
 

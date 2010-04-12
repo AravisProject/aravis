@@ -24,6 +24,7 @@
 #define ARV_CAMERA_H
 
 #include <arvtypes.h>
+#include <arvstream.h>
 
 G_BEGIN_DECLS
 
@@ -50,7 +51,7 @@ struct _ArvCameraClass {
 GType arv_camera_get_type (void);
 
 ArvCamera *	arv_camera_new			(const char *name);
-ArvStream *	arv_camera_new_stream		(ArvCamera *camera);
+ArvStream *	arv_camera_new_stream		(ArvCamera *camera, ArvStreamCallback callback, void *user_data);
 const char *	arv_camera_get_vendor_name	(ArvCamera *camera);
 const char *	arv_camera_get_model_name	(ArvCamera *camera);
 const char *	arv_camera_get_device_id	(ArvCamera *camera);
