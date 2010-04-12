@@ -271,7 +271,7 @@ arv_gv_stream_set_option (ArvGvStream *gv_stream, ArvGvStreamOption option, int 
 }
 
 ArvStream *
-arv_gv_stream_new (GInetAddress *device_address, guint16 port)
+arv_gv_stream_new_with_callback (GInetAddress *device_address, guint16 port)
 {
 	ArvGvStream *gv_stream;
 	ArvStream *stream;
@@ -399,7 +399,7 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 	parent_class = g_type_class_peek_parent (gv_stream_class);
 
 	object_class->finalize = arv_gv_stream_finalize;
-	
+
 	stream_class->get_statistics = arv_gv_stream_get_statistics;
 }
 
