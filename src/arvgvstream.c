@@ -226,7 +226,7 @@ arv_gv_stream_thread (void *data)
 						statistic_count++;
 						if (statistic_count > 5)
 							arv_statistic_fill (thread_data->statistic,
-									    0, (current_time_us - last_time_us) / 1000,
+									    0, (current_time_us - last_time_us),
 									    buffer->frame_id);
 						last_time_us = current_time_us;
 						g_async_queue_push (thread_data->output_queue, buffer);
@@ -324,7 +324,7 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port,
 	thread_data->n_size_mismatch_errors = 0;
 	thread_data->n_missing_blocks = 0;
 
-	thread_data->statistic = arv_statistic_new (1, 1000, 1, 10);
+	thread_data->statistic = arv_statistic_new (1, 5000, 200, 0);
 
 	thread_data->socket_buffer_option = ARV_GV_STREAM_OPTION_SOCKET_BUFFER_FIXED;
 	thread_data->socket_buffer_size = 0;
