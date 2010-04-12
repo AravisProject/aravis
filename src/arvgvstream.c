@@ -34,6 +34,9 @@ static GObjectClass *parent_class = NULL;
 /* Acquisition thread */
 
 typedef struct {
+	ArvStreamCallback callback;
+	void *user_data;
+
 	GSocket *socket;
 	GSocketAddress *device_address;
 
@@ -133,6 +136,9 @@ arv_gv_stream_thread (void *data)
 	gint64 last_time_us;
 	gboolean statistic_count = 0;
 
+	if (thread_data->callback != NULL)
+		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
+
 	packet = (ArvGvspPacket *) packet_buffer;
 
 	poll_fd.fd = g_socket_get_fd (thread_data->socket);
@@ -210,7 +216,10 @@ arv_gv_stream_thread (void *data)
 						if (buffer->status == ARV_BUFFER_STATUS_SUCCESS)
 							thread_data->n_processed_buffers++;
 
-						arv_buffer_run_callback (buffer);
+						if (thread_data->callback != NULL)
+							thread_data->callback (thread_data->user_data,
+									       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
+									       buffer);
 
 						g_get_current_time (&current_time);
 						current_time_us = current_time.tv_sec * 1000000 + current_time.tv_usec;
@@ -232,6 +241,9 @@ arv_gv_stream_thread (void *data)
 		buffer->status = ARV_BUFFER_STATUS_ABORTED;
 		g_async_queue_push (thread_data->output_queue, buffer);
 	}
+
+	if (thread_data->callback != NULL)
+		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_EXIT, NULL);
 
 	return NULL;
 }
@@ -271,7 +283,8 @@ arv_gv_stream_set_option (ArvGvStream *gv_stream, ArvGvStreamOption option, int 
 }
 
 ArvStream *
-arv_gv_stream_new_with_callback (GInetAddress *device_address, guint16 port)
+arv_gv_stream_new (GInetAddress *device_address, guint16 port,
+		   ArvStreamCallback callback, void *user_data)
 {
 	ArvGvStream *gv_stream;
 	ArvStream *stream;
@@ -295,6 +308,8 @@ arv_gv_stream_new_with_callback (GInetAddress *device_address, guint16 port)
 	g_socket_bind (gv_stream->socket, gv_stream->incoming_address, TRUE, NULL);
 
 	thread_data = g_new (ArvGvStreamThreadData, 1);
+	thread_data->callback = callback;
+	thread_data->user_data = user_data;
 	thread_data->socket = gv_stream->socket;
 	thread_data->device_address = g_inet_socket_address_new (device_address, ARV_GVCP_PORT);
 	thread_data->cancel = FALSE;

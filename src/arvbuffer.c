@@ -24,17 +24,8 @@
 
 static GObjectClass *parent_class = NULL;
 
-
-void
-arv_buffer_run_callback (ArvBuffer *buffer)
-{
-	if (buffer != NULL && buffer->frame_callback != NULL)
-		buffer->frame_callback (buffer);
-}
-
 ArvBuffer *
-arv_buffer_new_with_callback (size_t size, void *preallocated,
-			      ArvFrameCallback frame_callback, void *user_data)
+arv_buffer_new (size_t size, void *preallocated)
 {
 	ArvBuffer *buffer;
 
@@ -49,16 +40,7 @@ arv_buffer_new_with_callback (size_t size, void *preallocated,
 		buffer->data = g_malloc (size);
 	}
 
-	buffer->frame_callback = frame_callback;
-	buffer->user_data = user_data;
-
 	return buffer;
-}
-
-ArvBuffer *
-arv_buffer_new (size_t size, void *preallocated)
-{
-	return arv_buffer_new_with_callback (size, preallocated, NULL, NULL);
 }
 
 void

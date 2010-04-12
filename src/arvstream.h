@@ -27,6 +27,15 @@
 
 G_BEGIN_DECLS
 
+typedef enum {
+	ARV_STREAM_CALLBACK_TYPE_INIT,
+	ARV_STREAM_CALLBACK_TYPE_EXIT,
+	ARV_STREAM_CALLBACK_TYPE_START_BUFFER,
+	ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE
+} ArvStreamCallbackType;
+
+typedef void (*ArvStreamCallback)	(void *user_data, ArvStreamCallbackType type, ArvBuffer *buffer);
+
 #define ARV_TYPE_STREAM             (arv_stream_get_type ())
 #define ARV_STREAM(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_STREAM, ArvStream))
 #define ARV_STREAM_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_STREAM, ArvStreamClass))

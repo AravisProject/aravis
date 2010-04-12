@@ -400,7 +400,7 @@ arv_gv_device_load_genicam (ArvGvDevice *gv_device)
 /* ArvDevice implemenation */
 
 static ArvStream *
-arv_gv_device_new_stream (ArvDevice *device)
+arv_gv_device_new_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data)
 {
 	ArvGvDevice *gv_device = ARV_GV_DEVICE (device);
 	ArvGvDeviceIOData *io_data = gv_device->priv->io_data;
@@ -414,7 +414,7 @@ arv_gv_device_new_stream (ArvDevice *device)
 	device_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (io_data->device_address));
 	address_bytes = g_inet_address_to_bytes (interface_address);
 
-	stream = arv_gv_stream_new (device_address, 0);
+	stream = arv_gv_stream_new (device_address, 0, callback, user_data);
 
 	stream_port = arv_gv_stream_get_port (ARV_GV_STREAM (stream));
 

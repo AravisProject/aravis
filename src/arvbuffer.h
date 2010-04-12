@@ -59,9 +59,6 @@ struct _ArvBuffer {
 	guint32 frame_id;
 	guint32 width;
 	guint32 height;
-
-	ArvFrameCallback frame_callback;
-	void *user_data;
 };
 
 struct _ArvBufferClass {
@@ -71,10 +68,6 @@ struct _ArvBufferClass {
 GType arv_buffer_get_type (void);
 
 ArvBuffer * 		arv_buffer_new 			(size_t size, void *preallocated);
-ArvBuffer * 		arv_buffer_new_with_callback	(size_t size, void *preallocated,
-							 ArvFrameCallback frame_callback, void *user_data);
-
-void			arv_buffer_run_callback		(ArvBuffer *buffer);
 
 G_END_DECLS
 

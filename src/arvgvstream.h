@@ -59,7 +59,8 @@ struct _ArvGvStreamClass {
 
 GType arv_gv_stream_get_type (void);
 
-ArvStream * 		arv_gv_stream_new 		(GInetAddress *device_address, guint16 port);
+ArvStream * 		arv_gv_stream_new		(GInetAddress *device_address, guint16 port,
+							 ArvStreamCallback callback, void *user_data);
 guint16 		arv_gv_stream_get_port		(ArvGvStream *gv_stream);
 void			arv_gv_stream_set_option	(ArvGvStream *gv_stream, ArvGvStreamOption option,
 							 int value);

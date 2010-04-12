@@ -24,6 +24,7 @@
 #define ARV_DEVICE_H
 
 #include <arvtypes.h>
+#include <arvstream.h>
 
 G_BEGIN_DECLS
 
@@ -46,7 +47,7 @@ struct _ArvDevice {
 struct _ArvDeviceClass {
 	GObjectClass parent_class;
 
-	ArvStream *	(*new_stream)		(ArvDevice *device);
+	ArvStream *	(*new_stream)		(ArvDevice *device, ArvStreamCallback callback, void *user_data);
 
 	gboolean	(*read_memory)		(ArvDevice *device, guint32 address, guint32 size, void *buffer);
 	gboolean	(*write_memory)		(ArvDevice *device, guint32 address, guint32 size, void *buffer);
@@ -56,6 +57,8 @@ struct _ArvDeviceClass {
 
 GType arv_device_get_type (void);
 
+ArvStream *	arv_device_new_stream_with_callback	(ArvDevice *device, ArvStreamCallback callback,
+							 void *user_data);
 ArvStream *	arv_device_new_stream			(ArvDevice *device);
 
 gboolean	arv_device_read_memory 			(ArvDevice *device, guint32 address, guint32 size,
