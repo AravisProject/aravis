@@ -55,8 +55,13 @@ ArvStream *	arv_camera_new_stream		(ArvCamera *camera, ArvStreamCallback callbac
 const char *	arv_camera_get_vendor_name	(ArvCamera *camera);
 const char *	arv_camera_get_model_name	(ArvCamera *camera);
 const char *	arv_camera_get_device_id	(ArvCamera *camera);
+void		arv_camera_set_acquisition_mode (ArvCamera *camera, const char *value);
 void		arv_camera_start_acquisition	(ArvCamera *camera);
 void		arv_camera_stop_acquisition	(ArvCamera *camera);
+void		arv_camera_set_trigger_selector		(ArvCamera *camera, const char *value);
+void		arv_camera_set_trigger_mode		(ArvCamera *camera, const char *value);
+void		arv_camera_set_trigger_source		(ArvCamera *camera, const char *value);
+void		arv_camera_set_trigger_activation	(ArvCamera *camera, const char *value);
 guint		arv_camera_get_payload		(ArvCamera *camera);
 void		arv_camera_set_region		(ArvCamera *camera, gint x, gint y, gint width, gint height);
 void		arv_camera_get_region		(ArvCamera *camera, gint *x, gint *y, gint *width, gint *height);

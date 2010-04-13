@@ -26,6 +26,7 @@
 #include <arvgccommand.h>
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
+#include <arvgcenumeration.h>
 #include <arvgcstring.h>
 #include <arvgc.h>
 #include <arvdevice.h>
@@ -70,6 +71,16 @@ arv_camera_get_device_id (ArvCamera *camera)
 }
 
 void
+arv_camera_set_acquisition_mode (ArvCamera *camera, const char *value)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_gc_enumeration_set_string_value (ARV_GC_ENUMERATION (arv_gc_get_node (camera->priv->genicam,
+										  "AcquisitionMode")),
+					     value);
+}
+
+void
 arv_camera_start_acquisition (ArvCamera *camera)
 {
 	g_return_if_fail (ARV_IS_CAMERA (camera));
@@ -83,6 +94,46 @@ arv_camera_stop_acquisition (ArvCamera *camera)
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
 	arv_gc_command_execute (ARV_GC_COMMAND (arv_gc_get_node (camera->priv->genicam, "AcquisitionStop")));
+}
+
+void
+arv_camera_set_trigger_selector	(ArvCamera *camera, const char *value)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_gc_enumeration_set_string_value (ARV_GC_ENUMERATION (arv_gc_get_node (camera->priv->genicam,
+										  "TriggerSelector")),
+					     value);
+}
+
+void
+arv_camera_set_trigger_mode (ArvCamera *camera, const char *value)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_gc_enumeration_set_string_value (ARV_GC_ENUMERATION (arv_gc_get_node (camera->priv->genicam,
+										  "TriggerMode")),
+					     value);
+}
+
+void
+arv_camera_set_trigger_source (ArvCamera *camera, const char *value)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_gc_enumeration_set_string_value (ARV_GC_ENUMERATION (arv_gc_get_node (camera->priv->genicam,
+										  "TriggerSource")),
+					     value);
+}
+
+void
+arv_camera_set_trigger_activation (ArvCamera *camera, const char *value)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_gc_enumeration_set_string_value (ARV_GC_ENUMERATION (arv_gc_get_node (camera->priv->genicam,
+										  "TriggerActivation")),
+					     value);
 }
 
 guint

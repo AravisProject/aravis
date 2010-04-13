@@ -13,6 +13,7 @@ static char *arv_option_camera_name = NULL;
 static char *arv_option_debug_domains = NULL;
 static gboolean arv_option_snaphot = FALSE;
 static gboolean arv_option_auto_buffer = FALSE;
+static gboolean arv_option_external_trigger = FALSE;
 static int arv_option_width = -1;
 static int arv_option_height = -1;
 static int arv_option_horizontal_binning = -1;
@@ -25,7 +26,9 @@ static const GOptionEntry arv_option_entries[] =
 	{ "snapshot",		's', 0, G_OPTION_ARG_NONE,
 		&arv_option_snaphot,	"Snapshot", NULL},
 	{ "auto",		'a', 0, G_OPTION_ARG_NONE,
-		&arv_option_auto_buffer,	"AutoBufferSize", NULL},
+		&arv_option_auto_buffer,	"Auto buffer size", NULL},
+	{ "external",		'e', 0, G_OPTION_ARG_NONE,
+		&arv_option_external_trigger,	"External trigger", NULL},
 	{ "width", 		'w', 0, G_OPTION_ARG_INT,
 		&arv_option_width,		"Width", NULL },
 	{ "height", 		'h', 0, G_OPTION_ARG_INT,
@@ -104,23 +107,40 @@ main (int argc, char **argv)
 						  ARV_GV_STREAM_OPTION_SOCKET_BUFFER_AUTO,
 						  0);
 
-		for (i = 0; i < 30; i++)
+		for (i = 0; i < 200; i++)
 			arv_stream_push_buffer (stream, arv_buffer_new (payload, NULL));
+
+		arv_camera_set_acquisition_mode (camera, "Continuous");
+
+		if (arv_option_external_trigger) {
+			arv_camera_set_trigger_selector (camera, "FrameRate");
+			arv_camera_set_trigger_mode (camera, "On");
+			arv_camera_set_trigger_activation (camera, "RisingEdge");
+			arv_camera_set_trigger_source (camera, "Line1");
+		}
 
 		arv_camera_start_acquisition (camera);
 
 		signal (SIGINT, set_cancel);
 
 		do {
-			g_usleep (100000);
+			int buffer_count;
 
+			g_usleep (1000000);
+
+			buffer_count = 0;
 			do  {
 				buffer = arv_stream_pop_buffer (stream);
 				if (buffer != NULL) {
+					if (buffer->status == ARV_BUFFER_STATUS_SUCCESS)
+						buffer_count++;
 					/* Image processing here */
 					arv_stream_push_buffer (stream, buffer);
 				}
 			} while (buffer != NULL);
+
+			g_print ("Frame rate = %d\n", buffer_count);
+
 		} while (!cancel);
 
 		arv_stream_get_statistics (stream, &n_processed_buffers, &n_failures, &n_underruns);
