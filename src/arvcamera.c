@@ -80,6 +80,15 @@ arv_camera_set_acquisition_mode (ArvCamera *camera, const char *value)
 					     value);
 }
 
+const char *
+arv_camera_get_acquisition_mode (ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+
+	return arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (arv_gc_get_node (camera->priv->genicam,
+											 "AcquisitionMode")));
+}
+
 void
 arv_camera_start_acquisition (ArvCamera *camera)
 {
@@ -116,6 +125,15 @@ arv_camera_set_trigger_mode (ArvCamera *camera, const char *value)
 					     value);
 }
 
+const char *
+arv_camera_get_trigger_mode (ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+
+	return arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (arv_gc_get_node (camera->priv->genicam,
+											 "TriggerMode")));
+}
+
 void
 arv_camera_set_trigger_source (ArvCamera *camera, const char *value)
 {
@@ -126,6 +144,15 @@ arv_camera_set_trigger_source (ArvCamera *camera, const char *value)
 					     value);
 }
 
+const char *
+arv_camera_get_trigger_source (ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+
+	return arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (arv_gc_get_node (camera->priv->genicam,
+											 "TriggerSource")));
+}
+
 void
 arv_camera_set_trigger_activation (ArvCamera *camera, const char *value)
 {
@@ -134,6 +161,15 @@ arv_camera_set_trigger_activation (ArvCamera *camera, const char *value)
 	arv_gc_enumeration_set_string_value (ARV_GC_ENUMERATION (arv_gc_get_node (camera->priv->genicam,
 										  "TriggerActivation")),
 					     value);
+}
+
+const char *
+arv_camera_get_trigger_activation (ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+
+	return arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (arv_gc_get_node (camera->priv->genicam,
+											 "TriggerActivation")));
 }
 
 guint

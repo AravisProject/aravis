@@ -119,6 +119,11 @@ main (int argc, char **argv)
 			arv_camera_set_trigger_source (camera, "Line1");
 		}
 
+		g_print ("acquisition mode    = %s\n", arv_camera_get_acquisition_mode (camera));
+		g_print ("trigger mode        = %s\n", arv_camera_get_trigger_mode (camera));
+		g_print ("trigger activation  = %s\n", arv_camera_get_trigger_activation (camera));
+		g_print ("trigger source      = %s\n", arv_camera_get_trigger_source (camera));
+
 		arv_camera_start_acquisition (camera);
 
 		signal (SIGINT, set_cancel);
