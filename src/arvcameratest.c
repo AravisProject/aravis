@@ -113,7 +113,7 @@ main (int argc, char **argv)
 		arv_camera_set_acquisition_mode (camera, "Continuous");
 
 		if (arv_option_external_trigger) {
-			arv_camera_set_trigger_selector (camera, "FrameRate");
+			arv_camera_set_trigger_selector (camera, "AcquisitionStart");
 			arv_camera_set_trigger_mode (camera, "On");
 			arv_camera_set_trigger_activation (camera, "RisingEdge");
 			arv_camera_set_trigger_source (camera, "Line1");
