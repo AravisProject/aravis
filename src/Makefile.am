@@ -9,11 +9,7 @@ INCLUDES = \
 	-DPACKAGE_DATA_DIR=\""$(datadir)"\" $(ARAVIS_CFLAGS) \
 	-DG_LOG_DOMAIN=\"Aravis\"
 
-AM_CFLAGS =\
-	 -Wall\
-	 -Werror \
-	 -g \
-	 -O0
+AM_CFLAGS = -Wall
 
 lib_LTLIBRARIES = libaravis.la
 
