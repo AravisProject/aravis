@@ -28,7 +28,14 @@ IT_PROG_INTLTOOL([0.31.2])
 
 LT_INIT()
 
-AC_ARG_ENABLE(cairo, [  --enable-cairo          Enable cairo support], [enable_cairo=$enableval], [enable_cairo=no])
+AC_ARG_ENABLE(cairo,
+	      [  --enable-cairo          Enable cairo support],
+	      [enable_cairo=$enableval],
+	      [enable_cairo=no])
+AC_ARG_ENABLE(gstreamer,
+	      [  --enable-gstreamer      Enable gstreamer support],
+	      [enable_gstreamer=$enableval],
+	      [enable_gstreamer=no])
 
 PKG_PROG_PKG_CONFIG([0.14])
 
@@ -44,6 +51,16 @@ if test "x$enable_cairo" = "xyes"; then
 fi
 AM_CONDITIONAL(ARAVIS_WITH_CAIRO, test "x$with_cairo" = "xyes")
 
+with_gstreamer=no
+if test "x$enable_gstreamer" = "xyes"; then
+	PKG_CHECK_MODULES([GSTREAMER],   [gstreamer-base-0.10 >= 0.10],
+			  [AC_DEFINE([ARAVIS_WITH_GSTREAMER], [1], [Cairo support])
+			  ARAVIS_REQUIRES+=" [gstreamer-base-0.10 >= 0.10]"
+			  with_gstreamer=yes],
+			  [echo -n])
+fi
+AM_CONDITIONAL(ARAVIS_WITH_GSTREAMER, test "x$with_gstreamer" = "xyes")
+
 PKG_CHECK_MODULES(ARAVIS, $ARAVIS_REQUIRES)
 
 AC_SUBST(ARAVIS_CFLAGS)
@@ -56,6 +73,7 @@ GOBJECT_INTROSPECTION_CHECK([0.6.7])
 AC_CONFIG_FILES([
 Makefile
 src/Makefile
+gst/Makefile
 po/Makefile.in
 aravis.pc
 ])
@@ -65,6 +83,7 @@ echo ""
 echo "Configuration:"
 echo ""
 echo "	Cairo support:		$with_cairo"
+echo "	Gstreamer support:	$with_gstreamer"
 echo "	Compiler:		${CC}"
 echo "	Compiler flags:		${ARAVIS_CFLAGS}"
 echo ""

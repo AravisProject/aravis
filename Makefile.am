@@ -2,7 +2,7 @@ ACLOCAL_AMFLAGS = -I m4
 
 DISTCHECK_CONFIGURE_FLAGS = --enable-introspection
 
-SUBDIRS = src po
+SUBDIRS = src gst po
 
 aravisdocdir = ${prefix}/doc/aravis
 aravisdoc_DATA = 	\
