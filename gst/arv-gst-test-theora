@@ -1,0 +1,3 @@
+#!/bin/sh
+
+LD_PRELOAD=../src/.libs/libaravis.so gst-launch-0.10 --gst-plugin-load=.libs/libaravis-gst.so -v aravissrc width=256 height=256 ! ffmpegcolorspace ! theoraenc bitrate=150 ! udpsink host=127.0.0.1 port=1234
