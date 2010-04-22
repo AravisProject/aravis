@@ -12,17 +12,17 @@ AM_CFLAGS =\
 
 if ARAVIS_WITH_GSTREAMER
 
-lib_LTLIBRARIES = libaravis-gst.la
+lib_LTLIBRARIES = libgstaravis.la
 
-libaravis_gst_la_LIBADD =			\
+libgstaravis_la_LIBADD =			\
 	$(ARAVIS_LIBS)
 
-libaravis_gst_la_SOURCES =			\
-	arvgst.c
+libgstaravis_la_SOURCES =			\
+	gstaravis.c
 
-libaravis_gst_la_HEADERS =			\
-	arvgst.h
+libgstaravis_la_HEADERS =			\
+	gstaravis.h
 
-libaravis_gst_ladir = $(includedir)/aravis
+libgstaravis_ladir = $(includedir)/aravis
 
 endif
