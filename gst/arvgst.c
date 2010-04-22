@@ -156,6 +156,8 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 {
 	GstAravis *gst_aravis;
 	ArvBuffer *arv_buffer;
+	GstClockTime time_stamp;
+	GstClockTime next_time_stamp;
 
 	gst_aravis = GST_ARAVIS (push_src);
 
@@ -164,10 +166,22 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 		arv_buffer = arv_stream_pop_buffer (gst_aravis->stream);
 		if (arv_buffer == NULL)
 			g_usleep (20000);
+		else if (arv_buffer->status != ARV_BUFFER_STATUS_SUCCESS) {
+			arv_stream_push_buffer (gst_aravis->stream, arv_buffer);
+			arv_buffer = NULL;
+		}
 	} while (arv_buffer == NULL);
 	GST_BUFFER_DATA (*buffer) = arv_buffer->data;
 	GST_BUFFER_MALLOCDATA (*buffer) = NULL;
 	GST_BUFFER_SIZE (*buffer) = gst_aravis->payload;
+
+	time_stamp = gst_util_uint64_scale_int (arv_buffer->frame_id * GST_SECOND, 1, 50);
+	next_time_stamp = gst_util_uint64_scale_int ((arv_buffer->frame_id + 1) * GST_SECOND, 1, 50);
+
+	GST_BUFFER_TIMESTAMP (*buffer) = time_stamp;
+	GST_BUFFER_DURATION (*buffer) = next_time_stamp - time_stamp;
+	GST_BUFFER_OFFSET (*buffer) = arv_buffer->frame_id;
+	GST_BUFFER_OFFSET_END (*buffer) = arv_buffer->frame_id + 1;
 
 	arv_stream_push_buffer (gst_aravis->stream, arv_buffer);
 
