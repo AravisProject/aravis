@@ -14,8 +14,7 @@ if ARAVIS_WITH_GSTREAMER
 
 gstplugin_LTLIBRARIES = libgstaravis.la
 
-libgstaravis_la_SOURCES = gstaravis.c
-libgstaravis_la_HEADERS = gstaravis.h
+libgstaravis_la_SOURCES = gstaravis.c gstaravis.h
 libgstaravis_la_CFLAGS = $(ARAVIS_CFLAGS)
 libgstaravis_la_LIBADD = $(ARAVIS_LIBS)
 libgstaravis_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
@@ -24,5 +23,10 @@ libgstaravis_la_LIBTOOLFLAGS = --tag=disable-static
 libgstaravis_ladir = $(includedir)/aravis
 
 noinst_HEADERS = gstaravis.h
+
+bin_PROGRAMS = gst-aravis-test
+
+gst_aravis_test_SOURCES = gstaravistest.c
+gst_aravis_test_LDADD = $(ARAVIS_LIBS) ../src/libaravis.la
 
 endif
