@@ -12,17 +12,17 @@ AM_CFLAGS =\
 
 if ARAVIS_WITH_GSTREAMER
 
-lib_LTLIBRARIES = libgstaravis.la
+gstplugin_LTLIBRARIES = libgstaravis.la
 
-libgstaravis_la_LIBADD =			\
-	$(ARAVIS_LIBS)
-
-libgstaravis_la_SOURCES =			\
-	gstaravis.c
-
-libgstaravis_la_HEADERS =			\
-	gstaravis.h
+libgstaravis_la_SOURCES = gstaravis.c
+libgstaravis_la_HEADERS = gstaravis.h
+libgstaravis_la_CFLAGS = $(ARAVIS_CFLAGS)
+libgstaravis_la_LIBADD = $(ARAVIS_LIBS)
+libgstaravis_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstaravis_la_LIBTOOLFLAGS = --tag=disable-static
 
 libgstaravis_ladir = $(includedir)/aravis
+
+noinst_HEADERS = gstaravis.h
 
 endif

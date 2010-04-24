@@ -61,6 +61,16 @@ if test "x$enable_gstreamer" = "xyes"; then
 fi
 AM_CONDITIONAL(ARAVIS_WITH_GSTREAMER, test "x$with_gstreamer" = "xyes")
 
+if test "x${prefix}" = "x$HOME"; then
+  gstplugindir="$HOME/.gstreamer-0.10/plugins"
+else
+  gstplugindir="\$(libdir)/gstreamer-0.10"
+fi
+AC_SUBST(gstplugindir)
+
+GST_PLUGIN_LDFLAGS='-module -avoid-version -export-symbols-regex [_]*\(gst_\|Gst\|GST_\).*'
+AC_SUBST(GST_PLUGIN_LDFLAGS)
+
 PKG_CHECK_MODULES(ARAVIS, $ARAVIS_REQUIRES)
 
 AC_SUBST(ARAVIS_CFLAGS)
