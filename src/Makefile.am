@@ -101,7 +101,7 @@ arvenumtypes.h: arvenumtypes.h.template $(ARAVIS_HDRS) $(GLIB_MKENUMS)
 arvenumtypes.c: arvenumtypes.c.template $(ARAVIS_HDRS) $(GLIB_MKENUMS)
 	$(AM_V_GEN) (cd $(srcdir) && $(GLIB_MKENUMS) --template arvenumtypes.c.template $(libaravis_la_HEADERS)) > $@
 
-bin_PROGRAMS = arv-test arv-load-xml arv-genicam-test arv-evaluator-test arv-zip-test arv-camera-test
+noinst_PROGRAMS = arv-test arv-load-xml arv-genicam-test arv-evaluator-test arv-zip-test arv-camera-test
 
 arv_test_SOURCES = arvtest.c
 arv_test_LDADD = $(ARAVIS_LIBS) libaravis.la

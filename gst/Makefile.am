@@ -24,7 +24,7 @@ libgstaravis_ladir = $(includedir)/aravis
 
 noinst_HEADERS = gstaravis.h
 
-bin_PROGRAMS = gst-aravis-test
+noinst_PROGRAMS = gst-aravis-test
 
 gst_aravis_test_SOURCES = gstaravistest.c
 gst_aravis_test_LDADD = $(ARAVIS_LIBS) ../src/libaravis.la
