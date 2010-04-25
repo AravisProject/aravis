@@ -83,6 +83,7 @@ GOBJECT_INTROSPECTION_CHECK([0.6.7])
 AC_CONFIG_FILES([
 Makefile
 src/Makefile
+src/tests/Makefile
 gst/Makefile
 po/Makefile.in
 aravis.pc

@@ -1,3 +1,5 @@
+include $(top_srcdir)/Makefile.decl
+
 ACLOCAL_AMFLAGS = -I m4
 
 DISTCHECK_CONFIGURE_FLAGS = --enable-introspection
@@ -13,7 +15,7 @@ aravisdoc_DATA = 	\
 	INSTALL		\
 	NEWS
 
-EXTRA_DIST = $(aravisdoc_DATA) m4/introspection.m4
+EXTRA_DIST += $(aravisdoc_DATA) m4/introspection.m4
 
 # Copy all the spec files. Of cource, only one is actually used.
 dist-hook:

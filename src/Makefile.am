@@ -1,3 +1,7 @@
+include $(top_srcdir)/Makefile.decl
+
+SUBDIRS = tests
+
 -include $(INTROSPECTION_MAKEFILE)
   INTROSPECTION_GIRS =
   INTROSPECTION_SCANNER_ARGS = --add-include-path=$(srcdir)
@@ -15,8 +19,8 @@ lib_LTLIBRARIES = libaravis.la
 
 BUILT_SOURCES = arvenumtypes.h arvenumtypes.c
 
-EXTRA_DIST = arvenumtypes.h.template \
-	     arvenumtypes.c.template
+EXTRA_DIST += arvenumtypes.h.template \
+	      arvenumtypes.c.template
 
 libaravis_la_LIBADD = 				\
 	$(ARAVIS_LIBS)

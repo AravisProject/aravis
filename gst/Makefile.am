@@ -1,3 +1,5 @@
+include $(top_srcdir)/Makefile.decl
+
 INCLUDES = \
 	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\" \
 	-DPACKAGE_SRC_DIR=\""$(srcdir)"\" \
