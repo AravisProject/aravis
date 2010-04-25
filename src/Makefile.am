@@ -1,6 +1,6 @@
 include $(top_srcdir)/Makefile.decl
 
-SUBDIRS = tests
+SUBDIRS = . tests
 
 -include $(INTROSPECTION_MAKEFILE)
   INTROSPECTION_GIRS =
