@@ -45,7 +45,7 @@ with_cairo=no
 if test "x$enable_cairo" = "xyes"; then
 	PKG_CHECK_MODULES([CAIRO],   [cairo >= 1.2],
 			  [AC_DEFINE([ARAVIS_WITH_CAIRO], [1], [Cairo support])
-			  ARAVIS_REQUIRES+=" [cairo >= 1.2]"
+			  ARAVIS_REQUIRES="${ARAVIS_REQUIRES} [cairo >= 1.2]"
 			  with_cairo=yes],
 			  [echo -n])
 fi
@@ -55,7 +55,7 @@ with_gstreamer=no
 if test "x$enable_gstreamer" = "xyes"; then
 	PKG_CHECK_MODULES([GSTREAMER],   [gstreamer-base-0.10 >= 0.10],
 			  [AC_DEFINE([ARAVIS_WITH_GSTREAMER], [1], [Cairo support])
-			  ARAVIS_REQUIRES+=" [gstreamer-base-0.10 >= 0.10]"
+			  ARAVIS_REQUIRES="${ARAVIS_REQUIRES} [gstreamer-base-0.10 >= 0.10]"
 			  with_gstreamer=yes],
 			  [echo -n])
 fi
