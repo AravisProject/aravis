@@ -52,7 +52,9 @@ enum
 {
   PROP_0,
   PROP_WIDTH,
-  PROP_HEIGHT
+  PROP_HEIGHT,
+  PROP_H_BINNING,
+  PROP_V_BINNING
 };
 
 GST_BOILERPLATE (GstAravis, gst_aravis, GstPushSrc, GST_TYPE_PUSH_SRC);
@@ -118,6 +120,7 @@ gst_aravis_start (GstBaseSrc *src)
 	gst_aravis->caps = gst_aravis_get_camera_caps (gst_aravis);
 
 	arv_camera_set_region (gst_aravis->camera, 0, 0, gst_aravis->width, gst_aravis->height);
+	arv_camera_set_binning (gst_aravis->camera, gst_aravis->h_binning, gst_aravis->v_binning);
 	gst_aravis->payload = arv_camera_get_payload (gst_aravis->camera);
 
 	for (i = 0; i < GST_ARAVIS_N_BUFFERS; i++)
@@ -198,6 +201,8 @@ gst_aravis_init (GstAravis *gst_aravis, GstAravisClass *g_class)
 
 	gst_aravis->width = 320;
 	gst_aravis->height = 200;
+	gst_aravis->h_binning = 1;
+	gst_aravis->v_binning = 1;
 	gst_aravis->payload = 0;
 
 	gst_aravis->camera = NULL;
@@ -240,6 +245,12 @@ gst_aravis_set_property (GObject * object, guint prop_id,
 		case PROP_HEIGHT:
 			gst_aravis->height = g_value_get_int (value);
 			break;
+		case PROP_H_BINNING:
+			gst_aravis->h_binning = g_value_get_int (value);
+			break;
+		case PROP_V_BINNING:
+			gst_aravis->v_binning = g_value_get_int (value);
+			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 			break;
@@ -258,6 +269,12 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 			break;
 		case PROP_HEIGHT:
 			g_value_set_int (value, gst_aravis->height);
+			break;
+		case PROP_H_BINNING:
+			g_value_set_int (value, gst_aravis->h_binning);
+			break;
+		case PROP_V_BINNING:
+			g_value_set_int (value, gst_aravis->v_binning);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -302,6 +319,22 @@ gst_aravis_class_init (GstAravisClass * klass)
 				   "Image height",
 				   "Image height (in pixels)",
 				   1, G_MAXINT, 320,
+				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+	g_object_class_install_property
+		(gobject_class,
+		 PROP_H_BINNING,
+		 g_param_spec_int ("h-binning",
+				   "Horizontal binning",
+				   "CCD horizontal binning",
+				   1, G_MAXINT, 1,
+				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+	g_object_class_install_property
+		(gobject_class,
+		 PROP_V_BINNING,
+		 g_param_spec_int ("v-binning",
+				   "Vertical binning",
+				   "CCD vertical binning",
+				   1, G_MAXINT, 1,
 				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
         GST_DEBUG_CATEGORY_INIT (aravis_debug, "aravis", 0, "Aravis interface");

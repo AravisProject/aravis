@@ -43,6 +43,8 @@ struct _GstAravis {
 
 	gint width;
 	gint height;
+	gint h_binning;
+	gint v_binning;
 	gint payload;
 
 	ArvCamera *camera;
