@@ -30,3 +30,4 @@ make*.out
 genicam.xml
 test.png
 test-report.*
+perf-report.*
