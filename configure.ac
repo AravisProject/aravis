@@ -88,6 +88,7 @@ gst/Makefile
 po/Makefile.in
 aravis.pc
 ])
+AC_CONFIG_FILES([gst/gst-aravis-launch], [chmod +x gst/gst-aravis-launch])
 AC_OUTPUT
 
 echo ""
