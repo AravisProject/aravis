@@ -24,3 +24,8 @@ Direct output
 
 aravissrc width=256 height=256 v-binning=4 h-binning=4 ! ffmpegcolorspace ! xvimagesink
 
+RTP
+~~~
+
+gstrtpbin name=rtpbin     aravissrc width=256 height=256 v-binning=4 h-binning=4 ! ffmpegcolorspace ! queue ! x264enc byte-stream=true bitrate=300 ! rtph264pay ! rtpbin.send_rtp_sink_0     rtpbin.send_rtp_src_0 ! udpsink port=5000 host=127.0.0.1 ts-offset=0 name=vrtpsink     rtpbin.send_rtcp_src_0 ! udpsink port=5001 host=127.0.0.1 sync=false async=false name=vrtcpsink     udpsrc port=5005 name=vrtpsrc ! rtpbin.recv_rtcp_sink_0
+
