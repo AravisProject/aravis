@@ -1,0 +1,26 @@
+Theora - udp
+~~~~~~~~~~~~
+
+aravissrc width=256 height=256 v-binning=4 h-binning=4 ! ffmpegcolorspace ! theoraenc bitrate=150 ! udpsink host=127.0.0.1 port=1234
+
+udpsrc port=1234 ! theoradec ! xvimagesink
+
+Mjpeg - tcp
+~~~~~~~~~~~
+
+aravissrc width=256 height=256 v-binning=4 h-binning=4 ! ffmpegcolorspace ! jpegenc quality=50 ! multipartmux ! tcpserversink port=1234
+
+tcpclientsrc host=127.0.0.1 port=1234 ! multipartdemux ! jpegdec ! xvimagesink
+
+Smoke - tcp
+~~~~~~~~~~~
+
+aravissrc width=256 height=256 v-binning=4 h-binning=4 ! ffmpegcolorspace ! smokeenc ! multipartmux ! tcpserversink port=1234
+
+tcpclientsrc host=127.0.0.1 port=1234 ! multipartdemux ! smokedec ! xvimagesink
+
+Direct output
+~~~~~~~~~~~~~
+
+aravissrc width=256 height=256 v-binning=4 h-binning=4 ! ffmpegcolorspace ! xvimagesink
+
