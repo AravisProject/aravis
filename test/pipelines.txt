@@ -29,3 +29,18 @@ RTP
 
 gstrtpbin name=rtpbin     aravissrc width=256 height=256 v-binning=4 h-binning=4 ! ffmpegcolorspace ! queue ! x264enc byte-stream=true bitrate=300 ! rtph264pay ! rtpbin.send_rtp_sink_0     rtpbin.send_rtp_src_0 ! udpsink port=5000 host=127.0.0.1 ts-offset=0 name=vrtpsink     rtpbin.send_rtcp_src_0 ! udpsink port=5001 host=127.0.0.1 sync=false async=false name=vrtcpsink     udpsrc port=5005 name=vrtpsrc ! rtpbin.recv_rtcp_sink_0
 
+gstrtpbin name=rtpbin latency=200      udpsrc caps="application/x-rtp,media=(string)video,clock-rate=(int)90000,encoding-name=(string)H264" port=5000 ! rtpbin.recv_rtp_sink_0        rtpbin. ! rtph264depay ! ffdec_h264 ! xvimagesink      udpsrc port=5001 ! rtpbin.recv_rtcp_sink_0          rtpbin.send_rtcp_src_0 ! udpsink port=5005 host=127.0.0.1 sync=false async=false      udpsrc port=5003 ! rtpbin.recv_rtcp_sink_1          rtpbin.send_rtcp_src_1 ! udpsink port=5007 host=127.0.0.1 sync=false async=false
+
+sdp file:
+
+v=0
+o=- 1188340656180883 1 IN IP4 127.0.0.1
+s=Session streamed by GStreamer
+i=server.sh
+t=0 0
+a=tool:GStreamer
+a=type:broadcast
+m=video 5000 RTP/AVP 96
+c=IN IP4 127.0.0.1
+a=rtpmap:96 H264/90000
+
