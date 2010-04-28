@@ -3,10 +3,7 @@
 prefix=@prefix@
 exec_prefix=@prefix@
 
-if [ -a @bindir@/gst-launch]
-then
-	LD_PRELOAD=@top_srcdir@/src/.libs/libaravis.so @bindir@/gst-launch --gst-plugin-load=@top_srcdir@/gst/.libs/libgstaravis.so -v $*
-else
-	LD_PRELOAD=@top_srcdir@/src/.libs/libaravis.so gst-launch --gst-plugin-load=@top_srcdir@/gst/.libs/libgstaravis.so -v $*
-fi
+export PATH=${exec_prefix}/bin:${PATH}
+
+LD_PRELOAD=@top_srcdir@/src/.libs/libaravis.so gst-launch --gst-plugin-load=@top_srcdir@/gst/.libs/libgstaravis.so -v $*
 
