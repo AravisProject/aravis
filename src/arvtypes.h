@@ -59,6 +59,9 @@ typedef struct _ArvGvInterface 		ArvGvInterface;
 typedef struct _ArvGvDevice 		ArvGvDevice;
 typedef struct _ArvGvStream 		ArvGvStream;
 
+typedef struct _ArvFakeDevice		ArvFakeDevice;
+typedef struct _ArvFakeStream		ArvFakeStream;
+
 typedef struct _ArvZip			ArvZip;
 typedef struct _ArvZipFile 		ArvZipFile;
 

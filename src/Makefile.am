@@ -57,7 +57,9 @@ libaravis_la_SOURCES =				\
 	arvgvsp.c				\
 	arvgvinterface.c			\
 	arvgvdevice.c				\
-	arvgvstream.c
+	arvgvstream.c				\
+	arvfakedevice.c				\
+	arvfakestream.c
 
 ARAVIS_HDRS = 					\
 	arv.h					\
@@ -93,7 +95,9 @@ ARAVIS_HDRS = 					\
 	arvgvsp.h				\
 	arvgvinterface.h			\
 	arvgvdevice.h				\
-	arvgvstream.h
+	arvgvstream.h				\
+	arvfakedevice.h				\
+	arvfakestream.h
 
 libaravis_ladir = $(includedir)/aravis
 libaravis_la_HEADERS = $(ARAVIS_HDRS)

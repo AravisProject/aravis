@@ -1,0 +1,116 @@
+/* Aravis - Digital camera library
+ *
+ * Copyright © 2009-2010 Emmanuel Pacaud
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General
+ * Public License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+ * Boston, MA 02111-1307, USA.
+ *
+ * Author: Emmanuel Pacaud <emmanuel@gnome.org>
+ */
+
+#include <arvfakedevice.h>
+#include <arvfakestream.h>
+#include <arvdebug.h>
+
+static GObjectClass *parent_class = NULL;
+
+struct _ArvFakeDevicePrivate {
+	char *name;
+};
+
+/* ArvFakeDevice implemenation */
+
+/* ArvDevice implemenation */
+
+static ArvStream *
+arv_fake_device_new_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data)
+{
+	return NULL;
+}
+
+gboolean
+arv_fake_device_read_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer)
+{
+	return FALSE;
+}
+
+gboolean
+arv_fake_device_write_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer)
+{
+	return FALSE;
+}
+
+gboolean
+arv_fake_device_read_register (ArvDevice *device, guint32 address, guint32 *value)
+{
+	return FALSE;
+}
+
+gboolean
+arv_fake_device_write_register (ArvDevice *device, guint32 address, guint32 value)
+{
+	return FALSE;
+}
+
+ArvDevice *
+arv_fake_device_new (const char *name)
+{
+	ArvFakeDevice *fake_device;
+
+	g_return_val_if_fail (name != NULL, NULL);
+
+	fake_device = g_object_new (ARV_TYPE_FAKE_DEVICE, NULL);
+
+	fake_device->priv->name = g_strdup (name);
+
+	return ARV_DEVICE (fake_device);
+}
+
+static void
+arv_fake_device_init (ArvFakeDevice *fake_device)
+{
+	fake_device->priv = G_TYPE_INSTANCE_GET_PRIVATE (fake_device, ARV_TYPE_FAKE_DEVICE, ArvFakeDevicePrivate);
+}
+
+static void
+arv_fake_device_finalize (GObject *object)
+{
+	ArvFakeDevice *fake_device = ARV_FAKE_DEVICE (object);
+
+	g_free (fake_device->priv->name);
+
+	parent_class->finalize (object);
+}
+
+static void
+arv_fake_device_class_init (ArvFakeDeviceClass *fake_device_class)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS (fake_device_class);
+	ArvDeviceClass *device_class = ARV_DEVICE_CLASS (fake_device_class);
+
+	g_type_class_add_private (fake_device_class, sizeof (ArvFakeDevicePrivate));
+
+	parent_class = g_type_class_peek_parent (fake_device_class);
+
+	object_class->finalize = arv_fake_device_finalize;
+
+	device_class->new_stream = arv_fake_device_new_stream;
+	device_class->read_memory = arv_fake_device_read_memory;
+	device_class->write_memory = arv_fake_device_write_memory;
+	device_class->read_register = arv_fake_device_read_register;
+	device_class->write_register = arv_fake_device_write_register;
+}
+
+G_DEFINE_TYPE (ArvFakeDevice, arv_fake_device, ARV_TYPE_DEVICE)
