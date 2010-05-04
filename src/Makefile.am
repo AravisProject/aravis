@@ -58,6 +58,7 @@ libaravis_la_SOURCES =				\
 	arvgvinterface.c			\
 	arvgvdevice.c				\
 	arvgvstream.c				\
+	arvfakeinterface.c			\
 	arvfakedevice.c				\
 	arvfakestream.c
 
@@ -96,6 +97,7 @@ ARAVIS_HDRS = 					\
 	arvgvinterface.h			\
 	arvgvdevice.h				\
 	arvgvstream.h				\
+	arvfakeinterface.h			\
 	arvfakedevice.h				\
 	arvfakestream.h
 
