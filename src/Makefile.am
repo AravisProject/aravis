@@ -11,6 +11,7 @@ INCLUDES = \
 	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\" \
 	-DPACKAGE_SRC_DIR=\""$(srcdir)"\" \
 	-DPACKAGE_DATA_DIR=\""$(datadir)"\" $(ARAVIS_CFLAGS) \
+	-DARAVIS_DATA_DIR=\""$(aravis_datadir)"\" \
 	-DG_LOG_DOMAIN=\"Aravis\"
 
 AM_CFLAGS = -Wall
@@ -60,7 +61,8 @@ libaravis_la_SOURCES =				\
 	arvgvstream.c				\
 	arvfakeinterface.c			\
 	arvfakedevice.c				\
-	arvfakestream.c
+	arvfakestream.c				\
+	arvfakecamera.c
 
 ARAVIS_HDRS = 					\
 	arv.h					\
@@ -99,7 +101,11 @@ ARAVIS_HDRS = 					\
 	arvgvstream.h				\
 	arvfakeinterface.h			\
 	arvfakedevice.h				\
-	arvfakestream.h
+	arvfakestream.h				\
+	arvfakecamera.h
+
+arv_fake_cameradir = $(aravis_datadir)
+arv_fake_camera_DATA = arv-fake-camera.xml
 
 libaravis_ladir = $(includedir)/aravis
 libaravis_la_HEADERS = $(ARAVIS_HDRS)

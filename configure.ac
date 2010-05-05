@@ -68,6 +68,8 @@ else
 fi
 AC_SUBST(gstplugindir)
 
+AC_SUBST(aravis_datadir, '$(datadir)/aravis')
+
 GST_PLUGIN_LDFLAGS='-module -avoid-version -export-symbols-regex [_]*\(gst_\|Gst\|GST_\).*'
 AC_SUBST(GST_PLUGIN_LDFLAGS)
 

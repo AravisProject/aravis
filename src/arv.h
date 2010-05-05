@@ -55,5 +55,9 @@
 #include <arvgvinterface.h>
 #include <arvgvdevice.h>
 #include <arvgvstream.h>
+#include <arvfakeinterface.h>
+#include <arvfakedevice.h>
+#include <arvfakestream.h>
+#include <arvfakecamera.h>
 
 #endif
