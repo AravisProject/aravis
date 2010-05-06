@@ -51,7 +51,11 @@ struct _ArvFakeCameraClass {
 
 GType arv_fake_camera_get_type (void);
 
-ArvFakeCamera * 	arv_fake_camera_new 			(void);
+ArvFakeCamera * arv_fake_camera_new 		(const char *serial_number);
+gboolean	arv_fake_camera_read_memory 	(ArvFakeCamera *camera, guint32 address, guint32 size, void *buffer);
+gboolean	arv_fake_camera_write_memory	(ArvFakeCamera *camera, guint32 address, guint32 size, void *buffer);
+gboolean 	arv_fake_camera_read_register	(ArvFakeCamera *camera, guint32 address, guint32 *value);
+gboolean	arv_fake_camera_write_register 	(ArvFakeCamera *camera, guint32 address, guint32 value);
 
 const char *		arv_get_fake_camera_genicam_data	(size_t *size);
 

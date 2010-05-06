@@ -29,9 +29,64 @@ static GObjectClass *parent_class = NULL;
 
 struct _ArvFakeCameraPrivate {
 	void *memory;
+	const void *genicam_data;
+	size_t genicam_data_size;
 };
 
 /* ArvFakeCamera implementation */
+
+gboolean
+arv_fake_camera_read_memory (ArvFakeCamera *camera, guint32 address, guint32 size, void *buffer)
+{
+	g_return_val_if_fail (ARV_IS_FAKE_CAMERA (camera), FALSE);
+	g_return_val_if_fail (buffer != NULL, FALSE);
+	g_return_val_if_fail (size > 0, FALSE);
+
+	/* TODO Handle read accross register space and genicam data */
+
+	if (address < ARV_FAKE_CAMERA_MEMORY_SIZE) {
+		g_return_val_if_fail (address + size < ARV_FAKE_CAMERA_MEMORY_SIZE, FALSE);
+
+		memcpy (buffer, camera->priv->memory + address, size);
+
+		return TRUE;
+	}
+
+	g_return_val_if_fail (address - ARV_FAKE_CAMERA_MEMORY_SIZE + size > camera->priv->genicam_data_size, FALSE);
+
+	memcpy (buffer, camera->priv->genicam_data + address - ARV_FAKE_CAMERA_MEMORY_SIZE, size);
+
+	return TRUE;
+}
+
+gboolean
+arv_fake_camera_write_memory (ArvFakeCamera *camera, guint32 address, guint32 size, void *buffer)
+{
+	g_return_val_if_fail (ARV_IS_FAKE_CAMERA (camera), FALSE);
+	g_return_val_if_fail (address + size < ARV_FAKE_CAMERA_MEMORY_SIZE + camera->priv->genicam_data_size, FALSE);
+	g_return_val_if_fail (buffer != NULL, FALSE);
+	g_return_val_if_fail (size > 0, FALSE);
+
+	/* genicam_data are read only */
+	if (address + size > ARV_FAKE_CAMERA_MEMORY_SIZE)
+		return FALSE;
+
+	memcpy (camera->priv->memory + address, buffer, size);
+
+	return TRUE;
+}
+
+gboolean
+arv_fake_camera_read_register (ArvFakeCamera *camera, guint32 address, guint32 *value)
+{
+	return arv_fake_camera_read_memory (camera, address, sizeof (*value), value);
+}
+
+gboolean
+arv_fake_camera_write_register (ArvFakeCamera *camera, guint32 address, guint32 value)
+{
+	return arv_fake_camera_write_memory (camera, address, sizeof (value), &value);
+}
 
 const char *
 arv_get_fake_camera_genicam_data (size_t *size)
@@ -70,30 +125,34 @@ arv_get_fake_camera_genicam_data (size_t *size)
 /* GObject implemenation */
 
 ArvFakeCamera *
-arv_fake_camera_new (void)
+arv_fake_camera_new (const char *serial_number)
 {
 	ArvFakeCamera *fake_camera;
 	void *memory;
 	char *xml_url;
-	size_t size;
+
+	g_return_val_if_fail (serial_number != NULL, NULL);
+	g_return_val_if_fail (*serial_number != '\0', NULL);
+	g_return_val_if_fail (strlen (serial_number) < ARV_GVBS_SERIAL_NUMBER_SIZE, NULL);
 
 	fake_camera = g_object_new (ARV_TYPE_FAKE_CAMERA, NULL);
 
 	memory = g_malloc0 (ARV_FAKE_CAMERA_MEMORY_SIZE);
 
+	fake_camera->priv->genicam_data = arv_get_fake_camera_genicam_data (&fake_camera->priv->genicam_data_size);
+	fake_camera->priv->memory = g_malloc0 (ARV_FAKE_CAMERA_MEMORY_SIZE);
+
 	strcpy (memory + ARV_GVBS_MANUFACTURER_NAME, "Aravis");
 	strcpy (memory + ARV_GVBS_MODEL_NAME, "Fake");
 	strcpy (memory + ARV_GVBS_DEVICE_VERSION, PACKAGE_VERSION);
-	strcpy (memory + ARV_GVBS_SERIAL_NUMBER, "0");
+	strcpy (memory + ARV_GVBS_SERIAL_NUMBER, serial_number);
 
-	arv_get_fake_camera_genicam_data (&size);
 	xml_url = g_strdup_printf ("Local:arv-fake-camera-%s.xml;%x;%x",
 				   PACKAGE_VERSION,
-				   ARV_FAKE_CAMERA_MEMORY_SIZE, size);
+				   ARV_FAKE_CAMERA_MEMORY_SIZE,
+				   fake_camera->priv->genicam_data_size);
 	strcpy (memory + ARV_GVBS_FIRST_XML_URL, xml_url);
 	g_free (xml_url);
-
-	fake_camera->priv->memory = g_malloc0 (ARV_FAKE_CAMERA_MEMORY_SIZE);
 
 	return fake_camera;
 }

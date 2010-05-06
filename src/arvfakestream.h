@@ -25,6 +25,7 @@
 
 #include <arvtypes.h>
 #include <arvstream.h>
+#include <arvfakecamera.h>
 
 G_BEGIN_DECLS
 
@@ -35,13 +36,13 @@ G_BEGIN_DECLS
 #define ARV_IS_FAKE_STREAM_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_FAKE_STREAM))
 #define ARV_FAKE_STREAM_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_FAKE_STREAM, ArvFakeStreamClass))
 
+typedef struct _ArvFakeStreamPrivate ArvFakeStreamPrivate;
 typedef struct _ArvFakeStreamClass ArvFakeStreamClass;
 
 struct _ArvFakeStream {
 	ArvStream	stream;
 
-	GThread *thread;
-	void *thread_data;
+	ArvFakeStreamPrivate *priv;
 };
 
 struct _ArvFakeStreamClass {
@@ -50,7 +51,7 @@ struct _ArvFakeStreamClass {
 
 GType arv_fake_stream_get_type (void);
 
-ArvStream * 		arv_fake_stream_new		(ArvStreamCallback callback, void *user_data);
+ArvStream * 	arv_fake_stream_new	(ArvFakeCamera *camera, ArvStreamCallback callback, void *user_data);
 
 G_END_DECLS
 

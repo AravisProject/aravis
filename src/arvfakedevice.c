@@ -27,7 +27,7 @@
 static GObjectClass *parent_class = NULL;
 
 struct _ArvFakeDevicePrivate {
-	char *name;
+	ArvFakeCamera *camera;
 };
 
 /* ArvFakeDevice implemenation */
@@ -37,43 +37,53 @@ struct _ArvFakeDevicePrivate {
 static ArvStream *
 arv_fake_device_new_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data)
 {
-	return NULL;
+	ArvFakeDevice *fake_device = ARV_FAKE_DEVICE (device);
+	ArvStream *stream;
+
+	stream = arv_fake_stream_new (fake_device->priv->camera, callback, user_data);
+
+	return stream;
 }
 
-gboolean
+static gboolean
 arv_fake_device_read_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer)
 {
-	return FALSE;
+	return arv_fake_camera_read_memory (ARV_FAKE_DEVICE (device)->priv->camera, address, size, buffer);
 }
 
-gboolean
+static gboolean
 arv_fake_device_write_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer)
 {
-	return FALSE;
+	return arv_fake_camera_write_memory (ARV_FAKE_DEVICE (device)->priv->camera, address, size, buffer);
 }
 
-gboolean
+static gboolean
 arv_fake_device_read_register (ArvDevice *device, guint32 address, guint32 *value)
 {
-	return FALSE;
+	return arv_fake_camera_read_register (ARV_FAKE_DEVICE (device)->priv->camera, address, value);
 }
 
-gboolean
+static gboolean
 arv_fake_device_write_register (ArvDevice *device, guint32 address, guint32 value)
 {
-	return FALSE;
+	return arv_fake_camera_write_register (ARV_FAKE_DEVICE (device)->priv->camera, address, value);
 }
 
 ArvDevice *
 arv_fake_device_new (const char *name)
 {
 	ArvFakeDevice *fake_device;
+	const void *genicam_data;
+	size_t genicam_data_size;
 
 	g_return_val_if_fail (name != NULL, NULL);
 
 	fake_device = g_object_new (ARV_TYPE_FAKE_DEVICE, NULL);
 
-	fake_device->priv->name = g_strdup (name);
+	fake_device->priv->camera = arv_fake_camera_new (name);
+
+	genicam_data = arv_get_fake_camera_genicam_data (&genicam_data_size);
+	arv_device_set_genicam_data (ARV_DEVICE (fake_device), (char *) genicam_data, genicam_data_size);
 
 	return ARV_DEVICE (fake_device);
 }
@@ -89,7 +99,7 @@ arv_fake_device_finalize (GObject *object)
 {
 	ArvFakeDevice *fake_device = ARV_FAKE_DEVICE (object);
 
-	g_free (fake_device->priv->name);
+	g_object_unref (fake_device->priv->camera);
 
 	parent_class->finalize (object);
 }

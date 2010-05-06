@@ -26,6 +26,13 @@
 
 static GObjectClass *parent_class = NULL;
 
+struct _ArvFakeStreamPrivate {
+	GThread *thread;
+	void *thread_data;
+
+	ArvFakeCamera *camera;
+};
+
 /* Acquisition thread */
 
 typedef struct {
@@ -60,11 +67,15 @@ arv_fake_stream_thread (void *data)
 /* ArvFakeStream implemenation */
 
 ArvStream *
-arv_fake_stream_new (ArvStreamCallback callback, void *user_data)
+arv_fake_stream_new (ArvFakeCamera *camera, ArvStreamCallback callback, void *user_data)
 {
 	ArvFakeStream *fake_stream;
 	ArvFakeStreamThreadData *thread_data;
 	ArvStream *stream;
+
+	g_return_val_if_fail (ARV_IS_FAKE_CAMERA (camera), NULL);
+
+	g_object_ref (camera);
 
 	fake_stream = g_object_new (ARV_TYPE_FAKE_STREAM, NULL);
 
@@ -81,9 +92,10 @@ arv_fake_stream_new (ArvStreamCallback callback, void *user_data)
 	thread_data->n_failures = 0;
 	thread_data->n_underruns = 0;
 
-	fake_stream->thread_data = thread_data;
-
-	fake_stream->thread = g_thread_create (arv_fake_stream_thread, fake_stream->thread_data, TRUE, NULL);
+	fake_stream->priv->camera = camera;
+	fake_stream->priv->thread_data = thread_data;
+	fake_stream->priv->thread = g_thread_create (arv_fake_stream_thread,
+						     fake_stream->priv->thread_data, TRUE, NULL);
 
 	return ARV_STREAM (fake_stream);
 }
@@ -99,7 +111,7 @@ arv_fake_stream_get_statistics (ArvStream *stream,
 	ArvFakeStream *fake_stream = ARV_FAKE_STREAM (stream);
 	ArvFakeStreamThreadData *thread_data;
 
-	thread_data = fake_stream->thread_data;
+	thread_data = fake_stream->priv->thread_data;
 
 	*n_processed_buffers = thread_data->n_processed_buffers;
 	*n_failures = thread_data->n_failures;
@@ -109,6 +121,7 @@ arv_fake_stream_get_statistics (ArvStream *stream,
 static void
 arv_fake_stream_init (ArvFakeStream *fake_stream)
 {
+	fake_stream->priv = G_TYPE_INSTANCE_GET_PRIVATE (fake_stream, ARV_TYPE_FAKE_STREAM, ArvFakeStreamPrivate);
 }
 
 static void
@@ -116,18 +129,20 @@ arv_fake_stream_finalize (GObject *object)
 {
 	ArvFakeStream *fake_stream = ARV_FAKE_STREAM (object);
 
-	if (fake_stream->thread != NULL) {
+	if (fake_stream->priv->thread != NULL) {
 		ArvFakeStreamThreadData *thread_data;
 
-		thread_data = fake_stream->thread_data;
+		thread_data = fake_stream->priv->thread_data;
 
 		thread_data->cancel = TRUE;
-		g_thread_join (fake_stream->thread);
+		g_thread_join (fake_stream->priv->thread);
 		g_free (thread_data);
 
-		fake_stream->thread_data = NULL;
-		fake_stream->thread = NULL;
+		fake_stream->priv->thread_data = NULL;
+		fake_stream->priv->thread = NULL;
 	}
+
+	g_object_unref (fake_stream->priv->camera);
 
 	parent_class->finalize (object);
 }
@@ -137,6 +152,8 @@ arv_fake_stream_class_init (ArvFakeStreamClass *fake_stream_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (fake_stream_class);
 	ArvStreamClass *stream_class = ARV_STREAM_CLASS (fake_stream_class);
+
+	g_type_class_add_private (fake_stream_class, sizeof (ArvFakeStreamPrivate));
 
 	parent_class = g_type_class_peek_parent (fake_stream_class);
 
