@@ -50,7 +50,7 @@ struct _ArvFakeDeviceClass {
 
 GType arv_fake_device_get_type (void);
 
-ArvDevice * 		arv_fake_device_new 		(const char *name);
+ArvDevice * 		arv_fake_device_new 		(const char *serial_number);
 
 G_END_DECLS
 

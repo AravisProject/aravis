@@ -377,19 +377,19 @@ arv_gc_set_double_to_value (ArvGc *genicam, GValue *value, double v_double)
 }
 
 ArvGc *
-arv_gc_new (ArvDevice *device, char *xml, size_t size)
+arv_gc_new (ArvDevice *device, const void *xml, size_t size)
 {
 	ArvGc *genicam;
 
 	g_return_val_if_fail (xml != NULL, NULL);
 	if (size == 0)
-		size = strlen (xml);
+		size = strlen ((char *) xml);
 
 	genicam = g_object_new (ARV_TYPE_GC, NULL);
 	g_return_val_if_fail (genicam != NULL, NULL);
 	genicam->device = device;
 
-	arv_gc_parse_xml (genicam, xml, size);
+	arv_gc_parse_xml (genicam, (char *) xml, size);
 
 	return genicam;
 }

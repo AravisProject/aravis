@@ -21,6 +21,7 @@
  */
 
 #include <arvgvdevice.h>
+#include <arvgc.h>
 #include <arvdebug.h>
 #include <arvgvstream.h>
 #include <arvgvcp.h>
@@ -38,6 +39,8 @@ struct _ArvGvDevicePrivate {
 
 	void *heartbeat_thread;
 	void *heartbeat_data;
+
+	ArvGc *genicam;
 };
 
 /* Shared data (main thread - heartbeat) */
@@ -393,8 +396,10 @@ arv_gv_device_load_genicam (ArvGvDevice *gv_device)
 	if (genicam == NULL)
 		genicam = _load_genicam (gv_device, ARV_GVBS_SECOND_XML_URL, &size);
 
-	if (genicam != NULL)
-		arv_device_set_genicam_data (ARV_DEVICE (gv_device), genicam, size);
+	if (genicam != NULL) {
+		gv_device->priv->genicam = arv_gc_new (ARV_DEVICE (gv_device), genicam, size);
+		g_free (genicam);
+	}
 }
 
 /* ArvDevice implemenation */
@@ -426,6 +431,14 @@ arv_gv_device_new_stream (ArvDevice *device, ArvStreamCallback callback, void *u
 	arv_debug ("device", "[GvDevice::create_stream] stream port = %d", stream_port);
 
 	return stream;
+}
+
+static ArvGc *
+arv_gv_device_get_genicam (ArvDevice *device)
+{
+	ArvGvDevice *gv_device = ARV_GV_DEVICE (device);
+
+	return gv_device->priv->genicam;
 }
 
 gboolean
@@ -536,6 +549,8 @@ static void
 arv_gv_device_init (ArvGvDevice *gv_device)
 {
 	gv_device->priv = G_TYPE_INSTANCE_GET_PRIVATE (gv_device, ARV_TYPE_GV_DEVICE, ArvGvDevicePrivate);
+
+	gv_device->priv->genicam = NULL;
 }
 
 static void
@@ -568,6 +583,9 @@ arv_gv_device_finalize (GObject *object)
 
 	g_free (gv_device->priv->io_data);
 
+	if (gv_device->priv->genicam != NULL)
+		g_object_unref (gv_device->priv->genicam);
+
 	parent_class->finalize (object);
 }
 
@@ -584,6 +602,7 @@ arv_gv_device_class_init (ArvGvDeviceClass *gv_device_class)
 	object_class->finalize = arv_gv_device_finalize;
 
 	device_class->new_stream = arv_gv_device_new_stream;
+	device_class->get_genicam = arv_gv_device_get_genicam;
 	device_class->read_memory = arv_gv_device_read_memory;
 	device_class->write_memory = arv_gv_device_write_memory;
 	device_class->read_register = arv_gv_device_read_register;

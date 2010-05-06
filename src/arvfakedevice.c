@@ -22,12 +22,14 @@
 
 #include <arvfakedevice.h>
 #include <arvfakestream.h>
+#include <arvgc.h>
 #include <arvdebug.h>
 
 static GObjectClass *parent_class = NULL;
 
 struct _ArvFakeDevicePrivate {
 	ArvFakeCamera *camera;
+	ArvGc *genicam;
 };
 
 /* ArvFakeDevice implemenation */
@@ -43,6 +45,14 @@ arv_fake_device_new_stream (ArvDevice *device, ArvStreamCallback callback, void 
 	stream = arv_fake_stream_new (fake_device->priv->camera, callback, user_data);
 
 	return stream;
+}
+
+static ArvGc *
+arv_fake_device_get_genicam (ArvDevice *device)
+{
+	ArvFakeDevice *fake_device = ARV_FAKE_DEVICE (device);
+
+	return fake_device->priv->genicam;
 }
 
 static gboolean
@@ -70,20 +80,20 @@ arv_fake_device_write_register (ArvDevice *device, guint32 address, guint32 valu
 }
 
 ArvDevice *
-arv_fake_device_new (const char *name)
+arv_fake_device_new (const char *serial_number)
 {
 	ArvFakeDevice *fake_device;
 	const void *genicam_data;
 	size_t genicam_data_size;
 
-	g_return_val_if_fail (name != NULL, NULL);
+	g_return_val_if_fail (serial_number != NULL, NULL);
 
 	fake_device = g_object_new (ARV_TYPE_FAKE_DEVICE, NULL);
 
-	fake_device->priv->camera = arv_fake_camera_new (name);
+	fake_device->priv->camera = arv_fake_camera_new (serial_number);
 
 	genicam_data = arv_get_fake_camera_genicam_data (&genicam_data_size);
-	arv_device_set_genicam_data (ARV_DEVICE (fake_device), (char *) genicam_data, genicam_data_size);
+	fake_device->priv->genicam = arv_gc_new (ARV_DEVICE (fake_device), genicam_data, genicam_data_size);
 
 	return ARV_DEVICE (fake_device);
 }
@@ -99,6 +109,7 @@ arv_fake_device_finalize (GObject *object)
 {
 	ArvFakeDevice *fake_device = ARV_FAKE_DEVICE (object);
 
+	g_object_unref (fake_device->priv->genicam);
 	g_object_unref (fake_device->priv->camera);
 
 	parent_class->finalize (object);
@@ -117,6 +128,7 @@ arv_fake_device_class_init (ArvFakeDeviceClass *fake_device_class)
 	object_class->finalize = arv_fake_device_finalize;
 
 	device_class->new_stream = arv_fake_device_new_stream;
+	device_class->get_genicam = arv_fake_device_get_genicam;
 	device_class->read_memory = arv_fake_device_read_memory;
 	device_class->write_memory = arv_fake_device_write_memory;
 	device_class->read_register = arv_fake_device_read_register;

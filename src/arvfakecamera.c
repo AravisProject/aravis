@@ -21,6 +21,8 @@
  */
 
 #include <arvfakecamera.h>
+#include <arvgc.h>
+#include <arvgcregister.h>
 #include <arvgvcp.h>
 #include <arvdebug.h>
 #include <string.h>
@@ -153,6 +155,15 @@ arv_fake_camera_new (const char *serial_number)
 				   fake_camera->priv->genicam_data_size);
 	strcpy (memory + ARV_GVBS_FIRST_XML_URL, xml_url);
 	g_free (xml_url);
+
+	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_SENSOR_WIDTH, 2048);
+	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_SENSOR_HEIGHT, 2048);
+	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_WIDTH, 512);
+	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_HEIGHT, 512);
+	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_BINNING_HORIZONTAL, 1);
+	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_BINNING_VERTICAL, 1);
+	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_GAIN_RAW, 0);
+	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_GAIN_MODE, 0);
 
 	return fake_camera;
 }

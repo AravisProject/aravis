@@ -26,12 +26,6 @@
 
 static GObjectClass *parent_class = NULL;
 
-struct _ArvDevicePrivate {
-	ArvGc *genicam;
-	char *genicam_data;
-	size_t genicam_size;
-};
-
 ArvStream *
 arv_device_new_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data)
 {
@@ -77,56 +71,22 @@ arv_device_write_register (ArvDevice *device, guint32 address, guint32 value)
 	return ARV_DEVICE_GET_CLASS (device)->write_register (device, address, value);
 }
 
-void
-arv_device_set_genicam_data (ArvDevice *device, char *genicam, size_t size)
-{
-	g_return_if_fail (ARV_IS_DEVICE (device));
-
-	g_free (device->priv->genicam_data);
-	if (device->priv->genicam != NULL)
-		g_object_unref (device->priv->genicam);
-	device->priv->genicam_data = genicam;
-	device->priv->genicam_size = size;
-
-	device->priv->genicam = arv_gc_new (device,
-					    device->priv->genicam_data,
-					    device->priv->genicam_size);
-}
-
-const char *
-arv_device_get_genicam_data (ArvDevice *device, size_t *size)
-{
-	g_return_val_if_fail (ARV_IS_DEVICE (device), NULL);
-
-	if (size != NULL)
-		*size = device->priv->genicam_size;
-
-	return device->priv->genicam_data;
-}
-
 ArvGc *
 arv_device_get_genicam (ArvDevice *device)
 {
 	g_return_val_if_fail (ARV_IS_DEVICE (device), NULL);
 
-	return device->priv->genicam;
+	return ARV_DEVICE_GET_CLASS (device)->get_genicam (device);
 }
 
 static void
 arv_device_init (ArvDevice *device)
 {
-	device->priv = G_TYPE_INSTANCE_GET_PRIVATE (device, ARV_TYPE_DEVICE, ArvDevicePrivate);
 }
 
 static void
 arv_device_finalize (GObject *object)
 {
-	ArvDevice *device = ARV_DEVICE (object);
-
-	g_free (device->priv->genicam_data);
-	if (device->priv->genicam != NULL)
-		g_object_unref (device->priv->genicam);
-
 	parent_class->finalize (object);
 }
 
@@ -134,8 +94,6 @@ static void
 arv_device_class_init (ArvDeviceClass *device_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (device_class);
-
-	g_type_class_add_private (device_class, sizeof (ArvDevicePrivate));
 
 	parent_class = g_type_class_peek_parent (device_class);
 
