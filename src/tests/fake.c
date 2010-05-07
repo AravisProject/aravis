@@ -52,6 +52,8 @@ fake_device_test (void)
 	g_assert_cmpint (value, ==, 0);
 	value = arv_gc_enumeration_get_int_value (ARV_GC_ENUMERATION (arv_gc_get_node (genicam, "GainAuto")));
 	g_assert_cmpint (value, ==, 0);
+	value = arv_gc_float_get_value (ARV_GC_FLOAT (arv_gc_get_node (genicam, "ExposureTimeAbs")));
+	g_assert_cmpfloat (value, ==, 40000.0);
 
 	g_object_unref (device);
 }
