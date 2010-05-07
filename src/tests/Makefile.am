@@ -4,7 +4,9 @@ INCLUDES = -g -I$(top_srcdir)/src/ $(ARAVIS_CFLAGS)
 
 noinst_PROGRAMS = $(TEST_PROGS)
 
-TEST_PROGS        += evaluator genicam fake
+TEST_PROGS += evaluator genicam fake
+
+EXTRA_DIST += genicam.xml
 
 evaluator_SOURCES = evaluator.c
 evaluator_LDADD = $(ARAVIS_LIBS) $(top_builddir)/src/libaravis.la
@@ -14,5 +16,6 @@ genicam_CFLAGS = -DGENICAM_FILENAME="\"$(srcdir)/genicam.xml\""
 genicam_LDADD = $(ARAVIS_LIBS) $(top_builddir)/src/libaravis.la
 
 fake_SOURCES = fake.c
+fake_CFLAGS = -DGENICAM_FILENAME="\"$(srcdir)/../arv-fake-camera.xml\""
 fake_LDADD = $(ARAVIS_LIBS) $(top_builddir)/src/libaravis.la
 

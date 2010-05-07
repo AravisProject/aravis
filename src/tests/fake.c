@@ -67,6 +67,8 @@ main (int argc, char *argv[])
 
 	g_type_init ();
 
+	arv_set_fake_camera_genicam_filename (GENICAM_FILENAME);
+
 	g_test_add_func ("/fake/load-fake-camera-genicam", load_fake_camera_genicam_test);
 	g_test_add_func ("/fake/fake-device", fake_device_test);
 

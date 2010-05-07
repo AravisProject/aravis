@@ -35,6 +35,8 @@ struct _ArvFakeCameraPrivate {
 	size_t genicam_data_size;
 };
 
+static const char *arv_fake_camera_genicam_filename = NULL;
+
 /* ArvFakeCamera implementation */
 
 gboolean
@@ -90,6 +92,12 @@ arv_fake_camera_write_register (ArvFakeCamera *camera, guint32 address, guint32 
 	return arv_fake_camera_write_memory (camera, address, sizeof (value), &value);
 }
 
+void
+arv_set_fake_camera_genicam_filename (const char *filename)
+{
+	arv_fake_camera_genicam_filename = filename;
+}
+
 const char *
 arv_get_fake_camera_genicam_data (size_t *size)
 {
@@ -101,7 +109,11 @@ arv_get_fake_camera_genicam_data (size_t *size)
 	if (genicam_file == NULL ) {
 		char *filename;
 
-		filename = g_build_filename (ARAVIS_DATA_DIR, "arv-fake-camera.xml", NULL);
+		if (arv_fake_camera_genicam_filename == NULL)
+			filename = g_build_filename (ARAVIS_DATA_DIR, "arv-fake-camera.xml", NULL);
+		else
+			filename = g_strdup (arv_fake_camera_genicam_filename);
+
 		genicam_file = g_mapped_file_new (filename, FALSE, NULL);
 
 		if (genicam_file != NULL) {
