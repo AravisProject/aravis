@@ -187,6 +187,28 @@
 		<Endianess>LittleEndian</Endianess>
 	</IntReg>
 
+	<Float Name="ExposureTimeAbs" NameSpace="Standard">
+		<Description>Exposure duration, in microseconds.</Description>
+		<pValue>ExposureTimeAbsConverter</pValue>
+		<Min>10.0</Min>
+		<Max>10000000.0</Max>
+	</Float>
+
+	<Converter Name="ExposureTimeAbsConverter" NameSpace="Custom">
+		<FormulaTo>FROM</FormulaTo>
+		<FormulaFrom>TO</FormulaFrom>
+		<pValue>ExposureTimeAbsRegister</pValue>
+	</Converter>
+
+	<IntReg Name="ExposureTimeAbsRegister" NameSpace="Custom">
+		<Address>0x120</Address>
+		<Length>4</Length>
+		<AccessMode>RW</AccessMode>
+		<pPort>Device</pPort>
+		<Sign>Unsigned</Sign>
+		<Endianess>LittleEndian</Endianess>
+	</IntReg>
+
 	<Port Name="Device" NameSpace="Standard">
 	</Port>
 
