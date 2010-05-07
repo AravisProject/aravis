@@ -1,4 +1,4 @@
-gvcp.lua is a wireshark dissector for the GigeVision control protocol, written in lua.
+gvcp.lua is a wireshark dissector for the gigabit ethernet camera control protocol, written in lua.
 
 To use it, you first have to enable lua script in the wireshark configuration (assuming you have wireshark compiled with lua scripting support).
 

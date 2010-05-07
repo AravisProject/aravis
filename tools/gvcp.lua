@@ -1,5 +1,5 @@
 -- dissects the Gvcp Protocol
-gvcp_proto = Proto("gvcp", "GigeVision control protocol")
+gvcp_proto = Proto("gvcp", "Gigabit ethernet camera control protocol")
 
 local f = gvcp_proto.fields
 

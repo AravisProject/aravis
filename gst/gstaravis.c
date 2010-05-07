@@ -23,7 +23,7 @@
 /**
  * SECTION:element-aravissrc
  *
- * Source using the Aravis vision library (GigE Vision cameras)
+ * Source using the Aravis vision library
  * 
  * <refsect2>
  * <title>Example launch line</title>
@@ -45,7 +45,7 @@ GST_DEBUG_CATEGORY_STATIC (aravis_debug);
 static GstElementDetails aravis_details =
 GST_ELEMENT_DETAILS ("Aravis Video Source",
 		     "Source/Video",
-		     "Aravis based source, supports GigE Vision cameras",
+		     "Aravis based source",
 		     "Emmanuel Pacaud <emmanuel@gnome.org>");
 
 enum
