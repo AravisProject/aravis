@@ -1,200 +1,193 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <RegisterDescription
- ModelName="Model"
- VendorName="Aravis"
- StandardNameSpace="None"
- SchemaMajorVersion="1"
- SchemaMinorVersion="0"
- SchemaSubMinorVersion="0"
- MajorVersion="1"
- MinorVersion="0"
- SubMinorVersion="0"
- ToolTip="Fake camera"
- ProductGuid="0"
- VersionGuid="0"
- xmlns="http://www.genicam.org/GenApi/Version_1_0"
- xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
- xsi:schemaLocation="http://www.genicam.org/GenApi/Version_1_0 GenApiSchema.xsd">
+	ModelName="Fake"
+	VendorName="Aravis"
+	StandardNameSpace="None"
+	SchemaMajorVersion="1"
+	SchemaMinorVersion="0"
+	SchemaSubMinorVersion="1"
+	MajorVersion="1"
+	MinorVersion="0"
+	SubMinorVersion="0"
+	ToolTip="Fake camera"
+	ProductGuid="0"
+	VersionGuid="0"
+	xmlns="http://www.genicam.org/GenApi/Version_1_0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.genicam.org/GenApi/Version_1_0 GenApiSchema.xsd">
 
- <Category Name="Root" NameSpace="Standard">
-	 <pFeature>AcquisitionControl</pFeature>
-	 <pFeature>FeatureControl</pFeature>
- </Category>
+	<Category Name="Root" NameSpace="Standard">
+		<pFeature>AcquisitionControl</pFeature>
+		<pFeature>FeatureControl</pFeature>
+	</Category>
 
- <Category Name="AcquisitionControl" NameSpace="Custom">
-	 <pFeature>AcquisitionStart</pFeature>
-	 <pFeature>AcquisitionStop</pFeature>
- </Category>
+	<Category Name="AcquisitionControl" NameSpace="Custom">
+		<pFeature>AcquisitionStart</pFeature>
+		<pFeature>AcquisitionStop</pFeature>
+	</Category>
 
- <Category Name="FeatureControl" NameSpace="Custom">
-	 <pFeature>GainSelector</pFeature>
-	 <pFeature>GainRaw</pFeature>
-	 <pFeature>GainAuto</pFeature>
- </Category>
+	<Category Name="FeatureControl" NameSpace="Custom">
+		<pFeature>GainSelector</pFeature>
+		<pFeature>GainRaw</pFeature>
+		<pFeature>GainAuto</pFeature>
+	</Category>
 
- <Command Name="AcquisitionStart" NameSpace="Standard">
-	 <Description>Start acquisition. Before image acquisition can occur, acquisition must be started, either by a hardware trigger or this software command.</Description>
-	 <pValue>RegAcquisitionCommand</pValue>
-	 <CommandValue>1</CommandValue>
- </Command>
+	<Command Name="AcquisitionStart" NameSpace="Standard">
+		<Description>Start acquisition.</Description>
+		<pValue>AcquisitionCommandRegister</pValue>
+		<CommandValue>1</CommandValue>
+	</Command>
 
- <Command Name="AcquisitionStop" NameSpace="Standard">
-  <Description>Stop acquisition. Acquisition will stop after acquisition of the current frame is complete.</Description>
-  <pValue>RegAcquisitionCommand</pValue>
-  <CommandValue>0</CommandValue>
- </Command>
+	<Command Name="AcquisitionStop" NameSpace="Standard">
+		<Description>Stop acquisition.</Description>
+		<pValue>AcquisitionCommandRegister</pValue>
+		<CommandValue>0</CommandValue>
+	</Command>
 
- <IntReg Name="RegAcquisitionCommand" NameSpace="Custom">
-  <Address>0x120</Address>
-  <Length>4</Length>
-  <AccessMode>WO</AccessMode>
-  <pPort>Device</pPort>
-  <Sign>Unsigned</Sign>
-  <Endianess>LittleEndian</Endianess>
- </IntReg>
+	<IntReg Name="AcquisitionCommandRegister" NameSpace="Custom">
+		<Address>0x120</Address>
+		<Length>4</Length>
+		<AccessMode>WO</AccessMode>
+		<pPort>Device</pPort>
+		<Sign>Unsigned</Sign>
+		<Endianess>LittleEndian</Endianess>
+	</IntReg>
 
- <Integer Name="SensorHeight" NameSpace="Standard">
-	 <Description>Full height of image sensor.</Description>
-	 <pValue>RegSensorHeight</pValue>
- </Integer>
+	<Integer Name="SensorHeight" NameSpace="Standard">
+		<Description>Full height of image sensor.</Description>
+		<pValue>SensorHeightRegister</pValue>
+	</Integer>
 
- <IntReg Name="RegSensorHeight" NameSpace="Custom">
-	 <Address>0x118</Address>
-	 <Length>4</Length>
-	 <AccessMode>RO</AccessMode>
-	 <pPort>Device</pPort>
-	 <Sign>Unsigned</Sign>
-	 <Endianess>LittleEndian</Endianess>
- </IntReg>
+	<IntReg Name="SensorHeightRegister" NameSpace="Custom">
+		<Address>0x118</Address>
+		<Length>4</Length>
+		<AccessMode>RO</AccessMode>
+		<pPort>Device</pPort>
+		<Sign>Unsigned</Sign>
+		<Endianess>LittleEndian</Endianess>
+	</IntReg>
 
- <Integer Name="SensorWidth" NameSpace="Standard">
-	 <Description>Full height of image sensor.</Description>
-	 <pValue>RegSensorWidth</pValue>
- </Integer>
+	<Integer Name="SensorWidth" NameSpace="Standard">
+		<Description>Full height of image sensor.</Description>
+		<pValue>SensorWidthRegister</pValue>
+	</Integer>
 
- <IntReg Name="RegSensorWidth" NameSpace="Custom">
-	 <Address>0x11c</Address>
-	 <Length>4</Length>
-	 <AccessMode>RO</AccessMode>
-	 <pPort>Device</pPort>
-	 <Sign>Unsigned</Sign>
-	 <Endianess>LittleEndian</Endianess>
- </IntReg>
+	<IntReg Name="SensorWidthRegister" NameSpace="Custom">
+		<Address>0x11c</Address>
+		<Length>4</Length>
+		<AccessMode>RO</AccessMode>
+		<pPort>Device</pPort>
+		<Sign>Unsigned</Sign>
+		<Endianess>LittleEndian</Endianess>
+	</IntReg>
 
- <Integer Name="Width" NameSpace="Standard">
-	 <Description>Width of image, in pixels.</Description>
-	 <pValue>RegWidth</pValue>
-	 <Min>1</Min>
-	 <pMax>SensorWidth</pMax>
-	 <Inc>1</Inc>
- </Integer>
+	<Integer Name="Width" NameSpace="Standard">
+		<Description>Width of image, in pixels.</Description>
+		<pValue>WidthRegister</pValue>
+		<Min>1</Min>
+		<pMax>SensorWidth</pMax>
+		<Inc>1</Inc>
+	</Integer>
 
- <IntReg Name="RegWidth" NameSpace="Custom">
-	 <Address>0x100</Address>
-	 <Length>4</Length>
-	 <AccessMode>RW</AccessMode>
-	 <pPort>Device</pPort>
-	 <Sign>Unsigned</Sign>
-	 <Endianess>LittleEndian</Endianess>
- </IntReg>
+	<IntReg Name="WidthRegister" NameSpace="Custom">
+		<Address>0x100</Address>
+		<Length>4</Length>
+		<AccessMode>RW</AccessMode>
+		<pPort>Device</pPort>
+		<Sign>Unsigned</Sign>
+		<Endianess>LittleEndian</Endianess>
+	</IntReg>
 
- <Integer Name="Height" NameSpace="Standard">
-	 <Description>Height of image, in pixels.</Description>
-	 <pValue>RegHeight</pValue>
-	 <Min>1</Min>
-	 <pMax>SensorHeight</pMax>
-	 <Inc>1</Inc>
- </Integer>
+	<Integer Name="Height" NameSpace="Standard">
+		<Description>Height of image, in pixels.</Description>
+		<pValue>HeightRegister</pValue>
+		<Min>1</Min>
+		<pMax>SensorHeight</pMax>
+		<Inc>1</Inc>
+	</Integer>
 
- <IntReg Name="RegHeight" NameSpace="Custom">
-	 <Address>0x104</Address>
-	 <Length>4</Length>
-	 <AccessMode>RW</AccessMode>
-	 <pPort>Device</pPort>
-	 <Sign>Unsigned</Sign>
-	 <Endianess>LittleEndian</Endianess>
- </IntReg>
+	<IntReg Name="HeightRegister" NameSpace="Custom">
+		<Address>0x104</Address>
+		<Length>4</Length>
+		<AccessMode>RW</AccessMode>
+		<pPort>Device</pPort>
+		<Sign>Unsigned</Sign>
+		<Endianess>LittleEndian</Endianess>
+	</IntReg>
 
- <Integer Name="BinningHorizontal" NameSpace="Standard">
-	 <Description>Binning in horizontal direction.</Description>
-	 <pValue>RegBinningHorizontal</pValue>
-	 <Min>1</Min>
-	 <Max>16</Max>
- </Integer>
+	<Integer Name="BinningHorizontal" NameSpace="Standard">
+		<Description>Binning in horizontal direction.</Description>
+		<pValue>BinningHorizontalRegister</pValue>
+		<Min>1</Min>
+		<Max>16</Max>
+	</Integer>
 
- <IntReg Name="RegBinningHorizontal" NameSpace="Custom">
-	 <Address>0x108</Address>
-	 <Length>4</Length>
-	 <AccessMode>RW</AccessMode>
-	 <pPort>Device</pPort>
-	 <Sign>Unsigned</Sign>
-	 <Endianess>LittleEndian</Endianess>
- </IntReg>
+	<IntReg Name="BinningHorizontalRegister" NameSpace="Custom">
+		<Address>0x108</Address>
+		<Length>4</Length>
+		<AccessMode>RW</AccessMode>
+		<pPort>Device</pPort>
+		<Sign>Unsigned</Sign>
+		<Endianess>LittleEndian</Endianess>
+	</IntReg>
 
- <Integer Name="BinningVertical" NameSpace="Standard">
-	 <Description>Binning in vertical direction.</Description>
-	 <pValue>RegBinningVertical</pValue>
-	 <Min>1</Min>
-	 <Max>16</Max>
- </Integer>
+	<Integer Name="BinningVertical" NameSpace="Standard">
+		<Description>Binning in vertical direction.</Description>
+		<pValue>BinningVerticalRegister</pValue>
+		<Min>1</Min>
+		<Max>16</Max>
+	</Integer>
 
- <IntReg Name="RegBinningVertical" NameSpace="Custom">
-	 <Address>0x10c</Address>
-	 <Length>4</Length>
-	 <AccessMode>RW</AccessMode>
-	 <pPort>Device</pPort>
-	 <Sign>Unsigned</Sign>
-	 <Endianess>LittleEndian</Endianess>
- </IntReg>
+	<IntReg Name="BinningVerticalRegister" NameSpace="Custom">
+		<Address>0x10c</Address>
+		<Length>4</Length>
+		<AccessMode>RW</AccessMode>
+		<pPort>Device</pPort>
+		<Sign>Unsigned</Sign>
+		<Endianess>LittleEndian</Endianess>
+	</IntReg>
 
- <Enumeration Name="GainSelector" NameSpace="Standard">
-	 <EnumEntry Name="All" NameSpace="Standard">
-		 <Value>0</Value>
-	 </EnumEntry>
-	 <Value>0</Value>
- </Enumeration>
+	<Integer Name="GainRaw" NameSpace="Standard">
+		<Description>Raw gain.</Description>
+		<pValue>GainRawRegister</pValue>
+		<Min>0</Min>
+		<Max>10</Max>
+	</Integer>
 
- <Integer Name="GainRaw" NameSpace="Standard">
-	 <Description>Gain value of analog A/D stage. Units are usually in dB.</Description>
-	 <pValue>RegGainValue</pValue>
-	 <Min>0</Min>
-	 <Max>10</Max>
- </Integer>
+	<IntReg Name="GainRawRegister" NameSpace="Custom">
+		<Address>0x110</Address>
+		<Length>4</Length>
+		<AccessMode>RW</AccessMode>
+		<pPort>Device</pPort>
+		<Sign>Unsigned</Sign>
+		<Endianess>LittleEndian</Endianess>
+	</IntReg>
 
- <IntReg Name="RegGainValue" NameSpace="Custom">
-	 <Address>0x110</Address>
-	 <Length>4</Length>
-	 <AccessMode>RW</AccessMode>
-	 <pPort>Device</pPort>
-	 <Sign>Unsigned</Sign>
-	 <Endianess>LittleEndian</Endianess>
- </IntReg>
+	<Enumeration Name="GainAuto" NameSpace="Standard">
+		<Description>Automatic gain mode.</Description>
+		<EnumEntry Name="Off" NameSpace="Standard">
+			<Value>1</Value>
+		</EnumEntry>
+		<EnumEntry Name="Once" NameSpace="Standard">
+			<Value>3</Value>
+		</EnumEntry>
+		<EnumEntry Name="Continuous" NameSpace="Standard">
+			<Value>2</Value>
+		</EnumEntry>
+		<pValue>GainAutoRegister</pValue>
+	</Enumeration>
 
- <Enumeration Name="GainAuto" NameSpace="Standard">
-	 <Description>Automatic gain mode.</Description>
-	 <EnumEntry Name="Off" NameSpace="Standard">
-		 <Value>1</Value>
-	 </EnumEntry>
-	 <EnumEntry Name="Once" NameSpace="Standard">
-		 <Value>3</Value>
-	 </EnumEntry>
-	 <EnumEntry Name="Continuous" NameSpace="Standard">
-		 <Value>2</Value>
-	 </EnumEntry>
-	 <pValue>RegGainMode</pValue>
- </Enumeration>
+	<IntReg Name="GainAutoRegister" NameSpace="Custom">
+		<Address>0x114</Address>
+		<Length>4</Length>
+		<AccessMode>RW</AccessMode>
+		<pPort>Device</pPort>
+		<Sign>Unsigned</Sign>
+		<Endianess>LittleEndian</Endianess>
+	</IntReg>
 
- <IntReg Name="RegGainMode" NameSpace="Custom">
-	 <Address>0x114</Address>
-	 <Length>4</Length>
-	 <AccessMode>RW</AccessMode>
-	 <pPort>Device</pPort>
-	 <Sign>Unsigned</Sign>
-	 <Endianess>LittleEndian</Endianess>
- </IntReg>
-
- <Port Name="Device" NameSpace="Standard">
- </Port>
+	<Port Name="Device" NameSpace="Standard">
+	</Port>
 
 </RegisterDescription>
