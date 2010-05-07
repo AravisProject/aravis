@@ -107,6 +107,8 @@ ARAVIS_HDRS = 					\
 arv_fake_cameradir = $(aravis_datadir)
 arv_fake_camera_DATA = arv-fake-camera.xml
 
+EXTRA_DIST += arv-fake-camera.xml
+
 libaravis_ladir = $(includedir)/aravis
 libaravis_la_HEADERS = $(ARAVIS_HDRS)
 libaravis_la_HEADERS += arvenumtypes.h arvconfig.h
