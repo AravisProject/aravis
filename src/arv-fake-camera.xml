@@ -20,6 +20,7 @@
 	<Category Name="Root" NameSpace="Standard">
 		<pFeature>AcquisitionControl</pFeature>
 		<pFeature>FeatureControl</pFeature>
+		<pFeature>TransportLayerControl</pFeature>
 	</Category>
 
 	<Category Name="AcquisitionControl" NameSpace="Custom">
@@ -31,6 +32,10 @@
 		<pFeature>GainSelector</pFeature>
 		<pFeature>GainRaw</pFeature>
 		<pFeature>GainAuto</pFeature>
+	</Category>
+
+	<Category Name="TransportLayerControl" NameSpace="Standard">
+		<pFeature>PayloadSize</pFeature>
 	</Category>
 
 	<Command Name="AcquisitionStart" NameSpace="Standard">
@@ -208,6 +213,12 @@
 		<Sign>Unsigned</Sign>
 		<Endianess>LittleEndian</Endianess>
 	</IntReg>
+
+	<IntSwissKnife Name="PayloadSize" NameSpace="Standard">
+		<pVariable Name="WIDTH">Width</pVariable>
+		<pVariable Name="HEIGHT">Width</pVariable>
+		<Formula>WIDTH * HEIGHT</Formula>
+	</IntSwissKnife>
 
 	<Port Name="Device" NameSpace="Standard">
 	</Port>

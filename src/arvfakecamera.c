@@ -93,6 +93,17 @@ arv_fake_camera_write_register (ArvFakeCamera *camera, guint32 address, guint32 
 }
 
 void
+arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer)
+{
+}
+
+guint32
+arv_fake_camera_get_frame_period (ArvFakeCamera *camera)
+{
+	return 0;
+}
+
+void
 arv_set_fake_camera_genicam_filename (const char *filename)
 {
 	arv_fake_camera_genicam_filename = filename;

@@ -44,6 +44,9 @@ fake_device_test (void)
 	value = arv_gc_integer_get_value (ARV_GC_INTEGER (arv_gc_get_node (genicam, "Height")));
 	g_assert_cmpint (value, ==, 1024);
 
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (arv_gc_get_node (genicam, "PayloadSize")));
+	g_assert_cmpint (value, ==, 1024 * 1024);
+
 	value = arv_gc_integer_get_value (ARV_GC_INTEGER (arv_gc_get_node (genicam, "BinningHorizontal")));
 	g_assert_cmpint (value, ==, 1);
 	value = arv_gc_integer_get_value (ARV_GC_INTEGER (arv_gc_get_node (genicam, "BinningVertical")));
