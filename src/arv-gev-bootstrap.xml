@@ -1,0 +1,330 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RegisterDescription>
+
+	<Category Name="TransportLayerControl" NameSpace="Standard">
+	</Category>
+
+	<Port Name="Device" NameSpace="Standard">
+	</Port>
+
+	<Integer Name="GevVersionMajor" NameSpace="Standard">
+		<Description>Major version of the specification.</Description>
+		<DisplayName>Major version</DisplayName>
+		<pValue>GevVersionMajorRegister</pValue>
+	</Integer>
+
+	<MaskedIntReg Name="GevVersionMajorRegister" NameSpace="Custom">
+		<Address>0x0</Address>
+		<Length>4</Length>
+		<AccessMode>RO</AccessMode>
+		<pPort>Device</pPort>
+		<LSB>15</LSB>
+		<MSB>0</MSB>
+		<Sign>Unsigned</Sign>
+		<Endianess>BigEndian</Endianess>
+	</MaskedIntReg>
+
+	<Integer Name="GevVersionMinor" NameSpace="Standard">
+		<Description>Minor version of the specification.</Description>
+		<DisplayName>Minor version</DisplayName>
+		<pValue>GevVersionMinorRegister</pValue>
+	</Integer>
+
+	<MaskedIntReg Name="GevVersionMinorRegister" NameSpace="Custom">
+		<Address>0x0</Address>
+		<Length>4</Length>
+		<AccessMode>RO</AccessMode>
+		<pPort>Device</pPort>
+		<LSB>31</LSB>
+		<MSB>16</MSB>
+		<Sign>Unsigned</Sign>
+		<Endianess>BigEndian</Endianess>
+	</MaskedIntReg>
+
+	<Boolean Name="GevDeviceModeIsBigEndian" NameSpace="Standard">
+		<Description>Endianess of the device registers.</Description>
+		<DisplayName>Device mode is big endian</DisplayName>
+		<pValue>GevDeviceModeIsBigEndianRegister</pValue>
+	</Boolean>
+
+	<MaskedIntReg Name="GevDeviceModeIsBigEndianRegister" NameSpace="Custom">
+		<Address>0x4</Address>
+		<Length>4</Length>
+		<AccessMode>RO</AccessMode>
+		<pPort>Device</pPort>
+		<LSB>0</LSB>
+		<MSB>0</MSB>
+		<Sign>Unsigned</Sign>
+		<Endianess>BigEndian</Endianess>
+	</MaskedIntReg>
+
+	<Integer Name="GevDeviceModeCharacterSet" NameSpace="Standard">
+		<Description>Character set used by all the strings of the bootstrap registers.</Description>
+		<DisplayName>Character Set</DisplayName>
+		<pValue>GevDeviceModeCharacterSetRegister</pValue>
+	</Integer>
+
+	<MaskedIntReg Name="GevDeviceModeCharacterSetRegister" NameSpace="Custom">
+		<Address>0x4</Address>
+		<Length>4</Length>
+		<AccessMode>RO</AccessMode>
+		<pPort>Device</pPort>
+		<LSB>31</LSB>
+		<MSB>24</MSB>
+		<Sign>Unsigned</Sign>
+		<Endianess>BigEndian</Endianess>
+	</MaskedIntReg>
+
+	<Integer Name="GevMACAddress" NameSpace="Standard">
+		<Description>MAC address of the network interface.</Description>
+		<DisplayName>MAC Address</DisplayName>
+		<pValue>GevMACAddressFormula</pValue>
+	</Integer>
+
+	<IntSwissKnife Name="GevMACAddressFormula" NameSpace="Custom">
+		<pVariable Name="HIGH">GevMACAddressHighRegister</pVariable>
+		<pVariable Name="LOW">GevMACAddressLowRegister</pVariable>
+		<Formula>(HIGH &lt;&lt; 32) | LOW</Formula>
+	</IntSwissKnife>
+
+	<MaskedIntReg Name="GevMACAddressHighRegister" NameSpace="Custom">
+		<Address>0x8</Address>
+		<Length>4</Length>
+		<AccessMode>RO</AccessMode>
+		<pPort>Device</pPort>
+		<LSB>31</LSB>
+		<MSB>16</MSB>
+		<Sign>Unsigned</Sign>
+		<Endianess>BigEndian</Endianess>
+	</MaskedIntReg>
+
+	<MaskedIntReg Name="GevMACAddressLowRegister" NameSpace="Custom">
+		<Address>0xc</Address>
+		<Length>4</Length>
+		<AccessMode>RO</AccessMode>
+		<pPort>Device</pPort>
+		<LSB>31</LSB>
+		<MSB>0</MSB>
+		<Sign>Unsigned</Sign>
+		<Endianess>BigEndian</Endianess>
+	</MaskedIntReg>
+
+	<Integer Name="GevCurrentIPAddress" NameSpace="Standard">
+		<Description>Reports the IP address for the given network interface.</Description>
+		<DisplayName>Current IP Address</DisplayName>
+		<pValue>GevCurrentIPAddressRegister</pValue>
+	</Integer>
+
+	<MaskedIntReg Name="GevCurrentIPAddressRegister" NameSpace="Custom">
+		<Address>0x24</Address>
+		<Length>4</Length>
+		<AccessMode>RO</AccessMode>
+		<pPort>Device</pPort>
+		<LSB>31</LSB>
+		<MSB>0</MSB>
+		<Sign>Unsigned</Sign>
+		<Endianess>BigEndian</Endianess>
+	</MaskedIntReg>
+
+	<Integer Name="GevCurrentSubnetMask" NameSpace="Standard">
+		<Description>Provides the subnet mask of the given interface.</Description>
+		<DisplayName>Current Subnet Mask</DisplayName>
+		<pValue>GevCurrentSubnetMaskRegister</pValue>
+	</Integer>
+
+	<MaskedIntReg Name="GevCurrentSubnetMaskRegister" NameSpace="Custom">
+		<Address>0x34</Address>
+		<Length>4</Length>
+		<AccessMode>RO</AccessMode>
+		<pPort>Device</pPort>
+		<LSB>31</LSB>
+		<MSB>0</MSB>
+		<Sign>Unsigned</Sign>
+		<Endianess>BigEndian</Endianess>
+	</MaskedIntReg>
+
+	<Integer Name="GevNumberOfInterfaces">
+		<Description>Indicates the number of physical network interfaces supported by this device.</Description>
+		<DisplayName>Number of Interfaces</DisplayName>
+		<pValue>GevNumberOfInterfacesRegister</pValue>
+	</Integer>
+
+	<Integer Name="GevMessageChannelCount">
+		<Description>Indicates the number of message channels supported by this device.</Description>
+		<DisplayName>Message Channel Count</DisplayName>
+		<pValue>GevMessageChannelCountRegister</pValue>
+	</Integer>
+
+	<MaskedIntReg Name="GevMessageChannelCountRegister" NameSpace="Custom">
+		<Address>0x900</Address>
+		<Length>4</Length>
+		<AccessMode>RO</AccessMode>
+		<pPort>Device</pPort>
+		<LSB>31</LSB>
+		<MSB>0</MSB>
+		<Sign>Unsigned</Sign>
+		<Endianess>BigEndian</Endianess>
+	</MaskedIntReg>
+
+	<Integer Name="GevStreamChannelCount">
+		<Description>Indicates the number of stream channels supported by this device.</Description>
+		<DisplayName>Stream Channel Count</DisplayName>
+		<pValue>GevStreamChannelCountRegister</pValue>
+	</Integer>
+
+	<MaskedIntReg Name="GevStreamChannelCountRegister" NameSpace="Custom">
+		<Address>0x904</Address>
+		<Length>4</Length>
+		<AccessMode>RO</AccessMode>
+		<pPort>Device</pPort>
+		<LSB>31</LSB>
+		<MSB>0</MSB>
+		<Sign>Unsigned</Sign>
+		<Endianess>BigEndian</Endianess>
+	</MaskedIntReg>
+
+	<Integer Name="GevHeartbeatTimeout">
+		<Description>Indicates the current heartbeat timeout in milliseconds.</Description>
+		<DisplayName>Heartbeat Timeout</DisplayName>
+		<pValue>GevHeartbeatTimeoutRegister</pValue>
+	</Integer>
+
+	<MaskedIntReg Name="GevHeartbeatTimeoutRegister" NameSpace="Custom">
+		<Address>0x938</Address>
+		<Length>4</Length>
+		<AccessMode>RW</AccessMode>
+		<pPort>Device</pPort>
+		<LSB>31</LSB>
+		<MSB>0</MSB>
+		<Sign>Unsigned</Sign>
+		<Endianess>BigEndian</Endianess>
+	</MaskedIntReg>
+
+	<Integer Name="GevTimestampTickFrequency" NameSpace="Standard">
+		<Description>Indicates the number of timestamp ticks during 1 second (frequency in Hz).</Description>
+		<DisplayName>Timestamp Tick Frequency</DisplayName>
+		<pValue>GevTimestampTickFrequencySwissknife</pValue>
+		<Min>0</Min>
+		<Max>4294967295</Max>
+	</Integer>
+
+	<IntSwissKnife Name="GevTimestampTickFrequencySwissknife" NameSpace="Custom">
+		<pVariable Name="HIGH">GevTimestampTickFrequencyHighRegister</pVariable>
+		<pVariable Name="LOW">GevTimestampTickFrequencyLowRegister</pVariable>
+		<Formula>(HIGH &lt;&lt; 32) | LOW</Formula>
+	</IntSwissKnife>
+
+	<MaskedIntReg Name="GevTimestampTickFrequencyHighRegister" NameSpace="Custom">
+		<Address>0x93c</Address>
+		<Length>4</Length>
+		<AccessMode>RO</AccessMode>
+		<pPort>Device</pPort>
+		<LSB>31</LSB>
+		<MSB>0</MSB>
+		<Sign>Unsigned</Sign>
+		<Endianess>BigEndian</Endianess>
+	</MaskedIntReg>
+
+	<MaskedIntReg Name="GevTimestampTickFrequencyLowRegister" NameSpace="Custom">
+		<Address>0x940</Address>
+		<Length>4</Length>
+		<AccessMode>RO</AccessMode>
+		<pPort>Device</pPort>
+		<LSB>31</LSB>
+		<MSB>0</MSB>
+		<Sign>Unsigned</Sign>
+		<Endianess>BigEndian</Endianess>
+	</MaskedIntReg>
+
+	<Command Name="GevTimestampControlReset" NameSpace="Standard">
+		<Description>Resets the Timestamp counter to 0.</Description>
+		<DisplayName>Timestamp Reset</DisplayName>
+		<pValue>GevTimestampControlRegister</pValue>
+		<CommandValue>1</CommandValue>
+	</Command>
+
+	<Command Name="GevTimestampControlLatch" NameSpace="Standard">
+		<Description>Latches current timestamp counter into GevTimestampValue.</Description>
+		<DisplayName>Timestamp Control Latch</DisplayName>
+		<pValue>GevTimestampControlRegister</pValue>
+		<CommandValue>2</CommandValue>
+	</Command>
+
+	<IntReg Name="GevTimestampControlRegister" NameSpace="Custom">
+		<Address>0x944</Address>
+		<Length>4</Length>
+		<AccessMode>WO</AccessMode>
+		<pPort>Device</pPort>
+		<Cachable>NoCache</Cachable>
+		<Sign>Unsigned</Sign>
+		<Endianess>BigEndian</Endianess>
+	</IntReg>
+
+	<Integer Name="GevTimestampValue" NameSpace="Standard">
+		<Description></Description>
+		<DisplayName>Timestamp Value</DisplayName>
+		<Visibility>Guru</Visibility>
+		<pValue>GevTimestampValueSwissKnife</pValue>
+		<Representation>PureNumber</Representation>
+	</Integer>
+
+	<IntSwissKnife Name="GevTimestampValueSwissKnife" NameSpace="Custom">
+		<pVariable Name="HIGH">GevTimestampValueHighRegister</pVariable>
+		<pVariable Name="LOW">GevTimestampValueLowRegister</pVariable>
+		<Formula>(HIGH &lt;&lt; 32) | LOW</Formula>
+	</IntSwissKnife>
+
+	<MaskedIntReg Name="GevTimestampValueHighRegister" NameSpace="Custom">
+		<Address>0x948</Address>
+		<Length>4</Length>
+		<AccessMode>RO</AccessMode>
+		<pPort>Device</pPort>
+		<LSB>31</LSB>
+		<MSB>0</MSB>
+		<Sign>Unsigned</Sign>
+		<Endianess>BigEndian</Endianess>
+	</MaskedIntReg>
+
+	<MaskedIntReg Name="GevTimestampValueLowRegister" NameSpace="Custom">
+		<Address>0x94c</Address>
+		<Length>4</Length>
+		<AccessMode>RO</AccessMode>
+		<pPort>Device</pPort>
+		<LSB>31</LSB>
+		<MSB>0</MSB>
+		<Sign>Unsigned</Sign>
+		<Endianess>BigEndian</Endianess>
+	</MaskedIntReg>
+
+	<Enumeration Name="GevCCP" NameSpace="Standard">
+		<Description>Controls the device access privilege of an application.</Description>
+		<DisplayName>Control Channel Privilege</DisplayName>
+		<EnumEntry Name="OpenAccess">
+			<DisplayName>CCP open access</DisplayName>
+			<Value>1</Value>
+		</EnumEntry>
+		<EnumEntry Name="ExclusiveAccess">
+			<DisplayName>CCP exclusive access</DisplayName>
+			<Value>2</Value>
+		</EnumEntry>
+		<EnumEntry Name="ControlAccess">
+			<DisplayName>CCP control access Control</DisplayName>
+			<Value>3</Value>
+		</EnumEntry>
+		<pValue>GevCCPRegister</pValue>
+	</Enumeration>
+
+	<MaskedIntReg Name="GevCCPRegister" NameSpace="Custom">
+		<Address>0xa00</Address>
+		<Length>4</Length>
+		<AccessMode>RW</AccessMode>
+		<pPort>Device</pPort>
+		<LSB>31</LSB>
+		<MSB>0</MSB>
+		<Sign>Unsigned</Sign>
+		<Endianess>BigEndian</Endianess>
+	</MaskedIntReg>
+
+</RegisterDescription>
+
