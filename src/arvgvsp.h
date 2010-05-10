@@ -41,11 +41,12 @@ typedef struct {
 
 typedef struct {
 	guint32 data0;
-	guint32 data1;
-	guint32 data2;
-	guint32 data3;
+	guint64 timestamp;
+	guint32 pixel_format;
 	guint32 width;
 	guint32 height;
+	guint32	x;
+	guint32	y;
 } __attribute__((__packed__)) ArvGvspDataLeader;
 
 typedef struct {
@@ -79,6 +80,24 @@ arv_gvsp_packet_get_frame_id (const ArvGvspPacket *packet)
 }
 
 static inline guint32
+arv_gvsp_packet_get_x (const ArvGvspPacket *packet)
+{
+	ArvGvspDataLeader *leader;
+
+	leader = (ArvGvspDataLeader *) &packet->data;
+	return g_ntohl (leader->x);
+}
+
+static inline guint32
+arv_gvsp_packet_get_y (const ArvGvspPacket *packet)
+{
+	ArvGvspDataLeader *leader;
+
+	leader = (ArvGvspDataLeader *) &packet->data;
+	return g_ntohl (leader->y);
+}
+
+static inline guint32
 arv_gvsp_packet_get_width (const ArvGvspPacket *packet)
 {
 	ArvGvspDataLeader *leader;
@@ -94,6 +113,15 @@ arv_gvsp_packet_get_height (const ArvGvspPacket *packet)
 
 	leader = (ArvGvspDataLeader *) &packet->data;
 	return g_ntohl (leader->height);
+}
+
+static inline ArvPixelFormat
+arv_gvsp_packet_get_pixel_format (const ArvGvspPacket *packet)
+{
+	ArvGvspDataLeader *leader;
+
+	leader = (ArvGvspDataLeader *) &packet->data;
+	return g_ntohl (leader->pixel_format);
 }
 
 static inline size_t

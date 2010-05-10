@@ -166,9 +166,13 @@ arv_gv_stream_thread (void *data)
 
 					arv_gv_stream_update_socket (thread_data, buffer);
 
+					buffer->x = arv_gvsp_packet_get_x (packet);
+					buffer->y = arv_gvsp_packet_get_y (packet);
 					buffer->width = arv_gvsp_packet_get_width (packet);
 					buffer->height = arv_gvsp_packet_get_height (packet);
+					buffer->pixel_format = arv_gvsp_packet_get_pixel_format (packet);
 					buffer->frame_id = arv_gvsp_packet_get_frame_id (packet);
+
 					buffer->status = ARV_BUFFER_STATUS_FILLING;
 					block_id = 0;
 					offset = 0;
