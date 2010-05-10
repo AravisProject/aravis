@@ -62,6 +62,8 @@ struct _ArvBuffer {
 	guint32 width;
 	guint32 height;
 	ArvPixelFormat pixel_format;
+
+	guint64 timestamp_ns;
 };
 
 struct _ArvBufferClass {

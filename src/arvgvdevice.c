@@ -301,6 +301,30 @@ arv_gv_device_leave_control (ArvGvDevice *gv_device)
 	return result;
 }
 
+guint64
+arv_gv_device_get_timestamp_tick_frequency (ArvGvDevice *gv_device)
+{
+	guint32 timestamp_tick_frequency_high;
+	guint32 timestamp_tick_frequency_low;
+
+	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), 0);
+
+	if (arv_device_read_register (ARV_DEVICE (gv_device),
+				      ARV_GVBS_TIMESTAMP_TICK_FREQUENCY_HIGH,
+				      &timestamp_tick_frequency_high) &&
+	    arv_device_read_register (ARV_DEVICE (gv_device),
+				      ARV_GVBS_TIMESTAMP_TICK_FREQUENCY_LOW,
+				      &timestamp_tick_frequency_low)) {
+		guint64 timestamp_tick_frequency;
+
+		timestamp_tick_frequency = ((guint64) timestamp_tick_frequency_high << 32) |
+			timestamp_tick_frequency_low;
+		return timestamp_tick_frequency;
+	}
+
+	return 0;
+}
+
 static char *
 _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 {
@@ -419,7 +443,8 @@ arv_gv_device_new_stream (ArvDevice *device, ArvStreamCallback callback, void *u
 	device_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (io_data->device_address));
 	address_bytes = g_inet_address_to_bytes (interface_address);
 
-	stream = arv_gv_stream_new (device_address, 0, callback, user_data);
+	stream = arv_gv_stream_new (device_address, 0, callback, user_data,
+				    arv_gv_device_get_timestamp_tick_frequency (gv_device));
 
 	stream_port = arv_gv_stream_get_port (ARV_GV_STREAM (stream));
 

@@ -40,6 +40,8 @@ typedef struct {
 	GSocket *socket;
 	GSocketAddress *device_address;
 
+	guint64 timestamp_tick_frequency;
+
 	gboolean cancel;
 	GAsyncQueue *input_queue;
 	GAsyncQueue *output_queue;
@@ -134,6 +136,7 @@ arv_gv_stream_thread (void *data)
 	GTimeVal current_time;
 	gint64 current_time_us;
 	gint64 last_time_us;
+	guint64 last_timestamp_ns;
 	gboolean statistic_count = 0;
 
 	if (thread_data->callback != NULL)
@@ -147,6 +150,7 @@ arv_gv_stream_thread (void *data)
 
 	g_get_current_time (&current_time);
 	last_time_us = current_time.tv_sec * 1000000 + current_time.tv_usec;
+	last_timestamp_ns = 0;
 
 	do {
 		n_events = g_poll (&poll_fd, 1, 1000);
@@ -172,6 +176,9 @@ arv_gv_stream_thread (void *data)
 					buffer->height = arv_gvsp_packet_get_height (packet);
 					buffer->pixel_format = arv_gvsp_packet_get_pixel_format (packet);
 					buffer->frame_id = arv_gvsp_packet_get_frame_id (packet);
+
+					buffer->timestamp_ns = arv_gvsp_packet_get_timestamp
+						(packet, thread_data->timestamp_tick_frequency);
 
 					buffer->status = ARV_BUFFER_STATUS_FILLING;
 					block_id = 0;
@@ -228,11 +235,17 @@ arv_gv_stream_thread (void *data)
 						g_get_current_time (&current_time);
 						current_time_us = current_time.tv_sec * 1000000 + current_time.tv_usec;
 						statistic_count++;
-						if (statistic_count > 5)
+						if (statistic_count > 5) {
 							arv_statistic_fill (thread_data->statistic,
 									    0, (current_time_us - last_time_us),
 									    buffer->frame_id);
+							arv_statistic_fill (thread_data->statistic,
+									    1,
+									    (buffer->timestamp_ns - last_timestamp_ns) /
+									    1000, buffer->frame_id);
+						}
 						last_time_us = current_time_us;
+						last_timestamp_ns = buffer->timestamp_ns;
 						g_async_queue_push (thread_data->output_queue, buffer);
 						buffer = NULL;
 					}
@@ -288,7 +301,8 @@ arv_gv_stream_set_option (ArvGvStream *gv_stream, ArvGvStreamOption option, int 
 
 ArvStream *
 arv_gv_stream_new (GInetAddress *device_address, guint16 port,
-		   ArvStreamCallback callback, void *user_data)
+		   ArvStreamCallback callback, void *user_data,
+		   guint64 timestamp_tick_frequency)
 {
 	ArvGvStream *gv_stream;
 	ArvStream *stream;
@@ -316,6 +330,7 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port,
 	thread_data->user_data = user_data;
 	thread_data->socket = gv_stream->socket;
 	thread_data->device_address = g_inet_socket_address_new (device_address, ARV_GVCP_PORT);
+	thread_data->timestamp_tick_frequency = timestamp_tick_frequency;
 	thread_data->cancel = FALSE;
 	thread_data->input_queue = stream->input_queue;
 	thread_data->output_queue = stream->output_queue;
@@ -328,7 +343,10 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port,
 	thread_data->n_size_mismatch_errors = 0;
 	thread_data->n_missing_blocks = 0;
 
-	thread_data->statistic = arv_statistic_new (1, 5000, 200, 0);
+	thread_data->statistic = arv_statistic_new (2, 5000, 200, 0);
+
+	arv_statistic_set_name (thread_data->statistic, 0, "Local time delta");
+	arv_statistic_set_name (thread_data->statistic, 1, "Timestamp delta");
 
 	thread_data->socket_buffer_option = ARV_GV_STREAM_OPTION_SOCKET_BUFFER_FIXED;
 	thread_data->socket_buffer_size = 0;

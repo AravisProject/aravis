@@ -41,7 +41,8 @@ typedef struct {
 
 typedef struct {
 	guint32 data0;
-	guint64 timestamp;
+	guint32 timestamp_high;
+	guint32 timestamp_low;
 	guint32 pixel_format;
 	guint32 width;
 	guint32 height;
@@ -122,6 +123,29 @@ arv_gvsp_packet_get_pixel_format (const ArvGvspPacket *packet)
 
 	leader = (ArvGvspDataLeader *) &packet->data;
 	return g_ntohl (leader->pixel_format);
+}
+
+static inline guint64
+arv_gvsp_packet_get_timestamp (const ArvGvspPacket *packet, guint64 timestamp_tick_frequency)
+{
+	ArvGvspDataLeader *leader;
+	guint64 timestamp_s;
+	guint64 timestamp_ns;
+	guint64 timestamp;
+
+	if (timestamp_tick_frequency < 1)
+		return 0;
+
+	leader = (ArvGvspDataLeader *) &packet->data;
+
+	timestamp = ( (guint64) g_ntohl (leader->timestamp_high) << 32) | g_ntohl (leader->timestamp_low);
+
+	timestamp_s = timestamp / timestamp_tick_frequency;
+	timestamp_ns = ((timestamp % timestamp_tick_frequency) * 1000000000) / timestamp_tick_frequency;
+
+	timestamp_ns += timestamp_s * 1000000000;
+
+	return timestamp_ns;
 }
 
 static inline size_t
