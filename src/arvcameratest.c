@@ -80,7 +80,7 @@ main (int argc, char **argv)
 		gint x, y, width, height;
 		gint dx, dy;
 		double exposure;
-		guint64 n_processed_buffers;
+		guint64 n_completed_buffers;
 		guint64 n_failures;
 		guint64 n_underruns;
 
@@ -148,9 +148,9 @@ main (int argc, char **argv)
 
 		} while (!cancel);
 
-		arv_stream_get_statistics (stream, &n_processed_buffers, &n_failures, &n_underruns);
+		arv_stream_get_statistics (stream, &n_completed_buffers, &n_failures, &n_underruns);
 
-		g_print ("Processed buffers = %Ld\n", n_processed_buffers);
+		g_print ("Completed buffers = %Ld\n", n_completed_buffers);
 		g_print ("Failures          = %Ld\n", n_failures);
 		g_print ("Underruns         = %Ld\n", n_underruns);
 

@@ -53,21 +53,21 @@ arv_stream_get_n_available_buffers (ArvStream *stream)
 
 void
 arv_stream_get_statistics (ArvStream *stream,
-			   guint64 *n_processed_buffers,
+			   guint64 *n_completed_buffers,
 			   guint64 *n_failures,
 			   guint64 *n_underruns)
 {
 	ArvStreamClass *stream_class;
 	guint64 dummy;
 
-	if (n_processed_buffers == NULL)
-		n_processed_buffers = &dummy;
+	if (n_completed_buffers == NULL)
+		n_completed_buffers = &dummy;
 	if (n_failures == NULL)
 		n_failures = &dummy;
 	if (n_underruns == NULL)
 		n_underruns = &dummy;
 
-	*n_processed_buffers = 0;
+	*n_completed_buffers = 0;
 	*n_failures = 0;
 	*n_underruns = 0;
 
@@ -75,7 +75,7 @@ arv_stream_get_statistics (ArvStream *stream,
 
 	stream_class = ARV_STREAM_GET_CLASS (stream);
 	if (stream_class->get_statistics != NULL)
-		stream_class->get_statistics (stream, n_processed_buffers, n_failures, n_underruns);
+		stream_class->get_statistics (stream, n_completed_buffers, n_failures, n_underruns);
 }
 
 static void
