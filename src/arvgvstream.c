@@ -218,7 +218,7 @@ _process_data_trailer (ArvGvStreamThreadData *thread_data, ArvGvStreamThreadStat
 	if (state->buffer->status == ARV_BUFFER_STATUS_SUCCESS)
 		thread_data->n_processed_buffers++;
 	if (state->is_missing_blocks)
-		state->buffer->status = ARV_BUFFER_STATUS_MISSING_BLOCK;
+		state->buffer->status = ARV_BUFFER_STATUS_MISSING_BLOCKS;
 
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->user_data,
