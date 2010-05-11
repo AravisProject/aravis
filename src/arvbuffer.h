@@ -57,13 +57,14 @@ struct _ArvBuffer {
 	ArvBufferStatus status;
 
 	guint32 frame_id;
-	guint32 x;
-	guint32 y;
+	guint64 timestamp_ns;
+
+	guint32 x_offset;
+	guint32 y_offset;
 	guint32 width;
 	guint32 height;
-	ArvPixelFormat pixel_format;
 
-	guint64 timestamp_ns;
+	ArvPixelFormat pixel_format;
 };
 
 struct _ArvBufferClass {

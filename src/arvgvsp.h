@@ -46,8 +46,8 @@ typedef struct {
 	guint32 pixel_format;
 	guint32 width;
 	guint32 height;
-	guint32	x;
-	guint32	y;
+	guint32	x_offset;
+	guint32	y_offset;
 } __attribute__((__packed__)) ArvGvspDataLeader;
 
 typedef struct {
@@ -81,21 +81,21 @@ arv_gvsp_packet_get_frame_id (const ArvGvspPacket *packet)
 }
 
 static inline guint32
-arv_gvsp_packet_get_x (const ArvGvspPacket *packet)
+arv_gvsp_packet_get_x_offset (const ArvGvspPacket *packet)
 {
 	ArvGvspDataLeader *leader;
 
 	leader = (ArvGvspDataLeader *) &packet->data;
-	return g_ntohl (leader->x);
+	return g_ntohl (leader->x_offset);
 }
 
 static inline guint32
-arv_gvsp_packet_get_y (const ArvGvspPacket *packet)
+arv_gvsp_packet_get_y_offset (const ArvGvspPacket *packet)
 {
 	ArvGvspDataLeader *leader;
 
 	leader = (ArvGvspDataLeader *) &packet->data;
-	return g_ntohl (leader->y);
+	return g_ntohl (leader->y_offset);
 }
 
 static inline guint32

@@ -170,8 +170,8 @@ arv_gv_stream_thread (void *data)
 
 					arv_gv_stream_update_socket (thread_data, buffer);
 
-					buffer->x = arv_gvsp_packet_get_x (packet);
-					buffer->y = arv_gvsp_packet_get_y (packet);
+					buffer->x_offset = arv_gvsp_packet_get_x_offset (packet);
+					buffer->y_offset = arv_gvsp_packet_get_y_offset (packet);
 					buffer->width = arv_gvsp_packet_get_width (packet);
 					buffer->height = arv_gvsp_packet_get_height (packet);
 					buffer->pixel_format = arv_gvsp_packet_get_pixel_format (packet);
