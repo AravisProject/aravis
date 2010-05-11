@@ -123,6 +123,7 @@ arv_gv_stream_update_socket (ArvGvStreamThreadData *thread_data, ArvBuffer *buff
 typedef struct {
 	ArvGvspPacket *packet;
 	ArvBuffer *buffer;
+	gboolean is_missing_blocks;
 	gint32 last_block_size;
 	gint32 last_block_id;
 	gint64 last_time_us;
@@ -154,6 +155,7 @@ _process_data_leader (ArvGvStreamThreadData *thread_data, ArvGvStreamThreadState
 								     thread_data->timestamp_tick_frequency);
 
 	state->buffer->status = ARV_BUFFER_STATUS_FILLING;
+	state->is_missing_blocks = FALSE;
 	state->last_block_size = 0;
 	state->last_block_id = 0;
 }
@@ -177,11 +179,9 @@ _process_data_block (ArvGvStreamThreadData *thread_data, ArvGvStreamThreadState 
 			   state->last_block_id + 1,
 			   block_id,
 			   arv_gvsp_packet_get_frame_id (state->packet));
-		state->buffer->status = ARV_BUFFER_STATUS_MISSING_BLOCK;
-		state->last_block_id =  block_id;
 		thread_data->n_failures++;
 		thread_data->n_missing_blocks++;
-		return;
+		state->is_missing_blocks = TRUE;
 	}
 
 	block_size = arv_gvsp_packet_get_data_size (read_count);
@@ -217,6 +217,8 @@ _process_data_trailer (ArvGvStreamThreadData *thread_data, ArvGvStreamThreadStat
 		state->buffer->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
 	if (state->buffer->status == ARV_BUFFER_STATUS_SUCCESS)
 		thread_data->n_processed_buffers++;
+	if (state->is_missing_blocks)
+		state->buffer->status = ARV_BUFFER_STATUS_MISSING_BLOCK;
 
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->user_data,
@@ -260,6 +262,7 @@ arv_gv_stream_thread (void *data)
 
 	state.buffer = NULL;
 	state.packet = g_malloc0 (ARV_GV_STREAM_INCOMING_BUFFER_SIZE);
+	state.is_missing_blocks = FALSE;
 	state.last_block_size = 0;
 	state.last_block_id = 0;
 	state.statistic_count = 0;
