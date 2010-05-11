@@ -123,9 +123,8 @@ arv_gv_stream_update_socket (ArvGvStreamThreadData *thread_data, ArvBuffer *buff
 typedef struct {
 	ArvGvspPacket *packet;
 	ArvBuffer *buffer;
-	guint16 block_id;
-	size_t read_count;
-	ptrdiff_t offset;
+	gint32 last_block_size;
+	gint32 last_block_id;
 	gint64 last_time_us;
 	guint64 last_timestamp_ns;
 	guint32 statistic_count;
@@ -155,45 +154,53 @@ _process_data_leader (ArvGvStreamThreadData *thread_data, ArvGvStreamThreadState
 								     thread_data->timestamp_tick_frequency);
 
 	state->buffer->status = ARV_BUFFER_STATUS_FILLING;
-	state->block_id = 0;
-	state->offset = 0;
+	state->last_block_size = 0;
+	state->last_block_id = 0;
 }
 
 static void
-_process_data_block (ArvGvStreamThreadData *thread_data, ArvGvStreamThreadState *state)
+_process_data_block (ArvGvStreamThreadData *thread_data, ArvGvStreamThreadState *state, size_t read_count)
 {
 	size_t block_size;
+	ptrdiff_t block_offset;
+	ptrdiff_t block_end;
+	int block_id;
 
 	if (state->buffer == NULL ||
 	    state->buffer->status != ARV_BUFFER_STATUS_FILLING)
 		return;
 
-	state->block_id++;
-	if (arv_gvsp_packet_get_block_id (state->packet) != state->block_id) {
-		arv_gvsp_packet_debug (state->packet, state->read_count);
+	block_id = arv_gvsp_packet_get_block_id (state->packet);
+	if (block_id != (state->last_block_id + 1)) {
+		arv_gvsp_packet_debug (state->packet, read_count);
 		arv_debug ("stream", "[GvStream::thread] Missing block (expected %d - %d) frame %d",
-			   state->block_id,
-			   arv_gvsp_packet_get_block_id (state->packet),
+			   state->last_block_id + 1,
+			   block_id,
 			   arv_gvsp_packet_get_frame_id (state->packet));
 		state->buffer->status = ARV_BUFFER_STATUS_MISSING_BLOCK;
-		state->block_id =  arv_gvsp_packet_get_block_id (state->packet);
+		state->last_block_id =  block_id;
 		thread_data->n_failures++;
 		thread_data->n_missing_blocks++;
 		return;
 	}
 
-	block_size = arv_gvsp_packet_get_data_size (state->read_count);
-	if (block_size + state->offset > state->buffer->size) {
-		arv_gvsp_packet_debug (state->packet, state->read_count);
+	block_size = arv_gvsp_packet_get_data_size (read_count);
+	block_offset = state->last_block_size * (block_id - 1);
+	block_end = block_size + block_offset;
+
+	if (block_end  > state->buffer->size) {
+		arv_gvsp_packet_debug (state->packet, read_count);
 		state->buffer->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
 		thread_data->n_failures++;
 		thread_data->n_size_mismatch_errors++;
 		return;
 	}
-	memcpy (state->buffer->data + state->offset, &state->packet->data, block_size);
-	state->offset += block_size;
+	memcpy (state->buffer->data + block_offset, &state->packet->data, block_size);
 
-	if (state->offset == state->buffer->size)
+	state->last_block_size = block_size;
+	state->last_block_id =  block_id;
+
+	if (block_end  == state->buffer->size)
 		state->buffer->status = ARV_BUFFER_STATUS_SUCCESS;
 }
 
@@ -241,6 +248,7 @@ arv_gv_stream_thread (void *data)
 	ArvGvStreamThreadState state;
 	GTimeVal current_time;
 	GPollFD poll_fd;
+	size_t read_count;
 	int n_events;
 
 	if (thread_data->callback != NULL)
@@ -252,9 +260,8 @@ arv_gv_stream_thread (void *data)
 
 	state.buffer = NULL;
 	state.packet = g_malloc0 (ARV_GV_STREAM_INCOMING_BUFFER_SIZE);
-	state.block_id = 0;
-	state.read_count = 0;
-	state.offset = 0;
+	state.last_block_size = 0;
+	state.last_block_id = 0;
 	state.statistic_count = 0;
 	g_get_current_time (&current_time);
 	state.last_time_us = current_time.tv_sec * 1000000 + current_time.tv_usec;
@@ -264,8 +271,8 @@ arv_gv_stream_thread (void *data)
 		n_events = g_poll (&poll_fd, 1, 1000);
 
 		if (n_events > 0) {
-			state.read_count = g_socket_receive (thread_data->socket, (char *) state.packet,
-							     ARV_GV_STREAM_INCOMING_BUFFER_SIZE, NULL, NULL);
+			read_count = g_socket_receive (thread_data->socket, (char *) state.packet,
+						       ARV_GV_STREAM_INCOMING_BUFFER_SIZE, NULL, NULL);
 
 			switch (arv_gvsp_packet_get_packet_type (state.packet)) {
 				case ARV_GVSP_PACKET_TYPE_DATA_LEADER:
@@ -273,7 +280,7 @@ arv_gv_stream_thread (void *data)
 					break;
 
 				case ARV_GVSP_PACKET_TYPE_DATA_BLOCK:
-					_process_data_block (thread_data, &state);
+					_process_data_block (thread_data, &state, read_count);
 					break;
 
 				case ARV_GVSP_PACKET_TYPE_DATA_TRAILER:
