@@ -51,6 +51,9 @@ struct _GstAravis {
 	ArvStream *stream;
 
 	GstCaps *caps;
+
+	guint64 timestamp_offset;
+	guint64 last_timestamp;
 };
 
 struct _GstAravisClass {

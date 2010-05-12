@@ -69,18 +69,21 @@ gst_aravis_get_camera_caps (GstAravis *gst_aravis)
 {
 	GstCaps *gcaps = NULL;
 	GstStructure *gs;
+	int height, width;
 
 	GST_LOG_OBJECT (gst_aravis, "Get camera caps");
 
 	gcaps = gst_caps_new_empty ();
+
+	arv_camera_get_region (gst_aravis->camera, NULL, NULL, &width, &height);
 
 	gs = gst_structure_empty_new ("video");
 	gst_structure_set_name (gs, "video/x-raw-gray");
 	gst_structure_set (gs,
 			   "bpp", G_TYPE_INT, 8,
 			   "depth", G_TYPE_INT, 8,
-			   "width", G_TYPE_INT, gst_aravis->width,
-			   "height", G_TYPE_INT, gst_aravis->height,
+			   "width", G_TYPE_INT, width,
+			   "height", G_TYPE_INT, height,
 			   NULL);
 
 	gst_structure_set(gs, "framerate", GST_TYPE_FRACTION, 50, 1, NULL);
@@ -117,11 +120,11 @@ gst_aravis_start (GstBaseSrc *src)
 
 	gst_aravis->camera = arv_camera_new (NULL);
 	gst_aravis->stream = arv_camera_new_stream (gst_aravis->camera, NULL, NULL);
-	gst_aravis->caps = gst_aravis_get_camera_caps (gst_aravis);
 
 	arv_camera_set_region (gst_aravis->camera, 0, 0, gst_aravis->width, gst_aravis->height);
 	arv_camera_set_binning (gst_aravis->camera, gst_aravis->h_binning, gst_aravis->v_binning);
 	gst_aravis->payload = arv_camera_get_payload (gst_aravis->camera);
+	gst_aravis->caps = gst_aravis_get_camera_caps (gst_aravis);
 
 	for (i = 0; i < GST_ARAVIS_N_BUFFERS; i++)
 		arv_stream_push_buffer (gst_aravis->stream,
@@ -130,6 +133,9 @@ gst_aravis_start (GstBaseSrc *src)
 	GST_LOG_OBJECT (gst_aravis, "Starting acquisition");
 
 	arv_camera_start_acquisition (gst_aravis->camera);
+
+	gst_aravis->timestamp_offset = 0;
+	gst_aravis->last_timestamp = 0;
 
 	return TRUE;
 }
@@ -159,8 +165,6 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 {
 	GstAravis *gst_aravis;
 	ArvBuffer *arv_buffer;
-	GstClockTime time_stamp;
-	GstClockTime next_time_stamp;
 
 	gst_aravis = GST_ARAVIS (push_src);
 
@@ -168,23 +172,26 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 	do {
 		arv_buffer = arv_stream_pop_buffer (gst_aravis->stream);
 		if (arv_buffer == NULL)
-			g_usleep (20000);
+			g_usleep (1000);
 		else if (arv_buffer->status != ARV_BUFFER_STATUS_SUCCESS) {
 			arv_stream_push_buffer (gst_aravis->stream, arv_buffer);
 			arv_buffer = NULL;
 		}
 	} while (arv_buffer == NULL);
+
 	GST_BUFFER_DATA (*buffer) = arv_buffer->data;
 	GST_BUFFER_MALLOCDATA (*buffer) = NULL;
 	GST_BUFFER_SIZE (*buffer) = gst_aravis->payload;
 
-	time_stamp = gst_util_uint64_scale_int (arv_buffer->frame_id * GST_SECOND, 1, 50);
-	next_time_stamp = gst_util_uint64_scale_int ((arv_buffer->frame_id + 1) * GST_SECOND, 1, 50);
+	if (gst_aravis->timestamp_offset == 0) {
+		gst_aravis->timestamp_offset = arv_buffer->timestamp_ns;
+		gst_aravis->last_timestamp = arv_buffer->timestamp_ns;
+	}
 
-	GST_BUFFER_TIMESTAMP (*buffer) = time_stamp;
-	GST_BUFFER_DURATION (*buffer) = next_time_stamp - time_stamp;
-	GST_BUFFER_OFFSET (*buffer) = arv_buffer->frame_id;
-	GST_BUFFER_OFFSET_END (*buffer) = arv_buffer->frame_id + 1;
+	GST_BUFFER_TIMESTAMP (*buffer) = arv_buffer->timestamp_ns - gst_aravis->timestamp_offset;
+	GST_BUFFER_DURATION (*buffer) = arv_buffer->timestamp_ns - gst_aravis->last_timestamp;
+
+	gst_aravis->last_timestamp = arv_buffer->timestamp_ns;
 
 	arv_stream_push_buffer (gst_aravis->stream, arv_buffer);
 
