@@ -42,6 +42,8 @@ typedef struct {
 	GSocket *socket;
 	GSocketAddress *device_address;
 
+	ArvGvStreamPacketResend packet_resend;
+
 	guint64 timestamp_tick_frequency;
 
 	gboolean cancel;
@@ -269,8 +271,9 @@ _process_data_block (ArvGvStreamThreadData *thread_data, ArvGvStreamThreadState 
 		thread_data->n_missing_blocks += n_misses;
 		state->n_missing_blocks += n_misses;
 
-		_send_packet_request (thread_data, state->buffer->frame_id,
-				      state->last_block_id + 1, block_id - 1);
+		if (thread_data->packet_resend != ARV_GV_STREAM_PACKET_RESEND_NEVER)
+			_send_packet_request (thread_data, state->buffer->frame_id,
+					      state->last_block_id + 1, block_id - 1);
 	}
 
 	block_size = arv_gvsp_packet_get_data_size (read_count);
@@ -398,6 +401,16 @@ arv_gv_stream_set_option (ArvGvStream *gv_stream, ArvGvStreamOption option, int 
 	}
 }
 
+void arv_gv_stream_set_packet_resend (ArvGvStream *gv_stream, ArvGvStreamPacketResend resend)
+{
+	ArvGvStreamThreadData *thread_data;
+
+	g_return_if_fail (ARV_IS_GV_STREAM (gv_stream));
+
+	thread_data = gv_stream->thread_data;
+	thread_data->packet_resend = resend;
+}
+
 ArvStream *
 arv_gv_stream_new (GInetAddress *device_address, guint16 port,
 		   ArvStreamCallback callback, void *user_data,
@@ -429,6 +442,7 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port,
 	thread_data->user_data = user_data;
 	thread_data->socket = gv_stream->socket;
 	thread_data->device_address = g_inet_socket_address_new (device_address, ARV_GVCP_PORT);
+	thread_data->packet_resend = ARV_GV_STREAM_PACKET_RESEND_ALWAYS;
 	thread_data->timestamp_tick_frequency = timestamp_tick_frequency;
 	thread_data->cancel = FALSE;
 	thread_data->input_queue = stream->input_queue;

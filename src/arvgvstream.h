@@ -34,6 +34,11 @@ typedef enum {
 	ARV_GV_STREAM_OPTION_SOCKET_BUFFER_AUTO
 } ArvGvStreamOption;
 
+typedef enum {
+	ARV_GV_STREAM_PACKET_RESEND_NEVER,
+	ARV_GV_STREAM_PACKET_RESEND_ALWAYS
+} ArvGvStreamPacketResend;
+
 #define ARV_TYPE_GV_STREAM             (arv_gv_stream_get_type ())
 #define ARV_GV_STREAM(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GV_STREAM, ArvGvStream))
 #define ARV_GV_STREAM_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GV_STREAM, ArvGvStreamClass))
@@ -59,12 +64,13 @@ struct _ArvGvStreamClass {
 
 GType arv_gv_stream_get_type (void);
 
-ArvStream * 		arv_gv_stream_new		(GInetAddress *device_address, guint16 port,
+ArvStream * 	arv_gv_stream_new			(GInetAddress *device_address, guint16 port,
 							 ArvStreamCallback callback, void *user_data,
 							 guint64 timestamp_tick_frequency);
-guint16 		arv_gv_stream_get_port		(ArvGvStream *gv_stream);
-void			arv_gv_stream_set_option	(ArvGvStream *gv_stream, ArvGvStreamOption option,
+guint16 	arv_gv_stream_get_port			(ArvGvStream *gv_stream);
+void		arv_gv_stream_set_option		(ArvGvStream *gv_stream, ArvGvStreamOption option,
 							 int value);
+void		arv_gv_stream_set_packet_resend 	(ArvGvStream *gv_stream, ArvGvStreamPacketResend resend);
 
 G_END_DECLS
 
