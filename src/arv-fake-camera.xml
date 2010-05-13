@@ -38,6 +38,46 @@
 		<pFeature>PayloadSize</pFeature>
 	</Category>
 
+	<StringReg Name="DeviceID" NameSpace="Standard">
+		<DisplayName>Device ID</DisplayName>
+		<Address>0xd8</Address>
+		<Length>16</Length>
+		<AccessMode>RO</AccessMode>
+		<pPort>Device</pPort>
+	</StringReg>
+
+	<StringReg Name="DeviceVendorName" NameSpace="Standard">
+		<DisplayName>Vendor Name</DisplayName>
+		<Address>0x48</Address>
+		<Length>32</Length>
+		<AccessMode>RO</AccessMode>
+		<pPort>Device</pPort>
+	</StringReg>
+
+	<StringReg Name="DeviceModelName" NameSpace="Standard">
+		<DisplayName>Model Name</DisplayName>
+		<Address>0x68</Address>
+		<Length>32</Length>
+		<AccessMode>RO</AccessMode>
+		<pPort>Device</pPort>
+	</StringReg>
+
+	<StringReg Name="DeviceManufacturerInfo" NameSpace="Standard">
+		<DisplayName>Manufacturer Info</DisplayName>
+		<Address>0xa8</Address>
+		<Length>48</Length>
+		<AccessMode>RO</AccessMode>
+		<pPort>Device</pPort>
+	</StringReg>
+
+	<StringReg Name="DeviceVersion" NameSpace="Standard">
+		<DisplayName>Device Version</DisplayName>
+		<Address>0x88</Address>
+		<Length>32</Length>
+		<AccessMode>RO</AccessMode>
+		<pPort>Device</pPort>
+	</StringReg>
+
 	<Command Name="AcquisitionStart" NameSpace="Standard">
 		<Description>Start acquisition.</Description>
 		<pValue>AcquisitionCommandRegister</pValue>
