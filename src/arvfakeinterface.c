@@ -38,6 +38,9 @@ arv_fake_interface_update_device_list (ArvInterface *interface)
 static ArvDevice *
 arv_fake_interface_new_device (ArvInterface *interface, const char *name)
 {
+	if (g_strcmp0 (name, "Fake_1") == 0)
+		return arv_fake_device_new ("1");
+
 	return NULL;
 }
 

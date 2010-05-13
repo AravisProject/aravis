@@ -22,6 +22,7 @@
 
 #include <arvsystem.h>
 #include <arvgvinterface.h>
+#include <arvfakeinterface.h>
 #include <arvdevice.h>
 
 ArvDevice *
@@ -30,12 +31,15 @@ arv_new_device (const char *name)
 	ArvInterface *interface;
 	ArvDevice *device;
 
-	interface = arv_gv_interface_get_instance ();
-	if (ARV_IS_INTERFACE (interface)) {
-		device = arv_interface_new_device (interface, name);
-		if (ARV_IS_DEVICE (device))
+	interface = arv_fake_interface_get_instance ();
+	device = arv_interface_new_device (interface, name);
+		if (device != NULL)
 			return device;
-	}
+
+	interface = arv_gv_interface_get_instance ();
+	device = arv_interface_new_device (interface, name);
+		if (device != NULL)
+			return device;
 
 	return NULL;
 }
