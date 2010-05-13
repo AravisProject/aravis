@@ -76,6 +76,7 @@ const char *	arv_camera_get_acquisition_mode 	(ArvCamera *camera);
 void		arv_camera_start_acquisition		(ArvCamera *camera);
 void		arv_camera_stop_acquisition		(ArvCamera *camera);
 void		arv_camera_set_acquisition_frame_rate	(ArvCamera *camera, double frame_rate);
+double		arv_camera_get_acquisition_frame_rate	(ArvCamera *camera);
 void		arv_camera_set_trigger_selector		(ArvCamera *camera, const char *value);
 void		arv_camera_set_trigger_mode		(ArvCamera *camera, const char *value);
 const char *	arv_camera_get_trigger_mode		(ArvCamera *camera);
