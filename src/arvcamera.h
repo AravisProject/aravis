@@ -52,13 +52,30 @@ GType arv_camera_get_type (void);
 
 ArvCamera *	arv_camera_new			(const char *name);
 ArvStream *	arv_camera_new_stream		(ArvCamera *camera, ArvStreamCallback callback, void *user_data);
+
+/* Device control */
+
 const char *	arv_camera_get_vendor_name	(ArvCamera *camera);
 const char *	arv_camera_get_model_name	(ArvCamera *camera);
 const char *	arv_camera_get_device_id	(ArvCamera *camera);
-void		arv_camera_set_acquisition_mode (ArvCamera *camera, const char *value);
-const char *	arv_camera_get_acquisition_mode (ArvCamera *camera);
-void		arv_camera_start_acquisition	(ArvCamera *camera);
-void		arv_camera_stop_acquisition	(ArvCamera *camera);
+
+/* Image format control */
+
+void 		arv_camera_get_sensor_size 	(ArvCamera *camera, gint *width, gint *height);
+void		arv_camera_set_region		(ArvCamera *camera, gint x, gint y, gint width, gint height);
+void		arv_camera_get_region		(ArvCamera *camera, gint *x, gint *y, gint *width, gint *height);
+void		arv_camera_set_binning		(ArvCamera *camera, gint dx, gint dy);
+void		arv_camera_get_binning		(ArvCamera *camera, gint *dx, gint *dy);
+void 		arv_camera_set_pixel_format 	(ArvCamera *camera, ArvPixelFormat format);
+ArvPixelFormat 	arv_camera_get_pixel_format 	(ArvCamera *camera);
+
+/* Acquisition control */
+
+void		arv_camera_set_acquisition_mode 	(ArvCamera *camera, const char *value);
+const char *	arv_camera_get_acquisition_mode 	(ArvCamera *camera);
+void		arv_camera_start_acquisition		(ArvCamera *camera);
+void		arv_camera_stop_acquisition		(ArvCamera *camera);
+void		arv_camera_set_acquisition_frame_rate	(ArvCamera *camera, double frame_rate);
 void		arv_camera_set_trigger_selector		(ArvCamera *camera, const char *value);
 void		arv_camera_set_trigger_mode		(ArvCamera *camera, const char *value);
 const char *	arv_camera_get_trigger_mode		(ArvCamera *camera);
@@ -66,15 +83,17 @@ void		arv_camera_set_trigger_source		(ArvCamera *camera, const char *value);
 const char *	arv_camera_get_trigger_source		(ArvCamera *camera);
 void		arv_camera_set_trigger_activation	(ArvCamera *camera, const char *value);
 const char *	arv_camera_get_trigger_activation	(ArvCamera *camera);
-guint		arv_camera_get_payload		(ArvCamera *camera);
-void		arv_camera_set_region		(ArvCamera *camera, gint x, gint y, gint width, gint height);
-void		arv_camera_get_region		(ArvCamera *camera, gint *x, gint *y, gint *width, gint *height);
-void		arv_camera_set_binning		(ArvCamera *camera, gint dx, gint dy);
-void		arv_camera_get_binning		(ArvCamera *camera, gint *dx, gint *dy);
-void 		arv_camera_set_exposure_time 	(ArvCamera *camera, double exposure_time_us);
-gboolean 	arv_camera_get_exposure_time 	(ArvCamera *camera);
+void 		arv_camera_set_exposure_time 		(ArvCamera *camera, double exposure_time_us);
+gboolean 	arv_camera_get_exposure_time 		(ArvCamera *camera);
+
+/* Analog control */
+
 void 		arv_camera_set_gain	 	(ArvCamera *camera, gint64 gain);
 gint64 		arv_camera_get_gain 		(ArvCamera *camera);
+
+/* Transport layer control */
+
+guint		arv_camera_get_payload		(ArvCamera *camera);
 
 G_END_DECLS
 

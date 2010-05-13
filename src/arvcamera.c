@@ -46,6 +46,8 @@ arv_camera_new_stream (ArvCamera *camera, ArvStreamCallback callback, void *user
 	return arv_device_new_stream (camera->priv->device, callback, user_data);
 }
 
+/* Device control */
+
 const char *
 arv_camera_get_vendor_name (ArvCamera *camera)
 {
@@ -69,6 +71,89 @@ arv_camera_get_device_id (ArvCamera *camera)
 
 	return arv_device_get_string_feature_value (camera->priv->device, "DeviceID");
 }
+
+/* Image format control */
+
+void
+arv_camera_get_sensor_size (ArvCamera *camera, gint *width, gint *height)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	if (width != NULL)
+		*width = arv_device_get_integer_feature_value (camera->priv->device, "SensorWidth");
+	if (height != NULL)
+		*height = arv_device_get_integer_feature_value (camera->priv->device, "SensorHeight");
+}
+
+void
+arv_camera_set_region (ArvCamera *camera, int x, int y, int width, int height)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	if (x > 0)
+		arv_device_set_integer_feature_value (camera->priv->device, "OffsetX", x);
+	if (y > 0)
+		arv_device_set_integer_feature_value (camera->priv->device, "OffsetY", y);
+	if (width > 0)
+		arv_device_set_integer_feature_value (camera->priv->device, "Width", width);
+	if (height > 0)
+		arv_device_set_integer_feature_value (camera->priv->device, "Height", height);
+}
+
+void
+arv_camera_get_region (ArvCamera *camera, gint *x, gint *y, gint *width, gint *height)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	if (x != NULL)
+		*x = arv_device_get_integer_feature_value (camera->priv->device, "OffsetX");
+	if (y != NULL)
+		*y = arv_device_get_integer_feature_value (camera->priv->device, "OffsetY");
+	if (width != NULL)
+		*width = arv_device_get_integer_feature_value (camera->priv->device, "Width");
+	if (height != NULL)
+		*height = arv_device_get_integer_feature_value (camera->priv->device, "Height");
+}
+
+void
+arv_camera_set_binning (ArvCamera *camera, gint dx, gint dy)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	if (dx > 0)
+		arv_device_set_integer_feature_value (camera->priv->device, "BinningHorizontal", dx);
+	if (dy > 0)
+		arv_device_set_integer_feature_value (camera->priv->device, "BinningVertical", dy);
+}
+
+void
+arv_camera_get_binning (ArvCamera *camera, gint *dx, gint *dy)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	if (dx != NULL)
+		*dx = arv_device_get_integer_feature_value (camera->priv->device, "BinningHorizontal");
+	if (dy != NULL)
+		*dy = arv_device_get_integer_feature_value (camera->priv->device, "BinningVertical");
+}
+
+void
+arv_camera_set_pixel_format (ArvCamera *camera, ArvPixelFormat format)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_device_set_integer_feature_value (camera->priv->device, "PixelFormat", format);
+}
+
+ArvPixelFormat
+arv_camera_get_pixel_format (ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0);
+
+	return arv_device_get_integer_feature_value (camera->priv->device, "PixelFormat");
+}
+
+/* Acquisition control */
 
 void
 arv_camera_set_acquisition_mode (ArvCamera *camera, const char *value)
@@ -100,6 +185,22 @@ arv_camera_stop_acquisition (ArvCamera *camera)
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
 	arv_device_execute_command (camera->priv->device, "AcquisitionStop");
+}
+
+void
+arv_camera_set_acquisition_frame_rate (ArvCamera *camera, double frame_rate)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_device_set_float_feature_value (camera->priv->device, "AcquisitionFrameRate", frame_rate);
+}
+
+double
+arv_camera_get_acquisition_frame_rate (ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0.0);
+
+	return arv_device_get_integer_feature_value (camera->priv->device, "AcquisitionFrameRate");
 }
 
 void
@@ -158,65 +259,6 @@ arv_camera_get_trigger_activation (ArvCamera *camera)
 	return arv_device_get_string_feature_value (camera->priv->device, "TriggerActivation");
 }
 
-guint
-arv_camera_get_payload (ArvCamera *camera)
-{
-	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0);
-
-	return arv_device_get_integer_feature_value (camera->priv->device, "PayloadSize");
-}
-
-void
-arv_camera_set_region (ArvCamera *camera, int x, int y, int width, int height)
-{
-	g_return_if_fail (ARV_IS_CAMERA (camera));
-
-	/* FIXME check for limits */
-	if (width > 0)
-		arv_device_set_integer_feature_value (camera->priv->device, "Width", width);
-	if (height > 0)
-		arv_device_set_integer_feature_value (camera->priv->device, "Height", width);
-}
-
-void
-arv_camera_get_region (ArvCamera *camera, gint *x, gint *y, gint *width, gint *height)
-{
-	g_return_if_fail (ARV_IS_CAMERA (camera));
-
-	if (x != NULL)
-		*x = 0;
-	if (y != NULL)
-		*y = 0;
-
-	if (width != NULL)
-		*width = arv_device_get_integer_feature_value (camera->priv->device, "Width");
-	if (height != NULL)
-		*height = arv_device_get_integer_feature_value (camera->priv->device, "Height");
-}
-
-void
-arv_camera_set_binning (ArvCamera *camera, gint dx, gint dy)
-{
-	g_return_if_fail (ARV_IS_CAMERA (camera));
-
-	/* FIXME check for limits */
-	if (dx > 0)
-		arv_device_set_integer_feature_value (camera->priv->device, "BinningHorizontal", dx);
-	if (dy > 0)
-		arv_device_set_integer_feature_value (camera->priv->device, "BinningVertical", dx);
-}
-
-void
-arv_camera_get_binning (ArvCamera *camera, gint *dx, gint *dy)
-{
-	g_return_if_fail (ARV_IS_CAMERA (camera));
-
-	if (dx != NULL)
-		*dx = arv_device_get_integer_feature_value (camera->priv->device, "BinningHorizontal");
-	if (dy != NULL)
-		*dy = arv_device_get_integer_feature_value (camera->priv->device, "BinningVertical");
-}
-
 void
 arv_camera_set_exposure_time (ArvCamera *camera, double exposure_time_us)
 {
@@ -233,6 +275,8 @@ arv_camera_get_exposure_time (ArvCamera *camera)
 	return arv_device_get_float_feature_value (camera->priv->device, "ExposureTimeAbs");
 }
 
+/* Analog control */
+
 void
 arv_camera_set_gain (ArvCamera *camera, gint64 gain)
 {
@@ -247,6 +291,16 @@ arv_camera_get_gain (ArvCamera *camera)
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0.0);
 
 	return arv_device_get_integer_feature_value (camera->priv->device, "GainRaw");
+}
+
+/* Transport layer control */
+
+guint
+arv_camera_get_payload (ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0);
+
+	return arv_device_get_integer_feature_value (camera->priv->device, "PayloadSize");
 }
 
 ArvCamera *
