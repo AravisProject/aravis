@@ -51,7 +51,7 @@ arv_camera_get_vendor_name (ArvCamera *camera)
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
-	return arv_gc_string_get_value (ARV_GC_STRING (arv_gc_get_node (camera->priv->genicam, "DeviceVendorName")));
+	return arv_device_get_string_feature_value (camera->priv->device, "DeviceVendorName");
 }
 
 const char *
@@ -59,7 +59,7 @@ arv_camera_get_model_name (ArvCamera *camera)
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
-	return arv_gc_string_get_value (ARV_GC_STRING (arv_gc_get_node (camera->priv->genicam, "DeviceModelName")));
+	return arv_device_get_string_feature_value (camera->priv->device, "DeviceModelName");
 }
 
 const char *
@@ -67,7 +67,7 @@ arv_camera_get_device_id (ArvCamera *camera)
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
-	return arv_gc_string_get_value (ARV_GC_STRING (arv_gc_get_node (camera->priv->genicam, "DeviceID")));
+	return arv_device_get_string_feature_value (camera->priv->device, "DeviceID");
 }
 
 void
@@ -75,9 +75,7 @@ arv_camera_set_acquisition_mode (ArvCamera *camera, const char *value)
 {
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
-	arv_gc_enumeration_set_string_value (ARV_GC_ENUMERATION (arv_gc_get_node (camera->priv->genicam,
-										  "AcquisitionMode")),
-					     value);
+	arv_device_set_string_feature_value (camera->priv->device, "AcquisitionMode", value);
 }
 
 const char *
@@ -85,8 +83,7 @@ arv_camera_get_acquisition_mode (ArvCamera *camera)
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
-	return arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (arv_gc_get_node (camera->priv->genicam,
-											 "AcquisitionMode")));
+	return arv_device_get_string_feature_value (camera->priv->device, "AcquisitionMode");
 }
 
 void
@@ -94,7 +91,7 @@ arv_camera_start_acquisition (ArvCamera *camera)
 {
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
-	arv_gc_command_execute (ARV_GC_COMMAND (arv_gc_get_node (camera->priv->genicam, "AcquisitionStart")));
+	arv_device_execute_command (camera->priv->device, "AcquisitionStart");
 }
 
 void
@@ -102,7 +99,7 @@ arv_camera_stop_acquisition (ArvCamera *camera)
 {
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
-	arv_gc_command_execute (ARV_GC_COMMAND (arv_gc_get_node (camera->priv->genicam, "AcquisitionStop")));
+	arv_device_execute_command (camera->priv->device, "AcquisitionStop");
 }
 
 void
@@ -110,9 +107,7 @@ arv_camera_set_trigger_selector	(ArvCamera *camera, const char *value)
 {
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
-	arv_gc_enumeration_set_string_value (ARV_GC_ENUMERATION (arv_gc_get_node (camera->priv->genicam,
-										  "TriggerSelector")),
-					     value);
+	arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector", value);
 }
 
 void
@@ -120,9 +115,7 @@ arv_camera_set_trigger_mode (ArvCamera *camera, const char *value)
 {
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
-	arv_gc_enumeration_set_string_value (ARV_GC_ENUMERATION (arv_gc_get_node (camera->priv->genicam,
-										  "TriggerMode")),
-					     value);
+	arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", value);
 }
 
 const char *
@@ -130,8 +123,7 @@ arv_camera_get_trigger_mode (ArvCamera *camera)
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
-	return arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (arv_gc_get_node (camera->priv->genicam,
-											 "TriggerMode")));
+	return arv_device_get_string_feature_value (camera->priv->device, "TriggerMode");
 }
 
 void
@@ -139,9 +131,7 @@ arv_camera_set_trigger_source (ArvCamera *camera, const char *value)
 {
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
-	arv_gc_enumeration_set_string_value (ARV_GC_ENUMERATION (arv_gc_get_node (camera->priv->genicam,
-										  "TriggerSource")),
-					     value);
+	arv_device_set_string_feature_value (camera->priv->device, "TriggerSource", value);
 }
 
 const char *
@@ -149,8 +139,7 @@ arv_camera_get_trigger_source (ArvCamera *camera)
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
-	return arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (arv_gc_get_node (camera->priv->genicam,
-											 "TriggerSource")));
+	return arv_device_get_string_feature_value (camera->priv->device, "TriggerSource");
 }
 
 void
@@ -158,9 +147,7 @@ arv_camera_set_trigger_activation (ArvCamera *camera, const char *value)
 {
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
-	arv_gc_enumeration_set_string_value (ARV_GC_ENUMERATION (arv_gc_get_node (camera->priv->genicam,
-										  "TriggerActivation")),
-					     value);
+	arv_device_set_string_feature_value (camera->priv->device, "TriggerActivation", value);
 }
 
 const char *
@@ -168,8 +155,7 @@ arv_camera_get_trigger_activation (ArvCamera *camera)
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
-	return arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (arv_gc_get_node (camera->priv->genicam,
-											 "TriggerActivation")));
+	return arv_device_get_string_feature_value (camera->priv->device, "TriggerActivation");
 }
 
 guint
@@ -177,7 +163,7 @@ arv_camera_get_payload (ArvCamera *camera)
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0);
 
-	return arv_gc_integer_get_value (ARV_GC_INTEGER (arv_gc_get_node (camera->priv->genicam, "PayloadSize")));
+	return arv_device_get_integer_feature_value (camera->priv->device, "PayloadSize");
 }
 
 void
@@ -187,9 +173,9 @@ arv_camera_set_region (ArvCamera *camera, int x, int y, int width, int height)
 
 	/* FIXME check for limits */
 	if (width > 0)
-		arv_gc_integer_set_value (ARV_GC_INTEGER (arv_gc_get_node (camera->priv->genicam, "Width")), width);
+		arv_device_set_integer_feature_value (camera->priv->device, "Width", width);
 	if (height > 0)
-		arv_gc_integer_set_value (ARV_GC_INTEGER (arv_gc_get_node (camera->priv->genicam, "Height")), height);
+		arv_device_set_integer_feature_value (camera->priv->device, "Height", width);
 }
 
 void
@@ -203,11 +189,9 @@ arv_camera_get_region (ArvCamera *camera, gint *x, gint *y, gint *width, gint *h
 		*y = 0;
 
 	if (width != NULL)
-		*width = arv_gc_integer_get_value (ARV_GC_INTEGER (arv_gc_get_node (camera->priv->genicam,
-										    "Width")));
+		*width = arv_device_get_integer_feature_value (camera->priv->device, "Width");
 	if (height != NULL)
-		*height = arv_gc_integer_get_value (ARV_GC_INTEGER (arv_gc_get_node (camera->priv->genicam,
-										     "Height")));
+		*height = arv_device_get_integer_feature_value (camera->priv->device, "Height");
 }
 
 void
@@ -217,11 +201,9 @@ arv_camera_set_binning (ArvCamera *camera, gint dx, gint dy)
 
 	/* FIXME check for limits */
 	if (dx > 0)
-		arv_gc_integer_set_value (ARV_GC_INTEGER (arv_gc_get_node (camera->priv->genicam,
-									   "BinningHorizontal")), dx);
+		arv_device_set_integer_feature_value (camera->priv->device, "BinningHorizontal", dx);
 	if (dy > 0)
-		arv_gc_integer_set_value (ARV_GC_INTEGER (arv_gc_get_node (camera->priv->genicam,
-									   "BinningVertical")), dy);
+		arv_device_set_integer_feature_value (camera->priv->device, "BinningVertical", dx);
 }
 
 void
@@ -230,11 +212,9 @@ arv_camera_get_binning (ArvCamera *camera, gint *dx, gint *dy)
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
 	if (dx != NULL)
-		*dx = arv_gc_integer_get_value (ARV_GC_INTEGER (arv_gc_get_node (camera->priv->genicam,
-										 "BinningHorizontal")));
+		*dx = arv_device_get_integer_feature_value (camera->priv->device, "BinningHorizontal");
 	if (dy != NULL)
-		*dy = arv_gc_integer_get_value (ARV_GC_INTEGER (arv_gc_get_node (camera->priv->genicam,
-										 "BinningVertical")));
+		*dy = arv_device_get_integer_feature_value (camera->priv->device, "BinningVertical");
 }
 
 void
@@ -242,8 +222,7 @@ arv_camera_set_exposure_time (ArvCamera *camera, double exposure_time_us)
 {
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
-	arv_gc_float_set_value (ARV_GC_FLOAT (arv_gc_get_node (camera->priv->genicam, "ExposureTimeAbs")),
-				exposure_time_us);
+	arv_device_set_float_feature_value (camera->priv->device, "ExposureTimeAbs", exposure_time_us);
 }
 
 gboolean
@@ -251,7 +230,7 @@ arv_camera_get_exposure_time (ArvCamera *camera)
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0.0);
 
-	return arv_gc_float_get_value (ARV_GC_FLOAT (arv_gc_get_node (camera->priv->genicam, "ExposureTimeAbs")));
+	return arv_device_get_float_feature_value (camera->priv->device, "ExposureTimeAbs");
 }
 
 void
@@ -259,7 +238,7 @@ arv_camera_set_gain (ArvCamera *camera, gint64 gain)
 {
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
-	arv_gc_integer_set_value (ARV_GC_INTEGER (arv_gc_get_node (camera->priv->genicam, "GainRaw")), gain);
+	arv_device_set_integer_feature_value (camera->priv->device, "GainRaw", gain);
 }
 
 gint64
@@ -267,7 +246,7 @@ arv_camera_get_gain (ArvCamera *camera)
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0.0);
 
-	return arv_gc_integer_get_value (ARV_GC_INTEGER (arv_gc_get_node (camera->priv->genicam, "GainRaw")));
+	return arv_device_get_integer_feature_value (camera->priv->device, "GainRaw");
 }
 
 ArvCamera *

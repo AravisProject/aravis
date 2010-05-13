@@ -22,6 +22,12 @@
 
 #include <arvdevice.h>
 #include <arvgc.h>
+#include <arvgccommand.h>
+#include <arvgcinteger.h>
+#include <arvgcfloat.h>
+#include <arvgcboolean.h>
+#include <arvgcenumeration.h>
+#include <arvgcstring.h>
 #include <arvstream.h>
 
 static GObjectClass *parent_class = NULL;
@@ -77,6 +83,110 @@ arv_device_get_genicam (ArvDevice *device)
 	g_return_val_if_fail (ARV_IS_DEVICE (device), NULL);
 
 	return ARV_DEVICE_GET_CLASS (device)->get_genicam (device);
+}
+
+void
+arv_device_execute_command (ArvDevice *device, const char *feature)
+{
+	ArvGc *genicam;
+	ArvGcNode *node;
+
+	genicam = arv_device_get_genicam (device);
+	g_return_if_fail (ARV_IS_GC (genicam));
+
+	node = arv_gc_get_node (genicam, feature);
+	if (ARV_IS_GC_COMMAND (node))
+		arv_gc_command_execute (ARV_GC_COMMAND (node));
+}
+
+void
+arv_device_set_string_feature_value (ArvDevice *device, const char *feature, const char *value)
+{
+	ArvGc *genicam;
+	ArvGcNode *node;
+
+	genicam = arv_device_get_genicam (device);
+	g_return_if_fail (ARV_IS_GC (genicam));
+
+	node = arv_gc_get_node (genicam, feature);
+	if (ARV_IS_GC_ENUMERATION (node))
+		arv_gc_enumeration_set_string_value (ARV_GC_ENUMERATION (node), value);
+	else if (ARV_IS_GC_STRING (node))
+		arv_gc_string_set_value (ARV_GC_STRING (node), value);
+}
+
+const char *
+arv_device_get_string_feature_value (ArvDevice *device, const char *feature)
+{
+	ArvGc *genicam;
+	ArvGcNode *node;
+
+	genicam = arv_device_get_genicam (device);
+	g_return_val_if_fail (ARV_IS_GC (genicam), NULL);
+
+	node = arv_gc_get_node (genicam, feature);
+	if (ARV_IS_GC_ENUMERATION (node))
+		return arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (node));
+	else if (ARV_IS_GC_STRING (node))
+		return arv_gc_string_get_value (ARV_GC_STRING (node));
+
+	return NULL;
+}
+
+void
+arv_device_set_integer_feature_value (ArvDevice *device, const char *feature, guint64 value)
+{
+	ArvGc *genicam;
+	ArvGcNode *node;
+
+	genicam = arv_device_get_genicam (device);
+	g_return_if_fail (ARV_IS_GC (genicam));
+
+	node = arv_gc_get_node (genicam, feature);
+	if (ARV_IS_GC_INTEGER (node))
+		arv_gc_integer_set_value (ARV_GC_INTEGER (node), value);
+	else if (ARV_IS_GC_ENUMERATION (node))
+		arv_gc_enumeration_set_int_value (ARV_GC_ENUMERATION (node), value);
+	else if (ARV_IS_GC_BOOLEAN (node))
+		arv_gc_boolean_set_value (ARV_GC_BOOLEAN (node), value);
+}
+
+guint64
+arv_device_get_integer_feature_value (ArvDevice *device, const char *feature)
+{
+	ArvGc *genicam;
+	ArvGcNode *node;
+
+	genicam = arv_device_get_genicam (device);
+	g_return_val_if_fail (ARV_IS_GC (genicam), 0);
+
+	node = arv_gc_get_node (genicam, feature);
+	if (ARV_IS_GC_INTEGER (node))
+		return arv_gc_integer_get_value (ARV_GC_INTEGER (node));
+	else if (ARV_IS_GC_ENUMERATION (node))
+		return arv_gc_enumeration_get_int_value (ARV_GC_ENUMERATION (node));
+	else if (ARV_IS_GC_BOOLEAN (node))
+		return arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node));
+
+	return 0;
+}
+
+void
+arv_device_set_float_feature_value (ArvDevice *device, const char *feature, double value)
+{
+	ArvGc *genicam;
+
+	genicam = arv_device_get_genicam (device);
+	arv_gc_float_set_value (ARV_GC_FLOAT (arv_gc_get_node (genicam, feature)), value);
+}
+
+double
+arv_device_get_float_feature_value (ArvDevice *device, const char *feature)
+{
+	ArvGc *genicam;
+
+	genicam = arv_device_get_genicam (device);
+	return arv_gc_float_get_value (ARV_GC_FLOAT (arv_gc_get_node (genicam, feature)));
 }
 
 static void
