@@ -165,7 +165,7 @@ arv_fake_camera_new (const char *serial_number)
 	memory = g_malloc0 (ARV_FAKE_CAMERA_MEMORY_SIZE);
 
 	fake_camera->priv->genicam_data = arv_get_fake_camera_genicam_data (&fake_camera->priv->genicam_data_size);
-	fake_camera->priv->memory = g_malloc0 (ARV_FAKE_CAMERA_MEMORY_SIZE);
+	fake_camera->priv->memory = memory;
 
 	strcpy (memory + ARV_GVBS_MANUFACTURER_NAME, "Aravis");
 	strcpy (memory + ARV_GVBS_MODEL_NAME, "Fake");
