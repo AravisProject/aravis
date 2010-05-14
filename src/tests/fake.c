@@ -19,44 +19,43 @@ static void
 fake_device_test (void)
 {
 	ArvDevice *device;
-	ArvGc *genicam;
-	int value;
+	int int_value;
+	double dbl_value;
 
 	device = arv_fake_device_new ("TEST0");
 	g_assert (ARV_IS_FAKE_DEVICE (device));
 
-	genicam = arv_device_get_genicam (device);
-	g_assert (ARV_IS_GC (genicam));
+	/* Check default */
+	int_value = arv_device_get_integer_feature_value (device, "Width");
+	g_assert_cmpint (int_value, ==, 512);
+
+	arv_device_set_integer_feature_value (device, "Width", 1024);
+	int_value = arv_device_get_integer_feature_value (device, "Width");
+	g_assert_cmpint (int_value, ==, 1024);
 
 	/* Check default */
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (arv_gc_get_node (genicam, "Width")));
-	g_assert_cmpint (value, ==, 512);
+	int_value = arv_device_get_integer_feature_value (device, "Height");
+	g_assert_cmpint (int_value, ==, 512);
 
-	arv_gc_integer_set_value (ARV_GC_INTEGER (arv_gc_get_node (genicam, "Width")), 1024);
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (arv_gc_get_node (genicam, "Width")));
-	g_assert_cmpint (value, ==, 1024);
+	arv_device_set_integer_feature_value (device, "Height", 1024);
+	int_value = arv_device_get_integer_feature_value (device, "Height");
+	g_assert_cmpint (int_value, ==, 1024);
 
-	/* Check default */
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (arv_gc_get_node (genicam, "Height")));
-	g_assert_cmpint (value, ==, 512);
+	int_value = arv_device_get_integer_feature_value (device, "PayloadSize");
+	g_assert_cmpint (int_value, ==, 1024 * 1024);
 
-	arv_gc_integer_set_value (ARV_GC_INTEGER (arv_gc_get_node (genicam, "Height")), 1024);
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (arv_gc_get_node (genicam, "Height")));
-	g_assert_cmpint (value, ==, 1024);
-
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (arv_gc_get_node (genicam, "PayloadSize")));
-	g_assert_cmpint (value, ==, 1024 * 1024);
-
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (arv_gc_get_node (genicam, "BinningHorizontal")));
-	g_assert_cmpint (value, ==, 1);
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (arv_gc_get_node (genicam, "BinningVertical")));
-	g_assert_cmpint (value, ==, 1);
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (arv_gc_get_node (genicam, "GainRaw")));
-	g_assert_cmpint (value, ==, 0);
-	value = arv_gc_enumeration_get_int_value (ARV_GC_ENUMERATION (arv_gc_get_node (genicam, "GainAuto")));
-	g_assert_cmpint (value, ==, 0);
-	value = arv_gc_float_get_value (ARV_GC_FLOAT (arv_gc_get_node (genicam, "ExposureTimeAbs")));
-	g_assert_cmpfloat (value, ==, 40000.0);
+	int_value = arv_device_get_integer_feature_value (device, "BinningHorizontal");
+	g_assert_cmpint (int_value, ==, 1);
+	int_value = arv_device_get_integer_feature_value (device, "BinningVertical");
+	g_assert_cmpint (int_value, ==, 1);
+	int_value = arv_device_get_integer_feature_value (device, "GainRaw");
+	g_assert_cmpint (int_value, ==, 0);
+	int_value = arv_device_get_integer_feature_value (device, "GainAuto");
+	g_assert_cmpint (int_value, ==, 0);
+	dbl_value = arv_device_get_float_feature_value (device,  "ExposureTimeAbs");
+	g_assert_cmpfloat (dbl_value, ==, 40000.0);
+	int_value = arv_device_get_integer_feature_value (device, "PixelFormat");
+	g_assert_cmpint (int_value, ==, ARV_PIXEL_FORMAT_MONO_8);
 
 	g_object_unref (device);
 }

@@ -231,7 +231,7 @@ arv_gc_parser_warning (void *user_data, const char *msg, ...)
 	va_list args;
 
 	va_start(args, msg);
-	g_logv("Genicam", G_LOG_LEVEL_WARNING, msg, args);
+	g_logv("GcParser", G_LOG_LEVEL_WARNING, msg, args);
 	va_end(args);
 }
 
@@ -241,7 +241,7 @@ arv_gc_parser_error (void *user_data, const char *msg, ...)
 	va_list args;
 
 	va_start(args, msg);
-	g_logv("Genicam", G_LOG_LEVEL_CRITICAL, msg, args);
+	g_logv("GcParser", G_LOG_LEVEL_CRITICAL, msg, args);
 	va_end(args);
 }
 
@@ -251,7 +251,7 @@ arv_gc_parser_fatal_error (void *user_data, const char *msg, ...)
 	va_list args;
 
 	va_start(args, msg);
-	g_logv("Genicam", G_LOG_LEVEL_ERROR, msg, args);
+	g_logv("GcParser", G_LOG_LEVEL_ERROR, msg, args);
 	va_end(args);
 }
 

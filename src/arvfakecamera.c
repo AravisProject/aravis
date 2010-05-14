@@ -128,10 +128,10 @@ arv_get_fake_camera_genicam_data (size_t *size)
 		genicam_file = g_mapped_file_new (filename, FALSE, NULL);
 
 		if (genicam_file != NULL) {
-			arv_debug ("fakegenicam", "[get_fake_camera_genicam_data] %s [size = %d]",
+			arv_debug ("fake-genicam", "[get_fake_camera_genicam_data] %s [size = %d]",
 				   filename,
 				   g_mapped_file_get_length (genicam_file));
-			arv_debug ("fakegenicam", g_mapped_file_get_contents (genicam_file));
+			arv_debug ("fake-genicam", g_mapped_file_get_contents (genicam_file));
 		}
 
 		g_free (filename);
@@ -185,9 +185,13 @@ arv_fake_camera_new (const char *serial_number)
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_HEIGHT, 512);
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_BINNING_HORIZONTAL, 1);
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_BINNING_VERTICAL, 1);
+	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_PIXEL_FORMAT, ARV_PIXEL_FORMAT_MONO_8);
+
+	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_ACQUISITION, 0);
+	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_EXPOSURE_TIME_US, 40000);
+
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_GAIN_RAW, 0);
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_GAIN_MODE, 0);
-	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_EXPOSURE_TIME_US, 40000);
 
 	return fake_camera;
 }

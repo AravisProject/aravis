@@ -18,33 +18,21 @@
 	xsi:schemaLocation="http://www.genicam.org/GenApi/Version_1_0 GenApiSchema.xsd">
 
 	<Category Name="Root" NameSpace="Standard">
+		<pFeature>DeviceControl</pFeature>
+		<pFeature>ImageFormatControl</pFeature>
 		<pFeature>AcquisitionControl</pFeature>
-		<pFeature>FeatureControl</pFeature>
 		<pFeature>TransportLayerControl</pFeature>
 	</Category>
 
-	<Category Name="AcquisitionControl" NameSpace="Custom">
-		<pFeature>AcquisitionStart</pFeature>
-		<pFeature>AcquisitionStop</pFeature>
-	</Category>
+	<!-- Device control -->
 
-	<Category Name="FeatureControl" NameSpace="Custom">
-		<pFeature>GainSelector</pFeature>
-		<pFeature>GainRaw</pFeature>
-		<pFeature>GainAuto</pFeature>
+	<Category Name="DeviceControl" NameSpace="Standard">
+		<pFeature>DeviceVendorName</pFeature>
+		<pFeature>DeviceModelName</pFeature>
+		<pFeature>DeviceManufacturerInfo</pFeature>
+		<pFeature>DeviceID</pFeature>
+		<pFeature>DeviceVersion</pFeature>
 	</Category>
-
-	<Category Name="TransportLayerControl" NameSpace="Standard">
-		<pFeature>PayloadSize</pFeature>
-	</Category>
-
-	<StringReg Name="DeviceID" NameSpace="Standard">
-		<DisplayName>Device ID</DisplayName>
-		<Address>0xd8</Address>
-		<Length>16</Length>
-		<AccessMode>RO</AccessMode>
-		<pPort>Device</pPort>
-	</StringReg>
 
 	<StringReg Name="DeviceVendorName" NameSpace="Standard">
 		<DisplayName>Vendor Name</DisplayName>
@@ -70,6 +58,14 @@
 		<pPort>Device</pPort>
 	</StringReg>
 
+	<StringReg Name="DeviceID" NameSpace="Standard">
+		<DisplayName>Device ID</DisplayName>
+		<Address>0xd8</Address>
+		<Length>16</Length>
+		<AccessMode>RO</AccessMode>
+		<pPort>Device</pPort>
+	</StringReg>
+
 	<StringReg Name="DeviceVersion" NameSpace="Standard">
 		<DisplayName>Device Version</DisplayName>
 		<Address>0x88</Address>
@@ -78,26 +74,19 @@
 		<pPort>Device</pPort>
 	</StringReg>
 
-	<Command Name="AcquisitionStart" NameSpace="Standard">
-		<Description>Start acquisition.</Description>
-		<pValue>AcquisitionCommandRegister</pValue>
-		<CommandValue>1</CommandValue>
-	</Command>
+	<!-- Image format control -->
 
-	<Command Name="AcquisitionStop" NameSpace="Standard">
-		<Description>Stop acquisition.</Description>
-		<pValue>AcquisitionCommandRegister</pValue>
-		<CommandValue>0</CommandValue>
-	</Command>
-
-	<IntReg Name="AcquisitionCommandRegister" NameSpace="Custom">
-		<Address>0x120</Address>
-		<Length>4</Length>
-		<AccessMode>WO</AccessMode>
-		<pPort>Device</pPort>
-		<Sign>Unsigned</Sign>
-		<Endianess>LittleEndian</Endianess>
-	</IntReg>
+	<Category Name="ImageFormatControl" NameSpace="Standard">
+		<pFeature>SensorHeight</pFeature>
+		<pFeature>SensorWidth</pFeature>
+		<pFeature>Width</pFeature>
+		<pFeature>Height</pFeature>
+		<pFeature>WidthMax</pFeature>
+		<pFeature>HeightMax</pFeature>
+		<pFeature>BinningHorizontal</pFeature>
+		<pFeature>BinningVertical</pFeature>
+		<pFeature>PixelFormat</pFeature>
+	</Category>
 
 	<Integer Name="SensorHeight" NameSpace="Standard">
 		<Description>Full height of image sensor.</Description>
@@ -193,6 +182,81 @@
 		<Endianess>LittleEndian</Endianess>
 	</IntReg>
 
+	<Enumeration Name="PixelFormat" NameSpace="Standard">
+		<DisplayName>Pixel format</DisplayName>
+		<EnumEntry Name="Mono8" NameSpace="Standard">
+			<Value>17301505</Value>
+		</EnumEntry>
+		<pValue>PixelFormatRegister</pValue>
+	</Enumeration>
+
+	<IntReg Name="PixelFormatRegister" NameSpace="Custom">
+		<Address>0x128</Address>
+		<Length>4</Length>
+		<AccessMode>RW</AccessMode>
+		<pPort>Device</pPort>
+		<Sign>Unsigned</Sign>
+		<Endianess>LittleEndian</Endianess>
+	</IntReg>
+
+	<!-- Acquisition control -->
+
+	<Category Name="AcquisitionControl" NameSpace="Custom">
+		<pFeature>AcquisitionStart</pFeature>
+		<pFeature>AcquisitionStop</pFeature>
+		<pFeature>ExposureTimeAbs</pFeature>
+	</Category>
+
+	<Command Name="AcquisitionStart" NameSpace="Standard">
+		<Description>Start acquisition.</Description>
+		<pValue>AcquisitionCommandRegister</pValue>
+		<CommandValue>1</CommandValue>
+	</Command>
+
+	<Command Name="AcquisitionStop" NameSpace="Standard">
+		<Description>Stop acquisition.</Description>
+		<pValue>AcquisitionCommandRegister</pValue>
+		<CommandValue>0</CommandValue>
+	</Command>
+
+	<IntReg Name="AcquisitionCommandRegister" NameSpace="Custom">
+		<Address>0x124</Address>
+		<Length>4</Length>
+		<AccessMode>WO</AccessMode>
+		<pPort>Device</pPort>
+		<Sign>Unsigned</Sign>
+		<Endianess>LittleEndian</Endianess>
+	</IntReg>
+
+	<Float Name="ExposureTimeAbs" NameSpace="Standard">
+		<Description>Exposure duration, in microseconds.</Description>
+		<pValue>ExposureTimeAbsConverter</pValue>
+		<Min>10.0</Min>
+		<Max>10000000.0</Max>
+	</Float>
+
+	<Converter Name="ExposureTimeAbsConverter" NameSpace="Custom">
+		<FormulaTo>FROM</FormulaTo>
+		<FormulaFrom>TO</FormulaFrom>
+		<pValue>ExposureTimeAbsRegister</pValue>
+	</Converter>
+
+	<IntReg Name="ExposureTimeAbsRegister" NameSpace="Custom">
+		<Address>0x120</Address>
+		<Length>4</Length>
+		<AccessMode>RW</AccessMode>
+		<pPort>Device</pPort>
+		<Sign>Unsigned</Sign>
+		<Endianess>LittleEndian</Endianess>
+	</IntReg>
+
+	<!-- Analog control -->
+
+	<Category Name="AnalogControl" NameSpace="Custom">
+		<pFeature>GainRaw</pFeature>
+		<pFeature>GainAuto</pFeature>
+	</Category>
+
 	<Integer Name="GainRaw" NameSpace="Standard">
 		<Description>Raw gain.</Description>
 		<pValue>GainRawRegister</pValue>
@@ -232,27 +296,11 @@
 		<Endianess>LittleEndian</Endianess>
 	</IntReg>
 
-	<Float Name="ExposureTimeAbs" NameSpace="Standard">
-		<Description>Exposure duration, in microseconds.</Description>
-		<pValue>ExposureTimeAbsConverter</pValue>
-		<Min>10.0</Min>
-		<Max>10000000.0</Max>
-	</Float>
+	<!-- Transport layer control -->
 
-	<Converter Name="ExposureTimeAbsConverter" NameSpace="Custom">
-		<FormulaTo>FROM</FormulaTo>
-		<FormulaFrom>TO</FormulaFrom>
-		<pValue>ExposureTimeAbsRegister</pValue>
-	</Converter>
-
-	<IntReg Name="ExposureTimeAbsRegister" NameSpace="Custom">
-		<Address>0x120</Address>
-		<Length>4</Length>
-		<AccessMode>RW</AccessMode>
-		<pPort>Device</pPort>
-		<Sign>Unsigned</Sign>
-		<Endianess>LittleEndian</Endianess>
-	</IntReg>
+	<Category Name="TransportLayerControl" NameSpace="Standard">
+		<pFeature>PayloadSize</pFeature>
+	</Category>
 
 	<IntSwissKnife Name="PayloadSize" NameSpace="Standard">
 		<pVariable Name="WIDTH">Width</pVariable>
