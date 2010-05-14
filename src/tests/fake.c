@@ -41,21 +41,22 @@ fake_device_test (void)
 	int_value = arv_device_get_integer_feature_value (device, "Height");
 	g_assert_cmpint (int_value, ==, 1024);
 
-	int_value = arv_device_get_integer_feature_value (device, "PayloadSize");
-	g_assert_cmpint (int_value, ==, 1024 * 1024);
-
 	int_value = arv_device_get_integer_feature_value (device, "BinningHorizontal");
 	g_assert_cmpint (int_value, ==, 1);
 	int_value = arv_device_get_integer_feature_value (device, "BinningVertical");
 	g_assert_cmpint (int_value, ==, 1);
-	int_value = arv_device_get_integer_feature_value (device, "GainRaw");
-	g_assert_cmpint (int_value, ==, 0);
-	int_value = arv_device_get_integer_feature_value (device, "GainAuto");
-	g_assert_cmpint (int_value, ==, 0);
 	dbl_value = arv_device_get_float_feature_value (device,  "ExposureTimeAbs");
 	g_assert_cmpfloat (dbl_value, ==, 40000.0);
 	int_value = arv_device_get_integer_feature_value (device, "PixelFormat");
 	g_assert_cmpint (int_value, ==, ARV_PIXEL_FORMAT_MONO_8);
+
+	int_value = arv_device_get_integer_feature_value (device, "GainRaw");
+	g_assert_cmpint (int_value, ==, 0);
+	int_value = arv_device_get_integer_feature_value (device, "GainAuto");
+	g_assert_cmpint (int_value, ==, 0);
+
+	int_value = arv_device_get_integer_feature_value (device, "PayloadSize");
+	g_assert_cmpint (int_value, ==, 1024 * 1024);
 
 	g_object_unref (device);
 }
