@@ -16,6 +16,42 @@ load_fake_camera_genicam_test (void)
 }
 
 static void
+trigger_registers_test (void)
+{
+	ArvDevice *device;
+	ArvGc *genicam;
+	ArvGcNode *node;
+	gint64 address;
+
+	device = arv_fake_device_new ("TEST0");
+	g_assert (ARV_IS_FAKE_DEVICE (device));
+
+	genicam = arv_device_get_genicam (device);
+	g_assert (ARV_IS_GC (genicam));
+
+	node = arv_gc_get_node (genicam, "TriggerModeRegister");
+	g_assert (ARV_IS_GC_NODE (node));
+
+	address = arv_gc_register_get_address (ARV_GC_REGISTER (node));
+	g_assert_cmpint (address, ==, ARV_FAKE_CAMERA_REGISTER_TRIGGER_MODE);
+
+	address = arv_gc_register_get_address (ARV_GC_REGISTER (arv_gc_get_node (genicam,
+										 "TriggerSourceRegister")));
+	g_assert_cmpint (address, ==, ARV_FAKE_CAMERA_REGISTER_TRIGGER_SOURCE);
+
+	address = arv_gc_register_get_address (ARV_GC_REGISTER (arv_gc_get_node (genicam,
+										 "TriggerActivationRegister")));
+	g_assert_cmpint (address, ==, ARV_FAKE_CAMERA_REGISTER_TRIGGER_ACTIVATION);
+
+	arv_device_set_string_feature_value (device, "TriggerSelector", "AcquisitionStart");
+
+	address = arv_gc_register_get_address (ARV_GC_REGISTER (node));
+	g_assert_cmpint (address, ==, ARV_FAKE_CAMERA_REGISTER_TRIGGER_MODE + ARV_FAKE_CAMERA_REGISTER_TRIGGER_OFFSET);
+
+	g_object_unref (device);
+}
+
+static void
 fake_device_test (void)
 {
 	ArvDevice *device;
@@ -73,6 +109,7 @@ main (int argc, char *argv[])
 	arv_set_fake_camera_genicam_filename (GENICAM_FILENAME);
 
 	g_test_add_func ("/fake/load-fake-camera-genicam", load_fake_camera_genicam_test);
+	g_test_add_func ("/fake/trigger-registers", trigger_registers_test);
 	g_test_add_func ("/fake/fake-device", fake_device_test);
 
 	return g_test_run();
