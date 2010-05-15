@@ -228,6 +228,74 @@
 		<Endianess>LittleEndian</Endianess>
 	</IntReg>
 
+	<Enumeration Name="TriggerSelector" NameSpace="Standard">
+		<EnumEntry Name="FrameStart" NameSpace="Standard">
+			<Value>0</Value>
+		</EnumEntry>
+		<EnumEntry Name="AcquisitionStart" NameSpace="Standard">
+			<Value>1</Value>
+		</EnumEntry>
+		<pValue>TriggerSelectorInteger</pValue>
+	</Enumeration>
+
+	<Integer Name="TriggerSelectorInteger" NameSpace="Custom">
+		<Value>0</Value>
+	</Integer>
+
+	<Enumeration Name="TriggerMode" NameSpace="Standard">
+		<DisplayName>Trigger mode</DisplayName>
+		<EnumEntry Name="Off" NameSpace="Standard">
+			<Value>0</Value>
+		</EnumEntry>
+		<EnumEntry Name="On" NameSpace="Standard">
+			<Value>1</Value>
+		</EnumEntry>
+		<pValue>TriggerModeRegister</pValue>
+	</Enumeration>
+
+	<IntReg Name="TriggerModeRegister" NameSpace="Custom">
+		<Address>0x300</Address>
+		<pIndex Offset="0x20">TriggerSelectorInteger</pIndex>
+		<Length>4</Length>
+		<AccessMode>RW</AccessMode>
+		<pPort>Device</pPort>
+		<Endianess>LittleEndian</Endianess>
+	</IntReg>
+
+	<Enumeration Name="TriggerSource" NameSpace="Standard">
+		<DisplayName>Trigger source</DisplayName>
+		<EnumEntry Name="Line0" NameSpace="Standard">
+			<Value>0</Value>
+		</EnumEntry>
+		<pValue>TriggerSourceRegister</pValue>
+	</Enumeration>
+
+	<IntReg Name="TriggerSourceRegister" NameSpace="Custom">
+		<Address>0x304</Address>
+		<pIndex Offset="0x20">TriggerSelectorInteger</pIndex>
+		<Length>4</Length>
+		<AccessMode>RW</AccessMode>
+		<pPort>Device</pPort>
+		<Endianess>LittleEndian</Endianess>
+	</IntReg>
+
+	<Enumeration Name="TriggerActivation" NameSpace="Standard">
+		<DisplayName>Trigger activation</DisplayName>
+		<EnumEntry Name="RisingEdge" NameSpace="Standard">
+			<Value>0</Value>
+		</EnumEntry>
+		<pValue>TriggerActivationRegister</pValue>
+	</Enumeration>
+
+	<IntReg Name="TriggerActivationRegister" NameSpace="Custom">
+		<Address>0x308</Address>
+		<pIndex Offset="0x20">TriggerSelectorInteger</pIndex>
+		<Length>4</Length>
+		<AccessMode>RW</AccessMode>
+		<pPort>Device</pPort>
+		<Endianess>LittleEndian</Endianess>
+	</IntReg>
+
 	<Float Name="ExposureTimeAbs" NameSpace="Standard">
 		<Description>Exposure duration, in microseconds.</Description>
 		<pValue>ExposureTimeAbsConverter</pValue>
