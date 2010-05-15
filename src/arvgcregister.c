@@ -51,6 +51,21 @@ arv_gc_register_add_element (ArvGcNode *node, const char *name, const char *cont
 												   NULL, 0)));
 	} else if (strcmp (name, "pAddress") == 0) {
 		gc_register->addresses = g_slist_prepend (gc_register->addresses, arv_new_g_value_string (content));
+	} else if (strcmp (name, "pIndex") == 0) {
+		int i;
+
+		g_free (gc_register->index);
+		gc_register->index = g_strdup (content);
+
+		for (i = 0; attributes[i] != NULL && attributes[i+1] != NULL; i += 2)
+			if (g_strcmp0 (attributes[i], "Offset") == 0) {
+				arv_force_g_value_to_int64 (&gc_register->index_offset,
+							    g_ascii_strtoull (attributes[i+1], NULL, 0));
+				break;
+			} else if (g_strcmp0 (attributes[i], "pOffset") == 0) {
+				arv_force_g_value_to_string (&gc_register->index_offset, attributes[i+1]);
+				break;
+			}
 	} else if (strcmp (name, "Length") == 0) {
 		arv_force_g_value_to_int64 (&gc_register->length, g_ascii_strtoull (content, NULL, 0));
 	} else if (strcmp (name, "pLength") == 0) {
@@ -243,6 +258,27 @@ arv_gc_register_get_address (ArvGcRegister *gc_register)
 	for (iter = gc_register->addresses; iter != NULL; iter = iter->next)
 		value += arv_gc_get_int64_from_value (genicam, iter->data);
 
+	if (gc_register->index != NULL) {
+		ArvGcNode *node;
+
+		node = arv_gc_get_node (genicam, gc_register->index);
+		if (ARV_IS_GC_INTEGER (node)) {
+			guint64 index;
+			guint64 index_offset;
+
+			index = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
+
+			if (index != 0) {
+				if (G_VALUE_HOLDS_BOOLEAN (&gc_register->index_offset))
+					index_offset = arv_gc_register_get_length (gc_register);
+				else
+					index_offset = arv_gc_get_int64_from_value (genicam,
+										    &gc_register->index_offset);
+				value += index * index_offset;
+			}
+		}
+	}
+
 	return value;
 }
 
@@ -330,6 +366,8 @@ static void
 arv_gc_register_init (ArvGcRegister *gc_register)
 {
 	/* Set default to read only 32 bits little endian integer register */
+	g_value_init (&gc_register->index_offset, G_TYPE_BOOLEAN);
+	g_value_set_boolean (&gc_register->index_offset, FALSE);
 	g_value_init (&gc_register->length, G_TYPE_INT64);
 	g_value_set_int64 (&gc_register->length, 4);
 	gc_register->access_mode = ARV_GC_ACCESS_MODE_RO;
@@ -352,6 +390,7 @@ arv_gc_register_finalize (GObject *object)
 	for (iter = gc_register->addresses; iter != NULL; iter = iter->next)
 		arv_free_g_value (iter->data);
 	g_slist_free (gc_register->addresses);
+	g_value_unset (&gc_register->index_offset);
 	g_value_unset (&gc_register->length);
 	g_free (gc_register->port_name);
 	g_free (gc_register->cache);

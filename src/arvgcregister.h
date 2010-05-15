@@ -57,6 +57,8 @@ struct _ArvGcRegister {
 	ArvGcRegisterType type;
 	GType value_type;
 	GSList *addresses;
+	char *index;
+	GValue index_offset;
 	GValue length;
 	ArvGcAccessMode access_mode;
 	ArvGcCachable cachable;
