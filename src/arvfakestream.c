@@ -47,7 +47,7 @@ typedef struct {
 
 	/* Statistics */
 
-	guint n_processed_buffers;
+	guint n_completed_buffers;
 	guint n_failures;
 	guint n_underruns;
 } ArvFakeStreamThreadData;
@@ -64,9 +64,12 @@ arv_fake_stream_thread (void *data)
 	while (!thread_data->cancel) {
 		arv_fake_camera_wait_for_next_frame (thread_data->camera);
 		buffer = g_async_queue_try_pop (thread_data->input_queue);
-		arv_fake_camera_fill_buffer (thread_data->camera, buffer);
-		if (buffer != NULL)
+		if (buffer != NULL) {
+			arv_fake_camera_fill_buffer (thread_data->camera, buffer);
 			g_async_queue_push (thread_data->output_queue, buffer);
+			thread_data->n_completed_buffers++;
+		} else
+			thread_data->n_underruns++;
 	}
 
 	if (thread_data->callback != NULL)
@@ -100,7 +103,7 @@ arv_fake_stream_new (ArvFakeCamera *camera, ArvStreamCallback callback, void *us
 	thread_data->input_queue = stream->input_queue;
 	thread_data->output_queue = stream->output_queue;
 
-	thread_data->n_processed_buffers = 0;
+	thread_data->n_completed_buffers = 0;
 	thread_data->n_failures = 0;
 	thread_data->n_underruns = 0;
 
@@ -116,7 +119,7 @@ arv_fake_stream_new (ArvFakeCamera *camera, ArvStreamCallback callback, void *us
 
 static void
 arv_fake_stream_get_statistics (ArvStream *stream,
-				guint64 *n_processed_buffers,
+				guint64 *n_completed_buffers,
 				guint64 *n_failures,
 				guint64 *n_underruns)
 {
@@ -125,7 +128,7 @@ arv_fake_stream_get_statistics (ArvStream *stream,
 
 	thread_data = fake_stream->priv->thread_data;
 
-	*n_processed_buffers = thread_data->n_processed_buffers;
+	*n_completed_buffers = thread_data->n_completed_buffers;
 	*n_failures = thread_data->n_failures;
 	*n_underruns = thread_data->n_underruns;
 }
