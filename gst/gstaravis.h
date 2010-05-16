@@ -41,6 +41,8 @@ typedef struct _GstAravisClass GstAravisClass;
 struct _GstAravis {
 	GstPushSrc element;
 
+	char *camera_name;
+
 	gint width;
 	gint height;
 	gint h_binning;

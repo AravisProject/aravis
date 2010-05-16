@@ -51,6 +51,7 @@ GST_ELEMENT_DETAILS ("Aravis Video Source",
 enum
 {
   PROP_0,
+  PROP_CAMERA_NAME,
   PROP_WIDTH,
   PROP_HEIGHT,
   PROP_H_BINNING,
@@ -118,7 +119,7 @@ gst_aravis_start (GstBaseSrc *src)
 	if (gst_aravis->stream != NULL)
 		g_object_unref (gst_aravis->stream);
 
-	gst_aravis->camera = arv_camera_new (NULL);
+	gst_aravis->camera = arv_camera_new (gst_aravis->camera_name);
 	gst_aravis->stream = arv_camera_new_stream (gst_aravis->camera, NULL, NULL);
 
 	arv_camera_set_region (gst_aravis->camera, 0, 0, gst_aravis->width, gst_aravis->height);
@@ -206,6 +207,8 @@ gst_aravis_init (GstAravis *gst_aravis, GstAravisClass *g_class)
 {
 	gst_base_src_set_live (GST_BASE_SRC (gst_aravis), TRUE);
 
+	gst_aravis->camera_name = NULL;
+
 	gst_aravis->width = 320;
 	gst_aravis->height = 200;
 	gst_aravis->h_binning = 1;
@@ -236,6 +239,9 @@ gst_aravis_finalize (GObject * object)
 		gst_aravis->caps = NULL;
 	}
 
+	g_free (gst_aravis->camera_name);
+	gst_aravis->camera_name = NULL;
+
         G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -246,6 +252,10 @@ gst_aravis_set_property (GObject * object, guint prop_id,
 	GstAravis *gst_aravis = GST_ARAVIS (object);
 
 	switch (prop_id) {
+		case PROP_CAMERA_NAME:
+			g_free (gst_aravis->camera_name);
+			gst_aravis->camera_name = g_strdup (g_value_get_string (value));
+			break;
 		case PROP_WIDTH:
 			gst_aravis->width = g_value_get_int (value);
 			break;
@@ -271,6 +281,9 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 	GstAravis *gst_aravis = GST_ARAVIS (object);
 
 	switch (prop_id) {
+		case PROP_CAMERA_NAME:
+			g_value_set_string (value, gst_aravis->camera_name);
+			break;
 		case PROP_WIDTH:
 			g_value_set_int (value, gst_aravis->width);
 			break;
@@ -311,6 +324,14 @@ gst_aravis_class_init (GstAravisClass * klass)
 	gobject_class->set_property = gst_aravis_set_property;
 	gobject_class->get_property = gst_aravis_get_property;
 
+	g_object_class_install_property
+		(gobject_class,
+		 PROP_CAMERA_NAME,
+		 g_param_spec_string ("camera-name",
+				      "Camera name",
+				      "Name of the camera",
+				      NULL,
+				      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 	g_object_class_install_property
 		(gobject_class,
 		 PROP_WIDTH,
