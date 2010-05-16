@@ -24,6 +24,7 @@
 #include <arvgc.h>
 #include <arvgcregister.h>
 #include <arvgvcp.h>
+#include <arvbuffer.h>
 #include <arvdebug.h>
 #include <string.h>
 
@@ -33,6 +34,9 @@ struct _ArvFakeCameraPrivate {
 	void *memory;
 	const void *genicam_data;
 	size_t genicam_data_size;
+
+	guint32 frame_id;
+	double trigger_frequency;
 };
 
 static const char *arv_fake_camera_genicam_filename = NULL;
@@ -92,15 +96,85 @@ arv_fake_camera_write_register (ArvFakeCamera *camera, guint32 address, guint32 
 	return arv_fake_camera_write_memory (camera, address, sizeof (value), &value);
 }
 
+static guint32
+_get_register (ArvFakeCamera *camera, guint32 address)
+{
+	if (address + sizeof (guint32) > ARV_FAKE_CAMERA_MEMORY_SIZE)
+		return 0;
+
+	return *((guint32 *) ((void*) (camera->priv->memory + address)));
+}
+
+void
+arv_fake_camera_wait_for_next_frame (ArvFakeCamera *camera)
+{
+	struct timespec time;
+	struct timespec sleep_time;
+	guint64 sleep_time_ns;
+	guint64 frame_period_time_ns;
+
+	if (_get_register (camera, ARV_FAKE_CAMERA_REGISTER_TRIGGER_MODE) == 1)
+		frame_period_time_ns = 1000000000L / camera->priv->trigger_frequency;
+	else
+		frame_period_time_ns = (guint64) _get_register (camera, ARV_FAKE_CAMERA_REGISTER_EXPOSURE_TIME_US) *
+			1000L;
+
+	clock_gettime (CLOCK_MONOTONIC, &time);
+	sleep_time_ns = frame_period_time_ns - (((guint64) time.tv_sec * 1000000000L +
+						 (guint64) time.tv_nsec) % frame_period_time_ns);
+
+	sleep_time.tv_sec = sleep_time_ns / 1000000000L;
+	sleep_time.tv_nsec = sleep_time_ns % 1000000000L;
+
+	nanosleep (&sleep_time, NULL);
+}
+
 void
 arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer)
 {
+	struct timespec time;
+	guint32 width;
+	guint32 height;
+	guint32 x_offset, y_offset;
+	size_t payload;
+	guint32 x, y;
+
+	if (camera == NULL || buffer == NULL)
+		return;
+
+	clock_gettime (CLOCK_MONOTONIC, &time);
+
+	width = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_WIDTH);
+	height = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_HEIGHT);
+	x_offset = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_X_OFFSET);
+	y_offset = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_Y_OFFSET);
+	payload = width * height;
+
+	if (buffer->size != payload) {
+		buffer->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
+		return;
+	}
+
+	buffer->width = width;
+	buffer->height = height;
+	buffer->status = ARV_BUFFER_STATUS_SUCCESS;
+	buffer->timestamp_ns = time.tv_sec * 1000000000L + time.tv_nsec;
+	buffer->frame_id = camera->priv->frame_id++;
+	buffer->pixel_format = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_PIXEL_FORMAT);
+
+	for (y = 0; y < height; y++)
+		for (x = 0; x < width; x++)
+			((char *) buffer->data)[y * height + x] = (x + buffer->frame_id + y) % 255;
 }
 
-guint32
-arv_fake_camera_get_frame_period (ArvFakeCamera *camera)
+void
+arv_fake_camera_set_trigger_frequency (ArvFakeCamera *camera, double frequency)
 {
-	return 0;
+	g_return_if_fail (ARV_IS_FAKE_CAMERA (camera));
+	g_return_if_fail (frequency > 0.0);
+
+	camera->priv->trigger_frequency = frequency;
+	camera->priv->frame_id = 0;
 }
 
 void
@@ -183,12 +257,15 @@ arv_fake_camera_new (const char *serial_number)
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_SENSOR_HEIGHT, 2048);
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_WIDTH, 512);
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_HEIGHT, 512);
+	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_X_OFFSET, 0);
+	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_Y_OFFSET, 0);
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_BINNING_HORIZONTAL, 1);
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_BINNING_VERTICAL, 1);
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_PIXEL_FORMAT, ARV_PIXEL_FORMAT_MONO_8);
 
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_ACQUISITION, 0);
-	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_EXPOSURE_TIME_US, 40000);
+	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_ACQUISITION_MODE, 1);
+	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_EXPOSURE_TIME_US, 20000);
 
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_GAIN_RAW, 0);
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_GAIN_MODE, 0);
@@ -200,6 +277,8 @@ static void
 arv_fake_camera_init (ArvFakeCamera *fake_camera)
 {
 	fake_camera->priv = G_TYPE_INSTANCE_GET_PRIVATE (fake_camera, ARV_TYPE_FAKE_CAMERA, ArvFakeCameraPrivate);
+
+	fake_camera->priv->trigger_frequency = 25.0;
 }
 
 static void

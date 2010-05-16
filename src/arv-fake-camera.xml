@@ -116,6 +116,40 @@
 		<Endianess>LittleEndian</Endianess>
 	</IntReg>
 
+	<Integer Name="OffsetX" NameSpace="Standard">
+		<Description>X offset of image, in pixels.</Description>
+		<pValue>OffsetXRegister</pValue>
+		<Min>0</Min>
+		<pMax>SensorWidth</pMax>
+		<Inc>1</Inc>
+	</Integer>
+
+	<IntReg Name="OffsetXRegister" NameSpace="Custom">
+		<Address>0x130</Address>
+		<Length>4</Length>
+		<AccessMode>RW</AccessMode>
+		<pPort>Device</pPort>
+		<Sign>Unsigned</Sign>
+		<Endianess>LittleEndian</Endianess>
+	</IntReg>
+
+	<Integer Name="OffsetY" NameSpace="Standard">
+		<Description>Y offset of image, in pixels.</Description>
+		<pValue>OffsetYRegister</pValue>
+		<Min>0</Min>
+		<pMax>SensorHeight</pMax>
+		<Inc>1</Inc>
+	</Integer>
+
+	<IntReg Name="OffsetYRegister" NameSpace="Custom">
+		<Address>0x134</Address>
+		<Length>4</Length>
+		<AccessMode>RW</AccessMode>
+		<pPort>Device</pPort>
+		<Sign>Unsigned</Sign>
+		<Endianess>LittleEndian</Endianess>
+	</IntReg>
+
 	<Integer Name="Width" NameSpace="Standard">
 		<Description>Width of image, in pixels.</Description>
 		<pValue>WidthRegister</pValue>
@@ -223,6 +257,29 @@
 		<Address>0x124</Address>
 		<Length>4</Length>
 		<AccessMode>WO</AccessMode>
+		<pPort>Device</pPort>
+		<Sign>Unsigned</Sign>
+		<Endianess>LittleEndian</Endianess>
+	</IntReg>
+
+	<Enumeration Name="AcquisitionMode" NameSpace="Standard">
+		<DisplayName>Acquisition mode</DisplayName>
+		<EnumEntry Name="Continuous" NameSpace="Standard">
+			<Value>1</Value>
+		</EnumEntry>
+		<EnumEntry Name="SingleFrame" NameSpace="Standard">
+			<Value>2</Value>
+		</EnumEntry>
+		<EnumEntry Name="MultiFrame" NameSpace="Standard">
+			<Value>3</Value>
+		</EnumEntry>
+		<pValue>AcquisitionModeRegister</pValue>
+	</Enumeration>
+
+	<IntReg Name="AcquisitionModeRegister" NameSpace="Custom">
+		<Address>0x12c</Address>
+		<Length>4</Length>
+		<AccessMode>RW</AccessMode>
 		<pPort>Device</pPort>
 		<Sign>Unsigned</Sign>
 		<Endianess>LittleEndian</Endianess>

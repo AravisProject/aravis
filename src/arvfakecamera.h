@@ -37,11 +37,15 @@ G_BEGIN_DECLS
 #define ARV_FAKE_CAMERA_REGISTER_SENSOR_HEIGHT		0x118
 #define ARV_FAKE_CAMERA_REGISTER_WIDTH			0x100
 #define ARV_FAKE_CAMERA_REGISTER_HEIGHT			0x104
+#define ARV_FAKE_CAMERA_REGISTER_X_OFFSET		0x130
+#define ARV_FAKE_CAMERA_REGISTER_Y_OFFSET		0x134
 #define ARV_FAKE_CAMERA_REGISTER_BINNING_HORIZONTAL	0x108
 #define ARV_FAKE_CAMERA_REGISTER_BINNING_VERTICAL	0x10c
 #define ARV_FAKE_CAMERA_REGISTER_PIXEL_FORMAT		0x128
 
 /* Acquisition control */
+
+#define ARV_FAKE_CAMERA_REGISTER_ACQUISITION_MODE	0x12c
 
 #define ARV_FAKE_CAMERA_REGISTER_TRIGGER_OFFSET		0x020
 
@@ -84,8 +88,8 @@ gboolean	arv_fake_camera_write_memory	(ArvFakeCamera *camera, guint32 address, g
 gboolean 	arv_fake_camera_read_register	(ArvFakeCamera *camera, guint32 address, guint32 *value);
 gboolean	arv_fake_camera_write_register 	(ArvFakeCamera *camera, guint32 address, guint32 value);
 
+void 		arv_fake_camera_wait_for_next_frame 	(ArvFakeCamera *camera);
 void		arv_fake_camera_fill_buffer		(ArvFakeCamera *camera, ArvBuffer *buffer);
-guint32		arv_fake_camera_get_frame_period	(ArvFakeCamera *camera);
 
 void 		arv_set_fake_camera_genicam_filename 	(const char *filename);
 const char *	arv_get_fake_camera_genicam_data	(size_t *size);
