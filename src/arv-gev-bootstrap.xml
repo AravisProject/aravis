@@ -2,12 +2,6 @@
 
 <RegisterDescription>
 
-	<Category Name="TransportLayerControl" NameSpace="Standard">
-	</Category>
-
-	<Port Name="Device" NameSpace="Standard">
-	</Port>
-
 	<Integer Name="GevVersionMajor" NameSpace="Standard">
 		<Description>Major version of the specification.</Description>
 		<DisplayName>Major version</DisplayName>
@@ -143,6 +137,46 @@
 		<Sign>Unsigned</Sign>
 		<Endianess>BigEndian</Endianess>
 	</MaskedIntReg>
+
+	<StringReg Name="DeviceVendorName" NameSpace="Standard">
+		<DisplayName>Vendor Name</DisplayName>
+		<Address>0x48</Address>
+		<Length>32</Length>
+		<AccessMode>RO</AccessMode>
+		<pPort>Device</pPort>
+	</StringReg>
+
+	<StringReg Name="DeviceModelName" NameSpace="Standard">
+		<DisplayName>Model Name</DisplayName>
+		<Address>0x68</Address>
+		<Length>32</Length>
+		<AccessMode>RO</AccessMode>
+		<pPort>Device</pPort>
+	</StringReg>
+
+	<StringReg Name="DeviceVersion" NameSpace="Standard">
+		<DisplayName>Device Version</DisplayName>
+		<Address>0x88</Address>
+		<Length>32</Length>
+		<AccessMode>RO</AccessMode>
+		<pPort>Device</pPort>
+	</StringReg>
+
+	<StringReg Name="DeviceManufacturerInfo" NameSpace="Standard">
+		<DisplayName>Manufacturer Info</DisplayName>
+		<Address>0xa8</Address>
+		<Length>48</Length>
+		<AccessMode>RO</AccessMode>
+		<pPort>Device</pPort>
+	</StringReg>
+
+	<StringReg Name="DeviceID" NameSpace="Standard">
+		<DisplayName>Device ID</DisplayName>
+		<Address>0xd8</Address>
+		<Length>16</Length>
+		<AccessMode>RO</AccessMode>
+		<pPort>Device</pPort>
+	</StringReg>
 
 	<Integer Name="GevNumberOfInterfaces">
 		<Description>Indicates the number of physical network interfaces supported by this device.</Description>
