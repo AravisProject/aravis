@@ -46,7 +46,8 @@ trigger_registers_test (void)
 	arv_device_set_string_feature_value (device, "TriggerSelector", "AcquisitionStart");
 
 	address = arv_gc_register_get_address (ARV_GC_REGISTER (node));
-	g_assert_cmpint (address, ==, ARV_FAKE_CAMERA_REGISTER_TRIGGER_MODE + ARV_FAKE_CAMERA_REGISTER_TRIGGER_OFFSET);
+	g_assert_cmpint (address, ==, ARV_FAKE_CAMERA_REGISTER_TRIGGER_MODE +
+			 ARV_FAKE_CAMERA_REGISTER_ACQUISITION_START_OFFSET);
 
 	g_object_unref (device);
 }
@@ -63,7 +64,7 @@ fake_device_test (void)
 
 	/* Check default */
 	int_value = arv_device_get_integer_feature_value (device, "Width");
-	g_assert_cmpint (int_value, ==, 512);
+	g_assert_cmpint (int_value, ==, ARV_FAKE_CAMERA_WIDTH_DEFAULT);
 
 	arv_device_set_integer_feature_value (device, "Width", 1024);
 	int_value = arv_device_get_integer_feature_value (device, "Width");
@@ -71,20 +72,20 @@ fake_device_test (void)
 
 	/* Check default */
 	int_value = arv_device_get_integer_feature_value (device, "Height");
-	g_assert_cmpint (int_value, ==, 512);
+	g_assert_cmpint (int_value, ==, ARV_FAKE_CAMERA_HEIGHT_DEFAULT);
 
 	arv_device_set_integer_feature_value (device, "Height", 1024);
 	int_value = arv_device_get_integer_feature_value (device, "Height");
 	g_assert_cmpint (int_value, ==, 1024);
 
 	int_value = arv_device_get_integer_feature_value (device, "BinningHorizontal");
-	g_assert_cmpint (int_value, ==, 1);
+	g_assert_cmpint (int_value, ==, ARV_FAKE_CAMERA_BINNING_HORIZONTAL_DEFAULT);
 	int_value = arv_device_get_integer_feature_value (device, "BinningVertical");
-	g_assert_cmpint (int_value, ==, 1);
+	g_assert_cmpint (int_value, ==, ARV_FAKE_CAMERA_BINNING_VERTICAL_DEFAULT);
 	dbl_value = arv_device_get_float_feature_value (device,  "ExposureTimeAbs");
-	g_assert_cmpfloat (dbl_value, ==, 40000.0);
+	g_assert_cmpfloat (dbl_value, ==, ARV_FAKE_CAMERA_EXPOSURE_TIME_US_DEFAULT);
 	int_value = arv_device_get_integer_feature_value (device, "PixelFormat");
-	g_assert_cmpint (int_value, ==, ARV_PIXEL_FORMAT_MONO_8);
+	g_assert_cmpint (int_value, ==, ARV_FAKE_CAMERA_PIXEL_FORMAT_DEFAULT);
 
 	int_value = arv_device_get_integer_feature_value (device, "GainRaw");
 	g_assert_cmpint (int_value, ==, 0);
