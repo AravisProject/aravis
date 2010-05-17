@@ -285,6 +285,22 @@
 		<Endianess>LittleEndian</Endianess>
 	</IntReg>
 
+	<Converter Name="AcquisitionFrameRate" NameSpace="Standard">
+		<Description>Frame rate, in frames per second.</Description>
+		<FormulaTo>(1000000 / FROM)</FormulaTo>
+		<FormulaFrom>(1000000 / TO)</FormulaFrom>
+		<pValue>AcquisitionFramePeriodRegister</pValue>
+	</Converter>
+
+	<IntReg Name="AcquisitionFramePeriodRegister" NameSpace="Custom">
+		<Address>0x138</Address>
+		<Length>4</Length>
+		<AccessMode>RW</AccessMode>
+		<pPort>Device</pPort>
+		<Sign>Unsigned</Sign>
+		<Endianess>LittleEndian</Endianess>
+	</IntReg>
+
 	<Enumeration Name="TriggerSelector" NameSpace="Standard">
 		<EnumEntry Name="FrameStart" NameSpace="Standard">
 			<Value>0</Value>

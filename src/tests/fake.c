@@ -82,10 +82,13 @@ fake_device_test (void)
 	g_assert_cmpint (int_value, ==, ARV_FAKE_CAMERA_BINNING_HORIZONTAL_DEFAULT);
 	int_value = arv_device_get_integer_feature_value (device, "BinningVertical");
 	g_assert_cmpint (int_value, ==, ARV_FAKE_CAMERA_BINNING_VERTICAL_DEFAULT);
-	dbl_value = arv_device_get_float_feature_value (device,  "ExposureTimeAbs");
-	g_assert_cmpfloat (dbl_value, ==, ARV_FAKE_CAMERA_EXPOSURE_TIME_US_DEFAULT);
 	int_value = arv_device_get_integer_feature_value (device, "PixelFormat");
 	g_assert_cmpint (int_value, ==, ARV_FAKE_CAMERA_PIXEL_FORMAT_DEFAULT);
+
+	dbl_value = arv_device_get_float_feature_value (device, "AcquisitionFrameRate");
+	g_assert_cmpfloat (dbl_value, ==, ARV_FAKE_CAMERA_ACQUISITION_FRAME_RATE_DEFAULT);
+	dbl_value = arv_device_get_float_feature_value (device,  "ExposureTimeAbs");
+	g_assert_cmpfloat (dbl_value, ==, ARV_FAKE_CAMERA_EXPOSURE_TIME_US_DEFAULT);
 
 	int_value = arv_device_get_integer_feature_value (device, "GainRaw");
 	g_assert_cmpint (int_value, ==, 0);

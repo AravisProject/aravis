@@ -116,7 +116,8 @@ arv_fake_camera_wait_for_next_frame (ArvFakeCamera *camera)
 	if (_get_register (camera, ARV_FAKE_CAMERA_REGISTER_TRIGGER_MODE) == 1)
 		frame_period_time_ns = 1000000000L / camera->priv->trigger_frequency;
 	else
-		frame_period_time_ns = (guint64) _get_register (camera, ARV_FAKE_CAMERA_REGISTER_EXPOSURE_TIME_US) *
+		frame_period_time_ns = (guint64) _get_register (camera,
+								ARV_FAKE_CAMERA_REGISTER_ACQUISITION_FRAME_PERIOD_US) *
 			1000L;
 
 	clock_gettime (CLOCK_MONOTONIC, &time);
@@ -271,6 +272,8 @@ arv_fake_camera_new (const char *serial_number)
 
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_ACQUISITION, 0);
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_ACQUISITION_MODE, 1);
+	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_ACQUISITION_FRAME_PERIOD_US,
+					1000000.0 / ARV_FAKE_CAMERA_ACQUISITION_FRAME_RATE_DEFAULT);
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_EXPOSURE_TIME_US,
 					ARV_FAKE_CAMERA_EXPOSURE_TIME_US_DEFAULT);
 
