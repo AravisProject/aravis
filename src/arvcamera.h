@@ -28,6 +28,12 @@
 
 G_BEGIN_DECLS
 
+typedef enum {
+	ARV_CAMERA_VENDOR_UNKNOWN,
+	ARV_CAMERA_VENDOR_BASLER,
+	ARV_CAMERA_VENDOR_PROSILICA
+} ArvCameraVendor;
+
 #define ARV_TYPE_CAMERA             (arv_camera_get_type ())
 #define ARV_CAMERA(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_CAMERA, ArvCamera))
 #define ARV_CAMERA_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_CAMERA, ArvCameraClass))

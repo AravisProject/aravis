@@ -36,6 +36,8 @@ static GObjectClass *parent_class = NULL;
 struct _ArvCameraPrivate {
 	ArvDevice *device;
 	ArvGc *genicam;
+
+	ArvCameraVendor vendor;
 };
 
 ArvStream *
@@ -192,7 +194,20 @@ arv_camera_set_acquisition_frame_rate (ArvCamera *camera, double frame_rate)
 {
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
-	arv_device_set_float_feature_value (camera->priv->device, "AcquisitionFrameRate", frame_rate);
+	switch (camera->priv->vendor) {
+		case ARV_CAMERA_VENDOR_BASLER:
+			/* Fixme: use Raw and Base for access to the full frame rate range. */
+			arv_device_set_float_feature_value (camera->priv->device, "AcquisitionFrameRateAbs",
+							    frame_rate);
+			break;
+		case ARV_CAMERA_VENDOR_PROSILICA:
+			arv_device_set_float_feature_value (camera->priv->device, "AcquisitionFrameRateAbs",
+							    frame_rate);
+			break;
+		case ARV_CAMERA_VENDOR_UNKNOWN:
+			arv_device_set_float_feature_value (camera->priv->device, "AcquisitionFrameRate", frame_rate);
+			break;
+	}
 }
 
 double
@@ -200,7 +215,15 @@ arv_camera_get_acquisition_frame_rate (ArvCamera *camera)
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0.0);
 
-	return arv_device_get_integer_feature_value (camera->priv->device, "AcquisitionFrameRate");
+	switch (camera->priv->vendor) {
+		case ARV_CAMERA_VENDOR_BASLER:
+			return arv_device_get_integer_feature_value (camera->priv->device, "AcquisitionFrameRateAbs");
+		case ARV_CAMERA_VENDOR_PROSILICA:
+			return arv_device_get_integer_feature_value (camera->priv->device, "AcquisitionFrameRateAbs");
+		case ARV_CAMERA_VENDOR_UNKNOWN:
+		default:
+			return arv_device_get_integer_feature_value (camera->priv->device, "AcquisitionFrameRate");
+	}
 }
 
 void
@@ -308,6 +331,8 @@ arv_camera_new (const char *name)
 {
 	ArvCamera *camera;
 	ArvDevice *device;
+	ArvCameraVendor vendor;
+	const char *vendor_name;
 
 	device = arv_new_device (name);
 
@@ -317,6 +342,16 @@ arv_camera_new (const char *name)
 	camera = g_object_new (ARV_TYPE_CAMERA, NULL);
 	camera->priv->device = device;
 	camera->priv->genicam = arv_device_get_genicam (device);
+
+	vendor_name = arv_camera_get_vendor_name (camera);
+	if (g_strcmp0 (vendor_name, "Basler") == 0)
+		vendor = ARV_CAMERA_VENDOR_BASLER;
+	else if (g_strcmp0 (vendor_name, "Prosilica") == 0)
+		vendor = ARV_CAMERA_VENDOR_PROSILICA;
+	else
+		vendor = ARV_CAMERA_VENDOR_UNKNOWN;
+
+	camera->priv->vendor = vendor;
 
 	return camera;
 }
