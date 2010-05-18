@@ -77,21 +77,17 @@ ArvPixelFormat 	arv_camera_get_pixel_format 	(ArvCamera *camera);
 
 /* Acquisition control */
 
-void		arv_camera_set_acquisition_mode 	(ArvCamera *camera, const char *value);
-const char *	arv_camera_get_acquisition_mode 	(ArvCamera *camera);
 void		arv_camera_start_acquisition		(ArvCamera *camera);
 void		arv_camera_stop_acquisition		(ArvCamera *camera);
-void		arv_camera_set_acquisition_frame_rate	(ArvCamera *camera, double frame_rate);
-double		arv_camera_get_acquisition_frame_rate	(ArvCamera *camera);
-void		arv_camera_set_trigger_selector		(ArvCamera *camera, const char *value);
-void		arv_camera_set_trigger_mode		(ArvCamera *camera, const char *value);
-const char *	arv_camera_get_trigger_mode		(ArvCamera *camera);
-void		arv_camera_set_trigger_source		(ArvCamera *camera, const char *value);
-const char *	arv_camera_get_trigger_source		(ArvCamera *camera);
-void		arv_camera_set_trigger_activation	(ArvCamera *camera, const char *value);
-const char *	arv_camera_get_trigger_activation	(ArvCamera *camera);
+
+void			arv_camera_set_acquisition_mode 	(ArvCamera *camera, ArvAcquisitionMode value);
+ArvAcquisitionMode 	arv_camera_get_acquisition_mode 	(ArvCamera *camera);
+
+void		arv_camera_set_fixed_frame_rate		(ArvCamera *camera, double frame_rate);
+void		arv_camera_set_external_trigger		(ArvCamera *camera, ArvTriggerSource source);
+
 void 		arv_camera_set_exposure_time 		(ArvCamera *camera, double exposure_time_us);
-gboolean 	arv_camera_get_exposure_time 		(ArvCamera *camera);
+double 		arv_camera_get_exposure_time 		(ArvCamera *camera);
 
 /* Analog control */
 

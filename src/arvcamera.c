@@ -158,22 +158,6 @@ arv_camera_get_pixel_format (ArvCamera *camera)
 /* Acquisition control */
 
 void
-arv_camera_set_acquisition_mode (ArvCamera *camera, const char *value)
-{
-	g_return_if_fail (ARV_IS_CAMERA (camera));
-
-	arv_device_set_string_feature_value (camera->priv->device, "AcquisitionMode", value);
-}
-
-const char *
-arv_camera_get_acquisition_mode (ArvCamera *camera)
-{
-	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
-
-	return arv_device_get_string_feature_value (camera->priv->device, "AcquisitionMode");
-}
-
-void
 arv_camera_start_acquisition (ArvCamera *camera)
 {
 	g_return_if_fail (ARV_IS_CAMERA (camera));
@@ -190,97 +174,96 @@ arv_camera_stop_acquisition (ArvCamera *camera)
 }
 
 void
-arv_camera_set_acquisition_frame_rate (ArvCamera *camera, double frame_rate)
+arv_camera_set_acquisition_mode (ArvCamera *camera, ArvAcquisitionMode mode)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_device_set_string_feature_value (camera->priv->device, "AcquisitionMode",
+					     arv_acquisition_mode_to_string (mode));
+}
+
+ArvAcquisitionMode
+arv_camera_get_acquisition_mode (ArvCamera *camera)
+{
+	const char *string;
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0);
+
+	string = arv_device_get_string_feature_value (camera->priv->device, "AcquisitionMode");
+
+	return arv_acquisition_mode_from_string (string);
+}
+
+void
+arv_camera_set_fixed_frame_rate (ArvCamera *camera, double frame_rate)
 {
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
 	switch (camera->priv->vendor) {
 		case ARV_CAMERA_VENDOR_BASLER:
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
+							     "AcquisitionStart");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
 			arv_device_set_integer_feature_value (camera->priv->device, "AcquisitionFrameRateEnable",
 							      1);
 			arv_device_set_float_feature_value (camera->priv->device, "AcquisitionFrameRateAbs",
 							    frame_rate);
 			break;
 		case ARV_CAMERA_VENDOR_PROSILICA:
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
+							     "FrameStart");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
 			arv_device_set_float_feature_value (camera->priv->device, "AcquisitionFrameRateAbs",
 							    frame_rate);
 			break;
 		case ARV_CAMERA_VENDOR_UNKNOWN:
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
+							     "FrameStart");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
 			arv_device_set_float_feature_value (camera->priv->device, "AcquisitionFrameRate", frame_rate);
 			break;
 	}
 }
 
-double
-arv_camera_get_acquisition_frame_rate (ArvCamera *camera)
+void
+arv_camera_set_external_trigger (ArvCamera *camera, ArvTriggerSource source)
 {
-	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0.0);
+	const char *string;
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	string = arv_trigger_source_to_string (source);
 
 	switch (camera->priv->vendor) {
 		case ARV_CAMERA_VENDOR_BASLER:
-			return arv_device_get_integer_feature_value (camera->priv->device, "AcquisitionFrameRateAbs");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
+							     "AcquisitionStart");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "On");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerActivation",
+							     "RisingEdge");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerSource", string);
+			break;
 		case ARV_CAMERA_VENDOR_PROSILICA:
-			return arv_device_get_integer_feature_value (camera->priv->device, "AcquisitionFrameRateAbs");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
+							     "AcquisitionStart");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector", "FrameStart");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "On");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerActivation",
+							     "RisingEdge");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerSource", string);
+			break;
 		case ARV_CAMERA_VENDOR_UNKNOWN:
-		default:
-			return arv_device_get_integer_feature_value (camera->priv->device, "AcquisitionFrameRate");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
+							     "AcquisitionStart");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector", "FrameStart");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "On");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerActivation",
+							     "RisingEdge");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerSource", string);
+			break;
 	}
-}
-
-void
-arv_camera_set_trigger_selector	(ArvCamera *camera, const char *value)
-{
-	g_return_if_fail (ARV_IS_CAMERA (camera));
-
-	arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector", value);
-}
-
-void
-arv_camera_set_trigger_mode (ArvCamera *camera, const char *value)
-{
-	g_return_if_fail (ARV_IS_CAMERA (camera));
-
-	arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", value);
-}
-
-const char *
-arv_camera_get_trigger_mode (ArvCamera *camera)
-{
-	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
-
-	return arv_device_get_string_feature_value (camera->priv->device, "TriggerMode");
-}
-
-void
-arv_camera_set_trigger_source (ArvCamera *camera, const char *value)
-{
-	g_return_if_fail (ARV_IS_CAMERA (camera));
-
-	arv_device_set_string_feature_value (camera->priv->device, "TriggerSource", value);
-}
-
-const char *
-arv_camera_get_trigger_source (ArvCamera *camera)
-{
-	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
-
-	return arv_device_get_string_feature_value (camera->priv->device, "TriggerSource");
-}
-
-void
-arv_camera_set_trigger_activation (ArvCamera *camera, const char *value)
-{
-	g_return_if_fail (ARV_IS_CAMERA (camera));
-
-	arv_device_set_string_feature_value (camera->priv->device, "TriggerActivation", value);
-}
-
-const char *
-arv_camera_get_trigger_activation (ArvCamera *camera)
-{
-	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
-
-	return arv_device_get_string_feature_value (camera->priv->device, "TriggerActivation");
 }
 
 void
@@ -291,7 +274,7 @@ arv_camera_set_exposure_time (ArvCamera *camera, double exposure_time_us)
 	arv_device_set_float_feature_value (camera->priv->device, "ExposureTimeAbs", exposure_time_us);
 }
 
-gboolean
+double
 arv_camera_get_exposure_time (ArvCamera *camera)
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0.0);

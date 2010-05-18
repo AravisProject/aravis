@@ -27,6 +27,7 @@ libaravis_la_LIBADD = 				\
 	$(ARAVIS_LIBS)
 
 libaravis_la_SOURCES =				\
+	arvenums.c				\
 	arvenumtypes.c				\
 	arvdebug.c				\
 	arvtools.c				\

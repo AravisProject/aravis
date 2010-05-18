@@ -113,25 +113,13 @@ main (int argc, char **argv)
 		for (i = 0; i < 200; i++)
 			arv_stream_push_buffer (stream, arv_buffer_new (payload, NULL));
 
-		arv_camera_set_acquisition_mode (camera, "Continuous");
+		arv_camera_set_acquisition_mode (camera, ARV_ACQUISITION_MODE_CONTINUOUS);
 
-		if (arv_option_frequency > 0.0) {
-			arv_camera_set_trigger_selector (camera, "FrameStart");
-			arv_camera_set_trigger_mode (camera, "Off");
-			arv_camera_set_acquisition_frame_rate (camera, arv_option_frequency);
-		}
+		if (arv_option_frequency > 0.0)
+			arv_camera_set_fixed_frame_rate (camera, arv_option_frequency);
 
-		if (arv_option_trigger != NULL) {
-			arv_camera_set_trigger_selector (camera, "FrameStart");
-			arv_camera_set_trigger_mode (camera, "On");
-			arv_camera_set_trigger_activation (camera, "RisingEdge");
-			arv_camera_set_trigger_source (camera, arv_option_trigger);
-		}
-
-		g_print ("acquisition mode    = %s\n", arv_camera_get_acquisition_mode (camera));
-		g_print ("trigger mode        = %s\n", arv_camera_get_trigger_mode (camera));
-		g_print ("trigger activation  = %s\n", arv_camera_get_trigger_activation (camera));
-		g_print ("trigger source      = %s\n", arv_camera_get_trigger_source (camera));
+		if (arv_option_trigger != NULL)
+			arv_camera_set_external_trigger (camera, arv_trigger_source_from_string (arv_option_trigger));
 
 		arv_camera_start_acquisition (camera);
 
