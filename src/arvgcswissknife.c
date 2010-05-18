@@ -62,7 +62,7 @@ arv_gc_swiss_knife_add_element (ArvGcNode *node, const char *name, const char *c
 			gc_swiss_knife->variables = g_slist_prepend (gc_swiss_knife->variables,
 								     variable_infos);
 
-			arv_debug ("genicam",
+			arv_debug ("parser",
 				   "[GcSwissKnife::add_element] Add pVariable '%s' named '%s'",
 				   content, variable_name);
 		}
