@@ -30,6 +30,7 @@
 #include <arvgccommand.h>
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
+#include <arvgcboolean.h>
 #include <arvgcswissknife.h>
 #include <arvgcconverter.h>
 #include <arvgcport.h>
@@ -66,6 +67,8 @@ arv_gc_create_node (ArvGc *genicam, const char *type)
 		node = arv_gc_integer_node_new ();
 	else if (strcmp (type, "Float") == 0)
 		node = arv_gc_float_node_new ();
+	else if (strcmp (type, "Boolean") == 0)
+		node = arv_gc_boolean_new ();
 	else if (strcmp (type, "Enumeration") == 0)
 		node = arv_gc_enumeration_new ();
 	else if (strcmp (type, "EnumEntry") == 0)
