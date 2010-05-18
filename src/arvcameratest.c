@@ -13,7 +13,8 @@ static char *arv_option_camera_name = NULL;
 static char *arv_option_debug_domains = NULL;
 static gboolean arv_option_snaphot = FALSE;
 static gboolean arv_option_auto_buffer = FALSE;
-static gboolean arv_option_external_trigger = FALSE;
+static char *arv_option_trigger = NULL;
+static double arv_option_frequency = -1.0;
 static int arv_option_width = -1;
 static int arv_option_height = -1;
 static int arv_option_horizontal_binning = -1;
@@ -27,8 +28,10 @@ static const GOptionEntry arv_option_entries[] =
 		&arv_option_snaphot,	"Snapshot", NULL},
 	{ "auto",		'a', 0, G_OPTION_ARG_NONE,
 		&arv_option_auto_buffer,	"Auto buffer size", NULL},
-	{ "external",		'e', 0, G_OPTION_ARG_NONE,
-		&arv_option_external_trigger,	"External trigger", NULL},
+	{ "frequency", 		'f', 0, G_OPTION_ARG_DOUBLE,
+		&arv_option_frequency,	"Acquisition frequency", NULL },
+	{ "trigger",		't', 0, G_OPTION_ARG_STRING,
+		&arv_option_trigger,	"External trigger", NULL},
 	{ "width", 		'w', 0, G_OPTION_ARG_INT,
 		&arv_option_width,		"Width", NULL },
 	{ "height", 		'h', 0, G_OPTION_ARG_INT,
@@ -112,11 +115,17 @@ main (int argc, char **argv)
 
 		arv_camera_set_acquisition_mode (camera, "Continuous");
 
-		if (arv_option_external_trigger) {
-			arv_camera_set_trigger_selector (camera, "AcquisitionStart");
+		if (arv_option_frequency > 0.0) {
+			arv_camera_set_trigger_selector (camera, "FrameStart");
+			arv_camera_set_trigger_mode (camera, "Off");
+			arv_camera_set_acquisition_frame_rate (camera, arv_option_frequency);
+		}
+
+		if (arv_option_trigger != NULL) {
+			arv_camera_set_trigger_selector (camera, "FrameStart");
 			arv_camera_set_trigger_mode (camera, "On");
 			arv_camera_set_trigger_activation (camera, "RisingEdge");
-			arv_camera_set_trigger_source (camera, "Line1");
+			arv_camera_set_trigger_source (camera, arv_option_trigger);
 		}
 
 		g_print ("acquisition mode    = %s\n", arv_camera_get_acquisition_mode (camera));

@@ -196,7 +196,8 @@ arv_camera_set_acquisition_frame_rate (ArvCamera *camera, double frame_rate)
 
 	switch (camera->priv->vendor) {
 		case ARV_CAMERA_VENDOR_BASLER:
-			/* Fixme: use Raw and Base for access to the full frame rate range. */
+			arv_device_set_integer_feature_value (camera->priv->device, "AcquisitionFrameRateEnable",
+							      1);
 			arv_device_set_float_feature_value (camera->priv->device, "AcquisitionFrameRateAbs",
 							    frame_rate);
 			break;
