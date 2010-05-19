@@ -119,7 +119,7 @@ main (int argc, char **argv)
 			arv_camera_set_fixed_frame_rate (camera, arv_option_frequency);
 
 		if (arv_option_trigger != NULL)
-			arv_camera_set_external_trigger (camera, arv_trigger_source_from_string (arv_option_trigger));
+			arv_camera_set_trigger (camera, arv_trigger_source_from_string (arv_option_trigger));
 
 		arv_camera_start_acquisition (camera);
 

@@ -226,7 +226,7 @@ arv_camera_set_fixed_frame_rate (ArvCamera *camera, double frame_rate)
 }
 
 void
-arv_camera_set_external_trigger (ArvCamera *camera, ArvTriggerSource source)
+arv_camera_set_trigger (ArvCamera *camera, ArvTriggerSource source)
 {
 	const char *string;
 
