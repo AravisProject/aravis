@@ -51,12 +51,6 @@ typedef enum {
 } ArvAcquisitionMode;
 
 typedef enum {
-	ARV_TRIGGER_SOURCE_LINE_0,
-	ARV_TRIGGER_SOURCE_LINE_1,
-	ARV_TRIGGER_SOURCE_LINE_2
-} ArvTriggerSource;
-
-typedef enum {
 	ARV_PIXEL_FORMAT_MONO_8			= 0x01080001,
 	ARV_PIXEL_FORMAT_MONO_10		= 0x01100003,
 	ARV_PIXEL_FORMAT_MONO_12		= 0x01100005,
@@ -98,9 +92,6 @@ typedef enum {
 
 const char * 		arv_acquisition_mode_to_string 		(ArvAcquisitionMode value);
 ArvAcquisitionMode 	arv_acquisition_mode_from_string	(const char *string);
-
-const char * 		arv_trigger_source_to_string 		(ArvTriggerSource value);
-ArvTriggerSource 	arv_trigger_source_from_string		(const char *string);
 
 G_END_DECLS
 

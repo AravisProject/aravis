@@ -54,22 +54,3 @@ arv_acquisition_mode_from_string (const char *string)
 	return _from_string (string, arv_acquisition_mode_strings,
 			     G_N_ELEMENTS (arv_acquisition_mode_strings));
 }
-
-static const char *arv_trigger_source_strings[] = {
-	"Line0",
-	"Line1",
-	"Line2"
-};
-
-const char *
-arv_trigger_source_to_string (ArvTriggerSource value)
-{
-	return arv_trigger_source_strings[CLAMP (value, 0, ARV_TRIGGER_SOURCE_LINE_2)];
-}
-
-ArvTriggerSource
-arv_trigger_source_from_string (const char *string)
-{
-	return _from_string (string, arv_trigger_source_strings,
-			     G_N_ELEMENTS (arv_trigger_source_strings));
-}

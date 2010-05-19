@@ -29,6 +29,7 @@ let camera = Aravis.Camera.new ("Fake_1");
 
 camera.set_region (0,0,128,128);
 camera.set_pixel_format (Aravis.PixelFormat.MONO_8);
+camera.set_trigger ("Line1");
 
 let [x,y,width,height] = camera.get_region ();
 

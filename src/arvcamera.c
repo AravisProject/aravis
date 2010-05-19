@@ -226,13 +226,10 @@ arv_camera_set_fixed_frame_rate (ArvCamera *camera, double frame_rate)
 }
 
 void
-arv_camera_set_trigger (ArvCamera *camera, ArvTriggerSource source)
+arv_camera_set_trigger (ArvCamera *camera, const char *source)
 {
-	const char *string;
-
 	g_return_if_fail (ARV_IS_CAMERA (camera));
-
-	string = arv_trigger_source_to_string (source);
+	g_return_if_fail (source != NULL);
 
 	switch (camera->priv->vendor) {
 		case ARV_CAMERA_VENDOR_BASLER:
@@ -243,7 +240,7 @@ arv_camera_set_trigger (ArvCamera *camera, ArvTriggerSource source)
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "On");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerActivation",
 							     "RisingEdge");
-			arv_device_set_string_feature_value (camera->priv->device, "TriggerSource", string);
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerSource", source);
 			break;
 		case ARV_CAMERA_VENDOR_PROSILICA:
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
@@ -253,7 +250,7 @@ arv_camera_set_trigger (ArvCamera *camera, ArvTriggerSource source)
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "On");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerActivation",
 							     "RisingEdge");
-			arv_device_set_string_feature_value (camera->priv->device, "TriggerSource", string);
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerSource", source);
 			break;
 		case ARV_CAMERA_VENDOR_UNKNOWN:
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
@@ -263,7 +260,7 @@ arv_camera_set_trigger (ArvCamera *camera, ArvTriggerSource source)
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "On");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerActivation",
 							     "RisingEdge");
-			arv_device_set_string_feature_value (camera->priv->device, "TriggerSource", string);
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerSource", source);
 			break;
 	}
 }
