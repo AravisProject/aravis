@@ -165,7 +165,7 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer)
 
 	for (y = 0; y < height; y++)
 		for (x = 0; x < width; x++)
-			((char *) buffer->data)[y * height + x] = (x + buffer->frame_id + y) % 255;
+			((char *) buffer->data)[y * width + x] = (x + buffer->frame_id + y) % 255;
 }
 
 void
