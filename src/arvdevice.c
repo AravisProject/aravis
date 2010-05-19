@@ -33,11 +33,11 @@
 static GObjectClass *parent_class = NULL;
 
 ArvStream *
-arv_device_new_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data)
+arv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data)
 {
 	g_return_val_if_fail (ARV_IS_DEVICE (device), NULL);
 
-	return ARV_DEVICE_GET_CLASS (device)->new_stream (device, callback, user_data);
+	return ARV_DEVICE_GET_CLASS (device)->create_stream (device, callback, user_data);
 }
 
 gboolean

@@ -120,7 +120,7 @@ gst_aravis_start (GstBaseSrc *src)
 		g_object_unref (gst_aravis->stream);
 
 	gst_aravis->camera = arv_camera_new (gst_aravis->camera_name);
-	gst_aravis->stream = arv_camera_new_stream (gst_aravis->camera, NULL, NULL);
+	gst_aravis->stream = arv_camera_create_stream (gst_aravis->camera, NULL, NULL);
 
 	arv_camera_set_region (gst_aravis->camera, 0, 0, gst_aravis->width, gst_aravis->height);
 	arv_camera_set_binning (gst_aravis->camera, gst_aravis->h_binning, gst_aravis->v_binning);

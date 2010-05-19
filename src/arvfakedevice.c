@@ -37,7 +37,7 @@ struct _ArvFakeDevicePrivate {
 /* ArvDevice implemenation */
 
 static ArvStream *
-arv_fake_device_new_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data)
+arv_fake_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data)
 {
 	ArvFakeDevice *fake_device = ARV_FAKE_DEVICE (device);
 	ArvStream *stream;
@@ -127,7 +127,7 @@ arv_fake_device_class_init (ArvFakeDeviceClass *fake_device_class)
 
 	object_class->finalize = arv_fake_device_finalize;
 
-	device_class->new_stream = arv_fake_device_new_stream;
+	device_class->create_stream = arv_fake_device_create_stream;
 	device_class->get_genicam = arv_fake_device_get_genicam;
 	device_class->read_memory = arv_fake_device_read_memory;
 	device_class->write_memory = arv_fake_device_write_memory;

@@ -44,7 +44,7 @@ struct _ArvDevice {
 struct _ArvDeviceClass {
 	GObjectClass parent_class;
 
-	ArvStream *	(*new_stream)		(ArvDevice *device, ArvStreamCallback callback, void *user_data);
+	ArvStream *	(*create_stream)	(ArvDevice *device, ArvStreamCallback callback, void *user_data);
 
 	ArvGc *		(*get_genicam)		(ArvDevice *device);
 
@@ -56,7 +56,7 @@ struct _ArvDeviceClass {
 
 GType arv_device_get_type (void);
 
-ArvStream *	arv_device_new_stream		(ArvDevice *device, ArvStreamCallback callback, void *user_data);
+ArvStream *	arv_device_create_stream	(ArvDevice *device, ArvStreamCallback callback, void *user_data);
 gboolean	arv_device_read_memory 		(ArvDevice *device, guint32 address, guint32 size,
 						 void *buffer);
 gboolean	arv_device_write_memory	 	(ArvDevice *device, guint32 address, guint32 size,
