@@ -66,8 +66,11 @@ arv_fake_stream_thread (void *data)
 		buffer = g_async_queue_try_pop (thread_data->input_queue);
 		if (buffer != NULL) {
 			arv_fake_camera_fill_buffer (thread_data->camera, buffer);
+			if (buffer->status == ARV_BUFFER_STATUS_SUCCESS)
+				thread_data->n_completed_buffers++;
+			else
+				thread_data->n_failures++;
 			g_async_queue_push (thread_data->output_queue, buffer);
-			thread_data->n_completed_buffers++;
 		} else
 			thread_data->n_underruns++;
 	}
