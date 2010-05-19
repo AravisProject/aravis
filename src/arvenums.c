@@ -42,7 +42,7 @@ static const char *arv_trigger_source_strings[] = {
 const char *
 arv_trigger_source_to_string (ArvTriggerSource value)
 {
-	return arv_trigger_source_strings[CLAMP (value, 0, ARV_ACQUISITION_MODE_SINGLE_FRAME)];
+	return arv_trigger_source_strings[CLAMP (value, 0, ARV_TRIGGER_SOURCE_LINE_2)];
 }
 
 ArvTriggerSource
