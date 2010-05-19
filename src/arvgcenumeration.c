@@ -91,10 +91,16 @@ arv_gc_enumeration_set_string_value (ArvGcEnumeration *enumeration, const char *
 	g_return_if_fail (ARV_IS_GC_ENUMERATION (enumeration));
 
 	for (iter = arv_gc_node_get_childs (ARV_GC_NODE (enumeration)); iter != NULL; iter = iter->next)
-		if (g_strcmp0 (arv_gc_node_get_name (iter->data), value) ==0)
+		if (g_strcmp0 (arv_gc_node_get_name (iter->data), value) == 0) {
+			arv_debug ("genicam", "[GcEnumeration::set_string_value] value = %d - string = %s",
+				   &enumeration->value, value);
 			arv_gc_set_int64_to_value (arv_gc_node_get_genicam (ARV_GC_NODE (enumeration)),
 						   &enumeration->value,
 						   arv_gc_enum_entry_get_value (iter->data));
+			return;
+		}
+	
+	arv_debug ("genicam", "[GcEnumeration::set_string_value] entry %s not found", value);
 }
 
 gint64
