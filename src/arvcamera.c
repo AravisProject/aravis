@@ -312,6 +312,12 @@ arv_camera_get_payload (ArvCamera *camera)
 	return arv_device_get_integer_feature_value (camera->priv->device, "PayloadSize");
 }
 
+/**
+ * arv_camera_new:
+ *
+ * @name: (allow-none): name of the camera. If null, it will instantiate the first camera.
+ */
+
 ArvCamera *
 arv_camera_new (const char *name)
 {

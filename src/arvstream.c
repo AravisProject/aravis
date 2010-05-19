@@ -26,6 +26,12 @@
 
 static GObjectClass *parent_class = NULL;
 
+/**
+ * arv_stream_push_buffer:
+ *
+ * @buffer: (transfer full): buffer to push
+ */
+
 void
 arv_stream_push_buffer (ArvStream *stream, ArvBuffer *buffer)
 {

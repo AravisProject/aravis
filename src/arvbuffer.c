@@ -24,6 +24,14 @@
 
 static GObjectClass *parent_class = NULL;
 
+/**
+   arv_buffer_new:
+
+   @size: payload size
+   @preallocated: (transfer full): preallocated memory buffer
+
+ */
+
 ArvBuffer *
 arv_buffer_new (size_t size, void *preallocated)
 {
