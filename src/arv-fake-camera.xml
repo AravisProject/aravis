@@ -445,7 +445,7 @@
 
 	<IntSwissKnife Name="PayloadSize" NameSpace="Standard">
 		<pVariable Name="WIDTH">Width</pVariable>
-		<pVariable Name="HEIGHT">Width</pVariable>
+		<pVariable Name="HEIGHT">Height</pVariable>
 		<Formula>WIDTH * HEIGHT</Formula>
 	</IntSwissKnife>
 
