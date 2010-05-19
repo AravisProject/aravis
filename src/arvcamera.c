@@ -236,6 +236,8 @@ arv_camera_set_external_trigger (ArvCamera *camera, ArvTriggerSource source)
 
 	switch (camera->priv->vendor) {
 		case ARV_CAMERA_VENDOR_BASLER:
+			arv_device_set_integer_feature_value (camera->priv->device, "AcquisitionFrameRateEnable",
+							      0);
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
 							     "AcquisitionStart");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "On");
