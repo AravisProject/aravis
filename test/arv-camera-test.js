@@ -29,15 +29,17 @@ let camera = Aravis.Camera.new ("Fake_1");
 
 camera.set_region (0,0,128,128);
 camera.set_pixel_format (Aravis.PixelFormat.MONO_8);
-camera.set_trigger ("Line1");
+camera.set_fixed_frame_rate (10.0);
 
 let [x,y,width,height] = camera.get_region ();
 
 let stream = camera.create_stream (null, null);
 
-for (var i = 0; i < 10; i++)
+for (var i = 0; i < 100; i++)
 	stream.push_buffer (Aravis.Buffer.new (128*128, null));
 
 camera.start_acquisition ();
+
 GLib.usleep (1000000);
+
 camera.stop_acquisition ();
