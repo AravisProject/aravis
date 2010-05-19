@@ -219,46 +219,52 @@ arv_gv_interface_receive_hello_packet (ArvGvInterface *gv_interface)
 		for (i = 0, iter = gv_interface->priv->discover_infos_list; iter != NULL; i++, iter = iter->next) {
 			ArvGvInterfaceDiscoverInfos *infos = iter->data;
 
-			g_socket_set_blocking (infos->socket, FALSE);
-			count = g_socket_receive (infos->socket, buffer, ARV_GV_INTERFACE_SOCKET_BUFFER_SIZE,
-						  NULL, NULL);
-			g_socket_set_blocking (infos->socket, TRUE);
+			do {
+				g_socket_set_blocking (infos->socket, FALSE);
+				count = g_socket_receive (infos->socket, buffer, ARV_GV_INTERFACE_SOCKET_BUFFER_SIZE,
+							  NULL, NULL);
+				g_socket_set_blocking (infos->socket, TRUE);
 
-			if (count != 0) {
-				ArvGvcpPacket *packet = (ArvGvcpPacket *) buffer;
+				if (count > 0) {
+					ArvGvcpPacket *packet = (ArvGvcpPacket *) buffer;
 
-				if (g_ntohs (packet->header.command) == ARV_GVCP_COMMAND_DISCOVERY_ACK &&
-				    g_ntohs (packet->header.count) == 0xffff) {
-					ArvGvInterfaceDeviceInfos *device_infos;
-					GInetAddress *interface_address;
-					char *data = buffer + sizeof (ArvGvcpHeader);
-					char *serial_number;
-					char *manufacturer;
-					char *key;
+					if (g_ntohs (packet->header.command) == ARV_GVCP_COMMAND_DISCOVERY_ACK &&
+					    g_ntohs (packet->header.count) == 0xffff) {
+						ArvGvInterfaceDeviceInfos *device_infos;
+						GInetAddress *interface_address;
+						char *address_string;
+						char *data = buffer + sizeof (ArvGvcpHeader);
+						char *serial_number;
+						char *manufacturer;
+						char *key;
 
-					arv_gvcp_packet_debug (packet);
+						arv_gvcp_packet_debug (packet);
 
-					manufacturer = g_strndup (&data[ARV_GVBS_MANUFACTURER_NAME],
-								  ARV_GVBS_MANUFACTURER_NAME_SIZE);
-					serial_number = g_strndup (&data[ARV_GVBS_SERIAL_NUMBER],
-								  ARV_GVBS_SERIAL_NUMBER_SIZE);
-					key = g_strdup_printf ("%s-%s", manufacturer, serial_number);
-					g_free (manufacturer);
-					g_free (serial_number);
+						manufacturer = g_strndup (&data[ARV_GVBS_MANUFACTURER_NAME],
+									  ARV_GVBS_MANUFACTURER_NAME_SIZE);
+						serial_number = g_strndup (&data[ARV_GVBS_SERIAL_NUMBER],
+									   ARV_GVBS_SERIAL_NUMBER_SIZE);
+						key = g_strdup_printf ("%s-%s", manufacturer, serial_number);
+						g_free (manufacturer);
+						g_free (serial_number);
 
-					interface_address = g_inet_socket_address_get_address
-						(G_INET_SOCKET_ADDRESS (infos->interface_address));
-					device_infos = arv_gv_interface_device_infos_new (interface_address,
-											  data);
+						interface_address = g_inet_socket_address_get_address
+							(G_INET_SOCKET_ADDRESS (infos->interface_address));
+						device_infos = arv_gv_interface_device_infos_new (interface_address,
+												  data);
+						address_string = g_inet_address_to_string (interface_address);
 
-					arv_debug ("interface",
-						   "[GvInterface::discovery] Device '%s' found",
-						   key);
+						arv_debug ("interface",
+							   "[GvInterface::discovery] Device '%s' found (interface %s)",
+							   key, address_string);
 
-					g_hash_table_insert (gv_interface->priv->devices,
-							     key, device_infos);
+						g_free (address_string);
+
+						g_hash_table_insert (gv_interface->priv->devices,
+								     key, device_infos);
+					}
 				}
-			}
+			} while (count > 0);
 		}
 	} while (1);
 }
