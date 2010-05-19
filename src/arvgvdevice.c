@@ -524,9 +524,17 @@ arv_gv_device_new (GInetAddress *interface_address, GInetAddress *device_address
 	ArvGvDevice *gv_device;
 	ArvGvDeviceIOData *io_data;
 	ArvGvDeviceHeartbeatData *heartbeat_data;
+	char *address_string;
 
 	g_return_val_if_fail (G_IS_INET_ADDRESS (interface_address), NULL);
 	g_return_val_if_fail (G_IS_INET_ADDRESS (device_address), NULL);
+
+	address_string = g_inet_address_to_string (interface_address);
+	arv_debug ("device", "[GvDevice::new] Interface address = %s", address_string);
+	g_free (address_string);
+	address_string = g_inet_address_to_string (device_address);
+	arv_debug ("device", "[GvDevice::new] Device address = %s", address_string);
+	g_free (address_string);
 
 	gv_device = g_object_new (ARV_TYPE_GV_DEVICE, NULL);
 
