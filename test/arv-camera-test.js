@@ -28,7 +28,8 @@
 
    export GI_TYPELIB_PATH=$GI_TYPELIB_PATH:/opt/bin/lib/girepositry-1.0/
 
-   You may also have to give the path to libaravis.so, using LD_PRELOAD.
+   You may also have to give the path to libaravis.so, using LD_PRELOAD or
+   LD_LIBRARY_PATH.
  */
 
 const GLib = imports.gi.GLib;
@@ -38,7 +39,7 @@ let camera = Aravis.Camera.new ("Fake_1");
 
 camera.set_region (0,0,128,128);
 camera.set_pixel_format (Aravis.PixelFormat.MONO_8);
-camera.set_fixed_frame_rate (10.0);
+camera.set_frame_rate (10.0);
 
 let [x,y,width,height] = camera.get_region ();
 
