@@ -28,8 +28,9 @@ static GObjectClass *parent_class = NULL;
    arv_buffer_new:
 
    @size: payload size
-   @preallocated: (transfer full): preallocated memory buffer
+   @preallocated: (transfer none): preallocated memory buffer
 
+   Creates a new buffer for the storage of the video stream images. The data space can be either preallocated, and the caller is responsible for it's deallocation, or allocated by this function. If it is the case, data memory will be freed when the buffer is destroyed.
  */
 
 ArvBuffer *
@@ -50,6 +51,12 @@ arv_buffer_new (size_t size, void *preallocated)
 
 	return buffer;
 }
+
+/**
+   arv_buffer_clear:
+
+   Clears the buffer status.
+ */
 
 void
 arv_buffer_clear (ArvBuffer *buffer)
