@@ -50,6 +50,12 @@ arv_camera_create_stream (ArvCamera *camera, ArvStreamCallback callback, void *u
 
 /* Device control */
 
+/**
+   arv_camera_get_vendor_name:
+
+   Returns: A string with the camera vendor name.
+ */
+
 const char *
 arv_camera_get_vendor_name (ArvCamera *camera)
 {
@@ -58,6 +64,12 @@ arv_camera_get_vendor_name (ArvCamera *camera)
 	return arv_device_get_string_feature_value (camera->priv->device, "DeviceVendorName");
 }
 
+/**
+   arv_camera_get_model_name:
+
+   Returns: A string with the camera model name.
+ */
+
 const char *
 arv_camera_get_model_name (ArvCamera *camera)
 {
@@ -65,6 +77,12 @@ arv_camera_get_model_name (ArvCamera *camera)
 
 	return arv_device_get_string_feature_value (camera->priv->device, "DeviceModelName");
 }
+
+/**
+   arv_camera_get_device_id:
+
+   Returns: A string with the device ID.
+ */
 
 const char *
 arv_camera_get_device_id (ArvCamera *camera)
@@ -76,6 +94,13 @@ arv_camera_get_device_id (ArvCamera *camera)
 
 /* Image format control */
 
+/**
+   arv_camera_get_sensor_size:
+
+   @width: a placeholder for the camera sensor width
+   @height: a placeholder for the camera sensor height
+ */
+
 void
 arv_camera_get_sensor_size (ArvCamera *camera, gint *width, gint *height)
 {
@@ -86,6 +111,18 @@ arv_camera_get_sensor_size (ArvCamera *camera, gint *width, gint *height)
 	if (height != NULL)
 		*height = arv_device_get_integer_feature_value (camera->priv->device, "SensorHeight");
 }
+
+/**
+   arv_camera_set_region:
+
+   @camera: a camera object
+   @x: x offset
+   @y: y_offset
+   @width: region width
+   @height: region height
+
+   Defines the region of interest which will be transmitted in the video stream.
+ */
 
 void
 arv_camera_set_region (ArvCamera *camera, int x, int y, int width, int height)
@@ -102,6 +139,18 @@ arv_camera_set_region (ArvCamera *camera, int x, int y, int width, int height)
 		arv_device_set_integer_feature_value (camera->priv->device, "Height", height);
 }
 
+/**
+   arv_camera_get_region:
+
+   @camera: a camera object
+   @x: placeholder for the x offset
+   @y: placeholder for the y_offset
+   @width: placeholder for the region width
+   @height: placeholder for the region height
+
+   Retrieves the current region of interest.
+ */
+
 void
 arv_camera_get_region (ArvCamera *camera, gint *x, gint *y, gint *width, gint *height)
 {
@@ -117,6 +166,16 @@ arv_camera_get_region (ArvCamera *camera, gint *x, gint *y, gint *width, gint *h
 		*height = arv_device_get_integer_feature_value (camera->priv->device, "Height");
 }
 
+/**
+   arv_camera_set_binning:
+
+   @camera: a camera object
+   @dx: horizontal binning
+   @dy: vertical binning
+
+   Defines the binning in both directions. Not all cameras support this feature.
+ */
+
 void
 arv_camera_set_binning (ArvCamera *camera, gint dx, gint dy)
 {
@@ -127,6 +186,16 @@ arv_camera_set_binning (ArvCamera *camera, gint dx, gint dy)
 	if (dy > 0)
 		arv_device_set_integer_feature_value (camera->priv->device, "BinningVertical", dy);
 }
+
+/**
+   arv_camera_get_binning:
+
+   @camera: a camera object
+   @dx: horizontal binning placeholder
+   @dy: vertical binning placeholder
+
+   Retrieves the binning in both directions.
+ */
 
 void
 arv_camera_get_binning (ArvCamera *camera, gint *dx, gint *dy)
@@ -139,6 +208,15 @@ arv_camera_get_binning (ArvCamera *camera, gint *dx, gint *dy)
 		*dy = arv_device_get_integer_feature_value (camera->priv->device, "BinningVertical");
 }
 
+/**
+   arv_camera_set_pixel_format:
+
+   @camera: a camera object
+   @format: pixel format
+
+   Defines the pixel format.
+ */
+
 void
 arv_camera_set_pixel_format (ArvCamera *camera, ArvPixelFormat format)
 {
@@ -146,6 +224,15 @@ arv_camera_set_pixel_format (ArvCamera *camera, ArvPixelFormat format)
 
 	arv_device_set_integer_feature_value (camera->priv->device, "PixelFormat", format);
 }
+
+/**
+   arv_camera_get_pixel_format:
+
+   @camera: a camera object
+   @format: pixel format placeholder
+
+   Retrieves the pixel format.
+ */
 
 ArvPixelFormat
 arv_camera_get_pixel_format (ArvCamera *camera)
@@ -157,6 +244,14 @@ arv_camera_get_pixel_format (ArvCamera *camera)
 
 /* Acquisition control */
 
+/**
+   arv_camera_start_acquisition:
+
+   @camera: a camera object
+
+   Starts the video stream acquisition.
+ */
+
 void
 arv_camera_start_acquisition (ArvCamera *camera)
 {
@@ -164,6 +259,14 @@ arv_camera_start_acquisition (ArvCamera *camera)
 
 	arv_device_execute_command (camera->priv->device, "AcquisitionStart");
 }
+
+/**
+   arv_camera_stop_acquisition:
+
+   @camera: a camera object
+
+   Stops the video stream acquisition.
+ */
 
 void
 arv_camera_stop_acquisition (ArvCamera *camera)
@@ -173,6 +276,16 @@ arv_camera_stop_acquisition (ArvCamera *camera)
 	arv_device_execute_command (camera->priv->device, "AcquisitionStop");
 }
 
+/**
+   arv_camera_set_acquisition_mode:
+
+   @camera: a camera object
+   @mode: acquisition mode
+
+   Defines the acquisition mode.
+ */
+
+
 void
 arv_camera_set_acquisition_mode (ArvCamera *camera, ArvAcquisitionMode mode)
 {
@@ -181,6 +294,14 @@ arv_camera_set_acquisition_mode (ArvCamera *camera, ArvAcquisitionMode mode)
 	arv_device_set_string_feature_value (camera->priv->device, "AcquisitionMode",
 					     arv_acquisition_mode_to_string (mode));
 }
+
+/**
+  arv_camera_get_acquisition_mode:
+
+  @camera: a camera object
+
+  Retrieves the acquisition mode.
+ */
 
 ArvAcquisitionMode
 arv_camera_get_acquisition_mode (ArvCamera *camera)
@@ -193,6 +314,15 @@ arv_camera_get_acquisition_mode (ArvCamera *camera)
 
 	return arv_acquisition_mode_from_string (string);
 }
+
+/**
+   arv_camera_set_frame_rate: 
+
+   @camera: a camera object
+   @frame_rate: frame rate, in Hz²
+
+   Configures a fixed frame rate mode. Once acquisition start is triggered, the video stream will be acquired with the given frame rate.
+ */
 
 void
 arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
@@ -225,6 +355,14 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
 	}
 }
 
+/**
+   arv_camera_get_frame_rate:
+
+   @camera: a camera object
+
+   Returns: The actual frame rate, in Hz.
+ */
+
 double
 arv_camera_get_frame_rate (ArvCamera *camera)
 {
@@ -239,6 +377,15 @@ arv_camera_get_frame_rate (ArvCamera *camera)
 			return arv_device_get_float_feature_value (camera->priv->device, "AcquisitionFrameRate");
 	}
 }
+
+/**
+   arv_camera_set_trigger:
+
+   @camera: a camera object
+   @source: trigger source as string
+
+   Configures the camera in trigger mode. Typical values for source are "Line1" or "Line2". See the camera documentation for the allowed values. The activation is set to rising edge. It can be changed by accessing the underlying device object.
+ */
 
 void
 arv_camera_set_trigger (ArvCamera *camera, const char *source)
@@ -280,6 +427,15 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source)
 	}
 }
 
+/**
+   arv_camera_set_exposure_time:
+
+   @camera: a camera object
+   @exposure_time_us: exposure time, in µs
+
+   Sets the exposure time. User should take care to set a value compatible with the desired frame rate.
+ */
+
 void
 arv_camera_set_exposure_time (ArvCamera *camera, double exposure_time_us)
 {
@@ -287,6 +443,14 @@ arv_camera_set_exposure_time (ArvCamera *camera, double exposure_time_us)
 
 	arv_device_set_float_feature_value (camera->priv->device, "ExposureTimeAbs", exposure_time_us);
 }
+
+/**
+   arv_camera_get_exposure_time:
+
+   @camera: a camera object
+
+   Returns: The current exposure time, in µs.
+ */
 
 double
 arv_camera_get_exposure_time (ArvCamera *camera)
@@ -298,6 +462,15 @@ arv_camera_get_exposure_time (ArvCamera *camera)
 
 /* Analog control */
 
+/**
+   arv_camera_set_gain:
+
+   @camera: a camera object
+   @gain: gain value
+
+   Sets the gain of the ADC converter.
+ */
+
 void
 arv_camera_set_gain (ArvCamera *camera, gint64 gain)
 {
@@ -305,6 +478,14 @@ arv_camera_set_gain (ArvCamera *camera, gint64 gain)
 
 	arv_device_set_integer_feature_value (camera->priv->device, "GainRaw", gain);
 }
+
+/**
+   arv_camera_get_gain:
+
+   @camera: a camera object
+
+   Returns: The current gain setting.
+ */
 
 gint64
 arv_camera_get_gain (ArvCamera *camera)
@@ -315,6 +496,16 @@ arv_camera_get_gain (ArvCamera *camera)
 }
 
 /* Transport layer control */
+
+/**
+   arv_camera_get_payload:
+
+   @camera: a camera object
+   
+   Retrieves the size needed for the storage of an image. This value is used for the creation of the stream buffers.
+
+   Returns: The frame storage size, in bytes.
+ */
 
 guint
 arv_camera_get_payload (ArvCamera *camera)
