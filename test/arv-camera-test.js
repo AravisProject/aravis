@@ -22,6 +22,15 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/*
+   If you have installed aravis in a non standard location, you may need
+   to make GI_TYPELIB_PATH point to the correct location. For example:
+
+   export GI_TYPELIB_PATH=$GI_TYPELIB_PATH:/opt/bin/lib/girepositry-1.0/
+
+   You may also have to give the path to libaravis.so, using LD_PRELOAD.
+ */
+
 const GLib = imports.gi.GLib;
 const Aravis = imports.gi.Aravis;
 
