@@ -52,6 +52,7 @@ enum
 {
   PROP_0,
   PROP_CAMERA_NAME,
+  PROP_FRAME_RATE,
   PROP_WIDTH,
   PROP_HEIGHT,
   PROP_H_BINNING,
@@ -70,6 +71,7 @@ gst_aravis_get_camera_caps (GstAravis *gst_aravis)
 {
 	GstCaps *gcaps = NULL;
 	GstStructure *gs;
+	double frame_rate;
 	int height, width;
 
 	GST_LOG_OBJECT (gst_aravis, "Get camera caps");
@@ -87,7 +89,9 @@ gst_aravis_get_camera_caps (GstAravis *gst_aravis)
 			   "height", G_TYPE_INT, height,
 			   NULL);
 
-	gst_structure_set(gs, "framerate", GST_TYPE_FRACTION, 50, 1, NULL);
+	frame_rate = arv_camera_get_frame_rate (gst_aravis->camera);
+
+	gst_structure_set(gs, "framerate", GST_TYPE_FRACTION, (gint) (100.0 * frame_rate), 100, NULL);
 	gst_caps_append_structure (gcaps, gs);
 
 	return gcaps;
@@ -110,8 +114,6 @@ gst_aravis_start (GstBaseSrc *src)
 	GstAravis* gst_aravis = GST_ARAVIS(src);
 	int i;
 
-	g_message ("start");
-
 	GST_LOG_OBJECT (gst_aravis, "Opening first available camera");
 
 	if (gst_aravis->camera != NULL)
@@ -124,6 +126,8 @@ gst_aravis_start (GstBaseSrc *src)
 
 	arv_camera_set_region (gst_aravis->camera, 0, 0, gst_aravis->width, gst_aravis->height);
 	arv_camera_set_binning (gst_aravis->camera, gst_aravis->h_binning, gst_aravis->v_binning);
+	arv_camera_set_pixel_format (gst_aravis->camera, ARV_PIXEL_FORMAT_MONO_8);
+	arv_camera_set_frame_rate (gst_aravis->camera, gst_aravis->frame_rate);
 	gst_aravis->payload = arv_camera_get_payload (gst_aravis->camera);
 	gst_aravis->caps = gst_aravis_get_camera_caps (gst_aravis);
 
@@ -209,6 +213,7 @@ gst_aravis_init (GstAravis *gst_aravis, GstAravisClass *g_class)
 
 	gst_aravis->camera_name = NULL;
 
+	gst_aravis->frame_rate = 25.0;
 	gst_aravis->width = 320;
 	gst_aravis->height = 200;
 	gst_aravis->h_binning = 1;
@@ -256,6 +261,9 @@ gst_aravis_set_property (GObject * object, guint prop_id,
 			g_free (gst_aravis->camera_name);
 			gst_aravis->camera_name = g_strdup (g_value_get_string (value));
 			break;
+		case PROP_FRAME_RATE:
+			gst_aravis->frame_rate = g_value_get_double (value);
+			break;
 		case PROP_WIDTH:
 			gst_aravis->width = g_value_get_int (value);
 			break;
@@ -283,6 +291,9 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 	switch (prop_id) {
 		case PROP_CAMERA_NAME:
 			g_value_set_string (value, gst_aravis->camera_name);
+			break;
+		case PROP_FRAME_RATE:
+			g_value_set_double (value, gst_aravis->frame_rate);
 			break;
 		case PROP_WIDTH:
 			g_value_set_int (value, gst_aravis->width);
@@ -331,6 +342,14 @@ gst_aravis_class_init (GstAravisClass * klass)
 				      "Camera name",
 				      "Name of the camera",
 				      NULL,
+				      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+	g_object_class_install_property
+		(gobject_class,
+		 PROP_FRAME_RATE,
+		 g_param_spec_double ("frame-rate",
+				      "Frame rate",
+				      "Acquisition frame rate (in Hz)",
+				      0.0, 500.0, 25.0,
 				      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 	g_object_class_install_property
 		(gobject_class,

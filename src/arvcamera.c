@@ -195,7 +195,7 @@ arv_camera_get_acquisition_mode (ArvCamera *camera)
 }
 
 void
-arv_camera_set_fixed_frame_rate (ArvCamera *camera, double frame_rate)
+arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
 {
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
@@ -222,6 +222,21 @@ arv_camera_set_fixed_frame_rate (ArvCamera *camera, double frame_rate)
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
 			arv_device_set_float_feature_value (camera->priv->device, "AcquisitionFrameRate", frame_rate);
 			break;
+	}
+}
+
+double
+arv_camera_get_frame_rate (ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), -1);
+
+	switch (camera->priv->vendor) {
+		case ARV_CAMERA_VENDOR_BASLER:
+		case ARV_CAMERA_VENDOR_PROSILICA:
+			return arv_device_get_float_feature_value (camera->priv->device, "AcquisitionFrameRateAbs");
+		case ARV_CAMERA_VENDOR_UNKNOWN:
+		default:
+			return arv_device_get_float_feature_value (camera->priv->device, "AcquisitionFrameRate");
 	}
 }
 

@@ -43,6 +43,8 @@ struct _GstAravis {
 
 	char *camera_name;
 
+	double frame_rate;
+
 	gint width;
 	gint height;
 	gint h_binning;

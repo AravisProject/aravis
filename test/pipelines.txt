@@ -1,7 +1,7 @@
 Theora - udp
 ~~~~~~~~~~~~
 
-aravissrc width=256 height=256 v-binning=4 h-binning=4 ! ffmpegcolorspace ! theoraenc bitrate=150 ! udpsink host=127.0.0.1 port=1234
+aravissrc width=256 height=256 v-binning=4 h-binning=4 frame-rate=25.0 ! ffmpegcolorspace ! theoraenc bitrate=150 ! udpsink host=127.0.0.1 port=1234
 
 udpsrc port=1234 ! theoradec ! xvimagesink
 

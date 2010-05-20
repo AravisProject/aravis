@@ -116,7 +116,7 @@ main (int argc, char **argv)
 		arv_camera_set_acquisition_mode (camera, ARV_ACQUISITION_MODE_CONTINUOUS);
 
 		if (arv_option_frequency > 0.0)
-			arv_camera_set_fixed_frame_rate (camera, arv_option_frequency);
+			arv_camera_set_frame_rate (camera, arv_option_frequency);
 
 		if (arv_option_trigger != NULL)
 			arv_camera_set_trigger (camera, arv_option_trigger);
