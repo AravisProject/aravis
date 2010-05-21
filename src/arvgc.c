@@ -279,6 +279,16 @@ arv_gc_parse_xml (ArvGc *genicam, const char *xml, size_t size)
 	xmlSAXUserParseMemory (&sax_handler, &state, xml, size);
 }
 
+/**
+ * arv_gc_get_node:
+ *
+ * @genicam: a #ArvGc object
+ * @name: node name
+ * Return value: (transfer none): a #ArvGcNode, null if not found.
+ *
+ * Retrieves a genicam node by name.
+ */
+
 ArvGcNode *
 arv_gc_get_node	(ArvGc *genicam, const char *name)
 {
@@ -286,6 +296,15 @@ arv_gc_get_node	(ArvGc *genicam, const char *name)
 
 	return g_hash_table_lookup (genicam->nodes, name);
 }
+
+/**
+ * arv_gc_get_device:
+ *
+ * @genicam: a #ArvGc object
+ * Return value: (transfer none): a #ArvDevice.
+ *
+ * Retrieves the device handled by this genicam interface. The device is used for register access.
+ */
 
 ArvDevice *
 arv_gc_get_device (ArvGc *genicam)

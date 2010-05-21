@@ -77,6 +77,15 @@ arv_device_write_register (ArvDevice *device, guint32 address, guint32 value)
 	return ARV_DEVICE_GET_CLASS (device)->write_register (device, address, value);
 }
 
+/**
+ * arv_device_get_genicam:
+ *
+ * @device: a device object
+ * Return value: (transfer none): the genicam interface.
+ *
+ * Retrieves the genicam interface of the given device.
+ */
+
 ArvGc *
 arv_device_get_genicam (ArvDevice *device)
 {
