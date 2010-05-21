@@ -6,6 +6,7 @@
 *.la
 *.gir
 *.typelib
+*.stamp
 Makefile
 Makefile.in
 aclocal.m4
@@ -31,3 +32,5 @@ genicam.xml
 test.png
 test-report.*
 perf-report.*
+gtk-doc.make
+gtk-doc.m4

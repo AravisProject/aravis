@@ -28,6 +28,13 @@
 
 G_BEGIN_DECLS
 
+/**
+ * ArvCameraVendor:
+ * @ARV_CAMERA_VENDOR_UNKNOWN: unknown camera vendor
+ * @ARV_CAMERA_VENDOR_BASLER: Basler
+ * @ARV_CAMERA_VENDOR_PROSILICA: Prosilica
+ */
+
 typedef enum {
 	ARV_CAMERA_VENDOR_UNKNOWN,
 	ARV_CAMERA_VENDOR_BASLER,

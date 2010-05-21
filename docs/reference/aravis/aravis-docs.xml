@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+               "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+  <!ENTITY % local.common.attrib "xmlns:xi  CDATA  #FIXED 'http://www.w3.org/2003/XInclude'">
+]>
+<book id="index">
+	<bookinfo>
+		<title>Aravis Reference Manual</title>
+		<releaseinfo>
+			for Aravis 0.2.
+		</releaseinfo>
+	</bookinfo>
+
+	<chapter>
+		<title>Main</title>
+		<xi:include href="xml/arvcamera.xml"/>
+		<xi:include href="xml/arvinterface.xml"/>
+		<xi:include href="xml/arvdevice.xml"/>
+		<xi:include href="xml/arvstream.xml"/>
+		<xi:include href="xml/arvbuffer.xml"/>
+	</chapter>
+	<chapter>
+		<title>Genicam</title>
+		<xi:include href="xml/arvgc.xml"/>
+		<xi:include href="xml/arvgcnode.xml"/>
+		<xi:include href="xml/arvgcboolean.xml"/>
+		<xi:include href="xml/arvgcinteger.xml"/>
+		<xi:include href="xml/arvgcfloat.xml"/>
+		<xi:include href="xml/arvgcstring.xml"/>
+		<xi:include href="xml/arvgccategory.xml"/>
+		<xi:include href="xml/arvgcintegernode.xml"/>
+		<xi:include href="xml/arvgcfloatnode.xml"/>
+		<xi:include href="xml/arvgcregister.xml"/>
+		<xi:include href="xml/arvgcenumeration.xml"/>
+		<xi:include href="xml/arvgcenumentry.xml"/>
+		<xi:include href="xml/arvgcconverter.xml"/>
+		<xi:include href="xml/arvgcswissknife.xml"/>
+		<xi:include href="xml/arvgccommand.xml"/>
+		<xi:include href="xml/arvgcport.xml"/>
+	</chapter>
+	<chapter>
+		<title>Ethernet cameras</title>
+		<xi:include href="xml/arvgvinterface.xml"/>
+		<xi:include href="xml/arvgvdevice.xml"/>
+		<xi:include href="xml/arvgvstream.xml"/>
+		<xi:include href="xml/arvgvcp.xml"/>
+		<xi:include href="xml/arvgvsp.xml"/>
+	</chapter>
+	<chapter>
+		<title>Fake camera</title>
+		<xi:include href="xml/arvfakeinterface.xml"/>
+		<xi:include href="xml/arvfakedevice.xml"/>
+		<xi:include href="xml/arvfakestream.xml"/>
+		<xi:include href="xml/arvfakecamera.xml"/>
+	</chapter>
+	<chapter>
+		<title>Utils</title>
+		<xi:include href="xml/arvdebug.xml"/>
+		<xi:include href="xml/arvenums.xml"/>
+		<xi:include href="xml/arvevaluator.xml"/>
+		<xi:include href="xml/arvstatistic.xml"/>
+		<xi:include href="xml/arvvalue.xml"/>
+		<xi:include href="xml/arvzip.xml"/>
+	</chapter>
+	<chapter id="object-tree">
+		<title>Object Hierarchy</title>
+		<xi:include href="xml/tree_index.sgml"/>
+	</chapter>
+	<index id="api-index-full">
+		<title>API Index</title>
+		<xi:include href="xml/api-index-full.xml"><xi:fallback /></xi:include>
+	</index>
+
+	<xi:include href="xml/annotation-glossary.xml"><xi:fallback /></xi:include>
+</book>

@@ -27,6 +27,16 @@
 
 G_BEGIN_DECLS
 
+/**
+ * ArvStreamCallbackType:
+ * @ARV_STREAM_CALLBACK_TYPE_INIT: thread initialization, happens once
+ * @ARV_STREAM_CALLBACK_TYPE_EXIT: thread end, happens once
+ * @ARV_STREAM_CALLBACK_TYPE_START_BUFFER: buffer filling start, happens at each frame
+ * @ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE: buffer filled, happens at each frame
+ *
+ * Describes when the stream callback is called.
+ */
+
 typedef enum {
 	ARV_STREAM_CALLBACK_TYPE_INIT,
 	ARV_STREAM_CALLBACK_TYPE_EXIT,

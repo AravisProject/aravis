@@ -281,7 +281,6 @@ arv_gc_parse_xml (ArvGc *genicam, const char *xml, size_t size)
 
 /**
  * arv_gc_get_node:
- *
  * @genicam: a #ArvGc object
  * @name: node name
  * Return value: (transfer none): a #ArvGcNode, null if not found.
@@ -299,7 +298,6 @@ arv_gc_get_node	(ArvGc *genicam, const char *name)
 
 /**
  * arv_gc_get_device:
- *
  * @genicam: a #ArvGc object
  * Return value: (transfer none): a #ArvDevice.
  *

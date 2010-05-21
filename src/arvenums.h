@@ -45,10 +45,20 @@ typedef enum {
 	ARV_GC_CACHABLE_WRITE_AROUND
 } ArvGcCachable;
 
+/**
+ * ArvAcquisitionMode:
+ * @ARV_ACQUISITION_MODE_CONTINUOUS: continuous acquisition
+ * @ARV_ACQUISITION_MODE_SINGLE_FRAME: only one frame will be acquired
+ */
+
 typedef enum {
 	ARV_ACQUISITION_MODE_CONTINUOUS,
 	ARV_ACQUISITION_MODE_SINGLE_FRAME
 } ArvAcquisitionMode;
+
+/**
+ * ArvPixelFormat:
+ */
 
 typedef enum {
 	ARV_PIXEL_FORMAT_MONO_8			= 0x01080001,

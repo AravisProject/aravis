@@ -28,11 +28,26 @@
 
 G_BEGIN_DECLS
 
+/**
+ * ArvGcSign:
+ * @ARV_GC_SIGN_SIGNED: signed integer
+ * @ARV_GC_SIGN_UNSIGNED: unsigned integer
+ */
+
 typedef enum
 {
 	ARV_GC_SIGN_SIGNED,
 	ARV_GC_SIGN_UNSIGNED
 } ArvGcSign;
+
+/**
+ * ArvGcRegisterType:
+ * @ARV_GC_REGISTER_TYPE_REGISTER: Register node
+ * @ARV_GC_REGISTER_TYPE_INTEGER: IntReg node
+ * @ARV_GC_REGISTER_TYPE_MASKED_INTEGER: MaskedIntReg node
+ * @ARV_GC_REGISTER_TYPE_FLOAT: FloatReg node
+ * @ARV_GC_REGISTER_TYPE_STRING: StringReg node
+ */
 
 typedef enum {
        ARV_GC_REGISTER_TYPE_REGISTER,

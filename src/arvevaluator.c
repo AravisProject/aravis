@@ -1058,9 +1058,8 @@ arv_evaluator_set_int64_variable (ArvEvaluator *evaluator, const char *name, gin
 		   name, v_int64);
 }
 
-/**
+/** 
  * arv_evaluator_new:
- *
  * @expression: (allow-none): an evaluator expression
  * Return value: a new #ArvEvaluator object.
  *

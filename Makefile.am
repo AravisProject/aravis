@@ -2,9 +2,9 @@ include $(top_srcdir)/Makefile.decl
 
 ACLOCAL_AMFLAGS = -I m4
 
-DISTCHECK_CONFIGURE_FLAGS = --enable-introspection
+DISTCHECK_CONFIGURE_FLAGS = --enable-introspection --enable-gtk-doc
 
-SUBDIRS = src gst po
+SUBDIRS = src gst po docs
 
 aravisdocdir = ${prefix}/doc/aravis
 aravisdoc_DATA = 	\

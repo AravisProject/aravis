@@ -1,0 +1,11 @@
+*-undocumented.txt
+*-unused.txt
+*-overrides.txt
+*-undeclared.txt
+*-decl.txt
+*-decl-list.txt
+*.args
+*.hierarchy
+*.interfaces
+*.prerequisites
+*.signals

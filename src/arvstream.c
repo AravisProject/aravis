@@ -28,8 +28,11 @@ static GObjectClass *parent_class = NULL;
 
 /**
  * arv_stream_push_buffer:
- *
+ * @stream: a #ArvStream
  * @buffer: (transfer full): buffer to push
+ *
+ * Pushes a #ArvBuffer to the @stream thread. The @stream takes ownership of @buffer,
+ * and will free all the buffers still in its queues when destroyed.
  */
 
 void
@@ -40,6 +43,15 @@ arv_stream_push_buffer (ArvStream *stream, ArvBuffer *buffer)
 
 	g_async_queue_push (stream->input_queue, buffer);
 }
+
+/**
+ * arv_stream_pop_buffer:
+ * @stream: a #ArvStream
+ * Returns: a #ArvBuffer
+ *
+ * Pops a buffer from the output queue of @stream. The retrieved buffer
+ * may contain an invalid image. Caller should check the buffer status before using it.
+ */
 
 ArvBuffer *
 arv_stream_pop_buffer (ArvStream *stream)
