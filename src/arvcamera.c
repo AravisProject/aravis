@@ -40,6 +40,18 @@ struct _ArvCameraPrivate {
 	ArvCameraVendor vendor;
 };
 
+/**
+ * arv_camera_create_stream:
+ *
+ * @camera: a #ArvCamera object
+ * @callback: a frame processing callback
+ * @user_data: closure
+ * Return value: a new #ArvStream object.
+ *
+ * Creates a new #ArvStream object for video stream handling. See
+ * @arv_device_create_stream for details regarding the callback function.
+ */
+
 ArvStream *
 arv_camera_create_stream (ArvCamera *camera, ArvStreamCallback callback, void *user_data)
 {
@@ -125,7 +137,8 @@ arv_camera_get_sensor_size (ArvCamera *camera, gint *width, gint *height)
  * @width: region width
  * @height: region height
  *
- * Defines the region of interest which will be transmitted in the video stream.
+ * Defines the region of interest which will be transmitted in the video
+ * stream.
  */
 
 void
@@ -177,7 +190,8 @@ arv_camera_get_region (ArvCamera *camera, gint *x, gint *y, gint *width, gint *h
  * @dx: horizontal binning
  * @dy: vertical binning
  *
- * Defines the binning in both directions. Not all cameras support this feature.
+ * Defines the binning in both directions. Not all cameras support this
+ * feature.
  */
 
 void
@@ -289,7 +303,6 @@ arv_camera_stop_acquisition (ArvCamera *camera)
  * Defines the acquisition mode.
  */
 
-
 void
 arv_camera_set_acquisition_mode (ArvCamera *camera, ArvAcquisitionMode mode)
 {
@@ -326,7 +339,8 @@ arv_camera_get_acquisition_mode (ArvCamera *camera)
  * @camera: a #ArvCamera object
  * @frame_rate: frame rate, in Hz
  *
- * Configures a fixed frame rate mode. Once acquisition start is triggered, the video stream will be acquired with the given frame rate.
+ * Configures a fixed frame rate mode. Once acquisition start is triggered, the
+ * video stream will be acquired with the given frame rate.
  */
 
 void
@@ -388,7 +402,10 @@ arv_camera_get_frame_rate (ArvCamera *camera)
  * @camera: a #ArvCamera object
  * @source: trigger source as string
  *
- * Configures the camera in trigger mode. Typical values for source are "Line1" or "Line2". See the camera documentation for the allowed values. The activation is set to rising edge. It can be changed by accessing the underlying device object.
+ * Configures the camera in trigger mode. Typical values for source are "Line1"
+ * or "Line2". See the camera documentation for the allowed values. The
+ * activation is set to rising edge. It can be changed by accessing the
+ * underlying device object.
  */
 
 void
@@ -437,7 +454,8 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source)
  * @camera: a #ArvCamera object
  * @exposure_time_us: exposure time, in µs
  *
- * Sets the exposure time. User should take care to set a value compatible with the desired frame rate.
+ * Sets the exposure time. User should take care to set a value compatible with
+ * the desired frame rate.
  */
 
 void
@@ -505,7 +523,8 @@ arv_camera_get_gain (ArvCamera *camera)
  * @camera: a camera object
  * Return value: the frame storage size, in bytes.
  * 
- * Retrieves the size needed for the storage of an image. This value is used for the creation of the stream buffers.
+ * Retrieves the size needed for the storage of an image. This value is used
+ * for the creation of the stream buffers.
  */
 
 guint
@@ -519,7 +538,8 @@ arv_camera_get_payload (ArvCamera *camera)
 /**
  * arv_camera_new:
  *
- * @name: (allow-none): name of the camera. If null, it will instantiate the first camera.
+ * @name: (allow-none): name of the camera. If null, it will instantiate the
+ * first camera.
  */
 
 ArvCamera *
