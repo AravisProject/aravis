@@ -20,6 +20,16 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/**
+ * SECTION: arvstream
+ * @short_description: Abstract base class for video stream reception
+ *
+ * #ArvStream provides an abstract base class for the implementation of video
+ * stream reception threads. The interface between the reception thread and the
+ * main thread is done using asynchronous queues, containing #ArvBuffer
+ * objects.
+ */
+
 #include <arvstream.h>
 #include <arvbuffer.h>
 #include <arvdebug.h>

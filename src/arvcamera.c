@@ -20,6 +20,16 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/**
+ * SECTION:arvcamera
+ * @short_description: Class for generic camera control
+ *
+ * #ArvCamera is a class for the generic control of cameras. It hides the
+ * complexity of the genicam interface by providing a simple API, with the
+ * drawback of not exposing all the available features. See #ArvDevice and
+ * #ArvGc for a more advanced use of the Aravis library.
+ */
+
 #include <arvcamera.h>
 #include <arvsystem.h>
 #include <arvgvinterface.h>

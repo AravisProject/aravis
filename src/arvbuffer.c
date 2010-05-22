@@ -20,6 +20,18 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/**
+ * SECTION: arvbuffer
+ * @short_description: Buffer for storage of video frames
+ *
+ * #ArvBuffer provides a class for the instantiation of buffers used for the
+ * storage of the separate images of the video stream. The actual data space
+ * may either be allocated by #ArvBuffer during an object instatiation, of
+ * preallocated. #ArvBuffer also allows the transmission of image metadata,
+ * such as offsets and size of the transmitted region of interrest, pixel
+ * format and time stamp.
+ */
+
 #include <arvbuffer.h>
 
 static GObjectClass *parent_class = NULL;

@@ -20,6 +20,17 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/**
+ * SECTION: arvinterface
+ * @short_description: Base abstract class for camera discovery
+ *
+ * #ArvCamera is an abstract base class for camera discovery. It maintains a
+ * list of the available devices and help to instantiate the corresponding
+ * #ArvDevice object. If user already knows he name of the device, it should
+ * not worry about this class and just use arv_camera_new() or
+ * arv_new_device().
+ */
+
 #include <arvinterface.h>
 
 static GObjectClass *parent_class = NULL;

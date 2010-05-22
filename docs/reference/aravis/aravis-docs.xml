@@ -7,9 +7,28 @@
 <book id="index">
 	<bookinfo>
 		<title>Aravis Reference Manual</title>
-		<releaseinfo>
-			for Aravis 0.2.
-		</releaseinfo>
+		<releaseinfo>for Aravis 0.2.</releaseinfo>
+		<legalnotice>
+			<para>
+				Permission is granted to copy, distribute and/or modify this
+				document under the terms of the <citetitle>GNU Free
+				Documentation License</citetitle>, Version 1.1 or any later
+				version published by the Free Software Foundation with no
+				Invariant Sections, no Front-Cover Texts, and no Back-Cover
+				Texts. You may obtain a copy of the <citetitle>GNU Free
+				Documentation License</citetitle> from the Free Software
+				Foundation by visiting <ulink type="http"
+				url="http://www.fsf.org">their Web site</ulink> or by writing
+				to:
+
+				<address>
+					The Free Software Foundation, Inc.,
+					<street>59 Temple Place</street> - Suite 330,
+					<city>Boston</city>, <state>MA</state> <postcode>02111-1307</postcode>,
+					<country>USA</country>
+				</address>
+			</para>
+		</legalnotice>
 	</bookinfo>
 
 	<chapter>
@@ -20,6 +39,7 @@
 		<xi:include href="xml/arvstream.xml"/>
 		<xi:include href="xml/arvbuffer.xml"/>
 	</chapter>
+
 	<chapter>
 		<title>Genicam</title>
 		<xi:include href="xml/arvgc.xml"/>
@@ -39,6 +59,7 @@
 		<xi:include href="xml/arvgccommand.xml"/>
 		<xi:include href="xml/arvgcport.xml"/>
 	</chapter>
+
 	<chapter>
 		<title>Ethernet cameras</title>
 		<xi:include href="xml/arvgvinterface.xml"/>
@@ -47,6 +68,7 @@
 		<xi:include href="xml/arvgvcp.xml"/>
 		<xi:include href="xml/arvgvsp.xml"/>
 	</chapter>
+
 	<chapter>
 		<title>Fake camera</title>
 		<xi:include href="xml/arvfakeinterface.xml"/>
@@ -54,6 +76,7 @@
 		<xi:include href="xml/arvfakestream.xml"/>
 		<xi:include href="xml/arvfakecamera.xml"/>
 	</chapter>
+
 	<chapter>
 		<title>Utils</title>
 		<xi:include href="xml/arvdebug.xml"/>
@@ -63,10 +86,12 @@
 		<xi:include href="xml/arvvalue.xml"/>
 		<xi:include href="xml/arvzip.xml"/>
 	</chapter>
+
 	<chapter id="object-tree">
 		<title>Object Hierarchy</title>
 		<xi:include href="xml/tree_index.sgml"/>
 	</chapter>
+
 	<index id="api-index-full">
 		<title>API Index</title>
 		<xi:include href="xml/api-index-full.xml"><xi:fallback /></xi:include>

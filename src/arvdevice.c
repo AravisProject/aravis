@@ -20,6 +20,15 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/** 
+ * SECTION: arvdevice
+ * @short_description: Abstract base class for device handling
+ *
+ * #ArvDevice is an abstract base class for the control of cameras. It provides
+ * an easy access to the camera settings, and to its genicam interface for  more
+ * advanced uses.
+ */
+
 #include <arvdevice.h>
 #include <arvgc.h>
 #include <arvgccommand.h>
