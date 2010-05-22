@@ -20,6 +20,11 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/**
+ * SECTION: arvgcenumeration
+ * @short_description: Class for Enumeration nodes
+ */
+
 #include <arvgcenumeration.h>
 #include <arvgcenumentry.h>
 #include <arvgc.h>

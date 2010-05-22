@@ -20,6 +20,11 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/**
+ * SECTION: arvgcswissknife
+ * @short_description: Class for SwissKnife and IntSwissKnife nodes
+ */
+
 #include <arvgcswissknife.h>
 #include <arvevaluator.h>
 #include <arvgcinteger.h>

@@ -20,6 +20,11 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/**
+ * SECTION: arvgcboolean
+ * @short_description: Class for Boolean nodes
+ */
+
 #include <arvgcboolean.h>
 #include <arvgc.h>
 #include <arvtools.h>

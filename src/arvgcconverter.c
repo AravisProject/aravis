@@ -20,6 +20,11 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/**
+ * SECTION: arvgcconverter
+ * @short_description: Class for Converter and IntConverter nodes
+ */
+
 #include <arvgcnode.h>
 #include <arvgcconverter.h>
 #include <arvevaluator.h>

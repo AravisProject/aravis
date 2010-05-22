@@ -20,6 +20,11 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/**
+ * SECTION: arvgcregister
+ * @short_description: Class for Register, IntReg, MaskedIntReg, FloatReg and StringReg nodes
+ */
+
 #include <arvgcregister.h>
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>

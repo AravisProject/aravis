@@ -20,6 +20,11 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/**
+ * SECTION: arvevaluator
+ * @short_description: A math expression evaluator with Genicam syntax
+ */
+
 #include <arvevaluator.h>
 #include <arvtools.h>
 #include <arvdebug.h>

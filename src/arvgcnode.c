@@ -20,6 +20,14 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/**
+ * SECTION: arvgcnode
+ * @short_description: Base class for all Genicam nodes
+ *
+ * #ArvGcNode provides a base class for the implementation of the different
+ * types of Genicam node.
+ */
+
 #include <arvgcnode.h>
 #include <arvgc.h>
 #include <arvdebug.h>

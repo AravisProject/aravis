@@ -20,6 +20,11 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/**
+ * SECTION: arvgcfloatnode
+ * @short_description: Class for Float nodes
+ */
+
 #include <arvgcfloatnode.h>
 #include <arvgcfloat.h>
 #include <arvgc.h>

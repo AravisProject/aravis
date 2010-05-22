@@ -20,6 +20,11 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/**
+ * SECTION: arvgcintegernode
+ * @short_description: Class for Integer nodes
+ */
+
 #include <arvgcintegernode.h>
 #include <arvgcinteger.h>
 #include <arvgc.h>

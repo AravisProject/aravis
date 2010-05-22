@@ -20,6 +20,11 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/**
+ * SECTION: arvgcport
+ * @short_description: Class for Port nodes
+ */
+
 #include <arvgcport.h>
 #include <arvdevice.h>
 #include <arvgc.h>

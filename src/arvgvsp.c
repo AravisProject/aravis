@@ -20,6 +20,11 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/**
+ * SECTION: arvgvsp
+ * @short_description: Gvsp packet handling (stream)
+ */
+
 #include <arvgvsp.h>
 #include <arvdebug.h>
 #include <arvenumtypes.h>

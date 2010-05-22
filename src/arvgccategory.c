@@ -20,6 +20,11 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/**
+ * SECTION: arvgccategory
+ * @short_description: Class for Category nodes
+ */
+
 #include <arvgccategory.h>
 #include <arvgc.h>
 #include <string.h>

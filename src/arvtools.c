@@ -27,6 +27,11 @@
 #include <stdio.h>
 #include <zlib.h>
 
+/**
+ * SECTION: arvstatistic
+ * @short_description: An histogram tool
+ */
+
 typedef struct _ArvHistogram ArvHistogram;
 
 struct _ArvHistogram {
@@ -392,7 +397,10 @@ arv_str_parse_double (char **str, double *x)
 	return TRUE;
 }
 
-/* ArvValue implementation */
+/**
+ * SECTION: arvvalue
+ * @short_description: An int64/double value storage
+ */
 
 ArvValue *
 arv_value_new_double (double v_double)

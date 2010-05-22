@@ -20,6 +20,11 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/**
+ * SECTION: arvgvinterface
+ * @short_description: Gigabit ethernet camera interface
+ */
+
 #include <arvgvinterface.h>
 #include <arvgvdevice.h>
 #include <arvgvcp.h>

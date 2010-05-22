@@ -20,6 +20,11 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/**
+ * SECTION: arvgcstring
+ * @short_description: String interface
+ */
+
 #include <arvgcstring.h>
 #include <arvtools.h>
 

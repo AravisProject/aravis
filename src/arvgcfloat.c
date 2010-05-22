@@ -20,6 +20,11 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/**
+ * SECTION: arvgcfloat
+ * @short_description: Float interface
+ */
+
 #include <arvgcfloat.h>
 #include <arvtools.h>
 

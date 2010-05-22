@@ -20,6 +20,15 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/**
+ * SECTION:arvgc
+ * @short_description: Genicam root document class
+ *
+ * #ArvGc implements the root document for the storage of the Genicam feature
+ * nodes. It builds the node tree by parsing an xml file in the Genicam
+ * standard format. See http://www.genicam.org.
+ */
+
 #include <arvgc.h>
 #include <arvgccategory.h>
 #include <arvgcenumeration.h>

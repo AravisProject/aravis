@@ -20,6 +20,11 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/**
+ * SECTION: arvgcinteger
+ * @short_description: Integer interface
+ */
+
 #include <arvgcinteger.h>
 #include <arvtools.h>
 

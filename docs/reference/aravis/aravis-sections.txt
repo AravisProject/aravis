@@ -27,6 +27,9 @@ arv_camera_get_exposure_time
 arv_camera_set_gain
 arv_camera_get_gain
 arv_camera_get_payload
+ArvAcquisitionMode
+arv_acquisition_mode_to_string
+arv_acquisition_mode_from_string
 <SUBSECTION Standard>
 ARV_CAMERA
 ARV_IS_CAMERA
@@ -38,6 +41,7 @@ ARV_CAMERA_GET_CLASS
 <SUBSECTION Private>
 ArvCameraPrivate
 ArvCameraClass
+ArvPixelFormat
 </SECTION>
 
 <SECTION>
@@ -80,7 +84,6 @@ ArvInterfaceClass
 <SECTION>
 <FILE>arvfakeinterface</FILE>
 <TITLE>ArvFakeInterface</TITLE>
-<TITLE>ArvFake</TITLE>
 ArvFakeInterface
 arv_fake_interface_get_instance
 <SUBSECTION Standard>
@@ -653,16 +656,6 @@ ARV_IS_GC_COMMAND_CLASS
 ARV_GC_COMMAND_GET_CLASS
 <SUBSECTION Private>
 ArvGcCommandClass
-</SECTION>
-
-<SECTION>
-<FILE>arvenums</FILE>
-<TITLE>ArvEnums</TITLE>
-ArvAcquisitionMode
-arv_acquisition_mode_to_string
-arv_acquisition_mode_from_string
-<SUBSECTION Private>
-ArvPixelFormat
 </SECTION>
 
 <SECTION>

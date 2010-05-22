@@ -20,6 +20,11 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/**
+ * SECTION: arvfakeinterface
+ * @short_description: Fake camera interface
+ */
+
 #include <arvfakeinterface.h>
 #include <arvfakedevice.h>
 #include <arvdebug.h>

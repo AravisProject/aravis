@@ -20,6 +20,11 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/**
+ * SECTION: arvgccommand
+ * @short_description: Class for Command nodes
+ */
+
 #include <arvgccommand.h>
 #include <arvgcinteger.h>
 #include <arvgcport.h>

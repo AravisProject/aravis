@@ -20,6 +20,16 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/**
+ * SECTION: arvfakecamera
+ * @short_description: Fake camera internals
+ *
+ * #ArvFakeCamera is a class that simulate a real camera, which provides
+ * methods for the implementation of #ArvFakeDevice and #ArvFakeStream. It's
+ * foresen to use this class for the implementation of a fake ethernet camera
+ * too, but it's still a TODO.
+ */
+
 #include <arvfakecamera.h>
 #include <arvgc.h>
 #include <arvgcregister.h>

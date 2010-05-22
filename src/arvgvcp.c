@@ -20,6 +20,11 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/**
+ * SECTION: arvgvcp
+ * @short_description: Gvcp packet handling (control)
+ */
+
 #include <arvgvcp.h>
 #include <arvenumtypes.h>
 #include <string.h>

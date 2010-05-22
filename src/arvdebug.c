@@ -20,6 +20,11 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/**
+ * SECTION: arvdebug
+ * @short_description: Debugging tools
+ */
+
 #include <arvdebug.h>
 #include <glib/gprintf.h>
 #include <stdlib.h>

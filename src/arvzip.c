@@ -25,6 +25,11 @@
  *
  */
 
+/**
+ * SECTION: arvzip
+ * @short_description: A simple zip extractor
+ */
+
 #include <arvzip.h>
 #include <arvdebug.h>
 #include <string.h>

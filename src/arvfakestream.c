@@ -20,6 +20,11 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/**
+ * SECTION: arvfakestream
+ * @short_description: Fake camera stream
+ */
+
 #include <arvfakestream.h>
 #include <arvbuffer.h>
 #include <arvdebug.h>

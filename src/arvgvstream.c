@@ -20,6 +20,11 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/**
+ * SECTION: arvgvstream
+ * @short_description: Gigabit ethernet camera stream
+ */
+
 #include <arvgvstream.h>
 #include <arvbuffer.h>
 #include <arvgvsp.h>

@@ -20,6 +20,11 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+/**
+ * SECTION: arvgcenumentry
+ * @short_description: Class for EnumEntry nodes
+ */
+
 #include <arvgcenumentry.h>
 #include <arvgc.h>
 #include <string.h>
