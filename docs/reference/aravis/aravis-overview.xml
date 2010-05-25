@@ -1,0 +1,15 @@
+<part id="aravis-overview">
+
+<title>Overview</title>
+
+<para>Aravis is a GObject based library for the control and the video stream acquisition of digital cameras. It supports gobect-introspection, making it usable directly from Python (<ulink type="http" url="http://live.gnome.org/PyGI">PyGI</ulink>) , Javascript (<ulink type="http" url="http://live.gnome.org/Gjs/">Gjs</ulink> or <ulink type="http" url="http://live.gnome.org/Seed">Seed</ulink>) or <ulink type="http" url="http://live.gnome.org/Vala">Vala</ulink>.</para>
+
+<para>While using GenICam xml files for the description of the camera registers, it does not try to be a complete implementation of the Genicam API as described in the GenAPI GenICam document. Nevertheless, a good knowledge of the <ulink type="http" url="http://www.genicam.org">GenICam</ulink> standard should help the user to understand how Aravis operates.</para>
+
+<para>Aravis currently provides an implementation of a gigabit ethernet UDP based protocol, found in a lot of ethernet industrial cameras.</para>
+
+<para>#ArvCamera is a simple API for easy access of standard camera features.</para>
+
+<para>#ArvDevice and #ArvGc are more low level APIs, which enable the full control of the cameras, allowing the use of the features specific to each model.</para>
+
+</part>

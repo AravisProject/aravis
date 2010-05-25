@@ -216,6 +216,7 @@ ArvEvaluatorClass
 <SECTION>
 <FILE>arvgcinteger</FILE>
 <TITLE>ArvGcInteger</TITLE>
+ArvGcInteger
 arv_gc_integer_get_value
 arv_gc_integer_set_value
 arv_gc_integer_get_min
@@ -466,6 +467,7 @@ ArvGcCategoryClass
 <SECTION>
 <FILE>arvgcfloat</FILE>
 <TITLE>ArvGcFloat</TITLE>
+ArvGcFloat
 arv_gc_float_get_value
 arv_gc_float_set_value
 arv_gc_float_get_min
@@ -588,6 +590,7 @@ ArvGcRegisterClass
 <SECTION>
 <FILE>arvgcstring</FILE>
 <TITLE>ArvGcString</TITLE>
+ArvGcString
 arv_gc_string_get_value
 arv_gc_string_set_value
 arv_gc_string_get_max_length
@@ -766,6 +769,7 @@ ArvGvspPacketType
 <SECTION>
 <FILE>arvzip</FILE>
 <TITLE>ArvZip</TITLE>
+ArvZip
 arv_zip_new
 arv_zip_free
 arv_zip_get_file
