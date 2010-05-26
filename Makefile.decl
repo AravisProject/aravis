@@ -4,7 +4,6 @@ GTESTER = gtester
 GTESTER_REPORT = gtester-report
 
 # initialize variables for unconditional += appending
-EXTRA_DIST =
 TEST_PROGS =
 
 ### testing rules

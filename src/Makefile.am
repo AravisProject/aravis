@@ -1,3 +1,5 @@
+EXTRA_DIST =
+
 include $(top_srcdir)/Makefile.decl
 
 SUBDIRS = . tests
