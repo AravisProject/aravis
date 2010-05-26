@@ -2,15 +2,40 @@
 
 <title>Overview</title>
 
-<para>Aravis is a GObject based library for the control and the video stream acquisition of digital cameras. It supports gobect-introspection, making it usable directly from Python (<ulink type="http" url="http://live.gnome.org/PyGI">PyGI</ulink>) , Javascript (<ulink type="http" url="http://live.gnome.org/Gjs/">Gjs</ulink> or <ulink type="http" url="http://live.gnome.org/Seed">Seed</ulink>) or <ulink type="http" url="http://live.gnome.org/Vala">Vala</ulink>.</para>
+<para>
+	Aravis is a GObject based library for the control and the video stream
+	acquisition of digital cameras. It supports gobect-introspection,
+	making it usable directly from Python (<ulink type="http"
+		url="http://live.gnome.org/PyGI">PyGI</ulink>) , Javascript
+	(<ulink type="http" url="http://live.gnome.org/Gjs/">Gjs</ulink> or
+	<ulink type="http" url="http://live.gnome.org/Seed">Seed</ulink>) or
+	<ulink type="http"
+		url="http://live.gnome.org/Vala">Vala</ulink>.
+</para>
 
-<para>While using GenICam xml files for the description of the camera registers, it does not try to be a complete implementation of the Genicam API as described in the GenAPI GenICam document. Nevertheless, a good knowledge of the <ulink type="http" url="http://www.genicam.org">GenICam</ulink> standard should help the user to understand how Aravis operates.</para>
+<para>
+	While using GenICam xml files for the description of the camera
+	registers, it does not try to be a complete implementation of the
+	Genicam API as described in the GenAPI GenICam document. Nevertheless,
+	a good knowledge of the <ulink type="http"
+		url="http://www.genicam.org">GenICam</ulink> standard should
+	help the user to understand how Aravis operates.
+</para>
 
-<para>Aravis currently provides an implementation of a gigabit ethernet UDP based protocol, found in a lot of ethernet industrial cameras.</para>
+<para>
+	Aravis currently provides an implementation of a gigabit ethernet UDP
+	based protocol, found in a lot of ethernet industrial cameras.
+</para>
 
-<para>#ArvCamera is a simple API for easy access of standard camera features.</para>
+<para>
+	#ArvCamera is a simple API for easy access of standard camera features.
+</para>
 
-<para>#ArvDevice and #ArvGc are more low level APIs, which enable the full control of the cameras, allowing the use of the features specific to each model.</para>
+<para>
+	#ArvDevice and #ArvGc are more low level APIs, which enable the full
+	control of the cameras, allowing the use of the features specific to
+	each model.
+</para>
 
 <chapter id="aravis-building">
 	<title>Building and debugging Aravis</title>
@@ -45,11 +70,13 @@
 		For example, --enable-gstreamer will build the simple gstreamer source plugin.
 	</para>
 
-	<para>The ARV_DEBUG environment variable can be set to a colon
+	<para>
+		The ARV_DEBUG environment variable can be set to a colon
 		separated list of debugging domains, which will make Aravis
 		print out different types of debugging informations to the
-		console. For example, the following command will make Aravis
-		print out stream related informations:
+		console. For example, the following command before running an
+		Aravis based application will make Aravis print out stream
+		related informations:
 		<literallayout>
 			<userinput>export ARV_DEBUG=stream</userinput>
 		</literallayout>
