@@ -12,4 +12,49 @@
 
 <para>#ArvDevice and #ArvGc are more low level APIs, which enable the full control of the cameras, allowing the use of the features specific to each model.</para>
 
+<chapter id="aravis-building">
+	<title>Building and debugging Aravis</title>
+
+	<para>
+		On UNIX, Aravis uses the standard GNU build system, using
+		<application>autoconf</application> for package configuration
+		and resolving portability issues,
+		<application>automake</application> for building makefiles that
+		comply with the GNU Coding Standards, and
+		<application>libtool</application> for building shared
+		libraries on multiple platforms.  The normal sequence for
+		compiling and installing the Aravis library is thus:
+		<literallayout>
+			<userinput>./configure</userinput>
+			<userinput>make</userinput>
+			<userinput>make install</userinput>
+		</literallayout>
+	</para>
+
+	<para>
+		The standard options provided by <application>GNU
+			autoconf</application> may be passed to the
+		<command>configure</command> script.  Please see the
+		<application>autoconf</application> documentation or run
+		<command>./configure --help</command> for information about the
+		standard options.
+	</para>
+
+	<para>
+		In addition there are several options to activate or deactivate features.
+		For example, --enable-gstreamer will build the simple gstreamer source plugin.
+	</para>
+
+	<para>The ARV_DEBUG environment variable can be set to a colon
+		separated list of debugging domains, which will make Aravis
+		print out different types of debugging informations to the
+		console. For example, the following command will make Aravis
+		print out stream related informations:
+		<literallayout>
+			<userinput>export ARV_DEBUG=stream</userinput>
+		</literallayout>
+	</para>
+
+</chapter>
+
 </part>
