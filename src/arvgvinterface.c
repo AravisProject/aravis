@@ -115,7 +115,7 @@ arv_gv_interface_build_discover_infos_list (ArvGvInterface *gv_interface)
 	n_interfaces = getifaddrs (&ifap);
 	for (;ifap != NULL; ifap = ifap->ifa_next) {
 		if ((ifap->ifa_flags & IFF_UP) != 0 &&
-		    (ifap->ifa_flags & (IFF_LOOPBACK | IFF_POINTOPOINT)) == 0 &&
+		    (ifap->ifa_flags & IFF_POINTOPOINT) == 0 &&
 		    (ifap->ifa_addr->sa_family == AF_INET)) {
 			ArvGvInterfaceDiscoverInfos *infos = g_new (ArvGvInterfaceDiscoverInfos, 1);
 			GSocketAddress *socket_address;
