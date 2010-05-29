@@ -149,6 +149,25 @@ arv_gvcp_packet_new_discovery_cmd (size_t *packet_size)
 }
 
 ArvGvcpPacket *
+arv_gvcp_packet_new_discovery_ack (size_t *packet_size)
+{
+	ArvGvcpPacket *packet;
+
+	g_return_val_if_fail (packet_size != NULL, NULL);
+
+	*packet_size = sizeof (ArvGvcpHeader) + ARV_GVBS_DISCOVERY_DATA_SIZE ;
+
+	packet = g_malloc (*packet_size);
+
+	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_ACK);
+	packet->header.command = g_htons (ARV_GVCP_COMMAND_DISCOVERY_ACK);
+	packet->header.size = g_htons (ARV_GVBS_DISCOVERY_DATA_SIZE);
+	packet->header.count = g_htons (0xffff);
+
+	return packet;
+}
+
+ArvGvcpPacket *
 arv_gvcp_packet_new_packet_resend_cmd (guint32 frame_id,
 				       guint32 first_block, guint32 last_block,
 				       guint32 packet_count, size_t *packet_size)
