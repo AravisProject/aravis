@@ -78,7 +78,7 @@ arv_fake_camera_read_memory (ArvFakeCamera *camera, guint32 address, guint32 siz
 }
 
 gboolean
-arv_fake_camera_write_memory (ArvFakeCamera *camera, guint32 address, guint32 size, void *buffer)
+arv_fake_camera_write_memory (ArvFakeCamera *camera, guint32 address, guint32 size, const void *buffer)
 {
 	g_return_val_if_fail (ARV_IS_FAKE_CAMERA (camera), FALSE);
 	g_return_val_if_fail (address + size < ARV_FAKE_CAMERA_MEMORY_SIZE + camera->priv->genicam_data_size, FALSE);
@@ -176,6 +176,21 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer)
 	for (y = 0; y < height; y++)
 		for (x = 0; x < width; x++)
 			((char *) buffer->data)[y * width + x] = (x + buffer->frame_id + y) % 255;
+}
+
+void
+arv_fake_camera_set_inet_address (ArvFakeCamera *camera, GInetAddress *address)
+{
+	const guint8 *bytes;
+
+	g_return_if_fail (ARV_IS_FAKE_CAMERA (camera));
+	g_return_if_fail (G_IS_INET_ADDRESS (address));
+	g_return_if_fail (g_inet_address_get_family (address) == G_SOCKET_FAMILY_IPV4);
+
+	bytes = g_inet_address_to_bytes (address);
+
+	arv_fake_camera_write_memory (camera, ARV_GVBS_CURRENT_IP_ADDRESS,
+				      g_inet_address_get_native_size (address), (char *) bytes);
 }
 
 void

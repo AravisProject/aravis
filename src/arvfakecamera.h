@@ -24,6 +24,7 @@
 #define ARV_FAKE_CAMERA_H
 
 #include <arvtypes.h>
+#include <gio/gio.h>
 
 G_BEGIN_DECLS
 
@@ -99,12 +100,15 @@ GType arv_fake_camera_get_type (void);
 
 ArvFakeCamera * arv_fake_camera_new 		(const char *serial_number);
 gboolean	arv_fake_camera_read_memory 	(ArvFakeCamera *camera, guint32 address, guint32 size, void *buffer);
-gboolean	arv_fake_camera_write_memory	(ArvFakeCamera *camera, guint32 address, guint32 size, void *buffer);
+gboolean	arv_fake_camera_write_memory	(ArvFakeCamera *camera, guint32 address, guint32 size,
+						 const void *buffer);
 gboolean 	arv_fake_camera_read_register	(ArvFakeCamera *camera, guint32 address, guint32 *value);
 gboolean	arv_fake_camera_write_register 	(ArvFakeCamera *camera, guint32 address, guint32 value);
 
 void 		arv_fake_camera_wait_for_next_frame 	(ArvFakeCamera *camera);
 void		arv_fake_camera_fill_buffer		(ArvFakeCamera *camera, ArvBuffer *buffer);
+
+void		arv_fake_camera_set_inet_address	(ArvFakeCamera *camera, GInetAddress *address);
 
 void 		arv_set_fake_camera_genicam_filename 	(const char *filename);
 const char *	arv_get_fake_camera_genicam_data	(size_t *size);
