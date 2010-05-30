@@ -61,6 +61,28 @@ arv_gvcp_packet_new_read_memory_cmd (guint32 address, guint32 size, guint32 pack
 }
 
 ArvGvcpPacket *
+arv_gvcp_packet_new_read_memory_ack (guint32 address, guint32 size, guint32 packet_count, size_t *packet_size)
+{
+	ArvGvcpPacket *packet;
+	guint32 n_address = g_htonl (address);
+
+	g_return_val_if_fail (packet_size != NULL, NULL);
+
+	*packet_size = sizeof (ArvGvcpHeader) + sizeof (guint32) + size;
+
+	packet = g_malloc (*packet_size);
+
+	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_ACK);
+	packet->header.command = g_htons (ARV_GVCP_COMMAND_READ_MEMORY_ACK);
+	packet->header.size = g_htons (sizeof (guint32) + size);
+	packet->header.count = g_htons (packet_count);
+
+	memcpy (&packet->data, &n_address, sizeof (guint32));
+
+	return packet;
+}
+
+ArvGvcpPacket *
 arv_gvcp_packet_new_write_memory_cmd (guint32 address, guint32 size, guint32 packet_count, size_t *packet_size)
 {
 	ArvGvcpPacket *packet;

@@ -1,5 +1,6 @@
 #include <arv.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define ARV_FAKE_GV_CAMERA_BUFFER_SIZE	65536
 
@@ -28,10 +29,13 @@ handle_control_packet (ArvFakeGvCamera *gv_camera, GSocket *socket,
 {
 	ArvGvcpPacket *ack_packet;
 	size_t ack_packet_size;
+	guint32 block_address;
+	guint32 block_size;
+
+	arv_gvcp_packet_debug (packet);
 
 	switch (g_ntohs (packet->header.command)) {
 		case ARV_GVCP_COMMAND_DISCOVERY_CMD:
-			arv_gvcp_packet_debug (packet);
 			ack_packet = arv_gvcp_packet_new_discovery_ack (&ack_packet_size);
 			arv_fake_camera_read_memory (gv_camera->camera, 0, ARV_GVBS_DISCOVERY_DATA_SIZE,
 						     &ack_packet->data);
@@ -40,7 +44,19 @@ handle_control_packet (ArvFakeGvCamera *gv_camera, GSocket *socket,
 			g_free (ack_packet);
 			break;
 		case ARV_GVCP_COMMAND_READ_MEMORY_CMD:
-			g_message ("Read command ");
+			memcpy (&block_address, &packet->data[0], sizeof (guint32));
+			memcpy (&block_size, &packet->data[sizeof(guint32)], sizeof (guint32));
+			block_address = g_ntohl (block_address);
+			block_size = g_ntohl (block_size);
+			ack_packet = arv_gvcp_packet_new_read_memory_ack (block_address, block_size,
+									  arv_gvcp_packet_get_packet_count (packet),
+									  &ack_packet_size);
+			arv_fake_camera_read_memory (gv_camera->camera, block_address, block_size,
+						     arv_gvcp_packet_get_read_memory_ack_data (ack_packet));
+			g_socket_send_to (socket, remote_address, (char *) ack_packet, ack_packet_size, NULL, NULL);
+			arv_gvcp_packet_debug (ack_packet);
+			g_free (ack_packet);
+			g_message ("Read command %d (%d)", block_address, block_size);
 			break;
 		default:
 			g_message ("Unknown command");

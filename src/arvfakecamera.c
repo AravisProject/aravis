@@ -56,6 +56,8 @@ static const char *arv_fake_camera_genicam_filename = NULL;
 gboolean
 arv_fake_camera_read_memory (ArvFakeCamera *camera, guint32 address, guint32 size, void *buffer)
 {
+	guint32 read_size;
+
 	g_return_val_if_fail (ARV_IS_FAKE_CAMERA (camera), FALSE);
 	g_return_val_if_fail (buffer != NULL, FALSE);
 	g_return_val_if_fail (size > 0, FALSE);
@@ -70,9 +72,10 @@ arv_fake_camera_read_memory (ArvFakeCamera *camera, guint32 address, guint32 siz
 		return TRUE;
 	}
 
-	g_return_val_if_fail (address - ARV_FAKE_CAMERA_MEMORY_SIZE + size > camera->priv->genicam_data_size, FALSE);
+	address -= ARV_FAKE_CAMERA_MEMORY_SIZE;
+	read_size = MIN (address + size, camera->priv->genicam_data_size) - address;
 
-	memcpy (buffer, camera->priv->genicam_data + address - ARV_FAKE_CAMERA_MEMORY_SIZE, size);
+	memcpy (buffer, camera->priv->genicam_data + address, read_size);
 
 	return TRUE;
 }

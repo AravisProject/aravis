@@ -97,6 +97,8 @@ typedef struct {
 void 			arv_gvcp_packet_free 			(ArvGvcpPacket *packet);
 ArvGvcpPacket * 	arv_gvcp_packet_new_read_memory_cmd 	(guint32 address, guint32 size,
 								 guint32 packet_count, size_t *packet_size);
+ArvGvcpPacket * 	arv_gvcp_packet_new_read_memory_ack 	(guint32 address, guint32 size, guint32 packet_count,
+								 size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_write_memory_cmd	(guint32 address, guint32 size,
 								 guint32 packet_count, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_read_register_cmd 	(guint32 address,
