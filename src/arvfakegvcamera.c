@@ -47,6 +47,18 @@ handle_control_packet (ArvFakeGvCamera *gv_camera, GSocket *socket,
 	}
 }
 
+static char *arv_option_address = "127.0.0.1";
+static char *arv_option_debug_domains = NULL;
+
+static const GOptionEntry arv_option_entries[] =
+{
+	{ "address",		'a', 0, G_OPTION_ARG_STRING,
+		&arv_option_address,		"Camera IP address", NULL},
+	{ "debug", 		'd', 0, G_OPTION_ARG_STRING,
+		&arv_option_debug_domains, 	"Debug mode", NULL },
+	{ NULL }
+};
+
 int
 main (int argc, char **argv)
 {
@@ -57,18 +69,39 @@ main (int argc, char **argv)
 	GPollFD poll_fd;
 	int n_events;
 	GInputVector input_vector;
+	GOptionContext *context;
+	GError *error = NULL;
 
 	g_thread_init (NULL);
 	g_type_init ();
 
+	context = g_option_context_new (NULL);
+	g_option_context_add_main_entries (context, arv_option_entries, NULL);
+
+	if (!g_option_context_parse (context, &argc, &argv, &error)) {
+		g_option_context_free (context);
+		g_print ("Option parsing failed: %s\n", error->message);
+		g_error_free (error);
+		return EXIT_FAILURE;
+	}
+
+	g_option_context_free (context);
+
+	arv_debug_enable (arv_option_debug_domains);
+
+	address = g_inet_address_new_from_string (arv_option_address);
+	if (!G_IS_INET_ADDRESS (address)) {
+		g_print ("Invalid IP address: %s\n", arv_option_address);
+		return EXIT_FAILURE;
+	}
+
 	gv_camera = g_new0 (ArvFakeGvCamera, 1);
-	gv_camera->camera = arv_fake_camera_new ("Fake_1");
+	gv_camera->camera = arv_fake_camera_new ("GV01");
 
 	socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
 			       G_SOCKET_TYPE_DATAGRAM,
 			       G_SOCKET_PROTOCOL_UDP, NULL);
 
-	address = g_inet_address_new_from_string ("127.0.0.1");
 	socket_address = g_inet_socket_address_new (address, ARV_GVCP_PORT);
 	arv_fake_camera_set_inet_address (gv_camera->camera, address);
 	g_object_unref (address);
