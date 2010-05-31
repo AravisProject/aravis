@@ -101,9 +101,15 @@ ArvGvcpPacket * 	arv_gvcp_packet_new_read_memory_ack 	(guint32 address, guint32 
 								 size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_write_memory_cmd	(guint32 address, guint32 size,
 								 guint32 packet_count, size_t *packet_size);
+ArvGvcpPacket * 	arv_gvcp_packet_new_write_memory_ack	(guint32 address,
+								 guint32 packet_count, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_read_register_cmd 	(guint32 address,
 								 guint32 packet_count, size_t *packet_size);
+ArvGvcpPacket * 	arv_gvcp_packet_new_read_register_ack 	(guint32 value,
+								 guint32 packet_count, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_write_register_cmd 	(guint32 address, guint32 value,
+								 guint32 packet_count, size_t *packet_size);
+ArvGvcpPacket * 	arv_gvcp_packet_new_write_register_ack 	(guint32 address,
 								 guint32 packet_count, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_discovery_cmd 	(size_t *size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_discovery_ack 	(size_t *packet_size);
@@ -129,6 +135,17 @@ arv_gvcp_packet_get_packet_count (ArvGvcpPacket *packet)
 	return g_ntohs (packet->header.count);
 }
 
+static inline void
+arv_gvcp_packet_get_read_memory_cmd_infos (const ArvGvcpPacket *packet, guint32 *address, guint32 *size)
+{
+	if (packet == NULL)
+		return;
+	if (address != NULL)
+		*address = g_ntohl (*((guint32 *) ((void *) packet + sizeof (ArvGvcpPacket))));
+	if (size != NULL)
+		*size = g_ntohl (*((guint32 *) ((void *) packet + sizeof (ArvGvcpPacket) + sizeof (guint32))));
+}
+
 static inline size_t
 arv_gvcp_packet_get_read_memory_ack_size (guint32 data_size)
 {
@@ -139,6 +156,18 @@ static inline void *
 arv_gvcp_packet_get_read_memory_ack_data (const ArvGvcpPacket *packet)
 {
 	return (void *) packet + sizeof (ArvGvcpHeader) + sizeof (guint32);
+}
+
+static inline void
+arv_gvcp_packet_get_write_memory_cmd_infos (const ArvGvcpPacket *packet, guint32 *address, guint32 *size)
+{
+	if (packet == NULL)
+		return;
+
+	if (address != NULL)
+		*address = g_ntohl (*((guint32 *) ((void *) packet + sizeof (ArvGvcpPacket))));
+	if (size != NULL)
+		*size = g_ntohs (packet->header.size) - sizeof (guint32);
 }
 
 static inline void *
@@ -153,10 +182,32 @@ arv_gvcp_packet_get_write_memory_ack_size (void)
 	return sizeof (ArvGvcpPacket) + sizeof (guint32);
 }
 
+static inline void
+arv_gvcp_packet_get_read_register_cmd_infos (const ArvGvcpPacket *packet, guint32 *address)
+{
+	if (packet == NULL)
+		return;
+	if (address != NULL)
+		*address = g_ntohl (*((guint32 *) ((void *) packet + sizeof (ArvGvcpPacket))));
+}
+
 static inline guint32
 arv_gvcp_packet_get_read_register_ack_value (const ArvGvcpPacket *packet)
 {
+	if (packet == NULL)
+		return 0;
 	return g_ntohl (*((guint32 *) ((void *) packet + sizeof (ArvGvcpPacket))));
+}
+
+static inline void
+arv_gvcp_packet_get_write_register_cmd_infos (const ArvGvcpPacket *packet, guint32 *address, guint32 *value)
+{
+	if (packet == NULL)
+		return;
+	if (address != NULL)
+		*address = g_ntohl (*((guint32 *) ((void *) packet + sizeof (ArvGvcpPacket))));
+	if (value != NULL)
+		*value = g_ntohl (*((guint32 *) ((void *) packet + sizeof (ArvGvcpPacket) + sizeof (guint32))));
 }
 
 G_END_DECLS
