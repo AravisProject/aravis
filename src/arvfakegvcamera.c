@@ -19,8 +19,25 @@ typedef struct {
 	GPollFD gvcp_fds[2];
 	guint n_gvcp_fds;
 	GSocket *gvcp_socket;
+	GSocket *gvsp_socket;
 	GSocket *discovery_socket;
+
+	GThread *gvsp_thread;
+	gboolean cancel;
 } ArvFakeGvCamera;
+
+void *
+arv_fake_gv_camera_thread (void *user_data)
+{
+	ArvFakeGvCamera *gv_camera = user_data;
+
+	do {
+		arv_fake_camera_wait_for_next_frame (gv_camera->camera);
+		g_print ("new_frame\n");
+	} while (!cancel);
+
+	return NULL;
+}
 
 ArvFakeGvCamera *
 arv_fake_gv_camera_new (const char *interface_name)
@@ -52,6 +69,7 @@ arv_fake_gv_camera_new (const char *interface_name)
 			inet_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address));
 			gvcp_address_string = g_inet_address_to_string (inet_address);
 			arv_debug ("camera", "[FakeGvCamera::new] Interface address = %s", gvcp_address_string);
+
 			inet_socket_address = g_inet_socket_address_new (inet_address, ARV_GVCP_PORT);
 			gv_camera->gvcp_socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
 							       G_SOCKET_TYPE_DATAGRAM,
@@ -61,6 +79,15 @@ arv_fake_gv_camera_new (const char *interface_name)
 			g_assert (error == NULL);
 			arv_fake_camera_set_inet_address (gv_camera->camera, inet_address);
 			g_object_unref (inet_socket_address);
+
+			inet_socket_address = g_inet_socket_address_new (inet_address, 0);
+			gv_camera->gvsp_socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
+							       G_SOCKET_TYPE_DATAGRAM,
+							       G_SOCKET_PROTOCOL_UDP, NULL);
+			g_socket_bind (gv_camera->gvsp_socket, inet_socket_address, FALSE, &error);
+			g_assert (error == NULL);
+			g_object_unref (inet_socket_address);
+
 			g_object_unref (socket_address);
 
 			socket_address = g_socket_address_new_from_native (ifap->ifa_broadaddr,
@@ -103,6 +130,10 @@ arv_fake_gv_camera_new (const char *interface_name)
 	if (!interface_found)
 		goto INTERFACE_ERROR;
 
+	gv_camera->cancel = FALSE;
+	gv_camera->gvsp_thread = g_thread_create (arv_fake_gv_camera_thread,
+						  gv_camera, TRUE, NULL);
+
 	return gv_camera;
 
 INTERFACE_ERROR:
@@ -117,17 +148,17 @@ arv_fake_gv_camera_free (ArvFakeGvCamera *gv_camera)
 {
 	g_return_if_fail (gv_camera != NULL);
 
+	if (gv_camera->gvsp_thread != NULL) {
+		gv_camera->cancel = TRUE;
+		g_thread_join (gv_camera->gvsp_thread);
+		gv_camera->gvsp_thread = NULL;
+	}
+
 	g_object_unref (gv_camera->gvcp_socket);
 	if (gv_camera->discovery_socket != NULL)
 		g_object_unref (gv_camera->discovery_socket);
 	g_object_unref (gv_camera->camera);
 	g_free (gv_camera);
-}
-
-void *
-arv_fake_gv_camera_thread (void *user_data)
-{
-	return NULL;
 }
 
 void
