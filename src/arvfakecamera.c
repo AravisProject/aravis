@@ -164,7 +164,7 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer)
 	y_offset = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_Y_OFFSET);
 	payload = width * height;
 
-	if (buffer->size != payload) {
+	if (buffer->size < payload) {
 		buffer->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
 		return;
 	}

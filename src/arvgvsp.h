@@ -60,6 +60,16 @@ typedef struct {
 	guint8 data[];
 } ArvGvspPacket;
 
+ArvGvspPacket *		arv_gvsp_packet_new_data_leader		(guint32 frame_id, guint16 block_id,
+								 guint64 timestamp, ArvPixelFormat pixel_format,
+								 guint32 width, guint32 height,
+								 guint32 x_offset, guint32 y_offset,
+								 void *buffer, size_t *buffer_size);
+ArvGvspPacket *		arv_gvsp_packet_new_data_trailer	(guint32 frame_id, guint16 block_id,
+								 void *buffer, size_t *buffer_size);
+ArvGvspPacket *		arv_gvsp_packet_new_data_block		(guint32 frame_id, guint16 block_id,
+								 size_t size, void *data,
+								 void *buffer, size_t *buffer_size);
 void 			arv_gvsp_packet_debug 			(const ArvGvspPacket *packet, size_t packet_size);
 
 static inline ArvGvspPacketType

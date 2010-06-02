@@ -28,6 +28,94 @@
 #include <arvgvsp.h>
 #include <arvdebug.h>
 #include <arvenumtypes.h>
+#include <string.h>
+
+static ArvGvspPacket *
+arv_gvsp_packet_new (guint32 frame_id, guint16 block_id, size_t data_size, void *buffer, size_t *buffer_size)
+{
+	ArvGvspPacket *packet;
+	size_t packet_size;
+
+	packet_size = sizeof (ArvGvspPacket) + data_size;
+	if (packet_size == 0 || (buffer != NULL && (buffer_size == NULL || packet_size > *buffer_size)))
+		return NULL;
+
+	if (buffer_size != NULL)
+		*buffer_size = packet_size;
+
+	if (buffer != NULL)
+		packet = buffer;
+	else
+		packet = g_malloc (packet_size);
+
+	packet->header.frame_id = frame_id;
+	packet->header.packet_type = ARV_GVSP_PACKET_TYPE_DATA_LEADER;
+	packet->header.block_id = block_id;
+
+	return packet;
+}
+
+ArvGvspPacket *
+arv_gvsp_packet_new_data_leader	(guint32 frame_id, guint16 block_id,
+				 guint64 timestamp, ArvPixelFormat pixel_format,
+				 guint32 width, guint32 height,
+				 guint32 x_offset, guint32 y_offset,
+				 void *buffer, size_t *buffer_size)
+{
+	ArvGvspPacket *packet;
+
+	packet = arv_gvsp_packet_new (frame_id, block_id, sizeof (ArvGvspDataLeader), buffer, buffer_size);
+
+	if (packet != NULL) {
+		ArvGvspDataLeader *leader;
+
+		leader = (ArvGvspDataLeader *) &packet->data;
+		leader->data0 = 0;
+		leader->timestamp_high = (guint64) (timestamp / 1000000000LL);
+		leader->timestamp_low  = (guint64) (timestamp % 1000000000LL);
+		leader->pixel_format = pixel_format;
+		leader->width = width;
+		leader->height = height;
+		leader->x_offset = x_offset;
+		leader->y_offset = y_offset;
+	}
+
+	return packet;
+}
+
+ArvGvspPacket *
+arv_gvsp_packet_new_data_trailer (guint32 frame_id, guint16 block_id,
+				  void *buffer, size_t *buffer_size)
+{
+	ArvGvspPacket *packet;
+
+	packet = arv_gvsp_packet_new (frame_id, block_id, sizeof (ArvGvspDataTrailer), buffer, buffer_size);
+
+	if (packet != NULL) {
+		ArvGvspDataTrailer *trailer;
+
+		trailer = (ArvGvspDataTrailer *) &packet->data;
+		trailer->data0 = 0;
+		trailer->data1 = 0;
+	}
+
+	return packet;
+}
+
+ArvGvspPacket *
+arv_gvsp_packet_new_data_block (guint32 frame_id, guint16 block_id,
+				size_t size, void *data,
+				void *buffer, size_t *buffer_size)
+{
+	ArvGvspPacket *packet;
+
+	packet = arv_gvsp_packet_new (frame_id, block_id, size, buffer, buffer_size);
+
+	if (packet != NULL)
+		memcpy (&packet->data, data, size);
+
+	return packet;
+}
 
 static const char *
 arv_enum_to_string (GType type,
