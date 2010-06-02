@@ -143,7 +143,8 @@ arv_gvcp_packet_get_read_memory_cmd_infos (const ArvGvcpPacket *packet, guint32 
 	if (address != NULL)
 		*address = g_ntohl (*((guint32 *) ((void *) packet + sizeof (ArvGvcpPacket))));
 	if (size != NULL)
-		*size = g_ntohl (*((guint32 *) ((void *) packet + sizeof (ArvGvcpPacket) + sizeof (guint32))));
+		*size = (g_ntohl (*((guint32 *) ((void *) packet + sizeof (ArvGvcpPacket) + sizeof (guint32))))) &
+			0xffff;
 }
 
 static inline size_t
