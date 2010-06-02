@@ -136,6 +136,10 @@ arv_gv_interface_build_discover_infos_list (ArvGvInterface *gv_interface)
 									   sizeof (ifap->ifa_broadaddr));
 			inet_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address));
 			infos->broadcast_address = g_inet_socket_address_new (inet_address, ARV_GVCP_PORT);
+			inet_address_string = g_inet_address_to_string (inet_address);
+			arv_debug ("interface", "[GvInterface::build_discover_infos_list] Broadcast address is %s",
+				   inet_address_string);
+			g_free (inet_address_string);
 			g_object_unref (socket_address);
 
 			infos->socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
