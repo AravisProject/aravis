@@ -30,70 +30,106 @@ void *
 arv_fake_gv_camera_thread (void *user_data)
 {
 	ArvFakeGvCamera *gv_camera = user_data;
-	ArvBuffer *image_buffer;
-	GSocketAddress *socket_address;
-	GInetAddress *inet_address;
+	ArvBuffer *image_buffer = NULL;
+	GError *error = NULL;
+	GSocketAddress *stream_address = NULL;
 	void *packet_buffer;
 	size_t packet_size;
-	size_t payload = 512*512;
+	size_t payload = 0;
 	guint32 frame_id = 0;
 	guint16 block_id;
 	ptrdiff_t offset;
 
-	image_buffer = arv_buffer_new (2048*2048, NULL);
-	packet_buffer = g_malloc (65536);
-	inet_address = g_inet_address_new_from_string ("127.0.0.1");
-	socket_address = g_inet_socket_address_new (inet_address, 58000);
-	g_object_unref (inet_address);
+	packet_buffer = g_malloc (ARV_FAKE_GV_CAMERA_BUFFER_SIZE);
 
 	do {
-		arv_fake_camera_wait_for_next_frame (gv_camera->camera);
-		arv_fake_camera_fill_buffer (gv_camera->camera, image_buffer);
+		if (arv_fake_camera_get_acquisition_status (gv_camera->camera) == 0) {
+			if (stream_address != NULL) {
+				g_object_unref (stream_address);
+				stream_address = NULL;
+				g_object_unref (image_buffer);
+				image_buffer = NULL;
+				arv_debug ("camera", "[FakeGvCamera::stream_thread] Stop stream");
+			}
+			g_usleep (100000);
+		} else {
+			if (stream_address == NULL) {
+				GInetAddress *inet_address;
+				char *inet_address_string;
 
-		block_id = 0;
+				stream_address = arv_fake_camera_get_stream_address (gv_camera->camera);
+				inet_address = g_inet_socket_address_get_address
+					(G_INET_SOCKET_ADDRESS (stream_address));
+				inet_address_string = g_inet_address_to_string (inet_address);
+				arv_debug ("camera", "[FakeGvCamera::stream_thread] Start stream to %s (%d)",
+					   inet_address_string,
+					   g_inet_socket_address_get_port (G_INET_SOCKET_ADDRESS (stream_address)));
+				g_free (inet_address_string);
 
-		packet_size = 65536;
-		arv_gvsp_packet_new_data_leader (frame_id, block_id, image_buffer->timestamp_ns,
-						 image_buffer->pixel_format,
-						 image_buffer->width, image_buffer->height,
-						 image_buffer->x_offset, image_buffer->y_offset,
-						 packet_buffer, &packet_size);
+				payload = arv_fake_camera_get_payload (gv_camera->camera);
+				image_buffer = arv_buffer_new (payload, NULL);
+			}
 
-		g_socket_send_to (gv_camera->gvsp_socket, socket_address, packet_buffer, packet_size, NULL, NULL);
+			arv_fake_camera_wait_for_next_frame (gv_camera->camera);
+			arv_fake_camera_fill_buffer (gv_camera->camera, image_buffer);
 
-		block_id++;
+			block_id = 0;
 
-		offset = 0;
-		while (offset < payload) {
-			size_t data_size;
+			packet_size = ARV_FAKE_GV_CAMERA_BUFFER_SIZE;
+			arv_gvsp_packet_new_data_leader (image_buffer->frame_id,
+							 block_id,
+							 image_buffer->timestamp_ns,
+							 image_buffer->pixel_format,
+							 image_buffer->width, image_buffer->height,
+							 image_buffer->x_offset, image_buffer->y_offset,
+							 packet_buffer, &packet_size);
 
-			data_size = MIN (1500, payload - offset);
+			g_socket_send_to (gv_camera->gvsp_socket, stream_address,
+					  packet_buffer, packet_size, NULL, &error);
+			if (error != NULL) {
+				arv_debug ("camera", "[ArvFakeGvCamera::stream_thread] Socket send error [%s]",
+					   error->message);
+				g_error_free (error);
+				error = NULL;
+			}
 
-			packet_size = 65536;
-			arv_gvsp_packet_new_data_block (frame_id, block_id,
-							data_size, image_buffer->data + offset,
-							packet_buffer, &packet_size);
+			block_id++;
 
-			g_socket_send_to (gv_camera->gvsp_socket, socket_address,
+			offset = 0;
+			while (offset < payload) {
+				size_t data_size;
+
+				data_size = MIN (1500, payload - offset);
+
+				packet_size = ARV_FAKE_GV_CAMERA_BUFFER_SIZE;
+				arv_gvsp_packet_new_data_block (image_buffer->frame_id, block_id,
+								data_size, image_buffer->data + offset,
+								packet_buffer, &packet_size);
+
+				g_socket_send_to (gv_camera->gvsp_socket, stream_address,
+						  packet_buffer, packet_size, NULL, NULL);
+
+				offset += data_size;
+				block_id++;
+			}
+
+			packet_size = ARV_FAKE_GV_CAMERA_BUFFER_SIZE;
+			arv_gvsp_packet_new_data_trailer (image_buffer->frame_id, block_id,
+							  packet_buffer, &packet_size);
+
+			g_socket_send_to (gv_camera->gvsp_socket, stream_address,
 					  packet_buffer, packet_size, NULL, NULL);
 
-			offset += data_size;
-			block_id++;
+			frame_id++;
 		}
-
-		packet_size = 65536;
-		arv_gvsp_packet_new_data_trailer (frame_id, block_id,
-						  packet_buffer, &packet_size);
-
-		g_socket_send_to (gv_camera->gvsp_socket, socket_address, packet_buffer, packet_size, NULL, NULL);
-
-		frame_id++;
-
 	} while (!cancel);
 
-	g_object_unref (socket_address);
+	if (stream_address != NULL)
+		g_object_unref (stream_address);
+	if (image_buffer != NULL)
+		g_object_unref (image_buffer);
+
 	g_free (packet_buffer);
-	g_object_unref (image_buffer);
 
 	return NULL;
 }

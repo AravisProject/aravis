@@ -118,6 +118,19 @@ _get_register (ArvFakeCamera *camera, guint32 address)
 	return *((guint32 *) ((void*) (camera->priv->memory + address)));
 }
 
+size_t
+arv_fake_camera_get_payload (ArvFakeCamera *camera)
+{
+	guint32 width, height;
+
+	g_return_val_if_fail (ARV_IS_FAKE_CAMERA (camera), 0);
+
+	width = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_WIDTH);
+	height = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_HEIGHT);
+
+	return width * height;
+}
+
 void
 arv_fake_camera_wait_for_next_frame (ArvFakeCamera *camera)
 {
@@ -172,7 +185,7 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer)
 	buffer->width = width;
 	buffer->height = height;
 	buffer->status = ARV_BUFFER_STATUS_SUCCESS;
-	buffer->timestamp_ns = time.tv_sec * 1000000000L + time.tv_nsec;
+	buffer->timestamp_ns = time.tv_sec * 1000000000LL + time.tv_nsec;
 	buffer->frame_id = camera->priv->frame_id++;
 	buffer->pixel_format = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_PIXEL_FORMAT);
 
@@ -194,6 +207,31 @@ arv_fake_camera_set_inet_address (ArvFakeCamera *camera, GInetAddress *address)
 
 	arv_fake_camera_write_memory (camera, ARV_GVBS_CURRENT_IP_ADDRESS,
 				      g_inet_address_get_native_size (address), (char *) bytes);
+}
+
+guint32
+arv_fake_camera_get_acquisition_status (ArvFakeCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_FAKE_CAMERA (camera), 0);
+
+	return _get_register (camera, ARV_FAKE_CAMERA_REGISTER_ACQUISITION);
+}
+
+GSocketAddress *
+arv_fake_camera_get_stream_address (ArvFakeCamera *camera)
+{
+	GSocketAddress *stream_socket_address;
+	GInetAddress *inet_address;
+
+	g_return_val_if_fail (ARV_IS_FAKE_CAMERA (camera), NULL);
+
+	inet_address = g_inet_address_new_from_bytes (camera->priv->memory + ARV_GVBS_FIRST_STREAM_CHANNEL_IP_ADDRESS,
+						      G_SOCKET_FAMILY_IPV4);
+	stream_socket_address = g_inet_socket_address_new (inet_address,
+							   _get_register (camera, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT));
+	g_object_unref (inet_address);
+
+	return stream_socket_address;
 }
 
 void

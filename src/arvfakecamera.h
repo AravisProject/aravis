@@ -105,9 +105,12 @@ gboolean	arv_fake_camera_write_memory	(ArvFakeCamera *camera, guint32 address, g
 gboolean 	arv_fake_camera_read_register	(ArvFakeCamera *camera, guint32 address, guint32 *value);
 gboolean	arv_fake_camera_write_register 	(ArvFakeCamera *camera, guint32 address, guint32 value);
 
+size_t 		arv_fake_camera_get_payload 		(ArvFakeCamera *camera);
 void 		arv_fake_camera_wait_for_next_frame 	(ArvFakeCamera *camera);
 void		arv_fake_camera_fill_buffer		(ArvFakeCamera *camera, ArvBuffer *buffer);
 
+guint32 	arv_fake_camera_get_acquisition_status 	(ArvFakeCamera *camera);
+GSocketAddress *arv_fake_camera_get_stream_address 	(ArvFakeCamera *camera);
 void		arv_fake_camera_set_inet_address	(ArvFakeCamera *camera, GInetAddress *address);
 
 void 		arv_set_fake_camera_genicam_filename 	(const char *filename);
