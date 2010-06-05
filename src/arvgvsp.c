@@ -73,8 +73,8 @@ arv_gvsp_packet_new_data_leader	(guint32 frame_id, guint16 block_id,
 
 		leader = (ArvGvspDataLeader *) &packet->data;
 		leader->data0 = 0;
-		leader->timestamp_high = g_htonl ((guint64) (timestamp / 1000000000LL));
-		leader->timestamp_low  = g_htonl ((guint64) (timestamp % 1000000000LL));
+		leader->timestamp_high = g_htonl (((guint64) timestamp >> 32));
+		leader->timestamp_low  = g_htonl ((guint64) timestamp & 0xffffffff);
 		leader->pixel_format = g_htonl (pixel_format);
 		leader->width = g_htonl (width);
 		leader->height = g_htonl (height);

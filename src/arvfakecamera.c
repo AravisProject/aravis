@@ -185,7 +185,7 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer)
 	buffer->width = width;
 	buffer->height = height;
 	buffer->status = ARV_BUFFER_STATUS_SUCCESS;
-	buffer->timestamp_ns = time.tv_sec * 1000000000LL + time.tv_nsec;
+	buffer->timestamp_ns = ((guint64) time.tv_sec) * 1000000000LL + time.tv_nsec;
 	buffer->frame_id = camera->priv->frame_id++;
 	buffer->pixel_format = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_PIXEL_FORMAT);
 
@@ -345,6 +345,9 @@ arv_fake_camera_new (const char *serial_number)
 
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_GAIN_RAW, 0);
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_GAIN_MODE, 0);
+
+	arv_fake_camera_write_register (fake_camera, ARV_GVBS_TIMESTAMP_TICK_FREQUENCY_HIGH, 0);
+	arv_fake_camera_write_register (fake_camera, ARV_GVBS_TIMESTAMP_TICK_FREQUENCY_LOW, 1000000000);
 
 	return fake_camera;
 }
