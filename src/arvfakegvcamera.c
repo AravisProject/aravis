@@ -74,6 +74,7 @@ _g_inet_socket_address_is_equal (GInetSocketAddress *a, GInetSocketAddress *b)
 	a_str = g_inet_address_to_string (a_addr);
 	b_str = g_inet_address_to_string (b_addr);
 
+	/* TODO: find a better way to do inet address comparison */
 	result = g_strcmp0 (a_str, b_str) == 0;
 
 	g_free (a_str);
@@ -198,6 +199,7 @@ arv_fake_gv_camera_new (const char *interface_name)
 	struct ifaddrs *ifap;
 	int n_interfaces;
 	gboolean interface_found = FALSE;
+	gboolean binding_error = FALSE;
 
 	g_return_val_if_fail (interface_name != NULL, NULL);
 
@@ -215,7 +217,6 @@ arv_fake_gv_camera_new (const char *interface_name)
 			GInetAddress *inet_address;
 			char *gvcp_address_string;
 			char *discovery_address_string;
-			GError *error = NULL;
 
 			socket_address = g_socket_address_new_from_native (ifap->ifa_addr, sizeof (ifap->ifa_addr));
 			inet_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address));
@@ -226,9 +227,9 @@ arv_fake_gv_camera_new (const char *interface_name)
 			gv_camera->gvcp_socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
 							       G_SOCKET_TYPE_DATAGRAM,
 							       G_SOCKET_PROTOCOL_UDP, NULL);
-			g_socket_bind (gv_camera->gvcp_socket, inet_socket_address, FALSE, &error);
+			if (!g_socket_bind (gv_camera->gvcp_socket, inet_socket_address, FALSE, NULL))
+				binding_error = TRUE;
 			g_socket_set_blocking (gv_camera->gvcp_socket, FALSE);
-			g_assert (error == NULL);
 			arv_fake_camera_set_inet_address (gv_camera->camera, inet_address);
 			g_object_unref (inet_socket_address);
 
@@ -236,8 +237,8 @@ arv_fake_gv_camera_new (const char *interface_name)
 			gv_camera->gvsp_socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
 							       G_SOCKET_TYPE_DATAGRAM,
 							       G_SOCKET_PROTOCOL_UDP, NULL);
-			g_socket_bind (gv_camera->gvsp_socket, inet_socket_address, FALSE, &error);
-			g_assert (error == NULL);
+			if (!g_socket_bind (gv_camera->gvsp_socket, inet_socket_address, FALSE, NULL))
+				binding_error = TRUE;
 			g_object_unref (inet_socket_address);
 
 			g_object_unref (socket_address);
@@ -254,9 +255,9 @@ arv_fake_gv_camera_new (const char *interface_name)
 				gv_camera->discovery_socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
 									    G_SOCKET_TYPE_DATAGRAM,
 									    G_SOCKET_PROTOCOL_UDP, NULL);
-				g_socket_bind (gv_camera->discovery_socket, inet_socket_address, FALSE, &error);
+				if (!g_socket_bind (gv_camera->discovery_socket, inet_socket_address, FALSE, NULL))
+					binding_error = TRUE;
 				g_socket_set_blocking (gv_camera->discovery_socket, FALSE);
-				g_assert (error == NULL);
 			}
 			g_object_unref (inet_socket_address);
 			g_object_unref (socket_address);
@@ -279,6 +280,9 @@ arv_fake_gv_camera_new (const char *interface_name)
 		}
 	}
 
+	if (binding_error)
+		goto BINDING_ERROR;
+
 	if (!interface_found)
 		goto INTERFACE_ERROR;
 
@@ -287,6 +291,13 @@ arv_fake_gv_camera_new (const char *interface_name)
 						  gv_camera, TRUE, NULL);
 
 	return gv_camera;
+
+BINDING_ERROR:
+
+	g_object_unref (gv_camera->gvcp_socket);
+	if (gv_camera->discovery_socket != NULL)
+		g_object_unref (gv_camera->discovery_socket);
+	g_object_unref (gv_camera->gvsp_socket);
 
 INTERFACE_ERROR:
 	g_object_unref (gv_camera->camera);
@@ -464,7 +475,11 @@ main (int argc, char **argv)
 	arv_debug_enable (arv_option_debug_domains);
 
 	gv_camera = arv_fake_gv_camera_new (arv_option_interface_name);
-	g_return_val_if_fail (gv_camera != NULL, EXIT_FAILURE);
+	if (gv_camera == NULL) {
+		g_print ("Can't instantiate a new fake camera.\n");
+		g_print ("An existing instance may already use the '%s' interface.\n", arv_option_interface_name);
+		return EXIT_FAILURE;
+	}
 
 	input_vector.buffer = g_malloc0 (ARV_FAKE_GV_CAMERA_BUFFER_SIZE);
 	input_vector.size = ARV_FAKE_GV_CAMERA_BUFFER_SIZE;
