@@ -244,6 +244,32 @@ arv_fake_camera_set_trigger_frequency (ArvFakeCamera *camera, double frequency)
 	camera->priv->frame_id = 0;
 }
 
+guint32
+arv_fake_camera_get_control_channel_privilege (ArvFakeCamera *camera)
+{
+	guint32 value;
+
+	arv_fake_camera_read_register (camera, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE, &value);
+
+	return value;
+}
+
+void
+arv_fake_camera_set_control_channel_privilege (ArvFakeCamera *camera, guint32 privilege)
+{
+	arv_fake_camera_write_register (camera, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE, privilege);
+}
+
+guint32
+arv_fake_camera_get_heartbeat_timeout (ArvFakeCamera *camera)
+{
+	guint32 value;
+
+	arv_fake_camera_read_register (camera, ARV_GVBS_HEARTBEAT_TIMEOUT, &value);
+
+	return value;
+}
+
 void
 arv_set_fake_camera_genicam_filename (const char *filename)
 {
@@ -346,8 +372,10 @@ arv_fake_camera_new (const char *serial_number)
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_GAIN_RAW, 0);
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_GAIN_MODE, 0);
 
+	arv_fake_camera_write_register (fake_camera, ARV_GVBS_HEARTBEAT_TIMEOUT, 3000);
 	arv_fake_camera_write_register (fake_camera, ARV_GVBS_TIMESTAMP_TICK_FREQUENCY_HIGH, 0);
 	arv_fake_camera_write_register (fake_camera, ARV_GVBS_TIMESTAMP_TICK_FREQUENCY_LOW, 1000000000);
+	arv_fake_camera_write_register (fake_camera, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE, 0);
 
 	return fake_camera;
 }

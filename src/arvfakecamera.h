@@ -113,6 +113,10 @@ guint32 	arv_fake_camera_get_acquisition_status 	(ArvFakeCamera *camera);
 GSocketAddress *arv_fake_camera_get_stream_address 	(ArvFakeCamera *camera);
 void		arv_fake_camera_set_inet_address	(ArvFakeCamera *camera, GInetAddress *address);
 
+guint32		arv_fake_camera_get_control_channel_privilege	(ArvFakeCamera *camera);
+void		arv_fake_camera_set_control_channel_privilege	(ArvFakeCamera *camera, guint32 privilege);
+guint32		arv_fake_camera_get_heartbeat_timeout		(ArvFakeCamera *camera);
+
 void 		arv_set_fake_camera_genicam_filename 	(const char *filename);
 const char *	arv_get_fake_camera_genicam_data	(size_t *size);
 
