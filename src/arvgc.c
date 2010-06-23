@@ -194,7 +194,7 @@ arv_gc_parser_insert_node (ArvGcParserState *state, ArvGcNode *node)
 	node_name = arv_gc_node_get_name (node);
 	if (node_name != NULL) {
 		g_hash_table_insert (state->genicam->nodes, (char *) node_name, node);
-		arv_debug ("paser",
+		arv_debug ("parser",
 			   "[GcParser::end_element] Insert node '%s'", node_name);
 	} else
 		g_object_unref (node);
