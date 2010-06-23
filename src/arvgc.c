@@ -139,6 +139,10 @@ arv_gc_parser_start_element(void *user_data,
 	ArvGcParserState *state = user_data;
 	ArvGcNode *node;
 
+	/* Just ignore Group elements */
+	if (g_strcmp0 ((char *) name, "Group") == 0)
+		return;
+
 	state->level++;
 
 	node = arv_gc_create_node (state->genicam, (char *) name);
@@ -201,6 +205,10 @@ arv_gc_parser_end_element (void *user_data,
 			   const xmlChar *name)
 {
 	ArvGcParserState *state = user_data;
+
+	/* Just ignore Group elements */
+	if (g_strcmp0 ((char *) name, "Group") == 0)
+		return;
 
 	if (state->level == 2) {
 		if (state->level_2_node != NULL) {
