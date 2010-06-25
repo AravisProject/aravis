@@ -516,6 +516,13 @@ arv_fake_camera_write_register
 arv_fake_camera_wait_for_next_frame
 arv_fake_camera_fill_buffer
 arv_fake_camera_set_inet_address
+arv_fake_camera_get_acquisition_status
+arv_fake_camera_get_control_channel_privilege
+arv_fake_camera_get_heartbeat_timeout
+arv_fake_camera_get_payload
+arv_fake_camera_get_stream_address
+arv_fake_camera_set_control_channel_privilege
+arv_fake_camera_set_fill_pattern
 arv_set_fake_camera_genicam_filename
 arv_get_fake_camera_genicam_data
 <SUBSECTION Standard>
@@ -559,6 +566,7 @@ ARV_FAKE_CAMERA_REGISTER_GAIN_RAW
 ARV_FAKE_CAMERA_REGISTER_GAIN_MODE
 ArvFakeCameraClass
 ArvFakeCameraPrivate
+ArvFakeCameraFillPatern
 </SECTION>
 
 <SECTION>
@@ -767,6 +775,9 @@ ArvDebugLevel
 <FILE>arvgvsp</FILE>
 <TITLE>ArvGvsp</TITLE>
 arv_gvsp_packet_debug
+arv_gvsp_packet_new_data_block
+arv_gvsp_packet_new_data_leader
+arv_gvsp_packet_new_data_trailer
 <SUBSECTION Private>
 ArvGvspPacket
 ArvGvspPacketType

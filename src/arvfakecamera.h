@@ -28,6 +28,8 @@
 
 G_BEGIN_DECLS
 
+typedef void (*ArvFakeCameraFillPattern) (ArvBuffer *buffer, void *fill_pattern_data);
+
 #define ARV_FAKE_CAMERA_MEMORY_SIZE	0x1000
 
 /* To keep in sync with arv-fake-camera.xml */
@@ -116,6 +118,10 @@ void		arv_fake_camera_set_inet_address	(ArvFakeCamera *camera, GInetAddress *add
 guint32		arv_fake_camera_get_control_channel_privilege	(ArvFakeCamera *camera);
 void		arv_fake_camera_set_control_channel_privilege	(ArvFakeCamera *camera, guint32 privilege);
 guint32		arv_fake_camera_get_heartbeat_timeout		(ArvFakeCamera *camera);
+
+void		arv_fake_camera_set_fill_pattern	(ArvFakeCamera *camera,
+							 ArvFakeCameraFillPattern fill_pattern,
+							 void *fill_pattern_data);
 
 void 		arv_set_fake_camera_genicam_filename 	(const char *filename);
 const char *	arv_get_fake_camera_genicam_data	(size_t *size);
