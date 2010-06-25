@@ -50,7 +50,9 @@ struct _ArvFakeDeviceClass {
 
 GType arv_fake_device_get_type (void);
 
-ArvDevice * 		arv_fake_device_new 		(const char *serial_number);
+ArvDevice * 	arv_fake_device_new 			(const char *serial_number);
+
+void		arv_fake_device_set_trigger_frequency	(ArvFakeDevice *device, double frequency);
 
 G_END_DECLS
 

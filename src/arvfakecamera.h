@@ -122,6 +122,7 @@ guint32		arv_fake_camera_get_heartbeat_timeout		(ArvFakeCamera *camera);
 void		arv_fake_camera_set_fill_pattern	(ArvFakeCamera *camera,
 							 ArvFakeCameraFillPattern fill_pattern,
 							 void *fill_pattern_data);
+void 		arv_fake_camera_set_trigger_frequency 	(ArvFakeCamera *camera, double frequency);
 
 void 		arv_set_fake_camera_genicam_filename 	(const char *filename);
 const char *	arv_get_fake_camera_genicam_data	(size_t *size);
