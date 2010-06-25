@@ -52,7 +52,7 @@ GType arv_fake_device_get_type (void);
 
 ArvDevice * 	arv_fake_device_new 			(const char *serial_number);
 
-void		arv_fake_device_set_trigger_frequency	(ArvFakeDevice *device, double frequency);
+ArvFakeCamera *	arv_fake_device_get_fake_camera		(ArvFakeDevice *device);
 
 G_END_DECLS
 

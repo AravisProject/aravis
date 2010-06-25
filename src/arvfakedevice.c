@@ -84,12 +84,12 @@ arv_fake_device_write_register (ArvDevice *device, guint32 address, guint32 valu
 	return arv_fake_camera_write_register (ARV_FAKE_DEVICE (device)->priv->camera, address, value);
 }
 
-void
-arv_fake_device_set_trigger_frequency (ArvFakeDevice *device, double frequency)
+ArvFakeCamera *
+arv_fake_device_get_fake_camera	(ArvFakeDevice *device)
 {
-	g_return_if_fail (ARV_IS_FAKE_DEVICE (device));
+	g_return_val_if_fail (ARV_IS_FAKE_DEVICE (device), NULL);
 
-	arv_fake_camera_set_trigger_frequency (device->priv->camera, frequency);
+	return device->priv->camera;
 }
 
 ArvDevice *
