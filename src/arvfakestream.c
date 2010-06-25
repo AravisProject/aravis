@@ -63,6 +63,8 @@ arv_fake_stream_thread (void *data)
 	ArvFakeStreamThreadData *thread_data = data;
 	ArvBuffer *buffer;
 
+	arv_debug ("fake", "[FakeStream::thread] Start");
+
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
 
@@ -82,6 +84,8 @@ arv_fake_stream_thread (void *data)
 
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_EXIT, NULL);
+
+	arv_debug ("fake", "[FakeStream::thread] Stop");
 
 	return NULL;
 }
