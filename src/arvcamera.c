@@ -523,6 +523,22 @@ arv_camera_get_payload (ArvCamera *camera)
 }
 
 /**
+ * arv_camera_get_device:
+ * @camera: a #ArvCamera
+ * Return value: the underlying device object.
+ *
+ * Retrieves the #ArvDevice object for more complete access to the camera features.
+ */
+
+ArvDevice *
+arv_camera_get_device (ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+
+	return camera->priv->device;
+}
+
+/**
  * arv_camera_new:
  * @name: (allow-none): name of the camera.
  * Return value: a new #ArvCamera.

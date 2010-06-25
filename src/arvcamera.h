@@ -64,6 +64,7 @@ struct _ArvCameraClass {
 GType arv_camera_get_type (void);
 
 ArvCamera *	arv_camera_new			(const char *name);
+ArvDevice *	arv_camera_get_device		(ArvCamera *camera);
 
 ArvStream *	arv_camera_create_stream	(ArvCamera *camera, ArvStreamCallback callback, void *user_data);
 
