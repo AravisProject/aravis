@@ -79,7 +79,7 @@ arv_fake_stream_thread (void *data)
 				thread_data->n_failures++;
 			if (thread_data->callback != NULL)
 				thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
-						       NULL);
+						       buffer);
 			g_async_queue_push (thread_data->output_queue, buffer);
 		} else
 			thread_data->n_underruns++;
