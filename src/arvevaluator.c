@@ -881,7 +881,7 @@ parse_expression (char *expression, GSList **rpn_stack)
 					status = ARV_EVALUATOR_STATUS_PARENTHESES_MISMATCH;
 					goto CLEANUP;
 				}
-
+				arv_evaluator_token_free (token);
 				arv_evaluator_token_free (operator_stack->data);
 				operator_stack = g_slist_delete_link (operator_stack, operator_stack);
 			} else {
@@ -910,6 +910,8 @@ parse_expression (char *expression, GSList **rpn_stack)
 
 CLEANUP:
 
+	if (token != NULL)
+		arv_evaluator_token_free (token);
 	for (iter = token_stack; iter != NULL; iter = iter->next)
 		arv_evaluator_token_free (iter->data);
 	g_slist_free (token_stack);
