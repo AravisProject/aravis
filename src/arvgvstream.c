@@ -223,6 +223,11 @@ _process_data_leader (ArvGvStreamThreadData *thread_data, ArvGvStreamThreadState
 	state->n_missing_blocks = 0;
 	state->last_block_size = 0;
 	state->last_block_id = 0;
+
+	if (thread_data->callback != NULL)
+		thread_data->callback (thread_data->user_data,
+				       ARV_STREAM_CALLBACK_TYPE_START_BUFFER,
+				       state->buffer);
 }
 
 static void
