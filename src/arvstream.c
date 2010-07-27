@@ -71,13 +71,41 @@ arv_stream_pop_buffer (ArvStream *stream)
 	return g_async_queue_try_pop (stream->output_queue);
 }
 
-int
-arv_stream_get_n_available_buffers (ArvStream *stream)
-{
-	g_return_val_if_fail (ARV_IS_STREAM (stream), 0);
+/**
+ * arv_stream_get_n_buffers:
+ * @stream: a #ArvStream
+ * @n_input_buffers: (out) (allow-none): input queue length
+ * @n_output_buffers: (out) (allow-none): output queue length
+ *
+ * An accessor to the stream buffer queue lengths.
+ */
 
-	return g_async_queue_length (stream->output_queue);
+void
+arv_stream_get_n_buffers (ArvStream *stream, gint *n_input_buffers, gint *n_output_buffers)
+{
+	if (!ARV_IS_STREAM (stream)) {
+		if (n_input_buffers != NULL)
+			*n_input_buffers = 0;
+		if (n_output_buffers != NULL)
+			*n_output_buffers = 0;
+		return;
+	}
+
+	if (n_input_buffers != NULL)
+		*n_input_buffers = g_async_queue_length (stream->input_queue);
+	if (n_output_buffers != NULL)
+		*n_output_buffers = g_async_queue_length (stream->output_queue);
 }
+
+/**
+ * arv_stream_get_statistics:
+ * @stream: a #ArvStream
+ * @n_completed_buffers: (out) (allow-none): number of complete received buffers
+ * @n_failures: (out) (allow-none): number of reception failures
+ * @n_underruns: (out) (allow-none): number of input buffer underruns
+ *
+ * An accessor to the stream statistics.
+ */
 
 void
 arv_stream_get_statistics (ArvStream *stream,

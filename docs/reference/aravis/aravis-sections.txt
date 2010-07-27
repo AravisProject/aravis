@@ -5,6 +5,7 @@ ArvCameraVendor
 ArvCamera
 arv_camera_new
 arv_camera_create_stream
+arv_camera_get_device
 arv_camera_get_vendor_name
 arv_camera_get_model_name
 arv_camera_get_device_id
@@ -261,7 +262,7 @@ ArvStreamCallback
 ArvStream
 arv_stream_push_buffer
 arv_stream_pop_buffer
-arv_stream_get_n_available_buffers
+arv_stream_get_n_buffers
 arv_stream_get_statistics
 <SUBSECTION Standard>
 ARV_STREAM
@@ -523,6 +524,8 @@ arv_fake_camera_get_payload
 arv_fake_camera_get_stream_address
 arv_fake_camera_set_control_channel_privilege
 arv_fake_camera_set_fill_pattern
+arv_fake_camera_set_trigger_frequency
+arv_fake_device_get_fake_camera
 arv_set_fake_camera_genicam_filename
 arv_get_fake_camera_genicam_data
 <SUBSECTION Standard>
@@ -566,7 +569,7 @@ ARV_FAKE_CAMERA_REGISTER_GAIN_RAW
 ARV_FAKE_CAMERA_REGISTER_GAIN_MODE
 ArvFakeCameraClass
 ArvFakeCameraPrivate
-ArvFakeCameraFillPatern
+ArvFakeCameraFillPattern
 </SECTION>
 
 <SECTION>

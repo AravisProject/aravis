@@ -73,7 +73,9 @@ GType arv_stream_get_type (void);
 
 void			arv_stream_push_buffer 			(ArvStream *stream, ArvBuffer *buffer);
 ArvBuffer *		arv_stream_pop_buffer			(ArvStream *stream);
-int			arv_stream_get_n_available_buffers	(ArvStream *stream);
+void 			arv_stream_get_n_buffers 		(ArvStream *stream,
+								 gint *n_input_buffers,
+								 gint *n_output_buffers);
 void			arv_stream_get_statistics		(ArvStream *stream,
 								 guint64 *n_completed_buffers,
 								 guint64 *n_failures,
