@@ -141,6 +141,7 @@ typedef struct {
 	gint64 last_time_us;
 	guint64 last_timestamp_ns;
 	guint32 statistic_count;
+	gint64 leader_time_us;
 } ArvGvStreamThreadState;
 
 static void
@@ -180,11 +181,14 @@ _close_buffer (ArvGvStreamThreadData *thread_data, ArvGvStreamThreadState *state
 	current_time_us = current_time.tv_sec * 1000000 + current_time.tv_usec;
 	if (state->statistic_count > 5) {
 		arv_statistic_fill (thread_data->statistic, 0,
-				    (current_time_us - state->last_time_us),
-				    state->buffer->frame_id);
-		arv_statistic_fill (thread_data->statistic, 1,
 				    (state->buffer->timestamp_ns - state->last_timestamp_ns) /
 				    1000, state->buffer->frame_id);
+		arv_statistic_fill (thread_data->statistic, 1,
+				    current_time_us - state->last_time_us,
+				    state->buffer->frame_id);
+		arv_statistic_fill (thread_data->statistic, 2,
+				    current_time_us - state->leader_time_us,
+				    state->buffer->frame_id);
 	} else
 		state->statistic_count++;
 
@@ -197,6 +201,8 @@ _close_buffer (ArvGvStreamThreadData *thread_data, ArvGvStreamThreadState *state
 static void
 _process_data_leader (ArvGvStreamThreadData *thread_data, ArvGvStreamThreadState *state)
 {
+	GTimeVal current_time;
+
 	if (state->buffer != NULL)
 		_close_buffer (thread_data, state);
 
@@ -223,6 +229,9 @@ _process_data_leader (ArvGvStreamThreadData *thread_data, ArvGvStreamThreadState
 	state->n_missing_blocks = 0;
 	state->last_block_size = 0;
 	state->last_block_id = 0;
+
+	g_get_current_time (&current_time);
+	state->leader_time_us = current_time.tv_sec * 1000000 + current_time.tv_usec;
 
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->user_data,
@@ -469,10 +478,11 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port,
 	thread_data->n_late_blocks = 0;
 	thread_data->n_aborteds = 0;
 
-	thread_data->statistic = arv_statistic_new (2, 5000, 200, 0);
+	thread_data->statistic = arv_statistic_new (3, 5000, 200, 0);
 
-	arv_statistic_set_name (thread_data->statistic, 0, "Local time delta");
-	arv_statistic_set_name (thread_data->statistic, 1, "Timestamp delta");
+	arv_statistic_set_name (thread_data->statistic, 0, "Timestamp delta");
+	arv_statistic_set_name (thread_data->statistic, 1, "Local time delta");
+	arv_statistic_set_name (thread_data->statistic, 2, "Buffer reception time");
 
 	thread_data->socket_buffer_option = ARV_GV_STREAM_OPTION_SOCKET_BUFFER_FIXED;
 	thread_data->socket_buffer_size = 0;
