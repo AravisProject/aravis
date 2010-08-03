@@ -41,7 +41,7 @@ static const GOptionEntry arv_option_entries[] =
 	{ "v-binning", 		'\0', 0, G_OPTION_ARG_INT,
 		&arv_option_vertical_binning, 	"Vertical binning", NULL },
 	{ "debug", 		'd', 0, G_OPTION_ARG_STRING,
-		&arv_option_debug_domains, 	"Debug mode", NULL },
+		&arv_option_debug_domains, 	"Debug domains", NULL },
 	{ NULL }
 };
 
