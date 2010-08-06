@@ -2,8 +2,6 @@ EXTRA_DIST =
 
 include $(top_srcdir)/Makefile.decl
 
-SUBDIRS = . tests
-
 -include $(INTROSPECTION_MAKEFILE)
   INTROSPECTION_GIRS =
   INTROSPECTION_SCANNER_ARGS = --add-include-path=$(srcdir)

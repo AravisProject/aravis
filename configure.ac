@@ -87,8 +87,8 @@ AM_CONDITIONAL([BUILD_GTK_DOC], [test "x$enable_gtk_doc" = "xyes" || test ! -f "
 AC_CONFIG_FILES([
 Makefile
 src/Makefile
-src/tests/Makefile
 gst/Makefile
+tests/Makefile
 po/Makefile.in
 docs/Makefile
 docs/reference/Makefile

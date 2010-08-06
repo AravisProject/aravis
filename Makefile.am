@@ -6,7 +6,7 @@ ACLOCAL_AMFLAGS = -I m4
 
 DISTCHECK_CONFIGURE_FLAGS = --enable-introspection --enable-gtk-doc
 
-SUBDIRS = src gst po docs
+SUBDIRS = src gst tests po docs
 
 aravisdocdir = ${prefix}/doc/aravis
 aravisdoc_DATA = 	\
