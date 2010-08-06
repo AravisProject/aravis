@@ -1,9 +1,3 @@
-arv-test
-arv-load-xml
-arv-genicam-test
-arv-evaluator-test
-arv-zip-test
-arv-camera-test
 arv-fake-gv-camera
 arvenumtypes.c
 arvenumtypes.h
