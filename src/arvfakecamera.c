@@ -385,7 +385,7 @@ arv_fake_camera_new (const char *serial_number)
 	xml_url = g_strdup_printf ("Local:arv-fake-camera-%s.xml;%x;%x",
 				   PACKAGE_VERSION,
 				   ARV_FAKE_CAMERA_MEMORY_SIZE,
-				   fake_camera->priv->genicam_data_size);
+				   (unsigned int) fake_camera->priv->genicam_data_size);
 	strcpy (memory + ARV_GVBS_FIRST_XML_URL, xml_url);
 	g_free (xml_url);
 

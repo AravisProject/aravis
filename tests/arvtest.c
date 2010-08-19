@@ -236,9 +236,9 @@ main (int argc, char **argv)
 
 		arv_stream_get_statistics (stream, &n_processed_buffers, &n_failures, &n_underruns);
 
-		g_print ("Processed buffers = %Ld\n", n_processed_buffers);
-		g_print ("Failures          = %Ld\n", n_failures);
-		g_print ("Underruns         = %Ld\n", n_underruns);
+		g_print ("Processed buffers = %Lu\n", (unsigned long long) n_processed_buffers);
+		g_print ("Failures          = %Lu\n", (unsigned long long) n_failures);
+		g_print ("Underruns         = %Lu\n", (unsigned long long) n_underruns);
 
 		node = arv_gc_get_node (genicam, "AcquisitionStop");
 		arv_gc_command_execute (ARV_GC_COMMAND (node));

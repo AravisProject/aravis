@@ -37,13 +37,13 @@ typedef struct _ArvHistogram ArvHistogram;
 struct _ArvHistogram {
 	char *		name;
 
-	gint64 		and_more;
-	gint64	 	and_less;
-	gint64	 	last_seen_worst;
+	guint64		and_more;
+	guint64	 	and_less;
+	guint64	 	last_seen_worst;
 	int 	      	worst;
 	int 	        best;
 
-	gint64 *	bins;
+	guint64 *	bins;
 };
 
 struct _ArvStatistic {
@@ -104,7 +104,7 @@ arv_statistic_new (unsigned int n_histograms, unsigned n_bins, unsigned int bin_
 
 	for (i = 0; i < statistic->n_histograms; i++) {
 		statistic->histograms[i].name = NULL;
-		statistic->histograms[i].bins = g_new (gint64, statistic->n_bins);
+		statistic->histograms[i].bins = g_new (guint64, statistic->n_bins);
 		if (statistic->histograms[i].bins == NULL) {
 			arv_statistic_free (statistic);
 			g_warning ("[TolmStatistic::new] failed to allocate bin memory");
@@ -251,7 +251,7 @@ arv_statistic_to_string (const ArvStatistic *statistic)
 		for (j = 0; j < statistic->n_histograms; j++) {
 			if (j == 0)
 				g_string_append_printf (string, "%8d", i * statistic->bin_step + statistic->offset);
-			g_string_append_printf (string, ";%8Lu", statistic->histograms[j].bins[i]);
+			g_string_append_printf (string, ";%8Lu", (unsigned long long) statistic->histograms[j].bins[i]);
 		}
 		g_string_append (string, "\n");
 	}
@@ -261,14 +261,14 @@ arv_statistic_to_string (const ArvStatistic *statistic)
 	for (j = 0; j < statistic->n_histograms; j++) {
 		if (j == 0)
 			g_string_append_printf (string, ">=%6d", i * statistic->bin_step + statistic->offset);
-		g_string_append_printf (string, ";%8Ld", statistic->histograms[j].and_more);
+		g_string_append_printf (string, ";%8Lu", (unsigned long long) statistic->histograms[j].and_more);
 	}
 	g_string_append (string, "\n");
 
 	for (j = 0; j < statistic->n_histograms; j++) {
 		if (j == 0)
 			g_string_append_printf (string, "< %6d", statistic->offset);
-		g_string_append_printf (string, ";%8Ld", statistic->histograms[j].and_less);
+		g_string_append_printf (string, ";%8Lu", (unsigned long long) statistic->histograms[j].and_less);
 	}
 	g_string_append (string, "\n");
 
@@ -295,11 +295,11 @@ arv_statistic_to_string (const ArvStatistic *statistic)
 	for (j = 0; j < statistic->n_histograms; j++) {
 		if (j == 0)
 			g_string_append (string, "last max\nat:     ");
-		g_string_append_printf (string, ";%8Ld", statistic->histograms[j].last_seen_worst);
+		g_string_append_printf (string, ";%8Lu", (unsigned long long) statistic->histograms[j].last_seen_worst);
 	}
 	g_string_append (string, "\n");
 
-	g_string_append_printf (string, "Counter = %8Ld", statistic->counter);
+	g_string_append_printf (string, "Counter = %8Lu", (unsigned long long) statistic->counter);
 
 	str = string->str;
 	g_string_free (string, FALSE);

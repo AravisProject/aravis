@@ -147,9 +147,9 @@ main (int argc, char **argv)
 
 		arv_stream_get_statistics (stream, &n_completed_buffers, &n_failures, &n_underruns);
 
-		g_print ("Completed buffers = %Ld\n", n_completed_buffers);
-		g_print ("Failures          = %Ld\n", n_failures);
-		g_print ("Underruns         = %Ld\n", n_underruns);
+		g_print ("Completed buffers = %Lu\n", (unsigned long long) n_completed_buffers);
+		g_print ("Failures          = %Lu\n", (unsigned long long) n_failures);
+		g_print ("Underruns         = %Lu\n", (unsigned long long) n_underruns);
 
 		arv_camera_stop_acquisition (camera);
 
