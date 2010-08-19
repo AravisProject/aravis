@@ -83,7 +83,7 @@ _send_packet_request (ArvGvStreamThreadData *thread_data,
 		      guint32 last_block)
 {
 	ArvGvcpPacket *packet;
-	guint32 packet_size;
+	size_t packet_size;
 
 	packet = arv_gvcp_packet_new_packet_resend_cmd (frame_id, first_block, last_block,
 							thread_data->packet_count++, &packet_size);
