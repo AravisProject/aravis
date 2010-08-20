@@ -218,7 +218,7 @@ arv_fake_gv_camera_new (const char *interface_name)
 			char *gvcp_address_string;
 			char *discovery_address_string;
 
-			socket_address = g_socket_address_new_from_native (ifap->ifa_addr, sizeof (ifap->ifa_addr));
+			socket_address = g_socket_address_new_from_native (ifap->ifa_addr, sizeof (struct sockaddr));
 			inet_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address));
 			gvcp_address_string = g_inet_address_to_string (inet_address);
 			arv_debug ("camera", "[FakeGvCamera::new] Interface address = %s", gvcp_address_string);
@@ -244,7 +244,7 @@ arv_fake_gv_camera_new (const char *interface_name)
 			g_object_unref (socket_address);
 
 			socket_address = g_socket_address_new_from_native (ifap->ifa_broadaddr,
-									   sizeof (ifap->ifa_broadaddr));
+									   sizeof (struct sockaddr));
 			inet_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address));
 			discovery_address_string = g_inet_address_to_string (inet_address);
 			arv_debug ("camera", "[FakeGvCamera::new] Discovery address = %s", discovery_address_string);
