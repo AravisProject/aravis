@@ -31,6 +31,6 @@ evaluator_SOURCES = evaluator.c
 evaluator_LDADD = $(test_progs_ldadd)
 
 fake_SOURCES = fake.c
-fake_CFLAGS = -DGENICAM_FILENAME="\"../src/arv-fake-camera.xml\""
+fake_CFLAGS = -DGENICAM_FILENAME="\"$(top_srcdir)/src/arv-fake-camera.xml\""
 fake_LDADD = $(test_progs_ldadd)
 
