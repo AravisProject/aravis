@@ -1,4 +1,16 @@
-Version 0.1.0
-~~~~~~~~~~~~~
+Release 0.1.1
+=============
+
+  * Basic ethernet camera simulator
+  * Allow detection of ethernet cameras on lo, for the GV camera simulator
+  * Fix in gvcp support code
+  * More unit tests
+  * Add support for <Group> GENICAM element 
+  * Memory leak fixes
+  * Record statistics on buffer reception times
+  * Improve compilation on 64 bit platforms
+
+Release 0.1.0
+=============
 
 Initial release.
