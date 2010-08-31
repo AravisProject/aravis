@@ -53,6 +53,8 @@ enum
   PROP_0,
   PROP_CAMERA_NAME,
   PROP_FRAME_RATE,
+  PROP_GAIN,
+  PROP_EXPOSURE,
   PROP_WIDTH,
   PROP_HEIGHT,
   PROP_H_BINNING,
@@ -127,7 +129,19 @@ gst_aravis_start (GstBaseSrc *src)
 	arv_camera_set_region (gst_aravis->camera, 0, 0, gst_aravis->width, gst_aravis->height);
 	arv_camera_set_binning (gst_aravis->camera, gst_aravis->h_binning, gst_aravis->v_binning);
 	arv_camera_set_pixel_format (gst_aravis->camera, ARV_PIXEL_FORMAT_MONO_8);
+
+	GST_DEBUG_OBJECT (gst_aravis, "Frame rate = %g Hz", gst_aravis->frame_rate);
 	arv_camera_set_frame_rate (gst_aravis->camera, gst_aravis->frame_rate);
+	GST_DEBUG_OBJECT (gst_aravis, "Actual frame rate = %g Hz", arv_camera_get_frame_rate (gst_aravis->camera));
+
+	GST_DEBUG_OBJECT (gst_aravis, "Gain       = %d", gst_aravis->gain);
+	arv_camera_set_gain (gst_aravis->camera, gst_aravis->gain);
+	GST_DEBUG_OBJECT (gst_aravis, "Actual gain       = %d", arv_camera_get_gain (gst_aravis->camera));
+
+	GST_DEBUG_OBJECT (gst_aravis, "Exposure   = %g µs", gst_aravis->exposure_time_us);
+	arv_camera_set_exposure_time (gst_aravis->camera, gst_aravis->exposure_time_us);
+	GST_DEBUG_OBJECT (gst_aravis, "Actual exposure   = %g µs", arv_camera_get_exposure_time (gst_aravis->camera));
+
 	gst_aravis->payload = arv_camera_get_payload (gst_aravis->camera);
 	gst_aravis->caps = gst_aravis_get_camera_caps (gst_aravis);
 
@@ -213,11 +227,13 @@ gst_aravis_init (GstAravis *gst_aravis, GstAravisClass *g_class)
 
 	gst_aravis->camera_name = NULL;
 
-	gst_aravis->frame_rate = 25.0;
-	gst_aravis->width = 320;
-	gst_aravis->height = 200;
-	gst_aravis->h_binning = 1;
-	gst_aravis->v_binning = 1;
+	gst_aravis->frame_rate = -1;
+	gst_aravis->gain = -1;
+	gst_aravis->exposure_time_us = -1;
+	gst_aravis->width = -1;
+	gst_aravis->height = -1;
+	gst_aravis->h_binning = -1;
+	gst_aravis->v_binning = -1;
 	gst_aravis->payload = 0;
 
 	gst_aravis->camera = NULL;
@@ -264,6 +280,12 @@ gst_aravis_set_property (GObject * object, guint prop_id,
 		case PROP_FRAME_RATE:
 			gst_aravis->frame_rate = g_value_get_double (value);
 			break;
+		case PROP_GAIN:
+			gst_aravis->gain = g_value_get_int (value);
+			break;
+		case PROP_EXPOSURE:
+			gst_aravis->exposure_time_us = g_value_get_double (value);
+			break;
 		case PROP_WIDTH:
 			gst_aravis->width = g_value_get_int (value);
 			break;
@@ -294,6 +316,12 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 			break;
 		case PROP_FRAME_RATE:
 			g_value_set_double (value, gst_aravis->frame_rate);
+			break;
+		case PROP_GAIN:
+			g_value_set_int (value, gst_aravis->gain);
+			break;
+		case PROP_EXPOSURE:
+			g_value_set_double (value, gst_aravis->exposure_time_us);
 			break;
 		case PROP_WIDTH:
 			g_value_set_int (value, gst_aravis->width);
@@ -350,6 +378,22 @@ gst_aravis_class_init (GstAravisClass * klass)
 				      "Frame rate",
 				      "Acquisition frame rate (in Hz)",
 				      0.0, 500.0, 25.0,
+				      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+	g_object_class_install_property
+		(gobject_class,
+		 PROP_GAIN,
+		 g_param_spec_int ("gain",
+				   "Gain",
+				   "Gain (dB)",
+				   0, 500, 0,
+				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+	g_object_class_install_property
+		(gobject_class,
+		 PROP_EXPOSURE,
+		 g_param_spec_double ("exposure",
+				      "Exposure",
+				      "Exposure time (µs)",
+				      0.0, 100000000.0, 500.0,
 				      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 	g_object_class_install_property
 		(gobject_class,
