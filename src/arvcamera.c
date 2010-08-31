@@ -342,6 +342,9 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
 {
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
+	if (frame_rate <= 0.0)
+		return;
+
 	switch (camera->priv->vendor) {
 		case ARV_CAMERA_VENDOR_BASLER:
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
@@ -454,6 +457,9 @@ arv_camera_set_exposure_time (ArvCamera *camera, double exposure_time_us)
 {
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
+	if (exposure_time_us <= 0)
+		return;
+
 	arv_device_set_float_feature_value (camera->priv->device, "ExposureTimeAbs", exposure_time_us);
 }
 
@@ -485,6 +491,9 @@ void
 arv_camera_set_gain (ArvCamera *camera, gint64 gain)
 {
 	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	if (gain < 0)
+		return;
 
 	arv_device_set_integer_feature_value (camera->priv->device, "GainRaw", gain);
 }
