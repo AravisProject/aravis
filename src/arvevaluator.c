@@ -931,6 +931,10 @@ arv_evaluator_set_error (GError **error, ArvEvaluatorStatus status)
 		     "Parsing error: %s",
 		     arv_evaluator_status_strings [MIN (status,
 							G_N_ELEMENTS (arv_evaluator_status_strings)-1)]);
+
+	arv_debug ("evaluator", "[Evaluator::evaluate] Error '%s'",
+		   arv_evaluator_status_strings [MIN (status,
+						      G_N_ELEMENTS (arv_evaluator_status_strings)-1)]);
 }
 
 double
