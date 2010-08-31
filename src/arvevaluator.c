@@ -239,13 +239,18 @@ arv_evaluator_token_free (ArvEvaluatorToken *token)
 }
 
 void
-arv_evaluator_token_debug (ArvEvaluatorToken *token)
+arv_evaluator_token_debug (ArvEvaluatorToken *token, GHashTable *variables)
 {
+	ArvValue *value;
+
 	g_return_if_fail (token != NULL);
 
 	switch (token->token_id) {
 		case ARV_EVALUATOR_TOKEN_VARIABLE:
-			arv_debug ("evaluator", "%s", token->data.name);
+			value = g_hash_table_lookup (variables, token->data.name);
+			arv_debug ("evaluator", "(var) %s = %g%s", token->data.name,
+				   value != NULL ? arv_value_get_double (value) : 0,
+				   value != NULL ? "" : " not found");
 			break;
 		case ARV_EVALUATOR_TOKEN_CONSTANT_INT64:
 			arv_debug ("evaluator", "(int64) %Ld", token->data.v_int64);
@@ -254,7 +259,7 @@ arv_evaluator_token_debug (ArvEvaluatorToken *token)
 			arv_debug ("evaluator", "(double) %g", token->data.v_double);
 			break;
 		default:
-			arv_debug ("evaluator", "%s", arv_evaluator_token_infos[token->token_id]);
+			arv_debug ("evaluator", "(operator) %s", arv_evaluator_token_infos[token->token_id].tag);
 	}
 }
 
@@ -503,7 +508,7 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 			goto CLEANUP;
 		}
 
-		arv_evaluator_token_debug (token);
+		arv_evaluator_token_debug (token, variables);
 
 		switch (token->token_id) {
 			case ARV_EVALUATOR_TOKEN_LOGICAL_AND:
