@@ -218,7 +218,7 @@ _update_to_variables (ArvGcConverter *gc_converter)
 							  variable_infos->name,
 							  arv_gc_integer_get_value (ARV_GC_INTEGER (node)));
 		else if (arv_gc_node_get_value_type (node) == G_TYPE_DOUBLE)
-			arv_evaluator_set_double_variable (gc_converter->formula_from,
+			arv_evaluator_set_double_variable (gc_converter->formula_to,
 							   variable_infos->name,
 							   arv_gc_float_get_value (ARV_GC_FLOAT (node)));
 	}
