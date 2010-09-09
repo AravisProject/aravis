@@ -84,6 +84,11 @@ void		arv_gv_stream_set_option		(ArvGvStream *gv_stream, ArvGvStreamOption optio
 							 int value);
 void		arv_gv_stream_set_packet_resend 	(ArvGvStream *gv_stream, ArvGvStreamPacketResend resend);
 
+void		arv_gv_stream_get_statistics		(ArvStream *stream,
+							 guint64 *n_resent_blocks,
+							 guint64 *n_missing_blocks,
+							 guint64 *n_late_blocks);
+
 G_END_DECLS
 
 #endif

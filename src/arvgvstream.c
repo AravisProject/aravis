@@ -497,11 +497,33 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port,
 
 /* ArvStream implementation */
 
-static void
+void
 arv_gv_stream_get_statistics (ArvStream *stream,
-			      guint64 *n_completed_buffers,
-			      guint64 *n_failures,
-			      guint64 *n_underruns)
+			      guint64 *n_resent_blocks,
+			      guint64 *n_missing_blocks,
+			      guint64 *n_late_blocks)
+
+{
+	ArvGvStream *gv_stream = ARV_GV_STREAM (stream);
+	ArvGvStreamThreadData *thread_data;
+
+	g_return_if_fail (ARV_IS_GV_STREAM (stream));
+
+	thread_data = gv_stream->thread_data;
+
+	if (n_resent_blocks != NULL)
+		*n_resent_blocks = thread_data->n_resent_blocks;
+	if (n_missing_blocks != NULL)
+		*n_missing_blocks = thread_data->n_missing_blocks;
+	if (n_late_blocks != NULL)
+		*n_late_blocks = thread_data->n_late_blocks;
+}
+
+static void
+_get_statistics (ArvStream *stream,
+		 guint64 *n_completed_buffers,
+		 guint64 *n_failures,
+		 guint64 *n_underruns)
 {
 	ArvGvStream *gv_stream = ARV_GV_STREAM (stream);
 	ArvGvStreamThreadData *thread_data;
@@ -579,7 +601,7 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 
 	object_class->finalize = arv_gv_stream_finalize;
 
-	stream_class->get_statistics = arv_gv_stream_get_statistics;
+	stream_class->get_statistics = _get_statistics;
 }
 
 G_DEFINE_TYPE (ArvGvStream, arv_gv_stream, ARV_TYPE_STREAM)
