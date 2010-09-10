@@ -498,16 +498,15 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port,
 /* ArvStream implementation */
 
 void
-arv_gv_stream_get_statistics (ArvStream *stream,
+arv_gv_stream_get_statistics (ArvGvStream *gv_stream,
 			      guint64 *n_resent_blocks,
 			      guint64 *n_missing_blocks,
 			      guint64 *n_late_blocks)
 
 {
-	ArvGvStream *gv_stream = ARV_GV_STREAM (stream);
 	ArvGvStreamThreadData *thread_data;
 
-	g_return_if_fail (ARV_IS_GV_STREAM (stream));
+	g_return_if_fail (ARV_IS_GV_STREAM (gv_stream));
 
 	thread_data = gv_stream->thread_data;
 
