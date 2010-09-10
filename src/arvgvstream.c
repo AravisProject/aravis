@@ -415,7 +415,7 @@ arv_gv_stream_set_option (ArvGvStream *gv_stream, ArvGvStreamOption option, int 
 			break;
 		case ARV_GV_STREAM_OPTION_SOCKET_BUFFER_FIXED:
 			thread_data->socket_buffer_option = option;
-			thread_data->socket_buffer_size = 0;
+			thread_data->socket_buffer_size = value;
 			break;
 	}
 }
