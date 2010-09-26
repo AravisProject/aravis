@@ -50,7 +50,7 @@ struct _ArvInterfaceClass {
 GType arv_interface_get_type (void);
 
 void 			arv_interface_update_device_list 	(ArvInterface *interface);
-ArvDevice * 		arv_interface_new_device 		(ArvInterface *interface, const char *name);
+ArvDevice * 		arv_interface_create_device 		(ArvInterface *interface, const char *name);
 
 G_END_DECLS
 

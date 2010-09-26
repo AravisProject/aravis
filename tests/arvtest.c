@@ -83,7 +83,7 @@ main (int argc, char **argv)
 	else
 		g_print ("Looking for camera '%s'\n", arv_option_camera_name);
 
-	device = arv_new_device (arv_option_camera_name);
+	device = arv_create_device (arv_option_camera_name);
 	if (device != NULL) {
 		ArvGc *genicam;
 		ArvGcNode *node;

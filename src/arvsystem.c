@@ -26,18 +26,18 @@
 #include <arvdevice.h>
 
 ArvDevice *
-arv_new_device (const char *name)
+arv_create_device (const char *name)
 {
 	ArvInterface *interface;
 	ArvDevice *device;
 
 	interface = arv_fake_interface_get_instance ();
-	device = arv_interface_new_device (interface, name);
+	device = arv_interface_create_device (interface, name);
 		if (device != NULL)
 			return device;
 
 	interface = arv_gv_interface_get_instance ();
-	device = arv_interface_new_device (interface, name);
+	device = arv_interface_create_device (interface, name);
 		if (device != NULL)
 			return device;
 

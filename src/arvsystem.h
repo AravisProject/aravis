@@ -27,7 +27,7 @@
 
 G_BEGIN_DECLS
 
-ArvDevice * 		arv_new_device 		(const char *name);
+ArvDevice * 		arv_create_device 		(const char *name);
 
 G_END_DECLS
 

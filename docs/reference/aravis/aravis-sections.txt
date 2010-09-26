@@ -69,7 +69,7 @@ ArvBufferClass
 <TITLE>ArvInterface</TITLE>
 ArvInterface
 arv_interface_update_device_list
-arv_interface_new_device
+arv_interface_create_device
 <SUBSECTION Standard>
 ARV_INTERFACE
 ARV_IS_INTERFACE
@@ -125,7 +125,7 @@ ArvGcPortClass
 <FILE>arvdevice</FILE>
 <TITLE>ArvDevice</TITLE>
 ArvDevice
-arv_new_device
+arv_create_device
 arv_device_create_stream
 arv_device_read_memory
 arv_device_write_memory

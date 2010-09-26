@@ -28,7 +28,7 @@
  * list of the available devices and help to instantiate the corresponding
  * #ArvDevice object. If user already knows he name of the device, it should
  * not worry about this class and just use arv_camera_new() or
- * arv_new_device().
+ * arv_create_device().
  */
 
 #include <arvinterface.h>
@@ -44,7 +44,7 @@ arv_interface_update_device_list (ArvInterface *interface)
 }
 
 ArvDevice *
-arv_interface_new_device (ArvInterface *interface, const char *name)
+arv_interface_create_device (ArvInterface *interface, const char *name)
 {
 	ArvDevice *device;
 
