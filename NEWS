@@ -1,3 +1,13 @@
+Release 0.1.2
+=============
+
+  * Add exposure and gain settings to the gstreamer source element
+  * fix exposure setting in ArvCamera for Basler cameras
+  * gather running statistics for the GV devices
+  * fix GV stream fixed buffer size
+  * add a new arv-show-devices utility
+  * make API more consistent with the Genicam standard
+
 Release 0.1.1
 =============
 
