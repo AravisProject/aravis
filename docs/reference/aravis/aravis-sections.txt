@@ -68,7 +68,15 @@ ArvBufferClass
 <FILE>arvinterface</FILE>
 <TITLE>ArvInterface</TITLE>
 ArvInterface
+arv_get_device_id
+arv_get_interface_id
+arv_get_n_devices
+arv_get_n_interfaces
+arv_update_device_list
+arv_create_device
 arv_interface_update_device_list
+arv_interface_get_device_id
+arv_interface_get_n_devices
 arv_interface_create_device
 <SUBSECTION Standard>
 ARV_INTERFACE
@@ -80,6 +88,7 @@ ARV_IS_INTERFACE_CLASS
 ARV_INTERFACE_GET_CLASS
 <SUBSECTION Private>
 ArvInterfaceClass
+ArvInterfacePrivate
 </SECTION>
 
 <SECTION>
@@ -125,7 +134,6 @@ ArvGcPortClass
 <FILE>arvdevice</FILE>
 <TITLE>ArvDevice</TITLE>
 ArvDevice
-arv_create_device
 arv_device_create_stream
 arv_device_read_memory
 arv_device_write_memory

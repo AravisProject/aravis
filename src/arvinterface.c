@@ -26,7 +26,7 @@
  *
  * #ArvCamera is an abstract base class for camera discovery. It maintains a
  * list of the available devices and help to instantiate the corresponding
- * #ArvDevice object. If user already knows he name of the device, it should
+ * #ArvDevice object. If user already knows he name of the device, he should
  * not worry about this class and just use arv_camera_new() or
  * arv_create_device().
  */
@@ -35,13 +35,74 @@
 
 static GObjectClass *parent_class = NULL;
 
+struct _ArvInterfacePrivate {
+	GArray *device_ids;
+};
+
+/**
+ * arv_interface_update_device_list
+ * @interface: a #ArvInterface
+ *
+ * Updates the internal list of available devices. This may change the
+ * connection between a list index and a device ID.
+ **/
+
 void
 arv_interface_update_device_list (ArvInterface *interface)
 {
 	g_return_if_fail (ARV_IS_INTERFACE (interface));
 
-	ARV_INTERFACE_GET_CLASS (interface)->update_device_list (interface);
+	ARV_INTERFACE_GET_CLASS (interface)->update_device_list (interface, interface->priv->device_ids);
 }
+
+/**
+ * arv_interface_get_n_devices
+ * @interface: a #ArvInterface
+ * Return value: the number of available devices 
+ *
+ * Queries the number of available devices on this interface. Prior to this
+ * call the @arv_interface_update_device_list function must be called. The list content will not
+ * change until the next call of the update function.
+ **/
+
+unsigned int
+arv_interface_get_n_devices (ArvInterface *interface)
+{
+	g_return_val_if_fail (ARV_IS_INTERFACE (interface), 0);
+	g_return_val_if_fail (interface->priv->device_ids != NULL, 0);
+
+	return interface->priv->device_ids->len;
+}
+
+/**
+ * arv_interface_get_device_id
+ * @interface: a #ArvInterface
+ * @index: device index
+ * Return value: a unique device id
+ *
+ * Queries the unique device id corresponding to index.  Prior to this
+ * call the @arv_interface_update_device_list function must be called.
+ **/
+
+const char *
+arv_interface_get_device_id (ArvInterface *interface, unsigned int index)
+{
+	g_return_val_if_fail (ARV_IS_INTERFACE (interface), 0);
+	g_return_val_if_fail (interface->priv->device_ids != NULL, 0);
+
+	if (index >= interface->priv->device_ids->len)
+		return NULL;
+
+	return g_array_index (interface->priv->device_ids, char *, index);
+}
+
+/**
+ * arv_interface_create_device
+ * @interface: a #ArvInterface
+ * @name: device unique id or name
+ *
+ * Creates a new #ArvDevice object corresponding to the given name.
+ **/
 
 ArvDevice *
 arv_interface_create_device (ArvInterface *interface, const char *name)
@@ -50,33 +111,46 @@ arv_interface_create_device (ArvInterface *interface, const char *name)
 
 	g_return_val_if_fail (ARV_IS_INTERFACE (interface), NULL);
 
-	device = ARV_INTERFACE_GET_CLASS (interface)->new_device (interface, name);
+	device = ARV_INTERFACE_GET_CLASS (interface)->create_device (interface, name);
 
 	if (device != NULL)
 		return device;
 
 	arv_interface_update_device_list (interface);
 
-	return ARV_INTERFACE_GET_CLASS (interface)->new_device (interface, name);
+	return ARV_INTERFACE_GET_CLASS (interface)->create_device (interface, name);
 }
 
 static void
 arv_interface_init (ArvInterface *interface)
 {
+	interface->priv = G_TYPE_INSTANCE_GET_PRIVATE (interface, ARV_TYPE_INTERFACE, ArvInterfacePrivate);
+
+	interface->priv->device_ids = g_array_new (FALSE, TRUE, sizeof (char *));
 }
 
 static void
 arv_interface_finalize (GObject *object)
 {
+	ArvInterface *interface = ARV_INTERFACE (object);
+	unsigned int i;
+
 	parent_class->finalize (object);
+
+	for (i = 0; i < interface->priv->device_ids->len; i++)
+		g_free (g_array_index (interface->priv->device_ids, char *, i));
+	g_array_free (interface->priv->device_ids, TRUE);
+	interface->priv->device_ids = NULL;
 }
 
 static void
-arv_interface_class_init (ArvInterfaceClass *node_class)
+arv_interface_class_init (ArvInterfaceClass *interface_class)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS (node_class);
+	GObjectClass *object_class = G_OBJECT_CLASS (interface_class);
 
-	parent_class = g_type_class_peek_parent (node_class);
+	g_type_class_add_private (interface_class, sizeof (ArvInterfacePrivate));
+
+	parent_class = g_type_class_peek_parent (interface_class);
 
 	object_class->finalize = arv_interface_finalize;
 }

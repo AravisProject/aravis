@@ -120,10 +120,13 @@ arvenumtypes.h: arvenumtypes.h.template $(ARAVIS_HDRS) $(GLIB_MKENUMS)
 arvenumtypes.c: arvenumtypes.c.template $(ARAVIS_HDRS) $(GLIB_MKENUMS)
 	$(AM_V_GEN) (cd $(srcdir) && $(GLIB_MKENUMS) --template arvenumtypes.c.template $(libaravis_la_HEADERS)) > $@
 
-bin_PROGRAMS = arv-fake-gv-camera
+bin_PROGRAMS = arv-fake-gv-camera arv-show-devices
 
 arv_fake_gv_camera_SOURCES = arvfakegvcamera.c
 arv_fake_gv_camera_LDADD = $(ARAVIS_LIBS) libaravis.la
+
+arv_show_devices_SOURCES = arvshowdevices.c
+arv_show_devices_LDADD = $(ARAVIS_LIBS) libaravis.la
 
 CLEANFILES = $(BUILT_SOURCES)
 

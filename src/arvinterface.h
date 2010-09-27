@@ -34,22 +34,27 @@ G_BEGIN_DECLS
 #define ARV_IS_INTERFACE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_INTERFACE))
 #define ARV_INTERFACE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_INTERFACE, ArvInterfaceClass))
 
+typedef struct _ArvInterfacePrivate ArvInterfacePrivate;
 typedef struct _ArvInterfaceClass ArvInterfaceClass;
 
 struct _ArvInterface {
 	GObject	object;
+
+	ArvInterfacePrivate *priv;
 };
 
 struct _ArvInterfaceClass {
 	GObjectClass parent_class;
 
-	void 		(*update_device_list)		(ArvInterface *interface);
-	ArvDevice *	(*new_device)			(ArvInterface *interface, const char *name);
+	void 		(*update_device_list)		(ArvInterface *interface, GArray *device_ids);
+	ArvDevice *	(*create_device)		(ArvInterface *interface, const char *name);
 };
 
 GType arv_interface_get_type (void);
 
 void 			arv_interface_update_device_list 	(ArvInterface *interface);
+unsigned int 		arv_interface_get_n_devices 		(ArvInterface *interface);
+const char * 		arv_interface_get_device_id 		(ArvInterface *interface, unsigned int index);
 ArvDevice * 		arv_interface_create_device 		(ArvInterface *interface, const char *name);
 
 G_END_DECLS

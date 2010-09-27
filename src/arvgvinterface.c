@@ -279,14 +279,28 @@ arv_gv_interface_receive_hello_packet (ArvGvInterface *gv_interface)
 }
 
 static void
-arv_gv_interface_update_device_list (ArvInterface *interface)
+arv_gv_interface_update_device_list (ArvInterface *interface, GArray *device_ids)
 {
-	arv_gv_interface_send_discover_packet (ARV_GV_INTERFACE (interface));
-	arv_gv_interface_receive_hello_packet (ARV_GV_INTERFACE (interface));
+	ArvGvInterface *gv_interface;
+	GHashTableIter iter;
+	gpointer key, value;
+
+	gv_interface = ARV_GV_INTERFACE (interface);
+
+	arv_gv_interface_send_discover_packet (gv_interface);
+	arv_gv_interface_receive_hello_packet (gv_interface);
+
+	g_array_set_size (device_ids, 0);
+
+	g_hash_table_iter_init (&iter, gv_interface->priv->devices);
+	while (g_hash_table_iter_next (&iter, &key, &value)) {
+		char *device_id = g_strdup (key);
+		g_array_append_val (device_ids, device_id);
+	}
 }
 
 static ArvDevice *
-arv_gv_interface_new_device (ArvInterface *interface, const char *name)
+arv_gv_interface_create_device (ArvInterface *interface, const char *name)
 {
 	ArvGvInterface *gv_interface;
 	ArvDevice *device = NULL;
@@ -372,7 +386,7 @@ arv_gv_interface_class_init (ArvGvInterfaceClass *gv_interface_class)
 	object_class->finalize = arv_gv_interface_finalize;
 
 	interface_class->update_device_list = arv_gv_interface_update_device_list;
-	interface_class->new_device = arv_gv_interface_new_device;
+	interface_class->create_device = arv_gv_interface_create_device;
 }
 
 G_DEFINE_TYPE (ArvGvInterface, arv_gv_interface, ARV_TYPE_INTERFACE)

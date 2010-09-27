@@ -29,6 +29,8 @@
 #include <arvfakedevice.h>
 #include <arvdebug.h>
 
+#define ARV_FAKE_DEVICE_ID "Fake_1"
+
 static GObjectClass *parent_class = NULL;
 
 struct _ArvFakeInterfacePrivate {
@@ -36,14 +38,19 @@ struct _ArvFakeInterfacePrivate {
 };
 
 static void
-arv_fake_interface_update_device_list (ArvInterface *interface)
+arv_fake_interface_update_device_list (ArvInterface *interface, GArray *device_ids)
 {
+	char *device_id;
+
+	g_array_set_size (device_ids, 0);
+	device_id = g_strdup (ARV_FAKE_DEVICE_ID);
+	g_array_append_val (device_ids, device_id);
 }
 
 static ArvDevice *
-arv_fake_interface_new_device (ArvInterface *interface, const char *name)
+arv_fake_interface_create_device (ArvInterface *interface, const char *name)
 {
-	if (g_strcmp0 (name, "Fake_1") == 0)
+	if (g_strcmp0 (name, ARV_FAKE_DEVICE_ID) == 0)
 		return arv_fake_device_new ("1");
 
 	return NULL;
@@ -101,7 +108,7 @@ arv_fake_interface_class_init (ArvFakeInterfaceClass *fake_interface_class)
 	object_class->finalize = arv_fake_interface_finalize;
 
 	interface_class->update_device_list = arv_fake_interface_update_device_list;
-	interface_class->new_device = arv_fake_interface_new_device;
+	interface_class->create_device = arv_fake_interface_create_device;
 }
 
 G_DEFINE_TYPE (ArvFakeInterface, arv_fake_interface, ARV_TYPE_INTERFACE)

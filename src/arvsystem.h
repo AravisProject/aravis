@@ -27,6 +27,13 @@
 
 G_BEGIN_DECLS
 
+unsigned int 		arv_get_n_interfaces 		(void);
+const char * 		arv_get_interface_id 		(unsigned int index);
+
+void 			arv_update_device_list 		(void);
+unsigned int 		arv_get_n_devices 		(void);
+const char * 		arv_get_device_id 		(unsigned int index);
+
 ArvDevice * 		arv_create_device 		(const char *name);
 
 G_END_DECLS

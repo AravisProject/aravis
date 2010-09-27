@@ -25,21 +25,96 @@
 #include <arvfakeinterface.h>
 #include <arvdevice.h>
 
+typedef struct {
+	const char *interface_id;
+	ArvInterface * (*get_interface_instance) (void);
+} ArvInterfaceInfos;
+
+ArvInterfaceInfos interfaces[] = {
+	{"Fake", 		arv_fake_interface_get_instance},
+	{"GigE-Vision", 	arv_gv_interface_get_instance}
+};
+
+unsigned int
+arv_get_n_interfaces (void)
+{
+	return G_N_ELEMENTS (interfaces);
+}
+
+const char *
+arv_get_interface_id (unsigned int index)
+{
+	if (index >= G_N_ELEMENTS (interfaces))
+		return NULL;
+
+	return interfaces[index].interface_id;
+}
+
+void
+arv_update_device_list (void)
+{
+	unsigned int i;
+
+	for (i = 0; i < G_N_ELEMENTS (interfaces); i++) {
+		ArvInterface *interface;
+
+		interface = interfaces[i].get_interface_instance ();
+		arv_interface_update_device_list (interface);
+	}
+}
+
+unsigned int
+arv_get_n_devices (void)
+{
+	unsigned int n_devices = 0;
+	unsigned int i;
+
+	for (i = 0; i < G_N_ELEMENTS (interfaces); i++) {
+		ArvInterface *interface;
+
+		interface = interfaces[i].get_interface_instance ();
+		n_devices += arv_interface_get_n_devices (interface);
+	}
+
+	return n_devices;
+}
+
+const char *
+arv_get_device_id (unsigned int index)
+{
+	unsigned int offset = 0;
+	unsigned int i;
+
+	for (i = 0; i < G_N_ELEMENTS (interfaces); i++) {
+		ArvInterface *interface;
+		unsigned int n_devices;
+
+		interface = interfaces[i].get_interface_instance ();
+		n_devices = arv_interface_get_n_devices (interface);
+
+		if (index - offset <= n_devices)
+			return arv_interface_get_device_id (interface, index - offset);
+
+		offset += n_devices;
+	}
+
+	return NULL;
+}
+
 ArvDevice *
 arv_create_device (const char *name)
 {
-	ArvInterface *interface;
-	ArvDevice *device;
+	unsigned int i;
 
-	interface = arv_fake_interface_get_instance ();
-	device = arv_interface_create_device (interface, name);
+	for (i = 0; i < G_N_ELEMENTS (interfaces); i++) {
+		ArvInterface *interface;
+		ArvDevice *device;
+
+		interface = interfaces[i].get_interface_instance ();
+		device = arv_interface_create_device (interface, name);
 		if (device != NULL)
 			return device;
-
-	interface = arv_gv_interface_get_instance ();
-	device = arv_interface_create_device (interface, name);
-		if (device != NULL)
-			return device;
+	}
 
 	return NULL;
 }
