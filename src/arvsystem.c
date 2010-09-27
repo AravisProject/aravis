@@ -92,7 +92,7 @@ arv_get_device_id (unsigned int index)
 		interface = interfaces[i].get_interface_instance ();
 		n_devices = arv_interface_get_n_devices (interface);
 
-		if (index - offset <= n_devices)
+		if (index - offset < n_devices)
 			return arv_interface_get_device_id (interface, index - offset);
 
 		offset += n_devices;
