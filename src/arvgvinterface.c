@@ -300,7 +300,7 @@ arv_gv_interface_update_device_list (ArvInterface *interface, GArray *device_ids
 }
 
 static ArvDevice *
-arv_gv_interface_open_device (ArvInterface *interface, const char *name)
+arv_gv_interface_open_device (ArvInterface *interface, const char *device_id)
 {
 	ArvGvInterface *gv_interface;
 	ArvDevice *device = NULL;
@@ -309,14 +309,14 @@ arv_gv_interface_open_device (ArvInterface *interface, const char *name)
 
 	gv_interface = ARV_GV_INTERFACE (interface);
 
-	if (name == NULL) {
+	if (device_id == NULL) {
 		GList *device_list;
 
 		device_list = g_hash_table_get_values (gv_interface->priv->devices);
 		device_infos = device_list != NULL ? device_list->data : NULL;
 		g_list_free (device_list);
 	} else
-		device_infos = g_hash_table_lookup (gv_interface->priv->devices, name);
+		device_infos = g_hash_table_lookup (gv_interface->priv->devices, device_id);
 
 	if (device_infos == NULL)
 		return NULL;

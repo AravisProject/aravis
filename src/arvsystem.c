@@ -102,7 +102,7 @@ arv_get_device_id (unsigned int index)
 }
 
 ArvDevice *
-arv_open_device (const char *name)
+arv_open_device (const char *device_id)
 {
 	unsigned int i;
 
@@ -111,7 +111,7 @@ arv_open_device (const char *name)
 		ArvDevice *device;
 
 		interface = interfaces[i].get_interface_instance ();
-		device = arv_interface_open_device (interface, name);
+		device = arv_interface_open_device (interface, device_id);
 		if (device != NULL)
 			return device;
 	}
