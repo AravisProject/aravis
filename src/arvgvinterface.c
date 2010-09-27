@@ -300,7 +300,7 @@ arv_gv_interface_update_device_list (ArvInterface *interface, GArray *device_ids
 }
 
 static ArvDevice *
-arv_gv_interface_create_device (ArvInterface *interface, const char *name)
+arv_gv_interface_open_device (ArvInterface *interface, const char *name)
 {
 	ArvGvInterface *gv_interface;
 	ArvDevice *device = NULL;
@@ -386,7 +386,7 @@ arv_gv_interface_class_init (ArvGvInterfaceClass *gv_interface_class)
 	object_class->finalize = arv_gv_interface_finalize;
 
 	interface_class->update_device_list = arv_gv_interface_update_device_list;
-	interface_class->create_device = arv_gv_interface_create_device;
+	interface_class->open_device = arv_gv_interface_open_device;
 }
 
 G_DEFINE_TYPE (ArvGvInterface, arv_gv_interface, ARV_TYPE_INTERFACE)

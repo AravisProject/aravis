@@ -564,7 +564,7 @@ arv_camera_new (const char *name)
 	ArvCameraVendor vendor;
 	const char *vendor_name;
 
-	device = arv_create_device (name);
+	device = arv_open_device (name);
 
 	if (!ARV_IS_DEVICE (device))
 		return NULL;

@@ -48,7 +48,7 @@ arv_fake_interface_update_device_list (ArvInterface *interface, GArray *device_i
 }
 
 static ArvDevice *
-arv_fake_interface_create_device (ArvInterface *interface, const char *name)
+arv_fake_interface_open_device (ArvInterface *interface, const char *name)
 {
 	if (g_strcmp0 (name, ARV_FAKE_DEVICE_ID) == 0)
 		return arv_fake_device_new ("1");
@@ -108,7 +108,7 @@ arv_fake_interface_class_init (ArvFakeInterfaceClass *fake_interface_class)
 	object_class->finalize = arv_fake_interface_finalize;
 
 	interface_class->update_device_list = arv_fake_interface_update_device_list;
-	interface_class->create_device = arv_fake_interface_create_device;
+	interface_class->open_device = arv_fake_interface_open_device;
 }
 
 G_DEFINE_TYPE (ArvFakeInterface, arv_fake_interface, ARV_TYPE_INTERFACE)

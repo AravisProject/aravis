@@ -73,11 +73,11 @@ arv_get_interface_id
 arv_get_n_devices
 arv_get_n_interfaces
 arv_update_device_list
-arv_create_device
+arv_open_device
 arv_interface_update_device_list
 arv_interface_get_device_id
 arv_interface_get_n_devices
-arv_interface_create_device
+arv_interface_open_device
 <SUBSECTION Standard>
 ARV_INTERFACE
 ARV_IS_INTERFACE
