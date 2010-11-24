@@ -41,6 +41,8 @@ static GObjectClass *parent_class = NULL;
 /* Acquisition thread */
 
 typedef struct {
+	ArvStream *stream;
+
 	ArvStreamCallback callback;
 	void *user_data;
 
@@ -52,8 +54,6 @@ typedef struct {
 	guint64 timestamp_tick_frequency;
 
 	gboolean cancel;
-	GAsyncQueue *input_queue;
-	GAsyncQueue *output_queue;
 
 	guint32 packet_count;
 
@@ -194,7 +194,9 @@ _close_buffer (ArvGvStreamThreadData *thread_data, ArvGvStreamThreadState *state
 
 	state->last_time_us = current_time_us;
 	state->last_timestamp_ns = state->buffer->timestamp_ns;
-	g_async_queue_push (thread_data->output_queue, state->buffer);
+
+	arv_stream_push_output_buffer (thread_data->stream, state->buffer);
+
 	state->buffer = NULL;
 }
 
@@ -206,7 +208,7 @@ _process_data_leader (ArvGvStreamThreadData *thread_data, ArvGvStreamThreadState
 	if (state->buffer != NULL)
 		_close_buffer (thread_data, state);
 
-	state->buffer = g_async_queue_try_pop (thread_data->input_queue);
+	state->buffer = arv_stream_pop_input_buffer (thread_data->stream);
 	if (state->buffer == NULL) {
 		thread_data->n_underruns++;
 		return;
@@ -457,6 +459,7 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port,
 	g_socket_bind (gv_stream->socket, gv_stream->incoming_address, TRUE, NULL);
 
 	thread_data = g_new (ArvGvStreamThreadData, 1);
+	thread_data->stream = stream;
 	thread_data->callback = callback;
 	thread_data->user_data = user_data;
 	thread_data->socket = gv_stream->socket;
@@ -464,8 +467,6 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port,
 	thread_data->packet_resend = ARV_GV_STREAM_PACKET_RESEND_ALWAYS;
 	thread_data->timestamp_tick_frequency = timestamp_tick_frequency;
 	thread_data->cancel = FALSE;
-	thread_data->input_queue = stream->input_queue;
-	thread_data->output_queue = stream->output_queue;
 
 	thread_data->packet_count = 1;
 

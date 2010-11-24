@@ -42,13 +42,12 @@ struct _ArvFakeStreamPrivate {
 
 typedef struct {
 	ArvFakeCamera *camera;
+	ArvStream *stream;
 
 	ArvStreamCallback callback;
 	void *user_data;
 
 	gboolean cancel;
-	GAsyncQueue *input_queue;
-	GAsyncQueue *output_queue;
 
 	/* Statistics */
 
@@ -70,7 +69,7 @@ arv_fake_stream_thread (void *data)
 
 	while (!thread_data->cancel) {
 		arv_fake_camera_wait_for_next_frame (thread_data->camera);
-		buffer = g_async_queue_try_pop (thread_data->input_queue);
+		buffer = arv_stream_pop_input_buffer (thread_data->stream);
 		if (buffer != NULL) {
 			arv_fake_camera_fill_buffer (thread_data->camera, buffer);
 			if (buffer->status == ARV_BUFFER_STATUS_SUCCESS)
@@ -80,7 +79,7 @@ arv_fake_stream_thread (void *data)
 			if (thread_data->callback != NULL)
 				thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
 						       buffer);
-			g_async_queue_push (thread_data->output_queue, buffer);
+			arv_stream_push_output_buffer (thread_data->stream, buffer);
 		} else
 			thread_data->n_underruns++;
 	}
@@ -111,12 +110,11 @@ arv_fake_stream_new (ArvFakeCamera *camera, ArvStreamCallback callback, void *us
 	stream = ARV_STREAM (fake_stream);
 
 	thread_data = g_new (ArvFakeStreamThreadData, 1);
+	thread_data->stream = stream;
 	thread_data->camera = camera;
 	thread_data->callback = callback;
 	thread_data->user_data = user_data;
 	thread_data->cancel = FALSE;
-	thread_data->input_queue = stream->input_queue;
-	thread_data->output_queue = stream->output_queue;
 
 	thread_data->n_completed_buffers = 0;
 	thread_data->n_failures = 0;

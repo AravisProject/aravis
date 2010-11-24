@@ -1,13 +1,6 @@
 #include <arv.h>
 #include <stdlib.h>
-
-static gboolean cancel = FALSE;
-
-static void
-set_cancel (int signal)
-{
-	cancel = TRUE;
-}
+#include <signal.h>
 
 static char *arv_option_camera_name = NULL;
 static char *arv_option_debug_domains = NULL;
@@ -51,15 +44,61 @@ static const GOptionEntry arv_option_entries[] =
 	{ NULL }
 };
 
+typedef struct {
+	GMainLoop *main_loop;
+	int buffer_count;
+} ApplicationData;
+
+static gboolean cancel = FALSE;
+
+static void
+set_cancel (int signal)
+{
+	cancel = TRUE;
+}
+
+static void
+new_buffer_cb (ArvStream *stream, ApplicationData *data)
+{
+	ArvBuffer *buffer;
+
+	buffer = arv_stream_pop_buffer (stream);
+	if (buffer != NULL) {
+		if (buffer->status == ARV_BUFFER_STATUS_SUCCESS)
+			data->buffer_count++;
+		/* Image processing here */
+		arv_stream_push_buffer (stream, buffer);
+	}
+}
+
+static gboolean
+periodic_task_cb (void *abstract_data)
+{
+	ApplicationData *data = abstract_data;
+
+	g_printf ("Frame rate = %d Hz\n", data->buffer_count);
+	data->buffer_count = 0;
+
+	if (cancel) {
+		g_main_loop_quit (data->main_loop);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 int
 main (int argc, char **argv)
 {
+	ApplicationData data;
 	ArvCamera *camera;
 	ArvStream *stream;
 	ArvBuffer *buffer;
 	GOptionContext *context;
 	GError *error = NULL;
 	int i;
+
+	data.buffer_count = 0;
 
 	g_thread_init (NULL);
 	g_type_init ();
@@ -85,6 +124,7 @@ main (int argc, char **argv)
 
 	camera = arv_camera_new (arv_option_camera_name);
 	if (camera != NULL) {
+		void (*old_sigint_handler)(int);
 		gint payload;
 		gint x, y, width, height;
 		gint dx, dy;
@@ -121,7 +161,7 @@ main (int argc, char **argv)
 						  ARV_GV_STREAM_OPTION_SOCKET_BUFFER_AUTO,
 						  0);
 
-		for (i = 0; i < 200; i++)
+		for (i = 0; i < 50; i++)
 			arv_stream_push_buffer (stream, arv_buffer_new (payload, NULL));
 
 		arv_camera_set_acquisition_mode (camera, ARV_ACQUISITION_MODE_CONTINUOUS);
@@ -134,27 +174,20 @@ main (int argc, char **argv)
 
 		arv_camera_start_acquisition (camera);
 
-		signal (SIGINT, set_cancel);
+		g_signal_connect (stream, "new-buffer", G_CALLBACK (new_buffer_cb), &data);
+		arv_stream_set_emit_signals (stream, TRUE);
 
-		do {
-			int buffer_count;
+		g_timeout_add_seconds (1, periodic_task_cb, &data);
 
-			g_usleep (1000000);
+		data.main_loop = g_main_loop_new (NULL, FALSE);
 
-			buffer_count = 0;
-			do  {
-				buffer = arv_stream_pop_buffer (stream);
-				if (buffer != NULL) {
-					if (buffer->status == ARV_BUFFER_STATUS_SUCCESS)
-						buffer_count++;
-					/* Image processing here */
-					arv_stream_push_buffer (stream, buffer);
-				}
-			} while (buffer != NULL);
+		old_sigint_handler = signal (SIGINT, set_cancel);
 
-			g_printf ("Frame rate = %d\n", buffer_count);
+		g_main_loop_run (data.main_loop);
 
-		} while (!cancel);
+		signal (SIGINT, old_sigint_handler);
+
+		g_main_loop_unref (data.main_loop);
 
 		arv_stream_get_statistics (stream, &n_completed_buffers, &n_failures, &n_underruns);
 

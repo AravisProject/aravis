@@ -53,13 +53,13 @@ typedef void (*ArvStreamCallback)	(void *user_data, ArvStreamCallbackType type, 
 #define ARV_IS_STREAM_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_STREAM))
 #define ARV_STREAM_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_STREAM, ArvStreamClass))
 
+typedef struct _ArvStreamPrivate ArvStreamPrivate;
 typedef struct _ArvStreamClass ArvStreamClass;
 
 struct _ArvStream {
 	GObject	object;
 
-	GAsyncQueue *input_queue;
-	GAsyncQueue *output_queue;
+	ArvStreamPrivate *priv;
 };
 
 struct _ArvStreamClass {
@@ -67,19 +67,27 @@ struct _ArvStreamClass {
 
 	void		(*get_statistics)	(ArvStream *stream, guint64 *n_completed_buffers,
 						 guint64 *n_failures, guint64 *n_underruns);
+
+	void        	(*new_buffer)   	(ArvStream *stream);
 };
 
 GType arv_stream_get_type (void);
 
-void			arv_stream_push_buffer 			(ArvStream *stream, ArvBuffer *buffer);
-ArvBuffer *		arv_stream_pop_buffer			(ArvStream *stream);
-void 			arv_stream_get_n_buffers 		(ArvStream *stream,
-								 gint *n_input_buffers,
-								 gint *n_output_buffers);
-void			arv_stream_get_statistics		(ArvStream *stream,
-								 guint64 *n_completed_buffers,
-								 guint64 *n_failures,
-								 guint64 *n_underruns);
+void		arv_stream_push_buffer 			(ArvStream *stream, ArvBuffer *buffer);
+ArvBuffer *	arv_stream_pop_buffer			(ArvStream *stream);
+void 		arv_stream_get_n_buffers 		(ArvStream *stream,
+							 gint *n_input_buffers,
+							 gint *n_output_buffers);
+void		arv_stream_get_statistics		(ArvStream *stream,
+							 guint64 *n_completed_buffers,
+							 guint64 *n_failures,
+							 guint64 *n_underruns);
+
+void 		arv_stream_set_emit_signals 		(ArvStream *stream, gboolean emit_signals);
+gboolean 	arv_stream_get_emit_signals 		(ArvStream *stream);
+
+ArvBuffer *	arv_stream_pop_input_buffer		(ArvStream *stream);
+void		arv_stream_push_output_buffer		(ArvStream *stream, ArvBuffer *buffer);
 
 G_END_DECLS
 

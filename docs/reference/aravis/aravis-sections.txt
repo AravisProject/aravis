@@ -272,6 +272,8 @@ arv_stream_push_buffer
 arv_stream_pop_buffer
 arv_stream_get_n_buffers
 arv_stream_get_statistics
+arv_stream_get_emit_signals
+arv_stream_set_emit_signals
 <SUBSECTION Standard>
 ARV_STREAM
 ARV_IS_STREAM
@@ -281,6 +283,9 @@ ARV_STREAM_CLASS
 ARV_IS_STREAM_CLASS
 ARV_STREAM_GET_CLASS
 <SUBSECTION Private>
+ArvStreamPrivate
+arv_stream_pop_input_buffer
+arv_stream_push_output_buffer
 ArvStreamClass
 </SECTION>
 
