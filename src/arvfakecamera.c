@@ -25,9 +25,9 @@
  * @short_description: Fake camera internals
  *
  * #ArvFakeCamera is a class that simulate a real camera, which provides
- * methods for the implementation of #ArvFakeDevice and #ArvFakeStream. It's
- * foresen to use this class for the implementation of a fake ethernet camera
- * too, but it's still a TODO.
+ * methods for the implementation of #ArvFakeDevice and #ArvFakeStream.
+ *
+ * arv-fake-gv-camera is a GV camera simulator based on this class.
  */
 
 #include <arvfakecamera.h>
