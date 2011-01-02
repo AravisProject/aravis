@@ -32,6 +32,10 @@ AC_ARG_ENABLE(cairo,
 	      [  --enable-cairo          Enable cairo support],
 	      [enable_cairo=$enableval],
 	      [enable_cairo=no])
+AC_ARG_ENABLE(gtk,
+	      [  --enable-gtk            Enable gtk support],
+	      [enable_gtk=$enableval],
+	      [enable_gtk=no])
 AC_ARG_ENABLE(gstreamer,
 	      [  --enable-gstreamer      Enable gstreamer support],
 	      [enable_gstreamer=$enableval],
@@ -40,26 +44,39 @@ AC_ARG_ENABLE(gstreamer,
 PKG_PROG_PKG_CONFIG([0.14])
 
 ARAVIS_REQUIRES="[gobject-2.0 glib-2.0 >= 2.22 gio-2.0 libxml-2.0 gthread-2.0]"
+ARAVIS_EXTRA_REQUIRES="$(ARAVIS_REQUIRES)"
 
 with_cairo=no
 if test "x$enable_cairo" = "xyes"; then
 	PKG_CHECK_MODULES([CAIRO],   [cairo >= 1.2],
 			  [AC_DEFINE([ARAVIS_WITH_CAIRO], [1], [Cairo support])
-			  ARAVIS_REQUIRES="${ARAVIS_REQUIRES} [cairo >= 1.2]"
+			  ARAVIS_EXTRA_REQUIRES="${ARAVIS_EXTRA_REQUIRES} [cairo >= 1.2]"
 			  with_cairo=yes],
 			  [echo -n])
 fi
 AM_CONDITIONAL(ARAVIS_WITH_CAIRO, test "x$with_cairo" = "xyes")
 
+with_gtk=no
+if test "x$enable_gtk" = "xyes"; then
+	PKG_CHECK_MODULES([GTK],   [gtk+-2.0 >= 2.12],
+			  [AC_DEFINE([ARAVIS_WITH_GTK], [1], [Gtk support])
+			  ARAVIS_EXTRA_REQUIRES="${ARAVIS_EXTRA_REQUIRES} [gtk+-2.0 >= 2.12]"
+			  with_gtk=yes],
+			  [echo -n])
+fi
+AM_CONDITIONAL(ARAVIS_WITH_GTK, test "x$with_gtk" = "xyes")
+
 with_gstreamer=no
 if test "x$enable_gstreamer" = "xyes"; then
 	PKG_CHECK_MODULES([GSTREAMER],   [gstreamer-base-0.10 >= 0.10],
 			  [AC_DEFINE([ARAVIS_WITH_GSTREAMER], [1], [Cairo support])
-			  ARAVIS_REQUIRES="${ARAVIS_REQUIRES} [gstreamer-base-0.10 >= 0.10]"
+			  ARAVIS_EXTRA_REQUIRES="${ARAVIS_EXTRA_REQUIRES} [gstreamer-base-0.10 >= 0.10]"
 			  with_gstreamer=yes],
 			  [echo -n])
 fi
 AM_CONDITIONAL(ARAVIS_WITH_GSTREAMER, test "x$with_gstreamer" = "xyes")
+
+AM_CONDITIONAL(ARAVIS_VIEWER, test "x$with_gtk$with_gstreamer" = "xyesyes")
 
 if test "x${prefix}" = "x$HOME"; then
   gstplugindir="$HOME/.gstreamer-0.10/plugins"
@@ -78,6 +95,11 @@ PKG_CHECK_MODULES(ARAVIS, $ARAVIS_REQUIRES)
 AC_SUBST(ARAVIS_CFLAGS)
 AC_SUBST(ARAVIS_LIBS)
 
+PKG_CHECK_MODULES(ARAVIS_EXTRA, $ARAVIS_EXTRA_REQUIRES)
+
+AC_SUBST(ARAVIS_EXTRA_CFLAGS)
+AC_SUBST(ARAVIS_EXTRA_LIBS)
+
 AC_PATH_PROG(GLIB_MKENUMS, glib-mkenums)
 
 GOBJECT_INTROSPECTION_CHECK([0.6.7])
@@ -89,6 +111,7 @@ Makefile
 src/Makefile
 gst/Makefile
 tests/Makefile
+viewer/Makefile
 po/Makefile.in
 docs/Makefile
 docs/reference/Makefile
@@ -102,7 +125,9 @@ echo ""
 echo "Configuration:"
 echo ""
 echo "	Cairo support:		$with_cairo"
+echo "	Gtk+ support:           $with_gtk"
 echo "	Gstreamer support:	$with_gstreamer"
 echo "	Compiler:		${CC}"
 echo "	Compiler flags:		${ARAVIS_CFLAGS}"
+echo "	Compiler extra flags:	${ARAVIS_EXTRA_CFLAGS}"
 echo ""

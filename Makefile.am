@@ -8,6 +8,10 @@ DISTCHECK_CONFIGURE_FLAGS = --enable-introspection --enable-gtk-doc
 
 SUBDIRS = src gst tests po docs
 
+if ARAVIS_VIEWER
+SUBDIRS += viewer
+endif
+
 aravisdocdir = ${prefix}/doc/aravis
 aravisdoc_DATA = 	\
 	README		\

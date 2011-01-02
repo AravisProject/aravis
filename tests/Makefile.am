@@ -1,10 +1,10 @@
 include $(top_srcdir)/Makefile.decl
 
-INCLUDES = -g -I$(top_srcdir)/src/ $(ARAVIS_CFLAGS)
+INCLUDES = -g -I$(top_srcdir)/src/ $(ARAVIS_EXTRA_CFLAGS)
 
 test_progs_ldadd = 					\
 	$(top_builddir)/src/libaravis.la		\
-	$(ARAVIS_LIBS)
+	$(ARAVIS_EXTRA_LIBS)
 
 noinst_PROGRAMS = arv-test arv-genicam-test arv-evaluator-test arv-zip-test arv-camera-test
 
