@@ -14,7 +14,9 @@ set_cancel (int signal)
 
 static char *arv_option_camera_name = NULL;
 static char *arv_option_debug_domains = NULL;
+#ifdef ARAVIS_WITH_CAIRO
 static gboolean arv_option_snaphot = FALSE;
+#endif
 static gboolean arv_option_auto_buffer = FALSE;
 static int arv_option_width = -1;
 static int arv_option_height = -1;
@@ -25,8 +27,10 @@ static const GOptionEntry arv_option_entries[] =
 {
 	{ "name",		'n', 0, G_OPTION_ARG_STRING,
 		&arv_option_camera_name,"Camera name", NULL},
+#ifdef ARAVIS_WITH_CAIRO
 	{ "snapshot",		's', 0, G_OPTION_ARG_NONE,
 		&arv_option_snaphot,	"Snapshot", NULL},
+#endif
 	{ "auto",		'a', 0, G_OPTION_ARG_NONE,
 		&arv_option_auto_buffer,	"AutoBufferSize", NULL},
 	{ "width", 		'w', 0, G_OPTION_ARG_INT,
