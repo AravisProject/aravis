@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <!-- interface-requires gtk+ 2.10 -->
+  <!-- interface-requires gtk+ 2.12 -->
   <!-- interface-naming-policy project-wide -->
   <object class="GtkWindow" id="main_window">
+    <property name="title" translatable="yes">Aravis</property>
     <child>
       <object class="GtkVBox" id="vbox1">
         <property name="visible">True</property>
@@ -210,5 +211,10 @@
       </object>
     </child>
   </object>
-  <object class="GtkListStore" id="camera_liststore"/>
+  <object class="GtkListStore" id="camera_liststore">
+    <columns>
+      <!-- column-name device_id -->
+      <column type="gchar"/>
+    </columns>
+  </object>
 </interface>

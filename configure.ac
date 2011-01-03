@@ -68,9 +68,9 @@ AM_CONDITIONAL(ARAVIS_WITH_GTK, test "x$with_gtk" = "xyes")
 
 with_gstreamer=no
 if test "x$enable_gstreamer" = "xyes"; then
-	PKG_CHECK_MODULES([GSTREAMER],   [gstreamer-base-0.10 >= 0.10],
+	PKG_CHECK_MODULES([GSTREAMER],   [gstreamer-base-0.10 >= 0.10 gstreamer-app-0.10 gstreamer-interfaces-0.10],
 			  [AC_DEFINE([ARAVIS_WITH_GSTREAMER], [1], [Cairo support])
-			  ARAVIS_EXTRA_REQUIRES="${ARAVIS_EXTRA_REQUIRES} [gstreamer-base-0.10 >= 0.10]"
+			  ARAVIS_EXTRA_REQUIRES="${ARAVIS_EXTRA_REQUIRES} [gstreamer-base-0.10 >= 0.10 gstreamer-app-0.10 gstreamer-interfaces-0.10]"
 			  with_gstreamer=yes],
 			  [echo -n])
 fi
