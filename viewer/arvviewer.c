@@ -20,6 +20,7 @@ typedef struct {
 	GtkWidget *main_window;
 	GtkWidget *drawing_area;
 	GtkWidget *camera_combo_box;
+	GtkWidget *exposure_entry;
 } ArvViewer;
 
 void
@@ -119,6 +120,7 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	unsigned int frame_rate;
 	unsigned int i;
 	gulong window_xid;
+	double exposure;
 
 	arv_viewer_release_camera (viewer);
 
@@ -136,6 +138,7 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 
 	arv_camera_get_region (viewer->camera, NULL, NULL, &width, &height);
 	frame_rate = (unsigned int) (double) (0.5 + arv_camera_get_frame_rate (viewer->camera));
+	exposure = arv_camera_get_exposure_time (viewer->camera);
 
 	arv_camera_start_acquisition (viewer->camera);
 
@@ -201,6 +204,7 @@ arv_viewer_new (void)
 	viewer->camera_combo_box = GTK_WIDGET (gtk_builder_get_object (builder, "camera_combobox"));
 	viewer->main_window = GTK_WIDGET (gtk_builder_get_object (builder, "main_window"));
 	viewer->drawing_area = GTK_WIDGET (gtk_builder_get_object (builder, "video_drawingarea"));
+	viewer->exposure_entry = GTK_WIDGET (gtk_builder_get_object (builder, "exposure_entry"));
 
 	g_object_unref (builder);
 
