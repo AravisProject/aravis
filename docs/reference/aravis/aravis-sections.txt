@@ -25,8 +25,10 @@ arv_camera_get_frame_rate
 arv_camera_set_trigger
 arv_camera_set_exposure_time
 arv_camera_get_exposure_time
+arv_camera_get_exposure_time_bounds
 arv_camera_set_gain
 arv_camera_get_gain
+arv_camera_get_gain_bounds
 arv_camera_get_payload
 ArvAcquisitionMode
 arv_acquisition_mode_to_string
@@ -145,8 +147,10 @@ arv_device_set_string_feature_value
 arv_device_get_string_feature_value
 arv_device_set_integer_feature_value
 arv_device_get_integer_feature_value
+arv_device_get_integer_feature_bounds
 arv_device_set_float_feature_value
 arv_device_get_float_feature_value
+arv_device_get_float_feature_bounds
 <SUBSECTION Standard>
 ARV_DEVICE
 ARV_IS_DEVICE

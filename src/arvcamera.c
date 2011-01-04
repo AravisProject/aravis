@@ -477,6 +477,14 @@ arv_camera_get_exposure_time (ArvCamera *camera)
 	return arv_device_get_float_feature_value (camera->priv->device, "ExposureTimeAbs");
 }
 
+void
+arv_camera_get_exposure_time_bounds (ArvCamera *camera, double *min, double *max)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_device_get_float_feature_bounds (camera->priv->device, "ExposureTimeAbs", min, max);
+}
+
 /* Analog control */
 
 /**
@@ -510,6 +518,14 @@ arv_camera_get_gain (ArvCamera *camera)
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0.0);
 
 	return arv_device_get_integer_feature_value (camera->priv->device, "GainRaw");
+}
+
+void
+arv_camera_get_gain_bounds (ArvCamera *camera, gint64 *min, gint64 *max)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_device_get_integer_feature_bounds (camera->priv->device, "GainRaw", min, max);
 }
 
 /* Transport layer control */

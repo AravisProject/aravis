@@ -151,7 +151,7 @@ arv_device_get_string_feature_value (ArvDevice *device, const char *feature)
 }
 
 void
-arv_device_set_integer_feature_value (ArvDevice *device, const char *feature, guint64 value)
+arv_device_set_integer_feature_value (ArvDevice *device, const char *feature, gint64 value)
 {
 	ArvGc *genicam;
 	ArvGcNode *node;
@@ -168,7 +168,7 @@ arv_device_set_integer_feature_value (ArvDevice *device, const char *feature, gu
 		arv_gc_boolean_set_value (ARV_GC_BOOLEAN (node), value);
 }
 
-guint64
+gint64
 arv_device_get_integer_feature_value (ArvDevice *device, const char *feature)
 {
 	ArvGc *genicam;
@@ -189,6 +189,25 @@ arv_device_get_integer_feature_value (ArvDevice *device, const char *feature)
 }
 
 void
+arv_device_get_integer_feature_bounds (ArvDevice *device, const char *feature, gint64 *min, gint64 *max)
+{
+	ArvGc *genicam;
+	ArvGcNode *node;
+
+	genicam = arv_device_get_genicam (device);
+	g_return_if_fail (ARV_IS_GC (genicam));
+
+	node = arv_gc_get_node (genicam, feature);
+	if (ARV_IS_GC_INTEGER (node)) {
+		if (min != NULL)
+			*min = arv_gc_integer_get_min (ARV_GC_INTEGER (node));
+		if (max != NULL)
+			*max = arv_gc_integer_get_max (ARV_GC_INTEGER (node));
+		return;
+	}
+}
+
+void
 arv_device_set_float_feature_value (ArvDevice *device, const char *feature, double value)
 {
 	ArvGc *genicam;
@@ -204,6 +223,19 @@ arv_device_get_float_feature_value (ArvDevice *device, const char *feature)
 
 	genicam = arv_device_get_genicam (device);
 	return arv_gc_float_get_value (ARV_GC_FLOAT (arv_gc_get_node (genicam, feature)));
+}
+
+void
+arv_device_get_float_feature_bounds (ArvDevice *device, const char *feature, double *min, double *max)
+{
+	ArvGc *genicam;
+
+	genicam = arv_device_get_genicam (device);
+
+	if (min != NULL)
+		*min = arv_gc_float_get_min (ARV_GC_FLOAT (arv_gc_get_node (genicam, feature)));
+	if (max != NULL)
+		*max = arv_gc_float_get_max (ARV_GC_FLOAT (arv_gc_get_node (genicam, feature)));
 }
 
 static void
