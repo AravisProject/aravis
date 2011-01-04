@@ -80,6 +80,9 @@ arv_viewer_release_camera (ArvViewer *viewer)
 {
 	g_return_if_fail (viewer != NULL);
 
+	if (viewer->pipeline != NULL)
+		gst_element_set_state (viewer->pipeline, GST_STATE_NULL);
+
 	if (viewer->stream != NULL) {
 		g_object_unref (viewer->stream);
 		viewer->stream = NULL;
