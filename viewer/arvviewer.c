@@ -20,7 +20,8 @@ typedef struct {
 	GtkWidget *main_window;
 	GtkWidget *drawing_area;
 	GtkWidget *camera_combo_box;
-	GtkWidget *exposure_entry;
+	GtkWidget *exposure_spin_button;
+	GtkWidget *gain_spin_button;
 } ArvViewer;
 
 void
@@ -77,6 +78,16 @@ arv_viewer_new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 }
 
 void
+arv_viewer_exposure_cb (GtkSpinButton *spin_button, ArvViewer *viewer)
+{
+}
+
+void
+arv_viewer_gain_cb (GtkSpinButton *spin_button, ArvViewer *viewer)
+{
+}
+
+void
 arv_viewer_release_camera (ArvViewer *viewer)
 {
 	g_return_if_fail (viewer != NULL);
@@ -120,7 +131,10 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	unsigned int frame_rate;
 	unsigned int i;
 	gulong window_xid;
-	double exposure;
+	double exposure, exposure_min, exposure_max;
+	gint64 gain, gain_min, gain_max;
+
+	g_return_if_fail (viewer != NULL);
 
 	arv_viewer_release_camera (viewer);
 
@@ -139,6 +153,14 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	arv_camera_get_region (viewer->camera, NULL, NULL, &width, &height);
 	frame_rate = (unsigned int) (double) (0.5 + arv_camera_get_frame_rate (viewer->camera));
 	exposure = arv_camera_get_exposure_time (viewer->camera);
+	gain = arv_camera_get_gain (viewer->camera);
+	arv_camera_get_exposure_time_bounds (viewer->camera, &exposure_min, &exposure_max);
+	arv_camera_get_gain_bounds (viewer->camera, &gain_min, &gain_max);
+
+	gtk_spin_button_set_value (GTK_SPIN_BUTTON (viewer->exposure_spin_button), exposure);
+	gtk_spin_button_set_range (GTK_SPIN_BUTTON (viewer->exposure_spin_button), exposure_min, exposure_max);
+	gtk_spin_button_set_value (GTK_SPIN_BUTTON (viewer->gain_spin_button), gain);
+	gtk_spin_button_set_range (GTK_SPIN_BUTTON (viewer->gain_spin_button), gain_min, gain_max);
 
 	arv_camera_start_acquisition (viewer->camera);
 
@@ -204,7 +226,8 @@ arv_viewer_new (void)
 	viewer->camera_combo_box = GTK_WIDGET (gtk_builder_get_object (builder, "camera_combobox"));
 	viewer->main_window = GTK_WIDGET (gtk_builder_get_object (builder, "main_window"));
 	viewer->drawing_area = GTK_WIDGET (gtk_builder_get_object (builder, "video_drawingarea"));
-	viewer->exposure_entry = GTK_WIDGET (gtk_builder_get_object (builder, "exposure_entry"));
+	viewer->exposure_spin_button = GTK_WIDGET (gtk_builder_get_object (builder, "exposure_spinbutton"));
+	viewer->gain_spin_button = GTK_WIDGET (gtk_builder_get_object (builder, "gain_spinbutton"));
 
 	g_object_unref (builder);
 
@@ -216,6 +239,8 @@ arv_viewer_new (void)
 
 	g_signal_connect (viewer->main_window, "destroy", G_CALLBACK (arv_viewer_quit_cb), viewer);
 	g_signal_connect (viewer->camera_combo_box, "changed", G_CALLBACK (arv_viewer_select_camera_cb), viewer);
+	g_signal_connect (viewer->exposure_spin_button, "value-changed", G_CALLBACK (arv_viewer_exposure_cb), viewer);
+	g_signal_connect (viewer->gain_spin_button, "value-changed", G_CALLBACK (arv_viewer_gain_cb), viewer);
 
 	return viewer;
 }
