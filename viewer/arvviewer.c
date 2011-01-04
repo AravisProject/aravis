@@ -201,7 +201,9 @@ arv_viewer_new (void)
 	gtk_cell_layout_set_attributes (GTK_CELL_LAYOUT (viewer->camera_combo_box), cell, "text", 0, NULL);
 
 	gtk_widget_show_all (viewer->main_window);
+
 	g_signal_connect (viewer->main_window, "destroy", G_CALLBACK (arv_viewer_quit_cb), viewer);
+	g_signal_connect (viewer->camera_combo_box, "changed", G_CALLBACK (arv_viewer_select_camera_cb), viewer);
 
 	return viewer;
 }
