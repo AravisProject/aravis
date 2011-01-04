@@ -54,21 +54,23 @@ arv_viewer_new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 	if (arv_buffer == NULL)
 		return;
 
-	buffer = gst_buffer_new ();
+	if (arv_buffer->status == ARV_BUFFER_STATUS_SUCCESS) {
+		buffer = gst_buffer_new ();
 
-	GST_BUFFER_DATA (buffer) = arv_buffer->data;
-	GST_BUFFER_MALLOCDATA (buffer) = NULL;
-	GST_BUFFER_SIZE (buffer) = arv_buffer->size;
+		GST_BUFFER_DATA (buffer) = arv_buffer->data;
+		GST_BUFFER_MALLOCDATA (buffer) = NULL;
+		GST_BUFFER_SIZE (buffer) = arv_buffer->size;
 
-	if (viewer->timestamp_offset == 0) {
-		viewer->timestamp_offset = arv_buffer->timestamp_ns;
-		viewer->last_timestamp = arv_buffer->timestamp_ns;
+		if (viewer->timestamp_offset == 0) {
+			viewer->timestamp_offset = arv_buffer->timestamp_ns;
+			viewer->last_timestamp = arv_buffer->timestamp_ns;
+		}
+
+		GST_BUFFER_TIMESTAMP (buffer) = arv_buffer->timestamp_ns - viewer->timestamp_offset;
+		GST_BUFFER_DURATION (buffer) = arv_buffer->timestamp_ns - viewer->last_timestamp;
+
+		gst_app_src_push_buffer (GST_APP_SRC (viewer->appsrc), buffer);
 	}
-
-	GST_BUFFER_TIMESTAMP (buffer) = arv_buffer->timestamp_ns - viewer->timestamp_offset;
-	GST_BUFFER_DURATION (buffer) = arv_buffer->timestamp_ns - viewer->last_timestamp;
-
-	gst_app_src_push_buffer (GST_APP_SRC (viewer->appsrc), buffer);
 
 	arv_stream_push_buffer (stream, arv_buffer);
 }
