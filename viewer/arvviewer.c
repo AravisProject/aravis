@@ -9,6 +9,7 @@
 typedef struct {
 	ArvCamera *camera;
 	ArvDevice *device;
+	ArvStream *stream;
 
 	GstElement *pipeline;
 	GstElement *appsrc;
@@ -77,6 +78,11 @@ arv_viewer_release_camera (ArvViewer *viewer)
 {
 	g_return_if_fail (viewer != NULL);
 
+	if (viewer->stream != NULL) {
+		g_object_unref (viewer->stream);
+		viewer->stream = NULL;
+	}
+
 	if (viewer->camera != NULL) {
 		g_object_unref (viewer->camera);
 		viewer->camera = NULL;
@@ -98,7 +104,6 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	GstCaps *caps;
 	GstElement *ffmpegcolorspace;
 	GstElement *ximagesink;
-	ArvStream *stream;
 	char *camera_id;
 	unsigned int payload;
 	int width;
@@ -115,11 +120,11 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	viewer->camera = arv_camera_new (camera_id);
 	g_free (camera_id);
 
-	stream = arv_camera_create_stream (viewer->camera, NULL, NULL);
-	arv_stream_set_emit_signals (stream, TRUE);
+	viewer->stream = arv_camera_create_stream (viewer->camera, NULL, NULL);
+	arv_stream_set_emit_signals (viewer->stream, TRUE);
 	payload = arv_camera_get_payload (viewer->camera);
 	for (i = 0; i < 50; i++)
-		arv_stream_push_buffer (stream, arv_buffer_new (payload, NULL));
+		arv_stream_push_buffer (viewer->stream, arv_buffer_new (payload, NULL));
 
 	arv_camera_get_region (viewer->camera, NULL, NULL, &width, &height);
 	frame_rate = (unsigned int) (double) (0.5 + arv_camera_get_frame_rate (viewer->camera));
@@ -150,7 +155,7 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	window_xid = GDK_WINDOW_XID (viewer->drawing_area->window);
 	gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (ximagesink), window_xid);
 
-	g_signal_connect (stream, "new-buffer", G_CALLBACK (arv_viewer_new_buffer_cb), viewer);
+	g_signal_connect (viewer->stream, "new-buffer", G_CALLBACK (arv_viewer_new_buffer_cb), viewer);
 }
 
 void
