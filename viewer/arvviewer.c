@@ -99,6 +99,9 @@ arv_viewer_release_camera (ArvViewer *viewer)
 		viewer->pipeline = NULL;
 		viewer->appsrc = NULL;
 	}
+
+	viewer->timestamp_offset = 0;
+	viewer->last_timestamp = 0;
 }
 
 void
