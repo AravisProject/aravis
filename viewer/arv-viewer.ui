@@ -127,17 +127,6 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkHScale" id="frame_rate_hscale">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="draw_value">False</property>
-                  </object>
-                  <packing>
-                    <property name="left_attach">3</property>
-                    <property name="right_attach">4</property>
-                  </packing>
-                </child>
-                <child>
                   <object class="GtkHScale" id="exposure_hscale">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>

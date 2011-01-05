@@ -5,6 +5,7 @@
 #include <gdk/gdkx.h>
 #include <arv.h>
 #include <stdlib.h>
+#include <math.h>
 
 typedef struct {
 	ArvCamera *camera;
@@ -20,6 +21,7 @@ typedef struct {
 	GtkWidget *main_window;
 	GtkWidget *drawing_area;
 	GtkWidget *camera_combo_box;
+	GtkWidget *frame_rate_entry;
 	GtkWidget *exposure_spin_button;
 	GtkWidget *gain_spin_button;
 	GtkWidget *exposure_hscale;
@@ -29,7 +31,35 @@ typedef struct {
 	gulong gain_spin_changed;
 	gulong exposure_hscale_changed;
 	gulong gain_hscale_changed;
+
+	double exposure_min, exposure_max;
 } ArvViewer;
+
+double
+arv_viewer_value_to_log (double value, double min, double max)
+{
+	if (min >= max)
+		return 1.0;
+
+	if (value < min)
+		return 0.0;
+
+	return (log10 (value) - log10 (min)) / (log10 (max) - log10 (min));
+}
+
+double
+arv_viewer_value_from_log (double value, double min, double max)
+{
+	if (min <= 0.0 || max <= 0)
+		return 0.0;
+
+	if (value > 1.0)
+		return max;
+	if (value < 0.0)
+		return min;
+
+	return pow (10.0, (value * (log10 (max) - log10 (min)) + log10 (min)));
+}
 
 void
 arv_viewer_update_device_list_cb (ArvViewer *viewer)
@@ -85,12 +115,25 @@ arv_viewer_new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 }
 
 void
+arv_viewer_frame_rate_entry_cb (GtkEntry *entry, ArvViewer *viewer)
+{
+	const char *text;
+
+	text = gtk_entry_get_text (entry);
+
+	arv_camera_set_frame_rate (viewer->camera, g_strtod (text, NULL));
+}
+
+void
 arv_viewer_exposure_spin_cb (GtkSpinButton *spin_button, ArvViewer *viewer)
 {
-	arv_camera_set_exposure_time (viewer->camera, gtk_spin_button_get_value (spin_button)); 
+	double exposure = gtk_spin_button_get_value (spin_button);
+	double log_exposure = arv_viewer_value_to_log (exposure, viewer->exposure_min, viewer->exposure_max);
+
+	arv_camera_set_exposure_time (viewer->camera, exposure); 
 
 	g_signal_handler_block (viewer->exposure_hscale, viewer->exposure_hscale_changed);
-	gtk_range_set_value (GTK_RANGE (viewer->exposure_hscale), gtk_spin_button_get_value (spin_button));
+	gtk_range_set_value (GTK_RANGE (viewer->exposure_hscale), log_exposure);
 	g_signal_handler_unblock (viewer->exposure_hscale, viewer->exposure_hscale_changed);
 }
 
@@ -107,10 +150,13 @@ arv_viewer_gain_spin_cb (GtkSpinButton *spin_button, ArvViewer *viewer)
 void
 arv_viewer_exposure_scale_cb (GtkRange *range, ArvViewer *viewer)
 {
-	arv_camera_set_exposure_time (viewer->camera, gtk_range_get_value (range));
+	double log_exposure = gtk_range_get_value (range);
+	double exposure = arv_viewer_value_from_log (log_exposure, viewer->exposure_min, viewer->exposure_max);
+
+	arv_camera_set_exposure_time (viewer->camera, exposure);
 
 	g_signal_handler_block (viewer->exposure_spin_button, viewer->exposure_spin_changed);
-	gtk_spin_button_set_value (GTK_SPIN_BUTTON (viewer->exposure_spin_button), gtk_range_get_value (range));
+	gtk_spin_button_set_value (GTK_SPIN_BUTTON (viewer->exposure_spin_button), exposure);
 	g_signal_handler_unblock (viewer->exposure_spin_button, viewer->exposure_spin_changed);
 }
 
@@ -162,13 +208,15 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	GstElement *ffmpegcolorspace;
 	GstElement *ximagesink;
 	char *camera_id;
+	char *text;
 	unsigned int payload;
 	int width;
 	int height;
-	unsigned int frame_rate;
 	unsigned int i;
 	gulong window_xid;
-	double exposure, exposure_min, exposure_max;
+	double exposure;
+	double log_exposure;
+	double frame_rate;
 	gint64 gain, gain_min, gain_max;
 
 	g_return_if_fail (viewer != NULL);
@@ -188,23 +236,29 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 		arv_stream_push_buffer (viewer->stream, arv_buffer_new (payload, NULL));
 
 	arv_camera_get_region (viewer->camera, NULL, NULL, &width, &height);
-	frame_rate = (unsigned int) (double) (0.5 + arv_camera_get_frame_rate (viewer->camera));
 	exposure = arv_camera_get_exposure_time (viewer->camera);
 	gain = arv_camera_get_gain (viewer->camera);
-	arv_camera_get_exposure_time_bounds (viewer->camera, &exposure_min, &exposure_max);
+	arv_camera_get_exposure_time_bounds (viewer->camera, &viewer->exposure_min, &viewer->exposure_max);
 	arv_camera_get_gain_bounds (viewer->camera, &gain_min, &gain_max);
+	frame_rate = arv_camera_get_frame_rate (viewer->camera);
 
-	gtk_spin_button_set_range (GTK_SPIN_BUTTON (viewer->exposure_spin_button), exposure_min, exposure_max);
+	gtk_spin_button_set_range (GTK_SPIN_BUTTON (viewer->exposure_spin_button), viewer->exposure_min, viewer->exposure_max);
 	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->exposure_spin_button), 200.0, 1000.0); 
 	gtk_spin_button_set_value (GTK_SPIN_BUTTON (viewer->exposure_spin_button), exposure);
 	gtk_spin_button_set_range (GTK_SPIN_BUTTON (viewer->gain_spin_button), gain_min, gain_max);
 	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->gain_spin_button), 1, 10);
 	gtk_spin_button_set_value (GTK_SPIN_BUTTON (viewer->gain_spin_button), gain);
 
-	gtk_range_set_range (GTK_RANGE (viewer->exposure_hscale), exposure_min, exposure_max);
-	gtk_range_set_value (GTK_RANGE (viewer->exposure_hscale), exposure);
+	log_exposure = arv_viewer_value_to_log (exposure, viewer->exposure_min, viewer->exposure_max);
+
+	gtk_range_set_range (GTK_RANGE (viewer->exposure_hscale), 0.0, 1.0);
+	gtk_range_set_value (GTK_RANGE (viewer->exposure_hscale), log_exposure);
 	gtk_range_set_range (GTK_RANGE (viewer->gain_hscale), gain_min, gain_max);
 	gtk_range_set_value (GTK_RANGE (viewer->gain_hscale), gain);
+
+	text = g_strdup_printf ("%g", frame_rate);
+	gtk_entry_set_text (GTK_ENTRY (viewer->frame_rate_entry), text);
+	g_free (text);
 
 	arv_camera_start_acquisition (viewer->camera);
 
@@ -222,7 +276,7 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 				    "endianness", G_TYPE_INT, G_BIG_ENDIAN,
 				    "width", G_TYPE_INT, width,
 				    "height", G_TYPE_INT, height,
-				    "framerate", GST_TYPE_FRACTION, frame_rate, 1,
+				    "framerate", GST_TYPE_FRACTION, (unsigned int ) (double) (0.5 + frame_rate), 1,
 				    "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
 				    NULL);
 	gst_app_src_set_caps (GST_APP_SRC (viewer->appsrc), caps);
@@ -270,6 +324,7 @@ arv_viewer_new (void)
 	viewer->camera_combo_box = GTK_WIDGET (gtk_builder_get_object (builder, "camera_combobox"));
 	viewer->main_window = GTK_WIDGET (gtk_builder_get_object (builder, "main_window"));
 	viewer->drawing_area = GTK_WIDGET (gtk_builder_get_object (builder, "video_drawingarea"));
+	viewer->frame_rate_entry = GTK_WIDGET (gtk_builder_get_object (builder, "frame_rate_entry"));
 	viewer->exposure_spin_button = GTK_WIDGET (gtk_builder_get_object (builder, "exposure_spinbutton"));
 	viewer->gain_spin_button = GTK_WIDGET (gtk_builder_get_object (builder, "gain_spinbutton"));
 	viewer->exposure_hscale = GTK_WIDGET (gtk_builder_get_object (builder, "exposure_hscale"));
@@ -285,6 +340,8 @@ arv_viewer_new (void)
 
 	g_signal_connect (viewer->main_window, "destroy", G_CALLBACK (arv_viewer_quit_cb), viewer);
 	g_signal_connect (viewer->camera_combo_box, "changed", G_CALLBACK (arv_viewer_select_camera_cb), viewer);
+
+	g_signal_connect (viewer->frame_rate_entry, "changed", G_CALLBACK (arv_viewer_frame_rate_entry_cb), viewer);
 
 	viewer->exposure_spin_changed = g_signal_connect (viewer->exposure_spin_button, "value-changed",
 							  G_CALLBACK (arv_viewer_exposure_spin_cb), viewer);

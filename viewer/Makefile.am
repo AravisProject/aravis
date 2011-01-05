@@ -9,7 +9,7 @@ INCLUDES = \
 	-DARAVIS_DATA_DIR=\""$(aravis_datadir)"\" \
 	-DG_LOG_DOMAIN=\"Aravis\"
 
-AM_CFLAGS = -Wall
+AM_CFLAGS = -Wall -lm
 
 bin_PROGRAMS = arv-viewer
 
