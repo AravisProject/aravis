@@ -151,9 +151,9 @@ arv_camera_set_region (ArvCamera *camera, int x, int y, int width, int height)
 {
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
-	if (x > 0)
+	if (x >= 0)
 		arv_device_set_integer_feature_value (camera->priv->device, "OffsetX", x);
-	if (y > 0)
+	if (y >= 0)
 		arv_device_set_integer_feature_value (camera->priv->device, "OffsetY", y);
 	if (width > 0)
 		arv_device_set_integer_feature_value (camera->priv->device, "Width", width);
