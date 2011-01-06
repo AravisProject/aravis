@@ -649,7 +649,10 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 				break;
 			case ARV_EVALUATOR_TOKEN_DIVISION:
 				if (arv_value_holds_double (&stack[index-1]) ||
-				    arv_value_holds_double (&stack[index])) {
+				    arv_value_holds_double (&stack[index]) ||
+				    /* Do float division if asked for a float value, even
+				     * with integer operands. */
+				    v_double != NULL) {
 					if (arv_value_get_double (&stack[index]) == 0.0) {
 						status = ARV_EVALUATOR_STATUS_DIVISION_BY_ZERO;
 						goto CLEANUP;
