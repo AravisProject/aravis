@@ -254,7 +254,7 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer)
 	g_mutex_lock (camera->priv->fill_pattern_mutex);
 	arv_fake_camera_read_register (camera, ARV_FAKE_CAMERA_REGISTER_EXPOSURE_TIME_US, &exposure_time_us);
 	arv_fake_camera_read_register (camera, ARV_FAKE_CAMERA_REGISTER_GAIN_RAW, &gain);
-	arv_fake_camera_read_register (camera, ARV_FAKE_CAMERA_REGISTER_GAIN_RAW, &pixel_format);
+	arv_fake_camera_read_register (camera, ARV_FAKE_CAMERA_REGISTER_PIXEL_FORMAT, &pixel_format);
 	camera->priv->fill_pattern (buffer, camera->priv->fill_pattern_data, exposure_time_us, gain, pixel_format);
 	g_mutex_unlock (camera->priv->fill_pattern_mutex);
 }
