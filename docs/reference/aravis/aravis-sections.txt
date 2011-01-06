@@ -393,6 +393,7 @@ ArvGvInterfaceClass
 <TITLE>ArvGvDevice</TITLE>
 ArvGvDevice
 arv_gv_device_new
+arv_gv_device_get_xml
 arv_gv_device_get_timestamp_tick_frequency
 <SUBSECTION Standard>
 ARV_GV_DEVICE

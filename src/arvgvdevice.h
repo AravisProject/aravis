@@ -57,6 +57,7 @@ struct _ArvGvDeviceClass {
 GType arv_gv_device_get_type (void);
 
 ArvDevice * 	arv_gv_device_new 	(GInetAddress *interface_address, GInetAddress *device_address);
+char *		arv_gv_device_get_xml 	(ArvGvDevice *gv_device, size_t *size);
 
 guint64 	arv_gv_device_get_timestamp_tick_frequency 	(ArvGvDevice *gv_device);
 
