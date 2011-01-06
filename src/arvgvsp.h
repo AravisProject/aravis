@@ -75,7 +75,7 @@ void 			arv_gvsp_packet_debug 			(const ArvGvspPacket *packet, size_t packet_siz
 static inline ArvGvspPacketType
 arv_gvsp_packet_get_packet_type	(const ArvGvspPacket *packet)
 {
-	return g_ntohs (packet->header.packet_type);
+	return (ArvGvspPacketType) g_ntohs (packet->header.packet_type);
 }
 
 static inline guint16
@@ -132,7 +132,7 @@ arv_gvsp_packet_get_pixel_format (const ArvGvspPacket *packet)
 	ArvGvspDataLeader *leader;
 
 	leader = (ArvGvspDataLeader *) &packet->data;
-	return g_ntohl (leader->pixel_format);
+	return (ArvPixelFormat) g_ntohl (leader->pixel_format);
 }
 
 static inline guint64

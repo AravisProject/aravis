@@ -141,9 +141,9 @@ arv_gvcp_packet_get_read_memory_cmd_infos (const ArvGvcpPacket *packet, guint32 
 	if (packet == NULL)
 		return;
 	if (address != NULL)
-		*address = g_ntohl (*((guint32 *) ((void *) packet + sizeof (ArvGvcpPacket))));
+		*address = g_ntohl (*((guint32 *) ((char *) packet + sizeof (ArvGvcpPacket))));
 	if (size != NULL)
-		*size = (g_ntohl (*((guint32 *) ((void *) packet + sizeof (ArvGvcpPacket) + sizeof (guint32))))) &
+		*size = (g_ntohl (*((guint32 *) ((char *) packet + sizeof (ArvGvcpPacket) + sizeof (guint32))))) &
 			0xffff;
 }
 
@@ -156,7 +156,7 @@ arv_gvcp_packet_get_read_memory_ack_size (guint32 data_size)
 static inline void *
 arv_gvcp_packet_get_read_memory_ack_data (const ArvGvcpPacket *packet)
 {
-	return (void *) packet + sizeof (ArvGvcpHeader) + sizeof (guint32);
+	return (char *) packet + sizeof (ArvGvcpHeader) + sizeof (guint32);
 }
 
 static inline void
@@ -166,7 +166,7 @@ arv_gvcp_packet_get_write_memory_cmd_infos (const ArvGvcpPacket *packet, guint32
 		return;
 
 	if (address != NULL)
-		*address = g_ntohl (*((guint32 *) ((void *) packet + sizeof (ArvGvcpPacket))));
+		*address = g_ntohl (*((guint32 *) ((char *) packet + sizeof (ArvGvcpPacket))));
 	if (size != NULL)
 		*size = g_ntohs (packet->header.size) - sizeof (guint32);
 }
@@ -174,7 +174,7 @@ arv_gvcp_packet_get_write_memory_cmd_infos (const ArvGvcpPacket *packet, guint32
 static inline void *
 arv_gvcp_packet_get_write_memory_cmd_data (const ArvGvcpPacket *packet)
 {
-	return (void *) packet + sizeof (ArvGvcpPacket) + sizeof (guint32);
+	return (char *) packet + sizeof (ArvGvcpPacket) + sizeof (guint32);
 }
 
 static inline size_t
@@ -189,7 +189,7 @@ arv_gvcp_packet_get_read_register_cmd_infos (const ArvGvcpPacket *packet, guint3
 	if (packet == NULL)
 		return;
 	if (address != NULL)
-		*address = g_ntohl (*((guint32 *) ((void *) packet + sizeof (ArvGvcpPacket))));
+		*address = g_ntohl (*((guint32 *) ((char *) packet + sizeof (ArvGvcpPacket))));
 }
 
 static inline guint32
@@ -197,7 +197,7 @@ arv_gvcp_packet_get_read_register_ack_value (const ArvGvcpPacket *packet)
 {
 	if (packet == NULL)
 		return 0;
-	return g_ntohl (*((guint32 *) ((void *) packet + sizeof (ArvGvcpPacket))));
+	return g_ntohl (*((guint32 *) ((char *) packet + sizeof (ArvGvcpPacket))));
 }
 
 static inline void
@@ -206,9 +206,9 @@ arv_gvcp_packet_get_write_register_cmd_infos (const ArvGvcpPacket *packet, guint
 	if (packet == NULL)
 		return;
 	if (address != NULL)
-		*address = g_ntohl (*((guint32 *) ((void *) packet + sizeof (ArvGvcpPacket))));
+		*address = g_ntohl (*((guint32 *) ((char *) packet + sizeof (ArvGvcpPacket))));
 	if (value != NULL)
-		*value = g_ntohl (*((guint32 *) ((void *) packet + sizeof (ArvGvcpPacket) + sizeof (guint32))));
+		*value = g_ntohl (*((guint32 *) ((char *) packet + sizeof (ArvGvcpPacket) + sizeof (guint32))));
 }
 
 G_END_DECLS
