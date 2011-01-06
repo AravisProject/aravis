@@ -28,7 +28,9 @@
 
 G_BEGIN_DECLS
 
-typedef void (*ArvFakeCameraFillPattern) (ArvBuffer *buffer, void *fill_pattern_data);
+typedef void (*ArvFakeCameraFillPattern) (ArvBuffer *buffer, void *fill_pattern_data,
+					  guint32 exposure_time_us, guint32 gain,
+					  ArvPixelFormat pixel_format);
 
 #define ARV_FAKE_CAMERA_MEMORY_SIZE	0x1000
 

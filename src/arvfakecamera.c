@@ -37,6 +37,7 @@
 #include <arvbuffer.h>
 #include <arvdebug.h>
 #include <string.h>
+#include <math.h>
 
 static GObjectClass *parent_class = NULL;
 
@@ -161,8 +162,13 @@ arv_fake_camera_wait_for_next_frame (ArvFakeCamera *camera)
 }
 
 static void
-arv_fake_camera_grey_diagonal_ramp (ArvBuffer *buffer, void *fill_pattern_data)
+arv_fake_camera_diagonal_ramp (ArvBuffer *buffer, void *fill_pattern_data,
+				    guint32 exposure_time_us,
+				    guint32 gain,
+				    ArvPixelFormat pixel_format)
 {
+	double pixel_value;
+	double scale;
 	guint32 x, y;
 	guint32 width;
 	guint32 height;
@@ -170,12 +176,26 @@ arv_fake_camera_grey_diagonal_ramp (ArvBuffer *buffer, void *fill_pattern_data)
 	if (buffer == NULL)
 		return;
 
+	if (pixel_format != ARV_PIXEL_FORMAT_MONO_8)
+		return;
+
 	width = buffer->width;
 	height = buffer->height;
 
+	scale = 1.0 + gain + log10 ((double) exposure_time_us / 10000.0);
+
 	for (y = 0; y < height; y++)
-		for (x = 0; x < width; x++)
-			((char *) buffer->data)[y * width + x] = (x + buffer->frame_id + y) % 255;
+		for (x = 0; x < width; x++) {
+			pixel_value = (x + buffer->frame_id + y) % 255;
+			pixel_value *= scale;
+
+			if (pixel_value < 0.0)
+				((unsigned char *) buffer->data)[y * width + x] = 0;
+			else if (pixel_value > 255.0)
+				((unsigned char *) buffer->data)[y * width + x] = 255;
+			else
+				((unsigned char *) buffer->data)[y * width + x] = pixel_value;
+		}
 }
 
 void
@@ -190,7 +210,7 @@ arv_fake_camera_set_fill_pattern (ArvFakeCamera *camera,
 		camera->priv->fill_pattern = fill_pattern;
 		camera->priv->fill_pattern_data = fill_pattern_data;
 	} else {
-		camera->priv->fill_pattern = arv_fake_camera_grey_diagonal_ramp;
+		camera->priv->fill_pattern = arv_fake_camera_diagonal_ramp;
 		camera->priv->fill_pattern_data = NULL;
 	}
 	g_mutex_unlock (camera->priv->fill_pattern_mutex);
@@ -203,6 +223,9 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer)
 	guint32 width;
 	guint32 height;
 	guint32 x_offset, y_offset;
+	guint32 exposure_time_us;
+	guint32 gain;
+	guint32 pixel_format;
 	size_t payload;
 
 	if (camera == NULL || buffer == NULL)
@@ -229,7 +252,10 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer)
 	buffer->pixel_format = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_PIXEL_FORMAT);
 
 	g_mutex_lock (camera->priv->fill_pattern_mutex);
-	camera->priv->fill_pattern (buffer, camera->priv->fill_pattern_data);
+	arv_fake_camera_read_register (camera, ARV_FAKE_CAMERA_REGISTER_EXPOSURE_TIME_US, &exposure_time_us);
+	arv_fake_camera_read_register (camera, ARV_FAKE_CAMERA_REGISTER_GAIN_RAW, &gain);
+	arv_fake_camera_read_register (camera, ARV_FAKE_CAMERA_REGISTER_GAIN_RAW, &pixel_format);
+	camera->priv->fill_pattern (buffer, camera->priv->fill_pattern_data, exposure_time_us, gain, pixel_format);
 	g_mutex_unlock (camera->priv->fill_pattern_mutex);
 }
 
@@ -371,7 +397,7 @@ arv_fake_camera_new (const char *serial_number)
 	memory = g_malloc0 (ARV_FAKE_CAMERA_MEMORY_SIZE);
 
 	fake_camera->priv->fill_pattern_mutex = g_mutex_new ();
-	fake_camera->priv->fill_pattern = arv_fake_camera_grey_diagonal_ramp;
+	fake_camera->priv->fill_pattern = arv_fake_camera_diagonal_ramp;
 	fake_camera->priv->fill_pattern_data = NULL;
 
 	fake_camera->priv->genicam_data = arv_get_fake_camera_genicam_data (&fake_camera->priv->genicam_data_size);
