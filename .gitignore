@@ -36,3 +36,4 @@ perf-report.*
 gtk-doc.make
 gtk-doc.m4
 massif.out.*
+messages.mo
