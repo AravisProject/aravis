@@ -12,7 +12,6 @@
         <child>
           <object class="GtkComboBox" id="camera_combobox">
             <property name="visible">True</property>
-            <property name="model">camera_liststore</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -180,6 +179,9 @@
                     <property name="x_options">GTK_FILL</property>
                   </packing>
                 </child>
+                <child>
+                  <placeholder/>
+                </child>
               </object>
             </child>
             <child type="label">
@@ -197,11 +199,5 @@
         </child>
       </object>
     </child>
-  </object>
-  <object class="GtkListStore" id="camera_liststore">
-    <columns>
-      <!-- column-name device_id -->
-      <column type="gchar"/>
-    </columns>
   </object>
 </interface>
