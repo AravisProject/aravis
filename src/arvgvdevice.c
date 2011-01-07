@@ -474,7 +474,7 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 	stream_port = arv_gv_stream_get_port (ARV_GV_STREAM (stream));
 
 	arv_device_write_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PACKET_SIZE, 0x000005dc);
-	arv_device_write_memory (device, ARV_GVBS_FIRST_STREAM_CHANNEL_IP_ADDRESS, 4, (guint8 *) address_bytes);
+	arv_device_write_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_IP_ADDRESS, g_htonl(*((guint32 *) address_bytes)));
 	arv_device_write_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, stream_port);
 	arv_device_read_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, &stream_port);
 
