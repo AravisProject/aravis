@@ -63,7 +63,10 @@ arv_debug_check (const char *domain)
 	if (arv_debug_domains == NULL)
 		arv_debug_initialize (g_getenv ("ARV_DEBUG"));
 
-	return g_hash_table_lookup (arv_debug_domains, domain) != NULL;
+	if (g_hash_table_lookup (arv_debug_domains, domain) != NULL)
+		return TRUE;
+
+	return g_hash_table_lookup (arv_debug_domains, "all") != NULL;
 }
 
 void
