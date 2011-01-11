@@ -462,37 +462,14 @@ arv_camera_set_exposure_time (ArvCamera *camera, double exposure_time_us)
 
 	switch (camera->priv->vendor) {
 		case ARV_CAMERA_VENDOR_BASLER:
-			{
-				gint64 exposure_int;
-				gint64 time_base_min_int, time_base_max_int;
-				gint64 i;
-				double time_base_min, time_base_max;
-				gint64 raw_min, raw_max;
-
-				exposure_int = (gint64) ((double) 0.5 + exposure_time_us);
-				arv_device_get_float_feature_bounds (camera->priv->device, "ExposureTimeBaseAbs",
-								     &time_base_min, &time_base_max);
-				time_base_min_int = (gint64) ((double) 0.5 + time_base_min);
-				time_base_max_int = (gint64) ((double) 0.5 + time_base_max);
-				arv_device_get_integer_feature_bounds (camera->priv->device, "ExposureTimeRaw",
-								       &raw_min, &raw_max);
-
-				for (i = time_base_min_int; i <= time_base_max_int; i++) {
-					if (exposure_int % i == 0 &&
-					    (exposure_int / i) > raw_min &&
-					    (exposure_int / i) < raw_max)
-						continue;
-				}
-
-				arv_device_set_float_feature_value (camera->priv->device, "ExposureTimeBaseAbs", i);
-			}
+			arv_device_set_float_feature_value (camera->priv->device, "ExposureTimeBaseAbs", exposure_time_us);
+			arv_device_set_integer_feature_value (camera->priv->device, "ExposureTimeRaw", 1);
 			break;
 		case ARV_CAMERA_VENDOR_PROSILICA:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
+			arv_device_set_float_feature_value (camera->priv->device, "ExposureTimeAbs", exposure_time_us);
 			break;
 	}
-
-	arv_device_set_float_feature_value (camera->priv->device, "ExposureTimeAbs", exposure_time_us);
 }
 
 /**
@@ -516,20 +493,7 @@ arv_camera_get_exposure_time_bounds (ArvCamera *camera, double *min, double *max
 
 	switch (camera->priv->vendor) {
 		case ARV_CAMERA_VENDOR_BASLER:
-			{
-				double time_base_min, time_base_max;
-				gint64 raw_min, raw_max;
-
-				arv_device_get_float_feature_bounds (camera->priv->device, "ExposureTimeBaseAbs",
-								     &time_base_min, &time_base_max);
-				arv_device_get_integer_feature_bounds (camera->priv->device, "ExposureTimeRaw",
-								       &raw_min, &raw_max);
-
-				if (min != NULL)
-					*min = time_base_min * (double) raw_min;
-				if (max != NULL)
-					*max = time_base_max * (double) raw_max;
-			}
+			arv_device_get_float_feature_bounds (camera->priv->device, "ExposureTimeBaseAbs", min, max);
 			break;
 		case ARV_CAMERA_VENDOR_PROSILICA:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
