@@ -4,7 +4,7 @@ include $(top_srcdir)/Makefile.decl
 
 ACLOCAL_AMFLAGS = -I m4
 
-DISTCHECK_CONFIGURE_FLAGS = --enable-introspection --enable-gtk-doc
+DISTCHECK_CONFIGURE_FLAGS = --enable-introspection --enable-gtk-doc --enable-cairo --enable-gtk --enable-gstreamer
 
 SUBDIRS = src gst tests po docs
 
