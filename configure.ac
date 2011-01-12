@@ -44,7 +44,7 @@ AC_ARG_ENABLE(gstreamer,
 PKG_PROG_PKG_CONFIG([0.14])
 
 ARAVIS_REQUIRES="[gobject-2.0 glib-2.0 >= 2.22 gio-2.0 libxml-2.0 gthread-2.0]"
-ARAVIS_EXTRA_REQUIRES="$(ARAVIS_REQUIRES)"
+ARAVIS_EXTRA_REQUIRES="${ARAVIS_REQUIRES}"
 
 with_cairo=no
 if test "x$enable_cairo" = "xyes"; then
