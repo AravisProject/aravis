@@ -30,6 +30,21 @@
 #include <math.h>
 
 typedef struct {
+	ArvPixelFormat pixel_format;
+	const char *media_type;
+	gint bpp;
+	gint depth;
+} ArvViewerCapsInfos;
+
+ArvViewerCapsInfos arv_viewer_caps_infos[] = {
+	{ ARV_PIXEL_FORMAT_MONO_8,		"video/x-raw-gray",	 8, 	 8},
+	{ ARV_PIXEL_FORMAT_MONO_10,		"video/x-raw-gray",	16,	16},
+	{ ARV_PIXEL_FORMAT_MONO_12,		"video/x-raw-gray",	16,	16},
+	{ ARV_PIXEL_FORMAT_MONO_16,		"video/x-raw-gray",	16,	16},
+	{ ARV_PIXEL_FORMAT_RGB_8_PACKED,	"video/x-raw-rgb",	24,	24}
+};
+
+typedef struct {
 	ArvCamera *camera;
 	ArvDevice *device;
 	ArvStream *stream;
@@ -229,11 +244,13 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	GstCaps *caps;
 	GstElement *ffmpegcolorspace;
 	GstElement *ximagesink;
+	ArvPixelFormat pixel_format;
 	char *camera_id;
 	char *text;
 	unsigned int payload;
 	int width;
 	int height;
+	int caps_infos_id;
 	unsigned int i;
 	gulong window_xid;
 	double exposure;
@@ -258,6 +275,7 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 		arv_stream_push_buffer (viewer->stream, arv_buffer_new (payload, NULL));
 
 	arv_camera_get_region (viewer->camera, NULL, NULL, &width, &height);
+	pixel_format = arv_camera_get_pixel_format (viewer->camera);
 	exposure = arv_camera_get_exposure_time (viewer->camera);
 	gain = arv_camera_get_gain (viewer->camera);
 	arv_camera_get_exposure_time_bounds (viewer->camera, &viewer->exposure_min, &viewer->exposure_max);
@@ -282,6 +300,13 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	gtk_entry_set_text (GTK_ENTRY (viewer->frame_rate_entry), text);
 	g_free (text);
 
+	for (caps_infos_id = 0; caps_infos_id < G_N_ELEMENTS (arv_viewer_caps_infos); caps_infos_id++)
+		if (arv_viewer_caps_infos[caps_infos_id].pixel_format == pixel_format)
+			break;
+
+	if (caps_infos_id == G_N_ELEMENTS (arv_viewer_caps_infos))
+		return;
+
 	arv_camera_start_acquisition (viewer->camera);
 
 	viewer->pipeline = gst_pipeline_new ("pipeline");
@@ -292,9 +317,9 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	g_object_set (ximagesink, "force-aspect-ratio", TRUE, NULL);
 	gst_bin_add_many (GST_BIN (viewer->pipeline), viewer->appsrc, ffmpegcolorspace, ximagesink, NULL);
 	gst_element_link_many (viewer->appsrc, ffmpegcolorspace, ximagesink, NULL);
-	caps = gst_caps_new_simple ("video/x-raw-gray",
-				    "bpp", G_TYPE_INT, 8,
-				    "depth", G_TYPE_INT, 8,
+	caps = gst_caps_new_simple (arv_viewer_caps_infos[caps_infos_id].media_type,
+				    "bpp", G_TYPE_INT, arv_viewer_caps_infos[caps_infos_id].bpp,
+				    "depth", G_TYPE_INT, arv_viewer_caps_infos[caps_infos_id].depth,
 				    "endianness", G_TYPE_INT, G_BIG_ENDIAN,
 				    "width", G_TYPE_INT, width,
 				    "height", G_TYPE_INT, height,
