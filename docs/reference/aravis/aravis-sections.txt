@@ -141,6 +141,7 @@ arv_device_read_memory
 arv_device_write_memory
 arv_device_read_register
 arv_device_write_register
+arv_device_get_genicam_xml
 arv_device_get_genicam
 arv_device_execute_command
 arv_device_set_string_feature_value
@@ -393,7 +394,6 @@ ArvGvInterfaceClass
 <TITLE>ArvGvDevice</TITLE>
 ArvGvDevice
 arv_gv_device_new
-arv_gv_device_get_xml
 arv_gv_device_get_timestamp_tick_frequency
 <SUBSECTION Standard>
 ARV_GV_DEVICE
@@ -545,7 +545,7 @@ arv_fake_camera_set_fill_pattern
 arv_fake_camera_set_trigger_frequency
 arv_fake_device_get_fake_camera
 arv_set_fake_camera_genicam_filename
-arv_get_fake_camera_genicam_data
+arv_get_fake_camera_genicam_xml
 <SUBSECTION Standard>
 ARV_FAKE_CAMERA
 ARV_IS_FAKE_CAMERA

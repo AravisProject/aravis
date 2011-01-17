@@ -46,6 +46,7 @@ struct _ArvDeviceClass {
 
 	ArvStream *	(*create_stream)	(ArvDevice *device, ArvStreamCallback callback, void *user_data);
 
+	const char *	(*get_genicam_xml)	(ArvDevice *device, size_t *size);
 	ArvGc *		(*get_genicam)		(ArvDevice *device);
 
 	gboolean	(*read_memory)		(ArvDevice *device, guint32 address, guint32 size, void *buffer);
@@ -64,6 +65,7 @@ gboolean	arv_device_write_memory	 	(ArvDevice *device, guint32 address, guint32 
 gboolean 	arv_device_read_register	(ArvDevice *device, guint32 address, guint32 *value);
 gboolean	arv_device_write_register 	(ArvDevice *device, guint32 address, guint32 value);
 
+const char * 	arv_device_get_genicam_xml 		(ArvDevice *device, size_t *size);
 ArvGc *		arv_device_get_genicam			(ArvDevice *device);
 
 void 		arv_device_execute_command 		(ArvDevice *device, const char *feature);

@@ -127,7 +127,7 @@ void		arv_fake_camera_set_fill_pattern	(ArvFakeCamera *camera,
 void 		arv_fake_camera_set_trigger_frequency 	(ArvFakeCamera *camera, double frequency);
 
 void 		arv_set_fake_camera_genicam_filename 	(const char *filename);
-const char *	arv_get_fake_camera_genicam_data	(size_t *size);
+const char *	arv_get_fake_camera_genicam_xml		(size_t *size);
 
 G_END_DECLS
 

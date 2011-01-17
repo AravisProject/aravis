@@ -43,8 +43,8 @@ static GObjectClass *parent_class = NULL;
 
 struct _ArvFakeCameraPrivate {
 	void *memory;
-	const void *genicam_data;
-	size_t genicam_data_size;
+	const void *genicam_xml;
+	size_t genicam_xml_size;
 
 	guint32 frame_id;
 	double trigger_frequency;
@@ -78,9 +78,9 @@ arv_fake_camera_read_memory (ArvFakeCamera *camera, guint32 address, guint32 siz
 	}
 
 	address -= ARV_FAKE_CAMERA_MEMORY_SIZE;
-	read_size = MIN (address + size, camera->priv->genicam_data_size) - address;
+	read_size = MIN (address + size, camera->priv->genicam_xml_size) - address;
 
-	memcpy (buffer, camera->priv->genicam_data + address, read_size);
+	memcpy (buffer, camera->priv->genicam_xml + address, read_size);
 
 	return TRUE;
 }
@@ -89,7 +89,7 @@ gboolean
 arv_fake_camera_write_memory (ArvFakeCamera *camera, guint32 address, guint32 size, const void *buffer)
 {
 	g_return_val_if_fail (ARV_IS_FAKE_CAMERA (camera), FALSE);
-	g_return_val_if_fail (address + size < ARV_FAKE_CAMERA_MEMORY_SIZE + camera->priv->genicam_data_size, FALSE);
+	g_return_val_if_fail (address + size < ARV_FAKE_CAMERA_MEMORY_SIZE + camera->priv->genicam_xml_size, FALSE);
 	g_return_val_if_fail (buffer != NULL, FALSE);
 	g_return_val_if_fail (size > 0, FALSE);
 
@@ -342,7 +342,7 @@ arv_set_fake_camera_genicam_filename (const char *filename)
 }
 
 const char *
-arv_get_fake_camera_genicam_data (size_t *size)
+arv_get_fake_camera_genicam_xml (size_t *size)
 {
 	static GMappedFile *genicam_file = NULL;
 	static GStaticMutex mutex = G_STATIC_MUTEX_INIT;
@@ -400,7 +400,7 @@ arv_fake_camera_new (const char *serial_number)
 	fake_camera->priv->fill_pattern = arv_fake_camera_diagonal_ramp;
 	fake_camera->priv->fill_pattern_data = NULL;
 
-	fake_camera->priv->genicam_data = arv_get_fake_camera_genicam_data (&fake_camera->priv->genicam_data_size);
+	fake_camera->priv->genicam_xml = arv_get_fake_camera_genicam_xml (&fake_camera->priv->genicam_xml_size);
 	fake_camera->priv->memory = memory;
 
 	strcpy (memory + ARV_GVBS_MANUFACTURER_NAME, "Aravis");
@@ -411,7 +411,7 @@ arv_fake_camera_new (const char *serial_number)
 	xml_url = g_strdup_printf ("Local:arv-fake-camera-%s.xml;%x;%x",
 				   PACKAGE_VERSION,
 				   ARV_FAKE_CAMERA_MEMORY_SIZE,
-				   (unsigned int) fake_camera->priv->genicam_data_size);
+				   (unsigned int) fake_camera->priv->genicam_xml_size);
 	strcpy (memory + ARV_GVBS_FIRST_XML_URL, xml_url);
 	g_free (xml_url);
 
