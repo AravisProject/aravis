@@ -42,6 +42,27 @@
 #include <arvdevice.h>
 #include <arvenums.h>
 
+/**
+ * ArvCameraVendor:
+ * @ARV_CAMERA_VENDOR_UNKNOWN: unknown camera vendor
+ * @ARV_CAMERA_VENDOR_BASLER: Basler
+ * @ARV_CAMERA_VENDOR_PROSILICA: Prosilica
+ */
+
+typedef enum {
+	ARV_CAMERA_VENDOR_UNKNOWN,
+	ARV_CAMERA_VENDOR_BASLER,
+	ARV_CAMERA_VENDOR_PROSILICA
+} ArvCameraVendor;
+
+typedef enum {
+	ARV_CAMERA_SERIES_UNKNOWN,
+	ARV_CAMERA_SERIES_BASLER_ACE,
+	ARV_CAMERA_SERIES_BASLER_SCOUT,
+	ARV_CAMERA_SERIES_BASLER_OTHER,
+	ARV_CAMERA_SERIES_PROSILICA_OTHER
+} ArvCameraSeries;
+
 static GObjectClass *parent_class = NULL;
 
 struct _ArvCameraPrivate {
@@ -49,6 +70,7 @@ struct _ArvCameraPrivate {
 	ArvGc *genicam;
 
 	ArvCameraVendor vendor;
+	ArvCameraSeries series;
 };
 
 /**
@@ -460,13 +482,13 @@ arv_camera_set_exposure_time (ArvCamera *camera, double exposure_time_us)
 	if (exposure_time_us <= 0)
 		return;
 
-	switch (camera->priv->vendor) {
-		case ARV_CAMERA_VENDOR_BASLER:
-			arv_device_set_float_feature_value (camera->priv->device, "ExposureTimeBaseAbs", exposure_time_us);
+	switch (camera->priv->series) {
+		case ARV_CAMERA_SERIES_BASLER_SCOUT:
+			arv_device_set_float_feature_value (camera->priv->device, "ExposureTimeBaseAbs",
+							    exposure_time_us);
 			arv_device_set_integer_feature_value (camera->priv->device, "ExposureTimeRaw", 1);
 			break;
-		case ARV_CAMERA_VENDOR_PROSILICA:
-		case ARV_CAMERA_VENDOR_UNKNOWN:
+		default:
 			arv_device_set_float_feature_value (camera->priv->device, "ExposureTimeAbs", exposure_time_us);
 			break;
 	}
@@ -491,12 +513,11 @@ arv_camera_get_exposure_time_bounds (ArvCamera *camera, double *min, double *max
 {
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
-	switch (camera->priv->vendor) {
-		case ARV_CAMERA_VENDOR_BASLER:
+	switch (camera->priv->series) {
+		case ARV_CAMERA_SERIES_BASLER_SCOUT:
 			arv_device_get_float_feature_bounds (camera->priv->device, "ExposureTimeBaseAbs", min, max);
 			break;
-		case ARV_CAMERA_VENDOR_PROSILICA:
-		case ARV_CAMERA_VENDOR_UNKNOWN:
+		default:
 			arv_device_get_float_feature_bounds (camera->priv->device, "ExposureTimeAbs", min, max);
 			break;
 	}
@@ -595,7 +616,9 @@ arv_camera_new (const char *name)
 	ArvCamera *camera;
 	ArvDevice *device;
 	ArvCameraVendor vendor;
+	ArvCameraSeries series;
 	const char *vendor_name;
+	const char *model_name;
 
 	device = arv_open_device (name);
 
@@ -607,14 +630,26 @@ arv_camera_new (const char *name)
 	camera->priv->genicam = arv_device_get_genicam (device);
 
 	vendor_name = arv_camera_get_vendor_name (camera);
-	if (g_strcmp0 (vendor_name, "Basler") == 0)
+	model_name = arv_camera_get_model_name (camera);
+
+	if (g_strcmp0 (vendor_name, "Basler") == 0) {
 		vendor = ARV_CAMERA_VENDOR_BASLER;
-	else if (g_strcmp0 (vendor_name, "Prosilica") == 0)
+		if (g_str_has_prefix (model_name, "acA"))
+			series = ARV_CAMERA_SERIES_BASLER_ACE;
+		else if (g_str_has_prefix (model_name, "scA"))
+			series = ARV_CAMERA_SERIES_BASLER_SCOUT;
+		else
+			series = ARV_CAMERA_SERIES_BASLER_OTHER;
+	} else if (g_strcmp0 (vendor_name, "Prosilica") == 0) {
 		vendor = ARV_CAMERA_VENDOR_PROSILICA;
-	else
+		series = ARV_CAMERA_SERIES_PROSILICA_OTHER;
+	} else {
 		vendor = ARV_CAMERA_VENDOR_UNKNOWN;
+		series = ARV_CAMERA_SERIES_UNKNOWN;
+	}
 
 	camera->priv->vendor = vendor;
+	camera->priv->series = vendor;
 
 	return camera;
 }

@@ -1,7 +1,6 @@
 <SECTION>
 <FILE>arvcamera</FILE>
 <TITLE>ArvCamera</TITLE>
-ArvCameraVendor
 ArvCamera
 arv_camera_new
 arv_camera_create_stream
