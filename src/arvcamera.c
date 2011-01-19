@@ -649,7 +649,7 @@ arv_camera_new (const char *name)
 	}
 
 	camera->priv->vendor = vendor;
-	camera->priv->series = vendor;
+	camera->priv->series = series;
 
 	return camera;
 }
