@@ -186,7 +186,10 @@ _read_cache (ArvGcRegister *gc_register)
 			  arv_gc_register_get_address (gc_register),
 			  gc_register->cache_size);
 
-	gc_register->is_cache_valid = TRUE;
+	if (gc_register->cachable != ARV_GC_CACHABLE_NO_CACHE)
+		gc_register->is_cache_valid = TRUE;
+	else
+		gc_register->is_cache_valid = FALSE;
 }
 
 static void
@@ -213,6 +216,8 @@ _write_cache (ArvGcRegister *gc_register)
 
 	if (gc_register->cachable == ARV_GC_CACHABLE_WRITE_TRHOUGH)
 		gc_register->is_cache_valid = TRUE;
+	else
+		gc_register->is_cache_valid = FALSE;
 }
 
 void
