@@ -37,6 +37,25 @@ _from_string (const char *string, const char **strings, unsigned int n_strings)
 	return 0;
 }
 
+static const char *arv_auto_strings[] = {
+	"Off",
+	"Once",
+	"Continuous"
+};
+
+const char *
+arv_auto_to_string (ArvAuto value)
+{
+	return arv_auto_strings[CLAMP (value, 0, ARV_AUTO_CONTINUOUS)];
+}
+
+ArvAuto
+arv_auto_from_string (const char *string)
+{
+	return _from_string (string, arv_auto_strings,
+			     G_N_ELEMENTS (arv_auto_strings));
+}
+
 static const char *arv_acquisition_mode_strings[] = {
 	"Continuous",
 	"SingleFrame"

@@ -46,6 +46,22 @@ typedef enum {
 } ArvGcCachable;
 
 /**
+ * ArvAuto:
+ * @ARV_AUTO_OFF: manual setting
+ * @ARV_AUTO_ONCE: automatic setting done once, then returns to manual
+ * @ARV_AUTO_CONTINUOUS: setting is adjusted continuously
+ */
+
+typedef enum {
+	ARV_AUTO_OFF,
+	ARV_AUTO_ONCE,
+	ARV_AUTO_CONTINUOUS
+} ArvAuto;
+
+const char * 		arv_auto_to_string 		(ArvAuto value);
+ArvAuto 		arv_auto_from_string		(const char *string);
+
+/**
  * ArvAcquisitionMode:
  * @ARV_ACQUISITION_MODE_CONTINUOUS: continuous acquisition
  * @ARV_ACQUISITION_MODE_SINGLE_FRAME: only one frame will be acquired
@@ -55,6 +71,9 @@ typedef enum {
 	ARV_ACQUISITION_MODE_CONTINUOUS,
 	ARV_ACQUISITION_MODE_SINGLE_FRAME
 } ArvAcquisitionMode;
+
+const char * 		arv_acquisition_mode_to_string 		(ArvAcquisitionMode value);
+ArvAcquisitionMode 	arv_acquisition_mode_from_string	(const char *string);
 
 /**
  * ArvPixelFormat:
@@ -99,9 +118,6 @@ typedef enum {
 	ARV_PIXEL_FORMAT_BAYER_GB_16		= 0x81100008,
 	ARV_PIXEL_FORMAT_BAYER_BG_16		= 0x81100009
 } ArvPixelFormat;
-
-const char * 		arv_acquisition_mode_to_string 		(ArvAcquisitionMode value);
-ArvAcquisitionMode 	arv_acquisition_mode_from_string	(const char *string);
 
 G_END_DECLS
 

@@ -86,12 +86,16 @@ void		arv_camera_set_trigger			(ArvCamera *camera, const char *source);
 void 		arv_camera_set_exposure_time 		(ArvCamera *camera, double exposure_time_us);
 double 		arv_camera_get_exposure_time 		(ArvCamera *camera);
 void		arv_camera_get_exposure_time_bounds	(ArvCamera *camera, double *min, double *max);
+void		arv_camera_set_exposure_time_auto	(ArvCamera *camera, ArvAuto auto_mode);
+ArvAuto		arv_camera_get_exposure_time_auto	(ArvCamera *camera);
 
 /* Analog control */
 
 void 		arv_camera_set_gain	 	(ArvCamera *camera, gint64 gain);
 gint64 		arv_camera_get_gain 		(ArvCamera *camera);
 void		arv_camera_get_gain_bounds	(ArvCamera *camera, gint64 *min, gint64 *max);
+void		arv_camera_set_gain_auto	(ArvCamera *camera, ArvAuto auto_mode);
+ArvAuto		arv_camera_get_gain_auto	(ArvCamera *camera);
 
 /* Transport layer control */
 

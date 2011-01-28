@@ -523,6 +523,22 @@ arv_camera_get_exposure_time_bounds (ArvCamera *camera, double *min, double *max
 	}
 }
 
+void
+arv_camera_set_exposure_time_auto (ArvCamera *camera, ArvAuto auto_mode)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_device_set_string_feature_value (camera->priv->device, "ExposureAuto", arv_auto_to_string (auto_mode));
+}
+
+ArvAuto
+arv_camera_get_exposure_time_auto (ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), ARV_AUTO_OFF);
+
+	return arv_auto_from_string (arv_device_get_string_feature_value (camera->priv->device, "ExposureAuto"));
+}
+
 /* Analog control */
 
 /**
@@ -564,6 +580,22 @@ arv_camera_get_gain_bounds (ArvCamera *camera, gint64 *min, gint64 *max)
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
 	arv_device_get_integer_feature_bounds (camera->priv->device, "GainRaw", min, max);
+}
+
+void
+arv_camera_set_gain_auto (ArvCamera *camera, ArvAuto auto_mode)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_device_set_string_feature_value (camera->priv->device, "GainAuto", arv_auto_to_string (auto_mode));
+}
+
+ArvAuto
+arv_camera_get_gain_auto (ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), ARV_AUTO_OFF);
+
+	return arv_auto_from_string (arv_device_get_string_feature_value (camera->priv->device, "GainAuto"));
 }
 
 /* Transport layer control */

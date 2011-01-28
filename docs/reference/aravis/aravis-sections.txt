@@ -1,6 +1,9 @@
 <SECTION>
 <FILE>arvcamera</FILE>
 <TITLE>ArvCamera</TITLE>
+ArvAuto
+arv_auto_from_string
+arv_auto_to_string
 ArvCamera
 arv_camera_new
 arv_camera_create_stream
@@ -25,9 +28,13 @@ arv_camera_set_trigger
 arv_camera_set_exposure_time
 arv_camera_get_exposure_time
 arv_camera_get_exposure_time_bounds
+arv_camera_set_exposure_time_auto
+arv_camera_get_exposure_time_auto
 arv_camera_set_gain
 arv_camera_get_gain
 arv_camera_get_gain_bounds
+arv_camera_set_gain_auto
+arv_camera_get_gain_auto
 arv_camera_get_payload
 ArvAcquisitionMode
 arv_acquisition_mode_to_string
