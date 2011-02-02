@@ -1,3 +1,12 @@
+Release 0.1.4
+=============
+
+  * Viewer: support for some color pixel formats
+  * Viewer: support for auto gain and auto exposure
+  * Utils: Genicam xml data dump capability added to arv-show-devices
+  * Camera API: Fix exposure setting for Ace Basler cameras
+  * Genicam: Fix caching of registers on read
+
 Release 0.1.3
 =============
 
