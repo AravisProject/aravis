@@ -488,6 +488,7 @@ arv_camera_set_exposure_time (ArvCamera *camera, double exposure_time_us)
 							    exposure_time_us);
 			arv_device_set_integer_feature_value (camera->priv->device, "ExposureTimeRaw", 1);
 			break;
+		case ARV_CAMERA_SERIES_BASLER_ACE:
 		default:
 			arv_device_set_float_feature_value (camera->priv->device, "ExposureTimeAbs", exposure_time_us);
 			break;
@@ -511,11 +512,20 @@ arv_camera_get_exposure_time (ArvCamera *camera)
 void
 arv_camera_get_exposure_time_bounds (ArvCamera *camera, double *min, double *max)
 {
+	gint64 int_min, int_max;
+
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
 	switch (camera->priv->series) {
 		case ARV_CAMERA_SERIES_BASLER_SCOUT:
 			arv_device_get_float_feature_bounds (camera->priv->device, "ExposureTimeBaseAbs", min, max);
+			break;
+		case ARV_CAMERA_SERIES_BASLER_ACE:
+			arv_device_get_integer_feature_bounds (camera->priv->device, "ExposureTimeRaw", &int_min, &int_max);
+			if (min != NULL)
+				*min = int_min;
+			if (max != NULL)
+				*max = int_max;
 			break;
 		default:
 			arv_device_get_float_feature_bounds (camera->priv->device, "ExposureTimeAbs", min, max);
