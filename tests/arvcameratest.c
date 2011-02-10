@@ -5,7 +5,7 @@
 static char *arv_option_camera_name = NULL;
 static char *arv_option_debug_domains = NULL;
 static gboolean arv_option_snaphot = FALSE;
-static gboolean arv_option_auto_buffer = FALSE;
+static int arv_option_auto_socket_buffer = -1;
 static char *arv_option_trigger = NULL;
 static double arv_option_frequency = -1.0;
 static int arv_option_width = -1;
@@ -21,8 +21,8 @@ static const GOptionEntry arv_option_entries[] =
 		&arv_option_camera_name,"Camera name", NULL},
 	{ "snapshot",		's', 0, G_OPTION_ARG_NONE,
 		&arv_option_snaphot,	"Snapshot", NULL},
-	{ "auto",		'a', 0, G_OPTION_ARG_NONE,
-		&arv_option_auto_buffer,	"Auto buffer size", NULL},
+	{ "auto",		'a', 0, G_OPTION_ARG_INT,
+		&arv_option_auto_socket_buffer,	"Auto socket buffer size", NULL},
 	{ "frequency", 		'f', 0, G_OPTION_ARG_DOUBLE,
 		&arv_option_frequency,	"Acquisition frequency", NULL },
 	{ "trigger",		't', 0, G_OPTION_ARG_STRING,
@@ -156,10 +156,11 @@ main (int argc, char **argv)
 		g_printf ("gain                = %d dB\n", gain);
 
 		stream = arv_camera_create_stream (camera, NULL, NULL);
-		if (arv_option_auto_buffer)
-			arv_gv_stream_set_option (ARV_GV_STREAM (stream),
-						  ARV_GV_STREAM_OPTION_SOCKET_BUFFER_AUTO,
-						  0);
+		if (arv_option_auto_socket_buffer >= 0)
+			g_object_set (stream,
+				      "socket-buffer", ARV_GV_STREAM_SOCKET_BUFFER_AUTO,
+				      "socket-buffer-size", arv_option_auto_socket_buffer,
+				      NULL);
 
 		for (i = 0; i < 50; i++)
 			arv_stream_push_buffer (stream, arv_buffer_new (payload, NULL));

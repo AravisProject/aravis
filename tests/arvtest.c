@@ -182,9 +182,10 @@ main (int argc, char **argv)
 
 		stream = arv_device_create_stream (device, NULL, NULL);
 		if (arv_option_auto_buffer)
-			arv_gv_stream_set_option (ARV_GV_STREAM (stream),
-						  ARV_GV_STREAM_OPTION_SOCKET_BUFFER_AUTO,
-						  0);
+			g_object_set (stream,
+				      "socket-buffer", ARV_GV_STREAM_SOCKET_BUFFER_AUTO,
+				      "socket-buffer-size", 0,
+				      NULL);
 
 		node = arv_gc_get_node (genicam, "PayloadSize");
 		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));

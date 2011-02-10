@@ -30,15 +30,15 @@
 G_BEGIN_DECLS
 
 /**
- * ArvGvStreamOption:
- * @ARV_GV_STREAM_OPTION_SOCKET_BUFFER_FIXED: socket buffer is set to a given fixed value
- * @ARV_GV_STREAM_OPTION_SOCKET_BUFFER_AUTO: sockect buffer is set with respect to the payload size
+ * ArvGvStreamSocketBuffer:
+ * @ARV_GV_STREAM_SOCKET_BUFFER_FIXED: socket buffer is set to a given fixed value
+ * @ARV_GV_STREAM_SOCKET_BUFFER_AUTO: sockect buffer is set with respect to the payload size
  */
 
 typedef enum {
-	ARV_GV_STREAM_OPTION_SOCKET_BUFFER_FIXED,
-	ARV_GV_STREAM_OPTION_SOCKET_BUFFER_AUTO
-} ArvGvStreamOption;
+	ARV_GV_STREAM_SOCKET_BUFFER_FIXED,
+	ARV_GV_STREAM_SOCKET_BUFFER_AUTO
+} ArvGvStreamSocketBuffer;
 
 /**
  * ArvGvStreamPacketResend:
@@ -80,9 +80,6 @@ ArvStream * 	arv_gv_stream_new			(GInetAddress *device_address, guint16 port,
 							 ArvStreamCallback callback, void *user_data,
 							 guint64 timestamp_tick_frequency);
 guint16 	arv_gv_stream_get_port			(ArvGvStream *gv_stream);
-void		arv_gv_stream_set_option		(ArvGvStream *gv_stream, ArvGvStreamOption option,
-							 int value);
-void		arv_gv_stream_set_packet_resend 	(ArvGvStream *gv_stream, ArvGvStreamPacketResend resend);
 
 void		arv_gv_stream_get_statistics		(ArvGvStream *gv_stream,
 							 guint64 *n_resent_blocks,

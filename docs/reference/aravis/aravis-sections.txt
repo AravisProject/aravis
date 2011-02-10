@@ -643,13 +643,11 @@ ArvGcStringInterface
 <SECTION>
 <FILE>arvgvstream</FILE>
 <TITLE>ArvGvStream</TITLE>
-ArvGvStreamOption
+ArvGvStreamSocketBuffer
 ArvGvStreamPacketResend
 ArvGvStream
 arv_gv_stream_new
 arv_gv_stream_get_port
-arv_gv_stream_set_option
-arv_gv_stream_set_packet_resend
 arv_gv_stream_get_statistics
 <SUBSECTION Standard>
 ARV_GV_STREAM

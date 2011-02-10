@@ -31,10 +31,18 @@
 #include <arvgvcp.h>
 #include <arvdebug.h>
 #include <arvtools.h>
+#include <arvenumtypes.h>
 #include <string.h>
 #include <sys/socket.h>
 
 #define ARV_GV_STREAM_INCOMING_BUFFER_SIZE	65536
+
+enum {
+	ARV_GV_STREAM_PROPERTY_0,
+	ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER,
+	ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER_SIZE,
+	ARV_GV_STREAM_PROPERTY_PACKET_RESEND
+} ArvGvStreamProperties;
 
 static GObjectClass *parent_class = NULL;
 
@@ -71,7 +79,7 @@ typedef struct {
 
 	ArvStatistic *statistic;
 
-	ArvGvStreamOption socket_buffer_option;
+	ArvGvStreamSocketBuffer socket_buffer_option;
 	int socket_buffer_size;
 	int current_socket_buffer_size;
 } ArvGvStreamThreadData;
@@ -104,17 +112,17 @@ _update_socket (ArvGvStreamThreadData *thread_data, ArvBuffer *buffer)
 {
 	int buffer_size, fd;
 
-	if (thread_data->socket_buffer_option == ARV_GV_STREAM_OPTION_SOCKET_BUFFER_FIXED &&
+	if (thread_data->socket_buffer_option == ARV_GV_STREAM_SOCKET_BUFFER_FIXED &&
 	    thread_data->socket_buffer_size <= 0)
 		return;
 
 	fd = g_socket_get_fd (thread_data->socket);
 
 	switch (thread_data->socket_buffer_option) {
-		case ARV_GV_STREAM_OPTION_SOCKET_BUFFER_FIXED:
+		case ARV_GV_STREAM_SOCKET_BUFFER_FIXED:
 			buffer_size = thread_data->socket_buffer_size;
 			break;
-		case ARV_GV_STREAM_OPTION_SOCKET_BUFFER_AUTO:
+		case ARV_GV_STREAM_SOCKET_BUFFER_AUTO:
 			if (thread_data->socket_buffer_size <= 0)
 				buffer_size = buffer->size;
 			else
@@ -402,36 +410,6 @@ arv_gv_stream_get_port (ArvGvStream *gv_stream)
 	return g_inet_socket_address_get_port (local_address);
 }
 
-void
-arv_gv_stream_set_option (ArvGvStream *gv_stream, ArvGvStreamOption option, int value)
-{
-	ArvGvStreamThreadData *thread_data;
-
-	g_return_if_fail (ARV_IS_GV_STREAM (gv_stream));
-
-	thread_data = gv_stream->thread_data;
-	switch (option) {
-		case ARV_GV_STREAM_OPTION_SOCKET_BUFFER_AUTO:
-			thread_data->socket_buffer_size = value;
-			thread_data->socket_buffer_option = option;
-			break;
-		case ARV_GV_STREAM_OPTION_SOCKET_BUFFER_FIXED:
-			thread_data->socket_buffer_option = option;
-			thread_data->socket_buffer_size = value;
-			break;
-	}
-}
-
-void arv_gv_stream_set_packet_resend (ArvGvStream *gv_stream, ArvGvStreamPacketResend resend)
-{
-	ArvGvStreamThreadData *thread_data;
-
-	g_return_if_fail (ARV_IS_GV_STREAM (gv_stream));
-
-	thread_data = gv_stream->thread_data;
-	thread_data->packet_resend = resend;
-}
-
 ArvStream *
 arv_gv_stream_new (GInetAddress *device_address, guint16 port,
 		   ArvStreamCallback callback, void *user_data,
@@ -485,7 +463,7 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port,
 	arv_statistic_set_name (thread_data->statistic, 1, "Local time delta");
 	arv_statistic_set_name (thread_data->statistic, 2, "Buffer reception time");
 
-	thread_data->socket_buffer_option = ARV_GV_STREAM_OPTION_SOCKET_BUFFER_FIXED;
+	thread_data->socket_buffer_option = ARV_GV_STREAM_SOCKET_BUFFER_FIXED;
 	thread_data->socket_buffer_size = 0;
 	thread_data->current_socket_buffer_size = 0;
 
@@ -533,6 +511,56 @@ _get_statistics (ArvStream *stream,
 	*n_completed_buffers = thread_data->n_completed_buffers;
 	*n_failures = thread_data->n_failures;
 	*n_underruns = thread_data->n_underruns;
+}
+
+static void
+arv_gv_stream_set_property (GObject * object, guint prop_id,
+			    const GValue * value, GParamSpec * pspec)
+{
+	ArvGvStream *gv_stream = ARV_GV_STREAM (object);
+	ArvGvStreamThreadData *thread_data;
+
+	thread_data = gv_stream->thread_data;
+
+	switch (prop_id) {
+		case ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER:
+			thread_data->socket_buffer_option = g_value_get_enum (value);
+			break;
+		case ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER_SIZE:
+			thread_data->socket_buffer_size = g_value_get_int (value);
+			break;
+		case ARV_GV_STREAM_PROPERTY_PACKET_RESEND:
+			thread_data->packet_resend = g_value_get_enum (value);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+			break;
+	}
+}
+
+static void
+arv_gv_stream_get_property (GObject * object, guint prop_id,
+			    GValue * value, GParamSpec * pspec)
+{
+	ArvGvStream *gv_stream = ARV_GV_STREAM (object);
+	ArvGvStreamThreadData *thread_data;
+
+	thread_data = gv_stream->thread_data;
+
+	switch (prop_id) {
+		case ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER:
+			g_value_set_enum (value, thread_data->socket_buffer_option);
+			break;
+		case ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER_SIZE:
+			g_value_set_int (value, thread_data->socket_buffer_size);
+			break;
+		case ARV_GV_STREAM_PROPERTY_PACKET_RESEND:
+			g_value_set_enum (value, thread_data->packet_resend);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+			break;
+	}
 }
 
 static void
@@ -600,8 +628,34 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 	parent_class = g_type_class_peek_parent (gv_stream_class);
 
 	object_class->finalize = arv_gv_stream_finalize;
+	object_class->set_property = arv_gv_stream_set_property;
+	object_class->get_property = arv_gv_stream_get_property;
 
 	stream_class->get_statistics = _get_statistics;
+
+	g_object_class_install_property (
+		object_class, ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER,
+		g_param_spec_enum ("socket-buffer", "Socket buffer",
+				   "Socket buffer behaviour",
+				   ARV_TYPE_GV_STREAM_SOCKET_BUFFER,
+				   ARV_GV_STREAM_SOCKET_BUFFER_AUTO,
+				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+		);
+	g_object_class_install_property (
+		object_class, ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER_SIZE,
+		g_param_spec_int ("socket-buffer-size", "Socket buffer size",
+				  "Socket buffer size, in bytes",
+				  -1, G_MAXINT, 0,
+				  G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+		);
+	g_object_class_install_property (
+		object_class, ARV_GV_STREAM_PROPERTY_PACKET_RESEND,
+		g_param_spec_enum ("packet-resend", "Packet resend",
+				   "Packet resend behaviour",
+				   ARV_TYPE_GV_STREAM_PACKET_RESEND,
+				   ARV_GV_STREAM_PACKET_RESEND_ALWAYS,
+				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+		);
 }
 
 G_DEFINE_TYPE (ArvGvStream, arv_gv_stream, ARV_TYPE_STREAM)

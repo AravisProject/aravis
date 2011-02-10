@@ -49,7 +49,6 @@ enum {
 
 static GObjectClass *parent_class = NULL;
 
-
 struct _ArvStreamPrivate {
 	GAsyncQueue *input_queue;
 	GAsyncQueue *output_queue;
@@ -330,7 +329,6 @@ arv_stream_class_init (ArvStreamClass *node_class)
 				      "Emit signals", FALSE,
 				      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
 		);
-
 }
 
 G_DEFINE_ABSTRACT_TYPE (ArvStream, arv_stream, G_TYPE_OBJECT)
