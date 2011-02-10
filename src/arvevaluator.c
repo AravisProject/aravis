@@ -362,7 +362,7 @@ arv_get_next_token (char **expression, ArvEvaluatorToken *previous_token)
 		char *end = *expression;
 		ptrdiff_t token_length;
 
-		while (g_ascii_isalpha (*end) || *end == '_')
+		while (g_ascii_isalnum (*end) || *end == '_')
 			end++;
 
 		token_length = end - *expression;
@@ -953,6 +953,9 @@ arv_evaluator_evaluate_as_double (ArvEvaluator *evaluator, GError **error)
 
 	g_return_val_if_fail (ARV_IS_EVALUATOR (evaluator), 0.0);
 
+	arv_debug ("evaluator", "[Evaluator::evaluate_as_double] Expression = '%s'", 
+		   evaluator->priv->expression);
+
 	if (evaluator->priv->parsing_status == ARV_EVALUATOR_STATUS_NOT_PARSED) {
 		evaluator->priv->parsing_status = parse_expression (evaluator->priv->expression,
 								    &evaluator->priv->rpn_stack);
@@ -981,6 +984,9 @@ arv_evaluator_evaluate_as_int64 (ArvEvaluator *evaluator, GError **error)
 	gint64 value;
 
 	g_return_val_if_fail (ARV_IS_EVALUATOR (evaluator), 0.0);
+
+	arv_debug ("evaluator", "[Evaluator::evaluate_as_int64] Expression = '%s'", 
+		   evaluator->priv->expression);
 
 	if (evaluator->priv->parsing_status == ARV_EVALUATOR_STATUS_NOT_PARSED) {
 		evaluator->priv->parsing_status = parse_expression (evaluator->priv->expression,

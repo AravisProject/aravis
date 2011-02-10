@@ -118,9 +118,9 @@ set_int64_variable_test (void)
 	const char *expression;
 	gint64 v_int64;
 
-	evaluator = arv_evaluator_new ("A");
+	evaluator = arv_evaluator_new ("A_1");
 
-	arv_evaluator_set_int64_variable (evaluator, "A", 123);
+	arv_evaluator_set_int64_variable (evaluator, "A_1", 123);
 	v_int64 = arv_evaluator_evaluate_as_int64 (evaluator, NULL);
 
 	g_assert_cmpfloat (v_int64, ==, 123);
