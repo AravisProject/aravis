@@ -30,21 +30,6 @@
 #include <math.h>
 
 typedef struct {
-	ArvPixelFormat pixel_format;
-	const char *gst_caps_string;
-} ArvViewerCapsInfos;
-
-ArvViewerCapsInfos arv_viewer_caps_infos[] = {
-	{ ARV_PIXEL_FORMAT_MONO_8,		"video/x-raw-yuv, format=(fourcc)Y8  "},
-	{ ARV_PIXEL_FORMAT_MONO_10,		"video/x-raw-gray, bpp=(int)16, depth=(int)16"},
-	{ ARV_PIXEL_FORMAT_MONO_12,		"video/x-raw-gray, bpp=(int)16, depth=(int)16"},
-	{ ARV_PIXEL_FORMAT_MONO_16,		"video/x-raw-gray, bpp=(int)16, depth=(int)16"},
-	{ ARV_PIXEL_FORMAT_YUV_422_PACKED,	"video/x-raw-yuv, format=(fourcc)UYVY"},
-	{ ARV_PIXEL_FORMAT_YUV_422_YUYV_PACKED,	"video/x-raw-yuv, format=(fourcc)YUY2"},
-	{ ARV_PIXEL_FORMAT_RGB_8_PACKED,	"video/x-raw-rgb, bpp=(int)24, depth=(int)24"},
-};
-
-typedef struct {
 	ArvCamera *camera;
 	ArvDevice *device;
 	ArvStream *stream;
@@ -356,7 +341,6 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	unsigned int payload;
 	int width;
 	int height;
-	int caps_infos_id;
 	unsigned int i;
 	gulong window_xid;
 	double exposure;
@@ -364,6 +348,7 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	double frame_rate;
 	gint64 gain, gain_min, gain_max;
 	gboolean auto_gain, auto_exposure;
+	const char *caps_string;
 
 	g_return_if_fail (viewer != NULL);
 
@@ -429,11 +414,8 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	g_signal_handler_unblock (viewer->auto_gain_toggle, viewer->auto_gain_clicked);
 	g_signal_handler_unblock (viewer->auto_exposure_toggle, viewer->auto_exposure_clicked);
 
-	for (caps_infos_id = 0; caps_infos_id < G_N_ELEMENTS (arv_viewer_caps_infos); caps_infos_id++)
-		if (arv_viewer_caps_infos[caps_infos_id].pixel_format == pixel_format)
-			break;
-
-	if (caps_infos_id == G_N_ELEMENTS (arv_viewer_caps_infos))
+	caps_string = arv_pixel_format_to_gst_caps_string (pixel_format);
+	if (caps_string == NULL)
 		return;
 
 	arv_camera_start_acquisition (viewer->camera);
@@ -447,7 +429,7 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	gst_bin_add_many (GST_BIN (viewer->pipeline), viewer->appsrc, ffmpegcolorspace, ximagesink, NULL);
 	gst_element_link_many (viewer->appsrc, ffmpegcolorspace, ximagesink, NULL);
 
-	caps = gst_caps_from_string (arv_viewer_caps_infos[caps_infos_id].gst_caps_string);
+	caps = gst_caps_from_string (caps_string);
 	gst_caps_set_simple (caps,
 			     "width", G_TYPE_INT, width,
 			     "height", G_TYPE_INT, height,

@@ -71,32 +71,29 @@ static GstStaticPadTemplate aravis_src_template = GST_STATIC_PAD_TEMPLATE ("src"
 GstCaps *
 gst_aravis_get_camera_caps (GstAravis *gst_aravis)
 {
-	GstCaps *gcaps = NULL;
-	GstStructure *gs;
+	GstCaps *caps = NULL;
+	ArvPixelFormat pixel_format;
+	const char *caps_string;
 	double frame_rate;
 	int height, width;
 
 	GST_LOG_OBJECT (gst_aravis, "Get camera caps");
 
-	gcaps = gst_caps_new_empty ();
-
 	arv_camera_get_region (gst_aravis->camera, NULL, NULL, &width, &height);
-
-	gs = gst_structure_empty_new ("video");
-	gst_structure_set_name (gs, "video/x-raw-gray");
-	gst_structure_set (gs,
-			   "bpp", G_TYPE_INT, 8,
-			   "depth", G_TYPE_INT, 8,
-			   "width", G_TYPE_INT, width,
-			   "height", G_TYPE_INT, height,
-			   NULL);
-
+	pixel_format = arv_camera_get_pixel_format (gst_aravis->camera);
 	frame_rate = arv_camera_get_frame_rate (gst_aravis->camera);
 
-	gst_structure_set(gs, "framerate", GST_TYPE_FRACTION, (gint) (100.0 * frame_rate), 100, NULL);
-	gst_caps_append_structure (gcaps, gs);
+	caps_string = arv_pixel_format_to_gst_caps_string (pixel_format);
+	if (caps_string == NULL)
+		return NULL;
 
-	return gcaps;
+	caps = gst_caps_from_string (caps_string);
+	gst_caps_set_simple (caps,
+			     "width", G_TYPE_INT, width,
+			     "height", G_TYPE_INT, height,
+			     "framerate", GST_TYPE_FRACTION, (unsigned int ) (double) (0.5 + frame_rate), 1,
+			     NULL);
+	return caps;
 }
 
 static GstCaps *
@@ -128,7 +125,6 @@ gst_aravis_start (GstBaseSrc *src)
 
 	arv_camera_set_region (gst_aravis->camera, 0, 0, gst_aravis->width, gst_aravis->height);
 	arv_camera_set_binning (gst_aravis->camera, gst_aravis->h_binning, gst_aravis->v_binning);
-	arv_camera_set_pixel_format (gst_aravis->camera, ARV_PIXEL_FORMAT_MONO_8);
 
 	GST_DEBUG_OBJECT (gst_aravis, "Frame rate = %g Hz", gst_aravis->frame_rate);
 	arv_camera_set_frame_rate (gst_aravis->camera, gst_aravis->frame_rate);
@@ -166,13 +162,19 @@ gboolean gst_aravis_stop( GstBaseSrc * src )
 
 	arv_camera_stop_acquisition (gst_aravis->camera);
 
-	g_object_unref (gst_aravis->stream);
-	g_object_unref (gst_aravis->camera);
-	gst_caps_unref (gst_aravis->caps);
+	if (gst_aravis->stream != NULL) {
+		g_object_unref (gst_aravis->stream);
+		gst_aravis->stream = NULL;
 
-	gst_aravis->camera = NULL;
-	gst_aravis->stream = NULL;
-	gst_aravis->caps = NULL;
+	}
+	if (gst_aravis->camera != NULL) {
+		g_object_unref (gst_aravis->camera);
+		gst_aravis->camera = NULL;
+	}
+	if (gst_aravis->caps != NULL) {
+		gst_caps_unref (gst_aravis->caps);
+		gst_aravis->caps = NULL;
+	}
 
         GST_DEBUG_OBJECT (gst_aravis, "Capture stoped");
 

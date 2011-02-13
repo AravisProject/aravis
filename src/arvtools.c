@@ -688,3 +688,44 @@ CLEANUP:
 
 	return NULL;
 }
+
+/**
+ * SECTION: arvgst
+ * @short_description: Gstreamer utilities
+ */
+
+typedef struct {
+	ArvPixelFormat pixel_format;
+	const char *gst_caps_string;
+} ArvGstCapsInfos;
+
+ArvGstCapsInfos arv_gst_caps_infos[] = {
+	{ ARV_PIXEL_FORMAT_MONO_8,		"video/x-raw-yuv, format=(fourcc)Y8  "},
+	{ ARV_PIXEL_FORMAT_MONO_10,		"video/x-raw-gray, bpp=(int)16, depth=(int)16"},
+	{ ARV_PIXEL_FORMAT_MONO_12,		"video/x-raw-gray, bpp=(int)16, depth=(int)16"},
+	{ ARV_PIXEL_FORMAT_MONO_16,		"video/x-raw-gray, bpp=(int)16, depth=(int)16"},
+	{ ARV_PIXEL_FORMAT_YUV_422_PACKED,	"video/x-raw-yuv, format=(fourcc)UYVY"},
+	{ ARV_PIXEL_FORMAT_YUV_422_YUYV_PACKED,	"video/x-raw-yuv, format=(fourcc)YUY2"},
+	{ ARV_PIXEL_FORMAT_RGB_8_PACKED,	"video/x-raw-rgb, bpp=(int)24, depth=(int)24"},
+};
+
+/**
+ * arv_pixel_format_to_gst_caps_string:
+ * @pixel_format: a pixel format
+ * Return value: a gstreamer caps string describing the given @pixel_format
+ */
+
+const char *
+arv_pixel_format_to_gst_caps_string (ArvPixelFormat pixel_format)
+{
+	int i;
+
+	for (i = 0; i < G_N_ELEMENTS (arv_gst_caps_infos); i++)
+		if (arv_gst_caps_infos[i].pixel_format == pixel_format)
+			break;
+
+	if (i == G_N_ELEMENTS (arv_gst_caps_infos))
+		return NULL;
+
+	return arv_gst_caps_infos[i].gst_caps_string;
+}
