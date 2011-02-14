@@ -712,7 +712,7 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 /**
  * arv_pixel_format_to_gst_caps_string:
  * @pixel_format: a pixel format
- * Return value: a gstreamer caps string describing the given @pixel_format
+ * Return value: a gstreamer caps string describing the given @pixel_format.
  */
 
 const char *
