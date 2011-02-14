@@ -192,7 +192,7 @@ main (int argc, char **argv)
 		g_print ("payload size  = %d (0x%x)\n", value, value);
 
 		for (i = 0; i < 30; i++)
-			arv_stream_push_buffer (stream, arv_buffer_new (value, NULL));
+			arv_stream_push_buffer (stream, arv_buffer_new (value, NULL, NULL));
 
 		arv_device_read_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, &value);
 		g_print ("stream port = %d (%d)\n", value, arv_gv_stream_get_port (ARV_GV_STREAM (stream)));

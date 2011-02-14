@@ -163,7 +163,7 @@ main (int argc, char **argv)
 				      NULL);
 
 		for (i = 0; i < 50; i++)
-			arv_stream_push_buffer (stream, arv_buffer_new (payload, NULL));
+			arv_stream_push_buffer (stream, arv_buffer_new (payload, NULL, NULL));
 
 		arv_camera_set_acquisition_mode (camera, ARV_ACQUISITION_MODE_CONTINUOUS);
 

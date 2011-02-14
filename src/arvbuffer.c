@@ -40,6 +40,7 @@ static GObjectClass *parent_class = NULL;
  * arv_buffer_new:
  * @size: payload size
  * @preallocated: (transfer none): preallocated memory buffer
+ * @user_data: (transfer none): a pointer to user data associated to this buffer
  *
  * Creates a new buffer for the storage of the video stream images. 
  * The data space can be either preallocated, and the caller is responsible
@@ -48,12 +49,13 @@ static GObjectClass *parent_class = NULL;
  */
 
 ArvBuffer *
-arv_buffer_new (size_t size, void *preallocated)
+arv_buffer_new (size_t size, void *preallocated, void *user_data)
 {
 	ArvBuffer *buffer;
 
 	buffer = g_object_new (ARV_TYPE_BUFFER, NULL);
 	buffer->size = size;
+	buffer->user_data = user_data;
 
 	if (preallocated != NULL) {
 		buffer->is_preallocated = TRUE;

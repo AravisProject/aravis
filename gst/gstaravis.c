@@ -143,7 +143,7 @@ gst_aravis_start (GstBaseSrc *src)
 
 	for (i = 0; i < GST_ARAVIS_N_BUFFERS; i++)
 		arv_stream_push_buffer (gst_aravis->stream,
-					arv_buffer_new (gst_aravis->payload, NULL));
+					arv_buffer_new (gst_aravis->payload, NULL, NULL));
 
 	GST_LOG_OBJECT (gst_aravis, "Starting acquisition");
 

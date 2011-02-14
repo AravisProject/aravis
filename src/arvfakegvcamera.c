@@ -125,7 +125,7 @@ arv_fake_gv_camera_thread (void *user_data)
 				g_free (inet_address_string);
 
 				payload = arv_fake_camera_get_payload (gv_camera->camera);
-				image_buffer = arv_buffer_new (payload, NULL);
+				image_buffer = arv_buffer_new (payload, NULL, NULL);
 			}
 
 			arv_fake_camera_wait_for_next_frame (gv_camera->camera);

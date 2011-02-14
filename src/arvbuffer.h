@@ -61,8 +61,10 @@ struct _ArvBuffer {
 	GObject	object;
 
 	size_t size;
-	void *data;
 	gboolean is_preallocated;
+	void *data;
+
+	void *user_data;
 
 	ArvBufferStatus status;
 
@@ -83,7 +85,7 @@ struct _ArvBufferClass {
 
 GType arv_buffer_get_type (void);
 
-ArvBuffer * 		arv_buffer_new 			(size_t size, void *preallocated);
+ArvBuffer * 		arv_buffer_new 			(size_t size, void *preallocated, void *user_data);
 
 G_END_DECLS
 
