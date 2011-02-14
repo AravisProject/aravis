@@ -701,8 +701,9 @@ typedef struct {
 
 ArvGstCapsInfos arv_gst_caps_infos[] = {
 	{ ARV_PIXEL_FORMAT_MONO_8,		"video/x-raw-yuv, format=(fourcc)Y8  "},
-	{ ARV_PIXEL_FORMAT_MONO_10,		"video/x-raw-gray, bpp=(int)16, depth=(int)16"},
-	{ ARV_PIXEL_FORMAT_MONO_12,		"video/x-raw-gray, bpp=(int)16, depth=(int)16"},
+	{ ARV_PIXEL_FORMAT_MONO_10,		"video/x-raw-gray, bpp=(int)16, depth=(int)10"},
+	{ ARV_PIXEL_FORMAT_MONO_12,		"video/x-raw-gray, bpp=(int)16, depth=(int)12"},
+	{ ARV_PIXEL_FORMAT_MONO_12_PACKED,	"video/x-raw-gray, bpp=(int)12, depth=(int)12"},
 	{ ARV_PIXEL_FORMAT_MONO_16,		"video/x-raw-gray, bpp=(int)16, depth=(int)16"},
 	{ ARV_PIXEL_FORMAT_YUV_422_PACKED,	"video/x-raw-yuv, format=(fourcc)UYVY"},
 	{ ARV_PIXEL_FORMAT_YUV_422_YUYV_PACKED,	"video/x-raw-yuv, format=(fourcc)YUY2"},
