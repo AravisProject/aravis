@@ -2,7 +2,7 @@
  * Copyright © 2006 Eric Jonas <jonas@mit.edu>
  * Copyright © 2006 Antoine Tremblay <hexa00@gmail.com>
  * Copyright © 2010 United States Government, Joshua M. Doe <joshua.doe@us.army.mil>
- * Copyright © 2010 Emmanuel Pacaud <emmanuel@gnome.org>
+ * Copyright © 2010-2011 Emmanuel Pacaud <emmanuel@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -41,12 +41,6 @@
 
 GST_DEBUG_CATEGORY_STATIC (aravis_debug);
 #define GST_CAT_DEFAULT aravis_debug
-
-static GstElementDetails aravis_details =
-GST_ELEMENT_DETAILS ("Aravis Video Source",
-		     "Source/Video",
-		     "Aravis based source",
-		     "Emmanuel Pacaud <emmanuel@gnome.org>");
 
 enum
 {
@@ -348,8 +342,11 @@ gst_aravis_base_init (gpointer g_class)
 {
 	GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-	gst_element_class_set_details (element_class, &aravis_details);
-
+	gst_element_class_set_details_simple (element_class,
+					      "Aravis Video Source",
+					      "Source/Video",
+					      "Aravis based source",
+					      "Emmanuel Pacaud <emmanuel@gnome.org>");
 	gst_element_class_add_pad_template (element_class,
 					    gst_static_pad_template_get (&aravis_src_template));
 }
