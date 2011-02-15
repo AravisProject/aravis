@@ -700,14 +700,18 @@ typedef struct {
 } ArvGstCapsInfos;
 
 ArvGstCapsInfos arv_gst_caps_infos[] = {
-	{ ARV_PIXEL_FORMAT_MONO_8,		"video/x-raw-gray, bpp=(int)8, depth=(int)8"},
-	{ ARV_PIXEL_FORMAT_MONO_10,		"video/x-raw-gray, bpp=(int)16, depth=(int)10"},
-	{ ARV_PIXEL_FORMAT_MONO_12,		"video/x-raw-gray, bpp=(int)16, depth=(int)12"},
-	{ ARV_PIXEL_FORMAT_MONO_12_PACKED,	"video/x-raw-gray, bpp=(int)12, depth=(int)12"},
-	{ ARV_PIXEL_FORMAT_MONO_16,		"video/x-raw-gray, bpp=(int)16, depth=(int)16"},
-	{ ARV_PIXEL_FORMAT_YUV_422_PACKED,	"video/x-raw-yuv, format=(fourcc)UYVY"},
-	{ ARV_PIXEL_FORMAT_YUV_422_YUYV_PACKED,	"video/x-raw-yuv, format=(fourcc)YUY2"},
-	{ ARV_PIXEL_FORMAT_RGB_8_PACKED,	"video/x-raw-rgb, bpp=(int)24, depth=(int)24"}
+	{ ARV_PIXEL_FORMAT_MONO_8,			"video/x-raw-gray, bpp=(int)8, depth=(int)8"},
+	{ ARV_PIXEL_FORMAT_MONO_10,			"video/x-raw-gray, bpp=(int)16, depth=(int)10"},
+	{ ARV_PIXEL_FORMAT_MONO_12,			"video/x-raw-gray, bpp=(int)16, depth=(int)12"},
+	{ ARV_PIXEL_FORMAT_MONO_12_PACKED,		"video/x-raw-gray, bpp=(int)12, depth=(int)12"},
+	{ ARV_PIXEL_FORMAT_MONO_16,			"video/x-raw-gray, bpp=(int)16, depth=(int)16"},
+	{ ARV_PIXEL_FORMAT_BAYER_BG_8,			"video/x-raw-bayer, bpp=(int)8, depth=(int)8"},
+	{ ARV_PIXEL_FORMAT_YUV_422_PACKED,		"video/x-raw-yuv, format=(fourcc)UYVY"},
+	{ ARV_PIXEL_FORMAT_YUV_422_YUYV_PACKED,		"video/x-raw-yuv, format=(fourcc)YUY2"},
+	{ ARV_PIXEL_FORMAT_RGB_8_PACKED,		"video/x-raw-rgb, bpp=(int)24, depth=(int)24"},
+
+	{ ARV_PIXEL_FORMAT_CUSTOM_YUV_422_YUYV_PACKED,	"video/x-raw-yuv, format=(fourcc)YUY2"},
+	{ ARV_PIXEL_FORMAT_CUSTOM_BAYER_BG_16,		"video/x-raw-bayer, bpp=(int)16, depth=(int)16"}
 };
 
 /**
@@ -725,10 +729,13 @@ arv_pixel_format_to_gst_caps_string (ArvPixelFormat pixel_format)
 		if (arv_gst_caps_infos[i].pixel_format == pixel_format)
 			break;
 
-	if (i == G_N_ELEMENTS (arv_gst_caps_infos))
+	if (i == G_N_ELEMENTS (arv_gst_caps_infos)) {
+		arv_debug ("gst", "[PixelFormat::to_gst_caps_string] 0x%08x not found", pixel_format);
 		return NULL;
+	}
 
-	arv_debug ("gst", "[PixelFormat::to_gst_caps_string] 0x%08x -> %s", pixel_format, arv_gst_caps_infos[i].gst_caps_string);
+	arv_debug ("gst", "[PixelFormat::to_gst_caps_string] 0x%08x -> %s",
+		   pixel_format, arv_gst_caps_infos[i].gst_caps_string);
 
 	return arv_gst_caps_infos[i].gst_caps_string;
 }
