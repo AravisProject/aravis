@@ -66,6 +66,8 @@ const char *	arv_camera_get_device_id	(ArvCamera *camera);
 void 		arv_camera_get_sensor_size 	(ArvCamera *camera, gint *width, gint *height);
 void		arv_camera_set_region		(ArvCamera *camera, gint x, gint y, gint width, gint height);
 void		arv_camera_get_region		(ArvCamera *camera, gint *x, gint *y, gint *width, gint *height);
+void		arv_camera_get_width_bounds	(ArvCamera *camera, gint *min, gint *max);
+void		arv_camera_get_height_bounds	(ArvCamera *camera, gint *min, gint *max);
 void		arv_camera_set_binning		(ArvCamera *camera, gint dx, gint dy);
 void		arv_camera_get_binning		(ArvCamera *camera, gint *dx, gint *dy);
 void 		arv_camera_set_pixel_format 	(ArvCamera *camera, ArvPixelFormat format);
@@ -91,9 +93,9 @@ ArvAuto		arv_camera_get_exposure_time_auto	(ArvCamera *camera);
 
 /* Analog control */
 
-void 		arv_camera_set_gain	 	(ArvCamera *camera, gint64 gain);
-gint64 		arv_camera_get_gain 		(ArvCamera *camera);
-void		arv_camera_get_gain_bounds	(ArvCamera *camera, gint64 *min, gint64 *max);
+void 		arv_camera_set_gain	 	(ArvCamera *camera, gint gain);
+gint 		arv_camera_get_gain 		(ArvCamera *camera);
+void		arv_camera_get_gain_bounds	(ArvCamera *camera, gint *min, gint *max);
 void		arv_camera_set_gain_auto	(ArvCamera *camera, ArvAuto auto_mode);
 ArvAuto		arv_camera_get_gain_auto	(ArvCamera *camera);
 

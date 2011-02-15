@@ -169,7 +169,7 @@ arv_camera_get_sensor_size (ArvCamera *camera, gint *width, gint *height)
  */
 
 void
-arv_camera_set_region (ArvCamera *camera, int x, int y, int width, int height)
+arv_camera_set_region (ArvCamera *camera, gint x, gint y, gint width, gint height)
 {
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
@@ -207,6 +207,36 @@ arv_camera_get_region (ArvCamera *camera, gint *x, gint *y, gint *width, gint *h
 		*width = arv_device_get_integer_feature_value (camera->priv->device, "Width");
 	if (height != NULL)
 		*height = arv_device_get_integer_feature_value (camera->priv->device, "Height");
+}
+
+void
+arv_camera_get_width_bounds (ArvCamera *camera, gint *min, gint *max)
+{
+	gint64 min64, max64;
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_device_get_integer_feature_bounds (camera->priv->device, "Width", &min64, &max64);
+
+	if (min != NULL)
+		*min = min64;
+	if (max != NULL)
+		*max = max64;
+}
+
+void
+arv_camera_get_height_bounds (ArvCamera *camera, gint *min, gint *max)
+{
+	gint64 min64, max64;
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_device_get_integer_feature_bounds (camera->priv->device, "Height", &min64, &max64);
+
+	if (min != NULL)
+		*min = min64;
+	if (max != NULL)
+		*max = max64;
 }
 
 /**
@@ -560,7 +590,7 @@ arv_camera_get_exposure_time_auto (ArvCamera *camera)
  */
 
 void
-arv_camera_set_gain (ArvCamera *camera, gint64 gain)
+arv_camera_set_gain (ArvCamera *camera, gint gain)
 {
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
@@ -576,7 +606,7 @@ arv_camera_set_gain (ArvCamera *camera, gint64 gain)
  * Return value: the current gain setting.
  */
 
-gint64
+gint
 arv_camera_get_gain (ArvCamera *camera)
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0.0);
@@ -585,11 +615,18 @@ arv_camera_get_gain (ArvCamera *camera)
 }
 
 void
-arv_camera_get_gain_bounds (ArvCamera *camera, gint64 *min, gint64 *max)
+arv_camera_get_gain_bounds (ArvCamera *camera, gint *min, gint *max)
 {
+	gint64 min64, max64;
+
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
-	arv_device_get_integer_feature_bounds (camera->priv->device, "GainRaw", min, max);
+	arv_device_get_integer_feature_bounds (camera->priv->device, "GainRaw", &min64, &max64);
+
+	if (min != NULL)
+		*min = min64;
+	if (max != NULL)
+		*max = max64;
 }
 
 void
