@@ -92,6 +92,19 @@ arv_stream_pop_buffer (ArvStream *stream)
 }
 
 ArvBuffer *
+arv_stream_timed_pop_buffer (ArvStream *stream, guint64 timeout)
+{
+	GTimeVal end_time;
+
+	g_return_val_if_fail (ARV_IS_STREAM (stream), NULL);
+
+	g_get_current_time (&end_time);
+	g_time_val_add (&end_time, timeout);
+
+	return g_async_queue_timed_pop (stream->priv->output_queue, &end_time);
+}
+
+ArvBuffer *
 arv_stream_pop_input_buffer (ArvStream *stream)
 {
 	g_return_val_if_fail (ARV_IS_STREAM (stream), NULL);

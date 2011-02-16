@@ -284,6 +284,7 @@ ArvStreamCallback
 ArvStream
 arv_stream_push_buffer
 arv_stream_pop_buffer
+arv_stream_timed_pop_buffer
 arv_stream_get_n_buffers
 arv_stream_get_statistics
 arv_stream_get_emit_signals
