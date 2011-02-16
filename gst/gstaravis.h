@@ -51,6 +51,8 @@ struct _GstAravis {
 
 	gint payload;
 
+	guint64 buffer_timeout_us;
+
 	ArvCamera *camera;
 	ArvStream *stream;
 

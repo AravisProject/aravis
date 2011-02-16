@@ -37,7 +37,8 @@
 #include <time.h>
 #include <string.h>
 
-#define GST_ARAVIS_N_BUFFERS	50
+#define GST_ARAVIS_N_BUFFERS			50
+#define GST_ARAVIS_BUFFER_TIMEOUT_DEFAULT	2000000
 
 GST_DEBUG_CATEGORY_STATIC (aravis_debug);
 #define GST_CAT_DEFAULT aravis_debug
@@ -156,12 +157,21 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 	if (frame_rate != NULL) {
 		double dbl_frame_rate;
 
-		dbl_frame_rate = gst_value_get_fraction_numerator (frame_rate) /
-			gst_value_get_fraction_denominator (frame_rate);
+		dbl_frame_rate = (double) gst_value_get_fraction_numerator (frame_rate) /
+			(double) gst_value_get_fraction_denominator (frame_rate);
 
 		GST_DEBUG_OBJECT (gst_aravis, "Frame rate = %g Hz", dbl_frame_rate);
 		arv_camera_set_frame_rate (gst_aravis->camera, dbl_frame_rate);
-	}
+
+		if (dbl_frame_rate > 0.0)
+			gst_aravis->buffer_timeout_us = MAX (GST_ARAVIS_BUFFER_TIMEOUT_DEFAULT,
+							     3e6 / dbl_frame_rate);
+		else
+			gst_aravis->buffer_timeout_us = GST_ARAVIS_BUFFER_TIMEOUT_DEFAULT;
+	} else
+		gst_aravis->buffer_timeout_us = GST_ARAVIS_BUFFER_TIMEOUT_DEFAULT;
+
+	GST_DEBUG_OBJECT (gst_aravis, "Buffer timeout = %Ld µs", gst_aravis->buffer_timeout_us);
 
 	GST_DEBUG_OBJECT (gst_aravis, "Actual frame rate = %g Hz", arv_camera_get_frame_rate (gst_aravis->camera));
 
@@ -285,7 +295,7 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 	gst_aravis = GST_ARAVIS (push_src);
 
 	do {
-		arv_buffer = arv_stream_timed_pop_buffer (gst_aravis->stream, 2000000);
+		arv_buffer = arv_stream_timed_pop_buffer (gst_aravis->stream, gst_aravis->buffer_timeout_us);
 		if (arv_buffer != NULL && arv_buffer->status != ARV_BUFFER_STATUS_SUCCESS)
 			arv_stream_push_buffer (gst_aravis->stream, arv_buffer);
 	} while (arv_buffer != NULL && arv_buffer->status != ARV_BUFFER_STATUS_SUCCESS);
@@ -357,6 +367,8 @@ gst_aravis_init (GstAravis *gst_aravis, GstAravisClass *g_class)
 	gst_aravis->h_binning = -1;
 	gst_aravis->v_binning = -1;
 	gst_aravis->payload = 0;
+
+	gst_aravis->buffer_timeout_us = GST_ARAVIS_BUFFER_TIMEOUT_DEFAULT;
 
 	gst_aravis->camera = NULL;
 	gst_aravis->stream = NULL;
