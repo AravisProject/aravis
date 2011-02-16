@@ -202,7 +202,7 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 
 	for (i = 0; i < GST_ARAVIS_N_BUFFERS; i++)
 		arv_stream_push_buffer (gst_aravis->stream,
-					arv_buffer_new (gst_aravis->payload, NULL, NULL));
+					arv_buffer_new (gst_aravis->payload, NULL));
 
 	GST_LOG_OBJECT (gst_aravis, "Start acquisition");
 	arv_camera_start_acquisition (gst_aravis->camera);
@@ -255,6 +255,27 @@ gboolean gst_aravis_stop( GstBaseSrc * src )
         return TRUE;
 }
 
+static void
+gst_aravis_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
+		      GstClockTime * start, GstClockTime * end)
+{
+	if (gst_base_src_is_live (basesrc)) {
+		GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buffer);
+
+		if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+			GstClockTime duration = GST_BUFFER_DURATION (buffer);
+
+			if (GST_CLOCK_TIME_IS_VALID (duration)) {
+				*end = timestamp + duration;
+			}
+			*start = timestamp;
+		}
+	} else {
+		*start = -1;
+		*end = -1;
+	}
+}
+
 static GstFlowReturn
 gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 {
@@ -263,16 +284,16 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 
 	gst_aravis = GST_ARAVIS (push_src);
 
-	*buffer = gst_buffer_new ();
 	do {
-		arv_buffer = arv_stream_pop_buffer (gst_aravis->stream);
-		if (arv_buffer == NULL)
-			g_usleep (1000);
-		else if (arv_buffer->status != ARV_BUFFER_STATUS_SUCCESS) {
+		arv_buffer = arv_stream_timed_pop_buffer (gst_aravis->stream, 2000000);
+		if (arv_buffer != NULL && arv_buffer->status != ARV_BUFFER_STATUS_SUCCESS)
 			arv_stream_push_buffer (gst_aravis->stream, arv_buffer);
-			arv_buffer = NULL;
-		}
-	} while (arv_buffer == NULL);
+	} while (arv_buffer != NULL && arv_buffer->status != ARV_BUFFER_STATUS_SUCCESS);
+
+	if (arv_buffer == NULL)
+		return GST_FLOW_ERROR;
+
+	*buffer = gst_buffer_new ();
 
 	GST_BUFFER_DATA (*buffer) = arv_buffer->data;
 	GST_BUFFER_MALLOCDATA (*buffer) = NULL;
@@ -504,6 +525,8 @@ gst_aravis_class_init (GstAravisClass * klass)
 	gstbasesrc_class->set_caps = gst_aravis_set_caps;
 	gstbasesrc_class->start = gst_aravis_start;
 	gstbasesrc_class->stop = gst_aravis_stop;
+
+	gstbasesrc_class->get_times = gst_aravis_get_times;
 
 	gstpushsrc_class->create = gst_aravis_create;
 }

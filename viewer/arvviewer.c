@@ -364,7 +364,7 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	arv_stream_set_emit_signals (viewer->stream, TRUE);
 	payload = arv_camera_get_payload (viewer->camera);
 	for (i = 0; i < 5; i++)
-		arv_stream_push_buffer (viewer->stream, arv_buffer_new (payload, NULL, NULL));
+		arv_stream_push_buffer (viewer->stream, arv_buffer_new (payload, NULL));
 
 	arv_camera_get_region (viewer->camera, NULL, NULL, &width, &height);
 	pixel_format = arv_camera_get_pixel_format (viewer->camera);

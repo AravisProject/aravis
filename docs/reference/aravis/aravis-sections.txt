@@ -63,6 +63,7 @@ ArvFrameCallback
 ArvBufferStatus
 ArvBuffer
 arv_buffer_new
+arv_buffer_new_full
 <SUBSECTION Standard>
 ARV_BUFFER
 ARV_IS_BUFFER

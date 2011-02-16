@@ -41,21 +41,26 @@ static GObjectClass *parent_class = NULL;
  * @size: payload size
  * @preallocated: (transfer none): preallocated memory buffer
  * @user_data: (transfer none): a pointer to user data associated to this buffer
+ * @user_data_destroy_func: an optional user data destroy callback
  *
  * Creates a new buffer for the storage of the video stream images. 
  * The data space can be either preallocated, and the caller is responsible
  * for it's deallocation, or allocated by this function. If it is the case,
  * data memory will be freed when the buffer is destroyed.
+ *
+ * If @user_data_destroy_func is non NULL, it will be called in order to destroy
+ * user_data when the buffer is destroyed.
  */
 
 ArvBuffer *
-arv_buffer_new (size_t size, void *preallocated, void *user_data)
+arv_buffer_new_full (size_t size, void *preallocated, void *user_data, GDestroyNotify user_data_destroy_func)
 {
 	ArvBuffer *buffer;
 
 	buffer = g_object_new (ARV_TYPE_BUFFER, NULL);
 	buffer->size = size;
 	buffer->user_data = user_data;
+	buffer->user_data_destroy_func = user_data_destroy_func;
 
 	if (preallocated != NULL) {
 		buffer->is_preallocated = TRUE;
@@ -66,6 +71,23 @@ arv_buffer_new (size_t size, void *preallocated, void *user_data)
 	}
 
 	return buffer;
+}
+
+/**
+ * arv_buffer_new:
+ * @size: payload size
+ * @preallocated: (transfer none): preallocated memory buffer
+ *
+ * Creates a new buffer for the storage of the video stream images. 
+ * The data space can be either preallocated, and the caller is responsible
+ * for it's deallocation, or allocated by this function. If it is the case,
+ * data memory will be freed when the buffer is destroyed.
+ */
+
+ArvBuffer *
+arv_buffer_new (size_t size, void *preallocated)
+{
+	return arv_buffer_new_full (size, preallocated, NULL, NULL);
 }
 
 /**
@@ -100,6 +122,9 @@ arv_buffer_finalize (GObject *object)
 		buffer->size = 0;
 	}
 
+	if (buffer->user_data && buffer->user_data_destroy_func)
+		buffer->user_data_destroy_func (buffer->user_data);
+
 	parent_class->finalize (object);
 }
 
@@ -114,4 +139,3 @@ arv_buffer_class_init (ArvBufferClass *node_class)
 }
 
 G_DEFINE_TYPE (ArvBuffer, arv_buffer, G_TYPE_OBJECT)
-

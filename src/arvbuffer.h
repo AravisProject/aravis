@@ -65,6 +65,7 @@ struct _ArvBuffer {
 	void *data;
 
 	void *user_data;
+	GDestroyNotify user_data_destroy_func;
 
 	ArvBufferStatus status;
 
@@ -85,7 +86,9 @@ struct _ArvBufferClass {
 
 GType arv_buffer_get_type (void);
 
-ArvBuffer * 		arv_buffer_new 			(size_t size, void *preallocated, void *user_data);
+ArvBuffer *	arv_buffer_new 		(size_t size, void *preallocated);
+ArvBuffer * 	arv_buffer_new_full	(size_t size, void *preallocated,
+					 void *user_data, GDestroyNotify user_data_destroy_func);
 
 G_END_DECLS
 
