@@ -694,24 +694,73 @@ CLEANUP:
  * @short_description: Gstreamer utilities
  */
 
+#define ARV_MAKE_FOURCC(a,b,c,d)        ((guint32)((a)|(b)<<8|(c)<<16|(d)<<24))
+
 typedef struct {
 	ArvPixelFormat pixel_format;
 	const char *gst_caps_string;
+	const char *name;
+	int bpp;
+	int depth;
+	guint32 fourcc;
 } ArvGstCapsInfos;
 
 ArvGstCapsInfos arv_gst_caps_infos[] = {
-	{ ARV_PIXEL_FORMAT_MONO_8,			"video/x-raw-gray, bpp=(int)8, depth=(int)8"},
-	{ ARV_PIXEL_FORMAT_MONO_10,			"video/x-raw-gray, bpp=(int)16, depth=(int)10"},
-	{ ARV_PIXEL_FORMAT_MONO_12,			"video/x-raw-gray, bpp=(int)16, depth=(int)12"},
-	{ ARV_PIXEL_FORMAT_MONO_12_PACKED,		"video/x-raw-gray, bpp=(int)12, depth=(int)12"},
-	{ ARV_PIXEL_FORMAT_MONO_16,			"video/x-raw-gray, bpp=(int)16, depth=(int)16"},
-	{ ARV_PIXEL_FORMAT_BAYER_BG_8,			"video/x-raw-bayer, bpp=(int)8, depth=(int)8"},
-	{ ARV_PIXEL_FORMAT_YUV_422_PACKED,		"video/x-raw-yuv, format=(fourcc)UYVY"},
-	{ ARV_PIXEL_FORMAT_YUV_422_YUYV_PACKED,		"video/x-raw-yuv, format=(fourcc)YUY2"},
-	{ ARV_PIXEL_FORMAT_RGB_8_PACKED,		"video/x-raw-rgb, bpp=(int)24, depth=(int)24"},
-
-	{ ARV_PIXEL_FORMAT_CUSTOM_YUV_422_YUYV_PACKED,	"video/x-raw-yuv, format=(fourcc)YUY2"},
-	{ ARV_PIXEL_FORMAT_CUSTOM_BAYER_BG_16,		"video/x-raw-bayer, bpp=(int)16, depth=(int)16"}
+	{
+		ARV_PIXEL_FORMAT_MONO_8,
+		"video/x-raw-gray, bpp=(int)8, depth=(int)8",
+		"video/x-raw-gray", 	8,	8,	0
+	},
+	{
+		ARV_PIXEL_FORMAT_MONO_10,
+		"video/x-raw-gray, bpp=(int)16, depth=(int)10",
+		"video/x-raw-gray", 	16,	10,	0,
+	},
+	{
+	       ARV_PIXEL_FORMAT_MONO_12,
+	       "video/x-raw-gray, bpp=(int)16, depth=(int)12",
+	       "video/x-raw-gray",	16,	12,	0,
+	},
+	{
+		ARV_PIXEL_FORMAT_MONO_12_PACKED,
+		"video/x-raw-gray, bpp=(int)12, depth=(int)12",
+		"video/x-raw-gray",	12,	12,	0,
+	},
+	{
+		ARV_PIXEL_FORMAT_MONO_16,
+		"video/x-raw-gray, bpp=(int)16, depth=(int)16",
+		"video/x-raw-gray",	16,	16,	0
+	},
+	{
+	       ARV_PIXEL_FORMAT_BAYER_BG_8,
+	       "video/x-raw-bayer, bpp=(int)8, depth=(int)8",
+	       "video/x-raw-bayer",	8,	8,	0
+	},
+	{
+		ARV_PIXEL_FORMAT_YUV_422_PACKED,
+		"video/x-raw-yuv, format=(fourcc)UYVY",
+		"video/x-raw-yuv",	0,	0,	ARV_MAKE_FOURCC ('U','Y','V','Y')
+	},
+	{
+	       ARV_PIXEL_FORMAT_YUV_422_YUYV_PACKED,
+	       "video/x-raw-yuv, format=(fourcc)YUY2",
+	       "video/x-raw-yuv",	0,	0,	ARV_MAKE_FOURCC ('Y','U','Y','2')
+	},
+	{
+		ARV_PIXEL_FORMAT_RGB_8_PACKED,
+		"video/x-raw-rgb, bpp=(int)24, depth=(int)24",
+		"video/x-raw-rgb",	24,	24,	0
+	},
+	{
+		ARV_PIXEL_FORMAT_CUSTOM_YUV_422_YUYV_PACKED,
+		"video/x-raw-yuv, format=(fourcc)YUY2",
+		"video/x-raw-yuv",	0,	0,	ARV_MAKE_FOURCC ('Y','U','Y','2')
+	},
+	{
+		ARV_PIXEL_FORMAT_CUSTOM_BAYER_BG_16,
+		"video/x-raw-bayer, bpp=(int)16, depth=(int)16",
+		"video/x-raw-bayer",	16,	16,	0
+	}
 };
 
 /**
@@ -738,4 +787,27 @@ arv_pixel_format_to_gst_caps_string (ArvPixelFormat pixel_format)
 		   pixel_format, arv_gst_caps_infos[i].gst_caps_string);
 
 	return arv_gst_caps_infos[i].gst_caps_string;
+}
+
+ArvPixelFormat
+arv_pixel_format_from_gst_caps (const char *name, int bpp, int depth, guint32 fourcc)
+{
+	unsigned int i;
+
+	g_return_val_if_fail (name != NULL, 0);
+
+	for (i = 0; i < G_N_ELEMENTS (arv_gst_caps_infos); i++) {
+		if (strcmp (name, arv_gst_caps_infos[i].name) != 0)
+			continue;
+
+		if (strcmp (name, "video/x-raw-yuv") == 0 &&
+		    fourcc == arv_gst_caps_infos[i].fourcc)
+			return arv_gst_caps_infos[i].pixel_format;
+
+		if (depth == arv_gst_caps_infos[i].depth &&
+		    bpp == arv_gst_caps_infos[i].bpp)
+			return arv_gst_caps_infos[i].pixel_format;
+	}
+
+	return 0;
 }

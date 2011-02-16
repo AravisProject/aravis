@@ -108,6 +108,7 @@ void 		arv_copy_memory_with_endianess 	(void *to, size_t to_size, guint to_endia
 void * 		arv_decompress 			(void *input_buffer, size_t input_size, size_t *output_size);
 
 const char * 	arv_pixel_format_to_gst_caps_string 	(ArvPixelFormat pixel_format);
+ArvPixelFormat 	arv_pixel_format_from_gst_caps 		(const char *name, int bpp, int depth, guint32 fourcc);
 
 /*
    Compatibility with glib < 2.23
