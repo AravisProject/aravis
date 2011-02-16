@@ -14,10 +14,13 @@ arv_camera_get_device_id
 arv_camera_get_sensor_size
 arv_camera_set_region
 arv_camera_get_region
+arv_camera_get_height_bounds
+arv_camera_get_width_bounds
 arv_camera_set_binning
 arv_camera_get_binning
 arv_camera_set_pixel_format
 arv_camera_get_pixel_format
+arv_camera_get_available_pixel_formats
 arv_camera_start_acquisition
 arv_camera_stop_acquisition
 arv_camera_set_acquisition_mode
@@ -334,6 +337,7 @@ arv_gc_node_add_element
 arv_gc_node_can_add_child
 arv_gc_node_add_child
 arv_gc_node_get_childs
+arv_gc_node_get_n_childs
 arv_gc_node_inc_modification_count
 arv_gc_node_get_modification_count
 <SUBSECTION Standard>
@@ -741,6 +745,7 @@ G_IMPLEMENT_INTERFACE
 <FILE>arvgst</FILE>
 <TITLE>ArvGst</TITLE>
 arv_pixel_format_to_gst_caps_string
+arv_pixel_format_from_gst_caps
 </SECTION>
 
 <SECTION>
