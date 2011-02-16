@@ -68,6 +68,7 @@ void 		arv_gc_node_add_element 		(ArvGcNode *gc_node, const char *name, const ch
 gboolean 	arv_gc_node_can_add_child 		(ArvGcNode *gc_node, ArvGcNode *child);
 void 		arv_gc_node_add_child 			(ArvGcNode *gc_node, ArvGcNode *child);
 const GSList *	arv_gc_node_get_childs 			(ArvGcNode *gc_node);
+unsigned int 	arv_gc_node_get_n_childs 		(ArvGcNode *gc_node);
 void 		arv_gc_node_inc_modification_count 	(ArvGcNode *gc_node);
 gint 		arv_gc_node_get_modification_count 	(ArvGcNode *gc_node);
 

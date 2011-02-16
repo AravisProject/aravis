@@ -104,7 +104,7 @@ arv_gc_enumeration_set_string_value (ArvGcEnumeration *enumeration, const char *
 						   arv_gc_enum_entry_get_value (iter->data));
 			return;
 		}
-	
+
 	arv_debug ("genicam", "[GcEnumeration::set_string_value] entry %s not found", value);
 }
 

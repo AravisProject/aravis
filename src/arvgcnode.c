@@ -43,6 +43,7 @@ struct _ArvGcNodePrivate {
 	char *description;
 	char *display_name;
 
+	unsigned int n_childs;
 	GSList *childs;
 
 	gint modification_count;
@@ -152,6 +153,7 @@ arv_gc_node_add_child (ArvGcNode *node, ArvGcNode *child)
 	g_return_if_fail (ARV_IS_GC_NODE (child));
 
 	node->priv->childs = g_slist_append (node->priv->childs, child);
+	node->priv->n_childs++;
 }
 
 const GSList *
@@ -160,6 +162,14 @@ arv_gc_node_get_childs (ArvGcNode *node)
 	g_return_val_if_fail (ARV_IS_GC_NODE (node), NULL);
 
 	return node->priv->childs;
+}
+
+unsigned int
+arv_gc_node_get_n_childs (ArvGcNode *node)
+{
+	g_return_val_if_fail (ARV_IS_GC_NODE (node), 0);
+
+	return node->priv->n_childs;
 }
 
 ArvGcNode *
@@ -229,6 +239,7 @@ arv_gc_node_init (ArvGcNode *gc_node)
 	gc_node->priv->description = NULL;
 	gc_node->priv->display_name = NULL;
 	gc_node->priv->childs = NULL;
+	gc_node->priv->n_childs = 0;
 
 	gc_node->priv->modification_count = 0;
 }
@@ -242,6 +253,7 @@ arv_gc_node_finalize (GObject *object)
 	for (iter = node->priv->childs; iter != NULL; iter = iter->next)
 		g_object_unref (iter->data);
 	g_slist_free (node->priv->childs);
+	node->priv->n_childs = 0;
 
 	g_free (node->priv->name);
 	g_free (node->priv->tooltip);

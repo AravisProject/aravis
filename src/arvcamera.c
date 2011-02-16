@@ -37,6 +37,7 @@
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
 #include <arvgcenumeration.h>
+#include <arvgcenumentry.h>
 #include <arvgcstring.h>
 #include <arvgc.h>
 #include <arvdevice.h>
@@ -309,6 +310,33 @@ arv_camera_get_pixel_format (ArvCamera *camera)
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0);
 
 	return arv_device_get_integer_feature_value (camera->priv->device, "PixelFormat");
+}
+
+ArvPixelFormat *
+arv_camera_get_available_pixel_formats (ArvCamera *camera, guint *n_pixel_formats)
+{
+	ArvGcNode *enumeration;
+	ArvPixelFormat *pixel_formats;
+	const GSList *entries, *iter;
+	unsigned int i;
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+	g_return_val_if_fail (n_pixel_formats != NULL, NULL);
+
+	enumeration = arv_gc_get_node (camera->priv->genicam, "PixelFormat");
+	if (!ARV_IS_GC_ENUMERATION (enumeration))
+		return NULL;
+
+	*n_pixel_formats = arv_gc_node_get_n_childs (enumeration);
+	if (*n_pixel_formats == 0)
+		return NULL;
+
+	pixel_formats = g_new (ArvPixelFormat, *n_pixel_formats);
+	entries = arv_gc_enumeration_get_entries (ARV_GC_ENUMERATION (enumeration));
+	for (iter = entries, i = 0; iter != NULL; iter = iter->next, i++)
+		pixel_formats[i] = arv_gc_enum_entry_get_value (iter->data);
+
+	return pixel_formats;
 }
 
 /* Acquisition control */
