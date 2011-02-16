@@ -1,3 +1,15 @@
+Release 0.1.5
+=============
+
+  Release mostly focused on color support improvements.
+
+  * GstAravis: switch to negociated width, height, framerate and pixel format
+  * Evaluator: fix support of variable name containing digits
+  * Buffer: add a per buffer user data
+  * Stream: add a timed buffer pop function
+  * Stream: switch to gobject properties for packet resend and socket buffer size
+  * Camera: more bounds functions
+
 Release 0.1.4
 =============
 
