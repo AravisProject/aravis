@@ -23,12 +23,15 @@ arv_zip_test_LDADD = $(test_progs_ldadd)
 arv_camera_test_SOURCES = arvcameratest.c
 arv_camera_test_LDADD = $(test_progs_ldadd)
 
-TEST_PROGS += evaluator fake
+TEST_PROGS += evaluator buffer fake
 
 noinst_PROGRAMS += $(TEST_PROGS)
 
 evaluator_SOURCES = evaluator.c
 evaluator_LDADD = $(test_progs_ldadd)
+
+buffer_SOURCES = buffer.c
+buffer_LDADD = $(test_progs_ldadd)
 
 fake_SOURCES = fake.c
 fake_CFLAGS = -DGENICAM_FILENAME="\"$(top_srcdir)/src/arv-fake-camera.xml\""
