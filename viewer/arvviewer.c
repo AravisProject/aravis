@@ -346,7 +346,7 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	double exposure;
 	double log_exposure;
 	double frame_rate;
-	gint64 gain, gain_min, gain_max;
+	gint gain, gain_min, gain_max;
 	gboolean auto_gain, auto_exposure;
 	const char *caps_string;
 
