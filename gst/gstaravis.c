@@ -46,11 +46,8 @@ enum
 {
   PROP_0,
   PROP_CAMERA_NAME,
-  PROP_FRAME_RATE,
   PROP_GAIN,
   PROP_EXPOSURE,
-  PROP_WIDTH,
-  PROP_HEIGHT,
   PROP_H_BINNING,
   PROP_V_BINNING
 };
@@ -62,31 +59,46 @@ static GstStaticPadTemplate aravis_src_template = GST_STATIC_PAD_TEMPLATE ("src"
 									   GST_PAD_ALWAYS,
 									   GST_STATIC_CAPS ("ANY"));
 
-GstCaps *
-gst_aravis_get_camera_caps (GstAravis *gst_aravis)
+static GstCaps *
+gst_aravis_get_all_camera_caps (GstAravis *gst_aravis)
 {
-	GstCaps *caps = NULL;
-	ArvPixelFormat pixel_format;
-	const char *caps_string;
+	GstCaps *caps;
+	ArvPixelFormat *pixel_formats;
 	double frame_rate;
-	int height, width;
+	int min_height, min_width;
+	int max_height, max_width;
+	unsigned int n_pixel_formats, i;
 
-	GST_LOG_OBJECT (gst_aravis, "Get camera caps");
+	g_return_val_if_fail (GST_IS_ARAVIS (gst_aravis), NULL);
 
-	arv_camera_get_region (gst_aravis->camera, NULL, NULL, &width, &height);
-	pixel_format = arv_camera_get_pixel_format (gst_aravis->camera);
-	frame_rate = arv_camera_get_frame_rate (gst_aravis->camera);
-
-	caps_string = arv_pixel_format_to_gst_caps_string (pixel_format);
-	if (caps_string == NULL)
+	if (!ARV_IS_CAMERA (gst_aravis->camera))
 		return NULL;
 
-	caps = gst_caps_from_string (caps_string);
-	gst_caps_set_simple (caps,
-			     "width", G_TYPE_INT, width,
-			     "height", G_TYPE_INT, height,
-			     "framerate", GST_TYPE_FRACTION, (unsigned int ) (double) (0.5 + frame_rate), 1,
-			     NULL);
+	GST_LOG_OBJECT (gst_aravis, "Get all camera caps");
+
+	arv_camera_get_width_bounds (gst_aravis->camera, &min_width, &max_width);
+	arv_camera_get_height_bounds (gst_aravis->camera, &min_height, &max_height);
+	pixel_formats = arv_camera_get_available_pixel_formats (gst_aravis->camera, &n_pixel_formats);
+
+	caps = gst_caps_new_empty ();
+	for (i = 0; i < n_pixel_formats; i++) {
+		const char *caps_string;
+
+		caps_string = arv_pixel_format_to_gst_caps_string (pixel_formats[i]);
+
+		if (caps_string != NULL) {
+			GstStructure *structure;
+
+			structure = gst_structure_from_string (caps_string, NULL);
+			gst_structure_set (structure,
+					   "width", GST_TYPE_INT_RANGE, min_width, max_width,
+					   "height", GST_TYPE_INT_RANGE, min_height, max_height,
+					   "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
+					   NULL);
+			gst_caps_append_structure (caps, structure);
+		}
+	}
+
 	return caps;
 }
 
@@ -94,34 +106,63 @@ static GstCaps *
 gst_aravis_get_caps (GstBaseSrc * src)
 {
 	GstAravis* gst_aravis = GST_ARAVIS(src);
+	GstCaps *caps;
 
-	if (gst_aravis->caps != NULL)
-		return gst_caps_copy (gst_aravis->caps);
+	if (gst_aravis->all_caps != NULL)
+		caps = gst_caps_copy (gst_aravis->all_caps);
+	else
+		caps = gst_caps_new_any ();
 
-	return gst_caps_new_any ();
+	GST_LOG_OBJECT (gst_aravis, "Available caps = %" GST_PTR_FORMAT, caps);
+
+	return caps;
 }
 
 static gboolean
-gst_aravis_start (GstBaseSrc *src)
+gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 {
 	GstAravis* gst_aravis = GST_ARAVIS(src);
-	int i;
+	GstStructure *structure;
+	ArvPixelFormat pixel_format;
+	int height, width;
+	int bpp, depth;
+	const GValue *frame_rate;
+	const char *caps_string;
+	unsigned int i;
+	guint32 fourcc;
 
-	GST_LOG_OBJECT (gst_aravis, "Opening first available camera");
+	GST_LOG_OBJECT (gst_aravis, "Requested caps = %" GST_PTR_FORMAT, caps);
 
-	if (gst_aravis->camera != NULL)
-		g_object_unref (gst_aravis->camera);
+	arv_camera_stop_acquisition (gst_aravis->camera);
+
 	if (gst_aravis->stream != NULL)
 		g_object_unref (gst_aravis->stream);
 
-	gst_aravis->camera = arv_camera_new (gst_aravis->camera_name);
-	gst_aravis->stream = arv_camera_create_stream (gst_aravis->camera, NULL, NULL);
+	structure = gst_caps_get_structure (caps, 0);
 
-	arv_camera_set_region (gst_aravis->camera, 0, 0, gst_aravis->width, gst_aravis->height);
+	gst_structure_get_int (structure, "width", &width);
+	gst_structure_get_int (structure, "height", &height);
+	frame_rate = gst_structure_get_value (structure, "framerate");
+	gst_structure_get_fourcc (structure, "format", &fourcc);
+	gst_structure_get_int (structure, "bpp", &bpp);
+	gst_structure_get_int (structure, "depth", &depth);
+
+	pixel_format = arv_pixel_format_from_gst_caps (gst_structure_get_name (structure), bpp, depth, fourcc);
+
+	arv_camera_set_region (gst_aravis->camera, 0, 0, width, height);
 	arv_camera_set_binning (gst_aravis->camera, gst_aravis->h_binning, gst_aravis->v_binning);
+	arv_camera_set_pixel_format (gst_aravis->camera, pixel_format);
 
-	GST_DEBUG_OBJECT (gst_aravis, "Frame rate = %g Hz", gst_aravis->frame_rate);
-	arv_camera_set_frame_rate (gst_aravis->camera, gst_aravis->frame_rate);
+	if (frame_rate != NULL) {
+		double dbl_frame_rate;
+
+		dbl_frame_rate = gst_value_get_fraction_numerator (frame_rate) /
+			gst_value_get_fraction_denominator (frame_rate);
+
+		GST_DEBUG_OBJECT (gst_aravis, "Frame rate = %g Hz", dbl_frame_rate);
+		arv_camera_set_frame_rate (gst_aravis->camera, dbl_frame_rate);
+	}
+
 	GST_DEBUG_OBJECT (gst_aravis, "Actual frame rate = %g Hz", arv_camera_get_frame_rate (gst_aravis->camera));
 
 	GST_DEBUG_OBJECT (gst_aravis, "Gain       = %d", gst_aravis->gain);
@@ -132,19 +173,58 @@ gst_aravis_start (GstBaseSrc *src)
 	arv_camera_set_exposure_time (gst_aravis->camera, gst_aravis->exposure_time_us);
 	GST_DEBUG_OBJECT (gst_aravis, "Actual exposure   = %g µs", arv_camera_get_exposure_time (gst_aravis->camera));
 
+	if (gst_aravis->fixed_caps != NULL)
+		gst_caps_unref (gst_aravis->fixed_caps);
+
+	caps_string = arv_pixel_format_to_gst_caps_string (pixel_format);
+	if (caps_string != NULL) {
+		GstStructure *structure;
+		GstCaps *caps;
+
+		caps = gst_caps_new_empty ();
+		structure = gst_structure_from_string (caps_string, NULL);
+		gst_structure_set (structure,
+				   "width", G_TYPE_INT, width,
+				   "height", G_TYPE_INT, height,
+				   NULL);
+
+		if (frame_rate != NULL)
+			gst_structure_set_value (structure, "framerate", frame_rate);
+
+		gst_caps_append_structure (caps, structure);
+
+		gst_aravis->fixed_caps = caps;
+	} else
+		gst_aravis->fixed_caps = NULL;
+
 	gst_aravis->payload = arv_camera_get_payload (gst_aravis->camera);
-	gst_aravis->caps = gst_aravis_get_camera_caps (gst_aravis);
+	gst_aravis->stream = arv_camera_create_stream (gst_aravis->camera, NULL, NULL);
 
 	for (i = 0; i < GST_ARAVIS_N_BUFFERS; i++)
 		arv_stream_push_buffer (gst_aravis->stream,
 					arv_buffer_new (gst_aravis->payload, NULL, NULL));
 
-	GST_LOG_OBJECT (gst_aravis, "Starting acquisition");
-
+	GST_LOG_OBJECT (gst_aravis, "Start acquisition");
 	arv_camera_start_acquisition (gst_aravis->camera);
 
 	gst_aravis->timestamp_offset = 0;
 	gst_aravis->last_timestamp = 0;
+
+	return TRUE;
+}
+
+static gboolean
+gst_aravis_start (GstBaseSrc *src)
+{
+	GstAravis* gst_aravis = GST_ARAVIS(src);
+
+	GST_LOG_OBJECT (gst_aravis, "Open camera '%s'", gst_aravis->camera_name);
+
+	if (gst_aravis->camera != NULL)
+		g_object_unref (gst_aravis->camera);
+
+	gst_aravis->camera = arv_camera_new (gst_aravis->camera_name);
+	gst_aravis->all_caps = gst_aravis_get_all_camera_caps (gst_aravis);
 
 	return TRUE;
 }
@@ -165,12 +245,12 @@ gboolean gst_aravis_stop( GstBaseSrc * src )
 		g_object_unref (gst_aravis->camera);
 		gst_aravis->camera = NULL;
 	}
-	if (gst_aravis->caps != NULL) {
-		gst_caps_unref (gst_aravis->caps);
-		gst_aravis->caps = NULL;
+	if (gst_aravis->all_caps != NULL) {
+		gst_caps_unref (gst_aravis->all_caps);
+		gst_aravis->all_caps = NULL;
 	}
 
-        GST_DEBUG_OBJECT (gst_aravis, "Capture stoped");
+        GST_DEBUG_OBJECT (gst_aravis, "Stop acquisition");
 
         return TRUE;
 }
@@ -210,24 +290,49 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 
 	arv_stream_push_buffer (gst_aravis->stream, arv_buffer);
 
-	gst_buffer_set_caps (*buffer, gst_aravis->caps);
+	gst_buffer_set_caps (*buffer, gst_aravis->fixed_caps);
 
 	return GST_FLOW_OK;
 }
 
+static void
+gst_aravis_fixate_caps (GstPad * pad, GstCaps * caps)
+{
+	GstAravis *gst_aravis = GST_ARAVIS (gst_pad_get_parent_element (pad));
+	GstStructure *structure;
+	gint width;
+	gint height;
+	double frame_rate;
+
+	g_return_if_fail (GST_IS_ARAVIS (gst_aravis));
+
+	arv_camera_get_region (gst_aravis->camera, NULL, NULL, &width, &height);
+	frame_rate = arv_camera_get_frame_rate (gst_aravis->camera);
+
+	structure = gst_caps_get_structure (caps, 0);
+
+	gst_structure_fixate_field_nearest_int (structure, "width", width);
+	gst_structure_fixate_field_nearest_int (structure, "height", height);
+	gst_structure_fixate_field_nearest_fraction (structure, "framerate", (double) (0.5 + frame_rate), 1);
+
+	GST_LOG_OBJECT (gst_aravis, "Fixate caps");
+
+	g_object_unref (gst_aravis);
+}
 
 static void
 gst_aravis_init (GstAravis *gst_aravis, GstAravisClass *g_class)
 {
+	GstPad *pad = GST_BASE_SRC_PAD (gst_aravis);
+
+	gst_pad_set_fixatecaps_function (pad, gst_aravis_fixate_caps);
+
 	gst_base_src_set_live (GST_BASE_SRC (gst_aravis), TRUE);
 
 	gst_aravis->camera_name = NULL;
 
-	gst_aravis->frame_rate = -1;
 	gst_aravis->gain = -1;
 	gst_aravis->exposure_time_us = -1;
-	gst_aravis->width = -1;
-	gst_aravis->height = -1;
 	gst_aravis->h_binning = -1;
 	gst_aravis->v_binning = -1;
 	gst_aravis->payload = 0;
@@ -235,7 +340,8 @@ gst_aravis_init (GstAravis *gst_aravis, GstAravisClass *g_class)
 	gst_aravis->camera = NULL;
 	gst_aravis->stream = NULL;
 
-	gst_aravis->caps = NULL;
+	gst_aravis->all_caps = NULL;
+	gst_aravis->fixed_caps = NULL;
 }
 
 static void
@@ -251,9 +357,13 @@ gst_aravis_finalize (GObject * object)
 		g_object_unref (gst_aravis->stream);
 		gst_aravis->stream = NULL;
 	}
-	if (gst_aravis->caps != NULL) {
-		gst_caps_unref (gst_aravis->caps);
-		gst_aravis->caps = NULL;
+	if (gst_aravis->all_caps != NULL) {
+		gst_caps_unref (gst_aravis->all_caps);
+		gst_aravis->all_caps = NULL;
+	}
+	if (gst_aravis->fixed_caps != NULL) {
+		gst_caps_unref (gst_aravis->fixed_caps);
+		gst_aravis->fixed_caps = NULL;
 	}
 
 	g_free (gst_aravis->camera_name);
@@ -272,21 +382,15 @@ gst_aravis_set_property (GObject * object, guint prop_id,
 		case PROP_CAMERA_NAME:
 			g_free (gst_aravis->camera_name);
 			gst_aravis->camera_name = g_strdup (g_value_get_string (value));
-			break;
-		case PROP_FRAME_RATE:
-			gst_aravis->frame_rate = g_value_get_double (value);
+
+			GST_LOG_OBJECT (gst_aravis, "Set camera name to %s", gst_aravis->camera_name);
+
 			break;
 		case PROP_GAIN:
 			gst_aravis->gain = g_value_get_int (value);
 			break;
 		case PROP_EXPOSURE:
 			gst_aravis->exposure_time_us = g_value_get_double (value);
-			break;
-		case PROP_WIDTH:
-			gst_aravis->width = g_value_get_int (value);
-			break;
-		case PROP_HEIGHT:
-			gst_aravis->height = g_value_get_int (value);
 			break;
 		case PROP_H_BINNING:
 			gst_aravis->h_binning = g_value_get_int (value);
@@ -310,20 +414,11 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 		case PROP_CAMERA_NAME:
 			g_value_set_string (value, gst_aravis->camera_name);
 			break;
-		case PROP_FRAME_RATE:
-			g_value_set_double (value, gst_aravis->frame_rate);
-			break;
 		case PROP_GAIN:
 			g_value_set_int (value, gst_aravis->gain);
 			break;
 		case PROP_EXPOSURE:
 			g_value_set_double (value, gst_aravis->exposure_time_us);
-			break;
-		case PROP_WIDTH:
-			g_value_set_int (value, gst_aravis->width);
-			break;
-		case PROP_HEIGHT:
-			g_value_set_int (value, gst_aravis->height);
 			break;
 		case PROP_H_BINNING:
 			g_value_set_int (value, gst_aravis->h_binning);
@@ -372,14 +467,6 @@ gst_aravis_class_init (GstAravisClass * klass)
 				      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 	g_object_class_install_property
 		(gobject_class,
-		 PROP_FRAME_RATE,
-		 g_param_spec_double ("frame-rate",
-				      "Frame rate",
-				      "Acquisition frame rate (in Hz)",
-				      0.0, 500.0, 25.0,
-				      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-	g_object_class_install_property
-		(gobject_class,
 		 PROP_GAIN,
 		 g_param_spec_int ("gain",
 				   "Gain",
@@ -394,22 +481,6 @@ gst_aravis_class_init (GstAravisClass * klass)
 				      "Exposure time (µs)",
 				      0.0, 100000000.0, 500.0,
 				      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-	g_object_class_install_property
-		(gobject_class,
-		 PROP_WIDTH,
-		 g_param_spec_int ("width",
-				   "Image width",
-				   "Image width (in pixels)",
-				   1, G_MAXINT, 320,
-				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-	g_object_class_install_property
-		(gobject_class,
-		 PROP_HEIGHT,
-		 g_param_spec_int ("height",
-				   "Image height",
-				   "Image height (in pixels)",
-				   1, G_MAXINT, 320,
-				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 	g_object_class_install_property
 		(gobject_class,
 		 PROP_H_BINNING,
@@ -427,9 +498,10 @@ gst_aravis_class_init (GstAravisClass * klass)
 				   1, G_MAXINT, 1,
 				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-        GST_DEBUG_CATEGORY_INIT (aravis_debug, "aravis", 0, "Aravis interface");
+        GST_DEBUG_CATEGORY_INIT (aravis_debug, "aravissrc", 0, "Aravis interface");
 
 	gstbasesrc_class->get_caps = gst_aravis_get_caps;
+	gstbasesrc_class->set_caps = gst_aravis_set_caps;
 	gstbasesrc_class->start = gst_aravis_start;
 	gstbasesrc_class->stop = gst_aravis_stop;
 

@@ -43,20 +43,19 @@ struct _GstAravis {
 
 	char *camera_name;
 
-	double frame_rate;
 	gint64 gain;
 	double exposure_time_us;
 
-	gint width;
-	gint height;
 	gint h_binning;
 	gint v_binning;
+
 	gint payload;
 
 	ArvCamera *camera;
 	ArvStream *stream;
 
-	GstCaps *caps;
+	GstCaps *all_caps;
+	GstCaps *fixed_caps;
 
 	guint64 timestamp_offset;
 	guint64 last_timestamp;
