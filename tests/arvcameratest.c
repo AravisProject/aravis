@@ -7,6 +7,7 @@ static char *arv_option_debug_domains = NULL;
 static gboolean arv_option_snaphot = FALSE;
 static int arv_option_auto_socket_buffer = -1;
 static char *arv_option_trigger = NULL;
+static gboolean arv_option_software_trigger = FALSE;
 static double arv_option_frequency = -1.0;
 static int arv_option_width = -1;
 static int arv_option_height = -1;
@@ -27,6 +28,8 @@ static const GOptionEntry arv_option_entries[] =
 		&arv_option_frequency,	"Acquisition frequency", NULL },
 	{ "trigger",		't', 0, G_OPTION_ARG_STRING,
 		&arv_option_trigger,	"External trigger", NULL},
+	{ "software-trigger",	'\0', 0, G_OPTION_ARG_NONE,
+		&arv_option_software_trigger,	"Emit software trigger", NULL},
 	{ "width", 		'\0', 0, G_OPTION_ARG_INT,
 		&arv_option_width,		"Width", NULL },
 	{ "height", 		'\0', 0, G_OPTION_ARG_INT,
@@ -87,6 +90,16 @@ periodic_task_cb (void *abstract_data)
 	return TRUE;
 }
 
+static gboolean
+emit_software_trigger (void *abstract_data)
+{
+	ArvCamera *camera = abstract_data;
+
+	arv_camera_software_trigger (camera);
+
+	return TRUE;
+}
+
 int
 main (int argc, char **argv)
 {
@@ -133,6 +146,7 @@ main (int argc, char **argv)
 		guint64 n_failures;
 		guint64 n_underruns;
 		int gain;
+		guint software_trigger_source = 0;
 
 		arv_camera_set_region (camera, 0, 0, arv_option_width, arv_option_height);
 		arv_camera_set_binning (camera, arv_option_horizontal_binning, arv_option_vertical_binning);
@@ -167,7 +181,7 @@ main (int argc, char **argv)
 
 		arv_camera_set_acquisition_mode (camera, ARV_ACQUISITION_MODE_CONTINUOUS);
 
-		if (arv_option_frequency > 0.0)
+		if (arv_option_frequency > 0.0 && !arv_option_software_trigger)
 			arv_camera_set_frame_rate (camera, arv_option_frequency);
 
 		if (arv_option_trigger != NULL)
@@ -180,11 +194,20 @@ main (int argc, char **argv)
 
 		g_timeout_add_seconds (1, periodic_task_cb, &data);
 
+		if (arv_option_software_trigger && arv_option_frequency > 0.0) {
+			arv_camera_set_software_trigger (camera);
+			software_trigger_source = g_timeout_add ((double) (0.5 + 1000.0 / arv_option_frequency),
+								 emit_software_trigger, camera);
+		}
+
 		data.main_loop = g_main_loop_new (NULL, FALSE);
 
 		old_sigint_handler = signal (SIGINT, set_cancel);
 
 		g_main_loop_run (data.main_loop);
+
+		if (software_trigger_source > 0)
+			g_source_remove (software_trigger_source);
 
 		signal (SIGINT, old_sigint_handler);
 

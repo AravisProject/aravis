@@ -494,6 +494,9 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source)
 			arv_device_set_integer_feature_value (camera->priv->device, "AcquisitionFrameRateEnable",
 							      0);
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
+							     "FrameStart");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
 							     "AcquisitionStart");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "On");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerActivation",
@@ -504,7 +507,8 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source)
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
 							     "AcquisitionStart");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
-			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector", "FrameStart");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
+							     "FrameStart");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "On");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerActivation",
 							     "RisingEdge");
@@ -514,13 +518,28 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source)
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
 							     "AcquisitionStart");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
-			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector", "FrameStart");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
+							     "FrameStart");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "On");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerActivation",
 							     "RisingEdge");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerSource", source);
 			break;
 	}
+}
+
+void
+arv_camera_set_software_trigger (ArvCamera *camera)
+{
+	arv_camera_set_trigger (camera, "Software");
+}
+
+void
+arv_camera_software_trigger (ArvCamera *camera)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_device_execute_command (camera->priv->device, "TriggerSoftware");
 }
 
 /**
