@@ -7,7 +7,7 @@ static char *arv_option_debug_domains = NULL;
 static gboolean arv_option_snaphot = FALSE;
 static int arv_option_auto_socket_buffer = -1;
 static char *arv_option_trigger = NULL;
-static gboolean arv_option_software_trigger = FALSE;
+static double arv_option_software_trigger = -1;
 static double arv_option_frequency = -1.0;
 static int arv_option_width = -1;
 static int arv_option_height = -1;
@@ -28,7 +28,7 @@ static const GOptionEntry arv_option_entries[] =
 		&arv_option_frequency,	"Acquisition frequency", NULL },
 	{ "trigger",		't', 0, G_OPTION_ARG_STRING,
 		&arv_option_trigger,	"External trigger", NULL},
-	{ "software-trigger",	'\0', 0, G_OPTION_ARG_NONE,
+	{ "software-trigger",	'\0', 0, G_OPTION_ARG_DOUBLE,
 		&arv_option_software_trigger,	"Emit software trigger", NULL},
 	{ "width", 		'\0', 0, G_OPTION_ARG_INT,
 		&arv_option_width,		"Width", NULL },
@@ -181,11 +181,17 @@ main (int argc, char **argv)
 
 		arv_camera_set_acquisition_mode (camera, ARV_ACQUISITION_MODE_CONTINUOUS);
 
-		if (arv_option_frequency > 0.0 && !arv_option_software_trigger)
+		if (arv_option_frequency > 0.0)
 			arv_camera_set_frame_rate (camera, arv_option_frequency);
 
 		if (arv_option_trigger != NULL)
 			arv_camera_set_trigger (camera, arv_option_trigger);
+
+		if (arv_option_software_trigger > 0.0) {
+			arv_camera_set_trigger (camera, "Software");
+			software_trigger_source = g_timeout_add ((double) (0.5 + 1000.0 / arv_option_software_trigger),
+								 emit_software_trigger, camera);
+		}
 
 		arv_camera_start_acquisition (camera);
 
@@ -193,12 +199,6 @@ main (int argc, char **argv)
 		arv_stream_set_emit_signals (stream, TRUE);
 
 		g_timeout_add_seconds (1, periodic_task_cb, &data);
-
-		if (arv_option_software_trigger && arv_option_frequency > 0.0) {
-			arv_camera_set_trigger (camera, "Software");
-			software_trigger_source = g_timeout_add ((double) (0.5 + 1000.0 / arv_option_frequency),
-								 emit_software_trigger, camera);
-		}
 
 		data.main_loop = g_main_loop_new (NULL, FALSE);
 
