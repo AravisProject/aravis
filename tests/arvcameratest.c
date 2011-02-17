@@ -195,7 +195,7 @@ main (int argc, char **argv)
 		g_timeout_add_seconds (1, periodic_task_cb, &data);
 
 		if (arv_option_software_trigger && arv_option_frequency > 0.0) {
-			arv_camera_set_software_trigger (camera);
+			arv_camera_set_trigger (camera, "Software");
 			software_trigger_source = g_timeout_add ((double) (0.5 + 1000.0 / arv_option_frequency),
 								 emit_software_trigger, camera);
 		}

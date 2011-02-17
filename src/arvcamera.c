@@ -521,11 +521,6 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source)
 	}
 }
 
-void
-arv_camera_set_software_trigger (ArvCamera *camera)
-{
-	arv_camera_set_trigger (camera, "Software");
-}
 
 void
 arv_camera_software_trigger (ArvCamera *camera)
