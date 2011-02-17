@@ -262,8 +262,6 @@ _write_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 value)
 
 /* Heartbeat thread */
 
-#define ARV_GV_DEVICE_HEARTBEAT_SOCKET_BUFFER_SIZE	64
-
 typedef struct {
 	ArvGvDeviceIOData *io_data;
 	int period_us;
