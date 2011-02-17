@@ -131,6 +131,7 @@ set_int64_variable_test (void)
 int
 main (int argc, char *argv[])
 {
+	int result;
 	int i;
 
 	g_test_init (&argc, &argv, NULL);
@@ -146,5 +147,9 @@ main (int argc, char *argv[])
 	g_test_add_func ("/evaluator/double-variable", set_double_variable_test);
 	g_test_add_func ("/evaluator/int64-variable", set_int64_variable_test);
 
-	return g_test_run();
+	result = g_test_run();
+
+	arv_shutdown ();
+
+	return result;
 }

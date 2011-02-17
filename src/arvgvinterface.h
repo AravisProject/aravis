@@ -55,6 +55,7 @@ struct _ArvGvInterfaceClass {
 GType arv_gv_interface_get_type (void);
 
 ArvInterface * 		arv_gv_interface_get_instance 		(void);
+void 			arv_gv_interface_destroy_instance 	(void);
 
 G_END_DECLS
 

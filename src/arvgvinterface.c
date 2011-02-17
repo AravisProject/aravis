@@ -329,22 +329,33 @@ arv_gv_interface_open_device (ArvInterface *interface, const char *device_id)
 	return device;
 }
 
+static ArvInterface *gv_interface = NULL;
+static GStaticMutex gv_interface_mutex = G_STATIC_MUTEX_INIT;
+
 ArvInterface *
 arv_gv_interface_get_instance (void)
 {
-	static ArvInterface *gv_interface = NULL;
-	static GStaticMutex mutex = G_STATIC_MUTEX_INIT;
-
-	g_static_mutex_lock (&mutex);
+	g_static_mutex_lock (&gv_interface_mutex);
 
 	if (gv_interface == NULL)
 		gv_interface = g_object_new (ARV_TYPE_GV_INTERFACE, NULL);
-	else
-		g_object_ref (gv_interface);
 
-	g_static_mutex_unlock (&mutex);
+	g_static_mutex_unlock (&gv_interface_mutex);
 
 	return ARV_INTERFACE (gv_interface);
+}
+
+void
+arv_gv_interface_destroy_instance (void)
+{
+	g_static_mutex_lock (&gv_interface_mutex);
+
+	if (gv_interface != NULL) {
+		g_object_unref (gv_interface);
+		gv_interface = NULL;
+	}
+
+	g_static_mutex_unlock (&gv_interface_mutex);
 }
 
 static void

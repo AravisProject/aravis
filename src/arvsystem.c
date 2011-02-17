@@ -27,12 +27,13 @@
 
 typedef struct {
 	const char *interface_id;
-	ArvInterface * (*get_interface_instance) (void);
+	ArvInterface * 	(*get_interface_instance) 	(void);
+	void 		(*destroy_interface_instance) 	(void);
 } ArvInterfaceInfos;
 
 ArvInterfaceInfos interfaces[] = {
-	{"Fake", 		arv_fake_interface_get_instance},
-	{"GigE-Vision", 	arv_gv_interface_get_instance}
+	{"Fake", 		arv_fake_interface_get_instance,	arv_fake_interface_destroy_instance},
+	{"GigE-Vision", 	arv_gv_interface_get_instance,		arv_gv_interface_destroy_instance}
 };
 
 unsigned int
@@ -119,3 +120,11 @@ arv_open_device (const char *device_id)
 	return NULL;
 }
 
+void
+arv_shutdown (void)
+{
+	unsigned int i;
+
+	for (i = 0; i < G_N_ELEMENTS (interfaces); i++)
+		interfaces[i].destroy_interface_instance ();
+}

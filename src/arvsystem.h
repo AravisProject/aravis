@@ -36,6 +36,8 @@ const char * 		arv_get_device_id 		(unsigned int index);
 
 ArvDevice * 		arv_open_device 		(const char *device_id);
 
+void 			arv_shutdown 			(void);
+
 G_END_DECLS
 
 #endif

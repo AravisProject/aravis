@@ -54,6 +54,7 @@ struct _ArvFakeInterfaceClass {
 GType arv_fake_interface_get_type (void);
 
 ArvInterface * 		arv_fake_interface_get_instance 		(void);
+void 			arv_fake_interface_destroy_instance 		(void);
 
 G_END_DECLS
 

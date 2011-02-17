@@ -74,5 +74,8 @@ main (int argc, char **argv)
 		}
 	}
 
+	/* For debug purpose only */
+	arv_shutdown ();
+
 	return EXIT_SUCCESS;
 }

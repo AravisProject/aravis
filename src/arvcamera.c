@@ -525,7 +525,7 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source)
 
 /**
  * arv_camera_software_trigger:
- * @amera: a #ArvCamera
+ * @camera: a #ArvCamera
  *
  * Sends a software trigger command to @camera. The camera must be previously
  * configured to use a software trigger, using @arv_camera_set_trigger.

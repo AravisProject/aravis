@@ -543,5 +543,8 @@ main (int argc,char *argv[])
 
 	gtk_main ();
 
+	/* For debug purpose only */
+	arv_shutdown ();
+
 	return EXIT_SUCCESS;
 }

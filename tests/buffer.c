@@ -70,6 +70,7 @@ full_buffer_test (void)
 int
 main (int argc, char *argv[])
 {
+	int result;
 	int i;
 
 	g_test_init (&argc, &argv, NULL);
@@ -80,6 +81,10 @@ main (int argc, char *argv[])
 	g_test_add_func ("/buffer/preallocated-buffer", preallocated_buffer_test);
 	g_test_add_func ("/buffer/full-buffer", full_buffer_test);
 
-	return g_test_run();
+	result = g_test_run();
+
+	arv_shutdown ();
+
+	return result;
 }
 

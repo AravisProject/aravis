@@ -56,22 +56,34 @@ arv_fake_interface_open_device (ArvInterface *interface, const char *device_id)
 	return NULL;
 }
 
+static ArvInterface *fake_interface = NULL;
+static GStaticMutex fake_interface_mutex = G_STATIC_MUTEX_INIT;
+
 ArvInterface *
 arv_fake_interface_get_instance (void)
 {
-	static ArvInterface *fake_interface = NULL;
-	static GStaticMutex mutex = G_STATIC_MUTEX_INIT;
 
-	g_static_mutex_lock (&mutex);
+	g_static_mutex_lock (&fake_interface_mutex);
 
 	if (fake_interface == NULL)
 		fake_interface = g_object_new (ARV_TYPE_FAKE_INTERFACE, NULL);
-	else
-		g_object_ref (fake_interface);
 
-	g_static_mutex_unlock (&mutex);
+	g_static_mutex_unlock (&fake_interface_mutex);
 
 	return ARV_INTERFACE (fake_interface);
+}
+
+void
+arv_fake_interface_destroy_instance (void)
+{
+	g_static_mutex_lock (&fake_interface_mutex);
+
+	if (fake_interface != NULL) {
+		g_object_unref (fake_interface);
+		fake_interface = NULL;
+	}
+
+	g_static_mutex_unlock (&fake_interface_mutex);
 }
 
 static void

@@ -88,6 +88,7 @@ arv_get_n_devices
 arv_get_n_interfaces
 arv_update_device_list
 arv_open_device
+arv_shutdown
 arv_interface_update_device_list
 arv_interface_get_device_id
 arv_interface_get_n_devices
@@ -110,6 +111,7 @@ ArvInterfacePrivate
 <TITLE>ArvFakeInterface</TITLE>
 ArvFakeInterface
 arv_fake_interface_get_instance
+arv_fake_interface_destroy_instance
 <SUBSECTION Standard>
 ARV_FAKE_INTERFACE
 ARV_IS_FAKE_INTERFACE
@@ -388,6 +390,7 @@ arv_gc_set_double_to_value
 <TITLE>ArvGvInterface</TITLE>
 ArvGvInterface
 arv_gv_interface_get_instance
+arv_gv_interface_destroy_instance
 <SUBSECTION Standard>
 ARV_GV_INTERFACE
 ARV_IS_GV_INTERFACE
