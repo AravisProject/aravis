@@ -100,6 +100,8 @@ gst_aravis_get_all_camera_caps (GstAravis *gst_aravis)
 		}
 	}
 
+	g_free (pixel_formats);
+
 	return caps;
 }
 
