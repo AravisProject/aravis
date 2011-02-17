@@ -430,6 +430,9 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
 							     "AcquisitionStart");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
+							     "FrameStart");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
 			arv_device_set_integer_feature_value (camera->priv->device, "AcquisitionFrameRateEnable",
 							      1);
 			arv_device_set_float_feature_value (camera->priv->device, "AcquisitionFrameRateAbs",
@@ -489,32 +492,22 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source)
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 	g_return_if_fail (source != NULL);
 
-	switch (camera->priv->vendor) {
-		case ARV_CAMERA_VENDOR_BASLER:
+	switch (camera->priv->series) {
+		case ARV_CAMERA_SERIES_BASLER_SCOUT:
 			arv_device_set_integer_feature_value (camera->priv->device, "AcquisitionFrameRateEnable",
 							      0);
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
-							     "FrameStart");
-			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
-			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
 							     "AcquisitionStart");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "On");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerActivation",
 							     "RisingEdge");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerSource", source);
 			break;
-		case ARV_CAMERA_VENDOR_PROSILICA:
-			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
-							     "AcquisitionStart");
-			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
-			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
-							     "FrameStart");
-			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "On");
-			arv_device_set_string_feature_value (camera->priv->device, "TriggerActivation",
-							     "RisingEdge");
-			arv_device_set_string_feature_value (camera->priv->device, "TriggerSource", source);
-			break;
-		case ARV_CAMERA_VENDOR_UNKNOWN:
+		case ARV_CAMERA_SERIES_BASLER_ACE:
+		case ARV_CAMERA_SERIES_BASLER_OTHER:
+			arv_device_set_integer_feature_value (camera->priv->device, "AcquisitionFrameRateEnable",
+							      0);
+		default:
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
 							     "AcquisitionStart");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
