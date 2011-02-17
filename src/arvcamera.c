@@ -312,6 +312,16 @@ arv_camera_get_pixel_format (ArvCamera *camera)
 	return arv_device_get_integer_feature_value (camera->priv->device, "PixelFormat");
 }
 
+/**
+ * arv_camera_get_available_pixel_formats:
+ * @camera: a #ArvCamera
+ * @n_pixel_formats: number of different pixel format placehoder
+ * Return value: a newly allocated array of #ArvPixelFormat
+ *
+ * Retrieves the list of all available pixel formats. The returned array
+ * must be freed after use with g_free.
+ */
+
 ArvPixelFormat *
 arv_camera_get_available_pixel_formats (ArvCamera *camera, guint *n_pixel_formats)
 {
@@ -484,6 +494,9 @@ arv_camera_get_frame_rate (ArvCamera *camera)
  * or "Line2". See the camera documentation for the allowed values. The
  * activation is set to rising edge. It can be changed by accessing the
  * underlying device object.
+ *
+ * The source can also be "Software". In this case, an acquisition is triggered
+ * by a call to @arv_camera_software_trigger.
  */
 
 void
@@ -521,6 +534,13 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source)
 	}
 }
 
+/**
+ * arv_camera_software_trigger:
+ * @amera: a #ArvCamera
+ *
+ * Sends a software trigger command to @camera. The camera must be previously
+ * configured to use a software trigger, using @arv_camera_set_trigger.
+ */
 
 void
 arv_camera_software_trigger (ArvCamera *camera)
@@ -574,6 +594,15 @@ arv_camera_get_exposure_time (ArvCamera *camera)
 	return arv_device_get_float_feature_value (camera->priv->device, "ExposureTimeAbs");
 }
 
+/**
+ * arv_camera_get_exposure_time_bounds:
+ * @camera: a #ArvCamera
+ * @min: minimum exposure time placeholder
+ * @max: maximum exposure time placeholder
+ *
+ * Retrieves the exposure time bounds, in µs.
+ */
+
 void
 arv_camera_get_exposure_time_bounds (ArvCamera *camera, double *min, double *max)
 {
@@ -586,7 +615,9 @@ arv_camera_get_exposure_time_bounds (ArvCamera *camera, double *min, double *max
 			arv_device_get_float_feature_bounds (camera->priv->device, "ExposureTimeBaseAbs", min, max);
 			break;
 		case ARV_CAMERA_SERIES_BASLER_ACE:
-			arv_device_get_integer_feature_bounds (camera->priv->device, "ExposureTimeRaw", &int_min, &int_max);
+			arv_device_get_integer_feature_bounds (camera->priv->device, "ExposureTimeRaw",
+							       &int_min,
+							       &int_max);
 			if (min != NULL)
 				*min = int_min;
 			if (max != NULL)
@@ -598,6 +629,14 @@ arv_camera_get_exposure_time_bounds (ArvCamera *camera, double *min, double *max
 	}
 }
 
+/**
+ * arv_camera_set_exposure_time_auto:
+ * @camera: a #ArvCamera
+ * @auto_mode: auto exposure mode selection
+ *
+ * Configures automatic exposure feature.
+ **/
+
 void
 arv_camera_set_exposure_time_auto (ArvCamera *camera, ArvAuto auto_mode)
 {
@@ -605,6 +644,14 @@ arv_camera_set_exposure_time_auto (ArvCamera *camera, ArvAuto auto_mode)
 
 	arv_device_set_string_feature_value (camera->priv->device, "ExposureAuto", arv_auto_to_string (auto_mode));
 }
+
+/**
+ * arv_camera_get_exposure_time_auto:
+ * @camera: a #ArvCamera
+ * Return value: auto exposure mode selection
+ *
+ * Retrieves automatic exposure feature setting.
+ **/
 
 ArvAuto
 arv_camera_get_exposure_time_auto (ArvCamera *camera)
@@ -649,6 +696,15 @@ arv_camera_get_gain (ArvCamera *camera)
 	return arv_device_get_integer_feature_value (camera->priv->device, "GainRaw");
 }
 
+/**
+ * arv_camera_get_gain_bounds:
+ * @camera: a #ArvCamera
+ * @min: minimum gain placeholder
+ * @max: maximum gain  placeholder
+ *
+ * Retrieves the gain bounds.
+ */
+
 void
 arv_camera_get_gain_bounds (ArvCamera *camera, gint *min, gint *max)
 {
@@ -664,6 +720,14 @@ arv_camera_get_gain_bounds (ArvCamera *camera, gint *min, gint *max)
 		*max = max64;
 }
 
+/**
+ * arv_camera_set_gain_auto:
+ * @camera: a #ArvCamera
+ * @auto_mode: auto gaine mode selection
+ *
+ * Configures automatic gain feature.
+ **/
+
 void
 arv_camera_set_gain_auto (ArvCamera *camera, ArvAuto auto_mode)
 {
@@ -671,6 +735,14 @@ arv_camera_set_gain_auto (ArvCamera *camera, ArvAuto auto_mode)
 
 	arv_device_set_string_feature_value (camera->priv->device, "GainAuto", arv_auto_to_string (auto_mode));
 }
+
+/**
+ * arv_camera_get_gain_auto:
+ * @camera: a #ArvCamera
+ * Return value: auto gain mode selection
+ *
+ * Retrieves automatic gain feature setting.
+ **/
 
 ArvAuto
 arv_camera_get_gain_auto (ArvCamera *camera)
