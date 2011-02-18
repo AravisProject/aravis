@@ -14,7 +14,9 @@ AM_CFLAGS = -Wall -lm
 
 bin_PROGRAMS = arv-viewer
 
-arv_viewer_SOURCES = arvviewer.c
+arv_viewer_SOURCES = arvviewer.c	\
+		     arvfeaturewidget.c
+
 arv_viewer_LDADD = $(ARAVIS_EXTRA_LIBS) $(top_builddir)/src/libaravis.la
 arv_viewerdir = $(aravis_datadir)
 arv_viewer_DATA = arv-viewer.ui
