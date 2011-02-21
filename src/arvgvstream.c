@@ -145,7 +145,7 @@ typedef struct {
 	gint32 n_missing_blocks;
 	gint32 n_late_blocks;
 	gint32 last_block_size;
-	gint32 last_block_id;
+	gint32 last_packet_id;
 	gint64 last_time_us;
 	guint64 last_timestamp_ns;
 	guint32 statistic_count;
@@ -238,7 +238,7 @@ _process_data_leader (ArvGvStreamThreadData *thread_data, ArvGvStreamThreadState
 	state->read_data_size = 0;
 	state->n_missing_blocks = 0;
 	state->last_block_size = 0;
-	state->last_block_id = 0;
+	state->last_packet_id = 0;
 
 	g_get_current_time (&current_time);
 	state->leader_time_us = current_time.tv_sec * 1000000 + current_time.tv_usec;
@@ -255,7 +255,7 @@ _process_data_block (ArvGvStreamThreadData *thread_data, ArvGvStreamThreadState 
 	size_t block_size;
 	ptrdiff_t block_offset;
 	ptrdiff_t block_end;
-	int block_id;
+	guint32 packet_id;
 
 	if (state->buffer == NULL ||
 	    state->buffer->status != ARV_BUFFER_STATUS_FILLING)
@@ -266,13 +266,13 @@ _process_data_block (ArvGvStreamThreadData *thread_data, ArvGvStreamThreadState 
 		return;
 	}
 
-	block_id = arv_gvsp_packet_get_block_id (state->packet);
-	if (block_id <= state->last_block_id) {
-		arv_debug ("stream-thread", "[GvStream::thread] Receive resent block (%d) frame %d",
-			   block_id, state->buffer->frame_id);
+	packet_id = arv_gvsp_packet_get_packet_id (state->packet);
+	if (packet_id <= state->last_packet_id) {
+		arv_debug ("stream-thread", "[GvStream::thread] Receive resent packet (%d) frame %d",
+			   packet_id, state->buffer->frame_id);
 
 		block_size = arv_gvsp_packet_get_data_size (read_count);
-		block_offset = state->last_block_size * (block_id - 1);
+		block_offset = state->last_block_size * (packet_id - 1);
 		block_end = block_size + block_offset;
 
 		if (block_end  > state->buffer->size) {
@@ -288,25 +288,25 @@ _process_data_block (ArvGvStreamThreadData *thread_data, ArvGvStreamThreadState 
 		return;
 	}
 
-	if (block_id != (state->last_block_id + 1)) {
+	if (packet_id != (state->last_packet_id + 1)) {
 		gint32 n_misses;
 
-		n_misses = block_id - state->last_block_id - 1;
+		n_misses = packet_id - state->last_packet_id - 1;
 
 		arv_gvsp_packet_debug (state->packet, read_count);
 		arv_debug ("stream-thread", "[GvStream::thread] Missing block (expected %d - %d) frame %d",
-			   state->last_block_id + 1,
-			   block_id, state->buffer->frame_id);
+			   state->last_packet_id + 1,
+			   packet_id, state->buffer->frame_id);
 		thread_data->n_missing_blocks += n_misses;
 		state->n_missing_blocks += n_misses;
 
 		if (thread_data->packet_resend != ARV_GV_STREAM_PACKET_RESEND_NEVER)
 			_send_packet_request (thread_data, state->buffer->frame_id,
-					      state->last_block_id + 1, block_id - 1);
+					      state->last_packet_id + 1, packet_id - 1);
 	}
 
 	block_size = arv_gvsp_packet_get_data_size (read_count);
-	block_offset = state->last_block_size * (block_id - 1);
+	block_offset = state->last_block_size * (packet_id - 1);
 	block_end = block_size + block_offset;
 
 	if (block_end  > state->buffer->size) {
@@ -318,7 +318,7 @@ _process_data_block (ArvGvStreamThreadData *thread_data, ArvGvStreamThreadState 
 
 	state->read_data_size += block_size;
 	state->last_block_size = block_size;
-	state->last_block_id =  block_id;
+	state->last_packet_id =  packet_id;
 }
 
 static void
@@ -354,7 +354,7 @@ arv_gv_stream_thread (void *data)
 	state.packet = g_malloc0 (ARV_GV_STREAM_INCOMING_BUFFER_SIZE);
 	state.n_missing_blocks = 0;
 	state.last_block_size = 0;
-	state.last_block_id = 0;
+	state.last_packet_id = 0;
 	state.statistic_count = 0;
 	g_get_current_time (&current_time);
 	state.last_time_us = current_time.tv_sec * 1000000 + current_time.tv_usec;

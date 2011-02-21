@@ -27,16 +27,19 @@
 
 G_BEGIN_DECLS
 
+#define ARV_GVSP_PACKET_INFOS_ID_MASK		0x00ffffff
+#define ARV_GVSP_PACKET_INFOS_TYPE_MASK		0xff000000
+#define ARV_GVSP_PACKET_INFOS_TYPE_POS		24
+
 typedef enum {
-	ARV_GVSP_PACKET_TYPE_DATA_LEADER = 	0x0100,
-	ARV_GVSP_PACKET_TYPE_DATA_TRAILER = 	0x0200,
-	ARV_GVSP_PACKET_TYPE_DATA_BLOCK =	0x0300
+	ARV_GVSP_PACKET_TYPE_DATA_LEADER = 	0x01,
+	ARV_GVSP_PACKET_TYPE_DATA_TRAILER = 	0x02,
+	ARV_GVSP_PACKET_TYPE_DATA_BLOCK =	0x03
 } ArvGvspPacketType;
 
 typedef struct {
 	guint32 frame_id;
-	guint16 packet_type;
-	guint16 block_id;
+	guint32 packet_infos;
 } __attribute__((__packed__)) ArvGvspHeader;
 
 typedef struct {
@@ -60,14 +63,14 @@ typedef struct {
 	guint8 data[];
 } ArvGvspPacket;
 
-ArvGvspPacket *		arv_gvsp_packet_new_data_leader		(guint32 frame_id, guint16 block_id,
+ArvGvspPacket *		arv_gvsp_packet_new_data_leader		(guint32 frame_id, guint32 packet_id,
 								 guint64 timestamp, ArvPixelFormat pixel_format,
 								 guint32 width, guint32 height,
 								 guint32 x_offset, guint32 y_offset,
 								 void *buffer, size_t *buffer_size);
-ArvGvspPacket *		arv_gvsp_packet_new_data_trailer	(guint32 frame_id, guint16 block_id,
+ArvGvspPacket *		arv_gvsp_packet_new_data_trailer	(guint32 frame_id, guint32 packet_id,
 								 void *buffer, size_t *buffer_size);
-ArvGvspPacket *		arv_gvsp_packet_new_data_block		(guint32 frame_id, guint16 block_id,
+ArvGvspPacket *		arv_gvsp_packet_new_data_block		(guint32 frame_id, guint32 packet_id,
 								 size_t size, void *data,
 								 void *buffer, size_t *buffer_size);
 void 			arv_gvsp_packet_debug 			(const ArvGvspPacket *packet, size_t packet_size);
@@ -75,13 +78,14 @@ void 			arv_gvsp_packet_debug 			(const ArvGvspPacket *packet, size_t packet_siz
 static inline ArvGvspPacketType
 arv_gvsp_packet_get_packet_type	(const ArvGvspPacket *packet)
 {
-	return (ArvGvspPacketType) g_ntohs (packet->header.packet_type);
+	return (ArvGvspPacketType) ((g_ntohl (packet->header.packet_infos) & ARV_GVSP_PACKET_INFOS_TYPE_MASK) >>
+				    ARV_GVSP_PACKET_INFOS_TYPE_POS);
 }
 
 static inline guint16
-arv_gvsp_packet_get_block_id (const ArvGvspPacket *packet)
+arv_gvsp_packet_get_packet_id (const ArvGvspPacket *packet)
 {
-	return g_ntohs (packet->header.block_id);
+	return g_ntohl (packet->header.packet_infos) & ARV_GVSP_PACKET_INFOS_ID_MASK;
 }
 
 static inline guint32

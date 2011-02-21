@@ -32,7 +32,7 @@
 
 static ArvGvspPacket *
 arv_gvsp_packet_new (ArvGvspPacketType packet_type,
-		     guint32 frame_id, guint16 block_id, size_t data_size, void *buffer, size_t *buffer_size)
+		     guint32 frame_id, guint32 packet_id, size_t data_size, void *buffer, size_t *buffer_size)
 {
 	ArvGvspPacket *packet;
 	size_t packet_size;
@@ -50,14 +50,15 @@ arv_gvsp_packet_new (ArvGvspPacketType packet_type,
 		packet = g_malloc (packet_size);
 
 	packet->header.frame_id = g_htonl (frame_id);
-	packet->header.packet_type = g_htons (packet_type);
-	packet->header.block_id = g_htons (block_id);
+	packet->header.packet_infos = g_htonl ((packet_id & ARV_GVSP_PACKET_INFOS_ID_MASK) |
+					       ((packet_type << ARV_GVSP_PACKET_INFOS_TYPE_POS) &
+						ARV_GVSP_PACKET_INFOS_TYPE_MASK));
 
 	return packet;
 }
 
 ArvGvspPacket *
-arv_gvsp_packet_new_data_leader	(guint32 frame_id, guint16 block_id,
+arv_gvsp_packet_new_data_leader	(guint32 frame_id, guint32 packet_id,
 				 guint64 timestamp, ArvPixelFormat pixel_format,
 				 guint32 width, guint32 height,
 				 guint32 x_offset, guint32 y_offset,
@@ -66,7 +67,7 @@ arv_gvsp_packet_new_data_leader	(guint32 frame_id, guint16 block_id,
 	ArvGvspPacket *packet;
 
 	packet = arv_gvsp_packet_new (ARV_GVSP_PACKET_TYPE_DATA_LEADER,
-				      frame_id, block_id, sizeof (ArvGvspDataLeader), buffer, buffer_size);
+				      frame_id, packet_id, sizeof (ArvGvspDataLeader), buffer, buffer_size);
 
 	if (packet != NULL) {
 		ArvGvspDataLeader *leader;
@@ -86,13 +87,13 @@ arv_gvsp_packet_new_data_leader	(guint32 frame_id, guint16 block_id,
 }
 
 ArvGvspPacket *
-arv_gvsp_packet_new_data_trailer (guint32 frame_id, guint16 block_id,
+arv_gvsp_packet_new_data_trailer (guint32 frame_id, guint32 packet_id,
 				  void *buffer, size_t *buffer_size)
 {
 	ArvGvspPacket *packet;
 
 	packet = arv_gvsp_packet_new (ARV_GVSP_PACKET_TYPE_DATA_TRAILER,
-				      frame_id, block_id, sizeof (ArvGvspDataTrailer), buffer, buffer_size);
+				      frame_id, packet_id, sizeof (ArvGvspDataTrailer), buffer, buffer_size);
 
 	if (packet != NULL) {
 		ArvGvspDataTrailer *trailer;
@@ -106,14 +107,14 @@ arv_gvsp_packet_new_data_trailer (guint32 frame_id, guint16 block_id,
 }
 
 ArvGvspPacket *
-arv_gvsp_packet_new_data_block (guint32 frame_id, guint16 block_id,
+arv_gvsp_packet_new_data_block (guint32 frame_id, guint32 packet_id,
 				size_t size, void *data,
 				void *buffer, size_t *buffer_size)
 {
 	ArvGvspPacket *packet;
 
 	packet = arv_gvsp_packet_new (ARV_GVSP_PACKET_TYPE_DATA_BLOCK,
-				      frame_id, block_id, size, buffer, buffer_size);
+				      frame_id, packet_id, size, buffer, buffer_size);
 
 	if (packet != NULL)
 		memcpy (&packet->data, data, size);
@@ -150,16 +151,19 @@ char *
 arv_gvsp_packet_to_string (const ArvGvspPacket *packet, size_t packet_size)
 {
 	ArvGvspDataLeader *leader;
+	ArvGvspPacketType packet_type;
 	GString *string;
 	char *c_string;
 	int i, j, index;
 
 	string = g_string_new ("");
 
-	g_string_append_printf (string, "packet_type  = %s\n",
-				arv_gvsp_packet_type_to_string (g_ntohs (packet->header.packet_type)));
+	packet_type = (g_ntohl (packet->header.packet_infos) & ARV_GVSP_PACKET_INFOS_TYPE_MASK) >>
+		ARV_GVSP_PACKET_INFOS_TYPE_POS;
 
-	switch (g_ntohs (packet->header.packet_type)) {
+	g_string_append_printf (string, "packet_type  = %s\n", arv_gvsp_packet_type_to_string (packet_type));
+
+	switch (packet_type) {
 		case ARV_GVSP_PACKET_TYPE_DATA_LEADER:
 			leader = (ArvGvspDataLeader *) &packet->data;
 			g_string_append_printf (string, "width        = %d\n", g_ntohl (leader->width));

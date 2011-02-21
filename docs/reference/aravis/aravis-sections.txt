@@ -825,6 +825,9 @@ arv_gvsp_packet_new_data_trailer
 <SUBSECTION Private>
 ArvGvspPacket
 ArvGvspPacketType
+ARV_GVSP_PACKET_INFOS_ID_MASK
+ARV_GVSP_PACKET_INFOS_TYPE_MASK
+ARV_GVSP_PACKET_INFOS_TYPE_POS
 </SECTION>
 
 <SECTION>
