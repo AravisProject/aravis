@@ -73,6 +73,7 @@ ArvGvspPacket *		arv_gvsp_packet_new_data_trailer	(guint32 frame_id, guint32 pac
 ArvGvspPacket *		arv_gvsp_packet_new_data_block		(guint32 frame_id, guint32 packet_id,
 								 size_t size, void *data,
 								 void *buffer, size_t *buffer_size);
+char * 			arv_gvsp_packet_to_string 		(const ArvGvspPacket *packet, size_t packet_size);
 void 			arv_gvsp_packet_debug 			(const ArvGvspPacket *packet, size_t packet_size);
 
 static inline ArvGvspPacketType

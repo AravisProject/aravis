@@ -818,6 +818,7 @@ ArvDebugLevel
 <SECTION>
 <FILE>arvgvsp</FILE>
 <TITLE>ArvGvsp</TITLE>
+arv_gvsp_packet_to_string
 arv_gvsp_packet_debug
 arv_gvsp_packet_new_data_block
 arv_gvsp_packet_new_data_leader
