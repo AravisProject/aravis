@@ -49,6 +49,19 @@ static GObjectClass *parent_class = NULL;
 /* Acquisition thread */
 
 typedef struct {
+	ArvBuffer *buffer;
+	size_t read_data_size;
+	gint32 n_missing_blocks;
+	gint32 n_late_blocks;
+	gint32 last_block_size;
+	gint32 last_packet_id;
+	gint64 last_time_us;
+	guint64 last_timestamp_ns;
+	guint32 statistic_count;
+	gint64 leader_time_us;
+} ArvGvStreamFrameData;
+
+typedef struct {
 	ArvStream *stream;
 
 	ArvStreamCallback callback;
@@ -139,206 +152,198 @@ _update_socket (ArvGvStreamThreadData *thread_data, ArvBuffer *buffer)
 	}
 }
 
-typedef struct {
-	ArvGvspPacket *packet;
-	ArvBuffer *buffer;
-	size_t read_data_size;
-	gint32 n_missing_blocks;
-	gint32 n_late_blocks;
-	gint32 last_block_size;
-	gint32 last_packet_id;
-	gint64 last_time_us;
-	guint64 last_timestamp_ns;
-	guint32 statistic_count;
-	gint64 leader_time_us;
-} ArvGvStreamThreadState;
-
 static void
-_close_buffer (ArvGvStreamThreadData *thread_data, ArvGvStreamThreadState *state)
+_close_buffer (ArvGvStreamThreadData *thread_data, ArvGvStreamFrameData *frame)
 {
 	GTimeVal current_time;
 	gint64 current_time_us;
 
-	if (state->buffer == NULL)
+	if (frame->buffer == NULL)
 		return;
 
-	if (state->buffer->status == ARV_BUFFER_STATUS_FILLING) {
-	       if (state->read_data_size == state->buffer->size &&
-		   state->n_missing_blocks == 0)
-		       state->buffer->status = ARV_BUFFER_STATUS_SUCCESS;
+	if (frame->buffer->status == ARV_BUFFER_STATUS_FILLING) {
+	       if (frame->read_data_size == frame->buffer->size &&
+		   frame->n_missing_blocks == 0)
+		       frame->buffer->status = ARV_BUFFER_STATUS_SUCCESS;
 	       else
-		       state->buffer->status = ARV_BUFFER_STATUS_MISSING_BLOCKS;
+		       frame->buffer->status = ARV_BUFFER_STATUS_MISSING_BLOCKS;
 	}
 
-	if (state->buffer->status == ARV_BUFFER_STATUS_SUCCESS)
+	if (frame->buffer->status == ARV_BUFFER_STATUS_SUCCESS)
 		thread_data->n_completed_buffers++;
 	else
 		thread_data->n_failures++;
 
-	if (state->buffer->status == ARV_BUFFER_STATUS_ABORTED)
+	if (frame->buffer->status == ARV_BUFFER_STATUS_ABORTED)
 		thread_data->n_aborteds++;
 
-	if (state->buffer->status == ARV_BUFFER_STATUS_SIZE_MISMATCH)
+	if (frame->buffer->status == ARV_BUFFER_STATUS_SIZE_MISMATCH)
 		thread_data->n_size_mismatch_errors++;
 
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->user_data,
 				       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
-				       state->buffer);
+				       frame->buffer);
 
 	g_get_current_time (&current_time);
 	current_time_us = current_time.tv_sec * 1000000 + current_time.tv_usec;
-	if (state->statistic_count > 5) {
+	if (frame->statistic_count > 5) {
 		arv_statistic_fill (thread_data->statistic, 0,
-				    (state->buffer->timestamp_ns - state->last_timestamp_ns) /
-				    1000, state->buffer->frame_id);
+				    (frame->buffer->timestamp_ns - frame->last_timestamp_ns) /
+				    1000, frame->buffer->frame_id);
 		arv_statistic_fill (thread_data->statistic, 1,
-				    current_time_us - state->last_time_us,
-				    state->buffer->frame_id);
+				    current_time_us - frame->last_time_us,
+				    frame->buffer->frame_id);
 		arv_statistic_fill (thread_data->statistic, 2,
-				    current_time_us - state->leader_time_us,
-				    state->buffer->frame_id);
+				    current_time_us - frame->leader_time_us,
+				    frame->buffer->frame_id);
 	} else
-		state->statistic_count++;
+		frame->statistic_count++;
 
-	state->last_time_us = current_time_us;
-	state->last_timestamp_ns = state->buffer->timestamp_ns;
+	frame->last_time_us = current_time_us;
+	frame->last_timestamp_ns = frame->buffer->timestamp_ns;
 
-	arv_stream_push_output_buffer (thread_data->stream, state->buffer);
+	arv_stream_push_output_buffer (thread_data->stream, frame->buffer);
 
-	state->buffer = NULL;
+	frame->buffer = NULL;
 }
 
 static void
-_process_data_leader (ArvGvStreamThreadData *thread_data, ArvGvStreamThreadState *state)
+_process_data_leader (ArvGvStreamThreadData *thread_data,
+		      ArvGvStreamFrameData *frame,
+		      ArvGvspPacket *packet)
 {
 	GTimeVal current_time;
 
-	if (state->buffer != NULL)
-		_close_buffer (thread_data, state);
+	if (frame->buffer != NULL)
+		_close_buffer (thread_data, frame);
 
-	state->buffer = arv_stream_pop_input_buffer (thread_data->stream);
-	if (state->buffer == NULL) {
+	frame->buffer = arv_stream_pop_input_buffer (thread_data->stream);
+	if (frame->buffer == NULL) {
 		thread_data->n_underruns++;
 		return;
 	}
 
-	_update_socket (thread_data, state->buffer);
+	_update_socket (thread_data, frame->buffer);
 
-	state->buffer->x_offset = arv_gvsp_packet_get_x_offset (state->packet);
-	state->buffer->y_offset = arv_gvsp_packet_get_y_offset (state->packet);
-	state->buffer->width = arv_gvsp_packet_get_width (state->packet);
-	state->buffer->height = arv_gvsp_packet_get_height (state->packet);
-	state->buffer->pixel_format = arv_gvsp_packet_get_pixel_format (state->packet);
-	state->buffer->frame_id = arv_gvsp_packet_get_frame_id (state->packet);
+	frame->buffer->x_offset = arv_gvsp_packet_get_x_offset (packet);
+	frame->buffer->y_offset = arv_gvsp_packet_get_y_offset (packet);
+	frame->buffer->width = arv_gvsp_packet_get_width (packet);
+	frame->buffer->height = arv_gvsp_packet_get_height (packet);
+	frame->buffer->pixel_format = arv_gvsp_packet_get_pixel_format (packet);
+	frame->buffer->frame_id = arv_gvsp_packet_get_frame_id (packet);
 
-	state->buffer->timestamp_ns = arv_gvsp_packet_get_timestamp (state->packet,
+	frame->buffer->timestamp_ns = arv_gvsp_packet_get_timestamp (packet,
 								     thread_data->timestamp_tick_frequency);
 
-	state->buffer->status = ARV_BUFFER_STATUS_FILLING;
-	state->read_data_size = 0;
-	state->n_missing_blocks = 0;
-	state->last_block_size = 0;
-	state->last_packet_id = 0;
+	frame->buffer->status = ARV_BUFFER_STATUS_FILLING;
+	frame->read_data_size = 0;
+	frame->n_missing_blocks = 0;
+	frame->last_block_size = 0;
+	frame->last_packet_id = 0;
 
 	g_get_current_time (&current_time);
-	state->leader_time_us = current_time.tv_sec * 1000000 + current_time.tv_usec;
+	frame->leader_time_us = current_time.tv_sec * 1000000 + current_time.tv_usec;
 
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->user_data,
 				       ARV_STREAM_CALLBACK_TYPE_START_BUFFER,
-				       state->buffer);
+				       frame->buffer);
 }
 
 static void
-_process_data_block (ArvGvStreamThreadData *thread_data, ArvGvStreamThreadState *state, size_t read_count)
+_process_data_block (ArvGvStreamThreadData *thread_data,
+		     ArvGvStreamFrameData *frame,
+		     ArvGvspPacket *packet,
+		     size_t read_count)
 {
 	size_t block_size;
 	ptrdiff_t block_offset;
 	ptrdiff_t block_end;
 	guint32 packet_id;
 
-	if (state->buffer == NULL ||
-	    state->buffer->status != ARV_BUFFER_STATUS_FILLING)
+	if (frame->buffer == NULL ||
+	    frame->buffer->status != ARV_BUFFER_STATUS_FILLING)
 		return;
 
-	if (state->buffer->frame_id != arv_gvsp_packet_get_frame_id (state->packet)) {
+	if (frame->buffer->frame_id != arv_gvsp_packet_get_frame_id (packet)) {
 		thread_data->n_late_blocks ++;
 		return;
 	}
 
-	packet_id = arv_gvsp_packet_get_packet_id (state->packet);
-	if (packet_id <= state->last_packet_id) {
+	packet_id = arv_gvsp_packet_get_packet_id (packet);
+	if (packet_id <= frame->last_packet_id) {
 		arv_debug ("stream-thread", "[GvStream::thread] Receive resent packet (%d) frame %d",
-			   packet_id, state->buffer->frame_id);
+			   packet_id, frame->buffer->frame_id);
 
 		block_size = arv_gvsp_packet_get_data_size (read_count);
-		block_offset = state->last_block_size * (packet_id - 1);
+		block_offset = frame->last_block_size * (packet_id - 1);
 		block_end = block_size + block_offset;
 
-		if (block_end  > state->buffer->size) {
-			arv_gvsp_packet_debug (state->packet, read_count);
-			state->buffer->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
+		if (block_end  > frame->buffer->size) {
+			arv_gvsp_packet_debug (packet, read_count);
+			frame->buffer->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
 			return;
 		}
-		memcpy (state->buffer->data + block_offset, &state->packet->data, block_size);
+		memcpy (frame->buffer->data + block_offset, &packet->data, block_size);
 
-		state->read_data_size += block_size;
-		state->n_missing_blocks--;
+		frame->read_data_size += block_size;
+		frame->n_missing_blocks--;
 		thread_data->n_resent_blocks++;
 		return;
 	}
 
-	if (packet_id != (state->last_packet_id + 1)) {
+	if (packet_id != (frame->last_packet_id + 1)) {
 		gint32 n_misses;
 
-		n_misses = packet_id - state->last_packet_id - 1;
+		n_misses = packet_id - frame->last_packet_id - 1;
 
-		arv_gvsp_packet_debug (state->packet, read_count);
+		arv_gvsp_packet_debug (packet, read_count);
 		arv_debug ("stream-thread", "[GvStream::thread] Missing block (expected %d - %d) frame %d",
-			   state->last_packet_id + 1,
-			   packet_id, state->buffer->frame_id);
+			   frame->last_packet_id + 1,
+			   packet_id, frame->buffer->frame_id);
 		thread_data->n_missing_blocks += n_misses;
-		state->n_missing_blocks += n_misses;
+		frame->n_missing_blocks += n_misses;
 
 		if (thread_data->packet_resend != ARV_GV_STREAM_PACKET_RESEND_NEVER)
-			_send_packet_request (thread_data, state->buffer->frame_id,
-					      state->last_packet_id + 1, packet_id - 1);
+			_send_packet_request (thread_data, frame->buffer->frame_id,
+					      frame->last_packet_id + 1, packet_id - 1);
 	}
 
 	block_size = arv_gvsp_packet_get_data_size (read_count);
-	block_offset = state->last_block_size * (packet_id - 1);
+	block_offset = frame->last_block_size * (packet_id - 1);
 	block_end = block_size + block_offset;
 
-	if (block_end  > state->buffer->size) {
-		arv_gvsp_packet_debug (state->packet, read_count);
-		state->buffer->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
+	if (block_end  > frame->buffer->size) {
+		arv_gvsp_packet_debug (packet, read_count);
+		frame->buffer->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
 		return;
 	}
-	memcpy (state->buffer->data + block_offset, &state->packet->data, block_size);
+	memcpy (frame->buffer->data + block_offset, &packet->data, block_size);
 
-	state->read_data_size += block_size;
-	state->last_block_size = block_size;
-	state->last_packet_id =  packet_id;
+	frame->read_data_size += block_size;
+	frame->last_block_size = block_size;
+	frame->last_packet_id =  packet_id;
 }
 
 static void
-_process_data_trailer (ArvGvStreamThreadData *thread_data, ArvGvStreamThreadState *state)
+_process_data_trailer (ArvGvStreamThreadData *thread_data, ArvGvStreamFrameData *frame)
 {
-	if (state->buffer == NULL)
+	if (frame->buffer == NULL)
 		return;
 
-	if (state->read_data_size < state->buffer->size)
+	if (frame->read_data_size < frame->buffer->size)
 		return;
 
-	_close_buffer (thread_data, state);
+	_close_buffer (thread_data, frame);
 }
 
 static void *
 arv_gv_stream_thread (void *data)
 {
 	ArvGvStreamThreadData *thread_data = data;
-	ArvGvStreamThreadState state;
+	ArvGvStreamFrameData frame;
+	ArvGvspPacket *packet;
 	GTimeVal current_time;
 	GPollFD poll_fd;
 	size_t read_count;
@@ -351,48 +356,49 @@ arv_gv_stream_thread (void *data)
 	poll_fd.events =  G_IO_IN;
 	poll_fd.revents = 0;
 
-	state.buffer = NULL;
-	state.packet = g_malloc0 (ARV_GV_STREAM_INCOMING_BUFFER_SIZE);
-	state.n_missing_blocks = 0;
-	state.last_block_size = 0;
-	state.last_packet_id = 0;
-	state.statistic_count = 0;
+	packet = g_malloc0 (ARV_GV_STREAM_INCOMING_BUFFER_SIZE);
+
+	frame.buffer = NULL;
+	frame.n_missing_blocks = 0;
+	frame.last_block_size = 0;
+	frame.last_packet_id = 0;
+	frame.statistic_count = 0;
 	g_get_current_time (&current_time);
-	state.last_time_us = current_time.tv_sec * 1000000 + current_time.tv_usec;
-	state.last_timestamp_ns = 0;
+	frame.last_time_us = current_time.tv_sec * 1000000 + current_time.tv_usec;
+	frame.last_timestamp_ns = 0;
 
 	do {
 		n_events = g_poll (&poll_fd, 1, 1000);
 
 		if (n_events > 0) {
-			read_count = g_socket_receive (thread_data->socket, (char *) state.packet,
+			read_count = g_socket_receive (thread_data->socket, (char *) packet,
 						       ARV_GV_STREAM_INCOMING_BUFFER_SIZE, NULL, NULL);
 
-			switch (arv_gvsp_packet_get_packet_type (state.packet)) {
+			switch (arv_gvsp_packet_get_packet_type (packet)) {
 				case ARV_GVSP_PACKET_TYPE_DATA_LEADER:
-					_process_data_leader (thread_data, &state);
+					_process_data_leader (thread_data, &frame, packet);
 					break;
 
 				case ARV_GVSP_PACKET_TYPE_DATA_BLOCK:
-					_process_data_block (thread_data, &state, read_count);
+					_process_data_block (thread_data, &frame, packet, read_count);
 					break;
 
 				case ARV_GVSP_PACKET_TYPE_DATA_TRAILER:
-					_process_data_trailer (thread_data, &state);
+					_process_data_trailer (thread_data, &frame);
 					break;
 			}
 		}
 	} while (!thread_data->cancel);
 
-	if (state.buffer != NULL) {
-		state.buffer->status = ARV_BUFFER_STATUS_ABORTED;
-		_close_buffer (thread_data, &state);
+	if (frame.buffer != NULL) {
+		frame.buffer->status = ARV_BUFFER_STATUS_ABORTED;
+		_close_buffer (thread_data, &frame);
 	}
 
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_EXIT, NULL);
 
-	g_free (state.packet);
+	g_free (packet);
 
 	return NULL;
 }
