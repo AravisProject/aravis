@@ -78,7 +78,8 @@ GType arv_gv_stream_get_type (void);
 
 ArvStream * 	arv_gv_stream_new			(GInetAddress *device_address, guint16 port,
 							 ArvStreamCallback callback, void *user_data,
-							 guint64 timestamp_tick_frequency);
+							 guint64 timestamp_tick_frequency,
+							 guint packet_size);
 guint16 	arv_gv_stream_get_port			(ArvGvStream *gv_stream);
 
 void		arv_gv_stream_get_statistics		(ArvGvStream *gv_stream,

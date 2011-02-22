@@ -60,6 +60,7 @@ typedef struct {
 	ArvGvStreamPacketResend packet_resend;
 
 	guint64 timestamp_tick_frequency;
+	guint packet_size;
 
 	gboolean cancel;
 
@@ -413,7 +414,8 @@ arv_gv_stream_get_port (ArvGvStream *gv_stream)
 ArvStream *
 arv_gv_stream_new (GInetAddress *device_address, guint16 port,
 		   ArvStreamCallback callback, void *user_data,
-		   guint64 timestamp_tick_frequency)
+		   guint64 timestamp_tick_frequency,
+		   guint packet_size)
 {
 	ArvGvStream *gv_stream;
 	ArvStream *stream;
@@ -421,6 +423,7 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port,
 	ArvGvStreamThreadData *thread_data;
 
 	g_return_val_if_fail (G_IS_INET_ADDRESS (device_address), NULL);
+	g_return_val_if_fail (packet_size > 0, NULL);
 
 	gv_stream = g_object_new (ARV_TYPE_GV_STREAM, NULL);
 
@@ -444,6 +447,7 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port,
 	thread_data->device_address = g_inet_socket_address_new (device_address, ARV_GVCP_PORT);
 	thread_data->packet_resend = ARV_GV_STREAM_PACKET_RESEND_ALWAYS;
 	thread_data->timestamp_tick_frequency = timestamp_tick_frequency;
+	thread_data->packet_size = packet_size;
 	thread_data->cancel = FALSE;
 
 	thread_data->packet_count = 1;

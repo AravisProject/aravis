@@ -331,6 +331,20 @@ arv_gv_device_get_timestamp_tick_frequency (ArvGvDevice *gv_device)
 	return 0;
 }
 
+guint
+arv_gv_device_get_packet_size (ArvGvDevice *gv_device)
+{
+	guint32 packet_size;
+
+	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), 0);
+
+	arv_device_read_register (ARV_DEVICE (gv_device),
+				  ARV_GVBS_FIRST_STREAM_CHANNEL_PACKET_SIZE,
+				  &packet_size);
+
+	return packet_size;
+}
+
 static char *
 _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 {
@@ -461,6 +475,7 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 	ArvStream *stream;
 	const guint8 *address_bytes;
 	guint32 stream_port;
+	guint packet_size;
 	GInetAddress *interface_address;
 	GInetAddress *device_address;
 
@@ -468,13 +483,18 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 	device_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (io_data->device_address));
 	address_bytes = g_inet_address_to_bytes (interface_address);
 
+	packet_size = arv_gv_device_get_packet_size (gv_device);
+
+	arv_debug ("device", "[GvDevice::create_stream] Packet size = %d byte(s)", packet_size);
+
 	stream = arv_gv_stream_new (device_address, 0, callback, user_data,
-				    arv_gv_device_get_timestamp_tick_frequency (gv_device));
+				    arv_gv_device_get_timestamp_tick_frequency (gv_device), packet_size);
 
 	stream_port = arv_gv_stream_get_port (ARV_GV_STREAM (stream));
 
 	arv_device_write_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PACKET_SIZE, 0x000005dc);
-	arv_device_write_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_IP_ADDRESS, g_htonl(*((guint32 *) address_bytes)));
+	arv_device_write_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_IP_ADDRESS,
+				   g_htonl(*((guint32 *) address_bytes)));
 	arv_device_write_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, stream_port);
 	arv_device_read_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, &stream_port);
 
