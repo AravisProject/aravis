@@ -510,7 +510,7 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port,
 	ArvGvStreamThreadData *thread_data;
 
 	g_return_val_if_fail (G_IS_INET_ADDRESS (device_address), NULL);
-	g_return_val_if_fail (packet_size > (20 + 8 + 8) /* FIXME IP + UDP + GVSP headers */, NULL);
+	g_return_val_if_fail (packet_size > ARV_GVSP_PACKET_PROTOCOL_OVERHEAD, NULL);
 
 	gv_stream = g_object_new (ARV_TYPE_GV_STREAM, NULL);
 
@@ -534,7 +534,7 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port,
 	thread_data->device_address = g_inet_socket_address_new (device_address, ARV_GVCP_PORT);
 	thread_data->packet_resend = ARV_GV_STREAM_PACKET_RESEND_ALWAYS;
 	thread_data->timestamp_tick_frequency = timestamp_tick_frequency;
-	thread_data->data_size = packet_size - (20 + 8 + 8) /* FIXME IP + UDP + GVSP headers */;
+	thread_data->data_size = packet_size - ARV_GVSP_PACKET_PROTOCOL_OVERHEAD;
 	thread_data->cancel = FALSE;
 
 	thread_data->packet_count = 1;
