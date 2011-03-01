@@ -4,22 +4,25 @@ gvcp_proto = Proto("gvcp", "Gigabit ethernet camera control protocol")
 local f = gvcp_proto.fields
 
 local packet_types = {
-	[0x0000] = "Answer",
+	[0x0000] = "Acknowledge",
 	[0x4201] = "Command"
 }
 
 local commands = {
 	[0x0002] = "DiscoverCmd",
-	[0x0003] = "DiscoverAns",
+	[0x0003] = "DiscoverAck",
 	[0x0004] = "ByeCmd",
+	[0x0005] = "ByeAck",
+	[0x0040] = "PacketResendCmd",
+	[0x0041] = "PacketResendAck",
 	[0x0080] = "RegisterReadCmd",
-	[0x0081] = "RegisterReadAns",
+	[0x0081] = "RegisterReadAck",
 	[0x0082] = "RegisterWriteCmd",
-	[0x0083] = "RegisterWriteAns",
-	[0x0084] = "StringReadCmd",
-	[0x0085] = "StringReadAns",
-	[0x0086] = "StringWriteCmd",
-	[0x0087] = "StringWriteAns"
+	[0x0083] = "RegisterWriteAck",
+	[0x0084] = "MemoryReadCmd",
+	[0x0085] = "MemoryReadAck",
+	[0x0086] = "MemoryWriteCmd",
+	[0x0087] = "MemoryWriteAck"
 }
 
 f.packet_type = ProtoField.uint16 ("gvcp.packet_type",  "PacketType", nil, packet_types)
@@ -28,9 +31,9 @@ f.size = ProtoField.uint16 ("gvcp.size", "Size");
 f.count = ProtoField.uint16 ("gvcp.count", "Count");
 f.register_address = ProtoField.uint32 ("gvcp.register_address", "RegisterAddress");
 f.register_value = ProtoField.uint32 ("gvcp.register_value", "RegisterValue");
-f.string_address = ProtoField.uint32 ("gvcp.string_address", "StringAddress");
-f.string_size = ProtoField.uint32 ("gvcp.string_size", "StringSize");
-f.string_value = ProtoField.string ("gvcp.string_value", "StringValue");
+f.memory_address = ProtoField.uint32 ("gvcp.memory_address", "MemoryAddress");
+f.memory_size = ProtoField.uint32 ("gvcp.memory_size", "MemorySize");
+f.memory_value = ProtoField.string ("gvcp.memory_value", "MemoryValue");
 
 local packet_counter
 
@@ -67,15 +70,15 @@ function gvcp_proto.dissector(buffer,pinfo,tree)
 	elseif cmd == 0x81 then -- Register read ans
 		subtree:add (f.register_value, buffer (offset, 4))
 		offset = offset + 4
-	elseif cmd == 0x84 then -- String read cmd
-		subtree:add (f.string_address, buffer (offset, 4))
+	elseif cmd == 0x84 then -- Memory read cmd
+		subtree:add (f.memory_address, buffer (offset, 4))
 		offset = offset + 4
-		subtree:add (f.string_size, buffer (offset, 4))
+		subtree:add (f.memory_size, buffer (offset, 4))
 		offset = offset + 4
-	elseif cmd == 0x85 then -- String read ans
-		subtree:add (f.string_address, buffer (offset, 4))
+	elseif cmd == 0x85 then -- Memory read ans
+		subtree:add (f.memory_address, buffer (offset, 4))
 		offset = offset + 4
-		subtree:add (f.string_value, buffer (offset, 16):string())
+		subtree:add (f.memory_value, buffer (offset, 16):string())
 	end
 
 end
