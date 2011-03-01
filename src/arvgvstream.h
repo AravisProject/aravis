@@ -83,9 +83,8 @@ ArvStream * 	arv_gv_stream_new			(GInetAddress *device_address, guint16 port,
 guint16 	arv_gv_stream_get_port			(ArvGvStream *gv_stream);
 
 void		arv_gv_stream_get_statistics		(ArvGvStream *gv_stream,
-							 guint64 *n_resent_blocks,
-							 guint64 *n_missing_blocks,
-							 guint64 *n_late_blocks);
+							 guint64 *n_resent_packets,
+							 guint64 *n_missing_packets);
 
 G_END_DECLS
 

@@ -33,7 +33,8 @@ typedef void (*ArvFrameCallback)	(ArvBuffer *buffer);
  * ArvBufferStatus:
  * @ARV_BUFFER_STATUS_SUCCESS: the buffer contains a valid image
  * @ARV_BUFFER_STATUS_CLEARED: the buffer is cleared
- * @ARV_BUFFER_STATUS_MISSING_BLOCKS: image has missing blocks
+ * @ARV_BUFFER_STATUS_MISSING_PACKETS: stream has missing packets
+ * @ARV_BUFFER_STATUS_WRONG_PACKET_ID: stream has packet with wrong id
  * @ARV_BUFFER_STATUS_SIZE_MISMATCH: the received image didn't fit in the buffer data space
  * @ARV_BUFFER_STATUS_FILLING: the image is currently being filled
  * @ARV_BUFFER_STATUS_ABORTED: the filling was aborted before completion
@@ -42,7 +43,9 @@ typedef void (*ArvFrameCallback)	(ArvBuffer *buffer);
 typedef enum {
 	ARV_BUFFER_STATUS_SUCCESS,
 	ARV_BUFFER_STATUS_CLEARED,
-	ARV_BUFFER_STATUS_MISSING_BLOCKS,
+	ARV_BUFFER_STATUS_TIMEOUT,
+	ARV_BUFFER_STATUS_MISSING_PACKETS,
+	ARV_BUFFER_STATUS_WRONG_PACKET_ID,
 	ARV_BUFFER_STATUS_SIZE_MISMATCH,
 	ARV_BUFFER_STATUS_FILLING,
 	ARV_BUFFER_STATUS_ABORTED
