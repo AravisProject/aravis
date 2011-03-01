@@ -33,6 +33,7 @@ typedef void (*ArvFrameCallback)	(ArvBuffer *buffer);
  * ArvBufferStatus:
  * @ARV_BUFFER_STATUS_SUCCESS: the buffer contains a valid image
  * @ARV_BUFFER_STATUS_CLEARED: the buffer is cleared
+ * @ARV_BUFFER_STATUS_TIMEOUT: timeout was reached before all packets are received
  * @ARV_BUFFER_STATUS_MISSING_PACKETS: stream has missing packets
  * @ARV_BUFFER_STATUS_WRONG_PACKET_ID: stream has packet with wrong id
  * @ARV_BUFFER_STATUS_SIZE_MISMATCH: the received image didn't fit in the buffer data space
