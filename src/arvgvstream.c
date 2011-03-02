@@ -691,6 +691,13 @@ arv_gv_stream_finalize (GObject *object)
 		thread_data->cancel = TRUE;
 		g_thread_join (gv_stream->thread);
 
+		g_object_unref (thread_data->device_address);
+
+		statistic_string = arv_statistic_to_string (thread_data->statistic);
+		arv_debug ("stream", statistic_string);
+		g_free (statistic_string);
+		arv_statistic_free (thread_data->statistic);
+
 		arv_debug ("stream",
 			   "[GvStream::finalize] n_completed_buffers    = %d", thread_data->n_completed_buffers);
 		arv_debug ("stream",
@@ -711,14 +718,6 @@ arv_gv_stream_finalize (GObject *object)
 			   "[GvStream::finalize] n_resent_packets       = %d", thread_data->n_resent_packets);
 		arv_debug ("stream",
 			   "[GvStream::finalize] n_duplicated_packets   = %d", thread_data->n_duplicated_packets);
-
-		g_object_unref (thread_data->device_address);
-
-		statistic_string = arv_statistic_to_string (thread_data->statistic);
-		arv_debug ("stream", statistic_string);
-		g_free (statistic_string);
-
-		arv_statistic_free (thread_data->statistic);
 
 		g_free (thread_data);
 
