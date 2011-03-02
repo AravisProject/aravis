@@ -39,6 +39,8 @@ main (int argc, char **argv)
 
 	g_option_context_free (context);
 
+	arv_debug_enable (arv_option_debug_domains);
+
 	arv_update_device_list ();
 	n_devices = arv_get_n_devices ();
 	if (n_devices < 1)

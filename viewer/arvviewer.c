@@ -528,13 +528,43 @@ arv_viewer_new (void)
 	return viewer;
 }
 
+static char *arv_viewer_option_debug_domains = NULL;
+
+static const GOptionEntry arv_viewer_option_entries[] =
+{
+	{
+		"debug", 				'd', 0, G_OPTION_ARG_STRING,
+		&arv_viewer_option_debug_domains, 	"Debug domains", NULL
+	},
+	{ NULL }
+};
+
 int
 main (int argc,char *argv[])
 {
 	ArvViewer *viewer;
+	GOptionContext *context;
+	GError *error = NULL;
+
+	g_thread_init (NULL);
+
+	context = g_option_context_new (NULL);
+	g_option_context_add_main_entries (context, arv_viewer_option_entries, NULL);
+	g_option_context_add_group (context, gtk_get_option_group (TRUE));
+	g_option_context_add_group (context, gst_init_get_option_group ());
+	if (!g_option_context_parse (context, &argc, &argv, &error)) {
+		g_option_context_free (context);
+		g_print ("Option parsing failed: %s\n", error->message);
+		g_error_free (error);
+		return EXIT_FAILURE;
+	}
+
+	g_option_context_free (context);
 
 	gtk_init (&argc, &argv);
 	gst_init (&argc, &argv);
+
+	arv_debug_enable (arv_viewer_option_debug_domains);
 
 	viewer = arv_viewer_new ();
 
