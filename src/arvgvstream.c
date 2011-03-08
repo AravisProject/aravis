@@ -36,8 +36,11 @@
 #include <sys/socket.h>
 
 #define ARV_GV_STREAM_INCOMING_BUFFER_SIZE	65536
-#define ARV_GV_STREAM_THREAD_N_FRAMES		2
+#define ARV_GV_STREAM_THREAD_N_FRAMES		8
 #define ARV_GV_STREAM_THREAD_DISCARD_WINDOW	65536
+
+#define ARV_GV_STREAM_PACKET_TIMEOUT_MS		40
+#define ARV_GV_STREAM_FRAME_RETENTION_MS	200
 
 enum {
 	ARV_GV_STREAM_PROPERTY_0,
@@ -96,6 +99,7 @@ typedef struct {
 	guint n_aborteds;
 	guint n_size_mismatch_errors;
 
+	guint n_late_packets;
 	guint n_resend_requests;
 	guint n_resent_packets;
 	guint n_missing_packets;
@@ -195,8 +199,16 @@ _close_buffer (ArvGvStreamThreadData *thread_data, ArvGvStreamFrameData *frame)
 	if (frame->buffer->status == ARV_BUFFER_STATUS_ABORTED)
 		thread_data->n_aborteds++;
 
-	if (frame->buffer->status == ARV_BUFFER_STATUS_TIMEOUT)
+	if (frame->buffer->status == ARV_BUFFER_STATUS_TIMEOUT) {
+		guint32 i;
+
 		thread_data->n_timeouts++;
+		for (i = 0; i < frame->n_packets; i++) {
+			if (!frame->packet_data[i].received)
+				arv_debug ("stream-thread", "[GvStream::_close_buffer] Missing packet %u for frame %u",
+					   i, frame->frame_id);
+		}
+	}
 
 	if (frame->buffer->status == ARV_BUFFER_STATUS_SIZE_MISMATCH)
 		thread_data->n_size_mismatch_errors++;
@@ -248,8 +260,11 @@ _process_data_leader (ArvGvStreamThreadData *thread_data,
 	frame->buffer->timestamp_ns = arv_gvsp_packet_get_timestamp (packet,
 								     thread_data->timestamp_tick_frequency);
 
-	if (frame->packet_data[packet_id].n_requests > 0)
+	if (frame->packet_data[packet_id].n_requests > 0) {
 		thread_data->n_resent_packets++;
+		arv_debug ("stream-thread", "[GvStream::_process_data_leader] Received resent packet %u for frame %u",
+			   packet_id, frame->frame_id);
+	}
 
 	if (frame->last_valid_packet == frame->n_packets - 1)
 		_close_buffer (thread_data, frame);
@@ -291,8 +306,11 @@ _process_data_block (ArvGvStreamThreadData *thread_data,
 
 	memcpy (frame->buffer->data + block_offset, &packet->data, block_size);
 
-	if (frame->packet_data[packet_id].n_requests > 0)
+	if (frame->packet_data[packet_id].n_requests > 0) {
 		thread_data->n_resent_packets++;
+		arv_debug ("stream-thread", "[GvStream::_process_data_leader] Received resent packet %u for frame %u",
+			   packet_id, frame->frame_id);
+	}
 
 	if (frame->last_valid_packet == frame->n_packets - 1)
 		_close_buffer (thread_data, frame);
@@ -315,8 +333,11 @@ _process_data_trailer (ArvGvStreamThreadData *thread_data,
 		return;
 	}
 
-	if (frame->packet_data[packet_id].n_requests > 0)
+	if (frame->packet_data[packet_id].n_requests > 0) {
 		thread_data->n_resent_packets++;
+		arv_debug ("stream-thread", "[GvStream::_process_data_leader] Received resent packet %u for frame %u",
+			   packet_id, frame->frame_id);
+	}
 
 	if (frame->last_valid_packet == frame->n_packets - 1)
 		_close_buffer (thread_data, frame);
@@ -332,13 +353,16 @@ _update_frame_data (ArvGvStreamThreadData *thread_data, ArvGvStreamFrameData *fr
 	int i;
 
 	frame_id = arv_gvsp_packet_get_frame_id (packet);
+	packet_id = arv_gvsp_packet_get_packet_id (packet);
 
 	if (frame->buffer != NULL &&
 	    frame->frame_id != frame_id) {
 		/* discard old frames */
 		if (frame_id - thread_data->last_frame_id > - ARV_GV_STREAM_THREAD_DISCARD_WINDOW) {
-			arv_debug ("stream", "[GvStream::_update_frame_data] Discard late frame %u (last frame is %u)",
-				   frame_id, thread_data->last_frame_id);
+			arv_debug ("stream", "[GvStream::_update_frame_data] Discard late frame %u"
+				   " - packet %u (last frame is %u)",
+				   frame_id, packet_id, thread_data->last_frame_id);
+			thread_data->n_late_packets++;
 			return FALSE;
 		}
 
@@ -383,7 +407,6 @@ _update_frame_data (ArvGvStreamThreadData *thread_data, ArvGvStreamFrameData *fr
 
 	frame->last_packet_timestamp_us = timestamp_us;
 
-	packet_id = arv_gvsp_packet_get_packet_id (packet);
 	if (packet_id < frame->n_packets) {
 		if (frame->packet_data[packet_id].received)
 			thread_data->n_duplicated_packets++;
@@ -459,7 +482,7 @@ arv_gv_stream_thread (void *data)
 	memset (frames, 0, sizeof (ArvGvStreamFrameData) * ARV_GV_STREAM_THREAD_N_FRAMES);
 
 	do {
-		n_events = g_poll (&poll_fd, 1, 1000);
+		n_events = g_poll (&poll_fd, 1, ARV_GV_STREAM_PACKET_TIMEOUT_MS);
 
 		if (n_events > 0) {
 			g_get_current_time (&current_time);
@@ -563,6 +586,7 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port,
 	thread_data->n_underruns = 0;
 	thread_data->n_size_mismatch_errors = 0;
 	thread_data->n_missing_packets = 0;
+	thread_data->n_late_packets = 0;
 	thread_data->n_resent_packets = 0;
 	thread_data->n_resend_requests = 0;
 	thread_data->n_duplicated_packets = 0;
@@ -712,6 +736,8 @@ arv_gv_stream_finalize (GObject *object)
 			   "[GvStream::finalize] n_size_mismatch_errors = %d", thread_data->n_size_mismatch_errors);
 		arv_debug ("stream",
 			   "[GvStream::finalize] n_missing_packets      = %d", thread_data->n_missing_packets);
+		arv_debug ("stream",
+			   "[GvStream::finalize] n_late_packets         = %d", thread_data->n_late_packets);
 		arv_debug ("stream",
 			   "[GvStream::finalize] n_resend_requests      = %d", thread_data->n_resend_requests);
 		arv_debug ("stream",
