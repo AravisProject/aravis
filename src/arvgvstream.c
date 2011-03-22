@@ -60,9 +60,9 @@ typedef struct {
 
 typedef struct {
 	ArvBuffer *buffer;
-	guint frame_id;
+	guint32 frame_id;
 
-	gint last_valid_packet;
+	gint32 last_valid_packet;
 	guint64 first_packet_timestamp_us;
 	guint64 last_packet_timestamp_us;
 
@@ -104,6 +104,7 @@ typedef struct {
 	guint n_resent_packets;
 	guint n_missing_packets;
 	guint n_duplicated_packets;
+	guint n_missing_frames;
 
 	ArvStatistic *statistic;
 	guint32 statistic_count;
@@ -347,7 +348,7 @@ static gboolean
 _update_frame_data (ArvGvStreamThreadData *thread_data, ArvGvStreamFrameData *frame,
 		    ArvGvspPacket *packet, size_t read_count, guint64 timestamp_us)
 {
-	guint frame_id;
+	guint32 frame_id;
 	guint n_packets;
 	int packet_id;
 	int i;
@@ -371,6 +372,7 @@ _update_frame_data (ArvGvStreamThreadData *thread_data, ArvGvStreamFrameData *fr
 	}
 
 	if (frame->buffer == NULL) {
+		gint32 frame_id_inc;
 
 		frame->buffer = arv_stream_pop_input_buffer (thread_data->stream);
 		if (frame->buffer == NULL) {
@@ -384,7 +386,15 @@ _update_frame_data (ArvGvStreamThreadData *thread_data, ArvGvStreamFrameData *fr
 		frame->last_valid_packet = -1;
 		frame->buffer->status = ARV_BUFFER_STATUS_FILLING;
 
-		thread_data->last_frame_id = frame_id;
+		frame_id_inc = (gint )frame_id - (gint) thread_data->last_frame_id;
+		if (frame_id_inc > 0) {
+			thread_data->last_frame_id = frame_id;
+			if (frame_id_inc != 1) {
+				thread_data->n_missing_frames++;
+				arv_debug ("stream", "[GvStream::_update_frame_data] Missed %d frame(s) before %u",
+					   frame_id_inc - 1, frame_id);
+			}
+		}
 
 		frame->first_packet_timestamp_us = timestamp_us;
 
@@ -464,7 +474,7 @@ arv_gv_stream_thread (void *data)
 	ArvGvspPacket *packet;
 	GTimeVal current_time;
 	guint64 timestamp_us;
-	guint frame_id;
+	guint32 frame_id;
 	GPollFD poll_fd;
 	size_t read_count;
 	int n_events;
@@ -590,6 +600,7 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port,
 	thread_data->n_resent_packets = 0;
 	thread_data->n_resend_requests = 0;
 	thread_data->n_duplicated_packets = 0;
+	thread_data->n_missing_frames = 0;
 	thread_data->n_aborteds = 0;
 	thread_data->n_timeouts = 0;
 
@@ -744,6 +755,8 @@ arv_gv_stream_finalize (GObject *object)
 			   "[GvStream::finalize] n_resent_packets       = %d", thread_data->n_resent_packets);
 		arv_debug ("stream",
 			   "[GvStream::finalize] n_duplicated_packets   = %d", thread_data->n_duplicated_packets);
+		arv_debug ("stream",
+			   "[GvStream::finalize] n_missing_frames       = %d", thread_data->n_missing_frames);
 
 		g_free (thread_data);
 
