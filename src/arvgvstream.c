@@ -37,14 +37,16 @@
 
 #define ARV_GV_STREAM_INCOMING_BUFFER_SIZE	65536
 
-#define ARV_GV_STREAM_PACKET_TIMEOUT_US		40000
-#define ARV_GV_STREAM_FRAME_RETENTION_US	200000
+#define ARV_GV_STREAM_PACKET_TIMEOUT_US_DEFAULT		40000
+#define ARV_GV_STREAM_FRAME_RETENTION_US_DEFAULT	200000
 
 enum {
 	ARV_GV_STREAM_PROPERTY_0,
 	ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER,
 	ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER_SIZE,
-	ARV_GV_STREAM_PROPERTY_PACKET_RESEND
+	ARV_GV_STREAM_PROPERTY_PACKET_RESEND,
+	ARV_GV_STREAM_PROPERTY_PACKET_TIMEOUT,
+	ARV_GV_STREAM_PROPERTY_FRAME_RETENTION
 } ArvGvStreamProperties;
 
 static GObjectClass *parent_class = NULL;
@@ -78,6 +80,8 @@ typedef struct {
 	GSocketAddress *device_address;
 
 	ArvGvStreamPacketResend packet_resend;
+	guint packet_timeout_us;
+	guint frame_retention_us;
 
 	guint64 timestamp_tick_frequency;
 	guint data_size;
@@ -348,7 +352,7 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 		for (i = frame->last_valid_packet + 1; i <= packet_id; i++) {
 			if (!frame->packet_data[i].received &&
 			    (frame->packet_data[i].time_us == 0 ||
-			     (time_us - frame->packet_data[i].time_us > ARV_GV_STREAM_PACKET_TIMEOUT_US))) {
+			     (time_us - frame->packet_data[i].time_us > thread_data->packet_timeout_us))) {
 				if (first_missing < 0)
 					first_missing = i;
 			} else
@@ -468,7 +472,7 @@ _packet_timeout_check (ArvGvStreamThreadData *thread_data,
 		}
 
 		if (can_close_frame &&
-		    time_us - frame->last_packet_timestamp_us > ARV_GV_STREAM_FRAME_RETENTION_US) {
+		    time_us - frame->last_packet_timestamp_us > thread_data->frame_retention_us) {
 			frame->buffer->status = ARV_BUFFER_STATUS_TIMEOUT;
 			arv_debug ("stream", "[GvStream::_packet_timeout_check] Timeout for frame %u", frame->frame_id);
 			_close_frame (thread_data, frame);
@@ -480,7 +484,7 @@ _packet_timeout_check (ArvGvStreamThreadData *thread_data,
 
 		can_close_frame = FALSE;
 
-		if (time_us - frame->last_packet_timestamp_us > ARV_GV_STREAM_PACKET_TIMEOUT_US) {
+		if (time_us - frame->last_packet_timestamp_us > thread_data->packet_timeout_us) {
 			_missing_packet_check (thread_data, frame, frame->n_packets - 1, time_us);
 			iter = iter->next;
 			continue;
@@ -533,7 +537,7 @@ arv_gv_stream_thread (void *data)
 	packet = g_malloc0 (ARV_GV_STREAM_INCOMING_BUFFER_SIZE);
 
 	do {
-		n_events = g_poll (&poll_fd, 1, ARV_GV_STREAM_PACKET_TIMEOUT_US / 1000);
+		n_events = g_poll (&poll_fd, 1, thread_data->packet_timeout_us / 1000);
 
 		g_get_current_time (&current_time);
 		time_us = current_time.tv_sec * 1000000 + current_time.tv_usec;
@@ -639,6 +643,8 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port,
 	thread_data->socket = gv_stream->socket;
 	thread_data->device_address = g_inet_socket_address_new (device_address, ARV_GVCP_PORT);
 	thread_data->packet_resend = ARV_GV_STREAM_PACKET_RESEND_ALWAYS;
+	thread_data->packet_timeout_us = ARV_GV_STREAM_PACKET_TIMEOUT_US_DEFAULT;
+	thread_data->frame_retention_us = ARV_GV_STREAM_FRAME_RETENTION_US_DEFAULT;
 	thread_data->timestamp_tick_frequency = timestamp_tick_frequency;
 	thread_data->data_size = packet_size - ARV_GVSP_PACKET_PROTOCOL_OVERHEAD;
 	thread_data->cancel = FALSE;
@@ -731,6 +737,12 @@ arv_gv_stream_set_property (GObject * object, guint prop_id,
 		case ARV_GV_STREAM_PROPERTY_PACKET_RESEND:
 			thread_data->packet_resend = g_value_get_enum (value);
 			break;
+		case ARV_GV_STREAM_PROPERTY_PACKET_TIMEOUT:
+			thread_data->packet_timeout_us = g_value_get_uint (value);
+			break;
+		case ARV_GV_STREAM_PROPERTY_FRAME_RETENTION:
+			thread_data->frame_retention_us = g_value_get_uint (value);
+			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 			break;
@@ -755,6 +767,12 @@ arv_gv_stream_get_property (GObject * object, guint prop_id,
 			break;
 		case ARV_GV_STREAM_PROPERTY_PACKET_RESEND:
 			g_value_set_enum (value, thread_data->packet_resend);
+			break;
+		case ARV_GV_STREAM_PROPERTY_PACKET_TIMEOUT:
+			g_value_set_uint (value, thread_data->packet_timeout_us);
+			break;
+		case ARV_GV_STREAM_PROPERTY_FRAME_RETENTION:
+			g_value_set_uint (value, thread_data->frame_retention_us);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -860,6 +878,24 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 				   "Packet resend behaviour",
 				   ARV_TYPE_GV_STREAM_PACKET_RESEND,
 				   ARV_GV_STREAM_PACKET_RESEND_ALWAYS,
+				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+		);
+	g_object_class_install_property (
+		object_class, ARV_GV_STREAM_PROPERTY_PACKET_TIMEOUT,
+		g_param_spec_uint ("packet-timeout", "Packet timeout",
+				   "Packet timeout, in µs",
+				   100,
+				   10000000,
+				   ARV_GV_STREAM_PACKET_TIMEOUT_US_DEFAULT,
+				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+		);
+	g_object_class_install_property (
+		object_class, ARV_GV_STREAM_PROPERTY_FRAME_RETENTION,
+		g_param_spec_uint ("frame-retention", "Frame retention",
+				   "Packet retention, in µs",
+				   100,
+				   10000000,
+				   ARV_GV_STREAM_FRAME_RETENTION_US_DEFAULT,
 				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
 		);
 }
