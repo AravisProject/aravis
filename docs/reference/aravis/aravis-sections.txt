@@ -718,6 +718,11 @@ arv_statistic_fill
 arv_statistic_set_name
 arv_statistic_to_string
 arv_str_parse_double
+arv_str_skip_char
+arv_str_skip_colon_and_spaces
+arv_str_skip_comma_and_spaces
+arv_str_skip_semicolon_and_spaces
+arv_str_skip_spaces
 </SECTION>
 
 <SECTION>
@@ -759,6 +764,17 @@ arv_pixel_format_from_gst_caps
 <FILE>arvgvcp</FILE>
 <TITLE>ArvGvcp</TITLE>
 arv_gvcp_packet_free
+arv_gvcp_packet_get_packet_count
+arv_gvcp_packet_get_read_memory_ack_data
+arv_gvcp_packet_get_read_memory_ack_size
+arv_gvcp_packet_get_read_memory_cmd_infos
+arv_gvcp_packet_get_read_register_ack_value
+arv_gvcp_packet_get_read_register_cmd_infos
+arv_gvcp_packet_get_write_memory_ack_size
+arv_gvcp_packet_get_write_memory_cmd_data
+arv_gvcp_packet_get_write_memory_cmd_infos
+arv_gvcp_packet_get_write_register_cmd_infos
+arv_gvcp_packet_set_packet_count
 arv_gvcp_packet_new_read_memory_cmd
 arv_gvcp_packet_new_read_memory_ack
 arv_gvcp_packet_new_write_memory_cmd
@@ -819,6 +835,16 @@ ArvDebugLevel
 <FILE>arvgvsp</FILE>
 <TITLE>ArvGvsp</TITLE>
 arv_gvsp_packet_to_string
+arv_gvsp_packet_get_data_size
+arv_gvsp_packet_get_frame_id
+arv_gvsp_packet_get_height
+arv_gvsp_packet_get_packet_id
+arv_gvsp_packet_get_packet_type
+arv_gvsp_packet_get_pixel_format
+arv_gvsp_packet_get_timestamp
+arv_gvsp_packet_get_width
+arv_gvsp_packet_get_x_offset
+arv_gvsp_packet_get_y_offset
 arv_gvsp_packet_debug
 arv_gvsp_packet_new_data_block
 arv_gvsp_packet_new_data_leader
