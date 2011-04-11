@@ -37,6 +37,7 @@
 
 #define ARV_GV_STREAM_INCOMING_BUFFER_SIZE	65536
 
+#define ARV_GV_STREAM_POLL_TIMEOUT_US			1000000
 #define ARV_GV_STREAM_PACKET_TIMEOUT_US_DEFAULT		40000
 #define ARV_GV_STREAM_FRAME_RETENTION_US_DEFAULT	200000
 
@@ -524,6 +525,7 @@ arv_gv_stream_thread (void *data)
 	guint64 time_us;
 	GPollFD poll_fd;
 	size_t read_count;
+	int timeout_ms;
 	int n_events;
 	int i;
 
@@ -539,7 +541,12 @@ arv_gv_stream_thread (void *data)
 	packet = g_malloc0 (ARV_GV_STREAM_INCOMING_BUFFER_SIZE);
 
 	do {
-		n_events = g_poll (&poll_fd, 1, thread_data->packet_timeout_us / 1000);
+		if (thread_data->frames != NULL)
+			timeout_ms = thread_data->packet_timeout_us / 1000;
+		else
+			timeout_ms = ARV_GV_STREAM_POLL_TIMEOUT_US / 1000;
+
+		n_events = g_poll (&poll_fd, 1, timeout_ms);
 
 		g_get_current_time (&current_time);
 		time_us = current_time.tv_sec * 1000000 + current_time.tv_usec;
@@ -886,7 +893,7 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 		object_class, ARV_GV_STREAM_PROPERTY_PACKET_TIMEOUT,
 		g_param_spec_uint ("packet-timeout", "Packet timeout",
 				   "Packet timeout, in µs",
-				   100,
+				   1000,
 				   10000000,
 				   ARV_GV_STREAM_PACKET_TIMEOUT_US_DEFAULT,
 				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
@@ -895,7 +902,7 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 		object_class, ARV_GV_STREAM_PROPERTY_FRAME_RETENTION,
 		g_param_spec_uint ("frame-retention", "Frame retention",
 				   "Packet retention, in µs",
-				   100,
+				   1000,
 				   10000000,
 				   ARV_GV_STREAM_FRAME_RETENTION_US_DEFAULT,
 				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
