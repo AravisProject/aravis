@@ -343,7 +343,7 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 {
 	int i;
 
-	if (thread_data->packet_resend != ARV_GV_STREAM_PACKET_RESEND_ALWAYS)
+	if (thread_data->packet_resend == ARV_GV_STREAM_PACKET_RESEND_NEVER)
 		return;
 
 	if (packet_id < frame->n_packets) {
