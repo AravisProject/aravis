@@ -553,7 +553,6 @@ arv_gv_stream_thread (void *data)
 			frame = _find_frame_data (thread_data, frame_id, packet, packet_id, read_count, time_us);
 
 			if (frame != NULL) {
-
 				if (packet_id < frame->n_packets) {
 					if (frame->packet_data[packet_id].received)
 						thread_data->n_duplicated_packets++;
@@ -577,8 +576,9 @@ arv_gv_stream_thread (void *data)
 						_process_data_trailer (thread_data, frame, packet, packet_id);
 						break;
 				}
+
+				_missing_packet_check (thread_data, frame, packet_id, time_us);
 			}
-			_missing_packet_check (thread_data, frame, packet_id, time_us);
 		}
 
 		_packet_timeout_check (thread_data, time_us);
