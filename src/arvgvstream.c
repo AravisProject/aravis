@@ -451,7 +451,7 @@ _close_frame (ArvGvStreamThreadData *thread_data, ArvGvStreamFrameData *frame)
 }
 
 static void
-_packet_timeout_check (ArvGvStreamThreadData *thread_data,
+_check_frame_completion (ArvGvStreamThreadData *thread_data,
 		       guint64 time_us)
 {
 	GSList *iter;
@@ -463,7 +463,8 @@ _packet_timeout_check (ArvGvStreamThreadData *thread_data,
 
 		if (can_close_frame &&
 		    frame->last_valid_packet == frame->n_packets - 1) {
-			arv_debug ("stream", "[GvStream::_packet_timeout_check] Completed frame %u", frame->frame_id);
+			arv_debug ("stream", "[GvStream::_check_frame_completion] Completed frame %u",
+				   frame->frame_id);
 			_close_frame (thread_data, frame);
 			thread_data->frames = iter->next;
 			g_slist_free_1 (iter);
@@ -474,7 +475,8 @@ _packet_timeout_check (ArvGvStreamThreadData *thread_data,
 		if (can_close_frame &&
 		    time_us - frame->last_packet_timestamp_us > thread_data->frame_retention_us) {
 			frame->buffer->status = ARV_BUFFER_STATUS_TIMEOUT;
-			arv_debug ("stream", "[GvStream::_packet_timeout_check] Timeout for frame %u", frame->frame_id);
+			arv_debug ("stream", "[GvStream::_check_frame_completion] Timeout for frame %u",
+				   frame->frame_id);
 			_close_frame (thread_data, frame);
 			thread_data->frames = iter->next;
 			g_slist_free_1 (iter);
@@ -581,7 +583,7 @@ arv_gv_stream_thread (void *data)
 			}
 		}
 
-		_packet_timeout_check (thread_data, time_us);
+		_check_frame_completion (thread_data, time_us);
 	} while (!thread_data->cancel);
 
 	_flush_frames (thread_data);
