@@ -319,7 +319,7 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 			thread_data->last_frame_id = frame_id;
 			if (frame_id_inc != 1) {
 				thread_data->n_missing_frames++;
-				arv_debug ("stream", "[GvStream::_find_frame_data]"
+				arv_debug ("stream-thread", "[GvStream::_find_frame_data]"
 					   " Missed %d frame(s) before %u",
 					   frame_id_inc - 1, frame_id);
 			}
@@ -328,7 +328,7 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 
 	thread_data->frames = g_slist_append (thread_data->frames, frame);
 
-	arv_debug ("stream", "[GvStream::_find_frame_data] Start frame %u", frame_id);
+	arv_debug ("stream-thread", "[GvStream::_find_frame_data] Start frame %u", frame_id);
 
 	return frame;
 }
@@ -447,7 +447,7 @@ _close_frame (ArvGvStreamThreadData *thread_data, ArvGvStreamFrameData *frame)
 
 	arv_stream_push_output_buffer (thread_data->stream, frame->buffer);
 
-	arv_debug ("stream", "[GvStream::_close_frame] Close frame %u", frame->frame_id);
+	arv_debug ("stream-thread", "[GvStream::_close_frame] Close frame %u", frame->frame_id);
 
 	frame->buffer = NULL;
 	frame->frame_id = 0;
@@ -467,12 +467,12 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 
 	for (iter = thread_data->frames; iter != NULL;) {
 		frame = iter->data;
-		
+
 		if (can_close_frame &&
 		    thread_data->packet_resend == ARV_GV_STREAM_PACKET_RESEND_NEVER &&
 		    iter->next != NULL) {
 			frame->buffer->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
-			arv_debug ("stream", "[GvStream::_check_frame_completion] Incomplete frame %u",
+			arv_debug ("stream-thread", "[GvStream::_check_frame_completion] Incomplete frame %u",
 				   frame->frame_id);
 			_close_frame (thread_data, frame);
 			thread_data->frames = iter->next;
@@ -483,7 +483,7 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 
 		if (can_close_frame &&
 		    frame->last_valid_packet == frame->n_packets - 1) {
-			arv_debug ("stream", "[GvStream::_check_frame_completion] Completed frame %u",
+			arv_debug ("stream-thread", "[GvStream::_check_frame_completion] Completed frame %u",
 				   frame->frame_id);
 			_close_frame (thread_data, frame);
 			thread_data->frames = iter->next;
@@ -495,7 +495,7 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 		if (can_close_frame &&
 		    time_us - frame->first_packet_time_us > thread_data->frame_retention_us) {
 			frame->buffer->status = ARV_BUFFER_STATUS_TIMEOUT;
-			arv_debug ("stream", "[GvStream::_check_frame_completion] Timeout for frame %u",
+			arv_debug ("stream-thread", "[GvStream::_check_frame_completion] Timeout for frame %u",
 				   frame->frame_id);
 			_close_frame (thread_data, frame);
 			thread_data->frames = iter->next;
