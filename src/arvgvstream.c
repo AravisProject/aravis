@@ -65,7 +65,7 @@ typedef struct {
 
 	gint32 last_valid_packet;
 	guint64 first_packet_time_us;
-	guint64 resend_request_time_us;
+	guint64 last_packet_time_us;
 
 	guint n_packets;
 	ArvGvStreamPacketData *packet_data;
@@ -278,8 +278,10 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 
 	for (iter = thread_data->frames; iter != NULL; iter = iter->next) {
 		frame = iter->data;
-		if (frame->frame_id == frame_id)
+		if (frame->frame_id == frame_id) {
+			frame->last_packet_time_us = time_us;
 			return frame;
+		}
 	}
 
 	buffer = arv_stream_pop_input_buffer (thread_data->stream);
@@ -300,7 +302,7 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 	n_packets = (frame->buffer->size + thread_data->data_size - 1) / thread_data->data_size + 2;
 
 	frame->first_packet_time_us = time_us;
-	frame->resend_request_time_us = time_us;
+	frame->last_packet_time_us = time_us;
 
 	frame->packet_data = g_new0 (ArvGvStreamPacketData, n_packets);
 	frame->n_packets = n_packets;
@@ -365,7 +367,6 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 					for (j = first_missing; j < i; j++)
 						frame->packet_data[j].time_us = time_us;
 					thread_data->n_resend_requests += (i - first_missing);
-					frame->resend_request_time_us = time_us;
 
 					first_missing = -1;
 				}
@@ -382,7 +383,6 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 			for (j = first_missing; j < i; j++)
 				frame->packet_data[j].time_us = time_us;
 			thread_data->n_resend_requests += (i - first_missing);
-			frame->resend_request_time_us = time_us;
 		}
 	}
 }
@@ -493,7 +493,7 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 		}
 
 		if (can_close_frame &&
-		    time_us - frame->first_packet_time_us > thread_data->frame_retention_us) {
+		    time_us - frame->last_packet_time_us >= thread_data->frame_retention_us) {
 			frame->buffer->status = ARV_BUFFER_STATUS_TIMEOUT;
 			arv_debug ("stream-thread", "[GvStream::_check_frame_completion] Timeout for frame %u",
 				   frame->frame_id);
@@ -507,7 +507,7 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 		can_close_frame = FALSE;
 
 		if (frame != current_frame &&
-		    time_us - frame->resend_request_time_us > thread_data->packet_timeout_us) {
+		    time_us - frame->last_packet_time_us >= thread_data->packet_timeout_us) {
 			_missing_packet_check (thread_data, frame, frame->n_packets - 1, time_us);
 			iter = iter->next;
 			continue;
