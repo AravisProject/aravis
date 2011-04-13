@@ -582,6 +582,8 @@ arv_gv_stream_thread (void *data)
 			frame = _find_frame_data (thread_data, frame_id, packet, packet_id, read_count, time_us);
 
 			if (frame != NULL) {
+
+				/* Check for duplicated packets */
 				if (packet_id < frame->n_packets) {
 					if (frame->packet_data[packet_id].received)
 						thread_data->n_duplicated_packets++;
@@ -589,6 +591,7 @@ arv_gv_stream_thread (void *data)
 						frame->packet_data[packet_id].received = TRUE;
 				}
 
+				/* Keep track of last packet of a continuous block starting from packet 0 */
 				for (i = frame->last_valid_packet + 1; i < frame->n_packets; i++)
 					if (!frame->packet_data[i].received)
 						break;
