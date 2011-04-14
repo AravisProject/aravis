@@ -30,7 +30,10 @@
 #include <math.h>
 
 static char *arv_viewer_option_debug_domains = NULL;
-static gboolean arv_viewer_auto_socket_buffer = FALSE;
+static gboolean arv_viewer_option_auto_socket_buffer = FALSE;
+static gboolean arv_viewer_option_no_packet_resend = FALSE;
+static unsigned int arv_viewer_option_packet_timeout = 20;
+static unsigned int arv_viewer_option_frame_retention = 100;
 
 typedef struct {
 	ArvCamera *camera;
@@ -365,11 +368,19 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 
 	viewer->stream = arv_camera_create_stream (viewer->camera, NULL, NULL);
 	if (ARV_IS_GV_STREAM (viewer->stream)) {
-		if (arv_viewer_auto_socket_buffer)
+		if (arv_viewer_option_auto_socket_buffer)
 			g_object_set (viewer->stream,
 				      "socket-buffer", ARV_GV_STREAM_SOCKET_BUFFER_AUTO,
 				      "socket-buffer-size", 0,
 				      NULL);
+		if (arv_viewer_option_no_packet_resend)
+			g_object_set (viewer->stream,
+				      "packet-resend", ARV_GV_STREAM_PACKET_RESEND_NEVER,
+				      NULL);
+		g_object_set (viewer->stream,
+			      "packet-timeout", (unsigned) arv_viewer_option_packet_timeout * 1000,
+			      "frame-retention", (unsigned) arv_viewer_option_frame_retention * 1000,
+			      NULL);
 	}
 	arv_stream_set_emit_signals (viewer->stream, TRUE);
 	payload = arv_camera_get_payload (viewer->camera);
@@ -545,8 +556,20 @@ static const GOptionEntry arv_viewer_option_entries[] =
 		&arv_viewer_option_debug_domains, 	"Debug domains", NULL
 	},
 	{
-		"auto",					'a', 0, G_OPTION_ARG_NONE,
-		&arv_viewer_auto_socket_buffer,		"Auto socket buffer size", NULL
+		"auto-buffer-size",			'a', 0, G_OPTION_ARG_NONE,
+		&arv_viewer_option_auto_socket_buffer,	"Auto socket buffer size", NULL
+	},
+	{
+		"no-packet-resend",			'r', 0, G_OPTION_ARG_NONE,
+		&arv_viewer_option_no_packet_resend,	"No packet resend", NULL
+	},
+	{
+		"packet-timeout", 			'p', 0, G_OPTION_ARG_INT,
+		&arv_viewer_option_packet_timeout, 	"Packet timeout (ms)", NULL
+	},
+	{
+		"frame-retention", 			'f', 0, G_OPTION_ARG_INT,
+		&arv_viewer_option_frame_retention, 	"Frame retention (ms)", NULL
 	},
 	{ NULL }
 };
