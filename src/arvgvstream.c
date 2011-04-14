@@ -228,9 +228,14 @@ _process_data_block (ArvGvStreamThreadData *thread_data,
 	block_end = block_size + block_offset;
 
 	if (block_end > frame->buffer->size) {
-		arv_gvsp_packet_debug (packet, read_count);
-		frame->buffer->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
-		return;
+		arv_debug ("stream-thread", "[GvStream::_process_data_block] %d unexpected bytes in packet %u"
+			   " for frame %u",
+			   block_end, frame->buffer->size,
+			   packet_id, frame->frame_id);
+		thread_data->n_size_mismatch_errors++;
+
+		block_end = frame->buffer->size;
+		block_size = block_end - block_offset;
 	}
 
 	memcpy (frame->buffer->data + block_offset, &packet->data, block_size);
@@ -428,9 +433,6 @@ _close_frame (ArvGvStreamThreadData *thread_data, ArvGvStreamFrameData *frame)
 					   i, frame->frame_id);
 		}
 	}
-
-	if (frame->buffer->status == ARV_BUFFER_STATUS_SIZE_MISMATCH)
-		thread_data->n_size_mismatch_errors++;
 
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->user_data,
