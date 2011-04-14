@@ -365,8 +365,9 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 					int j;
 
 					arv_debug ("stream-thread", "[GvStream::_missing_packet_check]"
-						   " Resend request at dt = %Lu",
-						   time_us - frame->first_packet_time_us);
+						   " Resend request at dt = %Lu, packet id = %u/%u",
+						   time_us - frame->first_packet_time_us,
+						   packet_id, frame->n_packets);
 
 					_send_packet_request (thread_data, frame->frame_id,
 							      first_missing, i - 1);
@@ -381,8 +382,10 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 		if (first_missing >= 0) {
 			int j;
 
-			arv_debug ("stream-thread", "[GvStream::_missing_packet_check] Resend request at dt = %Lu",
-				   time_us - frame->first_packet_time_us);
+			arv_debug ("stream-thread", "[GvStream::_missing_packet_check]"
+				   " Resend request at dt = %Lu, packet id = %u/%u",
+				   time_us - frame->first_packet_time_us,
+				   packet_id, frame->n_packets);
 
 			_send_packet_request (thread_data, frame->frame_id,
 					      first_missing, i - 1);
