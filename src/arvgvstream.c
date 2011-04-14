@@ -401,41 +401,22 @@ _close_frame (ArvGvStreamThreadData *thread_data, ArvGvStreamFrameData *frame)
 {
 	GTimeVal current_time;
 	gint64 current_time_us;
-	int i;
-	guint n_missing_packets = 0;
-
-	if (frame->buffer->status == ARV_BUFFER_STATUS_FILLING) {
-		for (i = 0; i < frame->n_packets; i++)
-			if (!frame->packet_data[i].received)
-				n_missing_packets++;
-
-		thread_data->n_missing_packets += n_missing_packets;
-
-		if (n_missing_packets == 0)
-			frame->buffer->status = ARV_BUFFER_STATUS_SUCCESS;
-		else
-			frame->buffer->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
-	}
 
 	if (frame->buffer->status == ARV_BUFFER_STATUS_SUCCESS)
 		thread_data->n_completed_buffers++;
 	else
-		thread_data->n_failures++;
+		if (frame->buffer->status != ARV_BUFFER_STATUS_ABORTED)
+			thread_data->n_failures++;
+
+	if (frame->buffer->status == ARV_BUFFER_STATUS_TIMEOUT)
+		thread_data->n_timeouts++;
 
 	if (frame->buffer->status == ARV_BUFFER_STATUS_ABORTED)
 		thread_data->n_aborteds++;
 
-	if (frame->buffer->status == ARV_BUFFER_STATUS_TIMEOUT) {
-		guint32 i;
-
-		thread_data->n_timeouts++;
-		for (i = 0; i < frame->n_packets; i++) {
-			if (!frame->packet_data[i].received)
-				arv_debug ("stream-thread",
-					   "[GvStream::_close_frame] Missing packet %u for frame %u",
-					   i, frame->frame_id);
-		}
-	}
+	if (frame->buffer->status != ARV_BUFFER_STATUS_SUCCESS &&
+	    frame->buffer->status != ARV_BUFFER_STATUS_ABORTED)
+		thread_data->n_missing_packets += (int) frame->n_packets - (frame->last_valid_packet + 1);
 
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->user_data,
@@ -489,6 +470,7 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 
 		if (can_close_frame &&
 		    frame->last_valid_packet == frame->n_packets - 1) {
+			frame->buffer->status = ARV_BUFFER_STATUS_SUCCESS;
 			arv_debug ("stream-thread", "[GvStream::_check_frame_completion] Completed frame %u",
 				   frame->frame_id);
 			_close_frame (thread_data, frame);
@@ -531,7 +513,7 @@ _flush_frames (ArvGvStreamThreadData *thread_data)
 
 	for (iter = thread_data->frames; iter != NULL; iter = iter->next) {
 		frame = iter->data;
-		frame->buffer->status = ARV_BUFFER_STATUS_TIMEOUT;
+		frame->buffer->status = ARV_BUFFER_STATUS_ABORTED;
 		_close_frame (thread_data, frame);
 	}
 
