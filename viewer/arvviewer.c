@@ -552,10 +552,6 @@ arv_viewer_new (void)
 static const GOptionEntry arv_viewer_option_entries[] =
 {
 	{
-		"debug", 				'd', 0, G_OPTION_ARG_STRING,
-		&arv_viewer_option_debug_domains, 	"Debug domains", NULL
-	},
-	{
 		"auto-buffer-size",			'a', 0, G_OPTION_ARG_NONE,
 		&arv_viewer_option_auto_socket_buffer,	"Auto socket buffer size", NULL
 	},
@@ -568,8 +564,12 @@ static const GOptionEntry arv_viewer_option_entries[] =
 		&arv_viewer_option_packet_timeout, 	"Packet timeout (ms)", NULL
 	},
 	{
-		"frame-retention", 			'f', 0, G_OPTION_ARG_INT,
+		"frame-retention", 			'm', 0, G_OPTION_ARG_INT,
 		&arv_viewer_option_frame_retention, 	"Frame retention (ms)", NULL
+	},
+	{
+		"debug", 				'd', 0, G_OPTION_ARG_STRING,
+		&arv_viewer_option_debug_domains, 	"Debug domains", NULL
 	},
 	{ NULL }
 };
