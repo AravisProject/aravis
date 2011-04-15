@@ -5,7 +5,6 @@
 static char *arv_option_camera_name = NULL;
 static char *arv_option_debug_domains = NULL;
 static gboolean arv_option_snaphot = FALSE;
-static int arv_option_auto_socket_buffer = -1;
 static char *arv_option_trigger = NULL;
 static double arv_option_software_trigger = -1;
 static double arv_option_frequency = -1.0;
@@ -15,35 +14,77 @@ static int arv_option_horizontal_binning = -1;
 static int arv_option_vertical_binning = -1;
 static double arv_option_exposure_time_us = -1;
 static int arv_option_gain = -1;
+static gboolean arv_option_auto_socket_buffer = FALSE;
+static gboolean arv_option_no_packet_resend = FALSE;
+static unsigned int arv_option_packet_timeout = 20;
+static unsigned int arv_option_frame_retention = 100;
 
 static const GOptionEntry arv_option_entries[] =
 {
-	{ "name",		'n', 0, G_OPTION_ARG_STRING,
-		&arv_option_camera_name,"Camera name", NULL},
-	{ "snapshot",		's', 0, G_OPTION_ARG_NONE,
-		&arv_option_snaphot,	"Snapshot", NULL},
-	{ "auto",		'a', 0, G_OPTION_ARG_INT,
-		&arv_option_auto_socket_buffer,	"Auto socket buffer size", NULL},
-	{ "frequency", 		'f', 0, G_OPTION_ARG_DOUBLE,
-		&arv_option_frequency,	"Acquisition frequency", NULL },
-	{ "trigger",		't', 0, G_OPTION_ARG_STRING,
-		&arv_option_trigger,	"External trigger", NULL},
-	{ "software-trigger",	'\0', 0, G_OPTION_ARG_DOUBLE,
-		&arv_option_software_trigger,	"Emit software trigger", NULL},
-	{ "width", 		'\0', 0, G_OPTION_ARG_INT,
-		&arv_option_width,		"Width", NULL },
-	{ "height", 		'\0', 0, G_OPTION_ARG_INT,
-		&arv_option_height, 		"Height", NULL },
-	{ "h-binning", 		'\0', 0, G_OPTION_ARG_INT,
-		&arv_option_horizontal_binning,"Horizontal binning", NULL },
-	{ "v-binning", 		'\0', 0, G_OPTION_ARG_INT,
-		&arv_option_vertical_binning, 	"Vertical binning", NULL },
-	{ "exposure", 		'e', 0, G_OPTION_ARG_DOUBLE,
-		&arv_option_exposure_time_us, 	"Exposure time (µs)", NULL },
-	{ "gain", 		'g', 0, G_OPTION_ARG_INT,
-		&arv_option_gain,	 	"Gain (dB)", NULL },
-	{ "debug", 		'd', 0, G_OPTION_ARG_STRING,
-		&arv_option_debug_domains, 	"Debug domains", NULL },
+	{
+		"name",					'n', 0, G_OPTION_ARG_STRING,
+		&arv_option_camera_name,		"Camera name", NULL
+	},
+	{
+		"snapshot",				's', 0, G_OPTION_ARG_NONE,
+		&arv_option_snaphot,			"Snapshot", NULL
+	},
+	{
+		"frequency", 				'f', 0, G_OPTION_ARG_DOUBLE,
+		&arv_option_frequency,			"Acquisition frequency", NULL
+	},
+	{
+		"trigger",				't', 0, G_OPTION_ARG_STRING,
+		&arv_option_trigger,			"External trigger", NULL
+	},
+	{
+		"software-trigger",			'o', 0, G_OPTION_ARG_DOUBLE,
+		&arv_option_software_trigger,		"Emit software trigger", NULL
+	},
+	{
+		"width", 				'w', 0, G_OPTION_ARG_INT,
+		&arv_option_width,			"Width", NULL
+	},
+	{
+		"height", 				'h', 0, G_OPTION_ARG_INT,
+		&arv_option_height, 			"Height", NULL
+	},
+	{
+	       "h-binning", 				'\0', 0, G_OPTION_ARG_INT,
+		&arv_option_horizontal_binning,		"Horizontal binning", NULL
+	},
+	{
+		"v-binning", 				'\0', 0, G_OPTION_ARG_INT,
+		&arv_option_vertical_binning, 		"Vertical binning", NULL
+	},
+	{
+		"exposure", 				'e', 0, G_OPTION_ARG_DOUBLE,
+		&arv_option_exposure_time_us, 		"Exposure time (µs)", NULL
+	},
+	{
+		"gain", 				'g', 0, G_OPTION_ARG_INT,
+		&arv_option_gain,	 		"Gain (dB)", NULL
+	},
+	{
+		"auto",					'a', 0, G_OPTION_ARG_NONE,
+		&arv_option_auto_socket_buffer,		"Auto socket buffer size", NULL
+	},
+	{
+		"no-packet-resend",			'r', 0, G_OPTION_ARG_NONE,
+		&arv_option_no_packet_resend,		"No packet resend", NULL
+	},
+	{
+		"packet-timeout", 			'p', 0, G_OPTION_ARG_INT,
+		&arv_option_packet_timeout, 		"Packet timeout (ms)", NULL
+	},
+	{
+		"frame-retention", 			'm', 0, G_OPTION_ARG_INT,
+		&arv_option_frame_retention, 		"Frame retention (ms)", NULL
+	},
+	{
+		"debug", 				'd', 0, G_OPTION_ARG_STRING,
+		&arv_option_debug_domains, 		"Debug domains", NULL
+	},
 	{ NULL }
 };
 
@@ -170,11 +211,21 @@ main (int argc, char **argv)
 		g_printf ("gain                = %d dB\n", gain);
 
 		stream = arv_camera_create_stream (camera, NULL, NULL);
-		if (arv_option_auto_socket_buffer >= 0)
+		if (ARV_IS_GV_STREAM (stream)) {
+			if (arv_option_auto_socket_buffer)
+				g_object_set (stream,
+					      "socket-buffer", ARV_GV_STREAM_SOCKET_BUFFER_AUTO,
+					      "socket-buffer-size", 0,
+					      NULL);
+			if (arv_option_no_packet_resend)
+				g_object_set (stream,
+					      "packet-resend", ARV_GV_STREAM_PACKET_RESEND_NEVER,
+					      NULL);
 			g_object_set (stream,
-				      "socket-buffer", ARV_GV_STREAM_SOCKET_BUFFER_AUTO,
-				      "socket-buffer-size", arv_option_auto_socket_buffer,
+				      "packet-timeout", (unsigned) arv_option_packet_timeout * 1000,
+				      "frame-retention", (unsigned) arv_option_frame_retention * 1000,
 				      NULL);
+		}
 
 		for (i = 0; i < 50; i++)
 			arv_stream_push_buffer (stream, arv_buffer_new (payload, NULL));
