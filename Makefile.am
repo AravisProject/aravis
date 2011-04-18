@@ -12,7 +12,7 @@ if ARAVIS_VIEWER
 SUBDIRS += viewer
 endif
 
-aravisdocdir = ${prefix}/doc/aravis
+aravisdocdir = ${prefix}/doc/aravis-@ARAVIS_API_VERSION@
 aravisdoc_DATA = 	\
 	README		\
 	COPYING		\
@@ -32,4 +32,7 @@ dist-hook:
 	done
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = aravis.pc
+pkgconfig_DATA = aravis-@ARAVIS_API_VERSION@.pc
+
+%-@ARAVIS_API_VERSION@.pc: %.pc
+	cp $< $@

@@ -16,17 +16,17 @@ INCLUDES = \
 
 AM_CFLAGS = -Wall
 
-lib_LTLIBRARIES = libaravis.la
+lib_LTLIBRARIES = libaravis-@ARAVIS_API_VERSION@.la
 
 BUILT_SOURCES = arvenumtypes.h arvenumtypes.c
 
 EXTRA_DIST += arvenumtypes.h.template \
 	      arvenumtypes.c.template
 
-libaravis_la_LIBADD = 				\
+libaravis_@ARAVIS_API_VERSION@_la_LIBADD = 				\
 	$(ARAVIS_LIBS)
 
-libaravis_la_SOURCES =				\
+libaravis_@ARAVIS_API_VERSION@_la_SOURCES =				\
 	arvenums.c				\
 	arvenumtypes.c				\
 	arvdebug.c				\
@@ -110,38 +110,38 @@ arv_fake_camera_DATA = arv-fake-camera.xml
 
 EXTRA_DIST += arv-fake-camera.xml
 
-libaravis_ladir = $(includedir)/aravis
-libaravis_la_HEADERS = $(ARAVIS_HDRS)
-libaravis_la_HEADERS += arvenumtypes.h arvconfig.h
+libaravis_@ARAVIS_API_VERSION@_ladir = $(includedir)/aravis-@ARAVIS_API_VERSION@
+libaravis_@ARAVIS_API_VERSION@_la_HEADERS = $(ARAVIS_HDRS)
+libaravis_@ARAVIS_API_VERSION@_la_HEADERS += arvenumtypes.h arvconfig.h
 
 arvenumtypes.h: arvenumtypes.h.template $(ARAVIS_HDRS) $(GLIB_MKENUMS)
-	$(AM_V_GEN) (cd $(srcdir) && $(GLIB_MKENUMS) --template arvenumtypes.h.template $(libaravis_la_HEADERS)) > $@
+	$(AM_V_GEN) (cd $(srcdir) && $(GLIB_MKENUMS) --template arvenumtypes.h.template $(libaravis_@ARAVIS_API_VERSION@_la_HEADERS)) > $@
 
 arvenumtypes.c: arvenumtypes.c.template $(ARAVIS_HDRS) $(GLIB_MKENUMS)
-	$(AM_V_GEN) (cd $(srcdir) && $(GLIB_MKENUMS) --template arvenumtypes.c.template $(libaravis_la_HEADERS)) > $@
+	$(AM_V_GEN) (cd $(srcdir) && $(GLIB_MKENUMS) --template arvenumtypes.c.template $(libaravis_@ARAVIS_API_VERSION@_la_HEADERS)) > $@
 
-bin_PROGRAMS = arv-fake-gv-camera arv-show-devices
+bin_PROGRAMS = arv-fake-gv-camera-@ARAVIS_API_VERSION@ arv-show-devices-@ARAVIS_API_VERSION@
 
-arv_fake_gv_camera_SOURCES = arvfakegvcamera.c
-arv_fake_gv_camera_LDADD = $(ARAVIS_LIBS) libaravis.la
+arv_fake_gv_camera_@ARAVIS_API_VERSION@_SOURCES = arvfakegvcamera.c
+arv_fake_gv_camera_@ARAVIS_API_VERSION@_LDADD = $(ARAVIS_LIBS) libaravis-@ARAVIS_API_VERSION@.la
 
-arv_show_devices_SOURCES = arvshowdevices.c
-arv_show_devices_LDADD = $(ARAVIS_LIBS) libaravis.la
+arv_show_devices_@ARAVIS_API_VERSION@_SOURCES = arvshowdevices.c
+arv_show_devices_@ARAVIS_API_VERSION@_LDADD = $(ARAVIS_LIBS) libaravis-@ARAVIS_API_VERSION@.la
 
 CLEANFILES = $(BUILT_SOURCES)
 
 if HAVE_INTROSPECTION
 
-introspection_files = $(libaravis_la_SOURCES) \
+introspection_files = $(libaravis_@ARAVIS_API_VERSION@_la_SOURCES) \
 		      $(ARAVIS_HDRS)
 
-Aravis-1.0.gir: $(INTROSPECTION_SCANNER) libaravis.la Makefile
-Aravis_1_0_gir_INCLUDES = GObject-2.0 Gio-2.0
-Aravis_1_0_gir_SCANNERFLAGS = --identifier-prefix=Arv
-Aravis_1_0_gir_CFLAGS = $(INCLUDES) -I$(top_srcdir)/src
-Aravis_1_0_gir_LIBS = libaravis.la
-Aravis_1_0_gir_FILES = $(addprefix $(srcdir)/,$(introspection_files))
-INTROSPECTION_GIRS += Aravis-1.0.gir
+Aravis-@ARAVIS_API_VERSION@.gir: $(INTROSPECTION_SCANNER)
+Aravis_0_2_gir_INCLUDES = GObject-2.0 Gio-2.0
+Aravis_0_2_gir_SCANNERFLAGS = --identifier-prefix=Arv
+Aravis_0_2_gir_CFLAGS = $(INCLUDES) -I$(top_srcdir)/src
+Aravis_0_2_gir_LIBS = libaravis-@ARAVIS_API_VERSION@.la
+Aravis_0_2_gir_FILES = $(addprefix $(srcdir)/,$(introspection_files))
+INTROSPECTION_GIRS += Aravis-@ARAVIS_API_VERSION@.gir
 
 girdir = $(datadir)/gir-1.0
 dist_gir_DATA = $(INTROSPECTION_GIRS)

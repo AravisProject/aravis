@@ -15,6 +15,8 @@ AC_CONFIG_MACRO_DIR([m4])
 
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
+AC_SUBST([ARAVIS_API_VERSION], [0.2])
+
 AC_SEARCH_LIBS([strerror],[cposix])
 AC_PROG_CC
 
@@ -85,7 +87,7 @@ else
 fi
 AC_SUBST(gstplugindir)
 
-AC_SUBST(aravis_datadir, '$(datadir)/aravis')
+AC_SUBST(aravis_datadir, '$(datadir)/aravis-$(ARAVIS_API_VERSION)')
 
 GST_PLUGIN_LDFLAGS='-module -avoid-version -export-symbols-regex [_]*\(gst_\|Gst\|GST_\).*'
 AC_SUBST(GST_PLUGIN_LDFLAGS)

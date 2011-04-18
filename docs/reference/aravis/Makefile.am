@@ -14,7 +14,7 @@ AUTOMAKE_OPTIONS = 1.6
 DOC_MODULE=aravis
 
 # Uncomment for versioned docs and specify the version of the module, e.g. '2'.
-#DOC_MODULE_VERSION=2
+DOC_MODULE_VERSION=@ARAVIS_API_VERSION@
 
 
 # The top-level SGML file. You can change this if you want to.
@@ -86,7 +86,7 @@ expand_content_files= \
 # e.g. GTKDOC_CFLAGS=-I$(top_srcdir) -I$(top_builddir) $(GTK_DEBUG_FLAGS)
 # e.g. GTKDOC_LIBS=$(top_builddir)/gtk/$(gtktargetlib)
 GTKDOC_CFLAGS=-I$(top_srcdir)/src $(ARAVIS_CFLAGS)
-GTKDOC_LIBS=$(top_builddir)/src/libaravis.la $(ARAVIS_LIBS)
+GTKDOC_LIBS=$(top_builddir)/src/libaravis-@ARAVIS_API_VERSION@.la $(ARAVIS_LIBS)
 
 # This includes the standard gtk-doc make rules, copied by gtkdocize.
 include $(top_srcdir)/gtk-doc.make

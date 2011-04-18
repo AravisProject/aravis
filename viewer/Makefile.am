@@ -12,15 +12,15 @@ INCLUDES = \
 
 AM_CFLAGS = -Wall -lm
 
-bin_PROGRAMS = arv-viewer
+bin_PROGRAMS = arv-viewer-@ARAVIS_API_VERSION@
 
-arv_viewer_SOURCES = arvviewer.c	\
+arv_viewer_@ARAVIS_API_VERSION@_SOURCES = arvviewer.c	\
 		     arvfeaturewidget.c \
 		     arvfeaturewidget.h
 
-arv_viewer_LDADD = $(ARAVIS_EXTRA_LIBS) $(top_builddir)/src/libaravis.la
-arv_viewerdir = $(aravis_datadir)
-arv_viewer_DATA = arv-viewer.ui
+arv_viewer_@ARAVIS_API_VERSION@_LDADD = $(ARAVIS_EXTRA_LIBS) $(top_builddir)/src/libaravis-@ARAVIS_API_VERSION@.la
+arv_viewer_@ARAVIS_API_VERSION@dir = $(aravis_datadir)
+arv_viewer_@ARAVIS_API_VERSION@_DATA = arv-viewer.ui
 
 EXTRA_DIST += $(arv_viewer_DATA)
 
