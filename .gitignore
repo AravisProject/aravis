@@ -11,7 +11,7 @@
 Makefile
 Makefile.in
 aclocal.m4
-aravis-*.pc
+aravis*.pc
 config.guess
 config.log
 config.status

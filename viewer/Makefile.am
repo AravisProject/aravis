@@ -22,5 +22,5 @@ arv_viewer_@ARAVIS_API_VERSION@_LDADD = $(ARAVIS_EXTRA_LIBS) $(top_builddir)/src
 arv_viewer_@ARAVIS_API_VERSION@dir = $(aravis_datadir)
 arv_viewer_@ARAVIS_API_VERSION@_DATA = arv-viewer.ui
 
-EXTRA_DIST += $(arv_viewer_DATA)
+EXTRA_DIST += $(arv_viewer_@ARAVIS_API_VERSION@_DATA)
 

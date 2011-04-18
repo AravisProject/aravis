@@ -34,5 +34,7 @@ dist-hook:
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = aravis-@ARAVIS_API_VERSION@.pc
 
+CLEANFILES = $(pkgconfig_DATA)
+
 %-@ARAVIS_API_VERSION@.pc: %.pc
 	cp $< $@
