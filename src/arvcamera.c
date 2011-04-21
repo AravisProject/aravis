@@ -77,8 +77,8 @@ struct _ArvCameraPrivate {
 /**
  * arv_camera_create_stream:
  * @camera: a #ArvCamera
- * @callback: (scope call): a frame processing callback
- * @user_data: (closure) user data for @callback
+ * @callback: (scope call) (allow-none): a frame processing callback
+ * @user_data: (closure) (allow-none): user data for @callback
  * Return value: (transfer full): a new #ArvStream.
  *
  * Creates a new #ArvStream for video stream handling. See
