@@ -135,6 +135,13 @@ arv_zip_get_file_data (ArvZip *zip, ArvZipFile *zip_file)
 		GUINT16_FROM_LE_PTR (ptr + 28) + 30;
 }
 
+/**
+ * arv_zip_new: (skip)
+ * @buffer: zipped data
+ * @size: size of the zipped data
+ * Return value: a new #ArvZip instance
+ */
+
 ArvZip *
 arv_zip_new (const void *buffer, size_t size)
 {

@@ -94,6 +94,15 @@ arv_fake_stream_thread (void *data)
 
 /* ArvFakeStream implemenation */
 
+
+/**
+ * arv_fake_stream_new: (skip)
+ * @camera: a #ArvFakeCamera
+ * @callback: (scope call): image processing callback
+ * @user_data: (closure): user data for @callback
+ * Return Value: (transfer full): a new #ArvStream.
+ */
+
 ArvStream *
 arv_fake_stream_new (ArvFakeCamera *camera, ArvStreamCallback callback, void *user_data)
 {

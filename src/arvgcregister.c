@@ -52,10 +52,11 @@ arv_gc_register_add_element (ArvGcNode *node, const char *name, const char *cont
 
 	if (strcmp (name, "Address") == 0) {
 		gc_register->addresses = g_slist_prepend (gc_register->addresses,
-							  arv_new_g_value_int64 (g_ascii_strtoull (content,
+							  arv_create_int64_g_value (g_ascii_strtoull (content,
 												   NULL, 0)));
 	} else if (strcmp (name, "pAddress") == 0) {
-		gc_register->addresses = g_slist_prepend (gc_register->addresses, arv_new_g_value_string (content));
+		gc_register->addresses = g_slist_prepend (gc_register->addresses,
+							  arv_create_string_g_value (content));
 	} else if (strcmp (name, "pIndex") == 0) {
 		int i;
 
@@ -325,7 +326,7 @@ arv_gc_register_new (void)
 }
 
 ArvGcNode *
-arv_gc_integer_register_new (void)
+arv_gc_register_new_integer (void)
 {
 	ArvGcRegister *gc_register;
 
@@ -337,7 +338,7 @@ arv_gc_integer_register_new (void)
 }
 
 ArvGcNode *
-arv_gc_masked_integer_register_new (void)
+arv_gc_register_new_masked_integer (void)
 {
 	ArvGcRegister *gc_register;
 
@@ -349,7 +350,7 @@ arv_gc_masked_integer_register_new (void)
 }
 
 ArvGcNode *
-arv_gc_float_register_new (void)
+arv_gc_register_new_float (void)
 {
 	ArvGcRegister *gc_register;
 
@@ -361,7 +362,7 @@ arv_gc_float_register_new (void)
 }
 
 ArvGcNode *
-arv_gc_string_register_new (void)
+arv_gc_register_new_string (void)
 {
 	ArvGcRegister *gc_register;
 

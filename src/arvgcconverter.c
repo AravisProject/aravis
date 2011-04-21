@@ -109,7 +109,7 @@ arv_gc_converter_new (void)
 }
 
 ArvGcNode *
-arv_gc_int_converter_new (void)
+arv_gc_converter_new_integer (void)
 {
 	ArvGcConverter *converter;
 

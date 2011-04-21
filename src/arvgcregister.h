@@ -97,10 +97,10 @@ struct _ArvGcRegisterClass {
 
 GType 		arv_gc_register_get_type 		(void);
 ArvGcNode * 	arv_gc_register_new 			(void);
-ArvGcNode * 	arv_gc_integer_register_new 		(void);
-ArvGcNode * 	arv_gc_masked_integer_register_new 	(void);
-ArvGcNode * 	arv_gc_float_register_new 		(void);
-ArvGcNode * 	arv_gc_string_register_new 		(void);
+ArvGcNode * 	arv_gc_register_new_integer 		(void);
+ArvGcNode * 	arv_gc_register_new_masked_integer 	(void);
+ArvGcNode * 	arv_gc_register_new_float	 	(void);
+ArvGcNode * 	arv_gc_register_new_string 		(void);
 void 		arv_gc_register_get			(ArvGcRegister *gc_register, void *buffer, guint64 Length);
 void 		arv_gc_register_set			(ArvGcRegister *gc_register, void *buffer, guint64 Length);
 guint64 	arv_gc_register_get_address 		(ArvGcRegister *gc_register);

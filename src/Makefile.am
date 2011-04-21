@@ -26,12 +26,10 @@ EXTRA_DIST += arvenumtypes.h.template \
 libaravis_@ARAVIS_API_VERSION@_la_LIBADD = 				\
 	$(ARAVIS_LIBS)
 
-libaravis_@ARAVIS_API_VERSION@_la_SOURCES =				\
+ARAVIS_SRCS =					\
 	arvenums.c				\
 	arvenumtypes.c				\
 	arvdebug.c				\
-	arvtools.c				\
-	arvzip.c				\
 	arvsystem.c				\
 	arvevaluator.c				\
 	arvcamera.c				\
@@ -55,8 +53,6 @@ libaravis_@ARAVIS_API_VERSION@_la_SOURCES =				\
 	arvdevice.c				\
 	arvstream.c				\
 	arvbuffer.c				\
-	arvgvcp.c				\
-	arvgvsp.c				\
 	arvgvinterface.c			\
 	arvgvdevice.c				\
 	arvgvstream.c				\
@@ -65,13 +61,17 @@ libaravis_@ARAVIS_API_VERSION@_la_SOURCES =				\
 	arvfakestream.c				\
 	arvfakecamera.c
 
+ARAVIS_SRCS_NO_INTRO =				\
+	arvtools.c				\
+	arvzip.c				\
+	arvgvcp.c				\
+	arvgvsp.c
+
 ARAVIS_HDRS = 					\
 	arv.h					\
 	arvtypes.h				\
 	arvenums.h				\
 	arvdebug.h				\
-	arvtools.h				\
-	arvzip.h				\
 	arvsystem.h				\
 	arvevaluator.h				\
 	arvcamera.h				\
@@ -95,8 +95,6 @@ ARAVIS_HDRS = 					\
 	arvdevice.h				\
 	arvstream.h				\
 	arvbuffer.h				\
-	arvgvcp.h				\
-	arvgvsp.h				\
 	arvgvinterface.h			\
 	arvgvdevice.h				\
 	arvgvstream.h				\
@@ -105,19 +103,27 @@ ARAVIS_HDRS = 					\
 	arvfakestream.h				\
 	arvfakecamera.h
 
+ARAVIS_HDRS_NO_INTRO =				\
+	arvtools.h				\
+	arvzip.h				\
+	arvgvcp.h				\
+	arvgvsp.h
+
 arv_fake_cameradir = $(aravis_datadir)
 arv_fake_camera_DATA = arv-fake-camera.xml
 
 EXTRA_DIST += arv-fake-camera.xml
 
+libaravis_@ARAVIS_API_VERSION@_la_SOURCES = $(ARAVIS_SRCS) $(ARAVIS_SRCS_NO_INTRO)
+
 libaravis_@ARAVIS_API_VERSION@_ladir = $(includedir)/aravis-@ARAVIS_API_VERSION@
-libaravis_@ARAVIS_API_VERSION@_la_HEADERS = $(ARAVIS_HDRS)
+libaravis_@ARAVIS_API_VERSION@_la_HEADERS = $(ARAVIS_HDRS) $(ARAVIS_HDRS_NO_INTRO)
 libaravis_@ARAVIS_API_VERSION@_la_HEADERS += arvenumtypes.h arvconfig.h
 
-arvenumtypes.h: arvenumtypes.h.template $(ARAVIS_HDRS) $(GLIB_MKENUMS)
+arvenumtypes.h: arvenumtypes.h.template $(ARAVIS_HDRS) $(ARAVIS_HDRS_NO_INTRO) $(GLIB_MKENUMS)
 	$(AM_V_GEN) (cd $(srcdir) && $(GLIB_MKENUMS) --template arvenumtypes.h.template $(libaravis_@ARAVIS_API_VERSION@_la_HEADERS)) > $@
 
-arvenumtypes.c: arvenumtypes.c.template $(ARAVIS_HDRS) $(GLIB_MKENUMS)
+arvenumtypes.c: arvenumtypes.c.template $(ARAVIS_HDRS) $(ARAVIS_HDRS_NO_INTRO) $(GLIB_MKENUMS)
 	$(AM_V_GEN) (cd $(srcdir) && $(GLIB_MKENUMS) --template arvenumtypes.c.template $(libaravis_@ARAVIS_API_VERSION@_la_HEADERS)) > $@
 
 bin_PROGRAMS = arv-fake-gv-camera-@ARAVIS_API_VERSION@ arv-show-devices-@ARAVIS_API_VERSION@
@@ -132,12 +138,12 @@ CLEANFILES = $(BUILT_SOURCES)
 
 if HAVE_INTROSPECTION
 
-introspection_files = $(libaravis_@ARAVIS_API_VERSION@_la_SOURCES) \
+introspection_files = $(ARAVIS_SRCS) \
 		      $(ARAVIS_HDRS)
 
 Aravis-@ARAVIS_API_VERSION@.gir: $(INTROSPECTION_SCANNER)
 Aravis_0_2_gir_INCLUDES = GObject-2.0 Gio-2.0
-Aravis_0_2_gir_SCANNERFLAGS = --identifier-prefix=Arv
+Aravis_0_2_gir_SCANNERFLAGS = --identifier-prefix=Arv --warn-all
 Aravis_0_2_gir_CFLAGS = $(INCLUDES) -I$(top_srcdir)/src
 Aravis_0_2_gir_LIBS = libaravis-@ARAVIS_API_VERSION@.la
 Aravis_0_2_gir_FILES = $(addprefix $(srcdir)/,$(introspection_files))

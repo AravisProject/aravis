@@ -77,7 +77,7 @@ arv_stream_push_buffer (ArvStream *stream, ArvBuffer *buffer)
 /**
  * arv_stream_pop_buffer:
  * @stream: a #ArvStream
- * Returns: a #ArvBuffer
+ * Returns: (transfer full): a #ArvBuffer
  *
  * Pops a buffer from the output queue of @stream. The retrieved buffer
  * may contain an invalid image. Caller should check the buffer status before using it.
@@ -91,6 +91,16 @@ arv_stream_pop_buffer (ArvStream *stream)
 	return g_async_queue_try_pop (stream->priv->output_queue);
 }
 
+/**
+ * arv_stream_timed_pop_buffer:
+ * @stream: a #ArvStream
+ * @timeout: timeout, in µs
+ * Returns: (transfer full): a #ArvBuffer
+ *
+ * Pops a buffer from the output queue of @stream, waiting no more than @timeout. The retrieved buffer
+ * may contain an invalid image. Caller should check the buffer status before using it.
+ */
+
 ArvBuffer *
 arv_stream_timed_pop_buffer (ArvStream *stream, guint64 timeout)
 {
@@ -103,6 +113,13 @@ arv_stream_timed_pop_buffer (ArvStream *stream, guint64 timeout)
 
 	return g_async_queue_timed_pop (stream->priv->output_queue, &end_time);
 }
+
+/**
+ * arv_stream_pop_input_buffer: (skip)
+ * @stream: (transfer full): a #ArvStream
+ *
+ * Pos a buffer from the input queue of @stream.
+ */
 
 ArvBuffer *
 arv_stream_pop_input_buffer (ArvStream *stream)

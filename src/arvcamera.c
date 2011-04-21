@@ -77,16 +77,16 @@ struct _ArvCameraPrivate {
 /**
  * arv_camera_create_stream:
  * @camera: a #ArvCamera
- * @callback: a frame processing callback
- * @user_data: closure
- * Return value: a new #ArvStream.
+ * @callback: (scope call): a frame processing callback
+ * @user_data: (closure) user data for @callback
+ * Return value: (transfer full): a new #ArvStream.
  *
  * Creates a new #ArvStream for video stream handling. See
- * @arv_device_create_stream for details regarding the callback function.
+ * @ArvStreamCallback for details regarding the callback function.
  */
 
 ArvStream *
-arv_camera_create_stream (ArvCamera *camera, ArvStreamCallback callback, void *user_data)
+arv_camera_create_stream (ArvCamera *camera, ArvStreamCallback callback, gpointer user_data)
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
@@ -142,8 +142,8 @@ arv_camera_get_device_id (ArvCamera *camera)
 /**
  * arv_camera_get_sensor_size:
  * @camera: a #ArvCamera
- * @width: camera sensor width placeholder
- * @height: camera sensor height placeholder
+ * @width: (out): camera sensor width placeholder
+ * @height: (out): camera sensor height placeholder
  */
 
 void
@@ -187,10 +187,10 @@ arv_camera_set_region (ArvCamera *camera, gint x, gint y, gint width, gint heigh
 /**
  * arv_camera_get_region:
  * @camera: a #ArvCamera
- * @x: x offset placeholder
- * @y: y_offset placeholder
- * @width: region width placeholder
- * @height: region height placeholder
+ * @x: (out): x offset placeholder
+ * @y: (out): y_offset placeholder
+ * @width: (out): region width placeholder
+ * @height: (out): region height placeholder
  *
  * Retrieves the current region of interest.
  */
@@ -763,7 +763,7 @@ arv_camera_get_payload (ArvCamera *camera)
 /**
  * arv_camera_get_device:
  * @camera: a #ArvCamera
- * Return value: the underlying device object.
+ * Return value: (transfer none): the underlying device object.
  *
  * Retrieves the #ArvDevice object for more complete access to the camera features.
  */

@@ -268,7 +268,7 @@ ArvGcIntegerInterface
 <TITLE>ArvGcConverter</TITLE>
 ArvGcConverter
 arv_gc_converter_new
-arv_gc_int_converter_new
+arv_gc_converter_new_integer
 <SUBSECTION Standard>
 ARV_GC_CONVERTER
 ARV_IS_GC_CONVERTER
@@ -527,7 +527,7 @@ ArvGcFloatInterface
 <TITLE>ArvGcSwissKnife</TITLE>
 ArvGcSwissKnife
 arv_gc_swiss_knife_new
-arv_gc_int_swiss_knife_new
+arv_gc_swiss_knife_new_integer
 <SUBSECTION Standard>
 ARV_GC_SWISS_KNIFE
 ARV_IS_GC_SWISS_KNIFE
@@ -614,10 +614,10 @@ ArvGcSign
 ArvGcRegisterType
 ArvGcRegister
 arv_gc_register_new
-arv_gc_integer_register_new
-arv_gc_masked_integer_register_new
-arv_gc_float_register_new
-arv_gc_string_register_new
+arv_gc_register_new_integer
+arv_gc_register_new_masked_integer
+arv_gc_register_new_float
+arv_gc_register_new_string
 arv_gc_register_get
 arv_gc_register_set
 arv_gc_register_get_address
@@ -738,13 +738,15 @@ arv_value_get_int64
 arv_value_get_double
 arv_value_holds_int64
 arv_value_holds_double
-arv_new_g_value_int64
-arv_new_g_value_string
+arv_create_int64_g_value
+arv_create_string_g_value
 arv_free_g_value
 arv_force_g_value_to_int64
 arv_force_g_value_to_double
 arv_force_g_value_to_string
 <SUBSECTION Private>
+ARV_TYPE_VALUE
+arv_value_get_type
 ArvValue
 arv_copy_memory_with_endianess
 arv_decompress

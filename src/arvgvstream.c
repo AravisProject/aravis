@@ -629,6 +629,17 @@ arv_gv_stream_get_port (ArvGvStream *gv_stream)
 	return g_inet_socket_address_get_port (local_address);
 }
 
+/**
+ * arv_gv_stream_new: (skip)
+ * @device_address: inet device address for gvsp
+ * @port: inet port
+ * @callback: (scope call): processing callback
+ * @user_data: (closure): user data for @callback
+ * @timestamp_tick_frequency: camera tick frequency for timestamping
+ * @packet_size: gvsp packet size, in bytes
+ * Return value: (transfer full): a new #ArvStream.
+ */
+
 ArvStream *
 arv_gv_stream_new (GInetAddress *device_address, guint16 port,
 		   ArvStreamCallback callback, void *user_data,

@@ -63,15 +63,15 @@ arv_gc_create_node (ArvGc *genicam, const char *type)
 	else if (strcmp (type, "Converter") == 0)
 		node = arv_gc_converter_new ();
 	else if (strcmp (type, "IntConverter") == 0)
-		node = arv_gc_int_converter_new ();
+		node = arv_gc_converter_new_integer ();
 	else if (strcmp (type, "IntReg") == 0)
-		node = arv_gc_integer_register_new ();
+		node = arv_gc_register_new_integer ();
 	else if (strcmp (type, "MaskedIntReg") == 0)
-		node = arv_gc_masked_integer_register_new ();
+		node = arv_gc_register_new_masked_integer ();
 	else if (strcmp (type, "FloatReg") == 0)
-		node = arv_gc_float_register_new ();
+		node = arv_gc_register_new_float ();
 	else if (strcmp (type, "StringReg") == 0)
-		node = arv_gc_string_register_new ();
+		node = arv_gc_register_new_string ();
 	else if (strcmp (type, "Integer") == 0)
 		node = arv_gc_integer_node_new ();
 	else if (strcmp (type, "Float") == 0)
@@ -85,7 +85,7 @@ arv_gc_create_node (ArvGc *genicam, const char *type)
 	else if (strcmp (type, "SwissKnife") == 0)
 		node = arv_gc_swiss_knife_new ();
 	else if (strcmp (type, "IntSwissKnife") == 0)
-		node = arv_gc_int_swiss_knife_new ();
+		node = arv_gc_swiss_knife_new_integer ();
 	else if (strcmp (type, "Port") == 0)
 		node = arv_gc_port_new ();
 

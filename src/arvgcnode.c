@@ -191,6 +191,14 @@ arv_gc_node_set_genicam	(ArvGcNode *node, ArvGc *genicam)
 	node->priv->genicam = genicam;
 }
 
+/**
+ * arv_gc_node_get_genicam:
+ * @gc_node: a #ArvGcNode
+ * Return value: (transfer none): the parent #ArvGc
+ *
+ * Retrieves the parent genicam document of @node.
+ */
+
 ArvGc *
 arv_gc_node_get_genicam	(ArvGcNode *node)
 {

@@ -36,6 +36,17 @@ arv_gvcp_packet_free (ArvGvcpPacket *packet)
 	g_free (packet);
 }
 
+/**
+ * arv_gvcp_packet_new_read_memory_cmd: (skip)
+ * @address: read address
+ * @size: read size, in bytes
+ * @packet_count: current packet count
+ * @packet_size: (out): packet size, in bytes
+ * Return value: (transfer full): a new #ArvGvcpPacket
+ *
+ * Create a gvcp packet for a memory read command.
+ */
+
 ArvGvcpPacket *
 arv_gvcp_packet_new_read_memory_cmd (guint32 address, guint32 size, guint32 packet_count, size_t *packet_size)
 {
@@ -60,6 +71,17 @@ arv_gvcp_packet_new_read_memory_cmd (guint32 address, guint32 size, guint32 pack
 	return packet;
 }
 
+/**
+ * arv_gvcp_packet_new_read_memory_ack: (skip)
+ * @address: read address
+ * @size: read size, in bytes
+ * @packet_count: current packet count
+ * @packet_size: (out): packet size, in bytes
+ * Return value: (transfer full): a new #ArvGvcpPacket
+ *
+ * Create a gvcp packet for a memory read acknowledge.
+ */
+
 ArvGvcpPacket *
 arv_gvcp_packet_new_read_memory_ack (guint32 address, guint32 size, guint32 packet_count, size_t *packet_size)
 {
@@ -82,6 +104,17 @@ arv_gvcp_packet_new_read_memory_ack (guint32 address, guint32 size, guint32 pack
 	return packet;
 }
 
+/**
+ * arv_gvcp_packet_new_write_memory_cmd: (skip)
+ * @address: write address
+ * @size: write size, in bytes
+ * @packet_count: current packet count
+ * @packet_size: (out): packet size, in bytes
+ * Return value: (transfer full): a new #ArvGvcpPacket
+ *
+ * Create a gvcp packet for a memory write command.
+ */
+
 ArvGvcpPacket *
 arv_gvcp_packet_new_write_memory_cmd (guint32 address, guint32 size, guint32 packet_count, size_t *packet_size)
 {
@@ -103,6 +136,16 @@ arv_gvcp_packet_new_write_memory_cmd (guint32 address, guint32 size, guint32 pac
 
 	return packet;
 }
+
+/**
+ * arv_gvcp_packet_new_write_memory_ack: (skip)
+ * @address: write address
+ * @packet_count: current packet count
+ * @packet_size: (out): packet size, in bytes
+ * Return value: (transfer full): a new #ArvGvcpPacket
+ *
+ * Create a gvcp packet for a memory write acknowledge.
+ */
 
 ArvGvcpPacket *
 arv_gvcp_packet_new_write_memory_ack (guint32 address,
@@ -127,6 +170,16 @@ arv_gvcp_packet_new_write_memory_ack (guint32 address,
 	return packet;
 }
 
+/**
+ * arv_gvcp_packet_new_read_register_cmd: (skip)
+ * @address: write address
+ * @packet_count: current packet count
+ * @packet_size: (out): packet size, in bytes
+ * Return value: (transfer full): a new #ArvGvcpPacket
+ *
+ * Create a gvcp packet for a register read command.
+ */
+
 ArvGvcpPacket *
 arv_gvcp_packet_new_read_register_cmd (guint32 address, guint32 packet_count, size_t *packet_size)
 {
@@ -148,6 +201,16 @@ arv_gvcp_packet_new_read_register_cmd (guint32 address, guint32 packet_count, si
 
 	return packet;
 }
+
+/**
+ * arv_gvcp_packet_new_read_register_ack: (skip)
+ * @value: read value
+ * @packet_count: current packet count
+ * @packet_size: (out): packet size, in bytes
+ * Return value: (transfer full): a new #ArvGvcpPacket
+ *
+ * Create a gvcp packet for a register read acknowledge.
+ */
 
 ArvGvcpPacket *
 arv_gvcp_packet_new_read_register_ack (guint32 value,
@@ -171,6 +234,17 @@ arv_gvcp_packet_new_read_register_ack (guint32 value,
 
 	return packet;
 }
+
+/**
+ * arv_gvcp_packet_new_write_register_cmd: (skip)
+ * @address: write address
+ * @value: value to write
+ * @packet_count: current packet count
+ * @packet_size: (out): packet size, in bytes
+ * Return value: (transfer full): a new #ArvGvcpPacket
+ *
+ * Create a gvcp packet for a register write command.
+ */
 
 ArvGvcpPacket *
 arv_gvcp_packet_new_write_register_cmd (guint32 address, guint32 value,
@@ -197,6 +271,16 @@ arv_gvcp_packet_new_write_register_cmd (guint32 address, guint32 value,
 	return packet;
 }
 
+/**
+ * arv_gvcp_packet_new_write_register_ack: (skip)
+ * @address: write address
+ * @packet_count: current packet count
+ * @packet_size: (out): packet size, in bytes
+ * Return value: (transfer full): a new #ArvGvcpPacket
+ *
+ * Create a gvcp packet for a register write acknowledge.
+ */
+
 ArvGvcpPacket *
 arv_gvcp_packet_new_write_register_ack 	(guint32 address,
 					 guint32 packet_count, size_t *packet_size)
@@ -220,6 +304,14 @@ arv_gvcp_packet_new_write_register_ack 	(guint32 address,
 	return packet;
 }
 
+/**
+ * arv_gvcp_packet_new_discovery_cmd: (skip)
+ * @size: (out): packet size, in bytes
+ * Return value: (transfer full): a new #ArvGvcpPacket
+ *
+ * Create a gvcp packet for a discovery command.
+ */
+
 ArvGvcpPacket *
 arv_gvcp_packet_new_discovery_cmd (size_t *packet_size)
 {
@@ -239,6 +331,14 @@ arv_gvcp_packet_new_discovery_cmd (size_t *packet_size)
 	return packet;
 }
 
+/**
+ * arv_gvcp_packet_new_discovery_ack: (skip)
+ * @packet_size: (out): packet size, in bytes
+ * Return value: (transfer full): a new #ArvGvcpPacket
+ *
+ * Create a gvcp packet for a discovery acknowledge.
+ */
+
 ArvGvcpPacket *
 arv_gvcp_packet_new_discovery_ack (size_t *packet_size)
 {
@@ -257,6 +357,18 @@ arv_gvcp_packet_new_discovery_ack (size_t *packet_size)
 
 	return packet;
 }
+
+/**
+ * arv_gvcp_packet_new_packet_resend_cmd: (skip)
+ * @frame_id: frame id
+ * @first_block: first missing packet
+ * @last_block: last missing packet
+ * @packet_count: current packet count
+ * @packet_size: (out): packet size, in bytes
+ * Return value: (transfer full): a new #ArvGvcpPacket
+ *
+ * Create a gvcp packet for a packet resend command.
+ */
 
 ArvGvcpPacket *
 arv_gvcp_packet_new_packet_resend_cmd (guint32 frame_id,

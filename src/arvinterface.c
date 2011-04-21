@@ -99,9 +99,10 @@ arv_interface_get_device_id (ArvInterface *interface, unsigned int index)
 /**
  * arv_interface_open_device
  * @interface: a #ArvInterface
- * @device_id: device unique id
+ * @device_id: (allow-none): device unique id
+ * Return value: (transfer full): a new #ArvDevice
  *
- * Creates a new #ArvDevice object corresponding to the given id.
+ * Creates a new #ArvDevice object corresponding to the given device id string. The first available device is returned if @device_id is null.
  **/
 
 ArvDevice *

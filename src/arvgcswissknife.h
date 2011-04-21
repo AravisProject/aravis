@@ -52,7 +52,7 @@ struct _ArvGcSwissKnifeClass {
 GType 		arv_gc_swiss_knife_get_type 	(void);
 
 ArvGcNode * 	arv_gc_swiss_knife_new 		(void);
-ArvGcNode * 	arv_gc_int_swiss_knife_new 	(void);
+ArvGcNode * 	arv_gc_swiss_knife_new_integer 	(void);
 
 G_END_DECLS
 

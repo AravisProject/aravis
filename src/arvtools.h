@@ -75,6 +75,10 @@ arv_str_skip_colon_and_spaces (char **str)
 		(*str)++;
 }
 
+#define ARV_TYPE_VALUE (arv_value_get_type())
+
+GType arv_value_get_type (void);
+
 typedef struct _ArvValue ArvValue;
 struct _ArvValue {
 	GType type;
@@ -95,8 +99,8 @@ double 		arv_value_get_double 		(ArvValue *value);
 gboolean 	arv_value_holds_int64 		(ArvValue *value);
 double 		arv_value_holds_double 		(ArvValue *value);
 
-GValue * 	arv_new_g_value_int64 		(gint64 v_int64);
-GValue * 	arv_new_g_value_string 		(const char *v_string);
+GValue * 	arv_create_int64_g_value 	(gint64 v_int64);
+GValue * 	arv_create_string_g_value	(const char *v_string);
 void 		arv_free_g_value 		(GValue *value);
 void		arv_force_g_value_to_int64	(GValue *value, gint64 v_int64);
 void		arv_force_g_value_to_double	(GValue *value, double v_double);

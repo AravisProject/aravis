@@ -77,6 +77,15 @@ _arv_statistic_free (ArvStatistic *statistic)
 	g_free (statistic);
 }
 
+/**
+ * arv_statistic_new: (skip)
+ * @n_histograms: number of histograms
+ * @n_bins: number of bins for each histogram
+ * @bin_step: bin step
+ * @offset: offset of the first bin
+ * Return value: a new #ArvStatistic structure
+ */
+
 ArvStatistic *
 arv_statistic_new (unsigned int n_histograms, unsigned n_bins, unsigned int bin_step, int offset)
 {
@@ -434,6 +443,32 @@ arv_value_copy (ArvValue *to, const ArvValue *from)
 	*to = *from;
 }
 
+ArvValue *
+arv_value_duplicate (const ArvValue *from)
+{
+	ArvValue *value = g_new (ArvValue, 1);
+
+	if (from == NULL)
+		return NULL;
+
+	*value = *from;
+
+	return value;
+}
+
+GType
+arv_value_get_type (void)
+{
+	GType type_id = 0;
+
+	if (type_id == 0)
+		type_id = g_boxed_type_register_static ("ArvValue",
+							(GBoxedCopyFunc) arv_value_duplicate,
+							(GBoxedFreeFunc) arv_value_free);
+
+	return type_id;
+}
+
 void
 arv_value_set_int64 (ArvValue *value, gint64 v_int64)
 {
@@ -480,8 +515,14 @@ arv_value_holds_double (ArvValue *value)
 
 /* GValue utilities */
 
+/**
+ * arv_create_int64_g_value:
+ * @v_int64: default 64 bit integer value
+ * Return value: (transfer full) a new GValue holding a gint64.
+ */
+
 GValue *
-arv_new_g_value_int64 (gint64 v_int64)
+arv_create_int64_g_value (gint64 v_int64)
 {
 	GValue *value = g_new0 (GValue, 1);
 
@@ -491,8 +532,14 @@ arv_new_g_value_int64 (gint64 v_int64)
 	return value;
 }
 
+/**
+ * arv_create_string_g_value:
+ * @v_string: default 64 bit integer value
+ * Return value: (transfer full) a new GValue holding a string.
+ */
+
 GValue *
-arv_new_g_value_string (const char *v_string)
+arv_create_string_g_value (const char *v_string)
 {
 	GValue *value = g_new0 (GValue, 1);
 
@@ -597,6 +644,14 @@ arv_copy_memory_with_endianess (void *to, size_t to_size, guint to_endianess,
 }
 
 #define ARV_DECOMPRESS_CHUNK 16384
+
+/**
+ * arv_decompress:
+ * @input_buffer: compressed data
+ * @input_buffer: size of compressed data
+ * @output_size: (out): placeholder for inflated data
+ * Return value: (transfer full): a newly allocated buffer
+ **/
 
 void *
 arv_decompress (void *input_buffer, size_t input_size, size_t *output_size)

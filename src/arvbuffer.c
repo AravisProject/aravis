@@ -37,9 +37,9 @@
 static GObjectClass *parent_class = NULL;
 
 /**
- * arv_buffer_new:
+ * arv_buffer_new_full:
  * @size: payload size
- * @preallocated: (transfer none): preallocated memory buffer
+ * @preallocated: (transfer none) (allow-none): preallocated memory buffer
  * @user_data: (transfer none): a pointer to user data associated to this buffer
  * @user_data_destroy_func: an optional user data destroy callback
  *
@@ -76,7 +76,7 @@ arv_buffer_new_full (size_t size, void *preallocated, void *user_data, GDestroyN
 /**
  * arv_buffer_new:
  * @size: payload size
- * @preallocated: (transfer none): preallocated memory buffer
+ * @preallocated: (allow-none) (transfer none): preallocated memory buffer
  *
  * Creates a new buffer for the storage of the video stream images. 
  * The data space can be either preallocated, and the caller is responsible

@@ -59,6 +59,14 @@ arv_fake_interface_open_device (ArvInterface *interface, const char *device_id)
 static ArvInterface *fake_interface = NULL;
 static GStaticMutex fake_interface_mutex = G_STATIC_MUTEX_INIT;
 
+/**
+ * arv_fake_interface_get_instance:
+ *
+ * Gets the unique instance of the fake interface.
+ *
+ * Returns: (transfer none): a #ArvInterface singleton.
+ */
+
 ArvInterface *
 arv_fake_interface_get_instance (void)
 {

@@ -102,6 +102,14 @@ arv_get_device_id (unsigned int index)
 	return NULL;
 }
 
+/**
+ * arv_open_device:
+ * @device_id: (allow-none): a device identifier string
+ * Return value: (transfer full): a new #ArvDevice instance
+ *
+ * Open a device corresponding to the given identifier. A null string makes this function return the first available device.
+ */
+
 ArvDevice *
 arv_open_device (const char *device_id)
 {

@@ -122,7 +122,7 @@ void		arv_fake_camera_set_control_channel_privilege	(ArvFakeCamera *camera, guin
 guint32		arv_fake_camera_get_heartbeat_timeout		(ArvFakeCamera *camera);
 
 void		arv_fake_camera_set_fill_pattern	(ArvFakeCamera *camera,
-							 ArvFakeCameraFillPattern fill_pattern,
+							 ArvFakeCameraFillPattern fill_pattern_callback,
 							 void *fill_pattern_data);
 void 		arv_fake_camera_set_trigger_frequency 	(ArvFakeCamera *camera, double frequency);
 

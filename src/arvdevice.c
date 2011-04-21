@@ -41,6 +41,17 @@
 
 static GObjectClass *parent_class = NULL;
 
+/**
+ * arv_device_create_stream:
+ * @device: a #ArvDevice
+ * @callback: (scope call): a frame processing callback
+ * @user_data: (closure) user data for @callback
+ * Return value: (transfer full): a new #ArvStream.
+ *
+ * Creates a new #ArvStream for video stream handling. See
+ * @ArvStreamCallback for details regarding the callback function.
+ */
+
 ArvStream *
 arv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data)
 {
