@@ -139,7 +139,9 @@ CLEANFILES = $(BUILT_SOURCES)
 if HAVE_INTROSPECTION
 
 introspection_files = $(ARAVIS_SRCS) \
-		      $(ARAVIS_HDRS)
+		      $(ARAVIS_HDRS) \
+		      arvenumtypes.c \
+		      arvenumtypes.h
 
 Aravis-@ARAVIS_API_VERSION@.gir: $(INTROSPECTION_SCANNER)
 Aravis_0_2_gir_INCLUDES = GObject-2.0 Gio-2.0
