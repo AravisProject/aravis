@@ -4,13 +4,19 @@ include $(top_srcdir)/Makefile.decl
 
 ACLOCAL_AMFLAGS = -I m4
 
-DISTCHECK_CONFIGURE_FLAGS = --enable-introspection --enable-gtk-doc --enable-cairo --enable-gtk --enable-gstreamer
+DISTCHECK_CONFIGURE_FLAGS = --enable-introspection --enable-gtk-doc --enable-gst-plugin --enable-viewer
 
-SUBDIRS = src gst tests po docs
+SUBDIRS = src
 
-if ARAVIS_VIEWER
+if ARAVIS_BUILD_VIEWER
 SUBDIRS += viewer
 endif
+
+if ARAVIS_BUILD_GST_PLUGIN
+SUBDIRS += gst
+endif
+
+SUBDIRS += tests po docs
 
 aravisdocdir = ${prefix}/doc/aravis-@ARAVIS_API_VERSION@
 aravisdoc_DATA = 	\

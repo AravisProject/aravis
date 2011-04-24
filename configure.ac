@@ -29,55 +29,49 @@ IT_PROG_INTLTOOL([0.31.2])
 
 LT_INIT()
 
-AC_ARG_ENABLE(cairo,
-	      [  --enable-cairo          Enable cairo support],
-	      [enable_cairo=$enableval],
-	      [enable_cairo=no])
-AC_ARG_ENABLE(gtk,
-	      [  --enable-gtk            Enable gtk support],
-	      [enable_gtk=$enableval],
-	      [enable_gtk=no])
-AC_ARG_ENABLE(gstreamer,
-	      [  --enable-gstreamer      Enable gstreamer support],
-	      [enable_gstreamer=$enableval],
-	      [enable_gstreamer=no])
+AC_ARG_ENABLE(gst_plugin,
+	      [  --enable-gst-plugin     build gstreamer plugin],
+	      [enable_gst_plugin=$enableval],
+	      [enable_gst_plugin=no])
+AC_ARG_ENABLE(viewer,
+	      [  --enable-viewer         build viewer],
+	      [enable_viewer=$enableval],
+	      [enable_viewer=no])
 
 PKG_PROG_PKG_CONFIG([0.14])
 
 ARAVIS_REQUIRES="[gobject-2.0 glib-2.0 >= 2.22 gio-2.0 libxml-2.0 gthread-2.0]"
-ARAVIS_EXTRA_REQUIRES="${ARAVIS_REQUIRES}"
 
-with_cairo=no
-if test "x$enable_cairo" = "xyes"; then
-	PKG_CHECK_MODULES([CAIRO],   [cairo >= 1.2],
-			  [AC_DEFINE([ARAVIS_WITH_CAIRO], [1], [Cairo support])
-			  ARAVIS_EXTRA_REQUIRES="${ARAVIS_EXTRA_REQUIRES} [cairo >= 1.2]"
-			  with_cairo=yes],
+PKG_CHECK_MODULES(ARAVIS, $ARAVIS_REQUIRES)
+
+AC_SUBST(ARAVIS_CFLAGS)
+AC_SUBST(ARAVIS_LIBS)
+
+AC_SUBST(aravis_datadir, '$(datadir)/aravis-$(ARAVIS_API_VERSION)')
+
+build_viewer=no
+if test "x$enable_viewer" = "xyes"; then
+	PKG_CHECK_MODULES([ARAVIS_VIEWER],   [gtk+-2.0 >= 2.12 gstreamer-base-0.10 >= 0.10 gstreamer-app-0.10 gstreamer-interfaces-0.10],
+			  [AC_DEFINE([ARAVIS_BUILD_VIEWER], [1], [Build viewer])
+			  build_viewer=yes],
 			  [echo -n])
 fi
-AM_CONDITIONAL(ARAVIS_WITH_CAIRO, test "x$with_cairo" = "xyes")
+AM_CONDITIONAL(ARAVIS_BUILD_VIEWER, test "x$build_viewer" = "xyes")
 
-with_gtk=no
-if test "x$enable_gtk" = "xyes"; then
-	PKG_CHECK_MODULES([GTK],   [gtk+-2.0 >= 2.12],
-			  [AC_DEFINE([ARAVIS_WITH_GTK], [1], [Gtk support])
-			  ARAVIS_EXTRA_REQUIRES="${ARAVIS_EXTRA_REQUIRES} [gtk+-2.0 >= 2.12]"
-			  with_gtk=yes],
+AC_SUBST(ARAVIS_VIEWER_CFLAGS)
+AC_SUBST(ARAVIS_VIEWER_LIBS)
+
+build_gst_plugin=no
+if test "x$enable_gst_plugin" = "xyes"; then
+	PKG_CHECK_MODULES([ARAVIS_GST_PLUGIN],   [gstreamer-base-0.10 >= 0.10 gstreamer-app-0.10 gstreamer-interfaces-0.10],
+			  [AC_DEFINE([ARAVIS_BUILD_GST_PLUGIN], [1], [Build gstreamer plugin])
+			  build_gst_plugin=yes],
 			  [echo -n])
 fi
-AM_CONDITIONAL(ARAVIS_WITH_GTK, test "x$with_gtk" = "xyes")
+AM_CONDITIONAL(ARAVIS_BUILD_GST_PLUGIN, test "x$build_gst_plugin" = "xyes")
 
-with_gstreamer=no
-if test "x$enable_gstreamer" = "xyes"; then
-	PKG_CHECK_MODULES([GSTREAMER],   [gstreamer-base-0.10 >= 0.10 gstreamer-app-0.10 gstreamer-interfaces-0.10],
-			  [AC_DEFINE([ARAVIS_WITH_GSTREAMER], [1], [Cairo support])
-			  ARAVIS_EXTRA_REQUIRES="${ARAVIS_EXTRA_REQUIRES} [gstreamer-base-0.10 >= 0.10 gstreamer-app-0.10 gstreamer-interfaces-0.10]"
-			  with_gstreamer=yes],
-			  [echo -n])
-fi
-AM_CONDITIONAL(ARAVIS_WITH_GSTREAMER, test "x$with_gstreamer" = "xyes")
-
-AM_CONDITIONAL(ARAVIS_VIEWER, test "x$with_gtk$with_gstreamer" = "xyesyes")
+AC_SUBST(ARAVIS_GST_PLUGIN_CFLAGS)
+AC_SUBST(ARAVIS_GST_PLUGIN_LIBS)
 
 if test "x${prefix}" = "x$HOME"; then
   gstplugindir="$HOME/.gstreamer-0.10/plugins"
@@ -86,20 +80,8 @@ else
 fi
 AC_SUBST(gstplugindir)
 
-AC_SUBST(aravis_datadir, '$(datadir)/aravis-$(ARAVIS_API_VERSION)')
-
 GST_PLUGIN_LDFLAGS='-module -avoid-version -export-symbols-regex [_]*\(gst_\|Gst\|GST_\).*'
 AC_SUBST(GST_PLUGIN_LDFLAGS)
-
-PKG_CHECK_MODULES(ARAVIS, $ARAVIS_REQUIRES)
-
-AC_SUBST(ARAVIS_CFLAGS)
-AC_SUBST(ARAVIS_LIBS)
-
-PKG_CHECK_MODULES(ARAVIS_EXTRA, $ARAVIS_EXTRA_REQUIRES)
-
-AC_SUBST(ARAVIS_EXTRA_CFLAGS)
-AC_SUBST(ARAVIS_EXTRA_LIBS)
 
 AC_PATH_PROG(GLIB_MKENUMS, glib-mkenums)
 
@@ -110,9 +92,9 @@ AM_CONDITIONAL([BUILD_GTK_DOC], [test "x$enable_gtk_doc" = "xyes" || test ! -f "
 AC_CONFIG_FILES([
 Makefile
 src/Makefile
+viewer/Makefile
 gst/Makefile
 tests/Makefile
-viewer/Makefile
 po/Makefile.in
 docs/Makefile
 docs/reference/Makefile
@@ -125,10 +107,9 @@ AC_OUTPUT
 echo ""
 echo "Configuration:"
 echo ""
-echo "	Cairo support:		$with_cairo"
-echo "	Gtk+ support:           $with_gtk"
-echo "	Gstreamer support:	$with_gstreamer"
+echo "	Build viewer:		$build_viewer"
+echo "	Build gstreamer plugin:	$build_gst_plugin"
 echo "	Compiler:		${CC}"
 echo "	Compiler flags:		${ARAVIS_CFLAGS}"
-echo "	Compiler extra flags:	${ARAVIS_EXTRA_CFLAGS}"
+echo "	Linker flags:		${ARAVIS_LIBS}"
 echo ""

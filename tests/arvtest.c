@@ -1,7 +1,4 @@
 #include <arv.h>
-#ifdef ARAVIS_WITH_CAIRO
-#include <cairo.h>
-#endif
 #include <stdlib.h>
 
 static gboolean cancel = FALSE;
@@ -14,9 +11,6 @@ set_cancel (int signal)
 
 static char *arv_option_camera_name = NULL;
 static char *arv_option_debug_domains = NULL;
-#ifdef ARAVIS_WITH_CAIRO
-static gboolean arv_option_snaphot = FALSE;
-#endif
 static gboolean arv_option_auto_buffer = FALSE;
 static int arv_option_width = -1;
 static int arv_option_height = -1;
@@ -27,10 +21,6 @@ static const GOptionEntry arv_option_entries[] =
 {
 	{ "name",		'n', 0, G_OPTION_ARG_STRING,
 		&arv_option_camera_name,"Camera name", NULL},
-#ifdef ARAVIS_WITH_CAIRO
-	{ "snapshot",		's', 0, G_OPTION_ARG_NONE,
-		&arv_option_snaphot,	"Snapshot", NULL},
-#endif
 	{ "auto",		'a', 0, G_OPTION_ARG_NONE,
 		&arv_option_auto_buffer,	"AutoBufferSize", NULL},
 	{ "width", 		'w', 0, G_OPTION_ARG_INT,
@@ -61,9 +51,6 @@ main (int argc, char **argv)
 	GError *error = NULL;
 	char memory_buffer[100000];
 	int i;
-#ifdef ARAVIS_WITH_CAIRO
-	gboolean snapshot_done = FALSE;
-#endif
 
 	g_thread_init (NULL);
 	g_type_init ();
@@ -213,26 +200,8 @@ main (int argc, char **argv)
 
 			do  {
 				buffer = arv_stream_pop_buffer (stream);
-				if (buffer != NULL) {
-#ifdef ARAVIS_WITH_CAIRO
-					if (arv_option_snaphot &&
-					    !snapshot_done &&
-					    buffer->status == ARV_BUFFER_STATUS_SUCCESS) {
-						snapshot_done = TRUE;
-
-						cairo_surface_t *surface;
-
-						surface = cairo_image_surface_create_for_data (buffer->data,
-											       CAIRO_FORMAT_A8,
-											       buffer->width,
-											       buffer->height,
-											       buffer->width);
-						cairo_surface_write_to_png (surface, "test.png");
-						cairo_surface_destroy (surface);
-					}
-#endif
+				if (buffer != NULL)
 					arv_stream_push_buffer (stream, buffer);
-				}
 			} while (buffer != NULL);
 		} while (!cancel);
 
