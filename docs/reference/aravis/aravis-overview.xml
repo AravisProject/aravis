@@ -80,6 +80,24 @@
 		<literallayout>
 			<userinput>export ARV_DEBUG=stream</userinput>
 		</literallayout>
+		Available domains are:
+		<itemizedlist>
+			<listitem>all</listitem>
+			<listitem>interface</listitem>
+			<listitem>camera</listitem>
+			<listitem>device</listitem>
+			<listitem>stream</listitem>
+			<listitem>stream-thread</listitem>
+			<listitem>gvcp</listitem>
+			<listitem>gvsp</listitem>
+			<listitem>genicam</listitem>
+			<listitem>parser</listitem>
+			<listitem>evaluator</listitem>
+			<listitem>fake</listitem>
+			<listitem>gst</listitem>
+			<listitem>decompress</listitem>
+			<listitem>zip</listitem>
+		</itemizedlist>
 	</para>
 
 </chapter>
