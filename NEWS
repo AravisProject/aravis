@@ -3,9 +3,10 @@ Release 0.1.6
 
   Work on GV stream reception reliability, with improved packet resend mechanism.
 
-  * Camera: software trigger support.
-  * GV Stream: rewrite of the receiving thread.
-  * Introspection: annotation fixes.
+  * Camera: software trigger support
+  * GV Stream: rewrite of the receiving thread
+  * Introspection: annotation fixes
+  * Build: make stable release parallel installable
 
 Release 0.1.5
 =============
