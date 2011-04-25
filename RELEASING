@@ -60,7 +60,7 @@ make distcheck again.
   
   For example:
 
-  	$ install-module aravis-0.1.3.tar.gz
+  	$ ftpadmin install aravis-0.1.3.tar.gz
 
   This will move the tarball to the appropriate directory, do some additional
   administrative stuff, and send an email to the ftp-release mailing list so
