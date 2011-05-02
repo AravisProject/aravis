@@ -249,9 +249,9 @@ arv_gv_interface_receive_hello_packet (ArvGvInterface *gv_interface)
 
 						arv_gvcp_packet_debug (packet);
 
-						manufacturer = g_strndup (&data[ARV_GVBS_MANUFACTURER_NAME],
+						manufacturer = g_strndup (&data[ARV_GVBS_MANUFACTURER_NAME_OFFSET],
 									  ARV_GVBS_MANUFACTURER_NAME_SIZE);
-						serial_number = g_strndup (&data[ARV_GVBS_SERIAL_NUMBER],
+						serial_number = g_strndup (&data[ARV_GVBS_SERIAL_NUMBER_OFFSET],
 									   ARV_GVBS_SERIAL_NUMBER_SIZE);
 						key = g_strdup_printf ("%s-%s", manufacturer, serial_number);
 						g_free (manufacturer);
@@ -321,8 +321,9 @@ arv_gv_interface_open_device (ArvInterface *interface, const char *device_id)
 	if (device_infos == NULL)
 		return NULL;
 
-	device_address = g_inet_address_new_from_bytes (&device_infos->discovery_data[ARV_GVBS_CURRENT_IP_ADDRESS],
-							G_SOCKET_FAMILY_IPV4);
+	device_address = g_inet_address_new_from_bytes
+		(&device_infos->discovery_data[ARV_GVBS_CURRENT_IP_ADDRESS_OFFSET],
+		 G_SOCKET_FAMILY_IPV4);
 	device = arv_gv_device_new (device_infos->interface_address, device_address);
 	g_object_unref (device_address);
 

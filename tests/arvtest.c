@@ -181,13 +181,13 @@ main (int argc, char **argv)
 		for (i = 0; i < 30; i++)
 			arv_stream_push_buffer (stream, arv_buffer_new (value, NULL));
 
-		arv_device_read_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, &value);
+		arv_device_read_register (device, ARV_GVBS_STREAM_CHANNEL_0_PORT_OFFSET, &value);
 		g_print ("stream port = %d (%d)\n", value, arv_gv_stream_get_port (ARV_GV_STREAM (stream)));
 
 		arv_device_read_memory (device, 0x00014150, 8, memory_buffer);
 		arv_device_read_memory (device, 0x000000e8, 16, memory_buffer);
 		arv_device_read_memory (device,
-					ARV_GVBS_USER_DEFINED_NAME,
+					ARV_GVBS_USER_DEFINED_NAME_OFFSET,
 					ARV_GVBS_USER_DEFINED_NAME_SIZE, memory_buffer);
 
 		node = arv_gc_get_node (genicam, "AcquisitionStart");
@@ -205,7 +205,7 @@ main (int argc, char **argv)
 			} while (buffer != NULL);
 		} while (!cancel);
 
-		arv_device_read_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, &value);
+		arv_device_read_register (device, ARV_GVBS_STREAM_CHANNEL_0_PORT_OFFSET, &value);
 		g_print ("stream port = %d (%d)\n", value, arv_gv_stream_get_port (ARV_GV_STREAM (stream)));
 
 		arv_stream_get_statistics (stream, &n_processed_buffers, &n_failures, &n_underruns);

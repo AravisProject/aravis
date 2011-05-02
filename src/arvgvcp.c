@@ -456,16 +456,16 @@ arv_gvcp_packet_to_string (const ArvGvcpPacket *packet)
 			break;
 		case ARV_GVCP_COMMAND_DISCOVERY_ACK:
 			g_string_append_printf (string, "manufacturer = %s\n",
-						&data[ARV_GVBS_MANUFACTURER_NAME]);
+						&data[ARV_GVBS_MANUFACTURER_NAME_OFFSET]);
 			g_string_append_printf (string, "name         = %s\n",
-						&data[ARV_GVBS_USER_DEFINED_NAME]);
+						&data[ARV_GVBS_USER_DEFINED_NAME_OFFSET]);
 			g_string_append_printf (string, "model        = %s\n",
-						&data[ARV_GVBS_MODEL_NAME]);
+						&data[ARV_GVBS_MODEL_NAME_OFFSET]);
 			g_string_append_printf (string, "address      = %d.%d.%d.%d\n",
-						data[ARV_GVBS_CURRENT_IP_ADDRESS] & 0xff,
-						data[ARV_GVBS_CURRENT_IP_ADDRESS + 1] & 0xff,
-						data[ARV_GVBS_CURRENT_IP_ADDRESS + 2] & 0xff,
-						data[ARV_GVBS_CURRENT_IP_ADDRESS + 3] & 0xff);
+						data[ARV_GVBS_CURRENT_IP_ADDRESS_OFFSET] & 0xff,
+						data[ARV_GVBS_CURRENT_IP_ADDRESS_OFFSET + 1] & 0xff,
+						data[ARV_GVBS_CURRENT_IP_ADDRESS_OFFSET + 2] & 0xff,
+						data[ARV_GVBS_CURRENT_IP_ADDRESS_OFFSET + 3] & 0xff);
 			break;
 		case ARV_GVCP_COMMAND_WRITE_REGISTER_CMD:
 			value = g_ntohl (*((guint32 *) &data[0]));

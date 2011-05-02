@@ -277,7 +277,7 @@ arv_gv_device_heartbeat_thread (void *data)
 
 	do {
 		g_usleep (thread_data->period_us);
-		_read_register (io_data, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE, &value);
+		_read_register (io_data, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET, &value);
 		arv_debug ("device", "[GvDevice::Heartbeat] (%d)", value);
 	} while (!thread_data->cancel);
 
@@ -290,7 +290,7 @@ static gboolean
 arv_gv_device_take_control (ArvGvDevice *gv_device)
 {
 	gv_device->priv->is_controller = arv_device_write_register (ARV_DEVICE (gv_device),
-								    ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE, 2);
+								    ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET, 2);
 
 	return gv_device->priv->is_controller;
 }
@@ -301,7 +301,7 @@ arv_gv_device_leave_control (ArvGvDevice *gv_device)
 	gboolean result;
 
 	result = arv_device_write_register (ARV_DEVICE (gv_device),
-					    ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE, 0);
+					    ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET, 0);
 	gv_device->priv->is_controller = FALSE;
 
 	return result;
@@ -316,10 +316,10 @@ arv_gv_device_get_timestamp_tick_frequency (ArvGvDevice *gv_device)
 	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), 0);
 
 	if (arv_device_read_register (ARV_DEVICE (gv_device),
-				      ARV_GVBS_TIMESTAMP_TICK_FREQUENCY_HIGH,
+				      ARV_GVBS_TIMESTAMP_TICK_FREQUENCY_HIGH_OFFSET,
 				      &timestamp_tick_frequency_high) &&
 	    arv_device_read_register (ARV_DEVICE (gv_device),
-				      ARV_GVBS_TIMESTAMP_TICK_FREQUENCY_LOW,
+				      ARV_GVBS_TIMESTAMP_TICK_FREQUENCY_LOW_OFFSET,
 				      &timestamp_tick_frequency_low)) {
 		guint64 timestamp_tick_frequency;
 
@@ -339,7 +339,7 @@ arv_gv_device_get_packet_size (ArvGvDevice *gv_device)
 	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), 0);
 
 	arv_device_read_register (ARV_DEVICE (gv_device),
-				  ARV_GVBS_FIRST_STREAM_CHANNEL_PACKET_SIZE,
+				  ARV_GVBS_STREAM_CHANNEL_0_PACKET_SIZE_OFFSET,
 				  &packet_size);
 
 	return packet_size;
@@ -444,9 +444,9 @@ arv_gv_device_get_genicam_xml (ArvDevice *device, size_t *size)
 
 	*size = 0;
 
-	xml = _load_genicam (gv_device, ARV_GVBS_FIRST_XML_URL, size);
+	xml = _load_genicam (gv_device, ARV_GVBS_XML_URL_0_OFFSET, size);
 	if (xml == NULL)
-		xml = _load_genicam (gv_device, ARV_GVBS_SECOND_XML_URL, size);
+		xml = _load_genicam (gv_device, ARV_GVBS_XML_URL_1_OFFSET, size);
 
 	gv_device->priv->genicam_xml = xml;
 	gv_device->priv->genicam_xml_size = *size;
@@ -492,11 +492,11 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 
 	stream_port = arv_gv_stream_get_port (ARV_GV_STREAM (stream));
 
-	arv_device_write_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PACKET_SIZE, 0x000005dc);
-	arv_device_write_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_IP_ADDRESS,
+	arv_device_write_register (device, ARV_GVBS_STREAM_CHANNEL_0_PACKET_SIZE_OFFSET, 0x000005dc);
+	arv_device_write_register (device, ARV_GVBS_STREAM_CHANNEL_0_IP_ADDRESS_OFFSET,
 				   g_htonl(*((guint32 *) address_bytes)));
-	arv_device_write_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, stream_port);
-	arv_device_read_register (device, ARV_GVBS_FIRST_STREAM_CHANNEL_PORT, &stream_port);
+	arv_device_write_register (device, ARV_GVBS_STREAM_CHANNEL_0_PORT_OFFSET, stream_port);
+	arv_device_read_register (device, ARV_GVBS_STREAM_CHANNEL_0_PORT_OFFSET, &stream_port);
 
 	arv_debug ("device", "[GvDevice::create_stream] stream port = %d", stream_port);
 

@@ -403,7 +403,7 @@ handle_control_packet (ArvFakeGvCamera *gv_camera, GSocket *socket,
 			ack_packet = arv_gvcp_packet_new_read_register_ack (register_value, packet_count,
 									    &ack_packet_size);
 
-			if (register_address == ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE)
+			if (register_address == ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET)
 				clock_gettime (CLOCK_MONOTONIC, &gv_camera->controller_time);
 
 			break;
