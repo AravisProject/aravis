@@ -290,7 +290,8 @@ static gboolean
 arv_gv_device_take_control (ArvGvDevice *gv_device)
 {
 	gv_device->priv->is_controller = arv_device_write_register (ARV_DEVICE (gv_device),
-								    ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET, 2);
+								    ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET,
+								    ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_CONTROL);
 
 	return gv_device->priv->is_controller;
 }
