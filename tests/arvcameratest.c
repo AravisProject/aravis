@@ -211,68 +211,73 @@ main (int argc, char **argv)
 		g_printf ("gain                = %d dB\n", gain);
 
 		stream = arv_camera_create_stream (camera, NULL, NULL);
-		if (ARV_IS_GV_STREAM (stream)) {
-			if (arv_option_auto_socket_buffer)
+		if (stream != NULL) {
+			if (ARV_IS_GV_STREAM (stream)) {
+				if (arv_option_auto_socket_buffer)
+					g_object_set (stream,
+						      "socket-buffer", ARV_GV_STREAM_SOCKET_BUFFER_AUTO,
+						      "socket-buffer-size", 0,
+						      NULL);
+				if (arv_option_no_packet_resend)
+					g_object_set (stream,
+						      "packet-resend", ARV_GV_STREAM_PACKET_RESEND_NEVER,
+						      NULL);
 				g_object_set (stream,
-					      "socket-buffer", ARV_GV_STREAM_SOCKET_BUFFER_AUTO,
-					      "socket-buffer-size", 0,
+					      "packet-timeout", (unsigned) arv_option_packet_timeout * 1000,
+					      "frame-retention", (unsigned) arv_option_frame_retention * 1000,
 					      NULL);
-			if (arv_option_no_packet_resend)
-				g_object_set (stream,
-					      "packet-resend", ARV_GV_STREAM_PACKET_RESEND_NEVER,
-					      NULL);
-			g_object_set (stream,
-				      "packet-timeout", (unsigned) arv_option_packet_timeout * 1000,
-				      "frame-retention", (unsigned) arv_option_frame_retention * 1000,
-				      NULL);
-		}
+			}
 
-		for (i = 0; i < 50; i++)
-			arv_stream_push_buffer (stream, arv_buffer_new (payload, NULL));
+			for (i = 0; i < 50; i++)
+				arv_stream_push_buffer (stream, arv_buffer_new (payload, NULL));
 
-		arv_camera_set_acquisition_mode (camera, ARV_ACQUISITION_MODE_CONTINUOUS);
+			arv_camera_set_acquisition_mode (camera, ARV_ACQUISITION_MODE_CONTINUOUS);
 
-		if (arv_option_frequency > 0.0)
-			arv_camera_set_frame_rate (camera, arv_option_frequency);
+			if (arv_option_frequency > 0.0)
+				arv_camera_set_frame_rate (camera, arv_option_frequency);
 
-		if (arv_option_trigger != NULL)
-			arv_camera_set_trigger (camera, arv_option_trigger);
+			if (arv_option_trigger != NULL)
+				arv_camera_set_trigger (camera, arv_option_trigger);
 
-		if (arv_option_software_trigger > 0.0) {
-			arv_camera_set_trigger (camera, "Software");
-			software_trigger_source = g_timeout_add ((double) (0.5 + 1000.0 / arv_option_software_trigger),
-								 emit_software_trigger, camera);
-		}
+			if (arv_option_software_trigger > 0.0) {
+				arv_camera_set_trigger (camera, "Software");
+				software_trigger_source = g_timeout_add ((double) (0.5 + 1000.0 /
+										   arv_option_software_trigger),
+									 emit_software_trigger, camera);
+			}
 
-		arv_camera_start_acquisition (camera);
+			arv_camera_start_acquisition (camera);
 
-		g_signal_connect (stream, "new-buffer", G_CALLBACK (new_buffer_cb), &data);
-		arv_stream_set_emit_signals (stream, TRUE);
+			g_signal_connect (stream, "new-buffer", G_CALLBACK (new_buffer_cb), &data);
+			arv_stream_set_emit_signals (stream, TRUE);
 
-		g_timeout_add_seconds (1, periodic_task_cb, &data);
+			g_timeout_add_seconds (1, periodic_task_cb, &data);
 
-		data.main_loop = g_main_loop_new (NULL, FALSE);
+			data.main_loop = g_main_loop_new (NULL, FALSE);
 
-		old_sigint_handler = signal (SIGINT, set_cancel);
+			old_sigint_handler = signal (SIGINT, set_cancel);
 
-		g_main_loop_run (data.main_loop);
+			g_main_loop_run (data.main_loop);
 
-		if (software_trigger_source > 0)
-			g_source_remove (software_trigger_source);
+			if (software_trigger_source > 0)
+				g_source_remove (software_trigger_source);
 
-		signal (SIGINT, old_sigint_handler);
+			signal (SIGINT, old_sigint_handler);
 
-		g_main_loop_unref (data.main_loop);
+			g_main_loop_unref (data.main_loop);
 
-		arv_stream_get_statistics (stream, &n_completed_buffers, &n_failures, &n_underruns);
+			arv_stream_get_statistics (stream, &n_completed_buffers, &n_failures, &n_underruns);
 
-		g_printf ("Completed buffers = %Lu\n", (unsigned long long) n_completed_buffers);
-		g_printf ("Failures          = %Lu\n", (unsigned long long) n_failures);
-		g_printf ("Underruns         = %Lu\n", (unsigned long long) n_underruns);
+			g_printf ("Completed buffers = %Lu\n", (unsigned long long) n_completed_buffers);
+			g_printf ("Failures          = %Lu\n", (unsigned long long) n_failures);
+			g_printf ("Underruns         = %Lu\n", (unsigned long long) n_underruns);
 
-		arv_camera_stop_acquisition (camera);
+			arv_camera_stop_acquisition (camera);
 
-		g_object_unref (stream);
+			g_object_unref (stream);
+		} else
+			g_printf ("Can't create stream thread (check if the device is not already used)\n");
+
 		g_object_unref (camera);
 	} else
 		g_printf ("No camera found\n");

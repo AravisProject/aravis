@@ -367,6 +367,12 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	g_free (camera_id);
 
 	viewer->stream = arv_camera_create_stream (viewer->camera, NULL, NULL);
+	if (viewer->stream == NULL) {
+		g_object_unref (viewer->camera);
+		viewer->camera = NULL;
+		return;
+	}
+
 	if (ARV_IS_GV_STREAM (viewer->stream)) {
 		if (arv_viewer_option_auto_socket_buffer)
 			g_object_set (viewer->stream,

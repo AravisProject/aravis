@@ -37,22 +37,6 @@
 static GObjectClass *parent_class = NULL;
 static GRegex *arv_gv_device_url_regex = NULL;
 
-struct _ArvGvDevicePrivate {
-	gboolean is_controller;
-
-	void *io_data;
-
-	void *heartbeat_thread;
-	void *heartbeat_data;
-
-	ArvGc *genicam;
-
-	char *genicam_xml;
-	size_t genicam_xml_size;
-};
-
-/* Shared data (main thread - heartbeat) */
-
 typedef struct {
 	GMutex *mutex;
 
@@ -68,7 +52,23 @@ typedef struct {
 
 	unsigned int gvcp_n_retries;
 	unsigned int gvcp_timeout_ms;
+
+	gboolean is_controller;
 } ArvGvDeviceIOData;
+
+struct _ArvGvDevicePrivate {
+	ArvGvDeviceIOData *io_data;
+
+	void *heartbeat_thread;
+	void *heartbeat_data;
+
+	ArvGc *genicam;
+
+	char *genicam_xml;
+	size_t genicam_xml_size;
+};
+
+/* Shared data (main thread - heartbeat) */
 
 static gboolean
 _read_memory (ArvGvDeviceIOData *io_data, guint32 address, guint32 size, void *buffer)
@@ -276,9 +276,17 @@ arv_gv_device_heartbeat_thread (void *data)
 	guint32 value;
 
 	do {
-		g_usleep (thread_data->period_us);
-		_read_register (io_data, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET, &value);
-		arv_debug ("device", "[GvDevice::Heartbeat] (%d)", value);
+		if (io_data->is_controller) {
+			g_usleep (thread_data->period_us);
+			_read_register (io_data, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET, &value);
+			arv_debug ("device", "[GvDevice::Heartbeat] (%d)", value);
+
+			if ((value & (ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_CONTROL |
+				      ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_EXCLUSIVE)) == 0) {
+				arv_debug ("device", "[GvDevice::Heartbeat] Control access lost");
+				io_data->is_controller = FALSE;
+			}
+		}
 	} while (!thread_data->cancel);
 
 	return NULL;
@@ -289,11 +297,29 @@ arv_gv_device_heartbeat_thread (void *data)
 static gboolean
 arv_gv_device_take_control (ArvGvDevice *gv_device)
 {
-	gv_device->priv->is_controller = arv_device_write_register (ARV_DEVICE (gv_device),
-								    ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET,
-								    ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_CONTROL);
+	guint32 value;
 
-	return gv_device->priv->is_controller;
+	/* FIXME: prone to race condition error */
+
+	arv_device_read_register (ARV_DEVICE (gv_device), ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET, &value);
+	if (value & (ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_CONTROL | ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_EXCLUSIVE)) {
+		arv_debug ("device", "[GvDevice::take_control] Device already controlled by another user");
+		gv_device->priv->io_data->is_controller = FALSE;
+		return FALSE;
+	}
+
+	arv_device_write_register (ARV_DEVICE (gv_device),
+				   ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET,
+				   ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_CONTROL);
+	arv_device_read_register (ARV_DEVICE (gv_device), ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET, &value);
+	if (value & (ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_CONTROL | ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_EXCLUSIVE))
+		gv_device->priv->io_data->is_controller = TRUE;
+	else {
+		arv_debug ("device", "[GvDevice::take_control] Can't get control access");
+		gv_device->priv->io_data->is_controller = FALSE;
+	}
+
+	return gv_device->priv->io_data->is_controller;
 }
 
 static gboolean
@@ -303,7 +329,7 @@ arv_gv_device_leave_control (ArvGvDevice *gv_device)
 
 	result = arv_device_write_register (ARV_DEVICE (gv_device),
 					    ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET, 0);
-	gv_device->priv->is_controller = FALSE;
+	gv_device->priv->io_data->is_controller = FALSE;
 
 	return result;
 }
@@ -491,6 +517,11 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 	GInetAddress *interface_address;
 	GInetAddress *device_address;
 
+	if (!io_data->is_controller) {
+		arv_debug ("device", "[GvDevice::create_stream] Can't create stream without control access");
+		return NULL;
+	}
+
 	interface_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (io_data->interface_address));
 	device_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (io_data->device_address));
 	address_bytes = g_inet_address_to_bytes (interface_address);
@@ -594,7 +625,7 @@ arv_gv_device_new (GInetAddress *interface_address, GInetAddress *device_address
 
 	gv_device = g_object_new (ARV_TYPE_GV_DEVICE, NULL);
 
-	io_data = g_new (ArvGvDeviceIOData, 1);
+	io_data = g_new0 (ArvGvDeviceIOData, 1);
 
 	io_data->mutex = g_mutex_new ();
 	io_data->packet_count = 0;
@@ -612,7 +643,6 @@ arv_gv_device_new (GInetAddress *interface_address, GInetAddress *device_address
 	io_data->poll_in_event.fd = g_socket_get_fd (io_data->socket);
 	io_data->poll_in_event.events =  G_IO_IN;
 	io_data->poll_in_event.revents = 0;
-
 
 	gv_device->priv->io_data = io_data;
 
