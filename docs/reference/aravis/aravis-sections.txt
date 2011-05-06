@@ -767,6 +767,8 @@ arv_pixel_format_from_gst_caps
 <FILE>arvgvcp</FILE>
 <TITLE>ArvGvcp</TITLE>
 arv_gvcp_packet_free
+arv_gvcp_packet_get_packet_type
+arv_gvcp_packet_get_command
 arv_gvcp_packet_get_packet_count
 arv_gvcp_packet_get_read_memory_ack_data
 arv_gvcp_packet_get_read_memory_ack_size

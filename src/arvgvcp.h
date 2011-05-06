@@ -202,6 +202,24 @@ ArvGvcpPacket * 	arv_gvcp_packet_new_packet_resend_cmd 	(guint32 frame_id,
 char * 			arv_gvcp_packet_to_string 		(const ArvGvcpPacket *packet);
 void 			arv_gvcp_packet_debug 			(const ArvGvcpPacket *packet);
 
+static inline ArvGvcpPacketType
+arv_gvcp_packet_get_packet_type (ArvGvcpPacket *packet)
+{
+	if (packet == NULL)
+		return ARV_GVCP_PACKET_TYPE_ERROR;
+
+	return g_ntohs (packet->header.packet_type);
+}
+
+static inline ArvGvcpCommand
+arv_gvcp_packet_get_command (ArvGvcpPacket *packet)
+{
+	if (packet == NULL)
+		return 0;
+
+	return g_ntohs (packet->header.command);
+}
+
 static inline void
 arv_gvcp_packet_set_packet_count (ArvGvcpPacket *packet, guint16 count)
 {
