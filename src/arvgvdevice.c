@@ -37,6 +37,8 @@
 static GObjectClass *parent_class = NULL;
 static GRegex *arv_gv_device_url_regex = NULL;
 
+/* Shared data (main thread - heartbeat) */
+
 typedef struct {
 	GMutex *mutex;
 
@@ -67,8 +69,6 @@ struct _ArvGvDevicePrivate {
 	char *genicam_xml;
 	size_t genicam_xml_size;
 };
-
-/* Shared data (main thread - heartbeat) */
 
 static gboolean
 _read_memory (ArvGvDeviceIOData *io_data, guint32 address, guint32 size, void *buffer)
