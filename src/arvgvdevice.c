@@ -569,8 +569,15 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 	const guint8 *address_bytes;
 	guint32 stream_port;
 	guint packet_size;
+	guint32 n_stream_channels;
 	GInetAddress *interface_address;
 	GInetAddress *device_address;
+
+	arv_device_read_register (device, ARV_GVBS_N_STREAM_CHANNELS_OFFSET, &n_stream_channels);
+	arv_debug ("device", "[GvDevice::create_stream] Nimber of stream channels = %d", n_stream_channels);
+
+	if (n_stream_channels < 1)
+		return NULL;
 
 	if (!io_data->is_controller) {
 		arv_debug ("device", "[GvDevice::create_stream] Can't create stream without control access");
