@@ -358,41 +358,30 @@ arv_gv_device_heartbeat_thread (void *data)
 static gboolean
 arv_gv_device_take_control (ArvGvDevice *gv_device)
 {
-	guint32 value;
+	gboolean success;
 
-	/* FIXME: prone to race condition error */
+	success = arv_device_write_register (ARV_DEVICE (gv_device),
+					     ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET,
+					     ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_CONTROL);
 
-	arv_device_read_register (ARV_DEVICE (gv_device), ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET, &value);
-	if (value & (ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_CONTROL | ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_EXCLUSIVE)) {
-		arv_debug ("device", "[GvDevice::take_control] Device already controlled by another user");
-		gv_device->priv->io_data->is_controller = FALSE;
-		return FALSE;
-	}
+	gv_device->priv->io_data->is_controller = success;
 
-	arv_device_write_register (ARV_DEVICE (gv_device),
-				   ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET,
-				   ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_CONTROL);
-	arv_device_read_register (ARV_DEVICE (gv_device), ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET, &value);
-	if (value & (ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_CONTROL | ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_EXCLUSIVE))
-		gv_device->priv->io_data->is_controller = TRUE;
-	else {
+	if (!success)
 		arv_debug ("device", "[GvDevice::take_control] Can't get control access");
-		gv_device->priv->io_data->is_controller = FALSE;
-	}
 
-	return gv_device->priv->io_data->is_controller;
+	return success;
 }
 
 static gboolean
 arv_gv_device_leave_control (ArvGvDevice *gv_device)
 {
-	gboolean result;
+	gboolean success;
 
-	result = arv_device_write_register (ARV_DEVICE (gv_device),
+	success = arv_device_write_register (ARV_DEVICE (gv_device),
 					    ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET, 0);
 	gv_device->priv->io_data->is_controller = FALSE;
 
-	return result;
+	return success;
 }
 
 guint64
