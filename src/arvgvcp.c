@@ -535,14 +535,26 @@ arv_gvcp_packet_to_string (const ArvGvcpPacket *packet)
 }
 
 void
-arv_gvcp_packet_debug (const ArvGvcpPacket *packet)
+arv_gvcp_packet_debug (const ArvGvcpPacket *packet, ArvDebugLevel level)
 {
 	char *string;
 
-	if (!arv_debug_check ("gvcp"))
+	if (!arv_debug_check (&arv_debug_category_gvcp, level))
 		return;
 
 	string = arv_gvcp_packet_to_string (packet);
-	arv_debug ("gvcp", "%s", string);
+	switch (level) {
+		case ARV_DEBUG_LEVEL_LOG:
+			arv_log_gvcp ("%s", string);
+			break;
+		case ARV_DEBUG_LEVEL_DEBUG:
+			arv_debug_gvcp ("%", string);
+			break;
+		case ARV_DEBUG_LEVEL_WARNING:
+			arv_warning_gvcp ("%s", string);
+			break;
+		default:
+			break;
+	}
 	g_free (string);
 }

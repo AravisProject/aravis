@@ -107,7 +107,7 @@ arv_fake_gv_camera_thread (void *user_data)
 				stream_address = NULL;
 				g_object_unref (image_buffer);
 				image_buffer = NULL;
-				arv_debug ("camera", "[FakeGvCamera::stream_thread] Stop stream");
+				arv_debug_stream_thread ("[FakeGvCamera::stream_thread] Stop stream");
 			}
 			g_usleep (100000);
 		} else {
@@ -119,9 +119,10 @@ arv_fake_gv_camera_thread (void *user_data)
 				inet_address = g_inet_socket_address_get_address
 					(G_INET_SOCKET_ADDRESS (stream_address));
 				inet_address_string = g_inet_address_to_string (inet_address);
-				arv_debug ("camera", "[FakeGvCamera::stream_thread] Start stream to %s (%d)",
-					   inet_address_string,
-					   g_inet_socket_address_get_port (G_INET_SOCKET_ADDRESS (stream_address)));
+				arv_debug_stream_thread ("[FakeGvCamera::stream_thread] Start stream to %s (%d)",
+							 inet_address_string,
+							 g_inet_socket_address_get_port
+							 (G_INET_SOCKET_ADDRESS (stream_address)));
 				g_free (inet_address_string);
 
 				payload = arv_fake_camera_get_payload (gv_camera->camera);
@@ -145,8 +146,8 @@ arv_fake_gv_camera_thread (void *user_data)
 			g_socket_send_to (gv_camera->gvsp_socket, stream_address,
 					  packet_buffer, packet_size, NULL, &error);
 			if (error != NULL) {
-				arv_debug ("camera", "[ArvFakeGvCamera::stream_thread] Socket send error [%s]",
-					   error->message);
+				arv_warning_stream_thread ("[ArvFakeGvCamera::stream_thread] Socket send error [%s]",
+							   error->message);
 				g_error_free (error);
 				error = NULL;
 			}
@@ -221,7 +222,7 @@ arv_fake_gv_camera_new (const char *interface_name)
 			socket_address = g_socket_address_new_from_native (ifap->ifa_addr, sizeof (struct sockaddr));
 			inet_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address));
 			gvcp_address_string = g_inet_address_to_string (inet_address);
-			arv_debug ("camera", "[FakeGvCamera::new] Interface address = %s", gvcp_address_string);
+			arv_debug_device ("[FakeGvCamera::new] Interface address = %s", gvcp_address_string);
 
 			inet_socket_address = g_inet_socket_address_new (inet_address, ARV_GVCP_PORT);
 			gv_camera->gvcp_socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
@@ -247,7 +248,7 @@ arv_fake_gv_camera_new (const char *interface_name)
 									   sizeof (struct sockaddr));
 			inet_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address));
 			discovery_address_string = g_inet_address_to_string (inet_address);
-			arv_debug ("camera", "[FakeGvCamera::new] Discovery address = %s", discovery_address_string);
+			arv_debug_device ("[FakeGvCamera::new] Discovery address = %s", discovery_address_string);
 			inet_socket_address = g_inet_socket_address_new (inet_address, ARV_GVCP_PORT);
 			if (g_strcmp0 (gvcp_address_string, discovery_address_string) == 0)
 				gv_camera->discovery_socket = NULL;
@@ -353,7 +354,7 @@ handle_control_packet (ArvFakeGvCamera *gv_camera, GSocket *socket,
 			g_object_ref (gv_camera->controller_address);
 			gv_camera->controller_address = NULL;
 			write_access = TRUE;
-			arv_debug ("camera", "[FakeGvCamera::handle_control_packet] Heartbeat timeout");
+			arv_warning_device ("[FakeGvCamera::handle_control_packet] Heartbeat timeout");
 			arv_fake_camera_set_control_channel_privilege (gv_camera->camera, 0);
 		} else
 			write_access = _g_inet_socket_address_is_equal
@@ -363,21 +364,21 @@ handle_control_packet (ArvFakeGvCamera *gv_camera, GSocket *socket,
 		write_access = TRUE;
 
 
-	arv_gvcp_packet_debug (packet);
+	arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
 	packet_count = arv_gvcp_packet_get_packet_count (packet);
 
 	switch (g_ntohs (packet->header.command)) {
 		case ARV_GVCP_COMMAND_DISCOVERY_CMD:
 			ack_packet = arv_gvcp_packet_new_discovery_ack (&ack_packet_size);
-			arv_debug ("camera", "[FakeGvCamera::handle_control_packet] Discovery command");
+			arv_debug_device ("[FakeGvCamera::handle_control_packet] Discovery command");
 			arv_fake_camera_read_memory (gv_camera->camera, 0, ARV_GVBS_DISCOVERY_DATA_SIZE,
 						     &ack_packet->data);
 			break;
 		case ARV_GVCP_COMMAND_READ_MEMORY_CMD:
 			arv_gvcp_packet_get_read_memory_cmd_infos (packet, &block_address, &block_size);
-			arv_debug ("camera", "[FakeGvCamera::handle_control_packet] Read memory command %d (%d)",
-				   block_address, block_size);
+			arv_debug_device ("[FakeGvCamera::handle_control_packet] Read memory command %d (%d)",
+					  block_address, block_size);
 			ack_packet = arv_gvcp_packet_new_read_memory_ack (block_address, block_size,
 									  packet_count, &ack_packet_size);
 			arv_fake_camera_read_memory (gv_camera->camera, block_address, block_size,
@@ -388,8 +389,8 @@ handle_control_packet (ArvFakeGvCamera *gv_camera, GSocket *socket,
 				break;
 
 			arv_gvcp_packet_get_write_memory_cmd_infos (packet, &block_address, &block_size);
-			arv_debug ("camera", "[FakeGvCamera::handle_control_packet] Write memory command %d (%d)",
-				   block_address, block_size);
+			arv_debug_device ("[FakeGvCamera::handle_control_packet] Write memory command %d (%d)",
+					  block_address, block_size);
 			arv_fake_camera_write_memory (gv_camera->camera, block_address, block_size,
 						      arv_gvcp_packet_get_write_memory_cmd_data (packet));
 			ack_packet = arv_gvcp_packet_new_write_memory_ack (block_address, packet_count,
@@ -398,8 +399,8 @@ handle_control_packet (ArvFakeGvCamera *gv_camera, GSocket *socket,
 		case ARV_GVCP_COMMAND_READ_REGISTER_CMD:
 			arv_gvcp_packet_get_read_register_cmd_infos (packet, &register_address);
 			arv_fake_camera_read_register (gv_camera->camera, register_address, &register_value);
-			arv_debug ("camera", "[FakeGvCamera::handle_control_packet] Read register command %d -> %d",
-				   register_address, register_value);
+			arv_debug_device ("[FakeGvCamera::handle_control_packet] Read register command %d -> %d",
+					  register_address, register_value);
 			ack_packet = arv_gvcp_packet_new_read_register_ack (register_value, packet_count,
 									    &ack_packet_size);
 
@@ -413,18 +414,18 @@ handle_control_packet (ArvFakeGvCamera *gv_camera, GSocket *socket,
 
 			arv_gvcp_packet_get_write_register_cmd_infos (packet, &register_address, &register_value);
 			arv_fake_camera_write_register (gv_camera->camera, register_address, register_value);
-			arv_debug ("camera", "[FakeGvCamera::handle_control_packet] Write register command %d -> %d",
+			arv_debug_device ("[FakeGvCamera::handle_control_packet] Write register command %d -> %d",
 				   register_address, register_value);
 			ack_packet = arv_gvcp_packet_new_write_register_ack (register_value, packet_count,
 									     &ack_packet_size);
 			break;
 		default:
-			arv_debug ("camera", "[FakeGvCamera::handle_control_packet] Unknown command");
+			arv_warning_device ("[FakeGvCamera::handle_control_packet] Unknown command");
 	}
 
 	if (ack_packet != NULL) {
 		g_socket_send_to (socket, remote_address, (char *) ack_packet, ack_packet_size, NULL, NULL);
-		arv_gvcp_packet_debug (ack_packet);
+		arv_gvcp_packet_debug (ack_packet, ARV_DEBUG_LEVEL_LOG);
 		g_free (ack_packet);
 	}
 

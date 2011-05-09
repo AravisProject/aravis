@@ -126,8 +126,8 @@ arv_gv_interface_build_discover_infos_list (ArvGvInterface *gv_interface)
 			socket_address = g_socket_address_new_from_native (ifap->ifa_addr, sizeof (struct sockaddr));
 			inet_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address));
 			inet_address_string = g_inet_address_to_string (inet_address);
-			arv_debug ("interface", "[GvInterface::build_discover_infos_list] Add interface %s",
-				   inet_address_string);
+			arv_debug_interface ("[GvInterface::build_discover_infos_list] Add interface %s",
+					     inet_address_string);
 			g_free (inet_address_string);
 			infos->interface_address = g_inet_socket_address_new (inet_address, 0);
 			g_object_unref (socket_address);
@@ -137,8 +137,8 @@ arv_gv_interface_build_discover_infos_list (ArvGvInterface *gv_interface)
 			inet_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address));
 			infos->broadcast_address = g_inet_socket_address_new (inet_address, ARV_GVCP_PORT);
 			inet_address_string = g_inet_address_to_string (inet_address);
-			arv_debug ("interface", "[GvInterface::build_discover_infos_list] Broadcast address is %s",
-				   inet_address_string);
+			arv_debug_interface ("[GvInterface::build_discover_infos_list] Broadcast address is %s",
+					     inet_address_string);
 			g_free (inet_address_string);
 			g_object_unref (socket_address);
 
@@ -247,7 +247,7 @@ arv_gv_interface_receive_hello_packet (ArvGvInterface *gv_interface)
 						char *manufacturer;
 						char *key;
 
-						arv_gvcp_packet_debug (packet);
+						arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
 						manufacturer = g_strndup (&data[ARV_GVBS_MANUFACTURER_NAME_OFFSET],
 									  ARV_GVBS_MANUFACTURER_NAME_SIZE);
@@ -263,9 +263,9 @@ arv_gv_interface_receive_hello_packet (ArvGvInterface *gv_interface)
 												  data);
 						address_string = g_inet_address_to_string (interface_address);
 
-						arv_debug ("interface",
-							   "[GvInterface::discovery] Device '%s' found (interface %s)",
-							   key, address_string);
+						arv_debug_interface ("[GvInterface::discovery] Device '%s' found "
+								     "(interface %s)",
+								     key, address_string);
 
 						g_free (address_string);
 

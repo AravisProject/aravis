@@ -292,12 +292,10 @@ arv_stream_finalize (GObject *object)
 	ArvStream *stream = ARV_STREAM (object);
 	ArvBuffer *buffer;
 
-	arv_debug ("stream",
-		   "[Stream::finalize] Flush %d buffer[s] in input queue",
-		   g_async_queue_length (stream->priv->input_queue));
-	arv_debug ("stream",
-		   "[Stream::finalize] Flush %d buffer[s] in output queue",
-		   g_async_queue_length (stream->priv->output_queue));
+	arv_debug_stream ("[Stream::finalize] Flush %d buffer[s] in input queue",
+			  g_async_queue_length (stream->priv->input_queue));
+	arv_debug_stream ("[Stream::finalize] Flush %d buffer[s] in output queue",
+			  g_async_queue_length (stream->priv->output_queue));
 
 	do {
 		buffer = g_async_queue_try_pop (stream->priv->output_queue);

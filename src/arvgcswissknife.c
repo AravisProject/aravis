@@ -67,9 +67,8 @@ arv_gc_swiss_knife_add_element (ArvGcNode *node, const char *name, const char *c
 			gc_swiss_knife->variables = g_slist_prepend (gc_swiss_knife->variables,
 								     variable_infos);
 
-			arv_debug ("parser",
-				   "[GcSwissKnife::add_element] Add pVariable '%s' named '%s'",
-				   content, variable_name);
+			arv_log_genicam ("[GcSwissKnife::add_element] Add pVariable '%s' named '%s'",
+					 content, variable_name);
 		}
 	} else if (strcmp (name, "Formula") == 0) {
 		arv_evaluator_set_expression (gc_swiss_knife->formula, content);

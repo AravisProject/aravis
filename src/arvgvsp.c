@@ -209,14 +209,26 @@ arv_gvsp_packet_to_string (const ArvGvspPacket *packet, size_t packet_size)
 }
 
 void
-arv_gvsp_packet_debug (const ArvGvspPacket *packet, size_t packet_size)
+arv_gvsp_packet_debug (const ArvGvspPacket *packet, size_t packet_size, ArvDebugLevel level)
 {
 	char *string;
 
-	if (!arv_debug_check ("gvsp"))
+	if (!arv_debug_check (&arv_debug_category_gvsp, level))
 		return;
 
 	string = arv_gvsp_packet_to_string (packet, packet_size);
-	arv_debug ("gvsp", "%s", string);
+	switch (level) {
+		case ARV_DEBUG_LEVEL_LOG:
+			arv_log_gvsp ("%s", string);
+			break;
+		case ARV_DEBUG_LEVEL_DEBUG:
+			arv_debug_gvsp ("%", string);
+			break;
+		case ARV_DEBUG_LEVEL_WARNING:
+			arv_warning_gvsp ("%s", string);
+			break;
+		default:
+			break;
+	}
 	g_free (string);
 }

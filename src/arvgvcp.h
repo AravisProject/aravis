@@ -24,6 +24,7 @@
 #define ARV_GVCP_H
 
 #include <arvtypes.h>
+#include <arvdebug.h>
 
 G_BEGIN_DECLS
 
@@ -200,7 +201,7 @@ ArvGvcpPacket * 	arv_gvcp_packet_new_packet_resend_cmd 	(guint32 frame_id,
 								 guint32 first_block, guint32 last_block,
 								 guint32 packet_count, size_t *packet_size);
 char * 			arv_gvcp_packet_to_string 		(const ArvGvcpPacket *packet);
-void 			arv_gvcp_packet_debug 			(const ArvGvcpPacket *packet);
+void 			arv_gvcp_packet_debug 			(const ArvGvcpPacket *packet, ArvDebugLevel level);
 
 static inline ArvGvcpPacketType
 arv_gvcp_packet_get_packet_type (ArvGvcpPacket *packet)

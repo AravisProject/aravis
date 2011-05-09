@@ -169,7 +169,7 @@ _read_cache (ArvGcRegister *gc_register)
 	ArvGcNode *port;
 
 	if (gc_register->is_cache_valid == TRUE) {
-		arv_debug ("genicam", "[GcRegister::read_cache] Cache is valid");
+		arv_log_genicam ("[GcRegister::read_cache] Cache is valid");
 		return;
 	}
 
@@ -234,8 +234,8 @@ arv_gc_register_get (ArvGcRegister *gc_register, void *buffer, guint64 length)
 	} else
 		memcpy (buffer, gc_register->cache, length);
 
-	arv_debug ("genicam", "[GcRegister::get] 0x%Lx,%Ld",
-		   arv_gc_register_get_address (gc_register), length);
+	arv_log_genicam ("[GcRegister::get] 0x%Lx,%Ld",
+			 arv_gc_register_get_address (gc_register), length);
 }
 
 void
@@ -251,8 +251,7 @@ arv_gc_register_set (ArvGcRegister *gc_register, void *buffer, guint64 length)
 
 	_write_cache (gc_register);
 
-	arv_debug ("genicam", "[GcRegister::set] 0x%Lx,%Ld",
-		   arv_gc_register_get_address (gc_register), length);
+	arv_log_genicam ("[GcRegister::set] 0x%Lx,%Ld", arv_gc_register_get_address (gc_register), length);
 }
 
 guint64
@@ -469,9 +468,9 @@ arv_gc_register_get_integer_value (ArvGcInteger *gc_integer)
 #endif
 	}
 
-	arv_debug ("genicam", "[GcRegister::get_integer_value] address = 0x%Lx, value = 0x%Lx",
-		   arv_gc_register_get_address (gc_register),
-		   value);
+	arv_log_genicam ("[GcRegister::get_integer_value] address = 0x%Lx, value = 0x%Lx",
+			 arv_gc_register_get_address (gc_register),
+			 value);
 
 	return value;
 }
@@ -512,9 +511,9 @@ arv_gc_register_set_integer_value (ArvGcInteger *gc_integer, gint64 value)
 #endif
 	}
 
-	arv_debug ("genicam", "[GcRegister::set_integer_value] address = 0x%Lx, value = 0x%Lx",
-		   arv_gc_register_get_address (gc_register),
-		   value);
+	arv_log_genicam ("[GcRegister::set_integer_value] address = 0x%Lx, value = 0x%Lx",
+			 arv_gc_register_get_address (gc_register),
+			 value);
 
 	arv_copy_memory_with_endianess (gc_register->cache, gc_register->cache_size, gc_register->endianess,
 					&value, sizeof (value), G_BYTE_ORDER);
@@ -549,7 +548,7 @@ arv_gc_register_get_float_value (ArvGcFloat *gc_float)
 
 		return v_double;
 	} else {
-		arv_debug ("genicam", "[GcFloatReg::get_value] Invalid register size");
+		arv_warning_genicam ("[GcFloatReg::get_value] Invalid register size");
 		return 0.0;
 	}
 }
@@ -573,7 +572,7 @@ arv_gc_register_set_float_value (ArvGcFloat *gc_float, double v_double)
 		arv_copy_memory_with_endianess (gc_register->cache, gc_register->cache_size, gc_register->endianess,
 						&v_double, sizeof (v_double), G_BYTE_ORDER);
 	} else {
-		arv_debug ("genicam", "[GcFloatReg::set_value] Invalid register size");
+		arv_warning_genicam ("[GcFloatReg::set_value] Invalid register size");
 		return;
 	}
 

@@ -68,9 +68,8 @@ arv_gc_converter_add_element (ArvGcNode *node, const char *name, const char *con
 			gc_converter->variables = g_slist_prepend (gc_converter->variables,
 								     variable_infos);
 
-			arv_debug ("parser",
-				   "[GcConverter::add_element] Add pVariable '%s' named '%s'",
-				   content, variable_name);
+			arv_log_gvcp ("[GcConverter::add_element] Add pVariable '%s' named '%s'",
+				      content, variable_name);
 		}
 	} else if (strcmp (name, "FormulaTo") == 0) {
 		arv_evaluator_set_expression (gc_converter->formula_to, content);
@@ -231,9 +230,8 @@ _update_to_variables (ArvGcConverter *gc_converter)
 		arv_gc_float_set_value (ARV_GC_FLOAT (node),
 					arv_evaluator_evaluate_as_double (gc_converter->formula_to, NULL));
 	else
-		arv_debug ("genicam",
-			   "[GcConverter::set_value] Invalid pValue node '%s'",
-			   gc_converter->value);
+		arv_warning_genicam ("[GcConverter::set_value] Invalid pValue node '%s'",
+				     gc_converter->value);
 }
 
 static gint64

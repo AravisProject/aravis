@@ -95,7 +95,7 @@ _read_memory (ArvGvDeviceIOData *io_data, guint32 address, guint32 size, void *b
 	do {
 		arv_gvcp_packet_set_packet_count (packet, ++io_data->packet_count);
 
-		arv_gvcp_packet_debug (packet);
+		arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
 		g_socket_send_to (io_data->socket, io_data->device_address,
 				  (const char *) packet, packet_size,
@@ -110,7 +110,7 @@ _read_memory (ArvGvDeviceIOData *io_data, guint32 address, guint32 size, void *b
 				ArvGvcpCommand command;
 				guint16 packet_count;
 
-				arv_gvcp_packet_debug (ack_packet);
+				arv_gvcp_packet_debug (ack_packet, ARV_DEBUG_LEVEL_LOG);
 
 				packet_type = arv_gvcp_packet_get_packet_type (ack_packet);
 				command = arv_gvcp_packet_get_command (ack_packet);
@@ -159,7 +159,7 @@ _write_memory (ArvGvDeviceIOData *io_data, guint32 address, guint32 size, void *
 	do {
 		arv_gvcp_packet_set_packet_count (packet, ++io_data->packet_count);
 
-		arv_gvcp_packet_debug (packet);
+		arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
 		g_socket_send_to (io_data->socket, io_data->device_address,
 				  (const char *) packet, packet_size,
@@ -174,7 +174,7 @@ _write_memory (ArvGvDeviceIOData *io_data, guint32 address, guint32 size, void *
 				ArvGvcpCommand command;
 				guint16 packet_count;
 
-				arv_gvcp_packet_debug (ack_packet);
+				arv_gvcp_packet_debug (ack_packet, ARV_DEBUG_LEVEL_LOG);
 
 				packet_type = arv_gvcp_packet_get_packet_type (ack_packet);
 				command = arv_gvcp_packet_get_command (ack_packet);
@@ -217,7 +217,7 @@ _read_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 *value_plac
 	do {
 		arv_gvcp_packet_set_packet_count (packet, ++io_data->packet_count);
 
-		arv_gvcp_packet_debug (packet);
+		arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
 		g_socket_send_to (io_data->socket, io_data->device_address,
 				  (const char *) packet, packet_size,
@@ -232,7 +232,7 @@ _read_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 *value_plac
 				ArvGvcpCommand command;
 				guint16 packet_count;
 
-				arv_gvcp_packet_debug (ack_packet);
+				arv_gvcp_packet_debug (ack_packet, ARV_DEBUG_LEVEL_LOG);
 
 				packet_type = arv_gvcp_packet_get_packet_type (ack_packet);
 				command = arv_gvcp_packet_get_command (ack_packet);
@@ -279,7 +279,7 @@ _write_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 value)
 	do {
 		arv_gvcp_packet_set_packet_count (packet, ++io_data->packet_count);
 
-		arv_gvcp_packet_debug (packet);
+		arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
 		g_socket_send_to (io_data->socket, io_data->device_address, (const char *) packet, packet_size,
 				  NULL, NULL);
@@ -293,13 +293,13 @@ _write_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 value)
 				ArvGvcpCommand command;
 				guint16 packet_count;
 
-				arv_gvcp_packet_debug (ack_packet);
+				arv_gvcp_packet_debug (ack_packet, ARV_DEBUG_LEVEL_LOG);
 
 				packet_type = arv_gvcp_packet_get_packet_type (ack_packet);
 				command = arv_gvcp_packet_get_command (ack_packet);
 				packet_count = arv_gvcp_packet_get_packet_count (ack_packet);
 
-				arv_debug ("gvcp", "%d, %d, %d", packet_type, command, packet_count);
+				arv_log_gvcp ("%d, %d, %d", packet_type, command, packet_count);
 
 				if (packet_type == ARV_GVCP_PACKET_TYPE_ACK &&
 				    command == ARV_GVCP_COMMAND_WRITE_REGISTER_ACK &&
@@ -345,11 +345,11 @@ arv_gv_device_heartbeat_thread (void *data)
 
 			g_usleep (thread_data->period_us);
 			_read_register (io_data, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET, &value);
-			arv_debug ("device", "[GvDevice::Heartbeat] (%d)", value);
+			arv_log_device ("[GvDevice::Heartbeat] (%d)", value);
 
 			if ((value & (ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_CONTROL |
 				      ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_EXCLUSIVE)) == 0) {
-				arv_debug ("device", "[GvDevice::Heartbeat] Control access lost");
+				arv_warning_device ("[GvDevice::Heartbeat] Control access lost");
 				io_data->is_controller = FALSE;
 			}
 		}
@@ -372,7 +372,7 @@ arv_gv_device_take_control (ArvGvDevice *gv_device)
 	gv_device->priv->io_data->is_controller = success;
 
 	if (!success)
-		arv_debug ("device", "[GvDevice::take_control] Can't get control access");
+		arv_warning_device ("[GvDevice::take_control] Can't get control access");
 
 	return success;
 }
@@ -454,7 +454,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 
 	filename[ARV_GVBS_XML_URL_SIZE - 1] = '\0';
 
-	arv_debug ("device", "[GvDevice::load_genicam] xml url = '%s' at 0x%x", filename, address);
+	arv_debug_device ("[GvDevice::load_genicam] xml url = '%s' at 0x%x", filename, address);
 
 	tokens = g_regex_split (arv_gv_device_url_regex, filename, 0);
 
@@ -471,9 +471,8 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 			file_address = strtoul (tokens[3], NULL, 16);
 			file_size = strtoul (tokens[4], NULL, 16);
 
-			arv_debug ("device",
-				   "[GvDevice::load_genicam] Xml address = 0x%x - size = 0x%x - %s",
-				   file_address, file_size, tokens[2]);
+			arv_debug_device ("[GvDevice::load_genicam] Xml address = 0x%x - size = 0x%x - %s",
+					  file_address, file_size, tokens[2]);
 
 			if (file_size > 0) {
 				genicam = g_malloc (file_size);
@@ -485,8 +484,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 						ArvZip *zip;
 						const GSList *zip_files;
 
-						arv_debug ("device",
-							   "[GvDevice::load_genicam] Zipped xml data");
+						arv_debug_device ("[GvDevice::load_genicam] Zipped xml data");
 
 						zip = arv_zip_new (genicam, file_size);
 						zip_files = arv_zip_get_file_list (zip);
@@ -504,8 +502,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 							file_size = tmp_buffer_size;
 							genicam = tmp_buffer;
 						} else
-							arv_debug ("device",
-								   "[GvDevice::load_genicam] Invalid format");
+							arv_warning_device ("[GvDevice::load_genicam] Invalid format");
 						arv_zip_free (zip);
 					}
 					*size = file_size;
@@ -574,13 +571,13 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 	GInetAddress *device_address;
 
 	arv_device_read_register (device, ARV_GVBS_N_STREAM_CHANNELS_OFFSET, &n_stream_channels);
-	arv_debug ("device", "[GvDevice::create_stream] Nimber of stream channels = %d", n_stream_channels);
+	arv_debug_device ("[GvDevice::create_stream] Number of stream channels = %d", n_stream_channels);
 
 	if (n_stream_channels < 1)
 		return NULL;
 
 	if (!io_data->is_controller) {
-		arv_debug ("device", "[GvDevice::create_stream] Can't create stream without control access");
+		arv_warning_device ("[GvDevice::create_stream] Can't create stream without control access");
 		return NULL;
 	}
 
@@ -591,7 +588,7 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 	arv_gv_device_set_packet_size (gv_device, ARV_GV_DEVICE_GVSP_PACKET_SIZE_DEFAULT);
 	packet_size = arv_gv_device_get_packet_size (gv_device);
 
-	arv_debug ("device", "[GvDevice::create_stream] Packet size = %d byte(s)", packet_size);
+	arv_debug_device ("[GvDevice::create_stream] Packet size = %d byte(s)", packet_size);
 
 	stream = arv_gv_stream_new (device_address, 0, callback, user_data,
 				    arv_gv_device_get_timestamp_tick_frequency (gv_device), packet_size);
@@ -602,7 +599,7 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 				   g_htonl(*((guint32 *) address_bytes)));
 	arv_device_write_register (device, ARV_GVBS_STREAM_CHANNEL_0_PORT_OFFSET, stream_port);
 
-	arv_debug ("device", "[GvDevice::create_stream] stream port = %d", stream_port);
+	arv_debug_device ("[GvDevice::create_stream] stream port = %d", stream_port);
 
 	return stream;
 }
@@ -679,10 +676,10 @@ arv_gv_device_new (GInetAddress *interface_address, GInetAddress *device_address
 	g_return_val_if_fail (G_IS_INET_ADDRESS (device_address), NULL);
 
 	address_string = g_inet_address_to_string (interface_address);
-	arv_debug ("device", "[GvDevice::new] Interface address = %s", address_string);
+	arv_debug_device ("[GvDevice::new] Interface address = %s", address_string);
 	g_free (address_string);
 	address_string = g_inet_address_to_string (device_address);
-	arv_debug ("device", "[GvDevice::new] Device address = %s", address_string);
+	arv_debug_device ("[GvDevice::new] Device address = %s", address_string);
 	g_free (address_string);
 
 	gv_device = g_object_new (ARV_TYPE_GV_DEVICE, NULL);

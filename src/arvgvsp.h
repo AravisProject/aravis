@@ -24,6 +24,7 @@
 #define ARV_GVSP_H
 
 #include <arvtypes.h>
+#include <arvdebug.h>
 
 G_BEGIN_DECLS
 
@@ -76,7 +77,8 @@ ArvGvspPacket *		arv_gvsp_packet_new_data_block		(guint32 frame_id, guint32 pack
 								 size_t size, void *data,
 								 void *buffer, size_t *buffer_size);
 char * 			arv_gvsp_packet_to_string 		(const ArvGvspPacket *packet, size_t packet_size);
-void 			arv_gvsp_packet_debug 			(const ArvGvspPacket *packet, size_t packet_size);
+void 			arv_gvsp_packet_debug 			(const ArvGvspPacket *packet, size_t packet_size,
+								 ArvDebugLevel level);
 
 static inline ArvGvspPacketType
 arv_gvsp_packet_get_packet_type	(const ArvGvspPacket *packet)

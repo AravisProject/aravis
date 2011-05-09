@@ -71,32 +71,28 @@
 	</para>
 
 	<para>
-		The ARV_DEBUG environment variable can be set to a colon
-		separated list of debugging domains, which will make Aravis
+		The ARV_DEBUG environment variable can be set to a comma
+		separated list of debugging categories, which will make Aravis
 		print out different types of debugging informations to the
-		console. For example, the following command before running an
-		Aravis based application will make Aravis print out stream
-		related informations:
+		console. A debug level can also be specified, using a number from 0 (none) to
+		3 (log) separated from the category name by a colon. For example, the
+		following command before running an Aravis based application will make
+		Aravis print out all stream and device related informations:
 		<literallayout>
-			<userinput>export ARV_DEBUG=stream</userinput>
+			<userinput>export ARV_DEBUG=stream:3,device:3</userinput>
 		</literallayout>
-		Available domains are:
+		Available categories are:
 		<itemizedlist>
 			<listitem>all</listitem>
 			<listitem>interface</listitem>
-			<listitem>camera</listitem>
 			<listitem>device</listitem>
 			<listitem>stream</listitem>
 			<listitem>stream-thread</listitem>
 			<listitem>gvcp</listitem>
 			<listitem>gvsp</listitem>
 			<listitem>genicam</listitem>
-			<listitem>parser</listitem>
 			<listitem>evaluator</listitem>
-			<listitem>fake</listitem>
-			<listitem>gst</listitem>
-			<listitem>decompress</listitem>
-			<listitem>zip</listitem>
+			<listitem>misc</listitem>
 		</itemizedlist>
 	</para>
 

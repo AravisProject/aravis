@@ -378,10 +378,9 @@ arv_get_fake_camera_genicam_xml (size_t *size)
 		genicam_file = g_mapped_file_new (filename, FALSE, NULL);
 
 		if (genicam_file != NULL) {
-			arv_debug ("fake-genicam", "[get_fake_camera_genicam_data] %s [size = %d]",
-				   filename,
-				   g_mapped_file_get_length (genicam_file));
-			arv_debug ("fake-genicam", g_mapped_file_get_contents (genicam_file));
+			arv_debug_genicam ("[get_fake_camera_genicam_data] %s [size = %d]", filename,
+					   g_mapped_file_get_length (genicam_file));
+			arv_log_genicam (g_mapped_file_get_contents (genicam_file));
 		}
 
 		g_free (filename);
