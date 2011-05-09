@@ -83,7 +83,8 @@ arv_gc_enumeration_get_string_value (ArvGcEnumeration *enumeration)
 		}
 	}
 
-	arv_warning_genicam ("[GcEnumeration::get_string_value] value = %Ld not found", value);
+	arv_warning_genicam ("[GcEnumeration::get_string_value] value = %Ld not found for node %s",
+			     value, arv_gc_node_get_name (ARV_GC_NODE (enumeration)));
 
 	return NULL;
 }
