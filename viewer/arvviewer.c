@@ -349,6 +349,7 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	int width;
 	int height;
 	unsigned int i;
+	gulong window_xid;
 	double exposure;
 	double log_exposure;
 	double frame_rate;
@@ -468,7 +469,8 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	gst_element_set_state (viewer->pipeline, GST_STATE_PLAYING);
 
 	window = gtk_widget_get_window (viewer->drawing_area);
-	gst_x_overlay_set_window_handle (GST_X_OVERLAY (ximagesink), GDK_WINDOW_XID (window));
+	window_xid = GDK_WINDOW_XID (window);
+	gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (ximagesink), window_xid);
 
 	g_signal_connect (viewer->stream, "new-buffer", G_CALLBACK (arv_viewer_new_buffer_cb), viewer);
 }
