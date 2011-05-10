@@ -51,7 +51,7 @@ AC_SUBST(aravis_datadir, '$(datadir)/aravis-$(ARAVIS_API_VERSION)')
 
 build_viewer=no
 if test "x$enable_viewer" = "xyes"; then
-	PKG_CHECK_MODULES([ARAVIS_VIEWER],   [gtk+-2.0 >= 2.12 gstreamer-base-0.10 >= 0.10 gstreamer-app-0.10 gstreamer-interfaces-0.10],
+	PKG_CHECK_MODULES([ARAVIS_VIEWER],   [gtk+-2.0 >= 2.12 gstreamer-base-0.10 >= 0.10.31 gstreamer-app-0.10 gstreamer-interfaces-0.10],
 			  [AC_DEFINE([ARAVIS_BUILD_VIEWER], [1], [Build viewer])
 			  build_viewer=yes],
 			  [echo -n])
