@@ -103,7 +103,7 @@ typedef struct {
 	guint n_aborteds;
 	guint n_size_mismatch_errors;
 
-	guint n_late_packets;
+	guint n_ignored_packets;
 	guint n_resend_requests;
 	guint n_resent_packets;
 	guint n_missing_packets;
@@ -596,7 +596,8 @@ arv_gv_stream_thread (void *data)
 				}
 
 				_missing_packet_check (thread_data, frame, packet_id, time_us);
-			}
+			} else
+				thread_data->n_ignored_packets++;
 		} else
 			frame = NULL;
 
@@ -687,7 +688,7 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port,
 	thread_data->n_underruns = 0;
 	thread_data->n_size_mismatch_errors = 0;
 	thread_data->n_missing_packets = 0;
-	thread_data->n_late_packets = 0;
+	thread_data->n_ignored_packets = 0;
 	thread_data->n_resent_packets = 0;
 	thread_data->n_resend_requests = 0;
 	thread_data->n_duplicated_packets = 0;
@@ -850,8 +851,8 @@ arv_gv_stream_finalize (GObject *object)
 				  thread_data->n_size_mismatch_errors);
 		arv_debug_stream ("[GvStream::finalize] n_missing_packets      = %d",
 				  thread_data->n_missing_packets);
-		arv_debug_stream ("[GvStream::finalize] n_late_packets         = %d",
-				  thread_data->n_late_packets);
+		arv_debug_stream ("[GvStream::finalize] n_ignored_packets      = %d",
+				  thread_data->n_ignored_packets);
 		arv_debug_stream ("[GvStream::finalize] n_resend_requests      = %d",
 				  thread_data->n_resend_requests);
 		arv_debug_stream ("[GvStream::finalize] n_resent_packets       = %d",
