@@ -80,10 +80,10 @@
 	<Category Name="ImageFormatControl" NameSpace="Standard">
 		<pFeature>SensorHeight</pFeature>
 		<pFeature>SensorWidth</pFeature>
+		<pFeature>OffsetX</pFeature>
+		<pFeature>OffsetY</pFeature>
 		<pFeature>Width</pFeature>
 		<pFeature>Height</pFeature>
-		<pFeature>WidthMax</pFeature>
-		<pFeature>HeightMax</pFeature>
 		<pFeature>BinningHorizontal</pFeature>
 		<pFeature>BinningVertical</pFeature>
 		<pFeature>PixelFormat</pFeature>
@@ -237,6 +237,7 @@
 	<!-- Acquisition control -->
 
 	<Category Name="AcquisitionControl" NameSpace="Custom">
+		<pFeature>AcquisitionMode</pFeature>
 		<pFeature>AcquisitionStart</pFeature>
 		<pFeature>AcquisitionStop</pFeature>
 		<pFeature>ExposureTimeAbs</pFeature>
@@ -453,8 +454,7 @@
 		<Formula>WIDTH * HEIGHT</Formula>
 	</IntSwissKnife>
 
-	<Port Name="Device" NameSpace="Standard">
-	</Port>
+	<!-- Debug -->
 
 	<Category Name="Debug" NameSpace="Standard">
 		<pFeature>TestRegister</pFeature>
@@ -468,6 +468,11 @@
 		<Sign>Unsigned</Sign>
 		<Endianess>LittleEndian</Endianess>
 	</IntReg>
+
+	<!-- Port -->
+
+	<Port Name="Device" NameSpace="Standard">
+	</Port>
 
 </RegisterDescription>
 
