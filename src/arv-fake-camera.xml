@@ -22,6 +22,7 @@
 		<pFeature>ImageFormatControl</pFeature>
 		<pFeature>AcquisitionControl</pFeature>
 		<pFeature>TransportLayerControl</pFeature>
+		<pFeature>Debug</pFeature>
 	</Category>
 
 	<!-- Device control -->
@@ -332,6 +333,7 @@
 		<Length>4</Length>
 		<AccessMode>RW</AccessMode>
 		<pPort>Device</pPort>
+		<Sign>Unsigned</Sign>
 		<Endianess>LittleEndian</Endianess>
 	</IntReg>
 
@@ -349,6 +351,7 @@
 		<Length>4</Length>
 		<AccessMode>RW</AccessMode>
 		<pPort>Device</pPort>
+		<Sign>Unsigned</Sign>
 		<Endianess>LittleEndian</Endianess>
 	</IntReg>
 
@@ -366,6 +369,7 @@
 		<Length>4</Length>
 		<AccessMode>RW</AccessMode>
 		<pPort>Device</pPort>
+		<Sign>Unsigned</Sign>
 		<Endianess>LittleEndian</Endianess>
 	</IntReg>
 
@@ -452,4 +456,18 @@
 	<Port Name="Device" NameSpace="Standard">
 	</Port>
 
+	<Category Name="Debug" NameSpace="Standard">
+		<pFeature>TestRegister</pFeature>
+	</Category>
+
+	<IntReg Name="TestRegister" NameSpace="Custom">
+		<Address>0x1f0</Address>
+		<Length>4</Length>
+		<AccessMode>RW</AccessMode>
+		<pPort>Device</pPort>
+		<Sign>Unsigned</Sign>
+		<Endianess>LittleEndian</Endianess>
+	</IntReg>
+
 </RegisterDescription>
+
