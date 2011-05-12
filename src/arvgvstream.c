@@ -483,6 +483,18 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 			frame->buffer->status = ARV_BUFFER_STATUS_TIMEOUT;
 			arv_debug_stream_thread ("[GvStream::_check_frame_completion] Timeout for frame %u",
 						 frame->frame_id);
+#if 0
+			if (arv_debug_check (&arv_debug_category_stream_thread, ARV_DEBUG_LEVEL_LOG)) {
+				int i;
+				arv_log_stream_thread ("frame_id          = %Lu", frame->frame_id);
+				arv_log_stream_thread ("last_valid_packet = %d", frame->last_valid_packet);
+				for (i = 0; i < frame->n_packets; i++) {
+					arv_log_stream_thread ("%d - time = %Lu%s", i,
+							       frame->packet_data[i].time_us,
+							       frame->packet_data[i].received ? " - OK" : "");
+				}
+			}
+#endif
 			_close_frame (thread_data, frame);
 			thread_data->frames = iter->next;
 			g_slist_free_1 (iter);
