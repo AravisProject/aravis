@@ -593,6 +593,9 @@ arv_gv_stream_thread (void *data)
 					case ARV_GVSP_PACKET_TYPE_DATA_TRAILER:
 						_process_data_trailer (thread_data, frame, packet, packet_id);
 						break;
+					default:
+						thread_data->n_ignored_packets++;
+						break;
 				}
 
 				_missing_packet_check (thread_data, frame, packet_id, time_us);
