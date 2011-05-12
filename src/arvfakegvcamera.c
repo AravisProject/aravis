@@ -96,6 +96,7 @@ arv_fake_gv_camera_thread (void *user_data)
 	guint32 frame_id = 0;
 	guint16 block_id;
 	ptrdiff_t offset;
+	guint32 gv_packet_size;
 
 	packet_buffer = g_malloc (ARV_FAKE_GV_CAMERA_BUFFER_SIZE);
 
@@ -130,7 +131,7 @@ arv_fake_gv_camera_thread (void *user_data)
 			}
 
 			arv_fake_camera_wait_for_next_frame (gv_camera->camera);
-			arv_fake_camera_fill_buffer (gv_camera->camera, image_buffer);
+			arv_fake_camera_fill_buffer (gv_camera->camera, image_buffer, &gv_packet_size);
 
 			block_id = 0;
 
@@ -158,7 +159,8 @@ arv_fake_gv_camera_thread (void *user_data)
 			while (offset < payload) {
 				size_t data_size;
 
-				data_size = MIN (1500, payload - offset);
+				data_size = MIN (gv_packet_size - ARV_GVSP_PACKET_PROTOCOL_OVERHEAD,
+						 payload - offset);
 
 				packet_size = ARV_FAKE_GV_CAMERA_BUFFER_SIZE;
 				arv_gvsp_packet_new_data_block (image_buffer->frame_id, block_id,

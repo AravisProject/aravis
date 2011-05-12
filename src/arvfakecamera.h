@@ -113,7 +113,8 @@ gboolean	arv_fake_camera_write_register 	(ArvFakeCamera *camera, guint32 address
 
 size_t 		arv_fake_camera_get_payload 		(ArvFakeCamera *camera);
 void 		arv_fake_camera_wait_for_next_frame 	(ArvFakeCamera *camera);
-void		arv_fake_camera_fill_buffer		(ArvFakeCamera *camera, ArvBuffer *buffer);
+void		arv_fake_camera_fill_buffer		(ArvFakeCamera *camera, ArvBuffer *buffer,
+							 guint32 *packet_size);
 
 guint32 	arv_fake_camera_get_acquisition_status 	(ArvFakeCamera *camera);
 GSocketAddress *arv_fake_camera_get_stream_address 	(ArvFakeCamera *camera);

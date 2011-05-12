@@ -226,7 +226,7 @@ arv_fake_camera_set_fill_pattern (ArvFakeCamera *camera,
 }
 
 void
-arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer)
+arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer, guint32 *packet_size)
 {
 	struct timespec time;
 	guint32 width;
@@ -267,6 +267,9 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer)
 	camera->priv->fill_pattern_callback (buffer, camera->priv->fill_pattern_data,
 					     exposure_time_us, gain, pixel_format);
 	g_mutex_unlock (camera->priv->fill_pattern_mutex);
+
+	if (packet_size != NULL)
+		*packet_size = _get_register (camera, ARV_GVBS_STREAM_CHANNEL_0_PACKET_SIZE_OFFSET);
 }
 
 void

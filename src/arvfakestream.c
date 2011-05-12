@@ -71,7 +71,7 @@ arv_fake_stream_thread (void *data)
 		arv_fake_camera_wait_for_next_frame (thread_data->camera);
 		buffer = arv_stream_pop_input_buffer (thread_data->stream);
 		if (buffer != NULL) {
-			arv_fake_camera_fill_buffer (thread_data->camera, buffer);
+			arv_fake_camera_fill_buffer (thread_data->camera, buffer, NULL);
 			if (buffer->status == ARV_BUFFER_STATUS_SUCCESS)
 				thread_data->n_completed_buffers++;
 			else
