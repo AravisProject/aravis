@@ -303,12 +303,13 @@ arv_fake_camera_get_stream_address (ArvFakeCamera *camera)
 {
 	GSocketAddress *stream_socket_address;
 	GInetAddress *inet_address;
+	guint32 value;
 
 	g_return_val_if_fail (ARV_IS_FAKE_CAMERA (camera), NULL);
 
-	inet_address = g_inet_address_new_from_bytes (camera->priv->memory +
-						      ARV_GVBS_STREAM_CHANNEL_0_IP_ADDRESS_OFFSET,
-						      G_SOCKET_FAMILY_IPV4);
+	value = GUINT32_FROM_BE (_get_register (camera, ARV_GVBS_STREAM_CHANNEL_0_IP_ADDRESS_OFFSET));
+
+	inet_address = g_inet_address_new_from_bytes ((guint8 *) &value, G_SOCKET_FAMILY_IPV4);
 	stream_socket_address = g_inet_socket_address_new
 		(inet_address,
 		 _get_register (camera, ARV_GVBS_STREAM_CHANNEL_0_PORT_OFFSET));
