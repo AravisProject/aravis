@@ -463,6 +463,8 @@ arv_fake_camera_new (const char *serial_number)
 	arv_fake_camera_write_register (fake_camera, ARV_GVBS_TIMESTAMP_TICK_FREQUENCY_LOW_OFFSET, 1000000000);
 	arv_fake_camera_write_register (fake_camera, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET, 0);
 
+	arv_fake_camera_write_register (fake_camera, ARV_GVBS_N_STREAM_CHANNELS_OFFSET, 1);
+
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_TEST,
 					ARV_FAKE_CAMERA_TEST_REGISTER_DEFAULT);
 
