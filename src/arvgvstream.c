@@ -318,7 +318,7 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 				       NULL);
 
 	{
-		gint32 frame_id_inc;
+		gint16 frame_id_inc;
 
 		frame_id_inc = (gint )frame_id - (gint) thread_data->last_frame_id;
 		if (frame_id_inc > 0) {
