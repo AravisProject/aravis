@@ -595,6 +595,10 @@ arv_gv_stream_thread (void *data)
 						break;
 				frame->last_valid_packet = i - 1;
 
+				if (arv_gvsp_packet_get_packet_type (packet) != ARV_GVSP_PACKET_TYPE_OK) {
+					arv_gvsp_packet_debug (packet, read_count, ARV_DEBUG_LEVEL_DEBUG);
+				}
+
 				switch (arv_gvsp_packet_get_content_type (packet)) {
 					case ARV_GVSP_CONTENT_TYPE_DATA_LEADER:
 						_process_data_leader (thread_data, frame, packet, packet_id);

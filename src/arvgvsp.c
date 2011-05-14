@@ -143,6 +143,12 @@ arv_enum_to_string (GType type,
 }
 
 static const char *
+arv_gvsp_packet_type_to_string (ArvGvspPacketType value)
+{
+	return arv_enum_to_string (ARV_TYPE_GVSP_PACKET_TYPE, value);
+}
+
+static const char *
 arv_gvsp_content_type_to_string (ArvGvspContentType value)
 {
 	return arv_enum_to_string (ARV_TYPE_GVSP_CONTENT_TYPE, value);
@@ -152,6 +158,7 @@ char *
 arv_gvsp_packet_to_string (const ArvGvspPacket *packet, size_t packet_size)
 {
 	ArvGvspDataLeader *leader;
+	ArvGvspPacketType packet_type;
 	ArvGvspContentType content_type;
 	GString *string;
 	char *c_string;
@@ -159,10 +166,11 @@ arv_gvsp_packet_to_string (const ArvGvspPacket *packet, size_t packet_size)
 
 	string = g_string_new ("");
 
-	content_type = (g_ntohl (packet->header.packet_infos) & ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_MASK) >>
-		ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_POS;
+	packet_type = arv_gvsp_packet_get_packet_type (packet);
+	content_type = arv_gvsp_packet_get_content_type (packet);
 
-	g_string_append_printf (string, "content_type  = %s\n", arv_gvsp_content_type_to_string (content_type));
+	g_string_append_printf (string, "packet_type  = %s\n", arv_gvsp_packet_type_to_string (content_type));
+	g_string_append_printf (string, "content_type = %s\n", arv_gvsp_content_type_to_string (content_type));
 
 	switch (content_type) {
 		case ARV_GVSP_CONTENT_TYPE_DATA_LEADER:

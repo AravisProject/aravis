@@ -35,6 +35,11 @@ G_BEGIN_DECLS
 #define ARV_GVSP_PACKET_PROTOCOL_OVERHEAD	(20 + 8 + 8)		/* IP + UDP + GVSP headers */
 
 typedef enum {
+	ARV_GVSP_PACKET_TYPE_OK =		0x0000,
+	ARV_GVSP_PACKET_TYPE_ERROR =		0x80c0
+} ArvGvspPacketType;
+
+typedef enum {
 	ARV_GVSP_CONTENT_TYPE_DATA_LEADER = 	0x01,
 	ARV_GVSP_CONTENT_TYPE_DATA_TRAILER = 	0x02,
 	ARV_GVSP_CONTENT_TYPE_DATA_BLOCK =	0x03
@@ -80,13 +85,17 @@ ArvGvspPacket *		arv_gvsp_packet_new_data_block		(guint16 frame_id, guint32 pack
 char * 			arv_gvsp_packet_to_string 		(const ArvGvspPacket *packet, size_t packet_size);
 void 			arv_gvsp_packet_debug 			(const ArvGvspPacket *packet, size_t packet_size,
 								 ArvDebugLevel level);
+static inline ArvGvspPacketType
+arv_gvsp_packet_get_packet_type (const ArvGvspPacket *packet)
+{
+	return g_ntohs (packet->header.packet_type);
+}
 
 static inline ArvGvspContentType
-arv_gvsp_packet_get_content_type	(const ArvGvspPacket *packet)
+arv_gvsp_packet_get_content_type (const ArvGvspPacket *packet)
 {
-	return (ArvGvspContentType) ((g_ntohl (packet->header.packet_infos) &
-					    ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_MASK) >>
-					   ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_POS);
+	return (g_ntohl (packet->header.packet_infos) & ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_MASK) >>
+		ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_POS;
 }
 
 static inline guint16
