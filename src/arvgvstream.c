@@ -229,7 +229,7 @@ _process_data_block (ArvGvStreamThreadData *thread_data,
 	if (block_end > frame->buffer->size) {
 		arv_debug_stream_thread ("[GvStream::_process_data_block] %d unexpected bytes in packet %u "
 					 " for frame %u",
-					 block_end, frame->buffer->size,
+					 block_end - frame->buffer->size,
 					 packet_id, frame->frame_id);
 		thread_data->n_size_mismatch_errors++;
 
