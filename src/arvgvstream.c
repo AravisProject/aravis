@@ -216,7 +216,7 @@ _process_data_block (ArvGvStreamThreadData *thread_data,
 	if (frame->buffer->status != ARV_BUFFER_STATUS_FILLING)
 		return;
 
-	if (packet_id > frame->n_packets - 2) {
+	if (packet_id > frame->n_packets - 2 || packet_id < 1) {
 		arv_gvsp_packet_debug (packet, read_count, ARV_DEBUG_LEVEL_DEBUG);
 		frame->buffer->status = ARV_BUFFER_STATUS_WRONG_PACKET_ID;
 		return;
