@@ -31,7 +31,7 @@
 #include <string.h>
 
 static ArvGvspPacket *
-arv_gvsp_packet_new (ArvGvspPacketType packet_type,
+arv_gvsp_packet_new (ArvGvspContentType content_type,
 		     guint16 frame_id, guint32 packet_id, size_t data_size, void *buffer, size_t *buffer_size)
 {
 	ArvGvspPacket *packet;
@@ -52,8 +52,8 @@ arv_gvsp_packet_new (ArvGvspPacketType packet_type,
 	packet->header.packet_type = 0;
 	packet->header.frame_id = g_htons (frame_id);
 	packet->header.packet_infos = g_htonl ((packet_id & ARV_GVSP_PACKET_INFOS_ID_MASK) |
-					       ((packet_type << ARV_GVSP_PACKET_INFOS_TYPE_POS) &
-						ARV_GVSP_PACKET_INFOS_TYPE_MASK));
+					       ((content_type << ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_POS) &
+						ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_MASK));
 
 	return packet;
 }
@@ -67,7 +67,7 @@ arv_gvsp_packet_new_data_leader	(guint16 frame_id, guint32 packet_id,
 {
 	ArvGvspPacket *packet;
 
-	packet = arv_gvsp_packet_new (ARV_GVSP_PACKET_TYPE_DATA_LEADER,
+	packet = arv_gvsp_packet_new (ARV_GVSP_CONTENT_TYPE_DATA_LEADER,
 				      frame_id, packet_id, sizeof (ArvGvspDataLeader), buffer, buffer_size);
 
 	if (packet != NULL) {
@@ -93,7 +93,7 @@ arv_gvsp_packet_new_data_trailer (guint16 frame_id, guint32 packet_id,
 {
 	ArvGvspPacket *packet;
 
-	packet = arv_gvsp_packet_new (ARV_GVSP_PACKET_TYPE_DATA_TRAILER,
+	packet = arv_gvsp_packet_new (ARV_GVSP_CONTENT_TYPE_DATA_TRAILER,
 				      frame_id, packet_id, sizeof (ArvGvspDataTrailer), buffer, buffer_size);
 
 	if (packet != NULL) {
@@ -114,7 +114,7 @@ arv_gvsp_packet_new_data_block (guint16 frame_id, guint32 packet_id,
 {
 	ArvGvspPacket *packet;
 
-	packet = arv_gvsp_packet_new (ARV_GVSP_PACKET_TYPE_DATA_BLOCK,
+	packet = arv_gvsp_packet_new (ARV_GVSP_CONTENT_TYPE_DATA_BLOCK,
 				      frame_id, packet_id, size, buffer, buffer_size);
 
 	if (packet != NULL)
@@ -143,36 +143,36 @@ arv_enum_to_string (GType type,
 }
 
 static const char *
-arv_gvsp_packet_type_to_string (ArvGvspPacketType value)
+arv_gvsp_content_type_to_string (ArvGvspContentType value)
 {
-	return arv_enum_to_string (ARV_TYPE_GVSP_PACKET_TYPE, value);
+	return arv_enum_to_string (ARV_TYPE_GVSP_CONTENT_TYPE, value);
 }
 
 char *
 arv_gvsp_packet_to_string (const ArvGvspPacket *packet, size_t packet_size)
 {
 	ArvGvspDataLeader *leader;
-	ArvGvspPacketType packet_type;
+	ArvGvspContentType content_type;
 	GString *string;
 	char *c_string;
 	int i, j, index;
 
 	string = g_string_new ("");
 
-	packet_type = (g_ntohl (packet->header.packet_infos) & ARV_GVSP_PACKET_INFOS_TYPE_MASK) >>
-		ARV_GVSP_PACKET_INFOS_TYPE_POS;
+	content_type = (g_ntohl (packet->header.packet_infos) & ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_MASK) >>
+		ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_POS;
 
-	g_string_append_printf (string, "packet_type  = %s\n", arv_gvsp_packet_type_to_string (packet_type));
+	g_string_append_printf (string, "content_type  = %s\n", arv_gvsp_content_type_to_string (content_type));
 
-	switch (packet_type) {
-		case ARV_GVSP_PACKET_TYPE_DATA_LEADER:
+	switch (content_type) {
+		case ARV_GVSP_CONTENT_TYPE_DATA_LEADER:
 			leader = (ArvGvspDataLeader *) &packet->data;
 			g_string_append_printf (string, "width        = %d\n", g_ntohl (leader->width));
 			g_string_append_printf (string, "height       = %d\n", g_ntohl (leader->height));
 			break;
-		case ARV_GVSP_PACKET_TYPE_DATA_TRAILER:
+		case ARV_GVSP_CONTENT_TYPE_DATA_TRAILER:
 			break;
-		case ARV_GVSP_PACKET_TYPE_DATA_BLOCK:
+		case ARV_GVSP_CONTENT_TYPE_DATA_BLOCK:
 			break;
 	}
 

@@ -595,14 +595,14 @@ arv_gv_stream_thread (void *data)
 						break;
 				frame->last_valid_packet = i - 1;
 
-				switch (arv_gvsp_packet_get_packet_type (packet)) {
-					case ARV_GVSP_PACKET_TYPE_DATA_LEADER:
+				switch (arv_gvsp_packet_get_content_type (packet)) {
+					case ARV_GVSP_CONTENT_TYPE_DATA_LEADER:
 						_process_data_leader (thread_data, frame, packet, packet_id);
 						break;
-					case ARV_GVSP_PACKET_TYPE_DATA_BLOCK:
+					case ARV_GVSP_CONTENT_TYPE_DATA_BLOCK:
 						_process_data_block (thread_data, frame, packet, packet_id, read_count);
 						break;
-					case ARV_GVSP_PACKET_TYPE_DATA_TRAILER:
+					case ARV_GVSP_CONTENT_TYPE_DATA_TRAILER:
 						_process_data_trailer (thread_data, frame, packet, packet_id);
 						break;
 					default:

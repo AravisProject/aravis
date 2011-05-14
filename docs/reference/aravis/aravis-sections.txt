@@ -949,7 +949,7 @@ arv_gvsp_packet_get_data_size
 arv_gvsp_packet_get_frame_id
 arv_gvsp_packet_get_height
 arv_gvsp_packet_get_packet_id
-arv_gvsp_packet_get_packet_type
+arv_gvsp_packet_get_content_type
 arv_gvsp_packet_get_pixel_format
 arv_gvsp_packet_get_timestamp
 arv_gvsp_packet_get_width
@@ -962,9 +962,10 @@ arv_gvsp_packet_new_data_trailer
 <SUBSECTION Private>
 ArvGvspPacket
 ArvGvspPacketType
+ArvGvspContentType
 ARV_GVSP_PACKET_INFOS_ID_MASK
-ARV_GVSP_PACKET_INFOS_TYPE_MASK
-ARV_GVSP_PACKET_INFOS_TYPE_POS
+ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_MASK
+ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_POS
 ARV_GVSP_PACKET_PROTOCOL_OVERHEAD
 </SECTION>
 
