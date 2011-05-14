@@ -548,7 +548,7 @@ arv_gvcp_packet_debug (const ArvGvcpPacket *packet, ArvDebugLevel level)
 			arv_log_gvcp ("%s", string);
 			break;
 		case ARV_DEBUG_LEVEL_DEBUG:
-			arv_debug_gvcp ("%", string);
+			arv_debug_gvcp ("%s", string);
 			break;
 		case ARV_DEBUG_LEVEL_WARNING:
 			arv_warning_gvcp ("%s", string);
