@@ -32,7 +32,7 @@
 
 static ArvGvspPacket *
 arv_gvsp_packet_new (ArvGvspPacketType packet_type,
-		     guint32 frame_id, guint32 packet_id, size_t data_size, void *buffer, size_t *buffer_size)
+		     guint16 frame_id, guint32 packet_id, size_t data_size, void *buffer, size_t *buffer_size)
 {
 	ArvGvspPacket *packet;
 	size_t packet_size;
@@ -49,7 +49,8 @@ arv_gvsp_packet_new (ArvGvspPacketType packet_type,
 	else
 		packet = g_malloc (packet_size);
 
-	packet->header.frame_id = g_htonl (frame_id);
+	packet->header.packet_type = 0;
+	packet->header.frame_id = g_htons (frame_id);
 	packet->header.packet_infos = g_htonl ((packet_id & ARV_GVSP_PACKET_INFOS_ID_MASK) |
 					       ((packet_type << ARV_GVSP_PACKET_INFOS_TYPE_POS) &
 						ARV_GVSP_PACKET_INFOS_TYPE_MASK));
@@ -58,7 +59,7 @@ arv_gvsp_packet_new (ArvGvspPacketType packet_type,
 }
 
 ArvGvspPacket *
-arv_gvsp_packet_new_data_leader	(guint32 frame_id, guint32 packet_id,
+arv_gvsp_packet_new_data_leader	(guint16 frame_id, guint32 packet_id,
 				 guint64 timestamp, ArvPixelFormat pixel_format,
 				 guint32 width, guint32 height,
 				 guint32 x_offset, guint32 y_offset,
@@ -87,7 +88,7 @@ arv_gvsp_packet_new_data_leader	(guint32 frame_id, guint32 packet_id,
 }
 
 ArvGvspPacket *
-arv_gvsp_packet_new_data_trailer (guint32 frame_id, guint32 packet_id,
+arv_gvsp_packet_new_data_trailer (guint16 frame_id, guint32 packet_id,
 				  void *buffer, size_t *buffer_size)
 {
 	ArvGvspPacket *packet;
@@ -107,7 +108,7 @@ arv_gvsp_packet_new_data_trailer (guint32 frame_id, guint32 packet_id,
 }
 
 ArvGvspPacket *
-arv_gvsp_packet_new_data_block (guint32 frame_id, guint32 packet_id,
+arv_gvsp_packet_new_data_block (guint16 frame_id, guint32 packet_id,
 				size_t size, void *data,
 				void *buffer, size_t *buffer_size)
 {

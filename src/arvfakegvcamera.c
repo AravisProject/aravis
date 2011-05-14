@@ -93,7 +93,7 @@ arv_fake_gv_camera_thread (void *user_data)
 	void *packet_buffer;
 	size_t packet_size;
 	size_t payload = 0;
-	guint32 frame_id = 0;
+	guint16 frame_id = 0;
 	guint16 block_id;
 	ptrdiff_t offset;
 	guint32 gv_packet_size;
