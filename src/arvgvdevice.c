@@ -337,13 +337,14 @@ arv_gv_device_heartbeat_thread (void *data)
 	guint32 value;
 
 	do {
+		g_usleep (thread_data->period_us);
+
 		if (io_data->is_controller) {
 
 			/* TODO: Instead of reading the control register, Pylon does write the heartbeat
 			 * timeout value, which is interresting, as doing this we could get an error
 			 * ack packet which will indicate we lost the control access. */
 
-			g_usleep (thread_data->period_us);
 			_read_register (io_data, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET, &value);
 			arv_log_device ("[GvDevice::Heartbeat] (%d)", value);
 
