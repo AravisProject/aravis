@@ -1,3 +1,18 @@
+Release 0.1.7
+=============
+
+  More work on GV stream reception thread.
+
+  * GV Stream: handle error GVSP packets.
+  * GV Stream: always set packet size.
+  * GV Stream: check for control access before creating stream object.
+  * GV Stream: check the number of available stream channels.
+  * GVCP: more sanity checks on ack packets.
+  * GV Device: reliably check for control access.
+  * Fake GV Camera: make it work with viewer.
+  * Debug: allow different debug levels for each debug category.
+
+
 Release 0.1.6
 =============
 
