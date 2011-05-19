@@ -600,7 +600,7 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 				   g_htonl(*((guint32 *) address_bytes)));
 	arv_device_write_register (device, ARV_GVBS_STREAM_CHANNEL_0_PORT_OFFSET, stream_port);
 
-	arv_debug_device ("[GvDevice::create_stream] stream port = %d", stream_port);
+	arv_debug_device ("[GvDevice::create_stream] Stream port = %d", stream_port);
 
 	return stream;
 }
