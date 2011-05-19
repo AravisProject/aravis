@@ -41,6 +41,8 @@
 #define ARV_GV_STREAM_PACKET_TIMEOUT_US_DEFAULT		40000
 #define ARV_GV_STREAM_FRAME_RETENTION_US_DEFAULT	200000
 
+#define ARV_GV_STREAM_DISCARD_LATE_FRAME_THRESHOLD	100
+
 enum {
 	ARV_GV_STREAM_PROPERTY_0,
 	ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER,
@@ -66,6 +68,8 @@ typedef struct {
 	gint32 last_valid_packet;
 	guint64 first_packet_time_us;
 	guint64 last_packet_time_us;
+
+	gboolean error_packet_received;
 
 	guint n_packets;
 	ArvGvStreamPacketData *packet_data;
@@ -101,14 +105,17 @@ typedef struct {
 	guint n_timeouts;
 	guint n_underruns;
 	guint n_aborteds;
+	guint n_missing_frames;
+
 	guint n_size_mismatch_errors;
 
+	guint n_received_packets;
+	guint n_missing_packets;
+	guint n_error_packets;
 	guint n_ignored_packets;
 	guint n_resend_requests;
 	guint n_resent_packets;
-	guint n_missing_packets;
 	guint n_duplicated_packets;
-	guint n_missing_frames;
 
 	ArvStatistic *statistic;
 	guint32 statistic_count;
@@ -279,6 +286,7 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 	ArvBuffer *buffer;
 	GSList *iter;
 	guint n_packets = 0;
+	gint16 frame_id_inc;
 
 	for (iter = thread_data->frames; iter != NULL; iter = iter->next) {
 		frame = iter->data;
@@ -286,6 +294,13 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 			frame->last_packet_time_us = time_us;
 			return frame;
 		}
+	}
+
+	frame_id_inc = (gint16) frame_id - (gint16) thread_data->last_frame_id;
+	if (frame_id_inc < 1  && frame_id_inc > -ARV_GV_STREAM_DISCARD_LATE_FRAME_THRESHOLD) {
+		arv_debug_stream_thread ("[GvStream::_find_frame_data] Discard late frame %u (last: %u)",
+					 frame_id, thread_data->last_frame_id);
+		return NULL;
 	}
 
 	buffer = arv_stream_pop_input_buffer (thread_data->stream);
@@ -296,6 +311,8 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 	}
 
 	frame = g_new0 (ArvGvStreamFrameData, 1);
+
+	frame->error_packet_received = FALSE;
 
 	frame->frame_id = frame_id;
 	frame->last_valid_packet = -1;
@@ -317,18 +334,12 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 				       ARV_STREAM_CALLBACK_TYPE_START_BUFFER,
 				       NULL);
 
-	{
-		gint16 frame_id_inc;
+	thread_data->last_frame_id = frame_id;
 
-		frame_id_inc = (gint )frame_id - (gint) thread_data->last_frame_id;
-		if (frame_id_inc > 0) {
-			thread_data->last_frame_id = frame_id;
-			if (frame_id_inc != 1) {
-				thread_data->n_missing_frames++;
-				arv_log_stream_thread ("[GvStream::_find_frame_data] Missed %d frame(s) before %u",
-						       frame_id_inc - 1, frame_id);
-			}
-		}
+	if (frame_id_inc > 1) {
+		thread_data->n_missing_frames++;
+		arv_log_stream_thread ("[GvStream::_find_frame_data] Missed %d frame(s) before %u",
+				       frame_id_inc - 1, frame_id);
 	}
 
 	thread_data->frames = g_slist_append (thread_data->frames, frame);
@@ -346,7 +357,8 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 {
 	int i;
 
-	if (thread_data->packet_resend == ARV_GV_STREAM_PACKET_RESEND_NEVER)
+	if (thread_data->packet_resend == ARV_GV_STREAM_PACKET_RESEND_NEVER ||
+	    frame->error_packet_received)
 		return;
 
 	if (packet_id < frame->n_packets) {
@@ -424,7 +436,7 @@ _close_frame (ArvGvStreamThreadData *thread_data, ArvGvStreamFrameData *frame)
 	g_get_current_time (&current_time);
 	current_time_us = current_time.tv_sec * 1000000 + current_time.tv_usec;
 	if (thread_data->statistic_count > 5) {
-		arv_statistic_fill (thread_data->statistic, 1,
+		arv_statistic_fill (thread_data->statistic, 0,
 				    current_time_us - frame->first_packet_time_us,
 				    frame->buffer->frame_id);
 	} else
@@ -481,8 +493,10 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 		if (can_close_frame &&
 		    time_us - frame->last_packet_time_us >= thread_data->frame_retention_us) {
 			frame->buffer->status = ARV_BUFFER_STATUS_TIMEOUT;
-			arv_debug_stream_thread ("[GvStream::_check_frame_completion] Timeout for frame %u",
-						 frame->frame_id);
+			arv_debug_stream_thread ("[GvStream::_check_frame_completion] Timeout for frame %u "
+						 "at dt = %Lu",
+						 frame->frame_id,
+						 time_us - frame->first_packet_time_us);
 #if 0
 			if (arv_debug_check (&arv_debug_category_stream_thread, ARV_DEBUG_LEVEL_LOG)) {
 				int i;
@@ -546,8 +560,14 @@ arv_gv_stream_thread (void *data)
 	int timeout_ms;
 	int n_events;
 	int i;
+	gboolean first_packet = TRUE;
 
 	thread_data->frames = NULL;
+
+	arv_debug_stream_thread ("[GvStream::stream_thread] Packet timeout = %g ms",
+				 thread_data->packet_timeout_us / 1000.0);
+	arv_debug_stream_thread ("[GvStream::stream_thread] Frame retention = %g ms",
+				 thread_data->frame_retention_us / 1000.0);
 
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
@@ -570,6 +590,7 @@ arv_gv_stream_thread (void *data)
 		time_us = current_time.tv_sec * 1000000 + current_time.tv_usec;
 
 		if (n_events > 0) {
+			thread_data->n_received_packets++;
 
 			read_count = g_socket_receive (thread_data->socket, (char *) packet,
 						       ARV_GV_STREAM_INCOMING_BUFFER_SIZE, NULL, NULL);
@@ -577,44 +598,58 @@ arv_gv_stream_thread (void *data)
 			frame_id = arv_gvsp_packet_get_frame_id (packet);
 			packet_id = arv_gvsp_packet_get_packet_id (packet);
 
+			if (first_packet) {
+				thread_data->last_frame_id = frame_id - 1;
+				first_packet = FALSE;
+			}
+
 			frame = _find_frame_data (thread_data, frame_id, packet, packet_id, read_count, time_us);
 
 			if (frame != NULL) {
 
-				/* Check for duplicated packets */
-				if (packet_id < frame->n_packets) {
-					if (frame->packet_data[packet_id].received)
-						thread_data->n_duplicated_packets++;
-					else
-						frame->packet_data[packet_id].received = TRUE;
-				}
-
-				/* Keep track of last packet of a continuous block starting from packet 0 */
-				for (i = frame->last_valid_packet + 1; i < frame->n_packets; i++)
-					if (!frame->packet_data[i].received)
-						break;
-				frame->last_valid_packet = i - 1;
-
 				if (arv_gvsp_packet_get_packet_type (packet) != ARV_GVSP_PACKET_TYPE_OK) {
+					arv_debug_stream_thread ("[GvStream::stream_thread]"
+								 " Error packet at dt = %Lu, packet id = %u"
+								 " frame id = %u",
+								 time_us - frame->first_packet_time_us,
+								 packet_id, frame->frame_id);
 					arv_gvsp_packet_debug (packet, read_count, ARV_DEBUG_LEVEL_DEBUG);
-				}
+					frame->error_packet_received = TRUE;
 
-				switch (arv_gvsp_packet_get_content_type (packet)) {
-					case ARV_GVSP_CONTENT_TYPE_DATA_LEADER:
-						_process_data_leader (thread_data, frame, packet, packet_id);
-						break;
-					case ARV_GVSP_CONTENT_TYPE_DATA_BLOCK:
-						_process_data_block (thread_data, frame, packet, packet_id, read_count);
-						break;
-					case ARV_GVSP_CONTENT_TYPE_DATA_TRAILER:
-						_process_data_trailer (thread_data, frame, packet, packet_id);
-						break;
-					default:
-						thread_data->n_ignored_packets++;
-						break;
-				}
+					thread_data->n_error_packets++;
+				} else {
+					/* Check for duplicated packets */
+					if (packet_id < frame->n_packets) {
+						if (frame->packet_data[packet_id].received)
+							thread_data->n_duplicated_packets++;
+						else
+							frame->packet_data[packet_id].received = TRUE;
+					}
 
-				_missing_packet_check (thread_data, frame, packet_id, time_us);
+					/* Keep track of last packet of a continuous block starting from packet 0 */
+					for (i = frame->last_valid_packet + 1; i < frame->n_packets; i++)
+						if (!frame->packet_data[i].received)
+							break;
+					frame->last_valid_packet = i - 1;
+
+					switch (arv_gvsp_packet_get_content_type (packet)) {
+						case ARV_GVSP_CONTENT_TYPE_DATA_LEADER:
+							_process_data_leader (thread_data, frame, packet, packet_id);
+							break;
+						case ARV_GVSP_CONTENT_TYPE_DATA_BLOCK:
+							_process_data_block (thread_data, frame, packet, packet_id,
+									     read_count);
+							break;
+						case ARV_GVSP_CONTENT_TYPE_DATA_TRAILER:
+							_process_data_trailer (thread_data, frame, packet, packet_id);
+							break;
+						default:
+							thread_data->n_ignored_packets++;
+							break;
+					}
+
+					_missing_packet_check (thread_data, frame, packet_id, time_us);
+				}
 			} else
 				thread_data->n_ignored_packets++;
 		} else
@@ -705,21 +740,24 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port,
 	thread_data->n_completed_buffers = 0;
 	thread_data->n_failures = 0;
 	thread_data->n_underruns = 0;
+	thread_data->n_aborteds = 0;
+	thread_data->n_timeouts = 0;
+	thread_data->n_missing_frames = 0;
+
 	thread_data->n_size_mismatch_errors = 0;
+
+	thread_data->n_received_packets = 0;
 	thread_data->n_missing_packets = 0;
+	thread_data->n_error_packets = 0;
 	thread_data->n_ignored_packets = 0;
 	thread_data->n_resent_packets = 0;
 	thread_data->n_resend_requests = 0;
 	thread_data->n_duplicated_packets = 0;
-	thread_data->n_missing_frames = 0;
-	thread_data->n_aborteds = 0;
-	thread_data->n_timeouts = 0;
 
-	thread_data->statistic = arv_statistic_new (2, 5000, 200, 0);
+	thread_data->statistic = arv_statistic_new (1, 5000, 200, 0);
 	thread_data->statistic_count = 0;
 
-	arv_statistic_set_name (thread_data->statistic, 0, "Timestamp delta");
-	arv_statistic_set_name (thread_data->statistic, 1, "Buffer reception time");
+	arv_statistic_set_name (thread_data->statistic, 0, "Buffer reception time");
 
 	thread_data->socket_buffer_option = ARV_GV_STREAM_SOCKET_BUFFER_FIXED;
 	thread_data->socket_buffer_size = 0;
@@ -856,30 +894,37 @@ arv_gv_stream_finalize (GObject *object)
 		g_free (statistic_string);
 		arv_statistic_free (thread_data->statistic);
 
-		arv_debug_stream ("[GvStream::finalize] n_completed_buffers    = %d",
+		arv_debug_stream ("[GvStream::finalize] n_completed_buffers    = %u",
 				  thread_data->n_completed_buffers);
-		arv_debug_stream ("[GvStream::finalize] n_failures             = %d",
+		arv_debug_stream ("[GvStream::finalize] n_failures             = %u",
 				  thread_data->n_failures);
-		arv_debug_stream ("[GvStream::finalize] n_timeouts             = %d",
+		arv_debug_stream ("[GvStream::finalize] n_timeouts             = %u",
 				  thread_data->n_timeouts);
-		arv_debug_stream ("[GvStream::finalize] n_aborteds             = %d",
+		arv_debug_stream ("[GvStream::finalize] n_aborteds             = %u",
 				  thread_data->n_aborteds);
-		arv_debug_stream ("[GvStream::finalize] n_underruns            = %d",
+		arv_debug_stream ("[GvStream::finalize] n_underruns            = %u",
 				  thread_data->n_underruns);
-		arv_debug_stream ("[GvStream::finalize] n_size_mismatch_errors = %d",
-				  thread_data->n_size_mismatch_errors);
-		arv_debug_stream ("[GvStream::finalize] n_missing_packets      = %d",
-				  thread_data->n_missing_packets);
-		arv_debug_stream ("[GvStream::finalize] n_ignored_packets      = %d",
-				  thread_data->n_ignored_packets);
-		arv_debug_stream ("[GvStream::finalize] n_resend_requests      = %d",
-				  thread_data->n_resend_requests);
-		arv_debug_stream ("[GvStream::finalize] n_resent_packets       = %d",
-				  thread_data->n_resent_packets);
-		arv_debug_stream ("[GvStream::finalize] n_duplicated_packets   = %d",
-				  thread_data->n_duplicated_packets);
-		arv_debug_stream ("[GvStream::finalize] n_missing_frames       = %d",
+		arv_debug_stream ("[GvStream::finalize] n_missing_frames       = %u",
 				  thread_data->n_missing_frames);
+
+		arv_debug_stream ("[GvStream::finalize] n_size_mismatch_errors = %u",
+				  thread_data->n_size_mismatch_errors);
+
+		arv_debug_stream ("[GvStream::finalize] n_received_packets     = %u",
+				  thread_data->n_received_packets);
+		arv_debug_stream ("[GvStream::finalize] n_missing_packets      = %u",
+				  thread_data->n_missing_packets);
+		arv_debug_stream ("[GvStream::finalize] n_error_packets        = %u",
+				  thread_data->n_error_packets);
+		arv_debug_stream ("[GvStream::finalize] n_ignored_packets      = %u",
+				  thread_data->n_ignored_packets);
+
+		arv_debug_stream ("[GvStream::finalize] n_resend_requests      = %u",
+				  thread_data->n_resend_requests);
+		arv_debug_stream ("[GvStream::finalize] n_resent_packets       = %u",
+				  thread_data->n_resent_packets);
+		arv_debug_stream ("[GvStream::finalize] n_duplicated_packets   = %u",
+				  thread_data->n_duplicated_packets);
 
 		g_free (thread_data);
 
