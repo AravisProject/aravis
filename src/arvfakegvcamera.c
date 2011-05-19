@@ -93,7 +93,6 @@ arv_fake_gv_camera_thread (void *user_data)
 	void *packet_buffer;
 	size_t packet_size;
 	size_t payload = 0;
-	guint16 frame_id = 65500; /* Make circular counter bugs happen quicker */
 	guint16 block_id;
 	ptrdiff_t offset;
 	guint32 gv_packet_size;
@@ -180,8 +179,6 @@ arv_fake_gv_camera_thread (void *user_data)
 
 			g_socket_send_to (gv_camera->gvsp_socket, stream_address,
 					  packet_buffer, packet_size, NULL, NULL);
-
-			frame_id++;
 		}
 	} while (!cancel);
 

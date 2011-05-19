@@ -328,7 +328,6 @@ arv_fake_camera_set_trigger_frequency (ArvFakeCamera *camera, double frequency)
 	g_return_if_fail (frequency > 0.0);
 
 	camera->priv->trigger_frequency = frequency;
-	camera->priv->frame_id = 0;
 }
 
 guint32
@@ -481,6 +480,7 @@ arv_fake_camera_init (ArvFakeCamera *fake_camera)
 	fake_camera->priv = G_TYPE_INSTANCE_GET_PRIVATE (fake_camera, ARV_TYPE_FAKE_CAMERA, ArvFakeCameraPrivate);
 
 	fake_camera->priv->trigger_frequency = 25.0;
+	fake_camera->priv->frame_id = 65000; /* Trigger circular counter bugs sooner */
 }
 
 static void
