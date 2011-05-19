@@ -36,7 +36,7 @@ G_BEGIN_DECLS
 
 typedef enum {
 	ARV_GVSP_PACKET_TYPE_OK =		0x0000,
-	ARV_GVSP_PACKET_TYPE_ERROR =		0x80c0
+	ARV_GVSP_PACKET_TYPE_ERROR =		0x800c
 } ArvGvspPacketType;
 
 typedef enum {
