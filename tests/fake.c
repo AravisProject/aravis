@@ -93,7 +93,7 @@ fake_device_test (void)
 	int_value = arv_device_get_integer_feature_value (device, "GainRaw");
 	g_assert_cmpint (int_value, ==, 0);
 	int_value = arv_device_get_integer_feature_value (device, "GainAuto");
-	g_assert_cmpint (int_value, ==, 0);
+	g_assert_cmpint (int_value, ==, 1);
 
 	int_value = arv_device_get_integer_feature_value (device, "PayloadSize");
 	g_assert_cmpint (int_value, ==, 1024 * 1024);
