@@ -24,6 +24,7 @@
 #include <arvgvinterface.h>
 #include <arvfakeinterface.h>
 #include <arvdevice.h>
+#include <arvdebug.h>
 
 typedef struct {
 	const char *interface_id;
