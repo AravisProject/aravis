@@ -450,10 +450,12 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 
 	viewer->pipeline = gst_pipeline_new ("pipeline");
 
-	viewer->appsrc = gst_element_factory_make ("appsrc", "appsrc");
-	ffmpegcolorspace = gst_element_factory_make ("ffmpegcolorspace", "ffmpegcolorspace");
-	ximagesink = gst_element_factory_make ("xvimagesink", "xvimagesink");
-	g_object_set (ximagesink, "force-aspect-ratio", TRUE, NULL);
+	viewer->appsrc = gst_element_factory_make ("appsrc", NULL);
+	ffmpegcolorspace = gst_element_factory_make ("ffmpegcolorspace", NULL);
+	ximagesink = gst_element_factory_make ("xvimagesink", NULL);
+
+	g_object_set (ximagesink, "force-aspect-ratio", TRUE, "draw-borders", TRUE, "sync", FALSE, NULL);
+
 	gst_bin_add_many (GST_BIN (viewer->pipeline), viewer->appsrc, ffmpegcolorspace, ximagesink, NULL);
 	gst_element_link_many (viewer->appsrc, ffmpegcolorspace, ximagesink, NULL);
 
