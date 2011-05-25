@@ -209,16 +209,16 @@ arv_gvcp_packet_get_packet_type (ArvGvcpPacket *packet)
 	if (packet == NULL)
 		return ARV_GVCP_PACKET_TYPE_ERROR;
 
-	return g_ntohs (packet->header.packet_type);
+	return (ArvGvcpPacketType) g_ntohs (packet->header.packet_type);
 }
 
 static inline ArvGvcpCommand
 arv_gvcp_packet_get_command (ArvGvcpPacket *packet)
 {
 	if (packet == NULL)
-		return 0;
+		return (ArvGvcpCommand) 0;
 
-	return g_ntohs (packet->header.command);
+	return (ArvGvcpCommand) g_ntohs (packet->header.command);
 }
 
 static inline void

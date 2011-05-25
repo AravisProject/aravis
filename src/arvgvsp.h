@@ -88,14 +88,14 @@ void 			arv_gvsp_packet_debug 			(const ArvGvspPacket *packet, size_t packet_siz
 static inline ArvGvspPacketType
 arv_gvsp_packet_get_packet_type (const ArvGvspPacket *packet)
 {
-	return g_ntohs (packet->header.packet_type);
+	return (ArvGvspPacketType) g_ntohs (packet->header.packet_type);
 }
 
 static inline ArvGvspContentType
 arv_gvsp_packet_get_content_type (const ArvGvspPacket *packet)
 {
-	return (g_ntohl (packet->header.packet_infos) & ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_MASK) >>
-		ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_POS;
+	return (ArvGvspContentType) ((g_ntohl (packet->header.packet_infos) & ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_MASK) >>
+		ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_POS);
 }
 
 static inline guint16
