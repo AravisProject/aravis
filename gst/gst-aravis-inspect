@@ -1,9 +1,8 @@
 #!/bin/sh
 
-prefix=/home/pacaud/Sources/INSTALL
-exec_prefix=/home/pacaud/Sources/INSTALL
+exec_prefix=`pwd`
 
 export PATH=${exec_prefix}/bin:${PATH}
 
-LD_PRELOAD=../src/.libs/libaravis.so gst-inspect --gst-plugin-load=../gst/.libs/libgstaravis.so $*
+LD_PRELOAD=../src/.libs/libaravis-0.2.so gst-inspect --gst-plugin-load=../gst/.libs/libgstaravis-0.2.so $*
 

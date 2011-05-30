@@ -1,0 +1,8 @@
+#!/bin/sh
+
+exec_prefix=`pwd`
+
+export PATH=${exec_prefix}/bin:${PATH}
+
+LD_PRELOAD=../src/.libs/libaravis-0.2.so gst-launch --gst-plugin-load=../gst/.libs/libgstaravis-0.2.so -v $*
+
