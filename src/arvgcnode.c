@@ -30,6 +30,7 @@
 
 #include <arvgcnode.h>
 #include <arvgc.h>
+#include <arvtools.h>
 #include <arvdebug.h>
 #include <string.h>
 
@@ -42,6 +43,9 @@ struct _ArvGcNodePrivate {
 	char *tooltip;
 	char *description;
 	char *display_name;
+
+	GValue is_implemented;
+	GValue is_available;
 
 	unsigned int n_childs;
 	GSList *childs;
@@ -81,6 +85,15 @@ arv_gc_node_get_display_name (ArvGcNode *node)
 	return node->priv->display_name;
 }
 
+gboolean
+arv_gc_node_is_available (ArvGcNode *gc_node)
+{
+	g_return_val_if_fail (ARV_IS_GC_NODE (gc_node), FALSE);
+
+	return arv_gc_get_int64_from_value (gc_node->priv->genicam, &gc_node->priv->is_implemented) != 0 &&
+		arv_gc_get_int64_from_value (gc_node->priv->genicam, &gc_node->priv->is_available) != 0;
+}
+
 static void
 _set_attribute (ArvGcNode *node, const char *name, const char *value)
 {
@@ -116,6 +129,10 @@ _add_element (ArvGcNode *node, const char *name, const char *content, const char
 	} else if (strcmp (name, "DisplayName") == 0) {
 		g_free (node->priv->display_name);
 		node->priv->display_name = g_strdup (content);
+	} else if (strcmp (name, "pIsImplemented") == 0) {
+		arv_force_g_value_to_string (&node->priv->is_implemented, content);
+	} else if (strcmp (name, "pIsAvailable") == 0) {
+		arv_force_g_value_to_string (&node->priv->is_available, content);
 	}
 }
 
@@ -249,6 +266,11 @@ arv_gc_node_init (ArvGcNode *gc_node)
 	gc_node->priv->childs = NULL;
 	gc_node->priv->n_childs = 0;
 
+	g_value_init (&gc_node->priv->is_implemented, G_TYPE_INT64);
+	g_value_set_int64 (&gc_node->priv->is_implemented, 1);
+	g_value_init (&gc_node->priv->is_available, G_TYPE_INT64);
+	g_value_set_int64 (&gc_node->priv->is_available, 1);
+
 	gc_node->priv->modification_count = 0;
 }
 
@@ -267,6 +289,9 @@ arv_gc_node_finalize (GObject *object)
 	g_free (node->priv->tooltip);
 	g_free (node->priv->description);
 	g_free (node->priv->display_name);
+
+	g_value_unset (&node->priv->is_implemented);
+	g_value_unset (&node->priv->is_available);
 
 	parent_class->finalize (object);
 }

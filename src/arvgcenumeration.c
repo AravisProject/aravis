@@ -118,6 +118,39 @@ arv_gc_enumeration_get_int_value (ArvGcEnumeration *enumeration)
 					    &enumeration->value);
 }
 
+gint64 *
+arv_gc_enumeration_get_available_int_values (ArvGcEnumeration *enumeration, guint *n_values)
+{
+	gint64 *values;
+	const GSList *entries, *iter;
+	unsigned int i;
+
+	g_return_val_if_fail (n_values != NULL, NULL);
+
+	*n_values = 0;
+
+	g_return_val_if_fail (ARV_IS_GC_ENUMERATION (enumeration), NULL);
+
+	entries = arv_gc_enumeration_get_entries (enumeration);
+
+	*n_values = 0;
+	for (iter = entries; iter != NULL; iter = iter->next)
+		if (arv_gc_node_is_available (iter->data))
+		    (*n_values)++;
+
+	if (*n_values == 0)
+		return NULL;
+
+	values = g_new (gint64, *n_values);
+	for (iter = entries, i = 0; iter != NULL; iter = iter->next)
+		if (arv_gc_node_is_available (iter->data)) {
+			values[i] = arv_gc_enum_entry_get_value (iter->data);
+			i++;
+		}
+
+	return values;
+}
+
 void
 arv_gc_enumeration_set_int_value (ArvGcEnumeration *enumeration, gint64 value)
 {

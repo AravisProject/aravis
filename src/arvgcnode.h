@@ -62,6 +62,7 @@ ArvGc * 	arv_gc_node_get_genicam			(ArvGcNode *gc_node);
 const char *	arv_gc_node_get_name			(ArvGcNode *gc_node);
 const char *	arv_gc_node_get_tooltip			(ArvGcNode *gc_node);
 const char *	arv_gc_node_get_description		(ArvGcNode *gc_node);
+gboolean	arv_gc_node_is_available		(ArvGcNode *gc_node);
 void		arv_gc_node_set_attribute 		(ArvGcNode *gc_node, const char *name, const char *value);
 void 		arv_gc_node_add_element 		(ArvGcNode *gc_node, const char *name, const char *content,
 							 const char **attributes);

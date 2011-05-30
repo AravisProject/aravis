@@ -23,7 +23,7 @@ arv_zip_test_LDADD = $(test_progs_ldadd)
 arv_camera_test_SOURCES = arvcameratest.c
 arv_camera_test_LDADD = $(test_progs_ldadd)
 
-TEST_PROGS += evaluator buffer fake cpp
+TEST_PROGS += evaluator buffer fake genicam cpp
 
 noinst_PROGRAMS += $(TEST_PROGS)
 
@@ -36,6 +36,10 @@ buffer_LDADD = $(test_progs_ldadd)
 fake_SOURCES = fake.c
 fake_CFLAGS = -DGENICAM_FILENAME="\"$(top_srcdir)/src/arv-fake-camera.xml\""
 fake_LDADD = $(test_progs_ldadd)
+
+genicam_SOURCES = genicam.c
+genicam_CFLAGS = -DGENICAM_FILENAME="\"$(top_srcdir)/tests/data/genicam.xml\""
+genicam_LDADD = $(test_progs_ldadd)
 
 cpp_SOURCES = cpp.cc
 cpp_LDADD = $(test_progs_ldadd)

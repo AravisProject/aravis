@@ -64,7 +64,7 @@ static GstCaps *
 gst_aravis_get_all_camera_caps (GstAravis *gst_aravis)
 {
 	GstCaps *caps;
-	ArvPixelFormat *pixel_formats;
+	gint64 *pixel_formats;
 	double frame_rate;
 	int min_height, min_width;
 	int max_height, max_width;
