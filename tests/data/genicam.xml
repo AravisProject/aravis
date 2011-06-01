@@ -34,12 +34,12 @@
 			<Value>1</Value>
 		</EnumEntry>
 		<EnumEntry Name="EntryNotAvailable">
-			<Value>2</Value>
 			<pIsAvailable>NotAvailable</pIsAvailable>
+			<Value>2</Value>
 		</EnumEntry>
 		<EnumEntry Name="EntryNotImplemented">
-			<Value>3</Value>
 			<pIsImplemented>NotAvailable</pIsImplemented>
+			<Value>3</Value>
 		</EnumEntry>
 		<pValue>EnumerationValue</pValue>
 	</Enumeration>
