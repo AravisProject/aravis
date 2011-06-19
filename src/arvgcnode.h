@@ -51,12 +51,17 @@ struct _ArvGcNodeClass {
 							 const char **attributes);
 	GType		(*get_value_type)		(ArvGcNode *gc_node);
 	gboolean 	(*can_add_child) 		(ArvGcNode *gc_node, ArvGcNode *child);
+
+	void		(*set_value_from_string)	(ArvGcNode *gc_node, const char *string);
+	const char *	(*get_value_as_string)		(ArvGcNode *gc_node);
 };
 
 GType arv_gc_node_get_type (void);
 
 ArvGcNode * 	arv_gc_node_new 			(void);
 GType 		arv_gc_node_get_value_type 		(ArvGcNode *gc_node);
+void		arv_gc_node_set_value_from_string	(ArvGcNode *gc_node, const char *string);
+const char *	arv_gc_node_get_value_as_string		(ArvGcNode *gc_node);
 void		arv_gc_node_set_genicam			(ArvGcNode *gc_node, ArvGc *genicam);
 ArvGc * 	arv_gc_node_get_genicam			(ArvGcNode *gc_node);
 const char *	arv_gc_node_get_name			(ArvGcNode *gc_node);

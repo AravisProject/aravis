@@ -239,6 +239,33 @@ arv_gc_node_get_value_type (ArvGcNode *node)
 }
 
 void
+arv_gc_node_set_value_from_string (ArvGcNode *node, const char *string)
+{
+	ArvGcNodeClass *node_class;
+
+	g_return_if_fail (ARV_IS_GC_NODE (node));
+	g_return_if_fail (string != NULL);
+
+	node_class = ARV_GC_NODE_GET_CLASS (node);
+	if (node_class->set_value_from_string != NULL)
+		node_class->set_value_from_string (node, string);
+}
+
+const char *
+arv_gc_node_get_value_as_string (ArvGcNode *node)
+{
+	ArvGcNodeClass *node_class;
+
+	g_return_val_if_fail (ARV_IS_GC_NODE (node), NULL);
+
+	node_class = ARV_GC_NODE_GET_CLASS (node);
+	if (node_class->get_value_as_string != NULL)
+		return node_class->get_value_as_string (node);
+
+	return NULL;
+}
+
+void
 arv_gc_node_inc_modification_count (ArvGcNode *gc_node)
 {
 	g_return_if_fail (ARV_IS_GC_NODE (gc_node));

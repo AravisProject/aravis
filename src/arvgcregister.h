@@ -88,6 +88,8 @@ struct _ArvGcRegister {
 	size_t cache_size;
 	gboolean is_cache_valid;
 
+	char v_string[G_ASCII_DTOSTR_BUF_SIZE];
+
 	GSList *invalidators;
 };
 

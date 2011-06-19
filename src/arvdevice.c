@@ -153,16 +153,32 @@ arv_device_execute_command (ArvDevice *device, const char *feature)
 		arv_gc_command_execute (ARV_GC_COMMAND (node));
 }
 
+/**
+ * arv_device_get_feature:
+ * @device: a #ArvDevice
+ * @feature: a feature name
+ *
+ * Return value: (transfer none): the genicam node corresponding to the feature name, NULL if not found.
+ */
+
+ArvGcNode *
+arv_device_get_feature (ArvDevice *device, const char *feature)
+{
+	ArvGc *genicam;
+
+	genicam = arv_device_get_genicam (device);
+	g_return_val_if_fail (ARV_IS_GC (genicam), NULL);
+
+	return arv_gc_get_node (genicam, feature);
+}
+
 void
 arv_device_set_string_feature_value (ArvDevice *device, const char *feature, const char *value)
 {
-	ArvGc *genicam;
 	ArvGcNode *node;
 
-	genicam = arv_device_get_genicam (device);
-	g_return_if_fail (ARV_IS_GC (genicam));
+	node = arv_device_get_feature (device, feature);
 
-	node = arv_gc_get_node (genicam, feature);
 	if (ARV_IS_GC_ENUMERATION (node))
 		arv_gc_enumeration_set_string_value (ARV_GC_ENUMERATION (node), value);
 	else if (ARV_IS_GC_STRING (node))
@@ -172,13 +188,10 @@ arv_device_set_string_feature_value (ArvDevice *device, const char *feature, con
 const char *
 arv_device_get_string_feature_value (ArvDevice *device, const char *feature)
 {
-	ArvGc *genicam;
 	ArvGcNode *node;
 
-	genicam = arv_device_get_genicam (device);
-	g_return_val_if_fail (ARV_IS_GC (genicam), NULL);
+	node = arv_device_get_feature (device, feature);
 
-	node = arv_gc_get_node (genicam, feature);
 	if (ARV_IS_GC_ENUMERATION (node))
 		return arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (node));
 	else if (ARV_IS_GC_STRING (node))
@@ -190,13 +203,10 @@ arv_device_get_string_feature_value (ArvDevice *device, const char *feature)
 void
 arv_device_set_integer_feature_value (ArvDevice *device, const char *feature, gint64 value)
 {
-	ArvGc *genicam;
 	ArvGcNode *node;
 
-	genicam = arv_device_get_genicam (device);
-	g_return_if_fail (ARV_IS_GC (genicam));
+	node = arv_device_get_feature (device, feature);
 
-	node = arv_gc_get_node (genicam, feature);
 	if (ARV_IS_GC_INTEGER (node))
 		arv_gc_integer_set_value (ARV_GC_INTEGER (node), value);
 	else if (ARV_IS_GC_ENUMERATION (node))
@@ -208,13 +218,10 @@ arv_device_set_integer_feature_value (ArvDevice *device, const char *feature, gi
 gint64
 arv_device_get_integer_feature_value (ArvDevice *device, const char *feature)
 {
-	ArvGc *genicam;
 	ArvGcNode *node;
 
-	genicam = arv_device_get_genicam (device);
-	g_return_val_if_fail (ARV_IS_GC (genicam), 0);
+	node = arv_device_get_feature (device, feature);
 
-	node = arv_gc_get_node (genicam, feature);
 	if (ARV_IS_GC_INTEGER (node))
 		return arv_gc_integer_get_value (ARV_GC_INTEGER (node));
 	else if (ARV_IS_GC_ENUMERATION (node))
@@ -228,13 +235,10 @@ arv_device_get_integer_feature_value (ArvDevice *device, const char *feature)
 void
 arv_device_get_integer_feature_bounds (ArvDevice *device, const char *feature, gint64 *min, gint64 *max)
 {
-	ArvGc *genicam;
 	ArvGcNode *node;
 
-	genicam = arv_device_get_genicam (device);
-	g_return_if_fail (ARV_IS_GC (genicam));
+	node = arv_device_get_feature (device, feature);
 
-	node = arv_gc_get_node (genicam, feature);
 	if (ARV_IS_GC_INTEGER (node)) {
 		if (min != NULL)
 			*min = arv_gc_integer_get_min (ARV_GC_INTEGER (node));
@@ -247,32 +251,40 @@ arv_device_get_integer_feature_bounds (ArvDevice *device, const char *feature, g
 void
 arv_device_set_float_feature_value (ArvDevice *device, const char *feature, double value)
 {
-	ArvGc *genicam;
+	ArvGcNode *node;
 
-	genicam = arv_device_get_genicam (device);
-	arv_gc_float_set_value (ARV_GC_FLOAT (arv_gc_get_node (genicam, feature)), value);
+	node = arv_device_get_feature (device, feature);
+
+	if (ARV_IS_GC_FLOAT (node))
+		arv_gc_float_set_value (ARV_GC_FLOAT (node), value);
 }
 
 double
 arv_device_get_float_feature_value (ArvDevice *device, const char *feature)
 {
-	ArvGc *genicam;
+	ArvGcNode *node;
 
-	genicam = arv_device_get_genicam (device);
-	return arv_gc_float_get_value (ARV_GC_FLOAT (arv_gc_get_node (genicam, feature)));
+	node = arv_device_get_feature (device, feature);
+
+	if (ARV_IS_GC_FLOAT (node))
+		return arv_gc_float_get_value (ARV_GC_FLOAT (node));
+
+	return 0.0;
 }
 
 void
 arv_device_get_float_feature_bounds (ArvDevice *device, const char *feature, double *min, double *max)
 {
-	ArvGc *genicam;
+	ArvGcNode *node;
 
-	genicam = arv_device_get_genicam (device);
+	node = arv_device_get_feature (device, feature);
 
-	if (min != NULL)
-		*min = arv_gc_float_get_min (ARV_GC_FLOAT (arv_gc_get_node (genicam, feature)));
-	if (max != NULL)
-		*max = arv_gc_float_get_max (ARV_GC_FLOAT (arv_gc_get_node (genicam, feature)));
+	if (ARV_IS_GC_FLOAT (node)) {
+		if (min != NULL)
+			*min = arv_gc_float_get_min (ARV_GC_FLOAT (node));
+		if (max != NULL)
+			*max = arv_gc_float_get_max (ARV_GC_FLOAT (node));
+	}
 }
 
 static void

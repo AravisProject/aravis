@@ -69,13 +69,30 @@ arv_gc_float_node_add_element (ArvGcNode *node, const char *name, const char *co
 		ARV_GC_NODE_CLASS (parent_class)->add_element (node, name, content, attributes);
 }
 
-/* ArvGcFloatNode implementation */
-
 static GType
 arv_gc_float_node_get_value_type (ArvGcNode *node)
 {
 	return G_TYPE_DOUBLE;
 }
+
+
+static void
+arv_gc_float_node_set_value_from_string (ArvGcNode *node, const char *string)
+{
+	arv_gc_float_set_value (ARV_GC_FLOAT (node), g_ascii_strtod (string, NULL));
+}
+
+static const char *
+arv_gc_float_node_get_value_as_string (ArvGcNode *node)
+{
+	ArvGcFloatNode *float_node = ARV_GC_FLOAT_NODE (node);
+
+	g_ascii_dtostr (float_node->v_string, G_ASCII_DTOSTR_BUF_SIZE, arv_gc_float_get_value (ARV_GC_FLOAT (node)));
+
+	return float_node->v_string;
+}
+
+/* ArvGcFloatNode implementation */
 
 ArvGcNode *
 arv_gc_float_node_new (void)
@@ -130,6 +147,8 @@ arv_gc_float_node_class_init (ArvGcFloatNodeClass *float_node_class)
 
 	node_class->add_element = arv_gc_float_node_add_element;
 	node_class->get_value_type = arv_gc_float_node_get_value_type;
+	node_class->set_value_from_string = arv_gc_float_node_set_value_from_string;
+	node_class->get_value_as_string = arv_gc_float_node_get_value_as_string;
 }
 
 /* ArvGcFloat interface implementation */

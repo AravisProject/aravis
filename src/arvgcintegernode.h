@@ -45,6 +45,8 @@ struct _ArvGcIntegerNode {
 	GValue maximum;
 	GValue increment;
 	char *unit;
+
+	char v_string[G_ASCII_DTOSTR_BUF_SIZE];
 };
 
 struct _ArvGcIntegerNodeClass {

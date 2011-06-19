@@ -59,6 +59,19 @@ arv_gc_enumeration_add_element (ArvGcNode *node, const char *name, const char *c
 		ARV_GC_NODE_CLASS (parent_class)->add_element (node, name, content, attributes);
 }
 
+static void
+arv_gc_enumeration_set_value_from_string (ArvGcNode *node, const char *string)
+{
+	arv_gc_enumeration_set_string_value (ARV_GC_ENUMERATION (node), string);
+}
+
+static const char *
+arv_gc_enumeration_get_value_as_string (ArvGcNode *node)
+{
+	return arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (node));
+}
+
+
 /* ArvGcEnumeration implementation */
 
 const char *
@@ -207,6 +220,8 @@ arv_gc_enumeration_class_init (ArvGcEnumerationClass *enumeration_class)
 
 	node_class->add_element = arv_gc_enumeration_add_element;
 	node_class->can_add_child = arv_gc_enumeration_can_add_child;
+	node_class->set_value_from_string = arv_gc_enumeration_set_value_from_string;
+	node_class->get_value_as_string = arv_gc_enumeration_get_value_as_string;
 }
 
 G_DEFINE_TYPE (ArvGcEnumeration, arv_gc_enumeration, ARV_TYPE_GC_NODE)

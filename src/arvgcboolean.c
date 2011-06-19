@@ -52,6 +52,18 @@ arv_gc_boolean_add_element (ArvGcNode *node, const char *name, const char *conte
 		ARV_GC_NODE_CLASS (parent_class)->add_element (node, name, content, attributes);
 }
 
+static void
+arv_gc_boolean_set_value_from_string (ArvGcNode *node, const char *string)
+{
+	arv_gc_boolean_set_value (ARV_GC_BOOLEAN (node), g_strcmp0 (string, "true") == 0);
+}
+
+static const char *
+arv_gc_boolean_get_value_as_string (ArvGcNode *node)
+{
+	return arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node)) ? "true" : "false";
+}
+
 /* ArvGcBoolean implementation */
 
 gboolean
@@ -113,6 +125,8 @@ arv_gc_boolean_class_init (ArvGcBooleanClass *boolean_class)
 	object_class->finalize = arv_gc_boolean_finalize;
 
 	node_class->add_element = arv_gc_boolean_add_element;
+	node_class->set_value_from_string = arv_gc_boolean_set_value_from_string;
+	node_class->get_value_as_string = arv_gc_boolean_get_value_as_string;
 }
 
 /* ArvGcInteger interface implementation */

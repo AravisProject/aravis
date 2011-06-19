@@ -123,6 +123,57 @@ arv_gc_register_add_element (ArvGcNode *node, const char *name, const char *cont
 		ARV_GC_NODE_CLASS (parent_class)->add_element (node, name, content, attributes);
 }
 
+static GType
+arv_gc_register_get_value_type (ArvGcNode *node)
+{
+	ArvGcRegister *gc_register = ARV_GC_REGISTER (node);
+
+	return gc_register->value_type;
+}
+
+static void
+arv_gc_register_set_value_from_string (ArvGcNode *node, const char *string)
+{
+	ArvGcRegister *gc_register = ARV_GC_REGISTER (node);
+
+	switch (gc_register->value_type) {
+		case G_TYPE_INT64:
+			arv_gc_integer_set_value (ARV_GC_INTEGER (node), g_ascii_strtoll (string, NULL, 0));
+			break;
+		case G_TYPE_DOUBLE:
+			arv_gc_float_set_value (ARV_GC_FLOAT (node), g_ascii_strtod (string, NULL));
+			break;
+		case G_TYPE_STRING:
+			arv_gc_string_set_value (ARV_GC_STRING (node), string);
+			break;
+		default:
+			break;
+	}
+}
+
+static const char *
+arv_gc_register_get_value_as_string (ArvGcNode *node)
+{
+	ArvGcRegister *gc_register = ARV_GC_REGISTER (node);
+
+	switch (gc_register->value_type) {
+		case G_TYPE_INT64:
+			g_snprintf (gc_register->v_string, G_ASCII_DTOSTR_BUF_SIZE,
+				    "%" G_GINT64_FORMAT, arv_gc_integer_get_value (ARV_GC_INTEGER (node)));
+			return gc_register->v_string;
+		case G_TYPE_DOUBLE:
+			g_ascii_dtostr (gc_register->v_string, G_ASCII_DTOSTR_BUF_SIZE,
+					arv_gc_float_get_value (ARV_GC_FLOAT (node)));
+			return gc_register->v_string;
+		case G_TYPE_STRING:
+			return arv_gc_string_get_value (ARV_GC_STRING (node));
+		default:
+			break;
+	}
+
+	return NULL;
+}
+
 /* ArvGcRegister implementation */
 
 gboolean
@@ -304,14 +355,6 @@ arv_gc_register_get_length (ArvGcRegister *gc_register)
 	return arv_gc_get_int64_from_value (genicam, &gc_register->length);
 }
 
-static GType
-arv_gc_register_get_value_type (ArvGcNode *node)
-{
-	ArvGcRegister *gc_register = ARV_GC_REGISTER (node);
-
-	return gc_register->value_type;
-}
-
 ArvGcNode *
 arv_gc_register_new (void)
 {
@@ -428,6 +471,8 @@ arv_gc_register_class_init (ArvGcRegisterClass *register_class)
 
 	node_class->add_element = arv_gc_register_add_element;
 	node_class->get_value_type = arv_gc_register_get_value_type;
+	node_class->set_value_from_string = arv_gc_register_set_value_from_string;
+	node_class->get_value_as_string = arv_gc_register_get_value_as_string;
 }
 
 /* ArvGcInteger interface implementation */

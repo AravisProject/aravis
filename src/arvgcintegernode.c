@@ -30,6 +30,7 @@
 #include <arvgc.h>
 #include <arvtools.h>
 #include <string.h>
+#include <stdlib.h>
 
 static GObjectClass *parent_class = NULL;
 
@@ -67,13 +68,30 @@ arv_gc_integer_node_add_element (ArvGcNode *node, const char *name, const char *
 		ARV_GC_NODE_CLASS (parent_class)->add_element (node, name, content, attributes);
 }
 
-/* ArvGcIntegerNode implementation */
-
 static GType
 arv_gc_integer_node_get_value_type (ArvGcNode *node)
 {
 	return G_TYPE_INT64;
 }
+
+static void
+arv_gc_integer_node_set_value_from_string (ArvGcNode *node, const char *string)
+{
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node), g_ascii_strtoll (string, NULL, 0));
+}
+
+static const char *
+arv_gc_integer_node_get_value_as_string (ArvGcNode *node)
+{
+	ArvGcIntegerNode *integer_node = ARV_GC_INTEGER_NODE (node);
+
+	g_snprintf (integer_node->v_string, G_ASCII_DTOSTR_BUF_SIZE,
+		    "%" G_GINT64_FORMAT, arv_gc_integer_get_value (ARV_GC_INTEGER (node)));
+
+	return integer_node->v_string;
+}
+
+/* ArvGcIntegerNode implementation */
 
 ArvGcNode *
 arv_gc_integer_node_new (void)
@@ -128,6 +146,8 @@ arv_gc_integer_node_class_init (ArvGcIntegerNodeClass *integer_node_class)
 
 	node_class->add_element = arv_gc_integer_node_add_element;
 	node_class->get_value_type = arv_gc_integer_node_get_value_type;
+	node_class->set_value_from_string = arv_gc_integer_node_set_value_from_string;
+	node_class->get_value_as_string = arv_gc_integer_node_get_value_as_string;
 }
 
 /* ArvGcInteger interface implementation */

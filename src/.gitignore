@@ -1,5 +1,6 @@
 arv-fake-gv-camera-*.*
 arv-show-devices-*.*
+arv-control-*.*
 arvenumtypes.c
 arvenumtypes.h
 arvconfig.h

@@ -38,7 +38,7 @@ G_DEFINE_INTERFACE (ArvGcString, arv_gc_string, G_TYPE_OBJECT)
 const char *
 arv_gc_string_get_value (ArvGcString *gc_string)
 {
-	g_return_val_if_fail (ARV_IS_GC_STRING (gc_string), 0);
+	g_return_val_if_fail (ARV_IS_GC_STRING (gc_string), NULL);
 
 	return ARV_GC_STRING_GET_INTERFACE (gc_string)->get_value (gc_string);
 }
