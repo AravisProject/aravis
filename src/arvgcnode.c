@@ -238,29 +238,48 @@ arv_gc_node_get_value_type (ArvGcNode *node)
 	return 0;
 }
 
+/**
+ * arv_gc_node_set_value_from_string:
+ * @gc_node: a #ArvGcNode
+ * @string: new node value, as string
+ *
+ * Set the node value using a string representation of the value. May not be applicable to every node type, but safe.
+ */
+
 void
-arv_gc_node_set_value_from_string (ArvGcNode *node, const char *string)
+arv_gc_node_set_value_from_string (ArvGcNode *gc_node, const char *string)
 {
 	ArvGcNodeClass *node_class;
 
-	g_return_if_fail (ARV_IS_GC_NODE (node));
+	g_return_if_fail (ARV_IS_GC_NODE (gc_node));
 	g_return_if_fail (string != NULL);
 
-	node_class = ARV_GC_NODE_GET_CLASS (node);
+	node_class = ARV_GC_NODE_GET_CLASS (gc_node);
 	if (node_class->set_value_from_string != NULL)
-		node_class->set_value_from_string (node, string);
+		node_class->set_value_from_string (gc_node, string);
 }
 
+/**
+ * arv_gc_node_get_value_as_string:
+ * @gc_node: a #ArvGcNode
+ *
+ * Retrieve the node value a string.
+ *
+ * <warning><para>Please not the string content is still owned by the @node object, which means the returned pointer may not be still valid after a new call to this function.</para></warning>
+ *
+ * Returns: (transfer none): a string representation of the node value, %NULL if not applicable.
+ */
+
 const char *
-arv_gc_node_get_value_as_string (ArvGcNode *node)
+arv_gc_node_get_value_as_string (ArvGcNode *gc_node)
 {
 	ArvGcNodeClass *node_class;
 
-	g_return_val_if_fail (ARV_IS_GC_NODE (node), NULL);
+	g_return_val_if_fail (ARV_IS_GC_NODE (gc_node), NULL);
 
-	node_class = ARV_GC_NODE_GET_CLASS (node);
+	node_class = ARV_GC_NODE_GET_CLASS (gc_node);
 	if (node_class->get_value_as_string != NULL)
-		return node_class->get_value_as_string (node);
+		return node_class->get_value_as_string (gc_node);
 
 	return NULL;
 }

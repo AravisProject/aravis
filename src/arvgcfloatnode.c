@@ -87,7 +87,8 @@ arv_gc_float_node_get_value_as_string (ArvGcNode *node)
 {
 	ArvGcFloatNode *float_node = ARV_GC_FLOAT_NODE (node);
 
-	g_ascii_dtostr (float_node->v_string, G_ASCII_DTOSTR_BUF_SIZE, arv_gc_float_get_value (ARV_GC_FLOAT (node)));
+	g_ascii_formatd (float_node->v_string, G_ASCII_DTOSTR_BUF_SIZE,
+			 "%g", arv_gc_float_get_value (ARV_GC_FLOAT (node)));
 
 	return float_node->v_string;
 }

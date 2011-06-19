@@ -8,6 +8,7 @@ integer_test (void)
 	ArvGc *genicam;
 	ArvGcNode *node;
 	gint64 v_int64;
+	const char *v_string;
 
 	device = arv_fake_device_new ("TEST0");
 	g_assert (ARV_IS_FAKE_DEVICE (device));
@@ -20,6 +21,63 @@ integer_test (void)
 
 	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
 	g_assert_cmpint (v_int64, ==, 1);
+
+	v_string = arv_gc_node_get_value_as_string (node);
+	g_assert_cmpstr (v_string, ==, "1");
+
+	g_object_unref (device);
+}
+
+static void
+boolean_test (void)
+{
+	ArvDevice *device;
+	ArvGc *genicam;
+	ArvGcNode *node;
+	gboolean v_boolean;
+	const char *v_string;
+
+	device = arv_fake_device_new ("TEST0");
+	g_assert (ARV_IS_FAKE_DEVICE (device));
+
+	genicam = arv_device_get_genicam (device);
+	g_assert (ARV_IS_GC (genicam));
+
+	node = arv_gc_get_node (genicam, "RWBoolean");
+	g_assert (ARV_IS_GC_BOOLEAN (node));
+
+	v_boolean = arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node));
+	g_assert_cmpint (v_boolean, ==, TRUE);
+
+	v_string = arv_gc_node_get_value_as_string (node);
+	g_assert_cmpstr (v_string, ==, "true");
+
+	g_object_unref (device);
+}
+
+static void
+float_test (void)
+{
+	ArvDevice *device;
+	ArvGc *genicam;
+	ArvGcNode *node;
+	double v_double;
+	const char *v_string;
+
+	device = arv_fake_device_new ("TEST0");
+	g_assert (ARV_IS_FAKE_DEVICE (device));
+
+	genicam = arv_device_get_genicam (device);
+	g_assert (ARV_IS_GC (genicam));
+
+	node = arv_gc_get_node (genicam, "RWFloat");
+	g_assert (ARV_IS_GC_FLOAT_NODE (node));
+
+	v_double = arv_gc_float_get_value (ARV_GC_FLOAT (node));
+	g_assert_cmpfloat (v_double, ==, 0.1);
+
+	v_string = arv_gc_node_get_value_as_string (node);
+	g_assert_cmpstr (v_string, ==, "0.1");
 
 	g_object_unref (device);
 }
@@ -68,6 +126,8 @@ main (int argc, char *argv[])
 	arv_set_fake_camera_genicam_filename (GENICAM_FILENAME);
 
 	g_test_add_func ("/genicam/integer", integer_test);
+	g_test_add_func ("/genicam/boolean", boolean_test);
+	g_test_add_func ("/genicam/float", float_test);
 	g_test_add_func ("/genicam/enumeration", enumeration_test);
 
 	result = g_test_run();

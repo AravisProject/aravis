@@ -38,7 +38,7 @@ G_DEFINE_INTERFACE (ArvGcFloat, arv_gc_float, G_TYPE_OBJECT)
 double
 arv_gc_float_get_value (ArvGcFloat *gc_float)
 {
-	g_return_val_if_fail (ARV_IS_GC_FLOAT (gc_float), 0);
+	g_return_val_if_fail (ARV_IS_GC_FLOAT (gc_float), 0.0);
 
 	return ARV_GC_FLOAT_GET_INTERFACE (gc_float)->get_value (gc_float);
 }

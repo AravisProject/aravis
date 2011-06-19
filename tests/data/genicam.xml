@@ -22,6 +22,14 @@
 		<pFeature>Enumeration</pFeature>
 	</Category>
 
+	<Float Name="RWFloat">
+		<Value>0.1</Value>
+	</Float>
+
+	<Boolean Name="RWBoolean">
+		<Value>1</Value>
+	</Boolean>
+
 	<Integer Name="RWInteger">
 		<Value>1</Value>
 	</Integer>
