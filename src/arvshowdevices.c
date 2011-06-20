@@ -2,18 +2,18 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-static char *arv_option_camera_name = NULL;
+static char *arv_option_device_name = NULL;
 static gboolean arv_option_show_xml = FALSE;
 static char *arv_option_debug_domains = NULL;
 
 static const GOptionEntry arv_option_entries[] =
 {
 	{ "name",		'n', 0, G_OPTION_ARG_STRING,
-		&arv_option_camera_name,"Camera name", NULL},
+		&arv_option_device_name,	NULL, "device_name"},
 	{ "xml",		'x', 0, G_OPTION_ARG_NONE,
-		&arv_option_show_xml,	"Show XML", NULL},
+		&arv_option_show_xml,		"Show Genicam data", NULL},
 	{ "debug", 		'd', 0, G_OPTION_ARG_STRING,
-		&arv_option_debug_domains, 	"Debug domains", NULL },
+		&arv_option_debug_domains, 	NULL, "category[:level][,...]" },
 	{ NULL }
 };
 
@@ -28,6 +28,7 @@ main (int argc, char **argv)
 	g_type_init ();
 
 	context = g_option_context_new (NULL);
+	g_option_context_set_summary (context, "Utility that gives the list of the connected devices.");
 	g_option_context_add_main_entries (context, arv_option_entries, NULL);
 
 	if (!g_option_context_parse (context, &argc, &argv, &error)) {
@@ -52,8 +53,8 @@ main (int argc, char **argv)
 			const char *device_id;
 
 			device_id = arv_get_device_id (i);
-			if (arv_option_camera_name == NULL ||
-			    g_strcmp0 (device_id, arv_option_camera_name) == 0) {
+			if (arv_option_device_name == NULL ||
+			    g_strcmp0 (device_id, arv_option_device_name) == 0) {
 				if (device_id != NULL)
 					printf ("%s\n",  device_id);
 

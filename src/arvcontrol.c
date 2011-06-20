@@ -16,7 +16,7 @@ static const GOptionEntry arv_option_entries[] =
 	{ "description",	'i', 0, G_OPTION_ARG_NONE,
 		&arv_option_show_description,	"Show feature description", NULL},
 	{ "debug", 		'd', 0, G_OPTION_ARG_STRING,
-		&arv_option_debug_domains, 	"Debug", "domain[:level][,domain:[level]]..." },
+		&arv_option_debug_domains, 	NULL, "category[:level][,...]" },
 	{ NULL }
 };
 

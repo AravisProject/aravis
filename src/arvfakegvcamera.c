@@ -442,9 +442,9 @@ static char *arv_option_debug_domains = NULL;
 static const GOptionEntry arv_option_entries[] =
 {
 	{ "interface",		'i', 0, G_OPTION_ARG_STRING,
-		&arv_option_interface_name,	"Listening interface name", NULL},
+		&arv_option_interface_name,	"Listening interface name", "interface_id"},
 	{ "debug", 		'd', 0, G_OPTION_ARG_STRING,
-		&arv_option_debug_domains, 	"Debug mode", NULL },
+		&arv_option_debug_domains, 	NULL, "category[:level][,...]" },
 	{ NULL }
 };
 
@@ -461,6 +461,8 @@ main (int argc, char **argv)
 	g_type_init ();
 
 	context = g_option_context_new (NULL);
+	g_option_context_set_summary (context, "Fake GigEVision camera.");
+	g_option_context_set_description (context, "Example: 'arv-fake-gv-camera-" ARAVIS_API_VERSION " -i eth0'");
 	g_option_context_add_main_entries (context, arv_option_entries, NULL);
 
 	if (!g_option_context_parse (context, &argc, &argv, &error)) {
