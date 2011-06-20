@@ -106,10 +106,15 @@ main (int argc, char **argv)
 			if (!ARV_IS_GC_NODE (feature))
 				printf ("Feature '%s' not found\n", tokens[0]);
 			else {
-				if (tokens[1] != NULL)
-					arv_gc_node_set_value_from_string (feature, tokens[1]);
+				if (ARV_IS_GC_COMMAND (feature)) {
+					arv_gc_command_execute (ARV_GC_COMMAND (feature));
+					printf ("%s executed\n", tokens[0]);
+				} else {
+					if (tokens[1] != NULL)
+						arv_gc_node_set_value_from_string (feature, tokens[1]);
 
-				printf ("%s = %s\n", tokens[0], arv_gc_node_get_value_as_string (feature));
+					printf ("%s = %s\n", tokens[0], arv_gc_node_get_value_as_string (feature));
+				}
 			}
 			g_strfreev (tokens);
 		}
