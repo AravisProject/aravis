@@ -50,6 +50,19 @@ arv_control_list_features (ArvGc *genicam, const char *feature, gboolean show_de
 
 			for (iter = features; iter != NULL; iter = iter->next)
 				arv_control_list_features (genicam, iter->data, show_description, level + 1);
+		} else if (ARV_IS_GC_ENUMERATION (node)) {
+			const GSList *childs;
+			const GSList *iter;
+
+			childs = arv_gc_node_get_childs (node);
+			for (iter = childs; iter != NULL; iter = iter->next) {
+				for (i = 0; i < level + 1; i++)
+					printf ("    ");
+
+				printf ("%s: '%s'\n",
+					arv_gc_node_get_node_name (iter->data),
+					arv_gc_node_get_name (iter->data));
+			}
 		}
 	}
 }
