@@ -12,6 +12,7 @@ INCLUDES = \
 	-DPACKAGE_SRC_DIR=\""$(srcdir)"\" \
 	-DPACKAGE_DATA_DIR=\""$(datadir)"\" $(ARAVIS_CFLAGS) \
 	-DARAVIS_DATA_DIR=\""$(aravis_datadir)"\" \
+	-DARAVIS_API_VERSION=\""$(ARAVIS_API_VERSION)"\" \
 	-DG_LOG_DOMAIN=\"Aravis\"
 
 AM_CFLAGS = -Wall

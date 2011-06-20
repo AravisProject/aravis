@@ -10,13 +10,13 @@ static char *arv_option_debug_domains = NULL;
 static const GOptionEntry arv_option_entries[] =
 {
 	{ "name",		'n', 0, G_OPTION_ARG_STRING,
-		&arv_option_device_name,	"Camera name", NULL},
+		&arv_option_device_name,	NULL, "device_name"},
 	{ "list",		'l', 0, G_OPTION_ARG_NONE,
 		&arv_option_list,		"List available features", NULL},
 	{ "description",	'i', 0, G_OPTION_ARG_NONE,
 		&arv_option_show_description,	"Show feature description", NULL},
 	{ "debug", 		'd', 0, G_OPTION_ARG_STRING,
-		&arv_option_debug_domains, 	"Debug domains", NULL },
+		&arv_option_debug_domains, 	"Debug", "domain[:level][,domain:[level]]..." },
 	{ NULL }
 };
 
@@ -65,7 +65,12 @@ main (int argc, char **argv)
 	g_thread_init (NULL);
 	g_type_init ();
 
-	context = g_option_context_new (NULL);
+	context = g_option_context_new ("feature[=value] ...");
+	g_option_context_set_summary (context, "Small utility for read/write of Genicam device features.");
+	g_option_context_set_description (context,
+					  "For example the setting of the Width and Height features, followed by"
+					  " the read of the Gain, is done with this command: 'arv-control-"
+					  ARAVIS_API_VERSION " Width=128 Height=128 Gain'.");
 	g_option_context_add_main_entries (context, arv_option_entries, NULL);
 
 	if (!g_option_context_parse (context, &argc, &argv, &error)) {
