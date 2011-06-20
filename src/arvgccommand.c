@@ -38,6 +38,12 @@ static GObjectClass *parent_class = NULL;
 
 /* ArvGcNode implementation */
 
+static const char *
+arv_gc_command_get_node_name (ArvGcNode *node)
+{
+	return "Command";
+}
+
 static void
 arv_gc_command_add_element (ArvGcNode *node, const char *name, const char *content, const char **attributes)
 {
@@ -116,6 +122,7 @@ arv_gc_command_class_init (ArvGcCommandClass *command_class)
 
 	object_class->finalize = arv_gc_command_finalize;
 
+	node_class->get_node_name = arv_gc_command_get_node_name;
 	node_class->add_element = arv_gc_command_add_element;
 }
 

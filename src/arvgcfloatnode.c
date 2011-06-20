@@ -35,6 +35,12 @@ static GObjectClass *parent_class = NULL;
 
 /* ArvGcNode implementation */
 
+static const char *
+arv_gc_float_node_get_node_name (ArvGcNode *node)
+{
+	return "Float";
+}
+
 static void
 arv_gc_float_node_add_element (ArvGcNode *node, const char *name, const char *content, const char **attributes)
 {
@@ -146,6 +152,7 @@ arv_gc_float_node_class_init (ArvGcFloatNodeClass *float_node_class)
 
 	object_class->finalize = arv_gc_float_node_finalize;
 
+	node_class->get_node_name = arv_gc_float_node_get_node_name;
 	node_class->add_element = arv_gc_float_node_add_element;
 	node_class->get_value_type = arv_gc_float_node_get_value_type;
 	node_class->set_value_from_string = arv_gc_float_node_set_value_from_string;

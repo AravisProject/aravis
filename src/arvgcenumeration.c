@@ -36,6 +36,12 @@ static GObjectClass *parent_class = NULL;
 
 /* ArvGcNode implementation */
 
+static const char *
+arv_gc_enumeration_get_node_name (ArvGcNode *node)
+{
+	return "Enumeration";
+}
+
 static gboolean
 arv_gc_enumeration_can_add_child (ArvGcNode *node, ArvGcNode *child)
 {
@@ -218,6 +224,7 @@ arv_gc_enumeration_class_init (ArvGcEnumerationClass *enumeration_class)
 
 	object_class->finalize = arv_gc_enumeration_finalize;
 
+	node_class->get_node_name = arv_gc_enumeration_get_node_name;
 	node_class->add_element = arv_gc_enumeration_add_element;
 	node_class->can_add_child = arv_gc_enumeration_can_add_child;
 	node_class->set_value_from_string = arv_gc_enumeration_set_value_from_string;

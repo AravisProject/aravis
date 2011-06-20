@@ -33,6 +33,12 @@ static GObjectClass *parent_class = NULL;
 
 /* ArvGcNode implementation */
 
+static const char *
+arv_gc_enum_entry_get_node_name (ArvGcNode *node)
+{
+	return "EnumEntry";
+}
+
 static void
 arv_gc_enum_entry_add_element (ArvGcNode *node, const char *name, const char *content, const char **attributes)
 {
@@ -88,6 +94,7 @@ arv_gc_enum_entry_class_init (ArvGcEnumEntryClass *enum_entry_class)
 
 	object_class->finalize = arv_gc_enum_entry_finalize;
 
+	node_class->get_node_name = arv_gc_enum_entry_get_node_name;
 	node_class->add_element = arv_gc_enum_entry_add_element;
 }
 

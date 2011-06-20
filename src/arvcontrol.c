@@ -3,16 +3,45 @@
 #include <stdio.h>
 
 static char *arv_option_device_name = NULL;
+static gboolean arv_option_list = FALSE;
 static char *arv_option_debug_domains = NULL;
 
 static const GOptionEntry arv_option_entries[] =
 {
 	{ "name",		'n', 0, G_OPTION_ARG_STRING,
 		&arv_option_device_name,"Camera name", NULL},
+	{ "list",		'l', 0, G_OPTION_ARG_NONE,
+		&arv_option_list,	"List available features", NULL},
 	{ "debug", 		'd', 0, G_OPTION_ARG_STRING,
 		&arv_option_debug_domains, 	"Debug domains", NULL },
 	{ NULL }
 };
+
+static void
+arv_control_list_features (ArvGc *genicam, const char *feature, int level)
+{
+	ArvGcNode *node;
+
+	node = arv_gc_get_node (genicam, feature);
+	if (ARV_IS_GC_NODE (node)) {
+		int i;
+
+		for (i = 0; i < level; i++)
+			printf ("    ");
+
+		printf ("%s: '%s'\n", arv_gc_node_get_node_name (node), feature);
+
+		if (ARV_IS_GC_CATEGORY (node)) {
+			const GSList *features;
+			const GSList *iter;
+
+			features = arv_gc_category_get_features (ARV_GC_CATEGORY (node));
+
+			for (iter = features; iter != NULL; iter = iter->next)
+				arv_control_list_features (genicam, iter->data, level + 1);
+		}
+	}
+}
 
 int
 main (int argc, char **argv)
@@ -45,7 +74,12 @@ main (int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	if (argc < 2) {
+	if (arv_option_list) {
+		ArvGc *genicam;
+
+		genicam = arv_device_get_genicam (device);
+		arv_control_list_features (genicam, "Root",0);
+	} else if (argc < 2) {
 	} else
 		for (i = 1; i < argc; i++) {
 			ArvGcNode *feature;

@@ -39,6 +39,8 @@ typedef struct _ArvGcCategoryClass ArvGcCategoryClass;
 
 struct _ArvGcCategory {
 	ArvGcNode	node;
+
+	GSList *features;
 };
 
 struct _ArvGcCategoryClass {
@@ -47,7 +49,8 @@ struct _ArvGcCategoryClass {
 
 GType 		arv_gc_category_get_type 	(void);
 
-ArvGcNode * 	arv_gc_category_new 	(void);
+ArvGcNode * 	arv_gc_category_new 		(void);
+const GSList * 	arv_gc_category_get_features 	(ArvGcCategory *category);
 
 G_END_DECLS
 

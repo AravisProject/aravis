@@ -45,6 +45,27 @@ static GObjectClass *parent_class = NULL;
 
 /* ArvGcNode implementation */
 
+static const char *
+arv_gc_register_get_node_name (ArvGcNode *node)
+{
+	ArvGcRegister *gc_register = ARV_GC_REGISTER (node);
+
+	switch (gc_register->type) {
+		case ARV_GC_REGISTER_TYPE_REGISTER:
+			return "Register";
+		case ARV_GC_REGISTER_TYPE_INTEGER:
+			return "IntReg";
+		case ARV_GC_REGISTER_TYPE_MASKED_INTEGER:
+			return "MaskedIntReg";
+		case ARV_GC_REGISTER_TYPE_FLOAT:
+			return "FloatReg";
+		case ARV_GC_REGISTER_TYPE_STRING:
+			return "StringReg";
+	}
+
+	return NULL;
+}
+
 static void
 arv_gc_register_add_element (ArvGcNode *node, const char *name, const char *content, const char **attributes)
 {
@@ -469,6 +490,7 @@ arv_gc_register_class_init (ArvGcRegisterClass *register_class)
 
 	object_class->finalize = arv_gc_register_finalize;
 
+	node_class->get_node_name = arv_gc_register_get_node_name;
 	node_class->add_element = arv_gc_register_add_element;
 	node_class->get_value_type = arv_gc_register_get_value_type;
 	node_class->set_value_from_string = arv_gc_register_set_value_from_string;

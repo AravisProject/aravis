@@ -34,6 +34,12 @@ static GObjectClass *parent_class = NULL;
 
 /* ArvGcNode implementation */
 
+static const char *
+arv_gc_boolean_get_node_name (ArvGcNode *node)
+{
+	return "Boolean";
+}
+
 static void
 arv_gc_boolean_add_element (ArvGcNode *node, const char *name, const char *content, const char **attributes)
 {
@@ -124,6 +130,7 @@ arv_gc_boolean_class_init (ArvGcBooleanClass *boolean_class)
 
 	object_class->finalize = arv_gc_boolean_finalize;
 
+	node_class->get_node_name = arv_gc_boolean_get_node_name;
 	node_class->add_element = arv_gc_boolean_add_element;
 	node_class->set_value_from_string = arv_gc_boolean_set_value_from_string;
 	node_class->get_value_as_string = arv_gc_boolean_get_value_as_string;

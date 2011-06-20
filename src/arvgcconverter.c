@@ -44,6 +44,17 @@ typedef struct {
 	char *node_name;
 } ArvGcConverterVariableInfos;
 
+static const char *
+arv_gc_converter_get_node_name (ArvGcNode *node)
+{
+	ArvGcConverter *gc_converter = ARV_GC_CONVERTER (node);
+
+	if (gc_converter->value_type == G_TYPE_DOUBLE)
+		return "Converter";
+
+	return "IntConverter";
+}
+
 static void
 arv_gc_converter_add_element (ArvGcNode *node, const char *name, const char *content, const char **attributes)
 {
@@ -159,6 +170,7 @@ arv_gc_converter_class_init (ArvGcConverterClass *converter_class)
 
 	object_class->finalize = arv_gc_converter_finalize;
 
+	node_class->get_node_name = arv_gc_converter_get_node_name;
 	node_class->add_element = arv_gc_converter_add_element;
 	node_class->get_value_type = arv_gc_converter_node_get_value_type;
 }

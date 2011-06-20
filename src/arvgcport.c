@@ -31,6 +31,12 @@
 
 static GObjectClass *parent_class = NULL;
 
+static const char *
+arv_gc_port_get_node_name (ArvGcNode *node)
+{
+	return "Port";
+}
+
 void
 arv_gc_port_read (ArvGcPort *port, void *buffer, guint64 address, guint64 length)
 {
@@ -84,10 +90,13 @@ static void
 arv_gc_port_class_init (ArvGcPortClass *port_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (port_class);
+	ArvGcNodeClass *node_class = ARV_GC_NODE_CLASS (port_class);
 
 	parent_class = g_type_class_peek_parent (port_class);
 
 	object_class->finalize = arv_gc_port_finalize;
+
+	node_class->get_node_name = arv_gc_port_get_node_name;
 }
 
 G_DEFINE_TYPE (ArvGcPort, arv_gc_port, ARV_TYPE_GC_NODE)

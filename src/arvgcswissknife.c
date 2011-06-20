@@ -43,6 +43,17 @@ typedef struct {
 	char *node_name;
 } ArvGcSwissKnifeVariableInfos;
 
+static const char *
+arv_gc_swiss_knife_get_node_name (ArvGcNode *node)
+{
+	ArvGcSwissKnife *gc_swiss_knife = ARV_GC_SWISS_KNIFE (node);
+
+	if (gc_swiss_knife->value_type == G_TYPE_DOUBLE)
+		return "SwissKnife";
+
+	return "IntSwissKnife";
+}
+
 static void
 arv_gc_swiss_knife_add_element (ArvGcNode *node, const char *name, const char *content, const char **attributes)
 {
@@ -148,6 +159,7 @@ arv_gc_swiss_knife_class_init (ArvGcSwissKnifeClass *swiss_knife_class)
 
 	object_class->finalize = arv_gc_swiss_knife_finalize;
 
+	node_class->get_node_name = arv_gc_swiss_knife_get_node_name;
 	node_class->add_element = arv_gc_swiss_knife_add_element;
 	node_class->get_value_type = arv_gc_swiss_knife_node_get_value_type;
 }

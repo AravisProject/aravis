@@ -33,18 +33,41 @@ static GObjectClass *parent_class = NULL;
 
 /* ArvGcNode implementation */
 
+static const char *
+arv_gc_category_get_node_name (ArvGcNode *node)
+{
+	return "Category";
+}
+
 static void
 arv_gc_category_add_element (ArvGcNode *node, const char *name, const char *content, const char **attributes)
 {
-/*        ArvGcCategory *gc_category = ARV_GC_CATEGORY (node);*/
+	ArvGcCategory *category = ARV_GC_CATEGORY (node);
 
 	if (strcmp (name, "pFeature") == 0) {
-		/* TODO */
+		category->features = g_slist_append (category->features, g_strdup (content));
 	} else
 		ARV_GC_NODE_CLASS (parent_class)->add_element (node, name, content, attributes);
 }
 
 /* ArvGcCategory implementation */
+
+/**
+ * arv_gc_category_get_features:
+ * @category: a #ArvGcCategory
+ *
+ * Get a list of strings with the name of the features listed in the given category node.
+ *
+ * Returns: a list of strings.
+ */
+
+const GSList *
+arv_gc_category_get_features (ArvGcCategory *category)
+{
+	g_return_val_if_fail (ARV_IS_GC_CATEGORY (category), NULL);
+
+	return category->features;
+}
 
 ArvGcNode *
 arv_gc_category_new (void)
@@ -59,12 +82,18 @@ arv_gc_category_new (void)
 static void
 arv_gc_category_init (ArvGcCategory *gc_category)
 {
+	gc_category->features = NULL;
 }
 
 static void
 arv_gc_category_finalize (GObject *object)
 {
-/*        ArvGcCategory *gc_category = ARV_GC_CATEGORY (object);*/
+	ArvGcCategory *gc_category = ARV_GC_CATEGORY (object);
+	GSList *iter;
+
+	for (iter = gc_category->features; iter != NULL; iter = iter->next)
+		g_free (iter->data);
+	g_slist_free (gc_category->features);
 
 	parent_class->finalize (object);
 }
@@ -79,6 +108,7 @@ arv_gc_category_class_init (ArvGcCategoryClass *category_class)
 
 	object_class->finalize = arv_gc_category_finalize;
 
+	node_class->get_node_name = arv_gc_category_get_node_name;
 	node_class->add_element = arv_gc_category_add_element;
 }
 
