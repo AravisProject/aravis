@@ -4,21 +4,24 @@
 
 static char *arv_option_device_name = NULL;
 static gboolean arv_option_list = FALSE;
+static gboolean arv_option_show_description = FALSE;
 static char *arv_option_debug_domains = NULL;
 
 static const GOptionEntry arv_option_entries[] =
 {
 	{ "name",		'n', 0, G_OPTION_ARG_STRING,
-		&arv_option_device_name,"Camera name", NULL},
+		&arv_option_device_name,	"Camera name", NULL},
 	{ "list",		'l', 0, G_OPTION_ARG_NONE,
-		&arv_option_list,	"List available features", NULL},
+		&arv_option_list,		"List available features", NULL},
+	{ "description",	'i', 0, G_OPTION_ARG_NONE,
+		&arv_option_show_description,	"Show feature description", NULL},
 	{ "debug", 		'd', 0, G_OPTION_ARG_STRING,
 		&arv_option_debug_domains, 	"Debug domains", NULL },
 	{ NULL }
 };
 
 static void
-arv_control_list_features (ArvGc *genicam, const char *feature, int level)
+arv_control_list_features (ArvGc *genicam, const char *feature, gboolean show_description, int level)
 {
 	ArvGcNode *node;
 
@@ -31,6 +34,14 @@ arv_control_list_features (ArvGc *genicam, const char *feature, int level)
 
 		printf ("%s: '%s'\n", arv_gc_node_get_node_name (node), feature);
 
+		if (show_description) {
+			const char *description;
+
+			description = arv_gc_node_get_description (node);
+			if (description)
+				printf ("%s\n", description);
+		}
+
 		if (ARV_IS_GC_CATEGORY (node)) {
 			const GSList *features;
 			const GSList *iter;
@@ -38,7 +49,7 @@ arv_control_list_features (ArvGc *genicam, const char *feature, int level)
 			features = arv_gc_category_get_features (ARV_GC_CATEGORY (node));
 
 			for (iter = features; iter != NULL; iter = iter->next)
-				arv_control_list_features (genicam, iter->data, level + 1);
+				arv_control_list_features (genicam, iter->data, show_description, level + 1);
 		}
 	}
 }
@@ -78,7 +89,7 @@ main (int argc, char **argv)
 		ArvGc *genicam;
 
 		genicam = arv_device_get_genicam (device);
-		arv_control_list_features (genicam, "Root",0);
+		arv_control_list_features (genicam, "Root", arv_option_show_description, 0);
 	} else if (argc < 2) {
 	} else
 		for (i = 1; i < argc; i++) {
