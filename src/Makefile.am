@@ -129,17 +129,13 @@ arvenumtypes.c: arvenumtypes.c.template $(ARAVIS_HDRS) $(ARAVIS_HDRS_NO_INTRO) $
 
 bin_PROGRAMS =						\
 	arv-fake-gv-camera-@ARAVIS_API_VERSION@		\
-       	arv-show-devices-@ARAVIS_API_VERSION@		\
-	arv-control-@ARAVIS_API_VERSION@
+	arv-tool-@ARAVIS_API_VERSION@
 
 arv_fake_gv_camera_@ARAVIS_API_VERSION@_SOURCES = arvfakegvcamera.c
 arv_fake_gv_camera_@ARAVIS_API_VERSION@_LDADD = $(ARAVIS_LIBS) libaravis-@ARAVIS_API_VERSION@.la
 
-arv_show_devices_@ARAVIS_API_VERSION@_SOURCES = arvshowdevices.c
-arv_show_devices_@ARAVIS_API_VERSION@_LDADD = $(ARAVIS_LIBS) libaravis-@ARAVIS_API_VERSION@.la
-
-arv_control_@ARAVIS_API_VERSION@_SOURCES = arvcontrol.c
-arv_control_@ARAVIS_API_VERSION@_LDADD = $(ARAVIS_LIBS) libaravis-@ARAVIS_API_VERSION@.la
+arv_tool_@ARAVIS_API_VERSION@_SOURCES = arvtool.c
+arv_tool_@ARAVIS_API_VERSION@_LDADD = $(ARAVIS_LIBS) libaravis-@ARAVIS_API_VERSION@.la
 
 CLEANFILES = $(BUILT_SOURCES)
 
