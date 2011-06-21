@@ -180,7 +180,7 @@ arv_gc_register_get_value_as_string (ArvGcNode *node)
 	switch (gc_register->value_type) {
 		case G_TYPE_INT64:
 			g_snprintf (gc_register->v_string, G_ASCII_DTOSTR_BUF_SIZE,
-				    "%" G_GINT64_FORMAT, arv_gc_integer_get_value (ARV_GC_INTEGER (node)));
+				    "0x%08" G_GINT64_MODIFIER "x", arv_gc_integer_get_value (ARV_GC_INTEGER (node)));
 			return gc_register->v_string;
 		case G_TYPE_DOUBLE:
 			g_ascii_dtostr (gc_register->v_string, G_ASCII_DTOSTR_BUF_SIZE,
