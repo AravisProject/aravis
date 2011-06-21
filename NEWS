@@ -1,7 +1,11 @@
 Release 0.1.8
 =============
 
-  * Fix headers for C++ compatibility (Andre Gaschler)
+  In this release, arv-show-devices is renamed to arv-tool, and gain the capability
+  to read/write and list device features.
+
+  * Build: fix headers for C++ compatibility (Andre Gaschler)
+  * Genicam: partly implement isAvailable and isImplemented.
 
 Release 0.1.7
 =============
