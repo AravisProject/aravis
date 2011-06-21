@@ -1,0 +1,3 @@
+- rework of genicam node objects, probably using the same code as lasem.
+- add a feature tree and editor to the simple viewer.
+- support more genicam features.
