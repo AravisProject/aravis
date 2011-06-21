@@ -28,7 +28,7 @@
 #include <arvgcenumeration.h>
 #include <arvgcenumentry.h>
 #include <arvgc.h>
-#include <arvtools.h>
+#include <arvmisc.h>
 #include <arvdebug.h>
 #include <string.h>
 

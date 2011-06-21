@@ -26,8 +26,8 @@
  */
 
 #include <arvevaluator.h>
-#include <arvtools.h>
 #include <arvdebug.h>
+#include <arvmisc.h>
 #include <math.h>
 #include <stdlib.h>
 

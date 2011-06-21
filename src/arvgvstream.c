@@ -30,7 +30,7 @@
 #include <arvgvsp.h>
 #include <arvgvcp.h>
 #include <arvdebug.h>
-#include <arvtools.h>
+#include <arvmisc.h>
 #include <arvenumtypes.h>
 #include <string.h>
 #include <sys/socket.h>

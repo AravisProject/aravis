@@ -28,7 +28,7 @@
 #include <arvgcintegernode.h>
 #include <arvgcinteger.h>
 #include <arvgc.h>
-#include <arvtools.h>
+#include <arvmisc.h>
 #include <string.h>
 #include <stdlib.h>
 

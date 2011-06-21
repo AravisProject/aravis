@@ -26,7 +26,7 @@
  */
 
 #include <arvgcfloat.h>
-#include <arvtools.h>
+#include <arvmisc.h>
 
 static void
 arv_gc_float_default_init (ArvGcFloatInterface *gc_float_iface)

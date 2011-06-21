@@ -27,7 +27,7 @@
 
 #include <arvgcboolean.h>
 #include <arvgc.h>
-#include <arvtools.h>
+#include <arvmisc.h>
 #include <string.h>
 
 static GObjectClass *parent_class = NULL;

@@ -31,7 +31,7 @@
 #include <arvgcstring.h>
 #include <arvgcport.h>
 #include <arvgc.h>
-#include <arvtools.h>
+#include <arvmisc.h>
 #include <arvdebug.h>
 #include <stdlib.h>
 #include <string.h>

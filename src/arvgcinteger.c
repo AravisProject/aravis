@@ -26,7 +26,7 @@
  */
 
 #include <arvgcinteger.h>
-#include <arvtools.h>
+#include <arvmisc.h>
 
 static void
 arv_gc_integer_default_init (ArvGcIntegerInterface *gc_integer_iface)

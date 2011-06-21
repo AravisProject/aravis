@@ -63,7 +63,7 @@ ARAVIS_SRCS =					\
 	arvfakecamera.c
 
 ARAVIS_SRCS_NO_INTRO =				\
-	arvtools.c				\
+	arvmisc.c				\
 	arvzip.c				\
 	arvgvcp.c				\
 	arvgvsp.c
@@ -105,7 +105,7 @@ ARAVIS_HDRS = 					\
 	arvfakecamera.h
 
 ARAVIS_HDRS_NO_INTRO =				\
-	arvtools.h				\
+	arvmisc.h				\
 	arvzip.h				\
 	arvgvcp.h				\
 	arvgvsp.h

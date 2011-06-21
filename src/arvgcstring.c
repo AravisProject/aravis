@@ -26,7 +26,7 @@
  */
 
 #include <arvgcstring.h>
-#include <arvtools.h>
+#include <arvmisc.h>
 
 static void
 arv_gc_string_default_init (ArvGcStringInterface *gc_string_iface)

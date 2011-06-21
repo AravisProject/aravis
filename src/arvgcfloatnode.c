@@ -28,7 +28,7 @@
 #include <arvgcfloatnode.h>
 #include <arvgcfloat.h>
 #include <arvgc.h>
-#include <arvtools.h>
+#include <arvmisc.h>
 #include <string.h>
 
 static GObjectClass *parent_class = NULL;
