@@ -43,3 +43,5 @@ genicam_LDADD = $(test_progs_ldadd)
 
 cpp_SOURCES = cpp.cc
 cpp_LDADD = $(test_progs_ldadd)
+
+EXTRA_DIST = data/genicam.xml
