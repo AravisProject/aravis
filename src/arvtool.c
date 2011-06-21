@@ -9,9 +9,9 @@ static char *arv_option_debug_domains = NULL;
 static const GOptionEntry arv_option_entries[] =
 {
 	{ "name",		'n', 0, G_OPTION_ARG_STRING,
-		&arv_option_device_name,	NULL, "device_name"},
+		&arv_option_device_name,	NULL, "<device_name>"},
 	{ "debug", 		'd', 0, G_OPTION_ARG_STRING,
-		&arv_option_debug_domains, 	NULL, "category[:level][,...]" },
+		&arv_option_debug_domains, 	NULL, "<category>[:<level>][,...]" },
 	{ NULL }
 };
 
@@ -91,12 +91,12 @@ description_content[] =
 "\n"
 "  genicam:                          dump the content of the Genicam xml data\n"
 "  features:                         list all availale features\n"
-"  description  [<feature>] ...:     show the full feature description\n"
+"  description [<feature>] ...:      show the full feature description\n"
 "  control <feature>[=<value>] ...:  read/write device features\n"
 "\n"
-"If no command is given, this utility will list all the available devices\n"
+"If no command is given, this utility will list all the available devices.\n"
 "For the control command, direct access to device registers is provided using a R[address] syntax"
-" in place of a feature name \n"
+" in place of a feature name.\n"
 "\n"
 "Examples:\n"
 "\n"
