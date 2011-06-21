@@ -1,5 +1,6 @@
 #include <arv.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 
 static char *arv_option_device_name = NULL;
@@ -83,7 +84,10 @@ main (int argc, char **argv)
 	g_option_context_set_description (context,
 					  "For example the setting of the Width and Height features, followed by"
 					  " the read of the Gain, is done with this command: 'arv-control-"
-					  ARAVIS_API_VERSION " Width=128 Height=128 Gain'.");
+					  ARAVIS_API_VERSION " Width=128 Height=128 Gain'.\n"
+					  "Direct access to device registers is provided using a R[address] syntax"
+					  " in place of a feature name, like: 'arv-control-" ARAVIS_API_VERSION
+					  " R[0x10000] R[0x10004]=10'" );
 	g_option_context_add_main_entries (context, arv_option_entries, NULL);
 
 	if (!g_option_context_parse (context, &argc, &argv, &error)) {
@@ -117,7 +121,24 @@ main (int argc, char **argv)
 			tokens = g_strsplit (argv[i], "=", 2);
 			feature = arv_device_get_feature (device, tokens[0]);
 			if (!ARV_IS_GC_NODE (feature))
-				printf ("Feature '%s' not found\n", tokens[0]);
+				if (g_strrstr (tokens[0], "R[") == tokens[0]) {
+					guint32 value;
+					guint32 address;
+
+					address = g_ascii_strtoll(&tokens[0][2], NULL, 0);
+
+					if (tokens[1] != NULL) {
+						arv_device_write_register (device,
+									   address,
+									   g_ascii_strtoll (tokens[1], NULL, 0));
+					}
+
+					arv_device_read_register (device, address, &value);
+
+					printf ("R[0x%08x] = 0x%08x\n",
+						address, value);
+				} else
+					printf ("Feature '%s' not found\n", tokens[0]);
 			else {
 				if (ARV_IS_GC_COMMAND (feature)) {
 					arv_gc_command_execute (ARV_GC_COMMAND (feature));
