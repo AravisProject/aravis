@@ -42,7 +42,7 @@ static GRegex *arv_gv_device_url_regex = NULL;
 typedef struct {
 	GMutex *mutex;
 
-	guint32 packet_count;
+	guint16 packet_count;
 
 	GSocket *socket;
 	GSocketAddress	*interface_address;
