@@ -1,7 +1,8 @@
 Release 0.1.9
 =============
 
-  This release fix the lost of the device connection after about 65600 seconds.
+  This release fixes the lost of the connection to the device after
+  about 65600 seconds.
 
   * GV device: don't compare guint32 and guint16.
 
