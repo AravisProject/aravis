@@ -17,7 +17,9 @@ gstplugin_LTLIBRARIES = libgstaravis-@ARAVIS_API_VERSION@.la
 
 libgstaravis_@ARAVIS_API_VERSION@_la_SOURCES = gstaravis.c gstaravis.h
 libgstaravis_@ARAVIS_API_VERSION@_la_CFLAGS = $(ARAVIS_GST_PLUGIN_CFLAGS)
-libgstaravis_@ARAVIS_API_VERSION@_la_LIBADD = $(ARAVIS_GST_PLUGIN_LIBS)
+libgstaravis_@ARAVIS_API_VERSION@_la_LIBADD =		\
+	$(ARAVIS_GST_PLUGIN_LIBS) 			\
+	$(top_builddir)/src/libaravis-@ARAVIS_API_VERSION@.la
 libgstaravis_@ARAVIS_API_VERSION@_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstaravis_@ARAVIS_API_VERSION@_la_LIBTOOLFLAGS = --tag=disable-static
 
