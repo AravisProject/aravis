@@ -93,7 +93,7 @@ typedef struct {
 
 	gboolean cancel;
 
-	guint32 packet_count;
+	guint16 packet_count;
 
 	GSList *frames;
 	guint32 last_frame_id;
