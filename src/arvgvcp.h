@@ -180,26 +180,26 @@ typedef struct {
 
 void 			arv_gvcp_packet_free 			(ArvGvcpPacket *packet);
 ArvGvcpPacket * 	arv_gvcp_packet_new_read_memory_cmd 	(guint32 address, guint32 size,
-								 guint32 packet_count, size_t *packet_size);
-ArvGvcpPacket * 	arv_gvcp_packet_new_read_memory_ack 	(guint32 address, guint32 size, guint32 packet_count,
+								 guint16 packet_count, size_t *packet_size);
+ArvGvcpPacket * 	arv_gvcp_packet_new_read_memory_ack 	(guint32 address, guint32 size, guint16 packet_count,
 								 size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_write_memory_cmd	(guint32 address, guint32 size,
-								 guint32 packet_count, size_t *packet_size);
+								 guint16 packet_count, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_write_memory_ack	(guint32 address,
-								 guint32 packet_count, size_t *packet_size);
+								 guint16 packet_count, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_read_register_cmd 	(guint32 address,
-								 guint32 packet_count, size_t *packet_size);
+								 guint16 packet_count, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_read_register_ack 	(guint32 value,
-								 guint32 packet_count, size_t *packet_size);
+								 guint16 packet_count, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_write_register_cmd 	(guint32 address, guint32 value,
-								 guint32 packet_count, size_t *packet_size);
+								 guint16 packet_count, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_write_register_ack 	(guint32 address,
-								 guint32 packet_count, size_t *packet_size);
+								 guint16 packet_count, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_discovery_cmd 	(size_t *size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_discovery_ack 	(size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_packet_resend_cmd 	(guint32 frame_id,
 								 guint32 first_block, guint32 last_block,
-								 guint32 packet_count, size_t *packet_size);
+								 guint16 packet_count, size_t *packet_size);
 char * 			arv_gvcp_packet_to_string 		(const ArvGvcpPacket *packet);
 void 			arv_gvcp_packet_debug 			(const ArvGvcpPacket *packet, ArvDebugLevel level);
 
