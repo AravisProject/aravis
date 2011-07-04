@@ -79,7 +79,6 @@ _read_memory (ArvGvDeviceIOData *io_data, guint32 address, guint32 size, void *b
 	int count;
 	unsigned int n_retries = 0;
 	gboolean success = FALSE;
-	gboolean error = FALSE;
 
 	answer_size = arv_gvcp_packet_get_read_memory_ack_size (size);
 
@@ -123,13 +122,13 @@ _read_memory (ArvGvDeviceIOData *io_data, guint32 address, guint32 size, void *b
 					memcpy (buffer, arv_gvcp_packet_get_read_memory_ack_data (ack_packet), size);
 					success = TRUE;
 				} else
-					error = TRUE;
+					arv_gvcp_packet_debug (ack_packet, ARV_DEBUG_LEVEL_WARNING);
 			}
 		}
 
 		n_retries++;
 
-	} while (!success && !error && n_retries < io_data->gvcp_n_retries);
+	} while (!success && n_retries < io_data->gvcp_n_retries);
 
 	arv_gvcp_packet_free (packet);
 
@@ -146,7 +145,6 @@ _write_memory (ArvGvDeviceIOData *io_data, guint32 address, guint32 size, void *
 	int count;
 	unsigned int n_retries = 0;
 	gboolean success = FALSE;
-	gboolean error = FALSE;
 
 	g_mutex_lock (io_data->mutex);
 
@@ -187,13 +185,13 @@ _write_memory (ArvGvDeviceIOData *io_data, guint32 address, guint32 size, void *
 				    packet_count == io_data->packet_count)
 					success = TRUE;
 				else
-					error = TRUE;
+					arv_gvcp_packet_debug (ack_packet, ARV_DEBUG_LEVEL_WARNING);
 			}
 		}
 
 		n_retries++;
 
-	} while (!success && !error && n_retries < io_data->gvcp_n_retries);
+	} while (!success && n_retries < io_data->gvcp_n_retries);
 
 	arv_gvcp_packet_free (packet);
 
@@ -210,7 +208,6 @@ _read_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 *value_plac
 	int count;
 	unsigned int n_retries = 0;
 	gboolean success = FALSE;
-	gboolean error = FALSE;
 
 	g_mutex_lock (io_data->mutex);
 
@@ -247,13 +244,13 @@ _read_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 *value_plac
 					*value_placeholder = arv_gvcp_packet_get_read_register_ack_value (ack_packet);
 					success = TRUE;
 				} else
-					error = TRUE;
+					arv_gvcp_packet_debug (ack_packet, ARV_DEBUG_LEVEL_WARNING);
 			}
 		}
 
 		n_retries++;
 
-	} while (!success && !error && n_retries < io_data->gvcp_n_retries);
+	} while (!success && n_retries < io_data->gvcp_n_retries);
 
 	arv_gvcp_packet_free (packet);
 
@@ -273,7 +270,6 @@ _write_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 value)
 	int count;
 	unsigned int n_retries = 0;
 	gboolean success = FALSE;
-	gboolean error = FALSE;
 
 	g_mutex_lock (io_data->mutex);
 
@@ -310,13 +306,13 @@ _write_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 value)
 				    packet_count == io_data->packet_count)
 					success = TRUE;
 				else
-					error = TRUE;
+					arv_gvcp_packet_debug (ack_packet, ARV_DEBUG_LEVEL_WARNING);
 			}
 		}
 
 		n_retries++;
 
-	} while (!success && !error && n_retries < io_data->gvcp_n_retries);
+	} while (!success && n_retries < io_data->gvcp_n_retries);
 
 	arv_gvcp_packet_free (packet);
 
