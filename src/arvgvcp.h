@@ -319,7 +319,7 @@ arv_gvcp_next_packet_count (guint16 packet_count)
 	/* packet_count == 0 is an error value */
 	if (packet_count == 0xffff)
 		return 1;
-	return packet_count++;
+	return packet_count + 1;
 }
 
 G_END_DECLS
