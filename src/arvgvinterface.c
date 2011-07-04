@@ -42,6 +42,7 @@ static GObjectClass *parent_class = NULL;
 
 typedef struct {
 	GInetAddress *interface_address;
+	char *mac_string;
 	guchar discovery_data[ARV_GVBS_DISCOVERY_DATA_SIZE];
 } ArvGvInterfaceDeviceInfos;
 
@@ -60,6 +61,14 @@ arv_gv_interface_device_infos_new (GInetAddress *interface_address,
 	infos->interface_address = interface_address;
 	memcpy (infos->discovery_data, discovery_data, ARV_GVBS_DISCOVERY_DATA_SIZE);
 
+	infos->mac_string = g_strdup_printf ("%02x:%02x:%02x:%02x:%02x:%02x",
+					     infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 2],
+					     infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 3],
+					     infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 4],
+					     infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 5],
+					     infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 6],
+					     infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 7]);
+
 	return infos;
 }
 
@@ -68,6 +77,7 @@ arv_gv_interface_device_infos_free (ArvGvInterfaceDeviceInfos *infos)
 {
 	g_return_if_fail (infos != NULL);
 	g_object_unref (infos->interface_address);
+	g_free (infos->mac_string);
 	g_free (infos);
 }
 
@@ -76,6 +86,7 @@ struct _ArvGvInterfacePrivate {
 	GSList *discover_infos_list;
 
 	GHashTable *devices;
+	GHashTable *devices_by_mac;
 };
 
 typedef struct {
@@ -271,6 +282,8 @@ arv_gv_interface_receive_hello_packet (ArvGvInterface *gv_interface)
 
 						g_hash_table_insert (gv_interface->priv->devices,
 								     key, device_infos);
+						g_hash_table_insert (gv_interface->priv->devices_by_mac,
+								     device_infos->mac_string, device_infos);
 					}
 				}
 			} while (count > 0);
@@ -315,8 +328,12 @@ arv_gv_interface_open_device (ArvInterface *interface, const char *device_id)
 		device_list = g_hash_table_get_values (gv_interface->priv->devices);
 		device_infos = device_list != NULL ? device_list->data : NULL;
 		g_list_free (device_list);
-	} else
+	} else {
 		device_infos = g_hash_table_lookup (gv_interface->priv->devices, device_id);
+
+		if (device_infos == NULL)
+			device_infos = g_hash_table_lookup (gv_interface->priv->devices_by_mac, device_id);
+	}
 
 	if (device_infos == NULL)
 		return NULL;
@@ -375,9 +392,9 @@ arv_gv_interface_init (ArvGvInterface *gv_interface)
 	gv_interface->priv->n_discover_infos = 0;
 	gv_interface->priv->discover_infos_list = NULL;
 
-	gv_interface->priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
-							     g_free,
+	gv_interface->priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
 							     (GDestroyNotify) arv_gv_interface_device_infos_free);
+	gv_interface->priv->devices_by_mac = g_hash_table_new_full (g_str_hash, g_str_equal, NULL, NULL);
 }
 
 static void
@@ -385,7 +402,9 @@ arv_gv_interface_finalize (GObject *object)
 {
 	ArvGvInterface *gv_interface = ARV_GV_INTERFACE (object);
 
+	g_hash_table_unref (gv_interface->priv->devices_by_mac);
 	g_hash_table_unref (gv_interface->priv->devices);
+	gv_interface->priv->devices_by_mac = NULL;
 	gv_interface->priv->devices = NULL;
 
 	arv_gv_interface_free_discover_infos_list (gv_interface);
