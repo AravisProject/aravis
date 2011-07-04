@@ -802,6 +802,7 @@ arv_gvcp_packet_new_discovery_ack
 arv_gvcp_packet_new_packet_resend_cmd
 arv_gvcp_packet_to_string
 arv_gvcp_packet_debug
+arv_gvcp_next_packet_count
 <SUBSECTION Private>
 ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_CONTROL
 ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_EXCLUSIVE

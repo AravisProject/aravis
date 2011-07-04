@@ -93,7 +93,8 @@ _read_memory (ArvGvDeviceIOData *io_data, guint32 address, guint32 size, void *b
 						      0, &packet_size);
 
 	do {
-		arv_gvcp_packet_set_packet_count (packet, ++io_data->packet_count);
+		io_data->packet_count = arv_gvcp_next_packet_count (io_data->packet_count);
+		arv_gvcp_packet_set_packet_count (packet, io_data->packet_count);
 
 		arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
@@ -157,7 +158,8 @@ _write_memory (ArvGvDeviceIOData *io_data, guint32 address, guint32 size, void *
 	memcpy (arv_gvcp_packet_get_write_memory_cmd_data (packet), buffer, size);
 
 	do {
-		arv_gvcp_packet_set_packet_count (packet, ++io_data->packet_count);
+		io_data->packet_count = arv_gvcp_next_packet_count (io_data->packet_count);
+		arv_gvcp_packet_set_packet_count (packet, io_data->packet_count);
 
 		arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
@@ -215,7 +217,8 @@ _read_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 *value_plac
 	packet = arv_gvcp_packet_new_read_register_cmd (address, 0, &packet_size);
 
 	do {
-		arv_gvcp_packet_set_packet_count (packet, ++io_data->packet_count);
+		io_data->packet_count = arv_gvcp_next_packet_count (io_data->packet_count);
+		arv_gvcp_packet_set_packet_count (packet, io_data->packet_count);
 
 		arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
@@ -277,7 +280,8 @@ _write_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 value)
 	packet = arv_gvcp_packet_new_write_register_cmd (address, value, io_data->packet_count, &packet_size);
 
 	do {
-		arv_gvcp_packet_set_packet_count (packet, ++io_data->packet_count);
+		io_data->packet_count = arv_gvcp_next_packet_count (io_data->packet_count);
+		arv_gvcp_packet_set_packet_count (packet, io_data->packet_count);
 
 		arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
@@ -688,7 +692,7 @@ arv_gv_device_new (GInetAddress *interface_address, GInetAddress *device_address
 	io_data = g_new0 (ArvGvDeviceIOData, 1);
 
 	io_data->mutex = g_mutex_new ();
-	io_data->packet_count = 0;
+	io_data->packet_count = 65300; /* Start near the end of the circular counter */
 
 	io_data->interface_address = g_inet_socket_address_new (interface_address, 0);
 	io_data->device_address = g_inet_socket_address_new (device_address, ARV_GVCP_PORT);

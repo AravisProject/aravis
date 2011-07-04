@@ -313,6 +313,15 @@ arv_gvcp_packet_get_write_register_cmd_infos (const ArvGvcpPacket *packet, guint
 		*value = g_ntohl (*((guint32 *) ((char *) packet + sizeof (ArvGvcpPacket) + sizeof (guint32))));
 }
 
+static inline guint16
+arv_gvcp_next_packet_count (guint16 packet_count)
+{
+	/* packet_count == 0 is an error value */
+	if (packet_count == 0xffff)
+		return 1;
+	return packet_count++;
+}
+
 G_END_DECLS
 
 #endif
