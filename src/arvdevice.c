@@ -39,6 +39,13 @@
 #include <arvgcstring.h>
 #include <arvstream.h>
 
+enum {
+	ARV_DEVICE_SIGNAL_CONTROL_LOST,
+	ARV_DEVICE_SIGNAL_LAST
+} ArvDeviceSignals;
+
+static guint arv_device_signals[ARV_DEVICE_SIGNAL_LAST] = {0};
+
 static GObjectClass *parent_class = NULL;
 
 /**
@@ -287,6 +294,14 @@ arv_device_get_float_feature_bounds (ArvDevice *device, const char *feature, dou
 	}
 }
 
+void
+arv_device_emit_control_lost_signal (ArvDevice *device)
+{
+	g_return_if_fail (ARV_IS_DEVICE (device));
+
+	g_signal_emit (device, arv_device_signals[ARV_DEVICE_SIGNAL_CONTROL_LOST], 0);
+}
+
 static void
 arv_device_init (ArvDevice *device)
 {
@@ -308,6 +323,24 @@ arv_device_class_init (ArvDeviceClass *device_class)
 	object_class->finalize = arv_device_finalize;
 
 	device_class->get_genicam_xml = _get_genicam_xml;
+
+	/**
+	 * ArvDevice::control-lost:
+	 * @device:a #ArvDevice
+	 *
+	 * Signal that the control of the device is lost.
+	 *
+	 * This signal may be emited from a thread different than the main one,
+	 * so please take care to shared data access from the callback.
+	 */
+
+	arv_device_signals[ARV_DEVICE_SIGNAL_CONTROL_LOST] =
+		g_signal_new ("control-lost",
+			      G_TYPE_FROM_CLASS (device_class),
+			      G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (ArvDeviceClass, control_lost),
+			      NULL, NULL,
+			      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
 }
 
 G_DEFINE_ABSTRACT_TYPE (ArvDevice, arv_device, G_TYPE_OBJECT)

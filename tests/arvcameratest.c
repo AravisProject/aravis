@@ -259,9 +259,8 @@ main (int argc, char **argv)
 			g_signal_connect (stream, "new-buffer", G_CALLBACK (new_buffer_cb), &data);
 			arv_stream_set_emit_signals (stream, TRUE);
 
-			if (ARV_IS_GV_DEVICE (arv_camera_get_device (camera)))
-			    g_signal_connect (arv_camera_get_device (camera), "control-lost",
-					      G_CALLBACK (control_lost_cb), NULL);
+			g_signal_connect (arv_camera_get_device (camera), "control-lost",
+					  G_CALLBACK (control_lost_cb), NULL);
 
 			g_timeout_add_seconds (1, periodic_task_cb, &data);
 

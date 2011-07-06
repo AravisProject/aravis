@@ -53,6 +53,9 @@ struct _ArvDeviceClass {
 	gboolean	(*write_memory)		(ArvDevice *device, guint32 address, guint32 size, void *buffer);
 	gboolean	(*read_register)	(ArvDevice *device, guint32 address, guint32 *value);
 	gboolean	(*write_register)	(ArvDevice *device, guint32 address, guint32 value);
+
+	/* signals */
+	void		(*control_lost)		(ArvDevice *device);
 };
 
 GType arv_device_get_type (void);
@@ -84,6 +87,8 @@ void		arv_device_set_float_feature_value	(ArvDevice *device, const char *feature
 double		arv_device_get_float_feature_value	(ArvDevice *device, const char *feature);
 void 		arv_device_get_float_feature_bounds 	(ArvDevice *device, const char *feature,
 							 double *min, double *max);
+
+void 		arv_device_emit_control_lost_signal 	(ArvDevice *device);
 
 G_END_DECLS
 

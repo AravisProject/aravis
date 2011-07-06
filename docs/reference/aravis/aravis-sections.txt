@@ -167,6 +167,7 @@ arv_device_get_integer_feature_bounds
 arv_device_set_float_feature_value
 arv_device_get_float_feature_value
 arv_device_get_float_feature_bounds
+arv_device_emit_control_lost_signal
 <SUBSECTION Standard>
 ARV_DEVICE
 ARV_IS_DEVICE
@@ -430,6 +431,7 @@ ARV_GV_DEVICE_GET_CLASS
 ARV_GV_DEVICE_GVCP_N_RETRIES_DEFAULT
 ARV_GV_DEVICE_GVCP_TIMEOUT_MS_DEFAULT
 ARV_GV_DEVICE_GVSP_PACKET_SIZE_DEFAULT
+ARV_GV_DEVICE_HEARTBEAT_PERIOD_US
 ARV_GV_DEVICE_HEARTBEAT_RETRY_DELAY_US
 ARV_GV_DEVICE_BUFFER_SIZE
 ArvGvDeviceClass

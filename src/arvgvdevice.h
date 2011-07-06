@@ -31,6 +31,7 @@ G_BEGIN_DECLS
 
 #define	ARV_GV_DEVICE_GVCP_N_RETRIES_DEFAULT	5
 #define	ARV_GV_DEVICE_GVCP_TIMEOUT_MS_DEFAULT	500
+#define	ARV_GV_DEVICE_HEARTBEAT_PERIOD_US	1000000
 #define	ARV_GV_DEVICE_HEARTBEAT_RETRY_DELAY_US	10000
 
 #define ARV_GV_DEVICE_GVSP_PACKET_SIZE_DEFAULT	1500
@@ -55,9 +56,6 @@ struct _ArvGvDevice {
 
 struct _ArvGvDeviceClass {
 	ArvDeviceClass parent_class;
-
-	/* signals */
-	void		(*control_lost)		(ArvGvDevice *gv_device);
 };
 
 GType arv_gv_device_get_type (void);
