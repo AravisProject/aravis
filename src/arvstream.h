@@ -68,6 +68,7 @@ struct _ArvStreamClass {
 	void		(*get_statistics)	(ArvStream *stream, guint64 *n_completed_buffers,
 						 guint64 *n_failures, guint64 *n_underruns);
 
+	/* signals */
 	void        	(*new_buffer)   	(ArvStream *stream);
 };
 

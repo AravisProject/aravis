@@ -34,6 +34,13 @@
 #include <string.h>
 #include <stdlib.h>
 
+enum {
+	ARV_GV_DEVICE_SIGNAL_CONTROL_LOST,
+	ARV_GV_DEVICE_SIGNAL_LAST
+} ArvGvDeviceSignals;
+
+static guint arv_gv_device_signals[ARV_GV_DEVICE_SIGNAL_LAST] = {0};
+
 static GObjectClass *parent_class = NULL;
 static GRegex *arv_gv_device_url_regex = NULL;
 
@@ -324,6 +331,7 @@ _write_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 value)
 /* Heartbeat thread */
 
 typedef struct {
+	ArvGvDevice *gv_device;
 	ArvGvDeviceIOData *io_data;
 	int period_us;
 	gboolean cancel;
@@ -351,6 +359,10 @@ arv_gv_device_heartbeat_thread (void *data)
 			if ((value & (ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_CONTROL |
 				      ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_EXCLUSIVE)) == 0) {
 				arv_warning_device ("[GvDevice::Heartbeat] Control access lost");
+
+				g_signal_emit (thread_data->gv_device,
+					       arv_gv_device_signals[ARV_GV_DEVICE_SIGNAL_CONTROL_LOST], 0);
+
 				io_data->is_controller = FALSE;
 			}
 		}
@@ -383,9 +395,10 @@ arv_gv_device_leave_control (ArvGvDevice *gv_device)
 {
 	gboolean success;
 
+	gv_device->priv->io_data->is_controller = FALSE;
+
 	success = arv_device_write_register (ARV_DEVICE (gv_device),
 					    ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET, 0);
-	gv_device->priv->io_data->is_controller = FALSE;
 
 	return success;
 }
@@ -711,6 +724,7 @@ arv_gv_device_new (GInetAddress *interface_address, GInetAddress *device_address
 	arv_gv_device_take_control (gv_device);
 
 	heartbeat_data = g_new (ArvGvDeviceHeartbeatData, 1);
+	heartbeat_data->gv_device = gv_device;
 	heartbeat_data->io_data = io_data;
 	heartbeat_data->period_us = 1000000;
 	heartbeat_data->cancel = FALSE;
@@ -791,6 +805,23 @@ arv_gv_device_class_init (ArvGvDeviceClass *gv_device_class)
 	device_class->write_memory = arv_gv_device_write_memory;
 	device_class->read_register = arv_gv_device_read_register;
 	device_class->write_register = arv_gv_device_write_register;
+
+	/**
+	 * ArvGvDevice::control-lost:
+	 * @gv_device:a #ArvGvDevice
+	 *
+	 * Signal that the control of the device is lost.
+	 *
+	 * This signal is emited from the heartbeat thread, so please take care to shared data access.
+	 */
+
+	arv_gv_device_signals[ARV_GV_DEVICE_SIGNAL_CONTROL_LOST] =
+		g_signal_new ("control-lost",
+			      G_TYPE_FROM_CLASS (gv_device_class),
+			      G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (ArvGvDeviceClass, control_lost),
+			      NULL, NULL,
+			      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
 
 	arv_gv_device_url_regex = g_regex_new ("^(local:|file:|http:)(.+\\.[^;]+);?([0-9:a-f]*)?;?([0-9:a-f]*)?$",
 					       G_REGEX_CASELESS, 0, NULL);

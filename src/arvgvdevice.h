@@ -54,6 +54,9 @@ struct _ArvGvDevice {
 
 struct _ArvGvDeviceClass {
 	ArvDeviceClass parent_class;
+
+	/* signals */
+	void		(*control_lost)		(ArvGvDevice *gv_device);
 };
 
 GType arv_gv_device_get_type (void);
