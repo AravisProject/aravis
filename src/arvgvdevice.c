@@ -353,7 +353,7 @@ arv_gv_device_heartbeat_thread (void *data)
 			g_timer_start (timer);
 
 			while (!_read_register (io_data, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET, &value) &&
-			       g_timer_elapsed (timer, NULL) < 5.0 /* FIXME */ &&
+			       g_timer_elapsed (timer, NULL) < ARV_GV_DEVICE_HEARTBEAT_RETRY_TIMEOUT_S &&
 			       !thread_data->cancel) {
 				g_usleep (ARV_GV_DEVICE_HEARTBEAT_RETRY_DELAY_US);
 				counter++;
