@@ -1,3 +1,16 @@
+Release 0.1.10
+==============
+
+  This release should fix the lost of connection, at least better than
+  the last release. It also allows to instantiate a GigE Vision device
+  using its MAC address.
+
+  * device: new "control-lost" signal.
+  * GV device: allow use of MAC address for device instantiation.
+  * GV device: retry gvcp command if wrong packet is received.
+  * GV device: try harder to get control register value in heartbeat thread.
+  * GVCP: don't use 0 for packet counter value.
+
 Release 0.1.9
 =============
 
