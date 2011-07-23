@@ -1,0 +1,38 @@
+<part id="aravis-gv">
+	<title>Ethernet protocol (GV)</title>
+
+	<chapter id="aravis-gv-introduction">
+		<title>Introduction</title>
+
+		<para>
+			This part contains a description of the protocol implemented by Aravis for the control of the gigabit ethenet cameras. This protocol is a standard used by many video cameras manufacturers for their products. It is a closed standard which should not be confused by what is used on 'IP cameras'. In the case of 'IP cameras' the video stream is a compressed stream (jpeg, h264...) send over HTTP or RTSP, whereas in Aravis, the video stream is a raw stream, mainly targeted to industrial applications.
+		</para>
+
+		<para>
+			The protocol implemented by Aravis library is based on UDP packets transmited over an ethernet link. Two different types of packets are used: GVCP packets and GVSP packets. GVCP packets are used for the control of the devices, and GVSP for the transmission of the data stream.		</para>
+	</chapter>
+
+	<chapter id="aravis-gvcp">
+		<title>GVCP packets</title>
+		<para>
+			Devices are waiting for GVCP packets listening to the GVCP port (3946). When the client sends a command GVCP packet to the device, the device sends back an acknowledge packets in return. Each command/acknowledge pair is identified by a 16 bit value, which allows to check if an acknowledge packet corresponds to the previsoulsy sent command. 0 is an error value for this identifier. If an acknowledge is not received after a given timeout period, another command packet is sent, until a maximum number of retries is reached.
+		</para>
+
+		<para>
+			A GVCP packet is composed by a 64 bit headers, followed by a data byte array.
+		</para>
+
+	</chapter>
+
+	<chapter id="aravis-gvsp">
+		<title>GVSP packets</title>
+	</chapter>
+
+	<chapter id="aravis-gvcp-discovery">
+		<title>Device discovery mechanism</title>
+
+		<para>
+			A device discovery mechanism is implemented using a discovery GVCP packet, broadcasted by the client to the GVCP port. Each available device responds to this discovery packet with an acknowledge packet, containing a description of the device (device name, model name, manufacturer name, MAC Address...).
+		</para>
+	</chapter>
+</part>

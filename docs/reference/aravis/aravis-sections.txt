@@ -779,6 +779,10 @@ arv_pixel_format_from_gst_caps
 <SECTION>
 <FILE>arvgvcp</FILE>
 <TITLE>ArvGvcp</TITLE>
+ArvGvcpPacketType
+ArvGvcpCommand
+ArvGvcpHeader
+ArvGvcpPacket
 arv_gvcp_packet_free
 arv_gvcp_packet_get_packet_type
 arv_gvcp_packet_get_command
@@ -895,12 +899,10 @@ ARV_GVBS_USER_DEFINED_NAME_SIZE
 ARV_GVBS_XML_URL_SIZE
 ARV_GVCP_PORT
 ARV_GVCP_DATA_SIZE_MAX
-ArvGvcpPacket
-ArvGvcpPacketType
-ArvGvcpCommand
 g_ntohl
 g_ntohs
 sizeof
+ARAVIS_PACKED_STRUCTURE
 </SECTION>
 
 <SECTION>
