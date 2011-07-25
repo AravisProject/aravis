@@ -28,6 +28,11 @@
 
 G_BEGIN_DECLS
 
+/** 
+ * ARV_GVCP_PORT:
+ *
+ * Standard device listening port for GVCP packets 
+ */
 #define ARV_GVCP_PORT	3956
 
 #define ARV_GVBS_VERSION_OFFSET				0x00000000
@@ -192,23 +197,23 @@ typedef enum {
 	ARV_GVCP_COMMAND_WRITE_MEMORY_ACK =	0x0087
 } ArvGvcpCommand;
 
+#define ARAVIS_PACKED_STRUCTURE __attribute__((__packed__))
+
 /**
  * ArvGvcpHeader:
  * @packet_type: a #ArvGvcpPacketType identifier
  * @command: a #ArvGvcpCommand identifier
  * @size: data size
- * @count: packet identifier
+ * @id: packet identifier
  *
  * GVCP packet header structure.
  */
-
-#define ARAVIS_PACKED_STRUCTURE __attribute__((__packed__))
 
 typedef struct ARAVIS_PACKED_STRUCTURE {
 	guint16 packet_type;
 	guint16 command;
 	guint16 size;
-	guint16 count;
+	guint16 id;
 } ArvGvcpHeader;
 
 #undef ARAVIS_PACKED_STRUCTURE
@@ -228,28 +233,35 @@ typedef struct {
 
 void 			arv_gvcp_packet_free 			(ArvGvcpPacket *packet);
 ArvGvcpPacket * 	arv_gvcp_packet_new_read_memory_cmd 	(guint32 address, guint32 size,
-								 guint16 packet_count, size_t *packet_size);
-ArvGvcpPacket * 	arv_gvcp_packet_new_read_memory_ack 	(guint32 address, guint32 size, guint16 packet_count,
+								 guint16 packet_id, size_t *packet_size);
+ArvGvcpPacket * 	arv_gvcp_packet_new_read_memory_ack 	(guint32 address, guint32 size, guint16 packet_id,
 								 size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_write_memory_cmd	(guint32 address, guint32 size,
-								 guint16 packet_count, size_t *packet_size);
+								 guint16 packet_id, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_write_memory_ack	(guint32 address,
-								 guint16 packet_count, size_t *packet_size);
+								 guint16 packet_id, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_read_register_cmd 	(guint32 address,
-								 guint16 packet_count, size_t *packet_size);
+								 guint16 packet_id, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_read_register_ack 	(guint32 value,
-								 guint16 packet_count, size_t *packet_size);
+								 guint16 packet_id, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_write_register_cmd 	(guint32 address, guint32 value,
-								 guint16 packet_count, size_t *packet_size);
+								 guint16 packet_id, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_write_register_ack 	(guint32 address,
-								 guint16 packet_count, size_t *packet_size);
+								 guint16 packet_id, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_discovery_cmd 	(size_t *size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_discovery_ack 	(size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_packet_resend_cmd 	(guint32 frame_id,
 								 guint32 first_block, guint32 last_block,
-								 guint16 packet_count, size_t *packet_size);
+								 guint16 packet_id, size_t *packet_size);
 char * 			arv_gvcp_packet_to_string 		(const ArvGvcpPacket *packet);
 void 			arv_gvcp_packet_debug 			(const ArvGvcpPacket *packet, ArvDebugLevel level);
+
+/**
+ * arv_gvcp_packet_get_packet_type:
+ * @packet: a #ArvGvcpPacket
+ *
+ * Return value: The #ArvGvcpPacketType code of @packet.
+ */
 
 static inline ArvGvcpPacketType
 arv_gvcp_packet_get_packet_type (ArvGvcpPacket *packet)
@@ -259,6 +271,13 @@ arv_gvcp_packet_get_packet_type (ArvGvcpPacket *packet)
 
 	return (ArvGvcpPacketType) g_ntohs (packet->header.packet_type);
 }
+
+/**
+ * arv_gvcp_packet_get_command:
+ * @packet: a #ArvGvcpPacket
+ *
+ * Return value: The #ArvGvcpCommand code of @packet.
+ */
 
 static inline ArvGvcpCommand
 arv_gvcp_packet_get_command (ArvGvcpPacket *packet)
@@ -270,19 +289,19 @@ arv_gvcp_packet_get_command (ArvGvcpPacket *packet)
 }
 
 static inline void
-arv_gvcp_packet_set_packet_count (ArvGvcpPacket *packet, guint16 count)
+arv_gvcp_packet_set_packet_id (ArvGvcpPacket *packet, guint16 id)
 {
 	if (packet != NULL)
-		packet->header.count = g_htons (count);
+		packet->header.id = g_htons (id);
 }
 
 static inline guint16
-arv_gvcp_packet_get_packet_count (ArvGvcpPacket *packet)
+arv_gvcp_packet_get_packet_id (ArvGvcpPacket *packet)
 {
 	if (packet == NULL)
 		return 0;
 
-	return g_ntohs (packet->header.count);
+	return g_ntohs (packet->header.id);
 }
 
 static inline void
@@ -362,12 +381,12 @@ arv_gvcp_packet_get_write_register_cmd_infos (const ArvGvcpPacket *packet, guint
 }
 
 static inline guint16
-arv_gvcp_next_packet_count (guint16 packet_count)
+arv_gvcp_next_packet_id (guint16 packet_id)
 {
-	/* packet_count == 0 is an error value */
-	if (packet_count == 0xffff)
+	/* packet_id == 0 is an error value */
+	if (packet_id == 0xffff)
 		return 1;
-	return packet_count + 1;
+	return packet_id + 1;
 }
 
 G_END_DECLS

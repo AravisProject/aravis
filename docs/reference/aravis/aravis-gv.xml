@@ -19,20 +19,259 @@
 		</para>
 
 		<para>
-			A GVCP packet is composed by a 64 bit headers, followed by a data byte array.
+			The <link linkend="aravis-ArvGvcp">ArvGvcp</link> API offers a set of function for handling of GVCP packets.
 		</para>
+
+		<para>
+			The content of a GVCP packet is composed by a 64 bit headers, followed or not by a data byte array, depending on the GVCP packet type. Multibyte values are in big endian encoding.
+		</para>
+
+		<table frame='all'><title>GVCP packet</title>
+			<tgroup cols='8' align='left' colsep='1' rowsep='1'>
+				<colspec colname='B0'/>
+				<colspec colname='B1'/>
+				<colspec colname='B2'/>
+				<colspec colname='B3'/>
+				<colspec colname='B4'/>
+				<colspec colname='B5'/>
+				<colspec colname='B6'/>
+				<colspec colname='B7'/>
+				<thead>
+					<row>
+						<entry align="left">0</entry>
+						<entry align="right">15</entry>
+						<entry align="left">16</entry>
+						<entry align="right">31</entry>
+						<entry align="left">32</entry>
+						<entry align="right">47</entry>
+						<entry align="left">48</entry>
+						<entry align="right">63</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry namest="B0" nameend="B1">#ArvGvcpPacketType</entry>
+						<entry namest="B2" nameend="B3">#ArvGvcpCommand</entry>
+						<entry namest="B4" nameend="B5">Data size</entry>
+						<entry namest="B6" nameend="B7">Packet id</entry>
+					</row>
+					<row>
+						<entry namest="B0" nameend="B7" align='center'>Optional data</entry>
+					</row>
+					<row>
+						<entry namest="B0" nameend="B7" align='center'>...</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+
+		<sect2>
+			<title>Discovery</title>
+
+			<para>
+				A device discovery mechanism is implemented using a discovery GVCP packet, broadcasted by the client to the GVCP port. Each available device responds to this discovery packet with an acknowledge packet, containing a description of the device (device name, model name, manufacturer name, MAC Address...).
+			</para>
+
+			<para>
+				In the discovery command packet, data size is set to 0 and packet id is equal to 0xffff.
+			</para>
+
+			<table frame='all'><title>Discovery acknowledge packet</title>
+
+				<tgroup cols='5' align='left' colsep='1' rowsep='1'>
+					<colspec colname='Address'/>
+					<colspec colname='B0'/>
+					<colspec colname='B1'/>
+					<colspec colname='B2'/>
+					<colspec colname='B3'/>
+					<thead>
+						<row>
+							<entry align="left">Address</entry>
+							<entry align="left">0</entry>
+							<entry align="right">15</entry>
+							<entry align="left">16</entry>
+							<entry align="right">31</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry namest="B0" nameend="B1">0x0000</entry>
+							<entry namest="B2" nameend="B3">0x0003</entry>
+						</row>
+						<row>
+							<entry namest="B0" nameend="B1">0x00f8</entry>
+							<entry namest="B2" nameend="B3">0xffff</entry>
+						</row>
+						<row>
+							<entry>0x0000</entry>
+							<entry namest="B0" nameend="B1">Version major</entry>
+							<entry namest="B2" nameend="B3">Version minor</entry>
+						</row>
+						<row>
+							<entry>0x0004</entry>
+							<entry namest="B0" nameend="B1">Endianness</entry>
+							<entry namest="B2" nameend="B3">Character set</entry>
+						</row>
+						<row>
+							<entry>0x0008</entry>
+							<entry namest="B0" nameend="B3">MAC address high</entry>
+						</row>
+						<row>
+							<entry>0x000c</entry>
+							<entry namest="B0" nameend="B3">MAC address low</entry>
+						</row>
+						<row>
+							<entry>0x0010</entry>
+							<entry namest="B0" nameend="B3">Supported IP configuration</entry>
+						</row>
+						<row>
+							<entry>0x0014</entry>
+							<entry namest="B0" nameend="B3">Current IP configuration</entry>
+						</row>
+						<row>
+							<entry>0x0018</entry>
+							<entry morerows="2" namest="B0" nameend="B3"></entry>
+						</row>
+						<row><entry>0x001c</entry></row>
+						<row><entry>0x0020</entry></row>
+						<row>
+							<entry>0x0024</entry>
+							<entry namest="B0" nameend="B3">
+								Current IP address
+							</entry>
+						</row>
+						<row>
+							<entry>0x0028</entry>
+							<entry morerows="2" namest="B0" nameend="B3"></entry>
+						</row>
+						<row><entry>0x002c</entry></row>
+						<row><entry>0x0030</entry></row>
+						<row>
+							<entry>0x0034</entry>
+							<entry morerows="0" namest="B0" nameend="B3">
+								Current subnet mask
+							</entry>
+						</row>
+						<row>
+							<entry>0x0038</entry>
+							<entry morerows="2" namest="B0" nameend="B3"></entry>
+						</row>
+						<row><entry>0x003c</entry></row>
+						<row><entry>0x0040</entry></row>
+						<row>
+							<entry>0x0044</entry>
+							<entry namest="B0" nameend="B3">
+								Current gateway
+							</entry>
+						</row>
+						<row>
+							<entry>0x0048</entry>
+							<entry morerows="7" namest="B0" nameend="B3">
+								Manufacturer name
+							</entry>
+						</row>
+						<row><entry>0x004c</entry></row>
+						<row><entry>0x0050</entry></row>
+						<row><entry>0x0054</entry></row>
+						<row><entry>0x0058</entry></row>
+						<row><entry>0x005c</entry></row>
+						<row><entry>0x0060</entry></row>
+						<row><entry>0x0064</entry></row>
+						<row>
+							<entry>0x0068</entry>
+							<entry morerows="7" namest="B0" nameend="B3">
+								Model name
+							</entry>
+						</row>
+						<row><entry>0x006c</entry></row>
+						<row><entry>0x0070</entry></row>
+						<row><entry>0x0074</entry></row>
+						<row><entry>0x0078</entry></row>
+						<row><entry>0x007c</entry></row>
+						<row><entry>0x0080</entry></row>
+						<row><entry>0x0084</entry></row>
+						<row>
+							<entry>0x0088</entry>
+							<entry morerows="7" namest="B0" nameend="B3">
+								Device version
+							</entry>
+						</row>
+						<row><entry>0x008c</entry></row>
+						<row><entry>0x0090</entry></row>
+						<row><entry>0x0094</entry></row>
+						<row><entry>0x0098</entry></row>
+						<row><entry>0x009c</entry></row>
+						<row><entry>0x00a0</entry></row>
+						<row><entry>0x00a4</entry></row>
+						<row>
+							<entry>0x00a8</entry>
+							<entry morerows="11" namest="B0" nameend="B3">
+								Manufacturer informations
+							</entry>
+						</row>
+						<row><entry>0x00ac</entry></row>
+						<row><entry>0x00b0</entry></row>
+						<row><entry>0x00b4</entry></row>
+						<row><entry>0x00b8</entry></row>
+						<row><entry>0x00bc</entry></row>
+						<row><entry>0x00c0</entry></row>
+						<row><entry>0x00c0</entry></row>
+						<row><entry>0x00c4</entry></row>
+						<row><entry>0x00cc</entry></row>
+						<row><entry>0x00d0</entry></row>
+						<row><entry>0x00d4</entry></row>
+						<row>
+							<entry>0x00d8</entry>
+							<entry morerows="7" namest="B0" nameend="B3">
+								User defined name
+							</entry>
+						</row>
+						<row><entry>0x00dc</entry></row>
+						<row><entry>0x00e0</entry></row>
+						<row><entry>0x00e4</entry></row>
+						<row><entry>0x00e8</entry></row>
+						<row><entry>0x00ec</entry></row>
+						<row><entry>0x00f0</entry></row>
+						<row><entry>0x00f4</entry></row>
+					</tbody>
+				</tgroup>
+			</table>
+		</sect2>
+		<sect2>
+			<title>Read and write register</title>
+
+			<para>
+				These packets are used for the read and write of 32 bit registers, accessed using 32 bit adresses. For the read command, a list of addresses is sent ot the client, which returns a list of 32 bit values. For the write command, a list of address/value pairs is sent to the client, which returns a list of 32 bit values.
+			</para>
+			<para>
+				Address and data are encoded in the packet as big endian values.
+			</para>
+		</sect2>
+		<sect2>
+			<title>Read and write memory</title>
+			<para>
+				Write memory packet data area consists in a 32 bit address, followed by the data to write. Client returns an acknowledge packet with the target address.
+			</para>
+			<para>
+				For read memory command, an address/size pair is sent to the device, which returns the content of the given memory area.
+			</para>
+		</sect2>
 
 	</chapter>
 
 	<chapter id="aravis-gvsp">
 		<title>GVSP packets</title>
-	</chapter>
-
-	<chapter id="aravis-gvcp-discovery">
-		<title>Device discovery mechanism</title>
 
 		<para>
-			A device discovery mechanism is implemented using a discovery GVCP packet, broadcasted by the client to the GVCP port. Each available device responds to this discovery packet with an acknowledge packet, containing a description of the device (device name, model name, manufacturer name, MAC Address...).
+			GVSP packets are sent by the device for the video stream transmission. Depending on the device, it is possible to have more than one stream simultaneously, each directed to a different client port. Stream is splitted in frames. For each frame, identified by a frame id, three different packets are used: a leader packet, one or more data packets, and a trailer packet. Each packet in a frame is identified by a packet id, starting from 0.
+		</para>
+
+		<para>
+			The <link linkend="aravis-ArvGvsp">ArvGvsp</link> API offers a set of function for handling of GVSP packets. Structure of a GVSP is described in #ArvGvspPacket structure documentation. Content of leader and trailer packets in #ArvGvspDataLeader and #ArvGvspDataTrailer.
+		</para>
+
+		<para>
+			In the video stream reception code, client must take care to check if all frame packets are present, and ask for packet resend for missing ones, using a GVCP packet resend command.
 		</para>
 	</chapter>
 </part>

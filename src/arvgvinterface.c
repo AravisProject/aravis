@@ -249,7 +249,7 @@ arv_gv_interface_receive_hello_packet (ArvGvInterface *gv_interface)
 					ArvGvcpPacket *packet = (ArvGvcpPacket *) buffer;
 
 					if (g_ntohs (packet->header.command) == ARV_GVCP_COMMAND_DISCOVERY_ACK &&
-					    g_ntohs (packet->header.count) == 0xffff) {
+					    g_ntohs (packet->header.id) == 0xffff) {
 						ArvGvInterfaceDeviceInfos *device_infos;
 						GInetAddress *interface_address;
 						char *address_string;

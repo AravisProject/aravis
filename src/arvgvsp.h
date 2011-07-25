@@ -34,10 +34,23 @@ G_BEGIN_DECLS
 
 #define ARV_GVSP_PACKET_PROTOCOL_OVERHEAD	(20 + 8 + 8)		/* IP + UDP + GVSP headers */
 
+/**
+ * ArvGvspPacketType:
+ * @ARV_GVSP_PACKET_TYPE_OK: valid packet
+ * @ARV_GVSP_PACKET_TYPE_ERROR: error packet, indicating invalid resend request
+ */
+
 typedef enum {
 	ARV_GVSP_PACKET_TYPE_OK =		0x0000,
 	ARV_GVSP_PACKET_TYPE_ERROR =		0x800c
 } ArvGvspPacketType;
+
+/**
+ * ArvGvspContentType:
+ * @ARV_GVSP_CONTENT_TYPE_DATA_LEADER: leader packet
+ * @ARV_GVSP_CONTENT_TYPE_DATA_TRAILER: trailer packet
+ * @ARV_GVSP_CONTENT_TYPE_DATA_BLOCK: data packet
+ */
 
 typedef enum {
 	ARV_GVSP_CONTENT_TYPE_DATA_LEADER = 	0x01,
@@ -45,13 +58,38 @@ typedef enum {
 	ARV_GVSP_CONTENT_TYPE_DATA_BLOCK =	0x03
 } ArvGvspContentType;
 
-typedef struct {
+#define ARAVIS_PACKED_STRUCTURE __attribute__((__packed__))
+
+/**
+ * ArvGvspHeader:
+ * @packet_type: a #ArvGvspPacketType identifier
+ * @frame_id: frame identifier
+ * @packet_infos: #ArvGvspContentType and packet identifier in a 32 bit value
+ *
+ * GVSP packet header structure.
+ */
+
+typedef struct ARAVIS_PACKED_STRUCTURE {
 	guint16 packet_type;
 	guint16 frame_id;
 	guint32 packet_infos;
-} __attribute__((__packed__)) ArvGvspHeader;
+} ArvGvspHeader;
 
-typedef struct {
+/**
+ * ArvGvspDataLeader:
+ * @data0: unused
+ * @timestamp_high: most significant bits of frame timestamp
+ * @timestamp_low: least significant bits of frame timestamp_low
+ * @pixel_format: a #ArvPixelFormat identifier
+ * @width: frame width, in pixels
+ * @height: frame height, in pixels
+ * @x_offset: frame x offset, in pixels
+ * @y_offset: frame y offset, in pixels
+ *
+ * GVSP data leader packet data area.
+ */
+
+typedef struct ARAVIS_PACKED_STRUCTURE {
 	guint32 data0;
 	guint32 timestamp_high;
 	guint32 timestamp_low;
@@ -60,12 +98,30 @@ typedef struct {
 	guint32 height;
 	guint32	x_offset;
 	guint32	y_offset;
-} __attribute__((__packed__)) ArvGvspDataLeader;
+} ArvGvspDataLeader;
 
-typedef struct {
+/**
+ * ArvGvspDataTrailer:
+ * @data0: unused
+ * @data1: unused
+ *
+ * GVSP data trailer packet data area.
+ */
+
+typedef struct ARAVIS_PACKED_STRUCTURE {
 	guint32 data0;
 	guint32 data1;
-} __attribute__((__packed__)) ArvGvspDataTrailer;
+} ArvGvspDataTrailer;
+
+#undef ARAVIS_PACKED_STRUCTURE
+
+/**
+ * ArvGvspPacket:
+ * @header: common GVSP packet header
+ * @data: data byte array
+ *
+ * GVSP packet structure.
+ */
 
 typedef struct {
 	ArvGvspHeader header;

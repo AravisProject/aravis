@@ -40,7 +40,7 @@ arv_gvcp_packet_free (ArvGvcpPacket *packet)
  * arv_gvcp_packet_new_read_memory_cmd: (skip)
  * @address: read address
  * @size: read size, in bytes
- * @packet_count: current packet count
+ * @packet_id: packet id
  * @packet_size: (out): packet size, in bytes
  * Return value: (transfer full): a new #ArvGvcpPacket
  *
@@ -48,7 +48,7 @@ arv_gvcp_packet_free (ArvGvcpPacket *packet)
  */
 
 ArvGvcpPacket *
-arv_gvcp_packet_new_read_memory_cmd (guint32 address, guint32 size, guint16 packet_count, size_t *packet_size)
+arv_gvcp_packet_new_read_memory_cmd (guint32 address, guint32 size, guint16 packet_id, size_t *packet_size)
 {
 	ArvGvcpPacket *packet;
 	guint32 n_address = g_htonl (address);
@@ -63,7 +63,7 @@ arv_gvcp_packet_new_read_memory_cmd (guint32 address, guint32 size, guint16 pack
 	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_CMD);
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_READ_MEMORY_CMD);
 	packet->header.size = g_htons (2 * sizeof (guint32));
-	packet->header.count = g_htons (packet_count);
+	packet->header.id = g_htons (packet_id);
 
 	memcpy (&packet->data, &n_address, sizeof (guint32));
 	memcpy (&packet->data[sizeof(guint32)], &n_size, sizeof (guint32));
@@ -75,7 +75,7 @@ arv_gvcp_packet_new_read_memory_cmd (guint32 address, guint32 size, guint16 pack
  * arv_gvcp_packet_new_read_memory_ack: (skip)
  * @address: read address
  * @size: read size, in bytes
- * @packet_count: current packet count
+ * @packet_id: packet id
  * @packet_size: (out): packet size, in bytes
  * Return value: (transfer full): a new #ArvGvcpPacket
  *
@@ -83,7 +83,7 @@ arv_gvcp_packet_new_read_memory_cmd (guint32 address, guint32 size, guint16 pack
  */
 
 ArvGvcpPacket *
-arv_gvcp_packet_new_read_memory_ack (guint32 address, guint32 size, guint16 packet_count, size_t *packet_size)
+arv_gvcp_packet_new_read_memory_ack (guint32 address, guint32 size, guint16 packet_id, size_t *packet_size)
 {
 	ArvGvcpPacket *packet;
 	guint32 n_address = g_htonl (address);
@@ -97,7 +97,7 @@ arv_gvcp_packet_new_read_memory_ack (guint32 address, guint32 size, guint16 pack
 	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_ACK);
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_READ_MEMORY_ACK);
 	packet->header.size = g_htons (sizeof (guint32) + size);
-	packet->header.count = g_htons (packet_count);
+	packet->header.id = g_htons (packet_id);
 
 	memcpy (&packet->data, &n_address, sizeof (guint32));
 
@@ -108,7 +108,7 @@ arv_gvcp_packet_new_read_memory_ack (guint32 address, guint32 size, guint16 pack
  * arv_gvcp_packet_new_write_memory_cmd: (skip)
  * @address: write address
  * @size: write size, in bytes
- * @packet_count: current packet count
+ * @packet_id: packet id
  * @packet_size: (out): packet size, in bytes
  * Return value: (transfer full): a new #ArvGvcpPacket
  *
@@ -116,7 +116,7 @@ arv_gvcp_packet_new_read_memory_ack (guint32 address, guint32 size, guint16 pack
  */
 
 ArvGvcpPacket *
-arv_gvcp_packet_new_write_memory_cmd (guint32 address, guint32 size, guint16 packet_count, size_t *packet_size)
+arv_gvcp_packet_new_write_memory_cmd (guint32 address, guint32 size, guint16 packet_id, size_t *packet_size)
 {
 	ArvGvcpPacket *packet;
 	guint32 n_address = g_htonl (address);
@@ -130,7 +130,7 @@ arv_gvcp_packet_new_write_memory_cmd (guint32 address, guint32 size, guint16 pac
 	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_CMD);
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_WRITE_MEMORY_CMD);
 	packet->header.size = g_htons (sizeof (guint32) + size);
-	packet->header.count = g_htons (packet_count);
+	packet->header.id = g_htons (packet_id);
 
 	memcpy (&packet->data, &n_address, sizeof (guint32));
 
@@ -140,7 +140,7 @@ arv_gvcp_packet_new_write_memory_cmd (guint32 address, guint32 size, guint16 pac
 /**
  * arv_gvcp_packet_new_write_memory_ack: (skip)
  * @address: write address
- * @packet_count: current packet count
+ * @packet_id: packet id
  * @packet_size: (out): packet size, in bytes
  * Return value: (transfer full): a new #ArvGvcpPacket
  *
@@ -149,7 +149,8 @@ arv_gvcp_packet_new_write_memory_cmd (guint32 address, guint32 size, guint16 pac
 
 ArvGvcpPacket *
 arv_gvcp_packet_new_write_memory_ack (guint32 address,
-				      guint16 packet_count, size_t *packet_size)
+				      guint16 packet_id,
+				      size_t *packet_size)
 {
 	ArvGvcpPacket *packet;
 	guint32 n_address = g_htonl (address);
@@ -163,7 +164,7 @@ arv_gvcp_packet_new_write_memory_ack (guint32 address,
 	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_ACK);
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_WRITE_MEMORY_ACK);
 	packet->header.size = g_htons (sizeof (guint32));
-	packet->header.count = g_htons (packet_count);
+	packet->header.id = g_htons (packet_id);
 
 	memcpy (&packet->data, &n_address, sizeof (guint32));
 
@@ -173,7 +174,7 @@ arv_gvcp_packet_new_write_memory_ack (guint32 address,
 /**
  * arv_gvcp_packet_new_read_register_cmd: (skip)
  * @address: write address
- * @packet_count: current packet count
+ * @packet_id: packet id
  * @packet_size: (out): packet size, in bytes
  * Return value: (transfer full): a new #ArvGvcpPacket
  *
@@ -181,7 +182,9 @@ arv_gvcp_packet_new_write_memory_ack (guint32 address,
  */
 
 ArvGvcpPacket *
-arv_gvcp_packet_new_read_register_cmd (guint32 address, guint16 packet_count, size_t *packet_size)
+arv_gvcp_packet_new_read_register_cmd (guint32 address,
+				       guint16 packet_id,
+				       size_t *packet_size)
 {
 	ArvGvcpPacket *packet;
 	guint32 n_address = g_htonl (address);
@@ -195,7 +198,7 @@ arv_gvcp_packet_new_read_register_cmd (guint32 address, guint16 packet_count, si
 	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_CMD);
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_READ_REGISTER_CMD);
 	packet->header.size = g_htons (sizeof (guint32));
-	packet->header.count = g_htons (packet_count);
+	packet->header.id = g_htons (packet_id);
 
 	memcpy (&packet->data, &n_address, sizeof (guint32));
 
@@ -205,7 +208,7 @@ arv_gvcp_packet_new_read_register_cmd (guint32 address, guint16 packet_count, si
 /**
  * arv_gvcp_packet_new_read_register_ack: (skip)
  * @value: read value
- * @packet_count: current packet count
+ * @packet_id: packet id
  * @packet_size: (out): packet size, in bytes
  * Return value: (transfer full): a new #ArvGvcpPacket
  *
@@ -214,7 +217,8 @@ arv_gvcp_packet_new_read_register_cmd (guint32 address, guint16 packet_count, si
 
 ArvGvcpPacket *
 arv_gvcp_packet_new_read_register_ack (guint32 value,
-				       guint16 packet_count, size_t *packet_size)
+				       guint16 packet_id,
+				       size_t *packet_size)
 {
 	ArvGvcpPacket *packet;
 	guint32 n_value = g_htonl (value);
@@ -228,7 +232,7 @@ arv_gvcp_packet_new_read_register_ack (guint32 value,
 	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_ACK);
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_READ_REGISTER_ACK);
 	packet->header.size = g_htons (sizeof (guint32));
-	packet->header.count = g_htons (packet_count);
+	packet->header.id = g_htons (packet_id);
 
 	memcpy (&packet->data, &n_value, sizeof (guint32));
 
@@ -239,7 +243,7 @@ arv_gvcp_packet_new_read_register_ack (guint32 value,
  * arv_gvcp_packet_new_write_register_cmd: (skip)
  * @address: write address
  * @value: value to write
- * @packet_count: current packet count
+ * @packet_id: packet id
  * @packet_size: (out): packet size, in bytes
  * Return value: (transfer full): a new #ArvGvcpPacket
  *
@@ -247,8 +251,10 @@ arv_gvcp_packet_new_read_register_ack (guint32 value,
  */
 
 ArvGvcpPacket *
-arv_gvcp_packet_new_write_register_cmd (guint32 address, guint32 value,
-					guint16 packet_count, size_t *packet_size)
+arv_gvcp_packet_new_write_register_cmd (guint32 address,
+					guint32 value,
+					guint16 packet_id,
+					size_t *packet_size)
 {
 	ArvGvcpPacket *packet;
 	guint32 n_address = g_htonl (address);
@@ -263,7 +269,7 @@ arv_gvcp_packet_new_write_register_cmd (guint32 address, guint32 value,
 	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_CMD);
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_WRITE_REGISTER_CMD);
 	packet->header.size = g_htons (2 * sizeof (guint32));
-	packet->header.count = g_htons (packet_count);
+	packet->header.id = g_htons (packet_id);
 
 	memcpy (&packet->data, &n_address, sizeof (guint32));
 	memcpy (&packet->data[sizeof (guint32)], &n_value, sizeof (guint32));
@@ -274,7 +280,7 @@ arv_gvcp_packet_new_write_register_cmd (guint32 address, guint32 value,
 /**
  * arv_gvcp_packet_new_write_register_ack: (skip)
  * @address: write address
- * @packet_count: current packet count
+ * @packet_id: packet id
  * @packet_size: (out): packet size, in bytes
  * Return value: (transfer full): a new #ArvGvcpPacket
  *
@@ -283,7 +289,8 @@ arv_gvcp_packet_new_write_register_cmd (guint32 address, guint32 value,
 
 ArvGvcpPacket *
 arv_gvcp_packet_new_write_register_ack 	(guint32 address,
-					 guint16 packet_count, size_t *packet_size)
+					 guint16 packet_id,
+					 size_t *packet_size)
 {
 	ArvGvcpPacket *packet;
 	guint32 n_address = g_htonl (address);
@@ -297,7 +304,7 @@ arv_gvcp_packet_new_write_register_ack 	(guint32 address,
 	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_ACK);
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_WRITE_REGISTER_ACK);
 	packet->header.size = g_htons (sizeof (guint32));
-	packet->header.count = g_htons (packet_count);
+	packet->header.id = g_htons (packet_id);
 
 	memcpy (&packet->data, &n_address, sizeof (guint32));
 
@@ -326,7 +333,7 @@ arv_gvcp_packet_new_discovery_cmd (size_t *packet_size)
 	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_CMD);
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_DISCOVERY_CMD);
 	packet->header.size = g_htons (0x0000);
-	packet->header.count = g_htons (0xffff);
+	packet->header.id = g_htons (0xffff);
 
 	return packet;
 }
@@ -353,7 +360,7 @@ arv_gvcp_packet_new_discovery_ack (size_t *packet_size)
 	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_ACK);
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_DISCOVERY_ACK);
 	packet->header.size = g_htons (ARV_GVBS_DISCOVERY_DATA_SIZE);
-	packet->header.count = g_htons (0xffff);
+	packet->header.id = g_htons (0xffff);
 
 	return packet;
 }
@@ -363,17 +370,18 @@ arv_gvcp_packet_new_discovery_ack (size_t *packet_size)
  * @frame_id: frame id
  * @first_block: first missing packet
  * @last_block: last missing packet
- * @packet_count: current packet count
+ * @packet_id: packet id
  * @packet_size: (out): packet size, in bytes
- * Return value: (transfer full): a new #ArvGvcpPacket
  *
  * Create a gvcp packet for a packet resend command.
+ *
+ * Return value: (transfer full): a new #ArvGvcpPacket
  */
 
 ArvGvcpPacket *
 arv_gvcp_packet_new_packet_resend_cmd (guint32 frame_id,
 				       guint32 first_block, guint32 last_block,
-				       guint16 packet_count, size_t *packet_size)
+				       guint16 packet_id, size_t *packet_size)
 {
 	ArvGvcpPacket *packet;
 	guint32 *data;
@@ -387,7 +395,7 @@ arv_gvcp_packet_new_packet_resend_cmd (guint32 frame_id,
 	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_RESEND);
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_PACKET_RESEND_CMD);
 	packet->header.size = g_htons (3 * sizeof (guint32));
-	packet->header.count = g_htons (packet_count);
+	packet->header.id = g_htons (packet_id);
 
 	data = (guint32 *) &packet->data;
 
@@ -429,6 +437,15 @@ arv_gvcp_command_to_string (ArvGvcpCommand value)
 	return arv_enum_to_string (ARV_TYPE_GVCP_COMMAND, value);
 }
 
+/**
+ * arv_gvcp_packet_to_string:
+ * @packet: a #ArvGvcpPacket
+ *
+ * Converts @packet into a human readable string.
+ *
+ * return value: (transfer full): A newly allocated string.
+ */
+
 char *
 arv_gvcp_packet_to_string (const ArvGvcpPacket *packet)
 {
@@ -447,7 +464,7 @@ arv_gvcp_packet_to_string (const ArvGvcpPacket *packet)
 	g_string_append_printf (string, "command      = %s\n",
 				arv_gvcp_command_to_string (g_ntohs (packet->header.command)));
 	g_string_append_printf (string, "size         = %d\n", g_ntohs (packet->header.size));
-	g_string_append_printf (string, "count        = %d\n", g_ntohs (packet->header.count));
+	g_string_append_printf (string, "id           = %d\n", g_ntohs (packet->header.id));
 
 	data = (char *) &packet->data;
 
@@ -533,6 +550,14 @@ arv_gvcp_packet_to_string (const ArvGvcpPacket *packet)
 
 	return c_string;
 }
+
+/**
+ * arv_gvcp_packet_debug:
+ * @packet: a #ArvGvcpPacket
+ * @level: debug level
+ *
+ * Dumps the content of @packet if level is lower or equal to the current debug level for the gvcp debug category. See arv_debug_enable().
+ */
 
 void
 arv_gvcp_packet_debug (const ArvGvcpPacket *packet, ArvDebugLevel level)

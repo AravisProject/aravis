@@ -93,7 +93,7 @@ typedef struct {
 
 	gboolean cancel;
 
-	guint16 packet_count;
+	guint16 packet_id;
 
 	GSList *frames;
 	guint32 last_frame_id;
@@ -134,10 +134,10 @@ _send_packet_request (ArvGvStreamThreadData *thread_data,
 	ArvGvcpPacket *packet;
 	size_t packet_size;
 
-	thread_data->packet_count = arv_gvcp_next_packet_count (thread_data->packet_count);
+	thread_data->packet_id = arv_gvcp_next_packet_id (thread_data->packet_id);
 
 	packet = arv_gvcp_packet_new_packet_resend_cmd (frame_id, first_block, last_block,
-							thread_data->packet_count, &packet_size);
+							thread_data->packet_id, &packet_size);
 
 	arv_log_stream_thread ("[GvStream::send_packet_request] frame_id = %u (%d - %d)",
 			       frame_id, first_block, last_block);
@@ -736,7 +736,7 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port,
 	thread_data->data_size = packet_size - ARV_GVSP_PACKET_PROTOCOL_OVERHEAD;
 	thread_data->cancel = FALSE;
 
-	thread_data->packet_count = 65300;
+	thread_data->packet_id = 65300;
 	thread_data->last_frame_id = 0;
 
 	thread_data->n_completed_buffers = 0;

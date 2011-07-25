@@ -200,10 +200,22 @@ arv_log (ArvDebugCategory *category, const char *format, ...)
 	va_end (args);
 }
 
+/**
+ * arv_debug_enable:
+ * @category_selection: debug category configuration string
+ *
+ * Configures the debug output using a configuration string consisting of a comma separated list of debug categories or category/debug level pair. This function overwrites the configuration done by ARV_DEBUG environment variable.
+ * For example, enabling debug level 3 of the gvcp category and default debug level of category genicam is done using:
+ *
+ * <informalexample><programlisting>
+ * arv_debug_enable ("gvcp:3,genicam");
+ * </programlisting></informalexample>
+ */
+
 void
-arv_debug_enable (const char *categories)
+arv_debug_enable (const char *category_selection)
 {
-	arv_debug_initialize (categories);
+	arv_debug_initialize (category_selection);
 }
 
 void

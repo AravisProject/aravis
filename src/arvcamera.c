@@ -503,7 +503,7 @@ arv_camera_get_frame_rate (ArvCamera *camera)
  * underlying device object.
  *
  * Source can also be "Software". In this case, an acquisition is triggered
- * by a call to @arv_camera_software_trigger.
+ * by a call to arv_camera_software_trigger().
  */
 
 void
@@ -535,7 +535,7 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source)
  * @camera: a #ArvCamera
  *
  * Sends a software trigger command to @camera. The camera must be previously
- * configured to use a software trigger, using @arv_camera_set_trigger.
+ * configured to use a software trigger, using @arv_camera_set_trigger().
  */
 
 void
