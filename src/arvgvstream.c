@@ -676,12 +676,15 @@ guint16
 arv_gv_stream_get_port (ArvGvStream *gv_stream)
 {
 	GInetSocketAddress *local_address;
+	guint16 port;
 
 	g_return_val_if_fail (ARV_IS_GV_STREAM (gv_stream), 0);
 
 	local_address = G_INET_SOCKET_ADDRESS (g_socket_get_local_address (gv_stream->socket, NULL));
+	port = g_inet_socket_address_get_port (local_address);
+	g_object_unref (local_address);
 
-	return g_inet_socket_address_get_port (local_address);
+	return port;
 }
 
 /**
