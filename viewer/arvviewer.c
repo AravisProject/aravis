@@ -26,6 +26,7 @@
 #include <gst/interfaces/xoverlay.h>
 #include <gdk/gdkx.h>
 #include <arv.h>
+#include <arvenumtypes.h>
 #include <stdlib.h>
 #include <math.h>
 
@@ -39,6 +40,7 @@ typedef struct {
 	ArvCamera *camera;
 	ArvDevice *device;
 	ArvStream *stream;
+	ArvBuffer *last_buffer;
 
 	GstElement *pipeline;
 	GstElement *appsrc;
@@ -47,7 +49,7 @@ typedef struct {
 	guint64 last_timestamp;
 
 	GtkWidget *main_window;
-	GtkWidget *play_button;
+	GtkWidget *snapshot_button;
 	GtkWidget *drawing_area;
 	GtkWidget *camera_combo_box;
 	GtkWidget *trigger_combo_box;
@@ -148,7 +150,9 @@ arv_viewer_new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 		gst_app_src_push_buffer (GST_APP_SRC (viewer->appsrc), buffer);
 	}
 
-	arv_stream_push_buffer (stream, arv_buffer);
+	if (viewer->last_buffer != NULL)
+		arv_stream_push_buffer (stream, viewer->last_buffer);
+	viewer->last_buffer = arv_buffer;
 }
 
 void
@@ -329,8 +333,70 @@ arv_viewer_release_camera (ArvViewer *viewer)
 		viewer->appsrc = NULL;
 	}
 
+	if (viewer->last_buffer != NULL) {
+		g_object_unref (viewer->last_buffer);
+		viewer->last_buffer = NULL;
+	}
+
 	viewer->timestamp_offset = 0;
 	viewer->last_timestamp = 0;
+}
+
+static const char *
+arv_enum_to_string (GType type,
+		    guint enum_value)
+{
+	GEnumClass *enum_class;
+	GEnumValue *value;
+	const char *retval = NULL;
+
+	enum_class = g_type_class_ref (type);
+
+	value = g_enum_get_value (enum_class, enum_value);
+	if (value)
+		retval = value->value_nick;
+
+	g_type_class_unref (enum_class);
+
+	return retval;
+}
+
+void
+arv_viewer_snapshot_cb (GtkButton *button, ArvViewer *viewer)
+{
+	GFile *file;
+	char *path;
+	char *filename;
+	GDateTime *date;
+	char *date_string;
+
+	g_return_if_fail (ARV_IS_CAMERA (viewer->camera));
+	g_return_if_fail (ARV_IS_BUFFER (viewer->last_buffer));
+
+	path = g_build_filename (g_get_user_special_dir (G_USER_DIRECTORY_PICTURES),
+					 "Aravis", NULL);
+	file = g_file_new_for_path (path);
+	g_free (path);
+	g_file_make_directory (file, NULL, NULL);
+	g_object_unref (file);
+
+	date = g_date_time_new_now_local ();
+	date_string = g_date_time_format (date, "%Y-%m-%d-%H:%M:%S");
+	filename = g_strdup_printf ("%s-%s-%d-%d-%s-%s.raw",
+				    arv_camera_get_vendor_name (viewer->camera),
+				    arv_camera_get_device_id (viewer->camera),
+				    viewer->last_buffer->width,
+				    viewer->last_buffer->height,
+				    arv_enum_to_string (ARV_TYPE_PIXEL_FORMAT,
+							viewer->last_buffer->pixel_format),
+				    date_string);
+	path = g_build_filename (g_get_user_special_dir (G_USER_DIRECTORY_PICTURES),
+				 "Aravis", filename, NULL);
+	g_file_set_contents (path, viewer->last_buffer->data, viewer->last_buffer->size, NULL);
+	g_free (path);
+	g_free (filename);
+	g_free (date_string);
+	g_date_time_unref (date);
 }
 
 void
@@ -515,7 +581,7 @@ arv_viewer_new (void)
 	g_free (ui_filename);
 
 	viewer->camera_combo_box = GTK_WIDGET (gtk_builder_get_object (builder, "camera_combobox"));
-	viewer->play_button = GTK_WIDGET (gtk_builder_get_object (builder, "play_button"));
+	viewer->snapshot_button = GTK_WIDGET (gtk_builder_get_object (builder, "snapshot_button"));
 	viewer->main_window = GTK_WIDGET (gtk_builder_get_object (builder, "main_window"));
 	viewer->drawing_area = GTK_WIDGET (gtk_builder_get_object (builder, "video_drawingarea"));
 	viewer->trigger_combo_box = GTK_WIDGET (gtk_builder_get_object (builder, "trigger_combobox"));
@@ -533,12 +599,12 @@ arv_viewer_new (void)
 	gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (viewer->camera_combo_box), cell, TRUE);
 	gtk_cell_layout_set_attributes (GTK_CELL_LAYOUT (viewer->camera_combo_box), cell, "text", 0, NULL);
 
-	gtk_widget_set_no_show_all (viewer->play_button, TRUE);
 	gtk_widget_set_no_show_all (viewer->trigger_combo_box, TRUE);
 
 	gtk_widget_show_all (viewer->main_window);
 
 	g_signal_connect (viewer->main_window, "destroy", G_CALLBACK (arv_viewer_quit_cb), viewer);
+	g_signal_connect (viewer->snapshot_button, "clicked", G_CALLBACK (arv_viewer_snapshot_cb), viewer);
 	g_signal_connect (viewer->camera_combo_box, "changed", G_CALLBACK (arv_viewer_select_camera_cb), viewer);
 
 	g_signal_connect (viewer->frame_rate_entry, "changed", G_CALLBACK (arv_viewer_frame_rate_entry_cb), viewer);
