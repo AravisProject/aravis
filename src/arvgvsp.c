@@ -169,7 +169,7 @@ arv_gvsp_packet_to_string (const ArvGvspPacket *packet, size_t packet_size)
 	packet_type = arv_gvsp_packet_get_packet_type (packet);
 	content_type = arv_gvsp_packet_get_content_type (packet);
 
-	g_string_append_printf (string, "packet_type  = %s\n", arv_gvsp_packet_type_to_string (content_type));
+	g_string_append_printf (string, "packet_type  = %s\n", arv_gvsp_packet_type_to_string (packet_type));
 	g_string_append_printf (string, "content_type = %s\n", arv_gvsp_content_type_to_string (content_type));
 
 	switch (content_type) {
