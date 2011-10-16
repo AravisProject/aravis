@@ -196,7 +196,8 @@ ArvFakeGvCamera *
 arv_fake_gv_camera_new (const char *interface_name)
 {
 	ArvFakeGvCamera *gv_camera;
-	struct ifaddrs *ifap;
+	struct ifaddrs *ifap = NULL;
+	struct ifaddrs *ifap_iter;
 	int return_value;
 	gboolean interface_found = FALSE;
 	gboolean binding_error = FALSE;
@@ -212,18 +213,19 @@ arv_fake_gv_camera_new (const char *interface_name)
 		return NULL;
 	}
 
-	for (;ifap != NULL && !interface_found; ifap = ifap->ifa_next) {
-		if ((ifap->ifa_flags & IFF_UP) != 0 &&
-		    (ifap->ifa_flags & IFF_POINTOPOINT) == 0 &&
-		    (ifap->ifa_addr->sa_family == AF_INET) &&
-		    g_strcmp0 (ifap->ifa_name, interface_name) == 0) {
+	for (ifap_iter = ifap ;ifap_iter != NULL && !interface_found; ifap_iter = ifap_iter->ifa_next) {
+		if ((ifap_iter->ifa_flags & IFF_UP) != 0 &&
+		    (ifap_iter->ifa_flags & IFF_POINTOPOINT) == 0 &&
+		    (ifap_iter->ifa_addr->sa_family == AF_INET) &&
+		    g_strcmp0 (ifap_iter->ifa_name, interface_name) == 0) {
 			GSocketAddress *socket_address;
 			GSocketAddress *inet_socket_address;
 			GInetAddress *inet_address;
 			char *gvcp_address_string;
 			char *discovery_address_string;
 
-			socket_address = g_socket_address_new_from_native (ifap->ifa_addr, sizeof (struct sockaddr));
+			socket_address = g_socket_address_new_from_native (ifap_iter->ifa_addr,
+									   sizeof (struct sockaddr));
 			inet_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address));
 			gvcp_address_string = g_inet_address_to_string (inet_address);
 			arv_debug_device ("[FakeGvCamera::new] Interface address = %s", gvcp_address_string);
@@ -248,7 +250,7 @@ arv_fake_gv_camera_new (const char *interface_name)
 
 			g_object_unref (socket_address);
 
-			socket_address = g_socket_address_new_from_native (ifap->ifa_broadaddr,
+			socket_address = g_socket_address_new_from_native (ifap_iter->ifa_broadaddr,
 									   sizeof (struct sockaddr));
 			inet_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address));
 			discovery_address_string = g_inet_address_to_string (inet_address);
