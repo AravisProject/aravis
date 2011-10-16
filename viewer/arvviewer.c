@@ -416,10 +416,8 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	int height;
 	unsigned int i;
 	gulong window_xid;
-	double exposure;
-	double log_exposure;
 	double frame_rate;
-	gint gain, gain_min, gain_max;
+	gint gain_min, gain_max;
 	gboolean auto_gain, auto_exposure;
 	const char *caps_string;
 
@@ -462,8 +460,6 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 
 	arv_camera_get_region (viewer->camera, NULL, NULL, &width, &height);
 	pixel_format = arv_camera_get_pixel_format (viewer->camera);
-	exposure = arv_camera_get_exposure_time (viewer->camera);
-	gain = arv_camera_get_gain (viewer->camera);
 	arv_camera_get_exposure_time_bounds (viewer->camera, &viewer->exposure_min, &viewer->exposure_max);
 	arv_camera_get_gain_bounds (viewer->camera, &gain_min, &gain_max);
 	frame_rate = arv_camera_get_frame_rate (viewer->camera);
@@ -480,8 +476,6 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->exposure_spin_button), 200.0, 1000.0);
 	gtk_spin_button_set_range (GTK_SPIN_BUTTON (viewer->gain_spin_button), gain_min, gain_max);
 	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->gain_spin_button), 1, 10);
-
-	log_exposure = arv_viewer_value_to_log (exposure, viewer->exposure_min, viewer->exposure_max);
 
 	gtk_range_set_range (GTK_RANGE (viewer->exposure_hscale), 0.0, 1.0);
 	gtk_range_set_range (GTK_RANGE (viewer->gain_hscale), gain_min, gain_max);
