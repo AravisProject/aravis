@@ -305,7 +305,6 @@ arv_evaluator_token_compare_precedence (ArvEvaluatorToken *a, ArvEvaluatorToken 
 	gint a_precedence;
 	gint b_precedence;
 	ArvEvaluatorTokenAssociativity a_associativity;
-	ArvEvaluatorTokenAssociativity b_associativity;
 
 	if (a == NULL || b == NULL ||
 	    a->token_id >= G_N_ELEMENTS (arv_evaluator_token_infos) ||
@@ -315,7 +314,6 @@ arv_evaluator_token_compare_precedence (ArvEvaluatorToken *a, ArvEvaluatorToken 
 	a_precedence = arv_evaluator_token_infos[a->token_id].precedence;
 	b_precedence = arv_evaluator_token_infos[b->token_id].precedence;
 	a_associativity = arv_evaluator_token_infos[a->token_id].associativity;
-	b_associativity = arv_evaluator_token_infos[b->token_id].associativity;
 
 	return (((a_precedence <= b_precedence) &&
 		 a_associativity == ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT) ||
