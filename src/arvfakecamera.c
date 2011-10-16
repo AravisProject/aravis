@@ -231,7 +231,6 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer, guint32 *
 	struct timespec time;
 	guint32 width;
 	guint32 height;
-	guint32 x_offset, y_offset;
 	guint32 exposure_time_us;
 	guint32 gain;
 	guint32 pixel_format;
@@ -244,8 +243,6 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer, guint32 *
 
 	width = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_WIDTH);
 	height = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_HEIGHT);
-	x_offset = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_X_OFFSET);
-	y_offset = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_Y_OFFSET);
 	payload = width * height;
 
 	if (buffer->size < payload) {
