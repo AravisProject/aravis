@@ -58,7 +58,7 @@ arv_gc_category_add_element (ArvGcNode *node, const char *name, const char *cont
  *
  * Get a list of strings with the name of the features listed in the given category node.
  *
- * Returns: a list of strings.
+ * Returns: (element-type utf8) (transfer none): a list of strings.
  */
 
 const GSList *

@@ -179,6 +179,13 @@ arv_gc_enumeration_set_int_value (ArvGcEnumeration *enumeration, gint64 value)
 				   &enumeration->value, value);
 }
 
+/**
+ * arv_gc_enumeration_get_entries:
+ * enumeration: a #ArvGcEnumeration
+ *
+ * Returns: (element-type ArvGcNode) (transfer none): the list of enumeration entry nodes.
+ */
+
 const GSList *
 arv_gc_enumeration_get_entries (ArvGcEnumeration *enumeration)
 {

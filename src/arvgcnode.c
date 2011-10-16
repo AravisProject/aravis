@@ -173,12 +173,21 @@ arv_gc_node_add_child (ArvGcNode *node, ArvGcNode *child)
 	node->priv->n_childs++;
 }
 
-const GSList *
-arv_gc_node_get_childs (ArvGcNode *node)
-{
-	g_return_val_if_fail (ARV_IS_GC_NODE (node), NULL);
+/**
+ * arv_gc_node_get_childs:
+ * @gc_node: a #ArvGcNode
+ *
+ * Get the list of node childs.
+ *
+ * Returns: (element-type ArvGcNode) (transfer none): a list of #ArvGcNode.
+ */
 
-	return node->priv->childs;
+const GSList *
+arv_gc_node_get_childs (ArvGcNode *gc_node)
+{
+	g_return_val_if_fail (ARV_IS_GC_NODE (gc_node), NULL);
+
+	return gc_node->priv->childs;
 }
 
 unsigned int
