@@ -118,12 +118,15 @@ arv_gv_interface_free_discover_infos_list (ArvGvInterface *gv_interface)
 static void
 arv_gv_interface_build_discover_infos_list (ArvGvInterface *gv_interface)
 {
-	struct ifaddrs *ifap;
-	int n_interfaces;
+	struct ifaddrs *ifap  = NULL;
+	int return_value;
 
 	arv_gv_interface_free_discover_infos_list (gv_interface);
 
-	n_interfaces = getifaddrs (&ifap);
+	return_value  = getifaddrs (&ifap);
+	if (return_value < 0)
+		return;
+
 	for (;ifap != NULL; ifap = ifap->ifa_next) {
 		if ((ifap->ifa_flags & IFF_UP) != 0 &&
 		    (ifap->ifa_flags & IFF_POINTOPOINT) == 0 &&
@@ -164,6 +167,8 @@ arv_gv_interface_build_discover_infos_list (ArvGvInterface *gv_interface)
 			gv_interface->priv->n_discover_infos++;
 		}
 	}
+
+	freeifaddrs (ifap);
 }
 
 static gboolean
