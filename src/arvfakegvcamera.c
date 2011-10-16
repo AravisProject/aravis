@@ -197,7 +197,7 @@ arv_fake_gv_camera_new (const char *interface_name)
 {
 	ArvFakeGvCamera *gv_camera;
 	struct ifaddrs *ifap;
-	int n_interfaces;
+	int return_value;
 	gboolean interface_found = FALSE;
 	gboolean binding_error = FALSE;
 
@@ -206,7 +206,12 @@ arv_fake_gv_camera_new (const char *interface_name)
 	gv_camera = g_new0 (ArvFakeGvCamera, 1);
 	gv_camera->camera = arv_fake_camera_new ("GV01");
 
-	n_interfaces = getifaddrs (&ifap);
+	return_value = getifaddrs (&ifap);
+	if (return_value < 0) {
+		g_warning ("[FakeGvCamera::new] No network interface found");
+		return NULL;
+	}
+
 	for (;ifap != NULL && !interface_found; ifap = ifap->ifa_next) {
 		if ((ifap->ifa_flags & IFF_UP) != 0 &&
 		    (ifap->ifa_flags & IFF_POINTOPOINT) == 0 &&
@@ -279,6 +284,8 @@ arv_fake_gv_camera_new (const char *interface_name)
 			interface_found = TRUE;
 		}
 	}
+
+	freeifaddrs (ifap);
 
 	if (binding_error)
 		goto BINDING_ERROR;
