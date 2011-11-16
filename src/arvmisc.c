@@ -792,6 +792,16 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 	       "video/x-raw-bayer",	8,	8,	0
 	},
 	{
+	       ARV_PIXEL_FORMAT_BAYER_BG_12,
+	       "video/x-raw-bayer, bpp=(int)16, depth=(int)12",
+	       "video/x-raw-bayer",	16,	12,	0
+	},
+	{
+	       ARV_PIXEL_FORMAT_BAYER_BG_12_PACKED,
+	       "video/x-raw-bayer, bpp=(int)12, depth=(int)12",
+	       "video/x-raw-bayer",	12,	12,	0
+	},
+	{
 		ARV_PIXEL_FORMAT_YUV_422_PACKED,
 		"video/x-raw-yuv, format=(fourcc)UYVY",
 		"video/x-raw-yuv",	0,	0,	ARV_MAKE_FOURCC ('U','Y','V','Y')
