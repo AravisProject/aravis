@@ -147,11 +147,13 @@ introspection_files = $(ARAVIS_SRCS) \
 		      arvenumtypes.h
 
 Aravis-@ARAVIS_API_VERSION@.gir: $(INTROSPECTION_SCANNER)
-Aravis_0_2_gir_INCLUDES = GObject-2.0 Gio-2.0
-Aravis_0_2_gir_SCANNERFLAGS = --identifier-prefix=Arv --warn-all
-Aravis_0_2_gir_CFLAGS = $(INCLUDES) -I$(top_srcdir)/src
-Aravis_0_2_gir_LIBS = libaravis-@ARAVIS_API_VERSION@.la
-Aravis_0_2_gir_FILES = $(addprefix $(srcdir)/,$(introspection_files))
+
+Aravis_@ARAVIS_API_VERSION_U@_gir_INCLUDES = GObject-2.0 Gio-2.0
+Aravis_@ARAVIS_API_VERSION_U@_gir_SCANNERFLAGS = --identifier-prefix=Arv --warn-all
+Aravis_@ARAVIS_API_VERSION_U@_gir_CFLAGS = $(INCLUDES) -I$(top_srcdir)/src
+Aravis_@ARAVIS_API_VERSION_U@_gir_LIBS = libaravis-@ARAVIS_API_VERSION@.la
+Aravis_@ARAVIS_API_VERSION_U@_gir_FILES = $(addprefix $(srcdir)/,$(introspection_files))
+
 INTROSPECTION_GIRS += Aravis-@ARAVIS_API_VERSION@.gir
 
 girdir = $(datadir)/gir-1.0
