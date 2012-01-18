@@ -181,7 +181,7 @@ arv_gc_enumeration_set_int_value (ArvGcEnumeration *enumeration, gint64 value)
 
 /**
  * arv_gc_enumeration_get_entries:
- * enumeration: a #ArvGcEnumeration
+ * @enumeration: a #ArvGcEnumeration
  *
  * Returns: (element-type ArvGcNode) (transfer none): the list of enumeration entry nodes.
  */
