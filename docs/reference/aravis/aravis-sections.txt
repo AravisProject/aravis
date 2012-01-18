@@ -437,6 +437,7 @@ ARV_GV_DEVICE_HEARTBEAT_RETRY_TIMEOUT_S
 ARV_GV_DEVICE_BUFFER_SIZE
 ArvGvDeviceClass
 ArvGvDevicePrivate
+arv_gv_device_get_url_regex
 </SECTION>
 
 <SECTION>

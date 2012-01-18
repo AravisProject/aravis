@@ -64,6 +64,7 @@ GType arv_gv_device_get_type (void);
 ArvDevice * 	arv_gv_device_new 	(GInetAddress *interface_address, GInetAddress *device_address);
 
 guint64 	arv_gv_device_get_timestamp_tick_frequency 	(ArvGvDevice *gv_device);
+GRegex * 	arv_gv_device_get_url_regex 			(void);
 
 G_END_DECLS
 

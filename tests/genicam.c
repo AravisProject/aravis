@@ -113,6 +113,27 @@ enumeration_test (void)
 	g_object_unref (device);
 }
 
+GRegex *arv_gv_device_get_url_regex (void);
+
+static void
+url_test (void)
+{
+	char **tokens;
+	unsigned int i;
+
+	tokens = g_regex_split (arv_gv_device_get_url_regex (), "Local:Basler_Ace_GigE_e7c9b87e_Version_3_3.zip;c0000000;10cca", 0);
+
+	g_assert_cmpint (g_strv_length (tokens), ==, 6);
+
+	g_assert_cmpstr (tokens[0], ==, "");
+	g_assert_cmpstr (tokens[1], ==, "Local:");
+	g_assert_cmpstr (tokens[2], ==, "Basler_Ace_GigE_e7c9b87e_Version_3_3.zip");
+	g_assert_cmpstr (tokens[3], ==, "c0000000");
+	g_assert_cmpstr (tokens[4], ==, "10cca");
+
+	g_strfreev (tokens);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -129,6 +150,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/genicam/boolean", boolean_test);
 	g_test_add_func ("/genicam/float", float_test);
 	g_test_add_func ("/genicam/enumeration", enumeration_test);
+	g_test_add_func ("/genicam/url", url_test);
 
 	result = g_test_run();
 

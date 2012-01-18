@@ -35,7 +35,6 @@
 #include <stdlib.h>
 
 static GObjectClass *parent_class = NULL;
-static GRegex *arv_gv_device_url_regex = NULL;
 
 /* Shared data (main thread - heartbeat) */
 
@@ -69,6 +68,18 @@ struct _ArvGvDevicePrivate {
 	char *genicam_xml;
 	size_t genicam_xml_size;
 };
+
+GRegex *
+arv_gv_device_get_url_regex (void)
+{
+static GRegex *arv_gv_device_url_regex = NULL;
+
+	if (arv_gv_device_url_regex == NULL)
+		arv_gv_device_url_regex = g_regex_new ("^(local:|file:|http:)(.+\\.[^;]+);?([0-9:a-f]*)?;?([0-9:a-f]*)?$",
+						       G_REGEX_CASELESS, 0, NULL);
+
+	return arv_gv_device_url_regex;
+}
 
 static gboolean
 _read_memory (ArvGvDeviceIOData *io_data, guint32 address, guint32 size, void *buffer)
@@ -482,7 +493,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 
 	arv_debug_device ("[GvDevice::load_genicam] xml url = '%s' at 0x%x", filename, address);
 
-	tokens = g_regex_split (arv_gv_device_url_regex, filename, 0);
+	tokens = g_regex_split (arv_gv_device_get_url_regex (), filename, 0);
 
 	if (tokens[0] != NULL) {
 		if (g_strcmp0 (tokens[1], "File:") == 0)
@@ -817,9 +828,6 @@ arv_gv_device_class_init (ArvGvDeviceClass *gv_device_class)
 	device_class->write_memory = arv_gv_device_write_memory;
 	device_class->read_register = arv_gv_device_read_register;
 	device_class->write_register = arv_gv_device_write_register;
-
-	arv_gv_device_url_regex = g_regex_new ("^(local:|file:|http:)(.+\\.[^;]+);?([0-9:a-f]*)?;?([0-9:a-f]*)?$",
-					       G_REGEX_CASELESS, 0, NULL);
 }
 
 G_DEFINE_TYPE (ArvGvDevice, arv_gv_device, ARV_TYPE_DEVICE)
