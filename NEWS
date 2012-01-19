@@ -2,7 +2,7 @@ Release 0.1.11
 ==============
 
   * viewer: add a snapshot button.
-  * documentation: more GigE Vision protocol.
+  * documentation: more information on GigE Vision protocol.
   * all: memory leak fixes.
 
 Release 0.1.10
