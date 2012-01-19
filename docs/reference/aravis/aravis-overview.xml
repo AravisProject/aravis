@@ -6,13 +6,7 @@
 
 		<para>
 			Aravis is a GObject based library for the control and the video stream
-			acquisition of digital cameras. It supports gobect-introspection,
-			making it usable directly from Python (<ulink type="http"
-				url="http://live.gnome.org/PyGI">PyGI</ulink>) , Javascript
-			(<ulink type="http" url="http://live.gnome.org/Gjs/">Gjs</ulink> or
-			<ulink type="http" url="http://live.gnome.org/Seed">Seed</ulink>) or
-			<ulink type="http"
-				url="http://live.gnome.org/Vala">Vala</ulink>.
+			acquisition of digital cameras.
 		</para>
 
 		<para>
