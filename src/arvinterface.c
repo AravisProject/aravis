@@ -93,9 +93,34 @@ arv_interface_get_device_id (ArvInterface *interface, unsigned int index)
 	if (index >= interface->priv->device_ids->len)
 		return NULL;
 
-	return g_array_index (interface->priv->device_ids, char *, index);
+	return g_array_index (interface->priv->device_ids, char **, index)[0];
 }
 
+/**
+ * arv_interface_get_device_physical_id
+ * @interface: a #ArvInterface
+ * @index: device index
+ * Return value: a physical device id
+ *
+ * Queries the physical device id corresponding to index such
+ * as the MAC address for Ethernet based devices, bus id for PCI,
+ * USB or Firewire based devices.
+ *
+ * Prior to this call the @arv_interface_update_device_list
+ * function must be called.
+ **/
+
+const char *
+arv_interface_get_device_physical_id (ArvInterface *interface, unsigned int index)
+{
+	g_return_val_if_fail (ARV_IS_INTERFACE (interface), 0);
+	g_return_val_if_fail (interface->priv->device_ids != NULL, 0);
+
+	if (index >= interface->priv->device_ids->len)
+		return NULL;
+
+	return g_array_index (interface->priv->device_ids, char **, index)[1];
+}
 /**
  * arv_interface_open_device
  * @interface: a #ArvInterface
@@ -127,7 +152,7 @@ arv_interface_init (ArvInterface *interface)
 {
 	interface->priv = G_TYPE_INSTANCE_GET_PRIVATE (interface, ARV_TYPE_INTERFACE, ArvInterfacePrivate);
 
-	interface->priv->device_ids = g_array_new (FALSE, TRUE, sizeof (char *));
+	interface->priv->device_ids = g_array_new (FALSE, TRUE, sizeof (char **));
 }
 
 static void
@@ -139,7 +164,7 @@ arv_interface_finalize (GObject *object)
 	parent_class->finalize (object);
 
 	for (i = 0; i < interface->priv->device_ids->len; i++)
-		g_free (g_array_index (interface->priv->device_ids, char *, i));
+		g_strfreev (g_array_index (interface->priv->device_ids, char **, i));
 	g_array_free (interface->priv->device_ids, TRUE);
 	interface->priv->device_ids = NULL;
 }
