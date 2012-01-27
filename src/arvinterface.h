@@ -24,8 +24,14 @@
 #define ARV_INTERFACE_H
 
 #include <arvtypes.h>
+#include <arvdevice.h>
 
 G_BEGIN_DECLS
+
+typedef struct {
+	char *device;
+	char *physical;
+} ArvInterfaceDeviceIds;
 
 #define ARV_TYPE_INTERFACE             (arv_interface_get_type ())
 #define ARV_INTERFACE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_INTERFACE, ArvInterface))

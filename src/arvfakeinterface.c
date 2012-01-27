@@ -41,12 +41,16 @@ struct _ArvFakeInterfacePrivate {
 static void
 arv_fake_interface_update_device_list (ArvInterface *interface, GArray *device_ids)
 {
-	char **device_id = g_new0 (char*, 2 + 1);
+	ArvInterfaceDeviceIds *ids;
+
+	ids = g_new0 (ArvInterfaceDeviceIds, 1);
 
 	g_array_set_size (device_ids, 0);
-	device_id[0] = g_strdup (ARV_FAKE_DEVICE_ID);
-	device_id[1] = g_strdup (ARV_FAKE_PHYSICAL_ID);
-	g_array_append_val (device_ids, device_id);
+
+	ids->device = g_strdup (ARV_FAKE_DEVICE_ID);
+	ids->physical = g_strdup (ARV_FAKE_PHYSICAL_ID);
+
+	g_array_append_val (device_ids, ids);
 }
 
 static ArvDevice *

@@ -39,6 +39,18 @@ struct _ArvInterfacePrivate {
 	GArray *device_ids;
 };
 
+static void
+arv_interface_clear_device_ids (ArvInterface *interface)
+{
+	unsigned int i;
+
+	for (i = 0; i < interface->priv->device_ids->len; i++) {
+		g_free (g_array_index (interface->priv->device_ids, ArvInterfaceDeviceIds *, i)->device);
+		g_free (g_array_index (interface->priv->device_ids, ArvInterfaceDeviceIds *, i)->physical);
+	}
+	g_array_set_size (interface->priv->device_ids, 0);
+}
+
 /**
  * arv_interface_update_device_list
  * @interface: a #ArvInterface
@@ -51,6 +63,8 @@ void
 arv_interface_update_device_list (ArvInterface *interface)
 {
 	g_return_if_fail (ARV_IS_INTERFACE (interface));
+
+	arv_interface_clear_device_ids (interface);
 
 	ARV_INTERFACE_GET_CLASS (interface)->update_device_list (interface, interface->priv->device_ids);
 }
@@ -93,7 +107,7 @@ arv_interface_get_device_id (ArvInterface *interface, unsigned int index)
 	if (index >= interface->priv->device_ids->len)
 		return NULL;
 
-	return g_array_index (interface->priv->device_ids, char **, index)[0];
+	return g_array_index (interface->priv->device_ids, ArvInterfaceDeviceIds *, index)->device;
 }
 
 /**
@@ -119,7 +133,7 @@ arv_interface_get_device_physical_id (ArvInterface *interface, unsigned int inde
 	if (index >= interface->priv->device_ids->len)
 		return NULL;
 
-	return g_array_index (interface->priv->device_ids, char **, index)[1];
+	return g_array_index (interface->priv->device_ids, ArvInterfaceDeviceIds *, index)->physical;
 }
 /**
  * arv_interface_open_device
@@ -152,19 +166,17 @@ arv_interface_init (ArvInterface *interface)
 {
 	interface->priv = G_TYPE_INSTANCE_GET_PRIVATE (interface, ARV_TYPE_INTERFACE, ArvInterfacePrivate);
 
-	interface->priv->device_ids = g_array_new (FALSE, TRUE, sizeof (char **));
+	interface->priv->device_ids = g_array_new (FALSE, TRUE, sizeof (ArvInterfaceDeviceIds *));
 }
 
 static void
 arv_interface_finalize (GObject *object)
 {
 	ArvInterface *interface = ARV_INTERFACE (object);
-	unsigned int i;
 
 	parent_class->finalize (object);
 
-	for (i = 0; i < interface->priv->device_ids->len; i++)
-		g_strfreev (g_array_index (interface->priv->device_ids, char **, i));
+	arv_interface_clear_device_ids (interface);
 	g_array_free (interface->priv->device_ids, TRUE);
 	interface->priv->device_ids = NULL;
 }

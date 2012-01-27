@@ -314,10 +314,15 @@ arv_gv_interface_update_device_list (ArvInterface *interface, GArray *device_ids
 
 	g_hash_table_iter_init (&iter, gv_interface->priv->devices);
 	while (g_hash_table_iter_next (&iter, &key, &value)) {
-		char **device_id = g_new0 (char*, 2 + 1);
-		device_id[0] = g_strdup (key);
-                device_id[1] = g_strdup (((ArvGvInterfaceDeviceInfos *)value)->mac_string);
-		g_array_append_val (device_ids, device_id);
+		ArvInterfaceDeviceIds *ids;
+		ArvGvInterfaceDeviceInfos *infos = value;
+
+		ids = g_new0 (ArvInterfaceDeviceIds, 1);
+
+		ids->device = g_strdup (key);
+                ids->physical = g_strdup (infos->mac_string);
+
+		g_array_append_val (device_ids, ids);
 	}
 }
 
