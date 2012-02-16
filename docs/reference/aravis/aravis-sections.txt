@@ -91,6 +91,7 @@ arv_open_device
 arv_shutdown
 arv_interface_update_device_list
 arv_interface_get_device_id
+arv_interface_get_device_physical_id
 arv_interface_get_n_devices
 arv_interface_open_device
 <SUBSECTION Standard>
@@ -102,6 +103,7 @@ ARV_INTERFACE_CLASS
 ARV_IS_INTERFACE_CLASS
 ARV_INTERFACE_GET_CLASS
 <SUBSECTION Private>
+ArvInterfaceDeviceIds
 ArvInterfaceClass
 ArvInterfacePrivate
 </SECTION>
