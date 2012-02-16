@@ -106,7 +106,7 @@ new_buffer_cb (ArvStream *stream, ApplicationData *data)
 {
 	ArvBuffer *buffer;
 
-	buffer = arv_stream_pop_buffer (stream);
+	buffer = arv_stream_try_pop_buffer (stream);
 	if (buffer != NULL) {
 		if (buffer->status == ARV_BUFFER_STATUS_SUCCESS)
 			data->buffer_count++;

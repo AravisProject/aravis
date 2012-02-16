@@ -199,7 +199,7 @@ main (int argc, char **argv)
 			g_usleep (100000);
 
 			do  {
-				buffer = arv_stream_pop_buffer (stream);
+				buffer = arv_stream_try_pop_buffer (stream);
 				if (buffer != NULL)
 					arv_stream_push_buffer (stream, buffer);
 			} while (buffer != NULL);
