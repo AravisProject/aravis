@@ -531,6 +531,42 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source)
 }
 
 /**
+ * arv_camera_set_trigger_source:
+ * @camera: a #ArvCamera
+ * @source: source name
+ *
+ * Sets the trigger source. This function doesn't check if the camera is configured
+ * to actually use this source as a trigger.
+ */
+
+void
+arv_camera_set_trigger_source (ArvCamera *camera, const char *source)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+	g_return_if_fail (source != NULL);
+
+	arv_device_set_string_feature_value (camera->priv->device, "TriggerSource", source);
+}
+
+/**
+ * arv_camera_get_trigger_source:
+ * @camera: a #ArvCamera
+ *
+ * Gets the trigger source. This function doesn't check if the camera is configured
+ * to actually use this source as a trigger.
+ *
+ * Returns: a string containing the trigger source name, NULL on error.
+ */
+
+const char *
+arv_camera_get_trigger_source (ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+
+	return arv_device_get_string_feature_value (camera->priv->device, "TriggerSource");
+}
+
+/**
  * arv_camera_software_trigger:
  * @camera: a #ArvCamera
  *
