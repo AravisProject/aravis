@@ -22,11 +22,11 @@
  */
 
 /**
- * SECTION:lsmdomcharacterdata
+ * SECTION:arvdomcharacterdata
  * @short_description: Base class for DOM character data nodes
  */
 
-#include <lsmdomcharacterdata.h>
+#include <arvdomcharacterdata.h>
 #include <lsmdebug.h>
 #include <string.h>
 

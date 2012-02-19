@@ -22,13 +22,13 @@
  */
 
 /**
- * SECTION:lsmdomnode
+ * SECTION:arvdomnode
  * @short_description: Base class for DOM nodes
  */
 
-#include <lsmdomnode.h>
-#include <lsmdomnodelist.h>
-#include <lsmdomdocument.h>
+#include <arvdomnode.h>
+#include <arvdomnodelist.h>
+#include <arvdomdocument.h>
 #include <lsmdebug.h>
 #include <glib/gprintf.h>
 #include <stdio.h>

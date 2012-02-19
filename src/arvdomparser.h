@@ -21,22 +21,31 @@
  * 	Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#ifndef ARV_DOM_IMPLEMENTATION_H
-#define ARV_DOM_IMPLEMENTATION_H
+#ifndef ARV_DOM_PARSER_H
+#define ARV_DOM_PARSER_H
 
-#include <lsmdomtypes.h>
-#include <lsmdomdocument.h>
+#include <arvdomdocument.h>
+#include <gio/gio.h>
 
 G_BEGIN_DECLS
 
-typedef ArvDomDocument * (*ArvDomDocumentCreateFunction) (void);
+ArvDomDocument * 	arv_dom_document_new_from_memory 	(const void *buffer, int size, GError **error);
+ArvDomDocument * 	arv_dom_document_new_from_path 		(const char *path, GError **error);
+ArvDomDocument * 	arv_dom_document_new_from_url 		(const char *url, GError **error);
 
-ArvDomDocument *	arv_dom_implementation_create_document 			(const char *namespace_uri,
-										 const char *qualified_name);
-void			arv_dom_implementation_add_document_create_function	(const char *qualified_name,
-										 ArvDomDocumentCreateFunction create_function);
-
-void			arv_dom_implementation_cleanup 				(void);
+void			arv_dom_document_save_to_stream		(ArvDomDocument *document,
+								 GOutputStream *stream,
+								 GError **error);
+void			arv_dom_document_save_to_memory		(ArvDomDocument *documennt,
+								 void **buffer,
+								 int *size,
+								 GError **error);
+void			arv_dom_document_save_to_path		(ArvDomDocument *documennt,
+								 const char *path,
+								 GError **error);
+void			arv_dom_document_save_to_url		(ArvDomDocument *documennt,
+								 const char *path,
+								 GError **error);
 
 G_END_DECLS
 

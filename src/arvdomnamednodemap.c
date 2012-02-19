@@ -21,8 +21,8 @@
  * 	Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#include <lsmdomnamednodemap.h>
-#include <lsmdomnode.h>
+#include <arvdomnamednodemap.h>
+#include <arvdomnode.h>
 
 /* ArvDomNamedNodeMap implementation */
 

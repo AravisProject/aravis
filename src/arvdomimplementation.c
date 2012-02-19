@@ -21,7 +21,7 @@
  * 	Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#include <lsmdomimplementation.h>
+#include <arvdomimplementation.h>
 #include <lsmmathmldocument.h>
 #include <lsmsvgdocument.h>
 #include <lsmdebug.h>

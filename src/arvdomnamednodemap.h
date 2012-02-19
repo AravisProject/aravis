@@ -24,7 +24,7 @@
 #ifndef ARV_DOM_NAMED_NODE_MAP_H
 #define ARV_DOM_NAMED_NODE_MAP_H
 
-#include <lsmdomtypes.h>
+#include <arvdomtypes.h>
 
 G_BEGIN_DECLS
 

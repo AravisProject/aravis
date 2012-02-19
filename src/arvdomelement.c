@@ -22,11 +22,11 @@
  */
 
 /**
- * SECTION:lsmdomelement
+ * SECTION:arvdomelement
  * @short_description: Base class for DOM element nodes
  */
 
-#include <lsmdomelement.h>
+#include <arvdomelement.h>
 #include <string.h>
 
 static GObjectClass *parent_class = NULL;

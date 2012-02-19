@@ -22,11 +22,11 @@
  */
 
 /**
- * SECTION:lsmdomtext
+ * SECTION:arvdomtext
  * @short_description: Base class for DOM text nodes
  */
 
-#include <lsmdomtext.h>
+#include <arvdomtext.h>
 
 /* ArvDomNode implementation */
 

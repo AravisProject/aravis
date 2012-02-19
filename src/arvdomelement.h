@@ -24,8 +24,8 @@
 #ifndef ARV_DOM_ELEMENT_H
 #define ARV_DOM_ELEMENT_H
 
-#include <lsmdom.h>
-#include <lsmdomnode.h>
+#include <arvdom.h>
+#include <arvdomnode.h>
 
 G_BEGIN_DECLS
 

@@ -24,7 +24,7 @@
 #ifndef ARV_DOM_TEXT_H
 #define ARV_DOM_TEXT_H
 
-#include <lsmdomcharacterdata.h>
+#include <arvdomcharacterdata.h>
 
 G_BEGIN_DECLS
 

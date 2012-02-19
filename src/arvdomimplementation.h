@@ -1,6 +1,6 @@
 /* Aravis
  *
- * Copyright © 2010 Emmanuel Pacaud
+ * Copyright © 2007-2009 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,37 +21,23 @@
  * 	Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#include <lsmdomnodelist.h>
-#include <lsmdomnode.h>
+#ifndef ARV_DOM_IMPLEMENTATION_H
+#define ARV_DOM_IMPLEMENTATION_H
 
-/* ArvDomNodeList implementation */
+#include <arvdomtypes.h>
+#include <arvdomdocument.h>
 
-ArvDomNode *
-arv_dom_node_list_get_item (ArvDomNodeList *list, unsigned int index)
-{
-	g_return_val_if_fail (LSM_IS_DOM_NODE_LIST (list), NULL);
+G_BEGIN_DECLS
 
-	return ARV_DOM_NODE_LIST_GET_CLASS (list)->get_item (list, index);
-}
+typedef ArvDomDocument * (*ArvDomDocumentCreateFunction) (void);
 
-unsigned int
-arv_dom_node_list_get_length (ArvDomNodeList *list)
-{
-	g_return_val_if_fail (LSM_IS_DOM_NODE_LIST (list), 0);
+ArvDomDocument *	arv_dom_implementation_create_document 			(const char *namespace_uri,
+										 const char *qualified_name);
+void			arv_dom_implementation_add_document_create_function	(const char *qualified_name,
+										 ArvDomDocumentCreateFunction create_function);
 
-	return ARV_DOM_NODE_LIST_GET_CLASS (list)->get_length (list);
-}
+void			arv_dom_implementation_cleanup 				(void);
 
-static void
-arv_dom_node_list_init (ArvDomNodeList *list)
-{
-}
+G_END_DECLS
 
-/* ArvDomNodeList class */
-
-static void
-arv_dom_node_list_class_init (ArvDomNodeListClass *klass)
-{
-}
-
-G_DEFINE_ABSTRACT_TYPE (ArvDomNodeList, arv_dom_node_list, G_TYPE_OBJECT)
+#endif

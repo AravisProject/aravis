@@ -22,8 +22,8 @@
  */
 
 #include <lsmdebug.h>
-#include <lsmdomimplementation.h>
-#include <lsmdomnode.h>
+#include <arvdomimplementation.h>
+#include <arvdomnode.h>
 #include <lsmmathmlpresentationtoken.h>
 #include <lsmmathmlentitydictionary.h>
 #include <lsmsvgtextelement.h>

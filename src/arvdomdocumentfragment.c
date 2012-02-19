@@ -22,11 +22,11 @@
  */
 
 /**
- * SECTION:lsmdomdocumentfragment
+ * SECTION:arvdomdocumentfragment
  * @short_description: Base class for DOM document fragments
  */
 
-#include <lsmdomdocumentfragment.h>
+#include <arvdomdocumentfragment.h>
 #include <string.h>
 
 static GObjectClass *parent_class = NULL;

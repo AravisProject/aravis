@@ -25,9 +25,9 @@
 #define ARV_DOM_DOCUMENT_H
 
 #include <lsmtypes.h>
-#include <lsmdomtypes.h>
-#include <lsmdomnode.h>
-#include <lsmdomview.h>
+#include <arvdomtypes.h>
+#include <arvdomnode.h>
+#include <arvdomview.h>
 
 G_BEGIN_DECLS
 

@@ -22,15 +22,15 @@
  */
 
 /**
- * SECTION:lsmdomdocument
+ * SECTION:arvdomdocument
  * @short_description: Base class for DOM document nodes
  */
 
-#include <lsmdomdocument.h>
-#include <lsmdomelement.h>
+#include <arvdomdocument.h>
+#include <arvdomelement.h>
 #include <lsmstr.h>
 #include <lsmdebug.h>
-#include <lsmdomtext.h>
+#include <arvdomtext.h>
 #include <gio/gio.h>
 #include <string.h>
 

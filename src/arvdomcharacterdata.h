@@ -24,7 +24,7 @@
 #ifndef ARV_DOM_CHARACTER_DATA_H
 #define ARV_DOM_CHARACTER_DATA_H
 
-#include <lsmdomnode.h>
+#include <arvdomnode.h>
 
 G_BEGIN_DECLS
 
