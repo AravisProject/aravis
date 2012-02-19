@@ -1,4 +1,4 @@
-/* Lasem
+/* Aravis
  *
  * Copyright © 2007-2010 Emmanuel Pacaud
  *
@@ -36,79 +36,79 @@
 
 static GObjectClass *parent_class;
 
-/* LsmDomNode implementation */
+/* ArvDomNode implementation */
 
 static const char *
-lsm_dom_document_get_node_name (LsmDomNode *node)
+arv_dom_document_get_node_name (ArvDomNode *node)
 {
 	return "#document";
 }
 
-static LsmDomNodeType
-lsm_dom_document_get_node_type (LsmDomNode *node)
+static ArvDomNodeType
+arv_dom_document_get_node_type (ArvDomNode *node)
 {
-	return LSM_DOM_NODE_TYPE_DOCUMENT_NODE;
+	return ARV_DOM_NODE_TYPE_DOCUMENT_NODE;
 }
 
-/* LsmDomDocument implementation */
+/* ArvDomDocument implementation */
 
-LsmDomElement *
-lsm_dom_document_get_document_element (LsmDomDocument *self)
+ArvDomElement *
+arv_dom_document_get_document_element (ArvDomDocument *self)
 {
 	g_return_val_if_fail (LSM_IS_DOM_DOCUMENT (self), NULL);
 
-	return LSM_DOM_ELEMENT (lsm_dom_node_get_first_child (LSM_DOM_NODE (self)));
+	return ARV_DOM_ELEMENT (arv_dom_node_get_first_child (ARV_DOM_NODE (self)));
 }
 
-LsmDomElement *
-lsm_dom_document_create_element (LsmDomDocument *document, const char *tag_name)
+ArvDomElement *
+arv_dom_document_create_element (ArvDomDocument *document, const char *tag_name)
 {
-	LsmDomDocumentClass *document_class;
+	ArvDomDocumentClass *document_class;
 
 	g_return_val_if_fail (LSM_IS_DOM_DOCUMENT (document), NULL);
 
-	document_class = LSM_DOM_DOCUMENT_GET_CLASS (document);
+	document_class = ARV_DOM_DOCUMENT_GET_CLASS (document);
 	if (document_class->create_element != NULL)
 		return document_class->create_element (document, tag_name);
 
 	return NULL;
 }
 
-LsmDomText *
-lsm_dom_document_create_text_node_base (LsmDomDocument *document, const char *data)
+ArvDomText *
+arv_dom_document_create_text_node_base (ArvDomDocument *document, const char *data)
 {
-	return LSM_DOM_TEXT (lsm_dom_text_new (data));
+	return ARV_DOM_TEXT (arv_dom_text_new (data));
 }
 
-LsmDomText *
-lsm_dom_document_create_text_node (LsmDomDocument *document, const char *data)
+ArvDomText *
+arv_dom_document_create_text_node (ArvDomDocument *document, const char *data)
 {
 	g_return_val_if_fail (LSM_IS_DOM_DOCUMENT (document), NULL);
 
-	return LSM_DOM_DOCUMENT_GET_CLASS (document)->create_text_node (document, data);
+	return ARV_DOM_DOCUMENT_GET_CLASS (document)->create_text_node (document, data);
 }
 
-LsmDomView *
-lsm_dom_document_create_view (LsmDomDocument *self)
+ArvDomView *
+arv_dom_document_create_view (ArvDomDocument *self)
 {
 	g_return_val_if_fail (LSM_IS_DOM_DOCUMENT (self), NULL);
 
-	return LSM_DOM_DOCUMENT_GET_CLASS (self)->create_view (self);
+	return ARV_DOM_DOCUMENT_GET_CLASS (self)->create_view (self);
 }
 
-LsmDomElement *
-lsm_dom_document_get_element_by_id (LsmDomDocument *self, const char *id)
+ArvDomElement *
+arv_dom_document_get_element_by_id (ArvDomDocument *self, const char *id)
 {
 	g_return_val_if_fail (LSM_IS_DOM_DOCUMENT (self), NULL);
 	g_return_val_if_fail (id != NULL, NULL);
 
-	lsm_debug_dom ("[LsmDomDocument::get_element_by_id] Lookup '%s'", id);
+	lsm_debug_dom ("[ArvDomDocument::get_element_by_id] Lookup '%s'", id);
 
 	return g_hash_table_lookup (self->ids, id);
 }
 
 void
-lsm_dom_document_register_element (LsmDomDocument *self, LsmDomElement *element, const char *id)
+arv_dom_document_register_element (ArvDomDocument *self, ArvDomElement *element, const char *id)
 {
 	char *old_id;
 
@@ -116,7 +116,7 @@ lsm_dom_document_register_element (LsmDomDocument *self, LsmDomElement *element,
 
 	old_id = g_hash_table_lookup (self->elements, element);
 	if (old_id != NULL) {
-		lsm_debug_dom ("[LsmDomDocument::register_element] Unregister '%s'", old_id);
+		lsm_debug_dom ("[ArvDomDocument::register_element] Unregister '%s'", old_id);
 
 		g_hash_table_remove (self->elements, element);
 		g_hash_table_remove (self->ids, old_id);
@@ -125,7 +125,7 @@ lsm_dom_document_register_element (LsmDomDocument *self, LsmDomElement *element,
 	if (id != NULL) {
 		char *new_id = g_strdup (id);
 
-		lsm_debug_dom ("[LsmDomDocument::register_element] Register '%s'", id);
+		lsm_debug_dom ("[ArvDomDocument::register_element] Register '%s'", id);
 
 		g_hash_table_replace (self->ids, new_id, element);
 		g_hash_table_replace (self->elements, element, new_id);
@@ -133,7 +133,7 @@ lsm_dom_document_register_element (LsmDomDocument *self, LsmDomElement *element,
 }
 
 const char *
-lsm_dom_document_get_url (LsmDomDocument *self)
+arv_dom_document_get_url (ArvDomDocument *self)
 {
 	g_return_val_if_fail (LSM_IS_DOM_DOCUMENT (self), NULL);
 
@@ -141,7 +141,7 @@ lsm_dom_document_get_url (LsmDomDocument *self)
 }
 
 void
-lsm_dom_document_set_path (LsmDomDocument *self, const char *path)
+arv_dom_document_set_path (ArvDomDocument *self, const char *path)
 {
 	g_return_if_fail (LSM_IS_DOM_DOCUMENT (self));
 
@@ -156,7 +156,7 @@ lsm_dom_document_set_path (LsmDomDocument *self, const char *path)
 }
 
 void
-lsm_dom_document_set_url (LsmDomDocument *self, const char *url)
+arv_dom_document_set_url (ArvDomDocument *self, const char *url)
 {
 	g_return_if_fail (LSM_IS_DOM_DOCUMENT (self));
 	g_return_if_fail (url == NULL || lsm_str_is_uri (url));
@@ -166,7 +166,7 @@ lsm_dom_document_set_url (LsmDomDocument *self, const char *url)
 }
 
 void *
-lsm_dom_document_get_href_data (LsmDomDocument *self, const char *href, gsize *size)
+arv_dom_document_get_href_data (ArvDomDocument *self, const char *href, gsize *size)
 {
 	GFile *file;
 	char *data = NULL;
@@ -203,16 +203,16 @@ lsm_dom_document_get_href_data (LsmDomDocument *self, const char *href, gsize *s
 }
 
 static void
-lsm_dom_document_init (LsmDomDocument *document)
+arv_dom_document_init (ArvDomDocument *document)
 {
 	document->ids = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 	document->elements = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, NULL);
 }
 
 static void
-lsm_dom_document_finalize (GObject *object)
+arv_dom_document_finalize (GObject *object)
 {
-	LsmDomDocument *document = LSM_DOM_DOCUMENT (object);
+	ArvDomDocument *document = ARV_DOM_DOCUMENT (object);
 
 	g_hash_table_unref (document->elements);
 	g_hash_table_unref (document->ids);
@@ -222,23 +222,23 @@ lsm_dom_document_finalize (GObject *object)
 	parent_class->finalize (object);
 }
 
-/* LsmDomDocument class */
+/* ArvDomDocument class */
 
 static void
-lsm_dom_document_class_init (LsmDomDocumentClass *klass)
+arv_dom_document_class_init (ArvDomDocumentClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
-	LsmDomNodeClass *node_class = LSM_DOM_NODE_CLASS (klass);
+	ArvDomNodeClass *node_class = ARV_DOM_NODE_CLASS (klass);
 
 	parent_class = g_type_class_peek_parent (klass);
 
-	object_class->finalize = lsm_dom_document_finalize;
+	object_class->finalize = arv_dom_document_finalize;
 
-	node_class->get_node_name = lsm_dom_document_get_node_name;
-	node_class->get_node_type = lsm_dom_document_get_node_type;
+	node_class->get_node_name = arv_dom_document_get_node_name;
+	node_class->get_node_type = arv_dom_document_get_node_type;
 
-	klass->create_text_node = lsm_dom_document_create_text_node_base;
+	klass->create_text_node = arv_dom_document_create_text_node_base;
 }
 
-G_DEFINE_ABSTRACT_TYPE (LsmDomDocument, lsm_dom_document, LSM_TYPE_DOM_NODE)
+G_DEFINE_ABSTRACT_TYPE (ArvDomDocument, arv_dom_document, LSM_TYPE_DOM_NODE)
 

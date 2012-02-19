@@ -1,4 +1,4 @@
-/* Lasem
+/* Aravis
  *
  * Copyright © 2007-2010 Emmanuel Pacaud
  *
@@ -33,45 +33,45 @@
 #include <glib/gprintf.h>
 #include <stdio.h>
 
-/* LsmDomNodeChildList */
+/* ArvDomNodeChildList */
 
 
-#define LSM_TYPE_DOM_NODE_CHILD_LIST             (lsm_dom_node_child_list_get_type ())
-#define LSM_DOM_NODE_CHILD_LIST(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), LSM_TYPE_DOM_NODE_CHILD_LIST, LsmDomNodeChildList))
-#define LSM_DOM_NODE_CHILD_LIST_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), LSM_TYPE_DOM_NODE_CHILD_LIST, LsmDomNodeChildListClass))
+#define LSM_TYPE_DOM_NODE_CHILD_LIST             (arv_dom_node_child_list_get_type ())
+#define ARV_DOM_NODE_CHILD_LIST(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), LSM_TYPE_DOM_NODE_CHILD_LIST, ArvDomNodeChildList))
+#define ARV_DOM_NODE_CHILD_LIST_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), LSM_TYPE_DOM_NODE_CHILD_LIST, ArvDomNodeChildListClass))
 #define LSM_IS_DOM_NODE_CHILD_LIST(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), LSM_TYPE_DOM_NODE_CHILD_LIST))
 #define LSM_IS_DOM_NODE_CHILD_LIST_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), LSM_TYPE_DOM_NODE_CHILD_LIST))
-#define LSM_DOM_NODE_CHILD_LIST_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), LSM_TYPE_DOM_NODE_CHILD_LIST, LsmDomNodeChildListClass))
+#define ARV_DOM_NODE_CHILD_LIST_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), LSM_TYPE_DOM_NODE_CHILD_LIST, ArvDomNodeChildListClass))
 
-typedef struct _LsmDomNodeChildListClass LsmDomNodeChildListClass;
+typedef struct _ArvDomNodeChildListClass ArvDomNodeChildListClass;
 
 typedef struct {
-	LsmDomNodeList base;
+	ArvDomNodeList base;
 
-	LsmDomNode *parent_node;
-} LsmDomNodeChildList;
+	ArvDomNode *parent_node;
+} ArvDomNodeChildList;
 
-struct _LsmDomNodeChildListClass {
-	LsmDomNodeListClass parent_class;
+struct _ArvDomNodeChildListClass {
+	ArvDomNodeListClass parent_class;
 };
 
-GType lsm_dom_node_child_list_get_type (void);
+GType arv_dom_node_child_list_get_type (void);
 
 static GObjectClass *child_list_parent_class = NULL;
 
 static void
-lsm_dom_node_child_list_weak_notify_cb (void *user_data, GObject *object)
+arv_dom_node_child_list_weak_notify_cb (void *user_data, GObject *object)
 {
-	LsmDomNodeChildList *list = user_data;
+	ArvDomNodeChildList *list = user_data;
 
 	list->parent_node = NULL;
 }
 
-static LsmDomNode *
-lsm_dom_node_child_list_get_item (LsmDomNodeList *list, unsigned int index)
+static ArvDomNode *
+arv_dom_node_child_list_get_item (ArvDomNodeList *list, unsigned int index)
 {
-	LsmDomNodeChildList *child_list = LSM_DOM_NODE_CHILD_LIST (list);
-	LsmDomNode *iter;
+	ArvDomNodeChildList *child_list = ARV_DOM_NODE_CHILD_LIST (list);
+	ArvDomNode *iter;
 	unsigned int i = 0;
 
 	if (child_list->parent_node == NULL)
@@ -87,10 +87,10 @@ lsm_dom_node_child_list_get_item (LsmDomNodeList *list, unsigned int index)
 }
 
 static unsigned int
-lsm_dom_node_child_list_get_length (LsmDomNodeList *list)
+arv_dom_node_child_list_get_length (ArvDomNodeList *list)
 {
-	LsmDomNodeChildList *child_list = LSM_DOM_NODE_CHILD_LIST (list);
-	LsmDomNode *iter;
+	ArvDomNodeChildList *child_list = ARV_DOM_NODE_CHILD_LIST (list);
+	ArvDomNode *iter;
 	unsigned int length = 0;
 
 	if (child_list->parent_node == NULL)
@@ -102,33 +102,33 @@ lsm_dom_node_child_list_get_length (LsmDomNodeList *list)
 	return length;
 }
 
-LsmDomNodeList *
-lsm_dom_node_child_list_new (LsmDomNode *parent_node)
+ArvDomNodeList *
+arv_dom_node_child_list_new (ArvDomNode *parent_node)
 {
-	LsmDomNodeChildList *list;
+	ArvDomNodeChildList *list;
 
 	g_return_val_if_fail (LSM_IS_DOM_NODE (parent_node), NULL);
 
 	list = g_object_new (LSM_TYPE_DOM_NODE_CHILD_LIST, NULL);
 	list->parent_node = parent_node;
 
-	g_object_weak_ref (G_OBJECT (parent_node), lsm_dom_node_child_list_weak_notify_cb, list);
+	g_object_weak_ref (G_OBJECT (parent_node), arv_dom_node_child_list_weak_notify_cb, list);
 
-	return LSM_DOM_NODE_LIST (list);
+	return ARV_DOM_NODE_LIST (list);
 }
 
 static void
-lsm_dom_node_child_list_init (LsmDomNodeChildList *list)
+arv_dom_node_child_list_init (ArvDomNodeChildList *list)
 {
 }
 
 static void
-lsm_dom_node_child_list_finalize (GObject *object)
+arv_dom_node_child_list_finalize (GObject *object)
 {
-	LsmDomNodeChildList *list = LSM_DOM_NODE_CHILD_LIST (object);
+	ArvDomNodeChildList *list = ARV_DOM_NODE_CHILD_LIST (object);
 
 	if (list->parent_node != NULL) {
-		g_object_weak_unref (G_OBJECT (list->parent_node), lsm_dom_node_child_list_weak_notify_cb, list);
+		g_object_weak_unref (G_OBJECT (list->parent_node), arv_dom_node_child_list_weak_notify_cb, list);
 		list->parent_node = NULL;
 	}
 
@@ -136,38 +136,38 @@ lsm_dom_node_child_list_finalize (GObject *object)
 }
 
 static void
-lsm_dom_node_child_list_class_init (LsmDomNodeChildListClass *klass)
+arv_dom_node_child_list_class_init (ArvDomNodeChildListClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
-	LsmDomNodeListClass *node_list_class = LSM_DOM_NODE_LIST_CLASS (klass);
+	ArvDomNodeListClass *node_list_class = ARV_DOM_NODE_LIST_CLASS (klass);
 
 	child_list_parent_class = g_type_class_peek_parent (klass);
 
-	object_class->finalize = lsm_dom_node_child_list_finalize;
+	object_class->finalize = arv_dom_node_child_list_finalize;
 
-	node_list_class->get_item = lsm_dom_node_child_list_get_item;
-	node_list_class->get_length = lsm_dom_node_child_list_get_length;
+	node_list_class->get_item = arv_dom_node_child_list_get_item;
+	node_list_class->get_length = arv_dom_node_child_list_get_length;
 }
 
-G_DEFINE_TYPE (LsmDomNodeChildList, lsm_dom_node_child_list, LSM_TYPE_DOM_NODE_LIST)
+G_DEFINE_TYPE (ArvDomNodeChildList, arv_dom_node_child_list, LSM_TYPE_DOM_NODE_LIST)
 
 static GObjectClass *parent_class = NULL;
 
-/* LsmDomNode implementation */
+/* ArvDomNode implementation */
 
 
 /**
- * lsm_dom_node_get_node_name:
- * @self: a #LsmDomNode
+ * arv_dom_node_get_node_name:
+ * @self: a #ArvDomNode
  * Return value: the node name.
  *
  * Gets the node name.
  */
 
 const char*
-lsm_dom_node_get_node_name (LsmDomNode* self)
+arv_dom_node_get_node_name (ArvDomNode* self)
 {
-	LsmDomNodeClass *node_class = LSM_DOM_NODE_GET_CLASS (self);
+	ArvDomNodeClass *node_class = ARV_DOM_NODE_GET_CLASS (self);
 
 	g_return_val_if_fail (node_class != NULL, NULL);
 
@@ -178,17 +178,17 @@ lsm_dom_node_get_node_name (LsmDomNode* self)
 }
 
 /**
- * lsm_dom_node_get_node_value:
- * @self: a #LsmDomNode
+ * arv_dom_node_get_node_value:
+ * @self: a #ArvDomNode
  * Return value: the node value.
  *
  * Gets the node value.
  */
 
 const char*
-lsm_dom_node_get_node_value (LsmDomNode* self)
+arv_dom_node_get_node_value (ArvDomNode* self)
 {
-	LsmDomNodeClass *node_class = LSM_DOM_NODE_GET_CLASS (self);
+	ArvDomNodeClass *node_class = ARV_DOM_NODE_GET_CLASS (self);
 
 	g_return_val_if_fail (node_class != NULL, NULL);
 
@@ -199,9 +199,9 @@ lsm_dom_node_get_node_value (LsmDomNode* self)
 }
 
 void
-lsm_dom_node_set_node_value (LsmDomNode* self, const char* new_value)
+arv_dom_node_set_node_value (ArvDomNode* self, const char* new_value)
 {
-	LsmDomNodeClass *node_class = LSM_DOM_NODE_GET_CLASS (self);
+	ArvDomNodeClass *node_class = ARV_DOM_NODE_GET_CLASS (self);
 
 	g_return_if_fail (node_class != NULL);
 	g_return_if_fail (new_value != NULL);
@@ -210,9 +210,9 @@ lsm_dom_node_set_node_value (LsmDomNode* self, const char* new_value)
 		node_class->set_node_value (self, new_value);
 }
 
-LsmDomNodeType lsm_dom_node_get_node_type (LsmDomNode* self)
+ArvDomNodeType arv_dom_node_get_node_type (ArvDomNode* self)
 {
-	LsmDomNodeClass *node_class = LSM_DOM_NODE_GET_CLASS (self);
+	ArvDomNodeClass *node_class = ARV_DOM_NODE_GET_CLASS (self);
 
 	g_return_val_if_fail (node_class != NULL, 0);
 
@@ -222,73 +222,73 @@ LsmDomNodeType lsm_dom_node_get_node_type (LsmDomNode* self)
 	return 0;
 }
 
-LsmDomNode*
-lsm_dom_node_get_parent_node (LsmDomNode* self)
+ArvDomNode*
+arv_dom_node_get_parent_node (ArvDomNode* self)
 {
 	g_return_val_if_fail (LSM_IS_DOM_NODE (self), NULL);
 
 	return self->parent_node;
 }
 
-LsmDomNodeList*
-lsm_dom_node_get_child_nodes (LsmDomNode* self)
+ArvDomNodeList*
+arv_dom_node_get_child_nodes (ArvDomNode* self)
 {
-	LsmDomNodeList *list;
+	ArvDomNodeList *list;
 
 	g_return_val_if_fail (LSM_IS_DOM_NODE (self), NULL);
 
 	list = g_object_get_data (G_OBJECT (self), "child-nodes");
 
 	if (list == NULL) {
-		list = lsm_dom_node_child_list_new (self);
+		list = arv_dom_node_child_list_new (self);
 		g_object_set_data_full (G_OBJECT (self), "child-nodes", list, g_object_unref);
 	}
 
 	return list;
 }
 
-LsmDomNode*
-lsm_dom_node_get_first_child (LsmDomNode* self)
+ArvDomNode*
+arv_dom_node_get_first_child (ArvDomNode* self)
 {
 	g_return_val_if_fail (LSM_IS_DOM_NODE (self), NULL);
 
 	return self->first_child;
 }
 
-LsmDomNode*
-lsm_dom_node_get_last_child (LsmDomNode* self)
+ArvDomNode*
+arv_dom_node_get_last_child (ArvDomNode* self)
 {
 	g_return_val_if_fail (LSM_IS_DOM_NODE (self), NULL);
 
 	return self->last_child;
 }
 
-LsmDomNode*
-lsm_dom_node_get_previous_sibling (LsmDomNode* self)
+ArvDomNode*
+arv_dom_node_get_previous_sibling (ArvDomNode* self)
 {
 	g_return_val_if_fail (LSM_IS_DOM_NODE (self), NULL);
 
 	return self->previous_sibling;
 }
 
-LsmDomNode*
-lsm_dom_node_get_next_sibling (LsmDomNode* self)
+ArvDomNode*
+arv_dom_node_get_next_sibling (ArvDomNode* self)
 {
 	g_return_val_if_fail (LSM_IS_DOM_NODE (self), NULL);
 
 	return self->next_sibling;
 }
 
-/*LsmDomNamedNodeMap**/
-/*lsm_dom_node_get_attributes (LsmDomNode* self)*/
+/*ArvDomNamedNodeMap**/
+/*arv_dom_node_get_attributes (ArvDomNode* self)*/
 /*{*/
-/*        return LSM_DOM_NODE_GET_CLASS (self)->get_attributes (self);*/
+/*        return ARV_DOM_NODE_GET_CLASS (self)->get_attributes (self);*/
 /*}*/
 
-LsmDomDocument*
-lsm_dom_node_get_owner_document (LsmDomNode* self)
+ArvDomDocument*
+arv_dom_node_get_owner_document (ArvDomNode* self)
 {
-	LsmDomNode *parent;
+	ArvDomNode *parent;
 
 	g_return_val_if_fail (LSM_IS_DOM_NODE (self), NULL);
 
@@ -297,12 +297,12 @@ lsm_dom_node_get_owner_document (LsmDomNode* self)
 	     !LSM_IS_DOM_DOCUMENT (parent);
 	     parent = parent->parent_node);
 
-	return LSM_DOM_DOCUMENT (parent);
+	return ARV_DOM_DOCUMENT (parent);
 }
 
 /**
- * lsm_dom_node_insert_before:
- * @self: a #LsmDomNode
+ * arv_dom_node_insert_before:
+ * @self: a #ArvDomNode
  * @new_child: (transfer full): node to insert
  * @ref_child: (transfer none): reference node, i.e., the node before which the new node must be inserted.
  *
@@ -319,43 +319,43 @@ lsm_dom_node_get_owner_document (LsmDomNode* self)
  * Check if new_child is an ancestor of self.
  */
 
-LsmDomNode*
-lsm_dom_node_insert_before (LsmDomNode* self, LsmDomNode* new_child, LsmDomNode* ref_child)
+ArvDomNode*
+arv_dom_node_insert_before (ArvDomNode* self, ArvDomNode* new_child, ArvDomNode* ref_child)
 {
-	LsmDomNodeClass *node_class;
+	ArvDomNodeClass *node_class;
 
 	if (ref_child == NULL)
-		lsm_dom_node_append_child (self, new_child);
+		arv_dom_node_append_child (self, new_child);
 
 	g_return_val_if_fail (LSM_IS_DOM_NODE (new_child), NULL);
 
 	if (new_child->parent_node != NULL)
-		lsm_dom_node_remove_child (self, new_child);
+		arv_dom_node_remove_child (self, new_child);
 
 	if (!LSM_IS_DOM_NODE (self)) {
-		g_critical ("%s: self is not a LsmDomNode", G_STRFUNC);
+		g_critical ("%s: self is not a ArvDomNode", G_STRFUNC);
 		g_object_unref (new_child);
 		return NULL;
 	}
 
 	if (!LSM_IS_DOM_NODE (ref_child)) {
-		g_critical ("%s: ref_child is not a LsmDomNode", G_STRFUNC);
+		g_critical ("%s: ref_child is not a ArvDomNode", G_STRFUNC);
 		g_object_unref (new_child);
 		return NULL;
 	}
 
 	if (ref_child->parent_node != self) {
-		lsm_debug_dom ("[LsmDomNode::insert_before] Ref child '%s' doesn't belong to '%s'",
-			   lsm_dom_node_get_node_name (ref_child),
-			   lsm_dom_node_get_node_name (self));
+		lsm_debug_dom ("[ArvDomNode::insert_before] Ref child '%s' doesn't belong to '%s'",
+			   arv_dom_node_get_node_name (ref_child),
+			   arv_dom_node_get_node_name (self));
 		g_object_unref (new_child);
 		return NULL;
 	}
 
-	if (!LSM_DOM_NODE_GET_CLASS (self)->can_append_child (self, new_child)) {
-		lsm_debug_dom ("[LsmDomNode::insert_before] Can't append '%s' to '%s'",
-			   lsm_dom_node_get_node_name (new_child),
-			   lsm_dom_node_get_node_name (self));
+	if (!ARV_DOM_NODE_GET_CLASS (self)->can_append_child (self, new_child)) {
+		lsm_debug_dom ("[ArvDomNode::insert_before] Can't append '%s' to '%s'",
+			   arv_dom_node_get_node_name (new_child),
+			   arv_dom_node_get_node_name (self));
 		g_object_unref (new_child);
 		return NULL;
 	}
@@ -371,19 +371,19 @@ lsm_dom_node_insert_before (LsmDomNode* self, LsmDomNode* new_child, LsmDomNode*
 
 	ref_child->previous_sibling = new_child;
 
-	node_class = LSM_DOM_NODE_GET_CLASS (self);
+	node_class = ARV_DOM_NODE_GET_CLASS (self);
 
 	if (node_class->post_new_child)
 		node_class->post_new_child (self, new_child);
 
-	lsm_dom_node_changed (self);
+	arv_dom_node_changed (self);
 
 	return new_child;
 }
 
 /**
- * lsm_dom_node_replace_child:
- * @self: a #LsmDomNode
+ * arv_dom_node_replace_child:
+ * @self: a #ArvDomNode
  * @new_child: (transfer full): a replacement node
  * @old_child: (transfer none): node to replace
  *
@@ -398,39 +398,39 @@ lsm_dom_node_insert_before (LsmDomNode* self, LsmDomNode* new_child, LsmDomNode*
  * Check if new_child is an ancestor of self.
  */
 
-LsmDomNode*
-lsm_dom_node_replace_child (LsmDomNode* self, LsmDomNode* new_child, LsmDomNode* old_child)
+ArvDomNode*
+arv_dom_node_replace_child (ArvDomNode* self, ArvDomNode* new_child, ArvDomNode* old_child)
 {
-	LsmDomNode *next_sibling;
-	LsmDomNode *node;
+	ArvDomNode *next_sibling;
+	ArvDomNode *node;
 
 	if (new_child == NULL)
-		return lsm_dom_node_remove_child (self, old_child);
+		return arv_dom_node_remove_child (self, old_child);
 
 	if (!LSM_IS_DOM_NODE (new_child)) {
-		g_critical ("%s: new_child is not a LsmDomNode", G_STRFUNC);
+		g_critical ("%s: new_child is not a ArvDomNode", G_STRFUNC);
 		if (LSM_IS_DOM_NODE (old_child))
 			g_object_unref (old_child);
 		return NULL;
 	}
 
 	if (new_child->parent_node != NULL)
-		lsm_dom_node_remove_child (self, new_child);
+		arv_dom_node_remove_child (self, new_child);
 
 	if (old_child == NULL) {
-		lsm_debug_dom ("[LsmDomNode::replace_child] old_child == NULL)");
+		lsm_debug_dom ("[ArvDomNode::replace_child] old_child == NULL)");
 		g_object_unref (new_child);
 		return NULL;
 	}
 
 	if (!LSM_IS_DOM_NODE (old_child)) {
-		g_critical ("%s: old_child is not a LsmDomNode", G_STRFUNC);
+		g_critical ("%s: old_child is not a ArvDomNode", G_STRFUNC);
 		g_object_unref (new_child);
 		return NULL;
 	}
 
 	if (!LSM_IS_DOM_NODE (self)) {
-		g_critical ("%s: self is not a LsmDomNode", G_STRFUNC);
+		g_critical ("%s: self is not a ArvDomNode", G_STRFUNC);
 		g_object_unref (new_child);
 		g_object_unref (old_child);
 		return NULL;
@@ -444,7 +444,7 @@ lsm_dom_node_replace_child (LsmDomNode* self, LsmDomNode* new_child, LsmDomNode*
 
 	next_sibling = old_child->next_sibling;
 
-	node = lsm_dom_node_remove_child (self, old_child);
+	node = arv_dom_node_remove_child (self, old_child);
 	if (node != old_child) {
 		g_object_unref (new_child);
 		g_object_unref (old_child);
@@ -452,16 +452,16 @@ lsm_dom_node_replace_child (LsmDomNode* self, LsmDomNode* new_child, LsmDomNode*
 	}
 
 	if (next_sibling == NULL)
-		lsm_dom_node_append_child (self, new_child);
+		arv_dom_node_append_child (self, new_child);
 	else
-		lsm_dom_node_insert_before (self, new_child, next_sibling);
+		arv_dom_node_insert_before (self, new_child, next_sibling);
 
 	return old_child;
 }
 
 /**
- * lsm_dom_node_remove_child:
- * @self: a #LsmDomNode
+ * arv_dom_node_remove_child:
+ * @self: a #ArvDomNode
  * @old_child: (transfer none): node to remove.
  *
  * Removes the child node indicated by @old_child from the list of children, and returns it.
@@ -469,11 +469,11 @@ lsm_dom_node_replace_child (LsmDomNode* self, LsmDomNode* new_child, LsmDomNode*
  * Returns: (transfer full): the removed node.
  */
 
-LsmDomNode*
-lsm_dom_node_remove_child (LsmDomNode* self, LsmDomNode* old_child)
+ArvDomNode*
+arv_dom_node_remove_child (ArvDomNode* self, ArvDomNode* old_child)
 {
-	LsmDomNode *node;
-	LsmDomNodeClass *node_class;
+	ArvDomNode *node;
+	ArvDomNodeClass *node_class;
 
 	g_return_val_if_fail (LSM_IS_DOM_NODE (self), NULL);
 
@@ -489,7 +489,7 @@ lsm_dom_node_remove_child (LsmDomNode* self, LsmDomNode* old_child)
 	if (node == NULL)
 		return NULL;
 
-	node_class = LSM_DOM_NODE_GET_CLASS (self);
+	node_class = ARV_DOM_NODE_GET_CLASS (self);
 
 	if (node_class->pre_remove_child)
 		node_class->pre_remove_child (self, old_child);
@@ -508,14 +508,14 @@ lsm_dom_node_remove_child (LsmDomNode* self, LsmDomNode* old_child)
 	old_child->next_sibling = NULL;
 	old_child->previous_sibling = NULL;
 
-	lsm_dom_node_changed (self);
+	arv_dom_node_changed (self);
 
 	return old_child;
 }
 
 /**
- * lsm_dom_node_append_child:
- * @self: a #LsmDomNode
+ * arv_dom_node_append_child:
+ * @self: a #ArvDomNode
  * @new_child: (transfer full): node to append
  *
  * Adds the node @new_child to the end of the list of children of this node.
@@ -524,10 +524,10 @@ lsm_dom_node_remove_child (LsmDomNode* self, LsmDomNode* old_child)
  * Returns: (transfer none): the added node.
  */
 
-LsmDomNode *
-lsm_dom_node_append_child (LsmDomNode* self, LsmDomNode* new_child)
+ArvDomNode *
+arv_dom_node_append_child (ArvDomNode* self, ArvDomNode* new_child)
 {
-	LsmDomNodeClass *node_class;
+	ArvDomNodeClass *node_class;
 
 	if (new_child == NULL)
 		return NULL;
@@ -535,18 +535,18 @@ lsm_dom_node_append_child (LsmDomNode* self, LsmDomNode* new_child)
 	g_return_val_if_fail (LSM_IS_DOM_NODE (new_child), NULL);
 
 	if (!LSM_IS_DOM_NODE (self)) {
-		g_critical ("%s: self is not a LsmDomNode", G_STRFUNC);
+		g_critical ("%s: self is not a ArvDomNode", G_STRFUNC);
 		g_object_unref (new_child);
 		return NULL;
 	}
 
 	if (new_child->parent_node != NULL)
-		lsm_dom_node_remove_child (self, new_child);
+		arv_dom_node_remove_child (self, new_child);
 
-	if (!LSM_DOM_NODE_GET_CLASS (self)->can_append_child (self, new_child)) {
-		lsm_debug_dom ("[LsmDomNode::append_child] Can't append '%s' to '%s'",
-			   lsm_dom_node_get_node_name (new_child),
-			   lsm_dom_node_get_node_name (self));
+	if (!ARV_DOM_NODE_GET_CLASS (self)->can_append_child (self, new_child)) {
+		lsm_debug_dom ("[ArvDomNode::append_child] Can't append '%s' to '%s'",
+			   arv_dom_node_get_node_name (new_child),
+			   arv_dom_node_get_node_name (self));
 		g_object_unref (new_child);
 		return NULL;
 	}
@@ -561,32 +561,32 @@ lsm_dom_node_append_child (LsmDomNode* self, LsmDomNode* new_child)
 	new_child->previous_sibling = self->last_child;
 	self->last_child = new_child;
 
-	node_class = LSM_DOM_NODE_GET_CLASS (self);
+	node_class = ARV_DOM_NODE_GET_CLASS (self);
 
 	if (node_class->post_new_child)
 		node_class->post_new_child (self, new_child);
 
-	lsm_dom_node_changed (self);
+	arv_dom_node_changed (self);
 
 	return new_child;
 }
 
 static gboolean
-lsm_dom_node_can_append_child_default (LsmDomNode *self, LsmDomNode* new_child)
+arv_dom_node_can_append_child_default (ArvDomNode *self, ArvDomNode* new_child)
 {
 	return FALSE;
 }
 
 void
-lsm_dom_node_changed (LsmDomNode *self)
+arv_dom_node_changed (ArvDomNode *self)
 {
-	LsmDomNode *parent_node;
-	LsmDomNode *child_node;
-	LsmDomNodeClass *node_class;
+	ArvDomNode *parent_node;
+	ArvDomNode *child_node;
+	ArvDomNodeClass *node_class;
 
 	g_return_if_fail (LSM_IS_DOM_NODE (self));
 
-	node_class = LSM_DOM_NODE_GET_CLASS (self);
+	node_class = ARV_DOM_NODE_GET_CLASS (self);
 
 	if (node_class->changed)
 		node_class->changed (self);
@@ -595,7 +595,7 @@ lsm_dom_node_changed (LsmDomNode *self)
 	for (parent_node = self->parent_node;
 	       parent_node != NULL;
 	       parent_node = parent_node->parent_node) {
-		node_class = LSM_DOM_NODE_GET_CLASS (parent_node);
+		node_class = ARV_DOM_NODE_GET_CLASS (parent_node);
 		if (node_class->child_changed == NULL ||
 		    !node_class->child_changed (parent_node, child_node))
 			break;
@@ -604,7 +604,7 @@ lsm_dom_node_changed (LsmDomNode *self)
 }
 
 gboolean
-lsm_dom_node_has_child_nodes (LsmDomNode* self)
+arv_dom_node_has_child_nodes (ArvDomNode* self)
 {
 	g_return_val_if_fail (LSM_IS_DOM_NODE (self), FALSE);
 
@@ -612,37 +612,37 @@ lsm_dom_node_has_child_nodes (LsmDomNode* self)
 }
 
 static void
-lsm_dom_node_write_to_stream_default (LsmDomNode *self, GOutputStream *stream, GError **error)
+arv_dom_node_write_to_stream_default (ArvDomNode *self, GOutputStream *stream, GError **error)
 {
-	LsmDomNode *child;
+	ArvDomNode *child;
 
 	for (child = self->first_child; child != NULL; child = child->next_sibling)
-		lsm_dom_node_write_to_stream (child, stream, error);
+		arv_dom_node_write_to_stream (child, stream, error);
 }
 
 void
-lsm_dom_node_write_to_stream (LsmDomNode *self, GOutputStream *stream, GError **error)
+arv_dom_node_write_to_stream (ArvDomNode *self, GOutputStream *stream, GError **error)
 {
-	LsmDomNodeClass *node_class;
+	ArvDomNodeClass *node_class;
 
 	g_return_if_fail (LSM_IS_DOM_NODE (self));
 	g_return_if_fail (G_IS_OUTPUT_STREAM (stream));
 
-	node_class = LSM_DOM_NODE_GET_CLASS (self);
+	node_class = ARV_DOM_NODE_GET_CLASS (self);
 	if (node_class->write_to_stream != NULL)
 		node_class->write_to_stream (self, stream, error);
 }
 
 static void
-lsm_dom_node_init (LsmDomNode *node)
+arv_dom_node_init (ArvDomNode *node)
 {
 }
 
 static void
-lsm_dom_node_finalize (GObject *object)
+arv_dom_node_finalize (GObject *object)
 {
-	LsmDomNode *node = LSM_DOM_NODE (object);
-	LsmDomNode *child, *next_child;
+	ArvDomNode *node = ARV_DOM_NODE (object);
+	ArvDomNode *child, *next_child;
 
 	child = node->first_child;
 	while (child != NULL) {
@@ -654,19 +654,19 @@ lsm_dom_node_finalize (GObject *object)
 	parent_class->finalize (object);
 }
 
-/* LsmDomNode class */
+/* ArvDomNode class */
 
 static void
-lsm_dom_node_class_init (LsmDomNodeClass *node_class)
+arv_dom_node_class_init (ArvDomNodeClass *node_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (node_class);
 
 	parent_class = g_type_class_peek_parent (node_class);
 
-	object_class->finalize = lsm_dom_node_finalize;
+	object_class->finalize = arv_dom_node_finalize;
 
-	node_class->can_append_child = lsm_dom_node_can_append_child_default;
-	node_class->write_to_stream = lsm_dom_node_write_to_stream_default;
+	node_class->can_append_child = arv_dom_node_can_append_child_default;
+	node_class->write_to_stream = arv_dom_node_write_to_stream_default;
 }
 
-G_DEFINE_ABSTRACT_TYPE (LsmDomNode, lsm_dom_node, G_TYPE_OBJECT)
+G_DEFINE_ABSTRACT_TYPE (ArvDomNode, arv_dom_node, G_TYPE_OBJECT)

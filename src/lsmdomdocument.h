@@ -1,4 +1,4 @@
-/* Lasem
+/* Aravis
  *
  * Copyright © 2007-2008 Emmanuel Pacaud
  *
@@ -21,8 +21,8 @@
  * 	Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#ifndef LSM_DOM_DOCUMENT_H
-#define LSM_DOM_DOCUMENT_H
+#ifndef ARV_DOM_DOCUMENT_H
+#define ARV_DOM_DOCUMENT_H
 
 #include <lsmtypes.h>
 #include <lsmdomtypes.h>
@@ -31,17 +31,17 @@
 
 G_BEGIN_DECLS
 
-#define LSM_TYPE_DOM_DOCUMENT             (lsm_dom_document_get_type ())
-#define LSM_DOM_DOCUMENT(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), LSM_TYPE_DOM_DOCUMENT, LsmDomDocument))
-#define LSM_DOM_DOCUMENT_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), LSM_TYPE_DOM_DOCUMENT, LsmDomDocumentClass))
+#define LSM_TYPE_DOM_DOCUMENT             (arv_dom_document_get_type ())
+#define ARV_DOM_DOCUMENT(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), LSM_TYPE_DOM_DOCUMENT, ArvDomDocument))
+#define ARV_DOM_DOCUMENT_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), LSM_TYPE_DOM_DOCUMENT, ArvDomDocumentClass))
 #define LSM_IS_DOM_DOCUMENT(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), LSM_TYPE_DOM_DOCUMENT))
 #define LSM_IS_DOM_DOCUMENT_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), LSM_TYPE_DOM_DOCUMENT))
-#define LSM_DOM_DOCUMENT_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), LSM_TYPE_DOM_DOCUMENT, LsmDomDocumentClass))
+#define ARV_DOM_DOCUMENT_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), LSM_TYPE_DOM_DOCUMENT, ArvDomDocumentClass))
 
-typedef struct _LsmDomDocumentClass LsmDomDocumentClass;
+typedef struct _ArvDomDocumentClass ArvDomDocumentClass;
 
-struct _LsmDomDocument {
-	LsmDomNode node;
+struct _ArvDomDocument {
+	ArvDomNode node;
 
 	GHashTable *	ids;
 	GHashTable *	elements;
@@ -50,32 +50,32 @@ struct _LsmDomDocument {
 
 };
 
-struct _LsmDomDocumentClass {
-	LsmDomNodeClass parent_class;
+struct _ArvDomDocumentClass {
+	ArvDomNodeClass parent_class;
 
-	LsmDomElement *	(*get_document_element) (LsmDomDocument* self);
-	LsmDomElement *	(*create_element) 	(LsmDomDocument* self, const char *tag_name);
-	LsmDomText * 	(*create_text_node) 	(LsmDomDocument* self, const char *data);
+	ArvDomElement *	(*get_document_element) (ArvDomDocument* self);
+	ArvDomElement *	(*create_element) 	(ArvDomDocument* self, const char *tag_name);
+	ArvDomText * 	(*create_text_node) 	(ArvDomDocument* self, const char *data);
 
-	LsmDomView*	(*create_view) 		(LsmDomDocument *self);
+	ArvDomView*	(*create_view) 		(ArvDomDocument *self);
 };
 
-GType lsm_dom_document_get_type (void);
+GType arv_dom_document_get_type (void);
 
-LsmDomElement* 	lsm_dom_document_get_document_element 	(LsmDomDocument* self);
-LsmDomElement* 	lsm_dom_document_create_element 	(LsmDomDocument* self, const char *tag_name);
-LsmDomText* 	lsm_dom_document_create_text_node 	(LsmDomDocument* self, const char *data);
-LsmDomElement *	lsm_dom_document_get_element_by_id 	(LsmDomDocument *self, const char *id);
+ArvDomElement* 	arv_dom_document_get_document_element 	(ArvDomDocument* self);
+ArvDomElement* 	arv_dom_document_create_element 	(ArvDomDocument* self, const char *tag_name);
+ArvDomText* 	arv_dom_document_create_text_node 	(ArvDomDocument* self, const char *data);
+ArvDomElement *	arv_dom_document_get_element_by_id 	(ArvDomDocument *self, const char *id);
 
-void 		lsm_dom_document_register_element 	(LsmDomDocument *self, LsmDomElement *element, const char *id);
+void 		arv_dom_document_register_element 	(ArvDomDocument *self, ArvDomElement *element, const char *id);
 
-LsmDomView*	lsm_dom_document_create_view		(LsmDomDocument *self);
+ArvDomView*	arv_dom_document_create_view		(ArvDomDocument *self);
 
-const char * 	lsm_dom_document_get_url 		(LsmDomDocument *self);
-void		lsm_dom_document_set_url		(LsmDomDocument *self, const char *url);
-void 		lsm_dom_document_set_path 		(LsmDomDocument *self, const char *path);
+const char * 	arv_dom_document_get_url 		(ArvDomDocument *self);
+void		arv_dom_document_set_url		(ArvDomDocument *self, const char *url);
+void 		arv_dom_document_set_path 		(ArvDomDocument *self, const char *path);
 
-void * 		lsm_dom_document_get_href_data 		(LsmDomDocument *self, const char *href, gsize *size);
+void * 		arv_dom_document_get_href_data 		(ArvDomDocument *self, const char *href, gsize *size);
 
 G_END_DECLS
 

@@ -1,4 +1,4 @@
-/* Lasem
+/* Aravis
  *
  * Copyright © 2007-2008 Emmanuel Pacaud
  *
@@ -21,8 +21,8 @@
  * 	Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#ifndef LSM_DOM_NODE_H
-#define LSM_DOM_NODE_H
+#ifndef ARV_DOM_NODE_H
+#define ARV_DOM_NODE_H
 
 #include <lsmdomtypes.h>
 #include <gio/gio.h>
@@ -30,89 +30,89 @@
 G_BEGIN_DECLS
 
 typedef enum  {
-	LSM_DOM_NODE_TYPE_ELEMENT_NODE = 1,
-	LSM_DOM_NODE_TYPE_ATTRIBUTE_NODE,
-	LSM_DOM_NODE_TYPE_TEXT_NODE,
-	LSM_DOM_NODE_TYPE_CDATA_SECTION_NODE,
-	LSM_DOM_NODE_TYPE_ENTITY_REFERENCE_NODE,
-	LSM_DOM_NODE_TYPE_ENTITY_NODE,
-	LSM_DOM_NODE_TYPE_PROCESSING_INSTRUCTION_NODE,
-	LSM_DOM_NODE_TYPE_COMMENT_NODE,
-	LSM_DOM_NODE_TYPE_DOCUMENT_NODE,
-	LSM_DOM_NODE_TYPE_DOCUMENT_TYPE_NODE,
-	LSM_DOM_NODE_TYPE_DOCUMENT_FRAGMENT_NODE,
-	LSM_DOM_NODE_TYPE_NOTATION_NODE
-} LsmDomNodeType;
+	ARV_DOM_NODE_TYPE_ELEMENT_NODE = 1,
+	ARV_DOM_NODE_TYPE_ATTRIBUTE_NODE,
+	ARV_DOM_NODE_TYPE_TEXT_NODE,
+	ARV_DOM_NODE_TYPE_CDATA_SECTION_NODE,
+	ARV_DOM_NODE_TYPE_ENTITY_REFERENCE_NODE,
+	ARV_DOM_NODE_TYPE_ENTITY_NODE,
+	ARV_DOM_NODE_TYPE_PROCESSING_INSTRUCTION_NODE,
+	ARV_DOM_NODE_TYPE_COMMENT_NODE,
+	ARV_DOM_NODE_TYPE_DOCUMENT_NODE,
+	ARV_DOM_NODE_TYPE_DOCUMENT_TYPE_NODE,
+	ARV_DOM_NODE_TYPE_DOCUMENT_FRAGMENT_NODE,
+	ARV_DOM_NODE_TYPE_NOTATION_NODE
+} ArvDomNodeType;
 
-#define LSM_TYPE_DOM_NODE             (lsm_dom_node_get_type ())
-#define LSM_DOM_NODE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), LSM_TYPE_DOM_NODE, LsmDomNode))
-#define LSM_DOM_NODE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), LSM_TYPE_DOM_NODE, LsmDomNodeClass))
+#define LSM_TYPE_DOM_NODE             (arv_dom_node_get_type ())
+#define ARV_DOM_NODE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), LSM_TYPE_DOM_NODE, ArvDomNode))
+#define ARV_DOM_NODE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), LSM_TYPE_DOM_NODE, ArvDomNodeClass))
 #define LSM_IS_DOM_NODE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), LSM_TYPE_DOM_NODE))
 #define LSM_IS_DOM_NODE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), LSM_TYPE_DOM_NODE))
-#define LSM_DOM_NODE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), LSM_TYPE_DOM_NODE, LsmDomNodeClass))
+#define ARV_DOM_NODE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), LSM_TYPE_DOM_NODE, ArvDomNodeClass))
 
-typedef struct _LsmDomNodeClass LsmDomNodeClass;
+typedef struct _ArvDomNodeClass ArvDomNodeClass;
 
-struct _LsmDomNode {
+struct _ArvDomNode {
 	GObject	object;
 
-	LsmDomNode	*next_sibling;
-	LsmDomNode	*previous_sibling;
-	LsmDomNode	*parent_node;
-	LsmDomNode	*first_child;
-	LsmDomNode	*last_child;
+	ArvDomNode	*next_sibling;
+	ArvDomNode	*previous_sibling;
+	ArvDomNode	*parent_node;
+	ArvDomNode	*first_child;
+	ArvDomNode	*last_child;
 };
 
-struct _LsmDomNodeClass {
+struct _ArvDomNodeClass {
 	GObjectClass parent_class;
 
 	/* DOM node virtuals */
 
-	const char* 		(*get_node_name) 	(LsmDomNode* self);
-	const char* 		(*get_node_value) 	(LsmDomNode* self);
-	void 			(*set_node_value) 	(LsmDomNode* self, const char* new_value);
-	LsmDomNodeType 		(*get_node_type) 	(LsmDomNode* self);
+	const char* 		(*get_node_name) 	(ArvDomNode* self);
+	const char* 		(*get_node_value) 	(ArvDomNode* self);
+	void 			(*set_node_value) 	(ArvDomNode* self, const char* new_value);
+	ArvDomNodeType 		(*get_node_type) 	(ArvDomNode* self);
 
 	/* Validation virtuals */
 
-	gboolean		(*can_append_child) 	(LsmDomNode *self, LsmDomNode *new_child);
+	gboolean		(*can_append_child) 	(ArvDomNode *self, ArvDomNode *new_child);
 
 	/* Implementation virtuals */
 
-	void			(*post_new_child) 	(LsmDomNode *parent, LsmDomNode *child);
-	void			(*pre_remove_child) 	(LsmDomNode *parent, LsmDomNode *child);
-	void			(*changed)		(LsmDomNode *self);
-	gboolean		(*child_changed)	(LsmDomNode *self, LsmDomNode *child);
+	void			(*post_new_child) 	(ArvDomNode *parent, ArvDomNode *child);
+	void			(*pre_remove_child) 	(ArvDomNode *parent, ArvDomNode *child);
+	void			(*changed)		(ArvDomNode *self);
+	gboolean		(*child_changed)	(ArvDomNode *self, ArvDomNode *child);
 
-	void			(*write_to_stream)	(LsmDomNode *self, GOutputStream *stream, GError **error);
+	void			(*write_to_stream)	(ArvDomNode *self, GOutputStream *stream, GError **error);
 };
 
-GType lsm_dom_node_get_type (void);
+GType arv_dom_node_get_type (void);
 
-const char * 		lsm_dom_node_get_node_name 		(LsmDomNode* self);
-const char * 		lsm_dom_node_get_node_value 		(LsmDomNode* self);
-void 			lsm_dom_node_set_node_value 		(LsmDomNode* self, const char* new_value);
-LsmDomNodeType 		lsm_dom_node_get_node_type 		(LsmDomNode* self);
-LsmDomNode * 		lsm_dom_node_get_parent_node 		(LsmDomNode* self);
-LsmDomNodeList *	lsm_dom_node_get_child_nodes 		(LsmDomNode* self);
-LsmDomNode * 		lsm_dom_node_get_first_child 		(LsmDomNode* self);
-LsmDomNode * 		lsm_dom_node_get_last_child 		(LsmDomNode* self);
-LsmDomNode * 		lsm_dom_node_get_previous_sibling 	(LsmDomNode* self);
-LsmDomNode * 		lsm_dom_node_get_next_sibling 		(LsmDomNode* self);
+const char * 		arv_dom_node_get_node_name 		(ArvDomNode* self);
+const char * 		arv_dom_node_get_node_value 		(ArvDomNode* self);
+void 			arv_dom_node_set_node_value 		(ArvDomNode* self, const char* new_value);
+ArvDomNodeType 		arv_dom_node_get_node_type 		(ArvDomNode* self);
+ArvDomNode * 		arv_dom_node_get_parent_node 		(ArvDomNode* self);
+ArvDomNodeList *	arv_dom_node_get_child_nodes 		(ArvDomNode* self);
+ArvDomNode * 		arv_dom_node_get_first_child 		(ArvDomNode* self);
+ArvDomNode * 		arv_dom_node_get_last_child 		(ArvDomNode* self);
+ArvDomNode * 		arv_dom_node_get_previous_sibling 	(ArvDomNode* self);
+ArvDomNode * 		arv_dom_node_get_next_sibling 		(ArvDomNode* self);
 #if 0
-LsmDomNamedNodeMap * 	lsm_dom_node_get_attributes 		(LsmDomNode* self);
+ArvDomNamedNodeMap * 	arv_dom_node_get_attributes 		(ArvDomNode* self);
 #endif
-LsmDomNode * 		lsm_dom_node_insert_before		(LsmDomNode* self, LsmDomNode* new_child, LsmDomNode* ref_child);
-LsmDomNode * 		lsm_dom_node_replace_child 		(LsmDomNode* self, LsmDomNode* new_child, LsmDomNode* old_child);
-LsmDomNode * 		lsm_dom_node_append_child 		(LsmDomNode* self, LsmDomNode* new_child);
-LsmDomNode * 		lsm_dom_node_remove_child 		(LsmDomNode* self, LsmDomNode* old_child);
-gboolean 		lsm_dom_node_has_child_nodes 		(LsmDomNode* self);
+ArvDomNode * 		arv_dom_node_insert_before		(ArvDomNode* self, ArvDomNode* new_child, ArvDomNode* ref_child);
+ArvDomNode * 		arv_dom_node_replace_child 		(ArvDomNode* self, ArvDomNode* new_child, ArvDomNode* old_child);
+ArvDomNode * 		arv_dom_node_append_child 		(ArvDomNode* self, ArvDomNode* new_child);
+ArvDomNode * 		arv_dom_node_remove_child 		(ArvDomNode* self, ArvDomNode* old_child);
+gboolean 		arv_dom_node_has_child_nodes 		(ArvDomNode* self);
 
-void 			lsm_dom_node_changed 			(LsmDomNode *self);
+void 			arv_dom_node_changed 			(ArvDomNode *self);
 
-LsmDomDocument *	lsm_dom_node_get_owner_document 	(LsmDomNode* self);
+ArvDomDocument *	arv_dom_node_get_owner_document 	(ArvDomNode* self);
 
-void			lsm_dom_node_write_to_stream		(LsmDomNode *self, GOutputStream *stream,
+void			arv_dom_node_write_to_stream		(ArvDomNode *self, GOutputStream *stream,
 								 GError **error);
 
 G_END_DECLS

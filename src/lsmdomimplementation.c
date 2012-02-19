@@ -1,4 +1,4 @@
-/* Lasem
+/* Aravis
  *
  * Copyright © 2007-2009 Emmanuel Pacaud
  *
@@ -30,8 +30,8 @@
 static GHashTable *document_types = NULL;
 
 void
-lsm_dom_implementation_add_create_function (const char *qualified_name,
-					    LsmDomDocumentCreateFunction create_function)
+arv_dom_implementation_add_create_function (const char *qualified_name,
+					    ArvDomDocumentCreateFunction create_function)
 {
 	if (document_types == NULL)
 		document_types = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
@@ -39,22 +39,22 @@ lsm_dom_implementation_add_create_function (const char *qualified_name,
 	g_hash_table_insert (document_types, g_strdup (qualified_name), create_function);
 }
 
-LsmDomDocument *
-lsm_dom_implementation_create_document (const char *namespace_uri,
+ArvDomDocument *
+arv_dom_implementation_create_document (const char *namespace_uri,
 					const char *qualified_name)
 {
-	LsmDomDocumentCreateFunction create_function;
+	ArvDomDocumentCreateFunction create_function;
 
 	g_return_val_if_fail (qualified_name != NULL, NULL);
 
 	if (document_types == NULL) {
-		lsm_dom_implementation_add_create_function ("math", lsm_mathml_document_new);
-		lsm_dom_implementation_add_create_function ("svg", lsm_svg_document_new);
+		arv_dom_implementation_add_create_function ("math", lsm_mathml_document_new);
+		arv_dom_implementation_add_create_function ("svg", lsm_svg_document_new);
 	}
 
 	create_function = g_hash_table_lookup (document_types, qualified_name);
 	if (create_function == NULL) {
-		lsm_debug_dom ("[LsmDomImplementation::create_document] Unknow document type (%s)",
+		lsm_debug_dom ("[ArvDomImplementation::create_document] Unknow document type (%s)",
 			   qualified_name);
 		return NULL;
 	}
@@ -63,7 +63,7 @@ lsm_dom_implementation_create_document (const char *namespace_uri,
 }
 
 void
-lsm_dom_implementation_cleanup (void)
+arv_dom_implementation_cleanup (void)
 {
 	if (document_types == NULL)
 		return;

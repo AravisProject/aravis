@@ -1,4 +1,4 @@
-/* Lasem
+/* Aravis
  *
  * Copyright © 2007-2008 Emmanuel Pacaud
  *
@@ -21,33 +21,33 @@
  * 	Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#ifndef LSM_DOM_TEXT_H
-#define LSM_DOM_TEXT_H
+#ifndef ARV_DOM_TEXT_H
+#define ARV_DOM_TEXT_H
 
 #include <lsmdomcharacterdata.h>
 
 G_BEGIN_DECLS
 
-#define LSM_TYPE_DOM_TEXT             (lsm_dom_text_get_type ())
-#define LSM_DOM_TEXT(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), LSM_TYPE_DOM_TEXT, LsmDomText))
-#define LSM_DOM_TEXT_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), LSM_TYPE_DOM_TEXT, LsmDomTextClass))
+#define LSM_TYPE_DOM_TEXT             (arv_dom_text_get_type ())
+#define ARV_DOM_TEXT(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), LSM_TYPE_DOM_TEXT, ArvDomText))
+#define ARV_DOM_TEXT_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), LSM_TYPE_DOM_TEXT, ArvDomTextClass))
 #define LSM_IS_DOM_TEXT(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), LSM_TYPE_DOM_TEXT))
 #define LSM_IS_DOM_TEXT_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), LSM_TYPE_DOM_TEXT))
-#define LSM_DOM_TEXT_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), LSM_TYPE_DOM_TEXT, LsmDomTextClass))
+#define ARV_DOM_TEXT_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), LSM_TYPE_DOM_TEXT, ArvDomTextClass))
 
-typedef struct _LsmDomTextClass LsmDomTextClass;
+typedef struct _ArvDomTextClass ArvDomTextClass;
 
-struct _LsmDomText {
-	LsmDomCharacterData	character_data;
+struct _ArvDomText {
+	ArvDomCharacterData	character_data;
 };
 
-struct _LsmDomTextClass {
-	LsmDomCharacterDataClass  parent_class;
+struct _ArvDomTextClass {
+	ArvDomCharacterDataClass  parent_class;
 };
 
-GType lsm_dom_text_get_type (void);
+GType arv_dom_text_get_type (void);
 
-LsmDomNode 	*lsm_dom_text_new 		(const char *data);
+ArvDomNode 	*arv_dom_text_new 		(const char *data);
 
 G_END_DECLS
 

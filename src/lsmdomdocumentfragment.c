@@ -1,4 +1,4 @@
-/* Lasem
+/* Aravis
  *
  * Copyright © 2010 Emmanuel Pacaud
  *
@@ -31,51 +31,51 @@
 
 static GObjectClass *parent_class = NULL;
 
-/* LsmDomNode implementation */
+/* ArvDomNode implementation */
 
 static const char *
-lsm_dom_document_fragment_get_node_name (LsmDomNode *node)
+arv_dom_document_fragment_get_node_name (ArvDomNode *node)
 {
 	return "#document-fragment";
 }
 
 static const char *
-lsm_dom_document_fragment_get_node_value (LsmDomNode *node)
+arv_dom_document_fragment_get_node_value (ArvDomNode *node)
 {
 	return NULL;
 }
 
-static LsmDomNodeType
-lsm_dom_document_fragment_get_node_type (LsmDomNode *node)
+static ArvDomNodeType
+arv_dom_document_fragment_get_node_type (ArvDomNode *node)
 {
-	return LSM_DOM_NODE_TYPE_DOCUMENT_FRAGMENT_NODE;
+	return ARV_DOM_NODE_TYPE_DOCUMENT_FRAGMENT_NODE;
 }
 
-/* LsmDomDocumentFragment implementation */
+/* ArvDomDocumentFragment implementation */
 
-LsmDomDocumentFragment *
-lsm_dom_document_fragment_new (void)
+ArvDomDocumentFragment *
+arv_dom_document_fragment_new (void)
 {
 	return g_object_new (LSM_TYPE_DOM_DOCUMENT_FRAGMENT, NULL);
 }
 
 static void
-lsm_dom_document_fragment_init (LsmDomDocumentFragment *document_fragment)
+arv_dom_document_fragment_init (ArvDomDocumentFragment *document_fragment)
 {
 }
 
-/* LsmDomDocumentFragment class */
+/* ArvDomDocumentFragment class */
 
 static void
-lsm_dom_document_fragment_class_init (LsmDomDocumentFragmentClass *klass)
+arv_dom_document_fragment_class_init (ArvDomDocumentFragmentClass *klass)
 {
-	LsmDomNodeClass *node_class = LSM_DOM_NODE_CLASS (klass);
+	ArvDomNodeClass *node_class = ARV_DOM_NODE_CLASS (klass);
 
 	parent_class = g_type_class_peek_parent (klass);
 
-	node_class->get_node_name = lsm_dom_document_fragment_get_node_name;
-	node_class->get_node_value = lsm_dom_document_fragment_get_node_value;
-	node_class->get_node_type = lsm_dom_document_fragment_get_node_type;
+	node_class->get_node_name = arv_dom_document_fragment_get_node_name;
+	node_class->get_node_value = arv_dom_document_fragment_get_node_value;
+	node_class->get_node_type = arv_dom_document_fragment_get_node_type;
 }
 
-G_DEFINE_ABSTRACT_TYPE (LsmDomDocumentFragment, lsm_dom_document_fragment, LSM_TYPE_DOM_NODE)
+G_DEFINE_ABSTRACT_TYPE (ArvDomDocumentFragment, arv_dom_document_fragment, LSM_TYPE_DOM_NODE)

@@ -1,4 +1,4 @@
-/* Lasem
+/* Aravis
  *
  * Copyright © 2007-2008 Emmanuel Pacaud
  *
@@ -21,8 +21,8 @@
  * 	Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#ifndef LSM_DOM_H
-#define LSM_DOM_H
+#ifndef ARV_DOM_H
+#define ARV_DOM_H
 
 #include <lsm.h>
 

@@ -1,4 +1,4 @@
-/* Lasem
+/* Aravis
  *
  * Copyright © 2007-2008 Emmanuel Pacaud
  *
@@ -28,55 +28,55 @@
 
 #include <lsmdomtext.h>
 
-/* LsmDomNode implementation */
+/* ArvDomNode implementation */
 
 static const char *
-lsm_dom_text_get_node_name (LsmDomNode *node)
+arv_dom_text_get_node_name (ArvDomNode *node)
 {
 	return "#text";
 }
 
 static const char *
-lsm_dom_text_get_node_value (LsmDomNode *node)
+arv_dom_text_get_node_value (ArvDomNode *node)
 {
-	return LSM_DOM_CHARACTER_DATA (node)->data;
+	return ARV_DOM_CHARACTER_DATA (node)->data;
 }
 
-static LsmDomNodeType
-lsm_dom_text_get_node_type (LsmDomNode *node)
+static ArvDomNodeType
+arv_dom_text_get_node_type (ArvDomNode *node)
 {
-	return LSM_DOM_NODE_TYPE_TEXT_NODE;
+	return ARV_DOM_NODE_TYPE_TEXT_NODE;
 }
 
-/* LsmDomText implementation */
+/* ArvDomText implementation */
 
-LsmDomNode *
-lsm_dom_text_new (const char *data)
+ArvDomNode *
+arv_dom_text_new (const char *data)
 {
-	LsmDomNode *node;
+	ArvDomNode *node;
 
 	node = g_object_new (LSM_TYPE_DOM_TEXT, NULL);
 
-	lsm_dom_character_data_set_data (LSM_DOM_CHARACTER_DATA (node), data);
+	arv_dom_character_data_set_data (ARV_DOM_CHARACTER_DATA (node), data);
 
 	return node;
 }
 
 static void
-lsm_dom_text_init (LsmDomText *text_node)
+arv_dom_text_init (ArvDomText *text_node)
 {
 }
 
-/* LsmDomText class */
+/* ArvDomText class */
 
 static void
-lsm_dom_text_class_init (LsmDomTextClass *klass)
+arv_dom_text_class_init (ArvDomTextClass *klass)
 {
-	LsmDomNodeClass *node_class = LSM_DOM_NODE_CLASS (klass);
+	ArvDomNodeClass *node_class = ARV_DOM_NODE_CLASS (klass);
 
-	node_class->get_node_name = lsm_dom_text_get_node_name;
-	node_class->get_node_value = lsm_dom_text_get_node_value;
-	node_class->get_node_type = lsm_dom_text_get_node_type;
+	node_class->get_node_name = arv_dom_text_get_node_name;
+	node_class->get_node_value = arv_dom_text_get_node_value;
+	node_class->get_node_type = arv_dom_text_get_node_type;
 }
 
-G_DEFINE_TYPE (LsmDomText, lsm_dom_text, LSM_TYPE_DOM_CHARACTER_DATA)
+G_DEFINE_TYPE (ArvDomText, arv_dom_text, LSM_TYPE_DOM_CHARACTER_DATA)

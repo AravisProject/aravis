@@ -1,4 +1,4 @@
-/* Lasem
+/* Aravis
  *
  * Copyright © 2010 Emmanuel Pacaud
  *
@@ -21,37 +21,37 @@
  * 	Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#ifndef LSM_DOM_NODE_LIST_H
-#define LSM_DOM_NODE_LIST_H
+#ifndef ARV_DOM_NODE_LIST_H
+#define ARV_DOM_NODE_LIST_H
 
 #include <lsmdomtypes.h>
 
 G_BEGIN_DECLS
 
-#define LSM_TYPE_DOM_NODE_LIST             (lsm_dom_node_list_get_type ())
-#define LSM_DOM_NODE_LIST(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), LSM_TYPE_DOM_NODE_LIST, LsmDomNodeList))
-#define LSM_DOM_NODE_LIST_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), LSM_TYPE_DOM_NODE_LIST, LsmDomNodeListClass))
+#define LSM_TYPE_DOM_NODE_LIST             (arv_dom_node_list_get_type ())
+#define ARV_DOM_NODE_LIST(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), LSM_TYPE_DOM_NODE_LIST, ArvDomNodeList))
+#define ARV_DOM_NODE_LIST_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), LSM_TYPE_DOM_NODE_LIST, ArvDomNodeListClass))
 #define LSM_IS_DOM_NODE_LIST(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), LSM_TYPE_DOM_NODE_LIST))
 #define LSM_IS_DOM_NODE_LIST_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), LSM_TYPE_DOM_NODE_LIST))
-#define LSM_DOM_NODE_LIST_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), LSM_TYPE_DOM_NODE_LIST, LsmDomNodeListClass))
+#define ARV_DOM_NODE_LIST_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), LSM_TYPE_DOM_NODE_LIST, ArvDomNodeListClass))
 
-typedef struct _LsmDomNodeListClass LsmDomNodeListClass;
+typedef struct _ArvDomNodeListClass ArvDomNodeListClass;
 
-struct _LsmDomNodeList {
+struct _ArvDomNodeList {
 	GObject	object;
 };
 
-struct _LsmDomNodeListClass {
+struct _ArvDomNodeListClass {
 	GObjectClass parent_class;
 
-	LsmDomNode *	(*get_item) 		(LsmDomNodeList *list, unsigned int index);
-	unsigned int	(*get_length)		(LsmDomNodeList *list);
+	ArvDomNode *	(*get_item) 		(ArvDomNodeList *list, unsigned int index);
+	unsigned int	(*get_length)		(ArvDomNodeList *list);
 };
 
-GType lsm_dom_node_list_get_type (void);
+GType arv_dom_node_list_get_type (void);
 
-LsmDomNode *		lsm_dom_node_list_get_item 		(LsmDomNodeList *list, unsigned int index);
-unsigned int		lsm_dom_node_list_get_length		(LsmDomNodeList *list);
+ArvDomNode *		arv_dom_node_list_get_item 		(ArvDomNodeList *list, unsigned int index);
+unsigned int		arv_dom_node_list_get_length		(ArvDomNodeList *list);
 
 G_END_DECLS
 

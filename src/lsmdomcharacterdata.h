@@ -1,4 +1,4 @@
-/* Lasem
+/* Aravis
  *
  * Copyright © 2007-2010 Emmanuel Pacaud
  *
@@ -21,37 +21,37 @@
  * 	Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#ifndef LSM_DOM_CHARACTER_DATA_H
-#define LSM_DOM_CHARACTER_DATA_H
+#ifndef ARV_DOM_CHARACTER_DATA_H
+#define ARV_DOM_CHARACTER_DATA_H
 
 #include <lsmdomnode.h>
 
 G_BEGIN_DECLS
 
-#define LSM_TYPE_DOM_CHARACTER_DATA             (lsm_dom_character_data_get_type ())
-#define LSM_DOM_CHARACTER_DATA(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), LSM_TYPE_DOM_CHARACTER_DATA, LsmDomCharacterData))
-#define LSM_DOM_CHARACTER_DATA_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), LSM_TYPE_DOM_CHARACTER_DATA, LsmDomNodeClass))
+#define LSM_TYPE_DOM_CHARACTER_DATA             (arv_dom_character_data_get_type ())
+#define ARV_DOM_CHARACTER_DATA(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), LSM_TYPE_DOM_CHARACTER_DATA, ArvDomCharacterData))
+#define ARV_DOM_CHARACTER_DATA_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), LSM_TYPE_DOM_CHARACTER_DATA, ArvDomNodeClass))
 #define LSM_IS_DOM_CHARACTER_DATA(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), LSM_TYPE_DOM_CHARACTER_DATA))
 #define LSM_IS_DOM_CHARACTER_DATA_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), LSM_TYPE_DOM_CHARACTER_DATA))
-#define LSM_DOM_CHARACTER_DATA_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), LSM_TYPE_DOM_CHARACTER_DATA, LsmDomCharacterDataClass))
+#define ARV_DOM_CHARACTER_DATA_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), LSM_TYPE_DOM_CHARACTER_DATA, ArvDomCharacterDataClass))
 
-typedef struct _LsmDomCharacterDataClass LsmDomCharacterDataClass;
+typedef struct _ArvDomCharacterDataClass ArvDomCharacterDataClass;
 
-struct _LsmDomCharacterData
+struct _ArvDomCharacterData
 {
-	LsmDomNode node;
+	ArvDomNode node;
 
 	char *data;
 };
 
-struct _LsmDomCharacterDataClass {
-	LsmDomNodeClass parent_class;
+struct _ArvDomCharacterDataClass {
+	ArvDomNodeClass parent_class;
 };
 
-GType lsm_dom_character_data_get_type (void);
+GType arv_dom_character_data_get_type (void);
 
-const char * 	lsm_dom_character_data_get_data 	(LsmDomCharacterData* self);
-void 		lsm_dom_character_data_set_data 	(LsmDomCharacterData* self, const char* value);
+const char * 	arv_dom_character_data_get_data 	(ArvDomCharacterData* self);
+void 		arv_dom_character_data_set_data 	(ArvDomCharacterData* self, const char* value);
 
 G_END_DECLS
 

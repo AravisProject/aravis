@@ -1,4 +1,4 @@
-/* Lasem
+/* Aravis
  *
  * Copyright © 2010 Emmanuel Pacaud
  *
@@ -24,58 +24,58 @@
 #include <lsmdomnamednodemap.h>
 #include <lsmdomnode.h>
 
-/* LsmDomNamedNodeMap implementation */
+/* ArvDomNamedNodeMap implementation */
 
-LsmDomNode *
-lsm_dom_named_node_map_get_named_item (LsmDomNamedNodeMap *map, const char *name)
+ArvDomNode *
+arv_dom_named_node_map_get_named_item (ArvDomNamedNodeMap *map, const char *name)
 {
 	g_return_val_if_fail (LSM_IS_DOM_NAMED_NODE_MAP (map), NULL);
 
-	return LSM_DOM_NAMED_NODE_MAP_GET_CLASS (map)->get (map, name);
+	return ARV_DOM_NAMED_NODE_MAP_GET_CLASS (map)->get (map, name);
 }
 
-LsmDomNode *
-lsm_dom_named_node_map_set_named_item (LsmDomNamedNodeMap *map, LsmDomNode *node)
+ArvDomNode *
+arv_dom_named_node_map_set_named_item (ArvDomNamedNodeMap *map, ArvDomNode *node)
 {
 	g_return_val_if_fail (LSM_IS_DOM_NAMED_NODE_MAP (map), NULL);
 
-	return LSM_DOM_NAMED_NODE_MAP_GET_CLASS (map)->set (map, node);
+	return ARV_DOM_NAMED_NODE_MAP_GET_CLASS (map)->set (map, node);
 }
 
-LsmDomNode *
-lsm_dom_named_node_map_remove_named_item (LsmDomNamedNodeMap *map, const char *name)
+ArvDomNode *
+arv_dom_named_node_map_remove_named_item (ArvDomNamedNodeMap *map, const char *name)
 {
 	g_return_val_if_fail (LSM_IS_DOM_NAMED_NODE_MAP (map), NULL);
 
-	return LSM_DOM_NAMED_NODE_MAP_GET_CLASS (map)->remove (map, name);
+	return ARV_DOM_NAMED_NODE_MAP_GET_CLASS (map)->remove (map, name);
 }
 
-LsmDomNode *
-lsm_dom_named_node_map_get_item (LsmDomNamedNodeMap *map, unsigned int index)
+ArvDomNode *
+arv_dom_named_node_map_get_item (ArvDomNamedNodeMap *map, unsigned int index)
 {
 	g_return_val_if_fail (LSM_IS_DOM_NAMED_NODE_MAP (map), NULL);
 
-	return LSM_DOM_NAMED_NODE_MAP_GET_CLASS (map)->get_item (map, index);
+	return ARV_DOM_NAMED_NODE_MAP_GET_CLASS (map)->get_item (map, index);
 }
 
 unsigned int
-lsm_dom_named_node_map_get_length (LsmDomNamedNodeMap *map)
+arv_dom_named_node_map_get_length (ArvDomNamedNodeMap *map)
 {
 	g_return_val_if_fail (LSM_IS_DOM_NAMED_NODE_MAP (map), 0);
 
-	return LSM_DOM_NAMED_NODE_MAP_GET_CLASS (map)->get_length (map);
+	return ARV_DOM_NAMED_NODE_MAP_GET_CLASS (map)->get_length (map);
 }
 
 static void
-lsm_dom_named_node_map_init (LsmDomNamedNodeMap *map)
+arv_dom_named_node_map_init (ArvDomNamedNodeMap *map)
 {
 }
 
-/* LsmDomNamedNodeMap class */
+/* ArvDomNamedNodeMap class */
 
 static void
-lsm_dom_named_node_map_class_init (LsmDomNamedNodeMapClass *klass)
+arv_dom_named_node_map_class_init (ArvDomNamedNodeMapClass *klass)
 {
 }
 
-G_DEFINE_ABSTRACT_TYPE (LsmDomNamedNodeMap, lsm_dom_named_node_map, G_TYPE_OBJECT)
+G_DEFINE_ABSTRACT_TYPE (ArvDomNamedNodeMap, arv_dom_named_node_map, G_TYPE_OBJECT)

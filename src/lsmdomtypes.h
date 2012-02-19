@@ -1,4 +1,4 @@
-/* Lasem - SVG and Mathml library
+/* Aravis
  *
  * Copyright © 2010 Emmanuel Pacaud
  *
@@ -21,23 +21,23 @@
  * 	Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#ifndef LSM_DOM_TYPES_H
-#define LSM_DOM_TYPES_H
+#ifndef ARV_DOM_TYPES_H
+#define ARV_DOM_TYPES_H
 
 #include <glib-object.h>
 
 G_BEGIN_DECLS
 
-typedef struct _LsmDomNode LsmDomNode;
-typedef struct _LsmDomNodeList LsmDomNodeList;
-typedef struct _LsmDomNamedNodeMap LsmDomNamedNodeMap;
-typedef struct _LsmDomElement LsmDomElement;
-typedef struct _LsmDomDocument LsmDomDocument;
-typedef struct _LsmDomDocumentFragment LsmDomDocumentFragment;
-typedef struct _LsmDomCharacterData LsmDomCharacterData;
-typedef struct _LsmDomText LsmDomText;
+typedef struct _ArvDomNode ArvDomNode;
+typedef struct _ArvDomNodeList ArvDomNodeList;
+typedef struct _ArvDomNamedNodeMap ArvDomNamedNodeMap;
+typedef struct _ArvDomElement ArvDomElement;
+typedef struct _ArvDomDocument ArvDomDocument;
+typedef struct _ArvDomDocumentFragment ArvDomDocumentFragment;
+typedef struct _ArvDomCharacterData ArvDomCharacterData;
+typedef struct _ArvDomText ArvDomText;
 
-typedef struct _LsmDomView LsmDomView;
+typedef struct _ArvDomView ArvDomView;
 
 G_END_DECLS
 

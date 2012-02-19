@@ -1,4 +1,4 @@
-/* Lasem
+/* Aravis
  *
  * Copyright © 2010 Emmanuel Pacaud
  *
@@ -24,34 +24,34 @@
 #include <lsmdomnodelist.h>
 #include <lsmdomnode.h>
 
-/* LsmDomNodeList implementation */
+/* ArvDomNodeList implementation */
 
-LsmDomNode *
-lsm_dom_node_list_get_item (LsmDomNodeList *list, unsigned int index)
+ArvDomNode *
+arv_dom_node_list_get_item (ArvDomNodeList *list, unsigned int index)
 {
 	g_return_val_if_fail (LSM_IS_DOM_NODE_LIST (list), NULL);
 
-	return LSM_DOM_NODE_LIST_GET_CLASS (list)->get_item (list, index);
+	return ARV_DOM_NODE_LIST_GET_CLASS (list)->get_item (list, index);
 }
 
 unsigned int
-lsm_dom_node_list_get_length (LsmDomNodeList *list)
+arv_dom_node_list_get_length (ArvDomNodeList *list)
 {
 	g_return_val_if_fail (LSM_IS_DOM_NODE_LIST (list), 0);
 
-	return LSM_DOM_NODE_LIST_GET_CLASS (list)->get_length (list);
+	return ARV_DOM_NODE_LIST_GET_CLASS (list)->get_length (list);
 }
 
 static void
-lsm_dom_node_list_init (LsmDomNodeList *list)
+arv_dom_node_list_init (ArvDomNodeList *list)
 {
 }
 
-/* LsmDomNodeList class */
+/* ArvDomNodeList class */
 
 static void
-lsm_dom_node_list_class_init (LsmDomNodeListClass *klass)
+arv_dom_node_list_class_init (ArvDomNodeListClass *klass)
 {
 }
 
-G_DEFINE_ABSTRACT_TYPE (LsmDomNodeList, lsm_dom_node_list, G_TYPE_OBJECT)
+G_DEFINE_ABSTRACT_TYPE (ArvDomNodeList, arv_dom_node_list, G_TYPE_OBJECT)

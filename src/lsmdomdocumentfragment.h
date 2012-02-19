@@ -1,4 +1,4 @@
-/* Lasem
+/* Aravis
  *
  * Copyright © 2010 Emmanuel Pacaud
  *
@@ -21,34 +21,34 @@
  * 	Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#ifndef LSM_DOM_DOCUMENT_FRAGMENT_H
-#define LSM_DOM_DOCUMENT_FRAGMENT_H
+#ifndef ARV_DOM_DOCUMENT_FRAGMENT_H
+#define ARV_DOM_DOCUMENT_FRAGMENT_H
 
 #include <lsmdom.h>
 #include <lsmdomnode.h>
 
 G_BEGIN_DECLS
 
-#define LSM_TYPE_DOM_DOCUMENT_FRAGMENT             (lsm_dom_document_fragment_get_type ())
-#define LSM_DOM_DOCUMENT_FRAGMENT(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), LSM_TYPE_DOM_DOCUMENT_FRAGMENT, LsmDomDocumentFragment))
-#define LSM_DOM_DOCUMENT_FRAGMENT_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), LSM_TYPE_DOM_DOCUMENT_FRAGMENT, LsmDomDocumentFragmentClass))
+#define LSM_TYPE_DOM_DOCUMENT_FRAGMENT             (arv_dom_document_fragment_get_type ())
+#define ARV_DOM_DOCUMENT_FRAGMENT(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), LSM_TYPE_DOM_DOCUMENT_FRAGMENT, ArvDomDocumentFragment))
+#define ARV_DOM_DOCUMENT_FRAGMENT_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), LSM_TYPE_DOM_DOCUMENT_FRAGMENT, ArvDomDocumentFragmentClass))
 #define LSM_IS_DOM_DOCUMENT_FRAGMENT(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), LSM_TYPE_DOM_DOCUMENT_FRAGMENT))
 #define LSM_IS_DOM_DOCUMENT_FRAGMENT_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), LSM_TYPE_DOM_DOCUMENT_FRAGMENT))
-#define LSM_DOM_DOCUMENT_FRAGMENT_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), LSM_TYPE_DOM_DOCUMENT_FRAGMENT, LsmDomDocumentFragmentClass))
+#define ARV_DOM_DOCUMENT_FRAGMENT_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), LSM_TYPE_DOM_DOCUMENT_FRAGMENT, ArvDomDocumentFragmentClass))
 
-typedef struct _LsmDomDocumentFragmentClass LsmDomDocumentFragmentClass;
+typedef struct _ArvDomDocumentFragmentClass ArvDomDocumentFragmentClass;
 
-struct _LsmDomDocumentFragment {
-	LsmDomNode node;
+struct _ArvDomDocumentFragment {
+	ArvDomNode node;
 };
 
-struct _LsmDomDocumentFragmentClass {
-	LsmDomNodeClass parent_class;
+struct _ArvDomDocumentFragmentClass {
+	ArvDomNodeClass parent_class;
 };
 
-GType lsm_dom_document_fragment_get_type (void);
+GType arv_dom_document_fragment_get_type (void);
 
-LsmDomDocumentFragment * 	lsm_dom_document_fragment_new 		(void);
+ArvDomDocumentFragment * 	arv_dom_document_fragment_new 		(void);
 
 G_END_DECLS
 

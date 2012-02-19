@@ -1,4 +1,4 @@
-/* Lasem
+/* Aravis
  *
  * Copyright © 2007-2009 Emmanuel Pacaud
  *
@@ -21,22 +21,22 @@
  * 	Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#ifndef LSM_DOM_IMPLEMENTATION_H
-#define LSM_DOM_IMPLEMENTATION_H
+#ifndef ARV_DOM_IMPLEMENTATION_H
+#define ARV_DOM_IMPLEMENTATION_H
 
 #include <lsmdomtypes.h>
 #include <lsmdomdocument.h>
 
 G_BEGIN_DECLS
 
-typedef LsmDomDocument * (*LsmDomDocumentCreateFunction) (void);
+typedef ArvDomDocument * (*ArvDomDocumentCreateFunction) (void);
 
-LsmDomDocument *	lsm_dom_implementation_create_document 			(const char *namespace_uri,
+ArvDomDocument *	arv_dom_implementation_create_document 			(const char *namespace_uri,
 										 const char *qualified_name);
-void			lsm_dom_implementation_add_document_create_function	(const char *qualified_name,
-										 LsmDomDocumentCreateFunction create_function);
+void			arv_dom_implementation_add_document_create_function	(const char *qualified_name,
+										 ArvDomDocumentCreateFunction create_function);
 
-void			lsm_dom_implementation_cleanup 				(void);
+void			arv_dom_implementation_cleanup 				(void);
 
 G_END_DECLS
 

@@ -1,4 +1,4 @@
-/* Lasem
+/* Aravis
  *
  * Copyright © 2007-2008 Emmanuel Pacaud
  *
@@ -21,40 +21,40 @@
  * 	Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#ifndef LSM_DOM_ELEMENT_H
-#define LSM_DOM_ELEMENT_H
+#ifndef ARV_DOM_ELEMENT_H
+#define ARV_DOM_ELEMENT_H
 
 #include <lsmdom.h>
 #include <lsmdomnode.h>
 
 G_BEGIN_DECLS
 
-#define LSM_TYPE_DOM_ELEMENT             (lsm_dom_element_get_type ())
-#define LSM_DOM_ELEMENT(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), LSM_TYPE_DOM_ELEMENT, LsmDomElement))
-#define LSM_DOM_ELEMENT_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), LSM_TYPE_DOM_ELEMENT, LsmDomElementClass))
+#define LSM_TYPE_DOM_ELEMENT             (arv_dom_element_get_type ())
+#define ARV_DOM_ELEMENT(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), LSM_TYPE_DOM_ELEMENT, ArvDomElement))
+#define ARV_DOM_ELEMENT_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), LSM_TYPE_DOM_ELEMENT, ArvDomElementClass))
 #define LSM_IS_DOM_ELEMENT(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), LSM_TYPE_DOM_ELEMENT))
 #define LSM_IS_DOM_ELEMENT_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), LSM_TYPE_DOM_ELEMENT))
-#define LSM_DOM_ELEMENT_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), LSM_TYPE_DOM_ELEMENT, LsmDomElementClass))
+#define ARV_DOM_ELEMENT_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), LSM_TYPE_DOM_ELEMENT, ArvDomElementClass))
 
-typedef struct _LsmDomElementClass LsmDomElementClass;
+typedef struct _ArvDomElementClass ArvDomElementClass;
 
-struct _LsmDomElement {
-	LsmDomNode node;
+struct _ArvDomElement {
+	ArvDomNode node;
 };
 
-struct _LsmDomElementClass {
-	LsmDomNodeClass parent_class;
+struct _ArvDomElementClass {
+	ArvDomNodeClass parent_class;
 
-	const char* 	(*get_attribute) (LsmDomElement *self, const char *name);
-	void 		(*set_attribute) (LsmDomElement *self, const char *name, const char *attribute_value);
-	char *		(*get_serialized_attributes)	(LsmDomElement *self);
+	const char* 	(*get_attribute) (ArvDomElement *self, const char *name);
+	void 		(*set_attribute) (ArvDomElement *self, const char *name, const char *attribute_value);
+	char *		(*get_serialized_attributes)	(ArvDomElement *self);
 };
 
-GType lsm_dom_element_get_type (void);
+GType arv_dom_element_get_type (void);
 
-const char * 	lsm_dom_element_get_tag_name 	(LsmDomElement *self);
-const char* 	lsm_dom_element_get_attribute 	(LsmDomElement* self, const char* name);
-void 		lsm_dom_element_set_attribute 	(LsmDomElement* self, const char* name, const char* attribute_value);
+const char * 	arv_dom_element_get_tag_name 	(ArvDomElement *self);
+const char* 	arv_dom_element_get_attribute 	(ArvDomElement* self, const char* name);
+void 		arv_dom_element_set_attribute 	(ArvDomElement* self, const char* name, const char* attribute_value);
 
 G_END_DECLS
 

@@ -1,4 +1,4 @@
-/* Lasem
+/* Aravis
  *
  * Copyright © 2007-2009 Emmanuel Pacaud
  *
@@ -21,29 +21,29 @@
  * 	Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#ifndef LSM_DOM_PARSER_H
-#define LSM_DOM_PARSER_H
+#ifndef ARV_DOM_PARSER_H
+#define ARV_DOM_PARSER_H
 
 #include <lsmdomdocument.h>
 #include <gio/gio.h>
 
 G_BEGIN_DECLS
 
-LsmDomDocument * 	lsm_dom_document_new_from_memory 	(const void *buffer, int size, GError **error);
-LsmDomDocument * 	lsm_dom_document_new_from_path 		(const char *path, GError **error);
-LsmDomDocument * 	lsm_dom_document_new_from_url 		(const char *url, GError **error);
+ArvDomDocument * 	arv_dom_document_new_from_memory 	(const void *buffer, int size, GError **error);
+ArvDomDocument * 	arv_dom_document_new_from_path 		(const char *path, GError **error);
+ArvDomDocument * 	arv_dom_document_new_from_url 		(const char *url, GError **error);
 
-void			lsm_dom_document_save_to_stream		(LsmDomDocument *document,
+void			arv_dom_document_save_to_stream		(ArvDomDocument *document,
 								 GOutputStream *stream,
 								 GError **error);
-void			lsm_dom_document_save_to_memory		(LsmDomDocument *documennt,
+void			arv_dom_document_save_to_memory		(ArvDomDocument *documennt,
 								 void **buffer,
 								 int *size,
 								 GError **error);
-void			lsm_dom_document_save_to_path		(LsmDomDocument *documennt,
+void			arv_dom_document_save_to_path		(ArvDomDocument *documennt,
 								 const char *path,
 								 GError **error);
-void			lsm_dom_document_save_to_url		(LsmDomDocument *documennt,
+void			arv_dom_document_save_to_url		(ArvDomDocument *documennt,
 								 const char *path,
 								 GError **error);
 

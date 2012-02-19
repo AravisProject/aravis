@@ -1,4 +1,4 @@
-/* Lasem
+/* Aravis
  *
  * Copyright © 2007-2008 Emmanuel Pacaud
  *
@@ -31,94 +31,94 @@
 
 static GObjectClass *parent_class = NULL;
 
-/* LsmDomNode implementation */
+/* ArvDomNode implementation */
 
 static const char *
-lsm_dom_element_get_node_value (LsmDomNode *node)
+arv_dom_element_get_node_value (ArvDomNode *node)
 {
 	return NULL;
 }
 
-static LsmDomNodeType
-lsm_dom_element_get_node_type (LsmDomNode *node)
+static ArvDomNodeType
+arv_dom_element_get_node_type (ArvDomNode *node)
 {
-	return LSM_DOM_NODE_TYPE_ELEMENT_NODE;
+	return ARV_DOM_NODE_TYPE_ELEMENT_NODE;
 }
 
 static void
-lsm_dom_element_write_to_stream (LsmDomNode *self, GOutputStream *stream, GError **error)
+arv_dom_element_write_to_stream (ArvDomNode *self, GOutputStream *stream, GError **error)
 {
-	LsmDomElementClass *element_class;
+	ArvDomElementClass *element_class;
 	char *string;
 	char *attributes = NULL;
 
-	element_class = LSM_DOM_ELEMENT_GET_CLASS (self);
+	element_class = ARV_DOM_ELEMENT_GET_CLASS (self);
 	if (element_class->get_serialized_attributes != NULL)
-		attributes = element_class->get_serialized_attributes (LSM_DOM_ELEMENT (self));
+		attributes = element_class->get_serialized_attributes (ARV_DOM_ELEMENT (self));
 
 	if (attributes != NULL)
-		string = g_strdup_printf ("<%s %s>", lsm_dom_node_get_node_name (self), attributes);
+		string = g_strdup_printf ("<%s %s>", arv_dom_node_get_node_name (self), attributes);
 	else
-		string = g_strdup_printf ("<%s>", lsm_dom_node_get_node_name (self));
+		string = g_strdup_printf ("<%s>", arv_dom_node_get_node_name (self));
 
 	g_output_stream_write (stream, string, strlen (string), NULL, error);
 	g_free (string);
 	g_free (attributes);
 
-	LSM_DOM_NODE_CLASS (parent_class)->write_to_stream (self, stream, error);
+	ARV_DOM_NODE_CLASS (parent_class)->write_to_stream (self, stream, error);
 
-	string = g_strdup_printf ("</\%s>\n", lsm_dom_node_get_node_name (self));
+	string = g_strdup_printf ("</\%s>\n", arv_dom_node_get_node_name (self));
 	g_output_stream_write (stream, string, strlen (string), NULL, error);
 	g_free (string);
 }
 
-/* LsmDomElement implementation */
+/* ArvDomElement implementation */
 
 const char *
-lsm_dom_element_get_attribute (LsmDomElement* self, const char* name)
+arv_dom_element_get_attribute (ArvDomElement* self, const char* name)
 {
 	g_return_val_if_fail (LSM_IS_DOM_ELEMENT (self), NULL);
 	g_return_val_if_fail (name != NULL, NULL);
 
-	return LSM_DOM_ELEMENT_GET_CLASS (self)->get_attribute (self, name);
+	return ARV_DOM_ELEMENT_GET_CLASS (self)->get_attribute (self, name);
 }
 
 void
-lsm_dom_element_set_attribute (LsmDomElement* self, const char* name, const char* attribute_value)
+arv_dom_element_set_attribute (ArvDomElement* self, const char* name, const char* attribute_value)
 {
 	g_return_if_fail (LSM_IS_DOM_ELEMENT (self));
 	g_return_if_fail (name != NULL);
 
-	LSM_DOM_ELEMENT_GET_CLASS (self)->set_attribute (self, name, attribute_value);
+	ARV_DOM_ELEMENT_GET_CLASS (self)->set_attribute (self, name, attribute_value);
 
-	lsm_dom_node_changed (LSM_DOM_NODE (self));
+	arv_dom_node_changed (ARV_DOM_NODE (self));
 }
 
 const char *
-lsm_dom_element_get_tag_name (LsmDomElement *self)
+arv_dom_element_get_tag_name (ArvDomElement *self)
 {
 	g_return_val_if_fail (LSM_IS_DOM_ELEMENT (self), NULL);
 
-	return lsm_dom_node_get_node_name (LSM_DOM_NODE (self));
+	return arv_dom_node_get_node_name (ARV_DOM_NODE (self));
 }
 
 static void
-lsm_dom_element_init (LsmDomElement *element)
+arv_dom_element_init (ArvDomElement *element)
 {
 }
 
-/* LsmDomElement class */
+/* ArvDomElement class */
 
 static void
-lsm_dom_element_class_init (LsmDomElementClass *klass)
+arv_dom_element_class_init (ArvDomElementClass *klass)
 {
-	LsmDomNodeClass *node_class = LSM_DOM_NODE_CLASS (klass);
+	ArvDomNodeClass *node_class = ARV_DOM_NODE_CLASS (klass);
 
 	parent_class = g_type_class_peek_parent (klass);
 
-	node_class->get_node_value = lsm_dom_element_get_node_value;
-	node_class->get_node_type = lsm_dom_element_get_node_type;
-	node_class->write_to_stream = lsm_dom_element_write_to_stream;
+	node_class->get_node_value = arv_dom_element_get_node_value;
+	node_class->get_node_type = arv_dom_element_get_node_type;
+	node_class->write_to_stream = arv_dom_element_write_to_stream;
 }
 
-G_DEFINE_ABSTRACT_TYPE (LsmDomElement, lsm_dom_element, LSM_TYPE_DOM_NODE)
+G_DEFINE_ABSTRACT_TYPE (ArvDomElement, arv_dom_element, LSM_TYPE_DOM_NODE)

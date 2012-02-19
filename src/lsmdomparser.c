@@ -1,4 +1,4 @@
-/* Lasem
+/* Aravis
  *
  * Copyright © 2007-2009 Emmanuel Pacaud
  *
@@ -35,20 +35,20 @@
 
 typedef enum {
 	STATE
-} LsmDomSaxParserStateEnum;
+} ArvDomSaxParserStateEnum;
 
 typedef struct {
-	LsmDomSaxParserStateEnum state;
+	ArvDomSaxParserStateEnum state;
 
-	LsmDomDocument *document;
-	LsmDomNode *current_node;
+	ArvDomDocument *document;
+	ArvDomNode *current_node;
 
 	gboolean is_error;
 
 	int error_depth;
 
 	GHashTable *entities;
-} LsmDomSaxParserState;
+} ArvDomSaxParserState;
 
 void
 _free_entity (void *data)
@@ -64,9 +64,9 @@ _free_entity (void *data)
 }
 
 static void
-lsm_dom_parser_start_document (void *user_data)
+arv_dom_parser_start_document (void *user_data)
 {
-	LsmDomSaxParserState *state = user_data;
+	ArvDomSaxParserState *state = user_data;
 
 	state->state = STATE;
 	state->document = NULL;
@@ -76,20 +76,20 @@ lsm_dom_parser_start_document (void *user_data)
 }
 
 static void
-lsm_dom_parser_end_document (void *user_data)
+arv_dom_parser_end_document (void *user_data)
 {
-	LsmDomSaxParserState *state = user_data;
+	ArvDomSaxParserState *state = user_data;
 
 	g_hash_table_unref (state->entities);
 }
 
 static void
-lsm_dom_parser_start_element(void *user_data,
+arv_dom_parser_start_element(void *user_data,
 			     const xmlChar *name,
 			     const xmlChar **attrs)
 {
-	LsmDomSaxParserState *state = user_data;
-	LsmDomNode *node;
+	ArvDomSaxParserState *state = user_data;
+	ArvDomNode *node;
 	int i;
 
 	if (state->is_error) {
@@ -98,18 +98,18 @@ lsm_dom_parser_start_element(void *user_data,
 	}
 
 	if (state->document == NULL) {
-		state->document = lsm_dom_implementation_create_document (NULL, (char *) name);
-		state->current_node = LSM_DOM_NODE (state->document);
+		state->document = arv_dom_implementation_create_document (NULL, (char *) name);
+		state->current_node = ARV_DOM_NODE (state->document);
 
 		g_return_if_fail (LSM_IS_DOM_DOCUMENT (state->document));
 	}
 
-	node = LSM_DOM_NODE (lsm_dom_document_create_element (LSM_DOM_DOCUMENT (state->document), (char *) name));
+	node = ARV_DOM_NODE (arv_dom_document_create_element (ARV_DOM_DOCUMENT (state->document), (char *) name));
 
-	if (LSM_IS_DOM_NODE (node) && lsm_dom_node_append_child (state->current_node, node) != NULL) {
+	if (LSM_IS_DOM_NODE (node) && arv_dom_node_append_child (state->current_node, node) != NULL) {
 		if (attrs != NULL)
 			for (i = 0; attrs[i] != NULL && attrs[i+1] != NULL; i += 2)
-				lsm_dom_element_set_attribute (LSM_DOM_ELEMENT (node),
+				arv_dom_element_set_attribute (ARV_DOM_ELEMENT (node),
 							       (char *) attrs[i],
 							       (char *) attrs[i+1]);
 
@@ -123,10 +123,10 @@ lsm_dom_parser_start_element(void *user_data,
 }
 
 static void
-lsm_dom_parser_end_element (void *user_data,
+arv_dom_parser_end_element (void *user_data,
 			    const xmlChar *name)
 {
-	LsmDomSaxParserState *state = user_data;
+	ArvDomSaxParserState *state = user_data;
 
 	if (state->is_error) {
 		state->error_depth--;
@@ -138,31 +138,31 @@ lsm_dom_parser_end_element (void *user_data,
 		return;
 	}
 
-	state->current_node = lsm_dom_node_get_parent_node (state->current_node);
+	state->current_node = arv_dom_node_get_parent_node (state->current_node);
 }
 
 static void
-lsm_dom_parser_characters (void *user_data, const xmlChar *ch, int len)
+arv_dom_parser_characters (void *user_data, const xmlChar *ch, int len)
 {
-	LsmDomSaxParserState *state = user_data;
+	ArvDomSaxParserState *state = user_data;
 
 	if (!state->is_error) {
-		LsmDomNode *node;
+		ArvDomNode *node;
 		char *text;
 
 		text = g_strndup ((char *) ch, len);
-		node = LSM_DOM_NODE (lsm_dom_document_create_text_node (LSM_DOM_DOCUMENT (state->document), text));
+		node = ARV_DOM_NODE (arv_dom_document_create_text_node (ARV_DOM_DOCUMENT (state->document), text));
 
-		lsm_dom_node_append_child (state->current_node, node);
+		arv_dom_node_append_child (state->current_node, node);
 
 		g_free (text);
 	}
 }
 
 static xmlEntityPtr
-lsm_dom_parser_get_entity (void *user_data, const xmlChar *name)
+arv_dom_parser_get_entity (void *user_data, const xmlChar *name)
 {
-	LsmDomSaxParserState *state = user_data;
+	ArvDomSaxParserState *state = user_data;
 	xmlEntity *entity;
 	const char *utf8;
 
@@ -183,11 +183,11 @@ lsm_dom_parser_get_entity (void *user_data, const xmlChar *name)
 }
 
 void
-lsm_dom_parser_declare_entity (void * user_data, const xmlChar * name, int type,
+arv_dom_parser_declare_entity (void * user_data, const xmlChar * name, int type,
 			       const xmlChar * publicId, const xmlChar * systemId,
 			       xmlChar * content)
 {
-	LsmDomSaxParserState *state = user_data;
+	ArvDomSaxParserState *state = user_data;
 
 	if (content != NULL) {
 		xmlEntity *entity;
@@ -200,7 +200,7 @@ lsm_dom_parser_declare_entity (void * user_data, const xmlChar * name, int type,
 
 #if 1
 static void
-lsm_dom_parser_warning (void *user_data, const char *msg, ...)
+arv_dom_parser_warning (void *user_data, const char *msg, ...)
 {
 	va_list args;
 
@@ -210,7 +210,7 @@ lsm_dom_parser_warning (void *user_data, const char *msg, ...)
 }
 
 static void
-lsm_dom_parser_error (void *user_data, const char *msg, ...)
+arv_dom_parser_error (void *user_data, const char *msg, ...)
 {
 	va_list args;
 
@@ -220,7 +220,7 @@ lsm_dom_parser_error (void *user_data, const char *msg, ...)
 }
 
 static void
-lsm_dom_parser_fatal_error (void *user_data, const char *msg, ...)
+arv_dom_parser_fatal_error (void *user_data, const char *msg, ...)
 {
 	va_list args;
 
@@ -232,21 +232,21 @@ lsm_dom_parser_fatal_error (void *user_data, const char *msg, ...)
 
 static xmlSAXHandler sax_handler = {
 #if 1
-	.warning = lsm_dom_parser_warning,
-	.error = lsm_dom_parser_error,
-	.fatalError = lsm_dom_parser_fatal_error,
+	.warning = arv_dom_parser_warning,
+	.error = arv_dom_parser_error,
+	.fatalError = arv_dom_parser_fatal_error,
 #endif
-	.startDocument = lsm_dom_parser_start_document,
-	.endDocument = lsm_dom_parser_end_document,
-	.startElement = lsm_dom_parser_start_element,
-	.endElement = lsm_dom_parser_end_element,
-	.characters = lsm_dom_parser_characters,
-	.getEntity = lsm_dom_parser_get_entity,
-	.entityDecl = lsm_dom_parser_declare_entity
+	.startDocument = arv_dom_parser_start_document,
+	.endDocument = arv_dom_parser_end_document,
+	.startElement = arv_dom_parser_start_element,
+	.endElement = arv_dom_parser_end_element,
+	.characters = arv_dom_parser_characters,
+	.getEntity = arv_dom_parser_get_entity,
+	.entityDecl = arv_dom_parser_declare_entity
 };
 
 static GQuark
-lsm_dom_document_error_quark (void)
+arv_dom_document_error_quark (void)
 {
 	static GQuark q = 0;
 
@@ -257,16 +257,16 @@ lsm_dom_document_error_quark (void)
         return q;
 }
 
-#define LSM_DOM_DOCUMENT_ERROR lsm_dom_document_error_quark ()
+#define ARV_DOM_DOCUMENT_ERROR arv_dom_document_error_quark ()
 
 typedef enum {
-	LSM_DOM_DOCUMENT_ERROR_INVALID_XML
-} LsmDomDocumentError;
+	ARV_DOM_DOCUMENT_ERROR_INVALID_XML
+} ArvDomDocumentError;
 
-LsmDomDocument *
-lsm_dom_document_new_from_memory (const void *buffer, int size, GError **error)
+ArvDomDocument *
+arv_dom_document_new_from_memory (const void *buffer, int size, GError **error)
 {
-	static LsmDomSaxParserState state;
+	static ArvDomSaxParserState state;
 
 	g_return_val_if_fail (buffer != NULL, NULL);
 
@@ -280,85 +280,85 @@ lsm_dom_document_new_from_memory (const void *buffer, int size, GError **error)
 			g_object_unref (state.document);
 		state.document = NULL;
 
-		lsm_debug_dom ("[LsmDomParser::from_memory] Invalid document");
+		lsm_debug_dom ("[ArvDomParser::from_memory] Invalid document");
 
 		g_set_error (error,
-			     LSM_DOM_DOCUMENT_ERROR,
-			     LSM_DOM_DOCUMENT_ERROR_INVALID_XML,
+			     ARV_DOM_DOCUMENT_ERROR,
+			     ARV_DOM_DOCUMENT_ERROR_INVALID_XML,
 			     "Invalid document.");
 	}
 
 	return state.document;
 }
 
-static LsmDomDocument *
-lsm_dom_document_new_from_file (GFile *file, GError **error)
+static ArvDomDocument *
+arv_dom_document_new_from_file (GFile *file, GError **error)
 {
-	LsmDomDocument *document;
+	ArvDomDocument *document;
 	gsize size = 0;
 	char *contents = NULL;
 
 	if (!g_file_load_contents (file, NULL, &contents, &size, NULL, error))
 		return NULL;
 
-	document = lsm_dom_document_new_from_memory (contents, size, error);
+	document = arv_dom_document_new_from_memory (contents, size, error);
 
 	g_free (contents);
 
 	return document;
 }
 
-LsmDomDocument *
-lsm_dom_document_new_from_path (const char *path, GError **error)
+ArvDomDocument *
+arv_dom_document_new_from_path (const char *path, GError **error)
 {
-	LsmDomDocument *document;
+	ArvDomDocument *document;
 	GFile *file;
 
 	g_return_val_if_fail (path != NULL, NULL);
 
 	file = g_file_new_for_path (path);
 
-	document = lsm_dom_document_new_from_file (file, error);
+	document = arv_dom_document_new_from_file (file, error);
 
 	g_object_unref (file);
 
 	if (document != NULL)
-		lsm_dom_document_set_path (document, path);
+		arv_dom_document_set_path (document, path);
 
 	return document;
 }
 
-LsmDomDocument *
-lsm_dom_document_new_from_url (const char *url, GError **error)
+ArvDomDocument *
+arv_dom_document_new_from_url (const char *url, GError **error)
 {
-	LsmDomDocument *document;
+	ArvDomDocument *document;
 	GFile *file;
 
 	g_return_val_if_fail (url != NULL, NULL);
 
 	file = g_file_new_for_uri (url);
 
-	document = lsm_dom_document_new_from_file (file, error);
+	document = arv_dom_document_new_from_file (file, error);
 
 	g_object_unref (file);
 
 	if (document != NULL)
-		lsm_dom_document_set_url (document, url);
+		arv_dom_document_set_url (document, url);
 
 	return document;
 }
 
 void
-lsm_dom_document_save_to_stream (LsmDomDocument *document, GOutputStream *stream, GError **error)
+arv_dom_document_save_to_stream (ArvDomDocument *document, GOutputStream *stream, GError **error)
 {
 	g_return_if_fail (LSM_IS_DOM_DOCUMENT (document));
 	g_return_if_fail (G_IS_OUTPUT_STREAM (stream));
 
-	lsm_dom_node_write_to_stream (LSM_DOM_NODE (document), stream, error);
+	arv_dom_node_write_to_stream (ARV_DOM_NODE (document), stream, error);
 }
 
 void
-lsm_dom_document_save_to_memory	(LsmDomDocument *document, void **buffer, int *size, GError **error)
+arv_dom_document_save_to_memory	(ArvDomDocument *document, void **buffer, int *size, GError **error)
 {
 	GOutputStream *stream;
 
@@ -378,7 +378,7 @@ lsm_dom_document_save_to_memory	(LsmDomDocument *document, void **buffer, int *s
 		return;
 	}
 
-	lsm_dom_document_save_to_stream (document, G_OUTPUT_STREAM (stream), error);
+	arv_dom_document_save_to_stream (document, G_OUTPUT_STREAM (stream), error);
 	g_output_stream_close (G_OUTPUT_STREAM (stream), NULL, error);
 
 	if (size != NULL)
@@ -389,7 +389,7 @@ lsm_dom_document_save_to_memory	(LsmDomDocument *document, void **buffer, int *s
 }
 
 void
-lsm_dom_document_save_to_path (LsmDomDocument *document, const char *path, GError **error)
+arv_dom_document_save_to_path (ArvDomDocument *document, const char *path, GError **error)
 {
 	GFile *file;
 	GFileOutputStream *stream;
@@ -399,14 +399,14 @@ lsm_dom_document_save_to_path (LsmDomDocument *document, const char *path, GErro
 	file = g_file_new_for_path (path);
 	stream = g_file_create (file, G_FILE_CREATE_REPLACE_DESTINATION, NULL, error);
 	if (stream != NULL) {
-		lsm_dom_document_save_to_stream (document, G_OUTPUT_STREAM (stream), error);
+		arv_dom_document_save_to_stream (document, G_OUTPUT_STREAM (stream), error);
 		g_object_unref (stream);
 	}
 	g_object_unref (file);
 }
 
 void
-lsm_dom_document_save_to_url (LsmDomDocument *document, const char *path, GError **error)
+arv_dom_document_save_to_url (ArvDomDocument *document, const char *path, GError **error)
 {
 	GFile *file;
 	GFileOutputStream *stream;
@@ -416,7 +416,7 @@ lsm_dom_document_save_to_url (LsmDomDocument *document, const char *path, GError
 	file = g_file_new_for_uri (path);
 	stream = g_file_create (file, G_FILE_CREATE_REPLACE_DESTINATION, NULL, error);
 	if (stream != NULL) {
-		lsm_dom_document_save_to_stream (document, G_OUTPUT_STREAM (stream), error);
+		arv_dom_document_save_to_stream (document, G_OUTPUT_STREAM (stream), error);
 		g_object_unref (stream);
 	}
 	g_object_unref (file);
