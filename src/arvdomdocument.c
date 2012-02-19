@@ -28,8 +28,8 @@
 
 #include <arvdomdocument.h>
 #include <arvdomelement.h>
-#include <lsmstr.h>
-#include <lsmdebug.h>
+#include <arvstr.h>
+#include <arvdebug.h>
 #include <arvdomtext.h>
 #include <gio/gio.h>
 #include <string.h>
@@ -102,7 +102,7 @@ arv_dom_document_get_element_by_id (ArvDomDocument *self, const char *id)
 	g_return_val_if_fail (LSM_IS_DOM_DOCUMENT (self), NULL);
 	g_return_val_if_fail (id != NULL, NULL);
 
-	lsm_debug_dom ("[ArvDomDocument::get_element_by_id] Lookup '%s'", id);
+	arv_debug_dom ("[ArvDomDocument::get_element_by_id] Lookup '%s'", id);
 
 	return g_hash_table_lookup (self->ids, id);
 }
@@ -116,7 +116,7 @@ arv_dom_document_register_element (ArvDomDocument *self, ArvDomElement *element,
 
 	old_id = g_hash_table_lookup (self->elements, element);
 	if (old_id != NULL) {
-		lsm_debug_dom ("[ArvDomDocument::register_element] Unregister '%s'", old_id);
+		arv_debug_dom ("[ArvDomDocument::register_element] Unregister '%s'", old_id);
 
 		g_hash_table_remove (self->elements, element);
 		g_hash_table_remove (self->ids, old_id);
@@ -125,7 +125,7 @@ arv_dom_document_register_element (ArvDomDocument *self, ArvDomElement *element,
 	if (id != NULL) {
 		char *new_id = g_strdup (id);
 
-		lsm_debug_dom ("[ArvDomDocument::register_element] Register '%s'", id);
+		arv_debug_dom ("[ArvDomDocument::register_element] Register '%s'", id);
 
 		g_hash_table_replace (self->ids, new_id, element);
 		g_hash_table_replace (self->elements, element, new_id);
@@ -152,14 +152,14 @@ arv_dom_document_set_path (ArvDomDocument *self, const char *path)
 		return;
 	}
 
-	self->url = lsm_str_to_uri (path);
+	self->url = arv_str_to_uri (path);
 }
 
 void
 arv_dom_document_set_url (ArvDomDocument *self, const char *url)
 {
 	g_return_if_fail (LSM_IS_DOM_DOCUMENT (self));
-	g_return_if_fail (url == NULL || lsm_str_is_uri (url));
+	g_return_if_fail (url == NULL || arv_str_is_uri (url));
 
 	g_free (self->url);
 	self->url = g_strdup (url);

@@ -29,7 +29,7 @@
 #include <arvdomnode.h>
 #include <arvdomnodelist.h>
 #include <arvdomdocument.h>
-#include <lsmdebug.h>
+#include <arvdebug.h>
 #include <glib/gprintf.h>
 #include <stdio.h>
 
@@ -345,7 +345,7 @@ arv_dom_node_insert_before (ArvDomNode* self, ArvDomNode* new_child, ArvDomNode*
 	}
 
 	if (ref_child->parent_node != self) {
-		lsm_debug_dom ("[ArvDomNode::insert_before] Ref child '%s' doesn't belong to '%s'",
+		arv_debug_dom ("[ArvDomNode::insert_before] Ref child '%s' doesn't belong to '%s'",
 			   arv_dom_node_get_node_name (ref_child),
 			   arv_dom_node_get_node_name (self));
 		g_object_unref (new_child);
@@ -353,7 +353,7 @@ arv_dom_node_insert_before (ArvDomNode* self, ArvDomNode* new_child, ArvDomNode*
 	}
 
 	if (!ARV_DOM_NODE_GET_CLASS (self)->can_append_child (self, new_child)) {
-		lsm_debug_dom ("[ArvDomNode::insert_before] Can't append '%s' to '%s'",
+		arv_debug_dom ("[ArvDomNode::insert_before] Can't append '%s' to '%s'",
 			   arv_dom_node_get_node_name (new_child),
 			   arv_dom_node_get_node_name (self));
 		g_object_unref (new_child);
@@ -418,7 +418,7 @@ arv_dom_node_replace_child (ArvDomNode* self, ArvDomNode* new_child, ArvDomNode*
 		arv_dom_node_remove_child (self, new_child);
 
 	if (old_child == NULL) {
-		lsm_debug_dom ("[ArvDomNode::replace_child] old_child == NULL)");
+		arv_debug_dom ("[ArvDomNode::replace_child] old_child == NULL)");
 		g_object_unref (new_child);
 		return NULL;
 	}
@@ -544,9 +544,9 @@ arv_dom_node_append_child (ArvDomNode* self, ArvDomNode* new_child)
 		arv_dom_node_remove_child (self, new_child);
 
 	if (!ARV_DOM_NODE_GET_CLASS (self)->can_append_child (self, new_child)) {
-		lsm_debug_dom ("[ArvDomNode::append_child] Can't append '%s' to '%s'",
-			   arv_dom_node_get_node_name (new_child),
-			   arv_dom_node_get_node_name (self));
+		arv_debug_dom ("[ArvDomNode::append_child] Can't append '%s' to '%s'",
+			       arv_dom_node_get_node_name (new_child),
+			       arv_dom_node_get_node_name (self));
 		g_object_unref (new_child);
 		return NULL;
 	}

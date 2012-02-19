@@ -29,6 +29,7 @@
 #include <arvgcfloat.h>
 #include <arvgc.h>
 #include <arvmisc.h>
+#include <arvstr.h>
 #include <string.h>
 
 static GObjectClass *parent_class = NULL;

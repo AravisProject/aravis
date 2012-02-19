@@ -21,17 +21,14 @@
  * 	Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#include <lsmdebug.h>
+#include <arvdebug.h>
 #include <arvdomimplementation.h>
 #include <arvdomnode.h>
-#include <lsmmathmlpresentationtoken.h>
-#include <lsmmathmlentitydictionary.h>
-#include <lsmsvgtextelement.h>
-#include <lsmstr.h>
+#include <arvdomelement.h>
+#include <arvstr.h>
 #include <libxml/parser.h>
 #include <gio/gio.h>
 #include <string.h>
-#include <../itex2mml/itex2MML.h>
 
 typedef enum {
 	STATE
@@ -159,6 +156,7 @@ arv_dom_parser_characters (void *user_data, const xmlChar *ch, int len)
 	}
 }
 
+#if 0
 static xmlEntityPtr
 arv_dom_parser_get_entity (void *user_data, const xmlChar *name)
 {
@@ -197,6 +195,7 @@ arv_dom_parser_declare_entity (void * user_data, const xmlChar * name, int type,
 		g_hash_table_insert (state->entities, (char *) name, entity);
 	}
 }
+#endif
 
 #if 1
 static void
@@ -240,9 +239,11 @@ static xmlSAXHandler sax_handler = {
 	.endDocument = arv_dom_parser_end_document,
 	.startElement = arv_dom_parser_start_element,
 	.endElement = arv_dom_parser_end_element,
-	.characters = arv_dom_parser_characters,
+	.characters = arv_dom_parser_characters
+#if 0
 	.getEntity = arv_dom_parser_get_entity,
 	.entityDecl = arv_dom_parser_declare_entity
+#endif
 };
 
 static GQuark
@@ -280,7 +281,7 @@ arv_dom_document_new_from_memory (const void *buffer, int size, GError **error)
 			g_object_unref (state.document);
 		state.document = NULL;
 
-		lsm_debug_dom ("[ArvDomParser::from_memory] Invalid document");
+		arv_debug_dom ("[ArvDomParser::from_memory] Invalid document");
 
 		g_set_error (error,
 			     ARV_DOM_DOCUMENT_ERROR,

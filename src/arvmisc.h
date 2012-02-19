@@ -38,43 +38,6 @@ void 			arv_statistic_set_name 		(ArvStatistic *statistic, guint histogram_id, c
 
 char *			arv_statistic_to_string 	(const ArvStatistic *statistic);
 
-gboolean 		arv_str_parse_double 		(char **str, double *x);
-
-static inline void
-arv_str_skip_spaces (char **str)
-{
-	while (g_ascii_isspace (**str))
-		(*str)++;
-}
-
-static inline void
-arv_str_skip_char (char **str, char c)
-{
-	while (**str == c)
-		(*str)++;
-}
-
-static inline void
-arv_str_skip_comma_and_spaces (char **str)
-{
-	while (g_ascii_isspace (**str) || **str == ',')
-		(*str)++;
-}
-
-static inline void
-arv_str_skip_semicolon_and_spaces (char **str)
-{
-	while (g_ascii_isspace (**str) || **str == ';')
-		(*str)++;
-}
-
-static inline void
-arv_str_skip_colon_and_spaces (char **str)
-{
-	while (g_ascii_isspace (**str) || **str == ':')
-		(*str)++;
-}
-
 #define ARV_TYPE_VALUE (arv_value_get_type())
 
 GType arv_value_get_type (void);

@@ -24,7 +24,7 @@
 #ifndef ARV_DOM_H
 #define ARV_DOM_H
 
-#include <lsm.h>
+#include <arv.h>
 
 #include <arvdomtypes.h>
 
@@ -37,6 +37,5 @@
 #include <arvdomimplementation.h>
 
 #include <arvdomparser.h>
-#include <arvdomview.h>
 
 #endif

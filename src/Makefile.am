@@ -33,6 +33,16 @@ ARAVIS_SRCS =					\
 	arvdebug.c				\
 	arvsystem.c				\
 	arvevaluator.c				\
+	arvdomnode.c				\
+	arvdomnodelist.c			\
+	arvdomnamednodemap.c			\
+	arvdomdocument.c			\
+	arvdomdocumentfragment.c		\
+	arvdomelement.c				\
+	arvdomcharacterdata.c			\
+	arvdomtext.c				\
+	arvdomparser.c				\
+	arvdomimplementation.c			\
 	arvcamera.c				\
 	arvgc.c					\
 	arvgcnode.c				\
@@ -65,6 +75,7 @@ ARAVIS_SRCS =					\
 ARAVIS_SRCS_NO_INTRO =				\
 	arvmisc.c				\
 	arvzip.c				\
+	arvstr.c				\
 	arvgvcp.c				\
 	arvgvsp.c
 
@@ -75,6 +86,18 @@ ARAVIS_HDRS = 					\
 	arvdebug.h				\
 	arvsystem.h				\
 	arvevaluator.h				\
+	arvdom.h				\
+	arvdomtypes.h				\
+	arvdomnode.h				\
+	arvdomnodelist.h			\
+	arvdomnamednodemap.h			\
+	arvdomdocument.h			\
+	arvdomdocumentfragment.h		\
+	arvdomelement.h				\
+	arvdomcharacterdata.h			\
+	arvdomtext.h				\
+	arvdomparser.h				\
+	arvdomimplementation.h			\
 	arvcamera.h				\
 	arvgc.h					\
 	arvgcnode.h				\
@@ -107,6 +130,7 @@ ARAVIS_HDRS = 					\
 ARAVIS_HDRS_NO_INTRO =				\
 	arvmisc.h				\
 	arvzip.h				\
+	arvstr.h				\
 	arvgvcp.h				\
 	arvgvsp.h
 

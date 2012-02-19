@@ -40,6 +40,7 @@ typedef struct {
 	ArvDebugLevel level;
 } ArvDebugCategory;
 
+extern ArvDebugCategory arv_debug_category_dom;
 extern ArvDebugCategory arv_debug_category_interface;
 extern ArvDebugCategory arv_debug_category_device;
 extern ArvDebugCategory arv_debug_category_stream;
@@ -49,6 +50,10 @@ extern ArvDebugCategory arv_debug_category_gvsp;
 extern ArvDebugCategory arv_debug_category_genicam;
 extern ArvDebugCategory arv_debug_category_evaluator;
 extern ArvDebugCategory arv_debug_category_misc;
+
+#define arv_debug_dom(...)	 	arv_debug (&arv_debug_category_interface, __VA_ARGS__)
+#define arv_log_dom(...)		arv_log (&arv_debug_category_interface, __VA_ARGS__)
+#define arv_warning_dom(...)		arv_warning (&arv_debug_category_interface, __VA_ARGS__)
 
 #define arv_debug_interface(...) 	arv_debug (&arv_debug_category_interface, __VA_ARGS__)
 #define arv_log_interface(...)		arv_log (&arv_debug_category_interface, __VA_ARGS__)

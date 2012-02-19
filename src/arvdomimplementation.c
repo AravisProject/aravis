@@ -22,9 +22,7 @@
  */
 
 #include <arvdomimplementation.h>
-#include <lsmmathmldocument.h>
-#include <lsmsvgdocument.h>
-#include <lsmdebug.h>
+#include <arvdebug.h>
 #include <string.h>
 
 static GHashTable *document_types = NULL;
@@ -48,14 +46,14 @@ arv_dom_implementation_create_document (const char *namespace_uri,
 	g_return_val_if_fail (qualified_name != NULL, NULL);
 
 	if (document_types == NULL) {
-		arv_dom_implementation_add_create_function ("math", lsm_mathml_document_new);
-		arv_dom_implementation_add_create_function ("svg", lsm_svg_document_new);
+/*                arv_dom_implementation_add_create_function ("math", lsm_mathml_document_new);*/
+/*                arv_dom_implementation_add_create_function ("svg", lsm_svg_document_new);*/
 	}
 
 	create_function = g_hash_table_lookup (document_types, qualified_name);
 	if (create_function == NULL) {
-		lsm_debug_dom ("[ArvDomImplementation::create_document] Unknow document type (%s)",
-			   qualified_name);
+		arv_debug_dom ("[ArvDomImplementation::create_document] Unknow document type (%s)",
+			       qualified_name);
 		return NULL;
 	}
 

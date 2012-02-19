@@ -24,10 +24,9 @@
 #ifndef ARV_DOM_DOCUMENT_H
 #define ARV_DOM_DOCUMENT_H
 
-#include <lsmtypes.h>
+#include <arvtypes.h>
 #include <arvdomtypes.h>
 #include <arvdomnode.h>
-#include <arvdomview.h>
 
 G_BEGIN_DECLS
 
