@@ -55,7 +55,7 @@ arv_dom_document_get_node_type (ArvDomNode *node)
 ArvDomElement *
 arv_dom_document_get_document_element (ArvDomDocument *self)
 {
-	g_return_val_if_fail (LSM_IS_DOM_DOCUMENT (self), NULL);
+	g_return_val_if_fail (ARV_IS_DOM_DOCUMENT (self), NULL);
 
 	return ARV_DOM_ELEMENT (arv_dom_node_get_first_child (ARV_DOM_NODE (self)));
 }
@@ -65,7 +65,7 @@ arv_dom_document_create_element (ArvDomDocument *document, const char *tag_name)
 {
 	ArvDomDocumentClass *document_class;
 
-	g_return_val_if_fail (LSM_IS_DOM_DOCUMENT (document), NULL);
+	g_return_val_if_fail (ARV_IS_DOM_DOCUMENT (document), NULL);
 
 	document_class = ARV_DOM_DOCUMENT_GET_CLASS (document);
 	if (document_class->create_element != NULL)
@@ -83,23 +83,15 @@ arv_dom_document_create_text_node_base (ArvDomDocument *document, const char *da
 ArvDomText *
 arv_dom_document_create_text_node (ArvDomDocument *document, const char *data)
 {
-	g_return_val_if_fail (LSM_IS_DOM_DOCUMENT (document), NULL);
+	g_return_val_if_fail (ARV_IS_DOM_DOCUMENT (document), NULL);
 
 	return ARV_DOM_DOCUMENT_GET_CLASS (document)->create_text_node (document, data);
-}
-
-ArvDomView *
-arv_dom_document_create_view (ArvDomDocument *self)
-{
-	g_return_val_if_fail (LSM_IS_DOM_DOCUMENT (self), NULL);
-
-	return ARV_DOM_DOCUMENT_GET_CLASS (self)->create_view (self);
 }
 
 ArvDomElement *
 arv_dom_document_get_element_by_id (ArvDomDocument *self, const char *id)
 {
-	g_return_val_if_fail (LSM_IS_DOM_DOCUMENT (self), NULL);
+	g_return_val_if_fail (ARV_IS_DOM_DOCUMENT (self), NULL);
 	g_return_val_if_fail (id != NULL, NULL);
 
 	arv_debug_dom ("[ArvDomDocument::get_element_by_id] Lookup '%s'", id);
@@ -112,7 +104,7 @@ arv_dom_document_register_element (ArvDomDocument *self, ArvDomElement *element,
 {
 	char *old_id;
 
-	g_return_if_fail (LSM_IS_DOM_DOCUMENT (self));
+	g_return_if_fail (ARV_IS_DOM_DOCUMENT (self));
 
 	old_id = g_hash_table_lookup (self->elements, element);
 	if (old_id != NULL) {
@@ -135,7 +127,7 @@ arv_dom_document_register_element (ArvDomDocument *self, ArvDomElement *element,
 const char *
 arv_dom_document_get_url (ArvDomDocument *self)
 {
-	g_return_val_if_fail (LSM_IS_DOM_DOCUMENT (self), NULL);
+	g_return_val_if_fail (ARV_IS_DOM_DOCUMENT (self), NULL);
 
 	return self->url;
 }
@@ -143,7 +135,7 @@ arv_dom_document_get_url (ArvDomDocument *self)
 void
 arv_dom_document_set_path (ArvDomDocument *self, const char *path)
 {
-	g_return_if_fail (LSM_IS_DOM_DOCUMENT (self));
+	g_return_if_fail (ARV_IS_DOM_DOCUMENT (self));
 
 	g_free (self->url);
 
@@ -158,7 +150,7 @@ arv_dom_document_set_path (ArvDomDocument *self, const char *path)
 void
 arv_dom_document_set_url (ArvDomDocument *self, const char *url)
 {
-	g_return_if_fail (LSM_IS_DOM_DOCUMENT (self));
+	g_return_if_fail (ARV_IS_DOM_DOCUMENT (self));
 	g_return_if_fail (url == NULL || arv_str_is_uri (url));
 
 	g_free (self->url);
@@ -171,7 +163,7 @@ arv_dom_document_get_href_data (ArvDomDocument *self, const char *href, gsize *s
 	GFile *file;
 	char *data = NULL;
 
-	g_return_val_if_fail (LSM_IS_DOM_DOCUMENT (self), NULL);
+	g_return_val_if_fail (ARV_IS_DOM_DOCUMENT (self), NULL);
 	g_return_val_if_fail (href != NULL, NULL);
 
 	if (strncmp (href, "data:", 5) == 0) {
@@ -240,5 +232,5 @@ arv_dom_document_class_init (ArvDomDocumentClass *klass)
 	klass->create_text_node = arv_dom_document_create_text_node_base;
 }
 
-G_DEFINE_ABSTRACT_TYPE (ArvDomDocument, arv_dom_document, LSM_TYPE_DOM_NODE)
+G_DEFINE_ABSTRACT_TYPE (ArvDomDocument, arv_dom_document, ARV_TYPE_DOM_NODE)
 

@@ -49,6 +49,7 @@
 
 static GObjectClass *parent_class = NULL;
 
+#if 0
 static ArvGcNode *
 arv_gc_create_node (ArvGc *genicam, const char *type)
 {
@@ -293,6 +294,7 @@ arv_gc_parse_xml (ArvGc *genicam, const char *xml, size_t size)
 
 	xmlSAXUserParseMemory (&sax_handler, &state, xml, size);
 }
+#endif
 
 /**
  * arv_gc_get_node:
@@ -424,7 +426,8 @@ arv_gc_new (ArvDevice *device, const void *xml, size_t size)
 	g_return_val_if_fail (genicam != NULL, NULL);
 	genicam->device = device;
 
-	arv_gc_parse_xml (genicam, (char *) xml, size);
+	/* FIXME */
+/*        arv_gc_parse_xml (genicam, (char *) xml, size);*/
 
 	return genicam;
 }
@@ -455,4 +458,4 @@ arv_gc_class_init (ArvGcClass *node_class)
 	object_class->finalize = arv_gc_finalize;
 }
 
-G_DEFINE_TYPE (ArvGc, arv_gc, G_TYPE_OBJECT)
+G_DEFINE_TYPE (ArvGc, arv_gc, ARV_TYPE_DOM_DOCUMENT)

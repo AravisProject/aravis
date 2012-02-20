@@ -28,12 +28,12 @@
 
 G_BEGIN_DECLS
 
-#define LSM_TYPE_DOM_CHARACTER_DATA             (arv_dom_character_data_get_type ())
-#define ARV_DOM_CHARACTER_DATA(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), LSM_TYPE_DOM_CHARACTER_DATA, ArvDomCharacterData))
-#define ARV_DOM_CHARACTER_DATA_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), LSM_TYPE_DOM_CHARACTER_DATA, ArvDomNodeClass))
-#define LSM_IS_DOM_CHARACTER_DATA(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), LSM_TYPE_DOM_CHARACTER_DATA))
-#define LSM_IS_DOM_CHARACTER_DATA_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), LSM_TYPE_DOM_CHARACTER_DATA))
-#define ARV_DOM_CHARACTER_DATA_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), LSM_TYPE_DOM_CHARACTER_DATA, ArvDomCharacterDataClass))
+#define ARV_TYPE_DOM_CHARACTER_DATA             (arv_dom_character_data_get_type ())
+#define ARV_DOM_CHARACTER_DATA(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_DOM_CHARACTER_DATA, ArvDomCharacterData))
+#define ARV_DOM_CHARACTER_DATA_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_DOM_CHARACTER_DATA, ArvDomNodeClass))
+#define ARV_IS_DOM_CHARACTER_DATA(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_DOM_CHARACTER_DATA))
+#define ARV_IS_DOM_CHARACTER_DATA_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_DOM_CHARACTER_DATA))
+#define ARV_DOM_CHARACTER_DATA_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_DOM_CHARACTER_DATA, ArvDomCharacterDataClass))
 
 typedef struct _ArvDomCharacterDataClass ArvDomCharacterDataClass;
 

@@ -98,12 +98,12 @@ arv_dom_parser_start_element(void *user_data,
 		state->document = arv_dom_implementation_create_document (NULL, (char *) name);
 		state->current_node = ARV_DOM_NODE (state->document);
 
-		g_return_if_fail (LSM_IS_DOM_DOCUMENT (state->document));
+		g_return_if_fail (ARV_IS_DOM_DOCUMENT (state->document));
 	}
 
 	node = ARV_DOM_NODE (arv_dom_document_create_element (ARV_DOM_DOCUMENT (state->document), (char *) name));
 
-	if (LSM_IS_DOM_NODE (node) && arv_dom_node_append_child (state->current_node, node) != NULL) {
+	if (ARV_IS_DOM_NODE (node) && arv_dom_node_append_child (state->current_node, node) != NULL) {
 		if (attrs != NULL)
 			for (i = 0; attrs[i] != NULL && attrs[i+1] != NULL; i += 2)
 				arv_dom_element_set_attribute (ARV_DOM_ELEMENT (node),
@@ -352,7 +352,7 @@ arv_dom_document_new_from_url (const char *url, GError **error)
 void
 arv_dom_document_save_to_stream (ArvDomDocument *document, GOutputStream *stream, GError **error)
 {
-	g_return_if_fail (LSM_IS_DOM_DOCUMENT (document));
+	g_return_if_fail (ARV_IS_DOM_DOCUMENT (document));
 	g_return_if_fail (G_IS_OUTPUT_STREAM (stream));
 
 	arv_dom_node_write_to_stream (ARV_DOM_NODE (document), stream, error);

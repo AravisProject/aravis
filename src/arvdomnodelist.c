@@ -29,7 +29,7 @@
 ArvDomNode *
 arv_dom_node_list_get_item (ArvDomNodeList *list, unsigned int index)
 {
-	g_return_val_if_fail (LSM_IS_DOM_NODE_LIST (list), NULL);
+	g_return_val_if_fail (ARV_IS_DOM_NODE_LIST (list), NULL);
 
 	return ARV_DOM_NODE_LIST_GET_CLASS (list)->get_item (list, index);
 }
@@ -37,7 +37,7 @@ arv_dom_node_list_get_item (ArvDomNodeList *list, unsigned int index)
 unsigned int
 arv_dom_node_list_get_length (ArvDomNodeList *list)
 {
-	g_return_val_if_fail (LSM_IS_DOM_NODE_LIST (list), 0);
+	g_return_val_if_fail (ARV_IS_DOM_NODE_LIST (list), 0);
 
 	return ARV_DOM_NODE_LIST_GET_CLASS (list)->get_length (list);
 }

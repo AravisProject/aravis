@@ -24,6 +24,7 @@
 #define ARV_GC_H
 
 #include <arvtypes.h>
+#include <arvdomdocument.h>
 
 G_BEGIN_DECLS
 
@@ -37,14 +38,14 @@ G_BEGIN_DECLS
 typedef struct _ArvGcClass ArvGcClass;
 
 struct _ArvGc {
-	GObject	object;
+	ArvDomDocument base;
 
 	GHashTable *nodes;
 	ArvDevice *device;
 };
 
 struct _ArvGcClass {
-	GObjectClass parent_class;
+	ArvDomDocumentClass parent_class;
 };
 
 GType arv_gc_get_type (void);

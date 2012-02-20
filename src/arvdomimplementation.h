@@ -24,7 +24,7 @@
 #ifndef ARV_DOM_IMPLEMENTATION_H
 #define ARV_DOM_IMPLEMENTATION_H
 
-#include <arvdomtypes.h>
+#include <arvtypes.h>
 #include <arvdomdocument.h>
 
 G_BEGIN_DECLS

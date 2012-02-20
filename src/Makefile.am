@@ -86,8 +86,6 @@ ARAVIS_HDRS = 					\
 	arvdebug.h				\
 	arvsystem.h				\
 	arvevaluator.h				\
-	arvdom.h				\
-	arvdomtypes.h				\
 	arvdomnode.h				\
 	arvdomnodelist.h			\
 	arvdomnamednodemap.h			\

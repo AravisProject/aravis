@@ -29,7 +29,7 @@
 ArvDomNode *
 arv_dom_named_node_map_get_named_item (ArvDomNamedNodeMap *map, const char *name)
 {
-	g_return_val_if_fail (LSM_IS_DOM_NAMED_NODE_MAP (map), NULL);
+	g_return_val_if_fail (ARV_IS_DOM_NAMED_NODE_MAP (map), NULL);
 
 	return ARV_DOM_NAMED_NODE_MAP_GET_CLASS (map)->get (map, name);
 }
@@ -37,7 +37,7 @@ arv_dom_named_node_map_get_named_item (ArvDomNamedNodeMap *map, const char *name
 ArvDomNode *
 arv_dom_named_node_map_set_named_item (ArvDomNamedNodeMap *map, ArvDomNode *node)
 {
-	g_return_val_if_fail (LSM_IS_DOM_NAMED_NODE_MAP (map), NULL);
+	g_return_val_if_fail (ARV_IS_DOM_NAMED_NODE_MAP (map), NULL);
 
 	return ARV_DOM_NAMED_NODE_MAP_GET_CLASS (map)->set (map, node);
 }
@@ -45,7 +45,7 @@ arv_dom_named_node_map_set_named_item (ArvDomNamedNodeMap *map, ArvDomNode *node
 ArvDomNode *
 arv_dom_named_node_map_remove_named_item (ArvDomNamedNodeMap *map, const char *name)
 {
-	g_return_val_if_fail (LSM_IS_DOM_NAMED_NODE_MAP (map), NULL);
+	g_return_val_if_fail (ARV_IS_DOM_NAMED_NODE_MAP (map), NULL);
 
 	return ARV_DOM_NAMED_NODE_MAP_GET_CLASS (map)->remove (map, name);
 }
@@ -53,7 +53,7 @@ arv_dom_named_node_map_remove_named_item (ArvDomNamedNodeMap *map, const char *n
 ArvDomNode *
 arv_dom_named_node_map_get_item (ArvDomNamedNodeMap *map, unsigned int index)
 {
-	g_return_val_if_fail (LSM_IS_DOM_NAMED_NODE_MAP (map), NULL);
+	g_return_val_if_fail (ARV_IS_DOM_NAMED_NODE_MAP (map), NULL);
 
 	return ARV_DOM_NAMED_NODE_MAP_GET_CLASS (map)->get_item (map, index);
 }
@@ -61,7 +61,7 @@ arv_dom_named_node_map_get_item (ArvDomNamedNodeMap *map, unsigned int index)
 unsigned int
 arv_dom_named_node_map_get_length (ArvDomNamedNodeMap *map)
 {
-	g_return_val_if_fail (LSM_IS_DOM_NAMED_NODE_MAP (map), 0);
+	g_return_val_if_fail (ARV_IS_DOM_NAMED_NODE_MAP (map), 0);
 
 	return ARV_DOM_NAMED_NODE_MAP_GET_CLASS (map)->get_length (map);
 }

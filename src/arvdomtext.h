@@ -28,12 +28,12 @@
 
 G_BEGIN_DECLS
 
-#define LSM_TYPE_DOM_TEXT             (arv_dom_text_get_type ())
-#define ARV_DOM_TEXT(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), LSM_TYPE_DOM_TEXT, ArvDomText))
-#define ARV_DOM_TEXT_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), LSM_TYPE_DOM_TEXT, ArvDomTextClass))
-#define LSM_IS_DOM_TEXT(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), LSM_TYPE_DOM_TEXT))
-#define LSM_IS_DOM_TEXT_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), LSM_TYPE_DOM_TEXT))
-#define ARV_DOM_TEXT_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), LSM_TYPE_DOM_TEXT, ArvDomTextClass))
+#define ARV_TYPE_DOM_TEXT             (arv_dom_text_get_type ())
+#define ARV_DOM_TEXT(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_DOM_TEXT, ArvDomText))
+#define ARV_DOM_TEXT_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_DOM_TEXT, ArvDomTextClass))
+#define ARV_IS_DOM_TEXT(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_DOM_TEXT))
+#define ARV_IS_DOM_TEXT_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_DOM_TEXT))
+#define ARV_DOM_TEXT_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_DOM_TEXT, ArvDomTextClass))
 
 typedef struct _ArvDomTextClass ArvDomTextClass;
 

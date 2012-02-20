@@ -24,7 +24,7 @@
 #ifndef ARV_DOM_NODE_H
 #define ARV_DOM_NODE_H
 
-#include <arvdomtypes.h>
+#include <arvtypes.h>
 #include <gio/gio.h>
 
 G_BEGIN_DECLS
@@ -44,12 +44,12 @@ typedef enum  {
 	ARV_DOM_NODE_TYPE_NOTATION_NODE
 } ArvDomNodeType;
 
-#define LSM_TYPE_DOM_NODE             (arv_dom_node_get_type ())
-#define ARV_DOM_NODE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), LSM_TYPE_DOM_NODE, ArvDomNode))
-#define ARV_DOM_NODE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), LSM_TYPE_DOM_NODE, ArvDomNodeClass))
-#define LSM_IS_DOM_NODE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), LSM_TYPE_DOM_NODE))
-#define LSM_IS_DOM_NODE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), LSM_TYPE_DOM_NODE))
-#define ARV_DOM_NODE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), LSM_TYPE_DOM_NODE, ArvDomNodeClass))
+#define ARV_TYPE_DOM_NODE             (arv_dom_node_get_type ())
+#define ARV_DOM_NODE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_DOM_NODE, ArvDomNode))
+#define ARV_DOM_NODE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_DOM_NODE, ArvDomNodeClass))
+#define ARV_IS_DOM_NODE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_DOM_NODE))
+#define ARV_IS_DOM_NODE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_DOM_NODE))
+#define ARV_DOM_NODE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_DOM_NODE, ArvDomNodeClass))
 
 typedef struct _ArvDomNodeClass ArvDomNodeClass;
 

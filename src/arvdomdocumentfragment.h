@@ -24,17 +24,17 @@
 #ifndef ARV_DOM_DOCUMENT_FRAGMENT_H
 #define ARV_DOM_DOCUMENT_FRAGMENT_H
 
-#include <arvdom.h>
+#include <arvtypes.h>
 #include <arvdomnode.h>
 
 G_BEGIN_DECLS
 
-#define LSM_TYPE_DOM_DOCUMENT_FRAGMENT             (arv_dom_document_fragment_get_type ())
-#define ARV_DOM_DOCUMENT_FRAGMENT(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), LSM_TYPE_DOM_DOCUMENT_FRAGMENT, ArvDomDocumentFragment))
-#define ARV_DOM_DOCUMENT_FRAGMENT_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), LSM_TYPE_DOM_DOCUMENT_FRAGMENT, ArvDomDocumentFragmentClass))
-#define LSM_IS_DOM_DOCUMENT_FRAGMENT(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), LSM_TYPE_DOM_DOCUMENT_FRAGMENT))
-#define LSM_IS_DOM_DOCUMENT_FRAGMENT_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), LSM_TYPE_DOM_DOCUMENT_FRAGMENT))
-#define ARV_DOM_DOCUMENT_FRAGMENT_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), LSM_TYPE_DOM_DOCUMENT_FRAGMENT, ArvDomDocumentFragmentClass))
+#define ARV_TYPE_DOM_DOCUMENT_FRAGMENT             (arv_dom_document_fragment_get_type ())
+#define ARV_DOM_DOCUMENT_FRAGMENT(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_DOM_DOCUMENT_FRAGMENT, ArvDomDocumentFragment))
+#define ARV_DOM_DOCUMENT_FRAGMENT_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_DOM_DOCUMENT_FRAGMENT, ArvDomDocumentFragmentClass))
+#define ARV_IS_DOM_DOCUMENT_FRAGMENT(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_DOM_DOCUMENT_FRAGMENT))
+#define ARV_IS_DOM_DOCUMENT_FRAGMENT_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_DOM_DOCUMENT_FRAGMENT))
+#define ARV_DOM_DOCUMENT_FRAGMENT_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_DOM_DOCUMENT_FRAGMENT, ArvDomDocumentFragmentClass))
 
 typedef struct _ArvDomDocumentFragmentClass ArvDomDocumentFragmentClass;
 

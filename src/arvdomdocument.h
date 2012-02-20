@@ -25,17 +25,16 @@
 #define ARV_DOM_DOCUMENT_H
 
 #include <arvtypes.h>
-#include <arvdomtypes.h>
 #include <arvdomnode.h>
 
 G_BEGIN_DECLS
 
-#define LSM_TYPE_DOM_DOCUMENT             (arv_dom_document_get_type ())
-#define ARV_DOM_DOCUMENT(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), LSM_TYPE_DOM_DOCUMENT, ArvDomDocument))
-#define ARV_DOM_DOCUMENT_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), LSM_TYPE_DOM_DOCUMENT, ArvDomDocumentClass))
-#define LSM_IS_DOM_DOCUMENT(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), LSM_TYPE_DOM_DOCUMENT))
-#define LSM_IS_DOM_DOCUMENT_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), LSM_TYPE_DOM_DOCUMENT))
-#define ARV_DOM_DOCUMENT_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), LSM_TYPE_DOM_DOCUMENT, ArvDomDocumentClass))
+#define ARV_TYPE_DOM_DOCUMENT             (arv_dom_document_get_type ())
+#define ARV_DOM_DOCUMENT(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_DOM_DOCUMENT, ArvDomDocument))
+#define ARV_DOM_DOCUMENT_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_DOM_DOCUMENT, ArvDomDocumentClass))
+#define ARV_IS_DOM_DOCUMENT(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_DOM_DOCUMENT))
+#define ARV_IS_DOM_DOCUMENT_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_DOM_DOCUMENT))
+#define ARV_DOM_DOCUMENT_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_DOM_DOCUMENT, ArvDomDocumentClass))
 
 typedef struct _ArvDomDocumentClass ArvDomDocumentClass;
 
@@ -55,8 +54,6 @@ struct _ArvDomDocumentClass {
 	ArvDomElement *	(*get_document_element) (ArvDomDocument* self);
 	ArvDomElement *	(*create_element) 	(ArvDomDocument* self, const char *tag_name);
 	ArvDomText * 	(*create_text_node) 	(ArvDomDocument* self, const char *data);
-
-	ArvDomView*	(*create_view) 		(ArvDomDocument *self);
 };
 
 GType arv_dom_document_get_type (void);
@@ -67,8 +64,6 @@ ArvDomText* 	arv_dom_document_create_text_node 	(ArvDomDocument* self, const cha
 ArvDomElement *	arv_dom_document_get_element_by_id 	(ArvDomDocument *self, const char *id);
 
 void 		arv_dom_document_register_element 	(ArvDomDocument *self, ArvDomElement *element, const char *id);
-
-ArvDomView*	arv_dom_document_create_view		(ArvDomDocument *self);
 
 const char * 	arv_dom_document_get_url 		(ArvDomDocument *self);
 void		arv_dom_document_set_url		(ArvDomDocument *self, const char *url);

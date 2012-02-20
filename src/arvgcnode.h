@@ -24,6 +24,7 @@
 #define ARV_GC_NODE_H
 
 #include <arvtypes.h>
+#include <arvdomelement.h>
 
 G_BEGIN_DECLS
 
@@ -38,13 +39,13 @@ typedef struct _ArvGcNodePrivate ArvGcNodePrivate;
 typedef struct _ArvGcNodeClass ArvGcNodeClass;
 
 struct _ArvGcNode {
-	GObject	object;
+	ArvDomElement	base;
 
 	ArvGcNodePrivate *priv;
 };
 
 struct _ArvGcNodeClass {
-	GObjectClass parent_class;
+	ArvDomElementClass parent_class;
 
 	const char *	(*get_node_name)		(ArvGcNode *gc_node);
 

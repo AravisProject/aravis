@@ -390,4 +390,4 @@ arv_gc_node_class_init (ArvGcNodeClass *node_class)
 	node_class->get_value_type = NULL;
 }
 
-G_DEFINE_TYPE (ArvGcNode, arv_gc_node, G_TYPE_OBJECT)
+G_DEFINE_TYPE (ArvGcNode, arv_gc_node, ARV_TYPE_DOM_ELEMENT)

@@ -24,16 +24,16 @@
 #ifndef ARV_DOM_NODE_LIST_H
 #define ARV_DOM_NODE_LIST_H
 
-#include <arvdomtypes.h>
+#include <arvtypes.h>
 
 G_BEGIN_DECLS
 
-#define LSM_TYPE_DOM_NODE_LIST             (arv_dom_node_list_get_type ())
-#define ARV_DOM_NODE_LIST(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), LSM_TYPE_DOM_NODE_LIST, ArvDomNodeList))
-#define ARV_DOM_NODE_LIST_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), LSM_TYPE_DOM_NODE_LIST, ArvDomNodeListClass))
-#define LSM_IS_DOM_NODE_LIST(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), LSM_TYPE_DOM_NODE_LIST))
-#define LSM_IS_DOM_NODE_LIST_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), LSM_TYPE_DOM_NODE_LIST))
-#define ARV_DOM_NODE_LIST_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), LSM_TYPE_DOM_NODE_LIST, ArvDomNodeListClass))
+#define ARV_TYPE_DOM_NODE_LIST             (arv_dom_node_list_get_type ())
+#define ARV_DOM_NODE_LIST(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_DOM_NODE_LIST, ArvDomNodeList))
+#define ARV_DOM_NODE_LIST_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_DOM_NODE_LIST, ArvDomNodeListClass))
+#define ARV_IS_DOM_NODE_LIST(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_DOM_NODE_LIST))
+#define ARV_IS_DOM_NODE_LIST_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_DOM_NODE_LIST))
+#define ARV_DOM_NODE_LIST_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_DOM_NODE_LIST, ArvDomNodeListClass))
 
 typedef struct _ArvDomNodeListClass ArvDomNodeListClass;
 

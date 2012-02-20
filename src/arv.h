@@ -24,11 +24,20 @@
 #define ARV_H
 
 #include <arvtypes.h>
+
 #include <arvdebug.h>
 #include <arvmisc.h>
 #include <arvzip.h>
 #include <arvsystem.h>
 #include <arvevaluator.h>
+#include <arvdomnode.h>
+#include <arvdomnodelist.h>
+#include <arvdomdocument.h>
+#include <arvdomelement.h>
+#include <arvdomcharacterdata.h>
+#include <arvdomtext.h>
+#include <arvdomimplementation.h>
+#include <arvdomparser.h>
 #include <arvcamera.h>
 #include <arvgc.h>
 #include <arvgcnode.h>

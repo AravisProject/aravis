@@ -24,16 +24,16 @@
 #ifndef ARV_DOM_NAMED_NODE_MAP_H
 #define ARV_DOM_NAMED_NODE_MAP_H
 
-#include <arvdomtypes.h>
+#include <arvtypes.h>
 
 G_BEGIN_DECLS
 
-#define LSM_TYPE_DOM_NAMED_NODE_MAP             (arv_dom_named_node_map_get_type ())
-#define ARV_DOM_NAMED_NODE_MAP(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), LSM_TYPE_DOM_NAMED_NODE_MAP, ArvDomNamedNodeMap))
-#define ARV_DOM_NAMED_NODE_MAP_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), LSM_TYPE_DOM_NAMED_NODE_MAP, ArvDomNamedNodeMapClass))
-#define LSM_IS_DOM_NAMED_NODE_MAP(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), LSM_TYPE_DOM_NAMED_NODE_MAP))
-#define LSM_IS_DOM_NAMED_NODE_MAP_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), LSM_TYPE_DOM_NAMED_NODE_MAP))
-#define ARV_DOM_NAMED_NODE_MAP_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), LSM_TYPE_DOM_NAMED_NODE_MAP, ArvDomNamedNodeMapClass))
+#define ARV_TYPE_DOM_NAMED_NODE_MAP             (arv_dom_named_node_map_get_type ())
+#define ARV_DOM_NAMED_NODE_MAP(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_DOM_NAMED_NODE_MAP, ArvDomNamedNodeMap))
+#define ARV_DOM_NAMED_NODE_MAP_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_DOM_NAMED_NODE_MAP, ArvDomNamedNodeMapClass))
+#define ARV_IS_DOM_NAMED_NODE_MAP(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_DOM_NAMED_NODE_MAP))
+#define ARV_IS_DOM_NAMED_NODE_MAP_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_DOM_NAMED_NODE_MAP))
+#define ARV_DOM_NAMED_NODE_MAP_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_DOM_NAMED_NODE_MAP, ArvDomNamedNodeMapClass))
 
 typedef struct _ArvDomNamedNodeMapClass ArvDomNamedNodeMapClass;
 

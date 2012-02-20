@@ -55,7 +55,7 @@ arv_dom_text_new (const char *data)
 {
 	ArvDomNode *node;
 
-	node = g_object_new (LSM_TYPE_DOM_TEXT, NULL);
+	node = g_object_new (ARV_TYPE_DOM_TEXT, NULL);
 
 	arv_dom_character_data_set_data (ARV_DOM_CHARACTER_DATA (node), data);
 
@@ -79,4 +79,4 @@ arv_dom_text_class_init (ArvDomTextClass *klass)
 	node_class->get_node_type = arv_dom_text_get_node_type;
 }
 
-G_DEFINE_TYPE (ArvDomText, arv_dom_text, LSM_TYPE_DOM_CHARACTER_DATA)
+G_DEFINE_TYPE (ArvDomText, arv_dom_text, ARV_TYPE_DOM_CHARACTER_DATA)

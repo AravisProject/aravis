@@ -56,7 +56,7 @@ arv_dom_document_fragment_get_node_type (ArvDomNode *node)
 ArvDomDocumentFragment *
 arv_dom_document_fragment_new (void)
 {
-	return g_object_new (LSM_TYPE_DOM_DOCUMENT_FRAGMENT, NULL);
+	return g_object_new (ARV_TYPE_DOM_DOCUMENT_FRAGMENT, NULL);
 }
 
 static void
@@ -78,4 +78,4 @@ arv_dom_document_fragment_class_init (ArvDomDocumentFragmentClass *klass)
 	node_class->get_node_type = arv_dom_document_fragment_get_node_type;
 }
 
-G_DEFINE_ABSTRACT_TYPE (ArvDomDocumentFragment, arv_dom_document_fragment, LSM_TYPE_DOM_NODE)
+G_DEFINE_ABSTRACT_TYPE (ArvDomDocumentFragment, arv_dom_document_fragment, ARV_TYPE_DOM_NODE)

@@ -31,6 +31,15 @@ typedef struct _ArvCamera 		ArvCamera;
 
 typedef struct _ArvEvaluator 		ArvEvaluator;
 
+typedef struct _ArvDomNode ArvDomNode;
+typedef struct _ArvDomNodeList ArvDomNodeList;
+typedef struct _ArvDomNamedNodeMap ArvDomNamedNodeMap;
+typedef struct _ArvDomElement ArvDomElement;
+typedef struct _ArvDomDocument ArvDomDocument;
+typedef struct _ArvDomDocumentFragment ArvDomDocumentFragment;
+typedef struct _ArvDomCharacterData ArvDomCharacterData;
+typedef struct _ArvDomText ArvDomText;
+
 typedef struct _ArvGc 			ArvGc;
 
 typedef struct _ArvGcNode 		ArvGcNode;

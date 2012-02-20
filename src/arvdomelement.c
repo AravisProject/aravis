@@ -77,7 +77,7 @@ arv_dom_element_write_to_stream (ArvDomNode *self, GOutputStream *stream, GError
 const char *
 arv_dom_element_get_attribute (ArvDomElement* self, const char* name)
 {
-	g_return_val_if_fail (LSM_IS_DOM_ELEMENT (self), NULL);
+	g_return_val_if_fail (ARV_IS_DOM_ELEMENT (self), NULL);
 	g_return_val_if_fail (name != NULL, NULL);
 
 	return ARV_DOM_ELEMENT_GET_CLASS (self)->get_attribute (self, name);
@@ -86,7 +86,7 @@ arv_dom_element_get_attribute (ArvDomElement* self, const char* name)
 void
 arv_dom_element_set_attribute (ArvDomElement* self, const char* name, const char* attribute_value)
 {
-	g_return_if_fail (LSM_IS_DOM_ELEMENT (self));
+	g_return_if_fail (ARV_IS_DOM_ELEMENT (self));
 	g_return_if_fail (name != NULL);
 
 	ARV_DOM_ELEMENT_GET_CLASS (self)->set_attribute (self, name, attribute_value);
@@ -97,7 +97,7 @@ arv_dom_element_set_attribute (ArvDomElement* self, const char* name, const char
 const char *
 arv_dom_element_get_tag_name (ArvDomElement *self)
 {
-	g_return_val_if_fail (LSM_IS_DOM_ELEMENT (self), NULL);
+	g_return_val_if_fail (ARV_IS_DOM_ELEMENT (self), NULL);
 
 	return arv_dom_node_get_node_name (ARV_DOM_NODE (self));
 }
@@ -121,4 +121,4 @@ arv_dom_element_class_init (ArvDomElementClass *klass)
 	node_class->write_to_stream = arv_dom_element_write_to_stream;
 }
 
-G_DEFINE_ABSTRACT_TYPE (ArvDomElement, arv_dom_element, LSM_TYPE_DOM_NODE)
+G_DEFINE_ABSTRACT_TYPE (ArvDomElement, arv_dom_element, ARV_TYPE_DOM_NODE)
