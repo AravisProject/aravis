@@ -30,6 +30,8 @@
  */
 
 #include <arvgc.h>
+#include <arvgcpropertynode.h>
+#include <arvgcregisterdescriptionnode.h>
 #include <arvgccategory.h>
 #include <arvgcenumeration.h>
 #include <arvgcenumentry.h>
@@ -64,7 +66,7 @@ arv_gc_can_append_child (ArvDomNode *self, ArvDomNode *child)
 static ArvDomElement *
 arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 {
-	ArvGcNode *node = NULL;
+	ArvDomNode *node = NULL;
 
 	if (strcmp (tag_name, "Category") == 0)
 		node = arv_gc_category_new ();
@@ -98,6 +100,18 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 		node = arv_gc_swiss_knife_new_integer ();
 	else if (strcmp (tag_name, "Port") == 0)
 		node = arv_gc_port_new ();
+	else if (strcmp (tag_name, "RegisterDescription") == 0)
+		node = arv_gc_register_description_node_new ();
+	else if (strcmp (tag_name, "Description") == 0)
+		node = arv_gc_property_node_new_description ();
+	else if (strcmp (tag_name, "Tooltip") == 0)
+		node = arv_gc_property_node_new_tooltip ();
+	else if (strcmp (tag_name, "DisplayName") == 0)
+		node = arv_gc_property_node_new_display_name ();
+	else if (strcmp (tag_name, "pIsImplemented") == 0)
+		node = arv_gc_property_node_new_p_is_implemented ();
+	else if (strcmp (tag_name, "pIsAvailable") == 0)
+		node = arv_gc_property_node_new_p_is_available ();
 	else
 		arv_debug_dom ("[Genicam::create_element] Unknow tag (%s)", tag_name);
 

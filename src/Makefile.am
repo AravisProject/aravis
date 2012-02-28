@@ -46,6 +46,7 @@ ARAVIS_SRCS =					\
 	arvcamera.c				\
 	arvgc.c					\
 	arvgcnode.c				\
+	arvgcpropertynode.c			\
 	arvgcregisterdescriptionnode.c		\
 	arvgccategory.c				\
 	arvgcboolean.c				\
@@ -100,6 +101,7 @@ ARAVIS_HDRS = 					\
 	arvcamera.h				\
 	arvgc.h					\
 	arvgcnode.h				\
+	arvgcpropertynode.h			\
 	arvgcregisterdescriptionnode.h		\
 	arvgccategory.h				\
 	arvgcboolean.h				\
