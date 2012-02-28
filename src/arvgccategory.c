@@ -34,7 +34,7 @@ static GObjectClass *parent_class = NULL;
 /* ArvDomNode implementation */
 
 static const char *
-_get_node_name (ArvDomNode *node)
+arv_gc_category_get_node_name (ArvDomNode *node)
 {
 	return "Category";
 }
@@ -97,7 +97,7 @@ arv_gc_category_init (ArvGcCategory *gc_category)
 }
 
 static void
-_finalize (GObject *object)
+arv_gc_category_finalize (GObject *object)
 {
 	ArvGcCategory *category = ARV_GC_CATEGORY (object);
 
@@ -114,8 +114,8 @@ arv_gc_category_class_init (ArvGcCategoryClass *this_class)
 
 	parent_class = g_type_class_peek_parent (this_class);
 
-	object_class->finalize = _finalize;
-	dom_node_class->get_node_name = _get_node_name;
+	object_class->finalize = arv_gc_category_finalize;
+	dom_node_class->get_node_name = arv_gc_category_get_node_name;
 }
 
 G_DEFINE_TYPE (ArvGcCategory, arv_gc_category, ARV_TYPE_GC_NODE)
