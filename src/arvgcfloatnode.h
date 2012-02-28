@@ -54,8 +54,7 @@ struct _ArvGcFloatNodeClass {
 };
 
 GType 		arv_gc_float_node_get_type 	(void);
-
-ArvGcFeatureNode * 	arv_gc_float_node_new 	(void);
+ArvGcNode * 	arv_gc_float_node_new 		(void);
 
 G_END_DECLS
 

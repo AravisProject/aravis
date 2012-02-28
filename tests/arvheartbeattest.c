@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
 
 	    arv_camera_set_acquisition_mode(camera, ARV_ACQUISITION_MODE_CONTINUOUS);
 
-	    feature = arv_device_get_feature (device, arv_option_feature_name);
+	    feature = ARV_GC_FEATURE_NODE (arv_device_get_feature (device, arv_option_feature_name));
 
 	    arv_camera_start_acquisition (camera);
 

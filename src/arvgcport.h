@@ -45,12 +45,10 @@ struct _ArvGcPortClass {
 	ArvGcFeatureNodeClass parent_class;
 };
 
-GType arv_gc_port_get_type (void);
-
-ArvGcFeatureNode * 		arv_gc_port_new 	(void);
-
-void 			arv_gc_port_read	(ArvGcPort *port, void *buffer, guint64 address, guint64 length);
-void 			arv_gc_port_write	(ArvGcPort *port, void *buffer, guint64 address, guint64 length);
+GType 		arv_gc_port_get_type 	(void);
+ArvGcNode *	arv_gc_port_new 	(void);
+void 		arv_gc_port_read	(ArvGcPort *port, void *buffer, guint64 address, guint64 length);
+void 		arv_gc_port_write	(ArvGcPort *port, void *buffer, guint64 address, guint64 length);
 
 G_END_DECLS
 

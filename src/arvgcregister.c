@@ -68,6 +68,7 @@ arv_gc_register_get_node_name (ArvDomNode *node)
 
 /* ArvGcFeatureNode implementation */
 
+#if 0
 static void
 arv_gc_register_add_element (ArvGcFeatureNode *node, const char *name, const char *content, const char **attributes)
 {
@@ -145,6 +146,7 @@ arv_gc_register_add_element (ArvGcFeatureNode *node, const char *name, const cha
 	} else
 		ARV_GC_FEATURE_NODE_CLASS (parent_class)->add_element (node, name, content, attributes);
 }
+#endif
 
 static GType
 arv_gc_register_get_value_type (ArvGcFeatureNode *node)
@@ -207,14 +209,14 @@ _get_cache_validity (ArvGcRegister *gc_register)
 	gint modification_count;
 	gboolean is_cache_valid = gc_register->is_cache_valid;
 
-	genicam = arv_gc_feature_node_get_genicam (ARV_GC_FEATURE_NODE (gc_register));
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_register));
 
 	for (iter = gc_register->invalidators; iter != NULL; iter = iter->next) {
 		ArvGcInvalidator *invalidator = iter->data;
 
 		modification_count = invalidator->modification_count;
 		invalidator->modification_count = arv_gc_feature_node_get_modification_count
-			(arv_gc_get_node (genicam, invalidator->node));
+			(ARV_GC_FEATURE_NODE (arv_gc_get_node (genicam, invalidator->node)));
 		if (modification_count != invalidator->modification_count)
 			is_cache_valid = FALSE;
 	}
@@ -240,14 +242,14 @@ static void
 _read_cache (ArvGcRegister *gc_register)
 {
 	ArvGc *genicam;
-	ArvGcFeatureNode *port;
+	ArvGcNode *port;
 
 	if (gc_register->is_cache_valid == TRUE) {
 		arv_log_genicam ("[GcRegister::read_cache] Cache is valid");
 		return;
 	}
 
-	genicam = arv_gc_feature_node_get_genicam (ARV_GC_FEATURE_NODE (gc_register));
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_register));
 	g_return_if_fail (ARV_IS_GC (genicam));
 
 	port = arv_gc_get_node (genicam, gc_register->port_name);
@@ -271,9 +273,9 @@ static void
 _write_cache (ArvGcRegister *gc_register)
 {
 	ArvGc *genicam;
-	ArvGcFeatureNode *port;
+	ArvGcNode *port;
 
-	genicam = arv_gc_feature_node_get_genicam (ARV_GC_FEATURE_NODE (gc_register));
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_register));
 	g_return_if_fail (ARV_IS_GC (genicam));
 
 	arv_gc_feature_node_inc_modification_count (ARV_GC_FEATURE_NODE (gc_register));
@@ -336,14 +338,14 @@ arv_gc_register_get_address (ArvGcRegister *gc_register)
 	guint64 value = 0;
 
 	g_return_val_if_fail (ARV_IS_GC_REGISTER (gc_register), 0);
-	genicam = arv_gc_feature_node_get_genicam (ARV_GC_FEATURE_NODE (gc_register));
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_register));
 	g_return_val_if_fail (ARV_IS_GC (genicam), 0);
 
 	for (iter = gc_register->addresses; iter != NULL; iter = iter->next)
 		value += arv_gc_get_int64_from_value (genicam, iter->data);
 
 	if (gc_register->index != NULL) {
-		ArvGcFeatureNode *node;
+		ArvGcNode *node;
 
 		node = arv_gc_get_node (genicam, gc_register->index);
 		if (ARV_IS_GC_INTEGER (node)) {
@@ -372,13 +374,13 @@ arv_gc_register_get_length (ArvGcRegister *gc_register)
 	ArvGc *genicam;
 
 	g_return_val_if_fail (ARV_IS_GC_REGISTER (gc_register), 0);
-	genicam = arv_gc_feature_node_get_genicam (ARV_GC_FEATURE_NODE (gc_register));
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_register));
 	g_return_val_if_fail (ARV_IS_GC (genicam), 0);
 
 	return arv_gc_get_int64_from_value (genicam, &gc_register->length);
 }
 
-ArvGcFeatureNode *
+ArvGcNode *
 arv_gc_register_new (void)
 {
 	ArvGcRegister *gc_register;
@@ -387,10 +389,10 @@ arv_gc_register_new (void)
 	gc_register->type = ARV_GC_REGISTER_TYPE_REGISTER;
 	gc_register->value_type = G_TYPE_BYTE_ARRAY;
 
-	return ARV_GC_FEATURE_NODE (gc_register);
+	return ARV_GC_NODE (gc_register);
 }
 
-ArvGcFeatureNode *
+ArvGcNode *
 arv_gc_register_new_integer (void)
 {
 	ArvGcRegister *gc_register;
@@ -399,10 +401,10 @@ arv_gc_register_new_integer (void)
 	gc_register->type = ARV_GC_REGISTER_TYPE_INTEGER;
 	gc_register->value_type = G_TYPE_INT64;
 
-	return ARV_GC_FEATURE_NODE (gc_register);
+	return ARV_GC_NODE (gc_register);
 }
 
-ArvGcFeatureNode *
+ArvGcNode *
 arv_gc_register_new_masked_integer (void)
 {
 	ArvGcRegister *gc_register;
@@ -411,10 +413,10 @@ arv_gc_register_new_masked_integer (void)
 	gc_register->type = ARV_GC_REGISTER_TYPE_MASKED_INTEGER;
 	gc_register->value_type = G_TYPE_INT64;
 
-	return ARV_GC_FEATURE_NODE (gc_register);
+	return ARV_GC_NODE (gc_register);
 }
 
-ArvGcFeatureNode *
+ArvGcNode *
 arv_gc_register_new_float (void)
 {
 	ArvGcRegister *gc_register;
@@ -423,10 +425,10 @@ arv_gc_register_new_float (void)
 	gc_register->type = ARV_GC_REGISTER_TYPE_FLOAT;
 	gc_register->value_type = G_TYPE_DOUBLE;
 
-	return ARV_GC_FEATURE_NODE (gc_register);
+	return ARV_GC_NODE (gc_register);
 }
 
-ArvGcFeatureNode *
+ArvGcNode *
 arv_gc_register_new_string (void)
 {
 	ArvGcRegister *gc_register;
@@ -435,7 +437,7 @@ arv_gc_register_new_string (void)
 	gc_register->type = ARV_GC_REGISTER_TYPE_STRING;
 	gc_register->value_type = G_TYPE_STRING;
 
-	return ARV_GC_FEATURE_NODE (gc_register);
+	return ARV_GC_NODE (gc_register);
 }
 
 static void
@@ -493,7 +495,7 @@ arv_gc_register_class_init (ArvGcRegisterClass *this_class)
 
 	object_class->finalize = arv_gc_register_finalize;
 	dom_node_class->get_node_name = arv_gc_register_get_node_name;
-	gc_feature_node_class->add_element = arv_gc_register_add_element;
+/*        gc_feature_node_class->add_element = arv_gc_register_add_element;*/
 	gc_feature_node_class->get_value_type = arv_gc_register_get_value_type;
 	gc_feature_node_class->set_value_from_string = arv_gc_register_set_value_from_string;
 	gc_feature_node_class->get_value_as_string = arv_gc_register_get_value_as_string;
@@ -628,7 +630,7 @@ arv_gc_register_set_float_value (ArvGcFloat *gc_float, double v_double)
 	ArvGcRegister *gc_register = ARV_GC_REGISTER (gc_float);
 	ArvGc *genicam;
 
-	genicam = arv_gc_feature_node_get_genicam (ARV_GC_FEATURE_NODE (gc_register));
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_register));
 	g_return_if_fail (ARV_IS_GC (genicam));
 
 	_update_cache_size (gc_register, genicam);
@@ -674,7 +676,7 @@ arv_gc_register_set_string_value (ArvGcString *gc_string, const char *value)
 	ArvGcRegister *gc_register = ARV_GC_REGISTER (gc_string);
 	ArvGc *genicam;
 
-	genicam = arv_gc_feature_node_get_genicam (ARV_GC_FEATURE_NODE (gc_register));
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_register));
 	g_return_if_fail (ARV_IS_GC (genicam));
 
 	_update_cache_size (gc_register, genicam);

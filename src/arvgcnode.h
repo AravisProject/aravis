@@ -48,6 +48,8 @@ struct _ArvGcNodeClass {
 
 GType arv_gc_node_get_type (void);
 
+ArvGc * 	arv_gc_node_get_genicam			(ArvGcNode *gc_node);
+
 G_END_DECLS
 
 #endif

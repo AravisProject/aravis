@@ -24,17 +24,31 @@
 #define ARV_GC_PROPERTY_NODE_H
 
 #include <arvtypes.h>
-#include <arvdomelement.h>
+#include <arvgcnode.h>
 
 G_BEGIN_DECLS
 
 typedef enum {
-	ARV_GC_PROPERTY_NODE_TYPE_UNKNOWN,
+	ARV_GC_PROPERTY_NODE_TYPE_UNKNOWN	= 0,
+	ARV_GC_PROPERTY_NODE_TYPE_VALUE,
 	ARV_GC_PROPERTY_NODE_TYPE_DESCRIPTION,
 	ARV_GC_PROPERTY_NODE_TYPE_TOOLTIP,
 	ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_NAME,
+	ARV_GC_PROPERTY_NODE_TYPE_MINIMUM,
+	ARV_GC_PROPERTY_NODE_TYPE_MAXIMUM,
+	ARV_GC_PROPERTY_NODE_TYPE_INCREMENT,
+	ARV_GC_PROPERTY_NODE_TYPE_UNIT,
+	ARV_GC_PROPERTY_NODE_TYPE_ON_VALUE,
+	ARV_GC_PROPERTY_NODE_TYPE_OFF_VALUE,
+
+	ARV_GC_PROPERTY_NODE_TYPE_P_UNKNONW	= 1000,
+	ARV_GC_PROPERTY_NODE_TYPE_P_FEATURE,
+	ARV_GC_PROPERTY_NODE_TYPE_P_VALUE,
 	ARV_GC_PROPERTY_NODE_TYPE_P_IS_IMPLEMENTED,
-	ARV_GC_PROPERTY_NODE_TYPE_P_IS_AVAILABLE
+	ARV_GC_PROPERTY_NODE_TYPE_P_IS_AVAILABLE,
+	ARV_GC_PROPERTY_NODE_TYPE_P_MINIMUM,
+	ARV_GC_PROPERTY_NODE_TYPE_P_MAXIMUM,
+	ARV_GC_PROPERTY_NODE_TYPE_P_INCREMENT,
 } ArvGcPropertyNodeType;
 
 #define ARV_TYPE_GC_PROPERTY_NODE             (arv_gc_property_node_get_type ())
@@ -48,23 +62,31 @@ typedef struct _ArvGcPropertyNodePrivate ArvGcPropertyNodePrivate;
 typedef struct _ArvGcPropertyNodeClass ArvGcPropertyNodeClass;
 
 struct _ArvGcPropertyNode {
-	ArvDomElement	base;
+	ArvGcNode base;
 
 	ArvGcPropertyNodeType	type;
 };
 
 struct _ArvGcPropertyNodeClass {
-	ArvDomElementClass parent_class;
+	ArvGcNodeClass parent_class;
 };
 
 GType arv_gc_property_node_get_type (void);
 
-ArvGcPropertyNode * 	arv_gc_property_node_new_description 		(void);
-ArvGcPropertyNode * 	arv_gc_property_node_new_tooltip 		(void);
-ArvGcPropertyNode * 	arv_gc_property_node_new_display_name 		(void);
-ArvGcPropertyNode * 	arv_gc_property_node_new_p_is_implemented 	(void);
-ArvGcPropertyNode * 	arv_gc_property_node_new_p_is_available 	(void);
-const char * 		arv_gc_property_node_get_content 		(ArvGcPropertyNode *node);
+ArvGcNode * 	arv_gc_property_node_new_p_feature 		(void);
+ArvGcNode * 	arv_gc_property_node_new_value 			(void);
+ArvGcNode * 	arv_gc_property_node_new_p_value		(void);
+ArvGcNode * 	arv_gc_property_node_new_description 		(void);
+ArvGcNode * 	arv_gc_property_node_new_tooltip 		(void);
+ArvGcNode * 	arv_gc_property_node_new_display_name 		(void);
+ArvGcNode * 	arv_gc_property_node_new_p_is_implemented 	(void);
+ArvGcNode * 	arv_gc_property_node_new_p_is_available 	(void);
+
+const char * 		arv_gc_property_node_get_string 	(ArvGcPropertyNode *node);
+void	 		arv_gc_property_node_set_string 	(ArvGcPropertyNode *node, const char *string);
+gint64			arv_gc_property_node_get_int64		(ArvGcPropertyNode *node);
+void			arv_gc_property_node_set_int64		(ArvGcPropertyNode *node, gint64 v_int64);
+ArvGcPropertyNodeType	arv_gc_property_node_get_node_type	(ArvGcPropertyNode *node);
 
 G_END_DECLS
 

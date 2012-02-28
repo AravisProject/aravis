@@ -39,6 +39,8 @@ typedef struct _ArvGcRegisterDescriptionNodeClass ArvGcRegisterDescriptionNodeCl
 
 struct _ArvGcRegisterDescriptionNode {
 	ArvGcFeatureNode	node;
+
+	char *model_name;
 };
 
 struct _ArvGcRegisterDescriptionNodeClass {
@@ -46,6 +48,7 @@ struct _ArvGcRegisterDescriptionNodeClass {
 };
 
 GType 		arv_gc_register_description_node_get_type 	(void);
+ArvGcNode * 	arv_gc_register_description_node_new 		(void);
 
 G_END_DECLS
 

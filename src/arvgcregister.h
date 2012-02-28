@@ -98,11 +98,11 @@ struct _ArvGcRegisterClass {
 };
 
 GType 		arv_gc_register_get_type 		(void);
-ArvGcFeatureNode * 	arv_gc_register_new 			(void);
-ArvGcFeatureNode * 	arv_gc_register_new_integer 		(void);
-ArvGcFeatureNode * 	arv_gc_register_new_masked_integer 	(void);
-ArvGcFeatureNode * 	arv_gc_register_new_float	 	(void);
-ArvGcFeatureNode * 	arv_gc_register_new_string 		(void);
+ArvGcNode * 	arv_gc_register_new 			(void);
+ArvGcNode * 	arv_gc_register_new_integer 		(void);
+ArvGcNode * 	arv_gc_register_new_masked_integer 	(void);
+ArvGcNode * 	arv_gc_register_new_float	 	(void);
+ArvGcNode * 	arv_gc_register_new_string 		(void);
 void 		arv_gc_register_get			(ArvGcRegister *gc_register, void *buffer, guint64 Length);
 void 		arv_gc_register_set			(ArvGcRegister *gc_register, void *buffer, guint64 Length);
 guint64 	arv_gc_register_get_address 		(ArvGcRegister *gc_register);

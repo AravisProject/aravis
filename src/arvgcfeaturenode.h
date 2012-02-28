@@ -24,7 +24,7 @@
 #define ARV_GC_FEATURE_NODE_H
 
 #include <arvtypes.h>
-#include <arvdomelement.h>
+#include <arvgcnode.h>
 
 G_BEGIN_DECLS
 
@@ -39,45 +39,31 @@ typedef struct _ArvGcFeatureNodePrivate ArvGcFeatureNodePrivate;
 typedef struct _ArvGcFeatureNodeClass ArvGcFeatureNodeClass;
 
 struct _ArvGcFeatureNode {
-	ArvDomElement	base;
+	ArvGcNode base;
 
 	ArvGcFeatureNodePrivate *priv;
 };
 
 struct _ArvGcFeatureNodeClass {
-	ArvDomElementClass parent_class;
+	ArvGcNodeClass parent_class;
 
-	void		(*set_attribute)		(ArvGcFeatureNode *gc_feature_node, const char *name, const char *value);
-	void 		(*add_element)			(ArvGcFeatureNode *gc_feature_node, const char *name, const char *content,
-							 const char **attributes);
 	GType		(*get_value_type)		(ArvGcFeatureNode *gc_feature_node);
-	gboolean 	(*can_add_child) 		(ArvGcFeatureNode *gc_feature_node, ArvGcFeatureNode *child);
-
 	void		(*set_value_from_string)	(ArvGcFeatureNode *gc_feature_node, const char *string);
 	const char *	(*get_value_as_string)		(ArvGcFeatureNode *gc_feature_node);
 };
 
-GType arv_gc_feature_node_get_type (void);
+GType 			arv_gc_feature_node_get_type 			(void);
 
 ArvGcFeatureNode * 	arv_gc_feature_node_new 			(void);
-GType 		arv_gc_feature_node_get_value_type 		(ArvGcFeatureNode *gc_feature_node);
-void		arv_gc_feature_node_set_value_from_string	(ArvGcFeatureNode *gc_feature_node, const char *string);
-const char *	arv_gc_feature_node_get_value_as_string		(ArvGcFeatureNode *gc_feature_node);
-void		arv_gc_feature_node_set_genicam			(ArvGcFeatureNode *gc_feature_node, ArvGc *genicam);
-ArvGc * 	arv_gc_feature_node_get_genicam			(ArvGcFeatureNode *gc_feature_node);
-const char *	arv_gc_feature_node_get_name			(ArvGcFeatureNode *gc_feature_node);
-const char *	arv_gc_feature_node_get_tooltip			(ArvGcFeatureNode *gc_feature_node);
-const char *	arv_gc_feature_node_get_description		(ArvGcFeatureNode *gc_feature_node);
-gboolean	arv_gc_feature_node_is_available		(ArvGcFeatureNode *gc_feature_node);
-void		arv_gc_feature_node_set_attribute 		(ArvGcFeatureNode *gc_feature_node, const char *name, const char *value);
-void 		arv_gc_feature_node_add_element 		(ArvGcFeatureNode *gc_feature_node, const char *name, const char *content,
-							 const char **attributes);
-gboolean 	arv_gc_feature_node_can_add_child 		(ArvGcFeatureNode *gc_feature_node, ArvGcFeatureNode *child);
-void 		arv_gc_feature_node_add_child 			(ArvGcFeatureNode *gc_feature_node, ArvGcFeatureNode *child);
-const GSList *	arv_gc_feature_node_get_childs 			(ArvGcFeatureNode *gc_feature_node);
-unsigned int 	arv_gc_feature_node_get_n_childs 		(ArvGcFeatureNode *gc_feature_node);
-void 		arv_gc_feature_node_inc_modification_count 	(ArvGcFeatureNode *gc_feature_node);
-gint 		arv_gc_feature_node_get_modification_count 	(ArvGcFeatureNode *gc_feature_node);
+const char *		arv_gc_feature_node_get_name			(ArvGcFeatureNode *gc_feature_node);
+const char *		arv_gc_feature_node_get_tooltip			(ArvGcFeatureNode *gc_feature_node);
+const char *		arv_gc_feature_node_get_description		(ArvGcFeatureNode *gc_feature_node);
+gboolean		arv_gc_feature_node_is_available		(ArvGcFeatureNode *gc_feature_node);
+GType 			arv_gc_feature_node_get_value_type 		(ArvGcFeatureNode *gc_feature_node);
+void			arv_gc_feature_node_set_value_from_string	(ArvGcFeatureNode *gc_feature_node, const char *string);
+const char *		arv_gc_feature_node_get_value_as_string		(ArvGcFeatureNode *gc_feature_node);
+void 			arv_gc_feature_node_inc_modification_count 	(ArvGcFeatureNode *gc_feature_node);
+gint 			arv_gc_feature_node_get_modification_count 	(ArvGcFeatureNode *gc_feature_node);
 
 G_END_DECLS
 

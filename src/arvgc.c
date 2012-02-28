@@ -65,7 +65,7 @@ arv_gc_can_append_child (ArvDomNode *self, ArvDomNode *child)
 static ArvDomElement *
 arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 {
-	ArvDomNode *node = NULL;
+	ArvGcNode *node = NULL;
 
 	if (strcmp (tag_name, "Category") == 0)
 		node = arv_gc_category_new ();
@@ -101,6 +101,12 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 		node = arv_gc_port_new ();
 	else if (strcmp (tag_name, "RegisterDescription") == 0)
 		node = arv_gc_register_description_node_new ();
+	else if (strcmp (tag_name, "pFeature") == 0)
+		node = arv_gc_property_node_new_p_feature ();
+	else if (strcmp (tag_name, "Value") == 0)
+		node = arv_gc_property_node_new_value ();
+	else if (strcmp (tag_name, "pValue") == 0)
+		node = arv_gc_property_node_new_p_value ();
 	else if (strcmp (tag_name, "Description") == 0)
 		node = arv_gc_property_node_new_description ();
 	else if (strcmp (tag_name, "Tooltip") == 0)
@@ -117,6 +123,196 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 	return ARV_DOM_ELEMENT (node);
 }
 
+/* ArvGc implementation */
+
+/**
+ * arv_gc_get_node:
+ * @genicam: a #ArvGc object
+ * @name: node name
+ * Return value: (transfer none): a #ArvGcNode, null if not found.
+ *
+ * Retrieves a genicam node by name.
+ */
+
+ArvGcNode *
+arv_gc_get_node	(ArvGc *genicam, const char *name)
+{
+	g_return_val_if_fail (ARV_IS_GC (genicam), NULL);
+
+	return g_hash_table_lookup (genicam->nodes, name);
+}
+
+/**
+ * arv_gc_get_device:
+ * @genicam: a #ArvGc object
+ * Return value: (transfer none): a #ArvDevice.
+ *
+ * Retrieves the device handled by this genicam interface. The device is used for register access.
+ */
+
+ArvDevice *
+arv_gc_get_device (ArvGc *genicam)
+{
+	g_return_val_if_fail (ARV_IS_GC (genicam), NULL);
+
+	return genicam->device;
+}
+
+gint64
+arv_gc_get_int64_from_value (ArvGc *genicam, GValue *value)
+{
+	g_return_val_if_fail (ARV_IS_GC (genicam), 0);
+	g_return_val_if_fail (G_IS_VALUE (value), 0);
+
+	if (G_VALUE_HOLDS_INT64 (value))
+		return g_value_get_int64 (value);
+	else if (G_VALUE_HOLDS_STRING (value)) {
+		ArvGcNode *node;
+
+		node = arv_gc_get_node (genicam, g_value_get_string (value));
+		if (ARV_IS_GC_INTEGER (node))
+			return arv_gc_integer_get_value (ARV_GC_INTEGER (node));
+		else
+			arv_warning_genicam ("[Gc::set_int64_to_value] Invalid node '%s'",
+					     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (node)));
+	}
+
+	return 0;
+}
+
+void
+arv_gc_set_int64_to_value (ArvGc *genicam, GValue *value, gint64 v_int64)
+{
+	g_return_if_fail (ARV_IS_GC (genicam));
+	g_return_if_fail (G_IS_VALUE (value));
+
+	if (G_VALUE_HOLDS_INT64 (value))
+		return g_value_set_int64 (value, v_int64);
+	else if (G_VALUE_HOLDS_STRING (value)) {
+		ArvGcNode *node;
+
+		node = arv_gc_get_node (genicam, g_value_get_string (value));
+		if (ARV_IS_GC_INTEGER (node))
+			arv_gc_integer_set_value (ARV_GC_INTEGER (node), v_int64);
+		else
+			arv_warning_genicam ("[Gc::set_int64_to_value] Invalid node '%s'",
+					     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (node)));
+	}
+}
+
+double
+arv_gc_get_double_from_value (ArvGc *genicam, GValue *value)
+{
+	g_return_val_if_fail (ARV_IS_GC (genicam), 0);
+	g_return_val_if_fail (G_IS_VALUE (value), 0);
+
+	if (G_VALUE_HOLDS_DOUBLE (value))
+		return g_value_get_double (value);
+	else if (G_VALUE_HOLDS_STRING (value)) {
+		ArvGcNode *node;
+
+		node = arv_gc_get_node (genicam, g_value_get_string (value));
+		if (ARV_IS_GC_FLOAT (node))
+			return arv_gc_float_get_value (ARV_GC_FLOAT (node));
+		else
+			arv_warning_genicam ("[Gc::set_double_to_value] Invalid node '%s'",
+					     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (node)));
+	}
+
+	return 0.0;
+}
+
+void
+arv_gc_set_double_to_value (ArvGc *genicam, GValue *value, double v_double)
+{
+	g_return_if_fail (ARV_IS_GC (genicam));
+	g_return_if_fail (G_IS_VALUE (value));
+
+	if (G_VALUE_HOLDS_DOUBLE (value))
+		return g_value_set_double (value, v_double);
+	else if (G_VALUE_HOLDS_STRING (value)) {
+		ArvGcNode *node;
+
+		node = arv_gc_get_node (genicam, g_value_get_string (value));
+		if (ARV_IS_GC_FLOAT (node))
+			arv_gc_float_set_value (ARV_GC_FLOAT (node), v_double);
+		else
+			arv_warning_genicam ("[Gc::set_double_to_value] Invalid node '%s'",
+					     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (node)));
+	}
+}
+
+void
+arv_gc_register_feature_node (ArvGc *genicam, ArvGcFeatureNode *node)
+{
+	const char *name;
+
+	g_return_if_fail (ARV_IS_GC (genicam));
+	g_return_if_fail (ARV_IS_GC_FEATURE_NODE (node));
+
+
+	name = arv_gc_feature_node_get_name (node);
+	if (name == NULL)
+		return;
+
+	g_object_ref (node);
+
+	g_hash_table_remove (genicam->nodes, (char *) name);
+	g_hash_table_insert (genicam->nodes, (char *) name, node);
+
+	arv_log_genicam ("[Gc::register_feature_node] Register node '%s'", name);
+}
+
+ArvGc *
+arv_gc_new (ArvDevice *device, const void *xml, size_t size)
+{
+	ArvDomDocument *document;
+	ArvGc *genicam;
+
+	document = arv_dom_document_new_from_memory (xml, size, NULL);
+	if (!ARV_IS_GC (document)) {
+		if (document != NULL)
+			g_object_unref (document);
+		return NULL;
+	}
+
+	genicam = ARV_GC (document);
+	genicam->device = device;
+
+	return genicam;
+}
+
+static void
+arv_gc_init (ArvGc *genicam)
+{
+	genicam->nodes = g_hash_table_new_full (g_str_hash, g_str_equal, NULL, g_object_unref);
+}
+
+static void
+arv_gc_finalize (GObject *object)
+{
+	ArvGc *genicam = ARV_GC (object);
+
+	g_hash_table_unref (genicam->nodes);
+
+	parent_class->finalize (object);
+}
+
+static void
+arv_gc_class_init (ArvGcClass *node_class)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS (node_class);
+	ArvDomNodeClass *d_node_class = ARV_DOM_NODE_CLASS (node_class);
+	ArvDomDocumentClass *d_document_class = ARV_DOM_DOCUMENT_CLASS (node_class);
+
+	parent_class = g_type_class_peek_parent (node_class);
+
+	object_class->finalize = arv_gc_finalize;
+	d_node_class->can_append_child = arv_gc_can_append_child;
+	d_document_class->create_element = arv_gc_create_element;
+}
+
+G_DEFINE_TYPE (ArvGc, arv_gc, ARV_TYPE_DOM_DOCUMENT)
 #if 0
 static ArvGcFeatureNode *
 arv_gc_create_node (ArvGc *genicam, const char *type)
@@ -363,173 +559,3 @@ arv_gc_parse_xml (ArvGc *genicam, const char *xml, size_t size)
 	xmlSAXUserParseMemory (&sax_handler, &state, xml, size);
 }
 #endif
-
-/* ArvGc implementation */
-
-/**
- * arv_gc_get_node:
- * @genicam: a #ArvGc object
- * @name: node name
- * Return value: (transfer none): a #ArvGcFeatureNode, null if not found.
- *
- * Retrieves a genicam node by name.
- */
-
-ArvGcFeatureNode *
-arv_gc_get_node	(ArvGc *genicam, const char *name)
-{
-	g_return_val_if_fail (ARV_IS_GC (genicam), NULL);
-
-	return g_hash_table_lookup (genicam->nodes, name);
-}
-
-/**
- * arv_gc_get_device:
- * @genicam: a #ArvGc object
- * Return value: (transfer none): a #ArvDevice.
- *
- * Retrieves the device handled by this genicam interface. The device is used for register access.
- */
-
-ArvDevice *
-arv_gc_get_device (ArvGc *genicam)
-{
-	g_return_val_if_fail (ARV_IS_GC (genicam), NULL);
-
-	return genicam->device;
-}
-
-gint64
-arv_gc_get_int64_from_value (ArvGc *genicam, GValue *value)
-{
-	g_return_val_if_fail (ARV_IS_GC (genicam), 0);
-	g_return_val_if_fail (G_IS_VALUE (value), 0);
-
-	if (G_VALUE_HOLDS_INT64 (value))
-		return g_value_get_int64 (value);
-	else if (G_VALUE_HOLDS_STRING (value)) {
-		ArvGcFeatureNode *node;
-
-		node = arv_gc_get_node (genicam, g_value_get_string (value));
-		if (ARV_IS_GC_INTEGER (node))
-			return arv_gc_integer_get_value (ARV_GC_INTEGER (node));
-		else
-			arv_warning_genicam ("[Gc::set_int64_to_value] Invalid node '%s'",
-					     arv_gc_feature_node_get_name (node));
-	}
-
-	return 0;
-}
-
-void
-arv_gc_set_int64_to_value (ArvGc *genicam, GValue *value, gint64 v_int64)
-{
-	g_return_if_fail (ARV_IS_GC (genicam));
-	g_return_if_fail (G_IS_VALUE (value));
-
-	if (G_VALUE_HOLDS_INT64 (value))
-		return g_value_set_int64 (value, v_int64);
-	else if (G_VALUE_HOLDS_STRING (value)) {
-		ArvGcFeatureNode *node;
-
-		node = arv_gc_get_node (genicam, g_value_get_string (value));
-		if (ARV_IS_GC_INTEGER (node))
-			arv_gc_integer_set_value (ARV_GC_INTEGER (node), v_int64);
-		else
-			arv_warning_genicam ("[Gc::set_int64_to_value] Invalid node '%s'",
-					     arv_gc_feature_node_get_name (node));
-	}
-}
-
-double
-arv_gc_get_double_from_value (ArvGc *genicam, GValue *value)
-{
-	g_return_val_if_fail (ARV_IS_GC (genicam), 0);
-	g_return_val_if_fail (G_IS_VALUE (value), 0);
-
-	if (G_VALUE_HOLDS_DOUBLE (value))
-		return g_value_get_double (value);
-	else if (G_VALUE_HOLDS_STRING (value)) {
-		ArvGcFeatureNode *node;
-
-		node = arv_gc_get_node (genicam, g_value_get_string (value));
-		if (ARV_IS_GC_FLOAT (node))
-			return arv_gc_float_get_value (ARV_GC_FLOAT (node));
-		else
-			arv_warning_genicam ("[Gc::set_double_to_value] Invalid node '%s'",
-					     arv_gc_feature_node_get_name (node));
-	}
-
-	return 0.0;
-}
-
-void
-arv_gc_set_double_to_value (ArvGc *genicam, GValue *value, double v_double)
-{
-	g_return_if_fail (ARV_IS_GC (genicam));
-	g_return_if_fail (G_IS_VALUE (value));
-
-	if (G_VALUE_HOLDS_DOUBLE (value))
-		return g_value_set_double (value, v_double);
-	else if (G_VALUE_HOLDS_STRING (value)) {
-		ArvGcFeatureNode *node;
-
-		node = arv_gc_get_node (genicam, g_value_get_string (value));
-		if (ARV_IS_GC_FLOAT (node))
-			arv_gc_float_set_value (ARV_GC_FLOAT (node), v_double);
-		else
-			arv_warning_genicam ("[Gc::set_double_to_value] Invalid node '%s'",
-					     arv_gc_feature_node_get_name (node));
-	}
-}
-
-ArvGc *
-arv_gc_new (ArvDevice *device, const void *xml, size_t size)
-{
-	ArvDomDocument *document;
-	ArvGc *genicam;
-
-	document = arv_dom_document_new_from_memory (xml, size, NULL);
-	if (!ARV_IS_GC (document)) {
-		if (document != NULL)
-			g_object_unref (document);
-		return NULL;
-	}
-
-	genicam = ARV_GC (document);
-	genicam->device = device;
-
-	return genicam;
-}
-
-static void
-arv_gc_init (ArvGc *genicam)
-{
-	genicam->nodes = g_hash_table_new_full (g_str_hash, g_str_equal, NULL, g_object_unref);
-}
-
-static void
-arv_gc_finalize (GObject *object)
-{
-	ArvGc *genicam = ARV_GC (object);
-
-	g_hash_table_unref (genicam->nodes);
-
-	parent_class->finalize (object);
-}
-
-static void
-arv_gc_class_init (ArvGcClass *node_class)
-{
-	GObjectClass *object_class = G_OBJECT_CLASS (node_class);
-	ArvDomNodeClass *d_node_class = ARV_DOM_NODE_CLASS (node_class);
-	ArvDomDocumentClass *d_document_class = ARV_DOM_DOCUMENT_CLASS (node_class);
-
-	parent_class = g_type_class_peek_parent (node_class);
-
-	object_class->finalize = arv_gc_finalize;
-	d_node_class->can_append_child = arv_gc_can_append_child;
-	d_document_class->create_element = arv_gc_create_element;
-}
-
-G_DEFINE_TYPE (ArvGc, arv_gc, ARV_TYPE_DOM_DOCUMENT)

@@ -38,7 +38,23 @@ static GObjectClass *parent_class = NULL;
 
 /* ArvDomNode implementation */
 
+/* ArvDomElement implementation */
+
 /* ArvGcNode implementation */
+
+/**
+ * arv_gc_node_get_genicam:
+ * @gc_node: a #ArvGcNode
+ * Return value: (transfer none): the parent #ArvGc
+ *
+ * Retrieves the parent genicam document of @gc_node.
+ */
+
+ArvGc *
+arv_gc_node_get_genicam	(ArvGcNode *gc_node)
+{
+	return ARV_GC (arv_dom_node_get_owner_document (ARV_DOM_NODE (gc_node)));
+}
 
 static void
 arv_gc_node_init (ArvGcNode *gc_node)

@@ -6,7 +6,7 @@ integer_test (void)
 {
 	ArvDevice *device;
 	ArvGc *genicam;
-	ArvGcFeatureNode *node;
+	ArvGcNode *node;
 	gint64 v_int64;
 	const char *v_string;
 
@@ -22,7 +22,7 @@ integer_test (void)
 	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
 	g_assert_cmpint (v_int64, ==, 1);
 
-	v_string = arv_gc_feature_node_get_value_as_string (node);
+	v_string = arv_gc_feature_node_get_value_as_string (ARV_GC_FEATURE_NODE (node));
 	g_assert_cmpstr (v_string, ==, "1");
 
 	g_object_unref (device);
@@ -33,7 +33,7 @@ boolean_test (void)
 {
 	ArvDevice *device;
 	ArvGc *genicam;
-	ArvGcFeatureNode *node;
+	ArvGcNode *node;
 	gboolean v_boolean;
 	const char *v_string;
 
@@ -49,7 +49,7 @@ boolean_test (void)
 	v_boolean = arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node));
 	g_assert_cmpint (v_boolean, ==, TRUE);
 
-	v_string = arv_gc_feature_node_get_value_as_string (node);
+	v_string = arv_gc_feature_node_get_value_as_string (ARV_GC_FEATURE_NODE (node));
 	g_assert_cmpstr (v_string, ==, "true");
 
 	g_object_unref (device);
@@ -60,7 +60,7 @@ float_test (void)
 {
 	ArvDevice *device;
 	ArvGc *genicam;
-	ArvGcFeatureNode *node;
+	ArvGcNode *node;
 	double v_double;
 	const char *v_string;
 
@@ -76,7 +76,7 @@ float_test (void)
 	v_double = arv_gc_float_get_value (ARV_GC_FLOAT (node));
 	g_assert_cmpfloat (v_double, ==, 0.1);
 
-	v_string = arv_gc_feature_node_get_value_as_string (node);
+	v_string = arv_gc_feature_node_get_value_as_string (ARV_GC_FEATURE_NODE (node));
 	g_assert_cmpstr (v_string, ==, "0.1");
 
 	g_object_unref (device);
@@ -87,7 +87,7 @@ enumeration_test (void)
 {
 	ArvDevice *device;
 	ArvGc *genicam;
-	ArvGcFeatureNode *node;
+	ArvGcNode *node;
 	gint64 v_int64;
 	gint64 *values;
 	guint n_values;

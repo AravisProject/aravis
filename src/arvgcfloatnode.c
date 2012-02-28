@@ -44,6 +44,7 @@ arv_gc_float_node_get_node_name (ArvDomNode *node)
 
 /* ArvGcFeatureNode implementation */
 
+#if 0
 static void
 arv_gc_float_node_add_element (ArvGcFeatureNode *node, const char *name, const char *content, const char **attributes)
 {
@@ -77,6 +78,7 @@ arv_gc_float_node_add_element (ArvGcFeatureNode *node, const char *name, const c
 	} else
 		ARV_GC_FEATURE_NODE_CLASS (parent_class)->add_element (node, name, content, attributes);
 }
+#endif
 
 static GType
 arv_gc_float_node_get_value_type (ArvGcFeatureNode *node)
@@ -104,10 +106,10 @@ arv_gc_float_node_get_value_as_string (ArvGcFeatureNode *node)
 
 /* ArvGcFloatNode implementation */
 
-ArvGcFeatureNode *
+ArvGcNode *
 arv_gc_float_node_new (void)
 {
-	ArvGcFeatureNode *node;
+	ArvGcNode *node;
 
 	node = g_object_new (ARV_TYPE_GC_FLOAT_NODE, NULL);
 
@@ -156,7 +158,7 @@ arv_gc_float_node_class_init (ArvGcFloatNodeClass *this_class)
 
 	object_class->finalize = arv_gc_float_node_finalize;
 	dom_node_class->get_node_name = arv_gc_float_node_get_node_name;
-	gc_feature_node_class->add_element = arv_gc_float_node_add_element;
+/*        gc_feature_node_class->add_element = arv_gc_float_node_add_element;*/
 	gc_feature_node_class->get_value_type = arv_gc_float_node_get_value_type;
 	gc_feature_node_class->set_value_from_string = arv_gc_float_node_set_value_from_string;
 	gc_feature_node_class->get_value_as_string = arv_gc_float_node_get_value_as_string;
@@ -170,7 +172,7 @@ arv_gc_float_node_get_float_value (ArvGcFloat *gc_float)
 	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_float);
 	ArvGc *genicam;
 
-	genicam = arv_gc_feature_node_get_genicam (ARV_GC_FEATURE_NODE (gc_float));
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_float));
 	return arv_gc_get_double_from_value (genicam, &gc_float_node->value);
 }
 
@@ -180,7 +182,7 @@ arv_gc_float_node_set_float_value (ArvGcFloat *gc_float, double value)
 	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_float);
 	ArvGc *genicam;
 
-	genicam = arv_gc_feature_node_get_genicam (ARV_GC_FEATURE_NODE (gc_float));
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_float));
 	arv_gc_set_double_to_value (genicam, &gc_float_node->value, value);
 }
 
@@ -190,7 +192,7 @@ arv_gc_float_node_get_min (ArvGcFloat *gc_float)
 	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_float);
 	ArvGc *genicam;
 
-	genicam = arv_gc_feature_node_get_genicam (ARV_GC_FEATURE_NODE (gc_float));
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_float));
 	return arv_gc_get_double_from_value (genicam, &gc_float_node->minimum);
 }
 
@@ -200,7 +202,7 @@ arv_gc_float_node_get_max (ArvGcFloat *gc_float)
 	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_float);
 	ArvGc *genicam;
 
-	genicam = arv_gc_feature_node_get_genicam (ARV_GC_FEATURE_NODE (gc_float));
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_float));
 	return arv_gc_get_double_from_value (genicam, &gc_float_node->maximum);
 }
 
@@ -210,7 +212,7 @@ arv_gc_float_node_get_inc (ArvGcFloat *gc_float)
 	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_float);
 	ArvGc *genicam;
 
-	genicam = arv_gc_feature_node_get_genicam (ARV_GC_FEATURE_NODE (gc_float));
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_float));
 	return arv_gc_get_int64_from_value (genicam, &gc_float_node->increment);
 }
 
@@ -228,7 +230,7 @@ arv_gc_float_node_impose_min (ArvGcFloat *gc_float, double minimum)
 	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_float);
 	ArvGc *genicam;
 
-	genicam = arv_gc_feature_node_get_genicam (ARV_GC_FEATURE_NODE (gc_float));
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_float));
 	arv_gc_set_double_to_value (genicam, &gc_float_node->minimum, minimum);
 }
 
@@ -238,7 +240,7 @@ arv_gc_float_node_impose_max (ArvGcFloat *gc_float, double maximum)
 	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_float);
 	ArvGc *genicam;
 
-	genicam = arv_gc_feature_node_get_genicam (ARV_GC_FEATURE_NODE (gc_float));
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_float));
 	arv_gc_set_double_to_value (genicam, &gc_float_node->minimum, maximum);
 }
 

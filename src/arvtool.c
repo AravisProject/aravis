@@ -6,7 +6,7 @@
 static void
 arv_tool_list_features (ArvGc *genicam, const char *feature, gboolean show_description, int level)
 {
-	ArvGcFeatureNode *node;
+	ArvGcNode *node;
 
 	node = arv_gc_get_node (genicam, feature);
 	if (ARV_IS_GC_NODE (node)) {
@@ -20,7 +20,7 @@ arv_tool_list_features (ArvGc *genicam, const char *feature, gboolean show_descr
 		if (show_description) {
 			const char *description;
 
-			description = arv_gc_feature_node_get_description (node);
+			description = arv_gc_feature_node_get_description (ARV_GC_FEATURE_NODE (node));
 			if (description)
 				printf ("%s\n", description);
 		}
@@ -34,6 +34,7 @@ arv_tool_list_features (ArvGc *genicam, const char *feature, gboolean show_descr
 			for (iter = features; iter != NULL; iter = iter->next)
 				arv_tool_list_features (genicam, iter->data, show_description, level + 1);
 		} else if (ARV_IS_GC_ENUMERATION (node)) {
+#if 0
 			const GSList *childs;
 			const GSList *iter;
 
@@ -46,6 +47,7 @@ arv_tool_list_features (ArvGc *genicam, const char *feature, gboolean show_descr
 					arv_dom_node_get_node_name (iter->data),
 					arv_gc_feature_node_get_name (iter->data));
 			}
+#endif
 		}
 	}
 }
@@ -84,7 +86,7 @@ arv_tool_execute_command (int argc, char **argv, const char *device_name)
 			int i;
 
 			for (i = 2; i < argc; i++) {
-				ArvGcFeatureNode *node;
+				ArvGcNode *node;
 
 				node = arv_gc_get_node (genicam, argv[i]);
 				if (ARV_IS_GC_NODE (node)) {
@@ -92,7 +94,7 @@ arv_tool_execute_command (int argc, char **argv, const char *device_name)
 
 					printf ("%s: '%s'\n", arv_dom_node_get_node_name (ARV_DOM_NODE (node)), argv[i]);
 
-					description = arv_gc_feature_node_get_description (node);
+					description = arv_gc_feature_node_get_description (ARV_GC_FEATURE_NODE (node));
 					if (description)
 						printf ("%s\n", description);
 				}
@@ -102,7 +104,7 @@ arv_tool_execute_command (int argc, char **argv, const char *device_name)
 		int i;
 
 		for (i = 2; i < argc; i++) {
-			ArvGcFeatureNode *feature;
+			ArvGcNode *feature;
 			char **tokens;
 
 			tokens = g_strsplit (argv[i], "=", 2);
@@ -133,10 +135,11 @@ arv_tool_execute_command (int argc, char **argv, const char *device_name)
 						printf ("%s executed\n", tokens[0]);
 					} else {
 						if (tokens[1] != NULL)
-							arv_gc_feature_node_set_value_from_string (feature, tokens[1]);
+							arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (feature),
+												   tokens[1]);
 
 						printf ("%s = %s\n", tokens[0],
-							arv_gc_feature_node_get_value_as_string (feature));
+							arv_gc_feature_node_get_value_as_string (ARV_GC_FEATURE_NODE (feature)));
 					}
 				}
 			g_strfreev (tokens);

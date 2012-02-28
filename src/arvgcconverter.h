@@ -52,9 +52,8 @@ struct _ArvGcConverterClass {
 };
 
 GType 		arv_gc_converter_get_type 	(void);
-
-ArvGcFeatureNode * 	arv_gc_converter_new 		(void);
-ArvGcFeatureNode * 	arv_gc_converter_new_integer 	(void);
+ArvGcNode * 	arv_gc_converter_new 		(void);
+ArvGcNode * 	arv_gc_converter_new_integer 	(void);
 
 G_END_DECLS
 

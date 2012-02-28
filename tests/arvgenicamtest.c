@@ -48,7 +48,7 @@ main (int argc, char **argv)
 		g_file_get_contents (arv_option_filenames[i], &xml, &size, NULL);
 
 		if (xml != NULL) {
-			ArvGcFeatureNode *node;
+			ArvGcNode *node;
 
 			g_print ("Loading '%s'.\n", arv_option_filenames[i]);
 

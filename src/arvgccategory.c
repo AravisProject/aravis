@@ -43,7 +43,8 @@ arv_gc_category_get_node_name (ArvDomNode *node)
 static gboolean
 arv_gc_category_can_append_child (ArvDomNode *parent, ArvDomNode *child)
 {
-	return ARV_IS_GC_PROPERTY_NODE (child);
+	return ARV_IS_GC_PROPERTY_NODE (child) &&
+		arv_gc_property_node_get_node_type (ARV_GC_PROPERTY_NODE (child)) == ARV_GC_PROPERTY_NODE_TYPE_P_FEATURE;
 }
 
 /* ArvGcCategory implementation */
@@ -80,17 +81,16 @@ arv_gc_category_get_features (ArvGcCategory *category)
 	for (iter = arv_dom_node_get_first_child (ARV_DOM_NODE (category));
 	     iter != NULL;
 	     iter = arv_dom_node_get_next_sibling (iter))
-		if (g_strcmp0 (arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (iter)), "pFeature") == 0)
-			category->features = g_slist_append (category->features,
-							     g_strdup (arv_gc_property_node_get_content (ARV_GC_PROPERTY_NODE (iter))));
+		category->features = g_slist_append (category->features,
+						     g_strdup (arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (iter))));
 
 	return category->features;
 }
 
-ArvGcFeatureNode *
+ArvGcNode *
 arv_gc_category_new (void)
 {
-	ArvGcFeatureNode *node;
+	ArvGcNode *node;
 
 	node = g_object_new (ARV_TYPE_GC_CATEGORY, NULL);
 

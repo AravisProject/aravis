@@ -347,7 +347,7 @@ arv_camera_get_pixel_format (ArvCamera *camera)
 gint64 *
 arv_camera_get_available_pixel_formats (ArvCamera *camera, guint *n_pixel_formats)
 {
-	ArvGcFeatureNode *enumeration;
+	ArvGcNode *enumeration;
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 

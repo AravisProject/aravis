@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2012 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,6 +25,7 @@
 
 #include <arvtypes.h>
 #include <arvgcfeaturenode.h>
+#include <arvgcpropertynode.h>
 
 G_BEGIN_DECLS
 
@@ -40,13 +41,11 @@ typedef struct _ArvGcIntegerNodeClass ArvGcIntegerNodeClass;
 struct _ArvGcIntegerNode {
 	ArvGcFeatureNode	node;
 
-	GValue value;
-	GValue minimum;
-	GValue maximum;
-	GValue increment;
-	char *unit;
-
-	char v_string[G_ASCII_DTOSTR_BUF_SIZE];
+	ArvGcPropertyNode *value;
+	ArvGcPropertyNode *minimum;
+	ArvGcPropertyNode *maximum;
+	ArvGcPropertyNode *increment;
+	ArvGcPropertyNode *unit;
 };
 
 struct _ArvGcIntegerNodeClass {
@@ -54,8 +53,7 @@ struct _ArvGcIntegerNodeClass {
 };
 
 GType 		arv_gc_integer_node_get_type 	(void);
-
-ArvGcFeatureNode * 	arv_gc_integer_node_new 	(void);
+ArvGcNode * 	arv_gc_integer_node_new 	(void);
 
 G_END_DECLS
 

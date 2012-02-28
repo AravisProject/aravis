@@ -48,9 +48,8 @@ struct _ArvGcEnumEntryClass {
 };
 
 GType 		arv_gc_enum_entry_get_type 	(void);
-
-ArvGcFeatureNode * 	arv_gc_enum_entry_new 			(void);
-gint64		arv_gc_enum_entry_get_value		(ArvGcEnumEntry *entry);
+ArvGcNode * 	arv_gc_enum_entry_new 		(void);
+gint64		arv_gc_enum_entry_get_value	(ArvGcEnumEntry *entry);
 
 G_END_DECLS
 
