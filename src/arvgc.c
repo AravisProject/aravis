@@ -119,10 +119,10 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 }
 
 #if 0
-static ArvGcNode *
+static ArvGcFeatureNode *
 arv_gc_create_node (ArvGc *genicam, const char *type)
 {
-	ArvGcNode *node = NULL;
+	ArvGcFeatureNode *node = NULL;
 
 	g_return_val_if_fail (type != NULL, NULL);
 
@@ -160,7 +160,7 @@ arv_gc_create_node (ArvGc *genicam, const char *type)
 		node = arv_gc_port_new ();
 
 	if (node != NULL) {
-		arv_gc_node_set_genicam (node, genicam);
+		arv_gc_feature_node_set_genicam (node, genicam);
 		arv_log_genicam ("[Gc::create_node] Node '%s' created", type);
 	}
 
@@ -170,8 +170,8 @@ arv_gc_create_node (ArvGc *genicam, const char *type)
 typedef struct {
 	int level;
 	ArvGc *genicam;
-	ArvGcNode *level_2_node;
-	ArvGcNode *level_3_node;
+	ArvGcFeatureNode *level_2_node;
+	ArvGcFeatureNode *level_3_node;
 
 	const char *current_element;
 	char **current_attrs;
@@ -206,7 +206,7 @@ arv_gc_parser_start_element(void *user_data,
 			    const xmlChar **attrs)
 {
 	ArvGcParserState *state = user_data;
-	ArvGcNode *node;
+	ArvGcFeatureNode *node;
 
 	/* Just ignore Group elements */
 	if (g_strcmp0 ((char *) name, "Group") == 0)
@@ -218,7 +218,7 @@ arv_gc_parser_start_element(void *user_data,
 	if (node != NULL) {
 		int i;
 		for (i = 0; attrs[i] != NULL && attrs[i+1] != NULL; i += 2)
-			arv_gc_node_set_attribute (node, (char *) attrs[i], (char *) attrs[i+1]);
+			arv_gc_feature_node_set_attribute (node, (char *) attrs[i], (char *) attrs[i+1]);
 	}
 
 	if (state->level == 2) {
@@ -256,11 +256,11 @@ arv_gc_parser_start_element(void *user_data,
 }
 
 static void
-arv_gc_parser_insert_node (ArvGcParserState *state, ArvGcNode *node)
+arv_gc_parser_insert_node (ArvGcParserState *state, ArvGcFeatureNode *node)
 {
 	const char *node_name;
 
-	node_name = arv_gc_node_get_name (node);
+	node_name = arv_gc_feature_node_get_name (node);
 	if (node_name != NULL) {
 		g_hash_table_insert (state->genicam->nodes, (char *) node_name, node);
 		arv_log_genicam ("[GcParser::end_element] Insert node '%s'", node_name);
@@ -286,16 +286,16 @@ arv_gc_parser_end_element (void *user_data,
 	} else if (state->level > 2) {
 		if (state->level == 3 && state->level_3_node != NULL) {
 			if (state->level_2_node != NULL &&
-			    arv_gc_node_can_add_child (state->level_2_node, state->level_3_node))
-				arv_gc_node_add_child (state->level_2_node, state->level_3_node);
+			    arv_gc_feature_node_can_add_child (state->level_2_node, state->level_3_node))
+				arv_gc_feature_node_add_child (state->level_2_node, state->level_3_node);
 			else
 				g_object_unref (state->level_3_node);
 			state->level_3_node = NULL;
 		} else if (state->level == 3 && state->level_2_node != NULL) {
-			arv_gc_node_add_element (state->level_2_node, state->current_element,
+			arv_gc_feature_node_add_element (state->level_2_node, state->current_element,
 						 state->current_content->str, (const char **) state->current_attrs);
 		} else if (state->level == 4 && state->level_3_node != NULL) {
-			arv_gc_node_add_element (state->level_3_node, state->current_element,
+			arv_gc_feature_node_add_element (state->level_3_node, state->current_element,
 						 state->current_content->str, (const char **) state->current_attrs);
 		}
 	}
@@ -371,12 +371,12 @@ arv_gc_parse_xml (ArvGc *genicam, const char *xml, size_t size)
  * arv_gc_get_node:
  * @genicam: a #ArvGc object
  * @name: node name
- * Return value: (transfer none): a #ArvGcNode, null if not found.
+ * Return value: (transfer none): a #ArvGcFeatureNode, null if not found.
  *
  * Retrieves a genicam node by name.
  */
 
-ArvGcNode *
+ArvGcFeatureNode *
 arv_gc_get_node	(ArvGc *genicam, const char *name)
 {
 	g_return_val_if_fail (ARV_IS_GC (genicam), NULL);
@@ -409,14 +409,14 @@ arv_gc_get_int64_from_value (ArvGc *genicam, GValue *value)
 	if (G_VALUE_HOLDS_INT64 (value))
 		return g_value_get_int64 (value);
 	else if (G_VALUE_HOLDS_STRING (value)) {
-		ArvGcNode *node;
+		ArvGcFeatureNode *node;
 
 		node = arv_gc_get_node (genicam, g_value_get_string (value));
 		if (ARV_IS_GC_INTEGER (node))
 			return arv_gc_integer_get_value (ARV_GC_INTEGER (node));
 		else
 			arv_warning_genicam ("[Gc::set_int64_to_value] Invalid node '%s'",
-					     arv_gc_node_get_name (node));
+					     arv_gc_feature_node_get_name (node));
 	}
 
 	return 0;
@@ -431,14 +431,14 @@ arv_gc_set_int64_to_value (ArvGc *genicam, GValue *value, gint64 v_int64)
 	if (G_VALUE_HOLDS_INT64 (value))
 		return g_value_set_int64 (value, v_int64);
 	else if (G_VALUE_HOLDS_STRING (value)) {
-		ArvGcNode *node;
+		ArvGcFeatureNode *node;
 
 		node = arv_gc_get_node (genicam, g_value_get_string (value));
 		if (ARV_IS_GC_INTEGER (node))
 			arv_gc_integer_set_value (ARV_GC_INTEGER (node), v_int64);
 		else
 			arv_warning_genicam ("[Gc::set_int64_to_value] Invalid node '%s'",
-					     arv_gc_node_get_name (node));
+					     arv_gc_feature_node_get_name (node));
 	}
 }
 
@@ -451,14 +451,14 @@ arv_gc_get_double_from_value (ArvGc *genicam, GValue *value)
 	if (G_VALUE_HOLDS_DOUBLE (value))
 		return g_value_get_double (value);
 	else if (G_VALUE_HOLDS_STRING (value)) {
-		ArvGcNode *node;
+		ArvGcFeatureNode *node;
 
 		node = arv_gc_get_node (genicam, g_value_get_string (value));
 		if (ARV_IS_GC_FLOAT (node))
 			return arv_gc_float_get_value (ARV_GC_FLOAT (node));
 		else
 			arv_warning_genicam ("[Gc::set_double_to_value] Invalid node '%s'",
-					     arv_gc_node_get_name (node));
+					     arv_gc_feature_node_get_name (node));
 	}
 
 	return 0.0;
@@ -473,14 +473,14 @@ arv_gc_set_double_to_value (ArvGc *genicam, GValue *value, double v_double)
 	if (G_VALUE_HOLDS_DOUBLE (value))
 		return g_value_set_double (value, v_double);
 	else if (G_VALUE_HOLDS_STRING (value)) {
-		ArvGcNode *node;
+		ArvGcFeatureNode *node;
 
 		node = arv_gc_get_node (genicam, g_value_get_string (value));
 		if (ARV_IS_GC_FLOAT (node))
 			arv_gc_float_set_value (ARV_GC_FLOAT (node), v_double);
 		else
 			arv_warning_genicam ("[Gc::set_double_to_value] Invalid node '%s'",
-					     arv_gc_node_get_name (node));
+					     arv_gc_feature_node_get_name (node));
 	}
 }
 

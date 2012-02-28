@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
     ArvDevice *device;
     ArvStream *stream;
     ArvCamera *camera;
-    ArvGcNode *feature;
+    ArvGcFeatureNode *feature;
     guint64 n_completed_buffers;
     guint64 n_failures;
     guint64 n_underruns;
@@ -126,9 +126,9 @@ int main(int argc, char *argv[])
 
 			    fprintf (stderr, "Setting %s from %s to %s\n",
 				     arv_option_feature_name,
-				     arv_gc_node_get_value_as_string (feature),
+				     arv_gc_feature_node_get_value_as_string (feature),
 				     value);
-			    arv_gc_node_set_value_from_string (feature, value);
+			    arv_gc_feature_node_set_value_from_string (feature, value);
 
 			    g_free (value);
 		    }

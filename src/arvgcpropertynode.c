@@ -21,7 +21,7 @@
  */
 
 /**
- * SECTION: arvgcnode
+ * SECTION: arvgcfeaturenode
  * @short_description: Base class for all Genicam nodes
  *
  * #ArvGcPropertyNode provides a base class for the implementation of the different

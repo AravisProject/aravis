@@ -20,7 +20,7 @@ trigger_registers_test (void)
 {
 	ArvDevice *device;
 	ArvGc *genicam;
-	ArvGcNode *node;
+	ArvGcFeatureNode *node;
 	gint64 address;
 
 	device = arv_fake_device_new ("TEST0");

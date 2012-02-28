@@ -24,7 +24,7 @@
 #define ARV_GC_ENUM_ENTRY_H
 
 #include <arvtypes.h>
-#include <arvgcnode.h>
+#include <arvgcfeaturenode.h>
 
 G_BEGIN_DECLS
 
@@ -38,18 +38,18 @@ G_BEGIN_DECLS
 typedef struct _ArvGcEnumEntryClass ArvGcEnumEntryClass;
 
 struct _ArvGcEnumEntry {
-	ArvGcNode	node;
+	ArvGcFeatureNode	node;
 
 	gint64 value;
 };
 
 struct _ArvGcEnumEntryClass {
-	ArvGcNodeClass parent_class;
+	ArvGcFeatureNodeClass parent_class;
 };
 
 GType 		arv_gc_enum_entry_get_type 	(void);
 
-ArvGcNode * 	arv_gc_enum_entry_new 			(void);
+ArvGcFeatureNode * 	arv_gc_enum_entry_new 			(void);
 gint64		arv_gc_enum_entry_get_value		(ArvGcEnumEntry *entry);
 
 G_END_DECLS

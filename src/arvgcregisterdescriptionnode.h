@@ -24,7 +24,7 @@
 #define ARV_GC_REGISTER_DESCRIPTION_NODE_H
 
 #include <arvtypes.h>
-#include <arvgcnode.h>
+#include <arvgcfeaturenode.h>
 
 G_BEGIN_DECLS
 
@@ -38,11 +38,11 @@ G_BEGIN_DECLS
 typedef struct _ArvGcRegisterDescriptionNodeClass ArvGcRegisterDescriptionNodeClass;
 
 struct _ArvGcRegisterDescriptionNode {
-	ArvGcNode	node;
+	ArvGcFeatureNode	node;
 };
 
 struct _ArvGcRegisterDescriptionNodeClass {
-	ArvGcNodeClass parent_class;
+	ArvGcFeatureNodeClass parent_class;
 };
 
 GType 		arv_gc_register_description_node_get_type 	(void);

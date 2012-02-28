@@ -73,17 +73,17 @@ arv_gc_category_get_features (ArvGcCategory *category)
 	for (iter = arv_dom_node_get_first_child (ARV_DOM_NODE (category));
 	     iter != NULL;
 	     iter = arv_dom_node_get_next_sibling (iter))
-		if (g_strcmp0 (arv_gc_node_get_name (ARV_GC_NODE (iter)), "pFeature") == 0)
+		if (g_strcmp0 (arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (iter)), "pFeature") == 0)
 			category->features = g_slist_append (category->features,
-							     g_strdup (arv_gc_node_get_content (ARV_GC_NODE (iter))));
+							     g_strdup (arv_gc_feature_node_get_content (ARV_GC_FEATURE_NODE (iter))));
 
 	return category->features;
 }
 
-ArvGcNode *
+ArvGcFeatureNode *
 arv_gc_category_new (void)
 {
-	ArvGcNode *node;
+	ArvGcFeatureNode *node;
 
 	node = g_object_new (ARV_TYPE_GC_CATEGORY, NULL);
 

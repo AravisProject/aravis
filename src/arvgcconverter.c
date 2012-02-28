@@ -25,7 +25,7 @@
  * @short_description: Class for Converter and IntConverter nodes
  */
 
-#include <arvgcnode.h>
+#include <arvgcfeaturenode.h>
 #include <arvgcconverter.h>
 #include <arvevaluator.h>
 #include <arvgcinteger.h>
@@ -55,10 +55,10 @@ arv_gc_converter_get_node_name (ArvDomNode *node)
 	return "IntConverter";
 }
 
-/* ArvGcNode implementation */
+/* ArvGcFeatureNode implementation */
 
 static void
-arv_gc_converter_add_element (ArvGcNode *node, const char *name, const char *content, const char **attributes)
+arv_gc_converter_add_element (ArvGcFeatureNode *node, const char *name, const char *content, const char **attributes)
 {
 	ArvGcConverter *gc_converter = ARV_GC_CONVERTER (node);
 
@@ -96,20 +96,20 @@ arv_gc_converter_add_element (ArvGcNode *node, const char *name, const char *con
 	} else if (strcmp (name, "Constant") == 0) {
 		g_assert_not_reached ();
 	} else
-		ARV_GC_NODE_CLASS (parent_class)->add_element (node, name, content, attributes);
+		ARV_GC_FEATURE_NODE_CLASS (parent_class)->add_element (node, name, content, attributes);
 }
 
 /* ArvGcConverter implementation */
 
 static GType
-arv_gc_converter_node_get_value_type (ArvGcNode *node)
+arv_gc_converter_node_get_value_type (ArvGcFeatureNode *node)
 {
 	ArvGcConverter *gc_converter = ARV_GC_CONVERTER (node);
 
 	return gc_converter->value_type;
 }
 
-ArvGcNode *
+ArvGcFeatureNode *
 arv_gc_converter_new (void)
 {
 	ArvGcConverter *converter;
@@ -117,10 +117,10 @@ arv_gc_converter_new (void)
 	converter = g_object_new (ARV_TYPE_GC_CONVERTER, NULL);
 	converter->value_type = G_TYPE_DOUBLE;
 
-	return ARV_GC_NODE (converter);
+	return ARV_GC_FEATURE_NODE (converter);
 }
 
-ArvGcNode *
+ArvGcFeatureNode *
 arv_gc_converter_new_integer (void)
 {
 	ArvGcConverter *converter;
@@ -128,7 +128,7 @@ arv_gc_converter_new_integer (void)
 	converter = g_object_new (ARV_TYPE_GC_CONVERTER, NULL);
 	converter->value_type = G_TYPE_INT64;
 
-	return ARV_GC_NODE (converter);
+	return ARV_GC_FEATURE_NODE (converter);
 }
 
 static void
@@ -167,14 +167,14 @@ arv_gc_converter_class_init (ArvGcConverterClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
-	ArvGcNodeClass *gc_node_class = ARV_GC_NODE_CLASS (this_class);
+	ArvGcFeatureNodeClass *gc_feature_node_class = ARV_GC_FEATURE_NODE_CLASS (this_class);
 
 	parent_class = g_type_class_peek_parent (this_class);
 
 	object_class->finalize = arv_gc_converter_finalize;
 	dom_node_class->get_node_name = arv_gc_converter_get_node_name;
-	gc_node_class->add_element = arv_gc_converter_add_element;
-	gc_node_class->get_value_type = arv_gc_converter_node_get_value_type;
+	gc_feature_node_class->add_element = arv_gc_converter_add_element;
+	gc_feature_node_class->get_value_type = arv_gc_converter_node_get_value_type;
 }
 
 /* ArvGcInteger interface implementation */
@@ -183,31 +183,31 @@ static void
 _update_from_variables (ArvGcConverter *gc_converter)
 {
 	ArvGc *genicam;
-	ArvGcNode *node;
+	ArvGcFeatureNode *node;
 	GSList *iter;
 
-	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_converter));
+	genicam = arv_gc_feature_node_get_genicam (ARV_GC_FEATURE_NODE (gc_converter));
 
 	for (iter = gc_converter->variables; iter != NULL; iter = iter->next) {
 		ArvGcConverterVariableInfos *variable_infos = iter->data;
 
 		node = arv_gc_get_node (genicam, variable_infos->node_name);
-		if (arv_gc_node_get_value_type (node) == G_TYPE_INT64)
+		if (arv_gc_feature_node_get_value_type (node) == G_TYPE_INT64)
 			arv_evaluator_set_int64_variable (gc_converter->formula_from,
 							  variable_infos->name,
 							  arv_gc_integer_get_value (ARV_GC_INTEGER (node)));
-		else if (arv_gc_node_get_value_type (node) == G_TYPE_DOUBLE)
+		else if (arv_gc_feature_node_get_value_type (node) == G_TYPE_DOUBLE)
 			arv_evaluator_set_double_variable (gc_converter->formula_from,
 							   variable_infos->name,
 							   arv_gc_float_get_value (ARV_GC_FLOAT (node)));
 	}
 
 	node = arv_gc_get_node (genicam, gc_converter->value);
-	if (arv_gc_node_get_value_type (node) == G_TYPE_INT64)
+	if (arv_gc_feature_node_get_value_type (node) == G_TYPE_INT64)
 		arv_evaluator_set_int64_variable (gc_converter->formula_from,
 						  "TO",
 						  arv_gc_integer_get_value (ARV_GC_INTEGER (node)));
-	else if (arv_gc_node_get_value_type (node) == G_TYPE_DOUBLE)
+	else if (arv_gc_feature_node_get_value_type (node) == G_TYPE_DOUBLE)
 		arv_evaluator_set_double_variable (gc_converter->formula_from,
 						   "TO",
 						   arv_gc_float_get_value (ARV_GC_FLOAT (node)));
@@ -217,30 +217,30 @@ static void
 _update_to_variables (ArvGcConverter *gc_converter)
 {
 	ArvGc *genicam;
-	ArvGcNode *node;
+	ArvGcFeatureNode *node;
 	GSList *iter;
 
-	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_converter));
+	genicam = arv_gc_feature_node_get_genicam (ARV_GC_FEATURE_NODE (gc_converter));
 
 	for (iter = gc_converter->variables; iter != NULL; iter = iter->next) {
 		ArvGcConverterVariableInfos *variable_infos = iter->data;
 
 		node = arv_gc_get_node (genicam, variable_infos->node_name);
-		if (arv_gc_node_get_value_type (node) == G_TYPE_INT64)
+		if (arv_gc_feature_node_get_value_type (node) == G_TYPE_INT64)
 			arv_evaluator_set_int64_variable (gc_converter->formula_to,
 							  variable_infos->name,
 							  arv_gc_integer_get_value (ARV_GC_INTEGER (node)));
-		else if (arv_gc_node_get_value_type (node) == G_TYPE_DOUBLE)
+		else if (arv_gc_feature_node_get_value_type (node) == G_TYPE_DOUBLE)
 			arv_evaluator_set_double_variable (gc_converter->formula_to,
 							   variable_infos->name,
 							   arv_gc_float_get_value (ARV_GC_FLOAT (node)));
 	}
 
 	node = arv_gc_get_node (genicam, gc_converter->value);
-	if (arv_gc_node_get_value_type (node) == G_TYPE_INT64)
+	if (arv_gc_feature_node_get_value_type (node) == G_TYPE_INT64)
 		arv_gc_integer_set_value (ARV_GC_INTEGER (node),
 					  arv_evaluator_evaluate_as_int64 (gc_converter->formula_to, NULL));
-	else if (arv_gc_node_get_value_type (node) == G_TYPE_DOUBLE)
+	else if (arv_gc_feature_node_get_value_type (node) == G_TYPE_DOUBLE)
 		arv_gc_float_set_value (ARV_GC_FLOAT (node),
 					arv_evaluator_evaluate_as_double (gc_converter->formula_to, NULL));
 	else

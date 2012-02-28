@@ -24,7 +24,7 @@
 #define ARV_GC_SWISS_KNIFE_H
 
 #include <arvtypes.h>
-#include <arvgcnode.h>
+#include <arvgcfeaturenode.h>
 
 G_BEGIN_DECLS
 
@@ -38,7 +38,7 @@ G_BEGIN_DECLS
 typedef struct _ArvGcSwissKnifeClass ArvGcSwissKnifeClass;
 
 struct _ArvGcSwissKnife {
-	ArvGcNode	node;
+	ArvGcFeatureNode	node;
 
 	GType value_type;
 	GSList *variables;
@@ -46,13 +46,13 @@ struct _ArvGcSwissKnife {
 };
 
 struct _ArvGcSwissKnifeClass {
-	ArvGcNodeClass parent_class;
+	ArvGcFeatureNodeClass parent_class;
 };
 
 GType 		arv_gc_swiss_knife_get_type 	(void);
 
-ArvGcNode * 	arv_gc_swiss_knife_new 		(void);
-ArvGcNode * 	arv_gc_swiss_knife_new_integer 	(void);
+ArvGcFeatureNode * 	arv_gc_swiss_knife_new 		(void);
+ArvGcFeatureNode * 	arv_gc_swiss_knife_new_integer 	(void);
 
 G_END_DECLS
 

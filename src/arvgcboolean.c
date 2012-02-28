@@ -40,10 +40,10 @@ arv_gc_boolean_get_node_name (ArvDomNode *node)
 	return "Boolean";
 }
 
-/* ArvGcNode implementation */
+/* ArvGcFeatureNode implementation */
 
 static void
-arv_gc_boolean_add_element (ArvGcNode *node, const char *name, const char *content, const char **attributes)
+arv_gc_boolean_add_element (ArvGcFeatureNode *node, const char *name, const char *content, const char **attributes)
 {
 	ArvGcBoolean *gc_boolean = ARV_GC_BOOLEAN (node);
 
@@ -57,17 +57,17 @@ arv_gc_boolean_add_element (ArvGcNode *node, const char *name, const char *conte
 	} else if (strcmp (name, "OffValue") == 0) {
 		gc_boolean->off_value = g_ascii_strtoll (content, NULL, 0);
 	} else
-		ARV_GC_NODE_CLASS (parent_class)->add_element (node, name, content, attributes);
+		ARV_GC_FEATURE_NODE_CLASS (parent_class)->add_element (node, name, content, attributes);
 }
 
 static void
-arv_gc_boolean_set_value_from_string (ArvGcNode *node, const char *string)
+arv_gc_boolean_set_value_from_string (ArvGcFeatureNode *node, const char *string)
 {
 	arv_gc_boolean_set_value (ARV_GC_BOOLEAN (node), g_strcmp0 (string, "true") == 0);
 }
 
 static const char *
-arv_gc_boolean_get_value_as_string (ArvGcNode *node)
+arv_gc_boolean_get_value_as_string (ArvGcFeatureNode *node)
 {
 	return arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node)) ? "true" : "false";
 }
@@ -79,7 +79,7 @@ arv_gc_boolean_get_value (ArvGcBoolean *gc_boolean)
 {
 	g_return_val_if_fail (ARV_IS_GC_BOOLEAN (gc_boolean), FALSE);
 
-	return arv_gc_get_int64_from_value (arv_gc_node_get_genicam (ARV_GC_NODE (gc_boolean)),
+	return arv_gc_get_int64_from_value (arv_gc_feature_node_get_genicam (ARV_GC_FEATURE_NODE (gc_boolean)),
 					    &gc_boolean->value) == gc_boolean->on_value;
 }
 
@@ -88,15 +88,15 @@ arv_gc_boolean_set_value (ArvGcBoolean *gc_boolean, gboolean v_boolean)
 {
 	g_return_if_fail (ARV_IS_GC_BOOLEAN (gc_boolean));
 
-	arv_gc_set_int64_to_value (arv_gc_node_get_genicam (ARV_GC_NODE (gc_boolean)),
+	arv_gc_set_int64_to_value (arv_gc_feature_node_get_genicam (ARV_GC_FEATURE_NODE (gc_boolean)),
 				   &gc_boolean->value,
 				   v_boolean ? gc_boolean->on_value : gc_boolean->off_value);
 }
 
-ArvGcNode *
+ArvGcFeatureNode *
 arv_gc_boolean_new (void)
 {
-	ArvGcNode *node;
+	ArvGcFeatureNode *node;
 
 	node = g_object_new (ARV_TYPE_GC_BOOLEAN, NULL);
 
@@ -127,15 +127,15 @@ arv_gc_boolean_class_init (ArvGcBooleanClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
-	ArvGcNodeClass *gc_node_class = ARV_GC_NODE_CLASS (this_class);
+	ArvGcFeatureNodeClass *gc_feature_node_class = ARV_GC_FEATURE_NODE_CLASS (this_class);
 
 	parent_class = g_type_class_peek_parent (this_class);
 
 	object_class->finalize = arv_gc_boolean_finalize;
 	dom_node_class->get_node_name = arv_gc_boolean_get_node_name;
-	gc_node_class->add_element = arv_gc_boolean_add_element;
-	gc_node_class->set_value_from_string = arv_gc_boolean_set_value_from_string;
-	gc_node_class->get_value_as_string = arv_gc_boolean_get_value_as_string;
+	gc_feature_node_class->add_element = arv_gc_boolean_add_element;
+	gc_feature_node_class->set_value_from_string = arv_gc_boolean_set_value_from_string;
+	gc_feature_node_class->get_value_as_string = arv_gc_boolean_get_value_as_string;
 }
 
 /* ArvGcInteger interface implementation */

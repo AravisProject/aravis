@@ -24,7 +24,7 @@
 #define ARV_GC_PORT_H
 
 #include <arvtypes.h>
-#include <arvgcnode.h>
+#include <arvgcfeaturenode.h>
 
 G_BEGIN_DECLS
 
@@ -38,16 +38,16 @@ G_BEGIN_DECLS
 typedef struct _ArvGcPortClass ArvGcPortClass;
 
 struct _ArvGcPort {
-	ArvGcNode node;
+	ArvGcFeatureNode node;
 };
 
 struct _ArvGcPortClass {
-	ArvGcNodeClass parent_class;
+	ArvGcFeatureNodeClass parent_class;
 };
 
 GType arv_gc_port_get_type (void);
 
-ArvGcNode * 		arv_gc_port_new 	(void);
+ArvGcFeatureNode * 		arv_gc_port_new 	(void);
 
 void 			arv_gc_port_read	(ArvGcPort *port, void *buffer, guint64 address, guint64 length);
 void 			arv_gc_port_write	(ArvGcPort *port, void *buffer, guint64 address, guint64 length);

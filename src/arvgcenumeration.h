@@ -24,7 +24,7 @@
 #define ARV_GC_ENUMERATION_H
 
 #include <arvtypes.h>
-#include <arvgcnode.h>
+#include <arvgcfeaturenode.h>
 
 G_BEGIN_DECLS
 
@@ -38,18 +38,18 @@ G_BEGIN_DECLS
 typedef struct _ArvGcEnumerationClass ArvGcEnumerationClass;
 
 struct _ArvGcEnumeration {
-	ArvGcNode	node;
+	ArvGcFeatureNode	node;
 
 	GValue value;
 };
 
 struct _ArvGcEnumerationClass {
-	ArvGcNodeClass parent_class;
+	ArvGcFeatureNodeClass parent_class;
 };
 
 GType 		arv_gc_enumeration_get_type 	(void);
 
-ArvGcNode * 	arv_gc_enumeration_new 				(void);
+ArvGcFeatureNode * 	arv_gc_enumeration_new 				(void);
 
 const char *	arv_gc_enumeration_get_string_value		(ArvGcEnumeration *enumeration);
 void		arv_gc_enumeration_set_string_value		(ArvGcEnumeration *enumeration, const char *value);

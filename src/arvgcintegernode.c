@@ -42,10 +42,10 @@ arv_gc_integer_node_get_node_name (ArvDomNode *node)
 	return "Integer";
 }
 
-/* ArvGcNode implementation */
+/* ArvGcFeatureNode implementation */
 
 static void
-arv_gc_integer_node_add_element (ArvGcNode *node, const char *name, const char *content, const char **attributes)
+arv_gc_integer_node_add_element (ArvGcFeatureNode *node, const char *name, const char *content, const char **attributes)
 {
 	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (node);
 
@@ -73,23 +73,23 @@ arv_gc_integer_node_add_element (ArvGcNode *node, const char *name, const char *
 		g_free (gc_integer_node->unit);
 		gc_integer_node->unit = g_strdup (content);
 	} else
-		ARV_GC_NODE_CLASS (parent_class)->add_element (node, name, content, attributes);
+		ARV_GC_FEATURE_NODE_CLASS (parent_class)->add_element (node, name, content, attributes);
 }
 
 static GType
-arv_gc_integer_node_get_value_type (ArvGcNode *node)
+arv_gc_integer_node_get_value_type (ArvGcFeatureNode *node)
 {
 	return G_TYPE_INT64;
 }
 
 static void
-arv_gc_integer_node_set_value_from_string (ArvGcNode *node, const char *string)
+arv_gc_integer_node_set_value_from_string (ArvGcFeatureNode *node, const char *string)
 {
 	arv_gc_integer_set_value (ARV_GC_INTEGER (node), g_ascii_strtoll (string, NULL, 0));
 }
 
 static const char *
-arv_gc_integer_node_get_value_as_string (ArvGcNode *node)
+arv_gc_integer_node_get_value_as_string (ArvGcFeatureNode *node)
 {
 	ArvGcIntegerNode *integer_node = ARV_GC_INTEGER_NODE (node);
 
@@ -101,10 +101,10 @@ arv_gc_integer_node_get_value_as_string (ArvGcNode *node)
 
 /* ArvGcIntegerNode implementation */
 
-ArvGcNode *
+ArvGcFeatureNode *
 arv_gc_integer_node_new (void)
 {
-	ArvGcNode *node;
+	ArvGcFeatureNode *node;
 
 	node = g_object_new (ARV_TYPE_GC_INTEGER_NODE, NULL);
 
@@ -147,16 +147,16 @@ arv_gc_integer_node_class_init (ArvGcIntegerNodeClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
-	ArvGcNodeClass *gc_node_class = ARV_GC_NODE_CLASS (this_class);
+	ArvGcFeatureNodeClass *gc_feature_node_class = ARV_GC_FEATURE_NODE_CLASS (this_class);
 
 	parent_class = g_type_class_peek_parent (this_class);
 
 	object_class->finalize = arv_gc_integer_node_finalize;
 	dom_node_class->get_node_name = arv_gc_integer_node_get_node_name;
-	gc_node_class->add_element = arv_gc_integer_node_add_element;
-	gc_node_class->get_value_type = arv_gc_integer_node_get_value_type;
-	gc_node_class->set_value_from_string = arv_gc_integer_node_set_value_from_string;
-	gc_node_class->get_value_as_string = arv_gc_integer_node_get_value_as_string;
+	gc_feature_node_class->add_element = arv_gc_integer_node_add_element;
+	gc_feature_node_class->get_value_type = arv_gc_integer_node_get_value_type;
+	gc_feature_node_class->set_value_from_string = arv_gc_integer_node_set_value_from_string;
+	gc_feature_node_class->get_value_as_string = arv_gc_integer_node_get_value_as_string;
 }
 
 /* ArvGcInteger interface implementation */
@@ -167,7 +167,7 @@ arv_gc_integer_node_get_integer_value (ArvGcInteger *gc_integer)
 	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (gc_integer);
 	ArvGc *genicam;
 
-	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_integer));
+	genicam = arv_gc_feature_node_get_genicam (ARV_GC_FEATURE_NODE (gc_integer));
 	return arv_gc_get_int64_from_value (genicam, &gc_integer_node->value);
 }
 
@@ -177,7 +177,7 @@ arv_gc_integer_node_set_integer_value (ArvGcInteger *gc_integer, gint64 value)
 	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (gc_integer);
 	ArvGc *genicam;
 
-	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_integer));
+	genicam = arv_gc_feature_node_get_genicam (ARV_GC_FEATURE_NODE (gc_integer));
 	arv_gc_set_int64_to_value (genicam, &gc_integer_node->value, value);
 }
 
@@ -187,7 +187,7 @@ arv_gc_integer_node_get_min (ArvGcInteger *gc_integer)
 	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (gc_integer);
 	ArvGc *genicam;
 
-	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_integer));
+	genicam = arv_gc_feature_node_get_genicam (ARV_GC_FEATURE_NODE (gc_integer));
 	return arv_gc_get_int64_from_value (genicam, &gc_integer_node->minimum);
 }
 
@@ -197,7 +197,7 @@ arv_gc_integer_node_get_max (ArvGcInteger *gc_integer)
 	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (gc_integer);
 	ArvGc *genicam;
 
-	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_integer));
+	genicam = arv_gc_feature_node_get_genicam (ARV_GC_FEATURE_NODE (gc_integer));
 	return arv_gc_get_int64_from_value (genicam, &gc_integer_node->maximum);
 }
 
@@ -207,7 +207,7 @@ arv_gc_integer_node_get_inc (ArvGcInteger *gc_integer)
 	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (gc_integer);
 	ArvGc *genicam;
 
-	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_integer));
+	genicam = arv_gc_feature_node_get_genicam (ARV_GC_FEATURE_NODE (gc_integer));
 	return arv_gc_get_int64_from_value (genicam, &gc_integer_node->increment);
 }
 
@@ -225,7 +225,7 @@ arv_gc_integer_node_impose_min (ArvGcInteger *gc_integer, gint64 minimum)
 	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (gc_integer);
 	ArvGc *genicam;
 
-	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_integer));
+	genicam = arv_gc_feature_node_get_genicam (ARV_GC_FEATURE_NODE (gc_integer));
 	arv_gc_set_int64_to_value (genicam, &gc_integer_node->minimum, minimum);
 }
 
@@ -235,7 +235,7 @@ arv_gc_integer_node_impose_max (ArvGcInteger *gc_integer, gint64 maximum)
 	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (gc_integer);
 	ArvGc *genicam;
 
-	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_integer));
+	genicam = arv_gc_feature_node_get_genicam (ARV_GC_FEATURE_NODE (gc_integer));
 	arv_gc_set_int64_to_value (genicam, &gc_integer_node->minimum, maximum);
 }
 

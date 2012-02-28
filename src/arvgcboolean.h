@@ -24,7 +24,7 @@
 #define ARV_GC_BOOLEAN_H
 
 #include <arvtypes.h>
-#include <arvgcnode.h>
+#include <arvgcfeaturenode.h>
 
 G_BEGIN_DECLS
 
@@ -38,7 +38,7 @@ G_BEGIN_DECLS
 typedef struct _ArvGcBooleanClass ArvGcBooleanClass;
 
 struct _ArvGcBoolean {
-	ArvGcNode	node;
+	ArvGcFeatureNode	node;
 
 	GValue value;
 	gint64 on_value;
@@ -46,12 +46,12 @@ struct _ArvGcBoolean {
 };
 
 struct _ArvGcBooleanClass {
-	ArvGcNodeClass parent_class;
+	ArvGcFeatureNodeClass parent_class;
 };
 
 GType 		arv_gc_boolean_get_type 	(void);
 
-ArvGcNode * 	arv_gc_boolean_new 		(void);
+ArvGcFeatureNode * 	arv_gc_boolean_new 		(void);
 gboolean 	arv_gc_boolean_get_value 	(ArvGcBoolean *gc_boolean);
 void 		arv_gc_boolean_set_value 	(ArvGcBoolean *gc_boolean, gboolean v_boolean);
 

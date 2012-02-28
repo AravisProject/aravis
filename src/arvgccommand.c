@@ -36,7 +36,7 @@
 
 static GObjectClass *parent_class = NULL;
 
-/* ArvGcNode implementation */
+/* ArvGcFeatureNode implementation */
 
 static const char *
 arv_gc_command_get_node_name (ArvDomNode *node)
@@ -44,10 +44,10 @@ arv_gc_command_get_node_name (ArvDomNode *node)
 	return "Command";
 }
 
-/* ArvGcNode implementation */
+/* ArvGcFeatureNode implementation */
 
 static void
-arv_gc_command_add_element (ArvGcNode *node, const char *name, const char *content, const char **attributes)
+arv_gc_command_add_element (ArvGcFeatureNode *node, const char *name, const char *content, const char **attributes)
 {
 	ArvGcCommand *gc_command = ARV_GC_COMMAND (node);
 
@@ -60,7 +60,7 @@ arv_gc_command_add_element (ArvGcNode *node, const char *name, const char *conte
 	} else if (strcmp (name, "pCommandValue") == 0) {
 		arv_force_g_value_to_string (&gc_command->command_value, content);
 	} else
-		ARV_GC_NODE_CLASS (parent_class)->add_element (node, name, content, attributes);
+		ARV_GC_FEATURE_NODE_CLASS (parent_class)->add_element (node, name, content, attributes);
 }
 
 /* ArvGcCommand implementation */
@@ -72,21 +72,21 @@ arv_gc_command_execute (ArvGcCommand *gc_command)
 	gint64 command_value;
 
 	g_return_if_fail (ARV_IS_GC_COMMAND (gc_command));
-	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_command));
+	genicam = arv_gc_feature_node_get_genicam (ARV_GC_FEATURE_NODE (gc_command));
 	g_return_if_fail (ARV_IS_GC (genicam));
 
 	command_value = arv_gc_get_int64_from_value (genicam, &gc_command->command_value);
 	arv_gc_set_int64_to_value (genicam, &gc_command->value, command_value);
 
 	arv_log_genicam ("[GcCommand::execute] %s (0x%x)",
-			 arv_gc_node_get_name (ARV_GC_NODE (gc_command)),
+			 arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_command)),
 			 command_value);
 }
 
-ArvGcNode *
+ArvGcFeatureNode *
 arv_gc_command_new (void)
 {
-	ArvGcNode *node;
+	ArvGcFeatureNode *node;
 
 	node = g_object_new (ARV_TYPE_GC_COMMAND, NULL);
 
@@ -119,13 +119,13 @@ arv_gc_command_class_init (ArvGcCommandClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
-	ArvGcNodeClass *gc_node_class = ARV_GC_NODE_CLASS (this_class);
+	ArvGcFeatureNodeClass *gc_feature_node_class = ARV_GC_FEATURE_NODE_CLASS (this_class);
 
 	parent_class = g_type_class_peek_parent (this_class);
 
 	object_class->finalize = arv_gc_command_finalize;
 	dom_node_class->get_node_name = arv_gc_command_get_node_name;
-	gc_node_class->add_element = arv_gc_command_add_element;
+	gc_feature_node_class->add_element = arv_gc_command_add_element;
 }
 
 G_DEFINE_TYPE (ArvGcCommand, arv_gc_command, ARV_TYPE_GC_NODE)

@@ -49,7 +49,7 @@ arv_gc_port_read (ArvGcPort *port, void *buffer, guint64 address, guint64 length
 
 	g_return_if_fail (ARV_IS_GC_PORT (port));
 
-	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (port));
+	genicam = arv_gc_feature_node_get_genicam (ARV_GC_FEATURE_NODE (port));
 	device = arv_gc_get_device (genicam);
 
 	arv_device_read_memory (device, address, length, buffer);
@@ -63,16 +63,16 @@ arv_gc_port_write (ArvGcPort *port, void *buffer, guint64 address, guint64 lengt
 
 	g_return_if_fail (ARV_IS_GC_PORT (port));
 
-	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (port));
+	genicam = arv_gc_feature_node_get_genicam (ARV_GC_FEATURE_NODE (port));
 	device = arv_gc_get_device (genicam);
 
 	arv_device_write_memory (device, address, length, buffer);
 }
 
-ArvGcNode *
+ArvGcFeatureNode *
 arv_gc_port_new (void)
 {
-	ArvGcNode *node;
+	ArvGcFeatureNode *node;
 
 	node = g_object_new (ARV_TYPE_GC_PORT, NULL);
 

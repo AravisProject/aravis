@@ -24,7 +24,7 @@
 #define ARV_GC_CONVERTER_H
 
 #include <arvtypes.h>
-#include <arvgcnode.h>
+#include <arvgcfeaturenode.h>
 
 G_BEGIN_DECLS
 
@@ -38,7 +38,7 @@ G_BEGIN_DECLS
 typedef struct _ArvGcConverterClass ArvGcConverterClass;
 
 struct _ArvGcConverter {
-	ArvGcNode	node;
+	ArvGcFeatureNode	node;
 
 	GType value_type;
 	char *value;
@@ -48,13 +48,13 @@ struct _ArvGcConverter {
 };
 
 struct _ArvGcConverterClass {
-	ArvGcNodeClass parent_class;
+	ArvGcFeatureNodeClass parent_class;
 };
 
 GType 		arv_gc_converter_get_type 	(void);
 
-ArvGcNode * 	arv_gc_converter_new 		(void);
-ArvGcNode * 	arv_gc_converter_new_integer 	(void);
+ArvGcFeatureNode * 	arv_gc_converter_new 		(void);
+ArvGcFeatureNode * 	arv_gc_converter_new_integer 	(void);
 
 G_END_DECLS
 

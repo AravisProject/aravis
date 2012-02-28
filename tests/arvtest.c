@@ -77,7 +77,7 @@ main (int argc, char **argv)
 	device = arv_open_device (arv_option_camera_name);
 	if (device != NULL) {
 		ArvGc *genicam;
-		ArvGcNode *node;
+		ArvGcFeatureNode *node;
 		guint32 value;
 		guint32 maximum;
 		guint32 minimum;

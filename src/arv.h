@@ -40,7 +40,7 @@
 #include <arvdomparser.h>
 #include <arvcamera.h>
 #include <arvgc.h>
-#include <arvgcnode.h>
+#include <arvgcfeaturenode.h>
 #include <arvgccategory.h>
 #include <arvgcboolean.h>
 #include <arvgcenumeration.h>

@@ -24,7 +24,7 @@
 #define ARV_GC_INTEGER_NODE_H
 
 #include <arvtypes.h>
-#include <arvgcnode.h>
+#include <arvgcfeaturenode.h>
 
 G_BEGIN_DECLS
 
@@ -38,7 +38,7 @@ G_BEGIN_DECLS
 typedef struct _ArvGcIntegerNodeClass ArvGcIntegerNodeClass;
 
 struct _ArvGcIntegerNode {
-	ArvGcNode	node;
+	ArvGcFeatureNode	node;
 
 	GValue value;
 	GValue minimum;
@@ -50,12 +50,12 @@ struct _ArvGcIntegerNode {
 };
 
 struct _ArvGcIntegerNodeClass {
-	ArvGcNodeClass parent_class;
+	ArvGcFeatureNodeClass parent_class;
 };
 
 GType 		arv_gc_integer_node_get_type 	(void);
 
-ArvGcNode * 	arv_gc_integer_node_new 	(void);
+ArvGcFeatureNode * 	arv_gc_integer_node_new 	(void);
 
 G_END_DECLS
 
