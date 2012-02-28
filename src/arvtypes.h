@@ -42,7 +42,8 @@ typedef struct _ArvDomText 		ArvDomText;
 
 typedef struct _ArvGc ArvGc;
 
-typedef struct _ArvGcFeatureNode 			ArvGcFeatureNode;
+typedef	struct _ArvGcNode			ArvGcNode;
+typedef struct _ArvGcFeatureNode 		ArvGcFeatureNode;
 typedef struct _ArvGcPropertyNode		ArvGcPropertyNode;
 typedef struct _ArvGcRegisterDescriptionNode 	ArvGcRegisterDescriptionNode;
 typedef struct _ArvGcCategory			ArvGcCategory;

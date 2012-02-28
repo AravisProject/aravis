@@ -30,6 +30,7 @@
  */
 
 #include <arvgc.h>
+#include <arvgcnode.h>
 #include <arvgcpropertynode.h>
 #include <arvgcregisterdescriptionnode.h>
 #include <arvgccategory.h>
@@ -56,9 +57,7 @@ static GObjectClass *parent_class = NULL;
 static gboolean
 arv_gc_can_append_child (ArvDomNode *self, ArvDomNode *child)
 {
-	/* FIXME */
-
-	return TRUE;
+	return ARV_IS_GC_NODE (child);
 }
 
 /* ArvDomDocument implementation */

@@ -24,7 +24,7 @@ BUILT_SOURCES = arvenumtypes.h arvenumtypes.c
 EXTRA_DIST += arvenumtypes.h.template \
 	      arvenumtypes.c.template
 
-libaravis_@ARAVIS_API_VERSION@_la_LIBADD = 				\
+libaravis_@ARAVIS_API_VERSION@_la_LIBADD = 	\
 	$(ARAVIS_LIBS)
 
 ARAVIS_SRCS =					\
@@ -45,6 +45,7 @@ ARAVIS_SRCS =					\
 	arvdomimplementation.c			\
 	arvcamera.c				\
 	arvgc.c					\
+	arvgcnode.c				\
 	arvgcpropertynode.c			\
 	arvgcfeaturenode.c			\
 	arvgcregisterdescriptionnode.c		\
@@ -100,6 +101,7 @@ ARAVIS_HDRS = 					\
 	arvdomimplementation.h			\
 	arvcamera.h				\
 	arvgc.h					\
+	arvgcnode.h				\
 	arvgcpropertynode.h			\
 	arvgcfeaturenode.h			\
 	arvgcregisterdescriptionnode.h		\

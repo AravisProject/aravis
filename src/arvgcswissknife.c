@@ -237,6 +237,6 @@ arv_gc_swiss_knife_float_interface_init (ArvGcFloatInterface *interface)
 	interface->set_value = arv_gc_swiss_knife_set_float_value;
 }
 
-G_DEFINE_TYPE_WITH_CODE (ArvGcSwissKnife, arv_gc_swiss_knife, ARV_TYPE_GC_NODE,
+G_DEFINE_TYPE_WITH_CODE (ArvGcSwissKnife, arv_gc_swiss_knife, ARV_TYPE_GC_FEATURE_NODE,
 			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_swiss_knife_integer_interface_init)
 			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_FLOAT,   arv_gc_swiss_knife_float_interface_init))

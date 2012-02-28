@@ -126,4 +126,4 @@ arv_gc_category_class_init (ArvGcCategoryClass *this_class)
 	dom_node_class->can_append_child = arv_gc_category_can_append_child;
 }
 
-G_DEFINE_TYPE (ArvGcCategory, arv_gc_category, ARV_TYPE_GC_NODE)
+G_DEFINE_TYPE (ArvGcCategory, arv_gc_category, ARV_TYPE_GC_FEATURE_NODE)

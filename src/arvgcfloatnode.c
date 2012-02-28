@@ -255,5 +255,5 @@ arv_gc_float_node_float_interface_init (ArvGcFloatInterface *interface)
 	interface->impose_max = arv_gc_float_node_impose_max;
 }
 
-G_DEFINE_TYPE_WITH_CODE (ArvGcFloatNode, arv_gc_float_node, ARV_TYPE_GC_NODE,
+G_DEFINE_TYPE_WITH_CODE (ArvGcFloatNode, arv_gc_float_node, ARV_TYPE_GC_FEATURE_NODE,
 			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_FLOAT, arv_gc_float_node_float_interface_init))

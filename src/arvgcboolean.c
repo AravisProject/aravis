@@ -140,4 +140,4 @@ arv_gc_boolean_class_init (ArvGcBooleanClass *this_class)
 
 /* ArvGcInteger interface implementation */
 
-G_DEFINE_TYPE (ArvGcBoolean, arv_gc_boolean, ARV_TYPE_GC_NODE)
+G_DEFINE_TYPE (ArvGcBoolean, arv_gc_boolean, ARV_TYPE_GC_FEATURE_NODE)

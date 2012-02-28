@@ -239,4 +239,4 @@ arv_gc_enumeration_class_init (ArvGcEnumerationClass *this_class)
 	gc_feature_node_class->get_value_as_string = arv_gc_enumeration_get_value_as_string;
 }
 
-G_DEFINE_TYPE (ArvGcEnumeration, arv_gc_enumeration, ARV_TYPE_GC_NODE)
+G_DEFINE_TYPE (ArvGcEnumeration, arv_gc_enumeration, ARV_TYPE_GC_FEATURE_NODE)

@@ -252,5 +252,5 @@ arv_gc_integer_node_integer_interface_init (ArvGcIntegerInterface *interface)
 	interface->impose_max = arv_gc_integer_node_impose_max;
 }
 
-G_DEFINE_TYPE_WITH_CODE (ArvGcIntegerNode, arv_gc_integer_node, ARV_TYPE_GC_NODE,
+G_DEFINE_TYPE_WITH_CODE (ArvGcIntegerNode, arv_gc_integer_node, ARV_TYPE_GC_FEATURE_NODE,
 			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_integer_node_integer_interface_init))

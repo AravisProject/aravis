@@ -21,57 +21,44 @@
  */
 
 /**
- * SECTION: arvgcregisterdescriptionnode
- * @short_description: Class for Register Description elements
+ * SECTION: arvgcnode
+ * @short_description: Base class for all Genicam nodes
+ *
+ * #ArvGcNode provides a base class for the implementation of the different
+ * types of Genicam node.
  */
 
-#include <arvgcregisterdescriptionnode.h>
+#include <arvgcnode.h>
+#include <arvgc.h>
+#include <arvmisc.h>
+#include <arvdebug.h>
+#include <string.h>
 
 static GObjectClass *parent_class = NULL;
 
 /* ArvDomNode implementation */
 
-static const char *
-arv_gc_register_description_node_get_node_name (ArvDomNode *node)
-{
-	return "RegisterDescription";
-}
-
-/* ArvGcRegisterDescriptionNode implementation */
-
-ArvDomElement *
-arv_gc_register_description_node_new (void)
-{
-	ArvDomElement *element;
-
-	element = g_object_new (ARV_TYPE_GC_REGISTER_DESCRIPTION_NODE, NULL);
-
-	return element;
-}
+/* ArvGcNode implementation */
 
 static void
-arv_gc_register_description_node_init (ArvGcRegisterDescriptionNode *gc_register_description_node)
+arv_gc_node_init (ArvGcNode *gc_node)
 {
 }
 
 static void
-arv_gc_register_description_node_finalize (GObject *object)
+arv_gc_node_finalize (GObject *object)
 {
 	parent_class->finalize (object);
 }
 
 static void
-arv_gc_register_description_node_class_init (ArvGcRegisterDescriptionNodeClass *this_class)
+arv_gc_node_class_init (ArvGcNodeClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
-	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
 
 	parent_class = g_type_class_peek_parent (this_class);
 
-	object_class->finalize = arv_gc_register_description_node_finalize;
-	dom_node_class->get_node_name = arv_gc_register_description_node_get_node_name;
+	object_class->finalize = arv_gc_node_finalize;
 }
 
-/* ArvGcInteger interface implementation */
-
-G_DEFINE_TYPE (ArvGcRegisterDescriptionNode, arv_gc_register_description_node, ARV_TYPE_GC_FEATURE_NODE)
+G_DEFINE_ABSTRACT_TYPE (ArvGcNode, arv_gc_node, ARV_TYPE_DOM_ELEMENT)

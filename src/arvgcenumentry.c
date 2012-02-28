@@ -100,4 +100,4 @@ arv_gc_enum_entry_class_init (ArvGcEnumEntryClass *this_class)
 	gc_feature_node_class->add_element = arv_gc_enum_entry_add_element;
 }
 
-G_DEFINE_TYPE (ArvGcEnumEntry, arv_gc_enum_entry, ARV_TYPE_GC_NODE)
+G_DEFINE_TYPE (ArvGcEnumEntry, arv_gc_enum_entry, ARV_TYPE_GC_FEATURE_NODE)

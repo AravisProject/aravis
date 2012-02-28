@@ -102,4 +102,4 @@ arv_gc_port_class_init (ArvGcPortClass *this_class)
 	dom_node_class->get_node_name = arv_gc_port_get_node_name;
 }
 
-G_DEFINE_TYPE (ArvGcPort, arv_gc_port, ARV_TYPE_GC_NODE)
+G_DEFINE_TYPE (ArvGcPort, arv_gc_port, ARV_TYPE_GC_FEATURE_NODE)

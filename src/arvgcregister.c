@@ -703,7 +703,7 @@ arv_gc_register_string_interface_init (ArvGcStringInterface *interface)
 	interface->get_max_length = arv_gc_register_get_max_string_length;
 }
 
-G_DEFINE_TYPE_WITH_CODE (ArvGcRegister, arv_gc_register, ARV_TYPE_GC_NODE,
+G_DEFINE_TYPE_WITH_CODE (ArvGcRegister, arv_gc_register, ARV_TYPE_GC_FEATURE_NODE,
 			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_register_integer_interface_init)
 			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_FLOAT, arv_gc_register_float_interface_init)
 			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_STRING, arv_gc_register_string_interface_init))

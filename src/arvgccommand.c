@@ -128,4 +128,4 @@ arv_gc_command_class_init (ArvGcCommandClass *this_class)
 	gc_feature_node_class->add_element = arv_gc_command_add_element;
 }
 
-G_DEFINE_TYPE (ArvGcCommand, arv_gc_command, ARV_TYPE_GC_NODE)
+G_DEFINE_TYPE (ArvGcCommand, arv_gc_command, ARV_TYPE_GC_FEATURE_NODE)
