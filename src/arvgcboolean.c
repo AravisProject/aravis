@@ -32,13 +32,15 @@
 
 static GObjectClass *parent_class = NULL;
 
-/* ArvGcNode implementation */
+/* ArvDomNode implementation */
 
 static const char *
-arv_gc_boolean_get_node_name (ArvGcNode *node)
+arv_gc_boolean_get_node_name (ArvDomNode *node)
 {
 	return "Boolean";
 }
+
+/* ArvGcNode implementation */
 
 static void
 arv_gc_boolean_add_element (ArvGcNode *node, const char *name, const char *content, const char **attributes)
@@ -121,19 +123,19 @@ arv_gc_boolean_finalize (GObject *object)
 }
 
 static void
-arv_gc_boolean_class_init (ArvGcBooleanClass *boolean_class)
+arv_gc_boolean_class_init (ArvGcBooleanClass *this_class)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS (boolean_class);
-	ArvGcNodeClass *node_class = ARV_GC_NODE_CLASS (boolean_class);
+	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
+	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
+	ArvGcNodeClass *gc_node_class = ARV_GC_NODE_CLASS (this_class);
 
-	parent_class = g_type_class_peek_parent (boolean_class);
+	parent_class = g_type_class_peek_parent (this_class);
 
 	object_class->finalize = arv_gc_boolean_finalize;
-
-	node_class->get_node_name = arv_gc_boolean_get_node_name;
-	node_class->add_element = arv_gc_boolean_add_element;
-	node_class->set_value_from_string = arv_gc_boolean_set_value_from_string;
-	node_class->get_value_as_string = arv_gc_boolean_get_value_as_string;
+	dom_node_class->get_node_name = arv_gc_boolean_get_node_name;
+	gc_node_class->add_element = arv_gc_boolean_add_element;
+	gc_node_class->set_value_from_string = arv_gc_boolean_set_value_from_string;
+	gc_node_class->get_value_as_string = arv_gc_boolean_get_value_as_string;
 }
 
 /* ArvGcInteger interface implementation */

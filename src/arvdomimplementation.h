@@ -1,6 +1,6 @@
 /* Aravis
  *
- * Copyright © 2007-2009 Emmanuel Pacaud
+ * Copyright © 2007-2012 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -33,8 +33,8 @@ typedef ArvDomDocument * (*ArvDomDocumentCreateFunction) (void);
 
 ArvDomDocument *	arv_dom_implementation_create_document 			(const char *namespace_uri,
 										 const char *qualified_name);
-void			arv_dom_implementation_add_document_create_function	(const char *qualified_name,
-										 ArvDomDocumentCreateFunction create_function);
+void 			arv_dom_implementation_add_document_type 		(const char *qualified_name,
+					  					GType document_type);
 
 void			arv_dom_implementation_cleanup 				(void);
 

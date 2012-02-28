@@ -1,6 +1,6 @@
 /* Aravis
  *
- * Copyright © 2007-2009 Emmanuel Pacaud
+ * Copyright © 2007-2012 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,41 +23,46 @@
 
 #include <arvdomimplementation.h>
 #include <arvdebug.h>
+#include <arvgc.h>
 #include <string.h>
 
 static GHashTable *document_types = NULL;
 
 void
-arv_dom_implementation_add_create_function (const char *qualified_name,
-					    ArvDomDocumentCreateFunction create_function)
+arv_dom_implementation_add_document_type (const char *qualified_name,
+					  GType document_type)
 {
-	if (document_types == NULL)
-		document_types = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
+	GType *document_type_ptr;
 
-	g_hash_table_insert (document_types, g_strdup (qualified_name), create_function);
+	if (document_types == NULL)
+		document_types = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+
+	document_type_ptr = g_new (GType, 1);
+	*document_type_ptr = document_type;
+
+	g_hash_table_insert (document_types, g_strdup (qualified_name), document_type_ptr);
 }
 
 ArvDomDocument *
 arv_dom_implementation_create_document (const char *namespace_uri,
 					const char *qualified_name)
 {
-	ArvDomDocumentCreateFunction create_function;
+	GType *document_type;
 
 	g_return_val_if_fail (qualified_name != NULL, NULL);
 
 	if (document_types == NULL) {
-/*                arv_dom_implementation_add_create_function ("math", lsm_mathml_document_new);*/
-/*                arv_dom_implementation_add_create_function ("svg", lsm_svg_document_new);*/
+		arv_dom_implementation_add_document_type ("RegisterDescription", ARV_TYPE_GC);
 	}
 
-	create_function = g_hash_table_lookup (document_types, qualified_name);
-	if (create_function == NULL) {
+	document_type = g_hash_table_lookup (document_types, qualified_name);
+	if (document_type == NULL) {
 		arv_debug_dom ("[ArvDomImplementation::create_document] Unknow document type (%s)",
 			       qualified_name);
 		return NULL;
 	}
 
-	return create_function ();
+	return g_object_new (*document_type, NULL);
 }
 
 void

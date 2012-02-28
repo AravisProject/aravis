@@ -54,6 +54,14 @@ struct _ArvGcNodePrivate {
 };
 
 const char *
+arv_gc_node_get_content (ArvGcNode *node)
+{
+	g_assert_not_reached ();
+	return NULL;
+}
+
+
+const char *
 arv_gc_node_get_name (ArvGcNode *node)
 {
 	g_return_val_if_fail (ARV_IS_GC_NODE (node), NULL);
@@ -206,29 +214,6 @@ arv_gc_node_new (void)
 	node = g_object_new (ARV_TYPE_GC_NODE, NULL);
 
 	return node;
-}
-
-/**
- * arv_gc_node_get_node_name:
- * @gc_node: a #ArvGcNode
- *
- * Retrieves the Genicam name of the given node ("Integer", "IntReg", ...).
- *
- * Returns: The node name, %NULL on error.
- */
-
-const char *
-arv_gc_node_get_node_name (ArvGcNode *gc_node)
-{
-	ArvGcNodeClass *gc_node_class;
-
-	g_return_val_if_fail (ARV_IS_GC_NODE (gc_node), FALSE);
-
-	gc_node_class = ARV_GC_NODE_GET_CLASS (gc_node);
-	if (gc_node_class->get_node_name != NULL)
-	       return gc_node_class->get_node_name (gc_node);
-
-	return NULL;
 }
 
 void

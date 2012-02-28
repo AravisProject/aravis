@@ -15,7 +15,7 @@ arv_tool_list_features (ArvGc *genicam, const char *feature, gboolean show_descr
 		for (i = 0; i < level; i++)
 			printf ("    ");
 
-		printf ("%s: '%s'\n", arv_gc_node_get_node_name (node), feature);
+		printf ("%s: '%s'\n", arv_dom_node_get_node_name (ARV_DOM_NODE (node)), feature);
 
 		if (show_description) {
 			const char *description;
@@ -43,7 +43,7 @@ arv_tool_list_features (ArvGc *genicam, const char *feature, gboolean show_descr
 					printf ("    ");
 
 				printf ("%s: '%s'\n",
-					arv_gc_node_get_node_name (iter->data),
+					arv_dom_node_get_node_name (iter->data),
 					arv_gc_node_get_name (iter->data));
 			}
 		}
@@ -90,7 +90,7 @@ arv_tool_execute_command (int argc, char **argv, const char *device_name)
 				if (ARV_IS_GC_NODE (node)) {
 					const char *description;
 
-					printf ("%s: '%s'\n", arv_gc_node_get_node_name (node), argv[i]);
+					printf ("%s: '%s'\n", arv_dom_node_get_node_name (ARV_DOM_NODE (node)), argv[i]);
 
 					description = arv_gc_node_get_description (node);
 					if (description)

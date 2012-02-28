@@ -31,13 +31,15 @@
 
 static GObjectClass *parent_class = NULL;
 
-/* ArvGcNode implementation */
+/* ArvDomNode implementation */
 
 static const char *
-arv_gc_enum_entry_get_node_name (ArvGcNode *node)
+arv_gc_enum_entry_get_node_name (ArvDomNode *node)
 {
 	return "EnumEntry";
 }
+
+/* ArvGcNode implementation */
 
 static void
 arv_gc_enum_entry_add_element (ArvGcNode *node, const char *name, const char *content, const char **attributes)
@@ -85,17 +87,17 @@ arv_gc_enum_entry_finalize (GObject *object)
 }
 
 static void
-arv_gc_enum_entry_class_init (ArvGcEnumEntryClass *enum_entry_class)
+arv_gc_enum_entry_class_init (ArvGcEnumEntryClass *this_class)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS (enum_entry_class);
-	ArvGcNodeClass *node_class = ARV_GC_NODE_CLASS (enum_entry_class);
+	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
+	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
+	ArvGcNodeClass *gc_node_class = ARV_GC_NODE_CLASS (this_class);
 
-	parent_class = g_type_class_peek_parent (enum_entry_class);
+	parent_class = g_type_class_peek_parent (this_class);
 
 	object_class->finalize = arv_gc_enum_entry_finalize;
-
-	node_class->get_node_name = arv_gc_enum_entry_get_node_name;
-	node_class->add_element = arv_gc_enum_entry_add_element;
+	dom_node_class->get_node_name = arv_gc_enum_entry_get_node_name;
+	gc_node_class->add_element = arv_gc_enum_entry_add_element;
 }
 
 G_DEFINE_TYPE (ArvGcEnumEntry, arv_gc_enum_entry, ARV_TYPE_GC_NODE)

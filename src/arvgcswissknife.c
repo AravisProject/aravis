@@ -36,15 +36,15 @@
 
 static GObjectClass *parent_class = NULL;
 
-/* ArvGcNode implementation */
-
 typedef struct {
 	char *name;
 	char *node_name;
 } ArvGcSwissKnifeVariableInfos;
 
+/* ArvDomNode implementation */
+
 static const char *
-arv_gc_swiss_knife_get_node_name (ArvGcNode *node)
+arv_gc_swiss_knife_get_node_name (ArvDomNode *node)
 {
 	ArvGcSwissKnife *gc_swiss_knife = ARV_GC_SWISS_KNIFE (node);
 
@@ -53,6 +53,8 @@ arv_gc_swiss_knife_get_node_name (ArvGcNode *node)
 
 	return "IntSwissKnife";
 }
+
+/* ArvGcNode implementation */
 
 static void
 arv_gc_swiss_knife_add_element (ArvGcNode *node, const char *name, const char *content, const char **attributes)
@@ -150,18 +152,18 @@ arv_gc_swiss_knife_finalize (GObject *object)
 }
 
 static void
-arv_gc_swiss_knife_class_init (ArvGcSwissKnifeClass *swiss_knife_class)
+arv_gc_swiss_knife_class_init (ArvGcSwissKnifeClass *this_class)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS (swiss_knife_class);
-	ArvGcNodeClass *node_class = ARV_GC_NODE_CLASS (swiss_knife_class);
+	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
+	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
+	ArvGcNodeClass *gc_node_class = ARV_GC_NODE_CLASS (this_class);
 
-	parent_class = g_type_class_peek_parent (swiss_knife_class);
+	parent_class = g_type_class_peek_parent (this_class);
 
 	object_class->finalize = arv_gc_swiss_knife_finalize;
-
-	node_class->get_node_name = arv_gc_swiss_knife_get_node_name;
-	node_class->add_element = arv_gc_swiss_knife_add_element;
-	node_class->get_value_type = arv_gc_swiss_knife_node_get_value_type;
+	dom_node_class->get_node_name = arv_gc_swiss_knife_get_node_name;
+	gc_node_class->add_element = arv_gc_swiss_knife_add_element;
+	gc_node_class->get_value_type = arv_gc_swiss_knife_node_get_value_type;
 }
 
 /* ArvGcInteger interface implementation */

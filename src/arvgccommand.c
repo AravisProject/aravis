@@ -39,10 +39,12 @@ static GObjectClass *parent_class = NULL;
 /* ArvGcNode implementation */
 
 static const char *
-arv_gc_command_get_node_name (ArvGcNode *node)
+arv_gc_command_get_node_name (ArvDomNode *node)
 {
 	return "Command";
 }
+
+/* ArvGcNode implementation */
 
 static void
 arv_gc_command_add_element (ArvGcNode *node, const char *name, const char *content, const char **attributes)
@@ -113,17 +115,17 @@ arv_gc_command_finalize (GObject *object)
 }
 
 static void
-arv_gc_command_class_init (ArvGcCommandClass *command_class)
+arv_gc_command_class_init (ArvGcCommandClass *this_class)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS (command_class);
-	ArvGcNodeClass *node_class = ARV_GC_NODE_CLASS (command_class);
+	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
+	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
+	ArvGcNodeClass *gc_node_class = ARV_GC_NODE_CLASS (this_class);
 
-	parent_class = g_type_class_peek_parent (command_class);
+	parent_class = g_type_class_peek_parent (this_class);
 
 	object_class->finalize = arv_gc_command_finalize;
-
-	node_class->get_node_name = arv_gc_command_get_node_name;
-	node_class->add_element = arv_gc_command_add_element;
+	dom_node_class->get_node_name = arv_gc_command_get_node_name;
+	gc_node_class->add_element = arv_gc_command_add_element;
 }
 
 G_DEFINE_TYPE (ArvGcCommand, arv_gc_command, ARV_TYPE_GC_NODE)

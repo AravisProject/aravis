@@ -31,29 +31,30 @@ typedef struct _ArvCamera 		ArvCamera;
 
 typedef struct _ArvEvaluator 		ArvEvaluator;
 
-typedef struct _ArvDomNode ArvDomNode;
-typedef struct _ArvDomNodeList ArvDomNodeList;
-typedef struct _ArvDomNamedNodeMap ArvDomNamedNodeMap;
-typedef struct _ArvDomElement ArvDomElement;
-typedef struct _ArvDomDocument ArvDomDocument;
-typedef struct _ArvDomDocumentFragment ArvDomDocumentFragment;
-typedef struct _ArvDomCharacterData ArvDomCharacterData;
-typedef struct _ArvDomText ArvDomText;
+typedef struct _ArvDomNode 		ArvDomNode;
+typedef struct _ArvDomNodeList 		ArvDomNodeList;
+typedef struct _ArvDomNamedNodeMap 	ArvDomNamedNodeMap;
+typedef struct _ArvDomElement 		ArvDomElement;
+typedef struct _ArvDomDocument 		ArvDomDocument;
+typedef struct _ArvDomDocumentFragment 	ArvDomDocumentFragment;
+typedef struct _ArvDomCharacterData 	ArvDomCharacterData;
+typedef struct _ArvDomText 		ArvDomText;
 
-typedef struct _ArvGc 			ArvGc;
+typedef struct _ArvGc ArvGc;
 
-typedef struct _ArvGcNode 		ArvGcNode;
-typedef struct _ArvGcCategory		ArvGcCategory;
-typedef struct _ArvGcBoolean		ArvGcBoolean;
-typedef struct _ArvGcEnumeration	ArvGcEnumeration;
-typedef struct _ArvGcEnumEntry		ArvGcEnumEntry;
-typedef struct _ArvGcIntegerNode	ArvGcIntegerNode;
-typedef struct _ArvGcFloatNode		ArvGcFloatNode;
-typedef struct _ArvGcRegister 		ArvGcRegister;
-typedef struct _ArvGcCommand		ArvGcCommand;
-typedef struct _ArvGcSwissKnife		ArvGcSwissKnife;
-typedef struct _ArvGcConverter		ArvGcConverter;
-typedef struct _ArvGcPort		ArvGcPort;
+typedef struct _ArvGcNode 			ArvGcNode;
+typedef struct _ArvGcRegisterDescriptionNode 	ArvGcRegisterDescriptionNode;
+typedef struct _ArvGcCategory			ArvGcCategory;
+typedef struct _ArvGcBoolean			ArvGcBoolean;
+typedef struct _ArvGcEnumeration		ArvGcEnumeration;
+typedef struct _ArvGcEnumEntry			ArvGcEnumEntry;
+typedef struct _ArvGcIntegerNode		ArvGcIntegerNode;
+typedef struct _ArvGcFloatNode			ArvGcFloatNode;
+typedef struct _ArvGcRegister 			ArvGcRegister;
+typedef struct _ArvGcCommand			ArvGcCommand;
+typedef struct _ArvGcSwissKnife			ArvGcSwissKnife;
+typedef struct _ArvGcConverter			ArvGcConverter;
+typedef struct _ArvGcPort			ArvGcPort;
 
 typedef struct _ArvGcInteger		ArvGcInteger;
 typedef struct _ArvGcFloat		ArvGcFloat;

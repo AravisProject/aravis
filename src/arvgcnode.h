@@ -47,8 +47,6 @@ struct _ArvGcNode {
 struct _ArvGcNodeClass {
 	ArvDomElementClass parent_class;
 
-	const char *	(*get_node_name)		(ArvGcNode *gc_node);
-
 	void		(*set_attribute)		(ArvGcNode *gc_node, const char *name, const char *value);
 	void 		(*add_element)			(ArvGcNode *gc_node, const char *name, const char *content,
 							 const char **attributes);
@@ -62,7 +60,6 @@ struct _ArvGcNodeClass {
 GType arv_gc_node_get_type (void);
 
 ArvGcNode * 	arv_gc_node_new 			(void);
-const char *	arv_gc_node_get_node_name		(ArvGcNode *gc_node);
 GType 		arv_gc_node_get_value_type 		(ArvGcNode *gc_node);
 void		arv_gc_node_set_value_from_string	(ArvGcNode *gc_node, const char *string);
 const char *	arv_gc_node_get_value_as_string		(ArvGcNode *gc_node);
@@ -81,6 +78,8 @@ const GSList *	arv_gc_node_get_childs 			(ArvGcNode *gc_node);
 unsigned int 	arv_gc_node_get_n_childs 		(ArvGcNode *gc_node);
 void 		arv_gc_node_inc_modification_count 	(ArvGcNode *gc_node);
 gint 		arv_gc_node_get_modification_count 	(ArvGcNode *gc_node);
+
+const char * 	arv_gc_node_get_content (ArvGcNode *node);
 
 G_END_DECLS
 

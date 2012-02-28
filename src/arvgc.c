@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2012 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -44,10 +44,65 @@
 #include <arvgcconverter.h>
 #include <arvgcport.h>
 #include <arvdebug.h>
-#include <libxml/parser.h>
+#include <arvdomparser.h>
 #include <string.h>
 
 static GObjectClass *parent_class = NULL;
+
+/* ArvDomNode implementation */
+
+static gboolean
+arv_gc_can_append_child (ArvDomNode *self, ArvDomNode *child)
+{
+	/* FIXME */
+
+	return TRUE;
+}
+
+/* ArvDomDocument implementation */
+
+static ArvDomElement *
+arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
+{
+	ArvGcNode *node = NULL;
+
+	if (strcmp (tag_name, "Category") == 0)
+		node = arv_gc_category_new ();
+	else if (strcmp (tag_name, "Command") == 0)
+		node = arv_gc_command_new ();
+	else if (strcmp (tag_name, "Converter") == 0)
+		node = arv_gc_converter_new ();
+	else if (strcmp (tag_name, "IntConverter") == 0)
+		node = arv_gc_converter_new_integer ();
+	else if (strcmp (tag_name, "IntReg") == 0)
+		node = arv_gc_register_new_integer ();
+	else if (strcmp (tag_name, "MaskedIntReg") == 0)
+		node = arv_gc_register_new_masked_integer ();
+	else if (strcmp (tag_name, "FloatReg") == 0)
+		node = arv_gc_register_new_float ();
+	else if (strcmp (tag_name, "StringReg") == 0)
+		node = arv_gc_register_new_string ();
+	else if (strcmp (tag_name, "Integer") == 0)
+		node = arv_gc_integer_node_new ();
+	else if (strcmp (tag_name, "Float") == 0)
+		node = arv_gc_float_node_new ();
+	else if (strcmp (tag_name, "Boolean") == 0)
+		node = arv_gc_boolean_new ();
+	else if (strcmp (tag_name, "Enumeration") == 0)
+		node = arv_gc_enumeration_new ();
+	else if (strcmp (tag_name, "EnumEntry") == 0)
+		node = arv_gc_enum_entry_new ();
+	else if (strcmp (tag_name, "SwissKnife") == 0)
+		node = arv_gc_swiss_knife_new ();
+	else if (strcmp (tag_name, "IntSwissKnife") == 0)
+		node = arv_gc_swiss_knife_new_integer ();
+	else if (strcmp (tag_name, "Port") == 0)
+		node = arv_gc_port_new ();
+	else
+		arv_debug_dom ("[Genicam::create_element] Unknow tag (%s)", tag_name);
+
+	return ARV_DOM_ELEMENT (node);
+}
 
 #if 0
 static ArvGcNode *
@@ -296,6 +351,8 @@ arv_gc_parse_xml (ArvGc *genicam, const char *xml, size_t size)
 }
 #endif
 
+/* ArvGc implementation */
+
 /**
  * arv_gc_get_node:
  * @genicam: a #ArvGc object
@@ -416,18 +473,18 @@ arv_gc_set_double_to_value (ArvGc *genicam, GValue *value, double v_double)
 ArvGc *
 arv_gc_new (ArvDevice *device, const void *xml, size_t size)
 {
+	ArvDomDocument *document;
 	ArvGc *genicam;
 
-	g_return_val_if_fail (xml != NULL, NULL);
-	if (size == 0)
-		size = strlen ((char *) xml);
+	document = arv_dom_document_new_from_memory (xml, size, NULL);
+	if (!ARV_IS_GC (document)) {
+		if (document != NULL)
+			g_object_unref (document);
+		return NULL;
+	}
 
-	genicam = g_object_new (ARV_TYPE_GC, NULL);
-	g_return_val_if_fail (genicam != NULL, NULL);
+	genicam = ARV_GC (document);
 	genicam->device = device;
-
-	/* FIXME */
-/*        arv_gc_parse_xml (genicam, (char *) xml, size);*/
 
 	return genicam;
 }
@@ -452,10 +509,14 @@ static void
 arv_gc_class_init (ArvGcClass *node_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (node_class);
+	ArvDomNodeClass *d_node_class = ARV_DOM_NODE_CLASS (node_class);
+	ArvDomDocumentClass *d_document_class = ARV_DOM_DOCUMENT_CLASS (node_class);
 
 	parent_class = g_type_class_peek_parent (node_class);
 
 	object_class->finalize = arv_gc_finalize;
+	d_node_class->can_append_child = arv_gc_can_append_child;
+	d_document_class->create_element = arv_gc_create_element;
 }
 
 G_DEFINE_TYPE (ArvGc, arv_gc, ARV_TYPE_DOM_DOCUMENT)

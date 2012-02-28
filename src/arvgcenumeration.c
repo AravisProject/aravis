@@ -37,7 +37,7 @@ static GObjectClass *parent_class = NULL;
 /* ArvGcNode implementation */
 
 static const char *
-arv_gc_enumeration_get_node_name (ArvGcNode *node)
+arv_gc_enumeration_get_node_name (ArvDomNode *node)
 {
 	return "Enumeration";
 }
@@ -222,20 +222,21 @@ arv_gc_enumeration_finalize (GObject *object)
 }
 
 static void
-arv_gc_enumeration_class_init (ArvGcEnumerationClass *enumeration_class)
+arv_gc_enumeration_class_init (ArvGcEnumerationClass *this_class)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS (enumeration_class);
-	ArvGcNodeClass *node_class = ARV_GC_NODE_CLASS (enumeration_class);
+	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
+	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
+	ArvGcNodeClass *gc_node_class = ARV_GC_NODE_CLASS (this_class);
 
-	parent_class = g_type_class_peek_parent (enumeration_class);
+	parent_class = g_type_class_peek_parent (this_class);
 
 	object_class->finalize = arv_gc_enumeration_finalize;
 
-	node_class->get_node_name = arv_gc_enumeration_get_node_name;
-	node_class->add_element = arv_gc_enumeration_add_element;
-	node_class->can_add_child = arv_gc_enumeration_can_add_child;
-	node_class->set_value_from_string = arv_gc_enumeration_set_value_from_string;
-	node_class->get_value_as_string = arv_gc_enumeration_get_value_as_string;
+	dom_node_class->get_node_name = arv_gc_enumeration_get_node_name;
+	gc_node_class->add_element = arv_gc_enumeration_add_element;
+	gc_node_class->can_add_child = arv_gc_enumeration_can_add_child;
+	gc_node_class->set_value_from_string = arv_gc_enumeration_set_value_from_string;
+	gc_node_class->get_value_as_string = arv_gc_enumeration_get_value_as_string;
 }
 
 G_DEFINE_TYPE (ArvGcEnumeration, arv_gc_enumeration, ARV_TYPE_GC_NODE)
