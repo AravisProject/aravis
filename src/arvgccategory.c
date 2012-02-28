@@ -26,6 +26,7 @@
  */
 
 #include <arvgccategory.h>
+#include <arvgcpropertynode.h>
 #include <arvgc.h>
 #include <string.h>
 
@@ -37,6 +38,12 @@ static const char *
 arv_gc_category_get_node_name (ArvDomNode *node)
 {
 	return "Category";
+}
+
+static gboolean
+arv_gc_category_can_append_child (ArvDomNode *parent, ArvDomNode *child)
+{
+	return ARV_IS_GC_PROPERTY_NODE (child);
 }
 
 /* ArvGcCategory implementation */
@@ -75,7 +82,7 @@ arv_gc_category_get_features (ArvGcCategory *category)
 	     iter = arv_dom_node_get_next_sibling (iter))
 		if (g_strcmp0 (arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (iter)), "pFeature") == 0)
 			category->features = g_slist_append (category->features,
-							     g_strdup (arv_gc_feature_node_get_content (ARV_GC_FEATURE_NODE (iter))));
+							     g_strdup (arv_gc_property_node_get_content (ARV_GC_PROPERTY_NODE (iter))));
 
 	return category->features;
 }
@@ -116,6 +123,7 @@ arv_gc_category_class_init (ArvGcCategoryClass *this_class)
 
 	object_class->finalize = arv_gc_category_finalize;
 	dom_node_class->get_node_name = arv_gc_category_get_node_name;
+	dom_node_class->can_append_child = arv_gc_category_can_append_child;
 }
 
 G_DEFINE_TYPE (ArvGcCategory, arv_gc_category, ARV_TYPE_GC_NODE)

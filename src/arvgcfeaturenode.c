@@ -54,14 +54,6 @@ struct _ArvGcFeatureNodePrivate {
 };
 
 const char *
-arv_gc_feature_node_get_content (ArvGcFeatureNode *node)
-{
-	g_assert_not_reached ();
-	return NULL;
-}
-
-
-const char *
 arv_gc_feature_node_get_name (ArvGcFeatureNode *node)
 {
 	g_return_val_if_fail (ARV_IS_GC_NODE (node), NULL);

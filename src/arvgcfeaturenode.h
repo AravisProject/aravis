@@ -79,8 +79,6 @@ unsigned int 	arv_gc_feature_node_get_n_childs 		(ArvGcFeatureNode *gc_feature_n
 void 		arv_gc_feature_node_inc_modification_count 	(ArvGcFeatureNode *gc_feature_node);
 gint 		arv_gc_feature_node_get_modification_count 	(ArvGcFeatureNode *gc_feature_node);
 
-const char * 	arv_gc_feature_node_get_content (ArvGcFeatureNode *node);
-
 G_END_DECLS
 
 #endif
