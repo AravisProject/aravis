@@ -147,6 +147,35 @@ arv_gc_property_node_set_int64 (ArvGcPropertyNode *node, gint64 v_int64)
 	}
 }
 
+double
+arv_gc_property_node_get_double (ArvGcPropertyNode *node)
+{
+	const char *string;
+
+	string = arv_gc_property_node_get_string (node);
+
+	if (string != NULL)
+		return g_ascii_strtod (string, NULL);
+
+	 return 0.0;
+}
+
+void
+arv_gc_property_node_set_double (ArvGcPropertyNode *node, double v_double)
+{
+	ArvDomNode *child;
+
+	g_return_if_fail (ARV_IS_GC_PROPERTY_NODE (node));
+
+	child = arv_dom_node_get_first_child (ARV_DOM_NODE (node));
+	if (child != NULL) {
+		char buffer[G_ASCII_DTOSTR_BUF_SIZE];
+
+		g_ascii_dtostr (buffer, G_ASCII_DTOSTR_BUF_SIZE, v_double);
+		arv_dom_character_data_set_data (ARV_DOM_CHARACTER_DATA (child), buffer);
+	}
+}
+
 ArvGcPropertyNodeType
 arv_gc_property_node_get_node_type (ArvGcPropertyNode *node)
 {
