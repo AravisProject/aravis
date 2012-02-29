@@ -26,12 +26,24 @@
 		<Value>0.1</Value>
 	</Float>
 
+	<Float Name="P_RWFloat">
+		<pValue>RWFloat</pValue>
+	</Float>
+
 	<Boolean Name="RWBoolean">
 		<Value>1</Value>
 	</Boolean>
 
+	<Boolean Name="P_RWBoolean">
+		<pValue>RWBoolean</pValue>
+	</Boolean>
+
 	<Integer Name="RWInteger">
 		<Value>1</Value>
+	</Integer>
+
+	<Integer Name="P_RWInteger">
+		<pValue>RWInteger</pValue>
 	</Integer>
 
 	<Enumeration Name="Enumeration">

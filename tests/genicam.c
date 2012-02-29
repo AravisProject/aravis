@@ -25,6 +25,16 @@ integer_test (void)
 	v_string = arv_gc_feature_node_get_value_as_string (ARV_GC_FEATURE_NODE (node));
 	g_assert_cmpstr (v_string, ==, "1");
 
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node), 2);
+	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
+	g_assert_cmpint (v_int64, ==, 2);
+
+	node = arv_gc_get_node (genicam, "P_RWInteger");
+	g_assert (ARV_IS_GC_INTEGER_NODE (node));
+
+	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
+	g_assert_cmpint (v_int64, ==, 2);
+
 	g_object_unref (device);
 }
 
@@ -52,6 +62,19 @@ boolean_test (void)
 	v_string = arv_gc_feature_node_get_value_as_string (ARV_GC_FEATURE_NODE (node));
 	g_assert_cmpstr (v_string, ==, "true");
 
+	arv_gc_boolean_set_value (ARV_GC_BOOLEAN (node), 0);
+	v_boolean = arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node));
+	g_assert_cmpint (v_boolean, ==, FALSE);
+
+	v_string = arv_gc_feature_node_get_value_as_string (ARV_GC_FEATURE_NODE (node));
+	g_assert_cmpstr (v_string, ==, "false");
+
+	node = arv_gc_get_node (genicam, "P_RWBoolean");
+	g_assert (ARV_IS_GC_BOOLEAN (node));
+
+	v_boolean = arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node));
+	g_assert_cmpint (v_boolean, ==, FALSE);
+
 	g_object_unref (device);
 }
 
@@ -78,6 +101,16 @@ float_test (void)
 
 	v_string = arv_gc_feature_node_get_value_as_string (ARV_GC_FEATURE_NODE (node));
 	g_assert_cmpstr (v_string, ==, "0.1");
+
+	arv_gc_float_set_value (ARV_GC_FLOAT (node), 0.2);
+	v_double = arv_gc_float_get_value (ARV_GC_FLOAT (node));
+	g_assert_cmpfloat (v_double, ==, 0.2);
+
+	node = arv_gc_get_node (genicam, "P_RWFloat");
+	g_assert (ARV_IS_GC_FLOAT_NODE (node));
+
+	v_double = arv_gc_float_get_value (ARV_GC_FLOAT (node));
+	g_assert_cmpfloat (v_double, ==, 0.2);
 
 	g_object_unref (device);
 }
