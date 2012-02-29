@@ -29,6 +29,7 @@
  */
 
 #include <arvgcpropertynode.h>
+#include <arvgcfeaturenode.h>
 #include <arvgc.h>
 #include <arvdomtext.h>
 #include <arvmisc.h>
@@ -92,30 +93,62 @@ arv_gc_property_node_can_append_child (ArvDomNode *self, ArvDomNode *child)
 
 /* ArvGcPropertyNode implementation */
 
+static ArvDomNode *
+arv_gc_property_node_get_value_node (ArvGcPropertyNode *property_node)
+{
+	ArvDomNode *child;
+	ArvDomNode *value_node;
+	const char *node_name;
+	ArvGc *genicam;
+
+	child = arv_dom_node_get_first_child (ARV_DOM_NODE (property_node));
+	if (child == NULL)
+		return NULL;
+
+	if (property_node->type < ARV_GC_PROPERTY_NODE_TYPE_P_UNKNONW)
+		return ARV_DOM_NODE (child);
+
+	node_name = arv_dom_character_data_get_data (ARV_DOM_CHARACTER_DATA (child));
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (property_node));
+	value_node = ARV_DOM_NODE (arv_gc_get_node (genicam, node_name));
+
+	return value_node;
+}
+
 const char *
 arv_gc_property_node_get_string (ArvGcPropertyNode *node)
 {
-	ArvDomNode *child;
+	ArvDomNode *value_node;
 
 	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (node), NULL);
 
-	child = arv_dom_node_get_first_child (ARV_DOM_NODE (node));
-	if (child != NULL)
-		return arv_dom_character_data_get_data (ARV_DOM_CHARACTER_DATA (child));
+	value_node = arv_gc_property_node_get_value_node (node);
+	if (value_node == NULL)
+		return NULL;
 
-	return NULL;
+	if (ARV_IS_DOM_TEXT (value_node))
+		return arv_dom_character_data_get_data (ARV_DOM_CHARACTER_DATA (value_node));
+
+	return arv_gc_feature_node_get_value_as_string (ARV_GC_FEATURE_NODE (value_node));
 }
 	
 void
 arv_gc_property_node_set_string (ArvGcPropertyNode *node, const char *string)
 {
-	ArvDomNode *child;
+	ArvDomNode *value_node;
 
 	g_return_if_fail (ARV_IS_GC_PROPERTY_NODE (node));
 
-	child = arv_dom_node_get_first_child (ARV_DOM_NODE (node));
-	if (child != NULL)
-		arv_dom_character_data_set_data (ARV_DOM_CHARACTER_DATA (child), string);
+	value_node = arv_gc_property_node_get_value_node (node);
+	if (value_node == NULL)
+		return;
+
+	if (ARV_IS_DOM_TEXT (value_node)) {
+		arv_dom_character_data_set_data (ARV_DOM_CHARACTER_DATA (value_node), string);
+		return;
+	}
+
+	arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (value_node), string);
 }
 
 gint64
@@ -134,17 +167,13 @@ arv_gc_property_node_get_int64 (ArvGcPropertyNode *node)
 void
 arv_gc_property_node_set_int64 (ArvGcPropertyNode *node, gint64 v_int64)
 {
-	ArvDomNode *child;
+	char *buffer;
 
 	g_return_if_fail (ARV_IS_GC_PROPERTY_NODE (node));
 
-	child = arv_dom_node_get_first_child (ARV_DOM_NODE (node));
-	if (child != NULL) {
-		char *string = g_strdup_printf ("%" G_GINT64_FORMAT, v_int64);
-
-		arv_dom_character_data_set_data (ARV_DOM_CHARACTER_DATA (child), string);
-		g_free (string);
-	}
+	buffer = g_strdup_printf ("%" G_GINT64_FORMAT, v_int64);
+	arv_gc_property_node_set_string (node, buffer);
+	g_free (buffer);
 }
 
 double
@@ -163,17 +192,12 @@ arv_gc_property_node_get_double (ArvGcPropertyNode *node)
 void
 arv_gc_property_node_set_double (ArvGcPropertyNode *node, double v_double)
 {
-	ArvDomNode *child;
+	char buffer[G_ASCII_DTOSTR_BUF_SIZE];
 
 	g_return_if_fail (ARV_IS_GC_PROPERTY_NODE (node));
 
-	child = arv_dom_node_get_first_child (ARV_DOM_NODE (node));
-	if (child != NULL) {
-		char buffer[G_ASCII_DTOSTR_BUF_SIZE];
-
-		g_ascii_dtostr (buffer, G_ASCII_DTOSTR_BUF_SIZE, v_double);
-		arv_dom_character_data_set_data (ARV_DOM_CHARACTER_DATA (child), buffer);
-	}
+	g_ascii_dtostr (buffer, G_ASCII_DTOSTR_BUF_SIZE, v_double);
+	arv_gc_property_node_set_string (node, buffer);
 }
 
 ArvGcPropertyNodeType
