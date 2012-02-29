@@ -42,8 +42,6 @@ arv_gc_float_node_get_node_name (ArvDomNode *node)
 	return "Float";
 }
 
-/* ArvDomElement implementation */
-
 static void
 arv_gc_float_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 {

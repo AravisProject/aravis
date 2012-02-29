@@ -40,8 +40,6 @@ arv_gc_boolean_get_node_name (ArvDomNode *node)
 	return "Boolean";
 }
 
-/* ArvDomElement implementation */
-
 static void
 arv_gc_boolean_post_new_child (ArvDomNode *self, ArvDomNode *child)
 {

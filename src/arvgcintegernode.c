@@ -42,8 +42,6 @@ arv_gc_integer_node_get_node_name (ArvDomNode *node)
 	return "Integer";
 }
 
-/* ArvDomElement implementation */
-
 static void
 arv_gc_integer_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 {
