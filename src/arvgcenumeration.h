@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2012 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,6 +25,7 @@
 
 #include <arvtypes.h>
 #include <arvgcfeaturenode.h>
+#include <arvgcpropertynode.h>
 
 G_BEGIN_DECLS
 
@@ -38,9 +39,10 @@ G_BEGIN_DECLS
 typedef struct _ArvGcEnumerationClass ArvGcEnumerationClass;
 
 struct _ArvGcEnumeration {
-	ArvGcFeatureNode	node;
+	ArvGcFeatureNode base;
 
-	GValue value;
+	ArvGcPropertyNode *value;
+	GSList *entries;
 };
 
 struct _ArvGcEnumerationClass {
