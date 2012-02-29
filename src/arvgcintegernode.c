@@ -85,7 +85,7 @@ arv_gc_integer_node_pre_remove_child (ArvDomNode *self, ArvDomNode *child)
 	g_assert_not_reached ();
 }
 
-/* ArvGcIntegerNode implementation */
+/* ArvGcFeatureNode implementation */
 
 static GType
 arv_gc_integer_node_get_value_type (ArvGcFeatureNode *node)

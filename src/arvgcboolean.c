@@ -74,7 +74,7 @@ arv_gc_boolean_pre_remove_child (ArvDomNode *self, ArvDomNode *child)
 	g_assert_not_reached ();
 }
 
-/* ArvGcBoolean implementation */
+/* ArvGcFeatureNode implementation */
 
 static void
 arv_gc_boolean_set_value_from_string (ArvGcFeatureNode *node, const char *string)
