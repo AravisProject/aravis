@@ -108,6 +108,7 @@ gint64			arv_gc_property_node_get_int64		(ArvGcPropertyNode *node);
 void			arv_gc_property_node_set_int64		(ArvGcPropertyNode *node, gint64 v_int64);
 double 			arv_gc_property_node_get_double 	(ArvGcPropertyNode *node);
 void 			arv_gc_property_node_set_double 	(ArvGcPropertyNode *node, double v_double);
+ArvGcNode *		arv_gc_property_node_get_linked_node	(ArvGcPropertyNode *node);
 ArvGcPropertyNodeType	arv_gc_property_node_get_node_type	(ArvGcPropertyNode *node);
 
 G_END_DECLS

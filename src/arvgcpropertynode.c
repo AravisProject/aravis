@@ -220,6 +220,20 @@ arv_gc_property_node_get_node_type (ArvGcPropertyNode *node)
 	return node->type;
 }
 
+ArvGcNode *
+arv_gc_property_node_get_linked_node (ArvGcPropertyNode *node)
+{
+	ArvGc *genicam;
+	ArvDomNode *child;
+
+	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (node), NULL);
+	g_return_val_if_fail (node->type > ARV_GC_PROPERTY_NODE_TYPE_P_UNKNONW, NULL);
+
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (node));
+	child = arv_dom_node_get_first_child (ARV_DOM_NODE (node));
+	return arv_gc_get_node (genicam, arv_dom_character_data_get_data (ARV_DOM_CHARACTER_DATA (child)));
+}
+
 static ArvGcNode *
 arv_gc_property_node_new (ArvGcPropertyNodeType type)
 {
