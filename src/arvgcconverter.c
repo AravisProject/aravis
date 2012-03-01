@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2012 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,21 +26,16 @@
  */
 
 #include <arvgcfeaturenode.h>
+#include <arvgcvariablenode.h>
 #include <arvgcconverter.h>
 #include <arvevaluator.h>
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
-#include <arvgcport.h>
 #include <arvgc.h>
 #include <arvdebug.h>
 #include <string.h>
 
 static GObjectClass *parent_class = NULL;
-
-typedef struct {
-	char *name;
-	char *node_name;
-} ArvGcConverterVariableInfos;
 
 /* ArvDomNode implementation */
 
@@ -55,53 +50,45 @@ arv_gc_converter_get_node_name (ArvDomNode *node)
 	return "IntConverter";
 }
 
-/* ArvGcFeatureNode implementation */
-
-#if 0
 static void
-arv_gc_converter_add_element (ArvGcFeatureNode *node, const char *name, const char *content, const char **attributes)
+arv_gc_converter_post_new_child (ArvDomNode *self, ArvDomNode *child)
 {
-	ArvGcConverter *gc_converter = ARV_GC_CONVERTER (node);
+	ArvGcConverter *node = ARV_GC_CONVERTER (self);
 
-	if (strcmp (name, "pVariable") == 0) {
-		const char *variable_name = NULL;
-		int i;
+	if (ARV_IS_GC_PROPERTY_NODE (child)) {
+		ArvGcPropertyNode *property_node = ARV_GC_PROPERTY_NODE (child);
 
-		for (i = 0; attributes[i] != NULL && attributes[i+1] != NULL; i += 2)
-			if (g_strcmp0 (attributes[i], "Name") == 0) {
-				variable_name = attributes[i+1];
+		switch (arv_gc_property_node_get_node_type (property_node)) {
+			case ARV_GC_PROPERTY_NODE_TYPE_P_VARIABLE:
+				node->variables = g_slist_prepend (node->variables, property_node);
 				break;
-			}
-
-		if (variable_name != NULL) {
-			ArvGcConverterVariableInfos *variable_infos;
-
-			variable_infos = g_new (ArvGcConverterVariableInfos, 1);
-			variable_infos->name = g_strdup (variable_name);
-			variable_infos->node_name = g_strdup (content);
-			gc_converter->variables = g_slist_prepend (gc_converter->variables,
-								     variable_infos);
-
-			arv_log_gvcp ("[GcConverter::add_element] Add pVariable '%s' named '%s'",
-				      content, variable_name);
+			case ARV_GC_PROPERTY_NODE_TYPE_P_VALUE:
+				node->value = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_FORMULA_TO:
+				node->formula_to_node = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_FORMULA_FROM:
+				node->formula_from_node = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_EXPRESSION:
+			case ARV_GC_PROPERTY_NODE_TYPE_CONSTANT:
+				arv_warning_genicam ("[GcConverter::post_new_child] Constant and Expression not yet implemented");
+				break;
+			default:
+				ARV_DOM_NODE_CLASS (parent_class)->post_new_child (self, child);
+				break;
 		}
-	} else if (strcmp (name, "FormulaTo") == 0) {
-		arv_evaluator_set_expression (gc_converter->formula_to, content);
-	} else if (strcmp (name, "FormulaFrom") == 0) {
-		arv_evaluator_set_expression (gc_converter->formula_from, content);
-	} else if (strcmp (name, "pValue") == 0) {
-		g_free (gc_converter->value);
-		gc_converter->value = g_strdup (content);
-	} else if (strcmp (name, "Expression") == 0) {
-		g_assert_not_reached ();
-	} else if (strcmp (name, "Constant") == 0) {
-		g_assert_not_reached ();
-	} else
-		ARV_GC_FEATURE_NODE_CLASS (parent_class)->add_element (node, name, content, attributes);
+	}
 }
-#endif
 
-/* ArvGcConverter implementation */
+static void
+arv_gc_converter_pre_remove_child (ArvDomNode *self, ArvDomNode *child)
+{
+	g_assert_not_reached ();
+}
+
+/* ArvGcFeatureNode implementation */
 
 static GType
 arv_gc_converter_node_get_value_type (ArvGcFeatureNode *node)
@@ -110,6 +97,8 @@ arv_gc_converter_node_get_value_type (ArvGcFeatureNode *node)
 
 	return gc_converter->value_type;
 }
+
+/* ArvGcConverter implementation */
 
 ArvGcNode *
 arv_gc_converter_new (void)
@@ -145,21 +134,19 @@ static void
 arv_gc_converter_finalize (GObject *object)
 {
 	ArvGcConverter *gc_converter = ARV_GC_CONVERTER (object);
-	GSList *iter;
+/*        GSList *iter;*/
 
-	for (iter = gc_converter->variables; iter != NULL; iter = iter->next) {
-		ArvGcConverterVariableInfos *variable_infos = iter->data;
+/*        for (iter = gc_converter->variables; iter != NULL; iter = iter->next) {*/
+/*                ArvGcConverterVariableInfos *variable_infos = iter->data;*/
 
-		g_free (variable_infos->name);
-		g_free (variable_infos->node_name);
-		g_free (variable_infos);
-	}
+/*                g_free (variable_infos->name);*/
+/*                g_free (variable_infos->node_name);*/
+/*                g_free (variable_infos);*/
+/*        }*/
 	g_slist_free (gc_converter->variables);
 
 	g_object_unref (gc_converter->formula_to);
 	g_object_unref (gc_converter->formula_from);
-
-	g_free (gc_converter->value);
 
 	parent_class->finalize (object);
 }
@@ -175,7 +162,8 @@ arv_gc_converter_class_init (ArvGcConverterClass *this_class)
 
 	object_class->finalize = arv_gc_converter_finalize;
 	dom_node_class->get_node_name = arv_gc_converter_get_node_name;
-/*        gc_feature_node_class->add_element = arv_gc_converter_add_element;*/
+	dom_node_class->post_new_child = arv_gc_converter_post_new_child;
+	dom_node_class->pre_remove_child = arv_gc_converter_pre_remove_child;
 	gc_feature_node_class->get_value_type = arv_gc_converter_node_get_value_type;
 }
 
@@ -184,70 +172,87 @@ arv_gc_converter_class_init (ArvGcConverterClass *this_class)
 static void
 _update_from_variables (ArvGcConverter *gc_converter)
 {
-	ArvGc *genicam;
-	ArvGcNode *node;
+	ArvGcNode *node = NULL;
 	GSList *iter;
+	const char *expression;
 
-	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_converter));
+	if (gc_converter->formula_from_node != NULL)
+		expression = arv_gc_property_node_get_string (gc_converter->formula_from_node);
+	else
+		expression = "";
+	arv_evaluator_set_expression (gc_converter->formula_from, expression);
 
 	for (iter = gc_converter->variables; iter != NULL; iter = iter->next) {
-		ArvGcConverterVariableInfos *variable_infos = iter->data;
+		ArvGcVariableNode *variable_node = iter->data;
 
-		node = arv_gc_get_node (genicam, variable_infos->node_name);
+		node = arv_gc_property_node_get_linked_node (ARV_GC_PROPERTY_NODE (variable_node));
 		if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_INT64)
 			arv_evaluator_set_int64_variable (gc_converter->formula_from,
-							  variable_infos->name,
+							  arv_gc_variable_node_get_name (variable_node),
 							  arv_gc_integer_get_value (ARV_GC_INTEGER (node)));
 		else if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_DOUBLE)
 			arv_evaluator_set_double_variable (gc_converter->formula_from,
-							   variable_infos->name,
+							  arv_gc_variable_node_get_name (variable_node),
 							   arv_gc_float_get_value (ARV_GC_FLOAT (node)));
 	}
 
-	node = arv_gc_get_node (genicam, gc_converter->value);
-	if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_INT64)
-		arv_evaluator_set_int64_variable (gc_converter->formula_from,
-						  "TO",
-						  arv_gc_integer_get_value (ARV_GC_INTEGER (node)));
-	else if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_DOUBLE)
-		arv_evaluator_set_double_variable (gc_converter->formula_from,
-						   "TO",
-						   arv_gc_float_get_value (ARV_GC_FLOAT (node)));
+	if (gc_converter->value != NULL) {
+		node = arv_gc_property_node_get_linked_node (gc_converter->value);
+
+		if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_INT64)
+			arv_evaluator_set_int64_variable (gc_converter->formula_from,
+							  "TO",
+							  arv_gc_integer_get_value (ARV_GC_INTEGER (node)));
+		else if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_DOUBLE)
+			arv_evaluator_set_double_variable (gc_converter->formula_from,
+							   "TO",
+							   arv_gc_float_get_value (ARV_GC_FLOAT (node)));
+		else
+			arv_warning_genicam ("[GcConverter::set_value] Invalid pValue node '%s'",
+					     gc_converter->value);
+	}
 }
 
 static void
 _update_to_variables (ArvGcConverter *gc_converter)
 {
-	ArvGc *genicam;
 	ArvGcNode *node;
 	GSList *iter;
+	const char *expression;
 
-	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_converter));
+	if (gc_converter->formula_to_node != NULL)
+		expression = arv_gc_property_node_get_string (gc_converter->formula_to_node);
+	else
+		expression = "";
+	arv_evaluator_set_expression (gc_converter->formula_to, expression);
 
 	for (iter = gc_converter->variables; iter != NULL; iter = iter->next) {
-		ArvGcConverterVariableInfos *variable_infos = iter->data;
+		ArvGcVariableNode *variable_node = iter->data;
 
-		node = arv_gc_get_node (genicam, variable_infos->node_name);
+		node = arv_gc_property_node_get_linked_node (ARV_GC_PROPERTY_NODE (variable_node));
 		if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_INT64)
 			arv_evaluator_set_int64_variable (gc_converter->formula_to,
-							  variable_infos->name,
+							  arv_gc_variable_node_get_name (variable_node),
 							  arv_gc_integer_get_value (ARV_GC_INTEGER (node)));
 		else if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_DOUBLE)
 			arv_evaluator_set_double_variable (gc_converter->formula_to,
-							   variable_infos->name,
+							  arv_gc_variable_node_get_name (variable_node),
 							   arv_gc_float_get_value (ARV_GC_FLOAT (node)));
 	}
 
-	node = arv_gc_get_node (genicam, gc_converter->value);
-	if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_INT64)
-		arv_gc_integer_set_value (ARV_GC_INTEGER (node),
-					  arv_evaluator_evaluate_as_int64 (gc_converter->formula_to, NULL));
-	else if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_DOUBLE)
-		arv_gc_float_set_value (ARV_GC_FLOAT (node),
-					arv_evaluator_evaluate_as_double (gc_converter->formula_to, NULL));
-	else
-		arv_warning_genicam ("[GcConverter::set_value] Invalid pValue node '%s'",
-				     gc_converter->value);
+	if (gc_converter->value != NULL) {
+		node = arv_gc_property_node_get_linked_node (gc_converter->value);
+
+		if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_INT64)
+			arv_gc_integer_set_value (ARV_GC_INTEGER (node),
+						  arv_evaluator_evaluate_as_int64 (gc_converter->formula_to, NULL));
+		else if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_DOUBLE)
+			arv_gc_float_set_value (ARV_GC_FLOAT (node),
+						arv_evaluator_evaluate_as_double (gc_converter->formula_to, NULL));
+		else
+			arv_warning_genicam ("[GcConverter::set_value] Invalid pValue node '%s'",
+					     gc_converter->value);
+	}
 }
 
 static gint64
