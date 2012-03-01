@@ -35,6 +35,7 @@
 #include <arvgcindexnode.h>
 #include <arvgcvariablenode.h>
 #include <arvgcregisterdescriptionnode.h>
+#include <arvgcgroupnode.h>
 #include <arvgccategory.h>
 #include <arvgcenumeration.h>
 #include <arvgcenumentry.h>
@@ -161,6 +162,8 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 		node = arv_gc_property_node_new_expression ();
 	else if (strcmp (tag_name, "Constant") == 0)
 		node = arv_gc_property_node_new_constant ();
+	else if (strcmp (tag_name, "Group") == 0)
+		node = arv_gc_group_node_new ();
 	else
 		arv_debug_dom ("[Genicam::create_element] Unknow tag (%s)", tag_name);
 

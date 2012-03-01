@@ -51,6 +51,7 @@ ARAVIS_SRCS =					\
 	arvgcvariablenode.c			\
 	arvgcfeaturenode.c			\
 	arvgcregisterdescriptionnode.c		\
+	arvgcgroupnode.c			\
 	arvgccategory.c				\
 	arvgcboolean.c				\
 	arvgcenumeration.c			\
@@ -109,6 +110,7 @@ ARAVIS_HDRS = 					\
 	arvgcvariablenode.h			\
 	arvgcfeaturenode.h			\
 	arvgcregisterdescriptionnode.h		\
+	arvgcgroupnode.h			\
 	arvgccategory.h				\
 	arvgcboolean.h				\
 	arvgcenumeration.h			\
