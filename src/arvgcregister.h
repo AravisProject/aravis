@@ -77,26 +77,21 @@ struct _ArvGcRegister {
 	ArvGcPropertyNode *index;
 	ArvGcPropertyNode *length;
 	ArvGcPropertyNode *port;
+	ArvGcPropertyNode *access_mode;
+	ArvGcPropertyNode *cachable;
+	ArvGcPropertyNode *polling_time;
+	ArvGcPropertyNode *endianess;
+	ArvGcPropertyNode *sign;
+	ArvGcPropertyNode *lsb;
+	ArvGcPropertyNode *msb;
 
-//        char *index;
-//        GValue index_offset;
-//        GValue length;
-	ArvGcAccessMode access_mode;
-	ArvGcCachable cachable;
-	guint64 polling_time;
-//        char *port_name;
-	guint endianess;
-	ArvGcSign sign;
-	guint msb;
-	guint lsb;
+	GSList *invalidators;		/* ArvGcPropertyNode list */
 
 	void *cache;
 	size_t cache_size;
 	gboolean is_cache_valid;
 
 	char v_string[G_ASCII_DTOSTR_BUF_SIZE];
-
-	GSList *invalidators;
 };
 
 struct _ArvGcRegisterClass {
