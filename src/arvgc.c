@@ -138,6 +138,7 @@ ArvGcNode *
 arv_gc_get_node	(ArvGc *genicam, const char *name)
 {
 	g_return_val_if_fail (ARV_IS_GC (genicam), NULL);
+	g_return_val_if_fail (name != NULL, NULL);
 
 	return g_hash_table_lookup (genicam->nodes, name);
 }
