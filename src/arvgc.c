@@ -32,6 +32,7 @@
 #include <arvgc.h>
 #include <arvgcnode.h>
 #include <arvgcpropertynode.h>
+#include <arvgcindexnode.h>
 #include <arvgcregisterdescriptionnode.h>
 #include <arvgccategory.h>
 #include <arvgcenumeration.h>
@@ -99,6 +100,8 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 		node = arv_gc_swiss_knife_new_integer ();
 	else if (strcmp (tag_name, "Port") == 0)
 		node = arv_gc_port_new ();
+	else if (strcmp (tag_name, "pIndex") == 0)
+		node = arv_gc_index_node_new ();
 	else if (strcmp (tag_name, "RegisterDescription") == 0)
 		node = arv_gc_register_description_node_new ();
 	else if (strcmp (tag_name, "pFeature") == 0)
