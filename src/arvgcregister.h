@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2012 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,6 +25,7 @@
 
 #include <arvtypes.h>
 #include <arvgcfeaturenode.h>
+#include <arvgcpropertynode.h>
 
 G_BEGIN_DECLS
 
@@ -71,14 +72,19 @@ struct _ArvGcRegister {
 
 	ArvGcRegisterType type;
 	GType value_type;
+
 	GSList *addresses;
-	char *index;
-	GValue index_offset;
-	GValue length;
+	ArvGcPropertyNode *index;
+	ArvGcPropertyNode *length;
+	ArvGcPropertyNode *port;
+
+//        char *index;
+//        GValue index_offset;
+//        GValue length;
 	ArvGcAccessMode access_mode;
 	ArvGcCachable cachable;
 	guint64 polling_time;
-	char *port_name;
+//        char *port_name;
 	guint endianess;
 	ArvGcSign sign;
 	guint msb;
