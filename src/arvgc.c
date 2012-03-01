@@ -162,6 +162,26 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 		node = arv_gc_property_node_new_expression ();
 	else if (strcmp (tag_name, "Constant") == 0)
 		node = arv_gc_property_node_new_constant ();
+
+	else if (strcmp (tag_name, "AccessMode") == 0)
+		node = arv_gc_property_node_new_access_mode ();
+	else if (strcmp (tag_name, "Cachable") == 0)
+		node = arv_gc_property_node_new_cachable ();
+	else if (strcmp (tag_name, "PollingTime") == 0)
+		node = arv_gc_property_node_new_polling_time ();
+	else if (strcmp (tag_name, "Endianess") == 0)
+		node = arv_gc_property_node_new_endianess ();
+	else if (strcmp (tag_name, "Sign") == 0)
+		node = arv_gc_property_node_new_sign ();
+	else if (strcmp (tag_name, "LSB") == 0)
+		node = arv_gc_property_node_new_lsb ();
+	else if (strcmp (tag_name, "MSB") == 0)
+		node = arv_gc_property_node_new_msb ();
+	else if (strcmp (tag_name, "Bit") == 0)
+		node = arv_gc_property_node_new_bit ();
+	else if (strcmp (tag_name, "pInvalidator") == 0)
+		node = arv_gc_property_node_new_p_invalidator ();
+
 	else if (strcmp (tag_name, "Group") == 0)
 		node = arv_gc_group_node_new ();
 	else

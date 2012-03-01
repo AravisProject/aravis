@@ -80,6 +80,22 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 			return "Expression";
 		case ARV_GC_PROPERTY_NODE_TYPE_CONSTANT:
 			return "Constant";
+		case ARV_GC_PROPERTY_NODE_TYPE_ACCESS_MODE:
+			return "AccessMode";
+		case ARV_GC_PROPERTY_NODE_TYPE_CACHABLE:
+			return "Cachable";
+		case ARV_GC_PROPERTY_NODE_TYPE_POLLING_TIME:
+			return "PollingTime";
+		case ARV_GC_PROPERTY_NODE_TYPE_ENDIANESS:
+			return "Endianess";
+		case ARV_GC_PROPERTY_NODE_TYPE_SIGN:
+			return "Sign";
+		case ARV_GC_PROPERTY_NODE_TYPE_LSB:
+			return "LSB";
+		case ARV_GC_PROPERTY_NODE_TYPE_MSB:
+			return "MSB";
+		case ARV_GC_PROPERTY_NODE_TYPE_BIT:
+			return "Bit";
 
 		case ARV_GC_PROPERTY_NODE_TYPE_P_FEATURE:
 			return "pFeature";
@@ -103,6 +119,8 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 			return "pPort";
 		case ARV_GC_PROPERTY_NODE_TYPE_P_VARIABLE:
 			return "pVariable";
+		case ARV_GC_PROPERTY_NODE_TYPE_P_INVALIDATOR:
+			return "pInvalidator";
 		default:
 			return "Unknown";
 	}
@@ -418,6 +436,60 @@ ArvGcNode *
 arv_gc_property_node_new_constant (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_CONSTANT);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_access_mode (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_ACCESS_MODE);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_cachable (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_CACHABLE);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_polling_time (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_POLLING_TIME);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_endianess (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_ENDIANESS);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_sign (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_SIGN);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_lsb (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_LSB);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_msb (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_MSB);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_bit (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_BIT);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_p_invalidator (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_P_INVALIDATOR);
 }
 
 static void
