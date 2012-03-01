@@ -151,6 +151,8 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 		node = arv_gc_property_node_new_p_port ();
 	else if (strcmp (tag_name, "pVariable") == 0)
 		node = arv_gc_variable_node_new ();
+	else if (strcmp (tag_name, "Formula") == 0)
+		node = arv_gc_property_node_new_formula ();
 	else if (strcmp (tag_name, "FormulaTo") == 0)
 		node = arv_gc_property_node_new_formula_to ();
 	else if (strcmp (tag_name, "FormulaFrom") == 0)

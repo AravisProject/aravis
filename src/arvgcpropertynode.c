@@ -70,6 +70,8 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 			return "OffValue";
 		case ARV_GC_PROPERTY_NODE_TYPE_LENGTH:
 			return "Length";
+		case ARV_GC_PROPERTY_NODE_TYPE_FORMULA:
+			return "Formula";
 		case ARV_GC_PROPERTY_NODE_TYPE_FORMULA_TO:
 			return "FormulaTo";
 		case ARV_GC_PROPERTY_NODE_TYPE_FORMULA_FROM:
@@ -386,6 +388,12 @@ ArvGcNode *
 arv_gc_property_node_new_p_port (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_P_PORT);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_formula (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_FORMULA);
 }
 
 ArvGcNode *

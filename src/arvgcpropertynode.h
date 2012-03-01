@@ -42,6 +42,7 @@ typedef enum {
 	ARV_GC_PROPERTY_NODE_TYPE_ON_VALUE,
 	ARV_GC_PROPERTY_NODE_TYPE_OFF_VALUE,
 	ARV_GC_PROPERTY_NODE_TYPE_LENGTH,
+	ARV_GC_PROPERTY_NODE_TYPE_FORMULA,
 	ARV_GC_PROPERTY_NODE_TYPE_FORMULA_TO,
 	ARV_GC_PROPERTY_NODE_TYPE_FORMULA_FROM,
 	ARV_GC_PROPERTY_NODE_TYPE_EXPRESSION,
@@ -106,6 +107,7 @@ ArvGcNode * 	arv_gc_property_node_new_p_is_available 	(void);
 ArvGcNode * 	arv_gc_property_node_new_length			(void);
 ArvGcNode * 	arv_gc_property_node_new_p_length		(void);
 ArvGcNode * 	arv_gc_property_node_new_p_port 		(void);
+ArvGcNode * 	arv_gc_property_node_new_formula		(void);
 ArvGcNode * 	arv_gc_property_node_new_formula_to		(void);
 ArvGcNode * 	arv_gc_property_node_new_formula_from		(void);
 ArvGcNode * 	arv_gc_property_node_new_expression		(void);
