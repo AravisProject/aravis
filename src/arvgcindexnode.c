@@ -59,6 +59,8 @@ arv_gc_index_node_set_attribute (ArvDomElement *self, const char *name, const ch
 		arv_force_g_value_to_int64 (&index_node->offset, g_ascii_strtoll (value, NULL, 0));
 	else if (strcmp (name, "pOffset") == 0) 
 		arv_force_g_value_to_string (&index_node->offset, value);
+	else
+		ARV_DOM_ELEMENT_CLASS (parent_class)->set_attribute (self, name, value);
 }
 
 static const char *
