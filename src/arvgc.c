@@ -110,16 +110,44 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 		node = arv_gc_property_node_new_value ();
 	else if (strcmp (tag_name, "pValue") == 0)
 		node = arv_gc_property_node_new_p_value ();
+	else if (strcmp (tag_name, "Address") == 0)
+		node = arv_gc_property_node_new_address ();
+	else if (strcmp (tag_name, "pAddress") == 0)
+		node = arv_gc_property_node_new_p_address ();
 	else if (strcmp (tag_name, "Description") == 0)
 		node = arv_gc_property_node_new_description ();
 	else if (strcmp (tag_name, "Tooltip") == 0)
 		node = arv_gc_property_node_new_tooltip ();
 	else if (strcmp (tag_name, "DisplayName") == 0)
 		node = arv_gc_property_node_new_display_name ();
+	else if (strcmp (tag_name, "Min") == 0)
+		node = arv_gc_property_node_new_minimum ();
+	else if (strcmp (tag_name, "pMin") == 0)
+		node = arv_gc_property_node_new_p_minimum ();
+	else if (strcmp (tag_name, "Max") == 0)
+		node = arv_gc_property_node_new_maximum ();
+	else if (strcmp (tag_name, "pMax") == 0)
+		node = arv_gc_property_node_new_p_maximum ();
+	else if (strcmp (tag_name, "Inc") == 0)
+		node = arv_gc_property_node_new_increment ();
+	else if (strcmp (tag_name, "pInc") == 0)
+		node = arv_gc_property_node_new_p_increment ();
+	else if (strcmp (tag_name, "Unit") == 0)
+		node = arv_gc_property_node_new_unit ();
+	else if (strcmp (tag_name, "OnValue") == 0)
+		node = arv_gc_property_node_new_on_value ();
+	else if (strcmp (tag_name, "OffValue") == 0)
+		node = arv_gc_property_node_new_off_value ();
 	else if (strcmp (tag_name, "pIsImplemented") == 0)
 		node = arv_gc_property_node_new_p_is_implemented ();
 	else if (strcmp (tag_name, "pIsAvailable") == 0)
 		node = arv_gc_property_node_new_p_is_available ();
+	else if (strcmp (tag_name, "Length") == 0)
+		node = arv_gc_property_node_new_length ();
+	else if (strcmp (tag_name, "pLength") == 0)
+		node = arv_gc_property_node_new_p_length ();
+	else if (strcmp (tag_name, "pPort") == 0)
+		node = arv_gc_property_node_new_p_port ();
 	else
 		arv_debug_dom ("[Genicam::create_element] Unknow tag (%s)", tag_name);
 
