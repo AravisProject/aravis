@@ -31,6 +31,7 @@ G_BEGIN_DECLS
 typedef enum {
 	ARV_GC_PROPERTY_NODE_TYPE_UNKNOWN	= 0,
 	ARV_GC_PROPERTY_NODE_TYPE_VALUE,
+	ARV_GC_PROPERTY_NODE_TYPE_ADDRESS,
 	ARV_GC_PROPERTY_NODE_TYPE_DESCRIPTION,
 	ARV_GC_PROPERTY_NODE_TYPE_TOOLTIP,
 	ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_NAME,
@@ -40,15 +41,20 @@ typedef enum {
 	ARV_GC_PROPERTY_NODE_TYPE_UNIT,
 	ARV_GC_PROPERTY_NODE_TYPE_ON_VALUE,
 	ARV_GC_PROPERTY_NODE_TYPE_OFF_VALUE,
+	ARV_GC_PROPERTY_NODE_TYPE_LENGTH,
 
 	ARV_GC_PROPERTY_NODE_TYPE_P_UNKNONW	= 1000,
 	ARV_GC_PROPERTY_NODE_TYPE_P_FEATURE,
 	ARV_GC_PROPERTY_NODE_TYPE_P_VALUE,
+	ARV_GC_PROPERTY_NODE_TYPE_P_ADDRESS,
 	ARV_GC_PROPERTY_NODE_TYPE_P_IS_IMPLEMENTED,
 	ARV_GC_PROPERTY_NODE_TYPE_P_IS_AVAILABLE,
 	ARV_GC_PROPERTY_NODE_TYPE_P_MINIMUM,
 	ARV_GC_PROPERTY_NODE_TYPE_P_MAXIMUM,
 	ARV_GC_PROPERTY_NODE_TYPE_P_INCREMENT,
+	ARV_GC_PROPERTY_NODE_TYPE_P_INDEX,
+	ARV_GC_PROPERTY_NODE_TYPE_P_LENGTH,
+	ARV_GC_PROPERTY_NODE_TYPE_P_PORT
 } ArvGcPropertyNodeType;
 
 #define ARV_TYPE_GC_PROPERTY_NODE             (arv_gc_property_node_get_type ())
@@ -76,11 +82,25 @@ GType arv_gc_property_node_get_type (void);
 ArvGcNode * 	arv_gc_property_node_new_p_feature 		(void);
 ArvGcNode * 	arv_gc_property_node_new_value 			(void);
 ArvGcNode * 	arv_gc_property_node_new_p_value		(void);
+ArvGcNode * 	arv_gc_property_node_new_address		(void);
+ArvGcNode * 	arv_gc_property_node_new_p_address		(void);
 ArvGcNode * 	arv_gc_property_node_new_description 		(void);
 ArvGcNode * 	arv_gc_property_node_new_tooltip 		(void);
 ArvGcNode * 	arv_gc_property_node_new_display_name 		(void);
+ArvGcNode * 	arv_gc_property_node_new_minimum		(void);
+ArvGcNode * 	arv_gc_property_node_new_p_minimum		(void);
+ArvGcNode * 	arv_gc_property_node_new_maximum		(void);
+ArvGcNode * 	arv_gc_property_node_new_p_maximum		(void);
+ArvGcNode * 	arv_gc_property_node_new_increment		(void);
+ArvGcNode * 	arv_gc_property_node_new_p_increment		(void);
+ArvGcNode * 	arv_gc_property_node_new_unit			(void);
+ArvGcNode * 	arv_gc_property_node_new_on_value 		(void);
+ArvGcNode * 	arv_gc_property_node_new_off_value 		(void);
 ArvGcNode * 	arv_gc_property_node_new_p_is_implemented 	(void);
 ArvGcNode * 	arv_gc_property_node_new_p_is_available 	(void);
+ArvGcNode * 	arv_gc_property_node_new_length			(void);
+ArvGcNode * 	arv_gc_property_node_new_p_length		(void);
+ArvGcNode * 	arv_gc_property_node_new_p_port 		(void);
 
 const char * 		arv_gc_property_node_get_string 	(ArvGcPropertyNode *node);
 void	 		arv_gc_property_node_set_string 	(ArvGcPropertyNode *node, const char *string);

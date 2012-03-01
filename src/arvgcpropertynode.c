@@ -48,6 +48,8 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 	switch (property_node->type) {
 		case ARV_GC_PROPERTY_NODE_TYPE_VALUE:
 			return "Value";
+		case ARV_GC_PROPERTY_NODE_TYPE_ADDRESS:
+			return "Address";
 		case ARV_GC_PROPERTY_NODE_TYPE_DESCRIPTION:
 			return "Description";
 		case ARV_GC_PROPERTY_NODE_TYPE_TOOLTIP:
@@ -60,14 +62,20 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 			return "Max";
 		case ARV_GC_PROPERTY_NODE_TYPE_INCREMENT:
 			return "Inc";
+		case ARV_GC_PROPERTY_NODE_TYPE_UNIT:
+			return "Unit";
 		case ARV_GC_PROPERTY_NODE_TYPE_ON_VALUE:
 			return "OnValue";
 		case ARV_GC_PROPERTY_NODE_TYPE_OFF_VALUE:
 			return "OffValue";
+		case ARV_GC_PROPERTY_NODE_TYPE_LENGTH:
+			return "Length";
 		case ARV_GC_PROPERTY_NODE_TYPE_P_FEATURE:
 			return "pFeature";
 		case ARV_GC_PROPERTY_NODE_TYPE_P_VALUE:
 			return "pValue";
+		case ARV_GC_PROPERTY_NODE_TYPE_P_ADDRESS:
+			return "pAddress";
 		case ARV_GC_PROPERTY_NODE_TYPE_P_IS_IMPLEMENTED:
 			return "pIsImplemented";
 		case ARV_GC_PROPERTY_NODE_TYPE_P_IS_AVAILABLE:
@@ -78,6 +86,10 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 			return "pMax";
 		case ARV_GC_PROPERTY_NODE_TYPE_P_INCREMENT:
 			return "pInc";
+		case ARV_GC_PROPERTY_NODE_TYPE_P_LENGTH:
+			return "pLength";
+		case ARV_GC_PROPERTY_NODE_TYPE_P_PORT:
+			return "pPort";
 		default:
 			return "Unknown";
 	}
@@ -238,6 +250,18 @@ arv_gc_property_node_new_p_value (void)
 }
 
 ArvGcNode *
+arv_gc_property_node_new_address (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_ADDRESS);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_p_address (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_P_ADDRESS);
+}
+
+ArvGcNode *
 arv_gc_property_node_new_description (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_DESCRIPTION);
@@ -256,6 +280,60 @@ arv_gc_property_node_new_display_name (void)
 }
 
 ArvGcNode *
+arv_gc_property_node_new_minimum (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_MINIMUM);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_p_minimum (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_P_MINIMUM);
+}
+
+ArvGcNode * 
+arv_gc_property_node_new_maximum (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_MAXIMUM);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_p_maximum (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_P_MAXIMUM);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_increment (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_INCREMENT);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_p_increment (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_P_INCREMENT);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_unit (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_UNIT);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_on_value (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_ON_VALUE);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_off_value (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_OFF_VALUE);
+}
+
+ArvGcNode *
 arv_gc_property_node_new_p_is_implemented (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_P_IS_IMPLEMENTED);
@@ -265,6 +343,24 @@ ArvGcNode *
 arv_gc_property_node_new_p_is_available (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_P_IS_AVAILABLE);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_length (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_LENGTH);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_p_length (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_P_LENGTH);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_p_port (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_P_PORT);
 }
 
 static void
