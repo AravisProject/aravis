@@ -58,8 +58,7 @@ arv_gc_variable_node_set_attribute (ArvDomElement *self, const char *name, const
 	if (strcmp (name, "Name") == 0) {
 		g_free (variable_node->name);
 		variable_node->name = g_strdup (value);
-	} else
-		ARV_DOM_ELEMENT_CLASS (parent_class)->set_attribute (self, name, value);
+	}
 }
 
 static const char *
