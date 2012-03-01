@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2012 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,6 +26,7 @@
  */
 
 #include <arvgcswissknife.h>
+#include <arvgcvariablenode.h>
 #include <arvevaluator.h>
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
@@ -35,11 +36,6 @@
 #include <string.h>
 
 static GObjectClass *parent_class = NULL;
-
-typedef struct {
-	char *name;
-	char *node_name;
-} ArvGcSwissKnifeVariableInfos;
 
 /* ArvDomNode implementation */
 
@@ -54,48 +50,39 @@ arv_gc_swiss_knife_get_node_name (ArvDomNode *node)
 	return "IntSwissKnife";
 }
 
-/* ArvGcFeatureNode implementation */
-
-#if 0
 static void
-arv_gc_swiss_knife_add_element (ArvGcFeatureNode *node, const char *name, const char *content, const char **attributes)
+arv_gc_swiss_knife_post_new_child (ArvDomNode *self, ArvDomNode *child)
 {
-	ArvGcSwissKnife *gc_swiss_knife = ARV_GC_SWISS_KNIFE (node);
+	ArvGcSwissKnife *node = ARV_GC_SWISS_KNIFE (self);
 
-	if (strcmp (name, "pVariable") == 0) {
-		const char *variable_name = NULL;
-		int i;
+	if (ARV_IS_GC_PROPERTY_NODE (child)) {
+		ArvGcPropertyNode *property_node = ARV_GC_PROPERTY_NODE (child);
 
-		for (i = 0; attributes[i] != NULL && attributes[i+1] != NULL; i += 2)
-			if (g_strcmp0 (attributes[i], "Name") == 0) {
-				variable_name = attributes[i+1];
+		switch (arv_gc_property_node_get_node_type (property_node)) {
+			case ARV_GC_PROPERTY_NODE_TYPE_P_VARIABLE:
+				node->variables = g_slist_prepend (node->variables, property_node);
 				break;
-			}
-
-		if (variable_name != NULL) {
-			ArvGcSwissKnifeVariableInfos *variable_infos;
-
-			variable_infos = g_new (ArvGcSwissKnifeVariableInfos, 1);
-			variable_infos->name = g_strdup (variable_name);
-			variable_infos->node_name = g_strdup (content);
-			gc_swiss_knife->variables = g_slist_prepend (gc_swiss_knife->variables,
-								     variable_infos);
-
-			arv_log_genicam ("[GcSwissKnife::add_element] Add pVariable '%s' named '%s'",
-					 content, variable_name);
+			case ARV_GC_PROPERTY_NODE_TYPE_FORMULA:
+				node->formula_node = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_EXPRESSION:
+			case ARV_GC_PROPERTY_NODE_TYPE_CONSTANT:
+				arv_warning_genicam ("[GcSwissKnife::post_new_child] Constant and Expression not yet implemented");
+				break;
+			default:
+				ARV_DOM_NODE_CLASS (parent_class)->post_new_child (self, child);
+				break;
 		}
-	} else if (strcmp (name, "Formula") == 0) {
-		arv_evaluator_set_expression (gc_swiss_knife->formula, content);
-	} else if (strcmp (name, "Expression") == 0) {
-		g_assert_not_reached ();
-	} else if (strcmp (name, "Constant") == 0) {
-		g_assert_not_reached ();
-	} else
-		ARV_GC_FEATURE_NODE_CLASS (parent_class)->add_element (node, name, content, attributes);
+	}
 }
-#endif
 
-/* ArvGcSwissKnife implementation */
+static void
+arv_gc_swiss_knife_pre_remove_child (ArvDomNode *self, ArvDomNode *child)
+{
+	g_assert_not_reached ();
+}
+
+/* ArvGcFeatureNode implementation */
 
 static GType
 arv_gc_swiss_knife_node_get_value_type (ArvGcFeatureNode *node)
@@ -104,6 +91,8 @@ arv_gc_swiss_knife_node_get_value_type (ArvGcFeatureNode *node)
 
 	return gc_swiss_knife->value_type;
 }
+
+/* ArvGcSwissKnife implementation */
 
 ArvGcNode *
 arv_gc_swiss_knife_new (void)
@@ -137,15 +126,7 @@ static void
 arv_gc_swiss_knife_finalize (GObject *object)
 {
 	ArvGcSwissKnife *gc_swiss_knife = ARV_GC_SWISS_KNIFE (object);
-	GSList *iter;
 
-	for (iter = gc_swiss_knife->variables; iter != NULL; iter = iter->next) {
-		ArvGcSwissKnifeVariableInfos *variable_infos = iter->data;
-
-		g_free (variable_infos->name);
-		g_free (variable_infos->node_name);
-		g_free (variable_infos);
-	}
 	g_slist_free (gc_swiss_knife->variables);
 
 	g_object_unref (gc_swiss_knife->formula);
@@ -164,7 +145,8 @@ arv_gc_swiss_knife_class_init (ArvGcSwissKnifeClass *this_class)
 
 	object_class->finalize = arv_gc_swiss_knife_finalize;
 	dom_node_class->get_node_name = arv_gc_swiss_knife_get_node_name;
-/*        gc_feature_node_class->add_element = arv_gc_swiss_knife_add_element;*/
+	dom_node_class->post_new_child = arv_gc_swiss_knife_post_new_child;
+	dom_node_class->pre_remove_child = arv_gc_swiss_knife_pre_remove_child;
 	gc_feature_node_class->get_value_type = arv_gc_swiss_knife_node_get_value_type;
 }
 
@@ -173,23 +155,27 @@ arv_gc_swiss_knife_class_init (ArvGcSwissKnifeClass *this_class)
 static void
 _update_variables (ArvGcSwissKnife *gc_swiss_knife)
 {
-	ArvGc *genicam;
 	ArvGcNode *node;
 	GSList *iter;
+	const char *expression;
 
-	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_swiss_knife));
+	if (gc_swiss_knife->formula_node != NULL)
+		expression = arv_gc_property_node_get_string (gc_swiss_knife->formula_node);
+	else
+		expression = "";
+	arv_evaluator_set_expression (gc_swiss_knife->formula, expression);
 
 	for (iter = gc_swiss_knife->variables; iter != NULL; iter = iter->next) {
-		ArvGcSwissKnifeVariableInfos *variable_infos = iter->data;
+		ArvGcVariableNode *variable_node = iter->data;
 
-		node = arv_gc_get_node (genicam, variable_infos->node_name);
+		node = arv_gc_property_node_get_linked_node (ARV_GC_PROPERTY_NODE (variable_node));
 		if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_INT64)
 			arv_evaluator_set_int64_variable (gc_swiss_knife->formula,
-							  variable_infos->name,
+							  arv_gc_variable_node_get_name (variable_node),
 							  arv_gc_integer_get_value (ARV_GC_INTEGER (node)));
 		else if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_DOUBLE)
 			arv_evaluator_set_double_variable (gc_swiss_knife->formula,
-							   variable_infos->name,
+							  arv_gc_variable_node_get_name (variable_node),
 							   arv_gc_float_get_value (ARV_GC_FLOAT (node)));
 	}
 
