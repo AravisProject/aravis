@@ -134,15 +134,7 @@ static void
 arv_gc_converter_finalize (GObject *object)
 {
 	ArvGcConverter *gc_converter = ARV_GC_CONVERTER (object);
-/*        GSList *iter;*/
 
-/*        for (iter = gc_converter->variables; iter != NULL; iter = iter->next) {*/
-/*                ArvGcConverterVariableInfos *variable_infos = iter->data;*/
-
-/*                g_free (variable_infos->name);*/
-/*                g_free (variable_infos->node_name);*/
-/*                g_free (variable_infos);*/
-/*        }*/
 	g_slist_free (gc_converter->variables);
 
 	g_object_unref (gc_converter->formula_to);
