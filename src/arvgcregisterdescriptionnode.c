@@ -26,6 +26,7 @@
  */
 
 #include <arvgcregisterdescriptionnode.h>
+#include <string.h>
 
 static GObjectClass *parent_class = NULL;
 
@@ -42,10 +43,11 @@ arv_gc_register_description_node_set_attribute (ArvDomElement *self, const char*
 {
 	ArvGcRegisterDescriptionNode *node = ARV_GC_REGISTER_DESCRIPTION_NODE (self);
 
-	if (g_strcmp0 (name, "ModelName") == 0) {
+	if (strcmp (name, "ModelName") == 0) {
 		g_free (node->model_name);
 		node->model_name = g_strdup (value);
-	}
+	} else
+		ARV_DOM_ELEMENT_CLASS (parent_class)->set_attribute (self, name, value);
 }
 
 static const char *
@@ -53,10 +55,10 @@ arv_gc_register_description_node_get_attribute (ArvDomElement *self, const char 
 {
 	ArvGcRegisterDescriptionNode *node = ARV_GC_REGISTER_DESCRIPTION_NODE (self);
 
-	if (g_strcmp0 (name, "ModelName") == 0)
+	if (strcmp (name, "ModelName") == 0)
 		return node->model_name;
-
-	return NULL;
+	else
+		return ARV_DOM_ELEMENT_CLASS (parent_class)->get_attribute (self, name);
 }
 
 /* ArvGcRegisterDescriptionNode implementation */
