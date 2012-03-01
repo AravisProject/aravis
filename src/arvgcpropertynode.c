@@ -70,6 +70,15 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 			return "OffValue";
 		case ARV_GC_PROPERTY_NODE_TYPE_LENGTH:
 			return "Length";
+		case ARV_GC_PROPERTY_NODE_TYPE_FORMULA_TO:
+			return "FormulaTo";
+		case ARV_GC_PROPERTY_NODE_TYPE_FORMULA_FROM:
+			return "FormulaFrom";
+		case ARV_GC_PROPERTY_NODE_TYPE_EXPRESSION:
+			return "Expression";
+		case ARV_GC_PROPERTY_NODE_TYPE_CONSTANT:
+			return "Constant";
+
 		case ARV_GC_PROPERTY_NODE_TYPE_P_FEATURE:
 			return "pFeature";
 		case ARV_GC_PROPERTY_NODE_TYPE_P_VALUE:
@@ -90,6 +99,8 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 			return "pLength";
 		case ARV_GC_PROPERTY_NODE_TYPE_P_PORT:
 			return "pPort";
+		case ARV_GC_PROPERTY_NODE_TYPE_P_VARIABLE:
+			return "pVariable";
 		default:
 			return "Unknown";
 	}
@@ -375,6 +386,30 @@ ArvGcNode *
 arv_gc_property_node_new_p_port (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_P_PORT);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_formula_to (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_FORMULA_TO);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_formula_from (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_FORMULA_FROM);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_expression (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_EXPRESSION);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_constant (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_CONSTANT);
 }
 
 static void

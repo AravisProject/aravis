@@ -42,6 +42,10 @@ typedef enum {
 	ARV_GC_PROPERTY_NODE_TYPE_ON_VALUE,
 	ARV_GC_PROPERTY_NODE_TYPE_OFF_VALUE,
 	ARV_GC_PROPERTY_NODE_TYPE_LENGTH,
+	ARV_GC_PROPERTY_NODE_TYPE_FORMULA_TO,
+	ARV_GC_PROPERTY_NODE_TYPE_FORMULA_FROM,
+	ARV_GC_PROPERTY_NODE_TYPE_EXPRESSION,
+	ARV_GC_PROPERTY_NODE_TYPE_CONSTANT,
 
 	ARV_GC_PROPERTY_NODE_TYPE_P_UNKNONW	= 1000,
 	ARV_GC_PROPERTY_NODE_TYPE_P_FEATURE,
@@ -54,7 +58,8 @@ typedef enum {
 	ARV_GC_PROPERTY_NODE_TYPE_P_INCREMENT,
 	ARV_GC_PROPERTY_NODE_TYPE_P_INDEX,
 	ARV_GC_PROPERTY_NODE_TYPE_P_LENGTH,
-	ARV_GC_PROPERTY_NODE_TYPE_P_PORT
+	ARV_GC_PROPERTY_NODE_TYPE_P_PORT,
+	ARV_GC_PROPERTY_NODE_TYPE_P_VARIABLE
 } ArvGcPropertyNodeType;
 
 #define ARV_TYPE_GC_PROPERTY_NODE             (arv_gc_property_node_get_type ())
@@ -101,6 +106,10 @@ ArvGcNode * 	arv_gc_property_node_new_p_is_available 	(void);
 ArvGcNode * 	arv_gc_property_node_new_length			(void);
 ArvGcNode * 	arv_gc_property_node_new_p_length		(void);
 ArvGcNode * 	arv_gc_property_node_new_p_port 		(void);
+ArvGcNode * 	arv_gc_property_node_new_formula_to		(void);
+ArvGcNode * 	arv_gc_property_node_new_formula_from		(void);
+ArvGcNode * 	arv_gc_property_node_new_expression		(void);
+ArvGcNode * 	arv_gc_property_node_new_constant		(void);
 
 const char * 		arv_gc_property_node_get_string 	(ArvGcPropertyNode *node);
 void	 		arv_gc_property_node_set_string 	(ArvGcPropertyNode *node, const char *string);

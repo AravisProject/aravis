@@ -33,6 +33,7 @@
 #include <arvgcnode.h>
 #include <arvgcpropertynode.h>
 #include <arvgcindexnode.h>
+#include <arvgcvariablenode.h>
 #include <arvgcregisterdescriptionnode.h>
 #include <arvgccategory.h>
 #include <arvgcenumeration.h>
@@ -148,6 +149,16 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 		node = arv_gc_property_node_new_p_length ();
 	else if (strcmp (tag_name, "pPort") == 0)
 		node = arv_gc_property_node_new_p_port ();
+	else if (strcmp (tag_name, "pVariable") == 0)
+		node = arv_gc_variable_node_new ();
+	else if (strcmp (tag_name, "FormulaTo") == 0)
+		node = arv_gc_property_node_new_formula_to ();
+	else if (strcmp (tag_name, "FormulaFrom") == 0)
+		node = arv_gc_property_node_new_formula_from ();
+	else if (strcmp (tag_name, "Expression") == 0)
+		node = arv_gc_property_node_new_expression ();
+	else if (strcmp (tag_name, "Constant") == 0)
+		node = arv_gc_property_node_new_constant ();
 	else
 		arv_debug_dom ("[Genicam::create_element] Unknow tag (%s)", tag_name);
 
