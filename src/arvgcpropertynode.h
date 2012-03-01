@@ -129,7 +129,6 @@ ArvGcNode * 	arv_gc_property_node_new_sign			(void);
 ArvGcNode * 	arv_gc_property_node_new_lsb			(void);
 ArvGcNode * 	arv_gc_property_node_new_msb			(void);
 ArvGcNode * 	arv_gc_property_node_new_bit			(void);
-ArvGcNode * 	arv_gc_property_node_new_p_invalidator		(void);
 
 const char * 		arv_gc_property_node_get_string 	(ArvGcPropertyNode *node);
 void	 		arv_gc_property_node_set_string 	(ArvGcPropertyNode *node, const char *string);

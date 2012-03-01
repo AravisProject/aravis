@@ -119,8 +119,6 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 			return "pPort";
 		case ARV_GC_PROPERTY_NODE_TYPE_P_VARIABLE:
 			return "pVariable";
-		case ARV_GC_PROPERTY_NODE_TYPE_P_INVALIDATOR:
-			return "pInvalidator";
 		default:
 			return "Unknown";
 	}
@@ -132,6 +130,19 @@ static gboolean
 arv_gc_property_node_can_append_child (ArvDomNode *self, ArvDomNode *child)
 {
 	return ARV_IS_DOM_TEXT (child);
+}
+
+/* ArvDomElement implementation */
+
+static void
+arv_gc_property_node_set_attribute (ArvDomElement *self, const char *name, const char *value)
+{
+}
+
+static const char *
+arv_gc_property_node_get_attribute (ArvDomElement *self, const char *name)
+{
+	return NULL;
 }
 
 /* ArvGcPropertyNode implementation */
@@ -486,12 +497,6 @@ arv_gc_property_node_new_bit (void)
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_BIT);
 }
 
-ArvGcNode *
-arv_gc_property_node_new_p_invalidator (void)
-{
-	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_P_INVALIDATOR);
-}
-
 static void
 arv_gc_property_node_init (ArvGcPropertyNode *gc_property_node)
 {
@@ -509,12 +514,15 @@ arv_gc_property_node_class_init (ArvGcPropertyNodeClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
+	ArvDomElementClass *dom_element_class = ARV_DOM_ELEMENT_CLASS (this_class);
 
 	parent_class = g_type_class_peek_parent (this_class);
 
 	object_class->finalize = arv_gc_property_node_finalize;
 	dom_node_class->get_node_name = arv_gc_property_node_get_node_name;
 	dom_node_class->can_append_child = arv_gc_property_node_can_append_child;
+	dom_element_class->set_attribute = arv_gc_property_node_set_attribute;
+	dom_element_class->get_attribute = arv_gc_property_node_get_attribute;
 }
 
 G_DEFINE_TYPE (ArvGcPropertyNode, arv_gc_property_node, ARV_TYPE_GC_NODE)

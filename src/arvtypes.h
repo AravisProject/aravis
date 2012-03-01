@@ -46,6 +46,7 @@ typedef	struct _ArvGcNode			ArvGcNode;
 typedef struct _ArvGcPropertyNode		ArvGcPropertyNode;
 typedef struct _ArvGcIndexNode			ArvGcIndexNode;
 typedef struct _ArvGcVariableNode		ArvGcVariableNode;
+typedef struct _ArvGcInvalidatorNode		ArvGcInvalidatorNode;
 typedef struct _ArvGcFeatureNode 		ArvGcFeatureNode;
 typedef struct _ArvGcRegisterDescriptionNode 	ArvGcRegisterDescriptionNode;
 typedef struct _ArvGcGroupNode			ArvGcGroupNode;

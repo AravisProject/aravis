@@ -34,6 +34,7 @@
 #include <arvgcpropertynode.h>
 #include <arvgcindexnode.h>
 #include <arvgcvariablenode.h>
+#include <arvgcinvalidatornode.h>
 #include <arvgcregisterdescriptionnode.h>
 #include <arvgcgroupnode.h>
 #include <arvgccategory.h>
@@ -180,7 +181,7 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 	else if (strcmp (tag_name, "Bit") == 0)
 		node = arv_gc_property_node_new_bit ();
 	else if (strcmp (tag_name, "pInvalidator") == 0)
-		node = arv_gc_property_node_new_p_invalidator ();
+		node = arv_gc_invalidator_node_new ();
 
 	else if (strcmp (tag_name, "Group") == 0)
 		node = arv_gc_group_node_new ();
