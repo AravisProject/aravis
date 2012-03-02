@@ -62,13 +62,6 @@ double 		arv_value_get_double 		(ArvValue *value);
 gboolean 	arv_value_holds_int64 		(ArvValue *value);
 double 		arv_value_holds_double 		(ArvValue *value);
 
-GValue * 	arv_create_int64_g_value 	(gint64 v_int64);
-GValue * 	arv_create_string_g_value	(const char *v_string);
-void 		arv_free_g_value 		(GValue *value);
-void		arv_force_g_value_to_int64	(GValue *value, gint64 v_int64);
-void		arv_force_g_value_to_double	(GValue *value, double v_double);
-void		arv_force_g_value_to_string	(GValue *value, const char * v_string);
-
 void 		arv_copy_memory_with_endianess 	(void *to, size_t to_size, guint to_endianess,
 						 void *from, size_t from_size, guint from_endianess);
 
