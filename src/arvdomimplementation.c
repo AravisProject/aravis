@@ -43,6 +43,16 @@ arv_dom_implementation_add_document_type (const char *qualified_name,
 	g_hash_table_insert (document_types, g_strdup (qualified_name), document_type_ptr);
 }
 
+/**
+ * arv_dom_implementation_create_document:
+ * @namespace_uri: namespace URI
+ * @qualified_name: qualified name
+ *
+ * Create a new DOM document. Currently, only @qualified_name is used.
+ *
+ * Returns: (transfer full): a new #ArvDomDocument, NULL on error:
+ */
+
 ArvDomDocument *
 arv_dom_implementation_create_document (const char *namespace_uri,
 					const char *qualified_name)

@@ -26,6 +26,16 @@
 
 /* ArvDomNodeList implementation */
 
+/**
+ * arv_dom_node_list_get_item:
+ * @list: a #ArvDomNodeList
+ * @index: item index
+ *
+ * Get one of the item of @list.
+ *
+ * Returns: (transfer none): item corresponding to index, NULL on error.
+ */
+
 ArvDomNode *
 arv_dom_node_list_get_item (ArvDomNodeList *list, unsigned int index)
 {

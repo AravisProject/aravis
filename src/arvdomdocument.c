@@ -52,6 +52,13 @@ arv_dom_document_get_node_type (ArvDomNode *node)
 
 /* ArvDomDocument implementation */
 
+/**
+ * arv_dom_document_get_document_element:
+ * @self: a #ArvDomDocument
+ *
+ * Returns: (transfer none): the top element of @self.
+ */
+
 ArvDomElement *
 arv_dom_document_get_document_element (ArvDomDocument *self)
 {
@@ -60,33 +67,61 @@ arv_dom_document_get_document_element (ArvDomDocument *self)
 	return ARV_DOM_ELEMENT (arv_dom_node_get_first_child (ARV_DOM_NODE (self)));
 }
 
+/**
+ * arv_dom_document_create_element:
+ * @self: a #ArvDomDocument
+ * @tag_name: node name of the element to create
+ *
+ * Create a new element.
+ *
+ * Returns: (transfer full): a new orphan #ArvDomElement, NULL on error.
+ */
+
 ArvDomElement *
-arv_dom_document_create_element (ArvDomDocument *document, const char *tag_name)
+arv_dom_document_create_element (ArvDomDocument *self, const char *tag_name)
 {
 	ArvDomDocumentClass *document_class;
 
-	g_return_val_if_fail (ARV_IS_DOM_DOCUMENT (document), NULL);
+	g_return_val_if_fail (ARV_IS_DOM_DOCUMENT (self), NULL);
 
-	document_class = ARV_DOM_DOCUMENT_GET_CLASS (document);
+	document_class = ARV_DOM_DOCUMENT_GET_CLASS (self);
 	if (document_class->create_element != NULL)
-		return document_class->create_element (document, tag_name);
+		return document_class->create_element (self, tag_name);
 
 	return NULL;
 }
 
-ArvDomText *
+static ArvDomText *
 arv_dom_document_create_text_node_base (ArvDomDocument *document, const char *data)
 {
 	return ARV_DOM_TEXT (arv_dom_text_new (data));
 }
 
-ArvDomText *
-arv_dom_document_create_text_node (ArvDomDocument *document, const char *data)
-{
-	g_return_val_if_fail (ARV_IS_DOM_DOCUMENT (document), NULL);
+/**
+ * arv_dom_document_create_text_node:
+ * @self: a #ArvDomDocument
+ * @data: initial content
+ *
+ * Create a new text element.
+ *
+ * Returns: (transfer full): a new orphan #ArvDomText, NULL on error.
+ */
 
-	return ARV_DOM_DOCUMENT_GET_CLASS (document)->create_text_node (document, data);
+ArvDomText *
+arv_dom_document_create_text_node (ArvDomDocument *self, const char *data)
+{
+	g_return_val_if_fail (ARV_IS_DOM_DOCUMENT (self), NULL);
+
+	return ARV_DOM_DOCUMENT_GET_CLASS (self)->create_text_node (self, data);
 }
+
+/**
+ * arv_dom_document_get_element_by_id:
+ * @self: a #ArvDomDocument
+ * @id: xml:id of the wanted element
+ *
+ * Returns: (transfer none): the element wich has id as xml:id attribute.
+ */
 
 ArvDomElement *
 arv_dom_document_get_element_by_id (ArvDomDocument *self, const char *id)
@@ -156,6 +191,17 @@ arv_dom_document_set_url (ArvDomDocument *self, const char *url)
 	g_free (self->url);
 	self->url = g_strdup (url);
 }
+
+/**
+ * arv_dom_document_get_href_data:
+ * @self: a #ArvDomDocument
+ * @href: document reference
+ * @size: data size placeholder
+ *
+ * Load the content referenced by @href.
+ *
+ * Returns: (transfer full): a newly allocated data buffer.
+ */
 
 void *
 arv_dom_document_get_href_data (ArvDomDocument *self, const char *href, gsize *size)

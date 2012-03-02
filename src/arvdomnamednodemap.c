@@ -26,6 +26,15 @@
 
 /* ArvDomNamedNodeMap implementation */
 
+
+/**
+ * arv_dom_named_node_map_get_named_item:
+ * @map: a #ArvDomNamedNodeMap
+ * @name: name of the element to look for.
+ *
+ * Returns: (transfer none): a #ArvDomElement.
+ */
+
 ArvDomNode *
 arv_dom_named_node_map_get_named_item (ArvDomNamedNodeMap *map, const char *name)
 {
@@ -34,13 +43,29 @@ arv_dom_named_node_map_get_named_item (ArvDomNamedNodeMap *map, const char *name
 	return ARV_DOM_NAMED_NODE_MAP_GET_CLASS (map)->get (map, name);
 }
 
+/**
+ * arv_dom_named_node_map_set_named_item:
+ * @map: a #ArvDomNamedNodeMap
+ * @item: a node to insert
+ *
+ * Returns: (transfer none): same as @node on success.
+ */
+
 ArvDomNode *
-arv_dom_named_node_map_set_named_item (ArvDomNamedNodeMap *map, ArvDomNode *node)
+arv_dom_named_node_map_set_named_item (ArvDomNamedNodeMap *map, ArvDomNode *item)
 {
 	g_return_val_if_fail (ARV_IS_DOM_NAMED_NODE_MAP (map), NULL);
 
-	return ARV_DOM_NAMED_NODE_MAP_GET_CLASS (map)->set (map, node);
+	return ARV_DOM_NAMED_NODE_MAP_GET_CLASS (map)->set (map, item);
 }
+
+/**
+ * arv_dom_named_node_map_remove_named_item:
+ * @map: a #ArvDomNamedNodeMap
+ * @name: name of the node to remove
+ *
+ * Returns: (transfer none): the removed node.
+ */
 
 ArvDomNode *
 arv_dom_named_node_map_remove_named_item (ArvDomNamedNodeMap *map, const char *name)
@@ -49,6 +74,14 @@ arv_dom_named_node_map_remove_named_item (ArvDomNamedNodeMap *map, const char *n
 
 	return ARV_DOM_NAMED_NODE_MAP_GET_CLASS (map)->remove (map, name);
 }
+
+/**
+ * arv_dom_named_node_map_get_item:
+ * @map: a #ArvDomNamedNodeMap
+ * @index: an index
+ *
+ * Returns: (transfer none): the @ArvDomNode corresponding to @index.
+ */
 
 ArvDomNode *
 arv_dom_named_node_map_get_item (ArvDomNamedNodeMap *map, unsigned int index)

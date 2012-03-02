@@ -222,6 +222,15 @@ ArvDomNodeType arv_dom_node_get_node_type (ArvDomNode* self)
 	return 0;
 }
 
+/**
+ * arv_dom_node_get_parent_node:
+ * @self: a #ArvDomNode
+ *
+ * Get the parent node of @self.
+ *
+ * Returns: (transfer none): @self parent.
+ */
+
 ArvDomNode*
 arv_dom_node_get_parent_node (ArvDomNode* self)
 {
@@ -229,6 +238,13 @@ arv_dom_node_get_parent_node (ArvDomNode* self)
 
 	return self->parent_node;
 }
+
+/**
+ * arv_dom_node_get_child_nodes:
+ * @self: a #ArvDomNode
+ *
+ * Returns: (transfer none): a #ArvDomNodeList, NULL on error.
+ */
 
 ArvDomNodeList*
 arv_dom_node_get_child_nodes (ArvDomNode* self)
@@ -247,6 +263,13 @@ arv_dom_node_get_child_nodes (ArvDomNode* self)
 	return list;
 }
 
+/**
+ * arv_dom_node_get_first_child:
+ * @self: a #ArvDomNode
+ *
+ * Returns: (transfer none): @self first child.
+ */
+
 ArvDomNode*
 arv_dom_node_get_first_child (ArvDomNode* self)
 {
@@ -254,6 +277,13 @@ arv_dom_node_get_first_child (ArvDomNode* self)
 
 	return self->first_child;
 }
+
+/**
+ * arv_dom_node_get_last_child:
+ * @self: a #ArvDomNode
+ *
+ * Returns: (transfer none): @self last child.
+ */
 
 ArvDomNode*
 arv_dom_node_get_last_child (ArvDomNode* self)
@@ -263,6 +293,13 @@ arv_dom_node_get_last_child (ArvDomNode* self)
 	return self->last_child;
 }
 
+/**
+ * arv_dom_node_get_previous_sibling:
+ * @self: a #ArvDomNode
+ *
+ * Returns: (transfer none): @self previous sibling.
+ */
+
 ArvDomNode*
 arv_dom_node_get_previous_sibling (ArvDomNode* self)
 {
@@ -270,6 +307,13 @@ arv_dom_node_get_previous_sibling (ArvDomNode* self)
 
 	return self->previous_sibling;
 }
+
+/**
+ * arv_dom_node_get_next_sibling:
+ * @self: a #ArvDomNode
+ *
+ * Returns: (transfer none): @self next sibling.
+ */
 
 ArvDomNode*
 arv_dom_node_get_next_sibling (ArvDomNode* self)
@@ -284,6 +328,14 @@ arv_dom_node_get_next_sibling (ArvDomNode* self)
 /*{*/
 /*        return ARV_DOM_NODE_GET_CLASS (self)->get_attributes (self);*/
 /*}*/
+
+
+/**
+ * arv_dom_node_get_owner_document:
+ * @self: a #ArvDomNode
+ *
+ * Returns: (transfer none): @self owner document.
+ */
 
 ArvDomDocument*
 arv_dom_node_get_owner_document (ArvDomNode* self)

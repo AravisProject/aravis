@@ -356,6 +356,13 @@ arv_gc_property_node_get_node_type (ArvGcPropertyNode *node)
 	return node->type;
 }
 
+/**
+ * arv_gc_property_node_get_linked_node:
+ * @node: a #ArvGcPropertyNode
+ *
+ * Returns: (transfer none): the #ArvGcNode which @node points to.
+ */
+
 ArvGcNode *
 arv_gc_property_node_get_linked_node (ArvGcPropertyNode *node)
 {
