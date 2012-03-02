@@ -59,7 +59,7 @@ arv_gc_command_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_COMMAND_VALUE:
 			case ARV_GC_PROPERTY_NODE_TYPE_P_COMMAND_VALUE:
-				node->value = property_node;
+				node->command_value = property_node;
 				break;
 			default:
 				ARV_DOM_NODE_CLASS (parent_class)->post_new_child (self, child);
