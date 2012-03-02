@@ -30,6 +30,9 @@
 
 #include <arvgcpropertynode.h>
 #include <arvgcfeaturenode.h>
+#include <arvgcinteger.h>
+#include <arvgcfloat.h>
+#include <arvgcstring.h>
 #include <arvgc.h>
 #include <arvdomtext.h>
 #include <arvmisc.h>
@@ -182,13 +185,22 @@ arv_gc_property_node_get_string (ArvGcPropertyNode *node)
 	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (node), NULL);
 
 	value_node = arv_gc_property_node_get_value_node (node);
-	if (value_node == NULL)
+	if (value_node == NULL) {
+		arv_warning_genicam ("[GcPropertyNode::get_string] Invalid node '%s'",
+				   arv_dom_node_get_node_name (ARV_DOM_NODE (node)));
 		return NULL;
+	}
 
 	if (ARV_IS_DOM_TEXT (value_node))
 		return arv_dom_character_data_get_data (ARV_DOM_CHARACTER_DATA (value_node));
 
-	return arv_gc_feature_node_get_value_as_string (ARV_GC_FEATURE_NODE (value_node));
+	if (ARV_IS_GC_STRING (value_node))
+		return arv_gc_string_get_value (ARV_GC_STRING (value_node));
+
+	arv_warning_genicam ("[GcPropertyNode::get_string] Invalid node '%s'",
+			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (value_node)));
+
+	return NULL;
 }
 	
 void
@@ -199,64 +211,141 @@ arv_gc_property_node_set_string (ArvGcPropertyNode *node, const char *string)
 	g_return_if_fail (ARV_IS_GC_PROPERTY_NODE (node));
 
 	value_node = arv_gc_property_node_get_value_node (node);
-	if (value_node == NULL)
+	if (value_node == NULL) {
+		arv_warning_genicam ("[GcPropertyNode::set_string] Invalid node '%s'",
+				   arv_dom_node_get_node_name (ARV_DOM_NODE (node)));
 		return;
+	}
 
 	if (ARV_IS_DOM_TEXT (value_node)) {
 		arv_dom_character_data_set_data (ARV_DOM_CHARACTER_DATA (value_node), string);
 		return;
 	}
 
-	arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (value_node), string);
+	if (ARV_IS_GC_STRING (value_node)) {
+		arv_gc_string_set_value (ARV_GC_STRING (value_node), string);
+		return;
+	}
+
+	arv_warning_genicam ("[GcPropertyNode::set_string] Invalid linked node '%s'",
+			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (value_node)));
 }
 
 gint64
 arv_gc_property_node_get_int64 (ArvGcPropertyNode *node)
 {
-	const char *string;
+	ArvDomNode *value_node;
 
-	string = arv_gc_property_node_get_string (node);
+	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (node), 0);
 
-	if (string != NULL)
-		return g_ascii_strtoll (string, NULL, 0);
+	value_node = arv_gc_property_node_get_value_node (node);
+	if (value_node == NULL) {
+		arv_warning_genicam ("[GcPropertyNode::get_int64] Invalid node '%s'",
+				   arv_dom_node_get_node_name (ARV_DOM_NODE (node)));
+		return 0;
+	}
 
-	 return 0;
+	if (ARV_IS_DOM_TEXT (value_node))
+		return g_ascii_strtoll (arv_dom_character_data_get_data (ARV_DOM_CHARACTER_DATA (value_node)), NULL, 0);
+
+
+	if (ARV_IS_GC_INTEGER (value_node))
+		return arv_gc_integer_get_value (ARV_GC_INTEGER (value_node));
+
+	arv_warning_genicam ("[GcPropertyNode::get_int64] Invalid node '%s'",
+			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (value_node)));
+
+	return 0;
 }
 
 void
 arv_gc_property_node_set_int64 (ArvGcPropertyNode *node, gint64 v_int64)
 {
-	char *buffer;
+	ArvDomNode *value_node;
 
 	g_return_if_fail (ARV_IS_GC_PROPERTY_NODE (node));
 
-	buffer = g_strdup_printf ("%" G_GINT64_FORMAT, v_int64);
-	arv_gc_property_node_set_string (node, buffer);
-	g_free (buffer);
+	value_node = arv_gc_property_node_get_value_node (node);
+	if (value_node == NULL) {
+		arv_warning_genicam ("[GcPropertyNode::set_int64] Invalid node '%s'",
+				     arv_dom_node_get_node_name (ARV_DOM_NODE (node)));
+		return;
+	}
+
+	if (ARV_IS_DOM_TEXT (value_node)) {
+		char *buffer;
+
+		buffer = g_strdup_printf ("%" G_GINT64_FORMAT, v_int64);
+		arv_dom_character_data_set_data (ARV_DOM_CHARACTER_DATA (value_node), buffer);
+		g_free (buffer);
+		return ;
+	}
+
+	if (ARV_IS_GC_INTEGER (value_node)) {
+		arv_gc_integer_set_value (ARV_GC_INTEGER (value_node), v_int64);
+		return;
+	}
+
+	arv_warning_genicam ("[GcPropertyNode::set_int64] Invalid linked node '%s'",
+			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (value_node)));
 }
 
 double
 arv_gc_property_node_get_double (ArvGcPropertyNode *node)
 {
-	const char *string;
+	ArvDomNode *value_node;
 
-	string = arv_gc_property_node_get_string (node);
+	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (node), 0);
 
-	if (string != NULL)
-		return g_ascii_strtod (string, NULL);
+	value_node = arv_gc_property_node_get_value_node (node);
+	if (value_node == NULL) {
+		arv_warning_genicam ("[GcPropertyNode::get_double] Invalid node '%s'",
+				   arv_dom_node_get_node_name (ARV_DOM_NODE (node)));
+		return 0.0;
+	}
 
-	 return 0.0;
+	if (ARV_IS_DOM_TEXT (value_node))
+		return g_ascii_strtod (arv_dom_character_data_get_data (ARV_DOM_CHARACTER_DATA (value_node)), NULL);
+
+
+	if (ARV_IS_GC_FLOAT (value_node))
+		return arv_gc_float_get_value (ARV_GC_FLOAT (value_node));
+
+	arv_warning_genicam ("[GcPropertyNode::get_double] Invalid node '%s'",
+			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (value_node)));
+
+	return 0.0;
 }
 
 void
 arv_gc_property_node_set_double (ArvGcPropertyNode *node, double v_double)
 {
-	char buffer[G_ASCII_DTOSTR_BUF_SIZE];
+	ArvDomNode *value_node;
 
 	g_return_if_fail (ARV_IS_GC_PROPERTY_NODE (node));
 
-	g_ascii_dtostr (buffer, G_ASCII_DTOSTR_BUF_SIZE, v_double);
-	arv_gc_property_node_set_string (node, buffer);
+	value_node = arv_gc_property_node_get_value_node (node);
+	if (value_node == NULL) {
+		arv_warning_genicam ("[GcPropertyNode::set_double] Invalid node '%s'",
+				     arv_dom_node_get_node_name (ARV_DOM_NODE (node)));
+		return;
+	}
+
+	if (ARV_IS_DOM_TEXT (value_node)) {
+		char buffer[G_ASCII_DTOSTR_BUF_SIZE];
+
+		g_ascii_dtostr (buffer, G_ASCII_DTOSTR_BUF_SIZE, v_double);
+		arv_dom_character_data_set_data (ARV_DOM_CHARACTER_DATA (value_node), buffer);
+		return ;
+	}
+
+	if (ARV_IS_GC_FLOAT (value_node)) {
+		arv_gc_float_set_value (ARV_GC_FLOAT (value_node), v_double);
+		return;
+	}
+
+	arv_warning_genicam ("[GcPropertyNode::set_double] Invalid linked node '%s'",
+			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (value_node)));
 }
 
 ArvGcPropertyNodeType
