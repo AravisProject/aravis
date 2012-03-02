@@ -133,7 +133,9 @@ arv_gc_feature_node_set_attribute (ArvDomElement *self, const char *name, const 
 		node->priv->name = g_strdup (value);
 
 		genicam = arv_gc_node_get_genicam (ARV_GC_NODE (self));
-		arv_gc_register_feature_node (genicam, node);
+		/* Kludge around ugly Genicam specification (Really, pre-parsing for EnumEntry Name substitution ?) */
+		if (strcmp (arv_dom_node_get_node_name (ARV_DOM_NODE (node)), "EnumEntry") != 0)
+			arv_gc_register_feature_node (genicam, node);
 	} else if (strcmp (name, "NameSpace") == 0) {
 		if (g_strcmp0 (value, "Standard") == 0)
 			node->priv->name_space = ARV_GC_NAME_SPACE_STANDARD;
