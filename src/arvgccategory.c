@@ -73,6 +73,7 @@ const GSList *
 arv_gc_category_get_features (ArvGcCategory *category)
 {
 	ArvDomNode *iter;
+	ArvGcNode *node;
 
 	g_return_val_if_fail (ARV_IS_GC_CATEGORY (category), NULL);
 
@@ -80,9 +81,15 @@ arv_gc_category_get_features (ArvGcCategory *category)
 
 	for (iter = arv_dom_node_get_first_child (ARV_DOM_NODE (category));
 	     iter != NULL;
-	     iter = arv_dom_node_get_next_sibling (iter))
-		category->features = g_slist_append (category->features,
-						     g_strdup (arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (iter))));
+	     iter = arv_dom_node_get_next_sibling (iter)) {
+		node = arv_gc_property_node_get_linked_node (ARV_GC_PROPERTY_NODE (iter));
+		if (ARV_IS_GC_FEATURE_NODE (node)) {
+			char *name;
+
+			name = g_strdup (arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (node)));
+			category->features = g_slist_append (category->features, name);
+		}
+	}
 
 	return category->features;
 }

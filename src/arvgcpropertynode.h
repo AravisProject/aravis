@@ -55,6 +55,7 @@ typedef enum {
 	ARV_GC_PROPERTY_NODE_TYPE_LSB,
 	ARV_GC_PROPERTY_NODE_TYPE_MSB,
 	ARV_GC_PROPERTY_NODE_TYPE_BIT,
+	ARV_GC_PROPERTY_NODE_TYPE_COMMAND_VALUE,
 
 	ARV_GC_PROPERTY_NODE_TYPE_P_UNKNONW	= 1000,
 	ARV_GC_PROPERTY_NODE_TYPE_P_FEATURE,
@@ -69,7 +70,8 @@ typedef enum {
 	ARV_GC_PROPERTY_NODE_TYPE_P_LENGTH,
 	ARV_GC_PROPERTY_NODE_TYPE_P_PORT,
 	ARV_GC_PROPERTY_NODE_TYPE_P_VARIABLE,
-	ARV_GC_PROPERTY_NODE_TYPE_P_INVALIDATOR
+	ARV_GC_PROPERTY_NODE_TYPE_P_INVALIDATOR,
+	ARV_GC_PROPERTY_NODE_TYPE_P_COMMAND_VALUE
 } ArvGcPropertyNodeType;
 
 #define ARV_TYPE_GC_PROPERTY_NODE             (arv_gc_property_node_get_type ())
@@ -129,6 +131,8 @@ ArvGcNode * 	arv_gc_property_node_new_sign			(void);
 ArvGcNode * 	arv_gc_property_node_new_lsb			(void);
 ArvGcNode * 	arv_gc_property_node_new_msb			(void);
 ArvGcNode * 	arv_gc_property_node_new_bit			(void);
+ArvGcNode * 	arv_gc_property_node_new_command_value		(void);
+ArvGcNode * 	arv_gc_property_node_new_p_command_value	(void);
 
 const char * 		arv_gc_property_node_get_string 	(ArvGcPropertyNode *node);
 void	 		arv_gc_property_node_set_string 	(ArvGcPropertyNode *node, const char *string);

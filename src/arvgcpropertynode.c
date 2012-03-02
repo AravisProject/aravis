@@ -96,6 +96,8 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 			return "MSB";
 		case ARV_GC_PROPERTY_NODE_TYPE_BIT:
 			return "Bit";
+		case ARV_GC_PROPERTY_NODE_TYPE_COMMAND_VALUE:
+			return "CommandValue";
 
 		case ARV_GC_PROPERTY_NODE_TYPE_P_FEATURE:
 			return "pFeature";
@@ -119,6 +121,9 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 			return "pPort";
 		case ARV_GC_PROPERTY_NODE_TYPE_P_VARIABLE:
 			return "pVariable";
+		case ARV_GC_PROPERTY_NODE_TYPE_P_COMMAND_VALUE:
+			return "pCommandValue";
+
 		default:
 			return "Unknown";
 	}
@@ -495,6 +500,18 @@ ArvGcNode *
 arv_gc_property_node_new_bit (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_BIT);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_command_value (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_COMMAND_VALUE);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_p_command_value (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_P_COMMAND_VALUE);
 }
 
 static void

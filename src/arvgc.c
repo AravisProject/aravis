@@ -183,6 +183,11 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 	else if (strcmp (tag_name, "pInvalidator") == 0)
 		node = arv_gc_invalidator_node_new ();
 
+	else if (strcmp (tag_name, "CommandValue") == 0)
+		node = arv_gc_property_node_new_command_value ();
+	else if (strcmp (tag_name, "pCommandValue") == 0)
+		node = arv_gc_property_node_new_p_command_value ();
+
 	else if (strcmp (tag_name, "Group") == 0)
 		node = arv_gc_group_node_new ();
 	else
@@ -329,7 +334,8 @@ arv_gc_register_feature_node (ArvGc *genicam, ArvGcFeatureNode *node)
 	g_hash_table_remove (genicam->nodes, (char *) name);
 	g_hash_table_insert (genicam->nodes, (char *) name, node);
 
-	arv_log_genicam ("[Gc::register_feature_node] Register node '%s'", name);
+	arv_log_genicam ("[Gc::register_feature_node] Register node '%s' [%s]", name,
+			 arv_dom_node_get_node_name (ARV_DOM_NODE (node)));
 }
 
 ArvGc *

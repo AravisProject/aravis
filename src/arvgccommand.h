@@ -25,6 +25,7 @@
 
 #include <arvtypes.h>
 #include <arvgcfeaturenode.h>
+#include <arvgcpropertynode.h>
 
 G_BEGIN_DECLS
 
@@ -40,8 +41,8 @@ typedef struct _ArvGcCommandClass ArvGcCommandClass;
 struct _ArvGcCommand {
 	ArvGcFeatureNode	node;
 
-	GValue			command_value;
-	GValue			value;
+	ArvGcPropertyNode *command_value;
+	ArvGcPropertyNode *value;
 };
 
 struct _ArvGcCommandClass {
