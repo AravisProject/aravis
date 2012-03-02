@@ -40,7 +40,8 @@ typedef struct _ArvGcIndexNodeClass ArvGcIndexNodeClass;
 struct _ArvGcIndexNode {
 	ArvGcPropertyNode	base;
 
-	GValue offset;
+	char *offset;
+	gboolean is_p_offset;
 };
 
 struct _ArvGcIndexNodeClass {

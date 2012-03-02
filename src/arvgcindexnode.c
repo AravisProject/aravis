@@ -27,6 +27,7 @@
 
 #include <arvgcindexnode.h>
 #include <arvgcpropertynode.h>
+#include <arvgcinteger.h>
 #include <arvgc.h>
 #include <arvdomtext.h>
 #include <arvmisc.h>
@@ -55,10 +56,15 @@ arv_gc_index_node_set_attribute (ArvDomElement *self, const char *name, const ch
 {
 	ArvGcIndexNode *index_node = ARV_GC_INDEX_NODE (self);
 
-	if (strcmp (name, "Offset") == 0)
-		arv_force_g_value_to_int64 (&index_node->offset, g_ascii_strtoll (value, NULL, 0));
-	else if (strcmp (name, "pOffset") == 0) 
-		arv_force_g_value_to_string (&index_node->offset, value);
+	if (strcmp (name, "Offset") == 0) {
+		g_free (index_node->offset);
+		index_node->offset = g_strdup (value);
+		index_node->is_p_offset = FALSE;
+	} else if (strcmp (name, "pOffset") == 0) {
+		g_free (index_node->offset);
+		index_node->offset = g_strdup (value);
+		index_node->is_p_offset = TRUE;
+	}
 }
 
 static const char *
@@ -78,13 +84,18 @@ arv_gc_index_node_get_index (ArvGcIndexNode *index_node, gint64 default_offset)
 
 	g_return_val_if_fail (ARV_IS_GC_INDEX_NODE (index_node), 0);
 
-	if (G_VALUE_HOLDS_BOOLEAN (&index_node->offset))
+	if (index_node->offset == NULL)
 		offset = default_offset;
 	else {
-		ArvGc *genicam;
+		if (index_node->is_p_offset) {
+			ArvGcNode *node;
+			ArvGc *genicam;
 
-		genicam = arv_gc_node_get_genicam (ARV_GC_NODE (index_node));
-	       	offset = arv_gc_get_int64_from_value (genicam, &index_node->offset);
+			genicam = arv_gc_node_get_genicam (ARV_GC_NODE (index_node));
+			node = arv_gc_get_node (genicam, index_node->offset);
+			offset = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
+		} else
+			offset = g_ascii_strtoll (index_node->offset, NULL, 0);
 	}
 
 	return offset * arv_gc_property_node_get_int64 (ARV_GC_PROPERTY_NODE (index_node));
@@ -104,8 +115,8 @@ arv_gc_index_node_new (void)
 static void
 arv_gc_index_node_init (ArvGcIndexNode *index_node)
 {
-	g_value_init (&index_node->offset, G_TYPE_BOOLEAN);
-	g_value_set_boolean (&index_node->offset, FALSE);
+	index_node->offset = NULL;
+	index_node->is_p_offset = FALSE;
 }
 
 static void
@@ -113,7 +124,7 @@ arv_gc_index_node_finalize (GObject *object)
 {
 	ArvGcIndexNode *index_node = ARV_GC_INDEX_NODE (object);
 
-	g_value_unset (&index_node->offset);
+	g_free (index_node->offset);
 
 	parent_class->finalize (object);
 }
