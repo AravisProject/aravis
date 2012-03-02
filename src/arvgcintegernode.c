@@ -57,11 +57,11 @@ arv_gc_integer_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_MINIMUM:
 			case ARV_GC_PROPERTY_NODE_TYPE_P_MINIMUM:
-				node->maximum = property_node;
+				node->minimum = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_MAXIMUM:
 			case ARV_GC_PROPERTY_NODE_TYPE_P_MAXIMUM:
-				node->minimum = property_node;
+				node->maximum = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_INCREMENT:
 			case ARV_GC_PROPERTY_NODE_TYPE_P_INCREMENT:
