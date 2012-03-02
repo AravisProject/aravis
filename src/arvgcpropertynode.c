@@ -53,7 +53,7 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 		case ARV_GC_PROPERTY_NODE_TYPE_DESCRIPTION:
 			return "Description";
 		case ARV_GC_PROPERTY_NODE_TYPE_TOOLTIP:
-			return "Tooltip";
+			return "ToolTip";
 		case ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_NAME:
 			return "DisplayName";
 		case ARV_GC_PROPERTY_NODE_TYPE_MINIMUM:
