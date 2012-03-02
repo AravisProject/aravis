@@ -21,7 +21,7 @@
  */
 
 /**
- * SECTION: arvgcindex_node
+ * SECTION: arvgcindexnode
  * @short_description: Class for IndexNode elements
  */
 

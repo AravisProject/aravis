@@ -21,7 +21,7 @@
  */
 
 /**
- * SECTION: arvgcinvalidator_node
+ * SECTION: arvgcinvalidatornode
  * @short_description: Class for InvalidatorNode elements
  */
 

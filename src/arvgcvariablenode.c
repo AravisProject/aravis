@@ -21,7 +21,7 @@
  */
 
 /**
- * SECTION: arvgcvariable_node
+ * SECTION: arvgcvariablenode
  * @short_description: Class for VariableNode elements
  */
 

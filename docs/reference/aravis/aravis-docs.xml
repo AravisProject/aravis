@@ -49,6 +49,13 @@
 			<title>Genicam</title>
 			<xi:include href="xml/arvgc.xml"/>
 			<xi:include href="xml/arvgcnode.xml"/>
+			<xi:include href="xml/arvgcpropertynode.xml"/>
+			<xi:include href="xml/arvgcindexnode.xml"/>
+			<xi:include href="xml/arvgcinvalidatornode.xml"/>
+			<xi:include href="xml/arvgcvariablenode.xml"/>
+			<xi:include href="xml/arvgcfeaturenode.xml"/>
+			<xi:include href="xml/arvgcregisterdescriptionnode.xml"/>
+			<xi:include href="xml/arvgcgroupnode.xml"/>
 			<xi:include href="xml/arvgcinteger.xml"/>
 			<xi:include href="xml/arvgcfloat.xml"/>
 			<xi:include href="xml/arvgcstring.xml"/>
@@ -80,6 +87,18 @@
 			<xi:include href="xml/arvfakedevice.xml"/>
 			<xi:include href="xml/arvfakestream.xml"/>
 			<xi:include href="xml/arvfakecamera.xml"/>
+		</chapter>
+
+		<chapter>
+			<title>DOM</title>
+			<xi:include href="xml/arvdomnode.xml"/>
+			<xi:include href="xml/arvdomnodelist.xml"/>
+			<xi:include href="xml/arvdomnamednodemap.xml"/>
+			<xi:include href="xml/arvdomdocument.xml"/>
+			<xi:include href="xml/arvdomdocumentfragment.xml"/>
+			<xi:include href="xml/arvdomelement.xml"/>
+			<xi:include href="xml/arvdomcharacterdata.xml"/>
+			<xi:include href="xml/arvdomtext.xml"/>
 		</chapter>
 
 		<chapter>
