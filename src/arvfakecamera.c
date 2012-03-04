@@ -32,7 +32,7 @@
 
 #include <arvfakecamera.h>
 #include <arvgc.h>
-#include <arvgcregister.h>
+#include <arvgcregisternode.h>
 #include <arvgvcp.h>
 #include <arvbuffer.h>
 #include <arvdebug.h>

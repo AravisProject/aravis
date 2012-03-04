@@ -62,6 +62,7 @@ registers_test (void)
 	ArvGcNode *node_b;
 	ArvGcNode *node_c;
 	gint64 value;
+	gint64 address;
 
 	device = arv_fake_device_new ("TEST0");
 	g_assert (ARV_IS_FAKE_DEVICE (device));
@@ -71,6 +72,9 @@ registers_test (void)
 
 	node = arv_gc_get_node (genicam, "TestRegister");
 	g_assert (ARV_IS_GC_NODE (node));
+
+	address = arv_gc_register_get_address (ARV_GC_REGISTER (node));
+	g_assert_cmpint (address, ==, 0x1f0);
 
 	arv_gc_integer_set_value (ARV_GC_INTEGER (node), 0x12345678);
 	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
@@ -82,6 +86,13 @@ registers_test (void)
 	g_assert (ARV_IS_GC_NODE (node_b));
 	node_c = arv_gc_get_node (genicam, "StructEntry_16");
 	g_assert (ARV_IS_GC_NODE (node_c));
+
+	value = arv_gc_register_get_address (ARV_GC_REGISTER (node_a));
+	g_assert_cmpint (value, ==, address);
+	value = arv_gc_register_get_address (ARV_GC_REGISTER (node_b));
+	g_assert_cmpint (value, ==, address);
+	value = arv_gc_register_get_address (ARV_GC_REGISTER (node_c));
+	g_assert_cmpint (value, ==, address);
 
 	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_a));
 	g_assert_cmpint (value, ==, 0x5678);

@@ -49,11 +49,12 @@
 #include <arvgcenumentry.h>
 #include <arvgcintegernode.h>
 #include <arvgcfloatnode.h>
-#include <arvgcregister.h>
+#include <arvgcregisternode.h>
 #include <arvgccommand.h>
 #include <arvgcswissknife.h>
 #include <arvgcconverter.h>
 #include <arvgcport.h>
+#include <arvgcregister.h>
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
 #include <arvgcstring.h>

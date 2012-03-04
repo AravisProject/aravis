@@ -59,12 +59,13 @@ ARAVIS_SRCS =					\
 	arvgcenumentry.c			\
 	arvgcintegernode.c			\
 	arvgcfloatnode.c			\
-	arvgcregister.c				\
+	arvgcregisternode.c			\
 	arvgcstructentrynode.c			\
 	arvgccommand.c				\
 	arvgcswissknife.c			\
 	arvgcconverter.c			\
 	arvgcport.c				\
+	arvgcregister.c				\
 	arvgcinteger.c				\
 	arvgcstring.c				\
 	arvgcfloat.c				\
@@ -120,12 +121,13 @@ ARAVIS_HDRS = 					\
 	arvgcenumentry.h			\
 	arvgcintegernode.h			\
 	arvgcfloatnode.h			\
-	arvgcregister.h				\
+	arvgcregisternode.h			\
 	arvgcstructentrynode.h			\
 	arvgccommand.h				\
 	arvgcswissknife.h			\
 	arvgcconverter.h			\
 	arvgcport.h				\
+	arvgcregister.h				\
 	arvgcinteger.h				\
 	arvgcstring.h				\
 	arvgcfloat.h				\

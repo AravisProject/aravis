@@ -26,6 +26,7 @@
  */
 
 #include <arvgcstructentrynode.h>
+#include <arvgcregisternode.h>
 #include <arvgcregister.h>
 #include <arvgcinteger.h>
 #include <arvgcport.h>
@@ -174,6 +175,57 @@ arv_gc_struct_entry_node_class_init (ArvGcStructEntryNodeClass *this_class)
 	gc_feature_node_class->get_value_as_string = arv_gc_struct_entry_node_get_value_as_string;
 }
 
+/* ArvGcRegister interface implementation */
+
+static void
+arv_gc_struct_entry_node_get (ArvGcRegister *gc_register, void *buffer, guint64 length)
+{
+	ArvDomNode *struct_register = arv_dom_node_get_parent_node (ARV_DOM_NODE (gc_register));
+
+	if (ARV_IS_GC_REGISTER (struct_register))
+		arv_gc_register_get (ARV_GC_REGISTER (struct_register), buffer, length);
+}
+
+static void
+arv_gc_struct_entry_node_set (ArvGcRegister *gc_register, void *buffer, guint64 length)
+{
+	ArvDomNode *struct_register = arv_dom_node_get_parent_node (ARV_DOM_NODE (gc_register));
+
+	if (ARV_IS_GC_REGISTER (struct_register))
+		return arv_gc_register_set (ARV_GC_REGISTER (struct_register), buffer, length);
+}
+
+static guint64
+arv_gc_struct_entry_node_get_address (ArvGcRegister *gc_register)
+{
+	ArvDomNode *struct_register = arv_dom_node_get_parent_node (ARV_DOM_NODE (gc_register));
+
+	if (ARV_IS_GC_REGISTER (struct_register))
+		return arv_gc_register_get_address (ARV_GC_REGISTER (struct_register));
+
+	return 0;
+}
+
+static guint64
+arv_gc_struct_entry_node_get_length (ArvGcRegister *gc_register)
+{
+	ArvDomNode *struct_register = arv_dom_node_get_parent_node (ARV_DOM_NODE (gc_register));
+
+	if (ARV_IS_GC_REGISTER (struct_register))
+		return arv_gc_register_get_length (ARV_GC_REGISTER (struct_register));
+
+	return 0;
+}
+
+static void
+arv_gc_struct_entry_node_register_interface_init (ArvGcRegisterInterface *interface)
+{
+	interface->get = arv_gc_struct_entry_node_get;
+	interface->set = arv_gc_struct_entry_node_set;
+	interface->get_address = arv_gc_struct_entry_node_get_address;
+	interface->get_length = arv_gc_struct_entry_node_get_length;
+}
+
 /* ArvGcInteger interface implementation */
 
 static gint64
@@ -185,13 +237,13 @@ arv_gc_struct_entry_node_get_integer_value (ArvGcInteger *gc_integer)
 	guint msb;
 
 	struct_register = arv_dom_node_get_parent_node (ARV_DOM_NODE (gc_integer));
-	if (!ARV_IS_GC_REGISTER (struct_register))
+	if (!ARV_IS_GC_REGISTER_NODE (struct_register))
 		return 0;
 
 	lsb = _get_lsb (struct_entry);
 	msb = _get_msb (struct_entry);
 
-	return arv_gc_register_get_masked_integer_value (ARV_GC_REGISTER (struct_register), lsb, msb);
+	return arv_gc_register_node_get_masked_integer_value (ARV_GC_REGISTER_NODE (struct_register), lsb, msb);
 }
 
 static void
@@ -203,13 +255,13 @@ arv_gc_struct_entry_node_set_integer_value (ArvGcInteger *gc_integer, gint64 val
 	guint msb;
 
 	struct_register = arv_dom_node_get_parent_node (ARV_DOM_NODE (gc_integer));
-	if (!ARV_IS_GC_REGISTER (struct_register))
+	if (!ARV_IS_GC_REGISTER_NODE (struct_register))
 		return;
 
 	lsb = _get_lsb (struct_entry);
 	msb = _get_msb (struct_entry);
 
-	arv_gc_register_set_masked_integer_value (ARV_GC_REGISTER (struct_register), lsb, msb, value);
+	arv_gc_register_node_set_masked_integer_value (ARV_GC_REGISTER_NODE (struct_register), lsb, msb, value);
 }
 
 static void
@@ -220,4 +272,5 @@ arv_gc_struct_entry_node_integer_interface_init (ArvGcIntegerInterface *interfac
 }
 
 G_DEFINE_TYPE_WITH_CODE (ArvGcStructEntryNode, arv_gc_struct_entry_node, ARV_TYPE_GC_FEATURE_NODE,
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_REGISTER, arv_gc_struct_entry_node_register_interface_init)
 			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_struct_entry_node_integer_interface_init))

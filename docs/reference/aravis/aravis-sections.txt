@@ -455,6 +455,25 @@ ArvGcIntegerInterface
 </SECTION>
 
 <SECTION>
+<FILE>arvgcregister</FILE>
+<TITLE>ArvGcRegister</TITLE>
+arv_gc_register_get
+arv_gc_register_get_address
+arv_gc_register_get_length
+arv_gc_register_get_type
+arv_gc_register_set
+<SUBSECTION Standard>
+ARV_GC_REGISTER
+ARV_GC_REGISTER_GET_CLASS
+ARV_GC_REGISTER_GET_INTERFACE
+ARV_IS_GC_REGISTER
+ARV_TYPE_GC_REGISTER
+ArvGcRegister
+ArvGcRegisterInterface
+ArvGcRegisterType
+</SECTION>
+
+<SECTION>
 <FILE>arvgcconverter</FILE>
 <TITLE>ArvGcConverter</TITLE>
 ArvGcConverter
@@ -776,33 +795,29 @@ ArvFakeCameraFillPattern
 </SECTION>
 
 <SECTION>
-<FILE>arvgcregister</FILE>
-<TITLE>ArvGcRegister</TITLE>
+<FILE>arvgcregisternode</FILE>
+<TITLE>ArvGcRegisterNode</TITLE>
 ArvGcSign
-ArvGcRegisterType
-ArvGcRegister
-arv_gc_register_new
-arv_gc_register_new_integer
-arv_gc_register_new_masked_integer
-arv_gc_register_new_float
-arv_gc_register_new_string
-arv_gc_register_new_struct_register
-arv_gc_register_get
-arv_gc_register_set
-arv_gc_register_get_address
-arv_gc_register_get_length
-arv_gc_register_get_masked_integer_value
-arv_gc_register_set_masked_integer_value
+ArvGcRegisterNode
+ArvGcRegisterNodeType
+arv_gc_register_node_new
+arv_gc_register_node_new_integer
+arv_gc_register_node_new_masked_integer
+arv_gc_register_node_new_float
+arv_gc_register_node_new_string
+arv_gc_register_node_new_struct_register
+arv_gc_register_node_get_masked_integer_value
+arv_gc_register_node_set_masked_integer_value
 <SUBSECTION Standard>
-ARV_GC_REGISTER
-ARV_IS_GC_REGISTER
-ARV_TYPE_GC_REGISTER
-arv_gc_register_get_type
-ARV_GC_REGISTER_CLASS
-ARV_IS_GC_REGISTER_CLASS
-ARV_GC_REGISTER_GET_CLASS
+ARV_GC_REGISTER_NODE
+ARV_IS_GC_REGISTER_NODE
+ARV_TYPE_GC_REGISTER_NODE
+arv_gc_register_node_get_type
+ARV_GC_REGISTER_NODE_CLASS
+ARV_IS_GC_REGISTER_NODE_CLASS
+ARV_GC_REGISTER_NODE_GET_CLASS
 <SUBSECTION Private>
-ArvGcRegisterClass
+ArvGcRegisterNodeClass
 </SECTION>
 
 <SECTION>

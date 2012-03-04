@@ -42,7 +42,7 @@
 #include <arvgcenumentry.h>
 #include <arvgcintegernode.h>
 #include <arvgcfloatnode.h>
-#include <arvgcregister.h>
+#include <arvgcregisternode.h>
 #include <arvgcstructentrynode.h>
 #include <arvgccommand.h>
 #include <arvgcinteger.h>
@@ -81,15 +81,15 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 	else if (strcmp (tag_name, "IntConverter") == 0)
 		node = arv_gc_converter_new_integer ();
 	else if (strcmp (tag_name, "IntReg") == 0)
-		node = arv_gc_register_new_integer ();
+		node = arv_gc_register_node_new_integer ();
 	else if (strcmp (tag_name, "MaskedIntReg") == 0)
-		node = arv_gc_register_new_masked_integer ();
+		node = arv_gc_register_node_new_masked_integer ();
 	else if (strcmp (tag_name, "FloatReg") == 0)
-		node = arv_gc_register_new_float ();
+		node = arv_gc_register_node_new_float ();
 	else if (strcmp (tag_name, "StringReg") == 0)
-		node = arv_gc_register_new_string ();
+		node = arv_gc_register_node_new_string ();
 	else if (strcmp (tag_name, "StructReg") == 0)
-		node = arv_gc_register_new_struct_register ();
+		node = arv_gc_register_node_new_struct_register ();
 	else if (strcmp (tag_name, "StructEntry") == 0)
 		node = arv_gc_struct_entry_node_new ();
 	else if (strcmp (tag_name, "Integer") == 0)
