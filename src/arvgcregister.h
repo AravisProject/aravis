@@ -48,6 +48,7 @@ typedef enum
  * @ARV_GC_REGISTER_TYPE_MASKED_INTEGER: MaskedIntReg node
  * @ARV_GC_REGISTER_TYPE_FLOAT: FloatReg node
  * @ARV_GC_REGISTER_TYPE_STRING: StringReg node
+ * @ARV_GC_REGISTER_TYPE_STRUCT_REGISTER: StructReg node
  */
 
 typedef enum {
@@ -55,7 +56,8 @@ typedef enum {
        ARV_GC_REGISTER_TYPE_INTEGER,
        ARV_GC_REGISTER_TYPE_MASKED_INTEGER,
        ARV_GC_REGISTER_TYPE_FLOAT,
-       ARV_GC_REGISTER_TYPE_STRING
+       ARV_GC_REGISTER_TYPE_STRING,
+       ARV_GC_REGISTER_TYPE_STRUCT_REGISTER
 } ArvGcRegisterType;
 
 #define ARV_TYPE_GC_REGISTER             (arv_gc_register_get_type ())
@@ -104,10 +106,14 @@ ArvGcNode * 	arv_gc_register_new_integer 		(void);
 ArvGcNode * 	arv_gc_register_new_masked_integer 	(void);
 ArvGcNode * 	arv_gc_register_new_float	 	(void);
 ArvGcNode * 	arv_gc_register_new_string 		(void);
+ArvGcNode * 	arv_gc_register_new_struct_register	(void);
 void 		arv_gc_register_get			(ArvGcRegister *gc_register, void *buffer, guint64 Length);
 void 		arv_gc_register_set			(ArvGcRegister *gc_register, void *buffer, guint64 Length);
 guint64 	arv_gc_register_get_address 		(ArvGcRegister *gc_register);
 guint64 	arv_gc_register_get_length		(ArvGcRegister *gc_register);
+
+gint64 		arv_gc_register_get_masked_integer_value 	(ArvGcRegister *gc_register, guint lsb, guint msb);
+void 		arv_gc_register_set_masked_integer_value 	(ArvGcRegister *gc_register, guint lsb, guint msb, gint64 value);
 
 G_END_DECLS
 

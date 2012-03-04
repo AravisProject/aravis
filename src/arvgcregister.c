@@ -58,6 +58,8 @@ arv_gc_register_get_node_name (ArvDomNode *node)
 			return "FloatReg";
 		case ARV_GC_REGISTER_TYPE_STRING:
 			return "StringReg";
+		case ARV_GC_REGISTER_TYPE_STRUCT_REGISTER:
+			return "StuctReg";
 	}
 
 	return NULL;
@@ -456,6 +458,18 @@ arv_gc_register_new_string (void)
 	return ARV_GC_NODE (gc_register);
 }
 
+ArvGcNode *
+arv_gc_register_new_struct_register (void)
+{
+	ArvGcRegister *gc_register;
+
+	gc_register = g_object_new (ARV_TYPE_GC_REGISTER, NULL);
+	gc_register->type = ARV_GC_REGISTER_TYPE_STRUCT_REGISTER;
+	gc_register->value_type = G_TYPE_INT64;
+
+	return ARV_GC_NODE (gc_register);
+}
+
 static void
 arv_gc_register_init (ArvGcRegister *gc_register)
 {
@@ -497,9 +511,8 @@ arv_gc_register_class_init (ArvGcRegisterClass *this_class)
 /* ArvGcInteger interface implementation */
 
 static gint64
-arv_gc_register_get_integer_value (ArvGcInteger *gc_integer)
+_get_integer_value (ArvGcRegister *gc_register, guint register_lsb, guint register_msb)
 {
-	ArvGcRegister *gc_register = ARV_GC_REGISTER (gc_integer);
 	gint64 value;
 	guint lsb;
 	guint msb;
@@ -512,15 +525,16 @@ arv_gc_register_get_integer_value (ArvGcInteger *gc_integer)
 	arv_copy_memory_with_endianess (&value, sizeof (value), G_BYTE_ORDER,
 					gc_register->cache, gc_register->cache_size, endianess);
 
-	if (gc_register->type == ARV_GC_REGISTER_TYPE_MASKED_INTEGER) {
+	if (gc_register->type == ARV_GC_REGISTER_TYPE_MASKED_INTEGER ||
+	    gc_register->type == ARV_GC_REGISTER_TYPE_STRUCT_REGISTER) {
 		guint64 mask;
 
 		if (endianess == G_BYTE_ORDER) {
-			msb = _get_msb (gc_register);
-			lsb = _get_lsb (gc_register);
+			msb = register_msb;
+			lsb = register_lsb;
 		} else {
-			lsb = 8 * gc_register->cache_size - _get_lsb (gc_register) - 1;
-			msb = 8 * gc_register->cache_size - _get_msb (gc_register) - 1;
+			lsb = 8 * gc_register->cache_size - register_lsb - 1;
+			msb = 8 * gc_register->cache_size - register_msb - 1;
 		}
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
@@ -535,24 +549,40 @@ arv_gc_register_get_integer_value (ArvGcInteger *gc_integer)
 #endif
 	}
 
-	arv_log_genicam ("[GcRegister::get_integer_value] address = 0x%Lx, value = 0x%Lx",
+	arv_log_genicam ("[GcRegister::_get_integer_value] address = 0x%Lx, value = 0x%Lx",
 			 arv_gc_register_get_address (gc_register),
 			 value);
 
 	return value;
 }
 
-static void
-arv_gc_register_set_integer_value (ArvGcInteger *gc_integer, gint64 value)
+gint64
+arv_gc_register_get_masked_integer_value (ArvGcRegister *gc_register, guint lsb, guint msb)
+{
+	g_return_val_if_fail (ARV_IS_GC_REGISTER (gc_register), 0);
+
+	return _get_integer_value (gc_register, lsb, msb);
+}
+
+static gint64
+arv_gc_register_get_integer_value (ArvGcInteger *gc_integer)
 {
 	ArvGcRegister *gc_register = ARV_GC_REGISTER (gc_integer);
+
+	return _get_integer_value (gc_register, _get_lsb (gc_register), _get_msb (gc_register));
+}
+
+static void
+_set_integer_value (ArvGcRegister *gc_register, guint register_lsb, guint register_msb, gint64 value)
+{
 	guint lsb;
 	guint msb;
 	guint endianess;
 
 	endianess = _get_endianess (gc_register);
 
-	if (gc_register->type == ARV_GC_REGISTER_TYPE_MASKED_INTEGER) {
+	if (gc_register->type == ARV_GC_REGISTER_TYPE_MASKED_INTEGER ||
+	    gc_register->type == ARV_GC_REGISTER_TYPE_STRUCT_REGISTER) {
 		gint64 current_value;
 		guint64 mask;
 
@@ -562,11 +592,11 @@ arv_gc_register_set_integer_value (ArvGcInteger *gc_integer, gint64 value)
 						gc_register->cache, gc_register->cache_size, endianess);
 
 		if (endianess == G_BYTE_ORDER) {
-			msb = _get_msb (gc_register);
-			lsb = _get_lsb (gc_register);
+			msb = register_msb;
+			lsb = register_lsb;
 		} else {
-			lsb = 8 * gc_register->cache_size - _get_lsb (gc_register) - 1;
-			msb = 8 * gc_register->cache_size - _get_msb (gc_register) - 1;
+			lsb = 8 * gc_register->cache_size - register_lsb - 1;
+			msb = 8 * gc_register->cache_size - register_msb - 1;
 		}
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
@@ -581,7 +611,7 @@ arv_gc_register_set_integer_value (ArvGcInteger *gc_integer, gint64 value)
 #endif
 	}
 
-	arv_log_genicam ("[GcRegister::set_integer_value] address = 0x%Lx, value = 0x%Lx",
+	arv_log_genicam ("[GcRegister::_set_integer_value] address = 0x%Lx, value = 0x%Lx",
 			 arv_gc_register_get_address (gc_register),
 			 value);
 
@@ -589,6 +619,22 @@ arv_gc_register_set_integer_value (ArvGcInteger *gc_integer, gint64 value)
 					&value, sizeof (value), G_BYTE_ORDER);
 
 	_write_cache (gc_register);
+}
+
+void
+arv_gc_register_set_masked_integer_value (ArvGcRegister *gc_register, guint lsb, guint msb, gint64 value)
+{
+	g_return_if_fail (ARV_IS_GC_REGISTER (gc_register));
+
+	_set_integer_value (gc_register, lsb, msb, value);
+}
+
+static void
+arv_gc_register_set_integer_value (ArvGcInteger *gc_integer, gint64 value)
+{
+	ArvGcRegister *gc_register = ARV_GC_REGISTER (gc_integer);
+
+	_set_integer_value (gc_register, _get_lsb (gc_register), _get_msb (gc_register), value);
 }
 
 static void

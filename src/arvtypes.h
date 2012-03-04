@@ -57,6 +57,7 @@ typedef struct _ArvGcEnumEntry			ArvGcEnumEntry;
 typedef struct _ArvGcIntegerNode		ArvGcIntegerNode;
 typedef struct _ArvGcFloatNode			ArvGcFloatNode;
 typedef struct _ArvGcRegister 			ArvGcRegister;
+typedef struct _ArvGcStructEntryNode		ArvGcStructEntryNode;
 typedef struct _ArvGcCommand			ArvGcCommand;
 typedef struct _ArvGcSwissKnife			ArvGcSwissKnife;
 typedef struct _ArvGcConverter			ArvGcConverter;

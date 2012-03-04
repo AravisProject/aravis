@@ -53,6 +53,70 @@ trigger_registers_test (void)
 }
 
 static void
+registers_test (void)
+{
+	ArvDevice *device;
+	ArvGc *genicam;
+	ArvGcNode *node;
+	ArvGcNode *node_a;
+	ArvGcNode *node_b;
+	ArvGcNode *node_c;
+	gint64 value;
+
+	device = arv_fake_device_new ("TEST0");
+	g_assert (ARV_IS_FAKE_DEVICE (device));
+
+	genicam = arv_device_get_genicam (device);
+	g_assert (ARV_IS_GC (genicam));
+
+	node = arv_gc_get_node (genicam, "TestRegister");
+	g_assert (ARV_IS_GC_NODE (node));
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node), 0x12345678);
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
+	g_assert_cmpint (value, ==, 0x12345678);
+
+	node_a = arv_gc_get_node (genicam, "StructEntry_0_15");
+	g_assert (ARV_IS_GC_NODE (node_a));
+	node_b = arv_gc_get_node (genicam, "StructEntry_16_31");
+	g_assert (ARV_IS_GC_NODE (node_b));
+	node_c = arv_gc_get_node (genicam, "StructEntry_16");
+	g_assert (ARV_IS_GC_NODE (node_c));
+
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_a));
+	g_assert_cmpint (value, ==, 0x5678);
+
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_b));
+	g_assert_cmpint (value, ==, 0x1234);
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_b), 0x10101010);
+
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_a));
+	g_assert_cmpint (value, ==, 0x5678);
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_a), 0xabcdefaa);
+
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_a));
+	g_assert_cmpint (value, ==, 0xefaa);
+
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_b));
+	g_assert_cmpint (value, ==, 0x1010);
+
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_c));
+	g_assert_cmpint (value, ==, 0x0);
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_c), 0xff);
+
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_c));
+	g_assert_cmpint (value, ==, 0x1);
+
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_b));
+	g_assert_cmpint (value, ==, 0x1011);
+
+	g_object_unref (device);
+}
+
+static void
 fake_device_test (void)
 {
 	ArvDevice *device;
@@ -115,6 +179,7 @@ main (int argc, char *argv[])
 
 	g_test_add_func ("/fake/load-fake-camera-genicam", load_fake_camera_genicam_test);
 	g_test_add_func ("/fake/trigger-registers", trigger_registers_test);
+	g_test_add_func ("/fake/registers", registers_test);
 	g_test_add_func ("/fake/fake-device", fake_device_test);
 
 	result = g_test_run();

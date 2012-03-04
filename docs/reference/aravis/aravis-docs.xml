@@ -65,6 +65,7 @@
 			<xi:include href="xml/arvgcintegernode.xml"/>
 			<xi:include href="xml/arvgcfloatnode.xml"/>
 			<xi:include href="xml/arvgcregister.xml"/>
+			<xi:include href="xml/arvgcstructentrynode.xml"/>
 			<xi:include href="xml/arvgcenumeration.xml"/>
 			<xi:include href="xml/arvgcenumentry.xml"/>
 			<xi:include href="xml/arvgcconverter.xml"/>

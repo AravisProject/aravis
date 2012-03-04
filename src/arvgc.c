@@ -43,6 +43,7 @@
 #include <arvgcintegernode.h>
 #include <arvgcfloatnode.h>
 #include <arvgcregister.h>
+#include <arvgcstructentrynode.h>
 #include <arvgccommand.h>
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
@@ -87,6 +88,10 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 		node = arv_gc_register_new_float ();
 	else if (strcmp (tag_name, "StringReg") == 0)
 		node = arv_gc_register_new_string ();
+	else if (strcmp (tag_name, "StructReg") == 0)
+		node = arv_gc_register_new_struct_register ();
+	else if (strcmp (tag_name, "StructEntry") == 0)
+		node = arv_gc_struct_entry_node_new ();
 	else if (strcmp (tag_name, "Integer") == 0)
 		node = arv_gc_integer_node_new ();
 	else if (strcmp (tag_name, "Float") == 0)

@@ -786,10 +786,13 @@ arv_gc_register_new_integer
 arv_gc_register_new_masked_integer
 arv_gc_register_new_float
 arv_gc_register_new_string
+arv_gc_register_new_struct_register
 arv_gc_register_get
 arv_gc_register_set
 arv_gc_register_get_address
 arv_gc_register_get_length
+arv_gc_register_get_masked_integer_value
+arv_gc_register_set_masked_integer_value
 <SUBSECTION Standard>
 ARV_GC_REGISTER
 ARV_IS_GC_REGISTER
@@ -801,6 +804,22 @@ ARV_GC_REGISTER_GET_CLASS
 <SUBSECTION Private>
 ArvGcRegisterClass
 </SECTION>
+
+<SECTION>
+<FILE>arvgcstructentrynode</FILE>
+<TITLE>ArvGcStructEntryNode</TITLE>
+arv_gc_struct_entry_node_new
+<SUBSECTION Standard>
+ArvGcStructEntryNode
+ARV_GC_STRUCT_ENTRY_NODE
+ARV_GC_STRUCT_ENTRY_NODE_CLASS
+ARV_GC_STRUCT_ENTRY_NODE_GET_CLASS
+ARV_IS_GC_STRUCT_ENTRY_NODE
+ARV_IS_GC_STRUCT_ENTRY_NODE_CLASS
+ARV_TYPE_GC_STRUCT_ENTRY_NODE
+ArvGcStructEntryNodeClass
+arv_gc_struct_entry_node_get_type
+>/SECTION>
 
 <SECTION>
 <FILE>arvgcstring</FILE>
