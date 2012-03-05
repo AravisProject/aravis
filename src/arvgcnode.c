@@ -25,7 +25,7 @@
  * @short_description: Base class for all Genicam nodes
  *
  * #ArvGcNode provides a base class for the implementation of the different
- * types of Genicam node.
+ * types of Genicam nodes.
  */
 
 #include <arvgcnode.h>

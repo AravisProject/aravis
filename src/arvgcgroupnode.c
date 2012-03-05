@@ -22,7 +22,7 @@
 
 /**
  * SECTION: arvgcgroupnode
- * @short_description: Class for GroupNode nodes
+ * @short_description: Class for Group nodes
  */
 
 #include <arvgcgroupnode.h>

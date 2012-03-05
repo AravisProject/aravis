@@ -21,11 +21,11 @@
  */
 
 /**
- * SECTION: arvgcfeaturenode
- * @short_description: Base class for all Genicam nodes
+ * SECTION: arvgcpropertynode
+ * @short_description: Base class for Genicam property nodes
  *
  * #ArvGcPropertyNode provides a base class for the implementation of the different
- * types of Genicam node.
+ * types of Genicam property nodes (Value, pValue, Endianess...).
  */
 
 #include <arvgcpropertynode.h>

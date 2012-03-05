@@ -22,10 +22,10 @@
 
 /**
  * SECTION: arvgcfeaturenode
- * @short_description: Base class for all Genicam nodes
+ * @short_description: Base class for Genicam feature nodes
  *
  * #ArvGcFeatureNode provides a base class for the implementation of the different
- * types of Genicam node.
+ * types of Genicam feature node (Group, Integer, Float, Enumeration...).
  */
 
 #include <arvgcfeaturenode.h>

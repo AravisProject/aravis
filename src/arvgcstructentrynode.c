@@ -36,14 +36,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-/**
- * SECTION: arvgcstructentrynode
- * @short_description: Base class for StrucEntry nodes
- *
- * #ArvGcStructEntryNode provides a base class for the implementation of the different
- * types of Genicam node.
- */
-
 static GObjectClass *parent_class = NULL;
 
 /* ArvDomNode implementation */
@@ -135,6 +127,12 @@ _get_msb (ArvGcStructEntryNode *gc_struct_entry_node)
 
 	return arv_gc_property_node_get_int64 (gc_struct_entry_node->msb);
 }
+
+/**
+ * arv_gc_struct_entry_node_new:
+ *
+ * Returns: (transfer full): a newly created #ArvGcStructEntryNode.
+ */
 
 ArvGcNode *
 arv_gc_struct_entry_node_new (void)

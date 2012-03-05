@@ -22,7 +22,7 @@
 
 /**
  * SECTION: arvgcindexnode
- * @short_description: Class for IndexNode elements
+ * @short_description: Class for Index nodes
  */
 
 #include <arvgcindexnode.h>

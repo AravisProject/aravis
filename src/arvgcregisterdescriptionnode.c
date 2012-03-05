@@ -22,7 +22,7 @@
 
 /**
  * SECTION: arvgcregisterdescriptionnode
- * @short_description: Class for Register Description elements
+ * @short_description: Class for RegisterDescription nodes
  */
 
 #include <arvgcregisterdescriptionnode.h>

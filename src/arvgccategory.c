@@ -22,7 +22,7 @@
 
 /**
  * SECTION: arvgccategory
- * @short_description: Class for Category elements
+ * @short_description: Class for Category nodes
  */
 
 #include <arvgccategory.h>

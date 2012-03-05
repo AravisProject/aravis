@@ -22,7 +22,7 @@
 
 /**
  * SECTION: arvgcregisternode
- * @short_description: Class for Register, IntReg, MaskedIntReg, FloatReg and StringReg nodes
+ * @short_description: Class for Register, IntReg, MaskedIntReg, FloatReg, StringReg and StructReg nodes
  */
 
 #include <arvgcregisternode.h>

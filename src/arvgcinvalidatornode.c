@@ -22,7 +22,7 @@
 
 /**
  * SECTION: arvgcinvalidatornode
- * @short_description: Class for InvalidatorNode elements
+ * @short_description: Class for Invalidator nodes
  */
 
 #include <arvgcinvalidatornode.h>

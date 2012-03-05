@@ -22,7 +22,7 @@
 
 /**
  * SECTION: arvinterface
- * @short_description: Base abstract class for camera discovery
+ * @short_description: Abstract base class for camera discovery
  *
  * #ArvCamera is an abstract base class for camera discovery. It maintains a
  * list of the available devices and help to instantiate the corresponding
