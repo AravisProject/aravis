@@ -74,7 +74,7 @@ arv_dom_character_data_set_data (ArvDomCharacterData* self, const char * value)
 	g_free (self->data);
 	self->data = g_strdup (value);
 
-	arv_debug_dom ("[ArvDomCharacterData::set_data] Value = '%s'", value);
+	arv_log_dom ("[ArvDomCharacterData::set_data] Value = '%s'", value);
 
 	arv_dom_node_changed (ARV_DOM_NODE (self));
 }
