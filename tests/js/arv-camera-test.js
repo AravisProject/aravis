@@ -42,14 +42,19 @@ camera.set_pixel_format (Aravis.PixelFormat.MONO_8);
 camera.set_frame_rate (10.0);
 
 let [x,y,width,height] = camera.get_region ();
+let payload = camera.get_payload ();
+
+log (payload);
 
 let stream = camera.create_stream (null, null);
 
 for (var i = 0; i < 100; i++)
-	stream.push_buffer (Aravis.Buffer.new (128*128, null));
+	stream.push_buffer (Aravis.Buffer.new (payload, null));
 
 camera.start_acquisition ();
 
-GLib.usleep (1000000);
+let buffer = stream.pop_buffer ();
+
+log (buffer);
 
 camera.stop_acquisition ();
