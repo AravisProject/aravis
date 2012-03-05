@@ -35,11 +35,13 @@
 	</Boolean>
 
 	<Integer Name="RWBooleanValue">
-		<Value>1</Value>
+		<Value>23</Value>
 	</Integer>
 
 	<Boolean Name="P_RWBoolean">
 		<pValue>RWBooleanValue</pValue>
+		<OnValue>23</OnValue>
+		<OffValue>42</OffValue>
 	</Boolean>
 
 	<Integer Name="RWInteger">

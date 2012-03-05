@@ -44,6 +44,7 @@ boolean_test (void)
 	ArvDevice *device;
 	ArvGc *genicam;
 	ArvGcNode *node;
+	ArvGcNode *node_b;
 	gboolean v_boolean;
 	const char *v_string;
 
@@ -74,6 +75,14 @@ boolean_test (void)
 
 	v_boolean = arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node));
 	g_assert_cmpint (v_boolean, ==, TRUE);
+
+	node_b = arv_gc_get_node (genicam, "RWBooleanValue");
+	g_assert (ARV_IS_GC_INTEGER (node_b));
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_b), 42);
+
+	v_boolean = arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node));
+	g_assert_cmpint (v_boolean, ==, FALSE);
 
 	g_object_unref (device);
 }
