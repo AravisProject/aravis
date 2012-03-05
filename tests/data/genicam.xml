@@ -34,8 +34,12 @@
 		<Value>1</Value>
 	</Boolean>
 
+	<Integer Name="RWBooleanValue">
+		<Value>1</Value>
+	</Integer>
+
 	<Boolean Name="P_RWBoolean">
-		<pValue>RWBoolean</pValue>
+		<pValue>RWBooleanValue</pValue>
 	</Boolean>
 
 	<Integer Name="RWInteger">

@@ -73,7 +73,7 @@ boolean_test (void)
 	g_assert (ARV_IS_GC_BOOLEAN (node));
 
 	v_boolean = arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node));
-	g_assert_cmpint (v_boolean, ==, FALSE);
+	g_assert_cmpint (v_boolean, ==, TRUE);
 
 	g_object_unref (device);
 }
