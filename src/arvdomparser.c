@@ -281,7 +281,7 @@ arv_dom_document_new_from_memory (const void *buffer, int size, GError **error)
 			g_object_unref (state.document);
 		state.document = NULL;
 
-		arv_debug_dom ("[ArvDomParser::from_memory] Invalid document");
+		arv_warning_dom ("[ArvDomParser::from_memory] Invalid document");
 
 		g_set_error (error,
 			     ARV_DOM_DOCUMENT_ERROR,

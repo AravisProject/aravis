@@ -405,7 +405,7 @@ arv_dom_node_insert_before (ArvDomNode* self, ArvDomNode* new_child, ArvDomNode*
 	}
 
 	if (!ARV_DOM_NODE_GET_CLASS (self)->can_append_child (self, new_child)) {
-		arv_debug_dom ("[ArvDomNode::insert_before] Can't append '%s' to '%s'",
+		arv_log_dom ("[ArvDomNode::insert_before] Can't append '%s' to '%s'",
 			   arv_dom_node_get_node_name (new_child),
 			   arv_dom_node_get_node_name (self));
 		g_object_unref (new_child);
