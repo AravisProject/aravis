@@ -1,3 +1,17 @@
+Release 0.1.12
+==============
+
+  API warning: arv_stream_pop_buffer is now blocking. Use arv_stream_try_pop_buffer
+  for non blocking behaviour.
+
+  * genicam: support for StructReg StructEntry
+  * stream: new pop_buffer / try_pop_buffer functions, consistent with glib async_queue API.
+  * camera: new get/set_trigger_source functions.
+  * tool: support for wildcard in camera name.
+  * tool: ability to perform the same command on several cameras.
+  * interface: new get_device_physical_id function.
+  * genicam: rewrite on top of a DOM API.
+
 Release 0.1.11
 ==============
 
