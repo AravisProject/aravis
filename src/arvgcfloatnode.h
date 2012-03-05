@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2012 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,7 +24,8 @@
 #define ARV_GC_FLOAT_NODE_H
 
 #include <arvtypes.h>
-#include <arvgcnode.h>
+#include <arvgcfeaturenode.h>
+#include <arvgcpropertynode.h>
 
 G_BEGIN_DECLS
 
@@ -38,24 +39,21 @@ G_BEGIN_DECLS
 typedef struct _ArvGcFloatNodeClass ArvGcFloatNodeClass;
 
 struct _ArvGcFloatNode {
-	ArvGcNode	node;
+	ArvGcFeatureNode	node;
 
-	GValue value;
-	GValue minimum;
-	GValue maximum;
-	GValue increment;
-	char *unit;
-
-	char v_string[G_ASCII_DTOSTR_BUF_SIZE];
+	ArvGcPropertyNode *value;
+	ArvGcPropertyNode *minimum;
+	ArvGcPropertyNode *maximum;
+	ArvGcPropertyNode *increment;
+	ArvGcPropertyNode *unit;
 };
 
 struct _ArvGcFloatNodeClass {
-	ArvGcNodeClass parent_class;
+	ArvGcFeatureNodeClass parent_class;
 };
 
 GType 		arv_gc_float_node_get_type 	(void);
-
-ArvGcNode * 	arv_gc_float_node_new 	(void);
+ArvGcNode * 	arv_gc_float_node_new 		(void);
 
 G_END_DECLS
 

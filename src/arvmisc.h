@@ -38,43 +38,6 @@ void 			arv_statistic_set_name 		(ArvStatistic *statistic, guint histogram_id, c
 
 char *			arv_statistic_to_string 	(const ArvStatistic *statistic);
 
-gboolean 		arv_str_parse_double 		(char **str, double *x);
-
-static inline void
-arv_str_skip_spaces (char **str)
-{
-	while (g_ascii_isspace (**str))
-		(*str)++;
-}
-
-static inline void
-arv_str_skip_char (char **str, char c)
-{
-	while (**str == c)
-		(*str)++;
-}
-
-static inline void
-arv_str_skip_comma_and_spaces (char **str)
-{
-	while (g_ascii_isspace (**str) || **str == ',')
-		(*str)++;
-}
-
-static inline void
-arv_str_skip_semicolon_and_spaces (char **str)
-{
-	while (g_ascii_isspace (**str) || **str == ';')
-		(*str)++;
-}
-
-static inline void
-arv_str_skip_colon_and_spaces (char **str)
-{
-	while (g_ascii_isspace (**str) || **str == ':')
-		(*str)++;
-}
-
 #define ARV_TYPE_VALUE (arv_value_get_type())
 
 GType arv_value_get_type (void);
@@ -98,13 +61,6 @@ gint64 		arv_value_get_int64 		(ArvValue *value);
 double 		arv_value_get_double 		(ArvValue *value);
 gboolean 	arv_value_holds_int64 		(ArvValue *value);
 double 		arv_value_holds_double 		(ArvValue *value);
-
-GValue * 	arv_create_int64_g_value 	(gint64 v_int64);
-GValue * 	arv_create_string_g_value	(const char *v_string);
-void 		arv_free_g_value 		(GValue *value);
-void		arv_force_g_value_to_int64	(GValue *value, gint64 v_int64);
-void		arv_force_g_value_to_double	(GValue *value, double v_double);
-void		arv_force_g_value_to_string	(GValue *value, const char * v_string);
 
 void 		arv_copy_memory_with_endianess 	(void *to, size_t to_size, guint to_endianess,
 						 void *from, size_t from_size, guint from_endianess);

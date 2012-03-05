@@ -24,7 +24,7 @@
 #define ARV_GC_CATEGORY_H
 
 #include <arvtypes.h>
-#include <arvgcnode.h>
+#include <arvgcfeaturenode.h>
 
 G_BEGIN_DECLS
 
@@ -38,17 +38,16 @@ G_BEGIN_DECLS
 typedef struct _ArvGcCategoryClass ArvGcCategoryClass;
 
 struct _ArvGcCategory {
-	ArvGcNode	node;
+	ArvGcFeatureNode	base;
 
 	GSList *features;
 };
 
 struct _ArvGcCategoryClass {
-	ArvGcNodeClass parent_class;
+	ArvGcFeatureNodeClass parent_class;
 };
 
 GType 		arv_gc_category_get_type 	(void);
-
 ArvGcNode * 	arv_gc_category_new 		(void);
 const GSList * 	arv_gc_category_get_features 	(ArvGcCategory *category);
 

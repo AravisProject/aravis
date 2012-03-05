@@ -51,7 +51,7 @@ struct _ArvFeatureWidgetClass {
 
 GType arv_feature_widget_get_type (void);
 
-ArvFeatureWidget * 	arv_feature_widget_new 			(ArvGcNode *node);
+ArvFeatureWidget * 	arv_feature_widget_new 			(ArvGcFeatureNode *node);
 
 G_END_DECLS
 

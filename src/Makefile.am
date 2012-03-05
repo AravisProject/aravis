@@ -24,7 +24,7 @@ BUILT_SOURCES = arvenumtypes.h arvenumtypes.c
 EXTRA_DIST += arvenumtypes.h.template \
 	      arvenumtypes.c.template
 
-libaravis_@ARAVIS_API_VERSION@_la_LIBADD = 				\
+libaravis_@ARAVIS_API_VERSION@_la_LIBADD = 	\
 	$(ARAVIS_LIBS)
 
 ARAVIS_SRCS =					\
@@ -33,20 +33,39 @@ ARAVIS_SRCS =					\
 	arvdebug.c				\
 	arvsystem.c				\
 	arvevaluator.c				\
+	arvdomnode.c				\
+	arvdomnodelist.c			\
+	arvdomnamednodemap.c			\
+	arvdomdocument.c			\
+	arvdomdocumentfragment.c		\
+	arvdomelement.c				\
+	arvdomcharacterdata.c			\
+	arvdomtext.c				\
+	arvdomparser.c				\
+	arvdomimplementation.c			\
 	arvcamera.c				\
 	arvgc.c					\
 	arvgcnode.c				\
+	arvgcpropertynode.c			\
+	arvgcindexnode.c			\
+	arvgcvariablenode.c			\
+	arvgcinvalidatornode.c			\
+	arvgcfeaturenode.c			\
+	arvgcregisterdescriptionnode.c		\
+	arvgcgroupnode.c			\
 	arvgccategory.c				\
 	arvgcboolean.c				\
 	arvgcenumeration.c			\
 	arvgcenumentry.c			\
 	arvgcintegernode.c			\
 	arvgcfloatnode.c			\
-	arvgcregister.c				\
+	arvgcregisternode.c			\
+	arvgcstructentrynode.c			\
 	arvgccommand.c				\
 	arvgcswissknife.c			\
 	arvgcconverter.c			\
 	arvgcport.c				\
+	arvgcregister.c				\
 	arvgcinteger.c				\
 	arvgcstring.c				\
 	arvgcfloat.c				\
@@ -65,6 +84,7 @@ ARAVIS_SRCS =					\
 ARAVIS_SRCS_NO_INTRO =				\
 	arvmisc.c				\
 	arvzip.c				\
+	arvstr.c				\
 	arvgvcp.c				\
 	arvgvsp.c
 
@@ -75,20 +95,39 @@ ARAVIS_HDRS = 					\
 	arvdebug.h				\
 	arvsystem.h				\
 	arvevaluator.h				\
+	arvdomnode.h				\
+	arvdomnodelist.h			\
+	arvdomnamednodemap.h			\
+	arvdomdocument.h			\
+	arvdomdocumentfragment.h		\
+	arvdomelement.h				\
+	arvdomcharacterdata.h			\
+	arvdomtext.h				\
+	arvdomparser.h				\
+	arvdomimplementation.h			\
 	arvcamera.h				\
 	arvgc.h					\
 	arvgcnode.h				\
+	arvgcpropertynode.h			\
+	arvgcindexnode.h			\
+	arvgcvariablenode.h			\
+	arvgcinvalidatornode.h			\
+	arvgcfeaturenode.h			\
+	arvgcregisterdescriptionnode.h		\
+	arvgcgroupnode.h			\
 	arvgccategory.h				\
 	arvgcboolean.h				\
 	arvgcenumeration.h			\
 	arvgcenumentry.h			\
 	arvgcintegernode.h			\
 	arvgcfloatnode.h			\
-	arvgcregister.h				\
+	arvgcregisternode.h			\
+	arvgcstructentrynode.h			\
 	arvgccommand.h				\
 	arvgcswissknife.h			\
 	arvgcconverter.h			\
 	arvgcport.h				\
+	arvgcregister.h				\
 	arvgcinteger.h				\
 	arvgcstring.h				\
 	arvgcfloat.h				\
@@ -107,6 +146,7 @@ ARAVIS_HDRS = 					\
 ARAVIS_HDRS_NO_INTRO =				\
 	arvmisc.h				\
 	arvzip.h				\
+	arvstr.h				\
 	arvgvcp.h				\
 	arvgvsp.h
 

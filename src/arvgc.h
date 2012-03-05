@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2012 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,6 +24,7 @@
 #define ARV_GC_H
 
 #include <arvtypes.h>
+#include <arvdomdocument.h>
 
 G_BEGIN_DECLS
 
@@ -37,24 +38,20 @@ G_BEGIN_DECLS
 typedef struct _ArvGcClass ArvGcClass;
 
 struct _ArvGc {
-	GObject	object;
+	ArvDomDocument base;
 
 	GHashTable *nodes;
 	ArvDevice *device;
 };
 
 struct _ArvGcClass {
-	GObjectClass parent_class;
+	ArvDomDocumentClass parent_class;
 };
 
 GType arv_gc_get_type (void);
 
 ArvGc * 		arv_gc_new 			(ArvDevice *device, const void *xml, size_t size);
-
-gint64 			arv_gc_get_int64_from_value 	(ArvGc *genicam, GValue *value);
-void 			arv_gc_set_int64_to_value 	(ArvGc *genicam, GValue *value, gint64 v_int64);
-double 			arv_gc_get_double_from_value 	(ArvGc *genicam, GValue *value);
-void 			arv_gc_set_double_to_value 	(ArvGc *genicam, GValue *value, double v_double);
+void 			arv_gc_register_feature_node 	(ArvGc *genicam, ArvGcFeatureNode *node);
 ArvGcNode *		arv_gc_get_node			(ArvGc *genicam, const char *name);
 ArvDevice *		arv_gc_get_device		(ArvGc *genicam);
 

@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2012 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,7 +24,8 @@
 #define ARV_GC_SWISS_KNIFE_H
 
 #include <arvtypes.h>
-#include <arvgcnode.h>
+#include <arvgcfeaturenode.h>
+#include <arvgcpropertynode.h>
 
 G_BEGIN_DECLS
 
@@ -38,19 +39,21 @@ G_BEGIN_DECLS
 typedef struct _ArvGcSwissKnifeClass ArvGcSwissKnifeClass;
 
 struct _ArvGcSwissKnife {
-	ArvGcNode	node;
+	ArvGcFeatureNode	node;
 
 	GType value_type;
-	GSList *variables;
+	GSList *variables;	/* ArvGcVariableNode list */
+
+	ArvGcPropertyNode *formula_node;
+
 	ArvEvaluator *formula;
 };
 
 struct _ArvGcSwissKnifeClass {
-	ArvGcNodeClass parent_class;
+	ArvGcFeatureNodeClass parent_class;
 };
 
 GType 		arv_gc_swiss_knife_get_type 	(void);
-
 ArvGcNode * 	arv_gc_swiss_knife_new 		(void);
 ArvGcNode * 	arv_gc_swiss_knife_new_integer 	(void);
 

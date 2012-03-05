@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2012 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,7 +24,8 @@
 #define ARV_GC_CONVERTER_H
 
 #include <arvtypes.h>
-#include <arvgcnode.h>
+#include <arvgcfeaturenode.h>
+#include <arvgcpropertynode.h>
 
 G_BEGIN_DECLS
 
@@ -38,21 +39,24 @@ G_BEGIN_DECLS
 typedef struct _ArvGcConverterClass ArvGcConverterClass;
 
 struct _ArvGcConverter {
-	ArvGcNode	node;
+	ArvGcFeatureNode	node;
 
 	GType value_type;
-	char *value;
-	GSList *variables;
+	GSList *variables;	/* ArvGcVariableNode list */
+
+	ArvGcPropertyNode *value;
+	ArvGcPropertyNode *formula_to_node;
+	ArvGcPropertyNode *formula_from_node;
+
 	ArvEvaluator *formula_to;
 	ArvEvaluator *formula_from;
 };
 
 struct _ArvGcConverterClass {
-	ArvGcNodeClass parent_class;
+	ArvGcFeatureNodeClass parent_class;
 };
 
 GType 		arv_gc_converter_get_type 	(void);
-
 ArvGcNode * 	arv_gc_converter_new 		(void);
 ArvGcNode * 	arv_gc_converter_new_integer 	(void);
 

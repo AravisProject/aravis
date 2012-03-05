@@ -25,7 +25,7 @@
 static GObjectClass *parent_class = NULL;
 
 struct _ArvFeatureWidgetPrivate {
-	ArvGcNode *node;
+	ArvGcFeatureNode *node;
 
 	GtkWidget *entry;
 	GtkWidget *combo_box;
@@ -33,7 +33,7 @@ struct _ArvFeatureWidgetPrivate {
 };
 
 ArvFeatureWidget *
-arv_feature_widget_new (ArvGcNode *node)
+arv_feature_widget_new (ArvGcFeatureNode *node)
 {
 	ArvFeatureWidget *feature;
 

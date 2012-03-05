@@ -469,6 +469,30 @@
 		<Endianess>LittleEndian</Endianess>
 	</IntReg>
 
+	<StructReg Comment="TestStructReg">
+		<Address>0x1f0</Address>
+		<Length>4</Length>
+		<AccessMode>RW</AccessMode>
+		<pPort>Device</pPort>
+		<Endianess>LittleEndian</Endianess>
+
+		<StructEntry Name="StructEntry_0_15" NameSpace="Custom">
+			<LSB>0</LSB>
+			<MSB>15</MSB>
+			<Sign>Unsigned</Sign>
+		</StructEntry>
+
+		<StructEntry Name="StructEntry_16_31" NameSpace="Custom">
+			<LSB>16</LSB>
+			<MSB>31</MSB>
+			<Sign>Unsigned</Sign>
+		</StructEntry>
+
+		<StructEntry Name="StructEntry_16" NameSpace="Custom">
+			<Bit>16</Bit>
+		</StructEntry>
+	</StructReg>
+
 	<!-- Port -->
 
 	<Port Name="Device" NameSpace="Standard">

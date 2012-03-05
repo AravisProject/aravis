@@ -36,30 +36,45 @@
 
 static GObjectClass *parent_class = NULL;
 
-/* ArvGcNode implementation */
+/* ArvGcFeatureNode implementation */
 
 static const char *
-arv_gc_command_get_node_name (ArvGcNode *node)
+arv_gc_command_get_node_name (ArvDomNode *node)
 {
 	return "Command";
 }
 
 static void
-arv_gc_command_add_element (ArvGcNode *node, const char *name, const char *content, const char **attributes)
+arv_gc_command_post_new_child (ArvDomNode *self, ArvDomNode *child)
 {
-	ArvGcCommand *gc_command = ARV_GC_COMMAND (node);
+	ArvGcCommand *node = ARV_GC_COMMAND (self);
 
-	if (strcmp (name, "Value") == 0) {
-		arv_force_g_value_to_int64 (&gc_command->value, g_ascii_strtoull (content, NULL, 0));
-	} else if (strcmp (name, "pValue") == 0) {
-		arv_force_g_value_to_string (&gc_command->value, content);
-	} else if (strcmp (name, "CommandValue") == 0) {
-		arv_force_g_value_to_int64 (&gc_command->command_value, g_ascii_strtoull (content, NULL, 0));
-	} else if (strcmp (name, "pCommandValue") == 0) {
-		arv_force_g_value_to_string (&gc_command->command_value, content);
-	} else
-		ARV_GC_NODE_CLASS (parent_class)->add_element (node, name, content, attributes);
+	if (ARV_IS_GC_PROPERTY_NODE (child)) {
+		ArvGcPropertyNode *property_node = ARV_GC_PROPERTY_NODE (child);
+
+		switch (arv_gc_property_node_get_node_type (property_node)) {
+			case ARV_GC_PROPERTY_NODE_TYPE_VALUE:
+			case ARV_GC_PROPERTY_NODE_TYPE_P_VALUE:
+				node->value = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_COMMAND_VALUE:
+			case ARV_GC_PROPERTY_NODE_TYPE_P_COMMAND_VALUE:
+				node->command_value = property_node;
+				break;
+			default:
+				ARV_DOM_NODE_CLASS (parent_class)->post_new_child (self, child);
+				break;
+		}
+	}
 }
+
+static void
+arv_gc_command_pre_remove_child (ArvDomNode *self, ArvDomNode *child)
+{
+	g_assert_not_reached ();
+}
+
+/* ArvGcFeatureNode implementation */
 
 /* ArvGcCommand implementation */
 
@@ -73,11 +88,16 @@ arv_gc_command_execute (ArvGcCommand *gc_command)
 	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_command));
 	g_return_if_fail (ARV_IS_GC (genicam));
 
-	command_value = arv_gc_get_int64_from_value (genicam, &gc_command->command_value);
-	arv_gc_set_int64_to_value (genicam, &gc_command->value, command_value);
+	if (gc_command->command_value != NULL)
+		command_value = arv_gc_property_node_get_int64 (gc_command->command_value);
+	else
+		command_value = 0;
+
+	if (gc_command->value != NULL)
+		arv_gc_property_node_set_int64 (gc_command->value, command_value);
 
 	arv_log_genicam ("[GcCommand::execute] %s (0x%x)",
-			 arv_gc_node_get_name (ARV_GC_NODE (gc_command)),
+			 arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_command)),
 			 command_value);
 }
 
@@ -94,36 +114,26 @@ arv_gc_command_new (void)
 static void
 arv_gc_command_init (ArvGcCommand *gc_command)
 {
-	/* Set default to read only 32 bits little endian integer command */
-	g_value_init (&gc_command->value, G_TYPE_INT64);
-	g_value_init (&gc_command->command_value, G_TYPE_INT64);
-	g_value_set_int64 (&gc_command->value, 0);
-	g_value_set_int64 (&gc_command->command_value, 0);
 }
 
 static void
 arv_gc_command_finalize (GObject *object)
 {
-	ArvGcCommand *gc_command = ARV_GC_COMMAND (object);
-
-	g_value_unset (&gc_command->value);
-	g_value_unset (&gc_command->command_value);
-
 	parent_class->finalize (object);
 }
 
 static void
-arv_gc_command_class_init (ArvGcCommandClass *command_class)
+arv_gc_command_class_init (ArvGcCommandClass *this_class)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS (command_class);
-	ArvGcNodeClass *node_class = ARV_GC_NODE_CLASS (command_class);
+	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
+	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
 
-	parent_class = g_type_class_peek_parent (command_class);
+	parent_class = g_type_class_peek_parent (this_class);
 
 	object_class->finalize = arv_gc_command_finalize;
-
-	node_class->get_node_name = arv_gc_command_get_node_name;
-	node_class->add_element = arv_gc_command_add_element;
+	dom_node_class->get_node_name = arv_gc_command_get_node_name;
+	dom_node_class->post_new_child = arv_gc_command_post_new_child;
+	dom_node_class->pre_remove_child = arv_gc_command_pre_remove_child;
 }
 
-G_DEFINE_TYPE (ArvGcCommand, arv_gc_command, ARV_TYPE_GC_NODE)
+G_DEFINE_TYPE (ArvGcCommand, arv_gc_command, ARV_TYPE_GC_FEATURE_NODE)
