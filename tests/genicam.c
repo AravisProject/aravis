@@ -22,6 +22,15 @@ integer_test (void)
 	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
 	g_assert_cmpint (v_int64, ==, 1);
 
+	v_int64 = arv_gc_integer_get_min (ARV_GC_INTEGER (node));
+	g_assert_cmpint (v_int64, ==, -10);
+
+	v_int64 = arv_gc_integer_get_max (ARV_GC_INTEGER (node));
+	g_assert_cmpint (v_int64, ==, 10);
+
+	v_int64 = arv_gc_integer_get_inc (ARV_GC_INTEGER (node));
+	g_assert_cmpint (v_int64, ==, 2);
+
 	v_string = arv_gc_feature_node_get_value_as_string (ARV_GC_FEATURE_NODE (node));
 	g_assert_cmpstr (v_string, ==, "1");
 
@@ -34,6 +43,15 @@ integer_test (void)
 
 	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
 	g_assert_cmpint (v_int64, ==, 2);
+
+	v_int64 = arv_gc_integer_get_min (ARV_GC_INTEGER (node));
+	g_assert_cmpint (v_int64, ==, -20);
+
+	v_int64 = arv_gc_integer_get_max (ARV_GC_INTEGER (node));
+	g_assert_cmpint (v_int64, ==, 20);
+
+	v_int64 = arv_gc_integer_get_inc (ARV_GC_INTEGER (node));
+	g_assert_cmpint (v_int64, ==, 3);
 
 	g_object_unref (device);
 }

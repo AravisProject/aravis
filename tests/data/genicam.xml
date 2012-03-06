@@ -64,10 +64,28 @@
 
 	<Integer Name="RWInteger">
 		<Value>1</Value>
+		<Min>-10</Min>
+		<Max>10</Max>
+		<Inc>2</Inc>
+	</Integer>
+
+	<Integer Name="P_RWInteger_Min">
+		<Value>-20</Value>
+	</Integer>
+
+	<Integer Name="P_RWInteger_Max">
+		<Value>20</Value>
+	</Integer>
+
+	<Integer Name="P_RWInteger_Inc">
+		<Value>3</Value>
 	</Integer>
 
 	<Integer Name="P_RWInteger">
 		<pValue>RWInteger</pValue>
+		<pMin>P_RWInteger_Min</pMin>
+		<pMax>P_RWInteger_Max</pMax>
+		<pInc>P_RWInteger_Inc</pInc>
 	</Integer>
 
 	<Enumeration Name="Enumeration">
