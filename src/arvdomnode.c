@@ -596,7 +596,7 @@ arv_dom_node_append_child (ArvDomNode* self, ArvDomNode* new_child)
 		arv_dom_node_remove_child (self, new_child);
 
 	if (!ARV_DOM_NODE_GET_CLASS (self)->can_append_child (self, new_child)) {
-		arv_debug_dom ("[ArvDomNode::append_child] Can't append '%s' to '%s'",
+		arv_log_dom ("[ArvDomNode::append_child] Can't append '%s' to '%s'",
 			       arv_dom_node_get_node_name (new_child),
 			       arv_dom_node_get_node_name (self));
 		g_object_unref (new_child);
