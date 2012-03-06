@@ -18,6 +18,8 @@
 	xsi:schemaLocation="http://www.genicam.org/GenApi/Version_1_0 GenApiSchema.xsd">
 
 	<Category Name="Root" NameSpace="Standard">
+		<pFeature>RWFloat</pFeature>
+		<pFeature>RWBoolean</pFeature>
 		<pFeature>RWInteger</pFeature>
 		<pFeature>Enumeration</pFeature>
 	</Category>
