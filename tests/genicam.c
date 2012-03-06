@@ -108,6 +108,15 @@ float_test (void)
 	v_double = arv_gc_float_get_value (ARV_GC_FLOAT (node));
 	g_assert_cmpfloat (v_double, ==, 0.1);
 
+	v_double = arv_gc_float_get_min (ARV_GC_FLOAT (node));
+	g_assert_cmpfloat (v_double, ==, -10.0);
+
+	v_double = arv_gc_float_get_max (ARV_GC_FLOAT (node));
+	g_assert_cmpfloat (v_double, ==, 10.0);
+
+	v_double = arv_gc_float_get_inc (ARV_GC_FLOAT (node));
+	g_assert_cmpfloat (v_double, ==, 2.0);
+
 	v_string = arv_gc_feature_node_get_value_as_string (ARV_GC_FEATURE_NODE (node));
 	g_assert_cmpstr (v_string, ==, "0.1");
 
@@ -120,6 +129,15 @@ float_test (void)
 
 	v_double = arv_gc_float_get_value (ARV_GC_FLOAT (node));
 	g_assert_cmpfloat (v_double, ==, 0.2);
+
+	v_double = arv_gc_float_get_min (ARV_GC_FLOAT (node));
+	g_assert_cmpfloat (v_double, ==, -20.0);
+
+	v_double = arv_gc_float_get_max (ARV_GC_FLOAT (node));
+	g_assert_cmpfloat (v_double, ==, 20.0);
+
+	v_double = arv_gc_float_get_inc (ARV_GC_FLOAT (node));
+	g_assert_cmpfloat (v_double, ==, 3.0);
 
 	g_object_unref (device);
 }

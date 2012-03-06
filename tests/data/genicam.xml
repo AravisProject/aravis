@@ -24,10 +24,28 @@
 
 	<Float Name="RWFloat">
 		<Value>0.1</Value>
+		<Min>-10.0</Min>
+		<Max>10.0</Max>
+		<Inc>2.0</Inc>
+	</Float>
+
+	<Float Name="P_RWFloat_Min">
+		<Value>-20.0</Value>
+	</Float>
+
+	<Float Name="P_RWFloat_Max">
+		<Value>20.0</Value>
+	</Float>
+
+	<Float Name="P_RWFloat_Inc">
+		<Value>3.0</Value>
 	</Float>
 
 	<Float Name="P_RWFloat">
 		<pValue>RWFloat</pValue>
+		<pMin>P_RWFloat_Min</pMin>
+		<pMax>P_RWFloat_Max</pMax>
+		<pInc>P_RWFloat_Inc</pInc>
 	</Float>
 
 	<Boolean Name="RWBoolean">

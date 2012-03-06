@@ -194,13 +194,13 @@ arv_gc_float_node_get_max (ArvGcFloat *gc_float)
 	return G_MAXFLOAT;
 }
 
-static gint64
+static double
 arv_gc_float_node_get_inc (ArvGcFloat *gc_float)
 {
 	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_float);
 
 	if (gc_float_node->increment != NULL)
-		return arv_gc_property_node_get_int64 (ARV_GC_PROPERTY_NODE (gc_float_node->increment));
+		return arv_gc_property_node_get_double (ARV_GC_PROPERTY_NODE (gc_float_node->increment));
 
 	return 1;
 }

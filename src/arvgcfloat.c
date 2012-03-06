@@ -81,7 +81,7 @@ arv_gc_float_get_max (ArvGcFloat *gc_float)
 		return G_MAXDOUBLE;
 }
 
-gint64
+double
 arv_gc_float_get_inc (ArvGcFloat *gc_float)
 {
 	ArvGcFloatInterface *float_interface;

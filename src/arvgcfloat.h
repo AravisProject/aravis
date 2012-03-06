@@ -41,7 +41,7 @@ struct _ArvGcFloatInterface {
 	void		(*set_value)		(ArvGcFloat *gc_float, double value);
 	double		(*get_min)		(ArvGcFloat *gc_float);
 	double		(*get_max)		(ArvGcFloat *gc_float);
-	gint64		(*get_inc)		(ArvGcFloat *gc_float);
+	double		(*get_inc)		(ArvGcFloat *gc_float);
 	const char *	(*get_unit)		(ArvGcFloat *gc_float);
 	void		(*impose_min)		(ArvGcFloat *gc_float, double minimum);
 	void		(*impose_max)		(ArvGcFloat *gc_float, double maximum);
@@ -53,7 +53,7 @@ double		arv_gc_float_get_value		(ArvGcFloat *gc_float);
 void		arv_gc_float_set_value		(ArvGcFloat *gc_float, double value);
 double		arv_gc_float_get_min		(ArvGcFloat *gc_float);
 double		arv_gc_float_get_max		(ArvGcFloat *gc_float);
-gint64		arv_gc_float_get_inc		(ArvGcFloat *gc_float);
+double		arv_gc_float_get_inc		(ArvGcFloat *gc_float);
 const char *	arv_gc_float_get_unit		(ArvGcFloat *gc_float);
 void		arv_gc_float_impose_min		(ArvGcFloat *gc_float, double minimum);
 void		arv_gc_float_impose_max		(ArvGcFloat *gc_float, double maximum);
