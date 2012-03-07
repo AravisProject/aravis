@@ -28,6 +28,7 @@
 #include <arvgcregisternode.h>
 #include <arvgcindexnode.h>
 #include <arvgcinvalidatornode.h>
+#include <arvgcswissknife.h>
 #include <arvgcregister.h>
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
@@ -124,7 +125,10 @@ arv_gc_register_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				ARV_DOM_NODE_CLASS (parent_class)->post_new_child (self, child);
 				break;
 		}
-	}
+	} else if (ARV_IS_GC_SWISS_KNIFE (child))
+		node->swiss_knives = g_slist_prepend (node->swiss_knives, child);
+	else
+		ARV_DOM_NODE_CLASS (parent_class)->post_new_child (self, child);
 }
 
 static void
@@ -232,6 +236,9 @@ _get_address (ArvGcRegisterNode *gc_register_node)
 
 	for (iter = gc_register_node->addresses; iter != NULL; iter = iter->next)
 		value += arv_gc_property_node_get_int64 (iter->data);
+
+	for (iter = gc_register_node->swiss_knives; iter != NULL; iter = iter->next)
+		value += arv_gc_integer_get_value (iter->data);
 
 	if (gc_register_node->index != NULL)
 		value += arv_gc_index_node_get_index (ARV_GC_INDEX_NODE (gc_register_node->index),
@@ -443,6 +450,7 @@ arv_gc_register_node_finalize (GObject *object)
 	ArvGcRegisterNode *gc_register_node = ARV_GC_REGISTER_NODE (object);
 
 	g_slist_free (gc_register_node->addresses);
+	g_slist_free (gc_register_node->swiss_knives);
 	g_free (gc_register_node->cache);
 	g_slist_free (gc_register_node->invalidators);
 

@@ -120,4 +120,36 @@
 		<Value>0</Value>
 	</Integer>
 
+	<Integer Name="IntRegisterAddress">
+		<Value>0x50</Value>
+	</Integer>
+
+	<IntReg Name="IntRegisterA">
+		<Address>0x1000</Address>
+		<pAddress>IntRegisterAddress</pAddress>
+		<Length>8</Length>
+		<AccessMode>RW</AccessMode>
+		<Cachable>NoCache</Cachable>
+		<PollingTime>5</PollingTime>
+		<Sign>Unsigned</Sign>
+		<Endianess>LittelEndian</Endianess>
+	</IntReg>
+
+	<IntReg Name="IntRegisterB">
+		<Address>0x2000</Address>
+		<IntSwissKnife Name="IntRegisterBAddress">
+			<Formula>0xff</Formula>
+		</IntSwissKnife>
+		<Length>8</Length>
+		<AccessMode>RW</AccessMode>
+		<Cachable>NoCache</Cachable>
+		<PollingTime>5</PollingTime>
+		<Sign>Unsigned</Sign>
+		<Endianess>LittelEndian</Endianess>
+	</IntReg>
+
+	<IntSwissKnife Name="IntSwissKnifeTest">
+		<Formula>0x1234</Formula>
+	</IntSwissKnife>
+
 </RegisterDescription>

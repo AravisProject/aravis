@@ -191,6 +191,58 @@ enumeration_test (void)
 	g_object_unref (device);
 }
 
+static void
+swiss_knife_test (void)
+{
+	ArvDevice *device;
+	ArvGc *genicam;
+	ArvGcNode *node;
+	gint64 value;
+
+	device = arv_fake_device_new ("TEST0");
+	g_assert (ARV_IS_FAKE_DEVICE (device));
+
+	genicam = arv_device_get_genicam (device);
+	g_assert (ARV_IS_GC (genicam));
+
+	node = arv_gc_get_node (genicam, "IntSwissKnifeTest");
+	g_assert (ARV_IS_GC_SWISS_KNIFE (node));
+
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
+	g_assert_cmpint (value, ==, 0x1234);
+
+	g_object_unref (device);
+}
+
+static void
+register_test (void)
+{
+	ArvDevice *device;
+	ArvGc *genicam;
+	ArvGcNode *node;
+	gint64 value;
+
+	device = arv_fake_device_new ("TEST0");
+	g_assert (ARV_IS_FAKE_DEVICE (device));
+
+	genicam = arv_device_get_genicam (device);
+	g_assert (ARV_IS_GC (genicam));
+
+	node = arv_gc_get_node (genicam, "IntRegisterA");
+	g_assert (ARV_IS_GC_REGISTER (node));
+
+	value = arv_gc_register_get_address (ARV_GC_REGISTER (node));
+	g_assert_cmpint (value, ==, 0x1050);
+
+	node = arv_gc_get_node (genicam, "IntRegisterB");
+	g_assert (ARV_IS_GC_REGISTER (node));
+
+	value = arv_gc_register_get_address (ARV_GC_REGISTER (node));
+	g_assert_cmpint (value, ==, 0x20ff);
+
+	g_object_unref (device);
+}
+
 GRegex *arv_gv_device_get_url_regex (void);
 
 static void
@@ -228,6 +280,8 @@ main (int argc, char *argv[])
 	g_test_add_func ("/genicam/boolean", boolean_test);
 	g_test_add_func ("/genicam/float", float_test);
 	g_test_add_func ("/genicam/enumeration", enumeration_test);
+	g_test_add_func ("/genicam/swissknife", swiss_knife_test);
+	g_test_add_func ("/genicam/register", register_test);
 	g_test_add_func ("/genicam/url", url_test);
 
 	result = g_test_run();

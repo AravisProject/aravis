@@ -76,6 +76,7 @@ struct _ArvGcRegisterNode {
 	GType value_type;
 
 	GSList *addresses;
+	GSList *swiss_knives;
 	ArvGcPropertyNode *index;
 	ArvGcPropertyNode *length;
 	ArvGcPropertyNode *port;
