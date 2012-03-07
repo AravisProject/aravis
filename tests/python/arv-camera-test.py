@@ -40,8 +40,9 @@ else:
 	camera = Aravis.Camera.new (None)
 
 camera.set_region (0,0,128,128)
-camera.set_pixel_format (0x01080001) # MONO_8 - GI bug workaround
 camera.set_frame_rate (10.0)
+
+payload = camera.get_payload ()
 
 [x,y,width,height] = camera.get_region ()
 
@@ -49,11 +50,12 @@ print "Camera vendor :", camera.get_vendor_name ()
 print "Camera model  :", camera.get_model_name ()
 print "Camera id     :", camera.get_device_id ()
 print "ROI           :", width, "x", height, "at", x, ",", y
+print "Payload       :", payload
 
 stream = camera.create_stream (None, None)
 
 for i in range(0,100):
-	stream.push_buffer (Aravis.Buffer.new (128*128, None))
+	stream.push_buffer (Aravis.Buffer.new (payload, None))
 
 print "Start acquisition"
 
@@ -61,11 +63,7 @@ camera.start_acquisition ()
 
 print "Acquisition"
 
-time.sleep (1)
-
 buffer = stream.pop_buffer ()
-
-time.sleep (1)
 
 print "Stop acquisition"
 
