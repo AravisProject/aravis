@@ -809,6 +809,34 @@ arv_gv_device_finalize (GObject *object)
 	parent_class->finalize (object);
 }
 
+/**
+ * arv_gv_device_get_interface_address:
+ * @device: a #ArvGvDevice
+ *
+ * Returns: the device host interface mac address
+ */
+
+GSocketAddress *arv_gv_device_get_interface_address(ArvGvDevice *device)
+{
+	ArvGvDeviceIOData *io_data = device->priv->io_data;
+
+	return io_data->interface_address;
+}
+
+/**
+ * arv_gv_device_get_device_address:
+ * @device: a #ArvGvDevice
+ *
+ * Returns: the device mac address
+ */
+
+GSocketAddress *arv_gv_device_get_device_address(ArvGvDevice *device)
+{
+	ArvGvDeviceIOData *io_data = device->priv->io_data;
+
+	return io_data->device_address;
+}
+
 static void
 arv_gv_device_class_init (ArvGvDeviceClass *gv_device_class)
 {

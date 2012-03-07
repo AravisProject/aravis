@@ -66,6 +66,9 @@ ArvDevice * 	arv_gv_device_new 	(GInetAddress *interface_address, GInetAddress *
 guint64 	arv_gv_device_get_timestamp_tick_frequency 	(ArvGvDevice *gv_device);
 GRegex * 	arv_gv_device_get_url_regex 			(void);
 
+GSocketAddress *arv_gv_device_get_interface_address  		(ArvGvDevice *device);
+GSocketAddress *arv_gv_device_get_device_address  		(ArvGvDevice *device);
+
 G_END_DECLS
 
 #endif
