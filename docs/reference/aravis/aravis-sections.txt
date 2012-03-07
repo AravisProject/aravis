@@ -592,6 +592,8 @@ ArvGvInterfaceClass
 ArvGvDevice
 arv_gv_device_new
 arv_gv_device_get_timestamp_tick_frequency
+arv_gv_device_get_device_address
+arv_gv_device_get_interface_address
 <SUBSECTION Standard>
 ARV_GV_DEVICE
 ARV_IS_GV_DEVICE
