@@ -2,7 +2,7 @@
 
 # Aravis - Digital camera library
 #
-# Copyright (c) 2011 Emmanuel Pacaud
+# Copyright (c) 2011-2012 Emmanuel Pacaud
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -35,5 +35,13 @@ gi.require_version ('Aravis', '0.2')
 
 from gi.repository import Aravis
 
+print Aravis.Auto
 print Aravis.Auto.OFF
+print Aravis.BufferStatus
+print Aravis.DebugLevel
+print Aravis.DomNodeType
+print Aravis.GvStreamPacketResend
+print Aravis.GvspPacketType
+
+print Aravis.PixelFormat
 print Aravis.PixelFormat.MONO_8
