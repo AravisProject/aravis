@@ -813,7 +813,7 @@ arv_gv_device_finalize (GObject *object)
  * arv_gv_device_get_interface_address:
  * @device: a #ArvGvDevice
  *
- * Returns: (transfer none): the device host interface mac address.
+ * Returns: (transfer none): the device host interface IP address.
  * 
  * since: 0.1.13
  */
@@ -829,7 +829,7 @@ GSocketAddress *arv_gv_device_get_interface_address(ArvGvDevice *device)
  * arv_gv_device_get_device_address:
  * @device: a #ArvGvDevice
  *
- * Returns: (transfer none): the device mac address.
+ * Returns: (transfer none): the device IP address.
  *
  * since: 0.1.13
  */
