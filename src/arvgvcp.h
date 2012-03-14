@@ -178,6 +178,7 @@ typedef enum {
  * @ARV_GVCP_COMMAND_READ_MEMORY_ACK: read memory acknowledge
  * @ARV_GVCP_COMMAND_WRITE_MEMORY_CMD: write memory command
  * @ARV_GVCP_COMMAND_WRITE_MEMORY_ACK: write memory acknowledge
+ * @ARV_GVCP_COMMAND_PENDING_ACK: pending command acknowledge
  */
 
 typedef enum {
@@ -194,7 +195,8 @@ typedef enum {
 	ARV_GVCP_COMMAND_READ_MEMORY_CMD =	0x0084,
 	ARV_GVCP_COMMAND_READ_MEMORY_ACK =	0x0085,
 	ARV_GVCP_COMMAND_WRITE_MEMORY_CMD =	0x0086,
-	ARV_GVCP_COMMAND_WRITE_MEMORY_ACK =	0x0087
+	ARV_GVCP_COMMAND_WRITE_MEMORY_ACK =	0x0087,
+	ARV_GVCP_COMMAND_PENDING_ACK =		0x0089
 } ArvGvcpCommand;
 
 #define ARAVIS_PACKED_STRUCTURE __attribute__((__packed__))
