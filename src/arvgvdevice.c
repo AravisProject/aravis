@@ -30,6 +30,7 @@
 #include <arvdebug.h>
 #include <arvgvstream.h>
 #include <arvgvcp.h>
+#include <arvgvsp.h>
 #include <arvzip.h>
 #include <string.h>
 #include <stdlib.h>
@@ -622,9 +623,15 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 	device_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (io_data->device_address));
 	address_bytes = g_inet_address_to_bytes (interface_address);
 
-	arv_gv_device_set_packet_size (gv_device, ARV_GV_DEVICE_GVSP_PACKET_SIZE_DEFAULT);
+	/* On some cameras, the default packet size after reset is incorrect.
+	 * So, if the value is obviously incorrect, set it to a default size. */
 	packet_size = arv_gv_device_get_packet_size (gv_device);
+	if (packet_size <= ARV_GVSP_PACKET_PROTOCOL_OVERHEAD) {
+		arv_gv_device_set_packet_size (gv_device, ARV_GV_DEVICE_GVSP_PACKET_SIZE_DEFAULT);
+		arv_debug_device ("[GvDevice::create_stream] Packet size set to default value");
+	}
 
+	packet_size = arv_gv_device_get_packet_size (gv_device);
 	arv_debug_device ("[GvDevice::create_stream] Packet size = %d byte(s)", packet_size);
 
 	stream = arv_gv_stream_new (device_address, 0, callback, user_data,
