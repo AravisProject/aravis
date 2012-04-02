@@ -105,22 +105,37 @@ arv_fake_camera_write_memory (ArvFakeCamera *camera, guint32 address, guint32 si
 gboolean
 arv_fake_camera_read_register (ArvFakeCamera *camera, guint32 address, guint32 *value)
 {
-	return arv_fake_camera_read_memory (camera, address, sizeof (*value), value);
+	gboolean success;
+	guint32 be_value = 0;
+
+	g_return_val_if_fail (value != NULL, FALSE);
+
+	success = arv_fake_camera_read_memory (camera, address, sizeof (*value), &be_value);
+
+	*value = GUINT32_FROM_BE (be_value);
+
+	return success;
 }
 
 gboolean
 arv_fake_camera_write_register (ArvFakeCamera *camera, guint32 address, guint32 value)
 {
-	return arv_fake_camera_write_memory (camera, address, sizeof (value), &value);
+	guint32 be_value = GUINT32_TO_BE (value);
+
+	return arv_fake_camera_write_memory (camera, address, sizeof (value), &be_value);
 }
 
 static guint32
 _get_register (ArvFakeCamera *camera, guint32 address)
 {
+	guint32 value;
+
 	if (address + sizeof (guint32) > ARV_FAKE_CAMERA_MEMORY_SIZE)
 		return 0;
 
-	return *((guint32 *) ((void*) (camera->priv->memory + address)));
+	value = *((guint32 *) ((void*) (camera->priv->memory + address)));
+
+	return GUINT32_FROM_BE (value);
 }
 
 size_t
@@ -307,12 +322,13 @@ arv_fake_camera_get_stream_address (ArvFakeCamera *camera)
 
 	g_return_val_if_fail (ARV_IS_FAKE_CAMERA (camera), NULL);
 
-	value = GUINT32_FROM_BE (_get_register (camera, ARV_GVBS_STREAM_CHANNEL_0_IP_ADDRESS_OFFSET));
+	arv_fake_camera_read_memory (camera, ARV_GVBS_STREAM_CHANNEL_0_IP_ADDRESS_OFFSET, sizeof (value), &value);
 
 	inet_address = g_inet_address_new_from_bytes ((guint8 *) &value, G_SOCKET_FAMILY_IPV4);
 	stream_socket_address = g_inet_socket_address_new
 		(inet_address,
 		 _get_register (camera, ARV_GVBS_STREAM_CHANNEL_0_PORT_OFFSET));
+
 	g_object_unref (inet_address);
 
 	return stream_socket_address;
@@ -463,10 +479,11 @@ arv_fake_camera_new (const char *serial_number)
 	arv_fake_camera_write_register (fake_camera, ARV_GVBS_TIMESTAMP_TICK_FREQUENCY_LOW_OFFSET, 1000000000);
 	arv_fake_camera_write_register (fake_camera, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET, 0);
 
+	arv_fake_camera_write_register (fake_camera, ARV_GVBS_STREAM_CHANNEL_0_PACKET_SIZE_OFFSET, 2000);
+
 	arv_fake_camera_write_register (fake_camera, ARV_GVBS_N_STREAM_CHANNELS_OFFSET, 1);
 
-	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_TEST,
-					ARV_FAKE_CAMERA_TEST_REGISTER_DEFAULT);
+	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_TEST, ARV_FAKE_CAMERA_TEST_REGISTER_DEFAULT);
 
 	return fake_camera;
 }

@@ -132,7 +132,7 @@
 		<Cachable>NoCache</Cachable>
 		<PollingTime>5</PollingTime>
 		<Sign>Unsigned</Sign>
-		<Endianess>LittelEndian</Endianess>
+		<Endianess>BigEndian</Endianess>
 	</IntReg>
 
 	<IntReg Name="IntRegisterB">
@@ -145,7 +145,7 @@
 		<Cachable>NoCache</Cachable>
 		<PollingTime>5</PollingTime>
 		<Sign>Unsigned</Sign>
-		<Endianess>LittelEndian</Endianess>
+		<Endianess>BigEndian</Endianess>
 	</IntReg>
 
 	<IntSwissKnife Name="IntSwissKnifeTest">
