@@ -454,26 +454,15 @@ arv_gv_device_get_timestamp_tick_frequency (ArvGvDevice *gv_device)
 guint
 arv_gv_device_get_packet_size (ArvGvDevice *gv_device)
 {
-	guint32 packet_size;
-
-	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), 0);
-
-	arv_device_read_register (ARV_DEVICE (gv_device),
-				  ARV_GVBS_STREAM_CHANNEL_0_PACKET_SIZE_OFFSET,
-				  &packet_size);
-
-	return packet_size;
+	return arv_device_get_integer_feature_value (ARV_DEVICE (gv_device), "GevSCPSPacketSize");
 }
 
 void
 arv_gv_device_set_packet_size (ArvGvDevice *gv_device, guint packet_size)
 {
-	g_return_if_fail (ARV_IS_GV_DEVICE (gv_device));
 	g_return_if_fail (packet_size > 0);
 
-	arv_device_write_register (ARV_DEVICE (gv_device),
-				  ARV_GVBS_STREAM_CHANNEL_0_PACKET_SIZE_OFFSET,
-				  packet_size);
+	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevSCPSPacketSize", packet_size);
 }
 
 static char *
