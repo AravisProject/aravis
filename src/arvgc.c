@@ -259,6 +259,19 @@ arv_gc_register_feature_node (ArvGc *genicam, ArvGcFeatureNode *node)
 			 arv_dom_node_get_node_name (ARV_DOM_NODE (node)));
 }
 
+void
+arv_gc_set_default_node_data (ArvGc *genicam, const char *node_name, const char *node_data)
+{
+	g_return_if_fail (ARV_IS_GC (genicam));
+	g_return_if_fail (node_name != NULL);
+	g_return_if_fail (node_data != NULL);
+
+	if (arv_gc_get_node (genicam, node_name) != NULL)
+		return;
+
+	arv_dom_document_append_from_memory (ARV_DOM_DOCUMENT (genicam), NULL, node_data, -1, NULL);
+}
+
 ArvGc *
 arv_gc_new (ArvDevice *device, const void *xml, size_t size)
 {

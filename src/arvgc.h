@@ -52,6 +52,7 @@ GType arv_gc_get_type (void);
 
 ArvGc * 		arv_gc_new 			(ArvDevice *device, const void *xml, size_t size);
 void 			arv_gc_register_feature_node 	(ArvGc *genicam, ArvGcFeatureNode *node);
+void 			arv_gc_set_default_node_data 	(ArvGc *genicam, const char *node_name, const char *node_data);
 ArvGcNode *		arv_gc_get_node			(ArvGc *genicam, const char *name);
 ArvDevice *		arv_gc_get_device		(ArvGc *genicam);
 

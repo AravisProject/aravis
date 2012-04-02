@@ -589,8 +589,22 @@ arv_gv_device_load_genicam (ArvGvDevice *gv_device)
 	size_t size;
 
 	genicam = arv_gv_device_get_genicam_xml (ARV_DEVICE (gv_device), &size);
-	if (genicam != NULL)
+	if (genicam != NULL) {
 		gv_device->priv->genicam = arv_gc_new (ARV_DEVICE (gv_device), genicam, size);
+
+		arv_gc_set_default_node_data (gv_device->priv->genicam, "GevSCPSPacketSize",
+					      "<MaskedIntReg Name=\"GevSCPSPacketSize\">"
+					      "<Address>0xd04</Address>"
+					      "<Length>4</Length>"
+					      "<AccessMode>RW</AccessMode>"
+					      "<pPort>Device</pPort>"
+					      "<LSB>31</LSB>"
+					      "<MSB>16</MSB>"
+					      "<Sign>Unsigned</Sign>"
+					      "<Endianess>BigEndian</Endianess>"
+					      "</MaskedIntReg>"
+					     );
+	}
 }
 
 /* ArvDevice implemenation */

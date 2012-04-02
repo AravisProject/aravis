@@ -137,6 +137,7 @@ ArvGcPort
 arv_gc_port_new
 arv_gc_port_read
 arv_gc_port_write
+arv_gc_set_default_node_data
 <SUBSECTION Standard>
 ARV_GC_PORT
 ARV_IS_GC_PORT
