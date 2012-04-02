@@ -29,6 +29,9 @@
 
 G_BEGIN_DECLS
 
+void 			arv_dom_document_append_from_memory 	(ArvDomDocument *document, ArvDomNode *node,
+								 const void *buffer, int size, GError **error);
+
 ArvDomDocument * 	arv_dom_document_new_from_memory 	(const void *buffer, int size, GError **error);
 ArvDomDocument * 	arv_dom_document_new_from_path 		(const char *path, GError **error);
 ArvDomDocument * 	arv_dom_document_new_from_url 		(const char *url, GError **error);
