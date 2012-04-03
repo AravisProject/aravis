@@ -503,8 +503,10 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	g_signal_handler_unblock (viewer->auto_exposure_toggle, viewer->auto_exposure_clicked);
 
 	caps_string = arv_pixel_format_to_gst_caps_string (pixel_format);
-	if (caps_string == NULL)
+	if (caps_string == NULL) {
+		g_message ("GStreamer cannot understand the camera pixel format: 0x%x!\n", (int) pixel_format);
 		return;
+	}
 
 	arv_camera_start_acquisition (viewer->camera);
 
@@ -516,8 +518,17 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 
 	g_object_set (ximagesink, "force-aspect-ratio", TRUE, "draw-borders", TRUE, "sync", FALSE, NULL);
 
-	gst_bin_add_many (GST_BIN (viewer->pipeline), viewer->appsrc, ffmpegcolorspace, ximagesink, NULL);
-	gst_element_link_many (viewer->appsrc, ffmpegcolorspace, ximagesink, NULL);
+	if (g_str_has_prefix (caps_string, "video/x-raw-bayer")) {
+		GstElement *bayer2rgb;
+
+		bayer2rgb = gst_element_factory_make ("bayer2rgb", NULL);
+
+		gst_bin_add_many (GST_BIN (viewer->pipeline), viewer->appsrc, bayer2rgb, ffmpegcolorspace, ximagesink, NULL);
+		gst_element_link_many (viewer->appsrc, bayer2rgb, ffmpegcolorspace, ximagesink, NULL);
+	} else {
+		gst_bin_add_many (GST_BIN (viewer->pipeline), viewer->appsrc, ffmpegcolorspace, ximagesink, NULL);
+		gst_element_link_many (viewer->appsrc, ffmpegcolorspace, ximagesink, NULL);
+	}
 
 	caps = gst_caps_from_string (caps_string);
 	gst_caps_set_simple (caps,
