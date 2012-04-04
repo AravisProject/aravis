@@ -631,7 +631,8 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 	packet_size = arv_gv_device_get_packet_size (gv_device);
 	if (packet_size <= ARV_GVSP_PACKET_PROTOCOL_OVERHEAD) {
 		arv_gv_device_set_packet_size (gv_device, ARV_GV_DEVICE_GVSP_PACKET_SIZE_DEFAULT);
-		arv_debug_device ("[GvDevice::create_stream] Packet size set to default value");
+		arv_debug_device ("[GvDevice::create_stream] Packet size set to default value (%d)",
+				  ARV_GV_DEVICE_GVSP_PACKET_SIZE_DEFAULT);
 	}
 
 	packet_size = arv_gv_device_get_packet_size (gv_device);
