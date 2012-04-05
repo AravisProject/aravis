@@ -454,6 +454,14 @@
 		<Formula>WIDTH * HEIGHT</Formula>
 	</IntSwissKnife>
 
+	<Integer Name="TLParamsLocked">
+		<ToolTip> Indicates whether a live grab is under way</ToolTip>
+		<Visibility>Invisible</Visibility>
+		<Value>0</Value>
+		<Min>0</Min>
+		<Max>1</Max>
+	</Integer>
+
 	<!-- Debug -->
 
 	<Category Name="Debug" NameSpace="Standard">

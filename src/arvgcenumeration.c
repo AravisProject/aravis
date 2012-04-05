@@ -165,7 +165,8 @@ arv_gc_enumeration_get_available_int_values (ArvGcEnumeration *enumeration, guin
 
 	*n_values = 0;
 	for (iter = entries; iter != NULL; iter = iter->next)
-		if (arv_gc_feature_node_is_available (iter->data))
+		if (arv_gc_feature_node_is_available (iter->data) &&
+		    arv_gc_feature_node_is_implemented (iter->data))
 		    (*n_values)++;
 
 	if (*n_values == 0)
@@ -173,7 +174,8 @@ arv_gc_enumeration_get_available_int_values (ArvGcEnumeration *enumeration, guin
 
 	values = g_new (gint64, *n_values);
 	for (iter = entries, i = 0; iter != NULL; iter = iter->next)
-		if (arv_gc_feature_node_is_available (iter->data)) {
+		if (arv_gc_feature_node_is_available (iter->data) &&
+		    arv_gc_feature_node_is_implemented (iter->data)) {
 			values[i] = arv_gc_enum_entry_get_value (iter->data);
 			i++;
 		}

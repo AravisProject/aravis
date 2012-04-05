@@ -9,13 +9,17 @@ arv_tool_list_features (ArvGc *genicam, const char *feature, gboolean show_descr
 	ArvGcNode *node;
 
 	node = arv_gc_get_node (genicam, feature);
-	if (ARV_IS_GC_NODE (node)) {
+	if (ARV_IS_GC_FEATURE_NODE (node) &&
+	    arv_gc_feature_node_is_implemented (ARV_GC_FEATURE_NODE (node))) {
 		int i;
 
 		for (i = 0; i < level; i++)
 			printf ("    ");
 
-		printf ("%s: '%s'\n", arv_dom_node_get_node_name (ARV_DOM_NODE (node)), feature);
+		printf ("%s: '%s'%s\n",
+			arv_dom_node_get_node_name (ARV_DOM_NODE (node)),
+			feature,
+			arv_gc_feature_node_is_available (ARV_GC_FEATURE_NODE (node)) ? "" : " (Not available)");
 
 		if (show_description) {
 			const char *description;
@@ -39,13 +43,14 @@ arv_tool_list_features (ArvGc *genicam, const char *feature, gboolean show_descr
 
 			childs = arv_gc_enumeration_get_entries (ARV_GC_ENUMERATION (node));
 			for (iter = childs; iter != NULL; iter = iter->next) {
-				if (arv_gc_feature_node_is_available (iter->data)) {
+				if (arv_gc_feature_node_is_implemented (iter->data)) {
 					for (i = 0; i < level + 1; i++)
 						printf ("    ");
 
-					printf ("%s: '%s'\n",
+					printf ("%s: '%s'%s\n",
 						arv_dom_node_get_node_name (iter->data),
-						arv_gc_feature_node_get_name (iter->data));
+						arv_gc_feature_node_get_name (iter->data),
+						arv_gc_feature_node_is_available (iter->data) ? "" : " (Not available)");
 				}
 			}
 		}

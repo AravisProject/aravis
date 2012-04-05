@@ -47,6 +47,7 @@ struct _ArvGcFeatureNodePrivate {
 	ArvGcPropertyNode *display_name;
 	ArvGcPropertyNode *is_implemented;
 	ArvGcPropertyNode *is_available;
+	ArvGcPropertyNode *is_locked;
 
 	gint modification_count;
 };
@@ -83,6 +84,9 @@ arv_gc_feature_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 			case ARV_GC_PROPERTY_NODE_TYPE_P_IS_IMPLEMENTED:
 				node->priv->is_implemented = property_node;
 				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_P_IS_LOCKED:
+				node->priv->is_locked = property_node;
+				break;
 			default:
 				break;
 		}
@@ -112,6 +116,9 @@ arv_gc_feature_node_pre_remove_child (ArvDomNode *self, ArvDomNode *child)
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_P_IS_IMPLEMENTED:
 				node->priv->is_implemented = NULL;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_P_IS_LOCKED:
+				node->priv->is_locked = NULL;
 				break;
 			default:
 				break;
@@ -200,14 +207,30 @@ arv_gc_feature_node_get_display_name (ArvGcFeatureNode *node)
 }
 
 gboolean
+arv_gc_feature_node_is_implemented (ArvGcFeatureNode *gc_feature_node)
+{
+	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (gc_feature_node), FALSE);
+
+	return (gc_feature_node->priv->is_implemented == NULL || 
+		 arv_gc_property_node_get_int64 (gc_feature_node->priv->is_implemented) != 0);
+}
+
+gboolean
 arv_gc_feature_node_is_available (ArvGcFeatureNode *gc_feature_node)
 {
 	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (gc_feature_node), FALSE);
 
-	return ((gc_feature_node->priv->is_implemented == NULL || 
-		 arv_gc_property_node_get_int64 (gc_feature_node->priv->is_implemented) != 0) &&
-		(gc_feature_node->priv->is_available == NULL || 
-		 arv_gc_property_node_get_int64 (gc_feature_node->priv->is_available) != 0));
+	return (gc_feature_node->priv->is_available == NULL || 
+		 arv_gc_property_node_get_int64 (gc_feature_node->priv->is_available) != 0);
+}
+
+gboolean
+arv_gc_feature_node_is_locked (ArvGcFeatureNode *gc_feature_node)
+{
+	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (gc_feature_node), FALSE);
+
+	return (gc_feature_node->priv->is_locked != NULL && 
+		 arv_gc_property_node_get_int64 (gc_feature_node->priv->is_locked) != 0);
 }
 
 ArvGcFeatureNode *

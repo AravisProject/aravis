@@ -582,7 +582,13 @@ arv_gv_device_load_genicam (ArvGvDevice *gv_device)
 		gv_device->priv->genicam = arv_gc_new (ARV_DEVICE (gv_device), genicam, size);
 
 		arv_gc_set_default_node_data (gv_device->priv->genicam, "GevSCPSPacketSize",
-					      "<MaskedIntReg Name=\"GevSCPSPacketSize\">"
+					      "<Integer Name=\"GevSCPSPacketSize\">"
+					      "<Visibility>Expert</Visibility>"
+					      "<pIsLocked>TLParamsLocked</pIsLocked>"
+					      "<pValue>GevSCPSPacketSizeReg</pValue>"
+					      "</Integer>");
+		arv_gc_set_default_node_data (gv_device->priv->genicam, "GevSCPSPacketSizeReg",
+					      "<MaskedIntReg Name=\"GevSCPSPacketSizeReg\">"
 					      "<Address>0xd04</Address>"
 					      "<Length>4</Length>"
 					      "<AccessMode>RW</AccessMode>"
@@ -591,8 +597,14 @@ arv_gv_device_load_genicam (ArvGvDevice *gv_device)
 					      "<MSB>16</MSB>"
 					      "<Sign>Unsigned</Sign>"
 					      "<Endianess>BigEndian</Endianess>"
-					      "</MaskedIntReg>"
-					     );
+					      "</MaskedIntReg>");
+		arv_gc_set_default_node_data (gv_device->priv->genicam, "TLParamsLocked",
+					      "<Integer Name=\"TLParamsLocked\">"
+					      "<Visibility>Invisible</Visibility>"
+					      "<Value>0</Value>"
+					      "<Min>0</Min>"
+					      "<Max>1</Max>"
+					      "</Integer>");
 	}
 }
 

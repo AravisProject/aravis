@@ -112,6 +112,8 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 			return "pIsImplemented";
 		case ARV_GC_PROPERTY_NODE_TYPE_P_IS_AVAILABLE:
 			return "pIsAvailable";
+		case ARV_GC_PROPERTY_NODE_TYPE_P_IS_LOCKED:
+			return "pIsLocked";
 		case ARV_GC_PROPERTY_NODE_TYPE_P_MINIMUM:
 			return "pMin";
 		case ARV_GC_PROPERTY_NODE_TYPE_P_MAXIMUM:
@@ -500,6 +502,12 @@ ArvGcNode *
 arv_gc_property_node_new_p_is_available (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_P_IS_AVAILABLE);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_p_is_locked (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_P_IS_LOCKED);
 }
 
 ArvGcNode *

@@ -264,6 +264,26 @@ url_test (void)
 	g_strfreev (tokens);
 }
 
+static void
+mandatory_test (void)
+{
+	ArvDevice *device;
+	ArvGc *genicam;
+	ArvGcNode *node;
+	gint64 value;
+
+	device = arv_fake_device_new ("TEST0");
+	g_assert (ARV_IS_FAKE_DEVICE (device));
+
+	genicam = arv_device_get_genicam (device);
+	g_assert (ARV_IS_GC (genicam));
+
+	node = arv_gc_get_node (genicam, "TLParamsLocked");
+	g_assert (ARV_IS_GC_INTEGER (node));
+
+	g_object_unref (device);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -283,6 +303,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/genicam/swissknife", swiss_knife_test);
 	g_test_add_func ("/genicam/register", register_test);
 	g_test_add_func ("/genicam/url", url_test);
+	g_test_add_func ("/genicam/mandatory", mandatory_test);
 
 	result = g_test_run();
 
