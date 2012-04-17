@@ -1,6 +1,7 @@
 #include <arv.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <stdio.h>
 
 static char *arv_option_camera_name = NULL;
 static char *arv_option_debug_domains = NULL;
@@ -120,7 +121,7 @@ periodic_task_cb (void *abstract_data)
 {
 	ApplicationData *data = abstract_data;
 
-	g_printf ("Frame rate = %d Hz\n", data->buffer_count);
+	printf ("Frame rate = %d Hz\n", data->buffer_count);
 	data->buffer_count = 0;
 
 	if (cancel) {
@@ -144,7 +145,7 @@ emit_software_trigger (void *abstract_data)
 static void
 control_lost_cb (ArvGvDevice *gv_device)
 {
-	g_printf ("Control lost\n");
+	printf ("Control lost\n");
 
 	cancel = TRUE;
 }
@@ -208,15 +209,15 @@ main (int argc, char **argv)
 		payload = arv_camera_get_payload (camera);
 		gain = arv_camera_get_gain (camera);
 
-		g_printf ("vendor name         = %s\n", arv_camera_get_vendor_name (camera));
-		g_printf ("model name          = %s\n", arv_camera_get_model_name (camera));
-		g_printf ("device id           = %s\n", arv_camera_get_device_id (camera));
-		g_printf ("image width         = %d\n", width);
-		g_printf ("image height        = %d\n", height);
-		g_printf ("horizontal binning  = %d\n", dx);
-		g_printf ("vertical binning    = %d\n", dy);
-		g_printf ("exposure            = %g µs\n", exposure);
-		g_printf ("gain                = %d dB\n", gain);
+		printf ("vendor name         = %s\n", arv_camera_get_vendor_name (camera));
+		printf ("model name          = %s\n", arv_camera_get_model_name (camera));
+		printf ("device id           = %s\n", arv_camera_get_device_id (camera));
+		printf ("image width         = %d\n", width);
+		printf ("image height        = %d\n", height);
+		printf ("horizontal binning  = %d\n", dx);
+		printf ("vertical binning    = %d\n", dy);
+		printf ("exposure            = %g µs\n", exposure);
+		printf ("gain                = %d dB\n", gain);
 
 		stream = arv_camera_create_stream (camera, NULL, NULL);
 		if (stream != NULL) {
@@ -279,19 +280,19 @@ main (int argc, char **argv)
 
 			arv_stream_get_statistics (stream, &n_completed_buffers, &n_failures, &n_underruns);
 
-			g_printf ("Completed buffers = %Lu\n", (unsigned long long) n_completed_buffers);
-			g_printf ("Failures          = %Lu\n", (unsigned long long) n_failures);
-			g_printf ("Underruns         = %Lu\n", (unsigned long long) n_underruns);
+			printf ("Completed buffers = %Lu\n", (unsigned long long) n_completed_buffers);
+			printf ("Failures          = %Lu\n", (unsigned long long) n_failures);
+			printf ("Underruns         = %Lu\n", (unsigned long long) n_underruns);
 
 			arv_camera_stop_acquisition (camera);
 
 			g_object_unref (stream);
 		} else
-			g_printf ("Can't create stream thread (check if the device is not already used)\n");
+			printf ("Can't create stream thread (check if the device is not already used)\n");
 
 		g_object_unref (camera);
 	} else
-		g_printf ("No camera found\n");
+		printf ("No camera found\n");
 
 	return 0;
 }
