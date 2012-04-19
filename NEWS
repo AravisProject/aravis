@@ -1,3 +1,16 @@
+Release 0.1.13
+==============
+
+  This release hopefufly adds support for cameras depending on IntSwissKnife
+  for the computation of register addresses, like JAI cameras. It also allows to
+  manually tweak the PacketSize parameter.
+
+  * genicam: add support for SwissKnife in register address.
+  * GV device: don't force the packet size.
+  * GV device: export interface and device IP addresses (Luca).
+  * tests: more unit tests.
+  * build: don't require a C++ compiler by default.
+
 Release 0.1.12
 ==============
 
