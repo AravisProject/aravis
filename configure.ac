@@ -40,9 +40,9 @@ AC_ARG_ENABLE(viewer,
 	      [enable_viewer=$enableval],
 	      [enable_viewer=no])
 AC_ARG_ENABLE(cpp_test,
-	      [  --disable-cpp-test      disable c++ test],
+	      [  --enable-cpp-test       build c++ test],
 	      [enable_cpp_test=$enableval],
-	      [enable_cpp_test=yes])
+	      [enable_cpp_test=no])
 
 PKG_PROG_PKG_CONFIG([0.14])
 
