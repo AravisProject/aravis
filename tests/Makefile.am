@@ -26,7 +26,10 @@ arv_camera_test_LDADD = $(test_progs_ldadd)
 arv_heartbeat_test_SOURCES = arvheartbeattest.c
 arv_heartbeat_test_LDADD = $(test_progs_ldadd)
 
-TEST_PROGS += evaluator buffer fake genicam cpp
+TEST_PROGS += evaluator buffer fake genicam
+if ARAVIS_BUILD_CPP_TEST
+TEST_PROGS += cpp
+endif
 
 noinst_PROGRAMS += $(TEST_PROGS)
 

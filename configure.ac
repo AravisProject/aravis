@@ -39,6 +39,10 @@ AC_ARG_ENABLE(viewer,
 	      [  --enable-viewer         build viewer],
 	      [enable_viewer=$enableval],
 	      [enable_viewer=no])
+AC_ARG_ENABLE(cpp_test,
+	      [  --disable-cpp-test      disable c++ test],
+	      [enable_cpp_test=$enableval],
+	      [enable_cpp_test=yes])
 
 PKG_PROG_PKG_CONFIG([0.14])
 
@@ -71,6 +75,8 @@ if test "x$enable_gst_plugin" = "xyes"; then
 			  [echo -n])
 fi
 AM_CONDITIONAL(ARAVIS_BUILD_GST_PLUGIN, test "x$build_gst_plugin" = "xyes")
+
+AM_CONDITIONAL(ARAVIS_BUILD_CPP_TEST, test "x$enable_cpp_test" = "xyes")
 
 AC_SUBST(ARAVIS_GST_PLUGIN_CFLAGS)
 AC_SUBST(ARAVIS_GST_PLUGIN_LIBS)
