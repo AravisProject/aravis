@@ -41,6 +41,7 @@ else:
 
 camera.set_region (0,0,128,128)
 camera.set_frame_rate (10.0)
+camera.set_pixel_format (Aravis.PIXEL_FORMAT_MONO_8)
 
 payload = camera.get_payload ()
 
@@ -51,6 +52,7 @@ print "Camera model  :", camera.get_model_name ()
 print "Camera id     :", camera.get_device_id ()
 print "ROI           :", width, "x", height, "at", x, ",", y
 print "Payload       :", payload
+print "Pixel format  :", camera.get_pixel_format_as_string ()
 
 stream = camera.create_stream (None, None)
 

@@ -43,5 +43,4 @@ print Aravis.DomNodeType
 print Aravis.GvStreamPacketResend
 print Aravis.GvspPacketType
 
-print Aravis.PixelFormat
-print Aravis.PixelFormat.MONO_8
+print Aravis.PIXEL_FORMAT_MONO_8
