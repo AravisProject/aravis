@@ -73,6 +73,7 @@ void		arv_camera_get_binning		(ArvCamera *camera, gint *dx, gint *dy);
 
 void 		arv_camera_set_pixel_format 		(ArvCamera *camera, ArvPixelFormat format);
 ArvPixelFormat 	arv_camera_get_pixel_format 		(ArvCamera *camera);
+const char * 	arv_camera_get_pixel_format_as_string 	(ArvCamera *camera);
 gint64 *	arv_camera_get_available_pixel_formats 	(ArvCamera *camera, guint *n_pixel_formats);
 
 /* Acquisition control */

@@ -335,6 +335,21 @@ arv_camera_get_pixel_format (ArvCamera *camera)
 }
 
 /**
+ * arv_camera_get_pixel_format_as_string:
+ * @camera: a #ArvCamera
+ *
+ * Retuns: pixel format as string, NULL on error.
+ */
+
+const char *
+arv_camera_get_pixel_format_as_string (ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+
+	return arv_device_get_string_feature_value (camera->priv->device, "PixelFormat");
+}
+
+/**
  * arv_camera_get_available_pixel_formats:
  * @camera: a #ArvCamera
  * @n_pixel_formats: (out): number of different pixel formats

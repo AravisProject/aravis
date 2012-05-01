@@ -42,6 +42,8 @@ typedef struct {
 	ArvStream *stream;
 	ArvBuffer *last_buffer;
 
+	const char *pixel_format_string;
+
 	GstElement *pipeline;
 	GstElement *appsrc;
 
@@ -342,25 +344,6 @@ arv_viewer_release_camera (ArvViewer *viewer)
 	viewer->last_timestamp = 0;
 }
 
-static const char *
-arv_enum_to_string (GType type,
-		    guint enum_value)
-{
-	GEnumClass *enum_class;
-	GEnumValue *value;
-	const char *retval = NULL;
-
-	enum_class = g_type_class_ref (type);
-
-	value = g_enum_get_value (enum_class, enum_value);
-	if (value)
-		retval = value->value_nick;
-
-	g_type_class_unref (enum_class);
-
-	return retval;
-}
-
 void
 arv_viewer_snapshot_cb (GtkButton *button, ArvViewer *viewer)
 {
@@ -387,8 +370,7 @@ arv_viewer_snapshot_cb (GtkButton *button, ArvViewer *viewer)
 				    arv_camera_get_device_id (viewer->camera),
 				    viewer->last_buffer->width,
 				    viewer->last_buffer->height,
-				    arv_enum_to_string (ARV_TYPE_PIXEL_FORMAT,
-							viewer->last_buffer->pixel_format),
+				    viewer->pixel_format_string != NULL ? viewer->pixel_format_string : "Unknown",
 				    date_string);
 	path = g_build_filename (g_get_user_special_dir (G_USER_DIRECTORY_PICTURES),
 				 "Aravis", filename, NULL);
@@ -460,6 +442,7 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 
 	arv_camera_get_region (viewer->camera, NULL, NULL, &width, &height);
 	pixel_format = arv_camera_get_pixel_format (viewer->camera);
+	viewer->pixel_format_string = arv_camera_get_pixel_format_as_string (viewer->camera);
 	arv_camera_get_exposure_time_bounds (viewer->camera, &viewer->exposure_min, &viewer->exposure_max);
 	arv_camera_get_gain_bounds (viewer->camera, &gain_min, &gain_max);
 	frame_rate = arv_camera_get_frame_rate (viewer->camera);
