@@ -115,7 +115,7 @@ arv_stream_try_pop_buffer (ArvStream *stream)
 }
 
 /**
- * arv_stream_timed_pop_buffer:
+ * arv_stream_timeout_pop_buffer:
  * @stream: a #ArvStream
  * @timeout: timeout, in µs
  * Returns: (transfer full): a #ArvBuffer, NULL if no buffer is available until the timeout occurs.
@@ -125,8 +125,13 @@ arv_stream_try_pop_buffer (ArvStream *stream)
  */
 
 ArvBuffer *
-arv_stream_timed_pop_buffer (ArvStream *stream, guint64 timeout)
+arv_stream_timeout_pop_buffer (ArvStream *stream, guint64 timeout)
 {
+#if GLIB_CHECK_VERSION(2,32,0)
+	g_return_val_if_fail (ARV_IS_STREAM (stream), NULL);
+
+	return g_async_queue_timeout_pop (stream->priv->output_queue, timeout);
+#else
 	GTimeVal end_time;
 
 	g_return_val_if_fail (ARV_IS_STREAM (stream), NULL);
@@ -135,6 +140,7 @@ arv_stream_timed_pop_buffer (ArvStream *stream, guint64 timeout)
 	g_time_val_add (&end_time, timeout);
 
 	return g_async_queue_timed_pop (stream->priv->output_queue, &end_time);
+#endif
 }
 
 /**

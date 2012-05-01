@@ -297,7 +297,7 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 	gst_aravis = GST_ARAVIS (push_src);
 
 	do {
-		arv_buffer = arv_stream_timed_pop_buffer (gst_aravis->stream, gst_aravis->buffer_timeout_us);
+		arv_buffer = arv_stream_timeout_pop_buffer (gst_aravis->stream, gst_aravis->buffer_timeout_us);
 		if (arv_buffer != NULL && arv_buffer->status != ARV_BUFFER_STATUS_SUCCESS)
 			arv_stream_push_buffer (gst_aravis->stream, arv_buffer);
 	} while (arv_buffer != NULL && arv_buffer->status != ARV_BUFFER_STATUS_SUCCESS);

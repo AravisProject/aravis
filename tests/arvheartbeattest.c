@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
 	    old_sigint_handler = signal (SIGINT, set_cancel);
 
 	    while (!cancel) {
-		    ArvBuffer *buffer = arv_stream_timed_pop_buffer(stream, 2000000);
+		    ArvBuffer *buffer = arv_stream_timeout_pop_buffer(stream, 2000000);
 		    if (buffer) {
 			    usleep(10);
 			    arv_stream_push_buffer (stream, buffer);
