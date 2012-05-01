@@ -39,6 +39,10 @@ AC_ARG_ENABLE(viewer,
 	      [  --enable-viewer         build viewer],
 	      [enable_viewer=$enableval],
 	      [enable_viewer=no])
+AC_ARG_ENABLE(gtk3,
+	      [  --enable-gtk3           build viewer with gtk+-3.0],
+	      [enable_gtk3=$enableval],
+	      [enable_gtk3=no])
 AC_ARG_ENABLE(cpp_test,
 	      [  --enable-cpp-test       build c++ test],
 	      [enable_cpp_test=$enableval],
@@ -46,18 +50,27 @@ AC_ARG_ENABLE(cpp_test,
 
 PKG_PROG_PKG_CONFIG([0.14])
 
-ARAVIS_REQUIREMENTS="[glib-2.0 >= 2.26 gobject-2.0 gio-2.0 libxml-2.0 gthread-2.0]"
+ARAVIS_REQUIREMENTS="glib-2.0 >= 2.26 gobject-2.0 gio-2.0 libxml-2.0 gthread-2.0"
+ARAVIS_GSTREAMER_REQUIREMENTS="gstreamer-base-0.10 >= 0.10 gstreamer-app-0.10 gstreamer-interfaces-0.10"
 
-PKG_CHECK_MODULES(ARAVIS, $ARAVIS_REQUIREMENTS)
+
+PKG_CHECK_MODULES(ARAVIS, [$ARAVIS_REQUIREMENTS])
 
 AC_SUBST(ARAVIS_CFLAGS)
 AC_SUBST(ARAVIS_LIBS)
 
 AC_SUBST(aravis_datadir, '$(datadir)/aravis-$(ARAVIS_API_VERSION)')
 
+ARAVIS_VIEWER_REQUIREMENTS=$ARAVIS_GSTREAMER_REQUIREMENTS
+if test "x$enable_gtk3" = "xyes"; then
+	ARAVIS_VIEWER_REQUIREMENTS+=" gtk+-3.0"
+else
+	ARAVIS_VIEWER_REQUIREMENTS+=" gtk+-2.0 >= 2.12"
+fi
+
 build_viewer=no
 if test "x$enable_viewer" = "xyes"; then
-	PKG_CHECK_MODULES([ARAVIS_VIEWER],   [gtk+-2.0 >= 2.12 gstreamer-base-0.10 >= 0.10 gstreamer-app-0.10 gstreamer-interfaces-0.10],
+	PKG_CHECK_MODULES([ARAVIS_VIEWER], [$ARAVIS_VIEWER_REQUIREMENTS],
 			  [AC_DEFINE([ARAVIS_BUILD_VIEWER], [1], [Build viewer])
 			  build_viewer=yes],
 			  [echo -n])
@@ -69,7 +82,7 @@ AC_SUBST(ARAVIS_VIEWER_LIBS)
 
 build_gst_plugin=no
 if test "x$enable_gst_plugin" = "xyes"; then
-	PKG_CHECK_MODULES([ARAVIS_GST_PLUGIN],   [gstreamer-base-0.10 >= 0.10 gstreamer-app-0.10 gstreamer-interfaces-0.10],
+	PKG_CHECK_MODULES([ARAVIS_GST_PLUGIN], [$ARAVIS_GSTREAMER_REQUIREMENTS],
 			  [AC_DEFINE([ARAVIS_BUILD_GST_PLUGIN], [1], [Build gstreamer plugin])
 			  build_gst_plugin=yes],
 			  [echo -n])
