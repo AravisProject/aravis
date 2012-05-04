@@ -70,14 +70,25 @@ arv_gc_integer_node_pre_remove_child (ArvDomNode *self, ArvDomNode *child)
 /* ArvGcEnumEntry implementation */
 
 gint64
-arv_gc_enum_entry_get_value (ArvGcEnumEntry *entry)
+arv_gc_enum_entry_get_value (ArvGcEnumEntry *entry, GError **error)
 {
+	gint64 value;
+	GError *local_error = NULL;
+
 	g_return_val_if_fail (ARV_IS_GC_ENUM_ENTRY (entry), 0);
+	g_return_val_if_fail (error == NULL || *error == NULL, 0);
 
-	if (entry->value != NULL)
-		return arv_gc_property_node_get_int64 (entry->value);
+	if (entry->value == NULL)
+		return 0;
 
-	return 0;
+	value = arv_gc_property_node_get_int64 (entry->value, &local_error);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return 0;
+	}
+
+	return value;
 }
 
 ArvGcNode *

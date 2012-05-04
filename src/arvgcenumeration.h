@@ -51,12 +51,14 @@ struct _ArvGcEnumerationClass {
 
 GType 		arv_gc_enumeration_get_type 	(void);
 ArvGcNode * 	arv_gc_enumeration_new 				(void);
-const char *	arv_gc_enumeration_get_string_value		(ArvGcEnumeration *enumeration);
-void		arv_gc_enumeration_set_string_value		(ArvGcEnumeration *enumeration, const char *value);
-gint64 		arv_gc_enumeration_get_int_value		(ArvGcEnumeration *enumeration);
-void		arv_gc_enumeration_set_int_value		(ArvGcEnumeration *enumeration, gint64 value);
+
 const GSList *	arv_gc_enumeration_get_entries			(ArvGcEnumeration *enumeration);
-gint64 *	arv_gc_enumeration_get_available_int_values	(ArvGcEnumeration *enumeration,	guint *n_values);
+
+const char *	arv_gc_enumeration_get_string_value		(ArvGcEnumeration *enumeration, GError **error);
+void		arv_gc_enumeration_set_string_value		(ArvGcEnumeration *enumeration, const char *value, GError **error);
+gint64 		arv_gc_enumeration_get_int_value		(ArvGcEnumeration *enumeration, GError **error);
+void		arv_gc_enumeration_set_int_value		(ArvGcEnumeration *enumeration, gint64 value, GError **error);
+gint64 *	arv_gc_enumeration_get_available_int_values	(ArvGcEnumeration *enumeration,	guint *n_values, GError **error);
 
 G_END_DECLS
 

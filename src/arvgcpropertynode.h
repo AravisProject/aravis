@@ -136,12 +136,13 @@ ArvGcNode * 	arv_gc_property_node_new_bit			(void);
 ArvGcNode * 	arv_gc_property_node_new_command_value		(void);
 ArvGcNode * 	arv_gc_property_node_new_p_command_value	(void);
 
-const char * 		arv_gc_property_node_get_string 	(ArvGcPropertyNode *node);
-void	 		arv_gc_property_node_set_string 	(ArvGcPropertyNode *node, const char *string);
-gint64			arv_gc_property_node_get_int64		(ArvGcPropertyNode *node);
-void			arv_gc_property_node_set_int64		(ArvGcPropertyNode *node, gint64 v_int64);
-double 			arv_gc_property_node_get_double 	(ArvGcPropertyNode *node);
-void 			arv_gc_property_node_set_double 	(ArvGcPropertyNode *node, double v_double);
+const char * 		arv_gc_property_node_get_string 	(ArvGcPropertyNode *node, GError **error);
+void	 		arv_gc_property_node_set_string 	(ArvGcPropertyNode *node, const char *string, GError **error);
+gint64			arv_gc_property_node_get_int64		(ArvGcPropertyNode *node, GError **error);
+void			arv_gc_property_node_set_int64		(ArvGcPropertyNode *node, gint64 v_int64, GError **error);
+double 			arv_gc_property_node_get_double 	(ArvGcPropertyNode *node, GError **error);
+void 			arv_gc_property_node_set_double 	(ArvGcPropertyNode *node, double v_double, GError **error);
+
 ArvGcNode *		arv_gc_property_node_get_linked_node	(ArvGcPropertyNode *node);
 ArvGcPropertyNodeType	arv_gc_property_node_get_node_type	(ArvGcPropertyNode *node);
 

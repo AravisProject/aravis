@@ -183,54 +183,135 @@ arv_gc_feature_node_get_name (ArvGcFeatureNode *node)
 }
 
 const char *
-arv_gc_feature_node_get_tooltip (ArvGcFeatureNode *node)
+arv_gc_feature_node_get_tooltip (ArvGcFeatureNode *node, GError **error)
 {
-	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (node), NULL);
+	const char *tooltip;
+	GError *local_error = NULL;
 
-	return node->priv->tooltip != NULL ? arv_gc_property_node_get_string (node->priv->tooltip) : NULL;
+	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (node), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	if (node->priv->tooltip == NULL)
+		return NULL;
+
+	tooltip = arv_gc_property_node_get_string (node->priv->tooltip, &local_error);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return NULL;
+	}
+
+	return tooltip;
 }
 
 const char *
-arv_gc_feature_node_get_description (ArvGcFeatureNode *node)
+arv_gc_feature_node_get_description (ArvGcFeatureNode *node, GError **error)
 {
-	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (node), NULL);
+	const char *description;
+	GError *local_error = NULL;
 
-	return node->priv->description != NULL ? arv_gc_property_node_get_string (node->priv->description) : NULL;
+	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (node), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	if (node->priv->description == NULL)
+	       return NULL;
+
+	description = arv_gc_property_node_get_string (node->priv->description, &local_error);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return NULL;
+	}
+
+	return description;
 }
 
 const char *
-arv_gc_feature_node_get_display_name (ArvGcFeatureNode *node)
+arv_gc_feature_node_get_display_name (ArvGcFeatureNode *node, GError **error)
 {
+	const char *display_name;
+	GError *local_error = NULL;
+
 	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (node), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
-	return node->priv->display_name != NULL ? arv_gc_property_node_get_string (node->priv->display_name) : NULL;
+	if (node->priv->display_name == NULL)
+	       return NULL;
+
+	display_name = arv_gc_property_node_get_string (node->priv->display_name, &local_error);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return NULL;
+	}
+
+	return display_name;
 }
 
 gboolean
-arv_gc_feature_node_is_implemented (ArvGcFeatureNode *gc_feature_node)
+arv_gc_feature_node_is_implemented (ArvGcFeatureNode *gc_feature_node, GError **error)
 {
-	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (gc_feature_node), FALSE);
+	gboolean value;
+	GError *local_error = NULL;
 
-	return (gc_feature_node->priv->is_implemented == NULL || 
-		 arv_gc_property_node_get_int64 (gc_feature_node->priv->is_implemented) != 0);
+	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (gc_feature_node), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	if (gc_feature_node->priv->is_implemented == NULL)
+		return TRUE;
+
+
+	value = arv_gc_property_node_get_int64 (gc_feature_node->priv->is_implemented, &local_error) != 0;
+
+	if (local_error == NULL) {
+		g_propagate_error (error, local_error);
+		return FALSE;
+	}
+
+	return value;
 }
 
 gboolean
-arv_gc_feature_node_is_available (ArvGcFeatureNode *gc_feature_node)
+arv_gc_feature_node_is_available (ArvGcFeatureNode *gc_feature_node, GError **error)
 {
-	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (gc_feature_node), FALSE);
+	gboolean value;
+	GError *local_error = NULL;
 
-	return (gc_feature_node->priv->is_available == NULL || 
-		 arv_gc_property_node_get_int64 (gc_feature_node->priv->is_available) != 0);
+	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (gc_feature_node), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	if (gc_feature_node->priv->is_available == NULL)
+		return TRUE;
+
+	value = arv_gc_property_node_get_int64 (gc_feature_node->priv->is_available, &local_error) != 0;
+
+	if (local_error == NULL) {
+		g_propagate_error (error, local_error);
+		return FALSE;
+	}
+
+	return value;
 }
 
 gboolean
-arv_gc_feature_node_is_locked (ArvGcFeatureNode *gc_feature_node)
+arv_gc_feature_node_is_locked (ArvGcFeatureNode *gc_feature_node, GError **error)
 {
+	gboolean value;
+	GError *local_error = NULL;
+
 	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (gc_feature_node), FALSE);
 
-	return (gc_feature_node->priv->is_locked != NULL && 
-		 arv_gc_property_node_get_int64 (gc_feature_node->priv->is_locked) != 0);
+	if (gc_feature_node->priv->is_locked == NULL)
+		return FALSE;
+
+	value = arv_gc_property_node_get_int64 (gc_feature_node->priv->is_locked, &local_error) != 0;
+
+	if (local_error == NULL) {
+		g_propagate_error (error, local_error);
+		return FALSE;
+	}
+
+	return value;
 }
 
 ArvGcFeatureNode *
@@ -261,26 +342,29 @@ arv_gc_feature_node_get_value_type (ArvGcFeatureNode *node)
  * arv_gc_feature_node_set_value_from_string:
  * @gc_feature_node: a #ArvGcFeatureNode
  * @string: new node value, as string
+ * @error: return location for a GError, or NULL
  *
  * Set the node value using a string representation of the value. May not be applicable to every node type, but safe.
  */
 
 void
-arv_gc_feature_node_set_value_from_string (ArvGcFeatureNode *gc_feature_node, const char *string)
+arv_gc_feature_node_set_value_from_string (ArvGcFeatureNode *gc_feature_node, const char *string, GError **error)
 {
 	ArvGcFeatureNodeClass *node_class;
 
 	g_return_if_fail (ARV_IS_GC_FEATURE_NODE (gc_feature_node));
+	g_return_if_fail (error == NULL || *error == NULL);
 	g_return_if_fail (string != NULL);
 
 	node_class = ARV_GC_FEATURE_NODE_GET_CLASS (gc_feature_node);
 	if (node_class->set_value_from_string != NULL)
-		node_class->set_value_from_string (gc_feature_node, string);
+		node_class->set_value_from_string (gc_feature_node, string, error);
 }
 
 /**
  * arv_gc_feature_node_get_value_as_string:
  * @gc_feature_node: a #ArvGcFeatureNode
+ * @error: return location for a GError, or NULL
  *
  * Retrieve the node value a string.
  *
@@ -290,15 +374,16 @@ arv_gc_feature_node_set_value_from_string (ArvGcFeatureNode *gc_feature_node, co
  */
 
 const char *
-arv_gc_feature_node_get_value_as_string (ArvGcFeatureNode *gc_feature_node)
+arv_gc_feature_node_get_value_as_string (ArvGcFeatureNode *gc_feature_node, GError **error)
 {
 	ArvGcFeatureNodeClass *node_class;
 
 	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (gc_feature_node), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	node_class = ARV_GC_FEATURE_NODE_GET_CLASS (gc_feature_node);
 	if (node_class->get_value_as_string != NULL)
-		return node_class->get_value_as_string (gc_feature_node);
+		return node_class->get_value_as_string (gc_feature_node, error);
 
 	return NULL;
 }

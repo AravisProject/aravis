@@ -78,32 +78,63 @@ arv_gc_enumeration_pre_remove_child (ArvDomNode *self, ArvDomNode *child)
 /* ArvGcFeatureNode implementation */
 
 static void
-arv_gc_enumeration_set_value_from_string (ArvGcFeatureNode *node, const char *string)
+arv_gc_enumeration_set_value_from_string (ArvGcFeatureNode *node, const char *string, GError **error)
 {
-	arv_gc_enumeration_set_string_value (ARV_GC_ENUMERATION (node), string);
+	GError *local_error = NULL;
+
+	arv_gc_enumeration_set_string_value (ARV_GC_ENUMERATION (node), string, &local_error);
+
+	if (local_error != NULL)
+		g_propagate_error (error, local_error);
 }
 
 static const char *
-arv_gc_enumeration_get_value_as_string (ArvGcFeatureNode *node)
+arv_gc_enumeration_get_value_as_string (ArvGcFeatureNode *node, GError **error)
 {
-	return arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (node));
+	const char *string;
+	GError *local_error = NULL;
+
+	string = arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (node), &local_error);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return NULL;
+	}
+
+	return string;
 }
 
 
 /* ArvGcEnumeration implementation */
 
 const char *
-arv_gc_enumeration_get_string_value (ArvGcEnumeration *enumeration)
+arv_gc_enumeration_get_string_value (ArvGcEnumeration *enumeration, GError **error)
 {
 	const GSList *iter;
+	GError *local_error = NULL;
 	gint64 value;
 
 	g_return_val_if_fail (ARV_IS_GC_ENUMERATION (enumeration), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
-	value = arv_gc_enumeration_get_int_value (enumeration);
+	value = arv_gc_enumeration_get_int_value (enumeration, &local_error);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return NULL;
+	}
 
 	for (iter = enumeration->entries; iter != NULL; iter = iter->next) {
-		if (arv_gc_enum_entry_get_value (iter->data) == value) {
+		gint64 enum_value;
+
+		enum_value = arv_gc_enum_entry_get_value (iter->data, &local_error);
+
+		if (local_error != NULL) {
+			g_propagate_error (error, local_error);
+			return NULL;
+		}
+
+		if (enum_value == value) {
 			const char *string;
 
 			string = arv_gc_feature_node_get_name (iter->data);
@@ -120,17 +151,33 @@ arv_gc_enumeration_get_string_value (ArvGcEnumeration *enumeration)
 }
 
 void
-arv_gc_enumeration_set_string_value (ArvGcEnumeration *enumeration, const char *value)
+arv_gc_enumeration_set_string_value (ArvGcEnumeration *enumeration, const char *value, GError **error)
 {
 	const GSList *iter;
 
 	g_return_if_fail (ARV_IS_GC_ENUMERATION (enumeration));
+	g_return_if_fail (error == NULL || *error == NULL);
 
 	for (iter = enumeration->entries; iter != NULL; iter = iter->next)
 		if (g_strcmp0 (arv_gc_feature_node_get_name (iter->data), value) == 0) {
+			GError *local_error = NULL;
+			gint64 enum_value;
+
 			arv_log_genicam ("[GcEnumeration::set_string_value] value = %d - string = %s",
 					 &enumeration->value, value);
-			arv_gc_enumeration_set_int_value (enumeration, arv_gc_enum_entry_get_value (iter->data));
+
+			enum_value = arv_gc_enum_entry_get_value (iter->data, &local_error);
+
+			if (local_error != NULL) {
+				g_propagate_error (error, local_error);
+				return;
+			}
+
+			arv_gc_enumeration_set_int_value (enumeration, enum_value, &local_error);
+
+			if (local_error != NULL)
+				g_propagate_error (error, local_error);
+
 			return;
 		}
 
@@ -138,58 +185,119 @@ arv_gc_enumeration_set_string_value (ArvGcEnumeration *enumeration, const char *
 }
 
 gint64
-arv_gc_enumeration_get_int_value (ArvGcEnumeration *enumeration)
+arv_gc_enumeration_get_int_value (ArvGcEnumeration *enumeration, GError **error)
 {
+	GError *local_error = NULL;
+	gint64 value;
+
 	g_return_val_if_fail (ARV_IS_GC_ENUMERATION (enumeration), 0);
+	g_return_val_if_fail (error == NULL || *error == NULL, 0);
 
-	if (enumeration->value != NULL)
-		return arv_gc_property_node_get_int64 (enumeration->value);
+	if (enumeration->value == NULL) 
+		return 0;
 
-	return 0;
+	value = arv_gc_property_node_get_int64 (enumeration->value, &local_error);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return 0;
+	}
+
+	return value;
 }
 
 gint64 *
-arv_gc_enumeration_get_available_int_values (ArvGcEnumeration *enumeration, guint *n_values)
+arv_gc_enumeration_get_available_int_values (ArvGcEnumeration *enumeration, guint *n_values, GError **error)
 {
 	gint64 *values;
 	const GSList *entries, *iter;
+	GSList *available_entries = NULL;
 	unsigned int i;
+	GError *local_error = NULL;
 
 	g_return_val_if_fail (n_values != NULL, NULL);
 
 	*n_values = 0;
 
 	g_return_val_if_fail (ARV_IS_GC_ENUMERATION (enumeration), NULL);
+	g_return_val_if_fail (error == NULL || *error != NULL, NULL);
 
 	entries = arv_gc_enumeration_get_entries (enumeration);
 
 	*n_values = 0;
-	for (iter = entries; iter != NULL; iter = iter->next)
-		if (arv_gc_feature_node_is_available (iter->data) &&
-		    arv_gc_feature_node_is_implemented (iter->data))
-		    (*n_values)++;
+	for (iter = entries; iter != NULL; iter = iter->next) {
+		gboolean is_available;
 
-	if (*n_values == 0)
+		is_available = arv_gc_feature_node_is_available (iter->data, &local_error);
+
+		if (local_error != NULL) {
+			g_propagate_error (error, local_error);
+			*n_values = 0;
+			g_slist_free (available_entries);
+
+			return NULL;
+		}
+
+		if (is_available) {
+			gboolean is_implemented;
+
+			is_implemented = arv_gc_feature_node_is_implemented (iter->data, &local_error);
+
+			if (local_error != NULL) {
+				g_propagate_error (error, local_error);
+				*n_values = 0;
+				g_slist_free (available_entries);
+
+				return NULL;
+			}
+
+			if (is_implemented) {
+				(*n_values)++;
+				available_entries = g_slist_prepend (available_entries, iter->data);
+			}
+		}
+	}
+
+	if (*n_values == 0) {
+		g_slist_free (available_entries);
 		return NULL;
+	}
 
 	values = g_new (gint64, *n_values);
-	for (iter = entries, i = 0; iter != NULL; iter = iter->next)
-		if (arv_gc_feature_node_is_available (iter->data) &&
-		    arv_gc_feature_node_is_implemented (iter->data)) {
-			values[i] = arv_gc_enum_entry_get_value (iter->data);
-			i++;
+	for (iter = available_entries, i = 0; iter != NULL; iter = iter->next) {
+
+		values[i] = arv_gc_enum_entry_get_value (iter->data, &local_error);
+
+		if (local_error != NULL) {
+			g_propagate_error (error, local_error);
+			*n_values = 0;
+			g_slist_free (available_entries);
+			g_free (values);
+
+			return NULL;
 		}
+		i++;
+	}
+
+	g_slist_free (available_entries);
 
 	return values;
 }
 
 void
-arv_gc_enumeration_set_int_value (ArvGcEnumeration *enumeration, gint64 value)
+arv_gc_enumeration_set_int_value (ArvGcEnumeration *enumeration, gint64 value, GError **error)
 {
 	g_return_if_fail (ARV_IS_GC_ENUMERATION (enumeration));
+	g_return_if_fail (error == NULL || *error == NULL);
 
-	if (enumeration->value)
-		arv_gc_property_node_set_int64 (enumeration->value, value);
+	if (enumeration->value) {
+		GError *local_error = NULL;
+
+		arv_gc_property_node_set_int64 (enumeration->value, value, &local_error);
+
+		if (local_error != NULL)
+			g_propagate_error (error, local_error);
+	}
 }
 
 /**

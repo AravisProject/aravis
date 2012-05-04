@@ -50,7 +50,7 @@ struct _ArvGcIndexNodeClass {
 
 GType 		arv_gc_index_node_get_type 	(void);
 ArvGcNode * 	arv_gc_index_node_new 		(void);
-gint64		arv_gc_index_node_get_index	(ArvGcIndexNode *index_node, gint64 default_offset);
+gint64		arv_gc_index_node_get_index	(ArvGcIndexNode *index_node, gint64 default_offset, GError **error);
 
 G_END_DECLS
 

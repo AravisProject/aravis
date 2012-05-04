@@ -28,6 +28,19 @@
 
 G_BEGIN_DECLS
 
+/**
+ * ArvDeviceStatus:
+ * @ARV_DEVICE_STATUS_SUCCESS: no error has occured
+ * @ARV_DEVICE_STATUS_TIMEOUT: action failed on a timeout
+ * @ARV_DEVICE_STATUS_WRITE_ERROR: write on a read only node
+ */
+
+typedef enum {
+	ARV_DEVICE_STATUS_SUCCESS,
+	ARV_DEVICE_STATUS_TIMEOUT,
+	ARV_DEVICE_STATUS_WRITE_ERROR
+} ArvDeviceStatus;
+
 #define ARV_TYPE_DEVICE             (arv_device_get_type ())
 #define ARV_DEVICE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_DEVICE, ArvDevice))
 #define ARV_DEVICE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_DEVICE, ArvDeviceClass))
@@ -87,6 +100,8 @@ void		arv_device_set_float_feature_value	(ArvDevice *device, const char *feature
 double		arv_device_get_float_feature_value	(ArvDevice *device, const char *feature);
 void 		arv_device_get_float_feature_bounds 	(ArvDevice *device, const char *feature,
 							 double *min, double *max);
+
+gint64 *	arv_device_get_enumeration_feature_available_values	(ArvDevice *device, const char *feature, guint *n_values);
 
 void 		arv_device_emit_control_lost_signal 	(ArvDevice *device);
 

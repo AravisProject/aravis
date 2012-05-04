@@ -37,16 +37,16 @@ typedef struct _ArvGcStringInterface ArvGcStringInterface;
 struct _ArvGcStringInterface {
 	GTypeInterface parent;
 
-	const char *	(*get_value)		(ArvGcString *gc_string);
-	void		(*set_value)		(ArvGcString *gc_string, const char *value);
-	gint64		(*get_max_length)	(ArvGcString *gc_string);
+	const char *	(*get_value)		(ArvGcString *gc_string, GError **error);
+	void		(*set_value)		(ArvGcString *gc_string, const char *value, GError **error);
+	gint64		(*get_max_length)	(ArvGcString *gc_string, GError **error);
 };
 
 GType arv_gc_string_get_type (void);
 
-const char *	arv_gc_string_get_value		(ArvGcString *gc_string);
-void		arv_gc_string_set_value		(ArvGcString *gc_string, const char *value);
-gint64		arv_gc_string_get_max_length	(ArvGcString *gc_string);
+const char *	arv_gc_string_get_value		(ArvGcString *gc_string, GError **error);
+void		arv_gc_string_set_value		(ArvGcString *gc_string, const char *value, GError **error);
+gint64		arv_gc_string_get_max_length	(ArvGcString *gc_string, GError **error);
 
 G_END_DECLS
 

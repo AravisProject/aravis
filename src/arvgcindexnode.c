@@ -78,11 +78,14 @@ arv_gc_index_node_get_attribute (ArvDomElement *self, const char *name)
 /* ArvGcIndexNode implementation */
 
 gint64
-arv_gc_index_node_get_index (ArvGcIndexNode *index_node, gint64 default_offset)
+arv_gc_index_node_get_index (ArvGcIndexNode *index_node, gint64 default_offset, GError **error)
 {
 	gint64 offset;
+	gint64 node_value;
+	GError *local_error = NULL;
 
 	g_return_val_if_fail (ARV_IS_GC_INDEX_NODE (index_node), 0);
+	g_return_val_if_fail (error == NULL || *error == NULL, 0);
 
 	if (index_node->offset == NULL)
 		offset = default_offset;
@@ -93,12 +96,25 @@ arv_gc_index_node_get_index (ArvGcIndexNode *index_node, gint64 default_offset)
 
 			genicam = arv_gc_node_get_genicam (ARV_GC_NODE (index_node));
 			node = arv_gc_get_node (genicam, index_node->offset);
-			offset = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
+			offset = arv_gc_integer_get_value (ARV_GC_INTEGER (node), &local_error);
+
+			if (local_error != NULL) {
+				g_propagate_error (error, local_error);
+
+				return 0;
+			}
 		} else
 			offset = g_ascii_strtoll (index_node->offset, NULL, 0);
 	}
 
-	return offset * arv_gc_property_node_get_int64 (ARV_GC_PROPERTY_NODE (index_node));
+	node_value = arv_gc_property_node_get_int64 (ARV_GC_PROPERTY_NODE (index_node), &local_error);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return 0;
+	}
+
+	return offset * node_value;
 }
 
 ArvGcNode *

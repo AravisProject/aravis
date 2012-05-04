@@ -48,22 +48,29 @@ struct _ArvGcFeatureNodeClass {
 	ArvGcNodeClass parent_class;
 
 	GType		(*get_value_type)		(ArvGcFeatureNode *gc_feature_node);
-	void		(*set_value_from_string)	(ArvGcFeatureNode *gc_feature_node, const char *string);
-	const char *	(*get_value_as_string)		(ArvGcFeatureNode *gc_feature_node);
+
+	void		(*set_value_from_string)	(ArvGcFeatureNode *gc_feature_node, const char *string, GError **error);
+	const char *	(*get_value_as_string)		(ArvGcFeatureNode *gc_feature_node, GError **error);
 };
 
 GType 			arv_gc_feature_node_get_type 			(void);
 
 ArvGcFeatureNode * 	arv_gc_feature_node_new 			(void);
+
 const char *		arv_gc_feature_node_get_name			(ArvGcFeatureNode *gc_feature_node);
-const char *		arv_gc_feature_node_get_tooltip			(ArvGcFeatureNode *gc_feature_node);
-const char *		arv_gc_feature_node_get_description		(ArvGcFeatureNode *gc_feature_node);
-gboolean		arv_gc_feature_node_is_available		(ArvGcFeatureNode *gc_feature_node);
-gboolean		arv_gc_feature_node_is_implemented		(ArvGcFeatureNode *gc_feature_node);
-gboolean		arv_gc_feature_node_is_locked			(ArvGcFeatureNode *gc_feature_node);
+
+const char *		arv_gc_feature_node_get_tooltip			(ArvGcFeatureNode *gc_feature_node, GError **error);
+const char *		arv_gc_feature_node_get_description		(ArvGcFeatureNode *gc_feature_node, GError **error);
+
+gboolean		arv_gc_feature_node_is_available		(ArvGcFeatureNode *gc_feature_node, GError **error);
+gboolean		arv_gc_feature_node_is_implemented		(ArvGcFeatureNode *gc_feature_node, GError **error);
+gboolean		arv_gc_feature_node_is_locked			(ArvGcFeatureNode *gc_feature_node, GError **error);
+void			arv_gc_feature_node_set_value_from_string	(ArvGcFeatureNode *gc_feature_node, const char *string,
+									 GError **error);
+const char *		arv_gc_feature_node_get_value_as_string		(ArvGcFeatureNode *gc_feature_node, GError **error);
+
 GType 			arv_gc_feature_node_get_value_type 		(ArvGcFeatureNode *gc_feature_node);
-void			arv_gc_feature_node_set_value_from_string	(ArvGcFeatureNode *gc_feature_node, const char *string);
-const char *		arv_gc_feature_node_get_value_as_string		(ArvGcFeatureNode *gc_feature_node);
+
 void 			arv_gc_feature_node_inc_modification_count 	(ArvGcFeatureNode *gc_feature_node);
 gint 			arv_gc_feature_node_get_modification_count 	(ArvGcFeatureNode *gc_feature_node);
 

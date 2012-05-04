@@ -362,13 +362,9 @@ arv_camera_get_pixel_format_as_string (ArvCamera *camera)
 gint64 *
 arv_camera_get_available_pixel_formats (ArvCamera *camera, guint *n_pixel_formats)
 {
-	ArvGcNode *enumeration;
-
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
-	enumeration = arv_gc_get_node (camera->priv->genicam, "PixelFormat");
-
-	return arv_gc_enumeration_get_available_int_values (ARV_GC_ENUMERATION (enumeration), n_pixel_formats);
+	return arv_device_get_enumeration_feature_available_values (camera->priv->device, "PixelFormat", n_pixel_formats);
 }
 
 /* Acquisition control */

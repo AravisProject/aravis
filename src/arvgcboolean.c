@@ -75,58 +75,125 @@ arv_gc_boolean_pre_remove_child (ArvDomNode *self, ArvDomNode *child)
 /* ArvGcFeatureNode implementation */
 
 static void
-arv_gc_boolean_set_value_from_string (ArvGcFeatureNode *node, const char *string)
+arv_gc_boolean_set_value_from_string (ArvGcFeatureNode *node, const char *string, GError **error)
 {
-	arv_gc_boolean_set_value (ARV_GC_BOOLEAN (node), g_strcmp0 (string, "true") == 0);
+	GError *local_error = NULL;
+
+	arv_gc_boolean_set_value (ARV_GC_BOOLEAN (node), g_strcmp0 (string, "true") == 0, &local_error);
+
+	if (local_error != NULL)
+		g_propagate_error (error, local_error);
 }
 
 static const char *
-arv_gc_boolean_get_value_as_string (ArvGcFeatureNode *node)
+arv_gc_boolean_get_value_as_string (ArvGcFeatureNode *node, GError **error)
 {
-	return arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node)) ? "true" : "false";
+	const char *string;
+	GError *local_error = NULL;
+
+	string = arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node), &local_error) ? "true" : "false";
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return NULL;
+	}
+
+	return string;
 }
 
 /* ArvGcBoolean implementation */
 
 static gint64
-arv_gc_boolean_get_on_value (ArvGcBoolean *gc_boolean)
+arv_gc_boolean_get_on_value (ArvGcBoolean *gc_boolean, GError **error)
 {
-	if (gc_boolean->on_value != NULL)
-		return arv_gc_property_node_get_int64 (gc_boolean->on_value);
+	gint64 on_value;
+	GError *local_error = NULL;
 
-	return 1;
+	if (gc_boolean->on_value == NULL)
+		return 1;
+
+	on_value = arv_gc_property_node_get_int64 (gc_boolean->on_value, &local_error);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return 1;
+	}
+
+	return on_value;
 }
 
 static gint64
-arv_gc_boolean_get_off_value (ArvGcBoolean *gc_boolean)
+arv_gc_boolean_get_off_value (ArvGcBoolean *gc_boolean, GError **error)
 {
-	if (gc_boolean->off_value != NULL)
-		return arv_gc_property_node_get_int64 (gc_boolean->off_value);
+	gint64 off_value;
+	GError *local_error = NULL;
 
-	return 0;
+	if (gc_boolean->off_value == NULL)
+		return 0;
+
+	off_value = arv_gc_property_node_get_int64 (gc_boolean->off_value, &local_error);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return 0;
+	}
+
+	return off_value;
 }
 
 gboolean
-arv_gc_boolean_get_value (ArvGcBoolean *gc_boolean)
+arv_gc_boolean_get_value (ArvGcBoolean *gc_boolean, GError **error)
 {
+	gboolean value;
+	gint64 on_value;
+	GError *local_error = NULL;
+
 	g_return_val_if_fail (ARV_IS_GC_BOOLEAN (gc_boolean), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-	if (gc_boolean->value != NULL)
-		return arv_gc_property_node_get_int64 (gc_boolean->value) == arv_gc_boolean_get_on_value (gc_boolean);
+	if (gc_boolean->value == NULL)
+		return FALSE;
 
-	return FALSE;
+	value = arv_gc_property_node_get_int64 (gc_boolean->value, &local_error);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return FALSE;
+	}
+
+       	on_value = arv_gc_boolean_get_on_value (gc_boolean, &local_error);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return FALSE;
+	}
+
+	return value == on_value;
 }
 
 void
-arv_gc_boolean_set_value (ArvGcBoolean *gc_boolean, gboolean v_boolean)
+arv_gc_boolean_set_value (ArvGcBoolean *gc_boolean, gboolean v_boolean, GError **error)
 {
-	g_return_if_fail (ARV_IS_GC_BOOLEAN (gc_boolean));
+	gboolean value;
+	GError *local_error = NULL;
 
-	if (gc_boolean->value != NULL)
-		arv_gc_property_node_set_int64 (gc_boolean->value,
-						v_boolean ?
-						arv_gc_boolean_get_on_value (gc_boolean) :
-						arv_gc_boolean_get_off_value (gc_boolean));
+	g_return_if_fail (ARV_IS_GC_BOOLEAN (gc_boolean));
+	g_return_if_fail (error == NULL || *error == NULL);
+
+	if (v_boolean)
+		value = arv_gc_boolean_get_on_value (gc_boolean, &local_error);
+	else
+		value = arv_gc_boolean_get_off_value (gc_boolean, &local_error);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return;
+	}
+
+	arv_gc_property_node_set_int64 (gc_boolean->value, value, &local_error);
+
+	if (local_error != NULL)
+		g_propagate_error (error, local_error);
 }
 
 ArvGcNode *

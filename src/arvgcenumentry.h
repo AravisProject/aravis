@@ -50,7 +50,8 @@ struct _ArvGcEnumEntryClass {
 
 GType 		arv_gc_enum_entry_get_type 	(void);
 ArvGcNode * 	arv_gc_enum_entry_new 		(void);
-gint64		arv_gc_enum_entry_get_value	(ArvGcEnumEntry *entry);
+
+gint64		arv_gc_enum_entry_get_value	(ArvGcEnumEntry *entry, GError **error);
 
 G_END_DECLS
 

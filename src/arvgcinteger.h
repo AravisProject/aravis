@@ -37,26 +37,26 @@ typedef struct _ArvGcIntegerInterface ArvGcIntegerInterface;
 struct _ArvGcIntegerInterface {
 	GTypeInterface parent;
 
-	gint64		(*get_value)		(ArvGcInteger *gc_integer);
-	void		(*set_value)		(ArvGcInteger *gc_integer, gint64 value);
-	gint64		(*get_min)		(ArvGcInteger *gc_integer);
-	gint64		(*get_max)		(ArvGcInteger *gc_integer);
-	gint64		(*get_inc)		(ArvGcInteger *gc_integer);
-	const char *	(*get_unit)		(ArvGcInteger *gc_integer);
-	void		(*impose_min)		(ArvGcInteger *gc_integer, gint64 minimum);
-	void		(*impose_max)		(ArvGcInteger *gc_integer, gint64 maximum);
+	gint64		(*get_value)		(ArvGcInteger *gc_integer, GError **error);
+	void		(*set_value)		(ArvGcInteger *gc_integer, gint64 value, GError **error);
+	gint64		(*get_min)		(ArvGcInteger *gc_integer, GError **error);
+	gint64		(*get_max)		(ArvGcInteger *gc_integer, GError **error);
+	gint64		(*get_inc)		(ArvGcInteger *gc_integer, GError **error);
+	const char *	(*get_unit)		(ArvGcInteger *gc_integer, GError **error);
+	void		(*impose_min)		(ArvGcInteger *gc_integer, gint64 minimum, GError **error);
+	void		(*impose_max)		(ArvGcInteger *gc_integer, gint64 maximum, GError **error);
 };
 
 GType arv_gc_integer_get_type (void);
 
-gint64		arv_gc_integer_get_value	(ArvGcInteger *gc_integer);
-void		arv_gc_integer_set_value	(ArvGcInteger *gc_integer, gint64 value);
-gint64		arv_gc_integer_get_min		(ArvGcInteger *gc_integer);
-gint64		arv_gc_integer_get_max		(ArvGcInteger *gc_integer);
-gint64		arv_gc_integer_get_inc		(ArvGcInteger *gc_integer);
-const char *	arv_gc_integer_get_unit		(ArvGcInteger *gc_integer);
-void		arv_gc_integer_impose_min	(ArvGcInteger *gc_integer, gint64 minimum);
-void		arv_gc_integer_impose_max	(ArvGcInteger *gc_integer, gint64 maximum);
+gint64		arv_gc_integer_get_value	(ArvGcInteger *gc_integer, GError **error);
+void		arv_gc_integer_set_value	(ArvGcInteger *gc_integer, gint64 value, GError **error);
+gint64		arv_gc_integer_get_min		(ArvGcInteger *gc_integer, GError **error);
+gint64		arv_gc_integer_get_max		(ArvGcInteger *gc_integer, GError **error);
+gint64		arv_gc_integer_get_inc		(ArvGcInteger *gc_integer, GError **error);
+const char *	arv_gc_integer_get_unit		(ArvGcInteger *gc_integer, GError **error);
+void		arv_gc_integer_impose_min	(ArvGcInteger *gc_integer, gint64 minimum, GError *error);
+void		arv_gc_integer_impose_max	(ArvGcInteger *gc_integer, gint64 maximum, GError *error);
 
 /* FIXME get_representation is missing */
 
