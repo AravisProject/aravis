@@ -41,6 +41,8 @@ m4_define([_GOBJECT_INTROSPECTION_CHECK_INTERNAL],
     ],dnl
     [auto],[dnl
         PKG_CHECK_EXISTS([gobject-introspection-1.0 >= $1], found_introspection=yes, found_introspection=no)
+	dnl Canonicalize enable_introspection
+	enable_introspection=$found_introspection
     ],dnl
     [dnl	
         AC_MSG_ERROR([invalid argument passed to --enable-introspection, should be one of @<:@no/auto/yes@:>@])
