@@ -2,11 +2,6 @@ EXTRA_DIST =
 
 include $(top_srcdir)/Makefile.decl
 
--include $(INTROSPECTION_MAKEFILE)
-  INTROSPECTION_GIRS =
-  INTROSPECTION_SCANNER_ARGS = --add-include-path=$(srcdir)
-  INTROSPECTION_COMPILER_ARGS = --includedir=$(srcdir)
-
 INCLUDES = \
 	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\" \
 	-DPACKAGE_SRC_DIR=\""$(srcdir)"\" \
@@ -178,6 +173,12 @@ arv_tool_@ARAVIS_API_VERSION@_SOURCES = arvtool.c
 arv_tool_@ARAVIS_API_VERSION@_LDADD = $(ARAVIS_LIBS) libaravis-@ARAVIS_API_VERSION@.la
 
 CLEANFILES = $(BUILT_SOURCES)
+
+-include $(INTROSPECTION_MAKEFILE)
+
+INTROSPECTION_GIRS =
+INTROSPECTION_SCANNER_ARGS = --add-include-path=$(srcdir)
+INTROSPECTION_COMPILER_ARGS = --includedir=$(srcdir)
 
 if HAVE_INTROSPECTION
 
