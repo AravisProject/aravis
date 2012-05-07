@@ -79,22 +79,32 @@ arv_gc_command_pre_remove_child (ArvDomNode *self, ArvDomNode *child)
 /* ArvGcCommand implementation */
 
 void
-arv_gc_command_execute (ArvGcCommand *gc_command)
+arv_gc_command_execute (ArvGcCommand *gc_command, GError **error)
 {
 	ArvGc *genicam;
+	GError *local_error = NULL;
 	gint64 command_value;
 
 	g_return_if_fail (ARV_IS_GC_COMMAND (gc_command));
 	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_command));
 	g_return_if_fail (ARV_IS_GC (genicam));
 
-	if (gc_command->command_value != NULL)
-		command_value = arv_gc_property_node_get_int64 (gc_command->command_value);
-	else
-		command_value = 0;
+	if (gc_command->value == NULL)
+		return;
 
-	if (gc_command->value != NULL)
-		arv_gc_property_node_set_int64 (gc_command->value, command_value);
+	command_value = arv_gc_property_node_get_int64 (gc_command->command_value, &local_error);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return;
+	}
+
+	arv_gc_property_node_set_int64 (gc_command->value, command_value, &local_error);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return;
+	}
 
 	arv_log_genicam ("[GcCommand::execute] %s (0x%x)",
 			 arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_command)),

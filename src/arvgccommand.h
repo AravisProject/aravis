@@ -51,7 +51,7 @@ struct _ArvGcCommandClass {
 
 GType 		arv_gc_command_get_type 	(void);
 ArvGcNode * 	arv_gc_command_new 		(void);
-void 		arv_gc_command_execute 		(ArvGcCommand *gc_command);
+void 		arv_gc_command_execute 		(ArvGcCommand *gc_command, GError **error);
 
 G_END_DECLS
 
