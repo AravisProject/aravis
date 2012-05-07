@@ -51,10 +51,10 @@ GType arv_gc_float_get_type (void);
 
 double		arv_gc_float_get_value		(ArvGcFloat *gc_float, GError **error);
 void		arv_gc_float_set_value		(ArvGcFloat *gc_float, double value, GError **error);
-double		arv_gc_float_get_min		(ArvGcFloat *gc_float, GError *error);
-double		arv_gc_float_get_max		(ArvGcFloat *gc_float, GError *error);
-double		arv_gc_float_get_inc		(ArvGcFloat *gc_float, GError *error);
-const char *	arv_gc_float_get_unit		(ArvGcFloat *gc_float, GError *error);
+double		arv_gc_float_get_min		(ArvGcFloat *gc_float, GError **error);
+double		arv_gc_float_get_max		(ArvGcFloat *gc_float, GError **error);
+double		arv_gc_float_get_inc		(ArvGcFloat *gc_float, GError **error);
+const char *	arv_gc_float_get_unit		(ArvGcFloat *gc_float, GError **error);
 void		arv_gc_float_impose_min		(ArvGcFloat *gc_float, double minimum, GError **error);
 void		arv_gc_float_impose_max		(ArvGcFloat *gc_float, double maximum, GError **error);
 

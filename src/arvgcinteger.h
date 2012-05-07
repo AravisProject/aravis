@@ -55,8 +55,8 @@ gint64		arv_gc_integer_get_min		(ArvGcInteger *gc_integer, GError **error);
 gint64		arv_gc_integer_get_max		(ArvGcInteger *gc_integer, GError **error);
 gint64		arv_gc_integer_get_inc		(ArvGcInteger *gc_integer, GError **error);
 const char *	arv_gc_integer_get_unit		(ArvGcInteger *gc_integer, GError **error);
-void		arv_gc_integer_impose_min	(ArvGcInteger *gc_integer, gint64 minimum, GError *error);
-void		arv_gc_integer_impose_max	(ArvGcInteger *gc_integer, gint64 maximum, GError *error);
+void		arv_gc_integer_impose_min	(ArvGcInteger *gc_integer, gint64 minimum, GError **error);
+void		arv_gc_integer_impose_max	(ArvGcInteger *gc_integer, gint64 maximum, GError **error);
 
 /* FIXME get_representation is missing */
 

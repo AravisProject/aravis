@@ -42,12 +42,13 @@ arv_gc_port_get_node_name (ArvDomNode *node)
 /* ArvGcPort implementation */
 
 void
-arv_gc_port_read (ArvGcPort *port, void *buffer, guint64 address, guint64 length)
+arv_gc_port_read (ArvGcPort *port, void *buffer, guint64 address, guint64 length, GError **error)
 {
 	ArvGc *genicam;
 	ArvDevice *device;
 
 	g_return_if_fail (ARV_IS_GC_PORT (port));
+	g_return_if_fail (error == NULL || *error == NULL);
 
 	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (port));
 	device = arv_gc_get_device (genicam);
@@ -56,12 +57,13 @@ arv_gc_port_read (ArvGcPort *port, void *buffer, guint64 address, guint64 length
 }
 
 void
-arv_gc_port_write (ArvGcPort *port, void *buffer, guint64 address, guint64 length)
+arv_gc_port_write (ArvGcPort *port, void *buffer, guint64 address, guint64 length, GError **error)
 {
 	ArvGc *genicam;
 	ArvDevice *device;
 
 	g_return_if_fail (ARV_IS_GC_PORT (port));
+	g_return_if_fail (error == NULL || *error == NULL);
 
 	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (port));
 	device = arv_gc_get_device (genicam);

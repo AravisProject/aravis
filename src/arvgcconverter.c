@@ -162,110 +162,194 @@ arv_gc_converter_class_init (ArvGcConverterClass *this_class)
 /* ArvGcInteger interface implementation */
 
 static void
-_update_from_variables (ArvGcConverter *gc_converter)
+_update_from_variables (ArvGcConverter *gc_converter, GError **error)
 {
 	ArvGcNode *node = NULL;
+	GError *local_error = NULL;
 	GSList *iter;
 	const char *expression;
 
 	if (gc_converter->formula_from_node != NULL)
-		expression = arv_gc_property_node_get_string (gc_converter->formula_from_node);
+		expression = arv_gc_property_node_get_string (gc_converter->formula_from_node, &local_error);
 	else
 		expression = "";
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return;
+	}
+
 	arv_evaluator_set_expression (gc_converter->formula_from, expression);
 
 	for (iter = gc_converter->variables; iter != NULL; iter = iter->next) {
 		ArvGcVariableNode *variable_node = iter->data;
 
 		node = arv_gc_property_node_get_linked_node (ARV_GC_PROPERTY_NODE (variable_node));
-		if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_INT64)
+		if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_INT64) {
+			gint64 value;
+
+			value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), &local_error);
+
+			if (local_error != NULL) {
+				g_propagate_error (error, local_error);
+				return;
+			}
+
 			arv_evaluator_set_int64_variable (gc_converter->formula_from,
 							  arv_gc_variable_node_get_name (variable_node),
-							  arv_gc_integer_get_value (ARV_GC_INTEGER (node)));
-		else if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_DOUBLE)
+							  value);
+		} else if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_DOUBLE) {
+			double value;
+
+			value =  arv_gc_float_get_value (ARV_GC_FLOAT (node), &local_error);
+
+			if (local_error != NULL) {
+				g_propagate_error (error, local_error);
+				return;
+			}
+
 			arv_evaluator_set_double_variable (gc_converter->formula_from,
 							  arv_gc_variable_node_get_name (variable_node),
-							   arv_gc_float_get_value (ARV_GC_FLOAT (node)));
+							  value);
+		}
 	}
 
 	if (gc_converter->value != NULL) {
 		node = arv_gc_property_node_get_linked_node (gc_converter->value);
 
-		if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_INT64)
-			arv_evaluator_set_int64_variable (gc_converter->formula_from,
-							  "TO",
-							  arv_gc_integer_get_value (ARV_GC_INTEGER (node)));
-		else if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_DOUBLE)
-			arv_evaluator_set_double_variable (gc_converter->formula_from,
-							   "TO",
-							   arv_gc_float_get_value (ARV_GC_FLOAT (node)));
-		else
+		if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_INT64) {
+			gint64 value;
+
+			value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), &local_error);
+
+			if (local_error != NULL) {
+				g_propagate_error (error, local_error);
+				return;
+			}
+
+			arv_evaluator_set_int64_variable (gc_converter->formula_from, "TO", value);
+		} else if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_DOUBLE) {
+			double value;
+
+			value = arv_gc_float_get_value (ARV_GC_FLOAT (node), &local_error);
+
+			if (local_error != NULL) {
+				g_propagate_error (error, local_error);
+				return;
+			}
+
+			arv_evaluator_set_double_variable (gc_converter->formula_from, "TO", value);
+		} else
 			arv_warning_genicam ("[GcConverter::set_value] Invalid pValue node '%s'",
 					     gc_converter->value);
 	}
 }
 
 static void
-_update_to_variables (ArvGcConverter *gc_converter)
+_update_to_variables (ArvGcConverter *gc_converter, GError **error)
 {
 	ArvGcNode *node;
+	GError *local_error = NULL;
 	GSList *iter;
 	const char *expression;
 
 	if (gc_converter->formula_to_node != NULL)
-		expression = arv_gc_property_node_get_string (gc_converter->formula_to_node);
+		expression = arv_gc_property_node_get_string (gc_converter->formula_to_node, &local_error);
 	else
 		expression = "";
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return;
+	}
+
 	arv_evaluator_set_expression (gc_converter->formula_to, expression);
 
 	for (iter = gc_converter->variables; iter != NULL; iter = iter->next) {
 		ArvGcVariableNode *variable_node = iter->data;
 
 		node = arv_gc_property_node_get_linked_node (ARV_GC_PROPERTY_NODE (variable_node));
-		if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_INT64)
+		if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_INT64) {
+			gint64 value;
+
+			value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), &local_error);
+
+			if (local_error != NULL) {
+				g_propagate_error (error, local_error);
+				return;
+			}
+
 			arv_evaluator_set_int64_variable (gc_converter->formula_to,
 							  arv_gc_variable_node_get_name (variable_node),
-							  arv_gc_integer_get_value (ARV_GC_INTEGER (node)));
-		else if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_DOUBLE)
+							  value);
+		} else if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_DOUBLE) {
+			double value;
+
+			value =  arv_gc_float_get_value (ARV_GC_FLOAT (node), &local_error);
+
+			if (local_error != NULL) {
+				g_propagate_error (error, local_error);
+				return;
+			}
+
 			arv_evaluator_set_double_variable (gc_converter->formula_to,
 							  arv_gc_variable_node_get_name (variable_node),
-							   arv_gc_float_get_value (ARV_GC_FLOAT (node)));
+							  value);
+		}
 	}
 
 	if (gc_converter->value != NULL) {
 		node = arv_gc_property_node_get_linked_node (gc_converter->value);
 
-		if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_INT64)
+		if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_INT64) {
 			arv_gc_integer_set_value (ARV_GC_INTEGER (node),
-						  arv_evaluator_evaluate_as_int64 (gc_converter->formula_to, NULL));
-		else if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_DOUBLE)
+						  arv_evaluator_evaluate_as_int64 (gc_converter->formula_to, NULL),
+						  &local_error);
+
+			if (local_error != NULL) {
+				g_propagate_error (error, local_error);
+				return;
+			}
+		} else if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_DOUBLE) {
 			arv_gc_float_set_value (ARV_GC_FLOAT (node),
-						arv_evaluator_evaluate_as_double (gc_converter->formula_to, NULL));
-		else
+						arv_evaluator_evaluate_as_double (gc_converter->formula_to, NULL),
+						&local_error);
+
+			if (local_error != NULL) {
+				g_propagate_error (error, local_error);
+				return;
+			}
+		} else
 			arv_warning_genicam ("[GcConverter::set_value] Invalid pValue node '%s'",
 					     gc_converter->value);
 	}
 }
 
 static gint64
-arv_gc_converter_get_integer_value (ArvGcInteger *gc_integer)
+arv_gc_converter_get_integer_value (ArvGcInteger *gc_integer, GError **error)
 {
 	ArvGcConverter *gc_converter = ARV_GC_CONVERTER (gc_integer);
+	GError *local_error = NULL;
 
-	_update_from_variables (gc_converter);
+	_update_from_variables (gc_converter, &local_error);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return 0;
+	}
 
 	return arv_evaluator_evaluate_as_int64 (gc_converter->formula_from, NULL);
 }
 
 static void
-arv_gc_converter_set_integer_value (ArvGcInteger *gc_integer, gint64 value)
+arv_gc_converter_set_integer_value (ArvGcInteger *gc_integer, gint64 value, GError **error)
 {
 	ArvGcConverter *gc_converter = ARV_GC_CONVERTER (gc_integer);
 
 	arv_evaluator_set_int64_variable (gc_converter->formula_to,
 					  "FROM", value);
 
-	_update_to_variables (gc_converter);
+	_update_to_variables (gc_converter, error);
 }
 
 static void
@@ -276,24 +360,30 @@ arv_gc_converter_integer_interface_init (ArvGcIntegerInterface *interface)
 }
 
 static double
-arv_gc_converter_get_float_value (ArvGcFloat *gc_float)
+arv_gc_converter_get_float_value (ArvGcFloat *gc_float, GError **error)
 {
 	ArvGcConverter *gc_converter = ARV_GC_CONVERTER (gc_float);
+	GError *local_error = NULL;
 
-	_update_from_variables (gc_converter);
+	_update_from_variables (gc_converter, &local_error);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return 0.0;
+	}
 
 	return arv_evaluator_evaluate_as_double (gc_converter->formula_from, NULL);
 }
 
 static void
-arv_gc_converter_set_float_value (ArvGcFloat *gc_float, double value)
+arv_gc_converter_set_float_value (ArvGcFloat *gc_float, double value, GError **error)
 {
 	ArvGcConverter *gc_converter = ARV_GC_CONVERTER (gc_float);
 
 	arv_evaluator_set_double_variable (gc_converter->formula_to,
 					  "FROM", value);
 
-	_update_to_variables (gc_converter);
+	_update_to_variables (gc_converter, error);
 }
 
 static void
