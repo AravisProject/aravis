@@ -93,20 +93,34 @@ arv_gc_float_node_get_value_type (ArvGcFeatureNode *node)
 
 
 static void
-arv_gc_float_node_set_value_from_string (ArvGcFeatureNode *node, const char *string)
+arv_gc_float_node_set_value_from_string (ArvGcFeatureNode *node, const char *string, GError **error)
 {
-	arv_gc_float_set_value (ARV_GC_FLOAT (node), g_ascii_strtod (string, NULL));
+	GError *local_error = NULL;
+
+	arv_gc_float_set_value (ARV_GC_FLOAT (node), g_ascii_strtod (string, NULL), &local_error);
+
+	if (local_error != NULL)
+		g_propagate_error (error, local_error);
 }
 
 static const char *
-arv_gc_float_node_get_value_as_string (ArvGcFeatureNode *node)
+arv_gc_float_node_get_value_as_string (ArvGcFeatureNode *node, GError **error)
 {
 	ArvGcFloatNode *float_node = ARV_GC_FLOAT_NODE (node);
+	GError *local_error = NULL;
+	const char *string;
 
-	if (float_node->value != NULL)
-		return arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (float_node->value));
+	if (float_node->value == NULL)
+		return NULL;
 
-	return NULL;
+	string = arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (float_node->value), &local_error);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return NULL;
+	}
+
+	return string;
 }
 
 /* ArvGcFloatNode implementation */
@@ -153,85 +167,149 @@ arv_gc_float_node_class_init (ArvGcFloatNodeClass *this_class)
 /* ArvGcFloat interface implementation */
 
 static double
-arv_gc_float_node_get_float_value (ArvGcFloat *gc_float)
+arv_gc_float_node_get_float_value (ArvGcFloat *gc_float, GError **error)
 {
 	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_float);
+	GError *local_error = NULL;
+	double value;
 
-	if (gc_float_node->value != NULL)
-		return arv_gc_property_node_get_double (ARV_GC_PROPERTY_NODE (gc_float_node->value));
+	if (gc_float_node->value == NULL)
+		return 0.0;
 
-	return 0.0;
+	value = arv_gc_property_node_get_double (ARV_GC_PROPERTY_NODE (gc_float_node->value), &local_error);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return 0.0;
+	}
+
+	return value;
 }
 
 static void
-arv_gc_float_node_set_float_value (ArvGcFloat *gc_float, double value)
+arv_gc_float_node_set_float_value (ArvGcFloat *gc_float, double value, GError **error)
 {
 	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_float);
+	GError *local_error = NULL;
 
-	if (gc_float_node->value != NULL)
-		arv_gc_property_node_set_double (ARV_GC_PROPERTY_NODE (gc_float_node->value), value);
+	if (gc_float_node->value == NULL)
+		return;
+
+
+	arv_gc_property_node_set_double (ARV_GC_PROPERTY_NODE (gc_float_node->value), value, &local_error);
+
+	if (local_error != NULL)
+		g_propagate_error (error, local_error);
 }
 
 static double
-arv_gc_float_node_get_min (ArvGcFloat *gc_float)
+arv_gc_float_node_get_min (ArvGcFloat *gc_float, GError **error)
 {
 	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_float);
+	GError *local_error = NULL;
+	double value;
 
-	if (gc_float_node->minimum != NULL)
-		return arv_gc_property_node_get_double (ARV_GC_PROPERTY_NODE (gc_float_node->minimum));
+	if (gc_float_node->minimum == NULL)
+		return -G_MAXFLOAT;
 
-	return -G_MAXFLOAT;
+	value = arv_gc_property_node_get_double (ARV_GC_PROPERTY_NODE (gc_float_node->minimum), &local_error);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return -G_MAXFLOAT;
+	}
+
+	return value;
 }
 
 static double
-arv_gc_float_node_get_max (ArvGcFloat *gc_float)
+arv_gc_float_node_get_max (ArvGcFloat *gc_float, GError **error)
 {
 	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_float);
+	GError *local_error = NULL;
+	double value;
 
-	if (gc_float_node->maximum != NULL)
-		return arv_gc_property_node_get_double (ARV_GC_PROPERTY_NODE (gc_float_node->maximum));
+	if (gc_float_node->maximum == NULL)
+		return G_MAXFLOAT;
 
-	return G_MAXFLOAT;
+	value = arv_gc_property_node_get_double (ARV_GC_PROPERTY_NODE (gc_float_node->maximum), &local_error);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return G_MAXFLOAT;
+	}
+
+	return value;
 }
 
 static double
-arv_gc_float_node_get_inc (ArvGcFloat *gc_float)
+arv_gc_float_node_get_inc (ArvGcFloat *gc_float, GError **error)
 {
 	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_float);
+	GError *local_error = NULL;
+	double value;
 
-	if (gc_float_node->increment != NULL)
-		return arv_gc_property_node_get_double (ARV_GC_PROPERTY_NODE (gc_float_node->increment));
+	if (gc_float_node->increment == NULL)
+		return 1.0;
 
-	return 1;
+	value = arv_gc_property_node_get_double (ARV_GC_PROPERTY_NODE (gc_float_node->increment), &local_error);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return 1.0;
+	}
+
+	return value;
 }
 
 static const char *
-arv_gc_float_node_get_unit (ArvGcFloat *gc_float)
+arv_gc_float_node_get_unit (ArvGcFloat *gc_float, GError **error)
 {
 	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_float);
+	GError *local_error = NULL;
+	const char *string;
 
-	if (gc_float_node->unit != NULL)
-		return arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (gc_float_node->unit));
+	if (gc_float_node->unit == NULL)
+		return NULL;
 
-	return NULL;
+	string = arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (gc_float_node->unit), &local_error);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return NULL;
+	}
+
+	return string;
 }
 
 static void
-arv_gc_float_node_impose_min (ArvGcFloat *gc_float, double minimum)
+arv_gc_float_node_impose_min (ArvGcFloat *gc_float, double minimum, GError **error)
 {
 	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_float);
+	GError *local_error = NULL;
 
-	if (gc_float_node->minimum != NULL)
-		arv_gc_property_node_set_double (ARV_GC_PROPERTY_NODE (gc_float_node->minimum), minimum);
+	if (gc_float_node->minimum == NULL)
+		return;
+
+	arv_gc_property_node_set_double (ARV_GC_PROPERTY_NODE (gc_float_node->minimum), minimum, &local_error);
+
+	if (local_error != NULL)
+		g_propagate_error (error, local_error);
 }
 
 static void
-arv_gc_float_node_impose_max (ArvGcFloat *gc_float, double maximum)
+arv_gc_float_node_impose_max (ArvGcFloat *gc_float, double maximum, GError **error)
 {
 	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_float);
+	GError *local_error = NULL;
 
-	if (gc_float_node->maximum != NULL)
-		arv_gc_property_node_set_double (ARV_GC_PROPERTY_NODE (gc_float_node->maximum), maximum);
+	if (gc_float_node->maximum == NULL)
+		return;
+
+	arv_gc_property_node_set_double (ARV_GC_PROPERTY_NODE (gc_float_node->maximum), maximum, &local_error);
+
+	if (local_error != NULL)
+		g_propagate_error (error, local_error);
 }
 
 static void

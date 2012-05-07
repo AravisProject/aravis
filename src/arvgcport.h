@@ -47,8 +47,8 @@ struct _ArvGcPortClass {
 
 GType 		arv_gc_port_get_type 	(void);
 ArvGcNode *	arv_gc_port_new 	(void);
-void 		arv_gc_port_read	(ArvGcPort *port, void *buffer, guint64 address, guint64 length);
-void 		arv_gc_port_write	(ArvGcPort *port, void *buffer, guint64 address, guint64 length);
+void 		arv_gc_port_read	(ArvGcPort *port, void *buffer, guint64 address, guint64 length, GError **error);
+void 		arv_gc_port_write	(ArvGcPort *port, void *buffer, guint64 address, guint64 length, GError **error);
 
 G_END_DECLS
 
