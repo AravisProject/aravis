@@ -192,8 +192,8 @@ arv_gc_integer_node_set_integer_value (ArvGcInteger *gc_integer, gint64 value, G
 	GError *local_error = NULL;
 
 	if (gc_integer_node->value == NULL)
-		return
-	
+		return;
+
 	arv_gc_property_node_set_int64 (ARV_GC_PROPERTY_NODE (gc_integer_node->value), value, &local_error);
 
 	if (local_error != NULL)
