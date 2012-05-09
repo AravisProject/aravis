@@ -206,6 +206,7 @@ ArvGcPortClass
 <FILE>arvdevice</FILE>
 <TITLE>ArvDevice</TITLE>
 ArvDevice
+ArvDeviceStatus
 arv_device_create_stream
 arv_device_read_memory
 arv_device_write_memory
@@ -213,8 +214,10 @@ arv_device_read_register
 arv_device_write_register
 arv_device_get_genicam_xml
 arv_device_get_genicam
-arv_device_execute_command
 arv_device_get_feature
+arv_device_emit_control_lost_signal
+arv_device_get_status
+arv_device_execute_command
 arv_device_set_string_feature_value
 arv_device_get_string_feature_value
 arv_device_set_integer_feature_value
@@ -223,7 +226,7 @@ arv_device_get_integer_feature_bounds
 arv_device_set_float_feature_value
 arv_device_get_float_feature_value
 arv_device_get_float_feature_bounds
-arv_device_emit_control_lost_signal
+arv_device_get_enumeration_feature_available_values
 <SUBSECTION Standard>
 ARV_DEVICE
 ARV_IS_DEVICE

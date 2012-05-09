@@ -10,7 +10,7 @@ arv_tool_list_features (ArvGc *genicam, const char *feature, gboolean show_descr
 
 	node = arv_gc_get_node (genicam, feature);
 	if (ARV_IS_GC_FEATURE_NODE (node) &&
-	    arv_gc_feature_node_is_implemented (ARV_GC_FEATURE_NODE (node))) {
+	    arv_gc_feature_node_is_implemented (ARV_GC_FEATURE_NODE (node), NULL)) {
 		int i;
 
 		for (i = 0; i < level; i++)
@@ -19,12 +19,12 @@ arv_tool_list_features (ArvGc *genicam, const char *feature, gboolean show_descr
 		printf ("%s: '%s'%s\n",
 			arv_dom_node_get_node_name (ARV_DOM_NODE (node)),
 			feature,
-			arv_gc_feature_node_is_available (ARV_GC_FEATURE_NODE (node)) ? "" : " (Not available)");
+			arv_gc_feature_node_is_available (ARV_GC_FEATURE_NODE (node), NULL) ? "" : " (Not available)");
 
 		if (show_description) {
 			const char *description;
 
-			description = arv_gc_feature_node_get_description (ARV_GC_FEATURE_NODE (node));
+			description = arv_gc_feature_node_get_description (ARV_GC_FEATURE_NODE (node), NULL);
 			if (description)
 				printf ("%s\n", description);
 		}
@@ -43,14 +43,14 @@ arv_tool_list_features (ArvGc *genicam, const char *feature, gboolean show_descr
 
 			childs = arv_gc_enumeration_get_entries (ARV_GC_ENUMERATION (node));
 			for (iter = childs; iter != NULL; iter = iter->next) {
-				if (arv_gc_feature_node_is_implemented (iter->data)) {
+				if (arv_gc_feature_node_is_implemented (iter->data, NULL)) {
 					for (i = 0; i < level + 1; i++)
 						printf ("    ");
 
 					printf ("%s: '%s'%s\n",
 						arv_dom_node_get_node_name (iter->data),
 						arv_gc_feature_node_get_name (iter->data),
-						arv_gc_feature_node_is_available (iter->data) ? "" : " (Not available)");
+						arv_gc_feature_node_is_available (iter->data, NULL) ? "" : " (Not available)");
 				}
 			}
 		}
@@ -99,7 +99,7 @@ arv_tool_execute_command (int argc, char **argv, const char *device_name)
 
 					printf ("%s: '%s'\n", arv_dom_node_get_node_name (ARV_DOM_NODE (node)), argv[i]);
 
-					description = arv_gc_feature_node_get_description (ARV_GC_FEATURE_NODE (node));
+					description = arv_gc_feature_node_get_description (ARV_GC_FEATURE_NODE (node), NULL);
 					if (description)
 						printf ("%s\n", description);
 				}
@@ -136,29 +136,30 @@ arv_tool_execute_command (int argc, char **argv, const char *device_name)
 					printf ("Feature '%s' not found\n", tokens[0]);
 				else {
 					if (ARV_IS_GC_COMMAND (feature)) {
-						arv_gc_command_execute (ARV_GC_COMMAND (feature));
+						arv_gc_command_execute (ARV_GC_COMMAND (feature), NULL);
 						printf ("%s executed\n", tokens[0]);
 					} else {
 						if (tokens[1] != NULL)
 							arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (feature),
-												   tokens[1]);
+												   tokens[1], NULL);
 
 						if (ARV_IS_GC_INTEGER (feature))
 							printf ("%s = %" G_GINT64_FORMAT
 								" (min:%" G_GINT64_FORMAT 
 								"-max:%" G_GINT64_FORMAT
 								")\n", tokens[0],
-								arv_gc_integer_get_value (ARV_GC_INTEGER (feature)),
-								arv_gc_integer_get_min (ARV_GC_INTEGER (feature)),
-								arv_gc_integer_get_max (ARV_GC_INTEGER (feature)));
+								arv_gc_integer_get_value (ARV_GC_INTEGER (feature), NULL),
+								arv_gc_integer_get_min (ARV_GC_INTEGER (feature), NULL),
+								arv_gc_integer_get_max (ARV_GC_INTEGER (feature), NULL));
 						else if (ARV_IS_GC_FLOAT (feature))
 							printf ("%s = %g (min:%g-max:%g)\n", tokens[0],
-								arv_gc_float_get_value (ARV_GC_FLOAT (feature)),
-								arv_gc_float_get_min (ARV_GC_FLOAT (feature)),
-								arv_gc_float_get_max (ARV_GC_FLOAT (feature)));
+								arv_gc_float_get_value (ARV_GC_FLOAT (feature), NULL),
+								arv_gc_float_get_min (ARV_GC_FLOAT (feature), NULL),
+								arv_gc_float_get_max (ARV_GC_FLOAT (feature), NULL));
 						else
 							printf ("%s = %s\n", tokens[0],
-								arv_gc_feature_node_get_value_as_string (ARV_GC_FEATURE_NODE (feature)));
+								arv_gc_feature_node_get_value_as_string (ARV_GC_FEATURE_NODE (feature),
+													 NULL));
 					}
 				}
 			g_strfreev (tokens);

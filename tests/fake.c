@@ -32,20 +32,20 @@ trigger_registers_test (void)
 	node = arv_gc_get_node (genicam, "TriggerModeRegister");
 	g_assert (ARV_IS_GC_NODE (node));
 
-	address = arv_gc_register_get_address (ARV_GC_REGISTER (node));
+	address = arv_gc_register_get_address (ARV_GC_REGISTER (node), NULL);
 	g_assert_cmpint (address, ==, ARV_FAKE_CAMERA_REGISTER_TRIGGER_MODE);
 
 	address = arv_gc_register_get_address (ARV_GC_REGISTER (arv_gc_get_node (genicam,
-										 "TriggerSourceRegister")));
+										 "TriggerSourceRegister")), NULL);
 	g_assert_cmpint (address, ==, ARV_FAKE_CAMERA_REGISTER_TRIGGER_SOURCE);
 
 	address = arv_gc_register_get_address (ARV_GC_REGISTER (arv_gc_get_node (genicam,
-										 "TriggerActivationRegister")));
+										 "TriggerActivationRegister")), NULL);
 	g_assert_cmpint (address, ==, ARV_FAKE_CAMERA_REGISTER_TRIGGER_ACTIVATION);
 
 	arv_device_set_string_feature_value (device, "TriggerSelector", "AcquisitionStart");
 
-	address = arv_gc_register_get_address (ARV_GC_REGISTER (node));
+	address = arv_gc_register_get_address (ARV_GC_REGISTER (node), NULL);
 	g_assert_cmpint (address, ==, ARV_FAKE_CAMERA_REGISTER_TRIGGER_MODE +
 			 ARV_FAKE_CAMERA_REGISTER_ACQUISITION_START_OFFSET);
 
@@ -73,11 +73,11 @@ registers_test (void)
 	node = arv_gc_get_node (genicam, "TestRegister");
 	g_assert (ARV_IS_GC_NODE (node));
 
-	address = arv_gc_register_get_address (ARV_GC_REGISTER (node));
+	address = arv_gc_register_get_address (ARV_GC_REGISTER (node), NULL);
 	g_assert_cmpint (address, ==, 0x1f0);
 
-	arv_gc_integer_set_value (ARV_GC_INTEGER (node), 0x12345678);
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node), 0x12345678, NULL);
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
 	g_assert_cmpint (value, ==, 0x12345678);
 
 	node_a = arv_gc_get_node (genicam, "StructEntry_0_15");
@@ -87,41 +87,41 @@ registers_test (void)
 	node_c = arv_gc_get_node (genicam, "StructEntry_16");
 	g_assert (ARV_IS_GC_NODE (node_c));
 
-	value = arv_gc_register_get_address (ARV_GC_REGISTER (node_a));
+	value = arv_gc_register_get_address (ARV_GC_REGISTER (node_a), NULL);
 	g_assert_cmpint (value, ==, address);
-	value = arv_gc_register_get_address (ARV_GC_REGISTER (node_b));
+	value = arv_gc_register_get_address (ARV_GC_REGISTER (node_b), NULL);
 	g_assert_cmpint (value, ==, address);
-	value = arv_gc_register_get_address (ARV_GC_REGISTER (node_c));
+	value = arv_gc_register_get_address (ARV_GC_REGISTER (node_c), NULL);
 	g_assert_cmpint (value, ==, address);
 
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_a));
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_a), NULL);
 	g_assert_cmpint (value, ==, 0x5678);
 
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_b));
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_b), NULL);
 	g_assert_cmpint (value, ==, 0x1234);
 
-	arv_gc_integer_set_value (ARV_GC_INTEGER (node_b), 0x10101010);
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_b), 0x10101010, NULL);
 
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_a));
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_a), NULL);
 	g_assert_cmpint (value, ==, 0x5678);
 
-	arv_gc_integer_set_value (ARV_GC_INTEGER (node_a), 0xabcdefaa);
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_a), 0xabcdefaa, NULL);
 
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_a));
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_a), NULL);
 	g_assert_cmpint (value, ==, 0xefaa);
 
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_b));
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_b), NULL);
 	g_assert_cmpint (value, ==, 0x1010);
 
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_c));
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_c), NULL);
 	g_assert_cmpint (value, ==, 0x0);
 
-	arv_gc_integer_set_value (ARV_GC_INTEGER (node_c), 0xff);
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_c), 0xff, NULL);
 
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_c));
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_c), NULL);
 	g_assert_cmpint (value, ==, 0x1);
 
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_b));
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_b), NULL);
 	g_assert_cmpint (value, ==, 0x1011);
 
 	g_object_unref (device);

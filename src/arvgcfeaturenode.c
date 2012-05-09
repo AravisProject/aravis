@@ -263,7 +263,7 @@ arv_gc_feature_node_is_implemented (ArvGcFeatureNode *gc_feature_node, GError **
 
 	value = arv_gc_property_node_get_int64 (gc_feature_node->priv->is_implemented, &local_error) != 0;
 
-	if (local_error == NULL) {
+	if (local_error != NULL) {
 		g_propagate_error (error, local_error);
 		return FALSE;
 	}
@@ -285,7 +285,7 @@ arv_gc_feature_node_is_available (ArvGcFeatureNode *gc_feature_node, GError **er
 
 	value = arv_gc_property_node_get_int64 (gc_feature_node->priv->is_available, &local_error) != 0;
 
-	if (local_error == NULL) {
+	if (local_error != NULL) {
 		g_propagate_error (error, local_error);
 		return FALSE;
 	}
@@ -306,7 +306,7 @@ arv_gc_feature_node_is_locked (ArvGcFeatureNode *gc_feature_node, GError **error
 
 	value = arv_gc_property_node_get_int64 (gc_feature_node->priv->is_locked, &local_error) != 0;
 
-	if (local_error == NULL) {
+	if (local_error != NULL) {
 		g_propagate_error (error, local_error);
 		return FALSE;
 	}

@@ -126,9 +126,9 @@ int main(int argc, char *argv[])
 
 			    fprintf (stderr, "Setting %s from %s to %s\n",
 				     arv_option_feature_name,
-				     arv_gc_feature_node_get_value_as_string (feature),
+				     arv_gc_feature_node_get_value_as_string (feature, NULL),
 				     value);
-			    arv_gc_feature_node_set_value_from_string (feature, value);
+			    arv_gc_feature_node_set_value_from_string (feature, value, NULL);
 
 			    g_free (value);
 		    }

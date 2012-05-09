@@ -38,6 +38,7 @@
 #include <arvgcenumeration.h>
 #include <arvgcstring.h>
 #include <arvstream.h>
+#include <arvdebug.h>
 
 enum {
 	ARV_DEVICE_SIGNAL_CONTROL_LOST,
@@ -146,24 +147,10 @@ arv_device_get_genicam_xml (ArvDevice *device, size_t *size)
 	return ARV_DEVICE_GET_CLASS (device)->get_genicam_xml (device, size);
 }
 
-void
-arv_device_execute_command (ArvDevice *device, const char *feature)
-{
-	ArvGc *genicam;
-	ArvGcNode *node;
-
-	genicam = arv_device_get_genicam (device);
-	g_return_if_fail (ARV_IS_GC (genicam));
-
-	node = arv_gc_get_node (genicam, feature);
-	if (ARV_IS_GC_COMMAND (node))
-		arv_gc_command_execute (ARV_GC_COMMAND (node));
-}
-
 /**
  * arv_device_get_feature:
  * @device: a #ArvDevice
- * @feature: a feature name
+ * @feature: feature name
  *
  * Return value: (transfer none): the genicam node corresponding to the feature name, NULL if not found.
  */
@@ -179,119 +166,343 @@ arv_device_get_feature (ArvDevice *device, const char *feature)
 	return arv_gc_get_node (genicam, feature);
 }
 
+static void
+_set_status (ArvDevice *device, ArvDeviceStatus status, const char *message)
+{
+	if (device->status == ARV_DEVICE_STATUS_SUCCESS)
+		return;
+
+	arv_warning_device ("[ArvDevice::set_status] Status changed ('%s')", message);
+
+	g_free (device->status_message);
+	device->status = status;
+	device->status_message = g_strdup (message);
+}
+
+/**
+ * arv_device_execute_command:
+ * @device: a #ArvDevice
+ * @feature: feature name
+ *
+ * Execute a genicam command. If an error occur, this function change the device status.
+ */
+
+void
+arv_device_execute_command (ArvDevice *device, const char *feature)
+{
+	ArvGcNode *node;
+
+	g_return_if_fail (ARV_IS_DEVICE (device));
+
+	node = arv_device_get_feature (device, feature);
+
+	if (ARV_IS_GC_COMMAND (node)) {
+		GError *error = NULL;
+		
+		arv_gc_command_execute (ARV_GC_COMMAND (node), &error);
+
+		if (error != NULL) {
+			_set_status (device, error->code, error->message);
+			g_error_free (error);
+		}
+	} else
+		arv_warning_device ("[ArvDevice::execute_command] Node '%s' is not a command",
+				    feature);
+}
+
 void
 arv_device_set_string_feature_value (ArvDevice *device, const char *feature, const char *value)
 {
 	ArvGcNode *node;
+	GError *error = NULL;
+
+	g_return_if_fail (ARV_IS_DEVICE (device));
 
 	node = arv_device_get_feature (device, feature);
 
 	if (ARV_IS_GC_ENUMERATION (node))
-		arv_gc_enumeration_set_string_value (ARV_GC_ENUMERATION (node), value);
+		arv_gc_enumeration_set_string_value (ARV_GC_ENUMERATION (node), value, &error);
 	else if (ARV_IS_GC_STRING (node))
-		arv_gc_string_set_value (ARV_GC_STRING (node), value);
+		arv_gc_string_set_value (ARV_GC_STRING (node), value, &error);
+	else
+		arv_warning_device ("[ArvDevice::set_string_feature_value] Node '%s' is not a string",
+				    feature);
+
+	if (error != NULL) {
+		_set_status (device, error->code, error->message);
+		g_error_free (error);
+	}
 }
 
 const char *
 arv_device_get_string_feature_value (ArvDevice *device, const char *feature)
 {
 	ArvGcNode *node;
+	GError *error = NULL;
+	const char *string = NULL;
+
+	g_return_val_if_fail (ARV_IS_DEVICE (device), NULL);
 
 	node = arv_device_get_feature (device, feature);
 
 	if (ARV_IS_GC_ENUMERATION (node))
-		return arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (node));
+		string = arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (node), &error);
 	else if (ARV_IS_GC_STRING (node))
-		return arv_gc_string_get_value (ARV_GC_STRING (node));
+		string = arv_gc_string_get_value (ARV_GC_STRING (node), &error);
+	else {
+		arv_warning_device ("[ArvDevice::get_string_feature_value] Node '%s' is not a string",
+				    feature);
+	}
 
-	return NULL;
+	if (error != NULL) {
+		_set_status (device, error->code, error->message);
+		g_error_free (error);
+		return NULL;
+	}
+
+	return string;
 }
 
 void
 arv_device_set_integer_feature_value (ArvDevice *device, const char *feature, gint64 value)
 {
 	ArvGcNode *node;
+	GError *error = NULL;
+
+	g_return_if_fail (ARV_IS_DEVICE (device));
 
 	node = arv_device_get_feature (device, feature);
 
 	if (ARV_IS_GC_INTEGER (node))
-		arv_gc_integer_set_value (ARV_GC_INTEGER (node), value);
+		arv_gc_integer_set_value (ARV_GC_INTEGER (node), value, &error);
 	else if (ARV_IS_GC_ENUMERATION (node))
-		arv_gc_enumeration_set_int_value (ARV_GC_ENUMERATION (node), value);
+		arv_gc_enumeration_set_int_value (ARV_GC_ENUMERATION (node), value, &error);
 	else if (ARV_IS_GC_BOOLEAN (node))
-		arv_gc_boolean_set_value (ARV_GC_BOOLEAN (node), value);
+		arv_gc_boolean_set_value (ARV_GC_BOOLEAN (node), value, &error);
+	else
+		arv_warning_device ("[ArvDevice::set_integer_feature_value] Node '%s' is not an integer",
+				    feature);
+
+	if (error != NULL) {
+		_set_status (device, error->code, error->message);
+		g_error_free (error);
+	}
 }
 
 gint64
 arv_device_get_integer_feature_value (ArvDevice *device, const char *feature)
 {
 	ArvGcNode *node;
+	GError *error = NULL;
+	gint64 value = 0;
+
+	g_return_val_if_fail (ARV_IS_DEVICE (device), 0);
 
 	node = arv_device_get_feature (device, feature);
 
 	if (ARV_IS_GC_INTEGER (node))
-		return arv_gc_integer_get_value (ARV_GC_INTEGER (node));
+		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), &error);
 	else if (ARV_IS_GC_ENUMERATION (node))
-		return arv_gc_enumeration_get_int_value (ARV_GC_ENUMERATION (node));
+		value = arv_gc_enumeration_get_int_value (ARV_GC_ENUMERATION (node), &error);
 	else if (ARV_IS_GC_BOOLEAN (node))
-		return arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node));
+		value = arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node), &error);
+	else
+		arv_warning_device ("[ArvDevice::get_integer_feature_value] Node '%s' is not an integer",
+				    feature);
 
-	return 0;
+	if (error != NULL) {
+		_set_status (device, error->code, error->message);
+		g_error_free (error);
+		return 0;
+	}
+
+	return value;
 }
 
 void
 arv_device_get_integer_feature_bounds (ArvDevice *device, const char *feature, gint64 *min, gint64 *max)
 {
 	ArvGcNode *node;
+	GError *error = NULL;
+
+	if (min != NULL)
+		*min = -G_MAXINT64;
+	if (max != NULL)
+		*max = G_MAXINT64;
+
+	g_return_if_fail (ARV_IS_DEVICE (device));
 
 	node = arv_device_get_feature (device, feature);
 
 	if (ARV_IS_GC_INTEGER (node)) {
+		gint64 minimum;
+		gint64 maximum;
+
+		minimum = arv_gc_integer_get_min (ARV_GC_INTEGER (node), &error);
+
+		if (error != NULL) {
+			_set_status (device, error->code, error->message);
+			g_error_free (error);
+
+			return;
+		}
+
+		maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node), &error);
+
+		if (error != NULL) {
+			_set_status (device, error->code, error->message);
+			g_error_free (error);
+
+			return;
+		}
+
 		if (min != NULL)
-			*min = arv_gc_integer_get_min (ARV_GC_INTEGER (node));
+			*min = minimum;
 		if (max != NULL)
-			*max = arv_gc_integer_get_max (ARV_GC_INTEGER (node));
-		return;
-	}
+			*max = maximum;
+	} else
+		arv_warning_device ("[ArvDevice::get_integer_feature_bounds] Node '%s' is not an integer",
+				    feature);
 }
 
 void
 arv_device_set_float_feature_value (ArvDevice *device, const char *feature, double value)
 {
 	ArvGcNode *node;
+	GError *error = NULL;
+
+	g_return_if_fail (ARV_IS_DEVICE (device));
 
 	node = arv_device_get_feature (device, feature);
 
 	if (ARV_IS_GC_FLOAT (node))
-		arv_gc_float_set_value (ARV_GC_FLOAT (node), value);
+		arv_gc_float_set_value (ARV_GC_FLOAT (node), value, &error);
+	else 
+		arv_warning_device ("[ArvDevice::set_float_feature_value] Node '%s' is not a float",
+				    feature);
+
+	if (error != NULL) {
+		_set_status (device, error->code, error->message);
+		g_error_free (error);
+	}
 }
 
 double
 arv_device_get_float_feature_value (ArvDevice *device, const char *feature)
 {
 	ArvGcNode *node;
+	GError *error = NULL;
+	double value = 0.0;
+
+	g_return_val_if_fail (ARV_IS_DEVICE (device), 0.0);
 
 	node = arv_device_get_feature (device, feature);
 
 	if (ARV_IS_GC_FLOAT (node))
-		return arv_gc_float_get_value (ARV_GC_FLOAT (node));
+		value = arv_gc_float_get_value (ARV_GC_FLOAT (node), &error);
+	else 
+		arv_warning_device ("[ArvDevice::get_float_feature_value] Node '%s' is not a float",
+				    feature);
 
-	return 0.0;
+	if (error != NULL) {
+		_set_status (device, error->code, error->message);
+		g_error_free (error);
+		return 0.0;
+	}
+
+	return value;
 }
 
 void
 arv_device_get_float_feature_bounds (ArvDevice *device, const char *feature, double *min, double *max)
 {
 	ArvGcNode *node;
+	GError *error = NULL;
+
+	if (min != NULL)
+		*min = G_MINDOUBLE;
+	if (max != NULL)
+		*max = G_MAXDOUBLE;
+
+	g_return_if_fail (ARV_IS_DEVICE (device));
 
 	node = arv_device_get_feature (device, feature);
 
 	if (ARV_IS_GC_FLOAT (node)) {
+		double minimum;
+		double maximum;
+
+		minimum = arv_gc_float_get_min (ARV_GC_FLOAT (node), &error);
+
+		if (error != NULL) {
+			_set_status (device, error->code, error->message);
+			g_error_free (error);
+
+			return;
+		}
+
+		maximum = arv_gc_float_get_max (ARV_GC_FLOAT (node), &error);
+
+		if (error != NULL) {
+			_set_status (device, error->code, error->message);
+			g_error_free (error);
+
+			return;
+		}
+
 		if (min != NULL)
-			*min = arv_gc_float_get_min (ARV_GC_FLOAT (node));
+			*min = minimum;
 		if (max != NULL)
-			*max = arv_gc_float_get_max (ARV_GC_FLOAT (node));
+			*max = maximum;
+	} else
+		arv_warning_device ("[ArvDevice::get_float_feature_bounds] Node '%s' is not a float",
+				    feature);
+}
+
+gint64 *
+arv_device_get_enumeration_feature_available_values (ArvDevice *device, const char *feature, guint *n_values)
+{
+	ArvGcNode *node;
+	GError *error = NULL;
+	gint64 *values = NULL;
+
+	if (n_values != NULL)
+		*n_values = 0;
+
+	g_return_val_if_fail (ARV_IS_DEVICE (device), NULL);
+
+	node = arv_device_get_feature (device, feature);
+
+	if (ARV_IS_GC_ENUMERATION (node))
+		values = arv_gc_enumeration_get_available_int_values (ARV_GC_ENUMERATION (node), n_values, &error);
+	else
+		arv_warning_device ("[ArvDevice::get_enumeration_feature_available_values] Node '%s' is not an enumeration",
+				    feature);
+
+	if (error != NULL) {
+		_set_status (device, error->code, error->message);
+		g_error_free (error);
+
+		return NULL;
 	}
+
+	return values;
+}
+
+ArvDeviceStatus
+arv_device_get_status (ArvDevice *device)
+{
+	ArvDeviceStatus status;
+	
+	g_return_val_if_fail (ARV_IS_DEVICE (device), ARV_DEVICE_STATUS_UNKNOWN);
+
+	status = device->status;
+	
+	g_free (device->status_message);
+	device->status = ARV_DEVICE_STATUS_SUCCESS;
+	device->status_message = NULL;
+
+	return status;
 }
 
 void
@@ -305,11 +516,17 @@ arv_device_emit_control_lost_signal (ArvDevice *device)
 static void
 arv_device_init (ArvDevice *device)
 {
+	device->status = ARV_DEVICE_STATUS_SUCCESS;
+	device->status_message = NULL;
 }
 
 static void
 arv_device_finalize (GObject *object)
 {
+	ArvDevice *device = ARV_DEVICE (object);
+
+	g_free (device->status_message);
+
 	parent_class->finalize (object);
 }
 

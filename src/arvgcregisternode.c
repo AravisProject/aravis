@@ -307,6 +307,7 @@ _update_cache_size (ArvGcRegisterNode *gc_register_node, GError **error)
 	gint64 length;
 
 	length = _get_length (gc_register_node, &local_error);
+
 	if (local_error != NULL) {
 		g_propagate_error (error, local_error);
 		return;

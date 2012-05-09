@@ -94,76 +94,76 @@ main (int argc, char **argv)
 
 		if (arv_option_width > 0) {
 			node = arv_gc_get_node (genicam, "Width");
-			arv_gc_integer_set_value (ARV_GC_INTEGER (node), arv_option_width);
+			arv_gc_integer_set_value (ARV_GC_INTEGER (node), arv_option_width, NULL);
 		}
 		if (arv_option_height > 0) {
 			node = arv_gc_get_node (genicam, "Height");
-			arv_gc_integer_set_value (ARV_GC_INTEGER (node), arv_option_height);
+			arv_gc_integer_set_value (ARV_GC_INTEGER (node), arv_option_height, NULL);
 		}
 		if (arv_option_horizontal_binning > 0) {
 			node = arv_gc_get_node (genicam, "BinningHorizontal");
-			arv_gc_integer_set_value (ARV_GC_INTEGER (node), arv_option_horizontal_binning);
+			arv_gc_integer_set_value (ARV_GC_INTEGER (node), arv_option_horizontal_binning, NULL);
 		}
 		if (arv_option_vertical_binning > 0) {
 			node = arv_gc_get_node (genicam, "BinningVertical");
-			arv_gc_integer_set_value (ARV_GC_INTEGER (node), arv_option_vertical_binning);
+			arv_gc_integer_set_value (ARV_GC_INTEGER (node), arv_option_vertical_binning, NULL);
 		}
 
 		node = arv_gc_get_node (genicam, "DeviceVendorName");
-		v_string = arv_gc_string_get_value (ARV_GC_STRING (node));
+		v_string = arv_gc_string_get_value (ARV_GC_STRING (node), NULL);
 		g_print ("vendor        = %s\n", v_string);
 		node = arv_gc_get_node (genicam, "DeviceModelName");
-		v_string = arv_gc_string_get_value (ARV_GC_STRING (node));
+		v_string = arv_gc_string_get_value (ARV_GC_STRING (node), NULL);
 		g_print ("model         = %s\n", v_string);
 		node = arv_gc_get_node (genicam, "DeviceID");
-		v_string = arv_gc_string_get_value (ARV_GC_STRING (node));
+		v_string = arv_gc_string_get_value (ARV_GC_STRING (node), NULL);
 		g_print ("device id     = %s\n", v_string);
 		node = arv_gc_get_node (genicam, "SensorWidth");
-		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
+		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
 		g_print ("sensor width  = %d\n", value);
 		node = arv_gc_get_node (genicam, "SensorHeight");
-		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
+		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
 		g_print ("sensor height = %d\n", value);
 		node = arv_gc_get_node (genicam, "Width");
-		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
-		maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node));
+		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
+		maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node), NULL);
 		g_print ("image width   = %d (max:%d)\n", value, maximum);
 		node = arv_gc_get_node (genicam, "Height");
-		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
-		maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node));
+		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
+		maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node), NULL);
 		g_print ("image height  = %d (max:%d)\n", value, maximum);
 		node = arv_gc_get_node (genicam, "BinningHorizontal");
-		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
-		maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node));
-		minimum = arv_gc_integer_get_min (ARV_GC_INTEGER (node));
+		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
+		maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node), NULL);
+		minimum = arv_gc_integer_get_min (ARV_GC_INTEGER (node), NULL);
 		g_print ("horizontal binning  = %d (min:%d - max:%d)\n", value, minimum, maximum);
 		node = arv_gc_get_node (genicam, "BinningVertical");
-		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
-		maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node));
-		minimum = arv_gc_integer_get_min (ARV_GC_INTEGER (node));
+		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
+		maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node), NULL);
+		minimum = arv_gc_integer_get_min (ARV_GC_INTEGER (node), NULL);
 		g_print ("vertical binning    = %d (min:%d - max:%d)\n", value, minimum, maximum);
 		node = arv_gc_get_node (genicam, "ExposureTimeAbs");
-		v_double = arv_gc_float_get_value (ARV_GC_FLOAT (node));
-		v_double_min = arv_gc_float_get_min (ARV_GC_FLOAT (node));
-		v_double_max = arv_gc_float_get_max (ARV_GC_FLOAT (node));
+		v_double = arv_gc_float_get_value (ARV_GC_FLOAT (node), NULL);
+		v_double_min = arv_gc_float_get_min (ARV_GC_FLOAT (node), NULL);
+		v_double_max = arv_gc_float_get_max (ARV_GC_FLOAT (node), NULL);
 		g_print ("exposure            = %g (min:%g - max:%g)\n", v_double, v_double_min, v_double_max);
 		node = arv_gc_get_node (genicam, "ExposureAuto");
-		v_string = arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (node));
+		v_string = arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (node), NULL);
 		g_print ("exposure auto mode  = %s\n", v_string);
 		node = arv_gc_get_node (genicam, "GainRaw");
-		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
-		maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node));
-		minimum = arv_gc_integer_get_min (ARV_GC_INTEGER (node));
+		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
+		maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node), NULL);
+		minimum = arv_gc_integer_get_min (ARV_GC_INTEGER (node), NULL);
 		g_print ("gain                = %d (min:%d - max:%d)\n", value, minimum, maximum);
 		node = arv_gc_get_node (genicam, "GainAuto");
-		v_string = arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (node));
+		v_string = arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (node), NULL);
 		g_print ("gain auto mode      = %s\n", v_string);
 		node = arv_gc_get_node (genicam, "TriggerSelector");
-		v_string = arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (node));
+		v_string = arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (node), NULL);
 		g_print ("trigger selector    = %s\n", v_string);
 		node = arv_gc_get_node (genicam, "ReverseX");
 		if (node != NULL) {
-			v_boolean = arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node));
+			v_boolean = arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node), NULL);
 			g_print ("reverse x          = %s\n", v_boolean ? "TRUE" : "FALSE");
 		}
 
@@ -175,7 +175,7 @@ main (int argc, char **argv)
 				      NULL);
 
 		node = arv_gc_get_node (genicam, "PayloadSize");
-		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node));
+		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
 		g_print ("payload size  = %d (0x%x)\n", value, value);
 
 		for (i = 0; i < 30; i++)
@@ -191,7 +191,7 @@ main (int argc, char **argv)
 					ARV_GVBS_USER_DEFINED_NAME_SIZE, memory_buffer);
 
 		node = arv_gc_get_node (genicam, "AcquisitionStart");
-		arv_gc_command_execute (ARV_GC_COMMAND (node));
+		arv_gc_command_execute (ARV_GC_COMMAND (node), NULL);
 
 		signal (SIGINT, set_cancel);
 
@@ -215,7 +215,7 @@ main (int argc, char **argv)
 		g_print ("Underruns         = %Lu\n", (unsigned long long) n_underruns);
 
 		node = arv_gc_get_node (genicam, "AcquisitionStop");
-		arv_gc_command_execute (ARV_GC_COMMAND (node));
+		arv_gc_command_execute (ARV_GC_COMMAND (node), NULL);
 
 		g_object_unref (stream);
 		g_object_unref (device);
