@@ -26,7 +26,7 @@ missing
 mkinstalldirs
 stamp*
 autom4te*
-manugen
+manugen*
 tmp-introspect*
 make*.out
 genicam.xml
