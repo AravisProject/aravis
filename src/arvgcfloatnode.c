@@ -195,7 +195,6 @@ arv_gc_float_node_set_float_value (ArvGcFloat *gc_float, double value, GError **
 	if (gc_float_node->value == NULL)
 		return;
 
-
 	arv_gc_property_node_set_double (ARV_GC_PROPERTY_NODE (gc_float_node->value), value, &local_error);
 
 	if (local_error != NULL)
