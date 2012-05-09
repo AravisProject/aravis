@@ -206,8 +206,10 @@ arv_gv_interface_send_discover_packet (ArvGvInterface *gv_interface)
 				  infos->broadcast_address,
 				  (const char *) packet, size,
 				  NULL, &error);
-		if (error != NULL)
-			g_message ("error: %s", error->message);
+		if (error != NULL) {
+			arv_warning_interface ("[ArvGVInterface::send_discover_packet] Error: %s", error->message);
+			g_error_free (error);
+		}
 		arv_gv_interface_socket_set_broadcast (infos->socket, FALSE);
 	}
 
