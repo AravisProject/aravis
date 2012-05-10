@@ -74,6 +74,8 @@ typedef struct {
 
 	guint gain_update_event;
 	guint exposure_update_event;
+
+	gulong video_window_xid;
 } ArvViewer;
 
 double
@@ -386,7 +388,6 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 {
 	GtkTreeIter iter;
 	GtkTreeModel *list_store;
-	GdkWindow *window;
 	GstCaps *caps;
 	GstElement *ffmpegcolorspace;
 	GstElement *ximagesink;
@@ -397,7 +398,6 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	int width;
 	int height;
 	unsigned int i;
-	gulong window_xid;
 	double frame_rate;
 	gint gain_min, gain_max;
 	gboolean auto_gain, auto_exposure;
@@ -524,9 +524,8 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 
 	gst_element_set_state (viewer->pipeline, GST_STATE_PLAYING);
 
-	window = gtk_widget_get_window (viewer->drawing_area);
-	window_xid = GDK_WINDOW_XID (window);
-	gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (ximagesink), window_xid);
+	g_assert (viewer->video_window_xid != 0);
+	gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (ximagesink), viewer->video_window_xid);
 
 	g_signal_connect (viewer->stream, "new-buffer", G_CALLBACK (arv_viewer_new_buffer_cb), viewer);
 }
@@ -550,6 +549,12 @@ arv_viewer_quit_cb (GtkWidget *widget, ArvViewer *viewer)
 	arv_viewer_free (viewer);
 
 	gtk_main_quit ();
+}
+
+static void
+drawing_area_realize_cb (GtkWidget * widget, ArvViewer *viewer)
+{
+	viewer->video_window_xid = GDK_WINDOW_XID (gtk_widget_get_window (widget));
 }
 
 ArvViewer *
@@ -588,6 +593,8 @@ arv_viewer_new (void)
 	gtk_cell_layout_set_attributes (GTK_CELL_LAYOUT (viewer->camera_combo_box), cell, "text", 0, NULL);
 
 	gtk_widget_set_no_show_all (viewer->trigger_combo_box, TRUE);
+
+	g_signal_connect (viewer->drawing_area, "realize", G_CALLBACK (drawing_area_realize_cb), viewer);
 
 	gtk_widget_show_all (viewer->main_window);
 
