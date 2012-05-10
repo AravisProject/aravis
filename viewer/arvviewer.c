@@ -525,7 +525,7 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	gst_element_set_state (viewer->pipeline, GST_STATE_PLAYING);
 
 	g_assert (viewer->video_window_xid != 0);
-	gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (ximagesink), viewer->video_window_xid);
+	gst_x_overlay_set_window_handle (GST_X_OVERLAY (ximagesink), viewer->video_window_xid);
 
 	g_signal_connect (viewer->stream, "new-buffer", G_CALLBACK (arv_viewer_new_buffer_cb), viewer);
 }
