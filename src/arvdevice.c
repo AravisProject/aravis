@@ -49,6 +49,12 @@ static guint arv_device_signals[ARV_DEVICE_SIGNAL_LAST] = {0};
 
 static GObjectClass *parent_class = NULL;
 
+GQuark
+arv_device_error_quark (void)
+{
+	return g_quark_from_static_string ("arv-device-error-quark");
+}
+
 /**
  * arv_device_create_stream:
  * @device: a #ArvDevice
@@ -69,40 +75,44 @@ arv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *u
 }
 
 gboolean
-arv_device_read_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer)
+arv_device_read_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer, GError **error)
 {
 	g_return_val_if_fail (ARV_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (buffer != NULL, FALSE);
 	g_return_val_if_fail (size > 0, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-	return ARV_DEVICE_GET_CLASS (device)->read_memory (device, address, size, buffer);
+	return ARV_DEVICE_GET_CLASS (device)->read_memory (device, address, size, buffer, error);
 }
 
 gboolean
-arv_device_write_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer)
+arv_device_write_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer, GError **error)
 {
 	g_return_val_if_fail (ARV_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (buffer != NULL, FALSE);
 	g_return_val_if_fail (size > 0, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-	return ARV_DEVICE_GET_CLASS (device)->write_memory (device, address, size, buffer);
+	return ARV_DEVICE_GET_CLASS (device)->write_memory (device, address, size, buffer, error);
 }
 
 gboolean
-arv_device_read_register (ArvDevice *device, guint32 address, guint32 *value)
+arv_device_read_register (ArvDevice *device, guint32 address, guint32 *value, GError **error)
 {
 	g_return_val_if_fail (ARV_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (value != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-	return ARV_DEVICE_GET_CLASS (device)->read_register (device, address, value);
+	return ARV_DEVICE_GET_CLASS (device)->read_register (device, address, value, error);
 }
 
 gboolean
-arv_device_write_register (ArvDevice *device, guint32 address, guint32 value)
+arv_device_write_register (ArvDevice *device, guint32 address, guint32 value, GError **error)
 {
 	g_return_val_if_fail (ARV_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-	return ARV_DEVICE_GET_CLASS (device)->write_register (device, address, value);
+	return ARV_DEVICE_GET_CLASS (device)->write_register (device, address, value, error);
 }
 
 /**

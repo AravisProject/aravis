@@ -125,10 +125,10 @@ arv_tool_execute_command (int argc, char **argv, const char *device_name)
 						arv_device_write_register (device,
 									   address,
 									   g_ascii_strtoll (tokens[1],
-											    NULL, 0));
+											    NULL, 0), NULL); /* TODO error handling */
 					}
 
-					arv_device_read_register (device, address, &value);
+					arv_device_read_register (device, address, &value, NULL); /* TODO error handling */
 
 					printf ("R[0x%08x] = 0x%08x\n",
 						address, value);

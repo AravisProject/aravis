@@ -205,8 +205,10 @@ ArvGcPortClass
 <SECTION>
 <FILE>arvdevice</FILE>
 <TITLE>ArvDevice</TITLE>
+ARV_DEVICE_ERROR
 ArvDevice
 ArvDeviceStatus
+arv_device_error_quark
 arv_device_create_stream
 arv_device_read_memory
 arv_device_write_memory

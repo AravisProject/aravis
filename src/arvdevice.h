@@ -28,6 +28,8 @@
 
 G_BEGIN_DECLS
 
+#define ARV_DEVICE_ERROR arv_device_error_quark()
+
 /**
  * ArvDeviceStatus:
  * @ARV_DEVICE_STATUS_UNKNOWN: unknown status
@@ -67,10 +69,10 @@ struct _ArvDeviceClass {
 	const char *	(*get_genicam_xml)	(ArvDevice *device, size_t *size);
 	ArvGc *		(*get_genicam)		(ArvDevice *device);
 
-	gboolean	(*read_memory)		(ArvDevice *device, guint32 address, guint32 size, void *buffer);
-	gboolean	(*write_memory)		(ArvDevice *device, guint32 address, guint32 size, void *buffer);
-	gboolean	(*read_register)	(ArvDevice *device, guint32 address, guint32 *value);
-	gboolean	(*write_register)	(ArvDevice *device, guint32 address, guint32 value);
+	gboolean	(*read_memory)		(ArvDevice *device, guint32 address, guint32 size, void *buffer, GError **error);
+	gboolean	(*write_memory)		(ArvDevice *device, guint32 address, guint32 size, void *buffer, GError **error);
+	gboolean	(*read_register)	(ArvDevice *device, guint32 address, guint32 *value, GError **error);
+	gboolean	(*write_register)	(ArvDevice *device, guint32 address, guint32 value, GError **error);
 
 	/* signals */
 	void		(*control_lost)		(ArvDevice *device);
@@ -78,13 +80,14 @@ struct _ArvDeviceClass {
 
 GType arv_device_get_type (void);
 
+GQuark 		arv_device_error_quark 		(void);
+
 ArvStream *	arv_device_create_stream	(ArvDevice *device, ArvStreamCallback callback, void *user_data);
-gboolean	arv_device_read_memory 		(ArvDevice *device, guint32 address, guint32 size,
-						 void *buffer);
-gboolean	arv_device_write_memory	 	(ArvDevice *device, guint32 address, guint32 size,
-						 void *buffer);
-gboolean 	arv_device_read_register	(ArvDevice *device, guint32 address, guint32 *value);
-gboolean	arv_device_write_register 	(ArvDevice *device, guint32 address, guint32 value);
+
+gboolean	arv_device_read_memory 		(ArvDevice *device, guint32 address, guint32 size, void *buffer, GError **error);
+gboolean	arv_device_write_memory	 	(ArvDevice *device, guint32 address, guint32 size, void *buffer, GError **error);
+gboolean 	arv_device_read_register	(ArvDevice *device, guint32 address, guint32 *value, GError **error);
+gboolean	arv_device_write_register 	(ArvDevice *device, guint32 address, guint32 value, GError **error);
 
 const char * 	arv_device_get_genicam_xml 		(ArvDevice *device, size_t *size);
 ArvGc *		arv_device_get_genicam			(ArvDevice *device);
