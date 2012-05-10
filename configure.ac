@@ -51,7 +51,7 @@ AC_ARG_ENABLE(cpp_test,
 PKG_PROG_PKG_CONFIG([0.14])
 
 ARAVIS_REQUIREMENTS="glib-2.0 >= 2.26 gobject-2.0 gio-2.0 libxml-2.0 gthread-2.0"
-ARAVIS_GSTREAMER_REQUIREMENTS="gstreamer-base-0.10 >= 0.10 gstreamer-app-0.10 gstreamer-interfaces-0.10"
+ARAVIS_GSTREAMER_REQUIREMENTS="gstreamer-base-0.10 >= 0.10.31 gstreamer-app-0.10 gstreamer-interfaces-0.10"
 
 
 PKG_CHECK_MODULES(ARAVIS, [$ARAVIS_REQUIREMENTS])
