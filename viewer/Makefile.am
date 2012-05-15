@@ -20,7 +20,11 @@ arv_viewer_@ARAVIS_API_VERSION@_SOURCES = arvviewer.c	\
 
 arv_viewer_@ARAVIS_API_VERSION@_LDADD = $(ARAVIS_VIEWER_LIBS) $(top_builddir)/src/libaravis-@ARAVIS_API_VERSION@.la
 arv_viewer_@ARAVIS_API_VERSION@dir = $(aravis_datadir)
-arv_viewer_@ARAVIS_API_VERSION@_DATA = arv-viewer.ui
+if ARAVIS_WITH_GTK3
+arv_viewer_@ARAVIS_API_VERSION@_DATA = arv-viewer-3.ui
+else
+arv_viewer_@ARAVIS_API_VERSION@_DATA = arv-viewer-2.ui
+endif
 
 EXTRA_DIST += $(arv_viewer_@ARAVIS_API_VERSION@_DATA)
 

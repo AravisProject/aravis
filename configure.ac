@@ -67,6 +67,7 @@ if test "x$enable_gtk3" = "xyes"; then
 else
 	ARAVIS_VIEWER_REQUIREMENTS+=" gtk+-2.0 >= 2.12"
 fi
+AM_CONDITIONAL(ARAVIS_WITH_GTK3, test "x$enable_gtk3" = "xyes")
 
 build_viewer=no
 if test "x$enable_viewer" = "xyes"; then

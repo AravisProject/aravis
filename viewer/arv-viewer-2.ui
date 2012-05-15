@@ -18,10 +18,10 @@
             <property name="spacing">6</property>
             <child>
               <object class="GtkButton" id="snapshot_button">
+                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
                 <child>
                   <object class="GtkImage" id="image1">
                     <property name="visible">True</property>
@@ -182,6 +182,7 @@
                 </child>
                 <child>
                   <object class="GtkHScale" id="exposure_hscale">
+                    <property name="width_request">200</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="draw_value">False</property>
@@ -205,6 +206,9 @@
                     <property name="top_attach">2</property>
                     <property name="bottom_attach">3</property>
                   </packing>
+                </child>
+                <child>
+                  <placeholder/>
                 </child>
                 <child>
                   <object class="GtkSpinButton" id="exposure_spinbutton">
@@ -253,10 +257,10 @@
                 <child>
                   <object class="GtkToggleButton" id="auto_exposure_togglebutton">
                     <property name="label" translatable="yes">Auto</property>
+                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="use_action_appearance">False</property>
                   </object>
                   <packing>
                     <property name="top_attach">1</property>
@@ -267,19 +271,16 @@
                 <child>
                   <object class="GtkToggleButton" id="auto_gain_togglebutton">
                     <property name="label" translatable="yes">Auto</property>
+                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="use_action_appearance">False</property>
                   </object>
                   <packing>
                     <property name="top_attach">2</property>
                     <property name="bottom_attach">3</property>
                     <property name="x_options">GTK_FILL</property>
                   </packing>
-                </child>
-                <child>
-                  <placeholder/>
                 </child>
               </object>
             </child>
