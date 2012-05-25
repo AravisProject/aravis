@@ -29,6 +29,7 @@
 #include <arvenumtypes.h>
 #include <stdlib.h>
 #include <math.h>
+#include <glib/gi18n-lib.h>
 
 static char *arv_viewer_option_debug_domains = NULL;
 static gboolean arv_viewer_option_auto_socket_buffer = FALSE;
@@ -658,6 +659,10 @@ main (int argc,char *argv[])
 	ArvViewer *viewer;
 	GOptionContext *context;
 	GError *error = NULL;
+
+	bindtextdomain (GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR);
+	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+	textdomain (GETTEXT_PACKAGE);
 
 	g_thread_init (NULL);
 

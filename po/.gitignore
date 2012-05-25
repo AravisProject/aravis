@@ -1,2 +1,4 @@
 POTFILES
 *.gmo
+notexist
+*.pot

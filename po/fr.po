@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aravis master\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-12-04 22:53+0100\n"
+"POT-Creation-Date: 2012-05-25 22:58+0200\n"
 "PO-Revision-Date: 2010-12-04 22:56+0100\n"
 "Last-Translator: Emmanuel Pacaud <emmanuel@gnome.org>\n"
 "Language-Team: Emmanuel Pacaud <emmanuel@gnome.org>\n"
@@ -16,3 +16,38 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
+#: ../viewer/arv-viewer-2.ui.h:1 ../viewer/arv-viewer-3.ui.h:1
+msgid "Aravis"
+msgstr "Aravis"
+
+#: ../viewer/arv-viewer-2.ui.h:2 ../viewer/arv-viewer-3.ui.h:2
+msgid "Frame rate:"
+msgstr "Fréquence"
+
+#: ../viewer/arv-viewer-2.ui.h:3 ../viewer/arv-viewer-3.ui.h:5
+msgid "Exposure:"
+msgstr "Exposition"
+
+#: ../viewer/arv-viewer-2.ui.h:4 ../viewer/arv-viewer-3.ui.h:6
+msgid "Gain:"
+msgstr "Gain"
+
+#: ../viewer/arv-viewer-2.ui.h:5 ../viewer/arv-viewer-3.ui.h:3
+msgid "Hz"
+msgstr "Hz"
+
+#: ../viewer/arv-viewer-2.ui.h:6 ../viewer/arv-viewer-3.ui.h:7
+msgid "µs"
+msgstr "µs"
+
+#: ../viewer/arv-viewer-2.ui.h:7 ../viewer/arv-viewer-3.ui.h:4
+msgid "Auto"
+msgstr "Auto"
+
+#: ../viewer/arv-viewer-2.ui.h:8 ../viewer/arv-viewer-3.ui.h:8
+msgid "Settings"
+msgstr "Paramètres"
+
+#: ../viewer/arv-viewer-3.ui.h:9
+msgid "Save a snapshot into image folder"
+msgstr "Sauvegarde d'une capture dans le dossier images"
