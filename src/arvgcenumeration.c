@@ -220,7 +220,7 @@ arv_gc_enumeration_get_available_int_values (ArvGcEnumeration *enumeration, guin
 	*n_values = 0;
 
 	g_return_val_if_fail (ARV_IS_GC_ENUMERATION (enumeration), NULL);
-	g_return_val_if_fail (error == NULL || *error != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	entries = arv_gc_enumeration_get_entries (enumeration);
 
