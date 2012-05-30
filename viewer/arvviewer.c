@@ -577,7 +577,10 @@ arv_viewer_new (void)
 					"arv-viewer-2.ui",
 #endif
 					NULL);
-	gtk_builder_add_from_file (builder, ui_filename, NULL);
+
+	if (!gtk_builder_add_from_file (builder, ui_filename, NULL))
+		g_error ("The user interface file is missing ('%s')", ui_filename);
+
 	g_free (ui_filename);
 
 	viewer->camera_combo_box = GTK_WIDGET (gtk_builder_get_object (builder, "camera_combobox"));
