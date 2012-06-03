@@ -155,47 +155,6 @@ arv_dom_parser_characters (void *user_data, const xmlChar *ch, int len)
 	}
 }
 
-#if 0
-static xmlEntityPtr
-arv_dom_parser_get_entity (void *user_data, const xmlChar *name)
-{
-	ArvDomSaxParserState *state = user_data;
-	xmlEntity *entity;
-	const char *utf8;
-
-	entity = g_hash_table_lookup (state->entities, name);
-	if (entity != NULL)
-		return entity;
-
-	utf8 = lsm_mathml_entity_get_utf8 ((char *) name);
-	if (utf8 != NULL) {
-		entity = xmlNewEntity (NULL, name, XML_INTERNAL_GENERAL_ENTITY, NULL, NULL, (xmlChar *) utf8);
-
-		g_hash_table_insert (state->entities, (char *) name, entity);
-
-		return entity;
-	}
-
-	return xmlGetPredefinedEntity(name);
-}
-
-void
-arv_dom_parser_declare_entity (void * user_data, const xmlChar * name, int type,
-			       const xmlChar * publicId, const xmlChar * systemId,
-			       xmlChar * content)
-{
-	ArvDomSaxParserState *state = user_data;
-
-	if (content != NULL) {
-		xmlEntity *entity;
-
-		entity = xmlNewEntity (NULL, name, type, publicId, systemId, content);
-
-		g_hash_table_insert (state->entities, (char *) name, entity);
-	}
-}
-#endif
-
 #if 1
 static void
 arv_dom_parser_warning (void *user_data, const char *msg, ...)
@@ -239,10 +198,6 @@ static xmlSAXHandler sax_handler = {
 	.startElement = arv_dom_parser_start_element,
 	.endElement = arv_dom_parser_end_element,
 	.characters = arv_dom_parser_characters
-#if 0
-	.getEntity = arv_dom_parser_get_entity,
-	.entityDecl = arv_dom_parser_declare_entity
-#endif
 };
 
 static GQuark
