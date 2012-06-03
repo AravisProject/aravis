@@ -137,9 +137,25 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 /* ArvDomElement implementation */
 
 static gboolean
-arv_gc_property_node_can_append_child (ArvDomNode *self, ArvDomNode *child)
+_can_append_child (ArvDomNode *self, ArvDomNode *child)
 {
 	return ARV_IS_DOM_TEXT (child);
+}
+
+static void
+_post_new_child (ArvDomNode *parent, ArvDomNode *child)
+{
+	ArvGcPropertyNode *property_node = ARV_GC_PROPERTY_NODE (parent);
+
+	property_node->value_data_up_to_date = FALSE;
+}
+
+static void
+_pre_remove_child (ArvDomNode *parent, ArvDomNode *child)
+{
+	ArvGcPropertyNode *property_node = ARV_GC_PROPERTY_NODE (parent);
+
+	property_node->value_data_up_to_date = FALSE;
 }
 
 /* ArvDomElement implementation */
@@ -157,51 +173,78 @@ arv_gc_property_node_get_attribute (ArvDomElement *self, const char *name)
 
 /* ArvGcPropertyNode implementation */
 
-static ArvDomNode *
-arv_gc_property_node_get_value_node (ArvGcPropertyNode *property_node)
+static const char *
+_get_value_data (ArvGcPropertyNode *property_node)
 {
-	ArvDomNode *child;
-	ArvDomNode *value_node;
+	ArvDomNode *dom_node = ARV_DOM_NODE (property_node);
+
+	if (!property_node->value_data_up_to_date) {
+		ArvDomNode *iter;
+		GString *string = g_string_new (NULL);
+
+		for (iter = dom_node->first_child; iter != NULL; iter = iter->next_sibling)
+			g_string_append (string, arv_dom_character_data_get_data (ARV_DOM_CHARACTER_DATA (iter)));
+		g_free (property_node->value_data);
+		property_node->value_data = g_strdup (string->str);
+		g_string_free (string, FALSE);
+		property_node->value_data_up_to_date = TRUE;
+	}
+
+	return property_node->value_data;
+}
+
+static void
+_set_value_data (ArvGcPropertyNode *property_node, const char *data)
+{
+	ArvDomNode *dom_node = ARV_DOM_NODE (property_node);
+
+	if (dom_node->first_child != NULL) {
+		ArvDomNode *iter;
+
+		arv_dom_character_data_set_data (ARV_DOM_CHARACTER_DATA (dom_node->first_child), data);
+		for (iter = dom_node->first_child->next_sibling; iter != NULL; iter = iter->next_sibling)
+			arv_dom_character_data_set_data (ARV_DOM_CHARACTER_DATA (iter), "");
+	}
+
+	g_free (property_node->value_data);
+	property_node->value_data = g_strdup (data);
+	property_node->value_data_up_to_date = TRUE;
+}
+
+static ArvDomNode *
+_get_pvalue_node (ArvGcPropertyNode *property_node)
+{
+	ArvDomNode *pvalue_node;
 	const char *node_name;
 	ArvGc *genicam;
 
-	child = arv_dom_node_get_first_child (ARV_DOM_NODE (property_node));
-	if (child == NULL)
+	if (property_node->type < ARV_GC_PROPERTY_NODE_TYPE_P_UNKNONW)
 		return NULL;
 
-	if (property_node->type < ARV_GC_PROPERTY_NODE_TYPE_P_UNKNONW)
-		return ARV_DOM_NODE (child);
-
-	node_name = arv_dom_character_data_get_data (ARV_DOM_CHARACTER_DATA (child));
+	node_name = _get_value_data (property_node);
 	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (property_node));
-	value_node = ARV_DOM_NODE (arv_gc_get_node (genicam, node_name));
+	pvalue_node = ARV_DOM_NODE (arv_gc_get_node (genicam, node_name));
 
-	return value_node;
+	return pvalue_node;
 }
 
 const char *
 arv_gc_property_node_get_string (ArvGcPropertyNode *node, GError **error)
 {
-	ArvDomNode *value_node;
+	ArvDomNode *pvalue_node;
 
 	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (node), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
-	value_node = arv_gc_property_node_get_value_node (node);
-	if (value_node == NULL) {
-		arv_warning_genicam ("[GcPropertyNode::get_string] Invalid node '%s'",
-				   arv_dom_node_get_node_name (ARV_DOM_NODE (node)));
-		return NULL;
-	}
+	pvalue_node = _get_pvalue_node (node);
+	if (pvalue_node == NULL)
+		return _get_value_data (node);
 
-	if (ARV_IS_DOM_TEXT (value_node))
-		return arv_dom_character_data_get_data (ARV_DOM_CHARACTER_DATA (value_node));
-
-	if (ARV_IS_GC_STRING (value_node)) {
+	if (ARV_IS_GC_STRING (pvalue_node)) {
 		GError *local_error = NULL;
 		const char *value;
 
-		value = arv_gc_string_get_value (ARV_GC_STRING (value_node), &local_error);
+		value = arv_gc_string_get_value (ARV_GC_STRING (pvalue_node), &local_error);
 
 		if (local_error != NULL)
 			g_propagate_error (error, local_error);
@@ -210,7 +253,7 @@ arv_gc_property_node_get_string (ArvGcPropertyNode *node, GError **error)
 	}
 
 	arv_warning_genicam ("[GcPropertyNode::get_string] Invalid node '%s'",
-			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (value_node)));
+			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (pvalue_node)));
 
 	return NULL;
 }
@@ -218,27 +261,21 @@ arv_gc_property_node_get_string (ArvGcPropertyNode *node, GError **error)
 void
 arv_gc_property_node_set_string (ArvGcPropertyNode *node, const char *string, GError **error)
 {
-	ArvDomNode *value_node;
+	ArvDomNode *pvalue_node;
 
 	g_return_if_fail (ARV_IS_GC_PROPERTY_NODE (node));
 	g_return_if_fail (error == NULL || *error == NULL);
 
-	value_node = arv_gc_property_node_get_value_node (node);
-	if (value_node == NULL) {
-		arv_warning_genicam ("[GcPropertyNode::set_string] Invalid node '%s'",
-				   arv_dom_node_get_node_name (ARV_DOM_NODE (node)));
+	pvalue_node = _get_pvalue_node (node);
+	if (pvalue_node == NULL) {
+		_set_value_data (node, string);
 		return;
 	}
 
-	if (ARV_IS_DOM_TEXT (value_node)) {
-		arv_dom_character_data_set_data (ARV_DOM_CHARACTER_DATA (value_node), string);
-		return;
-	}
-
-	if (ARV_IS_GC_STRING (value_node)) {
+	if (ARV_IS_GC_STRING (pvalue_node)) {
 		GError *local_error = NULL;
 
-		arv_gc_string_set_value (ARV_GC_STRING (value_node), string, &local_error);
+		arv_gc_string_set_value (ARV_GC_STRING (pvalue_node), string, &local_error);
 
 		if (local_error != NULL)
 			g_propagate_error (error, local_error);
@@ -247,33 +284,27 @@ arv_gc_property_node_set_string (ArvGcPropertyNode *node, const char *string, GE
 	}
 
 	arv_warning_genicam ("[GcPropertyNode::set_string] Invalid linked node '%s'",
-			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (value_node)));
+			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (pvalue_node)));
 }
 
 gint64
 arv_gc_property_node_get_int64 (ArvGcPropertyNode *node, GError **error)
 {
-	ArvDomNode *value_node;
+	ArvDomNode *pvalue_node;
 
 	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (node), 0);
 	g_return_val_if_fail (error == NULL || *error == NULL, 0);
 
-	value_node = arv_gc_property_node_get_value_node (node);
-	if (value_node == NULL) {
-		arv_warning_genicam ("[GcPropertyNode::get_int64] Invalid node '%s'",
-				     arv_dom_node_get_node_name (ARV_DOM_NODE (node)));
-		return 0;
-	}
-
-	if (ARV_IS_DOM_TEXT (value_node))
-		return g_ascii_strtoll (arv_dom_character_data_get_data (ARV_DOM_CHARACTER_DATA (value_node)), NULL, 0);
+	pvalue_node = _get_pvalue_node (node);
+	if (pvalue_node == NULL)
+		return g_ascii_strtoll (_get_value_data (node), NULL, 0);
 
 
-	if (ARV_IS_GC_INTEGER (value_node)) {
+	if (ARV_IS_GC_INTEGER (pvalue_node)) {
 		GError *local_error = NULL;
 		gint64 value;
 
-		value = arv_gc_integer_get_value (ARV_GC_INTEGER (value_node), &local_error);
+		value = arv_gc_integer_get_value (ARV_GC_INTEGER (pvalue_node), &local_error);
 
 		if (local_error != NULL)
 			g_propagate_error (error, local_error);
@@ -282,7 +313,7 @@ arv_gc_property_node_get_int64 (ArvGcPropertyNode *node, GError **error)
 	}
 
 	arv_warning_genicam ("[GcPropertyNode::get_int64] Invalid node '%s'",
-			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (value_node)));
+			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (pvalue_node)));
 
 	return 0;
 }
@@ -290,31 +321,25 @@ arv_gc_property_node_get_int64 (ArvGcPropertyNode *node, GError **error)
 void
 arv_gc_property_node_set_int64 (ArvGcPropertyNode *node, gint64 v_int64, GError **error)
 {
-	ArvDomNode *value_node;
+	ArvDomNode *pvalue_node;
 
 	g_return_if_fail (ARV_IS_GC_PROPERTY_NODE (node));
 	g_return_if_fail (error == NULL || *error == NULL);
 
-	value_node = arv_gc_property_node_get_value_node (node);
-	if (value_node == NULL) {
-		arv_warning_genicam ("[GcPropertyNode::set_int64] Invalid node '%s'",
-				     arv_dom_node_get_node_name (ARV_DOM_NODE (node)));
-		return;
-	}
-
-	if (ARV_IS_DOM_TEXT (value_node)) {
+	pvalue_node = _get_pvalue_node (node);
+	if (pvalue_node == NULL) {
 		char *buffer;
 
 		buffer = g_strdup_printf ("%" G_GINT64_FORMAT, v_int64);
-		arv_dom_character_data_set_data (ARV_DOM_CHARACTER_DATA (value_node), buffer);
+		_set_value_data (node, buffer);
 		g_free (buffer);
 		return ;
 	}
 
-	if (ARV_IS_GC_INTEGER (value_node)) {
+	if (ARV_IS_GC_INTEGER (pvalue_node)) {
 		GError *local_error = NULL;
 
-		arv_gc_integer_set_value (ARV_GC_INTEGER (value_node), v_int64, &local_error);
+		arv_gc_integer_set_value (ARV_GC_INTEGER (pvalue_node), v_int64, &local_error);
 
 		if (local_error != NULL)
 			g_propagate_error (error, local_error);
@@ -323,33 +348,27 @@ arv_gc_property_node_set_int64 (ArvGcPropertyNode *node, gint64 v_int64, GError 
 	}
 
 	arv_warning_genicam ("[GcPropertyNode::set_int64] Invalid linked node '%s'",
-			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (value_node)));
+			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (pvalue_node)));
 }
 
 double
 arv_gc_property_node_get_double (ArvGcPropertyNode *node, GError **error)
 {
-	ArvDomNode *value_node;
+	ArvDomNode *pvalue_node;
 
 	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (node), 0.0);
 	g_return_val_if_fail (error == NULL || *error == NULL, 0.0);
 
-	value_node = arv_gc_property_node_get_value_node (node);
-	if (value_node == NULL) {
-		arv_warning_genicam ("[GcPropertyNode::get_double] Invalid node '%s'",
-				   arv_dom_node_get_node_name (ARV_DOM_NODE (node)));
-		return 0.0;
-	}
-
-	if (ARV_IS_DOM_TEXT (value_node))
-		return g_ascii_strtod (arv_dom_character_data_get_data (ARV_DOM_CHARACTER_DATA (value_node)), NULL);
+	pvalue_node = _get_pvalue_node (node);
+	if (pvalue_node == NULL)
+		return g_ascii_strtod (_get_value_data (node), NULL);
 
 
-	if (ARV_IS_GC_FLOAT (value_node)) {
+	if (ARV_IS_GC_FLOAT (pvalue_node)) {
 		GError *local_error = NULL;
 		double value;
 
-		value = arv_gc_float_get_value (ARV_GC_FLOAT (value_node), &local_error);
+		value = arv_gc_float_get_value (ARV_GC_FLOAT (pvalue_node), &local_error);
 
 		if (local_error != NULL)
 			g_propagate_error (error, local_error);
@@ -358,7 +377,7 @@ arv_gc_property_node_get_double (ArvGcPropertyNode *node, GError **error)
 	}
 
 	arv_warning_genicam ("[GcPropertyNode::get_double] Invalid node '%s'",
-			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (value_node)));
+			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (pvalue_node)));
 
 	return 0.0;
 }
@@ -366,30 +385,24 @@ arv_gc_property_node_get_double (ArvGcPropertyNode *node, GError **error)
 void
 arv_gc_property_node_set_double (ArvGcPropertyNode *node, double v_double, GError **error)
 {
-	ArvDomNode *value_node;
+	ArvDomNode *pvalue_node;
 
 	g_return_if_fail (ARV_IS_GC_PROPERTY_NODE (node));
 	g_return_if_fail (error == NULL || *error == NULL);
 
-	value_node = arv_gc_property_node_get_value_node (node);
-	if (value_node == NULL) {
-		arv_warning_genicam ("[GcPropertyNode::set_double] Invalid node '%s'",
-				     arv_dom_node_get_node_name (ARV_DOM_NODE (node)));
-		return;
-	}
-
-	if (ARV_IS_DOM_TEXT (value_node)) {
+	pvalue_node = _get_pvalue_node (node);
+	if (pvalue_node == NULL) {
 		char buffer[G_ASCII_DTOSTR_BUF_SIZE];
 
 		g_ascii_dtostr (buffer, G_ASCII_DTOSTR_BUF_SIZE, v_double);
-		arv_dom_character_data_set_data (ARV_DOM_CHARACTER_DATA (value_node), buffer);
+		_set_value_data (node, buffer);
 		return ;
 	}
 
-	if (ARV_IS_GC_FLOAT (value_node)) {
+	if (ARV_IS_GC_FLOAT (pvalue_node)) {
 		GError *local_error = NULL;
 
-		arv_gc_float_set_value (ARV_GC_FLOAT (value_node), v_double, &local_error);
+		arv_gc_float_set_value (ARV_GC_FLOAT (pvalue_node), v_double, &local_error);
 
 		if (local_error != NULL)
 			g_propagate_error (error, local_error);
@@ -398,7 +411,7 @@ arv_gc_property_node_set_double (ArvGcPropertyNode *node, double v_double, GErro
 	}
 
 	arv_warning_genicam ("[GcPropertyNode::set_double] Invalid linked node '%s'",
-			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (value_node)));
+			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (pvalue_node)));
 }
 
 ArvGcPropertyNodeType
@@ -420,14 +433,12 @@ ArvGcNode *
 arv_gc_property_node_get_linked_node (ArvGcPropertyNode *node)
 {
 	ArvGc *genicam;
-	ArvDomNode *child;
 
 	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (node), NULL);
 	g_return_val_if_fail (node->type > ARV_GC_PROPERTY_NODE_TYPE_P_UNKNONW, NULL);
 
 	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (node));
-	child = arv_dom_node_get_first_child (ARV_DOM_NODE (node));
-	return arv_gc_get_node (genicam, arv_dom_character_data_get_data (ARV_DOM_CHARACTER_DATA (child)));
+	return arv_gc_get_node (genicam, _get_value_data (node));
 }
 
 static ArvGcNode *
@@ -673,12 +684,18 @@ static void
 arv_gc_property_node_init (ArvGcPropertyNode *gc_property_node)
 {
 	gc_property_node->type = 0;
+	gc_property_node->value_data = NULL;
+	gc_property_node->value_data_up_to_date = FALSE;
 }
 
 static void
 arv_gc_property_node_finalize (GObject *object)
 {
+	ArvGcPropertyNode *property_node = ARV_GC_PROPERTY_NODE (object);
+
 	parent_class->finalize (object);
+
+	g_free (property_node->value_data);
 }
 
 static void
@@ -692,7 +709,9 @@ arv_gc_property_node_class_init (ArvGcPropertyNodeClass *this_class)
 
 	object_class->finalize = arv_gc_property_node_finalize;
 	dom_node_class->get_node_name = arv_gc_property_node_get_node_name;
-	dom_node_class->can_append_child = arv_gc_property_node_can_append_child;
+	dom_node_class->can_append_child = _can_append_child;
+	dom_node_class->post_new_child = _post_new_child;
+	dom_node_class->pre_remove_child = _pre_remove_child;
 	dom_element_class->set_attribute = arv_gc_property_node_set_attribute;
 	dom_element_class->get_attribute = arv_gc_property_node_get_attribute;
 }

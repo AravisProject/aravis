@@ -89,6 +89,9 @@ struct _ArvGcPropertyNode {
 	ArvGcNode base;
 
 	ArvGcPropertyNodeType	type;
+
+	gboolean value_data_up_to_date;
+	char *value_data;
 };
 
 struct _ArvGcPropertyNodeClass {
