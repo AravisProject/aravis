@@ -149,11 +149,11 @@
 	</IntReg>
 
 	<IntSwissKnife Name="IntSwissKnifeTestEntity">
-		<Formula>0x1234</Formula>
+		<Formula>(0x12345678 &amp; 0x10305070)</Formula>
 	</IntSwissKnife>
 
 	<IntSwissKnife Name="IntSwissKnifeTest">
-		<Formula>(0x12340000 &amp;&amp; 0x00005678)</Formula>
+		<Formula>0x1234</Formula>
 	</IntSwissKnife>
 
 	<Integer Name="TLParamsLocked">

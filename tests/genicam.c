@@ -215,7 +215,7 @@ swiss_knife_test (void)
 	g_assert (ARV_IS_GC_SWISS_KNIFE (node));
 
 	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
-	g_assert_cmpint (value, ==, 0x12345678);
+	g_assert_cmpint (value, ==, 0x10305070);
 
 	g_object_unref (device);
 }
