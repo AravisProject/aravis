@@ -148,8 +148,12 @@
 		<Endianess>BigEndian</Endianess>
 	</IntReg>
 
-	<IntSwissKnife Name="IntSwissKnifeTest">
+	<IntSwissKnife Name="IntSwissKnifeTestEntity">
 		<Formula>0x1234</Formula>
+	</IntSwissKnife>
+
+	<IntSwissKnife Name="IntSwissKnifeTest">
+		<Formula>(0x12340000 &amp;&amp; 0x00005678)</Formula>
 	</IntSwissKnife>
 
 	<Integer Name="TLParamsLocked">
