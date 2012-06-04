@@ -230,9 +230,7 @@ arv_device_set_string_feature_value (ArvDevice *device, const char *feature, con
 
 	node = arv_device_get_feature (device, feature);
 
-	if (ARV_IS_GC_ENUMERATION (node))
-		arv_gc_enumeration_set_string_value (ARV_GC_ENUMERATION (node), value, &error);
-	else if (ARV_IS_GC_STRING (node))
+	if (ARV_IS_GC_STRING (node))
 		arv_gc_string_set_value (ARV_GC_STRING (node), value, &error);
 	else
 		arv_warning_device ("[ArvDevice::set_string_feature_value] Node '%s' is not a string",
@@ -255,9 +253,7 @@ arv_device_get_string_feature_value (ArvDevice *device, const char *feature)
 
 	node = arv_device_get_feature (device, feature);
 
-	if (ARV_IS_GC_ENUMERATION (node))
-		string = arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (node), &error);
-	else if (ARV_IS_GC_STRING (node))
+	if (ARV_IS_GC_STRING (node))
 		string = arv_gc_string_get_value (ARV_GC_STRING (node), &error);
 	else {
 		arv_warning_device ("[ArvDevice::get_string_feature_value] Node '%s' is not a string",
@@ -285,10 +281,6 @@ arv_device_set_integer_feature_value (ArvDevice *device, const char *feature, gi
 
 	if (ARV_IS_GC_INTEGER (node))
 		arv_gc_integer_set_value (ARV_GC_INTEGER (node), value, &error);
-	else if (ARV_IS_GC_ENUMERATION (node))
-		arv_gc_enumeration_set_int_value (ARV_GC_ENUMERATION (node), value, &error);
-	else if (ARV_IS_GC_BOOLEAN (node))
-		arv_gc_boolean_set_value (ARV_GC_BOOLEAN (node), value, &error);
 	else
 		arv_warning_device ("[ArvDevice::set_integer_feature_value] Node '%s' is not an integer",
 				    feature);
@@ -312,10 +304,6 @@ arv_device_get_integer_feature_value (ArvDevice *device, const char *feature)
 
 	if (ARV_IS_GC_INTEGER (node))
 		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), &error);
-	else if (ARV_IS_GC_ENUMERATION (node))
-		value = arv_gc_enumeration_get_int_value (ARV_GC_ENUMERATION (node), &error);
-	else if (ARV_IS_GC_BOOLEAN (node))
-		value = arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node), &error);
 	else
 		arv_warning_device ("[ArvDevice::get_integer_feature_value] Node '%s' is not an integer",
 				    feature);
