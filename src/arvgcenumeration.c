@@ -362,6 +362,8 @@ arv_gc_enumeration_class_init (ArvGcEnumerationClass *this_class)
 	gc_feature_node_class->get_value_as_string = arv_gc_enumeration_get_value_as_string;
 }
 
+/* ArvGcInteger interface implementation */
+
 static gint64
 arv_gc_enumeration_get_integer_value (ArvGcInteger *gc_integer, GError **error)
 {
