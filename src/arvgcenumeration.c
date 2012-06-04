@@ -27,6 +27,8 @@
 
 #include <arvgcenumeration.h>
 #include <arvgcenumentry.h>
+#include <arvgcinteger.h>
+#include <arvgcstring.h>
 #include <arvgc.h>
 #include <arvmisc.h>
 #include <arvdebug.h>
@@ -360,4 +362,73 @@ arv_gc_enumeration_class_init (ArvGcEnumerationClass *this_class)
 	gc_feature_node_class->get_value_as_string = arv_gc_enumeration_get_value_as_string;
 }
 
-G_DEFINE_TYPE (ArvGcEnumeration, arv_gc_enumeration, ARV_TYPE_GC_FEATURE_NODE)
+static gint64
+arv_gc_enumeration_get_integer_value (ArvGcInteger *gc_integer, GError **error)
+{
+	ArvGcEnumeration *gc_enumeration = ARV_GC_ENUMERATION (gc_integer);
+
+	return arv_gc_enumeration_get_int_value (gc_enumeration, error);
+}
+
+static void
+arv_gc_enumeration_set_integer_value (ArvGcInteger *gc_integer, gint64 value, GError **error)
+{
+	ArvGcEnumeration *gc_enumeration = ARV_GC_ENUMERATION (gc_integer);
+
+	return arv_gc_enumeration_set_int_value (gc_enumeration, value, error);
+}
+
+static void
+arv_gc_enumeration_integer_interface_init (ArvGcIntegerInterface *interface)
+{
+	interface->get_value = arv_gc_enumeration_get_integer_value;
+	interface->set_value = arv_gc_enumeration_set_integer_value;
+}
+
+static const char *
+arv_gc_enumeration_get_str_value (ArvGcString *gc_string, GError **error)
+{
+	ArvGcEnumeration *gc_enumeration = ARV_GC_ENUMERATION (gc_string);
+
+	return arv_gc_enumeration_get_string_value (gc_enumeration, error);
+}
+
+static void
+arv_gc_enumeration_set_str_value (ArvGcString *gc_string, const char *value, GError **error)
+{
+	ArvGcEnumeration *gc_enumeration = ARV_GC_ENUMERATION (gc_string);
+
+	arv_gc_enumeration_set_string_value (gc_enumeration, value, error);
+}
+
+static gint64
+arv_gc_enumeration_get_max_string_length (ArvGcString *gc_string, GError **error)
+{
+	ArvGcEnumeration *gc_enumeration = ARV_GC_ENUMERATION (gc_string);
+	const GSList *entries, *iter;
+	gint64 length, max_length = 0;
+
+	entries = arv_gc_enumeration_get_entries (gc_enumeration);
+	for (iter = entries; iter != NULL; iter = iter->next) {
+		const char *name;
+
+		name = arv_gc_feature_node_get_name (iter->data);
+		length = name != NULL ? strlen (name) : 0;
+		if (length > max_length)
+			length = max_length;
+	}
+
+	return max_length;
+}
+
+static void
+arv_gc_enumeration_string_interface_init (ArvGcStringInterface *interface)
+{
+	interface->get_value = arv_gc_enumeration_get_str_value;
+	interface->set_value = arv_gc_enumeration_set_str_value;
+	interface->get_max_length = arv_gc_enumeration_get_max_string_length;
+}
+
+G_DEFINE_TYPE_WITH_CODE (ArvGcEnumeration, arv_gc_enumeration, ARV_TYPE_GC_FEATURE_NODE,
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_enumeration_integer_interface_init)
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_STRING, arv_gc_enumeration_string_interface_init))
