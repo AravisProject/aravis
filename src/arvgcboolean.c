@@ -26,6 +26,7 @@
  */
 
 #include <arvgcboolean.h>
+#include <arvgcinteger.h>
 #include <arvgc.h>
 #include <arvmisc.h>
 #include <string.h>
@@ -236,4 +237,28 @@ arv_gc_boolean_class_init (ArvGcBooleanClass *this_class)
 
 /* ArvGcInteger interface implementation */
 
-G_DEFINE_TYPE (ArvGcBoolean, arv_gc_boolean, ARV_TYPE_GC_FEATURE_NODE)
+static gint64
+arv_gc_boolean_get_integer_value (ArvGcInteger *gc_integer, GError **error)
+{
+	ArvGcBoolean *gc_boolean = ARV_GC_BOOLEAN (gc_integer);
+
+	return arv_gc_boolean_get_value (gc_boolean, error) ? 1 : 0 ;
+}
+
+static void
+arv_gc_boolean_set_integer_value (ArvGcInteger *gc_integer, gint64 value, GError **error)
+{
+	ArvGcBoolean *gc_boolean = ARV_GC_BOOLEAN (gc_integer);
+
+	return arv_gc_boolean_set_value (gc_boolean, value != 0, error);
+}
+
+static void
+arv_gc_boolean_integer_interface_init (ArvGcIntegerInterface *interface)
+{
+	interface->get_value = arv_gc_boolean_get_integer_value;
+	interface->set_value = arv_gc_boolean_set_integer_value;
+}
+
+G_DEFINE_TYPE_WITH_CODE (ArvGcBoolean, arv_gc_boolean, ARV_TYPE_GC_FEATURE_NODE,
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_boolean_integer_interface_init))
