@@ -1,5 +1,6 @@
 #include <glib.h>
 #include <arv.h>
+#include <string.h>
 
 static void
 integer_test (void)
@@ -65,6 +66,7 @@ boolean_test (void)
 	ArvGcNode *node_b;
 	gboolean v_boolean;
 	const char *v_string;
+	gint64 v_int64;
 
 	device = arv_fake_device_new ("TEST0");
 	g_assert (ARV_IS_FAKE_DEVICE (device));
@@ -74,9 +76,13 @@ boolean_test (void)
 
 	node = arv_gc_get_node (genicam, "RWBoolean");
 	g_assert (ARV_IS_GC_BOOLEAN (node));
+	g_assert (ARV_IS_GC_INTEGER (node));
 
 	v_boolean = arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node), NULL);
 	g_assert_cmpint (v_boolean, ==, TRUE);
+
+	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
+	g_assert_cmpint (v_int64, ==, 1);
 
 	v_string = arv_gc_feature_node_get_value_as_string (ARV_GC_FEATURE_NODE (node), NULL);
 	g_assert_cmpstr (v_string, ==, "true");
@@ -84,6 +90,9 @@ boolean_test (void)
 	arv_gc_boolean_set_value (ARV_GC_BOOLEAN (node), 0, NULL);
 	v_boolean = arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node), NULL);
 	g_assert_cmpint (v_boolean, ==, FALSE);
+
+	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
+	g_assert_cmpint (v_int64, ==, 0);
 
 	v_string = arv_gc_feature_node_get_value_as_string (ARV_GC_FEATURE_NODE (node), NULL);
 	g_assert_cmpstr (v_string, ==, "false");
@@ -169,6 +178,7 @@ enumeration_test (void)
 	gint64 v_int64;
 	gint64 *values;
 	guint n_values;
+	const char *v_string;
 
 	device = arv_fake_device_new ("TEST0");
 	g_assert (ARV_IS_FAKE_DEVICE (device));
@@ -178,6 +188,8 @@ enumeration_test (void)
 
 	node = arv_gc_get_node (genicam, "Enumeration");
 	g_assert (ARV_IS_GC_ENUMERATION (node));
+	g_assert (ARV_IS_GC_INTEGER (node));
+	g_assert (ARV_IS_GC_STRING (node));
 
 	v_int64 = arv_gc_enumeration_get_int_value (ARV_GC_ENUMERATION (node), NULL);
 	g_assert_cmpint (v_int64, ==, 0);
@@ -185,8 +197,29 @@ enumeration_test (void)
 	values = arv_gc_enumeration_get_available_int_values (ARV_GC_ENUMERATION (node), &n_values, NULL);
 	g_assert_cmpint (n_values, ==, 2);
 	g_assert (values != NULL);
-
 	g_free (values);
+
+	arv_gc_enumeration_set_string_value (ARV_GC_ENUMERATION (node), "Entry1", NULL);
+
+	v_int64 = arv_gc_enumeration_get_int_value (ARV_GC_ENUMERATION (node), NULL);
+	g_assert_cmpint (v_int64, ==, 1);
+
+	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
+	g_assert_cmpint (v_int64, ==, 1);
+
+	v_string = arv_gc_string_get_value (ARV_GC_STRING (node), NULL);
+	g_assert_cmpstr (v_string, ==, "Entry1");
+
+	arv_gc_string_set_value (ARV_GC_STRING (node), "Entry0", NULL);
+
+	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
+	g_assert_cmpint (v_int64, ==, 0);
+
+	v_string = arv_gc_string_get_value (ARV_GC_STRING (node), NULL);
+	g_assert_cmpstr (v_string, ==, "Entry0");
+
+	v_int64 = arv_gc_string_get_max_length (ARV_GC_STRING (node), NULL);
+	g_assert_cmpint (v_int64, ==, strlen ("EntryNotImplemented"));
 
 	g_object_unref (device);
 }

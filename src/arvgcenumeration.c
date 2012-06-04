@@ -417,7 +417,7 @@ arv_gc_enumeration_get_max_string_length (ArvGcString *gc_string, GError **error
 		name = arv_gc_feature_node_get_name (iter->data);
 		length = name != NULL ? strlen (name) : 0;
 		if (length > max_length)
-			length = max_length;
+			max_length = length;
 	}
 
 	return max_length;
