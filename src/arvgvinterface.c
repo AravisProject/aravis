@@ -300,6 +300,18 @@ arv_gv_interface_receive_hello_packet (ArvGvInterface *gv_interface)
 	} while (1);
 }
 
+static GInetAddress *
+_device_infos_to_ginetaddress (ArvGvInterfaceDeviceInfos *device_infos)
+{
+	GInetAddress *device_address;
+
+	device_address = g_inet_address_new_from_bytes
+		(&device_infos->discovery_data[ARV_GVBS_CURRENT_IP_ADDRESS_OFFSET],
+		 G_SOCKET_FAMILY_IPV4);
+
+	return device_address;
+}
+
 static void
 arv_gv_interface_update_device_list (ArvInterface *interface, GArray *device_ids)
 {
@@ -317,12 +329,16 @@ arv_gv_interface_update_device_list (ArvInterface *interface, GArray *device_ids
 	g_hash_table_iter_init (&iter, gv_interface->priv->devices);
 	while (g_hash_table_iter_next (&iter, &key, &value)) {
 		ArvInterfaceDeviceIds *ids;
+		GInetAddress *device_address;
 		ArvGvInterfaceDeviceInfos *infos = value;
 
 		ids = g_new0 (ArvInterfaceDeviceIds, 1);
 
 		ids->device = g_strdup (key);
-                ids->physical = g_strdup (infos->mac_string);
+		ids->physical = g_strdup (infos->mac_string);
+		device_address = _device_infos_to_ginetaddress (infos);
+		ids->address = g_inet_address_to_string (device_address);
+		g_object_unref (device_address);
 
 		g_array_append_val (device_ids, ids);
 	}
@@ -354,9 +370,7 @@ arv_gv_interface_open_device (ArvInterface *interface, const char *device_id)
 	if (device_infos == NULL)
 		return NULL;
 
-	device_address = g_inet_address_new_from_bytes
-		(&device_infos->discovery_data[ARV_GVBS_CURRENT_IP_ADDRESS_OFFSET],
-		 G_SOCKET_FAMILY_IPV4);
+	device_address = _device_infos_to_ginetaddress (device_infos);
 	device = arv_gv_device_new (device_infos->interface_address, device_address);
 	g_object_unref (device_address);
 

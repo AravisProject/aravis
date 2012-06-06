@@ -31,6 +31,7 @@
 
 #define ARV_FAKE_DEVICE_ID "Fake_1"
 #define ARV_FAKE_PHYSICAL_ID "Fake_1"
+#define ARV_FAKE_ADDRESS "0.0.0.0"
 
 static GObjectClass *parent_class = NULL;
 
@@ -49,6 +50,7 @@ arv_fake_interface_update_device_list (ArvInterface *interface, GArray *device_i
 
 	ids->device = g_strdup (ARV_FAKE_DEVICE_ID);
 	ids->physical = g_strdup (ARV_FAKE_PHYSICAL_ID);
+	ids->address = g_strdup (ARV_FAKE_ADDRESS);
 
 	g_array_append_val (device_ids, ids);
 }
