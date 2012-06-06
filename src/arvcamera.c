@@ -74,6 +74,12 @@ struct _ArvCameraPrivate {
 	ArvCameraSeries series;
 };
 
+enum
+{
+	PROP_0,
+	PROP_CAMERA_DEVICE
+};
+
 /**
  * arv_camera_create_stream:
  * @camera: a #ArvCamera
@@ -847,19 +853,55 @@ arv_camera_new (const char *name)
 {
 	ArvCamera *camera;
 	ArvDevice *device;
-	ArvCameraVendor vendor;
-	ArvCameraSeries series;
-	const char *vendor_name;
-	const char *model_name;
 
 	device = arv_open_device (name);
 
 	if (!ARV_IS_DEVICE (device))
 		return NULL;
 
-	camera = g_object_new (ARV_TYPE_CAMERA, NULL);
-	camera->priv->device = device;
-	camera->priv->genicam = arv_device_get_genicam (device);
+	camera = g_object_new (ARV_TYPE_CAMERA, "device", device, NULL);
+
+	return camera;
+}
+
+static void
+arv_camera_init (ArvCamera *camera)
+{
+	camera->priv = G_TYPE_INSTANCE_GET_PRIVATE (camera, ARV_TYPE_CAMERA, ArvCameraPrivate);
+}
+
+static void
+arv_camera_finalize (GObject *object)
+{
+	ArvCamera *camera = ARV_CAMERA (object);
+
+	g_object_unref (camera->priv->device);
+
+	parent_class->finalize (object);
+}
+
+static GObject *
+arv_camera_constructor (GType gtype, guint n_properties, GObjectConstructParam *properties)
+{
+	GObject *object;
+	ArvCamera *camera;
+	ArvCameraVendor vendor;
+	ArvCameraSeries series;
+	const char *vendor_name;
+	const char *model_name;
+
+	/* always call parent constructor */
+	object = parent_class->constructor(gtype, n_properties, properties);
+
+	camera = ARV_CAMERA (object);
+
+	if (!camera->priv->device)
+		camera->priv->device = arv_open_device (NULL);
+
+	if (!ARV_IS_DEVICE (camera->priv->device))
+		return NULL;
+
+	camera->priv->genicam = arv_device_get_genicam (camera->priv->device);
 
 	vendor_name = arv_camera_get_vendor_name (camera);
 	model_name = arv_camera_get_model_name (camera);
@@ -883,23 +925,39 @@ arv_camera_new (const char *name)
 	camera->priv->vendor = vendor;
 	camera->priv->series = series;
 
-	return camera;
+    return object;
 }
 
 static void
-arv_camera_init (ArvCamera *camera)
-{
-	camera->priv = G_TYPE_INSTANCE_GET_PRIVATE (camera, ARV_TYPE_CAMERA, ArvCameraPrivate);
-}
-
-static void
-arv_camera_finalize (GObject *object)
+arv_camera_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
 	ArvCamera *camera = ARV_CAMERA (object);
 
-	g_object_unref (camera->priv->device);
+	switch (prop_id)
+	{
+		case PROP_CAMERA_DEVICE:
+			camera->priv->device = g_value_get_object (value);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+			break;
+	}
+}
 
-	parent_class->finalize (object);
+static void
+arv_camera_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+{
+	ArvCamera *camera = ARV_CAMERA (object);
+
+	switch (prop_id)
+	{
+		case PROP_CAMERA_DEVICE:
+            g_value_set_object (value, camera->priv->device);
+            break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+			break;
+	}
 }
 
 static void
@@ -912,6 +970,17 @@ arv_camera_class_init (ArvCameraClass *camera_class)
 	parent_class = g_type_class_peek_parent (camera_class);
 
 	object_class->finalize = arv_camera_finalize;
+	object_class->constructor = arv_camera_constructor;
+	object_class->set_property = arv_camera_set_property;
+	object_class->get_property = arv_camera_get_property;
+
+	g_object_class_install_property (object_class,
+									 PROP_CAMERA_DEVICE,
+									 g_param_spec_object ("device",
+														  "device",
+														  "the device associated with this camera",
+														  ARV_TYPE_DEVICE,
+														  G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 }
 
 G_DEFINE_TYPE (ArvCamera, arv_camera, G_TYPE_OBJECT)
