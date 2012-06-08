@@ -246,10 +246,9 @@ main (int argc, char **argv)
 		device_id = arv_get_device_id (i);
 
 		if (g_pattern_match_string (pattern, device_id)) {
+			printf ("%s\n", device_id);
 			if (argc >= 2)
 				arv_tool_execute_command (argc, argv, device_id);
-			else
-				printf ("%s\n", device_id);
 			count++;
 		}
 	}
