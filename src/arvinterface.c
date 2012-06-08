@@ -141,7 +141,7 @@ arv_interface_get_device_physical_id (ArvInterface *interface, unsigned int inde
  * arv_interface_get_device_address
  * @interface: a #ArvInterface
  * @index: device index
- * Return value: the device address
+ * Returns: (transfer none): the device address
  *
  * Returns the device address (IP address in the case of an ethernet camera). Useful
  * for constructing manual connections to devices using @arv_gv_device_new
