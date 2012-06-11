@@ -18,7 +18,6 @@
             <property name="spacing">6</property>
             <child>
               <object class="GtkButton" id="snapshot_button">
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -257,7 +256,6 @@
                 <child>
                   <object class="GtkToggleButton" id="auto_exposure_togglebutton">
                     <property name="label" translatable="yes">Auto</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
@@ -271,7 +269,6 @@
                 <child>
                   <object class="GtkToggleButton" id="auto_gain_togglebutton">
                     <property name="label" translatable="yes">Auto</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
