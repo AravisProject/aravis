@@ -26,5 +26,5 @@ else
 arv_viewer_@ARAVIS_API_VERSION@_DATA = arv-viewer-2.ui
 endif
 
-EXTRA_DIST += $(arv_viewer_@ARAVIS_API_VERSION@_DATA)
+EXTRA_DIST += arv-viewer-2.ui arv-viewer-3.ui
 
