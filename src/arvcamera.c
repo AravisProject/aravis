@@ -72,6 +72,8 @@ struct _ArvCameraPrivate {
 
 	ArvCameraVendor vendor;
 	ArvCameraSeries series;
+
+	gboolean use_gain_raw;
 };
 
 enum
@@ -721,14 +723,17 @@ arv_camera_get_exposure_time_auto (ArvCamera *camera)
  */
 
 void
-arv_camera_set_gain (ArvCamera *camera, gint gain)
+arv_camera_set_gain (ArvCamera *camera, double gain)
 {
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
 	if (gain < 0)
 		return;
 
-	arv_device_set_integer_feature_value (camera->priv->device, "GainRaw", gain);
+	if (camera->priv->use_gain_raw)
+		arv_device_set_integer_feature_value (camera->priv->device, "GainRaw", gain);
+	else
+		arv_device_set_float_feature_value (camera->priv->device, "Gain", gain);
 }
 
 /**
@@ -738,12 +743,15 @@ arv_camera_set_gain (ArvCamera *camera, gint gain)
  * Returns: the current gain setting.
  */
 
-gint
+double
 arv_camera_get_gain (ArvCamera *camera)
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0.0);
 
-	return arv_device_get_integer_feature_value (camera->priv->device, "GainRaw");
+	if (camera->priv->use_gain_raw)
+		return arv_device_get_integer_feature_value (camera->priv->device, "GainRaw");
+
+	return arv_device_get_float_feature_value (camera->priv->device, "Gain");
 }
 
 /**
@@ -756,18 +764,24 @@ arv_camera_get_gain (ArvCamera *camera)
  */
 
 void
-arv_camera_get_gain_bounds (ArvCamera *camera, gint *min, gint *max)
+arv_camera_get_gain_bounds (ArvCamera *camera, double *min, double *max)
 {
 	gint64 min64, max64;
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
-	arv_device_get_integer_feature_bounds (camera->priv->device, "GainRaw", &min64, &max64);
+	if (camera->priv->use_gain_raw) {
+		arv_device_get_integer_feature_bounds (camera->priv->device, "GainRaw", &min64, &max64);
 
-	if (min != NULL)
-		*min = min64;
-	if (max != NULL)
-		*max = max64;
+		if (min != NULL)
+			*min = min64;
+		if (max != NULL)
+			*max = max64;
+
+		return;
+	}
+
+	arv_device_get_float_feature_bounds (camera->priv->device, "Gain", min, max);
 }
 
 /**
@@ -853,6 +867,7 @@ arv_camera_new (const char *name)
 {
 	ArvCamera *camera;
 	ArvDevice *device;
+	ArvGcNode *node;
 
 	device = arv_open_device (name);
 
@@ -860,6 +875,10 @@ arv_camera_new (const char *name)
 		return NULL;
 
 	camera = g_object_new (ARV_TYPE_CAMERA, "device", device, NULL);
+
+	node = arv_device_get_feature (device, "Gain");
+
+	camera->priv->use_gain_raw = !ARV_IS_GC_FLOAT (node);
 
 	return camera;
 }

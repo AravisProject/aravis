@@ -273,7 +273,7 @@ gboolean
 arv_viewer_update_gain_cb (void *data)
 {
 	ArvViewer *viewer = data;
-	gint64 gain;
+	double gain;
 
 	gain = arv_camera_get_gain (viewer->camera);
 
@@ -400,7 +400,7 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	int height;
 	unsigned int i;
 	double frame_rate;
-	gint gain_min, gain_max;
+	double gain_min, gain_max;
 	gboolean auto_gain, auto_exposure;
 	const char *caps_string;
 

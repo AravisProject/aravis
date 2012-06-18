@@ -100,9 +100,9 @@ ArvAuto		arv_camera_get_exposure_time_auto	(ArvCamera *camera);
 
 /* Analog control */
 
-void 		arv_camera_set_gain	 	(ArvCamera *camera, gint gain);
-gint 		arv_camera_get_gain 		(ArvCamera *camera);
-void		arv_camera_get_gain_bounds	(ArvCamera *camera, gint *min, gint *max);
+void 		arv_camera_set_gain	 	(ArvCamera *camera, double gain);
+double 		arv_camera_get_gain 		(ArvCamera *camera);
+void		arv_camera_get_gain_bounds	(ArvCamera *camera, double *min, double *max);
 void		arv_camera_set_gain_auto	(ArvCamera *camera, ArvAuto auto_mode);
 ArvAuto		arv_camera_get_gain_auto	(ArvCamera *camera);
 
