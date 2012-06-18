@@ -43,6 +43,10 @@ AC_ARG_ENABLE(gtk3,
 	      [  --enable-gtk3           build viewer with gtk+-3.0],
 	      [enable_gtk3=$enableval],
 	      [enable_gtk3=no])
+AC_ARG_ENABLE(notify,
+	      [  --enable-notify         build viewer with libnotify],
+	      [enable_notify=$enableval],
+	      [enable_notify=no])
 AC_ARG_ENABLE(cpp_test,
 	      [  --enable-cpp-test       build c++ test],
 	      [enable_cpp_test=$enableval],
@@ -52,7 +56,6 @@ PKG_PROG_PKG_CONFIG([0.14])
 
 ARAVIS_REQUIREMENTS="glib-2.0 >= 2.26 gobject-2.0 gio-2.0 libxml-2.0 gthread-2.0"
 ARAVIS_GSTREAMER_REQUIREMENTS="gstreamer-base-0.10 >= 0.10.31 gstreamer-app-0.10 gstreamer-interfaces-0.10"
-
 
 PKG_CHECK_MODULES(ARAVIS, [$ARAVIS_REQUIREMENTS])
 
@@ -68,6 +71,13 @@ else
 	ARAVIS_VIEWER_REQUIREMENTS+=" gtk+-2.0 >= 2.14"
 fi
 AM_CONDITIONAL(ARAVIS_WITH_GTK3, test "x$enable_gtk3" = "xyes")
+
+if test "x$enable_notify" = "xyes"; then
+	PKG_CHECK_MODULES(Notify, "libnotify")
+	ARAVIS_VIEWER_REQUIREMENTS+=" libnotify"
+	AC_DEFINE([ARAVIS_WITH_NOTIFY], 1, [Use libnotify])
+fi
+AM_CONDITIONAL(ARAVIS_WITH_NOTIFY, test "x$enable_notify" = "xyes")
 
 build_viewer=no
 if test "x$enable_viewer" = "xyes"; then
@@ -128,9 +138,10 @@ AC_OUTPUT
 echo ""
 echo "Configuration:"
 echo ""
-echo "	Build viewer:		$build_viewer"
-echo "	Build gstreamer plugin:	$build_gst_plugin"
 echo "	Compiler:		${CC}"
 echo "	Compiler flags:		${ARAVIS_CFLAGS}"
 echo "	Linker flags:		${ARAVIS_LIBS}"
+echo ""
+echo "	Build viewer:		$build_viewer"
+echo "	Build gstreamer plugin:	$build_gst_plugin"
 echo ""

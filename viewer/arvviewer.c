@@ -30,6 +30,9 @@
 #include <stdlib.h>
 #include <math.h>
 #include <glib/gi18n-lib.h>
+#ifdef ARAVIS_WITH_NOTIFY
+#include <libnotify/notify.h>
+#endif
 
 static char *arv_viewer_option_debug_domains = NULL;
 static gboolean arv_viewer_option_auto_socket_buffer = FALSE;
@@ -77,6 +80,10 @@ typedef struct {
 	guint exposure_update_event;
 
 	gulong video_window_xid;
+
+#ifdef ARAVIS_WITH_NOTIFY
+	NotifyNotification *notification;
+#endif
 } ArvViewer;
 
 double
@@ -378,6 +385,17 @@ arv_viewer_snapshot_cb (GtkButton *button, ArvViewer *viewer)
 	path = g_build_filename (g_get_user_special_dir (G_USER_DIRECTORY_PICTURES),
 				 "Aravis", filename, NULL);
 	g_file_set_contents (path, viewer->last_buffer->data, viewer->last_buffer->size, NULL);
+
+#ifdef ARAVIS_WITH_NOTIFY
+	if (viewer->notification) {
+		notify_notification_update (viewer->notification,
+					    "Snapshot saved to Image folder",
+					    path,
+					    "gtk-save");
+		notify_notification_show (viewer->notification, NULL);
+	}
+#endif
+
 	g_free (path);
 	g_free (filename);
 	g_free (date_string);
@@ -556,6 +574,11 @@ arv_viewer_free (ArvViewer *viewer)
 {
 	g_return_if_fail (viewer != NULL);
 
+#ifdef ARAVIS_WITH_NOTIFY
+	if (viewer->notification)
+		g_object_unref (viewer->notification);
+#endif
+
 	if (viewer->exposure_update_event > 0)
 		g_source_remove (viewer->exposure_update_event);
 	if (viewer->gain_update_event > 0)
@@ -648,6 +671,10 @@ arv_viewer_new (void)
 	viewer->auto_gain_clicked = g_signal_connect (viewer->auto_gain_toggle, "clicked",
 						      G_CALLBACK (arv_viewer_auto_gain_cb), viewer);
 
+#ifdef ARAVIS_WITH_NOTIFY
+	viewer->notification = notify_notification_new (NULL, NULL, NULL);
+#endif
+
 	return viewer;
 }
 
@@ -707,12 +734,20 @@ main (int argc,char *argv[])
 
 	arv_debug_enable (arv_viewer_option_debug_domains);
 
+#ifdef ARAVIS_WITH_NOTIFY
+	notify_init ("Aravis Viewer");
+#endif
+
 	viewer = arv_viewer_new ();
 
 	arv_viewer_update_device_list_cb (viewer);
 	arv_viewer_select_camera_cb (NULL, viewer);
 
 	gtk_main ();
+
+#ifdef ARAVIS_WITH_NOTIFY
+	notify_uninit ();
+#endif
 
 	/* For debug purpose only */
 	arv_shutdown ();
