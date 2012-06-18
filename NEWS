@@ -1,3 +1,23 @@
+Release 0.1.14
+==============
+
+API breaks:
+
+  arv_stream_timed_pop_buffer is now arv_stream_timeout_pop_buffer
+  arv_camera_(get/set)_gain use a double value for gain
+  arv_camera_get_gain_bounds also use doubles
+
+Changes:
+
+  * genicam: preliminary error handling
+  * viewer: internationalization support
+  * viewer: widget are now insensitive if feature is not available
+  * viewer: fix gtk requirement
+  * viewer: add optional support for gtk3
+  * viewer: fix flicker on window resize
+  * camera: use Gain feature instead of GainRaw when available
+  * genicam: fix formula evaluation when they contain entities
+  * 
 Release 0.1.13
 ==============
 
