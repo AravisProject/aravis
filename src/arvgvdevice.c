@@ -604,6 +604,46 @@ arv_gv_device_load_genicam (ArvGvDevice *gv_device)
 	if (genicam != NULL) {
 		gv_device->priv->genicam = arv_gc_new (ARV_DEVICE (gv_device), genicam, size);
 
+		arv_gc_set_default_node_data (gv_device->priv->genicam, "DeviceVendorName",
+					      "<StringReg Name=\"DeviceVendorName\">"
+					      "<DisplayName>Vendor Name</DisplayName>"
+					      "<Address>0x48</Address>"
+					      "<Length>32</Length>"
+					      "<AccessMode>RO</AccessMode>"
+					      "<pPort>Device</pPort>"
+					      "</StringReg>");
+		arv_gc_set_default_node_data (gv_device->priv->genicam, "DeviceModelName",
+					      "<StringReg Name=\"DeviceModelName\">"
+					      "<DisplayName>Model Name</DisplayName>"
+					      "<Address>0x68</Address>"
+					      "<Length>32</Length>"
+					      "<AccessMode>RO</AccessMode>"
+					      "<pPort>Device</pPort>"
+					      "</StringReg>");
+		arv_gc_set_default_node_data (gv_device->priv->genicam, "DeviceVersion",
+					      "<StringReg Name=\"DeviceVersion\">"
+					      "<DisplayName>Device Version</DisplayName>"
+					      "<Address>0x88</Address>"
+					      "<Length>32</Length>"
+					      "<AccessMode>RO</AccessMode>"
+					      "<pPort>Device</pPort>"
+					      "</StringReg>");
+		arv_gc_set_default_node_data (gv_device->priv->genicam, "DeviceManufacturerInfo",
+					      "<StringReg Name=\"DeviceManufacturerInfo\">"
+					      "<DisplayName>Manufacturer Info</DisplayName>"
+					      "<Address>0xa8</Address>"
+					      "<Length>48</Length>"
+					      "<AccessMode>RO</AccessMode>"
+					      "<pPort>Device</pPort>"
+					      "</StringReg>");
+		arv_gc_set_default_node_data (gv_device->priv->genicam, "DeviceID",
+					      "<StringReg Name=\"DeviceID\">"
+					      "<DisplayName>Device ID</DisplayName>"
+					      "<Address>0xd8</Address>"
+					      "<Length>16</Length>"
+					      "<AccessMode>RO</AccessMode>"
+					      "<pPort>Device</pPort>"
+					      "</StringReg>");
 		arv_gc_set_default_node_data (gv_device->priv->genicam, "GevSCPSPacketSize",
 					      "<Integer Name=\"GevSCPSPacketSize\">"
 					      "<Visibility>Expert</Visibility>"
