@@ -55,7 +55,7 @@ make distcheck again.
 
   	$ scp aravis-0.1.3.tar.gz (user)@master.gnome.org:
 
-  Then ssh into master.gnome.org and call install-module. There are no extra
+  Then ssh into master.gnome.org and call ftp-admin. There are no extra
   steps required for new modules.
   
   For example:
