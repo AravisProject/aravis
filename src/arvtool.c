@@ -143,7 +143,15 @@ arv_tool_execute_command (int argc, char **argv, const char *device_name)
 							arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (feature),
 												   tokens[1], NULL);
 
-						if (ARV_IS_GC_INTEGER (feature))
+						if (ARV_IS_GC_STRING (feature))
+							printf ("%s = %s\n", tokens[0],
+								arv_gc_string_get_value (ARV_GC_STRING (feature), NULL));
+						else if (ARV_IS_GC_FLOAT (feature))
+							printf ("%s = %g (min:%g-max:%g)\n", tokens[0],
+								arv_gc_float_get_value (ARV_GC_FLOAT (feature), NULL),
+								arv_gc_float_get_min (ARV_GC_FLOAT (feature), NULL),
+								arv_gc_float_get_max (ARV_GC_FLOAT (feature), NULL));
+						else if (ARV_IS_GC_INTEGER (feature))
 							printf ("%s = %" G_GINT64_FORMAT
 								" (min:%" G_GINT64_FORMAT 
 								"-max:%" G_GINT64_FORMAT
@@ -151,11 +159,6 @@ arv_tool_execute_command (int argc, char **argv, const char *device_name)
 								arv_gc_integer_get_value (ARV_GC_INTEGER (feature), NULL),
 								arv_gc_integer_get_min (ARV_GC_INTEGER (feature), NULL),
 								arv_gc_integer_get_max (ARV_GC_INTEGER (feature), NULL));
-						else if (ARV_IS_GC_FLOAT (feature))
-							printf ("%s = %g (min:%g-max:%g)\n", tokens[0],
-								arv_gc_float_get_value (ARV_GC_FLOAT (feature), NULL),
-								arv_gc_float_get_min (ARV_GC_FLOAT (feature), NULL),
-								arv_gc_float_get_max (ARV_GC_FLOAT (feature), NULL));
 						else
 							printf ("%s = %s\n", tokens[0],
 								arv_gc_feature_node_get_value_as_string (ARV_GC_FEATURE_NODE (feature),
