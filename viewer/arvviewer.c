@@ -403,6 +403,10 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	double gain_min, gain_max;
 	gboolean auto_gain, auto_exposure;
 	const char *caps_string;
+	gboolean is_exposure_available;
+	gboolean is_exposure_auto_available;
+	gboolean is_gain_available;
+	gboolean is_gain_auto_available;
 
 	g_return_if_fail (viewer != NULL);
 
@@ -450,6 +454,11 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	auto_gain = arv_camera_get_gain_auto (viewer->camera) != ARV_AUTO_OFF;
 	auto_exposure = arv_camera_get_gain_auto (viewer->camera) != ARV_AUTO_OFF;
 
+	is_exposure_available = arv_camera_is_exposure_time_available (viewer->camera);
+	is_exposure_auto_available = arv_camera_is_exposure_auto_available (viewer->camera);
+	is_gain_available = arv_camera_is_gain_available (viewer->camera);
+	is_gain_auto_available = arv_camera_is_gain_auto_available (viewer->camera);
+
 	g_signal_handler_block (viewer->gain_hscale, viewer->gain_hscale_changed);
 	g_signal_handler_block (viewer->gain_spin_button, viewer->gain_spin_changed);
 	g_signal_handler_block (viewer->exposure_hscale, viewer->exposure_hscale_changed);
@@ -468,6 +477,12 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	gtk_entry_set_text (GTK_ENTRY (viewer->frame_rate_entry), string);
 	g_free (string);
 
+	gtk_widget_set_sensitive (viewer->gain_hscale, is_gain_available);
+	gtk_widget_set_sensitive (viewer->gain_spin_button, is_gain_available);
+
+	gtk_widget_set_sensitive (viewer->exposure_hscale, is_exposure_available);
+	gtk_widget_set_sensitive (viewer->exposure_spin_button, is_exposure_available);
+
 	g_signal_handler_unblock (viewer->gain_hscale, viewer->gain_hscale_changed);
 	g_signal_handler_unblock (viewer->gain_spin_button, viewer->gain_spin_changed);
 	g_signal_handler_unblock (viewer->exposure_hscale, viewer->exposure_hscale_changed);
@@ -481,8 +496,13 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 
 	g_signal_handler_block (viewer->auto_gain_toggle, viewer->auto_gain_clicked);
 	g_signal_handler_block (viewer->auto_exposure_toggle, viewer->auto_exposure_clicked);
+	
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (viewer->auto_gain_toggle), auto_gain);
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (viewer->auto_exposure_toggle), auto_exposure);
+
+	gtk_widget_set_sensitive (viewer->auto_gain_toggle, is_gain_auto_available);
+	gtk_widget_set_sensitive (viewer->auto_exposure_toggle, is_exposure_auto_available);
+
 	g_signal_handler_unblock (viewer->auto_gain_toggle, viewer->auto_gain_clicked);
 	g_signal_handler_unblock (viewer->auto_exposure_toggle, viewer->auto_exposure_clicked);
 

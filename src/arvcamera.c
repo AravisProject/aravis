@@ -853,6 +853,65 @@ arv_camera_get_device (ArvCamera *camera)
 }
 
 /**
+ * arv_camera_is_exposure_time_available:
+ * @camera: a #ArvCamera
+ * Returns: TRUE if Exposure Time feature is available.
+ */
+
+gboolean
+arv_camera_is_exposure_time_available (ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
+
+	return arv_device_get_feature (camera->priv->device, "ExposureTimeAbs") != NULL;
+}
+
+/**
+ * arv_camera_is_exposure_auto_available:
+ * @camera: a #ArvCamera
+ * Returns: TRUE if Exposure Auto feature is available.
+ */
+
+gboolean
+arv_camera_is_exposure_auto_available (ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
+
+	return arv_device_get_feature (camera->priv->device, "ExposureAuto") != NULL;
+}
+
+/**
+ * arv_camera_is_gain_available:
+ * @camera: a #ArvCamera
+ * Returns: TRUE if Gain feature is available.
+ */
+
+gboolean
+arv_camera_is_gain_available (ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
+
+	if (camera->priv->use_gain_raw)
+		return arv_device_get_feature (camera->priv->device, "GainRaw") != NULL;
+
+	return arv_device_get_feature (camera->priv->device, "Gain") != NULL;
+}
+
+/**
+ * arv_camera_is_gain_auto_available:
+ * @camera: a #ArvCamera
+ * Returns: TRUE if Gain feature is available.
+ */
+
+gboolean
+arv_camera_is_gain_auto_available (ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
+
+	return arv_device_get_feature (camera->priv->device, "GainAuto") != NULL;
+}
+
+/**
  * arv_camera_new:
  * @name: (allow-none): name of the camera.
  *

@@ -92,6 +92,9 @@ const char *	arv_camera_get_trigger_source		(ArvCamera *camera);
 
 void 		arv_camera_software_trigger 		(ArvCamera *camera);
 
+gboolean 	arv_camera_is_exposure_time_available	(ArvCamera *camera);
+gboolean 	arv_camera_is_exposure_auto_available	(ArvCamera *camera);
+
 void 		arv_camera_set_exposure_time 		(ArvCamera *camera, double exposure_time_us);
 double 		arv_camera_get_exposure_time 		(ArvCamera *camera);
 void		arv_camera_get_exposure_time_bounds	(ArvCamera *camera, double *min, double *max);
@@ -99,6 +102,9 @@ void		arv_camera_set_exposure_time_auto	(ArvCamera *camera, ArvAuto auto_mode);
 ArvAuto		arv_camera_get_exposure_time_auto	(ArvCamera *camera);
 
 /* Analog control */
+
+gboolean 	arv_camera_is_gain_available		(ArvCamera *camera);
+gboolean 	arv_camera_is_gain_auto_available	(ArvCamera *camera);
 
 void 		arv_camera_set_gain	 	(ArvCamera *camera, double gain);
 double 		arv_camera_get_gain 		(ArvCamera *camera);
