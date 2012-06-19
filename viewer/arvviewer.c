@@ -421,6 +421,7 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	double gain_min, gain_max;
 	gboolean auto_gain, auto_exposure;
 	const char *caps_string;
+	gboolean is_frame_rate_available;
 	gboolean is_exposure_available;
 	gboolean is_exposure_auto_available;
 	gboolean is_gain_available;
@@ -472,6 +473,7 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	auto_gain = arv_camera_get_gain_auto (viewer->camera) != ARV_AUTO_OFF;
 	auto_exposure = arv_camera_get_gain_auto (viewer->camera) != ARV_AUTO_OFF;
 
+	is_frame_rate_available = arv_camera_is_frame_rate_available (viewer->camera);
 	is_exposure_available = arv_camera_is_exposure_time_available (viewer->camera);
 	is_exposure_auto_available = arv_camera_is_exposure_auto_available (viewer->camera);
 	is_gain_available = arv_camera_is_gain_available (viewer->camera);
@@ -490,6 +492,8 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 
 	gtk_range_set_range (GTK_RANGE (viewer->exposure_hscale), 0.0, 1.0);
 	gtk_range_set_range (GTK_RANGE (viewer->gain_hscale), gain_min, gain_max);
+
+	gtk_widget_set_sensitive (viewer->frame_rate_entry, is_frame_rate_available);
 
 	string = g_strdup_printf ("%g", frame_rate);
 	gtk_entry_set_text (GTK_ENTRY (viewer->frame_rate_entry), string);

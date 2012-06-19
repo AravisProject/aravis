@@ -853,6 +853,26 @@ arv_camera_get_device (ArvCamera *camera)
 }
 
 /**
+ * arv_camera_is_frame_rate_available:
+ * @camera: a #ArvCamera
+ * Returns: TRUE if FrameRate feature is available
+ */
+
+gboolean
+arv_camera_is_frame_rate_available (ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
+
+	switch (camera->priv->vendor) {
+		case ARV_CAMERA_VENDOR_BASLER:
+		case ARV_CAMERA_VENDOR_PROSILICA:
+			return arv_device_get_feature (camera->priv->device, "AcquisitionFrameRateAbs") != NULL;
+		case ARV_CAMERA_VENDOR_UNKNOWN:
+		default:
+			return arv_device_get_feature (camera->priv->device, "AcquisitionFrameRate") != NULL;
+	}
+}
+/**
  * arv_camera_is_exposure_time_available:
  * @camera: a #ArvCamera
  * Returns: TRUE if Exposure Time feature is available.

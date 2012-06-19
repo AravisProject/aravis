@@ -84,6 +84,8 @@ void		arv_camera_stop_acquisition		(ArvCamera *camera);
 void			arv_camera_set_acquisition_mode 	(ArvCamera *camera, ArvAcquisitionMode value);
 ArvAcquisitionMode 	arv_camera_get_acquisition_mode 	(ArvCamera *camera);
 
+gboolean 	arv_camera_is_frame_rate_available 	(ArvCamera *camera);
+
 void		arv_camera_set_frame_rate		(ArvCamera *camera, double frame_rate);
 double 		arv_camera_get_frame_rate 		(ArvCamera *camera);
 void		arv_camera_set_trigger			(ArvCamera *camera, const char *source);
