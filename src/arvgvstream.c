@@ -201,8 +201,15 @@ _process_data_leader (ArvGvStreamThreadData *thread_data,
 	frame->buffer->pixel_format = arv_gvsp_packet_get_pixel_format (packet);
 	frame->buffer->frame_id = arv_gvsp_packet_get_frame_id (packet);
 
-	frame->buffer->timestamp_ns = arv_gvsp_packet_get_timestamp (packet,
-								     thread_data->timestamp_tick_frequency);
+	if (G_LIKELY (thread_data->timestamp_tick_frequency != 0))
+		frame->buffer->timestamp_ns = arv_gvsp_packet_get_timestamp (packet,
+									     thread_data->timestamp_tick_frequency);
+	else {
+		GTimeVal time;
+
+		g_get_current_time (&time);
+		frame->buffer->timestamp_ns = ((guint64) time.tv_sec * 1000000000LL) + ((guint64) time.tv_usec * 1000) ;
+	}
 
 	if (frame->packet_data[packet_id].time_us > 0) {
 		thread_data->n_resent_packets++;
