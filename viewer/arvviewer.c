@@ -50,12 +50,20 @@ typedef struct {
 
 	GstElement *pipeline;
 	GstElement *appsrc;
+	GstElement *transform;
+
+	guint rotation;
+	gboolean flip_vertical;
+	gboolean flip_horizontal;
 
 	guint64 timestamp_offset;
 	guint64 last_timestamp;
 
 	GtkWidget *main_window;
 	GtkWidget *snapshot_button;
+	GtkWidget *rotate_cw_button;
+	GtkWidget *flip_vertical_toggle;
+	GtkWidget *flip_horizontal_toggle;
 	GtkWidget *drawing_area;
 	GtkWidget *camera_combo_box;
 	GtkWidget *trigger_combo_box;
@@ -402,6 +410,44 @@ arv_viewer_snapshot_cb (GtkButton *button, ArvViewer *viewer)
 	g_date_time_unref (date);
 }
 
+static void
+_update_transform (ArvViewer *viewer)
+{
+	static const gint methods[4][4] = {
+		{0, 1, 2, 3},
+		{4, 6, 5, 7},
+		{5, 7, 4, 6},
+		{2, 3, 0, 1}
+	};
+	int index = (viewer->flip_horizontal ? 1 : 0) + (viewer->flip_vertical ? 2 : 0);
+
+	g_object_set (viewer->transform, "method", methods[index][viewer->rotation % 4], NULL);
+}
+
+void
+arv_viewer_rotate_cw_cb (GtkButton *button, ArvViewer *viewer)
+{
+	viewer->rotation = (viewer->rotation + 1) % 4;
+
+	_update_transform (viewer);
+}
+
+void
+arv_viewer_flip_horizontal_cb (GtkToggleButton *toggle, ArvViewer *viewer)
+{
+	viewer->flip_horizontal = gtk_toggle_button_get_active (toggle);
+
+	_update_transform (viewer);
+}
+
+void
+arv_viewer_flip_vertical_cb (GtkToggleButton *toggle, ArvViewer *viewer)
+{
+	viewer->flip_vertical = gtk_toggle_button_get_active (toggle);
+
+	_update_transform (viewer);
+}
+
 void
 arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 {
@@ -437,6 +483,7 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	viewer->camera = arv_camera_new (camera_id);
 	g_free (camera_id);
 
+	viewer->rotation = 0;
 	viewer->stream = arv_camera_create_stream (viewer->camera, NULL, NULL);
 	if (viewer->stream == NULL) {
 		g_object_unref (viewer->camera);
@@ -540,6 +587,7 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 
 	viewer->appsrc = gst_element_factory_make ("appsrc", NULL);
 	ffmpegcolorspace = gst_element_factory_make ("ffmpegcolorspace", NULL);
+	viewer->transform = gst_element_factory_make ("videoflip", NULL);
 	ximagesink = gst_element_factory_make ("xvimagesink", NULL);
 
 	g_object_set (ximagesink, "force-aspect-ratio", TRUE, "draw-borders", TRUE, "sync", FALSE, NULL);
@@ -549,11 +597,15 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 
 		bayer2rgb = gst_element_factory_make ("bayer2rgb", NULL);
 
-		gst_bin_add_many (GST_BIN (viewer->pipeline), viewer->appsrc, bayer2rgb, ffmpegcolorspace, ximagesink, NULL);
-		gst_element_link_many (viewer->appsrc, bayer2rgb, ffmpegcolorspace, ximagesink, NULL);
+		gst_bin_add_many (GST_BIN (viewer->pipeline), viewer->appsrc, bayer2rgb,
+				  ffmpegcolorspace, viewer->transform, ximagesink, NULL);
+		gst_element_link_many (viewer->appsrc, bayer2rgb,
+				       ffmpegcolorspace, viewer->transform, ximagesink, NULL);
 	} else {
-		gst_bin_add_many (GST_BIN (viewer->pipeline), viewer->appsrc, ffmpegcolorspace, ximagesink, NULL);
-		gst_element_link_many (viewer->appsrc, ffmpegcolorspace, ximagesink, NULL);
+		gst_bin_add_many (GST_BIN (viewer->pipeline), viewer->appsrc,
+				  ffmpegcolorspace, viewer->transform, ximagesink, NULL);
+		gst_element_link_many (viewer->appsrc, ffmpegcolorspace,
+				       viewer->transform, ximagesink, NULL);
 	}
 
 	caps = gst_caps_from_string (caps_string);
@@ -642,6 +694,9 @@ arv_viewer_new (void)
 	viewer->gain_hscale = GTK_WIDGET (gtk_builder_get_object (builder, "gain_hscale"));
 	viewer->auto_exposure_toggle = GTK_WIDGET (gtk_builder_get_object (builder, "auto_exposure_togglebutton"));
 	viewer->auto_gain_toggle = GTK_WIDGET (gtk_builder_get_object (builder, "auto_gain_togglebutton"));
+	viewer->rotate_cw_button = GTK_WIDGET (gtk_builder_get_object (builder, "rotate_cw_button"));
+	viewer->flip_vertical_toggle = GTK_WIDGET (gtk_builder_get_object (builder, "flip_vertical_togglebutton"));
+	viewer->flip_horizontal_toggle = GTK_WIDGET (gtk_builder_get_object (builder, "flip_horizontal_togglebutton"));
 
 	g_object_unref (builder);
 
@@ -658,6 +713,9 @@ arv_viewer_new (void)
 
 	g_signal_connect (viewer->main_window, "destroy", G_CALLBACK (arv_viewer_quit_cb), viewer);
 	g_signal_connect (viewer->snapshot_button, "clicked", G_CALLBACK (arv_viewer_snapshot_cb), viewer);
+	g_signal_connect (viewer->rotate_cw_button, "clicked", G_CALLBACK (arv_viewer_rotate_cw_cb), viewer);
+	g_signal_connect (viewer->flip_horizontal_toggle, "clicked", G_CALLBACK (arv_viewer_flip_horizontal_cb), viewer);
+	g_signal_connect (viewer->flip_vertical_toggle, "clicked", G_CALLBACK (arv_viewer_flip_vertical_cb), viewer);
 	g_signal_connect (viewer->camera_combo_box, "changed", G_CALLBACK (arv_viewer_select_camera_cb), viewer);
 
 	g_signal_connect (viewer->frame_rate_entry, "changed", G_CALLBACK (arv_viewer_frame_rate_entry_cb), viewer);
