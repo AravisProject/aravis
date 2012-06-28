@@ -32,6 +32,7 @@
 #include <arvgvcp.h>
 #include <arvgvsp.h>
 #include <arvzip.h>
+#include <arvstr.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -528,6 +529,19 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 				genicam = g_malloc (file_size);
 				if (arv_device_read_memory (ARV_DEVICE (gv_device), file_address, file_size,
 							    genicam, NULL)) {
+
+					if (arv_debug_check (&arv_debug_category_misc, ARV_DEBUG_LEVEL_LOG)) {
+						GString *string = g_string_new ("");
+						
+						g_string_append_printf (string,
+									"[GvDevice::load_genicam] Raw data size = 0x%x\n", file_size);
+						arv_g_string_append_hex_dump (string, genicam, file_size);
+
+						arv_log_misc ("%s", string->str);
+
+						g_string_free (string, TRUE);
+					}
+
 					if (g_str_has_suffix (tokens[2], ".zip")) {
 						ArvZip *zip;
 						const GSList *zip_files;
