@@ -528,8 +528,6 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 				genicam = g_malloc (file_size);
 				if (arv_device_read_memory (ARV_DEVICE (gv_device), file_address, file_size,
 							    genicam, NULL)) {
-					genicam [file_size - 1] = '\0';
-
 					if (g_str_has_suffix (tokens[2], ".zip")) {
 						ArvZip *zip;
 						const GSList *zip_files;
