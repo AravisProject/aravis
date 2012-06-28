@@ -89,6 +89,8 @@ arv_zip_build_file_list (ArvZip *zip)
 		ptr = zip->buffer + zip->header_size + offset;
 		if (GUINT32_FROM_LE_PTR (ptr) != 0x02014b50) {
 			arv_debug_misc ("[Zip::build_file_list] Magic number of central directory not found (0x02014b50)");
+			arv_debug_misc ("[Zip::build_file_list] Expected at 0x%08x - found 0x%08x instead",
+					zip->header_size + offset, GUINT32_FROM_LE_PTR (ptr));
 		       	return;
 		}
 
@@ -192,6 +194,10 @@ arv_zip_new (const void *buffer, size_t size)
         zip->header_size = zip->directory_position - (zip->directory_offset + zip->directory_size);
 
 	arv_log_misc ("[Zip::new] number of files = %d", zip->n_files);
+	arv_log_misc ("[Zip::new] directory position = 0x%08x", zip->directory_position);
+	arv_log_misc ("[Zip::new] directory size = %d", zip->directory_size);
+	arv_log_misc ("[Zip::new] directory offset = 0x%08x", zip->directory_offset);
+	arv_log_misc ("[Zip::new] header size = %d", zip->header_size);
 
         arv_zip_build_file_list (zip);
 
