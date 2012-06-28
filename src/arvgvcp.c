@@ -29,6 +29,7 @@
 #include <arvenumtypes.h>
 #include <string.h>
 #include <arvdebug.h>
+#include <arvstr.h>
 
 void
 arv_gvcp_packet_free (ArvGvcpPacket *packet)
@@ -452,7 +453,7 @@ arv_gvcp_packet_to_string (const ArvGvcpPacket *packet)
 	GString *string;
 	char *c_string;
 	char *data;
-	int i, j, packet_size, index;
+	int packet_size;
 	guint32 value;
 
 	g_return_val_if_fail (packet != NULL, NULL);
@@ -518,31 +519,8 @@ arv_gvcp_packet_to_string (const ArvGvcpPacket *packet)
 	}
 
 	packet_size = sizeof (ArvGvcpHeader) + g_ntohs (packet->header.size);
-	for (i = 0; i < (packet_size + 15) / 16; i++) {
-		for (j = 0; j < 16; j++) {
-			index = i * 16 + j;
-			if (j == 0)
-				g_string_append_printf (string, "%04x", i * 16);
-			if (index < packet_size)
-				g_string_append_printf (string, " %02x", *((guint8 *) ((void *) packet) + index));
-			else
-				g_string_append (string, "   ");
-		}
-		for (j = 0; j < 16; j++) {
-			index = i * 16 + j;
-			if (j == 0)
-				g_string_append (string, "  ");
-			if (index < packet_size)
-				if (*((char *) ((void *) packet) + index) >= ' ' &&
-				    *((char *) ((void *) packet) + index) <  '\x7f')
-					g_string_append_c (string, *((char *) ((void *) packet) + index));
-				else g_string_append_c (string, '.');
-			else
-				g_string_append_c (string, ' ');
-		}
-		if (index < packet_size)
-			g_string_append (string, "\n");
-	}
+
+	arv_g_string_append_hex_dump (string, packet, packet_size);
 
 	c_string = string->str;
 

@@ -69,6 +69,8 @@ arv_str_skip_colon_and_spaces (char **str)
 		(*str)++;
 }
 
+void		arv_g_string_append_hex_dump (GString *string, const void *data, size_t size);
+
 G_END_DECLS
 
 #endif

@@ -191,3 +191,49 @@ arv_str_parse_double_list (char **str, unsigned int n_values, double *values)
 	return i;
 }
 
+/**
+ * arv_g_string_append_hex_dump:
+ * @string: a #GString
+ * @data: binary data
+ * @size: size of binary data
+ *
+ * Adds an hexadecimal dump of @data to @string, which consists in lines displaying the data adress, 16 8 bit values in hexadecimal representation, followed by their corresponding ASCII character (replaced by a dot for control ones).
+ *
+ * Here is an example of the output:
+ *
+ * 01e0 c8 b7 89 b0 45 fa 3d 9d 8c e9 a7 33 46 85 1f 2c  ....E.=....3F..,
+ * 01f0 3f 4c ba 8d 99 f3 ff d0 40 78 73 37 32 e5 4f 9f  ?L......@xs72.O.
+ * 0200 d0 d2 f2 ef 5a 2f fc 61 e3 64 36 21              ....Z/.a.d6!    
+ */
+
+void
+arv_g_string_append_hex_dump (GString *string, const void *data, size_t size)
+{
+	guint64 i, j, index;
+
+	for (i = 0; i < (size + 15) / 16; i++) {
+		for (j = 0; j < 16; j++) {
+			index = i * 16 + j;
+			if (j == 0)
+				g_string_append_printf (string, "%08" G_GUINT64_FORMAT, i * 16);
+			if (index < size)
+				g_string_append_printf (string, " %02x", *((guint8 *) data + index));
+			else
+				g_string_append (string, "   ");
+		}
+		for (j = 0; j < 16; j++) {
+			index = i * 16 + j;
+			if (j == 0)
+				g_string_append (string, "  ");
+			if (index < size)
+				if (*((char *) data + index) >= ' ' &&
+				    *((char *) data + index) <  '\x7f')
+					g_string_append_c (string, *((char *) data + index));
+				else g_string_append_c (string, '.');
+			else
+				g_string_append_c (string, ' ');
+		}
+		if (index < size)
+			g_string_append (string, "\n");
+	}
+}
