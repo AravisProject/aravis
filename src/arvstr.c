@@ -215,7 +215,7 @@ arv_g_string_append_hex_dump (GString *string, const void *data, size_t size)
 		for (j = 0; j < 16; j++) {
 			index = i * 16 + j;
 			if (j == 0)
-				g_string_append_printf (string, "%08" G_GUINT64_FORMAT, i * 16);
+				g_string_append_printf (string, "%08" G_GINT64_MODIFIER "x", i * 16);
 			if (index < size)
 				g_string_append_printf (string, " %02x", *((guint8 *) data + index));
 			else
