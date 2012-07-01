@@ -391,6 +391,24 @@ arv_camera_get_available_pixel_formats (ArvCamera *camera, guint *n_pixel_format
 	return arv_device_get_enumeration_feature_available_values (camera->priv->device, "PixelFormat", n_pixel_formats);
 }
 
+/**
+ * arv_camera_get_available_pixel_formats_as_strings:
+ * @camera: a #ArvCamera
+ * @n_pixel_formats: (out): number of different pixel formats
+ *
+ * Retrieves the list of all available pixel formats as strings.
+ *
+ * Returns: (array length=n_pixel_formats) (transfer full): a newly allocated array of strings.
+ */
+
+const char **
+arv_camera_get_available_pixel_formats_as_strings (ArvCamera *camera, guint *n_pixel_formats)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+
+	return arv_device_get_enumeration_feature_available_strings (camera->priv->device, "PixelFormat", n_pixel_formats);
+}
+
 /* Acquisition control */
 
 /**
