@@ -286,6 +286,84 @@ arv_gc_enumeration_get_available_int_values (ArvGcEnumeration *enumeration, guin
 	return values;
 }
 
+const char **
+arv_gc_enumeration_get_available_string_values (ArvGcEnumeration *enumeration, guint *n_values, GError **error)
+{
+	const char ** strings;
+	const GSList *entries, *iter;
+	GSList *available_entries = NULL;
+	unsigned int i;
+	GError *local_error = NULL;
+
+	g_return_val_if_fail (n_values != NULL, NULL);
+
+	*n_values = 0;
+
+	g_return_val_if_fail (ARV_IS_GC_ENUMERATION (enumeration), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	entries = arv_gc_enumeration_get_entries (enumeration);
+
+	*n_values = 0;
+	for (iter = entries; iter != NULL; iter = iter->next) {
+		gboolean is_available;
+
+		is_available = arv_gc_feature_node_is_available (iter->data, &local_error);
+
+		if (local_error != NULL) {
+			g_propagate_error (error, local_error);
+			*n_values = 0;
+			g_slist_free (available_entries);
+
+			return NULL;
+		}
+
+		if (is_available) {
+			gboolean is_implemented;
+
+			is_implemented = arv_gc_feature_node_is_implemented (iter->data, &local_error);
+
+			if (local_error != NULL) {
+				g_propagate_error (error, local_error);
+				*n_values = 0;
+				g_slist_free (available_entries);
+
+				return NULL;
+			}
+
+			if (is_implemented) {
+				(*n_values)++;
+				available_entries = g_slist_prepend (available_entries, iter->data);
+			}
+		}
+	}
+
+	if (*n_values == 0) {
+		g_slist_free (available_entries);
+		return NULL;
+	}
+
+	strings = g_new (const char*, *n_values);
+	for (iter = available_entries, i = 0; iter != NULL; iter = iter->next) {
+
+		strings[i] = arv_gc_enum_entry_get_string (iter->data, &local_error);
+
+		if (local_error != NULL) {
+			g_propagate_error (error, local_error);
+			*n_values = 0;
+			g_slist_free (available_entries);
+			g_free (strings);
+
+			return NULL;
+		}
+		i++;
+	}
+
+	g_slist_free (available_entries);
+
+	return strings;
+}
+
 void
 arv_gc_enumeration_set_int_value (ArvGcEnumeration *enumeration, gint64 value, GError **error)
 {
