@@ -328,6 +328,22 @@ arv_camera_set_pixel_format (ArvCamera *camera, ArvPixelFormat format)
 }
 
 /**
+ * arv_camera_set_pixel_format_from_string:
+ * @camera: a #ArvCamera
+ * @format: pixel format
+ *
+ * Defines pixel format described by a string.
+ */
+
+void
+arv_camera_set_pixel_format_from_string (ArvCamera *camera, const char * format)
+{
+        g_return_if_fail (ARV_IS_CAMERA (camera));
+
+        arv_device_set_string_feature_value (camera->priv->device, "PixelFormat", format);
+}
+
+/**
  * arv_camera_get_pixel_format:
  * @camera: a #ArvCamera
  *
