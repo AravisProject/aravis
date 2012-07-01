@@ -91,6 +91,28 @@ arv_gc_enum_entry_get_value (ArvGcEnumEntry *entry, GError **error)
 	return value;
 }
 
+const char *
+arv_gc_enum_entry_get_string (ArvGcEnumEntry *entry, GError **error)
+{
+	const char * string;
+	GError *local_error = NULL;
+
+	g_return_val_if_fail (ARV_IS_GC_ENUM_ENTRY (entry), 0);
+	g_return_val_if_fail (error == NULL || *error == NULL, 0);
+
+	if (entry->value == NULL)
+		return 0;
+
+	string = arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (entry));
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return 0;
+	}
+
+	return string;
+}
+
 ArvGcNode *
 arv_gc_enum_entry_new (void)
 {
