@@ -487,6 +487,36 @@ arv_device_get_enumeration_feature_available_values (ArvDevice *device, const ch
 	return values;
 }
 
+const char **
+arv_device_get_enumeration_feature_available_strings (ArvDevice *device, const char *feature, guint *n_values)
+{
+	ArvGcNode *node;
+	GError *error = NULL;
+	const char ** strings = NULL;
+
+	if (n_values != NULL)
+		*n_values = 0;
+
+	g_return_val_if_fail (ARV_IS_DEVICE (device), NULL);
+
+	node = arv_device_get_feature (device, feature);
+
+	if (ARV_IS_GC_ENUMERATION (node))
+		strings = arv_gc_enumeration_get_available_string_values (ARV_GC_ENUMERATION (node), n_values, &error);
+	else
+		arv_warning_device ("[ArvDevice::get_enumeration_feature_available_strings] Node '%s' is not an enumeration",
+				    feature);
+
+	if (error != NULL) {
+		_set_status (device, error->code, error->message);
+		g_error_free (error);
+
+		return NULL;
+	}
+
+	return strings;
+}
+
 ArvDeviceStatus
 arv_device_get_status (ArvDevice *device)
 {
