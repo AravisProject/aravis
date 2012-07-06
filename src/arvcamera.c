@@ -409,6 +409,60 @@ arv_camera_get_available_pixel_formats_as_strings (ArvCamera *camera, guint *n_p
 	return arv_device_get_enumeration_feature_available_strings (camera->priv->device, "PixelFormat", n_pixel_formats);
 }
 
+/**
+ * arv_camera_get_available_pixel_formats_as_display_names:
+ * @camera: a #ArvCamera
+ * @n_pixel_formats: (out): number of different pixel formats
+ *
+ * Retrieves the list of all available pixel formats as display names.
+ * In general, these are human-readable strings cannot be used as settings.
+ *
+ * Returns: (array length=n_pixel_formats) (transfer full): a newly allocated array of strings.
+ */
+
+const char **
+arv_camera_get_available_pixel_formats_as_display_names (ArvCamera *camera, guint *n_pixel_formats)
+{
+	ArvGcNode *node;
+	GSList *entries, *iter;
+	GError *error = NULL;
+	const char **strings;
+	const char *string = NULL;
+	int i;
+
+	*n_pixel_formats = 0;
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+	node = arv_device_get_feature (camera->priv->device, "PixelFormat");
+
+	if (ARV_IS_GC_ENUMERATION (node))
+		entries = (GSList*) arv_gc_enumeration_get_entries (ARV_GC_ENUMERATION (node));
+	else
+		return NULL;
+
+	strings = g_new (const char *, g_slist_length (entries));
+	i = 0;
+	for (iter = entries; iter != NULL; iter = iter->next) {
+		string = arv_gc_feature_node_get_display_name (iter->data, &error);
+		if (error != NULL) {
+			string = NULL;
+			g_error_free (error);
+			error = NULL;
+		}
+		if (string == NULL)
+			string = arv_gc_feature_node_get_name (iter->data);
+		if (string == NULL) break;
+		strings[i++] = string;
+	}
+
+	if (string == NULL) {
+		g_free (strings);
+		return NULL;
+	}
+
+	*n_pixel_formats = i;
+	return strings;
+}
+
 /* Acquisition control */
 
 /**
