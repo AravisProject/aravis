@@ -458,7 +458,7 @@ arv_device_get_float_feature_bounds (ArvDevice *device, const char *feature, dou
 }
 
 gint64 *
-arv_device_get_enumeration_feature_available_values (ArvDevice *device, const char *feature, guint *n_values)
+arv_device_get_available_enumeration_feature_values (ArvDevice *device, const char *feature, guint *n_values)
 {
 	ArvGcNode *node;
 	GError *error = NULL;
@@ -487,8 +487,19 @@ arv_device_get_enumeration_feature_available_values (ArvDevice *device, const ch
 	return values;
 }
 
+/**
+ * arv_device_get_available_enumeration_feature_values_as_strings:
+ * @device: an #ArvDevice
+ * @feature: feature name
+ * @n_values: placeholder for the number of returned values
+ *
+ * Get all the available values of @feature, as strings.
+ *
+ * Returns: (array length=n_values) (transfer container): a newly created array of const strings, which must freed after use using g_free.
+ */
+
 const char **
-arv_device_get_enumeration_feature_available_strings (ArvDevice *device, const char *feature, guint *n_values)
+arv_device_get_available_enumeration_feature_values_as_strings (ArvDevice *device, const char *feature, guint *n_values)
 {
 	ArvGcNode *node;
 	GError *error = NULL;

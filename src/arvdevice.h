@@ -113,8 +113,8 @@ double		arv_device_get_float_feature_value	(ArvDevice *device, const char *featu
 void 		arv_device_get_float_feature_bounds 	(ArvDevice *device, const char *feature,
 							 double *min, double *max);
 
-gint64 *	arv_device_get_enumeration_feature_available_values	(ArvDevice *device, const char *feature, guint *n_values);
-const char **	arv_device_get_enumeration_feature_available_strings	(ArvDevice *device, const char *feature, guint *n_values);
+gint64 *	arv_device_get_available_enumeration_feature_values		(ArvDevice *device, const char *feature, guint *n_values);
+const char **	arv_device_get_available_enumeration_feature_values_as_strings	(ArvDevice *device, const char *feature, guint *n_values);
 
 ArvDeviceStatus arv_device_get_status			(ArvDevice *device);
 

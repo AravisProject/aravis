@@ -380,7 +380,7 @@ arv_camera_get_pixel_format_as_string (ArvCamera *camera)
  *
  * Retrieves the list of all available pixel formats.
  *
- * Returns: (array length=n_pixel_formats) (transfer full): a newly allocated array of #ArvPixelFormat
+ * Returns: (array length=n_pixel_formats) (transfer container): a newly allocated array of #ArvPixelFormat
  */
 
 gint64 *
@@ -388,7 +388,7 @@ arv_camera_get_available_pixel_formats (ArvCamera *camera, guint *n_pixel_format
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
-	return arv_device_get_enumeration_feature_available_values (camera->priv->device, "PixelFormat", n_pixel_formats);
+	return arv_device_get_available_enumeration_feature_values (camera->priv->device, "PixelFormat", n_pixel_formats);
 }
 
 /**
@@ -398,7 +398,7 @@ arv_camera_get_available_pixel_formats (ArvCamera *camera, guint *n_pixel_format
  *
  * Retrieves the list of all available pixel formats as strings.
  *
- * Returns: (array length=n_pixel_formats) (transfer full): a newly allocated array of strings.
+ * Returns: (array length=n_pixel_formats) (transfer container): a newly allocated array of strings.
  */
 
 const char **
@@ -406,7 +406,7 @@ arv_camera_get_available_pixel_formats_as_strings (ArvCamera *camera, guint *n_p
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
-	return arv_device_get_enumeration_feature_available_strings (camera->priv->device, "PixelFormat", n_pixel_formats);
+	return arv_device_get_available_enumeration_feature_values_as_strings (camera->priv->device, "PixelFormat", n_pixel_formats);
 }
 
 /**
