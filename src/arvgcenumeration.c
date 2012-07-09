@@ -286,6 +286,17 @@ arv_gc_enumeration_get_available_int_values (ArvGcEnumeration *enumeration, guin
 	return values;
 }
 
+/**
+ * arv_gc_enumeration_get_available_string_values:
+ * @enumeration: an #ArvGcEnumeration
+ * @n_values: (out): placeholder for the number of values
+ * @error: placeholder for error, may be NULL
+ *
+ * Create an array of all available values of @enumeration, as strings.
+ *
+ * Returns: (array length=n_values) (transfer container): an newly created array of const strings, which must freed after use using g_free.
+ */
+
 const char **
 arv_gc_enumeration_get_available_string_values (ArvGcEnumeration *enumeration, guint *n_values, GError **error)
 {
