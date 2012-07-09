@@ -344,20 +344,8 @@ arv_gc_enumeration_get_available_string_values (ArvGcEnumeration *enumeration, g
 	}
 
 	strings = g_new (const char*, *n_values);
-	for (iter = available_entries, i = 0; iter != NULL; iter = iter->next) {
-
-		strings[i] = arv_gc_enum_entry_get_string (iter->data, &local_error);
-
-		if (local_error != NULL) {
-			g_propagate_error (error, local_error);
-			*n_values = 0;
-			g_slist_free (available_entries);
-			g_free (strings);
-
-			return NULL;
-		}
-		i++;
-	}
+	for (iter = available_entries, i = 0; iter != NULL; iter = iter->next, i++)
+		strings[i] = arv_gc_feature_node_get_name (iter->data);
 
 	g_slist_free (available_entries);
 
