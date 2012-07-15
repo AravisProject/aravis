@@ -1443,6 +1443,10 @@ arv_zip_get_file
 arv_zip_get_file_list
 arv_zip_file_get_name
 arv_zip_file_get_uncompressed_size
+ARV_GUINT16_FROM_LE_PTR
+ARV_GUINT32_FROM_LE_PTR
+arv_guint16_from_unaligned_le_ptr
+arv_guint32_from_unaligned_le_ptr
 <SUBSECTION Private>
 ArvZipFile
 </SECTION>
