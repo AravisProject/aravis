@@ -796,6 +796,8 @@ main (int argc,char *argv[])
 
 	arv_debug_enable (arv_viewer_option_debug_domains);
 
+	arv_enable_interface ("Fake");
+
 #ifdef ARAVIS_WITH_NOTIFY
 	notify_init ("Aravis Viewer");
 #endif

@@ -145,6 +145,8 @@ ArvBufferClass
 ArvInterface
 arv_get_device_id
 arv_get_interface_id
+arv_disable_interface
+arv_enable_interface
 arv_get_n_devices
 arv_get_n_interfaces
 arv_update_device_list
