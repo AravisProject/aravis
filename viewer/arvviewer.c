@@ -20,13 +20,13 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+#include <arvconfig.h>
 #include <gtk/gtk.h>
 #include <gst/gst.h>
 #include <gst/app/gstappsrc.h>
 #include <gst/interfaces/xoverlay.h>
 #include <gdk/gdkx.h>
 #include <arv.h>
-#include <arvenumtypes.h>
 #include <stdlib.h>
 #include <math.h>
 #include <glib/gi18n-lib.h>

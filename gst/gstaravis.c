@@ -33,6 +33,7 @@
  * </refsect2>
  */
 
+#include <arvconfig.h>
 #include <gstaravis.h>
 #include <time.h>
 #include <string.h>

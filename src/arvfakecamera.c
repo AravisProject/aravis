@@ -30,6 +30,7 @@
  * arv-fake-gv-camera is a GV camera simulator based on this class.
  */
 
+#include <arvconfig.h>
 #include <arvfakecamera.h>
 #include <arvgc.h>
 #include <arvgcregisternode.h>
