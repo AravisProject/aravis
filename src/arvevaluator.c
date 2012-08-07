@@ -844,13 +844,16 @@ parse_expression (char *expression, GSList **rpn_stack)
 	ArvEvaluatorStatus status;
 	GSList *token_stack = NULL;
 	GSList *operator_stack = NULL;
+	GSList *garbage_stack = NULL;
 	GSList *iter;
+	int count;
 
 	arv_log_evaluator (expression);
 
 	/* Dijkstra's "shunting yard" algorithm */
 	/* http://en.wikipedia.org/wiki/Shunting-yard_algorithm */
 
+	count = 0;
 	do {
 		token = arv_get_next_token (&expression, previous_token);
 		previous_token = token;
@@ -868,7 +871,7 @@ parse_expression (char *expression, GSList **rpn_stack)
 					status = ARV_EVALUATOR_STATUS_PARENTHESES_MISMATCH;
 					goto CLEANUP;
 				}
-				arv_evaluator_token_free (token);
+				garbage_stack = g_slist_prepend (garbage_stack, token);
 			} else if (arv_evaluator_token_is_operator (token)) {
 				while (operator_stack != NULL &&
 				       arv_evaluator_token_compare_precedence (token, operator_stack->data)) {
@@ -888,18 +891,21 @@ parse_expression (char *expression, GSList **rpn_stack)
 					status = ARV_EVALUATOR_STATUS_PARENTHESES_MISMATCH;
 					goto CLEANUP;
 				}
-				arv_evaluator_token_free (token);
-				arv_evaluator_token_free (operator_stack->data);
+				garbage_stack = g_slist_prepend (garbage_stack, token);
+				garbage_stack = g_slist_prepend (garbage_stack, operator_stack->data);
 				operator_stack = g_slist_delete_link (operator_stack, operator_stack);
 			} else {
 				status = ARV_EVALUATOR_STATUS_SYNTAX_ERROR;
 				goto CLEANUP;
 			}
+			count++;
 		} else if (*expression != '\0') {
 			status = ARV_EVALUATOR_STATUS_SYNTAX_ERROR;
 			goto CLEANUP;
 		}
 	} while (token != NULL);
+
+	arv_log_evaluator ("[Evaluator::_parse_expression] Found %d items in expression", count);
 
 	while (operator_stack != NULL) {
 		if (arv_evaluator_token_is_left_parenthesis (operator_stack->data)) {
@@ -913,12 +919,22 @@ parse_expression (char *expression, GSList **rpn_stack)
 
 	*rpn_stack = g_slist_reverse (token_stack);
 
+	for (iter = garbage_stack, count = 0; iter != NULL; iter = iter->next, count++)
+		arv_evaluator_token_free (iter->data);
+	g_slist_free (garbage_stack);
+
+	arv_log_evaluator ("[Evaluator::_parse_expression] %d items in garbage list", count);
+	arv_log_evaluator ("[Evaluator::_parse_expression] %d items in token list", g_slist_length (*rpn_stack));
+
 	return *rpn_stack == NULL ? ARV_EVALUATOR_STATUS_EMPTY_EXPRESSION : ARV_EVALUATOR_STATUS_SUCCESS;
 
 CLEANUP:
 
 	if (token != NULL)
 		arv_evaluator_token_free (token);
+	for (iter = garbage_stack; iter != NULL; iter = iter->next)
+		arv_evaluator_token_free (iter->data);
+	g_slist_free (garbage_stack);
 	for (iter = token_stack; iter != NULL; iter = iter->next)
 		arv_evaluator_token_free (iter->data);
 	g_slist_free (token_stack);
