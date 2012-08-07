@@ -59,11 +59,15 @@ expression_test (ExpressionTestData *data)
 	ArvEvaluator *evaluator;
 	gint64 v_int64;
 	double v_double;
+	GError *error = NULL;
 
 	evaluator = arv_evaluator_new (data->expression);
 
-	v_int64 = arv_evaluator_evaluate_as_int64 (evaluator, NULL);
-	v_double = arv_evaluator_evaluate_as_double (evaluator, NULL);
+	v_int64 = arv_evaluator_evaluate_as_int64 (evaluator, &error);
+	g_assert (error == NULL);
+
+	v_double = arv_evaluator_evaluate_as_double (evaluator, &error);
+	g_assert (error == NULL);
 
 	g_assert_cmpint (v_int64, ==, data->result_int64);
 	g_assert_cmpfloat (v_double, ==, data->result_double);
