@@ -50,7 +50,9 @@ static const ExpressionTestData expression_test_data[] = {
 	{"/evaluator/left-shift",	"1<<4",			16,	16.0},
 	{"/evaluator/right-shift",	"16>>4",		1,	1.0},
 	{"/evaluator/cos",		"COS(PI)",		-1,	-1.0},
-	{"/evaluator/sin",		"SIN(-PI/2)",		-1,	-1.0}
+	{"/evaluator/sin",		"SIN(-PI/2)",		-1,	-1.0},
+
+	{"/evaluator/bugs/remaining-op",	"(0 & 1)=0?((0 & 1)+2):1",	2, 2.0}
 };
 
 static void
