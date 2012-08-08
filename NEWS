@@ -1,3 +1,18 @@
+Release 0.1.15
+==============
+
+  * library: don't distribute arvconfig.h (Nial bug report)
+  * viewer: desktop file and application icon
+  * viewer: rotate and flip button
+  * viewer: file save notification
+  * viewer: use autovideosink instead of xvimagesink, for systems without XV extension
+  * camera: pixel format API improvments (Jure)
+  * system: disable the fake camera by default (Kai bug report)
+  * genicam: fix "remaining operands" issue in evaluator (Tom bug report)
+  * genicam: fix unzipping of genicam data on not supporting unaligned memory access (Nial)
+  * GV stream: use machine time for buffer timestamp if GevTimestampTickFrequency register does not exist
+  * gstreamer plugin: add auto gain, auto exposure, x and y offset properties (Philipp)
+  
 Release 0.1.14
 ==============
 
