@@ -44,3 +44,4 @@ CLEANFILES = $(pkgconfig_DATA)
 
 %-@ARAVIS_API_VERSION@.pc: %.pc
 	cp $< $@
+

@@ -125,6 +125,7 @@ AC_CONFIG_FILES([
 Makefile
 src/Makefile
 viewer/Makefile
+viewer/data/arv-viewer.desktop.in
 gst/Makefile
 tests/Makefile
 po/Makefile.in

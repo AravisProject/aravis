@@ -1,0 +1,6 @@
+The source files for Aravis icons are SVG files in viewer/icons/src.
+
+The rendering to the different sizes is done manually, in order to avoid
+a build dependency on Inkscape. After you have modified one of the source
+file, please don't forget to launch ../../tools/render-icon-theme.py from
+the icons directory.
