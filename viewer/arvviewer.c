@@ -448,6 +448,35 @@ arv_viewer_flip_vertical_cb (GtkToggleButton *toggle, ArvViewer *viewer)
 	_update_transform (viewer);
 }
 
+static GstBusSyncReply
+bus_sync_handler (GstBus *bus, GstMessage *message, gpointer user_data)
+{
+	ArvViewer *viewer = user_data;
+
+	if (GST_MESSAGE_TYPE (message) != GST_MESSAGE_ELEMENT)
+		return GST_BUS_PASS;
+	if (!gst_structure_has_name (message->structure, "prepare-xwindow-id"))
+		return GST_BUS_PASS;
+
+	if (viewer->video_window_xid != 0) {
+		GstXOverlay *xoverlay;
+
+		xoverlay = GST_X_OVERLAY (GST_MESSAGE_SRC (message));
+		gst_x_overlay_set_window_handle (xoverlay, viewer->video_window_xid);
+
+		if (g_strcmp0 (G_OBJECT_TYPE_NAME (xoverlay), "GstXvImageSink"))
+			g_object_set (xoverlay, "draw-borders", TRUE, NULL);
+
+		g_object_set (xoverlay, "force-aspect-ratio", TRUE, "sync", FALSE, NULL);
+	} else {
+		g_warning ("Should have obtained video_window_xid by now!");
+	}
+
+	gst_message_unref (message);
+
+	return GST_BUS_DROP;
+}
+
 void
 arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 {
@@ -455,7 +484,8 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	GtkTreeModel *list_store;
 	GstCaps *caps;
 	GstElement *ffmpegcolorspace;
-	GstElement *ximagesink;
+	GstElement *videosink;
+	GstBus *bus;
 	ArvPixelFormat pixel_format;
 	char *camera_id;
 	char *string;
@@ -588,9 +618,7 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	viewer->appsrc = gst_element_factory_make ("appsrc", NULL);
 	ffmpegcolorspace = gst_element_factory_make ("ffmpegcolorspace", NULL);
 	viewer->transform = gst_element_factory_make ("videoflip", NULL);
-	ximagesink = gst_element_factory_make ("xvimagesink", NULL);
-
-	g_object_set (ximagesink, "force-aspect-ratio", TRUE, "draw-borders", TRUE, "sync", FALSE, NULL);
+	videosink = gst_element_factory_make ("autovideosink", NULL);
 
 	if (g_str_has_prefix (caps_string, "video/x-raw-bayer")) {
 		GstElement *bayer2rgb;
@@ -598,14 +626,14 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 		bayer2rgb = gst_element_factory_make ("bayer2rgb", NULL);
 
 		gst_bin_add_many (GST_BIN (viewer->pipeline), viewer->appsrc, bayer2rgb,
-				  ffmpegcolorspace, viewer->transform, ximagesink, NULL);
+				  ffmpegcolorspace, viewer->transform, videosink, NULL);
 		gst_element_link_many (viewer->appsrc, bayer2rgb,
-				       ffmpegcolorspace, viewer->transform, ximagesink, NULL);
+				       ffmpegcolorspace, viewer->transform, videosink, NULL);
 	} else {
 		gst_bin_add_many (GST_BIN (viewer->pipeline), viewer->appsrc,
-				  ffmpegcolorspace, viewer->transform, ximagesink, NULL);
+				  ffmpegcolorspace, viewer->transform, videosink, NULL);
 		gst_element_link_many (viewer->appsrc, ffmpegcolorspace,
-				       viewer->transform, ximagesink, NULL);
+				       viewer->transform, videosink, NULL);
 	}
 
 	caps = gst_caps_from_string (caps_string);
@@ -617,10 +645,11 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	gst_app_src_set_caps (GST_APP_SRC (viewer->appsrc), caps);
 	gst_caps_unref (caps);
 
-	gst_element_set_state (viewer->pipeline, GST_STATE_PLAYING);
+	bus = gst_pipeline_get_bus (GST_PIPELINE (viewer->pipeline));
+	gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bus_sync_handler, viewer);
+	gst_object_unref (bus);
 
-	g_assert (viewer->video_window_xid != 0);
-	gst_x_overlay_set_window_handle (GST_X_OVERLAY (ximagesink), viewer->video_window_xid);
+	gst_element_set_state (viewer->pipeline, GST_STATE_PLAYING);
 
 	g_signal_connect (viewer->stream, "new-buffer", G_CALLBACK (arv_viewer_new_buffer_cb), viewer);
 }
