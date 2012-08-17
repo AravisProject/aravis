@@ -670,7 +670,14 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 		ARV_PIXEL_FORMAT_CUSTOM_BAYER_BG_16,
 		"video/x-raw-bayer, bpp=(int)16, depth=(int)16",
 		"video/x-raw-bayer",	16,	16,	0
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GB_8,
+		"video/x-raw-bayer, format=gbrg, bpp=(int)8, depth=(int)8",
+		"video/x-raw-bayer",	8,	8,	0
 	}
+
+
 };
 
 /**
