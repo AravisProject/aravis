@@ -425,6 +425,7 @@ arv_camera_get_available_pixel_formats_as_display_names (ArvCamera *camera, guin
 {
 	ArvGcNode *node;
 	const GSList *entries, *iter;
+	GSList *available_entries = NULL;
 	const char **strings;
 	const char *string = NULL;
 	gboolean is_available, is_implemented;
@@ -441,9 +442,7 @@ arv_camera_get_available_pixel_formats_as_display_names (ArvCamera *camera, guin
 	else
 		return NULL;
 
-	strings = g_new (const char *, g_slist_length ((GSList*)entries));
-	i = 0;
-	for (iter = entries; iter != NULL; iter = iter->next) {
+	for (i = 0, iter = entries; iter != NULL; iter = iter->next) {
 		is_available = arv_gc_feature_node_is_available (iter->data, NULL);
 		is_implemented = arv_gc_feature_node_is_implemented (iter->data, NULL);
 		if (is_available && is_implemented) {
@@ -451,12 +450,17 @@ arv_camera_get_available_pixel_formats_as_display_names (ArvCamera *camera, guin
 			if (string == NULL)
 				string = arv_gc_feature_node_get_name (iter->data);
 			if (string == NULL) {
-				g_free (strings);
+				g_slist_free (available_entries);
 				return NULL;
 			}
-			strings[i++] = string;
+			available_entries = g_slist_prepend (available_entries, (gpointer)string);
+			i++;
 		}
 	}
+
+	strings = g_new (const char *, i);
+	for (i = 0, iter = available_entries; iter != NULL; iter = iter->next, i++)
+		strings[i] = iter->data;
 
 	*n_pixel_formats = i;
 	return strings;
