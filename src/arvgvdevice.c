@@ -77,7 +77,7 @@ arv_gv_device_get_url_regex (void)
 static GRegex *arv_gv_device_url_regex = NULL;
 
 	if (arv_gv_device_url_regex == NULL)
-		arv_gv_device_url_regex = g_regex_new ("^(local:|file:|http:)(.+\\.[^;]+);?([0-9:a-f]*)?;?([0-9:a-f]*)?$",
+		arv_gv_device_url_regex = g_regex_new ("^(local:|file:|http:)(.+\\.[^;]+);?(?:0x)?([0-9:a-f]*)?;?(?:0x)?([0-9:a-f]*)?$",
 						       G_REGEX_CASELESS, 0, NULL);
 
 	return arv_gv_device_url_regex;

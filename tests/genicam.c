@@ -301,6 +301,19 @@ url_test (void)
 	g_assert_cmpstr (tokens[4], ==, "10cca");
 
 	g_strfreev (tokens);
+
+	tokens = g_regex_split (arv_gv_device_get_url_regex (), "Local:C4_2040_GigE_1.0.0.zip;0x8C400904;0x4D30", 0);
+
+	g_assert_cmpint (g_strv_length (tokens), ==, 6);
+
+	g_assert_cmpstr (tokens[0], ==, "");
+	g_assert_cmpstr (tokens[1], ==, "Local:");
+	g_assert_cmpstr (tokens[2], ==, "C4_2040_GigE_1.0.0.zip");
+	g_assert_cmpstr (tokens[3], ==, "8C400904");
+	g_assert_cmpstr (tokens[4], ==, "4D30");
+
+	g_strfreev (tokens);
+
 }
 
 static void
