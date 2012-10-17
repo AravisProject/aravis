@@ -1,3 +1,13 @@
+Release 0.2.0
+=============
+
+Stable release.
+
+  * camera: add support for BAYER_GB_8 images used by ImageingSource DFK 23G445 cameras (Matthias)
+  * camera: fix consistency of order of pixel format display names (Jure)
+  * GV: fix parsing of hexadecimal address/length with 0x prefix in Genicam file URL
+  * build: fix parallel compilation (make -j)
+  
 Release 0.1.15
 ==============
 
