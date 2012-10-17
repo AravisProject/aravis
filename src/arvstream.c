@@ -63,6 +63,8 @@ struct _ArvStreamPrivate {
  *
  * Pushes a #ArvBuffer to the @stream thread. The @stream takes ownership of @buffer,
  * and will free all the buffers still in its queues when destroyed.
+ *
+ * Since: 0.2.0
  */
 
 void
@@ -83,7 +85,7 @@ arv_stream_push_buffer (ArvStream *stream, ArvBuffer *buffer)
  * may contain an invalid image. Caller should check the buffer status before using it.
  * This function blocks until a buffer is available.
  *
- * since: 0.1.12
+ * Since: 0.2.0
  */
 
 ArvBuffer *
@@ -103,7 +105,7 @@ arv_stream_pop_buffer (ArvStream *stream)
  * may contain an invalid image. Caller should check the buffer status before using it.
  * This is the non blocking version of pop_buffer.
  *
- * since: 0.1.12
+ * Since: 0.2.0
  */
 
 ArvBuffer *
@@ -122,6 +124,8 @@ arv_stream_try_pop_buffer (ArvStream *stream)
  *
  * Pops a buffer from the output queue of @stream, waiting no more than @timeout. The retrieved buffer
  * may contain an invalid image. Caller should check the buffer status before using it.
+ *
+ * Since: 0.2.0
  */
 
 ArvBuffer *
@@ -148,6 +152,8 @@ arv_stream_timeout_pop_buffer (ArvStream *stream, guint64 timeout)
  * @stream: (transfer full): a #ArvStream
  *
  * Pos a buffer from the input queue of @stream.
+ *
+ * Since: 0.2.0
  */
 
 ArvBuffer *
@@ -177,6 +183,8 @@ arv_stream_push_output_buffer (ArvStream *stream, ArvBuffer *buffer)
  * @n_output_buffers: (out) (allow-none): output queue length
  *
  * An accessor to the stream buffer queue lengths.
+ *
+ * Since: 0.2.0
  */
 
 void
@@ -204,6 +212,8 @@ arv_stream_get_n_buffers (ArvStream *stream, gint *n_input_buffers, gint *n_outp
  * @n_underruns: (out) (allow-none): number of input buffer underruns
  *
  * An accessor to the stream statistics.
+ *
+ * Since: 0.2.0
  */
 
 void
@@ -242,7 +252,7 @@ arv_stream_get_statistics (ArvStream *stream,
  * by default disabled because signal emission is expensive and unneeded when
  * the application prefers to operate in pull mode.
  *
- * Since: 0.1.3
+ * Since: 0.2.0
  */
 
 void
@@ -261,7 +271,7 @@ arv_stream_set_emit_signals (ArvStream *stream, gboolean emit_signals)
  *
  * Returns: %TRUE if @appsink is emiting its signals.
  *
- * Since: 0.1.3
+ * Since: 0.2.0
  */
 
 gboolean
@@ -370,6 +380,8 @@ arv_stream_class_init (ArvStreamClass *node_class)
 	 *
 	 * Note that this signal is only emited when the "emit-signals" property is
 	 * set to %TRUE, which it is not by default for performance reasons.
+	 *
+	 * Since: 0.2.0
 	 */
 
 	arv_stream_signals[ARV_STREAM_SIGNAL_NEW_BUFFER] =

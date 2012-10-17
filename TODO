@@ -1,3 +1,6 @@
-- rework of genicam node objects, probably using the same code as lasem.
 - add a feature tree and editor to the simple viewer.
 - support more genicam features.
+- improve support of device creation by IP address.
+    As we have to find the interface with which we reach the device,
+    we need to extend the discovery code in order to send the discover
+    packet to a given IP address, instead of a broadcast one.

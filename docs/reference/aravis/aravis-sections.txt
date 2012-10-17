@@ -581,7 +581,6 @@ arv_stream_get_n_buffers
 arv_stream_get_statistics
 arv_stream_get_emit_signals
 arv_stream_set_emit_signals
-arv_g_string_append_hex_dump
 <SUBSECTION Standard>
 ARV_STREAM
 ARV_IS_STREAM
@@ -1401,6 +1400,7 @@ arv_warning_interface
 arv_warning_misc
 arv_warning_stream
 arv_warning_stream_thread
+arv_g_string_append_hex_dump
 </SECTION>
 
 <SECTION>

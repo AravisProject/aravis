@@ -64,6 +64,8 @@ arv_device_error_quark (void)
  *
  * Creates a new #ArvStream for video stream handling. See
  * @ArvStreamCallback for details regarding the callback function.
+ *
+ * Since: 0.2.0
  */
 
 ArvStream *
@@ -121,6 +123,8 @@ arv_device_write_register (ArvDevice *device, guint32 address, guint32 value, GE
  * Return value: (transfer none): the genicam interface.
  *
  * Retrieves the genicam interface of the given device.
+ *
+ * Since: 0.2.0
  */
 
 ArvGc *
@@ -146,6 +150,8 @@ _get_genicam_xml (ArvDevice *device, size_t *size)
  * Return value: a pointer to the Genicam XML data, owned by the device.
  *
  * Gets the Genicam XML data stored in the device memory.
+ *
+ * Since: 0.2.0
  **/
 
 const char *
@@ -163,6 +169,8 @@ arv_device_get_genicam_xml (ArvDevice *device, size_t *size)
  * @feature: feature name
  *
  * Return value: (transfer none): the genicam node corresponding to the feature name, NULL if not found.
+ *
+ * Since: 0.2.0
  */
 
 ArvGcNode *
@@ -195,6 +203,8 @@ _set_status (ArvDevice *device, ArvDeviceStatus status, const char *message)
  * @feature: feature name
  *
  * Execute a genicam command. If an error occur, this function change the device status.
+ *
+ * Since: 0.2.0
  */
 
 void
@@ -496,6 +506,8 @@ arv_device_get_available_enumeration_feature_values (ArvDevice *device, const ch
  * Get all the available values of @feature, as strings.
  *
  * Returns: (array length=n_values) (transfer container): a newly created array of const strings, which must freed after use using g_free.
+ *
+ * Since: 0.2.0
  */
 
 const char **
@@ -588,6 +600,8 @@ arv_device_class_init (ArvDeviceClass *device_class)
 	 *
 	 * This signal may be emited from a thread different than the main one,
 	 * so please take care to shared data access from the callback.
+	 *
+	 * Since: 0.2.0
 	 */
 
 	arv_device_signals[ARV_DEVICE_SIGNAL_CONTROL_LOST] =

@@ -50,6 +50,10 @@ static GObjectClass *parent_class = NULL;
  *
  * If @user_data_destroy_func is non NULL, it will be called in order to destroy
  * user_data when the buffer is destroyed.
+ *
+ * Returns: a new #ArvBuffer object
+ *
+ * Since: 0.2.0
  */
 
 ArvBuffer *
@@ -82,6 +86,10 @@ arv_buffer_new_full (size_t size, void *preallocated, void *user_data, GDestroyN
  * The data space can be either preallocated, and the caller is responsible
  * for it's deallocation, or allocated by this function. If it is the case,
  * data memory will be freed when the buffer is destroyed.
+ *
+ * Returns: a new #ArvBuffer object
+ *
+ * Since: 0.2.0
  */
 
 ArvBuffer *
@@ -95,6 +103,8 @@ arv_buffer_new (size_t size, void *preallocated)
  * @buffer: a #ArvBuffer
  *
  * Clears the buffer status.
+ *
+ * Since: 0.2.0
  */
 
 void

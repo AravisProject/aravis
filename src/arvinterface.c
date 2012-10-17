@@ -58,7 +58,9 @@ arv_interface_clear_device_ids (ArvInterface *interface)
  *
  * Updates the internal list of available devices. This may change the
  * connection between a list index and a device ID.
- **/
+ *
+ * Since: 0.2.0
+ */
 
 void
 arv_interface_update_device_list (ArvInterface *interface)
@@ -73,12 +75,15 @@ arv_interface_update_device_list (ArvInterface *interface)
 /**
  * arv_interface_get_n_devices
  * @interface: a #ArvInterface
- * Return value: the number of available devices 
  *
  * Queries the number of available devices on this interface. Prior to this
  * call the @arv_interface_update_device_list function must be called. The list content will not
  * change until the next call of the update function.
- **/
+ *
+ * Returns: the number of available devices 
+ *
+ * Since: 0.2.0
+ */
 
 unsigned int
 arv_interface_get_n_devices (ArvInterface *interface)
@@ -93,11 +98,14 @@ arv_interface_get_n_devices (ArvInterface *interface)
  * arv_interface_get_device_id
  * @interface: a #ArvInterface
  * @index: device index
- * Return value: a unique device id
  *
  * Queries the unique device id corresponding to index.  Prior to this
  * call the @arv_interface_update_device_list function must be called.
- **/
+ *
+ * Returns: a unique device id
+ *
+ * Since: 0.2.0
+ */
 
 const char *
 arv_interface_get_device_id (ArvInterface *interface, unsigned int index)
@@ -115,7 +123,6 @@ arv_interface_get_device_id (ArvInterface *interface, unsigned int index)
  * arv_interface_get_device_physical_id
  * @interface: a #ArvInterface
  * @index: device index
- * Return value: a physical device id
  *
  * Queries the physical device id corresponding to index such
  * as the MAC address for Ethernet based devices, bus id for PCI,
@@ -123,7 +130,11 @@ arv_interface_get_device_id (ArvInterface *interface, unsigned int index)
  *
  * Prior to this call the @arv_interface_update_device_list
  * function must be called.
- **/
+ *
+ * Returns: a physical device id
+ *
+ * Since: 0.2.0
+ */
 
 const char *
 arv_interface_get_device_physical_id (ArvInterface *interface, unsigned int index)
@@ -141,7 +152,6 @@ arv_interface_get_device_physical_id (ArvInterface *interface, unsigned int inde
  * arv_interface_get_device_address
  * @interface: a #ArvInterface
  * @index: device index
- * Return value: (transfer none): the device address
  *
  * queries the device address (IP address in the case of an ethernet camera). Useful
  * for constructing manual connections to devices using @arv_gv_device_new
@@ -149,8 +159,10 @@ arv_interface_get_device_physical_id (ArvInterface *interface, unsigned int inde
  * Prior to this call the @arv_interface_update_device_list
  * function must be called.
  *
- * since: 0.1.14
- **/
+ * Returns: (transfer none): the device address
+ *
+ * Since: 0.2.0
+ */
 
 const char *
 arv_interface_get_device_address (ArvInterface *interface, unsigned int index)
@@ -168,10 +180,13 @@ arv_interface_get_device_address (ArvInterface *interface, unsigned int index)
  * arv_interface_open_device
  * @interface: a #ArvInterface
  * @device_id: (allow-none): device unique id
- * Return value: (transfer full): a new #ArvDevice
  *
  * Creates a new #ArvDevice object corresponding to the given device id string. The first available device is returned if @device_id is null.
- **/
+ *
+ * Returns: (transfer full): a new #ArvDevice
+ *
+ * Since: 0.2.0
+ */
 
 ArvDevice *
 arv_interface_open_device (ArvInterface *interface, const char *device_id)

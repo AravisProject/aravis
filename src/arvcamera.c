@@ -28,6 +28,14 @@
  * complexity of the genicam interface by providing a simple API, with the
  * drawback of not exposing all the available features. See #ArvDevice and
  * #ArvGc for a more advanced use of the Aravis library.
+ *
+ * <example id="arv-example"><title>Sample application of the ArvCamera API</title>
+ * <programlisting>
+ * <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" href="../../../../tests/arvexample.c">
+ *   <xi:fallback>FIXME: MISSING XINCLUDE CONTENT</xi:fallback>
+ * </xi:include>
+ * </programlisting>
+ * </example>
  */
 
 #include <arvcamera.h>
@@ -92,6 +100,8 @@ enum
  * #ArvStreamCallback for details regarding the callback function.
  *
  * Returns: (transfer full): a new #ArvStream.
+ *
+ * Since: 0.2.0
  */
 
 ArvStream *
@@ -109,6 +119,8 @@ arv_camera_create_stream (ArvCamera *camera, ArvStreamCallback callback, gpointe
  * @camera: a #ArvCamera
  *
  * Returns: the camera vendor name.
+ *
+ * Since: 0.2.0
  */
 
 const char *
@@ -124,6 +136,8 @@ arv_camera_get_vendor_name (ArvCamera *camera)
  * @camera: a #ArvCamera
  *
  * Returns: the camera model name.
+ *
+ * Since: 0.2.0
  */
 
 const char *
@@ -139,6 +153,8 @@ arv_camera_get_model_name (ArvCamera *camera)
  * @camera: a #ArvCamera
  *
  * Returns: the camera device ID.
+ *
+ * Since: 0.2.0
  */
 
 const char *
@@ -156,6 +172,8 @@ arv_camera_get_device_id (ArvCamera *camera)
  * @camera: a #ArvCamera
  * @width: (out): camera sensor width
  * @height: (out): camera sensor height
+ *
+ * Since: 0.2.0
  */
 
 void
@@ -179,6 +197,8 @@ arv_camera_get_sensor_size (ArvCamera *camera, gint *width, gint *height)
  *
  * Defines the region of interest which will be transmitted in the video
  * stream.
+ *
+ * Since: 0.2.0
  */
 
 void
@@ -205,6 +225,8 @@ arv_camera_set_region (ArvCamera *camera, gint x, gint y, gint width, gint heigh
  * @height: (out): region height
  *
  * Retrieves the current region of interest.
+ *
+ * Since: 0.2.0
  */
 
 void
@@ -229,6 +251,8 @@ arv_camera_get_region (ArvCamera *camera, gint *x, gint *y, gint *width, gint *h
  * @max: (out): maximum width
  *
  * Retrieves the valid range for image width.
+ *
+ * Since: 0.2.0
  */
 
 void
@@ -253,6 +277,8 @@ arv_camera_get_width_bounds (ArvCamera *camera, gint *min, gint *max)
  * @max: (out): maximum height
  *
  * Retrieves the valid range for image height.
+ *
+ * Since: 0.2.0
  */
 
 void
@@ -278,6 +304,8 @@ arv_camera_get_height_bounds (ArvCamera *camera, gint *min, gint *max)
  *
  * Defines binning in both directions. Not all cameras support this
  * feature.
+ *
+ * Since: 0.2.0
  */
 
 void
@@ -298,6 +326,8 @@ arv_camera_set_binning (ArvCamera *camera, gint dx, gint dy)
  * @dy: (out): vertical binning placeholder
  *
  * Retrieves binning in both directions.
+ *
+ * Since: 0.2.0
  */
 
 void
@@ -317,6 +347,8 @@ arv_camera_get_binning (ArvCamera *camera, gint *dx, gint *dy)
  * @format: pixel format
  *
  * Defines pixel format.
+ *
+ * Since: 0.2.0
  */
 
 void
@@ -333,6 +365,8 @@ arv_camera_set_pixel_format (ArvCamera *camera, ArvPixelFormat format)
  * @format: pixel format
  *
  * Defines pixel format described by a string.
+ *
+ * Since: 0.2.0
  */
 
 void
@@ -348,6 +382,8 @@ arv_camera_set_pixel_format_from_string (ArvCamera *camera, const char * format)
  * @camera: a #ArvCamera
  *
  * Returns: pixel format.
+ *
+ * Since: 0.2.0
  */
 
 ArvPixelFormat
@@ -363,6 +399,8 @@ arv_camera_get_pixel_format (ArvCamera *camera)
  * @camera: a #ArvCamera
  *
  * Retuns: pixel format as string, NULL on error.
+ *
+ * Since: 0.2.0
  */
 
 const char *
@@ -381,6 +419,8 @@ arv_camera_get_pixel_format_as_string (ArvCamera *camera)
  * Retrieves the list of all available pixel formats.
  *
  * Returns: (array length=n_pixel_formats) (transfer container): a newly allocated array of #ArvPixelFormat
+ *
+ * Since: 0.2.0
  */
 
 gint64 *
@@ -399,6 +439,8 @@ arv_camera_get_available_pixel_formats (ArvCamera *camera, guint *n_pixel_format
  * Retrieves the list of all available pixel formats as strings.
  *
  * Returns: (array length=n_pixel_formats) (transfer container): a newly allocated array of strings.
+ *
+ * Since: 0.2.0
  */
 
 const char **
@@ -418,6 +460,8 @@ arv_camera_get_available_pixel_formats_as_strings (ArvCamera *camera, guint *n_p
  * In general, these human-readable strings cannot be used as settings.
  *
  * Returns: (array length=n_pixel_formats) (transfer container): a newly allocated array of string constants.
+ *
+ * Since: 0.2.0
  */
 
 const char **
@@ -473,6 +517,8 @@ arv_camera_get_available_pixel_formats_as_display_names (ArvCamera *camera, guin
  * @camera: a #ArvCamera
  *
  * Starts video stream acquisition.
+ *
+ * Since: 0.2.0
  */
 
 void
@@ -488,6 +534,8 @@ arv_camera_start_acquisition (ArvCamera *camera)
  * @camera: a #ArvCamera
  *
  * Stops video stream acquisition.
+ *
+ * Since: 0.2.0
  */
 
 void
@@ -504,6 +552,8 @@ arv_camera_stop_acquisition (ArvCamera *camera)
  * @acquisition_mode: acquisition mode
  *
  * Defines acquisition mode.
+ *
+ * Since: 0.2.0
  */
 
 void
@@ -520,6 +570,8 @@ arv_camera_set_acquisition_mode (ArvCamera *camera, ArvAcquisitionMode acquisiti
  * @camera: a #ArvCamera
  *
  * Returns: acquisition mode.
+ *
+ * Since: 0.2.0
  */
 
 ArvAcquisitionMode
@@ -541,6 +593,8 @@ arv_camera_get_acquisition_mode (ArvCamera *camera)
  *
  * Configures a fixed frame rate mode. Once acquisition start is triggered, the
  * video stream will be acquired with the given frame rate.
+ *
+ * Since: 0.2.0
  */
 
 void
@@ -585,6 +639,8 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
  * @camera: a #ArvCamera
  *
  * Returns: actual frame rate, in Hz.
+ *
+ * Since: 0.2.0
  */
 
 double
@@ -614,6 +670,8 @@ arv_camera_get_frame_rate (ArvCamera *camera)
  *
  * Source can also be "Software". In this case, an acquisition is triggered
  * by a call to arv_camera_software_trigger().
+ *
+ * Since: 0.2.0
  */
 
 void
@@ -647,6 +705,8 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source)
  *
  * Sets the trigger source. This function doesn't check if the camera is configured
  * to actually use this source as a trigger.
+ *
+ * Since: 0.2.0
  */
 
 void
@@ -666,6 +726,8 @@ arv_camera_set_trigger_source (ArvCamera *camera, const char *source)
  * to actually use this source as a trigger.
  *
  * Returns: a string containing the trigger source name, NULL on error.
+ *
+ * Since: 0.2.0
  */
 
 const char *
@@ -682,6 +744,8 @@ arv_camera_get_trigger_source (ArvCamera *camera)
  *
  * Sends a software trigger command to @camera. The camera must be previously
  * configured to use a software trigger, using @arv_camera_set_trigger().
+ *
+ * Since: 0.2.0
  */
 
 void
@@ -699,6 +763,8 @@ arv_camera_software_trigger (ArvCamera *camera)
  *
  * Sets exposure time. User should take care to set a value compatible with
  * the desired frame rate.
+ *
+ * Since: 0.2.0
  */
 
 void
@@ -727,6 +793,8 @@ arv_camera_set_exposure_time (ArvCamera *camera, double exposure_time_us)
  * @camera: a #ArvCamera
  *
  * Returns: current exposure time, in µs.
+ *
+ * Since: 0.2.0
  */
 
 double
@@ -744,6 +812,8 @@ arv_camera_get_exposure_time (ArvCamera *camera)
  * @max: (out): maximum exposure time
  *
  * Retrieves exposure time bounds, in µs.
+ *
+ * Since: 0.2.0
  */
 
 void
@@ -778,7 +848,9 @@ arv_camera_get_exposure_time_bounds (ArvCamera *camera, double *min, double *max
  * @auto_mode: auto exposure mode selection
  *
  * Configures automatic exposure feature.
- **/
+ *
+ * Since: 0.2.0
+ */
 
 void
 arv_camera_set_exposure_time_auto (ArvCamera *camera, ArvAuto auto_mode)
@@ -793,7 +865,9 @@ arv_camera_set_exposure_time_auto (ArvCamera *camera, ArvAuto auto_mode)
  * @camera: a #ArvCamera
  *
  * Returns: auto exposure mode selection
- **/
+ *
+ * Since: 0.2.0
+ */
 
 ArvAuto
 arv_camera_get_exposure_time_auto (ArvCamera *camera)
@@ -811,6 +885,8 @@ arv_camera_get_exposure_time_auto (ArvCamera *camera)
  * @gain: gain value
  *
  * Sets the gain of the ADC converter.
+ *
+ * Since: 0.2.0
  */
 
 void
@@ -832,6 +908,8 @@ arv_camera_set_gain (ArvCamera *camera, double gain)
  * @camera: a #ArvCamera
  *
  * Returns: the current gain setting.
+ *
+ * Since: 0.2.0
  */
 
 double
@@ -852,6 +930,8 @@ arv_camera_get_gain (ArvCamera *camera)
  * @max: (out): maximum gain
  *
  * Retrieves gain bounds.
+ *
+ * Since: 0.2.0
  */
 
 void
@@ -878,9 +958,11 @@ arv_camera_get_gain_bounds (ArvCamera *camera, double *min, double *max)
 /**
  * arv_camera_set_gain_auto:
  * @camera: a #ArvCamera
- * @auto_mode: auto gaine mode selection
+ * @auto_mode: auto gain mode selection
  *
  * Configures automatic gain feature.
+ *
+ * Since: 0.2.0
  **/
 
 void
@@ -896,6 +978,8 @@ arv_camera_set_gain_auto (ArvCamera *camera, ArvAuto auto_mode)
  * @camera: a #ArvCamera
  *
  * Returns: auto gain mode selection
+ *
+ * Since: 0.2.0
  **/
 
 ArvAuto
@@ -916,6 +1000,8 @@ arv_camera_get_gain_auto (ArvCamera *camera)
  * for the creation of the stream buffers.
  *
  * Returns: frame storage size, in bytes.
+ *
+ * Since: 0.2.0
  */
 
 guint
@@ -933,6 +1019,8 @@ arv_camera_get_payload (ArvCamera *camera)
  * Retrieves the #ArvDevice object for more complete access to camera features.
  *
  * Returns: (transfer none): underlying device object.
+ *
+ * Since: 0.2.0
  */
 
 ArvDevice *
@@ -946,7 +1034,10 @@ arv_camera_get_device (ArvCamera *camera)
 /**
  * arv_camera_is_frame_rate_available:
  * @camera: a #ArvCamera
+ *
  * Returns: TRUE if FrameRate feature is available
+ *
+ * Since: 0.2.0
  */
 
 gboolean
@@ -966,7 +1057,10 @@ arv_camera_is_frame_rate_available (ArvCamera *camera)
 /**
  * arv_camera_is_exposure_time_available:
  * @camera: a #ArvCamera
+ *
  * Returns: TRUE if Exposure Time feature is available.
+ *
+ * Since: 0.2.0
  */
 
 gboolean
@@ -980,7 +1074,10 @@ arv_camera_is_exposure_time_available (ArvCamera *camera)
 /**
  * arv_camera_is_exposure_auto_available:
  * @camera: a #ArvCamera
+ *
  * Returns: TRUE if Exposure Auto feature is available.
+ *
+ * Since: 0.2.0
  */
 
 gboolean
@@ -994,7 +1091,10 @@ arv_camera_is_exposure_auto_available (ArvCamera *camera)
 /**
  * arv_camera_is_gain_available:
  * @camera: a #ArvCamera
+ *
  * Returns: TRUE if Gain feature is available.
+ *
+ * Since: 0.2.0
  */
 
 gboolean
@@ -1011,7 +1111,10 @@ arv_camera_is_gain_available (ArvCamera *camera)
 /**
  * arv_camera_is_gain_auto_available:
  * @camera: a #ArvCamera
+ *
  * Returns: TRUE if Gain feature is available.
+ *
+ * Since: 0.2.0
  */
 
 gboolean
@@ -1030,6 +1133,8 @@ arv_camera_is_gain_auto_available (ArvCamera *camera)
  * first available camera.
  *
  * Returns: a new #ArvCamera.
+ *
+ * Since: 0.2.0
  */
 
 ArvCamera *
