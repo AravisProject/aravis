@@ -1,6 +1,20 @@
-- add a feature tree and editor to the simple viewer.
-- support more genicam features.
+Viewer:
+- add a feature tree and editor
+- add a device list refresh button (or event better, asynchronously check for new/removed device)
+
+GigE Vision:
 - improve support of device creation by IP address.
     As we have to find the interface with which we reach the device,
     we need to extend the discovery code in order to send the discover
     packet to a given IP address, instead of a broadcast one.
+- test and integration of PENDING_ACK packets
+- MTU check using GevSCPSFireTestPacket feature
+
+Tests:
+- add GigE Vision test (launch an instance of the camera simulator and connect to it)
+
+and:
+- improve Genicam feature coverage
+- improve developper documentation
+- improve GigE Vision protocol documentation
+- add more unit tests
