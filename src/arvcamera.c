@@ -29,7 +29,7 @@
  * drawback of not exposing all the available features. See #ArvDevice and
  * #ArvGc for a more advanced use of the Aravis library.
  *
- * <example id="arv-example"><title>Sample application of the ArvCamera API</title>
+ * <example id="arv-example"><title>Example use of the ArvCamera API</title>
  * <programlisting>
  * <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" href="../../../../tests/arvexample.c">
  *   <xi:fallback>FIXME: MISSING XINCLUDE CONTENT</xi:fallback>
