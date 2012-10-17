@@ -187,7 +187,7 @@ introspection_files = $(ARAVIS_SRCS) \
 		      arvenumtypes.c \
 		      arvenumtypes.h
 
-Aravis-@ARAVIS_API_VERSION@.gir: $(INTROSPECTION_SCANNER)
+Aravis-@ARAVIS_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libaravis-@ARAVIS_API_VERSION@.la Makefile
 
 Aravis_@ARAVIS_API_VERSION_U@_gir_INCLUDES = GObject-2.0 Gio-2.0
 Aravis_@ARAVIS_API_VERSION_U@_gir_SCANNERFLAGS = --identifier-prefix=Arv --warn-all
