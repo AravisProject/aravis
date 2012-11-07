@@ -74,9 +74,9 @@ typedef enum {
 const char * 		arv_acquisition_mode_to_string 		(ArvAcquisitionMode value);
 ArvAcquisitionMode 	arv_acquisition_mode_from_string	(const char *string);
 
-/* Grey pixel formats */
-
 typedef guint32 ArvPixelFormat;
+
+/* Grey pixel formats */
 
 #define	ARV_PIXEL_FORMAT_MONO_8			0x01080001
 #define	ARV_PIXEL_FORMAT_MONO_8_SIGNED		0x01080002
@@ -106,9 +106,10 @@ typedef guint32 ArvPixelFormat;
 #define ARV_PIXEL_FORMAT_BAYER_GB_12		0x01100012
 #define ARV_PIXEL_FORMAT_BAYER_BG_12		0x01100013
 
+#define ARV_PIXEL_FORMAT_BAYER_GR_12_PACKED	0x010c002a
 #define ARV_PIXEL_FORMAT_BAYER_BG_12_PACKED	0x010c002d
 
-	/* Color pixel formats */
+/* Color pixel formats */
 
 #define ARV_PIXEL_FORMAT_RGB_8_PACKED		0x02180014
 #define ARV_PIXEL_FORMAT_BGR_8_PACKED		0x02180015
@@ -133,7 +134,7 @@ typedef guint32 ArvPixelFormat;
 
 #define ARV_PIXEL_FORMAT_YUV_422_YUYV_PACKED 	0x02100032
 
-	/* Custom */
+/* Custom */
 
 #define ARV_PIXEL_FORMAT_CUSTOM_BAYER_GR_12_PACKED  	0x810c0001
 #define ARV_PIXEL_FORMAT_CUSTOM_BAYER_RG_12_PACKED  	0x810c0002
