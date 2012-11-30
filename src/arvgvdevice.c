@@ -25,6 +25,8 @@
  * @short_description: Gigabit ethernet camera device
  */
 
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include <arvgvdevice.h>
 #include <arvgc.h>
 #include <arvdebug.h>

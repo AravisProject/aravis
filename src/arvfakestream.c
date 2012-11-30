@@ -25,6 +25,8 @@
  * @short_description: Fake camera stream
  */
 
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include <arvfakestream.h>
 #include <arvbuffer.h>
 #include <arvdebug.h>
