@@ -1,3 +1,5 @@
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include <arv.h>
 #include <stdlib.h>
 #include <signal.h>
