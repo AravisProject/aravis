@@ -45,9 +45,10 @@ static GObjectClass *parent_class = NULL;
 /**
  * arv_gc_node_get_genicam:
  * @gc_node: a #ArvGcNode
- * Return value: (transfer none): the parent #ArvGc
  *
  * Retrieves the parent genicam document of @gc_node.
+ *
+ * Return value: (transfer none): the parent #ArvGc
  */
 
 ArvGc *

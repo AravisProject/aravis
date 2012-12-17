@@ -704,6 +704,7 @@ arv_gv_stream_get_port (ArvGvStream *gv_stream)
  * @user_data: (closure): user data for @callback
  * @timestamp_tick_frequency: camera tick frequency for timestamping
  * @packet_size: gvsp packet size, in bytes
+ *
  * Return value: (transfer full): a new #ArvStream.
  */
 

@@ -313,6 +313,7 @@ arv_fake_camera_get_acquisition_status (ArvFakeCamera *camera)
 /**
  * arv_fake_camera_get_stream_address:
  * @camera: a #ArvFakeCamera
+ *
  * Return value: (transfer full): the data stream #GSocketAddress for this camera
  */
 

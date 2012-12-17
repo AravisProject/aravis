@@ -53,7 +53,7 @@ arv_interface_clear_device_ids (ArvInterface *interface)
 }
 
 /**
- * arv_interface_update_device_list
+ * arv_interface_update_device_list:
  * @interface: a #ArvInterface
  *
  * Updates the internal list of available devices. This may change the
@@ -73,7 +73,7 @@ arv_interface_update_device_list (ArvInterface *interface)
 }
 
 /**
- * arv_interface_get_n_devices
+ * arv_interface_get_n_devices:
  * @interface: a #ArvInterface
  *
  * Queries the number of available devices on this interface. Prior to this
@@ -95,7 +95,7 @@ arv_interface_get_n_devices (ArvInterface *interface)
 }
 
 /**
- * arv_interface_get_device_id
+ * arv_interface_get_device_id:
  * @interface: a #ArvInterface
  * @index: device index
  *
@@ -120,7 +120,7 @@ arv_interface_get_device_id (ArvInterface *interface, unsigned int index)
 }
 
 /**
- * arv_interface_get_device_physical_id
+ * arv_interface_get_device_physical_id:
  * @interface: a #ArvInterface
  * @index: device index
  *
@@ -149,7 +149,7 @@ arv_interface_get_device_physical_id (ArvInterface *interface, unsigned int inde
 }
 
 /**
- * arv_interface_get_device_address
+ * arv_interface_get_device_address:
  * @interface: a #ArvInterface
  * @index: device index
  *
@@ -177,7 +177,7 @@ arv_interface_get_device_address (ArvInterface *interface, unsigned int index)
 }
 
 /**
- * arv_interface_open_device
+ * arv_interface_open_device:
  * @interface: a #ArvInterface
  * @device_id: (allow-none): device unique id
  *

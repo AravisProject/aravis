@@ -159,9 +159,10 @@ static GObjectClass *parent_class = NULL;
 /**
  * arv_dom_node_get_node_name:
  * @self: a #ArvDomNode
- * Return value: the node name.
  *
  * Gets the node name.
+ *
+ * Return value: the node name.
  */
 
 const char*
@@ -180,9 +181,10 @@ arv_dom_node_get_node_name (ArvDomNode* self)
 /**
  * arv_dom_node_get_node_value:
  * @self: a #ArvDomNode
- * Return value: the node value.
  *
  * Gets the node value.
+ *
+ * Return value: the node value.
  */
 
 const char*

@@ -60,10 +60,11 @@ arv_device_error_quark (void)
  * @device: a #ArvDevice
  * @callback: (scope call): a frame processing callback
  * @user_data: (closure) user data for @callback
- * Return value: (transfer full): a new #ArvStream.
  *
  * Creates a new #ArvStream for video stream handling. See
  * @ArvStreamCallback for details regarding the callback function.
+ *
+ * Return value: (transfer full): a new #ArvStream.
  *
  * Since: 0.2.0
  */
@@ -120,9 +121,10 @@ arv_device_write_register (ArvDevice *device, guint32 address, guint32 value, GE
 /**
  * arv_device_get_genicam: 
  * @device: a device object 
- * Return value: (transfer none): the genicam interface.
  *
  * Retrieves the genicam interface of the given device.
+ *
+ * Return value: (transfer none): the genicam interface.
  *
  * Since: 0.2.0
  */
@@ -147,9 +149,10 @@ _get_genicam_xml (ArvDevice *device, size_t *size)
  * arv_device_get_xml:
  * @device: a #ArvDevice
  * @size: placeholder for the returned data size (bytes)
- * Return value: a pointer to the Genicam XML data, owned by the device.
  *
  * Gets the Genicam XML data stored in the device memory.
+ *
+ * Return value: a pointer to the Genicam XML data, owned by the device.
  *
  * Since: 0.2.0
  **/

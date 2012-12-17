@@ -209,9 +209,10 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
  * arv_gc_get_node:
  * @genicam: a #ArvGc object
  * @name: node name
- * Return value: (transfer none): a #ArvGcNode, null if not found.
  *
  * Retrieves a genicam node by name.
+ *
+ * Return value: (transfer none): a #ArvGcNode, null if not found.
  */
 
 ArvGcNode *
@@ -226,9 +227,10 @@ arv_gc_get_node	(ArvGc *genicam, const char *name)
 /**
  * arv_gc_get_device:
  * @genicam: a #ArvGc object
- * Return value: (transfer none): a #ArvDevice.
  *
  * Retrieves the device handled by this genicam interface. The device is used for register access.
+ *
+ * Return value: (transfer none): a #ArvDevice.
  */
 
 ArvDevice *

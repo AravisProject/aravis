@@ -79,11 +79,12 @@ arv_stream_push_buffer (ArvStream *stream, ArvBuffer *buffer)
 /**
  * arv_stream_pop_buffer:
  * @stream: a #ArvStream
- * Returns: (transfer full): a #ArvBuffer
  *
  * Pops a buffer from the output queue of @stream. The retrieved buffer
  * may contain an invalid image. Caller should check the buffer status before using it.
  * This function blocks until a buffer is available.
+ *
+ * Returns: (transfer full): a #ArvBuffer
  *
  * Since: 0.2.0
  */
@@ -99,11 +100,12 @@ arv_stream_pop_buffer (ArvStream *stream)
 /**
  * arv_stream_try_pop_buffer:
  * @stream: a #ArvStream
- * Returns: (transfer full): a #ArvBuffer, NULL if no buffer is available.
  *
  * Pops a buffer from the output queue of @stream. The retrieved buffer
  * may contain an invalid image. Caller should check the buffer status before using it.
  * This is the non blocking version of pop_buffer.
+ *
+ * Returns: (transfer full): a #ArvBuffer, NULL if no buffer is available.
  *
  * Since: 0.2.0
  */
@@ -120,10 +122,11 @@ arv_stream_try_pop_buffer (ArvStream *stream)
  * arv_stream_timeout_pop_buffer:
  * @stream: a #ArvStream
  * @timeout: timeout, in µs
- * Returns: (transfer full): a #ArvBuffer, NULL if no buffer is available until the timeout occurs.
  *
  * Pops a buffer from the output queue of @stream, waiting no more than @timeout. The retrieved buffer
  * may contain an invalid image. Caller should check the buffer status before using it.
+ *
+ * Returns: (transfer full): a #ArvBuffer, NULL if no buffer is available until the timeout occurs.
  *
  * Since: 0.2.0
  */

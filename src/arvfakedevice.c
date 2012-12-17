@@ -100,6 +100,7 @@ arv_fake_device_write_register (ArvDevice *device, guint32 address, guint32 valu
 /**
  * arv_fake_device_get_fake_camera:
  * @device: a fake device
+ *
  * Return value: (transfer none): the #ArvFakeCamera used by this device instance.
  */
 
