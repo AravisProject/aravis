@@ -20,6 +20,8 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include <arvconfig.h>
 #include <gtk/gtk.h>
 #include <gst/gst.h>
