@@ -34,46 +34,9 @@ import time
 
 from gi.repository import Aravis
 
-Aravis.enable_interface ("Fake")
+buffer_a = Aravis.Buffer.new (1024, None)
+buffer_b = Aravis.Buffer.new (1024, None)
 
-if len(sys.argv) > 1:
-	camera = Aravis.Camera.new (sys.argv[1])
-else:
-	camera = Aravis.Camera.new (None)
-
-camera.set_region (0,0,128,128)
-camera.set_frame_rate (10.0)
-camera.set_pixel_format (Aravis.PIXEL_FORMAT_MONO_8)
-
-payload = camera.get_payload ()
-
-[x,y,width,height] = camera.get_region ()
-
-print "Camera vendor :", camera.get_vendor_name ()
-print "Camera model  :", camera.get_model_name ()
-print "Camera id     :", camera.get_device_id ()
-print "ROI           :", width, "x", height, "at", x, ",", y
-print "Payload       :", payload
-print "Pixel format  :", camera.get_pixel_format_as_string ()
-
-stream = camera.create_stream (None, None)
-
-for i in range(0,10):
-	stream.push_buffer (Aravis.Buffer.new (payload, None))
-
-print "Start acquisition"
-
-camera.start_acquisition ()
-
-print "Acquisition"
-
-for i in range(0,20):
-	buffer = stream.pop_buffer ()
-	print buffer
-	if buffer:
-		stream.push_buffer (buffer)
-
-print "Stop acquisition"
-
-camera.stop_acquisition ()
+print buffer_a.__grefcount__
+print buffer_b.__grefcount__
 
