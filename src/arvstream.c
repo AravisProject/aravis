@@ -154,7 +154,7 @@ arv_stream_timeout_pop_buffer (ArvStream *stream, guint64 timeout)
  * arv_stream_pop_input_buffer: (skip)
  * @stream: (transfer full): a #ArvStream
  *
- * Pos a buffer from the input queue of @stream.
+ * Pops a buffer from the input queue of @stream.
  *
  * Since: 0.2.0
  */
