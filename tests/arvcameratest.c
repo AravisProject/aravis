@@ -218,6 +218,7 @@ main (int argc, char **argv)
 		printf ("image height        = %d\n", height);
 		printf ("horizontal binning  = %d\n", dx);
 		printf ("vertical binning    = %d\n", dy);
+		printf ("payload             = %d bytes\n", payload);
 		printf ("exposure            = %g µs\n", exposure);
 		printf ("gain                = %d dB\n", gain);
 
