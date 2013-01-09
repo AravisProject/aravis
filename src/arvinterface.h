@@ -63,7 +63,7 @@ void 			arv_interface_update_device_list 	(ArvInterface *interface);
 unsigned int 		arv_interface_get_n_devices 		(ArvInterface *interface);
 const char * 		arv_interface_get_device_id 		(ArvInterface *interface, unsigned int index);
 const char * 		arv_interface_get_device_physical_id 	(ArvInterface *interface, unsigned int index);
-const char * 		arv_interface_get_device_address		(ArvInterface *interface, unsigned int index);
+const char * 		arv_interface_get_device_address	(ArvInterface *interface, unsigned int index);
 ArvDevice * 		arv_interface_open_device 		(ArvInterface *interface, const char *device_id);
 
 G_END_DECLS
