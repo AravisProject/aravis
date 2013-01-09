@@ -333,8 +333,6 @@ arv_gv_interface_discover (ArvGvInterface *gv_interface)
 									     device_infos->name, device_infos);
 						}
 						if (device_infos->user_name != NULL && device_infos->user_name[0] != '\0') {
-							printf ("%s\n", device_infos->user_name);
-
 							arv_gv_interface_device_infos_ref (device_infos);
 							g_hash_table_insert (gv_interface->priv->devices,
 									     device_infos->user_name, device_infos);
