@@ -187,9 +187,17 @@ arv_gv_discover_socket_list_send_discover_packet (ArvGvDiscoverSocketList *socke
 /* ArvGvInterfaceDeviceInfos implementation */
 
 typedef struct {
-	GInetAddress *interface_address;
+	char *name;
+	char *user_name;
+	char *manufacturer;
+	char *serial_number;
 	char *mac_string;
+
+	GInetAddress *interface_address;
+
 	guchar discovery_data[ARV_GVBS_DISCOVERY_DATA_SIZE];
+
+	volatile gint ref_count;
 } ArvGvInterfaceDeviceInfos;
 
 static ArvGvInterfaceDeviceInfos *
@@ -204,8 +212,18 @@ arv_gv_interface_device_infos_new (GInetAddress *interface_address,
 	g_object_ref (interface_address);
 
 	infos = g_new (ArvGvInterfaceDeviceInfos, 1);
-	infos->interface_address = interface_address;
+
 	memcpy (infos->discovery_data, discovery_data, ARV_GVBS_DISCOVERY_DATA_SIZE);
+
+	infos->manufacturer = g_strndup ((char *) &infos->discovery_data[ARV_GVBS_MANUFACTURER_NAME_OFFSET],
+					 ARV_GVBS_MANUFACTURER_NAME_SIZE);
+	infos->serial_number = g_strndup ((char *) &infos->discovery_data[ARV_GVBS_SERIAL_NUMBER_OFFSET],
+				   ARV_GVBS_SERIAL_NUMBER_SIZE);
+	infos->user_name = g_strndup ((char *) &infos->discovery_data[ARV_GVBS_USER_DEFINED_NAME_OFFSET],
+				      ARV_GVBS_USER_DEFINED_NAME_SIZE);
+	infos->name = g_strdup_printf ("%s-%s", infos->manufacturer, infos->serial_number);
+
+	infos->interface_address = interface_address;
 
 	infos->mac_string = g_strdup_printf ("%02x:%02x:%02x:%02x:%02x:%02x",
 					     infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 2],
@@ -214,17 +232,34 @@ arv_gv_interface_device_infos_new (GInetAddress *interface_address,
 					     infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 5],
 					     infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 6],
 					     infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 7]);
+	infos->ref_count = 1;
 
 	return infos;
 }
 
 static void
-arv_gv_interface_device_infos_free (ArvGvInterfaceDeviceInfos *infos)
+arv_gv_interface_device_infos_ref (ArvGvInterfaceDeviceInfos *infos)
 {
 	g_return_if_fail (infos != NULL);
-	g_object_unref (infos->interface_address);
-	g_free (infos->mac_string);
-	g_free (infos);
+	g_return_if_fail (g_atomic_int_get (&infos->ref_count) > 0);
+	g_atomic_int_inc (&infos->ref_count);
+}
+
+static void
+arv_gv_interface_device_infos_unref (ArvGvInterfaceDeviceInfos *infos)
+{
+	g_return_if_fail (infos != NULL);
+	g_return_if_fail (g_atomic_int_get (&infos->ref_count) > 0);
+
+	if (g_atomic_int_dec_and_test (&infos->ref_count)) {
+		g_object_unref (infos->interface_address);
+		g_free (infos->name);
+		g_free (infos->user_name);
+		g_free (infos->manufacturer);
+		g_free (infos->serial_number);
+		g_free (infos->mac_string);
+		g_free (infos);
+	}
 }
 
 /* ArvGvInterface implementation */
@@ -233,7 +268,6 @@ static GObjectClass *parent_class = NULL;
 
 struct _ArvGvInterfacePrivate {
 	GHashTable *devices;
-	GHashTable *devices_by_mac;
 };
 
 static void
@@ -278,19 +312,8 @@ arv_gv_interface_discover (ArvGvInterface *gv_interface)
 						GInetAddress *interface_address;
 						char *address_string;
 						char *data = buffer + sizeof (ArvGvcpHeader);
-						char *serial_number;
-						char *manufacturer;
-						char *key;
 
 						arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
-
-						manufacturer = g_strndup (&data[ARV_GVBS_MANUFACTURER_NAME_OFFSET],
-									  ARV_GVBS_MANUFACTURER_NAME_SIZE);
-						serial_number = g_strndup (&data[ARV_GVBS_SERIAL_NUMBER_OFFSET],
-									   ARV_GVBS_SERIAL_NUMBER_SIZE);
-						key = g_strdup_printf ("%s-%s", manufacturer, serial_number);
-						g_free (manufacturer);
-						g_free (serial_number);
 
 						interface_address = g_inet_socket_address_get_address
 							(G_INET_SOCKET_ADDRESS (discover_socket->interface_address));
@@ -300,14 +323,26 @@ arv_gv_interface_discover (ArvGvInterface *gv_interface)
 
 						arv_debug_interface ("[GvInterface::discovery] Device '%s' found "
 								     "(interface %s)",
-								     key, address_string);
+								     device_infos->name, address_string);
 
 						g_free (address_string);
 
-						g_hash_table_insert (gv_interface->priv->devices,
-								     key, device_infos);
-						g_hash_table_insert (gv_interface->priv->devices_by_mac,
-								     device_infos->mac_string, device_infos);
+						if (device_infos->name != NULL && device_infos->name[0] != '\0') {
+							arv_gv_interface_device_infos_ref (device_infos);
+							g_hash_table_insert (gv_interface->priv->devices,
+									     device_infos->name, device_infos);
+						}
+						if (device_infos->user_name != NULL && device_infos->user_name[0] != '\0') {
+							printf ("%s\n", device_infos->user_name);
+
+							arv_gv_interface_device_infos_ref (device_infos);
+							g_hash_table_insert (gv_interface->priv->devices,
+									     device_infos->user_name, device_infos);
+						}
+						arv_gv_interface_device_infos_ref (device_infos);
+						g_hash_table_insert (gv_interface->priv->devices, device_infos->mac_string, device_infos);
+
+						arv_gv_interface_device_infos_unref (device_infos);
 					}
 				}
 			} while (count > 0);
@@ -342,19 +377,22 @@ arv_gv_interface_update_device_list (ArvInterface *interface, GArray *device_ids
 
 	g_hash_table_iter_init (&iter, gv_interface->priv->devices);
 	while (g_hash_table_iter_next (&iter, &key, &value)) {
-		ArvInterfaceDeviceIds *ids;
-		GInetAddress *device_address;
 		ArvGvInterfaceDeviceInfos *infos = value;
 
-		ids = g_new0 (ArvInterfaceDeviceIds, 1);
+		if (g_strcmp0 (key, infos->name) == 0) {
+			ArvInterfaceDeviceIds *ids;
+			GInetAddress *device_address;
 
-		ids->device = g_strdup (key);
-		ids->physical = g_strdup (infos->mac_string);
-		device_address = _device_infos_to_ginetaddress (infos);
-		ids->address = g_inet_address_to_string (device_address);
-		g_object_unref (device_address);
+			ids = g_new0 (ArvInterfaceDeviceIds, 1);
 
-		g_array_append_val (device_ids, ids);
+			ids->device = g_strdup (key);
+			ids->physical = g_strdup (infos->mac_string);
+			device_address = _device_infos_to_ginetaddress (infos);
+			ids->address = g_inet_address_to_string (device_address);
+			g_object_unref (device_address);
+
+			g_array_append_val (device_ids, ids);
+		}
 	}
 }
 
@@ -374,12 +412,8 @@ arv_gv_interface_open_device (ArvInterface *interface, const char *device_id)
 		device_list = g_hash_table_get_values (gv_interface->priv->devices);
 		device_infos = device_list != NULL ? device_list->data : NULL;
 		g_list_free (device_list);
-	} else {
+	} else
 		device_infos = g_hash_table_lookup (gv_interface->priv->devices, device_id);
-
-		if (device_infos == NULL)
-			device_infos = g_hash_table_lookup (gv_interface->priv->devices_by_mac, device_id);
-	}
 
 	if (device_infos == NULL)
 		return NULL;
@@ -433,9 +467,8 @@ arv_gv_interface_init (ArvGvInterface *gv_interface)
 {
 	gv_interface->priv = G_TYPE_INSTANCE_GET_PRIVATE (gv_interface, ARV_TYPE_GV_INTERFACE, ArvGvInterfacePrivate);
 
-	gv_interface->priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
-							     (GDestroyNotify) arv_gv_interface_device_infos_free);
-	gv_interface->priv->devices_by_mac = g_hash_table_new_full (g_str_hash, g_str_equal, NULL, NULL);
+	gv_interface->priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal, NULL,
+							     (GDestroyNotify) arv_gv_interface_device_infos_unref);
 }
 
 static void
@@ -443,9 +476,7 @@ arv_gv_interface_finalize (GObject *object)
 {
 	ArvGvInterface *gv_interface = ARV_GV_INTERFACE (object);
 
-	g_hash_table_unref (gv_interface->priv->devices_by_mac);
 	g_hash_table_unref (gv_interface->priv->devices);
-	gv_interface->priv->devices_by_mac = NULL;
 	gv_interface->priv->devices = NULL;
 
 	parent_class->finalize (object);
