@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aravis master\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-05-25 22:58+0200\n"
+"POT-Creation-Date: 2013-01-09 13:46+0100\n"
 "PO-Revision-Date: 2010-12-04 22:56+0100\n"
 "Last-Translator: Emmanuel Pacaud <emmanuel@gnome.org>\n"
 "Language-Team: Emmanuel Pacaud <emmanuel@gnome.org>\n"
@@ -17,6 +17,7 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
 #: ../viewer/arv-viewer-2.ui.h:1 ../viewer/arv-viewer-3.ui.h:1
+#: ../viewer/data/arv-viewer.desktop.in.in.h:1
 msgid "Aravis"
 msgstr "Aravis"
 
@@ -51,3 +52,11 @@ msgstr "Paramètres"
 #: ../viewer/arv-viewer-3.ui.h:9
 msgid "Save a snapshot into image folder"
 msgstr "Sauvegarde d'une capture dans le dossier images"
+
+#: ../viewer/data/arv-viewer.desktop.in.in.h:2
+msgid "Aravis Simple Viewer"
+msgstr "Visualisateur de vidéo Aravis"
+
+#: ../viewer/data/arv-viewer.desktop.in.in.h:3
+msgid "Display the video stream from your cameras"
+msgstr "Affiche le flux vidéo de caméras Genicam"
