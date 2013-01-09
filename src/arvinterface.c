@@ -52,6 +52,17 @@ arv_interface_clear_device_ids (ArvInterface *interface)
 	g_array_set_size (interface->priv->device_ids, 0);
 }
 
+static gint
+_compare_device_ids (ArvInterfaceDeviceIds **a, ArvInterfaceDeviceIds **b)
+{
+	if (*a == NULL || (*a)->device == NULL)
+		return -1;
+	if (*b == NULL || (*b)->device == NULL)
+		return 1;
+
+	return g_ascii_strcasecmp ((*a)->device, (*b)->device);
+}
+
 /**
  * arv_interface_update_device_list:
  * @interface: a #ArvInterface
@@ -70,6 +81,8 @@ arv_interface_update_device_list (ArvInterface *interface)
 	arv_interface_clear_device_ids (interface);
 
 	ARV_INTERFACE_GET_CLASS (interface)->update_device_list (interface, interface->priv->device_ids);
+
+	g_array_sort (interface->priv->device_ids, (GCompareFunc) _compare_device_ids);
 }
 
 /**
