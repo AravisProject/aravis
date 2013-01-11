@@ -76,6 +76,8 @@ ArvAcquisitionMode 	arv_acquisition_mode_from_string	(const char *string);
 
 typedef guint32 ArvPixelFormat;
 
+#define ARV_PIXEL_FORMAT_BIT_PER_PIXEL(pixel_format) (((pixel_format) >> 16) & 0xff)
+
 /* Grey pixel formats */
 
 #define	ARV_PIXEL_FORMAT_MONO_8			0x01080001
