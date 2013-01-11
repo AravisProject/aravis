@@ -314,6 +314,7 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 {
 	GstAravis *gst_aravis;
 	ArvBuffer *arv_buffer;
+	int arv_row_stride;
 
 	gst_aravis = GST_ARAVIS (push_src);
 
@@ -328,9 +329,31 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 
 	*buffer = gst_buffer_new ();
 
-	GST_BUFFER_DATA (*buffer) = arv_buffer->data;
-	GST_BUFFER_MALLOCDATA (*buffer) = NULL;
-	GST_BUFFER_SIZE (*buffer) = gst_aravis->payload;
+	arv_row_stride = arv_buffer->width * ARV_PIXEL_FORMAT_BIT_PER_PIXEL (arv_buffer->pixel_format) / 8;
+
+	/* Gstreamer requires row stride to be a multiple of 4 */
+	if ((arv_row_stride & 0x3) != 0) {
+		int gst_row_stride;
+		size_t size;
+		void *data;
+		int i;
+
+		gst_row_stride = (arv_row_stride & ~(0x3)) + 4;
+
+		size = arv_buffer->height * gst_row_stride;
+		data = g_malloc (size);	
+
+		for (i = 0; i < arv_buffer->height; i++)
+			memcpy (data + i * gst_row_stride, arv_buffer->data + i * arv_row_stride, arv_row_stride);
+
+		GST_BUFFER_DATA (buffer) = data;
+		GST_BUFFER_MALLOCDATA (buffer) = data;
+		GST_BUFFER_SIZE (buffer) = size;
+	} else {
+		GST_BUFFER_DATA (*buffer) = arv_buffer->data;
+		GST_BUFFER_MALLOCDATA (*buffer) = NULL;
+		GST_BUFFER_SIZE (*buffer) = arv_buffer->size;
+	}
 
 	if (gst_aravis->timestamp_offset == 0) {
 		gst_aravis->timestamp_offset = arv_buffer->timestamp_ns;
