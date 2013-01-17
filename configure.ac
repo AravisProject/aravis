@@ -1,8 +1,8 @@
 AC_PREREQ(2.63.0)
 
 m4_define([aravis_version_major], [0])
-m4_define([aravis_version_minor], [2])
-m4_define([aravis_version_micro], [1])
+m4_define([aravis_version_minor], [3])
+m4_define([aravis_version_micro], [0])
 m4_define([aravis_version], [aravis_version_major.aravis_version_minor.aravis_version_micro])
 
 AC_INIT([aravis],[aravis_version],[http://bugzilla.gnome.org/enter_bug.cgi?product=aravis],[aravis])
@@ -15,7 +15,7 @@ AC_CONFIG_MACRO_DIR([m4])
 
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
-AC_SUBST([ARAVIS_API_VERSION], [0.2])
+AC_SUBST([ARAVIS_API_VERSION], [0.4])
 AC_SUBST([ARAVIS_API_VERSION_U],[AS_TR_SH([$ARAVIS_API_VERSION])])
 
 AC_SEARCH_LIBS([strerror],[cposix])
