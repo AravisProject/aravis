@@ -6,6 +6,7 @@ Bugfix release.
   * suppress glib deprecation warnings.
   * add a define for BAYER_GR_12_PACKED pixel format.
   * viewer: fix an issue when aravis buffer row stride is not a multiple of 4.
+  * viewer: translation update.
 
 Release 0.2.0
 =============
