@@ -733,7 +733,7 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 	stream_port = arv_gv_stream_get_port (ARV_GV_STREAM (stream));
 
 	if (!arv_device_write_register (device, ARV_GVBS_STREAM_CHANNEL_0_IP_ADDRESS_OFFSET,
-				   g_htonl(*((guint32 *) address_bytes)), NULL) ||
+					g_htonl(*((guint32 *) address_bytes)), NULL) ||
 	    !arv_device_write_register (device, ARV_GVBS_STREAM_CHANNEL_0_PORT_OFFSET, stream_port, NULL)) {
 		arv_warning_device ("[GvDevice::create_stream] Stream configuration failed");
 
