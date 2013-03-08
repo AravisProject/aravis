@@ -71,6 +71,9 @@ struct _ArvGvDevicePrivate {
 
 	char *genicam_xml;
 	size_t genicam_xml_size;
+
+	gboolean is_packet_resend_supported;
+	gboolean is_write_memory_supported;
 };
 
 GRegex *
@@ -741,6 +744,9 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 		return NULL;
 	}
 
+	if (!gv_device->priv->is_packet_resend_supported)
+		g_object_set (stream, "packet-resend", "never", NULL); 
+
 	arv_debug_device ("[GvDevice::create_stream] Stream port = %d", stream_port);
 
 	return stream;
@@ -813,6 +819,7 @@ arv_gv_device_new (GInetAddress *interface_address, GInetAddress *device_address
 	ArvGvDeviceIOData *io_data;
 	ArvGvDeviceHeartbeatData *heartbeat_data;
 	char *address_string;
+	guint32 capabilities;
 
 	g_return_val_if_fail (G_IS_INET_ADDRESS (interface_address), NULL);
 	g_return_val_if_fail (G_IS_INET_ADDRESS (device_address), NULL);
@@ -862,6 +869,13 @@ arv_gv_device_new (GInetAddress *interface_address, GInetAddress *device_address
 	gv_device->priv->heartbeat_thread = g_thread_create (arv_gv_device_heartbeat_thread,
 							     gv_device->priv->heartbeat_data,
 							     TRUE, NULL);
+
+	arv_device_read_register (ARV_DEVICE (gv_device), ARV_GVBS_GVCP_CAPABILITY_OFFSET, &capabilities, NULL);
+	gv_device->priv->is_packet_resend_supported = (capabilities & ARV_GVBS_GVCP_CAPABILITY_PACKET_RESEND) != 0;
+	gv_device->priv->is_write_memory_supported = (capabilities & ARV_GVBS_GVCP_CAPABILITY_WRITE_MEMORY) != 0;
+
+	arv_debug_device ("[GvDevice::new] Packet resend = %s", gv_device->priv->is_packet_resend_supported ? "yes" : "no");
+	arv_debug_device ("[GvDevice::new] Write memory = %s", gv_device->priv->is_write_memory_supported ? "yes" : "no");
 
 	return ARV_DEVICE (gv_device);
 }
