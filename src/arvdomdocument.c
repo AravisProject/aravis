@@ -115,50 +115,6 @@ arv_dom_document_create_text_node (ArvDomDocument *self, const char *data)
 	return ARV_DOM_DOCUMENT_GET_CLASS (self)->create_text_node (self, data);
 }
 
-/**
- * arv_dom_document_get_element_by_id:
- * @self: a #ArvDomDocument
- * @id: xml:id of the wanted element
- *
- * Returns: (transfer none): the element wich has id as xml:id attribute.
- */
-
-ArvDomElement *
-arv_dom_document_get_element_by_id (ArvDomDocument *self, const char *id)
-{
-	g_return_val_if_fail (ARV_IS_DOM_DOCUMENT (self), NULL);
-	g_return_val_if_fail (id != NULL, NULL);
-
-	arv_debug_dom ("[ArvDomDocument::get_element_by_id] Lookup '%s'", id);
-
-	return g_hash_table_lookup (self->ids, id);
-}
-
-void
-arv_dom_document_register_element (ArvDomDocument *self, ArvDomElement *element, const char *id)
-{
-	char *old_id;
-
-	g_return_if_fail (ARV_IS_DOM_DOCUMENT (self));
-
-	old_id = g_hash_table_lookup (self->elements, element);
-	if (old_id != NULL) {
-		arv_debug_dom ("[ArvDomDocument::register_element] Unregister '%s'", old_id);
-
-		g_hash_table_remove (self->elements, element);
-		g_hash_table_remove (self->ids, old_id);
-	}
-
-	if (id != NULL) {
-		char *new_id = g_strdup (id);
-
-		arv_debug_dom ("[ArvDomDocument::register_element] Register '%s'", id);
-
-		g_hash_table_replace (self->ids, new_id, element);
-		g_hash_table_replace (self->elements, element, new_id);
-	}
-}
-
 const char *
 arv_dom_document_get_url (ArvDomDocument *self)
 {
@@ -243,17 +199,12 @@ arv_dom_document_get_href_data (ArvDomDocument *self, const char *href, gsize *s
 static void
 arv_dom_document_init (ArvDomDocument *document)
 {
-	document->ids = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
-	document->elements = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, NULL);
 }
 
 static void
 arv_dom_document_finalize (GObject *object)
 {
 	ArvDomDocument *document = ARV_DOM_DOCUMENT (object);
-
-	g_hash_table_unref (document->elements);
-	g_hash_table_unref (document->ids);
 
 	g_free (document->url);
 

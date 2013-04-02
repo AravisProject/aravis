@@ -41,9 +41,6 @@ typedef struct _ArvDomDocumentClass ArvDomDocumentClass;
 struct _ArvDomDocument {
 	ArvDomNode node;
 
-	GHashTable *	ids;
-	GHashTable *	elements;
-
 	char *		url;
 
 };
@@ -61,9 +58,6 @@ GType arv_dom_document_get_type (void);
 ArvDomElement* 	arv_dom_document_get_document_element 	(ArvDomDocument* self);
 ArvDomElement* 	arv_dom_document_create_element 	(ArvDomDocument* self, const char *tag_name);
 ArvDomText* 	arv_dom_document_create_text_node 	(ArvDomDocument* self, const char *data);
-ArvDomElement *	arv_dom_document_get_element_by_id 	(ArvDomDocument *self, const char *id);
-
-void 		arv_dom_document_register_element 	(ArvDomDocument *self, ArvDomElement *element, const char *id);
 
 const char * 	arv_dom_document_get_url 		(ArvDomDocument *self);
 void		arv_dom_document_set_url		(ArvDomDocument *self, const char *url);

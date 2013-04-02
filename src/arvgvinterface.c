@@ -322,8 +322,10 @@ arv_gv_interface_discover (ArvGvInterface *gv_interface)
 						address_string = g_inet_address_to_string (interface_address);
 
 						arv_debug_interface ("[GvInterface::discovery] Device '%s' found "
-								     "(interface %s)",
-								     device_infos->name, address_string);
+								     "(interface %s) user_name '%s' - MAC_name '%s'",
+								     device_infos->name, address_string,
+								     device_infos->user_name,
+								     device_infos->mac_string);
 
 						g_free (address_string);
 
