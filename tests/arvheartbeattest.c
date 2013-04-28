@@ -1,5 +1,3 @@
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 #include <arv.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -57,7 +55,7 @@ int main(int argc, char *argv[])
     void (*old_sigint_handler)(int);
     int i, payload;
 
-    g_thread_init (NULL);
+    arv_g_thread_init (NULL);
     arv_g_type_init ();
 
     context = g_option_context_new (NULL);
