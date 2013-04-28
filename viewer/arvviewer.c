@@ -20,8 +20,6 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 #include <arvconfig.h>
 #include <gtk/gtk.h>
 #include <gst/gst.h>
@@ -830,7 +828,7 @@ main (int argc,char *argv[])
 	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 	textdomain (GETTEXT_PACKAGE);
 
-	g_thread_init (NULL);
+	arv_g_thread_init (NULL);
 
 	context = g_option_context_new (NULL);
 	g_option_context_add_main_entries (context, arv_viewer_option_entries, NULL);
