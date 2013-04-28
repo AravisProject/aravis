@@ -296,14 +296,7 @@ arv_fake_gv_camera_new (const char *interface_name)
 		goto INTERFACE_ERROR;
 
 	gv_camera->cancel = FALSE;
-#if GLIB_CHECK_VERSION(2,32,0)
-	gv_camera->gvsp_thread = g_thread_new ("fake_gv_camera",
-					       arv_fake_gv_camera_thread,
-					       gv_camera);
-#else
-	gv_camera->gvsp_thread = g_thread_create (arv_fake_gv_camera_thread,
-						  gv_camera, TRUE, NULL);
-#endif
+	gv_camera->gvsp_thread = arv_g_thread_new ("fake_gv_camera", arv_fake_gv_camera_thread, gv_camera);
 
 	return gv_camera;
 
@@ -472,9 +465,7 @@ main (int argc, char **argv)
 	GOptionContext *context;
 	GError *error = NULL;
 
-#if !GLIB_CHECK_VERSION(2,32,0)
-	g_thread_init (NULL);
-#endif
+	arv_g_thread_init (NULL);
 	arv_g_type_init ();
 
 	context = g_option_context_new (NULL);
