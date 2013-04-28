@@ -20,8 +20,6 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 /**
  * SECTION: arvgvstream
  * @short_description: Gigabit ethernet camera stream
@@ -780,7 +778,7 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port,
 
 	gv_stream->thread_data = thread_data;
 
-	gv_stream->thread = g_thread_create (arv_gv_stream_thread, gv_stream->thread_data, TRUE, NULL);
+	gv_stream->thread = arv_g_thread_new ("arv_gv_stream", arv_gv_stream_thread, gv_stream->thread_data);
 
 	return ARV_STREAM (gv_stream);
 }
