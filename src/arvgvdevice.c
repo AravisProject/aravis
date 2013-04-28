@@ -780,7 +780,7 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 	}
 
 	if (!gv_device->priv->is_packet_resend_supported)
-		g_object_set (stream, "packet-resend", "never", NULL); 
+		g_object_set (stream, "packet-resend", ARV_GV_STREAM_PACKET_RESEND_NEVER, NULL); 
 
 	arv_debug_device ("[GvDevice::create_stream] Stream port = %d", stream_port);
 
