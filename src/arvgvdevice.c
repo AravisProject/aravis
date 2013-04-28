@@ -25,8 +25,6 @@
  * @short_description: Gigabit ethernet camera device
  */
 
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 #include <arvgvdevice.h>
 #include <arvgc.h>
 #include <arvdebug.h>
@@ -35,6 +33,7 @@
 #include <arvgvsp.h>
 #include <arvzip.h>
 #include <arvstr.h>
+#include <arvmisc.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -43,7 +42,11 @@ static GObjectClass *parent_class = NULL;
 /* Shared data (main thread - heartbeat) */
 
 typedef struct {
+#if GLIB_CHECK_VERSION(2,32,0)
+	GMutex mutex;
+#else
 	GMutex *mutex;
+#endif
 
 	guint16 packet_id;
 
@@ -102,7 +105,11 @@ _read_memory (ArvGvDeviceIOData *io_data, guint32 address, guint32 size, void *b
 
 	g_return_val_if_fail (answer_size <= ARV_GV_DEVICE_BUFFER_SIZE, FALSE);
 
+#if GLIB_CHECK_VERSION(2,32,0)
+	g_mutex_lock (&io_data->mutex);
+#else
 	g_mutex_lock (io_data->mutex);
+#endif
 
 	packet = arv_gvcp_packet_new_read_memory_cmd (address,
 						      ((size + sizeof (guint32) - 1)
@@ -150,7 +157,11 @@ _read_memory (ArvGvDeviceIOData *io_data, guint32 address, guint32 size, void *b
 
 	arv_gvcp_packet_free (packet);
 
+#if GLIB_CHECK_VERSION(2,32,0)
+	g_mutex_unlock (&io_data->mutex);
+#else
 	g_mutex_unlock (io_data->mutex);
+#endif
 
 	if (!success) {
 		if (error != NULL && *error == NULL)
@@ -170,7 +181,11 @@ _write_memory (ArvGvDeviceIOData *io_data, guint32 address, guint32 size, void *
 	unsigned int n_retries = 0;
 	gboolean success = FALSE;
 
+#if GLIB_CHECK_VERSION(2,32,0)
+	g_mutex_lock (&io_data->mutex);
+#else
 	g_mutex_lock (io_data->mutex);
+#endif
 
 	packet = arv_gvcp_packet_new_write_memory_cmd (address,
 						       ((size + sizeof (guint32) - 1) /
@@ -219,7 +234,11 @@ _write_memory (ArvGvDeviceIOData *io_data, guint32 address, guint32 size, void *
 
 	arv_gvcp_packet_free (packet);
 
+#if GLIB_CHECK_VERSION(2,32,0)
+	g_mutex_unlock (&io_data->mutex);
+#else
 	g_mutex_unlock (io_data->mutex);
+#endif
 
 	if (!success) {
 		if (error != NULL && *error == NULL)
@@ -239,7 +258,11 @@ _read_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 *value_plac
 	unsigned int n_retries = 0;
 	gboolean success = FALSE;
 
+#if GLIB_CHECK_VERSION(2,32,0)
+	g_mutex_lock (&io_data->mutex);
+#else
 	g_mutex_lock (io_data->mutex);
+#endif
 
 	packet = arv_gvcp_packet_new_read_register_cmd (address, 0, &packet_size);
 
@@ -284,7 +307,11 @@ _read_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 *value_plac
 
 	arv_gvcp_packet_free (packet);
 
+#if GLIB_CHECK_VERSION(2,32,0)
+	g_mutex_unlock (&io_data->mutex);
+#else
 	g_mutex_unlock (io_data->mutex);
+#endif
 
 	if (!success) {
 		*value_placeholder = 0;
@@ -306,7 +333,11 @@ _write_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 value, GEr
 	unsigned int n_retries = 0;
 	gboolean success = FALSE;
 
+#if GLIB_CHECK_VERSION(2,32,0)
+	g_mutex_lock (&io_data->mutex);
+#else
 	g_mutex_lock (io_data->mutex);
+#endif
 
 	packet = arv_gvcp_packet_new_write_register_cmd (address, value, io_data->packet_id, &packet_size);
 
@@ -351,7 +382,11 @@ _write_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 value, GEr
 
 	arv_gvcp_packet_free (packet);
 
+#if GLIB_CHECK_VERSION(2,32,0)
+	g_mutex_unlock (&io_data->mutex);
+#else
 	g_mutex_unlock (io_data->mutex);
+#endif
 
 	if (!success) {
 		if (error != NULL && *error == NULL)
@@ -835,7 +870,11 @@ arv_gv_device_new (GInetAddress *interface_address, GInetAddress *device_address
 
 	io_data = g_new0 (ArvGvDeviceIOData, 1);
 
+#if GLIB_CHECK_VERSION(2,32,0)
+	g_mutex_init (&io_data->mutex);
+#else
 	io_data->mutex = g_mutex_new ();
+#endif
 	io_data->packet_id = 65300; /* Start near the end of the circular counter */
 
 	io_data->interface_address = g_inet_socket_address_new (interface_address, 0);
@@ -866,9 +905,8 @@ arv_gv_device_new (GInetAddress *interface_address, GInetAddress *device_address
 
 	gv_device->priv->heartbeat_data = heartbeat_data;
 
-	gv_device->priv->heartbeat_thread = g_thread_create (arv_gv_device_heartbeat_thread,
-							     gv_device->priv->heartbeat_data,
-							     TRUE, NULL);
+	gv_device->priv->heartbeat_thread = arv_g_thread_new ("arv_gv_heartbeat", arv_gv_device_heartbeat_thread,
+							      gv_device->priv->heartbeat_data);
 
 	arv_device_read_register (ARV_DEVICE (gv_device), ARV_GVBS_GVCP_CAPABILITY_OFFSET, &capabilities, NULL);
 	gv_device->priv->is_packet_resend_supported = (capabilities & ARV_GVBS_GVCP_CAPABILITY_PACKET_RESEND) != 0;
@@ -916,7 +954,11 @@ arv_gv_device_finalize (GObject *object)
 	g_object_unref (io_data->interface_address);
 	g_object_unref (io_data->socket);
 	g_free (io_data->buffer);
+#if GLIB_CHECK_VERSION(2,32,0)
+	g_mutex_clear (&io_data->mutex);
+#else
 	g_mutex_free (io_data->mutex);
+#endif
 
 	g_free (gv_device->priv->io_data);
 
