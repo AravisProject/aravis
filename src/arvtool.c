@@ -219,7 +219,7 @@ main (int argc, char **argv)
 	unsigned int count = 0;
 
 	g_thread_init (NULL);
-	g_type_init ();
+	arv_g_type_init ();
 
 	context = g_option_context_new (" command <parameters>");
 	g_option_context_set_summary (context, "Small utility for basic control of a Genicam device.");

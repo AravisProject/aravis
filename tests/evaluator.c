@@ -142,7 +142,7 @@ main (int argc, char *argv[])
 
 	g_test_init (&argc, &argv, NULL);
 
-	g_type_init ();
+	arv_g_type_init ();
 
 	for (i = 0; i < G_N_ELEMENTS (expression_test_data); i++)
 		g_test_add_data_func (expression_test_data[i].test_name,
