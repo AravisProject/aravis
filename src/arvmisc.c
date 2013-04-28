@@ -632,6 +632,11 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 		"video/x-raw-bayer",     8,      8,      0
 	},
 	{
+		ARV_PIXEL_FORMAT_BAYER_RG_8,
+		"video/x-raw-bayer, format=rggb, bpp=(int)8, depth=(int)8",
+		"video/x-raw-bayer",     8,      8,      0
+	},
+	{
 		ARV_PIXEL_FORMAT_BAYER_BG_12,
 		"video/x-raw-bayer, bpp=(int)16, depth=(int)12",
 		"video/x-raw-bayer",	16,	12,	0
