@@ -56,12 +56,14 @@
  * @ARV_CAMERA_VENDOR_UNKNOWN: unknown camera vendor
  * @ARV_CAMERA_VENDOR_BASLER: Basler
  * @ARV_CAMERA_VENDOR_PROSILICA: Prosilica
+ * @ARV_CAMERA_VENDOR_TIS: The Imaging Source
  */
 
 typedef enum {
 	ARV_CAMERA_VENDOR_UNKNOWN,
 	ARV_CAMERA_VENDOR_BASLER,
-	ARV_CAMERA_VENDOR_PROSILICA
+	ARV_CAMERA_VENDOR_PROSILICA,
+	ARV_CAMERA_VENDOR_TIS
 } ArvCameraVendor;
 
 typedef enum {
@@ -69,7 +71,8 @@ typedef enum {
 	ARV_CAMERA_SERIES_BASLER_ACE,
 	ARV_CAMERA_SERIES_BASLER_SCOUT,
 	ARV_CAMERA_SERIES_BASLER_OTHER,
-	ARV_CAMERA_SERIES_PROSILICA_OTHER
+	ARV_CAMERA_SERIES_PROSILICA_OTHER,
+	ARV_CAMERA_SERIES_TIS
 } ArvCameraSeries;
 
 static GObjectClass *parent_class = NULL;
@@ -625,6 +628,12 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
 			arv_device_set_float_feature_value (camera->priv->device, "AcquisitionFrameRateAbs",
 							    frame_rate);
 			break;
+		case ARV_CAMERA_VENDOR_TIS:
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
+								 "FrameStart");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
+			arv_device_set_float_feature_value (camera->priv->device, "FPS", frame_rate);
+			break;
 		case ARV_CAMERA_VENDOR_UNKNOWN:
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
 							     "FrameStart");
@@ -652,6 +661,8 @@ arv_camera_get_frame_rate (ArvCamera *camera)
 		case ARV_CAMERA_VENDOR_BASLER:
 		case ARV_CAMERA_VENDOR_PROSILICA:
 			return arv_device_get_float_feature_value (camera->priv->device, "AcquisitionFrameRateAbs");
+		case ARV_CAMERA_VENDOR_TIS:
+			return arv_device_get_float_feature_value (camera->priv->device, "FPS");
 		case ARV_CAMERA_VENDOR_UNKNOWN:
 		default:
 			return arv_device_get_float_feature_value (camera->priv->device, "AcquisitionFrameRate");
@@ -1049,6 +1060,8 @@ arv_camera_is_frame_rate_available (ArvCamera *camera)
 		case ARV_CAMERA_VENDOR_BASLER:
 		case ARV_CAMERA_VENDOR_PROSILICA:
 			return arv_device_get_feature (camera->priv->device, "AcquisitionFrameRateAbs") != NULL;
+		case ARV_CAMERA_VENDOR_TIS:
+			return arv_device_get_feature (camera->priv->device, "FPS") != NULL;
 		case ARV_CAMERA_VENDOR_UNKNOWN:
 		default:
 			return arv_device_get_feature (camera->priv->device, "AcquisitionFrameRate") != NULL;
@@ -1211,6 +1224,9 @@ arv_camera_constructor (GType gtype, guint n_properties, GObjectConstructParam *
 	} else if (g_strcmp0 (vendor_name, "Prosilica") == 0) {
 		vendor = ARV_CAMERA_VENDOR_PROSILICA;
 		series = ARV_CAMERA_SERIES_PROSILICA_OTHER;
+	} else if (g_strcmp0 (vendor_name, "The Imaging Source Europe GmbH") == 0) {
+		vendor = ARV_CAMERA_VENDOR_TIS;
+		series = ARV_CAMERA_SERIES_TIS;
 	} else {
 		vendor = ARV_CAMERA_VENDOR_UNKNOWN;
 		series = ARV_CAMERA_SERIES_UNKNOWN;
