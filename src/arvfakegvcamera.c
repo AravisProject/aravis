@@ -296,7 +296,7 @@ arv_fake_gv_camera_new (const char *interface_name)
 		goto INTERFACE_ERROR;
 
 	gv_camera->cancel = FALSE;
-	gv_camera->gvsp_thread = arv_g_thread_new ("fake_gv_camera", arv_fake_gv_camera_thread, gv_camera);
+	gv_camera->gvsp_thread = arv_g_thread_new ("arv_fake_gv_camera", arv_fake_gv_camera_thread, gv_camera);
 
 	return gv_camera;
 
