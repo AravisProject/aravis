@@ -81,13 +81,23 @@ ArvPixelFormat 	arv_pixel_format_from_gst_caps 		(const char *name, int bpp, int
 #endif
 
 #if GLIB_CHECK_VERSION(2,32,0)
+
 #define ARV_DEFINE_STATIC_MUTEX(mutex) static GMutex mutex
 #define arv_g_mutex_lock(mutex) g_mutex_lock(mutex)
 #define arv_g_mutex_unlock(mutex) g_mutex_unlock(mutex)
+
+#define arv_g_thread_init(vtable)
+#define arv_g_thread_new(name,func,data) g_thread_new(name,func,data)
+
 #else
+
 #define ARV_DEFINE_STATIC_MUTEX(mutex) static GStaticMutex mutex = G_STATIC_MUTEX_INIT
 #define arv_g_mutex_lock(mutex) g_static_mutex_lock(mutex)
 #define arv_g_mutex_unlock(mutex) g_static_mutex_unlock(mutex)
+
+#define arv_g_thread_init(vtable) g_thread_init(vtable)
+#define arv_g_thread_new(name,func,data) g_thread_create(func,data,TRUE,NULL)
+
 #endif
 
 G_END_DECLS

@@ -25,11 +25,10 @@
  * @short_description: Fake camera stream
  */
 
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 #include <arvfakestream.h>
 #include <arvbuffer.h>
 #include <arvdebug.h>
+#include <arvmisc.h>
 
 static GObjectClass *parent_class = NULL;
 
@@ -134,8 +133,7 @@ arv_fake_stream_new (ArvFakeCamera *camera, ArvStreamCallback callback, void *us
 
 	fake_stream->priv->camera = camera;
 	fake_stream->priv->thread_data = thread_data;
-	fake_stream->priv->thread = g_thread_create (arv_fake_stream_thread,
-						     fake_stream->priv->thread_data, TRUE, NULL);
+	fake_stream->priv->thread = arv_g_thread_new ("fake_stream", arv_fake_stream_thread, fake_stream->priv->thread_data);
 
 	return ARV_STREAM (fake_stream);
 }
