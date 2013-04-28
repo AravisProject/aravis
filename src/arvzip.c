@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2013 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -84,27 +84,27 @@ arv_zip_build_file_list (ArvZip *zip)
 
 	for (i = 0; i < zip->n_files; i++) {
 		ptr = zip->buffer + zip->header_size + offset;
-		if (ARV_GUINT32_FROM_LE_PTR (ptr) != 0x02014b50) {
+		if (ARV_GUINT32_FROM_LE_PTR (ptr, 0) != 0x02014b50) {
 			arv_debug_misc ("[Zip::build_file_list] Magic number of central directory not found (0x02014b50)");
 			arv_debug_misc ("[Zip::build_file_list] Expected at 0x%08x - found 0x%08x instead",
-					zip->header_size + offset, ARV_GUINT32_FROM_LE_PTR (ptr));
+					zip->header_size + offset, ARV_GUINT32_FROM_LE_PTR (ptr, 0));
 		       	return;
 		}
 
 		zip_file = g_new0 (ArvZipFile, 1);
-                zip_file->compressed_size = ARV_GUINT32_FROM_LE_PTR (ptr + 20);
-                zip_file->uncompressed_size = ARV_GUINT32_FROM_LE_PTR (ptr + 24);
-                zip_file->offset = ARV_GUINT32_FROM_LE_PTR (ptr + 42);
-		zip_file->name = g_strndup ((char *) (ptr + 46), ARV_GUINT16_FROM_LE_PTR (ptr + 28));
+                zip_file->compressed_size = ARV_GUINT32_FROM_LE_PTR (ptr, 20);
+                zip_file->uncompressed_size = ARV_GUINT32_FROM_LE_PTR (ptr, 24);
+                zip_file->offset = ARV_GUINT32_FROM_LE_PTR (ptr, 42);
+		zip_file->name = g_strndup (((char *) ptr) + 46, ARV_GUINT16_FROM_LE_PTR (ptr, 28));
 
 		arv_log_misc ("[Zip::list_files] %s", zip_file->name);
 
 		zip->files = g_slist_prepend (zip->files, zip_file);
 
                 offset += 0x2e +
-			ARV_GUINT16_FROM_LE_PTR (ptr + 28) + /* filename size */
-			ARV_GUINT16_FROM_LE_PTR (ptr + 30) + /* extra field */
-			ARV_GUINT16_FROM_LE_PTR (ptr + 32);  /* file comment */
+			ARV_GUINT16_FROM_LE_PTR (ptr, 28) + /* filename size */
+			ARV_GUINT16_FROM_LE_PTR (ptr, 30) + /* extra field */
+			ARV_GUINT16_FROM_LE_PTR (ptr, 32);  /* file comment */
 	}
 }
 
@@ -130,14 +130,14 @@ arv_zip_get_file_data (ArvZip *zip, ArvZipFile *zip_file)
 
 	ptr = zip->buffer + zip_file->offset + zip->header_size;
 
-        if (ARV_GUINT32_FROM_LE_PTR (ptr) != 0x04034b50) {
+        if (ARV_GUINT32_FROM_LE_PTR (ptr, 0) != 0x04034b50) {
 		arv_debug_misc ("[Zip::get_file_data] Magic number for file header not found (0x04034b50)");
 	       	return -1;
 	}
 
 	return zip_file->offset + zip->header_size +
-		ARV_GUINT16_FROM_LE_PTR (ptr + 26) +
-		ARV_GUINT16_FROM_LE_PTR (ptr + 28) + 30;
+		ARV_GUINT16_FROM_LE_PTR (ptr, 26) +
+		ARV_GUINT16_FROM_LE_PTR (ptr, 28) + 30;
 }
 
 /**
@@ -179,15 +179,15 @@ arv_zip_new (const void *buffer, size_t size)
 	}
 
 	ptr = zip->buffer + zip->directory_position;
-        zip->n_files = ARV_GUINT16_FROM_LE_PTR (ptr + 10);
-        if (ARV_GUINT16_FROM_LE_PTR (ptr + 8) != zip->n_files) {
+        zip->n_files = ARV_GUINT16_FROM_LE_PTR (ptr, 10);
+        if (ARV_GUINT16_FROM_LE_PTR (ptr, 8) != zip->n_files) {
 		arv_debug_misc ("[Zip::new] Mismatch in number of files");
 		zip->n_files = 0;
 		return zip;
         }
 
-        zip->directory_size = ARV_GUINT32_FROM_LE_PTR (ptr + 12);
-        zip->directory_offset = ARV_GUINT32_FROM_LE_PTR (ptr + 16);
+        zip->directory_size = ARV_GUINT32_FROM_LE_PTR (ptr, 12);
+        zip->directory_offset = ARV_GUINT32_FROM_LE_PTR (ptr, 16);
         zip->header_size = zip->directory_position - (zip->directory_offset + zip->directory_size);
 
 	arv_log_misc ("[Zip::new] number of files = %d", zip->n_files);

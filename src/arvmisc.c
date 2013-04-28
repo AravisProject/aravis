@@ -437,18 +437,18 @@ arv_copy_memory_with_endianess (void *to, size_t to_size, guint to_endianess,
 	if (to_endianess == G_LITTLE_ENDIAN &&
 	    from_endianess == G_BIG_ENDIAN) {
 		to_ptr = to;
-		from_ptr = from + from_size - 1;
+		from_ptr = ((char *) from) + from_size - 1;
 		if (to_size <= from_size) {
 			for (i = 0; i < to_size; i++, to_ptr++, from_ptr--)
 				*to_ptr = *from_ptr;
 		} else {
 			for (i = 0; i < from_size; i++, to_ptr++, from_ptr--)
 				*to_ptr = *from_ptr;
-			memset (to + from_size, 0, to_size - from_size);
+			memset (((char *) to) + from_size, 0, to_size - from_size);
 		}
 	} else if (to_endianess == G_BIG_ENDIAN &&
 		   from_endianess == G_LITTLE_ENDIAN) {
-		to_ptr = to + to_size - 1;
+		to_ptr = ((char *) to) + to_size - 1;
 		from_ptr = from;
 		if (to_size <= from_size) {
 			for (i = 0; i < to_size; i++, to_ptr--, from_ptr++)
@@ -464,14 +464,14 @@ arv_copy_memory_with_endianess (void *to, size_t to_size, guint to_endianess,
 			memcpy (to, from, to_size);
 		else {
 			memcpy (to, from, from_size);
-			memset (to + from_size, 0, to_size - from_size);
+			memset (((char *) to) + from_size, 0, to_size - from_size);
 		}
 	} else if (to_endianess == G_BIG_ENDIAN &&
 		   from_endianess == G_BIG_ENDIAN) {
 		if (to_size <= from_size)
-			memcpy (to, from + from_size - to_size, to_size);
+			memcpy (to, ((char *) from) + from_size - to_size, to_size);
 		else {
-			memcpy (to + to_size - from_size, from, from_size);
+			memcpy (((char *) to) + to_size - from_size, from, from_size);
 			memset (to, 0, to_size - from_size);
 		}
 	} else
@@ -521,7 +521,7 @@ arv_decompress (void *input_buffer, size_t input_size, size_t *output_size)
 				stream.next_in, stream.avail_in, *stream.next_in);
 
 		input_size -= stream.avail_in;
-		input_buffer += stream.avail_in;
+		input_buffer = ((char *) input_buffer) + stream.avail_in;
 
 		/* run inflate() on input until output buffer not full */
 		do {

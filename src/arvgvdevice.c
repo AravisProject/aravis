@@ -771,7 +771,7 @@ arv_gv_device_read_memory (ArvDevice *device, guint32 address, guint32 size, voi
 		block_size = MIN (ARV_GVCP_DATA_SIZE_MAX, size - i * ARV_GVCP_DATA_SIZE_MAX);
 		if (!_read_memory (gv_device->priv->io_data,
 				   address + i * ARV_GVCP_DATA_SIZE_MAX,
-				   block_size, buffer + i * ARV_GVCP_DATA_SIZE_MAX, error))
+				   block_size, ((char *) buffer) + i * ARV_GVCP_DATA_SIZE_MAX, error))
 			return FALSE;
 	}
 
@@ -789,7 +789,7 @@ arv_gv_device_write_memory (ArvDevice *device, guint32 address, guint32 size, vo
 		block_size = MIN (ARV_GVCP_DATA_SIZE_MAX, size - i * ARV_GVCP_DATA_SIZE_MAX);
 		if (!_write_memory (gv_device->priv->io_data,
 				    address + i * ARV_GVCP_DATA_SIZE_MAX,
-				    block_size, buffer + i * ARV_GVCP_DATA_SIZE_MAX, error))
+				    block_size, ((char *) buffer) + i * ARV_GVCP_DATA_SIZE_MAX, error))
 			return FALSE;
 	}
 

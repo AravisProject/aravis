@@ -35,12 +35,13 @@ const GSList *	arv_zip_get_file_list	(ArvZip *zip);
 const char *	arv_zip_file_get_name			(ArvZipFile *zip_file);
 size_t		arv_zip_file_get_uncompressed_size	(ArvZipFile *zip_file);
 
-#define ARV_GUINT32_FROM_LE_PTR(ptr) arv_guint32_from_unaligned_le_ptr (ptr)
-#define ARV_GUINT16_FROM_LE_PTR(ptr) arv_guint16_from_unaligned_le_ptr (ptr)
+#define ARV_GUINT32_FROM_LE_PTR(ptr,offset) arv_guint32_from_unaligned_le_ptr (ptr, offset)
+#define ARV_GUINT16_FROM_LE_PTR(ptr,offset) arv_guint16_from_unaligned_le_ptr (ptr, offset)
 
 /**
  * arv_guint32_from_unaligned_le_ptr:
  * @ptr: pointer to a little endian 32 bit usigned integer
+ * @offset: an offset to add to @ptr
  *
  * Here's an excerpt of the ARM documentation:
  *
@@ -67,11 +68,13 @@ size_t		arv_zip_file_get_uncompressed_size	(ArvZipFile *zip_file);
  */
 
 static inline guint32
-arv_guint32_from_unaligned_le_ptr (const void *ptr)
+arv_guint32_from_unaligned_le_ptr (const char *ptr, gint32 offset)
 {
 	guint32 val;
 
 	g_return_val_if_fail (ptr != NULL, 0);
+
+	ptr += offset;
 
 	*((char*)(&val)) = *((char*)ptr);
 	*(((char*)(&val))+1) = *(((char*)ptr)+1);
@@ -84,6 +87,7 @@ arv_guint32_from_unaligned_le_ptr (const void *ptr)
 /**
  * arv_guint16_from_unaligned_le_ptr:
  * @ptr: pointer to a little endian 16 bit usigned integer
+ * @offset: an offset to add to @ptr
  *
  * See @arv_guint32_from_unaligned_le_ptr.
  *
@@ -91,11 +95,13 @@ arv_guint32_from_unaligned_le_ptr (const void *ptr)
  */
 
 static inline guint16
-arv_guint16_from_unaligned_le_ptr (const void *ptr)
+arv_guint16_from_unaligned_le_ptr (const char *ptr, gint16 offset)
 {
 	guint16 val;
 
 	g_return_val_if_fail (ptr != NULL, 0);
+
+	ptr += offset;
 
 	*((char*)(&val)) = *((char*)ptr);
 	*(((char*)(&val))+1) = *(((char*)ptr)+1);
