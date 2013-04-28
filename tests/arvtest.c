@@ -1,5 +1,3 @@
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 #include <arv.h>
 #include <stdlib.h>
 
@@ -54,7 +52,7 @@ main (int argc, char **argv)
 	char memory_buffer[100000];
 	int i;
 
-	g_thread_init (NULL);
+	arv_g_thread_init (NULL);
 	arv_g_type_init ();
 
 	context = g_option_context_new (NULL);
