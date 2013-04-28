@@ -152,6 +152,12 @@ type_name##_get_type (void) \
 } /* closes type_name##_get_type() */
 #endif
 
+#if !GLIB_CHECK_VERSION(2,36,0)
+#define arv_g_type_init() g_type_init()
+#else
+#define arv_g_type_init()
+#endif
+
 G_END_DECLS
 
 #endif

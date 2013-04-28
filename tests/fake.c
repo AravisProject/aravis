@@ -184,7 +184,7 @@ main (int argc, char *argv[])
 
 	g_test_init (&argc, &argv, NULL);
 
-	g_type_init ();
+	arv_g_type_init ();
 
 	arv_set_fake_camera_genicam_filename (GENICAM_FILENAME);
 
