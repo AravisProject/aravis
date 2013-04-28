@@ -74,10 +74,20 @@ ArvPixelFormat 	arv_pixel_format_from_gst_caps 		(const char *name, int bpp, int
    Compatibility with old glib
  */
 
-#if !GLIB_CHECK_VERSION(2,36,0)
-#define arv_g_type_init() g_type_init()
-#else
+#if GLIB_CHECK_VERSION(2,36,0)
 #define arv_g_type_init()
+#else
+#define arv_g_type_init() g_type_init()
+#endif
+
+#if GLIB_CHECK_VERSION(2,32,0)
+#define ARV_DEFINE_STATIC_MUTEX(mutex) static GMutex mutex
+#define arv_g_mutex_lock(mutex) g_mutex_lock(mutex)
+#define arv_g_mutex_unlock(mutex) g_mutex_unlock(mutex)
+#else
+#define ARV_DEFINE_STATIC_MUTEX(mutex) static GStaticMutex mutex = G_STATIC_MUTEX_INIT
+#define arv_g_mutex_lock(mutex) g_static_mutex_lock(mutex)
+#define arv_g_mutex_unlock(mutex) g_static_mutex_unlock(mutex)
 #endif
 
 G_END_DECLS
