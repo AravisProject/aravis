@@ -344,7 +344,7 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 		data = g_malloc (size);	
 
 		for (i = 0; i < arv_buffer->height; i++)
-			memcpy (data + i * gst_row_stride, arv_buffer->data + i * arv_row_stride, arv_row_stride);
+			memcpy (((char *) data) + i * gst_row_stride, ((char *) arv_buffer->data) + i * arv_row_stride, arv_row_stride);
 
 		GST_BUFFER_DATA (buffer) = data;
 		GST_BUFFER_MALLOCDATA (buffer) = data;

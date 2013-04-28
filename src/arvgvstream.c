@@ -255,7 +255,7 @@ _process_data_block (ArvGvStreamThreadData *thread_data,
 		block_size = block_end - block_offset;
 	}
 
-	memcpy (frame->buffer->data + block_offset, &packet->data, block_size);
+	memcpy (((char *) frame->buffer->data) + block_offset, &packet->data, block_size);
 
 	if (frame->packet_data[packet_id].time_us > 0) {
 		thread_data->n_resent_packets++;

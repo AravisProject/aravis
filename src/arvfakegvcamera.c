@@ -165,7 +165,7 @@ arv_fake_gv_camera_thread (void *user_data)
 
 				packet_size = ARV_FAKE_GV_CAMERA_BUFFER_SIZE;
 				arv_gvsp_packet_new_data_block (image_buffer->frame_id, block_id,
-								data_size, image_buffer->data + offset,
+								data_size, ((char *) image_buffer->data) + offset,
 								packet_buffer, &packet_size);
 
 				g_socket_send_to (gv_camera->gvsp_socket, stream_address,

@@ -9,28 +9,28 @@ unaligned_from_le_ptr_test (void)
 	guint32 v_uint32;
 	guint16 v_uint16;
 
-	v_uint32 = ARV_GUINT32_FROM_LE_PTR (&test[0]);
+	v_uint32 = ARV_GUINT32_FROM_LE_PTR (&test[0], 0);
 	g_assert_cmpuint (v_uint32, ==, 0x44332211);
 
-	v_uint32 = ARV_GUINT32_FROM_LE_PTR (&test[1]);
+	v_uint32 = ARV_GUINT32_FROM_LE_PTR (&test[1], 0);
 	g_assert_cmpuint (v_uint32, ==, 0x55443322);
 	
-	v_uint32 = ARV_GUINT32_FROM_LE_PTR (&test[2]);
+	v_uint32 = ARV_GUINT32_FROM_LE_PTR (&test[2], 0);
 	g_assert_cmpuint (v_uint32, ==, 0x66554433);
 	
-	v_uint32 = ARV_GUINT32_FROM_LE_PTR (&test[3]);
+	v_uint32 = ARV_GUINT32_FROM_LE_PTR (&test[3], 0);
 	g_assert_cmpuint (v_uint32, ==, 0x77665544);
 
-	v_uint16 = ARV_GUINT16_FROM_LE_PTR (&test[0]);
+	v_uint16 = ARV_GUINT16_FROM_LE_PTR (&test[0], 0);
 	g_assert_cmpuint (v_uint16, ==, 0x2211);
 	
-	v_uint16 = ARV_GUINT16_FROM_LE_PTR (&test[1]);
+	v_uint16 = ARV_GUINT16_FROM_LE_PTR (&test[1], 0);
 	g_assert_cmpuint (v_uint16, ==, 0x3322);
 	
-	v_uint16 = ARV_GUINT16_FROM_LE_PTR (&test[2]);
+	v_uint16 = ARV_GUINT16_FROM_LE_PTR (&test[2], 0);
 	g_assert_cmpuint (v_uint16, ==, 0x4433);
 	
-	v_uint16 = ARV_GUINT16_FROM_LE_PTR (&test[3]);
+	v_uint16 = ARV_GUINT16_FROM_LE_PTR (&test[3], 0);
 	g_assert_cmpuint (v_uint16, ==, 0x5544);
 }
 

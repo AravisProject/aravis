@@ -620,7 +620,7 @@ arv_gc_register_node_get (ArvGcRegister *gc_register, void *buffer, guint64 leng
 
 	if (length > gc_register_node->cache_size) {
 		memcpy (buffer, gc_register_node->cache, gc_register_node->cache_size);
-		memset (buffer + gc_register_node->cache_size, 0, length - gc_register_node->cache_size);
+		memset (((char *) buffer) + gc_register_node->cache_size, 0, length - gc_register_node->cache_size);
 	} else
 		memcpy (buffer, gc_register_node->cache, length);
 
@@ -635,7 +635,7 @@ arv_gc_register_node_set (ArvGcRegister *gc_register, void *buffer, guint64 leng
 
 	if (gc_register_node->cache_size > length) {
 		memcpy (gc_register_node->cache, buffer, length);
-		memset (gc_register_node->cache + length, 0, gc_register_node->cache_size - length);
+		memset (((char *) gc_register_node->cache) + length, 0, gc_register_node->cache_size - length);
 	} else
 		memcpy (gc_register_node->cache, buffer, gc_register_node->cache_size);
 
