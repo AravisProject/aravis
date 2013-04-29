@@ -152,6 +152,10 @@
 		<Formula>(0x12345678 &amp; 0x10305070)</Formula>
 	</IntSwissKnife>
 
+	<IntSwissKnife Name="IntSwissKnifeTestEntity2">
+		<Formula>(0 &amp;&amp; 1)?2:3</Formula>
+	</IntSwissKnife>
+
 	<IntSwissKnife Name="IntSwissKnifeTest">
 		<Formula>0x1234</Formula>
 	</IntSwissKnife>
