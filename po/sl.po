@@ -1,0 +1,78 @@
+# Slovenian translation for aravis.
+# Copyright (C) 2013 aravis's COPYRIGHT HOLDER
+# This file is distributed under the same license as the aravis package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: aravis aravis-0-2\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/enter_bug.cgi?product=aravis&keywords=I18N+L10N&component=general\n"
+"POT-Creation-Date: 2013-04-29 09:04+0000\n"
+"PO-Revision-Date: 2013-04-29 12:23+0100\n"
+"Last-Translator: filmsi\n"
+"Language-Team: Slovenian <gnome-si@googlegroups.com>\n"
+"Language: sl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=4; plural=(n%100==1 ? 1 : n%100==2 ? 2 : n%100==3 || n%100==4 ? 3 : 0);\n"
+"X-Poedit-Language: Slovenian\n"
+"X-Poedit-Country: SLOVENIA\n"
+"X-Poedit-SourceCharset: utf-8\n"
+
+#: ../viewer/arv-viewer-2.ui.h:1
+#: ../viewer/arv-viewer-3.ui.h:1
+#: ../viewer/data/arv-viewer.desktop.in.in.h:1
+msgid "Aravis"
+msgstr "Aravis"
+
+#: ../viewer/arv-viewer-2.ui.h:2
+#: ../viewer/arv-viewer-3.ui.h:2
+msgid "Frame rate:"
+msgstr "Hitrost:"
+
+#: ../viewer/arv-viewer-2.ui.h:3
+#: ../viewer/arv-viewer-3.ui.h:5
+#, fuzzy
+msgid "Exposure:"
+msgstr "Ekspozicija:"
+
+#: ../viewer/arv-viewer-2.ui.h:4
+#: ../viewer/arv-viewer-3.ui.h:6
+#, fuzzy
+msgid "Gain:"
+msgstr "Ojačitev:"
+
+#: ../viewer/arv-viewer-2.ui.h:5
+#: ../viewer/arv-viewer-3.ui.h:3
+msgid "Hz"
+msgstr "Hz"
+
+#: ../viewer/arv-viewer-2.ui.h:6
+#: ../viewer/arv-viewer-3.ui.h:7
+msgid "µs"
+msgstr "µs"
+
+#: ../viewer/arv-viewer-2.ui.h:7
+#: ../viewer/arv-viewer-3.ui.h:4
+msgid "Auto"
+msgstr "Samodejno"
+
+#: ../viewer/arv-viewer-2.ui.h:8
+#: ../viewer/arv-viewer-3.ui.h:8
+msgid "Settings"
+msgstr "Nastavitve"
+
+#: ../viewer/arv-viewer-3.ui.h:9
+msgid "Save a snapshot into image folder"
+msgstr "Shrani zajeti fotogram v mapo slik"
+
+#: ../viewer/data/arv-viewer.desktop.in.in.h:2
+msgid "Aravis Simple Viewer"
+msgstr "Enostavni ogledovalnik Aravis"
+
+#: ../viewer/data/arv-viewer.desktop.in.in.h:3
+#, fuzzy
+msgid "Display the video stream from your cameras"
+msgstr "Prikažite video tok iz svojih kamer"
+
