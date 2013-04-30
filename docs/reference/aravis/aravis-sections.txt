@@ -32,6 +32,7 @@ arv_camera_get_acquisition_mode
 arv_camera_is_frame_rate_available
 arv_camera_set_frame_rate
 arv_camera_get_frame_rate
+arv_camera_get_frame_rate_bounds
 arv_camera_set_trigger
 arv_camera_set_trigger_source
 arv_camera_get_trigger_source

@@ -603,10 +603,21 @@ arv_camera_get_acquisition_mode (ArvCamera *camera)
 void
 arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
 {
+	ArvGcNode *feature;
+	double minimum;
+	double maximum;
+
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
 	if (frame_rate <= 0.0)
 		return;
+
+	arv_camera_get_frame_rate_bounds(camera, &minimum, &maximum);
+
+	if (frame_rate < minimum)
+		frame_rate = minimum;
+	if (frame_rate > maximum)
+		frame_rate = maximum;
 
 	switch (camera->priv->vendor) {
 		case ARV_CAMERA_VENDOR_BASLER:
@@ -632,7 +643,28 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
 								 "FrameStart");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
-			arv_device_set_float_feature_value (camera->priv->device, "FPS", frame_rate);
+			feature = arv_device_get_feature (camera->priv->device, "FPS");
+			if (ARV_IS_GC_FEATURE_NODE (feature) &&
+			    g_strcmp0 (arv_dom_node_get_node_name (ARV_DOM_NODE (feature)), "Enumeration") == 0) {
+				gint64 *values;
+				guint n_values;
+				guint i;
+
+				values = arv_gc_enumeration_get_available_int_values (ARV_GC_ENUMERATION (feature), &n_values, NULL);
+				for (i = 0; i < n_values; i++) {
+					if (values[i] > 0) {
+						double e;
+
+						e = (int)((10000000/(double) values[i]) * 100 + 0.5) / 100.0;
+						if (e == frame_rate) {
+							arv_gc_enumeration_set_int_value (ARV_GC_ENUMERATION (feature), values[i], NULL);
+							break;
+						}
+					}
+				}
+				g_free (values);
+			} else
+				arv_device_set_float_feature_value (camera->priv->device, "FPS", frame_rate);
 			break;
 		case ARV_CAMERA_VENDOR_UNKNOWN:
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
@@ -655,6 +687,8 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
 double
 arv_camera_get_frame_rate (ArvCamera *camera)
 {
+	ArvGcNode *feature;
+
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), -1);
 
 	switch (camera->priv->vendor) {
@@ -662,10 +696,81 @@ arv_camera_get_frame_rate (ArvCamera *camera)
 		case ARV_CAMERA_VENDOR_PROSILICA:
 			return arv_device_get_float_feature_value (camera->priv->device, "AcquisitionFrameRateAbs");
 		case ARV_CAMERA_VENDOR_TIS:
-			return arv_device_get_float_feature_value (camera->priv->device, "FPS");
+			feature = arv_device_get_feature (camera->priv->device, "FPS");
+			if (ARV_IS_GC_FEATURE_NODE (feature) &&
+			    g_strcmp0 (arv_dom_node_get_node_name (ARV_DOM_NODE (feature)), "Enumeration") == 0) {
+				gint64 i;
+
+				i = arv_gc_enumeration_get_int_value (ARV_GC_ENUMERATION (feature), NULL);
+				if (i > 0)
+					return (int)((10000000/(double) i) * 100 + 0.5) / 100.0;
+				else
+					return 0;
+			} else
+				return arv_device_get_float_feature_value (camera->priv->device, "FPS");
 		case ARV_CAMERA_VENDOR_UNKNOWN:
 		default:
 			return arv_device_get_float_feature_value (camera->priv->device, "AcquisitionFrameRate");
+	}
+}
+
+/**
+ * arv_camera_get_frame_rate_bounds:
+ * @camera: a #ArvCamera
+ * @min: (out): minimal possible framerate
+ * @max: (out): maximum possible framerate
+ *
+ * Retrieves allowed range for framerate.
+ *
+ * Since 0.2.2
+ */
+
+void
+arv_camera_get_frame_rate_bounds (ArvCamera *camera, double *min, double *max)
+{
+	ArvGcNode *feature;
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	switch (camera->priv->vendor) {
+		case ARV_CAMERA_VENDOR_TIS:
+			feature = arv_device_get_feature (camera->priv->device, "FPS");
+			if (ARV_IS_GC_FEATURE_NODE (feature) &&
+			    g_strcmp0 (arv_dom_node_get_node_name (ARV_DOM_NODE (feature)), "Enumeration") == 0) {
+				gint64 *values;
+				guint n_values;
+				guint i;
+
+				if (min != NULL)
+					*min = 0;
+				if (max != NULL)
+					*max = 0;
+
+				values = arv_gc_enumeration_get_available_int_values (ARV_GC_ENUMERATION (feature), &n_values, NULL);
+				for (i = 0; i < n_values; i++) {
+					if (values[i] > 0) {
+						double s;
+
+						s = (int)((10000000/(double) values[i]) * 100 + 0.5) / 100.0;
+
+						if (s > *max && max != NULL)
+							*max = s;
+						if ((*min == 0 || *min > s) && min != NULL)
+							*min = s;
+					}
+				}
+				g_free (values);
+			} else
+				arv_device_get_float_feature_bounds (camera->priv->device, "FPS", min, max);
+			break;
+		case ARV_CAMERA_VENDOR_BASLER:
+		case ARV_CAMERA_VENDOR_PROSILICA:
+			arv_device_get_float_feature_bounds (camera->priv->device, "AcquisitionFrameRateAbs", min, max);
+			break;
+		case ARV_CAMERA_VENDOR_UNKNOWN:
+		default:
+			arv_device_get_float_feature_bounds (camera->priv->device, "AcquisitionFrameRate", min, max);
+			break;
 	}
 }
 
