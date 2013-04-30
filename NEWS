@@ -1,3 +1,13 @@
+Release 0.2.2
+=============
+
+Bugfix release.
+
+  * updated translations (Marek, Matej, Martin, Daniel).
+  * make framerate work for The Imaging Source cameras (Edgar).
+  * don't send packet resend requests when this feature is not available.
+  * compilation warning suppression
+
 Release 0.2.1
 =============
 
