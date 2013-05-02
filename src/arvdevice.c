@@ -59,7 +59,7 @@ arv_device_error_quark (void)
  * arv_device_create_stream:
  * @device: a #ArvDevice
  * @callback: (scope call): a frame processing callback
- * @user_data: (closure) user data for @callback
+ * @user_data: (allow-none) (closure): user data for @callback
  *
  * Creates a new #ArvStream for video stream handling. See
  * @ArvStreamCallback for details regarding the callback function.
@@ -77,6 +77,19 @@ arv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *u
 	return ARV_DEVICE_GET_CLASS (device)->create_stream (device, callback, user_data);
 }
 
+/**
+ * arv_device_read_memory:
+ * @device: a #ArvDevice
+ * @address: memory address
+ * @size: number of bytes to read
+ * @buffer: a buffer for the storage of the read data
+ * @error: (out) (allow-none): a #GError placeholder
+ *
+ * Reads @size bytes from the device memory.
+ *
+ * Return value: (skip): TRUE on success.
+ **/
+
 gboolean
 arv_device_read_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer, GError **error)
 {
@@ -87,6 +100,19 @@ arv_device_read_memory (ArvDevice *device, guint32 address, guint32 size, void *
 
 	return ARV_DEVICE_GET_CLASS (device)->read_memory (device, address, size, buffer, error);
 }
+
+/**
+ * arv_device_write_memory:
+ * @device: a #ArvDevice
+ * @address: memory address
+ * @size: size of the returned buffer
+ * @buffer: (transfer full): the buffer read from memory
+ * @error: (out) (allow-none): a #GError placeholder
+ *
+ * Writes @size bytes to the device memory.
+ *
+ * Return value: (skip): TRUE on success.
+ **/
 
 gboolean
 arv_device_write_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer, GError **error)
@@ -99,6 +125,18 @@ arv_device_write_memory (ArvDevice *device, guint32 address, guint32 size, void 
 	return ARV_DEVICE_GET_CLASS (device)->write_memory (device, address, size, buffer, error);
 }
 
+/**
+ * arv_device_read_register:
+ * @device: a #ArvDevice
+ * @address: register address
+ * @value: (out): a placeholder for the read value
+ * @error: (out) (allow-none): a #GError placeholder
+ *
+ * Reads the value of a device register.
+ *
+ * Return value: (skip): TRUE on success.
+ **/
+
 gboolean
 arv_device_read_register (ArvDevice *device, guint32 address, guint32 *value, GError **error)
 {
@@ -108,6 +146,17 @@ arv_device_read_register (ArvDevice *device, guint32 address, guint32 *value, GE
 
 	return ARV_DEVICE_GET_CLASS (device)->read_register (device, address, value, error);
 }
+
+/**
+ * arv_device_write_register:
+ * @device: a #ArvDevice
+ * @address: the register address
+ * @value: value to write
+ *
+ * Writes @value to a device register.
+ *
+ * Return value: (skip): TRUE on success.
+ **/
 
 gboolean
 arv_device_write_register (ArvDevice *device, guint32 address, guint32 value, GError **error)
@@ -120,7 +169,7 @@ arv_device_write_register (ArvDevice *device, guint32 address, guint32 value, GE
 
 /**
  * arv_device_get_genicam: 
- * @device: a device object 
+ * @device: a #ArvDevice
  *
  * Retrieves the genicam interface of the given device.
  *
@@ -146,13 +195,13 @@ _get_genicam_xml (ArvDevice *device, size_t *size)
 }
 
 /**
- * arv_device_get_xml:
+ * arv_device_get_genicam_xml:
  * @device: a #ArvDevice
- * @size: placeholder for the returned data size (bytes)
+ * @size: (out) (allow-none): placeholder for the returned data size (bytes) // BUG: (skip) seems ignored
  *
  * Gets the Genicam XML data stored in the device memory.
  *
- * Return value: a pointer to the Genicam XML data, owned by the device.
+ * Returns: (transfer none) : a pointer to the Genicam XML data, owned by the device.
  *
  * Since: 0.2.0
  **/
