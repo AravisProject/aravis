@@ -37,6 +37,8 @@ from gi.repository import Aravis
 buffer_a = Aravis.Buffer.new (1024, None)
 buffer_b = Aravis.Buffer.new (1024, None)
 
-print buffer_a.__grefcount__
-print buffer_b.__grefcount__
+print "Buffer a refcount :        %d" %(buffer_a.__grefcount__)
+print "Buffer a is preallocated : %d" %(buffer_a.is_preallocated)
+print "Buffer b refcount :        %d" %(buffer_b.__grefcount__)
+print "Buffer b is preallocated : %d" %(buffer_b.is_preallocated)
 

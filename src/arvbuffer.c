@@ -57,7 +57,7 @@ static GObjectClass *parent_class = NULL;
  */
 
 ArvBuffer *
-arv_buffer_new_full (size_t size, void *preallocated, void *user_data, GDestroyNotify user_data_destroy_func)
+arv_buffer_new_full (size_t size, char *preallocated, void *user_data, GDestroyNotify user_data_destroy_func)
 {
 	ArvBuffer *buffer;
 
@@ -93,7 +93,7 @@ arv_buffer_new_full (size_t size, void *preallocated, void *user_data, GDestroyN
  */
 
 ArvBuffer *
-arv_buffer_new (size_t size, void *preallocated)
+arv_buffer_new (size_t size, char *preallocated)
 {
 	return arv_buffer_new_full (size, preallocated, NULL, NULL);
 }

@@ -36,10 +36,14 @@ from gi.repository import Aravis
 
 Aravis.enable_interface ("Fake")
 
-if len(sys.argv) > 1:
-	camera = Aravis.Camera.new (sys.argv[1])
-else:
-	camera = Aravis.Camera.new (None)
+try:
+	if len(sys.argv) > 1:
+		camera = Aravis.Camera.new (sys.argv[1])
+	else:
+		camera = Aravis.Camera.new (None)
+except:
+	print ("No camera found")
+	exit ()
 
 camera.set_region (0,0,128,128)
 camera.set_frame_rate (10.0)
