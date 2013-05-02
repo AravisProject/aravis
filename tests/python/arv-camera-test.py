@@ -53,12 +53,12 @@ payload = camera.get_payload ()
 
 [x,y,width,height] = camera.get_region ()
 
-print "Camera vendor :", camera.get_vendor_name ()
-print "Camera model  :", camera.get_model_name ()
-print "Camera id     :", camera.get_device_id ()
-print "ROI           :", width, "x", height, "at", x, ",", y
-print "Payload       :", payload
-print "Pixel format  :", camera.get_pixel_format_as_string ()
+print "Camera vendor : %s" %(camera.get_vendor_name ())
+print "Camera model  : %s" %(camera.get_model_name ())
+print "Camera id     : %s" %(camera.get_device_id ())
+print "ROI           : %dx%d at %d,%d" %(width, height, x, y)
+print "Payload       : %d" %(payload)
+print "Pixel format  : %s" %(camera.get_pixel_format_as_string ())
 
 stream = camera.create_stream (None, None)
 
