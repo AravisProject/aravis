@@ -88,6 +88,8 @@ arv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *u
  * Reads @size bytes from the device memory.
  *
  * Return value: (skip): TRUE on success.
+ *
+ * Since: 0.2.0
  **/
 
 gboolean
@@ -112,6 +114,8 @@ arv_device_read_memory (ArvDevice *device, guint32 address, guint32 size, void *
  * Writes @size bytes to the device memory.
  *
  * Return value: (skip): TRUE on success.
+ *
+ * Since: 0.2.0
  **/
 
 gboolean
@@ -135,6 +139,8 @@ arv_device_write_memory (ArvDevice *device, guint32 address, guint32 size, void 
  * Reads the value of a device register.
  *
  * Return value: (skip): TRUE on success.
+ *
+ * Since: 0.2.0
  **/
 
 gboolean
@@ -152,10 +158,13 @@ arv_device_read_register (ArvDevice *device, guint32 address, guint32 *value, GE
  * @device: a #ArvDevice
  * @address: the register address
  * @value: value to write
+ * @error: (out) (allow-none): a #GError placeholder
  *
  * Writes @value to a device register.
  *
  * Return value: (skip): TRUE on success.
+ *
+ * Since: 0.2.0
  **/
 
 gboolean
@@ -201,7 +210,7 @@ _get_genicam_xml (ArvDevice *device, size_t *size)
  *
  * Gets the Genicam XML data stored in the device memory.
  *
- * Returns: (transfer none) : a pointer to the Genicam XML data, owned by the device.
+ * Returns: (transfer none) (array length=size): a pointer to the Genicam XML data, owned by the device.
  *
  * Since: 0.2.0
  **/
