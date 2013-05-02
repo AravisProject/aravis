@@ -201,11 +201,26 @@ arv_viewer_new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 void
 arv_viewer_frame_rate_entry_cb (GtkEntry *entry, ArvViewer *viewer)
 {
-	const char *text;
+	char *text;
+	double frame_rate;
 
-	text = gtk_entry_get_text (entry);
+	text = (char *) gtk_entry_get_text (entry);
 
 	arv_camera_set_frame_rate (viewer->camera, g_strtod (text, NULL));
+
+	frame_rate = arv_camera_get_frame_rate (viewer->camera);
+	text = g_strdup_printf ("%g", frame_rate);
+	gtk_entry_set_text (entry, text);
+	g_free (text);
+}
+
+static gboolean
+arv_viewer_frame_rate_entry_focus_cb (GtkEntry *entry, GdkEventFocus *event,
+		    ArvViewer *viewer)
+{
+	arv_viewer_frame_rate_entry_cb (entry, viewer);
+
+	return FALSE;
 }
 
 void
@@ -770,7 +785,8 @@ arv_viewer_new (void)
 	g_signal_connect (viewer->flip_vertical_toggle, "clicked", G_CALLBACK (arv_viewer_flip_vertical_cb), viewer);
 	g_signal_connect (viewer->camera_combo_box, "changed", G_CALLBACK (arv_viewer_select_camera_cb), viewer);
 
-	g_signal_connect (viewer->frame_rate_entry, "changed", G_CALLBACK (arv_viewer_frame_rate_entry_cb), viewer);
+	g_signal_connect (viewer->frame_rate_entry, "activate", G_CALLBACK (arv_viewer_frame_rate_entry_cb), viewer);
+	g_signal_connect (viewer->frame_rate_entry, "focus-out-event", G_CALLBACK (arv_viewer_frame_rate_entry_focus_cb), viewer);
 
 	viewer->exposure_spin_changed = g_signal_connect (viewer->exposure_spin_button, "value-changed",
 							  G_CALLBACK (arv_viewer_exposure_spin_cb), viewer);
