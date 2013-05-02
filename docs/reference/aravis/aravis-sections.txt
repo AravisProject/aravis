@@ -1035,6 +1035,11 @@ G_DEFINE_INTERFACE
 G_DEFINE_INTERFACE_WITH_CODE
 G_IMPLEMENT_INTERFACE
 arv_g_type_init
+ARV_DEFINE_STATIC_MUTEX
+arv_g_mutex_lock
+arv_g_mutex_unlock
+arv_g_thread_init
+arv_g_thread_new
 </SECTION>
 
 <SECTION>
