@@ -34,8 +34,8 @@ import time
 
 from gi.repository import Aravis
 
-buffer_a = Aravis.Buffer.new (1024, None)
-buffer_b = Aravis.Buffer.new (1024, None)
+buffer_a = Aravis.Buffer.new_allocate (1024)
+buffer_b = Aravis.Buffer.new_allocate (1024)
 
 print "Buffer a refcount :        %d" %(buffer_a.__grefcount__)
 print "Buffer a is preallocated : %d" %(buffer_a.is_preallocated)

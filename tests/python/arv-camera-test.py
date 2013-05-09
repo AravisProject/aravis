@@ -63,7 +63,7 @@ print "Pixel format  : %s" %(camera.get_pixel_format_as_string ())
 stream = camera.create_stream (None, None)
 
 for i in range(0,10):
-	stream.push_buffer (Aravis.Buffer.new (payload, None))
+	stream.push_buffer (Aravis.Buffer.new_allocate (payload))
 
 print "Start acquisition"
 

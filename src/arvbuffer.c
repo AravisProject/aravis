@@ -39,7 +39,7 @@ static GObjectClass *parent_class = NULL;
 /**
  * arv_buffer_new_full:
  * @size: payload size
- * @preallocated: (transfer none) (allow-none): preallocated memory buffer
+ * @preallocated: (transfer none): preallocated memory buffer
  * @user_data: (transfer none): a pointer to user data associated to this buffer
  * @user_data_destroy_func: an optional user data destroy callback
  *
@@ -57,7 +57,7 @@ static GObjectClass *parent_class = NULL;
  */
 
 ArvBuffer *
-arv_buffer_new_full (size_t size, char *preallocated, void *user_data, GDestroyNotify user_data_destroy_func)
+arv_buffer_new_full (size_t size, void *preallocated, void *user_data, GDestroyNotify user_data_destroy_func)
 {
 	ArvBuffer *buffer;
 
@@ -80,7 +80,7 @@ arv_buffer_new_full (size_t size, char *preallocated, void *user_data, GDestroyN
 /**
  * arv_buffer_new:
  * @size: payload size
- * @preallocated: (allow-none) (transfer none): preallocated memory buffer
+ * @preallocated: (transfer none): preallocated memory buffer
  *
  * Creates a new buffer for the storage of the video stream images. 
  * The data space can be either preallocated, and the caller is responsible
@@ -93,9 +93,28 @@ arv_buffer_new_full (size_t size, char *preallocated, void *user_data, GDestroyN
  */
 
 ArvBuffer *
-arv_buffer_new (size_t size, char *preallocated)
+arv_buffer_new (size_t size, void *preallocated)
 {
 	return arv_buffer_new_full (size, preallocated, NULL, NULL);
+}
+
+/**
+ * arv_buffer_new_allocate:
+ * @size: payload size
+ *
+ * Creates a new buffer for the storage of the video stream images. 
+ * The data space is allocated by this function, and will
+ * be freed when the buffer is destroyed.
+ *
+ * Returns: a new #ArvBuffer object
+ *
+ * Since: 0.2.3
+ */
+
+ArvBuffer *
+arv_buffer_new_allocate (size_t size)
+{
+	return arv_buffer_new_full (size, NULL, NULL, NULL);
 }
 
 /**
