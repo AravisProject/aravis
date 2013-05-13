@@ -35,7 +35,7 @@
 const GLib = imports.gi.GLib;
 const Aravis = imports.gi.Aravis;
 
-let camera = Aravis.Camera.new ("Fake_1");
+let camera = Aravis.Camera.new (null);
 
 camera.set_region (0,0,128,128);
 camera.set_pixel_format (Aravis.PIXEL_FORMAT_MONO_8);
@@ -49,7 +49,7 @@ log (payload);
 let stream = camera.create_stream (null, null);
 
 for (var i = 0; i < 100; i++)
-	stream.push_buffer (Aravis.Buffer.new (payload, null));
+	stream.push_buffer (Aravis.Buffer.new_allocate (payload));
 
 camera.start_acquisition ();
 
