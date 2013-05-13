@@ -435,10 +435,12 @@ ARV_TYPE_GC_GROUP_NODE
 <SECTION>
 <FILE>arvgcregisterdescriptionnode</FILE>
 <TITLE>ArvGcRegisterDescriptionNode</TITLE>
-arv_gc_register_description_node_get_type
+ArvGcRegisterDescriptionNode
 arv_gc_register_description_node_new
+arv_gc_register_description_node_check_schema_version
 arv_gc_register_feature_node
 <SUBSECTION Standard>
+arv_gc_register_description_node_get_type
 ARV_GC_REGISTER_DESCRIPTION_NODE
 ARV_GC_REGISTER_DESCRIPTION_NODE_CLASS
 ARV_GC_REGISTER_DESCRIPTION_NODE_GET_CLASS

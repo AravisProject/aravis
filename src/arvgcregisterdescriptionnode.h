@@ -41,14 +41,21 @@ struct _ArvGcRegisterDescriptionNode {
 	ArvGcFeatureNode	node;
 
 	char *model_name;
+	guint major_version;
+	guint minor_version;
+	guint subminor_version;
 };
 
 struct _ArvGcRegisterDescriptionNodeClass {
 	ArvGcFeatureNodeClass parent_class;
 };
 
-GType 		arv_gc_register_description_node_get_type 	(void);
-ArvGcNode * 	arv_gc_register_description_node_new 		(void);
+GType 		arv_gc_register_description_node_get_type 		(void);
+ArvGcNode * 	arv_gc_register_description_node_new 			(void);
+gboolean	arv_gc_register_description_node_check_schema_version	(ArvGcRegisterDescriptionNode *node,
+									 guint required_major,
+									 guint required_minor, 
+									 guint required_subminor);
 
 G_END_DECLS
 

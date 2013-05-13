@@ -46,6 +46,12 @@ arv_gc_register_description_node_set_attribute (ArvDomElement *self, const char*
 	if (strcmp (name, "ModelName") == 0) {
 		g_free (node->model_name);
 		node->model_name = g_strdup (value);
+	} else if (strcmp (name, "SchemaMajorVersion") == 0) {
+		node->major_version = g_ascii_strtoll (value, NULL, 0);
+	} else if (strcmp (name, "SchemaMinorVersion") == 0) {
+		node->minor_version = g_ascii_strtoll (value, NULL, 0);
+	} else if (strcmp (name, "SchemaSubMinorVersion") == 0) {
+		node->subminor_version = g_ascii_strtoll (value, NULL, 0);
 	} else
 		ARV_DOM_ELEMENT_CLASS (parent_class)->set_attribute (self, name, value);
 }
@@ -63,6 +69,30 @@ arv_gc_register_description_node_get_attribute (ArvDomElement *self, const char 
 
 /* ArvGcRegisterDescriptionNode implementation */
 
+gboolean
+arv_gc_register_description_node_check_schema_version (ArvGcRegisterDescriptionNode *node,
+						       guint required_major,
+						       guint required_minor, 
+						       guint required_subminor)
+{
+	g_return_val_if_fail (ARV_IS_GC_REGISTER_DESCRIPTION_NODE (node), FALSE);
+
+	if (node->major_version < required_major)
+		return FALSE;
+	if (node->major_version > required_major)
+		return TRUE;
+
+	if (node->minor_version < required_minor)
+		return FALSE;
+	if (node->minor_version > required_minor)
+		return FALSE;
+
+	if (node->subminor_version < required_subminor)
+		return FALSE;
+
+	return TRUE;
+}
+
 ArvGcNode *
 arv_gc_register_description_node_new (void)
 {
@@ -76,6 +106,9 @@ arv_gc_register_description_node_new (void)
 static void
 arv_gc_register_description_node_init (ArvGcRegisterDescriptionNode *gc_register_description_node)
 {
+	gc_register_description_node->major_version = 0;
+	gc_register_description_node->minor_version = 0;
+	gc_register_description_node->subminor_version = 0;
 }
 
 static void
