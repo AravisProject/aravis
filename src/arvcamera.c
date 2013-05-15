@@ -85,6 +85,7 @@ struct _ArvCameraPrivate {
 	ArvCameraSeries series;
 
 	gboolean use_gain_raw;
+	gboolean use_exposure_time_abs;
 };
 
 enum
@@ -899,7 +900,10 @@ arv_camera_set_exposure_time (ArvCamera *camera, double exposure_time_us)
 			break;
 		case ARV_CAMERA_SERIES_BASLER_ACE:
 		default:
-			arv_device_set_float_feature_value (camera->priv->device, "ExposureTimeAbs", exposure_time_us);
+			if (camera->priv->use_exposure_time_abs)
+				arv_device_set_float_feature_value (camera->priv->device, "ExposureTimeAbs", exposure_time_us);
+			else
+				arv_device_set_float_feature_value (camera->priv->device, "ExposureTime", exposure_time_us);
 			break;
 	}
 }
@@ -918,7 +922,10 @@ arv_camera_get_exposure_time (ArvCamera *camera)
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0.0);
 
-	return arv_device_get_float_feature_value (camera->priv->device, "ExposureTimeAbs");
+	if (camera->priv->use_exposure_time_abs)
+		return arv_device_get_float_feature_value (camera->priv->device, "ExposureTimeAbs");
+
+	return arv_device_get_float_feature_value (camera->priv->device, "ExposureTime");
 }
 
 /**
@@ -953,7 +960,10 @@ arv_camera_get_exposure_time_bounds (ArvCamera *camera, double *min, double *max
 				*max = int_max;
 			break;
 		default:
-			arv_device_get_float_feature_bounds (camera->priv->device, "ExposureTimeAbs", min, max);
+			if (camera->priv->use_exposure_time_abs)
+				arv_device_get_float_feature_bounds (camera->priv->device, "ExposureTimeAbs", min, max);
+			else
+				arv_device_get_float_feature_bounds (camera->priv->device, "ExposureTime", min, max);
 			break;
 	}
 }
@@ -1186,7 +1196,10 @@ arv_camera_is_exposure_time_available (ArvCamera *camera)
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
-	return arv_device_get_feature (camera->priv->device, "ExposureTimeAbs") != NULL;
+	if (camera->priv->use_exposure_time_abs)
+		return arv_device_get_feature (camera->priv->device, "ExposureTimeAbs") != NULL;
+
+	return arv_device_get_feature (camera->priv->device, "ExposureTime") != NULL;
 }
 
 /**
@@ -1260,7 +1273,6 @@ arv_camera_new (const char *name)
 {
 	ArvCamera *camera;
 	ArvDevice *device;
-	ArvGcNode *node;
 
 	device = arv_open_device (name);
 
@@ -1269,9 +1281,8 @@ arv_camera_new (const char *name)
 
 	camera = g_object_new (ARV_TYPE_CAMERA, "device", device, NULL);
 
-	node = arv_device_get_feature (device, "Gain");
-
-	camera->priv->use_gain_raw = !ARV_IS_GC_FLOAT (node);
+	camera->priv->use_gain_raw = !ARV_IS_GC_FLOAT (arv_device_get_feature (device, "Gain"));
+	camera->priv->use_exposure_time_abs = !ARV_IS_GC_FLOAT (arv_device_get_feature (device, "ExposureTime"));
 
 	return camera;
 }
