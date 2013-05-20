@@ -27,6 +27,7 @@
 
 #include <arvgvdevice.h>
 #include <arvgc.h>
+#include <arvgcregisterdescriptionnode.h>
 #include <arvdebug.h>
 #include <arvgvstream.h>
 #include <arvgvcp.h>
@@ -853,6 +854,8 @@ arv_gv_device_new (GInetAddress *interface_address, GInetAddress *device_address
 	ArvGvDevice *gv_device;
 	ArvGvDeviceIOData *io_data;
 	ArvGvDeviceHeartbeatData *heartbeat_data;
+	ArvGcRegisterDescriptionNode *register_description;
+	ArvDomDocument *document;
 	char *address_string;
 	guint32 capabilities;
 
@@ -914,6 +917,11 @@ arv_gv_device_new (GInetAddress *interface_address, GInetAddress *device_address
 
 	arv_debug_device ("[GvDevice::new] Packet resend = %s", gv_device->priv->is_packet_resend_supported ? "yes" : "no");
 	arv_debug_device ("[GvDevice::new] Write memory = %s", gv_device->priv->is_write_memory_supported ? "yes" : "no");
+
+	document = ARV_DOM_DOCUMENT (gv_device->priv->genicam);
+	register_description = ARV_GC_REGISTER_DESCRIPTION_NODE (arv_dom_document_get_document_element (document));
+	if (!arv_gc_register_description_node_check_schema_version (register_description, 1, 1, 0))
+		arv_debug_device ("[GvDevice::new] Register workaround = yes");
 
 	return ARV_DEVICE (gv_device);
 }
