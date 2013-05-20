@@ -67,9 +67,12 @@ arv_gc_port_read (ArvGcPort *port, void *buffer, guint64 address, guint64 length
 	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (port));
 	device = arv_gc_get_device (genicam);
 
+	/* For schema < 1.1.0 and length == 4, register read must be used instead of memory read.
+	 * See Appendix 3 of Genicam 2.0 specification. */
 	if (_register_workaround_check (port, length)) {
 		guint32 value;
 
+		/* For schema < 1.1.0, all registers are big endian. */
 		value = *((guint32 *) buffer);
 		value = GUINT32_FROM_BE (value);
 
@@ -92,9 +95,12 @@ arv_gc_port_write (ArvGcPort *port, void *buffer, guint64 address, guint64 lengt
 	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (port));
 	device = arv_gc_get_device (genicam);
 
+	/* For schema < 1.1.0 and length == 4, register write must be used instead of memory write.
+	 * See Appendix 3 of Genicam 2.0 specification. */
 	if (_register_workaround_check (port, length)) {
 		guint32 value;
 
+		/* For schema < 1.1.0, all registers are big endian. */
 		value = *((guint32 *) buffer);
 		value = GUINT32_FROM_BE (value);
 
