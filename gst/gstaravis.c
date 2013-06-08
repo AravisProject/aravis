@@ -341,7 +341,7 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 		gst_row_stride = (arv_row_stride & ~(0x3)) + 4;
 
 		size = arv_buffer->height * gst_row_stride;
-		data = g_malloc (size);	
+		data = g_malloc (size);
 
 		for (i = 0; i < arv_buffer->height; i++)
 			memcpy (((char *) data) + i * gst_row_stride, ((char *) arv_buffer->data) + i * arv_row_stride, arv_row_stride);
@@ -355,15 +355,17 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 		GST_BUFFER_SIZE (*buffer) = arv_buffer->size;
 	}
 
-	if (gst_aravis->timestamp_offset == 0) {
-		gst_aravis->timestamp_offset = arv_buffer->timestamp_ns;
+	if (!gst_base_src_get_do_timestamp(GST_BASE_SRC(push_src))) {
+		if (gst_aravis->timestamp_offset == 0) {
+			gst_aravis->timestamp_offset = arv_buffer->timestamp_ns;
+			gst_aravis->last_timestamp = arv_buffer->timestamp_ns;
+		}
+
+		GST_BUFFER_TIMESTAMP (*buffer) = arv_buffer->timestamp_ns - gst_aravis->timestamp_offset;
+		GST_BUFFER_DURATION (*buffer) = arv_buffer->timestamp_ns - gst_aravis->last_timestamp;
+
 		gst_aravis->last_timestamp = arv_buffer->timestamp_ns;
 	}
-
-	GST_BUFFER_TIMESTAMP (*buffer) = arv_buffer->timestamp_ns - gst_aravis->timestamp_offset;
-	GST_BUFFER_DURATION (*buffer) = arv_buffer->timestamp_ns - gst_aravis->last_timestamp;
-
-	gst_aravis->last_timestamp = arv_buffer->timestamp_ns;
 
 	arv_stream_push_buffer (gst_aravis->stream, arv_buffer);
 
