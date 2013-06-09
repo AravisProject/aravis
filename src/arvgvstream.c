@@ -615,8 +615,10 @@ arv_gv_stream_thread (void *data)
 			frame = _find_frame_data (thread_data, frame_id, packet, packet_id, read_count, time_us);
 
 			if (frame != NULL) {
+				ArvGvspPacketType packet_type = arv_gvsp_packet_get_packet_type (packet);
 
-				if (arv_gvsp_packet_get_packet_type (packet) != ARV_GVSP_PACKET_TYPE_OK) {
+				if (packet_type != ARV_GVSP_PACKET_TYPE_OK &&
+				    packet_type != ARV_GVSP_PACKET_TYPE_RESEND) {
 					arv_debug_stream_thread ("[GvStream::stream_thread]"
 								 " Error packet at dt = %Lu, packet id = %u"
 								 " frame id = %u",

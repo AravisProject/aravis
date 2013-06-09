@@ -37,11 +37,13 @@ G_BEGIN_DECLS
 /**
  * ArvGvspPacketType:
  * @ARV_GVSP_PACKET_TYPE_OK: valid packet
+ * @ARV_GVSP_PACKET_TYPE_RESEND: resent packet (BlackFly PointGrey camera support)
  * @ARV_GVSP_PACKET_TYPE_ERROR: error packet, indicating invalid resend request
  */
 
 typedef enum {
 	ARV_GVSP_PACKET_TYPE_OK =		0x0000,
+	ARV_GVSP_PACKET_TYPE_RESEND =		0x0100,
 	ARV_GVSP_PACKET_TYPE_ERROR =		0x800c
 } ArvGvspPacketType;
 
