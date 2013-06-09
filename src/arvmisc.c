@@ -622,11 +622,6 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 		"video/x-raw-gray",	16,	16,	0
 	},
 	{
-	       ARV_PIXEL_FORMAT_BAYER_BG_8,
-	       "video/x-raw-bayer, bpp=(int)8, depth=(int)8",
-	       "video/x-raw-bayer",	8,	8,	0
-	},
-	{
 		ARV_PIXEL_FORMAT_BAYER_GR_8,
 		"video/x-raw-bayer, format=grbg, bpp=(int)8, depth=(int)8",
 		"video/x-raw-bayer",     8,      8,      0
@@ -637,20 +632,101 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 		"video/x-raw-bayer",     8,      8,      0
 	},
 	{
-		ARV_PIXEL_FORMAT_BAYER_BG_12,
-		"video/x-raw-bayer, bpp=(int)16, depth=(int)12",
-		"video/x-raw-bayer",	16,	12,	0
+		ARV_PIXEL_FORMAT_BAYER_GB_8,
+		"video/x-raw-bayer, format=gbrg, bpp=(int)8, depth=(int)8",
+		"video/x-raw-bayer",	8,	8,	0
 	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_BG_8,
+		"video/x-raw-bayer, format=bggr, bpp=(int)8, depth=(int)8",
+		"video/x-raw-bayer",	8,	8,	0
+	},
+
+/* Disable non 8bit bayer formats for now, as it's not supported by gstreamer bayer plugin.
+ * This feature is discussed in bug https://bugzilla.gnome.org/show_bug.cgi?id=693666 .*/
+
+#if 0	
 	{
 		ARV_PIXEL_FORMAT_BAYER_GR_12,
 		"video/x-raw-bayer, format=grbg, bpp=(int)16, depth=(int)12",
 		"video/x-raw-bayer",     16,     12,     0
 	},
 	{
-		ARV_PIXEL_FORMAT_BAYER_BG_12_PACKED,
-		"video/x-raw-bayer, bpp=(int)12, depth=(int)12",
+		ARV_PIXEL_FORMAT_BAYER_RG_12,
+		"video/x-raw-bayer, format=rggb, bpp=(int)16, depth=(int)12",
+		"video/x-raw-bayer",     16,     12,     0
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GB_12,
+		"video/x-raw-bayer, format=gbrg, bpp=(int)16, depth=(int)12",
+		"video/x-raw-bayer",	16,	12,	0
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_BG_12,
+		"video/x-raw-bayer, format=bggr, bpp=(int)16, depth=(int)12",
+		"video/x-raw-bayer",	16,	12,	0
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GR_12_PACKED,
+		"video/x-raw-bayer, format=grbg, bpp=(int)12, depth=(int)12",
 		"video/x-raw-bayer",	12,	12,	0
 	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_RG_12_PACKED,
+		"video/x-raw-bayer, format=rggb, bpp=(int)12, depth=(int)12",
+		"video/x-raw-bayer",	12,	12,	0
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GB_12_PACKED,
+		"video/x-raw-bayer, format=gbrg, bpp=(int)12, depth=(int)12",
+		"video/x-raw-bayer",	12,	12,	0
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_BG_12_PACKED,
+		"video/x-raw-bayer, format=bggr, bpp=(int)12, depth=(int)12",
+		"video/x-raw-bayer",	12,	12,	0
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GR_16,
+		"video/x-raw-bayer, format=grbg, bpp=(int)16, depth=(int)16",
+		"video/x-raw-bayer",	16,	16,	0
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_RG_16,
+		"video/x-raw-bayer, format=rggb, bpp=(int)16, depth=(int)16",
+		"video/x-raw-bayer",	16,	16,	0
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GB_16,
+		"video/x-raw-bayer, format=gbrg, bpp=(int)16, depth=(int)16",
+		"video/x-raw-bayer",	16,	16,	0
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_BG_16,
+		"video/x-raw-bayer, format=bggr, bpp=(int)16, depth=(int)16",
+		"video/x-raw-bayer",	16,	16,	0
+	},
+	{
+		ARV_PIXEL_FORMAT_CUSTOM_BAYER_GR_16,
+		"video/x-raw-bayer, format=grbg, bpp=(int)16, depth=(int)16",
+		"video/x-raw-bayer",	16,	16,	0
+	},
+	{
+		ARV_PIXEL_FORMAT_CUSTOM_BAYER_RG_16,
+		"video/x-raw-bayer, format=rggb, bpp=(int)16, depth=(int)16",
+		"video/x-raw-bayer",	16,	16,	0
+	},
+	{
+		ARV_PIXEL_FORMAT_CUSTOM_BAYER_GB_16,
+		"video/x-raw-bayer, format=gbrg, bpp=(int)16, depth=(int)16",
+		"video/x-raw-bayer",	16,	16,	0
+	},
+	{
+		ARV_PIXEL_FORMAT_CUSTOM_BAYER_BG_16,
+		"video/x-raw-bayer, format=bggr, bpp=(int)16, depth=(int)16",
+		"video/x-raw-bayer",	16,	16,	0
+	},
+#endif
 	{
 		ARV_PIXEL_FORMAT_YUV_422_PACKED,
 		"video/x-raw-yuv, format=(fourcc)UYVY",
@@ -670,19 +746,7 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 		ARV_PIXEL_FORMAT_CUSTOM_YUV_422_YUYV_PACKED,
 		"video/x-raw-yuv, format=(fourcc)YUY2",
 		"video/x-raw-yuv",	0,	0,	ARV_MAKE_FOURCC ('Y','U','Y','2')
-	},
-	{
-		ARV_PIXEL_FORMAT_CUSTOM_BAYER_BG_16,
-		"video/x-raw-bayer, bpp=(int)16, depth=(int)16",
-		"video/x-raw-bayer",	16,	16,	0
-	},
-	{
-		ARV_PIXEL_FORMAT_BAYER_GB_8,
-		"video/x-raw-bayer, format=gbrg, bpp=(int)8, depth=(int)8",
-		"video/x-raw-bayer",	8,	8,	0
 	}
-
-
 };
 
 /**
