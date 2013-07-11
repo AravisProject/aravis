@@ -1,0 +1,65 @@
+# German translation for aravis.
+# Copyright (C) 2013 aravis's COPYRIGHT HOLDER
+# This file is distributed under the same license as the aravis package.
+# Christian Kirbach <Christian.Kirbach@gmail.com>, 2013.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: aravis aravis-0-2\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/enter_bug.cgi?"
+"product=aravis&keywords=I18N+L10N&component=general\n"
+"POT-Creation-Date: 2013-06-09 21:12+0000\n"
+"PO-Revision-Date: 2013-06-14 08:14+0100\n"
+"Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
+"Language-Team: German <gnome-de@gnome.org>\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 1.5.5\n"
+
+#: ../viewer/arv-viewer-2.ui.h:1 ../viewer/arv-viewer-3.ui.h:1
+#: ../viewer/data/arv-viewer.desktop.in.in.h:1
+msgid "Aravis"
+msgstr "Aravis"
+
+#: ../viewer/arv-viewer-2.ui.h:2 ../viewer/arv-viewer-3.ui.h:2
+msgid "Frame rate:"
+msgstr "Bildrate:"
+
+#: ../viewer/arv-viewer-2.ui.h:3 ../viewer/arv-viewer-3.ui.h:5
+msgid "Exposure:"
+msgstr "Belichtung:"
+
+#: ../viewer/arv-viewer-2.ui.h:4 ../viewer/arv-viewer-3.ui.h:6
+msgid "Gain:"
+msgstr "Verstärkungsgrad:"
+
+#: ../viewer/arv-viewer-2.ui.h:5 ../viewer/arv-viewer-3.ui.h:3
+msgid "Hz"
+msgstr "Hz"
+
+#: ../viewer/arv-viewer-2.ui.h:6 ../viewer/arv-viewer-3.ui.h:7
+msgid "µs"
+msgstr "µs"
+
+#: ../viewer/arv-viewer-2.ui.h:7 ../viewer/arv-viewer-3.ui.h:4
+msgid "Auto"
+msgstr "Automatisch"
+
+#: ../viewer/arv-viewer-2.ui.h:8 ../viewer/arv-viewer-3.ui.h:8
+msgid "Settings"
+msgstr "Einstellungen"
+
+#: ../viewer/arv-viewer-3.ui.h:9
+msgid "Save a snapshot into image folder"
+msgstr "Einen Schnappschuss in einen Bilderordner speichern"
+
+#: ../viewer/data/arv-viewer.desktop.in.in.h:2
+msgid "Aravis Simple Viewer"
+msgstr "Aravis Bildbetrachter"
+
+#: ../viewer/data/arv-viewer.desktop.in.in.h:3
+msgid "Display the video stream from your cameras"
+msgstr "Den Videostrom von Ihren Kameras anzeigen"
