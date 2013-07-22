@@ -70,7 +70,7 @@ gst_aravis_get_all_camera_caps (GstAravis *gst_aravis)
 {
 	GstCaps *caps;
 	gint64 *pixel_formats;
-	double frame_rate;
+	double min_frame_rate, max_frame_rate;
 	int min_height, min_width;
 	int max_height, max_width;
 	unsigned int n_pixel_formats, i;
@@ -85,6 +85,15 @@ gst_aravis_get_all_camera_caps (GstAravis *gst_aravis)
 	arv_camera_get_width_bounds (gst_aravis->camera, &min_width, &max_width);
 	arv_camera_get_height_bounds (gst_aravis->camera, &min_height, &max_height);
 	pixel_formats = arv_camera_get_available_pixel_formats (gst_aravis->camera, &n_pixel_formats);
+	arv_camera_get_frame_rate_bounds (gst_aravis->camera, &min_frame_rate, &max_frame_rate);
+
+	int min_frame_rate_numerator;
+	int min_frame_rate_denominator;
+	gst_util_double_to_fraction (min_frame_rate, &min_frame_rate_numerator, &min_frame_rate_denominator);
+
+	int max_frame_rate_numerator;
+	int max_frame_rate_denominator;
+	gst_util_double_to_fraction (max_frame_rate, &max_frame_rate_numerator, &max_frame_rate_denominator);
 
 	caps = gst_caps_new_empty ();
 	for (i = 0; i < n_pixel_formats; i++) {
@@ -99,7 +108,9 @@ gst_aravis_get_all_camera_caps (GstAravis *gst_aravis)
 			gst_structure_set (structure,
 					   "width", GST_TYPE_INT_RANGE, min_width, max_width,
 					   "height", GST_TYPE_INT_RANGE, min_height, max_height,
-					   "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
+					   "framerate", GST_TYPE_FRACTION_RANGE,
+							   min_frame_rate_numerator, min_frame_rate_denominator,
+							   max_frame_rate_numerator, max_frame_rate_denominator,
 					   NULL);
 			gst_caps_append_structure (caps, structure);
 		}
