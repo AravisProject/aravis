@@ -151,9 +151,16 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 	gst_structure_get_int (structure, "width", &width);
 	gst_structure_get_int (structure, "height", &height);
 	frame_rate = gst_structure_get_value (structure, "framerate");
-	gst_structure_get_fourcc (structure, "format", &fourcc);
 	gst_structure_get_int (structure, "bpp", &bpp);
 	gst_structure_get_int (structure, "depth", &depth);
+
+	if (gst_structure_get_field_type (structure, "format") == G_TYPE_STRING) {
+		char* s = gst_structure_get_string (structure, "format");
+		fourcc = GST_STR_FOURCC (s);
+	} else if (gst_structure_get_field_type (structure, "format") == GST_TYPE_FOURCC) {
+		gst_structure_get_fourcc (structure, "format", &fourcc);
+	} else
+		fourcc = 0;
 
 	pixel_format = arv_pixel_format_from_gst_caps (gst_structure_get_name (structure), bpp, depth, fourcc);
 
