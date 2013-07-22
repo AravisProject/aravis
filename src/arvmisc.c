@@ -624,22 +624,22 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 	{
 		ARV_PIXEL_FORMAT_BAYER_GR_8,
 		"video/x-raw-bayer, format=grbg, bpp=(int)8, depth=(int)8",
-		"video/x-raw-bayer",     8,      8,      0
+		"video/x-raw-bayer",     8,      8,      ARV_MAKE_FOURCC ('g','r','b','g')
 	},
 	{
 		ARV_PIXEL_FORMAT_BAYER_RG_8,
 		"video/x-raw-bayer, format=rggb, bpp=(int)8, depth=(int)8",
-		"video/x-raw-bayer",     8,      8,      0
+		"video/x-raw-bayer",     8,      8,      ARV_MAKE_FOURCC ('r','g','g','b')
 	},
 	{
 		ARV_PIXEL_FORMAT_BAYER_GB_8,
 		"video/x-raw-bayer, format=gbrg, bpp=(int)8, depth=(int)8",
-		"video/x-raw-bayer",	8,	8,	0
+		"video/x-raw-bayer",	8,	8,	ARV_MAKE_FOURCC ('g','b','r','g')
 	},
 	{
 		ARV_PIXEL_FORMAT_BAYER_BG_8,
 		"video/x-raw-bayer, format=bggr, bpp=(int)8, depth=(int)8",
-		"video/x-raw-bayer",	8,	8,	0
+		"video/x-raw-bayer",	8,	8,	ARV_MAKE_FOURCC ('b','g','g','r')
 	},
 
 /* Disable non 8bit bayer formats for now, as it's not supported by gstreamer bayer plugin.
@@ -790,8 +790,9 @@ arv_pixel_format_from_gst_caps (const char *name, int bpp, int depth, guint32 fo
 		    fourcc == arv_gst_caps_infos[i].fourcc)
 			return arv_gst_caps_infos[i].pixel_format;
 
-		if (depth == arv_gst_caps_infos[i].depth &&
-		    bpp == arv_gst_caps_infos[i].bpp)
+		if ((depth == arv_gst_caps_infos[i].depth) &&
+		    (bpp == arv_gst_caps_infos[i].bpp)
+		    && (fourcc == arv_gst_caps_infos[i].fourcc))
 			return arv_gst_caps_infos[i].pixel_format;
 	}
 
