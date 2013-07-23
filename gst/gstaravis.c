@@ -166,8 +166,10 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 	gst_structure_get_int (structure, "depth", &depth);
 
 	if (gst_structure_get_field_type (structure, "format") == G_TYPE_STRING) {
-		char* s = gst_structure_get_string (structure, "format");
-		fourcc = GST_STR_FOURCC (s);
+		const char *string;
+
+	       	string = gst_structure_get_string (structure, "format");
+		fourcc = GST_STR_FOURCC (string);
 	} else if (gst_structure_get_field_type (structure, "format") == GST_TYPE_FOURCC) {
 		gst_structure_get_fourcc (structure, "format", &fourcc);
 	} else
