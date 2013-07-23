@@ -1,6 +1,6 @@
 include $(top_srcdir)/Makefile.decl
 
-INCLUDES = -g -I$(top_srcdir)/src/ $(ARAVIS_CFLAGS)
+AM_CPPFLAGS = -g -I$(top_srcdir)/src/ $(ARAVIS_CFLAGS)
 
 test_progs_ldadd = 					\
 	$(top_builddir)/src/libaravis-@ARAVIS_API_VERSION@.la		\

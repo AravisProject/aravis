@@ -2,7 +2,7 @@ EXTRA_DIST =
 
 include $(top_srcdir)/Makefile.decl
 
-INCLUDES = \
+AM_CPPFLAGS = \
 	-I$(top_srcdir)/src \
 	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\" \
 	-DPACKAGE_SRC_DIR=\""$(srcdir)"\" \
