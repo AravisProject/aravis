@@ -492,7 +492,7 @@ gst_aravis_set_property (GObject * object, guint prop_id,
 
 			break;
 		case PROP_GAIN:
-			gst_aravis->gain = g_value_get_int (value);
+			gst_aravis->gain = g_value_get_double (value);
 			break;
 		case PROP_GAIN_AUTO:
 			gst_aravis->gain_auto = g_value_get_boolean (value);
@@ -532,7 +532,7 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 			g_value_set_string (value, gst_aravis->camera_name);
 			break;
 		case PROP_GAIN:
-			g_value_set_int (value, gst_aravis->gain);
+			g_value_set_double (value, gst_aravis->gain);
 			break;
 		case PROP_GAIN_AUTO:
 			g_value_set_boolean (value, gst_aravis->gain_auto);
@@ -597,10 +597,10 @@ gst_aravis_class_init (GstAravisClass * klass)
 	g_object_class_install_property
 		(gobject_class,
 		 PROP_GAIN,
-		 g_param_spec_int ("gain",
+		 g_param_spec_double ("gain",
 				   "Gain",
 				   "Gain (dB)",
-				   -1, 500, 0,
+				   -1.0, 500.0, 0.0,
 				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 	g_object_class_install_property
 		(gobject_class,

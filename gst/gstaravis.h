@@ -43,7 +43,7 @@ struct _GstAravis {
 
 	char *camera_name;
 
-	gint64 gain;
+	double gain;
 	gboolean gain_auto;
 	double exposure_time_us;
 	gboolean exposure_auto;
