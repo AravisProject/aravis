@@ -1,0 +1,69 @@
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+# Aviary.pl
+# Jeśli masz jakiekolwiek uwagi odnoszące się do tłumaczenia lub chcesz
+# pomóc w jego rozwijaniu i pielęgnowaniu, napisz do nas:
+# gnomepl@aviary.pl
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+# Piotr Drąg <piotrdrag@gmail.com>, 2013.
+# Aviary.pl <gnomepl@aviary.pl>, 2013.
+msgid ""
+msgstr ""
+"Project-Id-Version: aravis\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2013-08-11 01:31+0200\n"
+"PO-Revision-Date: 2013-08-11 01:32+0200\n"
+"Last-Translator: Piotr Drąg <piotrdrag@gmail.com>\n"
+"Language-Team: Polish <gnomepl@aviary.pl>\n"
+"Language: pl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
+"|| n%100>=20) ? 1 : 2);\n"
+"X-Poedit-Language: Polish\n"
+"X-Poedit-Country: Poland\n"
+
+#: ../viewer/arv-viewer-2.ui.h:1 ../viewer/arv-viewer-3.ui.h:1
+#: ../viewer/data/arv-viewer.desktop.in.in.h:1
+msgid "Aravis"
+msgstr "Aravis"
+
+#: ../viewer/arv-viewer-2.ui.h:2 ../viewer/arv-viewer-3.ui.h:2
+msgid "Frame rate:"
+msgstr "Liczba klatek na sekundę:"
+
+#: ../viewer/arv-viewer-2.ui.h:3 ../viewer/arv-viewer-3.ui.h:5
+msgid "Exposure:"
+msgstr "Naświetlanie"
+
+#: ../viewer/arv-viewer-2.ui.h:4 ../viewer/arv-viewer-3.ui.h:6
+msgid "Gain:"
+msgstr "Wzmocnienie:"
+
+#: ../viewer/arv-viewer-2.ui.h:5 ../viewer/arv-viewer-3.ui.h:3
+msgid "Hz"
+msgstr "Hz"
+
+#: ../viewer/arv-viewer-2.ui.h:6 ../viewer/arv-viewer-3.ui.h:7
+msgid "µs"
+msgstr "µs"
+
+#: ../viewer/arv-viewer-2.ui.h:7 ../viewer/arv-viewer-3.ui.h:4
+msgid "Auto"
+msgstr "Automatycznie"
+
+#: ../viewer/arv-viewer-2.ui.h:8 ../viewer/arv-viewer-3.ui.h:8
+msgid "Settings"
+msgstr "Ustawienia"
+
+#: ../viewer/arv-viewer-3.ui.h:9
+msgid "Save a snapshot into image folder"
+msgstr "Zapis migawki do katalogu obrazów"
+
+#: ../viewer/data/arv-viewer.desktop.in.in.h:2
+msgid "Aravis Simple Viewer"
+msgstr "Prosta przeglądarka Aravis"
+
+#: ../viewer/data/arv-viewer.desktop.in.in.h:3
+msgid "Display the video stream from your cameras"
+msgstr "Wyświetlanie strumienia wideo z aparatu"
