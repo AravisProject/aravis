@@ -5,7 +5,7 @@
          xmlns="http://usefulinc.com/ns/doap#">
 
   <name xml:lang="en">Aravis</name>
-  <shortdesc xml:lang="en">Vision library for ethernet cameras</shortdesc>
+  <shortdesc xml:lang="en">Acquisition library for industrial cameras</shortdesc>
   <homepage rdf:resource="http://blogs.gnome.org/emmanuel/category/aravis" />
   <category rdf:resource="http://api.gnome.org/doap-extensions#development" />
 
