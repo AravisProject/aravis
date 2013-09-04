@@ -187,4 +187,11 @@
 		<Max>1</Max>
 	</Integer>
 
+	<StringReg Name="DeviceUserID">
+		<Address>0xe8</Address>
+		<Length>16</Length>
+		<AccessMode>RW</AccessMode>
+		<pPort>Device</pPort>
+	</StringReg>
+
 </RegisterDescription>

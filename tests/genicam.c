@@ -2,6 +2,54 @@
 #include <arv.h>
 #include <string.h>
 
+typedef struct {
+	const char *name;
+	GType value_type;
+} NodeTypes;
+
+NodeTypes node_value_types[] = {
+	{"RWFloat",			G_TYPE_DOUBLE},
+	{"P_RWFloat_Min",		G_TYPE_DOUBLE},
+	{"P_RWFloat_Max",		G_TYPE_DOUBLE},
+	{"P_RWFloat_Inc",		G_TYPE_DOUBLE},
+	{"P_RWFloat",			G_TYPE_DOUBLE},
+	{"RWBoolean",			G_TYPE_BOOLEAN},
+	{"P_RWBoolean",			G_TYPE_BOOLEAN},
+	{"RWInteger",			G_TYPE_INT64},
+	{"P_RWInteger",			G_TYPE_INT64},
+	{"P_RWInteger_Min",		G_TYPE_INT64},
+	{"P_RWInteger_Max",		G_TYPE_INT64},
+	{"P_RWInteger_Inc",		G_TYPE_INT64},
+	{"Enumeration",			G_TYPE_STRING},
+	{"EnumerationValue",		G_TYPE_INT64},
+	{"IntRegisterA",		G_TYPE_INT64},
+	{"IntRegisterB",		G_TYPE_INT64},
+	{"IntSwissKnifeTest",		G_TYPE_INT64},
+	{"DeviceUserID",		G_TYPE_STRING}
+};
+
+static void
+node_value_type_test (void)
+{
+	ArvDevice *device;
+	ArvGc *genicam;
+	ArvGcNode *node;
+	int i;
+
+	device = arv_fake_device_new ("TEST0");
+	g_assert (ARV_IS_FAKE_DEVICE (device));
+
+	genicam = arv_device_get_genicam (device); 
+	g_assert (ARV_IS_GC (genicam));
+
+	for (i = 0; i < G_N_ELEMENTS (node_value_types); i++) {
+		node = arv_gc_get_node (genicam, node_value_types[i].name);
+		g_assert (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == node_value_types[i].value_type);
+	}
+
+	g_object_unref (device);
+}
+
 static void
 integer_test (void)
 {
@@ -360,6 +408,7 @@ main (int argc, char *argv[])
 
 	arv_set_fake_camera_genicam_filename (GENICAM_FILENAME);
 
+	g_test_add_func ("/genicam/value_type", node_value_type_test);
 	g_test_add_func ("/genicam/integer", integer_test);
 	g_test_add_func ("/genicam/boolean", boolean_test);
 	g_test_add_func ("/genicam/float", float_test);
