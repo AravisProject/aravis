@@ -48,6 +48,7 @@ enum
 {
   PROP_0,
   PROP_CAMERA_NAME,
+  PROP_CAMERA,
   PROP_GAIN,
   PROP_GAIN_AUTO,
   PROP_EXPOSURE,
@@ -266,6 +267,28 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 	return TRUE;
 }
 
+void
+gst_aravis_init_camera (GstAravis *gst_aravis)
+{
+	if (gst_aravis->camera != NULL)
+		g_object_unref (gst_aravis->camera);
+
+	gst_aravis->camera = arv_camera_new (gst_aravis->camera_name);
+
+	gst_aravis->gain = arv_camera_get_gain(gst_aravis->camera);
+	gst_aravis->gain_auto = arv_camera_is_gain_available(gst_aravis->camera);
+
+	gst_aravis->exposure_time_us = arv_camera_get_exposure_time(gst_aravis->camera);
+	if (arv_camera_get_exposure_time_auto(gst_aravis->camera) == ARV_AUTO_OFF)
+		gst_aravis->exposure_auto = FALSE;
+	else
+		gst_aravis->exposure_auto = TRUE;
+
+	arv_camera_get_region (gst_aravis->camera, &gst_aravis->offset_x, &gst_aravis->offset_y, NULL, NULL);
+	arv_camera_get_binning (gst_aravis->camera, &gst_aravis->h_binning, &gst_aravis->v_binning);
+	gst_aravis->payload = 0;
+}
+
 static gboolean
 gst_aravis_start (GstBaseSrc *src)
 {
@@ -273,10 +296,9 @@ gst_aravis_start (GstBaseSrc *src)
 
 	GST_LOG_OBJECT (gst_aravis, "Open camera '%s'", gst_aravis->camera_name);
 
-	if (gst_aravis->camera != NULL)
-		g_object_unref (gst_aravis->camera);
+	if (gst_aravis->camera == NULL)
+		gst_aravis_init_camera (gst_aravis);
 
-	gst_aravis->camera = arv_camera_new (gst_aravis->camera_name);
 	gst_aravis->all_caps = gst_aravis_get_all_camera_caps (gst_aravis);
 
 	return TRUE;
@@ -293,10 +315,6 @@ gboolean gst_aravis_stop( GstBaseSrc * src )
 		g_object_unref (gst_aravis->stream);
 		gst_aravis->stream = NULL;
 
-	}
-	if (gst_aravis->camera != NULL) {
-		g_object_unref (gst_aravis->camera);
-		gst_aravis->camera = NULL;
 	}
 	if (gst_aravis->all_caps != NULL) {
 		gst_caps_unref (gst_aravis->all_caps);
@@ -486,22 +504,35 @@ gst_aravis_set_property (GObject * object, guint prop_id,
 	switch (prop_id) {
 		case PROP_CAMERA_NAME:
 			g_free (gst_aravis->camera_name);
-			gst_aravis->camera_name = g_strdup (g_value_get_string (value));
+			/* check if we are currently active
+			   prevent setting camera and other values to something not representing the active camera */
+			if (gst_aravis->stream == NULL) {
+				gst_aravis->camera_name = g_strdup (g_value_get_string (value));
+				gst_aravis_init_camera (gst_aravis);
+			}
 
 			GST_LOG_OBJECT (gst_aravis, "Set camera name to %s", gst_aravis->camera_name);
 
 			break;
 		case PROP_GAIN:
 			gst_aravis->gain = g_value_get_double (value);
+			if (gst_aravis->camera != NULL)
+				arv_camera_set_gain (gst_aravis->camera, gst_aravis->gain);
 			break;
 		case PROP_GAIN_AUTO:
 			gst_aravis->gain_auto = g_value_get_boolean (value);
+			if (gst_aravis->camera != NULL)
+				arv_camera_set_gain_auto (gst_aravis->camera, gst_aravis->gain_auto);
 			break;
 		case PROP_EXPOSURE:
 			gst_aravis->exposure_time_us = g_value_get_double (value);
+			if (gst_aravis->camera != NULL)
+				arv_camera_set_exposure_time (gst_aravis->camera, gst_aravis->exposure_time_us);
 			break;
 		case PROP_EXPOSURE_AUTO:
 			gst_aravis->exposure_auto = g_value_get_boolean (value);
+			if (gst_aravis->camera != NULL)
+				arv_camera_set_exposure_time_auto (gst_aravis->camera, gst_aravis->exposure_auto);
 			break;
 		case PROP_OFFSET_X:
 			gst_aravis->offset_x = g_value_get_int (value);
@@ -530,6 +561,9 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 	switch (prop_id) {
 		case PROP_CAMERA_NAME:
 			g_value_set_string (value, gst_aravis->camera_name);
+			break;
+		case PROP_CAMERA:
+			g_value_set_object (value, gst_aravis->camera);
 			break;
 		case PROP_GAIN:
 			g_value_set_double (value, gst_aravis->gain);
@@ -594,6 +628,14 @@ gst_aravis_class_init (GstAravisClass * klass)
 				      "Name of the camera",
 				      NULL,
 				      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+	g_object_class_install_property
+		(gobject_class,
+		 PROP_CAMERA,
+		 g_param_spec_object ("camera",
+				      "Camera Object",
+				      "Camera instance to retrieve additional information",
+				              ARV_TYPE_CAMERA,
+				      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 	g_object_class_install_property
 		(gobject_class,
 		 PROP_GAIN,
