@@ -102,6 +102,12 @@ arv_gc_boolean_get_value_as_string (ArvGcFeatureNode *node, GError **error)
 	return string;
 }
 
+static GType
+arv_gc_boolean_get_value_type (ArvGcFeatureNode *node)
+{
+	return G_TYPE_BOOLEAN;
+}
+
 /* ArvGcBoolean implementation */
 
 static gint64
@@ -233,6 +239,7 @@ arv_gc_boolean_class_init (ArvGcBooleanClass *this_class)
 	dom_node_class->pre_remove_child = arv_gc_boolean_pre_remove_child;
 	gc_feature_node_class->set_value_from_string = arv_gc_boolean_set_value_from_string;
 	gc_feature_node_class->get_value_as_string = arv_gc_boolean_get_value_as_string;
+	gc_feature_node_class->get_value_type = arv_gc_boolean_get_value_type;
 }
 
 /* ArvGcInteger interface implementation */

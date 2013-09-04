@@ -162,6 +162,11 @@ arv_tool_execute_command (int argc, char **argv, const char *device_name)
 							printf ("%s = %s\n", tokens[0],
 								arv_gc_string_get_value (ARV_GC_STRING (feature), NULL));
 							break;
+						case G_TYPE_BOOLEAN:
+							printf ("%s = %s\n", tokens[0],
+								arv_gc_integer_get_value (ARV_GC_INTEGER (feature), NULL) != 0 ?
+								"true" : "false");
+							break;
 						default:
 							printf ("%s = %s\n", tokens[0],
 								arv_gc_feature_node_get_value_as_string
