@@ -106,6 +106,12 @@ arv_gc_enumeration_get_value_as_string (ArvGcFeatureNode *node, GError **error)
 	return string;
 }
 
+GType
+arv_gc_enumeration_get_value_type (ArvGcFeatureNode *node)
+{
+	return G_TYPE_STRING;
+}
+
 
 /* ArvGcEnumeration implementation */
 
@@ -437,6 +443,7 @@ arv_gc_enumeration_class_init (ArvGcEnumerationClass *this_class)
 	dom_node_class->pre_remove_child = arv_gc_enumeration_pre_remove_child;
 	gc_feature_node_class->set_value_from_string = arv_gc_enumeration_set_value_from_string;
 	gc_feature_node_class->get_value_as_string = arv_gc_enumeration_get_value_as_string;
+	gc_feature_node_class->get_value_type = arv_gc_enumeration_get_value_type;
 }
 
 /* ArvGcInteger interface implementation */
