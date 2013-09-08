@@ -62,6 +62,7 @@
 typedef enum {
 	ARV_CAMERA_VENDOR_UNKNOWN,
 	ARV_CAMERA_VENDOR_BASLER,
+	ARV_CAMERA_VENDOR_DALSA,
 	ARV_CAMERA_VENDOR_PROSILICA,
 	ARV_CAMERA_VENDOR_TIS
 } ArvCameraVendor;
@@ -71,7 +72,8 @@ typedef enum {
 	ARV_CAMERA_SERIES_BASLER_ACE,
 	ARV_CAMERA_SERIES_BASLER_SCOUT,
 	ARV_CAMERA_SERIES_BASLER_OTHER,
-	ARV_CAMERA_SERIES_PROSILICA_OTHER,
+	ARV_CAMERA_SERIES_DALSA,
+	ARV_CAMERA_SERIES_PROSILICA,
 	ARV_CAMERA_SERIES_TIS
 } ArvCameraSeries;
 
@@ -86,6 +88,7 @@ struct _ArvCameraPrivate {
 
 	gboolean use_gain_raw;
 	gboolean use_exposure_time_abs;
+	gboolean use_acquisition_frame_rate_abs;
 };
 
 enum
@@ -667,11 +670,16 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
 			} else
 				arv_device_set_float_feature_value (camera->priv->device, "FPS", frame_rate);
 			break;
+		case ARV_CAMERA_VENDOR_DALSA:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
 							     "FrameStart");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
-			arv_device_set_float_feature_value (camera->priv->device, "AcquisitionFrameRate", frame_rate);
+
+			arv_device_set_float_feature_value (camera->priv->device,
+							    camera->priv->use_acquisition_frame_rate_abs ?
+							    "AcquisitionFrameRateAbs":
+							    "AcquisitionFrameRate", frame_rate);
 			break;
 	}
 }
@@ -690,7 +698,7 @@ arv_camera_get_frame_rate (ArvCamera *camera)
 {
 	ArvGcNode *feature;
 
-	g_return_val_if_fail (ARV_IS_CAMERA (camera), -1);
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), -1.0);
 
 	switch (camera->priv->vendor) {
 		case ARV_CAMERA_VENDOR_BASLER:
@@ -709,10 +717,15 @@ arv_camera_get_frame_rate (ArvCamera *camera)
 					return 0;
 			} else
 				return arv_device_get_float_feature_value (camera->priv->device, "FPS");
+		case ARV_CAMERA_VENDOR_DALSA:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
-		default:
-			return arv_device_get_float_feature_value (camera->priv->device, "AcquisitionFrameRate");
+			return arv_device_get_float_feature_value (camera->priv->device,
+								   camera->priv->use_acquisition_frame_rate_abs ?
+								   "AcquisitionFrameRateAbs":
+								   "AcquisitionFrameRate");
 	}
+
+	return -1.0;
 }
 
 /**
@@ -768,9 +781,13 @@ arv_camera_get_frame_rate_bounds (ArvCamera *camera, double *min, double *max)
 		case ARV_CAMERA_VENDOR_PROSILICA:
 			arv_device_get_float_feature_bounds (camera->priv->device, "AcquisitionFrameRateAbs", min, max);
 			break;
+		case ARV_CAMERA_VENDOR_DALSA:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
-		default:
-			arv_device_get_float_feature_bounds (camera->priv->device, "AcquisitionFrameRate", min, max);
+			arv_device_get_float_feature_bounds (camera->priv->device,
+							     camera->priv->use_exposure_time_abs ?
+							     "AcquisitionFrameRateAbs":
+							     "AcquisitionFrameRate",
+							     min, max);
 			break;
 	}
 }
@@ -900,10 +917,10 @@ arv_camera_set_exposure_time (ArvCamera *camera, double exposure_time_us)
 			break;
 		case ARV_CAMERA_SERIES_BASLER_ACE:
 		default:
-			if (camera->priv->use_exposure_time_abs)
-				arv_device_set_float_feature_value (camera->priv->device, "ExposureTimeAbs", exposure_time_us);
-			else
-				arv_device_set_float_feature_value (camera->priv->device, "ExposureTime", exposure_time_us);
+			arv_device_set_float_feature_value (camera->priv->device,
+							    camera->priv->use_exposure_time_abs ?
+							    "ExposureTimeAbs" :
+							    "ExposureTime", exposure_time_us);
 			break;
 	}
 }
@@ -922,10 +939,10 @@ arv_camera_get_exposure_time (ArvCamera *camera)
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0.0);
 
-	if (camera->priv->use_exposure_time_abs)
-		return arv_device_get_float_feature_value (camera->priv->device, "ExposureTimeAbs");
-
-	return arv_device_get_float_feature_value (camera->priv->device, "ExposureTime");
+	return arv_device_get_float_feature_value (camera->priv->device,
+						   camera->priv->use_exposure_time_abs ?
+						   "ExposureTimeAbs" : 
+						   "ExposureTime");
 }
 
 /**
@@ -960,10 +977,11 @@ arv_camera_get_exposure_time_bounds (ArvCamera *camera, double *min, double *max
 				*max = int_max;
 			break;
 		default:
-			if (camera->priv->use_exposure_time_abs)
-				arv_device_get_float_feature_bounds (camera->priv->device, "ExposureTimeAbs", min, max);
-			else
-				arv_device_get_float_feature_bounds (camera->priv->device, "ExposureTime", min, max);
+			arv_device_get_float_feature_bounds (camera->priv->device,
+							     camera->priv->use_exposure_time_abs ?
+							     "ExposureTimeAbs" :
+							     "ExposureTime",
+							     min, max);
 			break;
 	}
 }
@@ -1177,10 +1195,15 @@ arv_camera_is_frame_rate_available (ArvCamera *camera)
 			return arv_device_get_feature (camera->priv->device, "AcquisitionFrameRateAbs") != NULL;
 		case ARV_CAMERA_VENDOR_TIS:
 			return arv_device_get_feature (camera->priv->device, "FPS") != NULL;
+		case ARV_CAMERA_VENDOR_DALSA:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
-		default:
-			return arv_device_get_feature (camera->priv->device, "AcquisitionFrameRate") != NULL;
+			return arv_device_get_feature (camera->priv->device,
+						       camera->priv->use_acquisition_frame_rate_abs ?
+						       "AcquisitionFrameRateAbs":
+						       "AcquisitionFrameRate") != NULL;
 	}
+
+	return FALSE;
 }
 /**
  * arv_camera_is_exposure_time_available:
@@ -1196,10 +1219,10 @@ arv_camera_is_exposure_time_available (ArvCamera *camera)
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
-	if (camera->priv->use_exposure_time_abs)
-		return arv_device_get_feature (camera->priv->device, "ExposureTimeAbs") != NULL;
-
-	return arv_device_get_feature (camera->priv->device, "ExposureTime") != NULL;
+	return arv_device_get_feature (camera->priv->device,
+				       camera->priv->use_exposure_time_abs ?
+				       "ExposureTimeAbs" :
+				       "ExposureTime") != NULL;
 }
 
 /**
@@ -1283,6 +1306,7 @@ arv_camera_new (const char *name)
 
 	camera->priv->use_gain_raw = !ARV_IS_GC_FLOAT (arv_device_get_feature (device, "Gain"));
 	camera->priv->use_exposure_time_abs = !ARV_IS_GC_FLOAT (arv_device_get_feature (device, "ExposureTime"));
+	camera->priv->use_acquisition_frame_rate_abs = !ARV_IS_GC_FLOAT (arv_device_get_feature (device, "AcquisitionFrameRate"));
 
 	return camera;
 }
@@ -1339,10 +1363,13 @@ arv_camera_constructor (GType gtype, guint n_properties, GObjectConstructParam *
 			series = ARV_CAMERA_SERIES_BASLER_OTHER;
 	} else if (g_strcmp0 (vendor_name, "Prosilica") == 0) {
 		vendor = ARV_CAMERA_VENDOR_PROSILICA;
-		series = ARV_CAMERA_SERIES_PROSILICA_OTHER;
+		series = ARV_CAMERA_SERIES_PROSILICA;
 	} else if (g_strcmp0 (vendor_name, "The Imaging Source Europe GmbH") == 0) {
 		vendor = ARV_CAMERA_VENDOR_TIS;
 		series = ARV_CAMERA_SERIES_TIS;
+	} else if (g_strcmp0 (vendor_name, "DALSA") == 0) {
+		vendor = ARV_CAMERA_VENDOR_DALSA;
+		series = ARV_CAMERA_SERIES_DALSA;
 	} else {
 		vendor = ARV_CAMERA_VENDOR_UNKNOWN;
 		series = ARV_CAMERA_SERIES_UNKNOWN;
