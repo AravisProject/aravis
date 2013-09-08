@@ -30,6 +30,7 @@
 #include <arvgvcp.h>
 #include <arvdebug.h>
 #include <arvmisc.h>
+#include <arvstr.h>
 #include <glib/gprintf.h>
 #include <gio/gio.h>
 #include <sys/types.h>
@@ -223,6 +224,8 @@ arv_gv_interface_device_infos_new (GInetAddress *interface_address,
 	infos->user_name = g_strndup ((char *) &infos->discovery_data[ARV_GVBS_USER_DEFINED_NAME_OFFSET],
 				      ARV_GVBS_USER_DEFINED_NAME_SIZE);
 	infos->name = g_strdup_printf ("%s-%s", infos->manufacturer, infos->serial_number);
+
+	arv_str_strip (infos->name, ARV_DEVICE_NAME_ILLEGAL_CHARACTERS, ARV_DEVICE_NAME_REPLACEMENT_CHARACTER);
 
 	infos->interface_address = interface_address;
 
