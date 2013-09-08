@@ -28,6 +28,11 @@
 
 G_BEGIN_DECLS
 
+#define ARV_CAMERA_NAME_ILLEGAL_CHARACTERS 	"\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f" \
+						"\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f" \
+						" _-"
+#define ARV_CAMERA_NAME_REPLACEMENT_CHARACTER	'_'
+
 #define ARV_TYPE_CAMERA             (arv_camera_get_type ())
 #define ARV_CAMERA(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_CAMERA, ArvCamera))
 #define ARV_CAMERA_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_CAMERA, ArvCameraClass))

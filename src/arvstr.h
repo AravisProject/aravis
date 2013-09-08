@@ -28,6 +28,8 @@
 
 G_BEGIN_DECLS
 
+char * 		arv_str_strip 		(char *str, const char *illegal_chars, char replacement_char);
+
 gboolean 	arv_str_is_uri 		(const char *str);
 char *   	arv_str_to_uri 		(const char *str);
 

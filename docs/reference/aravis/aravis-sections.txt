@@ -66,6 +66,8 @@ ARV_CAMERA_GET_CLASS
 <SUBSECTION Private>
 ArvCameraPrivate
 ArvCameraClass
+ARV_CAMERA_NAME_ILLEGAL_CHARACTERS
+ARV_CAMERA_NAME_REPLACEMENT_CHARACTER
 </SECTION>
 
 <SECTION>
@@ -1010,6 +1012,7 @@ arv_statistic_reset
 arv_statistic_fill
 arv_statistic_set_name
 arv_statistic_to_string
+arv_str_strip
 arv_str_is_uri
 arv_str_to_uri
 arv_str_parse_double
