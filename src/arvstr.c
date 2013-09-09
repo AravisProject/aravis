@@ -28,6 +28,11 @@
 #include <math.h>
 
 /**
+ * SECTION: arvstr
+ * @short_description: String utilities
+ */
+
+/**
  * arv_str_strip:
  * @str: (allow-none): a string
  * @illegal_chars: illegal characters
@@ -36,6 +41,8 @@
  * Remove any @illegal_chars from @str, and replace them by @replacement_char if they are not at the end or at the beginning of @str.
  * Several consecutive @illegal_chars are replaced by only one @replacement_char. @illegal_chars at the beginnig or at the end of @str
  * are simply removed.
+ *
+ * If @replacement_char is '\0', all @illegal_chars are simply removed.
  *
  * Returns: @str
  *

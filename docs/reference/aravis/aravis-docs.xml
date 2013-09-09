@@ -105,11 +105,11 @@
 
 		<chapter>
 			<title>Utils</title>
-			<xi:include href="xml/arvpixelformat.xml"/>
 			<xi:include href="xml/arvdebug.xml"/>
 			<xi:include href="xml/arvevaluator.xml"/>
 			<xi:include href="xml/arvgst.xml"/>
 			<xi:include href="xml/arvstatistic.xml"/>
+			<xi:include href="xml/arvstr.xml"/>
 			<xi:include href="xml/arvvalue.xml"/>
 			<xi:include href="xml/arvzip.xml"/>
 		</chapter>

@@ -69,9 +69,15 @@ ArvCameraClass
 </SECTION>
 
 <SECTION>
-<FILE>arvpixelformat</FILE>
-<TITLE>ArvPixelFormat</TITLE>
+<FILE>arvbuffer</FILE>
+<TITLE>ArvBuffer</TITLE>
+ArvFrameCallback
+ArvBufferStatus
+ArvBuffer
 ArvPixelFormat
+arv_buffer_new
+arv_buffer_new_full
+arv_buffer_new_allocate
 ARV_PIXEL_FORMAT_BIT_PER_PIXEL
 ARV_PIXEL_FORMAT_BAYER_BG_10
 ARV_PIXEL_FORMAT_BAYER_BG_12
@@ -126,17 +132,6 @@ ARV_PIXEL_FORMAT_YUV_411_PACKED
 ARV_PIXEL_FORMAT_YUV_422_PACKED
 ARV_PIXEL_FORMAT_YUV_422_YUYV_PACKED
 ARV_PIXEL_FORMAT_YUV_444_PACKED
-</SECTION>
-
-<SECTION>
-<FILE>arvbuffer</FILE>
-<TITLE>ArvBuffer</TITLE>
-ArvFrameCallback
-ArvBufferStatus
-ArvBuffer
-arv_buffer_new
-arv_buffer_new_full
-arv_buffer_new_allocate
 <SUBSECTION Standard>
 ARV_BUFFER
 ARV_IS_BUFFER
@@ -1012,6 +1007,11 @@ arv_statistic_reset
 arv_statistic_fill
 arv_statistic_set_name
 arv_statistic_to_string
+</SECTION>
+
+<SECTION>
+<FILE>arvstr</FILE>
+<TITLE>ArvStr</TITLE>
 arv_str_strip
 arv_str_is_uri
 arv_str_to_uri
