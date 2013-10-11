@@ -210,7 +210,7 @@ _get_genicam_xml (ArvDevice *device, size_t *size)
  *
  * Gets the Genicam XML data stored in the device memory.
  *
- * Returns: (transfer none) (array length=size): a pointer to the Genicam XML data, owned by the device.
+ * Returns: (transfer none): a pointer to the Genicam XML data, owned by the device.
  *
  * Since: 0.2.0
  **/
