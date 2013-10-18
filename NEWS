@@ -1,3 +1,24 @@
+Release 0.3.0
+=============
+
+  * updated translations (Marek, Matej, Martin, Daniel, Joe, Kenneth, Rūdolfs, Andika, Balázs, Piotr, Christian, Мирослав)
+  * make framerate work for The Imaging Source cameras (Edgar)
+  * fix exposure setting on Point Grey Blackfly cameras
+  * added frame rate support for The Imaging Source(TIS) cameras (Edgar)
+  * gv_interface: strip control character from device id (Csaba)
+  * gst_plugin: make the plugin more useful for a use inside an application (Edgar)
+  * gst_plugin: honor do-timestamp property (Csaba)
+  * arv-tool: fix IntReg display and don't display min/max if they are no specified
+  * gv_device: don't send packet resend requests when this feature is not available
+  * gv_device: implement register workaround for schema < 1.1.0
+  * python: crash fixes (Olivier)
+  * viewer: fix an issue when aravis buffer row stride is not a multiple of 4
+  * viewer: improve framerate entry
+  * viewer: translation update
+  * compilation warning suppression
+  * suppress glib deprecation warnings
+  * add a define for BAYER_GR_12_PACKED pixel format
+
 Release 0.2.0
 =============
 
