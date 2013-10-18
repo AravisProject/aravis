@@ -59,6 +59,9 @@ ARAVIS_GSTREAMER_REQUIREMENTS="gstreamer-base-0.10 >= 0.10.31 gstreamer-app-0.10
 
 PKG_CHECK_MODULES(ARAVIS, [$ARAVIS_REQUIREMENTS])
 
+# Standard math library doesn't come with a pkgconfig file.
+ARAVIS_LIBS="-lm ${ARAVIS_LIBS}"
+
 AC_SUBST(ARAVIS_CFLAGS)
 AC_SUBST(ARAVIS_LIBS)
 
@@ -88,6 +91,9 @@ if test "x$enable_viewer" = "xyes"; then
 fi
 AM_CONDITIONAL(ARAVIS_BUILD_VIEWER, test "x$build_viewer" = "xyes")
 
+# Standard math library doesn't come with a pkgconfig file.
+ARAVIS_VIEWER_LIBS="-lm ${ARAVIS_VIEWER_LIBS}"
+
 AC_SUBST(ARAVIS_VIEWER_CFLAGS)
 AC_SUBST(ARAVIS_VIEWER_LIBS)
 
@@ -101,6 +107,9 @@ fi
 AM_CONDITIONAL(ARAVIS_BUILD_GST_PLUGIN, test "x$build_gst_plugin" = "xyes")
 
 AM_CONDITIONAL(ARAVIS_BUILD_CPP_TEST, test "x$enable_cpp_test" = "xyes")
+
+# Standard math library doesn't come with a pkgconfig file.
+ARAVIS_GST_PLUGIN_LIBS="-lm ${ARAVIS_GST_PLUGIN_LIBS}"
 
 AC_SUBST(ARAVIS_GST_PLUGIN_CFLAGS)
 AC_SUBST(ARAVIS_GST_PLUGIN_LIBS)
