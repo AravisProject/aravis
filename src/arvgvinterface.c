@@ -83,6 +83,7 @@ arv_gv_discover_socket_list_new (void)
 	for (ifap_iter = ifap; ifap_iter != NULL; ifap_iter = ifap_iter->ifa_next) {
 		if ((ifap_iter->ifa_flags & IFF_UP) != 0 &&
 		    (ifap_iter->ifa_flags & IFF_POINTOPOINT) == 0 &&
+		    (ifap_iter->ifa_addr != NULL) &&
 		    (ifap_iter->ifa_addr->sa_family == AF_INET)) {
 			ArvGvDiscoverSocket *discover_socket = g_new0 (ArvGvDiscoverSocket, 1);
 			GSocketAddress *socket_address;
