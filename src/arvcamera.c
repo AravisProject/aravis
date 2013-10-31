@@ -1304,9 +1304,10 @@ arv_camera_new (const char *name)
 
 	camera = g_object_new (ARV_TYPE_CAMERA, "device", device, NULL);
 
-	camera->priv->use_gain_raw = !ARV_IS_GC_FLOAT (arv_device_get_feature (device, "Gain"));
-	camera->priv->use_exposure_time_abs = !ARV_IS_GC_FLOAT (arv_device_get_feature (device, "ExposureTime"));
-	camera->priv->use_acquisition_frame_rate_abs = !ARV_IS_GC_FLOAT (arv_device_get_feature (device, "AcquisitionFrameRate"));
+    /* if you need to apply or test for fixups based on the camera model
+       please do so in arv_camera_constructor and not here, as this breaks
+       objects created with g_object_new, which includes but is not limited to
+       introspection users */
 
 	return camera;
 }
@@ -1377,6 +1378,10 @@ arv_camera_constructor (GType gtype, guint n_properties, GObjectConstructParam *
 
 	camera->priv->vendor = vendor;
 	camera->priv->series = series;
+
+	camera->priv->use_gain_raw = !ARV_IS_GC_FLOAT (arv_device_get_feature (camera->priv->device, "Gain"));
+	camera->priv->use_exposure_time_abs = !ARV_IS_GC_FLOAT (arv_device_get_feature (camera->priv->device, "ExposureTime"));
+	camera->priv->use_acquisition_frame_rate_abs = !ARV_IS_GC_FLOAT (arv_device_get_feature (camera->priv->device, "AcquisitionFrameRate"));
 
     return object;
 }
