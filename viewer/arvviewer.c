@@ -833,6 +833,42 @@ static const GOptionEntry arv_viewer_option_entries[] =
 	{ NULL }
 };
 
+static gboolean
+_gstreamer_plugin_check (void)
+{
+	GstRegistry *registry;
+	unsigned int i;
+	gboolean success = TRUE;
+
+	static char *plugins[] = {
+		"appsrc",
+		"ffmpegcolorspace",
+		"videoflip",
+		"autovideosink",
+		"bayer2rgb"
+	};
+
+	registry = gst_registry_get_default ();
+
+	for (i = 0; i < G_N_ELEMENTS (plugins); i++) {
+		GstPluginFeature *feature;
+	
+		feature = gst_registry_lookup_feature (registry, plugins[i]);
+		if (!GST_IS_PLUGIN_FEATURE (feature)) {
+			g_print ("Gstreamer plugin '%s' is missing.\n", plugins[i]);
+			success = FALSE;
+		}
+		else
+
+		g_object_unref (feature);
+	}
+
+	if (!success)
+		g_print ("Check your gstreamer installation.\n");
+
+	return success;
+}
+
 int
 main (int argc,char *argv[])
 {
@@ -861,6 +897,12 @@ main (int argc,char *argv[])
 
 	gtk_init (&argc, &argv);
 	gst_init (&argc, &argv);
+
+	if (!_gstreamer_plugin_check ()) {
+		arv_shutdown ();
+
+		return EXIT_FAILURE;
+	}
 
 	arv_debug_enable (arv_viewer_option_debug_domains);
 
