@@ -34,6 +34,8 @@ import time
 
 from gi.repository import Aravis
 
+# Hexadecimal dump code from http://www.alexonlinux.com/hex-dump-functions
+
 def DumpBuffer (buf, length, caption="", dest=sys.stdout):
 	def GetPrintableChar(str):
 		if str.isalpha():
