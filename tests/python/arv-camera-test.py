@@ -73,7 +73,7 @@ print "Acquisition"
 
 for i in range(0,20):
 	buffer = stream.pop_buffer ()
-	print buffer
+	print buffer.data
 	if buffer:
 		stream.push_buffer (buffer)
 
