@@ -34,6 +34,33 @@ import time
 
 from gi.repository import Aravis
 
+def DumpBuffer (buf, length, caption="", dest=sys.stdout):
+	def GetPrintableChar(str):
+		if str.isalpha():
+			return str
+		else:
+			return '.'
+
+	dest.write('---------> %s <--------- (%d bytes)\n' % (caption, length))
+	dest.write('       +0          +4          +8          +c           0   4   8   c\n')
+	i = 0
+	while i < length:
+		if length - i > 16:
+			l = 16
+		else:
+			l = length - i
+
+		dest.write('+%04x  ' % i)
+		s = ' '.join(["%02x" % ord(c) for c in buf[i:i + l]])
+		dest.write(s)
+		sp = 49 - len(s)
+		dest.write(' ' * sp)
+		s = ''.join(["%c" % GetPrintableChar(c) for c in buf[i:i + l]])
+		dest.write(s)
+		dest.write('\n')
+
+		i = i + 16
+
 Aravis.enable_interface ("Fake")
 
 try:
@@ -44,10 +71,6 @@ try:
 except:
 	print ("No camera found")
 	exit ()
-
-camera.set_region (0,0,128,128)
-camera.set_frame_rate (10.0)
-camera.set_pixel_format (Aravis.PIXEL_FORMAT_MONO_8)
 
 payload = camera.get_payload ()
 
@@ -62,8 +85,7 @@ print "Pixel format  : %s" %(camera.get_pixel_format_as_string ())
 
 stream = camera.create_stream (None, None)
 
-for i in range(0,10):
-	stream.push_buffer (Aravis.Buffer.new_allocate (payload))
+stream.push_buffer (Aravis.Buffer.new_allocate (payload))
 
 print "Start acquisition"
 
@@ -71,11 +93,9 @@ camera.start_acquisition ()
 
 print "Acquisition"
 
-for i in range(0,20):
-	buffer = stream.pop_buffer ()
-	print buffer
-	if buffer:
-		stream.push_buffer (buffer)
+buffer = stream.pop_buffer ()
+
+DumpBuffer (buffer.data, buffer.size, "Image buffer")
 
 print "Stop acquisition"
 
