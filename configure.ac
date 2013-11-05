@@ -126,7 +126,14 @@ AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 AC_PATH_PROG(GLIB_MKENUMS, glib-mkenums)
 
+m4_ifdef([GOBJECT_INTROSPECTION_CHECK], [
 GOBJECT_INTROSPECTION_CHECK([0.10.0])
+], [
+   AM_CONDITIONAL([HAVE_INTROSPECTION], [false])
+   enable_introspection=no])
+
+GOBJECT_INTROSPECTION_CHECK([0.10.0])
+
 GTK_DOC_CHECK([1.14],[--flavour no-tmpl])
 AM_CONDITIONAL([BUILD_GTK_DOC], [test "x$enable_gtk_doc" = "xyes" || test ! -f "autogen.sh"])
 
