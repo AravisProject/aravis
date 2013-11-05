@@ -177,7 +177,7 @@ arv_viewer_new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 			GST_BUFFER_MALLOCDATA (buffer) = data;
 			GST_BUFFER_SIZE (buffer) = size;
 		} else {
-			GST_BUFFER_DATA (buffer) = arv_buffer->data;
+			GST_BUFFER_DATA (buffer) = (unsigned char *) arv_buffer->data;
 			GST_BUFFER_MALLOCDATA (buffer) = NULL;
 			GST_BUFFER_SIZE (buffer) = arv_buffer->size;
 		}
