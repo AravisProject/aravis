@@ -384,7 +384,7 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 					int j;
 
 					arv_log_stream_thread ("[GvStream::_missing_packet_check]"
-							       " Resend request at dt = %Lu, packet id = %u/%u",
+							       " Resend request at dt = %" G_GINT64_FORMAT ", packet id = %u/%u",
 							       time_us - frame->first_packet_time_us,
 							       packet_id, frame->n_packets);
 
@@ -402,7 +402,7 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 			int j;
 
 			arv_log_stream_thread ("[GvStream::_missing_packet_check]"
-					       " Resend request at dt = %Lu, packet id = %u/%u",
+					       " Resend request at dt = %" G_GINT64_FORMAT", packet id = %u/%u",
 					       time_us - frame->first_packet_time_us,
 					       packet_id, frame->n_packets);
 
@@ -620,7 +620,7 @@ arv_gv_stream_thread (void *data)
 				if (packet_type != ARV_GVSP_PACKET_TYPE_OK &&
 				    packet_type != ARV_GVSP_PACKET_TYPE_RESEND) {
 					arv_debug_stream_thread ("[GvStream::stream_thread]"
-								 " Error packet at dt = %Lu, packet id = %u"
+								 " Error packet at dt = %" G_GINT64_FORMAT ", packet id = %u"
 								 " frame id = %u",
 								 time_us - frame->first_packet_time_us,
 								 packet_id, frame->frame_id);
