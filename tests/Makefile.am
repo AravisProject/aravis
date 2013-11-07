@@ -6,7 +6,7 @@ test_progs_ldadd = 					\
 	$(top_builddir)/src/libaravis-@ARAVIS_API_VERSION@.la		\
 	$(ARAVIS_LIBS)
 
-noinst_PROGRAMS = arv-test arv-genicam-test arv-evaluator-test arv-zip-test arv-camera-test arv-heartbeat-test arv-example
+noinst_PROGRAMS = arv-test arv-genicam-test arv-evaluator-test arv-zip-test arv-camera-test arv-heartbeat-test arv-example time-test
 
 arv_test_SOURCES = arvtest.c
 arv_test_LDADD = $(test_progs_ldadd)
@@ -28,6 +28,9 @@ arv_heartbeat_test_LDADD = $(test_progs_ldadd)
 
 arv_example_SOURCES = arvexample.c
 arv_example_LDADD = $(test_progs_ldadd)
+
+time_test_SOURCES = timetest.c
+time_test_LDADD = $(test_progs_ldadd)
 
 TEST_PROGS += evaluator buffer misc fake genicam
 if ARAVIS_BUILD_CPP_TEST
