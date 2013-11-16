@@ -767,9 +767,9 @@ arv_camera_get_frame_rate_bounds (ArvCamera *camera, double *min, double *max)
 
 						s = (int)((10000000/(double) values[i]) * 100 + 0.5) / 100.0;
 
-						if (s > *max && max != NULL)
+						if (max != NULL && s > *max)
 							*max = s;
-						if ((*min == 0 || *min > s) && min != NULL)
+						if (min != NULL && (*min == 0 || *min > s))
 							*min = s;
 					}
 				}
