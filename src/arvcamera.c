@@ -744,6 +744,11 @@ arv_camera_get_frame_rate_bounds (ArvCamera *camera, double *min, double *max)
 {
 	ArvGcNode *feature;
 
+	if (min != NULL)
+		*min = G_MINDOUBLE;
+	if (max != NULL)
+		*max = G_MAXDOUBLE;
+
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
 	switch (camera->priv->vendor) {
@@ -754,11 +759,6 @@ arv_camera_get_frame_rate_bounds (ArvCamera *camera, double *min, double *max)
 				gint64 *values;
 				guint n_values;
 				guint i;
-
-				if (min != NULL)
-					*min = 0;
-				if (max != NULL)
-					*max = 0;
 
 				values = arv_gc_enumeration_get_available_int_values (ARV_GC_ENUMERATION (feature), &n_values, NULL);
 				for (i = 0; i < n_values; i++) {
