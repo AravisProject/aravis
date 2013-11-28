@@ -79,7 +79,7 @@ typedef struct ARAVIS_PACKED_STRUCTURE {
 
 /**
  * ArvGvspDataLeader:
- * @data0: unused
+ * @payload_type: ID of the payload type
  * @timestamp_high: most significant bits of frame timestamp
  * @timestamp_low: least significant bits of frame timestamp_low
  * @pixel_format: a #ArvPixelFormat identifier
@@ -92,7 +92,7 @@ typedef struct ARAVIS_PACKED_STRUCTURE {
  */
 
 typedef struct ARAVIS_PACKED_STRUCTURE {
-	guint32 data0;
+	guint32 payload_type;
 	guint32 timestamp_high;
 	guint32 timestamp_low;
 	guint32 pixel_format;

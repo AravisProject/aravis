@@ -74,7 +74,7 @@ arv_gvsp_packet_new_data_leader	(guint16 frame_id, guint32 packet_id,
 		ArvGvspDataLeader *leader;
 
 		leader = (ArvGvspDataLeader *) &packet->data;
-		leader->data0 = 0;
+		leader->payload_type = g_htonl (0x00000001); /* ID for image data */
 		leader->timestamp_high = g_htonl (((guint64) timestamp >> 32));
 		leader->timestamp_low  = g_htonl ((guint64) timestamp & 0xffffffff);
 		leader->pixel_format = g_htonl (pixel_format);
