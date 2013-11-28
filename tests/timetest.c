@@ -19,14 +19,12 @@ static gint64
 time_wait (gint64 usec )
 {
 	gint64 wt, st, tt;
-	gint64 i, wait;
+	gint64 i;
 
 	st = get_time_us ();
 	wt = st + usec;
-	wait = usec;
-	for( i = 0, tt = get_time_us(); tt < wt;  wait = (gint64) (wt - tt), i++ ) {
+	for (i = 0, tt = get_time_us(); tt < wt; i++ )
 		tt = get_time_us ();
-	}
 
   return tt-st;
 }
@@ -81,5 +79,3 @@ main (int argc, char **argv)
 
 	return EXIT_SUCCESS;
 }
-
-
