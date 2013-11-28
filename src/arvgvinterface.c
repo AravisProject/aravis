@@ -333,16 +333,16 @@ arv_gv_interface_discover (ArvGvInterface *gv_interface)
 
 						if (device_infos->name != NULL && device_infos->name[0] != '\0') {
 							arv_gv_interface_device_infos_ref (device_infos);
-							g_hash_table_insert (gv_interface->priv->devices,
+							g_hash_table_replace (gv_interface->priv->devices,
 									     device_infos->name, device_infos);
 						}
 						if (device_infos->user_name != NULL && device_infos->user_name[0] != '\0') {
 							arv_gv_interface_device_infos_ref (device_infos);
-							g_hash_table_insert (gv_interface->priv->devices,
+							g_hash_table_replace (gv_interface->priv->devices,
 									     device_infos->user_name, device_infos);
 						}
 						arv_gv_interface_device_infos_ref (device_infos);
-						g_hash_table_insert (gv_interface->priv->devices, device_infos->mac_string, device_infos);
+						g_hash_table_replace (gv_interface->priv->devices, device_infos->mac_string, device_infos);
 
 						arv_gv_interface_device_infos_unref (device_infos);
 					}
