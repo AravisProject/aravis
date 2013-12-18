@@ -1,0 +1,66 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: aravis-0-2\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/enter_bug.cgi?"
+"product=aravis&keywords=I18N+L10N&component=general\n"
+"POT-Creation-Date: 2013-11-28 22:26+0000\n"
+"PO-Revision-Date: 2013-12-18 22:38+0400\n"
+"Last-Translator: Yuri Myasoedov <ymyasoedov@yandex.ru>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Generator: Poedit 1.5.7\n"
+
+#: ../viewer/arv-viewer-2.ui.h:1 ../viewer/arv-viewer-3.ui.h:1
+#: ../viewer/data/arv-viewer.desktop.in.in.h:1
+msgid "Aravis"
+msgstr "Aravis"
+
+#: ../viewer/arv-viewer-2.ui.h:2 ../viewer/arv-viewer-3.ui.h:2
+msgid "Frame rate:"
+msgstr "Частота кадров:"
+
+#: ../viewer/arv-viewer-2.ui.h:3 ../viewer/arv-viewer-3.ui.h:5
+msgid "Exposure:"
+msgstr "Экспозиция:"
+
+#: ../viewer/arv-viewer-2.ui.h:4 ../viewer/arv-viewer-3.ui.h:6
+msgid "Gain:"
+msgstr "Усиление:"
+
+#: ../viewer/arv-viewer-2.ui.h:5 ../viewer/arv-viewer-3.ui.h:3
+msgid "Hz"
+msgstr "Гц"
+
+#: ../viewer/arv-viewer-2.ui.h:6 ../viewer/arv-viewer-3.ui.h:7
+msgid "µs"
+msgstr "мкс"
+
+#: ../viewer/arv-viewer-2.ui.h:7 ../viewer/arv-viewer-3.ui.h:4
+msgid "Auto"
+msgstr "Авто"
+
+#: ../viewer/arv-viewer-2.ui.h:8 ../viewer/arv-viewer-3.ui.h:8
+msgid "Settings"
+msgstr "Настройки"
+
+#: ../viewer/arv-viewer-3.ui.h:9
+msgid "Save a snapshot into image folder"
+msgstr "Сохранить снимок в папку изображений"
+
+#: ../viewer/data/arv-viewer.desktop.in.in.h:2
+msgid "Aravis Simple Viewer"
+msgstr "Приложение для просмотра видеопотоков"
+
+#: ../viewer/data/arv-viewer.desktop.in.in.h:3
+msgid "Display the video stream from your cameras"
+msgstr "Показать видеопоток с ваших камер"
