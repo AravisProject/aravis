@@ -540,7 +540,7 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 						      arv_value_get_int64 (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_EQUAL:
-				if (arv_value_holds_int64 (&stack[index-1]) ||
+				if (arv_value_holds_int64 (&stack[index-1]) &&
 				    arv_value_holds_int64 (&stack[index]))
 					arv_value_set_int64 (&stack[index-1],
 							      arv_value_get_int64 (&stack[index-1]) ==
@@ -551,7 +551,7 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 							      arv_value_get_double (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_NOT_EQUAL:
-				if (arv_value_holds_int64 (&stack[index-1]) ||
+				if (arv_value_holds_int64 (&stack[index-1]) &&
 				    arv_value_holds_int64 (&stack[index]))
 					arv_value_set_int64 (&stack[index-1],
 							      arv_value_get_int64 (&stack[index-1]) !=
@@ -562,7 +562,7 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 							      arv_value_get_double (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_LESS_OR_EQUAL:
-				if (arv_value_holds_int64 (&stack[index-1]) ||
+				if (arv_value_holds_int64 (&stack[index-1]) &&
 				    arv_value_holds_int64 (&stack[index]))
 					arv_value_set_int64 (&stack[index-1],
 							      arv_value_get_int64 (&stack[index-1]) <=
@@ -573,7 +573,7 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 							      arv_value_get_double (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_GREATER_OR_EQUAL:
-				if (arv_value_holds_int64 (&stack[index-1]) ||
+				if (arv_value_holds_int64 (&stack[index-1]) &&
 				    arv_value_holds_int64 (&stack[index]))
 					arv_value_set_int64 (&stack[index-1],
 							      arv_value_get_int64 (&stack[index-1]) >=
@@ -584,7 +584,7 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 							      arv_value_get_double (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_LESS:
-				if (arv_value_holds_int64 (&stack[index-1]) ||
+				if (arv_value_holds_int64 (&stack[index-1]) &&
 				    arv_value_holds_int64 (&stack[index]))
 					arv_value_set_int64 (&stack[index-1],
 							      arv_value_get_int64 (&stack[index-1]) <
@@ -595,7 +595,7 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 							      arv_value_get_double (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_GREATER:
-				if (arv_value_holds_int64 (&stack[index-1]) ||
+				if (arv_value_holds_int64 (&stack[index-1]) &&
 				    arv_value_holds_int64 (&stack[index]))
 					arv_value_set_int64 (&stack[index-1],
 							      arv_value_get_int64 (&stack[index-1]) >
