@@ -1,13 +1,14 @@
 Release 0.3.1
 =============
 
-  * gv_interface: fix device discovery by using 255.255.255.255 as broadcast address.
-  * gv_interface: don't crash if there is no INET interface.
+  * gv_interface: fix device discovery by using 255.255.255.255 as broadcast address (Csaba).
+  * gv_interface: don't crash if there is no INET interface (Toby).
   * camera: make ArvCamera introspection friendly (John).
   * evaluator: fix comparison when one of the operand is a double.
   * python: don't crash on access to buffer data.
   * build: zlib check.
   * build: make configure pass even if gobject introspection is not available.
+  * updated translations (Yuri).
 
 Release 0.3.0
 =============
