@@ -1,6 +1,5 @@
 #!/bin/bash
-# dumb script to replace multiline "... write to the Free Software Foundation, 
-# Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA." 
+# dumb script to replace multiline "... see <http://www.gnu.org/licenses/>." 
 # with "see http://www.gnu.org/licenses/>"
 # 
 # becareful, regex pattern might match too many lines
