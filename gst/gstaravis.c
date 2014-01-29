@@ -59,7 +59,7 @@ enum
   PROP_OFFSET_Y
 };
 
-GST_BOILERPLATE (GstAravis, gst_aravis, GstPushSrc, GST_TYPE_PUSH_SRC);
+G_DEFINE_TYPE (GstAravis, gst_aravis, GST_TYPE_PUSH_SRC);
 
 static GstStaticPadTemplate aravis_src_template = GST_STATIC_PAD_TEMPLATE ("src",
 									   GST_PAD_SRC,
@@ -123,7 +123,7 @@ gst_aravis_get_all_camera_caps (GstAravis *gst_aravis)
 }
 
 static GstCaps *
-gst_aravis_get_caps (GstBaseSrc * src)
+gst_aravis_get_caps (GstBaseSrc * src, GstCaps * filter)
 {
 	GstAravis* gst_aravis = GST_ARAVIS(src);
 	GstCaps *caps;
@@ -148,8 +148,8 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 	int bpp, depth;
 	const GValue *frame_rate;
 	const char *caps_string;
+	const char *format_string;
 	unsigned int i;
-	guint32 fourcc;
 
 	GST_LOG_OBJECT (gst_aravis, "Requested caps = %" GST_PTR_FORMAT, caps);
 
@@ -165,18 +165,9 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 	frame_rate = gst_structure_get_value (structure, "framerate");
 	gst_structure_get_int (structure, "bpp", &bpp);
 	gst_structure_get_int (structure, "depth", &depth);
+	format_string = gst_structure_get_string (structure, "format");
 
-	if (gst_structure_get_field_type (structure, "format") == G_TYPE_STRING) {
-		const char *string;
-
-	       	string = gst_structure_get_string (structure, "format");
-		fourcc = GST_STR_FOURCC (string);
-	} else if (gst_structure_get_field_type (structure, "format") == GST_TYPE_FOURCC) {
-		gst_structure_get_fourcc (structure, "format", &fourcc);
-	} else
-		fourcc = 0;
-
-	pixel_format = arv_pixel_format_from_gst_caps (gst_structure_get_name (structure), bpp, depth, fourcc);
+	pixel_format = arv_pixel_format_from_gst_caps (gst_structure_get_name (structure), bpp, depth, format_string);
 
 	arv_camera_set_region (gst_aravis->camera, gst_aravis->offset_x, gst_aravis->offset_y, width, height);
 	arv_camera_set_binning (gst_aravis->camera, gst_aravis->h_binning, gst_aravis->v_binning);
@@ -331,7 +322,7 @@ gst_aravis_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
 		      GstClockTime * start, GstClockTime * end)
 {
 	if (gst_base_src_is_live (basesrc)) {
-		GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buffer);
+		GstClockTime timestamp = GST_BUFFER_PTS (buffer);
 
 		if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
 			GstClockTime duration = GST_BUFFER_DURATION (buffer);
@@ -365,8 +356,6 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 	if (arv_buffer == NULL)
 		return GST_FLOW_ERROR;
 
-	*buffer = gst_buffer_new ();
-
 	arv_row_stride = arv_buffer->width * ARV_PIXEL_FORMAT_BIT_PER_PIXEL (arv_buffer->pixel_format) / 8;
 
 	/* Gstreamer requires row stride to be a multiple of 4 */
@@ -384,13 +373,15 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 		for (i = 0; i < arv_buffer->height; i++)
 			memcpy (((char *) data) + i * gst_row_stride, ((char *) arv_buffer->data) + i * arv_row_stride, arv_row_stride);
 
-		GST_BUFFER_DATA (buffer) = data;
-		GST_BUFFER_MALLOCDATA (buffer) = data;
-		GST_BUFFER_SIZE (buffer) = size;
+		*buffer = gst_buffer_new_wrapped (data, size);
 	} else {
-		GST_BUFFER_DATA (*buffer) = arv_buffer->data;
-		GST_BUFFER_MALLOCDATA (*buffer) = NULL;
-		GST_BUFFER_SIZE (*buffer) = arv_buffer->size;
+		*buffer = gst_buffer_new_wrapped_full (0,
+			arv_buffer->data,
+			arv_buffer->size,
+			0,
+			arv_buffer->size,
+			NULL,
+			NULL);
 	}
 
 	if (!gst_base_src_get_do_timestamp(GST_BASE_SRC(push_src))) {
@@ -399,7 +390,7 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 			gst_aravis->last_timestamp = arv_buffer->timestamp_ns;
 		}
 
-		GST_BUFFER_TIMESTAMP (*buffer) = arv_buffer->timestamp_ns - gst_aravis->timestamp_offset;
+		GST_BUFFER_PTS (*buffer) = arv_buffer->timestamp_ns - gst_aravis->timestamp_offset;
 		GST_BUFFER_DURATION (*buffer) = arv_buffer->timestamp_ns - gst_aravis->last_timestamp;
 
 		gst_aravis->last_timestamp = arv_buffer->timestamp_ns;
@@ -407,15 +398,13 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 
 	arv_stream_push_buffer (gst_aravis->stream, arv_buffer);
 
-	gst_buffer_set_caps (*buffer, gst_aravis->fixed_caps);
-
 	return GST_FLOW_OK;
 }
 
-static void
-gst_aravis_fixate_caps (GstPad * pad, GstCaps * caps)
+static GstCaps *
+gst_aravis_fixate_caps (GstBaseSrc * bsrc, GstCaps * caps)
 {
-	GstAravis *gst_aravis = GST_ARAVIS (gst_pad_get_parent_element (pad));
+	GstAravis *gst_aravis = GST_ARAVIS (bsrc);
 	GstStructure *structure;
 	gint width;
 	gint height;
@@ -434,15 +423,13 @@ gst_aravis_fixate_caps (GstPad * pad, GstCaps * caps)
 
 	GST_LOG_OBJECT (gst_aravis, "Fixate caps");
 
-	g_object_unref (gst_aravis);
+	return GST_BASE_SRC_CLASS(gst_aravis_parent_class)->fixate(bsrc, caps);
 }
 
 static void
-gst_aravis_init (GstAravis *gst_aravis, GstAravisClass *g_class)
+gst_aravis_init (GstAravis *gst_aravis)
 {
 	GstPad *pad = GST_BASE_SRC_PAD (gst_aravis);
-
-	gst_pad_set_fixatecaps_function (pad, gst_aravis_fixate_caps);
 
 	gst_base_src_set_live (GST_BASE_SRC (gst_aravis), TRUE);
 
@@ -492,7 +479,7 @@ gst_aravis_finalize (GObject * object)
 	g_free (gst_aravis->camera_name);
 	gst_aravis->camera_name = NULL;
 
-        G_OBJECT_CLASS (parent_class)->finalize (object);
+        G_OBJECT_CLASS (gst_aravis_parent_class)->finalize (object);
 }
 
 static void
@@ -596,23 +583,10 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static void
-gst_aravis_base_init (gpointer g_class)
-{
-	GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-	gst_element_class_set_details_simple (element_class,
-					      "Aravis Video Source",
-					      "Source/Video",
-					      "Aravis based source",
-					      "Emmanuel Pacaud <emmanuel@gnome.org>");
-	gst_element_class_add_pad_template (element_class,
-					    gst_static_pad_template_get (&aravis_src_template));
-}
-
-static void
 gst_aravis_class_init (GstAravisClass * klass)
 {
 	GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+	GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 	GstBaseSrcClass *gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
 	GstPushSrcClass *gstpushsrc_class = GST_PUSH_SRC_CLASS (klass);
 
@@ -703,8 +677,17 @@ gst_aravis_class_init (GstAravisClass * klass)
 
         GST_DEBUG_CATEGORY_INIT (aravis_debug, "aravissrc", 0, "Aravis interface");
 
+	gst_element_class_set_details_simple (element_class,
+					      "Aravis Video Source",
+					      "Source/Video",
+					      "Aravis based source",
+					      "Emmanuel Pacaud <emmanuel@gnome.org>");
+	gst_element_class_add_pad_template (element_class,
+					    gst_static_pad_template_get (&aravis_src_template));
+
 	gstbasesrc_class->get_caps = gst_aravis_get_caps;
 	gstbasesrc_class->set_caps = gst_aravis_set_caps;
+	gstbasesrc_class->fixate = gst_aravis_fixate_caps;
 	gstbasesrc_class->start = gst_aravis_start;
 	gstbasesrc_class->stop = gst_aravis_stop;
 
@@ -721,7 +704,7 @@ plugin_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
 		   GST_VERSION_MINOR,
-		   "aravissrc",
+		   aravissrc,
 		   "Aravis Video Source",
 		   plugin_init,
 		   VERSION,

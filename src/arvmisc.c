@@ -592,54 +592,49 @@ typedef struct {
 	const char *name;
 	int bpp;
 	int depth;
-	guint32 fourcc;
+	const char *format;
 } ArvGstCapsInfos;
 
 ArvGstCapsInfos arv_gst_caps_infos[] = {
 	{
 		ARV_PIXEL_FORMAT_MONO_8,
-		"video/x-raw-gray, bpp=(int)8, depth=(int)8",
-		"video/x-raw-gray", 	8,	8,	0
+		"video/x-raw, format=(string)GRAY8, bpp=(int)8, depth=(int)8",
+		"video/x-raw", 	8,	8,	"GRAY8"
 	},
 	{
 		ARV_PIXEL_FORMAT_MONO_10,
-		"video/x-raw-gray, bpp=(int)16, depth=(int)10",
-		"video/x-raw-gray", 	16,	10,	0,
+		"video/x-raw, format=(string)GRAY16, bpp=(int)16, depth=(int)10",
+		"video/x-raw", 	16,	10,	"GRAY16_LE"
 	},
 	{
-	       ARV_PIXEL_FORMAT_MONO_12,
-	       "video/x-raw-gray, bpp=(int)16, depth=(int)12",
-	       "video/x-raw-gray",	16,	12,	0,
-	},
-	{
-		ARV_PIXEL_FORMAT_MONO_12_PACKED,
-		"video/x-raw-gray, bpp=(int)12, depth=(int)12",
-		"video/x-raw-gray",	12,	12,	0,
+		ARV_PIXEL_FORMAT_MONO_12,
+		"video/x-raw, format=(string)GRAY16, bpp=(int)16, depth=(int)12",
+		"video/x-raw",	16,	12,	"GRAY16_LE"
 	},
 	{
 		ARV_PIXEL_FORMAT_MONO_16,
-		"video/x-raw-gray, bpp=(int)16, depth=(int)16",
-		"video/x-raw-gray",	16,	16,	0
+		"video/x-raw, format=(string)GRAY16, bpp=(int)16, depth=(int)16",
+		"video/x-raw",	16,	16,	"GRAY16_LE"
 	},
 	{
 		ARV_PIXEL_FORMAT_BAYER_GR_8,
-		"video/x-raw-bayer, format=grbg, bpp=(int)8, depth=(int)8",
-		"video/x-raw-bayer",     8,      8,      ARV_MAKE_FOURCC ('g','r','b','g')
+		"video/x-bayer, format=grbg, bpp=(int)8, depth=(int)8",
+		"video/x-bayer",	8,	8,	"grbg"
 	},
 	{
 		ARV_PIXEL_FORMAT_BAYER_RG_8,
-		"video/x-raw-bayer, format=rggb, bpp=(int)8, depth=(int)8",
-		"video/x-raw-bayer",     8,      8,      ARV_MAKE_FOURCC ('r','g','g','b')
+		"video/x-bayer, format=rggb, bpp=(int)8, depth=(int)8",
+		"video/x-bayer",	8,	8,	"rggb"
 	},
 	{
 		ARV_PIXEL_FORMAT_BAYER_GB_8,
-		"video/x-raw-bayer, format=gbrg, bpp=(int)8, depth=(int)8",
-		"video/x-raw-bayer",	8,	8,	ARV_MAKE_FOURCC ('g','b','r','g')
+		"video/x-bayer, format=gbrg, bpp=(int)8, depth=(int)8",
+		"video/x-bayer",	8,	8,	"gbrg"
 	},
 	{
 		ARV_PIXEL_FORMAT_BAYER_BG_8,
-		"video/x-raw-bayer, format=bggr, bpp=(int)8, depth=(int)8",
-		"video/x-raw-bayer",	8,	8,	ARV_MAKE_FOURCC ('b','g','g','r')
+		"video/x-bayer, format=bggr, bpp=(int)8, depth=(int)8",
+		"video/x-bayer",	8,	8,	"bggr"
 	},
 
 /* Disable non 8bit bayer formats for now, as it's not supported by gstreamer bayer plugin.
@@ -648,104 +643,104 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 #if 0	
 	{
 		ARV_PIXEL_FORMAT_BAYER_GR_12,
-		"video/x-raw-bayer, format=grbg, bpp=(int)16, depth=(int)12",
-		"video/x-raw-bayer",     16,     12,     0
+		"video/x-bayer, format=grbg, bpp=(int)16, depth=(int)12",
+		"video/x-bayer",     16,     12,     0
 	},
 	{
 		ARV_PIXEL_FORMAT_BAYER_RG_12,
-		"video/x-raw-bayer, format=rggb, bpp=(int)16, depth=(int)12",
-		"video/x-raw-bayer",     16,     12,     0
+		"video/x-bayer, format=rggb, bpp=(int)16, depth=(int)12",
+		"video/x-bayer",     16,     12,     0
 	},
 	{
 		ARV_PIXEL_FORMAT_BAYER_GB_12,
-		"video/x-raw-bayer, format=gbrg, bpp=(int)16, depth=(int)12",
-		"video/x-raw-bayer",	16,	12,	0
+		"video/x-bayer, format=gbrg, bpp=(int)16, depth=(int)12",
+		"video/x-bayer",	16,	12,	0
 	},
 	{
 		ARV_PIXEL_FORMAT_BAYER_BG_12,
-		"video/x-raw-bayer, format=bggr, bpp=(int)16, depth=(int)12",
-		"video/x-raw-bayer",	16,	12,	0
+		"video/x-bayer, format=bggr, bpp=(int)16, depth=(int)12",
+		"video/x-bayer",	16,	12,	0
 	},
 	{
 		ARV_PIXEL_FORMAT_BAYER_GR_12_PACKED,
-		"video/x-raw-bayer, format=grbg, bpp=(int)12, depth=(int)12",
-		"video/x-raw-bayer",	12,	12,	0
+		"video/x-bayer, format=grbg, bpp=(int)12, depth=(int)12",
+		"video/x-bayer",	12,	12,	0
 	},
 	{
 		ARV_PIXEL_FORMAT_BAYER_RG_12_PACKED,
-		"video/x-raw-bayer, format=rggb, bpp=(int)12, depth=(int)12",
-		"video/x-raw-bayer",	12,	12,	0
+		"video/x-bayer, format=rggb, bpp=(int)12, depth=(int)12",
+		"video/x-bayer",	12,	12,	0
 	},
 	{
 		ARV_PIXEL_FORMAT_BAYER_GB_12_PACKED,
-		"video/x-raw-bayer, format=gbrg, bpp=(int)12, depth=(int)12",
-		"video/x-raw-bayer",	12,	12,	0
+		"video/x-bayer, format=gbrg, bpp=(int)12, depth=(int)12",
+		"video/x-bayer",	12,	12,	0
 	},
 	{
 		ARV_PIXEL_FORMAT_BAYER_BG_12_PACKED,
-		"video/x-raw-bayer, format=bggr, bpp=(int)12, depth=(int)12",
-		"video/x-raw-bayer",	12,	12,	0
+		"video/x-bayer, format=bggr, bpp=(int)12, depth=(int)12",
+		"video/x-bayer",	12,	12,	0
 	},
 	{
 		ARV_PIXEL_FORMAT_BAYER_GR_16,
-		"video/x-raw-bayer, format=grbg, bpp=(int)16, depth=(int)16",
-		"video/x-raw-bayer",	16,	16,	0
+		"video/x-bayer, format=grbg, bpp=(int)16, depth=(int)16",
+		"video/x-bayer",	16,	16,	0
 	},
 	{
 		ARV_PIXEL_FORMAT_BAYER_RG_16,
-		"video/x-raw-bayer, format=rggb, bpp=(int)16, depth=(int)16",
-		"video/x-raw-bayer",	16,	16,	0
+		"video/x-bayer, format=rggb, bpp=(int)16, depth=(int)16",
+		"video/x-bayer",	16,	16,	0
 	},
 	{
 		ARV_PIXEL_FORMAT_BAYER_GB_16,
-		"video/x-raw-bayer, format=gbrg, bpp=(int)16, depth=(int)16",
-		"video/x-raw-bayer",	16,	16,	0
+		"video/x-bayer, format=gbrg, bpp=(int)16, depth=(int)16",
+		"video/x-bayer",	16,	16,	0
 	},
 	{
 		ARV_PIXEL_FORMAT_BAYER_BG_16,
-		"video/x-raw-bayer, format=bggr, bpp=(int)16, depth=(int)16",
-		"video/x-raw-bayer",	16,	16,	0
+		"video/x-bayer, format=bggr, bpp=(int)16, depth=(int)16",
+		"video/x-bayer",	16,	16,	0
 	},
 	{
 		ARV_PIXEL_FORMAT_CUSTOM_BAYER_GR_16,
-		"video/x-raw-bayer, format=grbg, bpp=(int)16, depth=(int)16",
-		"video/x-raw-bayer",	16,	16,	0
+		"video/x-bayer, format=grbg, bpp=(int)16, depth=(int)16",
+		"video/x-bayer",	16,	16,	0
 	},
 	{
 		ARV_PIXEL_FORMAT_CUSTOM_BAYER_RG_16,
-		"video/x-raw-bayer, format=rggb, bpp=(int)16, depth=(int)16",
-		"video/x-raw-bayer",	16,	16,	0
+		"video/x-bayer, format=rggb, bpp=(int)16, depth=(int)16",
+		"video/x-bayer",	16,	16,	0
 	},
 	{
 		ARV_PIXEL_FORMAT_CUSTOM_BAYER_GB_16,
-		"video/x-raw-bayer, format=gbrg, bpp=(int)16, depth=(int)16",
-		"video/x-raw-bayer",	16,	16,	0
+		"video/x-bayer, format=gbrg, bpp=(int)16, depth=(int)16",
+		"video/x-bayer",	16,	16,	0
 	},
 	{
 		ARV_PIXEL_FORMAT_CUSTOM_BAYER_BG_16,
-		"video/x-raw-bayer, format=bggr, bpp=(int)16, depth=(int)16",
-		"video/x-raw-bayer",	16,	16,	0
+		"video/x-bayer, format=bggr, bpp=(int)16, depth=(int)16",
+		"video/x-bayer",	16,	16,	0
 	},
 #endif
 	{
 		ARV_PIXEL_FORMAT_YUV_422_PACKED,
-		"video/x-raw-yuv, format=(fourcc)UYVY",
-		"video/x-raw-yuv",	0,	0,	ARV_MAKE_FOURCC ('U','Y','V','Y')
+		"video/x-raw, format=(string)UYVY",
+		"video/x-raw",	0,	0,	"UYVY"
 	},
 	{
 		ARV_PIXEL_FORMAT_YUV_422_YUYV_PACKED,
-		"video/x-raw-yuv, format=(fourcc)YUY2",
-		"video/x-raw-yuv",	0,	0,	ARV_MAKE_FOURCC ('Y','U','Y','2')
+		"video/x-raw, format=(string)YUY2",
+		"video/x-raw",	0,	0,	"YUY2"
 	},
 	{
 		ARV_PIXEL_FORMAT_RGB_8_PACKED,
-		"video/x-raw-rgb, bpp=(int)24, depth=(int)24",
-		"video/x-raw-rgb",	24,	24,	0
+		"video/x-raw, format=(string)RGB, bpp=(int)24, depth=(int)24",
+		"video/x-raw",	24,	24,	"RGB"
 	},
 	{
 		ARV_PIXEL_FORMAT_CUSTOM_YUV_422_YUYV_PACKED,
-		"video/x-raw-yuv, format=(fourcc)YUY2",
-		"video/x-raw-yuv",	0,	0,	ARV_MAKE_FOURCC ('Y','U','Y','2')
+		"video/x-raw, format=(string)YUY2",
+		"video/x-raw",	0,	0,	"YUY2"
 	}
 };
 
@@ -776,7 +771,7 @@ arv_pixel_format_to_gst_caps_string (ArvPixelFormat pixel_format)
 }
 
 ArvPixelFormat
-arv_pixel_format_from_gst_caps (const char *name, int bpp, int depth, guint32 fourcc)
+arv_pixel_format_from_gst_caps (const char *name, int bpp, int depth, const char *format)
 {
 	unsigned int i;
 
@@ -786,13 +781,13 @@ arv_pixel_format_from_gst_caps (const char *name, int bpp, int depth, guint32 fo
 		if (strcmp (name, arv_gst_caps_infos[i].name) != 0)
 			continue;
 
-		if (strcmp (name, "video/x-raw-yuv") == 0 &&
-		    fourcc == arv_gst_caps_infos[i].fourcc)
+		if (strcmp (name, "video/x-raw") == 0 &&
+		    strcmp (format, arv_gst_caps_infos[i].format) == 0)
 			return arv_gst_caps_infos[i].pixel_format;
 
-		if ((depth == arv_gst_caps_infos[i].depth) &&
-		    (bpp == arv_gst_caps_infos[i].bpp)
-		    && (fourcc == arv_gst_caps_infos[i].fourcc))
+		if (depth == arv_gst_caps_infos[i].depth &&
+		    bpp == arv_gst_caps_infos[i].bpp &&
+		    strcmp (format, arv_gst_caps_infos[i].format) == 0)
 			return arv_gst_caps_infos[i].pixel_format;
 	}
 

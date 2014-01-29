@@ -24,7 +24,7 @@
 #include <gtk/gtk.h>
 #include <gst/gst.h>
 #include <gst/app/gstappsrc.h>
-#include <gst/interfaces/xoverlay.h>
+#include <gst/video/videooverlay.h>
 #include <gdk/gdkx.h>
 #include <arv.h>
 #include <stdlib.h>
@@ -154,7 +154,6 @@ arv_viewer_new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 
 	if (arv_buffer->status == ARV_BUFFER_STATUS_SUCCESS) {
 		int arv_row_stride;
-		buffer = gst_buffer_new ();
 
 		arv_row_stride = arv_buffer->width * ARV_PIXEL_FORMAT_BIT_PER_PIXEL (arv_buffer->pixel_format) / 8;
 
@@ -173,13 +172,15 @@ arv_viewer_new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 			for (i = 0; i < arv_buffer->height; i++)
 				memcpy (((char *) data) + i * gst_row_stride, ((char *) arv_buffer->data) + i * arv_row_stride, arv_row_stride);
 
-			GST_BUFFER_DATA (buffer) = data;
-			GST_BUFFER_MALLOCDATA (buffer) = data;
-			GST_BUFFER_SIZE (buffer) = size;
+			buffer = gst_buffer_new_wrapped (data, size);
 		} else {
-			GST_BUFFER_DATA (buffer) = (unsigned char *) arv_buffer->data;
-			GST_BUFFER_MALLOCDATA (buffer) = NULL;
-			GST_BUFFER_SIZE (buffer) = arv_buffer->size;
+			buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+				arv_buffer->data,
+				arv_buffer->size,
+				0,
+				arv_buffer->size,
+				NULL,
+				NULL);
 		}
 
 		if (viewer->timestamp_offset == 0) {
@@ -187,7 +188,7 @@ arv_viewer_new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 			viewer->last_timestamp = arv_buffer->timestamp_ns;
 		}
 
-		GST_BUFFER_TIMESTAMP (buffer) = arv_buffer->timestamp_ns - viewer->timestamp_offset;
+		GST_BUFFER_DTS (buffer) = arv_buffer->timestamp_ns - viewer->timestamp_offset;
 		GST_BUFFER_DURATION (buffer) = arv_buffer->timestamp_ns - viewer->last_timestamp;
 
 		gst_app_src_push_buffer (GST_APP_SRC (viewer->appsrc), buffer);
@@ -491,21 +492,14 @@ bus_sync_handler (GstBus *bus, GstMessage *message, gpointer user_data)
 {
 	ArvViewer *viewer = user_data;
 
-	if (GST_MESSAGE_TYPE (message) != GST_MESSAGE_ELEMENT)
-		return GST_BUS_PASS;
-	if (!gst_structure_has_name (message->structure, "prepare-xwindow-id"))
+	if (!gst_is_video_overlay_prepare_window_handle_message(message))
 		return GST_BUS_PASS;
 
 	if (viewer->video_window_xid != 0) {
-		GstXOverlay *xoverlay;
+		GstVideoOverlay *videooverlay;
 
-		xoverlay = GST_X_OVERLAY (GST_MESSAGE_SRC (message));
-		gst_x_overlay_set_window_handle (xoverlay, viewer->video_window_xid);
-
-		if (g_strcmp0 (G_OBJECT_TYPE_NAME (xoverlay), "GstXvImageSink"))
-			g_object_set (xoverlay, "draw-borders", TRUE, NULL);
-
-		g_object_set (xoverlay, "force-aspect-ratio", TRUE, "sync", FALSE, NULL);
+		videooverlay = GST_VIDEO_OVERLAY (GST_MESSAGE_SRC (message));
+		gst_video_overlay_set_window_handle (videooverlay, viewer->video_window_xid);
 	} else {
 		g_warning ("Should have obtained video_window_xid by now!");
 	}
@@ -521,7 +515,7 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	GtkTreeIter iter;
 	GtkTreeModel *list_store;
 	GstCaps *caps;
-	GstElement *ffmpegcolorspace;
+	GstElement *videoconvert;
 	GstElement *videosink;
 	GstBus *bus;
 	ArvPixelFormat pixel_format;
@@ -654,23 +648,23 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	viewer->pipeline = gst_pipeline_new ("pipeline");
 
 	viewer->appsrc = gst_element_factory_make ("appsrc", NULL);
-	ffmpegcolorspace = gst_element_factory_make ("ffmpegcolorspace", NULL);
+	videoconvert = gst_element_factory_make ("videoconvert", NULL);
 	viewer->transform = gst_element_factory_make ("videoflip", NULL);
 	videosink = gst_element_factory_make ("autovideosink", NULL);
 
-	if (g_str_has_prefix (caps_string, "video/x-raw-bayer")) {
+	if (g_str_has_prefix (caps_string, "video/x-bayer")) {
 		GstElement *bayer2rgb;
 
 		bayer2rgb = gst_element_factory_make ("bayer2rgb", NULL);
 
 		gst_bin_add_many (GST_BIN (viewer->pipeline), viewer->appsrc, bayer2rgb,
-				  ffmpegcolorspace, viewer->transform, videosink, NULL);
+				  videoconvert, viewer->transform, videosink, NULL);
 		gst_element_link_many (viewer->appsrc, bayer2rgb,
-				       ffmpegcolorspace, viewer->transform, videosink, NULL);
+				       videoconvert, viewer->transform, videosink, NULL);
 	} else {
 		gst_bin_add_many (GST_BIN (viewer->pipeline), viewer->appsrc,
-				  ffmpegcolorspace, viewer->transform, videosink, NULL);
-		gst_element_link_many (viewer->appsrc, ffmpegcolorspace,
+				  videoconvert, viewer->transform, videosink, NULL);
+		gst_element_link_many (viewer->appsrc, videoconvert,
 				       viewer->transform, videosink, NULL);
 	}
 
@@ -683,8 +677,10 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	gst_app_src_set_caps (GST_APP_SRC (viewer->appsrc), caps);
 	gst_caps_unref (caps);
 
+	g_object_set(G_OBJECT (viewer->appsrc), "format", GST_FORMAT_TIME, NULL);
+
 	bus = gst_pipeline_get_bus (GST_PIPELINE (viewer->pipeline));
-	gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bus_sync_handler, viewer);
+	gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bus_sync_handler, viewer, NULL);
 	gst_object_unref (bus);
 
 	gst_element_set_state (viewer->pipeline, GST_STATE_PLAYING);
@@ -842,13 +838,13 @@ _gstreamer_plugin_check (void)
 
 	static char *plugins[] = {
 		"appsrc",
-		"ffmpegcolorspace",
+		"videoconvert",
 		"videoflip",
 		"autovideosink",
 		"bayer2rgb"
 	};
 
-	registry = gst_registry_get_default ();
+	registry = gst_registry_get ();
 
 	for (i = 0; i < G_N_ELEMENTS (plugins); i++) {
 		GstPluginFeature *feature;

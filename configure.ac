@@ -55,7 +55,7 @@ AC_ARG_ENABLE(cpp_test,
 PKG_PROG_PKG_CONFIG([0.14])
 
 ARAVIS_REQUIREMENTS="glib-2.0 >= 2.26 gobject-2.0 gio-2.0 libxml-2.0 gthread-2.0 zlib"
-ARAVIS_GSTREAMER_REQUIREMENTS="gstreamer-base-0.10 >= 0.10.31 gstreamer-app-0.10 gstreamer-interfaces-0.10"
+ARAVIS_GSTREAMER_REQUIREMENTS="gstreamer-base-1.0 gstreamer-app-1.0"
 
 PKG_CHECK_MODULES(ARAVIS, [$ARAVIS_REQUIREMENTS])
 
@@ -67,7 +67,7 @@ AC_SUBST(ARAVIS_LIBS)
 
 AC_SUBST(aravis_datadir, '$(datadir)/aravis-$(ARAVIS_API_VERSION)')
 
-ARAVIS_VIEWER_REQUIREMENTS=$ARAVIS_GSTREAMER_REQUIREMENTS
+ARAVIS_VIEWER_REQUIREMENTS="$ARAVIS_GSTREAMER_REQUIREMENTS gstreamer-video-1.0"
 if test "x$enable_gtk3" = "xyes"; then
 	ARAVIS_VIEWER_REQUIREMENTS+=" gtk+-3.0"
 else
@@ -115,9 +115,9 @@ AC_SUBST(ARAVIS_GST_PLUGIN_CFLAGS)
 AC_SUBST(ARAVIS_GST_PLUGIN_LIBS)
 
 if test "x${prefix}" = "x$HOME"; then
-  gstplugindir="$HOME/.gstreamer-0.10/plugins"
+  gstplugindir="$HOME/.gstreamer-1.0/plugins"
 else
-  gstplugindir="\$(libdir)/gstreamer-0.10"
+  gstplugindir="\$(libdir)/gstreamer-1.0"
 fi
 AC_SUBST(gstplugindir)
 
