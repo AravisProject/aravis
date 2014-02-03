@@ -199,25 +199,25 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 	} else
 		gst_aravis->buffer_timeout_us = GST_ARAVIS_BUFFER_TIMEOUT_DEFAULT;
 
-	GST_DEBUG_OBJECT (gst_aravis, "Buffer timeout = %Ld µs", gst_aravis->buffer_timeout_us);
+	GST_DEBUG_OBJECT (gst_aravis, "Buffer timeout = %" G_GUINT64_FORMAT " µs", gst_aravis->buffer_timeout_us);
 
 	GST_DEBUG_OBJECT (gst_aravis, "Actual frame rate = %g Hz", arv_camera_get_frame_rate (gst_aravis->camera));
 
 	if(gst_aravis->gain_auto) {
 		arv_camera_set_gain_auto (gst_aravis->camera, ARV_AUTO_CONTINUOUS);
-		GST_DEBUG_OBJECT (gst_aravis, "Auto Gain = continuous", gst_aravis->gain_auto);
+		GST_DEBUG_OBJECT (gst_aravis, "Auto Gain = continuous");
 	} else {
 		if (gst_aravis->gain >= 0) {
-			GST_DEBUG_OBJECT (gst_aravis, "Gain = %d", gst_aravis->gain);
+			GST_DEBUG_OBJECT (gst_aravis, "Gain = %g", gst_aravis->gain);
 			arv_camera_set_gain_auto (gst_aravis->camera, ARV_AUTO_OFF);
 			arv_camera_set_gain (gst_aravis->camera, gst_aravis->gain);
 		}
-		GST_DEBUG_OBJECT (gst_aravis, "Actual gain = %d", arv_camera_get_gain (gst_aravis->camera));
+		GST_DEBUG_OBJECT (gst_aravis, "Actual gain = %g", arv_camera_get_gain (gst_aravis->camera));
 	}
 
 	if(gst_aravis->exposure_auto) {
 		arv_camera_set_exposure_time_auto (gst_aravis->camera, ARV_AUTO_CONTINUOUS);
-		GST_DEBUG_OBJECT (gst_aravis, "Auto Exposure = contiuous", gst_aravis->exposure_auto);
+		GST_DEBUG_OBJECT (gst_aravis, "Auto Exposure = continuous");
 	} else {
 		if (gst_aravis->exposure_time_us > 0.0) {
 			GST_DEBUG_OBJECT (gst_aravis, "Exposure = %g µs", gst_aravis->exposure_time_us);
