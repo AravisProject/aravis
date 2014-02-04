@@ -724,13 +724,7 @@ arv_viewer_new (void)
 
 	builder = gtk_builder_new ();
 
-	ui_filename = g_build_filename (ARAVIS_DATA_DIR,
-#if GTK_CHECK_VERSION(3,0,0)
-					"arv-viewer-3.ui",
-#else
-					"arv-viewer-2.ui",
-#endif
-					NULL);
+	ui_filename = g_build_filename (ARAVIS_DATA_DIR, "arv-viewer-3.ui", NULL);
 
 	if (!gtk_builder_add_from_file (builder, ui_filename, NULL))
 		g_error ("The user interface file is missing ('%s')", ui_filename);
