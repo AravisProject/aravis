@@ -30,9 +30,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <glib/gi18n-lib.h>
-#ifdef ARAVIS_WITH_NOTIFY
 #include <libnotify/notify.h>
-#endif
 
 static char *arv_viewer_option_debug_domains = NULL;
 static gboolean arv_viewer_option_auto_socket_buffer = FALSE;
@@ -89,9 +87,7 @@ typedef struct {
 
 	gulong video_window_xid;
 
-#ifdef ARAVIS_WITH_NOTIFY
 	NotifyNotification *notification;
-#endif
 } ArvViewer;
 
 double
@@ -433,7 +429,6 @@ arv_viewer_snapshot_cb (GtkButton *button, ArvViewer *viewer)
 				 "Aravis", filename, NULL);
 	g_file_set_contents (path, viewer->last_buffer->data, viewer->last_buffer->size, NULL);
 
-#ifdef ARAVIS_WITH_NOTIFY
 	if (viewer->notification) {
 		notify_notification_update (viewer->notification,
 					    "Snapshot saved to Image folder",
@@ -441,7 +436,6 @@ arv_viewer_snapshot_cb (GtkButton *button, ArvViewer *viewer)
 					    "gtk-save");
 		notify_notification_show (viewer->notification, NULL);
 	}
-#endif
 
 	g_free (path);
 	g_free (filename);
@@ -693,10 +687,8 @@ arv_viewer_free (ArvViewer *viewer)
 {
 	g_return_if_fail (viewer != NULL);
 
-#ifdef ARAVIS_WITH_NOTIFY
 	if (viewer->notification)
 		g_object_unref (viewer->notification);
-#endif
 
 	if (viewer->exposure_update_event > 0)
 		g_source_remove (viewer->exposure_update_event);
@@ -797,9 +789,7 @@ arv_viewer_new (void)
 	viewer->auto_gain_clicked = g_signal_connect (viewer->auto_gain_toggle, "clicked",
 						      G_CALLBACK (arv_viewer_auto_gain_cb), viewer);
 
-#ifdef ARAVIS_WITH_NOTIFY
 	viewer->notification = notify_notification_new (NULL, NULL, NULL);
-#endif
 
 	return viewer;
 }
@@ -904,9 +894,7 @@ main (int argc,char *argv[])
 
 	arv_enable_interface ("Fake");
 
-#ifdef ARAVIS_WITH_NOTIFY
 	notify_init ("Aravis Viewer");
-#endif
 
 	viewer = arv_viewer_new ();
 
@@ -915,9 +903,7 @@ main (int argc,char *argv[])
 
 	gtk_main ();
 
-#ifdef ARAVIS_WITH_NOTIFY
 	notify_uninit ();
-#endif
 
 	/* For debug purpose only */
 	arv_shutdown ();
