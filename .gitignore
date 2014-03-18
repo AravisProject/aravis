@@ -37,3 +37,5 @@ gtk-doc.make
 gtk-doc.m4
 massif.out.*
 messages.mo
+aravis-*.tar.bz2
+aravis-*.tar.gz
