@@ -432,6 +432,7 @@ gst_aravis_init (GstAravis *gst_aravis)
 	GstPad *pad = GST_BASE_SRC_PAD (gst_aravis);
 
 	gst_base_src_set_live (GST_BASE_SRC (gst_aravis), TRUE);
+	gst_base_src_set_format (GST_BASE_SRC (gst_aravis), GST_FORMAT_TIME);
 
 	gst_aravis->camera_name = NULL;
 
