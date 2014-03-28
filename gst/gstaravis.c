@@ -145,7 +145,6 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 	GstStructure *structure;
 	ArvPixelFormat pixel_format;
 	int height, width;
-	int bpp, depth;
 	const GValue *frame_rate;
 	const char *caps_string;
 	const char *format_string;
@@ -163,11 +162,9 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 	gst_structure_get_int (structure, "width", &width);
 	gst_structure_get_int (structure, "height", &height);
 	frame_rate = gst_structure_get_value (structure, "framerate");
-	gst_structure_get_int (structure, "bpp", &bpp);
-	gst_structure_get_int (structure, "depth", &depth);
 	format_string = gst_structure_get_string (structure, "format");
 
-	pixel_format = arv_pixel_format_from_gst_caps (gst_structure_get_name (structure), bpp, depth, format_string);
+	pixel_format = arv_pixel_format_from_gst_caps (gst_structure_get_name (structure), format_string);
 
 	arv_camera_set_region (gst_aravis->camera, gst_aravis->offset_x, gst_aravis->offset_y, width, height);
 	arv_camera_set_binning (gst_aravis->camera, gst_aravis->h_binning, gst_aravis->v_binning);
