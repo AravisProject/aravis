@@ -6,7 +6,10 @@
 
   <name xml:lang="en">Aravis</name>
   <shortdesc xml:lang="en">Acquisition library for industrial cameras</shortdesc>
-  <homepage rdf:resource="http://blogs.gnome.org/emmanuel/category/aravis" />
+  <homepage rdf:resource="https://wiki.gnome.org/Projects/Aravis" />
+  <mailing-list rdf:resource="http://www.freelists.org/list/aravis" />
+  <download-page rdf:resource="http://download.gnome.org/sources/aravis/" />
+  <bug-database rdf:resource="https://bugzilla.gnome.org/browse.cgi?product=aravis" />
   <category rdf:resource="http://api.gnome.org/doap-extensions#development" />
 
   <maintainer>
