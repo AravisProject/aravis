@@ -57,6 +57,7 @@
  * @ARV_CAMERA_VENDOR_BASLER: Basler
  * @ARV_CAMERA_VENDOR_PROSILICA: Prosilica
  * @ARV_CAMERA_VENDOR_TIS: The Imaging Source
+ * @ARV_CAMERA_VENDOR_POINT_GREY: PointGrey
  */
 
 typedef enum {
@@ -64,7 +65,8 @@ typedef enum {
 	ARV_CAMERA_VENDOR_BASLER,
 	ARV_CAMERA_VENDOR_DALSA,
 	ARV_CAMERA_VENDOR_PROSILICA,
-	ARV_CAMERA_VENDOR_TIS
+	ARV_CAMERA_VENDOR_TIS,
+	ARV_CAMERA_VENDOR_POINT_GREY
 } ArvCameraVendor;
 
 typedef enum {
@@ -74,7 +76,8 @@ typedef enum {
 	ARV_CAMERA_SERIES_BASLER_OTHER,
 	ARV_CAMERA_SERIES_DALSA,
 	ARV_CAMERA_SERIES_PROSILICA,
-	ARV_CAMERA_SERIES_TIS
+	ARV_CAMERA_SERIES_TIS,
+	ARV_CAMERA_SERIES_POINT_GREY
 } ArvCameraSeries;
 
 static GObjectClass *parent_class = NULL;
@@ -625,14 +628,11 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
 
 	switch (camera->priv->vendor) {
 		case ARV_CAMERA_VENDOR_BASLER:
-			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
-							     "AcquisitionStart");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector", "AcquisitionStart");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
-			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
-							     "FrameStart");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector", "FrameStart");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
-			arv_device_set_integer_feature_value (camera->priv->device, "AcquisitionFrameRateEnable",
-							      1);
+			arv_device_set_integer_feature_value (camera->priv->device, "AcquisitionFrameRateEnable", 1);
 			arv_device_set_float_feature_value (camera->priv->device, "AcquisitionFrameRateAbs",
 							    frame_rate);
 			break;
@@ -644,8 +644,7 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
 							    frame_rate);
 			break;
 		case ARV_CAMERA_VENDOR_TIS:
-			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
-								 "FrameStart");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector", "FrameStart");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
 			feature = arv_device_get_feature (camera->priv->device, "FPS");
 			if (ARV_IS_GC_FEATURE_NODE (feature) &&
@@ -670,12 +669,17 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
 			} else
 				arv_device_set_float_feature_value (camera->priv->device, "FPS", frame_rate);
 			break;
+		case ARV_CAMERA_VENDOR_POINT_GREY:
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector", "FrameStart");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
+			arv_device_set_integer_feature_value (camera->priv->device, "AcquisitionFrameRateEnabled", 1);
+			arv_device_set_string_feature_value (camera->priv->device, "AcquisitionFrameRateAuto", "Off");
+			arv_device_set_float_feature_value (camera->priv->device, "AcquisitionFrameRate", frame_rate);
+			break;
 		case ARV_CAMERA_VENDOR_DALSA:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
-			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
-							     "FrameStart");
+			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector", "FrameStart");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
-
 			arv_device_set_float_feature_value (camera->priv->device,
 							    camera->priv->use_acquisition_frame_rate_abs ?
 							    "AcquisitionFrameRateAbs":
@@ -717,6 +721,7 @@ arv_camera_get_frame_rate (ArvCamera *camera)
 					return 0;
 			} else
 				return arv_device_get_float_feature_value (camera->priv->device, "FPS");
+		case ARV_CAMERA_VENDOR_POINT_GREY:
 		case ARV_CAMERA_VENDOR_DALSA:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
 			return arv_device_get_float_feature_value (camera->priv->device,
@@ -781,6 +786,7 @@ arv_camera_get_frame_rate_bounds (ArvCamera *camera, double *min, double *max)
 		case ARV_CAMERA_VENDOR_PROSILICA:
 			arv_device_get_float_feature_bounds (camera->priv->device, "AcquisitionFrameRateAbs", min, max);
 			break;
+		case ARV_CAMERA_VENDOR_POINT_GREY:
 		case ARV_CAMERA_VENDOR_DALSA:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
 			arv_device_get_float_feature_bounds (camera->priv->device,
@@ -1195,6 +1201,7 @@ arv_camera_is_frame_rate_available (ArvCamera *camera)
 			return arv_device_get_feature (camera->priv->device, "AcquisitionFrameRateAbs") != NULL;
 		case ARV_CAMERA_VENDOR_TIS:
 			return arv_device_get_feature (camera->priv->device, "FPS") != NULL;
+		case ARV_CAMERA_VENDOR_POINT_GREY:
 		case ARV_CAMERA_VENDOR_DALSA:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
 			return arv_device_get_feature (camera->priv->device,
@@ -1371,6 +1378,9 @@ arv_camera_constructor (GType gtype, guint n_properties, GObjectConstructParam *
 	} else if (g_strcmp0 (vendor_name, "DALSA") == 0) {
 		vendor = ARV_CAMERA_VENDOR_DALSA;
 		series = ARV_CAMERA_SERIES_DALSA;
+	} else if (g_strcmp0 (vendor_name, "Point Grey Research") == 0) {
+		vendor = ARV_CAMERA_VENDOR_POINT_GREY;
+		series = ARV_CAMERA_SERIES_POINT_GREY;
 	} else {
 		vendor = ARV_CAMERA_VENDOR_UNKNOWN;
 		series = ARV_CAMERA_SERIES_UNKNOWN;
