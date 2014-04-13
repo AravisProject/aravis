@@ -31,16 +31,20 @@ IT_PROG_INTLTOOL([0.31.2])
 
 LT_INIT()
 
-AC_ARG_ENABLE(gst_plugin,
-	      [  --enable-gst-plugin     build gstreamer plugin],
-	      [enable_gst_plugin=$enableval],
-	      [enable_gst_plugin=no])
 AC_ARG_ENABLE(viewer,
-	      [  --enable-viewer         build viewer],
+	      [  --enable-viewer          build viewer],
 	      [enable_viewer=$enableval],
 	      [enable_viewer=no])
+AC_ARG_ENABLE(gst_plugin,
+	      [  --enable-gst-plugin      build gstreamer plugin],
+	      [enable_gst_plugin=$enableval],
+	      [enable_gst_plugin=no])
+AC_ARG_ENABLE(gst_0_10_plugin,
+	      [  --enable-gst-0.10-plugin build gstreamer-0.10 plugin],
+	      [enable_gst_0_10_plugin=$enableval],
+	      [enable_gst_0_10_plugin=no])
 AC_ARG_ENABLE(cpp_test,
-	      [  --enable-cpp-test       build c++ test],
+	      [  --enable-cpp-test        build c++ test],
 	      [enable_cpp_test=$enableval],
 	      [enable_cpp_test=no])
 
@@ -48,6 +52,7 @@ PKG_PROG_PKG_CONFIG([0.14])
 
 ARAVIS_REQUIREMENTS="glib-2.0 >= 2.26 gobject-2.0 gio-2.0 libxml-2.0 gthread-2.0 zlib"
 ARAVIS_GSTREAMER_REQUIREMENTS="gstreamer-base-1.0 gstreamer-app-1.0"
+ARAVIS_GSTREAMER_0_10_REQUIREMENTS="gstreamer-base-0.10 gstreamer-app-0.10"
 ARAVIS_VIEWER_REQUIREMENTS="$ARAVIS_GSTREAMER_REQUIREMENTS gstreamer-video-1.0 gtk+-3.0 libnotify"
 
 PKG_CHECK_MODULES(ARAVIS, [$ARAVIS_REQUIREMENTS])
@@ -59,6 +64,9 @@ AC_SUBST(ARAVIS_CFLAGS)
 AC_SUBST(ARAVIS_LIBS)
 
 AC_SUBST(aravis_datadir, '$(datadir)/aravis-$(ARAVIS_API_VERSION)')
+
+# Viewer
+# ======
 
 build_viewer=no
 if test "x$enable_viewer" = "xyes"; then
@@ -74,6 +82,9 @@ ARAVIS_VIEWER_LIBS="-lm ${ARAVIS_VIEWER_LIBS}"
 
 AC_SUBST(ARAVIS_VIEWER_CFLAGS)
 AC_SUBST(ARAVIS_VIEWER_LIBS)
+
+# GStreamer plugin
+# ================
 
 build_gst_plugin=no
 if test "x$enable_gst_plugin" = "xyes"; then
@@ -97,8 +108,36 @@ else
 fi
 AC_SUBST(gstplugindir)
 
-GST_PLUGIN_LDFLAGS='-module -avoid-version -export-symbols-regex [_]*\(gst_\|Gst\|GST_\).*'
-AC_SUBST(GST_PLUGIN_LDFLAGS)
+# GStreamer-0.10 plugin
+# =====================
+
+build_gst_0_10_plugin=no
+if test "x$enable_gst_0_10_plugin" = "xyes"; then
+	PKG_CHECK_MODULES([ARAVIS_GST_0_10_PLUGIN], [$ARAVIS_GSTREAMER_0_10_REQUIREMENTS],
+			  [AC_DEFINE([ARAVIS_BUILD_GST_0_10_PLUGIN], [1], [Build gstreamer-0.10 plugin])
+			  build_gst_0_10_plugin=yes],
+			  [echo -n])
+fi
+AM_CONDITIONAL(ARAVIS_BUILD_GST_0_10_PLUGIN, test "x$build_gst_0_10_plugin" = "xyes")
+
+# Standard math library doesn't come with a pkgconfig file.
+ARAVIS_GST_0_10_PLUGIN_LIBS="-lm ${ARAVIS_GST_0_10_PLUGIN_LIBS}"
+
+AC_SUBST(ARAVIS_GST_0_10_PLUGIN_CFLAGS)
+AC_SUBST(ARAVIS_GST_0_10_PLUGIN_LIBS)
+
+if test "x${prefix}" = "x$HOME"; then
+  gst010plugindir="$HOME/.gstreamer-0.10/plugins"
+else
+  gst010plugindir="\$(libdir)/gstreamer-0.10"
+fi
+AC_SUBST(gst010plugindir)
+
+GST_0_10_PLUGIN_LDFLAGS='-module -avoid-version -export-symbols-regex [_]*\(gst_\|Gst\|GST_\).*'
+AC_SUBST(GST_0_10_PLUGIN_LDFLAGS)
+
+# C++ test
+# ========
 
 AM_CONDITIONAL(ARAVIS_BUILD_CPP_TEST, test "x$enable_cpp_test" = "xyes")
 
@@ -119,6 +158,7 @@ src/Makefile
 viewer/Makefile
 viewer/data/arv-viewer.desktop.in
 gst/Makefile
+gst-0.10/Makefile
 tests/Makefile
 po/Makefile.in
 docs/Makefile
@@ -131,10 +171,11 @@ AC_OUTPUT
 echo ""
 echo "Configuration:"
 echo ""
-echo "	Compiler:		${CC}"
-echo "	Compiler flags:		${ARAVIS_CFLAGS}"
-echo "	Linker flags:		${ARAVIS_LIBS}"
+echo "  Compiler:                    ${CC}"
+echo "  Compiler flags:              ${ARAVIS_CFLAGS}"
+echo "  Linker flags:                ${ARAVIS_LIBS}"
 echo ""
-echo "	Build viewer:		$build_viewer"
-echo "	Build gstreamer plugin:	$build_gst_plugin"
+echo "  Build viewer:                $build_viewer"
+echo "  Build gstreamer plugin:      $build_gst_plugin"
+echo "  Build gstreamer-0.10 plugin: $build_gst_0_10_plugin"
 echo ""

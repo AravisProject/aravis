@@ -69,6 +69,7 @@ void * 		arv_decompress 			(void *input_buffer, size_t input_size, size_t *outpu
 
 const char * 	arv_pixel_format_to_gst_caps_string 	(ArvPixelFormat pixel_format);
 ArvPixelFormat 	arv_pixel_format_from_gst_caps 		(const char *name, const char *format);
+ArvPixelFormat 	arv_pixel_format_from_gst_0_10_caps 	(const char *name, int bpp, int depth, guint32 fourcc);
 
 /*
    Compatibility with old glib

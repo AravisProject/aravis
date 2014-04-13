@@ -4,7 +4,7 @@ include $(top_srcdir)/Makefile.decl
 
 ACLOCAL_AMFLAGS = -I m4
 
-DISTCHECK_CONFIGURE_FLAGS = --enable-introspection --enable-gtk-doc --enable-gst-plugin --enable-viewer --enable-cpp-test
+DISTCHECK_CONFIGURE_FLAGS = --enable-introspection --enable-gtk-doc --enable-gst-plugin --enable-gst-0.10-plugin --enable-viewer --enable-cpp-test
 
 SUBDIRS = src
 
@@ -14,6 +14,10 @@ endif
 
 if ARAVIS_BUILD_GST_PLUGIN
 SUBDIRS += gst
+endif
+
+if ARAVIS_BUILD_GST_0_10_PLUGIN
+SUBDIRS += gst-0.10
 endif
 
 SUBDIRS += tests po docs
