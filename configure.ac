@@ -84,8 +84,6 @@ if test "x$enable_gst_plugin" = "xyes"; then
 fi
 AM_CONDITIONAL(ARAVIS_BUILD_GST_PLUGIN, test "x$build_gst_plugin" = "xyes")
 
-AM_CONDITIONAL(ARAVIS_BUILD_CPP_TEST, test "x$enable_cpp_test" = "xyes")
-
 # Standard math library doesn't come with a pkgconfig file.
 ARAVIS_GST_PLUGIN_LIBS="-lm ${ARAVIS_GST_PLUGIN_LIBS}"
 
@@ -101,6 +99,8 @@ AC_SUBST(gstplugindir)
 
 GST_PLUGIN_LDFLAGS='-module -avoid-version -export-symbols-regex [_]*\(gst_\|Gst\|GST_\).*'
 AC_SUBST(GST_PLUGIN_LDFLAGS)
+
+AM_CONDITIONAL(ARAVIS_BUILD_CPP_TEST, test "x$enable_cpp_test" = "xyes")
 
 AC_PATH_PROG(GLIB_MKENUMS, glib-mkenums)
 
