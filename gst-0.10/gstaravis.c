@@ -445,6 +445,7 @@ gst_aravis_init (GstAravis *gst_aravis, GstAravisClass *g_class)
 	gst_pad_set_fixatecaps_function (pad, gst_aravis_fixate_caps);
 
 	gst_base_src_set_live (GST_BASE_SRC (gst_aravis), TRUE);
+	gst_base_src_set_format (GST_BASE_SRC (gst_aravis), GST_FORMAT_TIME);
 
 	gst_aravis->camera_name = NULL;
 
