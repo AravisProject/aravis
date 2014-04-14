@@ -1059,6 +1059,7 @@ arv_g_thread_new
 <TITLE>ArvGst</TITLE>
 arv_pixel_format_to_gst_caps_string
 arv_pixel_format_from_gst_caps
+arv_pixel_format_to_gst_0_10_caps_string
 arv_pixel_format_from_gst_0_10_caps
 </SECTION>
 

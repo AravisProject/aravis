@@ -100,7 +100,7 @@ gst_aravis_get_all_camera_caps (GstAravis *gst_aravis)
 	for (i = 0; i < n_pixel_formats; i++) {
 		const char *caps_string;
 
-		caps_string = arv_pixel_format_to_gst_caps_string (pixel_formats[i]);
+		caps_string = arv_pixel_format_to_gst_0_10_caps_string (pixel_formats[i]);
 
 		if (caps_string != NULL) {
 			GstStructure *structure;
@@ -230,7 +230,7 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 	if (gst_aravis->fixed_caps != NULL)
 		gst_caps_unref (gst_aravis->fixed_caps);
 
-	caps_string = arv_pixel_format_to_gst_caps_string (pixel_format);
+	caps_string = arv_pixel_format_to_gst_0_10_caps_string (pixel_format);
 	if (caps_string != NULL) {
 		GstStructure *structure;
 		GstCaps *caps;

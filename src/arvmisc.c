@@ -591,6 +591,8 @@ typedef struct {
 	const char *gst_caps_string;
 	const char *name;
 	const char *format;
+	const char *gst_0_10_caps_string;
+	const char *name_0_10;
 	int bpp;
 	int depth;
 	guint32 fourcc;
@@ -601,49 +603,57 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 		ARV_PIXEL_FORMAT_MONO_8,
 		"video/x-raw, format=(string)GRAY8",
 		"video/x-raw", "GRAY8",
-		8,	8,	0
+		"video/x-raw-gray, bpp=(int)8, depth=(int)8",
+		"video/x-raw-gray",	8,	8,	0
 	},
 	{
 		ARV_PIXEL_FORMAT_MONO_10,
 		"video/x-raw, format=(string)GRAY16_LE",
 		"video/x-raw", 	"GRAY16_LE",
-		16,	10,	0
+		"video/x-raw-gray, bpp=(int)16, depth=(int)10",
+		"video/x-raw-gray",	16,	10,	0
 	},
 	{
 		ARV_PIXEL_FORMAT_MONO_12,
 		"video/x-raw, format=(string)GRAY16_LE",
 		"video/x-raw",	"GRAY16_LE",
-		16,	12,	0
+		"video/x-raw-gray, bpp=(int)16, depth=(int)12",
+		"video/x-raw-gray",	16,	12,	0
 	},
 	{
 		ARV_PIXEL_FORMAT_MONO_16,
 		"video/x-raw, format=(string)GRAY16_LE",
 		"video/x-raw",	"GRAY16_LE",
-		16,	16,	0
+		"video/x-raw-gray, bpp=(int)16, depth=(int)16",
+		"video/x-raw-gray",	16,	16,	0
 	},
 	{
 		ARV_PIXEL_FORMAT_BAYER_GR_8,
 		"video/x-bayer, format=(string)grbg",
 		"video/x-bayer",	"grbg",
-		8,	8,	ARV_MAKE_FOURCC ('g','r','b','g')
+		"video/x-raw-bayer, format=(string)grbg, bpp=(int)8, depth=(int)8",
+		"video/x-raw-bayer",	8,	8,	ARV_MAKE_FOURCC ('g','r','b','g')
 	},
 	{
 		ARV_PIXEL_FORMAT_BAYER_RG_8,
 		"video/x-bayer, format=(string)rggb",
 		"video/x-bayer",	"rggb",
-		8,	8,	ARV_MAKE_FOURCC ('r','g','g','b')
+		"video/x-raw-bayer, format=(string)rggb, bpp=(int)8, depth=(int)8",
+		"video/x-raw-bayer",	8,	8,	ARV_MAKE_FOURCC ('r','g','g','b')
 	},
 	{
 		ARV_PIXEL_FORMAT_BAYER_GB_8,
 		"video/x-bayer, format=(string)gbrg",
 		"video/x-bayer",	"gbrg",
-		8,	8,	ARV_MAKE_FOURCC ('g','b','r','g')
+		"video/x-raw-bayer, format=(string)gbrg, bpp=(int)8, depth=(int)8",
+		"video/x-raw-bayer",	8,	8,	ARV_MAKE_FOURCC ('g','b','r','g')
 	},
 	{
 		ARV_PIXEL_FORMAT_BAYER_BG_8,
 		"video/x-bayer, format=(string)bggr",
 		"video/x-bayer",	"bggr",
-		8,	8,	ARV_MAKE_FOURCC ('b','g','g','r')
+		"video/x-raw-bayer, format=(string)bggr, bpp=(int)8, depth=(int)8",
+		"video/x-raw-bayer",	8,	8,	ARV_MAKE_FOURCC ('b','g','g','r')
 	},
 
 /* Non 8bit bayer formats are not supported by gstreamer bayer plugin.
@@ -653,24 +663,28 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 		ARV_PIXEL_FORMAT_YUV_422_PACKED,
 		"video/x-raw, format=(string)UYVY",
 		"video/x-raw",	"UYVY",
-		0,	0,	ARV_MAKE_FOURCC ('U','Y','V','Y')
+		"video/x-raw-yuv, format=(fourcc)UYVY",
+		"video/x-raw-yuv",	0,	0,	ARV_MAKE_FOURCC ('U','Y','V','Y')
 	},
 	{
 		ARV_PIXEL_FORMAT_YUV_422_YUYV_PACKED,
 		"video/x-raw, format=(string)YUY2",
-		0,	0,	ARV_MAKE_FOURCC ('Y','U','Y','2')
+		"video/x-raw-yuv, format=(fourcc)YUYU2",
+		"video/x-raw-yuv",	0,	0,	ARV_MAKE_FOURCC ('Y','U','Y','2')
 	},
 	{
 		ARV_PIXEL_FORMAT_RGB_8_PACKED,
 		"video/x-raw, format=(string)RGB",
 		"video/x-raw",	"RGB",
-		24,	24,	0
+		"video/x-raw-rgb, format=(string)RGB, bpp=(int)24, depth=(int)24",
+		"video/x-raw-rgb",	24,	24,	0
 	},
 	{
 		ARV_PIXEL_FORMAT_CUSTOM_YUV_422_YUYV_PACKED,
 		"video/x-raw, format=(string)YUY2",
 		"video/x-raw",	"YUY2",
-		0,	0,	ARV_MAKE_FOURCC ('Y','U','Y','2')
+		"video/x-raw-yuv, format=(fourcc)YUYU2",
+		"video/x-raw-yuv",	0,	0,	ARV_MAKE_FOURCC ('Y','U','Y','2')
 	}
 };
 
@@ -719,6 +733,26 @@ arv_pixel_format_from_gst_caps (const char *name, const char *format)
 	return 0;
 }
 
+const char *
+arv_pixel_format_to_gst_0_10_caps_string (ArvPixelFormat pixel_format)
+{
+	int i;
+
+	for (i = 0; i < G_N_ELEMENTS (arv_gst_caps_infos); i++)
+		if (arv_gst_caps_infos[i].pixel_format == pixel_format)
+			break;
+
+	if (i == G_N_ELEMENTS (arv_gst_caps_infos)) {
+		arv_warning_misc ("[PixelFormat::to_gst_0_10_caps_string] 0x%08x not found", pixel_format);
+		return NULL;
+	}
+
+	arv_log_misc ("[PixelFormat::to_gst_0_10_caps_string] 0x%08x -> %s",
+		      pixel_format, arv_gst_caps_infos[i].gst_0_10_caps_string);
+
+	return arv_gst_caps_infos[i].gst_0_10_caps_string;
+}
+
 ArvPixelFormat
 arv_pixel_format_from_gst_0_10_caps (const char *name, int bpp, int depth, guint32 fourcc)
 {
@@ -727,10 +761,10 @@ arv_pixel_format_from_gst_0_10_caps (const char *name, int bpp, int depth, guint
 	g_return_val_if_fail (name != NULL, 0);
 
 	for (i = 0; i < G_N_ELEMENTS (arv_gst_caps_infos); i++) {
-		if (strcmp (name, arv_gst_caps_infos[i].name) != 0)
+		if (strcmp (name, arv_gst_caps_infos[i].name_0_10) != 0)
 			continue;
 
-		if (strcmp (name, "video/x-raw") == 0 &&
+		if (strcmp (name, "video/x-raw-yuv") == 0 &&
 		    fourcc == arv_gst_caps_infos[i].fourcc)
 			return arv_gst_caps_infos[i].pixel_format;
 
