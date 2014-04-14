@@ -28,7 +28,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v aravissrc ! video/x-raw-yuv,width=512,height=512,framerate=25/1 ! autovideosink
+ * gst-launch -v aravissrc ! video/x-raw,format=UYVY,width=512,height=512,framerate=25/1 ! autovideosink
  * ]|
  * </refsect2>
  */
