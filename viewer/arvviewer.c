@@ -153,6 +153,8 @@ arv_viewer_new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 
 		arv_row_stride = arv_buffer->width * ARV_PIXEL_FORMAT_BIT_PER_PIXEL (arv_buffer->pixel_format) / 8;
 
+		arv_buffer->timestamp_ns = g_get_real_time () * 1000LL;
+
 		/* Gstreamer requires row stride to be a multiple of 4 */
 		if ((arv_row_stride & 0x3) != 0) {
 			int gst_row_stride;
