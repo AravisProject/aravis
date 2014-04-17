@@ -53,6 +53,7 @@ struct _GstAravis {
 
 	gint h_binning;
 	gint v_binning;
+        gboolean packet_resend;
 
 	gint payload;
 
