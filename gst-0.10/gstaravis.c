@@ -56,7 +56,8 @@ enum
   PROP_H_BINNING,
   PROP_V_BINNING,
   PROP_OFFSET_X,
-  PROP_OFFSET_Y
+  PROP_OFFSET_Y,
+  PROP_PACKET_RESEND
 };
 
 GST_BOILERPLATE (GstAravis, gst_aravis, GstPushSrc, GST_TYPE_PUSH_SRC);
@@ -253,6 +254,11 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 
 	gst_aravis->payload = arv_camera_get_payload (gst_aravis->camera);
 	gst_aravis->stream = arv_camera_create_stream (gst_aravis->camera, NULL, NULL);
+
+	if (gst_aravis->packet_resend)
+		g_object_set (gst_aravis->stream, "packet-resend", ARV_GV_STREAM_PACKET_RESEND_ALWAYS, NULL);
+	else
+		g_object_set (gst_aravis->stream, "packet-resend", ARV_GV_STREAM_PACKET_RESEND_NEVER, NULL);
 
 	for (i = 0; i < GST_ARAVIS_N_BUFFERS; i++)
 		arv_stream_push_buffer (gst_aravis->stream,
@@ -455,6 +461,7 @@ gst_aravis_init (GstAravis *gst_aravis, GstAravisClass *g_class)
 	gst_aravis->offset_y = 0;
 	gst_aravis->h_binning = -1;
 	gst_aravis->v_binning = -1;
+	gst_aravis->packet_resend = TRUE;
 	gst_aravis->payload = 0;
 
 	gst_aravis->buffer_timeout_us = GST_ARAVIS_BUFFER_TIMEOUT_DEFAULT;
@@ -545,6 +552,9 @@ gst_aravis_set_property (GObject * object, guint prop_id,
 		case PROP_V_BINNING:
 			gst_aravis->v_binning = g_value_get_int (value);
 			break;
+		case PROP_PACKET_RESEND:
+			gst_aravis->packet_resend = g_value_get_boolean (value);
+			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 			break;
@@ -587,6 +597,9 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 			break;
 		case PROP_V_BINNING:
 			g_value_set_int (value, gst_aravis->v_binning);
+			break;
+		case PROP_PACKET_RESEND:
+			g_value_set_boolean (value, gst_aravis->packet_resend);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -699,6 +712,14 @@ gst_aravis_class_init (GstAravisClass * klass)
 				   "CCD vertical binning",
 				   1, G_MAXINT, 1,
 				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+	g_object_class_install_property
+		(gobject_class,
+		 PROP_GAIN_AUTO,
+		 g_param_spec_boolean ("packet-resend",
+				       "Packet Resend",
+				       "Request dropped packets to be reissued by the camera",
+				       TRUE,
+				       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
         GST_DEBUG_CATEGORY_INIT (aravis_debug, "aravissrc", 0, "Aravis interface");
 
