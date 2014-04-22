@@ -255,7 +255,7 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 	gst_aravis->payload = arv_camera_get_payload (gst_aravis->camera);
 	gst_aravis->stream = arv_camera_create_stream (gst_aravis->camera, NULL, NULL);
 
-	if (gst_aravis->packet_resend)
+	if (ARV_IS_GV_STREAM (gst_aravis->stream) && gst_aravis->packet_resend)
 		g_object_set (gst_aravis->stream, "packet-resend", ARV_GV_STREAM_PACKET_RESEND_ALWAYS, NULL);
 	else
 		g_object_set (gst_aravis->stream, "packet-resend", ARV_GV_STREAM_PACKET_RESEND_NEVER, NULL);
