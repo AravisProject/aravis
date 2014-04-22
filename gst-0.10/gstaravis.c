@@ -421,8 +421,6 @@ gst_aravis_fixate_caps (GstPad * pad, GstCaps * caps)
 	gint height;
 	double frame_rate;
 
-	g_return_if_fail (GST_IS_ARAVIS (gst_aravis));
-
 	arv_camera_get_region (gst_aravis->camera, NULL, NULL, &width, &height);
 	frame_rate = arv_camera_get_frame_rate (gst_aravis->camera);
 
