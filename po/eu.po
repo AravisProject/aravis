@@ -1,0 +1,65 @@
+# Basque translation for aravis
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+#
+# Iñaki Larrañaga Murgoitio <dooteo@zundan.com>, 2014.
+msgid ""
+msgstr ""
+"Project-Id-Version: aravis master\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/enter_bug.cgi?"
+"product=aravis&keywords=I18N+L10N&component=general\n"
+"POT-Creation-Date: 2014-05-01 12:09+0200\n"
+"PO-Revision-Date: 2014-05-01 12:12+0200\n"
+"Last-Translator: Iñaki Larrañaga Murgoitio <dooteo@zundan.com>\n"
+"Language-Team: Basque <librezale@librezale.org>\n"
+"Language: eu\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Lokalize 1.4\n"
+
+#: ../viewer/arv-viewer-3.ui.h:1 ../viewer/data/arv-viewer.desktop.in.in.h:1
+msgid "Aravis"
+msgstr "Aravis"
+
+#: ../viewer/arv-viewer-3.ui.h:2
+msgid "Frame rate:"
+msgstr "Fotograma-emaria:"
+
+#: ../viewer/arv-viewer-3.ui.h:3
+msgid "Hz"
+msgstr "Hz"
+
+#: ../viewer/arv-viewer-3.ui.h:4
+msgid "Auto"
+msgstr "Automatikoa"
+
+#: ../viewer/arv-viewer-3.ui.h:5
+msgid "Exposure:"
+msgstr "Esposizioa:"
+
+#: ../viewer/arv-viewer-3.ui.h:6
+msgid "Gain:"
+msgstr "Irabazia:"
+
+#: ../viewer/arv-viewer-3.ui.h:7
+msgid "µs"
+msgstr "µs"
+
+#: ../viewer/arv-viewer-3.ui.h:8
+msgid "Settings"
+msgstr "Ezarpenak"
+
+#: ../viewer/arv-viewer-3.ui.h:9
+msgid "Save a snapshot into image folder"
+msgstr "Gorde pantaila-argazkia irudien karpetan"
+
+#: ../viewer/data/arv-viewer.desktop.in.in.h:2
+msgid "Aravis Simple Viewer"
+msgstr "Aravis ikustaile xumea"
+
+#: ../viewer/data/arv-viewer.desktop.in.in.h:3
+msgid "Display the video stream from your cameras"
+msgstr "Bistaratu bideo-korronteak kameretatik"
+
