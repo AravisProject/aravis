@@ -1,3 +1,12 @@
+Release 0.3.2
+=============
+
+  * gst_plugin: new plugin based on gstreamer 1.0, in addition to the existing 0.10 version.
+  * gst_plugin: add packet-resend property.
+  * viewer: port to gstreamer 1.0, and drop support for gtk+ 2.0.
+  * viewer: fix video output for camera with buggy time stamping.
+  * camera: fix frame rate setting for Point Grey devices.
+
 Release 0.3.1
 =============
 
