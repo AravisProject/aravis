@@ -18,9 +18,9 @@ arv_viewer_SOURCES = arvviewer.c
 
 arv_viewer_LDADD = $(ARAVIS_VIEWER_LIBS) $(top_builddir)/src/libaravis-@ARAVIS_API_VERSION@.la
 arv_viewerdir = $(aravis_datadir)
-arv_viewer_DATA = arv-viewer-3.ui
+arv_viewer_DATA = arv-viewer.ui
 
-EXTRA_DIST += arv-viewer-2.ui arv-viewer-3.ui
+EXTRA_DIST += arv-viewer.ui
 
 iconthemedir = $(datadir)/icons/hicolor
 icondir = ./icons/gnome
