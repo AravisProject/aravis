@@ -552,7 +552,10 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 
 	if (tokens[0] != NULL && tokens[1] != NULL) {
 		if (g_ascii_strcasecmp (tokens[1], "file:") == 0) {
-			g_file_get_contents (filename, &genicam, NULL, NULL);
+			gsize len;
+			g_file_get_contents (tokens[2], &genicam, &len, NULL);
+			if (genicam)
+				*size = len;
 		} else if (g_ascii_strcasecmp (tokens[1], "local:") == 0 &&
 			 tokens[2] != NULL &&
 			 tokens[3] != NULL &&
