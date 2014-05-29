@@ -619,23 +619,25 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 				}
 			}
         } else if (g_ascii_strcasecmp (tokens[1], "http:") == 0) {
-			GFile *gfile;
+			GFile *file;
 			GFileInputStream *stream;
 
-			gfile = g_file_new_for_uri(filename);
-			stream = g_file_read(gfile, NULL, NULL);
+			file = g_file_new_for_uri (filename);
+			stream = g_file_read (file, NULL, NULL);
 			if(stream) {
-				GDataInputStream *dstream;
+				GDataInputStream *data_stream;
 				gsize len;
-				dstream = g_data_input_stream_new ((GInputStream*) stream);
-				genicam = g_data_input_stream_read_upto (dstream, "", 0, &len, NULL, NULL);
+
+				data_stream = g_data_input_stream_new (G_INPUT_STREAM (stream));
+				genicam = g_data_input_stream_read_upto (data_stream, "", 0, &len, NULL, NULL);
 
 				if (genicam)
 					*size = len;
 
-				g_object_unref (dstream);
+				g_object_unref (data_stream);
 				g_object_unref (stream);
 			}
+			g_object_unref (file);
 		}
 	}
 
