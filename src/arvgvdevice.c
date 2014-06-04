@@ -921,6 +921,12 @@ arv_gv_device_new (GInetAddress *interface_address, GInetAddress *device_address
 
 	arv_gv_device_load_genicam (gv_device);
 
+	if (!ARV_IS_GC (gv_device->priv->genicam)) {
+		arv_warning_device ("[GvDevice::new] Failed to load genicam data");
+		g_object_unref (gv_device);
+		return NULL;
+	}
+
 	arv_gv_device_take_control (gv_device);
 
 	heartbeat_data = g_new (ArvGvDeviceHeartbeatData, 1);
