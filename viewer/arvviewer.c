@@ -540,6 +540,8 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	gtk_tree_model_get (GTK_TREE_MODEL (list_store), &iter, 0, &camera_id, -1);
 	viewer->camera = arv_camera_new (camera_id);
 	g_free (camera_id);
+	if (viewer->camera == NULL)
+		return;
 
 	viewer->rotation = 0;
 	viewer->stream = arv_camera_create_stream (viewer->camera, NULL, NULL);
