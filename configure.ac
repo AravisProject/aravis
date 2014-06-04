@@ -32,33 +32,51 @@ IT_PROG_INTLTOOL([0.31.2])
 LT_INIT()
 
 AC_ARG_ENABLE(viewer,
-	      [  --enable-viewer          build viewer],
+	      [AS_HELP_STRING([--enable-viewer],
+		              [build viewer [default=no]])],
 	      [enable_viewer=$enableval],
 	      [enable_viewer=no])
 AC_ARG_ENABLE(gst_plugin,
-	      [  --enable-gst-plugin      build gstreamer plugin],
+	      [AS_HELP_STRING([--enable-gst-plugin],
+			      [build gstreamer plugin [default=no]])],
 	      [enable_gst_plugin=$enableval],
 	      [enable_gst_plugin=no])
 AC_ARG_ENABLE(gst_0_10_plugin,
-	      [  --enable-gst-0.10-plugin build gstreamer-0.10 plugin],
+	      [AS_HELP_STRING([--enable-gst-0.10-plugin],
+			      [build gstreamer-0.10 plugin [default=no]])],
 	      [enable_gst_0_10_plugin=$enableval],
 	      [enable_gst_0_10_plugin=no])
 AC_ARG_ENABLE(cpp_test,
-	      [  --enable-cpp-test        build c++ test],
+	      [AS_HELP_STRING([--enable-cpp-test],
+		              [build c++ test [default=no]])],
 	      [enable_cpp_test=$enableval],
 	      [enable_cpp_test=no])
+AC_ARG_ENABLE(zlib_pc,
+	      [AS_HELP_STRING([--enable-zlib-pc],
+			      [use pkg-config for zlib dependency [default=yes]])],
+	      [enable_zlib_pc=$enableval],
+	      [enable_zlib_pc=yes])
 
 PKG_PROG_PKG_CONFIG([0.14])
 
-ARAVIS_REQUIREMENTS="glib-2.0 >= 2.26 gobject-2.0 gio-2.0 libxml-2.0 gthread-2.0 zlib"
+ARAVIS_REQUIREMENTS="glib-2.0 >= 2.26 gobject-2.0 gio-2.0 libxml-2.0 gthread-2.0"
 ARAVIS_GSTREAMER_REQUIREMENTS="gstreamer-base-1.0 gstreamer-app-1.0"
 ARAVIS_GSTREAMER_0_10_REQUIREMENTS="gstreamer-base-0.10 gstreamer-app-0.10"
 ARAVIS_VIEWER_REQUIREMENTS="$ARAVIS_GSTREAMER_REQUIREMENTS gstreamer-video-1.0 gtk+-3.0 libnotify"
 
+# Conditional use of zlib.pc, as it doesn't exist on old setup
+
+if test "x$enable_zlib_pc" = "xyes"; then
+	ARAVIS_REQUIREMENTS="${ARAVIS_REQUIREMENTS} zlib"
+	ARAVIS_ADDITIONAL_LIBS="-lm" 
+else
+	ARAVIS_ADDITIONAL_LIBS="-lm -lz"
+fi
+
 PKG_CHECK_MODULES(ARAVIS, [$ARAVIS_REQUIREMENTS])
 
 # Standard math library doesn't come with a pkgconfig file.
-ARAVIS_LIBS="-lm ${ARAVIS_LIBS}"
+ARAVIS_LIBS="${ARAVIS_ADDITIONAL_LIBS} ${ARAVIS_LIBS}"
 
 AC_SUBST(ARAVIS_CFLAGS)
 AC_SUBST(ARAVIS_LIBS)
@@ -78,7 +96,7 @@ fi
 AM_CONDITIONAL(ARAVIS_BUILD_VIEWER, test "x$build_viewer" = "xyes")
 
 # Standard math library doesn't come with a pkgconfig file.
-ARAVIS_VIEWER_LIBS="-lm ${ARAVIS_VIEWER_LIBS}"
+ARAVIS_VIEWER_LIBS="${ARAVIS_ADDITIONAL_LIBS} ${ARAVIS_VIEWER_LIBS}"
 
 AC_SUBST(ARAVIS_VIEWER_CFLAGS)
 AC_SUBST(ARAVIS_VIEWER_LIBS)
@@ -96,7 +114,7 @@ fi
 AM_CONDITIONAL(ARAVIS_BUILD_GST_PLUGIN, test "x$build_gst_plugin" = "xyes")
 
 # Standard math library doesn't come with a pkgconfig file.
-ARAVIS_GST_PLUGIN_LIBS="-lm ${ARAVIS_GST_PLUGIN_LIBS}"
+ARAVIS_GST_PLUGIN_LIBS="${ARAVIS_ADDITIONAL_LIBS} ${ARAVIS_GST_PLUGIN_LIBS}"
 
 AC_SUBST(ARAVIS_GST_PLUGIN_CFLAGS)
 AC_SUBST(ARAVIS_GST_PLUGIN_LIBS)
@@ -121,7 +139,7 @@ fi
 AM_CONDITIONAL(ARAVIS_BUILD_GST_0_10_PLUGIN, test "x$build_gst_0_10_plugin" = "xyes")
 
 # Standard math library doesn't come with a pkgconfig file.
-ARAVIS_GST_0_10_PLUGIN_LIBS="-lm ${ARAVIS_GST_0_10_PLUGIN_LIBS}"
+ARAVIS_GST_0_10_PLUGIN_LIBS="${ARAVIS_ADDITIONAL_LIBS} ${ARAVIS_GST_0_10_PLUGIN_LIBS}"
 
 AC_SUBST(ARAVIS_GST_0_10_PLUGIN_CFLAGS)
 AC_SUBST(ARAVIS_GST_0_10_PLUGIN_LIBS)
