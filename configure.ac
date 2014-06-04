@@ -33,19 +33,19 @@ LT_INIT()
 
 AC_ARG_ENABLE(viewer,
 	      [AS_HELP_STRING([--enable-viewer],
-		              [build viewer [default=no]])],
+		              [build viewer [default=auto]])],
 	      [enable_viewer=$enableval],
-	      [enable_viewer=no])
+	      [enable_viewer=auto])
 AC_ARG_ENABLE(gst_plugin,
 	      [AS_HELP_STRING([--enable-gst-plugin],
-			      [build gstreamer plugin [default=no]])],
+			      [build gstreamer plugin [default=auto]])],
 	      [enable_gst_plugin=$enableval],
-	      [enable_gst_plugin=no])
+	      [enable_gst_plugin=auto])
 AC_ARG_ENABLE(gst_0_10_plugin,
 	      [AS_HELP_STRING([--enable-gst-0.10-plugin],
-			      [build gstreamer-0.10 plugin [default=no]])],
+			      [build gstreamer-0.10 plugin [default=auto]])],
 	      [enable_gst_0_10_plugin=$enableval],
-	      [enable_gst_0_10_plugin=no])
+	      [enable_gst_0_10_plugin=auto])
 AC_ARG_ENABLE(cpp_test,
 	      [AS_HELP_STRING([--enable-cpp-test],
 		              [build c++ test [default=no]])],
@@ -87,11 +87,11 @@ AC_SUBST(aravis_datadir, '$(datadir)/aravis-$(ARAVIS_API_VERSION)')
 # ======
 
 build_viewer=no
-if test "x$enable_viewer" = "xyes"; then
+if test "x$enable_viewer" = "xyes" || test "x$enable_viewer" = "xauto"; then
 	PKG_CHECK_MODULES([ARAVIS_VIEWER], [$ARAVIS_VIEWER_REQUIREMENTS],
-			  [AC_DEFINE([ARAVIS_BUILD_VIEWER], [1], [Build viewer])
-			  build_viewer=yes],
-			  [echo -n])
+			  [AC_DEFINE([ARAVIS_BUILD_VIEWER], [1], [Build viewer]) build_viewer=yes],
+			  [AS_IF([test "x$enable_viewer" = "xyes"],
+				 AC_MSG_ERROR([${ARAVIS_VIEWER_PKG_ERRORS} - Can not build viewer]))]);
 fi
 AM_CONDITIONAL(ARAVIS_BUILD_VIEWER, test "x$build_viewer" = "xyes")
 
@@ -105,11 +105,11 @@ AC_SUBST(ARAVIS_VIEWER_LIBS)
 # ================
 
 build_gst_plugin=no
-if test "x$enable_gst_plugin" = "xyes"; then
+if test "x$enable_gst_plugin" = "xyes" || "x$enable_gst_plugin" = "xauto"; then
 	PKG_CHECK_MODULES([ARAVIS_GST_PLUGIN], [$ARAVIS_GSTREAMER_REQUIREMENTS],
-			  [AC_DEFINE([ARAVIS_BUILD_GST_PLUGIN], [1], [Build gstreamer plugin])
-			  build_gst_plugin=yes],
-			  [echo -n])
+			  [AC_DEFINE([ARAVIS_BUILD_GST_PLUGIN], [1], [Build gstreamer plugin]) build_gst_plugin=yes],
+			  [AS_IF([test "x$enable_gst_plugin" = "xyes"],
+				 AC_MSG_ERROR([${ARAVIS_GST_PLUGIN_PKG_ERRORS} - Can not build gstreamer plugin]))]);
 fi
 AM_CONDITIONAL(ARAVIS_BUILD_GST_PLUGIN, test "x$build_gst_plugin" = "xyes")
 
@@ -130,11 +130,11 @@ AC_SUBST(gstplugindir)
 # =====================
 
 build_gst_0_10_plugin=no
-if test "x$enable_gst_0_10_plugin" = "xyes"; then
+if test "x$enable_gst_0_10_plugin" = "xyes" || "x$enable_gst_0_10_plugin" = "xauto"; then
 	PKG_CHECK_MODULES([ARAVIS_GST_0_10_PLUGIN], [$ARAVIS_GSTREAMER_0_10_REQUIREMENTS],
-			  [AC_DEFINE([ARAVIS_BUILD_GST_0_10_PLUGIN], [1], [Build gstreamer-0.10 plugin])
-			  build_gst_0_10_plugin=yes],
-			  [echo -n])
+			  [AC_DEFINE([ARAVIS_BUILD_GST_0_10_PLUGIN], [1], [Build gstreamer-0.10 plugin]) build_gst_0_10_plugin=yes],
+			  [AS_IF([test "x$enable_gst_0_10_plugin" = "xyes"],
+				 AC_MSG_ERROR([${ARAVIS_GST_0_10_PLUGIN_PKG_ERRORS} - Can not build gstreamer plugin]))]);
 fi
 AM_CONDITIONAL(ARAVIS_BUILD_GST_0_10_PLUGIN, test "x$build_gst_0_10_plugin" = "xyes")
 
