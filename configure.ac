@@ -126,6 +126,9 @@ else
 fi
 AC_SUBST(gstplugindir)
 
+GST_PLUGIN_LDFLAGS='-module -avoid-version -export-symbols-regex [_]*\(gst_\|Gst\|GST_\).*'
+AC_SUBST(GST_PLUGIN_LDFLAGS)
+
 # GStreamer-0.10 plugin
 # =====================
 
