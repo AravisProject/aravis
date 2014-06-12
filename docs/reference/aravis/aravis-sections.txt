@@ -78,6 +78,7 @@ ArvPixelFormat
 arv_buffer_new
 arv_buffer_new_full
 arv_buffer_new_allocate
+arv_buffer_get_data
 ARV_PIXEL_FORMAT_BIT_PER_PIXEL
 ARV_PIXEL_FORMAT_BAYER_BG_10
 ARV_PIXEL_FORMAT_BAYER_BG_12

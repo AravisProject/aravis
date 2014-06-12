@@ -97,7 +97,9 @@ print "Acquisition"
 
 buffer = stream.pop_buffer ()
 
-DumpBuffer (buffer.data, buffer.size, "Image buffer")
+data = buffer.get_data ()
+
+DumpBuffer (data, len(data), "Image buffer")
 
 print "Stop acquisition"
 

@@ -66,7 +66,7 @@ struct _ArvBuffer {
 
 	size_t size;
 	gboolean is_preallocated;
-	char *data;
+	void *data;
 
 	void *user_data;
 	GDestroyNotify user_data_destroy_func;
@@ -94,6 +94,7 @@ ArvBuffer *	arv_buffer_new_allocate	(size_t size);
 ArvBuffer *	arv_buffer_new 		(size_t size, void *preallocated);
 ArvBuffer * 	arv_buffer_new_full	(size_t size, void *preallocated,
 					 void *user_data, GDestroyNotify user_data_destroy_func);
+const void *	arv_buffer_get_data	(ArvBuffer *buffer, size_t *size);
 
 G_END_DECLS
 

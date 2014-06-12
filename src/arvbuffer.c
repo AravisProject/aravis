@@ -134,6 +134,29 @@ arv_buffer_clear (ArvBuffer *buffer)
 	buffer->status = ARV_BUFFER_STATUS_CLEARED;
 }
 
+/**
+ * arv_buffer_get_data:
+ * @buffer: a #ArvBuffer
+ * @size: (allow-none): location to store data size, or %NULL
+ *
+ * Buffer data accessor.
+ *
+ * Returns: (array length=size) (element-type guint8): a pointer to the buffer data.
+ *
+ * Since: 0.3.3
+ **/
+
+const void *
+arv_buffer_get_data (ArvBuffer *buffer, size_t *size)
+{
+	g_return_val_if_fail (ARV_IS_BUFFER (buffer), NULL);
+
+	if (size != NULL)
+		*size = buffer->size;
+
+	return buffer->data;
+}
+
 static void
 arv_buffer_init (ArvBuffer *buffer)
 {
