@@ -72,6 +72,7 @@ typedef struct _ArvInterface 		ArvInterface;
 typedef struct _ArvDevice 		ArvDevice;
 typedef struct _ArvStream 		ArvStream;
 typedef struct _ArvBuffer 		ArvBuffer;
+typedef struct _ArvChunkParser		ArvChunkParser;
 
 typedef struct _ArvGvInterface 		ArvGvInterface;
 typedef struct _ArvGvDevice 		ArvGvDevice;

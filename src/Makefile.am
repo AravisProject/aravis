@@ -68,6 +68,7 @@ ARAVIS_SRCS =					\
 	arvdevice.c				\
 	arvstream.c				\
 	arvbuffer.c				\
+	arvchunkparser.c			\
 	arvgvinterface.c			\
 	arvgvdevice.c				\
 	arvgvstream.c				\
@@ -130,6 +131,7 @@ ARAVIS_HDRS = 					\
 	arvdevice.h				\
 	arvstream.h				\
 	arvbuffer.h				\
+	arvchunkparser.h			\
 	arvgvinterface.h			\
 	arvgvdevice.h				\
 	arvgvstream.h				\
