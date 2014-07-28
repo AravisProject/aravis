@@ -728,6 +728,10 @@ arv_pixel_format_from_gst_caps (const char *name, const char *format)
 		if (strcmp (name, "video/x-raw") == 0 &&
 		    strcmp (format, arv_gst_caps_infos[i].format) == 0)
 			return arv_gst_caps_infos[i].pixel_format;
+		
+		if (strcmp (name, "video/x-bayer") == 0 &&
+		    strcmp (format, arv_gst_caps_infos[i].format) == 0)
+			return arv_gst_caps_infos[i].pixel_format;		
 	}
 
 	return 0;
