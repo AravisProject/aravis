@@ -1,3 +1,11 @@
+Release 0.3.3
+=============
+
+  * genicam: improve loading of genicam data from local files (Peter)
+  * build: dependency check improvements
+  * build: miscellaneous compilation fixes (Patrick)
+  * gst_pugins_1.0: bayer format fix (Steve)
+
 Release 0.3.2
 =============
 
