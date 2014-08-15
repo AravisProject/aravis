@@ -4,14 +4,14 @@
 # pomóc w jego rozwijaniu i pielęgnowaniu, napisz do nas:
 # gnomepl@aviary.pl
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-# Piotr Drąg <piotrdrag@gmail.com>, 2013.
-# Aviary.pl <gnomepl@aviary.pl>, 2013.
+# Piotr Drąg <piotrdrag@gmail.com>, 2013-2014.
+# Aviary.pl <gnomepl@aviary.pl>, 2013-2014.
 msgid ""
 msgstr ""
 "Project-Id-Version: aravis\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-08-11 01:31+0200\n"
-"PO-Revision-Date: 2013-08-11 01:32+0200\n"
+"POT-Creation-Date: 2014-08-15 21:53+0200\n"
+"PO-Revision-Date: 2014-08-15 21:57+0200\n"
 "Last-Translator: Piotr Drąg <piotrdrag@gmail.com>\n"
 "Language-Team: Polish <gnomepl@aviary.pl>\n"
 "Language: pl\n"
@@ -23,40 +23,39 @@ msgstr ""
 "X-Poedit-Language: Polish\n"
 "X-Poedit-Country: Poland\n"
 
-#: ../viewer/arv-viewer-2.ui.h:1 ../viewer/arv-viewer-3.ui.h:1
-#: ../viewer/data/arv-viewer.desktop.in.in.h:1
+#: ../viewer/arv-viewer.ui.h:1 ../viewer/data/arv-viewer.desktop.in.in.h:1
 msgid "Aravis"
 msgstr "Aravis"
 
-#: ../viewer/arv-viewer-2.ui.h:2 ../viewer/arv-viewer-3.ui.h:2
+#: ../viewer/arv-viewer.ui.h:2
 msgid "Frame rate:"
 msgstr "Liczba klatek na sekundę:"
 
-#: ../viewer/arv-viewer-2.ui.h:3 ../viewer/arv-viewer-3.ui.h:5
-msgid "Exposure:"
-msgstr "Naświetlanie"
-
-#: ../viewer/arv-viewer-2.ui.h:4 ../viewer/arv-viewer-3.ui.h:6
-msgid "Gain:"
-msgstr "Wzmocnienie:"
-
-#: ../viewer/arv-viewer-2.ui.h:5 ../viewer/arv-viewer-3.ui.h:3
+#: ../viewer/arv-viewer.ui.h:3
 msgid "Hz"
 msgstr "Hz"
 
-#: ../viewer/arv-viewer-2.ui.h:6 ../viewer/arv-viewer-3.ui.h:7
-msgid "µs"
-msgstr "µs"
-
-#: ../viewer/arv-viewer-2.ui.h:7 ../viewer/arv-viewer-3.ui.h:4
+#: ../viewer/arv-viewer.ui.h:4
 msgid "Auto"
 msgstr "Automatycznie"
 
-#: ../viewer/arv-viewer-2.ui.h:8 ../viewer/arv-viewer-3.ui.h:8
+#: ../viewer/arv-viewer.ui.h:5
+msgid "Exposure:"
+msgstr "Naświetlenie:"
+
+#: ../viewer/arv-viewer.ui.h:6
+msgid "Gain:"
+msgstr "Wzmocnienie:"
+
+#: ../viewer/arv-viewer.ui.h:7
+msgid "µs"
+msgstr "µs"
+
+#: ../viewer/arv-viewer.ui.h:8
 msgid "Settings"
 msgstr "Ustawienia"
 
-#: ../viewer/arv-viewer-3.ui.h:9
+#: ../viewer/arv-viewer.ui.h:9
 msgid "Save a snapshot into image folder"
 msgstr "Zapis migawki do katalogu obrazów"
 
@@ -66,4 +65,28 @@ msgstr "Prosta przeglądarka Aravis"
 
 #: ../viewer/data/arv-viewer.desktop.in.in.h:3
 msgid "Display the video stream from your cameras"
-msgstr "Wyświetlanie strumienia wideo z aparatu"
+msgstr "Wyświetlanie strumienia wideo z kamery"
+
+#: ../viewer/data/arv-viewer.appdata.xml.in.h:1
+msgid "Aravis Viewer"
+msgstr "Przeglądarka Aravis"
+
+#: ../viewer/data/arv-viewer.appdata.xml.in.h:2
+msgid "Simple viewer of video stream acquired using Aravis"
+msgstr "Prosta przeglądarka strumieni wideo uzyskanych używając Aravis"
+
+#: ../viewer/data/arv-viewer.appdata.xml.in.h:3
+msgid ""
+"Aravis Viewer is a simple viewer used to display video streams from GENICAM-"
+"based Ethernet industrial cameras."
+msgstr ""
+"Prosta przeglądarka Aravis może być używana do wyświetlania strumieni wideo "
+"z przemysłowych kamer ethernetowych opartych o GENICAM."
+
+#: ../viewer/data/arv-viewer.appdata.xml.in.h:4
+msgid ""
+"It allows to control basic acquisition parameters, i.e. framerate, exposure "
+"and gain, and to save raw still images."
+msgstr ""
+"Umożliwia kontrolowanie podstawowych parametrów, tzn. liczby klatek na "
+"sekundę, naświetlenia i wzmocnienia, a także zapisywanie surowych obrazów."
