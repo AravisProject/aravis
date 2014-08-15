@@ -668,7 +668,7 @@ arv_device_class_init (ArvDeviceClass *device_class)
 	arv_device_signals[ARV_DEVICE_SIGNAL_CONTROL_LOST] =
 		g_signal_new ("control-lost",
 			      G_TYPE_FROM_CLASS (device_class),
-			      0,
+			      G_SIGNAL_RUN_LAST,
 			      G_STRUCT_OFFSET (ArvDeviceClass, control_lost),
 			      NULL, NULL,
 			      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
