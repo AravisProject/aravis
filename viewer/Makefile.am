@@ -2,6 +2,8 @@ EXTRA_DIST =
 
 include $(top_srcdir)/Makefile.decl
 
+SUBDIRS = data
+
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/src \
 	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\" \
@@ -47,14 +49,3 @@ install-update-icon-cache:
 uninstall-update-icon-cache:
 	$(AM_V_at)$(POST_UNINSTALL)
 	test -n "$(DESTDIR)" || $(update_icon_cache) "$(iconthemedir)"
-
-@INTLTOOL_DESKTOP_RULE@
-desktopdir = $(datadir)/applications
-desktop_in_files = data/arv-viewer.desktop.in
-desktop_DATA = $(desktop_in_files:.desktop.in=.desktop)
-
-dist_noinst_DATA = \
-	$(desktop_in_files)
-
-CLEANFILES = \
-	$(desktop_DATA)

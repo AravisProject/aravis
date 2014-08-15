@@ -173,11 +173,15 @@ GOBJECT_INTROSPECTION_CHECK([0.10.0])
 GTK_DOC_CHECK([1.14],[--flavour no-tmpl])
 AM_CONDITIONAL([BUILD_GTK_DOC], [test "x$enable_gtk_doc" = "xyes" || test ! -f "autogen.sh"])
 
+APPDATA_XML
+
 AC_CONFIG_FILES([
 Makefile
 src/Makefile
 viewer/Makefile
+viewer/data/Makefile
 viewer/data/arv-viewer.desktop.in
+viewer/data/arv-viewer.appdata.xml
 gst/Makefile
 gst-0.10/Makefile
 tests/Makefile

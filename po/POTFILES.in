@@ -1,3 +1,4 @@
 # List of source files containing translatable strings.
 [type: gettext/glade]viewer/arv-viewer.ui
 viewer/data/arv-viewer.desktop.in.in
+viewer/data/arv-viewer.appdata.xml.in
