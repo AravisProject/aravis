@@ -16,7 +16,7 @@
 		</p>
 	</description>
 	<screenshots>
-		<screenshot type="default" width="1024" height="576">https://people.gnome.org/~emmanuel/fedora/screenshots/aravis.png</screenshot>
+		<screenshot type="default" width="1024" height="576">https://git.gnome.org/browse/aravis/plain/viewer/data/aravis.png</screenshot>
 	</screenshots>
 	<url type="homepage">https://wiki.gnome.org/Projects/Aravis</url>
 	<updatecontact>emmanuel@gnome.org</updatecontact>
