@@ -1,3 +1,5 @@
+include $(top_srcdir)/Makefile.decl
+
 @APPDATA_XML_RULES@
 @INTLTOOL_XML_RULE@
 
