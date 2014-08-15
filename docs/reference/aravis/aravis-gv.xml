@@ -5,11 +5,16 @@
 		<title>Introduction</title>
 
 		<para>
-			This part contains a description of the protocol implemented by Aravis for the control of the gigabit ethenet cameras. This protocol is a standard used by many video cameras manufacturers for their products. It is a closed standard which should not be confused by what is used on 'IP cameras'. In the case of 'IP cameras' the video stream is a compressed stream (jpeg, h264...) send over HTTP or RTSP, whereas in Aravis, the video stream is a raw stream, mainly targeted to industrial applications.
+			This part contains a description of the protocol implemented by Aravis for the control of the gigabit ethenet cameras. This protocol is a standard used by many video cameras manufacturers for their products. It is a closed standard which should not be confused by what is used on 'IP cameras'. In the case of 'IP cameras' the video stream is a compressed stream (jpeg, h264...) send over HTTP or RTSP, whereas in Aravis, the video stream is a raw stream, mainly targeted to industrial applications (though the protocol supports non raw payload, it is not yet implemented in Aravis).
 		</para>
 
 		<para>
-			The protocol implemented by Aravis library is based on UDP packets transmited over an ethernet link. Two different types of packets are used: GVCP packets and GVSP packets. GVCP packets are used for the control of the devices, and GVSP for the transmission of the data stream.		</para>
+			The protocol implemented by Aravis library is based on UDP packets transmited over an ethernet link. Two different types of packets are used: GVCP packets and GVSP packets. GVCP packets are used for the control of the devices, and GVSP for the transmission of the data stream.
+		</para>
+
+		<para>
+			This documentation is the result of a reverse engineering, which means it is far from complete. A more complete description of the ethernet protocol can be found in the GVSP and GVCP dissectors found in Wireshark sources.
+		</para>	
 	</chapter>
 
 	<chapter id="aravis-gvcp">
