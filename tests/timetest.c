@@ -46,7 +46,7 @@ sleep_meas (gint64 usec) {
 int
 main (int argc, char **argv)
 {
-	gint64 i, j, pTt;
+	gint64 i, j;
 	double val, wt, min, max, swt;
 
 	for( i = 1; i < MAX_TIME_US; i = i*2 ) {
@@ -59,7 +59,7 @@ main (int argc, char **argv)
 			if (val > max) max = val;
 		}
 		wt /= j;
-		printf ("SleepMeas: %6d - Mean %7g Max %5g Min %5g rms %g\n",
+		printf ("SleepMeas: %6" G_GINT64_FORMAT " - Mean %7g Max %5g Min %5g rms %g\n",
 			i, wt, max, min, sqrt(swt/j - wt*wt));
 	} 
 
@@ -73,7 +73,7 @@ main (int argc, char **argv)
 			if( val > max ) max = val;
 		}
 		wt /= j;
-		printf ("TimeWait:  %6d - Mean %7g Max %5g Min %5g rms %g\n",
+		printf ("TimeWait:  %6" G_GINT64_FORMAT " - Mean %7g Max %5g Min %5g rms %g\n",
 			i, wt, max, min, sqrt(swt/j - wt*wt));
 	}
 

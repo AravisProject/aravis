@@ -71,7 +71,6 @@ int
 main (int argc, char *argv[])
 {
 	int result;
-	int i;
 
 	g_test_init (&argc, &argv, NULL);
 

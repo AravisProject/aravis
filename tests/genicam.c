@@ -348,7 +348,6 @@ static void
 url_test (void)
 {
 	char **tokens;
-	unsigned int i;
 
 	tokens = g_regex_split (arv_gv_device_get_url_regex (), "Local:Basler_Ace_GigE_e7c9b87e_Version_3_3.zip;c0000000;10cca", 0);
 
@@ -382,7 +381,6 @@ mandatory_test (void)
 	ArvDevice *device;
 	ArvGc *genicam;
 	ArvGcNode *node;
-	gint64 value;
 
 	device = arv_fake_device_new ("TEST0");
 	g_assert (ARV_IS_FAKE_DEVICE (device));
@@ -400,7 +398,6 @@ int
 main (int argc, char *argv[])
 {
 	int result;
-	int i;
 
 	g_test_init (&argc, &argv, NULL);
 

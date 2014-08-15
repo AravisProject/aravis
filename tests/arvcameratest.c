@@ -156,7 +156,6 @@ main (int argc, char **argv)
 	ApplicationData data;
 	ArvCamera *camera;
 	ArvStream *stream;
-	ArvBuffer *buffer;
 	GOptionContext *context;
 	GError *error = NULL;
 	int i;

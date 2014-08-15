@@ -61,7 +61,6 @@ main (int argc, char **argv)
 	ApplicationData data;
 	ArvCamera *camera;
 	ArvStream *stream;
-	ArvBuffer *buffer;
 	int i;
 
 	data.buffer_count = 0;
@@ -75,7 +74,6 @@ main (int argc, char **argv)
 	if (camera != NULL) {
 		void (*old_sigint_handler)(int);
 		gint payload;
-		guint software_trigger_source = 0;
 
 		/* Set region of interrest to a 200x200 pixel area */
 		arv_camera_set_region (camera, 0, 0, 200, 200);

@@ -115,7 +115,6 @@ static void
 set_double_variable_test (void)
 {
 	ArvEvaluator *evaluator;
-	const char *expression;
 	double v_double;
 
 	evaluator = arv_evaluator_new ("V_DBLA+V_DBLB");
@@ -133,7 +132,6 @@ static void
 set_int64_variable_test (void)
 {
 	ArvEvaluator *evaluator;
-	const char *expression;
 	gint64 v_int64;
 
 	evaluator = arv_evaluator_new ("A_1");
