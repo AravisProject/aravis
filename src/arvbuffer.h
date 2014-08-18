@@ -24,6 +24,7 @@
 #define ARV_BUFFER_H
 
 #include <arvtypes.h>
+#include <arvgvsp.h>
 
 G_BEGIN_DECLS
 
@@ -73,6 +74,8 @@ struct _ArvBuffer {
 
 	ArvBufferStatus status;
 
+	ArvGvspPayloadType payload_type;
+
 	guint32 frame_id;
 	guint64 timestamp_ns;
 
@@ -90,11 +93,12 @@ struct _ArvBufferClass {
 
 GType arv_buffer_get_type (void);
 
-ArvBuffer *	arv_buffer_new_allocate	(size_t size);
-ArvBuffer *	arv_buffer_new 		(size_t size, void *preallocated);
-ArvBuffer * 	arv_buffer_new_full	(size_t size, void *preallocated,
-					 void *user_data, GDestroyNotify user_data_destroy_func);
-const void *	arv_buffer_get_data	(ArvBuffer *buffer, size_t *size);
+ArvBuffer *	arv_buffer_new_allocate		(size_t size);
+ArvBuffer *	arv_buffer_new 			(size_t size, void *preallocated);
+ArvBuffer * 	arv_buffer_new_full		(size_t size, void *preallocated,
+						 void *user_data, GDestroyNotify user_data_destroy_func);
+const void *	arv_buffer_get_data		(ArvBuffer *buffer, size_t *size);
+const void *	arv_buffer_get_chunk_data	(ArvBuffer *buffer, guint64 chunk_id, size_t *size);
 
 G_END_DECLS
 

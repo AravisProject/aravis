@@ -194,6 +194,7 @@ _process_data_leader (ArvGvStreamThreadData *thread_data,
 		return;
 	}
 
+	frame->buffer->payload_type = arv_gvsp_packet_get_payload_type (packet);
 	frame->buffer->x_offset = arv_gvsp_packet_get_x_offset (packet);
 	frame->buffer->y_offset = arv_gvsp_packet_get_y_offset (packet);
 	frame->buffer->width = arv_gvsp_packet_get_width (packet);

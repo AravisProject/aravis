@@ -157,6 +157,65 @@ arv_buffer_get_data (ArvBuffer *buffer, size_t *size)
 	return buffer->data;
 }
 
+typedef struct ARAVIS_PACKED_STRUCTURE {
+	guint32 id;
+	guint32 size;
+} ArvChunkInfos;
+
+/**
+ * arv_buffer_get_chunk_data:
+ * @buffer: a #ArvBuffer
+ * @chunk_id: chunk id
+ * @size: (allow-none): location to store chunk data size, or %NULL
+ *
+ * Chunk data accessor.
+ *
+ * Returns: (array length=size) (element-type guint8): a pointer to the chunk data.
+ *
+ * Since: 0.3.5
+ **/
+
+const void *
+arv_buffer_get_chunk_data (ArvBuffer *buffer, guint64 chunk_id, size_t *size)
+{
+	ArvChunkInfos *infos;
+	char *data;
+	ptrdiff_t offset;
+
+	if (size != NULL)
+		*size = 0;
+
+	g_return_val_if_fail (ARV_IS_BUFFER (buffer), NULL);
+	g_return_val_if_fail (buffer->data != NULL, NULL);
+	g_return_val_if_fail (buffer->payload_type == ARV_GVSP_PAYLOAD_TYPE_CHUNK_DATA, NULL);
+
+	if (buffer->status != ARV_BUFFER_STATUS_SUCCESS)
+		return NULL;
+
+	data = buffer->data;
+	offset = buffer->size - sizeof (ArvChunkInfos);
+	while (offset > 0) {
+		infos = (ArvChunkInfos *) &data[offset];
+		if (GUINT32_FROM_BE (infos->id) == chunk_id) {
+			ptrdiff_t data_offset;
+
+			data_offset = offset - GUINT32_FROM_BE (infos->size);
+			if (data_offset >= 0) {
+				if (size != NULL)
+					*size = GUINT32_FROM_BE (infos->size);
+				return &data[data_offset];
+			} else
+		       		return NULL;
+		}
+		if (GUINT32_FROM_BE (infos->size) > 0)
+			offset = offset - GUINT32_FROM_BE (infos->size) - sizeof (ArvChunkInfos);
+		else
+			offset = 0;
+	};
+
+	return NULL;
+}
+
 static void
 arv_buffer_init (ArvBuffer *buffer)
 {
