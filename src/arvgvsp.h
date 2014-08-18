@@ -202,7 +202,7 @@ arv_gvsp_packet_get_payload_type (const ArvGvspPacket *packet)
 	ArvGvspDataLeader *leader;
 
 	leader = (ArvGvspDataLeader *) &packet->data;
-	return g_ntohl (leader->payload_type);
+	return (ArvGvspPayloadType) g_ntohl (leader->payload_type);
 }
 
 static inline guint32
