@@ -62,6 +62,7 @@
 #include <arvdevice.h>
 #include <arvstream.h>
 #include <arvbuffer.h>
+#include <arvchunkparser.h>
 #include <arvgvcp.h>
 #include <arvgvsp.h>
 #include <arvgvinterface.h>
