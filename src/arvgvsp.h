@@ -125,7 +125,7 @@ typedef struct ARAVIS_PACKED_STRUCTURE {
  * GVSP packet structure.
  */
 
-typedef struct {
+typedef struct ARAVIS_PACKED_STRUCTURE {
 	ArvGvspHeader header;
 	guint8 data[];
 } ArvGvspPacket;

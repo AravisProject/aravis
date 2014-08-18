@@ -239,7 +239,7 @@ typedef struct ARAVIS_PACKED_STRUCTURE {
  * GVCP packet structure.
  */
 
-typedef struct {
+typedef struct ARAVIS_PACKED_STRUCTURE {
 	ArvGvcpHeader header;
 	unsigned char data[];
 } ArvGvcpPacket;
