@@ -394,6 +394,117 @@ mandatory_test (void)
 	g_object_unref (device);
 }
 
+#define ARAVIS_PACKED_STRUCTURE __attribute__((__packed__))
+
+typedef struct ARAVIS_PACKED_STRUCTURE {
+	guint32 id;
+	guint32 size;
+} ArvChunkInfos;
+
+static ArvBuffer *
+create_buffer_with_chunk_data (void)
+{
+	ArvBuffer *buffer;
+	ArvChunkInfos *chunk_infos;
+	GString *string;
+	const char *data;
+	size_t size;
+	guint32 *int_value;
+	guint offset;
+
+	size = 64 + 64 + 8 + 3 * sizeof (ArvChunkInfos);
+
+	buffer = arv_buffer_new (size, NULL);
+	buffer->payload_type = ARV_GVSP_PAYLOAD_TYPE_CHUNK_DATA;
+	buffer->status = ARV_BUFFER_STATUS_SUCCESS;
+	data = arv_buffer_get_data (buffer, &size);
+
+	memset ((char *) data, '\0', size);
+
+	offset = size - sizeof (ArvChunkInfos);
+	chunk_infos = (ArvChunkInfos *) &data[offset];
+	chunk_infos->id = GUINT32_TO_BE (0x12345678);
+	chunk_infos->size = GUINT32_TO_BE (8);
+
+	int_value = (guint32 *) &data[offset - 8];
+	*int_value = GUINT32_TO_BE (0x11223344);
+
+	offset -= 8 + sizeof (ArvChunkInfos);
+	chunk_infos = (ArvChunkInfos *) &data[offset];
+	chunk_infos->id = GUINT32_TO_BE (0x87654321);
+	chunk_infos->size = GUINT32_TO_BE (64);
+
+	memcpy ((char *) &data[offset - 64], "Hello" ,sizeof ("Hello"));
+
+	offset -= 64 + sizeof (ArvChunkInfos);
+	chunk_infos = (ArvChunkInfos *) &data[offset];
+	chunk_infos->id = GUINT32_TO_BE (0x44444444);
+	chunk_infos->size = GUINT32_TO_BE (64);
+
+	g_assert (offset = 64);
+
+#if 0
+	{
+		GString *string;
+		string= g_string_new ("");
+		arv_g_string_append_hex_dump (string, data, size);
+		printf ("%s\n", string->str);
+		g_string_free (string, TRUE);
+	}
+#endif
+
+	return buffer;
+}
+
+static void
+chunk_data_test (void)
+{
+	ArvDevice *device;
+	ArvChunkParser *parser;
+	ArvBuffer *buffer;
+	guint32 int_value;
+	const char *chunk_data;
+	const char *data;
+	const char *string_value;
+	size_t size;
+	size_t chunk_data_size;
+
+	device = arv_fake_device_new ("TEST0");
+	g_assert (ARV_IS_FAKE_DEVICE (device));
+
+	parser = arv_device_create_chunk_parser (device);
+	g_assert (ARV_IS_CHUNK_PARSER (parser));
+
+	buffer = create_buffer_with_chunk_data ();
+	g_assert (ARV_IS_BUFFER (buffer));
+
+	data = arv_buffer_get_data (buffer, &size);
+
+	chunk_data = arv_buffer_get_chunk_data (buffer, 0x12345678, &chunk_data_size);
+	g_assert (chunk_data != NULL);
+	g_assert_cmpint (chunk_data_size, ==, 8);
+	g_assert_cmpint (chunk_data - data, ==, 64 + 64 + 2 * sizeof (ArvChunkInfos));
+
+	chunk_data = arv_buffer_get_chunk_data (buffer, 0x87654321, &chunk_data_size);
+	g_assert (chunk_data != NULL);
+	g_assert_cmpint (chunk_data_size, ==, 64);
+	g_assert_cmpint (chunk_data - data, ==, 64 + sizeof (ArvChunkInfos));
+
+	chunk_data = arv_buffer_get_chunk_data (buffer, 0x01020304, &chunk_data_size);
+	g_assert (chunk_data == NULL);
+	g_assert_cmpint (chunk_data_size, ==, 0);
+
+	int_value = arv_chunk_parser_get_integer_value (parser, buffer, "ChunkInt");
+	g_assert_cmpint (int_value, ==, 0x11223344);
+
+	string_value = arv_chunk_parser_get_string_value (parser, buffer, "ChunkString");
+	g_assert_cmpstr (string_value, ==, "Hello");
+
+	g_object_unref (buffer);
+	g_object_unref (parser);
+	g_object_unref (device);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -405,7 +516,7 @@ main (int argc, char *argv[])
 
 	arv_set_fake_camera_genicam_filename (GENICAM_FILENAME);
 
-	g_test_add_func ("/genicam/value_type", node_value_type_test);
+	g_test_add_func ("/genicam/value-type", node_value_type_test);
 	g_test_add_func ("/genicam/integer", integer_test);
 	g_test_add_func ("/genicam/boolean", boolean_test);
 	g_test_add_func ("/genicam/float", float_test);
@@ -414,6 +525,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/genicam/register", register_test);
 	g_test_add_func ("/genicam/url", url_test);
 	g_test_add_func ("/genicam/mandatory", mandatory_test);
+	g_test_add_func ("/genicam/chunk-data", chunk_data_test);
 
 	result = g_test_run();
 

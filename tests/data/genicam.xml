@@ -22,6 +22,9 @@
 		<pFeature>RWBoolean</pFeature>
 		<pFeature>RWInteger</pFeature>
 		<pFeature>Enumeration</pFeature>
+		<pFeature>ChunkInt</pFeature>
+		<pFeature>ChunkFloat</pFeature>
+		<pFeature>ChunkString</pFeature>
 	</Category>
 
 	<Float Name="RWFloat">
@@ -193,5 +196,30 @@
 		<AccessMode>RW</AccessMode>
 		<pPort>Device</pPort>
 	</StringReg>
+
+	<IntReg Name="ChunkInt">
+		<Address>0x00</Address>
+		<Length>4</Length>
+		<AccessMode>R</AccessMode>
+		<pPort>IntPort</pPort>
+		<Cachable>NoCache</Cachable>
+		<Sign>Unsigned</Sign>
+		<Endianess>BigEndian</Endianess>
+	</IntReg>
+
+	<Port Name="IntPort">
+		<ChunkID>12345678</ChunkID>
+	</Port>
+
+	<StringReg Name="ChunkString">
+		<Address>0x00</Address>
+		<Length>64</Length>
+		<AccessMode>R</AccessMode>
+		<pPort>StringPort</pPort>
+	</StringReg>
+
+	<Port Name="StringPort">
+		<ChunkID>87654321</ChunkID>
+	</Port>
 
 </RegisterDescription>
