@@ -28,6 +28,23 @@
 
 G_BEGIN_DECLS
 
+#define ARV_CHUNK_PARSER_ERROR arv_chunk_parser_error_quark()
+
+/**
+ * ArvChunkParserStatus:
+ * @ARV_CHUNK_PARSER_STATUS_UNKNOWN: unknown status
+ * @ARV_CHUNK_PARSER_STATUS_SUCCESS: no error has occured
+ * @ARV_CHUNK_PARSER_STATUS_BUFFER_NOT_FOUND: buffer not found
+ * @ARV_CHUNK_PARSER_STATUS_CHUNK_NOT_FOUND: chunk not found
+ */
+
+typedef enum {
+	ARV_CHUNK_PARSER_STATUS_UNKNOWN = -1,
+	ARV_CHUNK_PARSER_STATUS_SUCCESS =  0,
+	ARV_CHUNK_PARSER_STATUS_BUFFER_NOT_FOUND,
+	ARV_CHUNK_PARSER_STATUS_CHUNK_NOT_FOUND
+} ArvChunkParserStatus;
+
 #define ARV_TYPE_CHUNK_PARSER             (arv_chunk_parser_get_type ())
 #define ARV_CHUNK_PARSER(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_CHUNK_PARSER, ArvChunkParser))
 #define ARV_CHUNK_PARSER_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_CHUNK_PARSER, ArvChunkParserClass))
@@ -50,10 +67,12 @@ struct _ArvChunkParserClass {
 
 GType arv_chunk_parser_get_type (void);
 
-ArvChunkParser *	arv_chunk_parser_new 				(ArvGc *genicam);
-const char *		arv_chunk_parser_get_string_feature_value	(ArvChunkParser *parser, ArvBuffer *buffer, const char *feature);
-gint64			arv_chunk_parser_get_integer_feature_value	(ArvChunkParser *parser, ArvBuffer *buffer, const char *feature); 
-double			arv_chunk_parser_get_float_feature_value	(ArvChunkParser *parser, ArvBuffer *buffer, const char *feature);
+GQuark 			arv_chunk_parser_error_quark 		(void);
+
+ArvChunkParser *	arv_chunk_parser_new 			(const char *xml, gsize size);
+const char *		arv_chunk_parser_get_string_value	(ArvChunkParser *parser, ArvBuffer *buffer, const char *chunk);
+gint64			arv_chunk_parser_get_integer_value	(ArvChunkParser *parser, ArvBuffer *buffer, const char *chunk); 
+double			arv_chunk_parser_get_float_value	(ArvChunkParser *parser, ArvBuffer *buffer, const char *chunk);
 
 G_END_DECLS
 

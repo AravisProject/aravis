@@ -25,6 +25,7 @@
 
 #include <arvtypes.h>
 #include <arvstream.h>
+#include <arvchunkparser.h>
 
 G_BEGIN_DECLS
 
@@ -95,6 +96,8 @@ ArvGc *		arv_device_get_genicam			(ArvDevice *device);
 void 		arv_device_emit_control_lost_signal 	(ArvDevice *device);
 
 ArvGcNode *	arv_device_get_feature			(ArvDevice *device, const char *feature);
+
+ArvChunkParser *arv_device_create_chunk_parser		(ArvDevice *device);
 
 /* This functions may change the device status */
 

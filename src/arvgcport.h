@@ -35,10 +35,13 @@ G_BEGIN_DECLS
 #define ARV_IS_GC_PORT_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GC_PORT))
 #define ARV_GC_PORT_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GC_PORT, ArvGcPortClass))
 
+typedef struct _ArvGcPortPrivate ArvGcPortPrivate;
 typedef struct _ArvGcPortClass ArvGcPortClass;
 
 struct _ArvGcPort {
 	ArvGcFeatureNode node;
+
+	ArvGcPortPrivate *priv;
 };
 
 struct _ArvGcPortClass {

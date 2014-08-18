@@ -51,11 +51,18 @@
 #include <arvgcswissknife.h>
 #include <arvgcconverter.h>
 #include <arvgcport.h>
+#include <arvbuffer.h>
 #include <arvdebug.h>
 #include <arvdomparser.h>
 #include <string.h>
 
 static GObjectClass *parent_class = NULL;
+
+struct _ArvGcPrivate {
+	GHashTable *nodes;
+	ArvDevice *device;
+	ArvBuffer *buffer;
+};
 
 /* ArvDomNode implementation */
 
@@ -195,6 +202,9 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 	else if (strcmp (tag_name, "pCommandValue") == 0)
 		node = arv_gc_property_node_new_p_command_value ();
 
+	else if (strcmp (tag_name, "ChunkID") == 0)
+		node = arv_gc_property_node_new_chunk_id ();
+
 	else if (strcmp (tag_name, "Group") == 0)
 		node = arv_gc_group_node_new ();
 	else
@@ -221,7 +231,7 @@ arv_gc_get_node	(ArvGc *genicam, const char *name)
 	g_return_val_if_fail (ARV_IS_GC (genicam), NULL);
 	g_return_val_if_fail (name != NULL, NULL);
 
-	return g_hash_table_lookup (genicam->nodes, name);
+	return g_hash_table_lookup (genicam->priv->nodes, name);
 }
 
 /**
@@ -238,7 +248,7 @@ arv_gc_get_device (ArvGc *genicam)
 {
 	g_return_val_if_fail (ARV_IS_GC (genicam), NULL);
 
-	return genicam->device;
+	return genicam->priv->device;
 }
 
 void
@@ -256,8 +266,8 @@ arv_gc_register_feature_node (ArvGc *genicam, ArvGcFeatureNode *node)
 
 	g_object_ref (node);
 
-	g_hash_table_remove (genicam->nodes, (char *) name);
-	g_hash_table_insert (genicam->nodes, (char *) name, node);
+	g_hash_table_remove (genicam->priv->nodes, (char *) name);
+	g_hash_table_insert (genicam->priv->nodes, (char *) name, node);
 
 	arv_log_genicam ("[Gc::register_feature_node] Register node '%s' [%s]", name,
 			 arv_dom_node_get_node_name (ARV_DOM_NODE (node)));
@@ -276,6 +286,45 @@ arv_gc_set_default_node_data (ArvGc *genicam, const char *node_name, const char 
 	arv_dom_document_append_from_memory (ARV_DOM_DOCUMENT (genicam), NULL, node_data, -1, NULL);
 }
 
+static void
+_weak_notify_cb (gpointer data, GObject *object)
+{
+	ArvGc *genicam = data;
+
+	genicam->priv->buffer = NULL;
+}
+
+void
+arv_gc_set_buffer (ArvGc *genicam, ArvBuffer *buffer)
+{
+	g_return_if_fail (ARV_IS_GC (genicam));
+	g_return_if_fail (ARV_IS_BUFFER (buffer));
+
+	if (genicam->priv->buffer != NULL)
+		g_object_weak_unref (G_OBJECT (genicam->priv->buffer), _weak_notify_cb, genicam);
+
+	g_object_weak_ref (G_OBJECT (buffer), _weak_notify_cb, genicam);
+
+	genicam->priv->buffer = buffer;
+}
+
+/**
+ * arv_gc_get_buffer:
+ * @genicam: a #ArvGc object
+ *
+ * Retrieves the binded buffer.
+ *
+ * Return value: (transfer none): a #ArvBuffer.
+ */
+
+ArvBuffer *
+arv_gc_get_buffer (ArvGc *genicam)
+{
+	g_return_val_if_fail (ARV_IS_GC (genicam), NULL);
+
+	return genicam->priv->buffer;
+}
+
 ArvGc *
 arv_gc_new (ArvDevice *device, const void *xml, size_t size)
 {
@@ -290,7 +339,7 @@ arv_gc_new (ArvDevice *device, const void *xml, size_t size)
 	}
 
 	genicam = ARV_GC (document);
-	genicam->device = device;
+	genicam->priv->device = device;
 
 	return genicam;
 }
@@ -298,7 +347,9 @@ arv_gc_new (ArvDevice *device, const void *xml, size_t size)
 static void
 arv_gc_init (ArvGc *genicam)
 {
-	genicam->nodes = g_hash_table_new_full (g_str_hash, g_str_equal, NULL, g_object_unref);
+	genicam->priv = G_TYPE_INSTANCE_GET_PRIVATE (genicam, ARV_TYPE_GC, ArvGcPrivate);
+
+	genicam->priv->nodes = g_hash_table_new_full (g_str_hash, g_str_equal, NULL, g_object_unref);
 }
 
 static void
@@ -306,7 +357,10 @@ arv_gc_finalize (GObject *object)
 {
 	ArvGc *genicam = ARV_GC (object);
 
-	g_hash_table_unref (genicam->nodes);
+	if (genicam->priv->buffer != NULL)
+		g_object_weak_unref (G_OBJECT (genicam->priv->buffer), _weak_notify_cb, genicam);
+
+	g_hash_table_unref (genicam->priv->nodes);
 
 	parent_class->finalize (object);
 }
@@ -317,6 +371,8 @@ arv_gc_class_init (ArvGcClass *node_class)
 	GObjectClass *object_class = G_OBJECT_CLASS (node_class);
 	ArvDomNodeClass *d_node_class = ARV_DOM_NODE_CLASS (node_class);
 	ArvDomDocumentClass *d_document_class = ARV_DOM_DOCUMENT_CLASS (node_class);
+
+	g_type_class_add_private (node_class, sizeof (ArvGcPrivate));
 
 	parent_class = g_type_class_peek_parent (node_class);
 

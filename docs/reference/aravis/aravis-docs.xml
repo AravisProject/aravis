@@ -43,6 +43,7 @@
 			<xi:include href="xml/arvdevice.xml"/>
 			<xi:include href="xml/arvstream.xml"/>
 			<xi:include href="xml/arvbuffer.xml"/>
+			<xi:include href="xml/arvchunkparser.xml"/>
 		</chapter>
 
 		<chapter>

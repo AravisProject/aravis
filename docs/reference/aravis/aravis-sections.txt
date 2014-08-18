@@ -79,6 +79,7 @@ arv_buffer_new
 arv_buffer_new_full
 arv_buffer_new_allocate
 arv_buffer_get_data
+arv_buffer_get_chunk_data
 ARV_PIXEL_FORMAT_BIT_PER_PIXEL
 ARV_PIXEL_FORMAT_BAYER_BG_10
 ARV_PIXEL_FORMAT_BAYER_BG_12
@@ -216,6 +217,7 @@ ARV_GC_PORT_CLASS
 ARV_IS_GC_PORT_CLASS
 ARV_GC_PORT_GET_CLASS
 <SUBSECTION Private>
+ArvGcPortPrivate
 ArvGcPortClass
 </SECTION>
 
@@ -227,6 +229,7 @@ ArvDevice
 ArvDeviceStatus
 arv_device_error_quark
 arv_device_create_stream
+arv_device_create_chunk_parser
 arv_device_read_memory
 arv_device_write_memory
 arv_device_read_register
@@ -259,6 +262,29 @@ ARV_DEVICE_GET_CLASS
 ArvDeviceClass
 ARV_DEVICE_NAME_ILLEGAL_CHARACTERS
 ARV_DEVICE_NAME_REPLACEMENT_CHARACTER
+</SECTION>
+
+<SECTION>
+<FILE>arvchunkparser</FILE>
+<TITLE>ArvChunkParser</TITLE>
+ArvChunkParserStatus
+arv_chunk_parser_get_float_value
+arv_chunk_parser_get_integer_value
+arv_chunk_parser_get_string_value
+arv_chunk_parser_new
+<SUBSECTION Standard>
+ArvChunkParser
+arv_chunk_parser_get_type
+ARV_CHUNK_PARSER
+ARV_CHUNK_PARSER_CLASS
+ARV_CHUNK_PARSER_GET_CLASS
+ARV_IS_CHUNK_PARSER
+ARV_IS_CHUNK_PARSER_CLASS
+ARV_TYPE_CHUNK_PARSER
+<SUBSECTION Private>
+ArvChunkParserPrivate
+ARV_CHUNK_PARSER_ERROR
+arv_chunk_parser_error_quark
 </SECTION>
 
 <SECTION>
@@ -304,6 +330,7 @@ arv_gc_property_node_new_minimum
 arv_gc_property_node_new_msb
 arv_gc_property_node_new_off_value
 arv_gc_property_node_new_on_value
+arv_gc_property_node_new_chunk_id
 arv_gc_property_node_new_p_address
 arv_gc_property_node_new_p_command_value
 arv_gc_property_node_new_p_feature
@@ -631,6 +658,8 @@ ArvGc
 arv_gc_new
 arv_gc_get_node
 arv_gc_get_device
+arv_gc_get_buffer
+arv_gc_set_buffer
 <SUBSECTION Standard>
 ARV_GC
 ARV_IS_GC
@@ -640,6 +669,7 @@ ARV_GC_CLASS
 ARV_IS_GC_CLASS
 ARV_GC_GET_CLASS
 <SUBSECTION Private>
+ArvGcPrivate
 ArvGcClass
 ArvGcNameSpace
 ArvGcAccessMode
@@ -1434,11 +1464,16 @@ arv_warning_misc
 arv_warning_stream
 arv_warning_stream_thread
 arv_g_string_append_hex_dump
+arv_debug_category_chunk
+arv_debug_chunk
+arv_log_chunk
+arv_warning_chunk
 </SECTION>
 
 <SECTION>
 <FILE>arvgvsp</FILE>
 <TITLE>ArvGvsp</TITLE>
+ArvGvspPayloadType
 ArvGvspPacketType
 ArvGvspContentType
 ArvGvspDataLeader
@@ -1452,6 +1487,7 @@ arv_gvsp_packet_get_height
 arv_gvsp_packet_get_packet_id
 arv_gvsp_packet_get_packet_type
 arv_gvsp_packet_get_content_type
+arv_gvsp_packet_get_payload_type
 arv_gvsp_packet_get_pixel_format
 arv_gvsp_packet_get_timestamp
 arv_gvsp_packet_get_width

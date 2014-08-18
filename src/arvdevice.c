@@ -225,6 +225,30 @@ arv_device_get_genicam_xml (ArvDevice *device, size_t *size)
 }
 
 /**
+ * arv_device_create_chunk_parser:
+ * @device: a #ArvDevice
+ *
+ * Create a #ArvChunkParser object, to be used for chunk data extraction from #ArvBuffer.
+ *
+ * Returns: (transfer full): a new #ArvChunkParser object, NULL on error.
+ *
+ * Since: 0.4.0
+ **/
+
+ArvChunkParser *
+arv_device_create_chunk_parser (ArvDevice *device)
+{
+	const char *xml = NULL;
+	gsize size = 0;
+
+	g_return_val_if_fail (ARV_IS_DEVICE (device), NULL);
+
+	xml = arv_device_get_genicam_xml (device, &size);
+
+	return arv_chunk_parser_new (xml, size);
+}
+
+/**
  * arv_device_get_feature:
  * @device: a #ArvDevice
  * @feature: feature name

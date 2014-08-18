@@ -41,6 +41,12 @@ ArvDebugCategory arv_debug_category_device =
 	.level = -1
 };
 
+ArvDebugCategory arv_debug_category_chunk =
+{
+	.name = "chunk",
+	.level = -1
+};
+
 ArvDebugCategory arv_debug_category_stream =
 {
 	.name = "stream",

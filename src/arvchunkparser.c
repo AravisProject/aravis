@@ -29,6 +29,11 @@
  */
 
 #include <arvchunkparser.h>
+#include <arvbuffer.h>
+#include <arvgcinteger.h>
+#include <arvgcfloat.h>
+#include <arvgcstring.h>
+#include <arvdebug.h>
 
 enum {
 	ARV_CHUNK_PARSER_PROPERTY_0,
@@ -38,31 +43,80 @@ enum {
 
 static GObjectClass *parent_class = NULL;
 
+GQuark
+arv_chunk_parser_error_quark (void)
+{
+	return g_quark_from_static_string ("arv-chunk-parser-error-quark");
+}
+
 struct _ArvChunkParserPrivate {
 	ArvGc *genicam;
 };
 
 const char *
-arv_chunk_parser_get_string_feature_value (ArvChunkParser *parser, ArvBuffer *buffer, const char *feature)
+arv_chunk_parser_get_string_value (ArvChunkParser *parser, ArvBuffer *buffer, const char *chunk)
 {
-	return NULL;
+	ArvGcNode *node;
+	const char *string = NULL;
+
+	g_return_val_if_fail (ARV_IS_CHUNK_PARSER (parser), NULL);
+	g_return_val_if_fail (ARV_IS_BUFFER (buffer), NULL);
+
+	node = arv_gc_get_node (parser->priv->genicam, chunk);
+	arv_gc_set_buffer (parser->priv->genicam, buffer);
+
+	if (ARV_IS_GC_STRING (node))
+		string = arv_gc_string_get_value (ARV_GC_STRING (node), NULL);
+	else
+		arv_warning_device ("[ArvChunkParser::get_string_value] Node '%s' is not a string", chunk);
+
+	return string;
 }
 
 gint64
-arv_chunk_parser_get_integer_feature_value (ArvChunkParser *parser, ArvBuffer *buffer, const char *feature)
+arv_chunk_parser_get_integer_value (ArvChunkParser *parser, ArvBuffer *buffer, const char *chunk)
 {
-	return 0;
+	ArvGcNode *node;
+	gint64 value = 0;
+
+	g_return_val_if_fail (ARV_IS_CHUNK_PARSER (parser), 0.0);
+	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0.0);
+
+	node = arv_gc_get_node (parser->priv->genicam, chunk);
+	arv_gc_set_buffer (parser->priv->genicam, buffer);
+
+	if (ARV_IS_GC_INTEGER (node))
+		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
+	else
+		arv_warning_device ("[ArvChunkParser::get_integer_value] Node '%s' is not an integer", chunk);
+
+	return value;
 }
 
 double
-arv_chunk_parser_get_float_feature_value (ArvChunkParser *parser, ArvBuffer *buffer, const char *feature)
+arv_chunk_parser_get_float_value (ArvChunkParser *parser, ArvBuffer *buffer, const char *chunk)
 {
-	return 0.0;
+	ArvGcNode *node;
+	double value = 0.0;
+
+	g_return_val_if_fail (ARV_IS_CHUNK_PARSER (parser), 0.0);
+	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0.0);
+
+	node = arv_gc_get_node (parser->priv->genicam, chunk);
+	arv_gc_set_buffer (parser->priv->genicam, buffer);
+
+	if (ARV_IS_GC_FLOAT (node))
+		value = arv_gc_float_get_value (ARV_GC_FLOAT (node), NULL);
+	else 
+		arv_warning_chunk ("[ArvChunkParser::get_float_value] Node '%s' is not a float", chunk);
+
+	return value;
 }
 
 /**
  * arv_chunk_parser_new:
- * @genicam: a #ArvGc
+ * @xml: XML genicam data
+ * @size: data size, -1 if NULL terminated
  *
  * Creates a new chunk_parser.
  *
@@ -72,13 +126,18 @@ arv_chunk_parser_get_float_feature_value (ArvChunkParser *parser, ArvBuffer *buf
  */
 
 ArvChunkParser *
-arv_chunk_parser_new (ArvGc *genicam)
+arv_chunk_parser_new (const char *xml, gsize size)
 {
 	ArvChunkParser *chunk_parser;
+	ArvGc *genicam;
+
+	genicam = arv_gc_new (NULL, xml, size);
 
 	g_return_val_if_fail (ARV_IS_GC (genicam), NULL);
 
 	chunk_parser = g_object_new (ARV_TYPE_CHUNK_PARSER, "genicam", genicam, NULL);
+
+	g_object_unref (genicam);
 
 	return chunk_parser;
 }

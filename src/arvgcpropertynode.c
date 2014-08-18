@@ -101,6 +101,8 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 			return "Bit";
 		case ARV_GC_PROPERTY_NODE_TYPE_COMMAND_VALUE:
 			return "CommandValue";
+		case ARV_GC_PROPERTY_NODE_TYPE_CHUNK_ID:
+			return "ChunkID";
 
 		case ARV_GC_PROPERTY_NODE_TYPE_P_FEATURE:
 			return "pFeature";
@@ -678,6 +680,12 @@ ArvGcNode *
 arv_gc_property_node_new_p_command_value (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_P_COMMAND_VALUE);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_chunk_id (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_CHUNK_ID);
 }
 
 static void
