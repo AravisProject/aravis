@@ -30,7 +30,7 @@
  * objects.
  */
 
-#include <arvstream.h>
+#include <arvstreamprivate.h>
 #include <arvbuffer.h>
 #include <arvdebug.h>
 

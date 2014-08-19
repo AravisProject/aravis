@@ -26,6 +26,7 @@
  */
 
 #include <arvgvstream.h>
+#include <arvstreamprivate.h>
 #include <arvbufferprivate.h>
 #include <arvgvsp.h>
 #include <arvgvcp.h>

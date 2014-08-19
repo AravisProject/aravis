@@ -26,6 +26,7 @@
  */
 
 #include <arvfakestream.h>
+#include <arvstreamprivate.h>
 #include <arvbufferprivate.h>
 #include <arvdebug.h>
 #include <arvmisc.h>

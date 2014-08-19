@@ -89,9 +89,6 @@ void		arv_stream_get_statistics		(ArvStream *stream,
 void 		arv_stream_set_emit_signals 		(ArvStream *stream, gboolean emit_signals);
 gboolean 	arv_stream_get_emit_signals 		(ArvStream *stream);
 
-ArvBuffer *	arv_stream_pop_input_buffer		(ArvStream *stream);
-void		arv_stream_push_output_buffer		(ArvStream *stream, ArvBuffer *buffer);
-
 G_END_DECLS
 
 #endif
