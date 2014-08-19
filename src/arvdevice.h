@@ -89,8 +89,6 @@ gboolean	arv_device_write_register 	(ArvDevice *device, guint32 address, guint32
 const char * 	arv_device_get_genicam_xml 		(ArvDevice *device, size_t *size);
 ArvGc *		arv_device_get_genicam			(ArvDevice *device);
 
-void 		arv_device_emit_control_lost_signal 	(ArvDevice *device);
-
 ArvGcNode *	arv_device_get_feature			(ArvDevice *device, const char *feature);
 
 ArvChunkParser *arv_device_create_chunk_parser		(ArvDevice *device);

@@ -252,7 +252,6 @@ arv_device_write_register
 arv_device_get_genicam_xml
 arv_device_get_genicam
 arv_device_get_feature
-arv_device_emit_control_lost_signal
 arv_device_get_status
 arv_device_execute_command
 arv_device_set_string_feature_value

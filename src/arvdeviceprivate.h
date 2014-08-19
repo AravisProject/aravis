@@ -31,6 +31,8 @@ G_BEGIN_DECLS
 
 GQuark 		arv_device_error_quark 		(void);
 
+void 		arv_device_emit_control_lost_signal 	(ArvDevice *device);
+
 G_END_DECLS
 
 #endif
