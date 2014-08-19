@@ -241,7 +241,6 @@ ArvGcPortClass
 <SECTION>
 <FILE>arvdevice</FILE>
 <TITLE>ArvDevice</TITLE>
-ARV_DEVICE_ERROR
 ArvDevice
 ArvDeviceStatus
 arv_device_create_stream
