@@ -122,6 +122,15 @@ ArvAuto		arv_camera_get_gain_auto	(ArvCamera *camera);
 
 guint		arv_camera_get_payload		(ArvCamera *camera);
 
+/* Chunk data */
+
+void 			arv_camera_set_chunk_mode 	(ArvCamera *camera, gboolean is_active);
+gboolean 		arv_camera_get_chunk_mode 	(ArvCamera *camera);
+void 			arv_camera_set_chunk_state 	(ArvCamera *camera, const char *chunk, gboolean is_enabled);
+gboolean 		arv_camera_get_chunk_state 	(ArvCamera *camera, const char *chunk);
+void 			arv_camera_set_chunks 		(ArvCamera *camera, const char *chunk_list);
+ArvChunkParser * 	arv_camera_create_chunk_parser 	(ArvCamera *camera);
+
 G_END_DECLS
 
 #endif

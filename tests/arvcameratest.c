@@ -19,6 +19,7 @@ static gboolean arv_option_auto_socket_buffer = FALSE;
 static gboolean arv_option_no_packet_resend = FALSE;
 static unsigned int arv_option_packet_timeout = 20;
 static unsigned int arv_option_frame_retention = 100;
+static char *arv_option_chunks = NULL;
 
 static const GOptionEntry arv_option_entries[] =
 {
@@ -83,6 +84,10 @@ static const GOptionEntry arv_option_entries[] =
 		&arv_option_frame_retention, 		"Frame retention (ms)", NULL
 	},
 	{
+		"chunks", 				'c', 0, G_OPTION_ARG_STRING,
+		&arv_option_chunks,	 		"Chunks", NULL
+	},
+	{
 		"debug", 				'd', 0, G_OPTION_ARG_STRING,
 		&arv_option_debug_domains, 		"Debug domains", NULL
 	},
@@ -92,6 +97,8 @@ static const GOptionEntry arv_option_entries[] =
 typedef struct {
 	GMainLoop *main_loop;
 	int buffer_count;
+	ArvChunkParser *chunk_parser;
+	char **chunks;
 } ApplicationData;
 
 static gboolean cancel = FALSE;
@@ -111,7 +118,18 @@ new_buffer_cb (ArvStream *stream, ApplicationData *data)
 	if (buffer != NULL) {
 		if (arv_buffer_get_status (buffer) == ARV_BUFFER_STATUS_SUCCESS)
 			data->buffer_count++;
+
+		if (arv_buffer_get_payload_type (buffer) == ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA &&
+		    data->chunks != NULL) {
+			int i;
+
+			for (i = 0; data->chunks[i] != NULL; i++)
+				printf ("%s = %d\n", data->chunks[i],
+					arv_chunk_parser_get_integer_value (data->chunk_parser, buffer, data->chunks[i]));
+		}
+
 		/* Image processing here */
+
 		arv_stream_push_buffer (stream, buffer);
 	}
 }
@@ -161,6 +179,7 @@ main (int argc, char **argv)
 	int i;
 
 	data.buffer_count = 0;
+	data.chunks = NULL;
 
 	arv_g_thread_init (NULL);
 	arv_g_type_init ();
@@ -197,6 +216,12 @@ main (int argc, char **argv)
 		int gain;
 		guint software_trigger_source = 0;
 
+		if (arv_option_chunks != NULL) {
+			data.chunks = g_strsplit_set (arv_option_chunks, " ,:;", -1);
+			data.chunk_parser = arv_camera_create_chunk_parser (camera);
+		}
+
+		arv_camera_set_chunks (camera, arv_option_chunks);
 		arv_camera_set_region (camera, 0, 0, arv_option_width, arv_option_height);
 		arv_camera_set_binning (camera, arv_option_horizontal_binning, arv_option_vertical_binning);
 		arv_camera_set_exposure_time (camera, arv_option_exposure_time_us);
@@ -293,6 +318,11 @@ main (int argc, char **argv)
 		g_object_unref (camera);
 	} else
 		printf ("No camera found\n");
+
+	if (data.chunks != NULL)
+		g_strfreev (data.chunks);
+
+	g_clear_object (&data.chunk_parser);
 
 	return 0;
 }

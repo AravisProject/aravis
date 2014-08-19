@@ -1287,6 +1287,152 @@ arv_camera_is_gain_auto_available (ArvCamera *camera)
 }
 
 /**
+ * arv_camera_set_chunk_mode:
+ * @camera: a #ArvCamera
+ * @is_active: wether to enable chunk data mode
+ *
+ * Controls wether chunk data mode is active. When active, chunk data
+ * are appended to image data in #ArvBuffer. A #ArvChunkParser must be used in
+ * order to extract chunk data. 
+ *
+ * Since: 0.4.0
+ **/
+
+void
+arv_camera_set_chunk_mode (ArvCamera *camera, gboolean is_active)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_device_set_integer_feature_value (camera->priv->device, "ChunkModeActive", is_active ? 1 : 0);
+}
+
+/**
+ * arv_camera_get_chunk_mode:
+ * @camera: a #ArvCamera
+ *
+ * Check wether chunk data mode is active. Please see @arv_camera_set_chunk_mode.
+ *
+ * Returns: %TRUE if chunk data mode is active.
+ *
+ * Since: 0.4.0
+ **/
+
+gboolean
+arv_camera_get_chunk_mode (ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
+
+	return arv_device_get_integer_feature_value (camera->priv->device, "ChunkModeActive");
+}
+
+/**
+ * arv_camera_set_chunk_state:
+ * @camera: a #ArvCamera
+ * @chunk: chunk data name
+ * @is_enabled: wether to enable this chunk
+ *
+ * Sets state of a chunk data. Chunk data are be embedded in #ArvBuffer only
+ * if chunk mode is active. Please see @arv_camera_set_chunk_mode.
+ *
+ * Since: 0.4.0
+ **/
+
+void
+arv_camera_set_chunk_state (ArvCamera *camera, const char *chunk, gboolean is_enabled)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+	g_return_if_fail (chunk != NULL && chunk[0] != '\0');
+
+	arv_device_set_string_feature_value (camera->priv->device, "ChunkSelector", chunk);
+	arv_device_set_integer_feature_value (camera->priv->device, "ChunkEnable", is_enabled ? 1 : 0);
+}
+
+/**
+ * arv_camera_get_chunk_state:
+ * @camera: a #ArvCamera
+ * @chunk: chunk data name
+ *
+ * Gets state of chunk data. Chunk data are be embedded in #ArvBuffer only
+ * if chunk mode is active. Please see @arv_camera_set_chunk_mode.
+ *
+ * Returns: %TRUE if @chunk is enabled.
+ *
+ * Since: 0.4.0
+ */
+
+gboolean
+arv_camera_get_chunk_state (ArvCamera *camera, const char *chunk)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
+	g_return_val_if_fail (chunk != NULL && chunk[0] != '\0', FALSE);
+
+	arv_device_set_string_feature_value (camera->priv->device, "ChunkSelector", chunk);
+	return arv_device_get_integer_feature_value (camera->priv->device, "ChunkEnable");
+}
+
+/**
+ * arv_camera_set_chunks:
+ * @camera: a #ArvCamera
+ * @chunk_list: chunk data names, as a comma or space separated list
+ * 
+ * Convenience function for enabling a set of chunk data. Chunk mode is activated, or deactivated
+ * if @chunk_list is %NULL or empty. All chunk data not listed are disabled.
+ *
+ * Since: 0.4.0
+ */
+
+void
+arv_camera_set_chunks (ArvCamera *camera, const char *chunk_list)
+{
+	char **chunks;
+	gboolean enable_chunk_data = FALSE;
+	int i;
+	guint n_values;
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	if (chunk_list == NULL) {
+		arv_camera_set_chunk_mode (camera, FALSE);
+		return;
+	}
+
+	chunks = (char **) arv_device_get_available_enumeration_feature_values_as_strings (camera->priv->device,
+											   "ChunkSelector", &n_values);
+	for (i = 0; i < n_values; i++)
+		arv_camera_set_chunk_state (camera, chunks[i], FALSE);
+
+	chunks = g_strsplit_set (chunk_list, " ,:;", -1);
+
+	for (i = 0; chunks[i] != NULL; i++) {
+		arv_camera_set_chunk_state (camera, chunks[i], TRUE);
+		enable_chunk_data = TRUE;
+	}
+
+	g_strfreev (chunks);
+
+	arv_camera_set_chunk_mode (camera, enable_chunk_data);
+}
+
+/**
+ * arv_camera_create_chunk_parser:
+ * @camera: a #ArvCamera
+ *
+ * Creates a new #ArvChunkParser object, used for the extraction of chunk data from #ArvBuffer.
+ *
+ * Returns: (transfer full): a new #ArvChunkParser.
+ *
+ * Since: 0.4.0
+ */
+
+ArvChunkParser *
+arv_camera_create_chunk_parser (ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+
+	return arv_device_create_chunk_parser (camera->priv->device);
+}
+
+/**
  * arv_camera_new:
  * @name: (allow-none): name of the camera.
  *

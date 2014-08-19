@@ -551,6 +551,8 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	if (viewer->camera == NULL)
 		return;
 
+	arv_camera_set_chunk_mode (viewer->camera, FALSE);
+
 	viewer->rotation = 0;
 	viewer->stream = arv_camera_create_stream (viewer->camera, NULL, NULL);
 	if (viewer->stream == NULL) {
