@@ -282,7 +282,6 @@ ARV_DEVICE_NAME_REPLACEMENT_CHARACTER
 <FILE>arvchunkparser</FILE>
 <TITLE>ArvChunkParser</TITLE>
 ArvChunkParser
-ArvChunkParserStatus
 arv_chunk_parser_new
 arv_chunk_parser_get_float_value
 arv_chunk_parser_get_integer_value
@@ -296,6 +295,7 @@ ARV_IS_CHUNK_PARSER
 ARV_IS_CHUNK_PARSER_CLASS
 ARV_TYPE_CHUNK_PARSER
 <SUBSECTION Private>
+ArvChunkParserStatus
 ArvChunkParserPrivate
 ARV_CHUNK_PARSER_ERROR
 </SECTION>

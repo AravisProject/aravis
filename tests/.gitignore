@@ -9,6 +9,7 @@ arv-genicam-test
 arv-evaluator-test
 arv-zip-test
 arv-camera-test
+arv-chunk-parser-test
 arv-heartbeat-test
 arv-example
 time-test

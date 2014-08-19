@@ -8,7 +8,15 @@ test_progs_ldadd = 					\
 	$(top_builddir)/src/libaravis-@ARAVIS_API_VERSION@.la		\
 	$(ARAVIS_LIBS)
 
-noinst_PROGRAMS = arv-test arv-genicam-test arv-evaluator-test arv-zip-test arv-camera-test arv-heartbeat-test arv-example time-test
+noinst_PROGRAMS = 			\
+	arv-test			\
+	arv-genicam-test		\
+       	arv-evaluator-test		\
+       	arv-zip-test			\
+       	arv-camera-test			\
+	arv-chunk-parser-test		\
+       	arv-heartbeat-test		\
+       	arv-example time-test
 
 arv_test_SOURCES = arvtest.c
 arv_test_LDADD = $(test_progs_ldadd)
@@ -24,6 +32,9 @@ arv_zip_test_LDADD = $(test_progs_ldadd)
 
 arv_camera_test_SOURCES = arvcameratest.c
 arv_camera_test_LDADD = $(test_progs_ldadd)
+
+arv_chunk_parser_test_SOURCES = arvchunkparsertest.c
+arv_chunk_parser_test_LDADD = $(test_progs_ldadd)
 
 arv_heartbeat_test_SOURCES = arvheartbeattest.c
 arv_heartbeat_test_LDADD = $(test_progs_ldadd)

@@ -26,6 +26,23 @@
  *
  * #ArvChunkParser provides a class for the instantiation of chunk parsers used
  * for the extraction of chunk data stored in the stream payload.
+ *
+ * Chunks are tagged blocks of data stored in a #ArvBuffer containing
+ * a #ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA payload. The tags allow a chunk
+ * parser to dissect the data payload into its elements and to identify the content.
+ *
+ * Chunk data are enabled using either arv_camera_set_chunks() or
+ * arv_camera_set_chunk_mode(). Both functions are simple convenience wrappers
+ * that handle the setting of ChunkModeActive, ChunkSelector and ChunkEnable
+ * GENICAM features.
+ *
+ * <example id="arv-chunk-parser-test"><title>Example use of the ArvChunkParser API</title>
+ * <programlisting>
+ * <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" href="../../../../tests/arvchunkparsertest.c">
+ *   <xi:fallback>FIXME: MISSING XINCLUDE CONTENT</xi:fallback>
+ * </xi:include>
+ * </programlisting>
+ * </example>
  */
 
 #include <arvchunkparserprivate.h>
@@ -53,6 +70,17 @@ struct _ArvChunkParserPrivate {
 	ArvGc *genicam;
 };
 
+/**
+ * arv_chunk_parser_get_string_value:
+ * @parser: a #ArvChunkParser
+ * @buffer: a #ArvBuffer with a #ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA payload
+ * @chunk: chunk data name
+ *
+ * Gets the value of chunk data as a string.
+ *
+ * Returns: the chunk data string value.
+ */
+
 const char *
 arv_chunk_parser_get_string_value (ArvChunkParser *parser, ArvBuffer *buffer, const char *chunk)
 {
@@ -73,6 +101,17 @@ arv_chunk_parser_get_string_value (ArvChunkParser *parser, ArvBuffer *buffer, co
 	return string;
 }
 
+/**
+ * arv_chunk_parser_get_integer_value:
+ * @parser: a #ArvChunkParser
+ * @buffer: a #ArvBuffer with a #ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA payload
+ * @chunk: chunk data name
+ *
+ * Gets the value of chunk data as an integer.
+ *
+ * Returns: the chunk data integer value.
+ */
+
 gint64
 arv_chunk_parser_get_integer_value (ArvChunkParser *parser, ArvBuffer *buffer, const char *chunk)
 {
@@ -92,6 +131,17 @@ arv_chunk_parser_get_integer_value (ArvChunkParser *parser, ArvBuffer *buffer, c
 
 	return value;
 }
+
+/**
+ * arv_chunk_parser_get_float_value:
+ * @parser: a #ArvChunkParser
+ * @buffer: a #ArvBuffer with a #ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA payload
+ * @chunk: chunk data name
+ *
+ * Gets the value of chunk data as a float.
+ *
+ * Returns: the chunk data float value.
+ */
 
 double
 arv_chunk_parser_get_float_value (ArvChunkParser *parser, ArvBuffer *buffer, const char *chunk)
@@ -116,7 +166,7 @@ arv_chunk_parser_get_float_value (ArvChunkParser *parser, ArvBuffer *buffer, con
 /**
  * arv_chunk_parser_new:
  * @xml: XML genicam data
- * @size: data size, -1 if NULL terminated
+ * @size: genicam data size, -1 if NULL terminated
  *
  * Creates a new chunk_parser.
  *
