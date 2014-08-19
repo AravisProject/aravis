@@ -147,6 +147,9 @@ ARAVIS_HDRS_NO_INTRO =				\
 	arvgvcp.h				\
 	arvgvsp.h
 
+noinst_HEADERS =				\
+	arvbufferprivate.h
+
 arv_fake_cameradir = $(aravis_datadir)
 arv_fake_camera_DATA = arv-fake-camera.xml
 
