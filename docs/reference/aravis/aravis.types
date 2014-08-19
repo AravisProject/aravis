@@ -1,6 +1,7 @@
 arv_buffer_get_type
 arv_camera_get_type
 arv_device_get_type
+arv_chunk_parser_get_type
 arv_evaluator_get_type
 arv_fake_camera_get_type
 arv_fake_device_get_type
