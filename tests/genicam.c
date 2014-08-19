@@ -405,7 +405,6 @@ create_buffer_with_chunk_data (void)
 {
 	ArvBuffer *buffer;
 	ArvChunkInfos *chunk_infos;
-	GString *string;
 	const char *data;
 	size_t size;
 	guint32 *int_value;
@@ -440,7 +439,7 @@ create_buffer_with_chunk_data (void)
 	chunk_infos->id = GUINT32_TO_BE (0x44444444);
 	chunk_infos->size = GUINT32_TO_BE (64);
 
-	g_assert (offset = 64);
+	g_assert (offset == 64);
 
 #if 0
 	{
