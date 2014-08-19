@@ -65,6 +65,7 @@ IGNORE_HFILES=\
 	arvconfig.h			\
 	arvbufferprivate.h		\
 	arvchunkparserprivate.h		\
+	arvdeviceprivate.h		\
 	arv.h
 
 # Images to copy into HTML directory.

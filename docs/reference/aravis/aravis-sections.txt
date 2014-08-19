@@ -244,7 +244,6 @@ ArvGcPortClass
 ARV_DEVICE_ERROR
 ArvDevice
 ArvDeviceStatus
-arv_device_error_quark
 arv_device_create_stream
 arv_device_create_chunk_parser
 arv_device_read_memory

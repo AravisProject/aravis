@@ -29,8 +29,6 @@
 
 G_BEGIN_DECLS
 
-#define ARV_DEVICE_ERROR arv_device_error_quark()
-
 /**
  * ArvDeviceStatus:
  * @ARV_DEVICE_STATUS_UNKNOWN: unknown status
@@ -80,8 +78,6 @@ struct _ArvDeviceClass {
 };
 
 GType arv_device_get_type (void);
-
-GQuark 		arv_device_error_quark 		(void);
 
 ArvStream *	arv_device_create_stream	(ArvDevice *device, ArvStreamCallback callback, void *user_data);
 

@@ -26,6 +26,7 @@
  */
 
 #include <arvgvdevice.h>
+#include <arvdeviceprivate.h>
 #include <arvgc.h>
 #include <arvgcregisterdescriptionnode.h>
 #include <arvdebug.h>
