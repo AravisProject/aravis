@@ -301,7 +301,6 @@ ARV_TYPE_CHUNK_PARSER
 <SUBSECTION Private>
 ArvChunkParserPrivate
 ARV_CHUNK_PARSER_ERROR
-arv_chunk_parser_error_quark
 </SECTION>
 
 <SECTION>

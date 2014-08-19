@@ -28,8 +28,6 @@
 
 G_BEGIN_DECLS
 
-#define ARV_CHUNK_PARSER_ERROR arv_chunk_parser_error_quark()
-
 /**
  * ArvChunkParserStatus:
  * @ARV_CHUNK_PARSER_STATUS_UNKNOWN: unknown status
@@ -66,8 +64,6 @@ struct _ArvChunkParserClass {
 };
 
 GType arv_chunk_parser_get_type (void);
-
-GQuark 			arv_chunk_parser_error_quark 		(void);
 
 ArvChunkParser *	arv_chunk_parser_new 			(const char *xml, gsize size);
 const char *		arv_chunk_parser_get_string_value	(ArvChunkParser *parser, ArvBuffer *buffer, const char *chunk);

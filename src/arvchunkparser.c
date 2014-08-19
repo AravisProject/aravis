@@ -28,7 +28,7 @@
  * for the extraction of chunk data stored in the stream payload.
  */
 
-#include <arvchunkparser.h>
+#include <arvchunkparserprivate.h>
 #include <arvbuffer.h>
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>

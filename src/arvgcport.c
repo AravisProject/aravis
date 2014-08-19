@@ -28,7 +28,7 @@
 #include <arvgcport.h>
 #include <arvgcregisterdescriptionnode.h>
 #include <arvdevice.h>
-#include <arvchunkparser.h>
+#include <arvchunkparserprivate.h>
 #include <arvbuffer.h>
 #include <arvgcpropertynode.h>
 #include <arvgc.h>
