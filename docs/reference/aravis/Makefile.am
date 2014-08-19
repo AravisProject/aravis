@@ -61,8 +61,9 @@ EXTRA_HFILES=
 # Header files to ignore when scanning. Use base file name, no paths
 # e.g. IGNORE_HFILES=gtkdebug.h gtkintl.h
 IGNORE_HFILES=\
-	arvenumtypes.h 	\
-	arvconfig.h	\
+	arvenumtypes.h 		\
+	arvconfig.h		\
+	arvbufferprivate.h	\
 	arv.h
 
 # Images to copy into HTML directory.

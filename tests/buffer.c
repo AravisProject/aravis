@@ -5,17 +5,19 @@ static void
 simple_buffer_test (void)
 {
 	ArvBuffer *buffer;
+	size_t size;
+	const void *data;
 
 	buffer = arv_buffer_new (1024, NULL);
 
 	g_assert (ARV_IS_BUFFER (buffer));
-	g_assert (buffer->data != NULL);
-	g_assert (buffer->size == 1024);
 
-	g_assert (buffer->user_data == NULL);
-	g_assert (buffer->user_data_destroy_func == NULL);
+	data = arv_buffer_get_data (buffer, &size);
 
-	g_assert (buffer->status == ARV_BUFFER_STATUS_CLEARED);
+	g_assert (data != NULL);
+	g_assert (size == 1024);
+
+	g_assert (arv_buffer_get_status (buffer) == ARV_BUFFER_STATUS_CLEARED);
 
 	g_object_unref (buffer);
 }
@@ -28,12 +30,10 @@ preallocated_buffer_test (void)
 
 	buffer = arv_buffer_new (1024, data);
 	g_assert (ARV_IS_BUFFER (buffer));
-	g_assert (buffer->data == data);
 
-	g_assert (buffer->user_data == NULL);
-	g_assert (buffer->user_data_destroy_func == NULL);
+	g_assert (arv_buffer_get_data (buffer, NULL) == data);
 
-	g_assert (buffer->status == ARV_BUFFER_STATUS_CLEARED);
+	g_assert (arv_buffer_get_status (buffer) == ARV_BUFFER_STATUS_CLEARED);
 
 	g_object_unref (buffer);
 }
@@ -49,18 +49,19 @@ full_buffer_test (void)
 {
 	ArvBuffer *buffer;
 	int value = 1234;
-
+	const void *data;
+	size_t size;
 
 	buffer = arv_buffer_new_full (1024, NULL, &value, full_buffer_destroy_func);
 
 	g_assert (ARV_IS_BUFFER (buffer));
-	g_assert (buffer->data != NULL);
-	g_assert (buffer->size == 1024);
 
-	g_assert (buffer->user_data == &value);
-	g_assert (buffer->user_data_destroy_func == full_buffer_destroy_func);
+	data = arv_buffer_get_data (buffer, &size);
 
-	g_assert (buffer->status == ARV_BUFFER_STATUS_CLEARED);
+	g_assert (data != NULL);
+	g_assert (size == 1024);
+
+	g_assert (arv_buffer_get_status (buffer) == ARV_BUFFER_STATUS_CLEARED);
 
 	g_object_unref (buffer);
 

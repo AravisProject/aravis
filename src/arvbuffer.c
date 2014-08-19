@@ -32,7 +32,7 @@
  * format and time stamp.
  */
 
-#include <arvbuffer.h>
+#include <arvbufferprivate.h>
 
 static GObjectClass *parent_class = NULL;
 
@@ -62,16 +62,16 @@ arv_buffer_new_full (size_t size, void *preallocated, void *user_data, GDestroyN
 	ArvBuffer *buffer;
 
 	buffer = g_object_new (ARV_TYPE_BUFFER, NULL);
-	buffer->size = size;
-	buffer->user_data = user_data;
-	buffer->user_data_destroy_func = user_data_destroy_func;
+	buffer->priv->size = size;
+	buffer->priv->user_data = user_data;
+	buffer->priv->user_data_destroy_func = user_data_destroy_func;
 
 	if (preallocated != NULL) {
-		buffer->is_preallocated = TRUE;
-		buffer->data = preallocated;
+		buffer->priv->is_preallocated = TRUE;
+		buffer->priv->data = preallocated;
 	} else {
-		buffer->is_preallocated = FALSE;
-		buffer->data = g_malloc (size);
+		buffer->priv->is_preallocated = FALSE;
+		buffer->priv->data = g_malloc (size);
 	}
 
 	return buffer;
@@ -131,7 +131,7 @@ arv_buffer_clear (ArvBuffer *buffer)
 {
 	g_return_if_fail (ARV_IS_BUFFER (buffer));
 
-	buffer->status = ARV_BUFFER_STATUS_CLEARED;
+	buffer->priv->status = ARV_BUFFER_STATUS_CLEARED;
 }
 
 /**
@@ -152,9 +152,9 @@ arv_buffer_get_data (ArvBuffer *buffer, size_t *size)
 	g_return_val_if_fail (ARV_IS_BUFFER (buffer), NULL);
 
 	if (size != NULL)
-		*size = buffer->size;
+		*size = buffer->priv->size;
 
-	return buffer->data;
+	return buffer->priv->data;
 }
 
 typedef struct ARAVIS_PACKED_STRUCTURE {
@@ -186,14 +186,14 @@ arv_buffer_get_chunk_data (ArvBuffer *buffer, guint64 chunk_id, size_t *size)
 		*size = 0;
 
 	g_return_val_if_fail (ARV_IS_BUFFER (buffer), NULL);
-	g_return_val_if_fail (buffer->data != NULL, NULL);
-	g_return_val_if_fail (buffer->payload_type == ARV_GVSP_PAYLOAD_TYPE_CHUNK_DATA, NULL);
+	g_return_val_if_fail (buffer->priv->data != NULL, NULL);
+	g_return_val_if_fail (buffer->priv->gvsp_payload_type == ARV_GVSP_PAYLOAD_TYPE_CHUNK_DATA, NULL);
 
-	if (buffer->status != ARV_BUFFER_STATUS_SUCCESS)
+	if (buffer->priv->status != ARV_BUFFER_STATUS_SUCCESS)
 		return NULL;
 
-	data = buffer->data;
-	offset = buffer->size - sizeof (ArvChunkInfos);
+	data = buffer->priv->data;
+	offset = buffer->priv->size - sizeof (ArvChunkInfos);
 	while (offset > 0) {
 		infos = (ArvChunkInfos *) &data[offset];
 		if (GUINT32_FROM_BE (infos->id) == chunk_id) {
@@ -216,10 +216,117 @@ arv_buffer_get_chunk_data (ArvBuffer *buffer, guint64 chunk_id, size_t *size)
 	return NULL;
 }
 
+ArvBufferStatus
+arv_buffer_get_status (ArvBuffer *buffer)
+{
+	g_return_val_if_fail (ARV_IS_BUFFER (buffer), ARV_BUFFER_STATUS_UNKNOWN);
+	
+	return buffer->priv->status;
+}
+
+ArvBufferPayloadType
+arv_buffer_get_payload_type (ArvBuffer *buffer)
+{
+	g_return_val_if_fail (ARV_IS_BUFFER (buffer), -1);
+	
+	switch (buffer->priv->gvsp_payload_type) {
+		case ARV_GVSP_PAYLOAD_TYPE_IMAGE:
+			return ARV_BUFFER_PAYLOAD_TYPE_IMAGE;
+		case ARV_GVSP_PAYLOAD_TYPE_RAWDATA:
+			return ARV_BUFFER_PAYLOAD_TYPE_RAWDATA;
+		case ARV_GVSP_PAYLOAD_TYPE_FILE:
+			return ARV_BUFFER_PAYLOAD_TYPE_FILE;
+		case ARV_GVSP_PAYLOAD_TYPE_CHUNK_DATA:
+			return ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA;
+		case ARV_GVSP_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA:
+			return ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA;
+		case ARV_GVSP_PAYLOAD_TYPE_JPEG:
+			return ARV_BUFFER_PAYLOAD_TYPE_JPEG;
+		case ARV_GVSP_PAYLOAD_TYPE_JPEG2000:
+			return ARV_BUFFER_PAYLOAD_TYPE_JPEG2000;
+		case ARV_GVSP_PAYLOAD_TYPE_H264:
+			return ARV_BUFFER_PAYLOAD_TYPE_H264;
+		case ARV_GVSP_PAYLOAD_TYPE_MULTIZONE_IMAGE:
+			return ARV_BUFFER_PAYLOAD_TYPE_MULTIZONE_IMAGE;
+		default:
+			return ARV_BUFFER_PAYLOAD_TYPE_UNKNOWN;
+	}
+}
+
+guint64
+arv_buffer_get_timestamp (ArvBuffer *buffer)
+{
+	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
+
+	return buffer->priv->timestamp_ns;
+}
+
+void
+arv_buffer_get_image_region (ArvBuffer *buffer, gint *x, gint *y, gint *width, gint *height)
+{
+	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
+	g_return_val_if_fail (buffer->priv->gvsp_payload_type == ARV_GVSP_PAYLOAD_TYPE_IMAGE, 0);
+
+	if (x != NULL)
+		*x = buffer->priv->x_offset;
+	if (y != NULL)
+		*y = buffer->priv->y_offset;
+	if (width != NULL)
+		*width = buffer->priv->width;
+	if (height != NULL)
+		*height = buffer->priv->height;
+}
+
+gint
+arv_buffer_get_image_width (ArvBuffer *buffer)
+{
+	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
+	g_return_val_if_fail (buffer->priv->gvsp_payload_type == ARV_GVSP_PAYLOAD_TYPE_IMAGE, 0);
+
+	return buffer->priv->width;
+}
+
+gint
+arv_buffer_get_image_height (ArvBuffer *buffer)
+{
+	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
+	g_return_val_if_fail (buffer->priv->gvsp_payload_type == ARV_GVSP_PAYLOAD_TYPE_IMAGE, 0);
+
+	return buffer->priv->height;
+}
+
+gint
+arv_buffer_get_image_x (ArvBuffer *buffer)
+{
+	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
+	g_return_val_if_fail (buffer->priv->gvsp_payload_type == ARV_GVSP_PAYLOAD_TYPE_IMAGE, 0);
+
+	return buffer->priv->x_offset;
+}
+
+gint
+arv_buffer_get_image_y (ArvBuffer *buffer)
+{
+	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
+	g_return_val_if_fail (buffer->priv->gvsp_payload_type == ARV_GVSP_PAYLOAD_TYPE_IMAGE, 0);
+
+	return buffer->priv->y_offset;
+}
+
+ArvPixelFormat
+arv_buffer_get_image_pixel_format (ArvBuffer *buffer)
+{
+	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
+	g_return_val_if_fail (buffer->priv->gvsp_payload_type == ARV_GVSP_PAYLOAD_TYPE_IMAGE, 0);
+
+	return buffer->priv->pixel_format;
+}
+
 static void
 arv_buffer_init (ArvBuffer *buffer)
 {
-	buffer->status = ARV_BUFFER_STATUS_CLEARED;
+	buffer->priv = G_TYPE_INSTANCE_GET_PRIVATE (buffer, ARV_TYPE_BUFFER, ArvBufferPrivate);
+	buffer->priv->status = ARV_BUFFER_STATUS_CLEARED;
 }
 
 static void
@@ -227,24 +334,26 @@ arv_buffer_finalize (GObject *object)
 {
 	ArvBuffer *buffer = ARV_BUFFER (object);
 
-	if (!buffer->is_preallocated) {
-		g_free (buffer->data);
-		buffer->data = NULL;
-		buffer->size = 0;
+	if (!buffer->priv->is_preallocated) {
+		g_free (buffer->priv->data);
+		buffer->priv->data = NULL;
+		buffer->priv->size = 0;
 	}
 
-	if (buffer->user_data && buffer->user_data_destroy_func)
-		buffer->user_data_destroy_func (buffer->user_data);
+	if (buffer->priv->user_data && buffer->priv->user_data_destroy_func)
+		buffer->priv->user_data_destroy_func (buffer->priv->user_data);
 
 	parent_class->finalize (object);
 }
 
 static void
-arv_buffer_class_init (ArvBufferClass *node_class)
+arv_buffer_class_init (ArvBufferClass *this_class)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS (node_class);
+	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 
-	parent_class = g_type_class_peek_parent (node_class);
+	g_type_class_add_private (this_class, sizeof (ArvBufferPrivate));
+
+	parent_class = g_type_class_peek_parent (this_class);
 
 	object_class->finalize = arv_buffer_finalize;
 }

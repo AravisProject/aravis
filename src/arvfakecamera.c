@@ -35,7 +35,7 @@
 #include <arvgc.h>
 #include <arvgcregisternode.h>
 #include <arvgvcp.h>
-#include <arvbuffer.h>
+#include <arvbufferprivate.h>
 #include <arvdebug.h>
 #include <arvmisc.h>
 #include <string.h>
@@ -200,22 +200,22 @@ arv_fake_camera_diagonal_ramp (ArvBuffer *buffer, void *fill_pattern_data,
 	if (pixel_format != ARV_PIXEL_FORMAT_MONO_8)
 		return;
 
-	width = buffer->width;
-	height = buffer->height;
+	width = buffer->priv->width;
+	height = buffer->priv->height;
 
 	scale = 1.0 + gain + log10 ((double) exposure_time_us / 10000.0);
 
 	for (y = 0; y < height; y++)
 		for (x = 0; x < width; x++) {
-			pixel_value = (x + buffer->frame_id + y) % 255;
+			pixel_value = (x + buffer->priv->frame_id + y) % 255;
 			pixel_value *= scale;
 
 			if (pixel_value < 0.0)
-				((unsigned char *) buffer->data)[y * width + x] = 0;
+				((unsigned char *) buffer->priv->data)[y * width + x] = 0;
 			else if (pixel_value > 255.0)
-				((unsigned char *) buffer->data)[y * width + x] = 255;
+				((unsigned char *) buffer->priv->data)[y * width + x] = 255;
 			else
-				((unsigned char *) buffer->data)[y * width + x] = pixel_value;
+				((unsigned char *) buffer->priv->data)[y * width + x] = pixel_value;
 		}
 }
 
@@ -274,18 +274,18 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer, guint32 *
 	height = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_HEIGHT);
 	payload = width * height;
 
-	if (buffer->size < payload) {
-		buffer->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
+	if (buffer->priv->size < payload) {
+		buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
 		return;
 	}
 
-	buffer->payload_type = ARV_GVSP_PAYLOAD_TYPE_IMAGE;
-	buffer->width = width;
-	buffer->height = height;
-	buffer->status = ARV_BUFFER_STATUS_SUCCESS;
-	buffer->timestamp_ns = ((guint64) time.tv_sec) * 1000000000LL + time.tv_nsec;
-	buffer->frame_id = camera->priv->frame_id++;
-	buffer->pixel_format = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_PIXEL_FORMAT);
+	buffer->priv->gvsp_payload_type = ARV_GVSP_PAYLOAD_TYPE_IMAGE;
+	buffer->priv->width = width;
+	buffer->priv->height = height;
+	buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
+	buffer->priv->timestamp_ns = ((guint64) time.tv_sec) * 1000000000LL + time.tv_nsec;
+	buffer->priv->frame_id = camera->priv->frame_id++;
+	buffer->priv->pixel_format = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_PIXEL_FORMAT);
 
 #if GLIB_CHECK_VERSION(2,32,0)
 	g_mutex_lock (&camera->priv->fill_pattern_mutex);

@@ -21,6 +21,9 @@
  */
 
 #include <arv.h>
+#include <arvbufferprivate.h>
+#include <arvgvcp.h>
+#include <arvgvsp.h>
 #include <stdlib.h>
 #include <string.h>
 #include <net/if.h>
@@ -135,12 +138,12 @@ arv_fake_gv_camera_thread (void *user_data)
 			block_id = 0;
 
 			packet_size = ARV_FAKE_GV_CAMERA_BUFFER_SIZE;
-			arv_gvsp_packet_new_data_leader (image_buffer->frame_id,
+			arv_gvsp_packet_new_data_leader (image_buffer->priv->frame_id,
 							 block_id,
-							 image_buffer->timestamp_ns,
-							 image_buffer->pixel_format,
-							 image_buffer->width, image_buffer->height,
-							 image_buffer->x_offset, image_buffer->y_offset,
+							 image_buffer->priv->timestamp_ns,
+							 image_buffer->priv->pixel_format,
+							 image_buffer->priv->width, image_buffer->priv->height,
+							 image_buffer->priv->x_offset, image_buffer->priv->y_offset,
 							 packet_buffer, &packet_size);
 
 			g_socket_send_to (gv_camera->gvsp_socket, stream_address,
@@ -162,8 +165,8 @@ arv_fake_gv_camera_thread (void *user_data)
 						 payload - offset);
 
 				packet_size = ARV_FAKE_GV_CAMERA_BUFFER_SIZE;
-				arv_gvsp_packet_new_data_block (image_buffer->frame_id, block_id,
-								data_size, ((char *) image_buffer->data) + offset,
+				arv_gvsp_packet_new_data_block (image_buffer->priv->frame_id, block_id,
+								data_size, ((char *) image_buffer->priv->data) + offset,
 								packet_buffer, &packet_size);
 
 				g_socket_send_to (gv_camera->gvsp_socket, stream_address,
@@ -174,7 +177,7 @@ arv_fake_gv_camera_thread (void *user_data)
 			}
 
 			packet_size = ARV_FAKE_GV_CAMERA_BUFFER_SIZE;
-			arv_gvsp_packet_new_data_trailer (image_buffer->frame_id, block_id,
+			arv_gvsp_packet_new_data_trailer (image_buffer->priv->frame_id, block_id,
 							  packet_buffer, &packet_size);
 
 			g_socket_send_to (gv_camera->gvsp_socket, stream_address,

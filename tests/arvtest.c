@@ -1,5 +1,7 @@
 #include <arv.h>
 #include <stdlib.h>
+#include "../src/arvgvsp.h"
+#include "../src/arvgvcp.h"
 
 static gboolean cancel = FALSE;
 

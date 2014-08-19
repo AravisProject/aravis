@@ -26,7 +26,7 @@
  */
 
 #include <arvgvstream.h>
-#include <arvbuffer.h>
+#include <arvbufferprivate.h>
 #include <arvgvsp.h>
 #include <arvgvcp.h>
 #include <arvdebug.h>
@@ -167,9 +167,9 @@ _update_socket (ArvGvStreamThreadData *thread_data, ArvBuffer *buffer)
 			break;
 		case ARV_GV_STREAM_SOCKET_BUFFER_AUTO:
 			if (thread_data->socket_buffer_size <= 0)
-				buffer_size = buffer->size;
+				buffer_size = buffer->priv->size;
 			else
-				buffer_size = MIN (buffer->size, thread_data->socket_buffer_size);
+				buffer_size = MIN (buffer->priv->size, thread_data->socket_buffer_size);
 			break;
 	}
 
@@ -186,30 +186,36 @@ _process_data_leader (ArvGvStreamThreadData *thread_data,
 		      ArvGvspPacket *packet,
 		      guint32 packet_id)
 {
-	if (frame->buffer->status != ARV_BUFFER_STATUS_FILLING)
+	if (frame->buffer->priv->status != ARV_BUFFER_STATUS_FILLING)
 		return;
 
 	if (packet_id != 0) {
-		frame->buffer->status = ARV_BUFFER_STATUS_WRONG_PACKET_ID;
+		frame->buffer->priv->status = ARV_BUFFER_STATUS_WRONG_PACKET_ID;
 		return;
 	}
 
-	frame->buffer->payload_type = arv_gvsp_packet_get_payload_type (packet);
-	frame->buffer->x_offset = arv_gvsp_packet_get_x_offset (packet);
-	frame->buffer->y_offset = arv_gvsp_packet_get_y_offset (packet);
-	frame->buffer->width = arv_gvsp_packet_get_width (packet);
-	frame->buffer->height = arv_gvsp_packet_get_height (packet);
-	frame->buffer->pixel_format = arv_gvsp_packet_get_pixel_format (packet);
-	frame->buffer->frame_id = arv_gvsp_packet_get_frame_id (packet);
+	frame->buffer->priv->gvsp_payload_type = arv_gvsp_packet_get_payload_type (packet);
+	frame->buffer->priv->frame_id = arv_gvsp_packet_get_frame_id (packet);
 
-	if (G_LIKELY (thread_data->timestamp_tick_frequency != 0))
-		frame->buffer->timestamp_ns = arv_gvsp_packet_get_timestamp (packet,
-									     thread_data->timestamp_tick_frequency);
-	else {
-		GTimeVal time;
+	if (frame->buffer->priv->gvsp_payload_type != ARV_GVSP_PAYLOAD_TYPE_H264) {
+		if (G_LIKELY (thread_data->timestamp_tick_frequency != 0))
+			frame->buffer->priv->timestamp_ns = arv_gvsp_packet_get_timestamp (packet,
+											   thread_data->timestamp_tick_frequency);
+		else {
+			GTimeVal time;
 
-		g_get_current_time (&time);
-		frame->buffer->timestamp_ns = ((guint64) time.tv_sec * 1000000000LL) + ((guint64) time.tv_usec * 1000) ;
+			g_get_current_time (&time);
+			frame->buffer->priv->timestamp_ns = ((guint64) time.tv_sec * 1000000000LL) + ((guint64) time.tv_usec * 1000) ;
+		}
+	} else
+		frame->buffer->priv->timestamp_ns = g_get_real_time () * 1000LL;
+
+	if (frame->buffer->priv->gvsp_payload_type == ARV_GVSP_PAYLOAD_TYPE_IMAGE) {
+		frame->buffer->priv->x_offset = arv_gvsp_packet_get_x_offset (packet);
+		frame->buffer->priv->y_offset = arv_gvsp_packet_get_y_offset (packet);
+		frame->buffer->priv->width = arv_gvsp_packet_get_width (packet);
+		frame->buffer->priv->height = arv_gvsp_packet_get_height (packet);
+		frame->buffer->priv->pixel_format = arv_gvsp_packet_get_pixel_format (packet);
 	}
 
 	if (frame->packet_data[packet_id].time_us > 0) {
@@ -230,12 +236,12 @@ _process_data_block (ArvGvStreamThreadData *thread_data,
 	ptrdiff_t block_offset;
 	ptrdiff_t block_end;
 
-	if (frame->buffer->status != ARV_BUFFER_STATUS_FILLING)
+	if (frame->buffer->priv->status != ARV_BUFFER_STATUS_FILLING)
 		return;
 
 	if (packet_id > frame->n_packets - 2 || packet_id < 1) {
 		arv_gvsp_packet_debug (packet, read_count, ARV_DEBUG_LEVEL_DEBUG);
-		frame->buffer->status = ARV_BUFFER_STATUS_WRONG_PACKET_ID;
+		frame->buffer->priv->status = ARV_BUFFER_STATUS_WRONG_PACKET_ID;
 		return;
 	}
 
@@ -243,18 +249,18 @@ _process_data_block (ArvGvStreamThreadData *thread_data,
 	block_offset = (packet_id - 1) * thread_data->data_size;
 	block_end = block_size + block_offset;
 
-	if (block_end > frame->buffer->size) {
+	if (block_end > frame->buffer->priv->size) {
 		arv_debug_stream_thread ("[GvStream::_process_data_block] %d unexpected bytes in packet %u "
 					 " for frame %u",
-					 block_end - frame->buffer->size,
+					 block_end - frame->buffer->priv->size,
 					 packet_id, frame->frame_id);
 		thread_data->n_size_mismatch_errors++;
 
-		block_end = frame->buffer->size;
+		block_end = frame->buffer->priv->size;
 		block_size = block_end - block_offset;
 	}
 
-	memcpy (((char *) frame->buffer->data) + block_offset, &packet->data, block_size);
+	memcpy (((char *) frame->buffer->priv->data) + block_offset, &packet->data, block_size);
 
 	if (frame->packet_data[packet_id].time_us > 0) {
 		thread_data->n_resent_packets++;
@@ -269,11 +275,11 @@ _process_data_trailer (ArvGvStreamThreadData *thread_data,
 		       ArvGvspPacket *packet,
 		       guint32 packet_id)
 {
-	if (frame->buffer->status != ARV_BUFFER_STATUS_FILLING)
+	if (frame->buffer->priv->status != ARV_BUFFER_STATUS_FILLING)
 		return;
 
 	if (packet_id != frame->n_packets - 1) {
-		frame->buffer->status = ARV_BUFFER_STATUS_WRONG_PACKET_ID;
+		frame->buffer->priv->status = ARV_BUFFER_STATUS_WRONG_PACKET_ID;
 		return;
 	}
 
@@ -329,8 +335,8 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 
 	frame->buffer = buffer;
 	_update_socket (thread_data, frame->buffer);
-	frame->buffer->status = ARV_BUFFER_STATUS_FILLING;
-	n_packets = (frame->buffer->size + thread_data->data_size - 1) / thread_data->data_size + 2;
+	frame->buffer->priv->status = ARV_BUFFER_STATUS_FILLING;
+	n_packets = (frame->buffer->priv->size + thread_data->data_size - 1) / thread_data->data_size + 2;
 
 	frame->first_packet_time_us = time_us;
 	frame->last_packet_time_us = time_us;
@@ -422,20 +428,20 @@ _close_frame (ArvGvStreamThreadData *thread_data, ArvGvStreamFrameData *frame)
 	GTimeVal current_time;
 	gint64 current_time_us;
 
-	if (frame->buffer->status == ARV_BUFFER_STATUS_SUCCESS)
+	if (frame->buffer->priv->status == ARV_BUFFER_STATUS_SUCCESS)
 		thread_data->n_completed_buffers++;
 	else
-		if (frame->buffer->status != ARV_BUFFER_STATUS_ABORTED)
+		if (frame->buffer->priv->status != ARV_BUFFER_STATUS_ABORTED)
 			thread_data->n_failures++;
 
-	if (frame->buffer->status == ARV_BUFFER_STATUS_TIMEOUT)
+	if (frame->buffer->priv->status == ARV_BUFFER_STATUS_TIMEOUT)
 		thread_data->n_timeouts++;
 
-	if (frame->buffer->status == ARV_BUFFER_STATUS_ABORTED)
+	if (frame->buffer->priv->status == ARV_BUFFER_STATUS_ABORTED)
 		thread_data->n_aborteds++;
 
-	if (frame->buffer->status != ARV_BUFFER_STATUS_SUCCESS &&
-	    frame->buffer->status != ARV_BUFFER_STATUS_ABORTED)
+	if (frame->buffer->priv->status != ARV_BUFFER_STATUS_SUCCESS &&
+	    frame->buffer->priv->status != ARV_BUFFER_STATUS_ABORTED)
 		thread_data->n_missing_packets += (int) frame->n_packets - (frame->last_valid_packet + 1);
 
 	if (thread_data->callback != NULL)
@@ -448,7 +454,7 @@ _close_frame (ArvGvStreamThreadData *thread_data, ArvGvStreamFrameData *frame)
 	if (thread_data->statistic_count > 5) {
 		arv_statistic_fill (thread_data->statistic, 0,
 				    current_time_us - frame->first_packet_time_us,
-				    frame->buffer->frame_id);
+				    frame->buffer->priv->frame_id);
 	} else
 		thread_data->statistic_count++;
 
@@ -478,7 +484,7 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 		if (can_close_frame &&
 		    thread_data->packet_resend == ARV_GV_STREAM_PACKET_RESEND_NEVER &&
 		    iter->next != NULL) {
-			frame->buffer->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
+			frame->buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
 			arv_debug_stream_thread ("[GvStream::_check_frame_completion] Incomplete frame %u",
 						 frame->frame_id);
 			_close_frame (thread_data, frame);
@@ -490,7 +496,7 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 
 		if (can_close_frame &&
 		    frame->last_valid_packet == frame->n_packets - 1) {
-			frame->buffer->status = ARV_BUFFER_STATUS_SUCCESS;
+			frame->buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
 			arv_log_stream_thread ("[GvStream::_check_frame_completion] Completed frame %u",
 					       frame->frame_id);
 			_close_frame (thread_data, frame);
@@ -502,7 +508,7 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 
 		if (can_close_frame &&
 		    time_us - frame->last_packet_time_us >= thread_data->frame_retention_us) {
-			frame->buffer->status = ARV_BUFFER_STATUS_TIMEOUT;
+			frame->buffer->priv->status = ARV_BUFFER_STATUS_TIMEOUT;
 			arv_debug_stream_thread ("[GvStream::_check_frame_completion] Timeout for frame %u "
 						 "at dt = %Lu",
 						 frame->frame_id,
@@ -547,7 +553,7 @@ _flush_frames (ArvGvStreamThreadData *thread_data)
 
 	for (iter = thread_data->frames; iter != NULL; iter = iter->next) {
 		frame = iter->data;
-		frame->buffer->status = ARV_BUFFER_STATUS_ABORTED;
+		frame->buffer->priv->status = ARV_BUFFER_STATUS_ABORTED;
 		_close_frame (thread_data, frame);
 	}
 

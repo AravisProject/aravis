@@ -74,12 +74,22 @@ ArvCameraClass
 ArvFrameCallback
 ArvBufferStatus
 ArvBuffer
+ArvBufferPayloadType
 ArvPixelFormat
 arv_buffer_new
 arv_buffer_new_full
 arv_buffer_new_allocate
 arv_buffer_get_data
 arv_buffer_get_chunk_data
+arv_buffer_get_image_height
+arv_buffer_get_image_pixel_format
+arv_buffer_get_image_region
+arv_buffer_get_timestamp
+arv_buffer_get_image_width
+arv_buffer_get_image_x
+arv_buffer_get_image_y
+arv_buffer_get_payload_type
+arv_buffer_get_status
 ARV_PIXEL_FORMAT_BIT_PER_PIXEL
 ARV_PIXEL_FORMAT_BAYER_BG_10
 ARV_PIXEL_FORMAT_BAYER_BG_12
@@ -144,6 +154,7 @@ ARV_IS_BUFFER_CLASS
 ARV_BUFFER_GET_CLASS
 <SUBSECTION Private>
 ArvBufferClass
+ArvBufferPrivate
 </SECTION>
 
 <SECTION>

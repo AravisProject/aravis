@@ -347,19 +347,26 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 	GstAravis *gst_aravis;
 	ArvBuffer *arv_buffer;
 	int arv_row_stride;
+	int width, height;
+	char *buffer_data;
+	size_t buffer_size;
+	guint64 timestamp_ns;
 
 	gst_aravis = GST_ARAVIS (push_src);
 
 	do {
 		arv_buffer = arv_stream_timeout_pop_buffer (gst_aravis->stream, gst_aravis->buffer_timeout_us);
-		if (arv_buffer != NULL && arv_buffer->status != ARV_BUFFER_STATUS_SUCCESS)
+		if (arv_buffer != NULL && arv_buffer_get_status (arv_buffer) != ARV_BUFFER_STATUS_SUCCESS)
 			arv_stream_push_buffer (gst_aravis->stream, arv_buffer);
-	} while (arv_buffer != NULL && arv_buffer->status != ARV_BUFFER_STATUS_SUCCESS);
+	} while (arv_buffer != NULL && arv_buffer_get_status (arv_buffer) != ARV_BUFFER_STATUS_SUCCESS);
 
 	if (arv_buffer == NULL)
 		return GST_FLOW_ERROR;
 
-	arv_row_stride = arv_buffer->width * ARV_PIXEL_FORMAT_BIT_PER_PIXEL (arv_buffer->pixel_format) / 8;
+	buffer_data = (char *) arv_buffer_get_data (arv_buffer, &buffer_size);
+	arv_buffer_get_image_region (arv_buffer, NULL, NULL, &width, &height);
+	arv_row_stride = width * ARV_PIXEL_FORMAT_BIT_PER_PIXEL (arv_buffer_get_image_pixel_format (arv_buffer)) / 8;
+	timestamp_ns = arv_buffer_get_image_timestamp (arv_buffer);
 
 	/* Gstreamer requires row stride to be a multiple of 4 */
 	if ((arv_row_stride & 0x3) != 0) {
@@ -370,33 +377,27 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 
 		gst_row_stride = (arv_row_stride & ~(0x3)) + 4;
 
-		size = arv_buffer->height * gst_row_stride;
+		size = height * gst_row_stride;
 		data = g_malloc (size);
 
-		for (i = 0; i < arv_buffer->height; i++)
-			memcpy (((char *) data) + i * gst_row_stride, ((char *) arv_buffer->data) + i * arv_row_stride, arv_row_stride);
+		for (i = 0; i < height; i++)
+			memcpy (((char *) data) + i * gst_row_stride, buffer_data + i * arv_row_stride, arv_row_stride);
 
 		*buffer = gst_buffer_new_wrapped (data, size);
 	} else {
-		*buffer = gst_buffer_new_wrapped_full (0,
-			arv_buffer->data,
-			arv_buffer->size,
-			0,
-			arv_buffer->size,
-			NULL,
-			NULL);
+		*buffer = gst_buffer_new_wrapped_full (0, buffer_data, buffer_size, 0, buffer_size, NULL, NULL);
 	}
 
 	if (!gst_base_src_get_do_timestamp(GST_BASE_SRC(push_src))) {
 		if (gst_aravis->timestamp_offset == 0) {
-			gst_aravis->timestamp_offset = arv_buffer->timestamp_ns;
-			gst_aravis->last_timestamp = arv_buffer->timestamp_ns;
+			gst_aravis->timestamp_offset = timestamp_ns;
+			gst_aravis->last_timestamp = timestamp_ns;
 		}
 
-		GST_BUFFER_PTS (*buffer) = arv_buffer->timestamp_ns - gst_aravis->timestamp_offset;
-		GST_BUFFER_DURATION (*buffer) = arv_buffer->timestamp_ns - gst_aravis->last_timestamp;
+		GST_BUFFER_PTS (*buffer) = timestamp_ns - gst_aravis->timestamp_offset;
+		GST_BUFFER_DURATION (*buffer) = timestamp_ns - gst_aravis->last_timestamp;
 
-		gst_aravis->last_timestamp = arv_buffer->timestamp_ns;
+		gst_aravis->last_timestamp = timestamp_ns;
 	}
 
 	arv_stream_push_buffer (gst_aravis->stream, arv_buffer);

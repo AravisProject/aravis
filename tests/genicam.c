@@ -1,6 +1,7 @@
 #include <glib.h>
 #include <arv.h>
 #include <string.h>
+#include "../src/arvbufferprivate.h"
 
 typedef struct {
 	const char *name;
@@ -394,9 +395,7 @@ mandatory_test (void)
 	g_object_unref (device);
 }
 
-#define ARAVIS_PACKED_STRUCTURE __attribute__((__packed__))
-
-typedef struct ARAVIS_PACKED_STRUCTURE {
+typedef struct __attribute__((__packed__)) {
 	guint32 id;
 	guint32 size;
 } ArvChunkInfos;
@@ -415,8 +414,8 @@ create_buffer_with_chunk_data (void)
 	size = 64 + 64 + 8 + 3 * sizeof (ArvChunkInfos);
 
 	buffer = arv_buffer_new (size, NULL);
-	buffer->payload_type = ARV_GVSP_PAYLOAD_TYPE_CHUNK_DATA;
-	buffer->status = ARV_BUFFER_STATUS_SUCCESS;
+	buffer->priv->gvsp_payload_type = ARV_GVSP_PAYLOAD_TYPE_CHUNK_DATA;
+	buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
 	data = arv_buffer_get_data (buffer, &size);
 
 	memset ((char *) data, '\0', size);

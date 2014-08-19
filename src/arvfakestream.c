@@ -26,7 +26,7 @@
  */
 
 #include <arvfakestream.h>
-#include <arvbuffer.h>
+#include <arvbufferprivate.h>
 #include <arvdebug.h>
 #include <arvmisc.h>
 
@@ -73,7 +73,7 @@ arv_fake_stream_thread (void *data)
 		buffer = arv_stream_pop_input_buffer (thread_data->stream);
 		if (buffer != NULL) {
 			arv_fake_camera_fill_buffer (thread_data->camera, buffer, NULL);
-			if (buffer->status == ARV_BUFFER_STATUS_SUCCESS)
+			if (buffer->priv->status == ARV_BUFFER_STATUS_SUCCESS)
 				thread_data->n_completed_buffers++;
 			else
 				thread_data->n_failures++;

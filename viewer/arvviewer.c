@@ -148,12 +148,18 @@ arv_viewer_new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 	if (arv_buffer == NULL)
 		return;
 
-	if (arv_buffer->status == ARV_BUFFER_STATUS_SUCCESS) {
+	if (arv_buffer_get_status (arv_buffer) == ARV_BUFFER_STATUS_SUCCESS) {
 		int arv_row_stride;
+		int width, height;
+		char *buffer_data;
+		size_t buffer_size;
+		guint64 timestamp_ns;
 
-		arv_row_stride = arv_buffer->width * ARV_PIXEL_FORMAT_BIT_PER_PIXEL (arv_buffer->pixel_format) / 8;
+		timestamp_ns =  g_get_real_time () * 1000LL;
 
-		arv_buffer->timestamp_ns = g_get_real_time () * 1000LL;
+		buffer_data = (char *) arv_buffer_get_data (arv_buffer, &buffer_size);
+		arv_buffer_get_image_region (arv_buffer, NULL, NULL, &width, &height);
+		arv_row_stride = width * ARV_PIXEL_FORMAT_BIT_PER_PIXEL (arv_buffer_get_image_pixel_format (arv_buffer)) / 8;
 
 		/* Gstreamer requires row stride to be a multiple of 4 */
 		if ((arv_row_stride & 0x3) != 0) {
@@ -164,30 +170,26 @@ arv_viewer_new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 
 			gst_row_stride = (arv_row_stride & ~(0x3)) + 4;
 
-			size = arv_buffer->height * gst_row_stride;
+			size = height * gst_row_stride;
 			data = g_malloc (size);	
 
-			for (i = 0; i < arv_buffer->height; i++)
-				memcpy (((char *) data) + i * gst_row_stride, ((char *) arv_buffer->data) + i * arv_row_stride, arv_row_stride);
+			for (i = 0; i < height; i++)
+				memcpy (((char *) data) + i * gst_row_stride, buffer_data + i * arv_row_stride, arv_row_stride);
 
 			buffer = gst_buffer_new_wrapped (data, size);
 		} else {
 			buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
-				arv_buffer->data,
-				arv_buffer->size,
-				0,
-				arv_buffer->size,
-				NULL,
-				NULL);
+							      buffer_data, buffer_size,
+							      0, buffer_size, NULL, NULL);
 		}
 
 		if (viewer->timestamp_offset == 0) {
-			viewer->timestamp_offset = arv_buffer->timestamp_ns;
-			viewer->last_timestamp = arv_buffer->timestamp_ns;
+			viewer->timestamp_offset = timestamp_ns;
+			viewer->last_timestamp = timestamp_ns;
 		}
 
-		GST_BUFFER_DTS (buffer) = arv_buffer->timestamp_ns - viewer->timestamp_offset;
-		GST_BUFFER_DURATION (buffer) = arv_buffer->timestamp_ns - viewer->last_timestamp;
+		GST_BUFFER_DTS (buffer) = timestamp_ns - viewer->timestamp_offset;
+		GST_BUFFER_DURATION (buffer) = timestamp_ns - viewer->last_timestamp;
 
 		gst_app_src_push_buffer (GST_APP_SRC (viewer->appsrc), buffer);
 	}
@@ -407,9 +409,15 @@ arv_viewer_snapshot_cb (GtkButton *button, ArvViewer *viewer)
 	char *filename;
 	GDateTime *date;
 	char *date_string;
+	int width, height;
+	const char *data;
+	size_t size;
 
 	g_return_if_fail (ARV_IS_CAMERA (viewer->camera));
 	g_return_if_fail (ARV_IS_BUFFER (viewer->last_buffer));
+
+	arv_buffer_get_image_region (viewer->last_buffer, NULL, NULL, &width, &height);
+	data = arv_buffer_get_data (viewer->last_buffer, &size);
 
 	path = g_build_filename (g_get_user_special_dir (G_USER_DIRECTORY_PICTURES),
 					 "Aravis", NULL);
@@ -423,13 +431,13 @@ arv_viewer_snapshot_cb (GtkButton *button, ArvViewer *viewer)
 	filename = g_strdup_printf ("%s-%s-%d-%d-%s-%s.raw",
 				    arv_camera_get_vendor_name (viewer->camera),
 				    arv_camera_get_device_id (viewer->camera),
-				    viewer->last_buffer->width,
-				    viewer->last_buffer->height,
+				    width,
+				    height,
 				    viewer->pixel_format_string != NULL ? viewer->pixel_format_string : "Unknown",
 				    date_string);
 	path = g_build_filename (g_get_user_special_dir (G_USER_DIRECTORY_PICTURES),
 				 "Aravis", filename, NULL);
-	g_file_set_contents (path, viewer->last_buffer->data, viewer->last_buffer->size, NULL);
+	g_file_set_contents (path, data, size, NULL);
 
 	if (viewer->notification) {
 		notify_notification_update (viewer->notification,
