@@ -7,11 +7,7 @@ AM_CPPFLAGS = \
 	-DPACKAGE_DATA_DIR=\""$(datadir)"\" $(ARAVIS_GST_PLUGIN_CFLAGS) \
 	-DG_LOG_DOMAIN=\"Aravis\"
 
-AM_CFLAGS =\
-	 -Wall\
-	 -Werror \
-	 -g \
-	 -O0
+AM_CFLAGS = -Wall
 
 gstplugin_LTLIBRARIES = libgstaravis-@ARAVIS_API_VERSION@.la
 

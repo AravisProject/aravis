@@ -366,7 +366,7 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 	buffer_data = (char *) arv_buffer_get_data (arv_buffer, &buffer_size);
 	arv_buffer_get_image_region (arv_buffer, NULL, NULL, &width, &height);
 	arv_row_stride = width * ARV_PIXEL_FORMAT_BIT_PER_PIXEL (arv_buffer_get_image_pixel_format (arv_buffer)) / 8;
-	timestamp_ns = arv_buffer_get_image_timestamp (arv_buffer);
+	timestamp_ns = arv_buffer_get_timestamp (arv_buffer);
 
 	/* Gstreamer requires row stride to be a multiple of 4 */
 	if ((arv_row_stride & 0x3) != 0) {
