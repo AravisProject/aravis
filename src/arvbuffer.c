@@ -143,7 +143,7 @@ arv_buffer_clear (ArvBuffer *buffer)
  *
  * Returns: (array length=size) (element-type guint8): a pointer to the buffer data.
  *
- * Since: 0.3.3
+ * Since: 0.4.0
  **/
 
 const void *
@@ -172,7 +172,7 @@ typedef struct ARAVIS_PACKED_STRUCTURE {
  *
  * Returns: (array length=size) (element-type guint8): a pointer to the chunk data.
  *
- * Since: 0.3.5
+ * Since: 0.4.0
  **/
 
 const void *
@@ -216,6 +216,17 @@ arv_buffer_get_chunk_data (ArvBuffer *buffer, guint64 chunk_id, size_t *size)
 	return NULL;
 }
 
+/**
+ * arv_buffer_get_status:
+ * @buffer: a #ArvBuffer
+ *
+ * Gets the buffer acquisition status.
+ *
+ * Returns: buffer acquisition status.
+ *
+ * Since: 0.4.0
+ */
+
 ArvBufferStatus
 arv_buffer_get_status (ArvBuffer *buffer)
 {
@@ -223,6 +234,17 @@ arv_buffer_get_status (ArvBuffer *buffer)
 	
 	return buffer->priv->status;
 }
+
+/**
+ * arv_buffer_get_payload_type:
+ * @buffer: a #ArvBuffer
+ *
+ * Gets the buffer payload type.
+ *
+ * Returns: payload type.
+ *
+ * Since: 0.4.0
+ */
 
 ArvBufferPayloadType
 arv_buffer_get_payload_type (ArvBuffer *buffer)
@@ -253,6 +275,19 @@ arv_buffer_get_payload_type (ArvBuffer *buffer)
 	}
 }
 
+/**
+ * arv_buffer_get_timestamp:
+ * @buffer: a #ArvBuffer
+ *
+ * Gets the buffer camera timestamp, expressed as nanoseconds. Not all devices provide
+ * reliable timestamp, which means sometimes its better to rely on the buffer
+ * completion host local time (given by @g_get_realtime for example).
+ *
+ * Returns: buffer timestamp, in nanoseconds.
+ *
+ * Since: 0.4.0
+ */
+
 guint64
 arv_buffer_get_timestamp (ArvBuffer *buffer)
 {
@@ -260,6 +295,19 @@ arv_buffer_get_timestamp (ArvBuffer *buffer)
 
 	return buffer->priv->timestamp_ns;
 }
+
+/**
+ * arv_buffer_get_image_region:
+ * @buffer: a #ArvBuffer
+ * @x: (allow-none): image x offset placeholder
+ * @y: (allow-none): image y offset placeholder
+ * @width: (allow-none): image width placholder
+ * @height: (allow-none): image height placeholder
+ *
+ * Gets the image region. This function must only be called on buffer containing a @ARV_BUFFER_PAYLOAD_TYPE_IMAGE payload.
+ *
+ * Since: 0.4.0
+ */
 
 void
 arv_buffer_get_image_region (ArvBuffer *buffer, gint *x, gint *y, gint *width, gint *height)
@@ -277,6 +325,17 @@ arv_buffer_get_image_region (ArvBuffer *buffer, gint *x, gint *y, gint *width, g
 		*height = buffer->priv->height;
 }
 
+/**
+ * arv_buffer_get_image_width:
+ * @buffer: a #ArvBuffer
+ *
+ * Gets the image width. This function must only be called on buffer containing a @ARV_BUFFER_PAYLOAD_TYPE_IMAGE payload.
+ *
+ * Returns: image width, in pixels.
+ *
+ * Since: 0.4.0
+ */
+
 gint
 arv_buffer_get_image_width (ArvBuffer *buffer)
 {
@@ -285,6 +344,17 @@ arv_buffer_get_image_width (ArvBuffer *buffer)
 
 	return buffer->priv->width;
 }
+
+/**
+ * arv_buffer_get_image_height:
+ * @buffer: a #ArvBuffer
+ *
+ * Gets the image width. This function must only be called on buffer containing a @ARV_BUFFER_PAYLOAD_TYPE_IMAGE payload.
+ *
+ * Returns: image height, in pixels.
+ *
+ * Since: 0.4.0
+ */
 
 gint
 arv_buffer_get_image_height (ArvBuffer *buffer)
@@ -295,6 +365,17 @@ arv_buffer_get_image_height (ArvBuffer *buffer)
 	return buffer->priv->height;
 }
 
+/**
+ * arv_buffer_get_image_x:
+ * @buffer: a #ArvBuffer
+ *
+ * Gets the image x offset. This function must only be called on buffer containing a @ARV_BUFFER_PAYLOAD_TYPE_IMAGE payload.
+ *
+ * Returns: image x offset, in pixels.
+ *
+ * Since: 0.4.0
+ */
+
 gint
 arv_buffer_get_image_x (ArvBuffer *buffer)
 {
@@ -304,6 +385,17 @@ arv_buffer_get_image_x (ArvBuffer *buffer)
 	return buffer->priv->x_offset;
 }
 
+/**
+ * arv_buffer_get_image_y:
+ * @buffer: a #ArvBuffer
+ *
+ * Gets the image y offset. This function must only be called on buffer containing a @ARV_BUFFER_PAYLOAD_TYPE_IMAGE payload.
+ *
+ * Returns: image y offset, in pixels.
+ *
+ * Since: 0.4.0
+ */
+
 gint
 arv_buffer_get_image_y (ArvBuffer *buffer)
 {
@@ -312,6 +404,17 @@ arv_buffer_get_image_y (ArvBuffer *buffer)
 
 	return buffer->priv->y_offset;
 }
+
+/**
+ * arv_buffer_get_image_pixel_format:
+ * @buffer: a #ArvBuffer
+ *
+ * Gets the image pixel format. This function must only be called on buffer containing a @ARV_BUFFER_PAYLOAD_TYPE_IMAGE payload.
+ *
+ * Returns: image pixel format.
+ *
+ * Since: 0.4.0
+ */
 
 ArvPixelFormat
 arv_buffer_get_image_pixel_format (ArvBuffer *buffer)
