@@ -2,6 +2,8 @@ include $(top_srcdir)/Makefile.decl
 
 AM_CPPFLAGS = -g -I$(top_srcdir)/src/ $(ARAVIS_CFLAGS)
 
+AM_CFLAGS = -Wall
+
 test_progs_ldadd = 					\
 	$(top_builddir)/src/libaravis-@ARAVIS_API_VERSION@.la		\
 	$(ARAVIS_LIBS)
