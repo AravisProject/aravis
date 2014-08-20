@@ -1,4 +1,5 @@
 #include <arv.h>
+#include <arvstr.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <stdio.h>
@@ -217,7 +218,13 @@ main (int argc, char **argv)
 		guint software_trigger_source = 0;
 
 		if (arv_option_chunks != NULL) {
-			data.chunks = g_strsplit_set (arv_option_chunks, " ,:;", -1);
+			char *striped_chunks;
+
+			striped_chunks = g_strdup (arv_option_chunks);
+			arv_str_strip (striped_chunks, " ,:;", ',');
+			data.chunks = g_strsplit_set (striped_chunks, ",", -1);
+			g_free (striped_chunks);
+
 			data.chunk_parser = arv_camera_create_chunk_parser (camera);
 
 			for (i = 0; data.chunks[i] != NULL; i++) {

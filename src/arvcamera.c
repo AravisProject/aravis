@@ -50,6 +50,7 @@
 #include <arvgc.h>
 #include <arvdevice.h>
 #include <arvenums.h>
+#include <arvstr.h>
 
 /**
  * ArvCameraVendor:
@@ -1385,6 +1386,7 @@ void
 arv_camera_set_chunks (ArvCamera *camera, const char *chunk_list)
 {
 	char **chunks;
+	char *striped_chunk_list;
 	gboolean enable_chunk_data = FALSE;
 	int i;
 	guint n_values;
@@ -1398,10 +1400,14 @@ arv_camera_set_chunks (ArvCamera *camera, const char *chunk_list)
 
 	chunks = (char **) arv_device_get_available_enumeration_feature_values_as_strings (camera->priv->device,
 											   "ChunkSelector", &n_values);
-	for (i = 0; i < n_values; i++)
+	for (i = 0; i < n_values; i++) {
 		arv_camera_set_chunk_state (camera, chunks[i], FALSE);
+	}
 
-	chunks = g_strsplit_set (chunk_list, " ,:;", -1);
+	striped_chunk_list = g_strdup (chunk_list);
+	arv_str_strip (striped_chunk_list, " ,:;", ',');
+	chunks = g_strsplit_set (striped_chunk_list, " ,:;", -1);
+	g_free (striped_chunk_list);
 
 	for (i = 0; chunks[i] != NULL; i++) {
 		arv_camera_set_chunk_state (camera, chunks[i], TRUE);
