@@ -21,7 +21,7 @@ main (int argc, char **argv)
 		parser = arv_camera_create_chunk_parser (camera);
 
 		/* Enable chunk data */
-		arv_camera_set_chunks (camera, "ChunkWidth,ChunkHeight");
+		arv_camera_set_chunks (camera, "Width,Height");
 
 		/* retrieve image payload (number of bytes per image) */
 		payload = arv_camera_get_payload (camera);
