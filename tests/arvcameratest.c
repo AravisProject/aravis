@@ -219,6 +219,13 @@ main (int argc, char **argv)
 		if (arv_option_chunks != NULL) {
 			data.chunks = g_strsplit_set (arv_option_chunks, " ,:;", -1);
 			data.chunk_parser = arv_camera_create_chunk_parser (camera);
+
+			for (i = 0; data.chunks[i] != NULL; i++) {
+				char *chunk = g_strdup_printf ("Chunk%s", data.chunks[i]);
+
+				g_free (data.chunks[i]);
+				data.chunks[i] = chunk;
+			}
 		}
 
 		arv_camera_set_chunks (camera, arv_option_chunks);
