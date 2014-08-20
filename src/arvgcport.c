@@ -103,20 +103,25 @@ arv_gc_port_read (ArvGcPort *port, void *buffer, guint64 address, guint64 length
 		ArvDevice *device;
 
 		device = arv_gc_get_device (genicam);
+		if (ARV_IS_DEVICE (device)) {
+			/* For schema < 1.1.0 and length == 4, register read must be used instead of memory read.
+			 * See Appendix 3 of Genicam 2.0 specification. */
+			if (_register_workaround_check (port, length)) {
+				guint32 value;
 
-		/* For schema < 1.1.0 and length == 4, register read must be used instead of memory read.
-		 * See Appendix 3 of Genicam 2.0 specification. */
-		if (_register_workaround_check (port, length)) {
-			guint32 value;
+				/* For schema < 1.1.0, all registers are big endian. */
+				value = *((guint32 *) buffer);
+				value = GUINT32_FROM_BE (value);
 
-			/* For schema < 1.1.0, all registers are big endian. */
-			value = *((guint32 *) buffer);
-			value = GUINT32_FROM_BE (value);
-
-			arv_device_read_register (device, address, &value, error);
-			*((guint32 *) buffer) = GUINT32_TO_BE (value);
-		} else
-			arv_device_read_memory (device, address, length, buffer, error);
+				arv_device_read_register (device, address, &value, error);
+				*((guint32 *) buffer) = GUINT32_TO_BE (value);
+			} else
+				arv_device_read_memory (device, address, length, buffer, error);
+		} else {
+			if (error != NULL && *error == NULL)
+				*error = g_error_new (ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_STATUS_INVALID_FEATURE_NAME,
+						      "[ArvGcPort::read] Invalid feature name");
+		}
 	} else {
 		ArvBuffer *chunk_data_buffer;
 
@@ -160,18 +165,24 @@ arv_gc_port_write (ArvGcPort *port, void *buffer, guint64 address, guint64 lengt
 	if (port->priv->chunk_id == NULL) {
 		device = arv_gc_get_device (genicam);
 
-		/* For schema < 1.1.0 and length == 4, register write must be used instead of memory write.
-		 * See Appendix 3 of Genicam 2.0 specification. */
-		if (_register_workaround_check (port, length)) {
-			guint32 value;
+		if (ARV_IS_DEVICE (device)) {
+			/* For schema < 1.1.0 and length == 4, register write must be used instead of memory write.
+			 * See Appendix 3 of Genicam 2.0 specification. */
+			if (_register_workaround_check (port, length)) {
+				guint32 value;
 
-			/* For schema < 1.1.0, all registers are big endian. */
-			value = *((guint32 *) buffer);
-			value = GUINT32_FROM_BE (value);
+				/* For schema < 1.1.0, all registers are big endian. */
+				value = *((guint32 *) buffer);
+				value = GUINT32_FROM_BE (value);
 
-			arv_device_write_register (device, address, value, error);
-		} else
-			arv_device_write_memory (device, address, length, buffer, error);
+				arv_device_write_register (device, address, value, error);
+			} else
+				arv_device_write_memory (device, address, length, buffer, error);
+		} else {
+			if (error != NULL && *error == NULL)
+				*error = g_error_new (ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_STATUS_INVALID_FEATURE_NAME,
+						      "[ArvGcPort::write] Invalid feature name");
+		}
 	} else {
 		ArvBuffer *chunk_data_buffer;
 
