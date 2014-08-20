@@ -187,7 +187,7 @@ _get_value_data (ArvGcPropertyNode *property_node)
 		for (iter = dom_node->first_child; iter != NULL; iter = iter->next_sibling)
 			g_string_append (string, arv_dom_character_data_get_data (ARV_DOM_CHARACTER_DATA (iter)));
 		g_free (property_node->value_data);
-		property_node->value_data = g_strdup (string->str);
+		property_node->value_data = string->str;
 		g_string_free (string, FALSE);
 		property_node->value_data_up_to_date = TRUE;
 	}
