@@ -110,6 +110,8 @@ ArvBuffer * 		arv_buffer_new_full		(size_t size, void *preallocated,
 
 ArvBufferStatus		arv_buffer_get_status		(ArvBuffer *buffer);
 
+const void *		arv_buffer_get_user_data	(ArvBuffer *buffer);
+
 ArvBufferPayloadType	arv_buffer_get_payload_type	(ArvBuffer *buffer);
 guint64			arv_buffer_get_timestamp	(ArvBuffer *buffer);
 const void *		arv_buffer_get_data		(ArvBuffer *buffer, size_t *size);

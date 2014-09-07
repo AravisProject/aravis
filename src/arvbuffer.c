@@ -217,6 +217,25 @@ arv_buffer_get_chunk_data (ArvBuffer *buffer, guint64 chunk_id, size_t *size)
 }
 
 /**
+ * arv_buffer_get_user_data:
+ * @buffer: a #ArvBuffer
+ *
+ * Gets a pointer to user data set by arv_buffer_new_full.
+ *
+ * Returns: user data, or NULL if not set.
+ *
+ * Since: 0.4.0
+ */
+
+const void *
+arv_buffer_get_user_data (ArvBuffer *buffer)
+{
+	g_return_val_if_fail (ARV_IS_BUFFER (buffer), NULL);
+	
+	return buffer->priv->user_data;
+}
+
+/**
  * arv_buffer_get_status:
  * @buffer: a #ArvBuffer
  *
