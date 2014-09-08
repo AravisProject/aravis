@@ -34,8 +34,28 @@
 		</para>
 	</chapter>
 
+	<chapter id="thread-safety">
+		<title>Thread Safety</title>
+
+		<para>
+			Aravis is not thread safe, which means one can not use the same object
+			simultaneously from different threads, without using mutexes. But it is
+		   	perfectly fine to use different aravis objects in different threads.
+		</para>
+
+		<para>
+			A possible trap is that glib signal callbacks are called from the thread that
+			emitted the corresponding signal. For example, the "new-buffer" callback is
+			emitted from the stream packet receiving thread, which is an internal thread
+			created by ArvGvStream. It is not safe to use ArvDevice and some ArvStream
+			functions from this callback without using mutexes. The exceptions are
+			#arv_stream_push_buffer, #arv_stream_pop_buffer, #arv_stream_try_pop_buffer and
+			#arv_stream_timeout_pop_buffer.
+		</para>
+	</chapter>
+
 	<chapter id="aravis-building">
-		<title>Building and debugging Aravis</title>
+		<title>Building and Debugging Aravis</title>
 
 		<para>
 			On UNIX, Aravis uses the standard GNU build system, using

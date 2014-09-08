@@ -64,6 +64,8 @@ struct _ArvStreamPrivate {
  * Pushes a #ArvBuffer to the @stream thread. The @stream takes ownership of @buffer,
  * and will free all the buffers still in its queues when destroyed.
  *
+ * This method is thread safe.
+ *
  * Since: 0.2.0
  */
 
@@ -83,6 +85,8 @@ arv_stream_push_buffer (ArvStream *stream, ArvBuffer *buffer)
  * Pops a buffer from the output queue of @stream. The retrieved buffer
  * may contain an invalid image. Caller should check the buffer status before using it.
  * This function blocks until a buffer is available.
+ *
+ * This method is thread safe.
  *
  * Returns: (transfer full): a #ArvBuffer
  *
@@ -105,6 +109,8 @@ arv_stream_pop_buffer (ArvStream *stream)
  * may contain an invalid image. Caller should check the buffer status before using it.
  * This is the non blocking version of pop_buffer.
  *
+ * This method is thread safe.
+ *
  * Returns: (transfer full): a #ArvBuffer, NULL if no buffer is available.
  *
  * Since: 0.2.0
@@ -125,6 +131,8 @@ arv_stream_try_pop_buffer (ArvStream *stream)
  *
  * Pops a buffer from the output queue of @stream, waiting no more than @timeout. The retrieved buffer
  * may contain an invalid image. Caller should check the buffer status before using it.
+ *
+ * This method is thread safe.
  *
  * Returns: (transfer full): a #ArvBuffer, NULL if no buffer is available until the timeout occurs.
  *
