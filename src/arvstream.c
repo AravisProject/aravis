@@ -259,7 +259,7 @@ arv_stream_get_statistics (ArvStream *stream,
  * @stream: a #ArvStream
  * @emit_signals: the new state
  *
- * Make stream emit signals. This option is
+ * Make @stream emit signals. This option is
  * by default disabled because signal emission is expensive and unneeded when
  * the application prefers to operate in pull mode.
  *
@@ -280,7 +280,7 @@ arv_stream_set_emit_signals (ArvStream *stream, gboolean emit_signals)
  *
  * Check if stream will emit its signals.
  *
- * Returns: %TRUE if @appsink is emiting its signals.
+ * Returns: %TRUE if @stream is emiting its signals.
  *
  * Since: 0.2.0
  */
