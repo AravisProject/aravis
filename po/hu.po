@@ -3,14 +3,15 @@
 # This file is distributed under the same license as the aravis package.
 #
 # Balázs Úr <urbalazs at gmail dot com>, 2013.
+# Balázs Úr <urbalazs@gmail.com>, 2014.
 msgid ""
 msgstr ""
 "Project-Id-Version: aravis master\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/enter_bug.cgi?"
 "product=aravis&keywords=I18N+L10N&component=general\n"
-"POT-Creation-Date: 2013-08-16 08:56+0000\n"
-"PO-Revision-Date: 2013-08-25 10:35+0200\n"
-"Last-Translator: Balázs Úr <urbalazs at gmail dot com>\n"
+"POT-Creation-Date: 2014-08-15 19:58+0000\n"
+"PO-Revision-Date: 2014-09-11 19:17+0200\n"
+"Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
 "Language-Team: Hungarian <gnome-hu-list@gnome.org>\n"
 "Language: hu\n"
 "MIME-Version: 1.0\n"
@@ -19,40 +20,39 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Lokalize 1.2\n"
 
-#: ../viewer/arv-viewer-2.ui.h:1 ../viewer/arv-viewer-3.ui.h:1
-#: ../viewer/data/arv-viewer.desktop.in.in.h:1
+#: ../viewer/arv-viewer.ui.h:1 ../viewer/data/arv-viewer.desktop.in.in.h:1
 msgid "Aravis"
 msgstr "Aravis"
 
-#: ../viewer/arv-viewer-2.ui.h:2 ../viewer/arv-viewer-3.ui.h:2
+#: ../viewer/arv-viewer.ui.h:2
 msgid "Frame rate:"
 msgstr "Képkockasebesség:"
 
-#: ../viewer/arv-viewer-2.ui.h:3 ../viewer/arv-viewer-3.ui.h:5
-msgid "Exposure:"
-msgstr "Expozíció:"
-
-#: ../viewer/arv-viewer-2.ui.h:4 ../viewer/arv-viewer-3.ui.h:6
-msgid "Gain:"
-msgstr "Nyereség:"
-
-#: ../viewer/arv-viewer-2.ui.h:5 ../viewer/arv-viewer-3.ui.h:3
+#: ../viewer/arv-viewer.ui.h:3
 msgid "Hz"
 msgstr "Hz"
 
-#: ../viewer/arv-viewer-2.ui.h:6 ../viewer/arv-viewer-3.ui.h:7
-msgid "µs"
-msgstr "µs"
-
-#: ../viewer/arv-viewer-2.ui.h:7 ../viewer/arv-viewer-3.ui.h:4
+#: ../viewer/arv-viewer.ui.h:4
 msgid "Auto"
 msgstr "Automatikus"
 
-#: ../viewer/arv-viewer-2.ui.h:8 ../viewer/arv-viewer-3.ui.h:8
+#: ../viewer/arv-viewer.ui.h:5
+msgid "Exposure:"
+msgstr "Expozíció:"
+
+#: ../viewer/arv-viewer.ui.h:6
+msgid "Gain:"
+msgstr "Nyereség:"
+
+#: ../viewer/arv-viewer.ui.h:7
+msgid "µs"
+msgstr "µs"
+
+#: ../viewer/arv-viewer.ui.h:8
 msgid "Settings"
 msgstr "Beállítások"
 
-#: ../viewer/arv-viewer-3.ui.h:9
+#: ../viewer/arv-viewer.ui.h:9
 msgid "Save a snapshot into image folder"
 msgstr "Pillanatkép mentése a képmappába"
 
@@ -63,4 +63,30 @@ msgstr "Aravis egyszerű megjelenítő"
 #: ../viewer/data/arv-viewer.desktop.in.in.h:3
 msgid "Display the video stream from your cameras"
 msgstr "A videofolyam megjelenítése a kamerákról"
+
+#: ../viewer/data/arv-viewer.appdata.xml.in.h:1
+#| msgid "Aravis Simple Viewer"
+msgid "Aravis Viewer"
+msgstr "Aravis megjelenítő"
+
+#: ../viewer/data/arv-viewer.appdata.xml.in.h:2
+msgid "Simple viewer of video stream acquired using Aravis"
+msgstr ""
+"Az Aravis használatával megszerzett videofolyamok egyszerű megjelenítője"
+
+#: ../viewer/data/arv-viewer.appdata.xml.in.h:3
+msgid ""
+"Aravis Viewer is a simple viewer used to display video streams from GENICAM-"
+"based Ethernet industrial cameras."
+msgstr ""
+"Az Aravis megjelenítő egy egyszerű megjelenítő, amely a GENICAM alapú ipari "
+"Ethernet kamerákból származó videofolyamok megjelenítéséhez használható."
+
+#: ../viewer/data/arv-viewer.appdata.xml.in.h:4
+msgid ""
+"It allows to control basic acquisition parameters, i.e. framerate, exposure "
+"and gain, and to save raw still images."
+msgstr ""
+"Lehetővé teszi az alap adatgyűjtő paraméterek vezérlését, azaz képkockaszám, "
+"expozíció és erősítés, valamint nyers állóképek mentését."
 
