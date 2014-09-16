@@ -83,6 +83,7 @@ const char **	arv_camera_get_available_pixel_formats_as_display_names	(ArvCamera
 
 void		arv_camera_start_acquisition		(ArvCamera *camera);
 void		arv_camera_stop_acquisition		(ArvCamera *camera);
+void		arv_camera_abort_acquisition		(ArvCamera *camera);
 
 void			arv_camera_set_acquisition_mode 	(ArvCamera *camera, ArvAcquisitionMode value);
 ArvAcquisitionMode 	arv_camera_get_acquisition_mode 	(ArvCamera *camera);

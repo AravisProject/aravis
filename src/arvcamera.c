@@ -557,6 +557,23 @@ arv_camera_stop_acquisition (ArvCamera *camera)
 	arv_device_execute_command (camera->priv->device, "AcquisitionStop");
 }
 
+/**
+ * arv_camera_abort_acquisition:
+ * @camera: a #ArvCamera
+ *
+ * Aborts video stream acquisition.
+ *
+ * Since: 0.4.0
+ */
+
+void
+arv_camera_abort_acquisition (ArvCamera *camera)
+{
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_device_execute_command (camera->priv->device, "AcquisitionAbort");
+}
+
 /*
  * arv_camera_set_acquisition_mode:
  * @camera: a #ArvCamera
