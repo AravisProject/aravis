@@ -138,50 +138,63 @@ arv_viewer_update_device_list_cb (ArvViewer *viewer)
 		gtk_widget_set_sensitive (viewer->camera_combo_box, FALSE);
 }
 
+static GstBuffer *
+_arv_to_gst_buffer (ArvBuffer *arv_buffer) 
+{
+	GstBuffer *buffer;
+	int arv_row_stride;
+	int width, height;
+	char *buffer_data;
+	size_t buffer_size;
+
+	buffer_data = (char *) arv_buffer_get_data (arv_buffer, &buffer_size);
+	arv_buffer_get_image_region (arv_buffer, NULL, NULL, &width, &height);
+	arv_row_stride = width * ARV_PIXEL_FORMAT_BIT_PER_PIXEL (arv_buffer_get_image_pixel_format (arv_buffer)) / 8;
+
+	/* Gstreamer requires row stride to be a multiple of 4 */
+	if ((arv_row_stride & 0x3) != 0) {
+		int gst_row_stride;
+		size_t size;
+		void *data;
+		int i;
+
+		gst_row_stride = (arv_row_stride & ~(0x3)) + 4;
+
+		size = height * gst_row_stride;
+		data = g_malloc (size);	
+
+		for (i = 0; i < height; i++)
+			memcpy (((char *) data) + i * gst_row_stride, buffer_data + i * arv_row_stride, arv_row_stride);
+
+		buffer = gst_buffer_new_wrapped (data, size);
+	} else {
+		buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+						      buffer_data, buffer_size,
+						      0, buffer_size, NULL, NULL);
+	}
+
+	GST_BUFFER_DTS (buffer) = 0;
+	GST_BUFFER_DURATION (buffer) = 0;
+
+	return buffer;
+}
+
 void
 arv_viewer_new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 {
 	ArvBuffer *arv_buffer;
-	GstBuffer *buffer;
 
 	arv_buffer = arv_stream_pop_buffer (stream);
 	if (arv_buffer == NULL)
 		return;
 
 	if (arv_buffer_get_status (arv_buffer) == ARV_BUFFER_STATUS_SUCCESS) {
-		int arv_row_stride;
-		int width, height;
-		char *buffer_data;
-		size_t buffer_size;
+		GstBuffer *buffer;
 		guint64 timestamp_ns;
 
+		buffer = _arv_to_gst_buffer (arv_buffer);
+
 		timestamp_ns =  g_get_real_time () * 1000LL;
-
-		buffer_data = (char *) arv_buffer_get_data (arv_buffer, &buffer_size);
-		arv_buffer_get_image_region (arv_buffer, NULL, NULL, &width, &height);
-		arv_row_stride = width * ARV_PIXEL_FORMAT_BIT_PER_PIXEL (arv_buffer_get_image_pixel_format (arv_buffer)) / 8;
-
-		/* Gstreamer requires row stride to be a multiple of 4 */
-		if ((arv_row_stride & 0x3) != 0) {
-			int gst_row_stride;
-			size_t size;
-			void *data;
-			int i;
-
-			gst_row_stride = (arv_row_stride & ~(0x3)) + 4;
-
-			size = height * gst_row_stride;
-			data = g_malloc (size);	
-
-			for (i = 0; i < height; i++)
-				memcpy (((char *) data) + i * gst_row_stride, buffer_data + i * arv_row_stride, arv_row_stride);
-
-			buffer = gst_buffer_new_wrapped (data, size);
-		} else {
-			buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
-							      buffer_data, buffer_size,
-							      0, buffer_size, NULL, NULL);
-		}
 
 		if (viewer->timestamp_offset == 0) {
 			viewer->timestamp_offset = timestamp_ns;
