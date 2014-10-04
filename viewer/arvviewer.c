@@ -783,7 +783,10 @@ arv_viewer_new (void)
 	gtk_widget_set_no_show_all (viewer->trigger_combo_box, TRUE);
 
 	g_signal_connect (viewer->drawing_area, "realize", G_CALLBACK (drawing_area_realize_cb), viewer);
+
+#if !GTK_CHECK_VERSION (3,14,0)
 	gtk_widget_set_double_buffered (viewer->drawing_area, FALSE);
+#endif
 
 	gtk_widget_show_all (viewer->main_window);
 
