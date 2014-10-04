@@ -847,6 +847,7 @@ static gboolean
 _gstreamer_plugin_check (void)
 {
 	GstRegistry *registry;
+	GstPluginFeature *feature;
 	unsigned int i;
 	gboolean success = TRUE;
 
@@ -861,8 +862,6 @@ _gstreamer_plugin_check (void)
 	registry = gst_registry_get ();
 
 	for (i = 0; i < G_N_ELEMENTS (plugins); i++) {
-		GstPluginFeature *feature;
-	
 		feature = gst_registry_lookup_feature (registry, plugins[i]);
 		if (!GST_IS_PLUGIN_FEATURE (feature)) {
 			g_print ("Gstreamer plugin '%s' is missing.\n", plugins[i]);
@@ -875,6 +874,13 @@ _gstreamer_plugin_check (void)
 
 	if (!success)
 		g_print ("Check your gstreamer installation.\n");
+
+	/* Kludge, prevent autoloading of coglsink, which doesn't seem to work for us */
+	feature = gst_registry_lookup_feature (registry, "coglsink");
+	if (GST_IS_PLUGIN_FEATURE (feature)) {
+		gst_plugin_feature_set_rank (feature, GST_RANK_NONE);
+		g_object_unref (feature);
+	}
 
 	return success;
 }
