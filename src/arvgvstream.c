@@ -35,6 +35,7 @@
 #include <arvenumtypes.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <stdio.h>
 
 #define ARV_GV_STREAM_INCOMING_BUFFER_SIZE	65536
 
@@ -314,6 +315,9 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 	}
 
 	frame_id_inc = (gint16) frame_id - (gint16) thread_data->last_frame_id;
+	/* Frame id 0 is not a valid value */
+	if ((gint16) frame_id > 0 && (gint16) thread_data->last_frame_id < 0)
+		frame_id_inc--;
 	if (frame_id_inc < 1  && frame_id_inc > -ARV_GV_STREAM_DISCARD_LATE_FRAME_THRESHOLD) {
 		arv_debug_stream_thread ("[GvStream::_find_frame_data] Discard late frame %u (last: %u)",
 					 frame_id, thread_data->last_frame_id);
