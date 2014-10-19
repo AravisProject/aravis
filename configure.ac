@@ -105,7 +105,7 @@ AC_SUBST(ARAVIS_VIEWER_LIBS)
 # ================
 
 build_gst_plugin=no
-if test "x$enable_gst_plugin" = "xyes" || "x$enable_gst_plugin" = "xauto"; then
+if test "x$enable_gst_plugin" = "xyes" || test "x$enable_gst_plugin" = "xauto"; then
 	PKG_CHECK_MODULES([ARAVIS_GST_PLUGIN], [$ARAVIS_GSTREAMER_REQUIREMENTS],
 			  [AC_DEFINE([ARAVIS_BUILD_GST_PLUGIN], [1], [Build gstreamer plugin]) build_gst_plugin=yes],
 			  [AS_IF([test "x$enable_gst_plugin" = "xyes"],
@@ -133,7 +133,7 @@ AC_SUBST(GST_PLUGIN_LDFLAGS)
 # =====================
 
 build_gst_0_10_plugin=no
-if test "x$enable_gst_0_10_plugin" = "xyes" || "x$enable_gst_0_10_plugin" = "xauto"; then
+if test "x$enable_gst_0_10_plugin" = "xyes" || test "x$enable_gst_0_10_plugin" = "xauto"; then
 	PKG_CHECK_MODULES([ARAVIS_GST_0_10_PLUGIN], [$ARAVIS_GSTREAMER_0_10_REQUIREMENTS],
 			  [AC_DEFINE([ARAVIS_BUILD_GST_0_10_PLUGIN], [1], [Build gstreamer-0.10 plugin]) build_gst_0_10_plugin=yes],
 			  [AS_IF([test "x$enable_gst_0_10_plugin" = "xyes"],
