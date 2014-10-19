@@ -298,9 +298,9 @@ arv_buffer_get_payload_type (ArvBuffer *buffer)
  * arv_buffer_get_timestamp:
  * @buffer: a #ArvBuffer
  *
- * Gets the buffer camera timestamp, expressed as nanoseconds. Not all devices provide
- * reliable timestamp, which means sometimes its better to rely on the buffer
- * completion host local time (given by @g_get_realtime for example).
+ * Gets the buffer camera timestamp, expressed as nanoseconds. Not all devices
+ * provide reliable timestamp, which means sometimes its better to rely on the
+ * buffer completion host local time (given by @g_get_realtime for example).
  *
  * Returns: buffer timestamp, in nanoseconds.
  *
@@ -313,6 +313,26 @@ arv_buffer_get_timestamp (ArvBuffer *buffer)
 	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
 
 	return buffer->priv->timestamp_ns;
+}
+
+/**
+ * arv_buffer_get_frame_id:
+ * @buffer: a #ArvBuffer
+ *
+ * Gets the buffer frame id. For GigEVision devices, valid values are in the
+ * 1..65535 range.
+ *
+ * Returns: frame id, 0 on error.
+ *
+ * Since: 0.4.0
+ */
+
+guint32
+arv_buffer_get_frame_id (ArvBuffer *buffer)
+{
+	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
+
+	return buffer->priv->frame_id;
 }
 
 /**
