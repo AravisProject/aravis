@@ -1,14 +1,14 @@
 # Serbian translation for aravis.
-# Copyright (C) 2013 aravis's COPYRIGHT HOLDER
+# Copyright (C) 2014 aravis's COPYRIGHT HOLDER
 # This file is distributed under the same license as the aravis package.
-# Miroslav Nikolić <miroslavnikolic@rocketmail.com>, 2013.
+# Miroslav Nikolić <miroslavnikolic@rocketmail.com>, 2013—2014.
 msgid ""
 msgstr ""
 "Project-Id-Version: aravis master\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/enter_bug.cgi?product=aravis"
-"&keywords=I18N+L10N&component=general\n"
-"POT-Creation-Date: 2013-05-09 19:46+0000\n"
-"PO-Revision-Date: 2013-05-13 11:34+0200\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/enter_bug.cgi?product=aravis&"
+"keywords=I18N+L10N&component=general\n"
+"POT-Creation-Date: 2014-08-15 19:58+0000\n"
+"PO-Revision-Date: 2014-10-25 08:58+0200\n"
 "Last-Translator: Miroslav Nikolić <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <gnom@prevod.org>\n"
 "Language: sr\n"
@@ -19,40 +19,39 @@ msgstr ""
 "n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
 "X-Project-Style: gnome\n"
 
-#: ../viewer/arv-viewer-2.ui.h:1 ../viewer/arv-viewer-3.ui.h:1
-#: ../viewer/data/arv-viewer.desktop.in.in.h:1
+#: ../viewer/arv-viewer.ui.h:1 ../viewer/data/arv-viewer.desktop.in.in.h:1
 msgid "Aravis"
 msgstr "Aravis"
 
-#: ../viewer/arv-viewer-2.ui.h:2 ../viewer/arv-viewer-3.ui.h:2
+#: ../viewer/arv-viewer.ui.h:2
 msgid "Frame rate:"
 msgstr "Protok kadrova:"
 
-#: ../viewer/arv-viewer-2.ui.h:3 ../viewer/arv-viewer-3.ui.h:5
-msgid "Exposure:"
-msgstr "Izloženost:"
-
-#: ../viewer/arv-viewer-2.ui.h:4 ../viewer/arv-viewer-3.ui.h:6
-msgid "Gain:"
-msgstr "Pojačanje:"
-
-#: ../viewer/arv-viewer-2.ui.h:5 ../viewer/arv-viewer-3.ui.h:3
+#: ../viewer/arv-viewer.ui.h:3
 msgid "Hz"
 msgstr "Hz"
 
-#: ../viewer/arv-viewer-2.ui.h:6 ../viewer/arv-viewer-3.ui.h:7
-msgid "µs"
-msgstr "µs"
-
-#: ../viewer/arv-viewer-2.ui.h:7 ../viewer/arv-viewer-3.ui.h:4
+#: ../viewer/arv-viewer.ui.h:4
 msgid "Auto"
 msgstr "Samostalno"
 
-#: ../viewer/arv-viewer-2.ui.h:8 ../viewer/arv-viewer-3.ui.h:8
+#: ../viewer/arv-viewer.ui.h:5
+msgid "Exposure:"
+msgstr "Izloženost:"
+
+#: ../viewer/arv-viewer.ui.h:6
+msgid "Gain:"
+msgstr "Pojačanje:"
+
+#: ../viewer/arv-viewer.ui.h:7
+msgid "µs"
+msgstr "µs"
+
+#: ../viewer/arv-viewer.ui.h:8
 msgid "Settings"
 msgstr "Podešavanja"
 
-#: ../viewer/arv-viewer-3.ui.h:9
+#: ../viewer/arv-viewer.ui.h:9
 msgid "Save a snapshot into image folder"
 msgstr "Sačuvaj snimak ekrana u fasciklu sa slikama"
 
@@ -63,3 +62,28 @@ msgstr "Pregledač uzorka Aravis"
 #: ../viewer/data/arv-viewer.desktop.in.in.h:3
 msgid "Display the video stream from your cameras"
 msgstr "Prikažite video tok sa vašeg foto-aparata"
+
+#: ../viewer/data/arv-viewer.appdata.xml.in.h:1
+#| msgid "Aravis Simple Viewer"
+msgid "Aravis Viewer"
+msgstr "Pregledač Aravis"
+
+#: ../viewer/data/arv-viewer.appdata.xml.in.h:2
+msgid "Simple viewer of video stream acquired using Aravis"
+msgstr "Jednostavan pregledač video tokova napravljenih korišćenjem Aravisa"
+
+#: ../viewer/data/arv-viewer.appdata.xml.in.h:3
+msgid ""
+"Aravis Viewer is a simple viewer used to display video streams from GENICAM-"
+"based Ethernet industrial cameras."
+msgstr ""
+"Pregledač Aravis je jednostavan pregledač koji se koristi za prikazivanje "
+"video tokova sa eternet industrijskih foto-aparata zasnovanih na GENIKAM-u."
+
+#: ../viewer/data/arv-viewer.appdata.xml.in.h:4
+msgid ""
+"It allows to control basic acquisition parameters, i.e. framerate, exposure "
+"and gain, and to save raw still images."
+msgstr ""
+"Omogućava upravljanje osnovnim parametrima snimanja, tj. protokom kadrova, "
+"izloženošću i pojačanjem, kao i čuvatnje sirovih fotografija."
