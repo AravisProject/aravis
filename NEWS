@@ -1,3 +1,14 @@
+Release 0.3.6
+=============
+
+  * build: add missing test commands in configure.ac (Adrian)
+  * camera: new abort_acquisition function (Davide)
+  * gv_stream: missing frame detection fix (Davide)
+  * buffer: user_data and frame_id accessors
+  * chunk_parser: bug fixes
+  * viewer: prevent use of broken coglsink from autovideosink
+  * translations: updates (Matej, Balázs, Andika, Daniel, Rafael)
+
 Release 0.3.5
 =============
 
