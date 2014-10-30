@@ -721,7 +721,7 @@ gst_aravis_class_init (GstAravisClass * klass)
 				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 	g_object_class_install_property
 		(gobject_class,
-		 PROP_GAIN_AUTO,
+		 PROP_PACKET_RESEND,
 		 g_param_spec_boolean ("packet-resend",
 				       "Packet Resend",
 				       "Request dropped packets to be reissued by the camera",
