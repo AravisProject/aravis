@@ -38,7 +38,7 @@
 #include <time.h>
 #include <string.h>
 
-#define GST_ARAVIS_N_BUFFERS			50
+#define GST_ARAVIS_DEFAULT_N_BUFFERS		50
 #define GST_ARAVIS_BUFFER_TIMEOUT_DEFAULT	2000000
 
 GST_DEBUG_CATEGORY_STATIC (aravis_debug);
@@ -57,7 +57,8 @@ enum
   PROP_V_BINNING,
   PROP_OFFSET_X,
   PROP_OFFSET_Y,
-  PROP_PACKET_RESEND
+  PROP_PACKET_RESEND,
+  PROP_NUM_BUFFERS
 };
 
 G_DEFINE_TYPE (GstAravis, gst_aravis, GST_TYPE_PUSH_SRC);
@@ -248,7 +249,7 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
         else
                 g_object_set (gst_aravis->stream, "packet-resend", ARV_GV_STREAM_PACKET_RESEND_NEVER, NULL);
 
-	for (i = 0; i < GST_ARAVIS_N_BUFFERS; i++)
+	for (i = 0; i < gst_aravis->num_buffers; i++)
 		arv_stream_push_buffer (gst_aravis->stream,
 					arv_buffer_new (gst_aravis->payload, NULL));
 
@@ -445,6 +446,7 @@ gst_aravis_init (GstAravis *gst_aravis)
 	gst_aravis->h_binning = -1;
 	gst_aravis->v_binning = -1;
         gst_aravis->packet_resend = TRUE;
+        gst_aravis->num_buffers = GST_ARAVIS_DEFAULT_N_BUFFERS;
 	gst_aravis->payload = 0;
 
 	gst_aravis->buffer_timeout_us = GST_ARAVIS_BUFFER_TIMEOUT_DEFAULT;
@@ -538,6 +540,9 @@ gst_aravis_set_property (GObject * object, guint prop_id,
                 case PROP_PACKET_RESEND:
                         gst_aravis->packet_resend = g_value_get_boolean (value);
                         break;
+                case PROP_NUM_BUFFERS:
+                        gst_aravis->num_buffers = g_value_get_int (value);
+                        break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 			break;
@@ -583,6 +588,9 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 			break;
         	case PROP_PACKET_RESEND:
                         g_value_set_boolean (value, gst_aravis->packet_resend);
+                        break;
+        	case PROP_NUM_BUFFERS:
+                        g_value_set_int (value, gst_aravis->num_buffers);
                         break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -691,6 +699,15 @@ gst_aravis_class_init (GstAravisClass * klass)
 				       "Request dropped packets to be reissued by the camera",
 				       TRUE,
 				       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+	g_object_class_install_property
+		(gobject_class,
+		 PROP_NUM_BUFFERS,
+		 g_param_spec_int ("num-buffers",
+                                   "Number of Buffers",
+                                   "Number of video buffers to allocate for video frames",
+                                   1, G_MAXINT, GST_ARAVIS_DEFAULT_N_BUFFERS,
+                                   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
         GST_DEBUG_CATEGORY_INIT (aravis_debug, "aravissrc", 0, "Aravis interface");
 
