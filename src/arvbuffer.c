@@ -351,8 +351,8 @@ arv_buffer_get_frame_id (ArvBuffer *buffer)
 void
 arv_buffer_get_image_region (ArvBuffer *buffer, gint *x, gint *y, gint *width, gint *height)
 {
-	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
-	g_return_val_if_fail (buffer->priv->gvsp_payload_type == ARV_GVSP_PAYLOAD_TYPE_IMAGE, 0);
+	g_return_if_fail (ARV_IS_BUFFER (buffer));
+	g_return_if_fail (buffer->priv->gvsp_payload_type == ARV_GVSP_PAYLOAD_TYPE_IMAGE);
 
 	if (x != NULL)
 		*x = buffer->priv->x_offset;
