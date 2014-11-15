@@ -1,12 +1,12 @@
 include $(top_srcdir)/Makefile.decl
 
-@APPDATA_XML_RULES@
+@APPSTREAM_XML_RULES@
 @INTLTOOL_XML_RULE@
 
-appdata_in_files = arv-viewer.appdata.xml.in
-appdata_XML = $(appdata_in_files:.xml.in=.xml)
+appstream_in_files = arv-viewer.appdata.xml.in
+appstream_XML = $(appstream_in_files:.xml.in=.xml)
 
-EXTRA_DIST = $(appdata_in_files)
+EXTRA_DIST = $(appstream_in_files)
 
 @INTLTOOL_DESKTOP_RULE@
 desktopdir = $(datadir)/applications
@@ -17,5 +17,5 @@ dist_noinst_DATA = \
 	$(desktop_in_files)
 
 CLEANFILES = 					\
-	$(appdata_XML)				\
+	$(appstream_XML)				\
 	$(desktop_DATA)
