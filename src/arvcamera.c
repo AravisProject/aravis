@@ -1203,7 +1203,7 @@ arv_camera_get_device (ArvCamera *camera)
  * arv_camera_is_frame_rate_available:
  * @camera: a #ArvCamera
  *
- * Returns: TRUE if FrameRate feature is available
+ * Returns: %TRUE if FrameRate feature is available
  *
  * Since: 0.2.0
  */
@@ -1234,7 +1234,7 @@ arv_camera_is_frame_rate_available (ArvCamera *camera)
  * arv_camera_is_exposure_time_available:
  * @camera: a #ArvCamera
  *
- * Returns: TRUE if Exposure Time feature is available.
+ * Returns: %TRUE if Exposure Time feature is available.
  *
  * Since: 0.2.0
  */
@@ -1254,7 +1254,7 @@ arv_camera_is_exposure_time_available (ArvCamera *camera)
  * arv_camera_is_exposure_auto_available:
  * @camera: a #ArvCamera
  *
- * Returns: TRUE if Exposure Auto feature is available.
+ * Returns: %TRUE if Exposure Auto feature is available.
  *
  * Since: 0.2.0
  */
@@ -1271,7 +1271,7 @@ arv_camera_is_exposure_auto_available (ArvCamera *camera)
  * arv_camera_is_gain_available:
  * @camera: a #ArvCamera
  *
- * Returns: TRUE if Gain feature is available.
+ * Returns: %TRUE if Gain feature is available.
  *
  * Since: 0.2.0
  */
@@ -1291,7 +1291,7 @@ arv_camera_is_gain_available (ArvCamera *camera)
  * arv_camera_is_gain_auto_available:
  * @camera: a #ArvCamera
  *
- * Returns: TRUE if Gain feature is available.
+ * Returns: %TRUE if Gain feature is available.
  *
  * Since: 0.2.0
  */
@@ -1328,7 +1328,7 @@ arv_camera_set_chunk_mode (ArvCamera *camera, gboolean is_active)
  * arv_camera_get_chunk_mode:
  * @camera: a #ArvCamera
  *
- * Check wether chunk data mode is active. Please see @arv_camera_set_chunk_mode.
+ * Check wether chunk data mode is active. Please see arv_camera_set_chunk_mode().
  *
  * Returns: %TRUE if chunk data mode is active.
  *
@@ -1350,7 +1350,7 @@ arv_camera_get_chunk_mode (ArvCamera *camera)
  * @is_enabled: wether to enable this chunk
  *
  * Sets state of a chunk data. Chunk data are be embedded in #ArvBuffer only
- * if chunk mode is active. Please see @arv_camera_set_chunk_mode.
+ * if chunk mode is active. Please see arv_camera_set_chunk_mode().
  *
  * Since: 0.4.0
  **/
@@ -1371,7 +1371,7 @@ arv_camera_set_chunk_state (ArvCamera *camera, const char *chunk, gboolean is_en
  * @chunk: chunk data name
  *
  * Gets state of chunk data. Chunk data are be embedded in #ArvBuffer only
- * if chunk mode is active. Please see @arv_camera_set_chunk_mode.
+ * if chunk mode is active. Please see arv_camera_set_chunk_mode().
  *
  * Returns: %TRUE if @chunk is enabled.
  *
