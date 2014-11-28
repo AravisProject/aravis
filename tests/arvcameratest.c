@@ -181,6 +181,7 @@ main (int argc, char **argv)
 
 	data.buffer_count = 0;
 	data.chunks = NULL;
+	data.chunk_parser = NULL;
 
 	arv_g_thread_init (NULL);
 	arv_g_type_init ();
