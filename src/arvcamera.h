@@ -123,6 +123,19 @@ ArvAuto		arv_camera_get_gain_auto	(ArvCamera *camera);
 
 guint		arv_camera_get_payload		(ArvCamera *camera);
 
+/* GigEVision specific API */
+
+gboolean	arv_camera_is_gv_device			(ArvCamera *camera);
+
+gint		arv_camera_gv_get_n_stream_channels	(ArvCamera *camera);
+void		arv_camera_gv_select_stream_channel	(ArvCamera *camera, gint channel_id);
+int 		arv_camera_gv_get_current_stream_channel(ArvCamera *camera);
+
+void		arv_camera_gv_set_packet_delay		(ArvCamera *camera, gint64 delay_ns);
+gint64 		arv_camera_gv_get_packet_delay 		(ArvCamera *camera);
+void 		arv_camera_gv_set_packet_size 		(ArvCamera *camera, gint packet_size);
+gint		arv_camera_gv_get_packet_size		(ArvCamera *camera);
+
 /* Chunk data */
 
 void 			arv_camera_set_chunk_mode 	(ArvCamera *camera, gboolean is_active);

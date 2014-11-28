@@ -20,6 +20,9 @@ static gboolean arv_option_auto_socket_buffer = FALSE;
 static gboolean arv_option_no_packet_resend = FALSE;
 static unsigned int arv_option_packet_timeout = 20;
 static unsigned int arv_option_frame_retention = 100;
+static int arv_option_gv_stream_channel = -1;
+static int arv_option_gv_packet_delay = -1;
+static int arv_option_gv_packet_size = -1;
 static char *arv_option_chunks = NULL;
 
 static const GOptionEntry arv_option_entries[] =
@@ -85,7 +88,19 @@ static const GOptionEntry arv_option_entries[] =
 		&arv_option_frame_retention, 		"Frame retention (ms)", NULL
 	},
 	{
-		"chunks", 				'c', 0, G_OPTION_ARG_STRING,
+		"gv-stream-channel",			'c', 0, G_OPTION_ARG_INT,
+		&arv_option_gv_stream_channel,		"GigEVision stream channel id", NULL
+	},
+	{
+		"gv-packet-delay",			'y', 0, G_OPTION_ARG_INT,
+		&arv_option_gv_packet_delay,		"GigEVision packet delay (ns)", NULL
+	},
+	{
+		"gv-packet-size",			'i', 0, G_OPTION_ARG_INT,
+		&arv_option_gv_packet_size,		"GigEVision packet size (bytes)", NULL
+	},
+	{
+		"chunks", 				'u', 0, G_OPTION_ARG_STRING,
 		&arv_option_chunks,	 		"Chunks", NULL
 	},
 	{
@@ -241,6 +256,12 @@ main (int argc, char **argv)
 		arv_camera_set_binning (camera, arv_option_horizontal_binning, arv_option_vertical_binning);
 		arv_camera_set_exposure_time (camera, arv_option_exposure_time_us);
 		arv_camera_set_gain (camera, arv_option_gain);
+		
+		if (arv_camera_is_gv_device (camera)) {
+			arv_camera_gv_select_stream_channel (camera, arv_option_gv_stream_channel);
+			arv_camera_gv_set_packet_delay (camera, arv_option_gv_packet_delay);
+			arv_camera_gv_set_packet_size (camera, arv_option_gv_packet_size);
+		}
 
 		arv_camera_get_region (camera, &x, &y, &width, &height);
 		arv_camera_get_binning (camera, &dx, &dy);
@@ -248,16 +269,23 @@ main (int argc, char **argv)
 		payload = arv_camera_get_payload (camera);
 		gain = arv_camera_get_gain (camera);
 
-		printf ("vendor name         = %s\n", arv_camera_get_vendor_name (camera));
-		printf ("model name          = %s\n", arv_camera_get_model_name (camera));
-		printf ("device id           = %s\n", arv_camera_get_device_id (camera));
-		printf ("image width         = %d\n", width);
-		printf ("image height        = %d\n", height);
-		printf ("horizontal binning  = %d\n", dx);
-		printf ("vertical binning    = %d\n", dy);
-		printf ("payload             = %d bytes\n", payload);
-		printf ("exposure            = %g µs\n", exposure);
-		printf ("gain                = %d dB\n", gain);
+		printf ("vendor name           = %s\n", arv_camera_get_vendor_name (camera));
+		printf ("model name            = %s\n", arv_camera_get_model_name (camera));
+		printf ("device id             = %s\n", arv_camera_get_device_id (camera));
+		printf ("image width           = %d\n", width);
+		printf ("image height          = %d\n", height);
+		printf ("horizontal binning    = %d\n", dx);
+		printf ("vertical binning      = %d\n", dy);
+		printf ("payload               = %d bytes\n", payload);
+		printf ("exposure              = %g µs\n", exposure);
+		printf ("gain                  = %d dB\n", gain);
+
+		if (arv_camera_is_gv_device (camera)) {
+			printf ("gv n_stream channels  = %d\n", arv_camera_gv_get_n_stream_channels (camera));
+			printf ("gv current channel    = %d\n", arv_camera_gv_get_current_stream_channel (camera));
+			printf ("gv packet delay       = %" G_GINT64_FORMAT " ns\n", arv_camera_gv_get_packet_delay (camera));
+			printf ("gv packet size        = %d bytes\n", arv_camera_gv_get_packet_size (camera));
+		}
 
 		stream = arv_camera_create_stream (camera, NULL, NULL);
 		if (stream != NULL) {

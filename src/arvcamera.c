@@ -48,7 +48,7 @@
 #include <arvgcenumentry.h>
 #include <arvgcstring.h>
 #include <arvgc.h>
-#include <arvdevice.h>
+#include <arvgvdevice.h>
 #include <arvenums.h>
 #include <arvstr.h>
 
@@ -1305,6 +1305,177 @@ arv_camera_is_gain_auto_available (ArvCamera *camera)
 }
 
 /**
+ * arv_camera_is_gv_device:
+ * @camera: a #ArvCamera
+ *
+ * Returns: %TRUE if @camera is a GigEVision device.
+ *
+ * Since: 0.4.0
+ */
+
+gboolean
+arv_camera_is_gv_device	(ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
+
+	return ARV_IS_GV_DEVICE (camera->priv->device);
+}
+
+/**
+ * arv_camera_gv_get_n_stream_channels:
+ * @camera: a #ArvCamera
+ *
+ * Returns: the number of supported stream channels.
+ *
+ * Since: 0.4.0
+ */
+
+gint
+arv_camera_gv_get_n_stream_channels (ArvCamera *camera)
+{
+	g_return_val_if_fail (arv_camera_is_gv_device (camera), 0);
+
+	return arv_device_get_integer_feature_value (camera->priv->device, "GevStreamChannelCount");
+}
+
+/**
+ * arv_camera_gv_select_stream_channel:
+ * @camera: a #ArvCamera
+ * @channel_id: id of the channel to select
+ *
+ * Select the current stream channel.
+ *
+ * Since: 0.4.0
+ */
+
+void
+arv_camera_gv_select_stream_channel (ArvCamera *camera, gint channel_id)
+{
+	if (channel_id < 0)
+		return;
+
+	g_return_if_fail (arv_camera_is_gv_device (camera));
+
+	arv_device_set_integer_feature_value (camera->priv->device, "GevStreamChannelSelector", channel_id);
+}
+
+/**
+ * arv_camera_gv_get_current_stream_channel:
+ * @camera: a #ArvCamera
+ *
+ * Returns: The current stream channel id.
+ *
+ * Since: 0.4.0
+ */
+
+int
+arv_camera_gv_get_current_stream_channel (ArvCamera *camera)
+{
+	g_return_val_if_fail (arv_camera_is_gv_device (camera), 0);
+
+	return arv_device_get_integer_feature_value (camera->priv->device, "GevStreamChannelSelector");
+}
+
+/**
+ * arv_camera_gv_set_packet_delay:
+ * @camera: a #ArvCamera
+ * @delay_ns: inter packet delay, in nanoseconds
+ *
+ * Configure the inter packet delay to insert between each packet for the current stream
+ * channel. This can be used as a crude flow-control mechanism if the application or the network
+ * infrastructure cannot keep up with the packets coming from the device.
+ *
+ * Since: 0.4.0
+ */
+
+void
+arv_camera_gv_set_packet_delay (ArvCamera *camera, gint64 delay_ns)
+{
+	gint64 tick_frequency;
+	gint64 value;
+
+	if (delay_ns < 0)
+		return;
+
+	g_return_if_fail (arv_camera_is_gv_device (camera));
+
+	tick_frequency = arv_device_get_integer_feature_value (camera->priv->device, "GevTimestampTickFrequency");
+	if (tick_frequency <= 0)
+		return;
+
+	value = tick_frequency * delay_ns / 1000000000LL;
+	arv_device_set_integer_feature_value (camera->priv->device, "GevSCPD", value);
+}
+
+/**
+ * arv_camera_gv_get_packet_delay:
+ * @camera: a #ArvCamera
+ *
+ * Returns: The inter packet delay, in nanoseconds.
+ *
+ * Since: 0.4.0
+ */
+
+gint64
+arv_camera_gv_get_packet_delay (ArvCamera *camera)
+{
+	gint64 tick_frequency;
+	gint64 value;
+
+	g_return_val_if_fail (arv_camera_is_gv_device (camera), 0);
+
+	tick_frequency = arv_device_get_integer_feature_value (camera->priv->device, "GevTimestampTickFrequency");
+	if (tick_frequency <= 0)
+		return 0;
+
+	value = arv_device_get_integer_feature_value (camera->priv->device, "GevSCPD");
+
+	return value * 1000000000LL / tick_frequency;
+}
+
+/**
+ * arv_camera_gv_set_packet_size:
+ * @camera: a #ArvCamera
+ * @packet_size: packet size, in bytes
+ *
+ * Specifies the stream packet size, in bytes, to send on the selected channel for a GVSP transmitter
+ * or specifies the maximum packet size supported by a GVSP receiver.
+ *
+ * This does not include data leader and data trailer and the last data packet which might be of
+ * smaller size (since packet size is not necessarily a multiple of block size for stream channel).
+ *
+ * Since: 0.4.0
+ */
+
+void
+arv_camera_gv_set_packet_size (ArvCamera *camera, gint packet_size)
+{
+	if (packet_size <= 0)
+		return;
+
+	g_return_if_fail (arv_camera_is_gv_device (camera));
+
+	arv_device_set_integer_feature_value (camera->priv->device, "GevSCPSPacketSize", packet_size);
+}
+
+/**
+ * arv_camera_gv_get_packet_size:
+ * @camera: a #ArvCamera
+ *
+ * Returns: The stream packet size, in bytes.
+ *
+ * Since: 0.4.0
+ */
+
+gint
+arv_camera_gv_get_packet_size (ArvCamera *camera)
+{
+	g_return_val_if_fail (arv_camera_is_gv_device (camera), 0);
+
+	return arv_device_get_integer_feature_value (camera->priv->device, "GevSCPSPacketSize");
+}
+
+/**
  * arv_camera_set_chunk_mode:
  * @camera: a #ArvCamera
  * @is_active: wether to enable chunk data mode
@@ -1560,7 +1731,8 @@ arv_camera_constructor (GType gtype, guint n_properties, GObjectConstructParam *
 
 	camera->priv->use_gain_raw = !ARV_IS_GC_FLOAT (arv_device_get_feature (camera->priv->device, "Gain"));
 	camera->priv->use_exposure_time_abs = !ARV_IS_GC_FLOAT (arv_device_get_feature (camera->priv->device, "ExposureTime"));
-	camera->priv->use_acquisition_frame_rate_abs = !ARV_IS_GC_FLOAT (arv_device_get_feature (camera->priv->device, "AcquisitionFrameRate"));
+	camera->priv->use_acquisition_frame_rate_abs = !ARV_IS_GC_FLOAT (arv_device_get_feature (camera->priv->device,
+												 "AcquisitionFrameRate"));
 
     return object;
 }
