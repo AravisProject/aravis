@@ -59,7 +59,7 @@ AC_ARG_ENABLE(zlib_pc,
 
 PKG_PROG_PKG_CONFIG([0.14])
 
-ARAVIS_REQUIREMENTS="glib-2.0 >= 2.26 gobject-2.0 gio-2.0 libxml-2.0 gthread-2.0 dbus-1"
+ARAVIS_REQUIREMENTS="glib-2.0 >= 2.26 gobject-2.0 gio-2.0 libxml-2.0 gthread-2.0"
 ARAVIS_GSTREAMER_REQUIREMENTS="gstreamer-base-1.0 gstreamer-app-1.0"
 ARAVIS_GSTREAMER_0_10_REQUIREMENTS="gstreamer-base-0.10 gstreamer-app-0.10"
 ARAVIS_VIEWER_REQUIREMENTS="$ARAVIS_GSTREAMER_REQUIREMENTS gstreamer-video-1.0 gtk+-3.0 libnotify"

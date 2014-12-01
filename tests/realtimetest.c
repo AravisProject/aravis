@@ -27,7 +27,6 @@
 
 #include <errno.h>
 #include <sys/types.h>
-#include <dbus/dbus.h>
 
 #define RTKIT_SERVICE_NAME "org.freedesktop.RealtimeKit1"
 #define RTKIT_OBJECT_PATH "/org/freedesktop/RealtimeKit1"
@@ -45,247 +44,162 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
-static pid_t _gettid(void) {
-        return (pid_t) syscall(SYS_gettid);
+#include <gio/gio.h>
+#include <stdlib.h>
+
+#define ARV_RTKIT_ERROR arv_rtkit_error_quark ()
+
+GQuark
+arv_rtkit_error_quark (void)
+{
+  return g_quark_from_static_string ("arv-rtkit-error-quark");
 }
 
-static int translate_error(const char *name) {
-        if (strcmp(name, DBUS_ERROR_NO_MEMORY) == 0)
-                return -ENOMEM;
-        if (strcmp(name, DBUS_ERROR_SERVICE_UNKNOWN) == 0 ||
-            strcmp(name, DBUS_ERROR_NAME_HAS_NO_OWNER) == 0)
-                return -ENOENT;
-        if (strcmp(name, DBUS_ERROR_ACCESS_DENIED) == 0 ||
-            strcmp(name, DBUS_ERROR_AUTH_FAILED) == 0)
-                return -EACCES;
+gint64
+arv_rtkit_get_int_property (GDBusConnection *connection, const char* propname, GError **error) {
 
-        return -EIO;
+	GDBusMessage *message;
+	GDBusMessage *reply;
+	GError *local_error = NULL;
+	GVariant *body;
+	GVariant *parameter;
+	GVariant *variant;
+	const GVariantType *variant_type;
+	gint64 value;
+
+	message = g_dbus_message_new_method_call (RTKIT_SERVICE_NAME,
+						  RTKIT_OBJECT_PATH,
+						  "org.freedesktop.DBus.Properties",
+						  "Get");
+	g_dbus_message_set_body (message, g_variant_new ("(ss)", "org.freedesktop.RealtimeKit1", propname));
+
+	reply = g_dbus_connection_send_message_with_reply_sync (connection, message,
+								G_DBUS_SEND_MESSAGE_FLAGS_NONE, 1000, NULL, NULL,
+								&local_error);
+	g_object_unref (message);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return 0;
+	}
+
+	if (g_dbus_message_get_message_type (reply) != G_DBUS_MESSAGE_TYPE_METHOD_RETURN) {
+		local_error = g_error_new (ARV_RTKIT_ERROR, 0, "%s", g_dbus_message_get_error_name (reply));
+		g_propagate_error (error, local_error);
+		g_object_unref (reply);
+		return 0;
+	}
+
+	body = g_dbus_message_get_body (reply);
+	parameter = g_variant_get_child_value (body, 0);
+	variant = g_variant_get_variant (parameter);
+
+	variant_type = g_variant_get_type (variant);
+
+	if (g_variant_type_equal (variant_type, G_VARIANT_TYPE_INT32))
+		value = g_variant_get_int32 (variant);
+	else if (g_variant_type_equal (variant_type, G_VARIANT_TYPE_INT64))
+		value = g_variant_get_int64 (variant);
+	else
+		value = 0;
+
+	g_variant_unref (parameter);
+	g_variant_unref (variant);
+	g_object_unref (reply);
+
+	return value;
 }
 
-static long long rtkit_get_int_property(DBusConnection *connection, const char* propname, long long* propval) {
-        DBusMessage *m = NULL, *r = NULL;
-        DBusMessageIter iter, subiter;
-        dbus_int64_t i64;
-        dbus_int32_t i32;
-        DBusError error;
-        int current_type;
-        long long ret;
-        const char * interfacestr = "org.freedesktop.RealtimeKit1";
-
-        dbus_error_init(&error);
-
-        if (!(m = dbus_message_new_method_call(
-                              RTKIT_SERVICE_NAME,
-                              RTKIT_OBJECT_PATH,
-                              "org.freedesktop.DBus.Properties",
-                              "Get"))) {
-                ret = -ENOMEM;
-                goto finish;
-        }
-
-        if (!dbus_message_append_args(
-                            m,
-                            DBUS_TYPE_STRING, &interfacestr,
-                            DBUS_TYPE_STRING, &propname,
-                            DBUS_TYPE_INVALID)) {
-                ret = -ENOMEM;
-                goto finish;
-        }
-
-        if (!(r = dbus_connection_send_with_reply_and_block(connection, m, -1, &error))) {
-                ret = translate_error(error.name);
-                goto finish;
-        }
-
-        if (dbus_set_error_from_message(&error, r)) {
-                ret = translate_error(error.name);
-                goto finish;
-        }
-
-        ret = -EBADMSG;
-        dbus_message_iter_init(r, &iter);
-        while ((current_type = dbus_message_iter_get_arg_type (&iter)) != DBUS_TYPE_INVALID) {
-
-                if (current_type == DBUS_TYPE_VARIANT) {
-                        dbus_message_iter_recurse(&iter, &subiter);
-
-                        while ((current_type = dbus_message_iter_get_arg_type (&subiter)) != DBUS_TYPE_INVALID) {
-
-                                if (current_type == DBUS_TYPE_INT32) {
-                                        dbus_message_iter_get_basic(&subiter, &i32);
-                                        *propval = i32;
-                                        ret = 0;
-                                }
-
-                                if (current_type == DBUS_TYPE_INT64) {
-                                        dbus_message_iter_get_basic(&subiter, &i64);
-                                        *propval = i64;
-                                        ret = 0;
-                                }
-
-                                dbus_message_iter_next (&subiter);
-                         }
-                }
-                dbus_message_iter_next (&iter);
-        }
-
-finish:
-
-        if (m)
-                dbus_message_unref(m);
-
-        if (r)
-                dbus_message_unref(r);
-
-        dbus_error_free(&error);
-
-        return ret;
+int
+arv_rtkit_get_max_realtime_priority (GDBusConnection *connection, GError **error)
+{
+	return arv_rtkit_get_int_property (connection, "MaxRealtimePriority", error);
 }
 
-int rtkit_get_max_realtime_priority(DBusConnection *connection) {
-        long long retval;
-        int err;
-
-        err = rtkit_get_int_property(connection, "MaxRealtimePriority", &retval);
-        return err < 0 ? err : retval;
+int
+arv_rtkit_get_min_nice_level (GDBusConnection *connection, GError **error)
+{
+	return arv_rtkit_get_int_property (connection, "MinNiceLevel", error);
 }
 
-int rtkit_get_min_nice_level(DBusConnection *connection, int* min_nice_level) {
-        long long retval;
-        int err;
-
-        err = rtkit_get_int_property(connection, "MinNiceLevel", &retval);
-        if (err >= 0)
-                *min_nice_level = retval;
-        return err;
+gint64
+arv_rtkit_get_rttime_usec_max (GDBusConnection *connection, GError **error)
+{
+	return arv_rtkit_get_int_property (connection, "RTTimeUSecMax", error);
 }
 
-long long rtkit_get_rttime_usec_max(DBusConnection *connection) {
-        long long retval;
-        int err;
+void
+arv_rtkit_make_realtime (GDBusConnection *connection, pid_t thread, int priority, GError **error) {
 
-        err = rtkit_get_int_property(connection, "RTTimeUSecMax", &retval);
-        return err < 0 ? err : retval;
+	GDBusMessage *message;
+	GDBusMessage *reply;
+	GError *local_error = NULL;
+
+	message = g_dbus_message_new_method_call (RTKIT_SERVICE_NAME,
+						  RTKIT_OBJECT_PATH,
+						  "org.freedesktop.RealtimeKit1",
+						  "MakeThreadRealtime");
+	g_dbus_message_set_body (message, g_variant_new ("(tu)", thread, priority));
+
+	reply = g_dbus_connection_send_message_with_reply_sync (connection, message,
+								G_DBUS_SEND_MESSAGE_FLAGS_NONE, 1000, NULL, NULL,
+								&local_error);
+	g_object_unref (message);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return;
+	}
+
+	if (g_dbus_message_get_message_type (reply) != G_DBUS_MESSAGE_TYPE_METHOD_RETURN) {
+		local_error = g_error_new (ARV_RTKIT_ERROR, 0, "%s", g_dbus_message_get_error_name (reply));
+		g_propagate_error (error, local_error);
+		g_object_unref (reply);
+		return;
+	}
+
+	{
+		char *string;
+
+		string = g_dbus_message_print (reply, 2);
+		printf ("Reply = %s\n", string);
+		g_free (string);
+	}
+
+	g_object_unref (reply);
 }
 
-int rtkit_make_realtime(DBusConnection *connection, pid_t thread, int priority) {
-        DBusMessage *m = NULL, *r = NULL;
-        dbus_uint64_t u64;
-        dbus_uint32_t u32;
-        DBusError error;
-        int ret;
+void
+arv_rtkit_make_high_priority (GDBusConnection *connection, pid_t thread, int nice_level, GError **error) {
 
-        dbus_error_init(&error);
+	GDBusMessage *message;
+	GDBusMessage *reply;
+	GError *local_error = NULL;
 
-        if (thread == 0)
-                thread = _gettid();
+	message = g_dbus_message_new_method_call (RTKIT_SERVICE_NAME,
+						  RTKIT_OBJECT_PATH,
+						  "org.freedesktop.RealtimeKit1",
+						  "MakeThreadHighPriority");
+	g_dbus_message_set_body (message, g_variant_new ("(ti)", thread, nice_level));
 
-        if (!(m = dbus_message_new_method_call(
-                              RTKIT_SERVICE_NAME,
-                              RTKIT_OBJECT_PATH,
-                              "org.freedesktop.RealtimeKit1",
-                              "MakeThreadRealtime"))) {
-                ret = -ENOMEM;
-                goto finish;
-        }
+	reply = g_dbus_connection_send_message_with_reply_sync (connection, message,
+								G_DBUS_SEND_MESSAGE_FLAGS_NONE, 1000, NULL, NULL,
+								&local_error);
+	g_object_unref (message);
 
-        u64 = (dbus_uint64_t) thread;
-        u32 = (dbus_uint32_t) priority;
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return;
+	}
 
-        if (!dbus_message_append_args(
-                            m,
-                            DBUS_TYPE_UINT64, &u64,
-                            DBUS_TYPE_UINT32, &u32,
-                            DBUS_TYPE_INVALID)) {
-                ret = -ENOMEM;
-                goto finish;
-        }
+	if (g_dbus_message_get_message_type (reply) != G_DBUS_MESSAGE_TYPE_METHOD_RETURN) {
+		local_error = g_error_new (ARV_RTKIT_ERROR, 0, "%s", g_dbus_message_get_error_name (reply));
+		g_propagate_error (error, local_error);
+		g_object_unref (reply);
+		return;
+	}
 
-        if (!(r = dbus_connection_send_with_reply_and_block(connection, m, -1, &error))) {
-                ret = translate_error(error.name);
-                goto finish;
-        }
-
-
-        if (dbus_set_error_from_message(&error, r)) {
-                ret = translate_error(error.name);
-                goto finish;
-        }
-
-        ret = 0;
-
-finish:
-
-        if (m)
-                dbus_message_unref(m);
-
-        if (r)
-                dbus_message_unref(r);
-
-        dbus_error_free(&error);
-
-        return ret;
-}
-
-int rtkit_make_high_priority(DBusConnection *connection, pid_t thread, int nice_level) {
-        DBusMessage *m = NULL, *r = NULL;
-        dbus_uint64_t u64;
-        dbus_int32_t s32;
-        DBusError error;
-        int ret;
-
-        dbus_error_init(&error);
-
-        if (thread == 0)
-                thread = _gettid();
-
-        if (!(m = dbus_message_new_method_call(
-                              RTKIT_SERVICE_NAME,
-                              RTKIT_OBJECT_PATH,
-                              "org.freedesktop.RealtimeKit1",
-                              "MakeThreadHighPriority"))) {
-                ret = -ENOMEM;
-                goto finish;
-        }
-
-        u64 = (dbus_uint64_t) thread;
-        s32 = (dbus_int32_t) nice_level;
-
-        if (!dbus_message_append_args(
-                            m,
-                            DBUS_TYPE_UINT64, &u64,
-                            DBUS_TYPE_INT32, &s32,
-                            DBUS_TYPE_INVALID)) {
-                ret = -ENOMEM;
-                goto finish;
-        }
-
-
-
-        if (!(r = dbus_connection_send_with_reply_and_block(connection, m, -1, &error))) {
-                ret = translate_error(error.name);
-                goto finish;
-        }
-
-
-        if (dbus_set_error_from_message(&error, r)) {
-                ret = translate_error(error.name);
-                goto finish;
-        }
-
-        ret = 0;
-
-finish:
-
-        if (m)
-                dbus_message_unref(m);
-
-        if (r)
-                dbus_message_unref(r);
-
-        dbus_error_free(&error);
-
-        return ret;
+	g_object_unref (reply);
 }
 
 #ifndef SCHED_RESET_ON_FORK
@@ -297,93 +211,108 @@ finish:
 #endif
 
 static void print_status(const char *t) {
-        int ret;
+	int ret;
 
-        if ((ret = sched_getscheduler(0)) < 0) {
-                fprintf(stderr, "sched_getscheduler() failed: %s\n", strerror(errno));
-                return;
-        }
+	if ((ret = sched_getscheduler(0)) < 0) {
+		fprintf(stderr, "sched_getscheduler() failed: %s\n", strerror(errno));
+		return;
+	}
 
-        printf("%s:\n"
-               "\tSCHED_RESET_ON_FORK: %s\n",
-               t,
-               (ret & SCHED_RESET_ON_FORK) ? "yes" : "no");
+	printf("%s:\n"
+	       "\tSCHED_RESET_ON_FORK: %s\n",
+	       t,
+	       (ret & SCHED_RESET_ON_FORK) ? "yes" : "no");
 
-        if ((ret & ~SCHED_RESET_ON_FORK) == SCHED_RR) {
-                struct sched_param param;
+	if ((ret & ~SCHED_RESET_ON_FORK) == SCHED_RR) {
+		struct sched_param param;
 
-                if (sched_getparam(0, &param) < 0) {
-                        fprintf(stderr, "sched_getschedparam() failed: %s\n", strerror(errno));
-                        return;
-                }
+		if (sched_getparam(0, &param) < 0) {
+			fprintf(stderr, "sched_getschedparam() failed: %s\n", strerror(errno));
+			return;
+		}
 
-                printf("\tSCHED_RR with priority %i\n", param.sched_priority);
+		printf("\tSCHED_RR with priority %i\n", param.sched_priority);
 
-        } else if ((ret & ~SCHED_RESET_ON_FORK) == SCHED_OTHER) {
-                errno = 0;
-                ret = getpriority(PRIO_PROCESS, 0);
-                if (errno != 0) {
-                        fprintf(stderr, "getpriority() failed: %s\n", strerror(errno));
-                        return;
-                }
+	} else if ((ret & ~SCHED_RESET_ON_FORK) == SCHED_OTHER) {
+		errno = 0;
+		ret = getpriority(PRIO_PROCESS, 0);
+		if (errno != 0) {
+			fprintf(stderr, "getpriority() failed: %s\n", strerror(errno));
+			return;
+		}
 
-                printf("\tSCHED_OTHER with nice level: %i\n", ret);
+		printf("\tSCHED_OTHER with nice level: %i\n", ret);
 
-        } else
-                fprintf(stderr, "Neither SCHED_RR nor SCHED_OTHER.\n");
+	} else
+		fprintf(stderr, "Neither SCHED_RR nor SCHED_OTHER.\n");
 }
 
 int main(int argc, char *argv[]) {
-        DBusError error;
-        DBusConnection *bus;
-        int r, max_realtime_priority, min_nice_level;
-        long long rttime_usec_max;
-        struct rlimit rlim;
+        GDBusConnection *bus;
+	GError *error = NULL;
+        int max_realtime_priority, min_nice_level;
+	long long rttime_usec_max;
+	struct rlimit rlim;
 
-        dbus_error_init(&error);
+	bus = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, &error);
+	if (!G_IS_DBUS_CONNECTION (bus)) {
+		fprintf (stderr, "Failed to connect to system bus: %s\n", error->message);
+		g_error_free (error);
+		return EXIT_FAILURE;
+	}
 
-        if (!(bus = dbus_bus_get(DBUS_BUS_SYSTEM, &error))) {
-                fprintf(stderr, "Failed to connect to system bus: %s\n", error.message);
-                return 1;
-        }
+	max_realtime_priority = arv_rtkit_get_max_realtime_priority (bus, &error);
+	if (error != NULL) {
+		fprintf (stderr, "Failed to get MaxRealtimePriority: %s\n", error->message);
+		g_error_free (error);
+		error = NULL;
+	} else
+		printf ("MaxRealtimePriority = %d\n", max_realtime_priority);
 
-        if ((max_realtime_priority = rtkit_get_max_realtime_priority(bus)) < 0)
-                fprintf(stderr, "Failed to retrieve max realtime priority: %s\n", strerror(-max_realtime_priority));
-        else
-                printf("Max realtime priority is: %d\n", max_realtime_priority);
+	min_nice_level = arv_rtkit_get_min_nice_level (bus, &error);
+	if (error != NULL) {
+		fprintf (stderr, "Failed to get MinNiceLevel: %s\n", error->message);
+		g_error_free (error);
+		error = NULL;
+	} else
+		printf ("MinNiceLevel = %d\n", min_nice_level);
 
-        if ((r = rtkit_get_min_nice_level(bus, &min_nice_level)))
-                fprintf(stderr, "Failed to retrieve min nice level: %s\n", strerror(-r));
-        else
-                printf("Min nice level is: %d\n", min_nice_level);
+	rttime_usec_max = arv_rtkit_get_rttime_usec_max (bus, &error);
+	if (error != NULL) {
+		fprintf (stderr, "Failed to get RTTimeUSecMax: %s\n", error->message);
+		g_error_free (error);
+		error = NULL;
+	} else
+		printf ("RTTimeUSecMax = %Ld\n", rttime_usec_max);
 
-        if ((rttime_usec_max = rtkit_get_rttime_usec_max(bus)) < 0)
-                fprintf(stderr, "Failed to retrieve rttime limit: %s\n", strerror(-rttime_usec_max));
-        else
-                printf("Rttime limit is: %lld ns\n", rttime_usec_max);
+	memset(&rlim, 0, sizeof(rlim));
+	rlim.rlim_cur = rlim.rlim_max = 100000000ULL; /* 100ms */
+	if ((setrlimit(RLIMIT_RTTIME, &rlim) < 0))
+		fprintf(stderr, "Failed to set RLIMIT_RTTIME: %s\n", strerror(errno));
 
-        memset(&rlim, 0, sizeof(rlim));
-        rlim.rlim_cur = rlim.rlim_max = 100000000ULL; /* 100ms */
-        if ((setrlimit(RLIMIT_RTTIME, &rlim) < 0))
-                fprintf(stderr, "Failed to set RLIMIT_RTTIME: %s\n", strerror(errno));
+	print_status("before");
 
-        print_status("before");
+	arv_rtkit_make_high_priority (bus, 0, -10, &error);
+	if (error != NULL) {
+		fprintf (stderr, "Failed to become high priority: %s\n", error->message);
+		g_error_free (error);
+		error = NULL;
+	} else
+		printf ("Successfully became high priority\n");
 
-        if ((r = rtkit_make_high_priority(bus, 0, -10)) < 0)
-                fprintf(stderr, "Failed to become high priority: %s\n", strerror(-r));
-        else
-                printf("Successfully became high priority.\n");
+	print_status("after high priority");
 
-        print_status("after high priority");
+	arv_rtkit_make_realtime (bus, 0, 10, &error);
+	if (error != NULL) {
+		fprintf (stderr, "Failed to get become realtime: %s\n", error->message);
+		g_error_free (error);
+		error = NULL;
+	} else
+		printf ("Successfully became realtime\n");
 
-        if ((r = rtkit_make_realtime(bus, 0, 10)) < 0)
-                fprintf(stderr, "Failed to become realtime: %s\n", strerror(-r));
-        else
-                printf("Successfully became realtime.\n");
+	print_status("after realtime");
 
-        print_status("after realtime");
+	g_object_unref (bus);
 
-        dbus_connection_unref(bus);
-
-        return 0;
+        return EXIT_SUCCESS;
 }
