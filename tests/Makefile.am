@@ -16,7 +16,9 @@ noinst_PROGRAMS = 			\
        	arv-camera-test			\
 	arv-chunk-parser-test		\
        	arv-heartbeat-test		\
-       	arv-example time-test
+       	arv-example			\
+	time-test			\
+	realtime-test
 
 arv_test_SOURCES = arvtest.c
 arv_test_LDADD = $(test_progs_ldadd)
@@ -44,6 +46,9 @@ arv_example_LDADD = $(test_progs_ldadd)
 
 time_test_SOURCES = timetest.c
 time_test_LDADD = $(test_progs_ldadd)
+
+realtime_test_SOURCES = realtimetest.c
+realtime_test_LDADD = $(test_progs_ldadd)
 
 TEST_PROGS += evaluator buffer misc fake genicam
 if ARAVIS_BUILD_CPP_TEST
