@@ -221,6 +221,18 @@ static pid_t _gettid(void) {
         return (pid_t) syscall(SYS_gettid);
 }
 
+/**
+ * arv_make_thread_realtime:
+ * @priority: realtime priority
+ *
+ * Returns: %TRUE on success.
+ *
+ * Try to make current thread realtime. It first try to use sched_setscheduler,
+ * and if it fails, use rtkit.
+ *
+ * Since: 0.4.0
+ */
+
 gboolean
 arv_make_thread_realtime (int priority)
 {
@@ -265,6 +277,17 @@ arv_make_thread_realtime (int priority)
 
 	return TRUE;
 }
+
+/**
+ * arv_make_thread_high_priority:
+ * @nice_level: new nice level
+ *
+ * Returns: %TRUE on success.
+ *
+ * Try to set current thread nice level to high priority, using rtkit.
+ *
+ * Since: 0.4.0
+ */
 
 gboolean
 arv_make_thread_high_priority (int nice_level)
