@@ -1,8 +1,7 @@
-/*-*- Mode: C; c-basic-offset: 8 -*-*/
-
 /***
   Copyright 2009 Lennart Poettering
   Copyright 2010 David Henningsson <diwic@ubuntu.com>
+  Copyright 2014 Emmanuel Pacaud <emmanuel@gnome.org>
 
   Permission is hereby granted, free of charge, to any person
   obtaining a copy of this software and associated documentation files
@@ -49,6 +48,11 @@
 
 #define ARV_RTKIT_ERROR arv_rtkit_error_quark ()
 
+typedef enum {
+	ARV_RTKIT_ERROR_PERMISSION_DENIED,
+	ARV_RTKIT_ERROR_WRONG_REPLY
+} ArvRtkitError;
+
 GQuark
 arv_rtkit_error_quark (void)
 {
@@ -84,7 +88,16 @@ arv_rtkit_get_int_property (GDBusConnection *connection, const char* propname, G
 	}
 
 	if (g_dbus_message_get_message_type (reply) != G_DBUS_MESSAGE_TYPE_METHOD_RETURN) {
-		local_error = g_error_new (ARV_RTKIT_ERROR, 0, "%s", g_dbus_message_get_error_name (reply));
+		local_error = g_error_new (ARV_RTKIT_ERROR, ARV_RTKIT_ERROR_PERMISSION_DENIED,
+					   "%s", g_dbus_message_get_error_name (reply));
+		g_propagate_error (error, local_error);
+		g_object_unref (reply);
+		return 0;
+	}
+
+	if (!g_variant_type_equal ("v", g_dbus_message_get_signature (reply))) {
+		local_error = g_error_new (ARV_RTKIT_ERROR, ARV_RTKIT_ERROR_WRONG_REPLY,
+					   "Invalid reply signature");
 		g_propagate_error (error, local_error);
 		g_object_unref (reply);
 		return 0;
@@ -125,7 +138,16 @@ arv_rtkit_get_min_nice_level (GDBusConnection *connection, GError **error)
 gint64
 arv_rtkit_get_rttime_usec_max (GDBusConnection *connection, GError **error)
 {
-	return arv_rtkit_get_int_property (connection, "RTTimeUSecMax", error);
+	GError *local_error = NULL;
+	gint64 rttime_usec_max;
+
+	rttime_usec_max = arv_rtkit_get_int_property (connection, "RTTimeUSecMax", &local_error);
+	if (error == NULL)
+		return rttime_usec_max;
+
+	g_error_free (local_error);
+
+	return arv_rtkit_get_int_property (connection, "RTTimeNSecMax", error) / 1000;
 }
 
 void
@@ -156,14 +178,6 @@ arv_rtkit_make_realtime (GDBusConnection *connection, pid_t thread, int priority
 		g_propagate_error (error, local_error);
 		g_object_unref (reply);
 		return;
-	}
-
-	{
-		char *string;
-
-		string = g_dbus_message_print (reply, 2);
-		printf ("Reply = %s\n", string);
-		g_free (string);
 	}
 
 	g_object_unref (reply);
