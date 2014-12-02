@@ -526,6 +526,16 @@ bus_sync_handler (GstBus *bus, GstMessage *message, gpointer user_data)
 	return GST_BUS_DROP;
 }
 
+static void
+stream_cb (void *user_data, ArvStreamCallbackType type, ArvBuffer *buffer)
+{
+	if (type == ARV_STREAM_CALLBACK_TYPE_INIT) {
+		if (!arv_make_thread_realtime (10) &&
+		    !arv_make_thread_high_priority (-10))
+			g_warning ("Failed to make stream thread high priority");
+	}
+}
+
 void
 arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 {
@@ -567,7 +577,7 @@ arv_viewer_select_camera_cb (GtkComboBox *combo_box, ArvViewer *viewer)
 	arv_camera_set_chunk_mode (viewer->camera, FALSE);
 
 	viewer->rotation = 0;
-	viewer->stream = arv_camera_create_stream (viewer->camera, NULL, NULL);
+	viewer->stream = arv_camera_create_stream (viewer->camera, stream_cb, NULL);
 	if (viewer->stream == NULL) {
 		g_object_unref (viewer->camera);
 		viewer->camera = NULL;
