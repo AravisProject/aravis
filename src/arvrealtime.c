@@ -263,7 +263,7 @@ arv_make_thread_realtime (int priority)
 		return TRUE;
 	}
 
-	return FALSE;
+	return TRUE;
 }
 
 gboolean
