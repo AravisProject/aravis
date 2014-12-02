@@ -642,6 +642,8 @@ arv_stream_get_n_buffers
 arv_stream_get_statistics
 arv_stream_get_emit_signals
 arv_stream_set_emit_signals
+arv_make_thread_realtime
+arv_make_thread_high_priority
 <SUBSECTION Standard>
 ARV_STREAM
 ARV_IS_STREAM

@@ -13,3 +13,4 @@ arv-chunk-parser-test
 arv-heartbeat-test
 arv-example
 time-test
+realtime-test

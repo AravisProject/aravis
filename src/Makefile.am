@@ -75,7 +75,8 @@ ARAVIS_SRCS =					\
 	arvfakeinterface.c			\
 	arvfakedevice.c				\
 	arvfakestream.c				\
-	arvfakecamera.c
+	arvfakecamera.c				\
+	arvrealtime.c
 
 ARAVIS_SRCS_NO_INTRO =				\
 	arvmisc.c				\
@@ -138,7 +139,8 @@ ARAVIS_HDRS = 					\
 	arvfakeinterface.h			\
 	arvfakedevice.h				\
 	arvfakestream.h				\
-	arvfakecamera.h
+	arvfakecamera.h				\
+	arvrealtime.h
 
 ARAVIS_HDRS_NO_INTRO =				\
 	arvmisc.h				\
@@ -151,7 +153,8 @@ noinst_HEADERS =				\
 	arvbufferprivate.h			\
 	arvchunkparserprivate.h			\
 	arvdeviceprivate.h			\
-	arvstreamprivate.h
+	arvstreamprivate.h			\
+	arvrealtimeprivate.h
 
 arv_fake_cameradir = $(aravis_datadir)
 arv_fake_camera_DATA = arv-fake-camera.xml

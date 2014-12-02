@@ -72,5 +72,6 @@
 #include <arvfakedevice.h>
 #include <arvfakestream.h>
 #include <arvfakecamera.h>
+#include <arvrealtime.h>
 
 #endif

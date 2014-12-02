@@ -23,6 +23,8 @@ static unsigned int arv_option_frame_retention = 100;
 static int arv_option_gv_stream_channel = -1;
 static int arv_option_gv_packet_delay = -1;
 static int arv_option_gv_packet_size = -1;
+static gboolean arv_option_realtime = FALSE;
+static gboolean arv_option_high_priority = FALSE;
 static char *arv_option_chunks = NULL;
 
 static const GOptionEntry arv_option_entries[] =
@@ -104,6 +106,14 @@ static const GOptionEntry arv_option_entries[] =
 		&arv_option_chunks,	 		"Chunks", NULL
 	},
 	{
+		"realtime",				'\0', 0, G_OPTION_ARG_NONE,
+		&arv_option_realtime,			"Make stream thread realtime", NULL
+	},
+	{
+		"high-priority",			'\0', 0, G_OPTION_ARG_NONE,
+		&arv_option_high_priority,		"Make stream thread high priority", NULL
+	},
+	{
 		"debug", 				'd', 0, G_OPTION_ARG_STRING,
 		&arv_option_debug_domains, 		"Debug domains", NULL
 	},
@@ -147,6 +157,20 @@ new_buffer_cb (ArvStream *stream, ApplicationData *data)
 		/* Image processing here */
 
 		arv_stream_push_buffer (stream, buffer);
+	}
+}
+
+static void
+stream_cb (void *user_data, ArvStreamCallbackType type, ArvBuffer *buffer)
+{
+	if (type == ARV_STREAM_CALLBACK_TYPE_INIT) {
+		if (arv_option_realtime) {
+			if (!arv_make_thread_realtime (10))
+				printf ("Failed to make stream thread realtime\n");
+		} else if (arv_option_high_priority) {
+			if (!arv_make_thread_high_priority (-10))
+				printf ("Failed to make stream thread high priority\n");
+		}
 	}
 }
 
@@ -287,7 +311,7 @@ main (int argc, char **argv)
 			printf ("gv packet size        = %d bytes\n", arv_camera_gv_get_packet_size (camera));
 		}
 
-		stream = arv_camera_create_stream (camera, NULL, NULL);
+		stream = arv_camera_create_stream (camera, stream_cb, NULL);
 		if (stream != NULL) {
 			if (ARV_IS_GV_STREAM (stream)) {
 				if (arv_option_auto_socket_buffer)
