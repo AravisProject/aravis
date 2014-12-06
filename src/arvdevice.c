@@ -49,6 +49,11 @@ static guint arv_device_signals[ARV_DEVICE_SIGNAL_LAST] = {0};
 
 static GObjectClass *parent_class = NULL;
 
+struct  _ArvDevicePrivate {
+	ArvDeviceStatus status;
+	char *status_message;
+};
+
 GQuark
 arv_device_error_quark (void)
 {
@@ -272,14 +277,14 @@ arv_device_get_feature (ArvDevice *device, const char *feature)
 static void
 _set_status (ArvDevice *device, ArvDeviceStatus status, const char *message)
 {
-	if (device->status == ARV_DEVICE_STATUS_SUCCESS)
+	if (device->priv->status == ARV_DEVICE_STATUS_SUCCESS)
 		return;
 
 	arv_warning_device ("[ArvDevice::set_status] Status changed ('%s')", message);
 
-	g_free (device->status_message);
-	device->status = status;
-	device->status_message = g_strdup (message);
+	g_free (device->priv->status_message);
+	device->priv->status = status;
+	device->priv->status_message = g_strdup (message);
 }
 
 /**
@@ -632,11 +637,11 @@ arv_device_get_status (ArvDevice *device)
 	
 	g_return_val_if_fail (ARV_IS_DEVICE (device), ARV_DEVICE_STATUS_UNKNOWN);
 
-	status = device->status;
+	status = device->priv->status;
 	
-	g_free (device->status_message);
-	device->status = ARV_DEVICE_STATUS_SUCCESS;
-	device->status_message = NULL;
+	g_free (device->priv->status_message);
+	device->priv->status = ARV_DEVICE_STATUS_SUCCESS;
+	device->priv->status_message = NULL;
 
 	return status;
 }
@@ -652,8 +657,10 @@ arv_device_emit_control_lost_signal (ArvDevice *device)
 static void
 arv_device_init (ArvDevice *device)
 {
-	device->status = ARV_DEVICE_STATUS_SUCCESS;
-	device->status_message = NULL;
+	device->priv = G_TYPE_INSTANCE_GET_PRIVATE (device, ARV_TYPE_DEVICE, ArvDevicePrivate);
+
+	device->priv->status = ARV_DEVICE_STATUS_SUCCESS;
+	device->priv->status_message = NULL;
 }
 
 static void
@@ -661,7 +668,7 @@ arv_device_finalize (GObject *object)
 {
 	ArvDevice *device = ARV_DEVICE (object);
 
-	g_free (device->status_message);
+	g_free (device->priv->status_message);
 
 	parent_class->finalize (object);
 }
@@ -670,6 +677,8 @@ static void
 arv_device_class_init (ArvDeviceClass *device_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (device_class);
+
+	g_type_class_add_private (device_class, sizeof (ArvDevicePrivate));
 
 	parent_class = g_type_class_peek_parent (device_class);
 

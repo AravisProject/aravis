@@ -51,13 +51,13 @@ typedef enum {
 #define ARV_IS_DEVICE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_DEVICE))
 #define ARV_DEVICE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_DEVICE, ArvDeviceClass))
 
+typedef struct _ArvDevicePrivate ArvDevicePrivate;
 typedef struct _ArvDeviceClass ArvDeviceClass;
 
 struct _ArvDevice {
 	GObject	object;
 
-	ArvDeviceStatus status;
-	char *status_message;
+	ArvDevicePrivate *priv;
 };
 
 struct _ArvDeviceClass {
