@@ -37,8 +37,6 @@
 #include <sys/socket.h>
 #include <stdio.h>
 
-#include <arpa/inet.h>
-
 #define ARV_GV_STREAM_INCOMING_BUFFER_SIZE	65536
 
 #define ARV_GV_STREAM_POLL_TIMEOUT_US			1000000
