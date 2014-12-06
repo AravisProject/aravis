@@ -37,6 +37,8 @@
 #include <sys/socket.h>
 #include <stdio.h>
 
+#include <arpa/inet.h>
+
 #define ARV_GV_STREAM_INCOMING_BUFFER_SIZE	65536
 
 #define ARV_GV_STREAM_POLL_TIMEOUT_US			1000000
@@ -55,6 +57,14 @@ enum {
 } ArvGvStreamProperties;
 
 static GObjectClass *parent_class = NULL;
+
+struct _ArvGvStreamPrivate {
+	GSocket *socket;
+	GSocketAddress *incoming_address;
+
+	GThread *thread;
+	void *thread_data;
+};
 
 /* Acquisition thread */
 
@@ -701,7 +711,7 @@ arv_gv_stream_get_port (ArvGvStream *gv_stream)
 
 	g_return_val_if_fail (ARV_IS_GV_STREAM (gv_stream), 0);
 
-	local_address = G_INET_SOCKET_ADDRESS (g_socket_get_local_address (gv_stream->socket, NULL));
+	local_address = G_INET_SOCKET_ADDRESS (g_socket_get_local_address (gv_stream->priv->socket, NULL));
 	port = g_inet_socket_address_get_port (local_address);
 	g_object_unref (local_address);
 
@@ -738,21 +748,21 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port,
 
 	stream = ARV_STREAM (gv_stream);
 
-	gv_stream->socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
+	gv_stream->priv->socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
 					  G_SOCKET_TYPE_DATAGRAM,
 					  G_SOCKET_PROTOCOL_UDP, NULL);
 
 	incoming_inet_address = g_inet_address_new_any (G_SOCKET_FAMILY_IPV4);
-	gv_stream->incoming_address = g_inet_socket_address_new (incoming_inet_address, port);
+	gv_stream->priv->incoming_address = g_inet_socket_address_new (incoming_inet_address, port);
 	g_object_unref (incoming_inet_address);
 
-	g_socket_bind (gv_stream->socket, gv_stream->incoming_address, TRUE, NULL);
+	g_socket_bind (gv_stream->priv->socket, gv_stream->priv->incoming_address, TRUE, NULL);
 
 	thread_data = g_new (ArvGvStreamThreadData, 1);
 	thread_data->stream = stream;
 	thread_data->callback = callback;
 	thread_data->user_data = user_data;
-	thread_data->socket = gv_stream->socket;
+	thread_data->socket = gv_stream->priv->socket;
 	thread_data->device_address = g_inet_socket_address_new (device_address, ARV_GVCP_PORT);
 	thread_data->packet_resend = ARV_GV_STREAM_PACKET_RESEND_ALWAYS;
 	thread_data->packet_timeout_us = ARV_GV_STREAM_PACKET_TIMEOUT_US_DEFAULT;
@@ -790,9 +800,9 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port,
 	thread_data->socket_buffer_size = 0;
 	thread_data->current_socket_buffer_size = 0;
 
-	gv_stream->thread_data = thread_data;
+	gv_stream->priv->thread_data = thread_data;
 
-	gv_stream->thread = arv_g_thread_new ("arv_gv_stream", arv_gv_stream_thread, gv_stream->thread_data);
+	gv_stream->priv->thread = arv_g_thread_new ("arv_gv_stream", arv_gv_stream_thread, gv_stream->priv->thread_data);
 
 	return ARV_STREAM (gv_stream);
 }
@@ -809,7 +819,7 @@ arv_gv_stream_get_statistics (ArvGvStream *gv_stream,
 
 	g_return_if_fail (ARV_IS_GV_STREAM (gv_stream));
 
-	thread_data = gv_stream->thread_data;
+	thread_data = gv_stream->priv->thread_data;
 
 	if (n_resent_packets != NULL)
 		*n_resent_packets = thread_data->n_resent_packets;
@@ -826,7 +836,7 @@ _get_statistics (ArvStream *stream,
 	ArvGvStream *gv_stream = ARV_GV_STREAM (stream);
 	ArvGvStreamThreadData *thread_data;
 
-	thread_data = gv_stream->thread_data;
+	thread_data = gv_stream->priv->thread_data;
 
 	*n_completed_buffers = thread_data->n_completed_buffers;
 	*n_failures = thread_data->n_failures;
@@ -840,7 +850,7 @@ arv_gv_stream_set_property (GObject * object, guint prop_id,
 	ArvGvStream *gv_stream = ARV_GV_STREAM (object);
 	ArvGvStreamThreadData *thread_data;
 
-	thread_data = gv_stream->thread_data;
+	thread_data = gv_stream->priv->thread_data;
 
 	switch (prop_id) {
 		case ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER:
@@ -871,7 +881,7 @@ arv_gv_stream_get_property (GObject * object, guint prop_id,
 	ArvGvStream *gv_stream = ARV_GV_STREAM (object);
 	ArvGvStreamThreadData *thread_data;
 
-	thread_data = gv_stream->thread_data;
+	thread_data = gv_stream->priv->thread_data;
 
 	switch (prop_id) {
 		case ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER:
@@ -898,6 +908,7 @@ arv_gv_stream_get_property (GObject * object, guint prop_id,
 static void
 arv_gv_stream_init (ArvGvStream *gv_stream)
 {
+	gv_stream->priv = G_TYPE_INSTANCE_GET_PRIVATE (gv_stream, ARV_TYPE_GV_STREAM, ArvGvStreamPrivate);
 }
 
 static void
@@ -905,14 +916,14 @@ arv_gv_stream_finalize (GObject *object)
 {
 	ArvGvStream *gv_stream = ARV_GV_STREAM (object);
 
-	if (gv_stream->thread != NULL) {
+	if (gv_stream->priv->thread != NULL) {
 		ArvGvStreamThreadData *thread_data;
 		char *statistic_string;
 
-		thread_data = gv_stream->thread_data;
+		thread_data = gv_stream->priv->thread_data;
 
 		thread_data->cancel = TRUE;
-		g_thread_join (gv_stream->thread);
+		g_thread_join (gv_stream->priv->thread);
 
 		g_object_unref (thread_data->device_address);
 
@@ -955,12 +966,12 @@ arv_gv_stream_finalize (GObject *object)
 
 		g_free (thread_data);
 
-		gv_stream->thread_data = NULL;
-		gv_stream->thread = NULL;
+		gv_stream->priv->thread_data = NULL;
+		gv_stream->priv->thread = NULL;
 	}
 
-	g_object_unref (gv_stream->incoming_address);
-	g_object_unref (gv_stream->socket);
+	g_clear_object (&gv_stream->priv->incoming_address);
+	g_clear_object (&gv_stream->priv->socket);
 
 	parent_class->finalize (object);
 }
@@ -970,6 +981,8 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (gv_stream_class);
 	ArvStreamClass *stream_class = ARV_STREAM_CLASS (gv_stream_class);
+
+	g_type_class_add_private (gv_stream_class, sizeof (ArvGvStreamPrivate));
 
 	parent_class = g_type_class_peek_parent (gv_stream_class);
 

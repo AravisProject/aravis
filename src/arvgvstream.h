@@ -58,16 +58,13 @@ typedef enum {
 #define ARV_IS_GV_STREAM_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GV_STREAM))
 #define ARV_GV_STREAM_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GV_STREAM, ArvGvStreamClass))
 
+typedef struct _ArvGvStreamPrivate ArvGvStreamPrivate;
 typedef struct _ArvGvStreamClass ArvGvStreamClass;
 
 struct _ArvGvStream {
 	ArvStream	stream;
 
-	GSocket *socket;
-	GSocketAddress *incoming_address;
-
-	GThread *thread;
-	void *thread_data;
+	ArvGvStreamPrivate *priv;
 };
 
 struct _ArvGvStreamClass {
