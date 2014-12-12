@@ -8,8 +8,8 @@ msgstr ""
 "Project-Id-Version: aravis master\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/enter_bug.cgi?"
 "product=aravis&keywords=I18N+L10N&component=general\n"
-"POT-Creation-Date: 2014-06-19 02:45+0000\n"
-"PO-Revision-Date: 2014-06-19 15:57+0300\n"
+"POT-Creation-Date: 2014-12-12 15:48+0000\n"
+"PO-Revision-Date: 2014-12-12 18:47+0200\n"
 "Last-Translator: Muhammet Kara <muhammetk@gmail.com>\n"
 "Language-Team: Türkçe <gnome-turk@gnome.org>\n"
 "Language: tr\n"
@@ -62,3 +62,25 @@ msgstr "Aravis Basit Görüntüleyici"
 #: ../viewer/data/arv-viewer.desktop.in.in.h:3
 msgid "Display the video stream from your cameras"
 msgstr "Kameralarınızdan gelen video akışını görüntüleyin"
+
+#: ../viewer/data/arv-viewer.appdata.xml.in.h:1
+#| msgid "Aravis Simple Viewer"
+msgid "Aravis Viewer"
+msgstr "Aravis Görüntüleyici"
+
+#: ../viewer/data/arv-viewer.appdata.xml.in.h:2
+msgid "Simple viewer of video stream acquired using Aravis"
+msgstr ""
+"Aravis kullanılarak elde edilen video akışı için basit bir görüntüleyici"
+
+#: ../viewer/data/arv-viewer.appdata.xml.in.h:3
+msgid ""
+"Aravis Viewer is a simple viewer used to display video streams from GENICAM-"
+"based Ethernet industrial cameras."
+msgstr ""
+
+#: ../viewer/data/arv-viewer.appdata.xml.in.h:4
+msgid ""
+"It allows to control basic acquisition parameters, i.e. framerate, exposure "
+"and gain, and to save raw still images."
+msgstr ""
