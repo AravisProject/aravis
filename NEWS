@@ -1,3 +1,14 @@
+Release 0.3.7
+=============
+
+  * genicam: fix accuracy of division of integers (Emmanuel)
+  * new arv_make_high_priority and arv_make_realtime API (Emmanuel)
+  * viewer: make stream thread realtime if possible (Emmanuel)
+  * camera: add GigEVision specific API for packet delay, packet size and stream selection (Emmanuel)
+  * gst_pugins: add a number of buffers property (Patrick)
+  * build fixes (Patrick)
+  * translation updates (Tiago, Muhammet)
+
 Release 0.3.6
 =============
 
