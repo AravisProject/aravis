@@ -64,7 +64,8 @@ static const ExpressionTestData expression_test_data[] = {
 	{"/evaluator/cos",				"COS(PI)",		-1,	-1.0},
 	{"/evaluator/sin",				"SIN(-PI/2)",		-1,	-1.0},
 
-	{"/evaluator/bugs/remaining-op",		"(0 & 1)=0?((0 & 1)+2):1",	2, 2.0}
+	{"/evaluator/bugs/681048-remaining-op",		"(0 & 1)=0?((0 & 1)+2):1",	2,	2.0},
+	{"/evaluator/bugs/743025-division-by-zero",	"(4/(20/10000))",		2000,	2000.0}
 };
 
 static void
