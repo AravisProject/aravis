@@ -20,7 +20,7 @@
 	<chapter id="aravis-gvcp">
 		<title>GVCP packets</title>
 		<para>
-			Devices are waiting for GVCP packets listening to the GVCP port (3946). When the client sends a command GVCP packet to the device, the device sends back an acknowledge packets in return. Each command/acknowledge pair is identified by a 16 bit value, which allows to check if an acknowledge packet corresponds to the previsoulsy sent command. 0 is an error value for this identifier. If an acknowledge is not received after a given timeout period, another command packet is sent, until a maximum number of retries is reached.
+			Devices are waiting for GVCP packets listening to the GVCP port (3956). When the client sends a command GVCP packet to the device, the device sends back an acknowledge packets in return. Each command/acknowledge pair is identified by a 16 bit value, which allows to check if an acknowledge packet corresponds to the previsoulsy sent command. 0 is an error value for this identifier. If an acknowledge is not received after a given timeout period, another command packet is sent, until a maximum number of retries is reached.
 		</para>
 
 		<para>
