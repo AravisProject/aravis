@@ -2,22 +2,24 @@
 # Copyright (C) 2014 aravis's COPYRIGHT HOLDER
 # This file is distributed under the same license as the aravis package.
 # Muhammet Kara <muhammetk@gmail.com>, 2014.
+# İşbaran Akçayır <isbaran@gmail.com>, 2015.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: aravis master\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/enter_bug.cgi?"
-"product=aravis&keywords=I18N+L10N&component=general\n"
-"POT-Creation-Date: 2014-12-12 15:48+0000\n"
-"PO-Revision-Date: 2014-12-12 18:47+0200\n"
-"Last-Translator: Muhammet Kara <muhammetk@gmail.com>\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/enter_bug.cgi?product=aravis&"
+"keywords=I18N+L10N&component=general\n"
+"POT-Creation-Date: 2015-01-12 03:47+0000\n"
+"PO-Revision-Date: 2015-02-18 08:20+0000\n"
+"Last-Translator: İşbaran Akçayır <isbaran@gmail.com>\n"
 "Language-Team: Türkçe <gnome-turk@gnome.org>\n"
 "Language: tr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Gtranslator 2.91.6\n"
+"X-Generator: Pootle 2.5.1.1\n"
+"X-POOTLE-MTIME: 1424247649.000000\n"
 
 #: ../viewer/arv-viewer.ui.h:1 ../viewer/data/arv-viewer.desktop.in.in.h:1
 msgid "Aravis"
@@ -64,7 +66,6 @@ msgid "Display the video stream from your cameras"
 msgstr "Kameralarınızdan gelen video akışını görüntüleyin"
 
 #: ../viewer/data/arv-viewer.appdata.xml.in.h:1
-#| msgid "Aravis Simple Viewer"
 msgid "Aravis Viewer"
 msgstr "Aravis Görüntüleyici"
 
@@ -78,9 +79,13 @@ msgid ""
 "Aravis Viewer is a simple viewer used to display video streams from GENICAM-"
 "based Ethernet industrial cameras."
 msgstr ""
+"Aravis Görüntüleyici GENICAM-temelli Eternet endüstriyel kameralardan video "
+"akışlarını görüntülemeye yarayan basit bir görüntüleyicidir."
 
 #: ../viewer/data/arv-viewer.appdata.xml.in.h:4
 msgid ""
 "It allows to control basic acquisition parameters, i.e. framerate, exposure "
 "and gain, and to save raw still images."
 msgstr ""
+"Temel edinim parametrelerini kontrol etmeye yarar, örn. çerçevehızı, poz ve "
+"kazanç, ayrıca ham durağan resimleri kaydetmeye."
