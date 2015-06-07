@@ -3,15 +3,16 @@
 # This file is distributed under the same license as the aravis package.
 # Cédric Valmary (totenoc.org) <cvalmary@yahoo.fr>, 2013.
 # Cédric Valmary (Tot en òc) <cvalmary@yahoo.fr>, 2015.
+# Cédric Valmary (totenoc.eu) <cvalmary@yahoo.fr>, 2015.
 msgid ""
 msgstr ""
 "Project-Id-Version: aravis master\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/enter_bug.cgi?product=aravis&"
-"keywords=I18N+L10N&component=general\n"
-"POT-Creation-Date: 2013-07-23 08:58+0000\n"
-"PO-Revision-Date: 2015-05-19 22:52+0200\n"
-"Last-Translator: Cédric Valmary (Tot en òc) <cvalmary@yahoo.fr>\n"
-"Language-Team: Tot en òc (totenoc.eu)\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/enter_bug.cgi?product=aravis"
+"&keywords=I18N+L10N&component=general\n"
+"POT-Creation-Date: 2015-05-20 16:18+0000\n"
+"PO-Revision-Date: 2015-06-07 15:47+0200\n"
+"Last-Translator: Cédric Valmary (totenoc.eu) <cvalmary@yahoo.fr>\n"
+"Language-Team: Tot En Òc\n"
 "Language: oc\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -20,40 +21,39 @@ msgstr ""
 "X-Generator: Virtaal 0.7.1\n"
 "X-Project-Style: gnome\n"
 
-#: ../viewer/arv-viewer-2.ui.h:1 ../viewer/arv-viewer-3.ui.h:1
-#: ../viewer/data/arv-viewer.desktop.in.in.h:1
+#: ../viewer/arv-viewer.ui.h:1 ../viewer/data/arv-viewer.desktop.in.in.h:1
 msgid "Aravis"
 msgstr "Aravis"
 
-#: ../viewer/arv-viewer-2.ui.h:2 ../viewer/arv-viewer-3.ui.h:2
+#: ../viewer/arv-viewer.ui.h:2
 msgid "Frame rate:"
 msgstr "Frequéncia"
 
-#: ../viewer/arv-viewer-2.ui.h:3 ../viewer/arv-viewer-3.ui.h:5
-msgid "Exposure:"
-msgstr "Exposicion"
-
-#: ../viewer/arv-viewer-2.ui.h:4 ../viewer/arv-viewer-3.ui.h:6
-msgid "Gain:"
-msgstr "Ganh"
-
-#: ../viewer/arv-viewer-2.ui.h:5 ../viewer/arv-viewer-3.ui.h:3
+#: ../viewer/arv-viewer.ui.h:3
 msgid "Hz"
 msgstr "Hz"
 
-#: ../viewer/arv-viewer-2.ui.h:6 ../viewer/arv-viewer-3.ui.h:7
-msgid "µs"
-msgstr "µs"
-
-#: ../viewer/arv-viewer-2.ui.h:7 ../viewer/arv-viewer-3.ui.h:4
+#: ../viewer/arv-viewer.ui.h:4
 msgid "Auto"
 msgstr "Auto"
 
-#: ../viewer/arv-viewer-2.ui.h:8 ../viewer/arv-viewer-3.ui.h:8
+#: ../viewer/arv-viewer.ui.h:5
+msgid "Exposure:"
+msgstr "Exposicion"
+
+#: ../viewer/arv-viewer.ui.h:6
+msgid "Gain:"
+msgstr "Ganh"
+
+#: ../viewer/arv-viewer.ui.h:7
+msgid "µs"
+msgstr "µs"
+
+#: ../viewer/arv-viewer.ui.h:8
 msgid "Settings"
 msgstr "Paramètres"
 
-#: ../viewer/arv-viewer-3.ui.h:9
+#: ../viewer/arv-viewer.ui.h:9
 msgid "Save a snapshot into image folder"
 msgstr "Salvament d'una captura dins lo dorsièr imatges"
 
@@ -64,3 +64,24 @@ msgstr "Visualizador de vidèo Aravis"
 #: ../viewer/data/arv-viewer.desktop.in.in.h:3
 msgid "Display the video stream from your cameras"
 msgstr "Aficha lo flux vidèo de camèras Genicam"
+
+#: ../viewer/data/arv-viewer.appdata.xml.in.h:1
+#| msgid "Aravis Simple Viewer"
+msgid "Aravis Viewer"
+msgstr "Visualizador de vidèo Aravis"
+
+#: ../viewer/data/arv-viewer.appdata.xml.in.h:2
+msgid "Simple viewer of video stream acquired using Aravis"
+msgstr ""
+
+#: ../viewer/data/arv-viewer.appdata.xml.in.h:3
+msgid ""
+"Aravis Viewer is a simple viewer used to display video streams from GENICAM-"
+"based Ethernet industrial cameras."
+msgstr ""
+
+#: ../viewer/data/arv-viewer.appdata.xml.in.h:4
+msgid ""
+"It allows to control basic acquisition parameters, i.e. framerate, exposure "
+"and gain, and to save raw still images."
+msgstr ""
