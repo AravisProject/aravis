@@ -1014,7 +1014,7 @@ arv_gv_device_finalize (GObject *object)
  *
  * Returns: (transfer none): the device host interface IP address.
  * 
- * since: 0.1.13
+ * Since: 0.2.0
  */
 
 GSocketAddress *arv_gv_device_get_interface_address(ArvGvDevice *device)
@@ -1030,7 +1030,7 @@ GSocketAddress *arv_gv_device_get_interface_address(ArvGvDevice *device)
  *
  * Returns: (transfer none): the device IP address.
  *
- * since: 0.1.13
+ * since: 0.2.0
  */
 
 GSocketAddress *arv_gv_device_get_device_address(ArvGvDevice *device)

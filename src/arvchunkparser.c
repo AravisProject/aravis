@@ -172,7 +172,7 @@ arv_chunk_parser_get_float_value (ArvChunkParser *parser, ArvBuffer *buffer, con
  *
  * Returns: a new #ArvChunkParser object
  *
- * Since: 0.3.3
+ * Since: 0.4.0
  */
 
 ArvChunkParser *

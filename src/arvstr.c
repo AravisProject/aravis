@@ -46,7 +46,7 @@
  *
  * Returns: @str
  *
- * Since: 0.3.0
+ * Since: 0.4.0
  */
 
 char *
