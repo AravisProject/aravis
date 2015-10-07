@@ -1,0 +1,87 @@
+# Finnish translation for aravis.
+# Copyright (C) 2015 aravis's COPYRIGHT HOLDER
+# This file is distributed under the same license as the aravis package.
+# Jiri Grönroos <jiri.gronroos+l10n@iki.fi>, 2015.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: aravis master\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/enter_bug.cgi?"
+"product=aravis&keywords=I18N+L10N&component=general\n"
+"POT-Creation-Date: 2015-10-07 14:55+0000\n"
+"PO-Revision-Date: 2015-10-07 19:10+0300\n"
+"Last-Translator: Jiri Grönroos <jiri.gronroos+l10n@iki.fi>\n"
+"Language-Team: suomi <gnome-fi-laatu@lists.sourceforge.net>\n"
+"Language: fi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Gtranslator 2.91.6\n"
+
+#: ../viewer/arv-viewer.ui.h:1 ../viewer/data/arv-viewer.desktop.in.in.h:1
+msgid "Aravis"
+msgstr "Aravis"
+
+#: ../viewer/arv-viewer.ui.h:2
+msgid "Frame rate:"
+msgstr "Kuvanopeus:"
+
+#: ../viewer/arv-viewer.ui.h:3
+msgid "Hz"
+msgstr "Hz"
+
+#: ../viewer/arv-viewer.ui.h:4
+msgid "Auto"
+msgstr "Automaattinen"
+
+#: ../viewer/arv-viewer.ui.h:5
+msgid "Exposure:"
+msgstr "Valotus:"
+
+#: ../viewer/arv-viewer.ui.h:6
+msgid "Gain:"
+msgstr ""
+
+#: ../viewer/arv-viewer.ui.h:7
+msgid "µs"
+msgstr "µs"
+
+#: ../viewer/arv-viewer.ui.h:8
+msgid "Settings"
+msgstr "Asetukset"
+
+#: ../viewer/arv-viewer.ui.h:9
+msgid "Save a snapshot into image folder"
+msgstr "Tallenna tilannekuva kuvakansioon"
+
+#: ../viewer/data/arv-viewer.desktop.in.in.h:2
+msgid "Aravis Simple Viewer"
+msgstr ""
+
+#: ../viewer/data/arv-viewer.desktop.in.in.h:3
+msgid "Display the video stream from your cameras"
+msgstr "Katsele videovirtaa kameroista"
+
+#: ../viewer/data/arv-viewer.appdata.xml.in.h:1
+msgid "Aravis Viewer"
+msgstr "Aravis-katselin"
+
+#: ../viewer/data/arv-viewer.appdata.xml.in.h:2
+msgid "Simple viewer of video stream acquired using Aravis"
+msgstr "Yksinkertainen katselin Aravis-videovirtoihin"
+
+#: ../viewer/data/arv-viewer.appdata.xml.in.h:3
+msgid ""
+"Aravis Viewer is a simple viewer used to display video streams from GENICAM-"
+"based Ethernet industrial cameras."
+msgstr ""
+"Aravis-katselin on yksinkertainen katselin, jonka avulla voi katsella "
+"videovirtoja GENICAM-pohjaisista Ethernet-liitännäisistä "
+"teollisuuskameroista."
+
+#: ../viewer/data/arv-viewer.appdata.xml.in.h:4
+msgid ""
+"It allows to control basic acquisition parameters, i.e. framerate, exposure "
+"and gain, and to save raw still images."
+msgstr ""
