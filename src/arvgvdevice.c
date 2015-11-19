@@ -619,7 +619,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 					*size = 0;
 				}
 			}
-        } else if (g_ascii_strcasecmp (tokens[1], "http:") == 0) {
+		} else if (g_ascii_strcasecmp (tokens[1], "http:") == 0) {
 			GFile *file;
 			GFileInputStream *stream;
 

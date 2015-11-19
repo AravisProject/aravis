@@ -18,7 +18,8 @@ noinst_PROGRAMS = 			\
        	arv-heartbeat-test		\
        	arv-example			\
 	time-test			\
-	realtime-test
+	realtime-test			\
+	load-http-test
 
 arv_test_SOURCES = arvtest.c
 arv_test_LDADD = $(test_progs_ldadd)
@@ -49,6 +50,9 @@ time_test_LDADD = $(test_progs_ldadd)
 
 realtime_test_SOURCES = realtimetest.c
 realtime_test_LDADD = $(test_progs_ldadd)
+
+load_http_test_SOURCES = loadhttptest.c
+load_http_test_LDADD = $(test_progs_ldadd)
 
 TEST_PROGS += evaluator buffer misc fake genicam
 if ARAVIS_BUILD_CPP_TEST

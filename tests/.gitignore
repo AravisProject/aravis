@@ -14,3 +14,4 @@ arv-heartbeat-test
 arv-example
 time-test
 realtime-test
+load-http-test
