@@ -4,16 +4,16 @@
 	<id type="desktop">arv-viewer.desktop</id>
 	<metadata_license>CC0-1.0</metadata_license>
 	<project_license>GPL-2.0+</project_license>
-	<_name>Aravis Viewer</_name>
-	<_summary>Simple viewer of video stream acquired using Aravis</_summary>
+	<name>Aravis Viewer</name>
+	<summary>Simple viewer of video stream acquired using Aravis</summary>
 	<description>
-		<_p>
+		<p>
 			Aravis Viewer is a simple viewer used to display video streams from
 			GENICAM-based Ethernet industrial cameras.
-		</_p>
-		<_p>
+		</p>
+		<p>
 			It allows to control basic acquisition parameters, i.e. framerate, exposure and gain, and to save raw still images.
-		</_p>
+		</p>
 	</description>
 	<screenshots>
 		<screenshot type="default" width="1024" height="576">https://git.gnome.org/browse/aravis/plain/viewer/data/aravis.png</screenshot>
