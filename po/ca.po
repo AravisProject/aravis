@@ -1,0 +1,63 @@
+# Catalan translation for aravis.
+# Copyright (C) 2015 aravis's COPYRIGHT HOLDER
+# This file is distributed under the same license as the aravis package.
+# Robert Antoni Buj Gelonch <rbuj@fedoraproject.org>, 2015.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: aravis master\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/enter_bug.cgi?"
+"product=aravis&keywords=I18N+L10N&component=general\n"
+"POT-Creation-Date: 2015-11-29 15:53+0000\n"
+"PO-Revision-Date: 2015-11-30 00:20+0100\n"
+"Last-Translator: Robert Antoni Buj Gelonch <rbuj@fedoraproject.ord>\n"
+"Language-Team: Catalan <gnome@llistes.softcatala.org>\n"
+"Language: ca\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.8.6\n"
+
+#: ../viewer/arv-viewer.ui.h:1 ../viewer/data/arv-viewer.desktop.in.in.h:1
+msgid "Aravis"
+msgstr "Aravis"
+
+#: ../viewer/arv-viewer.ui.h:2
+msgid "Frame rate:"
+msgstr "Velocitat dels fotogrames:"
+
+#: ../viewer/arv-viewer.ui.h:3
+msgid "Hz"
+msgstr "Hz"
+
+#: ../viewer/arv-viewer.ui.h:4
+msgid "Auto"
+msgstr "Automàtic"
+
+#: ../viewer/arv-viewer.ui.h:5
+msgid "Exposure:"
+msgstr "Exposició:"
+
+#: ../viewer/arv-viewer.ui.h:6
+msgid "Gain:"
+msgstr "Guany:"
+
+#: ../viewer/arv-viewer.ui.h:7
+msgid "µs"
+msgstr "µs"
+
+#: ../viewer/arv-viewer.ui.h:8
+msgid "Settings"
+msgstr "Configuració"
+
+#: ../viewer/arv-viewer.ui.h:9
+msgid "Save a snapshot into image folder"
+msgstr "Desa una instantània a la carpeta d'imatges"
+
+#: ../viewer/data/arv-viewer.desktop.in.in.h:2
+msgid "Aravis Simple Viewer"
+msgstr "Visor simple Aravis"
+
+#: ../viewer/data/arv-viewer.desktop.in.in.h:3
+msgid "Display the video stream from your cameras"
+msgstr "Visualitzeu el flux de vídeo de les vostres càmeres"
