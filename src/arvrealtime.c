@@ -31,6 +31,7 @@
 #include <arvdebug.h>
 #include <memory.h>
 #include <errno.h>
+#include <sched.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/resource.h>
