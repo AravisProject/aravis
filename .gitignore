@@ -44,3 +44,4 @@ aravis-*.tar.gz
 aravis-*.tar.xz
 INSTALL
 compile
+aravis-*/
