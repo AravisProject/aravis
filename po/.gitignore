@@ -3,3 +3,4 @@ POTFILES
 notexist
 *.pot
 .intltool*
+Makefile.in.in
