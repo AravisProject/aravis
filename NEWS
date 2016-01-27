@@ -1,3 +1,12 @@
+Release 0.3.8
+=============
+
+  * genicam: add bigendian support (Emmanuel)
+  * camera: RICOH camera support (Anil)
+  * build fixes (Emmanuel)
+  * dox fixes (Jarek, Emmanuel)
+  * translation updates (Jordi, Jiri, Anders, Μύρων, Pedro, Cédric, Samir, Necdet)
+
 Release 0.3.7
 =============
 
