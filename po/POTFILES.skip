@@ -1,2 +1,4 @@
 viewer/data/arv-viewer.desktop.in
 viewer/data/arv-viewer.appdata.xml
+# Workaround intltool bug https://bugs.launchpad.net/intltool/+bug/1117944
+sub/viewer/data/arv-viewer.desktop.in
