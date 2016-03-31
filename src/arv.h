@@ -68,6 +68,9 @@
 #include <arvgvinterface.h>
 #include <arvgvdevice.h>
 #include <arvgvstream.h>
+#ifdef ARAVIS_BUILD_USB
+#include <arvuvinterface.h>
+#endif
 #include <arvfakeinterface.h>
 #include <arvfakedevice.h>
 #include <arvfakestream.h>
