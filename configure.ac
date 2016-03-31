@@ -31,6 +31,11 @@ IT_PROG_INTLTOOL([0.31.2])
 
 LT_INIT()
 
+AC_ARG_ENABLE(usb,
+	      [AS_HELP_STRING([--enable-usb],
+		              [build with USB support [default=auto]])],
+	      [enable_usb=$enableval],
+	      [enable_usb=auto])
 AC_ARG_ENABLE(viewer,
 	      [AS_HELP_STRING([--enable-viewer],
 		              [build viewer [default=auto]])],
@@ -60,6 +65,7 @@ AC_ARG_ENABLE(zlib_pc,
 PKG_PROG_PKG_CONFIG([0.14])
 
 ARAVIS_REQUIREMENTS="glib-2.0 >= 2.26 gobject-2.0 gio-2.0 libxml-2.0 gthread-2.0"
+ARAVIS_USB_REQUIREMENTS="libusb-1.0"
 ARAVIS_GSTREAMER_REQUIREMENTS="gstreamer-base-1.0 gstreamer-app-1.0"
 ARAVIS_GSTREAMER_0_10_REQUIREMENTS="gstreamer-base-0.10 gstreamer-app-0.10"
 ARAVIS_VIEWER_REQUIREMENTS="$ARAVIS_GSTREAMER_REQUIREMENTS gstreamer-video-1.0 gtk+-3.0 libnotify"
@@ -73,9 +79,26 @@ else
 	ARAVIS_ADDITIONAL_LIBS="-lm -lz"
 fi
 
+# USB support
+# ===========
+
+build_usb=no
+if test "x$enable_usb" = "xyes" || test "x$enable_usb" = "xauto"; then
+	PKG_CHECK_MODULES([ARAVIS_USB], [$ARAVIS_USB_REQUIREMENTS],
+			  [AC_DEFINE([ARAVIS_BUILD_USB], [1], [Build USB support]) build_usb=yes],
+			  [AS_IF([test "x$enable_usb" = "xyes"],
+				 AC_MSG_ERROR([${ARAVIS_USB_PKG_ERRORS} - Can not build USB support]))]);
+fi
+AM_CONDITIONAL(ARAVIS_BUILD_USB, test "x$build_usb" = "xyes")
+
+if test "x$build_usb" = "xyes"; then
+	ARAVIS_REQUIREMENTS="${ARAVIS_REQUIREMENTS} ${ARAVIS_USB_REQUIREMENTS}"
+fi
+
 PKG_CHECK_MODULES(ARAVIS, [$ARAVIS_REQUIREMENTS])
 
 # Standard math library doesn't come with a pkgconfig file.
+
 ARAVIS_LIBS="${ARAVIS_ADDITIONAL_LIBS} ${ARAVIS_LIBS}"
 
 AC_SUBST(ARAVIS_CFLAGS)
@@ -200,6 +223,7 @@ echo "  Compiler:                    ${CC}"
 echo "  Compiler flags:              ${ARAVIS_CFLAGS}"
 echo "  Linker flags:                ${ARAVIS_LIBS}"
 echo ""
+echo "  Build USB support:           $build_usb"
 echo "  Build viewer:                $build_viewer"
 echo "  Build gstreamer plugin:      $build_gst_plugin"
 echo "  Build gstreamer-0.10 plugin: $build_gst_0_10_plugin"

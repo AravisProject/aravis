@@ -22,7 +22,7 @@
 
 /**
  * SECTION: arvgvcp
- * @short_description: Gvcp packet handling (control)
+ * @short_description: GigEVision control packet handling
  */
 
 #include <arvgvcp.h>
@@ -534,7 +534,7 @@ arv_gvcp_packet_to_string (const ArvGvcpPacket *packet)
  * @packet: a #ArvGvcpPacket
  * @level: debug level
  *
- * Dumps the content of @packet if level is lower or equal to the current debug level for the gvcp debug category. See arv_debug_enable().
+ * Dumps the content of @packet if level is lower or equal to the current debug level for the cp debug category. See arv_debug_enable().
  */
 
 void
@@ -542,19 +542,19 @@ arv_gvcp_packet_debug (const ArvGvcpPacket *packet, ArvDebugLevel level)
 {
 	char *string;
 
-	if (!arv_debug_check (&arv_debug_category_gvcp, level))
+	if (!arv_debug_check (&arv_debug_category_cp, level))
 		return;
 
 	string = arv_gvcp_packet_to_string (packet);
 	switch (level) {
 		case ARV_DEBUG_LEVEL_LOG:
-			arv_log_gvcp ("%s", string);
+			arv_log_cp ("%s", string);
 			break;
 		case ARV_DEBUG_LEVEL_DEBUG:
-			arv_debug_gvcp ("%s", string);
+			arv_debug_cp ("%s", string);
 			break;
 		case ARV_DEBUG_LEVEL_WARNING:
-			arv_warning_gvcp ("%s", string);
+			arv_warning_cp ("%s", string);
 			break;
 		default:
 			break;

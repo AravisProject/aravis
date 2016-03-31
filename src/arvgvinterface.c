@@ -22,7 +22,7 @@
 
 /**
  * SECTION: arvgvinterface
- * @short_description: Gigabit ethernet camera interface
+ * @short_description: GigEVision interface
  */
 
 #include <arvgvinterface.h>

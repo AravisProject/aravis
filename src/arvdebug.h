@@ -46,8 +46,8 @@ extern ArvDebugCategory arv_debug_category_device;
 extern ArvDebugCategory arv_debug_category_chunk;
 extern ArvDebugCategory arv_debug_category_stream;
 extern ArvDebugCategory arv_debug_category_stream_thread;
-extern ArvDebugCategory arv_debug_category_gvcp;
-extern ArvDebugCategory arv_debug_category_gvsp;
+extern ArvDebugCategory arv_debug_category_cp;
+extern ArvDebugCategory arv_debug_category_sp;
 extern ArvDebugCategory arv_debug_category_genicam;
 extern ArvDebugCategory arv_debug_category_evaluator;
 extern ArvDebugCategory arv_debug_category_misc;
@@ -76,13 +76,13 @@ extern ArvDebugCategory arv_debug_category_misc;
 #define arv_log_stream_thread(...)	arv_log (&arv_debug_category_stream_thread, __VA_ARGS__)
 #define arv_warning_stream_thread(...)	arv_warning (&arv_debug_category_stream_thread, __VA_ARGS__)
 
-#define arv_debug_gvcp(...) 		arv_debug (&arv_debug_category_gvcp, __VA_ARGS__)
-#define arv_log_gvcp(...)		arv_log (&arv_debug_category_gvcp, __VA_ARGS__)
-#define arv_warning_gvcp(...)		arv_warning (&arv_debug_category_gvcp, __VA_ARGS__)
+#define arv_debug_cp(...) 		arv_debug (&arv_debug_category_cp, __VA_ARGS__)
+#define arv_log_cp(...)			arv_log (&arv_debug_category_cp, __VA_ARGS__)
+#define arv_warning_cp(...)		arv_warning (&arv_debug_category_cp, __VA_ARGS__)
 
-#define arv_debug_gvsp(...) 		arv_debug (&arv_debug_category_gvsp, __VA_ARGS__)
-#define arv_log_gvsp(...)		arv_log (&arv_debug_category_gvsp, __VA_ARGS__)
-#define arv_warning_gvsp(...)		arv_warning (&arv_debug_category_gvsp, __VA_ARGS__)
+#define arv_debug_sp(...) 		arv_debug (&arv_debug_category_sp, __VA_ARGS__)
+#define arv_log_sp(...)			arv_log (&arv_debug_category_sp, __VA_ARGS__)
+#define arv_warning_sp(...)		arv_warning (&arv_debug_category_sp, __VA_ARGS__)
 
 #define arv_debug_genicam(...) 		arv_debug (&arv_debug_category_genicam, __VA_ARGS__)
 #define arv_log_genicam(...)		arv_log (&arv_debug_category_genicam, __VA_ARGS__)

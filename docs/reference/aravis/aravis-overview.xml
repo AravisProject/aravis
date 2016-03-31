@@ -106,10 +106,11 @@
 				<listitem>all</listitem>
 				<listitem>interface</listitem>
 				<listitem>device</listitem>
+				<listitem>chunk</listitem>
 				<listitem>stream</listitem>
 				<listitem>stream-thread</listitem>
-				<listitem>gvcp</listitem>
-				<listitem>gvsp</listitem>
+				<listitem>cp</listitem>
+				<listitem>sp</listitem>
 				<listitem>genicam</listitem>
 				<listitem>evaluator</listitem>
 				<listitem>dom</listitem>

@@ -22,7 +22,7 @@
 
 /**
  * SECTION: arvfakeinterface
- * @short_description: Fake camera interface
+ * @short_description: Fake interface
  */
 
 #include <arvfakeinterface.h>

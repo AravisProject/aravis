@@ -23,7 +23,7 @@
 #ifndef ARV_DEVICE_PRIVATE_H
 #define ARV_DEVICE_PRIVATE_H
 
-#include <arvdeviceprivate.h>
+#include <arvdevice.h>
 
 G_BEGIN_DECLS
 

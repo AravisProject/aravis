@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2016 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,6 +24,7 @@
 #define ARV_TYPES_H
 
 #include <arvenums.h>
+#include <arvconfig.h>
 
 G_BEGIN_DECLS
 
@@ -77,6 +78,12 @@ typedef struct _ArvChunkParser		ArvChunkParser;
 typedef struct _ArvGvInterface 		ArvGvInterface;
 typedef struct _ArvGvDevice 		ArvGvDevice;
 typedef struct _ArvGvStream 		ArvGvStream;
+
+#ifdef ARAVIS_BUILD_USB
+typedef struct _ArvUvInterface 		ArvUvInterface;
+typedef struct _ArvUvDevice		ArvUvDevice;
+typedef struct _ArvUvStream		ArvUvStream;
+#endif
 
 typedef struct _ArvFakeInterface	ArvFakeInterface;
 typedef struct _ArvFakeDevice		ArvFakeDevice;

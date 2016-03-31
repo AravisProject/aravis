@@ -59,15 +59,15 @@ ArvDebugCategory arv_debug_category_stream_thread =
 	.level = -1
 };
 
-ArvDebugCategory arv_debug_category_gvcp =
+ArvDebugCategory arv_debug_category_cp =
 {
-	.name = "gvcp",
+	.name = "cp",
 	.level = -1
 };
 
-ArvDebugCategory arv_debug_category_gvsp =
+ArvDebugCategory arv_debug_category_sp =
 {
-	.name = "gvsp",
+	.name = "sp",
 	.level = -1
 };
 

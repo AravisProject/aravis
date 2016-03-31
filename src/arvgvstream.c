@@ -22,7 +22,7 @@
 
 /**
  * SECTION: arvgvstream
- * @short_description: Gigabit ethernet camera stream
+ * @short_description: GigEVision stream
  */
 
 #include <arvgvstream.h>

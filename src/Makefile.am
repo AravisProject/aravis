@@ -156,6 +156,26 @@ noinst_HEADERS =				\
 	arvstreamprivate.h			\
 	arvrealtimeprivate.h
 
+if ARAVIS_BUILD_USB
+ARAVIS_SRCS +=					\
+	arvuvinterface.c			\
+	arvuvdevice.c				\
+	arvuvstream.c
+
+ARAVIS_SRCS_NO_INTRO +=				\
+	arvuvcp.c				\
+	arvuvsp.c
+
+ARAVIS_HDRS +=					\
+	arvuvinterface.h			\
+	arvuvdevice.h				\
+	arvuvstream.h
+
+ARAVIS_HDRS_NO_INTRO +=				\
+	arvuvcp.h				\
+	arvuvsp.h
+endif
+
 arv_fake_cameradir = $(aravis_datadir)
 arv_fake_camera_DATA = arv-fake-camera.xml
 

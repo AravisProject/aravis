@@ -22,7 +22,7 @@
 
 /**
  * SECTION: arvfakedevice
- * @short_description: Fake camera device
+ * @short_description: Fake device
  */
 
 #include <arvfakedevice.h>
