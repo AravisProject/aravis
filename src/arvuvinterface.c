@@ -28,6 +28,7 @@
 #include <arvuvinterface.h>
 #include <arvdebug.h>
 #include <arvmisc.h>
+#include <arvstr.h>
 #include <libusb.h>
 #include <stdio.h>
 
@@ -89,9 +90,11 @@ printdev (libusb_device *device)
 }
 #endif
 
-gboolean
-_usb_device_is_usb3vision (libusb_device *device)
+ArvInterfaceDeviceIds *
+_usb_device_to_device_ids (libusb_device *device)
 {
+	ArvInterfaceDeviceIds *device_ids = NULL;
+	libusb_device_handle *device_handle;
 	struct libusb_device_descriptor desc;
 	struct libusb_config_descriptor *config;
 	const struct libusb_interface *inter;
@@ -102,13 +105,13 @@ _usb_device_is_usb3vision (libusb_device *device)
 	r = libusb_get_device_descriptor (device, &desc);
 	if (r < 0) {
 		g_warning ("Failed to get device descriptor");
-		return FALSE;
+		return NULL;
 	}
 
 	if (desc.bDeviceClass != ARV_UV_INTERFACE_DEVICE_CLASS ||
 	    desc.bDeviceSubClass != ARV_UV_INTERFACE_DEVICE_SUBCLASS ||
 	    desc.bDeviceProtocol != ARV_UV_INTERFACE_DEVICE_PROTOCOL)
-		return FALSE;
+		return NULL;
 
 	libusb_get_config_descriptor (device, 0, &config);
 	for (i = 0; i< (int) config->bNumInterfaces; i++) {
@@ -122,7 +125,45 @@ _usb_device_is_usb3vision (libusb_device *device)
 	}
 	libusb_free_config_descriptor (config);
 
-	return success;
+	if (!success)
+		return NULL;
+
+	if (libusb_open (device, &device_handle) == LIBUSB_SUCCESS) {
+		unsigned char *manufacturer;
+		unsigned char *product;
+		unsigned char *serial_nbr;
+		int index;
+
+		device_ids = g_new0 (ArvInterfaceDeviceIds, 1);
+
+		manufacturer = g_malloc0 (256);
+		product = g_malloc0 (256);
+		serial_nbr = g_malloc0 (256);
+
+		index = desc.iManufacturer;
+		if (index > 0)
+			libusb_get_string_descriptor_ascii (device_handle, index, manufacturer, 256);
+		index = desc.iProduct;
+		if (index > 0)
+			libusb_get_string_descriptor_ascii (device_handle, index, product, 256);
+		index = desc.iSerialNumber;
+		if (index > 0)
+			libusb_get_string_descriptor_ascii (device_handle, index, serial_nbr, 256);
+
+		device_ids->device = g_strdup_printf ("%s-%s", manufacturer, serial_nbr);
+		device_ids->physical = g_strdup_printf ("FIXME");
+		device_ids->address = g_strdup_printf ("FIXME");
+
+		arv_str_strip (device_ids->device, ARV_DEVICE_NAME_ILLEGAL_CHARACTERS, ARV_DEVICE_NAME_REPLACEMENT_CHARACTER);
+
+		g_free (manufacturer);
+		g_free (product);
+		g_free (serial_nbr);
+
+		libusb_close (device_handle);
+	}
+
+	return device_ids;
 }
 
 static void
@@ -138,11 +179,17 @@ arv_uv_interface_update_device_list (ArvInterface *interface, GArray *device_ids
 	if (count < 0)
 		return;
 
-	for (i = 0; i < count; i++)
-		if (_usb_device_is_usb3vision (devices[i]))
-		    uv_count++;
+	for (i = 0; i < count; i++) {
+		ArvInterfaceDeviceIds *ids;
 
-	arv_debug_interface ("Found %d USB3Vision device%s (among %d USB device%ss)\n",
+		ids = _usb_device_to_device_ids (devices[i]);
+		if (ids != NULL) {
+		    uv_count++;
+		    g_array_append_val (device_ids, ids);
+		}
+	}
+
+	arv_debug_interface ("Found %d USB3Vision device%s (among %d USB device%ss)",
 			     uv_count , uv_count > 1 ? "s" : "",
 			     count, count > 1 ? "s" : "");
 
