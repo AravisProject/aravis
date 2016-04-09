@@ -85,6 +85,13 @@
 		</chapter>
 
 		<chapter>
+			<title>USB camera</title>
+			<xi:include href="xml/arvuvinterface.xml"/>
+			<xi:include href="xml/arvuvdevice.xml"/>
+			<xi:include href="xml/arvuvstream.xml"/>
+		</chapter>
+
+		<chapter>
 			<title>Fake camera</title>
 			<xi:include href="xml/arvfakeinterface.xml"/>
 			<xi:include href="xml/arvfakedevice.xml"/>

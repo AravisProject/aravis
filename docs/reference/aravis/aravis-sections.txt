@@ -230,6 +230,61 @@ ARV_FAKE_INTERFACE_SOCKET_BUFFER_SIZE
 </SECTION>
 
 <SECTION>
+<FILE>arvuvinterface</FILE>
+<TITLE>ArvUvInterface</TITLE>
+arv_uv_interface_destroy_instance
+arv_uv_interface_get_instance
+<SUBSECTION Standard>
+ArvUvInterface
+ARV_IS_UV_INTERFACE
+ARV_IS_UV_INTERFACE_CLASS
+ARV_TYPE_UV_INTERFACE
+ARV_UV_INTERFACE
+ARV_UV_INTERFACE_CLASS
+ARV_UV_INTERFACE_GET_CLASS
+ArvUvInterfaceClass
+ArvUvInterfacePrivate
+arv_uv_interface_get_type
+<SUBSECTION Private>
+</SECTION>
+
+<SECTION>
+<FILE>arvuvdevice</FILE>
+<TITLE>ArvUvDevice</TITLE>
+arv_uv_device_new
+<SUBSECTION Standard>
+ArvUvDevice
+ARV_IS_UV_DEVICE
+ARV_IS_UV_DEVICE_CLASS
+ARV_TYPE_UV_DEVICE
+ARV_UV_DEVICE
+ARV_UV_DEVICE_CLASS
+ARV_UV_DEVICE_GET_CLASS
+ArvUvDeviceClass
+ArvUvDevicePrivate
+arv_uv_device_get_type
+<SUBSECTION Private>
+</SECTION>
+
+<SECTION>
+<FILE>arvuvstream</FILE>
+<TITLE>ArvUvStream</TITLE>
+arv_uv_stream_new
+<SUBSECTION Standard>
+ArvUvStream
+ARV_IS_UV_STREAM
+ARV_IS_UV_STREAM_CLASS
+ARV_TYPE_UV_STREAM
+ARV_UV_STREAM
+ARV_UV_STREAM_CLASS
+ARV_UV_STREAM_GET_CLASS
+ArvUvStreamClass
+ArvUvStreamPrivate
+arv_uv_stream_get_type
+<SUBSECTION Private>
+</SECTION>
+
+<SECTION>
 <FILE>arvgcport</FILE>
 <TITLE>ArvGcPort</TITLE>
 ArvGcPort

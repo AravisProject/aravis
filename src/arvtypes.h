@@ -81,6 +81,8 @@ typedef struct _ArvGvStream 		ArvGvStream;
 
 #ifdef ARAVIS_BUILD_USB
 typedef struct _ArvUvInterface 		ArvUvInterface;
+typedef struct _ArvUvDevice		ArvUvDevice;
+typedef struct _ArvUvStream		ArvUvStream;
 #endif
 
 typedef struct _ArvFakeInterface	ArvFakeInterface;

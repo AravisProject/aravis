@@ -158,10 +158,14 @@ noinst_HEADERS =				\
 
 if ARAVIS_BUILD_USB
 ARAVIS_SRCS +=					\
-	arvuvinterface.c
+	arvuvinterface.c			\
+	arvuvdevice.c				\
+	arvuvstream.c
 
 ARAVIS_HDRS +=					\
-	arvuvinterface.h
+	arvuvinterface.h			\
+	arvuvdevice.h				\
+	arvuvstream.h
 endif
 
 arv_fake_cameradir = $(aravis_datadir)
