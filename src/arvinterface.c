@@ -204,16 +204,7 @@ arv_interface_get_device_address (ArvInterface *interface, unsigned int index)
 ArvDevice *
 arv_interface_open_device (ArvInterface *interface, const char *device_id)
 {
-	ArvDevice *device;
-
 	g_return_val_if_fail (ARV_IS_INTERFACE (interface), NULL);
-
-	device = ARV_INTERFACE_GET_CLASS (interface)->open_device (interface, device_id);
-
-	if (device != NULL)
-		return device;
-
-	arv_interface_update_device_list (interface);
 
 	return ARV_INTERFACE_GET_CLASS (interface)->open_device (interface, device_id);
 }

@@ -399,7 +399,7 @@ arv_gv_interface_update_device_list (ArvInterface *interface, GArray *device_ids
 }
 
 static ArvDevice *
-arv_gv_interface_open_device (ArvInterface *interface, const char *device_id)
+_open_device (ArvInterface *interface, const char *device_id)
 {
 	ArvGvInterface *gv_interface;
 	ArvDevice *device = NULL;
@@ -425,6 +425,20 @@ arv_gv_interface_open_device (ArvInterface *interface, const char *device_id)
 	g_object_unref (device_address);
 
 	return device;
+}
+
+static ArvDevice *
+arv_gv_interface_open_device (ArvInterface *interface, const char *device_id)
+{
+	ArvDevice *device;
+
+	device = _open_device (interface, device_id);
+	if (ARV_IS_DEVICE (device))
+		return device;
+
+	arv_gv_interface_discover (ARV_GV_INTERFACE (interface));
+
+	return _open_device (interface, device_id);
 }
 
 static ArvInterface *gv_interface = NULL;
