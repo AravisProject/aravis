@@ -44,18 +44,18 @@ ArvInterfaceInfos interfaces[] = {
 		.get_interface_instance = arv_fake_interface_get_instance,
 		.destroy_interface_instance =  arv_fake_interface_destroy_instance
 	},
-	{	.interface_id = "GigEVision",
-		.is_available = TRUE,
-		.get_interface_instance = arv_gv_interface_get_instance,
-		.destroy_interface_instance = arv_gv_interface_destroy_instance
-	},
 #ifdef ARAVIS_BUILD_USB
 	{	.interface_id = "USB3Vision",
 		.is_available = TRUE,
 		.get_interface_instance = arv_uv_interface_get_instance,
 		.destroy_interface_instance = arv_uv_interface_destroy_instance
-	}
+	},
 #endif
+	{	.interface_id = "GigEVision",
+		.is_available = TRUE,
+		.get_interface_instance = arv_gv_interface_get_instance,
+		.destroy_interface_instance = arv_gv_interface_destroy_instance
+	}
 };
 
 unsigned int

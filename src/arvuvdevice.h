@@ -50,7 +50,7 @@ struct _ArvUvDeviceClass {
 
 GType arv_uv_device_get_type (void);
 
-ArvDevice * 	arv_uv_device_new 			(const char *serial_number);
+ArvDevice * 	arv_uv_device_new 			(const char *vendor, const char *product, const char *serial_nbr);
 
 G_END_DECLS
 

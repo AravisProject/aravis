@@ -162,10 +162,16 @@ ARAVIS_SRCS +=					\
 	arvuvdevice.c				\
 	arvuvstream.c
 
+ARAVIS_SRCS_NO_INTRO +=				\
+	arvuvcp.c
+
 ARAVIS_HDRS +=					\
 	arvuvinterface.h			\
 	arvuvdevice.h				\
 	arvuvstream.h
+
+ARAVIS_HDRS_NO_INTRO +=				\
+	arvuvcp.h
 endif
 
 arv_fake_cameradir = $(aravis_datadir)

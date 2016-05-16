@@ -26,6 +26,7 @@
  */
 
 #include <arvuvinterface.h>
+#include <arvuvdevice.h>
 #include <arvdebug.h>
 #include <arvmisc.h>
 #include <arvstr.h>
@@ -45,11 +46,67 @@
 
 static GObjectClass *parent_class = NULL;
 
+typedef struct {
+	char *name;
+	char *manufacturer;
+	char *product;
+	char *serial_nbr;
+
+	volatile gint ref_count;
+} ArvUvInterfaceDeviceInfos;
+
+static ArvUvInterfaceDeviceInfos *
+arv_uv_interface_device_infos_new (const char *manufacturer,
+				   const char *product,
+				   const char *serial_nbr)
+{
+	ArvUvInterfaceDeviceInfos *infos;
+
+	g_return_val_if_fail (manufacturer != NULL, NULL);
+	g_return_val_if_fail (product != NULL, NULL);
+	g_return_val_if_fail (serial_nbr != NULL, NULL);
+
+	infos = g_new (ArvUvInterfaceDeviceInfos, 1);
+	infos->manufacturer = g_strdup (manufacturer);
+	infos->name = g_strdup_printf ("%s-%s", manufacturer, serial_nbr);
+	infos->product = g_strdup (product);
+	infos->serial_nbr = g_strdup (serial_nbr);
+	infos->ref_count = 1;
+
+	arv_str_strip (infos->name, ARV_DEVICE_NAME_ILLEGAL_CHARACTERS, ARV_DEVICE_NAME_REPLACEMENT_CHARACTER);
+
+	return infos;
+}
+
+/*
+static void
+arv_uv_interface_device_infos_ref (ArvUvInterfaceDeviceInfos *infos)
+{
+	g_return_if_fail (infos != NULL);
+	g_return_if_fail (g_atomic_int_get (&infos->ref_count) > 0);
+	g_atomic_int_inc (&infos->ref_count);
+}
+*/
+
+static void
+arv_uv_interface_device_infos_unref (ArvUvInterfaceDeviceInfos *infos)
+{
+	g_return_if_fail (infos != NULL);
+	g_return_if_fail (g_atomic_int_get (&infos->ref_count) > 0);
+
+	if (g_atomic_int_dec_and_test (&infos->ref_count)) {
+		g_clear_pointer (&infos->name, g_free);
+		g_clear_pointer (&infos->manufacturer, g_free);
+		g_clear_pointer (&infos->product, g_free);
+		g_clear_pointer (&infos->serial_nbr, g_free);
+		g_clear_pointer (&infos, g_free);
+	}
+}
+
 struct _ArvUvInterfacePrivate {
 	GHashTable *devices;
 	libusb_context *usb;
 };
-
 
 #if 0
 static void
@@ -91,7 +148,7 @@ printdev (libusb_device *device)
 #endif
 
 ArvInterfaceDeviceIds *
-_usb_device_to_device_ids (libusb_device *device)
+_usb_device_to_device_ids (ArvUvInterface *uv_interface, libusb_device *device)
 {
 	ArvInterfaceDeviceIds *device_ids = NULL;
 	libusb_device_handle *device_handle;
@@ -129,6 +186,7 @@ _usb_device_to_device_ids (libusb_device *device)
 		return NULL;
 
 	if (libusb_open (device, &device_handle) == LIBUSB_SUCCESS) {
+		ArvUvInterfaceDeviceInfos *device_infos;
 		unsigned char *manufacturer;
 		unsigned char *product;
 		unsigned char *serial_nbr;
@@ -150,11 +208,12 @@ _usb_device_to_device_ids (libusb_device *device)
 		if (index > 0)
 			libusb_get_string_descriptor_ascii (device_handle, index, serial_nbr, 256);
 
-		device_ids->device = g_strdup_printf ("%s-%s", manufacturer, serial_nbr);
-		device_ids->physical = g_strdup_printf ("FIXME");
-		device_ids->address = g_strdup_printf ("FIXME");
+		device_infos = arv_uv_interface_device_infos_new ((char *) manufacturer, (char *) product, (char *) serial_nbr);
+		g_hash_table_replace (uv_interface->priv->devices, device_infos->name, device_infos);
 
-		arv_str_strip (device_ids->device, ARV_DEVICE_NAME_ILLEGAL_CHARACTERS, ARV_DEVICE_NAME_REPLACEMENT_CHARACTER);
+		device_ids->device = g_strdup (device_infos->name);
+		device_ids->physical = g_strdup ("FIXME-Physical");
+		device_ids->address = g_strdup ("FIXME-Address");
 
 		g_free (manufacturer);
 		g_free (product);
@@ -182,14 +241,14 @@ arv_uv_interface_update_device_list (ArvInterface *interface, GArray *device_ids
 	for (i = 0; i < count; i++) {
 		ArvInterfaceDeviceIds *ids;
 
-		ids = _usb_device_to_device_ids (devices[i]);
+		ids = _usb_device_to_device_ids (uv_interface, devices[i]);
 		if (ids != NULL) {
 		    uv_count++;
 		    g_array_append_val (device_ids, ids);
 		}
 	}
 
-	arv_debug_interface ("Found %d USB3Vision device%s (among %d USB device%ss)",
+	arv_debug_interface ("Found %d USB3Vision device%s (among %d USB device%s)",
 			     uv_count , uv_count > 1 ? "s" : "",
 			     count, count > 1 ? "s" : "");
 
@@ -199,7 +258,27 @@ arv_uv_interface_update_device_list (ArvInterface *interface, GArray *device_ids
 static ArvDevice *
 arv_uv_interface_open_device (ArvInterface *interface, const char *device_id)
 {
-	return NULL;
+	ArvUvInterface *uv_interface;
+	ArvDevice *device = NULL;
+	ArvUvInterfaceDeviceInfos *device_infos;
+
+	uv_interface = ARV_UV_INTERFACE (interface);
+
+	if (device_id == NULL) {
+		GList *device_list;
+
+		device_list = g_hash_table_get_values (uv_interface->priv->devices);
+		device_infos = device_list != NULL ? device_list->data : NULL;
+		g_list_free (device_list);
+	} else
+		device_infos = g_hash_table_lookup (uv_interface->priv->devices, device_id);
+
+	if (device_infos == NULL)
+		return NULL;
+
+	device = arv_uv_device_new (device_infos->manufacturer, device_infos->product, device_infos->serial_nbr);
+
+	return device;
 }
 
 static ArvInterface *uv_interface = NULL;
@@ -241,6 +320,9 @@ arv_uv_interface_init (ArvUvInterface *uv_interface)
 {
 	uv_interface->priv = G_TYPE_INSTANCE_GET_PRIVATE (uv_interface, ARV_TYPE_UV_INTERFACE, ArvUvInterfacePrivate);
 	libusb_init (&uv_interface->priv->usb);
+
+	uv_interface->priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal, NULL,
+							     (GDestroyNotify) arv_uv_interface_device_infos_unref);
 }
 
 static void
@@ -248,7 +330,10 @@ arv_uv_interface_finalize (GObject *object)
 {
 	ArvUvInterface *uv_interface = ARV_UV_INTERFACE (object);
 
+	g_hash_table_unref (uv_interface->priv->devices);
+
 	parent_class->finalize (object);
+
 	libusb_exit (uv_interface->priv->usb);
 }
 
