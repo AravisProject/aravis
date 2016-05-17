@@ -316,6 +316,25 @@ arv_buffer_get_timestamp (ArvBuffer *buffer)
 }
 
 /**
+ * arv_buffer_set_timestamp:
+ * @buffer: a #ArvBuffer
+ * @timestamp_ns: a timestamp, expressed as nanoseconds
+ *
+ * Sets the buffer timestamp, which allows to override the timpestamp set by
+ * the camera, which in some case is incorrect.
+ *
+ * Since: 0.4.0
+ */
+
+void
+arv_buffer_set_timestamp (ArvBuffer *buffer, guint64 timestamp_ns)
+{
+	g_return_if_fail (ARV_IS_BUFFER (buffer));
+
+	buffer->priv->timestamp_ns = timestamp_ns;
+}
+
+/**
  * arv_buffer_get_frame_id:
  * @buffer: a #ArvBuffer
  *

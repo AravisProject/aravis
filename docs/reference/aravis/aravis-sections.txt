@@ -98,6 +98,7 @@ arv_buffer_get_user_data
 arv_buffer_get_data
 arv_buffer_get_chunk_data
 arv_buffer_get_timestamp
+arv_buffer_set_timestamp
 arv_buffer_get_frame_id
 arv_buffer_get_payload_type
 arv_buffer_get_status

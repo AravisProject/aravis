@@ -74,6 +74,21 @@ full_buffer_test (void)
 	g_assert (value == 4321);
 }
 
+static void
+timestamp (void)
+{
+	ArvBuffer *buffer;
+
+	buffer = arv_buffer_new (1024, NULL);
+	g_assert (ARV_IS_BUFFER (buffer));
+	g_assert_cmpint (arv_buffer_get_timestamp (buffer), == , 0);
+
+	arv_buffer_set_timestamp (buffer, 1234);
+	g_assert_cmpint (arv_buffer_get_timestamp (buffer), == , 1234);
+
+	g_object_unref (buffer);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -86,6 +101,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/buffer/simple-buffer", simple_buffer_test);
 	g_test_add_func ("/buffer/preallocated-buffer", preallocated_buffer_test);
 	g_test_add_func ("/buffer/full-buffer", full_buffer_test);
+	g_test_add_func ("/buffer/timestamp", timestamp);
 
 	result = g_test_run();
 
