@@ -34,6 +34,7 @@
 #include <libusb.h>
 #include <string.h>
 #include <arvstr.h>
+#include <arvzip.h>
 
 static GObjectClass *parent_class = NULL;
 
@@ -51,6 +52,8 @@ struct _ArvUvDevicePrivate {
 	size_t genicam_xml_size;
 
 	guint16 packet_id;
+
+	guint data_size_max;
 };
 
 /* ArvUvDevice implemenation */
@@ -67,10 +70,10 @@ arv_uv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 	return stream;
 }
 
-static const char *
-arv_uv_device_get_genicam_xml (ArvDevice *device, size_t *size)
+static void 
+_bootstrap (ArvUvDevice *uv_device)
 {
-	ArvUvDevice *uv_device = ARV_UV_DEVICE (device);
+	ArvDevice *device = ARV_DEVICE (uv_device);
 	guint64 offset;
 	guint32 response_time;
 	guint64 manifest_table_address;
@@ -87,11 +90,7 @@ arv_uv_device_get_genicam_xml (ArvDevice *device, size_t *size)
 	guint64 manifest_n_entries;
 	ArvUvcpManifestEntry entry;
 	GString *string;
-
-	if (uv_device->priv->genicam_xml != NULL) {
-		*size = uv_device->priv->genicam_xml_size;
-		return uv_device->priv->genicam_xml;
-	}
+	void *data;
 
 	g_message ("Get genicam");
 
@@ -140,20 +139,46 @@ arv_uv_device_get_genicam_xml (ArvDevice *device, size_t *size)
 	g_message ("genicam address =          0x%016lx", entry.address);
 	g_message ("genicam address =          0x%016lx", entry.size);
 
-	return NULL;
-}
+	data = g_malloc0 (entry.size);
+	arv_device_read_memory (device, entry.address, entry.size, data, NULL);
 
-static void
-arv_gv_device_load_genicam (ArvUvDevice *uv_device)
-{
-	const char *genicam;
-	size_t size;
+#if 0
+	string = g_string_new ("");
+	arv_g_string_append_hex_dump (string, data, entry.size);
+	g_message ("GENICAM\n%s", string->str);
+	g_string_free (string, TRUE);
+#endif
 
-	genicam = arv_uv_device_get_genicam_xml (ARV_DEVICE (uv_device), &size);
-	if (genicam != NULL) {
-		uv_device->priv->genicam = arv_gc_new (ARV_DEVICE (uv_device), genicam, size);
+	{
+		ArvZip *zip;
+		const GSList *zip_files;
 
+		zip = arv_zip_new (data, entry.size);
+		zip_files = arv_zip_get_file_list (zip);
+
+		if (zip_files != NULL) {
+			const char *zip_filename;
+
+			zip_filename = arv_zip_file_get_name (zip_files->data);
+			uv_device->priv->genicam_xml = arv_zip_get_file (zip, zip_filename, &uv_device->priv->genicam_xml_size);
+
+			g_message ("file = %s", zip_filename);
+
+#if 0
+			string = g_string_new ("");
+			arv_g_string_append_hex_dump (string, uv_device->priv->genicam_xml, uv_device->priv->genicam_xml_size);
+			g_message ("GENICAM\n%s", string->str);
+			g_string_free (string, TRUE);
+#endif
+
+			uv_device->priv->genicam = arv_gc_new (ARV_DEVICE (uv_device), uv_device->priv->genicam_xml,
+							       uv_device->priv->genicam_xml_size);
+		}
+
+		arv_zip_free (zip);
 	}
+
+	g_free (data);
 }
 
 static ArvGc *
@@ -165,9 +190,8 @@ arv_uv_device_get_genicam (ArvDevice *device)
 }
 
 static gboolean
-arv_uv_device_read_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer, GError **error)
+_read_memory (ArvUvDevice *uv_device, guint32 address, guint32 size, void *buffer, GError **error)
 {
-	ArvUvDevice *uv_device = ARV_UV_DEVICE (device);
 	ArvUvcpPacket *packet;
 	size_t packet_size;
 	size_t answer_size;
@@ -195,8 +219,6 @@ arv_uv_device_read_memory (ArvDevice *device, guint32 address, guint32 size, voi
 
 		arv_uvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
-		g_message ("read_packet_size = %d", (int) read_packet_size);
-
 		g_assert (libusb_claim_interface (uv_device->priv->usb_device, 0) >= 0);
 		g_assert (libusb_bulk_transfer (uv_device->priv->usb_device, (0x04 | LIBUSB_ENDPOINT_OUT),
 						(guchar *) packet, packet_size, &transferred, 0) >= 0);
@@ -220,6 +242,38 @@ arv_uv_device_read_memory (ArvDevice *device, guint32 address, guint32 size, voi
 	}
 
 	return success;
+}
+
+static const char *
+arv_uv_device_get_genicam_xml (ArvDevice *device, size_t *size)
+{
+	ArvUvDevice *uv_device = ARV_UV_DEVICE (device);
+
+	if (size != NULL)
+		*size = uv_device->priv->genicam_xml_size;
+
+	return uv_device->priv->genicam_xml;
+}
+
+static gboolean
+arv_uv_device_read_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer, GError **error)
+{
+	ArvUvDevice *uv_device = ARV_UV_DEVICE (device);
+	int i;
+	gint32 block_size;
+	guint data_size_max;
+
+	data_size_max = uv_device->priv->data_size_max;
+
+	for (i = 0; i < (size + data_size_max - 1) / data_size_max; i++) {
+		block_size = MIN (data_size_max, size - i * data_size_max);
+		if (!_read_memory (uv_device,
+				   address + i * data_size_max,
+				   block_size, ((char *) buffer) + i * data_size_max, error))
+			return FALSE;
+	}
+
+	return TRUE;
 }
 
 static gboolean
@@ -315,7 +369,7 @@ arv_uv_device_new (const char *vendor, const char *product, const char *serial_n
 
 	_open_usb_device (uv_device);
 
-	arv_gv_device_load_genicam (uv_device);
+	_bootstrap (uv_device);
 
 	if (!ARV_IS_GC (uv_device->priv->genicam)) {
 		arv_warning_device ("[UvDevice::new] Failed to load genicam data");
@@ -330,6 +384,7 @@ static void
 arv_uv_device_init (ArvUvDevice *uv_device)
 {
 	uv_device->priv = G_TYPE_INSTANCE_GET_PRIVATE (uv_device, ARV_TYPE_UV_DEVICE, ArvUvDevicePrivate);
+	uv_device->priv->data_size_max = 256;
 }
 
 static void
