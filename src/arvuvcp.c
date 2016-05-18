@@ -86,23 +86,22 @@ arv_uvcp_packet_new_read_memory_cmd (guint32 address, guint32 size, guint16 pack
 ArvUvcpPacket *
 arv_uvcp_packet_new_write_memory_cmd (guint32 address, guint32 size, guint16 packet_id, size_t *packet_size)
 {
-	ArvUvcpPacket *packet;
-	guint32 n_address = g_htonl (address);
+	ArvUvcpWriteMemoryCmd *packet;
 
 	g_return_val_if_fail (packet_size != NULL, NULL);
 
-	*packet_size = sizeof (ArvUvcpHeader) + sizeof (guint32) + size;
+	*packet_size = sizeof (ArvUvcpWriteMemoryCmd) + size;
 
 	packet = g_malloc (*packet_size);
 
-	packet->header.packet_type = g_htons (ARV_UVCP_PACKET_TYPE_CMD);
-	packet->header.command = g_htons (ARV_UVCP_COMMAND_WRITE_MEMORY_CMD);
-	packet->header.size = g_htons (sizeof (guint32) + size);
-	packet->header.id = g_htons (packet_id);
+	packet->header.magic = GUINT32_TO_LE (ARV_UVCP_MAGIC);
+	packet->header.packet_type = GUINT16_TO_LE (ARV_UVCP_PACKET_TYPE_CMD);
+	packet->header.command = GUINT16_TO_LE (ARV_UVCP_COMMAND_WRITE_MEMORY_CMD);
+	packet->header.size = GUINT16_TO_LE (sizeof (ArvUvcpWriteMemoryCmdInfos) + size);
+	packet->header.id = GUINT16_TO_LE (packet_id);
+	packet->infos.address = GUINT64_TO_LE (address);
 
-	memcpy (&packet->data, &n_address, sizeof (guint32));
-
-	return packet;
+	return (ArvUvcpPacket *) packet;
 }
 
 static const char *
@@ -180,6 +179,22 @@ arv_uvcp_packet_to_string (const ArvUvcpPacket *packet)
 		case ARV_UVCP_COMMAND_READ_MEMORY_ACK:
 			{
 				break;
+			}
+		case ARV_UVCP_COMMAND_WRITE_MEMORY_CMD:
+			{
+				ArvUvcpWriteMemoryCmd *cmd_packet = (void *) packet;
+
+				value = GUINT64_FROM_LE (cmd_packet->infos.address);
+				g_string_append_printf (string, "address      = %10u (0x%08x)\n",
+							value, value);
+			}
+		case ARV_UVCP_COMMAND_WRITE_MEMORY_ACK:
+			{
+				ArvUvcpWriteMemoryAck *cmd_packet = (void *) packet;
+
+				value = GUINT64_FROM_LE (cmd_packet->infos.bytes_written);
+				g_string_append_printf (string, "written      = %10u (0x%08x)\n",
+							value, value);
 			}
 	}
 

@@ -89,6 +89,7 @@
 			<xi:include href="xml/arvuvinterface.xml"/>
 			<xi:include href="xml/arvuvdevice.xml"/>
 			<xi:include href="xml/arvuvstream.xml"/>
+			<xi:include href="xml/arvuvcp.xml"/>
 		</chapter>
 
 		<chapter>

@@ -81,6 +81,7 @@ G_BEGIN_DECLS
 
 /**
  * ArvUvcpPacketType:
+ * @ARV_UVCP_PACKET_TYPE_ERROR: error packet
  * @ARV_UVCP_PACKET_TYPE_ACK: acknowledge packet
  * @ARV_UVCP_PACKET_TYPE_CMD: command packet
  */
@@ -134,6 +135,25 @@ typedef struct ARAVIS_PACKED_STRUCTURE {
 	ArvUvcpHeader header;
 	ArvUvcpReadMemoryCmdInfos infos;
 } ArvUvcpReadMemoryCmd;
+
+typedef struct ARAVIS_PACKED_STRUCTURE {
+	guint64 address;
+} ArvUvcpWriteMemoryCmdInfos;
+
+typedef struct ARAVIS_PACKED_STRUCTURE {
+	ArvUvcpHeader header;
+	ArvUvcpWriteMemoryCmdInfos infos;
+} ArvUvcpWriteMemoryCmd;
+
+typedef struct ARAVIS_PACKED_STRUCTURE {
+	guint16 unknown;
+	guint16 bytes_written;
+} ArvUvcpWriteMemoryAckInfos;
+
+typedef struct ARAVIS_PACKED_STRUCTURE {
+	ArvUvcpHeader header;
+	ArvUvcpWriteMemoryAckInfos infos;
+} ArvUvcpWriteMemoryAck;
 
 /**
  * ArvUvcpPacket:
@@ -232,7 +252,13 @@ arv_uvcp_packet_get_read_memory_ack_size (size_t data_size)
 static inline void *
 arv_uvcp_packet_get_write_memory_cmd_data (const ArvUvcpPacket *packet)
 {
-	return (char *) packet + sizeof (ArvUvcpPacket);
+	return (char *) packet + sizeof (ArvUvcpWriteMemoryCmd);
+}
+
+static inline size_t
+arv_uvcp_packet_get_write_memory_ack_size (void)
+{
+	return sizeof (ArvUvcpWriteMemoryAck);
 }
 
 static inline guint16
