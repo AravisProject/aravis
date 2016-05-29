@@ -47,3 +47,5 @@ compile
 aravis-*/
 core.*
 tags
+.buildconfig
+.exrc
