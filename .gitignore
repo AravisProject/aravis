@@ -45,3 +45,5 @@ aravis-*.tar.xz
 INSTALL
 compile
 aravis-*/
+core.*
+tags
