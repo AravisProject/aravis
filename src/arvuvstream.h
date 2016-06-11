@@ -50,7 +50,7 @@ struct _ArvUvStreamClass {
 
 GType arv_uv_stream_get_type (void);
 
-ArvStream * 	arv_uv_stream_new	(ArvStreamCallback callback, void *user_data);
+ArvStream * 	arv_uv_stream_new	(void *usb, void *usb_device, ArvStreamCallback callback, void *user_data);
 
 G_END_DECLS
 

@@ -31,8 +31,6 @@
 #include <arvstr.h>
 #include <string.h>
 
-#define ARV_UVCP_MAGIC	0x43563355
-
 void
 arv_uvcp_packet_free (ArvUvcpPacket *packet)
 {

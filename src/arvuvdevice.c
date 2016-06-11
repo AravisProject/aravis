@@ -63,9 +63,10 @@ struct _ArvUvDevicePrivate {
 static ArvStream *
 arv_uv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data)
 {
+	ArvUvDevice *uv_device = ARV_UV_DEVICE (device);
 	ArvStream *stream;
 
-	stream = arv_uv_stream_new (callback, user_data);
+	stream = arv_uv_stream_new (uv_device->priv->usb, uv_device->priv->usb_device, callback, user_data);
 
 	return stream;
 }
@@ -97,12 +98,10 @@ _read_memory (ArvUvDevice *uv_device, guint32 address, guint32 size, void *buffe
 
 		arv_uvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
-		g_assert (libusb_claim_interface (uv_device->priv->usb_device, 0) >= 0);
 		g_assert (libusb_bulk_transfer (uv_device->priv->usb_device, (0x04 | LIBUSB_ENDPOINT_OUT),
 						(guchar *) packet, packet_size, &transferred, 0) >= 0);
 		g_assert (libusb_bulk_transfer (uv_device->priv->usb_device, (0x84 | LIBUSB_ENDPOINT_IN),
 						(guchar *) read_packet, read_packet_size, &transferred, 0) >= 0);
-		g_assert (libusb_release_interface (uv_device->priv->usb_device, 0) >= 0);
 		success = TRUE;
 
 		memcpy (buffer, arv_uvcp_packet_get_read_memory_ack_data (read_packet), size);
@@ -173,12 +172,10 @@ _write_memory (ArvUvDevice *uv_device, guint32 address, guint32 size, void *buff
 
 		arv_uvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
-		g_assert (libusb_claim_interface (uv_device->priv->usb_device, 0) >= 0);
 		g_assert (libusb_bulk_transfer (uv_device->priv->usb_device, (0x04 | LIBUSB_ENDPOINT_OUT),
 						(guchar *) packet, packet_size, &transferred, 0) >= 0);
 		g_assert (libusb_bulk_transfer (uv_device->priv->usb_device, (0x84 | LIBUSB_ENDPOINT_IN),
 						(guchar *) read_packet, read_packet_size, &transferred, 0) >= 0);
-		g_assert (libusb_release_interface (uv_device->priv->usb_device, 0) >= 0);
 		success = TRUE;
 
 		arv_uvcp_packet_debug (read_packet, ARV_DEBUG_LEVEL_LOG);
@@ -243,11 +240,18 @@ _bootstrap (ArvUvDevice *uv_device)
 	guint32 max_ack_transfer;
 	guint32 u3vcp_capability;
 	guint64 sirm_offset;
-	guint32 si_control;
 	guint32 si_info;
-	guint32 req_payload_size;
-	guint32 req_leader_size;
-	guint32 req_trailer_size;
+	guint32 si_control;
+	guint64 si_req_payload_size;
+	guint32 si_req_leader_size;
+	guint32 si_req_trailer_size;
+	guint32 si_max_leader_size;
+	guint32 si_payload_size;
+	guint32 si_payload_count;
+	guint32 si_transfer1_size;
+	guint32 si_transfer2_size;
+	guint32 si_max_trailer_size;
+
 	guint64 manifest_n_entries;
 	ArvUvcpManifestEntry entry;
 	GString *string;
@@ -275,17 +279,29 @@ _bootstrap (ArvUvDevice *uv_device)
 	g_message ("MAX_ACK_TRANSFER =         0x%08x", max_ack_transfer);
 	g_message ("SIRM_OFFSET =              0x%016lx", sirm_offset);
 
-	arv_device_read_memory (device, sirm_offset + ARV_SI_INFO, sizeof (guint64), &si_info, NULL);
-	arv_device_read_memory (device, sirm_offset + ARV_SI_CONTROL, sizeof (guint64), &si_control, NULL);
-	arv_device_read_memory (device, sirm_offset + ARV_SI_REQ_PAYLOAD_SIZE, sizeof (guint64), &req_payload_size, NULL);
-	arv_device_read_memory (device, sirm_offset + ARV_SI_REQ_LEADER_SIZE, sizeof (guint64), &req_leader_size, NULL);
-	arv_device_read_memory (device, sirm_offset + ARV_SI_REQ_TRAILER_SIZE, sizeof (guint64), &req_trailer_size, NULL);
+	arv_device_read_memory (device, sirm_offset + ARV_SI_INFO, sizeof (si_info), &si_info, NULL);
+	arv_device_read_memory (device, sirm_offset + ARV_SI_CONTROL, sizeof (si_control), &si_control, NULL);
+	arv_device_read_memory (device, sirm_offset + ARV_SI_REQ_PAYLOAD_SIZE, sizeof (si_req_payload_size), &si_req_payload_size, NULL);
+	arv_device_read_memory (device, sirm_offset + ARV_SI_REQ_LEADER_SIZE, sizeof (si_req_leader_size), &si_req_leader_size, NULL);
+	arv_device_read_memory (device, sirm_offset + ARV_SI_REQ_TRAILER_SIZE, sizeof (si_req_trailer_size), &si_req_trailer_size, NULL);
+	arv_device_read_memory (device, sirm_offset + ARV_SI_MAX_LEADER_SIZE, sizeof (si_max_leader_size), &si_max_leader_size, NULL);
+	arv_device_read_memory (device, sirm_offset + ARV_SI_PAYLOAD_SIZE, sizeof (si_payload_size), &si_payload_size, NULL);
+	arv_device_read_memory (device, sirm_offset + ARV_SI_PAYLOAD_COUNT, sizeof (si_payload_count), &si_payload_count, NULL);
+	arv_device_read_memory (device, sirm_offset + ARV_SI_TRANSFER1_SIZE, sizeof (si_transfer1_size), &si_transfer1_size, NULL);
+	arv_device_read_memory (device, sirm_offset + ARV_SI_TRANSFER2_SIZE, sizeof (si_transfer2_size), &si_transfer2_size, NULL);
+	arv_device_read_memory (device, sirm_offset + ARV_SI_MAX_TRAILER_SIZE, sizeof (si_max_trailer_size), &si_max_trailer_size, NULL);
 
 	g_message ("SI_INFO =                  0x%08x", si_info);
 	g_message ("SI_CONTROL =               0x%08x", si_control);
-	g_message ("REQ_PAYLOAD_SIZE =         0x%08x", req_payload_size);
-	g_message ("REQ_LEADER_SIZE =          0x%08x", req_leader_size);
-	g_message ("REQ_TRAILER_SIZE =         0x%08x", req_trailer_size);
+	g_message ("SI_REQ_PAYLOAD_SIZE =      0x%016lx", si_req_payload_size);
+	g_message ("SI_REQ_LEADER_SIZE =       0x%08x", si_req_leader_size);
+	g_message ("SI_REQ_TRAILER_SIZE =      0x%08x", si_req_trailer_size);
+	g_message ("SI_MAX_LEADER_SIZE =       0x%08x", si_max_leader_size);
+	g_message ("SI_PAYLOAD_SIZE =          0x%08x", si_payload_size);
+	g_message ("SI_PAYLOAD_COUNT =         0x%08x", si_payload_count);
+	g_message ("SI_TRANSFER1_SIZE =        0x%08x", si_transfer1_size);
+	g_message ("SI_TRANSFER2_SIZE =        0x%08x", si_transfer2_size);
+	g_message ("SI_MAX_TRAILER_SIZE =      0x%08x", si_max_trailer_size);
 
 	arv_device_read_memory (device, manifest_table_address, sizeof (guint64), &manifest_n_entries, NULL);
 	arv_device_read_memory (device, manifest_table_address + 0x08, sizeof (entry), &entry, NULL);
@@ -435,9 +451,13 @@ arv_uv_device_new (const char *vendor, const char *product, const char *serial_n
 
 	_open_usb_device (uv_device);
 
+	g_assert (libusb_claim_interface (uv_device->priv->usb_device, 0) >= 0);
+
 	_bootstrap (uv_device);
 
 	if (!ARV_IS_GC (uv_device->priv->genicam)) {
+		g_assert (libusb_release_interface (uv_device->priv->usb_device, 0) >= 0);
+
 		arv_warning_device ("[UvDevice::new] Failed to load genicam data");
 		g_object_unref (uv_device);
 		return NULL;
@@ -457,6 +477,8 @@ static void
 arv_uv_device_finalize (GObject *object)
 {
 	ArvUvDevice *uv_device = ARV_UV_DEVICE (object);
+
+	g_assert (libusb_release_interface (uv_device->priv->usb_device, 0) >= 0);
 
 	g_object_unref (uv_device->priv->genicam);
 

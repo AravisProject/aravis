@@ -26,10 +26,13 @@
  */
 
 #include <arvuvstream.h>
+#include <arvuvsp.h>
 #include <arvstreamprivate.h>
 #include <arvbufferprivate.h>
 #include <arvdebug.h>
 #include <arvmisc.h>
+#include <libusb.h>
+#include <string.h>
 
 static GObjectClass *parent_class = NULL;
 
@@ -46,6 +49,9 @@ typedef struct {
 	ArvStreamCallback callback;
 	void *user_data;
 
+	libusb_context *usb;
+	libusb_device_handle *usb_device;
+
 	gboolean cancel;
 
 	/* Statistics */
@@ -59,18 +65,82 @@ static void *
 arv_uv_stream_thread (void *data)
 {
 	ArvUvStreamThreadData *thread_data = data;
+	ArvUvspPacket *packet;
+	ArvBuffer *buffer = NULL;
+	guint64 offset;
+	int transferred;
 
 	arv_log_stream_thread ("[UvStream::thread] Start");
+
+	packet = g_malloc (65536);
 
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
 
+	offset = 0;
+
 	while (!thread_data->cancel) {
-		g_usleep (1000000);
+		g_assert (libusb_bulk_transfer (thread_data->usb_device, (0x81 | LIBUSB_ENDPOINT_IN),
+						(guchar *) packet, 65536, &transferred, 1000) >= 0);
+
+		if (transferred > 0) {
+			ArvUvspPacketType packet_type;
+
+			arv_uvsp_packet_debug (packet, ARV_DEBUG_LEVEL_WARNING);
+
+			packet_type = arv_uvsp_packet_get_packet_type (packet);
+			switch (packet_type) {
+				case ARV_UVSP_PACKET_TYPE_LEADER:
+					if (buffer != NULL) {
+						buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
+						arv_stream_push_output_buffer (thread_data->stream, buffer);
+						thread_data->n_failures++;
+						buffer = NULL;
+					}
+					buffer = arv_stream_pop_input_buffer (thread_data->stream);
+					if (buffer != NULL) {
+						buffer->priv->status = ARV_BUFFER_STATUS_FILLING;
+						buffer->priv->gvsp_payload_type = ARV_GVSP_PAYLOAD_TYPE_IMAGE;
+						arv_uvsp_packet_get_region (packet,
+									    &buffer->priv->width,
+									    &buffer->priv->height,
+									    &buffer->priv->x_offset,
+									    &buffer->priv->y_offset);
+						buffer->priv->frame_id = arv_uvsp_packet_get_frame_id (packet);
+						buffer->priv->timestamp_ns = arv_uvsp_packet_get_timestamp (packet);
+						offset = 0;
+					} else
+						thread_data->n_underruns++;
+					break;
+				case ARV_UVSP_PACKET_TYPE_TRAILER:
+					if (buffer != NULL) {
+						g_message ("Received %" G_GUINT64_FORMAT " bytes - expected %" G_GUINT64_FORMAT,
+							   offset, buffer->priv->size);
+						buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
+						arv_stream_push_output_buffer (thread_data->stream, buffer);
+						thread_data->n_completed_buffers++;
+						buffer = NULL;
+					}
+					break;
+				case ARV_UVSP_PACKET_TYPE_DATA:
+					if (buffer != NULL && buffer->priv->status == ARV_BUFFER_STATUS_FILLING) {
+						if (offset + transferred < buffer->priv->size) {
+							memcpy (((char *) buffer->priv->data) + offset, packet, transferred);
+							offset += transferred;
+						} else
+							buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
+					}
+					break;
+				default:
+					break;
+			}
+		}
 	}
 
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_EXIT, NULL);
+
+	g_free (packet);
 
 	arv_log_stream_thread ("[UvStream::thread] Stop");
 
@@ -89,7 +159,7 @@ arv_uv_stream_thread (void *data)
  */
 
 ArvStream *
-arv_uv_stream_new (ArvStreamCallback callback, void *user_data)
+arv_uv_stream_new (void *usb, void *usb_device, ArvStreamCallback callback, void *user_data)
 {
 	ArvUvStream *uv_stream;
 	ArvUvStreamThreadData *thread_data;
@@ -100,6 +170,8 @@ arv_uv_stream_new (ArvStreamCallback callback, void *user_data)
 	stream = ARV_STREAM (uv_stream);
 
 	thread_data = g_new (ArvUvStreamThreadData, 1);
+	thread_data->usb = usb;
+	thread_data->usb_device = usb_device;
 	thread_data->stream = stream;
 	thread_data->callback = callback;
 	thread_data->user_data = user_data;
