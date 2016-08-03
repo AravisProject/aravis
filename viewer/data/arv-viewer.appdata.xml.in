@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Copyright 2014 Emmanuel Pacaud <emmanuel@gnome.org> -->
 <application>
+	<translation type="gettext">aravis-@ARAVIS_API_VERSION@</translation>
 	<id type="desktop">arv-viewer.desktop</id>
 	<metadata_license>CC0-1.0</metadata_license>
 	<project_license>GPL-2.0+</project_license>
