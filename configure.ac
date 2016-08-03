@@ -1,8 +1,8 @@
 AC_PREREQ(2.63.0)
 
 m4_define([aravis_version_major], [0])
-m4_define([aravis_version_minor], [3])
-m4_define([aravis_version_micro], [9])
+m4_define([aravis_version_minor], [4])
+m4_define([aravis_version_micro], [0])
 m4_define([aravis_version], [aravis_version_major.aravis_version_minor.aravis_version_micro])
 
 AC_INIT([aravis],[aravis_version],[http://bugzilla.gnome.org/enter_bug.cgi?product=aravis],[aravis])
