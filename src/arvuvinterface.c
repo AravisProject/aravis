@@ -226,9 +226,8 @@ _usb_device_to_device_ids (ArvUvInterface *uv_interface, libusb_device *device)
 }
 
 static void
-arv_uv_interface_update_device_list (ArvInterface *interface, GArray *device_ids)
+_discover (ArvUvInterface *uv_interface,  GArray *device_ids)
 {
-	ArvUvInterface *uv_interface = ARV_UV_INTERFACE (interface);
 	libusb_device **devices;
 	unsigned uv_count = 0;
 	unsigned count;
@@ -244,7 +243,14 @@ arv_uv_interface_update_device_list (ArvInterface *interface, GArray *device_ids
 		ids = _usb_device_to_device_ids (uv_interface, devices[i]);
 		if (ids != NULL) {
 		    uv_count++;
-		    g_array_append_val (device_ids, ids);
+		    if (device_ids != NULL)
+			    g_array_append_val (device_ids, ids);
+		    else {
+			    g_free (ids->device);
+			    g_free (ids->physical);
+			    g_free (ids->address);
+			    g_free (ids);
+		    }
 		}
 	}
 
@@ -255,8 +261,16 @@ arv_uv_interface_update_device_list (ArvInterface *interface, GArray *device_ids
 	libusb_free_device_list (devices, 1);
 }
 
+static void
+arv_uv_interface_update_device_list (ArvInterface *interface, GArray *device_ids)
+{
+	ArvUvInterface *uv_interface = ARV_UV_INTERFACE (interface);
+
+	_discover (uv_interface, device_ids);
+}
+
 static ArvDevice *
-arv_uv_interface_open_device (ArvInterface *interface, const char *device_id)
+_open_device (ArvInterface *interface, const char *device_id)
 {
 	ArvUvInterface *uv_interface;
 	ArvDevice *device = NULL;
@@ -279,6 +293,20 @@ arv_uv_interface_open_device (ArvInterface *interface, const char *device_id)
 	device = arv_uv_device_new (device_infos->manufacturer, device_infos->product, device_infos->serial_nbr);
 
 	return device;
+}
+
+static ArvDevice *
+arv_uv_interface_open_device (ArvInterface *interface, const char *device_id)
+{
+	ArvDevice *device;
+
+	device = _open_device (interface, device_id);
+	if (ARV_IS_DEVICE (device))
+		return device;
+
+	_discover (ARV_UV_INTERFACE (interface), NULL);
+
+	return _open_device (interface, device_id);
 }
 
 static ArvInterface *uv_interface = NULL;

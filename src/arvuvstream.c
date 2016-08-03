@@ -26,7 +26,9 @@
  */
 
 #include <arvuvstream.h>
+#include <arvuvdeviceprivate.h>
 #include <arvuvsp.h>
+#include <arvuvcp.h>
 #include <arvstreamprivate.h>
 #include <arvbufferprivate.h>
 #include <arvdebug.h>
@@ -44,13 +46,11 @@ struct _ArvUvStreamPrivate {
 /* Acquisition thread */
 
 typedef struct {
+	ArvUvDevice *uv_device;
 	ArvStream *stream;
 
 	ArvStreamCallback callback;
 	void *user_data;
-
-	libusb_context *usb;
-	libusb_device_handle *usb_device;
 
 	gboolean cancel;
 
@@ -68,7 +68,7 @@ arv_uv_stream_thread (void *data)
 	ArvUvspPacket *packet;
 	ArvBuffer *buffer = NULL;
 	guint64 offset;
-	int transferred;
+	size_t transferred;
 
 	arv_log_stream_thread ("[UvStream::thread] Start");
 
@@ -80,8 +80,12 @@ arv_uv_stream_thread (void *data)
 	offset = 0;
 
 	while (!thread_data->cancel) {
-		g_assert (libusb_bulk_transfer (thread_data->usb_device, (0x81 | LIBUSB_ENDPOINT_IN),
-						(guchar *) packet, 65536, &transferred, 1000) >= 0);
+		transferred = 0;
+
+		arv_uv_device_bulk_transfer (thread_data->uv_device, 0x81 | LIBUSB_ENDPOINT_IN,
+					     packet, 65536, &transferred);
+
+/*                g_message ("transferred = %d", (int) transferred);*/
 
 		if (transferred > 0) {
 			ArvUvspPacketType packet_type;
@@ -124,7 +128,7 @@ arv_uv_stream_thread (void *data)
 					break;
 				case ARV_UVSP_PACKET_TYPE_DATA:
 					if (buffer != NULL && buffer->priv->status == ARV_BUFFER_STATUS_FILLING) {
-						if (offset + transferred < buffer->priv->size) {
+						if (offset + transferred <= buffer->priv->size) {
 							memcpy (((char *) buffer->priv->data) + offset, packet, transferred);
 							offset += transferred;
 						} else
@@ -152,6 +156,7 @@ arv_uv_stream_thread (void *data)
 
 /**
  * arv_uv_stream_new: (skip)
+ * @uv_device: a #ArvUvDevice
  * @callback: (scope call): image processing callback
  * @user_data: (closure): user data for @callback
  *
@@ -159,19 +164,65 @@ arv_uv_stream_thread (void *data)
  */
 
 ArvStream *
-arv_uv_stream_new (void *usb, void *usb_device, ArvStreamCallback callback, void *user_data)
+arv_uv_stream_new (ArvUvDevice *uv_device, ArvStreamCallback callback, void *user_data)
 {
+	ArvDevice *device;
 	ArvUvStream *uv_stream;
 	ArvUvStreamThreadData *thread_data;
 	ArvStream *stream;
+	guint64 offset;
+	guint64 sirm_offset;
+	guint64 si_req_payload_size;
+	guint32 si_req_leader_size;
+	guint32 si_req_trailer_size;
+	guint32 si_payload_size;
+	guint32 si_payload_count;
+	guint32 si_transfer1_size;
+	guint32 si_transfer2_size;
+	guint32 si_control;
+
+	g_return_val_if_fail (ARV_IS_UV_DEVICE (uv_device), NULL);
+
+	device = ARV_DEVICE (uv_device);
+
+	arv_device_read_memory (device, ARV_ABRM_SBRM_ADDRESS, sizeof (guint64), &offset, NULL);
+	arv_device_read_memory (device, offset + ARV_SBRM_SIRM_ADDRESS, sizeof (guint64), &sirm_offset, NULL);
+	arv_device_read_memory (device, sirm_offset + ARV_SI_REQ_PAYLOAD_SIZE, sizeof (si_req_payload_size), &si_req_payload_size, NULL);
+	arv_device_read_memory (device, sirm_offset + ARV_SI_REQ_LEADER_SIZE, sizeof (si_req_leader_size), &si_req_leader_size, NULL);
+	arv_device_read_memory (device, sirm_offset + ARV_SI_REQ_TRAILER_SIZE, sizeof (si_req_trailer_size), &si_req_trailer_size, NULL);
+
+	g_message ("SI_REQ_PAYLOAD_SIZE =      0x%016lx", si_req_payload_size);
+	g_message ("SI_REQ_LEADER_SIZE =       0x%08x", si_req_leader_size);
+	g_message ("SI_REQ_TRAILER_SIZE =      0x%08x", si_req_trailer_size);
+
+	si_payload_size = 65536;
+	si_payload_count=  si_req_payload_size / si_payload_size;
+	si_transfer1_size = si_req_payload_size % si_payload_size;
+	si_transfer2_size = 0;
+
+	arv_device_write_memory (device, sirm_offset + ARV_SI_MAX_LEADER_SIZE, sizeof (si_req_leader_size), &si_req_leader_size, NULL);
+	arv_device_write_memory (device, sirm_offset + ARV_SI_MAX_TRAILER_SIZE, sizeof (si_req_trailer_size), &si_req_trailer_size, NULL);
+	arv_device_write_memory (device, sirm_offset + ARV_SI_PAYLOAD_SIZE, sizeof (si_payload_size), &si_payload_size, NULL);
+	arv_device_write_memory (device, sirm_offset + ARV_SI_PAYLOAD_COUNT, sizeof (si_payload_count), &si_payload_count, NULL);
+	arv_device_write_memory (device, sirm_offset + ARV_SI_TRANSFER1_SIZE, sizeof (si_transfer1_size), &si_transfer1_size, NULL);
+	arv_device_write_memory (device, sirm_offset + ARV_SI_TRANSFER2_SIZE, sizeof (si_transfer2_size), &si_transfer2_size, NULL);
+
+	g_message ("SI_PAYLOAD_SIZE =          0x%08x", si_payload_size);
+	g_message ("SI_PAYLOAD_COUNT =         0x%08x", si_payload_count);
+	g_message ("SI_TRANSFER1_SIZE =        0x%08x", si_transfer1_size);
+	g_message ("SI_TRANSFER2_SIZE =        0x%08x", si_transfer2_size);
+	g_message ("SI_MAX_LEADER_SIZE =       0x%08x", si_req_leader_size);
+	g_message ("SI_MAX_TRAILER_SIZE =      0x%08x", si_req_trailer_size);
+
+	si_control = 0x1;
+	arv_device_write_memory (device, sirm_offset + ARV_SI_CONTROL, sizeof (si_control), &si_control, NULL);
 
 	uv_stream = g_object_new (ARV_TYPE_UV_STREAM, NULL);
 
 	stream = ARV_STREAM (uv_stream);
 
 	thread_data = g_new (ArvUvStreamThreadData, 1);
-	thread_data->usb = usb;
-	thread_data->usb_device = usb_device;
+	thread_data->uv_device = g_object_ref (uv_device);
 	thread_data->stream = stream;
 	thread_data->callback = callback;
 	thread_data->user_data = user_data;
@@ -224,6 +275,7 @@ arv_uv_stream_finalize (GObject *object)
 		thread_data->cancel = TRUE;
 		g_thread_join (uv_stream->priv->thread);
 		g_free (thread_data);
+		g_clear_object (&thread_data->uv_device);
 
 		uv_stream->priv->thread_data = NULL;
 		uv_stream->priv->thread = NULL;

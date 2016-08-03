@@ -25,6 +25,7 @@
 
 #include <arvtypes.h>
 #include <arvstream.h>
+#include <arvuvdevice.h>
 
 G_BEGIN_DECLS
 
@@ -50,7 +51,7 @@ struct _ArvUvStreamClass {
 
 GType arv_uv_stream_get_type (void);
 
-ArvStream * 	arv_uv_stream_new	(void *usb, void *usb_device, ArvStreamCallback callback, void *user_data);
+ArvStream * 	arv_uv_stream_new	(ArvUvDevice *uv_device, ArvStreamCallback callback, void *user_data);
 
 G_END_DECLS
 

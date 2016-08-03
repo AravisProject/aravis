@@ -53,12 +53,34 @@ struct _ArvUvDevicePrivate {
 
 	guint16 packet_id;
 
-	guint data_size_max;
+	guint timeout_ms;
+	guint cmd_packet_size_max;
+	guint ack_packet_size_max;
 };
+
+/* ArvDevice implemenation */
 
 /* ArvUvDevice implemenation */
 
-/* ArvDevice implemenation */
+gboolean
+arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, unsigned char endpoint, void *data,
+			     size_t size, size_t *transferred_size)
+{
+	gboolean success;
+	int transferred = 0;
+
+	g_return_val_if_fail (ARV_IS_UV_DEVICE (uv_device), FALSE);
+	g_return_val_if_fail (data != NULL, FALSE);
+	g_return_val_if_fail (size > 0, FALSE);
+
+	success = libusb_bulk_transfer (uv_device->priv->usb_device, endpoint, data, size, &transferred,
+					uv_device->priv->timeout_ms) >= 0;
+
+	if (transferred_size != NULL)
+		*transferred_size = transferred;
+
+	return success;
+}
 
 static ArvStream *
 arv_uv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data)
@@ -66,7 +88,7 @@ arv_uv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 	ArvUvDevice *uv_device = ARV_UV_DEVICE (device);
 	ArvStream *stream;
 
-	stream = arv_uv_stream_new (uv_device->priv->usb, uv_device->priv->usb_device, callback, user_data);
+	stream = arv_uv_stream_new (uv_device, callback, user_data);
 
 	return stream;
 }
@@ -75,43 +97,48 @@ static gboolean
 _read_memory (ArvUvDevice *uv_device, guint32 address, guint32 size, void *buffer, GError **error)
 {
 	ArvUvcpPacket *packet;
+	void *read_packet;
+	size_t read_packet_size;
 	size_t packet_size;
-	size_t answer_size;
 	gboolean success = FALSE;
 
-	answer_size = arv_uvcp_packet_get_read_memory_ack_size (size);
-
-	g_return_val_if_fail (answer_size <= 1024, FALSE);
+	read_packet_size = arv_uvcp_packet_get_read_memory_ack_size (size);
+	if (read_packet_size > uv_device->priv->ack_packet_size_max) {
+		arv_debug_device ("Invalid acknowledge packet size (%d / max: %d)",
+				  read_packet_size, uv_device->priv->ack_packet_size_max);
+		return FALSE;
+	}
 
 	packet = arv_uvcp_packet_new_read_memory_cmd (address, size, 0, &packet_size);
+	if (packet_size > uv_device->priv->cmd_packet_size_max) {
+		arv_debug_device ("Invalid command packet size (%d / max: %d)", packet_size, uv_device->priv->cmd_packet_size_max);
+		arv_uvcp_packet_free (packet);
+		return FALSE;
+	}
+
+	read_packet = g_malloc (read_packet_size);
 
 	do {
-		int transferred;
-		void *read_packet;
-		size_t read_packet_size;
-
-		read_packet_size = arv_uvcp_packet_get_read_memory_ack_size (size);
-		read_packet = g_malloc0 (read_packet_size);
+		size_t transferred;
 
 		uv_device->priv->packet_id = arv_uvcp_next_packet_id (uv_device->priv->packet_id);
 		arv_uvcp_packet_set_packet_id (packet, uv_device->priv->packet_id);
 
 		arv_uvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
-		g_assert (libusb_bulk_transfer (uv_device->priv->usb_device, (0x04 | LIBUSB_ENDPOINT_OUT),
-						(guchar *) packet, packet_size, &transferred, 0) >= 0);
-		g_assert (libusb_bulk_transfer (uv_device->priv->usb_device, (0x84 | LIBUSB_ENDPOINT_IN),
-						(guchar *) read_packet, read_packet_size, &transferred, 0) >= 0);
 		success = TRUE;
+		success = success && arv_uv_device_bulk_transfer (uv_device, (0x04 | LIBUSB_ENDPOINT_OUT),
+								  packet, packet_size, NULL);
+		success = success && arv_uv_device_bulk_transfer (uv_device, (0x84 | LIBUSB_ENDPOINT_IN),
+								  read_packet, read_packet_size, &transferred);
 
 		memcpy (buffer, arv_uvcp_packet_get_read_memory_ack_data (read_packet), size);
 
 		arv_uvcp_packet_debug (read_packet, ARV_DEBUG_LEVEL_LOG);
 
-		g_free (read_packet);
-
 	} while (!success);
 
+	g_free (read_packet);
 	arv_uvcp_packet_free (packet);
 
 	if (!success) {
@@ -131,7 +158,7 @@ arv_uv_device_read_memory (ArvDevice *device, guint32 address, guint32 size, voi
 	gint32 block_size;
 	guint data_size_max;
 
-	data_size_max = uv_device->priv->data_size_max;
+	data_size_max = uv_device->priv->ack_packet_size_max - sizeof (ArvUvcpHeader);
 
 	for (i = 0; i < (size + data_size_max - 1) / data_size_max; i++) {
 		block_size = MIN (data_size_max, size - i * data_size_max);
@@ -148,42 +175,47 @@ static gboolean
 _write_memory (ArvUvDevice *uv_device, guint32 address, guint32 size, void *buffer, GError **error)
 {
 	ArvUvcpPacket *packet;
+	void *read_packet;
 	size_t packet_size;
-	size_t answer_size;
+	size_t read_packet_size;
 	gboolean success = FALSE;
 
-	answer_size = arv_uvcp_packet_get_write_memory_ack_size ();
-
-	g_return_val_if_fail (answer_size <= 1024, FALSE);
+	read_packet_size = arv_uvcp_packet_get_write_memory_ack_size ();
+	if (read_packet_size > uv_device->priv->ack_packet_size_max) {
+		arv_debug_device ("Invalid acknowledge packet size (%d / max: %d)",
+				  read_packet_size, uv_device->priv->ack_packet_size_max);
+		return FALSE;
+	}
 
 	packet = arv_uvcp_packet_new_write_memory_cmd (address, size, 0, &packet_size);
+	if (packet_size > uv_device->priv->cmd_packet_size_max) {
+		arv_debug_device ("Invalid command packet size (%d / max: %d)", packet_size, uv_device->priv->cmd_packet_size_max);
+		arv_uvcp_packet_free (packet);
+		return FALSE;
+	}
+
 	memcpy (arv_uvcp_packet_get_write_memory_cmd_data (packet), buffer, size);
+	read_packet = g_malloc (read_packet_size);
 
 	do {
-		int transferred;
-		void *read_packet;
-		size_t read_packet_size;
-
-		read_packet_size = arv_uvcp_packet_get_read_memory_ack_size (size);
-		read_packet = g_malloc0 (read_packet_size);
+		size_t transferred;
 
 		uv_device->priv->packet_id = arv_uvcp_next_packet_id (uv_device->priv->packet_id);
 		arv_uvcp_packet_set_packet_id (packet, uv_device->priv->packet_id);
 
 		arv_uvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
-		g_assert (libusb_bulk_transfer (uv_device->priv->usb_device, (0x04 | LIBUSB_ENDPOINT_OUT),
-						(guchar *) packet, packet_size, &transferred, 0) >= 0);
-		g_assert (libusb_bulk_transfer (uv_device->priv->usb_device, (0x84 | LIBUSB_ENDPOINT_IN),
-						(guchar *) read_packet, read_packet_size, &transferred, 0) >= 0);
 		success = TRUE;
+		success = success && arv_uv_device_bulk_transfer (uv_device, (0x04 | LIBUSB_ENDPOINT_OUT),
+								  packet, packet_size, NULL);
+		success = success && arv_uv_device_bulk_transfer (uv_device, (0x84 | LIBUSB_ENDPOINT_IN),
+								  read_packet, read_packet_size, &transferred);
 
 		arv_uvcp_packet_debug (read_packet, ARV_DEBUG_LEVEL_LOG);
 
-		g_free (read_packet);
-
 	} while (!success);
 
+	g_free (read_packet);
 	arv_uvcp_packet_free (packet);
 
 	if (!success) {
@@ -203,7 +235,7 @@ arv_uv_device_write_memory (ArvDevice *device, guint32 address, guint32 size, vo
 	gint32 block_size;
 	guint data_size_max;
 
-	data_size_max = uv_device->priv->data_size_max;
+	data_size_max = uv_device->priv->ack_packet_size_max - sizeof (ArvUvcpHeader);
 
 	for (i = 0; i < (size + data_size_max - 1) / data_size_max; i++) {
 		block_size = MIN (data_size_max, size - i * data_size_max);
@@ -269,6 +301,8 @@ _bootstrap (ArvUvDevice *uv_device)
 	g_message ("SRBM_ADDRESS =             0x%016lx", offset);
 	g_message ("MANIFEST_TABLE_ADDRESS =   0x%016lx", manifest_table_address);
 
+	uv_device->priv->timeout_ms = MAX (ARV_UV_DEFAULT_RESPONSE_TIME_MS, response_time);
+
 	arv_device_read_memory (device, offset + ARV_SBRM_U3VCP_CAPABILITY, sizeof (guint32), &u3vcp_capability, NULL);
 	arv_device_read_memory (device, offset + ARV_SBRM_MAX_CMD_TRANSFER, sizeof (guint32), &max_cmd_transfer, NULL);
 	arv_device_read_memory (device, offset + ARV_SBRM_MAX_ACK_TRANSFER, sizeof (guint32), &max_ack_transfer, NULL);
@@ -278,6 +312,9 @@ _bootstrap (ArvUvDevice *uv_device)
 	g_message ("MAX_CMD_TRANSFER =         0x%08x", max_cmd_transfer);
 	g_message ("MAX_ACK_TRANSFER =         0x%08x", max_ack_transfer);
 	g_message ("SIRM_OFFSET =              0x%016lx", sirm_offset);
+
+	uv_device->priv->cmd_packet_size_max = MIN (uv_device->priv->cmd_packet_size_max, max_cmd_transfer);
+	uv_device->priv->ack_packet_size_max = MIN (uv_device->priv->ack_packet_size_max, max_ack_transfer);
 
 	arv_device_read_memory (device, sirm_offset + ARV_SI_INFO, sizeof (si_info), &si_info, NULL);
 	arv_device_read_memory (device, sirm_offset + ARV_SI_CONTROL, sizeof (si_control), &si_control, NULL);
@@ -448,6 +485,7 @@ arv_uv_device_new (const char *vendor, const char *product, const char *serial_n
 	uv_device->priv->product = g_strdup (product);
 	uv_device->priv->serial_nbr = g_strdup (serial_nbr);
 	uv_device->priv->packet_id = 65300; /* Start near the end of the circular counter */
+	uv_device->priv->timeout_ms = 32;
 
 	_open_usb_device (uv_device);
 
@@ -470,7 +508,8 @@ static void
 arv_uv_device_init (ArvUvDevice *uv_device)
 {
 	uv_device->priv = G_TYPE_INSTANCE_GET_PRIVATE (uv_device, ARV_TYPE_UV_DEVICE, ArvUvDevicePrivate);
-	uv_device->priv->data_size_max = 256;
+	uv_device->priv->cmd_packet_size_max = 65536 + sizeof (ArvUvcpHeader);
+	uv_device->priv->ack_packet_size_max = 65536 + sizeof (ArvUvcpHeader);
 }
 
 static void
