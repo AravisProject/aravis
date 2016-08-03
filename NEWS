@@ -1,3 +1,10 @@
+Release 0.4.0
+=============
+
+  * buffer: add a timestamp setter
+  * interface: don't touch device list on open device
+  * viewer: fix appdata file
+
 Release 0.3.8
 =============
 
