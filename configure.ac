@@ -7,7 +7,7 @@ m4_define([aravis_version], [aravis_version_major.aravis_version_minor.aravis_ve
 
 AC_INIT([aravis],[aravis_version],[http://bugzilla.gnome.org/enter_bug.cgi?product=aravis],[aravis])
 
-AM_INIT_AUTOMAKE([-Wno-portability dist-bzip2 dist-xz])
+AM_INIT_AUTOMAKE([-Wno-portability dist-bzip2 dist-xz foreign])
 AM_MAINTAINER_MODE
 
 AC_CONFIG_HEADERS([src/arvconfig.h])

@@ -24,7 +24,7 @@ SUBDIRS += tests po docs
 
 aravisdocdir = ${prefix}/doc/aravis-@ARAVIS_API_VERSION@
 aravisdoc_DATA = 	\
-	README		\
+	README.md	\
 	COPYING		\
 	ChangeLog 	\
 	AUTHORS		\
