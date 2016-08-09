@@ -7,6 +7,11 @@ Aravis is a glib/gobject based library for video acquisition using Genicam camer
 
 Aravis is released under the LGPL v2+.
 
+##" Downloads
+
+* 0.4.x stable releases: http://ftp.gnome.org/pub/GNOME/sources/aravis/0.4/
+* 0.5.x development releases: http://ftp.gnome.org/pub/GNOME/sources/aravis/0.5/
+
 ### Links
 
 * Github repository: https://github.com/AravisProject/aravis
