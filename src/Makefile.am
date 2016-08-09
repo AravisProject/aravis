@@ -153,6 +153,7 @@ noinst_HEADERS =				\
 	arvbufferprivate.h			\
 	arvchunkparserprivate.h			\
 	arvdeviceprivate.h			\
+	arvuvdeviceprivate.h			\
 	arvstreamprivate.h			\
 	arvrealtimeprivate.h
 
