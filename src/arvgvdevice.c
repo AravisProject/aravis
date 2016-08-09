@@ -22,7 +22,7 @@
 
 /**
  * SECTION: arvgvdevice
- * @short_description: Gigabit ethernet camera device
+ * @short_description: GigEVision device
  */
 
 #include <arvgvdevice.h>
@@ -367,7 +367,7 @@ _write_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 value, GEr
 				command = arv_gvcp_packet_get_command (ack_packet);
 				packet_id = arv_gvcp_packet_get_packet_id (ack_packet);
 
-				arv_log_gvcp ("%d, %d, %d", packet_type, command, packet_id);
+				arv_log_cp ("%d, %d, %d", packet_type, command, packet_id);
 
 				if (packet_type == ARV_GVCP_PACKET_TYPE_ACK &&
 				    command == ARV_GVCP_COMMAND_WRITE_REGISTER_ACK &&

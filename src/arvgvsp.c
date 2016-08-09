@@ -22,7 +22,7 @@
 
 /**
  * SECTION: arvgvsp
- * @short_description: Gvsp packet handling (stream)
+ * @short_description: GigEVision stream packet handling
  */
 
 #include <arvgvsp.h>
@@ -222,19 +222,19 @@ arv_gvsp_packet_debug (const ArvGvspPacket *packet, size_t packet_size, ArvDebug
 {
 	char *string;
 
-	if (!arv_debug_check (&arv_debug_category_gvsp, level))
+	if (!arv_debug_check (&arv_debug_category_sp, level))
 		return;
 
 	string = arv_gvsp_packet_to_string (packet, packet_size);
 	switch (level) {
 		case ARV_DEBUG_LEVEL_LOG:
-			arv_log_gvsp ("%s", string);
+			arv_log_sp ("%s", string);
 			break;
 		case ARV_DEBUG_LEVEL_DEBUG:
-			arv_debug_gvsp ("%s", string);
+			arv_debug_sp ("%s", string);
 			break;
 		case ARV_DEBUG_LEVEL_WARNING:
-			arv_warning_gvsp ("%s", string);
+			arv_warning_sp ("%s", string);
 			break;
 		default:
 			break;

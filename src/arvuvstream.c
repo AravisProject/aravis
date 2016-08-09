@@ -22,7 +22,7 @@
 
 /**
  * SECTION: arvuvstream
- * @short_description: USB3Vision camera stream
+ * @short_description: USB3Vision video stream
  */
 
 #include <arvuvstream.h>
@@ -85,8 +85,6 @@ arv_uv_stream_thread (void *data)
 		arv_uv_device_bulk_transfer (thread_data->uv_device, 0x81 | LIBUSB_ENDPOINT_IN,
 					     packet, 65536, &transferred);
 
-/*                g_message ("transferred = %d", (int) transferred);*/
-
 		if (transferred > 0) {
 			ArvUvspPacketType packet_type;
 
@@ -118,8 +116,9 @@ arv_uv_stream_thread (void *data)
 					break;
 				case ARV_UVSP_PACKET_TYPE_TRAILER:
 					if (buffer != NULL) {
-						g_message ("Received %" G_GUINT64_FORMAT " bytes - expected %" G_GUINT64_FORMAT,
-							   offset, buffer->priv->size);
+						arv_log_stream_thread ("Received %" G_GUINT64_FORMAT
+								       " bytes - expected %" G_GUINT64_FORMAT,
+								       offset, buffer->priv->size);
 						buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
 						arv_stream_push_output_buffer (thread_data->stream, buffer);
 						thread_data->n_completed_buffers++;
@@ -191,9 +190,9 @@ arv_uv_stream_new (ArvUvDevice *uv_device, ArvStreamCallback callback, void *use
 	arv_device_read_memory (device, sirm_offset + ARV_SI_REQ_LEADER_SIZE, sizeof (si_req_leader_size), &si_req_leader_size, NULL);
 	arv_device_read_memory (device, sirm_offset + ARV_SI_REQ_TRAILER_SIZE, sizeof (si_req_trailer_size), &si_req_trailer_size, NULL);
 
-	g_message ("SI_REQ_PAYLOAD_SIZE =      0x%016lx", si_req_payload_size);
-	g_message ("SI_REQ_LEADER_SIZE =       0x%08x", si_req_leader_size);
-	g_message ("SI_REQ_TRAILER_SIZE =      0x%08x", si_req_trailer_size);
+	arv_debug_stream ("SI_REQ_PAYLOAD_SIZE =      0x%016lx", si_req_payload_size);
+	arv_debug_stream ("SI_REQ_LEADER_SIZE =       0x%08x", si_req_leader_size);
+	arv_debug_stream ("SI_REQ_TRAILER_SIZE =      0x%08x", si_req_trailer_size);
 
 	si_payload_size = 65536;
 	si_payload_count=  si_req_payload_size / si_payload_size;
@@ -207,12 +206,12 @@ arv_uv_stream_new (ArvUvDevice *uv_device, ArvStreamCallback callback, void *use
 	arv_device_write_memory (device, sirm_offset + ARV_SI_TRANSFER1_SIZE, sizeof (si_transfer1_size), &si_transfer1_size, NULL);
 	arv_device_write_memory (device, sirm_offset + ARV_SI_TRANSFER2_SIZE, sizeof (si_transfer2_size), &si_transfer2_size, NULL);
 
-	g_message ("SI_PAYLOAD_SIZE =          0x%08x", si_payload_size);
-	g_message ("SI_PAYLOAD_COUNT =         0x%08x", si_payload_count);
-	g_message ("SI_TRANSFER1_SIZE =        0x%08x", si_transfer1_size);
-	g_message ("SI_TRANSFER2_SIZE =        0x%08x", si_transfer2_size);
-	g_message ("SI_MAX_LEADER_SIZE =       0x%08x", si_req_leader_size);
-	g_message ("SI_MAX_TRAILER_SIZE =      0x%08x", si_req_trailer_size);
+	arv_debug_stream ("SI_PAYLOAD_SIZE =          0x%08x", si_payload_size);
+	arv_debug_stream ("SI_PAYLOAD_COUNT =         0x%08x", si_payload_count);
+	arv_debug_stream ("SI_TRANSFER1_SIZE =        0x%08x", si_transfer1_size);
+	arv_debug_stream ("SI_TRANSFER2_SIZE =        0x%08x", si_transfer2_size);
+	arv_debug_stream ("SI_MAX_LEADER_SIZE =       0x%08x", si_req_leader_size);
+	arv_debug_stream ("SI_MAX_TRAILER_SIZE =      0x%08x", si_req_trailer_size);
 
 	si_control = 0x1;
 	arv_device_write_memory (device, sirm_offset + ARV_SI_CONTROL, sizeof (si_control), &si_control, NULL);
@@ -269,13 +268,25 @@ arv_uv_stream_finalize (GObject *object)
 
 	if (uv_stream->priv->thread != NULL) {
 		ArvUvStreamThreadData *thread_data;
+		guint64 offset;
+		guint64 sirm_offset;
+		guint32 si_control;
 
 		thread_data = uv_stream->priv->thread_data;
 
 		thread_data->cancel = TRUE;
 		g_thread_join (uv_stream->priv->thread);
-		g_free (thread_data);
+
+		si_control = 0x0;
+		arv_device_read_memory (ARV_DEVICE (thread_data->uv_device),
+					ARV_ABRM_SBRM_ADDRESS, sizeof (guint64), &offset, NULL);
+		arv_device_read_memory (ARV_DEVICE (thread_data->uv_device),
+					offset + ARV_SBRM_SIRM_ADDRESS, sizeof (guint64), &sirm_offset, NULL);
+		arv_device_write_memory (ARV_DEVICE (thread_data->uv_device),
+					 sirm_offset + ARV_SI_CONTROL, sizeof (si_control), &si_control, NULL);
+
 		g_clear_object (&thread_data->uv_device);
+		g_free (thread_data);
 
 		uv_stream->priv->thread_data = NULL;
 		uv_stream->priv->thread = NULL;

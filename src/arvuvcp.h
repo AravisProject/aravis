@@ -30,7 +30,7 @@ G_BEGIN_DECLS
 
 #define ARV_UVCP_MAGIC	0x43563355
 
-#define ARV_UV_DEFAULT_RESPONSE_TIME_MS		5
+#define ARV_UVCP_DEFAULT_RESPONSE_TIME_MS		5
 
 #define ARV_ABRM_GENCP_VERSION			0x0000
 #define ARV_ABRM_MANUFACTURER_NAME		0x0004
@@ -192,6 +192,9 @@ ArvUvcpPacket * 	arv_uvcp_packet_new_write_memory_cmd	(guint32 address, guint32 
 								 guint16 packet_id, size_t *packet_size);
 char * 			arv_uvcp_packet_to_string 		(const ArvUvcpPacket *packet);
 void 			arv_uvcp_packet_debug 			(const ArvUvcpPacket *packet, ArvDebugLevel level);
+const char * 		arv_uvcp_packet_type_to_string 		(ArvUvcpPacketType value);
+const char * 		arv_uvcp_command_to_string 		(ArvUvcpCommand value);
+
 
 /**
  * arv_uvcp_packet_get_packet_type:
@@ -206,7 +209,7 @@ arv_uvcp_packet_get_packet_type (ArvUvcpPacket *packet)
 	if (packet == NULL)
 		return ARV_UVCP_PACKET_TYPE_ERROR;
 
-	return (ArvUvcpPacketType) g_ntohs (packet->header.packet_type);
+	return (ArvUvcpPacketType) GUINT16_FROM_LE (packet->header.packet_type);
 }
 
 /**
@@ -222,14 +225,14 @@ arv_uvcp_packet_get_command (ArvUvcpPacket *packet)
 	if (packet == NULL)
 		return (ArvUvcpCommand) 0;
 
-	return (ArvUvcpCommand) g_ntohs (packet->header.command);
+	return (ArvUvcpCommand) GUINT16_FROM_LE (packet->header.command);
 }
 
 static inline void
 arv_uvcp_packet_set_packet_id (ArvUvcpPacket *packet, guint16 id)
 {
 	if (packet != NULL)
-		packet->header.id = g_htons (id);
+		packet->header.id = GUINT16_TO_LE (id);
 }
 
 static inline guint16
@@ -238,7 +241,7 @@ arv_uvcp_packet_get_packet_id (ArvUvcpPacket *packet)
 	if (packet == NULL)
 		return 0;
 
-	return g_ntohs (packet->header.id);
+	return GUINT16_FROM_LE (packet->header.id);
 }
 
 static inline void *

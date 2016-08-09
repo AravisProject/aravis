@@ -22,7 +22,7 @@
 
 /**
  * SECTION: arvfakestream
- * @short_description: Fake camera stream
+ * @short_description: Fake stream
  */
 
 #include <arvfakestream.h>

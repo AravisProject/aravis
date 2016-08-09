@@ -264,6 +264,7 @@ ArvUvDeviceClass
 ArvUvDevicePrivate
 arv_uv_device_get_type
 <SUBSECTION Private>
+arv_uv_device_bulk_transfer
 </SECTION>
 
 <SECTION>
@@ -1338,8 +1339,12 @@ arv_uvcp_packet_new_read_memory_cmd
 arv_uvcp_packet_new_write_memory_cmd
 arv_uvcp_packet_set_packet_id
 arv_uvcp_packet_to_string
+arv_uvcp_command_to_string
+arv_uvcp_packet_type_to_string
 <SUBSECTION Standard>
 <SUBSECTION Private>
+ARV_UVCP_MAGIC
+ARV_UVCP_DEFAULT_RESPONSE_TIME_MS
 ArvUvcpHeader
 ArvUvcpManifestEntry
 ArvUvcpReadMemoryCmd
@@ -1589,8 +1594,8 @@ arv_debug_category_device
 arv_debug_category_dom
 arv_debug_category_evaluator
 arv_debug_category_genicam
-arv_debug_category_gvcp
-arv_debug_category_gvsp
+arv_debug_category_cp
+arv_debug_category_sp
 arv_debug_category_interface
 arv_debug_category_misc
 arv_debug_category_stream
@@ -1599,8 +1604,8 @@ arv_debug_device
 arv_debug_dom
 arv_debug_evaluator
 arv_debug_genicam
-arv_debug_gvcp
-arv_debug_gvsp
+arv_debug_cp
+arv_debug_sp
 arv_debug_interface
 arv_debug_misc
 arv_debug_stream
@@ -1610,8 +1615,8 @@ arv_log_device
 arv_log_dom
 arv_log_evaluator
 arv_log_genicam
-arv_log_gvcp
-arv_log_gvsp
+arv_log_cp
+arv_log_sp
 arv_log_interface
 arv_log_misc
 arv_log_stream
@@ -1621,8 +1626,8 @@ arv_warning_device
 arv_warning_dom
 arv_warning_evaluator
 arv_warning_genicam
-arv_warning_gvcp
-arv_warning_gvsp
+arv_warning_cp
+arv_warning_sp
 arv_warning_interface
 arv_warning_misc
 arv_warning_stream
@@ -1666,6 +1671,28 @@ ARV_GVSP_PACKET_INFOS_ID_MASK
 ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_MASK
 ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_POS
 ARV_GVSP_PACKET_PROTOCOL_OVERHEAD
+</SECTION>
+
+<SECTION>
+<FILE>arvuvsp</FILE>
+<TITLE>ArvUvsp</TITLE>
+arv_uvsp_packet_get_frame_id
+arv_uvsp_packet_get_packet_type
+arv_uvsp_packet_get_region
+arv_uvsp_packet_get_timestamp
+arv_uvsp_packet_debug
+arv_uvsp_packet_to_string
+<SUBSECTION Private>
+ARV_UVSP_LEADER_MAGIC
+ARV_UVSP_TRAILER_MAGIC
+ArvUvspHeader
+ArvUvspLeader
+ArvUvspLeaderInfos
+ArvUvspPacket
+ArvUvspPacketType
+ArvUvspPayloadType
+ArvUvspTrailer
+ArvUvspTrailerInfos
 </SECTION>
 
 <SECTION>

@@ -22,7 +22,7 @@
 
 /**
  * SECTION: arvuvcp
- * @short_description: Uvcp packet handling (control)
+ * @short_description: USB3Vision control packet handling
  */
 
 #include <arvuvcp.h>
@@ -121,13 +121,13 @@ arv_enum_to_string (GType type,
 	return retval;
 }
 
-static const char *
+const char *
 arv_uvcp_packet_type_to_string (ArvUvcpPacketType value)
 {
 	return arv_enum_to_string (ARV_TYPE_UVCP_PACKET_TYPE, value);
 }
 
-static const char *
+const char *
 arv_uvcp_command_to_string (ArvUvcpCommand value)
 {
 	return arv_enum_to_string (ARV_TYPE_UVCP_COMMAND, value);
@@ -212,7 +212,7 @@ arv_uvcp_packet_to_string (const ArvUvcpPacket *packet)
  * @packet: a #ArvUvcpPacket
  * @level: debug level
  *
- * Dumps the content of @packet if level is lower or equal to the current debug level for the uvcp debug category. See arv_debug_enable().
+ * Dumps the content of @packet if level is lower or equal to the current debug level for the cp debug category. See arv_debug_enable().
  */
 
 void
@@ -220,19 +220,19 @@ arv_uvcp_packet_debug (const ArvUvcpPacket *packet, ArvDebugLevel level)
 {
 	char *string;
 
-	if (!arv_debug_check (&arv_debug_category_gvcp, level))
+	if (!arv_debug_check (&arv_debug_category_cp, level))
 		return;
 
 	string = arv_uvcp_packet_to_string (packet);
 	switch (level) {
 		case ARV_DEBUG_LEVEL_LOG:
-			arv_log_gvcp ("%s", string);
+			arv_log_cp ("%s", string);
 			break;
 		case ARV_DEBUG_LEVEL_DEBUG:
-			arv_debug_gvcp ("%s", string);
+			arv_debug_cp ("%s", string);
 			break;
 		case ARV_DEBUG_LEVEL_WARNING:
-			arv_warning_gvcp ("%s", string);
+			arv_warning_cp ("%s", string);
 			break;
 		default:
 			break;

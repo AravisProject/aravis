@@ -22,7 +22,7 @@
 
 /**
  * SECTION: arvuvinterface
- * @short_description: USB3 camera interface
+ * @short_description: USB3Vision interface
  */
 
 #include <arvuvinterface.h>

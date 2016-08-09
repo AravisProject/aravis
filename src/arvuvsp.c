@@ -25,6 +25,11 @@
 #include <arvmisc.h>
 
 /**
+ * SECTION: arvuvsp
+ * @short_description: USB3Vision stream packet handling
+ */
+
+/**
  * arv_uvsp_packet_to_string:
  * @packet: a #ArvUvspPacket
  *
@@ -111,7 +116,7 @@ arv_uvsp_packet_to_string (const ArvUvspPacket *packet)
  * @packet: a #ArvUvspPacket
  * @level: debug level
  *
- * Dumps the content of @packet if level is lower or equal to the current debug level for the gvcp debug category. See arv_debug_enable().
+ * Dumps the content of @packet if level is lower or equal to the current debug level for the sp debug category. See arv_debug_enable().
  */
 
 void
@@ -119,19 +124,19 @@ arv_uvsp_packet_debug (const ArvUvspPacket *packet, ArvDebugLevel level)
 {
 	char *string;
 
-	if (!arv_debug_check (&arv_debug_category_gvcp, level))
+	if (!arv_debug_check (&arv_debug_category_sp, level))
 		return;
 
 	string = arv_uvsp_packet_to_string (packet);
 	switch (level) {
 		case ARV_DEBUG_LEVEL_LOG:
-			arv_log_gvcp ("%s", string);
+			arv_log_sp ("%s", string);
 			break;
 		case ARV_DEBUG_LEVEL_DEBUG:
-			arv_debug_gvcp ("%s", string);
+			arv_debug_sp ("%s", string);
 			break;
 		case ARV_DEBUG_LEVEL_WARNING:
-			arv_warning_gvcp ("%s", string);
+			arv_warning_sp ("%s", string);
 			break;
 		default:
 			break;
