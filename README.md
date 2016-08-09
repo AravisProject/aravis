@@ -1,6 +1,5 @@
 # ![](viewer/icons/gnome/256x256/apps/aravis.png) Aravis
 
-
 ### What is Aravis ?
 
 Aravis is a glib/gobject based library for video acquisition using Genicam cameras. It currently only implements an ethernet camera protocol used for industrial cameras.
