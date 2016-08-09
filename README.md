@@ -16,8 +16,7 @@ Aravis is released under the LGPL v2+.
 ### Links
 
 * Github repository: https://github.com/AravisProject/aravis
-* Documentation: https://aravisproject.github.io/docs/aravis-0.4/
 * Mailing list: aravis@freelists.org ( http://www.freelists.org/list/aravis )
-* Releases: http://ftp.gnome.org/pub/GNOME/sources/aravis
+* Documentation: https://aravisproject.github.io/docs/aravis-0.4/
 * Blog: http://blogs.gnome.org/emmanuel/category/aravis/
 * Genicam standard : http://www.genicam.org
