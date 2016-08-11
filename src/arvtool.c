@@ -122,6 +122,7 @@ arv_tool_execute_command (int argc, char **argv, const char *device_name)
 					GType value_type;
 					gint64 max_int64, min_int64;
 					double max_double, min_double;
+					const char *unit;
 
 					if (tokens[1] != NULL)
 						arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (feature),
@@ -133,30 +134,40 @@ arv_tool_execute_command (int argc, char **argv, const char *device_name)
 						case G_TYPE_INT64:
 							min_int64 = arv_gc_integer_get_min (ARV_GC_INTEGER (feature), NULL);
 							max_int64 = arv_gc_integer_get_max (ARV_GC_INTEGER (feature), NULL);
+							unit = arv_gc_integer_get_unit (ARV_GC_INTEGER (feature), NULL);
 							
 							if (min_int64 != -G_MAXINT64 && max_int64 != G_MAXINT64)
 								printf ("%s = %" G_GINT64_FORMAT
-									" (min:%" G_GINT64_FORMAT 
+									"%s%s (min:%" G_GINT64_FORMAT 
 									";max:%" G_GINT64_FORMAT
 									")\n", tokens[0],
 									arv_gc_integer_get_value (ARV_GC_INTEGER (feature), NULL),
+									unit != NULL ? " ": "",
+									unit != NULL ? unit : "",
 									min_int64, max_int64);
 							else 
-								printf ("%s = %" G_GINT64_FORMAT "\n",
+								printf ("%s = %" G_GINT64_FORMAT "%s%s\n",
 									tokens[0],
-									arv_gc_integer_get_value (ARV_GC_INTEGER (feature), NULL));
+									arv_gc_integer_get_value (ARV_GC_INTEGER (feature), NULL),
+									unit != NULL ? " ": "",
+									unit != NULL ? unit : "");
 							break;
 						case G_TYPE_DOUBLE:
 							min_double = arv_gc_float_get_min (ARV_GC_FLOAT (feature), NULL);
 							max_double = arv_gc_float_get_max (ARV_GC_FLOAT (feature), NULL);
+							unit = arv_gc_float_get_unit (ARV_GC_FLOAT (feature), NULL);
 
 							if (min_double != -G_MAXDOUBLE && max_double != G_MAXDOUBLE)
-								printf ("%s = %g (min:%g;max:%g)\n", tokens[0],
+								printf ("%s = %g%s%s (min:%g;max:%g)\n", tokens[0],
 									arv_gc_float_get_value (ARV_GC_FLOAT (feature), NULL),
+									unit != NULL ? " ": "",
+									unit != NULL ? unit : "",
 									min_double, max_double);
 							else
-								printf ("%s = %g\n", tokens[0],
-									arv_gc_float_get_value (ARV_GC_FLOAT (feature), NULL));
+								printf ("%s = %g%s%s\n", tokens[0],
+									arv_gc_float_get_value (ARV_GC_FLOAT (feature), NULL),
+									unit != NULL ? " ": "",
+									unit != NULL ? unit : "");
 							break;
 						case G_TYPE_STRING:
 							printf ("%s = %s\n", tokens[0],
