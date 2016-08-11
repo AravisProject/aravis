@@ -81,6 +81,9 @@ arv_gc_converter_post_new_child (ArvDomNode *self, ArvDomNode *child)
 			case ARV_GC_PROPERTY_NODE_TYPE_CONSTANT:
 				arv_warning_genicam ("[GcConverter::post_new_child] Constant and Expression not yet implemented");
 				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_UNIT:
+				node->unit = property_node;
+				break;
 			default:
 				ARV_DOM_NODE_CLASS (parent_class)->post_new_child (self, child);
 				break;
@@ -271,6 +274,15 @@ _update_from_variables (ArvGcConverter *gc_converter, ArvGcConverterNodeType nod
 	}
 }
 
+static const char *
+_get_unit (ArvGcConverter *gc_converter, GError **error)
+{
+	if (gc_converter->unit == NULL)
+		return NULL;
+
+	return arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (gc_converter->unit), error);
+}
+
 static void
 _update_to_variables (ArvGcConverter *gc_converter, GError **error)
 {
@@ -430,6 +442,12 @@ arv_gc_converter_set_integer_value (ArvGcInteger *gc_integer, gint64 value, GErr
 	_update_to_variables (gc_converter, error);
 }
 
+static const char *
+arv_gc_converter_get_integer_unit (ArvGcInteger *gc_integer, GError **error)
+{
+	return _get_unit (ARV_GC_CONVERTER (gc_integer), error);
+}
+
 static void
 arv_gc_converter_integer_interface_init (ArvGcIntegerInterface *interface)
 {
@@ -437,6 +455,7 @@ arv_gc_converter_integer_interface_init (ArvGcIntegerInterface *interface)
 	interface->get_min = arv_gc_converter_get_integer_min;
 	interface->get_max = arv_gc_converter_get_integer_max;
 	interface->set_value = arv_gc_converter_set_integer_value;
+	interface->get_unit = arv_gc_converter_get_integer_unit;
 }
 
 static double
@@ -507,6 +526,12 @@ arv_gc_converter_get_float_max (ArvGcFloat *gc_float, GError **error)
 	return MAX (a, b);
 }
 
+static const char *
+arv_gc_converter_get_float_unit (ArvGcFloat *gc_float, GError **error)
+{
+	return _get_unit (ARV_GC_CONVERTER (gc_float), error);
+}
+
 static void
 arv_gc_converter_set_float_value (ArvGcFloat *gc_float, double value, GError **error)
 {
@@ -525,6 +550,7 @@ arv_gc_converter_float_interface_init (ArvGcFloatInterface *interface)
 	interface->get_min = arv_gc_converter_get_float_min;
 	interface->get_max = arv_gc_converter_get_float_max;
 	interface->set_value = arv_gc_converter_set_float_value;
+	interface->get_unit = arv_gc_converter_get_float_unit;
 }
 
 G_DEFINE_TYPE_WITH_CODE (ArvGcConverter, arv_gc_converter, ARV_TYPE_GC_FEATURE_NODE,
