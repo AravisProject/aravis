@@ -78,7 +78,7 @@ arv_uvsp_packet_to_string (const ArvUvspPacket *packet)
 						GUINT16_FROM_LE (leader->infos.height));
 			g_string_append_printf (string, "x_offset     = %d\n",
 						GUINT16_FROM_LE (leader->infos.x_offset));
-			g_string_append_printf (string, "y_offset     = %d\n",
+			g_string_append_printf (string, "y_offset     = %d",
 						GUINT16_FROM_LE (leader->infos.y_offset));
 			break;
 		case ARV_UVSP_TRAILER_MAGIC:
@@ -86,11 +86,11 @@ arv_uvsp_packet_to_string (const ArvUvspPacket *packet)
 			g_string_append_printf (string, "size         = %d\n", GUINT16_FROM_LE (packet->header.size));
 			g_string_append_printf (string, "frame id     = %" G_GUINT64_FORMAT "\n",
 						GUINT64_FROM_LE (packet->header.frame_id));
-			g_string_append_printf (string, "payload_size = %" G_GUINT64_FORMAT "\n",
+			g_string_append_printf (string, "payload_size = %" G_GUINT64_FORMAT "",
 						GUINT64_FROM_LE (trailer->infos.payload_size));
 			break;
 		default:
-			g_string_append (string, "packet_type  = image\n");
+			g_string_append (string, "packet_type  = image");
 			break;
 	}
 
