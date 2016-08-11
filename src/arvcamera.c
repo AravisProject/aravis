@@ -653,8 +653,10 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector", "FrameStart");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
 			arv_device_set_integer_feature_value (camera->priv->device, "AcquisitionFrameRateEnable", 1);
-			arv_device_set_float_feature_value (camera->priv->device, "AcquisitionFrameRateAbs",
-							    frame_rate);
+			arv_device_set_float_feature_value (camera->priv->device,
+							    camera->priv->use_acquisition_frame_rate_abs ?
+							    "AcquisitionFrameRateAbs":
+							    "AcquisitionFrameRate", frame_rate);
 			break;
 		case ARV_CAMERA_VENDOR_PROSILICA:
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
@@ -726,7 +728,6 @@ arv_camera_get_frame_rate (ArvCamera *camera)
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), -1.0);
 
 	switch (camera->priv->vendor) {
-		case ARV_CAMERA_VENDOR_BASLER:
 		case ARV_CAMERA_VENDOR_PROSILICA:
 			return arv_device_get_float_feature_value (camera->priv->device, "AcquisitionFrameRateAbs");
 		case ARV_CAMERA_VENDOR_TIS:
@@ -745,6 +746,7 @@ arv_camera_get_frame_rate (ArvCamera *camera)
 		case ARV_CAMERA_VENDOR_POINT_GREY:
 		case ARV_CAMERA_VENDOR_DALSA:
 		case ARV_CAMERA_VENDOR_RICOH:
+		case ARV_CAMERA_VENDOR_BASLER:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
 			return arv_device_get_float_feature_value (camera->priv->device,
 								   camera->priv->use_acquisition_frame_rate_abs ?
@@ -804,13 +806,13 @@ arv_camera_get_frame_rate_bounds (ArvCamera *camera, double *min, double *max)
 			} else
 				arv_device_get_float_feature_bounds (camera->priv->device, "FPS", min, max);
 			break;
-		case ARV_CAMERA_VENDOR_BASLER:
 		case ARV_CAMERA_VENDOR_PROSILICA:
 			arv_device_get_float_feature_bounds (camera->priv->device, "AcquisitionFrameRateAbs", min, max);
 			break;
 		case ARV_CAMERA_VENDOR_POINT_GREY:
 		case ARV_CAMERA_VENDOR_DALSA:
 		case ARV_CAMERA_VENDOR_RICOH:
+		case ARV_CAMERA_VENDOR_BASLER:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
 			arv_device_get_float_feature_bounds (camera->priv->device,
 							     camera->priv->use_acquisition_frame_rate_abs ?
@@ -1228,7 +1230,6 @@ arv_camera_is_frame_rate_available (ArvCamera *camera)
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
 	switch (camera->priv->vendor) {
-		case ARV_CAMERA_VENDOR_BASLER:
 		case ARV_CAMERA_VENDOR_PROSILICA:
 			return arv_device_get_feature (camera->priv->device, "AcquisitionFrameRateAbs") != NULL;
 		case ARV_CAMERA_VENDOR_TIS:
@@ -1236,6 +1237,7 @@ arv_camera_is_frame_rate_available (ArvCamera *camera)
 		case ARV_CAMERA_VENDOR_POINT_GREY:
 		case ARV_CAMERA_VENDOR_DALSA:
 		case ARV_CAMERA_VENDOR_RICOH:
+		case ARV_CAMERA_VENDOR_BASLER:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
 			return arv_device_get_feature (camera->priv->device,
 						       camera->priv->use_acquisition_frame_rate_abs ?
