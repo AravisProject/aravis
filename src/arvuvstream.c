@@ -36,6 +36,8 @@
 #include <libusb.h>
 #include <string.h>
 
+#define MAXIMUM_TRANSFER_SIZE	60000
+
 static GObjectClass *parent_class = NULL;
 
 struct _ArvUvStreamPrivate {
@@ -51,6 +53,10 @@ typedef struct {
 
 	ArvStreamCallback callback;
 	void *user_data;
+
+	size_t leader_size;
+	size_t payload_size;
+	size_t trailer_size;
 
 	gboolean cancel;
 
@@ -70,9 +76,9 @@ arv_uv_stream_thread (void *data)
 	guint64 offset;
 	size_t transferred;
 
-	arv_log_stream_thread ("[UvStream::thread] Start");
+	arv_log_stream_thread ("Start USB3Vision stream thread");
 
-	packet = g_malloc (65536);
+	packet = g_malloc (MAXIMUM_TRANSFER_SIZE);
 
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
@@ -80,20 +86,32 @@ arv_uv_stream_thread (void *data)
 	offset = 0;
 
 	while (!thread_data->cancel) {
+		size_t size;
 		transferred = 0;
 
+		if (buffer == NULL)
+			size = thread_data->leader_size;
+		else {
+			if (offset < buffer->priv->size)
+				size = MIN (thread_data->payload_size, buffer->priv->size - offset);
+			else
+				size = thread_data->trailer_size;
+		}
+
 		arv_uv_device_bulk_transfer (thread_data->uv_device, 0x81 | LIBUSB_ENDPOINT_IN,
-					     packet, 65536, &transferred);
+					     packet, size, &transferred);
 
 		if (transferred > 0) {
 			ArvUvspPacketType packet_type;
 
-			arv_uvsp_packet_debug (packet, ARV_DEBUG_LEVEL_WARNING);
+			arv_log_sp ("Received %d bytes", transferred);
+			arv_uvsp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
 			packet_type = arv_uvsp_packet_get_packet_type (packet);
 			switch (packet_type) {
 				case ARV_UVSP_PACKET_TYPE_LEADER:
 					if (buffer != NULL) {
+						arv_debug_stream_thread ("New leader received while a buffer is still open");
 						buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
 						arv_stream_push_output_buffer (thread_data->stream, buffer);
 						thread_data->n_failures++;
@@ -135,6 +153,7 @@ arv_uv_stream_thread (void *data)
 					}
 					break;
 				default:
+					arv_debug_stream_thread ("Unkown packet type");
 					break;
 			}
 		}
@@ -145,7 +164,7 @@ arv_uv_stream_thread (void *data)
 
 	g_free (packet);
 
-	arv_log_stream_thread ("[UvStream::thread] Stop");
+	arv_log_stream_thread ("Stop USB3Vision stream thread");
 
 	return NULL;
 }
@@ -194,7 +213,7 @@ arv_uv_stream_new (ArvUvDevice *uv_device, ArvStreamCallback callback, void *use
 	arv_debug_stream ("SI_REQ_LEADER_SIZE =       0x%08x", si_req_leader_size);
 	arv_debug_stream ("SI_REQ_TRAILER_SIZE =      0x%08x", si_req_trailer_size);
 
-	si_payload_size = 65536;
+	si_payload_size = MAXIMUM_TRANSFER_SIZE;
 	si_payload_count=  si_req_payload_size / si_payload_size;
 	si_transfer1_size = si_req_payload_size % si_payload_size;
 	si_transfer2_size = 0;
@@ -226,6 +245,9 @@ arv_uv_stream_new (ArvUvDevice *uv_device, ArvStreamCallback callback, void *use
 	thread_data->callback = callback;
 	thread_data->user_data = user_data;
 	thread_data->cancel = FALSE;
+	thread_data->leader_size = si_req_leader_size;
+	thread_data->payload_size = si_payload_size;
+	thread_data->trailer_size = si_req_trailer_size;
 
 	thread_data->n_completed_buffers = 0;
 	thread_data->n_failures = 0;
