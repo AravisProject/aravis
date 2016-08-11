@@ -813,7 +813,7 @@ arv_camera_get_frame_rate_bounds (ArvCamera *camera, double *min, double *max)
 		case ARV_CAMERA_VENDOR_RICOH:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
 			arv_device_get_float_feature_bounds (camera->priv->device,
-							     camera->priv->use_exposure_time_abs ?
+							     camera->priv->use_acquisition_frame_rate_abs ?
 							     "AcquisitionFrameRateAbs":
 							     "AcquisitionFrameRate",
 							     min, max);
