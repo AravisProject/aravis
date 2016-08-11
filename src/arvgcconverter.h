@@ -47,6 +47,7 @@ struct _ArvGcConverter {
 	ArvGcPropertyNode *value;
 	ArvGcPropertyNode *formula_to_node;
 	ArvGcPropertyNode *formula_from_node;
+	ArvGcPropertyNode *unit;
 
 	ArvEvaluator *formula_to;
 	ArvEvaluator *formula_from;
