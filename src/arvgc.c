@@ -64,6 +64,12 @@ struct _ArvGcPrivate {
 	ArvBuffer *buffer;
 };
 
+GQuark
+arv_gc_error_quark (void)
+{
+	return g_quark_from_static_string ("arv-gc-error-quark");
+}
+
 /* ArvDomNode implementation */
 
 static gboolean

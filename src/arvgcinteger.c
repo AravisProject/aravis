@@ -26,6 +26,8 @@
  */
 
 #include <arvgcinteger.h>
+#include <arvgcfeaturenode.h>
+#include <arvgc.h>
 #include <arvmisc.h>
 
 static void
@@ -65,8 +67,11 @@ arv_gc_integer_get_min (ArvGcInteger *gc_integer, GError **error)
 
 	if (integer_interface->get_min != NULL)
 		return integer_interface->get_min (gc_integer, error);
-	else
-		return G_MININT64;
+
+	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_PROPERTY_NOT_DEFINED, "<Min> node not found for '%s'",
+		     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_integer)));
+
+	return G_MININT64;
 }
 
 gint64
@@ -81,8 +86,11 @@ arv_gc_integer_get_max (ArvGcInteger *gc_integer, GError **error)
 
 	if (integer_interface->get_max != NULL)
 		return integer_interface->get_max (gc_integer, error);
-	else
-		return G_MAXINT64;
+
+	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_PROPERTY_NOT_DEFINED, "<Max> node not found for '%s'",
+		     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_integer)));
+
+	return G_MAXINT64;
 }
 
 gint64
@@ -97,8 +105,11 @@ arv_gc_integer_get_inc (ArvGcInteger *gc_integer, GError **error)
 
 	if (integer_interface->get_inc != NULL)
 		return integer_interface->get_inc (gc_integer, error);
-	else
-		return 1;
+
+	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_PROPERTY_NOT_DEFINED, "<Inc> node not found for '%s'",
+		     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_integer)));
+
+	return 1;
 }
 
 const char *
@@ -113,8 +124,11 @@ arv_gc_integer_get_unit	(ArvGcInteger *gc_integer, GError **error)
 
 	if (integer_interface->get_unit != NULL)
 		return integer_interface->get_unit (gc_integer, error);
-	else
-		return NULL;
+
+	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_PROPERTY_NOT_DEFINED, "<Unit> node not found for '%s'",
+		     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_integer)));
+
+	return NULL;
 }
 
 void arv_gc_integer_impose_min (ArvGcInteger *gc_integer, gint64 minimum, GError **error)
@@ -128,6 +142,9 @@ void arv_gc_integer_impose_min (ArvGcInteger *gc_integer, gint64 minimum, GError
 
 	if (integer_interface->impose_min != NULL)
 		integer_interface->impose_min (gc_integer, minimum, error);
+	else
+		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_PROPERTY_NOT_DEFINED, "<Min> node not found for '%s'",
+			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_integer)));
 }
 
 void arv_gc_integer_impose_max (ArvGcInteger *gc_integer, gint64 maximum, GError **error)
@@ -141,4 +158,7 @@ void arv_gc_integer_impose_max (ArvGcInteger *gc_integer, gint64 maximum, GError
 
 	if (integer_interface->impose_max != NULL)
 		integer_interface->impose_max (gc_integer, maximum, error);
+	else
+		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_PROPERTY_NOT_DEFINED, "<Max> node not found for '%s'",
+			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_integer)));
 }

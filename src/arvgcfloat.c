@@ -26,6 +26,8 @@
  */
 
 #include <arvgcfloat.h>
+#include <arvgcfeaturenode.h>
+#include <arvgc.h>
 #include <arvmisc.h>
 
 static void
@@ -65,8 +67,11 @@ arv_gc_float_get_min (ArvGcFloat *gc_float, GError **error)
 
 	if (float_interface->get_min != NULL)
 		return float_interface->get_min (gc_float, error);
-	else
-		return -G_MAXDOUBLE;
+
+	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_PROPERTY_NOT_DEFINED, "<Min> node not found for '%s'",
+		     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_float)));
+
+	return -G_MAXDOUBLE;
 }
 
 double
@@ -81,8 +86,11 @@ arv_gc_float_get_max (ArvGcFloat *gc_float, GError **error)
 
 	if (float_interface->get_max != NULL)
 		return float_interface->get_max (gc_float, error);
-	else
-		return G_MAXDOUBLE;
+
+	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_PROPERTY_NOT_DEFINED, "<Max> node not found for '%s'",
+		     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_float)));
+
+	return G_MAXDOUBLE;
 }
 
 double
@@ -97,8 +105,11 @@ arv_gc_float_get_inc (ArvGcFloat *gc_float, GError **error)
 
 	if (float_interface->get_inc != NULL)
 		return float_interface->get_inc (gc_float, error);
-	else
-		return 1;
+
+	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_PROPERTY_NOT_DEFINED, "<Inc> node not found for '%s'",
+		     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_float)));
+
+	return 1;
 }
 
 const char *
@@ -113,8 +124,11 @@ arv_gc_float_get_unit	(ArvGcFloat *gc_float, GError **error)
 
 	if (float_interface->get_unit != NULL)
 		return float_interface->get_unit (gc_float, error);
-	else
-		return NULL;
+
+	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_PROPERTY_NOT_DEFINED, "<Unit> node not found for '%s'",
+		     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_float)));
+
+	return NULL;
 }
 
 void arv_gc_float_impose_min (ArvGcFloat *gc_float, double minimum, GError **error)
@@ -128,6 +142,9 @@ void arv_gc_float_impose_min (ArvGcFloat *gc_float, double minimum, GError **err
 
 	if (float_interface->impose_min != NULL)
 		float_interface->impose_min (gc_float, minimum, error);
+	else
+		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_PROPERTY_NOT_DEFINED, "<Min> node not found for '%s'",
+			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_float)));
 }
 
 void arv_gc_float_impose_max (ArvGcFloat *gc_float, double maximum, GError **error)
@@ -141,4 +158,7 @@ void arv_gc_float_impose_max (ArvGcFloat *gc_float, double maximum, GError **err
 
 	if (float_interface->impose_max != NULL)
 		float_interface->impose_max (gc_float, maximum, error);
+	else
+		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_PROPERTY_NOT_DEFINED, "<Max> node not found for '%s'",
+			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_float)));
 }

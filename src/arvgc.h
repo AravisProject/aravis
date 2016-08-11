@@ -28,6 +28,14 @@
 
 G_BEGIN_DECLS
 
+#define ARV_GC_ERROR arv_gc_error_quark()
+
+GQuark 		arv_gc_error_quark 		(void);
+
+typedef enum {
+	ARV_GC_ERROR_PROPERTY_NOT_DEFINED
+} ArvGcError;
+
 #define ARV_TYPE_GC             (arv_gc_get_type ())
 #define ARV_GC(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC, ArvGc))
 #define ARV_GC_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GC, ArvGcClass))
