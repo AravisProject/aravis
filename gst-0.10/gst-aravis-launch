@@ -5,5 +5,5 @@ exec_prefix=/home/pacaud/Sources/INSTALL
 
 export PATH=${exec_prefix}/bin:${PATH}
 
-gst-launch-0.10 --gst-plugin-load=../gst-0.10/.libs/libgstaravis-0.4.so -v $*
+gst-launch-0.10 --gst-plugin-load=../gst-0.10/.libs/libgstaravis-0.6.so -v $*
 
