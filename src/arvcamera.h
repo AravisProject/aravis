@@ -66,6 +66,8 @@ const char *	arv_camera_get_device_id	(ArvCamera *camera);
 void 		arv_camera_get_sensor_size 	(ArvCamera *camera, gint *width, gint *height);
 void		arv_camera_set_region		(ArvCamera *camera, gint x, gint y, gint width, gint height);
 void		arv_camera_get_region		(ArvCamera *camera, gint *x, gint *y, gint *width, gint *height);
+void		arv_camera_get_x_offset_bounds	(ArvCamera *camera, gint *min, gint *max);
+void		arv_camera_get_y_offset_bounds	(ArvCamera *camera, gint *min, gint *max);
 void		arv_camera_get_width_bounds	(ArvCamera *camera, gint *min, gint *max);
 void		arv_camera_get_height_bounds	(ArvCamera *camera, gint *min, gint *max);
 void		arv_camera_set_binning		(ArvCamera *camera, gint dx, gint dy);

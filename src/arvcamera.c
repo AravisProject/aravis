@@ -258,6 +258,58 @@ arv_camera_get_region (ArvCamera *camera, gint *x, gint *y, gint *width, gint *h
 }
 
 /**
+ * arv_camera_get_y_offset_bounds:
+ * @camera: a #ArvCamera
+ * @min: (out): minimum width
+ * @max: (out): maximum width
+ *
+ * Retrieves the valid range for image vertical offset.
+ *
+ * Since: 0.2.0
+ */
+
+void
+arv_camera_get_y_offset_bounds (ArvCamera *camera, gint *min, gint *max)
+{
+	gint64 min64, max64;
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_device_get_integer_feature_bounds (camera->priv->device, "OffsetY", &min64, &max64);
+
+	if (min != NULL)
+		*min = min64;
+	if (max != NULL)
+		*max = max64;
+}
+
+/**
+ * arv_camera_get_x_offset_bounds:
+ * @camera: a #ArvCamera
+ * @min: (out): minimum width
+ * @max: (out): maximum width
+ *
+ * Retrieves the valid range for image horizontal offset.
+ *
+ * Since: 0.2.0
+ */
+
+void
+arv_camera_get_x_offset_bounds (ArvCamera *camera, gint *min, gint *max)
+{
+	gint64 min64, max64;
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_device_get_integer_feature_bounds (camera->priv->device, "OffsetX", &min64, &max64);
+
+	if (min != NULL)
+		*min = min64;
+	if (max != NULL)
+		*max = max64;
+}
+
+/**
  * arv_camera_get_width_bounds:
  * @camera: a #ArvCamera
  * @min: (out): minimum width
