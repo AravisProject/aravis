@@ -258,40 +258,14 @@ arv_camera_get_region (ArvCamera *camera, gint *x, gint *y, gint *width, gint *h
 }
 
 /**
- * arv_camera_get_y_offset_bounds:
- * @camera: a #ArvCamera
- * @min: (out): minimum width
- * @max: (out): maximum width
- *
- * Retrieves the valid range for image vertical offset.
- *
- * Since: 0.2.0
- */
-
-void
-arv_camera_get_y_offset_bounds (ArvCamera *camera, gint *min, gint *max)
-{
-	gint64 min64, max64;
-
-	g_return_if_fail (ARV_IS_CAMERA (camera));
-
-	arv_device_get_integer_feature_bounds (camera->priv->device, "OffsetY", &min64, &max64);
-
-	if (min != NULL)
-		*min = min64;
-	if (max != NULL)
-		*max = max64;
-}
-
-/**
  * arv_camera_get_x_offset_bounds:
  * @camera: a #ArvCamera
- * @min: (out): minimum width
- * @max: (out): maximum width
+ * @min: (out): minimum offset
+ * @max: (out): maximum offset
  *
  * Retrieves the valid range for image horizontal offset.
  *
- * Since: 0.2.0
+ * Since: 0.6.0
  */
 
 void
@@ -310,6 +284,84 @@ arv_camera_get_x_offset_bounds (ArvCamera *camera, gint *min, gint *max)
 }
 
 /**
+ * arv_camera_get_y_offset_bounds:
+ * @camera: a #ArvCamera
+ * @min: (out): minimum offset
+ * @max: (out): maximum offset
+ *
+ * Retrieves the valid range for image vertical offset.
+ *
+ * Since: 0.6.0
+ */
+
+void
+arv_camera_get_y_offset_bounds (ArvCamera *camera, gint *min, gint *max)
+{
+	gint64 min64, max64;
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_device_get_integer_feature_bounds (camera->priv->device, "OffsetY", &min64, &max64);
+
+	if (min != NULL)
+		*min = min64;
+	if (max != NULL)
+		*max = max64;
+}
+
+/**
+ * arv_camera_get_x_binning_bounds:
+ * @camera: a #ArvCamera
+ * @min: (out): minimum binning
+ * @max: (out): maximum binning
+ *
+ * Retrieves the valid range for image horizontal binning.
+ *
+ * Since: 0.6.0
+ */
+
+void
+arv_camera_get_x_binning_bounds (ArvCamera *camera, gint *min, gint *max)
+{
+	gint64 min64, max64;
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_device_get_integer_feature_bounds (camera->priv->device, "BinningHorizontal", &min64, &max64);
+
+	if (min != NULL)
+		*min = min64;
+	if (max != NULL)
+		*max = max64;
+}
+
+/**
+ * arv_camera_get_y_binning_bounds:
+ * @camera: a #ArvCamera
+ * @min: (out): minimum binning
+ * @max: (out): maximum binning
+ *
+ * Retrieves the valid range for image vertical binning.
+ *
+ * Since: 0.6.0
+ */
+
+void
+arv_camera_get_y_binning_bounds (ArvCamera *camera, gint *min, gint *max)
+{
+	gint64 min64, max64;
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_device_get_integer_feature_bounds (camera->priv->device, "BinningVertical", &min64, &max64);
+
+	if (min != NULL)
+		*min = min64;
+	if (max != NULL)
+		*max = max64;
+}
+
+/**
  * arv_camera_get_width_bounds:
  * @camera: a #ArvCamera
  * @min: (out): minimum width
@@ -317,7 +369,7 @@ arv_camera_get_x_offset_bounds (ArvCamera *camera, gint *min, gint *max)
  *
  * Retrieves the valid range for image width.
  *
- * Since: 0.2.0
+ * Since: 0.6.0
  */
 
 void
@@ -343,7 +395,7 @@ arv_camera_get_width_bounds (ArvCamera *camera, gint *min, gint *max)
  *
  * Retrieves the valid range for image height.
  *
- * Since: 0.2.0
+ * Since: 0.6.0
  */
 
 void
@@ -370,7 +422,7 @@ arv_camera_get_height_bounds (ArvCamera *camera, gint *min, gint *max)
  * Defines binning in both directions. Not all cameras support this
  * feature.
  *
- * Since: 0.2.0
+ * Since: 0.6.0
  */
 
 void
@@ -1380,6 +1432,24 @@ arv_camera_is_gain_auto_available (ArvCamera *camera)
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
 	return arv_device_get_feature (camera->priv->device, "GainAuto") != NULL;
+}
+
+/**
+ * arv_camera_is_binning_available:
+ * @camera: a #ArvCamera
+ *
+ * Returns: %TRUE if Binning feature is available.
+ *
+ * Since: 0.6.0
+ */
+
+gboolean
+arv_camera_is_binning_available (ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
+
+	return arv_device_get_feature (camera->priv->device, "BinningHorizontal") != NULL &&
+	       arv_device_get_feature (camera->priv->device, "BinningVertical") != NULL;
 }
 
 /**

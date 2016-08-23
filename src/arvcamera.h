@@ -72,6 +72,10 @@ void		arv_camera_get_width_bounds	(ArvCamera *camera, gint *min, gint *max);
 void		arv_camera_get_height_bounds	(ArvCamera *camera, gint *min, gint *max);
 void		arv_camera_set_binning		(ArvCamera *camera, gint dx, gint dy);
 void		arv_camera_get_binning		(ArvCamera *camera, gint *dx, gint *dy);
+void		arv_camera_get_x_binning_bounds	(ArvCamera *camera, gint *min, gint *max);
+void		arv_camera_get_y_binning_bounds	(ArvCamera *camera, gint *min, gint *max);
+
+gboolean	arv_camera_is_binning_available (ArvCamera *camera);
 
 void 		arv_camera_set_pixel_format 				(ArvCamera *camera, ArvPixelFormat format);
 void		arv_camera_set_pixel_format_from_string 		(ArvCamera *camera, const char * format);
