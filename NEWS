@@ -1,3 +1,13 @@
+Release 0.5.1
+=============
+
+  * viewer: new design with support for region settings
+  * usb3vision improvements
+  * camera: improve Basler support for exposure and frame rate
+  * camera: add support for x/y_offset and binning bounds
+  * interface: add vendor, model and serial getters
+  * genicam: implement min/max support for Converter elements
+
 Release 0.5.0
 =============
 
