@@ -214,6 +214,9 @@ _usb_device_to_device_ids (ArvUvInterface *uv_interface, libusb_device *device)
 		device_ids->device = g_strdup (device_infos->name);
 		device_ids->physical = g_strdup ("FIXME-Physical");
 		device_ids->address = g_strdup ("FIXME-Address");
+		device_ids->vendor = g_strdup (device_infos->manufacturer);
+		device_ids->model = g_strdup (device_infos->product);
+		device_ids->serial_nbr = g_strdup (device_infos->serial_nbr);
 
 		g_free (manufacturer);
 		g_free (product);

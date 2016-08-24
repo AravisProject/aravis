@@ -152,8 +152,8 @@ arv_get_n_devices (void)
 	return n_devices;
 }
 
-const char *
-arv_get_device_id (unsigned int index)
+static const char *
+arv_get_info (unsigned int index, const char *get_info (ArvInterface *, guint))
 {
 	unsigned int offset = 0;
 	unsigned int i;
@@ -167,13 +167,37 @@ arv_get_device_id (unsigned int index)
 			n_devices = arv_interface_get_n_devices (interface);
 
 			if (index - offset < n_devices)
-				return arv_interface_get_device_id (interface, index - offset);
+				return get_info (interface, index - offset);
 
 			offset += n_devices;
 		}
 	}
 
 	return NULL;
+}
+
+const char *
+arv_get_device_id (unsigned int index)
+{
+	return arv_get_info (index, arv_interface_get_device_id);
+}
+
+const char *
+arv_get_device_vendor	(unsigned int index)
+{
+	return arv_get_info (index, arv_interface_get_device_vendor);
+}
+
+const char *
+arv_get_device_model (unsigned int index)
+{
+	return arv_get_info (index, arv_interface_get_device_model);
+}
+
+const char *
+arv_get_device_serial_nbr (unsigned int index)
+{
+	return arv_get_info (index, arv_interface_get_device_serial_nbr);
 }
 
 /**
