@@ -5,6 +5,7 @@
 Aravis is a glib/gobject based library for video acquisition using Genicam cameras. It currently implements the gigabit ethernet and USB3 (in aravis 0.5.x)  protocols used by industrial cameras. It also provides a basic ethernet camera simulator and a simple video viewer.
 
 # ![](viewer/data/aravis.png)
+# ![](viewer/data/aravis-video.png)
 
 Aravis is released under the LGPL v2+.
 
