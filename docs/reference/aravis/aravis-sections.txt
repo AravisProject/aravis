@@ -14,10 +14,15 @@ arv_camera_get_device_id
 arv_camera_get_sensor_size
 arv_camera_set_region
 arv_camera_get_region
+arv_camera_get_x_offset_bounds
+arv_camera_get_y_offset_bounds
 arv_camera_get_height_bounds
 arv_camera_get_width_bounds
 arv_camera_set_binning
 arv_camera_get_binning
+arv_camera_get_x_binning_bounds
+arv_camera_get_y_binning_bounds
+arv_camera_is_binning_available
 arv_camera_set_pixel_format
 arv_camera_get_pixel_format
 arv_camera_get_pixel_format_as_string
@@ -181,6 +186,9 @@ ArvBufferPrivate
 ArvInterface
 arv_get_device_id
 arv_get_interface_id
+arv_get_device_model
+arv_get_device_serial_nbr
+arv_get_device_vendor
 arv_disable_interface
 arv_enable_interface
 arv_get_n_devices
@@ -192,6 +200,9 @@ arv_interface_update_device_list
 arv_interface_get_device_id
 arv_interface_get_device_physical_id
 arv_interface_get_device_address
+arv_interface_get_device_model
+arv_interface_get_device_serial_nbr
+arv_interface_get_device_vendor
 arv_interface_get_n_devices
 arv_interface_open_device
 <SUBSECTION Standard>
@@ -385,6 +396,9 @@ ARV_GC_NODE_GET_CLASS
 <SUBSECTION Private>
 ArvGcNodePrivate
 ArvGcNodeClass
+ARV_GC_ERROR
+ArvGcError
+arv_gc_error_quark
 </SECTION>
 
 <SECTION>

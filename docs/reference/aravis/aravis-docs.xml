@@ -137,16 +137,17 @@
 		<index>
 			<title>Index of new symbols in 0.2</title>
 			<xi:include href="xml/api-index-0.2.0.xml"><xi:fallback /></xi:include>
-		</index>
-
-		<index>
-			<title>Index of new symbols in 0.2.3</title>
 			<xi:include href="xml/api-index-0.2.3.xml"><xi:fallback /></xi:include>
 		</index>
 
 		<index>
 			<title>Index of new symbols in 0.4</title>
 			<xi:include href="xml/api-index-0.4.0.xml"><xi:fallback /></xi:include>
+		</index>
+
+		<index>
+			<title>Index of new symbols in 0.6</title>
+			<xi:include href="xml/api-index-0.6.0.xml"><xi:fallback /></xi:include>
 		</index>
 
 		<xi:include href="xml/annotation-glossary.xml"><xi:fallback /></xi:include>
