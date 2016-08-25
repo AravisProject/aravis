@@ -560,13 +560,21 @@ camera_region_cb (GtkSpinButton *spin_button, ArvViewer *viewer)
 {
 	int x = gtk_spin_button_get_value (GTK_SPIN_BUTTON (viewer->camera_x));
 	int y = gtk_spin_button_get_value (GTK_SPIN_BUTTON (viewer->camera_y));
-	int dx = gtk_spin_button_get_value (GTK_SPIN_BUTTON (viewer->camera_binning_x));
-	int dy = gtk_spin_button_get_value (GTK_SPIN_BUTTON (viewer->camera_binning_y));
 	int width = gtk_spin_button_get_value (GTK_SPIN_BUTTON (viewer->camera_width));
 	int height = gtk_spin_button_get_value (GTK_SPIN_BUTTON (viewer->camera_height));
 
-	arv_camera_set_binning (viewer->camera, dx, dy);
 	arv_camera_set_region (viewer->camera, x, y, width, height);
+
+	update_camera_region (viewer);
+}
+
+void
+camera_binning_cb (GtkSpinButton *spin_button, ArvViewer *viewer)
+{
+	int dx = gtk_spin_button_get_value (GTK_SPIN_BUTTON (viewer->camera_binning_x));
+	int dy = gtk_spin_button_get_value (GTK_SPIN_BUTTON (viewer->camera_binning_y));
+
+	arv_camera_set_binning (viewer->camera, dx, dy);
 
 	update_camera_region (viewer);
 }
@@ -1051,20 +1059,20 @@ activate (GApplication *application)
 							  G_CALLBACK (auto_exposure_cb), viewer);
 	viewer->auto_gain_clicked = g_signal_connect (viewer->auto_gain_toggle, "clicked",
 						      G_CALLBACK (auto_gain_cb), viewer);
+	viewer->pixel_format_changed = g_signal_connect (viewer->pixel_format_combo, "changed",
+							 G_CALLBACK (pixel_format_combo_cb), viewer);
 	viewer->camera_x_changed = g_signal_connect (viewer->camera_x, "value-changed",
 						     G_CALLBACK (camera_region_cb), viewer);
 	viewer->camera_y_changed = g_signal_connect (viewer->camera_y, "value-changed",
 						     G_CALLBACK (camera_region_cb), viewer);
-	viewer->camera_binning_x_changed = g_signal_connect (viewer->camera_binning_x, "value-changed",
-							     G_CALLBACK (camera_region_cb), viewer);
-	viewer->camera_binning_y_changed = g_signal_connect (viewer->camera_binning_y, "value-changed",
-							     G_CALLBACK (camera_region_cb), viewer);
 	viewer->camera_width_changed = g_signal_connect (viewer->camera_width, "value-changed",
 							 G_CALLBACK (camera_region_cb), viewer);
 	viewer->camera_height_changed = g_signal_connect (viewer->camera_height, "value-changed",
 							  G_CALLBACK (camera_region_cb), viewer);
-	viewer->pixel_format_changed = g_signal_connect (viewer->pixel_format_combo, "changed",
-							 G_CALLBACK (pixel_format_combo_cb), viewer);
+	viewer->camera_binning_x_changed = g_signal_connect (viewer->camera_binning_x, "value-changed",
+							     G_CALLBACK (camera_binning_cb), viewer);
+	viewer->camera_binning_y_changed = g_signal_connect (viewer->camera_binning_y, "value-changed",
+							     G_CALLBACK (camera_binning_cb), viewer);
 
 	gtk_widget_set_sensitive (viewer->camera_parameters, FALSE);
 	select_mode (viewer, ARV_VIEWER_MODE_CAMERA_LIST);
