@@ -834,9 +834,10 @@ start_camera (ArvViewer *viewer, const char *camera_id)
 {
 	GtkTreeIter iter;
 	GtkListStore *list_store;
-	const char *pixel_format;
-	const char **pixel_formats;
-	guint i, n_pixel_formats;
+	gint64 *pixel_formats;
+	const char *pixel_format_string;
+	const char **pixel_format_strings;
+	guint i, n_pixel_formats, n_pixel_format_strings, n_valid_formats;
 	gboolean binning_available;
 
 	stop_camera (viewer);
@@ -858,16 +859,23 @@ start_camera (ArvViewer *viewer, const char *camera_id)
 
 	list_store = GTK_LIST_STORE (gtk_combo_box_get_model (GTK_COMBO_BOX (viewer->pixel_format_combo)));
 	gtk_list_store_clear (list_store);
-
-	pixel_formats = arv_camera_get_available_pixel_formats_as_strings (viewer->camera, &n_pixel_formats);
-	pixel_format = arv_camera_get_pixel_format_as_string (viewer->camera);
+	n_valid_formats = 0;
+	pixel_format_strings = arv_camera_get_available_pixel_formats_as_strings (viewer->camera, &n_pixel_format_strings);
+	pixel_formats = arv_camera_get_available_pixel_formats (viewer->camera, &n_pixel_formats);
+	g_assert (n_pixel_formats == n_pixel_format_strings);
+	pixel_format_string = arv_camera_get_pixel_format_as_string (viewer->camera);
 	for (i = 0; i < n_pixel_formats; i++) {
-		gtk_list_store_append (list_store, &iter);
-		gtk_list_store_set (list_store, &iter, 0, pixel_formats[i], -1);
-		if (g_strcmp0 (pixel_formats[i], pixel_format) == 0)
-			gtk_combo_box_set_active (GTK_COMBO_BOX (viewer->pixel_format_combo), i);
+		if (arv_pixel_format_to_gst_caps_string (pixel_formats[i]) != NULL) {
+			gtk_list_store_append (list_store, &iter);
+			gtk_list_store_set (list_store, &iter, 0, pixel_format_strings[i], -1);
+			if (g_strcmp0 (pixel_format_strings[i], pixel_format_string) == 0)
+				gtk_combo_box_set_active (GTK_COMBO_BOX (viewer->pixel_format_combo), n_valid_formats);
+			n_valid_formats++;
+		}
 	}
-	gtk_widget_set_sensitive (viewer->pixel_format_combo, n_pixel_formats > 1);
+	g_free (pixel_formats);
+	g_free (pixel_format_strings);
+	gtk_widget_set_sensitive (viewer->pixel_format_combo, n_valid_formats > 1);
 	gtk_widget_set_sensitive (viewer->video_mode_button, TRUE);
 
 	binning_available = arv_camera_is_binning_available (viewer->camera);
