@@ -84,6 +84,7 @@ typedef struct {
 	GtkWidget *auto_gain_toggle;
 	GtkWidget *acquisition_button;
 
+	gulong camera_selected;
 	gulong exposure_spin_changed;
 	gulong gain_spin_changed;
 	gulong exposure_hscale_changed;
@@ -588,6 +589,7 @@ update_device_list_cb (GtkToolButton *button, ArvViewer *viewer)
 	unsigned int n_devices;
 	unsigned int i;
 
+	g_signal_handler_block (gtk_tree_view_get_selection (GTK_TREE_VIEW (viewer->camera_tree)), viewer->camera_selected);
 	list_store = GTK_LIST_STORE (gtk_tree_view_get_model (GTK_TREE_VIEW (viewer->camera_tree)));
 	gtk_list_store_clear (list_store);
 	arv_update_device_list ();
@@ -601,6 +603,7 @@ update_device_list_cb (GtkToolButton *button, ArvViewer *viewer)
 				    3, arv_get_device_serial_nbr (i),
 				    -1);
 	}
+	g_signal_handler_unblock (gtk_tree_view_get_selection (GTK_TREE_VIEW (viewer->camera_tree)), viewer->camera_selected);
 }
 
 static void
@@ -1018,8 +1021,6 @@ activate (GApplication *application)
 	g_signal_connect (viewer->refresh_button, "clicked", G_CALLBACK (update_device_list_cb), viewer);
 	g_signal_connect (viewer->video_mode_button, "clicked", G_CALLBACK (switch_to_video_mode_cb), viewer);
 	g_signal_connect (viewer->back_button, "clicked", G_CALLBACK (switch_to_camera_list_cb), viewer);
-	g_signal_connect (gtk_tree_view_get_selection (GTK_TREE_VIEW (viewer->camera_tree)), "changed",
-			  G_CALLBACK (camera_selection_changed_cb), viewer);
 	g_signal_connect (viewer->main_window, "destroy", G_CALLBACK (arv_viewer_quit_cb), viewer);
 	g_signal_connect (viewer->snapshot_button, "clicked", G_CALLBACK (snapshot_cb), viewer);
 	g_signal_connect (viewer->rotate_cw_button, "clicked", G_CALLBACK (rotate_cw_cb), viewer);
@@ -1028,6 +1029,8 @@ activate (GApplication *application)
 	g_signal_connect (viewer->frame_rate_entry, "activate", G_CALLBACK (frame_rate_entry_cb), viewer);
 	g_signal_connect (viewer->frame_rate_entry, "focus-out-event", G_CALLBACK (frame_rate_entry_focus_cb), viewer);
 
+	viewer->camera_selected = g_signal_connect (gtk_tree_view_get_selection (GTK_TREE_VIEW (viewer->camera_tree)), "changed",
+						    G_CALLBACK (camera_selection_changed_cb), viewer);
 	viewer->exposure_spin_changed = g_signal_connect (viewer->exposure_spin_button, "value-changed",
 							  G_CALLBACK (exposure_spin_cb), viewer);
 	viewer->gain_spin_changed = g_signal_connect (viewer->gain_spin_button, "value-changed",
