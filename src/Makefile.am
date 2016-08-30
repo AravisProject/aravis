@@ -87,6 +87,7 @@ ARAVIS_SRCS_NO_INTRO =				\
 
 ARAVIS_HDRS = 					\
 	arv.h					\
+	arvconfig.h				\
 	arvtypes.h				\
 	arvenums.h				\
 	arvdebug.h				\
