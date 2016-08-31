@@ -248,6 +248,9 @@ ARV_GC_PORT_GET_CLASS
 <SUBSECTION Private>
 ArvGcPortPrivate
 ArvGcPortClass
+ARV_GC_ERROR
+ArvGcError
+arv_gc_error_quark
 </SECTION>
 
 <SECTION>
