@@ -143,6 +143,7 @@ ARAVIS_HDRS = 					\
 	arvrealtime.h
 
 ARAVIS_HDRS_NO_INTRO =				\
+	arvconfig.h				\
 	arvmisc.h				\
 	arvzip.h				\
 	arvstr.h				\
