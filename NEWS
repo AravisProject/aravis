@@ -1,3 +1,11 @@
+Release 0.4.1
+=============
+
+  * camera: improve Basler camera support
+  * genicam: support for Converter min/max and unit
+  * tool: show feature unit
+  * build fixes
+
 Release 0.4.0
 =============
 
