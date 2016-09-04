@@ -337,7 +337,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="tooltip_text" translatable="yes">Refresh camera list</property>
-                    <property name="label" translatable="yes">__glade_unnamed_23</property>
                     <property name="use_underline">True</property>
                     <property name="icon_name">view-refresh-symbolic</property>
                   </object>
@@ -352,7 +351,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                     <property name="sensitive">False</property>
                     <property name="can_focus">False</property>
                     <property name="tooltip_text" translatable="yes">Start video acquisition</property>
-                    <property name="label" translatable="yes">__glade_unnamed_24</property>
                     <property name="use_underline">True</property>
                     <property name="icon_name">media-playback-start-symbolic</property>
                   </object>
@@ -590,7 +588,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
           </object>
           <packing>
             <property name="name">page0</property>
-            <property name="title" translatable="yes">page0</property>
           </packing>
         </child>
         <child>
@@ -609,7 +606,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
           </object>
           <packing>
             <property name="name">page1</property>
-            <property name="title" translatable="yes">page1</property>
             <property name="position">1</property>
           </packing>
         </child>
