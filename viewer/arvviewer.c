@@ -127,7 +127,7 @@ typedef struct {
 	gboolean flip_horizontal;
 
 	double exposure_min, exposure_max;
-	
+
 	NotifyNotification *notification;
 
 	GtkWidget *main_window;
@@ -240,7 +240,7 @@ arv_viewer_value_from_log (double value, double min, double max)
 }
 
 static GstBuffer *
-arv_to_gst_buffer (ArvBuffer *arv_buffer) 
+arv_to_gst_buffer (ArvBuffer *arv_buffer)
 {
 	GstBuffer *buffer;
 	int arv_row_stride;
@@ -262,7 +262,7 @@ arv_to_gst_buffer (ArvBuffer *arv_buffer)
 		gst_row_stride = (arv_row_stride & ~(0x3)) + 4;
 
 		size = height * gst_row_stride;
-		data = g_malloc (size);	
+		data = g_malloc (size);
 
 		for (i = 0; i < height; i++)
 			memcpy (((char *) data) + i * gst_row_stride, buffer_data + i * arv_row_stride, arv_row_stride);
@@ -584,7 +584,7 @@ stream_cb (void *user_data, ArvStreamCallbackType type, ArvBuffer *buffer)
 	}
 }
 
-static void 
+static void
 update_camera_region (ArvViewer *viewer)
 {
 	gint x, y, width, height;
@@ -849,7 +849,7 @@ start_video (ArvViewer *viewer)
 
 	g_signal_handler_block (viewer->auto_gain_toggle, viewer->auto_gain_clicked);
 	g_signal_handler_block (viewer->auto_exposure_toggle, viewer->auto_exposure_clicked);
-	
+
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (viewer->auto_gain_toggle), auto_gain);
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (viewer->auto_exposure_toggle), auto_exposure);
 
@@ -905,7 +905,7 @@ start_video (ArvViewer *viewer)
 		g_object_get (videosink, "widget", &video_widget, NULL);
 		gtk_container_add (GTK_CONTAINER (viewer->video_frame), video_widget);
 		gtk_widget_show (video_widget);
-		g_object_set(G_OBJECT (video_widget), "force-aspect-ratio", TRUE, NULL);	
+		g_object_set(G_OBJECT (video_widget), "force-aspect-ratio", TRUE, NULL);
 		gtk_widget_set_size_request (video_widget, 640, 480);
 	} else {
 		videosink = gst_element_factory_make ("autovideosink", NULL);
@@ -977,7 +977,7 @@ start_camera (ArvViewer *viewer, const char *camera_id)
 		return FALSE;
 
 	viewer->camera_name = g_strdup (camera_id);
-	
+
 	gtk_widget_set_sensitive (viewer->camera_parameters, TRUE);
 
 	arv_camera_set_chunk_mode (viewer->camera, FALSE);
@@ -1112,13 +1112,16 @@ activate (GApplication *application)
 	ArvViewer *viewer = (ArvViewer *) application;
 	GtkBuilder *builder;
 	char *ui_filename;
+	GError *err = NULL;
 
 	builder = gtk_builder_new ();
 
 	ui_filename = g_build_filename (ARAVIS_DATA_DIR, "arv-viewer.ui", NULL);
 
-	if (!gtk_builder_add_from_file (builder, ui_filename, NULL))
-		g_error ("The user interface file is missing ('%s')", ui_filename);
+	if (!gtk_builder_add_from_file (builder, ui_filename, &err)) {
+		g_error ("Cant't load user interface file: %s", err->message);
+		g_error_free (err);
+	}
 
 	g_free (ui_filename);
 
