@@ -1112,14 +1112,16 @@ activate (GApplication *application)
 	ArvViewer *viewer = (ArvViewer *) application;
 	GtkBuilder *builder;
 	char *ui_filename;
+	GError *err = NULL;
 
 	builder = gtk_builder_new ();
 
 	ui_filename = g_build_filename (ARAVIS_DATA_DIR, "arv-viewer.ui", NULL);
 
-	GError *err = NULL;
-	if (!gtk_builder_add_from_file (builder, ui_filename, &err))
+	if (!gtk_builder_add_from_file (builder, ui_filename, &err)) {
 		g_error ("Cant't load user interface file: %s", err->message);
+		g_error_free (err);
+	}
 
 	g_free (ui_filename);
 
