@@ -1119,7 +1119,7 @@ activate (GApplication *application)
 
 	GError *err = NULL;
 	if (!gtk_builder_add_from_file (builder, ui_filename, &err))
-		g_error ("Cant't load user interface file ('%s'): %s", ui_filename, err->message);
+		g_error ("Cant't load user interface file: %s", err->message);
 
 	g_free (ui_filename);
 
