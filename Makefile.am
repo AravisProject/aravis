@@ -22,7 +22,7 @@ endif
 
 SUBDIRS += tests po docs
 
-aravisdocdir = ${prefix}/doc/aravis-@ARAVIS_API_VERSION@
+aravisdocdir = ${docdir}/aravis-@ARAVIS_API_VERSION@
 aravisdoc_DATA = 	\
 	README.md	\
 	COPYING		\
