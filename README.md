@@ -17,7 +17,7 @@ The GStreamer plugin depends on GStreamer1 in addition to the Aravis library dep
 
 The simple viewer depends on GStreamer1, Gtk+3, libnotify and the Aravis library dependencies.
 
-The required versions are specified in the configure.ac file in Aravis sources.
+The required versions are specified in the [configure.ac](https://github.com/AravisProject/aravis/blob/master/configure.ac#L67) file in Aravis sources.
 
 ### Downloads
 
