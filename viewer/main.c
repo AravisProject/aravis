@@ -29,49 +29,6 @@
 #include <libnotify/notify.h>
 #include <libintl.h>
 
-static gboolean
-gstreamer_plugin_check (void)
-{
-	GstRegistry *registry;
-	GstPluginFeature *feature;
-	unsigned int i;
-	gboolean success = TRUE;
-
-	static char *plugins[] = {
-		"appsrc",
-		"videoconvert",
-		"videoflip",
-		"autovideosink",
-		"bayer2rgb",
-		"gtkglsink"
-	};
-
-	registry = gst_registry_get ();
-
-	for (i = 0; i < G_N_ELEMENTS (plugins); i++) {
-		feature = gst_registry_lookup_feature (registry, plugins[i]);
-		if (!GST_IS_PLUGIN_FEATURE (feature)) {
-			g_print ("Gstreamer plugin '%s' is missing.\n", plugins[i]);
-			success = FALSE;
-		}
-		else
-
-		g_object_unref (feature);
-	}
-
-	if (!success)
-		g_print ("Check your gstreamer installation.\n");
-
-	/* Kludge, prevent autoloading of coglsink, which doesn't seem to work for us */
-	feature = gst_registry_lookup_feature (registry, "coglsink");
-	if (GST_IS_PLUGIN_FEATURE (feature)) {
-		gst_plugin_feature_set_rank (feature, GST_RANK_NONE);
-		g_object_unref (feature);
-	}
-
-	return success;
-}
-
 static char *arv_viewer_option_debug_domains = NULL;
 static gboolean arv_viewer_option_auto_socket_buffer = FALSE;
 static gboolean arv_viewer_option_no_packet_resend = FALSE;
@@ -120,9 +77,6 @@ main (int argc, char **argv)
 	gtk_init (&argc, &argv);
 	gst_init (&argc, &argv);
 
-	if (!gstreamer_plugin_check ())
-		return EXIT_FAILURE;
-
 	context = g_option_context_new (NULL);
 	g_option_context_add_main_entries (context, arv_viewer_option_entries, NULL);
 	g_option_context_add_group (context, gtk_get_option_group (TRUE));
@@ -139,6 +93,9 @@ main (int argc, char **argv)
 	arv_debug_enable (arv_viewer_option_debug_domains);
 
 	viewer = arv_viewer_new ();
+	if (!ARV_IS_VIEWER (viewer))
+		return EXIT_FAILURE;
+
 	arv_viewer_set_options (viewer,
 				arv_viewer_option_auto_socket_buffer,
 				!arv_viewer_option_no_packet_resend,
