@@ -61,6 +61,11 @@ AC_ARG_ENABLE(zlib_pc,
 			      [use pkg-config for zlib dependency [default=yes]])],
 	      [enable_zlib_pc=$enableval],
 	      [enable_zlib_pc=yes])
+AC_ARG_ENABLE(fast_heartbeat,
+	      [AS_HELP_STRING([--enable-fast-heartbeat],
+		              [build with extremely fast heartbeat [default=no]])],
+	      [enable_fast_heartbeat=$enableval],
+	      [enable_fast_heartbeat=no])
 
 PKG_PROG_PKG_CONFIG([0.14])
 
@@ -180,6 +185,16 @@ AC_SUBST(gst010plugindir)
 GST_0_10_PLUGIN_LDFLAGS='-module -avoid-version -export-symbols-regex [_]*\(gst_\|Gst\|GST_\).*'
 AC_SUBST(GST_0_10_PLUGIN_LDFLAGS)
 
+# Fast heartbeat
+# =============
+
+build_fast_heartbeat=no
+if test "x$enable_fast_heartbeat" = "xyes" ; then
+    build_fast_heartbeat=yes
+    AC_DEFINE([ARAVIS_FAST_HEARTBEAT], [], [Build with a much fast heartbeat rate])
+fi
+AM_CONDITIONAL(ARAVIS_FAST_HEARTBEAT, test "x$build_fast_heartbeat" = "xyes")
+
 # C++ test
 # ========
 
@@ -227,4 +242,5 @@ echo "  Build USB support:           $build_usb"
 echo "  Build viewer:                $build_viewer"
 echo "  Build gstreamer plugin:      $build_gst_plugin"
 echo "  Build gstreamer-0.10 plugin: $build_gst_0_10_plugin"
+echo "  Build with fast heartbeat:   $build_fast_heartbeat"
 echo ""
