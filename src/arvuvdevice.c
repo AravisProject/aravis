@@ -547,13 +547,16 @@ arv_uv_device_new (const char *vendor, const char *product, const char *serial_n
 
 	_open_usb_device (uv_device);
 
-	g_assert (libusb_claim_interface (uv_device->priv->usb_device, 0) >= 0);
+	if (uv_device->priv->usb_device == NULL ||
+	    libusb_claim_interface (uv_device->priv->usb_device, 0) < 0) {
+		arv_warning_device ("[UvDevice::new] Failed to claim USB interface to '%s - #%s'", product, serial_nbr);
+		g_object_unref (uv_device);
+		return NULL;
+	}
 
 	_bootstrap (uv_device);
 
 	if (!ARV_IS_GC (uv_device->priv->genicam)) {
-		g_assert (libusb_release_interface (uv_device->priv->usb_device, 0) >= 0);
-
 		arv_warning_device ("[UvDevice::new] Failed to load genicam data");
 		g_object_unref (uv_device);
 		return NULL;
@@ -575,14 +578,15 @@ arv_uv_device_finalize (GObject *object)
 {
 	ArvUvDevice *uv_device = ARV_UV_DEVICE (object);
 
-	g_assert (libusb_release_interface (uv_device->priv->usb_device, 0) >= 0);
-
 	g_object_unref (uv_device->priv->genicam);
 
 	g_clear_pointer (&uv_device->priv->vendor, g_free);
 	g_clear_pointer (&uv_device->priv->product, g_free);
 	g_clear_pointer (&uv_device->priv->serial_nbr, g_free);
-	libusb_close (uv_device->priv->usb_device);
+	if (uv_device->priv->usb_device != NULL) {
+		libusb_release_interface (uv_device->priv->usb_device, 0);
+		libusb_close (uv_device->priv->usb_device);
+	}
 	libusb_exit (uv_device->priv->usb);
 
 	parent_class->finalize (object);
