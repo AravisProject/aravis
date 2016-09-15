@@ -1251,9 +1251,8 @@ arv_viewer_new (void)
 
   arv_viewer = g_object_new (arv_viewer_get_type (),
 			     "application-id", "org.aravis.ArvViewer",
-			     "flags", G_APPLICATION_FLAGS_NONE,
+			     "flags", G_APPLICATION_FLAGS_NONE | G_APPLICATION_NON_UNIQUE,
 			     "inactivity-timeout", 30000,
-/*                             "register-session", TRUE,*/
 			     NULL);
 
   return arv_viewer;
