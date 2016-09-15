@@ -73,12 +73,13 @@ arv_uv_stream_thread (void *data)
 	ArvUvStreamThreadData *thread_data = data;
 	ArvUvspPacket *packet;
 	ArvBuffer *buffer = NULL;
+	void *incoming_buffer;
 	guint64 offset;
 	size_t transferred;
 
 	arv_log_stream_thread ("Start USB3Vision stream thread");
 
-	packet = g_malloc (MAXIMUM_TRANSFER_SIZE);
+	incoming_buffer = g_malloc (MAXIMUM_TRANSFER_SIZE);
 
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
@@ -97,6 +98,14 @@ arv_uv_stream_thread (void *data)
 			else
 				size = thread_data->trailer_size;
 		}
+
+		/* Avoid unnecessary memory copy by transferring data directly to the image buffer */
+		if (buffer != NULL &&
+		    buffer->priv->status == ARV_BUFFER_STATUS_FILLING &&
+		    offset + size <= buffer->priv->size)
+			packet = buffer->priv->data + offset;
+		else
+			packet = incoming_buffer;
 
 		arv_uv_device_bulk_transfer (thread_data->uv_device, 0x81 | LIBUSB_ENDPOINT_IN,
 					     packet, size, &transferred);
@@ -146,7 +155,8 @@ arv_uv_stream_thread (void *data)
 				case ARV_UVSP_PACKET_TYPE_DATA:
 					if (buffer != NULL && buffer->priv->status == ARV_BUFFER_STATUS_FILLING) {
 						if (offset + transferred <= buffer->priv->size) {
-							memcpy (((char *) buffer->priv->data) + offset, packet, transferred);
+							if (packet == incoming_buffer)
+								memcpy (((char *) buffer->priv->data) + offset, packet, transferred);
 							offset += transferred;
 						} else
 							buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
@@ -162,7 +172,7 @@ arv_uv_stream_thread (void *data)
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_EXIT, NULL);
 
-	g_free (packet);
+	g_free (incoming_buffer);
 
 	arv_log_stream_thread ("Stop USB3Vision stream thread");
 
