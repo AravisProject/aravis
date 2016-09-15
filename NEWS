@@ -1,3 +1,14 @@
+Release 0.5.2
+=============
+
+  * viewer: only show compatbile pixel format in selector
+  * viewer: fix binning setting on some cameras
+  * viewer: add a fallback to autovideosink if gtk[gl]sink are not available
+  * viewer: fix video position issue
+  * usb3vision: avoid unnecessary memory during video data transfer
+  * usb3vision: better handling of device disconnection
+  * gigevision: compile time selection of fast heartbeat mode (Michele)
+
 Release 0.5.1
 =============
 
