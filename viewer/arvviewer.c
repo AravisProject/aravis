@@ -939,14 +939,22 @@ start_video (ArvViewer *viewer)
 	return TRUE;
 }
 
-/* FIXME */
-#if 0
+static gboolean
+select_camera_list_mode (gpointer user_data)
+{
+	ArvViewer *viewer = user_data;
+
+	select_mode (viewer, ARV_VIEWER_MODE_CAMERA_LIST);
+	update_device_list_cb (GTK_TOOL_BUTTON (viewer->refresh_button), viewer);
+
+	return FALSE;
+}
+
 static void
 control_lost_cb (ArvCamera *camera, ArvViewer *viewer)
 {
-	select_mode (viewer, ARV_VIEWER_MODE_CAMERA_LIST);
+	g_main_context_invoke (NULL, select_camera_list_mode, viewer);
 }
-#endif
 
 static void
 stop_camera (ArvViewer *viewer)
@@ -1013,10 +1021,7 @@ start_camera (ArvViewer *viewer, const char *camera_id)
 
 	g_signal_handler_unblock (viewer->pixel_format_combo, viewer->pixel_format_changed);
 
-	/* FIXME */
-#if 0
 	g_signal_connect (arv_camera_get_device (viewer->camera), "control-lost", G_CALLBACK (control_lost_cb), viewer);
-#endif
 
 	return TRUE;
 }
