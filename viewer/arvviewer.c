@@ -131,7 +131,7 @@ typedef struct {
 	NotifyNotification *notification;
 
 	GtkWidget *main_window;
-	GtkWidget *main_notebook;
+	GtkWidget *main_stack;
 	GtkWidget *main_headerbar;
 	GtkWidget *camera_box;
 	GtkWidget *refresh_button;
@@ -1049,7 +1049,7 @@ select_mode (ArvViewer *viewer, ArvViewerMode mode)
 	switch (mode) {
 		case ARV_VIEWER_MODE_CAMERA_LIST:
 			video_visibility = FALSE;
-			gtk_notebook_set_current_page (GTK_NOTEBOOK (viewer->main_notebook), 0);
+			gtk_stack_set_visible_child (GTK_STACK (viewer->main_stack), viewer->camera_box);
 			gtk_header_bar_set_title (GTK_HEADER_BAR (viewer->main_headerbar), "Aravis Viewer");
 			gtk_header_bar_set_subtitle (GTK_HEADER_BAR (viewer->main_headerbar), NULL);
 			stop_video (viewer);
@@ -1062,7 +1062,7 @@ select_mode (ArvViewer *viewer, ArvViewerMode mode)
 						    width, height,
 						    x, y,
 						    arv_camera_get_pixel_format_as_string (viewer->camera));
-			gtk_notebook_set_current_page (GTK_NOTEBOOK (viewer->main_notebook), 1);
+			gtk_stack_set_visible_child (GTK_STACK (viewer->main_stack), viewer->video_frame);
 			gtk_header_bar_set_title (GTK_HEADER_BAR (viewer->main_headerbar), viewer->camera_name);
 			gtk_header_bar_set_subtitle (GTK_HEADER_BAR (viewer->main_headerbar), subtitle);
 			g_free (subtitle);
@@ -1126,7 +1126,7 @@ activate (GApplication *application)
 	g_free (ui_filename);
 
 	viewer->main_window = GTK_WIDGET (gtk_builder_get_object (builder, "main_window"));
-	viewer->main_notebook = GTK_WIDGET (gtk_builder_get_object (builder, "main_notebook"));
+	viewer->main_stack = GTK_WIDGET (gtk_builder_get_object (builder, "main_stack"));
 	viewer->main_headerbar = GTK_WIDGET (gtk_builder_get_object (builder, "main_headerbar"));
 	viewer->camera_box = GTK_WIDGET (gtk_builder_get_object (builder, "camera_box"));
 	viewer->refresh_button = GTK_WIDGET (gtk_builder_get_object (builder, "refresh_button"));

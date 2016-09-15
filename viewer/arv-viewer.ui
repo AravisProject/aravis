@@ -241,17 +241,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
     <property name="can_focus">False</property>
     <property name="show_menubar">False</property>
     <child>
-      <object class="GtkNotebook" id="main_notebook">
+      <object class="GtkStack" id="main_stack">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="show_tabs">False</property>
-        <property name="show_border">False</property>
+        <property name="transition_type">crossfade</property>
+        <property name="interpolate_size">True</property>
         <child>
           <object class="GtkBox" id="camera_box">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="margin_left">6</property>
-            <property name="margin_right">6</property>
             <property name="orientation">vertical</property>
             <child>
               <object class="GtkScrolledWindow">
@@ -588,6 +586,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
               </packing>
             </child>
           </object>
+          <packing>
+            <property name="name">page0</property>
+          </packing>
         </child>
         <child>
           <object class="GtkFrame" id="video_frame">
@@ -604,6 +605,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
             </child>
           </object>
           <packing>
+            <property name="name">page1</property>
             <property name="position">1</property>
           </packing>
         </child>
