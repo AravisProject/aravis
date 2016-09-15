@@ -35,13 +35,17 @@ G_BEGIN_DECLS
  * @ARV_DEVICE_STATUS_SUCCESS: no error has occured
  * @ARV_DEVICE_STATUS_TIMEOUT: action failed on a timeout
  * @ARV_DEVICE_STATUS_WRITE_ERROR: write on a read only node
+ * @ARV_DEVICE_STATUS_TRANSFER_ERROR: error during data transfer
+ * @ARV_DEVICE_STATUS_NOT_CONNECTED: device not connected
  */
 
 typedef enum {
 	ARV_DEVICE_STATUS_UNKNOWN = -1,
 	ARV_DEVICE_STATUS_SUCCESS =  0,
 	ARV_DEVICE_STATUS_TIMEOUT,
-	ARV_DEVICE_STATUS_WRITE_ERROR
+	ARV_DEVICE_STATUS_WRITE_ERROR,
+	ARV_DEVICE_STATUS_TRANSFER_ERROR,
+	ARV_DEVICE_STATUS_NOT_CONNECTED
 } ArvDeviceStatus;
 
 #define ARV_TYPE_DEVICE             (arv_device_get_type ())

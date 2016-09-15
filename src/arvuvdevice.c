@@ -58,6 +58,8 @@ struct _ArvUvDevicePrivate {
 	guint timeout_ms;
 	guint cmd_packet_size_max;
 	guint ack_packet_size_max;
+
+	gboolean disconnected;
 };
 
 /* ArvDevice implementation */
@@ -66,20 +68,37 @@ struct _ArvUvDevicePrivate {
 
 gboolean
 arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, unsigned char endpoint, void *data,
-			     size_t size, size_t *transferred_size)
+			     size_t size, size_t *transferred_size, GError **error)
 {
 	gboolean success;
 	int transferred = 0;
+	int result;
 
 	g_return_val_if_fail (ARV_IS_UV_DEVICE (uv_device), FALSE);
 	g_return_val_if_fail (data != NULL, FALSE);
 	g_return_val_if_fail (size > 0, FALSE);
 
-	success = libusb_bulk_transfer (uv_device->priv->usb_device, endpoint, data, size, &transferred,
-					uv_device->priv->timeout_ms) >= 0;
+	if (uv_device->priv->disconnected) {
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_STATUS_NOT_CONNECTED,
+			     "Not connected");
+		return FALSE;
+	}
+
+	result = libusb_bulk_transfer (uv_device->priv->usb_device, endpoint, data, size, &transferred, uv_device->priv->timeout_ms);
+
+	success = result >= 0; 
+
+	if (!success)
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_STATUS_TRANSFER_ERROR,
+			     "Error during USB bulk transfer: %s", libusb_error_name (result));
 
 	if (transferred_size != NULL)
 		*transferred_size = transferred;
+
+	if (result == LIBUSB_ERROR_NO_DEVICE) {
+		uv_device->priv->disconnected = TRUE;
+		arv_device_emit_control_lost_signal (ARV_DEVICE (uv_device));
+	}
 
 	return success;
 }
@@ -131,14 +150,15 @@ _read_memory (ArvUvDevice *uv_device, guint32 address, guint32 size, void *buffe
 
 		success = TRUE;
 		success = success && arv_uv_device_bulk_transfer (uv_device, (0x04 | LIBUSB_ENDPOINT_OUT),
-								  packet, packet_size, NULL);
+								  packet, packet_size, NULL, NULL);
 		if (success) {
 			gboolean expected_answer;
 
 			do {
 				success = TRUE;
 				success = success && arv_uv_device_bulk_transfer (uv_device, (0x84 | LIBUSB_ENDPOINT_IN),
-										  read_packet, read_packet_size, &transferred);
+										  read_packet, read_packet_size, &transferred,
+										  NULL);
 
 				if (success) {
 					ArvUvcpPacketType packet_type;
@@ -238,14 +258,14 @@ _write_memory (ArvUvDevice *uv_device, guint32 address, guint32 size, void *buff
 
 		success = TRUE;
 		success = success && arv_uv_device_bulk_transfer (uv_device, (0x04 | LIBUSB_ENDPOINT_OUT),
-								  packet, packet_size, NULL);
+								  packet, packet_size, NULL, NULL);
 		if (success ) {
 			gboolean expected_answer;
 
 			do {
 				success = TRUE;
 				success = success && arv_uv_device_bulk_transfer (uv_device, (0x84 | LIBUSB_ENDPOINT_IN),
-										  read_packet, read_packet_size, &transferred);
+										  read_packet, read_packet_size, &transferred, NULL);
 
 				if (success) {
 					ArvUvcpPacketType packet_type;
@@ -571,6 +591,7 @@ arv_uv_device_init (ArvUvDevice *uv_device)
 	uv_device->priv = G_TYPE_INSTANCE_GET_PRIVATE (uv_device, ARV_TYPE_UV_DEVICE, ArvUvDevicePrivate);
 	uv_device->priv->cmd_packet_size_max = 65536 + sizeof (ArvUvcpHeader);
 	uv_device->priv->ack_packet_size_max = 65536 + sizeof (ArvUvcpHeader);
+	uv_device->priv->disconnected = FALSE;
 }
 
 static void

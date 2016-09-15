@@ -108,7 +108,7 @@ arv_uv_stream_thread (void *data)
 			packet = incoming_buffer;
 
 		arv_uv_device_bulk_transfer (thread_data->uv_device, 0x81 | LIBUSB_ENDPOINT_IN,
-					     packet, size, &transferred);
+					     packet, size, &transferred, NULL);
 
 		if (transferred > 0) {
 			ArvUvspPacketType packet_type;
