@@ -676,6 +676,9 @@ update_device_list_cb (GtkToolButton *button, ArvViewer *viewer)
 	unsigned int n_devices;
 	unsigned int i;
 
+	gtk_widget_set_sensitive (viewer->video_mode_button, FALSE);
+	gtk_widget_set_sensitive (viewer->camera_parameters, FALSE);
+
 	g_signal_handler_block (gtk_tree_view_get_selection (GTK_TREE_VIEW (viewer->camera_tree)), viewer->camera_selected);
 	list_store = GTK_LIST_STORE (gtk_tree_view_get_model (GTK_TREE_VIEW (viewer->camera_tree)));
 	gtk_list_store_clear (list_store);
