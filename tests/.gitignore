@@ -11,6 +11,7 @@ arv-zip-test
 arv-camera-test
 arv-chunk-parser-test
 arv-heartbeat-test
+arv-acquisition-test
 arv-example
 time-test
 realtime-test

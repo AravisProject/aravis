@@ -16,6 +16,7 @@ noinst_PROGRAMS = 			\
        	arv-camera-test			\
 	arv-chunk-parser-test		\
        	arv-heartbeat-test		\
+	arv-acquisition-test		\
        	arv-example			\
 	time-test			\
 	realtime-test			\
@@ -41,6 +42,9 @@ arv_chunk_parser_test_LDADD = $(test_progs_ldadd)
 
 arv_heartbeat_test_SOURCES = arvheartbeattest.c
 arv_heartbeat_test_LDADD = $(test_progs_ldadd)
+
+arv_acquisition_test_SOURCES = arvacquisitiontest.c
+arv_acquisition_test_LDADD = $(test_progs_ldadd)
 
 arv_example_SOURCES = arvexample.c
 arv_example_LDADD = $(test_progs_ldadd)

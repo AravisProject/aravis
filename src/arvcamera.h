@@ -91,6 +91,8 @@ void		arv_camera_start_acquisition		(ArvCamera *camera);
 void		arv_camera_stop_acquisition		(ArvCamera *camera);
 void		arv_camera_abort_acquisition		(ArvCamera *camera);
 
+ArvBuffer *	arv_camera_acquisition			(ArvCamera *camera, guint64 timeout);
+
 void			arv_camera_set_acquisition_mode 	(ArvCamera *camera, ArvAcquisitionMode value);
 ArvAcquisitionMode 	arv_camera_get_acquisition_mode 	(ArvCamera *camera);
 

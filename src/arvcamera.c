@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2016 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -47,6 +47,7 @@
 #include <arvgcenumeration.h>
 #include <arvgcenumentry.h>
 #include <arvgcstring.h>
+#include <arvbuffer.h>
 #include <arvgc.h>
 #include <arvgvdevice.h>
 #include <arvenums.h>
@@ -678,6 +679,42 @@ arv_camera_abort_acquisition (ArvCamera *camera)
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
 	arv_device_execute_command (camera->priv->device, "AcquisitionAbort");
+}
+
+/**
+ * arv_camera_acquisition:
+ * @camera: a #ArvCamera
+ * @timeout: acquisition timeout
+ *
+ * Acquire one image buffer.
+ *
+ * Returns: (transfer full): A new #ArvBuffer, NULL on error. The returned buffer must be freed using g_object_unref().
+ *
+ * Since: 0.6.0
+ */
+
+ArvBuffer *
+arv_camera_acquisition (ArvCamera *camera, guint64 timeout)
+{
+	ArvStream *stream;
+	ArvBuffer *buffer;
+	gint payload;
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+
+	stream = arv_camera_create_stream (camera, NULL, NULL);
+	payload = arv_camera_get_payload (camera);
+	arv_stream_push_buffer (stream,  arv_buffer_new (payload, NULL));
+	arv_camera_set_acquisition_mode (camera, ARV_ACQUISITION_MODE_SINGLE_FRAME);
+	arv_camera_start_acquisition (camera);
+	if (timeout > 0)
+		buffer = arv_stream_timeout_pop_buffer (stream, timeout);
+	else
+		buffer = arv_stream_pop_buffer (stream);
+	arv_camera_stop_acquisition (camera);
+	g_object_unref (stream);
+
+	return buffer;
 }
 
 /*
