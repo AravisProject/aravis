@@ -8,6 +8,7 @@ Release 0.5.2
   * usb3vision: avoid unnecessary memory during video data transfer
   * usb3vision: better handling of device disconnection
   * gigevision: compile time selection of fast heartbeat mode (Michele)
+  * camera: helper function for single image acquisition
 
 Release 0.5.1
 =============
