@@ -9,6 +9,18 @@ Aravis is a glib/gobject based library for video acquisition using Genicam camer
 
 Aravis is released under the LGPL v2+.
 
+### Building Aravis
+
+Aravis uses the standard GNU build system, using autoconf for package configuration and resolving portability issues, automake for building makefiles that comply with the GNU Coding Standards, and libtool for building shared libraries on multiple platforms. The normal sequence for compiling and installing Aravis is thus:
+
+```
+./configure
+make
+make install
+```   
+
+Compilation options may be passed to the configure script. Please run `./configure --help` for information about the available options.
+
 ### Dependencies
 
 The Aravis library depends on libxml2 and glib2, with an optional USB support depending on libusb1.
@@ -18,6 +30,8 @@ The GStreamer plugin depends on GStreamer1 in addition to the Aravis library dep
 The simple viewer depends on GStreamer1, Gtk+3, libnotify and the Aravis library dependencies.
 
 The required versions are specified in the [configure.ac](https://github.com/AravisProject/aravis/blob/master/configure.ac#L67) file in Aravis sources.
+
+It is perfectly possible to only build the library, reducing the dependencies to the bare minimum.
 
 ### Downloads
 
