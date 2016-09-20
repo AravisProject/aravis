@@ -244,6 +244,7 @@ ARV_FAKE_INTERFACE_SOCKET_BUFFER_SIZE
 <SECTION>
 <FILE>arvuvinterface</FILE>
 <TITLE>ArvUvInterface</TITLE>
+ARAVIS_HAS_USB
 arv_uv_interface_destroy_instance
 arv_uv_interface_get_instance
 <SUBSECTION Standard>

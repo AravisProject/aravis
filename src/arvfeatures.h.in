@@ -23,6 +23,14 @@
 #ifndef ARV_FEATURES_H
 #define ARV_FEATURES_H
 
+/**
+ * ARAVIS_HAS_USB
+ *
+ * ARAVIS_HAS_USB is defined as 1 if aravis is compiled with USB support, 0 if not.
+ *
+ * Since: 0.6.0
+ */
+
 #define ARAVIS_HAS_USB @ARAVIS_HAS_USB@
 
 #endif
