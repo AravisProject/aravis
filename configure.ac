@@ -98,6 +98,9 @@ AM_CONDITIONAL(ARAVIS_BUILD_USB, test "x$build_usb" = "xyes")
 
 if test "x$build_usb" = "xyes"; then
 	ARAVIS_REQUIREMENTS="${ARAVIS_REQUIREMENTS} ${ARAVIS_USB_REQUIREMENTS}"
+	AC_SUBST([ARAVIS_HAS_USB],[1])
+else
+	AC_SUBST([ARAVIS_HAS_USB],[0])
 fi
 
 PKG_CHECK_MODULES(ARAVIS, [$ARAVIS_REQUIREMENTS])
@@ -216,6 +219,7 @@ APPSTREAM_XML
 AC_CONFIG_FILES([
 Makefile
 src/Makefile
+src/arvfeatures.h
 viewer/Makefile
 viewer/data/Makefile
 viewer/data/arv-viewer.desktop.in

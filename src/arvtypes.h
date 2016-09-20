@@ -24,6 +24,7 @@
 #define ARV_TYPES_H
 
 #include <arvenums.h>
+#include <arvfeatures.h>
 
 G_BEGIN_DECLS
 
@@ -78,9 +79,11 @@ typedef struct _ArvGvInterface 		ArvGvInterface;
 typedef struct _ArvGvDevice 		ArvGvDevice;
 typedef struct _ArvGvStream 		ArvGvStream;
 
+#if ARAVIS_HAS_USB
 typedef struct _ArvUvInterface 		ArvUvInterface;
 typedef struct _ArvUvDevice		ArvUvDevice;
 typedef struct _ArvUvStream		ArvUvStream;
+#endif
 
 typedef struct _ArvFakeInterface	ArvFakeInterface;
 typedef struct _ArvFakeDevice		ArvFakeDevice;

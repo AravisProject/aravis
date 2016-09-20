@@ -4,3 +4,4 @@ arvenumtypes.c
 arvenumtypes.h
 arvconfig.h
 arvconfig.h.in
+arvfeatures.h
