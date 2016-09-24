@@ -22,6 +22,7 @@
 
 #include <arvsystem.h>
 #include <arvgvinterface.h>
+#include <arvconfig.h>
 #ifdef ARAVIS_BUILD_USB
 #include <arvuvinterface.h>
 #endif
