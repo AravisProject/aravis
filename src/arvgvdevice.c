@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2016 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -721,6 +721,24 @@ arv_gv_device_load_genicam (ArvGvDevice *gv_device)
 					      "<AccessMode>RO</AccessMode>"
 					      "<pPort>Device</pPort>"
 					      "</StringReg>");
+		arv_gc_set_default_node_data (gv_device->priv->genicam, "GevSCPHostPort",
+					      "<Integer Name=\"GevSCPHostPort\">"
+					      "<Visibility>Expert</Visibility>"
+					      "<pIsLocked>TLParamsLocked</pIsLocked>"
+					      "<pValue>GevSCPHostPortReg</pValue>"
+					      "</Integer>");
+		arv_gc_set_default_node_data (gv_device->priv->genicam, "GevSCPHostPortReg",
+					      "<MaskedIntReg Name=\"GevSCPHostPortReg\">"
+					      "<Address>0xd00</Address>"
+					      "<pAddress>GevSCPAddrCalc</pAddress>"
+					      "<Length>4</Length>"
+					      "<AccessMode>RW</AccessMode>"
+					      "<pPort>Device</pPort>"
+					      "<LSB>31</LSB>"
+					      "<MSB>16</MSB>"
+					      "<Sign>Unsigned</Sign>"
+					      "<Endianess>BigEndian</Endianess>"
+					      "</MaskedIntReg>");
 		arv_gc_set_default_node_data (gv_device->priv->genicam, "GevSCPSPacketSize",
 					      "<Integer Name=\"GevSCPSPacketSize\">"
 					      "<Visibility>Expert</Visibility>"
@@ -730,6 +748,7 @@ arv_gv_device_load_genicam (ArvGvDevice *gv_device)
 		arv_gc_set_default_node_data (gv_device->priv->genicam, "GevSCPSPacketSizeReg",
 					      "<MaskedIntReg Name=\"GevSCPSPacketSizeReg\">"
 					      "<Address>0xd04</Address>"
+					      "<pAddress>GevSCPAddrCalc</pAddress>"
 					      "<Length>4</Length>"
 					      "<AccessMode>RW</AccessMode>"
 					      "<pPort>Device</pPort>"
@@ -738,6 +757,45 @@ arv_gv_device_load_genicam (ArvGvDevice *gv_device)
 					      "<Sign>Unsigned</Sign>"
 					      "<Endianess>BigEndian</Endianess>"
 					      "</MaskedIntReg>");
+		arv_gc_set_default_node_data (gv_device->priv->genicam, "GevSCDA",
+					      "<Integer Name=\"GevSCDA\">"
+					      "<Visibility>Expert</Visibility>"
+					      "<pIsLocked>TLParamsLocked</pIsLocked>"
+					      "<pValue>GevSCDAReg</pValue>"
+					      "</Integer>");
+		arv_gc_set_default_node_data (gv_device->priv->genicam, "GevSCDAReg",
+					      "<IntReg Name=\"GevSCDAReg\">"
+					      "<Address>0xd18</Address>"
+					      "<pAddress>GevSCPAddrCalc</pAddress>"
+					      "<Length>4</Length>"
+					      "<AccessMode>RW</AccessMode>"
+					      "<pPort>Device</pPort>"
+					      "<Sign>Unsigned</Sign>"
+					      "<Endianess>BigEndian</Endianess>"
+					      "</IntReg>");
+		arv_gc_set_default_node_data (gv_device->priv->genicam, "GevSCSP",
+					      "<Integer Name=\"GevSCSP\">"
+					      "<Visibility>Expert</Visibility>"
+					      "<pIsLocked>TLParamsLocked</pIsLocked>"
+					      "<pValue>GevSCSPReg</pValue>"
+					      "</Integer>");
+		arv_gc_set_default_node_data (gv_device->priv->genicam, "GevSCSPReg",
+					      "<MaskedIntReg Name=\"GevSCSPReg\">"
+					      "<Address>0xd1c</Address>"
+					      "<pAddress>GevSCPAddrCalc</pAddress>"
+					      "<Length>4</Length>"
+					      "<AccessMode>RO</AccessMode>"
+					      "<pPort>Device</pPort>"
+					      "<LSB>31</LSB>"
+					      "<MSB>16</MSB>"
+					      "<Sign>Unsigned</Sign>"
+					      "<Endianess>BigEndian</Endianess>"
+					      "</MaskedIntReg>");
+		arv_gc_set_default_node_data (gv_device->priv->genicam, "GevSCSPReg",
+					      "<IntSwissKnife Name= \"GevSCPAddrCalc\">"
+					      "<pVariable Name=\"SEL\">GevStreamChannelSelector</pVariable>"
+					      "<Formula>SEL * 0x40</Formula>"
+					      "</IntSwissKnife>");
 		arv_gc_set_default_node_data (gv_device->priv->genicam, "TLParamsLocked",
 					      "<Integer Name=\"TLParamsLocked\">"
 					      "<Visibility>Invisible</Visibility>"
@@ -756,9 +814,6 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 	ArvGvDevice *gv_device = ARV_GV_DEVICE (device);
 	ArvGvDeviceIOData *io_data = gv_device->priv->io_data;
 	ArvStream *stream;
-	const guint8 *address_bytes;
-	guint32 stream_port;
-	guint packet_size;
 	guint32 n_stream_channels;
 	GInetAddress *interface_address;
 	GInetAddress *device_address;
@@ -776,38 +831,13 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 
 	interface_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (io_data->interface_address));
 	device_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (io_data->device_address));
-	address_bytes = g_inet_address_to_bytes (interface_address);
 
-	/* On some cameras, the default packet size after reset is incorrect.
-	 * So, if the value is obviously incorrect, set it to a default size. */
-	packet_size = arv_gv_device_get_packet_size (gv_device);
-	if (packet_size <= ARV_GVSP_PACKET_PROTOCOL_OVERHEAD) {
-		arv_gv_device_set_packet_size (gv_device, ARV_GV_DEVICE_GVSP_PACKET_SIZE_DEFAULT);
-		arv_debug_device ("[GvDevice::create_stream] Packet size set to default value (%d)",
-				  ARV_GV_DEVICE_GVSP_PACKET_SIZE_DEFAULT);
-	}
-
-	packet_size = arv_gv_device_get_packet_size (gv_device);
-	arv_debug_device ("[GvDevice::create_stream] Packet size = %d byte(s)", packet_size);
-
-	stream = arv_gv_stream_new (device_address, 0, callback, user_data,
-				    arv_gv_device_get_timestamp_tick_frequency (gv_device), packet_size);
-
-	stream_port = arv_gv_stream_get_port (ARV_GV_STREAM (stream));
-
-	if (!arv_device_write_register (device, ARV_GVBS_STREAM_CHANNEL_0_IP_ADDRESS_OFFSET,
-					g_htonl(*((guint32 *) address_bytes)), NULL) ||
-	    !arv_device_write_register (device, ARV_GVBS_STREAM_CHANNEL_0_PORT_OFFSET, stream_port, NULL)) {
-		arv_warning_device ("[GvDevice::create_stream] Stream configuration failed");
-
-		g_object_unref (stream);
+	stream = arv_gv_stream_new (gv_device, interface_address, device_address, callback, user_data);
+	if (!ARV_IS_STREAM (stream))
 		return NULL;
-	}
 
 	if (!gv_device->priv->is_packet_resend_supported)
 		g_object_set (stream, "packet-resend", ARV_GV_STREAM_PACKET_RESEND_NEVER, NULL); 
-
-	arv_debug_device ("[GvDevice::create_stream] Stream port = %d", stream_port);
 
 	return stream;
 }

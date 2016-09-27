@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2011 Emmanuel Pacaud
+ * Copyright © 2009-2016 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,16 +26,33 @@
  */
 
 #include <arvgvstream.h>
+#include <arvgvdevice.h>
 #include <arvstreamprivate.h>
 #include <arvbufferprivate.h>
+#include <arvconfig.h>
 #include <arvgvsp.h>
 #include <arvgvcp.h>
 #include <arvdebug.h>
 #include <arvmisc.h>
+#include <arvstr.h>
 #include <arvenumtypes.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <stdio.h>
+
+#ifdef ARAVIS_BUILD_RING_BUFFER
+#include <ifaddrs.h>
+#include <netinet/udp.h>
+#include <cap-ng.h>
+#include <net/if.h>
+#include <netinet/in.h>
+#include <linux/if_packet.h>
+#include <linux/if_ether.h>
+#include <linux/ip.h>
+#include <linux/filter.h>
+#include <sys/types.h>
+#include <sys/mman.h>
+#endif
 
 #define ARV_GV_STREAM_INCOMING_BUFFER_SIZE	65536
 
@@ -56,12 +73,11 @@ enum {
 
 static GObjectClass *parent_class = NULL;
 
-struct _ArvGvStreamPrivate {
-	GSocket *socket;
-	GSocketAddress *incoming_address;
+typedef struct _ArvGvStreamThreadData ArvGvStreamThreadData;
 
+struct _ArvGvStreamPrivate {
 	GThread *thread;
-	void *thread_data;
+	ArvGvStreamThreadData *thread_data;
 };
 
 /* Acquisition thread */
@@ -85,14 +101,20 @@ typedef struct {
 	ArvGvStreamPacketData *packet_data;
 } ArvGvStreamFrameData;
 
-typedef struct {
+struct _ArvGvStreamThreadData {
+	ArvGvDevice *gv_device;
 	ArvStream *stream;
 
 	ArvStreamCallback callback;
 	void *user_data;
 
 	GSocket *socket;
-	GSocketAddress *device_address;
+	GInetAddress *interface_address;
+	GSocketAddress *interface_socket_address;
+	GInetAddress *device_address;
+	GSocketAddress *device_socket_address;
+	guint16 source_stream_port;
+	guint16 stream_port;
 
 	ArvGvStreamPacketResend packet_resend;
 	guint packet_timeout_us;
@@ -106,6 +128,7 @@ typedef struct {
 	guint16 packet_id;
 
 	GSList *frames;
+	gboolean first_packet;
 	guint32 last_frame_id;
 
 	/* Statistics */
@@ -133,7 +156,7 @@ typedef struct {
 	ArvGvStreamSocketBuffer socket_buffer_option;
 	int socket_buffer_size;
 	int current_socket_buffer_size;
-} ArvGvStreamThreadData;
+};
 
 static void
 _send_packet_request (ArvGvStreamThreadData *thread_data,
@@ -154,7 +177,7 @@ _send_packet_request (ArvGvStreamThreadData *thread_data,
 
 	arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
-	g_socket_send_to (thread_data->socket, thread_data->device_address, (const char *) packet, packet_size,
+	g_socket_send_to (thread_data->socket, thread_data->device_socket_address, (const char *) packet, packet_size,
 			  NULL, NULL);
 
 	arv_gvcp_packet_free (packet);
@@ -193,7 +216,7 @@ _update_socket (ArvGvStreamThreadData *thread_data, ArvBuffer *buffer)
 static void
 _process_data_leader (ArvGvStreamThreadData *thread_data,
 		      ArvGvStreamFrameData *frame,
-		      ArvGvspPacket *packet,
+		      const ArvGvspPacket *packet,
 		      guint32 packet_id)
 {
 	if (frame->buffer->priv->status != ARV_BUFFER_STATUS_FILLING)
@@ -230,7 +253,7 @@ _process_data_leader (ArvGvStreamThreadData *thread_data,
 
 	if (frame->packet_data[packet_id].time_us > 0) {
 		thread_data->n_resent_packets++;
-		arv_log_stream_thread ("[GvStream::_process_data_leader] Received resent packet %u for frame %u",
+		arv_log_stream_thread ("[GvStream::process_data_leader] Received resent packet %u for frame %u",
 				       packet_id, frame->frame_id);
 	}
 }
@@ -238,7 +261,7 @@ _process_data_leader (ArvGvStreamThreadData *thread_data,
 static void
 _process_data_block (ArvGvStreamThreadData *thread_data,
 		     ArvGvStreamFrameData *frame,
-		     ArvGvspPacket *packet,
+		     const ArvGvspPacket *packet,
 		     guint32 packet_id,
 		     size_t read_count)
 {
@@ -260,7 +283,7 @@ _process_data_block (ArvGvStreamThreadData *thread_data,
 	block_end = block_size + block_offset;
 
 	if (block_end > frame->buffer->priv->size) {
-		arv_debug_stream_thread ("[GvStream::_process_data_block] %d unexpected bytes in packet %u "
+		arv_debug_stream_thread ("[GvStream::process_data_block] %d unexpected bytes in packet %u "
 					 " for frame %u",
 					 block_end - frame->buffer->priv->size,
 					 packet_id, frame->frame_id);
@@ -274,7 +297,7 @@ _process_data_block (ArvGvStreamThreadData *thread_data,
 
 	if (frame->packet_data[packet_id].time_us > 0) {
 		thread_data->n_resent_packets++;
-		arv_log_stream_thread ("[GvStream::_process_data_block] Received resent packet %u for frame %u",
+		arv_log_stream_thread ("[GvStream::process_data_block] Received resent packet %u for frame %u",
 				       packet_id, frame->frame_id);
 	}
 }
@@ -282,7 +305,7 @@ _process_data_block (ArvGvStreamThreadData *thread_data,
 static void
 _process_data_trailer (ArvGvStreamThreadData *thread_data,
 		       ArvGvStreamFrameData *frame,
-		       ArvGvspPacket *packet,
+		       const ArvGvspPacket *packet,
 		       guint32 packet_id)
 {
 	if (frame->buffer->priv->status != ARV_BUFFER_STATUS_FILLING)
@@ -295,7 +318,7 @@ _process_data_trailer (ArvGvStreamThreadData *thread_data,
 
 	if (frame->packet_data[packet_id].time_us > 0) {
 		thread_data->n_resent_packets++;
-		arv_log_stream_thread ("[GvStream::_process_data_trailer] Received resent packet %u for frame %u",
+		arv_log_stream_thread ("[GvStream::process_data_trailer] Received resent packet %u for frame %u",
 				       packet_id, frame->frame_id);
 	}
 }
@@ -303,7 +326,7 @@ _process_data_trailer (ArvGvStreamThreadData *thread_data,
 static ArvGvStreamFrameData *
 _find_frame_data (ArvGvStreamThreadData *thread_data,
 		  guint32 frame_id,
-		  ArvGvspPacket *packet,
+		  const ArvGvspPacket *packet,
 		  guint32 packet_id,
 		  size_t read_count,
 		  guint64 time_us)
@@ -327,7 +350,7 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 	if ((gint16) frame_id > 0 && (gint16) thread_data->last_frame_id < 0)
 		frame_id_inc--;
 	if (frame_id_inc < 1  && frame_id_inc > -ARV_GV_STREAM_DISCARD_LATE_FRAME_THRESHOLD) {
-		arv_debug_stream_thread ("[GvStream::_find_frame_data] Discard late frame %u (last: %u)",
+		arv_debug_stream_thread ("[GvStream::find_frame_data] Discard late frame %u (last: %u)",
 					 frame_id, thread_data->last_frame_id);
 		return NULL;
 	}
@@ -367,13 +390,13 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 
 	if (frame_id_inc > 1) {
 		thread_data->n_missing_frames++;
-		arv_log_stream_thread ("[GvStream::_find_frame_data] Missed %d frame(s) before %u",
+		arv_log_stream_thread ("[GvStream::find_frame_data] Missed %d frame(s) before %u",
 				       frame_id_inc - 1, frame_id);
 	}
 
 	thread_data->frames = g_slist_append (thread_data->frames, frame);
 
-	arv_log_stream_thread ("[GvStream::_find_frame_data] Start frame %u", frame_id);
+	arv_log_stream_thread ("[GvStream::find_frame_data] Start frame %u", frame_id);
 
 	return frame;
 }
@@ -403,7 +426,7 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 				if (first_missing >= 0) {
 					int j;
 
-					arv_log_stream_thread ("[GvStream::_missing_packet_check]"
+					arv_log_stream_thread ("[GvStream::missing_packet_check]"
 							       " Resend request at dt = %" G_GINT64_FORMAT ", packet id = %u/%u",
 							       time_us - frame->first_packet_time_us,
 							       packet_id, frame->n_packets);
@@ -421,7 +444,7 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 		if (first_missing >= 0) {
 			int j;
 
-			arv_log_stream_thread ("[GvStream::_missing_packet_check]"
+			arv_log_stream_thread ("[GvStream::missing_packet_check]"
 					       " Resend request at dt = %" G_GINT64_FORMAT", packet id = %u/%u",
 					       time_us - frame->first_packet_time_us,
 					       packet_id, frame->n_packets);
@@ -473,7 +496,7 @@ _close_frame (ArvGvStreamThreadData *thread_data, ArvGvStreamFrameData *frame)
 
 	arv_stream_push_output_buffer (thread_data->stream, frame->buffer);
 
-	arv_log_stream_thread ("[GvStream::_close_frame] Close frame %u", frame->frame_id);
+	arv_log_stream_thread ("[GvStream::close_frame] Close frame %u", frame->frame_id);
 
 	frame->buffer = NULL;
 	frame->frame_id = 0;
@@ -498,7 +521,7 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 		    thread_data->packet_resend == ARV_GV_STREAM_PACKET_RESEND_NEVER &&
 		    iter->next != NULL) {
 			frame->buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
-			arv_debug_stream_thread ("[GvStream::_check_frame_completion] Incomplete frame %u",
+			arv_debug_stream_thread ("[GvStream::check_frame_completion] Incomplete frame %u",
 						 frame->frame_id);
 			_close_frame (thread_data, frame);
 			thread_data->frames = iter->next;
@@ -510,7 +533,7 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 		if (can_close_frame &&
 		    frame->last_valid_packet == frame->n_packets - 1) {
 			frame->buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
-			arv_log_stream_thread ("[GvStream::_check_frame_completion] Completed frame %u",
+			arv_log_stream_thread ("[GvStream::check_frame_completion] Completed frame %u",
 					       frame->frame_id);
 			_close_frame (thread_data, frame);
 			thread_data->frames = iter->next;
@@ -522,7 +545,7 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 		if (can_close_frame &&
 		    time_us - frame->last_packet_time_us >= thread_data->frame_retention_us) {
 			frame->buffer->priv->status = ARV_BUFFER_STATUS_TIMEOUT;
-			arv_debug_stream_thread ("[GvStream::_check_frame_completion] Timeout for frame %u "
+			arv_debug_stream_thread ("[GvStream::check_frame_completion] Timeout for frame %u "
 						 "at dt = %Lu",
 						 frame->frame_id,
 						 time_us - frame->first_packet_time_us);
@@ -574,32 +597,93 @@ _flush_frames (ArvGvStreamThreadData *thread_data)
 	thread_data->frames = NULL;
 }
 
-static void *
-arv_gv_stream_thread (void *data)
+static ArvGvStreamFrameData *
+_process_packet (ArvGvStreamThreadData *thread_data, const ArvGvspPacket *packet, size_t packet_size, guint64 time_us)
+	
 {
-	ArvGvStreamThreadData *thread_data = data;
 	ArvGvStreamFrameData *frame;
-	ArvGvspPacket *packet;
 	guint32 packet_id;
 	guint32 frame_id;
+	int i;
+
+	thread_data->n_received_packets++;
+
+	frame_id = arv_gvsp_packet_get_frame_id (packet);
+	packet_id = arv_gvsp_packet_get_packet_id (packet);
+
+	if (thread_data->first_packet) {
+		thread_data->last_frame_id = frame_id - 1;
+		thread_data->first_packet = FALSE;
+	}
+
+	frame = _find_frame_data (thread_data, frame_id, packet, packet_id, packet_size, time_us);
+
+	if (frame != NULL) {
+		ArvGvspPacketType packet_type = arv_gvsp_packet_get_packet_type (packet);
+
+		if (packet_type != ARV_GVSP_PACKET_TYPE_OK &&
+		    packet_type != ARV_GVSP_PACKET_TYPE_RESEND) {
+			arv_debug_stream_thread ("[GvStream::process_packet]"
+						 " Error packet at dt = %" G_GINT64_FORMAT ", packet id = %u"
+						 " frame id = %u",
+						 time_us - frame->first_packet_time_us,
+						 packet_id, frame->frame_id);
+			arv_gvsp_packet_debug (packet, packet_size, ARV_DEBUG_LEVEL_DEBUG);
+			frame->error_packet_received = TRUE;
+
+			thread_data->n_error_packets++;
+		} else {
+			/* Check for duplicated packets */
+			if (packet_id < frame->n_packets) {
+				if (frame->packet_data[packet_id].received)
+					thread_data->n_duplicated_packets++;
+				else
+					frame->packet_data[packet_id].received = TRUE;
+			}
+
+			/* Keep track of last packet of a continuous block starting from packet 0 */
+			for (i = frame->last_valid_packet + 1; i < frame->n_packets; i++)
+				if (!frame->packet_data[i].received)
+					break;
+			frame->last_valid_packet = i - 1;
+
+			switch (arv_gvsp_packet_get_content_type (packet)) {
+				case ARV_GVSP_CONTENT_TYPE_DATA_LEADER:
+					_process_data_leader (thread_data, frame, packet, packet_id);
+					break;
+				case ARV_GVSP_CONTENT_TYPE_DATA_BLOCK:
+					_process_data_block (thread_data, frame, packet, packet_id,
+							     packet_size);
+					break;
+				case ARV_GVSP_CONTENT_TYPE_DATA_TRAILER:
+					_process_data_trailer (thread_data, frame, packet, packet_id);
+					break;
+				default:
+					thread_data->n_ignored_packets++;
+					break;
+			}
+
+			_missing_packet_check (thread_data, frame, packet_id, time_us);
+		}
+	} else
+		thread_data->n_ignored_packets++;
+
+	return frame;
+}
+
+static void
+_loop (ArvGvStreamThreadData *thread_data)
+{
+	ArvGvStreamFrameData *frame;
+	ArvGvspPacket *packet;
+	GPollFD poll_fd;
 	GTimeVal current_time;
 	guint64 time_us;
-	GPollFD poll_fd;
 	size_t read_count;
 	int timeout_ms;
 	int n_events;
-	int i;
-	gboolean first_packet = TRUE;
 
-	thread_data->frames = NULL;
-
-	arv_debug_stream_thread ("[GvStream::stream_thread] Packet timeout = %g ms",
-				 thread_data->packet_timeout_us / 1000.0);
-	arv_debug_stream_thread ("[GvStream::stream_thread] Frame retention = %g ms",
-				 thread_data->frame_retention_us / 1000.0);
-
-	if (thread_data->callback != NULL)
-		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
+	arv_debug_stream ("[GvStream::loop] Standard socket method");
 
 	poll_fd.fd = g_socket_get_fd (thread_data->socket);
 	poll_fd.events =  G_IO_IN;
@@ -619,149 +703,303 @@ arv_gv_stream_thread (void *data)
 		time_us = current_time.tv_sec * 1000000 + current_time.tv_usec;
 
 		if (n_events > 0) {
-			thread_data->n_received_packets++;
-
 			read_count = g_socket_receive (thread_data->socket, (char *) packet,
 						       ARV_GV_STREAM_INCOMING_BUFFER_SIZE, NULL, NULL);
 
-			frame_id = arv_gvsp_packet_get_frame_id (packet);
-			packet_id = arv_gvsp_packet_get_packet_id (packet);
-
-			if (first_packet) {
-				thread_data->last_frame_id = frame_id - 1;
-				first_packet = FALSE;
-			}
-
-			frame = _find_frame_data (thread_data, frame_id, packet, packet_id, read_count, time_us);
-
-			if (frame != NULL) {
-				ArvGvspPacketType packet_type = arv_gvsp_packet_get_packet_type (packet);
-
-				if (packet_type != ARV_GVSP_PACKET_TYPE_OK &&
-				    packet_type != ARV_GVSP_PACKET_TYPE_RESEND) {
-					arv_debug_stream_thread ("[GvStream::stream_thread]"
-								 " Error packet at dt = %" G_GINT64_FORMAT ", packet id = %u"
-								 " frame id = %u",
-								 time_us - frame->first_packet_time_us,
-								 packet_id, frame->frame_id);
-					arv_gvsp_packet_debug (packet, read_count, ARV_DEBUG_LEVEL_DEBUG);
-					frame->error_packet_received = TRUE;
-
-					thread_data->n_error_packets++;
-				} else {
-					/* Check for duplicated packets */
-					if (packet_id < frame->n_packets) {
-						if (frame->packet_data[packet_id].received)
-							thread_data->n_duplicated_packets++;
-						else
-							frame->packet_data[packet_id].received = TRUE;
-					}
-
-					/* Keep track of last packet of a continuous block starting from packet 0 */
-					for (i = frame->last_valid_packet + 1; i < frame->n_packets; i++)
-						if (!frame->packet_data[i].received)
-							break;
-					frame->last_valid_packet = i - 1;
-
-					switch (arv_gvsp_packet_get_content_type (packet)) {
-						case ARV_GVSP_CONTENT_TYPE_DATA_LEADER:
-							_process_data_leader (thread_data, frame, packet, packet_id);
-							break;
-						case ARV_GVSP_CONTENT_TYPE_DATA_BLOCK:
-							_process_data_block (thread_data, frame, packet, packet_id,
-									     read_count);
-							break;
-						case ARV_GVSP_CONTENT_TYPE_DATA_TRAILER:
-							_process_data_trailer (thread_data, frame, packet, packet_id);
-							break;
-						default:
-							thread_data->n_ignored_packets++;
-							break;
-					}
-
-					_missing_packet_check (thread_data, frame, packet_id, time_us);
-				}
-			} else
-				thread_data->n_ignored_packets++;
+			frame = _process_packet (thread_data, packet, read_count, time_us);
 		} else
 			frame = NULL;
 
 		_check_frame_completion (thread_data, time_us, frame);
 	} while (!thread_data->cancel);
 
+	g_free (packet);
+
+}
+
+
+#ifdef ARAVIS_BUILD_RING_BUFFER
+
+static void
+_set_socket_filter (int socket, guint32 source_ip, guint32 source_port, guint32 destination_ip, guint32 destination_port)
+{
+	struct sock_filter bpf[18] = {
+		{ 0x28, 0, 0, 0x0000000c },
+		{ 0x15, 15, 0, 0x000086dd },
+		{ 0x15, 0, 14, 0x00000800 },
+		{ 0x30, 0, 0, 0x00000017 },
+		{ 0x15, 0, 12, 0x00000011 },
+		{ 0x20, 0, 0, 0x0000001a },
+		{ 0x15, 0, 10, source_ip },
+		{ 0x28, 0, 0, 0x00000014 },
+		{ 0x45, 8, 0, 0x00001fff },
+		{ 0xb1, 0, 0, 0x0000000e },
+		{ 0x48, 0, 0, 0x0000000e },
+		{ 0x15, 0, 5, source_port },
+		{ 0x20, 0, 0, 0x0000001e },
+		{ 0x15, 0, 3, destination_ip },
+		{ 0x48, 0, 0, 0x00000010 },
+		{ 0x15, 0, 1, destination_port },
+		{ 0x6, 0, 0, 0x00040000 },
+		{ 0x6, 0, 0, 0x00000000 }
+	};
+	struct sock_fprog bpf_prog = {sizeof(bpf) / sizeof(struct sock_filter), bpf};
+
+	arv_debug_stream_thread ("[GvStream::set_socket_filter] source ip = 0x%08x - port = %d - dest ip = 0x%08x - port %d",
+				 source_ip, source_port, destination_ip, destination_port);
+
+	if (setsockopt(socket, SOL_SOCKET, SO_ATTACH_FILTER, &bpf_prog, sizeof(bpf_prog)) != 0)
+		arv_warning_stream_thread ("[GvStream::set_socket_filter] Failed to attach Beckerley Packet Filter to stream socket");
+}
+
+static unsigned
+_interface_index_from_address (guint32 ip)
+{
+    struct ifaddrs *ifaddr = NULL;
+    struct ifaddrs *ifa;
+    unsigned index = 0;
+
+    if (getifaddrs(&ifaddr) == -1) {
+        return index;
+    }
+
+    for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+	    if (ifa->ifa_addr != NULL &&
+		ifa->ifa_addr->sa_family == AF_INET) {
+		    struct sockaddr_in *sa;
+
+		    sa = (struct sockaddr_in *) (ifa->ifa_addr);
+		    if (ip == g_ntohl (sa->sin_addr.s_addr)) {
+			    index = if_nametoindex (ifa->ifa_name);
+			    break;
+		    }
+	    }
+    }
+
+    freeifaddrs (ifaddr);
+
+    return index;
+}
+
+typedef struct {
+	guint32 version;
+	guint32 offset_to_priv;
+	struct tpacket_hdr_v1 h1;
+} ArvGvStreamBlockDescriptor;
+
+static void
+_ring_buffer_loop (ArvGvStreamThreadData *thread_data)
+{
+	GPollFD poll_fd;
+	char *buffer;
+	struct tpacket_req3 req;
+	struct sockaddr_ll local_address;
+	enum tpacket_versions version;
+	int fd;
+	unsigned block_id;
+	const guint8 *bytes;
+	guint32 interface_address;
+	guint32 device_address;
+
+	arv_debug_stream ("[GvStream::loop] Raw socket method");
+
+	fd = socket (PF_PACKET, SOCK_RAW, g_htons (ETH_P_ALL));
+	if (fd < 0) {
+		arv_warning_stream_thread ("[GvStream::loop] Failed to create AF_PACKET socket");
+		return;
+	}
+
+	version = TPACKET_V3;
+	if (setsockopt (fd, SOL_PACKET, PACKET_VERSION, &version, sizeof(version)) < 0) {
+		arv_warning_stream_thread ("[GvStream::loop] Failed to set packet version");
+		goto socket_option_error;
+	}
+
+	req.tp_block_size = 1 << 21;
+	req.tp_frame_size = 1024;
+	req.tp_block_nr = 16;
+	req.tp_frame_nr = (req.tp_block_size * req.tp_block_nr) / req.tp_frame_size;
+	req.tp_sizeof_priv = 0;
+	req.tp_retire_blk_tov = 5;
+	req.tp_feature_req_word = TP_FT_REQ_FILL_RXHASH;
+	if (setsockopt (fd, SOL_PACKET, PACKET_RX_RING, &req, sizeof(req)) < 0) {
+		arv_warning_stream_thread ("[GvStream::loop] Failed to set packet rx ring");
+		goto socket_option_error;
+	}
+
+	buffer = mmap (NULL, req.tp_block_size * req.tp_block_nr, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_POPULATE, fd, 0);
+	if (buffer == MAP_FAILED) {
+		arv_warning_stream_thread ("[GvStream::loop] Failed to map ring buffer");
+		goto map_error;
+	}
+
+	bytes = g_inet_address_to_bytes (thread_data->interface_address);
+	interface_address = g_ntohl (*((guint32 *) bytes));
+	bytes = g_inet_address_to_bytes (thread_data->device_address);
+	device_address = g_ntohl (*((guint32 *) bytes));
+
+	local_address.sll_family   = AF_PACKET;
+	local_address.sll_protocol = g_htons(ETH_P_IP);
+	local_address.sll_ifindex  = _interface_index_from_address (interface_address);
+	local_address.sll_hatype   = 0;
+	local_address.sll_pkttype  = 0;
+	local_address.sll_halen    = 0;
+	if (bind (fd, (struct sockaddr *) &local_address, sizeof(local_address)) == -1) {
+		arv_warning_stream_thread ("[GvStream::loop] Failed to bind packet socket");
+		goto bind_error;
+	}
+
+	_set_socket_filter (fd, device_address, thread_data->source_stream_port, interface_address, thread_data->stream_port);
+
+	poll_fd.fd = fd;
+	poll_fd.events =  G_IO_IN;
+	poll_fd.revents = 0;
+
+	block_id = 0;
+	do {
+		ArvGvStreamBlockDescriptor *descriptor;
+		GTimeVal current_time;
+		guint64 time_us;
+
+		g_get_current_time (&current_time);
+		time_us = current_time.tv_sec * 1000000 + current_time.tv_usec;
+
+		descriptor = (void *) (buffer + block_id * req.tp_block_size);
+		if ((descriptor->h1.block_status & TP_STATUS_USER) == 0) {
+			_check_frame_completion (thread_data, time_us, NULL);
+
+			g_poll (&poll_fd, 1, 100);
+		} else {
+			ArvGvStreamFrameData *frame;
+			const struct tpacket3_hdr *header;
+			unsigned i;
+			
+			header = (void *) (((char *) descriptor) + descriptor->h1.offset_to_first_pkt);
+
+			for (i = 0; i < descriptor->h1.num_pkts; i++) {
+				const struct iphdr *ip;
+				const ArvGvspPacket *packet;
+				size_t size;
+
+				ip = (void *) (((char *) header) + header->tp_mac + ETH_HLEN);
+				packet = (void *) (((char *) ip) + sizeof (struct iphdr) + sizeof (struct udphdr));
+				size = g_ntohs (ip->tot_len) -  sizeof (struct iphdr) - sizeof (struct udphdr);
+
+				frame = _process_packet (thread_data, packet, size, time_us);
+
+				_check_frame_completion (thread_data, time_us, frame);
+
+				header = (void *) (((char *) header) + header->tp_next_offset);
+			}
+
+			descriptor->h1.block_status = TP_STATUS_KERNEL;
+			block_id = (block_id + 1) % req.tp_block_nr;
+		}
+	} while (!thread_data->cancel);
+
+bind_error:
+	munmap (buffer, req.tp_block_size * req.tp_block_nr);
+socket_option_error:
+map_error:
+	close (fd);
+}
+
+#endif /* ARAVIS_BUILD_RING_BUFFER */
+
+static void *
+arv_gv_stream_thread (void *data)
+{
+	ArvGvStreamThreadData *thread_data = data;
+
+	thread_data->frames = NULL;
+	thread_data->last_frame_id = 0;
+	thread_data->first_packet = TRUE;
+
+	arv_debug_stream_thread ("[GvStream::stream_thread] Packet timeout = %g ms",
+				 thread_data->packet_timeout_us / 1000.0);
+	arv_debug_stream_thread ("[GvStream::stream_thread] Frame retention = %g ms",
+				 thread_data->frame_retention_us / 1000.0);
+
+	if (thread_data->callback != NULL)
+		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
+
+#ifdef ARAVIS_BUILD_RING_BUFFER
+	if (capng_have_capability(CAPNG_EFFECTIVE, CAP_NET_RAW))
+		_ring_buffer_loop (thread_data);
+	else
+#endif
+		_loop (thread_data);
+
 	_flush_frames (thread_data);
 
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_EXIT, NULL);
 
-	g_free (packet);
-
 	return NULL;
 }
 
-/* ArvGvStream implemenation */
+/* ArvGvStream implementation */
 
 guint16
 arv_gv_stream_get_port (ArvGvStream *gv_stream)
 {
-	GInetSocketAddress *local_address;
-	guint16 port;
-
 	g_return_val_if_fail (ARV_IS_GV_STREAM (gv_stream), 0);
 
-	local_address = G_INET_SOCKET_ADDRESS (g_socket_get_local_address (gv_stream->priv->socket, NULL));
-	port = g_inet_socket_address_get_port (local_address);
-	g_object_unref (local_address);
-
-	return port;
+	return gv_stream->priv->thread_data->stream_port;
 }
 
 /**
  * arv_gv_stream_new: (skip)
+ * @gv_device: a #ArvGvDevice
+ * @interface_address: inet interface address for gvsp
  * @device_address: inet device address for gvsp
- * @port: inet port
  * @callback: (scope call): processing callback
  * @user_data: (closure): user data for @callback
- * @timestamp_tick_frequency: camera tick frequency for timestamping
- * @packet_size: gvsp packet size, in bytes
  *
  * Return value: (transfer full): a new #ArvStream.
  */
 
 ArvStream *
-arv_gv_stream_new (GInetAddress *device_address, guint16 port,
-		   ArvStreamCallback callback, void *user_data,
-		   guint64 timestamp_tick_frequency,
-		   guint packet_size)
+arv_gv_stream_new (ArvGvDevice *gv_device,
+		   GInetAddress *interface_address,
+		   GInetAddress *device_address,
+		   ArvStreamCallback callback, void *user_data)
 {
+	ArvGvStreamThreadData *thread_data;
 	ArvGvStream *gv_stream;
 	ArvStream *stream;
-	GInetAddress *incoming_inet_address;
-	ArvGvStreamThreadData *thread_data;
+	guint64 timestamp_tick_frequency;
+	const guint8 *address_bytes;
+	GInetSocketAddress *local_address;
+	guint packet_size;
 
+	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), NULL);
+	g_return_val_if_fail (G_IS_INET_ADDRESS (interface_address), NULL);
 	g_return_val_if_fail (G_IS_INET_ADDRESS (device_address), NULL);
+
+	timestamp_tick_frequency = arv_gv_device_get_timestamp_tick_frequency (gv_device);
+
+	packet_size = arv_gv_device_get_packet_size (gv_device);
+	if (packet_size <= ARV_GVSP_PACKET_PROTOCOL_OVERHEAD) {
+		arv_gv_device_set_packet_size (gv_device, ARV_GV_DEVICE_GVSP_PACKET_SIZE_DEFAULT);
+		arv_debug_device ("[GvStream::stream_new] Packet size set to default value (%d)",
+				  ARV_GV_DEVICE_GVSP_PACKET_SIZE_DEFAULT);
+	}
+
+	packet_size = arv_gv_device_get_packet_size (gv_device);
+	arv_debug_device ("[GvStream::stream_new] Packet size = %d byte(s)", packet_size);
+
 	g_return_val_if_fail (packet_size > ARV_GVSP_PACKET_PROTOCOL_OVERHEAD, NULL);
 
 	gv_stream = g_object_new (ARV_TYPE_GV_STREAM, NULL);
 
 	stream = ARV_STREAM (gv_stream);
 
-	gv_stream->priv->socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
-					  G_SOCKET_TYPE_DATAGRAM,
-					  G_SOCKET_PROTOCOL_UDP, NULL);
-
-	incoming_inet_address = g_inet_address_new_any (G_SOCKET_FAMILY_IPV4);
-	gv_stream->priv->incoming_address = g_inet_socket_address_new (incoming_inet_address, port);
-	g_object_unref (incoming_inet_address);
-
-	g_socket_bind (gv_stream->priv->socket, gv_stream->priv->incoming_address, TRUE, NULL);
-
 	thread_data = g_new (ArvGvStreamThreadData, 1);
+	thread_data->gv_device = g_object_ref (gv_device);
 	thread_data->stream = stream;
 	thread_data->callback = callback;
 	thread_data->user_data = user_data;
-	thread_data->socket = gv_stream->priv->socket;
-	thread_data->device_address = g_inet_socket_address_new (device_address, ARV_GVCP_PORT);
 	thread_data->packet_resend = ARV_GV_STREAM_PACKET_RESEND_ALWAYS;
 	thread_data->packet_timeout_us = ARV_GV_STREAM_PACKET_TIMEOUT_US_DEFAULT;
 	thread_data->frame_retention_us = ARV_GV_STREAM_FRAME_RETENTION_US_DEFAULT;
@@ -799,6 +1037,27 @@ arv_gv_stream_new (GInetAddress *device_address, guint16 port,
 	thread_data->current_socket_buffer_size = 0;
 
 	gv_stream->priv->thread_data = thread_data;
+
+	thread_data->socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
+					  G_SOCKET_TYPE_DATAGRAM,
+					  G_SOCKET_PROTOCOL_UDP, NULL);
+	thread_data->device_address = g_object_ref (device_address);
+	thread_data->interface_address = g_object_ref (interface_address);
+	thread_data->interface_socket_address = g_inet_socket_address_new (interface_address, 0);
+	thread_data->device_socket_address = g_inet_socket_address_new (device_address, ARV_GVCP_PORT);
+	g_socket_bind (thread_data->socket, thread_data->interface_socket_address, TRUE, NULL);
+
+	local_address = G_INET_SOCKET_ADDRESS (g_socket_get_local_address (thread_data->socket, NULL));
+	thread_data->stream_port = g_inet_socket_address_get_port (local_address);
+	g_object_unref (local_address);
+
+	address_bytes = g_inet_address_to_bytes (interface_address);
+	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevSCDA", g_htonl (*((guint32 *) address_bytes)));
+	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevSCPHostPort", thread_data->stream_port);
+	thread_data->source_stream_port = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device), "GevSCSP");
+
+	arv_debug_stream ("[GvStream::stream_new] Destination stream port = %d", thread_data->stream_port);
+	arv_debug_stream ("[GvStream::stream_new] Source stream port = %d", thread_data->source_stream_port);
 
 	gv_stream->priv->thread = arv_g_thread_new ("arv_gv_stream", arv_gv_stream_thread, gv_stream->priv->thread_data);
 
@@ -923,8 +1182,6 @@ arv_gv_stream_finalize (GObject *object)
 		thread_data->cancel = TRUE;
 		g_thread_join (gv_stream->priv->thread);
 
-		g_object_unref (thread_data->device_address);
-
 		statistic_string = arv_statistic_to_string (thread_data->statistic);
 		arv_debug_stream (statistic_string);
 		g_free (statistic_string);
@@ -962,14 +1219,18 @@ arv_gv_stream_finalize (GObject *object)
 		arv_debug_stream ("[GvStream::finalize] n_duplicated_packets   = %u",
 				  thread_data->n_duplicated_packets);
 
+		g_clear_object (&thread_data->device_address);
+		g_clear_object (&thread_data->interface_address);
+		g_clear_object (&thread_data->device_socket_address);
+		g_clear_object (&thread_data->interface_socket_address);
+		g_clear_object (&thread_data->socket);
+		g_clear_object (&thread_data->gv_device);
+
 		g_free (thread_data);
 
 		gv_stream->priv->thread_data = NULL;
 		gv_stream->priv->thread = NULL;
 	}
-
-	g_clear_object (&gv_stream->priv->incoming_address);
-	g_clear_object (&gv_stream->priv->socket);
 
 	parent_class->finalize (object);
 }

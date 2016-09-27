@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2016 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -73,12 +73,11 @@ struct _ArvGvStreamClass {
 
 GType arv_gv_stream_get_type (void);
 
-ArvStream * 	arv_gv_stream_new			(GInetAddress *device_address, guint16 port,
-							 ArvStreamCallback callback, void *user_data,
-							 guint64 timestamp_tick_frequency,
-							 guint packet_size);
-guint16 	arv_gv_stream_get_port			(ArvGvStream *gv_stream);
-
+ArvStream * 	arv_gv_stream_new			(ArvGvDevice *gv_device,
+							 GInetAddress *interface_address,
+							 GInetAddress *device_address,
+							 ArvStreamCallback callback, void *user_data);
+guint16 	arv_gv_stream_get_port 			(ArvGvStream *gv_stream);
 void		arv_gv_stream_get_statistics		(ArvGvStream *gv_stream,
 							 guint64 *n_resent_packets,
 							 guint64 *n_missing_packets);

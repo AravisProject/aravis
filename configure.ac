@@ -36,6 +36,11 @@ AC_ARG_ENABLE(usb,
 		              [build with USB support [default=auto]])],
 	      [enable_usb=$enableval],
 	      [enable_usb=auto])
+AC_ARG_ENABLE(ring_buffer,
+	      [AS_HELP_STRING([--enable-ring-buffer],
+		              [build with ring buffer support [default=auto]])],
+	      [enable_ring_buffer=$enableval],
+	      [enable_ring_buffer=auto])
 AC_ARG_ENABLE(viewer,
 	      [AS_HELP_STRING([--enable-viewer],
 		              [build viewer [default=auto]])],
@@ -71,6 +76,7 @@ PKG_PROG_PKG_CONFIG([0.14])
 
 ARAVIS_REQUIREMENTS="glib-2.0 >= 2.26 gobject-2.0 gio-2.0 libxml-2.0 gthread-2.0"
 ARAVIS_USB_REQUIREMENTS="libusb-1.0"
+ARAVIS_RING_BUFFER_REQUIREMENTS="audit"
 ARAVIS_GSTREAMER_REQUIREMENTS="gstreamer-base-1.0 gstreamer-app-1.0"
 ARAVIS_GSTREAMER_0_10_REQUIREMENTS="gstreamer-base-0.10 gstreamer-app-0.10"
 ARAVIS_VIEWER_REQUIREMENTS="$ARAVIS_GSTREAMER_REQUIREMENTS gstreamer-video-1.0 gtk+-3.0 >= 3.12 libnotify"
@@ -101,6 +107,25 @@ if test "x$build_usb" = "xyes"; then
 	AC_SUBST([ARAVIS_HAS_USB],[1])
 else
 	AC_SUBST([ARAVIS_HAS_USB],[0])
+fi
+
+# Ring buffer support
+# ===================
+
+build_ring_buffer=no
+if test "x$enable_ring_buffer" = "xyes" || test "x$enable_ring_buffer" = "xauto"; then
+	PKG_CHECK_MODULES([ARAVIS_RING_BUFFER], [$ARAVIS_RING_BUFFER_REQUIREMENTS],
+			  [AC_DEFINE([ARAVIS_BUILD_RING_BUFFER], [1], [Build ring buffer support]) build_ring_buffer=yes],
+			  [AS_IF([test "x$enable_ring_buffer" = "xyes"],
+				 AC_MSG_ERROR([${ARAVIS_RING_BUFFER_PKG_ERRORS} - Can not build ring buffer support]))]);
+fi
+AM_CONDITIONAL(ARAVIS_BUILD_RING_BUFFER, test "x$build_ring_buffer" = "xyes")
+
+if test "x$build_ring_buffer" = "xyes"; then
+	ARAVIS_REQUIREMENTS="${ARAVIS_REQUIREMENTS} ${ARAVIS_RING_BUFFER_REQUIREMENTS}"
+	AC_SUBST([ARAVIS_HAS_RING_BUFFER],[1])
+else
+	AC_SUBST([ARAVIS_HAS_RING_BUFFER],[0])
 fi
 
 PKG_CHECK_MODULES(ARAVIS, [$ARAVIS_REQUIREMENTS])
@@ -243,6 +268,7 @@ echo "  Compiler flags:              ${ARAVIS_CFLAGS}"
 echo "  Linker flags:                ${ARAVIS_LIBS}"
 echo ""
 echo "  Build USB support:           $build_usb"
+echo "  Build ring buffer support:   $build_ring_buffer"
 echo "  Build viewer:                $build_viewer"
 echo "  Build gstreamer plugin:      $build_gst_plugin"
 echo "  Build gstreamer-0.10 plugin: $build_gst_0_10_plugin"
