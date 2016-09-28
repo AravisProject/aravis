@@ -23,10 +23,10 @@ Compilation options may be passed to the configure script. Please run `./configu
 
 ### Packet sockets support (Since Aravis 0.5.x)
 
-For better performances using gigabit ethernet cameras, Aravis can use packet sockets for the video receiving thread. But this mode requires extended capabilities. If you want to allow your application to use packet socket, you must set the `cap_net_raw` capability using `setcap`. For example, the following command gives this capability to the Aravis viewer:
+For better performances using gigabit ethernet cameras, Aravis can use packet sockets for the video receiving thread. But this mode requires extended capabilities. If you want to allow your application to use packet socket, you must set the `cap_net_raw` capability using `setcap`. For example, the following command gives this capability to the Aravis viewer (You should do this on the installed arv-viewer executable, has the one in the source tree is just a wrapper shell script):
 
 ```
-sudo setcap cap_net_raw+ep ./viewer/arv-viewer
+sudo setcap cap_net_raw+ep arv-viewer
 ```
 
 ### Dependencies
