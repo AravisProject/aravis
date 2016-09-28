@@ -2,7 +2,7 @@
 
 ### What is Aravis ?
 
-Aravis is a glib/gobject based library for video acquisition using Genicam cameras. It currently implements the gigabit ethernet and USB3 (in aravis 0.5.x)  protocols used by industrial cameras. It also provides a basic ethernet camera simulator and a simple video viewer.
+Aravis is a glib/gobject based library for video acquisition using Genicam cameras. It currently implements the gigabit ethernet and USB3 (Since Aravis 0.5.x) protocols used by industrial cameras. It also provides a basic ethernet camera simulator and a simple video viewer.
 
 # ![](viewer/data/aravis.png)
 # ![](viewer/data/aravis-video.png)
@@ -21,9 +21,17 @@ make install
 
 Compilation options may be passed to the configure script. Please run `./configure --help` for information about the available options.
 
+### Packet sockets support (Since Aravis 0.5.x)
+
+For better performances using gigabit ethernet cameras, Aravis can use packet sockets for the video receiving thread. But this mode requires extended capabilities. If you want to allow your application to use packet socket, you must set the `cap_net_raw` capability using `setcap`. For example, the following command gives this capability to the Aravis viewer:
+
+```
+sudo setcap cap_net_raw+ep ./viewer/arv-viewer
+```
+
 ### Dependencies
 
-The Aravis library depends on libxml2 and glib2, with an optional USB support depending on libusb1.
+The Aravis library depends on libxml2 and glib2, with an optional USB support depending on libusb1, and an optional packet socket support depending on libaudit.
 
 The GStreamer plugin depends on GStreamer1 in addition to the Aravis library dependencies.
 
