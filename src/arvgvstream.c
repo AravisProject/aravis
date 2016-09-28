@@ -25,8 +25,8 @@
  * @short_description: GigEVision stream
  */
 
-#include <arvgvstream.h>
-#include <arvgvdevice.h>
+#include <arvgvstreamprivate.h>
+#include <arvgvdeviceprivate.h>
 #include <arvstreamprivate.h>
 #include <arvbufferprivate.h>
 #include <arvconfig.h>

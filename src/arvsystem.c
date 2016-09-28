@@ -21,12 +21,12 @@
  */
 
 #include <arvsystem.h>
-#include <arvgvinterface.h>
+#include <arvgvinterfaceprivate.h>
 #include <arvconfig.h>
 #ifdef ARAVIS_BUILD_USB
-#include <arvuvinterface.h>
+#include <arvuvinterfaceprivate.h>
 #endif
-#include <arvfakeinterface.h>
+#include <arvfakeinterfaceprivate.h>
 #include <arvdevice.h>
 #include <arvdebug.h>
 #include <string.h>

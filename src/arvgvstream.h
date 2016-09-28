@@ -24,8 +24,6 @@
 #define ARV_GV_STREAM_H
 
 #include <arvtypes.h>
-#include <arvstream.h>
-#include <gio/gio.h>
 
 G_BEGIN_DECLS
 
@@ -58,25 +56,8 @@ typedef enum {
 #define ARV_IS_GV_STREAM_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GV_STREAM))
 #define ARV_GV_STREAM_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GV_STREAM, ArvGvStreamClass))
 
-typedef struct _ArvGvStreamPrivate ArvGvStreamPrivate;
-typedef struct _ArvGvStreamClass ArvGvStreamClass;
-
-struct _ArvGvStream {
-	ArvStream	stream;
-
-	ArvGvStreamPrivate *priv;
-};
-
-struct _ArvGvStreamClass {
-	ArvStreamClass parent_class;
-};
-
 GType arv_gv_stream_get_type (void);
 
-ArvStream * 	arv_gv_stream_new			(ArvGvDevice *gv_device,
-							 GInetAddress *interface_address,
-							 GInetAddress *device_address,
-							 ArvStreamCallback callback, void *user_data);
 guint16 	arv_gv_stream_get_port 			(ArvGvStream *gv_stream);
 void		arv_gv_stream_get_statistics		(ArvGvStream *gv_stream,
 							 guint64 *n_resent_packets,

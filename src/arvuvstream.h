@@ -24,8 +24,6 @@
 #define ARV_UV_STREAM_H
 
 #include <arvtypes.h>
-#include <arvstream.h>
-#include <arvuvdevice.h>
 
 G_BEGIN_DECLS
 
@@ -36,22 +34,7 @@ G_BEGIN_DECLS
 #define ARV_IS_UV_STREAM_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_UV_STREAM))
 #define ARV_UV_STREAM_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_UV_STREAM, ArvUvStreamClass))
 
-typedef struct _ArvUvStreamPrivate ArvUvStreamPrivate;
-typedef struct _ArvUvStreamClass ArvUvStreamClass;
-
-struct _ArvUvStream {
-	ArvStream	stream;
-
-	ArvUvStreamPrivate *priv;
-};
-
-struct _ArvUvStreamClass {
-	ArvStreamClass parent_class;
-};
-
 GType arv_uv_stream_get_type (void);
-
-ArvStream * 	arv_uv_stream_new	(ArvUvDevice *uv_device, ArvStreamCallback callback, void *user_data);
 
 G_END_DECLS
 

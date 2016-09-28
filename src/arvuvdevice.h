@@ -24,7 +24,6 @@
 #define ARV_UV_DEVICE_H
 
 #include <arvtypes.h>
-#include <arvdevice.h>
 
 G_BEGIN_DECLS
 
@@ -34,19 +33,6 @@ G_BEGIN_DECLS
 #define ARV_IS_UV_DEVICE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_UV_DEVICE))
 #define ARV_IS_UV_DEVICE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_UV_DEVICE))
 #define ARV_UV_DEVICE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_UV_DEVICE, ArvUvDeviceClass))
-
-typedef struct _ArvUvDeviceClass ArvUvDeviceClass;
-typedef struct _ArvUvDevicePrivate ArvUvDevicePrivate;
-
-struct _ArvUvDevice {
-	ArvDevice device;
-
-	ArvUvDevicePrivate *priv;
-};
-
-struct _ArvUvDeviceClass {
-	ArvDeviceClass parent_class;
-};
 
 GType arv_uv_device_get_type (void);
 

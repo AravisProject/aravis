@@ -25,8 +25,9 @@
  * @short_description: USB3Vision interface
  */
 
-#include <arvuvinterface.h>
-#include <arvuvdevice.h>
+#include <arvuvinterfaceprivate.h>
+#include <arvinterfaceprivate.h>
+#include <arvuvdeviceprivate.h>
 #include <arvdebug.h>
 #include <arvmisc.h>
 #include <arvstr.h>

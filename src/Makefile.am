@@ -152,9 +152,18 @@ ARAVIS_HDRS_NO_INTRO =				\
 noinst_HEADERS =				\
 	arvbufferprivate.h			\
 	arvchunkparserprivate.h			\
+	arvinterfaceprivate.h			\
 	arvdeviceprivate.h			\
-	arvuvdeviceprivate.h			\
 	arvstreamprivate.h			\
+	arvgvinterfaceprivate.h			\
+	arvgvdeviceprivate.h			\
+	arvgvstreamprivate.h			\
+	arvuvinterfaceprivate.h			\
+	arvuvdeviceprivate.h			\
+	arvuvstreamprivate.h			\
+	arvfakeinterfaceprivate.h		\
+	arvfakedeviceprivate.h			\
+	arvfakestreamprivate.h			\
 	arvrealtimeprivate.h
 
 if ARAVIS_BUILD_USB

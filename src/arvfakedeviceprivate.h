@@ -20,29 +20,25 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#ifndef ARV_UV_DEVICE_PRIVATE_H
-#define ARV_UV_DEVICE_PRIVATE_H
+#ifndef ARV_FAKE_DEVICE_PRIVATE_H
+#define ARV_FAKE_DEVICE_PRIVATE_H
 
-#include <arvuvdevice.h>
-#include <arvdeviceprivate.h>
+#include <arvfakedevice.h>
 
 G_BEGIN_DECLS
 
-typedef struct _ArvUvDeviceClass ArvUvDeviceClass;
-typedef struct _ArvUvDevicePrivate ArvUvDevicePrivate;
+typedef struct _ArvFakeDeviceClass ArvFakeDeviceClass;
+typedef struct _ArvFakeDevicePrivate ArvFakeDevicePrivate;
 
-struct _ArvUvDevice {
+struct _ArvFakeDevice {
 	ArvDevice device;
 
-	ArvUvDevicePrivate *priv;
+	ArvFakeDevicePrivate *priv;
 };
 
-struct _ArvUvDeviceClass {
+struct _ArvFakeDeviceClass {
 	ArvDeviceClass parent_class;
 };
-
-gboolean 	arv_uv_device_bulk_transfer 		(ArvUvDevice *uv_device, unsigned char endpoint, void *data,
-							 size_t size, size_t *transferred_size, GError **error);
 
 G_END_DECLS
 

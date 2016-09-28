@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2016 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,8 +25,8 @@
  * @short_description: Fake device
  */
 
-#include <arvfakedevice.h>
-#include <arvfakestream.h>
+#include <arvfakedeviceprivate.h>
+#include <arvfakestreamprivate.h>
 #include <arvgc.h>
 #include <arvdebug.h>
 

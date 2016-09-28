@@ -31,7 +31,7 @@
  * arv_open_device().
  */
 
-#include <arvinterface.h>
+#include <arvinterfaceprivate.h>
 
 static GObjectClass *parent_class = NULL;
 

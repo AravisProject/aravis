@@ -20,30 +20,32 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#ifndef ARV_UV_DEVICE_PRIVATE_H
-#define ARV_UV_DEVICE_PRIVATE_H
+#ifndef ARV_FAKE_INTERFACE_PRIVATE_H
+#define ARV_FAKE_INTERFACE_PRIVATE_H
 
-#include <arvuvdevice.h>
-#include <arvdeviceprivate.h>
+#include <arvfakeinterface.h>
 
 G_BEGIN_DECLS
 
-typedef struct _ArvUvDeviceClass ArvUvDeviceClass;
-typedef struct _ArvUvDevicePrivate ArvUvDevicePrivate;
-
-struct _ArvUvDevice {
-	ArvDevice device;
-
-	ArvUvDevicePrivate *priv;
-};
-
-struct _ArvUvDeviceClass {
-	ArvDeviceClass parent_class;
-};
-
-gboolean 	arv_uv_device_bulk_transfer 		(ArvUvDevice *uv_device, unsigned char endpoint, void *data,
-							 size_t size, size_t *transferred_size, GError **error);
+#define ARV_FAKE_INTERFACE_DISCOVERY_TIMEOUT_MS	1000
+#define ARV_FAKE_INTERFACE_SOCKET_BUFFER_SIZE	1024
 
 G_END_DECLS
+
+typedef struct _ArvFakeInterfacePrivate ArvFakeInterfacePrivate;
+typedef struct _ArvFakeInterfaceClass ArvFakeInterfaceClass;
+
+struct _ArvFakeInterface {
+	ArvInterface	interface;
+
+	ArvFakeInterfacePrivate *priv;
+};
+
+struct _ArvFakeInterfaceClass {
+	ArvInterfaceClass parent_class;
+};
+
+ArvInterface * 		arv_fake_interface_get_instance 		(void);
+void 			arv_fake_interface_destroy_instance 		(void);
 
 #endif

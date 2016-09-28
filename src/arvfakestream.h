@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2016 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -36,22 +36,7 @@ G_BEGIN_DECLS
 #define ARV_IS_FAKE_STREAM_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_FAKE_STREAM))
 #define ARV_FAKE_STREAM_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_FAKE_STREAM, ArvFakeStreamClass))
 
-typedef struct _ArvFakeStreamPrivate ArvFakeStreamPrivate;
-typedef struct _ArvFakeStreamClass ArvFakeStreamClass;
-
-struct _ArvFakeStream {
-	ArvStream	stream;
-
-	ArvFakeStreamPrivate *priv;
-};
-
-struct _ArvFakeStreamClass {
-	ArvStreamClass parent_class;
-};
-
 GType arv_fake_stream_get_type (void);
-
-ArvStream * 	arv_fake_stream_new	(ArvFakeCamera *camera, ArvStreamCallback callback, void *user_data);
 
 G_END_DECLS
 

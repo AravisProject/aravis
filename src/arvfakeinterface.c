@@ -25,7 +25,9 @@
  * @short_description: Fake interface
  */
 
-#include <arvfakeinterface.h>
+#include <arvfakeinterfaceprivate.h>
+#include <arvfakedeviceprivate.h>
+#include <arvinterfaceprivate.h>
 #include <arvfakedevice.h>
 #include <arvdebug.h>
 #include <arvmisc.h>

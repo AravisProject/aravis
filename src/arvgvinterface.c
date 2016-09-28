@@ -25,8 +25,9 @@
  * @short_description: GigEVision interface
  */
 
-#include <arvgvinterface.h>
-#include <arvgvdevice.h>
+#include <arvgvinterfaceprivate.h>
+#include <arvinterfaceprivate.h>
+#include <arvgvdeviceprivate.h>
 #include <arvgvcp.h>
 #include <arvdebug.h>
 #include <arvmisc.h>

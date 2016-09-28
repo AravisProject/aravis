@@ -25,12 +25,11 @@
  * @short_description: USB3Vision video stream
  */
 
-#include <arvuvstream.h>
-#include <arvuvdeviceprivate.h>
-#include <arvuvsp.h>
-#include <arvuvcp.h>
+#include <arvuvstreamprivate.h>
 #include <arvstreamprivate.h>
 #include <arvbufferprivate.h>
+#include <arvuvsp.h>
+#include <arvuvcp.h>
 #include <arvdebug.h>
 #include <arvmisc.h>
 #include <libusb.h>

@@ -25,12 +25,12 @@
  * @short_description: GigEVision device
  */
 
-#include <arvgvdevice.h>
+#include <arvgvdeviceprivate.h>
 #include <arvdeviceprivate.h>
 #include <arvgc.h>
 #include <arvgcregisterdescriptionnode.h>
 #include <arvdebug.h>
-#include <arvgvstream.h>
+#include <arvgvstreamprivate.h>
 #include <arvgvcp.h>
 #include <arvgvsp.h>
 #include <arvzip.h>

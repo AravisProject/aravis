@@ -28,19 +28,6 @@
 
 G_BEGIN_DECLS
 
-#define ARV_DEVICE_NAME_ILLEGAL_CHARACTERS 	"\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f" \
-						"\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f"
-#define ARV_DEVICE_NAME_REPLACEMENT_CHARACTER	'\0'
-
-typedef struct {
-	char *device;
-	char *physical;
-	char *address;
-	char *vendor;
-	char *model;
-	char *serial_nbr;
-} ArvInterfaceDeviceIds;
-
 #define ARV_TYPE_INTERFACE             (arv_interface_get_type ())
 #define ARV_INTERFACE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_INTERFACE, ArvInterface))
 #define ARV_INTERFACE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_INTERFACE, ArvInterfaceClass))
@@ -73,7 +60,7 @@ const char * 		arv_interface_get_device_physical_id 	(ArvInterface *interface, u
 const char * 		arv_interface_get_device_address	(ArvInterface *interface, unsigned int index);
 const char * 		arv_interface_get_device_vendor		(ArvInterface *interface, unsigned int index);
 const char * 		arv_interface_get_device_model		(ArvInterface *interface, unsigned int index);
-const char * 		arv_interface_get_device_serial_nbr		(ArvInterface *interface, unsigned int index);
+const char * 		arv_interface_get_device_serial_nbr	(ArvInterface *interface, unsigned int index);
 ArvDevice * 		arv_interface_open_device 		(ArvInterface *interface, const char *device_id);
 
 G_END_DECLS

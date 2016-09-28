@@ -20,29 +20,25 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#ifndef ARV_UV_DEVICE_PRIVATE_H
-#define ARV_UV_DEVICE_PRIVATE_H
+#ifndef ARV_INTERFACE_PRIVATE_H
+#define ARV_INTERFACE_PRIVATE_H
 
-#include <arvuvdevice.h>
-#include <arvdeviceprivate.h>
+#include <arvinterface.h>
 
 G_BEGIN_DECLS
 
-typedef struct _ArvUvDeviceClass ArvUvDeviceClass;
-typedef struct _ArvUvDevicePrivate ArvUvDevicePrivate;
+#define ARV_DEVICE_NAME_ILLEGAL_CHARACTERS 	"\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f" \
+						"\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f"
+#define ARV_DEVICE_NAME_REPLACEMENT_CHARACTER	'\0'
 
-struct _ArvUvDevice {
-	ArvDevice device;
-
-	ArvUvDevicePrivate *priv;
-};
-
-struct _ArvUvDeviceClass {
-	ArvDeviceClass parent_class;
-};
-
-gboolean 	arv_uv_device_bulk_transfer 		(ArvUvDevice *uv_device, unsigned char endpoint, void *data,
-							 size_t size, size_t *transferred_size, GError **error);
+typedef struct {
+	char *device;
+	char *physical;
+	char *address;
+	char *vendor;
+	char *model;
+	char *serial_nbr;
+} ArvInterfaceDeviceIds;
 
 G_END_DECLS
 

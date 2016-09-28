@@ -20,29 +20,29 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#ifndef ARV_UV_DEVICE_PRIVATE_H
-#define ARV_UV_DEVICE_PRIVATE_H
+#ifndef ARV_UV_STREAM_PRIVATE_H
+#define ARV_UV_STREAM_PRIVATE_H
 
-#include <arvuvdevice.h>
-#include <arvdeviceprivate.h>
+#include <arvuvstream.h>
+#include <arvstream.h>
+#include <arvuvdeviceprivate.h>
 
 G_BEGIN_DECLS
 
-typedef struct _ArvUvDeviceClass ArvUvDeviceClass;
-typedef struct _ArvUvDevicePrivate ArvUvDevicePrivate;
+typedef struct _ArvUvStreamPrivate ArvUvStreamPrivate;
+typedef struct _ArvUvStreamClass ArvUvStreamClass;
 
-struct _ArvUvDevice {
-	ArvDevice device;
+struct _ArvUvStream {
+	ArvStream	stream;
 
-	ArvUvDevicePrivate *priv;
+	ArvUvStreamPrivate *priv;
 };
 
-struct _ArvUvDeviceClass {
-	ArvDeviceClass parent_class;
+struct _ArvUvStreamClass {
+	ArvStreamClass parent_class;
 };
 
-gboolean 	arv_uv_device_bulk_transfer 		(ArvUvDevice *uv_device, unsigned char endpoint, void *data,
-							 size_t size, size_t *transferred_size, GError **error);
+ArvStream * 	arv_uv_stream_new	(ArvUvDevice *uv_device, ArvStreamCallback callback, void *user_data);
 
 G_END_DECLS
 

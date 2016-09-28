@@ -224,8 +224,6 @@ ArvInterfacePrivate
 <FILE>arvfakeinterface</FILE>
 <TITLE>ArvFakeInterface</TITLE>
 ArvFakeInterface
-arv_fake_interface_get_instance
-arv_fake_interface_destroy_instance
 <SUBSECTION Standard>
 ARV_FAKE_INTERFACE
 ARV_IS_FAKE_INTERFACE
@@ -237,6 +235,8 @@ ARV_FAKE_INTERFACE_GET_CLASS
 <SUBSECTION Private>
 ArvFakeInterfacePrivate
 ArvFakeInterfaceClass
+arv_fake_interface_get_instance
+arv_fake_interface_destroy_instance
 ARV_FAKE_INTERFACE_DISCOVERY_TIMEOUT_MS
 ARV_FAKE_INTERFACE_SOCKET_BUFFER_SIZE
 </SECTION>
@@ -245,8 +245,6 @@ ARV_FAKE_INTERFACE_SOCKET_BUFFER_SIZE
 <FILE>arvuvinterface</FILE>
 <TITLE>ArvUvInterface</TITLE>
 ARAVIS_HAS_USB
-arv_uv_interface_destroy_instance
-arv_uv_interface_get_instance
 <SUBSECTION Standard>
 ArvUvInterface
 ARV_IS_UV_INTERFACE
@@ -259,12 +257,13 @@ ArvUvInterfaceClass
 ArvUvInterfacePrivate
 arv_uv_interface_get_type
 <SUBSECTION Private>
+arv_uv_interface_destroy_instance
+arv_uv_interface_get_instance
 </SECTION>
 
 <SECTION>
 <FILE>arvuvdevice</FILE>
 <TITLE>ArvUvDevice</TITLE>
-arv_uv_device_new
 <SUBSECTION Standard>
 ArvUvDevice
 ARV_IS_UV_DEVICE
@@ -277,13 +276,13 @@ ArvUvDeviceClass
 ArvUvDevicePrivate
 arv_uv_device_get_type
 <SUBSECTION Private>
+arv_uv_device_new
 arv_uv_device_bulk_transfer
 </SECTION>
 
 <SECTION>
 <FILE>arvuvstream</FILE>
 <TITLE>ArvUvStream</TITLE>
-arv_uv_stream_new
 <SUBSECTION Standard>
 ArvUvStream
 ARV_IS_UV_STREAM
@@ -296,6 +295,7 @@ ArvUvStreamClass
 ArvUvStreamPrivate
 arv_uv_stream_get_type
 <SUBSECTION Private>
+arv_uv_stream_new
 </SECTION>
 
 <SECTION>
@@ -784,8 +784,6 @@ arv_gc_set_double_to_value
 <FILE>arvgvinterface</FILE>
 <TITLE>ArvGvInterface</TITLE>
 ArvGvInterface
-arv_gv_interface_get_instance
-arv_gv_interface_destroy_instance
 <SUBSECTION Standard>
 ARV_GV_INTERFACE
 ARV_IS_GV_INTERFACE
@@ -797,6 +795,8 @@ ARV_GV_INTERFACE_GET_CLASS
 <SUBSECTION Private>
 ARV_GV_INTERFACE_DISCOVERY_TIMEOUT_MS
 ARV_GV_INTERFACE_SOCKET_BUFFER_SIZE
+arv_gv_interface_get_instance
+arv_gv_interface_destroy_instance
 ArvGvInterfacePrivate
 ArvGvInterfaceClass
 </SECTION>
@@ -854,7 +854,6 @@ ArvGcEnumEntryClass
 <FILE>arvfakestream</FILE>
 <TITLE>ArvFakeStream</TITLE>
 ArvFakeStream
-arv_fake_stream_new
 <SUBSECTION Standard>
 ARV_FAKE_STREAM
 ARV_IS_FAKE_STREAM
@@ -866,6 +865,7 @@ ARV_FAKE_STREAM_GET_CLASS
 <SUBSECTION Private>
 ArvFakeStreamPrivate
 ArvFakeStreamClass
+arv_fake_stream_new
 </SECTION>
 
 <SECTION>
@@ -1078,7 +1078,6 @@ ArvGcStringInterface
 ArvGvStreamSocketBuffer
 ArvGvStreamPacketResend
 ArvGvStream
-arv_gv_stream_new
 arv_gv_stream_get_port
 arv_gv_stream_get_statistics
 <SUBSECTION Standard>
@@ -1092,6 +1091,7 @@ ARV_GV_STREAM_GET_CLASS
 <SUBSECTION Private>
 ArvGvStreamClass
 ArvGvStreamPrivate
+arv_gv_stream_new
 </SECTION>
 
 <SECTION>

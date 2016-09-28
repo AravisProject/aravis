@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2016 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -35,23 +35,9 @@ G_BEGIN_DECLS
 #define ARV_IS_FAKE_DEVICE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_FAKE_DEVICE))
 #define ARV_FAKE_DEVICE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_FAKE_DEVICE, ArvFakeDeviceClass))
 
-typedef struct _ArvFakeDeviceClass ArvFakeDeviceClass;
-typedef struct _ArvFakeDevicePrivate ArvFakeDevicePrivate;
-
-struct _ArvFakeDevice {
-	ArvDevice device;
-
-	ArvFakeDevicePrivate *priv;
-};
-
-struct _ArvFakeDeviceClass {
-	ArvDeviceClass parent_class;
-};
-
 GType arv_fake_device_get_type (void);
 
 ArvDevice * 	arv_fake_device_new 			(const char *serial_number);
-
 ArvFakeCamera *	arv_fake_device_get_fake_camera		(ArvFakeDevice *device);
 
 G_END_DECLS

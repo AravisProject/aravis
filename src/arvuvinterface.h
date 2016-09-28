@@ -35,23 +35,7 @@ G_BEGIN_DECLS
 #define ARV_IS_UV_INTERFACE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_UV_INTERFACE))
 #define ARV_UV_INTERFACE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_UV_INTERFACE, ArvUvInterfaceClass))
 
-typedef struct _ArvUvInterfacePrivate ArvUvInterfacePrivate;
-typedef struct _ArvUvInterfaceClass ArvUvInterfaceClass;
-
-struct _ArvUvInterface {
-	ArvInterface	interface;
-
-	ArvUvInterfacePrivate *priv;
-};
-
-struct _ArvUvInterfaceClass {
-	ArvInterfaceClass parent_class;
-};
-
 GType arv_uv_interface_get_type (void);
-
-ArvInterface * 		arv_uv_interface_get_instance 		(void);
-void 			arv_uv_interface_destroy_instance 	(void);
 
 G_END_DECLS
 

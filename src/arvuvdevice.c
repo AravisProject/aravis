@@ -25,9 +25,8 @@
  * @short_description: USB3Vision device
  */
 
-#include <arvdeviceprivate.h>
-#include <arvuvdevice.h>
-#include <arvuvstream.h>
+#include <arvuvstreamprivate.h>
+#include <arvuvdeviceprivate.h>
 #include <arvgc.h>
 #include <arvdebug.h>
 #include <arvuvcp.h>
