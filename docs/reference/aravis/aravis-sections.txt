@@ -1,6 +1,7 @@
 <SECTION>
 <FILE>arvcamera</FILE>
 <TITLE>ArvCamera</TITLE>
+ARAVIS_HAS_PACKET_SOCKET
 ArvAuto
 arv_auto_from_string
 arv_auto_to_string
@@ -67,6 +68,7 @@ arv_camera_gv_get_packet_delay
 arv_camera_gv_set_packet_delay
 arv_camera_gv_get_packet_size
 arv_camera_gv_set_packet_size
+arv_camera_gv_set_stream_options
 arv_camera_get_chunk_mode
 arv_camera_get_chunk_state
 arv_camera_set_chunk_mode
@@ -812,6 +814,7 @@ arv_gv_device_get_interface_address
 arv_gv_device_get_packet_size
 arv_gv_device_set_packet_size
 arv_gv_device_get_stream_options
+arv_gv_device_set_stream_options
 <SUBSECTION Standard>
 ARV_GV_DEVICE
 ARV_IS_GV_DEVICE
@@ -1076,7 +1079,6 @@ ArvGcStringInterface
 <SECTION>
 <FILE>arvgvstream</FILE>
 <TITLE>ArvGvStream</TITLE>
-ARAVIS_HAS_PACKET_SOCKET
 ArvGvStreamOption
 ArvGvStreamSocketBuffer
 ArvGvStreamPacketResend

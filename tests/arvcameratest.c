@@ -25,6 +25,7 @@ static int arv_option_gv_packet_delay = -1;
 static int arv_option_gv_packet_size = -1;
 static gboolean arv_option_realtime = FALSE;
 static gboolean arv_option_high_priority = FALSE;
+static gboolean arv_option_no_packet_socket = FALSE;
 static char *arv_option_chunks = NULL;
 
 static const GOptionEntry arv_option_entries[] =
@@ -112,6 +113,10 @@ static const GOptionEntry arv_option_entries[] =
 	{
 		"high-priority",			'\0', 0, G_OPTION_ARG_NONE,
 		&arv_option_high_priority,		"Make stream thread high priority", NULL
+	},
+	{
+		"no-packet-socket",			'\0', 0, G_OPTION_ARG_NONE,
+		&arv_option_no_packet_socket,		"Disable use of packet socket", NULL
 	},
 	{
 		"debug", 				'd', 0, G_OPTION_ARG_STRING,
@@ -285,6 +290,9 @@ main (int argc, char **argv)
 			arv_camera_gv_select_stream_channel (camera, arv_option_gv_stream_channel);
 			arv_camera_gv_set_packet_delay (camera, arv_option_gv_packet_delay);
 			arv_camera_gv_set_packet_size (camera, arv_option_gv_packet_size);
+			arv_camera_gv_set_stream_options (camera, arv_option_no_packet_socket ?
+							  ARV_GV_STREAM_OPTION_PACKET_SOCKET_DISABLED :
+							  ARV_GV_STREAM_OPTION_NONE);
 		}
 
 		arv_camera_get_region (camera, &x, &y, &width, &height);

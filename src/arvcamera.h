@@ -25,6 +25,7 @@
 
 #include <arvtypes.h>
 #include <arvstream.h>
+#include <arvgvstream.h>
 
 G_BEGIN_DECLS
 
@@ -143,6 +144,8 @@ void		arv_camera_gv_set_packet_delay		(ArvCamera *camera, gint64 delay_ns);
 gint64 		arv_camera_gv_get_packet_delay 		(ArvCamera *camera);
 void 		arv_camera_gv_set_packet_size 		(ArvCamera *camera, gint packet_size);
 gint		arv_camera_gv_get_packet_size		(ArvCamera *camera);
+
+void 		arv_camera_gv_set_stream_options 	(ArvCamera *camera, ArvGvStreamOption options);
 
 /* Chunk data */
 

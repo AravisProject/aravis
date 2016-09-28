@@ -803,7 +803,7 @@ _ring_buffer_loop (ArvGvStreamThreadData *thread_data)
 	guint32 interface_address;
 	guint32 device_address;
 
-	arv_debug_stream ("[GvStream::loop] Raw socket method");
+	arv_debug_stream ("[GvStream::loop] Packet socket method");
 
 	fd = socket (PF_PACKET, SOCK_RAW, g_htons (ETH_P_ALL));
 	if (fd < 0) {

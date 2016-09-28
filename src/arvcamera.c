@@ -1661,6 +1661,25 @@ arv_camera_gv_get_packet_size (ArvCamera *camera)
 }
 
 /**
+ * arv_camera_gv_set_stream_options:
+ * @camera: a #ArvCamera
+ * @options: option for stream creation
+ *
+ * Sets the options used during stream object creation. These options mus be
+ * set before the call to arv_camera_create_stream().
+ *
+ * Since: 0.6.0
+ */
+
+void
+arv_camera_gv_set_stream_options (ArvCamera *camera, ArvGvStreamOption options)
+{
+	g_return_if_fail (arv_camera_is_gv_device (camera));
+
+	arv_gv_device_set_stream_options (ARV_GV_DEVICE (camera->priv->device), options);
+}
+
+/**
  * arv_camera_set_chunk_mode:
  * @camera: a #ArvCamera
  * @is_active: wether to enable chunk data mode
