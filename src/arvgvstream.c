@@ -40,7 +40,7 @@
 #include <sys/socket.h>
 #include <stdio.h>
 
-#ifdef ARAVIS_BUILD_RING_BUFFER
+#ifdef ARAVIS_BUILD_PACKET_SOCKET
 #include <ifaddrs.h>
 #include <netinet/udp.h>
 #include <cap-ng.h>
@@ -718,7 +718,7 @@ _loop (ArvGvStreamThreadData *thread_data)
 }
 
 
-#ifdef ARAVIS_BUILD_RING_BUFFER
+#ifdef ARAVIS_BUILD_PACKET_SOCKET
 
 static void
 _set_socket_filter (int socket, guint32 source_ip, guint32 source_port, guint32 destination_ip, guint32 destination_port)
@@ -904,7 +904,7 @@ map_error:
 	close (fd);
 }
 
-#endif /* ARAVIS_BUILD_RING_BUFFER */
+#endif /* ARAVIS_BUILD_PACKET_SOCKET */
 
 static void *
 arv_gv_stream_thread (void *data)
@@ -923,7 +923,7 @@ arv_gv_stream_thread (void *data)
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
 
-#ifdef ARAVIS_BUILD_RING_BUFFER
+#ifdef ARAVIS_BUILD_PACKET_SOCKET
 	if (capng_have_capability(CAPNG_EFFECTIVE, CAP_NET_RAW))
 		_ring_buffer_loop (thread_data);
 	else

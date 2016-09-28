@@ -33,4 +33,14 @@
 
 #define ARAVIS_HAS_USB @ARAVIS_HAS_USB@
 
+/**
+ * ARAVIS_HAS_PACKET_SOCKET
+ *
+ * ARAVIS_HAS_PACKET_SOCKET is defined as 1 if aravis is compiled with packet socket support, 0 if not.
+ *
+ * Since: 0.6.0
+ */
+
+#define ARAVIS_HAS_PACKET_SOCKET @ARAVIS_HAS_PACKET_SOCKET@
+
 #endif

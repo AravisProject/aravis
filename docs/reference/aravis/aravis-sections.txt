@@ -1075,6 +1075,7 @@ ArvGcStringInterface
 <SECTION>
 <FILE>arvgvstream</FILE>
 <TITLE>ArvGvStream</TITLE>
+ARAVIS_HAS_PACKET_SOCKET
 ArvGvStreamSocketBuffer
 ArvGvStreamPacketResend
 ArvGvStream
