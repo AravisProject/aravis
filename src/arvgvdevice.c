@@ -36,8 +36,14 @@
 #include <arvzip.h>
 #include <arvstr.h>
 #include <arvmisc.h>
+#include <arvenumtypes.h>
 #include <string.h>
 #include <stdlib.h>
+
+enum {
+	ARV_GV_DEVICE_PROPERTY_0,
+	ARV_GV_DEVICE_PROPERTY_STREAM_OPTIONS
+} ArvGvDeviceProperties;
 
 static GObjectClass *parent_class = NULL;
 
@@ -79,6 +85,8 @@ struct _ArvGvDevicePrivate {
 
 	gboolean is_packet_resend_supported;
 	gboolean is_write_memory_supported;
+
+	ArvGvStreamOption stream_options;
 };
 
 GRegex *
@@ -902,6 +910,14 @@ arv_gv_device_write_register (ArvDevice *device, guint32 address, guint32 value,
 	return _write_register (gv_device->priv->io_data, address, value, error);
 }
 
+ArvGvStreamOption
+arv_gv_device_get_stream_options (ArvGvDevice *gv_device)
+{
+	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), ARV_GV_STREAM_OPTION_NONE);
+
+	return gv_device->priv->stream_options;
+}
+
 ArvDevice *
 arv_gv_device_new (GInetAddress *interface_address, GInetAddress *device_address)
 {
@@ -986,6 +1002,37 @@ arv_gv_device_new (GInetAddress *interface_address, GInetAddress *device_address
 	return ARV_DEVICE (gv_device);
 }
 
+static void
+_set_property (GObject * object, guint prop_id,
+	       const GValue * value, GParamSpec * pspec)
+{
+	ArvGvDevice *gv_device = ARV_GV_DEVICE (object);
+
+	switch (prop_id) {
+		case ARV_GV_DEVICE_PROPERTY_STREAM_OPTIONS:
+			gv_device->priv->stream_options = g_value_get_enum (value);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+			break;
+	}
+}
+
+static void
+_get_property (GObject * object, guint prop_id,
+	       GValue * value, GParamSpec * pspec)
+{
+	ArvGvDevice *gv_device = ARV_GV_DEVICE (object);
+
+	switch (prop_id) {
+		case ARV_GV_DEVICE_PROPERTY_STREAM_OPTIONS:
+			g_value_set_enum (value, gv_device->priv->stream_options);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+			break;
+	}
+}
 static void
 arv_gv_device_init (ArvGvDevice *gv_device)
 {
@@ -1081,6 +1128,8 @@ arv_gv_device_class_init (ArvGvDeviceClass *gv_device_class)
 	parent_class = g_type_class_peek_parent (gv_device_class);
 
 	object_class->finalize = arv_gv_device_finalize;
+	object_class->set_property = _set_property;
+	object_class->get_property = _get_property;
 
 	device_class->create_stream = arv_gv_device_create_stream;
 	device_class->get_genicam_xml = arv_gv_device_get_genicam_xml;
@@ -1089,6 +1138,15 @@ arv_gv_device_class_init (ArvGvDeviceClass *gv_device_class)
 	device_class->write_memory = arv_gv_device_write_memory;
 	device_class->read_register = arv_gv_device_read_register;
 	device_class->write_register = arv_gv_device_write_register;
+
+	g_object_class_install_property (
+		object_class, ARV_GV_DEVICE_PROPERTY_STREAM_OPTIONS,
+		g_param_spec_enum ("stream-options", "Stream options",
+				   "Stream creation options",
+				   ARV_TYPE_GV_STREAM_OPTION,
+				   ARV_GV_STREAM_OPTION_NONE,
+				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+		);
 }
 
 G_DEFINE_TYPE (ArvGvDevice, arv_gv_device, ARV_TYPE_DEVICE)

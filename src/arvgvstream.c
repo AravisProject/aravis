@@ -131,6 +131,8 @@ struct _ArvGvStreamThreadData {
 	gboolean first_packet;
 	guint32 last_frame_id;
 
+	gboolean use_packet_socket;
+
 	/* Statistics */
 
 	guint n_completed_buffers;
@@ -924,7 +926,7 @@ arv_gv_stream_thread (void *data)
 		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
 
 #ifdef ARAVIS_BUILD_PACKET_SOCKET
-	if (capng_have_capability(CAPNG_EFFECTIVE, CAP_NET_RAW))
+	if (capng_have_capability(CAPNG_EFFECTIVE, CAP_NET_RAW) && thread_data->use_packet_socket)
 		_ring_buffer_loop (thread_data);
 	else
 #endif
@@ -968,6 +970,7 @@ arv_gv_stream_new (ArvGvDevice *gv_device,
 	ArvGvStreamThreadData *thread_data;
 	ArvGvStream *gv_stream;
 	ArvStream *stream;
+	ArvGvStreamOption options;
 	guint64 timestamp_tick_frequency;
 	const guint8 *address_bytes;
 	GInetSocketAddress *local_address;
@@ -978,6 +981,7 @@ arv_gv_stream_new (ArvGvDevice *gv_device,
 	g_return_val_if_fail (G_IS_INET_ADDRESS (device_address), NULL);
 
 	timestamp_tick_frequency = arv_gv_device_get_timestamp_tick_frequency (gv_device);
+	options = arv_gv_device_get_stream_options (gv_device);
 
 	packet_size = arv_gv_device_get_packet_size (gv_device);
 	if (packet_size <= ARV_GVSP_PACKET_PROTOCOL_OVERHEAD) {
@@ -1005,6 +1009,7 @@ arv_gv_stream_new (ArvGvDevice *gv_device,
 	thread_data->frame_retention_us = ARV_GV_STREAM_FRAME_RETENTION_US_DEFAULT;
 	thread_data->timestamp_tick_frequency = timestamp_tick_frequency;
 	thread_data->data_size = packet_size - ARV_GVSP_PACKET_PROTOCOL_OVERHEAD;
+	thread_data->use_packet_socket = (options & ARV_GV_STREAM_OPTION_PACKET_SOCKET_DISABLED) == 0;
 	thread_data->cancel = FALSE;
 
 	thread_data->packet_id = 65300;

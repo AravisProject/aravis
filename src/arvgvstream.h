@@ -28,6 +28,17 @@
 G_BEGIN_DECLS
 
 /**
+ * ArvGvStreamOption:
+ * @ARV_GV_STREAM_OPTION_NONE: no option specified
+ * @ARV_GV_STREAM_OPTION_PACKET_SOCKET_DISABLED: use of packet socket is disabled
+ */
+
+typedef enum {
+	ARV_GV_STREAM_OPTION_NONE = 0,
+	ARV_GV_STREAM_OPTION_PACKET_SOCKET_DISABLED
+} ArvGvStreamOption;
+
+/**
  * ArvGvStreamSocketBuffer:
  * @ARV_GV_STREAM_SOCKET_BUFFER_FIXED: socket buffer is set to a given fixed value
  * @ARV_GV_STREAM_SOCKET_BUFFER_AUTO: sockect buffer is set with respect to the payload size
