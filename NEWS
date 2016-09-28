@@ -1,3 +1,8 @@
+Release 0.5.4
+=============
+
+  * gigevision: support of packet socket in stream thread
+
 Release 0.5.3
 =============
 
