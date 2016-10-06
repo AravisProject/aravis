@@ -468,6 +468,12 @@
 		<pFeature>TestRegister</pFeature>
 	</Category>
 
+	<Boolean Name="TestBoolean" NameSpace="Custom">
+		<pValue>TestRegister</pValue>
+		<OnValue>321</OnValue>
+		<OffValue>123</OffValue>
+	</Boolean>
+
 	<IntReg Name="TestRegister" NameSpace="Custom">
 		<Address>0x1f0</Address>
 		<Length>4</Length>

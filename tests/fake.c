@@ -133,6 +133,7 @@ fake_device_test (void)
 	ArvDevice *device;
 	int int_value;
 	double dbl_value;
+	double boolean_value;
 
 	device = arv_fake_device_new ("TEST0");
 	g_assert (ARV_IS_FAKE_DEVICE (device));
@@ -172,6 +173,18 @@ fake_device_test (void)
 
 	int_value = arv_device_get_integer_feature_value (device, "PayloadSize");
 	g_assert_cmpint (int_value, ==, 1024 * 1024);
+
+	arv_device_set_boolean_feature_value (device, "TestBoolean", FALSE);
+	boolean_value = arv_device_get_boolean_feature_value (device, "TestBoolean");
+	g_assert_cmpint (boolean_value, ==, FALSE);
+	int_value = arv_device_get_integer_feature_value (device, "TestRegister");
+	g_assert_cmpint (int_value, ==, 123);
+
+	arv_device_set_boolean_feature_value (device, "TestBoolean", TRUE);
+	boolean_value = arv_device_get_boolean_feature_value (device, "TestBoolean");
+	g_assert_cmpint (boolean_value, ==, TRUE);
+	int_value = arv_device_get_integer_feature_value (device, "TestRegister");
+	g_assert_cmpint (int_value, ==, 321);
 
 	g_object_unref (device);
 }

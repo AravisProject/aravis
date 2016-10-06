@@ -320,6 +320,78 @@ arv_device_execute_command (ArvDevice *device, const char *feature)
 				    feature);
 }
 
+/**
+ * arv_device_set_boolean_feature_value:
+ * @device: a #ArvDevice
+ * @feature: feature name
+ * @value: feature value
+ *
+ * Set the value of a boolean feature.
+ * If this operation fails, the device status returned by arv_device_get_status() will be changed.
+ *
+ * Since: 0.6.0
+ */
+
+void
+arv_device_set_boolean_feature_value (ArvDevice *device, const char *feature, gboolean value)
+{
+	ArvGcNode *node;
+	GError *error = NULL;
+
+	g_return_if_fail (ARV_IS_DEVICE (device));
+
+	node = arv_device_get_feature (device, feature);
+
+	if (ARV_IS_GC_INTEGER (node))
+		arv_gc_boolean_set_value (ARV_GC_BOOLEAN (node), value, &error);
+	else
+		arv_warning_device ("[ArvDevice::set_boolean_feature_value] Node '%s' is not a boolean",
+				    feature);
+
+	if (error != NULL) {
+		_set_status (device, error->code, error->message);
+		g_error_free (error);
+	}
+}
+
+/**
+ * arv_device_get_boolean_feature_value:
+ * @device: a #ArvDevice
+ * @feature: feature name
+ *
+ * Returns: the feature value.
+ *
+ * If this operation fails, the device status returned by arv_device_get_status() will be changed.
+ *
+ * Since: 0.6.0
+ */
+
+gboolean
+arv_device_get_boolean_feature_value (ArvDevice *device, const char *feature)
+{
+	ArvGcNode *node;
+	GError *error = NULL;
+	gboolean value = 0;
+
+	g_return_val_if_fail (ARV_IS_DEVICE (device), 0);
+
+	node = arv_device_get_feature (device, feature);
+
+	if (ARV_IS_GC_BOOLEAN (node))
+		value = arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node), &error);
+	else
+		arv_warning_device ("[ArvDevice::get_boolean_feature_value] Node '%s' is not an boolean",
+				    feature);
+
+	if (error != NULL) {
+		_set_status (device, error->code, error->message);
+		g_error_free (error);
+		return 0;
+	}
+
+	return value;
+}
+
 void
 arv_device_set_string_feature_value (ArvDevice *device, const char *feature, const char *value)
 {

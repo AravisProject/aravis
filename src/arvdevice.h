@@ -101,6 +101,9 @@ ArvChunkParser *arv_device_create_chunk_parser		(ArvDevice *device);
 
 void 		arv_device_execute_command 		(ArvDevice *device, const char *feature);
 
+void		arv_device_set_boolean_feature_value	(ArvDevice *device, const char *feature, gboolean value);
+gboolean	arv_device_get_boolean_feature_value	(ArvDevice *device, const char *feature);
+
 void		arv_device_set_string_feature_value	(ArvDevice *device, const char *feature, const char *value);
 const char *	arv_device_get_string_feature_value	(ArvDevice *device, const char *feature);
 
