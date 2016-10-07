@@ -21,7 +21,7 @@ make install
 
 Compilation options may be passed to the configure script. Please run `./configure --help` for information about the available options.
 
-### GigEVision Performance
+### Ethernet Device Performance
 
 #### Stream Packet Size
 
