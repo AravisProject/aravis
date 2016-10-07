@@ -1,12 +1,18 @@
+Release 0.5.5
+=============
+
+  * build: fix library detection needed for packet socket support (Hubert)
+  * gigevision: new API for automatic stream packet size (Emmanuel)
+
 Release 0.5.4
 =============
 
-  * gigevision: support of packet socket in stream thread
+  * gigevision: support of packet socket in stream thread (Emmanuel)
 
 Release 0.5.3
 =============
 
-  * usb3vision: fix USB3 device scan
+  * usb3vision: fix USB3 device scan (Emmanuel)
 
 Release 0.5.2
 =============
