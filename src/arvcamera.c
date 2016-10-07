@@ -1633,14 +1633,14 @@ arv_camera_gv_get_packet_delay (ArvCamera *camera)
  */
 
 void
-arv_camera_gv_set_packet_size (ArvCamera *camera, gint packet_size)
+arv_camera_gv_set_packet_size (ArvCamera *camera, guint packet_size)
 {
 	if (packet_size <= 0)
 		return;
 
 	g_return_if_fail (arv_camera_is_gv_device (camera));
 
-	arv_device_set_integer_feature_value (camera->priv->device, "GevSCPSPacketSize", packet_size);
+	arv_gv_device_set_packet_size (ARV_GV_DEVICE (camera->priv->device), packet_size);
 }
 
 /**
@@ -1652,12 +1652,34 @@ arv_camera_gv_set_packet_size (ArvCamera *camera, gint packet_size)
  * Since: 0.4.0
  */
 
-gint
+guint
 arv_camera_gv_get_packet_size (ArvCamera *camera)
 {
 	g_return_val_if_fail (arv_camera_is_gv_device (camera), 0);
 
-	return arv_device_get_integer_feature_value (camera->priv->device, "GevSCPSPacketSize");
+	return arv_gv_device_get_packet_size (ARV_GV_DEVICE (camera->priv->device));
+}
+
+/**
+ * arv_camera_gv_auto_packet_size:
+ * @camera: a #ArvCamera
+ *
+ * Automatically determine the biggest packet size that can be used data
+ * streaming, and set GevSCPSPacketSize value accordingly. This function relies
+ * on the GevSCPSFireTestPacket feature. If this feature is not available, the
+ * packet size will be set to a default value (1500 bytes).
+ *
+ * Returns: The packet size, in bytes.
+ *
+ * Since: 0.6.0
+ */
+
+guint
+arv_camera_gv_auto_packet_size (ArvCamera *camera)
+{
+	g_return_val_if_fail (arv_camera_is_gv_device (camera), 0);
+
+	return arv_gv_device_auto_packet_size (ARV_GV_DEVICE (camera->priv->device));
 }
 
 /**

@@ -68,6 +68,7 @@ arv_camera_gv_get_packet_delay
 arv_camera_gv_set_packet_delay
 arv_camera_gv_get_packet_size
 arv_camera_gv_set_packet_size
+arv_camera_gv_auto_packet_size
 arv_camera_gv_set_stream_options
 arv_camera_get_chunk_mode
 arv_camera_get_chunk_state
@@ -337,6 +338,8 @@ arv_device_get_genicam
 arv_device_get_feature
 arv_device_get_status
 arv_device_execute_command
+arv_device_get_boolean_feature_value
+arv_device_set_boolean_feature_value
 arv_device_set_string_feature_value
 arv_device_get_string_feature_value
 arv_device_set_integer_feature_value
@@ -815,6 +818,7 @@ arv_gv_device_get_packet_size
 arv_gv_device_set_packet_size
 arv_gv_device_get_stream_options
 arv_gv_device_set_stream_options
+arv_gv_device_auto_packet_size
 <SUBSECTION Standard>
 ARV_GV_DEVICE
 ARV_IS_GV_DEVICE

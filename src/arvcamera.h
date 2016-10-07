@@ -142,8 +142,9 @@ int 		arv_camera_gv_get_current_stream_channel(ArvCamera *camera);
 
 void		arv_camera_gv_set_packet_delay		(ArvCamera *camera, gint64 delay_ns);
 gint64 		arv_camera_gv_get_packet_delay 		(ArvCamera *camera);
-void 		arv_camera_gv_set_packet_size 		(ArvCamera *camera, gint packet_size);
-gint		arv_camera_gv_get_packet_size		(ArvCamera *camera);
+void 		arv_camera_gv_set_packet_size 		(ArvCamera *camera, guint packet_size);
+guint		arv_camera_gv_get_packet_size		(ArvCamera *camera);
+guint		arv_camera_gv_auto_packet_size		(ArvCamera *camera);
 
 void 		arv_camera_gv_set_stream_options 	(ArvCamera *camera, ArvGvStreamOption options);
 

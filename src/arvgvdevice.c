@@ -2,11 +2,6 @@
  *
  * Copyright © 2009-2016 Emmanuel Pacaud
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
@@ -28,6 +23,8 @@
 #include <arvgvdeviceprivate.h>
 #include <arvdeviceprivate.h>
 #include <arvgc.h>
+#include <arvgccommand.h>
+#include <arvgcboolean.h>
 #include <arvgcregisterdescriptionnode.h>
 #include <arvdebug.h>
 #include <arvgvstreamprivate.h>
@@ -39,6 +36,8 @@
 #include <arvenumtypes.h>
 #include <string.h>
 #include <stdlib.h>
+#include <linux/ip.h>
+#include <netinet/udp.h>
 
 static GObjectClass *parent_class = NULL;
 
@@ -534,6 +533,130 @@ arv_gv_device_set_packet_size (ArvGvDevice *gv_device, guint packet_size)
 	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevSCPSPacketSize", packet_size);
 }
 
+/**
+ * arv_gv_device_auto_packet_size:
+ * @gv_device: a #ArvGvDevice
+ *
+ * Automatically determine the biggest packet size that can be used data
+ * streaming, and set GevSCPSPacketSize value accordingly. This function relies
+ * on the GevSCPSFireTestPacket feature. If this feature is not available, the
+ * packet size will be set to a default value (1500 bytes).
+ *
+ * Returns: The packet size, in bytes.
+ *
+ * Since: 0.6.0
+ */
+
+guint
+arv_gv_device_auto_packet_size (ArvGvDevice *gv_device)
+{
+	ArvDevice *device = ARV_DEVICE (gv_device);
+	ArvGvDeviceIOData *io_data = gv_device->priv->io_data;
+	ArvGcNode *node;
+	GSocket *socket;
+	GInetAddress *interface_address;
+	GSocketAddress *interface_socket_address;
+	GInetSocketAddress *local_address;
+	GPollFD poll_fd;
+	const guint8 *address_bytes;
+	guint16 port;
+	gboolean do_not_fragment;
+	gboolean is_command;
+	int n_events;
+	guint max_size, min_size, current_size;
+	guint packet_size = 1500;
+	char *buffer;
+
+	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), 1500);
+
+	node = arv_device_get_feature (device, "GevSCPSFireTestPacket");
+	if (!ARV_IS_GC_COMMAND (node) && !ARV_IS_GC_BOOLEAN (node)) {
+		arv_debug_device ("[GvDevice::auto_packet_size] No GevSCPSFireTestPacket feature found, "
+				  "use default packet size (%d bytes)",
+				  packet_size);
+		return packet_size;
+	}
+
+	is_command = ARV_IS_GC_COMMAND (node);
+
+	interface_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (io_data->interface_address));
+	interface_socket_address = g_inet_socket_address_new (interface_address, 0);
+	socket = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, NULL);
+	g_socket_bind (socket, interface_socket_address, TRUE, NULL);
+	local_address = G_INET_SOCKET_ADDRESS (g_socket_get_local_address (socket, NULL));
+	port = g_inet_socket_address_get_port (local_address);
+
+	address_bytes = g_inet_address_to_bytes (interface_address);
+	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevSCDA", g_htonl (*((guint32 *) address_bytes)));
+	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevSCPHostPort", port);
+
+	g_clear_object (&local_address);
+	g_clear_object (&interface_socket_address);
+	g_clear_object (&interface_address);
+
+	do_not_fragment = arv_device_get_boolean_feature_value (device, "GevSCPSDoNotFragment");
+	arv_device_set_boolean_feature_value (device, "GevSCPSDoNotFragment", TRUE);
+
+	poll_fd.fd = g_socket_get_fd (socket);
+	poll_fd.events =  G_IO_IN;
+	poll_fd.revents = 0;
+
+	current_size = 1500;
+	max_size = 16384;
+	min_size = 256;
+
+	buffer = g_malloc (8192);
+
+	do {
+		size_t read_count;
+		unsigned n_tries = 0;
+
+		arv_debug_device ("[GvDevice::auto_packet_size] Try packet size = %d", current_size);
+		arv_device_set_integer_feature_value (device, "GevSCPSPacketSize", current_size);
+
+		do {
+			if (is_command) {
+				arv_device_execute_command (device, "GevSCPSFireTestPacket");
+			} else {
+				arv_device_set_boolean_feature_value (device, "GevSCPSFireTestPacket", FALSE);
+				arv_device_set_boolean_feature_value (device, "GevSCPSFireTestPacket", TRUE);
+			}
+
+			do {
+				n_events = g_poll (&poll_fd, 1, 10);
+				if (n_events != 0)
+					read_count = g_socket_receive (socket, buffer, 8192, NULL, NULL);
+				else
+					read_count = 0;
+			/* Discard late packets, read_count should be equal to packet size minus IP and UDP headers */
+			} while (n_events != 0 && read_count != (current_size - sizeof (struct iphdr) - sizeof (struct udphdr)));
+
+			n_tries++;
+		} while (n_events == 0 && n_tries < 3);
+
+		if (n_events != 0) {
+			arv_debug_device ("[GvDevice::auto_packet_size] Received %d bytes", (int) read_count);
+
+			packet_size = current_size;
+			min_size = current_size;
+			current_size = (max_size - min_size) / 2 + min_size;
+		} else {
+			max_size = current_size;
+			current_size = (max_size - min_size) / 2 + min_size;
+		}
+	} while ((max_size - min_size) > 16);
+
+	g_clear_pointer (&buffer, g_free);
+	g_clear_object (&socket);
+
+	arv_debug_device ("[GvDevice::auto_packet_size] Packet size set to %d bytes", packet_size);
+
+	arv_device_set_boolean_feature_value (device, "GevSCPSDoNotFragment", do_not_fragment);
+	arv_device_set_integer_feature_value (device, "GevSCPSPacketSize", packet_size);
+
+	return packet_size;
+}
+
 static char *
 _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 {
@@ -742,6 +865,48 @@ arv_gv_device_load_genicam (ArvGvDevice *gv_device)
 					      "<Sign>Unsigned</Sign>"
 					      "<Endianess>BigEndian</Endianess>"
 					      "</MaskedIntReg>");
+#if 0
+		arv_gc_set_default_node_data (gv_device->priv->genicam, "GevSCPSFireTestPacket",
+					      "<Command Name=\"GevSCPSFireTestPacket\">"
+					      "<pIsLocked>TLParamsLocked</pIsLocked>"
+					      "<pValue>GevSCPSFireTestPacketReg</pValue>"
+					      "<CommandValue>1</CommandValue>"
+					      "</Boolean>");
+		arv_gc_set_default_node_data (gv_device->priv->genicam, "GevSCPSFireTestPacketReg",
+					      "<MaskedIntReg Name=\"GevSCPSFireTestPacketReg\">"
+					      "<Address>0x0d04</Address>"
+					      "<pAddress>GevSCPAddrCalc</pAddress>"
+					      "<Length>4</Length>"
+					      "<AccessMode>RW</AccessMode>"
+					      "<Bit>0</Bit>"
+					      "</MaskedIntReg>");
+#endif
+		arv_gc_set_default_node_data (gv_device->priv->genicam, "GevSCPSDoNotFragment",
+					      "<Boolean Name=\"GevSCPSDoNotFragment\">"
+					      "<pIsLocked>TLParamsLocked</pIsLocked>"
+					      "<pValue>GevSCPSDoNotFragmentReg</pValue>"
+					      "</Boolean>");
+		arv_gc_set_default_node_data (gv_device->priv->genicam, "GevSCPSDoNotFragmentReg",
+					      "<MaskedIntReg Name=\"GevSCPSDoNotFragmentReg\">"
+					      "<Address>0x0d04</Address>"
+					      "<pAddress>GevSCPAddrCalc</pAddress>"
+					      "<Length>4</Length>"
+					      "<AccessMode>RW</AccessMode>"
+					      "<Bit>1</Bit>"
+					      "</MaskedIntReg>");
+		arv_gc_set_default_node_data (gv_device->priv->genicam, "GevSCPSBigEndian",
+					      "<Boolean Name=\"GevSCPSBigEndian\">"
+					      "<pIsLocked>TLParamsLocked</pIsLocked>"
+					      "<pValue>GevSCPSBigEndianReg</pValue>"
+					      "</Boolean>");
+		arv_gc_set_default_node_data (gv_device->priv->genicam, "GevSCPSBigEndianReg",
+					      "<MaskedIntReg Name=\"GevSCPSBigEndianReg\">"
+					      "<Address>0x0d04</Address>"
+					      "<pAddress>GevSCPAddrCalc</pAddress>"
+					      "<Length>4</Length>"
+					      "<AccessMode>RW</AccessMode>"
+					      "<Bit>2</Bit>"
+					      "</MaskedIntReg>");
 		arv_gc_set_default_node_data (gv_device->priv->genicam, "GevSCPSPacketSize",
 					      "<Integer Name=\"GevSCPSPacketSize\">"
 					      "<Visibility>Expert</Visibility>"
@@ -794,7 +959,7 @@ arv_gv_device_load_genicam (ArvGvDevice *gv_device)
 					      "<Sign>Unsigned</Sign>"
 					      "<Endianess>BigEndian</Endianess>"
 					      "</MaskedIntReg>");
-		arv_gc_set_default_node_data (gv_device->priv->genicam, "GevSCSPReg",
+		arv_gc_set_default_node_data (gv_device->priv->genicam, "GevSCPAddrCalc",
 					      "<IntSwissKnife Name= \"GevSCPAddrCalc\">"
 					      "<pVariable Name=\"SEL\">GevStreamChannelSelector</pVariable>"
 					      "<Formula>SEL * 0x40</Formula>"

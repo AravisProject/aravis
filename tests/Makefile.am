@@ -18,6 +18,7 @@ noinst_PROGRAMS = 			\
        	arv-heartbeat-test		\
 	arv-acquisition-test		\
        	arv-example			\
+	arv-auto-packet-size-test	\
 	time-test			\
 	realtime-test			\
 	load-http-test
@@ -45,6 +46,9 @@ arv_heartbeat_test_LDADD = $(test_progs_ldadd)
 
 arv_acquisition_test_SOURCES = arvacquisitiontest.c
 arv_acquisition_test_LDADD = $(test_progs_ldadd)
+
+arv_auto_packet_size_test_SOURCES = arvautopacketsizetest.c
+arv_auto_packet_size_test_LDADD = $(test_progs_ldadd)
 
 arv_example_SOURCES = arvexample.c
 arv_example_LDADD = $(test_progs_ldadd)
