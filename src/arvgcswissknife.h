@@ -43,6 +43,8 @@ struct _ArvGcSwissKnife {
 
 	GType value_type;
 	GSList *variables;	/* ArvGcVariableNode list */
+	GSList *constants;	/* ArvGcVariableNode list */
+	GSList *expressions;	/* ArvGcVariableNode list */
 
 	ArvGcPropertyNode *formula_node;
 

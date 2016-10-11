@@ -69,6 +69,7 @@ static void
 expression_test (ExpressionTestData *data)
 {
 	ArvEvaluator *evaluator;
+	const char *expression;
 	gint64 v_int64;
 	double v_double;
 	GError *error = NULL;
@@ -83,6 +84,9 @@ expression_test (ExpressionTestData *data)
 
 	g_assert_cmpint (v_int64, ==, data->result_int64);
 	g_assert_cmpfloat (v_double, ==, data->result_double);
+
+	expression = arv_evaluator_get_expression (evaluator);
+	g_assert_cmpstr (expression, ==, data->expression);
 
 	g_object_unref (evaluator);
 }
@@ -113,15 +117,16 @@ static void
 set_double_variable_test (void)
 {
 	ArvEvaluator *evaluator;
+	GError *error = NULL;
 	double v_double;
 
 	evaluator = arv_evaluator_new ("V_DBLA+V_DBLB");
 
 	arv_evaluator_set_double_variable (evaluator, "V_DBLA", 123.0);
 	arv_evaluator_set_double_variable (evaluator, "V_DBLB", 0.4);
-	v_double = arv_evaluator_evaluate_as_double (evaluator, NULL);
-
+	v_double = arv_evaluator_evaluate_as_double (evaluator, &error);
 	g_assert_cmpfloat (v_double, ==, 123.4);
+	g_assert (error == NULL);
 
 	g_object_unref (evaluator);
 }
@@ -130,14 +135,115 @@ static void
 set_int64_variable_test (void)
 {
 	ArvEvaluator *evaluator;
+	GError *error = NULL;
 	gint64 v_int64;
 
 	evaluator = arv_evaluator_new ("A_1");
 
 	arv_evaluator_set_int64_variable (evaluator, "A_1", 123);
-	v_int64 = arv_evaluator_evaluate_as_int64 (evaluator, NULL);
-
+	v_int64 = arv_evaluator_evaluate_as_int64 (evaluator, &error);
 	g_assert_cmpfloat (v_int64, ==, 123);
+	g_assert (error == NULL);
+
+	g_object_unref (evaluator);
+}
+
+static void
+sub_expression_test (void)
+{
+	ArvEvaluator *evaluator;
+	GError *error = NULL;
+	double v_double;
+	const char *sub_expression;
+
+	evaluator = arv_evaluator_new ("ZERO5 + SUB_EXP");
+	arv_evaluator_set_sub_expression (evaluator, "ZERO5", "0.5");
+	arv_evaluator_set_sub_expression (evaluator, "SUB_EXP", "2*X");
+	arv_evaluator_set_int64_variable (evaluator, "X", 6);
+	v_double = arv_evaluator_evaluate_as_double (evaluator, &error);
+	g_assert_cmpfloat (v_double, ==, 12.5);
+	g_assert (error == NULL);
+
+	sub_expression = arv_evaluator_get_sub_expression (evaluator, "SUB_EXP");
+	g_assert_cmpstr (sub_expression, ==, "2*X");
+
+	arv_evaluator_set_sub_expression (evaluator, "SUB_EXP", "2 + X");
+	v_double = arv_evaluator_evaluate_as_double (evaluator, &error);
+	g_assert_cmpfloat (v_double, ==, 8.5);
+	g_assert (error == NULL);
+
+	arv_evaluator_set_sub_expression (evaluator, "SUB_EXP", NULL);
+	v_double = arv_evaluator_evaluate_as_double (evaluator, &error);
+	g_assert (error != NULL);
+	g_clear_error (&error);
+
+	sub_expression = arv_evaluator_get_sub_expression (evaluator, "SUB_EXP");
+	g_assert (sub_expression == NULL);
+
+	arv_evaluator_set_sub_expression (evaluator, "SUB_EXP", "SUB_EXP");
+	v_double = arv_evaluator_evaluate_as_double (evaluator, &error);
+	g_assert (error != NULL);
+	g_clear_error (&error);
+
+	g_object_unref (evaluator);
+}
+
+static void
+constant_test (void)
+{
+	ArvEvaluator *evaluator;
+	GError *error = NULL;
+	double v_double;
+	const char *constant;
+
+	evaluator = arv_evaluator_new ("ZERO5 + TEN * X");
+	arv_evaluator_set_constant (evaluator, "ZERO5", "0.5");
+	arv_evaluator_set_constant (evaluator, "TEN", "10");
+	arv_evaluator_set_int64_variable (evaluator, "X", 6);
+	v_double = arv_evaluator_evaluate_as_double (evaluator, &error);
+	g_assert_cmpfloat (v_double, ==, 60.5);
+	g_assert (error == NULL);
+
+	constant = arv_evaluator_get_constant (evaluator, "TEN");
+	g_assert_cmpstr (constant, ==, "10");
+
+	arv_evaluator_set_constant (evaluator, "TEN", "20");
+	v_double = arv_evaluator_evaluate_as_double (evaluator, &error);
+	g_assert_cmpfloat (v_double, ==, 120.5);
+	g_assert (error == NULL);
+
+	arv_evaluator_set_constant (evaluator, "TEN", NULL);
+	v_double = arv_evaluator_evaluate_as_double (evaluator, &error);
+	g_assert (error != NULL);
+	g_clear_error (&error);
+
+	constant = arv_evaluator_get_constant (evaluator, "TEN");
+	g_assert (constant == NULL);
+
+	g_object_unref (evaluator);
+}
+
+static void
+empty_test (void)
+{
+	ArvEvaluator *evaluator;
+	GError *error = NULL;
+	gint64 v_int64;
+
+	evaluator = arv_evaluator_new (NULL);
+	arv_evaluator_evaluate_as_double (evaluator, &error);
+	g_assert (error != NULL);
+	g_clear_error (&error);
+
+	arv_evaluator_set_expression (evaluator, "10 * 3");
+	v_int64 = arv_evaluator_evaluate_as_int64 (evaluator, &error);
+	g_assert_cmpint (v_int64, ==, 30);
+	g_assert (error == NULL);
+
+	arv_evaluator_set_expression (evaluator, NULL);
+	arv_evaluator_evaluate_as_double (evaluator, &error);
+	g_assert (error != NULL);
+	g_clear_error (&error);
 
 	g_object_unref (evaluator);
 }
@@ -160,6 +266,9 @@ main (int argc, char *argv[])
 	g_test_add_func ("/evaluator/set-get-expression", set_get_expression_test);
 	g_test_add_func ("/evaluator/double-variable", set_double_variable_test);
 	g_test_add_func ("/evaluator/int64-variable", set_int64_variable_test);
+	g_test_add_func ("/evaluator/sub-expression", sub_expression_test);
+	g_test_add_func ("/evaluator/constant", constant_test);
+	g_test_add_func ("/evaluator/empty", empty_test);
 
 	result = g_test_run();
 

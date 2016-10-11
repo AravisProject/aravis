@@ -44,10 +44,13 @@ typedef enum {
 	ARV_EVALUATOR_STATUS_SYNTAX_ERROR,
 	ARV_EVALUATOR_STATUS_UNKNOWN_OPERATOR,
 	ARV_EVALUATOR_STATUS_UNKNOWN_VARIABLE,
+	ARV_EVALUATOR_STATUS_UNKNOWN_SUB_EXPRESSION,
+	ARV_EVALUATOR_STATUS_UNKNOWN_CONSTANT,
 	ARV_EVALUATOR_STATUS_MISSING_ARGUMENTS,
 	ARV_EVALUATOR_STATUS_REMAINING_OPERANDS,
 	ARV_EVALUATOR_STATUS_DIVISION_BY_ZERO,
-	ARV_EVALUATOR_STATUS_STACK_OVERFLOW
+	ARV_EVALUATOR_STATUS_STACK_OVERFLOW,
+	ARV_EVALUATOR_STATUS_FORBIDDEN_RECUSRION
 } ArvEvaluatorStatus;
 
 static const char *arv_evaluator_status_strings[] = {
@@ -58,10 +61,13 @@ static const char *arv_evaluator_status_strings[] = {
 	"syntax error",
 	"unknown operator",
 	"unknown variable",
+	"unknown subexpression",
+	"unknown constant",
 	"missing arguments",
 	"remaining operands",
 	"division by zero",
-	"stack overflow"
+	"stack overflow",
+	"forbidden recursion"
 };
 
 struct _ArvEvaluatorPrivate {
@@ -69,6 +75,8 @@ struct _ArvEvaluatorPrivate {
 	GSList *rpn_stack;
 	ArvEvaluatorStatus parsing_status;
 	GHashTable *variables;
+	GHashTable *sub_expressions;
+	GHashTable *constants;
 };
 
 typedef enum {
@@ -262,6 +270,13 @@ arv_evaluator_token_debug (ArvEvaluatorToken *token, GHashTable *variables)
 		default:
 			arv_log_evaluator ("(operator) %s", arv_evaluator_token_infos[token->token_id].tag);
 	}
+}
+
+static gboolean
+arv_evaluator_token_is_variable (ArvEvaluatorToken *token)
+{
+	return (token != NULL &&
+		token->token_id == ARV_EVALUATOR_TOKEN_VARIABLE);
 }
 
 static gboolean
@@ -768,10 +783,12 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 				break;
 			case ARV_EVALUATOR_TOKEN_VARIABLE:
 				value = g_hash_table_lookup (variables, token->data.name);
-				if (value != NULL)
+				if (value != NULL) {
 					arv_value_copy (&stack[index+1], value);
-				else
-					arv_value_set_int64 (&stack[index+1], 0);
+				} else {
+					status = ARV_EVALUATOR_STATUS_UNKNOWN_VARIABLE;
+					goto CLEANUP;
+				}
 				break;
 			case ARV_EVALUATOR_TOKEN_TERNARY_COLON:
 				break;
@@ -822,111 +839,202 @@ CLEANUP:
 	return status;
 }
 
+typedef struct {
+	int count;
+	ArvEvaluatorToken *previous_token;
+	GSList *token_stack;
+	GSList *operator_stack;
+	GSList *garbage_stack;
+	gboolean in_sub_expression;
+} ArvEvaluatorParserState;
+
 static ArvEvaluatorStatus
-parse_expression (char *expression, GSList **rpn_stack)
+parse_to_stacks (ArvEvaluator *evaluator, char *expression, ArvEvaluatorParserState *state)
 {
 	ArvEvaluatorToken *token;
-	ArvEvaluatorToken *previous_token = NULL;
 	ArvEvaluatorStatus status;
-	GSList *token_stack = NULL;
-	GSList *operator_stack = NULL;
-	GSList *garbage_stack = NULL;
-	GSList *iter;
-	int count;
 
-	arv_log_evaluator (expression);
+	if (expression == NULL)
+		return ARV_EVALUATOR_STATUS_EMPTY_EXPRESSION;
 
 	/* Dijkstra's "shunting yard" algorithm */
 	/* http://en.wikipedia.org/wiki/Shunting-yard_algorithm */
 
-	count = 0;
 	do {
-		token = arv_get_next_token (&expression, previous_token);
-		previous_token = token;
+		token = arv_get_next_token (&expression, state->previous_token);
 		if (token != NULL) {
-			if (arv_evaluator_token_is_operand (token)) {
-				token_stack = g_slist_prepend (token_stack, token);
+			if (arv_evaluator_token_is_variable (token)) {
+				if (g_hash_table_contains (evaluator->priv->constants, token->data.name)) {
+					const char *constant;
+				
+					constant = g_hash_table_lookup (evaluator->priv->constants, token->data.name);
+
+					if (constant != NULL) {
+						arv_evaluator_token_free (token);
+						token = arv_get_next_token ((char **) &constant, NULL);
+						if (token != NULL)
+							state->token_stack = g_slist_prepend (state->token_stack, token);
+					} else {
+						status = ARV_EVALUATOR_STATUS_UNKNOWN_CONSTANT;
+						goto CLEANUP;
+					}
+				} else if (g_hash_table_contains (evaluator->priv->sub_expressions, token->data.name)) {
+					const char *sub_expression;
+
+					sub_expression = g_hash_table_lookup (evaluator->priv->sub_expressions, token->data.name);
+
+					if (sub_expression != NULL) {
+						char *string;
+
+						if (state->in_sub_expression) {
+							status = ARV_EVALUATOR_STATUS_FORBIDDEN_RECUSRION;
+							goto CLEANUP;
+						}
+
+						string = g_strdup_printf ("(%s)", sub_expression);
+						state->in_sub_expression = TRUE;
+						status = parse_to_stacks (evaluator, string, state);
+						state->in_sub_expression = FALSE;
+						g_free (string);
+
+						if (status != ARV_EVALUATOR_STATUS_SUCCESS) {
+							goto CLEANUP;
+						}
+
+						arv_evaluator_token_free (token);
+					} else {
+						status = ARV_EVALUATOR_STATUS_UNKNOWN_SUB_EXPRESSION;
+						goto CLEANUP;
+					}
+				} else {
+					state->token_stack = g_slist_prepend (state->token_stack, token);
+				}
+			} else if (arv_evaluator_token_is_operand (token)) {
+				state->token_stack = g_slist_prepend (state->token_stack, token);
 			} else if (arv_evaluator_token_is_comma (token)) {
-				while (operator_stack != NULL &&
-				       !arv_evaluator_token_is_left_parenthesis (operator_stack->data)) {
-					token_stack = g_slist_prepend (token_stack, operator_stack->data);
-					operator_stack = g_slist_delete_link (operator_stack, operator_stack);
+				while (state->operator_stack != NULL &&
+				       !arv_evaluator_token_is_left_parenthesis (state->operator_stack->data)) {
+					state->token_stack = g_slist_prepend (state->token_stack, state->operator_stack->data);
+					state->operator_stack = g_slist_delete_link (state->operator_stack, state->operator_stack);
 				}
-				if (operator_stack == NULL ||
-				    !arv_evaluator_token_is_left_parenthesis (operator_stack->data)) {
+				if (state->operator_stack == NULL ||
+				    !arv_evaluator_token_is_left_parenthesis (state->operator_stack->data)) {
 					status = ARV_EVALUATOR_STATUS_PARENTHESES_MISMATCH;
 					goto CLEANUP;
 				}
-				garbage_stack = g_slist_prepend (garbage_stack, token);
+				state->garbage_stack = g_slist_prepend (state->garbage_stack, token);
 			} else if (arv_evaluator_token_is_operator (token)) {
-				while (operator_stack != NULL &&
-				       arv_evaluator_token_compare_precedence (token, operator_stack->data)) {
-					token_stack = g_slist_prepend (token_stack, operator_stack->data);
-					operator_stack = g_slist_delete_link (operator_stack, operator_stack);
+				while (state->operator_stack != NULL &&
+				       arv_evaluator_token_compare_precedence (token, state->operator_stack->data)) {
+					state->token_stack = g_slist_prepend (state->token_stack, state->operator_stack->data);
+					state->operator_stack = g_slist_delete_link (state->operator_stack, state->operator_stack);
 				}
-				operator_stack = g_slist_prepend (operator_stack, token);
+				state->operator_stack = g_slist_prepend (state->operator_stack, token);
 			} else if (arv_evaluator_token_is_left_parenthesis (token)) {
-				operator_stack = g_slist_prepend (operator_stack, token);
+				state->operator_stack = g_slist_prepend (state->operator_stack, token);
 			} else if (arv_evaluator_token_is_right_parenthesis (token)) {
-				while (operator_stack != NULL &&
-				       !arv_evaluator_token_is_left_parenthesis (operator_stack->data)) {
-					token_stack = g_slist_prepend (token_stack, operator_stack->data);
-					operator_stack = g_slist_delete_link (operator_stack, operator_stack);
+				while (state->operator_stack != NULL &&
+				       !arv_evaluator_token_is_left_parenthesis (state->operator_stack->data)) {
+					state->token_stack = g_slist_prepend (state->token_stack, state->operator_stack->data);
+					state->operator_stack = g_slist_delete_link (state->operator_stack, state->operator_stack);
 				}
-				if (operator_stack == NULL) {
+				if (state->operator_stack == NULL) {
 					status = ARV_EVALUATOR_STATUS_PARENTHESES_MISMATCH;
 					goto CLEANUP;
 				}
-				garbage_stack = g_slist_prepend (garbage_stack, token);
-				garbage_stack = g_slist_prepend (garbage_stack, operator_stack->data);
-				operator_stack = g_slist_delete_link (operator_stack, operator_stack);
+				state->garbage_stack = g_slist_prepend (state->garbage_stack, token);
+				state->garbage_stack = g_slist_prepend (state->garbage_stack, state->operator_stack->data);
+				state->operator_stack = g_slist_delete_link (state->operator_stack, state->operator_stack);
 			} else {
 				status = ARV_EVALUATOR_STATUS_SYNTAX_ERROR;
 				goto CLEANUP;
 			}
-			count++;
+			(state->count)++;
 		} else if (*expression != '\0') {
 			status = ARV_EVALUATOR_STATUS_SYNTAX_ERROR;
 			goto CLEANUP;
 		}
+		state->previous_token = token;
 	} while (token != NULL);
 
-	arv_log_evaluator ("[Evaluator::_parse_expression] Found %d items in expression", count);
+	return ARV_EVALUATOR_STATUS_SUCCESS;
 
-	while (operator_stack != NULL) {
-		if (arv_evaluator_token_is_left_parenthesis (operator_stack->data)) {
+CLEANUP:
+	if (token != NULL)
+		arv_evaluator_token_free (token);
+
+	return status;
+}
+
+static void
+free_rpn_stack (ArvEvaluator *evaluator)
+{
+	GSList *iter;
+
+	for (iter = evaluator->priv->rpn_stack; iter != NULL; iter = iter->next)
+		arv_evaluator_token_free (iter->data);
+	g_slist_free (evaluator->priv->rpn_stack);
+	evaluator->priv->rpn_stack = NULL;
+}
+
+static ArvEvaluatorStatus
+parse_expression (ArvEvaluator *evaluator)
+{
+	ArvEvaluatorParserState state;
+	ArvEvaluatorStatus status;
+	GSList *iter;
+	int count;
+
+	state.count  =0;
+	state.previous_token = NULL;
+	state.token_stack = NULL;
+	state.operator_stack = NULL;
+	state.garbage_stack = NULL;
+	state.in_sub_expression = FALSE;
+
+	free_rpn_stack (evaluator);
+
+	arv_log_evaluator ("[Evaluator::parse_expression] %s", evaluator->priv->expression);
+
+	status = parse_to_stacks (evaluator, evaluator->priv->expression, &state);
+
+	if (status != ARV_EVALUATOR_STATUS_SUCCESS)
+		goto CLEANUP;
+
+	arv_log_evaluator ("[Evaluator::parse_expression] Found %d items in expression", state.count);
+
+	while (state.operator_stack != NULL) {
+		if (arv_evaluator_token_is_left_parenthesis (state.operator_stack->data)) {
 			status = ARV_EVALUATOR_STATUS_PARENTHESES_MISMATCH;
 			goto CLEANUP;
 		}
 
-		token_stack = g_slist_prepend (token_stack, operator_stack->data);
-		operator_stack = g_slist_delete_link (operator_stack, operator_stack);
+		state.token_stack = g_slist_prepend (state.token_stack, state.operator_stack->data);
+		state.operator_stack = g_slist_delete_link (state.operator_stack, state.operator_stack);
 	}
 
-	*rpn_stack = g_slist_reverse (token_stack);
+	evaluator->priv->rpn_stack = g_slist_reverse (state.token_stack);
 
-	for (iter = garbage_stack, count = 0; iter != NULL; iter = iter->next, count++)
+	for (iter = state.garbage_stack, count = 0; iter != NULL; iter = iter->next, count++)
 		arv_evaluator_token_free (iter->data);
-	g_slist_free (garbage_stack);
+	g_slist_free (state.garbage_stack);
 
-	arv_log_evaluator ("[Evaluator::_parse_expression] %d items in garbage list", count);
-	arv_log_evaluator ("[Evaluator::_parse_expression] %d items in token list", g_slist_length (*rpn_stack));
+	arv_log_evaluator ("[Evaluator::parse_expression] %d items in garbage list", count);
+	arv_log_evaluator ("[Evaluator::parse_expression] %d items in token list", g_slist_length (evaluator->priv->rpn_stack));
 
-	return *rpn_stack == NULL ? ARV_EVALUATOR_STATUS_EMPTY_EXPRESSION : ARV_EVALUATOR_STATUS_SUCCESS;
+	return evaluator->priv->rpn_stack == NULL ? ARV_EVALUATOR_STATUS_EMPTY_EXPRESSION : ARV_EVALUATOR_STATUS_SUCCESS;
 
 CLEANUP:
 
-	if (token != NULL)
-		arv_evaluator_token_free (token);
-	for (iter = garbage_stack; iter != NULL; iter = iter->next)
+	for (iter = state.garbage_stack; iter != NULL; iter = iter->next)
 		arv_evaluator_token_free (iter->data);
-	g_slist_free (garbage_stack);
-	for (iter = token_stack; iter != NULL; iter = iter->next)
+	g_slist_free (state.garbage_stack);
+	for (iter = state.token_stack; iter != NULL; iter = iter->next)
 		arv_evaluator_token_free (iter->data);
-	g_slist_free (token_stack);
-	for (iter = operator_stack; iter != NULL; iter = iter->next)
+	g_slist_free (state.token_stack);
+	for (iter = state.operator_stack; iter != NULL; iter = iter->next)
 		arv_evaluator_token_free (iter->data);
-	g_slist_free (operator_stack);
+	g_slist_free (state.operator_stack);
 
 	return status;
 }
@@ -941,7 +1049,7 @@ arv_evaluator_set_error (GError **error, ArvEvaluatorStatus status)
 		     arv_evaluator_status_strings [MIN (status,
 							G_N_ELEMENTS (arv_evaluator_status_strings)-1)]);
 
-	arv_warning_evaluator ("[Evaluator::evaluate] Error '%s'",
+	arv_warning_evaluator ("[Evaluator::set_error] Error '%s'",
 			       arv_evaluator_status_strings [MIN (status,
 								  G_N_ELEMENTS (arv_evaluator_status_strings)-1)]);
 }
@@ -958,8 +1066,7 @@ arv_evaluator_evaluate_as_double (ArvEvaluator *evaluator, GError **error)
 			   evaluator->priv->expression);
 
 	if (evaluator->priv->parsing_status == ARV_EVALUATOR_STATUS_NOT_PARSED) {
-		evaluator->priv->parsing_status = parse_expression (evaluator->priv->expression,
-								    &evaluator->priv->rpn_stack);
+		evaluator->priv->parsing_status = parse_expression (evaluator);
 		arv_log_evaluator ("[Evaluator::evaluate_as_double] Parsing status = %d",
 				   evaluator->priv->parsing_status);
 	}
@@ -990,8 +1097,7 @@ arv_evaluator_evaluate_as_int64 (ArvEvaluator *evaluator, GError **error)
 			   evaluator->priv->expression);
 
 	if (evaluator->priv->parsing_status == ARV_EVALUATOR_STATUS_NOT_PARSED) {
-		evaluator->priv->parsing_status = parse_expression (evaluator->priv->expression,
-								    &evaluator->priv->rpn_stack);
+		evaluator->priv->parsing_status = parse_expression (evaluator);
 		arv_log_evaluator ("[Evaluator::evaluate_as_int64] Parsing status = %d",
 				   evaluator->priv->parsing_status);
 	}
@@ -1013,8 +1119,6 @@ arv_evaluator_evaluate_as_int64 (ArvEvaluator *evaluator, GError **error)
 void
 arv_evaluator_set_expression (ArvEvaluator *evaluator, const char *expression)
 {
-	GSList *iter;
-
 	g_return_if_fail (ARV_IS_EVALUATOR (evaluator));
 
 	if (g_strcmp0 (expression, evaluator->priv->expression) == 0)
@@ -1022,10 +1126,6 @@ arv_evaluator_set_expression (ArvEvaluator *evaluator, const char *expression)
 
 	g_free (evaluator->priv->expression);
 	evaluator->priv->expression = NULL;
-	for (iter = evaluator->priv->rpn_stack; iter != NULL; iter = iter->next)
-		arv_evaluator_token_free (iter->data);
-	g_slist_free (evaluator->priv->rpn_stack);
-	evaluator->priv->rpn_stack = NULL;
 
 	if (expression == NULL) {
 		evaluator->priv->parsing_status = ARV_EVALUATOR_STATUS_EMPTY_EXPRESSION;
@@ -1042,6 +1142,119 @@ arv_evaluator_get_expression (ArvEvaluator *evaluator)
 	g_return_val_if_fail (ARV_IS_EVALUATOR (evaluator), NULL);
 
 	return evaluator->priv->expression;
+}
+
+/**
+ * arv_evaluator_set_sub_expression:
+ * @evaluator:a #ArvEvaluator
+ * @name: sub-expression name
+ * @expression: (allow-none): sub-pexression formula
+ *
+ * Assign a formula to a sub-expression. If @expression == %NULL, the sub-expression previously assigned to @name will be removed.
+ * A sub-expression may not reference another sub-expression.
+ *
+ * Since: 0.6.0
+ */
+
+void
+arv_evaluator_set_sub_expression (ArvEvaluator *evaluator, const char *name, const char *expression)
+{
+	const char *old_expression;
+
+	g_return_if_fail (ARV_IS_EVALUATOR (evaluator));
+
+	if (name == NULL)
+		return;
+
+	old_expression = g_hash_table_lookup (evaluator->priv->sub_expressions, name);
+	if (old_expression != NULL && g_strcmp0 (old_expression, expression) == 0)
+		return;
+
+	if (expression != NULL)
+		g_hash_table_replace (evaluator->priv->sub_expressions, g_strdup (name), g_strdup (expression));
+	else
+		g_hash_table_remove (evaluator->priv->sub_expressions, name);
+
+	evaluator->priv->parsing_status = ARV_EVALUATOR_STATUS_NOT_PARSED;
+
+	arv_log_evaluator ("[Evaluator::set_sub_expression] %s = %s", name, expression);
+}
+
+/**
+ * arv_evaluator_get_sub_expression:
+ * @evaluator: a #ArvEvaluator
+ * @name: sub-expression name
+ *
+ * Returns: The formula of the sub-expression corresponding to @name, %NULL if not defined.
+ *
+ * Since: 0.6.0
+ */
+
+const char *
+arv_evaluator_get_sub_expression (ArvEvaluator *evaluator, const char *name)
+{
+	g_return_val_if_fail (ARV_IS_EVALUATOR (evaluator), NULL);
+
+	if (name == NULL)
+		return NULL;
+
+	return g_hash_table_lookup (evaluator->priv->sub_expressions, name);
+}
+
+/**
+ * arv_evaluator_set_constant:
+ * @evaluator:a #ArvEvaluator
+ * @name: constant name
+ * @constant: (allow-none): constant as a string
+ *
+ * Assign a string to a constant. If @constant == %NULL, the constant previously assigned to @name will be removed.
+ *
+ * Since: 0.6.0
+ */
+
+void
+arv_evaluator_set_constant (ArvEvaluator *evaluator, const char *name, const char *constant)
+{
+	const char *old_constant;
+
+	g_return_if_fail (ARV_IS_EVALUATOR (evaluator));
+
+	if (name == NULL)
+		return;
+
+	old_constant = g_hash_table_lookup (evaluator->priv->constants, name);
+	if (old_constant != NULL && g_strcmp0 (old_constant, constant) == 0)
+		return;
+
+	if (constant != NULL)
+		g_hash_table_replace (evaluator->priv->constants, g_strdup (name), g_strdup (constant));
+	else
+		g_hash_table_remove (evaluator->priv->constants, name);
+
+	evaluator->priv->parsing_status = ARV_EVALUATOR_STATUS_NOT_PARSED;
+
+	arv_log_evaluator ("[Evaluator::set_constant] %s = %s", name, constant);
+}
+
+/**
+ * arv_evaluator_get_constant:
+ * @evaluator: a #ArvEvaluator
+ * @name: constant name
+ *
+ * Returns: The formula of the constant corresponding to @name, %NULL if not defined.
+ *
+ * Since: 0.6.0
+ */
+
+const char *
+arv_evaluator_get_constant (ArvEvaluator *evaluator, const char *name)
+{
+	g_return_val_if_fail (ARV_IS_EVALUATOR (evaluator), NULL);
+
+	if (name == NULL)
+		return NULL;
+
+	return g_hash_table_lookup (evaluator->priv->constants, name);
 }
 
 void
@@ -1112,6 +1325,8 @@ arv_evaluator_init (ArvEvaluator *evaluator)
 	evaluator->priv->expression = NULL;
 	evaluator->priv->rpn_stack = NULL;
 	evaluator->priv->variables = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, (GDestroyNotify) arv_value_free);
+	evaluator->priv->sub_expressions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	evaluator->priv->constants = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 
 	arv_evaluator_set_double_variable (evaluator, "PI", M_PI);
 	arv_evaluator_set_double_variable (evaluator, "E", M_E);
@@ -1124,6 +1339,9 @@ arv_evaluator_finalize (GObject *object)
 
 	arv_evaluator_set_expression (evaluator, NULL);
 	g_hash_table_unref (evaluator->priv->variables);
+	g_hash_table_unref (evaluator->priv->sub_expressions);
+	g_hash_table_unref (evaluator->priv->constants);
+	free_rpn_stack (evaluator);
 
 	parent_class->finalize (object);
 }

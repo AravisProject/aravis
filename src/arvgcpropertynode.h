@@ -91,6 +91,8 @@ struct _ArvGcPropertyNode {
 
 	ArvGcPropertyNodeType	type;
 
+	char *name;
+
 	gboolean value_data_up_to_date;
 	char *value_data;
 };
@@ -140,6 +142,8 @@ ArvGcNode * 	arv_gc_property_node_new_bit			(void);
 ArvGcNode * 	arv_gc_property_node_new_command_value		(void);
 ArvGcNode * 	arv_gc_property_node_new_p_command_value	(void);
 ArvGcNode * 	arv_gc_property_node_new_chunk_id 		(void);
+
+const char *		arv_gc_property_node_get_name		(ArvGcPropertyNode *node);
 
 const char * 		arv_gc_property_node_get_string 	(ArvGcPropertyNode *node, GError **error);
 void	 		arv_gc_property_node_set_string 	(ArvGcPropertyNode *node, const char *string, GError **error);

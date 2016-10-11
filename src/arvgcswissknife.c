@@ -66,8 +66,10 @@ arv_gc_swiss_knife_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				node->formula_node = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_EXPRESSION:
+				node->expressions = g_slist_prepend (node->expressions, property_node);
+				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_CONSTANT:
-				arv_warning_genicam ("[GcSwissKnife::post_new_child] Constant and Expression not yet implemented");
+				node->constants = g_slist_prepend (node->constants, property_node);
 				break;
 			default:
 				ARV_DOM_NODE_CLASS (parent_class)->post_new_child (self, child);
@@ -128,8 +130,9 @@ arv_gc_swiss_knife_finalize (GObject *object)
 	ArvGcSwissKnife *gc_swiss_knife = ARV_GC_SWISS_KNIFE (object);
 
 	g_slist_free (gc_swiss_knife->variables);
-
-	g_object_unref (gc_swiss_knife->formula);
+	g_slist_free (gc_swiss_knife->expressions);
+	g_slist_free (gc_swiss_knife->constants);
+	g_clear_object (&gc_swiss_knife->formula);
 
 	parent_class->finalize (object);
 }
@@ -171,6 +174,36 @@ _update_variables (ArvGcSwissKnife *gc_swiss_knife, GError **error)
 	}
 
 	arv_evaluator_set_expression (gc_swiss_knife->formula, expression);
+
+	for (iter = gc_swiss_knife->expressions; iter != NULL; iter = iter->next) {
+		const char *expression;
+		const char *name;
+
+		expression = arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (iter->data), &local_error);
+		if (local_error != NULL) { 
+			g_propagate_error (error, local_error);
+			return;
+		}
+
+		name = arv_gc_property_node_get_name (iter->data);
+
+		arv_evaluator_set_sub_expression (gc_swiss_knife->formula, name, expression);
+	}
+
+	for (iter = gc_swiss_knife->constants; iter != NULL; iter = iter->next) {
+		const char *constant;
+		const char *name;
+
+		constant = arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (iter->data), &local_error);
+		if (local_error != NULL) { 
+			g_propagate_error (error, local_error);
+			return;
+		}
+
+		name = arv_gc_property_node_get_name (iter->data);
+
+		arv_evaluator_set_constant (gc_swiss_knife->formula, name, constant);
+	}
 
 	for (iter = gc_swiss_knife->variables; iter != NULL; iter = iter->next) {
 		ArvGcVariableNode *variable_node = iter->data;

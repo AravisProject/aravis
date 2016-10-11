@@ -163,6 +163,17 @@
 		<Formula>0x1234</Formula>
 	</IntSwissKnife>
 
+	<IntSwissKnife Name="IntSwissKnifeTestSubAndConstant">
+		<pVariable Name="X">X</pVariable>
+		<Constant Name="TEN">10</Constant>
+		<Expression Name="XPLUS2">TEN + X</Expression>
+		<Formula>TEN * XPLUS2</Formula>
+	</IntSwissKnife>
+
+	<Integer Name="X">
+		<Value>4</Value>
+	</Integer>
+
 	<Integer Name="Bug699228_T">
 		<Value>10</Value>
 	</Integer>
