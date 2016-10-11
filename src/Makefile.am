@@ -43,7 +43,6 @@ ARAVIS_SRCS =					\
 	arvgcnode.c				\
 	arvgcpropertynode.c			\
 	arvgcindexnode.c			\
-	arvgcvariablenode.c			\
 	arvgcinvalidatornode.c			\
 	arvgcfeaturenode.c			\
 	arvgcregisterdescriptionnode.c		\
@@ -107,7 +106,6 @@ ARAVIS_HDRS = 					\
 	arvgcnode.h				\
 	arvgcpropertynode.h			\
 	arvgcindexnode.h			\
-	arvgcvariablenode.h			\
 	arvgcinvalidatornode.h			\
 	arvgcfeaturenode.h			\
 	arvgcregisterdescriptionnode.h		\

@@ -26,7 +26,6 @@
  */
 
 #include <arvgcswissknife.h>
-#include <arvgcvariablenode.h>
 #include <arvevaluator.h>
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
@@ -206,7 +205,7 @@ _update_variables (ArvGcSwissKnife *gc_swiss_knife, GError **error)
 	}
 
 	for (iter = gc_swiss_knife->variables; iter != NULL; iter = iter->next) {
-		ArvGcVariableNode *variable_node = iter->data;
+		ArvGcPropertyNode *variable_node = iter->data;
 
 		node = arv_gc_property_node_get_linked_node (ARV_GC_PROPERTY_NODE (variable_node));
 		if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_INT64) {
@@ -220,7 +219,7 @@ _update_variables (ArvGcSwissKnife *gc_swiss_knife, GError **error)
 			}
 
 			arv_evaluator_set_int64_variable (gc_swiss_knife->formula,
-							  arv_gc_variable_node_get_name (variable_node),
+							  arv_gc_property_node_get_name (variable_node),
 							  value);
 		} else if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_DOUBLE) {
 			double value;
@@ -233,7 +232,7 @@ _update_variables (ArvGcSwissKnife *gc_swiss_knife, GError **error)
 			}
 
 			arv_evaluator_set_double_variable (gc_swiss_knife->formula,
-							  arv_gc_variable_node_get_name (variable_node),
+							  arv_gc_property_node_get_name (variable_node),
 							  value);
 		}
 	}

@@ -11,7 +11,6 @@ arv_gc_node_get_type
 arv_gc_property_node_get_type
 arv_gc_index_node_get_type
 arv_gc_invalidator_node_get_type
-arv_gc_variable_node_get_type
 arv_gc_enum_entry_get_type
 arv_gc_feature_node_get_type
 arv_gc_register_description_node_get_type

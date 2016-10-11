@@ -624,6 +624,12 @@ arv_gc_property_node_new_p_port (void)
 }
 
 ArvGcNode *
+arv_gc_property_node_new_p_variable (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_P_VARIABLE);
+}
+
+ArvGcNode *
 arv_gc_property_node_new_formula (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_FORMULA);

@@ -126,6 +126,7 @@ ArvGcNode * 	arv_gc_property_node_new_p_is_locked	 	(void);
 ArvGcNode * 	arv_gc_property_node_new_length			(void);
 ArvGcNode * 	arv_gc_property_node_new_p_length		(void);
 ArvGcNode * 	arv_gc_property_node_new_p_port 		(void);
+ArvGcNode * 	arv_gc_property_node_new_p_variable 		(void);
 ArvGcNode * 	arv_gc_property_node_new_formula		(void);
 ArvGcNode * 	arv_gc_property_node_new_formula_to		(void);
 ArvGcNode * 	arv_gc_property_node_new_formula_from		(void);

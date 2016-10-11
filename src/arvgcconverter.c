@@ -26,7 +26,6 @@
  */
 
 #include <arvgcfeaturenode.h>
-#include <arvgcvariablenode.h>
 #include <arvgcconverter.h>
 #include <arvevaluator.h>
 #include <arvgcinteger.h>
@@ -191,7 +190,7 @@ _update_from_variables (ArvGcConverter *gc_converter, ArvGcConverterNodeType nod
 	arv_evaluator_set_expression (gc_converter->formula_from, expression);
 
 	for (iter = gc_converter->variables; iter != NULL; iter = iter->next) {
-		ArvGcVariableNode *variable_node = iter->data;
+		ArvGcPropertyNode *variable_node = iter->data;
 
 		node = arv_gc_property_node_get_linked_node (ARV_GC_PROPERTY_NODE (variable_node));
 		if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_INT64) {
@@ -205,7 +204,7 @@ _update_from_variables (ArvGcConverter *gc_converter, ArvGcConverterNodeType nod
 			}
 
 			arv_evaluator_set_int64_variable (gc_converter->formula_from,
-							  arv_gc_variable_node_get_name (variable_node),
+							  arv_gc_property_node_get_name (variable_node),
 							  value);
 		} else if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_DOUBLE) {
 			double value;
@@ -218,7 +217,7 @@ _update_from_variables (ArvGcConverter *gc_converter, ArvGcConverterNodeType nod
 			}
 
 			arv_evaluator_set_double_variable (gc_converter->formula_from,
-							  arv_gc_variable_node_get_name (variable_node),
+							  arv_gc_property_node_get_name (variable_node),
 							  value);
 		}
 	}
@@ -317,7 +316,7 @@ _update_to_variables (ArvGcConverter *gc_converter, GError **error)
 	arv_evaluator_set_expression (gc_converter->formula_to, expression);
 
 	for (iter = gc_converter->variables; iter != NULL; iter = iter->next) {
-		ArvGcVariableNode *variable_node = iter->data;
+		ArvGcPropertyNode *variable_node = iter->data;
 
 		node = arv_gc_property_node_get_linked_node (ARV_GC_PROPERTY_NODE (variable_node));
 		if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_INT64) {
@@ -331,7 +330,7 @@ _update_to_variables (ArvGcConverter *gc_converter, GError **error)
 			}
 
 			arv_evaluator_set_int64_variable (gc_converter->formula_to,
-							  arv_gc_variable_node_get_name (variable_node),
+							  arv_gc_property_node_get_name (variable_node),
 							  value);
 		} else if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_DOUBLE) {
 			double value;
@@ -344,7 +343,7 @@ _update_to_variables (ArvGcConverter *gc_converter, GError **error)
 			}
 
 			arv_evaluator_set_double_variable (gc_converter->formula_to,
-							  arv_gc_variable_node_get_name (variable_node),
+							  arv_gc_property_node_get_name (variable_node),
 							  value);
 		}
 	}
