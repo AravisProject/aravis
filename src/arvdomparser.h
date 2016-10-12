@@ -24,6 +24,10 @@
 #ifndef ARV_DOM_PARSER_H
 #define ARV_DOM_PARSER_H
 
+#if !defined (ARV_H_INSIDE) && !defined (ARAVIS_COMPILATION)
+#error "Only <arv.h> can be included directly."
+#endif
+
 #include <arvdomdocument.h>
 #include <gio/gio.h>
 

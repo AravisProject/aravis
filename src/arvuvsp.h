@@ -23,6 +23,10 @@
 #ifndef ARV_UVSP_H
 #define ARV_UVSP_H
 
+#if !defined (ARV_H_INSIDE) && !defined (ARAVIS_COMPILATION)
+#error "Only <arv.h> can be included directly."
+#endif
+
 #include <arvtypes.h>
 #include <arvdebug.h>
 

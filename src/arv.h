@@ -23,12 +23,15 @@
 #ifndef ARV_H
 #define ARV_H
 
+#define ARV_H_INSIDE
+
 #include <arvtypes.h>
 
 #include <arvfeatures.h>
 #include <arvversion.h>
 #include <arvdebug.h>
 #include <arvmisc.h>
+#include <arvstr.h>
 #include <arvzip.h>
 #include <arvsystem.h>
 #include <arvevaluator.h>
@@ -82,5 +85,7 @@
 #include <arvfakestream.h>
 #include <arvfakecamera.h>
 #include <arvrealtime.h>
+
+#undef ARV_H_INSIDE
 
 #endif

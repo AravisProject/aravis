@@ -23,6 +23,10 @@
 #ifndef ARV_FAKE_DEVICE_PRIVATE_H
 #define ARV_FAKE_DEVICE_PRIVATE_H
 
+#if !defined (ARV_H_INSIDE) && !defined (ARAVIS_COMPILATION)
+#error "Only <arv.h> can be included directly."
+#endif
+
 #include <arvfakedevice.h>
 
 G_BEGIN_DECLS

@@ -3,12 +3,13 @@ EXTRA_DIST =
 include $(top_srcdir)/Makefile.decl
 
 AM_CPPFLAGS = \
-	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\" \
-	-DPACKAGE_SRC_DIR=\""$(srcdir)"\" \
-	-DPACKAGE_DATA_DIR=\""$(datadir)"\" $(ARAVIS_CFLAGS) \
-	-DARAVIS_DATA_DIR=\""$(aravis_datadir)"\" \
-	-DARAVIS_API_VERSION=\""$(ARAVIS_API_VERSION)"\" \
-	-DG_LOG_DOMAIN=\"Aravis\"
+	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\" 	\
+	-DPACKAGE_SRC_DIR=\""$(srcdir)"\" 				\
+	-DPACKAGE_DATA_DIR=\""$(datadir)"\" $(ARAVIS_CFLAGS) 		\
+	-DARAVIS_DATA_DIR=\""$(aravis_datadir)"\" 			\
+	-DARAVIS_API_VERSION=\""$(ARAVIS_API_VERSION)"\" 		\
+	-DG_LOG_DOMAIN=\"Aravis\"					\
+	-DARAVIS_COMPILATION
 
 AM_CFLAGS = -Wall
 
@@ -232,7 +233,7 @@ Aravis-@ARAVIS_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libaravis-@ARAVIS_API_
 
 Aravis_@ARAVIS_API_VERSION_U@_gir_INCLUDES = GObject-2.0 Gio-2.0
 Aravis_@ARAVIS_API_VERSION_U@_gir_SCANNERFLAGS = --identifier-prefix=Arv --warn-all
-Aravis_@ARAVIS_API_VERSION_U@_gir_CFLAGS = $(INCLUDES) -I$(top_srcdir)/src
+Aravis_@ARAVIS_API_VERSION_U@_gir_CFLAGS = $(INCLUDES) -I$(top_srcdir)/src -DARAVIS_COMPILATION
 Aravis_@ARAVIS_API_VERSION_U@_gir_LIBS = libaravis-@ARAVIS_API_VERSION@.la
 Aravis_@ARAVIS_API_VERSION_U@_gir_FILES = $(addprefix $(srcdir)/,$(introspection_files))
 

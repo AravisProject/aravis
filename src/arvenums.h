@@ -23,6 +23,10 @@
 #ifndef ARV_ENUMS_H
 #define ARV_ENUMS_H
 
+#if !defined (ARV_H_INSIDE) && !defined (ARAVIS_COMPILATION)
+#error "Only <arv.h> can be included directly."
+#endif
+
 #include <glib-object.h>
 
 G_BEGIN_DECLS

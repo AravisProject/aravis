@@ -23,6 +23,10 @@
 #ifndef ARV_GV_STREAM_H
 #define ARV_GV_STREAM_H
 
+#if !defined (ARV_H_INSIDE) && !defined (ARAVIS_COMPILATION)
+#error "Only <arv.h> can be included directly."
+#endif
+
 #include <arvtypes.h>
 
 G_BEGIN_DECLS

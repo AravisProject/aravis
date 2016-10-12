@@ -23,6 +23,10 @@
 #ifndef ARV_SYSTEM_H
 #define ARV_SYSTEM_H
 
+#if !defined (ARV_H_INSIDE) && !defined (ARAVIS_COMPILATION)
+#error "Only <arv.h> can be included directly."
+#endif
+
 #include <arvtypes.h>
 
 G_BEGIN_DECLS

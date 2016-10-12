@@ -23,6 +23,10 @@
 #ifndef ARV_GV_DEVICE_PRIVATE_H
 #define ARV_GV_DEVICE_PRIVATE_H
 
+#if !defined (ARV_H_INSIDE) && !defined (ARAVIS_COMPILATION)
+#error "Only <arv.h> can be included directly."
+#endif
+
 #include <arvgvdevice.h>
 
 G_BEGIN_DECLS

@@ -24,6 +24,10 @@
 #ifndef ARV_DOM_CHARACTER_DATA_H
 #define ARV_DOM_CHARACTER_DATA_H
 
+#if !defined (ARV_H_INSIDE) && !defined (ARAVIS_COMPILATION)
+#error "Only <arv.h> can be included directly."
+#endif
+
 #include <arvdomnode.h>
 
 G_BEGIN_DECLS

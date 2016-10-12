@@ -20,6 +20,10 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+#if !defined (ARV_H_INSIDE) && !defined (ARAVIS_COMPILATION)
+#error "Only <arv.h> can be included directly."
+#endif
+
 #ifndef ARV_GV_DEVICE_H
 #define ARV_GV_DEVICE_H
 

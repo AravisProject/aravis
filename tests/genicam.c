@@ -1,6 +1,8 @@
 #include <glib.h>
 #include <arv.h>
 #include <string.h>
+
+#define ARAVIS_COMPILATION
 #include "../src/arvbufferprivate.h"
 
 typedef struct {
