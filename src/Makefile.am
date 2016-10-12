@@ -14,7 +14,7 @@ AM_CFLAGS = -Wall
 
 lib_LTLIBRARIES = libaravis-@ARAVIS_API_VERSION@.la
 
-BUILT_SOURCES = arvenumtypes.h arvenumtypes.c arvfeatures.h
+BUILT_SOURCES = arvenumtypes.h arvenumtypes.c arvfeatures.h arvversion.h
 
 EXTRA_DIST += arvenumtypes.h.template \
 	      arvenumtypes.c.template
@@ -195,7 +195,7 @@ libaravis_@ARAVIS_API_VERSION@_ladir = $(includedir)/aravis-@ARAVIS_API_VERSION@
 libaravis_@ARAVIS_API_VERSION@_la_HEADERS = $(ARAVIS_HDRS) $(ARAVIS_HDRS_NO_INTRO)
 libaravis_@ARAVIS_API_VERSION@_la_HEADERS += arvenumtypes.h
 
-nodist_libaravis_@ARAVIS_API_VERSION@_la_HEADERS = arvfeatures.h
+nodist_libaravis_@ARAVIS_API_VERSION@_la_HEADERS = arvfeatures.h arvversion.h
 
 arvenumtypes.h: arvenumtypes.h.template $(ARAVIS_HDRS) $(ARAVIS_HDRS_NO_INTRO) $(GLIB_MKENUMS)
 	$(AM_V_GEN) (cd $(srcdir) && $(GLIB_MKENUMS) --template arvenumtypes.h.template $(libaravis_@ARAVIS_API_VERSION@_la_HEADERS)) > $@

@@ -18,6 +18,16 @@ m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 AC_SUBST([ARAVIS_API_VERSION], [0.6])
 AC_SUBST([ARAVIS_API_VERSION_U],[AS_TR_SH([$ARAVIS_API_VERSION])])
 
+ARAVIS_MAJOR_VERSION=aravis_version_major
+ARAVIS_MINOR_VERSION=aravis_version_minor
+ARAVIS_MICRO_VERSION=aravis_version_micro
+ARAVIS_VERSION=aravis_version
+
+AC_SUBST(ARAVIS_MAJOR_VERSION)
+AC_SUBST(ARAVIS_MINOR_VERSION)
+AC_SUBST(ARAVIS_MICRO_VERSION)
+AC_SUBST(ARAVIS_VERSION)
+
 AC_SEARCH_LIBS([strerror],[cposix])
 AC_PROG_CC
 AC_PROG_CXX
@@ -245,6 +255,7 @@ AC_CONFIG_FILES([
 Makefile
 src/Makefile
 src/arvfeatures.h
+src/arvversion.h
 viewer/Makefile
 viewer/data/Makefile
 viewer/data/arv-viewer.desktop.in

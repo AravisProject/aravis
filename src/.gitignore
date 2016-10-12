@@ -5,3 +5,4 @@ arvenumtypes.h
 arvconfig.h
 arvconfig.h.in
 arvfeatures.h
+arvversion.h

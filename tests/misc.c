@@ -3,6 +3,10 @@
 #include <arvstr.h>
 #include <string.h>
 
+#if !ARAVIS_CHECK_VERSION (ARAVIS_MAJOR_VERSION, ARAVIS_MINOR_VERSION, ARAVIS_MICRO_VERSION)
+#error
+#endif
+
 static void
 unaligned_from_le_ptr_test (void)
 {

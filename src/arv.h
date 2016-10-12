@@ -25,6 +25,8 @@
 
 #include <arvtypes.h>
 
+#include <arvfeatures.h>
+#include <arvversion.h>
 #include <arvdebug.h>
 #include <arvmisc.h>
 #include <arvzip.h>
