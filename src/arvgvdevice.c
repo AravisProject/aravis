@@ -964,6 +964,13 @@ arv_gv_device_load_genicam (ArvGvDevice *gv_device)
 					      "<pVariable Name=\"SEL\">GevStreamChannelSelector</pVariable>"
 					      "<Formula>SEL * 0x40</Formula>"
 					      "</IntSwissKnife>");
+		arv_gc_set_default_node_data (gv_device->priv->genicam, "GevStreamChannelSelector",
+					      "<Integer Name=\"GevStreamChannelSelector\">"
+					      "<Value>0</Value>"
+					      "<Min>0</Min>"
+					      "<Max>4</Max>"
+					      "<Inc>1</Inc>"
+					      "</Integer>");
 		arv_gc_set_default_node_data (gv_device->priv->genicam, "TLParamsLocked",
 					      "<Integer Name=\"TLParamsLocked\">"
 					      "<Visibility>Invisible</Visibility>"
