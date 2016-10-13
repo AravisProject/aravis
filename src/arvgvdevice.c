@@ -847,6 +847,14 @@ arv_gv_device_load_genicam (ArvGvDevice *gv_device)
 					      "<AccessMode>RO</AccessMode>"
 					      "<pPort>Device</pPort>"
 					      "</StringReg>");
+		arv_gc_set_default_node_data (gv_device->priv->genicam, "NumberOfStreamChannels",
+					      "<IntReg Name=\"NumberOfStreamChannels\">"
+					      "<Address>0x904</Address>"
+					      "<Length>4</Length>"
+					      "<AccessMode>RO</AccessMode>"
+					      "<Endianess>BigEndian</Endianess>"
+					      "<pPort>Device</pPort>"
+					      "</IntReg>");
 		arv_gc_set_default_node_data (gv_device->priv->genicam, "GevSCPHostPort",
 					      "<Integer Name=\"GevSCPHostPort\">"
 					      "<Visibility>Expert</Visibility>"
@@ -968,9 +976,14 @@ arv_gv_device_load_genicam (ArvGvDevice *gv_device)
 					      "<Integer Name=\"GevStreamChannelSelector\">"
 					      "<Value>0</Value>"
 					      "<Min>0</Min>"
-					      "<Max>4</Max>"
+					      "<pMax>GevStreamChannelSelectorMax</pMax>"
 					      "<Inc>1</Inc>"
 					      "</Integer>");
+		arv_gc_set_default_node_data (gv_device->priv->genicam, "GevStreamChannelSelectorMax",
+					      "<IntSwissKnife Name=\"GevStreamChannelSelectorMax\">"
+					      "<pVariable Name=\"N_STREAM_CHANNELS\">NumberOfStreamChannels</pVariable>"
+					      "<Formula>N_STREAM_CHANNELS - 1</Formula>"
+					      "</IntSwissKnife>");
 		arv_gc_set_default_node_data (gv_device->priv->genicam, "TLParamsLocked",
 					      "<Integer Name=\"TLParamsLocked\">"
 					      "<Visibility>Invisible</Visibility>"
@@ -993,7 +1006,7 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 	GInetAddress *interface_address;
 	GInetAddress *device_address;
 
-	arv_device_read_register (device, ARV_GVBS_N_STREAM_CHANNELS_OFFSET, &n_stream_channels, NULL);
+	n_stream_channels = arv_device_get_integer_feature_value (device, "NumberOfStreamChannels"); 
 	arv_debug_device ("[GvDevice::create_stream] Number of stream channels = %d", n_stream_channels);
 
 	if (n_stream_channels < 1)
