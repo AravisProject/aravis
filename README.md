@@ -21,6 +21,8 @@ make install
 
 Compilation options may be passed to the configure script. Please run `./configure --help` for information about the available options.
 
+On some platforms (like Ubuntu), you may have to configure the dynamic linker (ld) to let it know where the aravis libraries are installed, and run ldconfig as root in order to update ld cache.
+
 ### Ethernet Device Performance
 
 #### Stream Packet Size
