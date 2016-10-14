@@ -46,7 +46,8 @@ struct _ArvUvDeviceClass {
 };
 
 gboolean 	arv_uv_device_bulk_transfer 		(ArvUvDevice *uv_device, unsigned char endpoint, void *data,
-							 size_t size, size_t *transferred_size, GError **error);
+							 size_t size, size_t *transferred_size,
+							 guint32 timeout_ms, GError **error);
 
 G_END_DECLS
 

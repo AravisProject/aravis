@@ -107,6 +107,7 @@ typedef enum {
  * @ARV_UVCP_COMMAND_WRITE_MEMORY_CMD: write memory command
  * @ARV_UVCP_COMMAND_WRITE_MEMORY_ACK: write memory acknowledge
  * @ARV_UVCP_COMMAND_PENDING_ACK: pending command acknowledge
+ * @ARV_UVCP_COMMAND_EVENT_CMD: event command
  */
 
 typedef enum {
@@ -114,7 +115,8 @@ typedef enum {
 	ARV_UVCP_COMMAND_READ_MEMORY_ACK =	0x0801,
 	ARV_UVCP_COMMAND_WRITE_MEMORY_CMD =	0x0802,
 	ARV_UVCP_COMMAND_WRITE_MEMORY_ACK =	0x0803,
-	ARV_UVCP_COMMAND_PENDING_ACK =		0x0805
+	ARV_UVCP_COMMAND_PENDING_ACK =		0x0805,
+	ARV_UVCP_COMMAND_EVENT_CMD =		0x0c00
 } ArvUvcpCommand;
 
 #define ARAVIS_PACKED_STRUCTURE __attribute__((__packed__))
@@ -162,6 +164,16 @@ typedef struct ARAVIS_PACKED_STRUCTURE {
 	ArvUvcpHeader header;
 	ArvUvcpWriteMemoryAckInfos infos;
 } ArvUvcpWriteMemoryAck;
+
+typedef struct ARAVIS_PACKED_STRUCTURE {
+	guint16 unknown;
+	guint16 timeout;
+} ArvUvcpPendingAckInfos;
+
+typedef struct ARAVIS_PACKED_STRUCTURE {
+	ArvUvcpHeader header;
+	ArvUvcpPendingAckInfos infos;
+} ArvUvcpPendingAck;
 
 /**
  * ArvUvcpPacket:
@@ -270,6 +282,12 @@ static inline size_t
 arv_uvcp_packet_get_write_memory_ack_size (void)
 {
 	return sizeof (ArvUvcpWriteMemoryAck);
+}
+
+static inline guint16
+arv_uvcp_packet_get_pending_ack_timeout (ArvUvcpPacket *packet)
+{
+	return GUINT16_FROM_LE (((ArvUvcpPendingAck *) packet)->infos.timeout);
 }
 
 static inline guint16

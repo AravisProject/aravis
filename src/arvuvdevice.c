@@ -67,7 +67,7 @@ struct _ArvUvDevicePrivate {
 
 gboolean
 arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, unsigned char endpoint, void *data,
-			     size_t size, size_t *transferred_size, GError **error)
+			     size_t size, size_t *transferred_size, guint32 timeout_ms, GError **error)
 {
 	gboolean success;
 	int transferred = 0;
@@ -83,7 +83,8 @@ arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, unsigned char endpoint, voi
 		return FALSE;
 	}
 
-	result = libusb_bulk_transfer (uv_device->priv->usb_device, endpoint, data, size, &transferred, uv_device->priv->timeout_ms);
+	result = libusb_bulk_transfer (uv_device->priv->usb_device, endpoint, data, size, &transferred,
+				       MAX (uv_device->priv->timeout_ms, timeout_ms));
 
 	success = result >= 0; 
 
@@ -122,6 +123,7 @@ _read_memory (ArvUvDevice *uv_device, guint32 address, guint32 size, void *buffe
 	size_t packet_size;
 	gboolean success = FALSE;
 	unsigned n_tries = 0;
+	guint32 timeout_ms = 0;
 
 	read_packet_size = arv_uvcp_packet_get_read_memory_ack_size (size);
 	if (read_packet_size > uv_device->priv->ack_packet_size_max) {
@@ -149,7 +151,7 @@ _read_memory (ArvUvDevice *uv_device, guint32 address, guint32 size, void *buffe
 
 		success = TRUE;
 		success = success && arv_uv_device_bulk_transfer (uv_device, (0x04 | LIBUSB_ENDPOINT_OUT),
-								  packet, packet_size, NULL, NULL);
+								  packet, packet_size, NULL, 0, NULL);
 		if (success) {
 			gboolean expected_answer;
 
@@ -157,7 +159,7 @@ _read_memory (ArvUvDevice *uv_device, guint32 address, guint32 size, void *buffe
 				success = TRUE;
 				success = success && arv_uv_device_bulk_transfer (uv_device, (0x84 | LIBUSB_ENDPOINT_IN),
 										  read_packet, read_packet_size, &transferred,
-										  NULL);
+										  0, NULL);
 
 				if (success) {
 					ArvUvcpPacketType packet_type;
@@ -168,9 +170,15 @@ _read_memory (ArvUvDevice *uv_device, guint32 address, guint32 size, void *buffe
 					command = arv_uvcp_packet_get_command (read_packet);
 					packet_id = arv_uvcp_packet_get_packet_id (read_packet);
 
-					expected_answer = packet_type == ARV_UVCP_PACKET_TYPE_ACK &&
-						command == ARV_UVCP_COMMAND_READ_MEMORY_ACK &&
-						packet_id == uv_device->priv->packet_id;
+					if (command == ARV_UVCP_COMMAND_PENDING_ACK) {
+						expected_answer = FALSE;
+						timeout_ms = arv_uvcp_packet_get_pending_ack_timeout (read_packet);
+
+						arv_log_device ("[UvDevice::read_memory] Pending ack timeout = %d", timeout_ms);
+					} else
+						expected_answer = packet_type == ARV_UVCP_PACKET_TYPE_ACK &&
+							command == ARV_UVCP_COMMAND_READ_MEMORY_ACK &&
+							packet_id == uv_device->priv->packet_id;
 				} else
 					expected_answer = FALSE;
 
@@ -229,6 +237,7 @@ _write_memory (ArvUvDevice *uv_device, guint32 address, guint32 size, void *buff
 	size_t read_packet_size;
 	gboolean success = FALSE;
 	unsigned n_tries = 0;
+	guint32 timeout_ms = 0;
 
 	read_packet_size = arv_uvcp_packet_get_write_memory_ack_size ();
 	if (read_packet_size > uv_device->priv->ack_packet_size_max) {
@@ -257,14 +266,15 @@ _write_memory (ArvUvDevice *uv_device, guint32 address, guint32 size, void *buff
 
 		success = TRUE;
 		success = success && arv_uv_device_bulk_transfer (uv_device, (0x04 | LIBUSB_ENDPOINT_OUT),
-								  packet, packet_size, NULL, NULL);
+								  packet, packet_size, NULL, 0, NULL);
 		if (success ) {
 			gboolean expected_answer;
 
 			do {
 				success = TRUE;
 				success = success && arv_uv_device_bulk_transfer (uv_device, (0x84 | LIBUSB_ENDPOINT_IN),
-										  read_packet, read_packet_size, &transferred, NULL);
+										  read_packet, read_packet_size, &transferred, 
+										  timeout_ms, NULL);
 
 				if (success) {
 					ArvUvcpPacketType packet_type;
@@ -275,9 +285,15 @@ _write_memory (ArvUvDevice *uv_device, guint32 address, guint32 size, void *buff
 					command = arv_uvcp_packet_get_command (read_packet);
 					packet_id = arv_uvcp_packet_get_packet_id (read_packet);
 
-					expected_answer = packet_type == ARV_UVCP_PACKET_TYPE_ACK &&
-						command == ARV_UVCP_COMMAND_WRITE_MEMORY_ACK &&
-						packet_id == uv_device->priv->packet_id;
+					if (command == ARV_UVCP_COMMAND_PENDING_ACK) {
+						expected_answer = FALSE;
+						timeout_ms = arv_uvcp_packet_get_pending_ack_timeout (read_packet);
+
+						arv_log_device ("[UvDevice::write_memory] Pending ack timeout = %d", timeout_ms);
+					} else
+						expected_answer = packet_type == ARV_UVCP_PACKET_TYPE_ACK &&
+							command == ARV_UVCP_COMMAND_WRITE_MEMORY_ACK &&
+							packet_id == uv_device->priv->packet_id;
 				} else
 					expected_answer = FALSE;
 
