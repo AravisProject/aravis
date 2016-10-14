@@ -64,6 +64,5 @@ It is perfectly possible to only build the library, reducing the dependencies to
 * Mailing list: aravis@freelists.org ( http://www.freelists.org/list/aravis )
 * Aravis 0.4 documentation: https://aravisproject.github.io/docs/aravis-0.4/
 * Aravis 0.5 (unstable) documentation: https://aravisproject.github.io/docs/aravis-0.5/
-* Documentation: https://aravisproject.github.io/docs/aravis-0.4/
 * Blog: http://blogs.gnome.org/emmanuel/category/aravis/
 * Genicam standard : http://www.genicam.org
