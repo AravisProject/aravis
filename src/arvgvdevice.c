@@ -703,7 +703,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 
 					if (arv_debug_check (&arv_debug_category_misc, ARV_DEBUG_LEVEL_LOG)) {
 						GString *string = g_string_new ("");
-						
+
 						g_string_append_printf (string,
 									"[GvDevice::load_genicam] Raw data size = 0x%x\n", file_size);
 						arv_g_string_append_hex_dump (string, genicam, file_size);
@@ -1006,7 +1006,7 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 	GInetAddress *interface_address;
 	GInetAddress *device_address;
 
-	n_stream_channels = arv_device_get_integer_feature_value (device, "NumberOfStreamChannels"); 
+	n_stream_channels = arv_device_get_integer_feature_value (device, "NumberOfStreamChannels");
 	arv_debug_device ("[GvDevice::create_stream] Number of stream channels = %d", n_stream_channels);
 
 	if (n_stream_channels < 1)
@@ -1025,7 +1025,7 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 		return NULL;
 
 	if (!gv_device->priv->is_packet_resend_supported)
-		g_object_set (stream, "packet-resend", ARV_GV_STREAM_PACKET_RESEND_NEVER, NULL); 
+		g_object_set (stream, "packet-resend", ARV_GV_STREAM_PACKET_RESEND_NEVER, NULL);
 
 	return stream;
 }

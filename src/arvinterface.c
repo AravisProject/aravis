@@ -96,7 +96,7 @@ arv_interface_update_device_list (ArvInterface *interface)
  * call the @arv_interface_update_device_list function must be called. The list content will not
  * change until the next call of the update function.
  *
- * Returns: the number of available devices 
+ * Returns: the number of available devices
  *
  * Since: 0.2.0
  */

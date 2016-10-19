@@ -86,7 +86,7 @@ arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, unsigned char endpoint, voi
 	result = libusb_bulk_transfer (uv_device->priv->usb_device, endpoint, data, size, &transferred,
 				       MAX (uv_device->priv->timeout_ms, timeout_ms));
 
-	success = result >= 0; 
+	success = result >= 0;
 
 	if (!success)
 		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_STATUS_TRANSFER_ERROR,
@@ -273,7 +273,7 @@ _write_memory (ArvUvDevice *uv_device, guint32 address, guint32 size, void *buff
 			do {
 				success = TRUE;
 				success = success && arv_uv_device_bulk_transfer (uv_device, (0x84 | LIBUSB_ENDPOINT_IN),
-										  read_packet, read_packet_size, &transferred, 
+										  read_packet, read_packet_size, &transferred,
 										  timeout_ms, NULL);
 
 				if (success) {
@@ -353,7 +353,7 @@ arv_uv_device_write_register (ArvDevice *device, guint32 address, guint32 value,
 	return arv_uv_device_write_memory (device, address, sizeof (guint32), &value, error);
 }
 
-static void 
+static void
 _bootstrap (ArvUvDevice *uv_device)
 {
 	ArvDevice *device = ARV_DEVICE (uv_device);

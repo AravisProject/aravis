@@ -20,7 +20,7 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-/** 
+/**
  * SECTION: arvdevice
  * @short_description: Abstract base class for device handling
  *
@@ -308,7 +308,7 @@ arv_device_execute_command (ArvDevice *device, const char *feature)
 
 	if (ARV_IS_GC_COMMAND (node)) {
 		GError *error = NULL;
-		
+
 		arv_gc_command_execute (ARV_GC_COMMAND (node), &error);
 
 		if (error != NULL) {
@@ -547,7 +547,7 @@ arv_device_set_float_feature_value (ArvDevice *device, const char *feature, doub
 
 	if (ARV_IS_GC_FLOAT (node))
 		arv_gc_float_set_value (ARV_GC_FLOAT (node), value, &error);
-	else 
+	else
 		arv_warning_device ("[ArvDevice::set_float_feature_value] Node '%s' is not a float",
 				    feature);
 
@@ -570,7 +570,7 @@ arv_device_get_float_feature_value (ArvDevice *device, const char *feature)
 
 	if (ARV_IS_GC_FLOAT (node))
 		value = arv_gc_float_get_value (ARV_GC_FLOAT (node), &error);
-	else 
+	else
 		arv_warning_device ("[ArvDevice::get_float_feature_value] Node '%s' is not a float",
 				    feature);
 
@@ -706,11 +706,11 @@ ArvDeviceStatus
 arv_device_get_status (ArvDevice *device)
 {
 	ArvDeviceStatus status;
-	
+
 	g_return_val_if_fail (ARV_IS_DEVICE (device), ARV_DEVICE_STATUS_UNKNOWN);
 
 	status = device->priv->status;
-	
+
 	g_free (device->priv->status_message);
 	device->priv->status = ARV_DEVICE_STATUS_SUCCESS;
 	device->priv->status_message = NULL;

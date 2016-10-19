@@ -69,7 +69,7 @@ typedef enum {
 	ARV_CAMERA_VENDOR_PROSILICA,
 	ARV_CAMERA_VENDOR_TIS,
 	ARV_CAMERA_VENDOR_POINT_GREY,
-	ARV_CAMERA_VENDOR_RICOH	
+	ARV_CAMERA_VENDOR_RICOH
 } ArvCameraVendor;
 
 typedef enum {
@@ -758,7 +758,7 @@ arv_camera_get_acquisition_mode (ArvCamera *camera)
 }
 
 /**
- * arv_camera_set_frame_rate: 
+ * arv_camera_set_frame_rate:
  * @camera: a #ArvCamera
  * @frame_rate: frame rate, in Hz
  *
@@ -1114,14 +1114,14 @@ double
 arv_camera_get_exposure_time (ArvCamera *camera)
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0.0);
-	
+
 	switch (camera->priv->series) {
 		case ARV_CAMERA_SERIES_RICOH:
 			return arv_device_get_integer_feature_value (camera->priv->device,"ExposureTimeRaw");
 		default:
 			return arv_device_get_float_feature_value (camera->priv->device,
 						   camera->priv->has_exposure_time ?
-						   "ExposureTime" : 
+						   "ExposureTime" :
 						   "ExposureTimeAbs");
 	}
 }
@@ -1278,7 +1278,7 @@ arv_camera_get_gain_bounds (ArvCamera *camera, double *min, double *max)
 		arv_device_get_float_feature_bounds (camera->priv->device, "Gain", min, max);
 		return;
 	}
-	
+
 	arv_device_get_integer_feature_bounds (camera->priv->device, "GainRaw", &min64, &max64);
 
 	if (min != NULL)
@@ -1329,7 +1329,7 @@ arv_camera_get_gain_auto (ArvCamera *camera)
 /**
  * arv_camera_get_payload:
  * @camera: a #ArvCamera
- * 
+ *
  * Retrieves the size needed for the storage of an image. This value is used
  * for the creation of the stream buffers.
  *
@@ -1708,7 +1708,7 @@ arv_camera_gv_set_stream_options (ArvCamera *camera, ArvGvStreamOption options)
  *
  * Controls wether chunk data mode is active. When active, chunk data
  * are appended to image data in #ArvBuffer. A #ArvChunkParser must be used in
- * order to extract chunk data. 
+ * order to extract chunk data.
  *
  * Since: 0.4.0
  **/
@@ -1789,7 +1789,7 @@ arv_camera_get_chunk_state (ArvCamera *camera, const char *chunk)
  * arv_camera_set_chunks:
  * @camera: a #ArvCamera
  * @chunk_list: chunk data names, as a comma or space separated list
- * 
+ *
  * Convenience function for enabling a set of chunk data. Chunk mode is activated, or deactivated
  * if @chunk_list is %NULL or empty. All chunk data not listed are disabled.
  *

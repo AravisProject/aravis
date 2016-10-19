@@ -385,7 +385,7 @@ arv_stream_class_init (ArvStreamClass *node_class)
 	 * Signal that a new buffer is available.
 	 *
 	 * This signal is emited from the stream receive thread and only when the
-	 * "emit-signals" property is %TRUE. 
+	 * "emit-signals" property is %TRUE.
 	 *
 	 * The new buffer can be retrieved with arv_stream_pop_buffer().
 	 *

@@ -43,7 +43,7 @@ static GObjectClass *parent_class = NULL;
  * @user_data: (transfer none): a pointer to user data associated to this buffer
  * @user_data_destroy_func: an optional user data destroy callback
  *
- * Creates a new buffer for the storage of the video stream images. 
+ * Creates a new buffer for the storage of the video stream images.
  * The data space can be either preallocated, and the caller is responsible
  * for it's deallocation, or allocated by this function. If it is the case,
  * data memory will be freed when the buffer is destroyed.
@@ -82,7 +82,7 @@ arv_buffer_new_full (size_t size, void *preallocated, void *user_data, GDestroyN
  * @size: payload size
  * @preallocated: (transfer none): preallocated memory buffer
  *
- * Creates a new buffer for the storage of the video stream images. 
+ * Creates a new buffer for the storage of the video stream images.
  * The data space can be either preallocated, and the caller is responsible
  * for it's deallocation, or allocated by this function. If it is the case,
  * data memory will be freed when the buffer is destroyed.
@@ -102,7 +102,7 @@ arv_buffer_new (size_t size, void *preallocated)
  * arv_buffer_new_allocate:
  * @size: payload size
  *
- * Creates a new buffer for the storage of the video stream images. 
+ * Creates a new buffer for the storage of the video stream images.
  * The data space is allocated by this function, and will
  * be freed when the buffer is destroyed.
  *
@@ -231,7 +231,7 @@ const void *
 arv_buffer_get_user_data (ArvBuffer *buffer)
 {
 	g_return_val_if_fail (ARV_IS_BUFFER (buffer), NULL);
-	
+
 	return buffer->priv->user_data;
 }
 
@@ -250,7 +250,7 @@ ArvBufferStatus
 arv_buffer_get_status (ArvBuffer *buffer)
 {
 	g_return_val_if_fail (ARV_IS_BUFFER (buffer), ARV_BUFFER_STATUS_UNKNOWN);
-	
+
 	return buffer->priv->status;
 }
 
@@ -269,7 +269,7 @@ ArvBufferPayloadType
 arv_buffer_get_payload_type (ArvBuffer *buffer)
 {
 	g_return_val_if_fail (ARV_IS_BUFFER (buffer), -1);
-	
+
 	switch (buffer->priv->gvsp_payload_type) {
 		case ARV_GVSP_PAYLOAD_TYPE_IMAGE:
 			return ARV_BUFFER_PAYLOAD_TYPE_IMAGE;
