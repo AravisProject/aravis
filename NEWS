@@ -1,3 +1,11 @@
+Release 0.5.6
+=============
+
+  * genicam: implement Expression and Constant nodes for [Int]SwissKnife
+  * API: add ARAVIS_CHECK_VERSION macro
+  * API: forbid direct inclusion of headers other than arv.h
+  * usb3vision: PENDING_ACK support
+
 Release 0.5.5
 =============
 
