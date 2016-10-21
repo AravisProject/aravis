@@ -17,7 +17,7 @@ Aravis uses the standard GNU build system, using autoconf for package configurat
 ./configure
 make
 make install
-```   
+```
 
 Compilation options may be passed to the configure script. Please run `./configure --help` for information about the available options.
 
