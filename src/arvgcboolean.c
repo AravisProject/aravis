@@ -48,7 +48,7 @@ arv_gc_boolean_post_new_child (ArvDomNode *self, ArvDomNode *child)
 
 	if (ARV_IS_GC_PROPERTY_NODE (child)) {
 		ArvGcPropertyNode *property_node = ARV_GC_PROPERTY_NODE (child);
-		
+
 		switch (arv_gc_property_node_get_node_type (property_node)) {
 			case ARV_GC_PROPERTY_NODE_TYPE_VALUE:
 			case ARV_GC_PROPERTY_NODE_TYPE_P_VALUE:

@@ -57,7 +57,7 @@ arv_str_strip (char *str, const char *illegal_chars, char replacement_char)
 	char *out = str;
 	unsigned int n_illegal_chars;
 	unsigned int i;
-	
+
 	if (str == NULL || illegal_chars == NULL)
 		return str;
 
@@ -69,7 +69,7 @@ arv_str_strip (char *str, const char *illegal_chars, char replacement_char)
 		gboolean found = FALSE;
 		for (i = 0; i < n_illegal_chars && !found; i++)
 			found = illegal_chars[i] == *ptr;
-		
+
 		if (found) {
 			if (last_char == out && replacement_char != '\0') {
 				*out = replacement_char;
@@ -267,7 +267,7 @@ arv_str_parse_double_list (char **str, unsigned int n_values, double *values)
  *
  * 01e0 c8 b7 89 b0 45 fa 3d 9d 8c e9 a7 33 46 85 1f 2c  ....E.=....3F..,
  * 01f0 3f 4c ba 8d 99 f3 ff d0 40 78 73 37 32 e5 4f 9f  ?L......@xs72.O.
- * 0200 d0 d2 f2 ef 5a 2f fc 61 e3 64 36 21              ....Z/.a.d6!    
+ * 0200 d0 d2 f2 ef 5a 2f fc 61 e3 64 36 21              ....Z/.a.d6!
  */
 
 void

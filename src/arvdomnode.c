@@ -369,7 +369,7 @@ arv_dom_node_get_owner_document (ArvDomNode* self)
 
 /* TODO:
  * If @new_child is a #LsmDocumentFragment object, all of its children are inserted,
- * in the same order, before @ref_child. 
+ * in the same order, before @ref_child.
  * Check if new_child is an ancestor of self.
  */
 

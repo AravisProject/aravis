@@ -32,10 +32,10 @@
 
 G_BEGIN_DECLS
 
-/** 
+/**
  * ARV_GVCP_PORT:
  *
- * Standard device listening port for GVCP packets 
+ * Standard device listening port for GVCP packets
  */
 #define ARV_GVCP_PORT	3956
 

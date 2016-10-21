@@ -61,7 +61,7 @@ main (int argc, char **argv)
 		wt /= j;
 		printf ("SleepMeas: %6" G_GINT64_FORMAT " - Mean %7g Max %5g Min %5g rms %g\n",
 			i, wt, max, min, sqrt(swt/j - wt*wt));
-	} 
+	}
 
 	for( i = 1; i < MAX_TIME_US; i = i*2 ) {
 		max = wt = swt = 0.; min = MAX_TIME_US;

@@ -382,7 +382,7 @@ _get_node_integer_value (ArvGcInteger *gc_integer, ArvGcConverterNodeType node_t
 	GError *local_error = NULL;
 
 	if (!_update_from_variables (gc_converter, node_type, &local_error)) {
-		if (local_error != NULL) 
+		if (local_error != NULL)
 			g_propagate_error (error, local_error);
 
 		switch (node_type) {
@@ -484,7 +484,7 @@ _get_node_float_value (ArvGcFloat *gc_float, ArvGcConverterNodeType node_type, G
 	GError *local_error = NULL;
 
 	if (!_update_from_variables (gc_converter, node_type, &local_error)) {
-		if (local_error != NULL) 
+		if (local_error != NULL)
 			g_propagate_error (error, local_error);
 
 		switch (node_type) {

@@ -601,7 +601,7 @@ _flush_frames (ArvGvStreamThreadData *thread_data)
 
 static ArvGvStreamFrameData *
 _process_packet (ArvGvStreamThreadData *thread_data, const ArvGvspPacket *packet, size_t packet_size, guint64 time_us)
-	
+
 {
 	ArvGvStreamFrameData *frame;
 	guint32 packet_id;
@@ -875,7 +875,7 @@ _ring_buffer_loop (ArvGvStreamThreadData *thread_data)
 			ArvGvStreamFrameData *frame;
 			const struct tpacket3_hdr *header;
 			unsigned i;
-			
+
 			header = (void *) (((char *) descriptor) + descriptor->h1.offset_to_first_pkt);
 
 			for (i = 0; i < descriptor->h1.num_pkts; i++) {

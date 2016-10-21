@@ -54,7 +54,7 @@ size_t		arv_zip_file_get_uncompressed_size	(ArvZipFile *zip_file);
  * It can be necessary to access unaligned data in memory, for example,
  * when porting legacy code from a CISC architecture where instructions are
  * available to directly access unaligned data in memory.
- * 
+ *
  * On ARMv4 and ARMv5 architectures, and on the ARMv6 architecture
  * depending on how it is configured, care is required when accessing
  * unaligned data in memory, to avoid unexpected results. For example, when
@@ -65,7 +65,7 @@ size_t		arv_zip_file_get_uncompressed_size	(ArvZipFile *zip_file);
  * the address is not a multiple of four, the LDR instruction returns a
  * rotated result rather than performing a true unaligned word load.
  * Generally, this rotation is not what the programmer expects.
- * 
+ *
  * On ARMv6 and later architectures, unaligned access is fully supported."
  *
  * Returns: a guint32 in machine endianess

@@ -42,7 +42,7 @@ node_value_type_test (void)
 	device = arv_fake_device_new ("TEST0");
 	g_assert (ARV_IS_FAKE_DEVICE (device));
 
-	genicam = arv_device_get_genicam (device); 
+	genicam = arv_device_get_genicam (device);
 	g_assert (ARV_IS_GC (genicam));
 
 	for (i = 0; i < G_N_ELEMENTS (node_value_types); i++) {

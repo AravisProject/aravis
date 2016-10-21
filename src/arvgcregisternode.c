@@ -191,7 +191,7 @@ arv_gc_register_node_get_value_as_string (ArvGcFeatureNode *node, GError **error
 		case G_TYPE_DOUBLE:
 			g_ascii_dtostr (gc_register_node->v_string, G_ASCII_DTOSTR_BUF_SIZE,
 					arv_gc_float_get_value (ARV_GC_FLOAT (node), &local_error));
-			
+
 			if (local_error != NULL) {
 				g_propagate_error (error, local_error);
 				return NULL;
@@ -686,7 +686,7 @@ _get_integer_value (ArvGcRegisterNode *gc_register_node, guint register_lsb, gui
 	guint endianess;
 
 	endianess = _get_endianess (gc_register_node, &local_error);
-	
+
 	if (local_error != NULL) {
 		g_propagate_error (error, local_error);
 		return 0;

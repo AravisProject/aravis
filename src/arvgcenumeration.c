@@ -201,7 +201,7 @@ arv_gc_enumeration_get_int_value (ArvGcEnumeration *enumeration, GError **error)
 	g_return_val_if_fail (ARV_IS_GC_ENUMERATION (enumeration), 0);
 	g_return_val_if_fail (error == NULL || *error == NULL, 0);
 
-	if (enumeration->value == NULL) 
+	if (enumeration->value == NULL)
 		return 0;
 
 	value = arv_gc_property_node_get_int64 (enumeration->value, &local_error);

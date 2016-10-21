@@ -279,7 +279,7 @@ arv_dom_document_new_from_memory (const void *buffer, int size, GError **error)
 {
 	g_return_val_if_fail (buffer != NULL, NULL);
 
-	return _parse_memory (NULL, NULL, buffer, size, error); 
+	return _parse_memory (NULL, NULL, buffer, size, error);
 }
 
 static ArvDomDocument *

@@ -157,7 +157,7 @@ arv_chunk_parser_get_float_value (ArvChunkParser *parser, ArvBuffer *buffer, con
 
 	if (ARV_IS_GC_FLOAT (node))
 		value = arv_gc_float_get_value (ARV_GC_FLOAT (node), NULL);
-	else 
+	else
 		arv_warning_chunk ("[ArvChunkParser::get_float_value] Node '%s' is not a float", chunk);
 
 	return value;

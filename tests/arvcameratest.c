@@ -284,7 +284,7 @@ main (int argc, char **argv)
 		arv_camera_set_binning (camera, arv_option_horizontal_binning, arv_option_vertical_binning);
 		arv_camera_set_exposure_time (camera, arv_option_exposure_time_us);
 		arv_camera_set_gain (camera, arv_option_gain);
-		
+
 		if (arv_camera_is_gv_device (camera)) {
 			arv_camera_gv_select_stream_channel (camera, arv_option_gv_stream_channel);
 			arv_camera_gv_set_packet_delay (camera, arv_option_gv_packet_delay);

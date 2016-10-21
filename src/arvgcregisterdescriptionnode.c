@@ -72,7 +72,7 @@ arv_gc_register_description_node_get_attribute (ArvDomElement *self, const char 
 gboolean
 arv_gc_register_description_node_check_schema_version (ArvGcRegisterDescriptionNode *node,
 						       guint required_major,
-						       guint required_minor, 
+						       guint required_minor,
 						       guint required_subminor)
 {
 	g_return_val_if_fail (ARV_IS_GC_REGISTER_DESCRIPTION_NODE (node), FALSE);

@@ -866,7 +866,7 @@ parse_to_stacks (ArvEvaluator *evaluator, char *expression, ArvEvaluatorParserSt
 			if (arv_evaluator_token_is_variable (token)) {
 				if (g_hash_table_contains (evaluator->priv->constants, token->data.name)) {
 					const char *constant;
-				
+
 					constant = g_hash_table_lookup (evaluator->priv->constants, token->data.name);
 
 					if (constant != NULL) {
@@ -1062,7 +1062,7 @@ arv_evaluator_evaluate_as_double (ArvEvaluator *evaluator, GError **error)
 
 	g_return_val_if_fail (ARV_IS_EVALUATOR (evaluator), 0.0);
 
-	arv_log_evaluator ("[Evaluator::evaluate_as_double] Expression = '%s'", 
+	arv_log_evaluator ("[Evaluator::evaluate_as_double] Expression = '%s'",
 			   evaluator->priv->expression);
 
 	if (evaluator->priv->parsing_status == ARV_EVALUATOR_STATUS_NOT_PARSED) {
@@ -1093,7 +1093,7 @@ arv_evaluator_evaluate_as_int64 (ArvEvaluator *evaluator, GError **error)
 
 	g_return_val_if_fail (ARV_IS_EVALUATOR (evaluator), 0.0);
 
-	arv_log_evaluator ("[Evaluator::evaluate_as_int64] Expression = '%s'", 
+	arv_log_evaluator ("[Evaluator::evaluate_as_int64] Expression = '%s'",
 			   evaluator->priv->expression);
 
 	if (evaluator->priv->parsing_status == ARV_EVALUATOR_STATUS_NOT_PARSED) {
@@ -1296,7 +1296,7 @@ arv_evaluator_set_int64_variable (ArvEvaluator *evaluator, const char *name, gin
 	arv_log_evaluator ("[Evaluator::set_int64_variable] %s = %Ld", name, v_int64);
 }
 
-/** 
+/**
  * arv_evaluator_new:
  * @expression: (allow-none): an evaluator expression
  *

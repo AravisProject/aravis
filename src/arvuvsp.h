@@ -90,7 +90,7 @@ typedef struct ARAVIS_PACKED_STRUCTURE {
 
 typedef struct ARAVIS_PACKED_STRUCTURE {
 	guint32 unknown0;
-	guint64 payload_size; 
+	guint64 payload_size;
 } ArvUvspTrailerInfos;
 
 typedef struct ARAVIS_PACKED_STRUCTURE {

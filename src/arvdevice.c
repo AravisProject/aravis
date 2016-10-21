@@ -182,7 +182,7 @@ arv_device_write_register (ArvDevice *device, guint32 address, guint32 value, GE
 }
 
 /**
- * arv_device_get_genicam: 
+ * arv_device_get_genicam:
  * @device: a #ArvDevice
  *
  * Retrieves the genicam interface of the given device.

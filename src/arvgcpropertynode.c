@@ -290,7 +290,7 @@ arv_gc_property_node_get_string (ArvGcPropertyNode *node, GError **error)
 
 	return NULL;
 }
-	
+
 void
 arv_gc_property_node_set_string (ArvGcPropertyNode *node, const char *string, GError **error)
 {
@@ -545,7 +545,7 @@ arv_gc_property_node_new_p_minimum (void)
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_P_MINIMUM);
 }
 
-ArvGcNode * 
+ArvGcNode *
 arv_gc_property_node_new_maximum (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_MAXIMUM);

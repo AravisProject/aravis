@@ -1267,7 +1267,7 @@ arv_gv_device_finalize (GObject *object)
  * @device: a #ArvGvDevice
  *
  * Returns: (transfer none): the device host interface IP address.
- * 
+ *
  * Since: 0.2.0
  */
 

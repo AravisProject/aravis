@@ -135,17 +135,17 @@ arv_tool_execute_command (int argc, char **argv, const char *device_name)
 							min_int64 = arv_gc_integer_get_min (ARV_GC_INTEGER (feature), NULL);
 							max_int64 = arv_gc_integer_get_max (ARV_GC_INTEGER (feature), NULL);
 							unit = arv_gc_integer_get_unit (ARV_GC_INTEGER (feature), NULL);
-							
+
 							if (min_int64 != -G_MAXINT64 && max_int64 != G_MAXINT64)
 								printf ("%s = %" G_GINT64_FORMAT
-									"%s%s (min:%" G_GINT64_FORMAT 
+									"%s%s (min:%" G_GINT64_FORMAT
 									";max:%" G_GINT64_FORMAT
 									")\n", tokens[0],
 									arv_gc_integer_get_value (ARV_GC_INTEGER (feature), NULL),
 									unit != NULL ? " ": "",
 									unit != NULL ? unit : "",
 									min_int64, max_int64);
-							else 
+							else
 								printf ("%s = %" G_GINT64_FORMAT "%s%s\n",
 									tokens[0],
 									arv_gc_integer_get_value (ARV_GC_INTEGER (feature), NULL),

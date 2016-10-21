@@ -21,7 +21,7 @@
  *
  * http://www.pkware.com/documents/casestudies/APPNOTE.TXT
  *
- * Heavily inspired by the Imposter code from Gürer Özen <madcat@e-kolay.net>. 
+ * Heavily inspired by the Imposter code from Gürer Özen <madcat@e-kolay.net>.
  *
  */
 
