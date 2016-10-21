@@ -16,7 +16,7 @@ Here are the steps to follow to create a new aravis release:
 	Summarize major changes briefly in a style similar to other
 	entries in NEWS. Take special care to note any additions in
 	the API. These should be easy to find by noting modifications
-	to .h files in the log command above. 
+	to .h files in the log command above.
 
 * Verify that the code passes "make distcheck"
 
@@ -50,14 +50,14 @@ make distcheck again.
   module maintainers who wish to be able to upload tarballs should request a
   shell account at master.gnome.org for this purpose -- see AccountPolicy.
   Ask someone else to do it for you if you are waiting for an account.
-  
+
   For example:
 
   	$ scp aravis-0.1.3.tar.gz (user)@master.gnome.org:
 
   Then ssh into master.gnome.org and call ftp-admin. There are no extra
   steps required for new modules.
-  
+
   For example:
 
   	$ ftpadmin install aravis-0.1.3.tar.gz
