@@ -201,6 +201,12 @@ arv_get_device_serial_nbr (unsigned int index)
 	return arv_get_info (index, arv_interface_get_device_serial_nbr);
 }
 
+const char *
+arv_get_device_address (unsigned int index)
+{
+	return arv_get_info (index, arv_interface_get_device_address);
+}
+
 /**
  * arv_open_device:
  * @device_id: (allow-none): a device identifier string

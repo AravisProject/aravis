@@ -216,12 +216,15 @@ arv_tool_execute_command (int argc, char **argv, const char *device_name)
 }
 
 static char *arv_option_device_name = NULL;
+static char *arv_option_device_address = NULL;
 static char *arv_option_debug_domains = NULL;
 
 static const GOptionEntry arv_option_entries[] =
 {
 	{ "name",		'n', 0, G_OPTION_ARG_STRING,
 		&arv_option_device_name,	NULL, "<device_name>"},
+	{ "address",	'a', 0, G_OPTION_ARG_STRING,
+		&arv_option_device_address,	NULL, "<device_address>"},
 	{ "debug", 		'd', 0, G_OPTION_ARG_STRING,
 		&arv_option_debug_domains, 	NULL, "<category>[:<level>][,...]" },
 	{ NULL }
@@ -256,6 +259,7 @@ main (int argc, char **argv)
 	unsigned int n_devices;
 	unsigned int i;
 	unsigned int count = 0;
+	unsigned int use_ip_addr = 0;
 
 	arv_g_thread_init (NULL);
 	arv_g_type_init ();
@@ -279,7 +283,10 @@ main (int argc, char **argv)
 	arv_update_device_list ();
 	n_devices = arv_get_n_devices ();
 
-	if (arv_option_device_name != NULL)
+	if (arv_option_device_address != NULL) {
+		use_ip_addr = 1;
+		pattern = g_pattern_spec_new (arv_option_device_address);
+	} else if (arv_option_device_name != NULL)
 		pattern = g_pattern_spec_new (arv_option_device_name);
 	else
 		pattern = g_pattern_spec_new ("*");
@@ -287,12 +294,15 @@ main (int argc, char **argv)
 	for (i = 0; i < n_devices; i++) {
 		const char *device_id;
 
-		device_id = arv_get_device_id (i);
+		const char *id = arv_get_device_id (i);
+		const char *addr = arv_get_device_address (i);
+
+		device_id = use_ip_addr ? addr : id;
 
 		if (g_pattern_match_string (pattern, device_id)) {
-			printf ("%s\n", device_id);
+			printf ("%s (%s)\n", id, addr);
 			if (argc >= 2)
-				arv_tool_execute_command (argc, argv, device_id);
+				arv_tool_execute_command (argc, argv, id);
 			count++;
 		}
 	}
