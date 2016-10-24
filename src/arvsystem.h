@@ -42,6 +42,7 @@ const char * 		arv_get_device_id 		(unsigned int index);
 const char * 		arv_get_device_vendor	 	(unsigned int index);
 const char * 		arv_get_device_model	 	(unsigned int index);
 const char * 		arv_get_device_serial_nbr 	(unsigned int index);
+const char * 		arv_get_device_address 		(unsigned int index);
 
 ArvDevice * 		arv_open_device 		(const char *device_id);
 

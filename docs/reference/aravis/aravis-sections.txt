@@ -198,6 +198,7 @@ arv_get_interface_id
 arv_get_device_model
 arv_get_device_serial_nbr
 arv_get_device_vendor
+arv_get_device_address
 arv_disable_interface
 arv_enable_interface
 arv_get_n_devices

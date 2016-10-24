@@ -202,6 +202,23 @@ arv_get_device_serial_nbr (unsigned int index)
 }
 
 /**
+ * arv_get_device_address:
+ * @index: device index
+ *
+ * The index of a device may change after a call to arv_update_device_list().
+ *
+ * Returns: The address of the device corresponding to @index as a string.
+ *
+ * Since: 0.6.0
+ */
+
+const char *
+arv_get_device_address (unsigned int index)
+{
+	return arv_get_info (index, arv_interface_get_device_address);
+}
+
+/**
  * arv_open_device:
  * @device_id: (allow-none): a device identifier string
  *
