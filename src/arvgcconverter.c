@@ -106,6 +106,21 @@ arv_gc_converter_node_get_value_type (ArvGcFeatureNode *node)
 	return gc_converter->value_type;
 }
 
+static void
+_set_value_from_string (ArvGcFeatureNode *node, const char *string, GError **error)
+{
+	ArvGcConverter *converter = ARV_GC_CONVERTER (node);
+	GError *local_error = NULL;
+
+	if (converter->value_type == G_TYPE_DOUBLE)
+		arv_gc_float_set_value (ARV_GC_FLOAT (node), g_ascii_strtod (string, NULL), &local_error);
+	else
+		arv_gc_integer_set_value (ARV_GC_INTEGER (node), g_ascii_strtoll (string, NULL, 0), &local_error);
+
+	if (local_error != NULL)
+		g_propagate_error (error, local_error);
+}
+
 /* ArvGcConverter implementation */
 
 ArvGcNode *
@@ -165,6 +180,7 @@ arv_gc_converter_class_init (ArvGcConverterClass *this_class)
 	dom_node_class->post_new_child = arv_gc_converter_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_converter_pre_remove_child;
 	gc_feature_node_class->get_value_type = arv_gc_converter_node_get_value_type;
+	gc_feature_node_class->set_value_from_string = _set_value_from_string;
 }
 
 /* ArvGcInteger interface implementation */

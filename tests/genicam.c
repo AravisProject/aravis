@@ -323,6 +323,44 @@ swiss_knife_test (void)
 }
 
 static void
+converter_test (void)
+{
+	ArvDevice *device;
+	ArvGc *genicam;
+	ArvGcNode *node;
+	double v_double;
+	gint64 v_int64;
+
+	device = arv_fake_device_new ("TEST0");
+	g_assert (ARV_IS_FAKE_DEVICE (device));
+
+	genicam = arv_device_get_genicam (device);
+	g_assert (ARV_IS_GC (genicam));
+
+	node = arv_gc_get_node (genicam, "Converter");
+	g_assert (ARV_IS_GC_CONVERTER (node));
+
+	v_double = arv_gc_float_get_value (ARV_GC_FLOAT (node), NULL);
+	g_assert_cmpfloat (v_double, ==, 200.0);
+
+	arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (node), "100.0", NULL);
+	v_double = arv_gc_float_get_value (ARV_GC_FLOAT (node), NULL);
+	g_assert_cmpfloat (v_double, ==, 100.0);
+
+	node = arv_gc_get_node (genicam, "IntConverter");
+	g_assert (ARV_IS_GC_CONVERTER (node));
+
+	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
+	g_assert_cmpint (v_int64, ==, 5);
+
+	arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (node), "100", NULL);
+	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
+	g_assert_cmpint (v_int64, ==, 100);
+
+	g_object_unref (device);
+}
+
+static void
 register_test (void)
 {
 	ArvDevice *device;
@@ -528,6 +566,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/genicam/float", float_test);
 	g_test_add_func ("/genicam/enumeration", enumeration_test);
 	g_test_add_func ("/genicam/swissknife", swiss_knife_test);
+	g_test_add_func ("/genicam/converter", converter_test);
 	g_test_add_func ("/genicam/register", register_test);
 	g_test_add_func ("/genicam/url", url_test);
 	g_test_add_func ("/genicam/mandatory", mandatory_test);

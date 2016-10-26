@@ -229,6 +229,22 @@
     <pPort>StringPort</pPort>
   </StringReg>
 
+  <Converter Name="Converter">
+    <FormulaTo> 0.5 * FROM</FormulaTo>
+    <FormulaFrom> 2.0 * TO</FormulaFrom>
+    <pValue>ConverterValue</pValue>
+  </Converter>
+
+  <IntConverter Name="IntConverter">
+    <FormulaTo> 10 * FROM</FormulaTo>
+    <FormulaFrom> 0.1 * TO</FormulaFrom>
+    <pValue>ConverterValue</pValue>
+  </IntConverter>
+
+  <Integer Name="ConverterValue">
+    <Value>100</Value>
+  </Integer>
+
   <Port Name="StringPort">
     <ChunkID>87654321</ChunkID>
   </Port>
