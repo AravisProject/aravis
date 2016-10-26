@@ -1,236 +1,236 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <RegisterDescription
-	ModelName="Model"
-	VendorName="Emmanuel"
-	StandardNameSpace="None"
-	SchemaMajorVersion="1"
-	SchemaMinorVersion="0"
-	SchemaSubMinorVersion="0"
-	MajorVersion="292"
-	MinorVersion="0"
-	SubMinorVersion="0"
-	ToolTip="TestTooltip"
-	ProductGuid="111-222"
-	VersionGuid="222-333"
-	xmlns="http://www.genicam.org/GenApi/Version_1_0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.genicam.org/GenApi/Version_1_0 GenApiSchema.xsd">
+  ModelName="Model"
+  VendorName="Emmanuel"
+  StandardNameSpace="None"
+  SchemaMajorVersion="1"
+  SchemaMinorVersion="0"
+  SchemaSubMinorVersion="0"
+  MajorVersion="292"
+  MinorVersion="0"
+  SubMinorVersion="0"
+  ToolTip="TestTooltip"
+  ProductGuid="111-222"
+  VersionGuid="222-333"
+  xmlns="http://www.genicam.org/GenApi/Version_1_0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.genicam.org/GenApi/Version_1_0 GenApiSchema.xsd">
 
-	<Category Name="Root" NameSpace="Standard">
-		<pFeature>RWFloat</pFeature>
-		<pFeature>RWBoolean</pFeature>
-		<pFeature>RWInteger</pFeature>
-		<pFeature>Enumeration</pFeature>
-		<pFeature>ChunkInt</pFeature>
-		<pFeature>ChunkFloat</pFeature>
-		<pFeature>ChunkString</pFeature>
-	</Category>
+  <Category Name="Root" NameSpace="Standard">
+    <pFeature>RWFloat</pFeature>
+    <pFeature>RWBoolean</pFeature>
+    <pFeature>RWInteger</pFeature>
+    <pFeature>Enumeration</pFeature>
+    <pFeature>ChunkInt</pFeature>
+    <pFeature>ChunkFloat</pFeature>
+    <pFeature>ChunkString</pFeature>
+  </Category>
 
-	<Float Name="RWFloat">
-		<Value>0.1</Value>
-		<Min>-10.0</Min>
-		<Max>10.0</Max>
-		<Inc>2.0</Inc>
-	</Float>
+  <Float Name="RWFloat">
+    <Value>0.1</Value>
+    <Min>-10.0</Min>
+    <Max>10.0</Max>
+    <Inc>2.0</Inc>
+  </Float>
 
-	<Float Name="P_RWFloat_Min">
-		<Value>-20.0</Value>
-	</Float>
+  <Float Name="P_RWFloat_Min">
+    <Value>-20.0</Value>
+  </Float>
 
-	<Float Name="P_RWFloat_Max">
-		<Value>20.0</Value>
-	</Float>
+  <Float Name="P_RWFloat_Max">
+    <Value>20.0</Value>
+  </Float>
 
-	<Float Name="P_RWFloat_Inc">
-		<Value>3.0</Value>
-	</Float>
+  <Float Name="P_RWFloat_Inc">
+    <Value>3.0</Value>
+  </Float>
 
-	<Float Name="P_RWFloat">
-		<pValue>RWFloat</pValue>
-		<pMin>P_RWFloat_Min</pMin>
-		<pMax>P_RWFloat_Max</pMax>
-		<pInc>P_RWFloat_Inc</pInc>
-	</Float>
+  <Float Name="P_RWFloat">
+    <pValue>RWFloat</pValue>
+    <pMin>P_RWFloat_Min</pMin>
+    <pMax>P_RWFloat_Max</pMax>
+    <pInc>P_RWFloat_Inc</pInc>
+  </Float>
 
-	<Boolean Name="RWBoolean">
-		<Value>1</Value>
-	</Boolean>
+  <Boolean Name="RWBoolean">
+    <Value>1</Value>
+  </Boolean>
 
-	<Integer Name="RWBooleanValue">
-		<Value>23</Value>
-	</Integer>
+  <Integer Name="RWBooleanValue">
+    <Value>23</Value>
+  </Integer>
 
-	<Boolean Name="P_RWBoolean">
-		<pValue>RWBooleanValue</pValue>
-		<OnValue>23</OnValue>
-		<OffValue>42</OffValue>
-	</Boolean>
+  <Boolean Name="P_RWBoolean">
+    <pValue>RWBooleanValue</pValue>
+    <OnValue>23</OnValue>
+    <OffValue>42</OffValue>
+  </Boolean>
 
-	<Integer Name="RWInteger">
-		<Value>1</Value>
-		<Min>-10</Min>
-		<Max>10</Max>
-		<Inc>2</Inc>
-	</Integer>
+  <Integer Name="RWInteger">
+    <Value>1</Value>
+    <Min>-10</Min>
+    <Max>10</Max>
+    <Inc>2</Inc>
+  </Integer>
 
-	<Integer Name="P_RWInteger_Min">
-		<Value>-20</Value>
-	</Integer>
+  <Integer Name="P_RWInteger_Min">
+    <Value>-20</Value>
+  </Integer>
 
-	<Integer Name="P_RWInteger_Max">
-		<Value>20</Value>
-	</Integer>
+  <Integer Name="P_RWInteger_Max">
+    <Value>20</Value>
+  </Integer>
 
-	<Integer Name="P_RWInteger_Inc">
-		<Value>3</Value>
-	</Integer>
+  <Integer Name="P_RWInteger_Inc">
+    <Value>3</Value>
+  </Integer>
 
-	<Integer Name="P_RWInteger">
-		<pValue>RWInteger</pValue>
-		<pMin>P_RWInteger_Min</pMin>
-		<pMax>P_RWInteger_Max</pMax>
-		<pInc>P_RWInteger_Inc</pInc>
-	</Integer>
+  <Integer Name="P_RWInteger">
+    <pValue>RWInteger</pValue>
+    <pMin>P_RWInteger_Min</pMin>
+    <pMax>P_RWInteger_Max</pMax>
+    <pInc>P_RWInteger_Inc</pInc>
+  </Integer>
 
-	<Enumeration Name="Enumeration">
-		<EnumEntry Name="Entry0">
-			<Value>0</Value>
-		</EnumEntry>
-		<EnumEntry Name="Entry1">
-			<Value>1</Value>
-		</EnumEntry>
-		<EnumEntry Name="EntryNotAvailable">
-			<pIsAvailable>NotAvailable</pIsAvailable>
-			<Value>2</Value>
-		</EnumEntry>
-		<EnumEntry Name="EntryNotImplemented">
-			<pIsImplemented>NotAvailable</pIsImplemented>
-			<Value>3</Value>
-		</EnumEntry>
-		<pValue>EnumerationValue</pValue>
-	</Enumeration>
+  <Enumeration Name="Enumeration">
+    <EnumEntry Name="Entry0">
+      <Value>0</Value>
+    </EnumEntry>
+    <EnumEntry Name="Entry1">
+      <Value>1</Value>
+    </EnumEntry>
+    <EnumEntry Name="EntryNotAvailable">
+      <pIsAvailable>NotAvailable</pIsAvailable>
+      <Value>2</Value>
+    </EnumEntry>
+    <EnumEntry Name="EntryNotImplemented">
+      <pIsImplemented>NotAvailable</pIsImplemented>
+      <Value>3</Value>
+    </EnumEntry>
+    <pValue>EnumerationValue</pValue>
+  </Enumeration>
 
-	<Integer Name="NotImplemented">
-		<Value>0</Value>
-	</Integer>
+  <Integer Name="NotImplemented">
+    <Value>0</Value>
+  </Integer>
 
-	<Integer Name="NotAvailable">
-		<Value>0</Value>
-	</Integer>
+  <Integer Name="NotAvailable">
+    <Value>0</Value>
+  </Integer>
 
-	<Integer Name="EnumerationValue">
-		<Value>0</Value>
-	</Integer>
+  <Integer Name="EnumerationValue">
+    <Value>0</Value>
+  </Integer>
 
-	<Integer Name="IntRegisterAddress">
-		<Value>0x50</Value>
-	</Integer>
+  <Integer Name="IntRegisterAddress">
+    <Value>0x50</Value>
+  </Integer>
 
-	<IntReg Name="IntRegisterA">
-		<Address>0x1000</Address>
-		<pAddress>IntRegisterAddress</pAddress>
-		<Length>8</Length>
-		<AccessMode>RW</AccessMode>
-		<Cachable>NoCache</Cachable>
-		<PollingTime>5</PollingTime>
-		<Sign>Unsigned</Sign>
-		<Endianess>BigEndian</Endianess>
-	</IntReg>
+  <IntReg Name="IntRegisterA">
+    <Address>0x1000</Address>
+    <pAddress>IntRegisterAddress</pAddress>
+    <Length>8</Length>
+    <AccessMode>RW</AccessMode>
+    <Cachable>NoCache</Cachable>
+    <PollingTime>5</PollingTime>
+    <Sign>Unsigned</Sign>
+    <Endianess>BigEndian</Endianess>
+  </IntReg>
 
-	<IntReg Name="IntRegisterB">
-		<Address>0x2000</Address>
-		<IntSwissKnife Name="IntRegisterBAddress">
-			<Formula>0xff</Formula>
-		</IntSwissKnife>
-		<Length>8</Length>
-		<AccessMode>RW</AccessMode>
-		<Cachable>NoCache</Cachable>
-		<PollingTime>5</PollingTime>
-		<Sign>Unsigned</Sign>
-		<Endianess>BigEndian</Endianess>
-	</IntReg>
+  <IntReg Name="IntRegisterB">
+    <Address>0x2000</Address>
+    <IntSwissKnife Name="IntRegisterBAddress">
+      <Formula>0xff</Formula>
+    </IntSwissKnife>
+    <Length>8</Length>
+    <AccessMode>RW</AccessMode>
+    <Cachable>NoCache</Cachable>
+    <PollingTime>5</PollingTime>
+    <Sign>Unsigned</Sign>
+    <Endianess>BigEndian</Endianess>
+  </IntReg>
 
-	<IntSwissKnife Name="IntSwissKnifeTestEntity">
-		<Formula>(0x12345678 &amp; 0x10305070)</Formula>
-	</IntSwissKnife>
+  <IntSwissKnife Name="IntSwissKnifeTestEntity">
+    <Formula>(0x12345678 &amp; 0x10305070)</Formula>
+  </IntSwissKnife>
 
-	<IntSwissKnife Name="IntSwissKnifeTestEntity2">
-		<Formula>(0 &amp;&amp; 1)?2:3</Formula>
-	</IntSwissKnife>
+  <IntSwissKnife Name="IntSwissKnifeTestEntity2">
+    <Formula>(0 &amp;&amp; 1)?2:3</Formula>
+  </IntSwissKnife>
 
-	<IntSwissKnife Name="IntSwissKnifeTest">
-		<Formula>0x1234</Formula>
-	</IntSwissKnife>
+  <IntSwissKnife Name="IntSwissKnifeTest">
+    <Formula>0x1234</Formula>
+  </IntSwissKnife>
 
-	<IntSwissKnife Name="IntSwissKnifeTestSubAndConstant">
-		<pVariable Name="X">X</pVariable>
-		<Constant Name="TEN">10</Constant>
-		<Expression Name="XPLUS2">TEN + X</Expression>
-		<Formula>TEN * XPLUS2</Formula>
-	</IntSwissKnife>
+  <IntSwissKnife Name="IntSwissKnifeTestSubAndConstant">
+    <pVariable Name="X">X</pVariable>
+    <Constant Name="TEN">10</Constant>
+    <Expression Name="XPLUS2">TEN + X</Expression>
+    <Formula>TEN * XPLUS2</Formula>
+  </IntSwissKnife>
 
-	<Integer Name="X">
-		<Value>4</Value>
-	</Integer>
+  <Integer Name="X">
+    <Value>4</Value>
+  </Integer>
 
-	<Integer Name="Bug699228_T">
-		<Value>10</Value>
-	</Integer>
+  <Integer Name="Bug699228_T">
+    <Value>10</Value>
+  </Integer>
 
-	<Integer Name="Bug699228_L">
-		<Value>20</Value>
-	</Integer>
+  <Integer Name="Bug699228_L">
+    <Value>20</Value>
+  </Integer>
 
-	<Integer Name="Bug699228_FILTER">
-		<Value>5</Value>
-	</Integer>
+  <Integer Name="Bug699228_FILTER">
+    <Value>5</Value>
+  </Integer>
 
-	<IntSwissKnife Name="IntSwissKnifeBug699228">
-		<pVariable Name="T">Bug699228_T</pVariable>
-		<pVariable Name="L">Bug699228_L</pVariable>
-		<pVariable Name="FILTER">Bug699228_FILTER</pVariable>
-		<Formula>((((L%2) = 0) &amp;&amp;((T%2) = 0) &amp;&amp; (FILTER = 0))?0:( (((L%2) = 0) &amp;&amp;((T%2) = 1) &amp;&amp; (FILTER = 1))?0:( (((L%2) = 1) &amp;&amp;((T%2) = 0) &amp;&amp; (FILTER = 2))?0:( (((L%2) = 1) &amp;&amp;((T%2) = 1) &amp;&amp; (FILTER = 3))?0:( (((L%2) = 0) &amp;&amp;((T%2) = 0) &amp;&amp; (FILTER = 1))?1:( (((L%2) = 0) &amp;&amp;((T%2) = 1) &amp;&amp; (FILTER = 0))?1:( (((L%2) = 1) &amp;&amp;((T%2) = 0) &amp;&amp; (FILTER = 3))?1:( (((L%2) = 1) &amp;&amp;((T%2) = 1) &amp;&amp; (FILTER = 2))?1:( (((L%2) = 0) &amp;&amp;((T%2) = 0) &amp;&amp; (FILTER = 2))?2:( (((L%2) = 0) &amp;&amp;((T%2) = 1) &amp;&amp; (FILTER = 3))?2:( (((L%2) = 1) &amp;&amp;((T%2) = 0) &amp;&amp; (FILTER = 0))?2:( (((L%2) = 1) &amp;&amp;((T%2) = 1) &amp;&amp; (FILTER = 1))?2:( (((L%2) = 0) &amp;&amp;((T%2) = 0) &amp;&amp; (FILTER = 3))?3:( (((L%2) = 0) &amp;&amp;((T%2) = 1) &amp;&amp; (FILTER = 2))?3:( (((L%2) = 1) &amp;&amp;((T%2) = 0) &amp;&amp; (FILTER = 1))?3:( (((L%2) = 1) &amp;&amp;((T%2) = 1) &amp;&amp; (FILTER = 0))?3:( 4 ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ))</Formula>
-	</IntSwissKnife>
+  <IntSwissKnife Name="IntSwissKnifeBug699228">
+    <pVariable Name="T">Bug699228_T</pVariable>
+    <pVariable Name="L">Bug699228_L</pVariable>
+    <pVariable Name="FILTER">Bug699228_FILTER</pVariable>
+    <Formula>((((L%2) = 0) &amp;&amp;((T%2) = 0) &amp;&amp; (FILTER = 0))?0:( (((L%2) = 0) &amp;&amp;((T%2) = 1) &amp;&amp; (FILTER = 1))?0:( (((L%2) = 1) &amp;&amp;((T%2) = 0) &amp;&amp; (FILTER = 2))?0:( (((L%2) = 1) &amp;&amp;((T%2) = 1) &amp;&amp; (FILTER = 3))?0:( (((L%2) = 0) &amp;&amp;((T%2) = 0) &amp;&amp; (FILTER = 1))?1:( (((L%2) = 0) &amp;&amp;((T%2) = 1) &amp;&amp; (FILTER = 0))?1:( (((L%2) = 1) &amp;&amp;((T%2) = 0) &amp;&amp; (FILTER = 3))?1:( (((L%2) = 1) &amp;&amp;((T%2) = 1) &amp;&amp; (FILTER = 2))?1:( (((L%2) = 0) &amp;&amp;((T%2) = 0) &amp;&amp; (FILTER = 2))?2:( (((L%2) = 0) &amp;&amp;((T%2) = 1) &amp;&amp; (FILTER = 3))?2:( (((L%2) = 1) &amp;&amp;((T%2) = 0) &amp;&amp; (FILTER = 0))?2:( (((L%2) = 1) &amp;&amp;((T%2) = 1) &amp;&amp; (FILTER = 1))?2:( (((L%2) = 0) &amp;&amp;((T%2) = 0) &amp;&amp; (FILTER = 3))?3:( (((L%2) = 0) &amp;&amp;((T%2) = 1) &amp;&amp; (FILTER = 2))?3:( (((L%2) = 1) &amp;&amp;((T%2) = 0) &amp;&amp; (FILTER = 1))?3:( (((L%2) = 1) &amp;&amp;((T%2) = 1) &amp;&amp; (FILTER = 0))?3:( 4 ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ))</Formula>
+  </IntSwissKnife>
 
-	<Integer Name="TLParamsLocked">
-		<ToolTip> Indicates whether a live grab is under way</ToolTip>
-		<Visibility>Invisible</Visibility>
-		<Value>0</Value>
-		<Min>0</Min>
-		<Max>1</Max>
-	</Integer>
+  <Integer Name="TLParamsLocked">
+    <ToolTip> Indicates whether a live grab is under way</ToolTip>
+    <Visibility>Invisible</Visibility>
+    <Value>0</Value>
+    <Min>0</Min>
+    <Max>1</Max>
+  </Integer>
 
-	<StringReg Name="DeviceUserID">
-		<Address>0xe8</Address>
-		<Length>16</Length>
-		<AccessMode>RW</AccessMode>
-		<pPort>Device</pPort>
-	</StringReg>
+  <StringReg Name="DeviceUserID">
+    <Address>0xe8</Address>
+    <Length>16</Length>
+    <AccessMode>RW</AccessMode>
+    <pPort>Device</pPort>
+  </StringReg>
 
-	<IntReg Name="ChunkInt">
-		<Address>0x00</Address>
-		<Length>4</Length>
-		<AccessMode>R</AccessMode>
-		<pPort>IntPort</pPort>
-		<Cachable>NoCache</Cachable>
-		<Sign>Unsigned</Sign>
-		<Endianess>BigEndian</Endianess>
-	</IntReg>
+  <IntReg Name="ChunkInt">
+    <Address>0x00</Address>
+    <Length>4</Length>
+    <AccessMode>R</AccessMode>
+    <pPort>IntPort</pPort>
+    <Cachable>NoCache</Cachable>
+    <Sign>Unsigned</Sign>
+    <Endianess>BigEndian</Endianess>
+  </IntReg>
 
-	<Port Name="IntPort">
-		<ChunkID>12345678</ChunkID>
-	</Port>
+  <Port Name="IntPort">
+    <ChunkID>12345678</ChunkID>
+  </Port>
 
-	<StringReg Name="ChunkString">
-		<Address>0x00</Address>
-		<Length>64</Length>
-		<AccessMode>R</AccessMode>
-		<pPort>StringPort</pPort>
-	</StringReg>
+  <StringReg Name="ChunkString">
+    <Address>0x00</Address>
+    <Length>64</Length>
+    <AccessMode>R</AccessMode>
+    <pPort>StringPort</pPort>
+  </StringReg>
 
-	<Port Name="StringPort">
-		<ChunkID>87654321</ChunkID>
-	</Port>
+  <Port Name="StringPort">
+    <ChunkID>87654321</ChunkID>
+  </Port>
 
 </RegisterDescription>
