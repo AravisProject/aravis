@@ -108,7 +108,7 @@ ArvPixelFormat 	arv_pixel_format_from_gst_0_10_caps 		(const char *name, int bpp
 
 #if GLIB_CHECK_VERSION(2,34,0)
 
-#define arv_g_clear_pointer(pp, destroy) arv_g_clear_pointer(pp, destroy)
+#define arv_g_clear_pointer(pp, destroy) g_clear_pointer(pp, destroy)
 
 #else
 
