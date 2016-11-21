@@ -101,6 +101,10 @@ ArvBuffer *	arv_camera_acquisition			(ArvCamera *camera, guint64 timeout);
 void			arv_camera_set_acquisition_mode 	(ArvCamera *camera, ArvAcquisitionMode value);
 ArvAcquisitionMode 	arv_camera_get_acquisition_mode 	(ArvCamera *camera);
 
+void 		arv_camera_set_frame_count	(ArvCamera *camera, gint64 frame_count);
+gint64		arv_camera_get_frame_count	(ArvCamera *camera);
+void		arv_camera_get_frame_count_bounds	(ArvCamera *camera, gint64 *min, gint64 *max);
+
 gboolean 	arv_camera_is_frame_rate_available 	(ArvCamera *camera);
 
 void		arv_camera_set_frame_rate		(ArvCamera *camera, double frame_rate);
