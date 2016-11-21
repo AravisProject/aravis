@@ -106,6 +106,27 @@ ArvPixelFormat 	arv_pixel_format_from_gst_0_10_caps 		(const char *name, int bpp
 
 #endif
 
+#if !GLIB_CHECK_VERSION(2,34,0)
+
+#define g_clear_pointer(pp, destroy)   		                          		\
+	G_STMT_START {                                                          	\
+		G_STATIC_ASSERT (sizeof *(pp) == sizeof (gpointer));                    \
+		/* Only one access, please */                                           \
+		gpointer *_pp = (gpointer *) (pp);                                      \
+		gpointer _p;                                                            \
+		/* This assignment is needed to avoid a gcc warning */                  \
+		GDestroyNotify _destroy = (GDestroyNotify) (destroy);                   \
+											\
+		_p = *_pp;                                                              \
+		if (_p)                                                                 \
+		{                                                                       \
+			*_pp = NULL;                                                    \
+			_destroy (_p);                                                  \
+		}                                                                       \
+	} G_STMT_END
+
+#endif
+
 G_END_DECLS
 
 #endif
