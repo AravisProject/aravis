@@ -831,6 +831,7 @@ arv_camera_get_frame_count (ArvCamera *camera)
 
 	return 0;
 }
+
 /**
  * arv_camera_get_frame_count_bounds:
  * @camera: a #ArvCamera
@@ -841,6 +842,7 @@ arv_camera_get_frame_count (ArvCamera *camera)
  *
  * Since: 0.6.0
  */
+
 void
 arv_camera_get_frame_count_bounds (ArvCamera *camera, gint64 *min, gint64 *max)
 {
