@@ -503,7 +503,7 @@ _open_device (ArvInterface *interface, const char *device_id)
 		device_infos = g_hash_table_lookup (gv_interface->priv->devices, device_id);
 
 	if (device_infos == NULL) {
-		/* Try if device_id is a hostname/IP addres */
+		/* Try if device_id is a hostname/IP address */
 		struct addrinfo hints;
 		struct addrinfo *servinfo, *endpoint;
 
