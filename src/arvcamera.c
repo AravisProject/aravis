@@ -770,7 +770,6 @@ arv_camera_get_acquisition_mode (ArvCamera *camera)
 void
 arv_camera_set_frame_count (ArvCamera *camera, gint64 frame_count)
 {
-	ArvGcNode *feature;
 	gint64 minimum;
 	gint64 maximum;
 
@@ -801,8 +800,6 @@ arv_camera_set_frame_count (ArvCamera *camera, gint64 frame_count)
 gint64
 arv_camera_get_frame_count (ArvCamera *camera)
 {
-	ArvGcNode *feature;
-
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0);
 
 	return arv_device_get_integer_feature_value (camera->priv->device, "AcquisitionFrameCount");
@@ -822,8 +819,6 @@ arv_camera_get_frame_count (ArvCamera *camera)
 void
 arv_camera_get_frame_count_bounds (ArvCamera *camera, gint64 *min, gint64 *max)
 {
-	ArvGcNode *feature;
-
 	if (min != NULL)
 		*min = G_MININT64;
 	if (max != NULL)
