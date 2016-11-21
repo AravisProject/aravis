@@ -864,7 +864,7 @@ parse_to_stacks (ArvEvaluator *evaluator, char *expression, ArvEvaluatorParserSt
 		token = arv_get_next_token (&expression, state->previous_token);
 		if (token != NULL) {
 			if (arv_evaluator_token_is_variable (token)) {
-				if (g_hash_table_contains (evaluator->priv->constants, token->data.name)) {
+				if (g_hash_table_lookup_extended (evaluator->priv->constants, token->data.name, NULL, NULL)) {
 					const char *constant;
 
 					constant = g_hash_table_lookup (evaluator->priv->constants, token->data.name);
@@ -878,7 +878,7 @@ parse_to_stacks (ArvEvaluator *evaluator, char *expression, ArvEvaluatorParserSt
 						status = ARV_EVALUATOR_STATUS_UNKNOWN_CONSTANT;
 						goto CLEANUP;
 					}
-				} else if (g_hash_table_contains (evaluator->priv->sub_expressions, token->data.name)) {
+				} else if (g_hash_table_lookup_extended (evaluator->priv->sub_expressions, token->data.name, NULL, NULL)) {
 					const char *sub_expression;
 
 					sub_expression = g_hash_table_lookup (evaluator->priv->sub_expressions, token->data.name);
