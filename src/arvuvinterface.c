@@ -96,11 +96,11 @@ arv_uv_interface_device_infos_unref (ArvUvInterfaceDeviceInfos *infos)
 	g_return_if_fail (g_atomic_int_get (&infos->ref_count) > 0);
 
 	if (g_atomic_int_dec_and_test (&infos->ref_count)) {
-		g_clear_pointer (&infos->name, g_free);
-		g_clear_pointer (&infos->manufacturer, g_free);
-		g_clear_pointer (&infos->product, g_free);
-		g_clear_pointer (&infos->serial_nbr, g_free);
-		g_clear_pointer (&infos, g_free);
+		arv_g_clear_pointer (&infos->name, g_free);
+		arv_g_clear_pointer (&infos->manufacturer, g_free);
+		arv_g_clear_pointer (&infos->product, g_free);
+		arv_g_clear_pointer (&infos->serial_nbr, g_free);
+		arv_g_clear_pointer (&infos, g_free);
 	}
 }
 

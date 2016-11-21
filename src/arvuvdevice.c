@@ -616,9 +616,9 @@ arv_uv_device_finalize (GObject *object)
 
 	g_object_unref (uv_device->priv->genicam);
 
-	g_clear_pointer (&uv_device->priv->vendor, g_free);
-	g_clear_pointer (&uv_device->priv->product, g_free);
-	g_clear_pointer (&uv_device->priv->serial_nbr, g_free);
+	arv_g_clear_pointer (&uv_device->priv->vendor, g_free);
+	arv_g_clear_pointer (&uv_device->priv->product, g_free);
+	arv_g_clear_pointer (&uv_device->priv->serial_nbr, g_free);
 	if (uv_device->priv->usb_device != NULL) {
 		libusb_release_interface (uv_device->priv->usb_device, 0);
 		libusb_close (uv_device->priv->usb_device);

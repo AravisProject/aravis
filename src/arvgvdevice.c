@@ -646,7 +646,7 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device)
 		}
 	} while ((max_size - min_size) > 16);
 
-	g_clear_pointer (&buffer, g_free);
+	arv_g_clear_pointer (&buffer, g_free);
 	g_clear_object (&socket);
 
 	arv_debug_device ("[GvDevice::auto_packet_size] Packet size set to %d bytes", packet_size);
