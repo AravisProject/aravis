@@ -786,19 +786,7 @@ arv_camera_set_frame_count (ArvCamera *camera, gint64 frame_count)
 	if (frame_count > maximum)
 		frame_count = maximum;
 
-	switch (camera->priv->vendor) {
-		case ARV_CAMERA_VENDOR_BASLER:
-		case ARV_CAMERA_VENDOR_PROSILICA:
-			arv_device_set_integer_feature_value (camera->priv->device, "AcquisitionFrameCount", frame_count);
-			break;
-		case ARV_CAMERA_VENDOR_TIS:
-		case ARV_CAMERA_VENDOR_POINT_GREY:
-		case ARV_CAMERA_VENDOR_DALSA:
-		case ARV_CAMERA_VENDOR_RICOH:
-		case ARV_CAMERA_VENDOR_UNKNOWN:
-			arv_device_set_integer_feature_value (camera->priv->device, "AcquisitionFrameCount", frame_count);
-			break;
-	}
+	arv_device_set_integer_feature_value (camera->priv->device, "AcquisitionFrameCount", frame_count);
 }
 
 /**
@@ -817,19 +805,8 @@ arv_camera_get_frame_count (ArvCamera *camera)
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0);
 
-	switch (camera->priv->vendor) {
-		case ARV_CAMERA_VENDOR_PROSILICA:
-			return arv_device_get_integer_feature_value (camera->priv->device, "AcquisitionFrameCount");
-		case ARV_CAMERA_VENDOR_TIS:
-		case ARV_CAMERA_VENDOR_POINT_GREY:
-		case ARV_CAMERA_VENDOR_DALSA:
-		case ARV_CAMERA_VENDOR_RICOH:
-		case ARV_CAMERA_VENDOR_BASLER:
-		case ARV_CAMERA_VENDOR_UNKNOWN:
-			return arv_device_get_integer_feature_value (camera->priv->device, "AcquisitionFrameCount");
+	return arv_device_get_integer_feature_value (camera->priv->device, "AcquisitionFrameCount");
 	}
-
-	return 0;
 }
 
 /**
@@ -855,19 +832,7 @@ arv_camera_get_frame_count_bounds (ArvCamera *camera, gint64 *min, gint64 *max)
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
-	switch (camera->priv->vendor) {
-		case ARV_CAMERA_VENDOR_TIS:
-		case ARV_CAMERA_VENDOR_PROSILICA:
-			arv_device_get_integer_feature_bounds (camera->priv->device, "AcquisitionFrameCount", min, max);
-			break;
-		case ARV_CAMERA_VENDOR_POINT_GREY:
-		case ARV_CAMERA_VENDOR_DALSA:
-		case ARV_CAMERA_VENDOR_RICOH:
-		case ARV_CAMERA_VENDOR_BASLER:
-		case ARV_CAMERA_VENDOR_UNKNOWN:
-			arv_device_get_integer_feature_bounds (camera->priv->device, "AcquisitionFrameCount", min, max);
-			break;
-	}
+	arv_device_get_integer_feature_bounds (camera->priv->device, "AcquisitionFrameCount", min, max);
 }
 
 /**
