@@ -1191,6 +1191,7 @@ arv_g_mutex_lock
 arv_g_mutex_unlock
 arv_g_thread_init
 arv_g_thread_new
+g_clear_pointer
 </SECTION>
 
 <SECTION>
