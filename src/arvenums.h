@@ -68,11 +68,13 @@ ArvAuto 		arv_auto_from_string		(const char *string);
  * ArvAcquisitionMode:
  * @ARV_ACQUISITION_MODE_CONTINUOUS: continuous acquisition
  * @ARV_ACQUISITION_MODE_SINGLE_FRAME: only one frame will be acquired
+ * @ARV_ACQUISITION_MODE_MULTI_FRAME: multiple frames will be acquired
  */
 
 typedef enum {
 	ARV_ACQUISITION_MODE_CONTINUOUS,
-	ARV_ACQUISITION_MODE_SINGLE_FRAME
+	ARV_ACQUISITION_MODE_SINGLE_FRAME,
+	ARV_ACQUISITION_MODE_MULTI_FRAME
 } ArvAcquisitionMode;
 
 const char * 		arv_acquisition_mode_to_string 		(ArvAcquisitionMode value);

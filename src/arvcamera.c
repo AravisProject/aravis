@@ -758,6 +758,78 @@ arv_camera_get_acquisition_mode (ArvCamera *camera)
 }
 
 /**
+ * arv_camera_set_frame_count:
+ * @camera: a #ArvCamera
+ * @frame_count: number of frames to capture in MultiFrame mode
+ *
+ * Sets the number of frames to capture in MultiFrame mode.
+ *
+ * Since: 0.6.0
+ */
+
+void
+arv_camera_set_frame_count (ArvCamera *camera, gint64 frame_count)
+{
+	gint64 minimum;
+	gint64 maximum;
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	if (frame_count <= 0)
+		return;
+
+	arv_camera_get_frame_count_bounds(camera, &minimum, &maximum);
+
+	if (frame_count < minimum)
+		frame_count = minimum;
+	if (frame_count > maximum)
+		frame_count = maximum;
+
+	arv_device_set_integer_feature_value (camera->priv->device, "AcquisitionFrameCount", frame_count);
+}
+
+/**
+ * arv_camera_get_frame_count:
+ * @camera: a #ArvCamera
+ *
+ * Returns: number of frames to capture in MultiFrame mode.
+ *
+ * Since: 0.6.0
+ */
+
+gint64
+arv_camera_get_frame_count (ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0);
+
+	return arv_device_get_integer_feature_value (camera->priv->device, "AcquisitionFrameCount");
+}
+
+/**
+ * arv_camera_get_frame_count_bounds:
+ * @camera: a #ArvCamera
+ * @min: (out): minimal possible frame count
+ * @max: (out): maximum possible frame count
+ *
+ * Retrieves allowed range for frame count.
+ *
+ * Since: 0.6.0
+ */
+
+void
+arv_camera_get_frame_count_bounds (ArvCamera *camera, gint64 *min, gint64 *max)
+{
+	if (min != NULL)
+		*min = G_MININT64;
+	if (max != NULL)
+		*max = G_MAXINT64;
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_device_get_integer_feature_bounds (camera->priv->device, "AcquisitionFrameCount", min, max);
+}
+
+/**
  * arv_camera_set_frame_rate:
  * @camera: a #ArvCamera
  * @frame_rate: frame rate, in Hz
