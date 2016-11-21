@@ -815,7 +815,7 @@ arv_camera_get_frame_count (ArvCamera *camera)
  * @min: (out): minimal possible frame count
  * @max: (out): maximum possible frame count
  *
- * Retrieves allowed range for framerate.
+ * Retrieves allowed range for frame count.
  *
  * Since: 0.6.0
  */
