@@ -512,7 +512,6 @@ _open_device (ArvInterface *interface, const char *device_id)
 		hints.ai_socktype = SOCK_STREAM;
 
 		if (getaddrinfo(device_id, "http", &hints, &servinfo) != 0) {
-			freeaddrinfo (servinfo);
 			return NULL;
 		}
 
