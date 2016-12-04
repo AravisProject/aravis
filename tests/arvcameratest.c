@@ -356,7 +356,7 @@ main (int argc, char **argv)
 				arv_stream_push_buffer (stream, arv_buffer_new (payload, NULL));
 
 			arv_camera_set_acquisition_mode (camera, ARV_ACQUISITION_MODE_CONTINUOUS);
-
+			
 			if (arv_option_frequency > 0.0)
 				arv_camera_set_frame_rate (camera, arv_option_frequency);
 
@@ -371,7 +371,9 @@ main (int argc, char **argv)
 			}
 
 			arv_camera_start_acquisition (camera);
-
+			arv_uv_stream_unpause(stream);
+ 
+			
 			g_signal_connect (stream, "new-buffer", G_CALLBACK (new_buffer_cb), &data);
 			arv_stream_set_emit_signals (stream, TRUE);
 
