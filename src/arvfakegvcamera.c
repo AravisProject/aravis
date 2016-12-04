@@ -457,6 +457,8 @@ static const GOptionEntry arv_option_entries[] =
 	        &arv_option_genicam_file, "XML Genicam file to use", "genicam_filename"},
 	{ "debug", 		'd', 0, G_OPTION_ARG_STRING,
 		&arv_option_debug_domains, 	NULL, "category[:level][,...]" },
+	{ "genicam",            'f', 0, G_OPTION_ARG_STRING,
+	        &arv_option_genicam_file, "Genicam file to use", "arv-fake-camera.xml"},
 	{ NULL }
 };
 
@@ -488,8 +490,15 @@ main (int argc, char **argv)
 
 	arv_debug_enable (arv_option_debug_domains);
 
+<<<<<<< HEAD
 	arv_set_fake_camera_genicam_filename (arv_option_genicam_file);
 
+=======
+	//Set the genicam file to use (declared as a static global in arvfakecamera.c
+
+	arv_set_fake_camera_genicam_filename(arv_option_genicam_file);
+	
+>>>>>>> Add cmd line option to arvfakegvcamera to support specifying the genicam file to use
 	gv_camera = arv_fake_gv_camera_new (arv_option_interface_name);
 	if (gv_camera == NULL) {
 		g_print ("Can't instantiate a new fake camera.\n");
