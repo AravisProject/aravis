@@ -58,6 +58,7 @@ typedef struct {
 	size_t trailer_size;
 
 	gboolean cancel;
+  gboolean paused;
 
 	/* Statistics */
 
@@ -85,6 +86,13 @@ arv_uv_stream_thread (void *data)
 
 	offset = 0;
 
+	//Wait for acquisition to actually start
+	/*
+	while (thread_data->paused)
+	  {
+	    g_thread_yield();
+	  }
+	*/
 	while (!thread_data->cancel) {
 		size_t size;
 		transferred = 0;
@@ -106,10 +114,11 @@ arv_uv_stream_thread (void *data)
 		else
 			packet = incoming_buffer;
 
-		arv_log_sp ("Asking for %u bytes", size);
+		arv_log_stream_thread("Asking for %u bytes", size);
 		arv_uv_device_bulk_transfer (thread_data->uv_device,  ARV_UV_ENDPOINT_DATA, LIBUSB_ENDPOINT_IN,
 					     packet, size, &transferred, 0, NULL);
 
+	
 		if (transferred > 0) {
 			ArvUvspPacketType packet_type;
 
@@ -135,6 +144,7 @@ arv_uv_stream_thread (void *data)
 									    &buffer->priv->height,
 									    &buffer->priv->x_offset,
 									    &buffer->priv->y_offset);
+
 						buffer->priv->pixel_format = arv_uvsp_packet_get_pixel_format (packet);
 						buffer->priv->frame_id = arv_uvsp_packet_get_frame_id (packet);
 						buffer->priv->timestamp_ns = arv_uvsp_packet_get_timestamp (packet);
@@ -144,7 +154,7 @@ arv_uv_stream_thread (void *data)
 					break;
 				case ARV_UVSP_PACKET_TYPE_TRAILER:
 					if (buffer != NULL) {
-						arv_log_stream_thread ("Received %" G_GUINT64_FORMAT
+						arv_log_stream ("Received %" G_GUINT64_FORMAT
 								       " bytes - expected %" G_GUINT64_FORMAT,
 								       offset, buffer->priv->size);
 
@@ -298,6 +308,16 @@ arv_uv_stream_get_statistics (ArvStream *stream,
 	*n_completed_buffers = thread_data->n_completed_buffers;
 	*n_failures = thread_data->n_failures;
 	*n_underruns = thread_data->n_underruns;
+}
+
+void arv_uv_stream_unpause(GObject *object)
+{
+  ArvUvStream *uv_stream = ARV_UV_STREAM (object);
+  ArvUvStreamThreadData *thread_data;
+
+
+  thread_data = uv_stream->priv->thread_data;
+  thread_data->paused = FALSE;
 }
 
 static void

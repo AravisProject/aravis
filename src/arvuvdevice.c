@@ -86,12 +86,10 @@ arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, ArvUvEndpointType endpoint_
 		return FALSE;
 	}
 
-
 	endpoint = (endpoint_type == ARV_UV_ENDPOINT_CONTROL) ? uv_device->priv->control_endpoint : uv_device->priv->data_endpoint;
 	result = libusb_bulk_transfer (uv_device->priv->usb_device, endpoint | endpoint_flags, data, size, &transferred,
 				       MAX (uv_device->priv->timeout_ms, timeout_ms));
-
-	success = result >= 0;
+	success = (result >= 0);
 
 	if (!success)
 		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_STATUS_TRANSFER_ERROR,
@@ -155,14 +153,22 @@ _read_memory (ArvUvDevice *uv_device, guint32 address, guint32 size, void *buffe
 		arv_uvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
 		success = TRUE;
+<<<<<<< HEAD
 		success = success && arv_uv_device_bulk_transfer (uv_device, ARV_UV_ENDPOINT_CONTROL, LIBUSB_ENDPOINT_OUT,
+=======
+		success = success && arv_uv_device_bulk_transfer (uv_device, (0x02 | LIBUSB_ENDPOINT_OUT),
+>>>>>>> Add support for Ximea MQ series
 								  packet, packet_size, NULL, 0, NULL);
 		if (success) {
 			gboolean expected_answer;
 
 			do {
 				success = TRUE;
+<<<<<<< HEAD
 				success = success && arv_uv_device_bulk_transfer (uv_device, ARV_UV_ENDPOINT_CONTROL, LIBUSB_ENDPOINT_IN,
+=======
+				success = success && arv_uv_device_bulk_transfer (uv_device, (0x82 | LIBUSB_ENDPOINT_IN),
+>>>>>>> Add support for Ximea MQ series
 										  read_packet, read_packet_size, &transferred,
 										  0, NULL);
 
@@ -270,14 +276,22 @@ _write_memory (ArvUvDevice *uv_device, guint32 address, guint32 size, void *buff
 		arv_uvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
 		success = TRUE;
+<<<<<<< HEAD
 		success = success && arv_uv_device_bulk_transfer (uv_device, ARV_UV_ENDPOINT_CONTROL, LIBUSB_ENDPOINT_OUT,
+=======
+		success = success && arv_uv_device_bulk_transfer (uv_device, (0x02 | LIBUSB_ENDPOINT_OUT),
+>>>>>>> Add support for Ximea MQ series
 								  packet, packet_size, NULL, 0, NULL);
 		if (success ) {
 			gboolean expected_answer;
 
 			do {
 				success = TRUE;
+<<<<<<< HEAD
 				success = success && arv_uv_device_bulk_transfer (uv_device, ARV_UV_ENDPOINT_CONTROL, LIBUSB_ENDPOINT_IN,
+=======
+				success = success && arv_uv_device_bulk_transfer (uv_device, (0x82 | LIBUSB_ENDPOINT_IN),
+>>>>>>> Add support for Ximea MQ series
 										  read_packet, read_packet_size, &transferred,
 										  timeout_ms, NULL);
 
@@ -388,12 +402,21 @@ _bootstrap (ArvUvDevice *uv_device)
 	void *data;
 	char manufacturer[64];
 
+	char manfName[64];
+	
 	arv_debug_device ("Get genicam");
 
+<<<<<<< HEAD
 	arv_device_read_memory(device, ARV_ABRM_MANUFACTURER_NAME, 64, &manufacturer, NULL);
 	manufacturer[63] = 0;
 	arv_debug_device ("MANUFACTURER_NAME =        %s", manufacturer);
 
+=======
+	arv_device_read_memory(device, ARV_ABRM_MANUFACTURER_NAME, 64, &manfName, NULL);
+	manfName[63] = 0;
+	arv_debug_device ("MAX_MANF_NAME = %s", manfName);
+	
+>>>>>>> Add support for Ximea MQ series
 	arv_device_read_memory (device, ARV_ABRM_SBRM_ADDRESS, sizeof (guint64), &offset, NULL);
 	arv_device_read_memory (device, ARV_ABRM_MAX_DEVICE_RESPONSE_TIME, sizeof (guint32), &response_time, NULL);
 	arv_device_read_memory (device, ARV_ABRM_DEVICE_CAPABILITY, sizeof (guint64), &device_capability, NULL);
@@ -466,6 +489,7 @@ _bootstrap (ArvUvDevice *uv_device)
 	g_string_free (string, TRUE);
 #endif
 
+<<<<<<< HEAD
 	schema_type = arv_uvcp_manifest_entry_get_schema_type (&entry);
 
 	switch (schema_type) {
@@ -473,6 +497,16 @@ _bootstrap (ArvUvDevice *uv_device)
 			{
 				ArvZip *zip;
 				const GSList *zip_files;
+=======
+	//Check if we need to unpack the zip file or if the genicam is stored as raw text:
+	ArvUvcpManifestSchemaType schemaType = arv_uvcp_packet_get_schema_type(entry.schema);
+	arv_debug_device("Found schema type: 0x%x", schemaType);
+
+	if (schemaType == ARV_UVCP_SCHEMA_ZIP)
+	{
+		ArvZip *zip;
+		const GSList *zip_files;
+>>>>>>> Add support for Ximea MQ series
 
 				zip = arv_zip_new (data, entry.size);
 				zip_files = arv_zip_get_file_list (zip);
@@ -500,6 +534,7 @@ _bootstrap (ArvUvDevice *uv_device)
 									       uv_device->priv->genicam_xml_size);
 				}
 
+<<<<<<< HEAD
 				arv_zip_free (zip);
 				g_free (data);
 			}
@@ -515,12 +550,34 @@ _bootstrap (ArvUvDevice *uv_device)
 			break;
 		default:
 			arv_warning_device ("Unknown USB3Vision manifest schema type (%d)", schema_type);
+=======
+		arv_zip_free (zip);
+		g_free (data);
+>>>>>>> Add support for Ximea MQ series
 	}
+	else if (schemaType == ARV_UVCP_SCHEMA_RAW)
+	  {
+	    //data is already gmalloc0'ed - store in private ptr
+	    uv_device->priv->genicam_xml = data;
+	    uv_device->priv->genicam_xml_size = entry.size;
+	    uv_device->priv->genicam = arv_gc_new (ARV_DEVICE (uv_device), uv_device->priv->genicam_xml,
+							       uv_device->priv->genicam_xml_size);
 
+	    //Do not deallocate data, since we handed the ptr off to the private device
+	  }
+
+	
 #if 0
 	arv_debug_device("GENICAM\n:%s", uv_device->priv->genicam_xml);
 #endif
 
+<<<<<<< HEAD
+#if 0
+	arv_debug_device("GENICAM\n:%s", uv_device->priv->genicam_xml);
+#endif
+
+=======
+>>>>>>> Add support for Ximea MQ series
 }
 
 static ArvGc *
@@ -584,9 +641,13 @@ _open_usb_device (ArvUvDevice *uv_device)
 			if (g_strcmp0 ((char * ) manufacturer, uv_device->priv->vendor) == 0 &&
 			    g_strcmp0 ((char * ) product, uv_device->priv->product) == 0 &&
 			    g_strcmp0 ((char * ) serial_nbr, uv_device->priv->serial_nbr) == 0) {
+<<<<<<< HEAD
 				struct libusb_config_descriptor *config;
 				struct libusb_interface_descriptor interface;
 				struct libusb_endpoint_descriptor endpoint;
+=======
+
+>>>>>>> Add support for Ximea MQ series
 
 				uv_device->priv->usb_device = usb_device;
 
@@ -670,6 +731,7 @@ arv_uv_device_init (ArvUvDevice *uv_device)
 	uv_device->priv = G_TYPE_INSTANCE_GET_PRIVATE (uv_device, ARV_TYPE_UV_DEVICE, ArvUvDevicePrivate);
 	uv_device->priv->cmd_packet_size_max = 65536 + sizeof (ArvUvcpHeader);
 	uv_device->priv->ack_packet_size_max = 65536 + sizeof (ArvUvcpHeader);
+	arv_debug_device("Default max ack: %u", uv_device->priv->ack_packet_size_max);
 	uv_device->priv->disconnected = FALSE;
 }
 

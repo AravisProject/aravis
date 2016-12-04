@@ -1167,10 +1167,19 @@ arv_camera_set_exposure_time (ArvCamera *camera, double exposure_time_us)
 			arv_device_set_integer_feature_value (camera->priv->device, "ExposureTimeRaw",
 							    exposure_time_us);
 			break;
+<<<<<<< HEAD
 		case ARV_CAMERA_SERIES_XIMEA:
 			arv_device_set_integer_feature_value (camera->priv->device, "ExposureTime",
 							      exposure_time_us);
 			break;
+=======
+	case ARV_CAMERA_SERIES_XIMEA:
+	  
+	  arv_device_set_integer_feature_value (camera->priv->device, "ExposureTime",
+						(guint32)exposure_time_us);
+	  break;
+	  
+>>>>>>> Add support for Ximea MQ series
 		case ARV_CAMERA_SERIES_BASLER_ACE:
 		default:
 			arv_device_set_float_feature_value (camera->priv->device,
@@ -1196,8 +1205,14 @@ arv_camera_get_exposure_time (ArvCamera *camera)
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0.0);
 
 	switch (camera->priv->series) {
+<<<<<<< HEAD
 		case ARV_CAMERA_SERIES_XIMEA:
 			return arv_device_get_integer_feature_value (camera->priv->device,"ExposureTime");
+=======
+	case ARV_CAMERA_SERIES_XIMEA:
+	  return arv_device_get_integer_feature_value (camera->priv->device,"ExposureTime");
+
+>>>>>>> Add support for Ximea MQ series
 		case ARV_CAMERA_SERIES_RICOH:
 			return arv_device_get_integer_feature_value (camera->priv->device,"ExposureTimeRaw");
 		default:

@@ -189,10 +189,17 @@ typedef struct ARAVIS_PACKED_STRUCTURE {
 } ArvUvcpPacket;
 
 typedef struct ARAVIS_PACKED_STRUCTURE {
+<<<<<<< HEAD
 	guint16 file_version_subminor;
 	guint8 file_version_minor;
 	guint8 file_version_major;
 	guint32 schema;
+=======
+  guint16 file_version_subminor;
+  guint8 file_version_minor;
+  guint8 file_version_major;
+  guint32 schema;
+>>>>>>> Add support for Ximea MQ series
 	guint64 address;
 	guint64 size;
 	guint64 unknown3;
@@ -202,6 +209,7 @@ typedef struct ARAVIS_PACKED_STRUCTURE {
 	guint64 unknown7;
 } ArvUvcpManifestEntry;
 
+<<<<<<< HEAD
 /**
  * ArvUvcpManifestSchemaType:
  * @ARV_UVCP_SCHEMA_RAW: uncompressed genicam data
@@ -225,6 +233,32 @@ arv_uvcp_manifest_entry_get_schema_type (ArvUvcpManifestEntry *entry)
 	return (entry->schema >> 10) & 0x0000001f;
 }
 
+=======
+//This is packed into the 32-bit schema type as bits 10-15
+typedef enum
+  {
+    ARV_UVCP_SCHEMA_RAW = 0x0,
+    ARV_UVCP_SCHEMA_ZIP = 0x1
+  }
+  ArvUvcpManifestSchemaType;
+
+static inline ArvUvcpManifestSchemaType arv_uvcp_packet_get_schema_type(guint32 schemaType)
+{
+  guint32 shifted = schemaType >> 10;
+  guint32 masked = shifted & 0x0000001f;
+
+  switch (masked)
+    {
+    case ARV_UVCP_SCHEMA_RAW:
+      return ARV_UVCP_SCHEMA_RAW;
+    case ARV_UVCP_SCHEMA_ZIP:
+      return ARV_UVCP_SCHEMA_ZIP;
+    default:
+      arv_debug_device("Unknown GenICam storage schema type: 0x%x", masked);
+      return 0;
+    }
+}
+>>>>>>> Add support for Ximea MQ series
 #undef ARAVIS_PACKED_STRUCTURE
 
 void 			arv_uvcp_packet_free 			(ArvUvcpPacket *packet);
