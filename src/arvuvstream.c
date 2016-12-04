@@ -58,7 +58,6 @@ typedef struct {
 	size_t trailer_size;
 
 	gboolean cancel;
-  gboolean paused;
 
 	/* Statistics */
 
@@ -86,13 +85,6 @@ arv_uv_stream_thread (void *data)
 
 	offset = 0;
 
-	//Wait for acquisition to actually start
-	/*
-	while (thread_data->paused)
-	  {
-	    g_thread_yield();
-	  }
-	*/
 	while (!thread_data->cancel) {
 		size_t size;
 		transferred = 0;
@@ -282,8 +274,7 @@ arv_uv_stream_new (ArvUvDevice *uv_device, ArvStreamCallback callback, void *use
 	thread_data->callback = callback;
 	thread_data->user_data = user_data;
 	thread_data->cancel = FALSE;
-	thread_data->paused = TRUE;
-	
+
 	thread_data->leader_size = si_req_leader_size;
 	thread_data->payload_size = si_payload_size;
 	thread_data->trailer_size = si_req_trailer_size;
@@ -314,16 +305,6 @@ arv_uv_stream_get_statistics (ArvStream *stream,
 	*n_completed_buffers = thread_data->n_completed_buffers;
 	*n_failures = thread_data->n_failures;
 	*n_underruns = thread_data->n_underruns;
-}
-
-void arv_uv_stream_unpause(GObject *object)
-{
-  ArvUvStream *uv_stream = ARV_UV_STREAM (object);
-  ArvUvStreamThreadData *thread_data;
-
-
-  thread_data = uv_stream->priv->thread_data;
-  thread_data->paused = FALSE;
 }
 
 static void

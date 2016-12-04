@@ -355,8 +355,6 @@ main (int argc, char **argv)
 			}
 
 			arv_camera_start_acquisition (camera);
-			arv_uv_stream_unpause(stream);
- 
 			
 			g_signal_connect (stream, "new-buffer", G_CALLBACK (new_buffer_cb), &data);
 			arv_stream_set_emit_signals (stream, TRUE);

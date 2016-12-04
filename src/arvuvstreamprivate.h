@@ -47,7 +47,7 @@ struct _ArvUvStreamClass {
 };
 
 ArvStream * 	arv_uv_stream_new	(ArvUvDevice *uv_device, ArvStreamCallback callback, void *user_data);
-void arv_uv_stream_unpause(GObject *object);
+
 G_END_DECLS
 
 #endif
