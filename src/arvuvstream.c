@@ -35,7 +35,7 @@
 #include <libusb.h>
 #include <string.h>
 
-#define MAXIMUM_TRANSFER_SIZE	60000
+#define MAXIMUM_TRANSFER_SIZE	1048576
 
 static GObjectClass *parent_class = NULL;
 
@@ -58,6 +58,7 @@ typedef struct {
 	size_t trailer_size;
 
 	gboolean cancel;
+  gboolean paused;
 
 	/* Statistics */
 
@@ -85,6 +86,13 @@ arv_uv_stream_thread (void *data)
 
 	offset = 0;
 
+	//Wait for acquisition to actually start
+	/*
+	while (thread_data->paused)
+	  {
+	    g_thread_yield();
+	  }
+	*/
 	while (!thread_data->cancel) {
 		size_t size;
 		transferred = 0;
@@ -106,9 +114,12 @@ arv_uv_stream_thread (void *data)
 		else
 			packet = incoming_buffer;
 
-		arv_uv_device_bulk_transfer (thread_data->uv_device, 0x81 | LIBUSB_ENDPOINT_IN,
+		//arv_debug_stream("Asking for %u bytes", size);
+		
+		arv_uv_device_bulk_transfer (thread_data->uv_device, (0x81 | LIBUSB_ENDPOINT_IN),
 					     packet, size, &transferred, 0, NULL);
 
+	
 		if (transferred > 0) {
 			ArvUvspPacketType packet_type;
 
@@ -134,6 +145,10 @@ arv_uv_stream_thread (void *data)
 									    &buffer->priv->height,
 									    &buffer->priv->x_offset,
 									    &buffer->priv->y_offset);
+
+						//Add the pixel format:
+
+						buffer->priv->pixel_format = arv_uvsp_packet_get_pixel_format(packet);
 						buffer->priv->frame_id = arv_uvsp_packet_get_frame_id (packet);
 						buffer->priv->timestamp_ns = arv_uvsp_packet_get_timestamp (packet);
 						offset = 0;
@@ -142,9 +157,22 @@ arv_uv_stream_thread (void *data)
 					break;
 				case ARV_UVSP_PACKET_TYPE_TRAILER:
 					if (buffer != NULL) {
-						arv_log_stream_thread ("Received %" G_GUINT64_FORMAT
+						arv_log_stream ("Received %" G_GUINT64_FORMAT
 								       " bytes - expected %" G_GUINT64_FORMAT,
 								       offset, buffer->priv->size);
+
+						//If the image was incomplete, drop the frame and try again
+						//Reset the offset to 0 - receive a new leader
+						if (offset != buffer->priv->size)
+						  {
+						    arv_debug_stream ("Incomplete image received, dropping");
+						    buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
+						    arv_stream_push_output_buffer (thread_data->stream, buffer);
+						    thread_data->n_underruns++;
+						    buffer = NULL;
+						    continue;
+						  }
+						
 						buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
 						arv_stream_push_output_buffer (thread_data->stream, buffer);
 						thread_data->n_completed_buffers++;
@@ -254,6 +282,8 @@ arv_uv_stream_new (ArvUvDevice *uv_device, ArvStreamCallback callback, void *use
 	thread_data->callback = callback;
 	thread_data->user_data = user_data;
 	thread_data->cancel = FALSE;
+	thread_data->paused = TRUE;
+	
 	thread_data->leader_size = si_req_leader_size;
 	thread_data->payload_size = si_payload_size;
 	thread_data->trailer_size = si_req_trailer_size;
@@ -284,6 +314,16 @@ arv_uv_stream_get_statistics (ArvStream *stream,
 	*n_completed_buffers = thread_data->n_completed_buffers;
 	*n_failures = thread_data->n_failures;
 	*n_underruns = thread_data->n_underruns;
+}
+
+void arv_uv_stream_unpause(GObject *object)
+{
+  ArvUvStream *uv_stream = ARV_UV_STREAM (object);
+  ArvUvStreamThreadData *thread_data;
+
+
+  thread_data = uv_stream->priv->thread_data;
+  thread_data->paused = FALSE;
 }
 
 static void
