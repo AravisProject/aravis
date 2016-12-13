@@ -2191,7 +2191,17 @@ arv_camera_constructor (GType gtype, guint n_properties, GObjectConstructParam *
 	camera->priv->series = series;
 
 	camera->priv->has_gain = ARV_IS_GC_FLOAT (arv_device_get_feature (camera->priv->device, "Gain"));
-	camera->priv->has_exposure_time = ARV_IS_GC_FLOAT (arv_device_get_feature (camera->priv->device, "ExposureTime"));
+
+	switch (vendor)
+	{
+	  case ARV_CAMERA_VENDOR_XIMEA:
+	    camera->priv->has_exposure_time = ARV_IS_GC_INTEGER(arv_device_get_feature (camera->priv->device, "ExposureTime"));
+	    break;
+	    default:
+	      camera->priv->has_exposure_time = ARV_IS_GC_FLOAT (arv_device_get_feature (camera->priv->device, "ExposureTime"));
+	    break; 
+	}
+	
 	camera->priv->has_acquisition_frame_rate = ARV_IS_GC_FLOAT (arv_device_get_feature (camera->priv->device,
 											    "AcquisitionFrameRate"));
 
