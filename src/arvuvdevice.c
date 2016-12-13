@@ -83,9 +83,11 @@ arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, unsigned char endpoint, voi
 		return FALSE;
 	}
 
-
+	//printf("Requesting %d bytes:", size);
 	result = libusb_bulk_transfer (uv_device->priv->usb_device, endpoint, data, size, &transferred,
 				       MAX (uv_device->priv->timeout_ms, timeout_ms));
+	//printf("Received %d bytes\n", transferred);
+	
 	success = (result >= 0);
 
 	if (!success)

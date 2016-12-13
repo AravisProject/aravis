@@ -106,8 +106,7 @@ arv_uv_stream_thread (void *data)
 		else
 			packet = incoming_buffer;
 
-		//arv_debug_stream("Asking for %u bytes", size);
-		
+		arv_debug_stream("Asking for %u bytes", size);		
 		arv_uv_device_bulk_transfer (thread_data->uv_device, (0x81 | LIBUSB_ENDPOINT_IN),
 					     packet, size, &transferred, 0, NULL);
 
