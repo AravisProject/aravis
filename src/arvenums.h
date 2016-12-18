@@ -48,6 +48,12 @@ typedef enum {
 	ARV_GC_CACHABLE_WRITE_AROUND
 } ArvGcCachable;
 
+typedef enum {
+  ARV_UV_ENDPOINT_CONTROL,
+  ARV_UV_ENDPOINT_DATA
+} ArvUvEndpointType;
+
+
 /**
  * ArvAuto:
  * @ARV_AUTO_OFF: manual setting
