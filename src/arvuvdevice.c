@@ -52,7 +52,7 @@ struct _ArvUvDevicePrivate {
 
 	const char *genicam_xml;
 	size_t genicam_xml_size;
-
+  
 	guint16 packet_id;
 
 	guint timeout_ms;
@@ -156,10 +156,14 @@ _read_memory (ArvUvDevice *uv_device, guint32 address, guint32 size, void *buffe
 
 		success = TRUE;
 <<<<<<< HEAD
+<<<<<<< HEAD
 		success = success && arv_uv_device_bulk_transfer (uv_device, ARV_UV_ENDPOINT_CONTROL, LIBUSB_ENDPOINT_OUT,
 =======
 		success = success && arv_uv_device_bulk_transfer (uv_device, (0x02 | LIBUSB_ENDPOINT_OUT),
 >>>>>>> Add support for Ximea MQ series
+=======
+		success = success && arv_uv_device_bulk_transfer (uv_device, ARV_UV_ENDPOINT_CONTROL, LIBUSB_ENDPOINT_OUT,
+>>>>>>> Add of device descriptor-agnostic support. Untested beyond Ximea
 								  packet, packet_size, NULL, 0, NULL);
 		if (success) {
 			gboolean expected_answer;
@@ -167,10 +171,14 @@ _read_memory (ArvUvDevice *uv_device, guint32 address, guint32 size, void *buffe
 			do {
 				success = TRUE;
 <<<<<<< HEAD
+<<<<<<< HEAD
 				success = success && arv_uv_device_bulk_transfer (uv_device, ARV_UV_ENDPOINT_CONTROL, LIBUSB_ENDPOINT_IN,
 =======
 				success = success && arv_uv_device_bulk_transfer (uv_device, (0x82 | LIBUSB_ENDPOINT_IN),
 >>>>>>> Add support for Ximea MQ series
+=======
+				success = success && arv_uv_device_bulk_transfer (uv_device, ARV_UV_ENDPOINT_CONTROL, LIBUSB_ENDPOINT_IN,
+>>>>>>> Add of device descriptor-agnostic support. Untested beyond Ximea
 										  read_packet, read_packet_size, &transferred,
 										  0, NULL);
 
@@ -279,10 +287,14 @@ _write_memory (ArvUvDevice *uv_device, guint32 address, guint32 size, void *buff
 
 		success = TRUE;
 <<<<<<< HEAD
+<<<<<<< HEAD
 		success = success && arv_uv_device_bulk_transfer (uv_device, ARV_UV_ENDPOINT_CONTROL, LIBUSB_ENDPOINT_OUT,
 =======
 		success = success && arv_uv_device_bulk_transfer (uv_device, (0x02 | LIBUSB_ENDPOINT_OUT),
 >>>>>>> Add support for Ximea MQ series
+=======
+		success = success && arv_uv_device_bulk_transfer (uv_device, ARV_UV_ENDPOINT_CONTROL, LIBUSB_ENDPOINT_OUT,
+>>>>>>> Add of device descriptor-agnostic support. Untested beyond Ximea
 								  packet, packet_size, NULL, 0, NULL);
 		if (success ) {
 			gboolean expected_answer;
@@ -290,10 +302,14 @@ _write_memory (ArvUvDevice *uv_device, guint32 address, guint32 size, void *buff
 			do {
 				success = TRUE;
 <<<<<<< HEAD
+<<<<<<< HEAD
 				success = success && arv_uv_device_bulk_transfer (uv_device, ARV_UV_ENDPOINT_CONTROL, LIBUSB_ENDPOINT_IN,
 =======
 				success = success && arv_uv_device_bulk_transfer (uv_device, (0x82 | LIBUSB_ENDPOINT_IN),
 >>>>>>> Add support for Ximea MQ series
+=======
+				success = success && arv_uv_device_bulk_transfer (uv_device, ARV_UV_ENDPOINT_CONTROL, LIBUSB_ENDPOINT_IN,
+>>>>>>> Add of device descriptor-agnostic support. Untested beyond Ximea
 										  read_packet, read_packet_size, &transferred,
 										  timeout_ms, NULL);
 
@@ -652,6 +668,7 @@ _open_usb_device (ArvUvDevice *uv_device)
 >>>>>>> Add support for Ximea MQ series
 
 				uv_device->priv->usb_device = usb_device;
+<<<<<<< HEAD
 
 				/* Assign the endpoint while the libusb device handle is handy */
 				libusb_get_active_config_descriptor(devices[i], &config);
@@ -669,6 +686,28 @@ _open_usb_device (ArvUvDevice *uv_device)
 
 				uv_device->priv->data_endpoint = 1;
 
+=======
+				//Assign the endpoint while the libusb device handle is handy
+				struct libusb_config_descriptor *config;
+				libusb_get_active_config_descriptor(devices[i], &config);
+
+				
+				//Get the first endpoint of the first interface, strip the direction bits
+				//the control interface is bidirectional -> both IN and OUT endpoints
+				struct libusb_interface_descriptor interface = config->interface[0].altsetting[0];
+				struct libusb_endpoint_descriptor endpoint = interface.endpoint[0];
+
+				uv_device->priv->control_endpoint = endpoint.bEndpointAddress & 0x0f; //mask off reserved / direction
+
+
+				//Get the first endpoint of the second interface, strip the direction bits
+				//the data interface is one-way -> only an IN endpoint
+				interface = config->interface[1].altsetting[0];
+				endpoint = interface.endpoint[0];
+				
+				uv_device->priv->data_endpoint = 1; //endpoint.bEndpointAddress & 0x0f; //mask off reserved / direction
+				
+>>>>>>> Add of device descriptor-agnostic support. Untested beyond Ximea
 				libusb_free_config_descriptor(config);
 			} else
 				libusb_close (usb_device);
@@ -705,10 +744,16 @@ arv_uv_device_new (const char *vendor, const char *product, const char *serial_n
 	uv_device->priv->timeout_ms = 32;
 
 	_open_usb_device (uv_device);
+<<<<<<< HEAD
 
 	arv_debug_device("[UvDevice::new] Using control endpoint %d", uv_device->priv->control_endpoint);
 	arv_debug_device("[UvDevice::new] Using data endpoint %d", uv_device->priv->data_endpoint);
 
+=======
+	arv_debug_device("[UvDevice::new] Using control endpoint %d", uv_device->priv->control_endpoint);
+	arv_debug_device("[UvDevice::new] Using data endpoint %d", uv_device->priv->data_endpoint);
+	
+>>>>>>> Add of device descriptor-agnostic support. Untested beyond Ximea
 	if (uv_device->priv->usb_device == NULL ||
 	    libusb_claim_interface (uv_device->priv->usb_device, 0) < 0) {
 		arv_warning_device ("[UvDevice::new] Failed to claim USB interface to '%s - #%s'", product, serial_nbr);
