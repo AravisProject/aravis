@@ -50,6 +50,7 @@
 #include <arvbuffer.h>
 #include <arvgc.h>
 #include <arvgvdevice.h>
+#include <arvuvdevice.h>
 #include <arvenums.h>
 #include <arvstr.h>
 
@@ -60,6 +61,7 @@
  * @ARV_CAMERA_VENDOR_PROSILICA: Prosilica
  * @ARV_CAMERA_VENDOR_TIS: The Imaging Source
  * @ARV_CAMERA_VENDOR_POINT_GREY: PointGrey
+ * @ARV_CAMERA_VENDOR_XIMEA: XIMEA Gmbh
  */
 
 typedef enum {
@@ -69,7 +71,8 @@ typedef enum {
 	ARV_CAMERA_VENDOR_PROSILICA,
 	ARV_CAMERA_VENDOR_TIS,
 	ARV_CAMERA_VENDOR_POINT_GREY,
-	ARV_CAMERA_VENDOR_RICOH
+	ARV_CAMERA_VENDOR_RICOH,
+	ARV_CAMERA_VENDOR_XIMEA
 } ArvCameraVendor;
 
 typedef enum {
@@ -81,7 +84,8 @@ typedef enum {
 	ARV_CAMERA_SERIES_PROSILICA,
 	ARV_CAMERA_SERIES_TIS,
 	ARV_CAMERA_SERIES_POINT_GREY,
-	ARV_CAMERA_SERIES_RICOH
+	ARV_CAMERA_SERIES_RICOH,
+	ARV_CAMERA_SERIES_XIMEA
 } ArvCameraSeries;
 
 static GObjectClass *parent_class = NULL;
@@ -96,6 +100,7 @@ struct _ArvCameraPrivate {
 	gboolean has_gain;
 	gboolean has_exposure_time;
 	gboolean has_acquisition_frame_rate;
+        gboolean has_bandwidth_control;
 };
 
 enum
@@ -643,7 +648,6 @@ void
 arv_camera_start_acquisition (ArvCamera *camera)
 {
 	g_return_if_fail (ARV_IS_CAMERA (camera));
-
 	arv_device_execute_command (camera->priv->device, "AcquisitionStart");
 }
 
@@ -913,6 +917,7 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
 			break;
 		case ARV_CAMERA_VENDOR_DALSA:
 		case ARV_CAMERA_VENDOR_RICOH:
+	        case ARV_CAMERA_VENDOR_XIMEA:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector", "FrameStart");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
@@ -960,7 +965,9 @@ arv_camera_get_frame_rate (ArvCamera *camera)
 		case ARV_CAMERA_VENDOR_DALSA:
 		case ARV_CAMERA_VENDOR_RICOH:
 		case ARV_CAMERA_VENDOR_BASLER:
-		case ARV_CAMERA_VENDOR_UNKNOWN:
+	        case ARV_CAMERA_VENDOR_XIMEA:
+	        case ARV_CAMERA_VENDOR_UNKNOWN:
+		
 			return arv_device_get_float_feature_value (camera->priv->device,
 								   camera->priv->has_acquisition_frame_rate ?
 								   "AcquisitionFrameRate":
@@ -1026,6 +1033,7 @@ arv_camera_get_frame_rate_bounds (ArvCamera *camera, double *min, double *max)
 		case ARV_CAMERA_VENDOR_DALSA:
 		case ARV_CAMERA_VENDOR_RICOH:
 		case ARV_CAMERA_VENDOR_BASLER:
+	        case ARV_CAMERA_VENDOR_XIMEA:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
 			arv_device_get_float_feature_bounds (camera->priv->device,
 							     camera->priv->has_acquisition_frame_rate ?
@@ -1163,6 +1171,12 @@ arv_camera_set_exposure_time (ArvCamera *camera, double exposure_time_us)
 			arv_device_set_integer_feature_value (camera->priv->device, "ExposureTimeRaw",
 							    exposure_time_us);
 			break;
+	case ARV_CAMERA_SERIES_XIMEA:
+	  
+	  arv_device_set_integer_feature_value (camera->priv->device, "ExposureTime",
+						(guint32)exposure_time_us);
+	  break;
+	  
 		case ARV_CAMERA_SERIES_BASLER_ACE:
 		default:
 			arv_device_set_float_feature_value (camera->priv->device,
@@ -1188,6 +1202,9 @@ arv_camera_get_exposure_time (ArvCamera *camera)
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0.0);
 
 	switch (camera->priv->series) {
+	case ARV_CAMERA_SERIES_XIMEA:
+	  return arv_device_get_integer_feature_value (camera->priv->device,"ExposureTime");
+
 		case ARV_CAMERA_SERIES_RICOH:
 			return arv_device_get_integer_feature_value (camera->priv->device,"ExposureTimeRaw");
 		default:
@@ -1460,6 +1477,7 @@ arv_camera_is_frame_rate_available (ArvCamera *camera)
 		case ARV_CAMERA_VENDOR_DALSA:
 		case ARV_CAMERA_VENDOR_RICOH:
 		case ARV_CAMERA_VENDOR_BASLER:
+	        case ARV_CAMERA_VENDOR_XIMEA:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
 			return arv_device_get_feature (camera->priv->device,
 						       camera->priv->has_acquisition_frame_rate ?
@@ -1577,6 +1595,103 @@ arv_camera_is_gv_device	(ArvCamera *camera)
 
 	return ARV_IS_GV_DEVICE (camera->priv->device);
 }
+
+/**
+ * arv_camera_is_uv_device:
+ * @camera: a #ArvCamera
+ *
+ * Returns: %TRUE if @camera is a USB3Vision device.
+ *
+ * Since: 
+ */
+
+gboolean
+arv_camera_is_uv_device	(ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
+
+	return ARV_IS_UV_DEVICE (camera->priv->device);
+}
+
+/**
+ * arv_camera_uv_is_bandwidth_control_available:
+ * @camera: a #ArvCamera
+ * Returns: Returns if bandwidth limits are available on this camera
+ */
+
+gboolean arv_camera_uv_is_bandwidth_control_available (ArvCamera *camera)
+{
+  g_return_val_if_fail (arv_camera_is_uv_device (camera), FALSE);
+  switch (camera->priv->vendor) {
+  case ARV_CAMERA_VENDOR_XIMEA:
+    return arv_device_get_feature(camera->priv->device, "DeviceLinkThroughputLimit") != NULL;
+  default:
+    return FALSE;
+  }
+  
+}
+
+
+/**
+ * arv_camera_uv_set_bandwidth:
+ * @camera: a #ArvCamera
+ * @bandwidth: Desired bandwith limit in megabits/sec. Set to 0 to disable limit mode
+ * Returns: void
+ */
+
+void  arv_camera_uv_set_bandwidth (ArvCamera *camera, guint bandwidth)
+{
+  g_return_if_fail (arv_camera_is_uv_device (camera));
+  g_return_if_fail (arv_camera_uv_is_bandwidth_control_available(camera));
+
+  if (bandwidth > 0)
+    {
+      arv_device_set_integer_feature_value (camera->priv->device, "DeviceLinkThroughputLimit", bandwidth);
+      arv_device_set_integer_feature_value (camera->priv->device, "DeviceLinkThroughputLimitMode", 1);
+    }
+  else
+    {
+      arv_device_set_integer_feature_value (camera->priv->device, "DeviceLinkThroughputLimitMode", 0);
+    }
+  
+}
+/**
+ * arv_camera_uv_get_bandwidth:
+ * @camera: a #ArvCamera
+ *
+ * Returns: the current bandwidth limit that is set
+ *
+ * Since: 
+ */
+guint  arv_camera_uv_get_bandwidth (ArvCamera *camera)
+{
+  g_return_val_if_fail (arv_camera_is_uv_device (camera), 0);
+  g_return_val_if_fail (arv_camera_uv_is_bandwidth_control_available(camera),0);
+  return arv_device_get_integer_feature_value (camera->priv->device, "DeviceLinkThroughputLimit");
+}
+
+/**
+ * arv_camera_uv_get_bandwidth_bounds:
+ * @camera: a #ArvCamera
+ *
+ * Returns: the current bandwidth bounds
+ *
+ * Since: 
+ */
+
+void  arv_camera_uv_get_bandwidth_bounds (ArvCamera *camera, guint* min, guint* max)
+{
+  gint64 min64, max64;
+
+  g_return_if_fail (arv_camera_is_uv_device (camera));
+  g_return_if_fail (arv_camera_uv_is_bandwidth_control_available(camera));
+  arv_device_get_integer_feature_bounds (camera->priv->device, "DeviceLinkThroughputLimit", &min64, &max64);
+  if (min != NULL)
+    *min = min64;
+  if (max != NULL)
+    *max = max64;
+}
+
 
 /**
  * arv_camera_gv_get_n_stream_channels:
@@ -2022,6 +2137,9 @@ arv_camera_constructor (GType gtype, guint n_properties, GObjectConstructParam *
 	} else if (g_strcmp0 (vendor_name, "Ricoh Company, Ltd.") == 0) {
 		vendor = ARV_CAMERA_VENDOR_RICOH;
 		series = ARV_CAMERA_SERIES_RICOH;
+	} else if (g_strcmp0 (vendor_name, "XIMEA GmbH") == 0) {
+		vendor = ARV_CAMERA_VENDOR_XIMEA;
+		series = ARV_CAMERA_SERIES_XIMEA;
 	} else {
 		vendor = ARV_CAMERA_VENDOR_UNKNOWN;
 		series = ARV_CAMERA_SERIES_UNKNOWN;
@@ -2031,9 +2149,21 @@ arv_camera_constructor (GType gtype, guint n_properties, GObjectConstructParam *
 	camera->priv->series = series;
 
 	camera->priv->has_gain = ARV_IS_GC_FLOAT (arv_device_get_feature (camera->priv->device, "Gain"));
-	camera->priv->has_exposure_time = ARV_IS_GC_FLOAT (arv_device_get_feature (camera->priv->device, "ExposureTime"));
+
+	switch (vendor)
+	{
+	  case ARV_CAMERA_VENDOR_XIMEA:
+	    camera->priv->has_exposure_time = ARV_IS_GC_INTEGER(arv_device_get_feature (camera->priv->device, "ExposureTime"));
+	    break;
+	    default:
+	      camera->priv->has_exposure_time = ARV_IS_GC_FLOAT (arv_device_get_feature (camera->priv->device, "ExposureTime"));
+	    break; 
+	}
+	
 	camera->priv->has_acquisition_frame_rate = ARV_IS_GC_FLOAT (arv_device_get_feature (camera->priv->device,
 											    "AcquisitionFrameRate"));
+
+	camera->priv->has_bandwidth_control = ARV_IS_GC_INTEGER(arv_device_get_feature (camera->priv->device, "DevieLinkThroughputLimit"));
 
     return object;
 }

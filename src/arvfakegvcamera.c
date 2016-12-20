@@ -208,6 +208,7 @@ arv_fake_gv_camera_new (const char *interface_name)
 	g_return_val_if_fail (interface_name != NULL, NULL);
 
 	gv_camera = g_new0 (ArvFakeGvCamera, 1);
+
 	gv_camera->camera = arv_fake_camera_new ("GV01");
 
 	return_value = getifaddrs (&ifap);
@@ -446,6 +447,7 @@ handle_control_packet (ArvFakeGvCamera *gv_camera, GSocket *socket,
 
 static char *arv_option_interface_name = "lo";
 static char *arv_option_debug_domains = NULL;
+static char *arv_option_genicam_file = "arv-fake-camera.xml";
 
 static const GOptionEntry arv_option_entries[] =
 {
@@ -453,6 +455,8 @@ static const GOptionEntry arv_option_entries[] =
 		&arv_option_interface_name,	"Listening interface name", "interface_id"},
 	{ "debug", 		'd', 0, G_OPTION_ARG_STRING,
 		&arv_option_debug_domains, 	NULL, "category[:level][,...]" },
+	{ "genicam",            'f', 0, G_OPTION_ARG_STRING,
+	        &arv_option_genicam_file, "Genicam file to use", "arv-fake-camera.xml"},
 	{ NULL }
 };
 
@@ -484,6 +488,10 @@ main (int argc, char **argv)
 
 	arv_debug_enable (arv_option_debug_domains);
 
+	//Set the genicam file to use (declared as a static global in arvfakecamera.c
+
+	arv_set_fake_camera_genicam_filename(arv_option_genicam_file);
+	
 	gv_camera = arv_fake_gv_camera_new (arv_option_interface_name);
 	if (gv_camera == NULL) {
 		g_print ("Can't instantiate a new fake camera.\n");
