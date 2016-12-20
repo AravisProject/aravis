@@ -50,6 +50,7 @@
 #include <arvbuffer.h>
 #include <arvgc.h>
 #include <arvgvdevice.h>
+#include <arvuvdevice.h>
 #include <arvenums.h>
 #include <arvstr.h>
 
@@ -99,6 +100,7 @@ struct _ArvCameraPrivate {
 	gboolean has_gain;
 	gboolean has_exposure_time;
 	gboolean has_acquisition_frame_rate;
+        gboolean has_bandwidth_control;
 };
 
 enum
@@ -1523,6 +1525,103 @@ arv_camera_is_gv_device	(ArvCamera *camera)
 }
 
 /**
+ * arv_camera_is_uv_device:
+ * @camera: a #ArvCamera
+ *
+ * Returns: %TRUE if @camera is a USB3Vision device.
+ *
+ * Since: 
+ */
+
+gboolean
+arv_camera_is_uv_device	(ArvCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
+
+	return ARV_IS_UV_DEVICE (camera->priv->device);
+}
+
+/**
+ * arv_camera_uv_is_bandwidth_control_available:
+ * @camera: a #ArvCamera
+ * Returns: Returns if bandwidth limits are available on this camera
+ */
+
+gboolean arv_camera_uv_is_bandwidth_control_available (ArvCamera *camera)
+{
+  g_return_val_if_fail (arv_camera_is_uv_device (camera), FALSE);
+  switch (camera->priv->vendor) {
+  case ARV_CAMERA_VENDOR_XIMEA:
+    return arv_device_get_feature(camera->priv->device, "DeviceLinkThroughputLimit") != NULL;
+  default:
+    return FALSE;
+  }
+  
+}
+
+
+/**
+ * arv_camera_uv_set_bandwidth:
+ * @camera: a #ArvCamera
+ * @bandwidth: Desired bandwith limit in megabits/sec. Set to 0 to disable limit mode
+ * Returns: void
+ */
+
+void  arv_camera_uv_set_bandwidth (ArvCamera *camera, guint bandwidth)
+{
+  g_return_if_fail (arv_camera_is_uv_device (camera));
+  g_return_if_fail (arv_camera_uv_is_bandwidth_control_available(camera));
+
+  if (bandwidth > 0)
+    {
+      arv_device_set_integer_feature_value (camera->priv->device, "DeviceLinkThroughputLimit", bandwidth);
+      arv_device_set_integer_feature_value (camera->priv->device, "DeviceLinkThroughputLimitMode", 1);
+    }
+  else
+    {
+      arv_device_set_integer_feature_value (camera->priv->device, "DeviceLinkThroughputLimitMode", 0);
+    }
+  
+}
+/**
+ * arv_camera_uv_get_bandwidth:
+ * @camera: a #ArvCamera
+ *
+ * Returns: the current bandwidth limit that is set
+ *
+ * Since: 
+ */
+guint  arv_camera_uv_get_bandwidth (ArvCamera *camera)
+{
+  g_return_val_if_fail (arv_camera_is_uv_device (camera), 0);
+  g_return_val_if_fail (arv_camera_uv_is_bandwidth_control_available(camera),0);
+  return arv_device_get_integer_feature_value (camera->priv->device, "DeviceLinkThroughputLimit");
+}
+
+/**
+ * arv_camera_uv_get_bandwidth_bounds:
+ * @camera: a #ArvCamera
+ *
+ * Returns: the current bandwidth bounds
+ *
+ * Since: 
+ */
+
+void  arv_camera_uv_get_bandwidth_bounds (ArvCamera *camera, guint* min, guint* max)
+{
+  gint64 min64, max64;
+
+  g_return_if_fail (arv_camera_is_uv_device (camera));
+  g_return_if_fail (arv_camera_uv_is_bandwidth_control_available(camera));
+  arv_device_get_integer_feature_bounds (camera->priv->device, "DeviceLinkThroughputLimit", &min64, &max64);
+  if (min != NULL)
+    *min = min64;
+  if (max != NULL)
+    *max = max64;
+}
+
+
+/**
  * arv_camera_gv_get_n_stream_channels:
  * @camera: a #ArvCamera
  *
@@ -1991,6 +2090,8 @@ arv_camera_constructor (GType gtype, guint n_properties, GObjectConstructParam *
 	
 	camera->priv->has_acquisition_frame_rate = ARV_IS_GC_FLOAT (arv_device_get_feature (camera->priv->device,
 											    "AcquisitionFrameRate"));
+
+	camera->priv->has_bandwidth_control = ARV_IS_GC_INTEGER(arv_device_get_feature (camera->priv->device, "DevieLinkThroughputLimit"));
 
     return object;
 }
