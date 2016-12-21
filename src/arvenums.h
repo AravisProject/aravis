@@ -53,6 +53,15 @@ typedef enum {
   ARV_UV_ENDPOINT_DATA
 } ArvUvEndpointType;
 
+typedef enum {
+  ARV_GPIO_MODE_INPUT,
+  ARV_GPIO_MODE_OUTPUT
+} ArvGpioMode;
+
+typedef enum {
+  ARV_GPIO_INVERT_MODE_NONE,
+  ARV_GPIO_INVERT_MODE_ACTIVE
+} ArvGpioInvertMode;
 
 /**
  * ArvAuto:
