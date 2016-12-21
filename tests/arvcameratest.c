@@ -8,6 +8,7 @@ static char *arv_option_debug_domains = NULL;
 static gboolean arv_option_snaphot = FALSE;
 static char *arv_option_trigger = NULL;
 static double arv_option_software_trigger = -1;
+static char *arv_option_master_trigger = NULL;
 static double arv_option_frequency = -1.0;
 static int arv_option_width = -1;
 static int arv_option_height = -1;
@@ -44,7 +45,11 @@ static const GOptionEntry arv_option_entries[] =
 	},
 	{
 		"trigger",				't', 0, G_OPTION_ARG_STRING,
-		&arv_option_trigger,			"External trigger", NULL
+		&arv_option_trigger,			"External input trigger", NULL
+	},
+	{
+		"master",				'\0', 0, G_OPTION_ARG_STRING,
+		&arv_option_master_trigger,		"Emit hardware trigger", NULL
 	},
 	{
 		"software-trigger",			'o', 0, G_OPTION_ARG_DOUBLE,
@@ -334,6 +339,38 @@ main (int argc, char **argv)
 			printf ("uv bandwidth limit     = %d [%d..%d]\n", arv_camera_uv_get_bandwidth (camera), min, max);
 		}
 
+		
+		const char** gpioLines;
+		guint numLines;
+		gpioLines = arv_camera_get_gpio_lines(camera, &numLines);
+
+		for (int i=0; i<numLines; i++)
+		  {
+		    printf("Found GPIO output line: %s\n", gpioLines[i]);
+		  }
+		const char** gpioSources;
+		guint numSources;
+	
+		gpioSources = arv_camera_get_gpio_output_sources(camera, &numSources);
+		for (int i=0; i<numSources; i++)
+		  {
+		    printf("Found GPIO output source: %s\n", gpioSources[i]);
+		  }
+		
+		if (arv_option_master_trigger)
+		  {
+		    printf("Setting output line: %s as master\n", arv_option_master_trigger);
+		    arv_camera_set_gpio_mode(camera, arv_option_master_trigger, ARV_GPIO_MODE_OUTPUT);
+		    ArvGpioMode camMode = arv_camera_get_gpio_mode(camera, arv_option_master_trigger);
+		    printf("Wanted %d, got output mode of %d\n", ARV_GPIO_MODE_OUTPUT, camMode);
+		    
+		    printf("Setting GPIO output source to: %s\n", gpioSources[0]);
+		    arv_camera_set_gpio_output_source(camera, gpioLines[0], gpioSources[0]);
+		    printf("Inverting line %s\n", gpioLines[0]);
+		    arv_camera_set_gpio_invert(camera, gpioLines[0], ARV_GPIO_INVERT_MODE_ACTIVE);
+
+		  }
+
 		stream = arv_camera_create_stream (camera, stream_cb, NULL);
 		if (stream != NULL) {
 			if (ARV_IS_GV_STREAM (stream)) {
@@ -359,17 +396,38 @@ main (int argc, char **argv)
 			
 			if (arv_option_frequency > 0.0)
 				arv_camera_set_frame_rate (camera, arv_option_frequency);
-
+			const char** triggerSources;
+			guint numTriggers;
+			triggerSources = arv_camera_get_trigger_sources(camera, &numTriggers);
+			for (int i=0; i < numTriggers; i++)
+			  {
+			    printf("Found trigger source: %s\n", triggerSources[i]);
+			  }
+			
 			if (arv_option_trigger != NULL)
-				arv_camera_set_trigger (camera, arv_option_trigger);
+			  {
+			    printf("Using trigger source: %s\n", arv_option_trigger);
+			    arv_camera_set_trigger (camera, arv_option_trigger);
 
+			    /*
+			    while (1)
+			      {
+				guint status = arv_camera_get_gpio_status(camera, arv_option_trigger);
+				printf("GPIO status: %d\n", status);
+				usleep(1000);
+			      }
+			    */
+			    
+			  }
+
+			
 			if (arv_option_software_trigger > 0.0) {
 				arv_camera_set_trigger (camera, "Software");
 				software_trigger_source = g_timeout_add ((double) (0.5 + 1000.0 /
 										   arv_option_software_trigger),
 									 emit_software_trigger, camera);
 			}
-
+			
 			arv_camera_start_acquisition (camera);
 			
 			g_signal_connect (stream, "new-buffer", G_CALLBACK (new_buffer_cb), &data);
