@@ -57,7 +57,8 @@ struct _ArvUvDevicePrivate {
 	guint timeout_ms;
 	guint cmd_packet_size_max;
 	guint ack_packet_size_max;
-
+        guint8 control_endpoint;
+        guint8 data_endpoint;
 	gboolean disconnected;
 };
 
@@ -66,10 +67,11 @@ struct _ArvUvDevicePrivate {
 /* ArvUvDevice implementation */
 
 gboolean
-arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, unsigned char endpoint, void *data,
+arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, ArvUvEndpointType endpoint_type, unsigned char endpoint_flags, void *data,
 			     size_t size, size_t *transferred_size, guint32 timeout_ms, GError **error)
 {
 	gboolean success;
+	guint8 endpoint;
 	int transferred = 0;
 	int result;
 
@@ -83,7 +85,9 @@ arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, unsigned char endpoint, voi
 		return FALSE;
 	}
 
-	result = libusb_bulk_transfer (uv_device->priv->usb_device, endpoint, data, size, &transferred,
+
+	endpoint = (endpoint_type == ARV_UV_ENDPOINT_CONTROL) ? uv_device->priv->control_endpoint : uv_device->priv->data_endpoint;
+	result = libusb_bulk_transfer (uv_device->priv->usb_device, endpoint | endpoint_flags, data, size, &transferred,
 				       MAX (uv_device->priv->timeout_ms, timeout_ms));
 
 	success = result >= 0;
@@ -150,14 +154,14 @@ _read_memory (ArvUvDevice *uv_device, guint32 address, guint32 size, void *buffe
 		arv_uvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
 		success = TRUE;
-		success = success && arv_uv_device_bulk_transfer (uv_device, (0x04 | LIBUSB_ENDPOINT_OUT),
+		success = success && arv_uv_device_bulk_transfer (uv_device, ARV_UV_ENDPOINT_CONTROL, LIBUSB_ENDPOINT_OUT,
 								  packet, packet_size, NULL, 0, NULL);
 		if (success) {
 			gboolean expected_answer;
 
 			do {
 				success = TRUE;
-				success = success && arv_uv_device_bulk_transfer (uv_device, (0x84 | LIBUSB_ENDPOINT_IN),
+				success = success && arv_uv_device_bulk_transfer (uv_device, ARV_UV_ENDPOINT_CONTROL, LIBUSB_ENDPOINT_IN,
 										  read_packet, read_packet_size, &transferred,
 										  0, NULL);
 
@@ -265,14 +269,14 @@ _write_memory (ArvUvDevice *uv_device, guint32 address, guint32 size, void *buff
 		arv_uvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
 		success = TRUE;
-		success = success && arv_uv_device_bulk_transfer (uv_device, (0x04 | LIBUSB_ENDPOINT_OUT),
+		success = success && arv_uv_device_bulk_transfer (uv_device, ARV_UV_ENDPOINT_CONTROL, LIBUSB_ENDPOINT_OUT,
 								  packet, packet_size, NULL, 0, NULL);
 		if (success ) {
 			gboolean expected_answer;
 
 			do {
 				success = TRUE;
-				success = success && arv_uv_device_bulk_transfer (uv_device, (0x84 | LIBUSB_ENDPOINT_IN),
+				success = success && arv_uv_device_bulk_transfer (uv_device, ARV_UV_ENDPOINT_CONTROL, LIBUSB_ENDPOINT_IN,
 										  read_packet, read_packet_size, &transferred,
 										  timeout_ms, NULL);
 
@@ -575,7 +579,29 @@ _open_usb_device (ArvUvDevice *uv_device)
 			if (g_strcmp0 ((char * ) manufacturer, uv_device->priv->vendor) == 0 &&
 			    g_strcmp0 ((char * ) product, uv_device->priv->product) == 0 &&
 			    g_strcmp0 ((char * ) serial_nbr, uv_device->priv->serial_nbr) == 0) {
+				struct libusb_config_descriptor *config;
+				struct libusb_interface_descriptor interface;
+				struct libusb_endpoint_descriptor endpoint;
+
 				uv_device->priv->usb_device = usb_device;
+
+				/* Assign the endpoint while the libusb device handle is handy */
+				libusb_get_active_config_descriptor(devices[i], &config);
+				/* Get the first endpoint of the first interface, strip the direction bits
+				   The control interface is bidirectional -> both IN and OUT endpoints */
+				interface = config->interface[0].altsetting[0];
+				endpoint = interface.endpoint[0];
+
+				uv_device->priv->control_endpoint = endpoint.bEndpointAddress & 0x0f; /* mask off reserved / direction */
+
+				/* Get the first endpoint of the second interface, strip the direction bits
+				   The data interface is one-way -> only an IN endpoint */
+				interface = config->interface[1].altsetting[0];
+				endpoint = interface.endpoint[0];
+
+				uv_device->priv->data_endpoint = 1;
+
+				libusb_free_config_descriptor(config);
 			} else
 				libusb_close (usb_device);
 
@@ -611,6 +637,9 @@ arv_uv_device_new (const char *vendor, const char *product, const char *serial_n
 	uv_device->priv->timeout_ms = 32;
 
 	_open_usb_device (uv_device);
+
+	arv_debug_device("[UvDevice::new] Using control endpoint %d", uv_device->priv->control_endpoint);
+	arv_debug_device("[UvDevice::new] Using data endpoint %d", uv_device->priv->data_endpoint);
 
 	if (uv_device->priv->usb_device == NULL ||
 	    libusb_claim_interface (uv_device->priv->usb_device, 0) < 0) {
