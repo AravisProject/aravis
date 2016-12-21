@@ -140,6 +140,18 @@ arv_uvsp_packet_get_region (ArvUvspPacket *packet, guint32 *width, guint32 *heig
 	*y_offset = GUINT32_FROM_LE (leader->infos.y_offset);
 }
 
+static inline ArvPixelFormat
+arv_uvsp_packet_get_pixel_format (ArvUvspPacket *packet)
+{
+	ArvUvspLeader *leader;
+
+	if (packet == NULL)
+		return 0;
+
+	leader = (ArvUvspLeader *)packet;
+	return GUINT32_FROM_LE (leader->infos.pixel_format);
+}
+
 static inline guint64
 arv_uvsp_packet_get_timestamp (ArvUvspPacket *packet)
 {
