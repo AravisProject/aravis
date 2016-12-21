@@ -23,6 +23,23 @@ Compilation options may be passed to the configure script. Please run `./configu
 
 On some platforms (like Ubuntu), you may have to configure the dynamic linker (ld) to let it know where the aravis libraries are installed, and run ldconfig as root in order to update ld cache.
 
+#### Building on Mac OS X
+
+Using the GNU build system on Mac OS X is not directly supported, but can be mimicked by augmenting the install procedure above with some environment settings:
+
+```
+brew install intltool
+brew link --force gettext
+aclocal
+autoconf
+autoheader
+glibtoolize --copy
+automake --add-missing
+./configure
+make
+make install
+```
+
 ### Ethernet Device Performance
 
 #### Stream Packet Size
