@@ -26,6 +26,7 @@ static gboolean arv_option_realtime = FALSE;
 static gboolean arv_option_high_priority = FALSE;
 static gboolean arv_option_no_packet_socket = FALSE;
 static char *arv_option_chunks = NULL;
+static unsigned int arv_option_bandwidth_limit = -1;
 
 static const GOptionEntry arv_option_entries[] =
 {
@@ -120,6 +121,10 @@ static const GOptionEntry arv_option_entries[] =
 	{
 		"debug", 				'd', 0, G_OPTION_ARG_STRING,
 		&arv_option_debug_domains, 		"Debug domains", NULL
+	},
+	{
+		"bandwidth-limit",			'b', 0, G_OPTION_ARG_INT,
+		&arv_option_bandwidth_limit,		"Desired USB3 Vision device bandwidth limit", NULL
 	},
 	{ NULL }
 };
@@ -285,6 +290,9 @@ main (int argc, char **argv)
 		arv_camera_set_exposure_time (camera, arv_option_exposure_time_us);
 		arv_camera_set_gain (camera, arv_option_gain);
 
+		if (arv_camera_is_uv_device(camera)) {
+			arv_camera_uv_set_bandwidth(camera, arv_option_bandwidth_limit);
+		}
 		if (arv_camera_is_gv_device (camera)) {
 			arv_camera_gv_select_stream_channel (camera, arv_option_gv_stream_channel);
 			arv_camera_gv_set_packet_delay (camera, arv_option_gv_packet_delay);
@@ -316,6 +324,13 @@ main (int argc, char **argv)
 			printf ("gv current channel    = %d\n", arv_camera_gv_get_current_stream_channel (camera));
 			printf ("gv packet delay       = %" G_GINT64_FORMAT " ns\n", arv_camera_gv_get_packet_delay (camera));
 			printf ("gv packet size        = %d bytes\n", arv_camera_gv_get_packet_size (camera));
+		}
+
+		if (arv_camera_is_uv_device (camera)) {
+			guint min,max;
+
+			arv_camera_uv_get_bandwidth_bounds (camera, &min, &max);
+			printf ("uv bandwidth limit     = %d [%d..%d]\n", arv_camera_uv_get_bandwidth (camera), min, max);
 		}
 
 		stream = arv_camera_create_stream (camera, stream_cb, NULL);

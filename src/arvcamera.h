@@ -156,6 +156,14 @@ guint		arv_camera_gv_auto_packet_size		(ArvCamera *camera);
 
 void 		arv_camera_gv_set_stream_options 	(ArvCamera *camera, ArvGvStreamOption options);
 
+/* USB3Vision specific API */
+
+gboolean        arv_camera_is_uv_device                 	(ArvCamera *camera);
+gboolean        arv_camera_uv_is_bandwidth_control_available 	(ArvCamera *camera);
+void            arv_camera_uv_set_bandwidth             	(ArvCamera *camera, guint bandwidth);
+guint           arv_camera_uv_get_bandwidth             	(ArvCamera *camera);
+void            arv_camera_uv_get_bandwidth_bounds      	(ArvCamera *camera, guint* min, guint* max);
+
 /* Chunk data */
 
 void 			arv_camera_set_chunk_mode 	(ArvCamera *camera, gboolean is_active);
