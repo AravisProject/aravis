@@ -56,7 +56,7 @@ enum {
 	ARV_CHUNK_PARSER_PROPERTY_0,
 	ARV_CHUNK_PARSER_PROPERTY_GENICAM,
 	ARV_CHUNK_PARSER_PROPERTY_LAST
-} ArvStreamProperties;
+} ArvChunkParserProperties;
 
 static GObjectClass *parent_class = NULL;
 
