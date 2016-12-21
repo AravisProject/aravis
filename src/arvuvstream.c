@@ -146,10 +146,21 @@ arv_uv_stream_thread (void *data)
 						arv_log_stream_thread ("Received %" G_GUINT64_FORMAT
 								       " bytes - expected %" G_GUINT64_FORMAT,
 								       offset, buffer->priv->size);
-						buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
-						arv_stream_push_output_buffer (thread_data->stream, buffer);
-						thread_data->n_completed_buffers++;
-						buffer = NULL;
+
+						/* If the image was incomplete, drop the frame and try again. */
+						if (offset != buffer->priv->size) {
+							arv_debug_stream_thread ("Incomplete image received, dropping");
+
+							buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
+							arv_stream_push_output_buffer (thread_data->stream, buffer);
+							thread_data->n_underruns++;
+							buffer = NULL;
+						} else {
+							buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
+							arv_stream_push_output_buffer (thread_data->stream, buffer);
+							thread_data->n_completed_buffers++;
+							buffer = NULL;
+						}
 					}
 					break;
 				case ARV_UVSP_PACKET_TYPE_DATA:
@@ -255,6 +266,7 @@ arv_uv_stream_new (ArvUvDevice *uv_device, ArvStreamCallback callback, void *use
 	thread_data->callback = callback;
 	thread_data->user_data = user_data;
 	thread_data->cancel = FALSE;
+
 	thread_data->leader_size = si_req_leader_size;
 	thread_data->payload_size = si_payload_size;
 	thread_data->trailer_size = si_req_trailer_size;
