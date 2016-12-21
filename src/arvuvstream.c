@@ -35,7 +35,7 @@
 #include <libusb.h>
 #include <string.h>
 
-#define MAXIMUM_TRANSFER_SIZE	60000
+#define MAXIMUM_TRANSFER_SIZE	1048576
 
 static GObjectClass *parent_class = NULL;
 
