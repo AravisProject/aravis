@@ -414,7 +414,7 @@ arv_get_fake_camera_genicam_xml (size_t *size)
 			filename = g_build_filename (ARAVIS_DATA_DIR, "arv-fake-camera.xml", NULL);
 		else
 			filename = g_strdup (arv_fake_camera_genicam_filename);
-
+		
 		genicam_file = g_mapped_file_new (filename, FALSE, NULL);
 
 		if (genicam_file != NULL) {
@@ -469,8 +469,7 @@ arv_fake_camera_new (const char *serial_number)
 	strcpy (((char *) memory) + ARV_GVBS_DEVICE_VERSION_OFFSET, PACKAGE_VERSION);
 	strcpy (((char *) memory) + ARV_GVBS_SERIAL_NUMBER_OFFSET, serial_number);
 
-	xml_url = g_strdup_printf ("Local:arv-fake-camera-%s.xml;%x;%x",
-				   PACKAGE_VERSION,
+	xml_url = g_strdup_printf ("Local:arv-fake-camera.xml;%x;%x",
 				   ARV_FAKE_CAMERA_MEMORY_SIZE,
 				   (unsigned int) fake_camera->priv->genicam_xml_size);
 	strcpy (((char *) memory) + ARV_GVBS_XML_URL_0_OFFSET, xml_url);
