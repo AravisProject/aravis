@@ -385,8 +385,6 @@ _bootstrap (ArvUvDevice *uv_device)
 	void *data;
 	char manufacturer[64];
 
-	char manfName[64];
-	
 	arv_debug_device ("Get genicam");
 
 	arv_device_read_memory(device, ARV_ABRM_MANUFACTURER_NAME, 64, &manufacturer, NULL);
@@ -515,7 +513,7 @@ _bootstrap (ArvUvDevice *uv_device)
 		default:
 			arv_warning_device ("Unknown USB3Vision manifest schema type (%d)", schema_type);
 	}
-	
+
 #if 0
 	arv_debug_device("GENICAM\n:%s", uv_device->priv->genicam_xml);
 #endif
@@ -579,7 +577,6 @@ _open_usb_device (ArvUvDevice *uv_device)
 			if (g_strcmp0 ((char * ) manufacturer, uv_device->priv->vendor) == 0 &&
 			    g_strcmp0 ((char * ) product, uv_device->priv->product) == 0 &&
 			    g_strcmp0 ((char * ) serial_nbr, uv_device->priv->serial_nbr) == 0) {
-
 				struct libusb_config_descriptor *config;
 				struct libusb_interface_descriptor interface;
 				struct libusb_endpoint_descriptor endpoint;
