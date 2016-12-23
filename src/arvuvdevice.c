@@ -52,7 +52,7 @@ struct _ArvUvDevicePrivate {
 
 	const char *genicam_xml;
 	size_t genicam_xml_size;
-  
+
 	guint16 packet_id;
 
 	guint timeout_ms;
@@ -85,6 +85,7 @@ arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, ArvUvEndpointType endpoint_
 			     "Not connected");
 		return FALSE;
 	}
+
 
 	endpoint = (endpoint_type == ARV_UV_ENDPOINT_CONTROL) ? uv_device->priv->control_endpoint : uv_device->priv->data_endpoint;
 	result = libusb_bulk_transfer (uv_device->priv->usb_device, endpoint | endpoint_flags, data, size, &transferred,
