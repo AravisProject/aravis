@@ -334,8 +334,9 @@ main (int argc, char **argv)
 
 		if (arv_camera_is_uv_device(camera)) {
 		        guint min,max;
-			arv_camera_uv_get_bandwidth_bounds(camera, &min, &max);
-			printf("uv bandwidth limit = %d [%d...%d]\n", arv_camera_uv_get_bandwidth(camera), min, max);
+			
+			arv_camera_uv_get_bandwidth_bounds (camera, &min, &max);
+			printf("uv bandwidth limit     = %d [%d...%d]\n", arv_camera_uv_get_bandwidth (camera), min, max);
 		}
 
 		
@@ -410,18 +411,14 @@ main (int argc, char **argv)
 			if (arv_option_frequency > 0.0)
 				arv_camera_set_frame_rate (camera, arv_option_frequency);
 
-			
-			
 			if (arv_option_software_trigger > 0.0) {
-			  arv_camera_set_trigger (camera, "Software");
-			  software_trigger_source = g_timeout_add ((double) (0.5 + 1000.0 /
-									     arv_option_software_trigger),
-								   emit_software_trigger, camera);
+			        arv_camera_set_trigger (camera, "Software");
+			        software_trigger_source = g_timeout_add ((double) (0.5 + 1000.0 /
+										   arv_option_software_trigger),
+									 emit_software_trigger, camera);
 			}
 			
 			arv_camera_start_acquisition (camera);
-
-
 			
 			g_signal_connect (stream, "new-buffer", G_CALLBACK (new_buffer_cb), &data);
 			arv_stream_set_emit_signals (stream, TRUE);

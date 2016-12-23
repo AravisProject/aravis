@@ -49,11 +49,6 @@ typedef enum {
 } ArvGcCachable;
 
 typedef enum {
-  ARV_UV_ENDPOINT_CONTROL,
-  ARV_UV_ENDPOINT_DATA
-} ArvUvEndpointType;
-
-typedef enum {
   ARV_GPIO_MODE_INPUT,
   ARV_GPIO_MODE_OUTPUT
 } ArvGpioMode;
