@@ -870,7 +870,9 @@ start_video (ArvViewer *viewer)
 	}
 
 	arv_camera_start_acquisition (viewer->camera);
+
 	viewer->pipeline = gst_pipeline_new ("pipeline");
+	
 	viewer->appsrc = gst_element_factory_make ("appsrc", NULL);
 	videoconvert = gst_element_factory_make ("videoconvert", NULL);
 	viewer->transform = gst_element_factory_make ("videoflip", NULL);
