@@ -171,10 +171,10 @@ arv_gc_enumeration_set_string_value (ArvGcEnumeration *enumeration, const char *
 			GError *local_error = NULL;
 			gint64 enum_value;
 
-			arv_log_genicam ("[GcEnumeration::set_string_value] value = %d - string = %s",
-					 &enumeration->value, value);
-
 			enum_value = arv_gc_enum_entry_get_value (iter->data, &local_error);
+
+			arv_log_genicam ("[GcEnumeration::set_string_value] value = %d - string = %s",
+					 enum_value, value);
 
 			if (local_error != NULL) {
 				g_propagate_error (error, local_error);

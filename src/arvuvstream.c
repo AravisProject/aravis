@@ -106,7 +106,7 @@ arv_uv_stream_thread (void *data)
 		else
 			packet = incoming_buffer;
 
-		arv_debug_stream("Asking for %u bytes", size);		
+		arv_log_sp ("Asking for %u bytes", size);
 		arv_uv_device_bulk_transfer (thread_data->uv_device,  ARV_UV_ENDPOINT_DATA, LIBUSB_ENDPOINT_IN,
 					     packet, size, &transferred, 0, NULL);
 
@@ -137,9 +137,7 @@ arv_uv_stream_thread (void *data)
 									    &buffer->priv->x_offset,
 									    &buffer->priv->y_offset);
 
-						//Add the pixel format:
-
-						buffer->priv->pixel_format = arv_uvsp_packet_get_pixel_format(packet);
+						buffer->priv->pixel_format = arv_uvsp_packet_get_pixel_format (packet);
 						buffer->priv->frame_id = arv_uvsp_packet_get_frame_id (packet);
 						buffer->priv->timestamp_ns = arv_uvsp_packet_get_timestamp (packet);
 						offset = 0;
@@ -152,22 +150,20 @@ arv_uv_stream_thread (void *data)
 								       " bytes - expected %" G_GUINT64_FORMAT,
 								       offset, buffer->priv->size);
 
-						//If the image was incomplete, drop the frame and try again
-						//Reset the offset to 0 - receive a new leader
-						if (offset != buffer->priv->size)
-						  {
-						    arv_debug_stream ("Incomplete image received, dropping");
-						    buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
-						    arv_stream_push_output_buffer (thread_data->stream, buffer);
-						    thread_data->n_underruns++;
-						    buffer = NULL;
-						    continue;
-						  }
-						
-						buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
-						arv_stream_push_output_buffer (thread_data->stream, buffer);
-						thread_data->n_completed_buffers++;
-						buffer = NULL;
+						/* If the image was incomplete, drop the frame and try again. */
+						if (offset != buffer->priv->size) {
+							arv_debug_stream_thread ("Incomplete image received, dropping");
+
+							buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
+							arv_stream_push_output_buffer (thread_data->stream, buffer);
+							thread_data->n_underruns++;
+							buffer = NULL;
+						} else {
+							buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
+							arv_stream_push_output_buffer (thread_data->stream, buffer);
+							thread_data->n_completed_buffers++;
+							buffer = NULL;
+						}
 					}
 					break;
 				case ARV_UVSP_PACKET_TYPE_DATA:
@@ -197,7 +193,7 @@ arv_uv_stream_thread (void *data)
 	return NULL;
 }
 
-/* ArvUvStream implemenation */
+/* ArvUvStream implementation */
 
 
 /**

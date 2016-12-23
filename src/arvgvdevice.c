@@ -655,8 +655,8 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device)
 					read_count = g_socket_receive (socket, buffer, 8192, NULL, NULL);
 				else
 					read_count = 0;
-			/* Discard late packets, read_count should be equal to packet size minus IP and UDP headers */
-            } while (n_events != 0 && read_count != (current_size - sizeof (struct iphdr) - sizeof (struct udphdr)));
+				/* Discard late packets, read_count should be equal to packet size minus IP and UDP headers */
+			} while (n_events != 0 && read_count != (current_size - sizeof (struct iphdr) - sizeof (struct udphdr)));
 
 			n_tries++;
 		} while (n_events == 0 && n_tries < 3);
