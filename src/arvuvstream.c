@@ -110,7 +110,6 @@ arv_uv_stream_thread (void *data)
 		arv_uv_device_bulk_transfer (thread_data->uv_device,  ARV_UV_ENDPOINT_DATA, LIBUSB_ENDPOINT_IN,
 					     packet, size, &transferred, 0, NULL);
 
-	
 		if (transferred > 0) {
 			ArvUvspPacketType packet_type;
 
@@ -136,7 +135,6 @@ arv_uv_stream_thread (void *data)
 									    &buffer->priv->height,
 									    &buffer->priv->x_offset,
 									    &buffer->priv->y_offset);
-
 						buffer->priv->pixel_format = arv_uvsp_packet_get_pixel_format (packet);
 						buffer->priv->frame_id = arv_uvsp_packet_get_frame_id (packet);
 						buffer->priv->timestamp_ns = arv_uvsp_packet_get_timestamp (packet);

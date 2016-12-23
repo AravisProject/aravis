@@ -45,7 +45,7 @@ static const GOptionEntry arv_option_entries[] =
 	},
 	{
 		"trigger",				't', 0, G_OPTION_ARG_STRING,
-		&arv_option_trigger,			"External input trigger", NULL
+		&arv_option_trigger,			"External trigger", NULL
 	},
 	{
 		"master",				'\0', 0, G_OPTION_ARG_STRING,
@@ -346,7 +346,7 @@ main (int argc, char **argv)
 
 		for (int i=0; i<numLines; i++)
 		  {
-		    printf("Found GPIO output line: %s\n", gpioLines[i]);
+		        printf("Found GPIO output line: %s\n", gpioLines[i]);
 		  }
 		const char** gpioSources;
 		guint numSources;
@@ -354,34 +354,30 @@ main (int argc, char **argv)
 		gpioSources = arv_camera_get_gpio_output_sources(camera, &numSources);
 		for (int i=0; i<numSources; i++)
 		  {
-		    printf("Found GPIO output source: %s\n", gpioSources[i]);
+		        printf("Found GPIO output source: %s\n", gpioSources[i]);
 		  }
 		const char** triggerSources;
 		guint numTriggers;
 		triggerSources = arv_camera_get_trigger_sources(camera, &numTriggers);
 		for (int i=0; i < numTriggers; i++)
 		  {
-		    printf("Found trigger source: %s\n", triggerSources[i]);
+		        printf("Found trigger source: %s\n", triggerSources[i]);
 		  }
 
 		arv_camera_clear_triggers(camera);
-		if (arv_option_trigger != NULL)
-		  {
-		    printf("Using trigger source: %s\n", arv_option_trigger);
-		    arv_camera_set_trigger (camera, arv_option_trigger);
-			    
-		  }
+		if (arv_option_trigger != NULL) {
+		        printf("Using trigger source: %s\n", arv_option_trigger);
+			arv_camera_set_trigger (camera, arv_option_trigger);
+		}
 
 		//Enable master mode:
-		if (arv_option_master_trigger)
-		  {
-		    printf("Setting output line: %s as master\n", arv_option_master_trigger);
-		    arv_camera_set_gpio_mode(camera, arv_option_master_trigger, ARV_GPIO_MODE_OUTPUT);
+		if (arv_option_master_trigger){
+		        printf("Setting output line: %s as master\n", arv_option_master_trigger);
+			arv_camera_set_gpio_mode(camera, arv_option_master_trigger, ARV_GPIO_MODE_OUTPUT);
 	    
-		    printf("Setting GPIO output source to: %s\n", gpioSources[1]);
-		    arv_camera_set_gpio_output_source(camera, arv_option_master_trigger, "FrameActive");
-		    	    
-		  }
+		        printf("Setting GPIO output source to: %s\n", gpioSources[1]);
+		        arv_camera_set_gpio_output_source(camera, arv_option_master_trigger, "FrameActive");
+		}
 
 
 		stream = arv_camera_create_stream (camera, stream_cb, NULL);
@@ -416,9 +412,9 @@ main (int argc, char **argv)
 										   arv_option_software_trigger),
 									 emit_software_trigger, camera);
 			}
-			
+
 			arv_camera_start_acquisition (camera);
-			
+
 			g_signal_connect (stream, "new-buffer", G_CALLBACK (new_buffer_cb), &data);
 			arv_stream_set_emit_signals (stream, TRUE);
 
