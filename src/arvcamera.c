@@ -1137,8 +1137,9 @@ arv_camera_get_trigger_source (ArvCamera *camera)
 const char **
 arv_camera_get_trigger_sources (ArvCamera *camera, guint* numSources)
 {
-  g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
-  return arv_device_get_available_enumeration_feature_values_as_strings(camera->priv->device, "TriggerSource", numSources);
+        g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+	
+	return arv_device_get_available_enumeration_feature_values_as_strings(camera->priv->device, "TriggerSource", numSources);
 }
 
 /**
@@ -1152,10 +1153,12 @@ arv_camera_get_trigger_sources (ArvCamera *camera, guint* numSources)
  *
  * Since: 
  */
-const char** arv_camera_get_trigger_types(ArvCamera *camera, guint* numTypes)
+const char**
+arv_camera_get_trigger_types(ArvCamera *camera, guint* numTypes)
 {
-  g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
-  return arv_device_get_available_enumeration_feature_values_as_strings(camera->priv->device, "TriggerSelector", numTypes);
+        g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+	
+	return arv_device_get_available_enumeration_feature_values_as_strings(camera->priv->device, "TriggerSelector", numTypes);
 }
 
 /**
@@ -1169,16 +1172,18 @@ const char** arv_camera_get_trigger_types(ArvCamera *camera, guint* numTypes)
  * Since: 
  */
 
-void arv_camera_clear_triggers(ArvCamera* camera)
+void
+arv_camera_clear_triggers(ArvCamera* camera)
 {
-  g_return_if_fail (ARV_IS_CAMERA (camera));
-  guint numTypes;
-  const char** trigList = arv_device_get_available_enumeration_feature_values_as_strings(camera->priv->device, "TriggerSelector", &numTypes);
-  for (unsigned int i = 0; i< numTypes; i++)
-    {
-      arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector", trigList[i]);
-      arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
-    }
+        g_return_if_fail (ARV_IS_CAMERA (camera));
+	
+	guint numTypes;
+	const char** trigList = arv_device_get_available_enumeration_feature_values_as_strings(camera->priv->device, "TriggerSelector", &numTypes);
+	for (unsigned int i = 0; i< numTypes; i++)
+	  {
+	    arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector", trigList[i]);
+	    arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
+	  }
 }
 
 /**
@@ -1209,13 +1214,12 @@ arv_camera_software_trigger (ArvCamera *camera)
  *
  */
 
-const char** arv_camera_get_gpio_lines(ArvCamera *camera, guint *numLines)
+const char**
+arv_camera_get_gpio_lines(ArvCamera *camera, guint *numLines)
 {
-  g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
-  const char** lines = arv_device_get_available_enumeration_feature_values_as_strings(camera->priv->device, "LineSelector", numLines);
-  //the values to index the lines aren't necessarily in order
-  //*lineValues = arv_device_get_available_enumeration_feature_values(camera->priv->device, "LineSelector", numLines);
-  return lines;
+  	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+        const char** lines = arv_device_get_available_enumeration_feature_values_as_strings(camera->priv->device, "LineSelector", numLines);
+	return lines;
 }
 
 /** 
@@ -1226,18 +1230,12 @@ const char** arv_camera_get_gpio_lines(ArvCamera *camera, guint *numLines)
  *
  */
 
-void arv_camera_set_gpio_mode(ArvCamera *camera, const char* line, ArvGpioMode mode)
+void
+arv_camera_set_gpio_mode(ArvCamera *camera, const char* line, ArvGpioMode mode)
 {
-  g_return_if_fail (ARV_IS_CAMERA (camera));
-  //Select the line indicated by the index 
-  arv_device_set_string_feature_value(camera->priv->device, "LineSelector", line);
-
-  const char* selLine = arv_device_get_string_feature_value(camera->priv->device, "LineSelector");
-  printf("SetGPIOMode: Selected line %s\n", selLine);
-  arv_device_set_string_feature_value(camera->priv->device, "LineMode", "Output");
-  arv_device_set_string_feature_value(camera->priv->device, "LineMode", "Output");
-
-  printf("Wanted mode %d, got mode %s\n", mode, arv_device_get_string_feature_value(camera->priv->device, "LineMode"));
+         g_return_if_fail (ARV_IS_CAMERA (camera));
+	 arv_device_set_string_feature_value(camera->priv->device, "LineSelector", line);
+	 arv_device_set_string_feature_value(camera->priv->device, "LineMode", "Output");
 }
 
 /** 
@@ -1248,15 +1246,12 @@ void arv_camera_set_gpio_mode(ArvCamera *camera, const char* line, ArvGpioMode m
  *
  */
 
-ArvGpioMode arv_camera_get_gpio_mode(ArvCamera *camera, const char* line)
+ArvGpioMode
+arv_camera_get_gpio_mode(ArvCamera *camera, const char* line)
 {
-  g_return_val_if_fail (ARV_IS_CAMERA (camera), -1);
-  //Select the line indicated by the index 
-  arv_device_set_string_feature_value(camera->priv->device, "LineSelector", line);
-
-  const char* selLine = arv_device_get_string_feature_value(camera->priv->device, "LineSelector");
-  printf("GetGPIOMode: Selected line %s\n", selLine);
-  return arv_device_get_integer_feature_value(camera->priv->device, "LineMode");
+        g_return_val_if_fail (ARV_IS_CAMERA (camera), -1);
+	arv_device_set_string_feature_value(camera->priv->device, "LineSelector", line);
+	return arv_device_get_integer_feature_value(camera->priv->device, "LineMode");
 }
 
 /** 
@@ -1267,11 +1262,12 @@ ArvGpioMode arv_camera_get_gpio_mode(ArvCamera *camera, const char* line)
  *
  */
 
-void arv_camera_set_gpio_invert(ArvCamera *camera, const char* line, ArvGpioInvertMode invert)
+void
+arv_camera_set_gpio_invert(ArvCamera *camera, const char* line, ArvGpioInvertMode invert)
 {
-   g_return_if_fail (ARV_IS_CAMERA (camera));
-   arv_device_set_string_feature_value(camera->priv->device, "LineSelector", line);
-   arv_device_set_integer_feature_value(camera->priv->device, "LineInverter", invert);
+        g_return_if_fail (ARV_IS_CAMERA (camera));
+	arv_device_set_string_feature_value(camera->priv->device, "LineSelector", line);
+	arv_device_set_integer_feature_value(camera->priv->device, "LineInverter", invert);
 }
 
 /** 
@@ -1283,14 +1279,12 @@ void arv_camera_set_gpio_invert(ArvCamera *camera, const char* line, ArvGpioInve
  *
  */
 
-const char** arv_camera_get_gpio_output_sources(ArvCamera *camera, guint *numSources)
+const char**
+arv_camera_get_gpio_output_sources(ArvCamera *camera, guint *numSources)
 {
-  g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
-  const char** sources = arv_device_get_available_enumeration_feature_values_as_strings(camera->priv->device, "LineSource", numSources);
-
-  //the values to index the sources aren't necessarily in order
-  //*values = arv_device_get_available_enumeration_feature_values(camera->priv->device, "LineSource", numSources);
-  return sources;
+        g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+	const char** sources = arv_device_get_available_enumeration_feature_values_as_strings(camera->priv->device, "LineSource", numSources);
+	return sources;
 }
 
 /** 
@@ -1301,11 +1295,12 @@ const char** arv_camera_get_gpio_output_sources(ArvCamera *camera, guint *numSou
  *
  */
 
-void arv_camera_set_gpio_output_source(ArvCamera *camera, const char* line, const char* source)
+void
+arv_camera_set_gpio_output_source(ArvCamera *camera, const char* line, const char* source)
 {
-   g_return_if_fail (ARV_IS_CAMERA (camera));
-   arv_device_set_string_feature_value(camera->priv->device, "LineSelector", line);
-   arv_device_set_string_feature_value(camera->priv->device, "LineSource", source);
+        g_return_if_fail (ARV_IS_CAMERA (camera));
+	arv_device_set_string_feature_value(camera->priv->device, "LineSelector", line);
+	arv_device_set_string_feature_value(camera->priv->device, "LineSource", source);
    
 }
 
@@ -1316,11 +1311,12 @@ void arv_camera_set_gpio_output_source(ArvCamera *camera, const char* line, cons
  *
  */
 
-guint arv_camera_get_gpio_status(ArvCamera *camera, const char* line)
+guint
+arv_camera_get_gpio_status(ArvCamera *camera, const char* line)
 {
-   g_return_val_if_fail (ARV_IS_CAMERA (camera), 0);
-   arv_device_set_string_feature_value(camera->priv->device, "LineSelector", line);
-   return arv_device_get_integer_feature_value(camera->priv->device, "LineStatus");
+        g_return_val_if_fail (ARV_IS_CAMERA (camera), 0);
+	arv_device_set_string_feature_value(camera->priv->device, "LineSelector", line);
+	return arv_device_get_integer_feature_value(camera->priv->device, "LineStatus");
 }
 
 /**
@@ -1813,103 +1809,6 @@ arv_camera_is_gv_device	(ArvCamera *camera)
 
 	return ARV_IS_GV_DEVICE (camera->priv->device);
 }
-
-/**
- * arv_camera_is_uv_device:
- * @camera: a #ArvCamera
- *
- * Returns: %TRUE if @camera is a USB3Vision device.
- *
- * Since: 
- */
-
-gboolean
-arv_camera_is_uv_device	(ArvCamera *camera)
-{
-	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
-
-	return ARV_IS_UV_DEVICE (camera->priv->device);
-}
-
-/**
- * arv_camera_uv_is_bandwidth_control_available:
- * @camera: a #ArvCamera
- * Returns: Returns if bandwidth limits are available on this camera
- */
-
-gboolean arv_camera_uv_is_bandwidth_control_available (ArvCamera *camera)
-{
-  g_return_val_if_fail (arv_camera_is_uv_device (camera), FALSE);
-  switch (camera->priv->vendor) {
-  case ARV_CAMERA_VENDOR_XIMEA:
-    return arv_device_get_feature(camera->priv->device, "DeviceLinkThroughputLimit") != NULL;
-  default:
-    return FALSE;
-  }
-  
-}
-
-
-/**
- * arv_camera_uv_set_bandwidth:
- * @camera: a #ArvCamera
- * @bandwidth: Desired bandwith limit in megabits/sec. Set to 0 to disable limit mode
- * Returns: 
- */
-
-void  arv_camera_uv_set_bandwidth (ArvCamera *camera, guint bandwidth)
-{
-  g_return_if_fail (arv_camera_is_uv_device (camera));
-  g_return_if_fail (arv_camera_uv_is_bandwidth_control_available(camera));
-
-  if (bandwidth > 0)
-    {
-      arv_device_set_integer_feature_value (camera->priv->device, "DeviceLinkThroughputLimit", bandwidth);
-      arv_device_set_integer_feature_value (camera->priv->device, "DeviceLinkThroughputLimitMode", 1);
-    }
-  else
-    {
-      arv_device_set_integer_feature_value (camera->priv->device, "DeviceLinkThroughputLimitMode", 0);
-    }
-  
-}
-/**
- * arv_camera_uv_get_bandwidth:
- * @camera: a #ArvCamera
- *
- * Returns: the current bandwidth limit that is set
- *
- * Since: 
- */
-guint  arv_camera_uv_get_bandwidth (ArvCamera *camera)
-{
-  g_return_val_if_fail (arv_camera_is_uv_device (camera), 0);
-  g_return_val_if_fail (arv_camera_uv_is_bandwidth_control_available(camera),0);
-  return arv_device_get_integer_feature_value (camera->priv->device, "DeviceLinkThroughputLimit");
-}
-
-/**
- * arv_camera_uv_get_bandwidth_bounds:
- * @camera: a #ArvCamera
- * Provides the current bandwidth bounds
- * Returns: 
- *
- * Since: 
- */
-
-void  arv_camera_uv_get_bandwidth_bounds (ArvCamera *camera, guint* min, guint* max)
-{
-  gint64 min64, max64;
-
-  g_return_if_fail (arv_camera_is_uv_device (camera));
-  g_return_if_fail (arv_camera_uv_is_bandwidth_control_available(camera));
-  arv_device_get_integer_feature_bounds (camera->priv->device, "DeviceLinkThroughputLimit", &min64, &max64);
-  if (min != NULL)
-    *min = min64;
-  if (max != NULL)
-    *max = max64;
-}
-
 
 /**
  * arv_camera_gv_get_n_stream_channels:

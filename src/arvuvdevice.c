@@ -573,17 +573,6 @@ _bootstrap (ArvUvDevice *uv_device)
 		g_free (data);
 >>>>>>> Add support for Ximea MQ series
 	}
-	else if (schemaType == ARV_UVCP_SCHEMA_RAW)
-	  {
-	    //data is already gmalloc0'ed - store in private ptr
-	    uv_device->priv->genicam_xml = data;
-	    uv_device->priv->genicam_xml_size = entry.size;
-	    uv_device->priv->genicam = arv_gc_new (ARV_DEVICE (uv_device), uv_device->priv->genicam_xml,
-							       uv_device->priv->genicam_xml_size);
-
-	    //Do not deallocate data, since we handed the ptr off to the private device
-	  }
-
 	
 #if 0
 	arv_debug_device("GENICAM\n:%s", uv_device->priv->genicam_xml);

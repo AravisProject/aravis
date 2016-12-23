@@ -146,7 +146,7 @@ arv_uv_stream_thread (void *data)
 					break;
 				case ARV_UVSP_PACKET_TYPE_TRAILER:
 					if (buffer != NULL) {
-						arv_log_stream ("Received %" G_GUINT64_FORMAT
+						arv_log_stream_thread ("Received %" G_GUINT64_FORMAT
 								       " bytes - expected %" G_GUINT64_FORMAT,
 								       offset, buffer->priv->size);
 

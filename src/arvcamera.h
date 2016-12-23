@@ -136,7 +136,7 @@ const char**    arv_camera_get_gpio_output_sources      (ArvCamera *camera, guin
 void            arv_camera_set_gpio_output_source       (ArvCamera *camera, const char* line, const char* source);
 guint           arv_camera_get_gpio_status              (ArvCamera *camera, const char* line);
 
-/* ADC Control */
+/* Analog Control */
 gboolean 	arv_camera_is_gain_available		(ArvCamera *camera);
 gboolean 	arv_camera_is_gain_auto_available	(ArvCamera *camera);
 
