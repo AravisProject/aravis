@@ -415,6 +415,10 @@ arv_gc_feature_node_init (ArvGcFeatureNode *gc_feature_node)
 static void
 arv_gc_feature_node_finalize (GObject *object)
 {
+	ArvGcFeatureNode *node = ARV_GC_FEATURE_NODE(object);
+
+	g_free (node->priv->name);
+
 	parent_class->finalize (object);
 }
 
