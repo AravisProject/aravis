@@ -28,7 +28,7 @@ On some platforms (like Ubuntu), you may have to configure the dynamic linker (l
 Using the GNU build system on Mac OS X is not directly supported, but can be mimicked by augmenting the install procedure above with some environment settings:
 
 ```
-brew install intltool
+brew install gettext intltool
 brew link --force gettext
 aclocal
 autoconf
@@ -36,6 +36,11 @@ autoheader
 glibtoolize --copy
 automake --add-missing
 ./configure
+```
+
+Realtime tests do not work with Mac OS, so you'll have to disable them by manually editing `tests/Makefile.am` to remove or comment the line `realtime-test`. Then you can proceed with `make`:
+
+```
 make
 make install
 ```
