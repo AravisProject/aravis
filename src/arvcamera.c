@@ -51,6 +51,7 @@
 #include <arvgc.h>
 #include <arvgvdevice.h>
 #include <arvuvdevice.h>
+#include <arvuvstream.h>
 #include <arvenums.h>
 #include <arvstr.h>
 
@@ -649,6 +650,15 @@ arv_camera_start_acquisition (ArvCamera *camera)
 {
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 	arv_device_execute_command (camera->priv->device, "AcquisitionStart");
+
+	if (ARV_IS_UV_DEVICE(camera->priv->device))
+	  {
+	    ArvUvDevice *uv_cam;
+	    uv_cam = ARV_UV_DEVICE(camera->priv->device);
+	    ArvUvStream *uv_stream;
+	    uv_stream = arv_uv_device_get_stream(uv_cam);
+	    arv_uv_stream_unpause(uv_stream);
+	  }
 }
 
 /**
