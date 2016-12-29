@@ -102,6 +102,8 @@ arv_uv_stream_thread (void *data)
 	while (!thread_data->can_start)
 	  g_cond_wait(thread_data->stream_condvar, thread_data->stream_mutex);
 	g_mutex_unlock(thread_data->stream_mutex);
+
+	arv_log_stream_thread("USB3Vision stream unpaused");
 	
 	while (!thread_data->cancel) {
 		size_t size;
@@ -375,6 +377,7 @@ arv_uv_stream_class_init (ArvUvStreamClass *uv_stream_class)
 
 void arv_uv_stream_unpause(ArvUvStream* stream)
 {
+  arv_log_stream_thread("Unpausing stream\n");
   ArvUvStreamThreadData *thread_data = stream->priv->thread_data;
   g_mutex_lock(thread_data->stream_mutex);
   thread_data->can_start = 1;
