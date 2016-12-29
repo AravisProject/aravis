@@ -41,6 +41,7 @@ G_BEGIN_DECLS
 GType arv_uv_device_get_type (void);
 
 ArvDevice * 	arv_uv_device_new 			(const char *vendor, const char *product, const char *serial_nbr);
+ArvUvStream*    arv_uv_device_get_stream (ArvUvDevice* device);
 
 G_END_DECLS
 

@@ -60,6 +60,9 @@ struct _ArvUvDevicePrivate {
         guint8 control_endpoint;
         guint8 data_endpoint;
 	gboolean disconnected;
+
+        ArvUvStream *stream;
+
 };
 
 /* ArvDevice implementation */
@@ -114,7 +117,8 @@ arv_uv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 	ArvStream *stream;
 
 	stream = arv_uv_stream_new (uv_device, callback, user_data);
-
+	uv_device->priv->stream = ARV_UV_STREAM(stream);
+	
 	return stream;
 }
 
@@ -629,6 +633,8 @@ arv_uv_device_new (const char *vendor, const char *product, const char *serial_n
 
 	uv_device = g_object_new (ARV_TYPE_UV_DEVICE, NULL);
 
+
+	
 	libusb_init (&uv_device->priv->usb);
 	uv_device->priv->vendor = g_strdup (vendor);
 	uv_device->priv->product = g_strdup (product);
@@ -642,8 +648,9 @@ arv_uv_device_new (const char *vendor, const char *product, const char *serial_n
 	arv_debug_device("[UvDevice::new] Using data endpoint %d", uv_device->priv->data_endpoint);
 
 	if (uv_device->priv->usb_device == NULL ||
-	    libusb_claim_interface (uv_device->priv->usb_device, 0) < 0) {
-		arv_warning_device ("[UvDevice::new] Failed to claim USB interface to '%s - #%s'", product, serial_nbr);
+	    libusb_claim_interface (uv_device->priv->usb_device, 0) < 0 ||
+	    libusb_claim_interface (uv_device->priv->usb_device, 1) < 0){
+		arv_warning_device ("[UvDevice::new] Failed to claim USB interfaces to '%s - #%s'", product, serial_nbr);
 		g_object_unref (uv_device);
 		return NULL;
 	}
@@ -706,6 +713,10 @@ arv_uv_device_class_init (ArvUvDeviceClass *uv_device_class)
 	device_class->write_memory = arv_uv_device_write_memory;
 	device_class->read_register = arv_uv_device_read_register;
 	device_class->write_register = arv_uv_device_write_register;
+}
+ArvUvStream*    arv_uv_device_get_stream (ArvUvDevice* device)
+{
+  return device->priv->stream;
 }
 
 G_DEFINE_TYPE (ArvUvDevice, arv_uv_device, ARV_TYPE_DEVICE)

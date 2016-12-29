@@ -38,6 +38,8 @@ G_BEGIN_DECLS
 #define ARV_IS_UV_STREAM_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_UV_STREAM))
 #define ARV_UV_STREAM_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_UV_STREAM, ArvUvStreamClass))
 
+void arv_uv_stream_unpause(ArvUvStream* stream);
+
 GType arv_uv_stream_get_type (void);
 
 G_END_DECLS
