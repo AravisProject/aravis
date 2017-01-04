@@ -50,7 +50,9 @@
 #include <arvbuffer.h>
 #include <arvgc.h>
 #include <arvgvdevice.h>
+#ifdef ARAVIS_BUILD_USB
 #include <arvuvdevice.h>
+#endif
 #include <arvenums.h>
 #include <arvstr.h>
 
@@ -1825,7 +1827,11 @@ arv_camera_is_uv_device	(ArvCamera *camera)
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
+#ifdef ARAVIS_BUILD_USB
 	return ARV_IS_UV_DEVICE (camera->priv->device);
+#else
+	return FALSE;
+#endif
 }
 
 /**

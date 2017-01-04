@@ -291,8 +291,9 @@ main (int argc, char **argv)
 		arv_camera_set_gain (camera, arv_option_gain);
 
 		if (arv_camera_is_uv_device(camera)) {
-			arv_camera_uv_set_bandwidth(camera, arv_option_bandwidth_limit);
+			arv_camera_uv_set_bandwidth (camera, arv_option_bandwidth_limit);
 		}
+
 		if (arv_camera_is_gv_device (camera)) {
 			arv_camera_gv_select_stream_channel (camera, arv_option_gv_stream_channel);
 			arv_camera_gv_set_packet_delay (camera, arv_option_gv_packet_delay);
