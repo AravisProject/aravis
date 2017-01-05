@@ -287,6 +287,8 @@ arv_gv_interface_discover (ArvGvInterface *gv_interface)
 	int count;
 	int i;
 
+	g_hash_table_remove_all (gv_interface->priv->devices);
+
 	socket_list = arv_gv_discover_socket_list_new ();
 
 	if (socket_list->n_sockets < 1) {
