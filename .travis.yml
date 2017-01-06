@@ -6,7 +6,7 @@ compiler:
 
 before_install:
   - sudo apt-get -qq update
-  - sudo apt-get install -y libxml2-dev libglib2.0-dev intltool gtk-doc-tools libusb-1.0-0-dev libaudit-dev libpcap-dev
+  - sudo apt-get install -y libxml2-dev libglib2.0-dev intltool gtk-doc-tools libusb-1.0-0-dev libaudit-dev libpcap-ng-dev
 
 before_script: ./autogen.sh
 
