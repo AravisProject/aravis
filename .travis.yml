@@ -11,5 +11,5 @@ before_install:
 before_script: ./autogen.sh
 
 script:
-  - ./configure --disable-usb --disable-viewer --disable-packet-socket --disable-gst-plugin --disable-cpp-test && make && make test
-  - ./configure --enable-usb --disable-viewer --disable-packet-socket --disable-gst-plugin --disable-cpp-test && make && make test
+  - ./configure --disable-usb --disable-viewer --disable-packet-socket --disable-gst-plugin --disable-cpp-test && make clean && make && make test
+  - ./configure --enable-usb --disable-viewer --disable-packet-socket --disable-gst-plugin --disable-cpp-test && make clean && make && make test
