@@ -8,4 +8,8 @@ before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y libxml2-dev libglib2.0-dev intltool gtk-doc-tools
 
-script: ./autogen.sh && ./configure && make && make test
+before_script: ./autogen.sh
+
+script:
+  - ./configure --disable-usb --disable-viewer --disable-packet-socket --disable-gst-plugin --disable-cpp-test && make && make test
+  - ./configure --enable-usb --disable-viewer --disable-packet-socket --disable-gst-plugin --disable-cpp-test && make && make test
