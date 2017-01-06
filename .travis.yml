@@ -6,7 +6,7 @@ compiler:
 
 before_install:
   - sudo apt-get -qq update
-  - sudo apt-get install -y libxml2-dev libglib2.0-dev intltool gtk-doc-tools
+  - sudo apt-get install -y libxml2-dev libglib2.0-dev intltool gtk-doc-tools libusb-dev
 
 before_script: ./autogen.sh
 
