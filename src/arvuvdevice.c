@@ -34,6 +34,7 @@
 #include <string.h>
 #include <arvstr.h>
 #include <arvzip.h>
+#include <arvmisc.h>
 
 #define ARV_UV_DEVICE_N_TRIES_MAX	5
 
