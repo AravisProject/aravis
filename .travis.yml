@@ -8,4 +8,4 @@ before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y libxml2-dev libglib2.0-dev intltool gtk-doc-tools
 
-script: ./autogen.sh && ./configure && make && make install && make test
+script: ./autogen.sh && ./configure && make && make test
