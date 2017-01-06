@@ -1,6 +1,6 @@
-# ![](viewer/icons/gnome/256x256/apps/aravis.png) Aravis
-
 [![Build Status](https://travis-ci.org/AravisProject/aravis.svg?branch=master)](https://travis-ci.org/AravisProject/aravis)
+
+# ![](viewer/icons/gnome/256x256/apps/aravis.png) Aravis
 
 ### What is Aravis ?
 
