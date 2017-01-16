@@ -185,6 +185,7 @@ arv_uvcp_packet_to_string (const ArvUvcpPacket *packet)
 				value = GUINT64_FROM_LE (cmd_packet->infos.address);
 				g_string_append_printf (string, "address      = %10u (0x%08x)\n",
 							value, value);
+				break;
 			}
 		case ARV_UVCP_COMMAND_WRITE_MEMORY_ACK:
 			{
@@ -193,6 +194,7 @@ arv_uvcp_packet_to_string (const ArvUvcpPacket *packet)
 				value = GUINT64_FROM_LE (cmd_packet->infos.bytes_written);
 				g_string_append_printf (string, "written      = %10u (0x%08x)\n",
 							value, value);
+				break;
 			}
 	}
 
