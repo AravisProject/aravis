@@ -28,5 +28,5 @@ before_install:
 before_script: ./autogen.sh
 
 script:
-  - ./configure --disable-usb --disable-viewer --disable-packet-socket --disable-gst-plugin --disable-cpp-test && make clean && make && make test
-  - ./configure --enable-usb --disable-packet-socket --enable-cpp-test --disable-viewer --disable-gst-plugin && make clean && make && make test
+  - if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then ./configure --disable-usb --disable-viewer --disable-packet-socket --disable-gst-plugin --disable-cpp-test && make clean && make && make test ; fi
+  - if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then ./configure --enable-usb --disable-packet-socket --enable-cpp-test --disable-viewer --disable-gst-plugin && make clean && make && make test ; fi
