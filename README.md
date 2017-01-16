@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/AravisProject/aravis.svg?branch=master)](https://travis-ci.org/AravisProject/aravis)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/fa7d9c88e5594d709ab44e8bad01a569)](https://www.codacy.com/app/EmmanuelP/aravis?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=AravisProject/aravis&amp;utm_campaign=Badge_Grade)
 
 # ![](viewer/icons/gnome/256x256/apps/aravis.png) Aravis
 
@@ -71,6 +72,10 @@ The simple viewer depends on GStreamer1, Gtk+3, libnotify and the Aravis library
 The required versions are specified in the [configure.ac](https://github.com/AravisProject/aravis/blob/master/configure.ac#L67) file in Aravis sources.
 
 It is perfectly possible to only build the library, reducing the dependencies to the bare minimum.
+
+### Contributions
+
+As an open source and free software project, we welcome any contributions to the aravis project: code, bug reports, testing...
 
 ### Downloads
 
