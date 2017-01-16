@@ -10,7 +10,7 @@ addons:
       name: "AravisProject/aravis"
       description: "Build submitted via Travis CI"
     notification_email: emmanuel@gnome.org
-    build_command_prepend: ".configure; make clean"
+    build_command_prepend: "./autogen.sh ; ./configure --enable-usb --disable-packet-socket --enable-cpp-test --disable-viewer --disable-gst-plugin ; make clean"
     build_command:   "make -j 4"
     branch_pattern: coverity_scan
 
