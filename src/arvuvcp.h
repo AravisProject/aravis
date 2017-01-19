@@ -202,7 +202,14 @@ typedef struct ARAVIS_PACKED_STRUCTURE {
 	guint64 unknown7;
 } ArvUvcpManifestEntry;
 
-/* This is packed into the 32-bit schema type as bits 10-15 */
+/**
+ * ArvUvcpManifestSchemaType:
+ * @ARV_UVCP_SCHEMA_RAW: uncompressed genicam data
+ * @ARV_UVCP_SCHEMA_ZIP: zipped genicam data
+ *
+ * This is packed into the 32-bit schema type as bits 10-15
+ */
+
 typedef enum
 {
 	ARV_UVCP_SCHEMA_RAW = 0x0,
