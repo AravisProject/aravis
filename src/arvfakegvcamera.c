@@ -457,6 +457,8 @@ static const GOptionEntry arv_option_entries[] =
 	        &arv_option_genicam_file, "XML Genicam file to use", "genicam_filename"},
 	{ "debug", 		'd', 0, G_OPTION_ARG_STRING,
 		&arv_option_debug_domains, 	NULL, "category[:level][,...]" },
+	{ "genicam",            'f', 0, G_OPTION_ARG_STRING,
+	        &arv_option_genicam_file, "Genicam file to use", "arv-fake-camera.xml"},
 	{ NULL }
 };
 

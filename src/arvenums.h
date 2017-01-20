@@ -48,6 +48,16 @@ typedef enum {
 	ARV_GC_CACHABLE_WRITE_AROUND
 } ArvGcCachable;
 
+typedef enum {
+  ARV_GPIO_MODE_INPUT,
+  ARV_GPIO_MODE_OUTPUT
+} ArvGpioMode;
+
+typedef enum {
+  ARV_GPIO_INVERT_MODE_NONE,
+  ARV_GPIO_INVERT_MODE_ACTIVE
+} ArvGpioInvertMode;
+
 /**
  * ArvAuto:
  * @ARV_AUTO_OFF: manual setting

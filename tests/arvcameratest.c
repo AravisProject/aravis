@@ -8,6 +8,7 @@ static char *arv_option_debug_domains = NULL;
 static gboolean arv_option_snaphot = FALSE;
 static char *arv_option_trigger = NULL;
 static double arv_option_software_trigger = -1;
+static char *arv_option_master_trigger = NULL;
 static double arv_option_frequency = -1.0;
 static int arv_option_width = -1;
 static int arv_option_height = -1;
@@ -45,6 +46,10 @@ static const GOptionEntry arv_option_entries[] =
 	{
 		"trigger",				't', 0, G_OPTION_ARG_STRING,
 		&arv_option_trigger,			"External trigger", NULL
+	},
+	{
+		"master",				'\0', 0, G_OPTION_ARG_STRING,
+		&arv_option_master_trigger,		"Emit hardware trigger", NULL
 	},
 	{
 		"software-trigger",			'o', 0, G_OPTION_ARG_DOUBLE,
@@ -289,9 +294,10 @@ main (int argc, char **argv)
 		arv_camera_set_binning (camera, arv_option_horizontal_binning, arv_option_vertical_binning);
 		arv_camera_set_exposure_time (camera, arv_option_exposure_time_us);
 		arv_camera_set_gain (camera, arv_option_gain);
+		
+	        if (arv_camera_is_uv_device(camera) && (arv_option_bandwidth_limit)) {
+		        arv_camera_uv_set_bandwidth(camera, arv_option_bandwidth_limit);
 
-		if (arv_camera_is_uv_device(camera)) {
-			arv_camera_uv_set_bandwidth (camera, arv_option_bandwidth_limit);
 		}
 
 		if (arv_camera_is_gv_device (camera)) {
@@ -327,11 +333,49 @@ main (int argc, char **argv)
 			printf ("gv packet size        = %d bytes\n", arv_camera_gv_get_packet_size (camera));
 		}
 
-		if (arv_camera_is_uv_device (camera)) {
-			guint min,max;
-
+		if (arv_camera_is_uv_device(camera)) {
+		        guint min,max;
+			
 			arv_camera_uv_get_bandwidth_bounds (camera, &min, &max);
-			printf ("uv bandwidth limit     = %d [%d..%d]\n", arv_camera_uv_get_bandwidth (camera), min, max);
+			printf ("uv bandwidth limit    = %d [%d..%d]\n", arv_camera_uv_get_bandwidth (camera), min, max);
+		}
+
+		
+		const char** gpioLines;
+		guint numLines;
+		gpioLines = arv_camera_get_gpio_lines(camera, &numLines);
+
+		for (int i=0; i<numLines; i++) {
+		        printf("Found GPIO output line: %s\n", gpioLines[i]);
+		  }
+		const char** gpioSources;
+		guint numSources;
+	
+		gpioSources = arv_camera_get_gpio_output_sources(camera, &numSources);
+		for (int i=0; i<numSources; i++) {
+		        printf("Found GPIO output source: %s\n", gpioSources[i]);
+		  }
+		const char** triggerSources;
+		guint numTriggers;
+		triggerSources = arv_camera_get_trigger_sources(camera, &numTriggers);
+		for (int i=0; i < numTriggers; i++)
+		  {
+		        printf("Found trigger source: %s\n", triggerSources[i]);
+		  }
+
+		arv_camera_clear_triggers(camera);
+		if (arv_option_trigger != NULL) {
+		        printf("Using trigger source: %s\n", arv_option_trigger);
+			arv_camera_set_trigger (camera, arv_option_trigger);
+		}
+
+		//Enable master mode:
+		if (arv_option_master_trigger){
+		        printf("Setting output line: %s as master\n", arv_option_master_trigger);
+			arv_camera_set_gpio_mode(camera, arv_option_master_trigger, ARV_GPIO_MODE_OUTPUT);
+	    
+		        printf("Setting GPIO output source to: %s\n", gpioSources[1]);
+		        arv_camera_set_gpio_output_source(camera, arv_option_master_trigger, "FrameActive");
 		}
 
 		stream = arv_camera_create_stream (camera, stream_cb, NULL);
@@ -356,16 +400,12 @@ main (int argc, char **argv)
 				arv_stream_push_buffer (stream, arv_buffer_new (payload, NULL));
 
 			arv_camera_set_acquisition_mode (camera, ARV_ACQUISITION_MODE_CONTINUOUS);
-
 			if (arv_option_frequency > 0.0)
 				arv_camera_set_frame_rate (camera, arv_option_frequency);
 
-			if (arv_option_trigger != NULL)
-				arv_camera_set_trigger (camera, arv_option_trigger);
-
 			if (arv_option_software_trigger > 0.0) {
-				arv_camera_set_trigger (camera, "Software");
-				software_trigger_source = g_timeout_add ((double) (0.5 + 1000.0 /
+			        arv_camera_set_trigger (camera, "Software");
+			        software_trigger_source = g_timeout_add ((double) (0.5 + 1000.0 /
 										   arv_option_software_trigger),
 									 emit_software_trigger, camera);
 			}

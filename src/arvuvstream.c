@@ -58,7 +58,10 @@ typedef struct {
 	size_t trailer_size;
 
 	gboolean cancel;
-
+        gboolean can_start;
+        GCond *stream_condvar;
+        GMutex *stream_mutex;
+  
 	/* Statistics */
 
 	guint n_completed_buffers;
@@ -78,6 +81,12 @@ arv_uv_stream_thread (void *data)
 
 	arv_log_stream_thread ("Start USB3Vision stream thread");
 
+	thread_data->stream_condvar = g_new(GCond, 1);
+	g_cond_init(thread_data->stream_condvar);
+	thread_data->stream_mutex = g_new(GMutex,1);
+	g_mutex_init(thread_data->stream_mutex);
+	thread_data->can_start = 0;
+	
 	incoming_buffer = g_malloc (MAXIMUM_TRANSFER_SIZE);
 
 	if (thread_data->callback != NULL)
@@ -85,6 +94,17 @@ arv_uv_stream_thread (void *data)
 
 	offset = 0;
 
+	/* Wait to start the thread loop until the condition variable is signalled by
+	   acquisition_start
+	*/
+	
+	g_mutex_lock(thread_data->stream_mutex);
+	while (!thread_data->can_start)
+	  g_cond_wait(thread_data->stream_condvar, thread_data->stream_mutex);
+	g_mutex_unlock(thread_data->stream_mutex);
+
+	arv_log_stream_thread("USB3Vision stream unpaused");
+	
 	while (!thread_data->cancel) {
 		size_t size;
 		transferred = 0;
@@ -106,7 +126,7 @@ arv_uv_stream_thread (void *data)
 		else
 			packet = incoming_buffer;
 
-		arv_log_sp ("Asking for %u bytes", size);
+		arv_log_stream_thread("Asking for %u bytes", size);
 		arv_uv_device_bulk_transfer (thread_data->uv_device,  ARV_UV_ENDPOINT_DATA, LIBUSB_ENDPOINT_IN,
 					     packet, size, &transferred, 0, NULL);
 
@@ -191,7 +211,7 @@ arv_uv_stream_thread (void *data)
 	return NULL;
 }
 
-/* ArvUvStream implemenation */
+/* ArvUvStream implementation */
 
 
 /**
@@ -353,6 +373,16 @@ arv_uv_stream_class_init (ArvUvStreamClass *uv_stream_class)
 	object_class->finalize = arv_uv_stream_finalize;
 
 	stream_class->get_statistics = arv_uv_stream_get_statistics;
+}
+
+void arv_uv_stream_unpause(ArvUvStream* stream)
+{
+  arv_log_stream_thread("Unpausing stream\n");
+  ArvUvStreamThreadData *thread_data = stream->priv->thread_data;
+  g_mutex_lock(thread_data->stream_mutex);
+  thread_data->can_start = 1;
+  g_cond_signal(thread_data->stream_condvar);
+  g_mutex_unlock(thread_data->stream_mutex);
 }
 
 G_DEFINE_TYPE (ArvUvStream, arv_uv_stream, ARV_TYPE_STREAM)
