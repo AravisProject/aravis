@@ -522,6 +522,11 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 			goto CLEANUP;
 		}
 
+		if (index >= ARV_EVALUATOR_STACK_SIZE - 1) {
+			status = ARV_EVALUATOR_STATUS_STACK_OVERFLOW;
+			goto CLEANUP;
+		}
+
 		arv_evaluator_token_debug (token, variables);
 
 		switch (token->token_id) {
@@ -805,11 +810,6 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 		}
 
 		index = index - arv_evaluator_token_infos[token->token_id].n_args + 1;
-
-		if (index >= ARV_EVALUATOR_STACK_SIZE) {
-			status = ARV_EVALUATOR_STATUS_STACK_OVERFLOW;
-			goto CLEANUP;
-		}
 	}
 
 	if (index != 0) {

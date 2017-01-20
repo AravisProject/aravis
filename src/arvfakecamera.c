@@ -172,6 +172,11 @@ arv_fake_camera_wait_for_next_frame (ArvFakeCamera *camera)
 								ARV_FAKE_CAMERA_REGISTER_ACQUISITION_FRAME_PERIOD_US) *
 			1000L;
 
+	if (frame_period_time_ns == 0) {
+		arv_warning_misc ("Invalid zero frame period, defaulting to 1 second");
+		frame_period_time_ns = 1000000000L;
+	}
+
 	clock_gettime (CLOCK_MONOTONIC, &time);
 	sleep_time_ns = frame_period_time_ns - (((guint64) time.tv_sec * 1000000000L +
 						 (guint64) time.tv_nsec) % frame_period_time_ns);

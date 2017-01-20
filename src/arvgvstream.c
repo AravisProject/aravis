@@ -39,6 +39,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <stdio.h>
+#include <errno.h>
 
 #ifdef ARAVIS_BUILD_PACKET_SOCKET
 #include <ifaddrs.h>
@@ -209,9 +210,16 @@ _update_socket (ArvGvStreamThreadData *thread_data, ArvBuffer *buffer)
 	}
 
 	if (buffer_size != thread_data->current_socket_buffer_size) {
-		setsockopt (fd, SOL_SOCKET, SO_RCVBUF, &buffer_size, sizeof (buffer_size));
-		thread_data->current_socket_buffer_size = buffer_size;
-		arv_debug_stream_thread ("[GvStream::update_socket] Socket buffer size set to %d", buffer_size);
+		int result;
+
+		result = setsockopt (fd, SOL_SOCKET, SO_RCVBUF, &buffer_size, sizeof (buffer_size));
+		if (result == 0) {
+			thread_data->current_socket_buffer_size = buffer_size;
+			arv_debug_stream_thread ("[GvStream::update_socket] Socket buffer size set to %d", buffer_size);
+		} else {
+			arv_warning_stream_thread ("[GvStream::update_socket] Failed to set socket buffer size to %d (%d)",
+						   buffer_size, errno);
+		}
 	}
 }
 

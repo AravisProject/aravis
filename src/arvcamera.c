@@ -50,8 +50,11 @@
 #include <arvbuffer.h>
 #include <arvgc.h>
 #include <arvgvdevice.h>
+#ifdef ARAVIS_BUILD_USB
 #include <arvuvdevice.h>
 #include <arvuvstream.h>
+#endif
+
 #include <arvenums.h>
 #include <arvstr.h>
 
@@ -1075,22 +1078,18 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source)
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 	g_return_if_fail (source != NULL);
 
-	switch (camera->priv->vendor) {
-		case ARV_CAMERA_VENDOR_BASLER:
-			arv_device_set_integer_feature_value (camera->priv->device, "AcquisitionFrameRateEnable",
-							      0);
-		default:
-			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
-							     "AcquisitionStart");
-			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
-			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
-							     "FrameStart");
-			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "On");
-			arv_device_set_string_feature_value (camera->priv->device, "TriggerActivation",
-							     "RisingEdge");
-			arv_device_set_string_feature_value (camera->priv->device, "TriggerSource", source);
-			break;
-	}
+	if (camera->priv->vendor ==  ARV_CAMERA_VENDOR_BASLER)
+		arv_device_set_integer_feature_value (camera->priv->device, "AcquisitionFrameRateEnable", 0);
+
+	arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
+					     "AcquisitionStart");
+	arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
+	arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
+					     "FrameStart");
+	arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "On");
+	arv_device_set_string_feature_value (camera->priv->device, "TriggerActivation",
+					     "RisingEdge");
+	arv_device_set_string_feature_value (camera->priv->device, "TriggerSource", source);
 }
 
 /**
@@ -2016,7 +2015,11 @@ arv_camera_is_uv_device	(ArvCamera *camera)
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
+#ifdef ARAVIS_BUILD_USB
 	return ARV_IS_UV_DEVICE (camera->priv->device);
+#else
+	return FALSE;
+#endif
 }
 
 /**

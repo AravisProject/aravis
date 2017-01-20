@@ -34,6 +34,7 @@
 #include <string.h>
 #include <arvstr.h>
 #include <arvzip.h>
+#include <arvmisc.h>
 
 #define ARV_UV_DEVICE_N_TRIES_MAX	5
 
@@ -548,11 +549,15 @@ static void
 _open_usb_device (ArvUvDevice *uv_device)
 {
 	libusb_device **devices;
-	unsigned i, count;
+	unsigned i;
+	ssize_t count;
 
 	count = libusb_get_device_list (uv_device->priv->usb, &devices);
-	if (count < 0)
+	if (count < 0) {
+		arv_warning_device ("[[UvDevice::_open_usb_device] Failed to get USB device list: %s",
+				    libusb_error_name (count));
 		return;
+	}
 
 	for (i = 0; i < count && uv_device->priv->usb_device == NULL; i++) {
 		libusb_device_handle *usb_device;

@@ -1,0 +1,32 @@
+env:
+  global:
+   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+   #   via the "travis encrypt" command using the project repo's public key
+   - secure: "g4G6rJ7YbfzdndkAiV6esu9cjvKqLJ8GrKRoMMMb9cSMvCeI59dogkzv2xMeVfbWDffZytCnn5YmOmHFtsCj6So+lLF76mrcn4lMUQ3dHDOT4ghxSvtq5XmlOuYg9DBC1eZnM0lMzv6U7SnyLtA517f+zkSr7G5OLmRORTGkDVzymI8G0Ab5vJtlH3NOvTQNLRYfRs0P5ajK/e+L1osj535Ap1m11nH70nhrzKADHLtsBlFwULdRtZVRcoD4p8inDlZeQ2KvlA9UZG6koNpfKq9VVqxbpMvZhX6kixmLHrg36ZpEV1f3lJ1fI6eQBTv7+IZW7miurE400vpvXAA2F0BIY5D05j5lbppI50n8CMpZpXibMEruWdX5KFevBpKbggJaNZXDZrweEnJr9Y6ZgQMP6XDU/cSKzKpmguAW0TJp7bdl5xsfpf7LS5A8fgUYqAls7lX91MUtXeOb3ZCQP9FQi5xTnOo0M1vGP5FFf+EIVdhsuZyDesG981Na13cwMvzz++QTwL/YauATxYTmnqa6q9pQyp2TMgwKc/fJyf24vTefjXo8XkDSlaACqYru07/HjkhYKS3xp1dLmF60UOavnefofrb7pnpZxyxnW15OrF68Ib+GB0b+lt17HHUGEwc4BNSOiJXV6K5AYrmXrOd2NBw2ZOjmJN3iZZfhskY="
+
+addons:
+  coverity_scan:
+    project:
+      name: "AravisProject/aravis"
+      description: "Build submitted via Travis CI"
+    notification_email: emmanuel@gnome.org
+    build_command_prepend: "./autogen.sh ; ./configure --enable-usb --disable-packet-socket --enable-cpp-test --disable-viewer --disable-gst-plugin ; make clean"
+    build_command:   "make -j 4"
+    branch_pattern: coverity_scan
+
+language: C
+
+compiler:
+  - clang
+  - gcc
+
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y libxml2-dev libglib2.0-dev intltool gtk-doc-tools libusb-1.0-0-dev
+  - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
+
+before_script: ./autogen.sh
+
+script:
+  - if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then ./configure --disable-usb --disable-viewer --disable-packet-socket --disable-gst-plugin --disable-cpp-test && make clean && make && make test ; fi
+  - if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then ./configure --enable-usb --disable-packet-socket --enable-cpp-test --disable-viewer --disable-gst-plugin && make clean && make && make test ; fi

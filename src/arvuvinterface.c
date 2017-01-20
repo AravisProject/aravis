@@ -234,12 +234,15 @@ _discover (ArvUvInterface *uv_interface,  GArray *device_ids)
 {
 	libusb_device **devices;
 	unsigned uv_count = 0;
-	unsigned count;
+	ssize_t count;
 	unsigned i;
 
 	count = libusb_get_device_list(uv_interface->priv->usb, &devices);
-	if (count < 0)
+	if (count < 0) {
+		arv_warning_interface ("[[UvInterface:_discover] Failed to get USB device list: %s",
+				       libusb_error_name (count));
 		return;
+	}
 
 	for (i = 0; i < count; i++) {
 		ArvInterfaceDeviceIds *ids;

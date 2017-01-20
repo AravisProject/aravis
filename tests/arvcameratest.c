@@ -297,6 +297,7 @@ main (int argc, char **argv)
 		
 	        if (arv_camera_is_uv_device(camera) && (arv_option_bandwidth_limit)) {
 		        arv_camera_uv_set_bandwidth(camera, arv_option_bandwidth_limit);
+
 		}
 
 		if (arv_camera_is_gv_device (camera)) {
