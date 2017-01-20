@@ -211,7 +211,7 @@ arv_uv_stream_thread (void *data)
 	return NULL;
 }
 
-/* ArvUvStream implemenation */
+/* ArvUvStream implementation */
 
 
 /**

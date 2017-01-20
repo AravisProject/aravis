@@ -93,8 +93,6 @@ arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, ArvUvEndpointType endpoint_
 	endpoint = (endpoint_type == ARV_UV_ENDPOINT_CONTROL) ? uv_device->priv->control_endpoint : uv_device->priv->data_endpoint;
 	result = libusb_bulk_transfer (uv_device->priv->usb_device, endpoint | endpoint_flags, data, size, &transferred,
 				       MAX (uv_device->priv->timeout_ms, timeout_ms));
-	//printf("Received %d bytes\n", transferred);
-	
 	success = (result >= 0);
 
 	if (!success)

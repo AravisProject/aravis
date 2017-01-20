@@ -54,6 +54,7 @@
 #include <arvuvdevice.h>
 #include <arvuvstream.h>
 #endif
+
 #include <arvenums.h>
 #include <arvstr.h>
 
