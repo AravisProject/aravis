@@ -369,33 +369,6 @@ main (int argc, char **argv)
 			arv_camera_set_trigger (camera, arv_option_trigger);
 		}
 
-		const char** gpioLines;
-		guint numLines;
-		gpioLines = arv_camera_get_gpio_lines(camera, &numLines);
-
-		for (int i=0; i<numLines; i++) {
-		        printf("Found GPIO output line: %s\n", gpioLines[i]);
-		  }
-		const char** gpioSources;
-		guint numSources;
-	
-		gpioSources = arv_camera_get_gpio_output_sources(camera, &numSources);
-		for (int i=0; i<numSources; i++) {
-		        printf("Found GPIO output source: %s\n", gpioSources[i]);
-		  }
-		const char** triggerSources;
-		guint numTriggers;
-		triggerSources = arv_camera_get_trigger_sources(camera, &numTriggers);
-		for (int i=0; i < numTriggers; i++) {
-		        printf("Found trigger source: %s\n", triggerSources[i]);
-		  }
-
-		arv_camera_clear_triggers(camera);
-		if (arv_option_trigger != NULL) {
-		        printf("Using trigger source: %s\n", arv_option_trigger);
-			arv_camera_set_trigger (camera, arv_option_trigger);
-		}
-
 		//Enable master mode:
 		if (arv_option_master_trigger){
 		        printf("Setting output line: %s as master\n", arv_option_master_trigger);
