@@ -32,7 +32,7 @@ On some platforms (like Ubuntu), you may have to configure the dynamic linker (l
 Using the GNU build system on Mac OS X is not directly supported, but can be mimicked by augmenting the install procedure above with some environment settings:
 
 ```
-brew install intltool
+brew install gettext intltool gtk-doc
 brew link --force gettext
 aclocal
 autoconf
