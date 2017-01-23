@@ -1121,6 +1121,72 @@ arv_camera_get_trigger_source (ArvCamera *camera)
 }
 
 /**
+ * arv_camera_get_available_trigger_sources:
+ * @camera: a #ArvCamera
+ * @n_sources: (out): number of sources
+ *
+ * Gets the list of all available trigger sources.
+ *
+ * Returns: (array length=n_sources) (transfer container): a newly allocated array of strings, which must be freed using g_free().
+ *
+ * Since: 0.6.0
+ */
+
+const char **
+arv_camera_get_available_trigger_sources (ArvCamera *camera, guint *n_sources)
+{
+        g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+
+	return arv_device_get_available_enumeration_feature_values_as_strings (camera->priv->device, "TriggerSource", n_sources);
+}
+
+/**
+ * arv_camera_get_available_triggers:
+ * @camera: a #ArvCamera
+ * @n_triggers: (out): number of available triggers
+ *
+ * Gets a list of all available triggers: FrameStart, ExposureActive, etc...
+ *
+ * Returns: (array length=n_triggers) (transfer container): a newly allocated array of strings, which must be freed using g_free().
+ *
+ * Since: 0.6.0
+ */
+
+const char **
+arv_camera_get_available_triggers (ArvCamera *camera, guint *n_triggers)
+{
+        g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+
+	return arv_device_get_available_enumeration_feature_values_as_strings (camera->priv->device, "TriggerSelector", n_triggers);
+}
+
+/**
+ * arv_camera_clear_triggers:
+ * @camera: a #ArvCamera
+ *
+ * Disables all triggers.
+ *
+ * Since: 0.6.0
+ */
+
+void
+arv_camera_clear_triggers (ArvCamera* camera)
+{
+	const char **triggers;
+	guint n_triggers;
+	unsigned i;
+
+        g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	triggers = arv_device_get_available_enumeration_feature_values_as_strings(camera->priv->device, "TriggerSelector", &n_triggers);
+
+	for (i = 0; i< n_triggers; i++) {
+		arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector", triggers[i]);
+		arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
+	}
+}
+
+/**
  * arv_camera_software_trigger:
  * @camera: a #ArvCamera
  *

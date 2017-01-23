@@ -113,7 +113,9 @@ void		arv_camera_get_frame_rate_bounds 	(ArvCamera *camera, double *min, double 
 void		arv_camera_set_trigger			(ArvCamera *camera, const char *source);
 void 		arv_camera_set_trigger_source		(ArvCamera *camera, const char *source);
 const char *	arv_camera_get_trigger_source		(ArvCamera *camera);
-
+const char **	arv_camera_get_available_trigger_sources(ArvCamera *camera, guint *n_sources);
+const char**    arv_camera_get_available_triggers       (ArvCamera *camera, guint *n_triggers);
+void            arv_camera_clear_triggers               (ArvCamera* camera);
 void 		arv_camera_software_trigger 		(ArvCamera *camera);
 
 gboolean 	arv_camera_is_exposure_time_available	(ArvCamera *camera);
