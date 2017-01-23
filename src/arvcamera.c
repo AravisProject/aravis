@@ -2013,6 +2013,7 @@ arv_camera_get_chunk_state (ArvCamera *camera, const char *chunk)
 void
 arv_camera_set_chunks (ArvCamera *camera, const char *chunk_list)
 {
+	const char **available_chunks;
 	char **chunks;
 	char *striped_chunk_list;
 	gboolean enable_chunk_data = FALSE;
@@ -2026,11 +2027,12 @@ arv_camera_set_chunks (ArvCamera *camera, const char *chunk_list)
 		return;
 	}
 
-	chunks = (char **) arv_device_get_available_enumeration_feature_values_as_strings (camera->priv->device,
+	available_chunks = arv_device_get_available_enumeration_feature_values_as_strings (camera->priv->device,
 											   "ChunkSelector", &n_values);
 	for (i = 0; i < n_values; i++) {
-		arv_camera_set_chunk_state (camera, chunks[i], FALSE);
+		arv_camera_set_chunk_state (camera, available_chunks[i], FALSE);
 	}
+	g_free (available_chunks);
 
 	striped_chunk_list = g_strdup (chunk_list);
 	arv_str_strip (striped_chunk_list, " ,:;", ',');
