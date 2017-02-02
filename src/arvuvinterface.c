@@ -34,7 +34,7 @@
 #include <libusb.h>
 #include <stdio.h>
 
-#define ARV_UV_INTERFACE_DEVICE_CLASS			0xef
+#define ARV_UV_INTERFACE_DEVICE_CLASS			0xef	/* Miscellaneous device */
 #define ARV_UV_INTERFACE_DEVICE_SUBCLASS		0x02
 #define ARV_UV_INTERFACE_DEVICE_PROTOCOL		0x01
 #define ARV_UV_INTERFACE_INTERFACE_CLASS		0xef
@@ -171,14 +171,16 @@ _usb_device_to_device_ids (ArvUvInterface *uv_interface, libusb_device *device)
 	    desc.bDeviceProtocol != ARV_UV_INTERFACE_DEVICE_PROTOCOL)
 		return NULL;
 
+	success = FALSE;
 	libusb_get_config_descriptor (device, 0, &config);
 	for (i = 0; i< (int) config->bNumInterfaces; i++) {
 		inter = &config->interface[i];
 		for (j = 0; j < inter->num_altsetting; j++) {
 			interdesc = &inter->altsetting[j];
-			if (interdesc->bInterfaceClass != ARV_UV_INTERFACE_INTERFACE_CLASS ||
-			    interdesc->bInterfaceSubClass != ARV_UV_INTERFACE_INTERFACE_SUBCLASS)
-				success = FALSE;
+			if (interdesc->bInterfaceClass == ARV_UV_INTERFACE_INTERFACE_CLASS &&
+			    interdesc->bInterfaceSubClass == ARV_UV_INTERFACE_INTERFACE_SUBCLASS) {
+				success = TRUE;
+			}
 		}
 	}
 	libusb_free_config_descriptor (config);
@@ -224,7 +226,8 @@ _usb_device_to_device_ids (ArvUvInterface *uv_interface, libusb_device *device)
 		g_free (serial_nbr);
 
 		libusb_close (device_handle);
-	}
+	} else
+		arv_warning_interface ("Failed to open USB device");
 
 	return device_ids;
 }
