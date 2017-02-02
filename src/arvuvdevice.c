@@ -392,7 +392,7 @@ _bootstrap (ArvUvDevice *uv_device)
 
 	arv_device_read_memory(device, ARV_ABRM_MANUFACTURER_NAME, 64, &manufacturer, NULL);
 	manufacturer[63] = 0;
-	arv_debug_device ("MANUFACTURER_NAME =        %s", manufacturer);
+	arv_debug_device ("MANUFACTURER_NAME =        '%s'", manufacturer);
 
 	arv_device_read_memory (device, ARV_ABRM_SBRM_ADDRESS, sizeof (guint64), &offset, NULL);
 	arv_device_read_memory (device, ARV_ABRM_MAX_DEVICE_RESPONSE_TIME, sizeof (guint32), &response_time, NULL);
