@@ -74,25 +74,25 @@ arv_fake_device_get_genicam (ArvDevice *device)
 }
 
 static gboolean
-arv_fake_device_read_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer, GError **error)
+arv_fake_device_read_memory (ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error)
 {
 	return arv_fake_camera_read_memory (ARV_FAKE_DEVICE (device)->priv->camera, address, size, buffer);
 }
 
 static gboolean
-arv_fake_device_write_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer, GError **error)
+arv_fake_device_write_memory (ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error)
 {
 	return arv_fake_camera_write_memory (ARV_FAKE_DEVICE (device)->priv->camera, address, size, buffer);
 }
 
 static gboolean
-arv_fake_device_read_register (ArvDevice *device, guint32 address, guint32 *value, GError **error)
+arv_fake_device_read_register (ArvDevice *device, guint64 address, guint32 *value, GError **error)
 {
 	return arv_fake_camera_read_register (ARV_FAKE_DEVICE (device)->priv->camera, address, value);
 }
 
 static gboolean
-arv_fake_device_write_register (ArvDevice *device, guint32 address, guint32 value, GError **error)
+arv_fake_device_write_register (ArvDevice *device, guint64 address, guint32 value, GError **error)
 {
 	return arv_fake_camera_write_register (ARV_FAKE_DEVICE (device)->priv->camera, address, value);
 }

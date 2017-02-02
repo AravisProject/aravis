@@ -98,7 +98,7 @@ arv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *u
  **/
 
 gboolean
-arv_device_read_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer, GError **error)
+arv_device_read_memory (ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error)
 {
 	g_return_val_if_fail (ARV_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (buffer != NULL, FALSE);
@@ -124,7 +124,7 @@ arv_device_read_memory (ArvDevice *device, guint32 address, guint32 size, void *
  **/
 
 gboolean
-arv_device_write_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer, GError **error)
+arv_device_write_memory (ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error)
 {
 	g_return_val_if_fail (ARV_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (buffer != NULL, FALSE);
@@ -149,7 +149,7 @@ arv_device_write_memory (ArvDevice *device, guint32 address, guint32 size, void 
  **/
 
 gboolean
-arv_device_read_register (ArvDevice *device, guint32 address, guint32 *value, GError **error)
+arv_device_read_register (ArvDevice *device, guint64 address, guint32 *value, GError **error)
 {
 	g_return_val_if_fail (ARV_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (value != NULL, FALSE);
@@ -173,7 +173,7 @@ arv_device_read_register (ArvDevice *device, guint32 address, guint32 *value, GE
  **/
 
 gboolean
-arv_device_write_register (ArvDevice *device, guint32 address, guint32 value, GError **error)
+arv_device_write_register (ArvDevice *device, guint64 address, guint32 value, GError **error)
 {
 	g_return_val_if_fail (ARV_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);

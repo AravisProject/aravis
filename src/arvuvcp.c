@@ -49,7 +49,7 @@ arv_uvcp_packet_free (ArvUvcpPacket *packet)
  */
 
 ArvUvcpPacket *
-arv_uvcp_packet_new_read_memory_cmd (guint32 address, guint32 size, guint16 packet_id, size_t *packet_size)
+arv_uvcp_packet_new_read_memory_cmd (guint64 address, guint32 size, guint16 packet_id, size_t *packet_size)
 {
 	ArvUvcpReadMemoryCmd *packet;
 
@@ -82,7 +82,7 @@ arv_uvcp_packet_new_read_memory_cmd (guint32 address, guint32 size, guint16 pack
  */
 
 ArvUvcpPacket *
-arv_uvcp_packet_new_write_memory_cmd (guint32 address, guint32 size, guint16 packet_id, size_t *packet_size)
+arv_uvcp_packet_new_write_memory_cmd (guint64 address, guint32 size, guint16 packet_id, size_t *packet_size)
 {
 	ArvUvcpWriteMemoryCmd *packet;
 
@@ -148,7 +148,7 @@ arv_uvcp_packet_to_string (const ArvUvcpPacket *packet)
 	GString *string;
 	char *c_string;
 	int packet_size;
-	guint32 value;
+	guint64 value;
 
 	g_return_val_if_fail (packet != NULL, NULL);
 
@@ -167,10 +167,9 @@ arv_uvcp_packet_to_string (const ArvUvcpPacket *packet)
 				ArvUvcpReadMemoryCmd *cmd_packet = (void *) packet;
 
 				value = GUINT64_FROM_LE (cmd_packet->infos.address);
-				g_string_append_printf (string, "address      = %10u (0x%08x)\n",
-							value, value);
+				g_string_append_printf (string, "address      = 0x%016lx\n", value);
 				value = GUINT16_FROM_LE (cmd_packet->infos.size);
-				g_string_append_printf (string, "size         = %10u (0x%08x)\n",
+				g_string_append_printf (string, "size         = %10lu (0x%08lx)\n",
 							value, value);
 				break;
 			}
@@ -183,8 +182,7 @@ arv_uvcp_packet_to_string (const ArvUvcpPacket *packet)
 				ArvUvcpWriteMemoryCmd *cmd_packet = (void *) packet;
 
 				value = GUINT64_FROM_LE (cmd_packet->infos.address);
-				g_string_append_printf (string, "address      = %10u (0x%08x)\n",
-							value, value);
+				g_string_append_printf (string, "address      = 0x%016lx\n", value);
 				break;
 			}
 		case ARV_UVCP_COMMAND_WRITE_MEMORY_ACK:
@@ -192,7 +190,7 @@ arv_uvcp_packet_to_string (const ArvUvcpPacket *packet)
 				ArvUvcpWriteMemoryAck *cmd_packet = (void *) packet;
 
 				value = GUINT64_FROM_LE (cmd_packet->infos.bytes_written);
-				g_string_append_printf (string, "written      = %10u (0x%08x)\n",
+				g_string_append_printf (string, "written      = %10lu (0x%08lx)\n",
 							value, value);
 				break;
 			}

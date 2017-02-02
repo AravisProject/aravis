@@ -123,7 +123,7 @@ static GRegex *arv_gv_device_url_regex = NULL;
 }
 
 static gboolean
-_read_memory (ArvGvDeviceIOData *io_data, guint32 address, guint32 size, void *buffer, GError **error)
+_read_memory (ArvGvDeviceIOData *io_data, guint64 address, guint32 size, void *buffer, GError **error)
 {
 	ArvGvcpPacket *packet;
 	size_t packet_size;
@@ -204,7 +204,7 @@ _read_memory (ArvGvDeviceIOData *io_data, guint32 address, guint32 size, void *b
 }
 
 static gboolean
-_write_memory (ArvGvDeviceIOData *io_data, guint32 address, guint32 size, void *buffer, GError **error)
+_write_memory (ArvGvDeviceIOData *io_data, guint64 address, guint32 size, void *buffer, GError **error)
 {
 	ArvGvcpPacket *packet;
 	size_t packet_size;
@@ -1066,7 +1066,7 @@ arv_gv_device_get_genicam (ArvDevice *device)
 }
 
 static gboolean
-arv_gv_device_read_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer, GError **error)
+arv_gv_device_read_memory (ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error)
 {
 	ArvGvDevice *gv_device = ARV_GV_DEVICE (device);
 	int i;
@@ -1084,7 +1084,7 @@ arv_gv_device_read_memory (ArvDevice *device, guint32 address, guint32 size, voi
 }
 
 static gboolean
-arv_gv_device_write_memory (ArvDevice *device, guint32 address, guint32 size, void *buffer, GError **error)
+arv_gv_device_write_memory (ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error)
 {
 	ArvGvDevice *gv_device = ARV_GV_DEVICE (device);
 	int i;
@@ -1102,7 +1102,7 @@ arv_gv_device_write_memory (ArvDevice *device, guint32 address, guint32 size, vo
 }
 
 static gboolean
-arv_gv_device_read_register (ArvDevice *device, guint32 address, guint32 *value, GError **error)
+arv_gv_device_read_register (ArvDevice *device, guint64 address, guint32 *value, GError **error)
 {
 	ArvGvDevice *gv_device = ARV_GV_DEVICE (device);
 
@@ -1110,7 +1110,7 @@ arv_gv_device_read_register (ArvDevice *device, guint32 address, guint32 *value,
 }
 
 static gboolean
-arv_gv_device_write_register (ArvDevice *device, guint32 address, guint32 value, GError **error)
+arv_gv_device_write_register (ArvDevice *device, guint64 address, guint32 value, GError **error)
 {
 	ArvGvDevice *gv_device = ARV_GV_DEVICE (device);
 
