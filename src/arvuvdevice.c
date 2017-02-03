@@ -624,7 +624,7 @@ _open_usb_device (ArvUvDevice *uv_device)
 ArvUvStream*
 arv_uv_device_get_stream (ArvUvDevice* device)
 {
-  return device->priv->stream;
+        return device->priv->stream;
 }
 
 ArvDevice *
