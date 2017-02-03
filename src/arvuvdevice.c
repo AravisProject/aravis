@@ -61,6 +61,8 @@ struct _ArvUvDevicePrivate {
         guint8 control_endpoint;
         guint8 data_endpoint;
 	gboolean disconnected;
+  
+        ArvUvStream *stream;
 };
 
 /* ArvDevice implementation */
@@ -115,7 +117,7 @@ arv_uv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 	ArvStream *stream;
 
 	stream = arv_uv_stream_new (uv_device, callback, user_data);
-
+	uv_device->priv->stream = ARV_UV_STREAM(stream);
 	return stream;
 }
 
@@ -617,6 +619,12 @@ _open_usb_device (ArvUvDevice *uv_device)
 	}
 
 	libusb_free_device_list (devices, 1);
+}
+
+ArvUvStream*
+arv_uv_device_get_stream (ArvUvDevice* device)
+{
+  return device->priv->stream;
 }
 
 ArvDevice *

@@ -59,8 +59,8 @@ typedef struct {
 
 	gboolean cancel;
         gboolean can_start;
-        GCond *stream_condvar;
-        GMutex *stream_mutex;
+        GCond stream_condvar;
+        GMutex stream_mutex;
   
 	/* Statistics */
 
@@ -81,10 +81,6 @@ arv_uv_stream_thread (void *data)
 
 	arv_log_stream_thread ("Start USB3Vision stream thread");
 
-	thread_data->stream_condvar = g_cond_new();
-	g_cond_init(thread_data->stream_condvar);
-	thread_data->stream_mutex = g_mutex_new();
-	g_mutex_init(thread_data->stream_mutex);
 	thread_data->can_start = 0;
 	
 	incoming_buffer = g_malloc (MAXIMUM_TRANSFER_SIZE);
@@ -98,10 +94,10 @@ arv_uv_stream_thread (void *data)
 	   acquisition_start
 	*/
 	
-	g_mutex_lock(thread_data->stream_mutex);
+	g_mutex_lock(&thread_data->stream_mutex);
 	while (!thread_data->can_start)
-	  g_cond_wait(thread_data->stream_condvar, thread_data->stream_mutex);
-	g_mutex_unlock(thread_data->stream_mutex);
+	        g_cond_wait(&thread_data->stream_condvar, &thread_data->stream_mutex);
+	g_mutex_unlock(&thread_data->stream_mutex);
 
 	arv_log_stream_thread("USB3Vision stream unpaused");
 	
@@ -377,12 +373,12 @@ arv_uv_stream_class_init (ArvUvStreamClass *uv_stream_class)
 
 void arv_uv_stream_unpause(ArvUvStream* stream)
 {
-  arv_log_stream_thread("Unpausing stream\n");
-  ArvUvStreamThreadData *thread_data = stream->priv->thread_data;
-  g_mutex_lock(thread_data->stream_mutex);
-  thread_data->can_start = 1;
-  g_cond_signal(thread_data->stream_condvar);
-  g_mutex_unlock(thread_data->stream_mutex);
+        arv_log_stream_thread("Unpausing stream\n");
+	ArvUvStreamThreadData *thread_data = stream->priv->thread_data;
+	g_mutex_lock(&thread_data->stream_mutex);
+	thread_data->can_start = 1;
+	g_cond_signal(&thread_data->stream_condvar);
+	g_mutex_unlock(&thread_data->stream_mutex);
 }
 
 G_DEFINE_TYPE (ArvUvStream, arv_uv_stream, ARV_TYPE_STREAM)
