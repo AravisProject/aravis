@@ -34,15 +34,6 @@
 #include <libusb.h>
 #include <stdio.h>
 
-#define ARV_UV_INTERFACE_DEVICE_CLASS			0xef	/* Miscellaneous device */
-#define ARV_UV_INTERFACE_DEVICE_SUBCLASS		0x02
-#define ARV_UV_INTERFACE_DEVICE_PROTOCOL		0x01
-#define ARV_UV_INTERFACE_INTERFACE_CLASS		0xef
-#define ARV_UV_INTERFACE_INTERFACE_SUBCLASS		0x05
-#define ARV_UV_INTERFACE_CONTROL_INTERFACE_PROTOCOL	0x00
-#define ARV_UV_INTERFACE_EVENT_INTERFACE_PROTOCOL	0x01
-#define ARV_UV_INTERFACE_STREAMING_INTERFACE_PROTOCOL	0x02
-
 /* ArvUvInterface implementation */
 
 static GObjectClass *parent_class = NULL;
@@ -157,7 +148,8 @@ _usb_device_to_device_ids (ArvUvInterface *uv_interface, libusb_device *device)
 	struct libusb_config_descriptor *config;
 	const struct libusb_interface *inter;
 	const struct libusb_interface_descriptor *interdesc;
-	gboolean success = TRUE;
+	gboolean control_protocol_found;
+	gboolean data_protocol_found;
 	int r, i, j;
 
 	r = libusb_get_device_descriptor (device, &desc);
@@ -171,7 +163,8 @@ _usb_device_to_device_ids (ArvUvInterface *uv_interface, libusb_device *device)
 	    desc.bDeviceProtocol != ARV_UV_INTERFACE_DEVICE_PROTOCOL)
 		return NULL;
 
-	success = FALSE;
+	control_protocol_found = FALSE;
+	data_protocol_found = FALSE;
 	libusb_get_config_descriptor (device, 0, &config);
 	for (i = 0; i< (int) config->bNumInterfaces; i++) {
 		inter = &config->interface[i];
@@ -179,13 +172,16 @@ _usb_device_to_device_ids (ArvUvInterface *uv_interface, libusb_device *device)
 			interdesc = &inter->altsetting[j];
 			if (interdesc->bInterfaceClass == ARV_UV_INTERFACE_INTERFACE_CLASS &&
 			    interdesc->bInterfaceSubClass == ARV_UV_INTERFACE_INTERFACE_SUBCLASS) {
-				success = TRUE;
+				if (interdesc->bInterfaceProtocol == ARV_UV_INTERFACE_CONTROL_PROTOCOL)
+					control_protocol_found = TRUE;
+				if (interdesc->bInterfaceProtocol == ARV_UV_INTERFACE_DATA_PROTOCOL)
+					data_protocol_found = TRUE;
 			}
 		}
 	}
 	libusb_free_config_descriptor (config);
 
-	if (!success)
+	if (!control_protocol_found && !data_protocol_found)
 		return NULL;
 
 	if (libusb_open (device, &device_handle) == LIBUSB_SUCCESS) {

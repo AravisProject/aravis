@@ -27,6 +27,7 @@
 
 #include <arvuvstreamprivate.h>
 #include <arvuvdeviceprivate.h>
+#include <arvuvinterfaceprivate.h>
 #include <arvgc.h>
 #include <arvdebug.h>
 #include <arvuvcp.h>
@@ -546,7 +547,7 @@ static void
 _open_usb_device (ArvUvDevice *uv_device)
 {
 	libusb_device **devices;
-	unsigned i;
+	unsigned i, j, k;
 	ssize_t count;
 
 	count = libusb_get_device_list (uv_device->priv->usb, &devices);
@@ -585,28 +586,31 @@ _open_usb_device (ArvUvDevice *uv_device)
 			    g_strcmp0 ((char * ) product, uv_device->priv->product) == 0 &&
 			    g_strcmp0 ((char * ) serial_nbr, uv_device->priv->serial_nbr) == 0) {
 				struct libusb_config_descriptor *config;
-				struct libusb_interface_descriptor interface;
 				struct libusb_endpoint_descriptor endpoint;
+				const struct libusb_interface *inter;
+				const struct libusb_interface_descriptor *interdesc;
 
 				uv_device->priv->usb_device = usb_device;
 
-				/* Assign the endpoint while the libusb device handle is handy */
-				libusb_get_active_config_descriptor(devices[i], &config);
-				/* Get the first endpoint of the first interface, strip the direction bits
-				   The control interface is bidirectional -> both IN and OUT endpoints */
-				interface = config->interface[0].altsetting[0];
-				endpoint = interface.endpoint[0];
-
-				uv_device->priv->control_endpoint = endpoint.bEndpointAddress & 0x0f; /* mask off reserved / direction */
-
-				/* Get the first endpoint of the second interface, strip the direction bits
-				   The data interface is one-way -> only an IN endpoint */
-				interface = config->interface[1].altsetting[0];
-				endpoint = interface.endpoint[0];
-
-				uv_device->priv->data_endpoint = 1;
-
-				libusb_free_config_descriptor(config);
+				libusb_get_config_descriptor (devices[i], 0, &config);
+				for (j = 0; j < (int) config->bNumInterfaces; j++) {
+					inter = &config->interface[j];
+					for (k = 0; k < inter->num_altsetting; k++) {
+						interdesc = &inter->altsetting[k];
+						if (interdesc->bInterfaceClass == ARV_UV_INTERFACE_INTERFACE_CLASS &&
+						    interdesc->bInterfaceSubClass == ARV_UV_INTERFACE_INTERFACE_SUBCLASS) {
+							if (interdesc->bInterfaceProtocol == ARV_UV_INTERFACE_CONTROL_PROTOCOL) {
+								endpoint = interdesc->endpoint[0];
+								uv_device->priv->control_endpoint = endpoint.bEndpointAddress & 0x0f;
+							}
+							if (interdesc->bInterfaceProtocol == ARV_UV_INTERFACE_DATA_PROTOCOL) {
+								endpoint = interdesc->endpoint[0];
+								uv_device->priv->data_endpoint = endpoint.bEndpointAddress & 0x0f;
+							}
+						}
+					}
+				}
+				libusb_free_config_descriptor (config);
 			} else
 				libusb_close (usb_device);
 

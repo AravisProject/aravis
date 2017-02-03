@@ -29,6 +29,15 @@
 
 #include <arvuvinterface.h>
 
+#define ARV_UV_INTERFACE_DEVICE_CLASS			0xef	/* Miscellaneous device */
+#define ARV_UV_INTERFACE_DEVICE_SUBCLASS		0x02
+#define ARV_UV_INTERFACE_DEVICE_PROTOCOL		0x01
+#define ARV_UV_INTERFACE_INTERFACE_CLASS		0xef
+#define ARV_UV_INTERFACE_INTERFACE_SUBCLASS		0x05
+#define ARV_UV_INTERFACE_CONTROL_PROTOCOL		0x00
+#define ARV_UV_INTERFACE_EVENT_PROTOCOL			0x01
+#define ARV_UV_INTERFACE_DATA_PROTOCOL			0x02
+
 G_BEGIN_DECLS
 
 typedef struct _ArvUvInterfacePrivate ArvUvInterfacePrivate;
