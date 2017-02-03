@@ -59,6 +59,8 @@ struct _ArvUvDevicePrivate {
 	guint timeout_ms;
 	guint cmd_packet_size_max;
 	guint ack_packet_size_max;
+	guint control_interface;
+	guint data_interface;
         guint8 control_endpoint;
         guint8 data_endpoint;
 	gboolean disconnected;
@@ -602,10 +604,12 @@ _open_usb_device (ArvUvDevice *uv_device)
 							if (interdesc->bInterfaceProtocol == ARV_UV_INTERFACE_CONTROL_PROTOCOL) {
 								endpoint = interdesc->endpoint[0];
 								uv_device->priv->control_endpoint = endpoint.bEndpointAddress & 0x0f;
+								uv_device->priv->control_interface = interdesc->bInterfaceNumber;
 							}
 							if (interdesc->bInterfaceProtocol == ARV_UV_INTERFACE_DATA_PROTOCOL) {
 								endpoint = interdesc->endpoint[0];
 								uv_device->priv->data_endpoint = endpoint.bEndpointAddress & 0x0f;
+								uv_device->priv->data_interface = interdesc->bInterfaceNumber;
 							}
 						}
 					}
@@ -647,11 +651,14 @@ arv_uv_device_new (const char *vendor, const char *product, const char *serial_n
 
 	_open_usb_device (uv_device);
 
-	arv_debug_device("[UvDevice::new] Using control endpoint %d", uv_device->priv->control_endpoint);
-	arv_debug_device("[UvDevice::new] Using data endpoint %d", uv_device->priv->data_endpoint);
+	arv_debug_device("[UvDevice::new] Using control endpoint %d, interface %d",
+			 uv_device->priv->control_endpoint, uv_device->priv->control_interface);
+	arv_debug_device("[UvDevice::new] Using data endpoint %d, interface %d",
+			 uv_device->priv->data_endpoint, uv_device->priv->data_interface);
 
 	if (uv_device->priv->usb_device == NULL ||
-	    libusb_claim_interface (uv_device->priv->usb_device, 0) < 0) {
+	    libusb_claim_interface (uv_device->priv->usb_device, uv_device->priv->control_interface) < 0 ||
+	    libusb_claim_interface (uv_device->priv->usb_device, uv_device->priv->data_interface) < 0) {
 		arv_warning_device ("[UvDevice::new] Failed to claim USB interface to '%s - #%s'", product, serial_nbr);
 		g_object_unref (uv_device);
 		return NULL;
@@ -688,7 +695,8 @@ arv_uv_device_finalize (GObject *object)
 	g_clear_pointer (&uv_device->priv->product, g_free);
 	g_clear_pointer (&uv_device->priv->serial_nbr, g_free);
 	if (uv_device->priv->usb_device != NULL) {
-		libusb_release_interface (uv_device->priv->usb_device, 0);
+		libusb_release_interface (uv_device->priv->usb_device, uv_device->priv->control_interface);
+		libusb_release_interface (uv_device->priv->usb_device, uv_device->priv->data_interface);
 		libusb_close (uv_device->priv->usb_device);
 	}
 	libusb_exit (uv_device->priv->usb);
