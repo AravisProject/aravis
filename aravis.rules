@@ -1,0 +1,4 @@
+# Basler
+SUBSYSTEM=="usb", ATTRS{idVendor}=="2676", MODE:="0666", TAG+="uaccess", TAG+="udev-acl"
+# The Imaging Source
+SUBSYSTEM=="usb", ATTRS{idVendor}=="199e", MODE:="0666", TAG+="uaccess", TAG+="udev-acl"
