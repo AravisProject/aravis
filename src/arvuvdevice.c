@@ -647,8 +647,9 @@ arv_uv_device_new (const char *vendor, const char *product, const char *serial_n
 	arv_debug_device("[UvDevice::new] Using data endpoint %d", uv_device->priv->data_endpoint);
 
 	if (uv_device->priv->usb_device == NULL ||
-	    libusb_claim_interface (uv_device->priv->usb_device, 0) < 0) {
-		arv_warning_device ("[UvDevice::new] Failed to claim USB interface to '%s - #%s'", product, serial_nbr);
+	    libusb_claim_interface (uv_device->priv->usb_device, 0) < 0) ||
+	    libusb_claim_interface (uv_device->priv->usb_device, 1) < 0) {
+		arv_warning_device ("[UvDevice::new] Failed to claim USB interfaces to '%s - #%s'", product, serial_nbr);
 		g_object_unref (uv_device);
 		return NULL;
 	}
