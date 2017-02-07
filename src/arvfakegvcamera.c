@@ -359,7 +359,7 @@ handle_control_packet (ArvFakeGvCamera *gv_camera, GSocket *socket,
 			(time.tv_nsec - gv_camera->controller_time.tv_nsec) / 1000000;
 
 		if (elapsed_ms > arv_fake_camera_get_heartbeat_timeout (gv_camera->camera)) {
-			g_object_ref (gv_camera->controller_address);
+			g_object_unref (gv_camera->controller_address);
 			gv_camera->controller_address = NULL;
 			write_access = TRUE;
 			arv_warning_device ("[FakeGvCamera::handle_control_packet] Heartbeat timeout");
