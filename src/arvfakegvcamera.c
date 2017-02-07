@@ -446,7 +446,15 @@ handle_control_packet (ArvFakeGvCamera *gv_camera, GSocket *socket,
 	if (gv_camera->controller_address == NULL &&
 	    arv_fake_camera_get_control_channel_privilege (gv_camera->camera) != 0) {
 		g_object_ref (remote_address);
+		arv_debug_device("[FakeGvCamera::handle_control_packet] New controller");
 		gv_camera->controller_address = remote_address;
+		clock_gettime (CLOCK_MONOTONIC, &gv_camera->controller_time);
+	}
+	else if (gv_camera->controller_address != NULL &&
+	    arv_fake_camera_get_control_channel_privilege (gv_camera->camera) == 0) {
+		g_object_unref (gv_camera->controller_address);
+		gv_camera->controller_address = NULL;
+		arv_debug_device("[FakeGvCamera::handle_control_packet] Controller releases");
 		clock_gettime (CLOCK_MONOTONIC, &gv_camera->controller_time);
 	}
 }
