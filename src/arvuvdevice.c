@@ -98,7 +98,7 @@ arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, ArvUvEndpointType endpoint_
 
 	if (!success)
 		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_STATUS_TRANSFER_ERROR,
-			     "Error during USB bulk transfer: %s", libusb_error_name (result));
+			     "%s", libusb_error_name (result));
 
 	if (transferred_size != NULL)
 		*transferred_size = transferred;
@@ -150,6 +150,7 @@ _read_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buffe
 	read_packet = g_malloc (read_packet_size);
 
 	do {
+		GError *error = NULL;
 		size_t transferred;
 
 		uv_device->priv->packet_id = arv_uvcp_next_packet_id (uv_device->priv->packet_id);
@@ -159,7 +160,7 @@ _read_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buffe
 
 		success = TRUE;
 		success = success && arv_uv_device_bulk_transfer (uv_device, ARV_UV_ENDPOINT_CONTROL, LIBUSB_ENDPOINT_OUT,
-								  packet, packet_size, NULL, 0, NULL);
+								  packet, packet_size, NULL, 0, &error);
 		if (success) {
 			gboolean expected_answer;
 
@@ -167,7 +168,7 @@ _read_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buffe
 				success = TRUE;
 				success = success && arv_uv_device_bulk_transfer (uv_device, ARV_UV_ENDPOINT_CONTROL, LIBUSB_ENDPOINT_IN,
 										  read_packet, read_packet_size, &transferred,
-										  0, NULL);
+										  0, &error);
 
 				if (success) {
 					ArvUvcpPacketType packet_type;
@@ -187,8 +188,12 @@ _read_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buffe
 						expected_answer = packet_type == ARV_UVCP_PACKET_TYPE_ACK &&
 							command == ARV_UVCP_COMMAND_READ_MEMORY_ACK &&
 							packet_id == uv_device->priv->packet_id;
-				} else
+				} else {
 					expected_answer = FALSE;
+					if (error != NULL)
+						g_warning ("[UvDevice::read_memory] Ack reception error: %s", error->message);
+					g_clear_error (&error);
+				}
 
 			} while (success && !expected_answer);
 
@@ -198,6 +203,10 @@ _read_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buffe
 				memcpy (buffer, arv_uvcp_packet_get_read_memory_ack_data (read_packet), size);
 				arv_uvcp_packet_debug (read_packet, ARV_DEBUG_LEVEL_LOG);
 			}
+		} else {
+			if (error != NULL)
+				g_warning ("[UvDevice::read_memory] Command sending error: %s", error->message);
+			g_clear_error (&error);
 		}
 
 		n_tries++;
@@ -265,6 +274,7 @@ _write_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buff
 	read_packet = g_malloc (read_packet_size);
 
 	do {
+		GError *error = NULL;
 		size_t transferred;
 
 		uv_device->priv->packet_id = arv_uvcp_next_packet_id (uv_device->priv->packet_id);
@@ -274,7 +284,7 @@ _write_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buff
 
 		success = TRUE;
 		success = success && arv_uv_device_bulk_transfer (uv_device, ARV_UV_ENDPOINT_CONTROL, LIBUSB_ENDPOINT_OUT,
-								  packet, packet_size, NULL, 0, NULL);
+								  packet, packet_size, NULL, 0, &error);
 		if (success ) {
 			gboolean expected_answer;
 
@@ -282,7 +292,7 @@ _write_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buff
 				success = TRUE;
 				success = success && arv_uv_device_bulk_transfer (uv_device, ARV_UV_ENDPOINT_CONTROL, LIBUSB_ENDPOINT_IN,
 										  read_packet, read_packet_size, &transferred,
-										  timeout_ms, NULL);
+										  timeout_ms, &error);
 
 				if (success) {
 					ArvUvcpPacketType packet_type;
@@ -302,8 +312,12 @@ _write_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buff
 						expected_answer = packet_type == ARV_UVCP_PACKET_TYPE_ACK &&
 							command == ARV_UVCP_COMMAND_WRITE_MEMORY_ACK &&
 							packet_id == uv_device->priv->packet_id;
-				} else
+				} else {
 					expected_answer = FALSE;
+					if (error != NULL)
+						g_warning ("[UvDevice::write_memory] Ack reception error: %s", error->message);
+					g_clear_error (&error);
+				}
 
 			} while (success && !expected_answer);
 
@@ -311,6 +325,10 @@ _write_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buff
 
 			if (success)
 				arv_uvcp_packet_debug (read_packet, ARV_DEBUG_LEVEL_LOG);
+		} else {
+			if (error != NULL)
+				g_warning ("[UvDevice::write_memory] Command sending error: %s", error->message);
+			g_clear_error (&error);
 		}
 
 		n_tries++;
