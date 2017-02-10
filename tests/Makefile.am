@@ -9,7 +9,7 @@ test_progs_ldadd = 					\
 	$(ARAVIS_LIBS)
 
 noinst_PROGRAMS = 			\
-	arv-test			\
+	arv-device-test			\
 	arv-genicam-test		\
        	arv-evaluator-test		\
        	arv-zip-test			\
@@ -23,8 +23,8 @@ noinst_PROGRAMS = 			\
 	realtime-test			\
 	load-http-test
 
-arv_test_SOURCES = arvtest.c
-arv_test_LDADD = $(test_progs_ldadd)
+arv_device_test_SOURCES = arvdevicetest.c
+arv_device_test_LDADD = $(test_progs_ldadd)
 
 arv_genicam_test_SOURCES = arvgenicamtest.c
 arv_genicam_test_LDADD = $(test_progs_ldadd)
