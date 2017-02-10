@@ -1,3 +1,19 @@
+Release 0.5.7
+=============
+
+  * usb3vision: Ximea camera support (Steve)
+  * usb3vision: TheImagingSource camera support (emmanuel)
+  * usb3vision: Bandwith control (Steve)
+  * usb3vision: USB endpoint detection improvments (Steve, Emmanuel)
+  * fake_camera: miscellaneous fixes (Michael)
+  * genicam: raw data support (Steve)
+  * camera: multiframe acquisition mode (Lee)
+  * camera: extension of the trigger API (Steve)
+  * gigevision: instantiation by IP address or hostname (Blaz, Arkadius)
+  * build: fix compilation with old glib (Blaz)
+  * build: intructions and compilation fix for OSX (Christoffer, Fernando)
+  * build: Travis and Coverity support on github (Emmanuel)
+
 Release 0.5.6
 =============
 
