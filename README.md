@@ -62,6 +62,10 @@ Aravis can use packet sockets for the video receiving thread. But this mode requ
 sudo setcap cap_net_raw+ep arv-viewer
 ```
 
+### USB Permissions
+
+By default, USB devices permissions may not be sufficient to allow any user to access the USB3 cameras. This permissions can be changed by using an udev rule file. There is a file example in Aravis sources, aravis.rules. This file must be placed in /etc/udev/rules.d directory (The exact location may depend on the distribution you are using). This file only contains declarations for a couple of vendors. If you want to add an entry with the vendor of your camera, the output of `lsusb` command will give you the vendor id, which is the first 4 digits of the ID field.
+
 ### Dependencies
 
 The Aravis library depends on libxml2 and glib2, with an optional USB support depending on libusb1, and an optional packet socket support depending on libaudit.
