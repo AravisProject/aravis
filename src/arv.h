@@ -85,6 +85,7 @@
 #include <arvfakestream.h>
 #include <arvfakecamera.h>
 #include <arvrealtime.h>
+#include <arvxmlschema.h>
 
 #undef ARV_H_INSIDE
 

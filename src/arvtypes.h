@@ -96,6 +96,8 @@ typedef struct _ArvFakeCamera		ArvFakeCamera;
 typedef struct _ArvZip			ArvZip;
 typedef struct _ArvZipFile 		ArvZipFile;
 
+typedef struct _ArvXmlSchema 		ArvXmlSchema;
+
 G_END_DECLS
 
 #endif

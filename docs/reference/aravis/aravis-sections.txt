@@ -1750,3 +1750,23 @@ arv_guint32_from_unaligned_le_ptr
 <SUBSECTION Private>
 ArvZipFile
 </SECTION>
+
+<SECTION>
+<FILE>arvxmlschema</FILE>
+<TITLE>ArvXmlSchema</TITLE>
+arv_xml_schema_new_from_file
+arv_xml_schema_new_from_path
+arv_xml_schema_validate
+<SUBSECTION Standard>
+arv_xml_schema_get_type
+ArvXmlSchema
+ARV_IS_XML_SCHEMA
+ARV_IS_XML_SCHEMA_CLASS
+ARV_TYPE_XML_SCHEMA
+ARV_XML_SCHEMA
+ARV_XML_SCHEMA_CLASS
+ARV_XML_SCHEMA_GET_CLASS
+<SUBSECTION Private>
+ArvXmlSchemaError
+ArvXmlSchemaPrivate
+</SECTION>

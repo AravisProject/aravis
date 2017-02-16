@@ -121,6 +121,7 @@
 			<xi:include href="xml/arvstr.xml"/>
 			<xi:include href="xml/arvvalue.xml"/>
 			<xi:include href="xml/arvzip.xml"/>
+			<xi:include href="xml/arvxmlschema.xml"/>
 		</chapter>
 
 		<chapter>
