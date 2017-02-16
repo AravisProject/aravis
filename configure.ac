@@ -43,44 +43,49 @@ LT_INIT()
 
 AC_ARG_ENABLE(usb,
 	      [AS_HELP_STRING([--enable-usb],
-		              [build with USB support [default=auto]])],
-	      [enable_usb=$enableval],
-	      [enable_usb=auto])
+			      [build with USB support [default=auto]])],
+			      [enable_usb=$enableval],
+			      [enable_usb=auto])
 AC_ARG_ENABLE(packet_socket,
 	      [AS_HELP_STRING([--enable-packet-socket],
-		              [build with packet socket support [default=auto]])],
-	      [enable_packet_socket=$enableval],
-	      [enable_packet_socket=auto])
+			      [build with packet socket support [default=auto]])],
+			      [enable_packet_socket=$enableval],
+			      [enable_packet_socket=auto])
 AC_ARG_ENABLE(viewer,
 	      [AS_HELP_STRING([--enable-viewer],
-		              [build viewer [default=auto]])],
-	      [enable_viewer=$enableval],
-	      [enable_viewer=auto])
+			      [build viewer [default=auto]])],
+			      [enable_viewer=$enableval],
+			      [enable_viewer=auto])
 AC_ARG_ENABLE(gst_plugin,
 	      [AS_HELP_STRING([--enable-gst-plugin],
 			      [build gstreamer plugin [default=auto]])],
-	      [enable_gst_plugin=$enableval],
-	      [enable_gst_plugin=auto])
+			      [enable_gst_plugin=$enableval],
+			      [enable_gst_plugin=auto])
 AC_ARG_ENABLE(gst_0_10_plugin,
 	      [AS_HELP_STRING([--enable-gst-0.10-plugin],
 			      [build gstreamer-0.10 plugin [default=auto]])],
-	      [enable_gst_0_10_plugin=$enableval],
-	      [enable_gst_0_10_plugin=auto])
+			      [enable_gst_0_10_plugin=$enableval],
+			      [enable_gst_0_10_plugin=auto])
 AC_ARG_ENABLE(cpp_test,
 	      [AS_HELP_STRING([--enable-cpp-test],
-		              [build c++ test [default=no]])],
-	      [enable_cpp_test=$enableval],
-	      [enable_cpp_test=no])
+			      [build c++ test [default=no]])],
+			      [enable_cpp_test=$enableval],
+			      [enable_cpp_test=no])
 AC_ARG_ENABLE(zlib_pc,
 	      [AS_HELP_STRING([--enable-zlib-pc],
 			      [use pkg-config for zlib dependency [default=yes]])],
-	      [enable_zlib_pc=$enableval],
-	      [enable_zlib_pc=yes])
+			      [enable_zlib_pc=$enableval],
+			      [enable_zlib_pc=yes])
 AC_ARG_ENABLE(fast_heartbeat,
 	      [AS_HELP_STRING([--enable-fast-heartbeat],
-		              [build with extremely fast heartbeat [default=no]])],
-	      [enable_fast_heartbeat=$enableval],
-	      [enable_fast_heartbeat=no])
+			      [build with extremely fast heartbeat [default=no]])],
+			      [enable_fast_heartbeat=$enableval],
+			      [enable_fast_heartbeat=no])
+AC_ARG_ENABLE(asan,
+	      [AC_HELP_STRING([--enable-asan],
+			      [build with address sanitizer [default=no]])],
+			      [enable_asan=$enableval],
+			      [enable_asan=no])
 
 PKG_PROG_PKG_CONFIG([0.14])
 
@@ -238,6 +243,20 @@ AM_CONDITIONAL(ARAVIS_FAST_HEARTBEAT, test "x$build_fast_heartbeat" = "xyes")
 
 AM_CONDITIONAL(ARAVIS_BUILD_CPP_TEST, test "x$enable_cpp_test" = "xyes")
 
+# Address sanatizer
+# =================
+
+AC_MSG_CHECKING([for asan flags])
+if test "x$enable_asan" = "xyes"; then
+    CFLAGS="$CFLAGS -fsanitize=address -O1 -fno-omit-frame-pointer -g"
+    build_with_asan="yes"
+else
+    build_with_asan="no"
+fi
+AM_CONDITIONAL(ARAVIS_WITH_ASAN, test "x$enable_asan" = "xyes")
+AC_MSG_RESULT($build_with_asan)
+
+
 AC_PATH_PROG(GLIB_MKENUMS, glib-mkenums)
 
 m4_ifdef([GOBJECT_INTROSPECTION_CHECK], [
@@ -274,14 +293,15 @@ AC_OUTPUT
 echo ""
 echo "Configuration:"
 echo ""
-echo "  Compiler:                    ${CC}"
-echo "  Compiler flags:              ${ARAVIS_CFLAGS}"
-echo "  Linker flags:                ${ARAVIS_LIBS}"
+echo "  Compiler:                     ${CC}"
+echo "  Compiler flags:               ${ARAVIS_CFLAGS}"
+echo "  Linker flags:                 ${ARAVIS_LIBS}"
 echo ""
-echo "  Build USB support:           $build_usb"
-echo "  Build packet socket support: $build_packet_socket"
-echo "  Build viewer:                $build_viewer"
-echo "  Build gstreamer plugin:      $build_gst_plugin"
-echo "  Build gstreamer-0.10 plugin: $build_gst_0_10_plugin"
-echo "  Build with fast heartbeat:   $build_fast_heartbeat"
+echo "  Build USB support:            $build_usb"
+echo "  Build packet socket support:  $build_packet_socket"
+echo "  Build viewer:                 $build_viewer"
+echo "  Build gstreamer plugin:       $build_gst_plugin"
+echo "  Build gstreamer-0.10 plugin:  $build_gst_0_10_plugin"
+echo "  Build with fast heartbeat:    $build_fast_heartbeat"
+echo "  Build with address sanatizer: $build_with_asan"
 echo ""
