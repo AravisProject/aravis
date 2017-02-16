@@ -255,6 +255,9 @@ _discover (ArvUvInterface *uv_interface,  GArray *device_ids)
 			    g_free (ids->device);
 			    g_free (ids->physical);
 			    g_free (ids->address);
+			    g_free (ids->vendor);
+			    g_free (ids->model);
+			    g_free (ids->serial_nbr);
 			    g_free (ids);
 		    }
 		}

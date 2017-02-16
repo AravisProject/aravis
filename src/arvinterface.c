@@ -51,6 +51,7 @@ arv_interface_clear_device_ids (ArvInterface *interface)
 		g_free (g_array_index (interface->priv->device_ids, ArvInterfaceDeviceIds *, i)->vendor);
 		g_free (g_array_index (interface->priv->device_ids, ArvInterfaceDeviceIds *, i)->model);
 		g_free (g_array_index (interface->priv->device_ids, ArvInterfaceDeviceIds *, i)->serial_nbr);
+		g_free (g_array_index (interface->priv->device_ids, ArvInterfaceDeviceIds *, i));
 	}
 	g_array_set_size (interface->priv->device_ids, 0);
 }
