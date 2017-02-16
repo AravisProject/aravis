@@ -324,8 +324,13 @@ arv_gvcp_packet_get_packet_id (ArvGvcpPacket *packet)
 static inline void
 arv_gvcp_packet_get_read_memory_cmd_infos (const ArvGvcpPacket *packet, guint32 *address, guint32 *size)
 {
-	if (packet == NULL)
+	if (packet == NULL) {
+		if (address != NULL)
+			*address = 0;
+		if (size != NULL)
+			*size = 0;
 		return;
+	}
 	if (address != NULL)
 		*address = g_ntohl (*((guint32 *) ((char *) packet + sizeof (ArvGvcpPacket))));
 	if (size != NULL)
@@ -348,9 +353,13 @@ arv_gvcp_packet_get_read_memory_ack_data (const ArvGvcpPacket *packet)
 static inline void
 arv_gvcp_packet_get_write_memory_cmd_infos (const ArvGvcpPacket *packet, guint32 *address, guint32 *size)
 {
-	if (packet == NULL)
+	if (packet == NULL) {
+		if (address != NULL)
+			*address = 0;
+		if (size != NULL)
+			*size = 0;
 		return;
-
+	}
 	if (address != NULL)
 		*address = g_ntohl (*((guint32 *) ((char *) packet + sizeof (ArvGvcpPacket))));
 	if (size != NULL)
@@ -372,8 +381,11 @@ arv_gvcp_packet_get_write_memory_ack_size (void)
 static inline void
 arv_gvcp_packet_get_read_register_cmd_infos (const ArvGvcpPacket *packet, guint32 *address)
 {
-	if (packet == NULL)
+	if (packet == NULL) {
+		if (address != NULL)
+			*address = 0;
 		return;
+	}
 	if (address != NULL)
 		*address = g_ntohl (*((guint32 *) ((char *) packet + sizeof (ArvGvcpPacket))));
 }
@@ -389,8 +401,13 @@ arv_gvcp_packet_get_read_register_ack_value (const ArvGvcpPacket *packet)
 static inline void
 arv_gvcp_packet_get_write_register_cmd_infos (const ArvGvcpPacket *packet, guint32 *address, guint32 *value)
 {
-	if (packet == NULL)
+	if (packet == NULL) {
+		if (address != NULL)
+			*address = 0;
+		if (value != NULL)
+			*value = 0;
 		return;
+	}
 	if (address != NULL)
 		*address = g_ntohl (*((guint32 *) ((char *) packet + sizeof (ArvGvcpPacket))));
 	if (value != NULL)
