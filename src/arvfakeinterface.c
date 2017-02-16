@@ -47,9 +47,9 @@ arv_fake_interface_update_device_list (ArvInterface *interface, GArray *device_i
 {
 	ArvInterfaceDeviceIds *ids;
 
-	ids = g_new0 (ArvInterfaceDeviceIds, 1);
+	g_assert (device_ids->len == 0);
 
-	g_array_set_size (device_ids, 0);
+	ids = g_new0 (ArvInterfaceDeviceIds, 1);
 
 	ids->device = g_strdup (ARV_FAKE_DEVICE_ID);
 	ids->physical = g_strdup (ARV_FAKE_PHYSICAL_ID);

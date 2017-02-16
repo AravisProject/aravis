@@ -272,6 +272,8 @@ arv_uv_interface_update_device_list (ArvInterface *interface, GArray *device_ids
 {
 	ArvUvInterface *uv_interface = ARV_UV_INTERFACE (interface);
 
+	g_assert (device_ids->len == 0);
+
 	_discover (uv_interface, device_ids);
 }
 

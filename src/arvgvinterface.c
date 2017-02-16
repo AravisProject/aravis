@@ -379,11 +379,11 @@ arv_gv_interface_update_device_list (ArvInterface *interface, GArray *device_ids
 	GHashTableIter iter;
 	gpointer key, value;
 
+	g_assert (device_ids->len == 0);
+
 	gv_interface = ARV_GV_INTERFACE (interface);
 
 	arv_gv_interface_discover (gv_interface);
-
-	g_array_set_size (device_ids, 0);
 
 	g_hash_table_iter_init (&iter, gv_interface->priv->devices);
 	while (g_hash_table_iter_next (&iter, &key, &value)) {
