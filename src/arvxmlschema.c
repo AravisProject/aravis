@@ -32,6 +32,7 @@
 #include <libxml/xmlschemas.h>
 #include <gio/gio.h>
 #include <arvdebug.h>
+#include <arvmisc.h>
 
 static GObjectClass *parent_class = NULL;
 
