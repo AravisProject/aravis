@@ -709,18 +709,18 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_SGN:
 				if (arv_value_holds_double (&stack[index])) {
-					double value = arv_value_get_double (&stack[index]);
-					if (value < 0.0)
+					double dbl_value = arv_value_get_double (&stack[index]);
+					if (dbl_value < 0.0)
 						arv_value_set_int64 (&stack[index], -1);
-					else if (value > 0.0)
+					else if (dbl_value > 0.0)
 						arv_value_set_int64 (&stack[index], 1);
 					else
 						arv_value_set_int64 (&stack[index], 0);
 				} else {
-					gint64 value = arv_value_get_int64 (&stack[index]);
-					if (value < 0)
+					gint64 int_value = arv_value_get_int64 (&stack[index]);
+					if (int_value < 0)
 						arv_value_set_int64 (&stack[index], -1);
-					else if (value > 0)
+					else if (int_value > 0)
 						arv_value_set_int64 (&stack[index], 1);
 					else
 						arv_value_set_int64 (&stack[index], 0);
