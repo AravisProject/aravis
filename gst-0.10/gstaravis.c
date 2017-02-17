@@ -402,7 +402,7 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 		GST_BUFFER_MALLOCDATA (buffer) = data;
 		GST_BUFFER_SIZE (buffer) = size;
 	} else {
-		GST_BUFFER_DATA (*buffer) = buffer_data;
+		GST_BUFFER_DATA (*buffer) = (guint8 *) buffer_data;
 		GST_BUFFER_MALLOCDATA (*buffer) = NULL;
 		GST_BUFFER_SIZE (*buffer) = buffer_size;
 	}
