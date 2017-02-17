@@ -10,7 +10,7 @@ dnl Add @APPSTREAM_XML_RULES@ to a Makefile.am to substitute the make rules. Add
 dnl .appdata.xml files to appstream_XML in Makefile.am and they will be validated
 dnl at make check time, if appstream-util is installed, as well as installed
 dnl to the correct location automatically. Add --enable-appstream-util to
-dnl DISTCHECK_CONFIGURE_FLAGS in Makefile.am to require valid AppData XML when
+dnl AM_DISTCHECK_CONFIGURE_FLAGS in Makefile.am to require valid AppData XML when
 dnl doing a distcheck.
 dnl
 dnl Adding files to appstream_XML does not distribute them automatically.
