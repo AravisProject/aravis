@@ -2,6 +2,8 @@ EXTRA_DIST =
 
 include $(top_srcdir)/Makefile.decl
 
+@CODE_COVERAGE_RULES@
+
 AM_CPPFLAGS = \
 	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\" 	\
 	-DPACKAGE_SRC_DIR=\""$(srcdir)"\" 				\
@@ -11,7 +13,7 @@ AM_CPPFLAGS = \
 	-DG_LOG_DOMAIN=\"Aravis\"					\
 	-DARAVIS_COMPILATION
 
-AM_CFLAGS = -Wall
+AM_CFLAGS = -Wall $(CODE_COVERAGE_CFLAGS)
 
 lib_LTLIBRARIES = libaravis-@ARAVIS_API_VERSION@.la
 
@@ -21,7 +23,7 @@ EXTRA_DIST += arvenumtypes.h.template \
 	      arvenumtypes.c.template
 
 libaravis_@ARAVIS_API_VERSION@_la_LIBADD = 	\
-	$(ARAVIS_LIBS)
+	$(ARAVIS_LIBS) $(CODE_COVERAGE_LIBS)
 
 ARAVIS_SRCS =					\
 	arvenums.c				\

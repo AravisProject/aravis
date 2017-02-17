@@ -9,6 +9,8 @@ cov-int/
 *.typelib
 *.stamp
 *.bak
+*.gcno
+*.gcda
 *~
 Makefile
 Makefile.in

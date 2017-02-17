@@ -69,22 +69,27 @@ endif
 
 check_PROGRAMS = $(TESTS)
 
+@CODE_COVERAGE_RULES@
+
 evaluator_SOURCES = evaluator.c
-evaluator_LDADD = $(test_progs_ldadd)
+evaluator_CFLAGS = $(CODE_COVERAGE_CFLAGS)
+evaluator_LDADD = $(test_progs_ldadd) $(CODE_COVERAGE_LIBS)
 
 buffer_SOURCES = buffer.c
-buffer_LDADD = $(test_progs_ldadd)
+buffer_CFLAGS = $(CODE_COVERAGE_CFLAGS)
+buffer_LDADD = $(test_progs_ldadd) $(CODE_COVERAGE_LIBS)
 
 misc_SOURCES = misc.c
-misc_LDADD = $(test_progs_ldadd)
+misc_CFLAGS = $(CODE_COVERAGE_CFLAGS)
+misc_LDADD = $(test_progs_ldadd) $(CODE_COVERAGE_LIBS)
 
 fake_SOURCES = fake.c
-fake_CFLAGS = -DGENICAM_FILENAME="\"$(top_srcdir)/src/arv-fake-camera.xml\""
-fake_LDADD = $(test_progs_ldadd)
+fake_CFLAGS = -DGENICAM_FILENAME="\"$(top_srcdir)/src/arv-fake-camera.xml\"" $(CODE_COVERAGE_CFLAGS)
+fake_LDADD = $(test_progs_ldadd) $(CODE_COVERAGE_LIBS)
 
 genicam_SOURCES = genicam.c
-genicam_CFLAGS = -DGENICAM_FILENAME="\"$(top_srcdir)/tests/data/genicam.xml\""
-genicam_LDADD = $(test_progs_ldadd)
+genicam_CFLAGS = -DGENICAM_FILENAME="\"$(top_srcdir)/tests/data/genicam.xml\"" $(CODE_COVERAGE_CFLAGS)
+genicam_LDADD = $(test_progs_ldadd) $(CODE_COVERAGE_LIBS)
 
 cpp_SOURCES = cpp.cc
 cpp_LDADD = $(test_progs_ldadd)
@@ -92,4 +97,3 @@ cpp_LDADD = $(test_progs_ldadd)
 EXTRA_DIST = data/genicam.xml
 
 @VALGRIND_CHECK_RULES@
-

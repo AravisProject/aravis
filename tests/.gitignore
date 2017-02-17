@@ -19,3 +19,4 @@ realtime-test
 load-http-test
 *.log
 *.trs
+*-coverage*
