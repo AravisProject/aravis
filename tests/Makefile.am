@@ -62,12 +62,12 @@ realtime_test_LDADD = $(test_progs_ldadd)
 load_http_test_SOURCES = loadhttptest.c
 load_http_test_LDADD = $(test_progs_ldadd)
 
-TEST_PROGS += evaluator buffer misc fake genicam
+TESTS = evaluator buffer misc fake genicam
 if ARAVIS_BUILD_CPP_TEST
-TEST_PROGS += cpp
+TESTS += cpp
 endif
 
-noinst_PROGRAMS += $(TEST_PROGS)
+check_PROGRAMS = $(TESTS)
 
 evaluator_SOURCES = evaluator.c
 evaluator_LDADD = $(test_progs_ldadd)
@@ -90,3 +90,6 @@ cpp_SOURCES = cpp.cc
 cpp_LDADD = $(test_progs_ldadd)
 
 EXTRA_DIST = data/genicam.xml
+
+@VALGRIND_CHECK_RULES@
+

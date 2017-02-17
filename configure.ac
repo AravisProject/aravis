@@ -41,6 +41,8 @@ IT_PROG_INTLTOOL([0.31.2])
 
 LT_INIT()
 
+AX_VALGRIND_CHECK()
+
 AC_ARG_ENABLE(usb,
 	      [AS_HELP_STRING([--enable-usb],
 			      [build with USB support [default=auto]])],
