@@ -25,6 +25,7 @@
 #include <arvgvcp.h>
 #include <arvgvsp.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <net/if.h>
 #include <ifaddrs.h>
@@ -335,7 +336,7 @@ arv_fake_gv_camera_free (ArvFakeGvCamera *gv_camera)
 	g_free (gv_camera);
 }
 
-void
+gboolean
 handle_control_packet (ArvFakeGvCamera *gv_camera, GSocket *socket,
 		       GSocketAddress *remote_address,
 		       ArvGvcpPacket *packet, size_t size)
@@ -345,9 +346,11 @@ handle_control_packet (ArvFakeGvCamera *gv_camera, GSocket *socket,
 	guint32 block_address;
 	guint32 block_size;
 	guint16 packet_id;
+	guint16 packet_type;
 	guint32 register_address;
 	guint32 register_value;
 	gboolean write_access;
+	gboolean success = FALSE;
 
 	if (gv_camera->controller_address != NULL) {
 		struct timespec time;
@@ -375,6 +378,12 @@ handle_control_packet (ArvFakeGvCamera *gv_camera, GSocket *socket,
 	arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
 	packet_id = arv_gvcp_packet_get_packet_id (packet);
+	packet_type = arv_gvcp_packet_get_packet_type (packet);
+
+	if (packet_type != ARV_GVCP_PACKET_TYPE_CMD) {
+		arv_warning_device ("[FakeGvCamera::handle_control_packet] Unknown packet type");
+		return FALSE;
+	}
 
 	switch (g_ntohs (packet->header.command)) {
 		case ARV_GVCP_COMMAND_DISCOVERY_CMD:
@@ -441,6 +450,8 @@ handle_control_packet (ArvFakeGvCamera *gv_camera, GSocket *socket,
 		g_socket_send_to (socket, remote_address, (char *) ack_packet, ack_packet_size, NULL, NULL);
 		arv_gvcp_packet_debug (ack_packet, ARV_DEBUG_LEVEL_LOG);
 		g_free (ack_packet);
+
+		success = TRUE;
 	}
 
 	if (gv_camera->controller_address == NULL &&
@@ -457,6 +468,8 @@ handle_control_packet (ArvFakeGvCamera *gv_camera, GSocket *socket,
 		arv_debug_device("[FakeGvCamera::handle_control_packet] Controller releases");
 		clock_gettime (CLOCK_MONOTONIC, &gv_camera->controller_time);
 	}
+
+	return success;
 }
 
 static char *arv_option_interface_name = "lo";
@@ -518,25 +531,28 @@ main (int argc, char **argv)
 
 	do {
 		n_events = g_poll (gv_camera->gvcp_fds, 2, 1000);
-		g_print ("n_events = %d\n", n_events);
 		if (n_events > 0) {
 			GSocketAddress *remote_address;
 			int count;
 
 			count = g_socket_receive_message (gv_camera->gvcp_socket,
 							  &remote_address, &input_vector, 1, NULL, NULL,
-							  G_SOCKET_MSG_NONE, NULL, NULL);
-			if (count > 0)
-				handle_control_packet (gv_camera, gv_camera->gvcp_socket,
-						       remote_address, input_vector.buffer, count);
+							  NULL, NULL, NULL);
+			if (count > 0) {
+				if (handle_control_packet (gv_camera, gv_camera->gvcp_socket,
+							   remote_address, input_vector.buffer, count))
+					printf ("Control packet received\n");
+			}
 
 			if (gv_camera->discovery_socket != NULL) {
 				count = g_socket_receive_message (gv_camera->discovery_socket,
 								  &remote_address, &input_vector, 1, NULL, NULL,
-								  G_SOCKET_MSG_NONE, NULL, NULL);
-				if (count > 0)
-					handle_control_packet (gv_camera, gv_camera->discovery_socket,
-							       remote_address, input_vector.buffer, count);
+								  NULL, NULL, NULL);
+				if (count > 0) {
+					if (handle_control_packet (gv_camera, gv_camera->discovery_socket,
+							       remote_address, input_vector.buffer, count))
+						printf ("Control packet received on discovery socket\n");
+				}
 			}
 		}
 	} while (!cancel);
