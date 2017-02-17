@@ -17,3 +17,5 @@ arv-example
 time-test
 realtime-test
 load-http-test
+*.log
+*.trs

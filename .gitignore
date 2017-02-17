@@ -42,6 +42,7 @@ messages.mo
 aravis-*.tar.bz2
 aravis-*.tar.gz
 aravis-*.tar.xz
+test-driver
 INSTALL
 compile
 aravis-*/
