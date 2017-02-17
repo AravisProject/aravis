@@ -60,6 +60,8 @@ static const ExpressionTestData expression_test_data[] = {
 	{"/evaluator/right-shift",			"16>>4",		1,	1.0},
 	{"/evaluator/cos",				"COS(PI)",		-1,	-1.0},
 	{"/evaluator/sin",				"SIN(-PI/2)",		-1,	-1.0},
+	{"/evaluator/abs",				"ABS(-1)",			1,		1.0},
+	{"/evaluator/abs64bits",			"ABS(-10000000000)",		10000000000,	1e10},
 
 	{"/evaluator/bugs/681048-remaining-op",		"(0 & 1)=0?((0 & 1)+2):1",	2,	2.0},
 	{"/evaluator/bugs/743025-division-by-zero",	"(4/(20/10000))",		2000,	2000.0}

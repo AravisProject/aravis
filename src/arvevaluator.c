@@ -746,7 +746,7 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 							      fabs (arv_value_get_double (&stack[index-1])));
 				else
 					arv_value_set_int64 (&stack[index],
-							     abs (arv_value_get_int64 (&stack[index])));
+							     labs (arv_value_get_int64 (&stack[index])));
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_EXP:
 				arv_value_set_double (&stack[index], exp (arv_value_get_double (&stack[index])));
