@@ -1,5 +1,6 @@
 #include <glib.h>
 #include <arv.h>
+#include <math.h>
 
 typedef struct {
 	const char *test_name;
@@ -19,6 +20,7 @@ static const ExpressionTestData expression_test_data[] = {
 	{"/evaluator/lower-true",			"1<2",			1,	1.0},
 	{"/evaluator/lower-false",			"2<2",			0,	0.0},
 	{"/evaluator/substraction",			"10-8",			2,	2.0},
+	{"/evaluator/substraction-float",		"10.1-8.1",		2,	2.0},
 	{"/evaluator/multiplication",			"2.5*4",	       	10,	10.0},
 	{"/evaluator/division",				"10/4",			2,	2.5},
 	{"/evaluator/division-float",			"10.0/4",		2,	2.5},
@@ -26,6 +28,26 @@ static const ExpressionTestData expression_test_data[] = {
 	{"/evaluator/remainder",			"10%3",			1,	1.0},
 	{"/evaluator/power",				"2**10",		1024,	1024.0},
 	{"/evaluator/power-precedence",			"2**10*2",		2048,	2048.0},
+	{"/evaluator/ln",				"LN(E)",		1,	1.0},
+	{"/evaluator/lg",				"LG(10)",		1,	1.0},
+	{"/evaluator/sqrt",				"SQRT(16)",		4,	4.0},
+	{"/evaluator/tan",				"TAN(0)",		0,	0.0},
+	{"/evaluator/atan",				"ATAN(0)",		0,	0.0},
+	{"/evaluator/exp",				"EXP(1)",		2,	M_E},
+	{"/evaluator/trunc-plus",			"TRUNC(10.7)",		10,	10.0},
+	{"/evaluator/trunc-minus",			"TRUNC(-11.9)",		-11,	-11.0},
+	{"/evaluator/floor-plus",			"FLOOR(10.7)",		10,	10.0},
+	{"/evaluator/floor-minus",			"FLOOR(-11.9)",		-12,	-12.0},
+	{"/evaluator/ceil-plus",			"CEIL(10.7)",		11,	11.0},
+	{"/evaluator/ceil-minus",			"CEIL(-11.9)",		-11,	-11.0},
+	{"/evaluator/sign-plus",			"SGN(2)",		1,	1.0},
+	{"/evaluator/sign-minus",			"SGN(-2)",		-1,	-1.0},
+	{"/evaluator/sign-zero",			"SGN(0)",		0,	0.0},
+	{"/evaluator/sign-plus-float",			"SGN(2.0)",		1,	1.0},
+	{"/evaluator/sign-minus-floa",			"SGN(-2.0)",		-1,	-1.0},
+	{"/evaluator/sign-zero-float",			"SGN(0.0)",		0,	0.0},
+	{"/evaluator/neg",				"NEG(-1)",		1,	1.0},
+	{"/evaluator/neg-float",			"NEG(-2.5)",		2,	2.5},
 	{"/evaluator/and",				"255 & 8",		8,	8.0},
 	{"/evaluator/or",				"128 | 8",		136,	136.0},
 	{"/evaluator/xor",				"3 ^ 1",		2,	2.0},
@@ -52,15 +74,18 @@ static const ExpressionTestData expression_test_data[] = {
 	{"/evaluator/greater-or-equal-false-double",	"2>=2.1",		0,	0.0},
 	{"/evaluator/less-or-equal-true-double",	"2<=2.1",		1,	1.0},
 	{"/evaluator/less-or-equal-false-double",	"2.1<=2",		0,	0.0},
-	{"/evaluator/logical-and-true",			"(2=2)&(1=1)",		1,	1.0},
-	{"/evaluator/logical-and-false",		"(2=2)&(1=2)",		0,	0.0},
-	{"/evaluator/logical-or-true",			"(2=2)|(1=2)",		1,	1.0},
-	{"/evaluator/logical-or-false",			"(1=2)|(0=2)",		0,	0.0},
+	{"/evaluator/logical-and-true",			"(2=2)&&(1=1)",		1,	1.0},
+	{"/evaluator/logical-and-false",		"(2=2)&&(1=2)",		0,	0.0},
+	{"/evaluator/logical-or-true",			"(2=2)||(1=2)",		1,	1.0},
+	{"/evaluator/logical-or-false",			"(1=2)||(0=2)",		0,	0.0},
 	{"/evaluator/left-shift",			"1<<4",			16,	16.0},
 	{"/evaluator/right-shift",			"16>>4",		1,	1.0},
 	{"/evaluator/cos",				"COS(PI)",		-1,	-1.0},
 	{"/evaluator/sin",				"SIN(-PI/2)",		-1,	-1.0},
-	{"/evaluator/abs",				"ABS(-1)",			1,		1.0},
+	{"/evaluator/acos",				"ACOS(1)",		0,	0.0},
+	{"/evaluator/asin",				"ASIN(0)",		0,	0.0},
+	{"/evaluator/abs",				"ABS(-1)",		1,	1.0},
+	{"/evaluator/abs-float",			"ABS(-10.3)",		10,	10.3},
 	{"/evaluator/abs64bits",			"ABS(-10000000000)",		10000000000,	1e10},
 
 	{"/evaluator/bugs/681048-remaining-op",		"(0 & 1)=0?((0 & 1)+2):1",	2,	2.0},
@@ -199,6 +224,7 @@ constant_test (void)
 	const char *constant;
 
 	evaluator = arv_evaluator_new ("ZERO5 + TEN * X");
+
 	arv_evaluator_set_constant (evaluator, "ZERO5", "0.5");
 	arv_evaluator_set_constant (evaluator, "TEN", "10");
 	arv_evaluator_set_int64_variable (evaluator, "X", 6);
@@ -250,6 +276,37 @@ empty_test (void)
 	g_object_unref (evaluator);
 }
 
+static void
+error_test (void)
+{
+	ArvEvaluator *evaluator;
+	GError *error = NULL;
+
+	evaluator = arv_evaluator_new ("(");
+
+	arv_evaluator_evaluate_as_double (evaluator, &error);
+	g_assert (error != NULL);
+	g_clear_error (&error);
+
+	arv_evaluator_evaluate_as_int64 (evaluator, &error);
+	g_assert (error != NULL);
+	g_clear_error (&error);
+
+	g_object_unref (evaluator);
+
+	evaluator = arv_evaluator_new ("UNKNOWN(");
+
+	arv_evaluator_evaluate_as_double (evaluator, &error);
+	g_assert (error != NULL);
+	g_clear_error (&error);
+
+	arv_evaluator_evaluate_as_int64 (evaluator, &error);
+	g_assert (error != NULL);
+	g_clear_error (&error);
+
+	g_object_unref (evaluator);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -271,6 +328,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/evaluator/sub-expression", sub_expression_test);
 	g_test_add_func ("/evaluator/constant", constant_test);
 	g_test_add_func ("/evaluator/empty", empty_test);
+	g_test_add_func ("/evaluator/error", error_test);
 
 	result = g_test_run();
 
