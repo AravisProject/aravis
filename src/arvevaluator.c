@@ -247,7 +247,7 @@ arv_evaluator_token_free (ArvEvaluatorToken *token)
 	g_free (token);
 }
 
-void
+static void
 arv_evaluator_token_debug (ArvEvaluatorToken *token, GHashTable *variables)
 {
 	ArvValue *value;
@@ -315,7 +315,7 @@ arv_evaluator_token_is_right_parenthesis (ArvEvaluatorToken *token)
 		token->token_id == ARV_EVALUATOR_TOKEN_RIGHT_PARENTHESIS);
 }
 
-gboolean
+static gboolean
 arv_evaluator_token_compare_precedence (ArvEvaluatorToken *a, ArvEvaluatorToken *b)
 {
 	gint a_precedence;
@@ -337,7 +337,7 @@ arv_evaluator_token_compare_precedence (ArvEvaluatorToken *a, ArvEvaluatorToken 
 		 a_associativity == ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_RIGHT_TO_LEFT));
 }
 
-ArvEvaluatorToken *
+static ArvEvaluatorToken *
 arv_get_next_token (char **expression, ArvEvaluatorToken *previous_token)
 {
 	ArvEvaluatorToken *token = NULL;
@@ -504,7 +504,7 @@ arv_get_next_token (char **expression, ArvEvaluatorToken *previous_token)
 	return token;
 }
 
-ArvEvaluatorStatus
+static ArvEvaluatorStatus
 evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v_double)
 {
 	ArvEvaluatorToken *token;

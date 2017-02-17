@@ -25,6 +25,7 @@
 #include <arvdomimplementation.h>
 #include <arvdomnode.h>
 #include <arvdomelement.h>
+#include <arvdomparser.h>
 #include <arvstr.h>
 #include <libxml/parser.h>
 #include <gio/gio.h>
@@ -47,7 +48,7 @@ typedef struct {
 	GHashTable *entities;
 } ArvDomSaxParserState;
 
-void
+static void
 _free_entity (void *data)
 {
 	xmlEntity *entity = data;
