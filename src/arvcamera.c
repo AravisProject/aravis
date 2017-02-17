@@ -2083,7 +2083,7 @@ arv_camera_set_chunks (ArvCamera *camera, const char *chunk_list)
 	char **chunks;
 	char *striped_chunk_list;
 	gboolean enable_chunk_data = FALSE;
-	int i;
+	guint i;
 	guint n_values;
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));

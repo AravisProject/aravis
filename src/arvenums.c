@@ -25,7 +25,7 @@
 static unsigned int
 _from_string (const char *string, const char **strings, unsigned int n_strings)
 {
-	int i;
+	unsigned int i;
 
 	if (string == NULL)
 		return 0;
