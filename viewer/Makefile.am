@@ -18,9 +18,7 @@ bin_PROGRAMS = arv-viewer
 
 arv_viewer_SOURCES =			\
 	main.c				\
-	arvviewer.c
-
-arv_viewer_HEADERS = 			\
+	arvviewer.c			\
 	arvviewertypes.h		\
 	arvviewer.h
 
