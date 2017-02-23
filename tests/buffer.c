@@ -40,6 +40,7 @@ preallocated_buffer_test (void)
 	g_assert (arv_buffer_get_user_data (buffer) == NULL);
 
 	g_object_unref (buffer);
+	g_free (data);
 }
 
 static void
