@@ -338,7 +338,7 @@ arv_evaluator_token_compare_precedence (ArvEvaluatorToken *a, ArvEvaluatorToken 
 }
 
 static ArvEvaluatorToken *
-arv_get_next_token (char **expression, ArvEvaluatorToken *previous_token)
+arv_get_next_token (char **expression, gboolean previous_token_was_operand, gboolean previous_token_was_right_parenthesis)
 {
 	ArvEvaluatorToken *token = NULL;
 	ArvEvaluatorTokenId token_id = ARV_EVALUATOR_TOKEN_UNKNOWN;
@@ -435,16 +435,14 @@ arv_get_next_token (char **expression, ArvEvaluatorToken *previous_token)
 			case ',': token_id = ARV_EVALUATOR_TOKEN_COMMA; break;
 			case '?': token_id = ARV_EVALUATOR_TOKEN_TERNARY_QUESTION_MARK; break;
 			case ':': token_id = ARV_EVALUATOR_TOKEN_TERNARY_COLON; break;
-			case '+': if (previous_token != NULL &&
-				      (arv_evaluator_token_is_operand (previous_token) ||
-				       arv_evaluator_token_is_right_parenthesis (previous_token)))
+			case '+': if (previous_token_was_operand ||
+				      previous_token_was_right_parenthesis)
 					  token_id = ARV_EVALUATOR_TOKEN_ADDITION;
 				  else
 					  token_id = ARV_EVALUATOR_TOKEN_PLUS;
 				  break;
-			case '-': if (previous_token != NULL &&
-				      (arv_evaluator_token_is_operand (previous_token) ||
-				       arv_evaluator_token_is_right_parenthesis (previous_token)))
+			case '-': if (previous_token_was_operand ||
+				      previous_token_was_right_parenthesis)
 					  token_id = ARV_EVALUATOR_TOKEN_SUBSTRACTION;
 				  else
 					  token_id = ARV_EVALUATOR_TOKEN_MINUS;
@@ -841,11 +839,12 @@ CLEANUP:
 
 typedef struct {
 	int count;
-	ArvEvaluatorToken *previous_token;
 	GSList *token_stack;
 	GSList *operator_stack;
 	GSList *garbage_stack;
 	gboolean in_sub_expression;
+	gboolean previous_token_was_operand;
+	gboolean previous_token_was_right_parenthesis;
 } ArvEvaluatorParserState;
 
 static ArvEvaluatorStatus
@@ -853,6 +852,7 @@ parse_to_stacks (ArvEvaluator *evaluator, char *expression, ArvEvaluatorParserSt
 {
 	ArvEvaluatorToken *token;
 	ArvEvaluatorStatus status;
+	gboolean token_found;
 
 	if (expression == NULL)
 		return ARV_EVALUATOR_STATUS_EMPTY_EXPRESSION;
@@ -861,8 +861,13 @@ parse_to_stacks (ArvEvaluator *evaluator, char *expression, ArvEvaluatorParserSt
 	/* http://en.wikipedia.org/wiki/Shunting-yard_algorithm */
 
 	do {
-		token = arv_get_next_token (&expression, state->previous_token);
+		token = arv_get_next_token (&expression, state->previous_token_was_operand, state->previous_token_was_right_parenthesis);
 		if (token != NULL) {
+			token_found = TRUE;
+
+			state->previous_token_was_operand = arv_evaluator_token_is_operand (token);
+			state->previous_token_was_right_parenthesis = arv_evaluator_token_is_right_parenthesis (token);
+
 			if (arv_evaluator_token_is_variable (token)) {
 				if (g_hash_table_lookup_extended (evaluator->priv->constants, token->data.name, NULL, NULL)) {
 					const char *constant;
@@ -871,7 +876,7 @@ parse_to_stacks (ArvEvaluator *evaluator, char *expression, ArvEvaluatorParserSt
 
 					if (constant != NULL) {
 						arv_evaluator_token_free (token);
-						token = arv_get_next_token ((char **) &constant, NULL);
+						token = arv_get_next_token ((char **) &constant, FALSE, FALSE);
 						if (token != NULL)
 							state->token_stack = g_slist_prepend (state->token_stack, token);
 					} else {
@@ -902,6 +907,7 @@ parse_to_stacks (ArvEvaluator *evaluator, char *expression, ArvEvaluatorParserSt
 						}
 
 						arv_evaluator_token_free (token);
+						token = NULL;
 					} else {
 						status = ARV_EVALUATOR_STATUS_UNKNOWN_SUB_EXPRESSION;
 						goto CLEANUP;
@@ -953,9 +959,10 @@ parse_to_stacks (ArvEvaluator *evaluator, char *expression, ArvEvaluatorParserSt
 		} else if (*expression != '\0') {
 			status = ARV_EVALUATOR_STATUS_SYNTAX_ERROR;
 			goto CLEANUP;
+		} else {
+			token_found = FALSE;
 		}
-		state->previous_token = token;
-	} while (token != NULL);
+	} while (token_found);
 
 	return ARV_EVALUATOR_STATUS_SUCCESS;
 
@@ -986,7 +993,8 @@ parse_expression (ArvEvaluator *evaluator)
 	int count;
 
 	state.count  =0;
-	state.previous_token = NULL;
+	state.previous_token_was_operand = FALSE;
+	state.previous_token_was_right_parenthesis = FALSE;
 	state.token_stack = NULL;
 	state.operator_stack = NULL;
 	state.garbage_stack = NULL;
