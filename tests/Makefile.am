@@ -67,6 +67,10 @@ if ARAVIS_BUILD_CPP_TEST
 TESTS += cpp
 endif
 
+@VALGRIND_CHECK_RULES@
+VALGRIND_SUPPRESSIONS_FILES = aravis.supp
+EXTRA_DIST = aravis.supp
+
 check_PROGRAMS = $(TESTS)
 
 @CODE_COVERAGE_RULES@
@@ -94,6 +98,4 @@ genicam_LDADD = $(test_progs_ldadd) $(CODE_COVERAGE_LIBS)
 cpp_SOURCES = cpp.cc
 cpp_LDADD = $(test_progs_ldadd)
 
-EXTRA_DIST = data/genicam.xml
-
-@VALGRIND_CHECK_RULES@
+EXTRA_DIST += data/genicam.xml

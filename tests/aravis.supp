@@ -1,0 +1,70 @@
+#
+# glib
+#
+
+{
+	glib initialisation
+		Memcheck:Leak
+		fun:calloc
+		fun:g_malloc0
+		...
+		fun:_dl_init
+}
+
+{
+	g_type_register_fundamental_realloc
+		Memcheck:Leak
+		fun:malloc
+		fun:realloc
+		fun:g_realloc
+		...
+		fun:g_type_register_fundamental
+		...
+		fun:_dl_init
+}
+
+{
+	g_type_register_static
+		Memcheck:Leak
+		fun:realloc
+		fun:g_realloc
+		...
+		fun:g_type_register_static
+		...
+		fun:_dl_init
+}
+
+{
+	g_type_register_static_app_malloc
+		Memcheck:Leak
+		fun:malloc
+		fun:realloc
+		fun:g_realloc
+		...
+		fun:g_type_register_static
+		fun:g_type_register_static_simple
+		...
+		fun:main
+}
+
+{
+	g_type_register_static_app
+		Memcheck:Leak
+		fun:realloc
+		fun:g_realloc
+		...
+		fun:g_type_register_static
+		fun:g_type_register_static_simple
+}
+
+{
+	g_param_spec_object
+		Memcheck:Leak
+		fun:calloc
+		fun:g_malloc0
+		fun:g_type_class_ref
+		fun:g_type_class_ref
+		fun:g_type_create_instance
+		fun:g_param_spec_internal
+		fun:g_param_spec_object
+}
