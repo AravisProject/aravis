@@ -25,6 +25,7 @@ static const ExpressionTestData expression_test_data[] = {
 	{"/evaluator/division",				"10/4",			2,	2.5},
 	{"/evaluator/division-float",			"10.0/4",		2,	2.5},
 	{"/evaluator/minus",				"4*-3",			-12,	-12.0},
+	{"/evaluator/plus",				"4*+3",			12,	12.0},
 	{"/evaluator/remainder",			"10%3",			1,	1.0},
 	{"/evaluator/power",				"2**10",		1024,	1024.0},
 	{"/evaluator/power-precedence",			"2**10*2",		2048,	2048.0},
