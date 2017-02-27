@@ -404,6 +404,7 @@ _thread (void *user_data)
 		g_object_unref (image_buffer);
 
 	g_free (packet_buffer);
+	g_free (input_vector.buffer);
 
 	return NULL;
 }
