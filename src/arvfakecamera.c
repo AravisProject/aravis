@@ -73,20 +73,25 @@ arv_fake_camera_read_memory (ArvFakeCamera *camera, guint32 address, guint32 siz
 	g_return_val_if_fail (buffer != NULL, FALSE);
 	g_return_val_if_fail (size > 0, FALSE);
 
-	/* TODO Handle read accross register space and genicam data */
-
 	if (address < ARV_FAKE_CAMERA_MEMORY_SIZE) {
-		g_return_val_if_fail (address + size < ARV_FAKE_CAMERA_MEMORY_SIZE, FALSE);
+		read_size = MIN (address  + size, ARV_FAKE_CAMERA_MEMORY_SIZE) - address;
 
-		memcpy (buffer, ((char *) camera->priv->memory) + address, size);
+		memcpy (buffer, ((char *) camera->priv->memory) + address, read_size);
 
-		return TRUE;
+		if (read_size == size)
+			return TRUE;
+
+		size = size - read_size;
+		address = ARV_FAKE_CAMERA_MEMORY_SIZE;
+		buffer = buffer + read_size;
 	}
 
 	address -= ARV_FAKE_CAMERA_MEMORY_SIZE;
 	read_size = MIN (address + size, camera->priv->genicam_xml_size) - address;
 
 	memcpy (buffer, ((char *) camera->priv->genicam_xml) + address, read_size);
+	if (read_size < size)
+		memset (buffer + read_size, 0, size - read_size);
 
 	return TRUE;
 }
