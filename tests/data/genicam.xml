@@ -23,8 +23,8 @@
     <pFeature>RWInteger</pFeature>
     <pFeature>Enumeration</pFeature>
     <pFeature>ChunkInt</pFeature>
-    <pFeature>ChunkFloat</pFeature>
     <pFeature>ChunkString</pFeature>
+    <pFeature>ChunkFloat</pFeature>
   </Category>
 
   <Float Name="RWFloat">
@@ -220,6 +220,20 @@
 
   <Port Name="IntPort">
     <ChunkID>12345678</ChunkID>
+  </Port>
+
+  <FloatReg Name="ChunkFloat">
+    <Address>0x00</Address>
+    <Length>8</Length>
+    <AccessMode>R</AccessMode>
+    <pPort>FloatPort</pPort>
+    <Cachable>NoCache</Cachable>
+    <Sign>Unsigned</Sign>
+    <Endianess>BigEndian</Endianess>
+  </FloatReg>
+
+  <Port Name="FloatPort">
+    <ChunkID>12345679</ChunkID>
   </Port>
 
   <StringReg Name="ChunkString">
