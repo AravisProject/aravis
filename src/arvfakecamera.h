@@ -117,6 +117,7 @@ gboolean	arv_fake_camera_write_register 	(ArvFakeCamera *camera, guint32 address
 
 size_t 		arv_fake_camera_get_payload 		(ArvFakeCamera *camera);
 void 		arv_fake_camera_wait_for_next_frame 	(ArvFakeCamera *camera);
+guint64 	arv_fake_camera_get_sleep_time_for_next_frame 	(ArvFakeCamera *camera, guint64 *next_timestamp_us);
 void		arv_fake_camera_fill_buffer		(ArvFakeCamera *camera, ArvBuffer *buffer,
 							 guint32 *packet_size);
 

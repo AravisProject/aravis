@@ -78,6 +78,7 @@ ARAVIS_SRCS =					\
 	arvfakedevice.c				\
 	arvfakestream.c				\
 	arvfakecamera.c				\
+	arvgvfakecamera.c			\
 	arvrealtime.c				\
 	arvxmlschema.c
 
@@ -142,6 +143,7 @@ ARAVIS_HDRS = 					\
 	arvfakedevice.h				\
 	arvfakestream.h				\
 	arvfakecamera.h				\
+	arvgvfakecamera.h			\
 	arvrealtime.h				\
 	arvxmlschema.h
 

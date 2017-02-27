@@ -79,6 +79,7 @@
 			<xi:include href="xml/arvgvinterface.xml"/>
 			<xi:include href="xml/arvgvdevice.xml"/>
 			<xi:include href="xml/arvgvstream.xml"/>
+			<xi:include href="xml/arvgvfakecamera.xml"/>
 			<xi:include href="xml/arvgvcp.xml"/>
 			<xi:include href="xml/arvgvsp.xml"/>
 		</chapter>

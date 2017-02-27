@@ -847,6 +847,26 @@ arv_gv_device_get_url_regex
 </SECTION>
 
 <SECTION>
+<FILE>arvgvfakecamera</FILE>
+<TITLE>ArvGvFakeCamera</TITLE>
+arv_gv_fake_camera_new
+arv_gv_fake_camera_start
+arv_gv_fake_camera_stop
+<SUBSECTION Standard>
+ArvGvFakeCamera
+ArvGvFakeCameraClass
+ArvGvFakeCameraPrivate
+arv_gv_fake_camera_get_type
+ARV_GV_FAKE_CAMERA
+ARV_GV_FAKE_CAMERA_CLASS
+ARV_GV_FAKE_CAMERA_GET_CLASS
+ARV_IS_GV_FAKE_CAMERA
+ARV_IS_GV_FAKE_CAMERA_CLASS
+ARV_TYPE_GV_FAKE_CAMERA
+<SUBSECTION Private>
+</SECTION>
+
+<SECTION>
 <FILE>arvgcenumentry</FILE>
 <TITLE>ArvGcEnumEntry</TITLE>
 ArvGcEnumEntry
@@ -969,6 +989,7 @@ arv_fake_camera_write_memory
 arv_fake_camera_read_register
 arv_fake_camera_write_register
 arv_fake_camera_wait_for_next_frame
+arv_fake_camera_get_sleep_time_for_next_frame
 arv_fake_camera_fill_buffer
 arv_fake_camera_set_inet_address
 arv_fake_camera_get_acquisition_status

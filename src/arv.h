@@ -84,6 +84,7 @@
 #include <arvfakedevice.h>
 #include <arvfakestream.h>
 #include <arvfakecamera.h>
+#include <arvgvfakecamera.h>
 #include <arvrealtime.h>
 #include <arvxmlschema.h>
 

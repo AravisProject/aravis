@@ -157,34 +157,40 @@ arv_fake_camera_get_payload (ArvFakeCamera *camera)
 	return width * height;
 }
 
+guint64
+arv_fake_camera_get_sleep_time_for_next_frame (ArvFakeCamera *camera, guint64 *next_timestamp_us)
+{
+	guint64 time_us;
+	guint64 sleep_time_us;
+	guint64 frame_period_time_us;
+
+	g_return_val_if_fail (ARV_IS_FAKE_CAMERA (camera), 0);
+
+	if (_get_register (camera, ARV_FAKE_CAMERA_REGISTER_TRIGGER_MODE) == 1)
+		frame_period_time_us = 1000000L / camera->priv->trigger_frequency;
+	else
+		frame_period_time_us = (guint64) _get_register (camera, ARV_FAKE_CAMERA_REGISTER_ACQUISITION_FRAME_PERIOD_US);
+
+	if (frame_period_time_us == 0) {
+		arv_warning_misc ("Invalid zero frame period, defaulting to 1 second");
+		frame_period_time_us = 1000000L;
+	}
+
+	time_us = g_get_real_time ();
+	sleep_time_us = frame_period_time_us - (time_us % frame_period_time_us);
+
+	if (next_timestamp_us != NULL)
+		*next_timestamp_us = time_us + sleep_time_us;
+
+	return sleep_time_us;
+}
+
 void
 arv_fake_camera_wait_for_next_frame (ArvFakeCamera *camera)
 {
-	struct timespec time;
-	struct timespec sleep_time;
-	guint64 sleep_time_ns;
-	guint64 frame_period_time_ns;
+	g_return_if_fail (ARV_IS_FAKE_CAMERA (camera));
 
-	if (_get_register (camera, ARV_FAKE_CAMERA_REGISTER_TRIGGER_MODE) == 1)
-		frame_period_time_ns = 1000000000L / camera->priv->trigger_frequency;
-	else
-		frame_period_time_ns = (guint64) _get_register (camera,
-								ARV_FAKE_CAMERA_REGISTER_ACQUISITION_FRAME_PERIOD_US) *
-			1000L;
-
-	if (frame_period_time_ns == 0) {
-		arv_warning_misc ("Invalid zero frame period, defaulting to 1 second");
-		frame_period_time_ns = 1000000000L;
-	}
-
-	clock_gettime (CLOCK_MONOTONIC, &time);
-	sleep_time_ns = frame_period_time_ns - (((guint64) time.tv_sec * 1000000000L +
-						 (guint64) time.tv_nsec) % frame_period_time_ns);
-
-	sleep_time.tv_sec = sleep_time_ns / 1000000000L;
-	sleep_time.tv_nsec = sleep_time_ns % 1000000000L;
-
-	nanosleep (&sleep_time, NULL);
+	g_usleep (arv_fake_camera_get_sleep_time_for_next_frame (camera, NULL));
 }
 
 static void
