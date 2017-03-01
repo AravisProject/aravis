@@ -85,6 +85,81 @@ arv_str_strip_test (void)
 	g_assert (arv_str_strip (NULL, NULL, REPLACEMENT_CHARACTER) == NULL);
 }
 
+struct {
+	char *uri;
+	gboolean is_valid;
+} uris[] = {
+	{"http://www.gnome/org",			TRUE},
+	{"file:///file.txtx",				TRUE},
+	{"",						FALSE}
+};
+
+static void
+arv_str_uri_test (void)
+{
+	char *uri;
+	unsigned i;
+	gboolean success;
+
+	for (i = 0; i < G_N_ELEMENTS (uris); i++) {
+		success = arv_str_is_uri (uris[i].uri);
+
+		g_assert (success == uris[i].is_valid);
+	}
+
+	uri = arv_str_to_uri ("http://www.gnome.org/test");
+	g_assert_cmpstr (uri, ==, "http://www.gnome.org/test");
+	g_free (uri);
+
+	uri = arv_str_to_uri ("/test.txt");
+	g_assert_cmpstr (uri, ==, "file:///test.txt");
+	g_free (uri);
+
+	uri = arv_str_to_uri ("test.txt");
+	g_assert (g_str_has_suffix (uri, "test.txt"));
+	g_assert (g_str_has_prefix (uri, "file:///"));
+	g_free (uri);
+}
+
+static void
+arv_str_parse_double_test (void)
+{
+	gboolean success;
+	char *test1 = "-10.0";
+	char *test2 = "+10.0";
+	char *test3 = "11.0a";
+	double value;
+
+	success = arv_str_parse_double (&test1, &value);
+	g_assert (success);
+	g_assert_cmpfloat (value, ==, -10.0);
+	g_assert_cmpint (test1[0], ==, '\0');
+
+	success = arv_str_parse_double (&test2, &value);
+	g_assert (success);
+	g_assert_cmpfloat (value, ==, 10.0);
+	g_assert_cmpint (test2[0], ==, '\0');
+
+	success = arv_str_parse_double (&test3, &value);
+	g_assert (success);
+	g_assert_cmpfloat (value, ==, 11.0);
+	g_assert_cmpint (test3[0], ==, 'a');
+}
+
+static void
+arv_str_parse_double_list_test (void)
+{
+	char *test1 = " -10.0 +20.0   ";
+	double value[2];
+	unsigned n_values;
+
+	n_values = arv_str_parse_double_list (&test1, 2, value);
+	g_assert_cmpint (n_values, ==, 2);
+	g_assert_cmpfloat (value[0], ==, -10.0);
+	g_assert_cmpfloat (value[1], ==, 20.0);
+	g_assert_cmpint (test1[0], ==, '\0');
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -96,6 +171,9 @@ main (int argc, char *argv[])
 
 	g_test_add_func ("/buffer/unaligned-from-le", unaligned_from_le_ptr_test);
 	g_test_add_func ("/str/arv-str-strip", arv_str_strip_test);
+	g_test_add_func ("/str/arv-str-uri", arv_str_uri_test);
+	g_test_add_func ("/str/arv-str-parse-double", arv_str_parse_double_test);
+	g_test_add_func ("/str/arv-str-parse-double-list", arv_str_parse_double_list_test);
 
 	result = g_test_run();
 
@@ -103,5 +181,4 @@ main (int argc, char *argv[])
 
 	return result;
 }
-
 
