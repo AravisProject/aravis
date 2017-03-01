@@ -58,13 +58,20 @@
 }
 
 {
-	g_param_spec_object
+	g_enum_register_static_app
+		Memcheck:Leak
+		fun:realloc
+		fun:g_realloc
+		...
+		fun:g_type_register_static
+		fun:g_enum_register_static
+}
+
+{
+	g_type_class_ref
 		Memcheck:Leak
 		fun:calloc
 		fun:g_malloc0
 		fun:g_type_class_ref
 		fun:g_type_class_ref
-		fun:g_type_create_instance
-		fun:g_param_spec_internal
-		fun:g_param_spec_object
 }
