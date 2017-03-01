@@ -265,6 +265,7 @@ arv_gv_interface_device_infos_unref (ArvGvInterfaceDeviceInfos *infos)
 		g_free (infos->user_name);
 		g_free (infos->manufacturer);
 		g_free (infos->serial_number);
+		g_free (infos->model);
 		g_free (infos->mac_string);
 		g_free (infos);
 	}
