@@ -38,6 +38,7 @@
 
 		<chapter>
 			<title>Base</title>
+			<xi:include href="xml/arv.xml"/>
 			<xi:include href="xml/arvcamera.xml"/>
 			<xi:include href="xml/arvinterface.xml"/>
 			<xi:include href="xml/arvdevice.xml"/>

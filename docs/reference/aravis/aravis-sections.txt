@@ -201,49 +201,97 @@ ArvBufferPrivate
 </SECTION>
 
 <SECTION>
-<FILE>arvinterface</FILE>
-<TITLE>ArvInterface</TITLE>
-ArvInterface
+<FILE>arv</FILE>
+<TITLE>Arv</TITLE>
+arv_update_device_list
+arv_get_n_devices
 arv_get_device_id
-arv_get_interface_id
+arv_get_device_physical_id
 arv_get_device_model
 arv_get_device_serial_nbr
 arv_get_device_vendor
 arv_get_device_address
+arv_open_device
+arv_get_n_interfaces
+arv_get_interface_id
 arv_disable_interface
 arv_enable_interface
-arv_get_n_devices
-arv_get_n_interfaces
-arv_update_device_list
-arv_open_device
 arv_shutdown
-arv_interface_update_device_list
-arv_interface_get_device_id
-arv_interface_get_device_physical_id
+</SECTION>
+
+<SECTION>
+<FILE>arvinterface</FILE>
+<TITLE>ArvInterface</TITLE>
 arv_interface_get_device_address
+arv_interface_get_device_id
 arv_interface_get_device_model
+arv_interface_get_device_physical_id
 arv_interface_get_device_serial_nbr
 arv_interface_get_device_vendor
 arv_interface_get_n_devices
 arv_interface_open_device
+arv_interface_update_device_list
 <SUBSECTION Standard>
 ARV_INTERFACE
+ARV_INTERFACE_CLASS
+ARV_INTERFACE_GET_CLASS
 ARV_IS_INTERFACE
+ARV_IS_INTERFACE_CLASS
 ARV_TYPE_INTERFACE
 arv_interface_get_type
-ARV_INTERFACE_CLASS
-ARV_IS_INTERFACE_CLASS
-ARV_INTERFACE_GET_CLASS
 <SUBSECTION Private>
 ArvInterfaceDeviceIds
-ArvInterfaceClass
 ArvInterfacePrivate
+</SECTION>
+
+<SECTION>
+<FILE>arvdevice</FILE>
+<TITLE>ArvDevice</TITLE>
+ArvDevice
+ArvDeviceStatus
+arv_device_create_stream
+arv_device_create_chunk_parser
+arv_device_read_memory
+arv_device_write_memory
+arv_device_read_register
+arv_device_write_register
+arv_device_get_genicam_xml
+arv_device_get_genicam
+arv_device_get_feature
+arv_device_get_status
+arv_device_execute_command
+arv_device_get_boolean_feature_value
+arv_device_set_boolean_feature_value
+arv_device_set_string_feature_value
+arv_device_get_string_feature_value
+arv_device_set_integer_feature_value
+arv_device_get_integer_feature_value
+arv_device_get_integer_feature_bounds
+arv_device_set_float_feature_value
+arv_device_get_float_feature_value
+arv_device_get_float_feature_bounds
+arv_device_get_available_enumeration_feature_values
+arv_device_get_available_enumeration_feature_values_as_strings
+<SUBSECTION Standard>
+ARV_DEVICE
+ARV_IS_DEVICE
+ARV_TYPE_DEVICE
+arv_device_get_type
+ARV_DEVICE_CLASS
+ARV_IS_DEVICE_CLASS
+ARV_DEVICE_GET_CLASS
+<SUBSECTION Private>
+ArvDeviceClass
+ArvDevicePrivate
+ARV_DEVICE_NAME_ILLEGAL_CHARACTERS
+ARV_DEVICE_NAME_REPLACEMENT_CHARACTER
 </SECTION>
 
 <SECTION>
 <FILE>arvfakeinterface</FILE>
 <TITLE>ArvFakeInterface</TITLE>
 ArvFakeInterface
+arv_fake_interface_get_instance
 <SUBSECTION Standard>
 ARV_FAKE_INTERFACE
 ARV_IS_FAKE_INTERFACE
@@ -255,7 +303,6 @@ ARV_FAKE_INTERFACE_GET_CLASS
 <SUBSECTION Private>
 ArvFakeInterfacePrivate
 ArvFakeInterfaceClass
-arv_fake_interface_get_instance
 arv_fake_interface_destroy_instance
 ARV_FAKE_INTERFACE_DISCOVERY_TIMEOUT_MS
 ARV_FAKE_INTERFACE_SOCKET_BUFFER_SIZE
@@ -264,8 +311,9 @@ ARV_FAKE_INTERFACE_SOCKET_BUFFER_SIZE
 <SECTION>
 <FILE>arvuvinterface</FILE>
 <TITLE>ArvUvInterface</TITLE>
-<SUBSECTION Standard>
 ArvUvInterface
+arv_uv_interface_get_instance
+<SUBSECTION Standard>
 ARV_IS_UV_INTERFACE
 ARV_IS_UV_INTERFACE_CLASS
 ARV_TYPE_UV_INTERFACE
@@ -277,7 +325,6 @@ ArvUvInterfacePrivate
 arv_uv_interface_get_type
 <SUBSECTION Private>
 arv_uv_interface_destroy_instance
-arv_uv_interface_get_instance
 </SECTION>
 
 <SECTION>
@@ -336,49 +383,6 @@ ARV_GC_PORT_GET_CLASS
 <SUBSECTION Private>
 ArvGcPortPrivate
 ArvGcPortClass
-</SECTION>
-
-<SECTION>
-<FILE>arvdevice</FILE>
-<TITLE>ArvDevice</TITLE>
-ArvDevice
-ArvDeviceStatus
-arv_device_create_stream
-arv_device_create_chunk_parser
-arv_device_read_memory
-arv_device_write_memory
-arv_device_read_register
-arv_device_write_register
-arv_device_get_genicam_xml
-arv_device_get_genicam
-arv_device_get_feature
-arv_device_get_status
-arv_device_execute_command
-arv_device_get_boolean_feature_value
-arv_device_set_boolean_feature_value
-arv_device_set_string_feature_value
-arv_device_get_string_feature_value
-arv_device_set_integer_feature_value
-arv_device_get_integer_feature_value
-arv_device_get_integer_feature_bounds
-arv_device_set_float_feature_value
-arv_device_get_float_feature_value
-arv_device_get_float_feature_bounds
-arv_device_get_available_enumeration_feature_values
-arv_device_get_available_enumeration_feature_values_as_strings
-<SUBSECTION Standard>
-ARV_DEVICE
-ARV_IS_DEVICE
-ARV_TYPE_DEVICE
-arv_device_get_type
-ARV_DEVICE_CLASS
-ARV_IS_DEVICE_CLASS
-ARV_DEVICE_GET_CLASS
-<SUBSECTION Private>
-ArvDeviceClass
-ArvDevicePrivate
-ARV_DEVICE_NAME_ILLEGAL_CHARACTERS
-ARV_DEVICE_NAME_REPLACEMENT_CHARACTER
 </SECTION>
 
 <SECTION>
@@ -795,6 +799,7 @@ arv_gc_set_double_to_value
 <FILE>arvgvinterface</FILE>
 <TITLE>ArvGvInterface</TITLE>
 ArvGvInterface
+arv_gv_interface_get_instance
 <SUBSECTION Standard>
 ARV_GV_INTERFACE
 ARV_IS_GV_INTERFACE
@@ -806,7 +811,6 @@ ARV_GV_INTERFACE_GET_CLASS
 <SUBSECTION Private>
 ARV_GV_INTERFACE_DISCOVERY_TIMEOUT_MS
 ARV_GV_INTERFACE_SOCKET_BUFFER_SIZE
-arv_gv_interface_get_instance
 arv_gv_interface_destroy_instance
 ArvGvInterfacePrivate
 ArvGvInterfaceClass

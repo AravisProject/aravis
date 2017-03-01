@@ -31,6 +31,14 @@
 #include <arvdebug.h>
 #include <string.h>
 
+/**
+ * SECTION: arv
+ * @short_description: Device discovery and instantiation
+ *
+ * This module contans a set of APIs that allows to list and enable/disable the available interfaces,
+ * and list and instantiate devices.
+ */
+
 typedef struct {
 	const char *interface_id;
 	gboolean is_available;
@@ -59,11 +67,30 @@ ArvInterfaceInfos interfaces[] = {
 	}
 };
 
+/**
+ * arv_get_n_interfaces:
+ *
+ * Gets the number of available interfaces, including the disabled ones.
+ *
+ * Returns: The number of available interfaces.
+ */
+
 unsigned int
 arv_get_n_interfaces (void)
 {
 	return G_N_ELEMENTS (interfaces);
 }
+
+
+/**
+ * arv_get_interface_id:
+ * @index: interface index
+ *
+ * Retrieves the interface identifier. Possible values are 'Fake', 'USB3Vision'
+ * and 'GigEVision'.
+ *
+ * Returns: The interfae identifier string.
+ */
 
 const char *
 arv_get_interface_id (unsigned int index)
@@ -78,7 +105,7 @@ arv_get_interface_id (unsigned int index)
  * arv_enable_interface:
  * @interface_id: name of the interface
  *
- * Enable an interface by name. By default, all interfaces are enabled, except "Fake".
+ * Enable an interface by name. By default, all interfaces are enabled, except 'Fake'.
  */
 
 void
@@ -101,7 +128,7 @@ arv_enable_interface (const char *interface_id)
  * arv_disable_interface:
  * @interface_id: name of the interface
  *
- * Disable an interface by name. By default, all interfaces are enabled, except "Fake".
+ * Disable an interface by name. By default, all interfaces are enabled, except 'Fake'.
  */
 
 void
@@ -120,6 +147,12 @@ arv_disable_interface (const char *interface_id)
 	g_warning ("[Arv::enable_interface] Unknown interface '%s'", interface_id);
 }
 
+/**
+ * arv_update_device_list:
+ *
+ * Updates the list of currently online devices.
+ **/
+
 void
 arv_update_device_list (void)
 {
@@ -134,6 +167,15 @@ arv_update_device_list (void)
 		}
 	}
 }
+
+/**
+ * arv_get_n_devices:
+ *
+ * Retrieves the number of currently online devices. This value is valid until
+ * the next call to arv_update_device_list().
+ *
+ * Returns: The number of currently online devices.
+ **/
 
 unsigned int
 arv_get_n_devices (void)
@@ -177,11 +219,59 @@ arv_get_info (unsigned int index, const char *get_info (ArvInterface *, guint))
 	return NULL;
 }
 
+/**
+ * arv_get_device_id:
+ * @index: device index
+ *
+ * Queries the unique device id corresponding to index.  Prior to this
+ * call the arv_update_device_list() function must be called.
+ *
+ * Returns: a unique device id
+ *
+ * Since: 0.2.0
+ */
+
 const char *
 arv_get_device_id (unsigned int index)
 {
 	return arv_get_info (index, arv_interface_get_device_id);
 }
+
+/**
+ * arv_get_device_physical_id:
+ * @index: device index
+ *
+ * Queries the physical device id corresponding to index such
+ * as the MAC address for Ethernet based devices, bus id for PCI,
+ * USB or Firewire based devices.
+ *
+ * Prior to this call the arv_update_device_list()
+ * function must be called.
+ *
+ * Returns: a physical device id
+ *
+ * Since: 0.2.0
+ */
+
+const char *
+arv_get_device_physical_id (unsigned int index)
+{
+	return arv_get_info (index, arv_interface_get_device_physical_id);
+}
+
+/**
+ * arv_get_device_vendor:
+ * @index: device index
+ *
+ * Queries the device vendor.
+ *
+ * Prior to this call the arv_update_device_list()
+ * function must be called.
+ *
+ * Returns: (transfer none): the device vendor, NULL on error
+ *
+ * Since: 0.6.0
+ */
 
 const char *
 arv_get_device_vendor	(unsigned int index)
@@ -189,11 +279,39 @@ arv_get_device_vendor	(unsigned int index)
 	return arv_get_info (index, arv_interface_get_device_vendor);
 }
 
+/**
+ * arv_get_device_model:
+ * @index: device index
+ *
+ * Queries the device model.
+ *
+ * Prior to this call the arv_update_device_list()
+ * function must be called.
+ *
+ * Returns: (transfer none): the device model, NULL on error
+ *
+ * Since: 0.6.0
+ */
+
 const char *
 arv_get_device_model (unsigned int index)
 {
 	return arv_get_info (index, arv_interface_get_device_model);
 }
+
+/**
+ * arv_get_device_serial_nbr:
+ * @index: device index
+ *
+ * Queries the device serial.
+ *
+ * Prior to this call the arv_update_device_list()
+ * function must be called.
+ *
+ * Returns: (transfer none): the device serial, NULL on error
+ *
+ * Since: 0.6.0
+ */
 
 const char *
 arv_get_device_serial_nbr (unsigned int index)
@@ -222,9 +340,12 @@ arv_get_device_address (unsigned int index)
  * arv_open_device:
  * @device_id: (allow-none): a device identifier string
  *
- * Open a device corresponding to the given identifier. A null string makes this function return the first available device.
+ * Open a device corresponding to the given identifier. A %NULL string makes
+ * this function return the first available device.
  *
- * Return value: (transfer full): a new #ArvDevice instance
+ * Return value: (transfer full): A new #ArvDevice instance.
+ *
+ * Since: 0.2.0
  */
 
 ArvDevice *
@@ -246,6 +367,14 @@ arv_open_device (const char *device_id)
 
 	return NULL;
 }
+
+/**
+ * arv_shutdown:
+ *
+ * Frees a number of ressources allocated by Aravis that would be otherwise
+ * reported as memory leak by tools like Valgrind. The call to this function is
+ * optional if you don't intend to check for memmory leaks.
+ */
 
 void
 arv_shutdown (void)
