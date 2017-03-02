@@ -919,6 +919,8 @@ start_video (ArvViewer *viewer)
 		gst_element_link_many (viewer->transform, videosink, NULL);
 	}
 
+	g_object_set(G_OBJECT (videosink), "sync", FALSE, NULL);
+
 	caps = gst_caps_from_string (caps_string);
 	gst_caps_set_simple (caps,
 			     "width", G_TYPE_INT, width,
