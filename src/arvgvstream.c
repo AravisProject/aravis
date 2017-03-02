@@ -134,6 +134,10 @@ struct _ArvGvStreamThreadData {
 
 	gboolean use_packet_socket;
 
+    ArvGvspPacket *packet;
+	GPollFD poll_fd;
+    gboolean thread_enabled;
+
 	/* Statistics */
 
 	guint n_completed_buffers;
@@ -685,46 +689,41 @@ static void
 _loop (ArvGvStreamThreadData *thread_data)
 {
 	ArvGvStreamFrameData *frame;
-	ArvGvspPacket *packet;
-	GPollFD poll_fd;
 	GTimeVal current_time;
 	guint64 time_us;
 	size_t read_count;
 	int timeout_ms;
 	int n_events;
 
-	arv_debug_stream ("[GvStream::loop] Standard socket method");
-
-	poll_fd.fd = g_socket_get_fd (thread_data->socket);
-	poll_fd.events =  G_IO_IN;
-	poll_fd.revents = 0;
-
-	packet = g_malloc0 (ARV_GV_STREAM_INCOMING_BUFFER_SIZE);
-
 	do {
-		if (thread_data->frames != NULL)
+        if(!thread_data->thread_enabled)
+            timeout_ms = 0;
+		else if (thread_data->frames != NULL)
 			timeout_ms = thread_data->packet_timeout_us / 1000;
 		else
 			timeout_ms = ARV_GV_STREAM_POLL_TIMEOUT_US / 1000;
 
-		n_events = g_poll (&poll_fd, 1, timeout_ms);
+		n_events = g_poll (&thread_data->poll_fd, 1, timeout_ms);
 
 		g_get_current_time (&current_time);
 		time_us = current_time.tv_sec * 1000000 + current_time.tv_usec;
 
 		if (n_events > 0) {
-			read_count = g_socket_receive (thread_data->socket, (char *) packet,
+			read_count = g_socket_receive (thread_data->socket, (char *) thread_data->packet,
 						       ARV_GV_STREAM_INCOMING_BUFFER_SIZE, NULL, NULL);
 
-			frame = _process_packet (thread_data, packet, read_count, time_us);
+			frame = _process_packet (thread_data, thread_data->packet, read_count, time_us);
 		} else
 			frame = NULL;
 
 		_check_frame_completion (thread_data, time_us, frame);
+
+        if(n_events <= 0 && !thread_data->thread_enabled) {
+		    // Scheduling stops when threading is disabled and there are
+            // no more packets to be processed
+            break;
+        }
 	} while (!thread_data->cancel);
-
-	g_free (packet);
-
 }
 
 
@@ -938,12 +937,15 @@ arv_gv_stream_thread (void *data)
 		_ring_buffer_loop (thread_data);
 	else
 #endif
+    {
+        arv_debug_stream ("[GvStream::loop] Standard socket method");
+        thread_data->poll_fd.fd = g_socket_get_fd (thread_data->socket);
+        thread_data->poll_fd.events =  G_IO_IN;
+        thread_data->poll_fd.revents = 0;
+        thread_data->packet = g_malloc0 (ARV_GV_STREAM_INCOMING_BUFFER_SIZE);
+    
 		_loop (thread_data);
-
-	_flush_frames (thread_data);
-
-	if (thread_data->callback != NULL)
-		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_EXIT, NULL);
+    }
 
 	return NULL;
 }
@@ -1017,8 +1019,11 @@ arv_gv_stream_new (ArvGvDevice *gv_device,
 	thread_data->frame_retention_us = ARV_GV_STREAM_FRAME_RETENTION_US_DEFAULT;
 	thread_data->timestamp_tick_frequency = timestamp_tick_frequency;
 	thread_data->data_size = packet_size - ARV_GVSP_PACKET_PROTOCOL_OVERHEAD;
-	thread_data->use_packet_socket = (options & ARV_GV_STREAM_OPTION_PACKET_SOCKET_DISABLED) == 0;
+	thread_data->use_packet_socket = ((options & ARV_GV_STREAM_OPTION_PACKET_SOCKET_DISABLED) == 0 &&
+        (options & ARV_GV_STREAM_OPTION_THREADING_DISABLED) == 0);
+    thread_data->thread_enabled = ((options & ARV_GV_STREAM_OPTION_THREADING_DISABLED) == 0);
 	thread_data->cancel = FALSE;
+    thread_data->packet = NULL;
 
 	thread_data->packet_id = 65300;
 	thread_data->last_frame_id = 0;
@@ -1072,9 +1077,31 @@ arv_gv_stream_new (ArvGvDevice *gv_device,
 	arv_debug_stream ("[GvStream::stream_new] Destination stream port = %d", thread_data->stream_port);
 	arv_debug_stream ("[GvStream::stream_new] Source stream port = %d", thread_data->source_stream_port);
 
-	gv_stream->priv->thread = arv_g_thread_new ("arv_gv_stream", arv_gv_stream_thread, gv_stream->priv->thread_data);
+    if(thread_data->thread_enabled) {
+        gv_stream->priv->thread = arv_g_thread_new ("arv_gv_stream", arv_gv_stream_thread, gv_stream->priv->thread_data);
+    } else {
+        gv_stream->priv->thread = NULL;
+        arv_gv_stream_thread(gv_stream->priv->thread_data);
+    }
 
 	return ARV_STREAM (gv_stream);
+}
+
+/**
+ * arv_gv_stream_schedule_thread: (skip)
+ * @gv_device: a #ArvGvDevice
+ *
+ * Manually schedules the image acquisition for the given stream. This method
+ * should be called regularly if threading has been disabled for this stream
+ * by setting the ARV_GV_STREAM_OPTION_THREADING_DISABLED stream option.
+ */
+void
+arv_gv_stream_schedule_thread	(ArvGvStream *gv_stream) {
+    g_return_if_fail (ARV_IS_GV_STREAM (gv_stream));
+
+    if(!gv_stream->priv->thread_data->thread_enabled) {
+        _loop(gv_stream->priv->thread_data);
+    }
 }
 
 /* ArvStream implementation */
@@ -1186,14 +1213,27 @@ arv_gv_stream_finalize (GObject *object)
 {
 	ArvGvStream *gv_stream = ARV_GV_STREAM (object);
 
-	if (gv_stream->priv->thread != NULL) {
+	if (gv_stream->priv->thread_data != NULL) {
 		ArvGvStreamThreadData *thread_data;
 		char *statistic_string;
 
 		thread_data = gv_stream->priv->thread_data;
 
 		thread_data->cancel = TRUE;
-		g_thread_join (gv_stream->priv->thread);
+        if(gv_stream->priv->thread != NULL) {
+            g_thread_join (gv_stream->priv->thread);
+        }
+
+        // Perform clean-up if the thread has ended
+        _flush_frames (thread_data);
+
+        if (thread_data->callback != NULL)
+            thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_EXIT, NULL);
+
+        if(thread_data->packet != NULL) {
+            g_free(thread_data->packet);
+            thread_data->packet = NULL;
+        }
 
 		statistic_string = arv_statistic_to_string (thread_data->statistic);
 		arv_debug_stream (statistic_string);

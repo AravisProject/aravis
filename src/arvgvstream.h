@@ -35,11 +35,13 @@ G_BEGIN_DECLS
  * ArvGvStreamOption:
  * @ARV_GV_STREAM_OPTION_NONE: no option specified
  * @ARV_GV_STREAM_OPTION_PACKET_SOCKET_DISABLED: use of packet socket is disabled
+ * @ARV_GV_STREAM_OPTION_THREADING_DISABLED: use of acquisition thread is disabled
  */
 
 typedef enum {
 	ARV_GV_STREAM_OPTION_NONE = 0,
-	ARV_GV_STREAM_OPTION_PACKET_SOCKET_DISABLED
+	ARV_GV_STREAM_OPTION_PACKET_SOCKET_DISABLED = 1,
+	ARV_GV_STREAM_OPTION_THREADING_DISABLED = 2
 } ArvGvStreamOption;
 
 /**
@@ -77,6 +79,8 @@ guint16 	arv_gv_stream_get_port 			(ArvGvStream *gv_stream);
 void		arv_gv_stream_get_statistics		(ArvGvStream *gv_stream,
 							 guint64 *n_resent_packets,
 							 guint64 *n_missing_packets);
+
+void		arv_gv_stream_schedule_thread	(ArvGvStream *gv_stream);
 
 G_END_DECLS
 
