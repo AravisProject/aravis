@@ -73,20 +73,25 @@ arv_fake_camera_read_memory (ArvFakeCamera *camera, guint32 address, guint32 siz
 	g_return_val_if_fail (buffer != NULL, FALSE);
 	g_return_val_if_fail (size > 0, FALSE);
 
-	/* TODO Handle read accross register space and genicam data */
-
 	if (address < ARV_FAKE_CAMERA_MEMORY_SIZE) {
-		g_return_val_if_fail (address + size < ARV_FAKE_CAMERA_MEMORY_SIZE, FALSE);
+		read_size = MIN (address  + size, ARV_FAKE_CAMERA_MEMORY_SIZE) - address;
 
-		memcpy (buffer, ((char *) camera->priv->memory) + address, size);
+		memcpy (buffer, ((char *) camera->priv->memory) + address, read_size);
 
-		return TRUE;
+		if (read_size == size)
+			return TRUE;
+
+		size = size - read_size;
+		address = ARV_FAKE_CAMERA_MEMORY_SIZE;
+		buffer = buffer + read_size;
 	}
 
 	address -= ARV_FAKE_CAMERA_MEMORY_SIZE;
 	read_size = MIN (address + size, camera->priv->genicam_xml_size) - address;
 
 	memcpy (buffer, ((char *) camera->priv->genicam_xml) + address, read_size);
+	if (read_size < size)
+		memset (buffer + read_size, 0, size - read_size);
 
 	return TRUE;
 }
@@ -157,34 +162,40 @@ arv_fake_camera_get_payload (ArvFakeCamera *camera)
 	return width * height;
 }
 
+guint64
+arv_fake_camera_get_sleep_time_for_next_frame (ArvFakeCamera *camera, guint64 *next_timestamp_us)
+{
+	guint64 time_us;
+	guint64 sleep_time_us;
+	guint64 frame_period_time_us;
+
+	g_return_val_if_fail (ARV_IS_FAKE_CAMERA (camera), 0);
+
+	if (_get_register (camera, ARV_FAKE_CAMERA_REGISTER_TRIGGER_MODE) == 1)
+		frame_period_time_us = 1000000L / camera->priv->trigger_frequency;
+	else
+		frame_period_time_us = (guint64) _get_register (camera, ARV_FAKE_CAMERA_REGISTER_ACQUISITION_FRAME_PERIOD_US);
+
+	if (frame_period_time_us == 0) {
+		arv_warning_misc ("Invalid zero frame period, defaulting to 1 second");
+		frame_period_time_us = 1000000L;
+	}
+
+	time_us = g_get_real_time ();
+	sleep_time_us = frame_period_time_us - (time_us % frame_period_time_us);
+
+	if (next_timestamp_us != NULL)
+		*next_timestamp_us = time_us + sleep_time_us;
+
+	return sleep_time_us;
+}
+
 void
 arv_fake_camera_wait_for_next_frame (ArvFakeCamera *camera)
 {
-	struct timespec time;
-	struct timespec sleep_time;
-	guint64 sleep_time_ns;
-	guint64 frame_period_time_ns;
+	g_return_if_fail (ARV_IS_FAKE_CAMERA (camera));
 
-	if (_get_register (camera, ARV_FAKE_CAMERA_REGISTER_TRIGGER_MODE) == 1)
-		frame_period_time_ns = 1000000000L / camera->priv->trigger_frequency;
-	else
-		frame_period_time_ns = (guint64) _get_register (camera,
-								ARV_FAKE_CAMERA_REGISTER_ACQUISITION_FRAME_PERIOD_US) *
-			1000L;
-
-	if (frame_period_time_ns == 0) {
-		arv_warning_misc ("Invalid zero frame period, defaulting to 1 second");
-		frame_period_time_ns = 1000000000L;
-	}
-
-	clock_gettime (CLOCK_MONOTONIC, &time);
-	sleep_time_ns = frame_period_time_ns - (((guint64) time.tv_sec * 1000000000L +
-						 (guint64) time.tv_nsec) % frame_period_time_ns);
-
-	sleep_time.tv_sec = sleep_time_ns / 1000000000L;
-	sleep_time.tv_nsec = sleep_time_ns % 1000000000L;
-
-	nanosleep (&sleep_time, NULL);
+	g_usleep (arv_fake_camera_get_sleep_time_for_next_frame (camera, NULL));
 }
 
 static void

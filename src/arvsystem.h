@@ -39,10 +39,11 @@ void 			arv_disable_interface		(const char *interface_id);
 void 			arv_update_device_list 		(void);
 unsigned int 		arv_get_n_devices 		(void);
 const char * 		arv_get_device_id 		(unsigned int index);
+const char * 		arv_get_device_physical_id 	(unsigned int index);
+const char * 		arv_get_device_address 		(unsigned int index);
 const char * 		arv_get_device_vendor	 	(unsigned int index);
 const char * 		arv_get_device_model	 	(unsigned int index);
 const char * 		arv_get_device_serial_nbr 	(unsigned int index);
-const char * 		arv_get_device_address 		(unsigned int index);
 
 ArvDevice * 		arv_open_device 		(const char *device_id);
 

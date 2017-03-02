@@ -117,7 +117,7 @@ arv_interface_get_n_devices (ArvInterface *interface)
  * @index: device index
  *
  * Queries the unique device id corresponding to index.  Prior to this
- * call the @arv_interface_update_device_list function must be called.
+ * call the arv_interface_update_device_list() function must be called.
  *
  * Returns: a unique device id
  *
@@ -145,7 +145,7 @@ arv_interface_get_device_id (ArvInterface *interface, unsigned int index)
  * as the MAC address for Ethernet based devices, bus id for PCI,
  * USB or Firewire based devices.
  *
- * Prior to this call the @arv_interface_update_device_list
+ * Prior to this call the arv_interface_update_device_list()
  * function must be called.
  *
  * Returns: a physical device id
@@ -173,7 +173,7 @@ arv_interface_get_device_physical_id (ArvInterface *interface, unsigned int inde
  * queries the device address (IP address in the case of an ethernet camera). Useful
  * for constructing manual connections to devices using @arv_gv_device_new
  *
- * Prior to this call the @arv_interface_update_device_list
+ * Prior to this call the arv_interface_update_device_list()
  * function must be called.
  *
  * Returns: (transfer none): the device address
@@ -200,7 +200,7 @@ arv_interface_get_device_address (ArvInterface *interface, unsigned int index)
  *
  * Queries the device vendor.
  *
- * Prior to this call the @arv_interface_update_device_list
+ * Prior to this call the arv_interface_update_device_list()
  * function must be called.
  *
  * Returns: (transfer none): the device vendor, NULL on error
@@ -227,7 +227,7 @@ arv_interface_get_device_vendor (ArvInterface *interface, unsigned int index)
  *
  * Queries the device model.
  *
- * Prior to this call the @arv_interface_update_device_list
+ * Prior to this call the arv_interface_update_device_list()
  * function must be called.
  *
  * Returns: (transfer none): the device model, NULL on error
@@ -254,7 +254,7 @@ arv_interface_get_device_model (ArvInterface *interface, unsigned int index)
  *
  * Queries the device serial.
  *
- * Prior to this call the @arv_interface_update_device_list
+ * Prior to this call the arv_interface_update_device_list()
  * function must be called.
  *
  * Returns: (transfer none): the device serial, NULL on error
@@ -279,7 +279,8 @@ arv_interface_get_device_serial_nbr (ArvInterface *interface, unsigned int index
  * @interface: a #ArvInterface
  * @device_id: (allow-none): device unique id
  *
- * Creates a new #ArvDevice object corresponding to the given device id string. The first available device is returned if @device_id is null.
+ * Creates a new #ArvDevice object corresponding to the given device id string.
+ * The first available device is returned if @device_id is %NULL.
  *
  * Returns: (transfer full): a new #ArvDevice
  *

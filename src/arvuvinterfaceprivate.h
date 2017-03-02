@@ -28,6 +28,7 @@
 #endif
 
 #include <arvuvinterface.h>
+#include <arvinterfaceprivate.h>
 
 #define ARV_UV_INTERFACE_DEVICE_CLASS			0xef	/* Miscellaneous device */
 #define ARV_UV_INTERFACE_DEVICE_SUBCLASS		0x02
@@ -53,7 +54,6 @@ struct _ArvUvInterfaceClass {
 	ArvInterfaceClass parent_class;
 };
 
-ArvInterface * 		arv_uv_interface_get_instance 		(void);
 void 			arv_uv_interface_destroy_instance 	(void);
 
 G_END_DECLS

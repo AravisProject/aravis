@@ -451,17 +451,19 @@ create_buffer_with_chunk_data (void)
 {
 	ArvBuffer *buffer;
 	ArvChunkInfos *chunk_infos;
-	const char *data;
+	char *data;
 	size_t size;
 	guint32 *int_value;
 	guint offset;
+	double float_value;
+	int i;
 
-	size = 64 + 64 + 8 + 3 * sizeof (ArvChunkInfos);
+	size = 64 + 8 + 64 + 8 + 4 * sizeof (ArvChunkInfos);
 
 	buffer = arv_buffer_new (size, NULL);
 	buffer->priv->gvsp_payload_type = ARV_GVSP_PAYLOAD_TYPE_CHUNK_DATA;
 	buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
-	data = arv_buffer_get_data (buffer, &size);
+	data = (char *) arv_buffer_get_data (buffer, &size);
 
 	memset ((char *) data, '\0', size);
 
@@ -481,6 +483,15 @@ create_buffer_with_chunk_data (void)
 	memcpy ((char *) &data[offset - 64], "Hello" ,sizeof ("Hello"));
 
 	offset -= 64 + sizeof (ArvChunkInfos);
+	chunk_infos = (ArvChunkInfos *) &data[offset];
+	chunk_infos->id = GUINT32_TO_BE (0x12345679);
+	chunk_infos->size = GUINT32_TO_BE (8);
+
+	float_value = 1.1;
+	for (i = 0; i < sizeof (float_value); i++)
+		data[offset - i - 1] = ((char *) &float_value)[i];
+
+	offset -= 8 + sizeof (ArvChunkInfos);
 	chunk_infos = (ArvChunkInfos *) &data[offset];
 	chunk_infos->id = GUINT32_TO_BE (0x44444444);
 	chunk_infos->size = GUINT32_TO_BE (64);
@@ -506,7 +517,9 @@ chunk_data_test (void)
 	ArvDevice *device;
 	ArvChunkParser *parser;
 	ArvBuffer *buffer;
+	ArvGc *genicam;
 	guint32 int_value;
+	double float_value;
 	const char *chunk_data;
 	const char *data;
 	const char *string_value;
@@ -519,6 +532,9 @@ chunk_data_test (void)
 	parser = arv_device_create_chunk_parser (device);
 	g_assert (ARV_IS_CHUNK_PARSER (parser));
 
+	g_object_get (parser, "genicam", &genicam, NULL);
+	g_object_unref (genicam);
+
 	buffer = create_buffer_with_chunk_data ();
 	g_assert (ARV_IS_BUFFER (buffer));
 
@@ -527,12 +543,17 @@ chunk_data_test (void)
 	chunk_data = arv_buffer_get_chunk_data (buffer, 0x12345678, &chunk_data_size);
 	g_assert (chunk_data != NULL);
 	g_assert_cmpint (chunk_data_size, ==, 8);
-	g_assert_cmpint (chunk_data - data, ==, 64 + 64 + 2 * sizeof (ArvChunkInfos));
+	g_assert_cmpint (chunk_data - data, ==, 64 + 64 + 8 + 3 * sizeof (ArvChunkInfos));
+
+	chunk_data = arv_buffer_get_chunk_data (buffer, 0x12345679, &chunk_data_size);
+	g_assert (chunk_data != NULL);
+	g_assert_cmpint (chunk_data_size, ==, 8);
+	g_assert_cmpint (chunk_data - data, ==, 64 + sizeof (ArvChunkInfos));
 
 	chunk_data = arv_buffer_get_chunk_data (buffer, 0x87654321, &chunk_data_size);
 	g_assert (chunk_data != NULL);
 	g_assert_cmpint (chunk_data_size, ==, 64);
-	g_assert_cmpint (chunk_data - data, ==, 64 + sizeof (ArvChunkInfos));
+	g_assert_cmpint (chunk_data - data, ==, 64 + 8 + 2 * sizeof (ArvChunkInfos));
 
 	chunk_data = arv_buffer_get_chunk_data (buffer, 0x01020304, &chunk_data_size);
 	g_assert (chunk_data == NULL);
@@ -541,8 +562,15 @@ chunk_data_test (void)
 	int_value = arv_chunk_parser_get_integer_value (parser, buffer, "ChunkInt");
 	g_assert_cmpint (int_value, ==, 0x11223344);
 
+	float_value = arv_chunk_parser_get_float_value (parser, buffer, "ChunkFloat");
+	g_assert_cmpfloat (float_value, ==, 1.1);
+
 	string_value = arv_chunk_parser_get_string_value (parser, buffer, "ChunkString");
 	g_assert_cmpstr (string_value, ==, "Hello");
+
+	arv_chunk_parser_get_integer_value (parser, buffer, "Dummy");
+	arv_chunk_parser_get_float_value (parser, buffer, "Dummy");
+	arv_chunk_parser_get_string_value (parser, buffer, "Dummy");
 
 	g_object_unref (buffer);
 	g_object_unref (parser);

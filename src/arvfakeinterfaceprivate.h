@@ -27,6 +27,7 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvinterfaceprivate.h>
 #include <arvfakeinterface.h>
 
 G_BEGIN_DECLS
@@ -49,7 +50,6 @@ struct _ArvFakeInterfaceClass {
 	ArvInterfaceClass parent_class;
 };
 
-ArvInterface * 		arv_fake_interface_get_instance 		(void);
 void 			arv_fake_interface_destroy_instance 		(void);
 
 #endif

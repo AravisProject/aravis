@@ -41,6 +41,8 @@ G_BEGIN_DECLS
 
 GType arv_uv_interface_get_type (void);
 
+ArvInterface * 		arv_uv_interface_get_instance 		(void);
+
 G_END_DECLS
 
 #endif

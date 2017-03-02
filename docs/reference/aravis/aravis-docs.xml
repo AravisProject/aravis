@@ -38,6 +38,7 @@
 
 		<chapter>
 			<title>Base</title>
+			<xi:include href="xml/arv.xml"/>
 			<xi:include href="xml/arvcamera.xml"/>
 			<xi:include href="xml/arvinterface.xml"/>
 			<xi:include href="xml/arvdevice.xml"/>
@@ -79,6 +80,7 @@
 			<xi:include href="xml/arvgvinterface.xml"/>
 			<xi:include href="xml/arvgvdevice.xml"/>
 			<xi:include href="xml/arvgvstream.xml"/>
+			<xi:include href="xml/arvgvfakecamera.xml"/>
 			<xi:include href="xml/arvgvcp.xml"/>
 			<xi:include href="xml/arvgvsp.xml"/>
 		</chapter>

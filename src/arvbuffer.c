@@ -118,23 +118,6 @@ arv_buffer_new_allocate (size_t size)
 }
 
 /**
- * arv_buffer_clear:
- * @buffer: a #ArvBuffer
- *
- * Clears the buffer status.
- *
- * Since: 0.2.0
- */
-
-void
-arv_buffer_clear (ArvBuffer *buffer)
-{
-	g_return_if_fail (ARV_IS_BUFFER (buffer));
-
-	buffer->priv->status = ARV_BUFFER_STATUS_CLEARED;
-}
-
-/**
  * arv_buffer_get_data:
  * @buffer: a #ArvBuffer
  * @size: (allow-none): location to store data size, or %NULL

@@ -716,6 +716,9 @@ stop_video (ArvViewer *viewer)
 
 	g_clear_object (&viewer->last_buffer);
 
+	if (ARV_IS_CAMERA (viewer->camera))
+		arv_camera_stop_acquisition (viewer->camera);
+
 	gtk_container_foreach (GTK_CONTAINER (viewer->video_frame), remove_widget, viewer->video_frame);
 }
 

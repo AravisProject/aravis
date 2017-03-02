@@ -62,7 +62,7 @@ realtime_test_LDADD = $(test_progs_ldadd)
 load_http_test_SOURCES = loadhttptest.c
 load_http_test_LDADD = $(test_progs_ldadd)
 
-TESTS = evaluator buffer misc fake genicam
+TESTS = evaluator buffer misc fake fakegv genicam
 if ARAVIS_BUILD_CPP_TEST
 TESTS += cpp
 endif
@@ -90,6 +90,10 @@ misc_LDADD = $(test_progs_ldadd) $(CODE_COVERAGE_LIBS)
 fake_SOURCES = fake.c
 fake_CFLAGS = -DGENICAM_FILENAME="\"$(top_srcdir)/src/arv-fake-camera.xml\"" $(CODE_COVERAGE_CFLAGS)
 fake_LDADD = $(test_progs_ldadd) $(CODE_COVERAGE_LIBS)
+
+fakegv_SOURCES = fakegv.c
+fakegv_CFLAGS = -DGENICAM_FILENAME="\"$(top_srcdir)/src/arv-fake-camera.xml\"" $(CODE_COVERAGE_CFLAGS)
+fakegv_LDADD = $(test_progs_ldadd) $(CODE_COVERAGE_LIBS)
 
 genicam_SOURCES = genicam.c
 genicam_CFLAGS = -DGENICAM_FILENAME="\"$(top_srcdir)/tests/data/genicam.xml\"" $(CODE_COVERAGE_CFLAGS)

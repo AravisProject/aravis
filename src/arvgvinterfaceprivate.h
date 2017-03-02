@@ -28,6 +28,7 @@
 #endif
 
 #include <arvgvinterface.h>
+#include <arvinterfaceprivate.h>
 
 G_BEGIN_DECLS
 
@@ -47,7 +48,6 @@ struct _ArvGvInterfaceClass {
 	ArvInterfaceClass parent_class;
 };
 
-ArvInterface * 		arv_gv_interface_get_instance 		(void);
 void 			arv_gv_interface_destroy_instance 	(void);
 
 G_END_DECLS

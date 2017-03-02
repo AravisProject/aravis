@@ -3,6 +3,7 @@ genicam
 buffer
 misc
 fake
+fakegv
 cpp
 arv-device-test
 arv-genicam-test
