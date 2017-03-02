@@ -57,7 +57,14 @@ typedef struct {
 	size_t payload_size;
 	size_t trailer_size;
 
+	guint64 offset;
+	ArvBuffer *buffer;
+	void *incoming_buffer;
+
 	gboolean cancel;
+	gboolean thread_enabled;
+
+	ArvUvspPacket *current_packet;
 
 	/* Statistics */
 
@@ -70,108 +77,101 @@ static void *
 arv_uv_stream_thread (void *data)
 {
 	ArvUvStreamThreadData *thread_data = data;
-	ArvUvspPacket *packet;
-	ArvBuffer *buffer = NULL;
-	void *incoming_buffer;
-	guint64 offset;
 	size_t transferred;
 
-	arv_log_stream_thread ("Start USB3Vision stream thread");
-
-	incoming_buffer = g_malloc (MAXIMUM_TRANSFER_SIZE);
-
-	if (thread_data->callback != NULL)
-		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
-
-	offset = 0;
-
 	while (!thread_data->cancel) {
-		size_t size;
 		transferred = 0;
 
-		if (buffer == NULL)
-			size = thread_data->leader_size;
-		else {
-			if (offset < buffer->priv->size)
-				size = MIN (thread_data->payload_size, buffer->priv->size - offset);
+		if(!arv_uv_is_transfer_active(thread_data->uv_device)) {
+			size_t size;
+			
+			if (thread_data->buffer == NULL)
+				size = thread_data->leader_size;
+			else {
+				if (thread_data->offset < thread_data->buffer->priv->size)
+					size = MIN (thread_data->payload_size, thread_data->buffer->priv->size - thread_data->offset);
+				else
+					size = thread_data->trailer_size;
+			}
+
+			/* Avoid unnecessary memory copy by transferring data directly to the image buffer */
+			if (thread_data->buffer != NULL &&
+				thread_data->buffer->priv->status == ARV_BUFFER_STATUS_FILLING &&
+				thread_data->offset + size <= thread_data->buffer->priv->size)
+				thread_data->current_packet = thread_data->buffer->priv->data + thread_data->offset;
 			else
-				size = thread_data->trailer_size;
+				thread_data->current_packet = thread_data->incoming_buffer;
+
+			arv_log_sp ("Asking for %u bytes", size);
+
+			arv_uv_device_submit_bulk_transfer (thread_data->uv_device, ARV_UV_ENDPOINT_DATA, LIBUSB_ENDPOINT_IN,
+				thread_data->current_packet, size, 0, NULL);
 		}
-
-		/* Avoid unnecessary memory copy by transferring data directly to the image buffer */
-		if (buffer != NULL &&
-		    buffer->priv->status == ARV_BUFFER_STATUS_FILLING &&
-		    offset + size <= buffer->priv->size)
-			packet = buffer->priv->data + offset;
-		else
-			packet = incoming_buffer;
-
-		arv_log_sp ("Asking for %u bytes", size);
-		arv_uv_device_bulk_transfer (thread_data->uv_device,  ARV_UV_ENDPOINT_DATA, LIBUSB_ENDPOINT_IN,
-					     packet, size, &transferred, 0, NULL);
+		
+		arv_uv_devce_collect_transfer(thread_data->uv_device, &transferred, FALSE, NULL);
 
 		if (transferred > 0) {
 			ArvUvspPacketType packet_type;
 
 			arv_log_sp ("Received %d bytes", transferred);
-			arv_uvsp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
+			arv_uvsp_packet_debug (thread_data->current_packet, ARV_DEBUG_LEVEL_LOG);
 
-			packet_type = arv_uvsp_packet_get_packet_type (packet);
+			packet_type = arv_uvsp_packet_get_packet_type (thread_data->current_packet);
 			switch (packet_type) {
 				case ARV_UVSP_PACKET_TYPE_LEADER:
-					if (buffer != NULL) {
+					if (thread_data->buffer != NULL) {
 						arv_debug_stream_thread ("New leader received while a buffer is still open");
-						buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
-						arv_stream_push_output_buffer (thread_data->stream, buffer);
+						thread_data->buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
+						arv_stream_push_output_buffer (thread_data->stream, thread_data->buffer);
 						thread_data->n_failures++;
-						buffer = NULL;
+						thread_data->buffer = NULL;
 					}
-					buffer = arv_stream_pop_input_buffer (thread_data->stream);
-					if (buffer != NULL) {
-						buffer->priv->status = ARV_BUFFER_STATUS_FILLING;
-						buffer->priv->gvsp_payload_type = ARV_GVSP_PAYLOAD_TYPE_IMAGE;
-						arv_uvsp_packet_get_region (packet,
-									    &buffer->priv->width,
-									    &buffer->priv->height,
-									    &buffer->priv->x_offset,
-									    &buffer->priv->y_offset);
-						buffer->priv->pixel_format = arv_uvsp_packet_get_pixel_format (packet);
-						buffer->priv->frame_id = arv_uvsp_packet_get_frame_id (packet);
-						buffer->priv->timestamp_ns = arv_uvsp_packet_get_timestamp (packet);
-						offset = 0;
+					thread_data->buffer = arv_stream_pop_input_buffer (thread_data->stream);
+					if (thread_data->buffer != NULL) {
+						thread_data->buffer->priv->status = ARV_BUFFER_STATUS_FILLING;
+						thread_data->buffer->priv->gvsp_payload_type = ARV_GVSP_PAYLOAD_TYPE_IMAGE;
+						arv_uvsp_packet_get_region (thread_data->current_packet,
+									    &thread_data->buffer->priv->width,
+									    &thread_data->buffer->priv->height,
+									    &thread_data->buffer->priv->x_offset,
+									    &thread_data->buffer->priv->y_offset);
+						thread_data->buffer->priv->pixel_format = arv_uvsp_packet_get_pixel_format (thread_data->current_packet);
+						thread_data->buffer->priv->frame_id = arv_uvsp_packet_get_frame_id (thread_data->current_packet);
+						thread_data->buffer->priv->timestamp_ns = arv_uvsp_packet_get_timestamp (thread_data->current_packet);
+						thread_data->offset = 0;
 					} else
 						thread_data->n_underruns++;
 					break;
 				case ARV_UVSP_PACKET_TYPE_TRAILER:
-					if (buffer != NULL) {
+					if (thread_data->buffer != NULL) {
 						arv_log_stream_thread ("Received %" G_GUINT64_FORMAT
 								       " bytes - expected %" G_GUINT64_FORMAT,
-								       offset, buffer->priv->size);
+								       thread_data->offset, thread_data->buffer->priv->size);
 
 						/* If the image was incomplete, drop the frame and try again. */
-						if (offset != buffer->priv->size) {
+						if (thread_data->offset != thread_data->buffer->priv->size) {
 							arv_debug_stream_thread ("Incomplete image received, dropping");
 
-							buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
-							arv_stream_push_output_buffer (thread_data->stream, buffer);
+							thread_data->buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
+							arv_stream_push_output_buffer (thread_data->stream, thread_data->buffer);
 							thread_data->n_underruns++;
-							buffer = NULL;
+							thread_data->buffer = NULL;
 						} else {
-							buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
-							arv_stream_push_output_buffer (thread_data->stream, buffer);
+							thread_data->buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
+							arv_stream_push_output_buffer (thread_data->stream, thread_data->buffer);
 							thread_data->n_completed_buffers++;
-							buffer = NULL;
+							thread_data->buffer = NULL;
 						}
 					}
 					break;
 				case ARV_UVSP_PACKET_TYPE_DATA:
-					if (buffer != NULL && buffer->priv->status == ARV_BUFFER_STATUS_FILLING) {
-						if (offset + transferred <= buffer->priv->size) {
-							if (packet == incoming_buffer)
-								memcpy (((char *) buffer->priv->data) + offset, packet, transferred);
-							offset += transferred;
+					if (thread_data->buffer != NULL && thread_data->buffer->priv->status == ARV_BUFFER_STATUS_FILLING) {
+						if (thread_data->offset + transferred <= thread_data->buffer->priv->size) {
+							if (thread_data->current_packet == thread_data->incoming_buffer)
+								memcpy (((char *) thread_data->buffer->priv->data) + thread_data->offset, thread_data->current_packet, transferred);
+							thread_data->offset += transferred;
 						} else
-							buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
+							thread_data->buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
 					}
 					break;
 				default:
@@ -179,14 +179,13 @@ arv_uv_stream_thread (void *data)
 					break;
 			}
 		}
+
+		if(transferred <= 0 && !thread_data->thread_enabled) {
+		    // Scheduling stops when threading is disabled and there are
+            // no more packets to be processed
+            break;
+        }
 	}
-
-	if (thread_data->callback != NULL)
-		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_EXIT, NULL);
-
-	g_free (incoming_buffer);
-
-	arv_log_stream_thread ("Stop USB3Vision stream thread");
 
 	return NULL;
 }
@@ -276,11 +275,46 @@ arv_uv_stream_new (ArvUvDevice *uv_device, ArvStreamCallback callback, void *use
 	thread_data->n_failures = 0;
 	thread_data->n_underruns = 0;
 
+	thread_data->thread_enabled = ((arv_uv_device_get_stream_options(uv_device) & ARV_UV_STREAM_OPTION_THREADING_DISABLED) == 0);
+
 	uv_stream->priv->thread_data = thread_data;
-	uv_stream->priv->thread = arv_g_thread_new ("arv_uv_stream", arv_uv_stream_thread, uv_stream->priv->thread_data);
+
+	thread_data->incoming_buffer = g_malloc (MAXIMUM_TRANSFER_SIZE);
+	thread_data->offset = 0;
+	thread_data->buffer = NULL;
+	thread_data->current_packet = NULL;
+
+	if (thread_data->callback != NULL)
+		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
+
+	if(thread_data->thread_enabled) {
+		uv_stream->priv->thread = arv_g_thread_new ("arv_uv_stream", arv_uv_stream_thread, uv_stream->priv->thread_data);
+	} else {
+		uv_stream->priv->thread = NULL;
+		arv_uv_stream_thread(uv_stream->priv->thread_data);
+	}
 
 	return ARV_STREAM (uv_stream);
 }
+
+/**
+ * arv_uv_stream_schedule_thread: (skip)
+ * @uv_device: a #ArvUvDevice
+ *
+ * Manually schedules the image acquisition for the given stream. This method
+ * should be called regularly if threading has been disabled for this stream
+ * by setting the ARV_GV_STREAM_OPTION_THREADING_DISABLED stream option.
+ */
+void
+arv_uv_stream_schedule_thread	(ArvUvStream *uv_stream) {
+    g_return_if_fail (ARV_IS_UV_STREAM (uv_stream));
+
+	ArvUvStreamThreadData *thread_data = uv_stream->priv->thread_data;
+    if(thread_data != NULL && !thread_data->thread_enabled) {
+        arv_uv_stream_thread(uv_stream->priv->thread_data);
+    }
+}
+
 
 /* ArvStream implementation */
 
@@ -311,7 +345,7 @@ arv_uv_stream_finalize (GObject *object)
 {
 	ArvUvStream *uv_stream = ARV_UV_STREAM (object);
 
-	if (uv_stream->priv->thread != NULL) {
+	if (uv_stream->priv->thread_data != NULL) {
 		ArvUvStreamThreadData *thread_data;
 		guint64 offset;
 		guint64 sirm_offset;
@@ -321,6 +355,11 @@ arv_uv_stream_finalize (GObject *object)
 
 		thread_data->cancel = TRUE;
 		g_thread_join (uv_stream->priv->thread);
+
+		if (thread_data->callback != NULL)
+			thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_EXIT, NULL);
+
+		g_free (thread_data->incoming_buffer);
 
 		si_control = 0x0;
 		arv_device_read_memory (ARV_DEVICE (thread_data->uv_device),

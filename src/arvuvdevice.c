@@ -64,11 +64,148 @@ struct _ArvUvDevicePrivate {
         guint8 control_endpoint;
         guint8 data_endpoint;
 	gboolean disconnected;
+
+	ArvUvStreamOption stream_options;
+	struct libusb_transfer* transfer;
+	gboolean active_transfer;
 };
+
+static void
+LIBUSB_CALL _transfer_callback(struct libusb_transfer * transfer) {
+	ArvUvDevice *uv_device = (ArvUvDevice*)transfer->user_data;
+	uv_device->priv->active_transfer = FALSE;
+	
+	if(transfer->status == LIBUSB_TRANSFER_CANCELLED) {
+		g_warning ("[UvDevice::transfer_callback]: Bulk transfer cancelled");
+	} else if(transfer->status != LIBUSB_TRANSFER_COMPLETED && transfer->status != LIBUSB_TRANSFER_OVERFLOW ) {
+		g_error("[UvDevice::transfer_callback]: Bulk transfer failed with code %d", transfer->status);
+	}
+}
 
 /* ArvDevice implementation */
 
+
+/**
+ * arv_uv_device_set_stream_options:
+ * @uv_device: a #ArvGvDevice
+ * @options: options for stream creation
+ *
+ * Sets the option used during stream creation. It must be called before arv_device_create_stream().
+ *
+ * Since: 0.6.0
+ */
+
+void
+arv_uv_device_set_stream_options (ArvUvDevice *uv_device, ArvUvStreamOption options)
+{
+	g_return_if_fail (ARV_IS_UV_DEVICE (uv_device));
+
+	uv_device->priv->stream_options = options;
+}
+
+/**
+ * arv_uv_device_get_stream_options:
+ * @uv_device: a #ArvGvDevice
+ *
+ * Returns: options for stream creation
+ *
+ * Since: 0.6.0
+ */
+
+ArvUvStreamOption
+arv_uv_device_get_stream_options (ArvUvDevice *uv_device)
+{
+	g_return_val_if_fail (ARV_IS_UV_DEVICE (uv_device), ARV_UV_STREAM_OPTION_NONE);
+
+	return uv_device->priv->stream_options;
+}
+
 /* ArvUvDevice implementation */
+
+gboolean
+arv_uv_devce_collect_transfer(ArvUvDevice *uv_device, size_t *transferred_size, gboolean block, GError **error)
+{
+	int success;
+	int result;
+	gboolean before_active_transfer = uv_device->priv->active_transfer;
+	
+	g_return_val_if_fail (transferred_size != NULL, FALSE);
+
+	*transferred_size = 0;
+
+	if(block) {
+		result = libusb_handle_events(uv_device->priv->usb);
+	} else {
+		struct timeval timeout;
+		timeout.tv_sec = 0;
+		timeout.tv_usec = 0;
+		result = libusb_handle_events_timeout(uv_device->priv->usb, &timeout);
+	}
+	
+	success = result >= 0;
+
+	if(success) {
+		if(before_active_transfer && !uv_device->priv->active_transfer) {
+			*transferred_size = uv_device->priv->transfer->actual_length;
+		}
+	} else {
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_STATUS_TRANSFER_ERROR,
+			"%s", libusb_error_name (result));
+	}
+
+	if (result == LIBUSB_ERROR_NO_DEVICE) {
+		uv_device->priv->disconnected = TRUE;
+		arv_device_emit_control_lost_signal (ARV_DEVICE (uv_device));
+	}
+
+	return success;
+}
+
+gboolean
+arv_uv_device_submit_bulk_transfer (ArvUvDevice *uv_device, ArvUvEndpointType endpoint_type, unsigned char endpoint_flags, void *data,
+			     size_t size, guint32 timeout_ms, GError **error)
+{
+	gboolean success;
+	guint8 endpoint;
+	int result;
+
+	g_return_val_if_fail (ARV_IS_UV_DEVICE (uv_device), FALSE);
+	g_return_val_if_fail (data != NULL, FALSE);
+	g_return_val_if_fail (size > 0, FALSE);
+
+	if (uv_device->priv->disconnected) {
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_STATUS_NOT_CONNECTED,
+			     "Not connected");
+		return FALSE;
+	}
+
+	endpoint = (endpoint_type == ARV_UV_ENDPOINT_CONTROL) ? uv_device->priv->control_endpoint : uv_device->priv->data_endpoint;
+	libusb_fill_bulk_transfer(uv_device->priv->transfer, uv_device->priv->usb_device, endpoint | endpoint_flags,
+		data, size, &_transfer_callback, uv_device, MAX (uv_device->priv->timeout_ms, timeout_ms));
+	result = libusb_submit_transfer (uv_device->priv->transfer);
+
+	success = result >= 0;
+
+	if(success) {
+		uv_device->priv->active_transfer = TRUE;
+	} else {
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_STATUS_TRANSFER_ERROR,
+			     "%s", libusb_error_name (result));
+	}
+
+	if (result == LIBUSB_ERROR_NO_DEVICE) {
+		uv_device->priv->disconnected = TRUE;
+		arv_device_emit_control_lost_signal (ARV_DEVICE (uv_device));
+	}
+
+	return success;
+}
+
+gboolean
+arv_uv_is_transfer_active(ArvUvDevice *uv_device) {
+	g_return_val_if_fail (ARV_IS_UV_DEVICE (uv_device), FALSE);
+	return uv_device->priv->active_transfer;
+}
 
 gboolean
 arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, ArvUvEndpointType endpoint_type, unsigned char endpoint_flags, void *data,
@@ -88,7 +225,6 @@ arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, ArvUvEndpointType endpoint_
 			     "Not connected");
 		return FALSE;
 	}
-
 
 	endpoint = (endpoint_type == ARV_UV_ENDPOINT_CONTROL) ? uv_device->priv->control_endpoint : uv_device->priv->data_endpoint;
 	result = libusb_bulk_transfer (uv_device->priv->usb_device, endpoint | endpoint_flags, data, size, &transferred,
@@ -700,6 +836,9 @@ arv_uv_device_init (ArvUvDevice *uv_device)
 	uv_device->priv->cmd_packet_size_max = 65536 + sizeof (ArvUvcpHeader);
 	uv_device->priv->ack_packet_size_max = 65536 + sizeof (ArvUvcpHeader);
 	uv_device->priv->disconnected = FALSE;
+	uv_device->priv->stream_options = ARV_UV_STREAM_OPTION_NONE;
+	uv_device->priv->transfer = libusb_alloc_transfer(0);
+	uv_device->priv->active_transfer = FALSE;
 }
 
 static void
@@ -712,6 +851,9 @@ arv_uv_device_finalize (GObject *object)
 	g_clear_pointer (&uv_device->priv->vendor, g_free);
 	g_clear_pointer (&uv_device->priv->product, g_free);
 	g_clear_pointer (&uv_device->priv->serial_nbr, g_free);
+
+	libusb_free_transfer(uv_device->priv->transfer);
+	 
 	if (uv_device->priv->usb_device != NULL) {
 		libusb_release_interface (uv_device->priv->usb_device, uv_device->priv->control_interface);
 		libusb_release_interface (uv_device->priv->usb_device, uv_device->priv->data_interface);

@@ -28,6 +28,7 @@
 #endif
 
 #include <arvtypes.h>
+#include <arvuvstream.h>
 
 G_BEGIN_DECLS
 
@@ -40,7 +41,9 @@ G_BEGIN_DECLS
 
 GType arv_uv_device_get_type (void);
 
-ArvDevice * 	arv_uv_device_new 			(const char *vendor, const char *product, const char *serial_nbr);
+ArvDevice * 		arv_uv_device_new 			(const char *vendor, const char *product, const char *serial_nbr);
+void				arv_uv_device_set_stream_options (ArvUvDevice *uv_device, ArvUvStreamOption options);
+ArvUvStreamOption 	arv_uv_device_get_stream_options (ArvUvDevice *uv_device);
 
 G_END_DECLS
 

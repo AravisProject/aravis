@@ -38,6 +38,7 @@
  * </example>
  */
 
+#include <arvconfig.h>
 #include <arvcamera.h>
 #include <arvsystem.h>
 #include <arvgvinterface.h>
@@ -1979,6 +1980,27 @@ arv_camera_uv_get_bandwidth_bounds (ArvCamera *camera, guint *min, guint *max)
 		*min = min64;
 	if (max != NULL)
 		*max = max64;
+}
+
+/**
+ * arv_camera_uv_set_stream_options:
+ * @camera: a #ArvCamera
+ * @options: option for stream creation
+ *
+ * Sets the options used during stream object creation. These options mus be
+ * set before the call to arv_camera_create_stream().
+ *
+ * Since: 0.6.0
+ */
+
+void
+arv_camera_uv_set_stream_options (ArvCamera *camera, ArvUvStreamOption options)
+{
+#ifdef ARAVIS_BUILD_USB
+	g_return_if_fail (arv_camera_is_uv_device (camera));
+
+	arv_uv_device_set_stream_options (ARV_UV_DEVICE (camera->priv->device), options);
+#endif
 }
 
 /**
