@@ -80,8 +80,6 @@ void		arv_gv_stream_get_statistics		(ArvGvStream *gv_stream,
 							 guint64 *n_resent_packets,
 							 guint64 *n_missing_packets);
 
-void		arv_gv_stream_schedule_thread	(ArvGvStream *gv_stream);
-
 G_END_DECLS
 
 #endif

@@ -51,7 +51,6 @@ typedef enum {
 #define ARV_UV_STREAM_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_UV_STREAM, ArvUvStreamClass))
 
 GType arv_uv_stream_get_type (void);
-void arv_uv_stream_schedule_thread	(ArvUvStream *uv_stream);
 
 G_END_DECLS
 

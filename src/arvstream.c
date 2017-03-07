@@ -255,6 +255,26 @@ arv_stream_get_statistics (ArvStream *stream,
 }
 
 /**
+ * arv_stream_schedule_thread: (skip)
+ * @stream: a #ArvStream
+ *
+ * Manually schedules the image acquisition for the given stream. This method
+ * should be called regularly if threading has been disabled for this stream
+ * by setting the appropriate stream option.
+ */
+void
+arv_stream_schedule_thread	(ArvStream *stream) {
+    ArvStreamClass *stream_class;
+	g_return_if_fail (ARV_IS_STREAM (stream));
+
+	stream_class = ARV_STREAM_GET_CLASS (stream);
+	
+	if (stream_class->schedule_thread != NULL) {
+		stream_class->schedule_thread (stream);
+	}
+}
+
+/**
  * arv_stream_set_emit_signals:
  * @stream: a #ArvStream
  * @emit_signals: the new state

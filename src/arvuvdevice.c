@@ -74,12 +74,12 @@ static void
 LIBUSB_CALL _transfer_callback(struct libusb_transfer * transfer) {
 	ArvUvDevice *uv_device = (ArvUvDevice*)transfer->user_data;
 	uv_device->priv->active_transfer = FALSE;
-	
-	if(transfer->status == LIBUSB_TRANSFER_CANCELLED) {
-		g_warning ("[UvDevice::transfer_callback]: Bulk transfer cancelled");
-	} else if(transfer->status != LIBUSB_TRANSFER_COMPLETED && transfer->status != LIBUSB_TRANSFER_OVERFLOW ) {
-		g_error("[UvDevice::transfer_callback]: Bulk transfer failed with code %d", transfer->status);
-	}
+
+	if(transfer->status == LIBUSB_TRANSFER_ERROR) {
+		g_error("[UvDevice::transfer_callback]: Bulk transfer failed  with LIBUSB_TRANSFER_ERROR", transfer->status);
+	} else if(transfer->status != LIBUSB_TRANSFER_COMPLETED ) {
+		g_warning ("[UvDevice::transfer_callback]: Bulk transfer failed with code %d", transfer->status);
+	} 
 }
 
 /* ArvDevice implementation */

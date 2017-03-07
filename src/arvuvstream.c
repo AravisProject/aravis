@@ -297,26 +297,18 @@ arv_uv_stream_new (ArvUvDevice *uv_device, ArvStreamCallback callback, void *use
 	return ARV_STREAM (uv_stream);
 }
 
-/**
- * arv_uv_stream_schedule_thread: (skip)
- * @uv_device: a #ArvUvDevice
- *
- * Manually schedules the image acquisition for the given stream. This method
- * should be called regularly if threading has been disabled for this stream
- * by setting the ARV_GV_STREAM_OPTION_THREADING_DISABLED stream option.
- */
-void
-arv_uv_stream_schedule_thread	(ArvUvStream *uv_stream) {
-    g_return_if_fail (ARV_IS_UV_STREAM (uv_stream));
+/* ArvStream implementation */
 
+static void
+arv_uv_stream_schedule_thread	(ArvStream *stream) {	
+    ArvUvStream *uv_stream = ARV_UV_STREAM (stream);
 	ArvUvStreamThreadData *thread_data = uv_stream->priv->thread_data;
+	
     if(thread_data != NULL && !thread_data->thread_enabled) {
         arv_uv_stream_thread(uv_stream->priv->thread_data);
     }
 }
 
-
-/* ArvStream implementation */
 
 static void
 arv_uv_stream_get_statistics (ArvStream *stream,
@@ -392,6 +384,8 @@ arv_uv_stream_class_init (ArvUvStreamClass *uv_stream_class)
 	object_class->finalize = arv_uv_stream_finalize;
 
 	stream_class->get_statistics = arv_uv_stream_get_statistics;
+
+	stream_class->schedule_thread = arv_uv_stream_schedule_thread;
 }
 
 G_DEFINE_TYPE (ArvUvStream, arv_uv_stream, ARV_TYPE_STREAM)

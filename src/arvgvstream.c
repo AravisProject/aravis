@@ -1087,24 +1087,17 @@ arv_gv_stream_new (ArvGvDevice *gv_device,
 	return ARV_STREAM (gv_stream);
 }
 
-/**
- * arv_gv_stream_schedule_thread: (skip)
- * @gv_device: a #ArvGvDevice
- *
- * Manually schedules the image acquisition for the given stream. This method
- * should be called regularly if threading has been disabled for this stream
- * by setting the ARV_GV_STREAM_OPTION_THREADING_DISABLED stream option.
- */
-void
-arv_gv_stream_schedule_thread	(ArvGvStream *gv_stream) {
-    g_return_if_fail (ARV_IS_GV_STREAM (gv_stream));
+/* ArvStream implementation */
+
+static void
+arv_gv_stream_schedule_thread	(ArvStream *stream) {
+    ArvGvStream *gv_stream = ARV_GV_STREAM (stream);
 
     if(!gv_stream->priv->thread_data->thread_enabled) {
         _loop(gv_stream->priv->thread_data);
     }
 }
 
-/* ArvStream implementation */
 
 void
 arv_gv_stream_get_statistics (ArvGvStream *gv_stream,
