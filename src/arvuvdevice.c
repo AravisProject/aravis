@@ -76,8 +76,8 @@ LIBUSB_CALL _transfer_callback(struct libusb_transfer * transfer) {
 	uv_device->priv->active_transfer = FALSE;
 
 	if(transfer->status == LIBUSB_TRANSFER_ERROR) {
-		g_error("[UvDevice::transfer_callback]: Bulk transfer failed  with LIBUSB_TRANSFER_ERROR", transfer->status);
-	} else if(transfer->status != LIBUSB_TRANSFER_COMPLETED ) {
+		g_error("[UvDevice::transfer_callback]: Bulk transfer failed  with LIBUSB_TRANSFER_ERROR");
+	} else if(transfer->status != LIBUSB_TRANSFER_COMPLETED && transfer->status != LIBUSB_TRANSFER_CANCELLED) {
 		g_warning ("[UvDevice::transfer_callback]: Bulk transfer failed with code %d", transfer->status);
 	} 
 }
@@ -851,6 +851,15 @@ arv_uv_device_finalize (GObject *object)
 	g_clear_pointer (&uv_device->priv->vendor, g_free);
 	g_clear_pointer (&uv_device->priv->product, g_free);
 	g_clear_pointer (&uv_device->priv->serial_nbr, g_free);
+
+	// Cancel outstanding transfers
+	if(uv_device->priv->active_transfer) {
+		libusb_cancel_transfer(uv_device->priv->transfer);
+
+		while(uv_device->priv->active_transfer) {
+			libusb_handle_events(uv_device->priv->usb);
+		}
+	}
 
 	libusb_free_transfer(uv_device->priv->transfer);
 	 
