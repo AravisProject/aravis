@@ -1297,6 +1297,8 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 
 	stream_class->get_statistics = _get_statistics;
 
+	stream_class->schedule_thread = arv_gv_stream_schedule_thread;
+
 	g_object_class_install_property (
 		object_class, ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER,
 		g_param_spec_enum ("socket-buffer", "Socket buffer",
