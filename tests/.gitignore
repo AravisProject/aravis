@@ -18,6 +18,7 @@ arv-example
 time-test
 realtime-test
 load-http-test
+singlethread-test
 *.log
 *.trs
 *-coverage*
