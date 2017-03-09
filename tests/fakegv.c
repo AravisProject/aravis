@@ -97,6 +97,66 @@ acquisition_test (void)
 	g_clear_object (&buffer);
 }
 
+static void
+new_buffer_cb (ArvStream *stream, unsigned *buffer_count)
+{
+	ArvBuffer *buffer;
+
+	buffer = arv_stream_try_pop_buffer (stream);
+	if (buffer != NULL) {
+		(*buffer_count)++;
+		if (*buffer_count == 20) {
+			/* Sleep after the last buffer was received, in order
+			 * to keep a reference to stream while the main loop
+			 * ends. If the main is able to unref stream while
+			 * this signal callback is still waiting, stream will
+			 * be finalized in its stream thread contex (because
+			 * g_signal_emit holds a reference to stream), leading
+			 * to a deadlock. */
+			sleep (1);
+		}
+		arv_stream_push_buffer (stream, buffer);
+	}
+}
+
+static void
+stream_test (void)
+{
+	ArvCamera *camera;
+	ArvStream *stream;
+	size_t payload;
+	unsigned buffer_count = 0;
+	unsigned i;
+
+	camera = arv_camera_new ("Aravis-GV01");
+	g_assert (ARV_IS_CAMERA (camera));
+
+	stream = arv_camera_create_stream (camera, NULL, NULL);
+	g_assert (ARV_IS_STREAM (stream));
+
+	payload = arv_camera_get_payload (camera);
+
+	for (i = 0; i < 10; i++)
+		arv_stream_push_buffer (stream, arv_buffer_new (payload, NULL));
+
+	g_signal_connect (stream, "new-buffer", G_CALLBACK (new_buffer_cb), &buffer_count);
+	arv_stream_set_emit_signals (stream, TRUE);
+
+	arv_camera_start_acquisition (camera);
+
+	while (buffer_count < 20)
+		usleep (1000);
+
+	arv_camera_stop_acquisition (camera);
+
+	g_clear_object (&stream);
+	g_clear_object (&camera);
+
+	/* For actually testing the deadlock condition (see comment in
+	 * new_buffer_cb), one must wait a bit before leaving this test,
+	 * because otherwise the stream thread will be killed while sleeping. */
+	sleep (2);
+}
 int
 main (int argc, char *argv[])
 {
@@ -113,6 +173,7 @@ main (int argc, char *argv[])
 
 	g_test_add_func ("/fakegv/device_registers", register_test);
 	g_test_add_func ("/fakegv/acquisition", acquisition_test);
+	g_test_add_func ("/fakegv/stream", stream_test);
 
 	result = g_test_run();
 
