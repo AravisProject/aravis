@@ -397,6 +397,11 @@ arv_stream_finalize (GObject *object)
 	arv_debug_stream ("[Stream::finalize] Flush %d buffer[s] in output queue",
 			  g_async_queue_length (stream->priv->output_queue));
 
+	if (stream->priv->emit_signals) {
+		arv_warning_stream("[Stream::finalize] Stream finalized with emit_signals=true");
+		arv_warning_stream("[Stream::finalize] Disable signals before final unref avoids possible deadlock.");
+	}
+
 	do {
 		buffer = g_async_queue_try_pop (stream->priv->output_queue);
 		if (buffer != NULL)
