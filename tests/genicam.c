@@ -23,7 +23,7 @@ NodeTypes node_value_types[] = {
 	{"P_RWInteger_Min",		G_TYPE_INT64},
 	{"P_RWInteger_Max",		G_TYPE_INT64},
 	{"P_RWInteger_Inc",		G_TYPE_INT64},
-	{"Enumeration",			G_TYPE_STRING},
+	{"Enumeration",			G_TYPE_INT64},
 	{"EnumerationValue",		G_TYPE_INT64},
 	{"IntRegisterA",		G_TYPE_INT64},
 	{"IntRegisterB",		G_TYPE_INT64},
@@ -356,6 +356,15 @@ converter_test (void)
 	arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (node), "100", NULL);
 	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
 	g_assert_cmpint (v_int64, ==, 100);
+
+	node = arv_gc_get_node (genicam, "Enumeration");
+	g_assert (ARV_IS_GC_ENUMERATION (node));
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node), 2, NULL);
+
+	node = arv_gc_get_node (genicam, "ConverterEnumeration");
+	g_assert (ARV_IS_GC_CONVERTER (node));
+	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
+	g_assert_cmpint (v_int64, ==, 8);
 
 	g_object_unref (device);
 }

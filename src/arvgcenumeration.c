@@ -109,7 +109,7 @@ arv_gc_enumeration_get_value_as_string (ArvGcFeatureNode *node, GError **error)
 GType
 arv_gc_enumeration_get_value_type (ArvGcFeatureNode *node)
 {
-	return G_TYPE_STRING;
+	return G_TYPE_INT64;
 }
 
 
