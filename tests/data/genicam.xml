@@ -260,8 +260,8 @@
   </Integer>
 
   <Converter Name="ConverterEnumeration">
-    <FormulaTo> 4 * FROM</FormulaTo>
-    <FormulaFrom> 4 * TO</FormulaFrom>
+    <FormulaTo> 4 + FROM</FormulaTo>
+    <FormulaFrom> 4 + TO</FormulaFrom>
     <pValue>Enumeration</pValue>
   </Converter>
 

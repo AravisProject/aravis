@@ -197,6 +197,10 @@ arv_gc_enumeration_get_int_value (ArvGcEnumeration *enumeration, GError **error)
 {
 	GError *local_error = NULL;
 	gint64 value;
+	gint64 *available_values;
+	unsigned n_values;
+	unsigned i;
+	gboolean found = FALSE;
 
 	g_return_val_if_fail (ARV_IS_GC_ENUMERATION (enumeration), 0);
 	g_return_val_if_fail (error == NULL || *error == NULL, 0);
@@ -210,6 +214,28 @@ arv_gc_enumeration_get_int_value (ArvGcEnumeration *enumeration, GError **error)
 		g_propagate_error (error, local_error);
 		return 0;
 	}
+
+	available_values = arv_gc_enumeration_get_available_int_values (enumeration, &n_values, &local_error);
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return value;
+	}
+
+	if (available_values == NULL) {
+		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_EMPTY_ENUMERATION,
+			     "No available entry found in <Enumeration> '%s'",
+			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
+		return value;
+	}
+
+	for (i = 0; i < n_values; i++)
+		if (available_values[i] == value)
+			found = TRUE;
+
+	if (!found)
+		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_OUT_OF_RANGE,
+			     "Value not found in <Enumeration> '%s'",
+			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
 
 	return value;
 }
@@ -377,6 +403,37 @@ arv_gc_enumeration_set_int_value (ArvGcEnumeration *enumeration, gint64 value, G
 
 	if (enumeration->value) {
 		GError *local_error = NULL;
+
+		{
+			gint64 *available_values;
+			unsigned n_values;
+			unsigned i;
+			gboolean found = FALSE;
+
+			available_values = arv_gc_enumeration_get_available_int_values (enumeration, &n_values, &local_error);
+			if (local_error != NULL) {
+				g_propagate_error (error, local_error);
+				return;
+			}
+
+			if (available_values == NULL) {
+				g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_EMPTY_ENUMERATION,
+					     "No available entry found in <Enumeration> '%s'",
+					     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
+				return;
+			}
+
+			for (i = 0; i < n_values; i++)
+				if (available_values[i] == value)
+					found = TRUE;
+
+			if (!found) {
+				g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_OUT_OF_RANGE,
+					     "Value not found in <Enumeration> '%s'",
+					     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
+				return;
+			}
+		}
 
 		arv_gc_property_node_set_int64 (enumeration->value, value, &local_error);
 

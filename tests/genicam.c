@@ -359,12 +359,12 @@ converter_test (void)
 
 	node = arv_gc_get_node (genicam, "Enumeration");
 	g_assert (ARV_IS_GC_ENUMERATION (node));
-	arv_gc_integer_set_value (ARV_GC_INTEGER (node), 2, NULL);
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node), 1, NULL);
 
 	node = arv_gc_get_node (genicam, "ConverterEnumeration");
 	g_assert (ARV_IS_GC_CONVERTER (node));
 	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
-	g_assert_cmpint (v_int64, ==, 8);
+	g_assert_cmpint (v_int64, ==, 5);
 
 	g_object_unref (device);
 }
