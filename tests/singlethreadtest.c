@@ -5,6 +5,7 @@
 #define BUFFERS_COUNT	4
 
 int main(int argc, char** argv) {
+ 	int i;
 	arv_g_type_init();
 	
 	if(argc != 2) {
@@ -49,7 +50,7 @@ int main(int argc, char** argv) {
 	// Create buffers
 	printf("Create buffers\n");
 	int payloadSize = arv_camera_get_payload (camera);
-	for(int i=0; i < BUFFERS_COUNT; i++) {
+	for(i=0; i < BUFFERS_COUNT; i++) {
 		arv_stream_push_buffer(stream, arv_buffer_new (payloadSize, NULL));
 	}
 
@@ -66,6 +67,7 @@ int main(int argc, char** argv) {
 			arv_stream_schedule_thread(stream);
 		}
 
+		usleep(1000);
 		buffer = arv_stream_try_pop_buffer(stream);
 		
 		if(buffer == NULL) {
