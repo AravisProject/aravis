@@ -148,6 +148,10 @@ stream_test (void)
 		usleep (1000);
 
 	arv_camera_stop_acquisition (camera);
+	/* The following will block until the signal callback returns
+	 * which avoids a race and possible deadlock.
+	 */
+	arv_stream_set_emit_signals (stream, FALSE);
 
 	g_clear_object (&stream);
 	g_clear_object (&camera);
