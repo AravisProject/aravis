@@ -1,17 +1,16 @@
 #include <glib.h>
 #include <arv.h>
 
+static ArvCamera *camera = NULL;
+
 static void
 register_test (void)
 {
-	ArvCamera *camera;
 	ArvDevice *device;
 	int int_value;
 	double dbl_value;
 	double boolean_value;
 
-	camera = arv_camera_new ("Aravis-GV01");
-	g_assert (ARV_IS_CAMERA (camera));
 	device = arv_camera_get_device (camera);
 	g_assert (ARV_IS_GV_DEVICE (device));
 
@@ -62,19 +61,13 @@ register_test (void)
 	g_assert_cmpint (boolean_value, ==, TRUE);
 	int_value = arv_device_get_integer_feature_value (device, "TestRegister");
 	g_assert_cmpint (int_value, ==, 321);
-
-	g_clear_object (&camera);
 }
 
 static void
 acquisition_test (void)
 {
-	ArvCamera *camera;
 	ArvBuffer *buffer;
 	gint x, y, width, height;
-
-	camera = arv_camera_new ("Aravis-GV01");
-	g_assert (ARV_IS_CAMERA (camera));
 
 	buffer = arv_camera_acquisition (camera, 0);
 	g_assert (ARV_IS_BUFFER (buffer));
@@ -93,7 +86,6 @@ acquisition_test (void)
 
 	g_assert (arv_buffer_get_image_pixel_format (buffer) == ARV_PIXEL_FORMAT_MONO_8);
 
-	g_clear_object (&camera);
 	g_clear_object (&buffer);
 }
 
@@ -105,7 +97,7 @@ new_buffer_cb (ArvStream *stream, unsigned *buffer_count)
 	buffer = arv_stream_try_pop_buffer (stream);
 	if (buffer != NULL) {
 		(*buffer_count)++;
-		if (*buffer_count == 20) {
+		if (*buffer_count == 10) {
 			/* Sleep after the last buffer was received, in order
 			 * to keep a reference to stream while the main loop
 			 * ends. If the main is able to unref stream while
@@ -122,21 +114,17 @@ new_buffer_cb (ArvStream *stream, unsigned *buffer_count)
 static void
 stream_test (void)
 {
-	ArvCamera *camera;
 	ArvStream *stream;
 	size_t payload;
 	unsigned buffer_count = 0;
 	unsigned i;
-
-	camera = arv_camera_new ("Aravis-GV01");
-	g_assert (ARV_IS_CAMERA (camera));
 
 	stream = arv_camera_create_stream (camera, NULL, NULL);
 	g_assert (ARV_IS_STREAM (stream));
 
 	payload = arv_camera_get_payload (camera);
 
-	for (i = 0; i < 10; i++)
+	for (i = 0; i < 5; i++)
 		arv_stream_push_buffer (stream, arv_buffer_new (payload, NULL));
 
 	g_signal_connect (stream, "new-buffer", G_CALLBACK (new_buffer_cb), &buffer_count);
@@ -144,7 +132,7 @@ stream_test (void)
 
 	arv_camera_start_acquisition (camera);
 
-	while (buffer_count < 20)
+	while (buffer_count < 10)
 		usleep (1000);
 
 	arv_camera_stop_acquisition (camera);
@@ -154,7 +142,6 @@ stream_test (void)
 	arv_stream_set_emit_signals (stream, FALSE);
 
 	g_clear_object (&stream);
-	g_clear_object (&camera);
 
 	/* For actually testing the deadlock condition (see comment in
 	 * new_buffer_cb), one must wait a bit before leaving this test,
@@ -175,11 +162,16 @@ main (int argc, char *argv[])
 
 	arv_gv_fake_camera_start (simulator);
 
+	camera = arv_camera_new ("Aravis-GV01");
+	g_assert (ARV_IS_CAMERA (camera));
+
 	g_test_add_func ("/fakegv/device_registers", register_test);
 	g_test_add_func ("/fakegv/acquisition", acquisition_test);
 	g_test_add_func ("/fakegv/stream", stream_test);
 
 	result = g_test_run();
+
+	g_object_unref (camera);
 
 	arv_gv_fake_camera_stop (simulator);
 
