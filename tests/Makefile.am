@@ -62,7 +62,7 @@ realtime_test_LDADD = $(test_progs_ldadd)
 load_http_test_SOURCES = loadhttptest.c
 load_http_test_LDADD = $(test_progs_ldadd)
 
-TESTS = evaluator buffer misc fake fakegv genicam
+TESTS = evaluator buffer misc genicam fake fakegv
 if ARAVIS_BUILD_CPP_TEST
 TESTS += cpp
 endif
