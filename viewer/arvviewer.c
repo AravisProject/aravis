@@ -709,6 +709,9 @@ stop_video (ArvViewer *viewer)
 	if (GST_IS_PIPELINE (viewer->pipeline))
 		gst_element_set_state (viewer->pipeline, GST_STATE_NULL);
 
+	if (ARV_IS_STREAM (viewer->stream))
+		arv_stream_set_emit_signals (viewer->stream, FALSE);
+
 	g_clear_object (&viewer->stream);
 	g_clear_object (&viewer->pipeline);
 
