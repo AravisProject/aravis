@@ -232,6 +232,8 @@ arv_gc_enumeration_get_int_value (ArvGcEnumeration *enumeration, GError **error)
 		if (available_values[i] == value)
 			found = TRUE;
 
+	g_free (available_values);
+
 	if (!found)
 		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_OUT_OF_RANGE,
 			     "Value not found in <Enumeration> '%s'",
@@ -426,6 +428,8 @@ arv_gc_enumeration_set_int_value (ArvGcEnumeration *enumeration, gint64 value, G
 			for (i = 0; i < n_values; i++)
 				if (available_values[i] == value)
 					found = TRUE;
+
+			g_free (available_values);
 
 			if (!found) {
 				g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_OUT_OF_RANGE,
