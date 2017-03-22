@@ -721,7 +721,7 @@ _loop (ArvGvStreamThreadData *thread_data)
 			frame = NULL;
 
 		_check_frame_completion (thread_data, time_us, frame);
-	} while (!thread_data->cancel);
+	} while (!g_atomic_int_get (&thread_data->cancel));
 
 	g_free (packet);
 
@@ -905,7 +905,7 @@ _ring_buffer_loop (ArvGvStreamThreadData *thread_data)
 			descriptor->h1.block_status = TP_STATUS_KERNEL;
 			block_id = (block_id + 1) % req.tp_block_nr;
 		}
-	} while (!thread_data->cancel);
+	} while (!g_atomic_int_get (&thread_data->cancel));
 
 bind_error:
 	munmap (buffer, req.tp_block_size * req.tp_block_nr);
@@ -1192,7 +1192,7 @@ arv_gv_stream_finalize (GObject *object)
 
 		thread_data = gv_stream->priv->thread_data;
 
-		thread_data->cancel = TRUE;
+		g_atomic_int_set (&thread_data->cancel, TRUE);
 		g_thread_join (gv_stream->priv->thread);
 
 		statistic_string = arv_statistic_to_string (thread_data->statistic);

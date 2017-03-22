@@ -69,7 +69,7 @@ arv_fake_stream_thread (void *data)
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
 
-	while (!thread_data->cancel) {
+	while (!g_atomic_int_get (&thread_data->cancel)) {
 		arv_fake_camera_wait_for_next_frame (thread_data->camera);
 		buffer = arv_stream_pop_input_buffer (thread_data->stream);
 		if (buffer != NULL) {
@@ -173,7 +173,7 @@ arv_fake_stream_finalize (GObject *object)
 
 		thread_data = fake_stream->priv->thread_data;
 
-		thread_data->cancel = TRUE;
+		g_atomic_int_set (&thread_data->cancel, TRUE);
 		g_thread_join (fake_stream->priv->thread);
 		g_free (thread_data);
 

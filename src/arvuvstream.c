@@ -85,7 +85,7 @@ arv_uv_stream_thread (void *data)
 
 	offset = 0;
 
-	while (!thread_data->cancel) {
+	while (!g_atomic_int_get (&thread_data->cancel)) {
 		size_t size;
 		transferred = 0;
 
@@ -319,7 +319,7 @@ arv_uv_stream_finalize (GObject *object)
 
 		thread_data = uv_stream->priv->thread_data;
 
-		thread_data->cancel = TRUE;
+		g_atomic_int_set (&thread_data->cancel, TRUE);
 		g_thread_join (uv_stream->priv->thread);
 
 		si_control = 0x0;
