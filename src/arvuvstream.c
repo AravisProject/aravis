@@ -79,12 +79,12 @@ arv_uv_stream_thread (void *data)
 	ArvUvStreamThreadData *thread_data = data;
 	size_t transferred;
 
-	while (!thread_data->cancel) {
+	while (!g_atomic_int_get (&thread_data->cancel)) {
 		transferred = 0;
 
 		if(!arv_uv_is_transfer_active(thread_data->uv_device)) {
 			size_t size;
-			
+
 			if (thread_data->buffer == NULL)
 				size = thread_data->leader_size;
 			else {
@@ -107,7 +107,7 @@ arv_uv_stream_thread (void *data)
 			arv_uv_device_submit_bulk_transfer (thread_data->uv_device, ARV_UV_ENDPOINT_DATA, LIBUSB_ENDPOINT_IN,
 				thread_data->current_packet, size, 0, NULL);
 		}
-		
+
 		arv_uv_devce_collect_transfer(thread_data->uv_device, &transferred, thread_data->thread_enabled, NULL);
 
 		if (transferred > 0) {
@@ -300,10 +300,10 @@ arv_uv_stream_new (ArvUvDevice *uv_device, ArvStreamCallback callback, void *use
 /* ArvStream implementation */
 
 static void
-arv_uv_stream_schedule_thread	(ArvStream *stream) {	
+arv_uv_stream_schedule_thread	(ArvStream *stream) {
     ArvUvStream *uv_stream = ARV_UV_STREAM (stream);
 	ArvUvStreamThreadData *thread_data = uv_stream->priv->thread_data;
-	
+
     if(thread_data != NULL && !thread_data->thread_enabled) {
         arv_uv_stream_thread(uv_stream->priv->thread_data);
     }
@@ -345,7 +345,7 @@ arv_uv_stream_finalize (GObject *object)
 
 		thread_data = uv_stream->priv->thread_data;
 
-		thread_data->cancel = TRUE;
+		g_atomic_int_set (&thread_data->cancel, TRUE);
 		if(uv_stream->priv->thread != NULL) {
 			g_thread_join (uv_stream->priv->thread);
 		}

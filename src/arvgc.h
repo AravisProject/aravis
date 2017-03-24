@@ -39,7 +39,9 @@ GQuark 		arv_gc_error_quark 		(void);
 typedef enum {
 	ARV_GC_ERROR_PROPERTY_NOT_DEFINED,
 	ARV_GC_ERROR_PVALUE_NOT_DEFINED,
-	ARV_GC_ERROR_INVALID_PVALUE
+	ARV_GC_ERROR_INVALID_PVALUE,
+	ARV_GC_ERROR_EMPTY_ENUMERATION,
+	ARV_GC_ERROR_OUT_OF_RANGE
 } ArvGcError;
 
 #define ARV_TYPE_GC             (arv_gc_get_type ())

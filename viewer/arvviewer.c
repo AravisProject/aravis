@@ -709,6 +709,9 @@ stop_video (ArvViewer *viewer)
 	if (GST_IS_PIPELINE (viewer->pipeline))
 		gst_element_set_state (viewer->pipeline, GST_STATE_NULL);
 
+	if (ARV_IS_STREAM (viewer->stream))
+		arv_stream_set_emit_signals (viewer->stream, FALSE);
+
 	g_clear_object (&viewer->stream);
 	g_clear_object (&viewer->pipeline);
 
@@ -918,6 +921,8 @@ start_video (ArvViewer *viewer)
 		gst_bin_add (GST_BIN (viewer->pipeline), videosink);
 		gst_element_link_many (viewer->transform, videosink, NULL);
 	}
+
+	g_object_set(G_OBJECT (videosink), "sync", FALSE, NULL);
 
 	caps = gst_caps_from_string (caps_string);
 	gst_caps_set_simple (caps,

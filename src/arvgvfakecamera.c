@@ -300,7 +300,7 @@ _thread (void *user_data)
 					g_clear_object (&remote_address);
 				}
 			}
-		} while (!gv_fake_camera->priv->cancel && g_get_real_time () < next_timestamp_us);
+		} while (!g_atomic_int_get (&gv_fake_camera->priv->cancel) && g_get_real_time () < next_timestamp_us);
 
 		if (arv_fake_camera_get_control_channel_privilege (gv_fake_camera->priv->camera) == 0 ||
 		    arv_fake_camera_get_acquisition_status (gv_fake_camera->priv->camera) == 0) {
@@ -398,7 +398,7 @@ _thread (void *user_data)
 			is_streaming = TRUE;
 		}
 
-	} while (!gv_fake_camera->priv->cancel);
+	} while (!g_atomic_int_get (&gv_fake_camera->priv->cancel));
 
 	if (stream_address != NULL)
 		g_object_unref (stream_address);
@@ -528,8 +528,7 @@ arv_gv_fake_camera_stop (ArvGvFakeCamera *gv_fake_camera)
 	if (gv_fake_camera->priv->thread == NULL)
 		return;
 
-	gv_fake_camera->priv->cancel = TRUE;
-
+	g_atomic_int_set (&gv_fake_camera->priv->cancel, TRUE);
 	g_thread_join (gv_fake_camera->priv->thread);
 	gv_fake_camera->priv->thread = NULL;
 

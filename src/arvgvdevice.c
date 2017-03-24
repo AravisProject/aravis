@@ -461,12 +461,12 @@ arv_gv_device_heartbeat_thread (void *data)
 
 			while (!_read_register (io_data, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET, &value, NULL) &&
 			       g_timer_elapsed (timer, NULL) < ARV_GV_DEVICE_HEARTBEAT_RETRY_TIMEOUT_S &&
-			       !thread_data->cancel) {
+			       !g_atomic_int_get (&thread_data->cancel)) {
 				g_usleep (ARV_GV_DEVICE_HEARTBEAT_RETRY_DELAY_US);
 				counter++;
 			}
 
-			if (!thread_data->cancel) {
+			if (!g_atomic_int_get (&thread_data->cancel)) {
 				arv_log_device ("[GvDevice::Heartbeat] Ack value = %d", value);
 
 				if (counter > 1)
@@ -483,7 +483,7 @@ arv_gv_device_heartbeat_thread (void *data)
 			} else
 				io_data->is_controller = FALSE;
 		}
-	} while (!thread_data->cancel);
+	} while (!g_atomic_int_get (&thread_data->cancel));
 
 	g_timer_destroy (timer);
 
@@ -1258,7 +1258,7 @@ arv_gv_device_finalize (GObject *object)
 
 		heartbeat_data = gv_device->priv->heartbeat_data;
 
-		heartbeat_data->cancel = TRUE;
+		g_atomic_int_set (&heartbeat_data->cancel, TRUE);
 		g_thread_join (gv_device->priv->heartbeat_thread);
 		g_free (heartbeat_data);
 
