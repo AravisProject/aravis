@@ -346,7 +346,9 @@ arv_uv_stream_finalize (GObject *object)
 		thread_data = uv_stream->priv->thread_data;
 
 		thread_data->cancel = TRUE;
-		g_thread_join (uv_stream->priv->thread);
+		if(uv_stream->priv->thread != NULL) {
+			g_thread_join (uv_stream->priv->thread);
+		}
 
 		if (thread_data->callback != NULL)
 			thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_EXIT, NULL);
