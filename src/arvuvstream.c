@@ -108,7 +108,7 @@ arv_uv_stream_thread (void *data)
 				thread_data->current_packet, size, 0, NULL);
 		}
 		
-		arv_uv_devce_collect_transfer(thread_data->uv_device, &transferred, FALSE, NULL);
+		arv_uv_devce_collect_transfer(thread_data->uv_device, &transferred, thread_data->thread_enabled, NULL);
 
 		if (transferred > 0) {
 			ArvUvspPacketType packet_type;
