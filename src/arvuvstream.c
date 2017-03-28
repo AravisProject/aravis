@@ -271,6 +271,10 @@ arv_uv_stream_new (ArvUvDevice *uv_device, ArvStreamCallback callback, void *use
 	thread_data->payload_size = si_payload_size;
 	thread_data->trailer_size = si_req_trailer_size;
 
+    if(si_req_leader_size == 0 || si_payload_size == 0 || si_req_trailer_size == 0) {
+        g_error("[UvStream::arv_uv_stream_new]: Transfer size is 0");
+    }
+
 	thread_data->n_completed_buffers = 0;
 	thread_data->n_failures = 0;
 	thread_data->n_underruns = 0;
