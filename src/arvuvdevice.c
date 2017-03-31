@@ -128,7 +128,7 @@ arv_uv_devce_collect_transfer(ArvUvDevice *uv_device, size_t *transferred_size, 
 	int success;
 	int result;
 	gboolean before_active_transfer = uv_device->priv->active_transfer;
-	
+
 	g_return_val_if_fail (transferred_size != NULL, FALSE);
 
 	*transferred_size = 0;
@@ -141,7 +141,7 @@ arv_uv_devce_collect_transfer(ArvUvDevice *uv_device, size_t *transferred_size, 
 		timeout.tv_usec = 0;
 		result = libusb_handle_events_timeout(uv_device->priv->usb, &timeout);
 	}
-	
+
 	success = result >= 0;
 
 	if(success) {
@@ -862,7 +862,7 @@ arv_uv_device_finalize (GObject *object)
 	}
 
 	libusb_free_transfer(uv_device->priv->transfer);
-	 
+
 	if (uv_device->priv->usb_device != NULL) {
 		libusb_release_interface (uv_device->priv->usb_device, uv_device->priv->control_interface);
 		libusb_release_interface (uv_device->priv->usb_device, uv_device->priv->data_interface);

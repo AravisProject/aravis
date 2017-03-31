@@ -63,6 +63,7 @@ typedef struct {
 
 	gboolean cancel;
 	gboolean thread_enabled;
+    gboolean blocking_schedule;
 
 	ArvUvspPacket *current_packet;
 
@@ -108,7 +109,7 @@ arv_uv_stream_thread (void *data)
 				thread_data->current_packet, size, 0, NULL);
 		}
 
-		arv_uv_devce_collect_transfer(thread_data->uv_device, &transferred, thread_data->thread_enabled, NULL);
+		arv_uv_devce_collect_transfer(thread_data->uv_device, &transferred, thread_data->blocking_schedule, NULL);
 
 		if (transferred > 0) {
 			ArvUvspPacketType packet_type;
@@ -180,7 +181,7 @@ arv_uv_stream_thread (void *data)
 			}
 		}
 
-		if(transferred <= 0 && !thread_data->thread_enabled) {
+		if((thread_data->blocking_schedule || transferred <= 0) && !thread_data->thread_enabled) {
 		    // Scheduling stops when threading is disabled and there are
             // no more packets to be processed
             break;
@@ -292,9 +293,11 @@ arv_uv_stream_new (ArvUvDevice *uv_device, ArvStreamCallback callback, void *use
 		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
 
 	if(thread_data->thread_enabled) {
+        thread_data->blocking_schedule = TRUE;
 		uv_stream->priv->thread = arv_g_thread_new ("arv_uv_stream", arv_uv_stream_thread, uv_stream->priv->thread_data);
 	} else {
 		uv_stream->priv->thread = NULL;
+        thread_data->blocking_schedule = FALSE;
 		arv_uv_stream_thread(uv_stream->priv->thread_data);
 	}
 
@@ -304,11 +307,12 @@ arv_uv_stream_new (ArvUvDevice *uv_device, ArvStreamCallback callback, void *use
 /* ArvStream implementation */
 
 static void
-arv_uv_stream_schedule_thread	(ArvStream *stream) {
+arv_uv_stream_schedule_thread	(ArvStream *stream, gboolean block) {
     ArvUvStream *uv_stream = ARV_UV_STREAM (stream);
 	ArvUvStreamThreadData *thread_data = uv_stream->priv->thread_data;
 
     if(thread_data != NULL && !thread_data->thread_enabled) {
+        thread_data->blocking_schedule = block;
         arv_uv_stream_thread(uv_stream->priv->thread_data);
     }
 }

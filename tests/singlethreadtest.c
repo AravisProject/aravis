@@ -64,10 +64,9 @@ int main(int argc, char** argv) {
 		
 		if(singlethread) {
 			// Manually schedule the "thread" of our patched aravis version
-			arv_stream_schedule_thread(stream);
+			arv_stream_schedule_thread(stream, TRUE);
 		}
 
-		usleep(1000);
 		buffer = arv_stream_try_pop_buffer(stream);
 		
 		if(buffer == NULL) {

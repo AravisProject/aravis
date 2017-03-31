@@ -686,7 +686,7 @@ _process_packet (ArvGvStreamThreadData *thread_data, const ArvGvspPacket *packet
 }
 
 static void
-_loop (ArvGvStreamThreadData *thread_data)
+_loop (ArvGvStreamThreadData *thread_data, gboolean block)
 {
 	ArvGvStreamFrameData *frame;
 	GTimeVal current_time;
@@ -696,7 +696,7 @@ _loop (ArvGvStreamThreadData *thread_data)
 	int n_events;
 
 	do {
-        if(!thread_data->thread_enabled)
+        if(!block)
             timeout_ms = 0;
 		else if (thread_data->frames != NULL)
 			timeout_ms = thread_data->packet_timeout_us / 1000;
@@ -718,7 +718,7 @@ _loop (ArvGvStreamThreadData *thread_data)
 
 		_check_frame_completion (thread_data, time_us, frame);
 
-        if(n_events <= 0 && !thread_data->thread_enabled) {
+        if((n_events <= 0 || block) && !thread_data->thread_enabled) {
 		    // Scheduling stops when threading is disabled and there are
             // no more packets to be processed
             break;
@@ -944,7 +944,7 @@ arv_gv_stream_thread (void *data)
         thread_data->poll_fd.revents = 0;
         thread_data->packet = g_malloc0 (ARV_GV_STREAM_INCOMING_BUFFER_SIZE);
 
-		_loop (thread_data);
+		_loop (thread_data, TRUE);
     }
 
 	return NULL;
@@ -1090,11 +1090,11 @@ arv_gv_stream_new (ArvGvDevice *gv_device,
 /* ArvStream implementation */
 
 static void
-arv_gv_stream_schedule_thread	(ArvStream *stream) {
+arv_gv_stream_schedule_thread	(ArvStream *stream, gboolean block) {
     ArvGvStream *gv_stream = ARV_GV_STREAM (stream);
 
     if(!gv_stream->priv->thread_data->thread_enabled) {
-        _loop(gv_stream->priv->thread_data);
+        _loop(gv_stream->priv->thread_data, block);
     }
 }
 
