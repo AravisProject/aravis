@@ -7,7 +7,7 @@
 int main(int argc, char** argv) {
  	int i;
 	arv_g_type_init();
-	
+
 	if(argc != 2) {
 		printf("Usage\n");
 		printf("=====\n\n");
@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
 	}
 
 	int singlethread = atoi(argv[1]);
-	
+
 	// Open camera
 	printf("Open\n");
 	ArvCamera* camera = arv_camera_new(arv_get_device_id(0));
@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
 		arv_camera_uv_set_stream_options(camera, ARV_UV_STREAM_OPTION_THREADING_DISABLED);
 		arv_camera_gv_set_stream_options(camera, ARV_GV_STREAM_OPTION_THREADING_DISABLED);
 	}
-	
+
 	// Create stream
 	printf("Create stream\n");
 	ArvStream* stream = arv_camera_create_stream(camera, NULL, NULL);
@@ -61,14 +61,16 @@ int main(int argc, char** argv) {
 	printf("Capturing\n");
 	for(;;) {
 		ArvBuffer* buffer = NULL;
-		
+
 		if(singlethread) {
 			// Manually schedule the "thread" of our patched aravis version
 			arv_stream_schedule_thread(stream, TRUE);
-		}
+		} else {
+            usleep(1000);
+        }
 
 		buffer = arv_stream_try_pop_buffer(stream);
-		
+
 		if(buffer == NULL) {
 			continue;
 		}
@@ -78,7 +80,7 @@ int main(int argc, char** argv) {
 
 		arv_stream_push_buffer(stream, buffer);
 	}
-	
+
 
 	// Clean up
 	printf("Clean up\n");
