@@ -129,6 +129,7 @@ arv_uv_stream_thread (void *data)
 					}
 					thread_data->buffer = arv_stream_pop_input_buffer (thread_data->stream);
 					if (thread_data->buffer != NULL) {
+                        thread_data->buffer->priv->systemtime_us = g_get_real_time ();
 						thread_data->buffer->priv->status = ARV_BUFFER_STATUS_FILLING;
 						thread_data->buffer->priv->gvsp_payload_type = ARV_GVSP_PAYLOAD_TYPE_IMAGE;
 						arv_uvsp_packet_get_region (thread_data->current_packet,
