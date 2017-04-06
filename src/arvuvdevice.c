@@ -175,6 +175,8 @@ _read_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buffe
 					ArvUvcpCommand command;
 					guint16 packet_id;
 
+					arv_uvcp_packet_debug (read_packet, ARV_DEBUG_LEVEL_LOG);
+
 					packet_type = arv_uvcp_packet_get_packet_type (read_packet);
 					command = arv_uvcp_packet_get_command (read_packet);
 					packet_id = arv_uvcp_packet_get_packet_id (read_packet);
@@ -298,6 +300,8 @@ _write_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buff
 					ArvUvcpPacketType packet_type;
 					ArvUvcpCommand command;
 					guint16 packet_id;
+
+					arv_uvcp_packet_debug (read_packet, ARV_DEBUG_LEVEL_LOG);
 
 					packet_type = arv_uvcp_packet_get_packet_type (read_packet);
 					command = arv_uvcp_packet_get_command (read_packet);
