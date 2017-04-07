@@ -162,6 +162,7 @@ _read_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buffe
 		success = success && arv_uv_device_bulk_transfer (uv_device, ARV_UV_ENDPOINT_CONTROL, LIBUSB_ENDPOINT_OUT,
 								  packet, packet_size, NULL, 0, &error);
 		if (success) {
+			gboolean pending_ack;
 			gboolean expected_answer;
 
 			do {
@@ -182,22 +183,29 @@ _read_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buffe
 					packet_id = arv_uvcp_packet_get_packet_id (read_packet);
 
 					if (command == ARV_UVCP_COMMAND_PENDING_ACK) {
+						pending_ack = TRUE;
 						expected_answer = FALSE;
 						timeout_ms = arv_uvcp_packet_get_pending_ack_timeout (read_packet);
 
 						arv_log_device ("[UvDevice::read_memory] Pending ack timeout = %d", timeout_ms);
-					} else
+					} else {
+						pending_ack = FALSE;
 						expected_answer = packet_type == ARV_UVCP_PACKET_TYPE_ACK &&
 							command == ARV_UVCP_COMMAND_READ_MEMORY_ACK &&
 							packet_id == uv_device->priv->packet_id;
+						if (!expected_answer)
+							arv_debug_device ("[[UvDevice::read_memory] Unexpected answer (0x%04x)",
+									  packet_type);
+					}
 				} else {
+					pending_ack = FALSE;
 					expected_answer = FALSE;
 					if (error != NULL)
 						g_warning ("[UvDevice::read_memory] Ack reception error: %s", error->message);
 					g_clear_error (&error);
 				}
 
-			} while (success && !expected_answer);
+			} while (pending_ack);
 
 			success = success && expected_answer;
 
@@ -288,6 +296,7 @@ _write_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buff
 		success = success && arv_uv_device_bulk_transfer (uv_device, ARV_UV_ENDPOINT_CONTROL, LIBUSB_ENDPOINT_OUT,
 								  packet, packet_size, NULL, 0, &error);
 		if (success ) {
+			gboolean pending_ack;
 			gboolean expected_answer;
 
 			do {
@@ -308,22 +317,29 @@ _write_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buff
 					packet_id = arv_uvcp_packet_get_packet_id (read_packet);
 
 					if (command == ARV_UVCP_COMMAND_PENDING_ACK) {
+						pending_ack = TRUE;
 						expected_answer = FALSE;
 						timeout_ms = arv_uvcp_packet_get_pending_ack_timeout (read_packet);
 
 						arv_log_device ("[UvDevice::write_memory] Pending ack timeout = %d", timeout_ms);
-					} else
+					} else {
+						pending_ack = FALSE;
 						expected_answer = packet_type == ARV_UVCP_PACKET_TYPE_ACK &&
 							command == ARV_UVCP_COMMAND_WRITE_MEMORY_ACK &&
 							packet_id == uv_device->priv->packet_id;
+						if (!expected_answer)
+							arv_debug_device ("[[UvDevice::write_memory] Unexpected answer (0x%04x)",
+									  packet_type);
+					}
 				} else {
+					pending_ack = FALSE;
 					expected_answer = FALSE;
 					if (error != NULL)
 						g_warning ("[UvDevice::write_memory] Ack reception error: %s", error->message);
 					g_clear_error (&error);
 				}
 
-			} while (success && !expected_answer);
+			} while (pending_ack);
 
 			success = success && expected_answer;
 
