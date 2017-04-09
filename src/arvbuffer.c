@@ -324,7 +324,7 @@ arv_buffer_set_timestamp (ArvBuffer *buffer, guint64 timestamp_ns)
  * Gets the system timestamp for when the frame was received. Expressed in
  * microseconds.
  *
- * Returns: buffer timestamp, in microseconds.
+ * Returns: buffer timestamp, in nanoseconds.
  *
  * Since: 0.4.0
  */
@@ -334,13 +334,13 @@ arv_buffer_get_system_time (ArvBuffer *buffer)
 {
 	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
 
-	return buffer->priv->systemtime_us;
+	return buffer->priv->systemtime_ns;
 }
 
 /**
  * arv_buffer_set_system_time:
  * @buffer: a #ArvBuffer
- * @timestamp_us: a timestamp, expressed as microseconds
+ * @timestamp_ns: a timestamp, expressed as nanoseconds
  *
  * Sets the system timestamp for when the frame was received. Expressed in
  * microseconds.
@@ -349,11 +349,11 @@ arv_buffer_get_system_time (ArvBuffer *buffer)
  */
 
 void
-arv_buffer_set_system_time (ArvBuffer *buffer, guint64 timestamp_us)
+arv_buffer_set_system_time (ArvBuffer *buffer, guint64 timestamp_ns)
 {
 	g_return_if_fail (ARV_IS_BUFFER (buffer));
 
-	buffer->priv->systemtime_us = timestamp_us;
+	buffer->priv->systemtime_ns = timestamp_ns;
 }
 
 
