@@ -300,6 +300,7 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer, guint32 *
 	buffer->priv->height = height;
 	buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
 	buffer->priv->timestamp_ns = ((guint64) time.tv_sec) * 1000000000LL + time.tv_nsec;
+	buffer->priv->system_timestamp_ns = buffer->priv->timestamp_ns;
 	buffer->priv->frame_id = camera->priv->frame_id++;
 	buffer->priv->pixel_format = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_PIXEL_FORMAT);
 
@@ -430,7 +431,7 @@ arv_get_fake_camera_genicam_xml (size_t *size)
 			filename = g_build_filename (ARAVIS_DATA_DIR, "arv-fake-camera.xml", NULL);
 		else
 			filename = g_strdup (arv_fake_camera_genicam_filename);
-		
+
 		genicam_file = g_mapped_file_new (filename, FALSE, NULL);
 
 		if (genicam_file != NULL) {
