@@ -126,7 +126,7 @@ arv_uv_stream_thread (void *data)
                         if (thread_data->callback != NULL)
 							thread_data->callback (thread_data->user_data,
 									       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
-									       buffer);
+									       thread_data->buffer);
 						arv_stream_push_output_buffer (thread_data->stream, thread_data->buffer);
 						thread_data->n_failures++;
 						thread_data->buffer = NULL;
@@ -166,7 +166,7 @@ arv_uv_stream_thread (void *data)
                             if (thread_data->callback != NULL)
 								thread_data->callback (thread_data->user_data,
 										       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
-										       buffer);
+										       thread_data->buffer);
 							arv_stream_push_output_buffer (thread_data->stream, thread_data->buffer);
 							thread_data->n_underruns++;
 							thread_data->buffer = NULL;
@@ -175,7 +175,7 @@ arv_uv_stream_thread (void *data)
 							if (thread_data->callback != NULL)
 								thread_data->callback (thread_data->user_data,
 										       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
-										       buffer);
+										       thread_data->buffer);
 							arv_stream_push_output_buffer (thread_data->stream, thread_data->buffer);
 							thread_data->n_completed_buffers++;
 							thread_data->buffer = NULL;
