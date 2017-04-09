@@ -240,18 +240,16 @@ _process_data_leader (ArvGvStreamThreadData *thread_data,
 	frame->buffer->priv->gvsp_payload_type = arv_gvsp_packet_get_payload_type (packet);
 	frame->buffer->priv->frame_id = arv_gvsp_packet_get_frame_id (packet);
 
+	frame->buffer->priv->system_timestamp_ns = g_get_real_time() * 1000LL;
 	if (frame->buffer->priv->gvsp_payload_type != ARV_GVSP_PAYLOAD_TYPE_H264) {
 		if (G_LIKELY (thread_data->timestamp_tick_frequency != 0))
 			frame->buffer->priv->timestamp_ns = arv_gvsp_packet_get_timestamp (packet,
 											   thread_data->timestamp_tick_frequency);
 		else {
-			GTimeVal time;
-
-			g_get_current_time (&time);
-			frame->buffer->priv->timestamp_ns = ((guint64) time.tv_sec * 1000000000LL) + ((guint64) time.tv_usec * 1000) ;
+			frame->buffer->priv->timestamp_ns = frame->buffer->priv->system_timestamp_ns;
 		}
 	} else
-		frame->buffer->priv->timestamp_ns = g_get_real_time () * 1000LL;
+		frame->buffer->priv->timestamp_ns = frame->buffer->priv->system_timestamp_ns;
 
 	if (frame->buffer->priv->gvsp_payload_type == ARV_GVSP_PAYLOAD_TYPE_IMAGE) {
 		frame->buffer->priv->x_offset = arv_gvsp_packet_get_x_offset (packet);
