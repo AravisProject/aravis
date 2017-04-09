@@ -334,7 +334,7 @@ arv_buffer_get_system_timestamp (ArvBuffer *buffer)
 {
 	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
 
-	return buffer->priv->systemtime_ns;
+	return buffer->priv->system_timestamp_ns;
 }
 
 /**
@@ -353,7 +353,7 @@ arv_buffer_set_system_timestamp (ArvBuffer *buffer, guint64 timestamp_ns)
 {
 	g_return_if_fail (ARV_IS_BUFFER (buffer));
 
-	buffer->priv->systemtime_ns = timestamp_ns;
+	buffer->priv->system_timestamp_ns = timestamp_ns;
 }
 
 
