@@ -123,6 +123,10 @@ arv_uv_stream_thread (void *data)
 					if (thread_data->buffer != NULL) {
 						arv_debug_stream_thread ("New leader received while a buffer is still open");
 						thread_data->buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
+                        if (thread_data->callback != NULL)
+							thread_data->callback (thread_data->user_data,
+									       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
+									       buffer);
 						arv_stream_push_output_buffer (thread_data->stream, thread_data->buffer);
 						thread_data->n_failures++;
 						thread_data->buffer = NULL;
@@ -141,6 +145,10 @@ arv_uv_stream_thread (void *data)
 						thread_data->buffer->priv->frame_id = arv_uvsp_packet_get_frame_id (thread_data->current_packet);
 						thread_data->buffer->priv->timestamp_ns = arv_uvsp_packet_get_timestamp (thread_data->current_packet);
 						thread_data->offset = 0;
+                        if (thread_data->callback != NULL)
+							thread_data->callback (thread_data->user_data,
+									       ARV_STREAM_CALLBACK_TYPE_START_BUFFER,
+									       NULL);
 					} else
 						thread_data->n_underruns++;
 					break;
@@ -155,11 +163,19 @@ arv_uv_stream_thread (void *data)
 							arv_debug_stream_thread ("Incomplete image received, dropping");
 
 							thread_data->buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
+                            if (thread_data->callback != NULL)
+								thread_data->callback (thread_data->user_data,
+										       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
+										       buffer);
 							arv_stream_push_output_buffer (thread_data->stream, thread_data->buffer);
 							thread_data->n_underruns++;
 							thread_data->buffer = NULL;
 						} else {
 							thread_data->buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
+							if (thread_data->callback != NULL)
+								thread_data->callback (thread_data->user_data,
+										       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
+										       buffer);
 							arv_stream_push_output_buffer (thread_data->stream, thread_data->buffer);
 							thread_data->n_completed_buffers++;
 							thread_data->buffer = NULL;
