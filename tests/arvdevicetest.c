@@ -1,5 +1,6 @@
 #include <arv.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "../src/arvgvsp.h"
 #include "../src/arvgvcp.h"
 
@@ -53,6 +54,8 @@ main (int argc, char **argv)
 	GError *error = NULL;
 	char memory_buffer[100000];
 	int i;
+	unsigned buffer_count = 0;
+	guint64 start_time, time;
 
 	arv_g_thread_init (NULL);
 	arv_g_type_init ();
@@ -135,38 +138,52 @@ main (int argc, char **argv)
 		maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node), NULL);
 		g_print ("image height  = %d (max:%d)\n", value, maximum);
 		node = arv_gc_get_node (genicam, "BinningHorizontal");
-		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
-		maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node), NULL);
-		minimum = arv_gc_integer_get_min (ARV_GC_INTEGER (node), NULL);
-		g_print ("horizontal binning  = %d (min:%d - max:%d)\n", value, minimum, maximum);
+		if (ARV_IS_GC_NODE (node)) {
+			value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
+			maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node), NULL);
+			minimum = arv_gc_integer_get_min (ARV_GC_INTEGER (node), NULL);
+			g_print ("horizontal binning  = %d (min:%d - max:%d)\n", value, minimum, maximum);
+		}
 		node = arv_gc_get_node (genicam, "BinningVertical");
-		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
-		maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node), NULL);
-		minimum = arv_gc_integer_get_min (ARV_GC_INTEGER (node), NULL);
-		g_print ("vertical binning    = %d (min:%d - max:%d)\n", value, minimum, maximum);
+		if (ARV_IS_GC_NODE (node)) {
+			value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
+			maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node), NULL);
+			minimum = arv_gc_integer_get_min (ARV_GC_INTEGER (node), NULL);
+			g_print ("vertical binning    = %d (min:%d - max:%d)\n", value, minimum, maximum);
+		}
 		node = arv_gc_get_node (genicam, "ExposureTimeAbs");
-		v_double = arv_gc_float_get_value (ARV_GC_FLOAT (node), NULL);
-		v_double_min = arv_gc_float_get_min (ARV_GC_FLOAT (node), NULL);
-		v_double_max = arv_gc_float_get_max (ARV_GC_FLOAT (node), NULL);
-		g_print ("exposure            = %g (min:%g - max:%g)\n", v_double, v_double_min, v_double_max);
+		if (ARV_IS_GC_NODE (node)) {
+			v_double = arv_gc_float_get_value (ARV_GC_FLOAT (node), NULL);
+			v_double_min = arv_gc_float_get_min (ARV_GC_FLOAT (node), NULL);
+			v_double_max = arv_gc_float_get_max (ARV_GC_FLOAT (node), NULL);
+			g_print ("exposure            = %g (min:%g - max:%g)\n", v_double, v_double_min, v_double_max);
+		}
 		node = arv_gc_get_node (genicam, "ExposureAuto");
-		v_string = arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (node), NULL);
-		g_print ("exposure auto mode  = %s\n", v_string);
+		if (ARV_IS_GC_NODE (node)) {
+			v_string = arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (node), NULL);
+			g_print ("exposure auto mode  = %s\n", v_string);
+		}
 		node = arv_gc_get_node (genicam, "GainRaw");
-		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
-		maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node), NULL);
-		minimum = arv_gc_integer_get_min (ARV_GC_INTEGER (node), NULL);
-		g_print ("gain                = %d (min:%d - max:%d)\n", value, minimum, maximum);
+		if (ARV_IS_GC_NODE (node)) {
+			value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
+			maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node), NULL);
+			minimum = arv_gc_integer_get_min (ARV_GC_INTEGER (node), NULL);
+			g_print ("gain                = %d (min:%d - max:%d)\n", value, minimum, maximum);
+		}
 		node = arv_gc_get_node (genicam, "GainAuto");
-		v_string = arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (node), NULL);
-		g_print ("gain auto mode      = %s\n", v_string);
+		if (ARV_IS_GC_NODE (node)) {
+			v_string = arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (node), NULL);
+			g_print ("gain auto mode      = %s\n", v_string);
+		}
 		node = arv_gc_get_node (genicam, "TriggerSelector");
-		v_string = arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (node), NULL);
-		g_print ("trigger selector    = %s\n", v_string);
+		if (ARV_IS_GC_NODE (node)) {
+			v_string = arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (node), NULL);
+			g_print ("trigger selector    = %s\n", v_string);
+		}
 		node = arv_gc_get_node (genicam, "ReverseX");
-		if (node != NULL) {
+		if (ARV_IS_GC_NODE (node)) {
 			v_boolean = arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node), NULL);
-			g_print ("reverse x          = %s\n", v_boolean ? "TRUE" : "FALSE");
+			g_print ("reverse x           = %s\n", v_boolean ? "TRUE" : "FALSE");
 		}
 
 		stream = arv_device_create_stream (device, NULL, NULL);
@@ -183,8 +200,10 @@ main (int argc, char **argv)
 		for (i = 0; i < 30; i++)
 			arv_stream_push_buffer (stream, arv_buffer_new (value, NULL));
 
-		arv_device_read_register (device, ARV_GVBS_STREAM_CHANNEL_0_PORT_OFFSET, &value, NULL);
-		g_print ("stream port = %d (%d)\n", value, arv_gv_stream_get_port (ARV_GV_STREAM (stream)));
+		if (ARV_IS_GV_DEVICE (device)) {
+			arv_device_read_register (device, ARV_GVBS_STREAM_CHANNEL_0_PORT_OFFSET, &value, NULL);
+			g_print ("stream port = %d (%d)\n", value, arv_gv_stream_get_port (ARV_GV_STREAM (stream)));
+		}
 
 		arv_device_read_memory (device, 0x00014150, 8, memory_buffer, NULL);
 		arv_device_read_memory (device, 0x000000e8, 16, memory_buffer, NULL);
@@ -197,18 +216,30 @@ main (int argc, char **argv)
 
 		signal (SIGINT, set_cancel);
 
+		start_time = g_get_real_time ();
 		do {
 			g_usleep (100000);
 
 			do  {
 				buffer = arv_stream_try_pop_buffer (stream);
-				if (buffer != NULL)
+				if (buffer != NULL) {
 					arv_stream_push_buffer (stream, buffer);
+					buffer_count++;
+				}
 			} while (buffer != NULL);
+
+			time = g_get_real_time ();
+			if (time - start_time > 1000000) {
+				printf ("Frame rate = %d Hz\n", buffer_count);
+				buffer_count = 0;
+				start_time = time;
+			}
 		} while (!cancel);
 
-		arv_device_read_register (device, ARV_GVBS_STREAM_CHANNEL_0_PORT_OFFSET, &value, NULL);
-		g_print ("stream port = %d (%d)\n", value, arv_gv_stream_get_port (ARV_GV_STREAM (stream)));
+		if (ARV_IS_GV_DEVICE (device)) {
+			arv_device_read_register (device, ARV_GVBS_STREAM_CHANNEL_0_PORT_OFFSET, &value, NULL);
+			g_print ("stream port = %d (%d)\n", value, arv_gv_stream_get_port (ARV_GV_STREAM (stream)));
+		}
 
 		arv_stream_get_statistics (stream, &n_processed_buffers, &n_failures, &n_underruns);
 
