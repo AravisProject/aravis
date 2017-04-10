@@ -1,3 +1,14 @@
+Release 0.5.8
+=============
+
+  * buffer: save local system time in buffer metadate (Konstantin)
+  * usb3vision: better handling of unexpected answers (Emmanuel)
+  * stream: fix for self joining receiving thread issue (Michael)
+  * fake: new class for instantiation of fake cameras (Emmanuel)
+  * tests: new fakegv test that exercizes GigEVision protocol (Emmanuel
+  * build system update (code-coverage, address sanitizer and valgrind support) (Emmanuel)
+  * miscellaneous fixes for bug discovered vie the update build system (Emmanuel)
+
 Release 0.5.7
 =============
 
