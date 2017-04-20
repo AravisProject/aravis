@@ -928,12 +928,12 @@ start_video (ArvViewer *viewer)
 	gst_caps_set_simple (caps,
 			     "width", G_TYPE_INT, width,
 			     "height", G_TYPE_INT, height,
-			     "framerate", GST_TYPE_FRACTION, (unsigned int ) (double) (0.5 + frame_rate), 1,
+			     "framerate", GST_TYPE_FRACTION, 0, 1,
 			     NULL);
 	gst_app_src_set_caps (GST_APP_SRC (viewer->appsrc), caps);
 	gst_caps_unref (caps);
 
-	g_object_set(G_OBJECT (viewer->appsrc), "format", GST_FORMAT_TIME, NULL);
+	g_object_set(G_OBJECT (viewer->appsrc), "format", GST_FORMAT_TIME, "is-live", TRUE, "do-timestamp", TRUE, NULL);
 
 	if (!has_gtkglsink && !has_gtksink) {
 		GstBus *bus;
