@@ -119,9 +119,6 @@ typedef struct {
 	GstElement *appsrc;
 	GstElement *transform;
 
-	guint64 timestamp_offset;
-	guint64 last_timestamp;
-
 	guint rotation;
 	gboolean flip_vertical;
 	gboolean flip_horizontal;
@@ -274,9 +271,6 @@ arv_to_gst_buffer (ArvBuffer *arv_buffer)
 						      0, buffer_size, NULL, NULL);
 	}
 
-	GST_BUFFER_DTS (buffer) = 0;
-	GST_BUFFER_DURATION (buffer) = 0;
-
 	return buffer;
 }
 
@@ -289,24 +283,8 @@ new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 	if (arv_buffer == NULL)
 		return;
 
-	if (arv_buffer_get_status (arv_buffer) == ARV_BUFFER_STATUS_SUCCESS) {
-		GstBuffer *buffer;
-		guint64 timestamp_ns;
-
-		buffer = arv_to_gst_buffer (arv_buffer);
-
-		timestamp_ns =  g_get_real_time () * 1000LL;
-
-		if (viewer->timestamp_offset == 0) {
-			viewer->timestamp_offset = timestamp_ns;
-			viewer->last_timestamp = timestamp_ns;
-		}
-
-		GST_BUFFER_DTS (buffer) = timestamp_ns - viewer->timestamp_offset;
-		GST_BUFFER_DURATION (buffer) = timestamp_ns - viewer->last_timestamp;
-
-		gst_app_src_push_buffer (GST_APP_SRC (viewer->appsrc), buffer);
-	}
+	if (arv_buffer_get_status (arv_buffer) == ARV_BUFFER_STATUS_SUCCESS)
+		gst_app_src_push_buffer (GST_APP_SRC (viewer->appsrc), arv_to_gst_buffer (arv_buffer));
 
 	if (viewer->last_buffer != NULL)
 		arv_stream_push_buffer (stream, viewer->last_buffer);
@@ -796,9 +774,6 @@ start_video (ArvViewer *viewer)
 			      "frame-retention", (unsigned) viewer->frame_retention * 1000,
 			      NULL);
 	}
-
-	viewer->timestamp_offset = 0;
-	viewer->last_timestamp = 0;
 
 	arv_stream_set_emit_signals (viewer->stream, TRUE);
 	payload = arv_camera_get_payload (viewer->camera);
