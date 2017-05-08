@@ -181,7 +181,7 @@ _usb_device_to_device_ids (ArvUvInterface *uv_interface, libusb_device *device)
 	}
 	libusb_free_config_descriptor (config);
 
-	if (!control_protocol_found && !data_protocol_found)
+	if (!control_protocol_found || !data_protocol_found)
 		return NULL;
 
 	if (libusb_open (device, &device_handle) == LIBUSB_SUCCESS) {
