@@ -512,9 +512,9 @@ _open_device (ArvInterface *interface, const char *device_id)
 
 		memset(&hints, 0, sizeof (hints));
 		hints.ai_family = AF_INET;
-		hints.ai_socktype = SOCK_STREAM;
+		hints.ai_socktype = SOCK_DGRAM;
 
-		if (getaddrinfo(device_id, "http", &hints, &servinfo) != 0) {
+		if (getaddrinfo(device_id, "3956", &hints, &servinfo) != 0) {
 			return NULL;
 		}
 
