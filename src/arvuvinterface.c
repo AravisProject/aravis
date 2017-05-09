@@ -33,6 +33,7 @@
 #include <arvstr.h>
 #include <libusb.h>
 #include <stdio.h>
+#include <string.h>
 
 /* ArvUvInterface implementation */
 
