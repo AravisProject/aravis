@@ -280,7 +280,7 @@ struct _ArvGvInterfacePrivate {
 };
 
 static void
-arv_gv_interface_discover (ArvGvInterface *gv_interface)
+_discover (ArvGvInterface *gv_interface,  GHashTable *devices, const char *device_id)
 {
 	ArvGvDiscoverSocketList *socket_list;
 	GSList *iter;
@@ -288,7 +288,7 @@ arv_gv_interface_discover (ArvGvInterface *gv_interface)
 	int count;
 	int i;
 
-	g_hash_table_remove_all (gv_interface->priv->devices);
+	g_hash_table_remove_all (devices);
 
 	socket_list = arv_gv_discover_socket_list_new ();
 
@@ -342,16 +342,26 @@ arv_gv_interface_discover (ArvGvInterface *gv_interface)
 
 						if (device_infos->name != NULL && device_infos->name[0] != '\0') {
 							arv_gv_interface_device_infos_ref (device_infos);
-							g_hash_table_replace (gv_interface->priv->devices,
-									     device_infos->name, device_infos);
+							g_hash_table_replace (devices,
+									      device_infos->name, device_infos);
 						}
 						if (device_infos->user_name != NULL && device_infos->user_name[0] != '\0') {
 							arv_gv_interface_device_infos_ref (device_infos);
-							g_hash_table_replace (gv_interface->priv->devices,
-									     device_infos->user_name, device_infos);
+							g_hash_table_replace (devices,
+									      device_infos->user_name, device_infos);
 						}
 						arv_gv_interface_device_infos_ref (device_infos);
-						g_hash_table_replace (gv_interface->priv->devices, device_infos->mac_string, device_infos);
+						g_hash_table_replace (devices, device_infos->mac_string,
+								      device_infos);
+
+						if (device_id != NULL &&
+						    (g_strcmp0 (device_infos->name, device_id) == 0 ||
+						     g_strcmp0 (device_infos->user_name, device_id) == 0 ||
+						     g_strcmp0 (device_infos->mac_string, device_id) == 0)) {
+							arv_gv_interface_device_infos_unref (device_infos);
+							arv_gv_discover_socket_list_free (socket_list);
+							return;
+						}
 
 						arv_gv_interface_device_infos_unref (device_infos);
 					}
@@ -359,6 +369,12 @@ arv_gv_interface_discover (ArvGvInterface *gv_interface)
 			} while (count > 0);
 		}
 	} while (1);
+}
+
+static void
+arv_gv_interface_discover (ArvGvInterface *gv_interface)
+{
+	_discover (gv_interface, gv_interface->priv->devices, NULL);
 }
 
 static GInetAddress *
@@ -487,7 +503,7 @@ arv_gv_interface_camera_locate (ArvGvInterface *gv_interface, GInetAddress *devi
 }
 
 static ArvDevice *
-_open_device (ArvInterface *interface, const char *device_id)
+_open_device (ArvInterface *interface, GHashTable *devices, const char *device_id)
 {
 	ArvGvInterface *gv_interface;
 	ArvDevice *device = NULL;
@@ -499,11 +515,11 @@ _open_device (ArvInterface *interface, const char *device_id)
 	if (device_id == NULL) {
 		GList *device_list;
 
-		device_list = g_hash_table_get_values (gv_interface->priv->devices);
+		device_list = g_hash_table_get_values (devices);
 		device_infos = device_list != NULL ? device_list->data : NULL;
 		g_list_free (device_list);
 	} else
-		device_infos = g_hash_table_lookup (gv_interface->priv->devices, device_id);
+		device_infos = g_hash_table_lookup (devices, device_id);
 
 	if (device_infos == NULL) {
 		/* Try if device_id is a hostname/IP address */
@@ -555,14 +571,22 @@ static ArvDevice *
 arv_gv_interface_open_device (ArvInterface *interface, const char *device_id)
 {
 	ArvDevice *device;
+	GHashTable *devices;
 
-	device = _open_device (interface, device_id);
+	device = _open_device (interface, ARV_GV_INTERFACE (interface)->priv->devices, device_id);
 	if (ARV_IS_DEVICE (device))
 		return device;
 
-	arv_gv_interface_discover (ARV_GV_INTERFACE (interface));
+	devices = g_hash_table_new_full (g_str_hash, g_str_equal, NULL,
+					 (GDestroyNotify) arv_gv_interface_device_infos_unref);
 
-	return _open_device (interface, device_id);
+	_discover (ARV_GV_INTERFACE (interface), devices, device_id);
+
+	device = _open_device (interface, devices, device_id);
+
+	g_hash_table_unref (devices);
+
+	return device;
 }
 
 static ArvInterface *gv_interface = NULL;
