@@ -280,7 +280,7 @@ struct _ArvGvInterfacePrivate {
 };
 
 static ArvGvInterfaceDeviceInfos *
-_discover (ArvGvInterface *gv_interface,  GHashTable *devices, const char *device_id)
+_discover (GHashTable *devices, const char *device_id)
 {
 	ArvGvDiscoverSocketList *socket_list;
 	GSList *iter;
@@ -379,7 +379,7 @@ _discover (ArvGvInterface *gv_interface,  GHashTable *devices, const char *devic
 static void
 arv_gv_interface_discover (ArvGvInterface *gv_interface)
 {
-	_discover (gv_interface, gv_interface->priv->devices, NULL);
+	_discover (gv_interface->priv->devices, NULL);
 }
 
 static GInetAddress *
@@ -586,7 +586,7 @@ arv_gv_interface_open_device (ArvInterface *interface, const char *device_id)
 	if (ARV_IS_DEVICE (device))
 		return device;
 
-	device_infos = _discover (ARV_GV_INTERFACE (interface), NULL, device_id);
+	device_infos = _discover (NULL, device_id);
 	if (device_infos != NULL) {
 		GInetAddress *device_address;
 
