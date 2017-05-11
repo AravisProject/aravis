@@ -666,9 +666,10 @@ update_device_list_cb (GtkToolButton *button, ArvViewer *viewer)
 		gtk_list_store_append (list_store, &iter);
 		gtk_list_store_set (list_store, &iter,
 				    0, arv_get_device_id (i),
-				    1, arv_get_device_vendor (i),
-				    2, arv_get_device_model (i),
-				    3, arv_get_device_serial_nbr (i),
+				    1, arv_get_device_protocol (i),
+				    2, arv_get_device_vendor (i),
+				    3, arv_get_device_model (i),
+				    4, arv_get_device_serial_nbr (i),
 				    -1);
 	}
 	g_signal_handler_unblock (gtk_tree_view_get_selection (GTK_TREE_VIEW (viewer->camera_tree)), viewer->camera_selected);

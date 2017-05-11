@@ -673,6 +673,8 @@ arv_gv_interface_class_init (ArvGvInterfaceClass *gv_interface_class)
 
 	interface_class->update_device_list = arv_gv_interface_update_device_list;
 	interface_class->open_device = arv_gv_interface_open_device;
+
+	interface_class->protocol = "GigEVision";
 }
 
 G_DEFINE_TYPE (ArvGvInterface, arv_gv_interface, ARV_TYPE_INTERFACE)

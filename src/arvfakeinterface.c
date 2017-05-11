@@ -141,6 +141,8 @@ arv_fake_interface_class_init (ArvFakeInterfaceClass *fake_interface_class)
 
 	interface_class->update_device_list = arv_fake_interface_update_device_list;
 	interface_class->open_device = arv_fake_interface_open_device;
+
+	interface_class->protocol = "Fake";
 }
 
 G_DEFINE_TYPE (ArvFakeInterface, arv_fake_interface, ARV_TYPE_INTERFACE)

@@ -390,6 +390,8 @@ arv_uv_interface_class_init (ArvUvInterfaceClass *uv_interface_class)
 
 	interface_class->update_device_list = arv_uv_interface_update_device_list;
 	interface_class->open_device = arv_uv_interface_open_device;
+
+	interface_class->protocol = "USB3Vision";
 }
 
 G_DEFINE_TYPE (ArvUvInterface, arv_uv_interface, ARV_TYPE_INTERFACE)

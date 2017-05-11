@@ -337,6 +337,23 @@ arv_get_device_address (unsigned int index)
 }
 
 /**
+ * arv_get_device_protocol:
+ * @index: device index
+ *
+ * The index of a device may change after a call to arv_update_device_list().
+ *
+ * Returns: The device protocol as a string.
+ *
+ * Since: 0.6.0
+ */
+
+const char *
+arv_get_device_protocol	(unsigned int index)
+{
+	return arv_get_info (index, arv_interface_get_device_protocol);
+}
+
+/**
  * arv_open_device:
  * @device_id: (allow-none): a device identifier string
  *
