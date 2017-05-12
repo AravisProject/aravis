@@ -45,9 +45,9 @@ struct _ArvGcRegisterDescriptionNode {
 	ArvGcFeatureNode	node;
 
 	char *model_name;
-	guint major_version;
-	guint minor_version;
-	guint subminor_version;
+	guint schema_major_version;
+	guint schema_minor_version;
+	guint schema_subminor_version;
 };
 
 struct _ArvGcRegisterDescriptionNodeClass {
