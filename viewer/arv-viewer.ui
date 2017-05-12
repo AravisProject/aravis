@@ -278,20 +278,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                       <object class="GtkTreeViewColumn" id="id">
                         <property name="title" translatable="yes">Id</property>
                         <child>
-                          <object class="GtkCellRendererText"/>
+                          <object class="GtkCellRendererPixbuf">
+			    <property name="xpad">4</property>
+			  </object>
                           <attributes>
-                            <attribute name="text">0</attribute>
+                            <attribute name="icon-name">1</attribute>
                           </attributes>
                         </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="protocol">
-                        <property name="title" translatable="yes">Protocol</property>
                         <child>
-                          <object class="GtkCellRendererText"/>
+                          <object class="GtkCellRendererText">
+			    <property name="xpad">6</property>
+			  </object>
                           <attributes>
-                            <attribute name="text">1</attribute>
+                            <attribute name="text">0</attribute>
                           </attributes>
                         </child>
                       </object>

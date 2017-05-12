@@ -5,11 +5,12 @@ include $(top_srcdir)/Makefile.decl
 SUBDIRS = data
 
 AM_CPPFLAGS = \
-	-I$(top_srcdir)/src \
-	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\" \
-	-DPACKAGE_SRC_DIR=\""$(srcdir)"\" \
-	-DPACKAGE_DATA_DIR=\""$(datadir)"\" $(ARAVIS_VIEWER_CFLAGS) \
-	-DARAVIS_DATA_DIR=\""$(aravis_datadir)"\" \
+	-I$(top_srcdir)/src 							\
+	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\" 		\
+	-DPACKAGE_SRC_DIR=\""$(srcdir)"\" 					\
+	-DPACKAGE_DATA_DIR=\""$(datadir)"\" $(ARAVIS_VIEWER_CFLAGS) 		\
+	-DARAVIS_DATA_DIR=\""$(aravis_datadir)"\" 				\
+	-DARAVIS_ICON_DIR=\""$(datadir)/icons"\"				\
 	-DG_LOG_DOMAIN=\"Aravis\"
 
 AM_CFLAGS = -Wall
@@ -35,11 +36,16 @@ appsicon22dir = $(iconthemedir)/22x22/apps
 appsicon32dir = $(iconthemedir)/32x32/apps
 appsicon48dir = $(iconthemedir)/48x48/apps
 appsicon256dir = $(iconthemedir)/256x256/apps
+protocoliconscalabledir = $(iconthemedir)/scalable/devices
 
 dist_appsicon22_DATA = $(icondir)/22x22/apps/aravis.png
 dist_appsicon32_DATA = $(icondir)/32x32/apps/aravis.png
 dist_appsicon48_DATA = $(icondir)/48x48/apps/aravis.png
 dist_appsicon256_DATA = $(icondir)/256x256/apps/aravis.png
+dist_protocoliconscalable_DATA = \
+	$(icondir)/scalable/devices/aravis-usb3vision-symbolic.svg		\
+	$(icondir)/scalable/devices/aravis-gigevision-symbolic.svg		\
+	$(icondir)/scalable/devices/aravis-fake-symbolic.svg
 
 update_icon_cache = gtk-update-icon-cache --ignore-theme-index --force
 

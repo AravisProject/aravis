@@ -663,14 +663,22 @@ update_device_list_cb (GtkToolButton *button, ArvViewer *viewer)
 	arv_update_device_list ();
 	n_devices = arv_get_n_devices ();
 	for (i = 0; i < n_devices; i++) {
+		GString *protocol;
+
+		protocol = g_string_new (NULL);
+		g_string_append_printf (protocol, "aravis-%s-symbolic", arv_get_device_protocol (i));
+		g_string_ascii_down (protocol);
+
 		gtk_list_store_append (list_store, &iter);
 		gtk_list_store_set (list_store, &iter,
 				    0, arv_get_device_id (i),
-				    1, arv_get_device_protocol (i),
+				    1, protocol->str,
 				    2, arv_get_device_vendor (i),
 				    3, arv_get_device_model (i),
 				    4, arv_get_device_serial_nbr (i),
 				    -1);
+
+		g_string_free (protocol, TRUE);
 	}
 	g_signal_handler_unblock (gtk_tree_view_get_selection (GTK_TREE_VIEW (viewer->camera_tree)), viewer->camera_selected);
 }
