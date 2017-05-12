@@ -151,6 +151,7 @@ arv_gc_register_description_node_finalize (GObject *object)
 	ArvGcRegisterDescriptionNode *node = ARV_GC_REGISTER_DESCRIPTION_NODE (object);
 
 	g_free (node->model_name);
+	g_free (node->vendor_name);
 
 	parent_class->finalize (object);
 }
