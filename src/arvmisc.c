@@ -780,3 +780,33 @@ arv_pixel_format_from_gst_0_10_caps (const char *name, int bpp, int depth, guint
 
 	return 0;
 }
+
+static struct {
+	const char *vendor;
+	const char *alias;
+} vendor_aliases[] = {
+	{ "The Imaging Source Europe GmbH",		"TIS"},
+	{ "Point Grey Research",			"PointGrey"}
+};
+
+/**
+ * arv_vendor_alias_lookup:
+ * @vendor: a vendor string
+ *
+ * Returns: vendor alias string if found, or @vendor if not found.
+ */
+
+const char *
+arv_vendor_alias_lookup	(const char *vendor)
+{
+	int i;
+
+	if (vendor == NULL)
+		return NULL;
+
+	for (i = 0; i < G_N_ELEMENTS (vendor_aliases); i++)
+		if (g_strcmp0 (vendor_aliases[i].vendor, vendor) == 0)
+			return vendor_aliases[i].alias;
+
+	return vendor;
+}

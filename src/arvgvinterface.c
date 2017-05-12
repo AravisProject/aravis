@@ -191,6 +191,7 @@ arv_gv_discover_socket_list_send_discover_packet (ArvGvDiscoverSocketList *socke
 
 typedef struct {
 	char *name;
+	char *full_name;
 	char *user_name;
 	char *manufacturer;
 	char *model;
@@ -215,7 +216,7 @@ arv_gv_interface_device_infos_new (GInetAddress *interface_address,
 
 	g_object_ref (interface_address);
 
-	infos = g_new (ArvGvInterfaceDeviceInfos, 1);
+	infos = g_new0 (ArvGvInterfaceDeviceInfos, 1);
 
 	memcpy (infos->discovery_data, discovery_data, ARV_GVBS_DISCOVERY_DATA_SIZE);
 
@@ -227,9 +228,11 @@ arv_gv_interface_device_infos_new (GInetAddress *interface_address,
 					  ARV_GVBS_SERIAL_NUMBER_SIZE);
 	infos->user_name = g_strndup ((char *) &infos->discovery_data[ARV_GVBS_USER_DEFINED_NAME_OFFSET],
 				      ARV_GVBS_USER_DEFINED_NAME_SIZE);
-	infos->name = g_strdup_printf ("%s-%s", infos->manufacturer, infos->serial_number);
 
+	infos->name = g_strdup_printf ("%s-%s", arv_vendor_alias_lookup (infos->manufacturer), infos->serial_number);
 	arv_str_strip (infos->name, ARV_DEVICE_NAME_ILLEGAL_CHARACTERS, ARV_DEVICE_NAME_REPLACEMENT_CHARACTER);
+	infos->full_name = g_strdup_printf ("%s-%s", infos->manufacturer, infos->serial_number);
+	arv_str_strip (infos->full_name, ARV_DEVICE_NAME_ILLEGAL_CHARACTERS, ARV_DEVICE_NAME_REPLACEMENT_CHARACTER);
 
 	infos->interface_address = interface_address;
 
@@ -245,12 +248,15 @@ arv_gv_interface_device_infos_new (GInetAddress *interface_address,
 	return infos;
 }
 
-static void
+static ArvGvInterfaceDeviceInfos *
 arv_gv_interface_device_infos_ref (ArvGvInterfaceDeviceInfos *infos)
 {
-	g_return_if_fail (infos != NULL);
-	g_return_if_fail (g_atomic_int_get (&infos->ref_count) > 0);
+	g_return_val_if_fail (infos != NULL, NULL);
+	g_return_val_if_fail (g_atomic_int_get (&infos->ref_count) > 0, NULL);
+
 	g_atomic_int_inc (&infos->ref_count);
+
+	return infos;
 }
 
 static void
@@ -263,6 +269,7 @@ arv_gv_interface_device_infos_unref (ArvGvInterfaceDeviceInfos *infos)
 		g_object_unref (infos->interface_address);
 		g_free (infos->name);
 		g_free (infos->user_name);
+		g_free (infos->full_name);
 		g_free (infos->manufacturer);
 		g_free (infos->serial_number);
 		g_free (infos->model);
@@ -337,29 +344,30 @@ _discover (GHashTable *devices, const char *device_id)
 
 						arv_debug_interface ("[GvInterface::discovery] Device '%s' found "
 								     "(interface %s) user_name '%s' - MAC_name '%s'",
-								     device_infos->name, address_string,
+								     device_infos->name,
+								     address_string,
 								     device_infos->user_name,
+								     device_infos->full_name,
 								     device_infos->mac_string);
 
 						g_free (address_string);
 
 						if (devices != NULL) {
-							if (device_infos->name != NULL && device_infos->name[0] != '\0') {
-								arv_gv_interface_device_infos_ref (device_infos);
-								g_hash_table_replace (devices,
-										      device_infos->name, device_infos);
-							}
-							if (device_infos->user_name != NULL && device_infos->user_name[0] != '\0') {
-								arv_gv_interface_device_infos_ref (device_infos);
-								g_hash_table_replace (devices,
-										      device_infos->user_name, device_infos);
-							}
-							arv_gv_interface_device_infos_ref (device_infos);
+							if (device_infos->name != NULL && device_infos->name[0] != '\0')
+								g_hash_table_replace (devices, device_infos->name,
+										      arv_gv_interface_device_infos_ref (device_infos));
+							if (device_infos->full_name != NULL && device_infos->full_name[0] != '\0')
+								g_hash_table_replace (devices, device_infos->full_name,
+										      arv_gv_interface_device_infos_ref (device_infos));
+							if (device_infos->user_name != NULL && device_infos->user_name[0] != '\0')
+								g_hash_table_replace (devices, device_infos->user_name,
+										      arv_gv_interface_device_infos_ref (device_infos));
 							g_hash_table_replace (devices, device_infos->mac_string,
-									      device_infos);
+									      arv_gv_interface_device_infos_ref (device_infos));
 						} else {
 							if (device_id == NULL ||
 							    g_strcmp0 (device_infos->name, device_id) == 0 ||
+							    g_strcmp0 (device_infos->full_name, device_id) == 0 ||
 							    g_strcmp0 (device_infos->user_name, device_id) == 0 ||
 							    g_strcmp0 (device_infos->mac_string, device_id) == 0) {
 								arv_gv_discover_socket_list_free (socket_list);

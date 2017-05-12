@@ -246,6 +246,7 @@ arv_interface_get_type
 <SUBSECTION Private>
 ArvInterfaceDeviceIds
 ArvInterfacePrivate
+arv_vendor_alias_lookup
 </SECTION>
 
 <SECTION>
