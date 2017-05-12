@@ -581,6 +581,7 @@ ARV_TYPE_GC_GROUP_NODE
 <TITLE>ArvGcRegisterDescriptionNode</TITLE>
 ArvGcRegisterDescriptionNode
 arv_gc_register_description_node_new
+arv_gc_register_description_node_compare_schema_version
 arv_gc_register_description_node_check_schema_version
 arv_gc_register_feature_node
 <SUBSECTION Standard>

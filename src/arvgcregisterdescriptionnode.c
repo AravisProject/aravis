@@ -80,28 +80,51 @@ arv_gc_register_description_node_get_attribute (ArvDomElement *self, const char 
 
 /* ArvGcRegisterDescriptionNode implementation */
 
+/**
+ * arv_gc_register_description_node_compare_schema_version:
+ * @node: a #ArvGcRegisterDescriptionNode
+ * @major: major version number
+ * @minor: minor version number
+ * @subminor: sub mminor version number
+ *
+ * Compare the Genicam document version to the given version.
+ *
+ * Returns: -1 if document version is lower than the given version, 0 if equal and 1 if greater.
+ */
+
+int
+arv_gc_register_description_node_compare_schema_version (ArvGcRegisterDescriptionNode *node,
+							 guint major,
+							 guint minor,
+							 guint subminor)
+{
+	g_return_val_if_fail (ARV_IS_GC_REGISTER_DESCRIPTION_NODE (node), FALSE);
+
+	if (node->schema_major_version < major)
+		return -1;
+	if (node->schema_major_version > major)
+		return 1;
+
+	if (node->schema_minor_version < minor)
+		return -1;
+	if (node->schema_minor_version > minor)
+		return 1;
+
+	if (node->schema_subminor_version < subminor)
+		return -1;
+	if (node->schema_subminor_version > subminor)
+		return 1;
+
+	return 0;
+}
+
 gboolean
 arv_gc_register_description_node_check_schema_version (ArvGcRegisterDescriptionNode *node,
 						       guint required_major,
 						       guint required_minor,
 						       guint required_subminor)
 {
-	g_return_val_if_fail (ARV_IS_GC_REGISTER_DESCRIPTION_NODE (node), FALSE);
-
-	if (node->schema_major_version < required_major)
-		return FALSE;
-	if (node->schema_major_version > required_major)
-		return TRUE;
-
-	if (node->schema_minor_version < required_minor)
-		return FALSE;
-	if (node->schema_minor_version > required_minor)
-		return FALSE;
-
-	if (node->schema_subminor_version < required_subminor)
-		return FALSE;
-
-	return TRUE;
+	return arv_gc_register_description_node_compare_schema_version (node, required_major, required_minor, required_subminor) >= 0;
 }
 
 ArvGcNode *

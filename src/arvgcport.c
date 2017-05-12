@@ -85,7 +85,7 @@ _register_workaround_check (ArvGcPort *port, guint64 length)
 	document = arv_dom_node_get_owner_document (ARV_DOM_NODE (port));
 	register_description = ARV_GC_REGISTER_DESCRIPTION_NODE (arv_dom_document_get_document_element (document));
 
-	return length == 4 && !arv_gc_register_description_node_check_schema_version (register_description, 1, 1, 0);
+	return length == 4 && (arv_gc_register_description_node_compare_schema_version (register_description, 1, 1, 0) < 0);
 }
 
 void
