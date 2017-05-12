@@ -416,12 +416,10 @@ _bootstrap (ArvUvDevice *uv_device)
 	guint64 si_req_payload_size;
 	guint32 si_req_leader_size;
 	guint32 si_req_trailer_size;
-	guint32 si_max_leader_size;
 	guint32 si_payload_size;
 	guint32 si_payload_count;
 	guint32 si_transfer1_size;
 	guint32 si_transfer2_size;
-	guint32 si_max_trailer_size;
 	guint64 manifest_n_entries;
 	ArvUvcpManifestEntry entry;
 	ArvUvcpManifestSchemaType schema_type;
@@ -465,24 +463,30 @@ _bootstrap (ArvUvDevice *uv_device)
 	arv_device_read_memory (device, sirm_offset + ARV_SI_REQ_PAYLOAD_SIZE, sizeof (si_req_payload_size), &si_req_payload_size, NULL);
 	arv_device_read_memory (device, sirm_offset + ARV_SI_REQ_LEADER_SIZE, sizeof (si_req_leader_size), &si_req_leader_size, NULL);
 	arv_device_read_memory (device, sirm_offset + ARV_SI_REQ_TRAILER_SIZE, sizeof (si_req_trailer_size), &si_req_trailer_size, NULL);
-	arv_device_read_memory (device, sirm_offset + ARV_SI_MAX_LEADER_SIZE, sizeof (si_max_leader_size), &si_max_leader_size, NULL);
-	arv_device_read_memory (device, sirm_offset + ARV_SI_PAYLOAD_SIZE, sizeof (si_payload_size), &si_payload_size, NULL);
-	arv_device_read_memory (device, sirm_offset + ARV_SI_PAYLOAD_COUNT, sizeof (si_payload_count), &si_payload_count, NULL);
-	arv_device_read_memory (device, sirm_offset + ARV_SI_TRANSFER1_SIZE, sizeof (si_transfer1_size), &si_transfer1_size, NULL);
-	arv_device_read_memory (device, sirm_offset + ARV_SI_TRANSFER2_SIZE, sizeof (si_transfer2_size), &si_transfer2_size, NULL);
-	arv_device_read_memory (device, sirm_offset + ARV_SI_MAX_TRAILER_SIZE, sizeof (si_max_trailer_size), &si_max_trailer_size, NULL);
+
+    si_payload_size = MAXIMUM_TRANSFER_SIZE;
+	si_payload_count= si_req_payload_size / si_payload_size;
+	si_transfer1_size = si_req_payload_size % (si_payload_size*si_payload_count);
+	si_transfer2_size = 0;
+
+	arv_device_write_memory (device, sirm_offset + ARV_SI_MAX_LEADER_SIZE, sizeof (si_req_leader_size), &si_req_leader_size, NULL);
+	arv_device_write_memory (device, sirm_offset + ARV_SI_MAX_TRAILER_SIZE, sizeof (si_req_trailer_size), &si_req_trailer_size, NULL);
+	arv_device_write_memory (device, sirm_offset + ARV_SI_PAYLOAD_SIZE, sizeof (si_payload_size), &si_payload_size, NULL);
+	arv_device_write_memory (device, sirm_offset + ARV_SI_PAYLOAD_COUNT, sizeof (si_payload_count), &si_payload_count, NULL);
+	arv_device_write_memory (device, sirm_offset + ARV_SI_TRANSFER1_SIZE, sizeof (si_transfer1_size), &si_transfer1_size, NULL);
+	arv_device_write_memory (device, sirm_offset + ARV_SI_TRANSFER2_SIZE, sizeof (si_transfer2_size), &si_transfer2_size, NULL);
 
 	arv_debug_device ("SI_INFO =                  0x%08x", si_info);
 	arv_debug_device ("SI_CONTROL =               0x%08x", si_control);
 	arv_debug_device ("SI_REQ_PAYLOAD_SIZE =      0x%016lx", si_req_payload_size);
 	arv_debug_device ("SI_REQ_LEADER_SIZE =       0x%08x", si_req_leader_size);
 	arv_debug_device ("SI_REQ_TRAILER_SIZE =      0x%08x", si_req_trailer_size);
-	arv_debug_device ("SI_MAX_LEADER_SIZE =       0x%08x", si_max_leader_size);
+	arv_debug_device ("SI_MAX_LEADER_SIZE =       0x%08x", si_req_leader_size);
 	arv_debug_device ("SI_PAYLOAD_SIZE =          0x%08x", si_payload_size);
 	arv_debug_device ("SI_PAYLOAD_COUNT =         0x%08x", si_payload_count);
 	arv_debug_device ("SI_TRANSFER1_SIZE =        0x%08x", si_transfer1_size);
 	arv_debug_device ("SI_TRANSFER2_SIZE =        0x%08x", si_transfer2_size);
-	arv_debug_device ("SI_MAX_TRAILER_SIZE =      0x%08x", si_max_trailer_size);
+	arv_debug_device ("SI_MAX_TRAILER_SIZE =      0x%08x", si_req_trailer_size);
 
 	arv_device_read_memory (device, manifest_table_address, sizeof (guint64), &manifest_n_entries, NULL);
 	arv_device_read_memory (device, manifest_table_address + 0x08, sizeof (entry), &entry, NULL);

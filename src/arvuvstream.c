@@ -28,6 +28,7 @@
 #include <arvuvstreamprivate.h>
 #include <arvstreamprivate.h>
 #include <arvbufferprivate.h>
+#include <arvdeviceprivate.h>
 #include <arvuvsp.h>
 #include <arvuvcp.h>
 #include <arvdebug.h>
@@ -253,8 +254,8 @@ arv_uv_stream_new (ArvUvDevice *uv_device, ArvStreamCallback callback, void *use
 	arv_debug_stream ("SI_REQ_TRAILER_SIZE =      0x%08x", si_req_trailer_size);
 
 	si_payload_size = MAXIMUM_TRANSFER_SIZE;
-	si_payload_count=  si_req_payload_size / si_payload_size;
-	si_transfer1_size = si_req_payload_size % si_payload_size;
+	si_payload_count= si_req_payload_size / si_payload_size;
+	si_transfer1_size = si_req_payload_size % (si_payload_size*si_payload_count);
 	si_transfer2_size = 0;
 
 	arv_device_write_memory (device, sirm_offset + ARV_SI_MAX_LEADER_SIZE, sizeof (si_req_leader_size), &si_req_leader_size, NULL);
@@ -286,7 +287,7 @@ arv_uv_stream_new (ArvUvDevice *uv_device, ArvStreamCallback callback, void *use
 	thread_data->cancel = FALSE;
 
 	thread_data->leader_size = si_req_leader_size;
-	thread_data->payload_size = si_payload_size;
+	thread_data->payload_size = si_payload_size*si_payload_count + si_transfer1_size + si_transfer2_size;
 	thread_data->trailer_size = si_req_trailer_size;
 
 	thread_data->n_completed_buffers = 0;
