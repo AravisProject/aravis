@@ -46,12 +46,21 @@ arv_gc_register_description_node_set_attribute (ArvDomElement *self, const char*
 	if (strcmp (name, "ModelName") == 0) {
 		g_free (node->model_name);
 		node->model_name = g_strdup (value);
+	} else if (strcmp (name, "VendorName") == 0) {
+		g_free (node->vendor_name);
+		node->vendor_name = g_strdup (value);
 	} else if (strcmp (name, "SchemaMajorVersion") == 0) {
 		node->schema_major_version = g_ascii_strtoll (value, NULL, 0);
 	} else if (strcmp (name, "SchemaMinorVersion") == 0) {
 		node->schema_minor_version = g_ascii_strtoll (value, NULL, 0);
 	} else if (strcmp (name, "SchemaSubMinorVersion") == 0) {
 		node->schema_subminor_version = g_ascii_strtoll (value, NULL, 0);
+	} else if (strcmp (name, "MajorVersion") == 0) {
+		node->major_version = g_ascii_strtoll (value, NULL, 0);
+	} else if (strcmp (name, "MinorVersion") == 0) {
+		node->minor_version = g_ascii_strtoll (value, NULL, 0);
+	} else if (strcmp (name, "SubMinorVersion") == 0) {
+		node->subminor_version = g_ascii_strtoll (value, NULL, 0);
 	} else
 		ARV_DOM_ELEMENT_CLASS (parent_class)->set_attribute (self, name, value);
 }
@@ -63,6 +72,8 @@ arv_gc_register_description_node_get_attribute (ArvDomElement *self, const char 
 
 	if (strcmp (name, "ModelName") == 0)
 		return node->model_name;
+	else if (strcmp (name, "VendorName") == 0)
+		return node->vendor_name;
 	else
 		return ARV_DOM_ELEMENT_CLASS (parent_class)->get_attribute (self, name);
 }
