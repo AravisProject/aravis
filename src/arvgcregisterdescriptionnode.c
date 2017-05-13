@@ -90,6 +90,8 @@ arv_gc_register_description_node_get_attribute (ArvDomElement *self, const char 
  * Compare the Genicam document version to the given version.
  *
  * Returns: -1 if document version is lower than the given version, 0 if equal and 1 if greater.
+ *
+ * Since: 0.6.0
  */
 
 int

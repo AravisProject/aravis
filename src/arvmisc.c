@@ -794,6 +794,8 @@ static struct {
  * @vendor: a vendor string
  *
  * Returns: vendor alias string if found, or @vendor if not found.
+ *
+ * Since: 0.6.0
  */
 
 const char *
