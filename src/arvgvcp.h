@@ -423,6 +423,23 @@ arv_gvcp_next_packet_id (guint16 packet_id)
 	return packet_id + 1;
 }
 
+/**
+ * arv_gvcp_packet_get_pending_ack_timeout:
+ * @packet: a #ArvGvcpPacket
+ * @timeout_ms: pending acknowledge timeout placeholder
+ *
+ * Gets the pending acknowledge timeout stored in @packet, in ms.
+ *
+ * Since: 0.6.0
+ */
+
+static inline void
+arv_gvcp_packet_get_pending_ack_timeout (const ArvGvcpPacket *packet, guint32 *timeout_ms)
+{
+	if (timeout_ms != NULL)
+		*timeout_ms = packet != NULL ? g_ntohl (*((guint32 *) ((char *) packet + sizeof (ArvGvcpPacket)))) : 0;
+}
+
 G_END_DECLS
 
 #endif
