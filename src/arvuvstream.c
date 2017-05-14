@@ -122,11 +122,11 @@ arv_uv_stream_thread (void *data)
 					if (buffer != NULL) {
 						arv_debug_stream_thread ("New leader received while a buffer is still open");
 						buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
+						arv_stream_push_output_buffer (thread_data->stream, buffer);
 						if (thread_data->callback != NULL)
 							thread_data->callback (thread_data->user_data,
 									       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
 									       buffer);
-						arv_stream_push_output_buffer (thread_data->stream, buffer);
 						thread_data->n_failures++;
 						buffer = NULL;
 					}
@@ -162,20 +162,20 @@ arv_uv_stream_thread (void *data)
 							arv_debug_stream_thread ("Incomplete image received, dropping");
 
 							buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
+							arv_stream_push_output_buffer (thread_data->stream, buffer);
 							if (thread_data->callback != NULL)
 								thread_data->callback (thread_data->user_data,
 										       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
 										       buffer);
-							arv_stream_push_output_buffer (thread_data->stream, buffer);
 							thread_data->n_underruns++;
 							buffer = NULL;
 						} else {
 							buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
+							arv_stream_push_output_buffer (thread_data->stream, buffer);
 							if (thread_data->callback != NULL)
 								thread_data->callback (thread_data->user_data,
 										       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
 										       buffer);
-							arv_stream_push_output_buffer (thread_data->stream, buffer);
 							thread_data->n_completed_buffers++;
 							buffer = NULL;
 						}
