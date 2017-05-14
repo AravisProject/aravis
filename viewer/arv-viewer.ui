@@ -27,6 +27,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
     <columns>
       <!-- column-name id -->
       <column type="gchararray"/>
+      <!-- column-name protocol -->
+      <column type="gchararray"/>
       <!-- column-name manufacturer -->
       <column type="gchararray"/>
       <!-- column-name model -->
@@ -276,7 +278,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                       <object class="GtkTreeViewColumn" id="id">
                         <property name="title" translatable="yes">Id</property>
                         <child>
-                          <object class="GtkCellRendererText"/>
+                          <object class="GtkCellRendererPixbuf">
+			    <property name="xpad">4</property>
+			  </object>
+                          <attributes>
+                            <attribute name="icon-name">1</attribute>
+                          </attributes>
+                        </child>
+                        <child>
+                          <object class="GtkCellRendererText">
+			    <property name="xpad">6</property>
+			  </object>
                           <attributes>
                             <attribute name="text">0</attribute>
                           </attributes>
@@ -289,7 +301,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                         <child>
                           <object class="GtkCellRendererText"/>
                           <attributes>
-                            <attribute name="text">1</attribute>
+                            <attribute name="text">2</attribute>
                           </attributes>
                         </child>
                       </object>
@@ -300,7 +312,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                         <child>
                           <object class="GtkCellRendererText"/>
                           <attributes>
-                            <attribute name="text">2</attribute>
+                            <attribute name="text">3</attribute>
                           </attributes>
                         </child>
                       </object>
@@ -311,7 +323,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                         <child>
                           <object class="GtkCellRendererText"/>
                           <attributes>
-                            <attribute name="text">3</attribute>
+                            <attribute name="text">4</attribute>
                           </attributes>
                         </child>
                       </object>

@@ -160,6 +160,23 @@ arv_str_parse_double_list_test (void)
 	g_assert_cmpint (test1[0], ==, '\0');
 }
 
+static void
+arv_vendor_alias_lookup_test (void)
+{
+	const char *vendor_a = "The Imaging Source Europe GmbH";
+	const char *vendor_b = "Unknown Vendor";
+	const char *alias;
+
+	alias = arv_vendor_alias_lookup (NULL);
+	g_assert (alias == NULL);
+
+	alias = arv_vendor_alias_lookup (vendor_a);
+	g_assert_cmpstr (alias, == ,"TIS");
+
+	alias = arv_vendor_alias_lookup (vendor_b);
+	g_assert (alias == vendor_b);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -174,6 +191,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/str/arv-str-uri", arv_str_uri_test);
 	g_test_add_func ("/str/arv-str-parse-double", arv_str_parse_double_test);
 	g_test_add_func ("/str/arv-str-parse-double-list", arv_str_parse_double_list_test);
+	g_test_add_func ("/misc/arv-vendor-alias-lookup", arv_vendor_alias_lookup_test);
 
 	result = g_test_run();
 

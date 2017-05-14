@@ -1,5 +1,5 @@
 # ===========================================================================
-#     http://www.gnu.org/software/autoconf-archive/ax_valgrind_check.html
+#    https://www.gnu.org/software/autoconf-archive/ax_valgrind_check.html
 # ===========================================================================
 #
 # SYNOPSIS
@@ -67,7 +67,7 @@
 #   and this notice are preserved.  This file is offered as-is, without any
 #   warranty.
 
-#serial 13
+#serial 15
 
 dnl Configured tools
 m4_define([valgrind_tool_list], [[memcheck], [helgrind], [drd], [sgcheck]])
@@ -187,9 +187,8 @@ endif
 # Use recursive makes in order to ignore errors during check
 check-valgrind:
 ifeq ($(VALGRIND_ENABLED),yes)
-	-$(A''M_V_at)$(foreach tool,$(valgrind_enabled_tools), \
-		$(MAKE) $(AM_MAKEFLAGS) -k check-valgrind-$(tool); \
-	)
+	$(A''M_V_at)$(MAKE) $(AM_MAKEFLAGS) -k \
+		$(foreach tool, $(valgrind_enabled_tools), check-valgrind-$(tool))
 else
 	@echo "Need to reconfigure with --enable-valgrind"
 endif

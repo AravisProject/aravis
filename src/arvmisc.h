@@ -76,6 +76,8 @@ ArvPixelFormat 	arv_pixel_format_from_gst_caps 			(const char *name, const char 
 const char * 	arv_pixel_format_to_gst_0_10_caps_string 	(ArvPixelFormat pixel_format);
 ArvPixelFormat 	arv_pixel_format_from_gst_0_10_caps 		(const char *name, int bpp, int depth, guint32 fourcc);
 
+const char *	arv_vendor_alias_lookup		(const char *vendor);
+
 /*
    Compatibility with old glib
  */

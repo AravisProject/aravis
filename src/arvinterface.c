@@ -275,6 +275,30 @@ arv_interface_get_device_serial_nbr (ArvInterface *interface, unsigned int index
 }
 
 /**
+ * arv_interface_get_device_protocol:
+ * @interface: a #ArvInterface
+ * @index: device index
+ *
+ * Queries the device protocol. Possible values are 'USB3Vision', 'GigEVision'
+ * and 'Fake'.
+ *
+ * Prior to this call the arv_interface_update_device_list()
+ * function must be called.
+ *
+ * Returns: (transfer none): the device protocol as a string, NULL on error
+ *
+ * Since: 0.6.0
+ */
+
+const char *
+arv_interface_get_device_protocol (ArvInterface *interface, unsigned int index)
+{
+	g_return_val_if_fail (ARV_IS_INTERFACE (interface), NULL);
+
+	return ARV_INTERFACE_GET_CLASS (interface)->protocol;
+}
+
+/**
  * arv_interface_open_device:
  * @interface: a #ArvInterface
  * @device_id: (allow-none): device unique id

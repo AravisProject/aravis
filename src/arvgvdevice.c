@@ -1230,7 +1230,7 @@ arv_gv_device_new (GInetAddress *interface_address, GInetAddress *device_address
 
 	document = ARV_DOM_DOCUMENT (gv_device->priv->genicam);
 	register_description = ARV_GC_REGISTER_DESCRIPTION_NODE (arv_dom_document_get_document_element (document));
-	if (!arv_gc_register_description_node_check_schema_version (register_description, 1, 1, 0))
+	if (arv_gc_register_description_node_compare_schema_version (register_description, 1, 1, 0) < 0)
 		arv_debug_device ("[GvDevice::new] Register workaround = yes");
 
 	return ARV_DEVICE (gv_device);

@@ -64,6 +64,7 @@ int
 main (int argc, char **argv)
 {
 	ArvViewer *viewer;
+	GtkIconTheme *icon_theme;
 	int status;
 	GOptionContext *context;
 	GError *error = NULL;
@@ -76,6 +77,9 @@ main (int argc, char **argv)
 
 	gtk_init (&argc, &argv);
 	gst_init (&argc, &argv);
+
+	icon_theme = gtk_icon_theme_get_default ();
+	gtk_icon_theme_append_search_path (icon_theme, ARAVIS_ICON_DIR);
 
 	context = g_option_context_new (NULL);
 	g_option_context_add_main_entries (context, arv_viewer_option_entries, NULL);
