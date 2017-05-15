@@ -76,15 +76,17 @@ arv_fake_stream_thread (void *data)
 			if (thread_data->callback != NULL)
 				thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_START_BUFFER,
 						       NULL);
+
 			arv_fake_camera_fill_buffer (thread_data->camera, buffer, NULL);
 			if (buffer->priv->status == ARV_BUFFER_STATUS_SUCCESS)
 				thread_data->n_completed_buffers++;
 			else
 				thread_data->n_failures++;
+			arv_stream_push_output_buffer (thread_data->stream, buffer);
+
 			if (thread_data->callback != NULL)
 				thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
 						       buffer);
-			arv_stream_push_output_buffer (thread_data->stream, buffer);
 		} else
 			thread_data->n_underruns++;
 	}
