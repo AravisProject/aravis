@@ -30,6 +30,7 @@
 #include <arvtypes.h>
 #include <arvstream.h>
 #include <arvgvstream.h>
+#include <arvuvstream.h>
 
 G_BEGIN_DECLS
 
@@ -165,6 +166,8 @@ gboolean        arv_camera_uv_is_bandwidth_control_available 	(ArvCamera *camera
 void            arv_camera_uv_set_bandwidth             	(ArvCamera *camera, guint bandwidth);
 guint           arv_camera_uv_get_bandwidth             	(ArvCamera *camera);
 void            arv_camera_uv_get_bandwidth_bounds      	(ArvCamera *camera, guint* min, guint* max);
+
+void 			arv_camera_uv_set_stream_options 	(ArvCamera *camera, ArvUvStreamOption options);
 
 /* Chunk data */
 

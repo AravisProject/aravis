@@ -31,6 +31,18 @@
 
 G_BEGIN_DECLS
 
+/**
+ * ArvGvStreamOption:
+ * @ARV_UV_STREAM_OPTION_NONE: no option specified
+ * @ARV_UV_STREAM_OPTION_THREADING_DISABLED: use of acquisition thread is disabled
+ */
+
+typedef enum {
+	ARV_UV_STREAM_OPTION_NONE = 0,
+	ARV_UV_STREAM_OPTION_THREADING_DISABLED = 1
+} ArvUvStreamOption;
+
+
 #define ARV_TYPE_UV_STREAM             (arv_uv_stream_get_type ())
 #define ARV_UV_STREAM(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_UV_STREAM, ArvUvStream))
 #define ARV_UV_STREAM_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_UV_STREAM, ArvUvStreamClass))

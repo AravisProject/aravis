@@ -21,7 +21,8 @@ noinst_PROGRAMS = 			\
 	arv-auto-packet-size-test	\
 	time-test			\
 	realtime-test			\
-	load-http-test
+	load-http-test			\
+	singlethread-test
 
 arv_device_test_SOURCES = arvdevicetest.c
 arv_device_test_LDADD = $(test_progs_ldadd)
@@ -101,5 +102,8 @@ genicam_LDADD = $(test_progs_ldadd) $(CODE_COVERAGE_LIBS)
 
 cpp_SOURCES = cpp.cc
 cpp_LDADD = $(test_progs_ldadd)
+
+singlethread_test_SOURCES = singlethreadtest.c
+singlethread_test_LDADD = $(test_progs_ldadd)
 
 EXTRA_DIST += data/genicam.xml

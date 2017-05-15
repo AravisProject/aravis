@@ -71,6 +71,7 @@ struct _ArvStreamClass {
 
 	void		(*get_statistics)	(ArvStream *stream, guint64 *n_completed_buffers,
 						 guint64 *n_failures, guint64 *n_underruns);
+	void		(*schedule_thread)	(ArvStream *stream, gboolean block);
 
 	/* signals */
 	void        	(*new_buffer)   	(ArvStream *stream);
@@ -92,6 +93,8 @@ void		arv_stream_get_statistics		(ArvStream *stream,
 
 void 		arv_stream_set_emit_signals 		(ArvStream *stream, gboolean emit_signals);
 gboolean 	arv_stream_get_emit_signals 		(ArvStream *stream);
+
+void		arv_stream_schedule_thread			(ArvStream *stream, gboolean block);
 
 G_END_DECLS
 

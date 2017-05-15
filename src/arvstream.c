@@ -272,6 +272,29 @@ arv_stream_get_statistics (ArvStream *stream,
 }
 
 /**
+ * arv_stream_schedule_thread: (skip)
+ * @stream: a #ArvStream
+ * @block: if set to TRUE the scheduling function will block until at least
+ *         one event from this stream has been processed or until a timeout
+ *         occurs.
+ *
+ * Manually schedules the image acquisition for the given stream. This method
+ * should be called regularly if threading has been disabled for this stream
+ * by setting the appropriate stream option.
+ */
+void
+arv_stream_schedule_thread	(ArvStream *stream, gboolean block) {
+    ArvStreamClass *stream_class;
+	g_return_if_fail (ARV_IS_STREAM (stream));
+
+	stream_class = ARV_STREAM_GET_CLASS (stream);
+	
+	if (stream_class->schedule_thread != NULL) {
+		stream_class->schedule_thread (stream, block);
+	}
+}
+
+/**
  * arv_stream_set_emit_signals:
  * @stream: a #ArvStream
  * @emit_signals: the new state
