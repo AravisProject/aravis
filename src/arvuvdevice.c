@@ -150,7 +150,7 @@ _read_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buffe
 	read_packet = g_malloc (read_packet_size);
 
 	do {
-		GError *error = NULL;
+		GError *local_error = NULL;
 		size_t transferred;
 
 		uv_device->priv->packet_id = arv_uvcp_next_packet_id (uv_device->priv->packet_id);
@@ -160,7 +160,7 @@ _read_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buffe
 
 		success = TRUE;
 		success = success && arv_uv_device_bulk_transfer (uv_device, ARV_UV_ENDPOINT_CONTROL, LIBUSB_ENDPOINT_OUT,
-								  packet, packet_size, NULL, 0, &error);
+								  packet, packet_size, NULL, 0, &local_error);
 		if (success) {
 			gboolean pending_ack;
 			gboolean expected_answer;
@@ -169,7 +169,7 @@ _read_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buffe
 				success = TRUE;
 				success = success && arv_uv_device_bulk_transfer (uv_device, ARV_UV_ENDPOINT_CONTROL, LIBUSB_ENDPOINT_IN,
 										  read_packet, read_packet_size, &transferred,
-										  0, &error);
+										  0, &local_error);
 
 				if (success) {
 					ArvUvcpPacketType packet_type;
@@ -200,9 +200,9 @@ _read_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buffe
 				} else {
 					pending_ack = FALSE;
 					expected_answer = FALSE;
-					if (error != NULL)
-						g_warning ("[UvDevice::read_memory] Ack reception error: %s", error->message);
-					g_clear_error (&error);
+					if (local_error != NULL)
+						g_warning ("[UvDevice::read_memory] Ack reception error: %s", local_error->message);
+					g_clear_error (&local_error);
 				}
 
 			} while (pending_ack);
@@ -214,9 +214,9 @@ _read_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buffe
 				arv_uvcp_packet_debug (read_packet, ARV_DEBUG_LEVEL_LOG);
 			}
 		} else {
-			if (error != NULL)
-				g_warning ("[UvDevice::read_memory] Command sending error: %s", error->message);
-			g_clear_error (&error);
+			if (local_error != NULL)
+				g_warning ("[UvDevice::read_memory] Command sending error: %s", local_error->message);
+			g_clear_error (&local_error);
 		}
 
 		n_tries++;
@@ -284,7 +284,7 @@ _write_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buff
 	read_packet = g_malloc (read_packet_size);
 
 	do {
-		GError *error = NULL;
+		GError *local_error = NULL;
 		size_t transferred;
 
 		uv_device->priv->packet_id = arv_uvcp_next_packet_id (uv_device->priv->packet_id);
@@ -294,7 +294,7 @@ _write_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buff
 
 		success = TRUE;
 		success = success && arv_uv_device_bulk_transfer (uv_device, ARV_UV_ENDPOINT_CONTROL, LIBUSB_ENDPOINT_OUT,
-								  packet, packet_size, NULL, 0, &error);
+								  packet, packet_size, NULL, 0, &local_error);
 		if (success ) {
 			gboolean pending_ack;
 			gboolean expected_answer;
@@ -303,7 +303,7 @@ _write_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buff
 				success = TRUE;
 				success = success && arv_uv_device_bulk_transfer (uv_device, ARV_UV_ENDPOINT_CONTROL, LIBUSB_ENDPOINT_IN,
 										  read_packet, read_packet_size, &transferred,
-										  timeout_ms, &error);
+										  timeout_ms, &local_error);
 
 				if (success) {
 					ArvUvcpPacketType packet_type;
@@ -334,9 +334,9 @@ _write_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buff
 				} else {
 					pending_ack = FALSE;
 					expected_answer = FALSE;
-					if (error != NULL)
-						g_warning ("[UvDevice::write_memory] Ack reception error: %s", error->message);
-					g_clear_error (&error);
+					if (local_error != NULL)
+						g_warning ("[UvDevice::write_memory] Ack reception error: %s", local_error->message);
+					g_clear_error (&local_error);
 				}
 
 			} while (pending_ack);
@@ -346,9 +346,9 @@ _write_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buff
 			if (success)
 				arv_uvcp_packet_debug (read_packet, ARV_DEBUG_LEVEL_LOG);
 		} else {
-			if (error != NULL)
-				g_warning ("[UvDevice::write_memory] Command sending error: %s", error->message);
-			g_clear_error (&error);
+			if (local_error != NULL)
+				g_warning ("[UvDevice::write_memory] Command sending error: %s", local_error->message);
+			g_clear_error (&local_error);
 		}
 
 		n_tries++;
