@@ -185,6 +185,7 @@ _read_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buffe
 					if (command == ARV_UVCP_COMMAND_PENDING_ACK) {
 						pending_ack = TRUE;
 						expected_answer = FALSE;
+
 						timeout_ms = arv_uvcp_packet_get_pending_ack_timeout (read_packet);
 
 						arv_log_device ("[UvDevice::read_memory] Pending ack timeout = %d", timeout_ms);
@@ -209,10 +210,8 @@ _read_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buffe
 
 			success = success && expected_answer;
 
-			if (success) {
+			if (success)
 				memcpy (buffer, arv_uvcp_packet_get_read_memory_ack_data (read_packet), size);
-				arv_uvcp_packet_debug (read_packet, ARV_DEBUG_LEVEL_LOG);
-			}
 		} else {
 			if (local_error != NULL)
 				g_warning ("[UvDevice::read_memory] Command sending error: %s", local_error->message);
