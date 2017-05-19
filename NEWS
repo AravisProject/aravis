@@ -1,3 +1,15 @@
+Release 0.5.9
+=============
+
+  * gige/usb3vision: device detection fixes (Nils)
+  * stream: allow to handle circular buffer from callback (Nils)
+  * build: OSX documentation fix (Mark)
+  * viewer: latency improvements (Emmanuel)
+  * viewer: show protocol in camera list view (Emmanuel)
+  * gigevision: faster connection to devices (Emmanuel)
+  * gigevision: PENDING ACK support (Emmanuel)
+  * gige/usb3vision: use vendor aliases for default device id (Emmanuel)
+
 Release 0.5.8
 =============
 
