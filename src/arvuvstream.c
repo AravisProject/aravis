@@ -35,7 +35,7 @@
 #include <libusb.h>
 #include <string.h>
 
-#define MAXIMUM_TRANSFER_SIZE	1048576
+#define ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE	1048576
 
 static GObjectClass *parent_class = NULL;
 
@@ -78,7 +78,7 @@ arv_uv_stream_thread (void *data)
 
 	arv_log_stream_thread ("Start USB3Vision stream thread");
 
-	incoming_buffer = g_malloc (MAXIMUM_TRANSFER_SIZE);
+	incoming_buffer = g_malloc (ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE);
 
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
@@ -252,7 +252,17 @@ arv_uv_stream_new (ArvUvDevice *uv_device, ArvStreamCallback callback, void *use
 	arv_debug_stream ("SI_REQ_LEADER_SIZE =       0x%08x", si_req_leader_size);
 	arv_debug_stream ("SI_REQ_TRAILER_SIZE =      0x%08x", si_req_trailer_size);
 
-	si_payload_size = MAXIMUM_TRANSFER_SIZE;
+	if (si_req_leader_size < 1) {
+		arv_warning_stream ("Wrong SI_REQ_LEADER_SIZE value, using %d instead", ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE);
+		si_req_leader_size = ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE;
+	}
+
+	if (si_req_trailer_size < 1) {
+		arv_warning_stream ("Wrong SI_REQ_TRAILER_SIZE value, using %d instead", ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE);
+		si_req_trailer_size = ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE;
+	}
+
+	si_payload_size = ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE;
 	si_payload_count=  si_req_payload_size / si_payload_size;
 	si_transfer1_size = si_req_payload_size % si_payload_size;
 	si_transfer2_size = 0;
