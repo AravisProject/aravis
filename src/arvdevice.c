@@ -200,14 +200,6 @@ arv_device_get_genicam (ArvDevice *device)
 	return ARV_DEVICE_GET_CLASS (device)->get_genicam (device);
 }
 
-static const char *
-_get_genicam_xml (ArvDevice *device, size_t *size)
-{
-	*size = 0;
-
-	return NULL;
-}
-
 /**
  * arv_device_get_genicam_xml:
  * @device: a #ArvDevice
@@ -226,7 +218,12 @@ arv_device_get_genicam_xml (ArvDevice *device, size_t *size)
 	g_return_val_if_fail (ARV_IS_DEVICE (device), NULL);
 	g_return_val_if_fail (size != NULL, NULL);
 
-	return ARV_DEVICE_GET_CLASS (device)->get_genicam_xml (device, size);
+	if (ARV_DEVICE_GET_CLASS (device)->get_genicam_xml != NULL)
+		return ARV_DEVICE_GET_CLASS (device)->get_genicam_xml (device, size);
+
+	*size = 0;
+
+	return NULL;
 }
 
 /**
@@ -755,8 +752,6 @@ arv_device_class_init (ArvDeviceClass *device_class)
 	parent_class = g_type_class_peek_parent (device_class);
 
 	object_class->finalize = arv_device_finalize;
-
-	device_class->get_genicam_xml = _get_genicam_xml;
 
 	/**
 	 * ArvDevice::control-lost:

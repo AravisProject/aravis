@@ -131,12 +131,23 @@ static void
 fake_device_test (void)
 {
 	ArvDevice *device;
+	ArvDeviceStatus status;
 	int int_value;
 	double dbl_value;
 	double boolean_value;
+	gint64 minimum, maximum;
+	gint64 *values;
+	const char **string_values;
+	int n_values;
+	double float_minimum, float_maximum;
+	const char *genicam;
+	gsize size;
 
 	device = arv_fake_device_new ("TEST0");
 	g_assert (ARV_IS_FAKE_DEVICE (device));
+
+	genicam = arv_device_get_genicam_xml (device, &size);
+	g_assert (genicam != NULL);
 
 	/* Check default */
 	int_value = arv_device_get_integer_feature_value (device, "Width");
@@ -186,7 +197,103 @@ fake_device_test (void)
 	int_value = arv_device_get_integer_feature_value (device, "TestRegister");
 	g_assert_cmpint (int_value, ==, 321);
 
+	arv_device_get_integer_feature_bounds (device, "Width", &minimum, &maximum);
+	g_assert_cmpint (minimum, ==, 1);
+	g_assert_cmpint (maximum, ==, 2048);
+
+	arv_device_get_float_feature_bounds (device, "ExposureTimeAbs", &float_minimum, &float_maximum);
+	g_assert_cmpfloat (float_minimum, ==, 10.0);
+	g_assert_cmpfloat (float_maximum, ==, 10000000.0);
+
+	arv_device_set_float_feature_value (device,  "ExposureTimeAbs", 20.0);
+	dbl_value = arv_device_get_float_feature_value (device,  "ExposureTimeAbs");
+	g_assert_cmpfloat (dbl_value, ==, 20.0);
+
+	values = arv_device_get_available_enumeration_feature_values (device, "GainAuto", &n_values);
+	g_assert (values != NULL);
+	g_assert_cmpint (n_values, ==, 3);
+	g_free (values);
+
+	string_values = arv_device_get_available_enumeration_feature_values_as_strings (device, "GainAuto", &n_values);
+	g_assert (string_values != NULL);
+	g_assert_cmpint (n_values, ==, 3);
+	g_free (string_values);
+
+	status = arv_device_get_status (device);
+	g_assert_cmpint (status, ==, ARV_DEVICE_STATUS_SUCCESS);
+
 	g_object_unref (device);
+}
+
+static void
+fake_device_error_test (void)
+{
+	ArvDevice *device;
+	ArvDeviceStatus status;
+	int int_value;
+	double dbl_value;
+	double boolean_value;
+	gint64 minimum, maximum;
+	gint64 *values;
+	const char **string_values;
+	int n_values;
+	double float_minimum, float_maximum;
+
+	device = arv_fake_device_new ("TEST0");
+	g_assert (ARV_IS_FAKE_DEVICE (device));
+
+	int_value = arv_device_get_integer_feature_value (device, "Unknown");
+	g_assert_cmpint (int_value, ==, 0);
+
+	boolean_value = arv_device_get_boolean_feature_value (device, "Unknown");
+	g_assert_cmpint (boolean_value, ==, 0);
+
+	status = arv_device_get_status (device);
+	g_assert_cmpint (status, ==, ARV_DEVICE_STATUS_SUCCESS);
+
+	g_object_unref (device);
+}
+
+static void
+fake_stream_test (void)
+{
+	ArvCamera *camera;
+	ArvStream *stream;
+	ArvBuffer *buffer;
+	guint64 n_completed_buffers;
+	guint64 n_failures;
+	guint64 n_underruns;
+	gint n_input_buffers;
+	gint n_output_buffers;
+	gint payload;
+
+	camera = arv_camera_new ("Fake_1");
+	g_assert (ARV_IS_CAMERA (camera));
+
+	stream = arv_camera_create_stream (camera, NULL, NULL);
+	g_assert (ARV_IS_STREAM (stream));
+
+	payload = arv_camera_get_payload (camera);
+	arv_stream_push_buffer (stream,  arv_buffer_new (payload, NULL));
+	arv_camera_set_acquisition_mode (camera, ARV_ACQUISITION_MODE_SINGLE_FRAME);
+	arv_camera_start_acquisition (camera);
+	buffer = arv_stream_pop_buffer (stream);
+	arv_camera_stop_acquisition (camera);
+
+	g_assert (ARV_IS_BUFFER (buffer));
+
+	arv_stream_get_statistics (stream, &n_completed_buffers, &n_failures, &n_underruns);
+	g_assert_cmpint (n_completed_buffers, == ,1);
+	g_assert_cmpint (n_failures, ==, 0);
+	g_assert_cmpint (n_underruns, ==, 0);
+
+	arv_stream_get_n_buffers (stream, &n_input_buffers, &n_output_buffers);
+	g_assert_cmpint (n_input_buffers, ==, 0);
+	g_assert_cmpint (n_output_buffers, ==, 0);
+
+	g_clear_object (&buffer);
+	g_clear_object (&stream);
+	g_clear_object (&camera);
 }
 
 int
@@ -198,12 +305,16 @@ main (int argc, char *argv[])
 
 	arv_g_type_init ();
 
+	arv_enable_interface ("Fake");
+
 	arv_set_fake_camera_genicam_filename (GENICAM_FILENAME);
 
 	g_test_add_func ("/fake/load-fake-camera-genicam", load_fake_camera_genicam_test);
 	g_test_add_func ("/fake/trigger-registers", trigger_registers_test);
 	g_test_add_func ("/fake/registers", registers_test);
 	g_test_add_func ("/fake/fake-device", fake_device_test);
+	g_test_add_func ("/fake/fake-device-error", fake_device_error_test);
+	g_test_add_func ("/fake/fake-stream", fake_stream_test);
 
 	result = g_test_run();
 
