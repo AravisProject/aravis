@@ -26,7 +26,6 @@ aravisdocdir = ${docdir}/aravis-@ARAVIS_API_VERSION@
 aravisdoc_DATA = 	\
 	README.md	\
 	COPYING		\
-	COPYING.LESSER	\
 	ChangeLog 	\
 	AUTHORS		\
 	NEWS
