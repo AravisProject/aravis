@@ -138,6 +138,7 @@ fake_device_test (void)
 	gint64 minimum, maximum;
 	gint64 *values;
 	const char **string_values;
+	const char *string_value;
 	int n_values;
 	double float_minimum, float_maximum;
 	const char *genicam;
@@ -218,6 +219,10 @@ fake_device_test (void)
 	g_assert (string_values != NULL);
 	g_assert_cmpint (n_values, ==, 3);
 	g_free (string_values);
+
+	arv_device_set_string_feature_value (device, "TestStringReg", "String");
+	string_value = arv_device_get_string_feature_value (device, "TestStringReg");
+	g_assert_cmpstr (string_value, ==, "String");
 
 	status = arv_device_get_status (device);
 	g_assert_cmpint (status, ==, ARV_DEVICE_STATUS_SUCCESS);

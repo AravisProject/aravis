@@ -507,6 +507,13 @@
 		</StructEntry>
 	</StructReg>
 
+	<StringReg Name="TestStringReg" NameSpace="Custom">
+		<Address>0x200</Address>
+		<Length>32</Length>
+		<AccessMode>RW</AccessMode>
+		<pPort>Device</pPort>
+	</StringReg>
+
 	<!-- Port -->
 
 	<Port Name="Device" NameSpace="Standard">
