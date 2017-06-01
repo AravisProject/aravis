@@ -33,6 +33,7 @@
 #include <arvstr.h>
 #include <libusb.h>
 #include <stdio.h>
+#include <string.h>
 
 /* ArvUvInterface implementation */
 
@@ -307,8 +308,29 @@ _open_device (ArvInterface *interface, const char *device_id)
 	} else
 		device_infos = g_hash_table_lookup (uv_interface->priv->devices, device_id);
 
-	if (device_infos == NULL)
-		return NULL;
+	if (device_infos == NULL) {
+		/* device id may be "manufacturer;model;serial" */
+		char* manufacturer;
+		char* product;
+		char* serial;
+		product = strchr (device_id, ';');
+		if (product == NULL)
+			return NULL;
+		
+		serial = strchr (product + 1, ';');
+		if (serial == NULL)
+			return NULL;
+		
+		manufacturer = g_strndup (device_id, product - device_id);
+		product = g_strndup (product + 1, serial - (product + 1));
+		
+		device = arv_uv_device_new (manufacturer, product, serial + 1);
+		
+		g_free(manufacturer);
+		g_free(product);
+		
+		return device;
+	}
 
 	device = arv_uv_device_new (device_infos->manufacturer, device_infos->product, device_infos->serial_nbr);
 
