@@ -90,12 +90,12 @@ arv_uv_stream_thread (void *data)
 		transferred = 0;
 
 		if (buffer == NULL)
-			size = thread_data->leader_size;
+			size = MAXIMUM_TRANSFER_SIZE;
 		else {
 			if (offset < buffer->priv->size)
 				size = MIN (thread_data->payload_size, buffer->priv->size - offset);
 			else
-				size = thread_data->trailer_size;
+				size = MAXIMUM_TRANSFER_SIZE;
 		}
 
 		/* Avoid unnecessary memory copy by transferring data directly to the image buffer */
