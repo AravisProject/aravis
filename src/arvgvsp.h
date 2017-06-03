@@ -133,15 +133,15 @@ typedef struct ARAVIS_PACKED_STRUCTURE {
 
 /**
  * ArvGvspDataTrailer:
+ * @payload_type: ID of the payload type
  * @data0: unused
- * @data1: unused
  *
  * GVSP data trailer packet data area.
  */
 
 typedef struct ARAVIS_PACKED_STRUCTURE {
+	guint32 payload_type;
 	guint32 data0;
-	guint32 data1;
 } ArvGvspDataTrailer;
 
 
