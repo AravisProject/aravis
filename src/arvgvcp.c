@@ -280,7 +280,7 @@ arv_gvcp_packet_new_write_register_cmd (guint32 address,
 
 /**
  * arv_gvcp_packet_new_write_register_ack: (skip)
- * @address: write address
+ * @data_index: data index
  * @packet_id: packet id
  * @packet_size: (out): packet size, in bytes
  * Return value: (transfer full): a new #ArvGvcpPacket
@@ -289,12 +289,12 @@ arv_gvcp_packet_new_write_register_cmd (guint32 address,
  */
 
 ArvGvcpPacket *
-arv_gvcp_packet_new_write_register_ack 	(guint32 address,
+arv_gvcp_packet_new_write_register_ack 	(guint32 data_index,
 					 guint16 packet_id,
 					 size_t *packet_size)
 {
 	ArvGvcpPacket *packet;
-	guint32 n_address = g_htonl (address);
+	guint32 n_data_index = g_htonl (data_index);
 
 	g_return_val_if_fail (packet_size != NULL, NULL);
 
@@ -307,7 +307,7 @@ arv_gvcp_packet_new_write_register_ack 	(guint32 address,
 	packet->header.size = g_htons (sizeof (guint32));
 	packet->header.id = g_htons (packet_id);
 
-	memcpy (&packet->data, &n_address, sizeof (guint32));
+	memcpy (&packet->data, &n_data_index, sizeof (guint32));
 
 	return packet;
 }
@@ -491,6 +491,11 @@ arv_gvcp_packet_to_string (const ArvGvcpPacket *packet)
 						value, value);
 			value = g_ntohl (*((guint32 *) &data[4]));
 			g_string_append_printf (string, "value        = %10u (0x%08x)\n",
+						value, value);
+			break;
+		case ARV_GVCP_COMMAND_WRITE_REGISTER_ACK:
+			value = g_ntohl (*((guint32 *) &data[0]));
+			g_string_append_printf (string, "data index   = %10u (0x%08x)\n",
 						value, value);
 			break;
 		case ARV_GVCP_COMMAND_READ_REGISTER_CMD:

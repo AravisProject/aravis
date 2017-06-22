@@ -263,7 +263,7 @@ ArvGvcpPacket * 	arv_gvcp_packet_new_read_register_ack 	(guint32 value,
 								 guint16 packet_id, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_write_register_cmd 	(guint32 address, guint32 value,
 								 guint16 packet_id, size_t *packet_size);
-ArvGvcpPacket * 	arv_gvcp_packet_new_write_register_ack 	(guint32 address,
+ArvGvcpPacket * 	arv_gvcp_packet_new_write_register_ack 	(guint32 data_index,
 								 guint16 packet_id, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_discovery_cmd 	(size_t *size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_discovery_ack 	(size_t *packet_size);

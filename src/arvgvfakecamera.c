@@ -198,8 +198,8 @@ handle_control_packet (ArvGvFakeCamera *gv_fake_camera, GSocket *socket,
 
 			arv_fake_camera_write_register (gv_fake_camera->priv->camera, register_address, register_value);
 			arv_debug_device ("[GvFakeCamera::handle_control_packet] Write register command %d -> %d",
-				   register_address, register_value);
-			ack_packet = arv_gvcp_packet_new_write_register_ack (register_value, packet_id,
+					  register_address, register_value);
+			ack_packet = arv_gvcp_packet_new_write_register_ack (1, packet_id,
 									     &ack_packet_size);
 			break;
 		default:
