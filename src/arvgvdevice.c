@@ -122,6 +122,22 @@ static GRegex *arv_gv_device_url_regex = NULL;
 	return arv_gv_device_url_regex;
 }
 
+static void
+_flush_socket_buffer(ArvGvDeviceIOData *io_data)
+{
+	GError *local_error = NULL;
+	gboolean success = TRUE;
+
+	while (success &&
+		g_poll (&io_data->poll_in_event, 1, 0) > 0
+	)
+	{
+		arv_debug_device ("[GvDevice::flush_receive_socket] Flush packet");
+		success = g_socket_receive (io_data->socket, io_data->buffer,
+						  ARV_GV_DEVICE_BUFFER_SIZE, NULL, &local_error) > 0;
+	}
+}
+
 static gboolean
 _read_memory (ArvGvDeviceIOData *io_data, guint64 address, guint32 size, void *buffer, GError **error)
 {
@@ -157,6 +173,7 @@ _read_memory (ArvGvDeviceIOData *io_data, guint64 address, guint32 size, void *b
 
 		arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
+		_flush_socket_buffer(io_data);
 		success = g_socket_send_to (io_data->socket, io_data->device_address,
 					    (const char *) packet, packet_size,
 					    NULL, &local_error) >= 0;
@@ -276,6 +293,7 @@ _write_memory (ArvGvDeviceIOData *io_data, guint64 address, guint32 size, void *
 
 		arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
+		_flush_socket_buffer(io_data);
 		success = g_socket_send_to (io_data->socket, io_data->device_address,
 					    (const char *) packet, packet_size,
 					    NULL, &local_error) >= 0;
@@ -388,6 +406,7 @@ _read_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 *value_plac
 
 		arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
+		_flush_socket_buffer(io_data);
 		success = g_socket_send_to (io_data->socket, io_data->device_address,
 					    (const char *) packet, packet_size,
 					    NULL, &local_error) >= 0;
@@ -505,6 +524,7 @@ _write_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 value, GEr
 
 		arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
+		_flush_socket_buffer(io_data);
 		success = g_socket_send_to (io_data->socket, io_data->device_address, (const char *) packet, packet_size,
 					    NULL, &local_error) >= 0;
 
