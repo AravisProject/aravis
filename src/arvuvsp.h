@@ -56,21 +56,21 @@ typedef enum {
 	ARV_UVSP_PAYLOAD_TYPE_EXTENDED_CHUNK =		0x4001
 } ArvUvspPayloadType;
 
-#define ARAVIS_PACKED_STRUCTURE __attribute__((__packed__))
+#pragma pack(push,1)
 
-typedef struct ARAVIS_PACKED_STRUCTURE {
+typedef struct {
 	guint32 magic;
 	guint16 unknown0;
 	guint16 size;
 	guint64 frame_id;
 } ArvUvspHeader;
 
-typedef struct ARAVIS_PACKED_STRUCTURE {
+typedef struct {
 	ArvUvspHeader header;
 	void *data;
 } ArvUvspPacket;
 
-typedef struct ARAVIS_PACKED_STRUCTURE {
+typedef struct {
 	guint16 unknown0;
 	guint16 payload_type;
 	guint64 timestamp;
@@ -83,22 +83,22 @@ typedef struct ARAVIS_PACKED_STRUCTURE {
 	guint16	unknown1;
 } ArvUvspLeaderInfos;
 
-typedef struct ARAVIS_PACKED_STRUCTURE {
+typedef struct {
 	ArvUvspHeader header;
 	ArvUvspLeaderInfos infos;
 } ArvUvspLeader;
 
-typedef struct ARAVIS_PACKED_STRUCTURE {
+typedef struct {
 	guint32 unknown0;
 	guint64 payload_size;
 } ArvUvspTrailerInfos;
 
-typedef struct ARAVIS_PACKED_STRUCTURE {
+typedef struct {
 	ArvUvspHeader header;
 	ArvUvspTrailerInfos infos;
 } ArvUvspTrailer;
 
-#undef ARAVIS_PACKED_STRUCTURE
+#pragma pack(pop)
 
 char * 			arv_uvsp_packet_to_string 		(const ArvUvspPacket *packet);
 void 			arv_uvsp_packet_debug 			(const ArvUvspPacket *packet, ArvDebugLevel level);

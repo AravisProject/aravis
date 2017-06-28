@@ -214,7 +214,7 @@ typedef enum {
 	ARV_GVCP_COMMAND_PENDING_ACK =		0x0089
 } ArvGvcpCommand;
 
-#define ARAVIS_PACKED_STRUCTURE __attribute__((__packed__))
+#pragma pack(push,1)
 
 /**
  * ArvGvcpHeader:
@@ -226,14 +226,12 @@ typedef enum {
  * GVCP packet header structure.
  */
 
-typedef struct ARAVIS_PACKED_STRUCTURE {
+typedef struct {
 	guint16 packet_type;
 	guint16 command;
 	guint16 size;
 	guint16 id;
 } ArvGvcpHeader;
-
-#undef ARAVIS_PACKED_STRUCTURE
 
 /**
  * ArvGvcpPacket:
@@ -243,10 +241,12 @@ typedef struct ARAVIS_PACKED_STRUCTURE {
  * GVCP packet structure.
  */
 
-typedef struct ARAVIS_PACKED_STRUCTURE {
+typedef struct {
 	ArvGvcpHeader header;
 	unsigned char data[];
 } ArvGvcpPacket;
+
+#pragma pack(pop)
 
 void 			arv_gvcp_packet_free 			(ArvGvcpPacket *packet);
 ArvGvcpPacket * 	arv_gvcp_packet_new_read_memory_cmd 	(guint32 address, guint32 size,

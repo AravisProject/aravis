@@ -89,7 +89,7 @@ typedef enum {
 	ARV_GVSP_PAYLOAD_TYPE_MULTIZONE_IMAGE = 	0x0009
 } ArvGvspPayloadType;
 
-#define ARAVIS_PACKED_STRUCTURE __attribute__((__packed__))
+#pragma pack(push,1)
 
 /**
  * ArvGvspHeader:
@@ -100,7 +100,7 @@ typedef enum {
  * GVSP packet header structure.
  */
 
-typedef struct ARAVIS_PACKED_STRUCTURE {
+typedef struct {
 	guint16 packet_type;
 	guint16 frame_id;
 	guint32 packet_infos;
@@ -120,7 +120,7 @@ typedef struct ARAVIS_PACKED_STRUCTURE {
  * GVSP data leader packet data area.
  */
 
-typedef struct ARAVIS_PACKED_STRUCTURE {
+typedef struct {
 	guint32 payload_type;
 	guint32 timestamp_high;
 	guint32 timestamp_low;
@@ -139,7 +139,7 @@ typedef struct ARAVIS_PACKED_STRUCTURE {
  * GVSP data trailer packet data area.
  */
 
-typedef struct ARAVIS_PACKED_STRUCTURE {
+typedef struct {
 	guint32 payload_type;
 	guint32 data0;
 } ArvGvspDataTrailer;
@@ -153,12 +153,12 @@ typedef struct ARAVIS_PACKED_STRUCTURE {
  * GVSP packet structure.
  */
 
-typedef struct ARAVIS_PACKED_STRUCTURE {
+typedef struct {
 	ArvGvspHeader header;
 	guint8 data[];
 } ArvGvspPacket;
 
-#undef ARAVIS_PACKED_STRUCTURE
+#pragma pack(pop)
 
 ArvGvspPacket *		arv_gvsp_packet_new_data_leader		(guint16 frame_id, guint32 packet_id,
 								 guint64 timestamp, ArvPixelFormat pixel_format,

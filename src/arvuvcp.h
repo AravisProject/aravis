@@ -119,7 +119,7 @@ typedef enum {
 	ARV_UVCP_COMMAND_EVENT_CMD =		0x0c00
 } ArvUvcpCommand;
 
-#define ARAVIS_PACKED_STRUCTURE __attribute__((__packed__))
+#pragma pack(push,1)
 
 /**
  * ArvUvcpHeader:
@@ -127,7 +127,7 @@ typedef enum {
  * UVCP packet header structure.
  */
 
-typedef struct ARAVIS_PACKED_STRUCTURE {
+typedef struct {
 	guint32 magic;
 	guint16 packet_type;
 	guint16 command;
@@ -135,42 +135,42 @@ typedef struct ARAVIS_PACKED_STRUCTURE {
 	guint16 id;
 } ArvUvcpHeader;
 
-typedef struct ARAVIS_PACKED_STRUCTURE {
+typedef struct {
 	guint64 address;
         guint16 unknown;	/* Listed as reserved, always 0 */
 	guint16 size;
 } ArvUvcpReadMemoryCmdInfos;
 
-typedef struct ARAVIS_PACKED_STRUCTURE {
+typedef struct {
 	ArvUvcpHeader header;
 	ArvUvcpReadMemoryCmdInfos infos;
 } ArvUvcpReadMemoryCmd;
 
-typedef struct ARAVIS_PACKED_STRUCTURE {
+typedef struct {
 	guint64 address;
 } ArvUvcpWriteMemoryCmdInfos;
 
-typedef struct ARAVIS_PACKED_STRUCTURE {
+typedef struct {
 	ArvUvcpHeader header;
 	ArvUvcpWriteMemoryCmdInfos infos;
 } ArvUvcpWriteMemoryCmd;
 
-typedef struct ARAVIS_PACKED_STRUCTURE {
+typedef struct {
 	guint16 unknown;
 	guint16 bytes_written;
 } ArvUvcpWriteMemoryAckInfos;
 
-typedef struct ARAVIS_PACKED_STRUCTURE {
+typedef struct {
 	ArvUvcpHeader header;
 	ArvUvcpWriteMemoryAckInfos infos;
 } ArvUvcpWriteMemoryAck;
 
-typedef struct ARAVIS_PACKED_STRUCTURE {
+typedef struct {
 	guint16 unknown;
 	guint16 timeout;
 } ArvUvcpPendingAckInfos;
 
-typedef struct ARAVIS_PACKED_STRUCTURE {
+typedef struct {
 	ArvUvcpHeader header;
 	ArvUvcpPendingAckInfos infos;
 } ArvUvcpPendingAck;
@@ -183,12 +183,12 @@ typedef struct ARAVIS_PACKED_STRUCTURE {
  * UVCP packet structure.
  */
 
-typedef struct ARAVIS_PACKED_STRUCTURE {
+typedef struct {
 	ArvUvcpHeader header;
 	unsigned char data[];
 } ArvUvcpPacket;
 
-typedef struct ARAVIS_PACKED_STRUCTURE {
+typedef struct {
 	guint16 file_version_subminor;
 	guint8 file_version_minor;
 	guint8 file_version_major;
@@ -201,6 +201,8 @@ typedef struct ARAVIS_PACKED_STRUCTURE {
 	guint64 unknown6;
 	guint64 unknown7;
 } ArvUvcpManifestEntry;
+
+#pragma pack(pop)
 
 /**
  * ArvUvcpManifestSchemaType:
@@ -224,8 +226,6 @@ arv_uvcp_manifest_entry_get_schema_type (ArvUvcpManifestEntry *entry)
 
 	return (entry->schema >> 10) & 0x0000001f;
 }
-
-#undef ARAVIS_PACKED_STRUCTURE
 
 void 			arv_uvcp_packet_free 			(ArvUvcpPacket *packet);
 ArvUvcpPacket * 	arv_uvcp_packet_new_read_memory_cmd 	(guint64 address, guint32 size,
