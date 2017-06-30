@@ -27,7 +27,6 @@ libaravis_@ARAVIS_API_VERSION@_la_LIBADD = 	\
 
 ARAVIS_SRCS =					\
 	arvenums.c				\
-	arvenumtypes.c				\
 	arvdebug.c				\
 	arvsystem.c				\
 	arvevaluator.c				\
@@ -197,6 +196,7 @@ arv_fake_camera_DATA = arv-fake-camera.xml
 EXTRA_DIST += arv-fake-camera.xml
 
 libaravis_@ARAVIS_API_VERSION@_la_SOURCES = $(ARAVIS_SRCS) $(ARAVIS_SRCS_NO_INTRO)
+libaravis_@ARAVIS_API_VERSION@_la_SOURCES += arvenumtypes.c
 
 libaravis_@ARAVIS_API_VERSION@_ladir = $(includedir)/aravis-@ARAVIS_API_VERSION@
 libaravis_@ARAVIS_API_VERSION@_la_HEADERS = $(ARAVIS_HDRS) $(ARAVIS_HDRS_NO_INTRO)
@@ -235,7 +235,8 @@ INTROSPECTION_COMPILER_ARGS = --includedir=$(srcdir)
 if HAVE_INTROSPECTION
 
 introspection_files = $(ARAVIS_SRCS) \
-		      $(ARAVIS_HDRS) \
+		      $(ARAVIS_HDRS)
+introspection_generated_files = \
 		      arvenumtypes.c \
 		      arvenumtypes.h
 
@@ -245,7 +246,8 @@ Aravis_@ARAVIS_API_VERSION_U@_gir_INCLUDES = GObject-2.0 Gio-2.0
 Aravis_@ARAVIS_API_VERSION_U@_gir_SCANNERFLAGS = --identifier-prefix=Arv --warn-all
 Aravis_@ARAVIS_API_VERSION_U@_gir_CFLAGS = $(INCLUDES) -I$(top_srcdir)/src -DARAVIS_COMPILATION
 Aravis_@ARAVIS_API_VERSION_U@_gir_LIBS = libaravis-@ARAVIS_API_VERSION@.la
-Aravis_@ARAVIS_API_VERSION_U@_gir_FILES = $(addprefix $(srcdir)/,$(introspection_files))
+Aravis_@ARAVIS_API_VERSION_U@_gir_FILES = $(addprefix $(srcdir)/,$(introspection_files)) \
+					  $(addprefix $(builddir)/,$(introspection_generated_files))
 
 INTROSPECTION_GIRS += Aravis-@ARAVIS_API_VERSION@.gir
 
