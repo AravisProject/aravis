@@ -24,7 +24,7 @@
  * SECTION:element-aravissrc
  *
  * Source using the Aravis vision library
- * 
+ *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
@@ -147,6 +147,7 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 	GstStructure *structure;
 	ArvPixelFormat pixel_format;
 	int height, width;
+	int depth = 0, bpp = 0;
 	const GValue *frame_rate;
 	const char *caps_string;
 	const char *format_string;
@@ -161,12 +162,16 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 
 	structure = gst_caps_get_structure (caps, 0);
 
+	arv_camera_get_region (gst_aravis->camera, NULL, NULL, &width, &height);
+
 	gst_structure_get_int (structure, "width", &width);
 	gst_structure_get_int (structure, "height", &height);
+	gst_structure_get_int (structure, "depth", &depth);
+	gst_structure_get_int (structure, "bpp", &bpp);
 	frame_rate = gst_structure_get_value (structure, "framerate");
 	format_string = gst_structure_get_string (structure, "format");
 
-	pixel_format = arv_pixel_format_from_gst_caps (gst_structure_get_name (structure), format_string);
+	pixel_format = arv_pixel_format_from_gst_caps (gst_structure_get_name (structure), format_string, bpp, depth);
 
 	arv_camera_set_region (gst_aravis->camera, gst_aravis->offset_x, gst_aravis->offset_y, width, height);
 	arv_camera_set_binning (gst_aravis->camera, gst_aravis->h_binning, gst_aravis->v_binning);

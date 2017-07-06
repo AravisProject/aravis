@@ -147,11 +147,11 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 	GstStructure *structure;
 	ArvPixelFormat pixel_format;
 	int height, width;
-	int bpp, depth;
+	int bpp = 0, depth = 0;
 	const GValue *frame_rate;
 	const char *caps_string;
 	unsigned int i;
-	guint32 fourcc;
+	guint32 fourcc = 0;
 
 	GST_LOG_OBJECT (gst_aravis, "Requested caps = %" GST_PTR_FORMAT, caps);
 
