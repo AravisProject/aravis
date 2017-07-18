@@ -734,7 +734,7 @@ arv_gv_device_get_packet_size (ArvGvDevice *gv_device)
 }
 
 void
-arv_gv_device_set_packet_size (ArvGvDevice *gv_device, guint packet_size)
+arv_gv_device_set_packet_size (ArvGvDevice *gv_device, gint packet_size)
 {
 	g_return_if_fail (packet_size > 0);
 

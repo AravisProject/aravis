@@ -1807,7 +1807,7 @@ arv_camera_gv_get_packet_delay (ArvCamera *camera)
  */
 
 void
-arv_camera_gv_set_packet_size (ArvCamera *camera, guint packet_size)
+arv_camera_gv_set_packet_size (ArvCamera *camera, gint packet_size)
 {
 	if (packet_size <= 0)
 		return;
