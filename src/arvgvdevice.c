@@ -800,7 +800,6 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device)
 
 	g_clear_object (&local_address);
 	g_clear_object (&interface_socket_address);
-	g_clear_object (&interface_address);
 
 	do_not_fragment = arv_device_get_boolean_feature_value (device, "GevSCPSDoNotFragment");
 	arv_device_set_boolean_feature_value (device, "GevSCPSDoNotFragment", TRUE);
