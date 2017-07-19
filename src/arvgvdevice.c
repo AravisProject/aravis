@@ -790,7 +790,7 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device)
 	interface_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (io_data->interface_address));
 	interface_socket_address = g_inet_socket_address_new (interface_address, 0);
 	socket = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, NULL);
-	g_socket_bind (socket, interface_socket_address, TRUE, NULL);
+	g_socket_bind (socket, interface_socket_address, FALSE, NULL);
 	local_address = G_INET_SOCKET_ADDRESS (g_socket_get_local_address (socket, NULL));
 	port = g_inet_socket_address_get_port (local_address);
 
@@ -1369,7 +1369,7 @@ arv_gv_device_new (GInetAddress *interface_address, GInetAddress *device_address
 	io_data->socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
 					G_SOCKET_TYPE_DATAGRAM,
 					G_SOCKET_PROTOCOL_UDP, NULL);
-	g_socket_bind (io_data->socket, io_data->interface_address, TRUE, NULL);
+	g_socket_bind (io_data->socket, io_data->interface_address, FALSE, NULL);
 
 	io_data->buffer = g_malloc (ARV_GV_DEVICE_BUFFER_SIZE);
 	io_data->gvcp_n_retries = ARV_GV_DEVICE_GVCP_N_RETRIES_DEFAULT;

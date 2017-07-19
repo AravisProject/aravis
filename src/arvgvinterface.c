@@ -106,7 +106,7 @@ arv_gv_discover_socket_list_new (void)
 			discover_socket->socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
 								G_SOCKET_TYPE_DATAGRAM,
 								G_SOCKET_PROTOCOL_UDP, NULL);
-			g_socket_bind (discover_socket->socket, discover_socket->interface_address, TRUE, &error);
+			g_socket_bind (discover_socket->socket, discover_socket->interface_address, FALSE, &error);
 
 			socket_list->sockets = g_slist_prepend (socket_list->sockets, discover_socket);
 			socket_list->n_sockets++;

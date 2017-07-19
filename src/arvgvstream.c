@@ -1055,7 +1055,7 @@ arv_gv_stream_new (ArvGvDevice *gv_device,
 	thread_data->interface_address = g_object_ref (interface_address);
 	thread_data->interface_socket_address = g_inet_socket_address_new (interface_address, 0);
 	thread_data->device_socket_address = g_inet_socket_address_new (device_address, ARV_GVCP_PORT);
-	g_socket_bind (thread_data->socket, thread_data->interface_socket_address, TRUE, NULL);
+	g_socket_bind (thread_data->socket, thread_data->interface_socket_address, FALSE, NULL);
 
 	local_address = G_INET_SOCKET_ADDRESS (g_socket_get_local_address (thread_data->socket, NULL));
 	thread_data->stream_port = g_inet_socket_address_get_port (local_address);
