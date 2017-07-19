@@ -118,6 +118,7 @@ typedef enum {
 	ARV_EVALUATOR_TOKEN_FUNCTION_LG,
 	ARV_EVALUATOR_TOKEN_FUNCTION_SQRT,
 	ARV_EVALUATOR_TOKEN_FUNCTION_TRUNC,
+	ARV_EVALUATOR_TOKEN_FUNCTION_ROUND,
 	ARV_EVALUATOR_TOKEN_FUNCTION_FLOOR,
 	ARV_EVALUATOR_TOKEN_FUNCTION_CEIL,
 	ARV_EVALUATOR_TOKEN_FUNCTION_ASIN,
@@ -180,6 +181,7 @@ static ArvEvaluatorTokenInfos arv_evaluator_token_infos[] = {
 	{"lg",  200,	1, 0}, /* FUNCTION_LG */
 	{"sqrt",200,	1, 0}, /* FUNCTION_SQRT */
 	{"trunc",200,	1, 0}, /* FUNCTION_TRUNC */
+	{"round",200,	1, 0}, /* FUNCTION_ROUND */
 	{"floor",200,	1, 0}, /* FUNCTION_FLOOR */
 	{"ceil",200, 	1, 0}, /* FUNCTION_CEIL */
 	{"asin",200, 	1, 0}, /* FUNCTION_ASIN */
@@ -415,6 +417,8 @@ arv_get_next_token (char **expression, gboolean previous_token_was_operand, gboo
 		} else if (token_length == 5) {
 			if (g_ascii_strncasecmp ("trunc", *expression, token_length) == 0)
 				token_id = ARV_EVALUATOR_TOKEN_FUNCTION_TRUNC;
+			else if (g_ascii_strncasecmp ("round", *expression, token_length) == 0)
+				token_id = ARV_EVALUATOR_TOKEN_FUNCTION_ROUND;
 			else if (g_ascii_strncasecmp ("floor", *expression, token_length) == 0)
 				token_id = ARV_EVALUATOR_TOKEN_FUNCTION_FLOOR;
 		}
@@ -765,6 +769,9 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 				else
 					arv_value_set_double (&stack[index],
 							      ceil (arv_value_get_double (&stack[index])));
+				break;
+			case ARV_EVALUATOR_TOKEN_FUNCTION_ROUND:
+				arv_value_set_double (&stack[index], round (arv_value_get_double (&stack[index])));
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_FLOOR:
 				arv_value_set_double (&stack[index], floor (arv_value_get_double (&stack[index])));
