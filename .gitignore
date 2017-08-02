@@ -14,6 +14,7 @@ cov-int/
 *~
 Makefile
 Makefile.in
+Makecache
 aclocal.m4
 aravis*.pc
 config.guess
