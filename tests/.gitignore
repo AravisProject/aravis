@@ -21,3 +21,4 @@ load-http-test
 *.log
 *.trs
 *-coverage*
+vgcore.*
