@@ -369,7 +369,7 @@ _update_to_variables (ArvGcConverter *gc_converter, GError **error)
 
 		if (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == G_TYPE_INT64) {
 			arv_gc_integer_set_value (ARV_GC_INTEGER (node),
-						  arv_evaluator_evaluate_as_int64 (gc_converter->formula_to, NULL),
+						  arv_evaluator_evaluate_as_double (gc_converter->formula_to, NULL),
 						  &local_error);
 
 			if (local_error != NULL) {
@@ -411,7 +411,7 @@ _get_node_integer_value (ArvGcInteger *gc_integer, ArvGcConverterNodeType node_t
 		}
 	}
 
-	return arv_evaluator_evaluate_as_int64 (gc_converter->formula_from, NULL);
+	return arv_evaluator_evaluate_as_double (gc_converter->formula_from, NULL);
 }
 
 static gint64

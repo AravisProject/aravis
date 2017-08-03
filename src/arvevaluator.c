@@ -50,6 +50,7 @@ typedef enum {
 	ARV_EVALUATOR_STATUS_REMAINING_OPERANDS,
 	ARV_EVALUATOR_STATUS_DIVISION_BY_ZERO,
 	ARV_EVALUATOR_STATUS_STACK_OVERFLOW,
+	ARV_EVALUATOR_STATUS_INVALID_DOUBLE_FUNCTION,
 	ARV_EVALUATOR_STATUS_FORBIDDEN_RECUSRION
 } ArvEvaluatorStatus;
 
@@ -138,59 +139,60 @@ typedef enum {
 typedef struct {
 	const char *		tag;
 	int			precedence;
+	gboolean		double_only;
 	int			n_args;
 	ArvEvaluatorTokenAssociativity	associativity;
 } ArvEvaluatorTokenInfos;
 
 static ArvEvaluatorTokenInfos arv_evaluator_token_infos[] = {
-	{"",	0,	1, 0}, /* UNKNOWN */
-	{",",	0, 	0, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* COMMA */
-	{"?",	5,	3, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_RIGHT_TO_LEFT}, /* TERNARY_QUESTION_MARK */
-	{":",	5,	1, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_RIGHT_TO_LEFT}, /* TERNARY_COLON */
-	{"||",	10,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* LOGICAL_OR */
-	{"&&",	20,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* LOGICAL_AND */
-	{"~",	30,	1, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* BITWISE_NOT */
-	{"|",	40,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* BITWISE_OR */
-	{"^",	50,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* BITWISE_XOR */
-	{"&",	60,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* BITWISE_AND */
-	{"=",	70,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* EQUAL, */
-	{"<>",	70,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* NOT_EQUAL */
-	{"<=",	80,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* LESS_OR_EQUAL */
-	{">=",	80,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* GREATER_OR_EQUAL */
-	{"<",	80,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* LESS */
-	{">",	80,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* GREATER */
-	{">>",	90,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* SHIFT_RIGHT */
-	{"<<",	90,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* SHIFT_LEFT */
-	{"-",	100, 	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* SUBSTRACTION */
-	{"+",	100, 	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* ADDITION */
-	{"%",	110,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* REMAINDER */
-	{"/",	110,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* DIVISION */
-	{"*",	110, 	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* MULTIPLICATION */
-	{"**",	120,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_RIGHT_TO_LEFT}, /* POWER */
-	{"minus",130, 	1, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_RIGHT_TO_LEFT}, /* MINUS */
-	{"plus",130, 	1, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_RIGHT_TO_LEFT}, /* PLUS */
-	{"sin",	200,	1, 0}, /* FUNCTION_SIN */
-	{"cos",	200,	1, 0}, /* FUNCTION_COS */
-	{"sgn",	200,	1, 0}, /* FUNCTION_SGN */
-	{"neg",	200,	1, 0}, /* FUNCTION_NEG */
-	{"atan",200,	1, 0}, /* FUNCTION_ATAN */
-	{"tan" ,200,	1, 0}, /* FUNCTION_TAN */
-	{"abs" ,200,	1, 0}, /* FUNCTION_ABS */
-	{"exp" ,200,	1, 0}, /* FUNCTION_EXP */
-	{"ln",  200,	1, 0}, /* FUNCTION_LN */
-	{"lg",  200,	1, 0}, /* FUNCTION_LG */
-	{"sqrt",200,	1, 0}, /* FUNCTION_SQRT */
-	{"trunc",200,	1, 0}, /* FUNCTION_TRUNC */
-	{"round",200,	1, 0}, /* FUNCTION_ROUND */
-	{"floor",200,	1, 0}, /* FUNCTION_FLOOR */
-	{"ceil",200, 	1, 0}, /* FUNCTION_CEIL */
-	{"asin",200, 	1, 0}, /* FUNCTION_ASIN */
-	{"acos",200, 	1, 0}, /* FUNCTION_ACOS */
-	{")",	990, 	0, 0}, /* RIGHT_PARENTHESIS */
-	{"(",	-1, 	0, 0}, /* LEFT_PARENTHESIS */
-	{"int64" ,200,	0, 0}, /* CONSTANT_INT64 */
-	{"double",200,	0, 0}, /* CONSTANT_DOUBLE */
-	{"var",	200,	0, 0}, /* VARIABLE */
+	{"",	0,	FALSE,	1, 0}, /* UNKNOWN */
+	{",",	0, 	FALSE,	0, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* COMMA */
+	{"?",	5,	FALSE,	3, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_RIGHT_TO_LEFT}, /* TERNARY_QUESTION_MARK */
+	{":",	5,	FALSE,	1, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_RIGHT_TO_LEFT}, /* TERNARY_COLON */
+	{"||",	10,	FALSE,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* LOGICAL_OR */
+	{"&&",	20,	FALSE,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* LOGICAL_AND */
+	{"~",	30,	FALSE,	1, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* BITWISE_NOT */
+	{"|",	40,	FALSE,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* BITWISE_OR */
+	{"^",	50,	FALSE,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* BITWISE_XOR */
+	{"&",	60,	FALSE,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* BITWISE_AND */
+	{"=",	70,	FALSE,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* EQUAL, */
+	{"<>",	70,	FALSE,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* NOT_EQUAL */
+	{"<=",	80,	FALSE,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* LESS_OR_EQUAL */
+	{">=",	80,	FALSE,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* GREATER_OR_EQUAL */
+	{"<",	80,	FALSE,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* LESS */
+	{">",	80,	FALSE,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* GREATER */
+	{">>",	90,	FALSE,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* SHIFT_RIGHT */
+	{"<<",	90,	FALSE,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* SHIFT_LEFT */
+	{"-",	100, 	FALSE,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* SUBSTRACTION */
+	{"+",	100, 	FALSE,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* ADDITION */
+	{"%",	110,	FALSE,	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* REMAINDER */
+	{"/",	110,	FALSE, 	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* DIVISION */
+	{"*",	110, 	FALSE, 	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_LEFT_TO_RIGHT}, /* MULTIPLICATION */
+	{"**",	120,	FALSE, 	2, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_RIGHT_TO_LEFT}, /* POWER */
+	{"minus",130, 	FALSE, 	1, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_RIGHT_TO_LEFT}, /* MINUS */
+	{"plus",130, 	FALSE, 	1, ARV_EVALUATOR_TOKEN_ASSOCIATIVITY_RIGHT_TO_LEFT}, /* PLUS */
+	{"sin",	200,	TRUE,	1, 0}, /* FUNCTION_SIN */
+	{"cos",	200,	TRUE,	1, 0}, /* FUNCTION_COS */
+	{"sgn",	200,	FALSE,	1, 0}, /* FUNCTION_SGN */
+	{"neg",	200,	FALSE,	1, 0}, /* FUNCTION_NEG */
+	{"atan",200,	TRUE,	1, 0}, /* FUNCTION_ATAN */
+	{"tan" ,200,	TRUE,	1, 0}, /* FUNCTION_TAN */
+	{"abs" ,200,	TRUE,	1, 0}, /* FUNCTION_ABS */
+	{"exp" ,200,	TRUE,	1, 0}, /* FUNCTION_EXP */
+	{"ln",  200,	TRUE,	1, 0}, /* FUNCTION_LN */
+	{"lg",  200,	TRUE,	1, 0}, /* FUNCTION_LG */
+	{"sqrt",200,	TRUE,	1, 0}, /* FUNCTION_SQRT */
+	{"trunc",200,	TRUE,	1, 0}, /* FUNCTION_TRUNC */
+	{"round",200,	TRUE,	1, 0}, /* FUNCTION_ROUND */
+	{"floor",200,	TRUE,	1, 0}, /* FUNCTION_FLOOR */
+	{"ceil",200, 	TRUE,	1, 0}, /* FUNCTION_CEIL */
+	{"asin",200, 	TRUE,	1, 0}, /* FUNCTION_ASIN */
+	{"acos",200, 	TRUE,	1, 0}, /* FUNCTION_ACOS */
+	{")",	990, 	FALSE,	0, 0}, /* RIGHT_PARENTHESIS */
+	{"(",	-1, 	FALSE,	0, 0}, /* LEFT_PARENTHESIS */
+	{"int64" ,200,	FALSE,	0, 0}, /* CONSTANT_INT64 */
+	{"double",200,	FALSE,	0, 0}, /* CONSTANT_DOUBLE */
+	{"var",	200,	FALSE,	0, 0}, /* VARIABLE */
 };
 
 typedef struct {
@@ -515,12 +517,22 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 	ArvValue stack[ARV_EVALUATOR_STACK_SIZE];
 	ArvValue *value;
 	int index = -1;
+	gboolean integer_mode;
+
+	g_assert (v_int64 != NULL || v_double != NULL);
+
+	integer_mode = v_int64 != NULL;
 
 	for (iter = token_stack; iter != NULL; iter = iter->next) {
 		token = iter->data;
 
 		if (index < (arv_evaluator_token_infos[token->token_id].n_args - 1)) {
 			status = ARV_EVALUATOR_STATUS_MISSING_ARGUMENTS;
+			goto CLEANUP;
+		}
+
+		if (arv_evaluator_token_infos[token->token_id].double_only && integer_mode) {
+			status = ARV_EVALUATOR_STATUS_INVALID_DOUBLE_FUNCTION;
 			goto CLEANUP;
 		}
 
@@ -562,102 +574,110 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 						      arv_value_get_int64 (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_EQUAL:
-				if (arv_value_holds_int64 (&stack[index-1]) &&
-				    arv_value_holds_int64 (&stack[index]))
+				if (integer_mode ||
+				    (arv_value_holds_int64 (&stack[index-1]) &&
+				     arv_value_holds_int64 (&stack[index])))
 					arv_value_set_int64 (&stack[index-1],
-							      arv_value_get_int64 (&stack[index-1]) ==
-							      arv_value_get_int64 (&stack[index]));
+							     arv_value_get_int64 (&stack[index-1]) ==
+							     arv_value_get_int64 (&stack[index]));
 				else
 					arv_value_set_int64 (&stack[index - 1],
-							      arv_value_get_double (&stack[index-1]) ==
-							      arv_value_get_double (&stack[index]));
+							     arv_value_get_double (&stack[index-1]) ==
+							     arv_value_get_double (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_NOT_EQUAL:
-				if (arv_value_holds_int64 (&stack[index-1]) &&
-				    arv_value_holds_int64 (&stack[index]))
+				if (integer_mode ||
+				    (arv_value_holds_int64 (&stack[index-1]) &&
+				     arv_value_holds_int64 (&stack[index])))
 					arv_value_set_int64 (&stack[index-1],
-							      arv_value_get_int64 (&stack[index-1]) !=
-							      arv_value_get_int64 (&stack[index]));
+							     arv_value_get_int64 (&stack[index-1]) !=
+							     arv_value_get_int64 (&stack[index]));
 				else
 					arv_value_set_int64 (&stack[index - 1],
-							      arv_value_get_double (&stack[index-1]) !=
-							      arv_value_get_double (&stack[index]));
+							     arv_value_get_double (&stack[index-1]) !=
+							     arv_value_get_double (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_LESS_OR_EQUAL:
-				if (arv_value_holds_int64 (&stack[index-1]) &&
-				    arv_value_holds_int64 (&stack[index]))
+				if (integer_mode ||
+				    (arv_value_holds_int64 (&stack[index-1]) &&
+				     arv_value_holds_int64 (&stack[index])))
 					arv_value_set_int64 (&stack[index-1],
-							      arv_value_get_int64 (&stack[index-1]) <=
-							      arv_value_get_int64 (&stack[index]));
+							     arv_value_get_int64 (&stack[index-1]) <=
+							     arv_value_get_int64 (&stack[index]));
 				else
 					arv_value_set_int64 (&stack[index - 1],
-							      arv_value_get_double (&stack[index-1]) <=
-							      arv_value_get_double (&stack[index]));
+							     arv_value_get_double (&stack[index-1]) <=
+							     arv_value_get_double (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_GREATER_OR_EQUAL:
-				if (arv_value_holds_int64 (&stack[index-1]) &&
-				    arv_value_holds_int64 (&stack[index]))
+				if (integer_mode ||
+				    (arv_value_holds_int64 (&stack[index-1]) &&
+				     arv_value_holds_int64 (&stack[index])))
 					arv_value_set_int64 (&stack[index-1],
-							      arv_value_get_int64 (&stack[index-1]) >=
-							      arv_value_get_int64 (&stack[index]));
+							     arv_value_get_int64 (&stack[index-1]) >=
+							     arv_value_get_int64 (&stack[index]));
 				else
 					arv_value_set_int64 (&stack[index - 1],
-							      arv_value_get_double (&stack[index-1]) >=
-							      arv_value_get_double (&stack[index]));
+							     arv_value_get_double (&stack[index-1]) >=
+							     arv_value_get_double (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_LESS:
-				if (arv_value_holds_int64 (&stack[index-1]) &&
-				    arv_value_holds_int64 (&stack[index]))
+				if (integer_mode ||
+				    (arv_value_holds_int64 (&stack[index-1]) &&
+				     arv_value_holds_int64 (&stack[index])))
 					arv_value_set_int64 (&stack[index-1],
-							      arv_value_get_int64 (&stack[index-1]) <
-							      arv_value_get_int64 (&stack[index]));
+							     arv_value_get_int64 (&stack[index-1]) <
+							     arv_value_get_int64 (&stack[index]));
 				else
 					arv_value_set_int64 (&stack[index - 1],
-							      arv_value_get_double (&stack[index-1]) <
-							      arv_value_get_double (&stack[index]));
+							     arv_value_get_double (&stack[index-1]) <
+							     arv_value_get_double (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_GREATER:
-				if (arv_value_holds_int64 (&stack[index-1]) &&
-				    arv_value_holds_int64 (&stack[index]))
+				if (integer_mode ||
+				    (arv_value_holds_int64 (&stack[index-1]) &&
+				     arv_value_holds_int64 (&stack[index])))
 					arv_value_set_int64 (&stack[index-1],
-							      arv_value_get_int64 (&stack[index-1]) >
-							      arv_value_get_int64 (&stack[index]));
+							     arv_value_get_int64 (&stack[index-1]) >
+							     arv_value_get_int64 (&stack[index]));
 				else
 					arv_value_set_int64 (&stack[index - 1],
-							      arv_value_get_double (&stack[index-1]) >
-							      arv_value_get_double (&stack[index]));
+							     arv_value_get_double (&stack[index-1]) >
+							     arv_value_get_double (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_SHIFT_RIGHT:
 				arv_value_set_int64 (&stack[index-1],
-						      arv_value_get_int64 (&stack[index-1]) >>
-						      arv_value_get_int64 (&stack[index]));
+						     arv_value_get_int64 (&stack[index-1]) >>
+						     arv_value_get_int64 (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_SHIFT_LEFT:
 				arv_value_set_int64 (&stack[index-1],
-						      arv_value_get_int64 (&stack[index-1]) <<
-						      arv_value_get_int64 (&stack[index]));
+						     arv_value_get_int64 (&stack[index-1]) <<
+						     arv_value_get_int64 (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_SUBSTRACTION:
-				if (arv_value_holds_double (&stack[index-1]) ||
-				    arv_value_holds_double (&stack[index]))
-					arv_value_set_double (&stack[index-1],
-							       arv_value_get_double (&stack[index-1]) -
-							       arv_value_get_double (&stack[index]));
-				else
+				if (integer_mode ||
+				    (arv_value_holds_int64 (&stack[index-1]) &&
+				     arv_value_holds_int64 (&stack[index])))
 					arv_value_set_int64 (&stack[index-1],
-							      arv_value_get_int64 (&stack[index-1]) -
-							      arv_value_get_int64 (&stack[index]));
+							     arv_value_get_int64 (&stack[index-1]) -
+							     arv_value_get_int64 (&stack[index]));
+				else
+					arv_value_set_double (&stack[index-1],
+							      arv_value_get_double (&stack[index-1]) -
+							      arv_value_get_double (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_ADDITION:
-				if (arv_value_holds_double (&stack[index-1]) ||
-				    arv_value_holds_double (&stack[index]))
-					arv_value_set_double (&stack[index-1],
-							       arv_value_get_double (&stack[index-1]) +
-							       arv_value_get_double (&stack[index]));
-				else
+				if (integer_mode ||
+				    (arv_value_holds_int64 (&stack[index-1]) &&
+				     arv_value_holds_int64 (&stack[index])))
 					arv_value_set_int64 (&stack[index-1],
-							      arv_value_get_int64 (&stack[index-1]) +
-							      arv_value_get_int64 (&stack[index]));
+							     arv_value_get_int64 (&stack[index-1]) +
+							     arv_value_get_int64 (&stack[index]));
+				else
+					arv_value_set_double (&stack[index-1],
+							      arv_value_get_double (&stack[index-1]) +
+							      arv_value_get_double (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_REMAINDER:
 				if (arv_value_get_int64 (&stack[index]) == 0) {
@@ -665,41 +685,57 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 					goto CLEANUP;
 				}
 				arv_value_set_int64 (&stack[index-1],
-						      arv_value_get_int64 (&stack[index-1]) %
-						      arv_value_get_int64 (&stack[index]));
+						     arv_value_get_int64 (&stack[index-1]) %
+						     arv_value_get_int64 (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_DIVISION:
-				if (arv_value_get_double (&stack[index]) == 0.0) {
-					status = ARV_EVALUATOR_STATUS_DIVISION_BY_ZERO;
-					goto CLEANUP;
+				if (integer_mode) {
+					if (arv_value_get_int64 (&stack[index]) == 0) {
+						status = ARV_EVALUATOR_STATUS_DIVISION_BY_ZERO;
+						goto CLEANUP;
+					}
+					arv_value_set_int64 (&stack[index-1],
+							     arv_value_get_int64 (&stack[index-1]) /
+							     arv_value_get_int64 (&stack[index]));
+				} else {
+					if (arv_value_get_double (&stack[index]) == 0.0) {
+						status = ARV_EVALUATOR_STATUS_DIVISION_BY_ZERO;
+						goto CLEANUP;
+					}
+					arv_value_set_double (&stack[index-1],
+							      arv_value_get_double (&stack[index-1]) /
+							      arv_value_get_double (&stack[index]));
 				}
-				arv_value_set_double (&stack[index-1],
-						      arv_value_get_double (&stack[index-1]) /
-						      arv_value_get_double (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_MULTIPLICATION:
-				if (arv_value_holds_double (&stack[index-1]) ||
-				    arv_value_holds_double (&stack[index]))
-					arv_value_set_double (&stack[index-1],
-							      arv_value_get_double (&stack[index-1]) *
-							      arv_value_get_double (&stack[index]));
-				else
+				if (integer_mode ||
+				    (arv_value_holds_int64 (&stack[index-1]) &&
+				     arv_value_holds_int64 (&stack[index])))
 					arv_value_set_int64 (&stack[index-1],
 							     arv_value_get_int64 (&stack[index-1]) *
 							     arv_value_get_int64 (&stack[index]));
+				else
+					arv_value_set_double (&stack[index-1],
+							      arv_value_get_double (&stack[index-1]) *
+							      arv_value_get_double (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_POWER:
-				arv_value_set_double (&stack[index-1],
-						      pow (arv_value_get_double(&stack[index-1]),
-							   arv_value_get_double(&stack[index])));
+				if (integer_mode)
+					arv_value_set_int64 (&stack[index-1],
+							     pow (arv_value_get_int64(&stack[index-1]),
+								  arv_value_get_int64(&stack[index])));
+				else
+					arv_value_set_double (&stack[index-1],
+							      pow (arv_value_get_double(&stack[index-1]),
+								   arv_value_get_double(&stack[index])));
 				break;
 			case ARV_EVALUATOR_TOKEN_MINUS:
-				if (arv_value_holds_double (&stack[index]))
-					arv_value_set_double (&stack[index],
-							      -arv_value_get_double (&stack[index]));
-				else
+				if (integer_mode || arv_value_holds_int64 (&stack[index]))
 					arv_value_set_int64 (&stack[index],
 							     -arv_value_get_int64 (&stack[index]));
+				else
+					arv_value_set_double (&stack[index],
+							      -arv_value_get_double (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_PLUS:
 				break;
@@ -710,15 +746,7 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 				arv_value_set_double (&stack[index], cos (arv_value_get_double (&stack[index])));
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_SGN:
-				if (arv_value_holds_double (&stack[index])) {
-					double dbl_value = arv_value_get_double (&stack[index]);
-					if (dbl_value < 0.0)
-						arv_value_set_int64 (&stack[index], -1);
-					else if (dbl_value > 0.0)
-						arv_value_set_int64 (&stack[index], 1);
-					else
-						arv_value_set_int64 (&stack[index], 0);
-				} else {
+				if (integer_mode || arv_value_holds_int64 (&stack[index])) {
 					gint64 int_value = arv_value_get_int64 (&stack[index]);
 					if (int_value < 0)
 						arv_value_set_int64 (&stack[index], -1);
@@ -726,15 +754,23 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 						arv_value_set_int64 (&stack[index], 1);
 					else
 						arv_value_set_int64 (&stack[index], 0);
+				} else {
+					double dbl_value = arv_value_get_double (&stack[index]);
+					if (dbl_value < 0.0)
+						arv_value_set_int64 (&stack[index], -1);
+					else if (dbl_value > 0.0)
+						arv_value_set_int64 (&stack[index], 1);
+					else
+						arv_value_set_int64 (&stack[index], 0);
 				}
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_NEG:
-				if (arv_value_holds_double (&stack[index]))
-					arv_value_set_double (&stack[index],
-							      -arv_value_get_double (&stack[index]));
-				else
+				if (integer_mode || arv_value_holds_int64 (&stack[index]))
 					arv_value_set_int64 (&stack[index],
 							     -arv_value_get_int64 (&stack[index]));
+				else
+					arv_value_set_double (&stack[index],
+							      -arv_value_get_double (&stack[index]));
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_ATAN:
 				arv_value_set_double (&stack[index], atan (arv_value_get_double (&stack[index])));
@@ -789,7 +825,10 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 				arv_value_set_int64 (&stack[index+1], token->data.v_int64);
 				break;
 			case ARV_EVALUATOR_TOKEN_CONSTANT_DOUBLE:
-				arv_value_set_double (&stack[index+1], token->data.v_double);
+				if (integer_mode)
+					arv_value_set_int64 (&stack[index+1], token->data.v_double);
+				else
+					arv_value_set_double (&stack[index+1], token->data.v_double);
 				break;
 			case ARV_EVALUATOR_TOKEN_VARIABLE:
 				value = g_hash_table_lookup (variables, token->data.name);

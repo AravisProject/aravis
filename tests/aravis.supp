@@ -75,3 +75,13 @@
 		fun:g_type_class_ref
 		fun:g_type_class_ref
 }
+
+{
+	g_type_class_ref_Wm
+		Memcheck:Leak
+		fun:calloc
+		fun:g_malloc0
+		fun:type_class_init_Wm
+		fun:g_type_class_ref
+		fun:g_type_class_ref
+}
