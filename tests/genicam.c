@@ -109,6 +109,50 @@ integer_test (void)
 }
 
 static void
+indexed_test (void)
+{
+	ArvDevice *device;
+	ArvGc *genicam;
+	ArvGcNode *node;
+	ArvGcNode *selector;
+	gint64 v_int64;
+
+	device = arv_fake_device_new ("TEST0");
+	g_assert (ARV_IS_FAKE_DEVICE (device));
+
+	genicam = arv_device_get_genicam (device);
+	g_assert (ARV_IS_GC (genicam));
+
+	node = arv_gc_get_node (genicam, "Table");
+	g_assert (ARV_IS_GC_INTEGER_NODE (node));
+
+	selector = arv_gc_get_node (genicam, "Selector");
+	g_assert (ARV_IS_GC_INTEGER_NODE (selector));
+
+	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
+	g_assert_cmpint (v_int64, ==, 200);
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node), 150, NULL);
+
+	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
+	g_assert_cmpint (v_int64, ==, 150);
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (selector), -1, NULL);
+	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
+	g_assert_cmpint (v_int64, ==, 600);
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (selector), 10, NULL);
+	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
+	g_assert_cmpint (v_int64, ==, 100);
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (selector), 20, NULL);
+	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
+	g_assert_cmpint (v_int64, ==, 150);
+
+	g_object_unref (device);
+}
+
+static void
 boolean_test (void)
 {
 	ArvDevice *device;
@@ -608,6 +652,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/genicam/url", url_test);
 	g_test_add_func ("/genicam/mandatory", mandatory_test);
 	g_test_add_func ("/genicam/chunk-data", chunk_data_test);
+	g_test_add_func ("/genicam/indexed", indexed_test);
 
 	result = g_test_run();
 

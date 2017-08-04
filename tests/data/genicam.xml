@@ -265,6 +265,21 @@
     <pValue>Enumeration</pValue>
   </Converter>
 
+  <Integer Name="Table">
+    <pIndex>Selector</pIndex>
+    <ValueIndexed Index="10">100</ValueIndexed>
+    <ValueIndexed Index="20">200</ValueIndexed>
+    <pValueDefault>DefaultValue</pValueDefault>
+  </Integer>
+
+  <Integer Name="Selector">
+    <Value>20</Value>
+  </Integer>
+
+  <Integer Name="DefaultValue">
+    <Value>600</Value>
+  </Integer>
+
   <Port Name="StringPort">
     <ChunkID>87654321</ChunkID>
   </Port>

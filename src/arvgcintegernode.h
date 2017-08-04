@@ -50,6 +50,10 @@ struct _ArvGcIntegerNode {
 	ArvGcPropertyNode *maximum;
 	ArvGcPropertyNode *increment;
 	ArvGcPropertyNode *unit;
+
+	ArvGcPropertyNode *index;
+	GSList *value_indexed_nodes;
+	ArvGcPropertyNode *value_default;
 };
 
 struct _ArvGcIntegerNodeClass {

@@ -27,6 +27,7 @@
 
 #include <arvgcintegernode.h>
 #include <arvgcinteger.h>
+#include <arvgcvalueindexednode.h>
 #include <arvgc.h>
 #include <arvmisc.h>
 #include <string.h>
@@ -70,6 +71,17 @@ arv_gc_integer_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 			case ARV_GC_PROPERTY_NODE_TYPE_UNIT:
 				node->unit = property_node;
 				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_P_INDEX:
+				node->index = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_VALUE_INDEXED:
+			case ARV_GC_PROPERTY_NODE_TYPE_P_VALUE_INDEXED:
+				node->value_indexed_nodes = g_slist_prepend (node->value_indexed_nodes, property_node);
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_VALUE_DEFAULT:
+			case ARV_GC_PROPERTY_NODE_TYPE_P_VALUE_DEFAULT:
+				node->value_default = property_node;
+				break;
 			default:
 				ARV_DOM_NODE_CLASS (parent_class)->post_new_child (self, child);
 				break;
@@ -85,6 +97,35 @@ arv_gc_integer_node_pre_remove_child (ArvDomNode *self, ArvDomNode *child)
 
 /* ArvGcFeatureNode implementation */
 
+static ArvGcPropertyNode *
+_get_value_node (ArvGcIntegerNode *gc_integer_node, GError **error)
+{
+	GError *local_error = NULL;
+
+	if (gc_integer_node->value != NULL)
+		return gc_integer_node->value;
+
+	if (gc_integer_node->index != NULL) {
+		gint64 index;
+		GSList *iter;
+
+		index = arv_gc_property_node_get_int64 (ARV_GC_PROPERTY_NODE (gc_integer_node->index), &local_error);
+		if (local_error != NULL) {
+			g_propagate_error (error, local_error);
+			return NULL;
+		}
+
+		for (iter = gc_integer_node->value_indexed_nodes; iter != NULL; iter = iter->next)
+			if (arv_gc_value_indexed_node_get_index (iter->data) == index)
+				return iter->data;
+
+		if (gc_integer_node->value_default != NULL)
+			return gc_integer_node->value_default;
+	}
+
+	return NULL;
+}
+
 static GType
 arv_gc_integer_node_get_value_type (ArvGcFeatureNode *node)
 {
@@ -94,26 +135,22 @@ arv_gc_integer_node_get_value_type (ArvGcFeatureNode *node)
 static void
 arv_gc_integer_node_set_value_from_string (ArvGcFeatureNode *node, const char *string, GError **error)
 {
-	GError *local_error = NULL;
-
-	arv_gc_integer_set_value (ARV_GC_INTEGER (node), g_ascii_strtoll (string, NULL, 0), &local_error);
-
-	if (local_error != NULL)
-		g_propagate_error (error, local_error);
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node), g_ascii_strtoll (string, NULL, 0), error);
 }
 
 static const char *
 arv_gc_integer_node_get_value_as_string (ArvGcFeatureNode *node, GError **error)
 {
 	ArvGcIntegerNode *integer_node = ARV_GC_INTEGER_NODE (node);
+	ArvGcPropertyNode *value_node;
 	GError *local_error = NULL;
 	const char *string;
 
-	if (integer_node->value == NULL)
+	value_node = _get_value_node (integer_node, error);
+	if (value_node == NULL)
 		return NULL;
 
-	string = arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (integer_node->value), &local_error);
-
+	string = arv_gc_property_node_get_string (value_node, &local_error);
 	if (local_error != NULL) {
 		g_propagate_error (error, local_error);
 		return NULL;
@@ -142,7 +179,11 @@ arv_gc_integer_node_init (ArvGcIntegerNode *gc_integer_node)
 static void
 arv_gc_integer_node_finalize (GObject *object)
 {
+	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (object);
+
 	parent_class->finalize (object);
+
+	g_slist_free (gc_integer_node->value_indexed_nodes);
 }
 
 static void
@@ -169,14 +210,15 @@ static gint64
 arv_gc_integer_node_get_integer_value (ArvGcInteger *gc_integer, GError **error)
 {
 	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (gc_integer);
+	ArvGcPropertyNode *value_node;
 	GError *local_error = NULL;
 	gint64 value;
 
-	if (gc_integer_node->value == NULL)
+	value_node = _get_value_node (gc_integer_node, error);
+	if (value_node == NULL)
 		return 0;
 
-	value = arv_gc_property_node_get_int64 (ARV_GC_PROPERTY_NODE (gc_integer_node->value), &local_error);
-
+	value = arv_gc_property_node_get_int64 (ARV_GC_PROPERTY_NODE (value_node), &local_error);
 	if (local_error != NULL) {
 		g_propagate_error (error, local_error);
 		return 0;
@@ -189,12 +231,14 @@ static void
 arv_gc_integer_node_set_integer_value (ArvGcInteger *gc_integer, gint64 value, GError **error)
 {
 	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (gc_integer);
+	ArvGcPropertyNode *value_node;
 	GError *local_error = NULL;
 
-	if (gc_integer_node->value == NULL)
+	value_node = _get_value_node (gc_integer_node, error);
+	if (value_node == NULL)
 		return;
 
-	arv_gc_property_node_set_int64 (ARV_GC_PROPERTY_NODE (gc_integer_node->value), value, &local_error);
+	arv_gc_property_node_set_int64 (ARV_GC_PROPERTY_NODE (value_node), value, &local_error);
 
 	if (local_error != NULL)
 		g_propagate_error (error, local_error);

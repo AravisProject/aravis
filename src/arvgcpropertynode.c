@@ -103,6 +103,8 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 			return "CommandValue";
 		case ARV_GC_PROPERTY_NODE_TYPE_CHUNK_ID:
 			return "ChunkID";
+		case ARV_GC_PROPERTY_NODE_TYPE_VALUE_DEFAULT:
+			return "ValueDefault";
 
 		case ARV_GC_PROPERTY_NODE_TYPE_P_FEATURE:
 			return "pFeature";
@@ -130,6 +132,8 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 			return "pVariable";
 		case ARV_GC_PROPERTY_NODE_TYPE_P_COMMAND_VALUE:
 			return "pCommandValue";
+		case ARV_GC_PROPERTY_NODE_TYPE_P_VALUE_DEFAULT:
+			return "pValueDefault";
 
 		default:
 			return "Unknown";
@@ -723,6 +727,18 @@ ArvGcNode *
 arv_gc_property_node_new_chunk_id (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_CHUNK_ID);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_value_default (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_VALUE_DEFAULT);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_p_value_default (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_P_VALUE_DEFAULT);
 }
 
 static void

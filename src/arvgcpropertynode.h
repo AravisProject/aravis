@@ -61,6 +61,8 @@ typedef enum {
 	ARV_GC_PROPERTY_NODE_TYPE_BIT,
 	ARV_GC_PROPERTY_NODE_TYPE_COMMAND_VALUE,
 	ARV_GC_PROPERTY_NODE_TYPE_CHUNK_ID,
+	ARV_GC_PROPERTY_NODE_TYPE_VALUE_INDEXED,
+	ARV_GC_PROPERTY_NODE_TYPE_VALUE_DEFAULT,
 
 	ARV_GC_PROPERTY_NODE_TYPE_P_UNKNONW	= 1000,
 	ARV_GC_PROPERTY_NODE_TYPE_P_FEATURE,
@@ -77,7 +79,9 @@ typedef enum {
 	ARV_GC_PROPERTY_NODE_TYPE_P_PORT,
 	ARV_GC_PROPERTY_NODE_TYPE_P_VARIABLE,
 	ARV_GC_PROPERTY_NODE_TYPE_P_INVALIDATOR,
-	ARV_GC_PROPERTY_NODE_TYPE_P_COMMAND_VALUE
+	ARV_GC_PROPERTY_NODE_TYPE_P_COMMAND_VALUE,
+	ARV_GC_PROPERTY_NODE_TYPE_P_VALUE_INDEXED,
+	ARV_GC_PROPERTY_NODE_TYPE_P_VALUE_DEFAULT
 } ArvGcPropertyNodeType;
 
 #define ARV_TYPE_GC_PROPERTY_NODE             (arv_gc_property_node_get_type ())
@@ -147,6 +151,8 @@ ArvGcNode * 	arv_gc_property_node_new_bit			(void);
 ArvGcNode * 	arv_gc_property_node_new_command_value		(void);
 ArvGcNode * 	arv_gc_property_node_new_p_command_value	(void);
 ArvGcNode * 	arv_gc_property_node_new_chunk_id 		(void);
+ArvGcNode * 	arv_gc_property_node_new_value_default 		(void);
+ArvGcNode * 	arv_gc_property_node_new_p_value_default	(void);
 
 const char *		arv_gc_property_node_get_name		(ArvGcPropertyNode *node);
 
