@@ -116,6 +116,7 @@ indexed_test (void)
 	ArvGcNode *node;
 	ArvGcNode *selector;
 	gint64 v_int64;
+	double v_double;
 
 	device = arv_fake_device_new ("TEST0");
 	g_assert (ARV_IS_FAKE_DEVICE (device));
@@ -126,7 +127,7 @@ indexed_test (void)
 	node = arv_gc_get_node (genicam, "Table");
 	g_assert (ARV_IS_GC_INTEGER_NODE (node));
 
-	selector = arv_gc_get_node (genicam, "Selector");
+	selector = arv_gc_get_node (genicam, "TableSelector");
 	g_assert (ARV_IS_GC_INTEGER_NODE (selector));
 
 	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
@@ -148,6 +149,90 @@ indexed_test (void)
 	arv_gc_integer_set_value (ARV_GC_INTEGER (selector), 20, NULL);
 	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
 	g_assert_cmpint (v_int64, ==, 150);
+
+	node = arv_gc_get_node (genicam, "Multiplexer");
+	g_assert (ARV_IS_GC_INTEGER_NODE (node));
+
+	selector = arv_gc_get_node (genicam, "MultiplexerSelector");
+	g_assert (ARV_IS_GC_INTEGER_NODE (selector));
+
+	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (selector), NULL);
+	g_assert_cmpint (v_int64, ==, 20);
+
+	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
+	g_assert_cmpint (v_int64, ==, 200);
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node), 150, NULL);
+
+	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
+	g_assert_cmpint (v_int64, ==, 150);
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (selector), -1, NULL);
+	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
+	g_assert_cmpint (v_int64, ==, 600);
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (selector), 10, NULL);
+	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
+	g_assert_cmpint (v_int64, ==, 100);
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (selector), 20, NULL);
+	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
+	g_assert_cmpint (v_int64, ==, 150);
+
+	node = arv_gc_get_node (genicam, "FloatTable");
+	g_assert (ARV_IS_GC_FLOAT_NODE (node));
+
+	selector = arv_gc_get_node (genicam, "FloatTableSelector");
+	g_assert (ARV_IS_GC_INTEGER_NODE (selector));
+
+	v_double = arv_gc_float_get_value (ARV_GC_FLOAT (node), NULL);
+	g_assert_cmpfloat (v_double, ==, 200.2);
+
+	arv_gc_float_set_value (ARV_GC_FLOAT (node), 150.15, NULL);
+
+	v_double = arv_gc_float_get_value (ARV_GC_FLOAT (node), NULL);
+	g_assert_cmpfloat (v_double, ==, 150.15);
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (selector), -1, NULL);
+	v_double = arv_gc_float_get_value (ARV_GC_FLOAT (node), NULL);
+	g_assert_cmpfloat (v_double, ==, 600.6);
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (selector), 10, NULL);
+	v_double = arv_gc_float_get_value (ARV_GC_FLOAT (node), NULL);
+	g_assert_cmpfloat (v_double, ==, 100.1);
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (selector), 20, NULL);
+	v_double = arv_gc_float_get_value (ARV_GC_FLOAT (node), NULL);
+	g_assert_cmpint (v_double, ==, 150.15);
+
+	node = arv_gc_get_node (genicam, "FloatMultiplexer");
+	g_assert (ARV_IS_GC_FLOAT_NODE (node));
+
+	selector = arv_gc_get_node (genicam, "FloatMultiplexerSelector");
+	g_assert (ARV_IS_GC_INTEGER_NODE (selector));
+
+	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (selector), NULL);
+	g_assert_cmpint (v_int64, ==, 20);
+
+	v_double = arv_gc_float_get_value (ARV_GC_FLOAT (node), NULL);
+	g_assert_cmpfloat (v_double, ==, 200.2);
+
+	arv_gc_float_set_value (ARV_GC_FLOAT (node), 150.15, NULL);
+
+	v_double = arv_gc_float_get_value (ARV_GC_FLOAT (node), NULL);
+	g_assert_cmpfloat (v_double, ==, 150.15);
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (selector), -1, NULL);
+	v_double = arv_gc_float_get_value (ARV_GC_FLOAT (node), NULL);
+	g_assert_cmpfloat (v_double, ==, 600.6);
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (selector), 10, NULL);
+	v_double = arv_gc_float_get_value (ARV_GC_FLOAT (node), NULL);
+	g_assert_cmpfloat (v_double, ==, 100.1);
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (selector), 20, NULL);
+	v_double = arv_gc_float_get_value (ARV_GC_FLOAT (node), NULL);
+	g_assert_cmpfloat (v_double, ==, 150.15);
 
 	g_object_unref (device);
 }

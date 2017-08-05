@@ -115,9 +115,10 @@ _get_value_node (ArvGcIntegerNode *gc_integer_node, GError **error)
 			return NULL;
 		}
 
-		for (iter = gc_integer_node->value_indexed_nodes; iter != NULL; iter = iter->next)
+		for (iter = gc_integer_node->value_indexed_nodes; iter != NULL; iter = iter->next) {
 			if (arv_gc_value_indexed_node_get_index (iter->data) == index)
 				return iter->data;
+		}
 
 		if (gc_integer_node->value_default != NULL)
 			return gc_integer_node->value_default;
@@ -239,7 +240,6 @@ arv_gc_integer_node_set_integer_value (ArvGcInteger *gc_integer, gint64 value, G
 		return;
 
 	arv_gc_property_node_set_int64 (ARV_GC_PROPERTY_NODE (value_node), value, &local_error);
-
 	if (local_error != NULL)
 		g_propagate_error (error, local_error);
 }

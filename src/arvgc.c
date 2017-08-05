@@ -176,7 +176,7 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 	else if (strcmp (tag_name, "ValueIndexed") == 0)
 		node = arv_gc_value_indexed_node_new ();
 	else if (strcmp (tag_name, "pValueIndexed") == 0)
-		node = arv_gc_value_indexed_node_new ();
+		node = arv_gc_p_value_indexed_node_new ();
 	else if (strcmp (tag_name, "ValueDefault") == 0)
 		node = arv_gc_property_node_new_value_default ();
 	else if (strcmp (tag_name, "pValueDefault") == 0)

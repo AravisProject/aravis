@@ -243,6 +243,10 @@
     <pPort>StringPort</pPort>
   </StringReg>
 
+  <Port Name="StringPort">
+    <ChunkID>87654321</ChunkID>
+  </Port>
+
   <Converter Name="Converter">
     <FormulaTo> 0.5 * FROM</FormulaTo>
     <FormulaFrom> 2.0 * TO</FormulaFrom>
@@ -266,22 +270,71 @@
   </Converter>
 
   <Integer Name="Table">
-    <pIndex>Selector</pIndex>
+    <pIndex>TableSelector</pIndex>
     <ValueIndexed Index="10">100</ValueIndexed>
     <ValueIndexed Index="20">200</ValueIndexed>
-    <pValueDefault>DefaultValue</pValueDefault>
+    <ValueDefault>600</ValueDefault>
   </Integer>
 
-  <Integer Name="Selector">
+  <Integer Name="TableSelector">
     <Value>20</Value>
   </Integer>
 
-  <Integer Name="DefaultValue">
+  <Float Name="FloatTable">
+    <pIndex>FloatTableSelector</pIndex>
+    <ValueIndexed Index="10">100.1</ValueIndexed>
+    <ValueIndexed Index="20">200.2</ValueIndexed>
+    <ValueDefault>600.6</ValueDefault>
+  </Float>
+
+  <Integer Name="FloatTableSelector">
+    <Value>20</Value>
+  </Integer>
+
+  <Integer Name="Multiplexer">
+    <pIndex>MultiplexerSelector</pIndex>
+    <pValueIndexed Index="10">MultiplexerEntry0</pValueIndexed>
+    <pValueIndexed Index="20">MultiplexerEntry1</pValueIndexed>
+    <pValueDefault>MultiplexerDefaultValue</pValueDefault>
+  </Integer>
+
+  <Integer Name="MultiplexerSelector">
+    <Value>20</Value>
+  </Integer>
+
+  <Integer Name="MultiplexerEntry0">
+    <Value>100</Value>
+  </Integer>
+
+  <Integer Name="MultiplexerEntry1">
+    <Value>200</Value>
+  </Integer>
+
+  <Integer Name="MultiplexerDefaultValue">
     <Value>600</Value>
   </Integer>
 
-  <Port Name="StringPort">
-    <ChunkID>87654321</ChunkID>
-  </Port>
+  <Float Name="FloatMultiplexer">
+    <pIndex>FloatMultiplexerSelector</pIndex>
+    <pValueIndexed Index="10">FloatMultiplexerEntry0</pValueIndexed>
+    <pValueIndexed Index="20">FloatMultiplexerEntry1</pValueIndexed>
+    <pValueDefault>FloatMultiplexerDefaultValue</pValueDefault>
+  </Float>
+
+  <Integer Name="FloatMultiplexerSelector">
+    <Value>20</Value>
+  </Integer>
+
+  <Float Name="FloatMultiplexerEntry0">
+    <Value>100.1</Value>
+  </Float>
+
+  <Float Name="FloatMultiplexerEntry1">
+    <Value>200.2</Value>
+  </Float>
+
+  <Float Name="FloatMultiplexerDefaultValue">
+    <Value>600.6</Value>
+  </Float>
 
 </RegisterDescription>

@@ -27,6 +27,7 @@
 
 #include <arvgcfloatnode.h>
 #include <arvgcfloat.h>
+#include <arvgcvalueindexednode.h>
 #include <arvgc.h>
 #include <arvmisc.h>
 #include <arvstr.h>
@@ -70,6 +71,17 @@ arv_gc_float_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 			case ARV_GC_PROPERTY_NODE_TYPE_UNIT:
 				node->unit = property_node;
 				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_P_INDEX:
+				node->index = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_VALUE_INDEXED:
+			case ARV_GC_PROPERTY_NODE_TYPE_P_VALUE_INDEXED:
+				node->value_indexed_nodes = g_slist_prepend (node->value_indexed_nodes, property_node);
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_VALUE_DEFAULT:
+			case ARV_GC_PROPERTY_NODE_TYPE_P_VALUE_DEFAULT:
+				node->value_default = property_node;
+				break;
 			default:
 				ARV_DOM_NODE_CLASS (parent_class)->post_new_child (self, child);
 				break;
@@ -85,6 +97,35 @@ arv_gc_float_node_pre_remove_child (ArvDomNode *self, ArvDomNode *child)
 
 /* ArvGcFeatureNode implementation */
 
+static ArvGcPropertyNode *
+_get_value_node (ArvGcFloatNode *gc_float_node, GError **error)
+{
+	GError *local_error = NULL;
+
+	if (gc_float_node->value != NULL)
+		return gc_float_node->value;
+
+	if (gc_float_node->index != NULL) {
+		gint64 index;
+		GSList *iter;
+
+		index = arv_gc_property_node_get_int64 (ARV_GC_PROPERTY_NODE (gc_float_node->index), &local_error);
+		if (local_error != NULL) {
+			g_propagate_error (error, local_error);
+			return NULL;
+		}
+
+		for (iter = gc_float_node->value_indexed_nodes; iter != NULL; iter = iter->next)
+			if (arv_gc_value_indexed_node_get_index (iter->data) == index)
+				return iter->data;
+
+		if (gc_float_node->value_default != NULL)
+			return gc_float_node->value_default;
+	}
+
+	return NULL;
+}
+
 static GType
 arv_gc_float_node_get_value_type (ArvGcFeatureNode *node)
 {
@@ -95,26 +136,22 @@ arv_gc_float_node_get_value_type (ArvGcFeatureNode *node)
 static void
 arv_gc_float_node_set_value_from_string (ArvGcFeatureNode *node, const char *string, GError **error)
 {
-	GError *local_error = NULL;
-
-	arv_gc_float_set_value (ARV_GC_FLOAT (node), g_ascii_strtod (string, NULL), &local_error);
-
-	if (local_error != NULL)
-		g_propagate_error (error, local_error);
+	arv_gc_float_set_value (ARV_GC_FLOAT (node), g_ascii_strtod (string, NULL), error);
 }
 
 static const char *
 arv_gc_float_node_get_value_as_string (ArvGcFeatureNode *node, GError **error)
 {
 	ArvGcFloatNode *float_node = ARV_GC_FLOAT_NODE (node);
+	ArvGcPropertyNode *value_node;
 	GError *local_error = NULL;
 	const char *string;
 
-	if (float_node->value == NULL)
+	value_node = _get_value_node (float_node, error);
+	if (value_node == NULL)
 		return NULL;
 
-	string = arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (float_node->value), &local_error);
-
+	string = arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (value_node), &local_error);
 	if (local_error != NULL) {
 		g_propagate_error (error, local_error);
 		return NULL;
@@ -143,7 +180,11 @@ arv_gc_float_node_init (ArvGcFloatNode *gc_float_node)
 static void
 arv_gc_float_node_finalize (GObject *object)
 {
+	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (object);
+
 	parent_class->finalize (object);
+
+	g_slist_free (gc_float_node->value_indexed_nodes);
 }
 
 static void
@@ -170,14 +211,15 @@ static double
 arv_gc_float_node_get_float_value (ArvGcFloat *gc_float, GError **error)
 {
 	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_float);
+	ArvGcPropertyNode *value_node;
 	GError *local_error = NULL;
 	double value;
 
-	if (gc_float_node->value == NULL)
+	value_node = _get_value_node (gc_float_node, error);
+	if (value_node == NULL)
 		return 0.0;
 
-	value = arv_gc_property_node_get_double (ARV_GC_PROPERTY_NODE (gc_float_node->value), &local_error);
-
+	value = arv_gc_property_node_get_double (ARV_GC_PROPERTY_NODE (value_node), &local_error);
 	if (local_error != NULL) {
 		g_propagate_error (error, local_error);
 		return 0.0;
@@ -190,13 +232,14 @@ static void
 arv_gc_float_node_set_float_value (ArvGcFloat *gc_float, double value, GError **error)
 {
 	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_float);
+	ArvGcPropertyNode *value_node;
 	GError *local_error = NULL;
 
-	if (gc_float_node->value == NULL)
+	value_node = _get_value_node (gc_float_node, error);
+	if (value_node == NULL)
 		return;
 
-	arv_gc_property_node_set_double (ARV_GC_PROPERTY_NODE (gc_float_node->value), value, &local_error);
-
+	arv_gc_property_node_set_double (ARV_GC_PROPERTY_NODE (value_node), value, &local_error);
 	if (local_error != NULL)
 		g_propagate_error (error, local_error);
 }

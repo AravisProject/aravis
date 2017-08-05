@@ -336,7 +336,6 @@ arv_gc_property_node_get_int64 (ArvGcPropertyNode *node, GError **error)
 	if (pvalue_node == NULL)
 		return g_ascii_strtoll (_get_value_data (node), NULL, 0);
 
-
 	if (ARV_IS_GC_INTEGER (pvalue_node)) {
 		GError *local_error = NULL;
 		gint64 value;
