@@ -53,6 +53,7 @@
 			<xi:include href="xml/arvgcnode.xml"/>
 			<xi:include href="xml/arvgcpropertynode.xml"/>
 			<xi:include href="xml/arvgcindexnode.xml"/>
+			<xi:include href="xml/arvgcvalueindexednode.xml"/>
 			<xi:include href="xml/arvgcinvalidatornode.xml"/>
 			<xi:include href="xml/arvgcfeaturenode.xml"/>
 			<xi:include href="xml/arvgcregisterdescriptionnode.xml"/>
