@@ -73,7 +73,7 @@
 #include <arvgvinterface.h>
 #include <arvgvdevice.h>
 #include <arvgvstream.h>
-#ifdef ARAVIS_BUILD_USB
+#if ARAVIS_HAS_USB
 #include <arvuvcp.h>
 #include <arvuvsp.h>
 #include <arvuvinterface.h>
