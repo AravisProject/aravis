@@ -495,6 +495,16 @@ converter_test (void)
 	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
 	g_assert_cmpint (v_int64, ==, 5);
 
+	node = arv_gc_get_node (genicam, "IntConverterTestSubAndConstant");
+	g_assert (ARV_IS_GC_CONVERTER (node));
+
+	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
+	g_assert_cmpint (v_int64, ==, 10000);
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node), 100, NULL);
+	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
+	g_assert_cmpint (v_int64, ==, 1000);
+
 	g_object_unref (device);
 }
 

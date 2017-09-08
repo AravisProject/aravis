@@ -47,6 +47,8 @@ struct _ArvGcConverter {
 
 	GType value_type;
 	GSList *variables;	/* ArvGcVariableNode list */
+	GSList *constants;	/* ArvGcVariableNode list */
+	GSList *expressions;	/* ArvGcVariableNode list */
 
 	ArvGcPropertyNode *value;
 	ArvGcPropertyNode *formula_to_node;

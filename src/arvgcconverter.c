@@ -77,8 +77,10 @@ arv_gc_converter_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				node->formula_from_node = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_EXPRESSION:
+				node->expressions = g_slist_prepend (node->expressions, property_node);
+				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_CONSTANT:
-				arv_warning_genicam ("[GcConverter::post_new_child] Constant and Expression not yet implemented");
+				node->constants = g_slist_prepend (node->constants, property_node);
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_UNIT:
 				node->unit = property_node;
@@ -159,6 +161,8 @@ arv_gc_converter_finalize (GObject *object)
 	ArvGcConverter *gc_converter = ARV_GC_CONVERTER (object);
 
 	g_slist_free (gc_converter->variables);
+	g_slist_free (gc_converter->expressions);
+	g_slist_free (gc_converter->constants);
 
 	g_object_unref (gc_converter->formula_to);
 	g_object_unref (gc_converter->formula_from);
@@ -204,6 +208,36 @@ _update_from_variables (ArvGcConverter *gc_converter, ArvGcConverterNodeType nod
 	}
 
 	arv_evaluator_set_expression (gc_converter->formula_from, expression);
+
+	for (iter = gc_converter->expressions; iter != NULL; iter = iter->next) {
+		const char *expression;
+		const char *name;
+
+		expression = arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (iter->data), &local_error);
+		if (local_error != NULL) {
+			g_propagate_error (error, local_error);
+			return FALSE;
+		}
+
+		name = arv_gc_property_node_get_name (iter->data);
+
+		arv_evaluator_set_sub_expression (gc_converter->formula_from, name, expression);
+	}
+
+	for (iter = gc_converter->constants; iter != NULL; iter = iter->next) {
+		const char *constant;
+		const char *name;
+
+		constant = arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (iter->data), &local_error);
+		if (local_error != NULL) {
+			g_propagate_error (error, local_error);
+			return FALSE;
+		}
+
+		name = arv_gc_property_node_get_name (iter->data);
+
+		arv_evaluator_set_constant (gc_converter->formula_from, name, constant);
+	}
 
 	for (iter = gc_converter->variables; iter != NULL; iter = iter->next) {
 		ArvGcPropertyNode *variable_node = iter->data;
@@ -330,6 +364,36 @@ _update_to_variables (ArvGcConverter *gc_converter, GError **error)
 	}
 
 	arv_evaluator_set_expression (gc_converter->formula_to, expression);
+
+	for (iter = gc_converter->expressions; iter != NULL; iter = iter->next) {
+		const char *expression;
+		const char *name;
+
+		expression = arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (iter->data), &local_error);
+		if (local_error != NULL) {
+			g_propagate_error (error, local_error);
+			return;
+		}
+
+		name = arv_gc_property_node_get_name (iter->data);
+
+		arv_evaluator_set_sub_expression (gc_converter->formula_to, name, expression);
+	}
+
+	for (iter = gc_converter->constants; iter != NULL; iter = iter->next) {
+		const char *constant;
+		const char *name;
+
+		constant = arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (iter->data), &local_error);
+		if (local_error != NULL) {
+			g_propagate_error (error, local_error);
+			return;
+		}
+
+		name = arv_gc_property_node_get_name (iter->data);
+
+		arv_evaluator_set_constant (gc_converter->formula_to, name, constant);
+	}
 
 	for (iter = gc_converter->variables; iter != NULL; iter = iter->next) {
 		ArvGcPropertyNode *variable_node = iter->data;

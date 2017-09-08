@@ -131,6 +131,7 @@ arv_gc_swiss_knife_finalize (GObject *object)
 	g_slist_free (gc_swiss_knife->variables);
 	g_slist_free (gc_swiss_knife->expressions);
 	g_slist_free (gc_swiss_knife->constants);
+
 	g_clear_object (&gc_swiss_knife->formula);
 
 	parent_class->finalize (object);

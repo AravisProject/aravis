@@ -269,6 +269,18 @@
     <pValue>Enumeration</pValue>
   </Converter>
 
+  <IntConverter Name="IntConverterTestSubAndConstant">
+    <Constant Name="TEN">10</Constant>
+    <Expression Name="XPLUS2">TEN</Expression>
+    <FormulaFrom>TO * TEN * XPLUS2</FormulaFrom>
+    <FormulaTo>FROM / XPLUS2</FormulaTo>
+    <pValue>IntConverterTestSubAndConstantValue</pValue>
+  </IntConverter>
+
+  <Integer Name="IntConverterTestSubAndConstantValue">
+    <Value>100</Value>
+  </Integer>
+
   <Integer Name="Table">
     <pIndex>TableSelector</pIndex>
     <ValueIndexed Index="10">100</ValueIndexed>
