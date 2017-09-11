@@ -94,8 +94,9 @@ static const ExpressionTestData expression_test_data[] = {
 	{"/evaluator/abs-float",			"ABS(-10.3)",			10,	TRUE,	10.3},
 	{"/evaluator/abs64bits",			"ABS(-10000000000)",		10000000000,	TRUE,	1e10},
 
-	{"/evaluator/bugs/681048-remaining-op",		"(0 & 1)=0?((0 & 1)+2):1",	2,	FALSE,	2.0},
-	{"/evaluator/bugs/743025-division-by-zero",	"(4/(20/10000))",		2000,	TRUE,	2000.0}
+	{"/evaluator/bugs/681048-remaining-op",		"(0 & 1)=0?((0 & 1)+2):1",		2,	FALSE,	2.0},
+	{"/evaluator/bugs/743025-division-by-zero",	"(4/(20/10000))",			2000,	TRUE,	2000.0},
+	{"/evaluator/bugs/gh98-not-operatorprecedence",	"(~(~0xC2000221|0xFEFFFFFF)) ? 2:0", 	0, 	FALSE,	0.0}
 };
 
 static void
