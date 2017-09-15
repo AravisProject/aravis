@@ -60,6 +60,7 @@
 #define ARV_GV_STREAM_POLL_TIMEOUT_US			1000000
 #define ARV_GV_STREAM_PACKET_TIMEOUT_US_DEFAULT		40000
 #define ARV_GV_STREAM_FRAME_RETENTION_US_DEFAULT	200000
+#define ARV_GV_STREAM_PACKET_REQUEST_RATIO_DEFAULT	0.10
 
 #define ARV_GV_STREAM_DISCARD_LATE_FRAME_THRESHOLD	100
 
@@ -68,6 +69,7 @@ enum {
 	ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER,
 	ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER_SIZE,
 	ARV_GV_STREAM_PROPERTY_PACKET_RESEND,
+	ARV_GV_STREAM_PROPERTY_PACKET_REQUEST_RATIO,
 	ARV_GV_STREAM_PROPERTY_PACKET_TIMEOUT,
 	ARV_GV_STREAM_PROPERTY_FRAME_RETENTION
 } ArvGvStreamProperties;
@@ -118,6 +120,7 @@ struct _ArvGvStreamThreadData {
 	guint16 stream_port;
 
 	ArvGvStreamPacketResend packet_resend;
+	double packet_request_ratio;
 	guint packet_timeout_us;
 	guint frame_retention_us;
 
@@ -415,10 +418,14 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 		       guint32 packet_id,
 		       guint64 time_us)
 {
+	guint n_packet_requests = 0;
 	int i;
 
 	if (thread_data->packet_resend == ARV_GV_STREAM_PACKET_RESEND_NEVER ||
 	    frame->error_packet_received)
+		return;
+
+	if ((int) (frame->n_packets * thread_data->packet_request_ratio) <= 0)
 		return;
 
 	if (packet_id < frame->n_packets) {
@@ -433,6 +440,19 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 			} else
 				if (first_missing >= 0) {
 					int j;
+
+					if (i - first_missing + n_packet_requests >
+					    (frame->n_packets * thread_data->packet_request_ratio)) {
+						n_packet_requests += i - first_missing;
+
+						arv_log_stream_thread ("[GvStream::missing_packet_check]"
+									 " Maximum number of packet requests "
+									 "reached at dt = %" G_GINT64_FORMAT ", n_requests = %u/%u",
+									 time_us - frame->first_packet_time_us,
+									 n_packet_requests, frame->n_packets);
+
+						return;
+					}
 
 					arv_log_stream_thread ("[GvStream::missing_packet_check]"
 							       " Resend request at dt = %" G_GINT64_FORMAT ", packet id = %u/%u",
@@ -451,6 +471,20 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 
 		if (first_missing >= 0) {
 			int j;
+
+			if (i - first_missing + n_packet_requests >
+			    (frame->n_packets * thread_data->packet_request_ratio)) {
+				n_packet_requests += i - first_missing;
+
+				arv_log_stream_thread ("[GvStream::missing_packet_check]"
+						       " Maximum number of packet requests "
+						       "reached at dt = %" G_GINT64_FORMAT ", n_requests = %u/%u",
+						       time_us - frame->first_packet_time_us,
+						       n_packet_requests, frame->n_packets);
+
+				return;
+			}
+
 
 			arv_log_stream_thread ("[GvStream::missing_packet_check]"
 					       " Resend request at dt = %" G_GINT64_FORMAT", packet id = %u/%u",
@@ -1010,6 +1044,7 @@ arv_gv_stream_new (ArvGvDevice *gv_device,
 	thread_data->callback = callback;
 	thread_data->user_data = user_data;
 	thread_data->packet_resend = ARV_GV_STREAM_PACKET_RESEND_ALWAYS;
+	thread_data->packet_request_ratio = ARV_GV_STREAM_PACKET_REQUEST_RATIO_DEFAULT;
 	thread_data->packet_timeout_us = ARV_GV_STREAM_PACKET_TIMEOUT_US_DEFAULT;
 	thread_data->frame_retention_us = ARV_GV_STREAM_FRAME_RETENTION_US_DEFAULT;
 	thread_data->timestamp_tick_frequency = timestamp_tick_frequency;
@@ -1129,6 +1164,9 @@ arv_gv_stream_set_property (GObject * object, guint prop_id,
 		case ARV_GV_STREAM_PROPERTY_PACKET_RESEND:
 			thread_data->packet_resend = g_value_get_enum (value);
 			break;
+		case ARV_GV_STREAM_PROPERTY_PACKET_REQUEST_RATIO:
+			thread_data->packet_request_ratio = g_value_get_double (value);
+			break;
 		case ARV_GV_STREAM_PROPERTY_PACKET_TIMEOUT:
 			thread_data->packet_timeout_us = g_value_get_uint (value);
 			break;
@@ -1159,6 +1197,9 @@ arv_gv_stream_get_property (GObject * object, guint prop_id,
 			break;
 		case ARV_GV_STREAM_PROPERTY_PACKET_RESEND:
 			g_value_set_enum (value, thread_data->packet_resend);
+			break;
+		case ARV_GV_STREAM_PROPERTY_PACKET_REQUEST_RATIO:
+			g_value_set_double (value, thread_data->packet_request_ratio);
 			break;
 		case ARV_GV_STREAM_PROPERTY_PACKET_TIMEOUT:
 			g_value_set_uint (value, thread_data->packet_timeout_us);
@@ -1283,6 +1324,13 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 				   ARV_TYPE_GV_STREAM_PACKET_RESEND,
 				   ARV_GV_STREAM_PACKET_RESEND_ALWAYS,
 				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+		);
+	g_object_class_install_property (
+		object_class, ARV_GV_STREAM_PROPERTY_PACKET_REQUEST_RATIO,
+		g_param_spec_double ("packet-request-ratio", "Packet request ratio",
+				     "Packet resend request limit as a percentage of frame packet number",
+				     0.0, 2.0, ARV_GV_STREAM_PACKET_REQUEST_RATIO_DEFAULT,
+				     G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
 		);
 	g_object_class_install_property (
 		object_class, ARV_GV_STREAM_PROPERTY_PACKET_TIMEOUT,

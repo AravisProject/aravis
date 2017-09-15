@@ -17,6 +17,7 @@ static double arv_option_exposure_time_us = -1;
 static int arv_option_gain = -1;
 static gboolean arv_option_auto_socket_buffer = FALSE;
 static gboolean arv_option_no_packet_resend = FALSE;
+static double arv_option_packet_request_ratio = -1.0;
 static unsigned int arv_option_packet_timeout = 20;
 static unsigned int arv_option_frame_retention = 100;
 static int arv_option_gv_stream_channel = -1;
@@ -81,6 +82,10 @@ static const GOptionEntry arv_option_entries[] =
 	{
 		"no-packet-resend",			'r', 0, G_OPTION_ARG_NONE,
 		&arv_option_no_packet_resend,		"No packet resend", NULL
+	},
+	{
+		"packet-request-ratio",			'q', 0, G_OPTION_ARG_DOUBLE,
+		&arv_option_packet_request_ratio,	"Packet resend request limit as a frame packet number ratio [0..2.0]", NULL
 	},
 	{
 		"packet-timeout", 			'p', 0, G_OPTION_ARG_INT,
@@ -346,6 +351,11 @@ main (int argc, char **argv)
 					g_object_set (stream,
 						      "packet-resend", ARV_GV_STREAM_PACKET_RESEND_NEVER,
 						      NULL);
+				if (arv_option_packet_request_ratio >= 0.0)
+					g_object_set (stream,
+						      "packet-request-ratio", arv_option_packet_request_ratio,
+						      NULL);
+
 				g_object_set (stream,
 					      "packet-timeout", (unsigned) arv_option_packet_timeout * 1000,
 					      "frame-retention", (unsigned) arv_option_frame_retention * 1000,
