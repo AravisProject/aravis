@@ -234,6 +234,7 @@ static pid_t _gettid(void) {
  * Since: 0.4.0
  */
 
+#ifndef __APPLE__
 gboolean
 arv_make_thread_realtime (int priority)
 {
@@ -275,9 +276,17 @@ arv_make_thread_realtime (int priority)
 
 		return TRUE;
 	}
-
 	return TRUE;
 }
+#else
+gboolean
+arv_make_thread_realtime (int priority)
+{
+	arv_debug_misc ("SCHED API not supported on OSX");
+
+	return FALSE;
+}
+#endif
 
 /**
  * arv_make_thread_high_priority:
