@@ -224,7 +224,7 @@ arv_uvcp_manifest_entry_get_schema_type (ArvUvcpManifestEntry *entry)
 {
 	g_return_val_if_fail (entry != NULL, ARV_UVCP_SCHEMA_RAW);
 
-	return (entry->schema >> 10) & 0x0000001f;
+	return (ArvUvcpManifestSchemaType) ((entry->schema >> 10) & 0x0000001f);
 }
 
 void 			arv_uvcp_packet_free 			(ArvUvcpPacket *packet);
