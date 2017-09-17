@@ -55,7 +55,7 @@ struct _ArvGvFakeCameraPrivate {
 	guint n_gvcp_fds;
 
 	GSocketAddress *controller_address;
-	struct timespec controller_time;
+	gint64 controller_time;
 
 	GSocket *gvcp_socket;
 	GSocket *gvsp_socket;
@@ -113,13 +113,12 @@ handle_control_packet (ArvGvFakeCamera *gv_fake_camera, GSocket *socket,
 	gboolean success = FALSE;
 
 	if (gv_fake_camera->priv->controller_address != NULL) {
-		struct timespec time;
+		gint64 time;
 		guint64 elapsed_ms;
 
-		clock_gettime (CLOCK_MONOTONIC, &time);
+		time = g_get_real_time ();
 
-		elapsed_ms = 1000 * (time.tv_sec - gv_fake_camera->priv->controller_time.tv_sec) +
-			(time.tv_nsec - gv_fake_camera->priv->controller_time.tv_nsec) / 1000000;
+		elapsed_ms = (time - gv_fake_camera->priv->controller_time) / 1000;
 
 		if (elapsed_ms > arv_fake_camera_get_heartbeat_timeout (gv_fake_camera->priv->camera)) {
 			g_object_unref (gv_fake_camera->priv->controller_address);
@@ -185,7 +184,7 @@ handle_control_packet (ArvGvFakeCamera *gv_fake_camera, GSocket *socket,
 									    &ack_packet_size);
 
 			if (register_address == ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET)
-				clock_gettime (CLOCK_MONOTONIC, &gv_fake_camera->priv->controller_time);
+				gv_fake_camera->priv->controller_time = g_get_real_time ();
 
 			break;
 		case ARV_GVCP_COMMAND_WRITE_REGISTER_CMD:
@@ -219,14 +218,14 @@ handle_control_packet (ArvGvFakeCamera *gv_fake_camera, GSocket *socket,
 		g_object_ref (remote_address);
 		arv_debug_device("[GvFakeCamera::handle_control_packet] New controller");
 		gv_fake_camera->priv->controller_address = remote_address;
-		clock_gettime (CLOCK_MONOTONIC, &gv_fake_camera->priv->controller_time);
+		gv_fake_camera->priv->controller_time = g_get_real_time ();
 	}
 	else if (gv_fake_camera->priv->controller_address != NULL &&
 	    arv_fake_camera_get_control_channel_privilege (gv_fake_camera->priv->camera) == 0) {
 		g_object_unref (gv_fake_camera->priv->controller_address);
-		gv_fake_camera->priv->controller_address = NULL;
 		arv_debug_device("[GvFakeCamera::handle_control_packet] Controller releases");
-		clock_gettime (CLOCK_MONOTONIC, &gv_fake_camera->priv->controller_time);
+		gv_fake_camera->priv->controller_address = NULL;
+		gv_fake_camera->priv->controller_time = g_get_real_time ();
 	}
 
 	return success;

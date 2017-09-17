@@ -273,7 +273,6 @@ arv_fake_camera_set_fill_pattern (ArvFakeCamera *camera,
 void
 arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer, guint32 *packet_size)
 {
-	struct timespec time;
 	guint32 width;
 	guint32 height;
 	guint32 exposure_time_us;
@@ -283,8 +282,6 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer, guint32 *
 
 	if (camera == NULL || buffer == NULL)
 		return;
-
-	clock_gettime (CLOCK_MONOTONIC, &time);
 
 	width = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_WIDTH);
 	height = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_HEIGHT);
@@ -299,7 +296,7 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer, guint32 *
 	buffer->priv->width = width;
 	buffer->priv->height = height;
 	buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
-	buffer->priv->timestamp_ns = ((guint64) time.tv_sec) * 1000000000LL + time.tv_nsec;
+	buffer->priv->timestamp_ns = g_get_real_time () * 1000;
 	buffer->priv->system_timestamp_ns = buffer->priv->timestamp_ns;
 	buffer->priv->frame_id = camera->priv->frame_id++;
 	buffer->priv->pixel_format = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_PIXEL_FORMAT);
