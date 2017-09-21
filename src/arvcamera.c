@@ -102,6 +102,7 @@ struct _ArvCameraPrivate {
 	gboolean has_gain;
 	gboolean has_exposure_time;
 	gboolean has_acquisition_frame_rate;
+	gboolean has_acquisition_frame_rate_enabled;
 };
 
 enum
@@ -912,13 +913,16 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
 		case ARV_CAMERA_VENDOR_POINT_GREY:
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector", "FrameStart");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
-			arv_device_set_integer_feature_value (camera->priv->device, "AcquisitionFrameRateEnabled", 1);
+			if (camera->priv->has_acquisition_frame_rate_enabled)
+				arv_device_set_integer_feature_value (camera->priv->device, "AcquisitionFrameRateEnabled", 1);
+			else
+				arv_device_set_integer_feature_value (camera->priv->device, "AcquisitionFrameRateEnable", 1);
 			arv_device_set_string_feature_value (camera->priv->device, "AcquisitionFrameRateAuto", "Off");
 			arv_device_set_float_feature_value (camera->priv->device, "AcquisitionFrameRate", frame_rate);
 			break;
 		case ARV_CAMERA_VENDOR_DALSA:
 		case ARV_CAMERA_VENDOR_RICOH:
-	        case ARV_CAMERA_VENDOR_XIMEA:
+		case ARV_CAMERA_VENDOR_XIMEA:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector", "FrameStart");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
@@ -2247,6 +2251,8 @@ arv_camera_constructor (GType gtype, guint n_properties, GObjectConstructParam *
 	camera->priv->has_exposure_time = ARV_IS_GC_FLOAT (arv_device_get_feature (camera->priv->device, "ExposureTime"));
 	camera->priv->has_acquisition_frame_rate = ARV_IS_GC_FLOAT (arv_device_get_feature (camera->priv->device,
 											    "AcquisitionFrameRate"));
+	camera->priv->has_acquisition_frame_rate_enabled = ARV_IS_GC_INTEGER (arv_device_get_feature (camera->priv->device,
+												      "AcquisitionFrameRateEnabled"));
 
     return object;
 }
