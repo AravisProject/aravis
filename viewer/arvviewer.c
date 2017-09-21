@@ -882,6 +882,13 @@ start_video (ArvViewer *viewer)
 	if (has_gtksink || has_gtkglsink) {
 		GtkWidget *video_widget;
 
+#if 0 /* Disable glsink for now, it crashes when we come back to camera list with:
+	(lt-arv-viewer:29151): Gdk-WARNING **: eglMakeCurrent failed
+	(lt-arv-viewer:29151): Gdk-WARNING **: eglMakeCurrent failed
+	(lt-arv-viewer:29151): Gdk-WARNING **: eglMakeCurrent failed
+	Erreur de segmentation (core dumped)
+	*/
+
 		videosink = gst_element_factory_make ("gtkglsink", NULL);
 
 		if (GST_IS_ELEMENT (videosink)) {
@@ -891,7 +898,11 @@ start_video (ArvViewer *viewer)
 			gst_bin_add_many (GST_BIN (viewer->pipeline), glupload, videosink, NULL);
 			gst_element_link_many (viewer->transform, glupload, videosink, NULL);
 		} else {
+#else
+		{
+#endif
 			videosink = gst_element_factory_make ("gtksink", NULL);
+			gst_bin_add_many (GST_BIN (viewer->pipeline), videosink, NULL);
 			gst_element_link_many (viewer->transform, videosink, NULL);
 		}
 
