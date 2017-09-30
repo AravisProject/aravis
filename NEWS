@@ -1,3 +1,24 @@
+Release 0.5.10
+==============
+
+  * camera: fix for PointGrey cmeras using AcquisitionFrameRateEnabled (Emmanuel)
+  * genicam: correctly implement integer mode of IntSwissKnife (Emmanuel)
+  * genicam: implementtion of pIndex, ValueIndexed, ValueDefault (Emmanuel)
+  * genicam: add Expression and Constant support to Converter and IntConverter (Emmanuel)
+  * evaluator: implement ROUND function (Emmanuel)
+  * evaluator: fix '~' precedence and associativity (Emmanuel)
+  * gigevision: protocol fixes (Emmanuel)
+  * gigevision: improve connection stability under high pressure (Michael)
+  * gigevision: avoid using the same port twice (Emmanuel)
+  * gvdevice: implement packet-resend-ration limit (Emmanuel)
+  * usb3vision: transfer size configuration fixes (Konstantin)
+  * build: improve OSX and Windows support (Emmanuel)
+  * build: improve build outside of source directory (Janito)
+  * viewer: improve Pixel format to GstCaps conversion (Emmanuel)
+  * viewer: disable gtkglsink for now to avoid a crash when switching views (Emmanuel)
+  * QA: extended code coverage (Emmanuel)
+  * QA: make travis build on OSX (Emmanuel)
+
 Release 0.5.9
 =============
 
