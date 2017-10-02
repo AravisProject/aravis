@@ -1,59 +1,126 @@
 # Brazilian Portuguese translation for aravis.
-# Copyright (C) 2013 aravis's COPYRIGHT HOLDER
+# Copyright (C) 2017 aravis's COPYRIGHT HOLDER
 # This file is distributed under the same license as the aravis package.
-# Rafael Ferreira <rafael.f.f1@gmail.com>, 2013, 2014.
-#
+# Rafael Fontenelle <rafaelff@gnome.org>, 2013, 2014, 2017.
 msgid ""
 msgstr ""
 "Project-Id-Version: aravis master\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/enter_bug.cgi?"
-"product=aravis&keywords=I18N+L10N&component=general\n"
-"POT-Creation-Date: 2014-08-15 19:58+0000\n"
-"PO-Revision-Date: 2014-08-22 04:40-0300\n"
-"Last-Translator: Rafael Ferreira <rafael.f.f1@gmail.com>\n"
+-"product=aravis&keywords=I18N+L10N&component=general\n"
+"POT-Creation-Date: 2017-10-02 04:14-0300\n"
+"PO-Revision-Date: 2017-10-02 04:16-0200\n"
+"Last-Translator: Rafael Fontenelle <rafaelff@gnome.org>\n"
 "Language-Team: Brazilian Portuguese <gnome-pt_br-list@gnome.org>\n"
 "Language: pt_BR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"X-Generator: Poedit 1.6.7\n"
+"X-Generator: Virtaal 1.0.0-beta1\n"
 
-#: ../viewer/arv-viewer.ui.h:1 ../viewer/data/arv-viewer.desktop.in.in.h:1
-msgid "Aravis"
-msgstr "Aravis"
-
-#: ../viewer/arv-viewer.ui.h:2
+#: ../viewer/arv-viewer.ui.h:1
 msgid "Frame rate:"
 msgstr "Taxa de quadros:"
 
-#: ../viewer/arv-viewer.ui.h:3
+#: ../viewer/arv-viewer.ui.h:2
 msgid "Hz"
 msgstr "Hz"
 
-#: ../viewer/arv-viewer.ui.h:4
+#: ../viewer/arv-viewer.ui.h:3
 msgid "Auto"
 msgstr "Auto"
 
-#: ../viewer/arv-viewer.ui.h:5
+#: ../viewer/arv-viewer.ui.h:4
 msgid "Exposure:"
 msgstr "Exposição:"
 
-#: ../viewer/arv-viewer.ui.h:6
+#: ../viewer/arv-viewer.ui.h:5
 msgid "Gain:"
 msgstr "Ganho:"
 
-#: ../viewer/arv-viewer.ui.h:7
+#: ../viewer/arv-viewer.ui.h:6
 msgid "µs"
 msgstr "µs"
 
+#: ../viewer/arv-viewer.ui.h:7
+msgid "dB"
+msgstr "dB"
+
 #: ../viewer/arv-viewer.ui.h:8
-msgid "Settings"
-msgstr "Configurações"
+msgid "Id"
+msgstr "Id"
 
 #: ../viewer/arv-viewer.ui.h:9
+msgid "Manufacturer"
+msgstr "Fabricante"
+
+#: ../viewer/arv-viewer.ui.h:10
+msgid "Model"
+msgstr "Modelo"
+
+#: ../viewer/arv-viewer.ui.h:11
+msgid "Serial"
+msgstr "Serial"
+
+#: ../viewer/arv-viewer.ui.h:12
+msgid "Refresh camera list"
+msgstr "Atualizar lista de câmeras"
+
+#: ../viewer/arv-viewer.ui.h:13
+msgid "Start video acquisition"
+msgstr "Iniciar aquisição de vídeo"
+
+#: ../viewer/arv-viewer.ui.h:14
+msgid "Pixel format:"
+msgstr "Formato de pixels:"
+
+#: ../viewer/arv-viewer.ui.h:15
+msgid "Region size:"
+msgstr "Tamanho da região:"
+
+#: ../viewer/arv-viewer.ui.h:16
+msgid "x"
+msgstr "x"
+
+#: ../viewer/arv-viewer.ui.h:17
+msgid "pixels"
+msgstr "pixels"
+
+#: ../viewer/arv-viewer.ui.h:18
+msgid "Region position:"
+msgstr "Posição da região:"
+
+#: ../viewer/arv-viewer.ui.h:19
+msgid "Binning:"
+msgstr "Agrupamento:"
+
+#: ../viewer/arv-viewer.ui.h:20
+msgid "Return to camera list"
+msgstr "Retornar à lista de câmeras"
+
+#: ../viewer/arv-viewer.ui.h:21
 msgid "Save a snapshot into image folder"
 msgstr "Salvar uma foto na pasta de imagens"
+
+#: ../viewer/arv-viewer.ui.h:22
+msgid "Rotate image to the right"
+msgstr "Girar imagem para a direita"
+
+#: ../viewer/arv-viewer.ui.h:23
+msgid "Flip image horizontally"
+msgstr "Virar imagem horizontalmente"
+
+#: ../viewer/arv-viewer.ui.h:24
+msgid "Flip image vertically"
+msgstr "Virar imagem verticalmente"
+
+#: ../viewer/arv-viewer.ui.h:25
+msgid "Acquisition settings"
+msgstr "Configurações de aquisição"
+
+#: ../viewer/data/arv-viewer.desktop.in.in.h:1
+msgid "Aravis"
+msgstr "Aravis"
 
 #: ../viewer/data/arv-viewer.desktop.in.in.h:2
 msgid "Aravis Simple Viewer"
@@ -63,26 +130,25 @@ msgstr "Visualizador simples Aravis"
 msgid "Display the video stream from your cameras"
 msgstr "Exiba o fluxo de vídeo de suas câmeras"
 
-#: ../viewer/data/arv-viewer.appdata.xml.in.h:1
-msgid "Aravis Viewer"
-msgstr "Visualizador Aravis"
+#~ msgid "Settings"
+#~ msgstr "Configurações"
 
-#: ../viewer/data/arv-viewer.appdata.xml.in.h:2
-msgid "Simple viewer of video stream acquired using Aravis"
-msgstr "Visualizador simples de fluxo de vídeo obtido usando Aravis"
+#~ msgid "Aravis Viewer"
+#~ msgstr "Visualizador Aravis"
 
-#: ../viewer/data/arv-viewer.appdata.xml.in.h:3
-msgid ""
-"Aravis Viewer is a simple viewer used to display video streams from GENICAM-"
-"based Ethernet industrial cameras."
-msgstr ""
-"Visualizador Aravis é um visualizar simples usado para exibir fluxos de "
-"vídeos de câmeras industriais Ethernet baseadas em GENICAM."
+#~ msgid "Simple viewer of video stream acquired using Aravis"
+#~ msgstr "Visualizador simples de fluxo de vídeo obtido usando Aravis"
 
-#: ../viewer/data/arv-viewer.appdata.xml.in.h:4
-msgid ""
-"It allows to control basic acquisition parameters, i.e. framerate, exposure "
-"and gain, and to save raw still images."
-msgstr ""
-"Ele permite que você controle parâmetros básicos de aquisição, i.e taxa de "
-"quadros, exposição e ganho, e para salvar imagens não tradadas (raw)."
+#~ msgid ""
+#~ "Aravis Viewer is a simple viewer used to display video streams from "
+#~ "GENICAM-based Ethernet industrial cameras."
+#~ msgstr ""
+#~ "Visualizador Aravis é um visualizar simples usado para exibir fluxos de "
+#~ "vídeos de câmeras industriais Ethernet baseadas em GENICAM."
+
+#~ msgid ""
+#~ "It allows to control basic acquisition parameters, i.e. framerate, "
+#~ "exposure and gain, and to save raw still images."
+#~ msgstr ""
+#~ "Ele permite que você controle parâmetros básicos de aquisição, i.e taxa "
+#~ "de quadros, exposição e ganho, e para salvar imagens não tradadas (raw)."
