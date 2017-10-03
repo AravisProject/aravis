@@ -1661,9 +1661,11 @@ arv_camera_is_gain_auto_available (ArvCamera *camera)
 gboolean
 arv_camera_is_binning_available (ArvCamera *camera)
 {
+	ArvGcNode* node;
+
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 	
-	ArvGcNode* node = arv_device_get_feature (camera->priv->device, "BinningHorizontal");
+	node = arv_device_get_feature (camera->priv->device, "BinningHorizontal");
 	if (!ARV_IS_GC_FEATURE_NODE (node))
 		return FALSE;
 	if (!arv_gc_feature_node_is_available (ARV_GC_FEATURE_NODE (node), NULL))
