@@ -260,9 +260,19 @@ fake_device_error_test (void)
 }
 
 static void
+fill_pattern_cb (ArvBuffer *buffer, void *fill_pattern_data, guint32 exposure_time_us, guint32 gain, ArvPixelFormat pixel_format)
+{
+	gint *counter = fill_pattern_data;
+
+	(*counter)++;
+}
+
+static void
 fake_stream_test (void)
 {
 	ArvCamera *camera;
+	ArvDevice *device;
+	ArvFakeCamera *fake_camera;
 	ArvStream *stream;
 	ArvBuffer *buffer;
 	guint64 n_completed_buffers;
@@ -271,12 +281,21 @@ fake_stream_test (void)
 	gint n_input_buffers;
 	gint n_output_buffers;
 	gint payload;
+	gint counter = 0;
 
 	camera = arv_camera_new ("Fake_1");
 	g_assert (ARV_IS_CAMERA (camera));
 
+	device = arv_camera_get_device (camera);
+	g_assert (ARV_IS_DEVICE (device));
+
+	fake_camera = arv_fake_device_get_fake_camera (ARV_FAKE_DEVICE (device));
+	g_assert (ARV_IS_FAKE_CAMERA (fake_camera));
+
 	stream = arv_camera_create_stream (camera, NULL, NULL);
 	g_assert (ARV_IS_STREAM (stream));
+
+	arv_fake_camera_set_fill_pattern (fake_camera, fill_pattern_cb, &counter);
 
 	payload = arv_camera_get_payload (camera);
 	arv_stream_push_buffer (stream,  arv_buffer_new (payload, NULL));
@@ -284,6 +303,10 @@ fake_stream_test (void)
 	arv_camera_start_acquisition (camera);
 	buffer = arv_stream_pop_buffer (stream);
 	arv_camera_stop_acquisition (camera);
+
+	arv_fake_camera_set_fill_pattern (fake_camera, NULL, NULL);
+
+	g_assert_cmpint (counter, ==, 1);
 
 	g_assert (ARV_IS_BUFFER (buffer));
 
