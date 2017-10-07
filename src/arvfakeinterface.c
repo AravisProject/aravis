@@ -38,10 +38,6 @@
 
 static GObjectClass *parent_class = NULL;
 
-struct _ArvFakeInterfacePrivate {
-	GHashTable *devices;
-};
-
 static void
 arv_fake_interface_update_device_list (ArvInterface *interface, GArray *device_ids)
 {
@@ -61,9 +57,8 @@ arv_fake_interface_update_device_list (ArvInterface *interface, GArray *device_i
 static ArvDevice *
 arv_fake_interface_open_device (ArvInterface *interface, const char *device_id)
 {
-	if (g_strcmp0 (device_id, ARV_FAKE_DEVICE_ID) == 0)
-		return arv_fake_device_new ("1");
-	if (g_strcmp0 (device_id, ARV_FAKE_PHYSICAL_ID) == 0)
+	if (g_strcmp0 (device_id, ARV_FAKE_DEVICE_ID) == 0 ||
+	    g_strcmp0 (device_id, ARV_FAKE_PHYSICAL_ID) == 0)
 		return arv_fake_device_new ("1");
 
 	return NULL;
@@ -109,21 +104,11 @@ arv_fake_interface_destroy_instance (void)
 static void
 arv_fake_interface_init (ArvFakeInterface *fake_interface)
 {
-	fake_interface->priv = G_TYPE_INSTANCE_GET_PRIVATE (fake_interface, ARV_TYPE_FAKE_INTERFACE, ArvFakeInterfacePrivate);
-
-	fake_interface->priv->devices = NULL;
 }
 
 static void
 arv_fake_interface_finalize (GObject *object)
 {
-	ArvFakeInterface *fake_interface = ARV_FAKE_INTERFACE (object);
-
-	if (fake_interface->priv->devices != NULL) {
-		g_hash_table_unref (fake_interface->priv->devices);
-		fake_interface->priv->devices = NULL;
-	}
-
 	parent_class->finalize (object);
 }
 
@@ -132,8 +117,6 @@ arv_fake_interface_class_init (ArvFakeInterfaceClass *fake_interface_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (fake_interface_class);
 	ArvInterfaceClass *interface_class = ARV_INTERFACE_CLASS (fake_interface_class);
-
-	g_type_class_add_private (fake_interface_class, sizeof (ArvFakeInterfacePrivate));
 
 	parent_class = g_type_class_peek_parent (fake_interface_class);
 

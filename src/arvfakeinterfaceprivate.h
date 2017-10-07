@@ -37,13 +37,10 @@ G_BEGIN_DECLS
 
 G_END_DECLS
 
-typedef struct _ArvFakeInterfacePrivate ArvFakeInterfacePrivate;
 typedef struct _ArvFakeInterfaceClass ArvFakeInterfaceClass;
 
 struct _ArvFakeInterface {
 	ArvInterface	interface;
-
-	ArvFakeInterfacePrivate *priv;
 };
 
 struct _ArvFakeInterfaceClass {
