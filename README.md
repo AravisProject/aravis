@@ -32,11 +32,14 @@ On some platforms (like Ubuntu), you may have to configure the dynamic linker (l
 Using the GNU build system on Mac OS X is not directly supported, but can be mimicked by augmenting the install procedure above with some environment settings:
 
 ```
-brew install gettext intltool gtk-doc automake
+brew install gettext intltool gtk-doc automake libxml2
 brew link --force gettext
+brew link --force libxml2
 aclocal
 autoconf
 autoheader
+gtkdocize
+intltoolize
 glibtoolize --copy
 automake --add-missing
 ./configure
