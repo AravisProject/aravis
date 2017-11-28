@@ -24,11 +24,16 @@
 #include <gst/gst.h>
 #include <gst/app/gstappsrc.h>
 #include <gst/video/videooverlay.h>
-#include <gdk/gdkx.h>
 #include <arv.h>
 #include <math.h>
 #include <memory.h>
 #include <libnotify/notify.h>
+#ifdef GDK_WINDOWING_X11
+#include <gdk/gdkx.h>  // for GDK_WINDOW_XID
+#endif
+#ifdef GDK_WINDOWING_WIN32
+#include <gdk/gdkwin32.h>  // for GDK_WINDOW_HWND
+#endif
 
 static gboolean has_autovideo_sink = FALSE;
 static gboolean has_gtksink = FALSE;
@@ -1114,7 +1119,12 @@ arv_viewer_quit_cb (GtkApplicationWindow *window, ArvViewer *viewer)
 static void
 video_frame_realize_cb (GtkWidget * widget, ArvViewer *viewer)
 {
+#ifdef GDK_WINDOWING_X11
 	viewer->video_window_xid = GDK_WINDOW_XID (gtk_widget_get_window (widget));
+#endif
+#ifdef GDK_WINDOWING_WIN32
+	viewer->video_window_xid = (guintptr) GDK_WINDOW_HWND (gtk_widget_get_window (video_window));
+#endif
 }
 
 static void
