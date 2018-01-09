@@ -241,8 +241,31 @@ arv_viewer_value_from_log (double value, double min, double max)
 	return pow (10.0, (value * (log10 (max) - log10 (min)) + log10 (min)));
 }
 
+typedef struct {
+	GWeakRef stream;
+	ArvBuffer* arv_buffer;
+} ArvGstBufferReleaseData;
+
+static void
+gst_buffer_release_cb (void *user_data)
+{
+	ArvGstBufferReleaseData* release_data = user_data;
+
+	ArvStream* stream = g_weak_ref_get (&release_data->stream);
+
+	if (stream) {
+		arv_stream_push_buffer (stream, release_data->arv_buffer);
+		g_object_unref (stream);
+	} else {
+		g_object_unref (release_data->arv_buffer);
+	}
+
+	g_weak_ref_clear (&release_data->stream);
+	g_free (release_data);
+}
+
 static GstBuffer *
-arv_to_gst_buffer (ArvBuffer *arv_buffer)
+arv_to_gst_buffer (ArvBuffer *arv_buffer, ArvStream *stream)
 {
 	GstBuffer *buffer;
 	int arv_row_stride;
@@ -271,9 +294,15 @@ arv_to_gst_buffer (ArvBuffer *arv_buffer)
 
 		buffer = gst_buffer_new_wrapped (data, size);
 	} else {
+		ArvGstBufferReleaseData* release_data = g_new0 (ArvGstBufferReleaseData, 1);
+
+		g_weak_ref_init (&release_data->stream, stream);
+		release_data->arv_buffer = arv_buffer;
+
 		buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
 						      buffer_data, buffer_size,
-						      0, buffer_size, NULL, NULL);
+						      0, buffer_size,
+						      release_data, gst_buffer_release_cb);
 	}
 
 	return buffer;
@@ -288,12 +317,14 @@ new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 	if (arv_buffer == NULL)
 		return;
 
-	if (arv_buffer_get_status (arv_buffer) == ARV_BUFFER_STATUS_SUCCESS)
-		gst_app_src_push_buffer (GST_APP_SRC (viewer->appsrc), arv_to_gst_buffer (arv_buffer));
+	if (arv_buffer_get_status (arv_buffer) == ARV_BUFFER_STATUS_SUCCESS) {
+		gst_app_src_push_buffer (GST_APP_SRC (viewer->appsrc), arv_to_gst_buffer (arv_buffer, stream));
 
-	if (viewer->last_buffer != NULL)
-		arv_stream_push_buffer (stream, viewer->last_buffer);
-	viewer->last_buffer = arv_buffer;
+		g_clear_object( &viewer->last_buffer );
+		viewer->last_buffer = g_object_ref( arv_buffer );
+	} else {
+		arv_stream_push_buffer (stream, arv_buffer);
+	}
 }
 
 static void
