@@ -254,10 +254,12 @@ _gst_buffer_release_cb (void *param)
 
 	ArvStream* stream = g_weak_ref_get (&release_data->stream);
 
-	if( stream )
+	if( stream ) {
 		arv_stream_push_buffer( stream, release_data->arv_buffer );
-
-	g_object_unref( stream );
+		g_object_unref( stream );
+	}
+	
+	g_object_unref (release_data->arv_buffer);
 	g_weak_ref_clear( &release_data->stream );
 	g_free( param );
 }
@@ -314,11 +316,12 @@ new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 	if (arv_buffer_get_status (arv_buffer) == ARV_BUFFER_STATUS_SUCCESS) {
 		ArvGstBufferReleaseData* buffer_release_data = g_malloc(sizeof(ArvGstBufferReleaseData));
 		g_weak_ref_init (&buffer_release_data->stream, stream);
-		buffer_release_data->arv_buffer = arv_buffer;
+		buffer_release_data->arv_buffer = g_object_ref (arv_buffer);
 
 		gst_app_src_push_buffer (GST_APP_SRC (viewer->appsrc), arv_to_gst_buffer (arv_buffer, buffer_release_data));
 
-		viewer->last_buffer = arv_buffer;
+		g_clear_object( &viewer->last_buffer );
+		viewer->last_buffer = g_object_ref( arv_buffer );
 	} else {
 		arv_stream_push_buffer (stream, arv_buffer);
 	}
