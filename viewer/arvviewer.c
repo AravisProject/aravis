@@ -241,30 +241,29 @@ arv_viewer_value_from_log (double value, double min, double max)
 	return pow (10.0, (value * (log10 (max) - log10 (min)) + log10 (min)));
 }
 
-struct free_arv_buffer_cb_param
+typedef struct
 {
 	GWeakRef stream;
-	GWeakRef arv_buffer;
-};
+	ArvBuffer* arv_buffer;
+} ArvGstBufferReleaseData;
 
 static void
-free_arv_buffer_cb (void* param)
+_gst_buffer_release_cb (void *param)
 {
-	struct free_arv_buffer_cb_param* cb_param = (struct free_arv_buffer_cb_param*)param;
+	ArvGstBufferReleaseData* release_data = param;
 
-	ArvStream* stream = g_weak_ref_get (&cb_param->stream);
-	ArvBuffer* arv_buffer = g_weak_ref_get (&cb_param->arv_buffer);
+	ArvStream* stream = g_weak_ref_get (&release_data->stream);
 
-	if( stream && arv_buffer )
-		arv_stream_push_buffer( stream, arv_buffer );
+	if( stream )
+		arv_stream_push_buffer( stream, release_data->arv_buffer );
 
-	g_weak_ref_clear( &cb_param->stream );
-	g_weak_ref_clear( &cb_param->arv_buffer );
+	g_object_unref( stream );
+	g_weak_ref_clear( &release_data->stream );
 	g_free( param );
 }
 
 static GstBuffer *
-arv_to_gst_buffer (ArvBuffer *arv_buffer, struct free_arv_buffer_cb_param* free_cb_param)
+arv_to_gst_buffer (ArvBuffer *arv_buffer, ArvGstBufferReleaseData *buffer_release_data)
 {
 	GstBuffer *buffer;
 	int arv_row_stride;
@@ -293,11 +292,11 @@ arv_to_gst_buffer (ArvBuffer *arv_buffer, struct free_arv_buffer_cb_param* free_
 
 		buffer = gst_buffer_new_wrapped (data, size);
 
-		free_arv_buffer_cb( free_cb_param );
+		_gst_buffer_release_cb( buffer_release_data );
 	} else {
 		buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
 						      buffer_data, buffer_size,
-						      0, buffer_size, free_cb_param, free_arv_buffer_cb);
+						      0, buffer_size, buffer_release_data, _gst_buffer_release_cb);
 	}
 
 	return buffer;
@@ -312,18 +311,15 @@ new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 	if (arv_buffer == NULL)
 		return;
 
-	if (arv_buffer_get_status (arv_buffer) == ARV_BUFFER_STATUS_SUCCESS)
-	{
-		struct free_arv_buffer_cb_param* cb_param = g_malloc(sizeof(struct free_arv_buffer_cb_param));
-		g_weak_ref_init (&cb_param->stream, stream);
-		g_weak_ref_init (&cb_param->arv_buffer, arv_buffer);
+	if (arv_buffer_get_status (arv_buffer) == ARV_BUFFER_STATUS_SUCCESS) {
+		ArvGstBufferReleaseData* buffer_release_data = g_malloc(sizeof(ArvGstBufferReleaseData));
+		g_weak_ref_init (&buffer_release_data->stream, stream);
+		buffer_release_data->arv_buffer = arv_buffer;
 
-		gst_app_src_push_buffer (GST_APP_SRC (viewer->appsrc), arv_to_gst_buffer (arv_buffer, cb_param));
+		gst_app_src_push_buffer (GST_APP_SRC (viewer->appsrc), arv_to_gst_buffer (arv_buffer, buffer_release_data));
 
 		viewer->last_buffer = arv_buffer;
-	}
-	else
-	{
+	} else {
 		arv_stream_push_buffer (stream, arv_buffer);
 	}
 }
