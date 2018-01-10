@@ -241,8 +241,31 @@ arv_viewer_value_from_log (double value, double min, double max)
 	return pow (10.0, (value * (log10 (max) - log10 (min)) + log10 (min)));
 }
 
+typedef struct
+{
+	GWeakRef stream;
+	ArvBuffer* arv_buffer;
+} ArvGstBufferReleaseData;
+
+static void
+_gst_buffer_release_cb (void *param)
+{
+	ArvGstBufferReleaseData* release_data = param;
+
+	ArvStream* stream = g_weak_ref_get (&release_data->stream);
+
+	if( stream ) {
+		arv_stream_push_buffer( stream, release_data->arv_buffer );
+		g_object_unref( stream );
+	}
+	
+	g_object_unref (release_data->arv_buffer);
+	g_weak_ref_clear( &release_data->stream );
+	g_free( param );
+}
+
 static GstBuffer *
-arv_to_gst_buffer (ArvBuffer *arv_buffer)
+arv_to_gst_buffer (ArvBuffer *arv_buffer, ArvGstBufferReleaseData *buffer_release_data)
 {
 	GstBuffer *buffer;
 	int arv_row_stride;
@@ -270,10 +293,12 @@ arv_to_gst_buffer (ArvBuffer *arv_buffer)
 			memcpy (((char *) data) + i * gst_row_stride, buffer_data + i * arv_row_stride, arv_row_stride);
 
 		buffer = gst_buffer_new_wrapped (data, size);
+
+		_gst_buffer_release_cb( buffer_release_data );
 	} else {
 		buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
 						      buffer_data, buffer_size,
-						      0, buffer_size, NULL, NULL);
+						      0, buffer_size, buffer_release_data, _gst_buffer_release_cb);
 	}
 
 	return buffer;
@@ -288,12 +313,18 @@ new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 	if (arv_buffer == NULL)
 		return;
 
-	if (arv_buffer_get_status (arv_buffer) == ARV_BUFFER_STATUS_SUCCESS)
-		gst_app_src_push_buffer (GST_APP_SRC (viewer->appsrc), arv_to_gst_buffer (arv_buffer));
+	if (arv_buffer_get_status (arv_buffer) == ARV_BUFFER_STATUS_SUCCESS) {
+		ArvGstBufferReleaseData* buffer_release_data = g_malloc(sizeof(ArvGstBufferReleaseData));
+		g_weak_ref_init (&buffer_release_data->stream, stream);
+		buffer_release_data->arv_buffer = g_object_ref (arv_buffer);
 
-	if (viewer->last_buffer != NULL)
-		arv_stream_push_buffer (stream, viewer->last_buffer);
-	viewer->last_buffer = arv_buffer;
+		gst_app_src_push_buffer (GST_APP_SRC (viewer->appsrc), arv_to_gst_buffer (arv_buffer, buffer_release_data));
+
+		g_clear_object( &viewer->last_buffer );
+		viewer->last_buffer = g_object_ref( arv_buffer );
+	} else {
+		arv_stream_push_buffer (stream, arv_buffer);
+	}
 }
 
 static void
