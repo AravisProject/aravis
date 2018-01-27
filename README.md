@@ -15,7 +15,15 @@ Aravis is released under the LGPL v2+.
 
 ### Building Aravis
 
-Aravis uses the standard GNU build system, using autoconf for package configuration and resolving portability issues, automake for building makefiles that comply with the GNU Coding Standards, and libtool for building shared libraries on multiple platforms. The normal sequence for compiling and installing Aravis is thus:
+Aravis uses the standard GNU build system, using autoconf for package configuration and resolving portability issues, automake for building makefiles that comply with the GNU Coding Standards, and libtool for building shared libraries on multiple platforms. 
+
+To create the configure script initially, run:
+
+```
+./autogen.sh
+```
+
+Thereafter the normal sequence for compiling and installing Aravis is:
 
 ```
 ./configure
