@@ -13,9 +13,9 @@ Aravis is a glib/gobject based library for video acquisition using Genicam camer
 
 Aravis is released under the LGPL v2+.
 
-### Building Aravis
+### Installing Aravis
 
-Aravis uses the standard GNU build system, using autoconf for package configuration and resolving portability issues, automake for building makefiles that comply with the GNU Coding Standards, and libtool for building shared libraries on multiple platforms. The normal sequence for compiling and installing Aravis is thus:
+Aravis uses the standard GNU build system, using autoconf for package configuration and resolving portability issues, automake for building makefiles that comply with the GNU Coding Standards, and libtool for building shared libraries on multiple platforms. The recommended way to get the sources is to download the release tarballs from http://ftp.gnome.org/pub/GNOME/sources/aravis.
 
 ```
 ./configure
@@ -26,6 +26,14 @@ make install
 Compilation options may be passed to the configure script. Please run `./configure --help` for information about the available options.
 
 On some platforms (like Ubuntu), you may have to configure the dynamic linker (ld) to let it know where the aravis libraries are installed, and run ldconfig as root in order to update ld cache.
+
+If you want to use a clone of the git repository on github, instead of the release tarballs, you may have to create the configure script by running:
+
+```
+./autogen.sh
+```
+
+Thereafter the normal sequence for compiling and installing Aravis is:
 
 #### Building on Mac OS X
 
