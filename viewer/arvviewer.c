@@ -254,9 +254,15 @@ gst_buffer_release_cb (void *user_data)
 	ArvStream* stream = g_weak_ref_get (&release_data->stream);
 
 	if (stream) {
+		gint n_input_buffers, n_output_buffers;
+
+		arv_stream_get_n_buffers (stream, &n_input_buffers, &n_output_buffers);
+		arv_log_viewer ("push_buffer (%d,%d)", n_input_buffers, n_output_buffers);
+
 		arv_stream_push_buffer (stream, release_data->arv_buffer);
 		g_object_unref (stream);
 	} else {
+		arv_debug_viewer ("invalid stream object");
 		g_object_unref (release_data->arv_buffer);
 	}
 
@@ -312,10 +318,14 @@ static void
 new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 {
 	ArvBuffer *arv_buffer;
+	gint n_input_buffers, n_output_buffers;
 
 	arv_buffer = arv_stream_pop_buffer (stream);
 	if (arv_buffer == NULL)
 		return;
+
+	arv_stream_get_n_buffers (stream, &n_input_buffers, &n_output_buffers);
+	arv_log_viewer ("pop_buffer (%d,%d)", n_input_buffers, n_output_buffers);
 
 	if (arv_buffer_get_status (arv_buffer) == ARV_BUFFER_STATUS_SUCCESS) {
 		gst_app_src_push_buffer (GST_APP_SRC (viewer->appsrc), arv_to_gst_buffer (arv_buffer, stream));
