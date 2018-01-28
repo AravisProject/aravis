@@ -832,7 +832,7 @@ start_video (ArvViewer *viewer)
 
 	arv_stream_set_emit_signals (viewer->stream, TRUE);
 	payload = arv_camera_get_payload (viewer->camera);
-	for (i = 0; i < 50; i++)
+	for (i = 0; i < 5; i++)
 		arv_stream_push_buffer (viewer->stream, arv_buffer_new (payload, NULL));
 
 	arv_camera_get_region (viewer->camera, NULL, NULL, &width, &height);
