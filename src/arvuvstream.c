@@ -86,11 +86,12 @@ arv_uv_stream_thread (void *data)
 	offset = 0;
 
 	while (!g_atomic_int_get (&thread_data->cancel)) {
+		GError *error = NULL;
 		size_t size;
 		transferred = 0;
 
 		if (buffer == NULL)
-			size = thread_data->leader_size;
+			size = ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE;
 		else {
 			if (offset < buffer->priv->size)
 				size = MIN (thread_data->payload_size, buffer->priv->size - offset);
@@ -108,9 +109,12 @@ arv_uv_stream_thread (void *data)
 
 		arv_log_sp ("Asking for %u bytes", size);
 		arv_uv_device_bulk_transfer (thread_data->uv_device,  ARV_UV_ENDPOINT_DATA, LIBUSB_ENDPOINT_IN,
-					     packet, size, &transferred, 0, NULL);
+					     packet, size, &transferred, 0, &error);
 
-		if (transferred > 0) {
+		if (error != NULL) {
+			arv_warning_sp ("USB transfer error: %s", error->message);
+			g_clear_error (&error);
+		} else {
 			ArvUvspPacketType packet_type;
 
 			arv_log_sp ("Received %d bytes", transferred);
@@ -356,6 +360,13 @@ arv_uv_stream_finalize (GObject *object)
 					offset + ARV_SBRM_SIRM_ADDRESS, sizeof (guint64), &sirm_offset, NULL);
 		arv_device_write_memory (ARV_DEVICE (thread_data->uv_device),
 					 sirm_offset + ARV_SI_CONTROL, sizeof (si_control), &si_control, NULL);
+
+		arv_debug_stream ("[UvStream::finalize] n_completed_buffers    = %u",
+				  thread_data->n_completed_buffers);
+		arv_debug_stream ("[UvStream::finalize] n_failures             = %u",
+				  thread_data->n_failures);
+		arv_debug_stream ("[UvStream::finalize] n_underruns            = %u",
+				  thread_data->n_underruns);
 
 		g_clear_object (&thread_data->uv_device);
 		g_free (thread_data);
