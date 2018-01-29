@@ -80,6 +80,19 @@ G_DEFINE_TYPE_WITH_CODE (ArvUvDevice, arv_uv_device, ARV_TYPE_DEVICE, G_ADD_PRIV
 
 /* ArvUvDevice implementation */
 
+void arv_uv_device_fill_bulk_transfer (struct libusb_transfer* transfer, ArvUvDevice *uv_device,
+				ArvUvEndpointType endpoint_type, unsigned char endpoint_flags,
+				void *data, size_t size,
+				libusb_transfer_cb_fn callback, void* callback_data,
+				unsigned int timeout)
+{
+	guint8 endpoint;
+
+	endpoint = (endpoint_type == ARV_UV_ENDPOINT_CONTROL) ? uv_device->priv->control_endpoint : uv_device->priv->data_endpoint;
+
+	libusb_fill_bulk_transfer( transfer, uv_device->priv->usb_device, endpoint | endpoint_flags, data, size, callback, callback_data, timeout );
+}
+
 gboolean
 arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, ArvUvEndpointType endpoint_type, unsigned char endpoint_flags, void *data,
 			     size_t size, size_t *transferred_size, guint32 timeout_ms, GError **error)
@@ -729,6 +742,22 @@ _open_usb_device (ArvUvDevice *uv_device)
 	libusb_free_device_list (devices, 1);
 }
 
+static int event_thread_run = 1;
+static GThread* event_thread = NULL;
+
+static gpointer
+event_thread_func(void *ctx)
+{
+	struct timeval tv = { 0, 100 };
+
+	while (event_thread_run)
+	{
+		libusb_handle_events_timeout(ctx, &tv);
+	}
+
+	return NULL;
+}
+
 ArvDevice *
 arv_uv_device_new (const char *vendor, const char *product, const char *serial_nbr)
 {
@@ -780,6 +809,9 @@ arv_uv_device_new (const char *vendor, const char *product, const char *serial_n
 
 	reset_endpoint (uv_device->priv->usb_device, uv_device->priv->data_endpoint, LIBUSB_ENDPOINT_IN);
 
+	event_thread_run = 1;
+	event_thread = g_thread_new( "libusb events", event_thread_func, uv_device->priv->usb );
+
 	return ARV_DEVICE (uv_device);
 }
 
@@ -797,6 +829,9 @@ static void
 arv_uv_device_finalize (GObject *object)
 {
 	ArvUvDevice *uv_device = ARV_UV_DEVICE (object);
+
+	event_thread_run = 0;
+	g_thread_join( event_thread );
 
 	g_clear_object (&uv_device->priv->genicam);
 
