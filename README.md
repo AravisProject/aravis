@@ -33,8 +33,6 @@ If you want to use a clone of the git repository on github, instead of the relea
 ./autogen.sh
 ```
 
-Thereafter the normal sequence for compiling and installing Aravis is:
-
 #### Building on Mac OS X
 
 Using the GNU build system on Mac OS X is not directly supported, but can be mimicked by augmenting the install procedure above with some environment settings:
