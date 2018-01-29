@@ -35,6 +35,8 @@ G_BEGIN_DECLS
 
 ArvStream * 	arv_uv_stream_new	(ArvUvDevice *uv_device, ArvStreamCallback callback, void *user_data);
 
+extern int mode_sync;
+
 G_END_DECLS
 
 #endif

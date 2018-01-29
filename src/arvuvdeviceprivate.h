@@ -29,6 +29,7 @@
 
 #include <arvuvdevice.h>
 #include <arvdeviceprivate.h>
+#include <libusb.h>
 
 G_BEGIN_DECLS
 
@@ -41,6 +42,12 @@ gboolean 	arv_uv_device_bulk_transfer 		(ArvUvDevice *uv_device,
 							 ArvUvEndpointType endpoint_type, unsigned char endpoint_flags,
 							 void *data, size_t size, size_t *transferred_size,
 							 guint32 timeout_ms, GError **error);
+
+void arv_uv_device_fill_bulk_transfer (struct libusb_transfer* transfer, ArvUvDevice *uv_device,
+				ArvUvEndpointType endpoint_type, unsigned char endpoint_flags,
+				void *data, size_t size,
+				libusb_transfer_cb_fn callback, void* callback_data,
+				unsigned int timeout);
 
 G_END_DECLS
 
