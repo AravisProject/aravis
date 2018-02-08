@@ -1,0 +1,6 @@
+#mesondefine VERSION
+#mesondefine PACKAGE_VERSION
+#mesondefine PACKAGE
+#mesondefine PACKAGE_NAME
+#mesondefine ARAVIS_BUILD_PACKET_SOCKET
+#mesondefine ARAVIS_FAST_HEARTBEAT
