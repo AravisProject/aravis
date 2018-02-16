@@ -508,12 +508,12 @@ arv_get_next_token (char **expression, gboolean previous_token_was_operand, gboo
 	return token;
 }
 
-double round_with_precision(double x, gint64 precision)
+static double
+round_with_precision (double x, gint64 precision)
 {
 	double pow_multiplier = pow(10, precision);
 	return (round (x*pow_multiplier))/pow_multiplier;
 }
-
 
 static ArvEvaluatorStatus
 evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v_double)
@@ -549,6 +549,7 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 		}
 
 		arv_evaluator_token_debug (token, variables);
+		
 		switch (token->token_id) {
 			case ARV_EVALUATOR_TOKEN_LOGICAL_AND:
 				arv_value_set_int64 (&stack[index-1],
@@ -815,7 +816,6 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 			case ARV_EVALUATOR_TOKEN_FUNCTION_ROUND:
 				arv_value_set_double (&stack[index-1], round_with_precision (arv_value_get_double (&stack[index-1]),
 																			 arv_value_get_int64 (&stack[index])));
-
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_FLOOR:
 				arv_value_set_double (&stack[index], floor (arv_value_get_double (&stack[index])));
