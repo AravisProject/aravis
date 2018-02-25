@@ -277,7 +277,7 @@ arv_evaluator_token_debug (ArvEvaluatorToken *token, GHashTable *variables)
 			arv_log_evaluator ("(double) %g", token->data.v_double);
 			break;
 		default:
-			arv_log_evaluator ("(operator) %s", arv_evaluator_token_infos[token->token_id].tag, token->token_id);
+			arv_log_evaluator ("(operator) %s", arv_evaluator_token_infos[token->token_id].tag);
 	}
 }
 
