@@ -68,6 +68,7 @@ static const char *arv_evaluator_status_strings[] = {
 	"remaining operands",
 	"division by zero",
 	"stack overflow",
+	"invalid double function",
 	"forbidden recursion"
 };
 
@@ -1078,8 +1079,10 @@ parse_to_stacks (ArvEvaluator *evaluator, char *expression, ArvEvaluatorParserSt
 				}
 				state->operator_stack = g_slist_prepend (state->operator_stack, token);
 			} else if (arv_evaluator_token_is_left_parenthesis (token)) {
-				state->operator_stack = g_slist_prepend (state->operator_stack, token);
-				state->token_stack = g_slist_prepend (state->token_stack, state->operator_stack->data);
+				ArvEvaluatorToken * clone = arv_evaluator_token_new(token->token_id);
+				clone->data = token->data;
+				state->operator_stack = g_slist_prepend (state->operator_stack, clone);
+				state->token_stack = g_slist_prepend (state->token_stack, token);
 			} else if (arv_evaluator_token_is_right_parenthesis (token)) {
 				while (state->operator_stack != NULL &&
 				       !arv_evaluator_token_is_left_parenthesis (state->operator_stack->data)) {
@@ -1091,6 +1094,7 @@ parse_to_stacks (ArvEvaluator *evaluator, char *expression, ArvEvaluatorParserSt
 					goto CLEANUP;
 				}
 				state->token_stack = g_slist_prepend (state->token_stack, token);
+				state->garbage_stack = g_slist_prepend (state->garbage_stack, state->operator_stack->data);
 				state->operator_stack = g_slist_delete_link (state->operator_stack, state->operator_stack);
 			} else {
 				status = ARV_EVALUATOR_STATUS_SYNTAX_ERROR;
@@ -1157,7 +1161,6 @@ parse_expression (ArvEvaluator *evaluator)
 			status = ARV_EVALUATOR_STATUS_PARENTHESES_MISMATCH;
 			goto CLEANUP;
 		}
-
 		state.token_stack = g_slist_prepend (state.token_stack, state.operator_stack->data);
 		state.operator_stack = g_slist_delete_link (state.operator_stack, state.operator_stack);
 	}
@@ -1174,7 +1177,6 @@ parse_expression (ArvEvaluator *evaluator)
 	return evaluator->priv->rpn_stack == NULL ? ARV_EVALUATOR_STATUS_EMPTY_EXPRESSION : ARV_EVALUATOR_STATUS_SUCCESS;
 
 CLEANUP:
-
 	for (iter = state.garbage_stack; iter != NULL; iter = iter->next)
 		arv_evaluator_token_free (iter->data);
 	g_slist_free (state.garbage_stack);
@@ -1226,6 +1228,7 @@ arv_evaluator_evaluate_as_double (ArvEvaluator *evaluator, GError **error)
 	}
 
 	status = evaluate (evaluator->priv->rpn_stack, evaluator->priv->variables, NULL, &value);
+
 	if (status != ARV_EVALUATOR_STATUS_SUCCESS) {
 		arv_evaluator_set_error (error, status);
 		return 0.0;
@@ -1257,7 +1260,9 @@ arv_evaluator_evaluate_as_int64 (ArvEvaluator *evaluator, GError **error)
 	}
 
 	status = evaluate (evaluator->priv->rpn_stack, evaluator->priv->variables, &value, NULL);
+
 	if (status != ARV_EVALUATOR_STATUS_SUCCESS) {
+
 		arv_evaluator_set_error (error, status);
 		return 0.0;
 	}
