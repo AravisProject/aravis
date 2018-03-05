@@ -93,6 +93,27 @@ As an open source and free software project, we welcome any contributions to the
 
 However, contributions to both Gigabit Ethernet and USB3 protocol code (files `src/arvuv*.[ch]` `src/arvgv*.[ch]`) must not be based on the corresponding specification documents published by the [AIA](http://http://www.visiononline.org/), as this organisation forbids the use of their documents for the development of an open source implementation of the specifications. So, if you want to contribute to this part of Aravis, don't use the AIA documents and state clearly in the pull request your work is not based on them.
 
+## Unit tests
+
+Aravis has a set of unit tests that helps to catch regressions and memory leaks during the development. The test suite is run using the following commands:
+
+```
+cd tests
+make check
+make check-valgrind-memcheck
+```
+
+`make check-valgrind-hellgrind`, `make check-valgrind-sgcheck` and `make check-valgrind-drd` are known to not pass. Any help to understand what fails and why would be nice.
+
+All the code is not covered yet by the tests. Code coverage can be obtained using:
+
+```
+cd tests
+make check-code-coverage
+```
+
+The report is published in `tests/aravis-{VERSION}-coverage/index.html`. Code coverage improvment is welcomed as well.
+
 ### Downloads
 
 * 0.4.x stable releases: http://ftp.gnome.org/pub/GNOME/sources/aravis/0.4/
