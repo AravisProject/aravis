@@ -93,7 +93,7 @@ As an open source and free software project, we welcome any contributions to the
 
 However, contributions to both Gigabit Ethernet and USB3 protocol code (files `src/arvuv*.[ch]` `src/arvgv*.[ch]`) must not be based on the corresponding specification documents published by the [AIA](http://http://www.visiononline.org/), as this organisation forbids the use of their documents for the development of an open source implementation of the specifications. So, if you want to contribute to this part of Aravis, don't use the AIA documents and state clearly in the pull request your work is not based on them.
 
-## Unit tests
+#### Unit tests
 
 Aravis has a set of unit tests that helps to catch regressions and memory leaks during the development. The test suite is run using the following commands:
 
