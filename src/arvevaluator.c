@@ -198,6 +198,7 @@ static ArvEvaluatorTokenInfos arv_evaluator_token_infos[] = {
 
 typedef struct {
 	ArvEvaluatorTokenId	token_id;
+	gint32 parenthesis_level;
 	union {
 		double		v_double;
 		gint64		v_int64;
@@ -206,7 +207,7 @@ typedef struct {
 } ArvEvaluatorToken;
 
 typedef struct {
-	int parenthesis_level;
+	gint32 parenthesis_level;
 	ArvValue value;
 } ArvEvaluatorValuesStackItem;
 
@@ -543,7 +544,6 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 	ArvEvaluatorValuesStackItem stack[ARV_EVALUATOR_STACK_SIZE];
 	ArvValue *value;
 	int index = -1;
-	int parenthesis_level = 0;
 	gboolean integer_mode;
 
 	g_assert (v_int64 != NULL || v_double != NULL);
@@ -577,36 +577,36 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 				arv_value_set_int64 (&stack[index-1].value,
 						      arv_value_get_int64 (&stack[index-1].value) &&
 						      arv_value_get_int64 (&stack[index].value));
-				stack[index-1].parenthesis_level = parenthesis_level;
+				stack[index-1].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_LOGICAL_OR:
 				arv_value_set_int64 (&stack[index-1].value,
 						      arv_value_get_int64 (&stack[index-1].value) ||
 						      arv_value_get_int64 (&stack[index].value));
-				stack[index-1].parenthesis_level = parenthesis_level;
+				stack[index-1].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_BITWISE_NOT:
 				arv_value_set_int64 (&stack[index].value,
 						      ~arv_value_get_int64 (&stack[index].value));
-				stack[index-1].parenthesis_level = parenthesis_level;
+				stack[index-1].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_BITWISE_AND:
 				arv_value_set_int64 (&stack[index-1].value,
 						      arv_value_get_int64 (&stack[index-1].value) &
 						      arv_value_get_int64 (&stack[index].value));
-				stack[index-1].parenthesis_level = parenthesis_level;
+				stack[index-1].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_BITWISE_OR:
 				arv_value_set_int64 (&stack[index-1].value,
 						      arv_value_get_int64 (&stack[index-1].value) |
 						      arv_value_get_int64 (&stack[index].value));
-				stack[index-1].parenthesis_level = parenthesis_level;
+				stack[index-1].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_BITWISE_XOR:
 				arv_value_set_int64 (&stack[index-1].value,
 						      arv_value_get_int64 (&stack[index-1].value) ^
 						      arv_value_get_int64 (&stack[index].value));
-				stack[index-1].parenthesis_level = parenthesis_level;
+				stack[index-1].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_EQUAL:
 				if (integer_mode ||
@@ -619,7 +619,7 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 					arv_value_set_int64 (&stack[index - 1].value,
 							     arv_value_get_double (&stack[index-1].value) ==
 							     arv_value_get_double (&stack[index].value));
-				stack[index-1].parenthesis_level = parenthesis_level;
+				stack[index-1].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_NOT_EQUAL:
 				if (integer_mode ||
@@ -632,7 +632,7 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 					arv_value_set_int64 (&stack[index - 1].value,
 							     arv_value_get_double (&stack[index-1].value) !=
 							     arv_value_get_double (&stack[index].value));
-				stack[index-1].parenthesis_level = parenthesis_level;
+				stack[index-1].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_LESS_OR_EQUAL:
 				if (integer_mode ||
@@ -645,7 +645,7 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 					arv_value_set_int64 (&stack[index - 1].value,
 							     arv_value_get_double (&stack[index-1].value) <=
 							     arv_value_get_double (&stack[index].value));
-				stack[index-1].parenthesis_level = parenthesis_level;
+				stack[index-1].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_GREATER_OR_EQUAL:
 				if (integer_mode ||
@@ -658,7 +658,7 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 					arv_value_set_int64 (&stack[index - 1].value,
 							     arv_value_get_double (&stack[index-1].value) >=
 							     arv_value_get_double (&stack[index].value));
-				stack[index-1].parenthesis_level = parenthesis_level;
+				stack[index-1].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_LESS:
 				if (integer_mode ||
@@ -671,7 +671,7 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 					arv_value_set_int64 (&stack[index - 1].value,
 							     arv_value_get_double (&stack[index-1].value) <
 							     arv_value_get_double (&stack[index].value));
-				stack[index-1].parenthesis_level = parenthesis_level;
+				stack[index-1].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_GREATER:
 				if (integer_mode ||
@@ -684,19 +684,19 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 					arv_value_set_int64 (&stack[index - 1].value,
 							     arv_value_get_double (&stack[index-1].value) >
 							     arv_value_get_double (&stack[index].value));
-				stack[index-1].parenthesis_level = parenthesis_level;
+				stack[index-1].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_SHIFT_RIGHT:
 				arv_value_set_int64 (&stack[index-1].value,
 						     arv_value_get_int64 (&stack[index-1].value) >>
 						     arv_value_get_int64 (&stack[index].value));
-				stack[index-1].parenthesis_level = parenthesis_level;
+				stack[index-1].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_SHIFT_LEFT:
 				arv_value_set_int64 (&stack[index-1].value,
 						     arv_value_get_int64 (&stack[index-1].value) <<
 						     arv_value_get_int64 (&stack[index].value));
-				stack[index-1].parenthesis_level = parenthesis_level;
+				stack[index-1].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_SUBSTRACTION:
 				if (integer_mode ||
@@ -709,7 +709,7 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 					arv_value_set_double (&stack[index-1].value,
 							      arv_value_get_double (&stack[index-1].value) -
 							      arv_value_get_double (&stack[index].value));
-				stack[index-1].parenthesis_level = parenthesis_level;
+				stack[index-1].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_ADDITION:
 				if (integer_mode ||
@@ -722,7 +722,7 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 					arv_value_set_double (&stack[index-1].value,
 							      arv_value_get_double (&stack[index-1].value) +
 							      arv_value_get_double (&stack[index].value));
-				stack[index-1].parenthesis_level = parenthesis_level;
+				stack[index-1].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_REMAINDER:
 				if (arv_value_get_int64 (&stack[index].value) == 0) {
@@ -732,7 +732,7 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 				arv_value_set_int64 (&stack[index-1].value,
 						     arv_value_get_int64 (&stack[index-1].value) %
 						     arv_value_get_int64 (&stack[index].value));
-				stack[index-1].parenthesis_level = parenthesis_level;
+				stack[index-1].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_DIVISION:
 				if (integer_mode) {
@@ -752,7 +752,7 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 							      arv_value_get_double (&stack[index-1].value) /
 							      arv_value_get_double (&stack[index].value));
 				}
-				stack[index-1].parenthesis_level = parenthesis_level;
+				stack[index-1].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_MULTIPLICATION:
 				if (integer_mode ||
@@ -765,7 +765,7 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 					arv_value_set_double (&stack[index-1].value,
 							      arv_value_get_double (&stack[index-1].value) *
 							      arv_value_get_double (&stack[index].value));
-				stack[index-1].parenthesis_level = parenthesis_level;
+				stack[index-1].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_POWER:
 				if (integer_mode)
@@ -776,7 +776,7 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 					arv_value_set_double (&stack[index-1].value,
 							      pow (arv_value_get_double(&stack[index-1].value),
 								   arv_value_get_double(&stack[index].value)));
-				stack[index-1].parenthesis_level = parenthesis_level;
+				stack[index-1].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_MINUS:
 				if (integer_mode || arv_value_holds_int64 (&stack[index].value))
@@ -785,17 +785,17 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 				else
 					arv_value_set_double (&stack[index].value,
 							      -arv_value_get_double (&stack[index].value));
-				stack[index].parenthesis_level = parenthesis_level;
+				stack[index].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_PLUS:
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_SIN:
 				arv_value_set_double (&stack[index].value, sin (arv_value_get_double (&stack[index].value)));
-				stack[index].parenthesis_level = parenthesis_level;
+				stack[index].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_COS:
 				arv_value_set_double (&stack[index].value, cos (arv_value_get_double (&stack[index].value)));
-				stack[index].parenthesis_level = parenthesis_level;
+				stack[index].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_SGN:
 				if (integer_mode || arv_value_holds_int64 (&stack[index].value)) {
@@ -815,7 +815,7 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 					else
 						arv_value_set_int64 (&stack[index].value, 0);
 				}
-				stack[index].parenthesis_level = parenthesis_level;
+				stack[index].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_NEG:
 				if (integer_mode || arv_value_holds_int64 (&stack[index].value))
@@ -824,15 +824,15 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 				else
 					arv_value_set_double (&stack[index].value,
 							      -arv_value_get_double (&stack[index].value));
-				stack[index].parenthesis_level = parenthesis_level;
+				stack[index].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_ATAN:
 				arv_value_set_double (&stack[index].value, atan (arv_value_get_double (&stack[index].value)));
-				stack[index].parenthesis_level = parenthesis_level;
+				stack[index].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_TAN:
 				arv_value_set_double (&stack[index].value, tan (arv_value_get_double (&stack[index].value)));
-				stack[index].parenthesis_level = parenthesis_level;
+				stack[index].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_ABS:
 				if (arv_value_holds_double (&stack[index].value))
@@ -841,23 +841,23 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 				else
 					arv_value_set_int64 (&stack[index].value,
 							     labs (arv_value_get_int64 (&stack[index].value)));
-				stack[index].parenthesis_level = parenthesis_level;
+				stack[index].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_EXP:
 				arv_value_set_double (&stack[index].value, exp (arv_value_get_double (&stack[index].value)));
-				stack[index].parenthesis_level = parenthesis_level;
+				stack[index].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_LN:
 				arv_value_set_double (&stack[index].value, log (arv_value_get_double (&stack[index].value)));
-				stack[index].parenthesis_level = parenthesis_level;
+				stack[index].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_LG:
 				arv_value_set_double (&stack[index].value, log10 (arv_value_get_double (&stack[index].value)));
-				stack[index].parenthesis_level = parenthesis_level;
+				stack[index].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_SQRT:
 				arv_value_set_double (&stack[index].value, sqrt (arv_value_get_double (&stack[index].value)));
-				stack[index].parenthesis_level = parenthesis_level;
+				stack[index].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_TRUNC:
 				if (arv_value_get_double (&stack[index].value) > 0.0)
@@ -866,18 +866,18 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 				else
 					arv_value_set_double (&stack[index].value,
 							      ceil (arv_value_get_double (&stack[index].value)));
-				stack[index].parenthesis_level = parenthesis_level;
+				stack[index].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_ROUND:
 				actual_arguments_count = get_arguments_count(stack, index);
 				if (actual_arguments_count==1) {
 					arv_value_set_double(&stack[index].value, round(arv_value_get_double(&stack[index].value)));
-					stack[index].parenthesis_level = parenthesis_level;
+					stack[index].parenthesis_level = token->parenthesis_level;
 				} else if (actual_arguments_count==2) {
 					arv_value_set_double(&stack[index - 1].value,
 										 round_with_precision(arv_value_get_double(&stack[index - 1].value),
 															  arv_value_get_int64(&stack[index].value)));
-					stack[index - 1].parenthesis_level = parenthesis_level;
+					stack[index - 1].parenthesis_level = token->parenthesis_level;
 				} else {
 					if (actual_arguments_count<1) {
 						status = ARV_EVALUATOR_STATUS_MISSING_ARGUMENTS;
@@ -890,36 +890,36 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_FLOOR:
 				arv_value_set_double (&stack[index].value, floor (arv_value_get_double (&stack[index].value)));
-				stack[index].parenthesis_level = parenthesis_level;
+				stack[index].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_CEIL:
 				arv_value_set_double (&stack[index].value, ceil (arv_value_get_double (&stack[index].value)));
-				stack[index].parenthesis_level = parenthesis_level;
+				stack[index].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_ASIN:
 				arv_value_set_double (&stack[index].value, asin (arv_value_get_double (&stack[index].value)));
-				stack[index].parenthesis_level = parenthesis_level;
+				stack[index].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_FUNCTION_ACOS:
 				arv_value_set_double (&stack[index].value, acos (arv_value_get_double (&stack[index].value)));
-				stack[index].parenthesis_level = parenthesis_level;
+				stack[index].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_CONSTANT_INT64:
 				arv_value_set_int64 (&stack[index+1].value, token->data.v_int64);
-				stack[index+1].parenthesis_level = parenthesis_level;
+				stack[index+1].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_CONSTANT_DOUBLE:
 				if (integer_mode)
 					arv_value_set_int64 (&stack[index+1].value, token->data.v_double);
 				else
 					arv_value_set_double (&stack[index+1].value, token->data.v_double);
-				stack[index+1].parenthesis_level = parenthesis_level;
+				stack[index+1].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_VARIABLE:
 				value = g_hash_table_lookup (variables, token->data.name);
 				if (value != NULL) {
 					arv_value_copy (&stack[index+1].value, value);
-					stack[index+1].parenthesis_level = parenthesis_level;
+					stack[index+1].parenthesis_level = token->parenthesis_level;
 				} else {
 					status = ARV_EVALUATOR_STATUS_UNKNOWN_VARIABLE;
 					goto CLEANUP;
@@ -935,14 +935,6 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 					arv_value_copy(&stack[index - 2].value, &stack[index].value);
 					stack[index - 2].parenthesis_level = stack[index].parenthesis_level;
 				}
-				break;
-			case ARV_EVALUATOR_TOKEN_LEFT_PARENTHESIS:
-				index-=1;
-				parenthesis_level+=1;
-				break;
-			case ARV_EVALUATOR_TOKEN_RIGHT_PARENTHESIS:
-				index-=1;
-				parenthesis_level-=1;
 				break;
 			default:
 				status = ARV_EVALUATOR_STATUS_UNKNOWN_OPERATOR;
@@ -995,7 +987,7 @@ parse_to_stacks (ArvEvaluator *evaluator, char *expression, ArvEvaluatorParserSt
 	ArvEvaluatorToken *token;
 	ArvEvaluatorStatus status;
 	gboolean token_found;
-
+	gint32 current_parenthesis_level = 0;
 	if (expression == NULL)
 		return ARV_EVALUATOR_STATUS_EMPTY_EXPRESSION;
 
@@ -1004,9 +996,10 @@ parse_to_stacks (ArvEvaluator *evaluator, char *expression, ArvEvaluatorParserSt
 
 	do {
 		token = arv_get_next_token (&expression, state->previous_token_was_operand, state->previous_token_was_right_parenthesis);
+
 		if (token != NULL) {
 			token_found = TRUE;
-
+			token->parenthesis_level = current_parenthesis_level;
 			state->previous_token_was_operand = arv_evaluator_token_is_operand (token);
 			state->previous_token_was_right_parenthesis = arv_evaluator_token_is_right_parenthesis (token);
 
@@ -1079,11 +1072,10 @@ parse_to_stacks (ArvEvaluator *evaluator, char *expression, ArvEvaluatorParserSt
 				}
 				state->operator_stack = g_slist_prepend (state->operator_stack, token);
 			} else if (arv_evaluator_token_is_left_parenthesis (token)) {
-				ArvEvaluatorToken * clone = arv_evaluator_token_new(token->token_id);
-				clone->data = token->data;
-				state->operator_stack = g_slist_prepend (state->operator_stack, clone);
-				state->token_stack = g_slist_prepend (state->token_stack, token);
+				current_parenthesis_level+=1;
+				state->operator_stack = g_slist_prepend (state->operator_stack, token);
 			} else if (arv_evaluator_token_is_right_parenthesis (token)) {
+				current_parenthesis_level-=1;
 				while (state->operator_stack != NULL &&
 				       !arv_evaluator_token_is_left_parenthesis (state->operator_stack->data)) {
 					state->token_stack = g_slist_prepend (state->token_stack, state->operator_stack->data);
@@ -1093,7 +1085,7 @@ parse_to_stacks (ArvEvaluator *evaluator, char *expression, ArvEvaluatorParserSt
 					status = ARV_EVALUATOR_STATUS_PARENTHESES_MISMATCH;
 					goto CLEANUP;
 				}
-				state->token_stack = g_slist_prepend (state->token_stack, token);
+				state->garbage_stack = g_slist_prepend (state->garbage_stack, token);
 				state->garbage_stack = g_slist_prepend (state->garbage_stack, state->operator_stack->data);
 				state->operator_stack = g_slist_delete_link (state->operator_stack, state->operator_stack);
 			} else {
