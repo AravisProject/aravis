@@ -286,6 +286,7 @@ gst/Makefile
 gst-0.10/Makefile
 tests/Makefile
 po/Makefile.in
+man/Makefile
 docs/Makefile
 docs/reference/Makefile
 docs/reference/aravis/Makefile
