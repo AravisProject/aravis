@@ -1689,6 +1689,7 @@ arv_debug_category_interface
 arv_debug_category_misc
 arv_debug_category_stream
 arv_debug_category_stream_thread
+arv_debug_category_viewer
 arv_debug_device
 arv_debug_dom
 arv_debug_evaluator
@@ -1699,6 +1700,7 @@ arv_debug_interface
 arv_debug_misc
 arv_debug_stream
 arv_debug_stream_thread
+arv_debug_viewer
 arv_log
 arv_log_device
 arv_log_dom
@@ -1710,6 +1712,7 @@ arv_log_interface
 arv_log_misc
 arv_log_stream
 arv_log_stream_thread
+arv_log_viewer
 arv_warning
 arv_warning_device
 arv_warning_dom
@@ -1721,6 +1724,7 @@ arv_warning_interface
 arv_warning_misc
 arv_warning_stream
 arv_warning_stream_thread
+arv_warning_viewer
 arv_g_string_append_hex_dump
 arv_debug_category_chunk
 arv_debug_chunk
