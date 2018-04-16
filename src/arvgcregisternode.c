@@ -347,7 +347,7 @@ _get_cachable (ArvGcRegisterNode *gc_register_node, GError **error)
 
 /* Set default to read only 32 bits little endian integer register */
 
-static ArvGcCachable
+static guint
 _get_endianess (ArvGcRegisterNode *gc_register_node, GError **error)
 {
 	GError *local_error = NULL;
