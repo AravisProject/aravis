@@ -48,6 +48,11 @@ typedef enum {
 	ARV_GC_CACHABLE_WRITE_AROUND
 } ArvGcCachable;
 
+typedef enum {
+	ARV_GC_SIGNEDNESS_SIGNED,
+	ARV_GC_SIGNEDNESS_UNSIGNED
+} ArvGcSignedness;
+
 /**
  * ArvAuto:
  * @ARV_AUTO_OFF: manual setting

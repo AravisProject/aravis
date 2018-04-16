@@ -105,7 +105,6 @@ arv_gc_register_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				node->endianess = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_SIGN:
-				/* TODO */
 				node->sign = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_LSB:
@@ -367,6 +366,28 @@ _get_endianess (ArvGcRegisterNode *gc_register_node, GError **error)
 		return G_BIG_ENDIAN;
 
 	return G_LITTLE_ENDIAN;
+}
+
+static ArvGcSignedness
+_get_signedness (ArvGcRegisterNode *gc_register_node, GError **error)
+{
+	GError *local_error = NULL;
+	const char *sign;
+
+	if (gc_register_node->sign == NULL)
+		return ARV_GC_SIGNEDNESS_SIGNED;
+
+	sign = arv_gc_property_node_get_string (gc_register_node->sign, &local_error);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return ARV_GC_SIGNEDNESS_SIGNED;
+	}
+
+	if (g_strcmp0 (sign, "Unsigned") == 0)
+		return ARV_GC_SIGNEDNESS_UNSIGNED;
+
+	return ARV_GC_SIGNEDNESS_SIGNED;
 }
 
 static gint64
@@ -725,7 +746,19 @@ _get_integer_value (ArvGcRegisterNode *gc_register_node, guint register_lsb, gui
 
 		value = (value & mask) >> lsb;
 
+		if (msb-lsb < 63 &&
+		    (value & (1 << (msb - lsb))) != 0 &&
+		    _get_signedness (gc_register_node, NULL) == ARV_GC_SIGNEDNESS_SIGNED)
+			value |= G_MAXUINT64 ^ (mask >> lsb);
+
 		arv_log_genicam ("[GcRegisterNode::_get_integer_value] mask  = 0x%08Lx", mask);
+	} else {
+		unsigned length = _get_length (gc_register_node, NULL);
+
+		if (length < 8 &&
+		    ((value & (1 << (length * 8 - 1))) != 0) &&
+		    _get_signedness (gc_register_node, NULL) == ARV_GC_SIGNEDNESS_SIGNED)
+			value |= G_MAXUINT64 ^ ((((guint64) 1) << (length * 8)) - 1);
 	}
 
 	arv_log_genicam ("[GcRegisterNode::_get_integer_value] address = 0x%Lx, value = 0x%Lx",

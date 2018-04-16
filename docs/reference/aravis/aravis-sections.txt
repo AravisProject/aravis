@@ -815,6 +815,7 @@ ArvGcClass
 ArvGcNameSpace
 ArvGcAccessMode
 ArvGcCachable
+ArvGcSignedness
 arv_gc_get_int64_from_value
 arv_gc_set_int64_to_value
 arv_gc_get_double_from_value

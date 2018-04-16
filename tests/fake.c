@@ -108,7 +108,7 @@ registers_test (void)
 	arv_gc_integer_set_value (ARV_GC_INTEGER (node_a), 0xabcdefaa, NULL);
 
 	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_a), NULL);
-	g_assert_cmpint (value, ==, 0xefaa);
+	g_assert_cmpint (value, ==, -4182);
 
 	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_b), NULL);
 	g_assert_cmpint (value, ==, 0x1010);
@@ -119,10 +119,20 @@ registers_test (void)
 	arv_gc_integer_set_value (ARV_GC_INTEGER (node_c), 0xff, NULL);
 
 	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_c), NULL);
-	g_assert_cmpint (value, ==, 0x1);
+	g_assert_cmpint (value, ==, -1);
 
 	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_b), NULL);
 	g_assert_cmpint (value, ==, 0x1011);
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_b), 0xff, NULL);
+
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_b), NULL);
+	g_assert_cmpint (value, ==, 0xff);
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_c), 0x0, NULL);
+
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_c), NULL);
+	g_assert_cmpint (value, ==, 0);
 
 	g_object_unref (device);
 }
