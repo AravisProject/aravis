@@ -202,7 +202,7 @@ _read_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buffe
 					pending_ack = FALSE;
 					expected_answer = FALSE;
 					if (local_error != NULL)
-						g_warning ("[UvDevice::read_memory] Ack reception error: %s", local_error->message);
+						arv_warning_device ("[UvDevice::read_memory] Ack reception error: %s", local_error->message);
 					g_clear_error (&local_error);
 				}
 
@@ -214,7 +214,7 @@ _read_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buffe
 				memcpy (buffer, arv_uvcp_packet_get_read_memory_ack_data (read_packet), size);
 		} else {
 			if (local_error != NULL)
-				g_warning ("[UvDevice::read_memory] Command sending error: %s", local_error->message);
+				arv_warning_device ("[UvDevice::read_memory] Command sending error: %s", local_error->message);
 			g_clear_error (&local_error);
 		}
 
@@ -334,7 +334,7 @@ _write_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buff
 					pending_ack = FALSE;
 					expected_answer = FALSE;
 					if (local_error != NULL)
-						g_warning ("[UvDevice::write_memory] Ack reception error: %s", local_error->message);
+						arv_warning_device ("[UvDevice::write_memory] Ack reception error: %s", local_error->message);
 					g_clear_error (&local_error);
 				}
 
@@ -346,7 +346,7 @@ _write_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buff
 				arv_uvcp_packet_debug (read_packet, ARV_DEBUG_LEVEL_LOG);
 		} else {
 			if (local_error != NULL)
-				g_warning ("[UvDevice::write_memory] Command sending error: %s", local_error->message);
+				arv_warning_device ("[UvDevice::write_memory] Command sending error: %s", local_error->message);
 			g_clear_error (&local_error);
 		}
 

@@ -159,7 +159,7 @@ _usb_device_to_device_ids (ArvUvInterface *uv_interface, libusb_device *device)
 
 	r = libusb_get_device_descriptor (device, &desc);
 	if (r < 0) {
-		g_warning ("Failed to get device descriptor");
+		arv_warning_interface ("Failed to get device descriptor");
 		return NULL;
 	}
 

@@ -423,7 +423,7 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 
 	return_value = getifaddrs (&ifap);
 	if (return_value < 0) {
-		g_warning ("[GvFakeCamera::start] No network interface found");
+		arv_warning_device ("[GvFakeCamera::start] No network interface found");
 		return FALSE;
 	}
 

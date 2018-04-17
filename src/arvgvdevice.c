@@ -226,7 +226,7 @@ _read_memory (ArvGvDeviceIOData *io_data, guint64 address, guint32 size, void *b
 					pending_ack = FALSE;
 					expected_answer = FALSE;
 					if (local_error != NULL)
-						g_warning ("[GvDevice::read_memory] Ack reception error: %s", local_error->message);
+						arv_warning_device ("[GvDevice::read_memory] Ack reception error: %s", local_error->message);
 					g_clear_error (&local_error);
 				}
 			} while (pending_ack);
@@ -237,7 +237,7 @@ _read_memory (ArvGvDeviceIOData *io_data, guint64 address, guint32 size, void *b
 				memcpy (buffer, arv_gvcp_packet_get_read_memory_ack_data (ack_packet), size);
 		} else {
 			if (local_error != NULL)
-				g_warning ("[GvDevice::read_memory] Command sending error: %s", local_error->message);
+				arv_warning_device ("[GvDevice::read_memory] Command sending error: %s", local_error->message);
 			g_clear_error (&local_error);
 		}
 
@@ -346,7 +346,7 @@ _write_memory (ArvGvDeviceIOData *io_data, guint64 address, guint32 size, void *
 					pending_ack = FALSE;
 					expected_answer = FALSE;
 					if (local_error != NULL)
-						g_warning ("[GvDevice::write_memory] Ack reception error: %s", local_error->message);
+						arv_warning_device ("[GvDevice::write_memory] Ack reception error: %s", local_error->message);
 					g_clear_error (&local_error);
 				}
 			} while (pending_ack);
@@ -354,7 +354,7 @@ _write_memory (ArvGvDeviceIOData *io_data, guint64 address, guint32 size, void *
 			success = success && expected_answer;
 		} else {
 			if (local_error != NULL)
-				g_warning ("[GvDevice::write_memory] Command sending error: %s", local_error->message);
+				arv_warning_device ("[GvDevice::write_memory] Command sending error: %s", local_error->message);
 			g_clear_error (&local_error);
 		}
 
@@ -459,7 +459,7 @@ _read_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 *value_plac
 					pending_ack = FALSE;
 					expected_answer = FALSE;
 					if (local_error != NULL)
-						g_warning ("[GvDevice::read_register] Ack reception error: %s", local_error->message);
+						arv_warning_device ("[GvDevice::read_register] Ack reception error: %s", local_error->message);
 					g_clear_error (&local_error);
 				}
 			} while (pending_ack);
@@ -470,7 +470,7 @@ _read_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 *value_plac
 				*value_placeholder = arv_gvcp_packet_get_read_register_ack_value (ack_packet);
 		} else {
 			if (local_error != NULL)
-				g_warning ("[GvDevice::read_register] Command sending error: %s", local_error->message);
+				arv_warning_device ("[GvDevice::read_register] Command sending error: %s", local_error->message);
 			g_clear_error (&local_error);
 		}
 
@@ -576,7 +576,7 @@ _write_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 value, GEr
 					pending_ack = FALSE;
 					expected_answer = FALSE;
 					if (local_error != NULL)
-						g_warning ("[GvDevice::write_register] Ack reception error: %s", local_error->message);
+						arv_warning_device ("[GvDevice::write_register] Ack reception error: %s", local_error->message);
 					g_clear_error (&local_error);
 				}
 			} while (pending_ack);
@@ -584,7 +584,7 @@ _write_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 value, GEr
 			success = success && expected_answer;
 		} else {
 			if (local_error != NULL)
-				g_warning ("[GvDevice::write_register] Command sending error: %s", local_error->message);
+				arv_warning_device ("[GvDevice::write_register] Command sending error: %s", local_error->message);
 			g_clear_error (&local_error);
 		}
 

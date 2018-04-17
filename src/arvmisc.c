@@ -96,8 +96,7 @@ arv_statistic_new (unsigned int n_histograms, unsigned n_bins, unsigned int bin_
 	g_return_val_if_fail (n_bins > 0, NULL);
 	g_return_val_if_fail (bin_step > 0, NULL);
 
-	statistic = g_new (ArvStatistic, 1);
-	g_return_val_if_fail (statistic != NULL, NULL);
+	statistic = g_new0 (ArvStatistic, 1);
 
 	statistic->n_histograms = n_histograms;
 	statistic->n_bins = n_bins;
@@ -105,20 +104,10 @@ arv_statistic_new (unsigned int n_histograms, unsigned n_bins, unsigned int bin_
 	statistic->offset = offset;
 
 	statistic->histograms = g_new (ArvHistogram, n_histograms);
-	if (statistic->histograms == NULL) {
-		_arv_statistic_free (statistic);
-		g_warning ("[ArvStatistic::new] failed to allocate histogram memory");
-		return NULL;
-	}
 
 	for (i = 0; i < statistic->n_histograms; i++) {
 		statistic->histograms[i].name = NULL;
 		statistic->histograms[i].bins = g_new (guint64, statistic->n_bins);
-		if (statistic->histograms[i].bins == NULL) {
-			arv_statistic_free (statistic);
-			g_warning ("[TolmStatistic::new] failed to allocate bin memory");
-			return NULL;
-		}
 	}
 
 	arv_statistic_reset (statistic);
