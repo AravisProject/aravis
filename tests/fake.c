@@ -149,7 +149,7 @@ fake_device_test (void)
 	gint64 *values;
 	const char **string_values;
 	const char *string_value;
-	int n_values;
+	guint n_values;
 	double float_minimum, float_maximum;
 	const char *genicam;
 	gsize size;
@@ -246,13 +246,7 @@ fake_device_error_test (void)
 	ArvDevice *device;
 	ArvDeviceStatus status;
 	int int_value;
-	double dbl_value;
 	double boolean_value;
-	gint64 minimum, maximum;
-	gint64 *values;
-	const char **string_values;
-	int n_values;
-	double float_minimum, float_maximum;
 
 	device = arv_fake_device_new ("TEST0");
 	g_assert (ARV_IS_FAKE_DEVICE (device));
