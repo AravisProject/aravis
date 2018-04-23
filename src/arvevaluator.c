@@ -588,7 +588,7 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 			case ARV_EVALUATOR_TOKEN_BITWISE_NOT:
 				arv_value_set_int64 (&stack[index].value,
 						      ~arv_value_get_int64 (&stack[index].value));
-				stack[index-1].parenthesis_level = token->parenthesis_level;
+				stack[index].parenthesis_level = token->parenthesis_level;
 				break;
 			case ARV_EVALUATOR_TOKEN_BITWISE_AND:
 				arv_value_set_int64 (&stack[index-1].value,
