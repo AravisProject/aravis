@@ -850,6 +850,13 @@ _set_integer_value (ArvGcRegisterNode *gc_register_node, guint register_lsb, gui
 		value = ((value << lsb) & mask) | (current_value & ~mask);
 
 		arv_log_genicam ("[GcRegisterNode::_get_integer_value] mask  = 0x%08Lx", mask);
+	} else {
+		_update_cache_size (gc_register_node, &local_error);
+
+		if (local_error != NULL) {
+			g_propagate_error (error, local_error);
+			return;
+		}
 	}
 
 	arv_log_genicam ("[GcRegisterNode::_set_integer_value] address = 0x%Lx, value = 0x%Lx",
