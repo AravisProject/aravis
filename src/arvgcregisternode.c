@@ -747,7 +747,7 @@ _get_integer_value (ArvGcRegisterNode *gc_register_node, guint register_lsb, gui
 		value = (value & mask) >> lsb;
 
 		if (msb-lsb < 63 &&
-		    (value & ((guint64) 1) << (msb - lsb))) != 0 &&
+		    (value & (((guint64) 1) << (msb - lsb))) != 0 &&
 		    _get_signedness (gc_register_node, NULL) == ARV_GC_SIGNEDNESS_SIGNED)
 			value |= G_MAXUINT64 ^ (mask >> lsb);
 
