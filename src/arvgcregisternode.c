@@ -756,7 +756,7 @@ _get_integer_value (ArvGcRegisterNode *gc_register_node, guint register_lsb, gui
 		unsigned length = _get_length (gc_register_node, NULL);
 
 		if (length < 8 &&
-		    ((value & (1 << (length * 8 - 1))) != 0) &&
+		    ((value & (((guint64) 1) << (length * 8 - 1))) != 0) &&
 		    _get_signedness (gc_register_node, NULL) == ARV_GC_SIGNEDNESS_SIGNED)
 			value |= G_MAXUINT64 ^ ((((guint64) 1) << (length * 8)) - 1);
 	}
