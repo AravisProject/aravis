@@ -253,9 +253,21 @@ arv_gvsp_packet_get_pixel_format (const ArvGvspPacket *packet)
 }
 
 static inline guint64
+arv_gvsp_packet_get_timestamp_ticks (const ArvGvspPacket *packet)
+{
+       ArvGvspDataLeader *leader;
+       guint64 timestamp;
+
+       leader = (ArvGvspDataLeader *) &packet->data;
+
+       timestamp = ( (guint64) g_ntohl (leader->timestamp_high) << 32) | g_ntohl (leader->timestamp_low);
+
+       return timestamp;
+}
+
+static inline guint64
 arv_gvsp_packet_get_timestamp (const ArvGvspPacket *packet, guint64 timestamp_tick_frequency)
 {
-	ArvGvspDataLeader *leader;
 	guint64 timestamp_s;
 	guint64 timestamp_ns;
 	guint64 timestamp;
@@ -263,9 +275,7 @@ arv_gvsp_packet_get_timestamp (const ArvGvspPacket *packet, guint64 timestamp_ti
 	if (timestamp_tick_frequency < 1)
 		return 0;
 
-	leader = (ArvGvspDataLeader *) &packet->data;
-
-	timestamp = ( (guint64) g_ntohl (leader->timestamp_high) << 32) | g_ntohl (leader->timestamp_low);
+       timestamp = arv_gvsp_packet_get_timestamp_ticks(packet);
 
 	timestamp_s = timestamp / timestamp_tick_frequency;
 	timestamp_ns = ((timestamp % timestamp_tick_frequency) * 1000000000) / timestamp_tick_frequency;
