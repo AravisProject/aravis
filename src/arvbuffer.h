@@ -118,6 +118,7 @@ const void *		arv_buffer_get_user_data	(ArvBuffer *buffer);
 
 ArvBufferPayloadType	arv_buffer_get_payload_type	(ArvBuffer *buffer);
 guint64			arv_buffer_get_timestamp	(ArvBuffer *buffer);
+guint64			arv_buffer_get_timestamp_ticks	(ArvBuffer *buffer);
 void			arv_buffer_set_timestamp	(ArvBuffer *buffer, guint64 timestamp_ns);
 guint64			arv_buffer_get_system_timestamp	(ArvBuffer *buffer);
 void			arv_buffer_set_system_timestamp	(ArvBuffer *buffer, guint64 timestamp_ns);

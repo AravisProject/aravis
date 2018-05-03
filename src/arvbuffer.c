@@ -299,6 +299,26 @@ arv_buffer_get_timestamp (ArvBuffer *buffer)
 	return buffer->priv->timestamp_ns;
 }
 
+
+/**
+ * arv_buffer_get_timestamp_ticks:
+ * @buffer: a #ArvBuffer
+ *
+ * Gets the buffer camera timestamp, expressed as ticks.
+ *
+ * Returns: buffer timestamp, in ticks.
+ *
+ * Since: 0.5.13
+ */
+
+guint64
+arv_buffer_get_timestamp_ticks (ArvBuffer *buffer)
+{
+       g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
+
+       return buffer->priv->timestamp_ticks;
+}
+
 /**
  * arv_buffer_set_timestamp:
  * @buffer: a #ArvBuffer

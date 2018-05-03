@@ -244,6 +244,8 @@ _process_data_leader (ArvGvStreamThreadData *thread_data,
 	frame->buffer->priv->frame_id = arv_gvsp_packet_get_frame_id (packet);
 
 	frame->buffer->priv->system_timestamp_ns = g_get_real_time() * 1000LL;
+       frame->buffer->priv->timestamp_ticks = arv_gvsp_packet_get_timestamp_ticks (packet);
+
 	if (frame->buffer->priv->gvsp_payload_type != ARV_GVSP_PAYLOAD_TYPE_H264) {
 		if (G_LIKELY (thread_data->timestamp_tick_frequency != 0))
 			frame->buffer->priv->timestamp_ns = arv_gvsp_packet_get_timestamp (packet,
