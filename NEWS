@@ -1,3 +1,11 @@
+Release 0.5.12
+==============
+
+  * gigevision: disable GVSP extended id mode
+  * genicam: fix for signedness of register nodes
+  * genicam: add support for optional ROUND parameter (Aleksandr)
+  * add man page (Chiara)
+
 Release 0.5.11
 ==============
 
