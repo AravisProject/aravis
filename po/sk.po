@@ -39,7 +39,7 @@ msgstr "Expozícia:"
 
 #: ../viewer/arv-viewer.ui.h:6
 msgid "Gain:"
-msgstr "Citlivosť:"
+msgstr "Zisk:"
 
 #: ../viewer/arv-viewer.ui.h:7
 msgid "µs"
@@ -83,4 +83,4 @@ msgid ""
 "and gain, and to save raw still images."
 msgstr ""
 "Umožňuje nastaviť základné parametre snímania, tj. snímkovú frekvenciu, expozíciu "
-"a citlivosť a tiež ukladať jednotlivé RAW snímky."
+"a zisk a tiež ukladať jednotlivé RAW snímky."
