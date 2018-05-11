@@ -44,7 +44,6 @@
 #ifdef ARAVIS_BUILD_PACKET_SOCKET
 #include <ifaddrs.h>
 #include <netinet/udp.h>
-#include <cap-ng.h>
 #include <net/if.h>
 #include <netinet/in.h>
 #include <linux/if_packet.h>
