@@ -44,7 +44,6 @@
 #ifdef ARAVIS_BUILD_PACKET_SOCKET
 #include <ifaddrs.h>
 #include <netinet/udp.h>
-#include <cap-ng.h>
 #include <net/if.h>
 #include <netinet/in.h>
 #include <linux/if_packet.h>
@@ -950,6 +949,8 @@ map_error:
 static void *
 arv_gv_stream_thread (void *data)
 {
+	int fd;
+
 	ArvGvStreamThreadData *thread_data = data;
 
 	thread_data->frames = NULL;
@@ -965,9 +966,10 @@ arv_gv_stream_thread (void *data)
 		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
 
 #ifdef ARAVIS_BUILD_PACKET_SOCKET
-	if (capng_have_capability(CAPNG_EFFECTIVE, CAP_NET_RAW) && thread_data->use_packet_socket)
+	if (thread_data->use_packet_socket && (fd = socket (PF_PACKET, SOCK_RAW, g_htons (ETH_P_ALL))) >= 0) {
+		close (fd);
 		_ring_buffer_loop (thread_data);
-	else
+	} else
 #endif
 		_loop (thread_data);
 
