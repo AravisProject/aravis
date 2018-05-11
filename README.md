@@ -13,9 +13,9 @@ Aravis is a glib/gobject based library for video acquisition using Genicam camer
 
 Aravis is released under the LGPL v2+.
 
-### Building Aravis
+### Installing Aravis
 
-Aravis uses the standard GNU build system, using autoconf for package configuration and resolving portability issues, automake for building makefiles that comply with the GNU Coding Standards, and libtool for building shared libraries on multiple platforms. The normal sequence for compiling and installing Aravis is thus:
+Aravis uses the standard GNU build system, using autoconf for package configuration and resolving portability issues, automake for building makefiles that comply with the GNU Coding Standards, and libtool for building shared libraries on multiple platforms. The recommended way to get the sources is to download the release tarballs from http://ftp.gnome.org/pub/GNOME/sources/aravis.
 
 ```
 ./configure
@@ -27,16 +27,25 @@ Compilation options may be passed to the configure script. Please run `./configu
 
 On some platforms (like Ubuntu), you may have to configure the dynamic linker (ld) to let it know where the aravis libraries are installed, and run ldconfig as root in order to update ld cache.
 
+If you want to use a clone of the git repository on github, instead of the release tarballs, you may have to create the configure script by running:
+
+```
+./autogen.sh
+```
+
 #### Building on Mac OS X
 
 Using the GNU build system on Mac OS X is not directly supported, but can be mimicked by augmenting the install procedure above with some environment settings:
 
 ```
-brew install gettext intltool gtk-doc automake
+brew install gettext intltool gtk-doc automake libxml2
 brew link --force gettext
+brew link --force libxml2
 aclocal
 autoconf
 autoheader
+gtkdocize
+intltoolize
 glibtoolize --copy
 automake --add-missing
 ./configure
@@ -83,6 +92,27 @@ It is perfectly possible to only build the library, reducing the dependencies to
 As an open source and free software project, we welcome any contributions to the aravis project: code, bug reports, testing...
 
 However, contributions to both Gigabit Ethernet and USB3 protocol code (files `src/arvuv*.[ch]` `src/arvgv*.[ch]`) must not be based on the corresponding specification documents published by the [AIA](http://http://www.visiononline.org/), as this organisation forbids the use of their documents for the development of an open source implementation of the specifications. So, if you want to contribute to this part of Aravis, don't use the AIA documents and state clearly in the pull request your work is not based on them.
+
+#### Unit tests
+
+Aravis has a set of unit tests that helps to catch regressions and memory leaks during the development. The test suite is run using the following commands:
+
+```
+cd tests
+make check
+make check-valgrind-memcheck
+```
+
+`make check-valgrind-hellgrind`, `make check-valgrind-sgcheck` and `make check-valgrind-drd` are known to not pass. Any help to understand what fails and why would be nice.
+
+All the code is not covered yet by the tests. Code coverage can be obtained using:
+
+```
+cd tests
+make check-code-coverage
+```
+
+The report is published in `tests/aravis-{VERSION}-coverage/index.html`. Code coverage improvment is welcomed as well.
 
 ### Downloads
 

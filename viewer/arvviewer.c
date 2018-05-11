@@ -24,11 +24,16 @@
 #include <gst/gst.h>
 #include <gst/app/gstappsrc.h>
 #include <gst/video/videooverlay.h>
-#include <gdk/gdkx.h>
 #include <arv.h>
 #include <math.h>
 #include <memory.h>
 #include <libnotify/notify.h>
+#ifdef GDK_WINDOWING_X11
+#include <gdk/gdkx.h>  // for GDK_WINDOW_XID
+#endif
+#ifdef GDK_WINDOWING_WIN32
+#include <gdk/gdkwin32.h>  // for GDK_WINDOW_HWND
+#endif
 
 static gboolean has_autovideo_sink = FALSE;
 static gboolean has_gtksink = FALSE;
@@ -236,8 +241,37 @@ arv_viewer_value_from_log (double value, double min, double max)
 	return pow (10.0, (value * (log10 (max) - log10 (min)) + log10 (min)));
 }
 
+typedef struct {
+	GWeakRef stream;
+	ArvBuffer* arv_buffer;
+} ArvGstBufferReleaseData;
+
+static void
+gst_buffer_release_cb (void *user_data)
+{
+	ArvGstBufferReleaseData* release_data = user_data;
+
+	ArvStream* stream = g_weak_ref_get (&release_data->stream);
+
+	if (stream) {
+		gint n_input_buffers, n_output_buffers;
+
+		arv_stream_get_n_buffers (stream, &n_input_buffers, &n_output_buffers);
+		arv_log_viewer ("push_buffer (%d,%d)", n_input_buffers, n_output_buffers);
+
+		arv_stream_push_buffer (stream, release_data->arv_buffer);
+		g_object_unref (stream);
+	} else {
+		arv_debug_viewer ("invalid stream object");
+		g_object_unref (release_data->arv_buffer);
+	}
+
+	g_weak_ref_clear (&release_data->stream);
+	g_free (release_data);
+}
+
 static GstBuffer *
-arv_to_gst_buffer (ArvBuffer *arv_buffer)
+arv_to_gst_buffer (ArvBuffer *arv_buffer, ArvStream *stream)
 {
 	GstBuffer *buffer;
 	int arv_row_stride;
@@ -266,9 +300,15 @@ arv_to_gst_buffer (ArvBuffer *arv_buffer)
 
 		buffer = gst_buffer_new_wrapped (data, size);
 	} else {
+		ArvGstBufferReleaseData* release_data = g_new0 (ArvGstBufferReleaseData, 1);
+
+		g_weak_ref_init (&release_data->stream, stream);
+		release_data->arv_buffer = arv_buffer;
+
 		buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
 						      buffer_data, buffer_size,
-						      0, buffer_size, NULL, NULL);
+						      0, buffer_size,
+						      release_data, gst_buffer_release_cb);
 	}
 
 	return buffer;
@@ -278,17 +318,23 @@ static void
 new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 {
 	ArvBuffer *arv_buffer;
+	gint n_input_buffers, n_output_buffers;
 
 	arv_buffer = arv_stream_pop_buffer (stream);
 	if (arv_buffer == NULL)
 		return;
 
-	if (arv_buffer_get_status (arv_buffer) == ARV_BUFFER_STATUS_SUCCESS)
-		gst_app_src_push_buffer (GST_APP_SRC (viewer->appsrc), arv_to_gst_buffer (arv_buffer));
+	arv_stream_get_n_buffers (stream, &n_input_buffers, &n_output_buffers);
+	arv_log_viewer ("pop_buffer (%d,%d)", n_input_buffers, n_output_buffers);
 
-	if (viewer->last_buffer != NULL)
-		arv_stream_push_buffer (stream, viewer->last_buffer);
-	viewer->last_buffer = arv_buffer;
+	if (arv_buffer_get_status (arv_buffer) == ARV_BUFFER_STATUS_SUCCESS) {
+		gst_app_src_push_buffer (GST_APP_SRC (viewer->appsrc), arv_to_gst_buffer (arv_buffer, stream));
+
+		g_clear_object( &viewer->last_buffer );
+		viewer->last_buffer = g_object_ref( arv_buffer );
+	} else {
+		arv_stream_push_buffer (stream, arv_buffer);
+	}
 }
 
 static void
@@ -786,7 +832,7 @@ start_video (ArvViewer *viewer)
 
 	arv_stream_set_emit_signals (viewer->stream, TRUE);
 	payload = arv_camera_get_payload (viewer->camera);
-	for (i = 0; i < 50; i++)
+	for (i = 0; i < 5; i++)
 		arv_stream_push_buffer (viewer->stream, arv_buffer_new (payload, NULL));
 
 	arv_camera_get_region (viewer->camera, NULL, NULL, &width, &height);
@@ -1114,7 +1160,12 @@ arv_viewer_quit_cb (GtkApplicationWindow *window, ArvViewer *viewer)
 static void
 video_frame_realize_cb (GtkWidget * widget, ArvViewer *viewer)
 {
+#ifdef GDK_WINDOWING_X11
 	viewer->video_window_xid = GDK_WINDOW_XID (gtk_widget_get_window (widget));
+#endif
+#ifdef GDK_WINDOWING_WIN32
+	viewer->video_window_xid = (guintptr) GDK_WINDOW_HWND (gtk_widget_get_window (video_window));
+#endif
 }
 
 static void

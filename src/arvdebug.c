@@ -89,6 +89,12 @@ ArvDebugCategory arv_debug_category_misc =
 	.level = -1
 };
 
+ArvDebugCategory arv_debug_category_viewer =
+{
+	.name = "viewer",
+	.level = -1
+};
+
 static GHashTable *arv_debug_categories = NULL;
 
 static void

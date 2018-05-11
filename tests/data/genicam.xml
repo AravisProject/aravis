@@ -151,6 +151,26 @@
     <Endianess>BigEndian</Endianess>
   </IntReg>
 
+  <IntReg Name="IntRegisterC">
+    <Address>0x1000</Address>
+    <Length>8</Length>
+    <AccessMode>RW</AccessMode>
+    <Cachable>NoCache</Cachable>
+    <PollingTime>5</PollingTime>
+    <Endianess>BigEndian</Endianess>
+    <pPort>Device</pPort>
+  </IntReg>
+
+  <IntReg Name="IntSignedRegisterC">
+    <Address>0x1004</Address>
+    <Length>4</Length>
+    <AccessMode>RW</AccessMode>
+    <Cachable>NoCache</Cachable>
+    <PollingTime>5</PollingTime>
+    <Endianess>BigEndian</Endianess>
+    <pPort>Device</pPort>
+  </IntReg>
+
   <IntSwissKnife Name="IntSwissKnifeTestEntity">
     <Formula>(0x12345678 &amp; 0x10305070)</Formula>
   </IntSwissKnife>
@@ -348,5 +368,8 @@
   <Float Name="FloatMultiplexerDefaultValue">
     <Value>600.6</Value>
   </Float>
+
+  <Port Name="Device" NameSpace="Standard">
+  </Port>
 
 </RegisterDescription>

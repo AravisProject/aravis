@@ -108,7 +108,7 @@ registers_test (void)
 	arv_gc_integer_set_value (ARV_GC_INTEGER (node_a), 0xabcdefaa, NULL);
 
 	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_a), NULL);
-	g_assert_cmpint (value, ==, 0xefaa);
+	g_assert_cmpint (value, ==, -4182);
 
 	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_b), NULL);
 	g_assert_cmpint (value, ==, 0x1010);
@@ -119,10 +119,20 @@ registers_test (void)
 	arv_gc_integer_set_value (ARV_GC_INTEGER (node_c), 0xff, NULL);
 
 	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_c), NULL);
-	g_assert_cmpint (value, ==, 0x1);
+	g_assert_cmpint (value, ==, -1);
 
 	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_b), NULL);
 	g_assert_cmpint (value, ==, 0x1011);
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_b), 0xff, NULL);
+
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_b), NULL);
+	g_assert_cmpint (value, ==, 0xff);
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_c), 0x0, NULL);
+
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_c), NULL);
+	g_assert_cmpint (value, ==, 0);
 
 	g_object_unref (device);
 }
@@ -139,7 +149,7 @@ fake_device_test (void)
 	gint64 *values;
 	const char **string_values;
 	const char *string_value;
-	int n_values;
+	guint n_values;
 	double float_minimum, float_maximum;
 	const char *genicam;
 	gsize size;
@@ -236,13 +246,7 @@ fake_device_error_test (void)
 	ArvDevice *device;
 	ArvDeviceStatus status;
 	int int_value;
-	double dbl_value;
 	double boolean_value;
-	gint64 minimum, maximum;
-	gint64 *values;
-	const char **string_values;
-	int n_values;
-	double float_minimum, float_maximum;
 
 	device = arv_fake_device_new ("TEST0");
 	g_assert (ARV_IS_FAKE_DEVICE (device));
@@ -260,9 +264,19 @@ fake_device_error_test (void)
 }
 
 static void
+fill_pattern_cb (ArvBuffer *buffer, void *fill_pattern_data, guint32 exposure_time_us, guint32 gain, ArvPixelFormat pixel_format)
+{
+	gint *counter = fill_pattern_data;
+
+	(*counter)++;
+}
+
+static void
 fake_stream_test (void)
 {
 	ArvCamera *camera;
+	ArvDevice *device;
+	ArvFakeCamera *fake_camera;
 	ArvStream *stream;
 	ArvBuffer *buffer;
 	guint64 n_completed_buffers;
@@ -271,12 +285,21 @@ fake_stream_test (void)
 	gint n_input_buffers;
 	gint n_output_buffers;
 	gint payload;
+	gint counter = 0;
 
 	camera = arv_camera_new ("Fake_1");
 	g_assert (ARV_IS_CAMERA (camera));
 
+	device = arv_camera_get_device (camera);
+	g_assert (ARV_IS_DEVICE (device));
+
+	fake_camera = arv_fake_device_get_fake_camera (ARV_FAKE_DEVICE (device));
+	g_assert (ARV_IS_FAKE_CAMERA (fake_camera));
+
 	stream = arv_camera_create_stream (camera, NULL, NULL);
 	g_assert (ARV_IS_STREAM (stream));
+
+	arv_fake_camera_set_fill_pattern (fake_camera, fill_pattern_cb, &counter);
 
 	payload = arv_camera_get_payload (camera);
 	arv_stream_push_buffer (stream,  arv_buffer_new (payload, NULL));
@@ -284,6 +307,10 @@ fake_stream_test (void)
 	arv_camera_start_acquisition (camera);
 	buffer = arv_stream_pop_buffer (stream);
 	arv_camera_stop_acquisition (camera);
+
+	arv_fake_camera_set_fill_pattern (fake_camera, NULL, NULL);
+
+	g_assert_cmpint (counter, ==, 1);
 
 	g_assert (ARV_IS_BUFFER (buffer));
 
@@ -311,6 +338,8 @@ main (int argc, char *argv[])
 	arv_g_type_init ();
 
 	arv_enable_interface ("Fake");
+
+	arv_update_device_list ();
 
 	arv_set_fake_camera_genicam_filename (GENICAM_FILENAME);
 

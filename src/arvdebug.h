@@ -55,6 +55,7 @@ extern ArvDebugCategory arv_debug_category_sp;
 extern ArvDebugCategory arv_debug_category_genicam;
 extern ArvDebugCategory arv_debug_category_evaluator;
 extern ArvDebugCategory arv_debug_category_misc;
+extern ArvDebugCategory arv_debug_category_viewer;
 
 #define arv_debug_dom(...)	 	arv_debug (&arv_debug_category_interface, __VA_ARGS__)
 #define arv_log_dom(...)		arv_log (&arv_debug_category_interface, __VA_ARGS__)
@@ -99,6 +100,10 @@ extern ArvDebugCategory arv_debug_category_misc;
 #define arv_debug_misc(...) 		arv_debug (&arv_debug_category_misc, __VA_ARGS__)
 #define arv_log_misc(...)		arv_log (&arv_debug_category_misc, __VA_ARGS__)
 #define arv_warning_misc(...)		arv_warning (&arv_debug_category_misc, __VA_ARGS__)
+
+#define arv_debug_viewer(...)	 	arv_debug (&arv_debug_category_viewer, __VA_ARGS__)
+#define arv_log_viewer(...)		arv_log (&arv_debug_category_viewer, __VA_ARGS__)
+#define arv_warning_viewer(...)		arv_warning (&arv_debug_category_viewer, __VA_ARGS__)
 
 void 		arv_warning 			(ArvDebugCategory *category, const char *format, ...);
 void 		arv_debug 			(ArvDebugCategory *category, const char *format, ...);
