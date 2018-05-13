@@ -2243,7 +2243,7 @@ arv_camera_constructor (GType gtype, guint n_properties, GObjectConstructParam *
 	} else if (g_strcmp0 (vendor_name, "DALSA") == 0) {
 		vendor = ARV_CAMERA_VENDOR_DALSA;
 		series = ARV_CAMERA_SERIES_DALSA;
-	} else if (g_strcmp0 (vendor_name, "Point Grey Research") == 0) {
+	} else if (g_strcmp0 (vendor_name, "Point Grey Research") == 0 || g_strcmp0 (vendor_name, "FLIR") == 0) {
 		vendor = ARV_CAMERA_VENDOR_POINT_GREY;
 		series = ARV_CAMERA_SERIES_POINT_GREY;
 	} else if (g_strcmp0 (vendor_name, "Ricoh Company, Ltd.") == 0) {
