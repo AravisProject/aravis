@@ -63,7 +63,8 @@
  * @ARV_CAMERA_VENDOR_PROSILICA: Prosilica
  * @ARV_CAMERA_VENDOR_TIS: The Imaging Source
  * @ARV_CAMERA_VENDOR_POINT_GREY_FLIR: PointGrey / FLIR
- * @ARV_CAMERA_VENDOR_XIMEA: XIMEA Gmbh
+ * @ARV_CAMERA_VENDOR_XIMEA: XIMEA GmbH
+ * @ARV_CAMERA_VENDOR_MATRIX_VISION: Matrix Vision GmbH
  */
 
 typedef enum {
@@ -74,7 +75,8 @@ typedef enum {
 	ARV_CAMERA_VENDOR_TIS,
 	ARV_CAMERA_VENDOR_POINT_GREY_FLIR,
 	ARV_CAMERA_VENDOR_RICOH,
-	ARV_CAMERA_VENDOR_XIMEA
+	ARV_CAMERA_VENDOR_XIMEA,
+	ARV_CAMERA_VENDOR_MATRIX_VISION
 } ArvCameraVendor;
 
 typedef enum {
@@ -87,7 +89,8 @@ typedef enum {
 	ARV_CAMERA_SERIES_TIS,
 	ARV_CAMERA_SERIES_POINT_GREY_FLIR,
 	ARV_CAMERA_SERIES_RICOH,
-	ARV_CAMERA_SERIES_XIMEA
+	ARV_CAMERA_SERIES_XIMEA,
+	ARV_CAMERA_SERIES_MATRIX_VISION
 } ArvCameraSeries;
 
 static GObjectClass *parent_class = NULL;
@@ -923,6 +926,7 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
 		case ARV_CAMERA_VENDOR_DALSA:
 		case ARV_CAMERA_VENDOR_RICOH:
 		case ARV_CAMERA_VENDOR_XIMEA:
+		case ARV_CAMERA_VENDOR_MATRIX_VISION:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector", "FrameStart");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
@@ -971,6 +975,7 @@ arv_camera_get_frame_rate (ArvCamera *camera)
 		case ARV_CAMERA_VENDOR_RICOH:
 		case ARV_CAMERA_VENDOR_BASLER:
 	        case ARV_CAMERA_VENDOR_XIMEA:
+		case ARV_CAMERA_VENDOR_MATRIX_VISION:
 	        case ARV_CAMERA_VENDOR_UNKNOWN:
 			return arv_device_get_float_feature_value (camera->priv->device,
 								   camera->priv->has_acquisition_frame_rate ?
@@ -1038,6 +1043,7 @@ arv_camera_get_frame_rate_bounds (ArvCamera *camera, double *min, double *max)
 		case ARV_CAMERA_VENDOR_RICOH:
 		case ARV_CAMERA_VENDOR_BASLER:
 	        case ARV_CAMERA_VENDOR_XIMEA:
+		case ARV_CAMERA_VENDOR_MATRIX_VISION:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
 			arv_device_get_float_feature_bounds (camera->priv->device,
 							     camera->priv->has_acquisition_frame_rate ?
@@ -1070,7 +1076,7 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source)
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 	g_return_if_fail (source != NULL);
 
-	if (camera->priv->vendor ==  ARV_CAMERA_VENDOR_BASLER)
+	if (camera->priv->vendor == ARV_CAMERA_VENDOR_BASLER)
 		arv_device_set_integer_feature_value (camera->priv->device, "AcquisitionFrameRateEnable", 0);
 
 	arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector",
@@ -1239,6 +1245,11 @@ arv_camera_set_exposure_time (ArvCamera *camera, double exposure_time_us)
 			break;
 		case ARV_CAMERA_SERIES_XIMEA:
 			arv_device_set_integer_feature_value (camera->priv->device, "ExposureTime",
+							      exposure_time_us);
+			break;
+		case ARV_CAMERA_SERIES_MATRIX_VISION:
+			arv_device_set_string_feature_value (camera->priv->device, "ExposureMode", "Timed");
+			arv_device_set_float_feature_value (camera->priv->device, "ExposureTime",
 							      exposure_time_us);
 			break;
 		case ARV_CAMERA_SERIES_BASLER_ACE:
@@ -1559,6 +1570,7 @@ arv_camera_is_frame_rate_available (ArvCamera *camera)
 		case ARV_CAMERA_VENDOR_RICOH:
 		case ARV_CAMERA_VENDOR_BASLER:
 	        case ARV_CAMERA_VENDOR_XIMEA:
+		case ARV_CAMERA_VENDOR_MATRIX_VISION:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
 			return arv_device_get_feature (camera->priv->device,
 						       camera->priv->has_acquisition_frame_rate ?
@@ -1664,19 +1676,19 @@ arv_camera_is_binning_available (ArvCamera *camera)
 	ArvGcNode* node;
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
-	
+
 	node = arv_device_get_feature (camera->priv->device, "BinningHorizontal");
 	if (!ARV_IS_GC_FEATURE_NODE (node))
 		return FALSE;
 	if (!arv_gc_feature_node_is_available (ARV_GC_FEATURE_NODE (node), NULL))
 		return FALSE;
-	
+
 	node = arv_device_get_feature (camera->priv->device, "BinningVertical");
 	if (!ARV_IS_GC_FEATURE_NODE (node))
 		return FALSE;
 	if (!arv_gc_feature_node_is_available (ARV_GC_FEATURE_NODE (node), NULL))
 		return FALSE;
-	
+
 	return TRUE;
 }
 
@@ -2252,6 +2264,9 @@ arv_camera_constructor (GType gtype, guint n_properties, GObjectConstructParam *
 	} else if (g_strcmp0 (vendor_name, "XIMEA GmbH") == 0) {
 		vendor = ARV_CAMERA_VENDOR_XIMEA;
 		series = ARV_CAMERA_SERIES_XIMEA;
+	} else if (g_strcmp0 (vendor_name, "MATRIX VISION GmbH") == 0) {
+		vendor = ARV_CAMERA_VENDOR_MATRIX_VISION;
+		series = ARV_CAMERA_SERIES_MATRIX_VISION;
 	} else {
 		vendor = ARV_CAMERA_VENDOR_UNKNOWN;
 		series = ARV_CAMERA_SERIES_UNKNOWN;
