@@ -62,7 +62,7 @@
  * @ARV_CAMERA_VENDOR_BASLER: Basler
  * @ARV_CAMERA_VENDOR_PROSILICA: Prosilica
  * @ARV_CAMERA_VENDOR_TIS: The Imaging Source
- * @ARV_CAMERA_VENDOR_POINT_GREY: PointGrey
+ * @ARV_CAMERA_VENDOR_POINT_GREY_FLIR: PointGrey / FLIR
  * @ARV_CAMERA_VENDOR_XIMEA: XIMEA Gmbh
  */
 
@@ -72,7 +72,7 @@ typedef enum {
 	ARV_CAMERA_VENDOR_DALSA,
 	ARV_CAMERA_VENDOR_PROSILICA,
 	ARV_CAMERA_VENDOR_TIS,
-	ARV_CAMERA_VENDOR_POINT_GREY,
+	ARV_CAMERA_VENDOR_POINT_GREY_FLIR,
 	ARV_CAMERA_VENDOR_RICOH,
 	ARV_CAMERA_VENDOR_XIMEA
 } ArvCameraVendor;
@@ -85,7 +85,7 @@ typedef enum {
 	ARV_CAMERA_SERIES_DALSA,
 	ARV_CAMERA_SERIES_PROSILICA,
 	ARV_CAMERA_SERIES_TIS,
-	ARV_CAMERA_SERIES_POINT_GREY,
+	ARV_CAMERA_SERIES_POINT_GREY_FLIR,
 	ARV_CAMERA_SERIES_RICOH,
 	ARV_CAMERA_SERIES_XIMEA
 } ArvCameraSeries;
@@ -910,7 +910,7 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
 			} else
 				arv_device_set_float_feature_value (camera->priv->device, "FPS", frame_rate);
 			break;
-		case ARV_CAMERA_VENDOR_POINT_GREY:
+		case ARV_CAMERA_VENDOR_POINT_GREY_FLIR:
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerSelector", "FrameStart");
 			arv_device_set_string_feature_value (camera->priv->device, "TriggerMode", "Off");
 			if (camera->priv->has_acquisition_frame_rate_enabled)
@@ -966,7 +966,7 @@ arv_camera_get_frame_rate (ArvCamera *camera)
 					return 0;
 			} else
 				return arv_device_get_float_feature_value (camera->priv->device, "FPS");
-		case ARV_CAMERA_VENDOR_POINT_GREY:
+		case ARV_CAMERA_VENDOR_POINT_GREY_FLIR:
 		case ARV_CAMERA_VENDOR_DALSA:
 		case ARV_CAMERA_VENDOR_RICOH:
 		case ARV_CAMERA_VENDOR_BASLER:
@@ -1033,7 +1033,7 @@ arv_camera_get_frame_rate_bounds (ArvCamera *camera, double *min, double *max)
 		case ARV_CAMERA_VENDOR_PROSILICA:
 			arv_device_get_float_feature_bounds (camera->priv->device, "AcquisitionFrameRateAbs", min, max);
 			break;
-		case ARV_CAMERA_VENDOR_POINT_GREY:
+		case ARV_CAMERA_VENDOR_POINT_GREY_FLIR:
 		case ARV_CAMERA_VENDOR_DALSA:
 		case ARV_CAMERA_VENDOR_RICOH:
 		case ARV_CAMERA_VENDOR_BASLER:
@@ -1554,7 +1554,7 @@ arv_camera_is_frame_rate_available (ArvCamera *camera)
 			return arv_device_get_feature (camera->priv->device, "AcquisitionFrameRateAbs") != NULL;
 		case ARV_CAMERA_VENDOR_TIS:
 			return arv_device_get_feature (camera->priv->device, "FPS") != NULL;
-		case ARV_CAMERA_VENDOR_POINT_GREY:
+		case ARV_CAMERA_VENDOR_POINT_GREY_FLIR:
 		case ARV_CAMERA_VENDOR_DALSA:
 		case ARV_CAMERA_VENDOR_RICOH:
 		case ARV_CAMERA_VENDOR_BASLER:
@@ -2243,9 +2243,9 @@ arv_camera_constructor (GType gtype, guint n_properties, GObjectConstructParam *
 	} else if (g_strcmp0 (vendor_name, "DALSA") == 0) {
 		vendor = ARV_CAMERA_VENDOR_DALSA;
 		series = ARV_CAMERA_SERIES_DALSA;
-	} else if (g_strcmp0 (vendor_name, "Point Grey Research") == 0) {
-		vendor = ARV_CAMERA_VENDOR_POINT_GREY;
-		series = ARV_CAMERA_SERIES_POINT_GREY;
+	} else if (g_strcmp0 (vendor_name, "Point Grey Research") == 0 || g_strcmp0 (vendor_name, "FLIR") == 0) {
+		vendor = ARV_CAMERA_VENDOR_POINT_GREY_FLIR;
+		series = ARV_CAMERA_SERIES_POINT_GREY_FLIR;
 	} else if (g_strcmp0 (vendor_name, "Ricoh Company, Ltd.") == 0) {
 		vendor = ARV_CAMERA_VENDOR_RICOH;
 		series = ARV_CAMERA_SERIES_RICOH;
