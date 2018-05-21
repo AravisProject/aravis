@@ -33,9 +33,8 @@ aravis_private_dependency_str = 'libxml-2.0 zlib'
 
 enable_packet_socket = get_option ('packet-socket')
 if enable_packet_socket
-	aravis_dependencies += dependency ('libcap-ng', required: true)
 	aravis_dependencies += dependency ('audit', required: true)
-	aravis_private_dependency_str += ' libcap-ng audit'
+	aravis_private_dependency_str += ' audit'
 endif
 
 enable_usb = get_option ('usb')
