@@ -13,6 +13,7 @@ periodic_task_cb (void *user_data)
 {
 	GMainLoop *main_loop = user_data;
 	guint n_devices;
+	int i;
 
 	if (cancel) {
 		g_main_loop_quit(main_loop);
@@ -27,7 +28,7 @@ periodic_task_cb (void *user_data)
 
 	printf ("Number of found Devices: %d\n", n_devices);
 
-	for (int i = 0; i < n_devices; i++)
+	for (i = 0; i < n_devices; i++)
 		printf ("%s\n", arv_get_device_id (i));
 
 	return TRUE;
