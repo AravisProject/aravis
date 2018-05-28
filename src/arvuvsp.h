@@ -51,6 +51,7 @@ typedef enum {
 } ArvUvspPacketType;
 
 typedef enum {
+	ARV_UVSP_PAYLOAD_TYPE_UNKNOWN =			0x0000,
 	ARV_UVSP_PAYLOAD_TYPE_IMAGE =			0x0001,
 	ARV_UVSP_PAYLOAD_TYPE_CHUNK = 			0x4000,
 	ARV_UVSP_PAYLOAD_TYPE_EXTENDED_CHUNK =		0x4001
@@ -114,6 +115,15 @@ arv_uvsp_packet_get_packet_type	(const ArvUvspPacket *packet)
 		return ARV_UVSP_PACKET_TYPE_TRAILER;
 	else
 		return ARV_UVSP_PACKET_TYPE_DATA;
+}
+
+static inline ArvUvspPayloadType
+arv_uvsp_packet_get_payload_type (ArvUvspLeader *packet)
+{
+	if (packet == NULL)
+		return ARV_UVSP_PAYLOAD_TYPE_UNKNOWN;
+
+	return (GUINT16_FROM_LE (packet->infos.payload_type));
 }
 
 static inline guint64
