@@ -42,11 +42,13 @@ struct _ArvBufferPrivate {
 
 	ArvBufferStatus status;
 
-	ArvGvspPayloadType gvsp_payload_type;
+	ArvBufferPayloadType payload_type;
+
+	guint32 chunk_endianness;
 
 	guint32 frame_id;
 	guint64 timestamp_ns;
-    guint64 system_timestamp_ns;
+	guint64 system_timestamp_ns;
 
 	guint32 x_offset;
 	guint32 y_offset;

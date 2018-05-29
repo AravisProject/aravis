@@ -29,6 +29,7 @@
 
 #include <arvtypes.h>
 #include <arvdebug.h>
+#include <arvbuffer.h>
 
 G_BEGIN_DECLS
 
@@ -198,13 +199,38 @@ arv_gvsp_packet_get_frame_id (const ArvGvspPacket *packet)
 	return g_ntohs (packet->header.frame_id);
 }
 
-static inline ArvGvspPayloadType
-arv_gvsp_packet_get_payload_type (const ArvGvspPacket *packet)
+static inline ArvBufferPayloadType
+arv_gvsp_packet_get_buffer_payload_type (const ArvGvspPacket *packet)
 {
 	ArvGvspDataLeader *leader;
+	ArvGvspPayloadType gvsp_payload_type;
 
 	leader = (ArvGvspDataLeader *) &packet->data;
-	return (ArvGvspPayloadType) g_ntohl (leader->payload_type);
+
+	gvsp_payload_type = g_ntohl (leader->payload_type);
+
+	switch (gvsp_payload_type) {
+		case ARV_GVSP_PAYLOAD_TYPE_IMAGE:
+			return ARV_BUFFER_PAYLOAD_TYPE_IMAGE;
+		case ARV_GVSP_PAYLOAD_TYPE_RAWDATA:
+			return ARV_BUFFER_PAYLOAD_TYPE_RAWDATA;
+		case ARV_GVSP_PAYLOAD_TYPE_FILE:
+			return ARV_BUFFER_PAYLOAD_TYPE_FILE;
+		case ARV_GVSP_PAYLOAD_TYPE_CHUNK_DATA:
+			return ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA;
+		case ARV_GVSP_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA:
+			return ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA;
+		case ARV_GVSP_PAYLOAD_TYPE_JPEG:
+			return ARV_BUFFER_PAYLOAD_TYPE_JPEG;
+		case ARV_GVSP_PAYLOAD_TYPE_JPEG2000:
+			return ARV_BUFFER_PAYLOAD_TYPE_JPEG2000;
+		case ARV_GVSP_PAYLOAD_TYPE_H264:
+			return ARV_BUFFER_PAYLOAD_TYPE_H264;
+		case ARV_GVSP_PAYLOAD_TYPE_MULTIZONE_IMAGE:
+			return ARV_BUFFER_PAYLOAD_TYPE_MULTIZONE_IMAGE;
+	}
+
+	return ARV_BUFFER_PAYLOAD_TYPE_UNKNOWN;
 }
 
 static inline guint32

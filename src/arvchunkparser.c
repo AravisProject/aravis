@@ -93,9 +93,16 @@ arv_chunk_parser_get_string_value (ArvChunkParser *parser, ArvBuffer *buffer, co
 	node = arv_gc_get_node (parser->priv->genicam, chunk);
 	arv_gc_set_buffer (parser->priv->genicam, buffer);
 
-	if (ARV_IS_GC_STRING (node))
+	if (ARV_IS_GC_STRING (node)) {
+		GError *error = NULL;
+
 		string = arv_gc_string_get_value (ARV_GC_STRING (node), NULL);
-	else
+
+		if (error != NULL) {
+			arv_warning_chunk ("%s", error->message);
+			g_clear_error (&error);
+		}
+	} else
 		arv_warning_device ("[ArvChunkParser::get_string_value] Node '%s' is not a string", chunk);
 
 	return string;
@@ -124,9 +131,16 @@ arv_chunk_parser_get_integer_value (ArvChunkParser *parser, ArvBuffer *buffer, c
 	node = arv_gc_get_node (parser->priv->genicam, chunk);
 	arv_gc_set_buffer (parser->priv->genicam, buffer);
 
-	if (ARV_IS_GC_INTEGER (node))
-		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
-	else
+	if (ARV_IS_GC_INTEGER (node)) {
+		GError *error = NULL;
+
+		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), &error);
+
+		if (error != NULL) {
+			arv_warning_chunk ("%s", error->message);
+			g_clear_error (&error);
+		}
+	} else
 		arv_warning_device ("[ArvChunkParser::get_integer_value] Node '%s' is not an integer", chunk);
 
 	return value;
@@ -155,9 +169,16 @@ arv_chunk_parser_get_float_value (ArvChunkParser *parser, ArvBuffer *buffer, con
 	node = arv_gc_get_node (parser->priv->genicam, chunk);
 	arv_gc_set_buffer (parser->priv->genicam, buffer);
 
-	if (ARV_IS_GC_FLOAT (node))
+	if (ARV_IS_GC_FLOAT (node)) {
+		GError *error = NULL;
+
 		value = arv_gc_float_get_value (ARV_GC_FLOAT (node), NULL);
-	else
+
+		if (error != NULL) {
+			arv_warning_chunk ("%s", error->message);
+			g_clear_error (&error);
+		}
+	} else
 		arv_warning_chunk ("[ArvChunkParser::get_float_value] Node '%s' is not a float", chunk);
 
 	return value;

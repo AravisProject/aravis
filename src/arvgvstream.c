@@ -239,11 +239,12 @@ _process_data_leader (ArvGvStreamThreadData *thread_data,
 		return;
 	}
 
-	frame->buffer->priv->gvsp_payload_type = arv_gvsp_packet_get_payload_type (packet);
+	frame->buffer->priv->payload_type = arv_gvsp_packet_get_buffer_payload_type (packet);
 	frame->buffer->priv->frame_id = arv_gvsp_packet_get_frame_id (packet);
+	frame->buffer->priv->chunk_endianness = G_BIG_ENDIAN;
 
 	frame->buffer->priv->system_timestamp_ns = g_get_real_time() * 1000LL;
-	if (frame->buffer->priv->gvsp_payload_type != ARV_GVSP_PAYLOAD_TYPE_H264) {
+	if (frame->buffer->priv->payload_type != ARV_BUFFER_PAYLOAD_TYPE_H264) {
 		if (G_LIKELY (thread_data->timestamp_tick_frequency != 0))
 			frame->buffer->priv->timestamp_ns = arv_gvsp_packet_get_timestamp (packet,
 											   thread_data->timestamp_tick_frequency);
@@ -253,7 +254,8 @@ _process_data_leader (ArvGvStreamThreadData *thread_data,
 	} else
 		frame->buffer->priv->timestamp_ns = frame->buffer->priv->system_timestamp_ns;
 
-	if (frame->buffer->priv->gvsp_payload_type == ARV_GVSP_PAYLOAD_TYPE_IMAGE) {
+	if (frame->buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
+	    frame->buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA) {
 		frame->buffer->priv->x_offset = arv_gvsp_packet_get_x_offset (packet);
 		frame->buffer->priv->y_offset = arv_gvsp_packet_get_y_offset (packet);
 		frame->buffer->priv->width = arv_gvsp_packet_get_width (packet);
@@ -686,6 +688,8 @@ _process_packet (ArvGvStreamThreadData *thread_data, const ArvGvspPacket *packet
 				if (!frame->packet_data[i].received)
 					break;
 			frame->last_valid_packet = i - 1;
+
+			arv_gvsp_packet_debug (packet, packet_size, ARV_DEBUG_LEVEL_LOG);
 
 			switch (arv_gvsp_packet_get_content_type (packet)) {
 				case ARV_GVSP_CONTENT_TYPE_DATA_LEADER:

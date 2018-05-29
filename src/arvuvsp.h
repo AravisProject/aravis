@@ -29,6 +29,7 @@
 
 #include <arvtypes.h>
 #include <arvdebug.h>
+#include <arvbuffer.h>
 
 G_BEGIN_DECLS
 
@@ -117,13 +118,31 @@ arv_uvsp_packet_get_packet_type	(const ArvUvspPacket *packet)
 		return ARV_UVSP_PACKET_TYPE_DATA;
 }
 
-static inline ArvUvspPayloadType
-arv_uvsp_packet_get_payload_type (ArvUvspLeader *packet)
+static inline ArvBufferPayloadType
+arv_uvsp_packet_get_buffer_payload_type (ArvUvspPacket *packet)
 {
-	if (packet == NULL)
-		return ARV_UVSP_PAYLOAD_TYPE_UNKNOWN;
+	ArvUvspLeader *leader;
+	ArvUvspPayloadType uvsp_payload_type;
 
-	return (GUINT16_FROM_LE (packet->infos.payload_type));
+	if (packet == NULL)
+		return ARV_BUFFER_PAYLOAD_TYPE_UNKNOWN;
+
+	leader = (ArvUvspLeader *) packet;
+
+	uvsp_payload_type = GUINT16_FROM_LE (leader->infos.payload_type);
+
+	switch (uvsp_payload_type) {
+		case ARV_UVSP_PAYLOAD_TYPE_IMAGE:
+			return ARV_BUFFER_PAYLOAD_TYPE_IMAGE;
+		case ARV_UVSP_PAYLOAD_TYPE_CHUNK:
+			return ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA;
+		case ARV_UVSP_PAYLOAD_TYPE_EXTENDED_CHUNK:
+			return ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA;
+		case ARV_UVSP_PAYLOAD_TYPE_UNKNOWN:
+			return ARV_BUFFER_PAYLOAD_TYPE_UNKNOWN;
+	}
+
+	return ARV_BUFFER_PAYLOAD_TYPE_UNKNOWN;
 }
 
 static inline guint64

@@ -292,7 +292,8 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer, guint32 *
 		return;
 	}
 
-	buffer->priv->gvsp_payload_type = ARV_GVSP_PAYLOAD_TYPE_IMAGE;
+	buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_IMAGE;
+	buffer->priv->chunk_endianness = G_BIG_ENDIAN;
 	buffer->priv->width = width;
 	buffer->priv->height = height;
 	buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
