@@ -373,11 +373,7 @@ arv_stream_finalize (GObject *object)
 	g_async_queue_unref (stream->priv->input_queue);
 	g_async_queue_unref (stream->priv->output_queue);
 
-#if GLIB_CHECK_VERSION(2,32,0)
 	g_rec_mutex_clear (&stream->priv->mutex);
-#else
-	g_rec_mutex_free (stream->priv->mutex);
-#endif
 
 	parent_class->finalize (object);
 }
