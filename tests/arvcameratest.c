@@ -237,9 +237,6 @@ main (int argc, char **argv)
 	data.chunks = NULL;
 	data.chunk_parser = NULL;
 
-	arv_g_thread_init (NULL);
-	arv_g_type_init ();
-
 	context = g_option_context_new (NULL);
 	g_option_context_add_main_entries (context, arv_option_entries, NULL);
 

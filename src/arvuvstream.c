@@ -312,7 +312,7 @@ arv_uv_stream_new (ArvUvDevice *uv_device, ArvStreamCallback callback, void *use
 	thread_data->n_underruns = 0;
 
 	uv_stream->priv->thread_data = thread_data;
-	uv_stream->priv->thread = arv_g_thread_new ("arv_uv_stream", arv_uv_stream_thread, uv_stream->priv->thread_data);
+	uv_stream->priv->thread = g_thread_new ("arv_uv_stream", arv_uv_stream_thread, uv_stream->priv->thread_data);
 
 	return ARV_STREAM (uv_stream);
 }

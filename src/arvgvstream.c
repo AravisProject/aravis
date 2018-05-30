@@ -1110,7 +1110,7 @@ arv_gv_stream_new (ArvGvDevice *gv_device,
 	arv_debug_stream ("[GvStream::stream_new] Destination stream port = %d", thread_data->stream_port);
 	arv_debug_stream ("[GvStream::stream_new] Source stream port = %d", thread_data->source_stream_port);
 
-	gv_stream->priv->thread = arv_g_thread_new ("arv_gv_stream", arv_gv_stream_thread, gv_stream->priv->thread_data);
+	gv_stream->priv->thread = g_thread_new ("arv_gv_stream", arv_gv_stream_thread, gv_stream->priv->thread_data);
 
 	return ARV_STREAM (gv_stream);
 }

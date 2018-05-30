@@ -156,8 +156,6 @@ main (int argc, char *argv[])
 
 	g_test_init (&argc, &argv, NULL);
 
-	arv_g_type_init ();
-
 	arv_set_fake_camera_genicam_filename (GENICAM_FILENAME);
 
 	simulator = arv_gv_fake_camera_new ("lo");

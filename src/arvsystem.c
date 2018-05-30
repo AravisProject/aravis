@@ -32,7 +32,7 @@
 #include <string.h>
 #include <arvmisc.h>
 
-ARV_DEFINE_STATIC_MUTEX (arv_system_mutex);
+static GMutex arv_system_mutex;
 
 /**
  * SECTION: arv

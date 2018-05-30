@@ -514,7 +514,7 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 	}
 
 	gv_fake_camera->priv->cancel = FALSE;
-	gv_fake_camera->priv->thread = arv_g_thread_new ("arv_fake_gv_fake_camera", _thread, gv_fake_camera);
+	gv_fake_camera->priv->thread = g_thread_new ("arv_fake_gv_fake_camera", _thread, gv_fake_camera);
 
 	return TRUE;
 }

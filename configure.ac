@@ -92,7 +92,7 @@ AC_ARG_ENABLE(asan,
 
 PKG_PROG_PKG_CONFIG([0.14])
 
-ARAVIS_REQUIREMENTS="glib-2.0 >= 2.26 gobject-2.0 gio-2.0 libxml-2.0 gthread-2.0"
+ARAVIS_REQUIREMENTS="glib-2.0 >= 2.32 gobject-2.0 gio-2.0 libxml-2.0 gthread-2.0"
 ARAVIS_USB_REQUIREMENTS="libusb-1.0"
 ARAVIS_PACKET_SOCKET_REQUIREMENTS="audit"
 ARAVIS_GSTREAMER_REQUIREMENTS="gstreamer-base-1.0 gstreamer-app-1.0"

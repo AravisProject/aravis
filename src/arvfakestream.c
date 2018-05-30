@@ -139,7 +139,7 @@ arv_fake_stream_new (ArvFakeCamera *camera, ArvStreamCallback callback, void *us
 
 	fake_stream->priv->camera = camera;
 	fake_stream->priv->thread_data = thread_data;
-	fake_stream->priv->thread = arv_g_thread_new ("arv_fake_stream", arv_fake_stream_thread, fake_stream->priv->thread_data);
+	fake_stream->priv->thread = g_thread_new ("arv_fake_stream", arv_fake_stream_thread, fake_stream->priv->thread_data);
 
 	return ARV_STREAM (fake_stream);
 }

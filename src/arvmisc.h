@@ -78,57 +78,6 @@ ArvPixelFormat 	arv_pixel_format_from_gst_0_10_caps 		(const char *name, int bpp
 
 const char *	arv_vendor_alias_lookup		(const char *vendor);
 
-/*
-   Compatibility with old glib
- */
-
-#if GLIB_CHECK_VERSION(2,36,0)
-#define arv_g_type_init()
-#else
-#define arv_g_type_init() g_type_init()
-#endif
-
-#if GLIB_CHECK_VERSION(2,32,0)
-
-#define ARV_DEFINE_STATIC_MUTEX(mutex) static GMutex mutex
-#define arv_g_mutex_lock(mutex) g_mutex_lock(mutex)
-#define arv_g_mutex_unlock(mutex) g_mutex_unlock(mutex)
-
-#define arv_g_thread_init(vtable)
-#define arv_g_thread_new(name,func,data) g_thread_new(name,func,data)
-
-#else
-
-#define ARV_DEFINE_STATIC_MUTEX(mutex) static GStaticMutex mutex = G_STATIC_MUTEX_INIT
-#define arv_g_mutex_lock(mutex) g_static_mutex_lock(mutex)
-#define arv_g_mutex_unlock(mutex) g_static_mutex_unlock(mutex)
-
-#define arv_g_thread_init(vtable) g_thread_init(vtable)
-#define arv_g_thread_new(name,func,data) g_thread_create(func,data,TRUE,NULL)
-
-#endif
-
-#if !GLIB_CHECK_VERSION(2,34,0)
-
-#define g_clear_pointer(pp, destroy)   		                          		\
-	G_STMT_START {                                                          	\
-		G_STATIC_ASSERT (sizeof *(pp) == sizeof (gpointer));                    \
-		/* Only one access, please */                                           \
-		gpointer *_pp = (gpointer *) (pp);                                      \
-		gpointer _p;                                                            \
-		/* This assignment is needed to avoid a gcc warning */                  \
-		GDestroyNotify _destroy = (GDestroyNotify) (destroy);                   \
-											\
-		_p = *_pp;                                                              \
-		if (_p)                                                                 \
-		{                                                                       \
-			*_pp = NULL;                                                    \
-			_destroy (_p);                                                  \
-		}                                                                       \
-	} G_STMT_END
-
-#endif
-
 G_END_DECLS
 
 #endif
