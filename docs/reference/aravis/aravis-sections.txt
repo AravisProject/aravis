@@ -1750,7 +1750,7 @@ arv_gvsp_packet_get_height
 arv_gvsp_packet_get_packet_id
 arv_gvsp_packet_get_packet_type
 arv_gvsp_packet_get_content_type
-arv_gvsp_packet_get_payload_type
+arv_gvsp_packet_get_buffer_payload_type
 arv_gvsp_packet_get_pixel_format
 arv_gvsp_packet_get_timestamp
 arv_gvsp_packet_get_width
@@ -1777,6 +1777,7 @@ arv_uvsp_packet_get_region
 arv_uvsp_packet_get_timestamp
 arv_uvsp_packet_debug
 arv_uvsp_packet_to_string
+arv_uvsp_packet_get_buffer_payload_type
 <SUBSECTION Private>
 ARV_UVSP_LEADER_MAGIC
 ARV_UVSP_TRAILER_MAGIC
