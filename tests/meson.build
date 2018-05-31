@@ -31,6 +31,7 @@ examples = [
 	['time-test',			'timetest.c'],
 	['realtime-test',		'realtimetest.c'],
 	['load-http-test',		'loadhttptest.c'],
+	['cpp-test',			'cpp.cc']
 ]
 
 foreach example: examples

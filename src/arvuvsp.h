@@ -129,7 +129,7 @@ arv_uvsp_packet_get_buffer_payload_type (ArvUvspPacket *packet)
 
 	leader = (ArvUvspLeader *) packet;
 
-	uvsp_payload_type = GUINT16_FROM_LE (leader->infos.payload_type);
+	uvsp_payload_type = (ArvUvspPayloadType) GUINT16_FROM_LE (leader->infos.payload_type);
 
 	switch (uvsp_payload_type) {
 		case ARV_UVSP_PAYLOAD_TYPE_IMAGE:

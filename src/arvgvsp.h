@@ -207,7 +207,7 @@ arv_gvsp_packet_get_buffer_payload_type (const ArvGvspPacket *packet)
 
 	leader = (ArvGvspDataLeader *) &packet->data;
 
-	gvsp_payload_type = g_ntohl (leader->payload_type);
+	gvsp_payload_type = (ArvGvspPayloadType) g_ntohl (leader->payload_type);
 
 	switch (gvsp_payload_type) {
 		case ARV_GVSP_PAYLOAD_TYPE_IMAGE:
