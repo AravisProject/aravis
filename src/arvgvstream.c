@@ -953,9 +953,10 @@ map_error:
 static void *
 arv_gv_stream_thread (void *data)
 {
-	int fd;
-
 	ArvGvStreamThreadData *thread_data = data;
+#ifdef ARAVIS_BUILD_PACKET_SOCKET
+	int fd;
+#endif
 
 	thread_data->frames = NULL;
 	thread_data->last_frame_id = 0;
