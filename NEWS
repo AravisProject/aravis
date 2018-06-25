@@ -1,3 +1,12 @@
+Release 0.5.13
+==============
+
+  * usb3vision: chunk data support (Emmanuel)
+  * camera: matrix vision device support (Nils)
+  * camera: PointGrey / FLIR renaming support (Nils)
+  * i18n: czech and slovak translations (Multiflexi)
+  * build: remove libcap-ng dependency (Nils)
+
 Release 0.5.12
 ==============
 
