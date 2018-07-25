@@ -397,8 +397,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                       <object class="GtkTreeSelection"/>
                     </child>
                     <child>
-                      <object class="GtkTreeViewColumn" id="manufacturer">
-                        <property name="title" translatable="yes">Manufacturer</property>
+                      <object class="GtkTreeViewColumn" id="vendor">
+                        <property name="title" translatable="yes">Vendor</property>
                         <child>
                           <object class="GtkCellRendererText"/>
                           <attributes>
