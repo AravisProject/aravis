@@ -9,7 +9,7 @@ AM_CPPFLAGS = \
 
 AM_CFLAGS = -Wall
 
-gst010plugin_LTLIBRARIES = libgstaravis-@ARAVIS_API_VERSION@.la
+gst010plugin_LTLIBRARIES = libgstaravis.@ARAVIS_API_VERSION@.la
 
 libgstaravis_@ARAVIS_API_VERSION@_la_SOURCES = gstaravis.c gstaravis.h
 libgstaravis_@ARAVIS_API_VERSION@_la_CFLAGS = $(ARAVIS_GST_0_10_PLUGIN_CFLAGS)

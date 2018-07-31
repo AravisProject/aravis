@@ -764,7 +764,7 @@ plugin_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
 		   GST_VERSION_MINOR,
-		   "aravissrc",
+		   "aravis",
 		   "Aravis Video Source",
 		   plugin_init,
 		   VERSION,
