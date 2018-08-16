@@ -109,6 +109,7 @@ typedef struct {
 
 /**
  * ArvGvspDataLeader:
+ * @flags: generic flags
  * @payload_type: ID of the payload type
  * @timestamp_high: most significant bits of frame timestamp
  * @timestamp_low: least significant bits of frame timestamp_low
@@ -122,7 +123,8 @@ typedef struct {
  */
 
 typedef struct {
-	guint32 payload_type;
+	guint16 flags;
+	guint16 payload_type;
 	guint32 timestamp_high;
 	guint32 timestamp_low;
 	guint32 pixel_format;
@@ -207,7 +209,7 @@ arv_gvsp_packet_get_buffer_payload_type (const ArvGvspPacket *packet)
 
 	leader = (ArvGvspDataLeader *) &packet->data;
 
-	gvsp_payload_type = (ArvGvspPayloadType) g_ntohl (leader->payload_type);
+	gvsp_payload_type = (ArvGvspPayloadType) g_ntohs (leader->payload_type);
 
 	switch (gvsp_payload_type) {
 		case ARV_GVSP_PAYLOAD_TYPE_IMAGE:
