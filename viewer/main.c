@@ -73,8 +73,6 @@ main (int argc, char **argv)
 	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 	textdomain (GETTEXT_PACKAGE);
 
-	arv_g_thread_init (NULL);
-
 	gtk_init (&argc, &argv);
 	gst_init (&argc, &argv);
 

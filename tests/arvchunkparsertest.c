@@ -8,9 +8,6 @@ main (int argc, char **argv)
 	ArvStream *stream;
 	ArvChunkParser *parser;
 
-	/* Mandatory glib type system initialization */
-	arv_g_type_init ();
-
 	/* Instantiation of the first available camera */
 	camera = arv_camera_new (NULL);
 

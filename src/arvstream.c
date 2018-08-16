@@ -52,12 +52,7 @@ static GObjectClass *parent_class = NULL;
 struct _ArvStreamPrivate {
 	GAsyncQueue *input_queue;
 	GAsyncQueue *output_queue;
-#if GLIB_CHECK_VERSION(2,32,0)
 	GRecMutex mutex;
-#else
-	GRecMutex *mutex;
-#endif
-
 	gboolean emit_signals;
 };
 
@@ -147,20 +142,9 @@ arv_stream_try_pop_buffer (ArvStream *stream)
 ArvBuffer *
 arv_stream_timeout_pop_buffer (ArvStream *stream, guint64 timeout)
 {
-#if GLIB_CHECK_VERSION(2,32,0)
 	g_return_val_if_fail (ARV_IS_STREAM (stream), NULL);
 
 	return g_async_queue_timeout_pop (stream->priv->output_queue, timeout);
-#else
-	GTimeVal end_time;
-
-	g_return_val_if_fail (ARV_IS_STREAM (stream), NULL);
-
-	g_get_current_time (&end_time);
-	g_time_val_add (&end_time, timeout);
-
-	return g_async_queue_timed_pop (stream->priv->output_queue, &end_time);
-#endif
 }
 
 /**
@@ -188,20 +172,12 @@ arv_stream_push_output_buffer (ArvStream *stream, ArvBuffer *buffer)
 
 	g_async_queue_push (stream->priv->output_queue, buffer);
 
-#if GLIB_CHECK_VERSION(2,32,0)
 	g_rec_mutex_lock (&stream->priv->mutex);
-#else
-	g_rec_mutex_lock (stream->priv->mutex);
-#endif
 
 	if (stream->priv->emit_signals)
 		g_signal_emit (stream, arv_stream_signals[ARV_STREAM_SIGNAL_NEW_BUFFER], 0);
 
-#if GLIB_CHECK_VERSION(2,32,0)
 	g_rec_mutex_unlock (&stream->priv->mutex);
-#else
-	g_rec_mutex_unlock (stream->priv->mutex);
-#endif
 }
 
 /**
@@ -288,19 +264,11 @@ arv_stream_set_emit_signals (ArvStream *stream, gboolean emit_signals)
 {
 	g_return_if_fail (ARV_IS_STREAM (stream));
 
-#if GLIB_CHECK_VERSION(2,32,0)
 	g_rec_mutex_lock (&stream->priv->mutex);
-#else
-	g_rec_mutex_lock (stream->priv->mutex);
-#endif
 
 	stream->priv->emit_signals = emit_signals;
 
-#if GLIB_CHECK_VERSION(2,32,0)
 	g_rec_mutex_unlock (&stream->priv->mutex);
-#else
-	g_rec_mutex_unlock (stream->priv->mutex);
-#endif
 }
 
 /**
@@ -320,19 +288,11 @@ arv_stream_get_emit_signals (ArvStream *stream)
 	gboolean ret;
 	g_return_val_if_fail (ARV_IS_STREAM (stream), FALSE);
 
-#if GLIB_CHECK_VERSION(2,32,0)
 	g_rec_mutex_lock (&stream->priv->mutex);
-#else
-	g_rec_mutex_lock (stream->priv->mutex);
-#endif
 
 	ret = stream->priv->emit_signals;
 
-#if GLIB_CHECK_VERSION(2,32,0)
 	g_rec_mutex_unlock (&stream->priv->mutex);
-#else
-	g_rec_mutex_unlock (stream->priv->mutex);
-#endif
 
 	return ret;
 }
@@ -379,11 +339,7 @@ arv_stream_init (ArvStream *stream)
 
 	stream->priv->emit_signals = FALSE;
 
-#if GLIB_CHECK_VERSION(2,32,0)
 	g_rec_mutex_init (&stream->priv->mutex);
-#else
-	stream->priv->mutex = g_rec_mutex_new ();
-#endif
 }
 
 static void
@@ -417,11 +373,7 @@ arv_stream_finalize (GObject *object)
 	g_async_queue_unref (stream->priv->input_queue);
 	g_async_queue_unref (stream->priv->output_queue);
 
-#if GLIB_CHECK_VERSION(2,32,0)
 	g_rec_mutex_clear (&stream->priv->mutex);
-#else
-	g_rec_mutex_free (stream->priv->mutex);
-#endif
 
 	parent_class->finalize (object);
 }

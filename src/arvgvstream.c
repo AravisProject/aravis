@@ -239,11 +239,12 @@ _process_data_leader (ArvGvStreamThreadData *thread_data,
 		return;
 	}
 
-	frame->buffer->priv->gvsp_payload_type = arv_gvsp_packet_get_payload_type (packet);
+	frame->buffer->priv->payload_type = arv_gvsp_packet_get_buffer_payload_type (packet);
 	frame->buffer->priv->frame_id = arv_gvsp_packet_get_frame_id (packet);
+	frame->buffer->priv->chunk_endianness = G_BIG_ENDIAN;
 
 	frame->buffer->priv->system_timestamp_ns = g_get_real_time() * 1000LL;
-	if (frame->buffer->priv->gvsp_payload_type != ARV_GVSP_PAYLOAD_TYPE_H264) {
+	if (frame->buffer->priv->payload_type != ARV_BUFFER_PAYLOAD_TYPE_H264) {
 		if (G_LIKELY (thread_data->timestamp_tick_frequency != 0))
 			frame->buffer->priv->timestamp_ns = arv_gvsp_packet_get_timestamp (packet,
 											   thread_data->timestamp_tick_frequency);
@@ -253,7 +254,8 @@ _process_data_leader (ArvGvStreamThreadData *thread_data,
 	} else
 		frame->buffer->priv->timestamp_ns = frame->buffer->priv->system_timestamp_ns;
 
-	if (frame->buffer->priv->gvsp_payload_type == ARV_GVSP_PAYLOAD_TYPE_IMAGE) {
+	if (frame->buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
+	    frame->buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA) {
 		frame->buffer->priv->x_offset = arv_gvsp_packet_get_x_offset (packet);
 		frame->buffer->priv->y_offset = arv_gvsp_packet_get_y_offset (packet);
 		frame->buffer->priv->width = arv_gvsp_packet_get_width (packet);
@@ -687,6 +689,8 @@ _process_packet (ArvGvStreamThreadData *thread_data, const ArvGvspPacket *packet
 					break;
 			frame->last_valid_packet = i - 1;
 
+			arv_gvsp_packet_debug (packet, packet_size, ARV_DEBUG_LEVEL_LOG);
+
 			switch (arv_gvsp_packet_get_content_type (packet)) {
 				case ARV_GVSP_CONTENT_TYPE_DATA_LEADER:
 					_process_data_leader (thread_data, frame, packet, packet_id);
@@ -949,9 +953,10 @@ map_error:
 static void *
 arv_gv_stream_thread (void *data)
 {
-	int fd;
-
 	ArvGvStreamThreadData *thread_data = data;
+#ifdef ARAVIS_BUILD_PACKET_SOCKET
+	int fd;
+#endif
 
 	thread_data->frames = NULL;
 	thread_data->last_frame_id = 0;
@@ -1106,7 +1111,7 @@ arv_gv_stream_new (ArvGvDevice *gv_device,
 	arv_debug_stream ("[GvStream::stream_new] Destination stream port = %d", thread_data->stream_port);
 	arv_debug_stream ("[GvStream::stream_new] Source stream port = %d", thread_data->source_stream_port);
 
-	gv_stream->priv->thread = arv_g_thread_new ("arv_gv_stream", arv_gv_stream_thread, gv_stream->priv->thread_data);
+	gv_stream->priv->thread = g_thread_new ("arv_gv_stream", arv_gv_stream_thread, gv_stream->priv->thread_data);
 
 	return ARV_STREAM (gv_stream);
 }

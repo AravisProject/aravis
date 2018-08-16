@@ -2,7 +2,7 @@ AC_PREREQ(2.63.0)
 
 m4_define([aravis_version_major], [0])
 m4_define([aravis_version_minor], [5])
-m4_define([aravis_version_micro], [13])
+m4_define([aravis_version_micro], [14])
 m4_define([aravis_version], [aravis_version_major.aravis_version_minor.aravis_version_micro])
 
 AC_INIT([aravis],[aravis_version],[http://bugzilla.gnome.org/enter_bug.cgi?product=aravis],[aravis])
@@ -92,7 +92,7 @@ AC_ARG_ENABLE(asan,
 
 PKG_PROG_PKG_CONFIG([0.14])
 
-ARAVIS_REQUIREMENTS="glib-2.0 >= 2.26 gobject-2.0 gio-2.0 libxml-2.0 gthread-2.0"
+ARAVIS_REQUIREMENTS="glib-2.0 >= 2.32 gobject-2.0 gio-2.0 libxml-2.0 gthread-2.0"
 ARAVIS_USB_REQUIREMENTS="libusb-1.0"
 ARAVIS_PACKET_SOCKET_REQUIREMENTS="audit"
 ARAVIS_GSTREAMER_REQUIREMENTS="gstreamer-base-1.0 gstreamer-app-1.0"

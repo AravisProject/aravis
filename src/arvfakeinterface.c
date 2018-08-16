@@ -32,9 +32,12 @@
 #include <arvdebug.h>
 #include <arvmisc.h>
 
-#define ARV_FAKE_DEVICE_ID "Fake_1"
-#define ARV_FAKE_PHYSICAL_ID "Fake_1"
-#define ARV_FAKE_ADDRESS "0.0.0.0"
+#define ARV_FAKE_DEVICE_ID 	"Fake_1"
+#define ARV_FAKE_PHYSICAL_ID 	"Fake_1"
+#define ARV_FAKE_ADDRESS 	"0.0.0.0"
+#define ARV_FAKE_VENDOR 	"Aravis"
+#define ARV_FAKE_MODEL 		"Fake"
+#define ARV_FAKE_SERIAL		"1"
 
 static GObjectClass *parent_class = NULL;
 
@@ -50,6 +53,9 @@ arv_fake_interface_update_device_list (ArvInterface *interface, GArray *device_i
 	ids->device = g_strdup (ARV_FAKE_DEVICE_ID);
 	ids->physical = g_strdup (ARV_FAKE_PHYSICAL_ID);
 	ids->address = g_strdup (ARV_FAKE_ADDRESS);
+	ids->vendor = g_strdup (ARV_FAKE_VENDOR);
+	ids->model = g_strdup (ARV_FAKE_MODEL);
+	ids->serial_nbr = g_strdup (ARV_FAKE_SERIAL);
 
 	g_array_append_val (device_ids, ids);
 }
@@ -65,7 +71,7 @@ arv_fake_interface_open_device (ArvInterface *interface, const char *device_id)
 }
 
 static ArvInterface *fake_interface = NULL;
-ARV_DEFINE_STATIC_MUTEX (fake_interface_mutex);
+static GMutex fake_interface_mutex;
 
 /**
  * arv_fake_interface_get_instance:
@@ -78,12 +84,12 @@ ARV_DEFINE_STATIC_MUTEX (fake_interface_mutex);
 ArvInterface *
 arv_fake_interface_get_instance (void)
 {
-	arv_g_mutex_lock (&fake_interface_mutex);
+	g_mutex_lock (&fake_interface_mutex);
 
 	if (fake_interface == NULL)
 		fake_interface = g_object_new (ARV_TYPE_FAKE_INTERFACE, NULL);
 
-	arv_g_mutex_unlock (&fake_interface_mutex);
+	g_mutex_unlock (&fake_interface_mutex);
 
 	return ARV_INTERFACE (fake_interface);
 }
@@ -91,14 +97,14 @@ arv_fake_interface_get_instance (void)
 void
 arv_fake_interface_destroy_instance (void)
 {
-	arv_g_mutex_lock (&fake_interface_mutex);
+	g_mutex_lock (&fake_interface_mutex);
 
 	if (fake_interface != NULL) {
 		g_object_unref (fake_interface);
 		fake_interface = NULL;
 	}
 
-	arv_g_mutex_unlock (&fake_interface_mutex);
+	g_mutex_unlock (&fake_interface_mutex);
 }
 
 static void

@@ -138,13 +138,17 @@ arv_uv_stream_thread (void *data)
 					if (buffer != NULL) {
 						buffer->priv->system_timestamp_ns = g_get_real_time () * 1000LL;
 						buffer->priv->status = ARV_BUFFER_STATUS_FILLING;
-						buffer->priv->gvsp_payload_type = ARV_GVSP_PAYLOAD_TYPE_IMAGE;
-						arv_uvsp_packet_get_region (packet,
-									    &buffer->priv->width,
-									    &buffer->priv->height,
-									    &buffer->priv->x_offset,
-									    &buffer->priv->y_offset);
-						buffer->priv->pixel_format = arv_uvsp_packet_get_pixel_format (packet);
+						buffer->priv->payload_type = arv_uvsp_packet_get_buffer_payload_type (packet);
+						buffer->priv->chunk_endianness = G_LITTLE_ENDIAN;
+						if (buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
+						    buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA) {
+							arv_uvsp_packet_get_region (packet,
+										    &buffer->priv->width,
+										    &buffer->priv->height,
+										    &buffer->priv->x_offset,
+										    &buffer->priv->y_offset);
+							buffer->priv->pixel_format = arv_uvsp_packet_get_pixel_format (packet);
+						}
 						buffer->priv->frame_id = arv_uvsp_packet_get_frame_id (packet);
 						buffer->priv->timestamp_ns = arv_uvsp_packet_get_timestamp (packet);
 						offset = 0;
@@ -308,7 +312,7 @@ arv_uv_stream_new (ArvUvDevice *uv_device, ArvStreamCallback callback, void *use
 	thread_data->n_underruns = 0;
 
 	uv_stream->priv->thread_data = thread_data;
-	uv_stream->priv->thread = arv_g_thread_new ("arv_uv_stream", arv_uv_stream_thread, uv_stream->priv->thread_data);
+	uv_stream->priv->thread = g_thread_new ("arv_uv_stream", arv_uv_stream_thread, uv_stream->priv->thread_data);
 
 	return ARV_STREAM (uv_stream);
 }

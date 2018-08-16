@@ -30,6 +30,9 @@
 #include <arvdevice.h>
 #include <arvdebug.h>
 #include <string.h>
+#include <arvmisc.h>
+
+static GMutex arv_system_mutex;
 
 /**
  * SECTION: arv
@@ -158,6 +161,8 @@ arv_update_device_list (void)
 {
 	unsigned int i;
 
+	g_mutex_lock (&arv_system_mutex);
+
 	for (i = 0; i < G_N_ELEMENTS (interfaces); i++) {
 		ArvInterface *interface;
 
@@ -166,6 +171,8 @@ arv_update_device_list (void)
 			arv_interface_update_device_list (interface);
 		}
 	}
+
+	g_mutex_unlock (&arv_system_mutex);
 }
 
 /**
@@ -183,6 +190,8 @@ arv_get_n_devices (void)
 	unsigned int n_devices = 0;
 	unsigned int i;
 
+	g_mutex_lock (&arv_system_mutex);
+
 	for (i = 0; i < G_N_ELEMENTS (interfaces); i++) {
 		ArvInterface *interface;
 
@@ -192,6 +201,8 @@ arv_get_n_devices (void)
 		}
 	}
 
+	g_mutex_unlock (&arv_system_mutex);
+
 	return n_devices;
 }
 
@@ -200,6 +211,9 @@ arv_get_info (unsigned int index, const char *get_info (ArvInterface *, guint))
 {
 	unsigned int offset = 0;
 	unsigned int i;
+	const char *info;
+
+	g_mutex_lock (&arv_system_mutex);
 
 	for (i = 0; i < G_N_ELEMENTS (interfaces); i++) {
 		ArvInterface *interface;
@@ -209,12 +223,19 @@ arv_get_info (unsigned int index, const char *get_info (ArvInterface *, guint))
 			interface = interfaces[i].get_interface_instance ();
 			n_devices = arv_interface_get_n_devices (interface);
 
-			if (index - offset < n_devices)
-				return get_info (interface, index - offset);
+			if (index - offset < n_devices) {
+				info = get_info (interface, index - offset);
+
+				g_mutex_unlock (&arv_system_mutex);
+
+				return info;
+			}
 
 			offset += n_devices;
 		}
 	}
+
+	g_mutex_unlock (&arv_system_mutex);
 
 	return NULL;
 }
@@ -370,6 +391,8 @@ arv_open_device (const char *device_id)
 {
 	unsigned int i;
 
+	g_mutex_lock (&arv_system_mutex);
+
 	for (i = 0; i < G_N_ELEMENTS (interfaces); i++) {
 		ArvInterface *interface;
 		ArvDevice *device;
@@ -377,10 +400,14 @@ arv_open_device (const char *device_id)
 		if (interfaces[i].is_available) {
 			interface = interfaces[i].get_interface_instance ();
 			device = arv_interface_open_device (interface, device_id);
-			if (device != NULL)
+			if (device != NULL) {
+				g_mutex_unlock (&arv_system_mutex);
 				return device;
+			}
 		}
 	}
+
+	g_mutex_unlock (&arv_system_mutex);
 
 	return NULL;
 }
@@ -398,8 +425,12 @@ arv_shutdown (void)
 {
 	unsigned int i;
 
+	g_mutex_lock (&arv_system_mutex);
+
 	for (i = 0; i < G_N_ELEMENTS (interfaces); i++)
 		interfaces[i].destroy_interface_instance ();
 
 	arv_debug_shutdown ();
+
+	g_mutex_unlock (&arv_system_mutex);
 }

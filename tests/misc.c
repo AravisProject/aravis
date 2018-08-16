@@ -184,8 +184,6 @@ main (int argc, char *argv[])
 
 	g_test_init (&argc, &argv, NULL);
 
-	arv_g_type_init ();
-
 	g_test_add_func ("/buffer/unaligned-from-le", unaligned_from_le_ptr_test);
 	g_test_add_func ("/str/arv-str-strip", arv_str_strip_test);
 	g_test_add_func ("/str/arv-str-uri", arv_str_uri_test);

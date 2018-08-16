@@ -115,8 +115,6 @@ main (int argc, char *argv[])
 
 	g_test_init (&argc, &argv, NULL);
 
-	arv_g_type_init ();
-
 	g_test_add_func ("/buffer/simple-buffer", simple_buffer_test);
 	g_test_add_func ("/buffer/preallocated-buffer", preallocated_buffer_test);
 	g_test_add_func ("/buffer/full-buffer", full_buffer_test);

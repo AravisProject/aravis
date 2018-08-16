@@ -335,8 +335,6 @@ main (int argc, char *argv[])
 
 	g_test_init (&argc, &argv, NULL);
 
-	arv_g_type_init ();
-
 	arv_enable_interface ("Fake");
 
 	arv_update_device_list ();
