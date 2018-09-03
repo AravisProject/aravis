@@ -56,7 +56,6 @@ arv_gc_struct_entry_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 
 		switch (arv_gc_property_node_get_node_type (property_node)) {
 			case ARV_GC_PROPERTY_NODE_TYPE_SIGN:
-				/* TODO */
 				node->sign = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_LSB:
@@ -136,6 +135,22 @@ _get_msb (ArvGcStructEntryNode *gc_struct_entry_node, GError **error)
 		return 31;
 
 	return arv_gc_property_node_get_int64 (gc_struct_entry_node->msb, error);
+}
+
+static ArvGcSignedness
+_get_signedness (ArvGcStructEntryNode *gc_struct_entry_node, GError **error)
+{
+	const char *signedness;
+
+	if (gc_struct_entry_node->sign == NULL)
+		return ARV_GC_SIGNEDNESS_UNSIGNED;
+
+	signedness = arv_gc_property_node_get_string (gc_struct_entry_node->sign, error);
+
+	if (g_strcmp0 (signedness, "Unsigned") == 0)
+		return ARV_GC_SIGNEDNESS_UNSIGNED;
+
+	return ARV_GC_SIGNEDNESS_SIGNED;
 }
 
 /**
@@ -259,6 +274,7 @@ arv_gc_struct_entry_node_get_integer_value (ArvGcInteger *gc_integer, GError **e
 {
 	ArvGcStructEntryNode *struct_entry = ARV_GC_STRUCT_ENTRY_NODE (gc_integer);
 	ArvDomNode *struct_register;
+	ArvGcSignedness signedness;
 	GError *local_error = NULL;
 	gint64 value;
 	guint lsb;
@@ -282,7 +298,15 @@ arv_gc_struct_entry_node_get_integer_value (ArvGcInteger *gc_integer, GError **e
 		return 0;
 	}
 
-	value = arv_gc_register_node_get_masked_integer_value (ARV_GC_REGISTER_NODE (struct_register), lsb, msb, &local_error);
+	signedness = _get_signedness (struct_entry, &local_error);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return 0;
+	}
+
+	value = arv_gc_register_node_get_masked_integer_value (ARV_GC_REGISTER_NODE (struct_register),
+							       lsb, msb, signedness, &local_error);
 
 	if (local_error != NULL) {
 		g_propagate_error (error, local_error);
