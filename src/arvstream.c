@@ -54,6 +54,7 @@ struct _ArvStreamPrivate {
 	GAsyncQueue *output_queue;
 	GRecMutex mutex;
 	gboolean emit_signals;
+	gboolean buffers_freed;
 };
 
 /**
@@ -297,6 +298,44 @@ arv_stream_get_emit_signals (ArvStream *stream)
 	return ret;
 }
 
+void
+arv_stream_receiver_buffers_freed (ArvStream *stream, gboolean state)
+{
+	g_return_if_fail (ARV_IS_STREAM (stream));
+
+	g_atomic_int_set (&stream->priv->buffers_freed, state);
+}
+
+gboolean
+arv_stream_free_buffers (ArvStream *stream)
+{
+	ArvBuffer *buffer;
+	g_return_val_if_fail (ARV_IS_STREAM (stream), FALSE);
+
+	if (!g_atomic_int_get (&stream->priv->buffers_freed))
+	{
+		arv_debug_stream ("[GvStream::free_buffers] receiver thread buffers in use!");
+		return FALSE;
+	}
+
+	arv_debug_stream ("[GvStream::free_buffers] free queue owned buffers");
+
+	// free buffers owned by queues
+	do {
+		buffer = g_async_queue_try_pop (stream->priv->output_queue);
+		if (buffer != NULL)
+			g_object_unref (buffer);
+	} while (buffer != NULL);
+
+	do {
+		buffer = g_async_queue_try_pop (stream->priv->input_queue);
+		if (buffer != NULL)
+			g_object_unref (buffer);
+	} while (buffer != NULL);
+
+	return TRUE;
+}
+
 static void
 arv_stream_set_property (GObject * object, guint prop_id,
 			 const GValue * value, GParamSpec * pspec)
@@ -338,6 +377,8 @@ arv_stream_init (ArvStream *stream)
 	stream->priv->output_queue = g_async_queue_new ();
 
 	stream->priv->emit_signals = FALSE;
+
+	stream->priv->buffers_freed = TRUE;
 
 	g_rec_mutex_init (&stream->priv->mutex);
 }

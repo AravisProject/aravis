@@ -755,9 +755,18 @@ _loop (ArvGvStreamThreadData *thread_data)
 			frame = NULL;
 
 		_check_frame_completion (thread_data, time_us, frame);
+
+		// signal state of owned buffers
+		if (thread_data->frames == NULL) {
+			arv_stream_receiver_buffers_freed (thread_data->stream, TRUE);
+		}
+		else {
+			arv_stream_receiver_buffers_freed (thread_data->stream, FALSE);
+		}
 	} while (!g_atomic_int_get (&thread_data->cancel));
 
 	g_free (packet);
+	arv_stream_receiver_buffers_freed (thread_data->stream, TRUE);
 
 }
 
