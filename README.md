@@ -122,6 +122,6 @@ The report is published in `tests/aravis-{VERSION}-coverage/index.html`. Code co
 
 * Github repository: https://github.com/AravisProject/aravis
 * Mailing list: aravis@freelists.org ( http://www.freelists.org/list/aravis )
-* Aravis 0.6 documentation: https://aravisproject.github.io/docs/aravis-0.4/
+* Aravis 0.6 documentation: https://aravisproject.github.io/docs/aravis-0.6/
 * Blog: http://blogs.gnome.org/emmanuel/category/aravis/
 * Genicam standard : http://www.genicam.org
