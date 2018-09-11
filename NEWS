@@ -1,3 +1,11 @@
+Release 0.6.0
+=============
+
+  Stable release.
+
+  * camera: avoid clashes in device id generation
+  * genicam: signedness and endianness related fix
+
 Release 0.5.13
 ==============
 
