@@ -726,6 +726,7 @@ _loop (ArvGvStreamThreadData *thread_data)
 	size_t read_count;
 	int timeout_ms;
 	int n_events;
+	int i;
 
 	arv_debug_stream ("[GvStream::loop] Standard socket method");
 
@@ -735,13 +736,32 @@ _loop (ArvGvStreamThreadData *thread_data)
 
 	packet = g_malloc0 (ARV_GV_STREAM_INCOMING_BUFFER_SIZE);
 
+	arv_stream_receiver_thread_running (thread_data->stream, TRUE);
 	do {
-		if (thread_data->frames != NULL)
+		if (thread_data->frames != NULL) {
 			timeout_ms = thread_data->packet_timeout_us / 1000;
-		else
+			n_events = g_poll (&poll_fd, 1, timeout_ms);
+		}
+		else {
 			timeout_ms = ARV_GV_STREAM_POLL_TIMEOUT_US / 1000;
+			/* improve responsiveness if no active acquisition
+			   to avoid long delay when free buffers requested */
+			for (i = 0; i < timeout_ms; i += 5) {
+				n_events = g_poll (&poll_fd, 1, 5);
+				if (n_events != 0 ||
+					arv_stream_free_buffers_requested (thread_data->stream))
+					break;
+			}
+		}
 
-		n_events = g_poll (&poll_fd, 1, timeout_ms);
+		// check if owned buffers have to be freed
+		if (arv_stream_free_buffers_requested (thread_data->stream))
+		{
+			_flush_frames (thread_data);
+			// signal receiver owned buffers freed
+			arv_stream_receiver_buffers_freed (thread_data->stream);
+			continue;
+		}
 
 		g_get_current_time (&current_time);
 		time_us = current_time.tv_sec * 1000000 + current_time.tv_usec;
@@ -756,17 +776,10 @@ _loop (ArvGvStreamThreadData *thread_data)
 
 		_check_frame_completion (thread_data, time_us, frame);
 
-		// signal state of owned buffers
-		if (thread_data->frames == NULL) {
-			arv_stream_receiver_buffers_freed (thread_data->stream, TRUE);
-		}
-		else {
-			arv_stream_receiver_buffers_freed (thread_data->stream, FALSE);
-		}
 	} while (!g_atomic_int_get (&thread_data->cancel));
 
 	g_free (packet);
-	arv_stream_receiver_buffers_freed (thread_data->stream, TRUE);
+	arv_stream_receiver_thread_running (thread_data->stream, FALSE);
 
 }
 

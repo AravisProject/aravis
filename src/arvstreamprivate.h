@@ -33,7 +33,10 @@ G_BEGIN_DECLS
 
 ArvBuffer *	arv_stream_pop_input_buffer		(ArvStream *stream);
 void		arv_stream_push_output_buffer		(ArvStream *stream, ArvBuffer *buffer);
-void		arv_stream_receiver_buffers_freed	(ArvStream *stream, gboolean state);
+void		arv_stream_receiver_buffers_freed	(ArvStream *stream);
+void		arv_stream_receiver_thread_running	(ArvStream *stream, gboolean state);
+gboolean	arv_stream_free_buffers_requested	(ArvStream *stream);
+
 
 G_END_DECLS
 

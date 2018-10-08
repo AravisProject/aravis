@@ -34,6 +34,9 @@
 #include <arvbuffer.h>
 #include <arvdebug.h>
 
+#define ARV_GV_STREAM_BUFFREE_TIMEOUT_MS	1500
+#define ARV_GV_STREAM_UNLOCK_RECV_THREAD_MS	100
+
 enum {
 	ARV_STREAM_SIGNAL_NEW_BUFFER,
 	ARV_STREAM_SIGNAL_LAST
@@ -47,6 +50,12 @@ enum {
 	ARV_STREAM_PROPERTY_LAST
 } ArvStreamProperties;
 
+enum ArvStreamRecvLockState {
+	ARV_STREAM_RECV_LOCK_FREED,
+	ARV_STREAM_RECV_LOCK_REQUEST,
+	ARV_STREAM_RECV_LOCK_ACQUIRED
+};
+
 static GObjectClass *parent_class = NULL;
 
 struct _ArvStreamPrivate {
@@ -54,7 +63,10 @@ struct _ArvStreamPrivate {
 	GAsyncQueue *output_queue;
 	GRecMutex mutex;
 	gboolean emit_signals;
-	gboolean buffers_freed;
+	enum ArvStreamRecvLockState recv_thread_lock;
+	GMutex cond_mutex_recv_lock;
+	GCond cond_data_recv_lock;
+	gboolean recv_thread_running;
 };
 
 /**
@@ -298,24 +310,79 @@ arv_stream_get_emit_signals (ArvStream *stream)
 	return ret;
 }
 
+gboolean
+arv_stream_free_buffers_requested (ArvStream *stream)
+{
+	g_return_val_if_fail (ARV_IS_STREAM (stream), FALSE);
+
+	return (stream->priv->recv_thread_lock == ARV_STREAM_RECV_LOCK_REQUEST);
+}
+
 void
-arv_stream_receiver_buffers_freed (ArvStream *stream, gboolean state)
+arv_stream_receiver_thread_running (ArvStream *stream, gboolean state)
 {
 	g_return_if_fail (ARV_IS_STREAM (stream));
 
-	g_atomic_int_set (&stream->priv->buffers_freed, state);
+	g_atomic_int_set (&stream->priv->recv_thread_running, state);
+}
+
+void
+arv_stream_receiver_buffers_freed (ArvStream *stream)
+{
+	gint64 end_time;
+	g_return_if_fail (ARV_IS_STREAM (stream));
+
+	if (stream->priv->recv_thread_lock != ARV_STREAM_RECV_LOCK_REQUEST)
+		return;
+
+	arv_debug_stream ("[GvStream::buffers_freed] wait for unlock receiver thread");
+
+	g_mutex_lock (&stream->priv->cond_mutex_recv_lock);
+
+	stream->priv->recv_thread_lock = ARV_STREAM_RECV_LOCK_ACQUIRED;
+	g_cond_signal (&stream->priv->cond_data_recv_lock);
+
+	// wait to continue
+	end_time = g_get_monotonic_time () + ARV_GV_STREAM_UNLOCK_RECV_THREAD_MS * G_TIME_SPAN_MILLISECOND;
+	while (stream->priv->recv_thread_lock != ARV_STREAM_RECV_LOCK_FREED) {
+		if (!g_cond_wait_until (&stream->priv->cond_data_recv_lock, &stream->priv->cond_mutex_recv_lock, end_time))
+		{
+			g_mutex_unlock (&stream->priv->cond_mutex_recv_lock);
+			arv_debug_stream ("[GvStream::buffers_freed] wait for unlock receiver thread timed out");
+			return;
+		}
+	}
+	arv_debug_stream ("[GvStream::buffers_freed] receiver thread unlocked");
+	g_mutex_unlock (&stream->priv->cond_mutex_recv_lock);
 }
 
 gboolean
 arv_stream_free_buffers (ArvStream *stream)
 {
 	ArvBuffer *buffer;
+	gint64 end_time;
 	g_return_val_if_fail (ARV_IS_STREAM (stream), FALSE);
 
-	if (!g_atomic_int_get (&stream->priv->buffers_freed))
-	{
-		arv_debug_stream ("[GvStream::free_buffers] receiver thread buffers in use!");
-		return FALSE;
+	if (g_atomic_int_get (&stream->priv->recv_thread_running)) {
+		arv_debug_stream ("[GvStream::free_buffers] wait for receiver thread freed buffers");
+
+		g_mutex_lock (&stream->priv->cond_mutex_recv_lock);
+
+		// lock receiver thread when receiver buffers freed
+		stream->priv->recv_thread_lock = ARV_STREAM_RECV_LOCK_REQUEST;
+		g_cond_signal (&stream->priv->cond_data_recv_lock);
+
+		// wait until receiver thread freed owned buffers and is locked
+		end_time = g_get_monotonic_time () + ARV_GV_STREAM_BUFFREE_TIMEOUT_MS * G_TIME_SPAN_MILLISECOND;
+		while (stream->priv->recv_thread_lock != ARV_STREAM_RECV_LOCK_ACQUIRED) {
+			if (!g_cond_wait_until (&stream->priv->cond_data_recv_lock, &stream->priv->cond_mutex_recv_lock, end_time))
+			{
+				g_mutex_unlock (&stream->priv->cond_mutex_recv_lock);
+				arv_debug_stream ("[GvStream::free_buffers] wait for receiver thread locked timed out");
+				return FALSE;
+			}
+		}
+		g_mutex_unlock (&stream->priv->cond_mutex_recv_lock);
 	}
 
 	arv_debug_stream ("[GvStream::free_buffers] free queue owned buffers");
@@ -332,6 +399,14 @@ arv_stream_free_buffers (ArvStream *stream)
 		if (buffer != NULL)
 			g_object_unref (buffer);
 	} while (buffer != NULL);
+
+	if (g_atomic_int_get (&stream->priv->recv_thread_running)) {
+		// unlock receiver thread
+		g_mutex_lock (&stream->priv->cond_mutex_recv_lock);
+		stream->priv->recv_thread_lock = ARV_STREAM_RECV_LOCK_FREED;
+		g_cond_signal (&stream->priv->cond_data_recv_lock);
+		g_mutex_unlock (&stream->priv->cond_mutex_recv_lock);
+	}
 
 	return TRUE;
 }
@@ -378,7 +453,10 @@ arv_stream_init (ArvStream *stream)
 
 	stream->priv->emit_signals = FALSE;
 
-	stream->priv->buffers_freed = TRUE;
+	g_mutex_init (&stream->priv->cond_mutex_recv_lock);
+	stream->priv->recv_thread_lock = ARV_STREAM_RECV_LOCK_FREED;
+	g_cond_init (&stream->priv->cond_data_recv_lock);
+	stream->priv->recv_thread_running = FALSE;
 
 	g_rec_mutex_init (&stream->priv->mutex);
 }
@@ -415,6 +493,9 @@ arv_stream_finalize (GObject *object)
 	g_async_queue_unref (stream->priv->output_queue);
 
 	g_rec_mutex_clear (&stream->priv->mutex);
+
+	g_cond_clear (&stream->priv->cond_data_recv_lock);
+	g_mutex_clear (&stream->priv->cond_mutex_recv_lock);
 
 	parent_class->finalize (object);
 }
