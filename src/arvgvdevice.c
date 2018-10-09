@@ -780,7 +780,7 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device)
 	max_size = 16384;
 	min_size = 256;
 
-	buffer = g_malloc (8192);
+	buffer = g_malloc (16384);
 
 	do {
 		size_t read_count;
@@ -800,7 +800,7 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device)
 			do {
 				n_events = g_poll (&poll_fd, 1, 10);
 				if (n_events != 0)
-					read_count = g_socket_receive (socket, buffer, 8192, NULL, NULL);
+					read_count = g_socket_receive (socket, buffer, 16384, NULL, NULL);
 				else
 					read_count = 0;
 				/* Discard late packets, read_count should be equal to packet size minus IP and UDP headers */
