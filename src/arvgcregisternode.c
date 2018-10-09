@@ -375,7 +375,9 @@ _get_signedness (ArvGcRegisterNode *gc_register_node, GError **error)
 	const char *sign;
 
 	if (gc_register_node->sign == NULL)
-		return ARV_GC_SIGNEDNESS_SIGNED;
+		return gc_register_node->type == ARV_GC_REGISTER_NODE_TYPE_REGISTER ?
+			ARV_GC_SIGNEDNESS_SIGNED :
+			ARV_GC_SIGNEDNESS_UNSIGNED;
 
 	sign = arv_gc_property_node_get_string (gc_register_node->sign, &local_error);
 
@@ -698,7 +700,9 @@ arv_gc_register_node_register_interface_init (ArvGcRegisterInterface *interface)
 /* ArvGcInteger interface implementation */
 
 static gint64
-_get_integer_value (ArvGcRegisterNode *gc_register_node, guint register_lsb, guint register_msb, GError **error)
+_get_integer_value (ArvGcRegisterNode *gc_register_node,
+		    guint register_lsb, guint register_msb, ArvGcSignedness signedness,
+		    GError **error)
 {
 	GError *local_error = NULL;
 	gint64 value;
@@ -748,8 +752,9 @@ _get_integer_value (ArvGcRegisterNode *gc_register_node, guint register_lsb, gui
 
 		if (msb-lsb < 63 &&
 		    (value & (((guint64) 1) << (msb - lsb))) != 0 &&
-		    _get_signedness (gc_register_node, NULL) == ARV_GC_SIGNEDNESS_SIGNED)
+		    signedness == ARV_GC_SIGNEDNESS_SIGNED) {
 			value |= G_MAXUINT64 ^ (mask >> lsb);
+		}
 
 		arv_log_genicam ("[GcRegisterNode::_get_integer_value] mask  = 0x%08Lx", mask);
 	} else {
@@ -757,7 +762,7 @@ _get_integer_value (ArvGcRegisterNode *gc_register_node, guint register_lsb, gui
 
 		if (length < 8 &&
 		    ((value & (((guint64) 1) << (length * 8 - 1))) != 0) &&
-		    _get_signedness (gc_register_node, NULL) == ARV_GC_SIGNEDNESS_SIGNED)
+		    signedness == ARV_GC_SIGNEDNESS_SIGNED)
 			value |= G_MAXUINT64 ^ ((((guint64) 1) << (length * 8)) - 1);
 	}
 
@@ -768,12 +773,14 @@ _get_integer_value (ArvGcRegisterNode *gc_register_node, guint register_lsb, gui
 }
 
 gint64
-arv_gc_register_node_get_masked_integer_value (ArvGcRegisterNode *gc_register_node, guint lsb, guint msb, GError **error)
+arv_gc_register_node_get_masked_integer_value (ArvGcRegisterNode *gc_register_node,
+					       guint lsb, guint msb, ArvGcSignedness signedness,
+					       GError **error)
 {
 	g_return_val_if_fail (ARV_IS_GC_REGISTER_NODE (gc_register_node), 0);
 	g_return_val_if_fail (error == NULL || *error == NULL, 0);
 
-	return _get_integer_value (gc_register_node, lsb, msb, error);
+	return _get_integer_value (gc_register_node, lsb, msb, signedness, error);
 }
 
 static gint64
@@ -781,6 +788,7 @@ arv_gc_register_node_get_integer_value (ArvGcInteger *gc_integer, GError **error
 {
 	GError *local_error = NULL;
 	ArvGcRegisterNode *gc_register_node = ARV_GC_REGISTER_NODE (gc_integer);
+	ArvGcSignedness signedness;
 	gint64 lsb, msb;
 
 	lsb = _get_lsb (gc_register_node, &local_error);
@@ -797,7 +805,14 @@ arv_gc_register_node_get_integer_value (ArvGcInteger *gc_integer, GError **error
 		return 0;
 	}
 
-	return _get_integer_value (gc_register_node, lsb, msb, error);
+	signedness = _get_signedness (gc_register_node, &local_error);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return 0;
+	}
+
+	return _get_integer_value (gc_register_node, lsb, msb, signedness, error);
 }
 
 static void
@@ -838,9 +853,9 @@ _set_integer_value (ArvGcRegisterNode *gc_register_node, guint register_lsb, gui
 			msb = 8 * gc_register_node->cache_size - register_msb - 1;
 		}
 
-		arv_log_genicam ("[GcRegisterNode::_get_integer_value] reglsb = %d, regmsb, %d, lsb = %d, msb = %d",
+		arv_log_genicam ("[GcRegisterNode::_set_integer_value] reglsb = %d, regmsb, %d, lsb = %d, msb = %d",
 				 register_lsb, register_msb, lsb, msb);
-		arv_log_genicam ("[GcRegisterNode::_get_integer_value] value = 0x%08Lx", value);
+		arv_log_genicam ("[GcRegisterNode::_set_integer_value] value = 0x%08Lx", value);
 
 		if (msb - lsb < 63)
 			mask = ((((guint64) 1) << (msb - lsb + 1)) - 1) << lsb;
@@ -849,7 +864,7 @@ _set_integer_value (ArvGcRegisterNode *gc_register_node, guint register_lsb, gui
 
 		value = ((value << lsb) & mask) | (current_value & ~mask);
 
-		arv_log_genicam ("[GcRegisterNode::_get_integer_value] mask  = 0x%08Lx", mask);
+		arv_log_genicam ("[GcRegisterNode::_set_integer_value] mask  = 0x%08Lx", mask);
 	} else {
 		_update_cache_size (gc_register_node, &local_error);
 

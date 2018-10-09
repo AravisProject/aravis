@@ -54,9 +54,6 @@ main (int argc, char **argv)
 	GOptionContext *context;
 	GError *error = NULL;
 
-	arv_g_thread_init (NULL);
-	arv_g_type_init ();
-
 	context = g_option_context_new (NULL);
 	g_option_context_set_summary (context, "Fake GigEVision camera.");
 	g_option_context_set_description (context, "Example: 'arv-fake-gv-camera-" ARAVIS_API_VERSION " -i eth0'");

@@ -3,4 +3,5 @@
 #mesondefine PACKAGE
 #mesondefine PACKAGE_NAME
 #mesondefine ARAVIS_BUILD_PACKET_SOCKET
+#mesondefine ARAVIS_BUILD_USB
 #mesondefine ARAVIS_FAST_HEARTBEAT

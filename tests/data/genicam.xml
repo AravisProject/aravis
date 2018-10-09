@@ -168,6 +168,7 @@
     <Cachable>NoCache</Cachable>
     <PollingTime>5</PollingTime>
     <Endianess>BigEndian</Endianess>
+    <Sign>Signed</Sign>
     <pPort>Device</pPort>
   </IntReg>
 

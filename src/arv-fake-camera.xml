@@ -493,7 +493,7 @@
 		<StructEntry Name="StructEntry_0_15" NameSpace="Custom">
 			<LSB>31</LSB>
 			<MSB>16</MSB>
-			<Sign>Unsigned</Sign>
+			<Sign>Signed</Sign>
 		</StructEntry>
 
 		<StructEntry Name="StructEntry_16_31" NameSpace="Custom">

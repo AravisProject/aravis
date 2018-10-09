@@ -65,9 +65,6 @@ main (int argc, char **argv)
 
 	data.buffer_count = 0;
 
-	/* Mandatory glib type system initialization */
-	arv_g_type_init ();
-
 	/* Instantiation of the first available camera */
 	camera = arv_camera_new (NULL);
 

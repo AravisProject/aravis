@@ -58,20 +58,13 @@ arv_tool_list_features (ArvGc *genicam, const char *feature, gboolean show_descr
 }
 
 static void
-arv_tool_execute_command (int argc, char **argv, const char *device_name)
+arv_tool_execute_command (int argc, char **argv, ArvDevice *device)
 {
-	ArvDevice *device;
 	ArvGc *genicam;
 	const char *command = argv[1];
 
-	device = arv_open_device (device_name);
-	if (!ARV_IS_DEVICE (device)) {
-		if (device_name != NULL)
-			printf ("Device '%s' not found\n", device_name);
-		else
-			printf ("No device found\n");
+	if (device == NULL || argc < 2)
 		return;
-	}
 
 	genicam = arv_device_get_genicam (device);
 
@@ -216,8 +209,6 @@ arv_tool_execute_command (int argc, char **argv, const char *device_name)
 	} else {
 		printf ("Unkown command\n");
 	}
-
-	g_object_unref (device);
 }
 
 static char *arv_option_device_name = NULL;
@@ -228,7 +219,7 @@ static const GOptionEntry arv_option_entries[] =
 {
 	{ "name",		'n', 0, G_OPTION_ARG_STRING,
 		&arv_option_device_name,	NULL, "<device_name>"},
-	{ "address",	'a', 0, G_OPTION_ARG_STRING,
+	{ "address",		'a', 0, G_OPTION_ARG_STRING,
 		&arv_option_device_address,	NULL, "<device_address>"},
 	{ "debug", 		'd', 0, G_OPTION_ARG_STRING,
 		&arv_option_debug_domains, 	NULL, "<category>[:<level>][,...]" },
@@ -258,15 +249,12 @@ description_content[] =
 int
 main (int argc, char **argv)
 {
-	GPatternSpec *pattern;
+	ArvDevice *device;
+	const char *device_id;
 	GOptionContext *context;
 	GError *error = NULL;
 	unsigned int n_devices;
 	unsigned int i;
-	unsigned int count = 0;
-
-	arv_g_thread_init (NULL);
-	arv_g_type_init ();
 
 	context = g_option_context_new (" command <parameters>");
 	g_option_context_set_summary (context, "Small utility for basic control of a Genicam device.");
@@ -284,32 +272,39 @@ main (int argc, char **argv)
 
 	arv_debug_enable (arv_option_debug_domains);
 
-	arv_update_device_list ();
-	n_devices = arv_get_n_devices ();
+	device_id = arv_option_device_address != NULL ? arv_option_device_address : arv_option_device_name;
+	if (device_id != NULL) {
+		device = arv_open_device (device_id);
 
-	if (arv_option_device_address != NULL)
-		pattern = g_pattern_spec_new (arv_option_device_address);
-	else if (arv_option_device_name != NULL)
-		pattern = g_pattern_spec_new (arv_option_device_name);
-	else
-		pattern = g_pattern_spec_new ("*");
+		if (ARV_IS_DEVICE (device)) {
+			if (argc < 2)
+				printf ("%s\n", device_id);
+			else
+				arv_tool_execute_command (argc, argv, device);
+			g_object_unref (device);
+		} else {
+			fprintf (stderr, "Device '%s' not found\n", device_id);
+		}
+	} else {
+		arv_update_device_list ();
+		n_devices = arv_get_n_devices ();
 
-	for (i = 0; i < n_devices; i++) {
-		const char *device_id = arv_get_device_id (i);
-		const char *ip_address = arv_get_device_address (i);
+		if (n_devices > 0) {
+			for (i = 0; i < n_devices; i++) {
+				device_id = arv_get_device_id (i);
+				device = arv_open_device (device_id);
 
-		if (g_pattern_match_string (pattern, arv_option_device_address != NULL ? ip_address : device_id)) {
-			printf ("%s (%s)\n", device_id, ip_address);
-			if (argc >= 2)
-				arv_tool_execute_command (argc, argv, device_id);
-			count++;
+				if (ARV_IS_DEVICE (device)) {
+					printf ("%s (%s)\n", device_id, arv_get_device_address (i));
+					arv_tool_execute_command (argc, argv, device);
+
+					g_object_unref (device);
+				}
+			}
+		} else {
+			fprintf (stderr, "No device found\n");
 		}
 	}
-
-	if (count == 0)
-		printf ("No device found\n");
-
-	g_pattern_spec_free (pattern);
 
 	arv_shutdown ();
 

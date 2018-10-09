@@ -119,7 +119,7 @@ registers_test (void)
 	arv_gc_integer_set_value (ARV_GC_INTEGER (node_c), 0xff, NULL);
 
 	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_c), NULL);
-	g_assert_cmpint (value, ==, -1);
+	g_assert_cmpint (value, ==, 1);
 
 	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_b), NULL);
 	g_assert_cmpint (value, ==, 0x1011);
@@ -334,8 +334,6 @@ main (int argc, char *argv[])
 	int result;
 
 	g_test_init (&argc, &argv, NULL);
-
-	arv_g_type_init ();
 
 	arv_enable_interface ("Fake");
 

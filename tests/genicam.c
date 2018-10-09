@@ -633,7 +633,7 @@ create_buffer_with_chunk_data (void)
 	size = 64 + 8 + 64 + 8 + 4 * sizeof (ArvChunkInfos);
 
 	buffer = arv_buffer_new (size, NULL);
-	buffer->priv->gvsp_payload_type = ARV_GVSP_PAYLOAD_TYPE_CHUNK_DATA;
+	buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA;
 	buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
 	data = (char *) arv_buffer_get_data (buffer, &size);
 
@@ -755,8 +755,6 @@ main (int argc, char *argv[])
 	int result;
 
 	g_test_init (&argc, &argv, NULL);
-
-	arv_g_type_init ();
 
 	arv_set_fake_camera_genicam_filename (GENICAM_FILENAME);
 

@@ -43,8 +43,6 @@
 		...
 		fun:g_type_register_static
 		fun:g_type_register_static_simple
-		...
-		fun:main
 }
 
 {
@@ -65,6 +63,16 @@
 		...
 		fun:g_type_register_static
 		fun:g_enum_register_static
+}
+
+{
+	g_type_add_interface_static_app
+		Memcheck:Leak
+		fun:malloc
+		fun:g_malloc
+		fun:g_slice_alloc
+		...
+		fun:g_type_add_interface_static
 }
 
 {

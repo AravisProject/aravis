@@ -114,7 +114,8 @@ ArvGcNode * 	arv_gc_register_node_new_string 		(void);
 ArvGcNode * 	arv_gc_register_node_new_struct_register	(void);
 
 gint64 		arv_gc_register_node_get_masked_integer_value 	(ArvGcRegisterNode *gc_register_node,
-								 guint lsb, guint msb, GError **error);
+								 guint lsb, guint msb, ArvGcSignedness signedness,
+								 GError **error);
 void 		arv_gc_register_node_set_masked_integer_value 	(ArvGcRegisterNode *gc_register_node,
 								 guint lsb, guint msb, gint64 value, GError **error);
 

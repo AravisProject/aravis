@@ -159,7 +159,8 @@ new_buffer_cb (ArvStream *stream, ApplicationData *data)
 		if (arv_buffer_get_status (buffer) == ARV_BUFFER_STATUS_SUCCESS)
 			data->buffer_count++;
 
-		if (arv_buffer_get_payload_type (buffer) == ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA &&
+		if ((arv_buffer_get_payload_type (buffer) == ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA ||
+		     arv_buffer_get_payload_type (buffer) == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA) &&
 		    data->chunks != NULL) {
 			int i;
 
@@ -235,9 +236,6 @@ main (int argc, char **argv)
 	data.buffer_count = 0;
 	data.chunks = NULL;
 	data.chunk_parser = NULL;
-
-	arv_g_thread_init (NULL);
-	arv_g_type_init ();
 
 	context = g_option_context_new (NULL);
 	g_option_context_add_main_entries (context, arv_option_entries, NULL);
