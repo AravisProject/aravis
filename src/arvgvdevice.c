@@ -40,6 +40,12 @@
 #include <linux/ip.h>
 #endif
 #include <netinet/udp.h>
+#include <sys/ioctl.h>
+#include <net/if.h>
+#include <sys/types.h>
+#include <ifaddrs.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 static GObjectClass *parent_class = NULL;
 
@@ -742,6 +748,10 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device)
 	guint max_size, min_size, current_size;
 	guint packet_size = 1500;
 	char *buffer;
+	struct ifreq req;
+	struct ifaddrs *addrs, *iap;
+	struct sockaddr_in *sa;
+	char buf[32];
 
 	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), 1500);
 
@@ -780,7 +790,30 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device)
 	max_size = 16384;
 	min_size = 256;
 
-	buffer = g_malloc (8192);
+	gchar* interface_address_string = g_inet_address_to_string(interface_address);
+
+	req.ifr_name[0] = '\0';
+
+	getifaddrs(&addrs);
+	for (iap = addrs; iap != NULL; iap = iap->ifa_next) {
+		if (iap->ifa_addr && (iap->ifa_flags & IFF_UP) && iap->ifa_addr->sa_family == AF_INET) {
+			sa = (struct sockaddr_in *)(iap->ifa_addr);
+			inet_ntop (iap->ifa_addr->sa_family, (void *)&(sa->sin_addr), buf, sizeof(buf));
+			if (g_strcmp0 (buf, interface_address_string) == 0)
+				g_strlcpy (req.ifr_name, iap->ifa_name, IF_NAMESIZE);
+		}
+	}
+	freeifaddrs(addrs);
+
+	g_free(interface_address_string);
+
+	// get MTU of interface
+	if (ioctl(g_socket_get_fd (socket), SIOCGIFMTU, &req) == 0) {
+		max_size = req.ifr_mtu;
+		current_size = max_size;
+	}
+
+	buffer = g_malloc(16384);
 
 	do {
 		size_t read_count;
@@ -800,7 +833,7 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device)
 			do {
 				n_events = g_poll (&poll_fd, 1, 10);
 				if (n_events != 0)
-					read_count = g_socket_receive (socket, buffer, 8192, NULL, NULL);
+					read_count = g_socket_receive (socket, buffer, 16384, NULL, NULL);
 				else
 					read_count = 0;
 				/* Discard late packets, read_count should be equal to packet size minus IP and UDP headers */
