@@ -6,7 +6,7 @@
 
 ### What is Aravis ?
 
-Aravis is a glib/gobject based library for video acquisition using Genicam cameras. It currently implements the gigabit ethernet and USB3 (Since Aravis 0.5.x) protocols used by industrial cameras. It also provides a basic ethernet camera simulator and a simple video viewer.
+Aravis is a glib/gobject based library for video acquisition using Genicam cameras. It currently implements the gigabit ethernet and USB3 protocols used by industrial cameras. It also provides a basic ethernet camera simulator and a simple video viewer.
 
 # ![](viewer/data/aravis.png)
 # ![](viewer/data/aravis-video.png)
@@ -57,13 +57,13 @@ make install
 
 #### Stream Packet Size
 
-One way to increase streaming performance is to increase the stream packet size. arv_camera_gv_set_packet_size() (and arv_camera_gv_auto_packet_size() since Aravis 0.5.X) allows you to change this parameter. By default, the network adapter of your machine will probably not let you receive packet bigger than 1500 bytes, which is the default Maximum Transfer Unit (MTU). It means if you want to use big packets, you also have to increase the network adapter MTU to a greater walue (8192 bytes being a recommended value). The exact procedure to change the MTU depends on the distribution you are using. Please refer to the administrator manual of your distribution.
+One way to increase streaming performance is to increase the stream packet size. arv_camera_gv_set_packet_size() and arv_camera_gv_auto_packet_size() allow you to change this parameter. By default, the network adapter of your machine will probably not let you receive packet bigger than 1500 bytes, which is the default Maximum Transfer Unit (MTU). It means if you want to use big packets, you also have to increase the network adapter MTU to a greater walue (8192 bytes being a recommended value). The exact procedure to change the MTU depends on the distribution you are using. Please refer to the administrator manual of your distribution.
 
 On Fedora, MTU can be changed using the network setting panel. Edit the wired network settings. MTU parameter is in the Identity page.
 
 Please note if your device is not connected directly to the machine, you may also have to tweak the active devices on your network.
 
-#### Packet Socket Support (Since Aravis 0.5.x)
+#### Packet Socket Support
 
 Aravis can use packet sockets for the video receiving thread. But this mode requires extended capabilities. If you want to allow your application to use packet socket, you must set the `cap_net_raw` capability using `setcap`. For example, the following command gives this capability to the Aravis viewer (You should do this on the installed arv-viewer executable, has the one in the source tree is just a wrapper shell script):
 
@@ -116,14 +116,12 @@ The report is published in `tests/aravis-{VERSION}-coverage/index.html`. Code co
 
 ### Downloads
 
-* 0.4.x stable releases: http://ftp.gnome.org/pub/GNOME/sources/aravis/0.4/
-* 0.5.x development releases: http://ftp.gnome.org/pub/GNOME/sources/aravis/0.5/
+* 0.6.x stable releases: http://ftp.gnome.org/pub/GNOME/sources/aravis/0.6/
 
 ### Links
 
 * Github repository: https://github.com/AravisProject/aravis
 * Mailing list: aravis@freelists.org ( http://www.freelists.org/list/aravis )
-* Aravis 0.4 documentation: https://aravisproject.github.io/docs/aravis-0.4/
-* Aravis 0.5 (unstable) documentation: https://aravisproject.github.io/docs/aravis-0.5/
+* Aravis 0.6 documentation: https://aravisproject.github.io/docs/aravis-0.6/
 * Blog: http://blogs.gnome.org/emmanuel/category/aravis/
 * Genicam standard : http://www.genicam.org
