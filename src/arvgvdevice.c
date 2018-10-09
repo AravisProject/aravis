@@ -748,6 +748,10 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device)
 	guint max_size, min_size, current_size;
 	guint packet_size = 1500;
 	char *buffer;
+	struct ifreq req;
+	struct ifaddrs *addrs, *iap;
+	struct sockaddr_in *sa;
+	char buf[32];
 
 	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), 1500);
 
@@ -786,12 +790,6 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device)
 	max_size = 16384;
 	min_size = 256;
 
-	struct ifreq req;
-
-	struct ifaddrs *addrs, *iap;
-	struct sockaddr_in *sa;
-	char buf[32];
-
 	gchar* interface_address_string = g_inet_address_to_string(interface_address);
 
 	req.ifr_name[0] = '\0';
@@ -800,9 +798,9 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device)
 	for (iap = addrs; iap != NULL; iap = iap->ifa_next) {
 		if (iap->ifa_addr && (iap->ifa_flags & IFF_UP) && iap->ifa_addr->sa_family == AF_INET) {
 			sa = (struct sockaddr_in *)(iap->ifa_addr);
-			inet_ntop(iap->ifa_addr->sa_family, (void *)&(sa->sin_addr), buf, sizeof(buf));
-			if (g_strcmp0(buf, interface_address_string) == 0)
-				g_strlcpy(req.ifr_name, iap->ifa_name, IF_NAMESIZE);
+			inet_ntop (iap->ifa_addr->sa_family, (void *)&(sa->sin_addr), buf, sizeof(buf));
+			if (g_strcmp0 (buf, interface_address_string) == 0)
+				g_strlcpy (req.ifr_name, iap->ifa_name, IF_NAMESIZE);
 		}
 	}
 	freeifaddrs(addrs);
