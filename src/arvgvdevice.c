@@ -789,6 +789,8 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device)
 		arv_debug_device ("[GvDevice::auto_packet_size] Try packet size = %d", current_size);
 		arv_device_set_integer_feature_value (device, "GevSCPSPacketSize", current_size);
 
+        current_size = arv_device_get_integer_feature_value(device, "GevSCPSPacketSize");
+
 		do {
 			if (is_command) {
 				arv_device_execute_command (device, "GevSCPSFireTestPacket");
