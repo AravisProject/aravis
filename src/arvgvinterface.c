@@ -480,7 +480,7 @@ arv_gv_interface_camera_locate (ArvGvInterface *gv_interface, GInetAddress *devi
 				struct sockaddr_in *mask = (struct sockaddr_in *)ifap_iter->ifa_netmask;
 				if ((sa->sin_addr.s_addr & mask->sin_addr.s_addr) == (device_sockaddr.sin_addr.s_addr & mask->sin_addr.s_addr)) {
 					GSocketAddress *socket_address = g_socket_address_new_from_native(ifap_iter->ifa_addr, sizeof(struct sockaddr));
-					GInetAddress *inet_address = g_inet_socket_address_get_address(G_INET_SOCKET_ADDRESS(socket_address));
+					GInetAddress *inet_address = g_object_ref(g_inet_socket_address_get_address(G_INET_SOCKET_ADDRESS(socket_address)));
 
 					freeifaddrs(ifap);
 
