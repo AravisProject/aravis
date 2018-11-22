@@ -464,37 +464,36 @@ arv_gv_interface_camera_locate (ArvGvInterface *gv_interface, GInetAddress *devi
 	struct ifaddrs *ifap_iter;
 	struct sockaddr_in device_sockaddr;
 
-	if (getifaddrs(&ifap) < 0)
-		return socket_list;
+	device_socket_address = g_inet_socket_address_new(device_address, ARV_GVCP_PORT);
 
-	device_socket_address = g_inet_socket_address_new (device_address, ARV_GVCP_PORT);
+	if (getifaddrs(&ifap) >= 0) {
+		g_socket_address_to_native(device_socket_address, &device_sockaddr, sizeof(device_sockaddr), NULL);
 
-	g_socket_address_to_native(device_socket_address, &device_sockaddr, sizeof(device_sockaddr), NULL);
+		// find interface whose netmask matches the camera's address
+		for (ifap_iter = ifap; ifap_iter != NULL; ifap_iter = ifap_iter->ifa_next) {
+			if ((ifap_iter->ifa_flags & IFF_UP) != 0 &&
+			(ifap_iter->ifa_flags & IFF_POINTOPOINT) == 0 &&
+			(ifap_iter->ifa_netmask != NULL) &&
+			(ifap_iter->ifa_addr != NULL) &&
+			(ifap_iter->ifa_addr->sa_family == AF_INET)) {
+				struct sockaddr_in *sa = (struct sockaddr_in *)ifap_iter->ifa_addr;
+				struct sockaddr_in *mask = (struct sockaddr_in *)ifap_iter->ifa_netmask;
+				if ((sa->sin_addr.s_addr & mask->sin_addr.s_addr) == (device_sockaddr.sin_addr.s_addr & mask->sin_addr.s_addr)) {
+					GSocketAddress *socket_address = g_socket_address_new_from_native(ifap_iter->ifa_addr, sizeof(struct sockaddr));
+					GInetAddress *inet_address = g_inet_socket_address_get_address(G_INET_SOCKET_ADDRESS(socket_address));
 
-	// find interface whose netmask matches the camera's address
-	for (ifap_iter = ifap; ifap_iter != NULL; ifap_iter = ifap_iter->ifa_next) {
-		if ((ifap_iter->ifa_flags & IFF_UP) != 0 &&
-		    (ifap_iter->ifa_flags & IFF_POINTOPOINT) == 0 &&
-		    (ifap_iter->ifa_netmask != NULL) &&
-		    (ifap_iter->ifa_addr != NULL) &&
-		    (ifap_iter->ifa_addr->sa_family == AF_INET)) {
-			struct sockaddr_in *sa = (struct sockaddr_in *)ifap_iter->ifa_addr;
-			struct sockaddr_in *mask = (struct sockaddr_in *)ifap_iter->ifa_netmask;
-			if ((sa->sin_addr.s_addr & mask->sin_addr.s_addr) == (device_sockaddr.sin_addr.s_addr & mask->sin_addr.s_addr)) {
-				GSocketAddress *socket_address = g_socket_address_new_from_native(ifap_iter->ifa_addr, sizeof(struct sockaddr));
-				GInetAddress *inet_address = g_inet_socket_address_get_address(G_INET_SOCKET_ADDRESS(socket_address));
+					freeifaddrs(ifap);
 
-				freeifaddrs(ifap);
+					g_object_unref(socket_address);
+					g_object_unref(device_socket_address);
 
-				g_object_unref(socket_address);
-				g_object_unref(device_socket_address);
-
-				return inet_address;
+					return inet_address;
+				}
 			}
 		}
-	}
 
-	freeifaddrs(ifap);
+		freeifaddrs(ifap);
+	}
 
 	socket_list = arv_gv_discover_socket_list_new();
 
