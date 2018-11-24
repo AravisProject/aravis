@@ -537,11 +537,17 @@ arv_fake_camera_class_init (ArvFakeCameraClass *fake_camera_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (fake_camera_class);
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 	g_type_class_add_private (fake_camera_class, sizeof (ArvFakeCameraPrivate));
+#endif
 
 	parent_class = g_type_class_peek_parent (fake_camera_class);
 
 	object_class->finalize = arv_fake_camera_finalize;
 }
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 G_DEFINE_TYPE (ArvFakeCamera, arv_fake_camera, G_TYPE_OBJECT)
+#else
+G_DEFINE_TYPE_WITH_CODE (ArvFakeCamera, arv_fake_camera, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvFakeCamera))
+#endif

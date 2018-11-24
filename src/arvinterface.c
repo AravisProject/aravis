@@ -344,11 +344,17 @@ arv_interface_class_init (ArvInterfaceClass *interface_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (interface_class);
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 	g_type_class_add_private (interface_class, sizeof (ArvInterfacePrivate));
+#endif
 
 	parent_class = g_type_class_peek_parent (interface_class);
 
 	object_class->finalize = arv_interface_finalize;
 }
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 G_DEFINE_ABSTRACT_TYPE (ArvInterface, arv_interface, G_TYPE_OBJECT)
+#else
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvInterface, arv_interface, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvInterface))
+#endif

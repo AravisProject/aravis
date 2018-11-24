@@ -596,7 +596,9 @@ arv_gv_fake_camera_class_init (ArvGvFakeCameraClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 	g_type_class_add_private (this_class, sizeof (ArvGvFakeCameraPrivate));
+#endif
 
 	parent_class = g_type_class_peek_parent (this_class);
 
@@ -610,9 +612,13 @@ arv_gv_fake_camera_class_init (ArvGvFakeCameraClass *this_class)
 							      "Interface name",
 							      "Interface name",
 							      NULL,
-							      G_PARAM_CONSTRUCT_ONLY|
-							      G_PARAM_WRITABLE|
-							      G_PARAM_STATIC_NAME|G_PARAM_STATIC_NICK|G_PARAM_STATIC_BLURB));
+							      G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
 }
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 G_DEFINE_TYPE (ArvGvFakeCamera, arv_gv_fake_camera, G_TYPE_OBJECT)
+#else
+G_DEFINE_TYPE_WITH_CODE (ArvGvFakeCamera, arv_gv_fake_camera, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvGvFakeCamera))
+#endif

@@ -241,7 +241,9 @@ arv_gc_port_class_init (ArvGcPortClass *this_class)
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 	g_type_class_add_private (this_class, sizeof (ArvGcPortPrivate));
+#endif
 
 	parent_class = g_type_class_peek_parent (this_class);
 
@@ -251,4 +253,8 @@ arv_gc_port_class_init (ArvGcPortClass *this_class)
 	dom_node_class->pre_remove_child = _pre_remove_child;
 }
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 G_DEFINE_TYPE (ArvGcPort, arv_gc_port, ARV_TYPE_GC_FEATURE_NODE)
+#else
+G_DEFINE_TYPE_WITH_CODE (ArvGcPort, arv_gc_port, ARV_TYPE_GC_FEATURE_NODE, G_ADD_PRIVATE(ArvGcPort))
+#endif

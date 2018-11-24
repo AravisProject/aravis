@@ -391,7 +391,9 @@ arv_uv_interface_class_init (ArvUvInterfaceClass *uv_interface_class)
 	GObjectClass *object_class = G_OBJECT_CLASS (uv_interface_class);
 	ArvInterfaceClass *interface_class = ARV_INTERFACE_CLASS (uv_interface_class);
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 	g_type_class_add_private (uv_interface_class, sizeof (ArvUvInterfacePrivate));
+#endif
 
 	parent_class = g_type_class_peek_parent (uv_interface_class);
 
@@ -403,4 +405,8 @@ arv_uv_interface_class_init (ArvUvInterfaceClass *uv_interface_class)
 	interface_class->protocol = "USB3Vision";
 }
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 G_DEFINE_TYPE (ArvUvInterface, arv_uv_interface, ARV_TYPE_INTERFACE)
+#else
+G_DEFINE_TYPE_WITH_CODE (ArvUvInterface, arv_uv_interface, ARV_TYPE_INTERFACE, G_ADD_PRIVATE (ArvUvInterface))
+#endif

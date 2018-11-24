@@ -1299,7 +1299,9 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 	GObjectClass *object_class = G_OBJECT_CLASS (gv_stream_class);
 	ArvStreamClass *stream_class = ARV_STREAM_CLASS (gv_stream_class);
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 	g_type_class_add_private (gv_stream_class, sizeof (ArvGvStreamPrivate));
+#endif
 
 	parent_class = g_type_class_peek_parent (gv_stream_class);
 
@@ -1359,4 +1361,8 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 		);
 }
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 G_DEFINE_TYPE (ArvGvStream, arv_gv_stream, ARV_TYPE_STREAM)
+#else
+G_DEFINE_TYPE_WITH_CODE (ArvGvStream, arv_gv_stream, ARV_TYPE_STREAM, G_ADD_PRIVATE (ArvGvStream))
+#endif

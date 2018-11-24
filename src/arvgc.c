@@ -386,7 +386,9 @@ arv_gc_class_init (ArvGcClass *node_class)
 	ArvDomNodeClass *d_node_class = ARV_DOM_NODE_CLASS (node_class);
 	ArvDomDocumentClass *d_document_class = ARV_DOM_DOCUMENT_CLASS (node_class);
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 	g_type_class_add_private (node_class, sizeof (ArvGcPrivate));
+#endif
 
 	parent_class = g_type_class_peek_parent (node_class);
 
@@ -395,4 +397,8 @@ arv_gc_class_init (ArvGcClass *node_class)
 	d_document_class->create_element = arv_gc_create_element;
 }
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 G_DEFINE_TYPE (ArvGc, arv_gc, ARV_TYPE_DOM_DOCUMENT)
+#else
+G_DEFINE_TYPE_WITH_CODE (ArvGc, arv_gc, ARV_TYPE_DOM_DOCUMENT, G_ADD_PRIVATE (ArvGc))
+#endif

@@ -2322,7 +2322,9 @@ arv_camera_class_init (ArvCameraClass *camera_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (camera_class);
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 	g_type_class_add_private (camera_class, sizeof (ArvCameraPrivate));
+#endif
 
 	parent_class = g_type_class_peek_parent (camera_class);
 
@@ -2340,4 +2342,8 @@ arv_camera_class_init (ArvCameraClass *camera_class)
 							      G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 }
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 G_DEFINE_TYPE (ArvCamera, arv_camera, G_TYPE_OBJECT)
+#else
+G_DEFINE_TYPE_WITH_CODE (ArvCamera, arv_camera, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvCamera))
+#endif

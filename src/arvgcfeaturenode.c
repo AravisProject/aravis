@@ -429,7 +429,9 @@ arv_gc_feature_node_class_init (ArvGcFeatureNodeClass *this_class)
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
 	ArvDomElementClass *dom_element_class = ARV_DOM_ELEMENT_CLASS (this_class);
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 	g_type_class_add_private (this_class, sizeof (ArvGcFeatureNodePrivate));
+#endif
 
 	parent_class = g_type_class_peek_parent (this_class);
 
@@ -442,4 +444,8 @@ arv_gc_feature_node_class_init (ArvGcFeatureNodeClass *this_class)
 	this_class->get_value_type = NULL;
 }
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 G_DEFINE_TYPE (ArvGcFeatureNode, arv_gc_feature_node, ARV_TYPE_GC_NODE)
+#else
+G_DEFINE_TYPE_WITH_CODE (ArvGcFeatureNode, arv_gc_feature_node, ARV_TYPE_GC_NODE, G_ADD_PRIVATE (ArvGcFeatureNode))
+#endif

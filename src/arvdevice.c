@@ -767,7 +767,9 @@ arv_device_class_init (ArvDeviceClass *device_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (device_class);
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 	g_type_class_add_private (device_class, sizeof (ArvDevicePrivate));
+#endif
 
 	parent_class = g_type_class_peek_parent (device_class);
 
@@ -794,4 +796,8 @@ arv_device_class_init (ArvDeviceClass *device_class)
 			      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
 }
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 G_DEFINE_ABSTRACT_TYPE (ArvDevice, arv_device, G_TYPE_OBJECT)
+#else
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvDevice, arv_device, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvDevice))
+#endif

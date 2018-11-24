@@ -182,7 +182,9 @@ arv_xml_schema_class_init (ArvXmlSchemaClass *this_class)
 {
 	GObjectClass *gobject_class = G_OBJECT_CLASS (this_class);
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 	g_type_class_add_private (this_class, sizeof (ArvXmlSchemaPrivate));
+#endif
 
 	parent_class = g_type_class_peek_parent (this_class);
 
@@ -191,4 +193,8 @@ arv_xml_schema_class_init (ArvXmlSchemaClass *this_class)
 	xmlLineNumbersDefault (1);
 }
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 G_DEFINE_TYPE (ArvXmlSchema, arv_xml_schema, G_TYPE_OBJECT)
+#else
+G_DEFINE_TYPE_WITH_CODE (ArvXmlSchema, arv_xml_schema, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvXmlSchema))
+#endif

@@ -383,7 +383,9 @@ arv_stream_class_init (ArvStreamClass *node_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (node_class);
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 	g_type_class_add_private (node_class, sizeof (ArvStreamPrivate));
+#endif
 
 	parent_class = g_type_class_peek_parent (node_class);
 
@@ -424,5 +426,9 @@ arv_stream_class_init (ArvStreamClass *node_class)
 		);
 }
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 G_DEFINE_ABSTRACT_TYPE (ArvStream, arv_stream, G_TYPE_OBJECT)
+#else
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvStream, arv_stream, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvStream))
+#endif
 

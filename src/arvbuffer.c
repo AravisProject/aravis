@@ -536,11 +536,17 @@ arv_buffer_class_init (ArvBufferClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 	g_type_class_add_private (this_class, sizeof (ArvBufferPrivate));
+#endif
 
 	parent_class = g_type_class_peek_parent (this_class);
 
 	object_class->finalize = arv_buffer_finalize;
 }
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 G_DEFINE_TYPE (ArvBuffer, arv_buffer, G_TYPE_OBJECT)
+#else
+G_DEFINE_TYPE_WITH_CODE (ArvBuffer, arv_buffer, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvBuffer))
+#endif

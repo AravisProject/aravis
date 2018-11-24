@@ -1497,11 +1497,17 @@ arv_evaluator_class_init (ArvEvaluatorClass *evaluator_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (evaluator_class);
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 	g_type_class_add_private (evaluator_class, sizeof (ArvEvaluatorPrivate));
+#endif
 
 	parent_class = g_type_class_peek_parent (evaluator_class);
 
 	object_class->finalize = arv_evaluator_finalize;
 }
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 G_DEFINE_TYPE (ArvEvaluator, arv_evaluator, G_TYPE_OBJECT)
+#else
+G_DEFINE_TYPE_WITH_CODE (ArvEvaluator, arv_evaluator, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvEvaluator))
+#endif

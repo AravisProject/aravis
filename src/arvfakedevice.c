@@ -154,7 +154,9 @@ arv_fake_device_class_init (ArvFakeDeviceClass *fake_device_class)
 	GObjectClass *object_class = G_OBJECT_CLASS (fake_device_class);
 	ArvDeviceClass *device_class = ARV_DEVICE_CLASS (fake_device_class);
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 	g_type_class_add_private (fake_device_class, sizeof (ArvFakeDevicePrivate));
+#endif
 
 	parent_class = g_type_class_peek_parent (fake_device_class);
 
@@ -169,4 +171,8 @@ arv_fake_device_class_init (ArvFakeDeviceClass *fake_device_class)
 	device_class->write_register = arv_fake_device_write_register;
 }
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 G_DEFINE_TYPE (ArvFakeDevice, arv_fake_device, ARV_TYPE_DEVICE)
+#else
+G_DEFINE_TYPE_WITH_CODE (ArvFakeDevice, arv_fake_device, ARV_TYPE_DEVICE, G_ADD_PRIVATE (ArvFakeDevice))
+#endif

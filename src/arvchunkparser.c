@@ -267,7 +267,9 @@ arv_chunk_parser_class_init (ArvChunkParserClass *node_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (node_class);
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 	g_type_class_add_private (node_class, sizeof (ArvChunkParserPrivate));
+#endif
 
 	parent_class = g_type_class_peek_parent (node_class);
 
@@ -283,4 +285,8 @@ arv_chunk_parser_class_init (ArvChunkParserClass *node_class)
 		);
 }
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 G_DEFINE_TYPE (ArvChunkParser, arv_chunk_parser, G_TYPE_OBJECT)
+#else
+G_DEFINE_TYPE_WITH_CODE (ArvChunkParser, arv_chunk_parser, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvChunkParser))
+#endif

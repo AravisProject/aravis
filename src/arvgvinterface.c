@@ -683,7 +683,9 @@ arv_gv_interface_class_init (ArvGvInterfaceClass *gv_interface_class)
 	GObjectClass *object_class = G_OBJECT_CLASS (gv_interface_class);
 	ArvInterfaceClass *interface_class = ARV_INTERFACE_CLASS (gv_interface_class);
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 	g_type_class_add_private (gv_interface_class, sizeof (ArvGvInterfacePrivate));
+#endif
 
 	parent_class = g_type_class_peek_parent (gv_interface_class);
 
@@ -695,4 +697,8 @@ arv_gv_interface_class_init (ArvGvInterfaceClass *gv_interface_class)
 	interface_class->protocol = "GigEVision";
 }
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 G_DEFINE_TYPE (ArvGvInterface, arv_gv_interface, ARV_TYPE_INTERFACE)
+#else
+G_DEFINE_TYPE_WITH_CODE (ArvGvInterface, arv_gv_interface, ARV_TYPE_INTERFACE, G_ADD_PRIVATE (ArvGvInterface))
+#endif

@@ -197,7 +197,9 @@ arv_fake_stream_class_init (ArvFakeStreamClass *fake_stream_class)
 	GObjectClass *object_class = G_OBJECT_CLASS (fake_stream_class);
 	ArvStreamClass *stream_class = ARV_STREAM_CLASS (fake_stream_class);
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 	g_type_class_add_private (fake_stream_class, sizeof (ArvFakeStreamPrivate));
+#endif
 
 	parent_class = g_type_class_peek_parent (fake_stream_class);
 
@@ -206,4 +208,8 @@ arv_fake_stream_class_init (ArvFakeStreamClass *fake_stream_class)
 	stream_class->get_statistics = arv_fake_stream_get_statistics;
 }
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 G_DEFINE_TYPE (ArvFakeStream, arv_fake_stream, ARV_TYPE_STREAM)
+#else
+G_DEFINE_TYPE_WITH_CODE (ArvFakeStream, arv_fake_stream, ARV_TYPE_STREAM, G_ADD_PRIVATE (ArvFakeStream))
+#endif
