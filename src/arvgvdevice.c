@@ -789,7 +789,7 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device)
 		arv_debug_device ("[GvDevice::auto_packet_size] Try packet size = %d", current_size);
 		arv_device_set_integer_feature_value (device, "GevSCPSPacketSize", current_size);
 
-        current_size = arv_device_get_integer_feature_value(device, "GevSCPSPacketSize");
+		current_size = arv_device_get_integer_feature_value(device, "GevSCPSPacketSize");
 
 		do {
 			if (is_command) {
@@ -1355,7 +1355,11 @@ arv_gv_device_new (GInetAddress *interface_address, GInetAddress *device_address
 		return NULL;
 	}
 
-	arv_gv_device_take_control (gv_device);
+	if (!arv_gv_device_take_control (gv_device)) {
+		arv_warning_device ("[GvDevice::new] Failed to take control of device");
+		g_object_unref (gv_device);
+		return NULL;
+	}
 
 	heartbeat_data = g_new (ArvGvDeviceHeartbeatData, 1);
 	heartbeat_data->gv_device = gv_device;
