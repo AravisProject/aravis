@@ -38,6 +38,7 @@
  * </example>
  */
 
+#include <arvconfig.h>
 #include <arvcamera.h>
 #include <arvsystem.h>
 #include <arvgvinterface.h>
