@@ -525,7 +525,7 @@ _bootstrap (ArvUvDevice *uv_device)
 											 zip_filename,
 											 &uv_device->priv->genicam_xml_size);
 
-					arv_debug_device ("zip file = %s", zip_filename);
+					arv_debug_device ("zip file =                 %s", zip_filename);
 
 #if 0
 					string = g_string_new ("");

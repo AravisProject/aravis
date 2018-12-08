@@ -216,8 +216,15 @@ arv_uv_stream_thread (void *data)
 	return NULL;
 }
 
-/* ArvUvStream implemenation */
+/* ArvUvStream implementation */
 
+static guint32
+align (guint32 val, guint32 alignment)
+{
+	g_assert (alignment % 2 == 0 && alignment > 0);
+
+	return (val + (alignment - 1)) & ~(alignment - 1);
+}
 
 /**
  * arv_uv_stream_new: (skip)
@@ -237,6 +244,7 @@ arv_uv_stream_new (ArvUvDevice *uv_device, ArvStreamCallback callback, void *use
 	ArvStream *stream;
 	guint64 offset;
 	guint64 sirm_offset;
+	guint32 si_info;
 	guint64 si_req_payload_size;
 	guint32 si_req_leader_size;
 	guint32 si_req_trailer_size;
@@ -245,6 +253,8 @@ arv_uv_stream_new (ArvUvDevice *uv_device, ArvStreamCallback callback, void *use
 	guint32 si_transfer1_size;
 	guint32 si_transfer2_size;
 	guint32 si_control;
+	guint32 alignment;
+	guint32 aligned_maximum_transfer_size;
 
 	g_return_val_if_fail (ARV_IS_UV_DEVICE (uv_device), NULL);
 
@@ -252,27 +262,39 @@ arv_uv_stream_new (ArvUvDevice *uv_device, ArvStreamCallback callback, void *use
 
 	arv_device_read_memory (device, ARV_ABRM_SBRM_ADDRESS, sizeof (guint64), &offset, NULL);
 	arv_device_read_memory (device, offset + ARV_SBRM_SIRM_ADDRESS, sizeof (guint64), &sirm_offset, NULL);
+	arv_device_read_memory (device, sirm_offset + ARV_SI_INFO, sizeof (si_info), &si_info, NULL);
 	arv_device_read_memory (device, sirm_offset + ARV_SI_REQ_PAYLOAD_SIZE, sizeof (si_req_payload_size), &si_req_payload_size, NULL);
 	arv_device_read_memory (device, sirm_offset + ARV_SI_REQ_LEADER_SIZE, sizeof (si_req_leader_size), &si_req_leader_size, NULL);
 	arv_device_read_memory (device, sirm_offset + ARV_SI_REQ_TRAILER_SIZE, sizeof (si_req_trailer_size), &si_req_trailer_size, NULL);
 
+	alignment = 1 << ((si_info & ARV_SI_INFO_ALIGNMENT_MASK) >> ARV_SI_INFO_ALIGNMENT_SHIFT);
+
+	arv_debug_stream ("SI_INFO            =       0x%08x", si_info);
 	arv_debug_stream ("SI_REQ_PAYLOAD_SIZE =      0x%016lx", si_req_payload_size);
 	arv_debug_stream ("SI_REQ_LEADER_SIZE =       0x%08x", si_req_leader_size);
 	arv_debug_stream ("SI_REQ_TRAILER_SIZE =      0x%08x", si_req_trailer_size);
 
+	arv_debug_stream ("Required alignment =       %d", alignment);
+
+	aligned_maximum_transfer_size = ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE / alignment * alignment;
+
 	if (si_req_leader_size < 1) {
-		arv_warning_stream ("Wrong SI_REQ_LEADER_SIZE value, using %d instead", ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE);
-		si_req_leader_size = ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE;
+		arv_warning_stream ("Wrong SI_REQ_LEADER_SIZE value, using %d instead", aligned_maximum_transfer_size);
+		si_req_leader_size = aligned_maximum_transfer_size;
+	} else {
+		si_req_leader_size = align (si_req_leader_size, alignment);
 	}
 
 	if (si_req_trailer_size < 1) {
-		arv_warning_stream ("Wrong SI_REQ_TRAILER_SIZE value, using %d instead", ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE);
-		si_req_trailer_size = ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE;
+		arv_warning_stream ("Wrong SI_REQ_TRAILER_SIZE value, using %d instead", aligned_maximum_transfer_size);
+		si_req_trailer_size = aligned_maximum_transfer_size;
+	} else {
+		si_req_trailer_size = align (si_req_trailer_size, alignment);
 	}
 
-	si_payload_size = ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE;
+	si_payload_size = aligned_maximum_transfer_size;
 	si_payload_count=  si_req_payload_size / si_payload_size;
-	si_transfer1_size = si_req_payload_size % si_payload_size;
+	si_transfer1_size = align(si_req_payload_size % si_payload_size, alignment);
 	si_transfer2_size = 0;
 
 	arv_device_write_memory (device, sirm_offset + ARV_SI_MAX_LEADER_SIZE, sizeof (si_req_leader_size), &si_req_leader_size, NULL);
