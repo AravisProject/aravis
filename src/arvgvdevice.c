@@ -742,6 +742,7 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device)
 	guint max_size, min_size, current_size;
 	guint packet_size = 1500;
 	char *buffer;
+	guint last_size = 0;
 
 	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), 1500);
 
@@ -789,7 +790,12 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device)
 		arv_debug_device ("[GvDevice::auto_packet_size] Try packet size = %d", current_size);
 		arv_device_set_integer_feature_value (device, "GevSCPSPacketSize", current_size);
 
-        current_size = arv_device_get_integer_feature_value(device, "GevSCPSPacketSize");
+		current_size = arv_device_get_integer_feature_value(device, "GevSCPSPacketSize");
+
+		if (current_size == last_size)
+			break;
+
+		last_size = current_size;
 
 		do {
 			if (is_command) {
