@@ -726,7 +726,7 @@ arv_uv_device_finalize (GObject *object)
 {
 	ArvUvDevice *uv_device = ARV_UV_DEVICE (object);
 
-	g_object_unref (uv_device->priv->genicam);
+	g_clear_object (&uv_device->priv->genicam);
 
 	g_clear_pointer (&uv_device->priv->vendor, g_free);
 	g_clear_pointer (&uv_device->priv->product, g_free);
