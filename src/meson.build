@@ -206,7 +206,6 @@ pkg.generate (libraries: [aravis_library, libm],
 	      requires_private: aravis_private_dependency_str)
 
 progs = [[ 'arv-tool', 			'arvtool.c'],
-	 [ 'arv-test',			'arvtest.c'],
 	 [ 'arv-fake-gv-camera', 	'arvfakegvcamera.c']]
 
 foreach p: progs
