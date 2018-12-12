@@ -920,7 +920,7 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
 			if (camera->priv->has_acquisition_frame_rate_enabled)
 				arv_device_set_integer_feature_value (camera->priv->device, "AcquisitionFrameRateEnabled", 1);
 			else
-				arv_device_set_integer_feature_value (camera->priv->device, "AcquisitionFrameRateEnable", 1);
+				arv_device_set_boolean_feature_value (camera->priv->device, "AcquisitionFrameRateEnable", 1);
 			arv_device_set_string_feature_value (camera->priv->device, "AcquisitionFrameRateAuto", "Off");
 			arv_device_set_float_feature_value (camera->priv->device, "AcquisitionFrameRate", frame_rate);
 			break;

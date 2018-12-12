@@ -42,6 +42,7 @@
 #include <ifaddrs.h>
 #include <stdlib.h>
 #include <string.h>
+#include <netinet/in.h>
 
 /* ArvGvDiscoverSocket implementation */
 
@@ -459,8 +460,42 @@ arv_gv_interface_camera_locate (ArvGvInterface *gv_interface, GInetAddress *devi
 	GSocketAddress *device_socket_address;
 	size_t size;
 	int i, count;
+	struct ifaddrs *ifap = NULL;
+	struct ifaddrs *ifap_iter;
+	struct sockaddr_in device_sockaddr;
 
-	socket_list = arv_gv_discover_socket_list_new ();
+	device_socket_address = g_inet_socket_address_new(device_address, ARV_GVCP_PORT);
+
+	if (getifaddrs(&ifap) >= 0) {
+		g_socket_address_to_native(device_socket_address, &device_sockaddr, sizeof(device_sockaddr), NULL);
+
+		// find interface whose netmask matches the camera's address
+		for (ifap_iter = ifap; ifap_iter != NULL; ifap_iter = ifap_iter->ifa_next) {
+			if ((ifap_iter->ifa_flags & IFF_UP) != 0 &&
+			(ifap_iter->ifa_flags & IFF_POINTOPOINT) == 0 &&
+			(ifap_iter->ifa_netmask != NULL) &&
+			(ifap_iter->ifa_addr != NULL) &&
+			(ifap_iter->ifa_addr->sa_family == AF_INET)) {
+				struct sockaddr_in *sa = (struct sockaddr_in *)ifap_iter->ifa_addr;
+				struct sockaddr_in *mask = (struct sockaddr_in *)ifap_iter->ifa_netmask;
+				if ((sa->sin_addr.s_addr & mask->sin_addr.s_addr) == (device_sockaddr.sin_addr.s_addr & mask->sin_addr.s_addr)) {
+					GSocketAddress *socket_address = g_socket_address_new_from_native(ifap_iter->ifa_addr, sizeof(struct sockaddr));
+					GInetAddress *inet_address = g_object_ref(g_inet_socket_address_get_address(G_INET_SOCKET_ADDRESS(socket_address)));
+
+					freeifaddrs(ifap);
+
+					g_object_unref(socket_address);
+					g_object_unref(device_socket_address);
+
+					return inet_address;
+				}
+			}
+		}
+
+		freeifaddrs(ifap);
+	}
+
+	socket_list = arv_gv_discover_socket_list_new();
 
 	if (socket_list->n_sockets < 1) {
 		arv_gv_discover_socket_list_free (socket_list);
@@ -469,7 +504,6 @@ arv_gv_interface_camera_locate (ArvGvInterface *gv_interface, GInetAddress *devi
 
 	/* Just read a random register from the camera socket */
 	packet = arv_gvcp_packet_new_read_register_cmd (ARV_GVBS_N_STREAM_CHANNELS_OFFSET, 0, &size);
-	device_socket_address = g_inet_socket_address_new (device_address, ARV_GVCP_PORT);
 
 	for (iter = socket_list->sockets; iter != NULL; iter = iter->next) {
 		ArvGvDiscoverSocket *socket = iter->data;
@@ -484,6 +518,8 @@ arv_gv_interface_camera_locate (ArvGvInterface *gv_interface, GInetAddress *devi
 			g_error_free (error);
 		}
 	}
+
+	g_object_unref(device_socket_address);
 
 	arv_gvcp_packet_free (packet);
 
