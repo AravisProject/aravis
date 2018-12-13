@@ -124,6 +124,24 @@ library_headers = [
 	'arvxmlschema.h'
 ]
 
+library_private_headers = [
+	'arvbufferprivate.h',
+	'arvchunkparserprivate.h',
+	'arvdeviceprivate.h',
+	'arvfakedeviceprivate.h',
+	'arvfakeinterfaceprivate.h',
+	'arvfakestreamprivate.h',
+	'arvgvdeviceprivate.h',
+	'arvgvinterfaceprivate.h',
+	'arvgvstreamprivate.h',
+	'arvinterfaceprivate.h',
+	'arvrealtimeprivate.h',
+	'arvstreamprivate.h',
+	'arvuvdeviceprivate.h',
+	'arvuvinterfaceprivate.h',
+	'arvuvstreamprivate.h'
+]
+
 library_no_introspection_headers = [
 	'arvmisc.h',
 	'arvzip.h',
@@ -184,7 +202,7 @@ library_c_args = [
 
 aravis_library = library ('aravis-@0@'.format (aravis_api_version),
 	library_sources, library_headers,
-	library_no_introspection_sources, library_no_introspection_headers,
+	library_no_introspection_sources, library_no_introspection_headers, library_private_headers,
 	library_enums,
 	version: aravis_version,
 	soversion: '0',
