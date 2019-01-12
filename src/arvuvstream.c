@@ -210,6 +210,10 @@ arv_uv_stream_thread (void *data)
 		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_EXIT, NULL);
 
 	g_free (incoming_buffer);
+        // The thread was cancelled with unprocessed frame. Release it to prevent memory leak
+        if (buffer != NULL) {
+       		g_object_unref(buffer);
+       	}
 
 	arv_log_stream_thread ("Stop USB3Vision stream thread");
 
