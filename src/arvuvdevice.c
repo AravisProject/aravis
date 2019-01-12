@@ -51,7 +51,7 @@ struct _ArvUvDevicePrivate {
 
 	ArvGc *genicam;
 
-	const char *genicam_xml;
+	char *genicam_xml;
 	size_t genicam_xml_size;
 
 	guint16 packet_id;
