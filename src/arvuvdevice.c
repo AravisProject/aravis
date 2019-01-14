@@ -51,7 +51,7 @@ struct _ArvUvDevicePrivate {
 
 	ArvGc *genicam;
 
-	const char *genicam_xml;
+	char *genicam_xml;
 	size_t genicam_xml_size;
 
 	guint16 packet_id;
@@ -731,6 +731,7 @@ arv_uv_device_finalize (GObject *object)
 	g_clear_pointer (&uv_device->priv->vendor, g_free);
 	g_clear_pointer (&uv_device->priv->product, g_free);
 	g_clear_pointer (&uv_device->priv->serial_nbr, g_free);
+	g_clear_pointer (&uv_device->priv->genicam_xml, g_free);
 	if (uv_device->priv->usb_device != NULL) {
 		libusb_release_interface (uv_device->priv->usb_device, uv_device->priv->control_interface);
 		libusb_release_interface (uv_device->priv->usb_device, uv_device->priv->data_interface);
