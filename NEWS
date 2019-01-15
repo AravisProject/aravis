@@ -1,3 +1,11 @@
+Release 0.6.1
+=============
+
+  * gigevision: auto-packet size negociation improvements (Nils, Edgar)
+  * gigevision: interface addess assignment improvement (Nils)
+  * usb3vision: memory leak fixes (wuyuanyi)
+  * usb3vision: payload size computation fixes (Johannes)
+
 Release 0.6.0
 =============
 
