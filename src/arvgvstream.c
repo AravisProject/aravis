@@ -161,6 +161,7 @@ struct _ArvGvStreamThreadData {
 	ArvGvStreamSocketBuffer socket_buffer_option;
 	int socket_buffer_size;
 	int current_socket_buffer_size;
+	int cancel_fd[2];
 };
 
 static void
@@ -720,7 +721,7 @@ _loop (ArvGvStreamThreadData *thread_data)
 {
 	ArvGvStreamFrameData *frame;
 	ArvGvspPacket *packet;
-	GPollFD poll_fd;
+	GPollFD poll_fd[2];
 	GTimeVal current_time;
 	guint64 time_us;
 	size_t read_count;
@@ -729,9 +730,12 @@ _loop (ArvGvStreamThreadData *thread_data)
 
 	arv_debug_stream ("[GvStream::loop] Standard socket method");
 
-	poll_fd.fd = g_socket_get_fd (thread_data->socket);
-	poll_fd.events =  G_IO_IN;
-	poll_fd.revents = 0;
+	poll_fd[0].fd = g_socket_get_fd (thread_data->socket);
+	poll_fd[0].events =  G_IO_IN;
+	poll_fd[0].revents = 0;
+	poll_fd[1].fd = thread_data->cancel_fd[0];
+	poll_fd[1].events =  G_IO_IN;
+	poll_fd[1].revents = 0;
 
 	packet = g_malloc0 (ARV_GV_STREAM_INCOMING_BUFFER_SIZE);
 
@@ -741,7 +745,9 @@ _loop (ArvGvStreamThreadData *thread_data)
 		else
 			timeout_ms = ARV_GV_STREAM_POLL_TIMEOUT_US / 1000;
 
-		n_events = g_poll (&poll_fd, 1, timeout_ms);
+		n_events = g_poll (poll_fd, 2, timeout_ms);
+		if (poll_fd[1].revents != 0)
+			break;
 
 		g_get_current_time (&current_time);
 		time_us = current_time.tv_sec * 1000000 + current_time.tv_usec;
@@ -1088,6 +1094,8 @@ arv_gv_stream_new (ArvGvDevice *gv_device,
 	thread_data->socket_buffer_size = 0;
 	thread_data->current_socket_buffer_size = 0;
 
+	pipe(thread_data->cancel_fd);
+
 	gv_stream->priv->thread_data = thread_data;
 
 	thread_data->socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
@@ -1238,6 +1246,8 @@ arv_gv_stream_finalize (GObject *object)
 		thread_data = gv_stream->priv->thread_data;
 
 		g_atomic_int_set (&thread_data->cancel, TRUE);
+		char one = 1;
+		write(thread_data->cancel_fd[1], &one, 1);
 		g_thread_join (gv_stream->priv->thread);
 
 		statistic_string = arv_statistic_to_string (thread_data->statistic);
