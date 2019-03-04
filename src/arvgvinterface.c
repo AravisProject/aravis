@@ -64,6 +64,19 @@ arv_gv_discover_socket_set_broadcast (ArvGvDiscoverSocket *discover_socket, gboo
 	return result == 0;
 }
 
+static gboolean
+arv_gv_discover_socket_set_buffer_size (ArvGvDiscoverSocket *discover_socket, gint buffer_size)
+{
+	int socket_fd;
+	int result;
+
+	socket_fd = g_socket_get_fd (discover_socket->socket);
+
+	result = setsockopt (socket_fd, SOL_SOCKET, SO_RCVBUF, &buffer_size, sizeof (buffer_size));
+
+	return result == 0;
+}
+
 typedef struct {
 	unsigned int n_sockets;
 	GSList *sockets;
@@ -94,6 +107,7 @@ arv_gv_discover_socket_list_new (void)
 			GInetAddress *inet_address;
 			char *inet_address_string;
 			GError *error = NULL;
+			gint buffer_size = ARV_GV_INTERFACE_DISCOVERY_SOCKET_BUFFER_SIZE;
 
 			socket_address = g_socket_address_new_from_native (ifap_iter->ifa_addr,
 									   sizeof (struct sockaddr));
@@ -107,6 +121,7 @@ arv_gv_discover_socket_list_new (void)
 			discover_socket->socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
 								G_SOCKET_TYPE_DATAGRAM,
 								G_SOCKET_PROTOCOL_UDP, NULL);
+			arv_gv_discover_socket_set_buffer_size (discover_socket, buffer_size);
 			g_socket_bind (discover_socket->socket, discover_socket->interface_address, FALSE, &error);
 
 			socket_list->sockets = g_slist_prepend (socket_list->sockets, discover_socket);
@@ -460,6 +475,7 @@ arv_gv_interface_camera_locate (ArvGvInterface *gv_interface, GInetAddress *devi
 	GSocketAddress *device_socket_address;
 	size_t size;
 	int i, count;
+
 	struct ifaddrs *ifap = NULL;
 	struct ifaddrs *ifap_iter;
 	struct sockaddr_in device_sockaddr;
