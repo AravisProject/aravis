@@ -34,6 +34,7 @@ G_BEGIN_DECLS
 
 #define ARV_GV_INTERFACE_DISCOVERY_TIMEOUT_MS	1000
 #define ARV_GV_INTERFACE_SOCKET_BUFFER_SIZE	1024
+#define ARV_GV_INTERFACE_DISCOVERY_SOCKET_BUFFER_SIZE	(256*1024)
 
 typedef struct _ArvGvInterfacePrivate ArvGvInterfacePrivate;
 typedef struct _ArvGvInterfaceClass ArvGvInterfaceClass;
