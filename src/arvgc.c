@@ -93,6 +93,8 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 		node = arv_gc_converter_new ();
 	else if (strcmp (tag_name, "IntConverter") == 0)
 		node = arv_gc_converter_new_integer ();
+	else if (strcmp (tag_name, "Register") == 0)
+		node = arv_gc_register_node_new ();
 	else if (strcmp (tag_name, "IntReg") == 0)
 		node = arv_gc_register_node_new_integer ();
 	else if (strcmp (tag_name, "MaskedIntReg") == 0)
@@ -222,7 +224,7 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 	else if (strcmp (tag_name, "Group") == 0)
 		node = arv_gc_group_node_new ();
 	else
-		arv_debug_dom ("[Genicam::create_element] Unknow tag (%s)", tag_name);
+		arv_debug_dom ("[Genicam::create_element] Unknown tag (%s)", tag_name);
 
 	return ARV_DOM_ELEMENT (node);
 }
