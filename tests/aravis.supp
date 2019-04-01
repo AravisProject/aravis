@@ -76,6 +76,14 @@
 }
 
 {
+	g_type_create_instance
+		Memcheck:Leak
+		fun:g_type_create_instance
+		...
+		fun:g_type_class_ref
+}
+
+{
 	g_type_class_ref
 		Memcheck:Leak
 		fun:calloc
