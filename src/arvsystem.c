@@ -31,6 +31,7 @@
 #include <arvdebug.h>
 #include <string.h>
 #include <arvmisc.h>
+#include <arvdomimplementation.h>
 
 static GMutex arv_system_mutex;
 
@@ -431,6 +432,8 @@ arv_shutdown (void)
 		interfaces[i].destroy_interface_instance ();
 
 	arv_debug_shutdown ();
+
+	arv_dom_implementation_cleanup ();
 
 	g_mutex_unlock (&arv_system_mutex);
 }
