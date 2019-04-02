@@ -401,15 +401,9 @@ arv_gc_property_node_get_double (ArvGcPropertyNode *node, GError **error)
 
 
 	if (ARV_IS_GC_FLOAT (pvalue_node)) {
-		GError *local_error = NULL;
-		double value;
-
-		value = arv_gc_float_get_value (ARV_GC_FLOAT (pvalue_node), &local_error);
-
-		if (local_error != NULL)
-			g_propagate_error (error, local_error);
-
-		return value;
+		return arv_gc_float_get_value (ARV_GC_FLOAT (pvalue_node), error);
+	} else if (ARV_IS_GC_INTEGER (pvalue_node)) {
+		return arv_gc_integer_get_value (ARV_GC_INTEGER (pvalue_node), error);
 	}
 
 	arv_warning_genicam ("[GcPropertyNode::get_double] Invalid node '%s'",
@@ -436,13 +430,10 @@ arv_gc_property_node_set_double (ArvGcPropertyNode *node, double v_double, GErro
 	}
 
 	if (ARV_IS_GC_FLOAT (pvalue_node)) {
-		GError *local_error = NULL;
-
-		arv_gc_float_set_value (ARV_GC_FLOAT (pvalue_node), v_double, &local_error);
-
-		if (local_error != NULL)
-			g_propagate_error (error, local_error);
-
+		arv_gc_float_set_value (ARV_GC_FLOAT (pvalue_node), v_double, error);
+		return;
+	} else if (ARV_IS_GC_INTEGER (pvalue_node)) {
+		arv_gc_integer_set_value (ARV_GC_INTEGER (pvalue_node), v_double, error);
 		return;
 	}
 
