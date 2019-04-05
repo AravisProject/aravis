@@ -430,14 +430,14 @@ _bootstrap (ArvUvDevice *uv_device)
 
 	arv_debug_device ("Get genicam");
 
-	arv_device_read_memory(device, ARV_ABRM_MANUFACTURER_NAME, 64, &manufacturer, NULL);
+	g_return_if_fail (arv_device_read_memory(device, ARV_ABRM_MANUFACTURER_NAME, 64, &manufacturer, NULL));
 	manufacturer[63] = 0;
 	arv_debug_device ("MANUFACTURER_NAME =        '%s'", manufacturer);
 
-	arv_device_read_memory (device, ARV_ABRM_SBRM_ADDRESS, sizeof (guint64), &offset, NULL);
-	arv_device_read_memory (device, ARV_ABRM_MAX_DEVICE_RESPONSE_TIME, sizeof (guint32), &response_time, NULL);
-	arv_device_read_memory (device, ARV_ABRM_DEVICE_CAPABILITY, sizeof (guint64), &device_capability, NULL);
-	arv_device_read_memory (device, ARV_ABRM_MANIFEST_TABLE_ADDRESS, sizeof (guint64), &manifest_table_address, NULL);
+	g_return_if_fail (arv_device_read_memory (device, ARV_ABRM_SBRM_ADDRESS, sizeof (guint64), &offset, NULL));
+	g_return_if_fail (arv_device_read_memory (device, ARV_ABRM_MAX_DEVICE_RESPONSE_TIME, sizeof (guint32), &response_time, NULL));
+	g_return_if_fail (arv_device_read_memory (device, ARV_ABRM_DEVICE_CAPABILITY, sizeof (guint64), &device_capability, NULL));
+	g_return_if_fail (arv_device_read_memory (device, ARV_ABRM_MANIFEST_TABLE_ADDRESS, sizeof (guint64), &manifest_table_address, NULL));
 
 	arv_debug_device ("MAX_DEVICE_RESPONSE_TIME = 0x%08x", response_time);
 	arv_debug_device ("DEVICE_CAPABILITY        = 0x%016lx", device_capability);
@@ -446,10 +446,10 @@ _bootstrap (ArvUvDevice *uv_device)
 
 	uv_device->priv->timeout_ms = MAX (ARV_UVCP_DEFAULT_RESPONSE_TIME_MS, response_time);
 
-	arv_device_read_memory (device, offset + ARV_SBRM_U3VCP_CAPABILITY, sizeof (guint32), &u3vcp_capability, NULL);
-	arv_device_read_memory (device, offset + ARV_SBRM_MAX_CMD_TRANSFER, sizeof (guint32), &max_cmd_transfer, NULL);
-	arv_device_read_memory (device, offset + ARV_SBRM_MAX_ACK_TRANSFER, sizeof (guint32), &max_ack_transfer, NULL);
-	arv_device_read_memory (device, offset + ARV_SBRM_SIRM_ADDRESS, sizeof (guint64), &sirm_offset, NULL);
+	g_return_if_fail (arv_device_read_memory (device, offset + ARV_SBRM_U3VCP_CAPABILITY, sizeof (guint32), &u3vcp_capability, NULL));
+	g_return_if_fail (arv_device_read_memory (device, offset + ARV_SBRM_MAX_CMD_TRANSFER, sizeof (guint32), &max_cmd_transfer, NULL));
+	g_return_if_fail (arv_device_read_memory (device, offset + ARV_SBRM_MAX_ACK_TRANSFER, sizeof (guint32), &max_ack_transfer, NULL));
+	g_return_if_fail (arv_device_read_memory (device, offset + ARV_SBRM_SIRM_ADDRESS, sizeof (guint64), &sirm_offset, NULL));
 
 	arv_debug_device ("U3VCP_CAPABILITY =         0x%08x", u3vcp_capability);
 	arv_debug_device ("MAX_CMD_TRANSFER =         0x%08x", max_cmd_transfer);
@@ -459,17 +459,17 @@ _bootstrap (ArvUvDevice *uv_device)
 	uv_device->priv->cmd_packet_size_max = MIN (uv_device->priv->cmd_packet_size_max, max_cmd_transfer);
 	uv_device->priv->ack_packet_size_max = MIN (uv_device->priv->ack_packet_size_max, max_ack_transfer);
 
-	arv_device_read_memory (device, sirm_offset + ARV_SI_INFO, sizeof (si_info), &si_info, NULL);
-	arv_device_read_memory (device, sirm_offset + ARV_SI_CONTROL, sizeof (si_control), &si_control, NULL);
-	arv_device_read_memory (device, sirm_offset + ARV_SI_REQ_PAYLOAD_SIZE, sizeof (si_req_payload_size), &si_req_payload_size, NULL);
-	arv_device_read_memory (device, sirm_offset + ARV_SI_REQ_LEADER_SIZE, sizeof (si_req_leader_size), &si_req_leader_size, NULL);
-	arv_device_read_memory (device, sirm_offset + ARV_SI_REQ_TRAILER_SIZE, sizeof (si_req_trailer_size), &si_req_trailer_size, NULL);
-	arv_device_read_memory (device, sirm_offset + ARV_SI_MAX_LEADER_SIZE, sizeof (si_max_leader_size), &si_max_leader_size, NULL);
-	arv_device_read_memory (device, sirm_offset + ARV_SI_PAYLOAD_SIZE, sizeof (si_payload_size), &si_payload_size, NULL);
-	arv_device_read_memory (device, sirm_offset + ARV_SI_PAYLOAD_COUNT, sizeof (si_payload_count), &si_payload_count, NULL);
-	arv_device_read_memory (device, sirm_offset + ARV_SI_TRANSFER1_SIZE, sizeof (si_transfer1_size), &si_transfer1_size, NULL);
-	arv_device_read_memory (device, sirm_offset + ARV_SI_TRANSFER2_SIZE, sizeof (si_transfer2_size), &si_transfer2_size, NULL);
-	arv_device_read_memory (device, sirm_offset + ARV_SI_MAX_TRAILER_SIZE, sizeof (si_max_trailer_size), &si_max_trailer_size, NULL);
+	g_return_if_fail (arv_device_read_memory (device, sirm_offset + ARV_SI_INFO, sizeof (si_info), &si_info, NULL));
+	g_return_if_fail (arv_device_read_memory (device, sirm_offset + ARV_SI_CONTROL, sizeof (si_control), &si_control, NULL));
+	g_return_if_fail (arv_device_read_memory (device, sirm_offset + ARV_SI_REQ_PAYLOAD_SIZE, sizeof (si_req_payload_size), &si_req_payload_size, NULL));
+	g_return_if_fail (arv_device_read_memory (device, sirm_offset + ARV_SI_REQ_LEADER_SIZE, sizeof (si_req_leader_size), &si_req_leader_size, NULL));
+	g_return_if_fail (arv_device_read_memory (device, sirm_offset + ARV_SI_REQ_TRAILER_SIZE, sizeof (si_req_trailer_size), &si_req_trailer_size, NULL));
+	g_return_if_fail (arv_device_read_memory (device, sirm_offset + ARV_SI_MAX_LEADER_SIZE, sizeof (si_max_leader_size), &si_max_leader_size, NULL));
+	g_return_if_fail (arv_device_read_memory (device, sirm_offset + ARV_SI_PAYLOAD_SIZE, sizeof (si_payload_size), &si_payload_size, NULL));
+	g_return_if_fail (arv_device_read_memory (device, sirm_offset + ARV_SI_PAYLOAD_COUNT, sizeof (si_payload_count), &si_payload_count, NULL));
+	g_return_if_fail (arv_device_read_memory (device, sirm_offset + ARV_SI_TRANSFER1_SIZE, sizeof (si_transfer1_size), &si_transfer1_size, NULL));
+	g_return_if_fail (arv_device_read_memory (device, sirm_offset + ARV_SI_TRANSFER2_SIZE, sizeof (si_transfer2_size), &si_transfer2_size, NULL));
+	g_return_if_fail (arv_device_read_memory (device, sirm_offset + ARV_SI_MAX_TRAILER_SIZE, sizeof (si_max_trailer_size), &si_max_trailer_size, NULL));
 
 	arv_debug_device ("SI_INFO =                  0x%08x", si_info);
 	arv_debug_device ("SI_CONTROL =               0x%08x", si_control);
@@ -483,8 +483,8 @@ _bootstrap (ArvUvDevice *uv_device)
 	arv_debug_device ("SI_TRANSFER2_SIZE =        0x%08x", si_transfer2_size);
 	arv_debug_device ("SI_MAX_TRAILER_SIZE =      0x%08x", si_max_trailer_size);
 
-	arv_device_read_memory (device, manifest_table_address, sizeof (guint64), &manifest_n_entries, NULL);
-	arv_device_read_memory (device, manifest_table_address + 0x08, sizeof (entry), &entry, NULL);
+	g_return_if_fail (arv_device_read_memory (device, manifest_table_address, sizeof (guint64), &manifest_n_entries, NULL));
+	g_return_if_fail (arv_device_read_memory (device, manifest_table_address + 0x08, sizeof (entry), &entry, NULL));
 
 	arv_debug_device ("MANIFEST_N_ENTRIES =       0x%016lx", manifest_n_entries);
 
@@ -497,7 +497,10 @@ _bootstrap (ArvUvDevice *uv_device)
 	arv_debug_device ("genicam size    =          0x%016lx", entry.size);
 
 	data = g_malloc0 (entry.size);
-	arv_device_read_memory (device, entry.address, entry.size, data, NULL);
+	if (FALSE == arv_device_read_memory (device, entry.address, entry.size, data, NULL)){
+		g_free(data);
+		return;
+	}
 
 #if 0
 	string = g_string_new ("");
