@@ -17,6 +17,7 @@ doc_private_headers = [
 	'arvfakedeviceprivate.h',
 	'arvfakestreamprivate.h',
 	'arvrealtimeprivate.h',
+	'arvwakeupprivate.h',
 	'arv.h'
 ]
 

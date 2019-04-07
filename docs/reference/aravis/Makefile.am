@@ -79,6 +79,7 @@ IGNORE_HFILES=\
 	arvfakedeviceprivate.h		\
 	arvfakestreamprivate.h		\
 	arvrealtimeprivate.h		\
+	arvwakeupprivate.h		\
 	arv.h
 
 # Images to copy into HTML directory.

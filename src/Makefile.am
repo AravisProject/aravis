@@ -87,7 +87,8 @@ ARAVIS_SRCS_NO_INTRO =				\
 	arvzip.c				\
 	arvstr.c				\
 	arvgvcp.c				\
-	arvgvsp.c
+	arvgvsp.c				\
+	arvwakeup.c
 
 ARAVIS_HDRS = 					\
 	arv.h					\
@@ -170,7 +171,8 @@ noinst_HEADERS =				\
 	arvfakeinterfaceprivate.h		\
 	arvfakedeviceprivate.h			\
 	arvfakestreamprivate.h			\
-	arvrealtimeprivate.h
+	arvrealtimeprivate.h			\
+	arvwakeupprivate.h
 
 if ARAVIS_BUILD_USB
 ARAVIS_SRCS +=					\
