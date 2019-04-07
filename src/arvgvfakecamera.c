@@ -298,20 +298,23 @@ _thread (void *user_data)
 					}
 					g_clear_object (&remote_address);
 				}
+
+				if (arv_fake_camera_get_control_channel_privilege (gv_fake_camera->priv->camera) == 0 ||
+				    arv_fake_camera_get_acquisition_status (gv_fake_camera->priv->camera) == 0) {
+					if (stream_address != NULL) {
+						g_object_unref (stream_address);
+						stream_address = NULL;
+						g_object_unref (image_buffer);
+						image_buffer = NULL;
+						arv_debug_stream_thread ("[GvFakeCamera::thread] Stop stream");
+					}
+					is_streaming = FALSE;
+				}
 			}
 		} while (!g_atomic_int_get (&gv_fake_camera->priv->cancel) && g_get_real_time () < next_timestamp_us);
 
-		if (arv_fake_camera_get_control_channel_privilege (gv_fake_camera->priv->camera) == 0 ||
-		    arv_fake_camera_get_acquisition_status (gv_fake_camera->priv->camera) == 0) {
-			if (stream_address != NULL) {
-				g_object_unref (stream_address);
-				stream_address = NULL;
-				g_object_unref (image_buffer);
-				image_buffer = NULL;
-				arv_debug_stream_thread ("[GvFakeCamera::thread] Stop stream");
-			}
-			is_streaming = FALSE;
-		} else {
+		if (arv_fake_camera_get_control_channel_privilege (gv_fake_camera->priv->camera) != 0 &&
+		    arv_fake_camera_get_acquisition_status (gv_fake_camera->priv->camera) != 0) {
 			if (stream_address == NULL) {
 				GInetAddress *inet_address;
 				char *inet_address_string;
