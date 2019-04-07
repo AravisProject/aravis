@@ -40,6 +40,7 @@
 #include <sys/socket.h>
 #include <stdio.h>
 #include <errno.h>
+#include <arvwakeupprivate.h>
 
 #ifdef ARAVIS_BUILD_PACKET_SOCKET
 #include <ifaddrs.h>
@@ -126,8 +127,8 @@ struct _ArvGvStreamThreadData {
 	guint64 timestamp_tick_frequency;
 	guint data_size;
 
-	gboolean cancel;
-	GCancellable *cancellable;
+	gboolean exit_thread;
+	ArvWakeup *wakeup;
 
 	guint16 packet_id;
 
@@ -722,7 +723,6 @@ _loop (ArvGvStreamThreadData *thread_data)
 	ArvGvStreamFrameData *frame;
 	ArvGvspPacket *packet;
 	GPollFD poll_fd[2];
-	int n_fds = 1;
 	GTimeVal current_time;
 	guint64 time_us;
 	size_t read_count;
@@ -734,8 +734,7 @@ _loop (ArvGvStreamThreadData *thread_data)
 	poll_fd[0].events =  G_IO_IN;
 	poll_fd[0].revents = 0;
 
-	if (g_cancellable_make_pollfd (thread_data->cancellable, &poll_fd[1]))
-		n_fds++;
+	arv_wakeup_get_pollfd (thread_data->wakeup, &poll_fd[1]);
 
 	packet = g_malloc0 (ARV_GV_STREAM_INCOMING_BUFFER_SIZE);
 
@@ -751,7 +750,7 @@ _loop (ArvGvStreamThreadData *thread_data)
 		do {
 			poll_fd[0].revents = 0;
 
-			n_events = g_poll (poll_fd, n_fds, timeout_ms);
+			n_events = g_poll (poll_fd, 2, timeout_ms);
 			errsv = errno;
 
 		} while (n_events < 0 && errsv == EINTR);
@@ -769,11 +768,7 @@ _loop (ArvGvStreamThreadData *thread_data)
 
 		_check_frame_completion (thread_data, time_us, frame);
 
-	} while (!g_cancellable_is_cancelled (thread_data->cancellable) &&
-		 !g_atomic_int_get (&thread_data->cancel));
-
-	if (n_fds > 1)
-		g_cancellable_release_fd (thread_data->cancellable);
+	} while (!g_atomic_int_get (&thread_data->exit_thread));
 
 	g_free (packet);
 }
@@ -852,7 +847,6 @@ static void
 _ring_buffer_loop (ArvGvStreamThreadData *thread_data)
 {
 	GPollFD poll_fd[2];
-	int n_fds = 1;
 	char *buffer;
 	struct tpacket_req3 req;
 	struct sockaddr_ll local_address;
@@ -917,8 +911,7 @@ _ring_buffer_loop (ArvGvStreamThreadData *thread_data)
 	poll_fd[0].events =  G_IO_IN;
 	poll_fd[0].revents = 0;
 
-	if (g_cancellable_make_pollfd (thread_data->cancellable, &poll_fd[1]))
-		n_fds++;
+	arv_wakeup_get_pollfd (thread_data->wakeup, &poll_fd[1]);
 
 	block_id = 0;
 	do {
@@ -937,7 +930,7 @@ _ring_buffer_loop (ArvGvStreamThreadData *thread_data)
 			_check_frame_completion (thread_data, time_us, NULL);
 
 			do {
-				n_events = g_poll (poll_fd, n_fds, 100);
+				n_events = g_poll (poll_fd, 2, 100);
 				errsv = errno;
 			} while (n_events < 0 && errsv == EINTR);
 		} else {
@@ -966,11 +959,7 @@ _ring_buffer_loop (ArvGvStreamThreadData *thread_data)
 			descriptor->h1.block_status = TP_STATUS_KERNEL;
 			block_id = (block_id + 1) % req.tp_block_nr;
 		}
-	} while (!g_cancellable_is_cancelled (thread_data->cancellable) &&
-		 !g_atomic_int_get (&thread_data->cancel));
-
-	if (n_fds > 1)
-		g_cancellable_release_fd (thread_data->cancellable);
+	} while (!g_atomic_int_get (&thread_data->exit_thread));
 
 bind_error:
 	munmap (buffer, req.tp_block_size * req.tp_block_nr);
@@ -1088,7 +1077,7 @@ arv_gv_stream_new (ArvGvDevice *gv_device,
 	thread_data->timestamp_tick_frequency = timestamp_tick_frequency;
 	thread_data->data_size = packet_size - ARV_GVSP_PACKET_PROTOCOL_OVERHEAD;
 	thread_data->use_packet_socket = (options & ARV_GV_STREAM_OPTION_PACKET_SOCKET_DISABLED) == 0;
-	thread_data->cancel = FALSE;
+	thread_data->exit_thread = FALSE;
 
 	thread_data->packet_id = 65300;
 	thread_data->last_frame_id = 0;
@@ -1139,7 +1128,7 @@ arv_gv_stream_new (ArvGvDevice *gv_device,
 	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevSCPHostPort", thread_data->stream_port);
 	thread_data->source_stream_port = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device), "GevSCSP");
 
-	thread_data->cancellable = g_cancellable_new();
+	thread_data->wakeup = arv_wakeup_new();
 
 	arv_debug_stream ("[GvStream::stream_new] Destination stream port = %d", thread_data->stream_port);
 	arv_debug_stream ("[GvStream::stream_new] Source stream port = %d", thread_data->source_stream_port);
@@ -1270,8 +1259,8 @@ arv_gv_stream_finalize (GObject *object)
 
 		thread_data = gv_stream->priv->thread_data;
 
-		g_atomic_int_set (&thread_data->cancel, TRUE);
-		g_cancellable_cancel (thread_data->cancellable);
+		g_atomic_int_set (&thread_data->exit_thread, TRUE);
+		arv_wakeup_signal (thread_data->wakeup);
 		g_thread_join (gv_stream->priv->thread);
 
 		statistic_string = arv_statistic_to_string (thread_data->statistic);
@@ -1317,7 +1306,7 @@ arv_gv_stream_finalize (GObject *object)
 		g_clear_object (&thread_data->interface_socket_address);
 		g_clear_object (&thread_data->socket);
 		g_clear_object (&thread_data->gv_device);
-		g_clear_object (&thread_data->cancellable);
+		g_clear_pointer (&thread_data->wakeup, arv_wakeup_free);
 
 		g_free (thread_data);
 
