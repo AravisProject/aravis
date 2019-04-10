@@ -1016,6 +1016,37 @@ arv_gv_stream_get_port (ArvGvStream *gv_stream)
 	return gv_stream->priv->thread_data->stream_port;
 }
 
+static void
+arv_gv_stream_start_thread (ArvStream *stream)
+{
+	ArvGvStream *gv_stream = ARV_GV_STREAM (stream);
+
+	g_return_if_fail (gv_stream->priv->thread == NULL);
+	g_return_if_fail (gv_stream->priv->thread_data != NULL);
+
+	gv_stream->priv->thread_data->exit_thread = FALSE;
+
+	gv_stream->priv->thread = g_thread_new ("arv_gv_stream", arv_gv_stream_thread, gv_stream->priv->thread_data);
+}
+
+static void
+arv_gv_stream_stop_thread (ArvStream *stream)
+{
+	ArvGvStream *gv_stream = ARV_GV_STREAM (stream);
+	ArvGvStreamThreadData *thread_data;
+
+	g_return_if_fail (gv_stream->priv->thread != NULL);
+	g_return_if_fail (gv_stream->priv->thread_data != NULL);
+
+	thread_data = gv_stream->priv->thread_data;
+
+	g_atomic_int_set (&thread_data->exit_thread, TRUE);
+	arv_wakeup_signal (thread_data->wakeup);
+	g_thread_join (gv_stream->priv->thread);
+
+	gv_stream->priv->thread = NULL;
+}
+
 /**
  * arv_gv_stream_new: (skip)
  * @gv_device: a #ArvGvDevice
@@ -1133,7 +1164,7 @@ arv_gv_stream_new (ArvGvDevice *gv_device,
 	arv_debug_stream ("[GvStream::stream_new] Destination stream port = %d", thread_data->stream_port);
 	arv_debug_stream ("[GvStream::stream_new] Source stream port = %d", thread_data->source_stream_port);
 
-	gv_stream->priv->thread = g_thread_new ("arv_gv_stream", arv_gv_stream_thread, gv_stream->priv->thread_data);
+	arv_gv_stream_start_thread (ARV_STREAM (gv_stream));
 
 	return ARV_STREAM (gv_stream);
 }
@@ -1253,15 +1284,13 @@ arv_gv_stream_finalize (GObject *object)
 {
 	ArvGvStream *gv_stream = ARV_GV_STREAM (object);
 
-	if (gv_stream->priv->thread != NULL) {
+	arv_gv_stream_stop_thread (ARV_STREAM (gv_stream));
+
+	if (gv_stream->priv->thread_data != NULL) {
 		ArvGvStreamThreadData *thread_data;
 		char *statistic_string;
 
 		thread_data = gv_stream->priv->thread_data;
-
-		g_atomic_int_set (&thread_data->exit_thread, TRUE);
-		arv_wakeup_signal (thread_data->wakeup);
-		g_thread_join (gv_stream->priv->thread);
 
 		statistic_string = arv_statistic_to_string (thread_data->statistic);
 		arv_debug_stream (statistic_string);
@@ -1308,10 +1337,7 @@ arv_gv_stream_finalize (GObject *object)
 		g_clear_object (&thread_data->gv_device);
 		g_clear_pointer (&thread_data->wakeup, arv_wakeup_free);
 
-		g_free (thread_data);
-
-		gv_stream->priv->thread_data = NULL;
-		gv_stream->priv->thread = NULL;
+		g_clear_pointer (&thread_data, g_free);
 	}
 
 	parent_class->finalize (object);
@@ -1333,6 +1359,8 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 	object_class->set_property = arv_gv_stream_set_property;
 	object_class->get_property = arv_gv_stream_get_property;
 
+	stream_class->start_thread = arv_gv_stream_start_thread;
+	stream_class->stop_thread = arv_gv_stream_stop_thread;
 	stream_class->get_statistics = _get_statistics;
 
 	g_object_class_install_property (
