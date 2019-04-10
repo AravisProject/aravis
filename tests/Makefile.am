@@ -20,6 +20,7 @@ noinst_PROGRAMS = 			\
        	arv-example			\
 	arv-auto-packet-size-test	\
 	arv-device-scan-test		\
+	arv-roi-test			\
 	time-test			\
 	realtime-test			\
 	load-http-test
@@ -53,6 +54,9 @@ arv_auto_packet_size_test_LDADD = $(test_progs_ldadd)
 
 arv_device_scan_test_SOURCES = arvdevicescantest.c
 arv_device_scan_test_LDADD = $(test_progs_ldadd)
+
+arv_roi_test_SOURCES = arvroitest.c
+arv_roi_test_LDADD = $(test_progs_ldadd)
 
 arv_example_SOURCES = arvexample.c
 arv_example_LDADD = $(test_progs_ldadd)

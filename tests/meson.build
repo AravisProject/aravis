@@ -28,6 +28,7 @@ examples = [
 	['arv-example',			'arvexample.c'],
 	['arv-auto-packet-size-test',	'arvautopacketsizetest.c'],
 	['arv-device-scan-test',	'arvdevicescantest.c'],
+	['arv-roi-test',		'arvroitest.c'],
 	['time-test',			'timetest.c'],
 	['realtime-test',		'realtimetest.c'],
 	['load-http-test',		'loadhttptest.c'],
