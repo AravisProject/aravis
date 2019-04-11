@@ -53,12 +53,20 @@ new_buffer_cb (ArvStream *stream, ApplicationData *data)
 }
 
 static gboolean
-periodic_task_cb (void *abstract_data)
+framerate_task_cb (void *abstract_data)
 {
 	ApplicationData *data = abstract_data;
 
-	printf ("Frame rate = %d Hz\n", data->buffer_count);
+	printf ("Frame rate = %g Hz\n", data->buffer_count / 10.0);
 	data->buffer_count = 0;
+
+	return TRUE;
+}
+
+static gboolean
+check_cancel_task_cb (void *abstract_data)
+{
+	ApplicationData *data = abstract_data;
 
 	if (cancel) {
 		g_main_loop_quit (data->main_loop);
@@ -171,8 +179,9 @@ main (int argc, char **argv)
 
 			old_sigint_handler = signal (SIGINT, set_cancel);
 
-			g_timeout_add_seconds (1, periodic_task_cb, &data);
-			g_timeout_add (197, switch_roi, &data);
+			g_timeout_add_seconds (10, framerate_task_cb, &data);
+			g_timeout_add_seconds (1, check_cancel_task_cb, &data);
+			g_timeout_add (697, switch_roi, &data);
 
 			g_main_loop_run (data.main_loop);
 
