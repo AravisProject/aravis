@@ -88,6 +88,10 @@ switch_roi (gpointer user_data)
 
 	arv_camera_stop_acquisition (data->camera);
 
+	n_deleted = arv_stream_stop_thread (data->stream, TRUE);
+
+	g_assert (n_deleted == N_BUFFERS);
+
 	data->width += SIZE_INC;
 	if (data->width > WIDTH_MAX)
 		data->width = WIDTH_MIN;
@@ -103,14 +107,13 @@ switch_roi (gpointer user_data)
 
 	printf ("image size set to %dx%d\n", width, height);
 
-	n_deleted = arv_stream_reset (data->stream);
-
-	g_assert (n_deleted == N_BUFFERS);
 
 	payload = arv_camera_get_payload (data->camera);
 
 	for (i = 0; i < N_BUFFERS; i++)
 		arv_stream_push_buffer (data->stream, arv_buffer_new (payload, NULL));
+
+	arv_stream_start_thread (data->stream);
 
 	arv_camera_start_acquisition (data->camera);
 

@@ -208,8 +208,44 @@ arv_stream_get_n_buffers (ArvStream *stream, gint *n_input_buffers, gint *n_outp
 		*n_output_buffers = g_async_queue_length (stream->priv->output_queue);
 }
 
+/**
+ * arv_stream_start_thread:
+ * @stream: a #ArvStream
+ *
+ * Start the stream receiving thread. The thread is automatically started when
+ * the #ArvAstream object is instantiated, so this functnio is only useful if
+ * the thread was stopped using @arv_stream_stop_thread.
+ *
+ * Since: 0.6.2
+ */
+
+void
+arv_stream_start_thread (ArvStream *stream)
+{
+	ArvStreamClass *stream_class;
+
+	g_return_if_fail (ARV_IS_STREAM (stream));
+
+	stream_class = ARV_STREAM_GET_CLASS (stream);
+	g_return_if_fail (stream_class->start_thread != NULL);
+
+	stream_class->start_thread (stream);
+}
+
+/**
+ * arv_stream_stop_thread:
+ * @stream: a #ArvStream
+ *
+ * Stop the stream receiving thread, and optionally delete the #ArvBuffer
+ * stored in the stream object queues. Main use of this function is to be able
+ * to quickly change an acquisition parameter that changes the payload size,
+ * without deleting/recreating the stream object.
+ *
+ * Since: 0.6.2
+ */
+
 unsigned int
-arv_stream_reset (ArvStream *stream)
+arv_stream_stop_thread (ArvStream *stream, gboolean delete_buffers)
 {
 	ArvStreamClass *stream_class;
 	ArvBuffer *buffer;
@@ -218,10 +254,12 @@ arv_stream_reset (ArvStream *stream)
 	g_return_val_if_fail (ARV_IS_STREAM (stream), 0);
 
 	stream_class = ARV_STREAM_GET_CLASS (stream);
-	g_return_val_if_fail (stream_class->start_thread != NULL, 0);
 	g_return_val_if_fail (stream_class->stop_thread != NULL, 0);
 
 	stream_class->stop_thread (stream);
+
+	if (!delete_buffers)
+		return 0;
 
 	g_async_queue_lock (stream->priv->input_queue);
 	do {
@@ -244,8 +282,6 @@ arv_stream_reset (ArvStream *stream)
 	g_async_queue_unlock (stream->priv->output_queue);
 
 	arv_debug_stream ("[Stream::reset] Deleted %u buffers\n", n_deleted);
-
-	stream_class->start_thread (stream);
 
 	return n_deleted;
 }
