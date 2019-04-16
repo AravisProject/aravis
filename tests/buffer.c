@@ -88,6 +88,11 @@ timestamp (void)
 	arv_buffer_set_timestamp (buffer, 1234);
 	g_assert_cmpint (arv_buffer_get_timestamp (buffer), == , 1234);
 
+	g_assert_cmpint (arv_buffer_get_system_timestamp (buffer), == , 0);
+
+	arv_buffer_set_system_timestamp (buffer, 1234);
+	g_assert_cmpint (arv_buffer_get_system_timestamp (buffer), == , 1234);
+
 	g_object_unref (buffer);
 }
 
