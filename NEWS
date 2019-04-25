@@ -1,3 +1,13 @@
+Release 0.6.2
+=============
+
+  * stream: add stop/start thread API  (Werner, Emmanuel)
+  * gigevision: allow to discover more devices (Michael)
+  * gigevision: stop stream thread quicker (Emmanuel)
+  * genicam: add <Register> element support (Nathan)
+  * genicam: let float node point to integer node (Emmanuel)
+  * usb3vision: sanity checks during device initialization (crabsmaps)
+
 Release 0.6.1
 =============
 
