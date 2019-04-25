@@ -754,11 +754,13 @@ arv_stream_pop_buffer
 arv_stream_try_pop_buffer
 arv_stream_timeout_pop_buffer
 arv_stream_get_n_buffers
-arv_stream_get_statistics
+arv_stream_start_thread
+arv_stream_stop_thread
 arv_stream_get_emit_signals
 arv_stream_set_emit_signals
 arv_make_thread_realtime
 arv_make_thread_high_priority
+arv_stream_get_statistics
 <SUBSECTION Standard>
 ARV_STREAM
 ARV_IS_STREAM
