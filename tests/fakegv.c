@@ -148,6 +148,70 @@ stream_test (void)
 	 * because otherwise the stream thread will be killed while sleeping. */
 	sleep (2);
 }
+
+#define N_BUFFERS	5
+
+static struct {
+	int width;
+	int height;
+} rois[] = { {100, 100}, {200, 200}, {300,300} };
+
+static void
+dynamic_roi_test (void)
+{
+	ArvStream *stream;
+	size_t payload;
+	unsigned buffer_count = 0;
+	unsigned i, j;
+
+	stream = arv_camera_create_stream (camera, NULL, NULL);
+	g_assert (ARV_IS_STREAM (stream));
+
+	payload = arv_camera_get_payload (camera);
+
+	g_signal_connect (stream, "new-buffer", G_CALLBACK (new_buffer_cb), &buffer_count);
+	arv_stream_set_emit_signals (stream, TRUE);
+
+	for (j = 0; j < G_N_ELEMENTS (rois); j++) {
+		unsigned int n_deleted;
+		int height, width;
+
+		n_deleted = arv_stream_stop_thread (stream, TRUE);
+
+		if (j == 0)
+			g_assert (n_deleted == 0);
+		else
+			g_assert (n_deleted == N_BUFFERS);
+
+		buffer_count = 0;
+
+		arv_camera_set_region (camera, 0, 0, rois[j].width , rois[j].height);
+		arv_camera_get_region (camera, NULL, NULL, &width, &height);
+
+		g_assert (width == rois[j].width);
+		g_assert (height == rois[j].height);
+
+		payload = arv_camera_get_payload (camera);
+
+		for (i = 0; i < N_BUFFERS; i++)
+			arv_stream_push_buffer (stream, arv_buffer_new (payload, NULL));
+
+		arv_stream_start_thread (stream);
+
+		arv_camera_start_acquisition (camera);
+
+		while (buffer_count < 10) {
+			usleep (10000);
+		}
+
+		arv_camera_stop_acquisition (camera);
+	}
+
+	arv_stream_set_emit_signals (stream, FALSE);
+
+	g_clear_object (&stream);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -168,6 +232,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/fakegv/device_registers", register_test);
 	g_test_add_func ("/fakegv/acquisition", acquisition_test);
 	g_test_add_func ("/fakegv/stream", stream_test);
+	g_test_add_func ("/fakegv/dynamic_roi", dynamic_roi_test);
 
 	result = g_test_run();
 
