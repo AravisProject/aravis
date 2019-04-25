@@ -213,7 +213,7 @@ arv_stream_get_n_buffers (ArvStream *stream, gint *n_input_buffers, gint *n_outp
  * @stream: a #ArvStream
  *
  * Start the stream receiving thread. The thread is automatically started when
- * the #ArvAstream object is instantiated, so this functnio is only useful if
+ * the #ArvStream object is instantiated, so this function is only useful if
  * the thread was stopped using @arv_stream_stop_thread.
  *
  * Since: 0.6.2
@@ -236,7 +236,7 @@ arv_stream_start_thread (ArvStream *stream)
  * arv_stream_stop_thread:
  * @stream: a #ArvStream
  *
- * Stop the stream receiving thread, and optionally delete the #ArvBuffer
+ * Stop the stream receiving thread, and optionally delete all the #ArvBuffer
  * stored in the stream object queues. Main use of this function is to be able
  * to quickly change an acquisition parameter that changes the payload size,
  * without deleting/recreating the stream object.
