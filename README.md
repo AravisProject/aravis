@@ -15,42 +15,31 @@ Aravis is released under the LGPL v2+.
 
 ### Installing Aravis
 
-Aravis uses the standard GNU build system, using autoconf for package configuration and resolving portability issues, automake for building makefiles that comply with the GNU Coding Standards, and libtool for building shared libraries on multiple platforms. The recommended way to get the sources is to download the release tarballs from http://ftp.gnome.org/pub/GNOME/sources/aravis.
+Aravis uses meson build system ( http://mesonbuild.com/ ). The recommended way to get the sources is to download the release tarballs from http://ftp.gnome.org/pub/GNOME/sources/aravis.
+
+Then you can build and install Aravis like [any other meson project](http://mesonbuild.com/Quick-guide.html#compiling-a-meson-project):
 
 ```
-./configure
-make
-make install
+meson build
+cd build
+ninja
+ninja install
 ```
 
-Compilation options may be passed to the configure script. Please run `./configure --help` for information about the available options.
+The build can be configured at any time using `meson configure` in the build directory. `meson configure` invoked without any other argument will show the configuration options.
 
 On some platforms (like Ubuntu), you may have to configure the dynamic linker (ld) to let it know where the aravis libraries are installed, and run ldconfig as root in order to update ld cache.
-
-If you want to use a clone of the git repository on github, instead of the release tarballs, you may have to create the configure script by running:
-
-```
-./autogen.sh
-```
 
 #### Building on Mac OS X
 
 Using the GNU build system on Mac OS X is not directly supported, but can be mimicked by augmenting the install procedure above with some environment settings:
 
 ```
-brew install gettext intltool gtk-doc automake libxml2
+brew install gettext intltool gtk-doc libxml2 meson
 brew link --force gettext
 brew link --force libxml2
-aclocal
-autoconf
-autoheader
-gtkdocize
-intltoolize
-glibtoolize --copy
-automake --add-missing
-./configure
-make
-make install
+meson build
+ninja -C build
 ```
 
 ### Ethernet Device Performance
@@ -73,7 +62,7 @@ sudo setcap cap_net_raw+ep arv-viewer
 
 ### USB Permissions
 
-By default, USB devices permissions may not be sufficient to allow any user to access the USB3 cameras. This permissions can be changed by using an udev rule file. There is a file example in Aravis sources, aravis.rules. This file must be placed in /etc/udev/rules.d directory (The exact location may depend on the distribution you are using). This file only contains declarations for a couple of vendors. If you want to add an entry with the vendor of your camera, the output of `lsusb` command will give you the vendor id, which is the first 4 digits of the ID field.
+By default, USB devices permissions may not be sufficient to allow any user to access the USB3 cameras. This permissions can be changed by using an udev rule file. There is a file example in Aravis sources, src/aravis.rules. This file must be placed in /etc/udev/rules.d directory (The exact location may depend on the distribution you are using). This file only contains declarations for a couple of vendors. If you want to add an entry with the vendor of your camera, the output of `lsusb` command will give you the vendor id, which is the first 4 digits of the ID field.
 
 ### Dependencies
 

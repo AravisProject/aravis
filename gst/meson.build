@@ -15,5 +15,5 @@ gst_plugin = shared_library ('gstplugin',
 			     gst_sources, gst_headers,
 			     link_with: aravis_library,
 			     c_args: gst_c_args,
-			     include_directories: [configuration_inc, library_inc],
+			     include_directories: [library_inc],
 			     dependencies: gst_plugin_dependencies)

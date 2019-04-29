@@ -190,6 +190,16 @@ version_config_data.set ('ARAVIS_MICRO_VERSION', aravis_micro_version)
 configure_file (input: 'arvversion.h.in', output: 'arvversion.h',
 		configuration: version_config_data, install_dir: library_include_dir)
 
+config_data = configuration_data ()
+config_data.set_quoted ('PACKAGE_NAME', 'aravis')
+config_data.set_quoted ('PACKAGE_VERSION', aravis_version)
+config_data.set_quoted ('PACKAGE', 'aravis')
+config_data.set_quoted ('VERSION', aravis_version)
+config_data.set ('ARAVIS_BUILD_PACKET_SOCKET', enable_packet_socket)
+config_data.set ('ARAVIS_BUILD_USB', enable_usb)
+config_data.set ('ARAVIS_FAST_HEARTBEAT', get_option ('fast-heartbeat'))
+configure_file (input: 'arvconfig.h.in', output: 'arvconfig.h', configuration: config_data)
+
 library_inc = include_directories ('.')
 
 install_headers (library_headers + library_no_introspection_headers, install_dir: library_include_dir)
@@ -210,7 +220,6 @@ aravis_library = library ('aravis-@0@'.format (aravis_api_version),
 	soversion: '0',
 	dependencies: aravis_dependencies,
 	c_args: library_c_args,
-	include_directories: configuration_inc,
 	install: true)
 
 aravis_library_dependencies = declare_dependency (dependencies: aravis_dependencies,

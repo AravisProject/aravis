@@ -12,7 +12,7 @@ foreach t: tests
     c_args: [t[1]],
     link_with: aravis_library,
     dependencies: aravis_dependencies,
-    include_directories: [configuration_inc, library_inc])
+    include_directories: [library_inc])
   test (t[0], exe)
 endforeach
 
@@ -39,5 +39,5 @@ foreach example: examples
   exe = executable (example[0], example[1],
     link_with: aravis_library,
     dependencies: aravis_dependencies,
-    include_directories: [configuration_inc, library_inc])
+    include_directories: [library_inc])
 endforeach

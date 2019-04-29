@@ -24,7 +24,6 @@
 #define ARV_VIEWER_TYPES_H
 
 #include <glib-object.h>
-#include <arvconfig.h>
 
 G_BEGIN_DECLS
 
