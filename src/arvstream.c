@@ -235,11 +235,14 @@ arv_stream_start_thread (ArvStream *stream)
 /**
  * arv_stream_stop_thread:
  * @stream: a #ArvStream
+ * @delete_buffers: enable buffer deletion
  *
  * Stop the stream receiving thread, and optionally delete all the #ArvBuffer
  * stored in the stream object queues. Main use of this function is to be able
  * to quickly change an acquisition parameter that changes the payload size,
  * without deleting/recreating the stream object.
+ *
+ * Returns: the number of deleted buffers if @delete_buffers == %TRUE, 0 otherwise.
  *
  * Since: 0.6.2
  */
