@@ -69,6 +69,8 @@ if get_option ('gst-plugin')
 	subdir ('gst')
 endif
 
+subdir ('man')
+
 if get_option ('documentation')
 	subdir ('docs/reference/aravis')
 endif
