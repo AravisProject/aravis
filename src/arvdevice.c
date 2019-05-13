@@ -274,7 +274,7 @@ arv_device_get_feature (ArvDevice *device, const char *feature)
 static void
 _set_status (ArvDevice *device, ArvDeviceStatus status, const char *message)
 {
-	if (device->priv->status == ARV_DEVICE_STATUS_SUCCESS)
+	if (status == ARV_DEVICE_STATUS_SUCCESS)
 		return;
 
 	arv_warning_device ("[ArvDevice::set_status] Status changed ('%s')", message);
