@@ -277,11 +277,15 @@ _set_status (ArvDevice *device, ArvDeviceStatus status, const char *message)
 	if (status == ARV_DEVICE_STATUS_SUCCESS)
 		return;
 
-	arv_warning_device ("[ArvDevice::set_status] Status changed ('%s')", message);
+	if (device->priv->status != ARV_DEVICE_STATUS_SUCCESS) {
+		arv_warning_device ("[ArvDevice::set_status] '%s'", message);
+	} else {
+		arv_warning_device ("[ArvDevice::set_status] Status changed ('%s')", message);
 
-	g_free (device->priv->status_message);
-	device->priv->status = status;
-	device->priv->status_message = g_strdup (message);
+		g_free (device->priv->status_message);
+		device->priv->status = status;
+		device->priv->status_message = g_strdup (message);
+	}
 }
 
 /**
@@ -718,6 +722,17 @@ arv_device_get_available_enumeration_feature_values_as_strings (ArvDevice *devic
 
 	return strings;
 }
+
+/**
+ * arv_device_get_status:
+ * @device: a #ArvDevice
+ *
+ * Returns: The status since the last call to arv_device_get_status(). If an
+ * error occured, the returned status value corresponds to the first error
+ * encountered.
+ *
+ * Since: 0.2.0
+ */
 
 ArvDeviceStatus
 arv_device_get_status (ArvDevice *device)
