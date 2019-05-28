@@ -16,7 +16,9 @@ addons:
       - intltool
       - gtk-doc-tools
       - libusb-1.0-0-dev
-      - meson
+      - ninja
+      - python-pip
+      - python-dev
 
 language: C
 
@@ -25,9 +27,14 @@ compiler:
   - gcc
 
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install libxml2 glib gettext intltool gtk-doc libusb meson; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install libxml2 glib gettext intltool gtk-doc libusb ; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew link --force gettext ; fi
+  - sudo pip install --upgrade pip
+  - sudo pip install meson
 
 script:
-  - meson build && ninja -C build && ninja -C build test
+  - meson build
+  - cd build
+  - ninja
+  - ninja test
