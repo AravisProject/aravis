@@ -43,17 +43,6 @@ if enable_usb
 	aravis_private_dependency_str += ' libusb-1.0'
 endif
 
-config_data = configuration_data ()
-config_data.set_quoted ('PACKAGE_NAME', 'aravis')
-config_data.set_quoted ('PACKAGE_VERSION', aravis_version)
-config_data.set_quoted ('PACKAGE', 'aravis')
-config_data.set_quoted ('VERSION', aravis_version)
-config_data.set ('ARAVIS_BUILD_PACKET_SOCKET', enable_packet_socket)
-config_data.set ('ARAVIS_BUILD_USB', enable_usb)
-config_data.set ('ARAVIS_FAST_HEARTBEAT', get_option ('fast-heartbeat'))
-configure_file (input: 'arvconfig.h.in', output: 'arvconfig.h', configuration: config_data)
-configuration_inc = include_directories ('.')
-
 subdir ('po')
 subdir ('src')
 subdir ('tests')
@@ -80,6 +69,4 @@ if get_option ('gst-plugin')
 	subdir ('gst')
 endif
 
-if get_option ('documentation')
-	subdir ('docs/reference/aravis')
-endif
+subdir ('docs')

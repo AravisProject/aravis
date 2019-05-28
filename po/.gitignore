@@ -1,6 +1,0 @@
-POTFILES
-*.gmo
-notexist
-*.pot
-.intltool*
-Makefile.in.in

@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2016 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,7 +24,6 @@
 #define ARV_VIEWER_TYPES_H
 
 #include <glib-object.h>
-#include <arvconfig.h>
 
 G_BEGIN_DECLS
 

@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2011 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -30,8 +30,8 @@
  * arv-fake-gv-camera is a GV camera simulator based on this class.
  */
 
-#include <arvconfig.h>
 #include <arvfakecamera.h>
+#include <arvversion.h>
 #include <arvgc.h>
 #include <arvgcregisternode.h>
 #include <arvgvcp.h>
@@ -462,7 +462,7 @@ arv_fake_camera_new (const char *serial_number)
 
 	strcpy (((char *) memory) + ARV_GVBS_MANUFACTURER_NAME_OFFSET, "Aravis");
 	strcpy (((char *) memory) + ARV_GVBS_MODEL_NAME_OFFSET, "Fake");
-	strcpy (((char *) memory) + ARV_GVBS_DEVICE_VERSION_OFFSET, PACKAGE_VERSION);
+	strcpy (((char *) memory) + ARV_GVBS_DEVICE_VERSION_OFFSET, ARAVIS_VERSION);
 	strcpy (((char *) memory) + ARV_GVBS_SERIAL_NUMBER_OFFSET, serial_number);
 
 	xml_url = g_strdup_printf ("Local:arv-fake-camera.xml;%x;%x",
