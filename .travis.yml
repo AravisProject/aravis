@@ -37,7 +37,7 @@ before_install:
   - sudo pip3 install meson
 
 script:
-  - meson build
+  - meson build -Dintrospection=false -Dviewer=false -Dgst-plugin=false -Ddocumentation=false
   - cd build
   - ninja
   - ninja test
