@@ -1,3 +1,9 @@
+Release 0.6.3
+=============
+
+  * device: fix get_status return value (crabsmaps)
+  * gigevision: add more pixel format enums (emmanuel)
+
 Release 0.6.2
 =============
 
