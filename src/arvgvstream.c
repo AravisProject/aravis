@@ -29,7 +29,7 @@
 #include <arvgvdeviceprivate.h>
 #include <arvstreamprivate.h>
 #include <arvbufferprivate.h>
-#include <arvconfig.h>
+#include <arvfeatures.h>
 #include <arvgvsp.h>
 #include <arvgvcp.h>
 #include <arvdebug.h>
@@ -42,7 +42,7 @@
 #include <errno.h>
 #include <arvwakeupprivate.h>
 
-#ifdef ARAVIS_BUILD_PACKET_SOCKET
+#if ARAVIS_HAS_PACKET_SOCKET
 #include <ifaddrs.h>
 #include <netinet/udp.h>
 #include <net/if.h>
@@ -774,7 +774,7 @@ _loop (ArvGvStreamThreadData *thread_data)
 }
 
 
-#ifdef ARAVIS_BUILD_PACKET_SOCKET
+#if ARAVIS_HAS_PACKET_SOCKET
 
 static void
 _set_socket_filter (int socket, guint32 source_ip, guint32 source_port, guint32 destination_ip, guint32 destination_port)
@@ -968,13 +968,13 @@ map_error:
 	close (fd);
 }
 
-#endif /* ARAVIS_BUILD_PACKET_SOCKET */
+#endif /* ARAVIS_HAS_PACKET_SOCKET */
 
 static void *
 arv_gv_stream_thread (void *data)
 {
 	ArvGvStreamThreadData *thread_data = data;
-#ifdef ARAVIS_BUILD_PACKET_SOCKET
+#if ARAVIS_HAS_PACKET_SOCKET
 	int fd;
 #endif
 
@@ -990,7 +990,7 @@ arv_gv_stream_thread (void *data)
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
 
-#ifdef ARAVIS_BUILD_PACKET_SOCKET
+#if ARAVIS_HAS_PACKET_SOCKET
 	if (thread_data->use_packet_socket && (fd = socket (PF_PACKET, SOCK_RAW, g_htons (ETH_P_ALL))) >= 0) {
 		close (fd);
 		_ring_buffer_loop (thread_data);

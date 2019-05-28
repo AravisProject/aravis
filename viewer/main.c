@@ -20,7 +20,6 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#include <arvconfig.h>
 #include <arvviewer.h>
 #include <gtk/gtk.h>
 #include <gst/gst.h>

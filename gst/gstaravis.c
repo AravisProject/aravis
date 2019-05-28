@@ -33,7 +33,6 @@
  * </refsect2>
  */
 
-#include <arvconfig.h>
 #include <gstaravis.h>
 #include <time.h>
 #include <string.h>
@@ -741,12 +740,14 @@ plugin_init (GstPlugin * plugin)
         return gst_element_register (plugin, "aravissrc", GST_RANK_NONE, GST_TYPE_ARAVIS);
 }
 
+#define PACKAGE "aravis"
+
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
 		   GST_VERSION_MINOR,
 		   aravis,
 		   "Aravis Video Source",
 		   plugin_init,
-		   VERSION,
+		   ARAVIS_VERSION,
 		   "LGPL",
-		   PACKAGE_NAME,
+		   "aravis",
 		   "http://blogs.gnome.org/emmanuel")

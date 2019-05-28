@@ -180,25 +180,17 @@ library_include_dir = join_paths (get_option ('includedir'), 'aravis-@0@'.format
 library_config_data = configuration_data ()
 library_config_data.set10 ('ARAVIS_HAS_USB', get_option ('usb'))
 library_config_data.set10 ('ARAVIS_HAS_PACKET_SOCKET', get_option ('packet-socket'))
+library_config_data.set10 ('ARAVIS_HAS_FAST_HEARTBEAT', get_option ('fast-heartbeat'))
 configure_file (input: 'arvfeatures.h.in', output: 'arvfeatures.h',
 		configuration: library_config_data, install_dir: library_include_dir)
 
 version_config_data = configuration_data ()
+version_config_data.set ('ARAVIS_VERSION', aravis_version)
 version_config_data.set ('ARAVIS_MAJOR_VERSION', aravis_major_version)
 version_config_data.set ('ARAVIS_MINOR_VERSION', aravis_minor_version)
 version_config_data.set ('ARAVIS_MICRO_VERSION', aravis_micro_version)
 configure_file (input: 'arvversion.h.in', output: 'arvversion.h',
 		configuration: version_config_data, install_dir: library_include_dir)
-
-config_data = configuration_data ()
-config_data.set_quoted ('PACKAGE_NAME', 'aravis')
-config_data.set_quoted ('PACKAGE_VERSION', aravis_version)
-config_data.set_quoted ('PACKAGE', 'aravis')
-config_data.set_quoted ('VERSION', aravis_version)
-config_data.set ('ARAVIS_BUILD_PACKET_SOCKET', enable_packet_socket)
-config_data.set ('ARAVIS_BUILD_USB', enable_usb)
-config_data.set ('ARAVIS_FAST_HEARTBEAT', get_option ('fast-heartbeat'))
-configure_file (input: 'arvconfig.h.in', output: 'arvconfig.h', configuration: config_data)
 
 library_inc = include_directories ('.')
 

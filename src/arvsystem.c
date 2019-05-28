@@ -22,8 +22,8 @@
 
 #include <arvsystem.h>
 #include <arvgvinterfaceprivate.h>
-#include <arvconfig.h>
-#ifdef ARAVIS_BUILD_USB
+#include <arvfeatures.h>
+#if ARAVIS_HAS_USB
 #include <arvuvinterfaceprivate.h>
 #endif
 #include <arvfakeinterfaceprivate.h>
@@ -57,7 +57,7 @@ ArvInterfaceInfos interfaces[] = {
 		.get_interface_instance = arv_fake_interface_get_instance,
 		.destroy_interface_instance =  arv_fake_interface_destroy_instance
 	},
-#ifdef ARAVIS_BUILD_USB
+#if ARAVIS_HAS_USB
 	{	.interface_id = "USB3Vision",
 		.is_available = TRUE,
 		.get_interface_instance = arv_uv_interface_get_instance,
