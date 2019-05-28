@@ -15,9 +15,15 @@ Aravis is released under the LGPL v2+.
 
 ### Installing Aravis
 
-Aravis uses meson build system ( http://mesonbuild.com/ ). The recommended way to get the sources is to download the release tarballs from http://ftp.gnome.org/pub/GNOME/sources/aravis.
+Until de 0.6.x stable serie, Aravis build system was based on Autotools. The recommended way to get the sources is to download the release tarballs from http://ftp.gnome.org/pub/GNOME/sources/aravis, and then compile it using the following commands:
 
-Then you can build and install Aravis like [any other meson project](http://mesonbuild.com/Quick-guide.html#compiling-a-meson-project):
+```
+./configure
+make
+make install
+```
+
+The current unstable serie of Aravis uses meson build system ( http://mesonbuild.com/ ). Release tarballs can be found at the same usual place. You can build and install Aravis like [any other meson project](http://mesonbuild.com/Quick-guide.html#compiling-a-meson-project):
 
 ```
 meson build
