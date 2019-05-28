@@ -87,21 +87,22 @@ However, contributions to both Gigabit Ethernet and USB3 protocol code (files `s
 Aravis has a set of unit tests that helps to catch regressions and memory leaks during the development. The test suite is run using the following commands:
 
 ```
-cd tests
-make check
-make check-valgrind-memcheck
+ninja test
 ```
 
-`make check-valgrind-hellgrind`, `make check-valgrind-sgcheck` and `make check-valgrind-drd` are known to not pass. Any help to understand what fails and why would be nice.
+The is a small helper script that run the same tests under valgrind memmory checker
+
+```
+../tests/valgrind-memcheck
+```
 
 All the code is not covered yet by the tests. Code coverage can be obtained using:
 
 ```
-cd tests
-make check-code-coverage
+ninja coverage
 ```
 
-The report is published in `tests/aravis-{VERSION}-coverage/index.html`. Code coverage improvment is welcomed as well.
+The report is published in `build/meson-logs/coveragereport/index.html`. Help on code coverage improvment is welcomed.
 
 ### Downloads
 
