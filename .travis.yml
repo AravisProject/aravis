@@ -17,10 +17,11 @@ addons:
       - gtk-doc-tools
       - libusb-1.0-0-dev
       - libaudit-dev
-      - ninja
+      - ninja-build
       - python3-pip
       - python3-dev
       - gobject-introspection
+    update: true
 
 language: C
 
