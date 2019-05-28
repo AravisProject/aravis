@@ -16,6 +16,7 @@ addons:
       - intltool
       - gtk-doc-tools
       - libusb-1.0-0-dev
+      - libaudit-dev
       - ninja
       - python3-pip
       - python3-dev
