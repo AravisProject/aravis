@@ -20,6 +20,7 @@ addons:
       - ninja
       - python3-pip
       - python3-dev
+      - gobject-introspection
 
 language: C
 
