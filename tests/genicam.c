@@ -203,7 +203,7 @@ indexed_test (void)
 
 	arv_gc_integer_set_value (ARV_GC_INTEGER (selector), 20, NULL);
 	v_double = arv_gc_float_get_value (ARV_GC_FLOAT (node), NULL);
-	g_assert_cmpint (v_double, ==, 150.15);
+	g_assert_cmpfloat (v_double, ==, 150.15);
 
 	node = arv_gc_get_node (genicam, "FloatMultiplexer");
 	g_assert (ARV_IS_GC_FLOAT_NODE (node));
