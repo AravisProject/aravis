@@ -415,7 +415,7 @@ _read_cache (ArvGcRegisterNode *gc_register_node, GError **error)
 {
 	GError *local_error = NULL;
 	ArvGcNode *port;
-	gboolean cachable;
+	ArvGcCachable cachable;
 	gint64 address;
 
 	if (gc_register_node->is_cache_valid == TRUE) {
@@ -469,7 +469,7 @@ _write_cache (ArvGcRegisterNode *gc_register_node, GError **error)
 {
 	GError *local_error = NULL;
 	gint64 address;
-	gboolean cachable;
+	ArvGcCachable cachable;
 	ArvGcNode *port;
 
 	arv_gc_feature_node_inc_modification_count (ARV_GC_FEATURE_NODE (gc_register_node));
