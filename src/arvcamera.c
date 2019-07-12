@@ -232,13 +232,17 @@ arv_camera_set_region (ArvCamera *camera, gint x, gint y, gint width, gint heigh
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
 	if (x >= 0)
-		arv_device_set_integer_feature_value (camera->priv->device, "OffsetX", x);
+		arv_device_set_integer_feature_value (camera->priv->device, "OffsetX", 0);
 	if (y >= 0)
-		arv_device_set_integer_feature_value (camera->priv->device, "OffsetY", y);
+		arv_device_set_integer_feature_value (camera->priv->device, "OffsetY", 0);
 	if (width > 0)
 		arv_device_set_integer_feature_value (camera->priv->device, "Width", width);
 	if (height > 0)
 		arv_device_set_integer_feature_value (camera->priv->device, "Height", height);
+	if (x >= 0)
+		arv_device_set_integer_feature_value (camera->priv->device, "OffsetX", x);
+	if (y >= 0)
+		arv_device_set_integer_feature_value (camera->priv->device, "OffsetY", y);
 }
 
 /**
