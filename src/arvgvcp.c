@@ -348,7 +348,7 @@ arv_gvcp_packet_new_discovery_cmd (size_t *packet_size)
  */
 
 ArvGvcpPacket *
-arv_gvcp_packet_new_discovery_ack (size_t *packet_size)
+arv_gvcp_packet_new_discovery_ack (size_t *packet_size, int id)
 {
 	ArvGvcpPacket *packet;
 
@@ -361,7 +361,7 @@ arv_gvcp_packet_new_discovery_ack (size_t *packet_size)
 	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_ACK);
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_DISCOVERY_ACK);
 	packet->header.size = g_htons (ARV_GVBS_DISCOVERY_DATA_SIZE);
-	packet->header.id = g_htons (0xffff);
+        packet->header.id = g_htons (id);
 
 	return packet;
 }

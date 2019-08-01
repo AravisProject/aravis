@@ -28,7 +28,8 @@
 #include <arvmisc.h>
 #include <net/if.h>
 #include <ifaddrs.h>
-
+#include <netinet/in.h>
+#include <sys/ioctl.h>
 /**
  * SECTION: arvgvfakecamera
  * @short_description: GigE Vision Simulator
@@ -139,14 +140,15 @@ handle_control_packet (ArvGvFakeCamera *gv_fake_camera, GSocket *socket,
 	packet_id = arv_gvcp_packet_get_packet_id (packet);
 	packet_type = arv_gvcp_packet_get_packet_type (packet);
 
-	if (packet_type != ARV_GVCP_PACKET_TYPE_CMD) {
+        // nb flag in second nybble of packet_type indicates whether broadcast acknowledge allowed, so mask it out
+	if ((packet_type&0xFF0F) != ARV_GVCP_PACKET_TYPE_CMD) {
 		arv_warning_device ("[GvFakeCamera::handle_control_packet] Unknown packet type");
 		return FALSE;
 	}
 
 	switch (g_ntohs (packet->header.command)) {
 		case ARV_GVCP_COMMAND_DISCOVERY_CMD:
-			ack_packet = arv_gvcp_packet_new_discovery_ack (&ack_packet_size);
+                  ack_packet = arv_gvcp_packet_new_discovery_ack (&ack_packet_size,packet_id);
 			arv_debug_device ("[GvFakeCamera::handle_control_packet] Discovery command");
 			arv_fake_camera_read_memory (gv_fake_camera->priv->camera, 0, ARV_GVBS_DISCOVERY_DATA_SIZE,
 						     &ack_packet->data);
@@ -435,7 +437,7 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 		    (ifap_iter->ifa_flags & IFF_POINTOPOINT) == 0 &&
 		    (ifap_iter->ifa_addr->sa_family == AF_INET) &&
 		    g_strcmp0 (ifap_iter->ifa_name, gv_fake_camera->priv->interface_name) == 0) {
-			GSocketAddress *socket_address;
+                        GSocketAddress *socket_address;
 			GSocketAddress *inet_socket_address;
 			GInetAddress *inet_address;
 			char *gvcp_address_string;
@@ -443,20 +445,18 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 
 			socket_address = g_socket_address_new_from_native (ifap_iter->ifa_addr,
 									   sizeof (struct sockaddr));
+                        
 			inet_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address));
 			gvcp_address_string = g_inet_address_to_string (inet_address);
 			arv_debug_device ("[GvFakeCamera::start] Interface address = %s", gvcp_address_string);
-
-			inet_socket_address = g_inet_socket_address_new (inet_address, ARV_GVCP_PORT);
-			gv_fake_camera->priv->gvcp_socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
-							       G_SOCKET_TYPE_DATAGRAM,
-							       G_SOCKET_PROTOCOL_UDP, NULL);
-			if (!g_socket_bind (gv_fake_camera->priv->gvcp_socket, inet_socket_address, FALSE, NULL))
-				binding_error = TRUE;
-			g_socket_set_blocking (gv_fake_camera->priv->gvcp_socket, FALSE);
 			arv_fake_camera_set_inet_address (gv_fake_camera->priv->camera, inet_address);
-			g_object_unref (inet_socket_address);
-
+                        /// insert the netmask
+                        in_addr_t netmask=((struct sockaddr_in*)ifap_iter->ifa_netmask)->sin_addr.s_addr;
+                        arv_fake_camera_write_memory(gv_fake_camera->priv->camera, ARV_GVBS_CURRENT_SUBNET_MASK_OFFSET, sizeof(netmask), &netmask);
+                        // set API version
+                        guint32 version=0x200;
+                        arv_fake_camera_write_memory(gv_fake_camera->priv->camera, ARV_GVBS_VERSION_OFFSET, sizeof(version), &version);
+                        
 			inet_socket_address = g_inet_socket_address_new (inet_address, 0);
 			gv_fake_camera->priv->gvsp_socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
 							       G_SOCKET_TYPE_DATAGRAM,
@@ -464,23 +464,34 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 			if (!g_socket_bind (gv_fake_camera->priv->gvsp_socket, inet_socket_address, FALSE, NULL))
 				binding_error = TRUE;
 
+                        // find mac address, and copy into camera
+                        // private data. Linux specific code, may not
+                        // be necessary
+                        {
+                          int sock=socket(PF_INET,SOCK_DGRAM,0);
+                          struct ifreq req;
+                          memset(&req,0,sizeof(req));
+                          strncpy(req.ifr_name,gv_fake_camera->priv->interface_name,IF_NAMESIZE-1);
+                          ioctl(sock,SIOCGIFHWADDR,&req);
+                          arv_fake_camera_write_memory(gv_fake_camera->priv->camera, ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET+2, 2, req.ifr_hwaddr.sa_data);
+                          arv_fake_camera_write_memory(gv_fake_camera->priv->camera, ARV_GVBS_DEVICE_MAC_ADDRESS_LOW_OFFSET, 4, req.ifr_hwaddr.sa_data+2);
+                        }
+
+                        inet_address = g_inet_address_new_any (G_SOCKET_FAMILY_IPV4);
+			inet_socket_address = g_inet_socket_address_new (inet_address, ARV_GVCP_PORT);
+			gv_fake_camera->priv->gvcp_socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
+							       G_SOCKET_TYPE_DATAGRAM,
+							       G_SOCKET_PROTOCOL_UDP, NULL);
+			if (!g_socket_bind (gv_fake_camera->priv->gvcp_socket, inet_socket_address, FALSE, NULL))
+				binding_error = TRUE;
+			g_socket_set_blocking (gv_fake_camera->priv->gvcp_socket, FALSE);
+			g_object_unref (inet_socket_address);
+
 			g_clear_object (&inet_socket_address);
 			g_clear_object (&socket_address);
 
-			inet_address = g_inet_address_new_from_string ("255.255.255.255");
-			discovery_address_string = g_inet_address_to_string (inet_address);
-			arv_debug_device ("[GvFakeCamera::start] Discovery address = %s", discovery_address_string);
-			inet_socket_address = g_inet_socket_address_new (inet_address, ARV_GVCP_PORT);
-			if (g_strcmp0 (gvcp_address_string, discovery_address_string) == 0)
-				gv_fake_camera->priv->discovery_socket = NULL;
-			else {
-				gv_fake_camera->priv->discovery_socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
-									    G_SOCKET_TYPE_DATAGRAM,
-									    G_SOCKET_PROTOCOL_UDP, NULL);
-				if (!g_socket_bind (gv_fake_camera->priv->discovery_socket, inet_socket_address, FALSE, NULL))
-					binding_error = TRUE;
-				g_socket_set_blocking (gv_fake_camera->priv->discovery_socket, FALSE);
-			}
+                        // TODO - remove discovery_socket
+                        gv_fake_camera->priv->discovery_socket = NULL;
 			g_clear_object (&inet_socket_address);
 			g_clear_object (&inet_address);
 
