@@ -231,7 +231,8 @@ arv_uv_stream_thread (void *data)
 static guint32
 align (guint32 val, guint32 alignment)
 {
-	g_assert (alignment > 0);
+	/* Alignment must be a power of two, otherwise the used alignment algorithm does not work. */
+	g_assert (alignment > 0 && (alignment & (alignment - 1)) == 0);
 
 	return (val + (alignment - 1)) & ~(alignment - 1);
 }
