@@ -17,4 +17,3 @@ desktop = i18n.merge_file ('desktop',
 			   install_dir: aravis_desktop_dir,
 			   po_dir: po_dir,
 			   type: 'desktop')
-
