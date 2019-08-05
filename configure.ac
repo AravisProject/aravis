@@ -246,7 +246,7 @@ AM_CONDITIONAL(ARAVIS_FAST_HEARTBEAT, test "x$build_fast_heartbeat" = "xyes")
 
 AM_CONDITIONAL(ARAVIS_BUILD_CPP_TEST, test "x$enable_cpp_test" = "xyes")
 
-# Address sanatizer
+# Address sanitizer
 # =================
 
 AC_MSG_CHECKING([for asan flags])
@@ -307,5 +307,5 @@ echo "  Build viewer:                 $build_viewer"
 echo "  Build gstreamer plugin:       $build_gst_plugin"
 echo "  Build gstreamer-0.10 plugin:  $build_gst_0_10_plugin"
 echo "  Build with fast heartbeat:    $build_fast_heartbeat"
-echo "  Build with address sanatizer: $build_with_asan"
+echo "  Build with address sanitizer: $build_with_asan"
 echo ""
