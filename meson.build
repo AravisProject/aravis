@@ -1,4 +1,4 @@
-project ('aravis', 'c', 'cpp', version: '0.7.0', meson_version: '>=0.47.0')
+project ('aravis', 'c', 'cpp', version: '0.7.0', meson_version: '>=0.47.0', default_options: 'c_std=c89')
 
 gnome = import('gnome')
 i18n = import ('i18n')
