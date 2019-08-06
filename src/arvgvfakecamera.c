@@ -139,7 +139,9 @@ handle_control_packet (ArvGvFakeCamera *gv_fake_camera, GSocket *socket,
 	packet_id = arv_gvcp_packet_get_packet_id (packet);
 	packet_type = arv_gvcp_packet_get_packet_type (packet);
 
-	if (packet_type != ARV_GVCP_PACKET_TYPE_CMD) {
+        /* nb flag in second nybble of packet_type indicates whether
+           broadcast acknowledge allowed, so mask it out */
+	if ((packet_type&0xFF0F) != ARV_GVCP_PACKET_TYPE_CMD) {
 		arv_warning_device ("[GvFakeCamera::handle_control_packet] Unknown packet type");
 		return FALSE;
 	}
