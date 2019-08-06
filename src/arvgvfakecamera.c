@@ -28,6 +28,9 @@
 #include <arvmisc.h>
 #include <net/if.h>
 #include <ifaddrs.h>
+#include <netinet/in.h>
+#include <sys/ioctl.h>
+ 
 
 /**
  * SECTION: arvgvfakecamera
@@ -447,7 +450,31 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 			gvcp_address_string = g_inet_address_to_string (inet_address);
 			arv_debug_device ("[GvFakeCamera::start] Interface address = %s", gvcp_address_string);
 
-			inet_socket_address = g_inet_socket_address_new (inet_address, ARV_GVCP_PORT);
+                        {
+                          in_addr_t netmask=((struct sockaddr_in*)ifap_iter->ifa_netmask)->sin_addr.s_addr;
+                          guint32 version=0x200;
+                          int sock;
+                          struct ifreq req;
+                          
+                          arv_fake_camera_set_inet_address (gv_fake_camera->priv->camera, inet_address);
+                          /* insert the netmask */
+                          arv_fake_camera_write_memory(gv_fake_camera->priv->camera,
+                                                       ARV_GVBS_CURRENT_SUBNET_MASK_OFFSET, sizeof(netmask), &netmask);
+                          /* set API version */
+                          arv_fake_camera_write_memory(gv_fake_camera->priv->camera,
+                                                       ARV_GVBS_VERSION_OFFSET, sizeof(version), &version);
+                        
+                          /* find mac address, and copy into camera
+                             private data. Linux specific code. */
+                          sock=socket(PF_INET,SOCK_DGRAM,0);
+                          memset(&req,0,sizeof(req));
+                          strncpy(req.ifr_name,gv_fake_camera->priv->interface_name,IF_NAMESIZE-1);
+                          ioctl(sock,SIOCGIFHWADDR,&req);
+                          arv_fake_camera_write_memory(gv_fake_camera->priv->camera, ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET+2, 2, req.ifr_hwaddr.sa_data);
+                          arv_fake_camera_write_memory(gv_fake_camera->priv->camera, ARV_GVBS_DEVICE_MAC_ADDRESS_LOW_OFFSET, 4, req.ifr_hwaddr.sa_data+2);
+                        }
+
+                        inet_socket_address = g_inet_socket_address_new (inet_address, ARV_GVCP_PORT);
 			gv_fake_camera->priv->gvcp_socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
 							       G_SOCKET_TYPE_DATAGRAM,
 							       G_SOCKET_PROTOCOL_UDP, NULL);
