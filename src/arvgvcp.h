@@ -171,11 +171,28 @@ G_BEGIN_DECLS
  */
 
 typedef enum {
-	ARV_GVCP_PACKET_TYPE_ACK =		0x0000,
-	ARV_GVCP_PACKET_TYPE_RESEND =		0x4200,
-	ARV_GVCP_PACKET_TYPE_CMD = 		0x4201,
-	ARV_GVCP_PACKET_TYPE_ERROR =		0x8006
+	ARV_GVCP_PACKET_TYPE_ACK =		0x00,
+	ARV_GVCP_PACKET_TYPE_CMD = 		0x42,
+	ARV_GVCP_PACKET_TYPE_ERROR =		0x80,
+	ARV_GVCP_PACKET_TYPE_UNKNOWN_ERROR =	0x8f
 } ArvGvcpPacketType;
+
+/**
+ * ArvGvcpPacketFlags:
+ * @ARV_GVCP_PACKET_FLAGS_NONE: no flag defined
+ * @ARV_GVCP_PACKET_FLAGS_ACK_REQUIRED: acknowledge required
+ * @ARV_GVCP_PACKET_FLAGS_64BIT_ID: extended id
+ * @ARV_GVCP_PACKET_FLAGS_ALLOW_BROADCAST_ACK: allow broadcast acknowledge
+ * @ARV_GVCP_PACKET_FLAGS_SCHEDULED_ACTION: scheduled action command
+ */
+
+typedef enum {
+	ARV_GVCP_PACKET_FLAGS_NONE =			0x00,
+	ARV_GVCP_PACKET_FLAGS_ACK_REQUIRED =		0x01,
+	ARV_GVCP_PACKET_FLAGS_64BIT_ID =		0x08,
+	ARV_GVCP_PACKET_FLAGS_ALLOW_BROADCAST_ACK = 	0x10,
+	ARV_GVCP_PACKET_FLAGS_SCHEDULED_ACTION =	0x80
+} ArvGvcpPacketFlags;
 
 /**
  * ArvGvcpCommand:
@@ -227,7 +244,8 @@ typedef enum {
  */
 
 typedef struct {
-	guint16 packet_type;
+	guint8 packet_type;
+	guint8 packet_flags;
 	guint16 command;
 	guint16 size;
 	guint16 id;
@@ -286,7 +304,7 @@ arv_gvcp_packet_get_packet_type (ArvGvcpPacket *packet)
 	if (packet == NULL)
 		return ARV_GVCP_PACKET_TYPE_ERROR;
 
-	return (ArvGvcpPacketType) g_ntohs (packet->header.packet_type);
+	return (ArvGvcpPacketType) packet->header.packet_type;
 }
 
 /**

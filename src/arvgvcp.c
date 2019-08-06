@@ -61,7 +61,8 @@ arv_gvcp_packet_new_read_memory_cmd (guint32 address, guint32 size, guint16 pack
 
 	packet = g_malloc (*packet_size);
 
-	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_CMD);
+	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_CMD;
+	packet->header.packet_flags = 0;
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_READ_MEMORY_CMD);
 	packet->header.size = g_htons (2 * sizeof (guint32));
 	packet->header.id = g_htons (packet_id);
@@ -95,7 +96,8 @@ arv_gvcp_packet_new_read_memory_ack (guint32 address, guint32 size, guint16 pack
 
 	packet = g_malloc (*packet_size);
 
-	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_ACK);
+	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_ACK;
+	packet->header.packet_flags = 0;
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_READ_MEMORY_ACK);
 	packet->header.size = g_htons (sizeof (guint32) + size);
 	packet->header.id = g_htons (packet_id);
@@ -128,7 +130,8 @@ arv_gvcp_packet_new_write_memory_cmd (guint32 address, guint32 size, guint16 pac
 
 	packet = g_malloc (*packet_size);
 
-	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_CMD);
+	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_CMD;
+	packet->header.packet_flags = 0;
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_WRITE_MEMORY_CMD);
 	packet->header.size = g_htons (sizeof (guint32) + size);
 	packet->header.id = g_htons (packet_id);
@@ -162,7 +165,8 @@ arv_gvcp_packet_new_write_memory_ack (guint32 address,
 
 	packet = g_malloc (*packet_size);
 
-	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_ACK);
+	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_ACK;
+	packet->header.packet_flags = 0;
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_WRITE_MEMORY_ACK);
 	packet->header.size = g_htons (sizeof (guint32));
 	packet->header.id = g_htons (packet_id);
@@ -196,7 +200,8 @@ arv_gvcp_packet_new_read_register_cmd (guint32 address,
 
 	packet = g_malloc (*packet_size);
 
-	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_CMD);
+	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_CMD;
+	packet->header.packet_flags = 0;
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_READ_REGISTER_CMD);
 	packet->header.size = g_htons (sizeof (guint32));
 	packet->header.id = g_htons (packet_id);
@@ -230,7 +235,8 @@ arv_gvcp_packet_new_read_register_ack (guint32 value,
 
 	packet = g_malloc (*packet_size);
 
-	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_ACK);
+	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_ACK;
+	packet->header.packet_flags = 0;
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_READ_REGISTER_ACK);
 	packet->header.size = g_htons (sizeof (guint32));
 	packet->header.id = g_htons (packet_id);
@@ -267,7 +273,8 @@ arv_gvcp_packet_new_write_register_cmd (guint32 address,
 
 	packet = g_malloc (*packet_size);
 
-	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_CMD);
+	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_CMD;
+	packet->header.packet_flags = 0;
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_WRITE_REGISTER_CMD);
 	packet->header.size = g_htons (2 * sizeof (guint32));
 	packet->header.id = g_htons (packet_id);
@@ -302,7 +309,8 @@ arv_gvcp_packet_new_write_register_ack 	(guint32 data_index,
 
 	packet = g_malloc (*packet_size);
 
-	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_ACK);
+	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_ACK;
+	packet->header.packet_flags = 0;
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_WRITE_REGISTER_ACK);
 	packet->header.size = g_htons (sizeof (guint32));
 	packet->header.id = g_htons (packet_id);
@@ -331,7 +339,8 @@ arv_gvcp_packet_new_discovery_cmd (size_t *packet_size)
 
 	packet = g_malloc (*packet_size);
 
-	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_CMD);
+	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_CMD;
+	packet->header.packet_flags = 0;
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_DISCOVERY_CMD);
 	packet->header.size = g_htons (0x0000);
 	packet->header.id = g_htons (0xffff);
@@ -358,7 +367,8 @@ arv_gvcp_packet_new_discovery_ack (size_t *packet_size, int id)
 
 	packet = g_malloc (*packet_size);
 
-	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_ACK);
+	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_ACK;
+	packet->header.packet_flags = 0;
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_DISCOVERY_ACK);
 	packet->header.size = g_htons (ARV_GVBS_DISCOVERY_DATA_SIZE);
         packet->header.id = g_htons (id);
@@ -393,7 +403,8 @@ arv_gvcp_packet_new_packet_resend_cmd (guint32 frame_id,
 
 	packet = g_malloc (*packet_size);
 
-	packet->header.packet_type = g_htons (ARV_GVCP_PACKET_TYPE_RESEND);
+	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_CMD;
+	packet->header.packet_flags = ARV_GVCP_PACKET_FLAGS_ACK_REQUIRED;
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_PACKET_RESEND_CMD);
 	packet->header.size = g_htons (3 * sizeof (guint32));
 	packet->header.id = g_htons (packet_id);
@@ -433,6 +444,12 @@ arv_gvcp_packet_type_to_string (ArvGvcpPacketType value)
 }
 
 static const char *
+arv_gvcp_packet_flags_to_string (ArvGvcpPacketFlags value)
+{
+	return arv_enum_to_string (ARV_TYPE_GVCP_PACKET_FLAGS, value);
+}
+
+static const char *
 arv_gvcp_command_to_string (ArvGvcpCommand value)
 {
 	return arv_enum_to_string (ARV_TYPE_GVCP_COMMAND, value);
@@ -461,7 +478,9 @@ arv_gvcp_packet_to_string (const ArvGvcpPacket *packet)
 	string = g_string_new ("");
 
 	g_string_append_printf (string, "packet_type  = %s\n",
-				arv_gvcp_packet_type_to_string (g_ntohs (packet->header.packet_type)));
+				arv_gvcp_packet_type_to_string (packet->header.packet_type));
+	g_string_append_printf (string, "packet_flags = %s\n",
+				arv_gvcp_packet_flags_to_string (packet->header.packet_flags));
 	g_string_append_printf (string, "command      = %s\n",
 				arv_gvcp_command_to_string (g_ntohs (packet->header.command)));
 	g_string_append_printf (string, "size         = %d\n", g_ntohs (packet->header.size));
@@ -505,7 +524,7 @@ arv_gvcp_packet_to_string (const ArvGvcpPacket *packet)
 			break;
 		case ARV_GVCP_COMMAND_READ_REGISTER_ACK:
 			value = g_ntohl (*((guint32 *) &data[0]));
-			g_string_append_printf (string, "success      = %10u (0x%08x)\n",
+			g_string_append_printf (string, "value        = %10u (0x%08x)\n",
 						value, value);
 			break;
 		case ARV_GVCP_COMMAND_READ_MEMORY_CMD:
