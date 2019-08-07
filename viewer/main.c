@@ -68,15 +68,15 @@ main (int argc, char **argv)
 	GOptionContext *context;
 	GError *error = NULL;
 
-	bindtextdomain (GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR);
-	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
-	textdomain (GETTEXT_PACKAGE);
+	bindtextdomain (ARAVIS_GETTEXT, ARAVIS_LOCALE_DIR);
+	bind_textdomain_codeset (ARAVIS_GETTEXT, "UTF-8");
+	textdomain (ARAVIS_GETTEXT);
 
 	gtk_init (&argc, &argv);
 	gst_init (&argc, &argv);
 
 	icon_theme = gtk_icon_theme_get_default ();
-	gtk_icon_theme_append_search_path (icon_theme, ARAVIS_ICON_DIR);
+	gtk_icon_theme_add_resource_path (icon_theme, "/org/aravis/viewer/icons/gnome/");
 
 	context = g_option_context_new (NULL);
 	g_option_context_add_main_entries (context, arv_viewer_option_entries, NULL);
