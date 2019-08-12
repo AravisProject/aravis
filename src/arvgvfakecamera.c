@@ -28,8 +28,6 @@
 #include <arvmisc.h>
 #include <net/if.h>
 #include <ifaddrs.h>
-#include <netinet/in.h>
-#include <sys/ioctl.h>
  
 
 /**
