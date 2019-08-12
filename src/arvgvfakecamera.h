@@ -56,11 +56,6 @@ GType arv_gv_fake_camera_get_type (void);
 ArvGvFakeCamera *		arv_gv_fake_camera_new		(const char *interface_name);
 gboolean 			arv_gv_fake_camera_start	(ArvGvFakeCamera *gv_fake_camera);
 void	 			arv_gv_fake_camera_stop		(ArvGvFakeCamera *gv_fake_camera);
-
-/** 
-    arv_gv_fake_camera_get_camera
-    Returns: (transfer none): the ArvFakeCamera instance of this ArvGvFakeCamera object
- */
 ArvFakeCamera *                 arv_gv_fake_camera_get_camera   (ArvGvFakeCamera *gv_fake_camera);
 
 G_END_DECLS
