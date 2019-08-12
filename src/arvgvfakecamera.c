@@ -51,7 +51,7 @@ struct _ArvGvFakeCameraPrivate {
 	char *interface_name;
 	ArvFakeCamera *camera;
 
-	GPollFD gvcp_fds[2];
+	GPollFD gvcp_fds[3];
 	guint n_gvcp_fds;
 
 	GSocketAddress *controller_address;
@@ -272,7 +272,7 @@ _thread (void *user_data)
 			if (timeout_ms < 0)
 				timeout_ms = 0;
 
-			n_events = g_poll (gv_fake_camera->priv->gvcp_fds, 2, timeout_ms);
+			n_events = g_poll (gv_fake_camera->priv->gvcp_fds, gv_fake_camera->priv->n_gvcp_fds, timeout_ms);
 			if (n_events > 0) {
 				GSocketAddress *remote_address = NULL;
 				int count;
@@ -527,13 +527,19 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 			gv_fake_camera->priv->gvcp_fds[0].fd = g_socket_get_fd (gv_fake_camera->priv->gvcp_socket);
 			gv_fake_camera->priv->gvcp_fds[0].events = G_IO_IN;
 			gv_fake_camera->priv->gvcp_fds[0].revents = 0;
+                        gv_fake_camera->priv->n_gvcp_fds = 1;
 			if (gv_fake_camera->priv->discovery_socket != NULL) {
 				gv_fake_camera->priv->gvcp_fds[1].fd = g_socket_get_fd (gv_fake_camera->priv->discovery_socket);
 				gv_fake_camera->priv->gvcp_fds[1].events = G_IO_IN;
 				gv_fake_camera->priv->gvcp_fds[1].revents = 0;
-				gv_fake_camera->priv->n_gvcp_fds = 2;
-			} else
-				gv_fake_camera->priv->n_gvcp_fds = 1;
+				gv_fake_camera->priv->n_gvcp_fds++;
+                                if (gv_fake_camera->priv->subnet_discovery_socket != NULL) {
+				    gv_fake_camera->priv->gvcp_fds[2].fd = g_socket_get_fd (gv_fake_camera->priv->subnet_discovery_socket);
+				    gv_fake_camera->priv->gvcp_fds[2].events = G_IO_IN;
+				    gv_fake_camera->priv->gvcp_fds[2].revents = 0;
+				    gv_fake_camera->priv->n_gvcp_fds++;
+                                }
+			} 
 
 			interface_found = TRUE;
 		}
@@ -545,6 +551,7 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 		g_clear_object (&gv_fake_camera->priv->gvcp_socket);
 		g_clear_object (&gv_fake_camera->priv->gvsp_socket);
 		g_clear_object (&gv_fake_camera->priv->discovery_socket);
+		g_clear_object (&gv_fake_camera->priv->subnet_discovery_socket);
 
 		return FALSE;
 	}
@@ -574,6 +581,7 @@ arv_gv_fake_camera_stop (ArvGvFakeCamera *gv_fake_camera)
 	g_clear_object (&gv_fake_camera->priv->gvcp_socket);
 	g_clear_object (&gv_fake_camera->priv->gvsp_socket);
 	g_clear_object (&gv_fake_camera->priv->discovery_socket);
+	g_clear_object (&gv_fake_camera->priv->subnet_discovery_socket);
 
 	g_clear_object (&gv_fake_camera->priv->controller_address);
 }
