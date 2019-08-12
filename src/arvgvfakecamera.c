@@ -60,6 +60,7 @@ struct _ArvGvFakeCameraPrivate {
 	GSocket *gvcp_socket;
 	GSocket *gvsp_socket;
 	GSocket *discovery_socket;
+	GSocket *subnet_discovery_socket;
 
 	GThread *thread;
 	gboolean cancel;
@@ -299,6 +300,19 @@ _thread (void *user_data)
 					g_clear_object (&remote_address);
 				}
 
+				if (gv_fake_camera->priv->subnet_discovery_socket != NULL) {
+					count = g_socket_receive_message (gv_fake_camera->priv->subnet_discovery_socket,
+									  &remote_address, &input_vector, 1, NULL, NULL,
+									  NULL, NULL, NULL);
+					if (count > 0) {
+						if (handle_control_packet (gv_fake_camera, gv_fake_camera->priv->subnet_discovery_socket,
+									   remote_address, input_vector.buffer, count))
+							arv_debug_device ("[GvFakeCamera::thread]"
+									  " Control packet received on subnet discovery socket\n");
+					}
+					g_clear_object (&remote_address);
+				}
+
 				if (arv_fake_camera_get_control_channel_privilege (gv_fake_camera->priv->camera) == 0 ||
 				    arv_fake_camera_get_acquisition_status (gv_fake_camera->priv->camera) == 0) {
 					if (stream_address != NULL) {
@@ -446,6 +460,7 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 			inet_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address));
 			gvcp_address_string = g_inet_address_to_string (inet_address);
 			arv_debug_device ("[GvFakeCamera::start] Interface address = %s", gvcp_address_string);
+			g_free (gvcp_address_string);
 
 			inet_socket_address = g_inet_socket_address_new (inet_address, ARV_GVCP_PORT);
 			gv_fake_camera->priv->gvcp_socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
@@ -467,9 +482,11 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 			g_clear_object (&inet_socket_address);
 			g_clear_object (&socket_address);
 
+                        /* global broadcast discovery */
 			inet_address = g_inet_address_new_from_string ("255.255.255.255");
 			discovery_address_string = g_inet_address_to_string (inet_address);
 			arv_debug_device ("[GvFakeCamera::start] Discovery address = %s", discovery_address_string);
+			g_free (discovery_address_string);
 			inet_socket_address = g_inet_socket_address_new (inet_address, ARV_GVCP_PORT);
 			if (g_strcmp0 (gvcp_address_string, discovery_address_string) == 0)
 				gv_fake_camera->priv->discovery_socket = NULL;
@@ -483,9 +500,29 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 			}
 			g_clear_object (&inet_socket_address);
 			g_clear_object (&inet_address);
-
-			g_free (gvcp_address_string);
+                        
+                        /* subnet broadcast discovery */
+			socket_address = g_socket_address_new_from_native (ifap_iter->ifa_broadaddr,
+									   sizeof (struct sockaddr));
+                        inet_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address));
+			discovery_address_string = g_inet_address_to_string (inet_address);
+			arv_debug_device ("[GvFakeCamera::start] Discovery address = %s", discovery_address_string);
 			g_free (discovery_address_string);
+			inet_socket_address = g_inet_socket_address_new (inet_address, ARV_GVCP_PORT);
+			if (g_strcmp0 (gvcp_address_string, discovery_address_string) == 0)
+				gv_fake_camera->priv->subnet_discovery_socket = NULL;
+			else {
+				gv_fake_camera->priv->subnet_discovery_socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
+									    G_SOCKET_TYPE_DATAGRAM,
+									    G_SOCKET_PROTOCOL_UDP, NULL);
+				if (!g_socket_bind (gv_fake_camera->priv->subnet_discovery_socket, inet_socket_address, FALSE, NULL))
+					binding_error = TRUE;
+				g_socket_set_blocking (gv_fake_camera->priv->subnet_discovery_socket, FALSE);
+			}
+			g_clear_object (&socket_address);
+			g_clear_object (&inet_socket_address);
+			g_clear_object (&inet_address);
+                        
 
 			gv_fake_camera->priv->gvcp_fds[0].fd = g_socket_get_fd (gv_fake_camera->priv->gvcp_socket);
 			gv_fake_camera->priv->gvcp_fds[0].events = G_IO_IN;
