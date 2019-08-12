@@ -564,6 +564,17 @@ _set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *
 	}
 }
 
+/** 
+ *  arv_gv_fake_camera_get_camera:
+ *  Returns: (transfer none): the #ArvFakeCamera instance of this #ArvGvFakeCamera object
+ */
+
+ArvFakeCamera *
+arv_gv_fake_camera_get_camera (ArvGvFakeCamera *gv_fake_camera)
+{
+        return gv_fake_camera->priv->camera;
+}
+
 static void
 arv_gv_fake_camera_init (ArvGvFakeCamera *gv_fake_camera)
 {
