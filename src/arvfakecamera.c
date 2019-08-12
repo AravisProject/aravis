@@ -149,14 +149,15 @@ _get_register (ArvFakeCamera *camera, guint32 address)
 size_t
 arv_fake_camera_get_payload (ArvFakeCamera *camera)
 {
-	guint32 width, height;
+        guint32 width, height, pixelFormat;
 
 	g_return_val_if_fail (ARV_IS_FAKE_CAMERA (camera), 0);
 
 	width = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_WIDTH);
 	height = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_HEIGHT);
-
-	return width * height;
+        pixelFormat = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_PIXEL_FORMAT);
+        
+	return width * height * ARV_PIXEL_FORMAT_BIT_PER_PIXEL(pixelFormat)/8;
 }
 
 guint64
@@ -276,7 +277,7 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer, guint32 *
 
 	width = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_WIDTH);
 	height = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_HEIGHT);
-	payload = width * height;
+	payload = arv_fake_camera_get_payload (camera);
 
 	if (buffer->priv->size < payload) {
 		buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;

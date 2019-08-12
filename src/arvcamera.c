@@ -1529,7 +1529,8 @@ arv_camera_get_payload (ArvCamera *camera)
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0);
 
-	return arv_device_get_integer_feature_value (camera->priv->device, "PayloadSize");
+	return arv_device_get_integer_feature_value (camera->priv->device, "PayloadSize") *
+          ARV_PIXEL_FORMAT_BIT_PER_PIXEL(arv_camera_get_pixel_format(camera)) / 8;
 }
 
 /**

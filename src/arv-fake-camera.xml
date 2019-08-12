@@ -222,6 +222,9 @@
 		<EnumEntry Name="Mono8" NameSpace="Standard">
 			<Value>17301505</Value>
 		</EnumEntry>
+		<EnumEntry Name="RGB8" NameSpace="Standard">
+			<Value>35127316</Value>
+		</EnumEntry>
 		<pValue>PixelFormatRegister</pValue>
 	</Enumeration>
 
