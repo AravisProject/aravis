@@ -147,7 +147,7 @@ handle_control_packet (ArvGvFakeCamera *gv_fake_camera, GSocket *socket,
 
 	switch (g_ntohs (packet->header.command)) {
 		case ARV_GVCP_COMMAND_DISCOVERY_CMD:
-			ack_packet = arv_gvcp_packet_new_discovery_ack (&ack_packet_size,packet_id);
+			ack_packet = arv_gvcp_packet_new_discovery_ack (packet_id, &ack_packet_size);
 			arv_debug_device ("[GvFakeCamera::handle_control_packet] Discovery command");
 			arv_fake_camera_read_memory (gv_fake_camera->priv->camera, 0, ARV_GVBS_DISCOVERY_DATA_SIZE,
 						     &ack_packet->data);
