@@ -165,9 +165,9 @@ G_BEGIN_DECLS
 /**
  * ArvGvcpPacketType:
  * @ARV_GVCP_PACKET_TYPE_ACK: acknowledge packet
- * @ARV_GVCP_PACKET_TYPE_RESEND: resend request packet
  * @ARV_GVCP_PACKET_TYPE_CMD: command packet
  * @ARV_GVCP_PACKET_TYPE_ERROR: error packet
+ * @ARV_GVCP_PACKET_TYPE_UNKNOWN_ERROR: unknown error
  */
 
 typedef enum {
@@ -236,6 +236,7 @@ typedef enum {
 /**
  * ArvGvcpHeader:
  * @packet_type: a #ArvGvcpPacketType identifier
+ * @packet_flags: set of packet flags
  * @command: a #ArvGvcpCommand identifier
  * @size: data size
  * @id: packet identifier

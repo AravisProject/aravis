@@ -898,6 +898,7 @@ arv_gv_device_get_url_regex
 arv_gv_fake_camera_new
 arv_gv_fake_camera_start
 arv_gv_fake_camera_stop
+arv_gv_fake_camera_get_fake_camera
 <SUBSECTION Standard>
 ArvGvFakeCamera
 ArvGvFakeCameraClass
@@ -1283,6 +1284,7 @@ arv_pixel_format_from_gst_0_10_caps
 <TITLE>ArvGvcp</TITLE>
 ARV_GVCP_PORT
 ArvGvcpPacketType
+ArvGvcpPacketFlags
 ArvGvcpCommand
 ArvGvcpHeader
 ArvGvcpPacket

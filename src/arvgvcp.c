@@ -350,10 +350,12 @@ arv_gvcp_packet_new_discovery_cmd (size_t *packet_size)
 
 /**
  * arv_gvcp_packet_new_discovery_ack: (skip)
+ * @id: packet id 
  * @packet_size: (out): packet size, in bytes
- * Return value: (transfer full): a new #ArvGvcpPacket
  *
  * Create a gvcp packet for a discovery acknowledge.
+ *
+ * Return value: (transfer full): a new #ArvGvcpPacket
  */
 
 ArvGvcpPacket *
