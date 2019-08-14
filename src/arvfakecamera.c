@@ -393,14 +393,14 @@ arv_fake_camera_get_heartbeat_timeout (ArvFakeCamera *camera)
 	return value;
 }
 
-
-
 /**
-  * arv_set_fake_camera_genicam_filename: 
-  * sets name of genicam file. This needs to be called prior to
-  * instantiation of the fake camera
-  * @filename: path to genicam file
-*/
+ * arv_set_fake_camera_genicam_filename: 
+ * @filename: path to genicam file
+ * 
+ * Sets name of genicam file. This needs to be called prior to
+ * instantiation of the fake camera.
+ */
+
 void
 arv_set_fake_camera_genicam_filename (const char *filename)
 {
