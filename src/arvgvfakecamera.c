@@ -494,7 +494,7 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 				gv_fake_camera->priv->discovery_socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
 									    G_SOCKET_TYPE_DATAGRAM,
 									    G_SOCKET_PROTOCOL_UDP, NULL);
-				if (!g_socket_bind (gv_fake_camera->priv->discovery_socket, inet_socket_address, FALSE, NULL)) {
+				if (!g_socket_bind (gv_fake_camera->priv->discovery_socket, inet_socket_address, TRUE /*allow_reuse*/, NULL)) {
 					if (error != NULL) {
 						arv_warning_device ("Failed to bind global discovery socket: %s", error->message);
 						g_clear_error (&error);
