@@ -502,7 +502,7 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 				 "GVCP", gvcp_inet_address, ARV_GVCP_PORT, FALSE, FALSE);
 
 			inet_address = g_inet_address_new_from_string ("255.255.255.255");
-			if (!g_inet_address_equal (gvcp_inet_address, inet_address) != 0)
+			if (!g_inet_address_equal (gvcp_inet_address, inet_address))
 				success = success && _create_and_bind_input_socket 
 					(&gv_fake_camera->priv->input_sockets[ARV_GV_FAKE_CAMERA_INPUT_SOCKET_GLOBAL_DISCOVERY],
 					 "Global discovery", inet_address, ARV_GVCP_PORT, TRUE, FALSE);
