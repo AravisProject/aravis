@@ -622,15 +622,15 @@ _set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *
 	}
 }
 
-/** 
- *  arv_gv_fake_camera_get_camera:
- *  @gv_fake_camera: a #ArvGvFakeCamera
+/**
+ * arv_gv_fake_camera_get_fake_camera:
+ * @gv_fake_camera: a #ArvGvFakeCamera
  *
- *  Retrieves the underlying #ArvFakeCamera object owned by @gv_fake_camera.
+ * Retrieves the underlying #ArvFakeCamera object owned by @gv_fake_camera.
  *
- *  Returns: (transfer none): underlying fake camera object.
+ * Returns: (transfer none): underlying fake camera object.
  *
- *  Since: 0.8.0
+ * Since: 0.8.0
  */
 
 ArvFakeCamera *
