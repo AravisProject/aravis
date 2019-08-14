@@ -91,10 +91,10 @@ _g_inet_socket_address_is_equal (GInetSocketAddress *a, GInetSocketAddress *b)
 				     g_inet_socket_address_get_address (b));
 }
 
-gboolean
-handle_control_packet (ArvGvFakeCamera *gv_fake_camera, GSocket *socket,
-		       GSocketAddress *remote_address,
-		       ArvGvcpPacket *packet, size_t size)
+static gboolean
+_handle_control_packet (ArvGvFakeCamera *gv_fake_camera, GSocket *socket,
+			GSocketAddress *remote_address,
+			ArvGvcpPacket *packet, size_t size)
 {
 	ArvGvcpPacket *ack_packet = NULL;
 	size_t ack_packet_size;
@@ -226,7 +226,7 @@ handle_control_packet (ArvGvFakeCamera *gv_fake_camera, GSocket *socket,
 	return success;
 }
 
-void *
+static void *
 _thread (void *user_data)
 {
 	ArvGvFakeCamera *gv_fake_camera = user_data;
@@ -280,8 +280,8 @@ _thread (void *user_data)
 						count = g_socket_receive_message (socket, &remote_address, &input_vector, 1, NULL, NULL,
 										  NULL, NULL, NULL);
 						if (count > 0) {
-							if (handle_control_packet (gv_fake_camera, socket,
-										   remote_address, input_vector.buffer, count))
+							if (_handle_control_packet (gv_fake_camera, socket,
+										    remote_address, input_vector.buffer, count))
 								arv_debug_device ("[GvFakeCamera::thread] Control packet received");
 						}
 						g_clear_object (&remote_address);
@@ -402,7 +402,7 @@ _thread (void *user_data)
 	return NULL;
 }
 
-gboolean
+static gboolean
 _create_and_bind_input_socket (GSocket **socket_out, const char *socket_name, GInetAddress *inet_address, unsigned int port, gboolean allow_reuse, gboolean blocking)
 {
 	GSocket *socket;
