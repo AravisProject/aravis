@@ -149,14 +149,15 @@ _get_register (ArvFakeCamera *camera, guint32 address)
 size_t
 arv_fake_camera_get_payload (ArvFakeCamera *camera)
 {
-	guint32 width, height;
+        guint32 width, height, pixel_format;
 
 	g_return_val_if_fail (ARV_IS_FAKE_CAMERA (camera), 0);
 
 	width = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_WIDTH);
 	height = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_HEIGHT);
-
-	return width * height;
+        pixel_format = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_PIXEL_FORMAT);
+        
+	return width * height * ARV_PIXEL_FORMAT_BIT_PER_PIXEL(pixel_format)/8;
 }
 
 guint64
@@ -195,11 +196,273 @@ arv_fake_camera_wait_for_next_frame (ArvFakeCamera *camera)
 	g_usleep (arv_fake_camera_get_sleep_time_for_next_frame (camera, NULL));
 }
 
+static struct {
+	unsigned char r,g,b;
+} jet_colormap [] =
+  {
+   {0  ,   0  , 132},
+   {0  ,   0  , 136},
+   {0  ,   0  , 140},
+   {0  ,   0  , 144},
+   {0  ,   0  , 148},
+   {0  ,   0  , 152},
+   {0  ,   0  , 156},
+   {0  ,   0  , 160},
+   {0  ,   0  , 164},
+   {0  ,   0  , 168},
+   {0  ,   0  , 172},
+   {0  ,   0  , 176},
+   {0  ,   0  , 180},
+   {0  ,   0  , 184},
+   {0  ,   0  , 188},
+   {0  ,   0  , 192},
+   {0  ,   0  , 196},
+   {0  ,   0  , 200},
+   {0  ,   0  , 204},
+   {0  ,   0  , 208},
+   {0  ,   0  , 212},
+   {0  ,   0  , 216},
+   {0  ,   0  , 220},
+   {0  ,   0  , 224},
+   {0  ,   0  , 228},
+   {0  ,   0  , 232},
+   {0  ,   0  , 236},
+   {0  ,   0  , 240},
+   {0  ,   0  , 244},
+   {0  ,   0  , 248},
+   {0  ,   0  , 252},
+   {0  ,   0  , 255},
+   {0  ,   4  , 255},
+   {0  ,   8  , 255},
+   {0  ,  12  , 255},
+   {0  ,  16  , 255},
+   {0  ,  20  , 255},
+   {0  ,  24  , 255},
+   {0  ,  28  , 255},
+   {0  ,  32  , 255},
+   {0  ,  36  , 255},
+   {0  ,  40  , 255},
+   {0  ,  44  , 255},
+   {0  ,  48  , 255},
+   {0  ,  52  , 255},
+   {0  ,  56  , 255},
+   {0  ,  60  , 255},
+   {0  ,  64  , 255},
+   {0  ,  68  , 255},
+   {0  ,  72  , 255},
+   {0  ,  76  , 255},
+   {0  ,  80  , 255},
+   {0  ,  84  , 255},
+   {0  ,  88  , 255},
+   {0  ,  92  , 255},
+   {0  ,  96  , 255},
+   {0  , 100  , 255},
+   {0  , 104  , 255},
+   {0  , 108  , 255},
+   {0  , 112  , 255},
+   {0  , 116  , 255},
+   {0  , 120  , 255},
+   {0  , 124  , 255},
+   {0  , 128  , 255},
+   {0  , 132  , 255},
+   {0  , 136  , 255},
+   {0  , 140  , 255},
+   {0  , 144  , 255},
+   {0  , 148  , 255},
+   {0  , 152  , 255},
+   {0  , 156  , 255},
+   {0  , 160  , 255},
+   {0  , 164  , 255},
+   {0  , 168  , 255},
+   {0  , 172  , 255},
+   {0  , 176  , 255},
+   {0  , 180  , 255},
+   {0  , 184  , 255},
+   {0  , 188  , 255},
+   {0  , 192  , 255},
+   {0  , 196  , 255},
+   {0  , 200  , 255},
+   {0  , 204  , 255},
+   {0  , 208  , 255},
+   {0  , 212  , 255},
+   {0  , 216  , 255},
+   {0  , 220  , 255},
+   {0  , 224  , 255},
+   {0  , 228  , 255},
+   {0  , 232  , 255},
+   {0  , 236  , 255},
+   {0  , 240  , 255},
+   {0  , 244  , 255},
+   {0  , 248  , 255},
+   {0  , 252  , 255},
+   {0  , 255  , 255},
+   {4  , 255  , 252},
+   {8  , 255  , 248},
+   {12 , 255 ,  244},
+   {16 , 255 ,  240},
+   {20 , 255 ,  236},
+   {24 , 255 ,  232},
+   {28 , 255 ,  228},
+   {32 , 255 ,  224},
+   {36 , 255 ,  220},
+   {40 , 255 ,  216},
+   {44 , 255 ,  212},
+   {48 , 255 ,  208},
+   {52 , 255 ,  204},
+   {56 , 255 ,  200},
+   {60 , 255 ,  196},
+   {64 , 255 ,  192},
+   {68 , 255 ,  188},
+   {72 , 255 ,  184},
+   {76 , 255 ,  180},
+   {80 , 255 ,  176},
+   {84 , 255 ,  172},
+   {88 , 255 ,  168},
+   {92 , 255 ,  164},
+   {96 , 255 ,  160},
+   {100,   255, 156},
+   {104,   255, 152},
+   {108,   255, 148},
+   {112,   255, 144},
+   {116,   255, 140},
+   {120,   255, 136},
+   {124,   255, 132},
+   {128,   255, 128},
+   {132,   255, 124},
+   {136,   255, 120},
+   {140,   255, 116},
+   {144,   255, 112},
+   {148,   255, 108},
+   {152,   255, 104},
+   {156,   255, 100},
+   {160,   255,  96},
+   {164,   255,  92},
+   {168,   255,  88},
+   {172,   255,  84},
+   {176,   255,  80},
+   {180,   255,  76},
+   {184,   255,  72},
+   {188,   255,  68},
+   {192,   255,  64},
+   {196,   255,  60},
+   {200,   255,  56},
+   {204,   255,  52},
+   {208,   255,  48},
+   {212,   255,  44},
+   {216,   255,  40},
+   {220,   255,  36},
+   {224,   255,  32},
+   {228,   255,  28},
+   {232,   255,  24},
+   {236,   255,  20},
+   {240,   255,  16},
+   {244,   255,  12},
+   {248,   255,   8},
+   {252,   255,   4},
+   {255,   255,   0},
+   {255,   252,   0},
+   {255,   248,   0},
+   {255,   244,   0},
+   {255,   240,   0},
+   {255,   236,   0},
+   {255,   232,   0},
+   {255,   228,   0},
+   {255,   224,   0},
+   {255,   220,   0},
+   {255,   216,   0},
+   {255,   212,   0},
+   {255,   208,   0},
+   {255,   204,   0},
+   {255,   200,   0},
+   {255,   196,   0},
+   {255,   192,   0},
+   {255,   188,   0},
+   {255,   184,   0},
+   {255,   180,   0},
+   {255,   176,   0},
+   {255,   172,   0},
+   {255,   168,   0},
+   {255,   164,   0},
+   {255,   160,   0},
+   {255,   156,   0},
+   {255,   152,   0},
+   {255,   148,   0},
+   {255,   144,   0},
+   {255,   140,   0},
+   {255,   136,   0},
+   {255,   132,   0},
+   {255,   128,   0},
+   {255,   124,   0},
+   {255,   120,   0},
+   {255,   116,   0},
+   {255,   112,   0},
+   {255,   108,   0},
+   {255,   104,   0},
+   {255,   100,   0},
+   {255,    96,   0},
+   {255,    92,   0},
+   {255,    88,   0},
+   {255,    84,   0},
+   {255,    80,   0},
+   {255,    76,   0},
+   {255,    72,   0},
+   {255,    68,   0},
+   {255,    64,   0},
+   {255,    60,   0},
+   {255,    56,   0},
+   {255,    52,   0},
+   {255,    48,   0},
+   {255,    44,   0},
+   {255,    40,   0},
+   {255,    36,   0},
+   {255,    32,   0},
+   {255,    28,   0},
+   {255,    24,   0},
+   {255,    20,   0},
+   {255,    16,   0},
+   {255,    12,   0},
+   {255,     8,   0},
+   {255,     4,   0},
+   {255,     0,   0},
+   {252,     0,   0},
+   {248,     0,   0},
+   {244,     0,   0},
+   {240,     0,   0},
+   {236,     0,   0},
+   {232,     0,   0},
+   {228,     0,   0},
+   {224,     0,   0},
+   {220,     0,   0},
+   {216,     0,   0},
+   {212,     0,   0},
+   {208,     0,   0},
+   {204,     0,   0},
+   {200,     0,   0},
+   {196,     0,   0},
+   {192,     0,   0},
+   {188,     0,   0},
+   {184,     0,   0},
+   {180,     0,   0},
+   {176,     0,   0},
+   {172,     0,   0},
+   {168,     0,   0},
+   {164,     0,   0},
+   {160,     0,   0},
+   {156,     0,   0},
+   {152,     0,   0},
+   {148,     0,   0},
+   {144,     0,   0},
+   {140,     0,   0},
+   {136,     0,   0},
+   {132,     0,   0},
+   {128,     0,   0},
+  };
+
 static void
 arv_fake_camera_diagonal_ramp (ArvBuffer *buffer, void *fill_pattern_data,
-				    guint32 exposure_time_us,
-				    guint32 gain,
-				    ArvPixelFormat pixel_format)
+			       guint32 exposure_time_us,
+			       guint32 gain,
+			       ArvPixelFormat pixel_format)
 {
 	double pixel_value;
 	double scale;
@@ -210,26 +473,44 @@ arv_fake_camera_diagonal_ramp (ArvBuffer *buffer, void *fill_pattern_data,
 	if (buffer == NULL)
 		return;
 
-	if (pixel_format != ARV_PIXEL_FORMAT_MONO_8)
-		return;
-
 	width = buffer->priv->width;
 	height = buffer->priv->height;
 
 	scale = 1.0 + gain + log10 ((double) exposure_time_us / 10000.0);
 
-	for (y = 0; y < height; y++)
-		for (x = 0; x < width; x++) {
-			pixel_value = (x + buffer->priv->frame_id + y) % 255;
-			pixel_value *= scale;
+	switch (pixel_format)
+	{
+		case ARV_PIXEL_FORMAT_MONO_8:
+			for (y = 0; y < height; y++)
+				for (x = 0; x < width; x++) {
+					unsigned char *pixel = &buffer->priv->data [y * width + x];
 
-			if (pixel_value < 0.0)
-				((unsigned char *) buffer->priv->data)[y * width + x] = 0;
-			else if (pixel_value > 255.0)
-				((unsigned char *) buffer->priv->data)[y * width + x] = 255;
-			else
-				((unsigned char *) buffer->priv->data)[y * width + x] = pixel_value;
-		}
+					pixel_value = (x + buffer->priv->frame_id + y) % 255;
+					pixel_value *= scale;
+
+					*pixel = CLAMP (pixel_value, 0, 255);
+				}
+			break;
+
+		case ARV_PIXEL_FORMAT_RGB_8_PACKED:
+			for (y = 0; y < height; y++)
+				for (x = 0; x < width; x++) {
+					unsigned char *pixel = &buffer->priv->data [3 * (y * width + x)];
+					unsigned int index;
+
+					pixel_value = (x + buffer->priv->frame_id + y) % 255;
+					pixel_value *= scale;
+
+					index = CLAMP (pixel_value, 0, 255);
+
+					pixel[0] = jet_colormap [index].r;
+					pixel[1] = jet_colormap [index].g;
+					pixel[2] = jet_colormap [index].b;
+				}
+
+		default:
+			break;
+	}
 }
 
 /**
@@ -276,7 +557,7 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer, guint32 *
 
 	width = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_WIDTH);
 	height = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_HEIGHT);
-	payload = width * height;
+	payload = arv_fake_camera_get_payload (camera);
 
 	if (buffer->priv->size < payload) {
 		buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;

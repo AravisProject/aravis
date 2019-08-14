@@ -35,7 +35,7 @@ G_BEGIN_DECLS
 struct _ArvBufferPrivate {
 	size_t size;
 	gboolean is_preallocated;
-	void *data;
+	unsigned char *data;
 
 	void *user_data;
 	GDestroyNotify user_data_destroy_func;

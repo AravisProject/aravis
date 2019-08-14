@@ -164,7 +164,7 @@ const void *
 arv_buffer_get_chunk_data (ArvBuffer *buffer, guint64 chunk_id, size_t *size)
 {
 	ArvChunkInfos *infos;
-	char *data;
+	unsigned char *data;
 	ptrdiff_t offset;
 
 	if (size != NULL)
