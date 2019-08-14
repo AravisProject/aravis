@@ -63,6 +63,8 @@ struct _ArvGvFakeCameraPrivate {
 
 	ArvFakeCamera *camera;
 
+	gboolean is_running;
+
 	GPollFD socket_fds[3];
 	guint n_socket_fds;
 
@@ -444,7 +446,7 @@ _create_and_bind_input_socket (GSocket **socket_out, const char *socket_name, GI
 	return G_IS_SOCKET (socket);
 }
 
-gboolean
+static gboolean
 arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 {
 	struct ifaddrs *ifap = NULL;
@@ -548,7 +550,7 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 	return TRUE;
 }
 
-void
+static void
 arv_gv_fake_camera_stop (ArvGvFakeCamera *gv_fake_camera)
 {
 	unsigned int i;
@@ -652,6 +654,23 @@ arv_gv_fake_camera_get_fake_camera (ArvGvFakeCamera *gv_fake_camera)
         return gv_fake_camera->priv->camera;
 }
 
+/**
+ * arv_gv_fake_camera_is_running:
+ * @gv_fake_camera: a #ArvGvFakeCamera
+ *
+ * Returns: %TRUE if the fake camera is correctly listening on the GVCP port
+ *
+ * Since: 0.8.0
+ */
+
+gboolean
+arv_gv_fake_camera_is_running (ArvGvFakeCamera *gv_fake_camera)
+{
+	g_return_val_if_fail (ARV_IS_GV_FAKE_CAMERA (gv_fake_camera), FALSE);
+
+	return gv_fake_camera->priv->is_running;
+}
+
 static void
 arv_gv_fake_camera_init (ArvGvFakeCamera *gv_fake_camera)
 {
@@ -666,12 +685,17 @@ _constructed (GObject *gobject)
 	parent_class->constructed (gobject);
 
 	gv_fake_camera->priv->camera = arv_fake_camera_new_full (gv_fake_camera->priv->serial_number, gv_fake_camera->priv->genicam_filename);
+	gv_fake_camera->priv->is_running = arv_gv_fake_camera_start (gv_fake_camera);
 }
 
 static void
 _finalize (GObject *object)
 {
 	ArvGvFakeCamera *gv_fake_camera = ARV_GV_FAKE_CAMERA (object);
+
+	gv_fake_camera->priv->is_running = FALSE;
+
+	arv_gv_fake_camera_stop (gv_fake_camera);
 
 	g_object_unref (gv_fake_camera->priv->camera);
 

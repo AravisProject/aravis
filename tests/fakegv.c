@@ -224,8 +224,6 @@ main (int argc, char *argv[])
 
 	simulator = arv_gv_fake_camera_new ("lo", NULL);
 
-	arv_gv_fake_camera_start (simulator);
-
 	camera = arv_camera_new ("Aravis-GV01");
 	g_assert (ARV_IS_CAMERA (camera));
 
@@ -237,8 +235,6 @@ main (int argc, char *argv[])
 	result = g_test_run();
 
 	g_object_unref (camera);
-
-	arv_gv_fake_camera_stop (simulator);
 
 	g_object_unref (simulator);
 
