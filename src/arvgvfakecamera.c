@@ -51,6 +51,7 @@ enum
   PROP_INTERFACE_NAME,
   PROP_SERIAL_NUMBER,
   PROP_GENICAM_FILENAME,
+  PROP_GVSP_LOST_PACKET_RATIO,
   PROP_CM_DOMAIN
 };
 
@@ -77,6 +78,8 @@ struct _ArvGvFakeCameraPrivate {
 
 	GThread *thread;
 	gboolean cancel;
+
+	double gvsp_lost_packet_ratio;
 };
 
 static gboolean
@@ -339,8 +342,12 @@ _thread (void *user_data)
 							 image_buffer->priv->x_offset, image_buffer->priv->y_offset,
 							 packet_buffer, &packet_size);
 
-			g_socket_send_to (gv_fake_camera->priv->gvsp_socket, stream_address,
-					  packet_buffer, packet_size, NULL, &error);
+			if (g_random_double () >= gv_fake_camera->priv->gvsp_lost_packet_ratio)
+				g_socket_send_to (gv_fake_camera->priv->gvsp_socket, stream_address,
+						  packet_buffer, packet_size, NULL, &error);
+			else
+				arv_debug_stream_thread ("Drop GVSP leader packet frame:%u", image_buffer->priv->frame_id);
+
 			if (error != NULL) {
 				arv_warning_stream_thread ("[GvFakeCamera::thread] Failed to send leader for frame %d: %s",
 							   image_buffer->priv->frame_id, error->message);
@@ -361,8 +368,12 @@ _thread (void *user_data)
 								data_size, ((char *) image_buffer->priv->data) + offset,
 								packet_buffer, &packet_size);
 
-				g_socket_send_to (gv_fake_camera->priv->gvsp_socket, stream_address,
-						  packet_buffer, packet_size, NULL, &error);
+				if (g_random_double () >= gv_fake_camera->priv->gvsp_lost_packet_ratio)
+					g_socket_send_to (gv_fake_camera->priv->gvsp_socket, stream_address,
+							  packet_buffer, packet_size, NULL, &error);
+				else
+					arv_debug_stream_thread ("Drop GVSP data packet frame:%d, block:%u", image_buffer->priv->frame_id, block_id);
+
 				if (error != NULL) {
 					arv_debug_stream_thread ("[GvFakeCamera::thread] Failed to send frame block %d for frame: %s",
 								 block_id,
@@ -379,8 +390,12 @@ _thread (void *user_data)
 			arv_gvsp_packet_new_data_trailer (image_buffer->priv->frame_id, block_id,
 							  packet_buffer, &packet_size);
 
-			g_socket_send_to (gv_fake_camera->priv->gvsp_socket, stream_address,
-					  packet_buffer, packet_size, NULL, &error);
+			if (g_random_double () >= gv_fake_camera->priv->gvsp_lost_packet_ratio)
+				g_socket_send_to (gv_fake_camera->priv->gvsp_socket, stream_address,
+						  packet_buffer, packet_size, NULL, &error);
+			else
+				arv_debug_stream_thread ("Drop GVSP trailer packet frame:%d", image_buffer->priv->frame_id);
+
 			if (error != NULL) {
 				arv_debug_stream_thread ("[GvFakeCamera::thread] Failed to send trailer for frame %d: %s",
 							 image_buffer->priv->frame_id,
@@ -629,6 +644,9 @@ _set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *
 			g_free (gv_fake_camera->priv->genicam_filename);
 			gv_fake_camera->priv->genicam_filename = g_value_dup_string (value);
 			break;
+		case PROP_GVSP_LOST_PACKET_RATIO:
+			gv_fake_camera->priv->gvsp_lost_packet_ratio = g_value_get_double (value);
+			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 			break;
@@ -746,6 +764,15 @@ arv_gv_fake_camera_class_init (ArvGvFakeCameraClass *this_class)
 							      "Genicam filename",
 							      NULL,
 							      G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_GVSP_LOST_PACKET_RATIO,
+					 g_param_spec_double ("gvsp-lost-ratio",
+							      "GVSP lost packet ratio",
+							      "GVSP lost packet ratio",
+							      0.0, 1.0, 0.0,
+							      G_PARAM_WRITABLE | G_PARAM_CONSTRUCT |
 							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
 							      G_PARAM_STATIC_BLURB));
 }

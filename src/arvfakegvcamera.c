@@ -35,6 +35,7 @@ set_cancel (int signal)
 static char *arv_option_interface_name = NULL;
 static char *arv_option_serial_number = NULL;
 static char *arv_option_genicam_file = NULL;
+static double arv_option_gvsp_lost_ratio = 0.0;
 static char *arv_option_debug_domains = NULL;
 
 static const GOptionEntry arv_option_entries[] =
@@ -45,6 +46,8 @@ static const GOptionEntry arv_option_entries[] =
 	        &arv_option_serial_number, 	"Fake camera serial number", "serial_nbr"},
 	{ "genicam",            'g', 0, G_OPTION_ARG_STRING,
 	        &arv_option_genicam_file, 	"XML Genicam file to use", "genicam_filename"},
+	{ "gvsp-lost-ratio",    'r', 0, G_OPTION_ARG_DOUBLE,
+	        &arv_option_gvsp_lost_ratio,	"GVSP lost packet ratio", "packet_per_thousand"},
 	{ "debug", 		'd', 0, G_OPTION_ARG_STRING,
 		&arv_option_debug_domains, 	NULL, "category[:level][,...]" },
 	{ NULL }
@@ -85,6 +88,8 @@ main (int argc, char **argv)
 	arv_debug_enable (arv_option_debug_domains);
 
 	gv_camera = arv_gv_fake_camera_new_full (arv_option_interface_name, arv_option_serial_number, arv_option_genicam_file);
+
+	g_object_set (gv_camera, "gvsp-lost-ratio", arv_option_gvsp_lost_ratio / 1000.0, NULL);
 
 	signal (SIGINT, set_cancel);
 
