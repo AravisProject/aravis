@@ -357,7 +357,7 @@ arv_gvcp_packet_new_discovery_cmd (size_t *packet_size)
  */
 
 ArvGvcpPacket *
-arv_gvcp_packet_new_discovery_ack (size_t *packet_size, int id)
+arv_gvcp_packet_new_discovery_ack (int id, size_t *packet_size)
 {
 	ArvGvcpPacket *packet;
 
