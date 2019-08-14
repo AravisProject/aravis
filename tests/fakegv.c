@@ -222,7 +222,7 @@ main (int argc, char *argv[])
 
 	arv_set_fake_camera_genicam_filename (GENICAM_FILENAME);
 
-	simulator = arv_gv_fake_camera_new ("lo");
+	simulator = arv_gv_fake_camera_new ("lo", NULL);
 
 	arv_gv_fake_camera_start (simulator);
 

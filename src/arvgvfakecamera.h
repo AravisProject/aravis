@@ -31,6 +31,9 @@
 
 G_BEGIN_DECLS
 
+#define ARV_GV_FAKE_CAMERA_DEFAULT_SERIAL_NUMBER	"GV01"
+#define ARV_GV_FAKE_CAMERA_DEFAULT_INTERFACE		"lo"
+
 #define ARV_TYPE_GV_FAKE_CAMERA             (arv_gv_fake_camera_get_type ())
 #define ARV_GV_FAKE_CAMERA(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GV_FAKE_CAMERA, ArvGvFakeCamera))
 #define ARV_GV_FAKE_CAMERA_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GV_FAKE_CAMERA, ArvGvFakeCameraClass))
@@ -53,7 +56,7 @@ struct _ArvGvFakeCameraClass {
 
 GType arv_gv_fake_camera_get_type (void);
 
-ArvGvFakeCamera *		arv_gv_fake_camera_new			(const char *interface_name);
+ArvGvFakeCamera *		arv_gv_fake_camera_new			(const char *interface_name, const char *serial_number);
 ArvGvFakeCamera * 		arv_gv_fake_camera_new_full 		(const char *interface_name, const char *serial_number, const char *genicam_filename);
 gboolean 			arv_gv_fake_camera_start		(ArvGvFakeCamera *gv_fake_camera);
 void	 			arv_gv_fake_camera_stop			(ArvGvFakeCamera *gv_fake_camera);

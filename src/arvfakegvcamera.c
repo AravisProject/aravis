@@ -32,8 +32,8 @@ set_cancel (int signal)
        cancel = TRUE;
 }
 
-static char *arv_option_interface_name = "lo";
-static char *arv_option_serial_number = "GV01";
+static char *arv_option_interface_name = NULL;
+static char *arv_option_serial_number = NULL;
 static char *arv_option_genicam_file = NULL;
 static char *arv_option_debug_domains = NULL;
 

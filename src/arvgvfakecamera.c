@@ -570,21 +570,21 @@ arv_gv_fake_camera_stop (ArvGvFakeCamera *gv_fake_camera)
 }
 
 ArvGvFakeCamera *
-arv_gv_fake_camera_new (const char *interface_name)
+arv_gv_fake_camera_new_full (const char *interface_name, const char *serial_number, const char *genicam_filename)
 {
 	return g_object_new (ARV_TYPE_GV_FAKE_CAMERA,
-			     "interface-name", interface_name,
+			     "interface-name", interface_name != NULL ?
+			     interface_name : ARV_GV_FAKE_CAMERA_DEFAULT_INTERFACE,
+			     "serial-number", serial_number != NULL ?
+			     serial_number : ARV_GV_FAKE_CAMERA_DEFAULT_SERIAL_NUMBER,
+			     "genicam-filename", genicam_filename,
 			     NULL);
 }
 
 ArvGvFakeCamera *
-arv_gv_fake_camera_new_full (const char *interface_name, const char *serial_number, const char *genicam_filename)
+arv_gv_fake_camera_new (const char *interface_name, const char *serial_number)
 {
-	return g_object_new (ARV_TYPE_GV_FAKE_CAMERA,
-			     "interface-name", interface_name,
-			     "serial-number", serial_number,
-			     "genicam-filename", genicam_filename,
-			     NULL);
+	return arv_gv_fake_camera_new_full (interface_name, serial_number, NULL);
 }
 
 static void
@@ -681,7 +681,7 @@ arv_gv_fake_camera_class_init (ArvGvFakeCameraClass *this_class)
 					 g_param_spec_string ("interface-name",
 							      "Interface name",
 							      "Interface name",
-							      "lo",
+							      ARV_GV_FAKE_CAMERA_DEFAULT_INTERFACE,
 							      G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE |
 							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
 							      G_PARAM_STATIC_BLURB));
@@ -690,7 +690,7 @@ arv_gv_fake_camera_class_init (ArvGvFakeCameraClass *this_class)
 					 g_param_spec_string ("serial-number",
 							      "Serial number",
 							      "Serial number",
-							      "GV01",
+							      ARV_GV_FAKE_CAMERA_DEFAULT_SERIAL_NUMBER,
 							      G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE |
 							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
 							      G_PARAM_STATIC_BLURB));
