@@ -576,6 +576,8 @@ arv_gv_fake_camera_stop (ArvGvFakeCamera *gv_fake_camera)
  * @genicam_filename: (nullable): path to alternative genicam data
  *
  * Returns: a new #ArvGvFakeCamera
+ *
+ * Since: 0.8.0
  */
 
 ArvGvFakeCamera *
@@ -596,6 +598,8 @@ arv_gv_fake_camera_new_full (const char *interface_name, const char *serial_numb
  * @serial_number: (nullable): fake device serial number ('GV01' by default)
  *
  * Returns: a new #ArvGvFakeCamera
+ *
+ * Since: 0.8.0
  */
 
 ArvGvFakeCamera *
