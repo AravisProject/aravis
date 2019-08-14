@@ -149,15 +149,15 @@ _get_register (ArvFakeCamera *camera, guint32 address)
 size_t
 arv_fake_camera_get_payload (ArvFakeCamera *camera)
 {
-        guint32 width, height, pixelFormat;
+        guint32 width, height, pixel_format;
 
 	g_return_val_if_fail (ARV_IS_FAKE_CAMERA (camera), 0);
 
 	width = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_WIDTH);
 	height = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_HEIGHT);
-        pixelFormat = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_PIXEL_FORMAT);
+        pixel_format = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_PIXEL_FORMAT);
         
-	return width * height * ARV_PIXEL_FORMAT_BIT_PER_PIXEL(pixelFormat)/8;
+	return width * height * ARV_PIXEL_FORMAT_BIT_PER_PIXEL(pixel_format)/8;
 }
 
 guint64
