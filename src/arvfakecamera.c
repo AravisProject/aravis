@@ -568,6 +568,8 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer, guint32 *
 	buffer->priv->chunk_endianness = G_BIG_ENDIAN;
 	buffer->priv->width = width;
 	buffer->priv->height = height;
+        buffer->priv->x_offset = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_X_OFFSET);
+        buffer->priv->y_offset = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_Y_OFFSET);
 	buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
 	buffer->priv->timestamp_ns = g_get_real_time () * 1000;
 	buffer->priv->system_timestamp_ns = buffer->priv->timestamp_ns;
