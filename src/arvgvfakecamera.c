@@ -569,6 +569,15 @@ arv_gv_fake_camera_stop (ArvGvFakeCamera *gv_fake_camera)
 	g_clear_object (&gv_fake_camera->priv->controller_address);
 }
 
+/**
+ * arv_gv_fake_camera_new_full:
+ * @interface_name: (nullable): listening network interface, default is lo
+ * @serial_number: (nullable): fake device serial number, default is GV01
+ * @genicam_filename: (nullable): path to alternative genicam data
+ *
+ * Returns: a new #ArvGvFakeCamera
+ */
+
 ArvGvFakeCamera *
 arv_gv_fake_camera_new_full (const char *interface_name, const char *serial_number, const char *genicam_filename)
 {
@@ -580,6 +589,14 @@ arv_gv_fake_camera_new_full (const char *interface_name, const char *serial_numb
 			     "genicam-filename", genicam_filename,
 			     NULL);
 }
+
+/**
+ * arv_gv_fake_camera_new:
+ * @interface_name: (nullable): listening network interface ('lo' by default)
+ * @serial_number: (nullable): fake device serial number ('GV01' by default)
+ *
+ * Returns: a new #ArvGvFakeCamera
+ */
 
 ArvGvFakeCamera *
 arv_gv_fake_camera_new (const char *interface_name, const char *serial_number)

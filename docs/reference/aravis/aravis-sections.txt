@@ -794,6 +794,7 @@ ArvStreamClass
 <TITLE>ArvFakeDevice</TITLE>
 ArvFakeDevice
 arv_fake_device_new
+arv_fake_device_get_fake_camera
 <SUBSECTION Standard>
 ARV_FAKE_DEVICE
 ARV_IS_FAKE_DEVICE
@@ -896,6 +897,7 @@ arv_gv_device_get_url_regex
 <FILE>arvgvfakecamera</FILE>
 <TITLE>ArvGvFakeCamera</TITLE>
 arv_gv_fake_camera_new
+arv_gv_fake_camera_new_full
 arv_gv_fake_camera_start
 arv_gv_fake_camera_stop
 arv_gv_fake_camera_get_fake_camera
@@ -911,6 +913,8 @@ ARV_IS_GV_FAKE_CAMERA
 ARV_IS_GV_FAKE_CAMERA_CLASS
 ARV_TYPE_GV_FAKE_CAMERA
 <SUBSECTION Private>
+ARV_GV_FAKE_CAMERA_DEFAULT_INTERFACE
+ARV_GV_FAKE_CAMERA_DEFAULT_SERIAL_NUMBER
 </SECTION>
 
 <SECTION>
@@ -1031,6 +1035,7 @@ ArvGcSwissKnifeClass
 <TITLE>ArvFakeCamera</TITLE>
 ArvFakeCamera
 arv_fake_camera_new
+arv_fake_camera_new_full
 arv_fake_camera_read_memory
 arv_fake_camera_write_memory
 arv_fake_camera_read_register
@@ -1047,9 +1052,8 @@ arv_fake_camera_get_stream_address
 arv_fake_camera_set_control_channel_privilege
 arv_fake_camera_set_fill_pattern
 arv_fake_camera_set_trigger_frequency
-arv_fake_device_get_fake_camera
+arv_fake_camera_get_genicam_xml
 arv_set_fake_camera_genicam_filename
-arv_get_fake_camera_genicam_xml
 <SUBSECTION Standard>
 ARV_FAKE_CAMERA
 ARV_IS_FAKE_CAMERA
