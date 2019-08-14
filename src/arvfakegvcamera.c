@@ -33,15 +33,18 @@ set_cancel (int signal)
 }
 
 static char *arv_option_interface_name = "lo";
-static char *arv_option_debug_domains = NULL;
+static char *arv_option_serial_number = "GV01";
 static char *arv_option_genicam_file = NULL;
+static char *arv_option_debug_domains = NULL;
 
 static const GOptionEntry arv_option_entries[] =
 {
 	{ "interface",		'i', 0, G_OPTION_ARG_STRING,
 		&arv_option_interface_name,	"Listening interface name", "interface_id"},
+	{ "serial",             's', 0, G_OPTION_ARG_STRING,
+	        &arv_option_serial_number, 	"Fake camera serial number", "serial_nbr"},
 	{ "genicam",            'g', 0, G_OPTION_ARG_STRING,
-	        &arv_option_genicam_file, "XML Genicam file to use", "genicam_filename"},
+	        &arv_option_genicam_file, 	"XML Genicam file to use", "genicam_filename"},
 	{ "debug", 		'd', 0, G_OPTION_ARG_STRING,
 		&arv_option_debug_domains, 	NULL, "category[:level][,...]" },
 	{ NULL }
@@ -70,9 +73,7 @@ main (int argc, char **argv)
 
 	arv_debug_enable (arv_option_debug_domains);
 
-	arv_set_fake_camera_genicam_filename (arv_option_genicam_file);
-
-	gv_camera = arv_gv_fake_camera_new (arv_option_interface_name);
+	gv_camera = arv_gv_fake_camera_new_full (arv_option_interface_name, arv_option_serial_number, arv_option_genicam_file);
 
 	signal (SIGINT, set_cancel);
 

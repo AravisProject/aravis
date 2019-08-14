@@ -54,6 +54,7 @@ struct _ArvGvFakeCameraClass {
 GType arv_gv_fake_camera_get_type (void);
 
 ArvGvFakeCamera *		arv_gv_fake_camera_new			(const char *interface_name);
+ArvGvFakeCamera * 		arv_gv_fake_camera_new_full 		(const char *interface_name, const char *serial_number, const char *genicam_filename);
 gboolean 			arv_gv_fake_camera_start		(ArvGvFakeCamera *gv_fake_camera);
 void	 			arv_gv_fake_camera_stop			(ArvGvFakeCamera *gv_fake_camera);
 ArvFakeCamera *                 arv_gv_fake_camera_get_fake_camera   	(ArvGvFakeCamera *gv_fake_camera);

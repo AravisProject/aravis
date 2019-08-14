@@ -49,6 +49,8 @@ enum
 {
   PROP_0,
   PROP_INTERFACE_NAME,
+  PROP_SERIAL_NUMBER,
+  PROP_GENICAM_FILENAME,
   PROP_CM_DOMAIN
 };
 
@@ -56,6 +58,9 @@ static GObjectClass *parent_class = NULL;
 
 struct _ArvGvFakeCameraPrivate {
 	char *interface_name;
+	char *serial_number;
+	char *genicam_filename;
+
 	ArvFakeCamera *camera;
 
 	GPollFD socket_fds[3];
@@ -567,7 +572,19 @@ arv_gv_fake_camera_stop (ArvGvFakeCamera *gv_fake_camera)
 ArvGvFakeCamera *
 arv_gv_fake_camera_new (const char *interface_name)
 {
-	return g_object_new (ARV_TYPE_GV_FAKE_CAMERA, "interface-name", interface_name, NULL);
+	return g_object_new (ARV_TYPE_GV_FAKE_CAMERA,
+			     "interface-name", interface_name,
+			     NULL);
+}
+
+ArvGvFakeCamera *
+arv_gv_fake_camera_new_full (const char *interface_name, const char *serial_number, const char *genicam_filename)
+{
+	return g_object_new (ARV_TYPE_GV_FAKE_CAMERA,
+			     "interface-name", interface_name,
+			     "serial-number", serial_number,
+			     "genicam-filename", genicam_filename,
+			     NULL);
 }
 
 static void
@@ -580,6 +597,14 @@ _set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *
 		case PROP_INTERFACE_NAME:
 			g_free (gv_fake_camera->priv->interface_name);
 			gv_fake_camera->priv->interface_name = g_value_dup_string (value);
+			break;
+		case PROP_SERIAL_NUMBER:
+			g_free (gv_fake_camera->priv->serial_number);
+			gv_fake_camera->priv->serial_number = g_value_dup_string (value);
+			break;
+		case PROP_GENICAM_FILENAME:
+			g_free (gv_fake_camera->priv->genicam_filename);
+			gv_fake_camera->priv->genicam_filename = g_value_dup_string (value);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -610,7 +635,6 @@ static void
 arv_gv_fake_camera_init (ArvGvFakeCamera *gv_fake_camera)
 {
 	gv_fake_camera->priv = G_TYPE_INSTANCE_GET_PRIVATE (gv_fake_camera, ARV_TYPE_GV_FAKE_CAMERA, ArvGvFakeCameraPrivate);
-	gv_fake_camera->priv->interface_name = g_strdup ("lo");
 }
 
 static void
@@ -620,8 +644,9 @@ _constructed (GObject *gobject)
 
 	parent_class->constructed (gobject);
 
-	gv_fake_camera->priv->camera = arv_fake_camera_new ("GV01");
+	arv_set_fake_camera_genicam_filename (gv_fake_camera->priv->genicam_filename);
 
+	gv_fake_camera->priv->camera = arv_fake_camera_new (gv_fake_camera->priv->serial_number);
 }
 
 static void
@@ -631,7 +656,9 @@ _finalize (GObject *object)
 
 	g_object_unref (gv_fake_camera->priv->camera);
 
-	g_free (gv_fake_camera->priv->interface_name);
+	g_clear_pointer (&gv_fake_camera->priv->interface_name, g_free);
+	g_clear_pointer (&gv_fake_camera->priv->serial_number, g_free);
+	g_clear_pointer (&gv_fake_camera->priv->genicam_filename, g_free);
 
 	parent_class->finalize (object);
 }
@@ -656,6 +683,24 @@ arv_gv_fake_camera_class_init (ArvGvFakeCameraClass *this_class)
 					 g_param_spec_string ("interface-name",
 							      "Interface name",
 							      "Interface name",
+							      "lo",
+							      G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_SERIAL_NUMBER,
+					 g_param_spec_string ("serial-number",
+							      "Serial number",
+							      "Serial number",
+							      "GV01",
+							      G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_GENICAM_FILENAME,
+					 g_param_spec_string ("genicam-filename",
+							      "Genicam filename",
+							      "Genicam filename",
 							      NULL,
 							      G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE |
 							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
