@@ -41,11 +41,34 @@
 #include <string.h>
 #include <math.h>
 
+static const char *arv_fake_camera_genicam_filename = NULL;
+
+/*
+ * arv_set_fake_camera_genicam_filename:
+ * @filename: path to genicam file
+ *
+ * Sets name of genicam file. This needs to be called prior to
+ * instantiation of the fake camera. This function is not thread safe.
+ */
+
+void
+arv_set_fake_camera_genicam_filename (const char *filename)
+{
+	arv_fake_camera_genicam_filename = filename;
+}
+
+static const char *
+arv_get_fake_camera_genicam_filename (void)
+{
+	return arv_fake_camera_genicam_filename;
+}
+
 static GObjectClass *parent_class = NULL;
 
 struct _ArvFakeCameraPrivate {
 	void *memory;
-	const void *genicam_xml;
+
+	char *genicam_xml;
 	size_t genicam_xml_size;
 
 	guint32 frame_id;
@@ -56,8 +79,6 @@ struct _ArvFakeCameraPrivate {
 	ArvFakeCameraFillPattern fill_pattern_callback;
 	void *fill_pattern_data;
 };
-
-static const char *arv_fake_camera_genicam_filename = NULL;
 
 /* ArvFakeCamera implementation */
 
@@ -156,7 +177,7 @@ arv_fake_camera_get_payload (ArvFakeCamera *camera)
 	width = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_WIDTH);
 	height = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_HEIGHT);
         pixel_format = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_PIXEL_FORMAT);
-        
+
 	return width * height * ARV_PIXEL_FORMAT_BIT_PER_PIXEL(pixel_format)/8;
 }
 
@@ -676,63 +697,28 @@ arv_fake_camera_get_heartbeat_timeout (ArvFakeCamera *camera)
 	return value;
 }
 
-/**
- * arv_set_fake_camera_genicam_filename: 
- * @filename: path to genicam file
- * 
- * Sets name of genicam file. This needs to be called prior to
- * instantiation of the fake camera.
- */
-
-void
-arv_set_fake_camera_genicam_filename (const char *filename)
-{
-	arv_fake_camera_genicam_filename = filename;
-}
-
 const char *
-arv_get_fake_camera_genicam_xml (size_t *size)
+arv_fake_camera_get_genicam_xml (ArvFakeCamera *camera, size_t *size)
 {
-	static GMappedFile *genicam_file = NULL;
-	static GMutex mutex;
+	if (size != NULL)
+		*size = 0;
 
-	g_mutex_lock (&mutex);
-
-	if (genicam_file == NULL ) {
-		char *filename;
-
-		if (arv_fake_camera_genicam_filename == NULL)
-			filename = g_build_filename (ARAVIS_DATA_DIR, "arv-fake-camera.xml", NULL);
-		else
-			filename = g_strdup (arv_fake_camera_genicam_filename);
-
-		genicam_file = g_mapped_file_new (filename, FALSE, NULL);
-
-		if (genicam_file != NULL) {
-			arv_debug_genicam ("[get_fake_camera_genicam_data] %s [size = %d]", filename,
-					   g_mapped_file_get_length (genicam_file));
-			arv_log_genicam (g_mapped_file_get_contents (genicam_file));
-		}
-
-		g_free (filename);
-	}
-
-	g_mutex_unlock (&mutex);
-
-	g_return_val_if_fail( genicam_file != NULL, NULL);
+	g_return_val_if_fail (ARV_IS_FAKE_CAMERA (camera), NULL);
 
 	if (size != NULL)
-		*size = g_mapped_file_get_length (genicam_file);
+		*size = camera->priv->genicam_xml_size;
 
-	return g_mapped_file_get_contents (genicam_file);
+	return camera->priv->genicam_xml;
 }
 
 /* GObject implemenation */
 
 ArvFakeCamera *
-arv_fake_camera_new (const char *serial_number)
+arv_fake_camera_new_full (const char *serial_number, const char *genicam_filename)
 {
 	ArvFakeCamera *fake_camera;
+	GError *error = NULL;
+	char *filename;
 	void *memory;
 	char *xml_url;
 
@@ -748,7 +734,22 @@ arv_fake_camera_new (const char *serial_number)
 	fake_camera->priv->fill_pattern_callback = arv_fake_camera_diagonal_ramp;
 	fake_camera->priv->fill_pattern_data = NULL;
 
-	fake_camera->priv->genicam_xml = arv_get_fake_camera_genicam_xml (&fake_camera->priv->genicam_xml_size);
+	if (genicam_filename != NULL)
+		filename = g_strdup (genicam_filename);
+	else if (arv_get_fake_camera_genicam_filename () != NULL)
+		filename = g_strdup (arv_get_fake_camera_genicam_filename ());
+	else
+		filename = g_build_filename (ARAVIS_DATA_DIR, "arv-fake-camera.xml", NULL);
+
+	if (!g_file_get_contents (filename, &fake_camera->priv->genicam_xml, &fake_camera->priv->genicam_xml_size, &error)) {
+		arv_warning_device ("Failed to load genicam file '%s': %s", error != NULL ? error->message : "Unknown reason");
+		g_clear_error (&error);
+		fake_camera->priv->genicam_xml = NULL;
+		fake_camera->priv->genicam_xml_size = 0;
+	}
+
+	g_clear_pointer (&filename, g_free);
+
 	fake_camera->priv->memory = memory;
 
 	strcpy (((char *) memory) + ARV_GVBS_MANUFACTURER_NAME_OFFSET, "Aravis");
@@ -802,6 +803,12 @@ arv_fake_camera_new (const char *serial_number)
 	return fake_camera;
 }
 
+ArvFakeCamera *
+arv_fake_camera_new (const char *serial_number)
+{
+	return arv_fake_camera_new_full (serial_number, NULL);
+}
+
 static void
 arv_fake_camera_init (ArvFakeCamera *fake_camera)
 {
@@ -816,9 +823,9 @@ arv_fake_camera_finalize (GObject *object)
 {
 	ArvFakeCamera *fake_camera = ARV_FAKE_CAMERA (object);
 
-	g_free (fake_camera->priv->memory);
-
 	g_mutex_clear (&fake_camera->priv->fill_pattern_mutex);
+	g_clear_pointer (&fake_camera->priv->memory, g_free);
+	g_clear_pointer (&fake_camera->priv->genicam_xml, g_free);
 
 	parent_class->finalize (object);
 }

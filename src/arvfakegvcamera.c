@@ -50,6 +50,17 @@ static const GOptionEntry arv_option_entries[] =
 	{ NULL }
 };
 
+static const char
+description_content[] =
+"The genicam parameter is for debug purpose only. It is not possible to load\n"
+"any arbitrary genicam data, as the declared features must match the registers\n"
+"of the fake device.\n"
+"\n"
+"Examples:\n"
+"\n"
+"arv-fake-gv-camera-" ARAVIS_API_VERSION " -i eth0\n"
+"arv-fake-gv-camera-" ARAVIS_API_VERSION " -s GV02 -d all\n";
+
 int
 main (int argc, char **argv)
 {
@@ -59,7 +70,7 @@ main (int argc, char **argv)
 
 	context = g_option_context_new (NULL);
 	g_option_context_set_summary (context, "Fake GigEVision camera.");
-	g_option_context_set_description (context, "Example: 'arv-fake-gv-camera-" ARAVIS_API_VERSION " -i eth0'");
+	g_option_context_set_description (context, description_content);
 	g_option_context_add_main_entries (context, arv_option_entries, NULL);
 
 	if (!g_option_context_parse (context, &argc, &argv, &error)) {

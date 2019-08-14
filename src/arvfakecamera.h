@@ -32,6 +32,8 @@
 
 G_BEGIN_DECLS
 
+void arv_set_fake_camera_genicam_filename (const char *filename);
+
 typedef void (*ArvFakeCameraFillPattern) (ArvBuffer *buffer, void *fill_pattern_data,
 					  guint32 exposure_time_us, guint32 gain,
 					  ArvPixelFormat pixel_format);
@@ -109,6 +111,7 @@ struct _ArvFakeCameraClass {
 GType arv_fake_camera_get_type (void);
 
 ArvFakeCamera * arv_fake_camera_new 		(const char *serial_number);
+ArvFakeCamera * arv_fake_camera_new_full 	(const char *serial_number, const char *genicam_filename);
 gboolean	arv_fake_camera_read_memory 	(ArvFakeCamera *camera, guint32 address, guint32 size, void *buffer);
 gboolean	arv_fake_camera_write_memory	(ArvFakeCamera *camera, guint32 address, guint32 size,
 						 const void *buffer);
@@ -134,8 +137,7 @@ void		arv_fake_camera_set_fill_pattern	(ArvFakeCamera *camera,
 							 void *fill_pattern_data);
 void 		arv_fake_camera_set_trigger_frequency 	(ArvFakeCamera *camera, double frequency);
 
-void 		arv_set_fake_camera_genicam_filename 	(const char *filename);
-const char *	arv_get_fake_camera_genicam_xml		(size_t *size);
+const char *	arv_fake_camera_get_genicam_xml 	(ArvFakeCamera *camera, size_t *size);
 
 G_END_DECLS
 

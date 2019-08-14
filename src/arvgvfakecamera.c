@@ -644,9 +644,7 @@ _constructed (GObject *gobject)
 
 	parent_class->constructed (gobject);
 
-	arv_set_fake_camera_genicam_filename (gv_fake_camera->priv->genicam_filename);
-
-	gv_fake_camera->priv->camera = arv_fake_camera_new (gv_fake_camera->priv->serial_number);
+	gv_fake_camera->priv->camera = arv_fake_camera_new_full (gv_fake_camera->priv->serial_number, gv_fake_camera->priv->genicam_filename);
 }
 
 static void

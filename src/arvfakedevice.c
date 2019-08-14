@@ -35,9 +35,6 @@ static GObjectClass *parent_class = NULL;
 struct _ArvFakeDevicePrivate {
 	ArvFakeCamera *camera;
 	ArvGc *genicam;
-
-	const char *genicam_xml;
-	size_t genicam_xml_size;
 };
 
 /* ArvFakeDevice implemenation */
@@ -60,9 +57,7 @@ arv_fake_device_get_genicam_xml (ArvDevice *device, size_t *size)
 {
 	ArvFakeDevice *fake_device = ARV_FAKE_DEVICE (device);
 
-	*size = fake_device->priv->genicam_xml_size;
-
-	return fake_device->priv->genicam_xml;
+	return arv_fake_camera_get_genicam_xml (fake_device->priv->camera, size);
 }
 
 static ArvGc *
@@ -116,17 +111,18 @@ ArvDevice *
 arv_fake_device_new (const char *serial_number)
 {
 	ArvFakeDevice *fake_device;
+	ArvFakeCamera *fake_camera;
+	const char *genicam_xml;
+	gsize genicam_xml_size;
 
 	g_return_val_if_fail (serial_number != NULL, NULL);
 
+	fake_camera = arv_fake_camera_new_full (serial_number, NULL);
+	genicam_xml = arv_fake_camera_get_genicam_xml (fake_camera, &genicam_xml_size);
+
 	fake_device = g_object_new (ARV_TYPE_FAKE_DEVICE, NULL);
-
-	fake_device->priv->camera = arv_fake_camera_new (serial_number);
-
-	fake_device->priv->genicam_xml = arv_get_fake_camera_genicam_xml (&fake_device->priv->genicam_xml_size);
-	fake_device->priv->genicam = arv_gc_new (ARV_DEVICE (fake_device),
-						 fake_device->priv->genicam_xml,
-						 fake_device->priv->genicam_xml_size);
+	fake_device->priv->camera = fake_camera;
+	fake_device->priv->genicam = arv_gc_new (ARV_DEVICE (fake_device), genicam_xml, genicam_xml_size);
 
 	return ARV_DEVICE (fake_device);
 }

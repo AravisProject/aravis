@@ -2,20 +2,6 @@
 #include <arv.h>
 
 static void
-load_fake_camera_genicam_test (void)
-{
-	const char *genicam_xml;
-	size_t size;
-
-	genicam_xml = arv_get_fake_camera_genicam_xml (&size);
-	g_assert (genicam_xml != NULL);
-	g_assert (size != 0);
-
-	genicam_xml = arv_get_fake_camera_genicam_xml (NULL);
-	g_assert (genicam_xml != NULL);
-}
-
-static void
 trigger_registers_test (void)
 {
 	ArvDevice *device;
@@ -335,13 +321,12 @@ main (int argc, char *argv[])
 
 	g_test_init (&argc, &argv, NULL);
 
+	arv_set_fake_camera_genicam_filename (GENICAM_FILENAME);
+
 	arv_enable_interface ("Fake");
 
 	arv_update_device_list ();
 
-	arv_set_fake_camera_genicam_filename (GENICAM_FILENAME);
-
-	g_test_add_func ("/fake/load-fake-camera-genicam", load_fake_camera_genicam_test);
 	g_test_add_func ("/fake/trigger-registers", trigger_registers_test);
 	g_test_add_func ("/fake/registers", registers_test);
 	g_test_add_func ("/fake/fake-device", fake_device_test);
