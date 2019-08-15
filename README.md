@@ -14,7 +14,7 @@ Aravis is released under the LGPL v2+.
 
 ### Installing Aravis
 
-Until de 0.6.x stable serie, Aravis build system was based on Autotools. The recommended way to get the sources is to download the release tarballs from http://ftp.gnome.org/pub/GNOME/sources/aravis, and then compile it using the following commands:
+Until the 0.6.x stable series, Aravis build system was based on Autotools. The recommended way to get the sources is to download the release tarballs from http://ftp.gnome.org/pub/GNOME/sources/aravis, and then compile it using the following commands:
 
 ```
 ./configure
@@ -55,6 +55,15 @@ One way to increase streaming performance is to increase the stream packet size.
 
 On Fedora, MTU can be changed using the network setting panel. Edit the wired network settings. MTU parameter is in the Identity page.
 
+On Debian / Ubuntu you can add a line "mtu 8192" to /etc/network/interfaces under the correct device.
+```
+iface ethusb0 inet static
+	address 192.168.45.1
+	netmask 255.255.255.0
+	broadcast 192.168.45.255
+	mtu 8192
+```
+
 Please note if your device is not connected directly to the machine, you may also have to tweak the active devices on your network.
 
 #### Packet Socket Support
@@ -85,7 +94,7 @@ It is perfectly possible to only build the library, reducing the dependencies to
 
 As an open source and free software project, we welcome any contributions to the aravis project: code, bug reports, testing...
 
-However, contributions to both Gigabit Ethernet and USB3 protocol code (files `src/arvuv*.[ch]` `src/arvgv*.[ch]`) must not be based on the corresponding specification documents published by the [AIA](http://http://www.visiononline.org/), as this organisation forbids the use of their documents for the development of an open source implementation of the specifications. So, if you want to contribute to this part of Aravis, don't use the AIA documents and state clearly in the pull request your work is not based on them.
+However, contributions to both Gigabit Ethernet and USB3 protocol code (files `src/arvuv*.[ch]` `src/arvgv*.[ch]`) must not be based on the corresponding specification documents published by the [AIA](http://www.visiononline.org/), as this organisation forbids the use of their documents for the development of an open source implementation of the specifications. So, if you want to contribute to this part of Aravis, don't use the AIA documents and state clearly in the pull request your work is not based on them.
 
 #### Unit tests
 
