@@ -608,7 +608,10 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer, guint32 *
 	g_mutex_unlock (&camera->priv->fill_pattern_mutex);
 
 	if (packet_size != NULL)
-		*packet_size = _get_register (camera, ARV_GVBS_STREAM_CHANNEL_0_PACKET_SIZE_OFFSET);
+		*packet_size =
+			(_get_register (camera, ARV_GVBS_STREAM_CHANNEL_0_PACKET_SIZE_OFFSET) >>
+			 ARV_GVBS_STREAM_CHANNEL_0_PACKET_SIZE_POS) &
+			ARV_GVBS_STREAM_CHANNEL_0_PACKET_SIZE_MASK;
 }
 
 void
