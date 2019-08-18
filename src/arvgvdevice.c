@@ -512,7 +512,7 @@ _write_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 value, GEr
 				success = success && g_poll (&io_data->poll_in_event, 1, timeout_ms) > 0;
 				if (success)
 					count = g_socket_receive (io_data->socket, io_data->buffer,
-								  ARV_GV_DEVICE_BUFFER_SIZE, NULL, NULL);
+								  ARV_GV_DEVICE_BUFFER_SIZE, NULL, &local_error);
 				else
 					count = 0;
 				success = success && (count > 0);
