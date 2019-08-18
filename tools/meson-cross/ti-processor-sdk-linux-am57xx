@@ -1,0 +1,21 @@
+[binaries]
+c = '/opt/ti-processor-sdk-linux-am57xx-evm-06.00.00.07/linux-devkit/sysroots/x86_64-arago-linux/usr/bin/arm-linux-gnueabihf-gcc'
+cpp = '/opt/ti-processor-sdk-linux-am57xx-evm-06.00.00.07/linux-devkit/sysroots/x86_64-arago-linux/usr/bin/arm-linux-gnueabihf-g++'
+ar = '/opt/ti-processor-sdk-linux-am57xx-evm-06.00.00.07/linux-devkit/sysroots/x86_64-arago-linux/usr/bin/arm-linux-gnueabihf-ar'
+strip = '/opt/ti-processor-sdk-linux-am57xx-evm-06.00.00.07/linux-devkit/sysroots/x86_64-arago-linux/usr/bin/arm-linux-gnueabihf-strip'
+pkgconfig = '/home/rks/usr/bin/arm-pkg-config'
+cmake='/opt/ti-processor-sdk-linux-am57xx-evm-06.00.00.07/linux-devkit/sysroots/x86_64-arago-linux/usr/bin/cmake'
+
+#exe_wrapper = 'qemu' # A command used to run generated executables.
+
+[properties]
+sys_root='/opt/ti-processor-sdk-linux-am57xx-evm-06.00.00.07/linux-devkit/sysroots/armv7at2hf-neon-linux-gnueabi/'
+
+[host_machine]
+system = 'linux'
+cpu_family = 'arm'
+cpu = 'armv7hl'
+endian = 'big'
+
+[paths]
+prefix='/opt/ti-processor-sdk-linux-am57xx-evm-06.00.00.07/linux-devkit/sysroots/armv7at2hf-neon-linux-gnueabi/usr'
