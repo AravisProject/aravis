@@ -123,19 +123,6 @@ static GRegex *arv_gv_device_url_regex = NULL;
 	return arv_gv_device_url_regex;
 }
 
-static void
-_flush_socket_buffer(ArvGvDeviceIOData *io_data)
-{
-	gboolean success = TRUE;
-
-	while (success && g_poll (&io_data->poll_in_event, 1, 0) > 0)
-	{
-		success = g_socket_receive (io_data->socket, io_data->buffer,
-						  ARV_GV_DEVICE_BUFFER_SIZE, NULL, NULL) > 0;
-		arv_debug_device ("[GvDevice::flush_receive_socket] Flush packet");
-	}
-}
-
 static gboolean
 _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 			   guint64 address, size_t size, void *buffer, GError **error)
@@ -147,7 +134,6 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 	size_t packet_size;
 	size_t ack_size;
 	unsigned int n_retries = 0;
-	guint32 timeout_ms;
 	gboolean success = FALSE;
 	int count;
 
@@ -213,20 +199,24 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 
 		arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
-		_flush_socket_buffer(io_data);
 		success = g_socket_send_to (io_data->socket, io_data->device_address,
 					    (const char *) packet, packet_size,
 					    NULL, &local_error) >= 0;
 
 		if (success) {
+			gint timeout_ms;
+			gint64 timeout_stop_ms;
 			gboolean pending_ack;
 			gboolean expected_answer;
 
-			timeout_ms = io_data->gvcp_timeout_ms;
+			timeout_stop_ms = g_get_monotonic_time () / 1000 + io_data->gvcp_timeout_ms;
 
 			do {
+				timeout_ms = MAX (0, timeout_stop_ms - g_get_monotonic_time () / 1000);
+
 				success = TRUE;
 				success = success && g_poll (&io_data->poll_in_event, 1, timeout_ms) > 0;
+
 				if (success)
 					count = g_socket_receive (io_data->socket, io_data->buffer,
 								  ARV_GV_DEVICE_BUFFER_SIZE, NULL, &local_error);
@@ -246,12 +236,14 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 					packet_id = arv_gvcp_packet_get_packet_id (ack_packet);
 
 					if (command == ARV_GVCP_COMMAND_PENDING_ACK) {
+						gint64 pending_ack_timeout_ms = arv_gvcp_packet_get_pending_ack_timeout (ack_packet);
 						pending_ack = TRUE;
 						expected_answer = FALSE;
 
-						timeout_ms = arv_gvcp_packet_get_pending_ack_timeout (ack_packet);
+						timeout_stop_ms = g_get_monotonic_time () / 1000 + pending_ack_timeout_ms;
 
-						arv_log_device ("[GvDevice::%s] Pending ack timeout = %d", operation, timeout_ms);
+						arv_log_device ("[GvDevice::%s] Pending ack timeout = %d",
+								operation, pending_ack_timeout_ms);
 					} else {
 						pending_ack = FALSE;
 						expected_answer = packet_type == ARV_GVCP_PACKET_TYPE_ACK &&
@@ -270,7 +262,7 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 								    local_error->message);
 					g_clear_error (&local_error);
 				}
-			} while (pending_ack);
+			} while (pending_ack || (!expected_answer && timeout_ms > 0));
 
 			success = success && expected_answer;
 
