@@ -153,22 +153,22 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 
 	switch (command) {
 		case ARV_GVCP_COMMAND_READ_MEMORY_CMD:
-			operation = "Read memory";
+			operation = "read_memory";
 			ack_command = ARV_GVCP_COMMAND_READ_MEMORY_ACK;
 			ack_size = arv_gvcp_packet_get_read_memory_ack_size (size);
 			break;
 		case ARV_GVCP_COMMAND_WRITE_MEMORY_CMD:
-			operation = "Write memory";
+			operation = "write_memory";
 			ack_command = ARV_GVCP_COMMAND_WRITE_MEMORY_ACK;
 			ack_size = arv_gvcp_packet_get_write_memory_ack_size ();
 			break;
 		case ARV_GVCP_COMMAND_READ_REGISTER_CMD:
-			operation = "Read register";
+			operation = "read_register";
 			ack_command = ARV_GVCP_COMMAND_READ_REGISTER_ACK;
 			ack_size = 1;
 			break;
 		case ARV_GVCP_COMMAND_WRITE_REGISTER_CMD:
-			operation = "Write register";
+			operation = "write_register";
 			ack_command = ARV_GVCP_COMMAND_WRITE_REGISTER_ACK;
 			ack_size = 1;
 			break;
@@ -251,14 +251,14 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 
 						timeout_ms = arv_gvcp_packet_get_pending_ack_timeout (ack_packet);
 
-						arv_log_device ("%s pending ack timeout = %d", operation, timeout_ms);
+						arv_log_device ("[GvDevice::%s] Pending ack timeout = %d", operation, timeout_ms);
 					} else {
 						pending_ack = FALSE;
 						expected_answer = packet_type == ARV_GVCP_PACKET_TYPE_ACK &&
 							command == ack_command &&
 							packet_id == io_data->packet_id;
 						if (!expected_answer) {
-							arv_debug_device ("%s unexpected answer (0x%04x)", operation,
+							arv_debug_device ("[GvDevice::%s] Unexpected answer (0x%04x)", operation,
 									  packet_type);
 						}
 					}
@@ -266,7 +266,8 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 					pending_ack = FALSE;
 					expected_answer = FALSE;
 					if (local_error != NULL)
-						arv_warning_device ("%s ack reception error: %s", operation, local_error->message);
+						arv_warning_device ("[GvDevice::%s] Ack reception error: %s", operation,
+								    local_error->message);
 					g_clear_error (&local_error);
 				}
 			} while (pending_ack);
@@ -290,7 +291,7 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 			}
 		} else {
 			if (local_error != NULL)
-				arv_warning_device ("%s command sending error: %s", operation, local_error->message);
+				arv_warning_device ("[GvDevice::%s] Command sending error: %s", operation, local_error->message);
 			g_clear_error (&local_error);
 		}
 
@@ -319,7 +320,7 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 
 		if (error != NULL && *error == NULL)
 			*error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_STATUS_TIMEOUT,
-					      "%s timeout", operation);
+					      "[GvDevice::%s] Timeout", operation);
 	}
 
 	return success;
