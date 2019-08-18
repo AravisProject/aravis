@@ -295,7 +295,7 @@ _write_memory (ArvGvDeviceIOData *io_data, guint64 address, guint32 size, void *
 
 			do {
 				success = TRUE;
-				success = success && g_poll (&io_data->poll_in_event, 1, io_data->gvcp_timeout_ms) > 0;
+				success = success && g_poll (&io_data->poll_in_event, 1, timeout_ms) > 0;
 				if (success)
 					count = g_socket_receive (io_data->socket, io_data->buffer,
 								  ARV_GV_DEVICE_BUFFER_SIZE, NULL, &local_error);
@@ -400,7 +400,7 @@ _read_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 *value_plac
 
 			do {
 				success = TRUE;
-				success = success && g_poll (&io_data->poll_in_event, 1, io_data->gvcp_timeout_ms) > 0;
+				success = success && g_poll (&io_data->poll_in_event, 1, timeout_ms) > 0;
 				if (success)
 					count = g_socket_receive (io_data->socket, io_data->buffer,
 						  ARV_GV_DEVICE_BUFFER_SIZE, NULL, &local_error);
@@ -509,7 +509,7 @@ _write_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 value, GEr
 
 			do {
 				success = TRUE;
-				success = success && g_poll (&io_data->poll_in_event, 1, io_data->gvcp_timeout_ms) > 0;
+				success = success && g_poll (&io_data->poll_in_event, 1, timeout_ms) > 0;
 				if (success)
 					count = g_socket_receive (io_data->socket, io_data->buffer,
 								  ARV_GV_DEVICE_BUFFER_SIZE, NULL, NULL);
