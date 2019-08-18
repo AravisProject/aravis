@@ -126,16 +126,13 @@ static GRegex *arv_gv_device_url_regex = NULL;
 static void
 _flush_socket_buffer(ArvGvDeviceIOData *io_data)
 {
-	GError *local_error = NULL;
 	gboolean success = TRUE;
 
-	while (success &&
-		g_poll (&io_data->poll_in_event, 1, 0) > 0
-	)
+	while (success && g_poll (&io_data->poll_in_event, 1, 0) > 0)
 	{
-		arv_debug_device ("[GvDevice::flush_receive_socket] Flush packet");
 		success = g_socket_receive (io_data->socket, io_data->buffer,
-						  ARV_GV_DEVICE_BUFFER_SIZE, NULL, &local_error) > 0;
+						  ARV_GV_DEVICE_BUFFER_SIZE, NULL, NULL) > 0;
+		arv_debug_device ("[GvDevice::flush_receive_socket] Flush packet");
 	}
 }
 
