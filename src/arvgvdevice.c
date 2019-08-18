@@ -137,27 +137,73 @@ _flush_socket_buffer(ArvGvDeviceIOData *io_data)
 }
 
 static gboolean
-_read_memory (ArvGvDeviceIOData *io_data, guint64 address, guint32 size, void *buffer, GError **error)
+_send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
+			   guint64 address, size_t size, void *buffer, GError **error)
 {
-	ArvGvcpPacket *packet;
+	ArvGvcpCommand ack_command;
 	ArvGvcpPacket *ack_packet = io_data->buffer;
+	ArvGvcpPacket *packet;
+	const char *operation;
 	size_t packet_size;
-	size_t answer_size;
-	int count;
+	size_t ack_size;
 	unsigned int n_retries = 0;
-	gboolean success = FALSE;
 	guint32 timeout_ms;
+	gboolean success = FALSE;
+	int count;
 
-	answer_size = arv_gvcp_packet_get_read_memory_ack_size (size);
+	switch (command) {
+		case ARV_GVCP_COMMAND_READ_MEMORY_CMD:
+			operation = "Read memory";
+			ack_command = ARV_GVCP_COMMAND_READ_MEMORY_ACK;
+			ack_size = arv_gvcp_packet_get_read_memory_ack_size (size);
+			break;
+		case ARV_GVCP_COMMAND_WRITE_MEMORY_CMD:
+			operation = "Write memory";
+			ack_command = ARV_GVCP_COMMAND_WRITE_MEMORY_ACK;
+			ack_size = arv_gvcp_packet_get_write_memory_ack_size ();
+			break;
+		case ARV_GVCP_COMMAND_READ_REGISTER_CMD:
+			operation = "Read register";
+			ack_command = ARV_GVCP_COMMAND_READ_REGISTER_ACK;
+			ack_size = 1;
+			break;
+		case ARV_GVCP_COMMAND_WRITE_REGISTER_CMD:
+			operation = "Write register";
+			ack_command = ARV_GVCP_COMMAND_WRITE_REGISTER_ACK;
+			ack_size = 1;
+			break;
+		default:
+			g_assert_not_reached ();
+	}
 
-	g_return_val_if_fail (answer_size <= ARV_GV_DEVICE_BUFFER_SIZE, FALSE);
+	g_return_val_if_fail (ack_size <= ARV_GV_DEVICE_BUFFER_SIZE, FALSE);
 
 	g_mutex_lock (&io_data->mutex);
 
-	packet = arv_gvcp_packet_new_read_memory_cmd (address,
-						      ((size + sizeof (guint32) - 1)
-						       / sizeof (guint32)) * sizeof (guint32),
-						      0, &packet_size);
+	switch (command) {
+		case ARV_GVCP_COMMAND_READ_MEMORY_CMD:
+			packet = arv_gvcp_packet_new_read_memory_cmd (address,
+								      ((size + sizeof (guint32) - 1)
+								       / sizeof (guint32)) * sizeof (guint32),
+								      0, &packet_size);
+			break;
+		case ARV_GVCP_COMMAND_WRITE_MEMORY_CMD:
+			packet = arv_gvcp_packet_new_write_memory_cmd (address,
+								       ((size + sizeof (guint32) - 1) /
+									sizeof (guint32)) * sizeof (guint32),
+								       0, &packet_size);
+			memcpy (arv_gvcp_packet_get_write_memory_cmd_data (packet), buffer, size);
+			break;
+		case ARV_GVCP_COMMAND_READ_REGISTER_CMD:
+			packet = arv_gvcp_packet_new_read_register_cmd (address, 0, &packet_size);
+			break;
+		case ARV_GVCP_COMMAND_WRITE_REGISTER_CMD:
+			packet = arv_gvcp_packet_new_write_register_cmd (address, *((guint32 *) buffer),
+									 io_data->packet_id, &packet_size);
+			break;
+		default:
+			g_assert_not_reached ();
+	}
 
 	do {
 		GError *local_error = NULL;
@@ -186,7 +232,7 @@ _read_memory (ArvGvDeviceIOData *io_data, guint64 address, guint32 size, void *b
 								  ARV_GV_DEVICE_BUFFER_SIZE, NULL, &local_error);
 				else
 					count = 0;
-				success = success && (count >= answer_size);
+				success = success && (count >= ack_size);
 
 				if (success) {
 					ArvGvcpPacketType packet_type;
@@ -205,14 +251,14 @@ _read_memory (ArvGvDeviceIOData *io_data, guint64 address, guint32 size, void *b
 
 						timeout_ms = arv_gvcp_packet_get_pending_ack_timeout (ack_packet);
 
-						arv_log_device ("[GvDevice::read_memory] Pending ack timeout = %d", timeout_ms);
+						arv_log_device ("%s pending ack timeout = %d", operation, timeout_ms);
 					} else {
 						pending_ack = FALSE;
 						expected_answer = packet_type == ARV_GVCP_PACKET_TYPE_ACK &&
-							command == ARV_GVCP_COMMAND_READ_MEMORY_ACK &&
+							command == ack_command &&
 							packet_id == io_data->packet_id;
 						if (!expected_answer) {
-							arv_debug_device ("[GvDevice::read_memory] Unexpected answer (0x%04x)",
+							arv_debug_device ("%s unexpected answer (0x%04x)", operation,
 									  packet_type);
 						}
 					}
@@ -220,18 +266,31 @@ _read_memory (ArvGvDeviceIOData *io_data, guint64 address, guint32 size, void *b
 					pending_ack = FALSE;
 					expected_answer = FALSE;
 					if (local_error != NULL)
-						arv_warning_device ("[GvDevice::read_memory] Ack reception error: %s", local_error->message);
+						arv_warning_device ("%s ack reception error: %s", operation, local_error->message);
 					g_clear_error (&local_error);
 				}
 			} while (pending_ack);
 
 			success = success && expected_answer;
 
-			if (success)
-				memcpy (buffer, arv_gvcp_packet_get_read_memory_ack_data (ack_packet), size);
+			if (success) {
+				switch (command) {
+					case ARV_GVCP_COMMAND_READ_MEMORY_CMD:
+						memcpy (buffer, arv_gvcp_packet_get_read_memory_ack_data (ack_packet), size);
+						break;
+					case ARV_GVCP_COMMAND_READ_REGISTER_CMD:
+						*((gint32 *) buffer) = arv_gvcp_packet_get_read_register_ack_value (ack_packet);
+						break;
+					case ARV_GVCP_COMMAND_WRITE_MEMORY_CMD:
+					case ARV_GVCP_COMMAND_WRITE_REGISTER_CMD:
+						break;
+					default:
+						g_assert_not_reached ();
+				}
+			}
 		} else {
 			if (local_error != NULL)
-				arv_warning_device ("[GvDevice::read_memory] Command sending error: %s", local_error->message);
+				arv_warning_device ("%s command sending error: %s", operation, local_error->message);
 			g_clear_error (&local_error);
 		}
 
@@ -243,336 +302,55 @@ _read_memory (ArvGvDeviceIOData *io_data, guint64 address, guint32 size, void *b
 	g_mutex_unlock (&io_data->mutex);
 
 	if (!success) {
+	switch (command) {
+		case ARV_GVCP_COMMAND_READ_MEMORY_CMD:
+			memset (buffer, 0, size);
+			break;
+		case ARV_GVCP_COMMAND_WRITE_MEMORY_CMD:
+			break;
+		case ARV_GVCP_COMMAND_READ_REGISTER_CMD:
+			*((guint32 *) buffer) = 0;
+			break;
+		case ARV_GVCP_COMMAND_WRITE_REGISTER_CMD:
+			break;
+		default:
+			g_assert_not_reached ();
+	}
+
 		if (error != NULL && *error == NULL)
 			*error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_STATUS_TIMEOUT,
-					      "[ArvDevice::read_memory] Timeout");
+					      "%s timeout", operation);
 	}
 
 	return success;
 }
 
 static gboolean
+_read_memory (ArvGvDeviceIOData *io_data, guint64 address, guint32 size, void *buffer, GError **error)
+{
+	return _send_cmd_and_receive_ack (io_data, ARV_GVCP_COMMAND_READ_MEMORY_CMD,
+					  address, size, buffer, error);
+}
+
+static gboolean
 _write_memory (ArvGvDeviceIOData *io_data, guint64 address, guint32 size, void *buffer, GError **error)
 {
-	ArvGvcpPacket *packet;
-	ArvGvcpPacket *ack_packet = io_data->buffer;
-	size_t packet_size;
-	int count;
-	unsigned int n_retries = 0;
-	gboolean success = FALSE;
-	guint32 timeout_ms;
-
-	g_mutex_lock (&io_data->mutex);
-
-	packet = arv_gvcp_packet_new_write_memory_cmd (address,
-						       ((size + sizeof (guint32) - 1) /
-							sizeof (guint32)) * sizeof (guint32),
-						       0, &packet_size);
-
-	memcpy (arv_gvcp_packet_get_write_memory_cmd_data (packet), buffer, size);
-
-	do {
-		GError *local_error = NULL;
-
-		io_data->packet_id = arv_gvcp_next_packet_id (io_data->packet_id);
-		arv_gvcp_packet_set_packet_id (packet, io_data->packet_id);
-
-		arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
-
-		_flush_socket_buffer(io_data);
-		success = g_socket_send_to (io_data->socket, io_data->device_address,
-					    (const char *) packet, packet_size,
-					    NULL, &local_error) >= 0;
-
-		if (success) {
-			gboolean pending_ack;
-			gboolean expected_answer;
-
-			timeout_ms = io_data->gvcp_timeout_ms;
-
-			do {
-				success = TRUE;
-				success = success && g_poll (&io_data->poll_in_event, 1, timeout_ms) > 0;
-				if (success)
-					count = g_socket_receive (io_data->socket, io_data->buffer,
-								  ARV_GV_DEVICE_BUFFER_SIZE, NULL, &local_error);
-				else
-					count = 0;
-				success = success && (count >= arv_gvcp_packet_get_write_memory_ack_size ());
-
-				if (success) {
-					ArvGvcpPacketType packet_type;
-					ArvGvcpCommand command;
-					guint16 packet_id;
-
-					arv_gvcp_packet_debug (ack_packet, ARV_DEBUG_LEVEL_LOG);
-
-					packet_type = arv_gvcp_packet_get_packet_type (ack_packet);
-					command = arv_gvcp_packet_get_command (ack_packet);
-					packet_id = arv_gvcp_packet_get_packet_id (ack_packet);
-
-					if (command == ARV_GVCP_COMMAND_PENDING_ACK) {
-						pending_ack = TRUE;
-						expected_answer = FALSE;
-
-						timeout_ms = arv_gvcp_packet_get_pending_ack_timeout (ack_packet);
-
-						arv_log_device ("[GvDevice::write_memory] Pending ack timeout = %d", timeout_ms);
-					} else {
-						pending_ack = FALSE;
-						expected_answer = packet_type == ARV_GVCP_PACKET_TYPE_ACK &&
-							command == ARV_GVCP_COMMAND_WRITE_MEMORY_ACK &&
-							packet_id == io_data->packet_id;
-						if (!expected_answer) {
-							arv_debug_device ("[GvDevice::write_memory] Unexpected answer (0x%04x)",
-									  packet_type);
-						}
-					}
-				} else {
-					pending_ack = FALSE;
-					expected_answer = FALSE;
-					if (local_error != NULL)
-						arv_warning_device ("[GvDevice::write_memory] Ack reception error: %s", local_error->message);
-					g_clear_error (&local_error);
-				}
-			} while (pending_ack);
-
-			success = success && expected_answer;
-		} else {
-			if (local_error != NULL)
-				arv_warning_device ("[GvDevice::write_memory] Command sending error: %s", local_error->message);
-			g_clear_error (&local_error);
-		}
-
-		n_retries++;
-
-	} while (!success && n_retries < io_data->gvcp_n_retries);
-
-	arv_gvcp_packet_free (packet);
-
-	g_mutex_unlock (&io_data->mutex);
-
-	if (!success) {
-		if (error != NULL && *error == NULL)
-			*error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_STATUS_TIMEOUT,
-					      "[ArvDevice::write_memory] Timeout");
-	}
-
-	return success;
+	return  _send_cmd_and_receive_ack (io_data, ARV_GVCP_COMMAND_WRITE_MEMORY_CMD,
+					   address, size, buffer, error);
 }
 
 gboolean
 _read_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 *value_placeholder, GError **error)
 {
-	ArvGvcpPacket *packet;
-	ArvGvcpPacket *ack_packet = io_data->buffer;
-	size_t packet_size;
-	int count;
-	unsigned int n_retries = 0;
-	gboolean success = FALSE;
-	guint32 timeout_ms;
-
-	g_mutex_lock (&io_data->mutex);
-
-	packet = arv_gvcp_packet_new_read_register_cmd (address, 0, &packet_size);
-
-	do {
-		GError *local_error = NULL;
-
-		io_data->packet_id = arv_gvcp_next_packet_id (io_data->packet_id);
-		arv_gvcp_packet_set_packet_id (packet, io_data->packet_id);
-
-		arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
-
-		_flush_socket_buffer(io_data);
-		success = g_socket_send_to (io_data->socket, io_data->device_address,
-					    (const char *) packet, packet_size,
-					    NULL, &local_error) >= 0;
-
-		if (success) {
-			gboolean pending_ack;
-			gboolean expected_answer;
-
-			timeout_ms = io_data->gvcp_timeout_ms;
-
-			do {
-				success = TRUE;
-				success = success && g_poll (&io_data->poll_in_event, 1, timeout_ms) > 0;
-				if (success)
-					count = g_socket_receive (io_data->socket, io_data->buffer,
-						  ARV_GV_DEVICE_BUFFER_SIZE, NULL, &local_error);
-				else
-					count = 0;
-				success = success && (count > 0);
-
-				if (success) {
-					ArvGvcpPacketType packet_type;
-					ArvGvcpCommand command;
-					guint16 packet_id;
-
-					arv_gvcp_packet_debug (ack_packet, ARV_DEBUG_LEVEL_LOG);
-
-					packet_type = arv_gvcp_packet_get_packet_type (ack_packet);
-					command = arv_gvcp_packet_get_command (ack_packet);
-					packet_id = arv_gvcp_packet_get_packet_id (ack_packet);
-
-					if (command == ARV_GVCP_COMMAND_PENDING_ACK) {
-						pending_ack = TRUE;
-						expected_answer = FALSE;
-
-						timeout_ms = arv_gvcp_packet_get_pending_ack_timeout (ack_packet);
-
-						arv_log_device ("[GvDevice::read_register] Pending ack timeout = %d", timeout_ms);
-					} else {
-						pending_ack = FALSE;
-						expected_answer = packet_type == ARV_GVCP_PACKET_TYPE_ACK &&
-							command == ARV_GVCP_COMMAND_READ_REGISTER_ACK &&
-							packet_id == io_data->packet_id;
-						if (!expected_answer) {
-							arv_debug_device ("[GvDevice::read_register] Unexpected answer (0x%04x)",
-									  packet_type);
-						}
-					}
-				} else {
-					pending_ack = FALSE;
-					expected_answer = FALSE;
-					if (local_error != NULL)
-						arv_warning_device ("[GvDevice::read_register] Ack reception error: %s", local_error->message);
-					g_clear_error (&local_error);
-				}
-			} while (pending_ack);
-
-			success = success && expected_answer;
-
-			if (success)
-				*value_placeholder = arv_gvcp_packet_get_read_register_ack_value (ack_packet);
-		} else {
-			if (local_error != NULL)
-				arv_warning_device ("[GvDevice::read_register] Command sending error: %s", local_error->message);
-			g_clear_error (&local_error);
-		}
-
-		n_retries++;
-
-	} while (!success && n_retries < io_data->gvcp_n_retries);
-
-	arv_gvcp_packet_free (packet);
-
-	g_mutex_unlock (&io_data->mutex);
-
-	if (!success) {
-		*value_placeholder = 0;
-
-		if (error != NULL && *error == NULL)
-			*error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_STATUS_TIMEOUT,
-					      "[ArvDevice::read_register] Timeout");
-	}
-
-	return success;
+	return _send_cmd_and_receive_ack (io_data, ARV_GVCP_COMMAND_READ_REGISTER_CMD,
+					  address, sizeof (guint32), value_placeholder, error);
 }
 
 gboolean
 _write_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 value, GError **error)
 {
-	ArvGvcpPacket *packet;
-	ArvGvcpPacket *ack_packet = io_data->buffer;
-	size_t packet_size;
-	int count;
-	unsigned int n_retries = 0;
-	gboolean success = FALSE;
-	guint32 timeout_ms;
-
-	g_mutex_lock (&io_data->mutex);
-
-	packet = arv_gvcp_packet_new_write_register_cmd (address, value, io_data->packet_id, &packet_size);
-
-	do {
-		GError *local_error = NULL;
-
-		io_data->packet_id = arv_gvcp_next_packet_id (io_data->packet_id);
-		arv_gvcp_packet_set_packet_id (packet, io_data->packet_id);
-
-		arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
-
-		_flush_socket_buffer(io_data);
-		success = g_socket_send_to (io_data->socket, io_data->device_address, (const char *) packet, packet_size,
-					    NULL, &local_error) >= 0;
-
-		if (success) {
-			gboolean pending_ack;
-			gboolean expected_answer;
-
-			timeout_ms = io_data->gvcp_timeout_ms;
-
-			do {
-				success = TRUE;
-				success = success && g_poll (&io_data->poll_in_event, 1, timeout_ms) > 0;
-				if (success)
-					count = g_socket_receive (io_data->socket, io_data->buffer,
-								  ARV_GV_DEVICE_BUFFER_SIZE, NULL, &local_error);
-				else
-					count = 0;
-				success = success && (count > 0);
-
-				if (success) {
-					ArvGvcpPacketType packet_type;
-					ArvGvcpCommand command;
-					guint16 packet_id;
-
-					arv_gvcp_packet_debug (ack_packet, ARV_DEBUG_LEVEL_LOG);
-
-					packet_type = arv_gvcp_packet_get_packet_type (ack_packet);
-					command = arv_gvcp_packet_get_command (ack_packet);
-					packet_id = arv_gvcp_packet_get_packet_id (ack_packet);
-
-					if (command == ARV_GVCP_COMMAND_PENDING_ACK) {
-						pending_ack = TRUE;
-						expected_answer = FALSE;
-
-						timeout_ms = arv_gvcp_packet_get_pending_ack_timeout (ack_packet);
-
-						arv_log_device ("[GvDevice::write_register] Pending ack timeout = %d", timeout_ms);
-					} else {
-						pending_ack = FALSE;
-						expected_answer = packet_type == ARV_GVCP_PACKET_TYPE_ACK &&
-							command == ARV_GVCP_COMMAND_WRITE_REGISTER_ACK &&
-							packet_id == io_data->packet_id;
-						if (!expected_answer) {
-							arv_debug_device ("[GvDevice::write_register] Unexpected answer (0x%04x)",
-									  packet_type);
-						}
-					}
-				} else {
-					pending_ack = FALSE;
-					expected_answer = FALSE;
-					if (local_error != NULL)
-						arv_warning_device ("[GvDevice::write_register] Ack reception error: %s", local_error->message);
-					g_clear_error (&local_error);
-				}
-			} while (pending_ack);
-
-			success = success && expected_answer;
-		} else {
-			if (local_error != NULL)
-				arv_warning_device ("[GvDevice::write_register] Command sending error: %s", local_error->message);
-			g_clear_error (&local_error);
-		}
-
-		n_retries++;
-
-	} while (!success && n_retries < io_data->gvcp_n_retries);
-
-	arv_gvcp_packet_free (packet);
-
-	g_mutex_unlock (&io_data->mutex);
-
-	if (!success) {
-		if (error != NULL && *error == NULL)
-			*error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_STATUS_TIMEOUT,
-					      "[ArvDevice::write_register] Timeout");
-	}
-
-	return success;
+	return _send_cmd_and_receive_ack (io_data, ARV_GVCP_COMMAND_WRITE_REGISTER_CMD,
+					  address, sizeof (guint32), &value, error);
 }
 
 /* Heartbeat thread */
