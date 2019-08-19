@@ -365,6 +365,22 @@ arv_gvcp_packet_get_packet_type (ArvGvcpPacket *packet)
 }
 
 /**
+ * arv_gvcp_packet_get_packet_flags:
+ * @packet: a #ArvGvcpPacket
+ *
+ * Return value: The packet flags.
+ */
+
+static inline guint8
+arv_gvcp_packet_get_packet_flags (ArvGvcpPacket *packet)
+{
+	if (packet == NULL)
+		return 0;
+
+	return (ArvGvcpPacketType) packet->header.packet_flags;
+}
+
+/**
  * arv_gvcp_packet_get_command:
  * @packet: a #ArvGvcpPacket
  *
