@@ -53,9 +53,11 @@ arv_gvcp_packet_new_read_memory_cmd (guint32 address, guint32 size, guint16 pack
 {
 	ArvGvcpPacket *packet;
 	guint32 n_address = g_htonl (address);
-	guint32 n_size = g_htonl (size);
+	guint32 n_size;
 
 	g_return_val_if_fail (packet_size != NULL, NULL);
+
+	n_size = g_htonl (((size + sizeof (guint32) - 1) / sizeof (guint32)) * sizeof (guint32));
 
 	*packet_size = sizeof (ArvGvcpHeader) + 2 * sizeof (guint32);
 
@@ -119,24 +121,28 @@ arv_gvcp_packet_new_read_memory_ack (guint32 address, guint32 size, guint16 pack
  */
 
 ArvGvcpPacket *
-arv_gvcp_packet_new_write_memory_cmd (guint32 address, guint32 size, guint16 packet_id, size_t *packet_size)
+arv_gvcp_packet_new_write_memory_cmd (guint32 address, guint32 size, const char *buffer, guint16 packet_id, size_t *packet_size)
 {
 	ArvGvcpPacket *packet;
 	guint32 n_address = g_htonl (address);
+	guint32 actual_size;
 
 	g_return_val_if_fail (packet_size != NULL, NULL);
 
-	*packet_size = sizeof (ArvGvcpHeader) + sizeof (guint32) + size;
+	actual_size = ((size + sizeof (guint32) - 1) / sizeof (guint32)) * sizeof (guint32);
+
+	*packet_size = sizeof (ArvGvcpHeader) + sizeof (guint32) + actual_size;
 
 	packet = g_malloc (*packet_size);
 
 	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_CMD;
 	packet->header.packet_flags = ARV_GVCP_PACKET_FLAGS_ACK_REQUIRED;
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_WRITE_MEMORY_CMD);
-	packet->header.size = g_htons (sizeof (guint32) + size);
+	packet->header.size = g_htons (sizeof (guint32) + actual_size);
 	packet->header.id = g_htons (packet_id);
 
 	memcpy (&packet->data, &n_address, sizeof (guint32));
+	memcpy ((char *) packet + sizeof (ArvGvcpPacket) + sizeof (guint32), buffer, size);
 
 	return packet;
 }
@@ -359,7 +365,7 @@ arv_gvcp_packet_new_discovery_cmd (size_t *packet_size)
  */
 
 ArvGvcpPacket *
-arv_gvcp_packet_new_discovery_ack (int id, size_t *packet_size)
+arv_gvcp_packet_new_discovery_ack (guint16 packet_id, size_t *packet_size)
 {
 	ArvGvcpPacket *packet;
 
@@ -373,7 +379,7 @@ arv_gvcp_packet_new_discovery_ack (int id, size_t *packet_size)
 	packet->header.packet_flags = 0;
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_DISCOVERY_ACK);
 	packet->header.size = g_htons (ARV_GVBS_DISCOVERY_DATA_SIZE);
-        packet->header.id = g_htons (id);
+        packet->header.id = g_htons (packet_id);
 
 	return packet;
 }

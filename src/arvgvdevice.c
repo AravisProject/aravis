@@ -166,22 +166,20 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 
 	g_mutex_lock (&io_data->mutex);
 
+	io_data->packet_id = arv_gvcp_next_packet_id (io_data->packet_id);
+
 	switch (command) {
 		case ARV_GVCP_COMMAND_READ_MEMORY_CMD:
-			packet = arv_gvcp_packet_new_read_memory_cmd (address,
-								      ((size + sizeof (guint32) - 1)
-								       / sizeof (guint32)) * sizeof (guint32),
-								      0, &packet_size);
+			packet = arv_gvcp_packet_new_read_memory_cmd (address, size,
+								      io_data->packet_id, &packet_size);
 			break;
 		case ARV_GVCP_COMMAND_WRITE_MEMORY_CMD:
-			packet = arv_gvcp_packet_new_write_memory_cmd (address,
-								       ((size + sizeof (guint32) - 1) /
-									sizeof (guint32)) * sizeof (guint32),
-								       0, &packet_size);
-			memcpy (arv_gvcp_packet_get_write_memory_cmd_data (packet), buffer, size);
+			packet = arv_gvcp_packet_new_write_memory_cmd (address, size, buffer,
+								       io_data->packet_id, &packet_size);
 			break;
 		case ARV_GVCP_COMMAND_READ_REGISTER_CMD:
-			packet = arv_gvcp_packet_new_read_register_cmd (address, 0, &packet_size);
+			packet = arv_gvcp_packet_new_read_register_cmd (address,
+									io_data->packet_id, &packet_size);
 			break;
 		case ARV_GVCP_COMMAND_WRITE_REGISTER_CMD:
 			packet = arv_gvcp_packet_new_write_register_cmd (address, *((guint32 *) buffer),
