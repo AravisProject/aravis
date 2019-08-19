@@ -62,7 +62,7 @@ arv_gvcp_packet_new_read_memory_cmd (guint32 address, guint32 size, guint16 pack
 	packet = g_malloc (*packet_size);
 
 	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_CMD;
-	packet->header.packet_flags = 0;
+	packet->header.packet_flags = ARV_GVCP_PACKET_FLAGS_ACK_REQUIRED;
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_READ_MEMORY_CMD);
 	packet->header.size = g_htons (2 * sizeof (guint32));
 	packet->header.id = g_htons (packet_id);
@@ -131,7 +131,7 @@ arv_gvcp_packet_new_write_memory_cmd (guint32 address, guint32 size, guint16 pac
 	packet = g_malloc (*packet_size);
 
 	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_CMD;
-	packet->header.packet_flags = 0;
+	packet->header.packet_flags = ARV_GVCP_PACKET_FLAGS_ACK_REQUIRED;
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_WRITE_MEMORY_CMD);
 	packet->header.size = g_htons (sizeof (guint32) + size);
 	packet->header.id = g_htons (packet_id);
@@ -201,7 +201,7 @@ arv_gvcp_packet_new_read_register_cmd (guint32 address,
 	packet = g_malloc (*packet_size);
 
 	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_CMD;
-	packet->header.packet_flags = 0;
+	packet->header.packet_flags = ARV_GVCP_PACKET_FLAGS_ACK_REQUIRED;
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_READ_REGISTER_CMD);
 	packet->header.size = g_htons (sizeof (guint32));
 	packet->header.id = g_htons (packet_id);
@@ -274,7 +274,7 @@ arv_gvcp_packet_new_write_register_cmd (guint32 address,
 	packet = g_malloc (*packet_size);
 
 	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_CMD;
-	packet->header.packet_flags = 0;
+	packet->header.packet_flags = ARV_GVCP_PACKET_FLAGS_ACK_REQUIRED;
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_WRITE_REGISTER_CMD);
 	packet->header.size = g_htons (2 * sizeof (guint32));
 	packet->header.id = g_htons (packet_id);
@@ -340,7 +340,7 @@ arv_gvcp_packet_new_discovery_cmd (size_t *packet_size)
 	packet = g_malloc (*packet_size);
 
 	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_CMD;
-	packet->header.packet_flags = 0;
+	packet->header.packet_flags = ARV_GVCP_PACKET_FLAGS_ACK_REQUIRED;
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_DISCOVERY_CMD);
 	packet->header.size = g_htons (0x0000);
 	packet->header.id = g_htons (0xffff);
@@ -350,7 +350,7 @@ arv_gvcp_packet_new_discovery_cmd (size_t *packet_size)
 
 /**
  * arv_gvcp_packet_new_discovery_ack: (skip)
- * @id: packet id 
+ * @id: packet id
  * @packet_size: (out): packet size, in bytes
  *
  * Create a gvcp packet for a discovery acknowledge.
@@ -406,7 +406,7 @@ arv_gvcp_packet_new_packet_resend_cmd (guint32 frame_id,
 	packet = g_malloc (*packet_size);
 
 	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_CMD;
-	packet->header.packet_flags = ARV_GVCP_PACKET_FLAGS_ACK_REQUIRED;
+	packet->header.packet_flags = 0;
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_PACKET_RESEND_CMD);
 	packet->header.size = g_htons (3 * sizeof (guint32));
 	packet->header.id = g_htons (packet_id);
