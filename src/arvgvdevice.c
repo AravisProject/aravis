@@ -332,14 +332,14 @@ _write_memory (ArvGvDeviceIOData *io_data, guint64 address, guint32 size, void *
 					   address, size, buffer, error);
 }
 
-gboolean
+static gboolean
 _read_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 *value_placeholder, GError **error)
 {
 	return _send_cmd_and_receive_ack (io_data, ARV_GVCP_COMMAND_READ_REGISTER_CMD,
 					  address, sizeof (guint32), value_placeholder, error);
 }
 
-gboolean
+static gboolean
 _write_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 value, GError **error)
 {
 	return _send_cmd_and_receive_ack (io_data, ARV_GVCP_COMMAND_WRITE_REGISTER_CMD,
