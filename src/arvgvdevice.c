@@ -192,9 +192,6 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 	do {
 		GError *local_error = NULL;
 
-		io_data->packet_id = arv_gvcp_next_packet_id (io_data->packet_id);
-		arv_gvcp_packet_set_packet_id (packet, io_data->packet_id);
-
 		arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
 		success = g_socket_send_to (io_data->socket, io_data->device_address,
