@@ -151,12 +151,12 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 		case ARV_GVCP_COMMAND_READ_REGISTER_CMD:
 			operation = "read_register";
 			ack_command = ARV_GVCP_COMMAND_READ_REGISTER_ACK;
-			ack_size = 1;
+			ack_size = arv_gvcp_packet_get_read_register_ack_size ();
 			break;
 		case ARV_GVCP_COMMAND_WRITE_REGISTER_CMD:
 			operation = "write_register";
 			ack_command = ARV_GVCP_COMMAND_WRITE_REGISTER_ACK;
-			ack_size = 1;
+			ack_size = arv_gvcp_packet_get_write_register_ack_size ();
 			break;
 		default:
 			g_assert_not_reached ();

@@ -473,6 +473,12 @@ arv_gvcp_packet_get_read_register_ack_value (const ArvGvcpPacket *packet)
 	return g_ntohl (*((guint32 *) ((char *) packet + sizeof (ArvGvcpPacket))));
 }
 
+static inline size_t
+arv_gvcp_packet_get_read_register_ack_size (void)
+{
+	return sizeof (ArvGvcpHeader) + sizeof (guint32);
+}
+
 static inline void
 arv_gvcp_packet_get_write_register_cmd_infos (const ArvGvcpPacket *packet, guint32 *address, guint32 *value)
 {
@@ -487,6 +493,12 @@ arv_gvcp_packet_get_write_register_cmd_infos (const ArvGvcpPacket *packet, guint
 		*address = g_ntohl (*((guint32 *) ((char *) packet + sizeof (ArvGvcpPacket))));
 	if (value != NULL)
 		*value = g_ntohl (*((guint32 *) ((char *) packet + sizeof (ArvGvcpPacket) + sizeof (guint32))));
+}
+
+static inline size_t
+arv_gvcp_packet_get_write_register_ack_size (void)
+{
+	return sizeof (ArvGvcpHeader) + sizeof (guint32);
 }
 
 static inline guint16

@@ -237,7 +237,7 @@ arv_gvcp_packet_new_read_register_ack (guint32 value,
 
 	g_return_val_if_fail (packet_size != NULL, NULL);
 
-	*packet_size = sizeof (ArvGvcpHeader) + sizeof (guint32);
+	*packet_size = arv_gvcp_packet_get_read_register_ack_size ();
 
 	packet = g_malloc (*packet_size);
 
@@ -311,7 +311,7 @@ arv_gvcp_packet_new_write_register_ack 	(guint32 data_index,
 
 	g_return_val_if_fail (packet_size != NULL, NULL);
 
-	*packet_size = sizeof (ArvGvcpHeader) + sizeof (guint32);
+	*packet_size = arv_gvcp_packet_get_write_register_ack_size ();
 
 	packet = g_malloc (*packet_size);
 
