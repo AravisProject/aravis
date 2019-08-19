@@ -452,6 +452,12 @@ arv_gvcp_packet_flags_to_string (ArvGvcpPacketFlags value)
 }
 
 static const char *
+arv_gvcp_error_to_string (ArvGvcpError value)
+{
+	return arv_enum_to_string (ARV_TYPE_GVCP_ERROR, value);
+}
+
+static const char *
 arv_gvcp_command_to_string (ArvGvcpCommand value)
 {
 	return arv_enum_to_string (ARV_TYPE_GVCP_COMMAND, value);
@@ -481,8 +487,19 @@ arv_gvcp_packet_to_string (const ArvGvcpPacket *packet)
 
 	g_string_append_printf (string, "packet_type  = %s\n",
 				arv_gvcp_packet_type_to_string (packet->header.packet_type));
-	g_string_append_printf (string, "packet_flags = %s\n",
-				arv_gvcp_packet_flags_to_string (packet->header.packet_flags));
+	switch (packet->header.packet_type) {
+		case ARV_GVCP_PACKET_TYPE_CMD:
+		case ARV_GVCP_PACKET_TYPE_ACK:
+			g_string_append_printf (string, "packet_flags = %s\n",
+						arv_gvcp_packet_flags_to_string (packet->header.packet_flags));
+			break;
+		case ARV_GVCP_PACKET_TYPE_ERROR:
+			g_string_append_printf (string, "error        = %s\n",
+						arv_gvcp_error_to_string (packet->header.packet_flags));
+			break;
+		default:
+			break;
+	}
 	g_string_append_printf (string, "command      = %s\n",
 				arv_gvcp_command_to_string (g_ntohs (packet->header.command)));
 	g_string_append_printf (string, "size         = %d\n", g_ntohs (packet->header.size));
