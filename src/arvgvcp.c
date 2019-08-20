@@ -445,11 +445,29 @@ arv_enum_to_string (GType type,
 	return retval;
 }
 
+/**
+ * arv_gvcp_packet_type_to_string: (skip)
+ * @value: a #ArvGvcpPacketType
+ *
+ * Returns: (transfer none): packet type string.
+ */
+
 const char *
 arv_gvcp_packet_type_to_string (ArvGvcpPacketType value)
 {
-	return arv_enum_to_string (ARV_TYPE_GVCP_PACKET_TYPE, value);
+	const char *text;
+
+	text = arv_enum_to_string (ARV_TYPE_GVCP_PACKET_TYPE, value);
+
+	return text != NULL ? text : "unknown";
 }
+
+/**
+ * arv_gvcp_packet_flags_to_string_new: (skip)
+ * @value: a #ArvGvcpPacketFlags
+ *
+ * Returns: (transfer full): a newly allocated string with the name of all active flags, to be freed after use.
+ */
 
 char *
 arv_gvcp_packet_flags_to_string_new (ArvGvcpPacketFlags value)
@@ -464,6 +482,9 @@ arv_gvcp_packet_flags_to_string_new (ArvGvcpPacketFlags value)
 						arv_enum_to_string (ARV_TYPE_GVCP_PACKET_FLAGS, 1 << i));
 	}
 
+	if (string->len == 0)
+		g_string_append (string, "none");
+
 	buffer = string->str;
 
 	g_string_free (string, FALSE);
@@ -471,16 +492,38 @@ arv_gvcp_packet_flags_to_string_new (ArvGvcpPacketFlags value)
 	return buffer;
 }
 
+/**
+ * arv_gvcp_error_to_string: (skip)
+ * @value: a #ArvGvcpError
+ *
+ * Returns: (transfer none): GVCP error name.
+ */
+
 const char *
 arv_gvcp_error_to_string (ArvGvcpError value)
 {
-	return arv_enum_to_string (ARV_TYPE_GVCP_ERROR, value);
+	const char *text;
+
+	text = arv_enum_to_string (ARV_TYPE_GVCP_ERROR, value);
+
+	return text != NULL ? text : "unknown";
 }
+
+/**
+ * arv_gvcp_command_to_string: (skip)
+ * @value: a #ArvGvcpCommand
+ *
+ * Returns: (transfer none): GVCP command name.
+ */
 
 const char *
 arv_gvcp_command_to_string (ArvGvcpCommand value)
 {
-	return arv_enum_to_string (ARV_TYPE_GVCP_COMMAND, value);
+	const char *text;
+
+	text = arv_enum_to_string (ARV_TYPE_GVCP_COMMAND, value);
+
+	return text != NULL ? text : "unknown";
 }
 
 /**
