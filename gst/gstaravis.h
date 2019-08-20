@@ -53,8 +53,12 @@ struct _GstAravis {
 
 	gint h_binning;
 	gint v_binning;
-        gboolean packet_resend;
         gint num_buffers;
+
+	/* GigEVision parameters */
+	int packet_size;
+	gboolean auto_packet_size;
+        gboolean packet_resend;
 
 	gint payload;
 

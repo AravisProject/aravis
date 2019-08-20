@@ -56,6 +56,8 @@ enum
   PROP_V_BINNING,
   PROP_OFFSET_X,
   PROP_OFFSET_Y,
+  PROP_PACKET_SIZE,
+  PROP_AUTO_PACKET_SIZE,
   PROP_PACKET_RESEND,
   PROP_NUM_BUFFERS
 };
@@ -176,6 +178,13 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 	arv_camera_set_binning (gst_aravis->camera, gst_aravis->h_binning, gst_aravis->v_binning);
 	arv_camera_set_pixel_format (gst_aravis->camera, pixel_format);
 
+	if (arv_camera_is_gv_device (gst_aravis->camera)) {
+		if (gst_aravis->packet_size > 0)
+			arv_camera_gv_set_packet_size (gst_aravis->camera, gst_aravis->packet_size);
+		if (gst_aravis->auto_packet_size)
+			arv_camera_gv_auto_packet_size (gst_aravis->camera);
+	}
+
 	if (frame_rate != NULL) {
 		double dbl_frame_rate;
 
@@ -248,10 +257,13 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 	gst_aravis->payload = arv_camera_get_payload (gst_aravis->camera);
 	gst_aravis->stream = arv_camera_create_stream (gst_aravis->camera, NULL, NULL);
 
-	if (ARV_IS_GV_STREAM (gst_aravis->stream) && gst_aravis->packet_resend)
-                g_object_set (gst_aravis->stream, "packet-resend", ARV_GV_STREAM_PACKET_RESEND_ALWAYS, NULL);
-        else
-                g_object_set (gst_aravis->stream, "packet-resend", ARV_GV_STREAM_PACKET_RESEND_NEVER, NULL);
+	if (ARV_IS_GV_STREAM (gst_aravis->stream)) {
+		if (gst_aravis->packet_resend)
+			g_object_set (gst_aravis->stream, "packet-resend", ARV_GV_STREAM_PACKET_RESEND_ALWAYS, NULL);
+		else
+			g_object_set (gst_aravis->stream, "packet-resend", ARV_GV_STREAM_PACKET_RESEND_NEVER, NULL);
+	}
+
 
 	for (i = 0; i < gst_aravis->num_buffers; i++)
 		arv_stream_push_buffer (gst_aravis->stream,
@@ -449,6 +461,8 @@ gst_aravis_init (GstAravis *gst_aravis)
 	gst_aravis->offset_y = 0;
 	gst_aravis->h_binning = -1;
 	gst_aravis->v_binning = -1;
+	gst_aravis->packet_size = -1;
+	gst_aravis->auto_packet_size = FALSE;
         gst_aravis->packet_resend = TRUE;
         gst_aravis->num_buffers = GST_ARAVIS_DEFAULT_N_BUFFERS;
 	gst_aravis->payload = 0;
@@ -541,6 +555,12 @@ gst_aravis_set_property (GObject * object, guint prop_id,
 		case PROP_V_BINNING:
 			gst_aravis->v_binning = g_value_get_int (value);
 			break;
+                case PROP_PACKET_SIZE:
+                        gst_aravis->packet_size = g_value_get_int (value);
+                        break;
+                case PROP_AUTO_PACKET_SIZE:
+                        gst_aravis->auto_packet_size = g_value_get_boolean (value);
+                        break;
                 case PROP_PACKET_RESEND:
                         gst_aravis->packet_resend = g_value_get_boolean (value);
                         break;
@@ -590,6 +610,12 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 		case PROP_V_BINNING:
 			g_value_set_int (value, gst_aravis->v_binning);
 			break;
+        	case PROP_PACKET_SIZE:
+                        g_value_set_int (value, gst_aravis->packet_size);
+                        break;
+        	case PROP_AUTO_PACKET_SIZE:
+                        g_value_set_boolean (value, gst_aravis->auto_packet_size);
+                        break;
         	case PROP_PACKET_RESEND:
                         g_value_set_boolean (value, gst_aravis->packet_resend);
                         break;
@@ -694,7 +720,22 @@ gst_aravis_class_init (GstAravisClass * klass)
 				   "CCD vertical binning",
 				   1, G_MAXINT, 1,
 				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
+	g_object_class_install_property
+		(gobject_class,
+		 PROP_PACKET_SIZE,
+		 g_param_spec_int ("packet-size",
+				   "Packet size",
+				   "GigEVision streaming packet size",
+				   ARV_GVSP_PACKET_PROTOCOL_OVERHEAD, 65500, 1500,
+				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+	g_object_class_install_property
+		(gobject_class,
+		 PROP_AUTO_PACKET_SIZE,
+		 g_param_spec_boolean ("auto-packet-size",
+				       "Auto Packet Size",
+				       "Negociate GigEVision streaming packet size",
+				       FALSE,
+				       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 	g_object_class_install_property
 		(gobject_class,
 		 PROP_PACKET_RESEND,
