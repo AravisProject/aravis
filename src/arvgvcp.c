@@ -445,25 +445,25 @@ arv_enum_to_string (GType type,
 	return retval;
 }
 
-static const char *
+const char *
 arv_gvcp_packet_type_to_string (ArvGvcpPacketType value)
 {
 	return arv_enum_to_string (ARV_TYPE_GVCP_PACKET_TYPE, value);
 }
 
-static const char *
+const char *
 arv_gvcp_packet_flags_to_string (ArvGvcpPacketFlags value)
 {
 	return arv_enum_to_string (ARV_TYPE_GVCP_PACKET_FLAGS, value);
 }
 
-static const char *
+const char *
 arv_gvcp_error_to_string (ArvGvcpError value)
 {
 	return arv_enum_to_string (ARV_TYPE_GVCP_ERROR, value);
 }
 
-static const char *
+const char *
 arv_gvcp_command_to_string (ArvGvcpCommand value)
 {
 	return arv_enum_to_string (ARV_TYPE_GVCP_COMMAND, value);

@@ -317,9 +317,15 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 				g_assert_not_reached ();
 		}
 
-		if (error != NULL && *error == NULL)
-			*error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_STATUS_TIMEOUT,
-					      "[GvDevice::%s] Timeout", operation);
+		if (error != NULL && *error == NULL) {
+			if (command_error != ARV_GVCP_ERROR_NONE)
+				*error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_STATUS_PROTOCOL_ERROR,
+						      "[GvDevice::%s] GigEVision error: %s", operation,
+						      arv_gvcp_error_to_string (command_error));
+			else
+				*error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_STATUS_TIMEOUT,
+						      "[GvDevice::%s] Timeout", operation);
+		}
 	}
 
 	return success;
