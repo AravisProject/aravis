@@ -346,7 +346,7 @@ ArvGvcpPacket * 	arv_gvcp_packet_new_packet_resend_cmd 	(guint32 frame_id,
 								 guint16 packet_id, size_t *packet_size);
 
 const char *		arv_gvcp_packet_type_to_string 		(ArvGvcpPacketType value);
-const char * 		arv_gvcp_packet_flags_to_string 	(ArvGvcpPacketFlags value);
+char *	 		arv_gvcp_packet_flags_to_string_new 	(ArvGvcpPacketFlags value);
 const char * 		arv_gvcp_error_to_string 		(ArvGvcpError value);
 const char * 		arv_gvcp_command_to_string 		(ArvGvcpCommand value);
 

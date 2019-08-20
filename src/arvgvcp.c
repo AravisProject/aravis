@@ -451,10 +451,24 @@ arv_gvcp_packet_type_to_string (ArvGvcpPacketType value)
 	return arv_enum_to_string (ARV_TYPE_GVCP_PACKET_TYPE, value);
 }
 
-const char *
-arv_gvcp_packet_flags_to_string (ArvGvcpPacketFlags value)
+char *
+arv_gvcp_packet_flags_to_string_new (ArvGvcpPacketFlags value)
 {
-	return arv_enum_to_string (ARV_TYPE_GVCP_PACKET_FLAGS, value);
+	GString *string = g_string_new ("");
+	char *buffer = NULL;
+	unsigned i;
+
+	for (i = 0; i < 8; i++) {
+		if ((1 << i) & value)
+			g_string_append_printf (string, "%s%s", string->len > 0 ? " " : "",
+						arv_enum_to_string (ARV_TYPE_GVCP_PACKET_FLAGS, 1 << i));
+	}
+
+	buffer = string->str;
+
+	g_string_free (string, FALSE);
+
+	return buffer;
 }
 
 const char *
@@ -496,8 +510,11 @@ arv_gvcp_packet_to_string (const ArvGvcpPacket *packet)
 	switch (packet->header.packet_type) {
 		case ARV_GVCP_PACKET_TYPE_CMD:
 		case ARV_GVCP_PACKET_TYPE_ACK:
-			g_string_append_printf (string, "packet_flags = %s\n",
-						arv_gvcp_packet_flags_to_string (packet->header.packet_flags));
+			{
+				char *flags = arv_gvcp_packet_flags_to_string_new (packet->header.packet_flags);
+				g_string_append_printf (string, "packet_flags = %s\n", flags);
+				g_free (flags);
+			}
 			break;
 		case ARV_GVCP_PACKET_TYPE_ERROR:
 			g_string_append_printf (string, "error        = %s\n",
