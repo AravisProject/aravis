@@ -59,8 +59,6 @@ struct _ArvGcFeatureNodeClass {
 
 GType 			arv_gc_feature_node_get_type 			(void);
 
-ArvGcFeatureNode * 	arv_gc_feature_node_new 			(void);
-
 const char *		arv_gc_feature_node_get_name			(ArvGcFeatureNode *gc_feature_node);
 
 const char *		arv_gc_feature_node_get_tooltip			(ArvGcFeatureNode *gc_feature_node, GError **error);

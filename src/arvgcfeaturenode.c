@@ -314,16 +314,6 @@ arv_gc_feature_node_is_locked (ArvGcFeatureNode *gc_feature_node, GError **error
 	return value;
 }
 
-ArvGcFeatureNode *
-arv_gc_feature_node_new (void)
-{
-	ArvGcFeatureNode *node;
-
-	node = g_object_new (ARV_TYPE_GC_FEATURE_NODE, NULL);
-
-	return node;
-}
-
 GType
 arv_gc_feature_node_get_value_type (ArvGcFeatureNode *node)
 {
@@ -445,7 +435,7 @@ arv_gc_feature_node_class_init (ArvGcFeatureNodeClass *this_class)
 }
 
 #if !GLIB_CHECK_VERSION(2,38,0)
-G_DEFINE_TYPE (ArvGcFeatureNode, arv_gc_feature_node, ARV_TYPE_GC_NODE)
+G_DEFINE_ABSTRACT_TYPE (ArvGcFeatureNode, arv_gc_feature_node, ARV_TYPE_GC_NODE)
 #else
-G_DEFINE_TYPE_WITH_CODE (ArvGcFeatureNode, arv_gc_feature_node, ARV_TYPE_GC_NODE, G_ADD_PRIVATE (ArvGcFeatureNode))
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvGcFeatureNode, arv_gc_feature_node, ARV_TYPE_GC_NODE, G_ADD_PRIVATE (ArvGcFeatureNode))
 #endif
