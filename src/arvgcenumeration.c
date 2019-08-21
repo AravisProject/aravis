@@ -439,6 +439,7 @@ arv_gc_enumeration_set_int_value (ArvGcEnumeration *enumeration, gint64 value, G
 			}
 		}
 
+		arv_gc_feature_node_increment_change_count (ARV_GC_FEATURE_NODE (enumeration));
 		arv_gc_property_node_set_int64 (enumeration->value, value, &local_error);
 
 		if (local_error != NULL)

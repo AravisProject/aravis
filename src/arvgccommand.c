@@ -99,6 +99,7 @@ arv_gc_command_execute (ArvGcCommand *gc_command, GError **error)
 		return;
 	}
 
+	arv_gc_feature_node_increment_change_count (ARV_GC_FEATURE_NODE (gc_command));
 	arv_gc_property_node_set_int64 (gc_command->value, command_value, &local_error);
 
 	if (local_error != NULL) {

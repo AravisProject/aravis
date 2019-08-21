@@ -29,6 +29,7 @@
 #include <libintl.h>
 
 static char *arv_viewer_option_debug_domains = NULL;
+static char *arv_viewer_option_cache_policy = NULL;
 static gboolean arv_viewer_option_auto_socket_buffer = FALSE;
 static gboolean arv_viewer_option_no_packet_resend = FALSE;
 static unsigned int arv_viewer_option_packet_timeout = 20;
@@ -53,6 +54,10 @@ static const GOptionEntry arv_viewer_option_entries[] =
 		&arv_viewer_option_frame_retention, 	"Frame retention (ms)", NULL
 	},
 	{
+		"cache-policy", 			'c', 0, G_OPTION_ARG_STRING,
+		&arv_viewer_option_cache_policy, 	"Register cache policy", "[disable|enable|debug]",
+	},
+	{
 		"debug", 				'd', 0, G_OPTION_ARG_STRING,
 		&arv_viewer_option_debug_domains, 	"Debug domains", NULL
 	},
@@ -67,6 +72,7 @@ main (int argc, char **argv)
 	int status;
 	GOptionContext *context;
 	GError *error = NULL;
+	ArvRegisterCachePolicy cache_policy = ARV_REGISTER_CACHE_POLICY_DEFAULT;
 
 	bindtextdomain (ARAVIS_GETTEXT, ARAVIS_LOCALE_DIR);
 	bind_textdomain_codeset (ARAVIS_GETTEXT, "UTF-8");
@@ -93,6 +99,18 @@ main (int argc, char **argv)
 
 	arv_debug_enable (arv_viewer_option_debug_domains);
 
+	if (arv_viewer_option_cache_policy == NULL ||
+	    g_strcmp0 (arv_viewer_option_cache_policy, "disable") == 0)
+		cache_policy = ARV_REGISTER_CACHE_POLICY_DISABLE;
+	else if (g_strcmp0 (arv_viewer_option_cache_policy, "enable") == 0)
+		cache_policy = ARV_REGISTER_CACHE_POLICY_ENABLE;
+	else if (g_strcmp0 (arv_viewer_option_cache_policy, "debug") == 0)
+		cache_policy = ARV_REGISTER_CACHE_POLICY_DEBUG;
+	else {
+		printf ("Invalid cache policy\n");
+		return EXIT_FAILURE;
+	}
+
 	viewer = arv_viewer_new ();
 	if (!ARV_IS_VIEWER (viewer))
 		return EXIT_FAILURE;
@@ -101,7 +119,8 @@ main (int argc, char **argv)
 				arv_viewer_option_auto_socket_buffer,
 				!arv_viewer_option_no_packet_resend,
 				arv_viewer_option_packet_timeout,
-				arv_viewer_option_frame_retention);
+				arv_viewer_option_frame_retention,
+				cache_policy);
 
 	notify_init ("Aravis Viewer");
 

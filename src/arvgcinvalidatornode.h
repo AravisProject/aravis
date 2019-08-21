@@ -44,7 +44,7 @@ typedef struct _ArvGcInvalidatorNodeClass ArvGcInvalidatorNodeClass;
 struct _ArvGcInvalidatorNode {
 	ArvGcPropertyNode	base;
 
-	gint modification_count;
+	guint64 change_index;
 };
 
 struct _ArvGcInvalidatorNodeClass {
@@ -53,8 +53,8 @@ struct _ArvGcInvalidatorNodeClass {
 
 GType 		arv_gc_invalidator_node_get_type 		(void);
 ArvGcNode * 	arv_gc_invalidator_node_new 			(void);
-gint		arv_gc_invalidator_node_get_modification_count	(ArvGcInvalidatorNode *invalidator_node);
-void		arv_gc_invalidator_node_set_modification_count	(ArvGcInvalidatorNode *invalidator_node, gint modification_count);
+
+gboolean 	arv_gc_invalidator_has_changed 			(ArvGcInvalidatorNode *self);
 
 G_END_DECLS
 

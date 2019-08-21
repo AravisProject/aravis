@@ -751,6 +751,17 @@ arv_device_get_status (ArvDevice *device)
 }
 
 void
+arv_device_set_register_cache_policy (ArvDevice *device, ArvRegisterCachePolicy policy)
+{
+	ArvGc *genicam;
+
+	g_return_if_fail (ARV_IS_DEVICE (device));
+
+	genicam = arv_device_get_genicam (device);
+	arv_gc_set_register_cache_policy (genicam, policy);
+}
+
+void
 arv_device_emit_control_lost_signal (ArvDevice *device)
 {
 	g_return_if_fail (ARV_IS_DEVICE (device));

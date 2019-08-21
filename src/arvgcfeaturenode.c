@@ -49,7 +49,7 @@ struct _ArvGcFeatureNodePrivate {
 	ArvGcPropertyNode *is_available;
 	ArvGcPropertyNode *is_locked;
 
-	gint modification_count;
+	guint64 change_count;
 };
 
 /* ArvDomNode implementation */
@@ -379,19 +379,19 @@ arv_gc_feature_node_get_value_as_string (ArvGcFeatureNode *gc_feature_node, GErr
 }
 
 void
-arv_gc_feature_node_inc_modification_count (ArvGcFeatureNode *gc_feature_node)
+arv_gc_feature_node_increment_change_count (ArvGcFeatureNode *gc_feature_node)
 {
 	g_return_if_fail (ARV_IS_GC_FEATURE_NODE (gc_feature_node));
 
-	gc_feature_node->priv->modification_count++;
+	gc_feature_node->priv->change_count++;
 }
 
-gint
-arv_gc_feature_node_get_modification_count (ArvGcFeatureNode *node)
+guint64
+arv_gc_feature_node_get_change_count (ArvGcFeatureNode *gc_feature_node)
 {
-	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (node), 0);
+	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (gc_feature_node), 0);
 
-	return node->priv->modification_count;
+	return gc_feature_node->priv->change_count;
 }
 
 static void
@@ -399,7 +399,7 @@ arv_gc_feature_node_init (ArvGcFeatureNode *gc_feature_node)
 {
 	gc_feature_node->priv = G_TYPE_INSTANCE_GET_PRIVATE (gc_feature_node, ARV_TYPE_GC_FEATURE_NODE, ArvGcFeatureNodePrivate);
 
-	gc_feature_node->priv->modification_count = 0;
+	gc_feature_node->priv->change_count = 0;
 }
 
 static void

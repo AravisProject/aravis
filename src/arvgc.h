@@ -41,8 +41,16 @@ typedef enum {
 	ARV_GC_ERROR_PVALUE_NOT_DEFINED,
 	ARV_GC_ERROR_INVALID_PVALUE,
 	ARV_GC_ERROR_EMPTY_ENUMERATION,
-	ARV_GC_ERROR_OUT_OF_RANGE
+	ARV_GC_ERROR_OUT_OF_RANGE,
+	ARV_GC_ERROR_NODE_NOT_FOUND
 } ArvGcError;
+
+typedef enum {
+	ARV_REGISTER_CACHE_POLICY_DISABLE,
+	ARV_REGISTER_CACHE_POLICY_ENABLE,
+	ARV_REGISTER_CACHE_POLICY_DEBUG,
+	ARV_REGISTER_CACHE_POLICY_DEFAULT = ARV_REGISTER_CACHE_POLICY_DISABLE
+} ArvRegisterCachePolicy;
 
 #define ARV_TYPE_GC             (arv_gc_get_type ())
 #define ARV_GC(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC, ArvGc))
@@ -66,13 +74,15 @@ struct _ArvGcClass {
 
 GType arv_gc_get_type (void);
 
-ArvGc * 		arv_gc_new 			(ArvDevice *device, const void *xml, size_t size);
-void 			arv_gc_register_feature_node 	(ArvGc *genicam, ArvGcFeatureNode *node);
-void 			arv_gc_set_default_node_data 	(ArvGc *genicam, const char *node_name, ...) G_GNUC_NULL_TERMINATED;
-ArvGcNode *		arv_gc_get_node			(ArvGc *genicam, const char *name);
-ArvDevice *		arv_gc_get_device		(ArvGc *genicam);
-void			arv_gc_set_buffer		(ArvGc *genicam, ArvBuffer *buffer);
-ArvBuffer *		arv_gc_get_buffer		(ArvGc *genicam);
+ArvGc * 		arv_gc_new 				(ArvDevice *device, const void *xml, size_t size);
+void 			arv_gc_register_feature_node 		(ArvGc *genicam, ArvGcFeatureNode *node);
+void			arv_gc_set_register_cache_policy	(ArvGc *genicam, ArvRegisterCachePolicy policy);
+ArvRegisterCachePolicy 	arv_gc_get_register_cache_policy 	(ArvGc *genicam);
+void 			arv_gc_set_default_node_data 		(ArvGc *genicam, const char *node_name, ...) G_GNUC_NULL_TERMINATED;
+ArvGcNode *		arv_gc_get_node				(ArvGc *genicam, const char *name);
+ArvDevice *		arv_gc_get_device			(ArvGc *genicam);
+void			arv_gc_set_buffer			(ArvGc *genicam, ArvBuffer *buffer);
+ArvBuffer *		arv_gc_get_buffer			(ArvGc *genicam);
 
 G_END_DECLS
 

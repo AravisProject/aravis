@@ -197,6 +197,7 @@ arv_gc_boolean_set_value (ArvGcBoolean *gc_boolean, gboolean v_boolean, GError *
 		return;
 	}
 
+	arv_gc_feature_node_increment_change_count (ARV_GC_FEATURE_NODE (gc_boolean));
 	arv_gc_property_node_set_int64 (gc_boolean->value, value, &local_error);
 
 	if (local_error != NULL)
