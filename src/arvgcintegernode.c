@@ -239,6 +239,7 @@ arv_gc_integer_node_set_integer_value (ArvGcInteger *gc_integer, gint64 value, G
 	if (value_node == NULL)
 		return;
 
+	arv_gc_feature_node_increment_change_count (ARV_GC_FEATURE_NODE (gc_integer_node));
 	arv_gc_property_node_set_int64 (ARV_GC_PROPERTY_NODE (value_node), value, &local_error);
 	if (local_error != NULL)
 		g_propagate_error (error, local_error);
@@ -333,6 +334,7 @@ arv_gc_integer_node_impose_min (ArvGcInteger *gc_integer, gint64 minimum, GError
 	if (gc_integer_node->minimum == NULL)
 		return;
 
+	arv_gc_feature_node_increment_change_count (ARV_GC_FEATURE_NODE (gc_integer_node));
 	arv_gc_property_node_set_int64 (ARV_GC_PROPERTY_NODE (gc_integer_node->minimum), minimum, &local_error);
 
 	if (local_error != NULL)
@@ -348,6 +350,7 @@ arv_gc_integer_node_impose_max (ArvGcInteger *gc_integer, gint64 maximum, GError
 	if (gc_integer_node->maximum == NULL)
 		return;
 
+	arv_gc_feature_node_increment_change_count (ARV_GC_FEATURE_NODE (gc_integer_node));
 	arv_gc_property_node_set_int64 (ARV_GC_PROPERTY_NODE (gc_integer_node->maximum), maximum, &local_error);
 
 	if (local_error != NULL)

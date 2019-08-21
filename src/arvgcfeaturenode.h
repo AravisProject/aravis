@@ -74,8 +74,8 @@ const char *		arv_gc_feature_node_get_value_as_string		(ArvGcFeatureNode *gc_fea
 
 GType 			arv_gc_feature_node_get_value_type 		(ArvGcFeatureNode *gc_feature_node);
 
-void 			arv_gc_feature_node_inc_modification_count 	(ArvGcFeatureNode *gc_feature_node);
-gint 			arv_gc_feature_node_get_modification_count 	(ArvGcFeatureNode *gc_feature_node);
+void			arv_gc_feature_node_increment_change_count	(ArvGcFeatureNode *gc_feature_node);
+guint64 		arv_gc_feature_node_get_change_count 		(ArvGcFeatureNode *gc_feature_node);
 
 G_END_DECLS
 

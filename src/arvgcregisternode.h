@@ -94,9 +94,12 @@ struct _ArvGcRegisterNode {
 
 	GSList *invalidators;		/* ArvGcPropertyNode list */
 
-	void *cache;
-	size_t cache_size;
-	gboolean is_cache_valid;
+	ArvGcCachable default_cachable;
+
+	gboolean cached;
+	GHashTable *caches;
+	guint n_cache_hits;
+	guint n_cache_misses;
 
 	char v_string[G_ASCII_DTOSTR_BUF_SIZE];
 };

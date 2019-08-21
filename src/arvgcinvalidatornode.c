@@ -27,6 +27,7 @@
 
 #include <arvgcinvalidatornode.h>
 #include <arvgcpropertynode.h>
+#include <arvgcfeaturenode.h>
 #include <arvgc.h>
 #include <arvdomtext.h>
 #include <arvmisc.h>
@@ -44,20 +45,24 @@ arv_gc_invalidator_node_get_node_name (ArvDomNode *node)
 
 /* ArvGcInvalidatorNode implementation */
 
-gint
-arv_gc_invalidator_node_get_modification_count (ArvGcInvalidatorNode *invalidator_node)
+gboolean
+arv_gc_invalidator_has_changed (ArvGcInvalidatorNode *self)
 {
-	g_return_val_if_fail (ARV_IS_GC_INVALIDATOR_NODE (invalidator_node), 0);
+	ArvGcNode *node;
+	guint64 change_count;
 
-	return invalidator_node->modification_count;
-}
+	g_return_val_if_fail (ARV_IS_GC_INVALIDATOR_NODE (self), FALSE);
 
-void
-arv_gc_invalidator_node_set_modification_count (ArvGcInvalidatorNode *invalidator_node, gint modification_count)
-{
-	g_return_if_fail (ARV_IS_GC_INVALIDATOR_NODE (invalidator_node));
+	node = arv_gc_property_node_get_linked_node (ARV_GC_PROPERTY_NODE (self));
+	change_count = arv_gc_feature_node_get_change_count (ARV_GC_FEATURE_NODE (node));
 
-	invalidator_node->modification_count = modification_count;
+	if (change_count != self->change_index) {
+		self->change_index = change_count;
+
+		return TRUE;
+	}
+
+	return FALSE;
 }
 
 ArvGcNode *
@@ -74,7 +79,6 @@ arv_gc_invalidator_node_new (void)
 static void
 arv_gc_invalidator_node_init (ArvGcInvalidatorNode *invalidator_node)
 {
-	invalidator_node->modification_count = 0;
 }
 
 static void
