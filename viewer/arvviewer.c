@@ -196,6 +196,7 @@ typedef struct {
 	gboolean packet_resend;
 	guint packet_timeout;
 	guint frame_retention;
+	ArvRegisterCachePolicy cache_policy;
 
 	gulong video_window_xid;
 } ArvViewer;
@@ -216,7 +217,8 @@ arv_viewer_set_options (ArvViewer *viewer,
 			gboolean auto_socket_buffer,
 			gboolean packet_resend,
 			guint packet_timeout,
-			guint frame_retention)
+			guint frame_retention,
+			ArvRegisterCachePolicy cache_policy)
 {
 	g_return_if_fail (viewer != NULL);
 
@@ -224,6 +226,7 @@ arv_viewer_set_options (ArvViewer *viewer,
 	viewer->packet_resend = packet_resend;
 	viewer->packet_timeout = packet_timeout;
 	viewer->frame_retention = frame_retention;
+	viewer->cache_policy = cache_policy;
 }
 
 static double
@@ -1110,6 +1113,8 @@ start_camera (ArvViewer *viewer, const char *camera_id)
 	if (!ARV_IS_CAMERA (viewer->camera))
 		return FALSE;
 
+	arv_device_set_register_cache_policy (arv_camera_get_device (viewer->camera), viewer->cache_policy);
+
 	viewer->camera_name = g_strdup (camera_id);
 
 	gtk_widget_set_sensitive (viewer->camera_parameters, TRUE);
@@ -1394,6 +1399,7 @@ arv_viewer_init (ArvViewer *viewer)
 	viewer->packet_resend = TRUE;
 	viewer->packet_timeout = 20;
 	viewer->frame_retention = 100;
+	viewer->cache_policy = ARV_REGISTER_CACHE_POLICY_DEFAULT;
 }
 
 static void

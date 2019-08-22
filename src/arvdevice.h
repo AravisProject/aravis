@@ -128,6 +128,8 @@ const char **	arv_device_get_available_enumeration_feature_values_as_strings	(Ar
 
 ArvDeviceStatus arv_device_get_status			(ArvDevice *device);
 
+void		arv_device_set_register_cache_policy	(ArvDevice *device, ArvRegisterCachePolicy policy);
+
 G_END_DECLS
 
 #endif

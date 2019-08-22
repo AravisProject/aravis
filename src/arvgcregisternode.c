@@ -39,6 +39,7 @@
 #include <arvdebug.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 typedef struct {
 	gint64 address;
@@ -395,17 +396,28 @@ _get_msb (ArvGcRegisterNode *gc_register_node, GError **error)
 }
 
 static gboolean
-_get_cached (ArvGcRegisterNode *gc_register_node)
+_get_cached (ArvGcRegisterNode *gc_register_node, ArvRegisterCachePolicy *cache_policy)
 {
+	ArvGc *genicam;
 	GSList *iter;
 	gboolean cached = gc_register_node->cached;
+
+	*cache_policy = ARV_REGISTER_CACHE_POLICY_DISABLE;
+
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_register_node));
+	g_return_val_if_fail (ARV_IS_GC (genicam), FALSE);
+
+	*cache_policy = arv_gc_get_register_cache_policy (genicam);
+
+	if (*cache_policy == ARV_REGISTER_CACHE_POLICY_DISABLE)
+		return FALSE;
 
 	for (iter = gc_register_node->invalidators; iter != NULL; iter = iter->next) {
 		if (arv_gc_invalidator_has_changed (iter->data))
 			cached = FALSE;
 	}
 
-	if (cached)
+	if (cached && *cache_policy == ARV_REGISTER_CACHE_POLICY_DEBUG)
 		gc_register_node->n_cache_hits++;
 	else
 		gc_register_node->n_cache_misses++;
@@ -450,10 +462,11 @@ _read_from_port (ArvGcRegisterNode *gc_register_node, gint64 address, gint64 len
 	GError *local_error = NULL;
 	ArvGcNode *port;
 	ArvGcCachable cachable;
+	ArvRegisterCachePolicy cache_policy;
 	void *cache;
 	gboolean cached;
 
-	cached = _get_cached (gc_register_node);
+	cached = _get_cached (gc_register_node, &cache_policy);
 
 	port = arv_gc_property_node_get_linked_node (gc_register_node->port);
 	if (!ARV_IS_GC_PORT (port)) {
@@ -464,7 +477,7 @@ _read_from_port (ArvGcRegisterNode *gc_register_node, gint64 address, gint64 len
 		return;
 	}
 
-	if (cached) {
+	if (cached && cache_policy == ARV_REGISTER_CACHE_POLICY_DEBUG) {
 		cache = g_malloc (length);
 		memcpy (cache, buffer, length);
 	}
@@ -478,10 +491,10 @@ _read_from_port (ArvGcRegisterNode *gc_register_node, gint64 address, gint64 len
 		return;
 	}
 
-	if (cached) {
+	if (cached && cache_policy == ARV_REGISTER_CACHE_POLICY_DEBUG) {
 		if (memcmp (cache, buffer, length) != 0)
-			arv_warning_genicam ("Incorrect cache value for %s",
-					     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_register_node)));
+			printf ("Incorrect cache value for %s\n",
+				arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_register_node)));
 		g_free (cache);
 	}
 
@@ -623,10 +636,10 @@ arv_gc_register_node_finalize (GObject *object)
 	g_clear_pointer (&gc_register_node->caches, g_hash_table_unref);
 
 	if (gc_register_node->n_cache_hits > 0 || gc_register_node->n_cache_misses > 0)
-		arv_debug_genicam ("Cache hits = %u / %u for %s",
-				   gc_register_node->n_cache_hits,
-				   gc_register_node->n_cache_hits + gc_register_node->n_cache_misses,
-				   arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_register_node)));
+		printf ("Cache hits = %u / %u for %s\n",
+			gc_register_node->n_cache_hits,
+			gc_register_node->n_cache_hits + gc_register_node->n_cache_misses,
+			arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_register_node)));
 
 	parent_class->finalize (object);
 }

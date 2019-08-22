@@ -64,6 +64,8 @@ struct _ArvGcPrivate {
 	GHashTable *nodes;
 	ArvDevice *device;
 	ArvBuffer *buffer;
+
+	ArvRegisterCachePolicy cache_policy;
 };
 
 GQuark
@@ -314,6 +316,22 @@ arv_gc_set_default_node_data (ArvGc *genicam, const char *node_name, ...)
 	va_end (args);
 }
 
+void
+arv_gc_set_register_cache_policy (ArvGc *genicam, ArvRegisterCachePolicy policy)
+{
+	g_return_if_fail (ARV_IS_GC (genicam));
+
+	genicam->priv->cache_policy = policy;
+}
+
+ArvRegisterCachePolicy
+arv_gc_get_register_cache_policy (ArvGc *genicam)
+{
+	g_return_val_if_fail (ARV_IS_GC (genicam), ARV_REGISTER_CACHE_POLICY_DISABLE);
+
+	return genicam->priv->cache_policy;
+}
+
 static void
 _weak_notify_cb (gpointer data, GObject *object)
 {
@@ -378,6 +396,7 @@ arv_gc_init (ArvGc *genicam)
 	genicam->priv = G_TYPE_INSTANCE_GET_PRIVATE (genicam, ARV_TYPE_GC, ArvGcPrivate);
 
 	genicam->priv->nodes = g_hash_table_new_full (g_str_hash, g_str_equal, NULL, g_object_unref);
+	genicam->priv->cache_policy = ARV_REGISTER_CACHE_POLICY_DISABLE;
 }
 
 static void
