@@ -405,6 +405,11 @@ _get_cached (ArvGcRegisterNode *gc_register_node)
 			cached = FALSE;
 	}
 
+	if (cached)
+		gc_register_node->n_cache_hits++;
+	else
+		gc_register_node->n_cache_misses++;
+
 	return cached;
 }
 
@@ -450,35 +455,35 @@ _read_from_port (ArvGcRegisterNode *gc_register_node, gint64 address, gint64 len
 
 	cached = _get_cached (gc_register_node);
 
-	if (cached)
-		gc_register_node->n_cache_hits++;
-	else
-		gc_register_node->n_cache_misses++;
-
 	port = arv_gc_property_node_get_linked_node (gc_register_node->port);
 	if (!ARV_IS_GC_PORT (port)) {
 		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_NODE_NOT_FOUND,
 			     "Port not found for node '%s'",
 			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_register_node)));
+		gc_register_node->cached = FALSE;
 		return;
 	}
 
-	cache = g_malloc (length);
-	memcpy (cache, buffer, length);
+	if (cached) {
+		cache = g_malloc (length);
+		memcpy (cache, buffer, length);
+	}
 
 	arv_gc_port_read (ARV_GC_PORT (port), buffer, address, length, &local_error);
 	if (local_error == NULL)
 		cachable = _get_cachable (gc_register_node, &local_error);
 	if (local_error != NULL) {
 		g_propagate_error (error, local_error);
+		gc_register_node->cached = FALSE;
 		return;
 	}
 
-	if (cached && memcmp (cache, buffer, length) != 0)
-		arv_warning_genicam ("Incorrect cache value for %s",
-				     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_register_node)));
-
-	g_free (cache);
+	if (cached) {
+		if (memcmp (cache, buffer, length) != 0)
+			arv_warning_genicam ("Incorrect cache value for %s",
+					     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_register_node)));
+		g_free (cache);
+	}
 
 	if (cachable != ARV_GC_CACHABLE_NO_CACHE)
 		gc_register_node->cached = TRUE;
@@ -498,6 +503,7 @@ _write_to_port (ArvGcRegisterNode *gc_register_node, gint64 address, gint64 leng
 		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_NODE_NOT_FOUND,
 			     "Port not found for node '%s'",
 			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_register_node)));
+		gc_register_node->cached = FALSE;
 		return;
 	}
 
@@ -508,6 +514,7 @@ _write_to_port (ArvGcRegisterNode *gc_register_node, gint64 address, gint64 leng
 		cachable = _get_cachable (gc_register_node, &local_error);
 	if (local_error != NULL) {
 		g_propagate_error (error, local_error);
+		gc_register_node->cached = FALSE;
 		return;
 	}
 
