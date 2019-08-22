@@ -535,6 +535,7 @@ arv_gc_converter_set_integer_value (ArvGcInteger *gc_integer, gint64 value, GErr
 {
 	ArvGcConverter *gc_converter = ARV_GC_CONVERTER (gc_integer);
 
+	arv_gc_feature_node_increment_change_count (ARV_GC_FEATURE_NODE (gc_integer));
 	arv_evaluator_set_int64_variable (gc_converter->formula_to,
 					  "FROM", value);
 
@@ -643,6 +644,7 @@ arv_gc_converter_set_float_value (ArvGcFloat *gc_float, double value, GError **e
 {
 	ArvGcConverter *gc_converter = ARV_GC_CONVERTER (gc_float);
 
+	arv_gc_feature_node_increment_change_count (ARV_GC_FEATURE_NODE (gc_float));
 	arv_evaluator_set_double_variable (gc_converter->formula_to,
 					  "FROM", value);
 

@@ -163,6 +163,8 @@ arv_gc_port_write (ArvGcPort *port, void *buffer, guint64 address, guint64 lengt
 
 	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (port));
 
+	arv_gc_feature_node_increment_change_count (ARV_GC_FEATURE_NODE (port));
+
 	if (port->priv->chunk_id == NULL) {
 		device = arv_gc_get_device (genicam);
 

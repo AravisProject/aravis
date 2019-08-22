@@ -303,6 +303,7 @@ arv_gc_set_default_node_data (ArvGc *genicam, const char *node_name, ...)
 	if (arv_gc_get_node (genicam, node_name) != NULL)
 		return;
 
+	arv_debug_genicam ("[Gc::set_default_node_data] Add '%s'", node_name);
 
 	va_start (args, node_name);
 	do {

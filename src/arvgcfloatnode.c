@@ -239,6 +239,7 @@ arv_gc_float_node_set_float_value (ArvGcFloat *gc_float, double value, GError **
 	if (value_node == NULL)
 		return;
 
+	arv_gc_feature_node_increment_change_count (ARV_GC_FEATURE_NODE (gc_float));
 	arv_gc_property_node_set_double (ARV_GC_PROPERTY_NODE (value_node), value, &local_error);
 	if (local_error != NULL)
 		g_propagate_error (error, local_error);
