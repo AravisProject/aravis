@@ -55,7 +55,7 @@ static const GOptionEntry arv_viewer_option_entries[] =
 	},
 	{
 		"cache-policy", 			'c', 0, G_OPTION_ARG_STRING,
-		&arv_viewer_option_cache_policy, 	"Register cache policy", "[disable|normal|debug]",
+		&arv_viewer_option_cache_policy, 	"Register cache policy", "[disable|enable|debug]",
 	},
 	{
 		"debug", 				'd', 0, G_OPTION_ARG_STRING,
@@ -101,8 +101,8 @@ main (int argc, char **argv)
 
 	if (g_strcmp0 (arv_viewer_option_cache_policy, "disable") == 0)
 		cache_policy = ARV_REGISTER_CACHE_POLICY_DISABLE;
-	else if (g_strcmp0 (arv_viewer_option_cache_policy, "normal") == 0)
-		cache_policy = ARV_REGISTER_CACHE_POLICY_NORMAL;
+	else if (g_strcmp0 (arv_viewer_option_cache_policy, "enable") == 0)
+		cache_policy = ARV_REGISTER_CACHE_POLICY_ENABLE;
 	else if (g_strcmp0 (arv_viewer_option_cache_policy, "debug") == 0)
 		cache_policy = ARV_REGISTER_CACHE_POLICY_DEBUG;
 	else {
