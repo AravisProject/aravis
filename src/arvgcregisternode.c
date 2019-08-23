@@ -635,11 +635,17 @@ arv_gc_register_node_finalize (GObject *object)
 	g_slist_free (gc_register_node->invalidators);
 	g_clear_pointer (&gc_register_node->caches, g_hash_table_unref);
 
-	if (gc_register_node->n_cache_hits > 0 || gc_register_node->n_cache_misses > 0)
+	if (gc_register_node->n_cache_hits > 0 || gc_register_node->n_cache_misses > 0) {
+		const char *name = arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_register_node));
+
+		if (name == NULL)
+			name = arv_dom_node_get_node_name (ARV_DOM_NODE (gc_register_node));
+
 		printf ("Cache hits = %u / %u for %s\n",
 			gc_register_node->n_cache_hits,
 			gc_register_node->n_cache_hits + gc_register_node->n_cache_misses,
-			arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_register_node)));
+			name);
+	}
 
 	parent_class->finalize (object);
 }
