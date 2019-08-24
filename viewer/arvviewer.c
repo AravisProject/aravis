@@ -152,7 +152,10 @@ typedef struct {
 	GtkWidget *camera_binning_y;
 	GtkWidget *camera_width;
 	GtkWidget *camera_height;
+	GtkWidget *video_box;
 	GtkWidget *video_frame;
+	GtkWidget *fps_label;
+	GtkWidget *image_label;
 	GtkWidget *trigger_combo_box;
 	GtkWidget *frame_rate_entry;
 	GtkWidget *exposure_spin_button;
@@ -180,6 +183,14 @@ typedef struct {
 
 	guint gain_update_event;
 	guint exposure_update_event;
+
+	guint status_bar_update_event;
+	gint64 last_status_bar_update_time_ms;
+	unsigned last_n_images;
+	unsigned last_n_bytes;
+	unsigned n_images;
+	unsigned n_bytes;
+	unsigned n_errors;
 
 	gboolean auto_socket_buffer;
 	gboolean packet_resend;
@@ -328,12 +339,19 @@ new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 	arv_log_viewer ("pop_buffer (%d,%d)", n_input_buffers, n_output_buffers);
 
 	if (arv_buffer_get_status (arv_buffer) == ARV_BUFFER_STATUS_SUCCESS) {
+		size_t size;
+
+		arv_buffer_get_data (arv_buffer, &size);
 		gst_app_src_push_buffer (GST_APP_SRC (viewer->appsrc), arv_to_gst_buffer (arv_buffer, stream));
 
 		g_clear_object( &viewer->last_buffer );
 		viewer->last_buffer = g_object_ref( arv_buffer );
+
+		viewer->n_images++;
+		viewer->n_bytes += size;
 	} else {
 		arv_stream_push_buffer (stream, arv_buffer);
+		viewer->n_errors++;
 	}
 }
 
@@ -608,6 +626,39 @@ stream_cb (void *user_data, ArvStreamCallbackType type, ArvBuffer *buffer)
 	}
 }
 
+static gboolean
+update_status_bar_cb (void *data)
+{
+	ArvViewer *viewer = data;
+	char *text;
+	gint64 time_ms = g_get_real_time () / 1000;
+	gint64 elapsed_time_ms = time_ms - viewer->last_status_bar_update_time_ms;
+	guint n_images = viewer->n_images;
+	guint n_bytes = viewer->n_bytes;
+	guint n_errors = viewer->n_errors;
+
+	if (elapsed_time_ms == 0)
+		return TRUE;
+
+	text = g_strdup_printf ("%.1f fps (%.1f MB/s)",
+				1000.0 * (n_images - viewer->last_n_images) / elapsed_time_ms,
+				((n_bytes - viewer->last_n_bytes) / 1000.0) / elapsed_time_ms);
+	gtk_label_set_label (GTK_LABEL (viewer->fps_label), text);
+	g_free (text);
+
+	text = g_strdup_printf ("%u image%s / %u error%s",
+				n_images, n_images > 0 ? "s" : "",
+				n_errors, n_errors > 0 ? "s" : "");
+	gtk_label_set_label (GTK_LABEL (viewer->image_label), text);
+	g_free (text);
+
+	viewer->last_status_bar_update_time_ms = time_ms;
+	viewer->last_n_images = n_images;
+	viewer->last_n_bytes = n_bytes;
+
+	return TRUE;
+}
+
 static void
 update_camera_region (ArvViewer *viewer)
 {
@@ -756,6 +807,11 @@ stop_video (ArvViewer *viewer)
 		arv_camera_stop_acquisition (viewer->camera);
 
 	gtk_container_foreach (GTK_CONTAINER (viewer->video_frame), remove_widget, viewer->video_frame);
+
+	if (viewer->status_bar_update_event > 0) {
+		g_source_remove (viewer->status_bar_update_event);
+		viewer->status_bar_update_event = 0;
+	}
 }
 
 static GstBusSyncReply
@@ -986,6 +1042,14 @@ start_video (ArvViewer *viewer)
 
 	gst_element_set_state (viewer->pipeline, GST_STATE_PLAYING);
 
+	viewer->last_status_bar_update_time_ms = g_get_real_time () / 1000;
+	viewer->last_n_images = 0;
+	viewer->last_n_bytes = 0;
+	viewer->n_images = 0;
+	viewer->n_bytes = 0;
+	viewer->n_errors = 0;
+	viewer->status_bar_update_event = g_timeout_add_seconds (1, update_status_bar_cb, viewer);
+
 	g_signal_connect (viewer->stream, "new-buffer", G_CALLBACK (new_buffer_cb), viewer);
 
 	return TRUE;
@@ -1119,7 +1183,7 @@ select_mode (ArvViewer *viewer, ArvViewerMode mode)
 						    width, height,
 						    x, y,
 						    arv_camera_get_pixel_format_as_string (viewer->camera));
-			gtk_stack_set_visible_child (GTK_STACK (viewer->main_stack), viewer->video_frame);
+			gtk_stack_set_visible_child (GTK_STACK (viewer->main_stack), viewer->video_box);
 			gtk_header_bar_set_title (GTK_HEADER_BAR (viewer->main_headerbar), viewer->camera_name);
 			gtk_header_bar_set_subtitle (GTK_HEADER_BAR (viewer->main_headerbar), subtitle);
 			g_free (subtitle);
@@ -1194,7 +1258,10 @@ activate (GApplication *application)
 	viewer->camera_binning_y = GTK_WIDGET (gtk_builder_get_object (builder, "camera_binning_y"));
 	viewer->camera_width = GTK_WIDGET (gtk_builder_get_object (builder, "camera_width"));
 	viewer->camera_height = GTK_WIDGET (gtk_builder_get_object (builder, "camera_height"));
+	viewer->video_box = GTK_WIDGET (gtk_builder_get_object (builder, "video_box"));
 	viewer->video_frame = GTK_WIDGET (gtk_builder_get_object (builder, "video_frame"));
+	viewer->fps_label = GTK_WIDGET (gtk_builder_get_object (builder, "fps_label"));
+	viewer->image_label = GTK_WIDGET (gtk_builder_get_object (builder, "image_label"));
 	viewer->trigger_combo_box = GTK_WIDGET (gtk_builder_get_object (builder, "trigger_combobox"));
 	viewer->frame_rate_entry = GTK_WIDGET (gtk_builder_get_object (builder, "frame_rate_entry"));
 	viewer->exposure_spin_button = GTK_WIDGET (gtk_builder_get_object (builder, "exposure_spinbutton"));
