@@ -99,7 +99,8 @@ main (int argc, char **argv)
 
 	arv_debug_enable (arv_viewer_option_debug_domains);
 
-	if (g_strcmp0 (arv_viewer_option_cache_policy, "disable") == 0)
+	if (arv_viewer_option_cache_policy == NULL ||
+	    g_strcmp0 (arv_viewer_option_cache_policy, "disable") == 0)
 		cache_policy = ARV_REGISTER_CACHE_POLICY_DISABLE;
 	else if (g_strcmp0 (arv_viewer_option_cache_policy, "enable") == 0)
 		cache_policy = ARV_REGISTER_CACHE_POLICY_ENABLE;
