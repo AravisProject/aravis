@@ -233,21 +233,37 @@ typedef enum {
 } ArvGvcpError;
 
 /**
- * ArvGvcpPacketFlags:
- * @ARV_GVCP_PACKET_FLAGS_NONE: no flag defined
- * @ARV_GVCP_PACKET_FLAGS_ACK_REQUIRED: acknowledge required
- * @ARV_GVCP_PACKET_FLAGS_64BIT_ID: extended id
- * @ARV_GVCP_PACKET_FLAGS_ALLOW_BROADCAST_ACK: allow broadcast acknowledge
- * @ARV_GVCP_PACKET_FLAGS_SCHEDULED_ACTION: scheduled action command
+ * ArvGvcpCmdPacketFlags:
+ * @ARV_GVCP_CMD_PACKET_FLAGS_NONE: no flag defined
+ * @ARV_GVCP_CMD_PACKET_FLAGS_ACK_REQUIRED: acknowledge required
  */
 
 typedef enum {
-	ARV_GVCP_PACKET_FLAGS_NONE =			0x00,
-	ARV_GVCP_PACKET_FLAGS_ACK_REQUIRED =		0x01,
-	ARV_GVCP_PACKET_FLAGS_64BIT_ID =		0x08,
-	ARV_GVCP_PACKET_FLAGS_ALLOW_BROADCAST_ACK = 	0x10,
-	ARV_GVCP_PACKET_FLAGS_SCHEDULED_ACTION =	0x80
-} ArvGvcpPacketFlags;
+	ARV_GVCP_CMD_PACKET_FLAGS_NONE =			0x00,
+	ARV_GVCP_CMD_PACKET_FLAGS_ACK_REQUIRED =		0x01,
+} ArvGvcpCmdPacketFlags;
+
+/**
+ * ArvGvcpEventPacketFlags:
+ * @ARV_GVCP_EVENT_PACKET_FLAGS_NONE: no flag defined
+ * @ARV_GVCP_EVENT_PACKET_FLAGS_64BIT_ID: extended id
+ */
+
+typedef enum {
+	ARV_GVCP_EVENT_PACKET_FLAGS_NONE =			0x00,
+	ARV_GVCP_EVENT_PACKET_FLAGS_64BIT_ID =			0x10,
+} ArvGvcpEventPacketFlags;
+
+/**
+ * ArvGvcpDiscoveryPacketFlags:
+ * @ARV_GVCP_DISCOVERY_PACKET_FLAGS_NONE: no flag defined
+ * @ARV_GVCP_DISCOVERY_PACKET_FLAGS_ALLOW_BROADCAST_ACK: allow broadcast acknowledge
+ */
+
+typedef enum {
+	ARV_GVCP_DISCOVERY_PACKET_FLAGS_NONE =			0x00,
+	ARV_GVCP_DISCOVERY_PACKET_FLAGS_ALLOW_BROADCAST_ACK = 	0x10,
+} ArvGvcpDiscoveryPacketFlags;
 
 /**
  * ArvGvcpCommand:
@@ -346,9 +362,9 @@ ArvGvcpPacket * 	arv_gvcp_packet_new_packet_resend_cmd 	(guint32 frame_id,
 								 guint16 packet_id, size_t *packet_size);
 
 const char *		arv_gvcp_packet_type_to_string 		(ArvGvcpPacketType value);
-char *	 		arv_gvcp_packet_flags_to_string_new 	(ArvGvcpPacketFlags value);
-const char * 		arv_gvcp_error_to_string 		(ArvGvcpError value);
 const char * 		arv_gvcp_command_to_string 		(ArvGvcpCommand value);
+char *	 		arv_gvcp_packet_flags_to_string_new 	(ArvGvcpCommand command, guint8 flags);
+const char * 		arv_gvcp_error_to_string 		(ArvGvcpError value);
 
 char * 			arv_gvcp_packet_to_string 		(const ArvGvcpPacket *packet);
 void 			arv_gvcp_packet_debug 			(const ArvGvcpPacket *packet, ArvDebugLevel level);
