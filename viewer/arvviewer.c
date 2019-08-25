@@ -812,6 +812,16 @@ stop_video (ArvViewer *viewer)
 		g_source_remove (viewer->status_bar_update_event);
 		viewer->status_bar_update_event = 0;
 	}
+
+	if (viewer->exposure_update_event > 0) {
+		g_source_remove (viewer->exposure_update_event);
+		viewer->exposure_update_event = 0;
+	}
+
+	if (viewer->gain_update_event > 0) {
+		g_source_remove (viewer->gain_update_event);
+		viewer->gain_update_event = 0;
+	}
 }
 
 static GstBusSyncReply
