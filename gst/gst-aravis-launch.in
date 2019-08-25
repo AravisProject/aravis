@@ -1,0 +1,4 @@
+#!/bin/sh
+
+gst-launch-1.0 --gst-plugin-load=@GST_PLUGIN_FILENAME@ -v $*
+

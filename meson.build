@@ -66,6 +66,8 @@ if get_option ('gst-plugin')
 
 	gst_plugin_dependencies = [aravis_dependencies, gstreamer_base_dep]
 
+	gst_plugin_dir = join_paths (get_option ('libdir'), 'gstreamer-1.0')
+
 	subdir ('gst')
 endif
 
