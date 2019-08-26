@@ -19,7 +19,7 @@ aravis_icon_dir = join_paths (aravis_data_dir, 'icons', 'hicolor')
 cc = meson.get_compiler ('c')
 cxx = meson.get_compiler ('cpp')
 
-glib_dep = dependency ('glib-2.0', version: '>=2.32', required: true)
+glib_dep = dependency ('glib-2.0', version: '>=2.34', required: true)
 gobject_dep = dependency ('gobject-2.0', required: true)
 gio_dep = dependency ('gio-2.0', required: true)
 xml2_dep = dependency ('libxml-2.0', required: true)
