@@ -84,7 +84,7 @@ arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, ArvUvEndpointType endpoint_
 	g_return_val_if_fail (size > 0, FALSE);
 
 	if (uv_device->priv->disconnected) {
-		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_STATUS_NOT_CONNECTED,
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_STATUS_NOT_CONNECTED,
 			     "Not connected");
 		return FALSE;
 	}
@@ -97,7 +97,7 @@ arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, ArvUvEndpointType endpoint_
 	success = result >= 0;
 
 	if (!success)
-		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_STATUS_TRANSFER_ERROR,
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_STATUS_TRANSFER_ERROR,
 			     "%s", libusb_error_name (result));
 
 	if (transferred_size != NULL)
@@ -226,7 +226,7 @@ _read_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buffe
 
 	if (!success) {
 		if (error != NULL && *error == NULL)
-			*error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_STATUS_TIMEOUT,
+			*error = g_error_new (ARV_DEVICE_ERROR, ARV_STATUS_TIMEOUT,
 					      "[ArvDevice::read_memory] Timeout");
 	}
 
@@ -358,7 +358,7 @@ _write_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buff
 
 	if (!success) {
 		if (error != NULL && *error == NULL)
-			*error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_STATUS_TIMEOUT,
+			*error = g_error_new (ARV_DEVICE_ERROR, ARV_STATUS_TIMEOUT,
 					      "[ArvDevice::write_memory] Timeout");
 	}
 

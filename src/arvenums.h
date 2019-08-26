@@ -54,6 +54,29 @@ typedef enum {
 } ArvGcSignedness;
 
 /**
+ * ArvStatus:
+ * @ARV_STATUS_UNKNOWN: unknown status
+ * @ARV_STATUS_SUCCESS: no error has occured
+ * @ARV_STATUS_TIMEOUT: action failed on a timeout
+ * @ARV_STATUS_WRITE_ERROR: write on a read only node
+ * @ARV_STATUS_TRANSFER_ERROR: error during data transfer
+ * @ARV_STATUS_PROTOCOL_ERROR: protocol specific error
+ * @ARV_STATUS_NOT_CONNECTED: device not connected
+ *
+ * Since: 0.8.0
+ */
+
+typedef enum {
+	ARV_STATUS_UNKNOWN = -1,
+	ARV_STATUS_SUCCESS =  0,
+	ARV_STATUS_TIMEOUT,
+	ARV_STATUS_WRITE_ERROR,
+	ARV_STATUS_TRANSFER_ERROR,
+	ARV_STATUS_PROTOCOL_ERROR,
+	ARV_STATUS_NOT_CONNECTED
+} ArvStatus;
+
+/**
  * ArvAuto:
  * @ARV_AUTO_OFF: manual setting
  * @ARV_AUTO_ONCE: automatic setting done once, then returns to manual

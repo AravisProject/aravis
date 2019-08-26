@@ -33,27 +33,6 @@
 
 G_BEGIN_DECLS
 
-/**
- * ArvDeviceStatus:
- * @ARV_DEVICE_STATUS_UNKNOWN: unknown status
- * @ARV_DEVICE_STATUS_SUCCESS: no error has occured
- * @ARV_DEVICE_STATUS_TIMEOUT: action failed on a timeout
- * @ARV_DEVICE_STATUS_WRITE_ERROR: write on a read only node
- * @ARV_DEVICE_STATUS_TRANSFER_ERROR: error during data transfer
- * @ARV_DEVICE_STATUS_PROTOCOL_ERROR: protocol specific error
- * @ARV_DEVICE_STATUS_NOT_CONNECTED: device not connected
- */
-
-typedef enum {
-	ARV_DEVICE_STATUS_UNKNOWN = -1,
-	ARV_DEVICE_STATUS_SUCCESS =  0,
-	ARV_DEVICE_STATUS_TIMEOUT,
-	ARV_DEVICE_STATUS_WRITE_ERROR,
-	ARV_DEVICE_STATUS_TRANSFER_ERROR,
-	ARV_DEVICE_STATUS_PROTOCOL_ERROR,
-	ARV_DEVICE_STATUS_NOT_CONNECTED
-} ArvDeviceStatus;
-
 #define ARV_TYPE_DEVICE             (arv_device_get_type ())
 #define ARV_DEVICE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_DEVICE, ArvDevice))
 #define ARV_DEVICE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_DEVICE, ArvDeviceClass))
@@ -126,7 +105,7 @@ void 		arv_device_get_float_feature_bounds 	(ArvDevice *device, const char *feat
 gint64 *	arv_device_get_available_enumeration_feature_values		(ArvDevice *device, const char *feature, guint *n_values);
 const char **	arv_device_get_available_enumeration_feature_values_as_strings	(ArvDevice *device, const char *feature, guint *n_values);
 
-ArvDeviceStatus arv_device_get_status			(ArvDevice *device);
+ArvStatus 	arv_device_get_status			(ArvDevice *device);
 
 void		arv_device_set_register_cache_policy	(ArvDevice *device, ArvRegisterCachePolicy policy);
 

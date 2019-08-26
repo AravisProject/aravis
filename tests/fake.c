@@ -127,7 +127,7 @@ static void
 fake_device_test (void)
 {
 	ArvDevice *device;
-	ArvDeviceStatus status;
+	ArvStatus status;
 	int int_value;
 	double dbl_value;
 	double boolean_value;
@@ -221,7 +221,7 @@ fake_device_test (void)
 	g_assert_cmpstr (string_value, ==, "String");
 
 	status = arv_device_get_status (device);
-	g_assert_cmpint (status, ==, ARV_DEVICE_STATUS_SUCCESS);
+	g_assert_cmpint (status, ==, ARV_STATUS_SUCCESS);
 
 	g_object_unref (device);
 }
@@ -230,7 +230,7 @@ static void
 fake_device_error_test (void)
 {
 	ArvDevice *device;
-	ArvDeviceStatus status;
+	ArvStatus status;
 	int int_value;
 	double boolean_value;
 
@@ -244,7 +244,7 @@ fake_device_error_test (void)
 	g_assert_cmpint (boolean_value, ==, 0);
 
 	status = arv_device_get_status (device);
-	g_assert_cmpint (status, ==, ARV_DEVICE_STATUS_SUCCESS);
+	g_assert_cmpint (status, ==, ARV_STATUS_SUCCESS);
 
 	g_object_unref (device);
 }

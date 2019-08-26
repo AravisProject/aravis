@@ -50,7 +50,7 @@ static guint arv_device_signals[ARV_DEVICE_SIGNAL_LAST] = {0};
 static GObjectClass *parent_class = NULL;
 
 struct  _ArvDevicePrivate {
-	ArvDeviceStatus status;
+	ArvStatus status;
 	char *status_message;
 };
 
@@ -272,12 +272,12 @@ arv_device_get_feature (ArvDevice *device, const char *feature)
 }
 
 static void
-_set_status (ArvDevice *device, ArvDeviceStatus status, const char *message)
+_set_status (ArvDevice *device, ArvStatus status, const char *message)
 {
-	if (status == ARV_DEVICE_STATUS_SUCCESS)
+	if (status == ARV_STATUS_SUCCESS)
 		return;
 
-	if (device->priv->status != ARV_DEVICE_STATUS_SUCCESS) {
+	if (device->priv->status != ARV_STATUS_SUCCESS) {
 		arv_warning_device ("[ArvDevice::set_status] '%s'", message);
 	} else {
 		arv_warning_device ("[ArvDevice::set_status] Status changed ('%s')", message);
@@ -734,17 +734,17 @@ arv_device_get_available_enumeration_feature_values_as_strings (ArvDevice *devic
  * Since: 0.2.0
  */
 
-ArvDeviceStatus
+ArvStatus
 arv_device_get_status (ArvDevice *device)
 {
-	ArvDeviceStatus status;
+	ArvStatus status;
 
-	g_return_val_if_fail (ARV_IS_DEVICE (device), ARV_DEVICE_STATUS_UNKNOWN);
+	g_return_val_if_fail (ARV_IS_DEVICE (device), ARV_STATUS_UNKNOWN);
 
 	status = device->priv->status;
 
 	g_free (device->priv->status_message);
-	device->priv->status = ARV_DEVICE_STATUS_SUCCESS;
+	device->priv->status = ARV_STATUS_SUCCESS;
 	device->priv->status_message = NULL;
 
 	return status;
@@ -774,7 +774,7 @@ arv_device_init (ArvDevice *device)
 {
 	device->priv = G_TYPE_INSTANCE_GET_PRIVATE (device, ARV_TYPE_DEVICE, ArvDevicePrivate);
 
-	device->priv->status = ARV_DEVICE_STATUS_SUCCESS;
+	device->priv->status = ARV_STATUS_SUCCESS;
 	device->priv->status_message = NULL;
 }
 
