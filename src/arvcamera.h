@@ -60,7 +60,7 @@ ArvDevice *	arv_camera_get_device		(ArvCamera *camera);
 
 ArvStream *	arv_camera_create_stream	(ArvCamera *camera, ArvStreamCallback callback, void *user_data);
 
-/* Device control */
+/* Device informations */
 
 const char *	arv_camera_get_vendor_name	(ArvCamera *camera);
 const char *	arv_camera_get_model_name	(ArvCamera *camera);
@@ -141,6 +141,31 @@ ArvAuto		arv_camera_get_gain_auto	(ArvCamera *camera);
 /* Transport layer control */
 
 guint		arv_camera_get_payload		(ArvCamera *camera);
+
+/* Generic feature control */
+
+void 		arv_camera_execute_command 		(ArvCamera *camera, const char *feature);
+
+void		arv_camera_set_boolean			(ArvCamera *camera, const char *feature, gboolean value);
+gboolean	arv_camera_get_boolean			(ArvCamera *camera, const char *feature);
+
+void		arv_camera_set_string			(ArvCamera *camera, const char *feature, const char *value);
+const char *	arv_camera_get_string			(ArvCamera *camera, const char *feature);
+
+void		arv_camera_set_integer			(ArvCamera *camera, const char *feature, gint64 value);
+gint64		arv_camera_get_integer			(ArvCamera *camera, const char *feature);
+void 		arv_camera_get_integer_bounds 		(ArvCamera *camera, const char *feature,
+							 gint64 *min, gint64 *max);
+
+void		arv_camera_set_float			(ArvCamera *camera, const char *feature, double value);
+double		arv_camera_get_float			(ArvCamera *camera, const char *feature);
+void 		arv_camera_get_float_bounds 		(ArvCamera *camera, const char *feature,
+							 double *min, double *max);
+
+gint64 *	arv_camera_get_available_enumerations			(ArvCamera *camera, const char *feature, guint *n_values);
+const char **	arv_camera_get_available_enumerations_as_strings	(ArvCamera *camera, const char *feature, guint *n_values);
+
+ArvStatus 	arv_camera_get_status			(ArvCamera *camera, GError **error);
 
 /* GigEVision specific API */
 

@@ -30,6 +30,7 @@
  */
 
 #include <arvdevice.h>
+#include <arvdeviceprivate.h>
 #include <arvgc.h>
 #include <arvgccommand.h>
 #include <arvgcinteger.h>
@@ -50,8 +51,7 @@ static guint arv_device_signals[ARV_DEVICE_SIGNAL_LAST] = {0};
 static GObjectClass *parent_class = NULL;
 
 struct  _ArvDevicePrivate {
-	ArvStatus status;
-	char *status_message;
+	int dummy;
 };
 
 GQuark
@@ -271,54 +271,50 @@ arv_device_get_feature (ArvDevice *device, const char *feature)
 	return arv_gc_get_node (genicam, feature);
 }
 
-static void
-_set_status (ArvDevice *device, ArvStatus status, const char *message)
+static void *
+_get_feature (ArvDevice *device, GType node_type, const char *feature, GError **error)
 {
-	if (status == ARV_STATUS_SUCCESS)
-		return;
+	void *node;
 
-	if (device->priv->status != ARV_STATUS_SUCCESS) {
-		arv_warning_device ("[ArvDevice::set_status] '%s'", message);
-	} else {
-		arv_warning_device ("[ArvDevice::set_status] Status changed ('%s')", message);
+	g_return_val_if_fail (ARV_IS_DEVICE (device), NULL);
+	g_return_val_if_fail (feature != NULL, NULL);
 
-		g_free (device->priv->status_message);
-		device->priv->status = status;
-		device->priv->status_message = g_strdup (message);
+	node = arv_device_get_feature (device, feature);
+
+	if (node == NULL) {
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_FEATURE_NOT_FOUND,
+			     "node '%s' not found", feature);
+		return NULL;
 	}
+
+	if (!(G_TYPE_CHECK_INSTANCE_TYPE ((node), node_type))) {
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_WRONG_FEATURE,
+			     "node '%s' [%s]  is not a %s", feature, G_OBJECT_TYPE_NAME (node), g_type_name (node_type));
+		return NULL;
+	}
+
+	return node;
 }
 
 /**
  * arv_device_execute_command:
  * @device: a #ArvDevice
  * @feature: feature name
+ * @error: a #GError placeholder
  *
- * Execute a genicam command. If an error occur, this function change the device status.
+ * Execute a genicam command.
  *
- * Since: 0.2.0
+ * Since: 0.8.0
  */
 
 void
-arv_device_execute_command (ArvDevice *device, const char *feature)
+arv_device_execute_command (ArvDevice *device, const char *feature, GError **error)
 {
 	ArvGcNode *node;
 
-	g_return_if_fail (ARV_IS_DEVICE (device));
-
-	node = arv_device_get_feature (device, feature);
-
-	if (ARV_IS_GC_COMMAND (node)) {
-		GError *error = NULL;
-
-		arv_gc_command_execute (ARV_GC_COMMAND (node), &error);
-
-		if (error != NULL) {
-			_set_status (device, error->code, error->message);
-			g_error_free (error);
-		}
-	} else
-		arv_warning_device ("[ArvDevice::execute_command] Node '%s' is not a command",
-				    feature);
+	node = _get_feature (device, ARV_TYPE_GC_COMMAND, feature, error);
+	if (node != NULL)
+		arv_gc_command_execute (ARV_GC_COMMAND (node), error);
 }
 
 /**
@@ -326,168 +322,134 @@ arv_device_execute_command (ArvDevice *device, const char *feature)
  * @device: a #ArvDevice
  * @feature: feature name
  * @value: feature value
+ * @error: a #GError placeholder
  *
  * Set the value of a boolean feature.
- * If this operation fails, the device status returned by arv_device_get_status() will be changed.
  *
- * Since: 0.6.0
+ * Since: 0.8.0
  */
 
 void
-arv_device_set_boolean_feature_value (ArvDevice *device, const char *feature, gboolean value)
+arv_device_set_boolean_feature_value (ArvDevice *device, const char *feature, gboolean value, GError **error)
 {
 	ArvGcNode *node;
-	GError *error = NULL;
 
-	g_return_if_fail (ARV_IS_DEVICE (device));
-
-	node = arv_device_get_feature (device, feature);
-
-	if (ARV_IS_GC_BOOLEAN (node))
-		arv_gc_boolean_set_value (ARV_GC_BOOLEAN (node), value, &error);
-	else
-		arv_warning_device ("[ArvDevice::set_boolean_feature_value] Node '%s' is not a boolean",
-				    feature);
-
-	if (error != NULL) {
-		_set_status (device, error->code, error->message);
-		g_error_free (error);
-	}
+	node = _get_feature (device, ARV_TYPE_GC_BOOLEAN, feature, error);
+	if (node != NULL)
+		arv_gc_boolean_set_value (ARV_GC_BOOLEAN (node), value, error);
 }
 
 /**
  * arv_device_get_boolean_feature_value:
  * @device: a #ArvDevice
  * @feature: feature name
+ * @error: a #GError placeholder
  *
- * Returns: the feature value.
+ * Returns: the feature value, %FALSE on error.
  *
- * If this operation fails, the device status returned by arv_device_get_status() will be changed.
- *
- * Since: 0.6.0
+ * Since: 0.8.0
  */
 
 gboolean
-arv_device_get_boolean_feature_value (ArvDevice *device, const char *feature)
+arv_device_get_boolean_feature_value (ArvDevice *device, const char *feature, GError **error)
 {
 	ArvGcNode *node;
-	GError *error = NULL;
-	gboolean value = 0;
 
-	g_return_val_if_fail (ARV_IS_DEVICE (device), 0);
+	node = _get_feature (device, ARV_TYPE_GC_BOOLEAN, feature, error);
+	if (node != NULL)
+		return arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node), error);
 
-	node = arv_device_get_feature (device, feature);
-
-	if (ARV_IS_GC_BOOLEAN (node))
-		value = arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node), &error);
-	else
-		arv_warning_device ("[ArvDevice::get_boolean_feature_value] Node '%s' is not an boolean",
-				    feature);
-
-	if (error != NULL) {
-		_set_status (device, error->code, error->message);
-		g_error_free (error);
-		return 0;
-	}
-
-	return value;
+	return FALSE;
 }
+
+/**
+ * arv_device_set_string_feature_value:
+ * @device: a #ArvDevice
+ * @feature: feature name
+ * @value: new feature value
+ * @error: a #GError placeholder
+ *
+ * Set the string feature value.
+ *
+ * Since: 0.8.0
+ */
 
 void
-arv_device_set_string_feature_value (ArvDevice *device, const char *feature, const char *value)
+arv_device_set_string_feature_value (ArvDevice *device, const char *feature, const char *value, GError **error)
 {
 	ArvGcNode *node;
-	GError *error = NULL;
 
-	g_return_if_fail (ARV_IS_DEVICE (device));
-
-	node = arv_device_get_feature (device, feature);
-
-	if (ARV_IS_GC_STRING (node))
-		arv_gc_string_set_value (ARV_GC_STRING (node), value, &error);
-	else
-		arv_warning_device ("[ArvDevice::set_string_feature_value] Node '%s' is not a string",
-				    feature);
-
-	if (error != NULL) {
-		_set_status (device, error->code, error->message);
-		g_error_free (error);
-	}
+	node = _get_feature (device, ARV_TYPE_GC_STRING, feature, error);
+	if (node != NULL)
+		arv_gc_string_set_value (ARV_GC_STRING (node), value, error);
 }
+
+/**
+ * arv_device_get_string_feature_value:
+ * @device: a #ArvDevice
+ * @feature: feature name
+ * @error: a #GError placeholder
+ *
+ * Returns: the string feature value, %NULL on error.
+ *
+ * Since: 0.8.0
+ */
 
 const char *
-arv_device_get_string_feature_value (ArvDevice *device, const char *feature)
+arv_device_get_string_feature_value (ArvDevice *device, const char *feature, GError  **error)
 {
 	ArvGcNode *node;
-	GError *error = NULL;
-	const char *string = NULL;
 
-	g_return_val_if_fail (ARV_IS_DEVICE (device), NULL);
+	node = _get_feature (device, ARV_TYPE_GC_STRING, feature, error);
+	if (node != NULL)
+		return arv_gc_string_get_value (ARV_GC_STRING (node), error);
 
-	node = arv_device_get_feature (device, feature);
-
-	if (ARV_IS_GC_STRING (node))
-		string = arv_gc_string_get_value (ARV_GC_STRING (node), &error);
-	else {
-		arv_warning_device ("[ArvDevice::get_string_feature_value] Node '%s' is not a string",
-				    feature);
-	}
-
-	if (error != NULL) {
-		_set_status (device, error->code, error->message);
-		g_error_free (error);
-		return NULL;
-	}
-
-	return string;
+	return NULL;
 }
+
+/**
+ * arv_device_set_integer_feature_value:
+ * @device: a #ArvDevice
+ * @feature: feature name
+ * @value: new feature value
+ * @error: a #GError placeholder
+ *
+ * Set the integer feature value.
+ *
+ * Since: 0.8.0
+ */
 
 void
-arv_device_set_integer_feature_value (ArvDevice *device, const char *feature, gint64 value)
+arv_device_set_integer_feature_value (ArvDevice *device, const char *feature, gint64 value, GError **error)
 {
 	ArvGcNode *node;
-	GError *error = NULL;
 
-	g_return_if_fail (ARV_IS_DEVICE (device));
-
-	node = arv_device_get_feature (device, feature);
-
-	if (ARV_IS_GC_INTEGER (node))
-		arv_gc_integer_set_value (ARV_GC_INTEGER (node), value, &error);
-	else
-		arv_warning_device ("[ArvDevice::set_integer_feature_value] Node '%s' is not an integer",
-				    feature);
-
-	if (error != NULL) {
-		_set_status (device, error->code, error->message);
-		g_error_free (error);
-	}
+	node = _get_feature (device, ARV_TYPE_GC_INTEGER, feature, error);
+	if (node != NULL)
+		arv_gc_integer_set_value (ARV_GC_INTEGER (node), value, error);
 }
 
+/**
+ * arv_device_get_integer_feature_value:
+ * @device: a #ArvDevice
+ * @feature: feature name
+ * @error: a #GError placeholder
+ *
+ * Returns: the integer feature value, 0 on error.
+ *
+ * Since: 0.8.0
+ */
+
 gint64
-arv_device_get_integer_feature_value (ArvDevice *device, const char *feature)
+arv_device_get_integer_feature_value (ArvDevice *device, const char *feature, GError **error)
 {
 	ArvGcNode *node;
-	GError *error = NULL;
-	gint64 value = 0;
 
-	g_return_val_if_fail (ARV_IS_DEVICE (device), 0);
+	node = _get_feature (device, ARV_TYPE_GC_INTEGER, feature, error);
+	if (node != NULL)
+		return arv_gc_integer_get_value (ARV_GC_INTEGER (node), error);
 
-	node = arv_device_get_feature (device, feature);
-
-	if (ARV_IS_GC_INTEGER (node))
-		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), &error);
-	else
-		arv_warning_device ("[ArvDevice::get_integer_feature_value] Node '%s' is not an integer",
-				    feature);
-
-	if (error != NULL) {
-		_set_status (device, error->code, error->message);
-		g_error_free (error);
-		return 0;
-	}
-
-	return value;
+	return 0;
 }
 
 /**
@@ -496,102 +458,98 @@ arv_device_get_integer_feature_value (ArvDevice *device, const char *feature)
  * @feature: feature name
  * @min: (out): minimum feature value
  * @max: (out): maximum feature value
+ * @error: a #GError placeholder
  *
  * Retrieves feature bounds.
+ *
+ * Since: 0.8.0
  */
 
 void
-arv_device_get_integer_feature_bounds (ArvDevice *device, const char *feature, gint64 *min, gint64 *max)
+arv_device_get_integer_feature_bounds (ArvDevice *device, const char *feature, gint64 *min, gint64 *max, GError **error)
 {
 	ArvGcNode *node;
-	GError *error = NULL;
 
 	if (min != NULL)
 		*min = -G_MAXINT64;
 	if (max != NULL)
 		*max = G_MAXINT64;
 
-	g_return_if_fail (ARV_IS_DEVICE (device));
+	node = _get_feature (device, ARV_TYPE_GC_INTEGER, feature, error);
+	if (node != NULL) {
+		GError *local_error = NULL;
 
-	node = arv_device_get_feature (device, feature);
+		if (min != NULL) {
+			gint64 minimum;
 
-	if (ARV_IS_GC_INTEGER (node)) {
-		gint64 minimum;
-		gint64 maximum;
+			minimum = arv_gc_integer_get_min (ARV_GC_INTEGER (node), &local_error);
 
-		minimum = arv_gc_integer_get_min (ARV_GC_INTEGER (node), &error);
+			if (local_error != NULL) {
+				g_propagate_error (error, local_error);
+				return;
+			}
 
-		if (error != NULL) {
-			_set_status (device, error->code, error->message);
-			g_error_free (error);
-
-			return;
-		}
-
-		maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node), &error);
-
-		if (error != NULL) {
-			_set_status (device, error->code, error->message);
-			g_error_free (error);
-
-			return;
-		}
-
-		if (min != NULL)
 			*min = minimum;
-		if (max != NULL)
+		}
+
+		if (max != NULL) {
+			gint64 maximum;
+
+			maximum = arv_gc_integer_get_max (ARV_GC_INTEGER (node), &local_error);
+
+			if (local_error != NULL) {
+				g_propagate_error (error, local_error);
+				return;
+			}
+
 			*max = maximum;
-	} else
-		arv_warning_device ("[ArvDevice::get_integer_feature_bounds] Node '%s' is not an integer",
-				    feature);
+		}
+	}
 }
+
+/**
+ * arv_device_set_float_feature_value:
+ * @device: a #ArvDevice
+ * @feature: feature name
+ * @value: new feature value
+ * @error: a #GError placeholder
+ *
+ * Set the float feature value.
+ *
+ * Since: 0.8.0
+ */
 
 void
-arv_device_set_float_feature_value (ArvDevice *device, const char *feature, double value)
+arv_device_set_float_feature_value (ArvDevice *device, const char *feature, double value, GError **error)
 {
 	ArvGcNode *node;
-	GError *error = NULL;
 
-	g_return_if_fail (ARV_IS_DEVICE (device));
-
-	node = arv_device_get_feature (device, feature);
-
-	if (ARV_IS_GC_FLOAT (node))
-		arv_gc_float_set_value (ARV_GC_FLOAT (node), value, &error);
-	else
-		arv_warning_device ("[ArvDevice::set_float_feature_value] Node '%s' is not a float",
-				    feature);
-
-	if (error != NULL) {
-		_set_status (device, error->code, error->message);
-		g_error_free (error);
-	}
+	node = _get_feature (device, ARV_TYPE_GC_FLOAT, feature, error);
+	if (node != NULL)
+		arv_gc_float_set_value (ARV_GC_FLOAT (node), value, error);
 }
 
+/**
+ * arv_device_get_float_feature_value:
+ * @device: a #ArvDevice
+ * @feature: feature name
+ * @error: a #GError placeholder
+ *
+ * Returns: the float feature value, 0.0 on error.
+ *
+ * Since: 0.8.0
+ */
+
 double
-arv_device_get_float_feature_value (ArvDevice *device, const char *feature)
+arv_device_get_float_feature_value (ArvDevice *device, const char *feature, GError **error)
 {
 	ArvGcNode *node;
-	GError *error = NULL;
-	double value = 0.0;
 
-	g_return_val_if_fail (ARV_IS_DEVICE (device), 0.0);
+	node = _get_feature (device, ARV_TYPE_GC_FLOAT, feature, error);
+	if (node != NULL)
+		return  arv_gc_float_get_value (ARV_GC_FLOAT (node), error);
 
-	node = arv_device_get_feature (device, feature);
-
-	if (ARV_IS_GC_FLOAT (node))
-		value = arv_gc_float_get_value (ARV_GC_FLOAT (node), &error);
-	else
-		arv_warning_device ("[ArvDevice::get_float_feature_value] Node '%s' is not a float",
-				    feature);
-
-	if (error != NULL) {
-		_set_status (device, error->code, error->message);
-		g_error_free (error);
-		return 0.0;
-	}
-
-	return value;
+	return 0.0;
 }
 
 /**
@@ -600,84 +558,83 @@ arv_device_get_float_feature_value (ArvDevice *device, const char *feature)
  * @feature: feature name
  * @min: (out): minimum feature value
  * @max: (out): maximum feature value
+ * @error: a #GError placeholder
  *
  * Retrieves feature bounds.
+ *
+ * Since: 0.8.0
  */
 
 void
-arv_device_get_float_feature_bounds (ArvDevice *device, const char *feature, double *min, double *max)
+arv_device_get_float_feature_bounds (ArvDevice *device, const char *feature, double *min, double *max, GError **error)
 {
 	ArvGcNode *node;
-	GError *error = NULL;
 
 	if (min != NULL)
 		*min = G_MINDOUBLE;
 	if (max != NULL)
 		*max = G_MAXDOUBLE;
 
-	g_return_if_fail (ARV_IS_DEVICE (device));
+	node = _get_feature (device, ARV_TYPE_GC_FLOAT, feature, error);
+	if (node != NULL) {
+		GError *local_error = NULL;
 
-	node = arv_device_get_feature (device, feature);
+		if (min != NULL) {
+			double minimum;
 
-	if (ARV_IS_GC_FLOAT (node)) {
-		double minimum;
-		double maximum;
+			minimum = arv_gc_float_get_min (ARV_GC_FLOAT (node), &local_error);
 
-		minimum = arv_gc_float_get_min (ARV_GC_FLOAT (node), &error);
+			if (local_error != NULL) {
+				g_propagate_error (error, local_error);
+				return;
+			}
 
-		if (error != NULL) {
-			_set_status (device, error->code, error->message);
-			g_error_free (error);
-
-			return;
-		}
-
-		maximum = arv_gc_float_get_max (ARV_GC_FLOAT (node), &error);
-
-		if (error != NULL) {
-			_set_status (device, error->code, error->message);
-			g_error_free (error);
-
-			return;
-		}
-
-		if (min != NULL)
 			*min = minimum;
-		if (max != NULL)
+		}
+
+		if (max != NULL) {
+			double maximum;
+
+			maximum = arv_gc_float_get_max (ARV_GC_FLOAT (node), &local_error);
+
+			if (local_error != NULL) {
+				g_propagate_error (error, local_error);
+				return;
+			}
+
 			*max = maximum;
-	} else
-		arv_warning_device ("[ArvDevice::get_float_feature_bounds] Node '%s' is not a float",
-				    feature);
+		}
+	}
 }
 
+/**
+ * arv_device_get_available_enumeration_feature_values:
+ * @device: an #ArvDevice
+ * @feature: feature name
+ * @n_values: placeholder for the number of returned values
+ * @error: a #GError placeholder
+ *
+ * Get all the available values of @feature, as integers.
+ *
+ * Returns: (array length=n_values) (transfer container): a newly created array of 64 bit integers, which must freed after use using g_free,
+ * or NULL on error.
+ *
+ * Since: 0.8.0
+ */
+
 gint64 *
-arv_device_get_available_enumeration_feature_values (ArvDevice *device, const char *feature, guint *n_values)
+arv_device_get_available_enumeration_feature_values (ArvDevice *device, const char *feature, guint *n_values, GError **error)
 {
 	ArvGcNode *node;
-	GError *error = NULL;
-	gint64 *values = NULL;
 
 	if (n_values != NULL)
 		*n_values = 0;
 
-	g_return_val_if_fail (ARV_IS_DEVICE (device), NULL);
+	node = _get_feature (device, ARV_TYPE_GC_ENUMERATION, feature, error);
+	if (node != NULL)
+		return arv_gc_enumeration_get_available_int_values (ARV_GC_ENUMERATION (node), n_values, error);
 
-	node = arv_device_get_feature (device, feature);
-
-	if (ARV_IS_GC_ENUMERATION (node))
-		values = arv_gc_enumeration_get_available_int_values (ARV_GC_ENUMERATION (node), n_values, &error);
-	else
-		arv_warning_device ("[ArvDevice::get_enumeration_feature_available_values] Node '%s' is not an enumeration",
-				    feature);
-
-	if (error != NULL) {
-		_set_status (device, error->code, error->message);
-		g_error_free (error);
-
-		return NULL;
-	}
-
-	return values;
+	return NULL;
 }
 
 /**
@@ -685,69 +642,29 @@ arv_device_get_available_enumeration_feature_values (ArvDevice *device, const ch
  * @device: an #ArvDevice
  * @feature: feature name
  * @n_values: placeholder for the number of returned values
+ * @error: a #GError placeholder
  *
  * Get all the available values of @feature, as strings.
  *
- * Returns: (array length=n_values) (transfer container): a newly created array of const strings, which must freed after use using g_free.
+ * Returns: (array length=n_values) (transfer container): a newly created array of const strings, which must freed after use using g_free,
+ * or NULL on error.
  *
- * Since: 0.2.0
+ * Since: 0.8.0
  */
 
 const char **
-arv_device_get_available_enumeration_feature_values_as_strings (ArvDevice *device, const char *feature, guint *n_values)
+arv_device_get_available_enumeration_feature_values_as_strings (ArvDevice *device, const char *feature, guint *n_values, GError **error)
 {
 	ArvGcNode *node;
-	GError *error = NULL;
-	const char ** strings = NULL;
 
 	if (n_values != NULL)
 		*n_values = 0;
 
-	g_return_val_if_fail (ARV_IS_DEVICE (device), NULL);
+	node = _get_feature (device, ARV_TYPE_GC_ENUMERATION, feature, error);
+	if (node != NULL)
+		return arv_gc_enumeration_get_available_string_values (ARV_GC_ENUMERATION (node), n_values, error);
 
-	node = arv_device_get_feature (device, feature);
-
-	if (ARV_IS_GC_ENUMERATION (node))
-		strings = arv_gc_enumeration_get_available_string_values (ARV_GC_ENUMERATION (node), n_values, &error);
-	else
-		arv_warning_device ("[ArvDevice::get_enumeration_feature_available_strings] Node '%s' is not an enumeration",
-				    feature);
-
-	if (error != NULL) {
-		_set_status (device, error->code, error->message);
-		g_error_free (error);
-
-		return NULL;
-	}
-
-	return strings;
-}
-
-/**
- * arv_device_get_status:
- * @device: a #ArvDevice
- *
- * Returns: The status since the last call to arv_device_get_status(). If an
- * error occured, the returned status value corresponds to the first error
- * encountered.
- *
- * Since: 0.2.0
- */
-
-ArvStatus
-arv_device_get_status (ArvDevice *device)
-{
-	ArvStatus status;
-
-	g_return_val_if_fail (ARV_IS_DEVICE (device), ARV_STATUS_UNKNOWN);
-
-	status = device->priv->status;
-
-	g_free (device->priv->status_message);
-	device->priv->status = ARV_STATUS_SUCCESS;
-	device->priv->status_message = NULL;
-
-	return status;
+	return NULL;
 }
 
 void
@@ -773,18 +690,11 @@ static void
 arv_device_init (ArvDevice *device)
 {
 	device->priv = G_TYPE_INSTANCE_GET_PRIVATE (device, ARV_TYPE_DEVICE, ArvDevicePrivate);
-
-	device->priv->status = ARV_STATUS_SUCCESS;
-	device->priv->status_message = NULL;
 }
 
 static void
 arv_device_finalize (GObject *object)
 {
-	ArvDevice *device = ARV_DEVICE (object);
-
-	g_free (device->priv->status_message);
-
 	parent_class->finalize (object);
 }
 

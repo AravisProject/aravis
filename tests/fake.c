@@ -29,7 +29,7 @@ trigger_registers_test (void)
 										 "TriggerActivationRegister")), NULL);
 	g_assert_cmpint (address, ==, ARV_FAKE_CAMERA_REGISTER_TRIGGER_ACTIVATION);
 
-	arv_device_set_string_feature_value (device, "TriggerSelector", "AcquisitionStart");
+	arv_device_set_string_feature_value (device, "TriggerSelector", "AcquisitionStart", NULL);
 
 	address = arv_gc_register_get_address (ARV_GC_REGISTER (node), NULL);
 	g_assert_cmpint (address, ==, ARV_FAKE_CAMERA_REGISTER_TRIGGER_MODE +
@@ -127,7 +127,6 @@ static void
 fake_device_test (void)
 {
 	ArvDevice *device;
-	ArvStatus status;
 	int int_value;
 	double dbl_value;
 	double boolean_value;
@@ -147,81 +146,78 @@ fake_device_test (void)
 	g_assert (genicam != NULL);
 
 	/* Check default */
-	int_value = arv_device_get_integer_feature_value (device, "Width");
+	int_value = arv_device_get_integer_feature_value (device, "Width", NULL);
 	g_assert_cmpint (int_value, ==, ARV_FAKE_CAMERA_WIDTH_DEFAULT);
 
-	arv_device_set_integer_feature_value (device, "Width", 1024);
-	int_value = arv_device_get_integer_feature_value (device, "Width");
+	arv_device_set_integer_feature_value (device, "Width", 1024, NULL);
+	int_value = arv_device_get_integer_feature_value (device, "Width", NULL);
 	g_assert_cmpint (int_value, ==, 1024);
 
 	/* Check default */
-	int_value = arv_device_get_integer_feature_value (device, "Height");
+	int_value = arv_device_get_integer_feature_value (device, "Height", NULL);
 	g_assert_cmpint (int_value, ==, ARV_FAKE_CAMERA_HEIGHT_DEFAULT);
 
-	arv_device_set_integer_feature_value (device, "Height", 1024);
-	int_value = arv_device_get_integer_feature_value (device, "Height");
+	arv_device_set_integer_feature_value (device, "Height", 1024, NULL);
+	int_value = arv_device_get_integer_feature_value (device, "Height", NULL);
 	g_assert_cmpint (int_value, ==, 1024);
 
-	int_value = arv_device_get_integer_feature_value (device, "BinningHorizontal");
+	int_value = arv_device_get_integer_feature_value (device, "BinningHorizontal", NULL);
 	g_assert_cmpint (int_value, ==, ARV_FAKE_CAMERA_BINNING_HORIZONTAL_DEFAULT);
-	int_value = arv_device_get_integer_feature_value (device, "BinningVertical");
+	int_value = arv_device_get_integer_feature_value (device, "BinningVertical", NULL);
 	g_assert_cmpint (int_value, ==, ARV_FAKE_CAMERA_BINNING_VERTICAL_DEFAULT);
-	int_value = arv_device_get_integer_feature_value (device, "PixelFormat");
+	int_value = arv_device_get_integer_feature_value (device, "PixelFormat", NULL);
 	g_assert_cmpint (int_value, ==, ARV_FAKE_CAMERA_PIXEL_FORMAT_DEFAULT);
 
-	dbl_value = arv_device_get_float_feature_value (device, "AcquisitionFrameRate");
+	dbl_value = arv_device_get_float_feature_value (device, "AcquisitionFrameRate", NULL);
 	g_assert_cmpfloat (dbl_value, ==, ARV_FAKE_CAMERA_ACQUISITION_FRAME_RATE_DEFAULT);
-	dbl_value = arv_device_get_float_feature_value (device,  "ExposureTimeAbs");
+	dbl_value = arv_device_get_float_feature_value (device,  "ExposureTimeAbs", NULL);
 	g_assert_cmpfloat (dbl_value, ==, ARV_FAKE_CAMERA_EXPOSURE_TIME_US_DEFAULT);
 
-	int_value = arv_device_get_integer_feature_value (device, "GainRaw");
+	int_value = arv_device_get_integer_feature_value (device, "GainRaw", NULL);
 	g_assert_cmpint (int_value, ==, 0);
-	int_value = arv_device_get_integer_feature_value (device, "GainAuto");
+	int_value = arv_device_get_integer_feature_value (device, "GainAuto", NULL);
 	g_assert_cmpint (int_value, ==, 1);
 
-	int_value = arv_device_get_integer_feature_value (device, "PayloadSize");
+	int_value = arv_device_get_integer_feature_value (device, "PayloadSize", NULL);
 	g_assert_cmpint (int_value, ==, 1024 * 1024);
 
-	arv_device_set_boolean_feature_value (device, "TestBoolean", FALSE);
-	boolean_value = arv_device_get_boolean_feature_value (device, "TestBoolean");
+	arv_device_set_boolean_feature_value (device, "TestBoolean", FALSE, NULL);
+	boolean_value = arv_device_get_boolean_feature_value (device, "TestBoolean", NULL);
 	g_assert_cmpint (boolean_value, ==, FALSE);
-	int_value = arv_device_get_integer_feature_value (device, "TestRegister");
+	int_value = arv_device_get_integer_feature_value (device, "TestRegister", NULL);
 	g_assert_cmpint (int_value, ==, 123);
 
-	arv_device_set_boolean_feature_value (device, "TestBoolean", TRUE);
-	boolean_value = arv_device_get_boolean_feature_value (device, "TestBoolean");
+	arv_device_set_boolean_feature_value (device, "TestBoolean", TRUE, NULL);
+	boolean_value = arv_device_get_boolean_feature_value (device, "TestBoolean", NULL);
 	g_assert_cmpint (boolean_value, ==, TRUE);
-	int_value = arv_device_get_integer_feature_value (device, "TestRegister");
+	int_value = arv_device_get_integer_feature_value (device, "TestRegister", NULL);
 	g_assert_cmpint (int_value, ==, 321);
 
-	arv_device_get_integer_feature_bounds (device, "Width", &minimum, &maximum);
+	arv_device_get_integer_feature_bounds (device, "Width", &minimum, &maximum, NULL);
 	g_assert_cmpint (minimum, ==, 1);
 	g_assert_cmpint (maximum, ==, 2048);
 
-	arv_device_get_float_feature_bounds (device, "ExposureTimeAbs", &float_minimum, &float_maximum);
+	arv_device_get_float_feature_bounds (device, "ExposureTimeAbs", &float_minimum, &float_maximum, NULL);
 	g_assert_cmpfloat (float_minimum, ==, 10.0);
 	g_assert_cmpfloat (float_maximum, ==, 10000000.0);
 
-	arv_device_set_float_feature_value (device,  "ExposureTimeAbs", 20.0);
-	dbl_value = arv_device_get_float_feature_value (device,  "ExposureTimeAbs");
+	arv_device_set_float_feature_value (device,  "ExposureTimeAbs", 20.0, NULL);
+	dbl_value = arv_device_get_float_feature_value (device,  "ExposureTimeAbs", NULL);
 	g_assert_cmpfloat (dbl_value, ==, 20.0);
 
-	values = arv_device_get_available_enumeration_feature_values (device, "GainAuto", &n_values);
+	values = arv_device_get_available_enumeration_feature_values (device, "GainAuto", &n_values, NULL);
 	g_assert (values != NULL);
 	g_assert_cmpint (n_values, ==, 3);
 	g_free (values);
 
-	string_values = arv_device_get_available_enumeration_feature_values_as_strings (device, "GainAuto", &n_values);
+	string_values = arv_device_get_available_enumeration_feature_values_as_strings (device, "GainAuto", &n_values, NULL);
 	g_assert (string_values != NULL);
 	g_assert_cmpint (n_values, ==, 3);
 	g_free (string_values);
 
-	arv_device_set_string_feature_value (device, "TestStringReg", "String");
-	string_value = arv_device_get_string_feature_value (device, "TestStringReg");
+	arv_device_set_string_feature_value (device, "TestStringReg", "String", NULL);
+	string_value = arv_device_get_string_feature_value (device, "TestStringReg", NULL);
 	g_assert_cmpstr (string_value, ==, "String");
-
-	status = arv_device_get_status (device);
-	g_assert_cmpint (status, ==, ARV_STATUS_SUCCESS);
 
 	g_object_unref (device);
 }
@@ -230,21 +226,24 @@ static void
 fake_device_error_test (void)
 {
 	ArvDevice *device;
-	ArvStatus status;
+	GError *error = NULL;
 	int int_value;
 	double boolean_value;
 
 	device = arv_fake_device_new ("TEST0");
 	g_assert (ARV_IS_FAKE_DEVICE (device));
 
-	int_value = arv_device_get_integer_feature_value (device, "Unknown");
+	int_value = arv_device_get_integer_feature_value (device, "Unknown", &error);
 	g_assert_cmpint (int_value, ==, 0);
+	g_assert (error != NULL);
 
-	boolean_value = arv_device_get_boolean_feature_value (device, "Unknown");
+	g_clear_error (&error);
+
+	boolean_value = arv_device_get_boolean_feature_value (device, "Unknown", &error);
 	g_assert_cmpint (boolean_value, ==, 0);
+	g_assert (error != NULL);
 
-	status = arv_device_get_status (device);
-	g_assert_cmpint (status, ==, ARV_STATUS_SUCCESS);
+	g_clear_error (&error);
 
 	g_object_unref (device);
 }

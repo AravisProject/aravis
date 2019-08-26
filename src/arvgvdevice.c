@@ -436,7 +436,7 @@ arv_gv_device_take_control (ArvGvDevice *gv_device)
 
 	/* Disable GVSP extended ID mode for now, it is not supported yet by ArvGvStream */
 	if (success)
-		arv_device_set_string_feature_value (ARV_DEVICE (gv_device), "GevGVSPExtendedIDMode", "Off");
+		arv_device_set_string_feature_value (ARV_DEVICE (gv_device), "GevGVSPExtendedIDMode", "Off", NULL);
 
 	if (!success)
 		arv_warning_device ("[GvDevice::take_control] Can't get control access");
@@ -484,7 +484,7 @@ arv_gv_device_get_timestamp_tick_frequency (ArvGvDevice *gv_device)
 guint
 arv_gv_device_get_packet_size (ArvGvDevice *gv_device)
 {
-	return arv_device_get_integer_feature_value (ARV_DEVICE (gv_device), "GevSCPSPacketSize");
+	return arv_device_get_integer_feature_value (ARV_DEVICE (gv_device), "GevSCPSPacketSize", NULL);
 }
 
 void
@@ -492,7 +492,7 @@ arv_gv_device_set_packet_size (ArvGvDevice *gv_device, gint packet_size)
 {
 	g_return_if_fail (packet_size > 0);
 
-	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevSCPSPacketSize", packet_size);
+	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevSCPSPacketSize", packet_size, NULL);
 }
 
 /**
@@ -550,14 +550,14 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device)
 	port = g_inet_socket_address_get_port (local_address);
 
 	address_bytes = g_inet_address_to_bytes (interface_address);
-	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevSCDA", g_htonl (*((guint32 *) address_bytes)));
-	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevSCPHostPort", port);
+	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevSCDA", g_htonl (*((guint32 *) address_bytes)), NULL);
+	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevSCPHostPort", port, NULL);
 
 	g_clear_object (&local_address);
 	g_clear_object (&interface_socket_address);
 
-	do_not_fragment = arv_device_get_boolean_feature_value (device, "GevSCPSDoNotFragment");
-	arv_device_set_boolean_feature_value (device, "GevSCPSDoNotFragment", TRUE);
+	do_not_fragment = arv_device_get_boolean_feature_value (device, "GevSCPSDoNotFragment", NULL);
+	arv_device_set_boolean_feature_value (device, "GevSCPSDoNotFragment", TRUE, NULL);
 
 	poll_fd.fd = g_socket_get_fd (socket);
 	poll_fd.events =  G_IO_IN;
@@ -574,9 +574,9 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device)
 		unsigned n_tries = 0;
 
 		arv_debug_device ("[GvDevice::auto_packet_size] Try packet size = %d", current_size);
-		arv_device_set_integer_feature_value (device, "GevSCPSPacketSize", current_size);
+		arv_device_set_integer_feature_value (device, "GevSCPSPacketSize", current_size, NULL);
 
-		current_size = arv_device_get_integer_feature_value(device, "GevSCPSPacketSize");
+		current_size = arv_device_get_integer_feature_value(device, "GevSCPSPacketSize", NULL);
 
 		if (current_size == last_size)
 			break;
@@ -585,10 +585,10 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device)
 
 		do {
 			if (is_command) {
-				arv_device_execute_command (device, "GevSCPSFireTestPacket");
+				arv_device_execute_command (device, "GevSCPSFireTestPacket", NULL);
 			} else {
-				arv_device_set_boolean_feature_value (device, "GevSCPSFireTestPacket", FALSE);
-				arv_device_set_boolean_feature_value (device, "GevSCPSFireTestPacket", TRUE);
+				arv_device_set_boolean_feature_value (device, "GevSCPSFireTestPacket", FALSE, NULL);
+				arv_device_set_boolean_feature_value (device, "GevSCPSFireTestPacket", TRUE, NULL);
 			}
 
 			do {
@@ -620,8 +620,8 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device)
 
 	arv_debug_device ("[GvDevice::auto_packet_size] Packet size set to %d bytes", packet_size);
 
-	arv_device_set_boolean_feature_value (device, "GevSCPSDoNotFragment", do_not_fragment);
-	arv_device_set_integer_feature_value (device, "GevSCPSPacketSize", packet_size);
+	arv_device_set_boolean_feature_value (device, "GevSCPSDoNotFragment", do_not_fragment, NULL);
+	arv_device_set_integer_feature_value (device, "GevSCPSPacketSize", packet_size, NULL);
 
 	return packet_size;
 }
@@ -983,7 +983,7 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 	GInetAddress *interface_address;
 	GInetAddress *device_address;
 
-	n_stream_channels = arv_device_get_integer_feature_value (device, "NumberOfStreamChannels");
+	n_stream_channels = arv_device_get_integer_feature_value (device, "NumberOfStreamChannels", NULL);
 	arv_debug_device ("[GvDevice::create_stream] Number of stream channels = %d", n_stream_channels);
 
 	if (n_stream_channels < 1)

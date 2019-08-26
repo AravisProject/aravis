@@ -15,51 +15,51 @@ register_test (void)
 	g_assert (ARV_IS_GV_DEVICE (device));
 
 	/* Check default */
-	int_value = arv_device_get_integer_feature_value (device, "Width");
+	int_value = arv_device_get_integer_feature_value (device, "Width", NULL);
 	g_assert_cmpint (int_value, ==, ARV_FAKE_CAMERA_WIDTH_DEFAULT);
 
-	arv_device_set_integer_feature_value (device, "Width", 1024);
-	int_value = arv_device_get_integer_feature_value (device, "Width");
+	arv_device_set_integer_feature_value (device, "Width", 1024, NULL);
+	int_value = arv_device_get_integer_feature_value (device, "Width", NULL);
 	g_assert_cmpint (int_value, ==, 1024);
 
 	/* Check default */
-	int_value = arv_device_get_integer_feature_value (device, "Height");
+	int_value = arv_device_get_integer_feature_value (device, "Height", NULL);
 	g_assert_cmpint (int_value, ==, ARV_FAKE_CAMERA_HEIGHT_DEFAULT);
 
-	arv_device_set_integer_feature_value (device, "Height", 1024);
-	int_value = arv_device_get_integer_feature_value (device, "Height");
+	arv_device_set_integer_feature_value (device, "Height", 1024, NULL);
+	int_value = arv_device_get_integer_feature_value (device, "Height", NULL);
 	g_assert_cmpint (int_value, ==, 1024);
 
-	int_value = arv_device_get_integer_feature_value (device, "BinningHorizontal");
+	int_value = arv_device_get_integer_feature_value (device, "BinningHorizontal", NULL);
 	g_assert_cmpint (int_value, ==, ARV_FAKE_CAMERA_BINNING_HORIZONTAL_DEFAULT);
-	int_value = arv_device_get_integer_feature_value (device, "BinningVertical");
+	int_value = arv_device_get_integer_feature_value (device, "BinningVertical", NULL);
 	g_assert_cmpint (int_value, ==, ARV_FAKE_CAMERA_BINNING_VERTICAL_DEFAULT);
-	int_value = arv_device_get_integer_feature_value (device, "PixelFormat");
+	int_value = arv_device_get_integer_feature_value (device, "PixelFormat", NULL);
 	g_assert_cmpint (int_value, ==, ARV_FAKE_CAMERA_PIXEL_FORMAT_DEFAULT);
 
-	dbl_value = arv_device_get_float_feature_value (device, "AcquisitionFrameRate");
+	dbl_value = arv_device_get_float_feature_value (device, "AcquisitionFrameRate", NULL);
 	g_assert_cmpfloat (dbl_value, ==, ARV_FAKE_CAMERA_ACQUISITION_FRAME_RATE_DEFAULT);
-	dbl_value = arv_device_get_float_feature_value (device,  "ExposureTimeAbs");
+	dbl_value = arv_device_get_float_feature_value (device,  "ExposureTimeAbs", NULL);
 	g_assert_cmpfloat (dbl_value, ==, ARV_FAKE_CAMERA_EXPOSURE_TIME_US_DEFAULT);
 
-	int_value = arv_device_get_integer_feature_value (device, "GainRaw");
+	int_value = arv_device_get_integer_feature_value (device, "GainRaw", NULL);
 	g_assert_cmpint (int_value, ==, 0);
-	int_value = arv_device_get_integer_feature_value (device, "GainAuto");
+	int_value = arv_device_get_integer_feature_value (device, "GainAuto", NULL);
 	g_assert_cmpint (int_value, ==, 1);
 
-	int_value = arv_device_get_integer_feature_value (device, "PayloadSize");
+	int_value = arv_device_get_integer_feature_value (device, "PayloadSize", NULL);
 	g_assert_cmpint (int_value, ==, 1024 * 1024);
 
-	arv_device_set_boolean_feature_value (device, "TestBoolean", FALSE);
-	boolean_value = arv_device_get_boolean_feature_value (device, "TestBoolean");
+	arv_device_set_boolean_feature_value (device, "TestBoolean", FALSE, NULL);
+	boolean_value = arv_device_get_boolean_feature_value (device, "TestBoolean", NULL);
 	g_assert_cmpint (boolean_value, ==, FALSE);
-	int_value = arv_device_get_integer_feature_value (device, "TestRegister");
+	int_value = arv_device_get_integer_feature_value (device, "TestRegister", NULL);
 	g_assert_cmpint (int_value, ==, 123);
 
-	arv_device_set_boolean_feature_value (device, "TestBoolean", TRUE);
-	boolean_value = arv_device_get_boolean_feature_value (device, "TestBoolean");
+	arv_device_set_boolean_feature_value (device, "TestBoolean", TRUE, NULL);
+	boolean_value = arv_device_get_boolean_feature_value (device, "TestBoolean", NULL);
 	g_assert_cmpint (boolean_value, ==, TRUE);
-	int_value = arv_device_get_integer_feature_value (device, "TestRegister");
+	int_value = arv_device_get_integer_feature_value (device, "TestRegister", NULL);
 	g_assert_cmpint (int_value, ==, 321);
 }
 
