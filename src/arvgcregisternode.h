@@ -30,6 +30,7 @@
 #include <arvtypes.h>
 #include <arvgcfeaturenode.h>
 #include <arvgcpropertynode.h>
+#include <arvgcenums.h>
 
 G_BEGIN_DECLS
 

@@ -31,6 +31,7 @@
 #include <arvgcfeaturenode.h>
 #include <arvgcpropertynode.h>
 #include <arvgc.h>
+#include <arvgcenums.h>
 #include <arvmisc.h>
 #include <arvdebug.h>
 #include <string.h>

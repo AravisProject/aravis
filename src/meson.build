@@ -84,6 +84,7 @@ library_headers = [
 	'arvdomimplementation.h',
 	'arvcamera.h',
 	'arvgc.h',
+	'arvgcenums.h',
 	'arvgcnode.h',
 	'arvgcpropertynode.h',
 	'arvgcindexnode.h',

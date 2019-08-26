@@ -31,28 +31,6 @@
 
 G_BEGIN_DECLS
 
-typedef enum {
-	ARV_GC_NAME_SPACE_STANDARD,
-	ARV_GC_NAME_SPACE_CUSTOM
-} ArvGcNameSpace;
-
-typedef enum {
-	ARV_GC_ACCESS_MODE_RO,
-	ARV_GC_ACCESS_MODE_WO,
-	ARV_GC_ACCESS_MODE_RW
-} ArvGcAccessMode;
-
-typedef enum {
-	ARV_GC_CACHABLE_NO_CACHE,
-	ARV_GC_CACHABLE_WRITE_TRHOUGH,
-	ARV_GC_CACHABLE_WRITE_AROUND
-} ArvGcCachable;
-
-typedef enum {
-	ARV_GC_SIGNEDNESS_SIGNED,
-	ARV_GC_SIGNEDNESS_UNSIGNED
-} ArvGcSignedness;
-
 /**
  * ArvStatus:
  * @ARV_STATUS_UNKNOWN: unknown status
