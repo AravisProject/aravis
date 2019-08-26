@@ -24,7 +24,7 @@
 #include <arvstr.h>
 #include <arvmisc.h>
 
-/**
+/*
  * SECTION: arvuvsp
  * @short_description: USB3Vision stream packet handling
  */

@@ -1,5 +1,6 @@
 doc_ignore_headers = [
 	'arvenumtypes.h',
+	'arvenumtypesprivate.h',
 	'arvconfig.h',
 	'arvbufferprivate.h',
 	'arvchunkparserprivate.h',
@@ -18,6 +19,10 @@ doc_ignore_headers = [
 	'arvfakestreamprivate.h',
 	'arvrealtimeprivate.h',
 	'arvwakeupprivate.h',
+	'arvgvspprivate.h',
+	'arvgvcpprivate.h',
+	'arvuvspprivate.h',
+	'arvuvcpprivate.h',
 	'arv.h'
 ]
 

@@ -20,7 +20,7 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-/**
+/*
  * SECTION: arvuvcp
  * @short_description: USB3Vision control packet handling
  */

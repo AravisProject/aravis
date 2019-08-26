@@ -20,7 +20,7 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-/**
+/*
  * SECTION: arvgvcp
  * @short_description: GigEVision control packet handling
  */

@@ -45,6 +45,16 @@ typedef enum {
 	ARV_GC_ERROR_NODE_NOT_FOUND
 } ArvGcError;
 
+/**
+ * ArvRegisterCachePolicy:
+ * @ARV_REGISTER_CACHE_POLICY_DISABLE: disable register caching
+ * @ARV_REGISTER_CACHE_POLICY_ENABLE: enable register caching
+ * @ARV_REGISTER_CACHE_POLICY_DEBUG: enable register caching, but read the acual register value for comparison
+ * @ARV_REGISTER_CACHE_POLICY_DEFAULT: default cache policy
+ *
+ * Since: 0.8.0
+ */
+
 typedef enum {
 	ARV_REGISTER_CACHE_POLICY_DISABLE,
 	ARV_REGISTER_CACHE_POLICY_ENABLE,
