@@ -69,14 +69,10 @@
 #include <arvstream.h>
 #include <arvbuffer.h>
 #include <arvchunkparser.h>
-#include <arvgvcp.h>
-#include <arvgvsp.h>
 #include <arvgvinterface.h>
 #include <arvgvdevice.h>
 #include <arvgvstream.h>
 #if ARAVIS_HAS_USB
-#include <arvuvcp.h>
-#include <arvuvsp.h>
 #include <arvuvinterface.h>
 #include <arvuvdevice.h>
 #include <arvuvstream.h>

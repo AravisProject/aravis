@@ -29,7 +29,7 @@
 #include <arvgvinterfaceprivate.h>
 #include <arvinterfaceprivate.h>
 #include <arvgvdeviceprivate.h>
-#include <arvgvcp.h>
+#include <arvgvcpprivate.h>
 #include <arvdebug.h>
 #include <arvmisc.h>
 #include <arvstr.h>

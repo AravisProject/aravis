@@ -34,7 +34,7 @@
 #include <arvversion.h>
 #include <arvgc.h>
 #include <arvgcregisternode.h>
-#include <arvgvcp.h>
+#include <arvgvcpprivate.h>
 #include <arvbufferprivate.h>
 #include <arvdebug.h>
 #include <arvmisc.h>

@@ -20,12 +20,8 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#ifndef ARV_GVSP_H
-#define ARV_GVSP_H
-
-#if !defined (ARV_H_INSIDE) && !defined (ARAVIS_COMPILATION)
-#error "Only <arv.h> can be included directly."
-#endif
+#ifndef ARV_GVSP_PRIVATE_H
+#define ARV_GVSP_PRIVATE_H
 
 #include <arvtypes.h>
 #include <arvdebug.h>

@@ -25,11 +25,12 @@
  * @short_description: GigEVision stream packet handling
  */
 
-#include <arvgvsp.h>
 #include <arvdebug.h>
-#include <arvenumtypes.h>
-#include <string.h>
 #include <arvmisc.h>
+#include <arvenumtypes.h>
+#include <arvgvspprivate.h>
+#include <arvenumtypesprivate.h>
+#include <string.h>
 
 static ArvGvspPacket *
 arv_gvsp_packet_new (ArvGvspContentType content_type,

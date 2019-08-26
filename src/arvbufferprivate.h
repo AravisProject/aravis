@@ -28,7 +28,7 @@
 #endif
 
 #include <arvbuffer.h>
-#include <arvgvsp.h>
+#include <arvgvspprivate.h>
 
 G_BEGIN_DECLS
 

@@ -33,8 +33,8 @@
 #include <arvgcregisterdescriptionnode.h>
 #include <arvdebug.h>
 #include <arvgvstreamprivate.h>
-#include <arvgvcp.h>
-#include <arvgvsp.h>
+#include <arvgvcpprivate.h>
+#include <arvgvspprivate.h>
 #include <arvzip.h>
 #include <arvstr.h>
 #include <arvmisc.h>

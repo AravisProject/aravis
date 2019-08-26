@@ -30,8 +30,8 @@
 #include <arvstreamprivate.h>
 #include <arvbufferprivate.h>
 #include <arvfeatures.h>
-#include <arvgvsp.h>
-#include <arvgvcp.h>
+#include <arvgvspprivate.h>
+#include <arvgvcpprivate.h>
 #include <arvdebug.h>
 #include <arvmisc.h>
 #include <arvstr.h>

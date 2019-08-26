@@ -25,8 +25,9 @@
  * @short_description: GigEVision control packet handling
  */
 
-#include <arvgvcp.h>
+#include <arvgvcpprivate.h>
 #include <arvenumtypes.h>
+#include <arvenumtypesprivate.h>
 #include <string.h>
 #include <arvdebug.h>
 #include <arvstr.h>

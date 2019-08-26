@@ -20,7 +20,7 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#include <arvuvsp.h>
+#include <arvuvspprivate.h>
 #include <arvstr.h>
 #include <arvmisc.h>
 

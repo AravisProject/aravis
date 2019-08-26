@@ -28,8 +28,8 @@
 #include <arvuvstreamprivate.h>
 #include <arvstreamprivate.h>
 #include <arvbufferprivate.h>
-#include <arvuvsp.h>
-#include <arvuvcp.h>
+#include <arvuvspprivate.h>
+#include <arvuvcpprivate.h>
 #include <arvdebug.h>
 #include <arvmisc.h>
 #include <libusb.h>

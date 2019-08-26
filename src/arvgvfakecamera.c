@@ -23,8 +23,8 @@
 #include <arvgvfakecamera.h>
 #include <arvfakecamera.h>
 #include <arvbufferprivate.h>
-#include <arvgvcp.h>
-#include <arvgvsp.h>
+#include <arvgvcpprivate.h>
+#include <arvgvspprivate.h>
 #include <arvmisc.h>
 #include <net/if.h>
 #include <ifaddrs.h>

@@ -34,6 +34,7 @@
  */
 
 #include <gstaravis.h>
+#include <arvgvspprivate.h>
 #include <time.h>
 #include <string.h>
 

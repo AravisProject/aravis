@@ -136,6 +136,8 @@ library_private_headers = [
 	'arvgvdeviceprivate.h',
 	'arvgvinterfaceprivate.h',
 	'arvgvstreamprivate.h',
+	'arvgvcpprivate.h',
+	'arvgvspprivate.h',
 	'arvinterfaceprivate.h',
 	'arvrealtimeprivate.h',
 	'arvstreamprivate.h',
@@ -148,9 +150,7 @@ library_private_headers = [
 library_no_introspection_headers = [
 	'arvmisc.h',
 	'arvzip.h',
-	'arvstr.h',
-	'arvgvcp.h',
-	'arvgvsp.h'
+	'arvstr.h'
 ]
 
 if get_option ('usb')
@@ -168,13 +168,14 @@ if get_option ('usb')
 		'arvuvdevice.h',
 		'arvuvstream.h'
 	]
-	library_no_introspection_headers += [
-		'arvuvcp.h',
-		'arvuvsp.h'
+	library_private_headers += [
+		'arvuvcpprivate.h',
+		'arvuvspprivate.h'
 		]
 endif
 
 library_enums = gnome.mkenums_simple ('arvenumtypes', sources: library_headers + library_no_introspection_headers)
+library_private_enums = gnome.mkenums_simple ('arvenumtypesprivate', sources: library_private_headers)
 
 library_include_dir = join_paths (get_option ('includedir'), 'aravis-@0@'.format (aravis_api_version))
 
@@ -208,7 +209,7 @@ library_c_args = [
 aravis_library = library ('aravis-@0@'.format (aravis_api_version),
 	library_sources, library_headers,
 	library_no_introspection_sources, library_no_introspection_headers, library_private_headers,
-	library_enums,
+	library_enums, library_private_enums,
 	version: aravis_version,
 	soversion: '0',
 	dependencies: aravis_dependencies,

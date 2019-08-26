@@ -25,8 +25,8 @@
  * @short_description: USB3Vision control packet handling
  */
 
-#include <arvuvcp.h>
-#include <arvenumtypes.h>
+#include <arvuvcpprivate.h>
+#include <arvenumtypesprivate.h>
 #include <arvdebug.h>
 #include <arvstr.h>
 #include <string.h>
