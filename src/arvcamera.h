@@ -164,6 +164,7 @@ void 		arv_camera_get_float_bounds 		(ArvCamera *camera, const char *feature,
 
 gint64 *	arv_camera_get_available_enumerations			(ArvCamera *camera, const char *feature, guint *n_values);
 const char **	arv_camera_get_available_enumerations_as_strings	(ArvCamera *camera, const char *feature, guint *n_values);
+const char ** 	arv_camera_get_available_enumeration_display_names 	(ArvCamera *camera, const char *feature, guint *n_values);
 
 ArvStatus 	arv_camera_get_status			(ArvCamera *camera, GError **error);
 

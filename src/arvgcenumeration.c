@@ -321,19 +321,8 @@ arv_gc_enumeration_get_available_int_values (ArvGcEnumeration *enumeration, guin
 	return values;
 }
 
-/**
- * arv_gc_enumeration_get_available_string_values:
- * @enumeration: an #ArvGcEnumeration
- * @n_values: (out): placeholder for the number of values
- * @error: placeholder for error, may be NULL
- *
- * Create an array of all available values of @enumeration, as strings.
- *
- * Returns: (array length=n_values) (transfer container): an newly created array of const strings, which must freed after use using g_free.
- */
-
-const char **
-arv_gc_enumeration_get_available_string_values (ArvGcEnumeration *enumeration, guint *n_values, GError **error)
+static const char **
+_get_available_string_values (ArvGcEnumeration *enumeration, gboolean display_name ,guint *n_values, GError **error)
 {
 	const char ** strings;
 	const GSList *entries, *iter;
@@ -390,12 +379,56 @@ arv_gc_enumeration_get_available_string_values (ArvGcEnumeration *enumeration, g
 	}
 
 	strings = g_new (const char*, *n_values);
-	for (iter = available_entries, i = 0; iter != NULL; iter = iter->next, i++)
-		strings[i] = arv_gc_feature_node_get_name (iter->data);
+	for (iter = available_entries, i = 0; iter != NULL; iter = iter->next, i++) {
+		const char *string = NULL;
+		if (display_name)
+			string = arv_gc_feature_node_get_display_name (iter->data, NULL);
+		if (string == NULL)
+			string = arv_gc_feature_node_get_name (iter->data);
+		strings[i] = string;
+	}
 
 	g_slist_free (available_entries);
 
 	return strings;
+}
+
+/**
+ * arv_gc_enumeration_get_available_string_values:
+ * @enumeration: an #ArvGcEnumeration
+ * @n_values: (out): placeholder for the number of values
+ * @error: placeholder for error, may be NULL
+ *
+ * Create an array of all available values of @enumeration, as strings.
+ *
+ * Returns: (array length=n_values) (transfer container): an newly created array of const strings, which must freed after use using g_free,
+ * %NULL on error.
+ */
+
+const char **
+arv_gc_enumeration_get_available_string_values (ArvGcEnumeration *enumeration, guint *n_values, GError **error)
+{
+	return _get_available_string_values (enumeration, FALSE, n_values, error);
+}
+
+/**
+ * arv_gc_enumeration_get_available_display_names:
+ * @enumeration: an #ArvGcEnumeration
+ * @n_values: (out): placeholder for the number of values
+ * @error: placeholder for error, may be NULL
+ *
+ * Create an array of display names of all available entries.
+ *
+ * Returns: (array length=n_values) (transfer container): an newly created array of const strings, which must freed after use using g_free,
+ * %NULL on error.
+ *
+ * Since: 0.8.0
+ */
+
+const char **
+arv_gc_enumeration_get_available_display_names (ArvGcEnumeration *enumeration, guint *n_values, GError **error)
+{
+	return _get_available_string_values (enumeration, TRUE, n_values, error);
 }
 
 void

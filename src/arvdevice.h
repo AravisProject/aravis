@@ -102,6 +102,8 @@ gint64 *	arv_device_get_available_enumeration_feature_values		(ArvDevice *device
 										 guint *n_values, GError **error);
 const char **	arv_device_get_available_enumeration_feature_values_as_strings	(ArvDevice *device, const char *feature,
 										 guint *n_values, GError **error);
+const char **	arv_device_get_available_enumeration_feature_display_names	(ArvDevice *device, const char *feature,
+										 guint *n_values, GError **error);
 
 void		arv_device_set_register_cache_policy	(ArvDevice *device, ArvRegisterCachePolicy policy);
 

@@ -667,6 +667,35 @@ arv_device_get_available_enumeration_feature_values_as_strings (ArvDevice *devic
 	return NULL;
 }
 
+/**
+ * arv_device_get_available_enumeration_feature_display_names:
+ * @device: an #ArvDevice
+ * @feature: feature name
+ * @n_values: placeholder for the number of returned values
+ * @error: a #GError placeholder
+ *
+ * Get display names of all the available entries of @feature.
+ *
+ * Returns: (array length=n_values) (transfer container): a newly created array of const strings, to be freed after use using g_free, or
+ * %NULL on error.
+ *
+ * Since: 0.8.0
+ */
+
+const char **
+arv_device_get_available_enumeration_feature_display_names (ArvDevice *device, const char *feature, guint *n_values, GError **error)
+{
+	ArvGcNode *node;
+
+	if (n_values != NULL)
+		*n_values = 0;
+
+	node = _get_feature (device, ARV_TYPE_GC_ENUMERATION, feature, error);
+	if (node != NULL)
+		return arv_gc_enumeration_get_available_display_names (ARV_GC_ENUMERATION (node), n_values, error);
+
+	return NULL;
+}
 void
 arv_device_set_register_cache_policy (ArvDevice *device, ArvRegisterCachePolicy policy)
 {

@@ -587,47 +587,7 @@ arv_camera_get_available_pixel_formats_as_strings (ArvCamera *camera, guint *n_p
 const char **
 arv_camera_get_available_pixel_formats_as_display_names (ArvCamera *camera, guint *n_pixel_formats)
 {
-	ArvGcNode *node;
-	const GSList *entries, *iter;
-	GSList *available_entries = NULL;
-	const char **strings;
-	const char *string = NULL;
-	gboolean is_available, is_implemented;
-	int i;
-
-	g_return_val_if_fail (n_pixel_formats != NULL, NULL);
-	*n_pixel_formats = 0;
-
-	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
-	node = arv_device_get_feature (camera->priv->device, "PixelFormat");
-
-	if (ARV_IS_GC_ENUMERATION (node))
-		entries = arv_gc_enumeration_get_entries (ARV_GC_ENUMERATION (node));
-	else
-		return NULL;
-
-	for (i = 0, iter = entries; iter != NULL; iter = iter->next) {
-		is_available = arv_gc_feature_node_is_available (iter->data, NULL);
-		is_implemented = arv_gc_feature_node_is_implemented (iter->data, NULL);
-		if (is_available && is_implemented) {
-			string = arv_gc_feature_node_get_display_name (iter->data, NULL);
-			if (string == NULL)
-				string = arv_gc_feature_node_get_name (iter->data);
-			if (string == NULL) {
-				g_slist_free (available_entries);
-				return NULL;
-			}
-			available_entries = g_slist_prepend (available_entries, (gpointer)string);
-			i++;
-		}
-	}
-
-	strings = g_new (const char *, i);
-	for (i = 0, iter = available_entries; iter != NULL; iter = iter->next, i++)
-		strings[i] = iter->data;
-
-	*n_pixel_formats = i;
-	return strings;
+	return arv_camera_get_available_enumeration_display_names (camera, "PixelFormat", n_pixel_formats); 
 }
 
 /* Acquisition control */
@@ -2001,7 +1961,7 @@ arv_camera_get_available_enumerations (ArvCamera *camera, const char *feature, g
  * Get all the available values of @feature, as strings.
  *
  * Returns: (array length=n_values) (transfer container): a newly created array of const strings, which must freed after use using g_free,
- * or NULL on error.
+ * or %NULL on error.
  *
  * Since: 0.8.0
  */
@@ -2017,6 +1977,39 @@ arv_camera_get_available_enumerations_as_strings (ArvCamera *camera, const char 
 
 	strings = arv_device_get_available_enumeration_feature_values_as_strings (camera->priv->device,
 										  feature, n_values, &error);
+	if (error != NULL) {
+		_update_status (camera, error);
+		g_clear_error (&error);
+	}
+
+	return strings;
+}
+
+/**
+ * arv_camera_get_available_enumeration_display_names:
+ * @camera: a #ArvCamera
+ * @feature: feature name
+ * @n_values: placeholder for the number of returned values
+ *
+ * Get display names of all the available entries of @feature.
+ *
+ * Returns: (array length=n_values) (transfer container): a newly created array of const strings, to be freed after use using g_free, or
+ * %NULL on error.
+ *
+ * Since: 0.8.0
+ */
+
+const char **
+arv_camera_get_available_enumeration_display_names (ArvCamera *camera, const char *feature, guint *n_values)
+{
+	GError *error = NULL;
+	const char **strings;
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+	g_return_val_if_fail (feature != NULL, NULL);
+
+	strings = arv_device_get_available_enumeration_feature_display_names (camera->priv->device,
+									      feature, n_values, &error);
 	if (error != NULL) {
 		_update_status (camera, error);
 		g_clear_error (&error);

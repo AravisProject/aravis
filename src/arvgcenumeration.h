@@ -64,6 +64,7 @@ gint64 		arv_gc_enumeration_get_int_value		(ArvGcEnumeration *enumeration, GErro
 void		arv_gc_enumeration_set_int_value		(ArvGcEnumeration *enumeration, gint64 value, GError **error);
 gint64 *	arv_gc_enumeration_get_available_int_values	(ArvGcEnumeration *enumeration,	guint *n_values, GError **error);
 const char **	arv_gc_enumeration_get_available_string_values	(ArvGcEnumeration *enumeration,	guint *n_values, GError **error);
+const char **	arv_gc_enumeration_get_available_display_names 	(ArvGcEnumeration *enumeration, guint *n_values, GError **error);
 
 G_END_DECLS
 
