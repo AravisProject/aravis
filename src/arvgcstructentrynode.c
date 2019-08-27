@@ -29,6 +29,7 @@
 #include <arvgcregisternode.h>
 #include <arvgcregister.h>
 #include <arvgcinteger.h>
+#include <arvgcfeaturenodeprivate.h>
 #include <arvgcport.h>
 #include <arvgc.h>
 #include <arvmisc.h>

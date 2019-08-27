@@ -28,6 +28,7 @@
 #include <arvgcfloatnode.h>
 #include <arvgcfloat.h>
 #include <arvgcvalueindexednode.h>
+#include <arvgcfeaturenodeprivate.h>
 #include <arvgc.h>
 #include <arvmisc.h>
 #include <arvstr.h>

@@ -28,6 +28,7 @@
 #include <arvgcintegernode.h>
 #include <arvgcinteger.h>
 #include <arvgcvalueindexednode.h>
+#include <arvgcfeaturenodeprivate.h>
 #include <arvgc.h>
 #include <arvmisc.h>
 #include <string.h>

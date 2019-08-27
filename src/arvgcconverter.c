@@ -25,7 +25,7 @@
  * @short_description: Class for Converter and IntConverter nodes
  */
 
-#include <arvgcfeaturenode.h>
+#include <arvgcfeaturenodeprivate.h>
 #include <arvgcconverter.h>
 #include <arvevaluator.h>
 #include <arvgcinteger.h>

@@ -28,6 +28,7 @@
 #include <arvgcregisternode.h>
 #include <arvgcindexnode.h>
 #include <arvgcinvalidatornode.h>
+#include <arvgcfeaturenodeprivate.h>
 #include <arvgcswissknife.h>
 #include <arvgcregister.h>
 #include <arvgcinteger.h>

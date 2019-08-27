@@ -27,6 +27,7 @@
 
 #include <arvgcboolean.h>
 #include <arvgcinteger.h>
+#include <arvgcfeaturenodeprivate.h>
 #include <arvgc.h>
 #include <arvmisc.h>
 #include <string.h>

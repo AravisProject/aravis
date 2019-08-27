@@ -27,7 +27,7 @@
 
 #include <arvgcinvalidatornode.h>
 #include <arvgcpropertynode.h>
-#include <arvgcfeaturenode.h>
+#include <arvgcfeaturenodeprivate.h>
 #include <arvgc.h>
 #include <arvdomtext.h>
 #include <arvmisc.h>

@@ -1,12 +1,14 @@
 doc_ignore_headers = [
+	'arv.h',
+	'arvconfig.h',
 	'arvenumtypes.h',
 	'arvenumtypesprivate.h',
-	'arvconfig.h',
 	'arvbufferprivate.h',
 	'arvchunkparserprivate.h',
 	'arvinterfaceprivate.h',
 	'arvdeviceprivate.h',
 	'arvstreamprivate.h',
+	'arvgcfeaturenodeprivate.h',
 	'arvgvstreamprivate.h',
 	'arvgvinterfaceprivate.h',
 	'arvgvdeviceprivate.h',
@@ -22,8 +24,7 @@ doc_ignore_headers = [
 	'arvgvspprivate.h',
 	'arvgvcpprivate.h',
 	'arvuvspprivate.h',
-	'arvuvcpprivate.h',
-	'arv.h'
+	'arvuvcpprivate.h'
 ]
 
 if not enable_usb
