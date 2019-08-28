@@ -492,8 +492,8 @@ converter_test (void)
 
 	node = arv_gc_get_node (genicam, "ConverterEnumeration");
 	g_assert (ARV_IS_GC_CONVERTER (node));
-	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
-	g_assert_cmpint (v_int64, ==, 5);
+	v_double = arv_gc_float_get_value (ARV_GC_FLOAT (node), NULL);
+	g_assert_cmpint (v_double, ==, 5);
 
 	node = arv_gc_get_node (genicam, "IntConverterTestSubAndConstant");
 	g_assert (ARV_IS_GC_CONVERTER (node));

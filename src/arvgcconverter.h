@@ -27,7 +27,6 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
-#include <arvtypes.h>
 #include <arvgcfeaturenode.h>
 #include <arvgcpropertynode.h>
 
@@ -54,8 +53,6 @@ struct _ArvGcConverterClass {
 };
 
 GType 		arv_gc_converter_get_type 	(void);
-ArvGcNode * 	arv_gc_converter_new 		(void);
-ArvGcNode * 	arv_gc_converter_new_integer 	(void);
 
 G_END_DECLS
 

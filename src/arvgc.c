@@ -94,9 +94,9 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 	else if (strcmp (tag_name, "Command") == 0)
 		node = arv_gc_command_new ();
 	else if (strcmp (tag_name, "Converter") == 0)
-		node = arv_gc_converter_new ();
+		node = arv_gc_converter_node_new ();
 	else if (strcmp (tag_name, "IntConverter") == 0)
-		node = arv_gc_converter_new_integer ();
+		node = arv_gc_int_converter_node_new ();
 	else if (strcmp (tag_name, "Register") == 0)
 		node = arv_gc_register_node_new ();
 	else if (strcmp (tag_name, "IntReg") == 0)

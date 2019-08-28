@@ -58,6 +58,7 @@
 #include <arvgccategory.h>
 #include <arvgccommand.h>
 #include <arvgcconverter.h>
+#include <arvgcconverternode.h>
 #include <arvgcenumentry.h>
 #include <arvgcenumeration.h>
 #include <arvgcenums.h>
@@ -67,6 +68,7 @@
 #include <arvgcgroupnode.h>
 #include <arvgc.h>
 #include <arvgcindexnode.h>
+#include <arvgcintconverternode.h>
 #include <arvgcinteger.h>
 #include <arvgcintegernode.h>
 #include <arvgcinvalidatornode.h>
