@@ -58,6 +58,10 @@
 #include <arvenums.h>
 #include <arvstr.h>
 
+static void arv_camera_get_integer_bounds_as_gint (ArvCamera *camera, const char *feature, gint *min, gint *max);
+static void arv_camera_get_integer_bounds_as_guint (ArvCamera *camera, const char *feature, guint *min, guint *max);
+static void arv_camera_get_integer_bounds_as_double (ArvCamera *camera, const char *feature, double *min, double *max);
+
 /**
  * ArvCameraVendor:
  * @ARV_CAMERA_VENDOR_UNKNOWN: unknown camera vendor
@@ -284,16 +288,7 @@ arv_camera_get_region (ArvCamera *camera, gint *x, gint *y, gint *width, gint *h
 void
 arv_camera_get_x_offset_bounds (ArvCamera *camera, gint *min, gint *max)
 {
-	gint64 min64, max64;
-
-	g_return_if_fail (ARV_IS_CAMERA (camera));
-
-	arv_camera_get_integer_bounds (camera, "OffsetX", &min64, &max64);
-
-	if (min != NULL)
-		*min = min64;
-	if (max != NULL)
-		*max = max64;
+	arv_camera_get_integer_bounds_as_gint (camera, "OffsetX", min, max);
 }
 
 /**
@@ -310,16 +305,7 @@ arv_camera_get_x_offset_bounds (ArvCamera *camera, gint *min, gint *max)
 void
 arv_camera_get_y_offset_bounds (ArvCamera *camera, gint *min, gint *max)
 {
-	gint64 min64, max64;
-
-	g_return_if_fail (ARV_IS_CAMERA (camera));
-
-	arv_camera_get_integer_bounds (camera, "OffsetY", &min64, &max64);
-
-	if (min != NULL)
-		*min = min64;
-	if (max != NULL)
-		*max = max64;
+	arv_camera_get_integer_bounds_as_gint (camera, "OffsetY", min, max);
 }
 
 /**
@@ -336,16 +322,7 @@ arv_camera_get_y_offset_bounds (ArvCamera *camera, gint *min, gint *max)
 void
 arv_camera_get_x_binning_bounds (ArvCamera *camera, gint *min, gint *max)
 {
-	gint64 min64, max64;
-
-	g_return_if_fail (ARV_IS_CAMERA (camera));
-
-	arv_camera_get_integer_bounds (camera, "BinningHorizontal", &min64, &max64);
-
-	if (min != NULL)
-		*min = min64;
-	if (max != NULL)
-		*max = max64;
+	arv_camera_get_integer_bounds_as_gint (camera, "BinningHorizontal", min, max);
 }
 
 /**
@@ -362,16 +339,7 @@ arv_camera_get_x_binning_bounds (ArvCamera *camera, gint *min, gint *max)
 void
 arv_camera_get_y_binning_bounds (ArvCamera *camera, gint *min, gint *max)
 {
-	gint64 min64, max64;
-
-	g_return_if_fail (ARV_IS_CAMERA (camera));
-
-	arv_camera_get_integer_bounds (camera, "BinningVertical", &min64, &max64);
-
-	if (min != NULL)
-		*min = min64;
-	if (max != NULL)
-		*max = max64;
+	arv_camera_get_integer_bounds_as_gint (camera, "BinningVertical", min, max);
 }
 
 /**
@@ -388,16 +356,7 @@ arv_camera_get_y_binning_bounds (ArvCamera *camera, gint *min, gint *max)
 void
 arv_camera_get_width_bounds (ArvCamera *camera, gint *min, gint *max)
 {
-	gint64 min64, max64;
-
-	g_return_if_fail (ARV_IS_CAMERA (camera));
-
-	arv_camera_get_integer_bounds (camera, "Width", &min64, &max64);
-
-	if (min != NULL)
-		*min = min64;
-	if (max != NULL)
-		*max = max64;
+	arv_camera_get_integer_bounds_as_gint (camera, "Width", min, max);
 }
 
 /**
@@ -414,16 +373,7 @@ arv_camera_get_width_bounds (ArvCamera *camera, gint *min, gint *max)
 void
 arv_camera_get_height_bounds (ArvCamera *camera, gint *min, gint *max)
 {
-	gint64 min64, max64;
-
-	g_return_if_fail (ARV_IS_CAMERA (camera));
-
-	arv_camera_get_integer_bounds (camera, "Height", &min64, &max64);
-
-	if (min != NULL)
-		*min = min64;
-	if (max != NULL)
-		*max = max64;
+	arv_camera_get_integer_bounds_as_gint (camera, "Height", min, max);
 }
 
 /**
@@ -587,7 +537,7 @@ arv_camera_get_available_pixel_formats_as_strings (ArvCamera *camera, guint *n_p
 const char **
 arv_camera_get_available_pixel_formats_as_display_names (ArvCamera *camera, guint *n_pixel_formats)
 {
-	return arv_camera_get_available_enumeration_display_names (camera, "PixelFormat", n_pixel_formats); 
+	return arv_camera_get_available_enumeration_display_names (camera, "PixelFormat", n_pixel_formats);
 }
 
 /* Acquisition control */
@@ -731,7 +681,7 @@ arv_camera_set_frame_count (ArvCamera *camera, gint64 frame_count)
 	if (frame_count <= 0)
 		return;
 
-	arv_camera_get_frame_count_bounds(camera, &minimum, &maximum);
+	arv_camera_get_frame_count_bounds (camera, &minimum, &maximum);
 
 	if (frame_count < minimum)
 		frame_count = minimum;
@@ -770,11 +720,6 @@ arv_camera_get_frame_count (ArvCamera *camera)
 void
 arv_camera_get_frame_count_bounds (ArvCamera *camera, gint64 *min, gint64 *max)
 {
-	if (min != NULL)
-		*min = G_MININT64;
-	if (max != NULL)
-		*max = G_MAXINT64;
-
 	arv_camera_get_integer_bounds (camera, "AcquisitionFrameCount", min, max);
 }
 
@@ -941,11 +886,6 @@ void
 arv_camera_get_frame_rate_bounds (ArvCamera *camera, double *min, double *max)
 {
 	ArvGcNode *feature;
-
-	if (min != NULL)
-		*min = G_MINDOUBLE;
-	if (max != NULL)
-		*max = G_MAXDOUBLE;
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
@@ -1225,8 +1165,6 @@ arv_camera_get_exposure_time (ArvCamera *camera)
 void
 arv_camera_get_exposure_time_bounds (ArvCamera *camera, double *min, double *max)
 {
-	gint64 int_min, int_max;
-
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
 	switch (camera->priv->series) {
@@ -1238,35 +1176,16 @@ arv_camera_get_exposure_time_bounds (ArvCamera *camera, double *min, double *max
 						     min, max);
 			break;
 		case ARV_CAMERA_SERIES_BASLER_ACE:
-			if (camera->priv->has_exposure_time) {
+			if (camera->priv->has_exposure_time)
 				arv_camera_get_float_bounds (camera, "ExposureTime", min, max);
-			} else {
-				arv_camera_get_integer_bounds (camera, "ExposureTimeRaw",
-							       &int_min,
-							       &int_max);
-				if (min != NULL)
-					*min = int_min;
-				if (max != NULL)
-					*max = int_max;
-			}
+			else
+				arv_camera_get_integer_bounds_as_double (camera, "ExposureTimeRaw", min, max);
 			break;
 		case ARV_CAMERA_SERIES_XIMEA:
-			arv_camera_get_integer_bounds (camera, "ExposureTime",
-						       &int_min,
-						       &int_max);
-			if (min != NULL)
-				*min = int_min;
-			if (max != NULL)
-				*max = int_max;
+			arv_camera_get_integer_bounds_as_double (camera, "ExposureTime", min, max);
 			break;
 		case ARV_CAMERA_SERIES_RICOH:
-			arv_camera_get_integer_bounds (camera, "ExposureTimeRaw",
-						       &int_min,
-						       &int_max);
-			if (min != NULL)
-				*min = int_min;
-			if (max != NULL)
-				*max = int_max;
+			arv_camera_get_integer_bounds_as_double (camera, "ExposureTimeRaw", min, max);
 			break;
 		default:
 			arv_camera_get_float_bounds (camera,
@@ -1371,8 +1290,6 @@ arv_camera_get_gain (ArvCamera *camera)
 void
 arv_camera_get_gain_bounds (ArvCamera *camera, double *min, double *max)
 {
-	gint64 min64, max64;
-
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
 	if (camera->priv->has_gain) {
@@ -1380,12 +1297,7 @@ arv_camera_get_gain_bounds (ArvCamera *camera, double *min, double *max)
 		return;
 	}
 
-	arv_camera_get_integer_bounds (camera, "GainRaw", &min64, &max64);
-
-	if (min != NULL)
-		*min = min64;
-	if (max != NULL)
-		*max = max64;
+	arv_camera_get_integer_bounds_as_double (camera, "GainRaw", min, max);
 
 	return;
 }
@@ -1836,6 +1748,84 @@ arv_camera_get_integer_bounds (ArvCamera *camera, const char *feature, gint64 *m
 	if (error != NULL) {
 		_update_status (camera, error);
 		g_clear_error (&error);
+	}
+}
+
+static void
+arv_camera_get_integer_bounds_as_gint (ArvCamera *camera, const char *feature, gint *min, gint *max)
+{
+	GError *error = NULL;
+	gint64 min64, max64;
+
+	if (min != NULL)
+		*min = G_MININT;
+	if (max != NULL)
+		*max = G_MAXINT;
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+	g_return_if_fail (feature != NULL);
+
+	arv_device_get_integer_feature_bounds (camera->priv->device, feature, &min64, &max64, &error);
+	if (error != NULL) {
+		_update_status (camera, error);
+		g_clear_error (&error);
+	} else {
+		if (min != NULL)
+			*min = CLAMP (min64, G_MININT, G_MAXINT);
+		if (max != NULL)
+			*max = CLAMP (max64, G_MININT, G_MAXINT);
+	}
+}
+
+static void
+arv_camera_get_integer_bounds_as_guint (ArvCamera *camera, const char *feature, guint *min, guint *max)
+{
+	GError *error = NULL;
+	gint64 min64, max64;
+
+	if (min != NULL)
+		*min = 0;
+	if (max != NULL)
+		*max = G_MAXUINT;
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+	g_return_if_fail (feature != NULL);
+
+	arv_device_get_integer_feature_bounds (camera->priv->device, feature, &min64, &max64, &error);
+	if (error != NULL) {
+		_update_status (camera, error);
+		g_clear_error (&error);
+	} else {
+		if (min != NULL)
+			*min = CLAMP (min64, 0, G_MAXUINT);
+		if (max != NULL)
+			*max = CLAMP (max64, 0, G_MAXUINT);
+	}
+}
+
+static void
+arv_camera_get_integer_bounds_as_double (ArvCamera *camera, const char *feature, double *min, double *max)
+{
+	GError *error = NULL;
+	gint64 min64, max64;
+
+	if (min != NULL)
+		*min = G_MININT64;
+	if (max != NULL)
+		*max = G_MAXINT64;
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+	g_return_if_fail (feature != NULL);
+
+	arv_device_get_integer_feature_bounds (camera->priv->device, feature, &min64, &max64, &error);
+	if (error != NULL) {
+		_update_status (camera, error);
+		g_clear_error (&error);
+	} else {
+		if (min != NULL)
+			*min = min64;
+		if (max != NULL)
+			*max = max64;
 	}
 }
 
@@ -2339,15 +2329,7 @@ arv_camera_uv_get_bandwidth (ArvCamera *camera)
 void
 arv_camera_uv_get_bandwidth_bounds (ArvCamera *camera, guint *min, guint *max)
 {
-	gint64 min64, max64;
-
-	g_return_if_fail (arv_camera_is_uv_device (camera));
-
-	arv_camera_get_integer_bounds (camera, "DeviceLinkThroughputLimit", &min64, &max64);
-	if (min != NULL)
-		*min = min64;
-	if (max != NULL)
-		*max = max64;
+	arv_camera_get_integer_bounds_as_guint (camera, "DeviceLinkThroughputLimit", min, max);
 }
 
 /**
