@@ -471,7 +471,7 @@ arv_device_get_integer_feature_bounds (ArvDevice *device, const char *feature, g
 	ArvGcNode *node;
 
 	if (min != NULL)
-		*min = -G_MAXINT64;
+		*min = G_MININT64;
 	if (max != NULL)
 		*max = G_MAXINT64;
 
@@ -571,7 +571,7 @@ arv_device_get_float_feature_bounds (ArvDevice *device, const char *feature, dou
 	ArvGcNode *node;
 
 	if (min != NULL)
-		*min = G_MINDOUBLE;
+		*min = -G_MAXDOUBLE;
 	if (max != NULL)
 		*max = G_MAXDOUBLE;
 
