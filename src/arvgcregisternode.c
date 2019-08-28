@@ -970,11 +970,78 @@ arv_gc_register_node_set_integer_value (ArvGcInteger *gc_integer, gint64 value, 
 	_set_integer_value (gc_register_node, lsb, msb, value, error);
 }
 
+static gint64
+arv_gc_register_node_get_min (ArvGcInteger *gc_integer, GError **error)
+{
+	ArvGcRegisterNode *gc_register_node = ARV_GC_REGISTER_NODE (gc_integer);
+	GError *local_error = NULL;
+	gint64 lsb, msb;
+	ArvGcSignedness signedness;
+
+	if (gc_register_node->type != ARV_GC_REGISTER_NODE_TYPE_MASKED_INTEGER &&
+	    gc_register_node->type != ARV_GC_REGISTER_NODE_TYPE_STRUCT_REGISTER)
+		return G_MININT64;
+
+	lsb = _get_lsb (gc_register_node, &local_error);
+	if (local_error == NULL)
+		msb = _get_msb (gc_register_node, &local_error);
+	if (local_error == NULL)
+		signedness = _get_signedness (gc_register_node, &local_error);
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return G_MININT64;
+	}
+
+	if (signedness == ARV_GC_SIGNEDNESS_SIGNED) {
+		return -((1 << (msb - lsb  - 1)));
+	} else {
+		return 0;
+	}
+}
+
+static gint64
+arv_gc_register_node_get_max (ArvGcInteger *gc_integer, GError **error)
+{
+	ArvGcRegisterNode *gc_register_node = ARV_GC_REGISTER_NODE (gc_integer);
+	GError *local_error = NULL;
+	gint64 lsb, msb;
+	ArvGcSignedness signedness;
+
+	if (gc_register_node->type != ARV_GC_REGISTER_NODE_TYPE_MASKED_INTEGER &&
+	    gc_register_node->type != ARV_GC_REGISTER_NODE_TYPE_STRUCT_REGISTER)
+		return G_MAXINT64;
+
+	lsb = _get_lsb (gc_register_node, &local_error);
+	if (local_error == NULL)
+		msb = _get_msb (gc_register_node, &local_error);
+	if (local_error == NULL)
+		signedness = _get_signedness (gc_register_node, &local_error);
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return G_MAXINT64;
+	}
+
+	if (signedness == ARV_GC_SIGNEDNESS_SIGNED) {
+		return ((1 << (msb - lsb  - 1)) - 1);
+	} else {
+		return (1 << (msb - lsb)) - 1;
+	}
+}
+
+static gint64
+arv_gc_register_node_get_inc (ArvGcInteger *gc_integer, GError **error)
+{
+	return 1;
+}
+
 static void
 arv_gc_register_node_integer_interface_init (ArvGcIntegerInterface *interface)
 {
 	interface->get_value = arv_gc_register_node_get_integer_value;
 	interface->set_value = arv_gc_register_node_set_integer_value;
+	interface->get_min = arv_gc_register_node_get_min;
+	interface->get_max = arv_gc_register_node_get_max;
+	interface->get_inc = arv_gc_register_node_get_inc;
 }
 
 static double
