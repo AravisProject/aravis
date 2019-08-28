@@ -49,7 +49,8 @@
 #include <arvgcfloat.h>
 #include <arvgcboolean.h>
 #include <arvgcswissknife.h>
-#include <arvgcconverter.h>
+#include <arvgcconverternode.h>
+#include <arvgcintconverternode.h>
 #include <arvgcport.h>
 #include <arvbuffer.h>
 #include <arvdebug.h>
