@@ -124,6 +124,14 @@ arv_gc_converter_get_integer_max (ArvGcInteger *gc_integer, GError **error)
 	return MAX (a, b);
 }
 
+static gint64
+_get_inc (ArvGcInteger *self, GError **error)
+{
+	/* Genicam 2.1.1 p. 41 says: The increment of an IntConvertor is always 1. */
+
+	return 1;
+}
+
 static void
 arv_gc_converter_set_integer_value (ArvGcInteger *gc_integer, gint64 value, GError **error)
 {
@@ -142,6 +150,7 @@ arv_gc_int_converter_node_integer_interface_init (ArvGcIntegerInterface *interfa
 	interface->get_value = arv_gc_converter_get_integer_value;
 	interface->get_min = arv_gc_converter_get_integer_min;
 	interface->get_max = arv_gc_converter_get_integer_max;
+	interface->get_inc = _get_inc;
 	interface->set_value = arv_gc_converter_set_integer_value;
 	interface->get_unit = arv_gc_converter_get_integer_unit;
 }
