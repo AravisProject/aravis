@@ -171,6 +171,8 @@ gint64 *	arv_camera_get_available_enumerations			(ArvCamera *camera, const char 
 const char **	arv_camera_get_available_enumerations_as_strings	(ArvCamera *camera, const char *feature, guint *n_values);
 const char ** 	arv_camera_get_available_enumeration_display_names 	(ArvCamera *camera, const char *feature, guint *n_values);
 
+gboolean 	arv_camera_is_feature_available 	(ArvCamera *camera, const char *feature);
+
 ArvStatus 	arv_camera_get_status			(ArvCamera *camera, GError **error);
 
 /* GigEVision specific API */

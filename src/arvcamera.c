@@ -1591,23 +1591,10 @@ arv_camera_is_gain_auto_available (ArvCamera *camera)
 gboolean
 arv_camera_is_binning_available (ArvCamera *camera)
 {
-	ArvGcNode* node;
-
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
-	node = arv_device_get_feature (camera->priv->device, "BinningHorizontal");
-	if (!ARV_IS_GC_FEATURE_NODE (node))
-		return FALSE;
-	if (!arv_gc_feature_node_is_available (ARV_GC_FEATURE_NODE (node), NULL))
-		return FALSE;
-
-	node = arv_device_get_feature (camera->priv->device, "BinningVertical");
-	if (!ARV_IS_GC_FEATURE_NODE (node))
-		return FALSE;
-	if (!arv_gc_feature_node_is_available (ARV_GC_FEATURE_NODE (node), NULL))
-		return FALSE;
-
-	return TRUE;
+	return arv_camera_is_feature_available (camera, "BinningHorizontal") &&
+		arv_camera_is_feature_available (camera, "BinningVertical");
 }
 
 static void
@@ -2124,6 +2111,37 @@ arv_camera_get_available_enumeration_display_names (ArvCamera *camera, const cha
 	}
 
 	return strings;
+}
+
+/**
+ * arv_camera_is_feature_available:
+ * @camera: a #ArvCamera
+ * @feature: feature name
+ *
+ * Return: %TRUE if feature is available, %FALSE if not or on error.
+ *
+ * Since: 0.8.0
+ */
+
+gboolean
+arv_camera_is_feature_available (ArvCamera *camera, const char *feature)
+{
+	ArvGcNode* node;
+	GError *error = NULL;
+	gboolean available = FALSE;
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
+	g_return_val_if_fail (feature != NULL, FALSE);
+
+	node = arv_device_get_feature (camera->priv->device, feature);
+	available = ARV_IS_GC_FEATURE_NODE (node) && arv_gc_feature_node_is_available (ARV_GC_FEATURE_NODE (node), &error);
+
+	if (error != NULL) {
+		_update_status (camera, error);
+		g_clear_error (&error);
+	}
+
+	return available;
 }
 
 ArvStatus
