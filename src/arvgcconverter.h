@@ -40,23 +40,13 @@ G_BEGIN_DECLS
 #define ARV_IS_GC_CONVERTER_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GC_CONVERTER))
 #define ARV_GC_CONVERTER_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GC_CONVERTER, ArvGcConverterClass))
 
+typedef struct _ArvGcConverterPrivate ArvGcConverterPrivate;
 typedef struct _ArvGcConverterClass ArvGcConverterClass;
 
 struct _ArvGcConverter {
 	ArvGcFeatureNode	node;
 
-	GType value_type;
-	GSList *variables;	/* ArvGcVariableNode list */
-	GSList *constants;	/* ArvGcVariableNode list */
-	GSList *expressions;	/* ArvGcVariableNode list */
-
-	ArvGcPropertyNode *value;
-	ArvGcPropertyNode *formula_to_node;
-	ArvGcPropertyNode *formula_from_node;
-	ArvGcPropertyNode *unit;
-
-	ArvEvaluator *formula_to;
-	ArvEvaluator *formula_from;
+	ArvGcConverterPrivate *priv;
 };
 
 struct _ArvGcConverterClass {
