@@ -866,20 +866,19 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
 			arv_camera_set_string (camera, "TriggerSelector", "FrameStart");
 			arv_camera_set_string (camera, "TriggerMode", "Off");
 			feature = arv_device_get_feature (camera->priv->device, "FPS");
-			if (ARV_IS_GC_FEATURE_NODE (feature) &&
-			    g_strcmp0 (arv_dom_node_get_node_name (ARV_DOM_NODE (feature)), "Enumeration") == 0) {
+			if (ARV_IS_GC_ENUMERATION (feature)) {
 				gint64 *values;
 				guint n_values;
 				guint i;
 
-				values = arv_gc_enumeration_get_available_int_values (ARV_GC_ENUMERATION (feature), &n_values, NULL);
+				values = arv_camera_get_available_enumerations (camera, "FPS", &n_values);
 				for (i = 0; i < n_values; i++) {
 					if (values[i] > 0) {
 						double e;
 
 						e = (int)((10000000/(double) values[i]) * 100 + 0.5) / 100.0;
 						if (e == frame_rate) {
-							arv_gc_enumeration_set_int_value (ARV_GC_ENUMERATION (feature), values[i], NULL);
+							arv_camera_set_integer (camera, "FPS", values[i]);
 							break;
 						}
 					}
@@ -934,11 +933,10 @@ arv_camera_get_frame_rate (ArvCamera *camera)
 			return arv_camera_get_float (camera, "AcquisitionFrameRateAbs");
 		case ARV_CAMERA_VENDOR_TIS:
 			feature = arv_device_get_feature (camera->priv->device, "FPS");
-			if (ARV_IS_GC_FEATURE_NODE (feature) &&
-			    g_strcmp0 (arv_dom_node_get_node_name (ARV_DOM_NODE (feature)), "Enumeration") == 0) {
+			if (ARV_IS_GC_ENUMERATION (feature)) {
 				gint64 i;
 
-				i = arv_gc_enumeration_get_int_value (ARV_GC_ENUMERATION (feature), NULL);
+				i = arv_camera_get_integer (camera, "FPS");
 				if (i > 0)
 					return (int)((10000000/(double) i) * 100 + 0.5) / 100.0;
 				else
@@ -982,13 +980,12 @@ arv_camera_get_frame_rate_bounds (ArvCamera *camera, double *min, double *max)
 	switch (camera->priv->vendor) {
 		case ARV_CAMERA_VENDOR_TIS:
 			feature = arv_device_get_feature (camera->priv->device, "FPS");
-			if (ARV_IS_GC_FEATURE_NODE (feature) &&
-			    g_strcmp0 (arv_dom_node_get_node_name (ARV_DOM_NODE (feature)), "Enumeration") == 0) {
+			if (ARV_IS_GC_ENUMERATION (feature)) {
 				gint64 *values;
 				guint n_values;
 				guint i;
 
-				values = arv_gc_enumeration_get_available_int_values (ARV_GC_ENUMERATION (feature), &n_values, NULL);
+				values = arv_camera_get_available_enumerations (camera, "FPS", &n_values);
 				for (i = 0; i < n_values; i++) {
 					if (values[i] > 0) {
 						double s;
