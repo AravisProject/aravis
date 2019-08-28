@@ -313,6 +313,130 @@ fake_stream_test (void)
 	g_clear_object (&camera);
 }
 
+static void
+camera_api_test (void)
+{
+	ArvCamera *camera;
+	ArvPixelFormat pixel_format;
+	ArvStatus status;
+	GError *error = NULL;
+	int x, y, w, h;
+	const char *string;
+	void *ptr;
+	unsigned int n;
+	gboolean b;
+	double d;
+
+	camera = arv_camera_new ("Fake_1");
+	g_assert (ARV_IS_CAMERA (camera));
+
+	string = arv_camera_get_vendor_name (camera);
+	g_assert (string != NULL);
+
+	string = arv_camera_get_model_name (camera);
+	g_assert (string != NULL);
+
+	string = arv_camera_get_device_id (camera);
+	g_assert (string != NULL);
+
+	arv_camera_get_region (camera, &x, &y, &w, &h);
+	g_assert_cmpint (x, ==, 0);
+	g_assert_cmpint (y, ==, 0);
+	g_assert_cmpint (w, ==, ARV_FAKE_CAMERA_WIDTH_DEFAULT);
+	g_assert_cmpint (h, ==, ARV_FAKE_CAMERA_HEIGHT_DEFAULT);
+
+	arv_camera_get_sensor_size (camera, &w, &h);
+	g_assert_cmpint (w, ==, ARV_FAKE_CAMERA_SENSOR_WIDTH);
+	g_assert_cmpint (h, ==, ARV_FAKE_CAMERA_SENSOR_HEIGHT);
+
+	arv_camera_set_region (camera, 10, 20, 30, 40);
+	arv_camera_get_region (camera, &x, &y, &w, &h);
+	g_assert_cmpint (x, ==, 10);
+	g_assert_cmpint (y, ==, 20);
+	g_assert_cmpint (w, ==, 30);
+	g_assert_cmpint (h, ==, 40);
+
+	arv_camera_get_binning (camera, &x, &y);
+	g_assert_cmpint (x, ==, ARV_FAKE_CAMERA_BINNING_HORIZONTAL_DEFAULT);
+	g_assert_cmpint (y, ==, ARV_FAKE_CAMERA_BINNING_VERTICAL_DEFAULT);
+
+	arv_camera_set_binning (camera, 2, 4);
+	arv_camera_get_binning (camera, &x, &y);
+	g_assert_cmpint (x, ==, 2);
+	g_assert_cmpint (y, ==, 4);
+
+	b = arv_camera_is_binning_available (camera);
+	g_assert (b);
+
+	pixel_format = arv_camera_get_pixel_format (camera);
+	g_assert_cmpint (pixel_format, ==, ARV_PIXEL_FORMAT_MONO_8);
+
+	arv_camera_set_pixel_format (camera, ARV_PIXEL_FORMAT_RGB_8_PACKED);
+	pixel_format = arv_camera_get_pixel_format (camera);
+	g_assert_cmpint (pixel_format, ==, ARV_PIXEL_FORMAT_RGB_8_PACKED);
+
+	string = arv_camera_get_pixel_format_as_string (camera);
+	g_assert_cmpstr (string, ==, "RGB8");
+
+	arv_camera_set_pixel_format_from_string (camera, "Mono8");
+	pixel_format = arv_camera_get_pixel_format (camera);
+	g_assert_cmpint (pixel_format, ==, ARV_PIXEL_FORMAT_MONO_8);
+
+	ptr = arv_camera_get_available_pixel_formats (camera, &n);
+	g_assert (ptr != NULL);
+	g_assert_cmpint (n, ==, 2);
+	g_clear_pointer (&ptr, g_free);
+
+	ptr = arv_camera_get_available_pixel_formats_as_strings (camera, &n);
+	g_assert (ptr != NULL);
+	g_assert_cmpint (n, ==, 2);
+	g_clear_pointer (&ptr, g_free);
+
+	ptr = arv_camera_get_available_pixel_formats_as_display_names (camera, &n);
+	g_assert (ptr != NULL);
+	g_assert_cmpint (n, ==, 2);
+	g_clear_pointer (&ptr, g_free);
+
+	b = arv_camera_is_frame_rate_available (camera);
+	g_assert (b);
+
+#if 0
+	d = arv_camera_get_frame_rate (camera);
+	g_assert_cmpfloat (d, ==, ARV_FAKE_CAMERA_ACQUISITION_FRAME_RATE_DEFAULT);
+
+	arv_camera_set_frame_rate (camera, 10.0);
+	d = arv_camera_get_frame_rate (camera);
+	g_assert_cmpfloat (d, ==, 10.0);
+#endif
+
+	b = arv_camera_is_exposure_auto_available (camera);
+	g_assert (!b);
+
+	b = arv_camera_is_exposure_time_available (camera);
+	g_assert (b);
+
+	arv_camera_set_gain (camera, 1.0);
+	d = arv_camera_get_gain (camera);
+	g_assert_cmpfloat (d, ==, 1.0);
+
+	status = arv_camera_get_status (camera, &error);
+	g_assert_cmpint (status, ==, ARV_STATUS_SUCCESS);
+	g_assert (error == NULL);
+
+	arv_camera_set_integer (camera, "Unknown", 0);
+	status = arv_camera_get_status (camera, &error);
+	g_assert_cmpint (status, !=, ARV_STATUS_SUCCESS);
+	g_assert (error != NULL);
+	g_clear_error (&error);
+
+	/* Status is reset after read */
+	status = arv_camera_get_status (camera, &error);
+	g_assert_cmpint (status, ==, ARV_STATUS_SUCCESS);
+	g_assert (error == NULL);
+
+	g_object_unref (camera);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -331,6 +455,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/fake/fake-device", fake_device_test);
 	g_test_add_func ("/fake/fake-device-error", fake_device_error_test);
 	g_test_add_func ("/fake/fake-stream", fake_stream_test);
+	g_test_add_func ("/fake/camera-api", camera_api_test);
 
 	result = g_test_run();
 
