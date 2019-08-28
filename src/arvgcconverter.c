@@ -45,6 +45,8 @@ struct _ArvGcConverterPrivate {
 	ArvGcPropertyNode *formula_to_node;
 	ArvGcPropertyNode *formula_from_node;
 	ArvGcPropertyNode *unit;
+	ArvGcPropertyNode *is_linear;
+	ArvGcPropertyNode *slope;
 
 	ArvEvaluator *formula_to;
 	ArvEvaluator *formula_from;
@@ -81,6 +83,12 @@ arv_gc_converter_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_UNIT:
 				gc_converter->priv->unit = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_IS_LINEAR:
+				gc_converter->priv->is_linear = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_SLOPE:
+				gc_converter->priv->slope = property_node;
 				break;
 			default:
 				ARV_DOM_NODE_CLASS (parent_class)->post_new_child (self, child);

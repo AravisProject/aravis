@@ -41,7 +41,9 @@ typedef enum {
 	ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_NAME,
 	ARV_GC_PROPERTY_NODE_TYPE_MINIMUM,
 	ARV_GC_PROPERTY_NODE_TYPE_MAXIMUM,
+	ARV_GC_PROPERTY_NODE_TYPE_SLOPE,
 	ARV_GC_PROPERTY_NODE_TYPE_INCREMENT,
+	ARV_GC_PROPERTY_NODE_TYPE_IS_LINEAR,
 	ARV_GC_PROPERTY_NODE_TYPE_UNIT,
 	ARV_GC_PROPERTY_NODE_TYPE_ON_VALUE,
 	ARV_GC_PROPERTY_NODE_TYPE_OFF_VALUE,
@@ -123,8 +125,10 @@ ArvGcNode * 	arv_gc_property_node_new_minimum		(void);
 ArvGcNode * 	arv_gc_property_node_new_p_minimum		(void);
 ArvGcNode * 	arv_gc_property_node_new_maximum		(void);
 ArvGcNode * 	arv_gc_property_node_new_p_maximum		(void);
+ArvGcNode * 	arv_gc_property_node_new_slope			(void);
 ArvGcNode * 	arv_gc_property_node_new_increment		(void);
 ArvGcNode * 	arv_gc_property_node_new_p_increment		(void);
+ArvGcNode * 	arv_gc_property_node_new_is_linear		(void);
 ArvGcNode * 	arv_gc_property_node_new_unit			(void);
 ArvGcNode * 	arv_gc_property_node_new_on_value 		(void);
 ArvGcNode * 	arv_gc_property_node_new_off_value 		(void);

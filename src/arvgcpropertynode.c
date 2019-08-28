@@ -63,8 +63,12 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 			return "Min";
 		case ARV_GC_PROPERTY_NODE_TYPE_MAXIMUM:
 			return "Max";
+		case ARV_GC_PROPERTY_NODE_TYPE_SLOPE:
+			return "Slope";
 		case ARV_GC_PROPERTY_NODE_TYPE_INCREMENT:
 			return "Inc";
+		case ARV_GC_PROPERTY_NODE_TYPE_IS_LINEAR:
+			return "IsLinear";
 		case ARV_GC_PROPERTY_NODE_TYPE_UNIT:
 			return "Unit";
 		case ARV_GC_PROPERTY_NODE_TYPE_ON_VALUE:
@@ -552,6 +556,12 @@ arv_gc_property_node_new_p_maximum (void)
 }
 
 ArvGcNode *
+arv_gc_property_node_new_slope (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_SLOPE);
+}
+
+ArvGcNode *
 arv_gc_property_node_new_increment (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_INCREMENT);
@@ -561,6 +571,12 @@ ArvGcNode *
 arv_gc_property_node_new_p_increment (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_P_INCREMENT);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_is_linear (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_IS_LINEAR);
 }
 
 ArvGcNode *
