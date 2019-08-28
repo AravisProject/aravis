@@ -68,17 +68,23 @@ const char *	arv_camera_get_device_id	(ArvCamera *camera);
 
 /* Image format control */
 
-void 		arv_camera_get_sensor_size 	(ArvCamera *camera, gint *width, gint *height);
-void		arv_camera_set_region		(ArvCamera *camera, gint x, gint y, gint width, gint height);
-void		arv_camera_get_region		(ArvCamera *camera, gint *x, gint *y, gint *width, gint *height);
-void		arv_camera_get_x_offset_bounds	(ArvCamera *camera, gint *min, gint *max);
-void		arv_camera_get_y_offset_bounds	(ArvCamera *camera, gint *min, gint *max);
-void		arv_camera_get_width_bounds	(ArvCamera *camera, gint *min, gint *max);
-void		arv_camera_get_height_bounds	(ArvCamera *camera, gint *min, gint *max);
-void		arv_camera_set_binning		(ArvCamera *camera, gint dx, gint dy);
-void		arv_camera_get_binning		(ArvCamera *camera, gint *dx, gint *dy);
-void		arv_camera_get_x_binning_bounds	(ArvCamera *camera, gint *min, gint *max);
-void		arv_camera_get_y_binning_bounds	(ArvCamera *camera, gint *min, gint *max);
+void 		arv_camera_get_sensor_size 		(ArvCamera *camera, gint *width, gint *height);
+void		arv_camera_set_region			(ArvCamera *camera, gint x, gint y, gint width, gint height);
+void		arv_camera_get_region			(ArvCamera *camera, gint *x, gint *y, gint *width, gint *height);
+void		arv_camera_get_x_offset_bounds		(ArvCamera *camera, gint *min, gint *max);
+gint		arv_camera_get_x_offset_increment	(ArvCamera *camera);
+void		arv_camera_get_y_offset_bounds		(ArvCamera *camera, gint *min, gint *max);
+gint		arv_camera_get_y_offset_increment	(ArvCamera *camera);
+void		arv_camera_get_width_bounds		(ArvCamera *camera, gint *min, gint *max);
+gint		arv_camera_get_width_increment		(ArvCamera *camera);
+void		arv_camera_get_height_bounds		(ArvCamera *camera, gint *min, gint *max);
+gint		arv_camera_get_height_increment		(ArvCamera *camera);
+void		arv_camera_set_binning			(ArvCamera *camera, gint dx, gint dy);
+void		arv_camera_get_binning			(ArvCamera *camera, gint *dx, gint *dy);
+void		arv_camera_get_x_binning_bounds		(ArvCamera *camera, gint *min, gint *max);
+gint		arv_camera_get_x_binning_increment	(ArvCamera *camera);
+void		arv_camera_get_y_binning_bounds		(ArvCamera *camera, gint *min, gint *max);
+gint		arv_camera_get_y_binning_increment	(ArvCamera *camera);
 
 gboolean	arv_camera_is_binning_available (ArvCamera *camera);
 
@@ -155,6 +161,7 @@ const char *	arv_camera_get_string			(ArvCamera *camera, const char *feature);
 void		arv_camera_set_integer			(ArvCamera *camera, const char *feature, gint64 value);
 gint64		arv_camera_get_integer			(ArvCamera *camera, const char *feature);
 void 		arv_camera_get_integer_bounds 		(ArvCamera *camera, const char *feature, gint64 *min, gint64 *max);
+gint64		arv_camera_get_integer_increment	(ArvCamera *camera, const char *feature);
 
 void		arv_camera_set_float			(ArvCamera *camera, const char *feature, double value);
 double		arv_camera_get_float			(ArvCamera *camera, const char *feature);

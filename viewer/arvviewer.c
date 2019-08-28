@@ -668,6 +668,7 @@ update_camera_region (ArvViewer *viewer)
 	gint x, y, width, height;
 	gint dx, dy;
 	gint min, max;
+	gint inc;
 
 	g_signal_handler_block (viewer->camera_x, viewer->camera_x_changed);
 	g_signal_handler_block (viewer->camera_y, viewer->camera_y_changed);
@@ -680,28 +681,40 @@ update_camera_region (ArvViewer *viewer)
 	arv_camera_get_binning (viewer->camera, &dx, &dy);
 
 	arv_camera_get_x_binning_bounds (viewer->camera, &min, &max);
+	inc = arv_camera_get_x_binning_increment (viewer->camera);
 	gtk_spin_button_set_range (GTK_SPIN_BUTTON (viewer->camera_binning_x), min, max);
-	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->camera_binning_x), 1, 10);
+	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->camera_binning_x), inc, inc * 10);
+	gtk_spin_button_set_snap_to_ticks (GTK_SPIN_BUTTON (viewer->camera_binning_x), TRUE);
 	gtk_spin_button_set_value (GTK_SPIN_BUTTON (viewer->camera_binning_x), dx);
 	arv_camera_get_y_binning_bounds (viewer->camera, &min, &max);
+	inc = arv_camera_get_y_binning_increment (viewer->camera);
 	gtk_spin_button_set_range (GTK_SPIN_BUTTON (viewer->camera_binning_y), min, max);
-	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->camera_binning_y), 1, 10);
+	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->camera_binning_y), inc, inc * 10);
+	gtk_spin_button_set_snap_to_ticks (GTK_SPIN_BUTTON (viewer->camera_binning_y), TRUE);
 	gtk_spin_button_set_value (GTK_SPIN_BUTTON (viewer->camera_binning_y), dy);
 	arv_camera_get_x_offset_bounds (viewer->camera, &min, &max);
+	inc = arv_camera_get_x_offset_increment (viewer->camera);
 	gtk_spin_button_set_range (GTK_SPIN_BUTTON (viewer->camera_x), min, max);
-	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->camera_x), 1, 10);
+	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->camera_x), inc, inc * 10);
+	gtk_spin_button_set_snap_to_ticks (GTK_SPIN_BUTTON (viewer->camera_x), TRUE);
 	gtk_spin_button_set_value (GTK_SPIN_BUTTON (viewer->camera_x), x);
 	arv_camera_get_y_offset_bounds (viewer->camera, &min, &max);
+	inc = arv_camera_get_y_offset_increment (viewer->camera);
 	gtk_spin_button_set_range (GTK_SPIN_BUTTON (viewer->camera_y), min, max);
-	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->camera_y), 1, 10);
+	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->camera_y), inc, inc * 10);
+	gtk_spin_button_set_snap_to_ticks (GTK_SPIN_BUTTON (viewer->camera_y), TRUE);
 	gtk_spin_button_set_value (GTK_SPIN_BUTTON (viewer->camera_y), y);
 	arv_camera_get_width_bounds (viewer->camera, &min, &max);
+	inc = arv_camera_get_width_increment (viewer->camera);
 	gtk_spin_button_set_range (GTK_SPIN_BUTTON (viewer->camera_width), min, max);
-	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->camera_width), 1, 10);
+	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->camera_width), inc, inc * 10);
+	gtk_spin_button_set_snap_to_ticks (GTK_SPIN_BUTTON (viewer->camera_width), TRUE);
 	gtk_spin_button_set_value (GTK_SPIN_BUTTON (viewer->camera_width), width);
 	arv_camera_get_height_bounds (viewer->camera, &min, &max);
+	inc = arv_camera_get_height_increment (viewer->camera);
 	gtk_spin_button_set_range (GTK_SPIN_BUTTON (viewer->camera_height), min, max);
-	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->camera_height), 1, 10);
+	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->camera_height), inc, inc * 10);
+	gtk_spin_button_set_snap_to_ticks (GTK_SPIN_BUTTON (viewer->camera_height), TRUE);
 	gtk_spin_button_set_value (GTK_SPIN_BUTTON (viewer->camera_height), height);
 
 	g_signal_handler_unblock (viewer->camera_x, viewer->camera_x_changed);

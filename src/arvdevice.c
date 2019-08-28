@@ -508,6 +508,43 @@ arv_device_get_integer_feature_bounds (ArvDevice *device, const char *feature, g
 }
 
 /**
+ * arv_device_get_integer_feature_increment:
+ * @device: a #ArvDevice
+ * @feature: feature name
+ * @error: a #GError placeholder
+ *
+ * Not all integer features have evenly distributed allowed values, which means the returned increment may not reflect the allowed value
+ * set.
+ *
+ * Returns: feature value increment, or 1 on error.
+ *
+ * Since: 0.8.0
+ */
+
+gint64
+arv_device_get_integer_feature_increment (ArvDevice *device, const char *feature, GError **error)
+{
+	ArvGcNode *node;
+
+	node = _get_feature (device, ARV_TYPE_GC_INTEGER, feature, error);
+	if (node != NULL) {
+		GError *local_error = NULL;
+		gint64 increment;
+
+		increment = arv_gc_integer_get_inc (ARV_GC_INTEGER (node), &local_error);
+
+			if (local_error != NULL) {
+				g_propagate_error (error, local_error);
+				return 1;
+			}
+
+			return increment;
+	}
+
+	return 1;
+}
+
+/**
  * arv_device_set_float_feature_value:
  * @device: a #ArvDevice
  * @feature: feature name

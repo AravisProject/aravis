@@ -93,6 +93,7 @@ const char *	arv_device_get_string_feature_value	(ArvDevice *device, const char 
 void		arv_device_set_integer_feature_value	(ArvDevice *device, const char *feature, gint64 value, GError **error);
 gint64		arv_device_get_integer_feature_value	(ArvDevice *device, const char *feature, GError **error);
 void 		arv_device_get_integer_feature_bounds 	(ArvDevice *device, const char *feature, gint64 *min, gint64 *max, GError **error);
+gint64		arv_device_get_integer_feature_increment(ArvDevice *device, const char *feature, GError **error);
 
 void		arv_device_set_float_feature_value	(ArvDevice *device, const char *feature, double value, GError **error);
 double		arv_device_get_float_feature_value	(ArvDevice *device, const char *feature, GError **error);

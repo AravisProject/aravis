@@ -292,6 +292,21 @@ arv_camera_get_x_offset_bounds (ArvCamera *camera, gint *min, gint *max)
 }
 
 /**
+ * arv_camera_get_x_offset_increment:
+ * @camera: a #ArvCamera
+ *
+ * Returns: horizontal offset value increment.
+ *
+ * Since: 0.8.0
+ */
+
+gint
+arv_camera_get_x_offset_increment (ArvCamera *camera)
+{
+	return arv_camera_get_integer_increment (camera, "OffsetX");
+}
+
+/**
  * arv_camera_get_y_offset_bounds:
  * @camera: a #ArvCamera
  * @min: (out): minimum offset
@@ -309,37 +324,18 @@ arv_camera_get_y_offset_bounds (ArvCamera *camera, gint *min, gint *max)
 }
 
 /**
- * arv_camera_get_x_binning_bounds:
+ * arv_camera_get_y_offset_increment:
  * @camera: a #ArvCamera
- * @min: (out): minimum binning
- * @max: (out): maximum binning
  *
- * Retrieves the valid range for image horizontal binning.
+ * Returns: vertical offset value increment.
  *
- * Since: 0.6.0
+ * Since: 0.8.0
  */
 
-void
-arv_camera_get_x_binning_bounds (ArvCamera *camera, gint *min, gint *max)
+gint
+arv_camera_get_y_offset_increment (ArvCamera *camera)
 {
-	arv_camera_get_integer_bounds_as_gint (camera, "BinningHorizontal", min, max);
-}
-
-/**
- * arv_camera_get_y_binning_bounds:
- * @camera: a #ArvCamera
- * @min: (out): minimum binning
- * @max: (out): maximum binning
- *
- * Retrieves the valid range for image vertical binning.
- *
- * Since: 0.6.0
- */
-
-void
-arv_camera_get_y_binning_bounds (ArvCamera *camera, gint *min, gint *max)
-{
-	arv_camera_get_integer_bounds_as_gint (camera, "BinningVertical", min, max);
+	return arv_camera_get_integer_increment (camera, "OffsetY");
 }
 
 /**
@@ -360,6 +356,21 @@ arv_camera_get_width_bounds (ArvCamera *camera, gint *min, gint *max)
 }
 
 /**
+ * arv_camera_get_width_increment:
+ * @camera: a #ArvCamera
+ *
+ * Returns: width value increment.
+ *
+ * Since: 0.8.0
+ */
+
+gint
+arv_camera_get_width_increment (ArvCamera *camera)
+{
+	return arv_camera_get_integer_increment (camera, "Width");
+}
+
+/**
  * arv_camera_get_height_bounds:
  * @camera: a #ArvCamera
  * @min: (out): minimum height
@@ -374,6 +385,21 @@ void
 arv_camera_get_height_bounds (ArvCamera *camera, gint *min, gint *max)
 {
 	arv_camera_get_integer_bounds_as_gint (camera, "Height", min, max);
+}
+
+/**
+ * arv_camera_get_height_increment:
+ * @camera: a #ArvCamera
+ *
+ * Returns: height value increment.
+ *
+ * Since: 0.8.0
+ */
+
+gint
+arv_camera_get_height_increment (ArvCamera *camera)
+{
+	return arv_camera_get_integer_increment (camera, "Height");
 }
 
 /**
@@ -419,6 +445,70 @@ arv_camera_get_binning (ArvCamera *camera, gint *dx, gint *dy)
 		*dx = arv_camera_get_integer (camera, "BinningHorizontal");
 	if (dy != NULL)
 		*dy = arv_camera_get_integer (camera, "BinningVertical");
+}
+
+/**
+ * arv_camera_get_x_binning_bounds:
+ * @camera: a #ArvCamera
+ * @min: (out): minimum binning
+ * @max: (out): maximum binning
+ *
+ * Retrieves the valid range for image horizontal binning.
+ *
+ * Since: 0.6.0
+ */
+
+void
+arv_camera_get_x_binning_bounds (ArvCamera *camera, gint *min, gint *max)
+{
+	arv_camera_get_integer_bounds_as_gint (camera, "BinningHorizontal", min, max);
+}
+
+/**
+ * arv_camera_get_x_binning_increment:
+ * @camera: a #ArvCamera
+ *
+ * Returns: horizontal binning value increment.
+ *
+ * Since: 0.8.0
+ */
+
+gint
+arv_camera_get_x_binning_increment (ArvCamera *camera)
+{
+	return arv_camera_get_integer_increment (camera, "BinningHorizontal");
+}
+
+/**
+ * arv_camera_get_y_binning_bounds:
+ * @camera: a #ArvCamera
+ * @min: (out): minimum binning
+ * @max: (out): maximum binning
+ *
+ * Retrieves the valid range for image vertical binning.
+ *
+ * Since: 0.6.0
+ */
+
+void
+arv_camera_get_y_binning_bounds (ArvCamera *camera, gint *min, gint *max)
+{
+	arv_camera_get_integer_bounds_as_gint (camera, "BinningVertical", min, max);
+}
+
+/**
+ * arv_camera_get_y_binning_increment:
+ * @camera: a #ArvCamera
+ *
+ * Returns: vertical binning value increment.
+ *
+ * Since: 0.8.0
+ */
+
+gint
+arv_camera_get_y_binning_increment (ArvCamera *camera)
+{
+	return arv_camera_get_integer_increment (camera, "BinningVertical");
 }
 
 /**
@@ -1749,6 +1839,34 @@ arv_camera_get_integer_bounds (ArvCamera *camera, const char *feature, gint64 *m
 		_update_status (camera, error);
 		g_clear_error (&error);
 	}
+}
+
+/**
+ * arv_camera_get_integer_increment:
+ * @camera: a #ArvCamera
+ * @feature: feature name
+ *
+ * Returns: @feature value increment.
+ *
+ * Since: 0.8.0
+ */
+
+gint64
+arv_camera_get_integer_increment (ArvCamera *camera, const char *feature)
+{
+	GError *error = NULL;
+	gint64 value = 1;
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), 1);
+	g_return_val_if_fail (feature != NULL, 1);
+
+	value = arv_device_get_integer_feature_increment (camera->priv->device, feature, &error);
+	if (error != NULL) {
+		_update_status (camera, error);
+		g_clear_error (&error);
+	}
+
+	return value;
 }
 
 static void
