@@ -135,8 +135,6 @@ arv_tool_execute_command (int argc, char **argv, ArvDevice *device)
 					printf ("%s executed\n", tokens[0]);
 				} else {
 					GType value_type;
-					gint64 max_int64, min_int64;
-					double max_double, min_double;
 					const char *unit;
 
 					if (tokens[1] != NULL)
@@ -151,43 +149,59 @@ arv_tool_execute_command (int argc, char **argv, ArvDevice *device)
 								printf ("%s = %s\n", tokens[0],
 									arv_gc_string_get_value (ARV_GC_STRING (feature), NULL));
 							} else {
+								gint64 max_int64, min_int64, inc_int64;
+								GString *string = g_string_new ("");
+
 								min_int64 = arv_gc_integer_get_min (ARV_GC_INTEGER (feature), NULL);
 								max_int64 = arv_gc_integer_get_max (ARV_GC_INTEGER (feature), NULL);
+								inc_int64 = arv_gc_integer_get_inc (ARV_GC_INTEGER (feature), NULL);
 								unit = arv_gc_integer_get_unit (ARV_GC_INTEGER (feature), NULL);
 
-								if (min_int64 != -G_MAXINT64 && max_int64 != G_MAXINT64)
-									printf ("%s = %" G_GINT64_FORMAT
-										"%s%s (min:%" G_GINT64_FORMAT
-										";max:%" G_GINT64_FORMAT
-										")\n", tokens[0],
-										arv_gc_integer_get_value (ARV_GC_INTEGER (feature), NULL),
-										unit != NULL ? " ": "",
-										unit != NULL ? unit : "",
-										min_int64, max_int64);
-								else
-									printf ("%s = %" G_GINT64_FORMAT "%s%s\n",
-										tokens[0],
-										arv_gc_integer_get_value (ARV_GC_INTEGER (feature), NULL),
-										unit != NULL ? " ": "",
-										unit != NULL ? unit : "");
+								g_string_append_printf (string, "%s = %" G_GINT64_FORMAT,
+											tokens[0],
+											arv_gc_integer_get_value (ARV_GC_INTEGER (feature),
+														  NULL));
+
+								if (unit != NULL)
+									g_string_append_printf (string, " %s", unit);
+								if (min_int64 != G_MININT64)
+									g_string_append_printf (string, " min:%" G_GINT64_FORMAT, min_int64);
+								if (max_int64 != G_MAXINT64)
+									g_string_append_printf (string, " max:%" G_GINT64_FORMAT, max_int64);
+								if (inc_int64 != 1)
+									g_string_append_printf (string, " inc:%" G_GINT64_FORMAT, inc_int64);
+
+								printf ("%s\n", string->str);
+								g_string_free (string, TRUE);
 							}
 							break;
 						case G_TYPE_DOUBLE:
-							min_double = arv_gc_float_get_min (ARV_GC_FLOAT (feature), NULL);
-							max_double = arv_gc_float_get_max (ARV_GC_FLOAT (feature), NULL);
-							unit = arv_gc_float_get_unit (ARV_GC_FLOAT (feature), NULL);
+							{
+								double max_double, min_double, inc_double;
+								GString *string = g_string_new ("");
 
-							if (min_double != -G_MAXDOUBLE && max_double != G_MAXDOUBLE)
-								printf ("%s = %g%s%s (min:%g;max:%g)\n", tokens[0],
-									arv_gc_float_get_value (ARV_GC_FLOAT (feature), NULL),
-									unit != NULL ? " ": "",
-									unit != NULL ? unit : "",
-									min_double, max_double);
-							else
-								printf ("%s = %g%s%s\n", tokens[0],
-									arv_gc_float_get_value (ARV_GC_FLOAT (feature), NULL),
-									unit != NULL ? " ": "",
-									unit != NULL ? unit : "");
+								min_double = arv_gc_float_get_min (ARV_GC_FLOAT (feature), NULL);
+								max_double = arv_gc_float_get_max (ARV_GC_FLOAT (feature), NULL);
+								inc_double = arv_gc_float_get_inc (ARV_GC_FLOAT (feature), NULL);
+								unit = arv_gc_float_get_unit (ARV_GC_FLOAT (feature), NULL);
+
+								g_string_append_printf (string, "%s = %g",
+											tokens[0],
+											arv_gc_float_get_value (ARV_GC_FLOAT (feature),
+														NULL));
+
+								if (unit != NULL)
+									g_string_append_printf (string, " %s", unit);
+								if (min_double != -G_MAXDOUBLE)
+									g_string_append_printf (string, " min:%g", min_double);
+								if (max_double != G_MAXDOUBLE)
+									g_string_append_printf (string, " max:%g", max_double);
+								if (inc_double != 1)
+									g_string_append_printf (string, " inc:%g", inc_double);
+
+								printf ("%s\n", string->str);
+								g_string_free (string, TRUE);
+							}
 							break;
 						case G_TYPE_STRING:
 							printf ("%s = %s\n", tokens[0],
