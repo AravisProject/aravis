@@ -418,7 +418,7 @@ _get_cached (ArvGcRegisterNode *gc_register_node, ArvRegisterCachePolicy *cache_
 			cached = FALSE;
 	}
 
-	if (cached && *cache_policy == ARV_REGISTER_CACHE_POLICY_DEBUG)
+	if (cached)
 		gc_register_node->n_cache_hits++;
 	else
 		gc_register_node->n_cache_misses++;
@@ -642,10 +642,10 @@ arv_gc_register_node_finalize (GObject *object)
 		if (name == NULL)
 			name = arv_dom_node_get_node_name (ARV_DOM_NODE (gc_register_node));
 
-		printf ("Cache hits = %u / %u for %s\n",
-			gc_register_node->n_cache_hits,
-			gc_register_node->n_cache_hits + gc_register_node->n_cache_misses,
-			name);
+		arv_debug_genicam ("Cache hits = %u / %u for %s",
+				   gc_register_node->n_cache_hits,
+				   gc_register_node->n_cache_hits + gc_register_node->n_cache_misses,
+				   name);
 	}
 
 	parent_class->finalize (object);
