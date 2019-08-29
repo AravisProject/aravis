@@ -400,14 +400,12 @@ camera_api_test (void)
 	b = arv_camera_is_frame_rate_available (camera);
 	g_assert (b);
 
-#if 0
 	d = arv_camera_get_frame_rate (camera);
 	g_assert_cmpfloat (d, ==, ARV_FAKE_CAMERA_ACQUISITION_FRAME_RATE_DEFAULT);
 
 	arv_camera_set_frame_rate (camera, 10.0);
 	d = arv_camera_get_frame_rate (camera);
 	g_assert_cmpfloat (d, ==, 10.0);
-#endif
 
 	b = arv_camera_is_exposure_auto_available (camera);
 	g_assert (!b);

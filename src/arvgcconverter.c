@@ -240,9 +240,15 @@ arv_gc_converter_update_from_variables (ArvGcConverter *gc_converter, ArvGcConve
 			switch (node_type) {
 				case ARV_GC_CONVERTER_NODE_TYPE_MIN:
 					value = arv_gc_integer_get_min (ARV_GC_INTEGER (node), &local_error);
+					/* Default minimum, don't convert it */
+					if (value == G_MININT64)
+						return FALSE;
 					break;
 				case ARV_GC_CONVERTER_NODE_TYPE_MAX:
 					value = arv_gc_integer_get_max (ARV_GC_INTEGER (node), &local_error);
+					/* Default maximum, don't convert it */
+					if (value == G_MAXINT64)
+						return FALSE;
 					break;
 				default:
 					value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), &local_error);
@@ -261,9 +267,15 @@ arv_gc_converter_update_from_variables (ArvGcConverter *gc_converter, ArvGcConve
 			switch (node_type) {
 				case ARV_GC_CONVERTER_NODE_TYPE_MIN:
 					value = arv_gc_float_get_min (ARV_GC_FLOAT (node), &local_error);
+					/* Default minimum, don't convert it */
+					if (value == -G_MAXDOUBLE)
+						return FALSE;
 					break;
 				case ARV_GC_CONVERTER_NODE_TYPE_MAX:
 					value = arv_gc_float_get_max (ARV_GC_FLOAT (node), &local_error);
+					/* Default maximum, don't convert it */
+					if (value == G_MAXDOUBLE)
+						return FALSE;
 					break;
 				default:
 					value =  arv_gc_float_get_value (ARV_GC_FLOAT (node), &local_error);
@@ -295,7 +307,7 @@ arv_gc_converter_update_from_variables (ArvGcConverter *gc_converter, ArvGcConve
 	return TRUE;
 }
 
-double 
+double
 arv_gc_converter_convert_to_double (ArvGcConverter *gc_converter, ArvGcConverterNodeType node_type, GError **error)
 {
 	GError *local_error = NULL;
