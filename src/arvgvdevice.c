@@ -527,6 +527,8 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device)
 	int n_events;
 	guint max_size, min_size, current_size;
 	guint packet_size = 1500;
+	gint64 minimum, maximum;
+	guint inc;
 	char *buffer;
 	guint last_size = 0;
 
@@ -537,6 +539,20 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device)
 		arv_debug_device ("[GvDevice::auto_packet_size] No GevSCPSFireTestPacket feature found, "
 				  "use default packet size (%d bytes)",
 				  packet_size);
+		return packet_size;
+	}
+
+	inc = MAX (1, arv_device_get_integer_feature_increment (device, "GevSCPSPacketSize", NULL));
+	arv_device_get_integer_feature_bounds (device, "GevSCPSPacketSize", &minimum, &maximum, NULL);
+	max_size = MIN (65536, maximum);
+	min_size = MAX (ARV_GVSP_PACKET_PROTOCOL_OVERHEAD, minimum);
+
+	if (max_size < min_size ||
+	    inc > max_size - min_size ||
+	    max_size < packet_size ||
+	    min_size > packet_size ||
+	    inc > 16) {
+		arv_warning_device ("[GvDevice::auto_packet_size] Invalid GevSCPSPacketSize properties");
 		return packet_size;
 	}
 
@@ -564,14 +580,14 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device)
 	poll_fd.revents = 0;
 
 	current_size = 1500;
-	max_size = 16384;
-	min_size = 256;
 
-	buffer = g_malloc (16384);
+	buffer = g_malloc (max_size);
 
 	do {
 		size_t read_count;
 		unsigned n_tries = 0;
+
+		current_size = ((current_size + inc - 1) / inc) * inc;
 
 		arv_debug_device ("[GvDevice::auto_packet_size] Try packet size = %d", current_size);
 		arv_device_set_integer_feature_value (device, "GevSCPSPacketSize", current_size, NULL);
