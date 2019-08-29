@@ -123,6 +123,24 @@ arv_gc_converter_get_float_max (ArvGcFloat *gc_float, GError **error)
 	return MAX (a, b);
 }
 
+static double
+_get_inc (ArvGcFloat *gc_float, GError **error)
+{
+	GError *local_error = NULL;
+	ArvGcIsLinear is_linear;
+
+	is_linear = arv_gc_converter_get_is_linear (ARV_GC_CONVERTER (gc_float), &local_error);
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return 1.0;
+	}
+
+	if (is_linear == ARV_GC_IS_LINEAR_NO)
+		return 1.0;
+
+	return arv_gc_converter_convert_to_double (ARV_GC_CONVERTER (gc_float), ARV_GC_CONVERTER_NODE_TYPE_INC, &local_error);
+}
+
 static const char *
 arv_gc_converter_get_float_unit (ArvGcFloat *gc_float, GError **error)
 {
@@ -141,6 +159,7 @@ arv_gc_converter_node_float_interface_init (ArvGcFloatInterface *interface)
 	interface->get_value = arv_gc_converter_get_float_value;
 	interface->get_min = arv_gc_converter_get_float_min;
 	interface->get_max = arv_gc_converter_get_float_max;
+	interface->get_inc = _get_inc;
 	interface->set_value = arv_gc_converter_set_float_value;
 	interface->get_unit = arv_gc_converter_get_float_unit;
 }

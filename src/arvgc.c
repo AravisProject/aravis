@@ -160,6 +160,10 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 		node = arv_gc_property_node_new_increment ();
 	else if (strcmp (tag_name, "pInc") == 0)
 		node = arv_gc_property_node_new_p_increment ();
+	else if (strcmp (tag_name, "IsLinear") == 0)
+		node = arv_gc_property_node_new_is_linear ();
+	else if (strcmp (tag_name, "Slope") == 0)
+		node = arv_gc_property_node_new_slope ();
 	else if (strcmp (tag_name, "Unit") == 0)
 		node = arv_gc_property_node_new_unit ();
 	else if (strcmp (tag_name, "OnValue") == 0)

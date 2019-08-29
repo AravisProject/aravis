@@ -148,6 +148,24 @@ arv_gc_converter_class_init (ArvGcConverterClass *this_class)
 
 /* ArvGcInteger interface implementation */
 
+ArvGcIsLinear
+arv_gc_converter_get_is_linear (ArvGcConverter *gc_converter, GError **error)
+{
+	const char *string;
+
+	g_return_val_if_fail (ARV_IS_GC_CONVERTER (gc_converter), ARV_GC_IS_LINEAR_NO);
+
+	if (gc_converter->priv->is_linear == NULL)
+		return ARV_GC_IS_LINEAR_NO;
+
+	string = arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (gc_converter->priv->is_linear), error);
+
+	if (g_strcmp0 ("Yes", string) == 0)
+		return ARV_GC_IS_LINEAR_YES;
+
+	return ARV_GC_IS_LINEAR_NO;
+}
+
 gboolean
 arv_gc_converter_update_from_variables (ArvGcConverter *gc_converter, ArvGcConverterNodeType node_type, GError **error)
 {
@@ -250,6 +268,9 @@ arv_gc_converter_update_from_variables (ArvGcConverter *gc_converter, ArvGcConve
 					if (value == G_MAXINT64)
 						return FALSE;
 					break;
+				case ARV_GC_CONVERTER_NODE_TYPE_INC:
+					value = arv_gc_integer_get_inc (ARV_GC_INTEGER (node), &local_error);
+					break;
 				default:
 					value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), &local_error);
 					break;
@@ -276,6 +297,9 @@ arv_gc_converter_update_from_variables (ArvGcConverter *gc_converter, ArvGcConve
 					/* Default maximum, don't convert it */
 					if (value == G_MAXDOUBLE)
 						return FALSE;
+					break;
+				case ARV_GC_CONVERTER_NODE_TYPE_INC:
+					value = arv_gc_float_get_inc (ARV_GC_FLOAT (node), &local_error);
 					break;
 				default:
 					value =  arv_gc_float_get_value (ARV_GC_FLOAT (node), &local_error);
@@ -488,6 +512,8 @@ arv_gc_converter_convert_from_int64 (ArvGcConverter *gc_converter, gint64 value,
 const char *
 arv_gc_converter_get_unit (ArvGcConverter *gc_converter, GError **error)
 {
+	g_return_val_if_fail (ARV_IS_GC_CONVERTER (gc_converter), NULL);
+
 	if (gc_converter->priv->unit == NULL)
 		return NULL;
 

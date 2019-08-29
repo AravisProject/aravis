@@ -53,6 +53,11 @@ typedef enum {
 	ARV_GC_SIGNEDNESS_UNSIGNED
 } ArvGcSignedness;
 
+typedef enum {
+	ARV_GC_IS_LINEAR_NO,
+	ARV_GC_IS_LINEAR_YES
+} ArvGcIsLinear;
+
 G_END_DECLS
 
 #endif
