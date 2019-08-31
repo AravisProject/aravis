@@ -680,7 +680,7 @@ arv_camera_abort_acquisition (ArvCamera *camera)
 /**
  * arv_camera_acquisition:
  * @camera: a #ArvCamera
- * @timeout: acquisition timeout
+ * @timeout: acquisition timeout in µs. Zero means no timeout.
  *
  * Acquire one image buffer.
  *
