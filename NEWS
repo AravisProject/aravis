@@ -1,3 +1,9 @@
+Release 0.6.4
+=============
+
+  * usb3vision: fix alignùent assertion
+  * camera:make arv_camera_set_region more robust
+
 Release 0.6.3
 =============
 
