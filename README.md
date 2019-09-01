@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/AravisProject/aravis.svg?branch=master)](https://travis-ci.org/AravisProject/aravis)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/fa7d9c88e5594d709ab44e8bad01a569)](https://www.codacy.com/app/EmmanuelP/aravis?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=AravisProject/aravis&amp;utm_campaign=Badge_Grade)
 
-# ![](viewer/icons/gnome/128x128/apps/aravis.png) Aravis
+# ![](viewer/icons/gnome/128x128/apps/aravis.png)
 
 ### What is Aravis ?
 
@@ -14,7 +14,7 @@ Aravis is released under the LGPL v2+.
 
 ### Installing Aravis
 
-Until the 0.6.x stable series, Aravis build system was based on Autotools. The recommended way to get the sources is to download the release tarballs from http://ftp.gnome.org/pub/GNOME/sources/aravis, and then compile it using the following commands:
+Up to the 0.6.x stable series, Aravis build system is based on Autotools. The recommended way to get the sources is to download the release tarballs from http://ftp.gnome.org/pub/GNOME/sources/aravis, and then compile it using the following commands:
 
 ```
 ./configure
@@ -124,8 +124,7 @@ The report is published in `build/meson-logs/coveragereport/index.html`. Help on
 
 ### Links
 
+* Forum: https://aravis-project.discourse.group
 * Github repository: https://github.com/AravisProject/aravis
-* Mailing list: aravis@freelists.org ( http://www.freelists.org/list/aravis )
 * Aravis 0.6 documentation: https://aravisproject.github.io/docs/aravis-0.6/
-* Blog: http://blogs.gnome.org/emmanuel/category/aravis/
 * Genicam standard : http://www.genicam.org
