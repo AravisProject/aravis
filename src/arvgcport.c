@@ -109,13 +109,11 @@ arv_gc_port_read (ArvGcPort *port, void *buffer, guint64 address, guint64 length
 			/* For schema < 1.1.0 and length == 4, register read must be used instead of memory read.
 			 * Only applies to GigE Vision devices. See Appendix 3 of Genicam 2.0 specification. */
 			if (ARV_IS_GV_DEVICE (device) && _use_legacy_endianess_mechanism (port, length)) {
-				guint32 value;
-
-				/* For schema < 1.1.0, all registers are big endian. */
-				value = *((guint32 *) buffer);
-				value = GUINT32_FROM_BE (value);
+				guint32 value = 0;
 
 				arv_device_read_register (device, address, &value, error);
+
+				/* For schema < 1.1.0, all registers are big endian. */
 				*((guint32 *) buffer) = GUINT32_TO_BE (value);
 			} else
 				arv_device_read_memory (device, address, length, buffer, error);
