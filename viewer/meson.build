@@ -1,3 +1,7 @@
+aravis_desktop_dir = join_paths (get_option ('datadir'), 'applications')
+aravis_app_data_dir = join_paths (get_option ('datadir'), 'appdata')
+aravis_icon_dir = join_paths (get_option ('datadir'), 'icons', 'hicolor')
+
 viewer_sources = [
 	'main.c',
 	'arvviewer.c'

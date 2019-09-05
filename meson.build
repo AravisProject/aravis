@@ -12,9 +12,7 @@ aravis_major_version = versions[0].to_int ()
 aravis_minor_version = versions[1].to_int ()
 aravis_micro_version = versions[2].to_int ()
 
-aravis_desktop_dir = join_paths (get_option ('datadir'), 'applications')
 aravis_data_dir = join_paths (get_option ('datadir'), 'aravis-@0@'.format (aravis_api_version))
-aravis_icon_dir = join_paths (aravis_data_dir, 'icons', 'hicolor')
 
 cc = meson.get_compiler ('c')
 cxx = meson.get_compiler ('cpp')
