@@ -323,7 +323,7 @@ _get_cachable (ArvGcRegisterNode *gc_register_node, GError **error)
 	}
 
 	if (g_strcmp0 (cachable, "WriteThrough") == 0)
-		return ARV_GC_CACHABLE_WRITE_TRHOUGH;
+		return ARV_GC_CACHABLE_WRITE_THROUGH;
 	else if (strcmp (cachable, "WriteAround") == 0)
 		return ARV_GC_CACHABLE_WRITE_AROUND;
 
@@ -532,7 +532,7 @@ _write_to_port (ArvGcRegisterNode *gc_register_node, gint64 address, gint64 leng
 		return;
 	}
 
-	if (cachable == ARV_GC_CACHABLE_WRITE_TRHOUGH)
+	if (cachable == ARV_GC_CACHABLE_WRITE_THROUGH)
 		gc_register_node->cached = TRUE;
 	else
 		gc_register_node->cached = FALSE;
@@ -546,7 +546,7 @@ arv_gc_register_node_new (void)
 	gc_register_node = g_object_new (ARV_TYPE_GC_REGISTER_NODE, NULL);
 	gc_register_node->type = ARV_GC_REGISTER_NODE_TYPE_REGISTER;
 	gc_register_node->value_type = G_TYPE_BYTE_ARRAY;
-	gc_register_node->default_cachable = ARV_GC_CACHABLE_WRITE_TRHOUGH;
+	gc_register_node->default_cachable = ARV_GC_CACHABLE_WRITE_THROUGH;
 
 	return ARV_GC_NODE (gc_register_node);
 }
@@ -559,7 +559,7 @@ arv_gc_register_node_new_integer (void)
 	gc_register_node = g_object_new (ARV_TYPE_GC_REGISTER_NODE, NULL);
 	gc_register_node->type = ARV_GC_REGISTER_NODE_TYPE_INTEGER;
 	gc_register_node->value_type = G_TYPE_INT64;
-	gc_register_node->default_cachable = ARV_GC_CACHABLE_WRITE_TRHOUGH;
+	gc_register_node->default_cachable = ARV_GC_CACHABLE_WRITE_THROUGH;
 
 	return ARV_GC_NODE (gc_register_node);
 }
@@ -572,7 +572,7 @@ arv_gc_register_node_new_masked_integer (void)
 	gc_register_node = g_object_new (ARV_TYPE_GC_REGISTER_NODE, NULL);
 	gc_register_node->type = ARV_GC_REGISTER_NODE_TYPE_MASKED_INTEGER;
 	gc_register_node->value_type = G_TYPE_INT64;
-	gc_register_node->default_cachable = ARV_GC_CACHABLE_WRITE_TRHOUGH;
+	gc_register_node->default_cachable = ARV_GC_CACHABLE_WRITE_THROUGH;
 
 	return ARV_GC_NODE (gc_register_node);
 }
@@ -598,7 +598,7 @@ arv_gc_register_node_new_string (void)
 	gc_register_node = g_object_new (ARV_TYPE_GC_REGISTER_NODE, NULL);
 	gc_register_node->type = ARV_GC_REGISTER_NODE_TYPE_STRING;
 	gc_register_node->value_type = G_TYPE_STRING;
-	gc_register_node->default_cachable = ARV_GC_CACHABLE_WRITE_TRHOUGH;
+	gc_register_node->default_cachable = ARV_GC_CACHABLE_WRITE_THROUGH;
 
 	return ARV_GC_NODE (gc_register_node);
 }
