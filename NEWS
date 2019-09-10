@@ -1,3 +1,23 @@
+Unstable release 0.7.0
+======================
+
+  * build: aravis is now built using meson (and only meson)
+  * camera: make set_region more robust (Aleksandr)
+  * usb3vision: fix an align assertion (Johannes)
+  * fakecamera: improve discovery (Russell)
+  * fakecamera: add RGB8 pixel format support (Russell)
+  * fakecamera: allow to instantiate several gvfakecamera (Emmanuel)
+  * gigevision: pending ack fix (Emmanuel)
+  * gigevision: better handling of GVCP error packets (Emmanuel)
+  * gstplugin: packet size parameter (Emmanuel)
+  * viewer: show stream statistics (Emmanuel)
+  * genicam: fix register cache (Emmanuel)
+  * camera: move feature read/write API with status here from ArvDevice (Emmanuel)
+  * device: add a GError parameter to feature read/write functions (Emmanuel)
+  * gvdevice: use Inc in auto packet size function (Emmanuel)
+  * genicam: implementation of `<Inc>` support (Emmanuel)
+  * viewer: icon refresh (Emmanuel)
+
 Release 0.6.3
 =============
 
