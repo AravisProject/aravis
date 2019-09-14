@@ -730,6 +730,7 @@ arv_uv_device_new (const char *vendor, const char *product, const char *serial_n
 
 	if ( !_bootstrap (uv_device)){
 		arv_warning_device ("[UvDevice::new] Failed to bootstrap USB device");
+		g_object_unref (uv_device);
 		return NULL;
 	}
 
