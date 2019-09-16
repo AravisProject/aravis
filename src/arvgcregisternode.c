@@ -417,10 +417,12 @@ _get_cached (ArvGcRegisterNode *gc_register_node, ArvRegisterCachePolicy *cache_
 			cached = FALSE;
 	}
 
-	if (cached && *cache_policy == ARV_REGISTER_CACHE_POLICY_DEBUG)
-		gc_register_node->n_cache_hits++;
-	else
-		gc_register_node->n_cache_misses++;
+	if (*cache_policy == ARV_REGISTER_CACHE_POLICY_DEBUG) {
+		if (cached)
+			gc_register_node->n_cache_hits++;
+		else
+			gc_register_node->n_cache_misses++;
+	}
 
 	return cached;
 }
