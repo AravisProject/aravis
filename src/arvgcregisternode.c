@@ -467,6 +467,7 @@ _read_from_port (ArvGcRegisterNode *gc_register_node, gint64 address, gint64 len
 	gboolean cached;
 
 	cached = _get_cached (gc_register_node, &cache_policy);
+	cachable = _get_cachable (gc_register_node, &local_error);
 
 	port = arv_gc_property_node_get_linked_node (gc_register_node->port);
 	if (!ARV_IS_GC_PORT (port)) {
@@ -482,13 +483,16 @@ _read_from_port (ArvGcRegisterNode *gc_register_node, gint64 address, gint64 len
 		memcpy (cache, buffer, length);
 	}
 
-	arv_gc_port_read (ARV_GC_PORT (port), buffer, address, length, &local_error);
-	if (local_error == NULL)
-		cachable = _get_cachable (gc_register_node, &local_error);
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		gc_register_node->cached = FALSE;
-		return;
+	if (!cached || cache_policy == ARV_REGISTER_CACHE_POLICY_DEBUG) {
+		arv_gc_port_read (ARV_GC_PORT (port), buffer, address, length, &local_error);
+		if (local_error != NULL) {
+			g_propagate_error(error, local_error);
+			gc_register_node->cached = FALSE;
+			if (cached && cache_policy == ARV_REGISTER_CACHE_POLICY_DEBUG) {
+				g_free (cache);
+			}
+			return;
+		}
 	}
 
 	if (cached && cache_policy == ARV_REGISTER_CACHE_POLICY_DEBUG) {
