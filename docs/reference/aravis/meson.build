@@ -1,3 +1,5 @@
+subdir ('xml')
+
 doc_ignore_headers = [
 	'arv.h',
 	'arvconfig.h',

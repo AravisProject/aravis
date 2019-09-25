@@ -3,11 +3,14 @@
                "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
 [
   <!ENTITY % local.common.attrib "xmlns:xi  CDATA  #FIXED 'http://www.w3.org/2003/XInclude'">
+  <!ENTITY % gtkdocentities SYSTEM "xml/gtkdocentities.ent">
+  %gtkdocentities;
 ]>
+
 <book id="index">
 	<bookinfo>
-		<title>Aravis Reference Manual</title>
-		<releaseinfo>For Aravis 0.8.</releaseinfo>
+		<title>&package_name; Reference Manual</title>
+		<releaseinfo>For &package_name; &package_api_version;.</releaseinfo>
 		<legalnotice>
 			<para>
 				Permission is granted to copy, distribute and/or modify this
@@ -34,7 +37,7 @@
 	<xi:include href="xml/aravis-overview.xml"/>
 
 	<part id="aravis-reference">
-		<title>Aravis API reference</title>
+		<title>&package_name; API reference</title>
 
 		<chapter>
 			<title>Base</title>
