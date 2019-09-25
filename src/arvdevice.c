@@ -705,7 +705,7 @@ arv_device_get_available_enumeration_feature_values_as_strings (ArvDevice *devic
 }
 
 /**
- * arv_device_get_available_enumeration_feature_display_names:
+ * arv_device_get_available_enumeration_feature_values_as_display_names:
  * @device: an #ArvDevice
  * @feature: feature name
  * @n_values: placeholder for the number of returned values
@@ -720,7 +720,7 @@ arv_device_get_available_enumeration_feature_values_as_strings (ArvDevice *devic
  */
 
 const char **
-arv_device_get_available_enumeration_feature_display_names (ArvDevice *device, const char *feature, guint *n_values, GError **error)
+arv_device_get_available_enumeration_feature_values_as_display_names (ArvDevice *device, const char *feature, guint *n_values, GError **error)
 {
 	ArvGcNode *node;
 
@@ -803,3 +803,4 @@ G_DEFINE_ABSTRACT_TYPE (ArvDevice, arv_device, G_TYPE_OBJECT)
 #else
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvDevice, arv_device, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvDevice))
 #endif
+

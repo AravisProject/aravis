@@ -169,7 +169,7 @@ void 		arv_camera_get_float_bounds 		(ArvCamera *camera, const char *feature, do
 
 gint64 *	arv_camera_get_available_enumerations			(ArvCamera *camera, const char *feature, guint *n_values);
 const char **	arv_camera_get_available_enumerations_as_strings	(ArvCamera *camera, const char *feature, guint *n_values);
-const char ** 	arv_camera_get_available_enumeration_display_names 	(ArvCamera *camera, const char *feature, guint *n_values);
+const char ** 	arv_camera_get_available_enumerations_as_display_names 	(ArvCamera *camera, const char *feature, guint *n_values);
 
 gboolean 	arv_camera_is_feature_available 	(ArvCamera *camera, const char *feature);
 

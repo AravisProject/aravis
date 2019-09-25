@@ -21,7 +21,7 @@
  */
 
 /**
- * SECTION: arvgcconverternoe
+ * SECTION: arvgcconverternode
  * @short_description: Converter node class
  */
 

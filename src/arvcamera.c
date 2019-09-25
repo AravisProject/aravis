@@ -627,7 +627,7 @@ arv_camera_get_available_pixel_formats_as_strings (ArvCamera *camera, guint *n_p
 const char **
 arv_camera_get_available_pixel_formats_as_display_names (ArvCamera *camera, guint *n_pixel_formats)
 {
-	return arv_camera_get_available_enumeration_display_names (camera, "PixelFormat", n_pixel_formats);
+	return arv_camera_get_available_enumerations_as_display_names (camera, "PixelFormat", n_pixel_formats);
 }
 
 /* Acquisition control */
@@ -2078,7 +2078,7 @@ arv_camera_get_available_enumerations_as_strings (ArvCamera *camera, const char 
 }
 
 /**
- * arv_camera_get_available_enumeration_display_names:
+ * arv_camera_get_available_enumerations_as_display_names:
  * @camera: a #ArvCamera
  * @feature: feature name
  * @n_values: placeholder for the number of returned values
@@ -2092,7 +2092,7 @@ arv_camera_get_available_enumerations_as_strings (ArvCamera *camera, const char 
  */
 
 const char **
-arv_camera_get_available_enumeration_display_names (ArvCamera *camera, const char *feature, guint *n_values)
+arv_camera_get_available_enumerations_as_display_names (ArvCamera *camera, const char *feature, guint *n_values)
 {
 	GError *error = NULL;
 	const char **strings;
@@ -2100,8 +2100,8 @@ arv_camera_get_available_enumeration_display_names (ArvCamera *camera, const cha
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 	g_return_val_if_fail (feature != NULL, NULL);
 
-	strings = arv_device_get_available_enumeration_feature_display_names (camera->priv->device,
-									      feature, n_values, &error);
+	strings = arv_device_get_available_enumeration_feature_values_as_display_names (camera->priv->device,
+											feature, n_values, &error);
 	if (error != NULL) {
 		_update_status (camera, error);
 		g_clear_error (&error);

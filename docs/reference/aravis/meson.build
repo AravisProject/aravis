@@ -10,6 +10,7 @@ doc_ignore_headers = [
 	'arvinterfaceprivate.h',
 	'arvdeviceprivate.h',
 	'arvstreamprivate.h',
+	'arvgcconverterprivate.h',
 	'arvgcfeaturenodeprivate.h',
 	'arvgvstreamprivate.h',
 	'arvgvinterfaceprivate.h',

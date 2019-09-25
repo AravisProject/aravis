@@ -75,6 +75,8 @@
 			<xi:include href="xml/arvgcenumeration.xml"/>
 			<xi:include href="xml/arvgcenumentry.xml"/>
 			<xi:include href="xml/arvgcconverter.xml"/>
+			<xi:include href="xml/arvgcconverternode.xml"/>
+			<xi:include href="xml/arvgcintconverternode.xml"/>
 			<xi:include href="xml/arvgcswissknife.xml"/>
 			<xi:include href="xml/arvgcport.xml"/>
 		</chapter>
