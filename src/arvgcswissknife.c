@@ -34,7 +34,12 @@
 #include <arvdebug.h>
 #include <string.h>
 
-static GObjectClass *parent_class = NULL;
+static void arv_gc_swiss_knife_integer_interface_init (ArvGcIntegerInterface *interface);
+static void arv_gc_swiss_knife_float_interface_init (ArvGcFloatInterface *interface);
+
+G_DEFINE_TYPE_WITH_CODE (ArvGcSwissKnife, arv_gc_swiss_knife, ARV_TYPE_GC_FEATURE_NODE,
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_swiss_knife_integer_interface_init)
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_FLOAT,   arv_gc_swiss_knife_float_interface_init))
 
 /* ArvDomNode implementation */
 
@@ -71,7 +76,7 @@ arv_gc_swiss_knife_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				node->constants = g_slist_prepend (node->constants, property_node);
 				break;
 			default:
-				ARV_DOM_NODE_CLASS (parent_class)->post_new_child (self, child);
+				ARV_DOM_NODE_CLASS (arv_gc_swiss_knife_parent_class)->post_new_child (self, child);
 				break;
 		}
 	}
@@ -134,7 +139,7 @@ arv_gc_swiss_knife_finalize (GObject *object)
 
 	g_clear_object (&gc_swiss_knife->formula);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_gc_swiss_knife_parent_class)->finalize (object);
 }
 
 static void
@@ -143,8 +148,6 @@ arv_gc_swiss_knife_class_init (ArvGcSwissKnifeClass *this_class)
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
 	ArvGcFeatureNodeClass *gc_feature_node_class = ARV_GC_FEATURE_NODE_CLASS (this_class);
-
-	parent_class = g_type_class_peek_parent (this_class);
 
 	object_class->finalize = arv_gc_swiss_knife_finalize;
 	dom_node_class->get_node_name = arv_gc_swiss_knife_get_node_name;
@@ -295,7 +298,3 @@ arv_gc_swiss_knife_float_interface_init (ArvGcFloatInterface *interface)
 	interface->get_value = arv_gc_swiss_knife_get_float_value;
 	interface->set_value = arv_gc_swiss_knife_set_float_value;
 }
-
-G_DEFINE_TYPE_WITH_CODE (ArvGcSwissKnife, arv_gc_swiss_knife, ARV_TYPE_GC_FEATURE_NODE,
-			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_swiss_knife_integer_interface_init)
-			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_FLOAT,   arv_gc_swiss_knife_float_interface_init))

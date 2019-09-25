@@ -71,7 +71,16 @@ arv_gc_cache_key_new (gint64 address, gint64 length)
 	return key;
 }
 
-static GObjectClass *parent_class = NULL;
+static void arv_gc_register_node_register_interface_init (ArvGcRegisterInterface *interface);
+static void arv_gc_register_node_integer_interface_init (ArvGcIntegerInterface *interface);
+static void arv_gc_register_node_float_interface_init (ArvGcFloatInterface *interface);
+static void arv_gc_register_node_string_interface_init (ArvGcStringInterface *interface);
+
+G_DEFINE_TYPE_WITH_CODE (ArvGcRegisterNode, arv_gc_register_node, ARV_TYPE_GC_FEATURE_NODE,
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_REGISTER, arv_gc_register_node_register_interface_init)
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_register_node_integer_interface_init)
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_FLOAT, arv_gc_register_node_float_interface_init)
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_STRING, arv_gc_register_node_string_interface_init))
 
 /* ArvDomNode implementation */
 
@@ -152,13 +161,13 @@ arv_gc_register_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				node->invalidators = g_slist_prepend (node->invalidators, property_node);
 				break;
 			default:
-				ARV_DOM_NODE_CLASS (parent_class)->post_new_child (self, child);
+				ARV_DOM_NODE_CLASS (arv_gc_register_node_parent_class)->post_new_child (self, child);
 				break;
 		}
 	} else if (ARV_IS_GC_SWISS_KNIFE (child))
 		node->swiss_knives = g_slist_prepend (node->swiss_knives, child);
 	else
-		ARV_DOM_NODE_CLASS (parent_class)->post_new_child (self, child);
+		ARV_DOM_NODE_CLASS (arv_gc_register_node_parent_class)->post_new_child (self, child);
 }
 
 static void
@@ -651,7 +660,7 @@ arv_gc_register_node_finalize (GObject *object)
 				   name);
 	}
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_gc_register_node_parent_class)->finalize (object);
 }
 
 static void
@@ -660,8 +669,6 @@ arv_gc_register_node_class_init (ArvGcRegisterNodeClass *this_class)
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
 	ArvGcFeatureNodeClass *gc_feature_node_class = ARV_GC_FEATURE_NODE_CLASS (this_class);
-
-	parent_class = g_type_class_peek_parent (this_class);
 
 	object_class->finalize = arv_gc_register_node_finalize;
 	dom_node_class->get_node_name = arv_gc_register_node_get_node_name;
@@ -1194,9 +1201,3 @@ arv_gc_register_node_string_interface_init (ArvGcStringInterface *interface)
 	interface->set_value = arv_gc_register_node_set_string_value;
 	interface->get_max_length = arv_gc_register_node_get_max_string_length;
 }
-
-G_DEFINE_TYPE_WITH_CODE (ArvGcRegisterNode, arv_gc_register_node, ARV_TYPE_GC_FEATURE_NODE,
-			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_REGISTER, arv_gc_register_node_register_interface_init)
-			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_register_node_integer_interface_init)
-			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_FLOAT, arv_gc_register_node_float_interface_init)
-			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_STRING, arv_gc_register_node_string_interface_init))

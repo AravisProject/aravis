@@ -37,7 +37,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-static GObjectClass *parent_class = NULL;
+static void arv_gc_struct_entry_node_register_interface_init (ArvGcRegisterInterface *interface);
+static void arv_gc_struct_entry_node_integer_interface_init (ArvGcIntegerInterface *interface);
+
+G_DEFINE_TYPE_WITH_CODE (ArvGcStructEntryNode, arv_gc_struct_entry_node, ARV_TYPE_GC_FEATURE_NODE,
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_REGISTER, arv_gc_struct_entry_node_register_interface_init)
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_struct_entry_node_integer_interface_init))
 
 /* ArvDomNode implementation */
 
@@ -70,7 +75,7 @@ arv_gc_struct_entry_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				node->lsb = property_node;
 				break;
 			default:
-				ARV_DOM_NODE_CLASS (parent_class)->post_new_child (self, child);
+				ARV_DOM_NODE_CLASS (arv_gc_struct_entry_node_parent_class)->post_new_child (self, child);
 				break;
 		}
 	}
@@ -178,7 +183,7 @@ arv_gc_struct_entry_node_init (ArvGcStructEntryNode *gc_struct_entry_node)
 static void
 arv_gc_struct_entry_node_finalize (GObject *object)
 {
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_gc_struct_entry_node_parent_class)->finalize (object);
 }
 
 static void
@@ -187,8 +192,6 @@ arv_gc_struct_entry_node_class_init (ArvGcStructEntryNodeClass *this_class)
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
 	ArvGcFeatureNodeClass *gc_feature_node_class = ARV_GC_FEATURE_NODE_CLASS (this_class);
-
-	parent_class = g_type_class_peek_parent (this_class);
 
 	object_class->finalize = arv_gc_struct_entry_node_finalize;
 	dom_node_class->get_node_name = arv_gc_struct_entry_node_get_node_name;
@@ -360,7 +363,3 @@ arv_gc_struct_entry_node_integer_interface_init (ArvGcIntegerInterface *interfac
 	interface->get_value = arv_gc_struct_entry_node_get_integer_value;
 	interface->set_value = arv_gc_struct_entry_node_set_integer_value;
 }
-
-G_DEFINE_TYPE_WITH_CODE (ArvGcStructEntryNode, arv_gc_struct_entry_node, ARV_TYPE_GC_FEATURE_NODE,
-			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_REGISTER, arv_gc_struct_entry_node_register_interface_init)
-			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_struct_entry_node_integer_interface_init))

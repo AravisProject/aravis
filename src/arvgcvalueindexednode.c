@@ -33,8 +33,6 @@
 #include <arvmisc.h>
 #include <string.h>
 
-static GObjectClass *parent_class = NULL;
-
 /* ArvDomNode implementation */
 
 static const char *
@@ -118,6 +116,8 @@ arv_gc_p_value_indexed_node_new (void)
 	return ARV_GC_NODE (node);
 }
 
+G_DEFINE_TYPE (ArvGcValueIndexedNode, arv_gc_value_indexed_node, ARV_TYPE_GC_PROPERTY_NODE)
+
 static void
 arv_gc_value_indexed_node_init (ArvGcValueIndexedNode *value_indexed_node)
 {
@@ -131,7 +131,7 @@ arv_gc_value_indexed_node_finalize (GObject *object)
 
 	g_clear_pointer (&value_indexed_node->index, g_free);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_gc_value_indexed_node_parent_class)->finalize (object);
 }
 
 static void
@@ -141,13 +141,9 @@ arv_gc_value_indexed_node_class_init (ArvGcValueIndexedNodeClass *this_class)
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
 	ArvDomElementClass *dom_element_class = ARV_DOM_ELEMENT_CLASS (this_class);
 
-	parent_class = g_type_class_peek_parent (this_class);
-
 	object_class->finalize = arv_gc_value_indexed_node_finalize;
 	dom_node_class->get_node_name = arv_gc_value_indexed_node_get_node_name;
 	dom_node_class->can_append_child = arv_gc_value_indexed_node_can_append_child;
 	dom_element_class->set_attribute = arv_gc_value_indexed_node_set_attribute;
 	dom_element_class->get_attribute = arv_gc_value_indexed_node_get_attribute;
 }
-
-G_DEFINE_TYPE (ArvGcValueIndexedNode, arv_gc_value_indexed_node, ARV_TYPE_GC_PROPERTY_NODE)
