@@ -46,8 +46,6 @@
 #endif
 #include <netinet/udp.h>
 
-static GObjectClass *parent_class = NULL;
-
 /* Shared data (main thread - heartbeat) */
 
 #ifdef __APPLE__
@@ -1200,10 +1198,12 @@ arv_gv_device_new (GInetAddress *interface_address, GInetAddress *device_address
 	return ARV_DEVICE (gv_device);
 }
 
+G_DEFINE_TYPE_WITH_CODE (ArvGvDevice, arv_gv_device, ARV_TYPE_DEVICE, G_ADD_PRIVATE (ArvGvDevice))
+
 static void
 arv_gv_device_init (ArvGvDevice *gv_device)
 {
-	gv_device->priv = G_TYPE_INSTANCE_GET_PRIVATE (gv_device, ARV_TYPE_GV_DEVICE, ArvGvDevicePrivate);
+	gv_device->priv = arv_gv_device_get_instance_private (gv_device);
 
 	gv_device->priv->genicam = NULL;
 	gv_device->priv->genicam_xml = NULL;
@@ -1246,7 +1246,7 @@ arv_gv_device_finalize (GObject *object)
 
 	g_free (gv_device->priv->genicam_xml);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_gv_device_parent_class)->finalize (object);
 }
 
 /**
@@ -1287,12 +1287,6 @@ arv_gv_device_class_init (ArvGvDeviceClass *gv_device_class)
 	GObjectClass *object_class = G_OBJECT_CLASS (gv_device_class);
 	ArvDeviceClass *device_class = ARV_DEVICE_CLASS (gv_device_class);
 
-#if !GLIB_CHECK_VERSION (2,38,0)
-	g_type_class_add_private (gv_device_class, sizeof (ArvGvDevicePrivate));
-#endif
-
-	parent_class = g_type_class_peek_parent (gv_device_class);
-
 	object_class->finalize = arv_gv_device_finalize;
 
 	device_class->create_stream = arv_gv_device_create_stream;
@@ -1303,9 +1297,3 @@ arv_gv_device_class_init (ArvGvDeviceClass *gv_device_class)
 	device_class->read_register = arv_gv_device_read_register;
 	device_class->write_register = arv_gv_device_write_register;
 }
-
-#if !GLIB_CHECK_VERSION (2,38,0)
-G_DEFINE_TYPE (ArvGvDevice, arv_gv_device, ARV_TYPE_DEVICE)
-#else
-G_DEFINE_TYPE_WITH_CODE (ArvGvDevice, arv_gv_device, ARV_TYPE_DEVICE, G_ADD_PRIVATE (ArvGvDevice))
-#endif

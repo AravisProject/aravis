@@ -34,8 +34,6 @@
 #include <arvdebug.h>
 #include <arvmisc.h>
 
-static GObjectClass *parent_class = NULL;
-
 struct _ArvXmlSchemaPrivate {
 	char *xsd;
 	size_t xsd_size;
@@ -158,10 +156,12 @@ arv_xml_schema_new_from_path (const char *path)
 	return schema;
 }
 
+G_DEFINE_TYPE_WITH_CODE (ArvXmlSchema, arv_xml_schema, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvXmlSchema))
+
 static void
 arv_xml_schema_init (ArvXmlSchema *self)
 {
-	self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, ARV_TYPE_XML_SCHEMA, ArvXmlSchemaPrivate);
+	self->priv = arv_xml_schema_get_instance_private (self);
 }
 
 static void
@@ -174,7 +174,7 @@ _finalize (GObject *object)
 	g_clear_pointer (&schema->priv->parser_ctxt, xmlSchemaFreeParserCtxt);
 	g_clear_pointer (&schema->priv->xsd, g_free);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_xml_schema_parent_class)->finalize (object);
 }
 
 static void
@@ -182,19 +182,7 @@ arv_xml_schema_class_init (ArvXmlSchemaClass *this_class)
 {
 	GObjectClass *gobject_class = G_OBJECT_CLASS (this_class);
 
-#if !GLIB_CHECK_VERSION(2,38,0)
-	g_type_class_add_private (this_class, sizeof (ArvXmlSchemaPrivate));
-#endif
-
-	parent_class = g_type_class_peek_parent (this_class);
-
 	gobject_class->finalize = _finalize;
 
 	xmlLineNumbersDefault (1);
 }
-
-#if !GLIB_CHECK_VERSION(2,38,0)
-G_DEFINE_TYPE (ArvXmlSchema, arv_xml_schema, G_TYPE_OBJECT)
-#else
-G_DEFINE_TYPE_WITH_CODE (ArvXmlSchema, arv_xml_schema, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvXmlSchema))
-#endif

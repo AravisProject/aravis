@@ -48,8 +48,6 @@ enum {
 
 static guint arv_device_signals[ARV_DEVICE_SIGNAL_LAST] = {0};
 
-static GObjectClass *parent_class = NULL;
-
 struct  _ArvDevicePrivate {
 	int dummy;
 };
@@ -752,28 +750,24 @@ arv_device_emit_control_lost_signal (ArvDevice *device)
 	g_signal_emit (device, arv_device_signals[ARV_DEVICE_SIGNAL_CONTROL_LOST], 0);
 }
 
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvDevice, arv_device, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvDevice))
+
 static void
 arv_device_init (ArvDevice *device)
 {
-	device->priv = G_TYPE_INSTANCE_GET_PRIVATE (device, ARV_TYPE_DEVICE, ArvDevicePrivate);
+	device->priv = arv_device_get_instance_private (device);
 }
 
 static void
 arv_device_finalize (GObject *object)
 {
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_device_parent_class)->finalize (object);
 }
 
 static void
 arv_device_class_init (ArvDeviceClass *device_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (device_class);
-
-#if !GLIB_CHECK_VERSION(2,38,0)
-	g_type_class_add_private (device_class, sizeof (ArvDevicePrivate));
-#endif
-
-	parent_class = g_type_class_peek_parent (device_class);
 
 	object_class->finalize = arv_device_finalize;
 
@@ -797,10 +791,3 @@ arv_device_class_init (ArvDeviceClass *device_class)
 			      NULL, NULL,
 			      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
 }
-
-#if !GLIB_CHECK_VERSION(2,38,0)
-G_DEFINE_ABSTRACT_TYPE (ArvDevice, arv_device, G_TYPE_OBJECT)
-#else
-G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvDevice, arv_device, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvDevice))
-#endif
-

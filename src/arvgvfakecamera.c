@@ -55,8 +55,6 @@ enum
   PROP_CM_DOMAIN
 };
 
-static GObjectClass *parent_class = NULL;
-
 struct _ArvGvFakeCameraPrivate {
 	char *interface_name;
 	char *serial_number;
@@ -689,10 +687,12 @@ arv_gv_fake_camera_is_running (ArvGvFakeCamera *gv_fake_camera)
 	return gv_fake_camera->priv->is_running;
 }
 
+G_DEFINE_TYPE_WITH_CODE (ArvGvFakeCamera, arv_gv_fake_camera, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvGvFakeCamera))
+
 static void
 arv_gv_fake_camera_init (ArvGvFakeCamera *gv_fake_camera)
 {
-	gv_fake_camera->priv = G_TYPE_INSTANCE_GET_PRIVATE (gv_fake_camera, ARV_TYPE_GV_FAKE_CAMERA, ArvGvFakeCameraPrivate);
+	gv_fake_camera->priv = arv_gv_fake_camera_get_instance_private (gv_fake_camera);
 }
 
 static void
@@ -700,7 +700,7 @@ _constructed (GObject *gobject)
 {
 	ArvGvFakeCamera *gv_fake_camera = ARV_GV_FAKE_CAMERA (gobject);
 
-	parent_class->constructed (gobject);
+	G_OBJECT_CLASS (arv_gv_fake_camera_parent_class)->constructed (gobject);
 
 	gv_fake_camera->priv->camera = arv_fake_camera_new_full (gv_fake_camera->priv->serial_number, gv_fake_camera->priv->genicam_filename);
 	gv_fake_camera->priv->is_running = arv_gv_fake_camera_start (gv_fake_camera);
@@ -721,19 +721,13 @@ _finalize (GObject *object)
 	g_clear_pointer (&gv_fake_camera->priv->serial_number, g_free);
 	g_clear_pointer (&gv_fake_camera->priv->genicam_filename, g_free);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_gv_fake_camera_parent_class)->finalize (object);
 }
 
 static void
 arv_gv_fake_camera_class_init (ArvGvFakeCameraClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
-
-#if !GLIB_CHECK_VERSION(2,38,0)
-	g_type_class_add_private (this_class, sizeof (ArvGvFakeCameraPrivate));
-#endif
-
-	parent_class = g_type_class_peek_parent (this_class);
 
 	object_class->set_property = _set_property;
 	object_class->constructed = _constructed;
@@ -776,9 +770,3 @@ arv_gv_fake_camera_class_init (ArvGvFakeCameraClass *this_class)
 							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
 							      G_PARAM_STATIC_BLURB));
 }
-
-#if !GLIB_CHECK_VERSION(2,38,0)
-G_DEFINE_TYPE (ArvGvFakeCamera, arv_gv_fake_camera, G_TYPE_OBJECT)
-#else
-G_DEFINE_TYPE_WITH_CODE (ArvGvFakeCamera, arv_gv_fake_camera, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvGvFakeCamera))
-#endif

@@ -63,8 +63,6 @@ arv_get_fake_camera_genicam_filename (void)
 	return arv_fake_camera_genicam_filename;
 }
 
-static GObjectClass *parent_class = NULL;
-
 struct _ArvFakeCameraPrivate {
 	void *memory;
 
@@ -812,10 +810,12 @@ arv_fake_camera_new (const char *serial_number)
 	return arv_fake_camera_new_full (serial_number, NULL);
 }
 
+G_DEFINE_TYPE_WITH_CODE (ArvFakeCamera, arv_fake_camera, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvFakeCamera))
+
 static void
 arv_fake_camera_init (ArvFakeCamera *fake_camera)
 {
-	fake_camera->priv = G_TYPE_INSTANCE_GET_PRIVATE (fake_camera, ARV_TYPE_FAKE_CAMERA, ArvFakeCameraPrivate);
+	fake_camera->priv = arv_fake_camera_get_instance_private (fake_camera);
 
 	fake_camera->priv->trigger_frequency = 25.0;
 	fake_camera->priv->frame_id = 65000; /* Trigger circular counter bugs sooner */
@@ -830,7 +830,7 @@ arv_fake_camera_finalize (GObject *object)
 	g_clear_pointer (&fake_camera->priv->memory, g_free);
 	g_clear_pointer (&fake_camera->priv->genicam_xml, g_free);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_fake_camera_parent_class)->finalize (object);
 }
 
 static void
@@ -838,17 +838,5 @@ arv_fake_camera_class_init (ArvFakeCameraClass *fake_camera_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (fake_camera_class);
 
-#if !GLIB_CHECK_VERSION(2,38,0)
-	g_type_class_add_private (fake_camera_class, sizeof (ArvFakeCameraPrivate));
-#endif
-
-	parent_class = g_type_class_peek_parent (fake_camera_class);
-
 	object_class->finalize = arv_fake_camera_finalize;
 }
-
-#if !GLIB_CHECK_VERSION(2,38,0)
-G_DEFINE_TYPE (ArvFakeCamera, arv_fake_camera, G_TYPE_OBJECT)
-#else
-G_DEFINE_TYPE_WITH_CODE (ArvFakeCamera, arv_fake_camera, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvFakeCamera))
-#endif

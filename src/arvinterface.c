@@ -33,8 +33,6 @@
 
 #include <arvinterfaceprivate.h>
 
-static GObjectClass *parent_class = NULL;
-
 struct _ArvInterfacePrivate {
 	GArray *device_ids;
 };
@@ -319,10 +317,12 @@ arv_interface_open_device (ArvInterface *interface, const char *device_id)
 	return ARV_INTERFACE_GET_CLASS (interface)->open_device (interface, device_id);
 }
 
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvInterface, arv_interface, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvInterface))
+
 static void
 arv_interface_init (ArvInterface *interface)
 {
-	interface->priv = G_TYPE_INSTANCE_GET_PRIVATE (interface, ARV_TYPE_INTERFACE, ArvInterfacePrivate);
+	interface->priv = arv_interface_get_instance_private (interface);
 
 	interface->priv->device_ids = g_array_new (FALSE, TRUE, sizeof (ArvInterfaceDeviceIds *));
 }
@@ -332,7 +332,7 @@ arv_interface_finalize (GObject *object)
 {
 	ArvInterface *interface = ARV_INTERFACE (object);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_interface_parent_class)->finalize (object);
 
 	arv_interface_clear_device_ids (interface);
 	g_array_free (interface->priv->device_ids, TRUE);
@@ -344,17 +344,5 @@ arv_interface_class_init (ArvInterfaceClass *interface_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (interface_class);
 
-#if !GLIB_CHECK_VERSION(2,38,0)
-	g_type_class_add_private (interface_class, sizeof (ArvInterfacePrivate));
-#endif
-
-	parent_class = g_type_class_peek_parent (interface_class);
-
 	object_class->finalize = arv_interface_finalize;
 }
-
-#if !GLIB_CHECK_VERSION(2,38,0)
-G_DEFINE_ABSTRACT_TYPE (ArvInterface, arv_interface, G_TYPE_OBJECT)
-#else
-G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvInterface, arv_interface, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvInterface))
-#endif

@@ -302,8 +302,6 @@ arv_gv_interface_device_infos_unref (ArvGvInterfaceDeviceInfos *infos)
 
 /* ArvGvInterface implementation */
 
-static GObjectClass *parent_class = NULL;
-
 struct _ArvGvInterfacePrivate {
 	GHashTable *devices;
 };
@@ -709,10 +707,12 @@ arv_gv_interface_destroy_instance (void)
 	g_mutex_unlock (&gv_interface_mutex);
 }
 
+G_DEFINE_TYPE_WITH_CODE (ArvGvInterface, arv_gv_interface, ARV_TYPE_INTERFACE, G_ADD_PRIVATE (ArvGvInterface))
+
 static void
 arv_gv_interface_init (ArvGvInterface *gv_interface)
 {
-	gv_interface->priv = G_TYPE_INSTANCE_GET_PRIVATE (gv_interface, ARV_TYPE_GV_INTERFACE, ArvGvInterfacePrivate);
+	gv_interface->priv = arv_gv_interface_get_instance_private (gv_interface);
 
 	gv_interface->priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal, NULL,
 							     (GDestroyNotify) arv_gv_interface_device_infos_unref);
@@ -726,7 +726,7 @@ arv_gv_interface_finalize (GObject *object)
 	g_hash_table_unref (gv_interface->priv->devices);
 	gv_interface->priv->devices = NULL;
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_gv_interface_parent_class)->finalize (object);
 }
 
 static void
@@ -735,12 +735,6 @@ arv_gv_interface_class_init (ArvGvInterfaceClass *gv_interface_class)
 	GObjectClass *object_class = G_OBJECT_CLASS (gv_interface_class);
 	ArvInterfaceClass *interface_class = ARV_INTERFACE_CLASS (gv_interface_class);
 
-#if !GLIB_CHECK_VERSION(2,38,0)
-	g_type_class_add_private (gv_interface_class, sizeof (ArvGvInterfacePrivate));
-#endif
-
-	parent_class = g_type_class_peek_parent (gv_interface_class);
-
 	object_class->finalize = arv_gv_interface_finalize;
 
 	interface_class->update_device_list = arv_gv_interface_update_device_list;
@@ -748,9 +742,3 @@ arv_gv_interface_class_init (ArvGvInterfaceClass *gv_interface_class)
 
 	interface_class->protocol = "GigEVision";
 }
-
-#if !GLIB_CHECK_VERSION(2,38,0)
-G_DEFINE_TYPE (ArvGvInterface, arv_gv_interface, ARV_TYPE_INTERFACE)
-#else
-G_DEFINE_TYPE_WITH_CODE (ArvGvInterface, arv_gv_interface, ARV_TYPE_INTERFACE, G_ADD_PRIVATE (ArvGvInterface))
-#endif

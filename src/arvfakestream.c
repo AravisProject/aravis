@@ -31,8 +31,6 @@
 #include <arvdebug.h>
 #include <arvmisc.h>
 
-static GObjectClass *parent_class = NULL;
-
 struct _ArvFakeStreamPrivate {
 	GThread *thread;
 	void *thread_data;
@@ -194,10 +192,12 @@ arv_fake_stream_get_statistics (ArvStream *stream,
 	*n_underruns = thread_data->n_underruns;
 }
 
+G_DEFINE_TYPE_WITH_CODE (ArvFakeStream, arv_fake_stream, ARV_TYPE_STREAM, G_ADD_PRIVATE (ArvFakeStream))
+
 static void
 arv_fake_stream_init (ArvFakeStream *fake_stream)
 {
-	fake_stream->priv = G_TYPE_INSTANCE_GET_PRIVATE (fake_stream, ARV_TYPE_FAKE_STREAM, ArvFakeStreamPrivate);
+	fake_stream->priv = arv_fake_stream_get_instance_private (fake_stream);
 }
 
 static void
@@ -213,7 +213,7 @@ arv_fake_stream_finalize (GObject *object)
 
 	g_object_unref (fake_stream->priv->camera);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_fake_stream_parent_class)->finalize (object);
 }
 
 static void
@@ -222,21 +222,9 @@ arv_fake_stream_class_init (ArvFakeStreamClass *fake_stream_class)
 	GObjectClass *object_class = G_OBJECT_CLASS (fake_stream_class);
 	ArvStreamClass *stream_class = ARV_STREAM_CLASS (fake_stream_class);
 
-#if !GLIB_CHECK_VERSION(2,38,0)
-	g_type_class_add_private (fake_stream_class, sizeof (ArvFakeStreamPrivate));
-#endif
-
-	parent_class = g_type_class_peek_parent (fake_stream_class);
-
 	object_class->finalize = arv_fake_stream_finalize;
 
 	stream_class->start_thread = arv_fake_stream_start_thread;
 	stream_class->stop_thread = arv_fake_stream_stop_thread;
 	stream_class->get_statistics = arv_fake_stream_get_statistics;
 }
-
-#if !GLIB_CHECK_VERSION(2,38,0)
-G_DEFINE_TYPE (ArvFakeStream, arv_fake_stream, ARV_TYPE_STREAM)
-#else
-G_DEFINE_TYPE_WITH_CODE (ArvFakeStream, arv_fake_stream, ARV_TYPE_STREAM, G_ADD_PRIVATE (ArvFakeStream))
-#endif

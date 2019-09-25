@@ -34,8 +34,6 @@
 
 #define ARV_EVALUATOR_STACK_SIZE	128
 
-static GObjectClass *parent_class = NULL;
-
 typedef enum {
 	ARV_EVALUATOR_STATUS_SUCCESS,
 	ARV_EVALUATOR_STATUS_NOT_PARSED,
@@ -1463,10 +1461,12 @@ arv_evaluator_new (const char *expression)
 	return evaluator;
 }
 
+G_DEFINE_TYPE_WITH_CODE (ArvEvaluator, arv_evaluator, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvEvaluator))
+
 static void
 arv_evaluator_init (ArvEvaluator *evaluator)
 {
-	evaluator->priv = G_TYPE_INSTANCE_GET_PRIVATE (evaluator, ARV_TYPE_EVALUATOR, ArvEvaluatorPrivate);
+	evaluator->priv = arv_evaluator_get_instance_private (evaluator);
 
 	evaluator->priv->expression = NULL;
 	evaluator->priv->rpn_stack = NULL;
@@ -1489,7 +1489,7 @@ arv_evaluator_finalize (GObject *object)
 	g_hash_table_unref (evaluator->priv->constants);
 	free_rpn_stack (evaluator);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_evaluator_parent_class)->finalize (object);
 }
 
 static void
@@ -1497,17 +1497,5 @@ arv_evaluator_class_init (ArvEvaluatorClass *evaluator_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (evaluator_class);
 
-#if !GLIB_CHECK_VERSION(2,38,0)
-	g_type_class_add_private (evaluator_class, sizeof (ArvEvaluatorPrivate));
-#endif
-
-	parent_class = g_type_class_peek_parent (evaluator_class);
-
 	object_class->finalize = arv_evaluator_finalize;
 }
-
-#if !GLIB_CHECK_VERSION(2,38,0)
-G_DEFINE_TYPE (ArvEvaluator, arv_evaluator, G_TYPE_OBJECT)
-#else
-G_DEFINE_TYPE_WITH_CODE (ArvEvaluator, arv_evaluator, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvEvaluator))
-#endif

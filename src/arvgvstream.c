@@ -74,8 +74,6 @@ enum {
 	ARV_GV_STREAM_PROPERTY_FRAME_RETENTION
 } ArvGvStreamProperties;
 
-static GObjectClass *parent_class = NULL;
-
 typedef struct _ArvGvStreamThreadData ArvGvStreamThreadData;
 
 struct _ArvGvStreamPrivate {
@@ -1273,10 +1271,12 @@ arv_gv_stream_get_property (GObject * object, guint prop_id,
 	}
 }
 
+G_DEFINE_TYPE_WITH_CODE (ArvGvStream, arv_gv_stream, ARV_TYPE_STREAM, G_ADD_PRIVATE (ArvGvStream))
+
 static void
 arv_gv_stream_init (ArvGvStream *gv_stream)
 {
-	gv_stream->priv = G_TYPE_INSTANCE_GET_PRIVATE (gv_stream, ARV_TYPE_GV_STREAM, ArvGvStreamPrivate);
+	gv_stream->priv = arv_gv_stream_get_instance_private (gv_stream);
 }
 
 static void
@@ -1340,7 +1340,7 @@ arv_gv_stream_finalize (GObject *object)
 		g_clear_pointer (&thread_data, g_free);
 	}
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_gv_stream_parent_class)->finalize (object);
 }
 
 static void
@@ -1348,12 +1348,6 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (gv_stream_class);
 	ArvStreamClass *stream_class = ARV_STREAM_CLASS (gv_stream_class);
-
-#if !GLIB_CHECK_VERSION(2,38,0)
-	g_type_class_add_private (gv_stream_class, sizeof (ArvGvStreamPrivate));
-#endif
-
-	parent_class = g_type_class_peek_parent (gv_stream_class);
 
 	object_class->finalize = arv_gv_stream_finalize;
 	object_class->set_property = arv_gv_stream_set_property;
@@ -1412,9 +1406,3 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
 		);
 }
-
-#if !GLIB_CHECK_VERSION(2,38,0)
-G_DEFINE_TYPE (ArvGvStream, arv_gv_stream, ARV_TYPE_STREAM)
-#else
-G_DEFINE_TYPE_WITH_CODE (ArvGvStream, arv_gv_stream, ARV_TYPE_STREAM, G_ADD_PRIVATE (ArvGvStream))
-#endif

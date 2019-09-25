@@ -34,8 +34,6 @@
 
 #include <arvbufferprivate.h>
 
-static GObjectClass *parent_class = NULL;
-
 /**
  * arv_buffer_new_full:
  * @size: payload size
@@ -507,10 +505,12 @@ arv_buffer_get_image_pixel_format (ArvBuffer *buffer)
 	return buffer->priv->pixel_format;
 }
 
+G_DEFINE_TYPE_WITH_CODE (ArvBuffer, arv_buffer, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvBuffer))
+
 static void
 arv_buffer_init (ArvBuffer *buffer)
 {
-	buffer->priv = G_TYPE_INSTANCE_GET_PRIVATE (buffer, ARV_TYPE_BUFFER, ArvBufferPrivate);
+	buffer->priv = arv_buffer_get_instance_private (buffer);
 	buffer->priv->status = ARV_BUFFER_STATUS_CLEARED;
 }
 
@@ -528,7 +528,7 @@ arv_buffer_finalize (GObject *object)
 	if (buffer->priv->user_data && buffer->priv->user_data_destroy_func)
 		buffer->priv->user_data_destroy_func (buffer->priv->user_data);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_buffer_parent_class)->finalize (object);
 }
 
 static void
@@ -536,17 +536,5 @@ arv_buffer_class_init (ArvBufferClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 
-#if !GLIB_CHECK_VERSION(2,38,0)
-	g_type_class_add_private (this_class, sizeof (ArvBufferPrivate));
-#endif
-
-	parent_class = g_type_class_peek_parent (this_class);
-
 	object_class->finalize = arv_buffer_finalize;
 }
-
-#if !GLIB_CHECK_VERSION(2,38,0)
-G_DEFINE_TYPE (ArvBuffer, arv_buffer, G_TYPE_OBJECT)
-#else
-G_DEFINE_TYPE_WITH_CODE (ArvBuffer, arv_buffer, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvBuffer))
-#endif

@@ -99,8 +99,6 @@ typedef enum {
 	ARV_CAMERA_SERIES_MATRIX_VISION
 } ArvCameraSeries;
 
-static GObjectClass *parent_class = NULL;
-
 struct _ArvCameraPrivate {
 	ArvDevice *device;
 	ArvGc *genicam;
@@ -2650,10 +2648,12 @@ arv_camera_new (const char *name)
 	return camera;
 }
 
+G_DEFINE_TYPE_WITH_CODE (ArvCamera, arv_camera, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvCamera))
+
 static void
 arv_camera_init (ArvCamera *camera)
 {
-	camera->priv = G_TYPE_INSTANCE_GET_PRIVATE (camera, ARV_TYPE_CAMERA, ArvCameraPrivate);
+	camera->priv = arv_camera_get_instance_private (camera);
 }
 
 static void
@@ -2664,7 +2664,7 @@ arv_camera_finalize (GObject *object)
 	g_clear_object (&camera->priv->device);
 	g_clear_error (&camera->priv->error);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_camera_parent_class)->finalize (object);
 }
 
 static GObject *
@@ -2677,8 +2677,7 @@ arv_camera_constructor (GType gtype, guint n_properties, GObjectConstructParam *
 	const char *vendor_name;
 	const char *model_name;
 
-	/* always call parent constructor */
-	object = parent_class->constructor(gtype, n_properties, properties);
+	object = G_OBJECT_CLASS (arv_camera_parent_class)->constructor (gtype, n_properties, properties);
 
 	camera = ARV_CAMERA (object);
 
@@ -2777,12 +2776,6 @@ arv_camera_class_init (ArvCameraClass *camera_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (camera_class);
 
-#if !GLIB_CHECK_VERSION(2,38,0)
-	g_type_class_add_private (camera_class, sizeof (ArvCameraPrivate));
-#endif
-
-	parent_class = g_type_class_peek_parent (camera_class);
-
 	object_class->finalize = arv_camera_finalize;
 	object_class->constructor = arv_camera_constructor;
 	object_class->set_property = arv_camera_set_property;
@@ -2796,9 +2789,3 @@ arv_camera_class_init (ArvCameraClass *camera_class)
 							      ARV_TYPE_DEVICE,
 							      G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 }
-
-#if !GLIB_CHECK_VERSION(2,38,0)
-G_DEFINE_TYPE (ArvCamera, arv_camera, G_TYPE_OBJECT)
-#else
-G_DEFINE_TYPE_WITH_CODE (ArvCamera, arv_camera, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvCamera))
-#endif

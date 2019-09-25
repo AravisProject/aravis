@@ -36,8 +36,6 @@
 #include <arvdebug.h>
 #include <string.h>
 
-static GObjectClass *parent_class = NULL;
-
 struct _ArvGcFeatureNodePrivate {
 
 	char *name;
@@ -395,10 +393,12 @@ arv_gc_feature_node_get_change_count (ArvGcFeatureNode *gc_feature_node)
 	return gc_feature_node->priv->change_count;
 }
 
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvGcFeatureNode, arv_gc_feature_node, ARV_TYPE_GC_NODE, G_ADD_PRIVATE (ArvGcFeatureNode))
+
 static void
 arv_gc_feature_node_init (ArvGcFeatureNode *gc_feature_node)
 {
-	gc_feature_node->priv = G_TYPE_INSTANCE_GET_PRIVATE (gc_feature_node, ARV_TYPE_GC_FEATURE_NODE, ArvGcFeatureNodePrivate);
+	gc_feature_node->priv = arv_gc_feature_node_get_instance_private (gc_feature_node);
 
 	gc_feature_node->priv->change_count = 0;
 }
@@ -410,7 +410,7 @@ arv_gc_feature_node_finalize (GObject *object)
 
 	g_free (node->priv->name);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_gc_feature_node_parent_class)->finalize (object);
 }
 
 static void
@@ -420,12 +420,6 @@ arv_gc_feature_node_class_init (ArvGcFeatureNodeClass *this_class)
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
 	ArvDomElementClass *dom_element_class = ARV_DOM_ELEMENT_CLASS (this_class);
 
-#if !GLIB_CHECK_VERSION(2,38,0)
-	g_type_class_add_private (this_class, sizeof (ArvGcFeatureNodePrivate));
-#endif
-
-	parent_class = g_type_class_peek_parent (this_class);
-
 	object_class->finalize = arv_gc_feature_node_finalize;
 	dom_node_class->can_append_child = arv_gc_feature_node_can_append_child;
 	dom_node_class->post_new_child = arv_gc_feature_node_post_new_child;
@@ -434,9 +428,3 @@ arv_gc_feature_node_class_init (ArvGcFeatureNodeClass *this_class)
 	dom_element_class->get_attribute = arv_gc_feature_node_get_attribute;
 	this_class->get_value_type = NULL;
 }
-
-#if !GLIB_CHECK_VERSION(2,38,0)
-G_DEFINE_ABSTRACT_TYPE (ArvGcFeatureNode, arv_gc_feature_node, ARV_TYPE_GC_NODE)
-#else
-G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvGcFeatureNode, arv_gc_feature_node, ARV_TYPE_GC_NODE, G_ADD_PRIVATE (ArvGcFeatureNode))
-#endif

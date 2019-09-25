@@ -39,8 +39,6 @@
 
 #define ARV_UV_DEVICE_N_TRIES_MAX	5
 
-static GObjectClass *parent_class = NULL;
-
 struct _ArvUvDevicePrivate {
 	char *vendor;
 	char *product;
@@ -743,10 +741,13 @@ arv_uv_device_new (const char *vendor, const char *product, const char *serial_n
 	return ARV_DEVICE (uv_device);
 }
 
+G_DEFINE_TYPE_WITH_CODE (ArvUvDevice, arv_uv_device, ARV_TYPE_DEVICE, G_ADD_PRIVATE (ArvUvDevice))
+
 static void
 arv_uv_device_init (ArvUvDevice *uv_device)
 {
-	uv_device->priv = G_TYPE_INSTANCE_GET_PRIVATE (uv_device, ARV_TYPE_UV_DEVICE, ArvUvDevicePrivate);
+	uv_device->priv = arv_uv_device_get_instance_private (uv_device);
+
 	uv_device->priv->cmd_packet_size_max = 65536 + sizeof (ArvUvcpHeader);
 	uv_device->priv->ack_packet_size_max = 65536 + sizeof (ArvUvcpHeader);
 	uv_device->priv->disconnected = FALSE;
@@ -770,7 +771,7 @@ arv_uv_device_finalize (GObject *object)
 	}
 	libusb_exit (uv_device->priv->usb);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_uv_device_parent_class)->finalize (object);
 }
 
 static void
@@ -778,12 +779,6 @@ arv_uv_device_class_init (ArvUvDeviceClass *uv_device_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (uv_device_class);
 	ArvDeviceClass *device_class = ARV_DEVICE_CLASS (uv_device_class);
-
-#if !GLIB_CHECK_VERSION(2,38,0)
-	g_type_class_add_private (uv_device_class, sizeof (ArvUvDevicePrivate));
-#endif
-
-	parent_class = g_type_class_peek_parent (uv_device_class);
 
 	object_class->finalize = arv_uv_device_finalize;
 
@@ -795,9 +790,3 @@ arv_uv_device_class_init (ArvUvDeviceClass *uv_device_class)
 	device_class->read_register = arv_uv_device_read_register;
 	device_class->write_register = arv_uv_device_write_register;
 }
-
-#if !GLIB_CHECK_VERSION(2,38,0)
-G_DEFINE_TYPE (ArvUvDevice, arv_uv_device, ARV_TYPE_DEVICE)
-#else
-G_DEFINE_TYPE_WITH_CODE (ArvUvDevice, arv_uv_device, ARV_TYPE_DEVICE, G_ADD_PRIVATE (ArvUvDevice))
-#endif

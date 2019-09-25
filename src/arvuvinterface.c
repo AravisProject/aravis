@@ -36,8 +36,6 @@
 
 /* ArvUvInterface implementation */
 
-static GObjectClass *parent_class = NULL;
-
 typedef struct {
 	char *name;
 	char *full_name;
@@ -363,12 +361,14 @@ arv_uv_interface_destroy_instance (void)
 	g_mutex_unlock (&uv_interface_mutex);
 }
 
+G_DEFINE_TYPE_WITH_CODE (ArvUvInterface, arv_uv_interface, ARV_TYPE_INTERFACE, G_ADD_PRIVATE (ArvUvInterface))
+
 static void
 arv_uv_interface_init (ArvUvInterface *uv_interface)
 {
-	uv_interface->priv = G_TYPE_INSTANCE_GET_PRIVATE (uv_interface, ARV_TYPE_UV_INTERFACE, ArvUvInterfacePrivate);
-	libusb_init (&uv_interface->priv->usb);
+	uv_interface->priv = arv_uv_interface_get_instance_private (uv_interface);
 
+	libusb_init (&uv_interface->priv->usb);
 	uv_interface->priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal, NULL,
 							     (GDestroyNotify) arv_uv_interface_device_infos_unref);
 }
@@ -380,7 +380,7 @@ arv_uv_interface_finalize (GObject *object)
 
 	g_hash_table_unref (uv_interface->priv->devices);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_uv_interface_parent_class)->finalize (object);
 
 	libusb_exit (uv_interface->priv->usb);
 }
@@ -391,12 +391,6 @@ arv_uv_interface_class_init (ArvUvInterfaceClass *uv_interface_class)
 	GObjectClass *object_class = G_OBJECT_CLASS (uv_interface_class);
 	ArvInterfaceClass *interface_class = ARV_INTERFACE_CLASS (uv_interface_class);
 
-#if !GLIB_CHECK_VERSION(2,38,0)
-	g_type_class_add_private (uv_interface_class, sizeof (ArvUvInterfacePrivate));
-#endif
-
-	parent_class = g_type_class_peek_parent (uv_interface_class);
-
 	object_class->finalize = arv_uv_interface_finalize;
 
 	interface_class->update_device_list = arv_uv_interface_update_device_list;
@@ -404,9 +398,3 @@ arv_uv_interface_class_init (ArvUvInterfaceClass *uv_interface_class)
 
 	interface_class->protocol = "USB3Vision";
 }
-
-#if !GLIB_CHECK_VERSION(2,38,0)
-G_DEFINE_TYPE (ArvUvInterface, arv_uv_interface, ARV_TYPE_INTERFACE)
-#else
-G_DEFINE_TYPE_WITH_CODE (ArvUvInterface, arv_uv_interface, ARV_TYPE_INTERFACE, G_ADD_PRIVATE (ArvUvInterface))
-#endif

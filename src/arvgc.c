@@ -59,8 +59,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-static GObjectClass *parent_class = NULL;
-
 struct _ArvGcPrivate {
 	GHashTable *nodes;
 	ArvDevice *device;
@@ -395,10 +393,12 @@ arv_gc_new (ArvDevice *device, const void *xml, size_t size)
 	return genicam;
 }
 
+G_DEFINE_TYPE_WITH_CODE (ArvGc, arv_gc, ARV_TYPE_DOM_DOCUMENT, G_ADD_PRIVATE (ArvGc))
+
 static void
 arv_gc_init (ArvGc *genicam)
 {
-	genicam->priv = G_TYPE_INSTANCE_GET_PRIVATE (genicam, ARV_TYPE_GC, ArvGcPrivate);
+	genicam->priv = arv_gc_get_instance_private (genicam);
 
 	genicam->priv->nodes = g_hash_table_new_full (g_str_hash, g_str_equal, NULL, g_object_unref);
 	genicam->priv->cache_policy = ARV_REGISTER_CACHE_POLICY_DISABLE;
@@ -414,7 +414,7 @@ arv_gc_finalize (GObject *object)
 
 	g_hash_table_unref (genicam->priv->nodes);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_gc_parent_class)->finalize (object);
 }
 
 static void
@@ -424,19 +424,7 @@ arv_gc_class_init (ArvGcClass *node_class)
 	ArvDomNodeClass *d_node_class = ARV_DOM_NODE_CLASS (node_class);
 	ArvDomDocumentClass *d_document_class = ARV_DOM_DOCUMENT_CLASS (node_class);
 
-#if !GLIB_CHECK_VERSION(2,38,0)
-	g_type_class_add_private (node_class, sizeof (ArvGcPrivate));
-#endif
-
-	parent_class = g_type_class_peek_parent (node_class);
-
 	object_class->finalize = arv_gc_finalize;
 	d_node_class->can_append_child = arv_gc_can_append_child;
 	d_document_class->create_element = arv_gc_create_element;
 }
-
-#if !GLIB_CHECK_VERSION(2,38,0)
-G_DEFINE_TYPE (ArvGc, arv_gc, ARV_TYPE_DOM_DOCUMENT)
-#else
-G_DEFINE_TYPE_WITH_CODE (ArvGc, arv_gc, ARV_TYPE_DOM_DOCUMENT, G_ADD_PRIVATE (ArvGc))
-#endif

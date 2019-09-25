@@ -58,8 +58,6 @@ enum {
 	ARV_CHUNK_PARSER_PROPERTY_LAST
 } ArvChunkParserProperties;
 
-static GObjectClass *parent_class = NULL;
-
 GQuark
 arv_chunk_parser_error_quark (void)
 {
@@ -246,10 +244,12 @@ _get_property (GObject * object, guint prop_id,
 	}
 }
 
+G_DEFINE_TYPE_WITH_CODE (ArvChunkParser, arv_chunk_parser, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvChunkParser))
+
 static void
 arv_chunk_parser_init (ArvChunkParser *chunk_parser)
 {
-	chunk_parser->priv = G_TYPE_INSTANCE_GET_PRIVATE (chunk_parser, ARV_TYPE_CHUNK_PARSER, ArvChunkParserPrivate);
+	chunk_parser->priv = arv_chunk_parser_get_instance_private (chunk_parser);
 }
 
 static void
@@ -259,19 +259,13 @@ _finalize (GObject *object)
 
 	g_clear_object (&chunk_parser->priv->genicam);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_chunk_parser_parent_class)->finalize (object);
 }
 
 static void
 arv_chunk_parser_class_init (ArvChunkParserClass *node_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (node_class);
-
-#if !GLIB_CHECK_VERSION(2,38,0)
-	g_type_class_add_private (node_class, sizeof (ArvChunkParserPrivate));
-#endif
-
-	parent_class = g_type_class_peek_parent (node_class);
 
 	object_class->finalize = _finalize;
 	object_class->set_property = _set_property;
@@ -284,9 +278,3 @@ arv_chunk_parser_class_init (ArvChunkParserClass *node_class)
 				     G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY)
 		);
 }
-
-#if !GLIB_CHECK_VERSION(2,38,0)
-G_DEFINE_TYPE (ArvChunkParser, arv_chunk_parser, G_TYPE_OBJECT)
-#else
-G_DEFINE_TYPE_WITH_CODE (ArvChunkParser, arv_chunk_parser, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvChunkParser))
-#endif

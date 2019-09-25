@@ -30,8 +30,6 @@
 #include <arvgc.h>
 #include <arvdebug.h>
 
-static GObjectClass *parent_class = NULL;
-
 struct _ArvFakeDevicePrivate {
 	ArvFakeCamera *camera;
 	ArvGc *genicam;
@@ -127,10 +125,12 @@ arv_fake_device_new (const char *serial_number)
 	return ARV_DEVICE (fake_device);
 }
 
+G_DEFINE_TYPE_WITH_CODE (ArvFakeDevice, arv_fake_device, ARV_TYPE_DEVICE, G_ADD_PRIVATE (ArvFakeDevice))
+
 static void
 arv_fake_device_init (ArvFakeDevice *fake_device)
 {
-	fake_device->priv = G_TYPE_INSTANCE_GET_PRIVATE (fake_device, ARV_TYPE_FAKE_DEVICE, ArvFakeDevicePrivate);
+	fake_device->priv = arv_fake_device_get_instance_private (fake_device);
 }
 
 static void
@@ -141,7 +141,7 @@ arv_fake_device_finalize (GObject *object)
 	g_object_unref (fake_device->priv->genicam);
 	g_object_unref (fake_device->priv->camera);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_fake_device_parent_class)->finalize (object);
 }
 
 static void
@@ -149,12 +149,6 @@ arv_fake_device_class_init (ArvFakeDeviceClass *fake_device_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (fake_device_class);
 	ArvDeviceClass *device_class = ARV_DEVICE_CLASS (fake_device_class);
-
-#if !GLIB_CHECK_VERSION(2,38,0)
-	g_type_class_add_private (fake_device_class, sizeof (ArvFakeDevicePrivate));
-#endif
-
-	parent_class = g_type_class_peek_parent (fake_device_class);
 
 	object_class->finalize = arv_fake_device_finalize;
 
@@ -166,9 +160,3 @@ arv_fake_device_class_init (ArvFakeDeviceClass *fake_device_class)
 	device_class->read_register = arv_fake_device_read_register;
 	device_class->write_register = arv_fake_device_write_register;
 }
-
-#if !GLIB_CHECK_VERSION(2,38,0)
-G_DEFINE_TYPE (ArvFakeDevice, arv_fake_device, ARV_TYPE_DEVICE)
-#else
-G_DEFINE_TYPE_WITH_CODE (ArvFakeDevice, arv_fake_device, ARV_TYPE_DEVICE, G_ADD_PRIVATE (ArvFakeDevice))
-#endif

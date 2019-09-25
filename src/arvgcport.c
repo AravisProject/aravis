@@ -36,11 +36,11 @@
 #include <arvgc.h>
 #include <memory.h>
 
-static GObjectClass *parent_class = NULL;
-
 struct _ArvGcPortPrivate {
 	ArvGcPropertyNode *chunk_id;
 };
+
+G_DEFINE_TYPE_WITH_CODE (ArvGcPort, arv_gc_port, ARV_TYPE_GC_FEATURE_NODE, G_ADD_PRIVATE(ArvGcPort))
 
 /* ArvDomNode implementation */
 
@@ -63,11 +63,11 @@ _post_new_child (ArvDomNode *self, ArvDomNode *child)
 				node->priv->chunk_id = property_node;
 				break;
 			default:
-				ARV_DOM_NODE_CLASS (parent_class)->post_new_child (self, child);
+				ARV_DOM_NODE_CLASS (arv_gc_port_parent_class)->post_new_child (self, child);
 				break;
 		}
 	} else
-		ARV_DOM_NODE_CLASS (parent_class)->post_new_child (self, child);
+		ARV_DOM_NODE_CLASS (arv_gc_port_parent_class)->post_new_child (self, child);
 }
 
 static void
@@ -226,14 +226,14 @@ arv_gc_port_new (void)
 static void
 arv_gc_port_init (ArvGcPort *gc_port)
 {
-	gc_port->priv = G_TYPE_INSTANCE_GET_PRIVATE (gc_port, ARV_TYPE_GC_PORT, ArvGcPortPrivate);
+	gc_port->priv = arv_gc_port_get_instance_private (gc_port);
 	gc_port->priv->chunk_id = 0;
 }
 
 static void
 _finalize (GObject *object)
 {
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_gc_port_parent_class)->finalize (object);
 }
 
 static void
@@ -242,20 +242,8 @@ arv_gc_port_class_init (ArvGcPortClass *this_class)
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
 
-#if !GLIB_CHECK_VERSION(2,38,0)
-	g_type_class_add_private (this_class, sizeof (ArvGcPortPrivate));
-#endif
-
-	parent_class = g_type_class_peek_parent (this_class);
-
 	object_class->finalize = _finalize;
 	dom_node_class->get_node_name = _get_node_name;
 	dom_node_class->post_new_child = _post_new_child;
 	dom_node_class->pre_remove_child = _pre_remove_child;
 }
-
-#if !GLIB_CHECK_VERSION(2,38,0)
-G_DEFINE_TYPE (ArvGcPort, arv_gc_port, ARV_TYPE_GC_FEATURE_NODE)
-#else
-G_DEFINE_TYPE_WITH_CODE (ArvGcPort, arv_gc_port, ARV_TYPE_GC_FEATURE_NODE, G_ADD_PRIVATE(ArvGcPort))
-#endif

@@ -47,8 +47,6 @@ enum {
 	ARV_STREAM_PROPERTY_LAST
 } ArvStreamProperties;
 
-static GObjectClass *parent_class = NULL;
-
 struct _ArvStreamPrivate {
 	GAsyncQueue *input_queue;
 	GAsyncQueue *output_queue;
@@ -410,10 +408,12 @@ arv_stream_get_property (GObject * object, guint prop_id,
 	}
 }
 
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvStream, arv_stream, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvStream))
+
 static void
 arv_stream_init (ArvStream *stream)
 {
-	stream->priv = G_TYPE_INSTANCE_GET_PRIVATE (stream, ARV_TYPE_STREAM, ArvStreamPrivate);
+	stream->priv = arv_stream_get_instance_private (stream);
 
 	stream->priv->input_queue = g_async_queue_new ();
 	stream->priv->output_queue = g_async_queue_new ();
@@ -456,19 +456,13 @@ arv_stream_finalize (GObject *object)
 
 	g_rec_mutex_clear (&stream->priv->mutex);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_stream_parent_class)->finalize (object);
 }
 
 static void
 arv_stream_class_init (ArvStreamClass *node_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (node_class);
-
-#if !GLIB_CHECK_VERSION(2,38,0)
-	g_type_class_add_private (node_class, sizeof (ArvStreamPrivate));
-#endif
-
-	parent_class = g_type_class_peek_parent (node_class);
 
 	object_class->finalize = arv_stream_finalize;
 	object_class->set_property = arv_stream_set_property;
@@ -506,10 +500,4 @@ arv_stream_class_init (ArvStreamClass *node_class)
 				      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
 		);
 }
-
-#if !GLIB_CHECK_VERSION(2,38,0)
-G_DEFINE_ABSTRACT_TYPE (ArvStream, arv_stream, G_TYPE_OBJECT)
-#else
-G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvStream, arv_stream, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvStream))
-#endif
 

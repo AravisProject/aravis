@@ -34,8 +34,6 @@
 #include <arvdebug.h>
 #include <string.h>
 
-static GObjectClass *parent_class = NULL;
-
 struct _ArvGcConverterPrivate {
 	GSList *variables;	/* ArvGcVariableNode list */
 	GSList *constants;	/* ArvGcVariableNode list */
@@ -51,6 +49,9 @@ struct _ArvGcConverterPrivate {
 	ArvEvaluator *formula_to;
 	ArvEvaluator *formula_from;
 };
+
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvGcConverter, arv_gc_converter, ARV_TYPE_GC_FEATURE_NODE,
+				  G_ADD_PRIVATE (ArvGcConverter))
 
 /* ArvDomNode implementation */
 
@@ -91,7 +92,7 @@ arv_gc_converter_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				gc_converter->priv->slope = property_node;
 				break;
 			default:
-				ARV_DOM_NODE_CLASS (parent_class)->post_new_child (self, child);
+				ARV_DOM_NODE_CLASS (arv_gc_converter_parent_class)->post_new_child (self, child);
 				break;
 		}
 	}
@@ -108,7 +109,7 @@ arv_gc_converter_pre_remove_child (ArvDomNode *self, ArvDomNode *child)
 static void
 arv_gc_converter_init (ArvGcConverter *gc_converter)
 {
-	gc_converter->priv = G_TYPE_INSTANCE_GET_PRIVATE (gc_converter, ARV_TYPE_GC_CONVERTER, ArvGcConverterPrivate);
+	gc_converter->priv = arv_gc_converter_get_instance_private (gc_converter);
 
 	gc_converter->priv->formula_to = arv_evaluator_new (NULL);
 	gc_converter->priv->formula_from = arv_evaluator_new (NULL);
@@ -127,7 +128,7 @@ arv_gc_converter_finalize (GObject *object)
 	g_object_unref (gc_converter->priv->formula_to);
 	g_object_unref (gc_converter->priv->formula_from);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_gc_converter_parent_class)->finalize (object);
 }
 
 static void
@@ -135,11 +136,6 @@ arv_gc_converter_class_init (ArvGcConverterClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
-
-#if !GLIB_CHECK_VERSION(2,38,0)
-	g_type_class_add_private (this_class, sizeof (ArvGcConverterPrivate));
-#endif
-	parent_class = g_type_class_peek_parent (this_class);
 
 	object_class->finalize = arv_gc_converter_finalize;
 	dom_node_class->post_new_child = arv_gc_converter_post_new_child;
@@ -519,10 +515,3 @@ arv_gc_converter_get_unit (ArvGcConverter *gc_converter, GError **error)
 
 	return arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (gc_converter->priv->unit), error);
 }
-
-#if !GLIB_CHECK_VERSION(2,38,0)
-G_DEFINE_ABSTRACT_TYPE (ArvGcConverter, arv_gc_converter, ARV_TYPE_GC_FEATURE_NODE)
-#else
-G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvGcConverter, arv_gc_converter, ARV_TYPE_GC_FEATURE_NODE,
-				  G_ADD_PRIVATE (ArvGcConverter))
-#endif
