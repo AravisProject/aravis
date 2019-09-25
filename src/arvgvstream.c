@@ -504,7 +504,6 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 static void
 _close_frame (ArvGvStreamThreadData *thread_data, ArvGvStreamFrameData *frame)
 {
-	GTimeVal current_time;
 	gint64 current_time_us;
 
 	if (frame->buffer->priv->status == ARV_BUFFER_STATUS_SUCCESS)
@@ -529,8 +528,7 @@ _close_frame (ArvGvStreamThreadData *thread_data, ArvGvStreamFrameData *frame)
 				       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
 				       frame->buffer);
 
-	g_get_current_time (&current_time);
-	current_time_us = current_time.tv_sec * 1000000 + current_time.tv_usec;
+	current_time_us = g_get_monotonic_time ();
 	if (thread_data->statistic_count > 5) {
 		arv_statistic_fill (thread_data->statistic, 0,
 				    current_time_us - frame->first_packet_time_us,
@@ -721,7 +719,6 @@ _loop (ArvGvStreamThreadData *thread_data)
 	ArvGvStreamFrameData *frame;
 	ArvGvspPacket *packet;
 	GPollFD poll_fd[2];
-	GTimeVal current_time;
 	guint64 time_us;
 	size_t read_count;
 	int timeout_ms;
@@ -753,8 +750,7 @@ _loop (ArvGvStreamThreadData *thread_data)
 
 		} while (n_events < 0 && errsv == EINTR);
 
-		g_get_current_time (&current_time);
-		time_us = current_time.tv_sec * 1000000 + current_time.tv_usec;
+		time_us = g_get_monotonic_time ();
 
 		if (poll_fd[0].revents != 0) {
 			read_count = g_socket_receive (thread_data->socket, (char *) packet,
@@ -914,11 +910,9 @@ _ring_buffer_loop (ArvGvStreamThreadData *thread_data)
 	block_id = 0;
 	do {
 		ArvGvStreamBlockDescriptor *descriptor;
-		GTimeVal current_time;
 		guint64 time_us;
 
-		g_get_current_time (&current_time);
-		time_us = current_time.tv_sec * 1000000 + current_time.tv_usec;
+		time_us = g_get_monotonic_time ();
 
 		descriptor = (void *) (buffer + block_id * req.tp_block_size);
 		if ((descriptor->h1.block_status & TP_STATUS_USER) == 0) {
