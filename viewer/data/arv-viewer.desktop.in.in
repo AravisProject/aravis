@@ -2,7 +2,7 @@
 Name=Aravis
 X-GNOME-FullName=Aravis Simple Viewer
 Comment=Display the video stream from your cameras
-Exec=arv-viewer
+Exec=arv-viewer-@ARAVIS_API_VERSION@
 Terminal=false
 Type=Application
 StartupNotify=false
