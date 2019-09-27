@@ -7,7 +7,7 @@ Terminal=false
 Type=Application
 StartupNotify=false
 # Translators: Do NOT translate or transliterate this text (this is an icon file name)!
-Icon=aravis
+Icon=aravis-@ARAVIS_API_VERSION@
 Categories=GNOME;AudioVideo;Video;
 # Translators: Search terms to find this application. Do NOT translate or localize the semicolons! The list MUST also end with a semicolon!
 Keywords=gigevision;usb3vision;vision;display;viewer;
