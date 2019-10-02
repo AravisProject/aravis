@@ -1,13 +1,13 @@
 [![Build Status](https://travis-ci.org/AravisProject/aravis.svg?branch=master)](https://travis-ci.org/AravisProject/aravis)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/fa7d9c88e5594d709ab44e8bad01a569)](https://www.codacy.com/app/EmmanuelP/aravis?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=AravisProject/aravis&amp;utm_campaign=Badge_Grade)
 
-# ![](viewer/icons/gnome/128x128/apps/aravis.png)
+# ![](viewer/icons/gnome/128x128/apps/aravis-0.8.png)
 
 ### What is Aravis ?
 
 Aravis is a glib/gobject based library for video acquisition using Genicam cameras. It currently implements the gigabit ethernet and USB3 protocols used by industrial cameras. It also provides a basic ethernet camera simulator and a simple video viewer.
 
-# ![](viewer/data/aravis-0.8.png)
+# ![](viewer/data/aravis.png)
 # ![](viewer/data/aravis-video.png)
 
 Aravis is released under the LGPL v2+.
