@@ -838,6 +838,37 @@ arv_gv_device_load_genicam (ArvGvDevice *gv_device)
 					      "<Endianess>BigEndian</Endianess>"
 					      "<pPort>Device</pPort>"
 					      "</IntReg>", NULL);
+		arv_gc_set_default_node_data (gv_device->priv->genicam, "GevTimestampTickFrequency",
+					      "<Integer Name=\"GevTimestampTickFrequency\">"
+					      "<pValue>ArvGevTimestampTickFrequencyCalc</pValue>"
+					      "</Integer>",
+					      "<IntSwissKnife Name=\"ArvGevTimestampTickFrequencyCalc\">"
+					      "<pVariable Name=\"HIGH\">ArvGevTimestampTickFrequencyHigh</pVariable>"
+					      "<pVariable Name=\"LOW\">ArvGevTimestampTickFrequencyLow</pVariable>"
+					      "<Formula>(HIGH&lt;&lt; 32) | LOW</Formula>"
+					      "</IntSwissKnife>",
+					      "<MaskedIntReg Name=\"ArvGevTimestampTickFrequencyHigh\">"
+					      "<Visibility>Invisible</Visibility>"
+					      "<Address>0x93C</Address>"
+					      "<Length>4</Length>"
+					      "<AccessMode>RO</AccessMode>"
+					      "<pPort>Device</pPort>"
+					      "<LSB>31</LSB>"
+					      "<MSB>0</MSB>"
+					      "<Sign>Unsigned</Sign>"
+					      "<Endianess>BigEndian</Endianess>"
+					      "</MaskedIntReg>",
+					      "<MaskedIntReg Name=\"ArvGevTimestampTickFrequencyLow\">"
+					      "<Visibility>Invisible</Visibility>"
+					      "<Address>0x940</Address>"
+					      "<Length>4</Length>"
+					      "<AccessMode>RO</AccessMode>"
+					      "<pPort>Device</pPort>"
+					      "<LSB>31</LSB>"
+					      "<MSB>0</MSB>"
+					      "<Sign>Unsigned</Sign>"
+					      "<Endianess>BigEndian</Endianess>"
+					      "</MaskedIntReg>", NULL);
 		arv_gc_set_default_node_data (gv_device->priv->genicam, "GevSCPHostPort",
 					      "<Integer Name=\"GevSCPHostPort\">"
 					      "  <Visibility>Expert</Visibility>"
