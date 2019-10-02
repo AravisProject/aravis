@@ -830,8 +830,8 @@ arv_gv_device_load_genicam (ArvGvDevice *gv_device)
 					      "<AccessMode>RO</AccessMode>"
 					      "<pPort>Device</pPort>"
 					      "</StringReg>", NULL);
-		arv_gc_set_default_node_data (gv_device->priv->genicam, "NumberOfStreamChannels",
-					      "<IntReg Name=\"NumberOfStreamChannels\">"
+		arv_gc_set_default_node_data (gv_device->priv->genicam, "GevStreamChannelCount",
+					      "<IntReg Name=\"GevStreamChannelCount\">"
 					      "<Address>0x904</Address>"
 					      "<Length>4</Length>"
 					      "<AccessMode>RO</AccessMode>"
@@ -997,7 +997,7 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 	GInetAddress *interface_address;
 	GInetAddress *device_address;
 
-	n_stream_channels = arv_device_get_integer_feature_value (device, "NumberOfStreamChannels", NULL);
+	n_stream_channels = arv_device_get_integer_feature_value (device, "GevStreamChannelCount", NULL);
 	arv_debug_device ("[GvDevice::create_stream] Number of stream channels = %d", n_stream_channels);
 
 	if (n_stream_channels < 1)
