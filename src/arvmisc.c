@@ -785,7 +785,8 @@ static struct {
 	const char *alias;
 } vendor_aliases[] = {
 	{ "The Imaging Source Europe GmbH",		"TIS"},
-	{ "Point Grey Research",			"PointGrey"}
+	{ "Point Grey Research",			"PointGrey"},
+	{ "Lucid Vision Labs",				"LucidVision"}
 };
 
 /**
