@@ -190,6 +190,9 @@ arv_gvsp_packet_to_string (const ArvGvspPacket *packet, size_t packet_size)
 				case ARV_GVSP_PAYLOAD_TYPE_H264:
 					g_string_append (string, "payload_type = h264\n");
 					break;
+				case ARV_GVSP_PAYLOAD_TYPE_IMAGE_EXTENDED_CHUNK:
+					g_string_append (string, "payload_type = image extended chunk\n");
+					break;
 				default:
 					g_string_append (string, "payload_type = unknown\n");
 					break;

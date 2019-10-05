@@ -82,7 +82,8 @@ typedef enum {
 	ARV_BUFFER_PAYLOAD_TYPE_JPEG = 			0x0006,
 	ARV_BUFFER_PAYLOAD_TYPE_JPEG2000 = 		0x0007,
 	ARV_BUFFER_PAYLOAD_TYPE_H264 = 			0x0008,
-	ARV_BUFFER_PAYLOAD_TYPE_MULTIZONE_IMAGE = 	0x0009
+	ARV_BUFFER_PAYLOAD_TYPE_MULTIZONE_IMAGE = 	0x0009,
+	ARV_BUFFER_PAYLOAD_TYPE_IMAGE_EXTENDED_CHUNK = 	0x4001
 } ArvBufferPayloadType;
 
 #define ARV_TYPE_BUFFER             (arv_buffer_get_type ())
@@ -131,6 +132,7 @@ gint			arv_buffer_get_image_x			(ArvBuffer *buffer);
 gint			arv_buffer_get_image_y			(ArvBuffer *buffer);
 ArvPixelFormat		arv_buffer_get_image_pixel_format	(ArvBuffer *buffer);
 
+gboolean		arv_buffer_has_chunks		(ArvBuffer *buffer);
 const void *		arv_buffer_get_chunk_data	(ArvBuffer *buffer, guint64 chunk_id, size_t *size);
 
 G_END_DECLS
