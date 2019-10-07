@@ -34,6 +34,23 @@
 
 #include <arvbufferprivate.h>
 
+static gboolean
+arv_buffer_payload_type_has_chunks (ArvBufferPayloadType payload_type)
+{
+	return (payload_type == ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA ||
+		payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA ||
+		payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE_EXTENDED_CHUNK);
+}
+
+static gboolean
+arv_buffer_payload_type_has_aoi (ArvBufferPayloadType payload_type)
+{
+
+	return (payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
+		payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA ||
+		payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE_EXTENDED_CHUNK);
+}
+
 /**
  * arv_buffer_new_full:
  * @size: payload size
@@ -159,9 +176,7 @@ arv_buffer_has_chunks (ArvBuffer *buffer)
 {
 	return ARV_IS_BUFFER (buffer) &&
 		buffer->priv->status == ARV_BUFFER_STATUS_SUCCESS &&
-		(buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA ||
-		 buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA ||
-		 buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE_EXTENDED_CHUNK);
+		arv_buffer_payload_type_has_chunks (buffer->priv->payload_type);
 }
 
 /**
@@ -401,9 +416,7 @@ void
 arv_buffer_get_image_region (ArvBuffer *buffer, gint *x, gint *y, gint *width, gint *height)
 {
 	g_return_if_fail (ARV_IS_BUFFER (buffer));
-	g_return_if_fail (buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
-			  buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA ||
-			  buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE_EXTENDED_CHUNK);
+	g_return_if_fail (arv_buffer_payload_type_has_aoi (buffer->priv->payload_type));
 
 	if (x != NULL)
 		*x = buffer->priv->x_offset;
@@ -430,9 +443,7 @@ gint
 arv_buffer_get_image_width (ArvBuffer *buffer)
 {
 	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
-	g_return_val_if_fail (buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
-			      buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA ||
-			      buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE_EXTENDED_CHUNK, 0);
+	g_return_val_if_fail (arv_buffer_payload_type_has_aoi (buffer->priv->payload_type), 0);
 
 	return buffer->priv->width;
 }
@@ -452,9 +463,7 @@ gint
 arv_buffer_get_image_height (ArvBuffer *buffer)
 {
 	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
-	g_return_val_if_fail (buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
-			      buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA ||
-			      buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE_EXTENDED_CHUNK, 0);
+	g_return_val_if_fail (arv_buffer_payload_type_has_aoi (buffer->priv->payload_type), 0);
 
 	return buffer->priv->height;
 }
@@ -474,9 +483,7 @@ gint
 arv_buffer_get_image_x (ArvBuffer *buffer)
 {
 	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
-	g_return_val_if_fail (buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
-			      buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA ||
-			      buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE_EXTENDED_CHUNK, 0);
+	g_return_val_if_fail (arv_buffer_payload_type_has_aoi (buffer->priv->payload_type), 0);
 
 	return buffer->priv->x_offset;
 }
@@ -496,9 +503,7 @@ gint
 arv_buffer_get_image_y (ArvBuffer *buffer)
 {
 	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
-	g_return_val_if_fail (buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
-			      buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA ||
-			      buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE_EXTENDED_CHUNK, 0);
+	g_return_val_if_fail (arv_buffer_payload_type_has_aoi (buffer->priv->payload_type), 0);
 
 	return buffer->priv->y_offset;
 }
@@ -518,9 +523,7 @@ ArvPixelFormat
 arv_buffer_get_image_pixel_format (ArvBuffer *buffer)
 {
 	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
-	g_return_val_if_fail (buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
-			      buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA ||
-			      buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE_EXTENDED_CHUNK, 0);
+	g_return_val_if_fail (arv_buffer_payload_type_has_aoi (buffer->priv->payload_type), 0);
 
 	return buffer->priv->pixel_format;
 }
