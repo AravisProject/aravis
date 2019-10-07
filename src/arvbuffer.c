@@ -34,7 +34,7 @@
 
 #include <arvbufferprivate.h>
 
-static gboolean
+gboolean
 arv_buffer_payload_type_has_chunks (ArvBufferPayloadType payload_type)
 {
 	return (payload_type == ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA ||
@@ -42,7 +42,7 @@ arv_buffer_payload_type_has_chunks (ArvBufferPayloadType payload_type)
 		payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE_EXTENDED_CHUNK);
 }
 
-static gboolean
+gboolean
 arv_buffer_payload_type_has_aoi (ArvBufferPayloadType payload_type)
 {
 

@@ -58,6 +58,9 @@ struct _ArvBufferPrivate {
 	ArvPixelFormat pixel_format;
 };
 
+gboolean	arv_buffer_payload_type_has_chunks 	(ArvBufferPayloadType payload_type);
+gboolean	arv_buffer_payload_type_has_aoi 	(ArvBufferPayloadType payload_type);
+
 G_END_DECLS
 
 #endif

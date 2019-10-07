@@ -254,9 +254,7 @@ _process_data_leader (ArvGvStreamThreadData *thread_data,
 	} else
 		frame->buffer->priv->timestamp_ns = frame->buffer->priv->system_timestamp_ns;
 
-	if (frame->buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
-	    frame->buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA ||
-	    frame->buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE_EXTENDED_CHUNK) {
+	if (arv_buffer_payload_type_has_aoi (frame->buffer->priv->payload_type)) {
 		frame->buffer->priv->x_offset = arv_gvsp_packet_get_x_offset (packet);
 		frame->buffer->priv->y_offset = arv_gvsp_packet_get_y_offset (packet);
 		frame->buffer->priv->width = arv_gvsp_packet_get_width (packet);
