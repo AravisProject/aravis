@@ -162,9 +162,24 @@ new_buffer_cb (ArvStream *stream, ApplicationData *data)
 		if (arv_buffer_has_chunks (buffer) && data->chunks != NULL) {
 			int i;
 
-			for (i = 0; data->chunks[i] != NULL; i++)
-				printf ("%s = %" G_GINT64_FORMAT "\n", data->chunks[i],
-					arv_chunk_parser_get_integer_value (data->chunk_parser, buffer, data->chunks[i], NULL));
+			for (i = 0; data->chunks[i] != NULL; i++) {
+				gint64 integer_value;
+				GError *error = NULL;
+
+				integer_value = arv_chunk_parser_get_integer_value (data->chunk_parser, buffer, data->chunks[i], &error);
+				if (error == NULL)
+					printf ("%s = %" G_GINT64_FORMAT "\n", data->chunks[i], integer_value);
+				else {
+					double float_value;
+
+					g_clear_error (&error);
+					float_value = arv_chunk_parser_get_float_value (data->chunk_parser, buffer, data->chunks[i], &error);
+					if (error == NULL)
+						printf ("%s = %g\n", data->chunks[i], float_value);
+					else
+						g_clear_error (&error);
+				}
+			}
 		}
 
 		/* Image processing here */
