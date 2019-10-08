@@ -96,7 +96,6 @@ arv_gc_port_read (ArvGcPort *port, void *buffer, guint64 address, guint64 length
 	ArvGc *genicam;
 
 	g_return_if_fail (ARV_IS_GC_PORT (port));
-	g_return_if_fail (error == NULL || *error == NULL);
 	g_return_if_fail (buffer != NULL);
 
 	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (port));
@@ -118,9 +117,8 @@ arv_gc_port_read (ArvGcPort *port, void *buffer, guint64 address, guint64 length
 			} else
 				arv_device_read_memory (device, address, length, buffer, error);
 		} else {
-			if (error != NULL && *error == NULL)
-				*error = g_error_new (ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_INVALID_FEATURE_NAME,
-						      "[ArvGcPort::read] Invalid feature name");
+			g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_INVALID_FEATURE_NAME,
+				     "[ArvGcPort::read] Invalid feature name");
 		}
 	} else {
 		ArvBuffer *chunk_data_buffer;
@@ -128,9 +126,8 @@ arv_gc_port_read (ArvGcPort *port, void *buffer, guint64 address, guint64 length
 		chunk_data_buffer = arv_gc_get_buffer (genicam);
 
 		if (!ARV_IS_BUFFER (chunk_data_buffer)) {
-			if (error != NULL && *error == NULL)
-				*error = g_error_new (ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_BUFFER_NOT_FOUND,
-						      "[ArvGcPort::read] Buffer not found");
+			g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_BUFFER_NOT_FOUND,
+				     "[ArvGcPort::read] Buffer not found");
 		} else {
 			char *chunk_data;
 			size_t chunk_data_size;
@@ -142,9 +139,8 @@ arv_gc_port_read (ArvGcPort *port, void *buffer, guint64 address, guint64 length
 			if (chunk_data != NULL) {
 				memcpy (buffer, chunk_data + address, MIN (chunk_data_size - address, length));
 			} else {
-				if (error != NULL && *error == NULL)
-					*error = g_error_new (ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_CHUNK_NOT_FOUND,
-							      "[ArvGcPort::read] Chunk 0x%08x not found", chunk_id);
+				g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_CHUNK_NOT_FOUND,
+					     "[ArvGcPort::read] Chunk 0x%08x not found", chunk_id);
 			}
 		}
 	}
@@ -157,7 +153,6 @@ arv_gc_port_write (ArvGcPort *port, void *buffer, guint64 address, guint64 lengt
 	ArvDevice *device;
 
 	g_return_if_fail (ARV_IS_GC_PORT (port));
-	g_return_if_fail (error == NULL || *error == NULL);
 	g_return_if_fail (buffer != NULL);
 
 	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (port));
@@ -181,9 +176,8 @@ arv_gc_port_write (ArvGcPort *port, void *buffer, guint64 address, guint64 lengt
 			} else
 				arv_device_write_memory (device, address, length, buffer, error);
 		} else {
-			if (error != NULL && *error == NULL)
-				*error = g_error_new (ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_INVALID_FEATURE_NAME,
-						      "[ArvGcPort::write] Invalid feature name");
+			g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_INVALID_FEATURE_NAME,
+				     "[ArvGcPort::write] Invalid feature name");
 		}
 	} else {
 		ArvBuffer *chunk_data_buffer;
@@ -191,9 +185,8 @@ arv_gc_port_write (ArvGcPort *port, void *buffer, guint64 address, guint64 lengt
 		chunk_data_buffer = arv_gc_get_buffer (genicam);
 
 		if (!ARV_IS_BUFFER (chunk_data_buffer)) {
-			if (error != NULL && *error == NULL)
-				*error = g_error_new (ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_BUFFER_NOT_FOUND,
-						      "[ArvGcPort::write] Buffer not found");
+			g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_BUFFER_NOT_FOUND,
+				     "[ArvGcPort::write] Buffer not found");
 		} else {
 			char *chunk_data;
 			size_t chunk_data_size;
@@ -205,9 +198,8 @@ arv_gc_port_write (ArvGcPort *port, void *buffer, guint64 address, guint64 lengt
 			if (chunk_data != NULL) {
 				memcpy (chunk_data + address, buffer, MIN (chunk_data_size - address, length));
 			} else {
-				if (error != NULL && *error == NULL)
-					*error = g_error_new (ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_CHUNK_NOT_FOUND,
-							      "[ArvGcPort::write] Chunk 0x%08x not found", chunk_id);
+				g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_CHUNK_NOT_FOUND,
+					     "[ArvGcPort::write] Chunk 0x%08x not found", chunk_id);
 			}
 		}
 	}
