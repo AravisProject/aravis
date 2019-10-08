@@ -690,6 +690,7 @@ chunk_data_test (void)
 	ArvChunkParser *parser;
 	ArvBuffer *buffer;
 	ArvGc *genicam;
+	GError *error = NULL;
 	guint32 int_value;
 	double float_value;
 	const char *chunk_data;
@@ -731,18 +732,29 @@ chunk_data_test (void)
 	g_assert (chunk_data == NULL);
 	g_assert_cmpint (chunk_data_size, ==, 0);
 
-	int_value = arv_chunk_parser_get_integer_value (parser, buffer, "ChunkInt");
+	int_value = arv_chunk_parser_get_integer_value (parser, buffer, "ChunkInt", &error);
 	g_assert_cmpint (int_value, ==, 0x11223344);
+	g_assert (error == NULL);
 
-	float_value = arv_chunk_parser_get_float_value (parser, buffer, "ChunkFloat");
+	float_value = arv_chunk_parser_get_float_value (parser, buffer, "ChunkFloat", &error);
 	g_assert_cmpfloat (float_value, ==, 1.1);
+	g_assert (error == NULL);
 
-	string_value = arv_chunk_parser_get_string_value (parser, buffer, "ChunkString");
+	string_value = arv_chunk_parser_get_string_value (parser, buffer, "ChunkString", &error);
 	g_assert_cmpstr (string_value, ==, "Hello");
+	g_assert (error == NULL);
 
-	arv_chunk_parser_get_integer_value (parser, buffer, "Dummy");
-	arv_chunk_parser_get_float_value (parser, buffer, "Dummy");
-	arv_chunk_parser_get_string_value (parser, buffer, "Dummy");
+	arv_chunk_parser_get_integer_value (parser, buffer, "Dummy", &error);
+	g_assert (error != NULL);
+	g_clear_error (&error);
+
+	arv_chunk_parser_get_float_value (parser, buffer, "Dummy", &error);
+	g_assert (error != NULL);
+	g_clear_error (&error);
+
+	arv_chunk_parser_get_string_value (parser, buffer, "Dummy", &error);
+	g_assert (error != NULL);
+	g_clear_error (&error);
 
 	g_object_unref (buffer);
 	g_object_unref (parser);

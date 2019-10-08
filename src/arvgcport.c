@@ -119,7 +119,7 @@ arv_gc_port_read (ArvGcPort *port, void *buffer, guint64 address, guint64 length
 				arv_device_read_memory (device, address, length, buffer, error);
 		} else {
 			if (error != NULL && *error == NULL)
-				*error = g_error_new (ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_STATUS_INVALID_FEATURE_NAME,
+				*error = g_error_new (ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_INVALID_FEATURE_NAME,
 						      "[ArvGcPort::read] Invalid feature name");
 		}
 	} else {
@@ -129,7 +129,7 @@ arv_gc_port_read (ArvGcPort *port, void *buffer, guint64 address, guint64 length
 
 		if (!ARV_IS_BUFFER (chunk_data_buffer)) {
 			if (error != NULL && *error == NULL)
-				*error = g_error_new (ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_STATUS_BUFFER_NOT_FOUND,
+				*error = g_error_new (ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_BUFFER_NOT_FOUND,
 						      "[ArvGcPort::read] Buffer not found");
 		} else {
 			char *chunk_data;
@@ -143,7 +143,7 @@ arv_gc_port_read (ArvGcPort *port, void *buffer, guint64 address, guint64 length
 				memcpy (buffer, chunk_data + address, MIN (chunk_data_size - address, length));
 			} else {
 				if (error != NULL && *error == NULL)
-					*error = g_error_new (ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_STATUS_CHUNK_NOT_FOUND,
+					*error = g_error_new (ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_CHUNK_NOT_FOUND,
 							      "[ArvGcPort::read] Chunk 0x%08x not found", chunk_id);
 			}
 		}
@@ -182,7 +182,7 @@ arv_gc_port_write (ArvGcPort *port, void *buffer, guint64 address, guint64 lengt
 				arv_device_write_memory (device, address, length, buffer, error);
 		} else {
 			if (error != NULL && *error == NULL)
-				*error = g_error_new (ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_STATUS_INVALID_FEATURE_NAME,
+				*error = g_error_new (ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_INVALID_FEATURE_NAME,
 						      "[ArvGcPort::write] Invalid feature name");
 		}
 	} else {
@@ -192,7 +192,7 @@ arv_gc_port_write (ArvGcPort *port, void *buffer, guint64 address, guint64 lengt
 
 		if (!ARV_IS_BUFFER (chunk_data_buffer)) {
 			if (error != NULL && *error == NULL)
-				*error = g_error_new (ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_STATUS_BUFFER_NOT_FOUND,
+				*error = g_error_new (ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_BUFFER_NOT_FOUND,
 						      "[ArvGcPort::write] Buffer not found");
 		} else {
 			char *chunk_data;
@@ -206,7 +206,7 @@ arv_gc_port_write (ArvGcPort *port, void *buffer, guint64 address, guint64 lengt
 				memcpy (chunk_data + address, buffer, MIN (chunk_data_size - address, length));
 			} else {
 				if (error != NULL && *error == NULL)
-					*error = g_error_new (ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_STATUS_CHUNK_NOT_FOUND,
+					*error = g_error_new (ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_CHUNK_NOT_FOUND,
 							      "[ArvGcPort::write] Chunk 0x%08x not found", chunk_id);
 			}
 		}

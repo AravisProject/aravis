@@ -73,6 +73,7 @@ struct _ArvChunkParserPrivate {
  * @parser: a #ArvChunkParser
  * @buffer: a #ArvBuffer with a #ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA payload
  * @chunk: chunk data name
+ * @error: a #GError placeholder
  *
  * Gets the value of chunk data as a string.
  *
@@ -80,7 +81,7 @@ struct _ArvChunkParserPrivate {
  */
 
 const char *
-arv_chunk_parser_get_string_value (ArvChunkParser *parser, ArvBuffer *buffer, const char *chunk)
+arv_chunk_parser_get_string_value (ArvChunkParser *parser, ArvBuffer *buffer, const char *chunk, GError **error)
 {
 	ArvGcNode *node;
 	const char *string = NULL;
@@ -92,16 +93,18 @@ arv_chunk_parser_get_string_value (ArvChunkParser *parser, ArvBuffer *buffer, co
 	arv_gc_set_buffer (parser->priv->genicam, buffer);
 
 	if (ARV_IS_GC_STRING (node)) {
-		GError *error = NULL;
+		GError *local_error = NULL;
 
-		string = arv_gc_string_get_value (ARV_GC_STRING (node), NULL);
+		string = arv_gc_string_get_value (ARV_GC_STRING (node), &local_error);
 
-		if (error != NULL) {
-			arv_warning_chunk ("%s", error->message);
-			g_clear_error (&error);
+		if (local_error != NULL) {
+			arv_warning_chunk ("%s", local_error->message);
+			g_propagate_error (error, local_error);
 		}
-	} else
-		arv_warning_device ("[ArvChunkParser::get_string_value] Node '%s' is not a string", chunk);
+	} else {
+		g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_INVALID_FEATURE_TYPE,
+			     "Node '%s' is not a string", chunk);
+	}
 
 	return string;
 }
@@ -111,6 +114,7 @@ arv_chunk_parser_get_string_value (ArvChunkParser *parser, ArvBuffer *buffer, co
  * @parser: a #ArvChunkParser
  * @buffer: a #ArvBuffer with a #ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA payload
  * @chunk: chunk data name
+ * @error: a #GError placeholder
  *
  * Gets the value of chunk data as an integer.
  *
@@ -118,7 +122,7 @@ arv_chunk_parser_get_string_value (ArvChunkParser *parser, ArvBuffer *buffer, co
  */
 
 gint64
-arv_chunk_parser_get_integer_value (ArvChunkParser *parser, ArvBuffer *buffer, const char *chunk)
+arv_chunk_parser_get_integer_value (ArvChunkParser *parser, ArvBuffer *buffer, const char *chunk, GError **error)
 {
 	ArvGcNode *node;
 	gint64 value = 0;
@@ -130,16 +134,18 @@ arv_chunk_parser_get_integer_value (ArvChunkParser *parser, ArvBuffer *buffer, c
 	arv_gc_set_buffer (parser->priv->genicam, buffer);
 
 	if (ARV_IS_GC_INTEGER (node)) {
-		GError *error = NULL;
+		GError *local_error = NULL;
 
-		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), &error);
+		value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), &local_error);
 
-		if (error != NULL) {
-			arv_warning_chunk ("%s", error->message);
-			g_clear_error (&error);
+		if (local_error != NULL) {
+			arv_warning_chunk ("%s", local_error->message);
+			g_propagate_error (error, local_error);
 		}
-	} else
-		arv_warning_device ("[ArvChunkParser::get_integer_value] Node '%s' is not an integer", chunk);
+	} else {
+		g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_INVALID_FEATURE_TYPE,
+			     "Node '%s' is not an integer", chunk);
+	}
 
 	return value;
 }
@@ -149,6 +155,7 @@ arv_chunk_parser_get_integer_value (ArvChunkParser *parser, ArvBuffer *buffer, c
  * @parser: a #ArvChunkParser
  * @buffer: a #ArvBuffer with a #ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA payload
  * @chunk: chunk data name
+ * @error: a #GError placeholder
  *
  * Gets the value of chunk data as a float.
  *
@@ -156,7 +163,7 @@ arv_chunk_parser_get_integer_value (ArvChunkParser *parser, ArvBuffer *buffer, c
  */
 
 double
-arv_chunk_parser_get_float_value (ArvChunkParser *parser, ArvBuffer *buffer, const char *chunk)
+arv_chunk_parser_get_float_value (ArvChunkParser *parser, ArvBuffer *buffer, const char *chunk, GError **error)
 {
 	ArvGcNode *node;
 	double value = 0.0;
@@ -168,16 +175,18 @@ arv_chunk_parser_get_float_value (ArvChunkParser *parser, ArvBuffer *buffer, con
 	arv_gc_set_buffer (parser->priv->genicam, buffer);
 
 	if (ARV_IS_GC_FLOAT (node)) {
-		GError *error = NULL;
+		GError *local_error = NULL;
 
-		value = arv_gc_float_get_value (ARV_GC_FLOAT (node), NULL);
+		value = arv_gc_float_get_value (ARV_GC_FLOAT (node), &local_error);
 
-		if (error != NULL) {
-			arv_warning_chunk ("%s", error->message);
-			g_clear_error (&error);
+		if (local_error != NULL) {
+			arv_warning_chunk ("%s", local_error->message);
+			g_propagate_error (error, local_error);
 		}
-	} else
-		arv_warning_chunk ("[ArvChunkParser::get_float_value] Node '%s' is not a float", chunk);
+	} else {
+		g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_INVALID_FEATURE_TYPE,
+			     "Node '%s' is not a float", chunk);
+	}
 
 	return value;
 }

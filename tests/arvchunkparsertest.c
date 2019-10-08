@@ -38,8 +38,8 @@ main (int argc, char **argv)
 			/* Retrieve the acquired buffer */
 			buffer = arv_stream_pop_buffer (stream);
 
-			printf ("ChunkWidth = %d\n", (int) arv_chunk_parser_get_integer_value (parser, buffer, "ChunkWidth"));
-			printf ("ChunkHeight = %d\n", (int) arv_chunk_parser_get_integer_value (parser, buffer, "ChunkHeight"));
+			printf ("ChunkWidth = %d\n", (int) arv_chunk_parser_get_integer_value (parser, buffer, "ChunkWidth", NULL));
+			printf ("ChunkHeight = %d\n", (int) arv_chunk_parser_get_integer_value (parser, buffer, "ChunkHeight", NULL));
 
 			g_object_unref (buffer);
 

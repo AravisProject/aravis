@@ -164,7 +164,7 @@ new_buffer_cb (ArvStream *stream, ApplicationData *data)
 
 			for (i = 0; data->chunks[i] != NULL; i++)
 				printf ("%s = %" G_GINT64_FORMAT "\n", data->chunks[i],
-					arv_chunk_parser_get_integer_value (data->chunk_parser, buffer, data->chunks[i]));
+					arv_chunk_parser_get_integer_value (data->chunk_parser, buffer, data->chunks[i], NULL));
 		}
 
 		/* Image processing here */

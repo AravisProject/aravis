@@ -33,21 +33,16 @@
 G_BEGIN_DECLS
 
 /**
- * ArvChunkParserStatus:
- * @ARV_CHUNK_PARSER_STATUS_UNKNOWN: unknown status
- * @ARV_CHUNK_PARSER_STATUS_SUCCESS: no error has occured
- * @ARV_CHUNK_PARSER_STATUS_BUFFER_NOT_FOUND: buffer not found
- * @ARV_CHUNK_PARSER_STATUS_CHUNK_NOT_FOUND: chunk not found
+ * ArvChunkParserError:
+ * @ARV_CHUNK_PARSER_ERROR_INVALID_CHUNK_TYPE: invalid chunk type
  */
 
 typedef enum {
-	/* < private> */
-	ARV_CHUNK_PARSER_STATUS_UNKNOWN = -1,
-	ARV_CHUNK_PARSER_STATUS_SUCCESS =  0,
-	ARV_CHUNK_PARSER_STATUS_BUFFER_NOT_FOUND,
-	ARV_CHUNK_PARSER_STATUS_CHUNK_NOT_FOUND,
-	ARV_CHUNK_PARSER_STATUS_INVALID_FEATURE_NAME
-} ArvChunkParserStatus;
+	ARV_CHUNK_PARSER_ERROR_INVALID_FEATURE_TYPE,
+	ARV_CHUNK_PARSER_ERROR_INVALID_FEATURE_NAME,
+	ARV_CHUNK_PARSER_ERROR_BUFFER_NOT_FOUND,
+	ARV_CHUNK_PARSER_ERROR_CHUNK_NOT_FOUND
+} ArvChunkParserError;
 
 #define ARV_TYPE_CHUNK_PARSER             (arv_chunk_parser_get_type ())
 #define ARV_CHUNK_PARSER(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_CHUNK_PARSER, ArvChunkParser))
@@ -72,9 +67,12 @@ struct _ArvChunkParserClass {
 GType arv_chunk_parser_get_type (void);
 
 ArvChunkParser *	arv_chunk_parser_new 			(const char *xml, gsize size);
-const char *		arv_chunk_parser_get_string_value	(ArvChunkParser *parser, ArvBuffer *buffer, const char *chunk);
-gint64			arv_chunk_parser_get_integer_value	(ArvChunkParser *parser, ArvBuffer *buffer, const char *chunk);
-double			arv_chunk_parser_get_float_value	(ArvChunkParser *parser, ArvBuffer *buffer, const char *chunk);
+const char *		arv_chunk_parser_get_string_value	(ArvChunkParser *parser, ArvBuffer *buffer,
+								 const char *chunk, GError **error);
+gint64			arv_chunk_parser_get_integer_value	(ArvChunkParser *parser, ArvBuffer *buffer,
+								 const char *chunk, GError **error);
+double			arv_chunk_parser_get_float_value	(ArvChunkParser *parser, ArvBuffer *buffer,
+								 const char *chunk, GError **error);
 
 G_END_DECLS
 
