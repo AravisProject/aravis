@@ -121,10 +121,12 @@ The report is published in `build/meson-logs/coveragereport/index.html`. Help on
 ### Downloads
 
 * 0.6.x stable releases: http://ftp.gnome.org/pub/GNOME/sources/aravis/0.6/
+* 0.7.x unstable releases: http://ftp.gnome.org/pub/GNOME/sources/aravis/0.7/
 
 ### Links
 
 * Forum: https://aravis-project.discourse.group
 * Github repository: https://github.com/AravisProject/aravis
 * Aravis 0.6 documentation: https://aravisproject.github.io/docs/aravis-0.6/
+* Unstable Aravis 0.7 documentation: https://aravisproject.github.io/docs/aravis-0.7/
 * Genicam standard : http://www.genicam.org
