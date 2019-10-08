@@ -70,6 +70,7 @@ typedef enum {
  * @ARV_BUFFER_PAYLOAD_TYPE_JPEG2000: JPEG2000 data
  * @ARV_BUFFER_PAYLOAD_TYPE_H264: h264 data
  * @ARV_BUFFER_PAYLOAD_TYPE_MULTIZONE_IMAGE: multizone image
+ * @ARV_BUFFER_PAYLOAD_TYPE_IMAGE_EXTENDED_CHUNK: image and chunk data
 */
 
 typedef enum {

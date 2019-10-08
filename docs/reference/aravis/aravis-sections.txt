@@ -146,6 +146,7 @@ arv_buffer_new_full
 arv_buffer_new_allocate
 arv_buffer_get_user_data
 arv_buffer_get_data
+arv_buffer_has_chunks
 arv_buffer_get_chunk_data
 arv_buffer_get_timestamp
 arv_buffer_set_timestamp
