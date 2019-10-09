@@ -107,6 +107,8 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 			return "CommandValue";
 		case ARV_GC_PROPERTY_NODE_TYPE_CHUNK_ID:
 			return "ChunkID";
+		case ARV_GC_PROPERTY_NODE_TYPE_EVENT_ID:
+			return "EventID";
 		case ARV_GC_PROPERTY_NODE_TYPE_VALUE_DEFAULT:
 			return "ValueDefault";
 
@@ -733,6 +735,12 @@ ArvGcNode *
 arv_gc_property_node_new_chunk_id (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_CHUNK_ID);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_event_id (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_EVENT_ID);
 }
 
 ArvGcNode *

@@ -227,6 +227,8 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 
 	else if (strcmp (tag_name, "ChunkID") == 0)
 		node = arv_gc_property_node_new_chunk_id ();
+	else if (strcmp (tag_name, "EventID") == 0)
+		node = arv_gc_property_node_new_event_id ();
 
 	else if (strcmp (tag_name, "Group") == 0)
 		node = arv_gc_group_node_new ();

@@ -38,6 +38,7 @@
 
 struct _ArvGcPortPrivate {
 	ArvGcPropertyNode *chunk_id;
+	ArvGcPropertyNode *event_id;
 };
 
 G_DEFINE_TYPE_WITH_CODE (ArvGcPort, arv_gc_port, ARV_TYPE_GC_FEATURE_NODE, G_ADD_PRIVATE(ArvGcPort))
@@ -61,6 +62,9 @@ _post_new_child (ArvDomNode *self, ArvDomNode *child)
 		switch (arv_gc_property_node_get_node_type (property_node)) {
 			case ARV_GC_PROPERTY_NODE_TYPE_CHUNK_ID:
 				node->priv->chunk_id = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_EVENT_ID:
+				node->priv->event_id = property_node;
 				break;
 			default:
 				ARV_DOM_NODE_CLASS (arv_gc_port_parent_class)->post_new_child (self, child);
@@ -100,27 +104,7 @@ arv_gc_port_read (ArvGcPort *port, void *buffer, guint64 address, guint64 length
 
 	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (port));
 
-	if (port->priv->chunk_id == NULL) {
-		ArvDevice *device;
-
-		device = arv_gc_get_device (genicam);
-		if (ARV_IS_DEVICE (device)) {
-			/* For schema < 1.1.0 and length == 4, register read must be used instead of memory read.
-			 * Only applies to GigE Vision devices. See Appendix 3 of Genicam 2.0 specification. */
-			if (ARV_IS_GV_DEVICE (device) && _use_legacy_endianess_mechanism (port, length)) {
-				guint32 value = 0;
-
-				arv_device_read_register (device, address, &value, error);
-
-				/* For schema < 1.1.0, all registers are big endian. */
-				*((guint32 *) buffer) = GUINT32_TO_BE (value);
-			} else
-				arv_device_read_memory (device, address, length, buffer, error);
-		} else {
-			g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_INVALID_FEATURE_NAME,
-				     "[ArvGcPort::read] Invalid feature name");
-		}
-	} else {
+	if (port->priv->chunk_id != NULL) {
 		ArvBuffer *chunk_data_buffer;
 
 		chunk_data_buffer = arv_gc_get_buffer (genicam);
@@ -143,6 +127,29 @@ arv_gc_port_read (ArvGcPort *port, void *buffer, guint64 address, guint64 length
 					     "[ArvGcPort::read] Chunk 0x%08x not found", chunk_id);
 			}
 		}
+	} else if (port->priv->event_id != NULL) {
+		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_NO_EVENT_IMPLEMENTATION,
+			     "[ArvGcPort::read] Event support is not implemented");
+	} else {
+		ArvDevice *device;
+
+		device = arv_gc_get_device (genicam);
+		if (ARV_IS_DEVICE (device)) {
+			/* For schema < 1.1.0 and length == 4, register read must be used instead of memory read.
+			 * Only applies to GigE Vision devices. See Appendix 3 of Genicam 2.0 specification. */
+			if (ARV_IS_GV_DEVICE (device) && _use_legacy_endianess_mechanism (port, length)) {
+				guint32 value = 0;
+
+				arv_device_read_register (device, address, &value, error);
+
+				/* For schema < 1.1.0, all registers are big endian. */
+				*((guint32 *) buffer) = GUINT32_TO_BE (value);
+			} else
+				arv_device_read_memory (device, address, length, buffer, error);
+		} else {
+			g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_NO_DEVICE_SET,
+				     "[ArvGcPort::read] No device set");
+		}
 	}
 }
 
@@ -159,27 +166,7 @@ arv_gc_port_write (ArvGcPort *port, void *buffer, guint64 address, guint64 lengt
 
 	arv_gc_feature_node_increment_change_count (ARV_GC_FEATURE_NODE (port));
 
-	if (port->priv->chunk_id == NULL) {
-		device = arv_gc_get_device (genicam);
-
-		if (ARV_IS_DEVICE (device)) {
-			/* For schema < 1.1.0 and length == 4, register write must be used instead of memory write.
-			 * Only applies to GigE Vision devices. See Appendix 3 of Genicam 2.0 specification. */
-			if (ARV_IS_GV_DEVICE (device) && _use_legacy_endianess_mechanism (port, length)) {
-				guint32 value;
-
-				/* For schema < 1.1.0, all registers are big endian. */
-				value = *((guint32 *) buffer);
-				value = GUINT32_FROM_BE (value);
-
-				arv_device_write_register (device, address, value, error);
-			} else
-				arv_device_write_memory (device, address, length, buffer, error);
-		} else {
-			g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_INVALID_FEATURE_NAME,
-				     "[ArvGcPort::write] Invalid feature name");
-		}
-	} else {
+	if (port->priv->chunk_id != NULL) {
 		ArvBuffer *chunk_data_buffer;
 
 		chunk_data_buffer = arv_gc_get_buffer (genicam);
@@ -201,6 +188,29 @@ arv_gc_port_write (ArvGcPort *port, void *buffer, guint64 address, guint64 lengt
 				g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_CHUNK_NOT_FOUND,
 					     "[ArvGcPort::write] Chunk 0x%08x not found", chunk_id);
 			}
+		}
+	} else if (port->priv->event_id != NULL) {
+		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_NO_EVENT_IMPLEMENTATION,
+			     "[ArvGcPort::read] Event support is not implemented");
+	} else {
+		device = arv_gc_get_device (genicam);
+
+		if (ARV_IS_DEVICE (device)) {
+			/* For schema < 1.1.0 and length == 4, register write must be used instead of memory write.
+			 * Only applies to GigE Vision devices. See Appendix 3 of Genicam 2.0 specification. */
+			if (ARV_IS_GV_DEVICE (device) && _use_legacy_endianess_mechanism (port, length)) {
+				guint32 value;
+
+				/* For schema < 1.1.0, all registers are big endian. */
+				value = *((guint32 *) buffer);
+				value = GUINT32_FROM_BE (value);
+
+				arv_device_write_register (device, address, value, error);
+			} else
+				arv_device_write_memory (device, address, length, buffer, error);
+		} else {
+			g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_NO_DEVICE_SET,
+				     "[ArvGcPort::read] No device set");
 		}
 	}
 }

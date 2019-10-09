@@ -63,6 +63,7 @@ typedef enum {
 	ARV_GC_PROPERTY_NODE_TYPE_BIT,
 	ARV_GC_PROPERTY_NODE_TYPE_COMMAND_VALUE,
 	ARV_GC_PROPERTY_NODE_TYPE_CHUNK_ID,
+	ARV_GC_PROPERTY_NODE_TYPE_EVENT_ID,
 	ARV_GC_PROPERTY_NODE_TYPE_VALUE_INDEXED,
 	ARV_GC_PROPERTY_NODE_TYPE_VALUE_DEFAULT,
 
@@ -155,6 +156,7 @@ ArvGcNode * 	arv_gc_property_node_new_bit			(void);
 ArvGcNode * 	arv_gc_property_node_new_command_value		(void);
 ArvGcNode * 	arv_gc_property_node_new_p_command_value	(void);
 ArvGcNode * 	arv_gc_property_node_new_chunk_id 		(void);
+ArvGcNode * 	arv_gc_property_node_new_event_id 		(void);
 ArvGcNode * 	arv_gc_property_node_new_value_default 		(void);
 ArvGcNode * 	arv_gc_property_node_new_p_value_default	(void);
 
