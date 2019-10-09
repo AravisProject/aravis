@@ -89,33 +89,38 @@ arv_tool_list_features (ArvGc *genicam, const char *feature, ArvToolListMode lis
 		} else {
 			if (arv_gc_feature_node_is_available (ARV_GC_FEATURE_NODE (node), NULL)) {
 				char *value = NULL;
+				GError *error = NULL;
 
 				if (list_mode == ARV_TOOL_LIST_MODE_VALUES) {
 					if (ARV_IS_GC_STRING (node))
-						value = g_strdup (arv_gc_string_get_value (ARV_GC_STRING (node), NULL));
+						value = g_strdup (arv_gc_string_get_value (ARV_GC_STRING (node), &error));
 					else if (ARV_IS_GC_INTEGER (node)) {
 						const char *unit = arv_gc_integer_get_unit (ARV_GC_INTEGER (node), NULL);
 
 						value = g_strdup_printf ("%" G_GINT64_FORMAT "%s%s",
-									 arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL),
+									 arv_gc_integer_get_value (ARV_GC_INTEGER (node), &error),
 									 unit != NULL ? " " : "",
 									 unit != NULL ? unit : "");
 					} else if (ARV_IS_GC_FLOAT (node)) {
 						const char *unit = arv_gc_float_get_unit (ARV_GC_FLOAT (node), NULL);
 
 						value = g_strdup_printf ("%g%s%s",
-									 arv_gc_float_get_value (ARV_GC_FLOAT (node), NULL),
+									 arv_gc_float_get_value (ARV_GC_FLOAT (node), &error),
 									 unit != NULL ? " " : "",
 									 unit != NULL ? unit : "");
 					}
 				}
 
-				if (value != NULL && value[0] != '\0')
-					printf ("%*s%-12s: '%s' = %s\n", 4 * level, "",
-						arv_dom_node_get_node_name (ARV_DOM_NODE (node)), feature, value);
-				else
-					printf ("%*s%-12s: '%s'\n", 4 * level, "",
-						arv_dom_node_get_node_name (ARV_DOM_NODE (node)), feature);
+				if (error != NULL) {
+					g_clear_error (&error);
+				} else {
+					if (value != NULL && value[0] != '\0')
+						printf ("%*s%-12s: '%s' = %s\n", 4 * level, "",
+							arv_dom_node_get_node_name (ARV_DOM_NODE (node)), feature, value);
+					else
+						printf ("%*s%-12s: '%s'\n", 4 * level, "",
+							arv_dom_node_get_node_name (ARV_DOM_NODE (node)), feature);
+				}
 
 				g_clear_pointer (&value, g_free);
 			} else {
