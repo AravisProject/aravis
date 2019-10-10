@@ -100,12 +100,17 @@ arv_tool_list_features (ArvGc *genicam, const char *feature, ArvToolListMode lis
 
 					switch (value_type) {
 						case G_TYPE_INT64:
-							unit = arv_gc_integer_get_unit (ARV_GC_INTEGER (node), NULL);
+							if (ARV_IS_GC_ENUMERATION (node)) {
+								value = g_strdup_printf ("'%s'",
+											 arv_gc_string_get_value (ARV_GC_STRING (node), &error));
+							} else {
+								unit = arv_gc_integer_get_unit (ARV_GC_INTEGER (node), NULL);
 
-							value = g_strdup_printf ("%" G_GINT64_FORMAT "%s%s",
-										 arv_gc_integer_get_value (ARV_GC_INTEGER (node), &error),
-										 unit != NULL ? " " : "",
-										 unit != NULL ? unit : "");
+								value = g_strdup_printf ("%" G_GINT64_FORMAT "%s%s",
+											 arv_gc_integer_get_value (ARV_GC_INTEGER (node), &error),
+											 unit != NULL ? " " : "",
+											 unit != NULL ? unit : "");
+							}
 							break;
 						case G_TYPE_DOUBLE:
 							unit = arv_gc_float_get_unit (ARV_GC_FLOAT (node), NULL);
