@@ -45,7 +45,8 @@ enum
 	PROP_UV_DEVICE_SERIAL_NUMBER
 };
 
-#define ARV_UV_DEVICE_N_TRIES_MAX	5
+#define ARV_UV_DEVICE_RETRY_MAX			5
+#define ARV_UV_DEVICE_LIBUSB_EPIPE_RETRY_MAX	5
 
 typedef struct {
 	char *vendor;
@@ -95,6 +96,7 @@ arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, ArvUvEndpointType endpoint_
 	guint8 endpoint;
 	int transferred = 0;
 	int result;
+	int n_tries = 0;
 
 	g_return_val_if_fail (ARV_IS_UV_DEVICE (uv_device), FALSE);
 	g_return_val_if_fail (data != NULL, FALSE);
@@ -108,8 +110,13 @@ arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, ArvUvEndpointType endpoint_
 
 
 	endpoint = (endpoint_type == ARV_UV_ENDPOINT_CONTROL) ? priv->control_endpoint : priv->data_endpoint;
-	result = libusb_bulk_transfer (priv->usb_device, endpoint | endpoint_flags, data, size, &transferred,
-				       MAX (priv->timeout_ms, timeout_ms));
+	do {
+		result = libusb_bulk_transfer (priv->usb_device, endpoint | endpoint_flags, data, size, &transferred,
+					       MAX (priv->timeout_ms, timeout_ms));
+		if (result == LIBUSB_ERROR_PIPE)
+			libusb_clear_halt (priv->usb_device, endpoint | endpoint_flags);
+		n_tries++;
+	} while (result == LIBUSB_ERROR_PIPE && n_tries < ARV_UV_DEVICE_LIBUSB_EPIPE_RETRY_MAX);
 
 	success = result >= 0;
 
@@ -233,7 +240,7 @@ _read_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buffe
 		}
 
 		n_tries++;
-	} while (!success && n_tries < ARV_UV_DEVICE_N_TRIES_MAX);
+	} while (!success && n_tries < ARV_UV_DEVICE_RETRY_MAX);
 
 	g_free (read_packet);
 	arv_uvcp_packet_free (packet);
@@ -368,7 +375,7 @@ _write_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buff
 		}
 
 		n_tries++;
-	} while (!success && n_tries < ARV_UV_DEVICE_N_TRIES_MAX);
+	} while (!success && n_tries < ARV_UV_DEVICE_RETRY_MAX);
 
 	g_free (read_packet);
 	arv_uvcp_packet_free (packet);
