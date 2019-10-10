@@ -74,6 +74,7 @@ typedef enum {
 	ARV_GC_PROPERTY_NODE_TYPE_P_IS_IMPLEMENTED,
 	ARV_GC_PROPERTY_NODE_TYPE_P_IS_LOCKED,
 	ARV_GC_PROPERTY_NODE_TYPE_P_IS_AVAILABLE,
+	ARV_GC_PROPERTY_NODE_TYPE_P_SELECTED,
 	ARV_GC_PROPERTY_NODE_TYPE_P_MINIMUM,
 	ARV_GC_PROPERTY_NODE_TYPE_P_MAXIMUM,
 	ARV_GC_PROPERTY_NODE_TYPE_P_INCREMENT,
@@ -136,6 +137,7 @@ ArvGcNode * 	arv_gc_property_node_new_off_value 		(void);
 ArvGcNode * 	arv_gc_property_node_new_p_is_implemented 	(void);
 ArvGcNode * 	arv_gc_property_node_new_p_is_available 	(void);
 ArvGcNode * 	arv_gc_property_node_new_p_is_locked	 	(void);
+ArvGcNode * 	arv_gc_property_node_new_p_selected 		(void);
 ArvGcNode * 	arv_gc_property_node_new_length			(void);
 ArvGcNode * 	arv_gc_property_node_new_p_length		(void);
 ArvGcNode * 	arv_gc_property_node_new_p_port 		(void);

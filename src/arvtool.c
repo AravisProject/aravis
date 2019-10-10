@@ -90,6 +90,7 @@ arv_tool_list_features (ArvGc *genicam, const char *feature, ArvToolListMode lis
 			if (arv_gc_feature_node_is_available (ARV_GC_FEATURE_NODE (node), NULL)) {
 				char *value = NULL;
 				GError *error = NULL;
+				gboolean is_selector;
 
 				if (list_mode == ARV_TOOL_LIST_MODE_VALUES) {
 					if (ARV_IS_GC_STRING (node))
@@ -111,6 +112,10 @@ arv_tool_list_features (ArvGc *genicam, const char *feature, ArvToolListMode lis
 					}
 				}
 
+				is_selector = ARV_IS_GC_SELECTOR (node) && arv_gc_selector_is_selector (ARV_GC_SELECTOR (node));
+				if (is_selector) {
+				}
+
 				if (error != NULL) {
 					g_clear_error (&error);
 				} else {
@@ -120,6 +125,18 @@ arv_tool_list_features (ArvGc *genicam, const char *feature, ArvToolListMode lis
 					else
 						printf ("%*s%-12s: '%s'\n", 4 * level, "",
 							arv_dom_node_get_node_name (ARV_DOM_NODE (node)), feature);
+
+					if (is_selector) {
+						const GSList *iter;
+
+						for (iter = arv_gc_selector_get_selected_features (ARV_GC_SELECTOR (node));
+						     iter != NULL;
+						     iter = iter->next) {
+							printf (" %*s     * %s\n", 4 * level, " ",
+								arv_gc_feature_node_get_name (iter->data));
+						}
+
+					}
 				}
 
 				g_clear_pointer (&value, g_free);

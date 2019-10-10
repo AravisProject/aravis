@@ -28,6 +28,7 @@
 #include <arvgcenumeration.h>
 #include <arvgcenumentry.h>
 #include <arvgcinteger.h>
+#include <arvgcselector.h>
 #include <arvgcstring.h>
 #include <arvgcfeaturenodeprivate.h>
 #include <arvgc.h>
@@ -63,6 +64,9 @@ arv_gc_enumeration_post_new_child (ArvDomNode *self, ArvDomNode *child)
 			case ARV_GC_PROPERTY_NODE_TYPE_VALUE:
 			case ARV_GC_PROPERTY_NODE_TYPE_P_VALUE:
 				node->value = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_P_SELECTED:
+				node->selecteds = g_slist_prepend (node->selecteds, property_node);
 				break;
 			default:
 				ARV_DOM_NODE_CLASS (parent_class)->post_new_child (self, child);
@@ -516,8 +520,9 @@ arv_gc_enumeration_finalize (GObject *object)
 {
 	ArvGcEnumeration *enumeration = ARV_GC_ENUMERATION (object);
 
-	g_slist_free (enumeration->entries);
-	enumeration->entries = NULL;
+	g_clear_pointer (&enumeration->entries, g_slist_free);
+	g_clear_pointer (&enumeration->selecteds, g_slist_free);
+	g_clear_pointer (&enumeration->selected_features, g_slist_free);
 
 	parent_class->finalize (object);
 }
@@ -611,6 +616,29 @@ arv_gc_enumeration_string_interface_init (ArvGcStringInterface *interface)
 	interface->get_max_length = arv_gc_enumeration_get_max_string_length;
 }
 
+const GSList *
+arv_gc_enumeration_get_selected_features (ArvGcSelector *selector)
+{
+	ArvGcEnumeration *enumeration = ARV_GC_ENUMERATION (selector);
+	GSList *iter;
+
+	g_clear_pointer (&enumeration->selected_features, g_slist_free);
+	for (iter = enumeration->selecteds; iter != NULL; iter = iter->next) {
+		ArvGcFeatureNode *feature_node = ARV_GC_FEATURE_NODE (arv_gc_property_node_get_linked_node (iter->data));
+		if (ARV_IS_GC_FEATURE_NODE (feature_node))
+		    enumeration->selected_features = g_slist_prepend (enumeration->selected_features, feature_node);
+	}
+
+	return enumeration->selected_features;
+}
+
+static void
+arv_gc_enumeration_selector_interface_init (ArvGcSelectorInterface *interface)
+{
+	interface->get_selected_features = arv_gc_enumeration_get_selected_features;
+}
+
 G_DEFINE_TYPE_WITH_CODE (ArvGcEnumeration, arv_gc_enumeration, ARV_TYPE_GC_FEATURE_NODE,
 			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_enumeration_integer_interface_init)
-			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_STRING, arv_gc_enumeration_string_interface_init))
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_STRING, arv_gc_enumeration_string_interface_init)
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_SELECTOR, arv_gc_enumeration_selector_interface_init))

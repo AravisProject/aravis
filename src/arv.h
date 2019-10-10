@@ -79,6 +79,7 @@
 #include <arvgcregister.h>
 #include <arvgcregisternode.h>
 #include <arvgcstring.h>
+#include <arvgcselector.h>
 #include <arvgcstructentrynode.h>
 #include <arvgcswissknife.h>
 #include <arvgcvalueindexednode.h>

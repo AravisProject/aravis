@@ -32,6 +32,7 @@
 #include <arvgcswissknife.h>
 #include <arvgcregister.h>
 #include <arvgcinteger.h>
+#include <arvgcselector.h>
 #include <arvgcfloat.h>
 #include <arvgcstring.h>
 #include <arvgcport.h>
@@ -75,12 +76,14 @@ static void arv_gc_register_node_register_interface_init (ArvGcRegisterInterface
 static void arv_gc_register_node_integer_interface_init (ArvGcIntegerInterface *interface);
 static void arv_gc_register_node_float_interface_init (ArvGcFloatInterface *interface);
 static void arv_gc_register_node_string_interface_init (ArvGcStringInterface *interface);
+static void arv_gc_register_node_selector_interface_init (ArvGcSelectorInterface *interface);
 
 G_DEFINE_TYPE_WITH_CODE (ArvGcRegisterNode, arv_gc_register_node, ARV_TYPE_GC_FEATURE_NODE,
 			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_REGISTER, arv_gc_register_node_register_interface_init)
 			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_register_node_integer_interface_init)
 			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_FLOAT, arv_gc_register_node_float_interface_init)
-			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_STRING, arv_gc_register_node_string_interface_init))
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_STRING, arv_gc_register_node_string_interface_init)
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_SELECTOR, arv_gc_register_node_selector_interface_init))
 
 /* ArvDomNode implementation */
 
@@ -159,6 +162,9 @@ arv_gc_register_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_P_INVALIDATOR:
 				node->invalidators = g_slist_prepend (node->invalidators, property_node);
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_P_SELECTED:
+				node->selecteds = g_slist_prepend (node->selecteds, property_node);
 				break;
 			default:
 				ARV_DOM_NODE_CLASS (arv_gc_register_node_parent_class)->post_new_child (self, child);
@@ -646,6 +652,8 @@ arv_gc_register_node_finalize (GObject *object)
 	g_slist_free (gc_register_node->addresses);
 	g_slist_free (gc_register_node->swiss_knives);
 	g_slist_free (gc_register_node->invalidators);
+	g_slist_free (gc_register_node->selecteds);
+	g_slist_free (gc_register_node->selected_features);
 	g_clear_pointer (&gc_register_node->caches, g_hash_table_unref);
 
 	if (gc_register_node->n_cache_hits > 0 || gc_register_node->n_cache_misses > 0) {
@@ -1200,4 +1208,32 @@ arv_gc_register_node_string_interface_init (ArvGcStringInterface *interface)
 	interface->get_value = arv_gc_register_node_get_string_value;
 	interface->set_value = arv_gc_register_node_set_string_value;
 	interface->get_max_length = arv_gc_register_node_get_max_string_length;
+}
+
+const GSList *
+arv_gc_register_node_get_selected_features (ArvGcSelector *selector)
+{
+	ArvGcRegisterNode *register_node = ARV_GC_REGISTER_NODE (selector);
+
+	if (register_node->type == ARV_GC_REGISTER_NODE_TYPE_INTEGER ||
+	    register_node->type == ARV_GC_REGISTER_NODE_TYPE_MASKED_INTEGER) {
+		GSList *iter;
+
+		g_clear_pointer (&register_node->selected_features, g_slist_free);
+		for (iter = register_node->selecteds; iter != NULL; iter = iter->next) {
+			ArvGcFeatureNode *feature_node = ARV_GC_FEATURE_NODE (arv_gc_property_node_get_linked_node (iter->data));
+			if (ARV_IS_GC_FEATURE_NODE (feature_node))
+				register_node->selected_features = g_slist_prepend (register_node->selected_features, feature_node);
+		}
+
+		return register_node->selected_features;
+	}
+
+	return NULL;
+}
+
+static void
+arv_gc_register_node_selector_interface_init (ArvGcSelectorInterface *interface)
+{
+	interface->get_selected_features = arv_gc_register_node_get_selected_features;
 }

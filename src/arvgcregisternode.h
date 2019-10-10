@@ -93,7 +93,9 @@ struct _ArvGcRegisterNode {
 	ArvGcPropertyNode *lsb;
 	ArvGcPropertyNode *msb;
 
-	GSList *invalidators;		/* ArvGcPropertyNode list */
+	GSList *invalidators;		/* #ArvGcPropertyNode */
+	GSList *selecteds;	/* #ArvGcPropertNode */
+	GSList *selected_features;	/* #ArvGcFeatureNode */
 
 	ArvGcCachable default_cachable;
 

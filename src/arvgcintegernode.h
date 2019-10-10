@@ -54,6 +54,9 @@ struct _ArvGcIntegerNode {
 	ArvGcPropertyNode *index;
 	GSList *value_indexed_nodes;
 	ArvGcPropertyNode *value_default;
+
+	GSList *selecteds;		/* #ArvGcPropertyNode */
+	GSList *selected_features;	/* #ArvGcFeatureNode */
 };
 
 struct _ArvGcIntegerNodeClass {

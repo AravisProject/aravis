@@ -47,6 +47,9 @@ struct _ArvGcEnumeration {
 
 	ArvGcPropertyNode *value;
 	GSList *entries;
+
+	GSList *selecteds;		/* #ArvGcPropertyNode */
+	GSList *selected_features;	/* #ArvGcFeatureNode */
 };
 
 struct _ArvGcEnumerationClass {

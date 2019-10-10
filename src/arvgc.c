@@ -174,6 +174,8 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 		node = arv_gc_property_node_new_p_is_available ();
 	else if (strcmp (tag_name, "pIsLocked") == 0)
 		node = arv_gc_property_node_new_p_is_locked ();
+	else if (strcmp (tag_name, "pSelected") == 0)
+		node = arv_gc_property_node_new_p_selected ();
 	else if (strcmp (tag_name, "Length") == 0)
 		node = arv_gc_property_node_new_length ();
 	else if (strcmp (tag_name, "pLength") == 0)

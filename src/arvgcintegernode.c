@@ -27,6 +27,7 @@
 
 #include <arvgcintegernode.h>
 #include <arvgcinteger.h>
+#include <arvgcselector.h>
 #include <arvgcvalueindexednode.h>
 #include <arvgcfeaturenodeprivate.h>
 #include <arvgc.h>
@@ -82,6 +83,9 @@ arv_gc_integer_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 			case ARV_GC_PROPERTY_NODE_TYPE_VALUE_DEFAULT:
 			case ARV_GC_PROPERTY_NODE_TYPE_P_VALUE_DEFAULT:
 				node->value_default = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_P_SELECTED:
+				node->selecteds = g_slist_prepend (node->selecteds, property_node);
 				break;
 			default:
 				ARV_DOM_NODE_CLASS (parent_class)->post_new_child (self, child);
@@ -185,7 +189,9 @@ arv_gc_integer_node_finalize (GObject *object)
 
 	parent_class->finalize (object);
 
-	g_slist_free (gc_integer_node->value_indexed_nodes);
+	g_clear_pointer (&gc_integer_node->value_indexed_nodes, g_slist_free);
+	g_clear_pointer (&gc_integer_node->selecteds, g_slist_free);
+	g_clear_pointer (&gc_integer_node->selected_features, g_slist_free);
 }
 
 static void
@@ -369,5 +375,28 @@ arv_gc_integer_node_integer_interface_init (ArvGcIntegerInterface *interface)
 	interface->impose_max = arv_gc_integer_node_impose_max;
 }
 
+const GSList *
+arv_gc_integer_node_get_selected_features (ArvGcSelector *selector)
+{
+	ArvGcIntegerNode *integer = ARV_GC_INTEGER_NODE (selector);
+	GSList *iter;
+
+	g_clear_pointer (&integer->selected_features, g_slist_free);
+	for (iter = integer->selecteds; iter != NULL; iter = iter->next) {
+		ArvGcFeatureNode *feature_node = ARV_GC_FEATURE_NODE (arv_gc_property_node_get_linked_node (iter->data));
+		if (ARV_IS_GC_FEATURE_NODE (feature_node))
+			integer->selected_features = g_slist_prepend (integer->selected_features, feature_node);
+	}
+
+	return integer->selected_features;
+}
+
+static void
+arv_gc_integer_node_selector_interface_init (ArvGcSelectorInterface *interface)
+{
+	interface->get_selected_features = arv_gc_integer_node_get_selected_features;
+}
+
 G_DEFINE_TYPE_WITH_CODE (ArvGcIntegerNode, arv_gc_integer_node, ARV_TYPE_GC_FEATURE_NODE,
-			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_integer_node_integer_interface_init))
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_integer_node_integer_interface_init)
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_SELECTOR, arv_gc_integer_node_selector_interface_init))
