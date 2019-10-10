@@ -93,28 +93,41 @@ arv_tool_list_features (ArvGc *genicam, const char *feature, ArvToolListMode lis
 				gboolean is_selector;
 
 				if (list_mode == ARV_TOOL_LIST_MODE_VALUES) {
-					if (ARV_IS_GC_STRING (node))
-						value = g_strdup (arv_gc_string_get_value (ARV_GC_STRING (node), &error));
-					else if (ARV_IS_GC_INTEGER (node)) {
-						const char *unit = arv_gc_integer_get_unit (ARV_GC_INTEGER (node), NULL);
+					GType value_type;
+					const char *unit;
 
-						value = g_strdup_printf ("%" G_GINT64_FORMAT "%s%s",
-									 arv_gc_integer_get_value (ARV_GC_INTEGER (node), &error),
-									 unit != NULL ? " " : "",
-									 unit != NULL ? unit : "");
-					} else if (ARV_IS_GC_FLOAT (node)) {
-						const char *unit = arv_gc_float_get_unit (ARV_GC_FLOAT (node), NULL);
+					value_type = arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node));
 
-						value = g_strdup_printf ("%g%s%s",
-									 arv_gc_float_get_value (ARV_GC_FLOAT (node), &error),
-									 unit != NULL ? " " : "",
-									 unit != NULL ? unit : "");
+					switch (value_type) {
+						case G_TYPE_INT64:
+							unit = arv_gc_integer_get_unit (ARV_GC_INTEGER (node), NULL);
+
+							value = g_strdup_printf ("%" G_GINT64_FORMAT "%s%s",
+										 arv_gc_integer_get_value (ARV_GC_INTEGER (node), &error),
+										 unit != NULL ? " " : "",
+										 unit != NULL ? unit : "");
+							break;
+						case G_TYPE_DOUBLE:
+							unit = arv_gc_float_get_unit (ARV_GC_FLOAT (node), NULL);
+
+							value = g_strdup_printf ("%g%s%s",
+										 arv_gc_float_get_value (ARV_GC_FLOAT (node), &error),
+										 unit != NULL ? " " : "",
+										 unit != NULL ? unit : "");
+							break;
+						case G_TYPE_STRING:
+							value = g_strdup_printf ("'%s'",
+										 arv_gc_string_get_value (ARV_GC_STRING (node), &error));
+							break;
+						case G_TYPE_BOOLEAN:
+							value = g_strdup_printf ("%s",
+										 arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node), &error) ?
+										 "true" : "false");
+							break;
 					}
 				}
 
 				is_selector = ARV_IS_GC_SELECTOR (node) && arv_gc_selector_is_selector (ARV_GC_SELECTOR (node));
-				if (is_selector) {
-				}
 
 				if (error != NULL) {
 					g_clear_error (&error);
@@ -317,7 +330,7 @@ arv_tool_execute_command (int argc, char **argv, ArvDevice *device, ArvRegisterC
 							break;
 						case G_TYPE_BOOLEAN:
 							printf ("%s = %s\n", tokens[0],
-								arv_gc_integer_get_value (ARV_GC_INTEGER (feature), NULL) != 0 ?
+								arv_gc_boolean_get_value (ARV_GC_BOOLEAN (feature), NULL) ?
 								"true" : "false");
 							break;
 						default:
