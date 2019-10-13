@@ -691,6 +691,27 @@ arv_gc_property_node_new_cachable (void)
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_CACHABLE);
 }
 
+ArvGcCachable
+arv_gc_property_node_get_cachable (ArvGcPropertyNode *self, ArvGcCachable default_value)
+{
+	const char *value;
+
+	if (self == NULL)
+		return default_value;
+
+	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	g_return_val_if_fail (self->type == ARV_GC_PROPERTY_NODE_TYPE_CACHABLE, default_value);
+
+	value = _get_value_data (self);
+
+	if (g_strcmp0 (value, "WriteAround") == 0)
+		return ARV_GC_CACHABLE_WRITE_AROUND;
+	else if (g_strcmp0 (value, "WriteThrough") == 0)
+		return ARV_GC_CACHABLE_WRITE_THROUGH;
+
+	return ARV_GC_CACHABLE_NO_CACHE;
+}
+
 ArvGcNode *
 arv_gc_property_node_new_polling_time (void)
 {
@@ -703,10 +724,40 @@ arv_gc_property_node_new_endianess (void)
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_ENDIANESS);
 }
 
+guint
+arv_gc_property_node_get_endianess (ArvGcPropertyNode *self, guint default_value)
+{
+	if (self == NULL)
+		return default_value;
+
+	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	g_return_val_if_fail (self->type == ARV_GC_PROPERTY_NODE_TYPE_ENDIANESS, default_value);
+
+	if (g_strcmp0 (_get_value_data (self), "BigEndian") == 0)
+		return G_BIG_ENDIAN;
+
+	return G_LITTLE_ENDIAN;
+}
+
 ArvGcNode *
 arv_gc_property_node_new_sign (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_SIGN);
+}
+
+ArvGcSignedness
+arv_gc_property_node_get_sign (ArvGcPropertyNode *self, ArvGcSignedness default_value)
+{
+	if (self == NULL)
+		return default_value;
+
+	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	g_return_val_if_fail (self->type == ARV_GC_PROPERTY_NODE_TYPE_SIGN, default_value);
+
+	if (g_strcmp0 (_get_value_data (self), "Unsigned") == 0)
+		return ARV_GC_SIGNEDNESS_UNSIGNED;
+
+	return ARV_GC_SIGNEDNESS_SIGNED;
 }
 
 ArvGcNode *
@@ -715,10 +766,36 @@ arv_gc_property_node_new_lsb (void)
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_LSB);
 }
 
+guint
+arv_gc_property_node_get_lsb (ArvGcPropertyNode *self, guint default_value)
+{
+	if (self == NULL)
+		return default_value;
+
+	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	g_return_val_if_fail (self->type == ARV_GC_PROPERTY_NODE_TYPE_LSB ||
+			      self->type == ARV_GC_PROPERTY_NODE_TYPE_BIT, default_value);
+
+	return g_ascii_strtoll (_get_value_data (self), NULL, 10);
+}
+
 ArvGcNode *
 arv_gc_property_node_new_msb (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_MSB);
+}
+
+guint
+arv_gc_property_node_get_msb (ArvGcPropertyNode *self, guint default_value)
+{
+	if (self == NULL)
+		return default_value;
+
+	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	g_return_val_if_fail (self->type == ARV_GC_PROPERTY_NODE_TYPE_MSB ||
+			      self->type == ARV_GC_PROPERTY_NODE_TYPE_BIT, default_value);
+
+	return g_ascii_strtoll (_get_value_data (self), NULL, 10);
 }
 
 ArvGcNode *

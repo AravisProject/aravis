@@ -28,6 +28,7 @@
 #endif
 
 #include <arvtypes.h>
+#include <arvgcenums.h>
 #include <arvgcnode.h>
 
 G_BEGIN_DECLS
@@ -170,6 +171,12 @@ gint64			arv_gc_property_node_get_int64		(ArvGcPropertyNode *node, GError **erro
 void			arv_gc_property_node_set_int64		(ArvGcPropertyNode *node, gint64 v_int64, GError **error);
 double 			arv_gc_property_node_get_double 	(ArvGcPropertyNode *node, GError **error);
 void 			arv_gc_property_node_set_double 	(ArvGcPropertyNode *node, double v_double, GError **error);
+
+guint	 		arv_gc_property_node_get_endianess	(ArvGcPropertyNode *self, guint default_value);
+ArvGcSignedness		arv_gc_property_node_get_sign 		(ArvGcPropertyNode *self, ArvGcSignedness default_value);
+guint	 		arv_gc_property_node_get_lsb		(ArvGcPropertyNode *self, guint default_value);
+guint	 		arv_gc_property_node_get_msb		(ArvGcPropertyNode *self, guint default_value);
+ArvGcCachable		arv_gc_property_node_get_cachable	(ArvGcPropertyNode *self, ArvGcCachable default_value);
 
 ArvGcNode *		arv_gc_property_node_get_linked_node	(ArvGcPropertyNode *node);
 ArvGcPropertyNodeType	arv_gc_property_node_get_node_type	(ArvGcPropertyNode *node);
