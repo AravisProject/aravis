@@ -82,35 +82,6 @@ arv_gc_enumeration_pre_remove_child (ArvDomNode *self, ArvDomNode *child)
 	g_assert_not_reached ();
 }
 
-/* ArvGcFeatureNode implementation */
-
-static void
-arv_gc_enumeration_set_value_from_string (ArvGcFeatureNode *node, const char *string, GError **error)
-{
-	GError *local_error = NULL;
-
-	arv_gc_enumeration_set_string_value (ARV_GC_ENUMERATION (node), string, &local_error);
-
-	if (local_error != NULL)
-		g_propagate_error (error, local_error);
-}
-
-static const char *
-arv_gc_enumeration_get_value_as_string (ArvGcFeatureNode *node, GError **error)
-{
-	const char *string;
-	GError *local_error = NULL;
-
-	string = arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (node), &local_error);
-
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return NULL;
-	}
-
-	return string;
-}
-
 /* ArvGcEnumeration implementation */
 
 const char *
@@ -525,7 +496,6 @@ arv_gc_enumeration_class_init (ArvGcEnumerationClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
-	ArvGcFeatureNodeClass *gc_feature_node_class = ARV_GC_FEATURE_NODE_CLASS (this_class);
 
 	parent_class = g_type_class_peek_parent (this_class);
 
@@ -535,8 +505,6 @@ arv_gc_enumeration_class_init (ArvGcEnumerationClass *this_class)
 	dom_node_class->can_append_child = arv_gc_enumeration_can_append_child;
 	dom_node_class->post_new_child = arv_gc_enumeration_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_enumeration_pre_remove_child;
-	gc_feature_node_class->set_value_from_string = arv_gc_enumeration_set_value_from_string;
-	gc_feature_node_class->get_value_as_string = arv_gc_enumeration_get_value_as_string;
 }
 
 /* ArvGcInteger interface implementation */

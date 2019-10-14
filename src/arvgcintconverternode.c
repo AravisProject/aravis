@@ -37,12 +37,6 @@ arv_gc_int_converter_node_get_node_name (ArvDomNode *node)
 	return "IntConverter";
 }
 
-static void
-arv_gc_int_converter_node_set_value_from_string (ArvGcFeatureNode *node, const char *string, GError **error)
-{
-	arv_gc_integer_set_value (ARV_GC_INTEGER (node), g_ascii_strtoll (string, NULL, 0), error);
-}
-
 ArvGcNode *
 arv_gc_int_converter_node_new (void)
 {
@@ -57,11 +51,9 @@ arv_gc_int_converter_node_init (ArvGcIntConverterNode *node)
 static void
 arv_gc_int_converter_node_class_init (ArvGcIntConverterNodeClass *this_class)
 {
-	ArvGcFeatureNodeClass *gc_feature_node_class = ARV_GC_FEATURE_NODE_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
 
 	dom_node_class->get_node_name = arv_gc_int_converter_node_get_node_name;
-	gc_feature_node_class->set_value_from_string = arv_gc_int_converter_node_set_value_from_string;
 }
 
 

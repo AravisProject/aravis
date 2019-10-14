@@ -259,7 +259,6 @@ boolean_test (void)
 	ArvGcNode *node_b;
 	gboolean v_boolean;
 	const char *v_string;
-	gint64 v_int64;
 
 	device = arv_fake_device_new ("TEST0");
 	g_assert (ARV_IS_FAKE_DEVICE (device));
@@ -269,13 +268,9 @@ boolean_test (void)
 
 	node = arv_gc_get_node (genicam, "RWBoolean");
 	g_assert (ARV_IS_GC_BOOLEAN (node));
-	g_assert (ARV_IS_GC_INTEGER (node));
 
 	v_boolean = arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node), NULL);
 	g_assert_cmpint (v_boolean, ==, TRUE);
-
-	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
-	g_assert_cmpint (v_int64, ==, 1);
 
 	v_string = arv_gc_feature_node_get_value_as_string (ARV_GC_FEATURE_NODE (node), NULL);
 	g_assert_cmpstr (v_string, ==, "true");
@@ -283,9 +278,6 @@ boolean_test (void)
 	arv_gc_boolean_set_value (ARV_GC_BOOLEAN (node), 0, NULL);
 	v_boolean = arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node), NULL);
 	g_assert_cmpint (v_boolean, ==, FALSE);
-
-	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
-	g_assert_cmpint (v_int64, ==, 0);
 
 	v_string = arv_gc_feature_node_get_value_as_string (ARV_GC_FEATURE_NODE (node), NULL);
 	g_assert_cmpstr (v_string, ==, "false");

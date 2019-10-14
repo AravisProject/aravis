@@ -91,34 +91,6 @@ arv_gc_struct_entry_node_pre_remove_child (ArvDomNode *self, ArvDomNode *child)
 	g_assert_not_reached ();
 }
 
-/* ArvGcFeatureNode implementation */
-
-static void
-arv_gc_struct_entry_node_set_value_from_string (ArvGcFeatureNode *node, const char *string, GError **error)
-{
-	arv_gc_integer_set_value (ARV_GC_INTEGER (node), g_ascii_strtoll (string, NULL, 0), error);
-}
-
-static const char *
-arv_gc_struct_entry_node_get_value_as_string (ArvGcFeatureNode *node, GError **error)
-{
-	ArvGcStructEntryNode *gc_struct_entry_node = ARV_GC_STRUCT_ENTRY_NODE (node);
-	GError *local_error = NULL;
-	gint64 value;
-
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), &local_error);
-
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return NULL;
-	}
-
-	g_snprintf (gc_struct_entry_node->v_string, G_ASCII_DTOSTR_BUF_SIZE,
-		    "0x%08" G_GINT64_MODIFIER "x", value);
-
-	return gc_struct_entry_node->v_string;
-}
-
 /* ArvGcStructEntryNode implementation */
 
 /**
@@ -153,14 +125,11 @@ arv_gc_struct_entry_node_class_init (ArvGcStructEntryNodeClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
-	ArvGcFeatureNodeClass *gc_feature_node_class = ARV_GC_FEATURE_NODE_CLASS (this_class);
 
 	object_class->finalize = arv_gc_struct_entry_node_finalize;
 	dom_node_class->get_node_name = arv_gc_struct_entry_node_get_node_name;
 	dom_node_class->post_new_child = arv_gc_struct_entry_node_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_struct_entry_node_pre_remove_child;
-	gc_feature_node_class->set_value_from_string = arv_gc_struct_entry_node_set_value_from_string;
-	gc_feature_node_class->get_value_as_string = arv_gc_struct_entry_node_get_value_as_string;
 }
 
 /* ArvGcRegister interface implementation */

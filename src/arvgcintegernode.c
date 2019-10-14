@@ -132,33 +132,6 @@ _get_value_node (ArvGcIntegerNode *gc_integer_node, GError **error)
 	return NULL;
 }
 
-static void
-arv_gc_integer_node_set_value_from_string (ArvGcFeatureNode *node, const char *string, GError **error)
-{
-	arv_gc_integer_set_value (ARV_GC_INTEGER (node), g_ascii_strtoll (string, NULL, 0), error);
-}
-
-static const char *
-arv_gc_integer_node_get_value_as_string (ArvGcFeatureNode *node, GError **error)
-{
-	ArvGcIntegerNode *integer_node = ARV_GC_INTEGER_NODE (node);
-	ArvGcPropertyNode *value_node;
-	GError *local_error = NULL;
-	const char *string;
-
-	value_node = _get_value_node (integer_node, error);
-	if (value_node == NULL)
-		return NULL;
-
-	string = arv_gc_property_node_get_string (value_node, &local_error);
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return NULL;
-	}
-
-	return string;
-}
-
 /* ArvGcIntegerNode implementation */
 
 ArvGcNode *
@@ -193,7 +166,6 @@ arv_gc_integer_node_class_init (ArvGcIntegerNodeClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
-	ArvGcFeatureNodeClass *gc_feature_node_class = ARV_GC_FEATURE_NODE_CLASS (this_class);
 
 	parent_class = g_type_class_peek_parent (this_class);
 
@@ -201,8 +173,6 @@ arv_gc_integer_node_class_init (ArvGcIntegerNodeClass *this_class)
 	dom_node_class->get_node_name = arv_gc_integer_node_get_node_name;
 	dom_node_class->post_new_child = arv_gc_integer_node_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_integer_node_pre_remove_child;
-	gc_feature_node_class->set_value_from_string = arv_gc_integer_node_set_value_from_string;
-	gc_feature_node_class->get_value_as_string = arv_gc_integer_node_get_value_as_string;
 }
 
 /* ArvGcInteger interface implementation */

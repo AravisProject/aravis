@@ -31,6 +31,11 @@
 #include <arvgcfeaturenode.h>
 #include <arvgcpropertynode.h>
 #include <arvgc.h>
+#include <arvgcboolean.h>
+#include <arvgcinteger.h>
+#include <arvgcfloat.h>
+#include <arvgcstring.h>
+#include <arvgcenumeration.h>
 #include <arvgcenums.h>
 #include <arvmisc.h>
 #include <arvdebug.h>
@@ -49,6 +54,8 @@ struct _ArvGcFeatureNodePrivate {
 	ArvGcPropertyNode *is_locked;
 
 	guint64 change_count;
+
+	char *string_buffer;
 };
 
 /* ArvDomNode implementation */
@@ -323,17 +330,25 @@ arv_gc_feature_node_is_locked (ArvGcFeatureNode *gc_feature_node, GError **error
  */
 
 void
-arv_gc_feature_node_set_value_from_string (ArvGcFeatureNode *gc_feature_node, const char *string, GError **error)
+arv_gc_feature_node_set_value_from_string (ArvGcFeatureNode *self, const char *string, GError **error)
 {
-	ArvGcFeatureNodeClass *node_class;
-
-	g_return_if_fail (ARV_IS_GC_FEATURE_NODE (gc_feature_node));
-	g_return_if_fail (error == NULL || *error == NULL);
+	g_return_if_fail (ARV_IS_GC_FEATURE_NODE (self));
 	g_return_if_fail (string != NULL);
 
-	node_class = ARV_GC_FEATURE_NODE_GET_CLASS (gc_feature_node);
-	if (node_class->set_value_from_string != NULL)
-		node_class->set_value_from_string (gc_feature_node, string, error);
+	if (ARV_IS_GC_INTEGER (self)) {
+		arv_gc_integer_set_value (ARV_GC_INTEGER (self), g_ascii_strtoll (string, NULL, 0), error);
+	} else if (ARV_IS_GC_FLOAT (self)) {
+		arv_gc_float_set_value (ARV_GC_FLOAT (self), g_ascii_strtod (string, NULL), error);
+	} else if (ARV_IS_GC_STRING (self)) {
+		arv_gc_string_set_value (ARV_GC_STRING (self), string, error);
+	} else if (ARV_IS_GC_BOOLEAN (self)) {
+		arv_gc_boolean_set_value (ARV_GC_BOOLEAN (self), g_strcmp0 (string, "true") == 0 ? 1 : 0, error);
+	} else if (ARV_IS_GC_ENUMERATION (self)) {
+		arv_gc_enumeration_set_string_value (ARV_GC_ENUMERATION (self), string, error);
+	} else {
+		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_SET_FROM_STRING_UNDEFINED,
+			     "Don't know how to set %s value from string", arv_dom_node_get_node_name (ARV_DOM_NODE (self)));
+	}
 }
 
 /**
@@ -349,16 +364,30 @@ arv_gc_feature_node_set_value_from_string (ArvGcFeatureNode *gc_feature_node, co
  */
 
 const char *
-arv_gc_feature_node_get_value_as_string (ArvGcFeatureNode *gc_feature_node, GError **error)
+arv_gc_feature_node_get_value_as_string (ArvGcFeatureNode *self, GError **error)
 {
-	ArvGcFeatureNodeClass *node_class;
+	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (self), NULL);
 
-	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (gc_feature_node), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	if (ARV_IS_GC_INTEGER (self)) {
+		g_free (self->priv->string_buffer);
+		self->priv->string_buffer = g_strdup_printf ("%" G_GINT64_FORMAT, 
+							     arv_gc_integer_get_value (ARV_GC_INTEGER (self), error));
+		return self->priv->string_buffer;
+	} else if (ARV_IS_GC_FLOAT (self)) {
+		g_free (self->priv->string_buffer);
+		self->priv->string_buffer = g_strdup_printf ("%g", 
+							     arv_gc_float_get_value (ARV_GC_FLOAT (self), error));
+		return self->priv->string_buffer;
+	} else if (ARV_IS_GC_STRING (self)) {
+		return arv_gc_string_get_value (ARV_GC_STRING (self), error);
+	} else if (ARV_IS_GC_BOOLEAN (self)) {
+		return arv_gc_boolean_get_value (ARV_GC_BOOLEAN (self), error) ? "true" : "false";
+	} else if (ARV_IS_GC_ENUMERATION (self)) {
+		return arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (self), error);
+	}
 
-	node_class = ARV_GC_FEATURE_NODE_GET_CLASS (gc_feature_node);
-	if (node_class->get_value_as_string != NULL)
-		return node_class->get_value_as_string (gc_feature_node, error);
+	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_SET_FROM_STRING_UNDEFINED,
+		     "Don't know how to set %s value from string", arv_dom_node_get_node_name (ARV_DOM_NODE (self)));
 
 	return NULL;
 }
@@ -394,7 +423,8 @@ arv_gc_feature_node_finalize (GObject *object)
 {
 	ArvGcFeatureNode *node = ARV_GC_FEATURE_NODE(object);
 
-	g_free (node->priv->name);
+	g_clear_pointer (&node->priv->name, g_free);
+	g_clear_pointer (&node->priv->string_buffer, g_free);
 
 	G_OBJECT_CLASS (arv_gc_feature_node_parent_class)->finalize (object);
 }

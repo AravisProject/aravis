@@ -50,9 +50,6 @@ struct _ArvGcFeatureNode {
 
 struct _ArvGcFeatureNodeClass {
 	ArvGcNodeClass parent_class;
-
-	void		(*set_value_from_string)	(ArvGcFeatureNode *gc_feature_node, const char *string, GError **error);
-	const char *	(*get_value_as_string)		(ArvGcFeatureNode *gc_feature_node, GError **error);
 };
 
 GType 			arv_gc_feature_node_get_type 			(void);
