@@ -85,7 +85,6 @@ arv_gc_float_reg_node_get_float_value (ArvGcFloat *self, GError **error)
 	GError *local_error = NULL;
 	guint endianess;
 	gint64 length;
-	float v_float = 0.0;
 	double v_double = 0.0;
 
 	endianess = arv_gc_property_node_get_endianess (priv->endianess, G_LITTLE_ENDIAN);
@@ -97,6 +96,8 @@ arv_gc_float_reg_node_get_float_value (ArvGcFloat *self, GError **error)
 		arv_gc_register_get (ARV_GC_REGISTER (self), buffer, length, &local_error);
 		if (local_error == NULL) {
 			if (length == 4) {
+				float v_float = 0.0;
+
 				arv_copy_memory_with_endianess (&v_float, sizeof (v_float), G_BYTE_ORDER,
 								buffer, length, endianess);
 
@@ -121,7 +122,38 @@ arv_gc_float_reg_node_get_float_value (ArvGcFloat *self, GError **error)
 static void
 arv_gc_float_reg_node_set_float_value (ArvGcFloat *self, gdouble value, GError **error)
 {
-	g_assert_not_reached ();
+	ArvGcFloatRegNodePrivate *priv = arv_gc_float_reg_node_get_instance_private (ARV_GC_FLOAT_REG_NODE (self));
+	GError *local_error = NULL;
+	guint endianess;
+	gint64 length;
+
+	endianess = arv_gc_property_node_get_endianess (priv->endianess, G_LITTLE_ENDIAN);
+	length = arv_gc_register_get_length (ARV_GC_REGISTER (self), &local_error);
+	if (local_error == NULL) {
+		char *buffer;
+
+		buffer = g_malloc (length);
+		if (local_error == NULL) {
+			if (length == 4) {
+				float v_float = value;
+
+				arv_copy_memory_with_endianess (buffer, length, endianess, &v_float, sizeof (v_float), G_BYTE_ORDER);
+			} else if (length == 8) {
+				arv_copy_memory_with_endianess (buffer, length, endianess, &value, sizeof (value), G_BYTE_ORDER);
+			} else {
+				g_set_error (&local_error, ARV_GC_ERROR, ARV_GC_ERROR_INVALID_LENGTH,
+					     "Invalid register length for FloatReg node");
+			}
+		}
+
+		if (local_error == NULL)
+			arv_gc_register_set (ARV_GC_REGISTER (self), buffer, length, &local_error);
+
+		g_free (buffer);
+	}
+
+	if (local_error != NULL)
+		g_propagate_error (error, local_error);
 }
 
 static const char *
