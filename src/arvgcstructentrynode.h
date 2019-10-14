@@ -48,6 +48,7 @@ struct _ArvGcStructEntryNode {
 	ArvGcPropertyNode *sign;
 	ArvGcPropertyNode *lsb;
 	ArvGcPropertyNode *msb;
+	ArvGcPropertyNode *cachable;
 
 	char v_string[G_ASCII_DTOSTR_BUF_SIZE];
 };

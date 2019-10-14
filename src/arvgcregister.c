@@ -47,7 +47,7 @@ arv_gc_register_get (ArvGcRegister *gc_register, void *buffer, guint64 length, G
 }
 
 void
-arv_gc_register_set (ArvGcRegister *gc_register, void *buffer, guint64 length, GError **error)
+arv_gc_register_set (ArvGcRegister *gc_register, const void *buffer, guint64 length, GError **error)
 {
 	g_return_if_fail (ARV_IS_GC_REGISTER (gc_register));
 	g_return_if_fail (buffer != NULL);

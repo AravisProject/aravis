@@ -42,7 +42,7 @@ struct _ArvGcRegisterInterface {
 	GTypeInterface parent;
 
 	void 		(*get)			(ArvGcRegister *gc_register, void *buffer, guint64 length, GError **error);
-	void 		(*set)			(ArvGcRegister *gc_register, void *buffer, guint64 length, GError **error);
+	void 		(*set)			(ArvGcRegister *gc_register, const void *buffer, guint64 length, GError **error);
 	guint64		(*get_address) 		(ArvGcRegister *gc_register, GError **error);
 	guint64 	(*get_length)		(ArvGcRegister *gc_register, GError **error);
 };
@@ -50,7 +50,7 @@ struct _ArvGcRegisterInterface {
 GType arv_gc_register_get_type (void);
 
 void 		arv_gc_register_get			(ArvGcRegister *gc_register, void *buffer, guint64 length, GError **error);
-void 		arv_gc_register_set			(ArvGcRegister *gc_register, void *buffer, guint64 length, GError **error);
+void 		arv_gc_register_set			(ArvGcRegister *gc_register, const void *buffer, guint64 length, GError **error);
 guint64 	arv_gc_register_get_address 		(ArvGcRegister *gc_register, GError **error);
 guint64 	arv_gc_register_get_length		(ArvGcRegister *gc_register, GError **error);
 

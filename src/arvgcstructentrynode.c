@@ -30,6 +30,7 @@
 #include <arvgcregister.h>
 #include <arvgcinteger.h>
 #include <arvgcfeaturenodeprivate.h>
+#include <arvgcregisternodeprivate.h>
 #include <arvgcport.h>
 #include <arvgc.h>
 #include <arvmisc.h>
@@ -73,6 +74,9 @@ arv_gc_struct_entry_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 			case ARV_GC_PROPERTY_NODE_TYPE_BIT:
 				node->msb = property_node;
 				node->lsb = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_CACHABLE:
+				node->cachable = property_node;
 				break;
 			default:
 				ARV_DOM_NODE_CLASS (arv_gc_struct_entry_node_parent_class)->post_new_child (self, child);
@@ -122,42 +126,6 @@ arv_gc_struct_entry_node_get_value_as_string (ArvGcFeatureNode *node, GError **e
 }
 
 /* ArvGcStructEntryNode implementation */
-
-/* Set default to read only 32 bits little endian integer struct_entry_node */
-
-static gint64
-_get_lsb (ArvGcStructEntryNode *gc_struct_entry_node, GError **error)
-{
-	if (gc_struct_entry_node->lsb == NULL)
-		return 0;
-
-	return arv_gc_property_node_get_int64 (gc_struct_entry_node->lsb, error);
-}
-
-static gint64
-_get_msb (ArvGcStructEntryNode *gc_struct_entry_node, GError **error)
-{
-	if (gc_struct_entry_node->msb == NULL)
-		return 31;
-
-	return arv_gc_property_node_get_int64 (gc_struct_entry_node->msb, error);
-}
-
-static ArvGcSignedness
-_get_signedness (ArvGcStructEntryNode *gc_struct_entry_node, GError **error)
-{
-	const char *signedness;
-
-	if (gc_struct_entry_node->sign == NULL)
-		return ARV_GC_SIGNEDNESS_UNSIGNED;
-
-	signedness = arv_gc_property_node_get_string (gc_struct_entry_node->sign, error);
-
-	if (g_strcmp0 (signedness, "Unsigned") == 0)
-		return ARV_GC_SIGNEDNESS_UNSIGNED;
-
-	return ARV_GC_SIGNEDNESS_SIGNED;
-}
 
 /**
  * arv_gc_struct_entry_node_new:
@@ -215,7 +183,7 @@ arv_gc_struct_entry_node_get (ArvGcRegister *gc_register, void *buffer, guint64 
 }
 
 static void
-arv_gc_struct_entry_node_set (ArvGcRegister *gc_register, void *buffer, guint64 length, GError **error)
+arv_gc_struct_entry_node_set (ArvGcRegister *gc_register, const void *buffer, guint64 length, GError **error)
 {
 	ArvDomNode *struct_register = arv_dom_node_get_parent_node (ARV_DOM_NODE (gc_register));
 
@@ -279,46 +247,19 @@ arv_gc_struct_entry_node_get_integer_value (ArvGcInteger *gc_integer, GError **e
 {
 	ArvGcStructEntryNode *struct_entry = ARV_GC_STRUCT_ENTRY_NODE (gc_integer);
 	ArvDomNode *struct_register;
-	ArvGcSignedness signedness;
-	GError *local_error = NULL;
-	gint64 value;
-	guint lsb;
-	guint msb;
 
 	struct_register = arv_dom_node_get_parent_node (ARV_DOM_NODE (gc_integer));
 	if (!ARV_IS_GC_REGISTER_NODE (struct_register))
 		return 0;
 
-	lsb = _get_lsb (struct_entry, &local_error);
-
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return 0;
-	}
-
-	msb = _get_msb (struct_entry, &local_error);
-
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return 0;
-	}
-
-	signedness = _get_signedness (struct_entry, &local_error);
-
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return 0;
-	}
-
-	value = arv_gc_register_node_get_masked_integer_value (ARV_GC_REGISTER_NODE (struct_register),
-							       lsb, msb, signedness, &local_error);
-
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return 0;
-	}
-
-	return value;
+	return arv_gc_register_node_get_masked_integer_value
+		(ARV_GC_REGISTER_NODE (struct_register),
+		 arv_gc_property_node_get_lsb (struct_entry->lsb, 0),
+		 arv_gc_property_node_get_msb (struct_entry->msb, 31),
+		 arv_gc_property_node_get_sign (struct_entry->sign, ARV_GC_SIGNEDNESS_UNSIGNED),
+		 0,
+		 arv_gc_property_node_get_cachable (struct_entry->cachable, ARV_GC_CACHABLE_WRITE_AROUND),
+		 TRUE, error);
 }
 
 static void
@@ -326,34 +267,59 @@ arv_gc_struct_entry_node_set_integer_value (ArvGcInteger *gc_integer, gint64 val
 {
 	ArvGcStructEntryNode *struct_entry = ARV_GC_STRUCT_ENTRY_NODE (gc_integer);
 	ArvDomNode *struct_register;
-	GError *local_error = NULL;
-	guint lsb;
-	guint msb;
 
 	struct_register = arv_dom_node_get_parent_node (ARV_DOM_NODE (gc_integer));
 	if (!ARV_IS_GC_REGISTER_NODE (struct_register))
 		return;
 
-	lsb = _get_lsb (struct_entry, &local_error);
-
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return;
-	}
-
-	msb = _get_msb (struct_entry, &local_error);
-
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return;
-	}
-
 	arv_gc_feature_node_increment_change_count (ARV_GC_FEATURE_NODE (gc_integer));
-	arv_gc_register_node_set_masked_integer_value (ARV_GC_REGISTER_NODE (struct_register), lsb, msb, value, &local_error);
+	arv_gc_register_node_set_masked_integer_value
+		(ARV_GC_REGISTER_NODE (struct_register),
+		 arv_gc_property_node_get_lsb (struct_entry->lsb, 0),
+		 arv_gc_property_node_get_msb (struct_entry->msb, 31),
+		 arv_gc_property_node_get_sign (struct_entry->sign, ARV_GC_SIGNEDNESS_UNSIGNED),
+		 0,
+		 arv_gc_property_node_get_cachable (struct_entry->cachable, ARV_GC_CACHABLE_WRITE_AROUND),
+		 TRUE, value, error);
+}
 
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return;
+static gint64
+arv_gc_struct_entry_node_get_min (ArvGcInteger *self, GError **error)
+{
+	ArvGcStructEntryNode *struct_entry = ARV_GC_STRUCT_ENTRY_NODE (self);
+	gint64 lsb, msb;
+	ArvGcSignedness signedness;
+
+	lsb = arv_gc_property_node_get_lsb (struct_entry->lsb, 0);
+	msb = arv_gc_property_node_get_msb (struct_entry->msb, 31);
+	signedness = arv_gc_property_node_get_sign (struct_entry->sign, ARV_GC_SIGNEDNESS_UNSIGNED);
+
+	/* TODO endianess */
+
+	if (signedness == ARV_GC_SIGNEDNESS_SIGNED) {
+		return -((1 << (msb - lsb  - 1)));
+	} else {
+		return 0;
+	}
+}
+
+static gint64
+arv_gc_struct_entry_node_get_max (ArvGcInteger *self, GError **error)
+{
+	ArvGcStructEntryNode *struct_entry = ARV_GC_STRUCT_ENTRY_NODE (self);
+	gint64 lsb, msb;
+	ArvGcSignedness signedness;
+
+	lsb = arv_gc_property_node_get_lsb (struct_entry->lsb, 0);
+	msb = arv_gc_property_node_get_msb (struct_entry->msb, 31);
+	signedness = arv_gc_property_node_get_sign (struct_entry->sign, ARV_GC_SIGNEDNESS_UNSIGNED);
+
+	/* TODO endianess */
+
+	if (signedness == ARV_GC_SIGNEDNESS_SIGNED) {
+		return ((1 << (msb - lsb  - 1)) - 1);
+	} else {
+		return (1 << (msb - lsb)) - 1;
 	}
 }
 
@@ -362,4 +328,6 @@ arv_gc_struct_entry_node_integer_interface_init (ArvGcIntegerInterface *interfac
 {
 	interface->get_value = arv_gc_struct_entry_node_get_integer_value;
 	interface->set_value = arv_gc_struct_entry_node_set_integer_value;
+	interface->get_min = arv_gc_struct_entry_node_get_min;
+	interface->get_max = arv_gc_struct_entry_node_get_max;
 }

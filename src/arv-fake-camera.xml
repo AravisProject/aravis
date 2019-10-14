@@ -290,7 +290,13 @@
 		<Endianess>BigEndian</Endianess>
 	</IntReg>
 
-	<Converter Name="AcquisitionFrameRate" NameSpace="Standard">
+	<Float Name="AcquisitionFrameRate">
+	  <pValue>AcquisitionFrameRateConverter</pValue>
+	  <Min>0.1</Min>
+	  <Max>100.0</Max>
+	</Float>
+
+	<Converter Name="AcquisitionFrameRateConverter">
 		<Description>Frame rate, in frames per second.</Description>
 		<FormulaTo>(1000000 / FROM)</FormulaTo>
 		<FormulaFrom>(1000000 / TO)</FormulaFrom>

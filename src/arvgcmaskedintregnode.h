@@ -20,55 +20,25 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#ifndef ARV_GC_ENUMS_H
-#define ARV_GC_ENUMS_H
+#ifndef ARV_GC_MASKED_INT_REG_NODE_H
+#define ARV_GC_MASKED_INT_REG_NODE_H
 
 #if !defined (ARV_H_INSIDE) && !defined (ARAVIS_COMPILATION)
 #error "Only <arv.h> can be included directly."
 #endif
 
-#include <glib-object.h>
+#include <arvgcregisternode.h>
 
 G_BEGIN_DECLS
 
-typedef enum {
-	ARV_GC_NAME_SPACE_UNDEFINED = -1,
-	ARV_GC_NAME_SPACE_STANDARD,
-	ARV_GC_NAME_SPACE_CUSTOM
-} ArvGcNameSpace;
+#define ARV_TYPE_GC_MASKED_INT_REG_NODE             (arv_gc_masked_int_reg_node_get_type ())
+G_DECLARE_DERIVABLE_TYPE (ArvGcMaskedIntRegNode, arv_gc_masked_int_reg_node, ARV, GC_MASKED_INT_REG_NODE, ArvGcRegisterNode)
 
-typedef enum {
-	ARV_GC_ACCESS_MODE_UNDEFINED = -1,
-	ARV_GC_ACCESS_MODE_RO,
-	ARV_GC_ACCESS_MODE_WO,
-	ARV_GC_ACCESS_MODE_RW
-} ArvGcAccessMode;
+struct _ArvGcMaskedIntRegNodeClass {
+	ArvGcRegisterNodeClass parent_class;
+};
 
-typedef enum {
-	ARV_GC_CACHABLE_UNDEFINED = -1,
-	ARV_GC_CACHABLE_NO_CACHE,
-	ARV_GC_CACHABLE_WRITE_THROUGH,
-	ARV_GC_CACHABLE_WRITE_AROUND
-} ArvGcCachable;
-
-/**
- * ArvGcSign:
- * @ARV_GC_SIGNEDNESS_UNDEFINED: undefined sign
- * @ARV_GC_SIGNEDNESS_SIGNED: signed integer
- * @ARV_GC_SIGNEDNESS_UNSIGNED: unsigned integer
- */
-
-typedef enum {
-	ARV_GC_SIGNEDNESS_UNDEFINED = -1,
-	ARV_GC_SIGNEDNESS_SIGNED,
-	ARV_GC_SIGNEDNESS_UNSIGNED
-} ArvGcSignedness;
-
-typedef enum {
-	ARV_GC_IS_LINEAR_UNDEFINED = -1,
-	ARV_GC_IS_LINEAR_NO,
-	ARV_GC_IS_LINEAR_YES
-} ArvGcIsLinear;
+ArvGcNode *	arv_gc_masked_int_reg_node_new			(void);
 
 G_END_DECLS
 
