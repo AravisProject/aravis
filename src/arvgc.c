@@ -53,7 +53,8 @@
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
 #include <arvgcboolean.h>
-#include <arvgcswissknife.h>
+#include <arvgcswissknifenode.h>
+#include <arvgcintswissknifenode.h>
 #include <arvgcconverternode.h>
 #include <arvgcintconverternode.h>
 #include <arvgcport.h>
@@ -126,9 +127,9 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 	else if (strcmp (tag_name, "EnumEntry") == 0)
 		node = arv_gc_enum_entry_new ();
 	else if (strcmp (tag_name, "SwissKnife") == 0)
-		node = arv_gc_swiss_knife_new ();
+		node = arv_gc_swiss_knife_node_new ();
 	else if (strcmp (tag_name, "IntSwissKnife") == 0)
-		node = arv_gc_swiss_knife_new_integer ();
+		node = arv_gc_int_swiss_knife_node_new ();
 	else if (strcmp (tag_name, "Port") == 0)
 		node = arv_gc_port_new ();
 	else if (strcmp (tag_name, "pIndex") == 0)

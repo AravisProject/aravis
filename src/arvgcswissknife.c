@@ -34,25 +34,9 @@
 #include <arvdebug.h>
 #include <string.h>
 
-static void arv_gc_swiss_knife_integer_interface_init (ArvGcIntegerInterface *interface);
-static void arv_gc_swiss_knife_float_interface_init (ArvGcFloatInterface *interface);
-
-G_DEFINE_TYPE_WITH_CODE (ArvGcSwissKnife, arv_gc_swiss_knife, ARV_TYPE_GC_FEATURE_NODE,
-			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_swiss_knife_integer_interface_init)
-			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_FLOAT,   arv_gc_swiss_knife_float_interface_init))
+G_DEFINE_ABSTRACT_TYPE (ArvGcSwissKnife, arv_gc_swiss_knife, ARV_TYPE_GC_FEATURE_NODE)
 
 /* ArvDomNode implementation */
-
-static const char *
-arv_gc_swiss_knife_get_node_name (ArvDomNode *node)
-{
-	ArvGcSwissKnife *gc_swiss_knife = ARV_GC_SWISS_KNIFE (node);
-
-	if (gc_swiss_knife->value_type == G_TYPE_DOUBLE)
-		return "SwissKnife";
-
-	return "IntSwissKnife";
-}
 
 static void
 arv_gc_swiss_knife_post_new_child (ArvDomNode *self, ArvDomNode *child)
@@ -90,38 +74,6 @@ arv_gc_swiss_knife_pre_remove_child (ArvDomNode *self, ArvDomNode *child)
 
 /* ArvGcFeatureNode implementation */
 
-static GType
-arv_gc_swiss_knife_node_get_value_type (ArvGcFeatureNode *node)
-{
-	ArvGcSwissKnife *gc_swiss_knife = ARV_GC_SWISS_KNIFE (node);
-
-	return gc_swiss_knife->value_type;
-}
-
-/* ArvGcSwissKnife implementation */
-
-ArvGcNode *
-arv_gc_swiss_knife_new (void)
-{
-	ArvGcSwissKnife *swiss_knife;
-
-	swiss_knife = g_object_new (ARV_TYPE_GC_SWISS_KNIFE, NULL);
-	swiss_knife->value_type = G_TYPE_DOUBLE;
-
-	return ARV_GC_NODE (swiss_knife);
-}
-
-ArvGcNode *
-arv_gc_swiss_knife_new_integer (void)
-{
-	ArvGcSwissKnife *swiss_knife;
-
-	swiss_knife = g_object_new (ARV_TYPE_GC_SWISS_KNIFE, NULL);
-	swiss_knife->value_type = G_TYPE_INT64;
-
-	return ARV_GC_NODE (swiss_knife);
-}
-
 static void
 arv_gc_swiss_knife_init (ArvGcSwissKnife *gc_swiss_knife)
 {
@@ -147,13 +99,10 @@ arv_gc_swiss_knife_class_init (ArvGcSwissKnifeClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
-	ArvGcFeatureNodeClass *gc_feature_node_class = ARV_GC_FEATURE_NODE_CLASS (this_class);
 
 	object_class->finalize = arv_gc_swiss_knife_finalize;
-	dom_node_class->get_node_name = arv_gc_swiss_knife_get_node_name;
 	dom_node_class->post_new_child = arv_gc_swiss_knife_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_swiss_knife_pre_remove_child;
-	gc_feature_node_class->get_value_type = arv_gc_swiss_knife_node_get_value_type;
 }
 
 /* ArvGcInteger interface implementation */
@@ -243,58 +192,36 @@ _update_variables (ArvGcSwissKnife *gc_swiss_knife, GError **error)
 
 }
 
-static gint64
-arv_gc_swiss_knife_get_integer_value (ArvGcInteger *gc_integer, GError **error)
+gint64
+arv_gc_swiss_knife_get_integer_value (ArvGcSwissKnife *self, GError **error)
 {
-	ArvGcSwissKnife *gc_swiss_knife = ARV_GC_SWISS_KNIFE (gc_integer);
 	GError *local_error = NULL;
 
-	_update_variables (gc_swiss_knife, &local_error);
+	g_return_val_if_fail (ARV_IS_GC_SWISS_KNIFE (self), 0);
+
+	_update_variables (self, &local_error);
 
 	if (local_error != NULL) {
 		g_propagate_error (error, local_error);
 		return 0;
 	}
 
-	return arv_evaluator_evaluate_as_int64 (gc_swiss_knife->formula, NULL);
+	return arv_evaluator_evaluate_as_int64 (self->formula, NULL);
 }
 
-static void
-arv_gc_swiss_knife_set_integer_value (ArvGcInteger *gc_integer, gint64 value, GError **error)
+double
+arv_gc_swiss_knife_get_float_value (ArvGcSwissKnife *self, GError **error)
 {
-}
-
-static void
-arv_gc_swiss_knife_integer_interface_init (ArvGcIntegerInterface *interface)
-{
-	interface->get_value = arv_gc_swiss_knife_get_integer_value;
-	interface->set_value = arv_gc_swiss_knife_set_integer_value;
-}
-
-static double
-arv_gc_swiss_knife_get_float_value (ArvGcFloat *gc_float, GError **error)
-{
-	ArvGcSwissKnife *gc_swiss_knife = ARV_GC_SWISS_KNIFE (gc_float);
 	GError *local_error = NULL;
 
-	_update_variables (gc_swiss_knife, &local_error);
+	g_return_val_if_fail (ARV_IS_GC_SWISS_KNIFE (self), 0.0);
+
+	_update_variables (self, &local_error);
 
 	if (local_error != NULL) {
 		g_propagate_error (error, local_error);
 		return 0.0;
 	}
 
-	return arv_evaluator_evaluate_as_double (gc_swiss_knife->formula, NULL);
-}
-
-static void
-arv_gc_swiss_knife_set_float_value (ArvGcFloat *gc_float, double value, GError **error)
-{
-}
-
-static void
-arv_gc_swiss_knife_float_interface_init (ArvGcFloatInterface *interface)
-{
-	interface->get_value = arv_gc_swiss_knife_get_float_value;
-	interface->set_value = arv_gc_swiss_knife_set_float_value;
+	return arv_evaluator_evaluate_as_double (self->formula, NULL);
 }
