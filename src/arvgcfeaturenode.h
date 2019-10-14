@@ -51,8 +51,6 @@ struct _ArvGcFeatureNode {
 struct _ArvGcFeatureNodeClass {
 	ArvGcNodeClass parent_class;
 
-	GType		(*get_value_type)		(ArvGcFeatureNode *gc_feature_node);
-
 	void		(*set_value_from_string)	(ArvGcFeatureNode *gc_feature_node, const char *string, GError **error);
 	const char *	(*get_value_as_string)		(ArvGcFeatureNode *gc_feature_node, GError **error);
 };
@@ -71,8 +69,6 @@ gboolean		arv_gc_feature_node_is_locked			(ArvGcFeatureNode *gc_feature_node, GE
 void			arv_gc_feature_node_set_value_from_string	(ArvGcFeatureNode *gc_feature_node, const char *string,
 									 GError **error);
 const char *		arv_gc_feature_node_get_value_as_string		(ArvGcFeatureNode *gc_feature_node, GError **error);
-
-GType 			arv_gc_feature_node_get_value_type 		(ArvGcFeatureNode *gc_feature_node);
 
 G_END_DECLS
 

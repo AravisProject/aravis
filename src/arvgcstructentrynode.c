@@ -93,12 +93,6 @@ arv_gc_struct_entry_node_pre_remove_child (ArvDomNode *self, ArvDomNode *child)
 
 /* ArvGcFeatureNode implementation */
 
-static GType
-arv_gc_struct_entry_node_get_value_type (ArvGcFeatureNode *node)
-{
-	return G_TYPE_INT64;
-}
-
 static void
 arv_gc_struct_entry_node_set_value_from_string (ArvGcFeatureNode *node, const char *string, GError **error)
 {
@@ -165,7 +159,6 @@ arv_gc_struct_entry_node_class_init (ArvGcStructEntryNodeClass *this_class)
 	dom_node_class->get_node_name = arv_gc_struct_entry_node_get_node_name;
 	dom_node_class->post_new_child = arv_gc_struct_entry_node_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_struct_entry_node_pre_remove_child;
-	gc_feature_node_class->get_value_type = arv_gc_struct_entry_node_get_value_type;
 	gc_feature_node_class->set_value_from_string = arv_gc_struct_entry_node_set_value_from_string;
 	gc_feature_node_class->get_value_as_string = arv_gc_struct_entry_node_get_value_as_string;
 }

@@ -7,10 +7,10 @@
 
 typedef struct {
 	const char *name;
-	GType value_type;
+	GType type;
 } NodeTypes;
 
-NodeTypes node_value_types[] = {
+NodeTypes node_types[] = {
 	{"RWFloat",			G_TYPE_DOUBLE},
 	{"P_RWFloat_Min",		G_TYPE_DOUBLE},
 	{"P_RWFloat_Max",		G_TYPE_DOUBLE},
@@ -45,9 +45,22 @@ node_value_type_test (void)
 	genicam = arv_device_get_genicam (device);
 	g_assert (ARV_IS_GC (genicam));
 
-	for (i = 0; i < G_N_ELEMENTS (node_value_types); i++) {
-		node = arv_gc_get_node (genicam, node_value_types[i].name);
-		g_assert (arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node)) == node_value_types[i].value_type);
+	for (i = 0; i < G_N_ELEMENTS (node_types); i++) {
+		node = arv_gc_get_node (genicam, node_types[i].name);
+		switch (node_types[i].type) {
+			case G_TYPE_STRING:
+				g_assert (ARV_IS_GC_STRING (node));
+				break;
+			case G_TYPE_DOUBLE:
+				g_assert (ARV_IS_GC_FLOAT (node));
+				break;
+			case G_TYPE_INT64:
+				g_assert (ARV_IS_GC_INTEGER (node));
+				break;
+			case G_TYPE_BOOLEAN:
+				g_assert (ARV_IS_GC_BOOLEAN (node));
+				break;
+		}
 	}
 
 	g_object_unref (device);

@@ -141,14 +141,6 @@ arv_gc_register_node_pre_remove_child (ArvDomNode *self, ArvDomNode *child)
 	g_assert_not_reached ();
 }
 
-/* ArvGcFeatureNode implementation */
-
-static GType
-arv_gc_register_node_get_value_type (ArvGcFeatureNode *node)
-{
-	return G_TYPE_BYTE_ARRAY;
-}
-
 /* ArvGcRegisterNode implementation */
 
 static gint64
@@ -406,13 +398,11 @@ arv_gc_register_node_class_init (ArvGcRegisterNodeClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
-	ArvGcFeatureNodeClass *gc_feature_node_class = ARV_GC_FEATURE_NODE_CLASS (this_class);
 
 	object_class->finalize = arv_gc_register_node_finalize;
 	dom_node_class->get_node_name = arv_gc_register_node_get_node_name;
 	dom_node_class->post_new_child = arv_gc_register_node_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_register_node_pre_remove_child;
-	gc_feature_node_class->get_value_type = arv_gc_register_node_get_value_type;
 
 	this_class->default_cachable = ARV_GC_CACHABLE_WRITE_THROUGH;
 }

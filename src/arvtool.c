@@ -93,42 +93,34 @@ arv_tool_list_features (ArvGc *genicam, const char *feature, ArvToolListMode lis
 				gboolean is_selector;
 
 				if (list_mode == ARV_TOOL_LIST_MODE_VALUES) {
-					GType value_type;
 					const char *unit;
 
-					value_type = arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (node));
-
-					switch (value_type) {
-						case G_TYPE_INT64:
-							if (ARV_IS_GC_ENUMERATION (node)) {
-								value = g_strdup_printf ("'%s'",
-											 arv_gc_string_get_value (ARV_GC_STRING (node), &error));
-							} else {
-								unit = arv_gc_integer_get_unit (ARV_GC_INTEGER (node), NULL);
-
-								value = g_strdup_printf ("%" G_GINT64_FORMAT "%s%s",
-											 arv_gc_integer_get_value (ARV_GC_INTEGER (node), &error),
-											 unit != NULL ? " " : "",
-											 unit != NULL ? unit : "");
-							}
-							break;
-						case G_TYPE_DOUBLE:
-							unit = arv_gc_float_get_unit (ARV_GC_FLOAT (node), NULL);
-
-							value = g_strdup_printf ("%g%s%s",
-										 arv_gc_float_get_value (ARV_GC_FLOAT (node), &error),
-										 unit != NULL ? " " : "",
-										 unit != NULL ? unit : "");
-							break;
-						case G_TYPE_STRING:
+					if (ARV_IS_GC_STRING (node) ||
+					    ARV_IS_GC_ENUMERATION (node)) {
+						value = g_strdup_printf ("'%s'", arv_gc_string_get_value (ARV_GC_STRING (node), &error));
+					} else if (ARV_IS_GC_INTEGER (node)) {
+						if (ARV_IS_GC_ENUMERATION (node)) {
 							value = g_strdup_printf ("'%s'",
 										 arv_gc_string_get_value (ARV_GC_STRING (node), &error));
-							break;
-						case G_TYPE_BOOLEAN:
-							value = g_strdup_printf ("%s",
-										 arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node), &error) ?
-										 "true" : "false");
-							break;
+						} else {
+							unit = arv_gc_integer_get_unit (ARV_GC_INTEGER (node), NULL);
+
+							value = g_strdup_printf ("%" G_GINT64_FORMAT "%s%s",
+										 arv_gc_integer_get_value (ARV_GC_INTEGER (node), &error),
+										 unit != NULL ? " " : "",
+										 unit != NULL ? unit : "");
+						}
+					} else if (ARV_IS_GC_FLOAT (node)) {
+						unit = arv_gc_float_get_unit (ARV_GC_FLOAT (node), NULL);
+
+						value = g_strdup_printf ("%g%s%s",
+									 arv_gc_float_get_value (ARV_GC_FLOAT (node), &error),
+									 unit != NULL ? " " : "",
+									 unit != NULL ? unit : "");
+					} else if (ARV_IS_GC_BOOLEAN (node)) {
+						value = g_strdup_printf ("%s",
+									 arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node), &error) ?
+									 "true" : "false");
 					}
 				}
 
@@ -260,89 +252,75 @@ arv_tool_execute_command (int argc, char **argv, ArvDevice *device, ArvRegisterC
 					arv_gc_command_execute (ARV_GC_COMMAND (feature), NULL);
 					printf ("%s executed\n", tokens[0]);
 				} else {
-					GType value_type;
 					const char *unit;
 
 					if (tokens[1] != NULL)
 						arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (feature),
 											   tokens[1], NULL);
 
-					value_type = arv_gc_feature_node_get_value_type (ARV_GC_FEATURE_NODE (feature));
+					if (ARV_IS_GC_STRING (feature) ||
+					    ARV_IS_GC_ENUMERATION (feature)) {
+						printf ("%s = %s\n", tokens[0],
+							arv_gc_string_get_value (ARV_GC_STRING (feature), NULL));
+					} else if (ARV_IS_GC_INTEGER (feature)) {
+						gint64 max_int64, min_int64, inc_int64;
+						GString *string = g_string_new ("");
 
-					switch (value_type) {
-						case G_TYPE_INT64:
-							if (ARV_IS_GC_ENUMERATION (feature)) {
-								printf ("%s = %s\n", tokens[0],
-									arv_gc_string_get_value (ARV_GC_STRING (feature), NULL));
-							} else {
-								gint64 max_int64, min_int64, inc_int64;
-								GString *string = g_string_new ("");
+						min_int64 = arv_gc_integer_get_min (ARV_GC_INTEGER (feature), NULL);
+						max_int64 = arv_gc_integer_get_max (ARV_GC_INTEGER (feature), NULL);
+						inc_int64 = arv_gc_integer_get_inc (ARV_GC_INTEGER (feature), NULL);
+						unit = arv_gc_integer_get_unit (ARV_GC_INTEGER (feature), NULL);
 
-								min_int64 = arv_gc_integer_get_min (ARV_GC_INTEGER (feature), NULL);
-								max_int64 = arv_gc_integer_get_max (ARV_GC_INTEGER (feature), NULL);
-								inc_int64 = arv_gc_integer_get_inc (ARV_GC_INTEGER (feature), NULL);
-								unit = arv_gc_integer_get_unit (ARV_GC_INTEGER (feature), NULL);
+						g_string_append_printf (string, "%s = %" G_GINT64_FORMAT,
+									tokens[0],
+									arv_gc_integer_get_value (ARV_GC_INTEGER (feature),
+												  NULL));
 
-								g_string_append_printf (string, "%s = %" G_GINT64_FORMAT,
-											tokens[0],
-											arv_gc_integer_get_value (ARV_GC_INTEGER (feature),
-														  NULL));
+						if (unit != NULL)
+							g_string_append_printf (string, " %s", unit);
+						if (min_int64 != G_MININT64)
+							g_string_append_printf (string, " min:%" G_GINT64_FORMAT, min_int64);
+						if (max_int64 != G_MAXINT64)
+							g_string_append_printf (string, " max:%" G_GINT64_FORMAT, max_int64);
+						if (inc_int64 != 1)
+							g_string_append_printf (string, " inc:%" G_GINT64_FORMAT, inc_int64);
 
-								if (unit != NULL)
-									g_string_append_printf (string, " %s", unit);
-								if (min_int64 != G_MININT64)
-									g_string_append_printf (string, " min:%" G_GINT64_FORMAT, min_int64);
-								if (max_int64 != G_MAXINT64)
-									g_string_append_printf (string, " max:%" G_GINT64_FORMAT, max_int64);
-								if (inc_int64 != 1)
-									g_string_append_printf (string, " inc:%" G_GINT64_FORMAT, inc_int64);
+						printf ("%s\n", string->str);
+						g_string_free (string, TRUE);
+					} else if (ARV_IS_GC_FLOAT (feature)) {
+						double max_double, min_double, inc_double;
+						GString *string = g_string_new ("");
 
-								printf ("%s\n", string->str);
-								g_string_free (string, TRUE);
-							}
-							break;
-						case G_TYPE_DOUBLE:
-							{
-								double max_double, min_double, inc_double;
-								GString *string = g_string_new ("");
+						min_double = arv_gc_float_get_min (ARV_GC_FLOAT (feature), NULL);
+						max_double = arv_gc_float_get_max (ARV_GC_FLOAT (feature), NULL);
+						inc_double = arv_gc_float_get_inc (ARV_GC_FLOAT (feature), NULL);
+						unit = arv_gc_float_get_unit (ARV_GC_FLOAT (feature), NULL);
 
-								min_double = arv_gc_float_get_min (ARV_GC_FLOAT (feature), NULL);
-								max_double = arv_gc_float_get_max (ARV_GC_FLOAT (feature), NULL);
-								inc_double = arv_gc_float_get_inc (ARV_GC_FLOAT (feature), NULL);
-								unit = arv_gc_float_get_unit (ARV_GC_FLOAT (feature), NULL);
+						g_string_append_printf (string, "%s = %g",
+									tokens[0],
+									arv_gc_float_get_value (ARV_GC_FLOAT (feature),
+												NULL));
 
-								g_string_append_printf (string, "%s = %g",
-											tokens[0],
-											arv_gc_float_get_value (ARV_GC_FLOAT (feature),
-														NULL));
+						if (unit != NULL)
+							g_string_append_printf (string, " %s", unit);
+						if (min_double != -G_MAXDOUBLE)
+							g_string_append_printf (string, " min:%g", min_double);
+						if (max_double != G_MAXDOUBLE)
+							g_string_append_printf (string, " max:%g", max_double);
+						if (inc_double != 1)
+							g_string_append_printf (string, " inc:%g", inc_double);
 
-								if (unit != NULL)
-									g_string_append_printf (string, " %s", unit);
-								if (min_double != -G_MAXDOUBLE)
-									g_string_append_printf (string, " min:%g", min_double);
-								if (max_double != G_MAXDOUBLE)
-									g_string_append_printf (string, " max:%g", max_double);
-								if (inc_double != 1)
-									g_string_append_printf (string, " inc:%g", inc_double);
-
-								printf ("%s\n", string->str);
-								g_string_free (string, TRUE);
-							}
-							break;
-						case G_TYPE_STRING:
-							printf ("%s = %s\n", tokens[0],
-								arv_gc_string_get_value (ARV_GC_STRING (feature), NULL));
-							break;
-						case G_TYPE_BOOLEAN:
-							printf ("%s = %s\n", tokens[0],
-								arv_gc_boolean_get_value (ARV_GC_BOOLEAN (feature), NULL) ?
-								"true" : "false");
-							break;
-						default:
-							printf ("%s = %s\n", tokens[0],
-								arv_gc_feature_node_get_value_as_string
-								(ARV_GC_FEATURE_NODE (feature),
-								 NULL));
+						printf ("%s\n", string->str);
+						g_string_free (string, TRUE);
+					} else if (ARV_IS_GC_BOOLEAN (feature)) {
+						printf ("%s = %s\n", tokens[0],
+							arv_gc_boolean_get_value (ARV_GC_BOOLEAN (feature), NULL) ?
+							"true" : "false");
+					} else {
+						printf ("%s = %s\n", tokens[0],
+							arv_gc_feature_node_get_value_as_string
+							(ARV_GC_FEATURE_NODE (feature),
+							 NULL));
 					}
 				}
 			} else {

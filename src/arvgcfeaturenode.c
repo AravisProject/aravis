@@ -313,20 +313,6 @@ arv_gc_feature_node_is_locked (ArvGcFeatureNode *gc_feature_node, GError **error
 	return value;
 }
 
-GType
-arv_gc_feature_node_get_value_type (ArvGcFeatureNode *node)
-{
-	ArvGcFeatureNodeClass *node_class;
-
-	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (node), 0);
-
-	node_class = ARV_GC_FEATURE_NODE_GET_CLASS (node);
-	if (node_class->get_value_type != NULL)
-		return node_class->get_value_type (node);
-
-	return 0;
-}
-
 /**
  * arv_gc_feature_node_set_value_from_string:
  * @gc_feature_node: a #ArvGcFeatureNode
@@ -426,5 +412,4 @@ arv_gc_feature_node_class_init (ArvGcFeatureNodeClass *this_class)
 	dom_node_class->pre_remove_child = arv_gc_feature_node_pre_remove_child;
 	dom_element_class->set_attribute = arv_gc_feature_node_set_attribute;
 	dom_element_class->get_attribute = arv_gc_feature_node_get_attribute;
-	this_class->get_value_type = NULL;
 }

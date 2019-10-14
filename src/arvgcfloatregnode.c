@@ -78,12 +78,6 @@ arv_gc_float_reg_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 	}
 }
 
-static GType
-arv_gc_float_reg_node_get_value_type (ArvGcFeatureNode *node)
-{
-	return G_TYPE_DOUBLE;
-}
-
 static gdouble
 arv_gc_float_reg_node_get_float_value (ArvGcFloat *self, GError **error)
 {
@@ -173,7 +167,6 @@ arv_gc_float_reg_node_finalize (GObject *self)
 static void
 arv_gc_float_reg_node_class_init (ArvGcFloatRegNodeClass *this_class)
 {
-	ArvGcFeatureNodeClass *gc_feature_node_class = ARV_GC_FEATURE_NODE_CLASS (this_class);
 	ArvGcRegisterNodeClass *gc_register_node_class = ARV_GC_REGISTER_NODE_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
@@ -181,6 +174,5 @@ arv_gc_float_reg_node_class_init (ArvGcFloatRegNodeClass *this_class)
 	object_class->finalize = arv_gc_float_reg_node_finalize;
 	dom_node_class->get_node_name = arv_gc_float_reg_node_get_node_name;
 	dom_node_class->post_new_child = arv_gc_float_reg_node_post_new_child;
-	gc_feature_node_class->get_value_type = arv_gc_float_reg_node_get_value_type;
 	gc_register_node_class->default_cachable = ARV_GC_CACHABLE_WRITE_AROUND;
 }
