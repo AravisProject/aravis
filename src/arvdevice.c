@@ -201,7 +201,7 @@ arv_device_get_genicam (ArvDevice *device)
 /**
  * arv_device_get_genicam_xml:
  * @device: a #ArvDevice
- * @size: (out) (allow-none): placeholder for the returned data size (bytes) // BUG: (skip) seems ignored
+ * @size: (out) (allow-none): placeholder for the returned data size (bytes)
  *
  * Gets the Genicam XML data stored in the device memory.
  *
