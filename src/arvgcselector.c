@@ -38,9 +38,11 @@ G_DEFINE_INTERFACE (ArvGcSelector, arv_gc_selector, G_TYPE_OBJECT)
 
 /**
  * arv_gc_selector_is_selector:
- * @gc_selector: a #ArvGCSelector
+ * @gc_selector: a #ArvGcSelector
  *
- * Returns: %TRUE if this node is a selector, i.e. it has <pSelected> childs.
+ * Returns: %TRUE if this node is a selector, i.e. it has pSelected childs.
+ *
+ * Since: 0.8.0
  */
 
 gboolean
@@ -53,9 +55,11 @@ arv_gc_selector_is_selector (ArvGcSelector *gc_selector)
 
 /**
  * arv_gc_selector_get_selected_features:
- * @gc_selector: a #ArvGCSelector
+ * @gc_selector: a #ArvGcSelector
  *
  * Returns: (element-type ArvGcFeatureNode) (transfer none): a list of selected #ArvGcFeatureNode
+ *
+ * Since: 0.8.0
  */
 
 const GSList *

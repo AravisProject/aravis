@@ -433,6 +433,7 @@ ArvGcPortClass
 <FILE>arvchunkparser</FILE>
 <TITLE>ArvChunkParser</TITLE>
 ArvChunkParser
+ArvChunkParserError
 arv_chunk_parser_new
 arv_chunk_parser_get_float_value
 arv_chunk_parser_get_integer_value
@@ -520,15 +521,22 @@ arv_gc_property_node_new_unit
 arv_gc_property_node_new_p_value_default
 arv_gc_property_node_new_value_default
 arv_gc_property_node_new_value
+arv_gc_property_node_new_event_id
+arv_gc_property_node_new_p_selected
 arv_gc_property_node_get_name
 arv_gc_property_node_get_node_type
 arv_gc_property_node_get_linked_node
 arv_gc_property_node_get_double
-arv_gc_property_node_get_int64
-arv_gc_property_node_get_string
 arv_gc_property_node_set_double
+arv_gc_property_node_get_int64
 arv_gc_property_node_set_int64
+arv_gc_property_node_get_string
 arv_gc_property_node_set_string
+arv_gc_property_node_get_cachable
+arv_gc_property_node_get_endianess
+arv_gc_property_node_get_lsb
+arv_gc_property_node_get_msb
+arv_gc_property_node_get_sign
 <SUBSECTION Standard>
 arv_gc_property_node_get_type
 ARV_GC_PROPERTY_NODE
@@ -596,7 +604,6 @@ ARV_TYPE_GC_INVALIDATOR_NODE
 <FILE>arvgcfeaturenode</FILE>
 <TITLE>ArvGcFeatureNode</TITLE>
 ArvGcFeatureNode
-arv_gc_feature_node_get_value_type
 arv_gc_feature_node_get_value_as_string
 arv_gc_feature_node_set_value_from_string
 arv_gc_feature_node_get_name
@@ -1079,13 +1086,18 @@ ArvGcFloatInterface
 <SECTION>
 <FILE>arvgcswissknife</FILE>
 <TITLE>ArvGcSwissKnife</TITLE>
-ArvGcSwissKnife
-arv_gc_swiss_knife_new
-arv_gc_swiss_knife_new_integer
+ArvGcSwissKnifeNode
+ArvGcIntSwissKnifeNode
+arv_gc_swiss_knife_node_new
+arv_gc_int_swiss_knife_node_new
 <SUBSECTION Standard>
+ArvGcSwissKnifeNodeClass
+ArvGcIntSwissKnifeNodeClass
 ARV_GC_SWISS_KNIFE
 ARV_IS_GC_SWISS_KNIFE
 ARV_TYPE_GC_SWISS_KNIFE
+ARV_TYPE_GC_SWISS_KNIFE_NODE
+ARV_TYPE_GC_INT_SWISS_KNIFE_NODE
 arv_gc_swiss_knife_get_type
 ARV_GC_SWISS_KNIFE_CLASS
 ARV_IS_GC_SWISS_KNIFE_CLASS
@@ -1182,20 +1194,26 @@ arv_gc_struct_entry_node_get_type
 <SECTION>
 <FILE>arvgcregisternode</FILE>
 <TITLE>ArvGcRegisterNode</TITLE>
-ArvGcSign
 ArvGcRegisterNode
-ArvGcRegisterNodeType
+ArvGcIntRegNode
+ArvGcMaskedIntRegNode
+ArvGcFloatRegNode
+ArvGcStringRegNode
+ArvGcStructRegNode
 arv_gc_register_node_new
-arv_gc_register_node_new_integer
-arv_gc_register_node_new_masked_integer
-arv_gc_register_node_new_float
-arv_gc_register_node_new_string
-arv_gc_register_node_new_struct_register
-arv_gc_register_node_get_masked_integer_value
-arv_gc_register_node_set_masked_integer_value
+arv_gc_int_reg_node_new
+arv_gc_masked_int_reg_node_new
+arv_gc_float_reg_node_new
+arv_gc_string_reg_node_new
+arv_gc_struct_reg_node_new
 <SUBSECTION Standard>
 ARV_GC_REGISTER_NODE
 ARV_IS_GC_REGISTER_NODE
+ARV_TYPE_GC_FLOAT_REG_NODE
+ARV_TYPE_GC_INT_REG_NODE
+ARV_TYPE_GC_MASKED_INT_REG_NODE
+ARV_TYPE_GC_STRING_REG_NODE
+ARV_TYPE_GC_STRUCT_REG_NODE
 ARV_TYPE_GC_REGISTER_NODE
 arv_gc_register_node_get_type
 ARV_GC_REGISTER_NODE_CLASS
@@ -1203,6 +1221,11 @@ ARV_IS_GC_REGISTER_NODE_CLASS
 ARV_GC_REGISTER_NODE_GET_CLASS
 <SUBSECTION Private>
 ArvGcRegisterNodeClass
+ArvGcFloatRegNodeClass
+ArvGcIntRegNodeClass
+ArvGcStringRegNodeClass
+ArvGcStructRegNodeClass
+ArvGcMaskedIntRegNodeClass
 </SECTION>
 
 <SECTION>
@@ -1278,6 +1301,22 @@ ARV_IS_GC_COMMAND_CLASS
 ARV_GC_COMMAND_GET_CLASS
 <SUBSECTION Private>
 ArvGcCommandClass
+</SECTION>
+
+<SECTION>
+<FILE>arvgcselector</FILE>
+<TITLE>ArvGcSelector</TITLE>
+ArvGcSelector
+arv_gc_selector_get_selected_features
+arv_gc_selector_is_selector
+<SUBSECTION Standard>
+ArvGcSelectorInterface
+arv_gc_selector_get_type
+ARV_GC_SELECTOR
+ARV_TYPE_GC_SELECTOR
+ARV_GC_SELECTOR_GET_INTERFACE
+ARV_IS_GC_SELECTOR
+<SUBSECTION Private>
 </SECTION>
 
 <SECTION>

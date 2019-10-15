@@ -190,6 +190,14 @@ arv_gc_int_reg_node_get_unit (ArvGcInteger *self, GError **error)
 	return arv_gc_property_node_get_string (priv->unit, error);
 }
 
+/**
+ * arv_gc_int_reg_node_new:
+ *
+ * Returns: a new IntReg node
+ *
+ * Since:0.8.0
+ */
+
 ArvGcNode *
 arv_gc_int_reg_node_new	(void)
 {

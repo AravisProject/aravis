@@ -32,6 +32,14 @@ arv_gc_struct_reg_node_get_node_name (ArvDomNode *node)
 	return "StructReg";
 }
 
+/**
+ * arv_gc_struct_reg_node_new:
+ *
+ * Returns: (transfer full): a new StructReg #ArvGcNode
+ *
+ * Since:0.8.0
+ */
+
 ArvGcNode *
 arv_gc_struct_reg_node_new	(void)
 {

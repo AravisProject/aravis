@@ -78,6 +78,14 @@ arv_gc_string_reg_node_get_max_string_length (ArvGcString *self, GError **error)
 	return arv_gc_register_get_length (ARV_GC_REGISTER (self), error);
 }
 
+/**
+ * arv_gc_string_reg_node_new:
+ *
+ * Returns: a new StringReg node
+ *
+ * Since:0.8.0
+ */
+
 ArvGcNode *
 arv_gc_string_reg_node_new	(void)
 {

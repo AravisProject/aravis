@@ -34,12 +34,13 @@ G_BEGIN_DECLS
 
 /**
  * ArvChunkParserError:
- * @ARV_CHUNK_PARSER_ERROR_INVALID_CHUNK_TYPE: invalid chunk type
+ * @ARV_CHUNK_PARSER_ERROR_INVALID_FEATURE_TYPE: invalid feature type
+ * @ARV_CHUNK_PARSER_ERROR_BUFFER_NOT_FOUND: a buffer is not attached to the chunk parser
+ * @ARV_CHUNK_PARSER_ERROR_CHUNK_NOT_FOUND: the requested chunk is not found in the buffer data
  */
 
 typedef enum {
 	ARV_CHUNK_PARSER_ERROR_INVALID_FEATURE_TYPE,
-	ARV_CHUNK_PARSER_ERROR_INVALID_FEATURE_NAME,
 	ARV_CHUNK_PARSER_ERROR_BUFFER_NOT_FOUND,
 	ARV_CHUNK_PARSER_ERROR_CHUNK_NOT_FOUND
 } ArvChunkParserError;
