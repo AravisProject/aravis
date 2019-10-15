@@ -50,6 +50,7 @@
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
 #include <arvgcstring.h>
+#include <arvgcboolean.h>
 #include <arvdebug.h>
 
 enum {
@@ -69,15 +70,52 @@ struct _ArvChunkParserPrivate {
 };
 
 /**
+ * arv_chunk_parser_get_boolean_value:
+ * @parser: a #ArvChunkParser
+ * @buffer: a #ArvBuffer with a #ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA payload
+ * @chunk: chunk data name
+ * @error: a #GError placeholder
+ *
+ * Returns: the boolean chunk data value.
+ */
+
+gboolean
+arv_chunk_parser_get_boolean_value (ArvChunkParser *parser, ArvBuffer *buffer, const char *chunk, GError **error)
+{
+	ArvGcNode *node;
+	gboolean value = FALSE;
+
+	g_return_val_if_fail (ARV_IS_CHUNK_PARSER (parser), 0.0);
+	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0.0);
+
+	node = arv_gc_get_node (parser->priv->genicam, chunk);
+	arv_gc_set_buffer (parser->priv->genicam, buffer);
+
+	if (ARV_IS_GC_BOOLEAN (node)) {
+		GError *local_error = NULL;
+
+		value = arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node), &local_error);
+
+		if (local_error != NULL) {
+			arv_warning_chunk ("%s", local_error->message);
+			g_propagate_error (error, local_error);
+		}
+	} else {
+		g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_INVALID_FEATURE_TYPE,
+			     "Node '%s' is not a boolean", chunk);
+	}
+
+	return value;
+}
+
+/**
  * arv_chunk_parser_get_string_value:
  * @parser: a #ArvChunkParser
  * @buffer: a #ArvBuffer with a #ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA payload
  * @chunk: chunk data name
  * @error: a #GError placeholder
  *
- * Gets the value of chunk data as a string.
- *
- * Returns: the chunk data string value.
+ * Returns: the string chunk data value.
  */
 
 const char *
@@ -116,9 +154,7 @@ arv_chunk_parser_get_string_value (ArvChunkParser *parser, ArvBuffer *buffer, co
  * @chunk: chunk data name
  * @error: a #GError placeholder
  *
- * Gets the value of chunk data as an integer.
- *
- * Returns: the chunk data integer value.
+ * Returns: the integer chunk data integer.
  */
 
 gint64
@@ -157,9 +193,7 @@ arv_chunk_parser_get_integer_value (ArvChunkParser *parser, ArvBuffer *buffer, c
  * @chunk: chunk data name
  * @error: a #GError placeholder
  *
- * Gets the value of chunk data as a float.
- *
- * Returns: the chunk data float value.
+ * Returns: the float chunk data value.
  */
 
 double

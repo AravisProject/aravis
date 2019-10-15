@@ -68,6 +68,8 @@ struct _ArvChunkParserClass {
 GType arv_chunk_parser_get_type (void);
 
 ArvChunkParser *	arv_chunk_parser_new 			(const char *xml, gsize size);
+gboolean		arv_chunk_parser_get_boolean_value	(ArvChunkParser *parser, ArvBuffer *buffer,
+								 const char *chunk, GError **error);
 const char *		arv_chunk_parser_get_string_value	(ArvChunkParser *parser, ArvBuffer *buffer,
 								 const char *chunk, GError **error);
 gint64			arv_chunk_parser_get_integer_value	(ArvChunkParser *parser, ArvBuffer *buffer,

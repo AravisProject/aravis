@@ -631,11 +631,12 @@ create_buffer_with_chunk_data (void)
 	char *data;
 	size_t size;
 	guint32 *int_value;
+	guint8 *boolean_value;
 	guint offset;
 	double float_value;
 	int i;
 
-	size = 64 + 8 + 64 + 8 + 4 * sizeof (ArvChunkInfos);
+	size = 64 + 8 + 64 + 8 + 1 + 5 * sizeof (ArvChunkInfos);
 
 	buffer = arv_buffer_new (size, NULL);
 	buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA;
@@ -670,10 +671,18 @@ create_buffer_with_chunk_data (void)
 
 	offset -= 8 + sizeof (ArvChunkInfos);
 	chunk_infos = (ArvChunkInfos *) &data[offset];
+	chunk_infos->id = GUINT32_TO_BE (0x12345680);
+	chunk_infos->size = GUINT32_TO_BE (1);
+
+	boolean_value = (guint8 *) &data[offset - 1];
+	*boolean_value = 0x1;
+
+	offset -= 1 + sizeof (ArvChunkInfos);
+	chunk_infos = (ArvChunkInfos *) &data[offset];
 	chunk_infos->id = GUINT32_TO_BE (0x44444444);
 	chunk_infos->size = GUINT32_TO_BE (64);
 
-	g_assert (offset == 64);
+	g_assert_cmpint (offset, ==, 64);
 
 #if 0
 	{
@@ -698,6 +707,7 @@ chunk_data_test (void)
 	GError *error = NULL;
 	guint32 int_value;
 	double float_value;
+	gboolean boolean_value;
 	const char *chunk_data;
 	const char *data;
 	const char *string_value;
@@ -721,17 +731,17 @@ chunk_data_test (void)
 	chunk_data = arv_buffer_get_chunk_data (buffer, 0x12345678, &chunk_data_size);
 	g_assert (chunk_data != NULL);
 	g_assert_cmpint (chunk_data_size, ==, 8);
-	g_assert_cmpint (chunk_data - data, ==, 64 + 64 + 8 + 3 * sizeof (ArvChunkInfos));
+	g_assert_cmpint (chunk_data - data, ==, 1 + 64 + 64 + 8 + 4 * sizeof (ArvChunkInfos));
 
 	chunk_data = arv_buffer_get_chunk_data (buffer, 0x12345679, &chunk_data_size);
 	g_assert (chunk_data != NULL);
 	g_assert_cmpint (chunk_data_size, ==, 8);
-	g_assert_cmpint (chunk_data - data, ==, 64 + sizeof (ArvChunkInfos));
+	g_assert_cmpint (chunk_data - data, ==, 1 + 64 + 2 * sizeof (ArvChunkInfos));
 
 	chunk_data = arv_buffer_get_chunk_data (buffer, 0x87654321, &chunk_data_size);
 	g_assert (chunk_data != NULL);
 	g_assert_cmpint (chunk_data_size, ==, 64);
-	g_assert_cmpint (chunk_data - data, ==, 64 + 8 + 2 * sizeof (ArvChunkInfos));
+	g_assert_cmpint (chunk_data - data, ==, 1 + 64 + 8 + 3 * sizeof (ArvChunkInfos));
 
 	chunk_data = arv_buffer_get_chunk_data (buffer, 0x01020304, &chunk_data_size);
 	g_assert (chunk_data == NULL);
@@ -747,6 +757,10 @@ chunk_data_test (void)
 
 	string_value = arv_chunk_parser_get_string_value (parser, buffer, "ChunkString", &error);
 	g_assert_cmpstr (string_value, ==, "Hello");
+	g_assert (error == NULL);
+
+	boolean_value = arv_chunk_parser_get_boolean_value (parser, buffer, "ChunkBoolean", &error);
+	g_assert (boolean_value);
 	g_assert (error == NULL);
 
 	arv_chunk_parser_get_integer_value (parser, buffer, "Dummy", &error);

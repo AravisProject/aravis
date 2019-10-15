@@ -25,6 +25,7 @@
     <pFeature>ChunkInt</pFeature>
     <pFeature>ChunkString</pFeature>
     <pFeature>ChunkFloat</pFeature>
+    <pFeature>ChunkBoolean</pFeature>
   </Category>
 
   <Float Name="RWFloat">
@@ -266,6 +267,26 @@
 
   <Port Name="StringPort">
     <ChunkID>87654321</ChunkID>
+  </Port>
+
+  <Boolean Name="ChunkBoolean">
+    <pValue>ChunkBooleanReg</pValue>
+    <OnValue>1</OnValue>
+    <OffValue>0</OffValue>
+  </Boolean>
+
+  <IntReg Name="ChunkBooleanReg">
+    <Address>0x00</Address>
+    <Length>1</Length>
+    <AccessMode>R</AccessMode>
+    <pPort>BooleanPort</pPort>
+    <Cachable>NoCache</Cachable>
+    <Sign>Unsigned</Sign>
+    <Endianess>BigEndian</Endianess>
+  </IntReg>
+
+  <Port Name="BooleanPort">
+    <ChunkID>12345680</ChunkID>
   </Port>
 
   <Converter Name="Converter">
