@@ -731,6 +731,20 @@ arv_device_get_available_enumeration_feature_values_as_display_names (ArvDevice 
 
 	return NULL;
 }
+
+/**
+ * arv_device_set_register_cache_policy:
+ * @device: a #ArvDevice
+ * @policy: cache policy
+ *
+ * Sets the register cache policy.
+ *
+ * <warning><para>Be aware that some camera may have wrong Cachable properties defined in their Genicam metadata, which may
+ * lead to incorrect readouts. Using the debug cache policy, and activating genicam debug output (export ARV_DEBUG=genicam), can help you to
+ * check the cache validity. In this mode, every time the cache content is not in sync with the actual register value, a debug message is
+ * printed on the console.</para></warning>
+ */
+
 void
 arv_device_set_register_cache_policy (ArvDevice *device, ArvRegisterCachePolicy policy)
 {
