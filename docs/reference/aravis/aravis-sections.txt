@@ -437,6 +437,7 @@ ArvChunkParserError
 arv_chunk_parser_new
 arv_chunk_parser_get_float_value
 arv_chunk_parser_get_integer_value
+arv_chunk_parser_get_boolean_value
 arv_chunk_parser_get_string_value
 <SUBSECTION Standard>
 arv_chunk_parser_get_type
