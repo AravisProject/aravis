@@ -418,7 +418,7 @@ arv_open_device (const char *device_id)
  *
  * Frees a number of ressources allocated by Aravis that would be otherwise
  * reported as memory leak by tools like Valgrind. The call to this function is
- * optional if you don't intend to check for memmory leaks.
+ * optional if you don't intend to check for memory leaks.
  */
 
 void
