@@ -57,6 +57,8 @@ arv_gc_string_reg_node_get_string_value (ArvGcString *self, GError **error)
 			if (local_error == NULL)
 				priv->string[length] = '\0';
 		}
+	} else {
+		g_clear_pointer (&priv->string, g_free);
 	}
 
 	if (local_error != NULL)
