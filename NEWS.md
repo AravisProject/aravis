@@ -1,3 +1,18 @@
+Unstable release 0.7.2
+======================
+
+  * gigevision: support for ImageExtendedChunkPayload (Nathan)
+  * chunkparser: add a GError parameter to the getters (Emmanuel)
+  * chunkparser: add a boolean accessor (Emmanuel)
+  * arvtool: new `values` command that show the values of all available features (Emmanuel)
+  * gcport: don't try to read a register when the port is an event (Emmanuel)
+  * genicam: pSelect support (Emmanuel)
+  * genicam: remove value_type property, replaced by ARV_IS_GC_(FLOAT|INTEGER`BOOLEAN|STRING|ENUMERATION) (Emmanuel)
+  * genicam: simplify read/write feature values as/from string (Emmanuel)
+  * genicam: fix min/max of non 64 bit integers
+  * genicam: Float and Integer now get their min/max also from pValue (Emmanuel)
+  * gigevision: correctly detect access denied errors
+
 Unstable release 0.7.1
 ======================
 
