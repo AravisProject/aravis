@@ -218,7 +218,7 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 								  ARV_GV_DEVICE_BUFFER_SIZE, NULL, &local_error);
 				else
 					count = 0;
-				success = success && (count >= ack_size);
+				success = success && (count >= sizeof (ArvGvcpHeader));
 
 				if (success) {
 					ArvGvcpPacketType packet_type;
@@ -231,7 +231,8 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 					command = arv_gvcp_packet_get_command (ack_packet);
 					packet_id = arv_gvcp_packet_get_packet_id (ack_packet);
 
-					if (command == ARV_GVCP_COMMAND_PENDING_ACK) {
+					if (command == ARV_GVCP_COMMAND_PENDING_ACK &&
+					    count >= arv_gvcp_packet_get_pending_ack_size ()) {
 						gint64 pending_ack_timeout_ms = arv_gvcp_packet_get_pending_ack_timeout (ack_packet);
 						pending_ack = TRUE;
 						expected_answer = FALSE;
@@ -251,7 +252,8 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 					} else  {
 						expected_answer = packet_type == ARV_GVCP_PACKET_TYPE_ACK &&
 							command == ack_command &&
-							packet_id == io_data->packet_id;
+							packet_id == io_data->packet_id &&
+							count >= ack_size;
 						if (!expected_answer) {
 							arv_debug_device ("[GvDevice::%s] Unexpected answer (0x%04x)", operation,
 									  packet_type);
@@ -262,6 +264,8 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 					if (local_error != NULL)
 						arv_warning_device ("[GvDevice::%s] Ack reception error: %s", operation,
 								    local_error->message);
+					else
+						arv_warning_device ("[GvDevice::%s] Ack reception timeout", operation);
 					g_clear_error (&local_error);
 				}
 			} while (pending_ack || (!expected_answer && timeout_ms > 0));

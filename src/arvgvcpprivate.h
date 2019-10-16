@@ -543,6 +543,12 @@ arv_gvcp_next_packet_id (guint16 packet_id)
 	return packet_id + 1;
 }
 
+static inline size_t
+arv_gvcp_packet_get_pending_ack_size (void)
+{
+	return sizeof (ArvGvcpHeader) + sizeof (guint32);
+}
+
 /**
  * arv_gvcp_packet_get_pending_ack_timeout:
  * @packet: a #ArvGvcpPacket
