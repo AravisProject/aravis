@@ -461,7 +461,7 @@ arv_gc_property_node_get_node_type (ArvGcPropertyNode *node)
  * arv_gc_property_node_get_linked_node:
  * @node: a #ArvGcPropertyNode
  *
- * Returns: (transfer none): the #ArvGcNode which @node points to.
+ * Returns: (transfer none): the #ArvGcNode which @node points to, %NULL if the property is not a pointer.
  */
 
 ArvGcNode *
@@ -470,7 +470,9 @@ arv_gc_property_node_get_linked_node (ArvGcPropertyNode *node)
 	ArvGc *genicam;
 
 	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (node), NULL);
-	g_return_val_if_fail (node->type > ARV_GC_PROPERTY_NODE_TYPE_P_UNKNONW, NULL);
+
+	if (node->type <= ARV_GC_PROPERTY_NODE_TYPE_P_UNKNONW)
+		return NULL;
 
 	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (node));
 	return arv_gc_get_node (genicam, _get_value_data (node));
