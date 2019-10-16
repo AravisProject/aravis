@@ -54,6 +54,7 @@
 
 #include <arvfeatures.h>
 
+#include <arvgc.h>
 #include <arvgcboolean.h>
 #include <arvgccategory.h>
 #include <arvgccommand.h>
@@ -65,23 +66,29 @@
 #include <arvgcfeaturenode.h>
 #include <arvgcfloat.h>
 #include <arvgcfloatnode.h>
+#include <arvgcfloatregnode.h>
 #include <arvgcgroupnode.h>
-#include <arvgc.h>
 #include <arvgcindexnode.h>
 #include <arvgcintconverternode.h>
 #include <arvgcinteger.h>
 #include <arvgcintegernode.h>
+#include <arvgcintregnode.h>
+#include <arvgcintswissknifenode.h>
 #include <arvgcinvalidatornode.h>
 #include <arvgcnode.h>
+#include <arvgcmaskedintregnode.h>
 #include <arvgcport.h>
 #include <arvgcpropertynode.h>
 #include <arvgcregisterdescriptionnode.h>
 #include <arvgcregister.h>
 #include <arvgcregisternode.h>
-#include <arvgcstring.h>
 #include <arvgcselector.h>
+#include <arvgcstring.h>
+#include <arvgcstringregnode.h>
+#include <arvgcstructregnode.h>
 #include <arvgcstructentrynode.h>
 #include <arvgcswissknife.h>
+#include <arvgcswissknifenode.h>
 #include <arvgcvalueindexednode.h>
 
 #include <arvgvdevice.h>
