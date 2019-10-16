@@ -419,8 +419,18 @@ arv_gc_register_node_get (ArvGcRegister *gc_register, void *buffer, guint64 leng
 	gint64 cache_length;
 
 	cache = _get_cache (gc_register_node, &address, &cache_length, &local_error);
-	if (local_error == NULL)
-		_read_from_port (gc_register_node, address, cache_length, cache, _get_cachable (gc_register_node), &local_error);
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return;
+	}
+
+	if (length < cache_length) {
+		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_INVALID_LENGTH,
+			     "Register get failed due to data not fitting into buffer");
+		return;
+	}
+
+	_read_from_port (gc_register_node, address, cache_length, cache, _get_cachable (gc_register_node), &local_error);
 	if (local_error != NULL) {
 		g_propagate_error (error, local_error);
 		return;
@@ -447,6 +457,12 @@ arv_gc_register_node_set (ArvGcRegister *gc_register, const void *buffer, guint6
 	cache = _get_cache (gc_register_node, &address, &cache_length, &local_error);
 	if (local_error != NULL) {
 		g_propagate_error (error, local_error);
+		return;
+	}
+
+	if (cache_length < length) {
+		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_INVALID_LENGTH,
+			     "Register set failed due to data not fitting into register");
 		return;
 	}
 
