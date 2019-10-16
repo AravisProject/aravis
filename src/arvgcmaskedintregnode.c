@@ -25,6 +25,9 @@
 #include <arvgcinteger.h>
 #include <arvgcselector.h>
 
+#define ARV_GC_MASKED_INT_REG_NODE_DEFAULT_SIGNEDNESS ARV_GC_SIGNEDNESS_UNSIGNED
+#define ARV_GC_MASKED_INT_REG_NODE_DEFAULT_ENDIANESS G_LITTLE_ENDIAN
+
 typedef struct {
 	ArvGcPropertyNode *lsb;
 	ArvGcPropertyNode *msb;
@@ -99,13 +102,14 @@ arv_gc_masked_int_reg_node_get_integer_value (ArvGcInteger *self, GError **error
 {
 	ArvGcMaskedIntRegNodePrivate *priv = arv_gc_masked_int_reg_node_get_instance_private (ARV_GC_MASKED_INT_REG_NODE (self));
 
-	return arv_gc_register_node_get_masked_integer_value (ARV_GC_REGISTER_NODE (self),
-							      arv_gc_property_node_get_lsb (priv->lsb, 0),
-							      arv_gc_property_node_get_msb (priv->msb, 31),
-							      arv_gc_property_node_get_sign (priv->sign, ARV_GC_SIGNEDNESS_UNSIGNED),
-							      arv_gc_property_node_get_endianess (priv->endianess, G_LITTLE_ENDIAN),
-							      ARV_GC_CACHABLE_UNDEFINED,
-							      TRUE, error);
+	return arv_gc_register_node_get_masked_integer_value
+		(ARV_GC_REGISTER_NODE (self),
+		 arv_gc_property_node_get_lsb (priv->lsb, 0),
+		 arv_gc_property_node_get_msb (priv->msb, 31),
+		 arv_gc_property_node_get_sign (priv->sign, ARV_GC_MASKED_INT_REG_NODE_DEFAULT_SIGNEDNESS),
+		 arv_gc_property_node_get_endianess (priv->endianess, ARV_GC_MASKED_INT_REG_NODE_DEFAULT_ENDIANESS),
+		 ARV_GC_CACHABLE_UNDEFINED,
+		 TRUE, error);
 }
 
 static void
@@ -113,13 +117,14 @@ arv_gc_masked_int_reg_node_set_integer_value (ArvGcInteger *self, gint64 value, 
 {
 	ArvGcMaskedIntRegNodePrivate *priv = arv_gc_masked_int_reg_node_get_instance_private (ARV_GC_MASKED_INT_REG_NODE (self));
 
-	arv_gc_register_node_set_masked_integer_value (ARV_GC_REGISTER_NODE (self),
-						       arv_gc_property_node_get_lsb (priv->lsb, 0),
-						       arv_gc_property_node_get_msb (priv->msb, 31),
-						       arv_gc_property_node_get_sign (priv->sign, ARV_GC_SIGNEDNESS_UNSIGNED),
-						       arv_gc_property_node_get_endianess (priv->endianess, G_LITTLE_ENDIAN),
-						       ARV_GC_CACHABLE_UNDEFINED,
-						       TRUE, value, error);
+	arv_gc_register_node_set_masked_integer_value
+		(ARV_GC_REGISTER_NODE (self),
+		 arv_gc_property_node_get_lsb (priv->lsb, 0),
+		 arv_gc_property_node_get_msb (priv->msb, 31),
+		 arv_gc_property_node_get_sign (priv->sign, ARV_GC_MASKED_INT_REG_NODE_DEFAULT_SIGNEDNESS),
+		 arv_gc_property_node_get_endianess (priv->endianess, ARV_GC_MASKED_INT_REG_NODE_DEFAULT_ENDIANESS),
+		 ARV_GC_CACHABLE_UNDEFINED,
+		 TRUE, value, error);
 }
 
 static gint64
@@ -128,15 +133,17 @@ arv_gc_masked_int_reg_node_get_min (ArvGcInteger *self, GError **error)
 	ArvGcMaskedIntRegNodePrivate *priv = arv_gc_masked_int_reg_node_get_instance_private (ARV_GC_MASKED_INT_REG_NODE (self));
 	gint64 lsb, msb;
 	ArvGcSignedness signedness;
+	guint endianess;
 
 	lsb = arv_gc_property_node_get_lsb (priv->lsb, 0);
 	msb = arv_gc_property_node_get_msb (priv->msb, 31);
-	signedness = arv_gc_property_node_get_sign (priv->sign, ARV_GC_SIGNEDNESS_UNSIGNED);
-
-	/* TODO endianess */
+	signedness = arv_gc_property_node_get_sign (priv->sign, ARV_GC_MASKED_INT_REG_NODE_DEFAULT_SIGNEDNESS);
+	endianess =arv_gc_property_node_get_endianess (priv->endianess, ARV_GC_MASKED_INT_REG_NODE_DEFAULT_ENDIANESS);
 
 	if (signedness == ARV_GC_SIGNEDNESS_SIGNED) {
-		return -((1 << (msb - lsb  - 1)));
+		return endianess == G_BIG_ENDIAN ?
+			-((1 << (lsb - msb))) :
+			-((1 << (msb - lsb)));
 	} else {
 		return 0;
 	}
@@ -148,17 +155,21 @@ arv_gc_masked_int_reg_node_get_max (ArvGcInteger *self, GError **error)
 	ArvGcMaskedIntRegNodePrivate *priv = arv_gc_masked_int_reg_node_get_instance_private (ARV_GC_MASKED_INT_REG_NODE (self));
 	gint64 lsb, msb;
 	ArvGcSignedness signedness;
+	guint endianess;
 
 	lsb = arv_gc_property_node_get_lsb (priv->lsb, 0);
 	msb = arv_gc_property_node_get_msb (priv->msb, 31);
-	signedness = arv_gc_property_node_get_sign (priv->sign, ARV_GC_SIGNEDNESS_UNSIGNED);
-
-	/* TODO endianess */
+	signedness = arv_gc_property_node_get_sign (priv->sign, ARV_GC_MASKED_INT_REG_NODE_DEFAULT_SIGNEDNESS);
+	endianess =arv_gc_property_node_get_endianess (priv->endianess, ARV_GC_MASKED_INT_REG_NODE_DEFAULT_ENDIANESS);
 
 	if (signedness == ARV_GC_SIGNEDNESS_SIGNED) {
-		return ((1 << (msb - lsb  - 1)) - 1);
+		return endianess == G_BIG_ENDIAN ?
+			((1 << (lsb - msb)) - 1) :
+			((1 << (msb - lsb)) - 1);
 	} else {
-		return (1 << (msb - lsb)) - 1;
+		return endianess == G_BIG_ENDIAN ?
+			(1 << (lsb - msb + 1)) - 1 :
+			(1 << (msb - lsb + 1)) - 1;
 	}
 }
 
