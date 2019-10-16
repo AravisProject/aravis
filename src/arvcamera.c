@@ -847,7 +847,7 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
 			arv_camera_set_string (camera, "TriggerMode", "Off");
 			arv_camera_set_string (camera, "TriggerSelector", "FrameStart");
 			arv_camera_set_string (camera, "TriggerMode", "Off");
-			arv_camera_set_integer (camera, "AcquisitionFrameRateEnable", 1);
+			arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", TRUE);
 			arv_camera_set_float (camera,
 					      camera->priv->has_acquisition_frame_rate ?
 					      "AcquisitionFrameRate":
@@ -891,7 +891,7 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
 			if (camera->priv->has_acquisition_frame_rate_enabled)
 				arv_camera_set_integer (camera, "AcquisitionFrameRateEnabled", 1);
 			else
-				arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", 1);
+				arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", TRUE);
 			arv_camera_set_string (camera, "AcquisitionFrameRateAuto", "Off");
 			arv_camera_set_float (camera, "AcquisitionFrameRate", frame_rate);
 			break;
