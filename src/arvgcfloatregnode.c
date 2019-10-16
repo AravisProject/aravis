@@ -156,6 +156,52 @@ arv_gc_float_reg_node_set_float_value (ArvGcFloat *self, gdouble value, GError *
 		g_propagate_error (error, local_error);
 }
 
+static double
+arv_gc_float_reg_node_get_min (ArvGcFloat *self, GError **error)
+{
+	GError *local_error = NULL;
+	gint64 length;
+
+	length = arv_gc_register_get_length (ARV_GC_REGISTER (self), &local_error);
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return -G_MAXDOUBLE;
+	}
+
+	if (length == 4)
+		return -G_MAXFLOAT;
+	else if (length == 8)
+		return -G_MAXDOUBLE;
+
+	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_INVALID_LENGTH,
+		     "Invalid register length for FloatReg node");
+
+	return -G_MAXDOUBLE;
+}
+
+static double
+arv_gc_float_reg_node_get_max (ArvGcFloat *self, GError **error)
+{
+	GError *local_error = NULL;
+	gint64 length;
+
+	length = arv_gc_register_get_length (ARV_GC_REGISTER (self), &local_error);
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return G_MAXDOUBLE;
+	}
+
+	if (length == 4)
+		return G_MAXFLOAT;
+	else if (length == 8)
+		return G_MAXDOUBLE;
+
+	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_INVALID_LENGTH,
+		     "Invalid register length for FloatReg node");
+
+	return G_MAXDOUBLE;
+}
+
 static const char *
 arv_gc_float_reg_node_get_unit (ArvGcFloat *self, GError **error)
 {
@@ -186,6 +232,8 @@ arv_gc_float_reg_node_float_interface_init (ArvGcFloatInterface *interface)
 {
 	interface->get_value = arv_gc_float_reg_node_get_float_value;
 	interface->set_value = arv_gc_float_reg_node_set_float_value;
+	interface->get_min = arv_gc_float_reg_node_get_min;
+	interface->get_max = arv_gc_float_reg_node_get_max;
 	interface->get_unit = arv_gc_float_reg_node_get_unit;
 }
 
