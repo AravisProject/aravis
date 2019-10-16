@@ -253,74 +253,91 @@ arv_tool_execute_command (int argc, char **argv, ArvDevice *device, ArvRegisterC
 					printf ("%s executed\n", tokens[0]);
 				} else {
 					const char *unit;
+					GError *error = NULL;
 
 					if (tokens[1] != NULL)
 						arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (feature),
-											   tokens[1], NULL);
+											   tokens[1], &error);
 
-					if (ARV_IS_GC_STRING (feature) ||
-					    ARV_IS_GC_ENUMERATION (feature)) {
-						printf ("%s = %s\n", tokens[0],
-							arv_gc_string_get_value (ARV_GC_STRING (feature), NULL));
-					} else if (ARV_IS_GC_INTEGER (feature)) {
-						gint64 max_int64, min_int64, inc_int64;
-						GString *string = g_string_new ("");
+					if (error == NULL) {
+						if (ARV_IS_GC_STRING (feature) ||
+						    ARV_IS_GC_ENUMERATION (feature)) {
+							const char *value = arv_gc_string_get_value (ARV_GC_STRING (feature), &error);
 
-						min_int64 = arv_gc_integer_get_min (ARV_GC_INTEGER (feature), NULL);
-						max_int64 = arv_gc_integer_get_max (ARV_GC_INTEGER (feature), NULL);
-						inc_int64 = arv_gc_integer_get_inc (ARV_GC_INTEGER (feature), NULL);
-						unit = arv_gc_integer_get_unit (ARV_GC_INTEGER (feature), NULL);
+							if (error == NULL)
+								printf ("%s = %s\n", tokens[0], value);
+						} else if (ARV_IS_GC_INTEGER (feature)) {
+							gint64 max_int64, min_int64, inc_int64;
+							gint64 value;
 
-						g_string_append_printf (string, "%s = %" G_GINT64_FORMAT,
-									tokens[0],
-									arv_gc_integer_get_value (ARV_GC_INTEGER (feature),
-												  NULL));
+							min_int64 = arv_gc_integer_get_min (ARV_GC_INTEGER (feature), NULL);
+							max_int64 = arv_gc_integer_get_max (ARV_GC_INTEGER (feature), NULL);
+							inc_int64 = arv_gc_integer_get_inc (ARV_GC_INTEGER (feature), NULL);
+							unit = arv_gc_integer_get_unit (ARV_GC_INTEGER (feature), NULL);
 
-						if (unit != NULL)
-							g_string_append_printf (string, " %s", unit);
-						if (min_int64 != G_MININT64)
-							g_string_append_printf (string, " min:%" G_GINT64_FORMAT, min_int64);
-						if (max_int64 != G_MAXINT64)
-							g_string_append_printf (string, " max:%" G_GINT64_FORMAT, max_int64);
-						if (inc_int64 != 1)
-							g_string_append_printf (string, " inc:%" G_GINT64_FORMAT, inc_int64);
+							value = arv_gc_integer_get_value (ARV_GC_INTEGER (feature), &error);
 
-						printf ("%s\n", string->str);
-						g_string_free (string, TRUE);
-					} else if (ARV_IS_GC_FLOAT (feature)) {
-						double max_double, min_double, inc_double;
-						GString *string = g_string_new ("");
+							if (error == NULL) {
+								GString *string = g_string_new ("");
 
-						min_double = arv_gc_float_get_min (ARV_GC_FLOAT (feature), NULL);
-						max_double = arv_gc_float_get_max (ARV_GC_FLOAT (feature), NULL);
-						inc_double = arv_gc_float_get_inc (ARV_GC_FLOAT (feature), NULL);
-						unit = arv_gc_float_get_unit (ARV_GC_FLOAT (feature), NULL);
+								g_string_append_printf (string, "%s = %" G_GINT64_FORMAT, tokens[0], value);
 
-						g_string_append_printf (string, "%s = %g",
-									tokens[0],
-									arv_gc_float_get_value (ARV_GC_FLOAT (feature),
-												NULL));
+								if (unit != NULL)
+									g_string_append_printf (string, " %s", unit);
+								if (min_int64 != G_MININT64)
+									g_string_append_printf (string, " min:%" G_GINT64_FORMAT, min_int64);
+								if (max_int64 != G_MAXINT64)
+									g_string_append_printf (string, " max:%" G_GINT64_FORMAT, max_int64);
+								if (inc_int64 != 1)
+									g_string_append_printf (string, " inc:%" G_GINT64_FORMAT, inc_int64);
 
-						if (unit != NULL)
-							g_string_append_printf (string, " %s", unit);
-						if (min_double != -G_MAXDOUBLE)
-							g_string_append_printf (string, " min:%g", min_double);
-						if (max_double != G_MAXDOUBLE)
-							g_string_append_printf (string, " max:%g", max_double);
-						if (inc_double != 1)
-							g_string_append_printf (string, " inc:%g", inc_double);
+								printf ("%s\n", string->str);
+								g_string_free (string, TRUE);
+							}
+						} else if (ARV_IS_GC_FLOAT (feature)) {
+							double max_double, min_double, inc_double;
+							GString *string = g_string_new ("");
+							double value;
 
-						printf ("%s\n", string->str);
-						g_string_free (string, TRUE);
-					} else if (ARV_IS_GC_BOOLEAN (feature)) {
-						printf ("%s = %s\n", tokens[0],
-							arv_gc_boolean_get_value (ARV_GC_BOOLEAN (feature), NULL) ?
-							"true" : "false");
-					} else {
-						printf ("%s = %s\n", tokens[0],
-							arv_gc_feature_node_get_value_as_string
-							(ARV_GC_FEATURE_NODE (feature),
-							 NULL));
+							min_double = arv_gc_float_get_min (ARV_GC_FLOAT (feature), NULL);
+							max_double = arv_gc_float_get_max (ARV_GC_FLOAT (feature), NULL);
+							inc_double = arv_gc_float_get_inc (ARV_GC_FLOAT (feature), NULL);
+							unit = arv_gc_float_get_unit (ARV_GC_FLOAT (feature), NULL);
+
+							value = arv_gc_float_get_value (ARV_GC_FLOAT (feature), &error);
+
+							if (error == NULL) {
+								g_string_append_printf (string, "%s = %g", tokens[0], value);
+
+								if (unit != NULL)
+									g_string_append_printf (string, " %s", unit);
+								if (min_double != -G_MAXDOUBLE)
+									g_string_append_printf (string, " min:%g", min_double);
+								if (max_double != G_MAXDOUBLE)
+									g_string_append_printf (string, " max:%g", max_double);
+								if (inc_double != 1)
+									g_string_append_printf (string, " inc:%g", inc_double);
+
+								printf ("%s\n", string->str);
+								g_string_free (string, TRUE);
+							}
+						} else if (ARV_IS_GC_BOOLEAN (feature)) {
+							gboolean value = arv_gc_boolean_get_value (ARV_GC_BOOLEAN (feature), &error);
+
+							if (error == NULL)
+								printf ("%s = %s\n", tokens[0], value ?  "true" : "false");
+						} else {
+							const char *value =  arv_gc_feature_node_get_value_as_string
+								(ARV_GC_FEATURE_NODE (feature), &error);
+
+							if (error == NULL)
+								printf ("%s = %s\n", tokens[0], value);
+						}
+					}
+
+					if (error != NULL) {
+							printf ("%s read error: %s\n", tokens[0], error->message);
+							g_clear_error (&error);
 					}
 				}
 			} else {
