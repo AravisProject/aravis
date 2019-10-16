@@ -516,13 +516,19 @@ converter_test (void)
 static void
 register_test (void)
 {
+	GError *error = NULL;
 	ArvDevice *device;
 	ArvGc *genicam;
 	ArvGcNode *node_a;
 	ArvGcNode *node_b;
 	ArvGcNode *node_c;
 	ArvGcNode *node_sc;
+	ArvGcNode *node_uc;
+	ArvGcNode *node_f;
+	ArvGcNode *node_str;
+	const char *string;
 	gint64 value;
+	double value_f;
 
 	device = arv_fake_device_new ("TEST0");
 	g_assert (ARV_IS_FAKE_DEVICE (device));
@@ -530,8 +536,16 @@ register_test (void)
 	genicam = arv_device_get_genicam (device);
 	g_assert (ARV_IS_GC (genicam));
 
+	/* 64 bit IntReg */
+
 	node_a = arv_gc_get_node (genicam, "IntRegisterA");
 	g_assert (ARV_IS_GC_REGISTER (node_a));
+	value = arv_gc_integer_get_min (ARV_GC_INTEGER (node_a), NULL);
+	g_assert_cmpint (value, ==, 0);
+	value = arv_gc_integer_get_max (ARV_GC_INTEGER (node_a), NULL);
+	g_assert_cmpint (value, ==, G_MAXINT64);
+	string = arv_gc_integer_get_unit (ARV_GC_INTEGER (node_a), NULL);
+	g_assert_cmpstr (string, ==, "Pa");
 
 	value = arv_gc_register_get_address (ARV_GC_REGISTER (node_a), NULL);
 	g_assert_cmpint (value, ==, 0x1050);
@@ -545,23 +559,162 @@ register_test (void)
 	node_c = arv_gc_get_node (genicam, "IntRegisterC");
 	g_assert (ARV_IS_GC_REGISTER (node_c));
 
-	arv_gc_integer_set_value (ARV_GC_INTEGER (node_c), 0, NULL);
+	/* 32 bit IntReg */
 
-	node_sc = arv_gc_get_node (genicam, "IntSignedRegisterC");
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_c), 0x1234567887654321, NULL);
+
+	node_sc = arv_gc_get_node (genicam, "IntSigned32BitRegisterC");
 	g_assert (ARV_IS_GC_REGISTER (node_sc));
+	value = arv_gc_integer_get_min (ARV_GC_INTEGER (node_sc), NULL);
+	g_assert_cmpint (value, ==, G_MININT32);
+	value = arv_gc_integer_get_max (ARV_GC_INTEGER (node_sc), NULL);
+	g_assert_cmpint (value, ==, G_MAXINT32);
+	value = arv_gc_integer_get_inc (ARV_GC_INTEGER (node_sc), NULL);
+	g_assert_cmpint (value, ==, 1);
+
+	node_uc = arv_gc_get_node (genicam, "IntUnsigned32BitRegisterC");
+	g_assert (ARV_IS_GC_REGISTER (node_uc));
+	value = arv_gc_integer_get_min (ARV_GC_INTEGER (node_uc), NULL);
+	g_assert_cmpint (value, ==, 0);
+	value = arv_gc_integer_get_max (ARV_GC_INTEGER (node_uc), NULL);
+	g_assert_cmpint (value, ==, G_MAXUINT32);
+	value = arv_gc_integer_get_inc (ARV_GC_INTEGER (node_uc), NULL);
+	g_assert_cmpint (value, ==, 1);
 
 	arv_gc_integer_set_value (ARV_GC_INTEGER (node_sc), -1, NULL);
 
 	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_sc), NULL);
 	g_assert_cmpint (value, ==, -1);
 
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_uc), NULL);
+	g_assert_cmpint (value, ==, 0xffffffff);
+
 	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_c), NULL);
-	g_assert_cmpint (value, ==, 0x00000000ffffffff);
+	g_assert_cmpint (value, ==, 0x12345678ffffffff);
 
 	arv_gc_integer_set_value (ARV_GC_INTEGER (node_sc), 0x7fffffff, NULL);
 
 	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_sc), NULL);
 	g_assert_cmpint (value, ==, 0x7fffffff);
+
+	/* 16 bit IntReg */
+
+	node_sc = arv_gc_get_node (genicam, "IntSigned16BitRegisterC");
+	g_assert (ARV_IS_GC_REGISTER (node_sc));
+	value = arv_gc_integer_get_min (ARV_GC_INTEGER (node_sc), NULL);
+	g_assert_cmpint (value, ==, G_MININT16);
+	value = arv_gc_integer_get_max (ARV_GC_INTEGER (node_sc), NULL);
+	g_assert_cmpint (value, ==, G_MAXINT16);
+	value = arv_gc_integer_get_inc (ARV_GC_INTEGER (node_sc), NULL);
+	g_assert_cmpint (value, ==, 1);
+
+	node_uc = arv_gc_get_node (genicam, "IntUnsigned16BitRegisterC");
+	g_assert (ARV_IS_GC_REGISTER (node_uc));
+	value = arv_gc_integer_get_min (ARV_GC_INTEGER (node_uc), NULL);
+	g_assert_cmpint (value, ==, 0);
+	value = arv_gc_integer_get_max (ARV_GC_INTEGER (node_uc), NULL);
+	g_assert_cmpint (value, ==, G_MAXUINT16);
+	value = arv_gc_integer_get_inc (ARV_GC_INTEGER (node_uc), NULL);
+	g_assert_cmpint (value, ==, 1);
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_sc), -1, NULL);
+
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_sc), NULL);
+	g_assert_cmpint (value, ==, -1);
+
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_uc), NULL);
+	g_assert_cmpint (value, ==, 0xffff);
+
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_c), NULL);
+	g_assert_cmpint (value, ==, 0xffff56787fffffff);
+
+	/* MaskedIntReg */
+
+	node_sc = arv_gc_get_node (genicam, "MaskedIntSignedRegisterC");
+	g_assert (ARV_IS_GC_REGISTER (node_sc));
+	value = arv_gc_integer_get_min (ARV_GC_INTEGER (node_sc), NULL);
+	g_assert_cmpint (value, ==, -8);
+	value = arv_gc_integer_get_max (ARV_GC_INTEGER (node_sc), NULL);
+	g_assert_cmpint (value, ==, 7);
+	value = arv_gc_integer_get_inc (ARV_GC_INTEGER (node_sc), NULL);
+	g_assert_cmpint (value, ==, 1);
+	string = arv_gc_integer_get_unit (ARV_GC_INTEGER (node_sc), NULL);
+	g_assert_cmpstr (string, ==, "V");
+
+	node_uc = arv_gc_get_node (genicam, "MaskedIntUnsignedRegisterC");
+	g_assert (ARV_IS_GC_REGISTER (node_uc));
+	value = arv_gc_integer_get_min (ARV_GC_INTEGER (node_uc), NULL);
+	g_assert_cmpint (value, ==, 0);
+	value = arv_gc_integer_get_max (ARV_GC_INTEGER (node_uc), NULL);
+	g_assert_cmpint (value, ==, 15);
+	value = arv_gc_integer_get_inc (ARV_GC_INTEGER (node_uc), NULL);
+	g_assert_cmpint (value, ==, 1);
+	string = arv_gc_integer_get_unit (ARV_GC_INTEGER (node_uc), NULL);
+	g_assert_cmpstr (string, ==, "A");
+
+	/* 4 byte FLoatReg */
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_c), 0x1234567887654321, NULL);
+
+	node_f = arv_gc_get_node (genicam, "FloatReg4C");
+	g_assert (ARV_IS_GC_REGISTER (node_f));
+	value_f = arv_gc_float_get_min (ARV_GC_FLOAT (node_f), NULL);
+	g_assert_cmpfloat (value_f, ==, -G_MAXFLOAT);
+	value_f = arv_gc_float_get_max (ARV_GC_FLOAT (node_f), NULL);
+	g_assert_cmpfloat (value_f, ==, G_MAXFLOAT);
+	string = arv_gc_float_get_unit (ARV_GC_FLOAT (node_f), NULL);
+	g_assert_cmpstr (string, ==, "mA");
+
+	arv_gc_float_set_value (ARV_GC_FLOAT (node_f), 2.0, NULL);
+	value_f = arv_gc_float_get_value (ARV_GC_FLOAT (node_f), NULL);
+	g_assert_cmpfloat (value_f, ==, 2.0);
+	arv_gc_float_set_value (ARV_GC_FLOAT (node_f), -1.0, NULL);
+	value_f = arv_gc_float_get_value (ARV_GC_FLOAT (node_f), NULL);
+	g_assert_cmpfloat (value_f, ==, -1.0);
+
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_c), NULL);
+	g_assert_cmpint (value, ==, 0x000080bf87654321);
+
+	/* 8 byte FLoatReg */
+
+	node_f = arv_gc_get_node (genicam, "FloatReg8C");
+	g_assert (ARV_IS_GC_REGISTER (node_f));
+	value_f = arv_gc_float_get_min (ARV_GC_FLOAT (node_f), NULL);
+	g_assert_cmpfloat (value_f, ==, -G_MAXDOUBLE);
+	value_f = arv_gc_float_get_max (ARV_GC_FLOAT (node_f), NULL);
+	g_assert_cmpfloat (value_f, ==, G_MAXDOUBLE);
+	string = arv_gc_float_get_unit (ARV_GC_FLOAT (node_f), NULL);
+	g_assert_cmpstr (string, ==, "mV");
+
+	arv_gc_float_set_value (ARV_GC_FLOAT (node_f), 1.2, NULL);
+	value_f = arv_gc_float_get_value (ARV_GC_FLOAT (node_f), NULL);
+	g_assert_cmpfloat (value_f, ==, 1.2);
+	arv_gc_float_set_value (ARV_GC_FLOAT (node_f), -1.0, NULL);
+	value_f = arv_gc_float_get_value (ARV_GC_FLOAT (node_f), NULL);
+	g_assert_cmpfloat (value_f, ==, -1.0);
+
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_c), NULL);
+	g_assert_cmpint (value, ==, 0x000000000000f0bf);
+
+	/* StringReg */
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_c), 0x1234567887654321, NULL);
+
+	node_str = arv_gc_get_node (genicam, "StringReg");
+	g_assert (ARV_IS_GC_REGISTER (node_str));
+	value = arv_gc_string_get_max_length (ARV_GC_STRING (node_str), NULL);
+	g_assert_cmpint (value, ==, 4);
+
+	arv_gc_string_set_value (ARV_GC_STRING (node_str), "Toto", NULL);
+	string = arv_gc_string_get_value (ARV_GC_STRING (node_str), NULL);
+	g_assert_cmpstr (string, ==, "Toto");
+
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_c), NULL);
+	g_assert_cmpint (value, ==, 0x1234546f746f4321);
+
+	arv_gc_string_set_value (ARV_GC_STRING (node_str), "TotoTata", &error);
+	g_assert (error != NULL);
+	g_clear_error (&error);
 
 	g_object_unref (device);
 }

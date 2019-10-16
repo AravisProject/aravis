@@ -136,6 +136,7 @@
     <Cachable>NoCache</Cachable>
     <PollingTime>5</PollingTime>
     <Sign>Unsigned</Sign>
+    <Unit>Pa</Unit>
     <Endianess>BigEndian</Endianess>
   </IntReg>
 
@@ -162,7 +163,7 @@
     <pPort>Device</pPort>
   </IntReg>
 
-  <IntReg Name="IntSignedRegisterC">
+  <IntReg Name="IntSigned32BitRegisterC">
     <Address>0x1004</Address>
     <Length>4</Length>
     <AccessMode>RW</AccessMode>
@@ -172,6 +173,92 @@
     <Sign>Signed</Sign>
     <pPort>Device</pPort>
   </IntReg>
+
+  <IntReg Name="IntUnsigned32BitRegisterC">
+    <Address>0x1004</Address>
+    <Length>4</Length>
+    <AccessMode>RW</AccessMode>
+    <Cachable>NoCache</Cachable>
+    <PollingTime>5</PollingTime>
+    <Endianess>BigEndian</Endianess>
+    <Sign>Unsigned</Sign>
+    <pPort>Device</pPort>
+  </IntReg>
+
+  <IntReg Name="IntSigned16BitRegisterC">
+    <Address>0x1000</Address>
+    <Length>2</Length>
+    <AccessMode>RW</AccessMode>
+    <Cachable>NoCache</Cachable>
+    <PollingTime>5</PollingTime>
+    <Endianess>BigEndian</Endianess>
+    <Sign>Signed</Sign>
+    <pPort>Device</pPort>
+  </IntReg>
+
+  <IntReg Name="IntUnsigned16BitRegisterC">
+    <Address>0x1000</Address>
+    <Length>2</Length>
+    <AccessMode>RW</AccessMode>
+    <Cachable>NoCache</Cachable>
+    <PollingTime>5</PollingTime>
+    <Endianess>BigEndian</Endianess>
+    <Sign>Unsigned</Sign>
+    <pPort>Device</pPort>
+  </IntReg>
+
+  <MaskedIntReg Name="MaskedIntSignedRegisterC">
+    <Address>0x1002</Address>
+    <Length>2</Length>
+    <AccessMode>RW</AccessMode>
+    <Cachable>NoCache</Cachable>
+    <PollingTime>5</PollingTime>
+    <Endianess>BigEndian</Endianess>
+    <LSB>7</LSB>
+    <MSB>4</MSB>
+    <Sign>Signed</Sign>
+    <Unit>V</Unit>
+    <pPort>Device</pPort>
+  </MaskedIntReg>
+
+  <MaskedIntReg Name="MaskedIntUnsignedRegisterC">
+    <Address>0x1002</Address>
+    <Length>2</Length>
+    <AccessMode>RW</AccessMode>
+    <Cachable>NoCache</Cachable>
+    <PollingTime>5</PollingTime>
+    <Endianess>BigEndian</Endianess>
+    <LSB>7</LSB>
+    <MSB>4</MSB>
+    <Sign>Unsigned</Sign>
+    <Unit>A</Unit>
+    <pPort>Device</pPort>
+  </MaskedIntReg>
+
+  <FloatReg Name="FloatReg4C">
+    <Address>0x1000</Address>
+    <Length>4</Length>
+    <Cachable>NoCache</Cachable>
+    <Endianess>LittleEndian</Endianess>
+    <Unit>mA</Unit>
+    <pPort>Device</pPort>
+  </FloatReg>
+
+  <FloatReg Name="FloatReg8C">
+    <Address>0x1000</Address>
+    <Length>8</Length>
+    <Cachable>NoCache</Cachable>
+    <Endianess>LittleEndian</Endianess>
+    <Unit>mV</Unit>
+    <pPort>Device</pPort>
+  </FloatReg>
+
+  <StringReg Name="StringReg">
+    <Address>0x1002</Address>
+    <Length>4</Length>
+    <Cachable>NoCache</Cachable>
+    <pPort>Device</pPort>
+  </StringReg>
 
   <IntSwissKnife Name="IntSwissKnifeTestEntity">
     <Formula>(0x12345678 &amp; 0x10305070)</Formula>
