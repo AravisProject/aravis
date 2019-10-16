@@ -211,6 +211,8 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 
 	else if (strcmp (tag_name, "AccessMode") == 0)
 		node = arv_gc_property_node_new_access_mode ();
+	else if (strcmp (tag_name, "ImposedAccessMode") == 0)
+		node = arv_gc_property_node_new_imposed_access_mode ();
 	else if (strcmp (tag_name, "Cachable") == 0)
 		node = arv_gc_property_node_new_cachable ();
 	else if (strcmp (tag_name, "PollingTime") == 0)

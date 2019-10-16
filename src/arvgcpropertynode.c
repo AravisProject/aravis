@@ -688,6 +688,34 @@ arv_gc_property_node_new_access_mode (void)
 }
 
 ArvGcNode *
+arv_gc_property_node_new_imposed_access_mode (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_IMPOSED_ACCESS_MODE);
+}
+
+ArvGcAccessMode
+arv_gc_property_node_get_access_mode (ArvGcPropertyNode *self, ArvGcAccessMode default_value)
+{
+	const char *value;
+
+	if (self == NULL)
+		return default_value;
+
+	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	g_return_val_if_fail (self->type == ARV_GC_PROPERTY_NODE_TYPE_ACCESS_MODE ||
+			      self->type == ARV_GC_PROPERTY_NODE_TYPE_IMPOSED_ACCESS_MODE, default_value);
+
+	value = _get_value_data (self);
+
+	if (g_strcmp0 (value, "RO") == 0)
+		return ARV_GC_ACCESS_MODE_RO;
+	else if (g_strcmp0 (value, "WO") == 0)
+		return ARV_GC_ACCESS_MODE_WO;
+
+	return ARV_GC_ACCESS_MODE_RW;
+}
+
+ArvGcNode *
 arv_gc_property_node_new_cachable (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_CACHABLE);

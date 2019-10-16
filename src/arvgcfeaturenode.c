@@ -52,6 +52,8 @@ struct _ArvGcFeatureNodePrivate {
 	ArvGcPropertyNode *is_implemented;
 	ArvGcPropertyNode *is_available;
 	ArvGcPropertyNode *is_locked;
+	ArvGcPropertyNode *access_mode;
+	ArvGcPropertyNode *imposed_access_mode;
 
 	guint64 change_count;
 
@@ -93,6 +95,12 @@ arv_gc_feature_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 			case ARV_GC_PROPERTY_NODE_TYPE_P_IS_LOCKED:
 				node->priv->is_locked = property_node;
 				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_ACCESS_MODE:
+				node->priv->access_mode = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_IMPOSED_ACCESS_MODE:
+				node->priv->imposed_access_mode = property_node;
+				break;
 			default:
 				break;
 		}
@@ -125,6 +133,12 @@ arv_gc_feature_node_pre_remove_child (ArvDomNode *self, ArvDomNode *child)
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_P_IS_LOCKED:
 				node->priv->is_locked = NULL;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_ACCESS_MODE:
+				node->priv->access_mode = NULL;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_IMPOSED_ACCESS_MODE:
+				node->priv->imposed_access_mode =  NULL;
 				break;
 			default:
 				break;
@@ -319,6 +333,19 @@ arv_gc_feature_node_is_locked (ArvGcFeatureNode *gc_feature_node, GError **error
 
 	return value;
 }
+
+#if 0
+ArvGcAccessMode
+arv_gc_feature_node_get_access_mode (ArvGcFeatureNode *self)
+{
+	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (self), ARV_GC_ACCESS_MODE_RW);
+
+	if (ARV_IS_GC_PROPERTY_NODE (self->priv->imposed_access_mode))
+	    return arv_gc_property_node_get_access_mode (self->priv->imposed_access_mode, ARV_GC_ACCESS_MODE_RW);
+
+	return arv_gc_property_node_get_access_mode (self->priv->access_mode, ARV_GC_ACCESS_MODE_RW);
+}
+#endif
 
 /**
  * arv_gc_feature_node_set_value_from_string:

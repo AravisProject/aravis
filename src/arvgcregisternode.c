@@ -108,10 +108,6 @@ arv_gc_register_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 			case ARV_GC_PROPERTY_NODE_TYPE_P_PORT:
 				node->port = property_node;
 				break;
-			case ARV_GC_PROPERTY_NODE_TYPE_ACCESS_MODE:
-				/* TODO */
-				node->access_mode = property_node;
-				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_CACHABLE:
 				node->cachable = property_node;
 				break;

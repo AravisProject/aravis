@@ -51,7 +51,6 @@ struct _ArvGcRegisterNode {
 	ArvGcPropertyNode *index;
 	ArvGcPropertyNode *length;
 	ArvGcPropertyNode *port;
-	ArvGcPropertyNode *access_mode;
 	ArvGcPropertyNode *cachable;
 	ArvGcPropertyNode *polling_time;
 	ArvGcPropertyNode *endianess;

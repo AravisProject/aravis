@@ -55,6 +55,7 @@ typedef enum {
 	ARV_GC_PROPERTY_NODE_TYPE_EXPRESSION,
 	ARV_GC_PROPERTY_NODE_TYPE_CONSTANT,
 	ARV_GC_PROPERTY_NODE_TYPE_ACCESS_MODE,
+	ARV_GC_PROPERTY_NODE_TYPE_IMPOSED_ACCESS_MODE,
 	ARV_GC_PROPERTY_NODE_TYPE_CACHABLE,
 	ARV_GC_PROPERTY_NODE_TYPE_POLLING_TIME,
 	ARV_GC_PROPERTY_NODE_TYPE_ENDIANESS,
@@ -149,6 +150,7 @@ ArvGcNode * 	arv_gc_property_node_new_formula_from		(void);
 ArvGcNode * 	arv_gc_property_node_new_expression		(void);
 ArvGcNode * 	arv_gc_property_node_new_constant		(void);
 ArvGcNode * 	arv_gc_property_node_new_access_mode		(void);
+ArvGcNode * 	arv_gc_property_node_new_imposed_access_mode 	(void);
 ArvGcNode * 	arv_gc_property_node_new_cachable		(void);
 ArvGcNode * 	arv_gc_property_node_new_polling_time		(void);
 ArvGcNode * 	arv_gc_property_node_new_endianess		(void);
@@ -177,6 +179,7 @@ ArvGcSignedness		arv_gc_property_node_get_sign 		(ArvGcPropertyNode *self, ArvGc
 guint	 		arv_gc_property_node_get_lsb		(ArvGcPropertyNode *self, guint default_value);
 guint	 		arv_gc_property_node_get_msb		(ArvGcPropertyNode *self, guint default_value);
 ArvGcCachable		arv_gc_property_node_get_cachable	(ArvGcPropertyNode *self, ArvGcCachable default_value);
+ArvGcAccessMode		arv_gc_property_node_get_access_mode	(ArvGcPropertyNode *self, ArvGcAccessMode default_value);
 
 ArvGcNode *		arv_gc_property_node_get_linked_node	(ArvGcPropertyNode *node);
 ArvGcPropertyNodeType	arv_gc_property_node_get_node_type	(ArvGcPropertyNode *node);
