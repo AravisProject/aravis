@@ -27,6 +27,7 @@
 
 #include <arvgcfloatnode.h>
 #include <arvgcfloat.h>
+#include <arvgcinteger.h>
 #include <arvgcvalueindexednode.h>
 #include <arvgcfeaturenodeprivate.h>
 #include <arvgc.h>
@@ -215,8 +216,25 @@ arv_gc_float_node_get_min (ArvGcFloat *gc_float, GError **error)
 	GError *local_error = NULL;
 	double value;
 
-	if (gc_float_node->minimum == NULL)
+	if (gc_float_node->minimum == NULL) {
+		ArvGcPropertyNode *value_node;
+
+		value_node = _get_value_node (gc_float_node, &local_error);
+		if (local_error != NULL) {
+			g_propagate_error (error, local_error);
+			return -G_MAXDOUBLE;
+		}
+
+		if (ARV_IS_GC_PROPERTY_NODE (value_node)) {
+			ArvGcNode *linked_node = arv_gc_property_node_get_linked_node (value_node);
+
+			if (ARV_IS_GC_INTEGER (linked_node))
+				return arv_gc_integer_get_min (ARV_GC_INTEGER (linked_node), error);
+			else if (ARV_IS_GC_FLOAT (linked_node))
+				return arv_gc_float_get_min (ARV_GC_FLOAT (linked_node), error);
+		}
 		return -G_MAXDOUBLE;
+	}
 
 	value = arv_gc_property_node_get_double (ARV_GC_PROPERTY_NODE (gc_float_node->minimum), &local_error);
 
@@ -235,8 +253,25 @@ arv_gc_float_node_get_max (ArvGcFloat *gc_float, GError **error)
 	GError *local_error = NULL;
 	double value;
 
-	if (gc_float_node->maximum == NULL)
+	if (gc_float_node->maximum == NULL) {
+		ArvGcPropertyNode *value_node;
+
+		value_node = _get_value_node (gc_float_node, &local_error);
+		if (local_error != NULL) {
+			g_propagate_error (error, local_error);
+			return G_MAXDOUBLE;
+		}
+
+		if (ARV_IS_GC_PROPERTY_NODE (value_node)) {
+			ArvGcNode *linked_node = arv_gc_property_node_get_linked_node (value_node);
+
+			if (ARV_IS_GC_INTEGER (linked_node))
+				return arv_gc_integer_get_max (ARV_GC_INTEGER (linked_node), error);
+			else if (ARV_IS_GC_FLOAT (linked_node))
+				return arv_gc_float_get_max (ARV_GC_FLOAT (linked_node), error);
+		}
 		return G_MAXDOUBLE;
+	}
 
 	value = arv_gc_property_node_get_double (ARV_GC_PROPERTY_NODE (gc_float_node->maximum), &local_error);
 
@@ -255,8 +290,26 @@ arv_gc_float_node_get_inc (ArvGcFloat *gc_float, GError **error)
 	GError *local_error = NULL;
 	double value;
 
-	if (gc_float_node->increment == NULL)
+	if (gc_float_node->increment == NULL) {
+		ArvGcPropertyNode *value_node;
+
+		value_node = _get_value_node (gc_float_node, &local_error);
+		if (local_error != NULL) {
+			g_propagate_error (error, local_error);
+			return 1.0;
+		}
+
+		if (ARV_IS_GC_PROPERTY_NODE (value_node)) {
+			ArvGcNode *linked_node = arv_gc_property_node_get_linked_node (value_node);
+
+			if (ARV_IS_GC_INTEGER (linked_node))
+				return arv_gc_integer_get_inc (ARV_GC_INTEGER (linked_node), error);
+			else if (ARV_IS_GC_FLOAT (linked_node))
+				return arv_gc_float_get_inc (ARV_GC_FLOAT (linked_node), error);
+		}
+
 		return 1.0;
+	}
 
 	value = arv_gc_property_node_get_double (ARV_GC_PROPERTY_NODE (gc_float_node->increment), &local_error);
 
