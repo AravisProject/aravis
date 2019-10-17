@@ -36,19 +36,6 @@ G_BEGIN_DECLS
 #define ARV_GV_INTERFACE_SOCKET_BUFFER_SIZE	1024
 #define ARV_GV_INTERFACE_DISCOVERY_SOCKET_BUFFER_SIZE	(256*1024)
 
-typedef struct _ArvGvInterfacePrivate ArvGvInterfacePrivate;
-typedef struct _ArvGvInterfaceClass ArvGvInterfaceClass;
-
-struct _ArvGvInterface {
-	ArvInterface	interface;
-
-	ArvGvInterfacePrivate *priv;
-};
-
-struct _ArvGvInterfaceClass {
-	ArvInterfaceClass parent_class;
-};
-
 void 			arv_gv_interface_destroy_instance 	(void);
 
 G_END_DECLS

@@ -302,9 +302,21 @@ arv_gv_interface_device_infos_unref (ArvGvInterfaceDeviceInfos *infos)
 
 /* ArvGvInterface implementation */
 
-struct _ArvGvInterfacePrivate {
+typedef struct {
 	GHashTable *devices;
+} ArvGvInterfacePrivate;
+
+struct _ArvGvInterface {
+	ArvInterface	interface;
+
+	ArvGvInterfacePrivate *priv;
 };
+
+struct _ArvGvInterfaceClass {
+	ArvInterfaceClass parent_class;
+};
+
+G_DEFINE_TYPE_WITH_CODE (ArvGvInterface, arv_gv_interface, ARV_TYPE_INTERFACE, G_ADD_PRIVATE (ArvGvInterface))
 
 static ArvGvInterfaceDeviceInfos *
 _discover (GHashTable *devices, const char *device_id)
@@ -706,8 +718,6 @@ arv_gv_interface_destroy_instance (void)
 
 	g_mutex_unlock (&gv_interface_mutex);
 }
-
-G_DEFINE_TYPE_WITH_CODE (ArvGvInterface, arv_gv_interface, ARV_TYPE_INTERFACE, G_ADD_PRIVATE (ArvGvInterface))
 
 static void
 arv_gv_interface_init (ArvGvInterface *gv_interface)
