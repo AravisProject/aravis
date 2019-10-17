@@ -51,20 +51,7 @@ typedef enum {
 typedef void (*ArvStreamCallback)	(void *user_data, ArvStreamCallbackType type, ArvBuffer *buffer);
 
 #define ARV_TYPE_STREAM             (arv_stream_get_type ())
-#define ARV_STREAM(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_STREAM, ArvStream))
-#define ARV_STREAM_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_STREAM, ArvStreamClass))
-#define ARV_IS_STREAM(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_STREAM))
-#define ARV_IS_STREAM_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_STREAM))
-#define ARV_STREAM_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_STREAM, ArvStreamClass))
-
-typedef struct _ArvStreamPrivate ArvStreamPrivate;
-typedef struct _ArvStreamClass ArvStreamClass;
-
-struct _ArvStream {
-	GObject	object;
-
-	ArvStreamPrivate *priv;
-};
+G_DECLARE_DERIVABLE_TYPE (ArvStream, arv_stream, ARV, STREAM, GObject)
 
 struct _ArvStreamClass {
 	GObjectClass parent_class;
@@ -77,8 +64,6 @@ struct _ArvStreamClass {
 	/* signals */
 	void        	(*new_buffer)   	(ArvStream *stream);
 };
-
-GType arv_stream_get_type (void);
 
 void		arv_stream_push_buffer 			(ArvStream *stream, ArvBuffer *buffer);
 ArvBuffer *	arv_stream_pop_buffer			(ArvStream *stream);

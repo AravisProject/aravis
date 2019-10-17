@@ -47,12 +47,14 @@ enum {
 	ARV_STREAM_PROPERTY_LAST
 } ArvStreamProperties;
 
-struct _ArvStreamPrivate {
+typedef struct {
 	GAsyncQueue *input_queue;
 	GAsyncQueue *output_queue;
 	GRecMutex mutex;
 	gboolean emit_signals;
-};
+} ArvStreamPrivate;
+
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvStream, arv_stream, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvStream))
 
 /**
  * arv_stream_push_buffer:
@@ -70,10 +72,12 @@ struct _ArvStreamPrivate {
 void
 arv_stream_push_buffer (ArvStream *stream, ArvBuffer *buffer)
 {
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+
 	g_return_if_fail (ARV_IS_STREAM (stream));
 	g_return_if_fail (ARV_IS_BUFFER (buffer));
 
-	g_async_queue_push (stream->priv->input_queue, buffer);
+	g_async_queue_push (priv->input_queue, buffer);
 }
 
 /**
@@ -94,9 +98,11 @@ arv_stream_push_buffer (ArvStream *stream, ArvBuffer *buffer)
 ArvBuffer *
 arv_stream_pop_buffer (ArvStream *stream)
 {
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+
 	g_return_val_if_fail (ARV_IS_STREAM (stream), NULL);
 
-	return g_async_queue_pop (stream->priv->output_queue);
+	return g_async_queue_pop (priv->output_queue);
 }
 
 /**
@@ -117,9 +123,11 @@ arv_stream_pop_buffer (ArvStream *stream)
 ArvBuffer *
 arv_stream_try_pop_buffer (ArvStream *stream)
 {
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+
 	g_return_val_if_fail (ARV_IS_STREAM (stream), NULL);
 
-	return g_async_queue_try_pop (stream->priv->output_queue);
+	return g_async_queue_try_pop (priv->output_queue);
 }
 
 /**
@@ -140,9 +148,11 @@ arv_stream_try_pop_buffer (ArvStream *stream)
 ArvBuffer *
 arv_stream_timeout_pop_buffer (ArvStream *stream, guint64 timeout)
 {
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+
 	g_return_val_if_fail (ARV_IS_STREAM (stream), NULL);
 
-	return g_async_queue_timeout_pop (stream->priv->output_queue, timeout);
+	return g_async_queue_timeout_pop (priv->output_queue, timeout);
 }
 
 /**
@@ -157,25 +167,29 @@ arv_stream_timeout_pop_buffer (ArvStream *stream, guint64 timeout)
 ArvBuffer *
 arv_stream_pop_input_buffer (ArvStream *stream)
 {
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+
 	g_return_val_if_fail (ARV_IS_STREAM (stream), NULL);
 
-	return g_async_queue_try_pop (stream->priv->input_queue);
+	return g_async_queue_try_pop (priv->input_queue);
 }
 
 void
 arv_stream_push_output_buffer (ArvStream *stream, ArvBuffer *buffer)
 {
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+
 	g_return_if_fail (ARV_IS_STREAM (stream));
 	g_return_if_fail (ARV_IS_BUFFER (buffer));
 
-	g_async_queue_push (stream->priv->output_queue, buffer);
+	g_async_queue_push (priv->output_queue, buffer);
 
-	g_rec_mutex_lock (&stream->priv->mutex);
+	g_rec_mutex_lock (&priv->mutex);
 
-	if (stream->priv->emit_signals)
+	if (priv->emit_signals)
 		g_signal_emit (stream, arv_stream_signals[ARV_STREAM_SIGNAL_NEW_BUFFER], 0);
 
-	g_rec_mutex_unlock (&stream->priv->mutex);
+	g_rec_mutex_unlock (&priv->mutex);
 }
 
 /**
@@ -192,6 +206,8 @@ arv_stream_push_output_buffer (ArvStream *stream, ArvBuffer *buffer)
 void
 arv_stream_get_n_buffers (ArvStream *stream, gint *n_input_buffers, gint *n_output_buffers)
 {
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+
 	if (!ARV_IS_STREAM (stream)) {
 		if (n_input_buffers != NULL)
 			*n_input_buffers = 0;
@@ -201,9 +217,9 @@ arv_stream_get_n_buffers (ArvStream *stream, gint *n_input_buffers, gint *n_outp
 	}
 
 	if (n_input_buffers != NULL)
-		*n_input_buffers = g_async_queue_length (stream->priv->input_queue);
+		*n_input_buffers = g_async_queue_length (priv->input_queue);
 	if (n_output_buffers != NULL)
-		*n_output_buffers = g_async_queue_length (stream->priv->output_queue);
+		*n_output_buffers = g_async_queue_length (priv->output_queue);
 }
 
 /**
@@ -248,6 +264,7 @@ arv_stream_start_thread (ArvStream *stream)
 unsigned int
 arv_stream_stop_thread (ArvStream *stream, gboolean delete_buffers)
 {
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
 	ArvStreamClass *stream_class;
 	ArvBuffer *buffer;
 	unsigned int n_deleted = 0;
@@ -262,25 +279,25 @@ arv_stream_stop_thread (ArvStream *stream, gboolean delete_buffers)
 	if (!delete_buffers)
 		return 0;
 
-	g_async_queue_lock (stream->priv->input_queue);
+	g_async_queue_lock (priv->input_queue);
 	do {
-		buffer = g_async_queue_try_pop_unlocked (stream->priv->input_queue);
+		buffer = g_async_queue_try_pop_unlocked (priv->input_queue);
 		if (buffer != NULL) {
 			g_object_unref (buffer);
 			n_deleted++;
 		}
 	} while (buffer != NULL);
-	g_async_queue_unlock (stream->priv->input_queue);
+	g_async_queue_unlock (priv->input_queue);
 
-	g_async_queue_lock (stream->priv->output_queue);
+	g_async_queue_lock (priv->output_queue);
 	do {
-		buffer = g_async_queue_try_pop_unlocked (stream->priv->output_queue);
+		buffer = g_async_queue_try_pop_unlocked (priv->output_queue);
 		if (buffer != NULL) {
 			g_object_unref (buffer);
 			n_deleted++;
 		}
 	} while (buffer != NULL);
-	g_async_queue_unlock (stream->priv->output_queue);
+	g_async_queue_unlock (priv->output_queue);
 
 	arv_debug_stream ("[Stream::reset] Deleted %u buffers\n", n_deleted);
 
@@ -341,13 +358,15 @@ arv_stream_get_statistics (ArvStream *stream,
 void
 arv_stream_set_emit_signals (ArvStream *stream, gboolean emit_signals)
 {
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+
 	g_return_if_fail (ARV_IS_STREAM (stream));
 
-	g_rec_mutex_lock (&stream->priv->mutex);
+	g_rec_mutex_lock (&priv->mutex);
 
-	stream->priv->emit_signals = emit_signals;
+	priv->emit_signals = emit_signals;
 
-	g_rec_mutex_unlock (&stream->priv->mutex);
+	g_rec_mutex_unlock (&priv->mutex);
 }
 
 /**
@@ -364,14 +383,16 @@ arv_stream_set_emit_signals (ArvStream *stream, gboolean emit_signals)
 gboolean
 arv_stream_get_emit_signals (ArvStream *stream)
 {
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
 	gboolean ret;
+
 	g_return_val_if_fail (ARV_IS_STREAM (stream), FALSE);
 
-	g_rec_mutex_lock (&stream->priv->mutex);
+	g_rec_mutex_lock (&priv->mutex);
 
-	ret = stream->priv->emit_signals;
+	ret = priv->emit_signals;
 
-	g_rec_mutex_unlock (&stream->priv->mutex);
+	g_rec_mutex_unlock (&priv->mutex);
 
 	return ret;
 }
@@ -408,53 +429,54 @@ arv_stream_get_property (GObject * object, guint prop_id,
 	}
 }
 
-G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvStream, arv_stream, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvStream))
-
 static void
 arv_stream_init (ArvStream *stream)
 {
-	stream->priv = arv_stream_get_instance_private (stream);
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
 
-	stream->priv->input_queue = g_async_queue_new ();
-	stream->priv->output_queue = g_async_queue_new ();
+	priv = arv_stream_get_instance_private (stream);
 
-	stream->priv->emit_signals = FALSE;
+	priv->input_queue = g_async_queue_new ();
+	priv->output_queue = g_async_queue_new ();
 
-	g_rec_mutex_init (&stream->priv->mutex);
+	priv->emit_signals = FALSE;
+
+	g_rec_mutex_init (&priv->mutex);
 }
 
 static void
 arv_stream_finalize (GObject *object)
 {
 	ArvStream *stream = ARV_STREAM (object);
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
 	ArvBuffer *buffer;
 
 	arv_debug_stream ("[Stream::finalize] Flush %d buffer[s] in input queue",
-			  g_async_queue_length (stream->priv->input_queue));
+			  g_async_queue_length (priv->input_queue));
 	arv_debug_stream ("[Stream::finalize] Flush %d buffer[s] in output queue",
-			  g_async_queue_length (stream->priv->output_queue));
+			  g_async_queue_length (priv->output_queue));
 
-	if (stream->priv->emit_signals) {
+	if (priv->emit_signals) {
 		g_warning ("Stream finalized with 'new-buffer' signal enabled");
 		g_warning ("Please call arv_stream_set_emit_signals (stream, FALSE) before ArvStream object finalization");
 	}
 
 	do {
-		buffer = g_async_queue_try_pop (stream->priv->output_queue);
+		buffer = g_async_queue_try_pop (priv->output_queue);
 		if (buffer != NULL)
 			g_object_unref (buffer);
 	} while (buffer != NULL);
 
 	do {
-		buffer = g_async_queue_try_pop (stream->priv->input_queue);
+		buffer = g_async_queue_try_pop (priv->input_queue);
 		if (buffer != NULL)
 			g_object_unref (buffer);
 	} while (buffer != NULL);
 
-	g_async_queue_unref (stream->priv->input_queue);
-	g_async_queue_unref (stream->priv->output_queue);
+	g_async_queue_unref (priv->input_queue);
+	g_async_queue_unref (priv->output_queue);
 
-	g_rec_mutex_clear (&stream->priv->mutex);
+	g_rec_mutex_clear (&priv->mutex);
 
 	G_OBJECT_CLASS (arv_stream_parent_class)->finalize (object);
 }
