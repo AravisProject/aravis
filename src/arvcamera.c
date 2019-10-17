@@ -99,7 +99,7 @@ typedef enum {
 	ARV_CAMERA_SERIES_MATRIX_VISION
 } ArvCameraSeries;
 
-struct _ArvCameraPrivate {
+typedef struct {
 	ArvDevice *device;
 	ArvGc *genicam;
 
@@ -112,7 +112,9 @@ struct _ArvCameraPrivate {
 	gboolean has_acquisition_frame_rate_enabled;
 
 	GError *error;	/* First error that changed camera status. Cleared after status read.  */
-};
+} ArvCameraPrivate;
+
+G_DEFINE_TYPE_WITH_CODE (ArvCamera, arv_camera, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvCamera))
 
 enum
 {
@@ -137,9 +139,11 @@ enum
 ArvStream *
 arv_camera_create_stream (ArvCamera *camera, ArvStreamCallback callback, gpointer user_data)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
-	return arv_device_create_stream (camera->priv->device, callback, user_data);
+	return arv_device_create_stream (priv->device, callback, user_data);
 }
 
 /* Device control */
@@ -825,6 +829,7 @@ arv_camera_get_frame_count_bounds (ArvCamera *camera, gint64 *min, gint64 *max)
 void
 arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 	ArvGcNode *feature;
 	double minimum;
 	double maximum;
@@ -841,7 +846,7 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
 	if (frame_rate > maximum)
 		frame_rate = maximum;
 
-	switch (camera->priv->vendor) {
+	switch (priv->vendor) {
 		case ARV_CAMERA_VENDOR_BASLER:
 			arv_camera_set_string (camera, "TriggerSelector", "AcquisitionStart");
 			arv_camera_set_string (camera, "TriggerMode", "Off");
@@ -849,7 +854,7 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
 			arv_camera_set_string (camera, "TriggerMode", "Off");
 			arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", TRUE);
 			arv_camera_set_float (camera,
-					      camera->priv->has_acquisition_frame_rate ?
+					      priv->has_acquisition_frame_rate ?
 					      "AcquisitionFrameRate":
 					      "AcquisitionFrameRateAbs", frame_rate);
 			break;
@@ -863,7 +868,7 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
 		case ARV_CAMERA_VENDOR_TIS:
 			arv_camera_set_string (camera, "TriggerSelector", "FrameStart");
 			arv_camera_set_string (camera, "TriggerMode", "Off");
-			feature = arv_device_get_feature (camera->priv->device, "FPS");
+			feature = arv_device_get_feature (priv->device, "FPS");
 			if (ARV_IS_GC_ENUMERATION (feature)) {
 				gint64 *values;
 				guint n_values;
@@ -888,7 +893,7 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
 		case ARV_CAMERA_VENDOR_POINT_GREY_FLIR:
 			arv_camera_set_string (camera, "TriggerSelector", "FrameStart");
 			arv_camera_set_string (camera, "TriggerMode", "Off");
-			if (camera->priv->has_acquisition_frame_rate_enabled)
+			if (priv->has_acquisition_frame_rate_enabled)
 				arv_camera_set_integer (camera, "AcquisitionFrameRateEnabled", 1);
 			else
 				arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", TRUE);
@@ -903,7 +908,7 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
 			arv_camera_set_string (camera, "TriggerSelector", "FrameStart");
 			arv_camera_set_string (camera, "TriggerMode", "Off");
 			arv_camera_set_float (camera,
-					      camera->priv->has_acquisition_frame_rate ?
+					      priv->has_acquisition_frame_rate ?
 					      "AcquisitionFrameRate":
 					      "AcquisitionFrameRateAbs", frame_rate);
 			break;
@@ -922,15 +927,16 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate)
 double
 arv_camera_get_frame_rate (ArvCamera *camera)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 	ArvGcNode *feature;
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), -1.0);
 
-	switch (camera->priv->vendor) {
+	switch (priv->vendor) {
 		case ARV_CAMERA_VENDOR_PROSILICA:
 			return arv_camera_get_float (camera, "AcquisitionFrameRateAbs");
 		case ARV_CAMERA_VENDOR_TIS:
-			feature = arv_device_get_feature (camera->priv->device, "FPS");
+			feature = arv_device_get_feature (priv->device, "FPS");
 			if (ARV_IS_GC_ENUMERATION (feature)) {
 				gint64 i;
 
@@ -949,7 +955,7 @@ arv_camera_get_frame_rate (ArvCamera *camera)
 		case ARV_CAMERA_VENDOR_MATRIX_VISION:
 	        case ARV_CAMERA_VENDOR_UNKNOWN:
 			return arv_camera_get_float (camera,
-						     camera->priv->has_acquisition_frame_rate ?
+						     priv->has_acquisition_frame_rate ?
 						     "AcquisitionFrameRate":
 						     "AcquisitionFrameRateAbs");
 	}
@@ -971,13 +977,14 @@ arv_camera_get_frame_rate (ArvCamera *camera)
 void
 arv_camera_get_frame_rate_bounds (ArvCamera *camera, double *min, double *max)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 	ArvGcNode *feature;
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
-	switch (camera->priv->vendor) {
+	switch (priv->vendor) {
 		case ARV_CAMERA_VENDOR_TIS:
-			feature = arv_device_get_feature (camera->priv->device, "FPS");
+			feature = arv_device_get_feature (priv->device, "FPS");
 			if (ARV_IS_GC_ENUMERATION (feature)) {
 				gint64 *values;
 				guint n_values;
@@ -1011,7 +1018,7 @@ arv_camera_get_frame_rate_bounds (ArvCamera *camera, double *min, double *max)
 		case ARV_CAMERA_VENDOR_MATRIX_VISION:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
 			arv_camera_get_float_bounds (camera,
-						     camera->priv->has_acquisition_frame_rate ?
+						     priv->has_acquisition_frame_rate ?
 						     "AcquisitionFrameRate":
 						     "AcquisitionFrameRateAbs",
 						     min, max);
@@ -1038,10 +1045,11 @@ arv_camera_get_frame_rate_bounds (ArvCamera *camera, double *min, double *max)
 void
 arv_camera_set_trigger (ArvCamera *camera, const char *source)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 	g_return_if_fail (source != NULL);
 
-	if (camera->priv->vendor == ARV_CAMERA_VENDOR_BASLER)
+	if (priv->vendor == ARV_CAMERA_VENDOR_BASLER)
 		arv_camera_set_integer (camera, "AcquisitionFrameRateEnable", 0);
 
 	arv_camera_set_string (camera, "TriggerSelector", "AcquisitionStart");
@@ -1179,12 +1187,13 @@ arv_camera_software_trigger (ArvCamera *camera)
 void
 arv_camera_set_exposure_time (ArvCamera *camera, double exposure_time_us)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
 	if (exposure_time_us <= 0)
 		return;
 
-	switch (camera->priv->series) {
+	switch (priv->series) {
 		case ARV_CAMERA_SERIES_BASLER_SCOUT:
 			arv_camera_set_float (camera, "ExposureTimeBaseAbs", exposure_time_us);
 			arv_camera_set_integer (camera, "ExposureTimeRaw", 1);
@@ -1202,7 +1211,7 @@ arv_camera_set_exposure_time (ArvCamera *camera, double exposure_time_us)
 		case ARV_CAMERA_SERIES_BASLER_ACE:
 		default:
 			arv_camera_set_float (camera,
-					      camera->priv->has_exposure_time ?
+					      priv->has_exposure_time ?
 					      "ExposureTime" :
 					      "ExposureTimeAbs", exposure_time_us);
 			break;
@@ -1221,16 +1230,18 @@ arv_camera_set_exposure_time (ArvCamera *camera, double exposure_time_us)
 double
 arv_camera_get_exposure_time (ArvCamera *camera)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0.0);
 
-	switch (camera->priv->series) {
+	switch (priv->series) {
 		case ARV_CAMERA_SERIES_XIMEA:
 			return arv_camera_get_integer (camera,"ExposureTime");
 		case ARV_CAMERA_SERIES_RICOH:
 			return arv_camera_get_integer (camera,"ExposureTimeRaw");
 		default:
 			return arv_camera_get_float (camera,
-						     camera->priv->has_exposure_time ?
+						     priv->has_exposure_time ?
 						     "ExposureTime" :
 						     "ExposureTimeAbs");
 	}
@@ -1250,18 +1261,20 @@ arv_camera_get_exposure_time (ArvCamera *camera)
 void
 arv_camera_get_exposure_time_bounds (ArvCamera *camera, double *min, double *max)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
-	switch (camera->priv->series) {
+	switch (priv->series) {
 		case ARV_CAMERA_SERIES_BASLER_SCOUT:
 			arv_camera_get_float_bounds (camera,
-						     camera->priv->has_exposure_time ?
+						     priv->has_exposure_time ?
 						     "ExposureTime" :
 						     "ExposureTimeBaseAbs",
 						     min, max);
 			break;
 		case ARV_CAMERA_SERIES_BASLER_ACE:
-			if (camera->priv->has_exposure_time)
+			if (priv->has_exposure_time)
 				arv_camera_get_float_bounds (camera, "ExposureTime", min, max);
 			else
 				arv_camera_get_integer_bounds_as_double (camera, "ExposureTimeRaw", min, max);
@@ -1274,7 +1287,7 @@ arv_camera_get_exposure_time_bounds (ArvCamera *camera, double *min, double *max
 			break;
 		default:
 			arv_camera_get_float_bounds (camera,
-						     camera->priv->has_exposure_time ?
+						     priv->has_exposure_time ?
 						     "ExposureTime" :
 						     "ExposureTimeAbs",
 						     min, max);
@@ -1330,12 +1343,14 @@ arv_camera_get_exposure_time_auto (ArvCamera *camera)
 void
 arv_camera_set_gain (ArvCamera *camera, double gain)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
 	if (gain < 0)
 		return;
 
-	if (camera->priv->has_gain)
+	if (priv->has_gain)
 		arv_camera_set_float (camera, "Gain", gain);
 	else
 		arv_camera_set_integer (camera, "GainRaw", gain);
@@ -1353,9 +1368,11 @@ arv_camera_set_gain (ArvCamera *camera, double gain)
 double
 arv_camera_get_gain (ArvCamera *camera)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0.0);
 
-	if (camera->priv->has_gain)
+	if (priv->has_gain)
 		return arv_camera_get_float (camera, "Gain");
 
 	return arv_camera_get_integer (camera, "GainRaw");
@@ -1375,9 +1392,11 @@ arv_camera_get_gain (ArvCamera *camera)
 void
 arv_camera_get_gain_bounds (ArvCamera *camera, double *min, double *max)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
-	if (camera->priv->has_gain) {
+	if (priv->has_gain) {
 		arv_camera_get_float_bounds (camera, "Gain", min, max);
 		return;
 	}
@@ -1454,9 +1473,11 @@ arv_camera_get_payload (ArvCamera *camera)
 ArvDevice *
 arv_camera_get_device (ArvCamera *camera)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
-	return camera->priv->device;
+	return priv->device;
 }
 
 /**
@@ -1471,13 +1492,15 @@ arv_camera_get_device (ArvCamera *camera)
 gboolean
 arv_camera_is_frame_rate_available (ArvCamera *camera)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
-	switch (camera->priv->vendor) {
+	switch (priv->vendor) {
 		case ARV_CAMERA_VENDOR_PROSILICA:
-			return arv_device_get_feature (camera->priv->device, "AcquisitionFrameRateAbs") != NULL;
+			return arv_device_get_feature (priv->device, "AcquisitionFrameRateAbs") != NULL;
 		case ARV_CAMERA_VENDOR_TIS:
-			return arv_device_get_feature (camera->priv->device, "FPS") != NULL;
+			return arv_device_get_feature (priv->device, "FPS") != NULL;
 		case ARV_CAMERA_VENDOR_POINT_GREY_FLIR:
 		case ARV_CAMERA_VENDOR_DALSA:
 		case ARV_CAMERA_VENDOR_RICOH:
@@ -1485,8 +1508,8 @@ arv_camera_is_frame_rate_available (ArvCamera *camera)
 	        case ARV_CAMERA_VENDOR_XIMEA:
 		case ARV_CAMERA_VENDOR_MATRIX_VISION:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
-			return arv_device_get_feature (camera->priv->device,
-						       camera->priv->has_acquisition_frame_rate ?
+			return arv_device_get_feature (priv->device,
+						       priv->has_acquisition_frame_rate ?
 						       "AcquisitionFrameRate":
 						       "AcquisitionFrameRateAbs") != NULL;
 	}
@@ -1505,16 +1528,18 @@ arv_camera_is_frame_rate_available (ArvCamera *camera)
 gboolean
 arv_camera_is_exposure_time_available (ArvCamera *camera)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
-	switch (camera->priv->vendor) {
+	switch (priv->vendor) {
 		case ARV_CAMERA_VENDOR_XIMEA:
-			return arv_device_get_feature (camera->priv->device, "ExposureTime") != NULL;
+			return arv_device_get_feature (priv->device, "ExposureTime") != NULL;
 		case ARV_CAMERA_VENDOR_RICOH:
-			return arv_device_get_feature (camera->priv->device, "ExposureTimeRaw") != NULL;
+			return arv_device_get_feature (priv->device, "ExposureTimeRaw") != NULL;
 		default:
-			return arv_device_get_feature (camera->priv->device,
-						       camera->priv->has_exposure_time ?
+			return arv_device_get_feature (priv->device,
+						       priv->has_exposure_time ?
 						       "ExposureTime" :
 						       "ExposureTimeAbs") != NULL;
 	}
@@ -1532,9 +1557,11 @@ arv_camera_is_exposure_time_available (ArvCamera *camera)
 gboolean
 arv_camera_is_exposure_auto_available (ArvCamera *camera)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
-	return arv_device_get_feature (camera->priv->device, "ExposureAuto") != NULL;
+	return arv_device_get_feature (priv->device, "ExposureAuto") != NULL;
 }
 
 /**
@@ -1549,12 +1576,14 @@ arv_camera_is_exposure_auto_available (ArvCamera *camera)
 gboolean
 arv_camera_is_gain_available (ArvCamera *camera)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
-	if (camera->priv->has_gain)
-		return arv_device_get_feature (camera->priv->device, "Gain") != NULL;
+	if (priv->has_gain)
+		return arv_device_get_feature (priv->device, "Gain") != NULL;
 
-	return arv_device_get_feature (camera->priv->device, "GainRaw") != NULL;
+	return arv_device_get_feature (priv->device, "GainRaw") != NULL;
 }
 
 /**
@@ -1569,9 +1598,11 @@ arv_camera_is_gain_available (ArvCamera *camera)
 gboolean
 arv_camera_is_gain_auto_available (ArvCamera *camera)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
-	return arv_device_get_feature (camera->priv->device, "GainAuto") != NULL;
+	return arv_device_get_feature (priv->device, "GainAuto") != NULL;
 }
 
 /**
@@ -1595,16 +1626,18 @@ arv_camera_is_binning_available (ArvCamera *camera)
 static void
 _update_status (ArvCamera *camera, const GError *error)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
 	if (error == NULL)
 		return;
 
-	if (camera->priv->error != NULL) {
+	if (priv->error != NULL) {
 		arv_warning_device ("[ArvCamera:_update_status] %s", error->message);
 	} else {
 		arv_warning_device ("[ArvCamera:_update_status] %s (Status changed)", error->message);
 
-		g_clear_error (&camera->priv->error);
-		camera->priv->error = g_error_copy (error);
+		g_clear_error (&priv->error);
+		priv->error = g_error_copy (error);
 	}
 }
 
@@ -1621,12 +1654,13 @@ _update_status (ArvCamera *camera, const GError *error)
 void
 arv_camera_execute_command (ArvCamera *camera, const char *feature)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 	GError *error = NULL;
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 	g_return_if_fail (feature != NULL);
 
-	arv_device_execute_command (camera->priv->device, feature, &error);
+	arv_device_execute_command (priv->device, feature, &error);
 	if (error != NULL) {
 		_update_status (camera, error);
 		g_clear_error (&error);
@@ -1647,12 +1681,13 @@ arv_camera_execute_command (ArvCamera *camera, const char *feature)
 void
 arv_camera_set_boolean (ArvCamera *camera, const char *feature, gboolean value)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 	GError *error = NULL;
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 	g_return_if_fail (feature != NULL);
 
-	arv_device_set_boolean_feature_value (camera->priv->device, feature, value, &error);
+	arv_device_set_boolean_feature_value (priv->device, feature, value, &error);
 	if (error != NULL) {
 		_update_status (camera, error);
 		g_clear_error (&error);
@@ -1672,13 +1707,14 @@ arv_camera_set_boolean (ArvCamera *camera, const char *feature, gboolean value)
 gboolean
 arv_camera_get_boolean (ArvCamera *camera, const char *feature)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 	GError *error = NULL;
 	gboolean value;
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 	g_return_val_if_fail (feature != NULL, FALSE);
 
-	value = arv_device_get_boolean_feature_value (camera->priv->device, feature, &error);
+	value = arv_device_get_boolean_feature_value (priv->device, feature, &error);
 	if (error != NULL) {
 		_update_status (camera, error);
 		g_clear_error (&error);
@@ -1701,13 +1737,14 @@ arv_camera_get_boolean (ArvCamera *camera, const char *feature)
 void
 arv_camera_set_string (ArvCamera *camera, const char *feature, const char *value)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 	GError *error = NULL;
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 	g_return_if_fail (feature != NULL);
 	g_return_if_fail (value != NULL);
 
-	arv_device_set_string_feature_value (camera->priv->device, feature, value, &error);
+	arv_device_set_string_feature_value (priv->device, feature, value, &error);
 	if (error != NULL) {
 		_update_status (camera, error);
 		g_clear_error (&error);
@@ -1727,13 +1764,14 @@ arv_camera_set_string (ArvCamera *camera, const char *feature, const char *value
 const char *
 arv_camera_get_string (ArvCamera *camera, const char *feature)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 	GError *error = NULL;
 	const char *value;
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 	g_return_val_if_fail (feature != NULL, FALSE);
 
-	value = arv_device_get_string_feature_value (camera->priv->device, feature, &error);
+	value = arv_device_get_string_feature_value (priv->device, feature, &error);
 	if (error != NULL) {
 		_update_status (camera, error);
 		g_clear_error (&error);
@@ -1756,12 +1794,13 @@ arv_camera_get_string (ArvCamera *camera, const char *feature)
 void
 arv_camera_set_integer (ArvCamera *camera, const char *feature, gint64 value)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 	GError *error = NULL;
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 	g_return_if_fail (feature != NULL);
 
-	arv_device_set_integer_feature_value (camera->priv->device, feature, value, &error);
+	arv_device_set_integer_feature_value (priv->device, feature, value, &error);
 	if (error != NULL) {
 		_update_status (camera, error);
 		g_clear_error (&error);
@@ -1781,13 +1820,14 @@ arv_camera_set_integer (ArvCamera *camera, const char *feature, gint64 value)
 gint64
 arv_camera_get_integer (ArvCamera *camera, const char *feature)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 	GError *error = NULL;
 	gint64 value;
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0);
 	g_return_val_if_fail (feature != NULL, 0);
 
-	value = arv_device_get_integer_feature_value (camera->priv->device, feature, &error);
+	value = arv_device_get_integer_feature_value (priv->device, feature, &error);
 	if (error != NULL) {
 		_update_status (camera, error);
 		g_clear_error (&error);
@@ -1811,12 +1851,13 @@ arv_camera_get_integer (ArvCamera *camera, const char *feature)
 void
 arv_camera_get_integer_bounds (ArvCamera *camera, const char *feature, gint64 *min, gint64 *max)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 	GError *error = NULL;
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 	g_return_if_fail (feature != NULL);
 
-	arv_device_get_integer_feature_bounds (camera->priv->device, feature, min, max, &error);
+	arv_device_get_integer_feature_bounds (priv->device, feature, min, max, &error);
 	if (error != NULL) {
 		_update_status (camera, error);
 		g_clear_error (&error);
@@ -1836,13 +1877,14 @@ arv_camera_get_integer_bounds (ArvCamera *camera, const char *feature, gint64 *m
 gint64
 arv_camera_get_integer_increment (ArvCamera *camera, const char *feature)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 	GError *error = NULL;
 	gint64 value = 1;
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), 1);
 	g_return_val_if_fail (feature != NULL, 1);
 
-	value = arv_device_get_integer_feature_increment (camera->priv->device, feature, &error);
+	value = arv_device_get_integer_feature_increment (priv->device, feature, &error);
 	if (error != NULL) {
 		_update_status (camera, error);
 		g_clear_error (&error);
@@ -1854,6 +1896,7 @@ arv_camera_get_integer_increment (ArvCamera *camera, const char *feature)
 static void
 arv_camera_get_integer_bounds_as_gint (ArvCamera *camera, const char *feature, gint *min, gint *max)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 	GError *error = NULL;
 	gint64 min64, max64;
 
@@ -1865,7 +1908,7 @@ arv_camera_get_integer_bounds_as_gint (ArvCamera *camera, const char *feature, g
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 	g_return_if_fail (feature != NULL);
 
-	arv_device_get_integer_feature_bounds (camera->priv->device, feature, &min64, &max64, &error);
+	arv_device_get_integer_feature_bounds (priv->device, feature, &min64, &max64, &error);
 	if (error != NULL) {
 		_update_status (camera, error);
 		g_clear_error (&error);
@@ -1880,6 +1923,7 @@ arv_camera_get_integer_bounds_as_gint (ArvCamera *camera, const char *feature, g
 static void
 arv_camera_get_integer_bounds_as_guint (ArvCamera *camera, const char *feature, guint *min, guint *max)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 	GError *error = NULL;
 	gint64 min64, max64;
 
@@ -1891,7 +1935,7 @@ arv_camera_get_integer_bounds_as_guint (ArvCamera *camera, const char *feature, 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 	g_return_if_fail (feature != NULL);
 
-	arv_device_get_integer_feature_bounds (camera->priv->device, feature, &min64, &max64, &error);
+	arv_device_get_integer_feature_bounds (priv->device, feature, &min64, &max64, &error);
 	if (error != NULL) {
 		_update_status (camera, error);
 		g_clear_error (&error);
@@ -1906,6 +1950,7 @@ arv_camera_get_integer_bounds_as_guint (ArvCamera *camera, const char *feature, 
 static void
 arv_camera_get_integer_bounds_as_double (ArvCamera *camera, const char *feature, double *min, double *max)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 	GError *error = NULL;
 	gint64 min64, max64;
 
@@ -1917,7 +1962,7 @@ arv_camera_get_integer_bounds_as_double (ArvCamera *camera, const char *feature,
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 	g_return_if_fail (feature != NULL);
 
-	arv_device_get_integer_feature_bounds (camera->priv->device, feature, &min64, &max64, &error);
+	arv_device_get_integer_feature_bounds (priv->device, feature, &min64, &max64, &error);
 	if (error != NULL) {
 		_update_status (camera, error);
 		g_clear_error (&error);
@@ -1943,12 +1988,13 @@ arv_camera_get_integer_bounds_as_double (ArvCamera *camera, const char *feature,
 void
 arv_camera_set_float (ArvCamera *camera, const char *feature, double value)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 	GError *error = NULL;
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 	g_return_if_fail (feature != NULL);
 
-	arv_device_set_float_feature_value (camera->priv->device, feature, value, &error);
+	arv_device_set_float_feature_value (priv->device, feature, value, &error);
 	if (error != NULL) {
 		_update_status (camera, error);
 		g_clear_error (&error);
@@ -1968,13 +2014,14 @@ arv_camera_set_float (ArvCamera *camera, const char *feature, double value)
 double
 arv_camera_get_float (ArvCamera *camera, const char *feature)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 	GError *error = NULL;
 	double value;
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0.0);
 	g_return_val_if_fail (feature != NULL, 0.0);
 
-	value = arv_device_get_float_feature_value (camera->priv->device, feature, &error);
+	value = arv_device_get_float_feature_value (priv->device, feature, &error);
 	if (error != NULL) {
 		_update_status (camera, error);
 		g_clear_error (&error);
@@ -1998,12 +2045,13 @@ arv_camera_get_float (ArvCamera *camera, const char *feature)
 void
 arv_camera_get_float_bounds (ArvCamera *camera, const char *feature, double *min, double *max)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 	GError *error = NULL;
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 	g_return_if_fail (feature != NULL);
 
-	arv_device_get_float_feature_bounds (camera->priv->device, feature, min, max, &error);
+	arv_device_get_float_feature_bounds (priv->device, feature, min, max, &error);
 	if (error != NULL) {
 		_update_status (camera, error);
 		g_clear_error (&error);
@@ -2027,13 +2075,14 @@ arv_camera_get_float_bounds (ArvCamera *camera, const char *feature, double *min
 gint64 *
 arv_camera_get_available_enumerations (ArvCamera *camera, const char *feature, guint *n_values)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 	GError *error = NULL;
 	gint64 *values;
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 	g_return_val_if_fail (feature != NULL, NULL);
 
-	values = arv_device_get_available_enumeration_feature_values (camera->priv->device, feature, n_values, &error);
+	values = arv_device_get_available_enumeration_feature_values (priv->device, feature, n_values, &error);
 	if (error != NULL) {
 		_update_status (camera, error);
 		g_clear_error (&error);
@@ -2059,13 +2108,14 @@ arv_camera_get_available_enumerations (ArvCamera *camera, const char *feature, g
 const char **
 arv_camera_get_available_enumerations_as_strings (ArvCamera *camera, const char *feature, guint *n_values)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 	GError *error = NULL;
 	const char **strings;
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 	g_return_val_if_fail (feature != NULL, NULL);
 
-	strings = arv_device_get_available_enumeration_feature_values_as_strings (camera->priv->device,
+	strings = arv_device_get_available_enumeration_feature_values_as_strings (priv->device,
 										  feature, n_values, &error);
 	if (error != NULL) {
 		_update_status (camera, error);
@@ -2092,13 +2142,14 @@ arv_camera_get_available_enumerations_as_strings (ArvCamera *camera, const char 
 const char **
 arv_camera_get_available_enumerations_as_display_names (ArvCamera *camera, const char *feature, guint *n_values)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 	GError *error = NULL;
 	const char **strings;
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 	g_return_val_if_fail (feature != NULL, NULL);
 
-	strings = arv_device_get_available_enumeration_feature_values_as_display_names (camera->priv->device,
+	strings = arv_device_get_available_enumeration_feature_values_as_display_names (priv->device,
 											feature, n_values, &error);
 	if (error != NULL) {
 		_update_status (camera, error);
@@ -2121,6 +2172,7 @@ arv_camera_get_available_enumerations_as_display_names (ArvCamera *camera, const
 gboolean
 arv_camera_is_feature_available (ArvCamera *camera, const char *feature)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 	ArvGcNode* node;
 	GError *error = NULL;
 	gboolean available = FALSE;
@@ -2128,7 +2180,7 @@ arv_camera_is_feature_available (ArvCamera *camera, const char *feature)
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 	g_return_val_if_fail (feature != NULL, FALSE);
 
-	node = arv_device_get_feature (camera->priv->device, feature);
+	node = arv_device_get_feature (priv->device, feature);
 	available = ARV_IS_GC_FEATURE_NODE (node) && arv_gc_feature_node_is_available (ARV_GC_FEATURE_NODE (node), &error);
 
 	if (error != NULL) {
@@ -2142,13 +2194,15 @@ arv_camera_is_feature_available (ArvCamera *camera, const char *feature)
 ArvStatus
 arv_camera_get_status (ArvCamera *camera, GError **error)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), ARV_STATUS_UNKNOWN);
 
-	if (camera->priv->error == NULL)
+	if (priv->error == NULL)
 		return ARV_STATUS_SUCCESS;
 
-	g_propagate_error (error, camera->priv->error);
-	camera->priv->error = NULL;
+	g_propagate_error (error, priv->error);
+	priv->error = NULL;
 
 	return ARV_STATUS_PROTOCOL_ERROR;
 }
@@ -2165,9 +2219,11 @@ arv_camera_get_status (ArvCamera *camera, GError **error)
 gboolean
 arv_camera_is_gv_device	(ArvCamera *camera)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
-	return ARV_IS_GV_DEVICE (camera->priv->device);
+	return ARV_IS_GV_DEVICE (priv->device);
 }
 
 /**
@@ -2299,12 +2355,14 @@ arv_camera_gv_get_packet_delay (ArvCamera *camera)
 void
 arv_camera_gv_set_packet_size (ArvCamera *camera, gint packet_size)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
 	if (packet_size <= 0)
 		return;
 
 	g_return_if_fail (arv_camera_is_gv_device (camera));
 
-	arv_gv_device_set_packet_size (ARV_GV_DEVICE (camera->priv->device), packet_size);
+	arv_gv_device_set_packet_size (ARV_GV_DEVICE (priv->device), packet_size);
 }
 
 /**
@@ -2319,9 +2377,11 @@ arv_camera_gv_set_packet_size (ArvCamera *camera, gint packet_size)
 guint
 arv_camera_gv_get_packet_size (ArvCamera *camera)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
 	g_return_val_if_fail (arv_camera_is_gv_device (camera), 0);
 
-	return arv_gv_device_get_packet_size (ARV_GV_DEVICE (camera->priv->device));
+	return arv_gv_device_get_packet_size (ARV_GV_DEVICE (priv->device));
 }
 
 /**
@@ -2341,9 +2401,11 @@ arv_camera_gv_get_packet_size (ArvCamera *camera)
 guint
 arv_camera_gv_auto_packet_size (ArvCamera *camera)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
 	g_return_val_if_fail (arv_camera_is_gv_device (camera), 0);
 
-	return arv_gv_device_auto_packet_size (ARV_GV_DEVICE (camera->priv->device));
+	return arv_gv_device_auto_packet_size (ARV_GV_DEVICE (priv->device));
 }
 
 /**
@@ -2360,9 +2422,11 @@ arv_camera_gv_auto_packet_size (ArvCamera *camera)
 void
 arv_camera_gv_set_stream_options (ArvCamera *camera, ArvGvStreamOption options)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
 	g_return_if_fail (arv_camera_is_gv_device (camera));
 
-	arv_gv_device_set_stream_options (ARV_GV_DEVICE (camera->priv->device), options);
+	arv_gv_device_set_stream_options (ARV_GV_DEVICE (priv->device), options);
 }
 
 /**
@@ -2377,10 +2441,12 @@ arv_camera_gv_set_stream_options (ArvCamera *camera, ArvGvStreamOption options)
 gboolean
 arv_camera_is_uv_device	(ArvCamera *camera)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
 #if ARAVIS_HAS_USB
-	return ARV_IS_UV_DEVICE (camera->priv->device);
+	return ARV_IS_UV_DEVICE (priv->device);
 #else
 	return FALSE;
 #endif
@@ -2398,11 +2464,13 @@ arv_camera_is_uv_device	(ArvCamera *camera)
 gboolean
 arv_camera_uv_is_bandwidth_control_available (ArvCamera *camera)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
 	g_return_val_if_fail (arv_camera_is_uv_device (camera), FALSE);
 
-	switch (camera->priv->vendor) {
+	switch (priv->vendor) {
 		case ARV_CAMERA_VENDOR_XIMEA:
-			return arv_device_get_feature(camera->priv->device, "DeviceLinkThroughputLimit") != NULL;
+			return arv_device_get_feature(priv->device, "DeviceLinkThroughputLimit") != NULL;
 		default:
 			return FALSE;
 	}
@@ -2610,9 +2678,11 @@ arv_camera_set_chunks (ArvCamera *camera, const char *chunk_list)
 ArvChunkParser *
 arv_camera_create_chunk_parser (ArvCamera *camera)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
-	return arv_device_create_chunk_parser (camera->priv->device);
+	return arv_device_create_chunk_parser (priv->device);
 }
 
 /**
@@ -2648,21 +2718,18 @@ arv_camera_new (const char *name)
 	return camera;
 }
 
-G_DEFINE_TYPE_WITH_CODE (ArvCamera, arv_camera, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvCamera))
-
 static void
 arv_camera_init (ArvCamera *camera)
 {
-	camera->priv = arv_camera_get_instance_private (camera);
 }
 
 static void
 arv_camera_finalize (GObject *object)
 {
-	ArvCamera *camera = ARV_CAMERA (object);
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (ARV_CAMERA (object));
 
-	g_clear_object (&camera->priv->device);
-	g_clear_error (&camera->priv->error);
+	g_clear_object (&priv->device);
+	g_clear_error (&priv->error);
 
 	G_OBJECT_CLASS (arv_camera_parent_class)->finalize (object);
 }
@@ -2670,6 +2737,7 @@ arv_camera_finalize (GObject *object)
 static GObject *
 arv_camera_constructor (GType gtype, guint n_properties, GObjectConstructParam *properties)
 {
+	ArvCameraPrivate *priv;
 	GObject *object;
 	ArvCamera *camera;
 	ArvCameraVendor vendor;
@@ -2680,14 +2748,15 @@ arv_camera_constructor (GType gtype, guint n_properties, GObjectConstructParam *
 	object = G_OBJECT_CLASS (arv_camera_parent_class)->constructor (gtype, n_properties, properties);
 
 	camera = ARV_CAMERA (object);
+	priv = arv_camera_get_instance_private (camera);
 
-	if (!camera->priv->device)
-		camera->priv->device = arv_open_device (NULL);
+	if (!priv->device)
+		priv->device = arv_open_device (NULL);
 
-	if (!ARV_IS_DEVICE (camera->priv->device))
+	if (!ARV_IS_DEVICE (priv->device))
 		return NULL;
 
-	camera->priv->genicam = arv_device_get_genicam (camera->priv->device);
+	priv->genicam = arv_device_get_genicam (priv->device);
 
 	vendor_name = arv_camera_get_vendor_name (camera);
 	model_name = arv_camera_get_model_name (camera);
@@ -2726,15 +2795,15 @@ arv_camera_constructor (GType gtype, guint n_properties, GObjectConstructParam *
 		series = ARV_CAMERA_SERIES_UNKNOWN;
 	}
 
-	camera->priv->vendor = vendor;
-	camera->priv->series = series;
+	priv->vendor = vendor;
+	priv->series = series;
 
-	camera->priv->has_gain = ARV_IS_GC_FLOAT (arv_device_get_feature (camera->priv->device, "Gain"));
-	camera->priv->has_exposure_time = ARV_IS_GC_FLOAT (arv_device_get_feature (camera->priv->device, "ExposureTime"));
-	camera->priv->has_acquisition_frame_rate = ARV_IS_GC_FLOAT (arv_device_get_feature (camera->priv->device,
-											    "AcquisitionFrameRate"));
-	camera->priv->has_acquisition_frame_rate_enabled = ARV_IS_GC_INTEGER (arv_device_get_feature (camera->priv->device,
-												      "AcquisitionFrameRateEnabled"));
+	priv->has_gain = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device, "Gain"));
+	priv->has_exposure_time = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device, "ExposureTime"));
+	priv->has_acquisition_frame_rate = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device,
+										    "AcquisitionFrameRate"));
+	priv->has_acquisition_frame_rate_enabled = ARV_IS_GC_INTEGER (arv_device_get_feature (priv->device,
+											      "AcquisitionFrameRateEnabled"));
 
     return object;
 }
@@ -2742,12 +2811,12 @@ arv_camera_constructor (GType gtype, guint n_properties, GObjectConstructParam *
 static void
 arv_camera_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
-	ArvCamera *camera = ARV_CAMERA (object);
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (ARV_CAMERA (object));
 
 	switch (prop_id)
 	{
 		case PROP_CAMERA_DEVICE:
-			camera->priv->device = g_value_get_object (value);
+			priv->device = g_value_get_object (value);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2758,13 +2827,13 @@ arv_camera_set_property (GObject *object, guint prop_id, const GValue *value, GP
 static void
 arv_camera_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
-	ArvCamera *camera = ARV_CAMERA (object);
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (ARV_CAMERA (object));
 
 	switch (prop_id)
 	{
 		case PROP_CAMERA_DEVICE:
-            g_value_set_object (value, camera->priv->device);
-            break;
+			g_value_set_object (value, priv->device);
+			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 			break;
