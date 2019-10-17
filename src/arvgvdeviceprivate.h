@@ -49,19 +49,6 @@ G_BEGIN_DECLS
 
 #define ARV_GV_DEVICE_BUFFER_SIZE	1024
 
-typedef struct _ArvGvDeviceClass ArvGvDeviceClass;
-typedef struct _ArvGvDevicePrivate ArvGvDevicePrivate;
-
-struct _ArvGvDevice {
-	ArvDevice device;
-
-	ArvGvDevicePrivate *priv;
-};
-
-struct _ArvGvDeviceClass {
-	ArvDeviceClass parent_class;
-};
-
 G_END_DECLS
 
 #endif

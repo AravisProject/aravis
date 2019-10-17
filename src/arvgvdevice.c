@@ -92,7 +92,7 @@ typedef struct {
 	gboolean is_controller;
 } ArvGvDeviceIOData;
 
-struct _ArvGvDevicePrivate {
+typedef struct {
 	ArvGvDeviceIOData *io_data;
 
 	void *heartbeat_thread;
@@ -107,6 +107,16 @@ struct _ArvGvDevicePrivate {
 	gboolean is_write_memory_supported;
 
 	ArvGvStreamOption stream_options;
+} ArvGvDevicePrivate ;
+
+struct _ArvGvDevice {
+	ArvDevice device;
+
+	ArvGvDevicePrivate *priv;
+};
+
+struct _ArvGvDeviceClass {
+	ArvDeviceClass parent_class;
 };
 
 GRegex *
