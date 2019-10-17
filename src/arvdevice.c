@@ -48,10 +48,6 @@ enum {
 
 static guint arv_device_signals[ARV_DEVICE_SIGNAL_LAST] = {0};
 
-struct  _ArvDevicePrivate {
-	int dummy;
-};
-
 GQuark
 arv_device_error_quark (void)
 {
@@ -764,12 +760,11 @@ arv_device_emit_control_lost_signal (ArvDevice *device)
 	g_signal_emit (device, arv_device_signals[ARV_DEVICE_SIGNAL_CONTROL_LOST], 0);
 }
 
-G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvDevice, arv_device, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvDevice))
+G_DEFINE_ABSTRACT_TYPE (ArvDevice, arv_device, G_TYPE_OBJECT)
 
 static void
 arv_device_init (ArvDevice *device)
 {
-	device->priv = arv_device_get_instance_private (device);
 }
 
 static void

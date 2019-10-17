@@ -34,20 +34,7 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_DEVICE             (arv_device_get_type ())
-#define ARV_DEVICE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_DEVICE, ArvDevice))
-#define ARV_DEVICE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_DEVICE, ArvDeviceClass))
-#define ARV_IS_DEVICE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_DEVICE))
-#define ARV_IS_DEVICE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_DEVICE))
-#define ARV_DEVICE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_DEVICE, ArvDeviceClass))
-
-typedef struct _ArvDevicePrivate ArvDevicePrivate;
-typedef struct _ArvDeviceClass ArvDeviceClass;
-
-struct _ArvDevice {
-	GObject	object;
-
-	ArvDevicePrivate *priv;
-};
+G_DECLARE_DERIVABLE_TYPE (ArvDevice, arv_device, ARV, DEVICE, GObject)
 
 struct _ArvDeviceClass {
 	GObjectClass parent_class;
@@ -65,8 +52,6 @@ struct _ArvDeviceClass {
 	/* signals */
 	void		(*control_lost)		(ArvDevice *device);
 };
-
-GType arv_device_get_type (void);
 
 ArvStream *	arv_device_create_stream	(ArvDevice *device, ArvStreamCallback callback, void *user_data);
 
