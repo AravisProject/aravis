@@ -33,25 +33,28 @@
 
 #include <arvinterfaceprivate.h>
 
-struct _ArvInterfacePrivate {
+typedef struct {
 	GArray *device_ids;
-};
+} ArvInterfacePrivate;
+
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvInterface, arv_interface, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvInterface))
 
 static void
 arv_interface_clear_device_ids (ArvInterface *interface)
 {
+	ArvInterfacePrivate *priv = arv_interface_get_instance_private (interface);
 	unsigned int i;
 
-	for (i = 0; i < interface->priv->device_ids->len; i++) {
-		g_free (g_array_index (interface->priv->device_ids, ArvInterfaceDeviceIds *, i)->device);
-		g_free (g_array_index (interface->priv->device_ids, ArvInterfaceDeviceIds *, i)->physical);
-		g_free (g_array_index (interface->priv->device_ids, ArvInterfaceDeviceIds *, i)->address);
-		g_free (g_array_index (interface->priv->device_ids, ArvInterfaceDeviceIds *, i)->vendor);
-		g_free (g_array_index (interface->priv->device_ids, ArvInterfaceDeviceIds *, i)->model);
-		g_free (g_array_index (interface->priv->device_ids, ArvInterfaceDeviceIds *, i)->serial_nbr);
-		g_free (g_array_index (interface->priv->device_ids, ArvInterfaceDeviceIds *, i));
+	for (i = 0; i < priv->device_ids->len; i++) {
+		g_free (g_array_index (priv->device_ids, ArvInterfaceDeviceIds *, i)->device);
+		g_free (g_array_index (priv->device_ids, ArvInterfaceDeviceIds *, i)->physical);
+		g_free (g_array_index (priv->device_ids, ArvInterfaceDeviceIds *, i)->address);
+		g_free (g_array_index (priv->device_ids, ArvInterfaceDeviceIds *, i)->vendor);
+		g_free (g_array_index (priv->device_ids, ArvInterfaceDeviceIds *, i)->model);
+		g_free (g_array_index (priv->device_ids, ArvInterfaceDeviceIds *, i)->serial_nbr);
+		g_free (g_array_index (priv->device_ids, ArvInterfaceDeviceIds *, i));
 	}
-	g_array_set_size (interface->priv->device_ids, 0);
+	g_array_set_size (priv->device_ids, 0);
 }
 
 static gint
@@ -78,13 +81,14 @@ _compare_device_ids (ArvInterfaceDeviceIds **a, ArvInterfaceDeviceIds **b)
 void
 arv_interface_update_device_list (ArvInterface *interface)
 {
+	ArvInterfacePrivate *priv = arv_interface_get_instance_private (interface);
 	g_return_if_fail (ARV_IS_INTERFACE (interface));
 
 	arv_interface_clear_device_ids (interface);
 
-	ARV_INTERFACE_GET_CLASS (interface)->update_device_list (interface, interface->priv->device_ids);
+	ARV_INTERFACE_GET_CLASS (interface)->update_device_list (interface, priv->device_ids);
 
-	g_array_sort (interface->priv->device_ids, (GCompareFunc) _compare_device_ids);
+	g_array_sort (priv->device_ids, (GCompareFunc) _compare_device_ids);
 }
 
 /**
@@ -103,10 +107,12 @@ arv_interface_update_device_list (ArvInterface *interface)
 unsigned int
 arv_interface_get_n_devices (ArvInterface *interface)
 {
-	g_return_val_if_fail (ARV_IS_INTERFACE (interface), 0);
-	g_return_val_if_fail (interface->priv->device_ids != NULL, 0);
+	ArvInterfacePrivate *priv = arv_interface_get_instance_private (interface);
 
-	return interface->priv->device_ids->len;
+	g_return_val_if_fail (ARV_IS_INTERFACE (interface), 0);
+	g_return_val_if_fail (priv->device_ids != NULL, 0);
+
+	return priv->device_ids->len;
 }
 
 /**
@@ -125,13 +131,15 @@ arv_interface_get_n_devices (ArvInterface *interface)
 const char *
 arv_interface_get_device_id (ArvInterface *interface, unsigned int index)
 {
-	g_return_val_if_fail (ARV_IS_INTERFACE (interface), 0);
-	g_return_val_if_fail (interface->priv->device_ids != NULL, 0);
+	ArvInterfacePrivate *priv = arv_interface_get_instance_private (interface);
 
-	if (index >= interface->priv->device_ids->len)
+	g_return_val_if_fail (ARV_IS_INTERFACE (interface), 0);
+	g_return_val_if_fail (priv->device_ids != NULL, 0);
+
+	if (index >= priv->device_ids->len)
 		return NULL;
 
-	return g_array_index (interface->priv->device_ids, ArvInterfaceDeviceIds *, index)->device;
+	return g_array_index (priv->device_ids, ArvInterfaceDeviceIds *, index)->device;
 }
 
 /**
@@ -154,13 +162,15 @@ arv_interface_get_device_id (ArvInterface *interface, unsigned int index)
 const char *
 arv_interface_get_device_physical_id (ArvInterface *interface, unsigned int index)
 {
-	g_return_val_if_fail (ARV_IS_INTERFACE (interface), 0);
-	g_return_val_if_fail (interface->priv->device_ids != NULL, 0);
+	ArvInterfacePrivate *priv = arv_interface_get_instance_private (interface);
 
-	if (index >= interface->priv->device_ids->len)
+	g_return_val_if_fail (ARV_IS_INTERFACE (interface), 0);
+	g_return_val_if_fail (priv->device_ids != NULL, 0);
+
+	if (index >= priv->device_ids->len)
 		return NULL;
 
-	return g_array_index (interface->priv->device_ids, ArvInterfaceDeviceIds *, index)->physical;
+	return g_array_index (priv->device_ids, ArvInterfaceDeviceIds *, index)->physical;
 }
 
 /**
@@ -182,13 +192,15 @@ arv_interface_get_device_physical_id (ArvInterface *interface, unsigned int inde
 const char *
 arv_interface_get_device_address (ArvInterface *interface, unsigned int index)
 {
-	g_return_val_if_fail (ARV_IS_INTERFACE (interface), 0);
-	g_return_val_if_fail (interface->priv->device_ids != NULL, 0);
+	ArvInterfacePrivate *priv = arv_interface_get_instance_private (interface);
 
-	if (index >= interface->priv->device_ids->len)
+	g_return_val_if_fail (ARV_IS_INTERFACE (interface), 0);
+	g_return_val_if_fail (priv->device_ids != NULL, 0);
+
+	if (index >= priv->device_ids->len)
 		return NULL;
 
-	return g_array_index (interface->priv->device_ids, ArvInterfaceDeviceIds *, index)->address;
+	return g_array_index (priv->device_ids, ArvInterfaceDeviceIds *, index)->address;
 }
 
 /**
@@ -209,13 +221,15 @@ arv_interface_get_device_address (ArvInterface *interface, unsigned int index)
 const char *
 arv_interface_get_device_vendor (ArvInterface *interface, unsigned int index)
 {
-	g_return_val_if_fail (ARV_IS_INTERFACE (interface), 0);
-	g_return_val_if_fail (interface->priv->device_ids != NULL, 0);
+	ArvInterfacePrivate *priv = arv_interface_get_instance_private (interface);
 
-	if (index >= interface->priv->device_ids->len)
+	g_return_val_if_fail (ARV_IS_INTERFACE (interface), 0);
+	g_return_val_if_fail (priv->device_ids != NULL, 0);
+
+	if (index >= priv->device_ids->len)
 		return NULL;
 
-	return g_array_index (interface->priv->device_ids, ArvInterfaceDeviceIds *, index)->vendor;
+	return g_array_index (priv->device_ids, ArvInterfaceDeviceIds *, index)->vendor;
 }
 
 /**
@@ -236,13 +250,15 @@ arv_interface_get_device_vendor (ArvInterface *interface, unsigned int index)
 const char *
 arv_interface_get_device_model (ArvInterface *interface, unsigned int index)
 {
-	g_return_val_if_fail (ARV_IS_INTERFACE (interface), 0);
-	g_return_val_if_fail (interface->priv->device_ids != NULL, 0);
+	ArvInterfacePrivate *priv = arv_interface_get_instance_private (interface);
 
-	if (index >= interface->priv->device_ids->len)
+	g_return_val_if_fail (ARV_IS_INTERFACE (interface), 0);
+	g_return_val_if_fail (priv->device_ids != NULL, 0);
+
+	if (index >= priv->device_ids->len)
 		return NULL;
 
-	return g_array_index (interface->priv->device_ids, ArvInterfaceDeviceIds *, index)->model;
+	return g_array_index (priv->device_ids, ArvInterfaceDeviceIds *, index)->model;
 }
 
 /**
@@ -263,13 +279,15 @@ arv_interface_get_device_model (ArvInterface *interface, unsigned int index)
 const char *
 arv_interface_get_device_serial_nbr (ArvInterface *interface, unsigned int index)
 {
-	g_return_val_if_fail (ARV_IS_INTERFACE (interface), 0);
-	g_return_val_if_fail (interface->priv->device_ids != NULL, 0);
+	ArvInterfacePrivate *priv = arv_interface_get_instance_private (interface);
 
-	if (index >= interface->priv->device_ids->len)
+	g_return_val_if_fail (ARV_IS_INTERFACE (interface), 0);
+	g_return_val_if_fail (priv->device_ids != NULL, 0);
+
+	if (index >= priv->device_ids->len)
 		return NULL;
 
-	return g_array_index (interface->priv->device_ids, ArvInterfaceDeviceIds *, index)->serial_nbr;
+	return g_array_index (priv->device_ids, ArvInterfaceDeviceIds *, index)->serial_nbr;
 }
 
 /**
@@ -317,26 +335,25 @@ arv_interface_open_device (ArvInterface *interface, const char *device_id)
 	return ARV_INTERFACE_GET_CLASS (interface)->open_device (interface, device_id);
 }
 
-G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvInterface, arv_interface, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvInterface))
-
 static void
 arv_interface_init (ArvInterface *interface)
 {
-	interface->priv = arv_interface_get_instance_private (interface);
+	ArvInterfacePrivate *priv = arv_interface_get_instance_private (interface);
 
-	interface->priv->device_ids = g_array_new (FALSE, TRUE, sizeof (ArvInterfaceDeviceIds *));
+	priv->device_ids = g_array_new (FALSE, TRUE, sizeof (ArvInterfaceDeviceIds *));
 }
 
 static void
 arv_interface_finalize (GObject *object)
 {
 	ArvInterface *interface = ARV_INTERFACE (object);
+	ArvInterfacePrivate *priv = arv_interface_get_instance_private (interface);
 
 	G_OBJECT_CLASS (arv_interface_parent_class)->finalize (object);
 
 	arv_interface_clear_device_ids (interface);
-	g_array_free (interface->priv->device_ids, TRUE);
-	interface->priv->device_ids = NULL;
+	g_array_free (priv->device_ids, TRUE);
+	priv->device_ids = NULL;
 }
 
 static void
