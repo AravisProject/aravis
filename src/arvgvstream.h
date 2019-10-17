@@ -28,6 +28,7 @@
 #endif
 
 #include <arvtypes.h>
+#include <arvstream.h>
 
 G_BEGIN_DECLS
 
@@ -65,13 +66,7 @@ typedef enum {
 } ArvGvStreamPacketResend;
 
 #define ARV_TYPE_GV_STREAM             (arv_gv_stream_get_type ())
-#define ARV_GV_STREAM(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GV_STREAM, ArvGvStream))
-#define ARV_GV_STREAM_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GV_STREAM, ArvGvStreamClass))
-#define ARV_IS_GV_STREAM(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GV_STREAM))
-#define ARV_IS_GV_STREAM_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GV_STREAM))
-#define ARV_GV_STREAM_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GV_STREAM, ArvGvStreamClass))
-
-GType arv_gv_stream_get_type (void);
+G_DECLARE_FINAL_TYPE (ArvGvStream, arv_gv_stream, ARV, GV_STREAM, ArvStream)
 
 guint16 	arv_gv_stream_get_port 			(ArvGvStream *gv_stream);
 void		arv_gv_stream_get_statistics		(ArvGvStream *gv_stream,

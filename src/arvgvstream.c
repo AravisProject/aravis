@@ -76,10 +76,22 @@ enum {
 
 typedef struct _ArvGvStreamThreadData ArvGvStreamThreadData;
 
-struct _ArvGvStreamPrivate {
+typedef struct {
 	GThread *thread;
 	ArvGvStreamThreadData *thread_data;
+} ArvGvStreamPrivate;
+
+struct _ArvGvStream {
+	ArvStream	stream;
+
+	ArvGvStreamPrivate *priv;
 };
+
+struct _ArvGvStreamClass {
+	ArvStreamClass parent_class;
+};
+
+G_DEFINE_TYPE_WITH_CODE (ArvGvStream, arv_gv_stream, ARV_TYPE_STREAM, G_ADD_PRIVATE (ArvGvStream))
 
 /* Acquisition thread */
 
@@ -1263,8 +1275,6 @@ arv_gv_stream_get_property (GObject * object, guint prop_id,
 			break;
 	}
 }
-
-G_DEFINE_TYPE_WITH_CODE (ArvGvStream, arv_gv_stream, ARV_TYPE_STREAM, G_ADD_PRIVATE (ArvGvStream))
 
 static void
 arv_gv_stream_init (ArvGvStream *gv_stream)
