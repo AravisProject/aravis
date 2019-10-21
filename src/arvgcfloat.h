@@ -32,11 +32,7 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_FLOAT             	(arv_gc_float_get_type ())
-#define ARV_GC_FLOAT(obj)             	(G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_FLOAT, ArvGcFloat))
-#define ARV_IS_GC_FLOAT(obj)          	(G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GC_FLOAT))
-#define ARV_GC_FLOAT_GET_INTERFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE((obj), ARV_TYPE_GC_FLOAT, ArvGcFloatInterface))
-
-typedef struct _ArvGcFloatInterface ArvGcFloatInterface;
+G_DECLARE_INTERFACE (ArvGcFloat, arv_gc_float, ARV, GC_FLOAT, GObject)
 
 struct _ArvGcFloatInterface {
 	GTypeInterface parent;
@@ -50,8 +46,6 @@ struct _ArvGcFloatInterface {
 	void		(*impose_min)		(ArvGcFloat *gc_float, double minimum, GError **error);
 	void		(*impose_max)		(ArvGcFloat *gc_float, double maximum, GError **error);
 };
-
-GType arv_gc_float_get_type (void);
 
 double		arv_gc_float_get_value		(ArvGcFloat *gc_float, GError **error);
 void		arv_gc_float_set_value		(ArvGcFloat *gc_float, double value, GError **error);

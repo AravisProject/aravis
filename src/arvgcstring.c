@@ -51,7 +51,7 @@ arv_gc_string_get_value (ArvGcString *gc_string, GError **error)
 	g_return_val_if_fail (ARV_IS_GC_STRING (gc_string), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
-	return ARV_GC_STRING_GET_INTERFACE (gc_string)->get_value (gc_string, error);
+	return ARV_GC_STRING_GET_IFACE (gc_string)->get_value (gc_string, error);
 }
 
 /**
@@ -69,7 +69,7 @@ arv_gc_string_set_value (ArvGcString *gc_string, const char *value, GError **err
 	g_return_if_fail (ARV_IS_GC_STRING (gc_string));
 	g_return_if_fail (error == NULL || *error == NULL);
 
-	ARV_GC_STRING_GET_INTERFACE (gc_string)->set_value (gc_string, value, error);
+	ARV_GC_STRING_GET_IFACE (gc_string)->set_value (gc_string, value, error);
 }
 
 /**
@@ -88,7 +88,7 @@ arv_gc_string_get_max_length (ArvGcString *gc_string, GError **error)
 	g_return_val_if_fail (ARV_IS_GC_STRING (gc_string), 0);
 	g_return_val_if_fail (error == NULL || *error == NULL, 0);
 
-	string_interface = ARV_GC_STRING_GET_INTERFACE (gc_string);
+	string_interface = ARV_GC_STRING_GET_IFACE (gc_string);
 
 	if (string_interface->get_max_length != NULL)
 		return string_interface->get_max_length (gc_string, error);
