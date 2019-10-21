@@ -36,7 +36,28 @@
 #include <arvdebug.h>
 #include <string.h>
 
-static GObjectClass *parent_class = NULL;
+struct _ArvGcEnumeration {
+	ArvGcFeatureNode base;
+
+	ArvGcPropertyNode *value;
+	GSList *entries;
+
+	GSList *selecteds;		/* #ArvGcPropertyNode */
+	GSList *selected_features;	/* #ArvGcFeatureNode */
+};
+
+struct _ArvGcEnumerationClass {
+	ArvGcFeatureNodeClass parent_class;
+};
+
+static void arv_gc_enumeration_integer_interface_init (ArvGcIntegerInterface *interface);
+static void arv_gc_enumeration_string_interface_init (ArvGcStringInterface *interface);
+static void arv_gc_enumeration_selector_interface_init (ArvGcSelectorInterface *interface);
+
+G_DEFINE_TYPE_WITH_CODE (ArvGcEnumeration, arv_gc_enumeration, ARV_TYPE_GC_FEATURE_NODE,
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_enumeration_integer_interface_init)
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_STRING, arv_gc_enumeration_string_interface_init)
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_SELECTOR, arv_gc_enumeration_selector_interface_init))
 
 /* ArvGcDomNode implementation */
 
@@ -69,7 +90,7 @@ arv_gc_enumeration_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				node->selecteds = g_slist_prepend (node->selecteds, property_node);
 				break;
 			default:
-				ARV_DOM_NODE_CLASS (parent_class)->post_new_child (self, child);
+				ARV_DOM_NODE_CLASS (arv_gc_enumeration_parent_class)->post_new_child (self, child);
 				break;
 		}
 	} else if (ARV_IS_GC_ENUM_ENTRY (child))
@@ -488,7 +509,7 @@ arv_gc_enumeration_finalize (GObject *object)
 	g_clear_pointer (&enumeration->selecteds, g_slist_free);
 	g_clear_pointer (&enumeration->selected_features, g_slist_free);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_gc_enumeration_parent_class)->finalize (object);
 }
 
 static void
@@ -496,8 +517,6 @@ arv_gc_enumeration_class_init (ArvGcEnumerationClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
-
-	parent_class = g_type_class_peek_parent (this_class);
 
 	object_class->finalize = arv_gc_enumeration_finalize;
 
@@ -597,8 +616,3 @@ arv_gc_enumeration_selector_interface_init (ArvGcSelectorInterface *interface)
 {
 	interface->get_selected_features = arv_gc_enumeration_get_selected_features;
 }
-
-G_DEFINE_TYPE_WITH_CODE (ArvGcEnumeration, arv_gc_enumeration, ARV_TYPE_GC_FEATURE_NODE,
-			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_enumeration_integer_interface_init)
-			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_STRING, arv_gc_enumeration_string_interface_init)
-			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_SELECTOR, arv_gc_enumeration_selector_interface_init))

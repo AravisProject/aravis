@@ -33,30 +33,9 @@
 
 G_BEGIN_DECLS
 
-#define ARV_TYPE_GC_ENUMERATION             (arv_gc_enumeration_get_type ())
-#define ARV_GC_ENUMERATION(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_ENUMERATION, ArvGcEnumeration))
-#define ARV_GC_ENUMERATION_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GC_ENUMERATION, ArvGcEnumerationClass))
-#define ARV_IS_GC_ENUMERATION(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GC_ENUMERATION))
-#define ARV_IS_GC_ENUMERATION_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GC_ENUMERATION))
-#define ARV_GC_ENUMERATION_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GC_ENUMERATION, ArvGcEnumerationClass))
+#define ARV_TYPE_GC_ENUMERATION (arv_gc_enumeration_get_type ())
+G_DECLARE_FINAL_TYPE (ArvGcEnumeration, arv_gc_enumeration, ARV, GC_ENUMERATION, ArvGcFeatureNode)
 
-typedef struct _ArvGcEnumerationClass ArvGcEnumerationClass;
-
-struct _ArvGcEnumeration {
-	ArvGcFeatureNode base;
-
-	ArvGcPropertyNode *value;
-	GSList *entries;
-
-	GSList *selecteds;		/* #ArvGcPropertyNode */
-	GSList *selected_features;	/* #ArvGcFeatureNode */
-};
-
-struct _ArvGcEnumerationClass {
-	ArvGcFeatureNodeClass parent_class;
-};
-
-GType 		arv_gc_enumeration_get_type 	(void);
 ArvGcNode * 	arv_gc_enumeration_new 				(void);
 
 const GSList *	arv_gc_enumeration_get_entries			(ArvGcEnumeration *enumeration);
