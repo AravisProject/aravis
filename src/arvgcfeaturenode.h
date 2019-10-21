@@ -34,26 +34,11 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_FEATURE_NODE             (arv_gc_feature_node_get_type ())
-#define ARV_GC_FEATURE_NODE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_FEATURE_NODE, ArvGcFeatureNode))
-#define ARV_GC_FEATURE_NODE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GC_FEATURE_NODE, ArvGcFeatureNodeClass))
-#define ARV_IS_GC_FEATURE_NODE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GC_FEATURE_NODE))
-#define ARV_IS_GC_FEATURE_NODE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GC_FEATURE_NODE))
-#define ARV_GC_FEATURE_NODE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GC_FEATURE_NODE, ArvGcFeatureNodeClass))
-
-typedef struct _ArvGcFeatureNodePrivate ArvGcFeatureNodePrivate;
-typedef struct _ArvGcFeatureNodeClass ArvGcFeatureNodeClass;
-
-struct _ArvGcFeatureNode {
-	ArvGcNode base;
-
-	ArvGcFeatureNodePrivate *priv;
-};
+G_DECLARE_DERIVABLE_TYPE (ArvGcFeatureNode, arv_gc_feature_node, ARV, GC_FEATURE_NODE, ArvGcNode)
 
 struct _ArvGcFeatureNodeClass {
 	ArvGcNodeClass parent_class;
 };
-
-GType 			arv_gc_feature_node_get_type 			(void);
 
 const char *		arv_gc_feature_node_get_name			(ArvGcFeatureNode *gc_feature_node);
 

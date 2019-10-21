@@ -34,6 +34,20 @@
 
 static GObjectClass *parent_class = NULL;
 
+struct _ArvGcBoolean {
+	ArvGcFeatureNode	node;
+
+	ArvGcPropertyNode *value;
+	ArvGcPropertyNode *on_value;
+	ArvGcPropertyNode *off_value;
+};
+
+struct _ArvGcBooleanClass {
+	ArvGcFeatureNodeClass parent_class;
+};
+
+G_DEFINE_TYPE (ArvGcBoolean, arv_gc_boolean, ARV_TYPE_GC_FEATURE_NODE);
+
 /* ArvDomNode implementation */
 
 static const char *
@@ -204,5 +218,3 @@ arv_gc_boolean_class_init (ArvGcBooleanClass *this_class)
 	dom_node_class->post_new_child = arv_gc_boolean_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_boolean_pre_remove_child;
 }
-
-G_DEFINE_TYPE (ArvGcBoolean, arv_gc_boolean, ARV_TYPE_GC_FEATURE_NODE);

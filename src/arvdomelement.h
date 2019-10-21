@@ -59,6 +59,8 @@ const char * 	arv_dom_element_get_tag_name 	(ArvDomElement *self);
 const char* 	arv_dom_element_get_attribute 	(ArvDomElement* self, const char* name);
 void 		arv_dom_element_set_attribute 	(ArvDomElement* self, const char* name, const char* attribute_value);
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (ArvDomElement, g_object_unref)
+
 G_END_DECLS
 
 #endif

@@ -34,27 +34,8 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_BOOLEAN             (arv_gc_boolean_get_type ())
-#define ARV_GC_BOOLEAN(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_BOOLEAN, ArvGcBoolean))
-#define ARV_GC_BOOLEAN_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GC_BOOLEAN, ArvGcBooleanClass))
-#define ARV_IS_GC_BOOLEAN(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GC_BOOLEAN))
-#define ARV_IS_GC_BOOLEAN_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GC_BOOLEAN))
-#define ARV_GC_BOOLEAN_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GC_BOOLEAN, ArvGcBooleanClass))
+G_DECLARE_FINAL_TYPE (ArvGcBoolean, arv_gc_boolean, ARV, GC_BOOLEAN, ArvGcFeatureNode)
 
-typedef struct _ArvGcBooleanClass ArvGcBooleanClass;
-
-struct _ArvGcBoolean {
-	ArvGcFeatureNode	node;
-
-	ArvGcPropertyNode *value;
-	ArvGcPropertyNode *on_value;
-	ArvGcPropertyNode *off_value;
-};
-
-struct _ArvGcBooleanClass {
-	ArvGcFeatureNodeClass parent_class;
-};
-
-GType 		arv_gc_boolean_get_type 	(void);
 ArvGcNode * 	arv_gc_boolean_new 		(void);
 
 gboolean 	arv_gc_boolean_get_value 	(ArvGcBoolean *gc_boolean, GError **error);
