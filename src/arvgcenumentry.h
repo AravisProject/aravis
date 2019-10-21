@@ -34,25 +34,8 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_ENUM_ENTRY             (arv_gc_enum_entry_get_type ())
-#define ARV_GC_ENUM_ENTRY(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_ENUM_ENTRY, ArvGcEnumEntry))
-#define ARV_GC_ENUM_ENTRY_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GC_ENUM_ENTRY, ArvGcEnumEntryClass))
-#define ARV_IS_GC_ENUM_ENTRY(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GC_ENUM_ENTRY))
-#define ARV_IS_GC_ENUM_ENTRY_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GC_ENUM_ENTRY))
-#define ARV_GC_ENUM_ENTRY_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GC_ENUM_ENTRY, ArvGcEnumEntryClass))
+G_DECLARE_FINAL_TYPE (ArvGcEnumEntry, arv_gc_enum_entry, ARV, GC_ENUM_ENTRY, ArvGcFeatureNode)
 
-typedef struct _ArvGcEnumEntryClass ArvGcEnumEntryClass;
-
-struct _ArvGcEnumEntry {
-	ArvGcFeatureNode base;
-
-	ArvGcPropertyNode *value;
-};
-
-struct _ArvGcEnumEntryClass {
-	ArvGcFeatureNodeClass parent_class;
-};
-
-GType 		arv_gc_enum_entry_get_type 	(void);
 ArvGcNode * 	arv_gc_enum_entry_new 		(void);
 
 gint64		arv_gc_enum_entry_get_value	(ArvGcEnumEntry *entry, GError **error);
