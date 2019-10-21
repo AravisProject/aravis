@@ -65,9 +65,21 @@ arv_chunk_parser_error_quark (void)
 	return g_quark_from_static_string ("arv-chunk-parser-error-quark");
 }
 
-struct _ArvChunkParserPrivate {
+typedef struct {
 	ArvGc *genicam;
+} ArvChunkParserPrivate;
+
+struct _ArvChunkParser {
+	GObject	object;
+
+	ArvChunkParserPrivate *priv;
 };
+
+struct _ArvChunkParserClass {
+	GObjectClass parent_class;
+};
+
+G_DEFINE_TYPE_WITH_CODE (ArvChunkParser, arv_chunk_parser, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvChunkParser))
 
 /**
  * arv_chunk_parser_get_boolean_value:
@@ -286,8 +298,6 @@ _get_property (GObject * object, guint prop_id,
 			break;
 	}
 }
-
-G_DEFINE_TYPE_WITH_CODE (ArvChunkParser, arv_chunk_parser, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvChunkParser))
 
 static void
 arv_chunk_parser_init (ArvChunkParser *chunk_parser)

@@ -46,26 +46,7 @@ typedef enum {
 } ArvChunkParserError;
 
 #define ARV_TYPE_CHUNK_PARSER             (arv_chunk_parser_get_type ())
-#define ARV_CHUNK_PARSER(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_CHUNK_PARSER, ArvChunkParser))
-#define ARV_CHUNK_PARSER_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_CHUNK_PARSER, ArvChunkParserClass))
-#define ARV_IS_CHUNK_PARSER(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_CHUNK_PARSER))
-#define ARV_IS_CHUNK_PARSER_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_CHUNK_PARSER))
-#define ARV_CHUNK_PARSER_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_CHUNK_PARSER, ArvChunkParserClass))
-
-typedef struct _ArvChunkParserPrivate ArvChunkParserPrivate;
-typedef struct _ArvChunkParserClass ArvChunkParserClass;
-
-struct _ArvChunkParser {
-	GObject	object;
-
-	ArvChunkParserPrivate *priv;
-};
-
-struct _ArvChunkParserClass {
-	GObjectClass parent_class;
-};
-
-GType arv_chunk_parser_get_type (void);
+G_DECLARE_FINAL_TYPE (ArvChunkParser, arv_chunk_parser, ARV, CHUNK_PARSER, GObject)
 
 ArvChunkParser *	arv_chunk_parser_new 			(const char *xml, gsize size);
 gboolean		arv_chunk_parser_get_boolean_value	(ArvChunkParser *parser, ArvBuffer *buffer,
