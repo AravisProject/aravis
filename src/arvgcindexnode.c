@@ -120,12 +120,7 @@ arv_gc_index_node_get_index (ArvGcIndexNode *index_node, gint64 default_offset, 
 ArvGcNode *
 arv_gc_index_node_new (void)
 {
-	ArvGcPropertyNode *node;
-
-	node = g_object_new (ARV_TYPE_GC_INDEX_NODE, NULL);
-	node->type = ARV_GC_PROPERTY_NODE_TYPE_P_INDEX;
-
-	return ARV_GC_NODE (node);
+	return g_object_new (ARV_TYPE_GC_INDEX_NODE, "node-type", ARV_GC_PROPERTY_NODE_TYPE_P_INDEX, NULL);
 }
 
 static void

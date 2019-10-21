@@ -91,31 +91,11 @@ typedef enum {
 } ArvGcPropertyNodeType;
 
 #define ARV_TYPE_GC_PROPERTY_NODE             (arv_gc_property_node_get_type ())
-#define ARV_GC_PROPERTY_NODE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_PROPERTY_NODE, ArvGcPropertyNode))
-#define ARV_GC_PROPERTY_NODE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GC_PROPERTY_NODE, ArvGcPropertyNodeClass))
-#define ARV_IS_GC_PROPERTY_NODE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GC_PROPERTY_NODE))
-#define ARV_IS_GC_PROPERTY_NODE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GC_PROPERTY_NODE))
-#define ARV_GC_PROPERTY_NODE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GC_PROPERTY_NODE, ArvGcPropertyNodeClass))
-
-typedef struct _ArvGcPropertyNodePrivate ArvGcPropertyNodePrivate;
-typedef struct _ArvGcPropertyNodeClass ArvGcPropertyNodeClass;
-
-struct _ArvGcPropertyNode {
-	ArvGcNode base;
-
-	ArvGcPropertyNodeType	type;
-
-	char *name;
-
-	gboolean value_data_up_to_date;
-	char *value_data;
-};
+G_DECLARE_DERIVABLE_TYPE (ArvGcPropertyNode, arv_gc_property_node, ARV, GC_PROPERTY_NODE, ArvGcNode)
 
 struct _ArvGcPropertyNodeClass {
 	ArvGcNodeClass parent_class;
 };
-
-GType arv_gc_property_node_get_type (void);
 
 ArvGcNode * 	arv_gc_property_node_new_p_feature 		(void);
 ArvGcNode * 	arv_gc_property_node_new_value 			(void);

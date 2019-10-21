@@ -38,9 +38,7 @@
 static const char *
 arv_gc_value_indexed_node_get_node_name (ArvDomNode *node)
 {
-	ArvGcPropertyNode *property_node = ARV_GC_PROPERTY_NODE (node);
-
-	switch (property_node->type) {
+	switch (arv_gc_property_node_get_node_type (ARV_GC_PROPERTY_NODE (node))) {
 		case ARV_GC_PROPERTY_NODE_TYPE_VALUE_INDEXED:
 			return "ValueIndexed";
 		case ARV_GC_PROPERTY_NODE_TYPE_P_VALUE_INDEXED:
@@ -97,23 +95,13 @@ arv_gc_value_indexed_node_get_index (ArvGcValueIndexedNode *value_indexed_node)
 ArvGcNode *
 arv_gc_value_indexed_node_new (void)
 {
-	ArvGcPropertyNode *node;
-
-	node = g_object_new (ARV_TYPE_GC_VALUE_INDEXED_NODE, NULL);
-	node->type = ARV_GC_PROPERTY_NODE_TYPE_VALUE_INDEXED;
-
-	return ARV_GC_NODE (node);
+	return g_object_new (ARV_TYPE_GC_VALUE_INDEXED_NODE, "node-type", ARV_GC_PROPERTY_NODE_TYPE_VALUE_INDEXED, NULL);
 }
 
 ArvGcNode *
 arv_gc_p_value_indexed_node_new (void)
 {
-	ArvGcPropertyNode *node;
-
-	node = g_object_new (ARV_TYPE_GC_VALUE_INDEXED_NODE, NULL);
-	node->type = ARV_GC_PROPERTY_NODE_TYPE_P_VALUE_INDEXED;
-
-	return ARV_GC_NODE (node);
+	return g_object_new (ARV_TYPE_GC_VALUE_INDEXED_NODE, "node-type", ARV_GC_PROPERTY_NODE_TYPE_P_VALUE_INDEXED, NULL);
 }
 
 G_DEFINE_TYPE (ArvGcValueIndexedNode, arv_gc_value_indexed_node, ARV_TYPE_GC_PROPERTY_NODE)

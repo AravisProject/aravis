@@ -68,12 +68,7 @@ arv_gc_invalidator_has_changed (ArvGcInvalidatorNode *self)
 ArvGcNode *
 arv_gc_invalidator_node_new (void)
 {
-	ArvGcPropertyNode *node;
-
-	node = g_object_new (ARV_TYPE_GC_INVALIDATOR_NODE, NULL);
-	node->type = ARV_GC_PROPERTY_NODE_TYPE_P_INVALIDATOR;
-
-	return ARV_GC_NODE (node);
+	return g_object_new (ARV_TYPE_GC_INVALIDATOR_NODE, "node-type", ARV_GC_PROPERTY_NODE_TYPE_P_INVALIDATOR, NULL);
 }
 
 static void
