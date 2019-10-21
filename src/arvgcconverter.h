@@ -33,26 +33,11 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_CONVERTER             (arv_gc_converter_get_type ())
-#define ARV_GC_CONVERTER(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_CONVERTER, ArvGcConverter))
-#define ARV_GC_CONVERTER_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GC_CONVERTER, ArvGcConverterClass))
-#define ARV_IS_GC_CONVERTER(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GC_CONVERTER))
-#define ARV_IS_GC_CONVERTER_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GC_CONVERTER))
-#define ARV_GC_CONVERTER_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GC_CONVERTER, ArvGcConverterClass))
-
-typedef struct _ArvGcConverterPrivate ArvGcConverterPrivate;
-typedef struct _ArvGcConverterClass ArvGcConverterClass;
-
-struct _ArvGcConverter {
-	ArvGcFeatureNode	node;
-
-	ArvGcConverterPrivate *priv;
-};
+G_DECLARE_DERIVABLE_TYPE (ArvGcConverter, arv_gc_converter, ARV, GC_CONVERTER, ArvGcFeatureNode)
 
 struct _ArvGcConverterClass {
 	ArvGcFeatureNodeClass parent_class;
 };
-
-GType 		arv_gc_converter_get_type 	(void);
 
 G_END_DECLS
 

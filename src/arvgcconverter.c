@@ -34,7 +34,7 @@
 #include <arvdebug.h>
 #include <string.h>
 
-struct _ArvGcConverterPrivate {
+typedef struct {
 	GSList *variables;	/* ArvGcVariableNode list */
 	GSList *constants;	/* ArvGcVariableNode list */
 	GSList *expressions;	/* ArvGcVariableNode list */
@@ -48,7 +48,7 @@ struct _ArvGcConverterPrivate {
 
 	ArvEvaluator *formula_to;
 	ArvEvaluator *formula_from;
-};
+} ArvGcConverterPrivate;
 
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvGcConverter, arv_gc_converter, ARV_TYPE_GC_FEATURE_NODE,
 				  G_ADD_PRIVATE (ArvGcConverter))
@@ -58,38 +58,38 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvGcConverter, arv_gc_converter, ARV_TYPE_GC_
 static void
 arv_gc_converter_post_new_child (ArvDomNode *self, ArvDomNode *child)
 {
-	ArvGcConverter *gc_converter = ARV_GC_CONVERTER (self);
+	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (ARV_GC_CONVERTER (self));
 
 	if (ARV_IS_GC_PROPERTY_NODE (child)) {
 		ArvGcPropertyNode *property_node = ARV_GC_PROPERTY_NODE (child);
 
 		switch (arv_gc_property_node_get_node_type (property_node)) {
 			case ARV_GC_PROPERTY_NODE_TYPE_P_VARIABLE:
-				gc_converter->priv->variables = g_slist_prepend (gc_converter->priv->variables, property_node);
+				priv->variables = g_slist_prepend (priv->variables, property_node);
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_P_VALUE:
-				gc_converter->priv->value = property_node;
+				priv->value = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_FORMULA_TO:
-				gc_converter->priv->formula_to_node = property_node;
+				priv->formula_to_node = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_FORMULA_FROM:
-				gc_converter->priv->formula_from_node = property_node;
+				priv->formula_from_node = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_EXPRESSION:
-				gc_converter->priv->expressions = g_slist_prepend (gc_converter->priv->expressions, property_node);
+				priv->expressions = g_slist_prepend (priv->expressions, property_node);
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_CONSTANT:
-				gc_converter->priv->constants = g_slist_prepend (gc_converter->priv->constants, property_node);
+				priv->constants = g_slist_prepend (priv->constants, property_node);
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_UNIT:
-				gc_converter->priv->unit = property_node;
+				priv->unit = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_IS_LINEAR:
-				gc_converter->priv->is_linear = property_node;
+				priv->is_linear = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_SLOPE:
-				gc_converter->priv->slope = property_node;
+				priv->slope = property_node;
 				break;
 			default:
 				ARV_DOM_NODE_CLASS (arv_gc_converter_parent_class)->post_new_child (self, child);
@@ -107,26 +107,26 @@ arv_gc_converter_pre_remove_child (ArvDomNode *self, ArvDomNode *child)
 /* ArvGcConverter implementation */
 
 static void
-arv_gc_converter_init (ArvGcConverter *gc_converter)
+arv_gc_converter_init (ArvGcConverter *self)
 {
-	gc_converter->priv = arv_gc_converter_get_instance_private (gc_converter);
+	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (ARV_GC_CONVERTER (self));
 
-	gc_converter->priv->formula_to = arv_evaluator_new (NULL);
-	gc_converter->priv->formula_from = arv_evaluator_new (NULL);
-	gc_converter->priv->value = NULL;
+	priv->formula_to = arv_evaluator_new (NULL);
+	priv->formula_from = arv_evaluator_new (NULL);
+	priv->value = NULL;
 }
 
 static void
 arv_gc_converter_finalize (GObject *object)
 {
-	ArvGcConverter *gc_converter = ARV_GC_CONVERTER (object);
+	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (ARV_GC_CONVERTER (object));
 
-	g_slist_free (gc_converter->priv->variables);
-	g_slist_free (gc_converter->priv->expressions);
-	g_slist_free (gc_converter->priv->constants);
+	g_slist_free (priv->variables);
+	g_slist_free (priv->expressions);
+	g_slist_free (priv->constants);
 
-	g_object_unref (gc_converter->priv->formula_to);
-	g_object_unref (gc_converter->priv->formula_from);
+	g_object_unref (priv->formula_to);
+	g_object_unref (priv->formula_from);
 
 	G_OBJECT_CLASS (arv_gc_converter_parent_class)->finalize (object);
 }
@@ -147,14 +147,15 @@ arv_gc_converter_class_init (ArvGcConverterClass *this_class)
 ArvGcIsLinear
 arv_gc_converter_get_is_linear (ArvGcConverter *gc_converter, GError **error)
 {
+	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (gc_converter);
 	const char *string;
 
 	g_return_val_if_fail (ARV_IS_GC_CONVERTER (gc_converter), ARV_GC_IS_LINEAR_NO);
 
-	if (gc_converter->priv->is_linear == NULL)
+	if (priv->is_linear == NULL)
 		return ARV_GC_IS_LINEAR_NO;
 
-	string = arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (gc_converter->priv->is_linear), error);
+	string = arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (priv->is_linear), error);
 
 	if (g_strcmp0 ("Yes", string) == 0)
 		return ARV_GC_IS_LINEAR_YES;
@@ -165,13 +166,14 @@ arv_gc_converter_get_is_linear (ArvGcConverter *gc_converter, GError **error)
 gboolean
 arv_gc_converter_update_from_variables (ArvGcConverter *gc_converter, ArvGcConverterNodeType node_type, GError **error)
 {
+	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (gc_converter);
 	ArvGcNode *node = NULL;
 	GError *local_error = NULL;
 	GSList *iter;
 	const char *expression;
 
-	if (gc_converter->priv->formula_from_node != NULL)
-		expression = arv_gc_property_node_get_string (gc_converter->priv->formula_from_node, &local_error);
+	if (priv->formula_from_node != NULL)
+		expression = arv_gc_property_node_get_string (priv->formula_from_node, &local_error);
 	else
 		expression = "";
 
@@ -180,9 +182,9 @@ arv_gc_converter_update_from_variables (ArvGcConverter *gc_converter, ArvGcConve
 		return FALSE;
 	}
 
-	arv_evaluator_set_expression (gc_converter->priv->formula_from, expression);
+	arv_evaluator_set_expression (priv->formula_from, expression);
 
-	for (iter = gc_converter->priv->expressions; iter != NULL; iter = iter->next) {
+	for (iter = priv->expressions; iter != NULL; iter = iter->next) {
 		const char *expression;
 		const char *name;
 
@@ -194,10 +196,10 @@ arv_gc_converter_update_from_variables (ArvGcConverter *gc_converter, ArvGcConve
 
 		name = arv_gc_property_node_get_name (iter->data);
 
-		arv_evaluator_set_sub_expression (gc_converter->priv->formula_from, name, expression);
+		arv_evaluator_set_sub_expression (priv->formula_from, name, expression);
 	}
 
-	for (iter = gc_converter->priv->constants; iter != NULL; iter = iter->next) {
+	for (iter = priv->constants; iter != NULL; iter = iter->next) {
 		const char *constant;
 		const char *name;
 
@@ -209,10 +211,10 @@ arv_gc_converter_update_from_variables (ArvGcConverter *gc_converter, ArvGcConve
 
 		name = arv_gc_property_node_get_name (iter->data);
 
-		arv_evaluator_set_constant (gc_converter->priv->formula_from, name, constant);
+		arv_evaluator_set_constant (priv->formula_from, name, constant);
 	}
 
-	for (iter = gc_converter->priv->variables; iter != NULL; iter = iter->next) {
+	for (iter = priv->variables; iter != NULL; iter = iter->next) {
 		ArvGcPropertyNode *variable_node = iter->data;
 
 		node = arv_gc_property_node_get_linked_node (ARV_GC_PROPERTY_NODE (variable_node));
@@ -226,7 +228,7 @@ arv_gc_converter_update_from_variables (ArvGcConverter *gc_converter, ArvGcConve
 				return FALSE;
 			}
 
-			arv_evaluator_set_int64_variable (gc_converter->priv->formula_from,
+			arv_evaluator_set_int64_variable (priv->formula_from,
 							  arv_gc_property_node_get_name (variable_node),
 							  value);
 		} else if (ARV_IS_GC_FLOAT (node)) {
@@ -239,14 +241,14 @@ arv_gc_converter_update_from_variables (ArvGcConverter *gc_converter, ArvGcConve
 				return FALSE;
 			}
 
-			arv_evaluator_set_double_variable (gc_converter->priv->formula_from,
+			arv_evaluator_set_double_variable (priv->formula_from,
 							  arv_gc_property_node_get_name (variable_node),
 							  value);
 		}
 	}
 
-	if (gc_converter->priv->value != NULL) {
-		node = arv_gc_property_node_get_linked_node (gc_converter->priv->value);
+	if (priv->value != NULL) {
+		node = arv_gc_property_node_get_linked_node (priv->value);
 
 		if (ARV_IS_GC_INTEGER (node)) {
 			gint64 value;
@@ -277,7 +279,7 @@ arv_gc_converter_update_from_variables (ArvGcConverter *gc_converter, ArvGcConve
 				return FALSE;
 			}
 
-			arv_evaluator_set_int64_variable (gc_converter->priv->formula_from, "TO", value);
+			arv_evaluator_set_int64_variable (priv->formula_from, "TO", value);
 		} else if (ARV_IS_GC_FLOAT (node)) {
 			double value;
 
@@ -307,13 +309,12 @@ arv_gc_converter_update_from_variables (ArvGcConverter *gc_converter, ArvGcConve
 				return FALSE;
 			}
 
-			arv_evaluator_set_double_variable (gc_converter->priv->formula_from, "TO", value);
+			arv_evaluator_set_double_variable (priv->formula_from, "TO", value);
 		} else {
-			arv_warning_genicam ("[GcConverter::set_value] Invalid pValue node '%s'",
-					     gc_converter->priv->value);
+			arv_warning_genicam ("[GcConverter::set_value] Invalid pValue node '%s'", priv->value);
 			g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_INVALID_PVALUE,
 				     "pValue node '%s' of '%s' is invalid",
-				     arv_gc_property_node_get_string (gc_converter->priv->value, NULL),
+				     arv_gc_property_node_get_string (priv->value, NULL),
 				     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_converter)));
 			return FALSE;
 		}
@@ -330,6 +331,7 @@ arv_gc_converter_update_from_variables (ArvGcConverter *gc_converter, ArvGcConve
 double
 arv_gc_converter_convert_to_double (ArvGcConverter *gc_converter, ArvGcConverterNodeType node_type, GError **error)
 {
+	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (gc_converter);
 	GError *local_error = NULL;
 
 	g_return_val_if_fail (ARV_IS_GC_CONVERTER (gc_converter), 0.0);
@@ -348,12 +350,13 @@ arv_gc_converter_convert_to_double (ArvGcConverter *gc_converter, ArvGcConverter
 		}
 	}
 
-	return arv_evaluator_evaluate_as_double (gc_converter->priv->formula_from, NULL);
+	return arv_evaluator_evaluate_as_double (priv->formula_from, NULL);
 }
 
 gint64
 arv_gc_converter_convert_to_int64 (ArvGcConverter *gc_converter, ArvGcConverterNodeType node_type, GError **error)
 {
+	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (gc_converter);
 	GError *local_error = NULL;
 
 	g_return_val_if_fail (ARV_IS_GC_CONVERTER (gc_converter), 0);
@@ -372,19 +375,20 @@ arv_gc_converter_convert_to_int64 (ArvGcConverter *gc_converter, ArvGcConverterN
 		}
 	}
 
-	return arv_evaluator_evaluate_as_double (gc_converter->priv->formula_from, NULL);
+	return arv_evaluator_evaluate_as_double (priv->formula_from, NULL);
 }
 
 static void
 arv_gc_converter_update_to_variables (ArvGcConverter *gc_converter, GError **error)
 {
+	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (gc_converter);
 	ArvGcNode *node;
 	GError *local_error = NULL;
 	GSList *iter;
 	const char *expression;
 
-	if (gc_converter->priv->formula_to_node != NULL)
-		expression = arv_gc_property_node_get_string (gc_converter->priv->formula_to_node, &local_error);
+	if (priv->formula_to_node != NULL)
+		expression = arv_gc_property_node_get_string (priv->formula_to_node, &local_error);
 	else
 		expression = "";
 
@@ -393,9 +397,9 @@ arv_gc_converter_update_to_variables (ArvGcConverter *gc_converter, GError **err
 		return;
 	}
 
-	arv_evaluator_set_expression (gc_converter->priv->formula_to, expression);
+	arv_evaluator_set_expression (priv->formula_to, expression);
 
-	for (iter = gc_converter->priv->expressions; iter != NULL; iter = iter->next) {
+	for (iter = priv->expressions; iter != NULL; iter = iter->next) {
 		const char *expression;
 		const char *name;
 
@@ -407,10 +411,10 @@ arv_gc_converter_update_to_variables (ArvGcConverter *gc_converter, GError **err
 
 		name = arv_gc_property_node_get_name (iter->data);
 
-		arv_evaluator_set_sub_expression (gc_converter->priv->formula_to, name, expression);
+		arv_evaluator_set_sub_expression (priv->formula_to, name, expression);
 	}
 
-	for (iter = gc_converter->priv->constants; iter != NULL; iter = iter->next) {
+	for (iter = priv->constants; iter != NULL; iter = iter->next) {
 		const char *constant;
 		const char *name;
 
@@ -422,10 +426,10 @@ arv_gc_converter_update_to_variables (ArvGcConverter *gc_converter, GError **err
 
 		name = arv_gc_property_node_get_name (iter->data);
 
-		arv_evaluator_set_constant (gc_converter->priv->formula_to, name, constant);
+		arv_evaluator_set_constant (priv->formula_to, name, constant);
 	}
 
-	for (iter = gc_converter->priv->variables; iter != NULL; iter = iter->next) {
+	for (iter = priv->variables; iter != NULL; iter = iter->next) {
 		ArvGcPropertyNode *variable_node = iter->data;
 
 		node = arv_gc_property_node_get_linked_node (ARV_GC_PROPERTY_NODE (variable_node));
@@ -439,7 +443,7 @@ arv_gc_converter_update_to_variables (ArvGcConverter *gc_converter, GError **err
 				return;
 			}
 
-			arv_evaluator_set_int64_variable (gc_converter->priv->formula_to,
+			arv_evaluator_set_int64_variable (priv->formula_to,
 							  arv_gc_property_node_get_name (variable_node),
 							  value);
 		} else if (ARV_IS_GC_FLOAT (node)) {
@@ -452,18 +456,18 @@ arv_gc_converter_update_to_variables (ArvGcConverter *gc_converter, GError **err
 				return;
 			}
 
-			arv_evaluator_set_double_variable (gc_converter->priv->formula_to,
-							  arv_gc_property_node_get_name (variable_node),
-							  value);
+			arv_evaluator_set_double_variable (priv->formula_to,
+							   arv_gc_property_node_get_name (variable_node),
+							   value);
 		}
 	}
 
-	if (gc_converter->priv->value != NULL) {
-		node = arv_gc_property_node_get_linked_node (gc_converter->priv->value);
+	if (priv->value != NULL) {
+		node = arv_gc_property_node_get_linked_node (priv->value);
 
 		if (ARV_IS_GC_INTEGER (node)) {
 			arv_gc_integer_set_value (ARV_GC_INTEGER (node),
-						  arv_evaluator_evaluate_as_double (gc_converter->priv->formula_to, NULL),
+						  arv_evaluator_evaluate_as_double (priv->formula_to, NULL),
 						  &local_error);
 
 			if (local_error != NULL) {
@@ -472,7 +476,7 @@ arv_gc_converter_update_to_variables (ArvGcConverter *gc_converter, GError **err
 			}
 		} else if (ARV_IS_GC_FLOAT (node)) {
 			arv_gc_float_set_value (ARV_GC_FLOAT (node),
-						arv_evaluator_evaluate_as_double (gc_converter->priv->formula_to, NULL),
+						arv_evaluator_evaluate_as_double (priv->formula_to, NULL),
 						&local_error);
 
 			if (local_error != NULL) {
@@ -481,37 +485,43 @@ arv_gc_converter_update_to_variables (ArvGcConverter *gc_converter, GError **err
 			}
 		} else
 			arv_warning_genicam ("[GcConverter::set_value] Invalid pValue node '%s'",
-					     gc_converter->priv->value);
+					     priv->value);
 	}
 }
 
 void
 arv_gc_converter_convert_from_double (ArvGcConverter *gc_converter, double value, GError **error)
 {
+	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (gc_converter);
+
 	g_return_if_fail (ARV_IS_GC_CONVERTER (gc_converter));
 
 	arv_gc_feature_node_increment_change_count (ARV_GC_FEATURE_NODE (gc_converter));
-	arv_evaluator_set_double_variable (gc_converter->priv->formula_to, "FROM", value);
+	arv_evaluator_set_double_variable (priv->formula_to, "FROM", value);
 	arv_gc_converter_update_to_variables (gc_converter, error);
 }
 
 void
 arv_gc_converter_convert_from_int64 (ArvGcConverter *gc_converter, gint64 value, GError **error)
 {
+	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (gc_converter);
+
 	g_return_if_fail (ARV_IS_GC_CONVERTER (gc_converter));
 
 	arv_gc_feature_node_increment_change_count (ARV_GC_FEATURE_NODE (gc_converter));
-	arv_evaluator_set_int64_variable (gc_converter->priv->formula_to, "FROM", value);
+	arv_evaluator_set_int64_variable (priv->formula_to, "FROM", value);
 	arv_gc_converter_update_to_variables (gc_converter, error);
 }
 
 const char *
 arv_gc_converter_get_unit (ArvGcConverter *gc_converter, GError **error)
 {
+	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (gc_converter);
+
 	g_return_val_if_fail (ARV_IS_GC_CONVERTER (gc_converter), NULL);
 
-	if (gc_converter->priv->unit == NULL)
+	if (priv->unit == NULL)
 		return NULL;
 
-	return arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (gc_converter->priv->unit), error);
+	return arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (priv->unit), error);
 }
