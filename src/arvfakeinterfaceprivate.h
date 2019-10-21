@@ -37,16 +37,6 @@ G_BEGIN_DECLS
 
 G_END_DECLS
 
-typedef struct _ArvFakeInterfaceClass ArvFakeInterfaceClass;
-
-struct _ArvFakeInterface {
-	ArvInterface	interface;
-};
-
-struct _ArvFakeInterfaceClass {
-	ArvInterfaceClass parent_class;
-};
-
 void 			arv_fake_interface_destroy_instance 		(void);
 
 #endif

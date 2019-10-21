@@ -89,26 +89,7 @@ typedef void (*ArvFakeCameraFillPattern) (ArvBuffer *buffer, void *fill_pattern_
 #define ARV_FAKE_CAMERA_REGISTER_GAIN_MODE		0x114
 
 #define ARV_TYPE_FAKE_CAMERA             (arv_fake_camera_get_type ())
-#define ARV_FAKE_CAMERA(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_FAKE_CAMERA, ArvFakeCamera))
-#define ARV_FAKE_CAMERA_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_FAKE_CAMERA, ArvFakeCameraClass))
-#define ARV_IS_FAKE_CAMERA(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_FAKE_CAMERA))
-#define ARV_IS_FAKE_CAMERA_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_FAKE_CAMERA))
-#define ARV_FAKE_CAMERA_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_FAKE_CAMERA, ArvFakeCameraClass))
-
-typedef struct _ArvFakeCameraClass ArvFakeCameraClass;
-typedef struct _ArvFakeCameraPrivate ArvFakeCameraPrivate;
-
-struct _ArvFakeCamera {
-	GObject object;
-
-	ArvFakeCameraPrivate *priv;
-};
-
-struct _ArvFakeCameraClass {
-	GObjectClass parent_class;
-};
-
-GType arv_fake_camera_get_type (void);
+G_DECLARE_FINAL_TYPE (ArvFakeCamera, arv_fake_camera, ARV, FAKE_CAMERA, GObject)
 
 ArvFakeCamera * arv_fake_camera_new 		(const char *serial_number);
 ArvFakeCamera * arv_fake_camera_new_full 	(const char *serial_number, const char *genicam_filename);

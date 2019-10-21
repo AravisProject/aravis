@@ -63,7 +63,7 @@ arv_get_fake_camera_genicam_filename (void)
 	return arv_fake_camera_genicam_filename;
 }
 
-struct _ArvFakeCameraPrivate {
+typedef struct {
 	void *memory;
 
 	char *genicam_xml;
@@ -76,7 +76,19 @@ struct _ArvFakeCameraPrivate {
 
 	ArvFakeCameraFillPattern fill_pattern_callback;
 	void *fill_pattern_data;
+} ArvFakeCameraPrivate;
+
+struct _ArvFakeCamera {
+	GObject object;
+
+	ArvFakeCameraPrivate *priv;
 };
+
+struct _ArvFakeCameraClass {
+	GObjectClass parent_class;
+};
+
+G_DEFINE_TYPE_WITH_CODE (ArvFakeCamera, arv_fake_camera, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvFakeCamera))
 
 /* ArvFakeCamera implementation */
 
@@ -809,8 +821,6 @@ arv_fake_camera_new (const char *serial_number)
 {
 	return arv_fake_camera_new_full (serial_number, NULL);
 }
-
-G_DEFINE_TYPE_WITH_CODE (ArvFakeCamera, arv_fake_camera, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvFakeCamera))
 
 static void
 arv_fake_camera_init (ArvFakeCamera *fake_camera)

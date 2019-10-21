@@ -31,19 +31,6 @@
 
 G_BEGIN_DECLS
 
-typedef struct _ArvFakeDeviceClass ArvFakeDeviceClass;
-typedef struct _ArvFakeDevicePrivate ArvFakeDevicePrivate;
-
-struct _ArvFakeDevice {
-	ArvDevice device;
-
-	ArvFakeDevicePrivate *priv;
-};
-
-struct _ArvFakeDeviceClass {
-	ArvDeviceClass parent_class;
-};
-
 G_END_DECLS
 
 #endif

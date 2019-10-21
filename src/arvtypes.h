@@ -92,9 +92,6 @@ typedef struct _ArvUvDevice		ArvUvDevice;
 typedef struct _ArvUvStream		ArvUvStream;
 #endif
 
-typedef struct _ArvFakeInterface	ArvFakeInterface;
-typedef struct _ArvFakeDevice		ArvFakeDevice;
-typedef struct _ArvFakeStream		ArvFakeStream;
 typedef struct _ArvFakeCamera		ArvFakeCamera;
 
 typedef struct _ArvGvFakeCamera		ArvGvFakeCamera;

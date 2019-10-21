@@ -33,13 +33,7 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_FAKE_INTERFACE             (arv_fake_interface_get_type ())
-#define ARV_FAKE_INTERFACE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_FAKE_INTERFACE, ArvFakeInterface))
-#define ARV_FAKE_INTERFACE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_FAKE_INTERFACE, ArvFakeInterfaceClass))
-#define ARV_IS_FAKE_INTERFACE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_FAKE_INTERFACE))
-#define ARV_IS_FAKE_INTERFACE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_FAKE_INTERFACE))
-#define ARV_FAKE_INTERFACE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_FAKE_INTERFACE, ArvFakeInterfaceClass))
-
-GType arv_fake_interface_get_type (void);
+G_DECLARE_FINAL_TYPE (ArvFakeInterface, arv_fake_interface, ARV, FAKE_INTERFACE, ArvInterface)
 
 ArvInterface * 		arv_fake_interface_get_instance 		(void);
 

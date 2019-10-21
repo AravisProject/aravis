@@ -31,19 +31,6 @@
 
 G_BEGIN_DECLS
 
-typedef struct _ArvFakeStreamPrivate ArvFakeStreamPrivate;
-typedef struct _ArvFakeStreamClass ArvFakeStreamClass;
-
-struct _ArvFakeStream {
-	ArvStream	stream;
-
-	ArvFakeStreamPrivate *priv;
-};
-
-struct _ArvFakeStreamClass {
-	ArvStreamClass parent_class;
-};
-
 ArvStream * 	arv_fake_stream_new	(ArvFakeCamera *camera, ArvStreamCallback callback, void *user_data);
 
 G_END_DECLS

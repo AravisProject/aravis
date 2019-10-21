@@ -26,17 +26,30 @@
  */
 
 #include <arvfakestreamprivate.h>
+#include <arvfakecamera.h>
 #include <arvstreamprivate.h>
 #include <arvbufferprivate.h>
 #include <arvdebug.h>
 #include <arvmisc.h>
 
-struct _ArvFakeStreamPrivate {
+typedef struct {
 	GThread *thread;
 	void *thread_data;
 
 	ArvFakeCamera *camera;
+} ArvFakeStreamPrivate;
+
+struct _ArvFakeStream {
+	ArvStream	stream;
+
+	ArvFakeStreamPrivate *priv;
 };
+
+struct _ArvFakeStreamClass {
+	ArvStreamClass parent_class;
+};
+
+G_DEFINE_TYPE_WITH_CODE (ArvFakeStream, arv_fake_stream, ARV_TYPE_STREAM, G_ADD_PRIVATE (ArvFakeStream))
 
 /* Acquisition thread */
 
@@ -191,8 +204,6 @@ arv_fake_stream_get_statistics (ArvStream *stream,
 	*n_failures = thread_data->n_failures;
 	*n_underruns = thread_data->n_underruns;
 }
-
-G_DEFINE_TYPE_WITH_CODE (ArvFakeStream, arv_fake_stream, ARV_TYPE_STREAM, G_ADD_PRIVATE (ArvFakeStream))
 
 static void
 arv_fake_stream_init (ArvFakeStream *fake_stream)
