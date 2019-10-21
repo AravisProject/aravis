@@ -17,7 +17,7 @@ aravis_data_dir = join_paths (get_option ('datadir'), 'aravis-@0@'.format (aravi
 cc = meson.get_compiler ('c')
 cxx = meson.get_compiler ('cpp')
 
-glib_dep = dependency ('glib-2.0', version: '>=2.38', required: true)
+glib_dep = dependency ('glib-2.0', version: '>=2.44', required: true)
 gobject_dep = dependency ('gobject-2.0', required: true)
 gio_dep = dependency ('gio-2.0', required: true)
 xml2_dep = dependency ('libxml-2.0', required: true)
