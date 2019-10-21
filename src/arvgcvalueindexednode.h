@@ -32,26 +32,9 @@
 
 G_BEGIN_DECLS
 
-#define ARV_TYPE_GC_VALUE_INDEXED_NODE             (arv_gc_value_indexed_node_get_type ())
-#define ARV_GC_VALUE_INDEXED_NODE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_VALUE_INDEXED_NODE, ArvGcValueIndexedNode))
-#define ARV_GC_VALUE_INDEXED_NODE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GC_VALUE_INDEXED_NODE, ArvGcValueIndexedNodeClass))
-#define ARV_IS_GC_VALUE_INDEXED_NODE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GC_VALUE_INDEXED_NODE))
-#define ARV_IS_GC_VALUE_INDEXED_NODE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GC_VALUE_INDEXED_NODE))
-#define ARV_GC_VALUE_INDEXED_NODE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GC_VALUE_INDEXED_NODE, ArvGcValueIndexedNodeClass))
+#define ARV_TYPE_GC_VALUE_INDEXED_NODE (arv_gc_value_indexed_node_get_type ())
+G_DECLARE_FINAL_TYPE (ArvGcValueIndexedNode, arv_gc_value_indexed_node, ARV, GC_VALUE_INDEXED_NODE, ArvGcPropertyNode)
 
-typedef struct _ArvGcValueIndexedNodeClass ArvGcValueIndexedNodeClass;
-
-struct _ArvGcValueIndexedNode {
-	ArvGcPropertyNode	base;
-
-	char *index;
-};
-
-struct _ArvGcValueIndexedNodeClass {
-	ArvGcPropertyNodeClass parent_class;
-};
-
-GType 		arv_gc_value_indexed_node_get_type 	(void);
 ArvGcNode * 	arv_gc_value_indexed_node_new 		(void);
 ArvGcNode * 	arv_gc_p_value_indexed_node_new 	(void);
 gint64		arv_gc_value_indexed_node_get_index	(ArvGcValueIndexedNode *value_indexed_node);

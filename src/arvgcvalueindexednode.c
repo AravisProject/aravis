@@ -33,6 +33,18 @@
 #include <arvmisc.h>
 #include <string.h>
 
+struct _ArvGcValueIndexedNode {
+	ArvGcPropertyNode	base;
+
+	char *index;
+};
+
+struct _ArvGcValueIndexedNodeClass {
+	ArvGcPropertyNodeClass parent_class;
+};
+
+G_DEFINE_TYPE (ArvGcValueIndexedNode, arv_gc_value_indexed_node, ARV_TYPE_GC_PROPERTY_NODE)
+
 /* ArvDomNode implementation */
 
 static const char *
@@ -103,8 +115,6 @@ arv_gc_p_value_indexed_node_new (void)
 {
 	return g_object_new (ARV_TYPE_GC_VALUE_INDEXED_NODE, "node-type", ARV_GC_PROPERTY_NODE_TYPE_P_VALUE_INDEXED, NULL);
 }
-
-G_DEFINE_TYPE (ArvGcValueIndexedNode, arv_gc_value_indexed_node, ARV_TYPE_GC_PROPERTY_NODE)
 
 static void
 arv_gc_value_indexed_node_init (ArvGcValueIndexedNode *value_indexed_node)
