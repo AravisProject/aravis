@@ -31,6 +31,14 @@
 #include <arvevaluator.h>
 #include <arvgcfloat.h>
 
+struct _ArvGcConverterNode {
+	ArvGcConverter	converter;
+};
+
+struct _ArvGcConverterNodeClass {
+	ArvGcConverterClass parent_class;
+};
+
 static const char *
 arv_gc_converter_node_get_node_name (ArvDomNode *node)
 {

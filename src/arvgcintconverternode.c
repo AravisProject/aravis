@@ -31,6 +31,14 @@
 #include <arvevaluator.h>
 #include <arvgcinteger.h>
 
+struct _ArvGcIntConverterNode {
+	ArvGcConverter	converter;
+};
+
+struct _ArvGcIntConverterNodeClass {
+	ArvGcConverterClass parent_class;
+};
+
 static const char *
 arv_gc_int_converter_node_get_node_name (ArvDomNode *node)
 {
@@ -142,3 +150,4 @@ arv_gc_int_converter_node_integer_interface_init (ArvGcIntegerInterface *interfa
 
 G_DEFINE_TYPE_WITH_CODE (ArvGcIntConverterNode, arv_gc_int_converter_node, ARV_TYPE_GC_CONVERTER,
 			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER,   arv_gc_int_converter_node_integer_interface_init))
+

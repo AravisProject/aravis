@@ -32,23 +32,8 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_CONVERTER_NODE             (arv_gc_converter_node_get_type ())
-#define ARV_GC_CONVERTER_NODE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_CONVERTER_NODE, ArvGcConverterNode))
-#define ARV_GC_CONVERTER_NODE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GC_CONVERTER_NODE, ArvGcConverterNodeClass))
-#define ARV_IS_GC_CONVERTER_NODE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GC_CONVERTER_NODE))
-#define ARV_IS_GC_CONVERTER_NODE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GC_CONVERTER_NODE))
-#define ARV_GC_CONVERTER_NODE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GC_CONVERTER_NODE, ArvGcConverterNodeClass))
+G_DECLARE_FINAL_TYPE (ArvGcConverterNode, arv_gc_converter_node, ARV, GC_CONVERTER_NODE, ArvGcConverter)
 
-typedef struct _ArvGcConverterNodeClass ArvGcConverterNodeClass;
-
-struct _ArvGcConverterNode {
-	ArvGcConverter	converter;
-};
-
-struct _ArvGcConverterNodeClass {
-	ArvGcConverterClass parent_class;
-};
-
-GType 		arv_gc_converter_node_get_type 	(void);
 ArvGcNode *	arv_gc_converter_node_new	(void);
 
 G_END_DECLS
