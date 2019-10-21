@@ -34,33 +34,8 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_FLOAT_NODE             (arv_gc_float_node_get_type ())
-#define ARV_GC_FLOAT_NODE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_FLOAT_NODE, ArvGcFloatNode))
-#define ARV_GC_FLOAT_NODE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GC_FLOAT_NODE, ArvGcFloatNodeClass))
-#define ARV_IS_GC_FLOAT_NODE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GC_FLOAT_NODE))
-#define ARV_IS_GC_FLOAT_NODE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GC_FLOAT_NODE))
-#define ARV_GC_FLOAT_NODE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GC_FLOAT_NODE, ArvGcFloatNodeClass))
+G_DECLARE_FINAL_TYPE (ArvGcFloatNode, arv_gc_float_node, ARV, GC_FLOAT_NODE, ArvGcFeatureNode)
 
-typedef struct _ArvGcFloatNodeClass ArvGcFloatNodeClass;
-
-struct _ArvGcFloatNode {
-	ArvGcFeatureNode	node;
-
-	ArvGcPropertyNode *value;
-	ArvGcPropertyNode *minimum;
-	ArvGcPropertyNode *maximum;
-	ArvGcPropertyNode *increment;
-	ArvGcPropertyNode *unit;
-
-	ArvGcPropertyNode *index;
-	GSList *value_indexed_nodes;
-	ArvGcPropertyNode *value_default;
-};
-
-struct _ArvGcFloatNodeClass {
-	ArvGcFeatureNodeClass parent_class;
-};
-
-GType 		arv_gc_float_node_get_type 	(void);
 ArvGcNode * 	arv_gc_float_node_new 		(void);
 
 G_END_DECLS
