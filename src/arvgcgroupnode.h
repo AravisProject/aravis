@@ -33,25 +33,8 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_GROUP_NODE             (arv_gc_group_node_get_type ())
-#define ARV_GC_GROUP_NODE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_GROUP_NODE, ArvGcGroupNode))
-#define ARV_GC_GROUP_NODE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GC_GROUP_NODE, ArvGcGroupNodeClass))
-#define ARV_IS_GC_GROUP_NODE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GC_GROUP_NODE))
-#define ARV_IS_GC_GROUP_NODE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GC_GROUP_NODE))
-#define ARV_GC_GROUP_NODE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GC_GROUP_NODE, ArvGcGroupNodeClass))
+G_DECLARE_FINAL_TYPE (ArvGcGroupNode, arv_gc_group_node, ARV, GC_GROUP_NODE, ArvGcFeatureNode)
 
-typedef struct _ArvGcGroupNodeClass ArvGcGroupNodeClass;
-
-struct _ArvGcGroupNode {
-	ArvGcFeatureNode base;
-
-	char *comment;
-};
-
-struct _ArvGcGroupNodeClass {
-	ArvGcFeatureNodeClass parent_class;
-};
-
-GType 		arv_gc_group_node_get_type 	(void);
 ArvGcNode * 	arv_gc_group_node_new 		(void);
 
 G_END_DECLS
