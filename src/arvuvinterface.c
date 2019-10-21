@@ -98,9 +98,19 @@ arv_uv_interface_device_infos_unref (ArvUvInterfaceDeviceInfos *infos)
 	}
 }
 
-struct _ArvUvInterfacePrivate {
+typedef struct {
 	GHashTable *devices;
 	libusb_context *usb;
+} ArvUvInterfacePrivate;
+
+struct _ArvUvInterface {
+	ArvInterface	interface;
+
+	ArvUvInterfacePrivate *priv;
+};
+
+struct _ArvUvInterfaceClass {
+	ArvInterfaceClass parent_class;
 };
 
 #if 0

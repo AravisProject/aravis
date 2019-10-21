@@ -41,19 +41,6 @@
 
 G_BEGIN_DECLS
 
-typedef struct _ArvUvInterfacePrivate ArvUvInterfacePrivate;
-typedef struct _ArvUvInterfaceClass ArvUvInterfaceClass;
-
-struct _ArvUvInterface {
-	ArvInterface	interface;
-
-	ArvUvInterfacePrivate *priv;
-};
-
-struct _ArvUvInterfaceClass {
-	ArvInterfaceClass parent_class;
-};
-
 void 			arv_uv_interface_destroy_instance 	(void);
 
 G_END_DECLS

@@ -39,7 +39,7 @@
 
 #define ARV_UV_DEVICE_N_TRIES_MAX	5
 
-struct _ArvUvDevicePrivate {
+typedef struct {
 	char *vendor;
 	char *product;
 	char *serial_nbr;
@@ -62,7 +62,19 @@ struct _ArvUvDevicePrivate {
         guint8 control_endpoint;
         guint8 data_endpoint;
 	gboolean disconnected;
+} ArvUvDevicePrivate;
+
+struct _ArvUvDevice {
+	ArvDevice device;
+
+	ArvUvDevicePrivate *priv;
 };
+
+struct _ArvUvDeviceClass {
+	ArvDeviceClass parent_class;
+};
+
+G_DEFINE_TYPE_WITH_CODE (ArvUvDevice, arv_uv_device, ARV_TYPE_DEVICE, G_ADD_PRIVATE (ArvUvDevice))
 
 /* ArvDevice implementation */
 
@@ -740,8 +752,6 @@ arv_uv_device_new (const char *vendor, const char *product, const char *serial_n
 
 	return ARV_DEVICE (uv_device);
 }
-
-G_DEFINE_TYPE_WITH_CODE (ArvUvDevice, arv_uv_device, ARV_TYPE_DEVICE, G_ADD_PRIVATE (ArvUvDevice))
 
 static void
 arv_uv_device_init (ArvUvDevice *uv_device)

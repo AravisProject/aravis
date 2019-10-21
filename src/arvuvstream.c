@@ -59,9 +59,19 @@ typedef struct {
 	guint n_underruns;
 } ArvUvStreamThreadData;
 
-struct _ArvUvStreamPrivate {
+typedef struct {
 	GThread *thread;
 	ArvUvStreamThreadData *thread_data;
+} ArvUvStreamPrivate;
+
+struct _ArvUvStream {
+	ArvStream	stream;
+
+	ArvUvStreamPrivate *priv;
+};
+
+struct _ArvUvStreamClass {
+	ArvStreamClass parent_class;
 };
 
 static void *
