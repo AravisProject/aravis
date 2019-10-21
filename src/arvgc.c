@@ -65,12 +65,22 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-struct _ArvGcPrivate {
+typedef struct {
 	GHashTable *nodes;
 	ArvDevice *device;
 	ArvBuffer *buffer;
 
 	ArvRegisterCachePolicy cache_policy;
+} ArvGcPrivate;
+
+struct _ArvGc {
+	ArvDomDocument base;
+
+	ArvGcPrivate *priv;
+};
+
+struct _ArvGcClass {
+	ArvDomDocumentClass parent_class;
 };
 
 GQuark

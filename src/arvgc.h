@@ -69,26 +69,7 @@ typedef enum {
 } ArvRegisterCachePolicy;
 
 #define ARV_TYPE_GC             (arv_gc_get_type ())
-#define ARV_GC(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC, ArvGc))
-#define ARV_GC_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GC, ArvGcClass))
-#define ARV_IS_GC(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GC))
-#define ARV_IS_GC_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GC))
-#define ARV_GC_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GC, ArvGcClass))
-
-typedef struct _ArvGcPrivate ArvGcPrivate;
-typedef struct _ArvGcClass ArvGcClass;
-
-struct _ArvGc {
-	ArvDomDocument base;
-
-	ArvGcPrivate *priv;
-};
-
-struct _ArvGcClass {
-	ArvDomDocumentClass parent_class;
-};
-
-GType arv_gc_get_type (void);
+G_DECLARE_FINAL_TYPE (ArvGc, arv_gc, ARV, GC, ArvDomDocument)
 
 ArvGc * 		arv_gc_new 				(ArvDevice *device, const void *xml, size_t size);
 void 			arv_gc_register_feature_node 		(ArvGc *genicam, ArvGcFeatureNode *node);

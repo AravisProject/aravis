@@ -69,6 +69,8 @@ void 		arv_dom_document_set_path 		(ArvDomDocument *self, const char *path);
 
 void * 		arv_dom_document_get_href_data 		(ArvDomDocument *self, const char *href, gsize *size);
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (ArvDomDocument, g_object_unref)
+
 G_END_DECLS
 
 #endif
