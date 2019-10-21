@@ -170,6 +170,7 @@ library_private_headers = [
 	'arvgvspprivate.h',
 	'arvgvstreamprivate.h',
 	'arvinterfaceprivate.h',
+	'arvmiscprivate.h',
 	'arvrealtimeprivate.h',
 	'arvstreamprivate.h',
 	'arvwakeupprivate.h'

@@ -47,13 +47,6 @@ char *			arv_statistic_to_string 	(const ArvStatistic *statistic);
 GType arv_value_get_type (void);
 
 typedef struct _ArvValue ArvValue;
-struct _ArvValue {
-	GType type;
-	union {
-		gint64 v_int64;
-		double v_double;
-	} data;
-};
 
 ArvValue * 	arv_value_new_double 		(double v_double);
 ArvValue * 	arv_value_new_int64 		(double v_int64);
