@@ -32,27 +32,9 @@
 
 G_BEGIN_DECLS
 
-#define ARV_TYPE_GC_PORT             (arv_gc_port_get_type ())
-#define ARV_GC_PORT(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_PORT, ArvGcPort))
-#define ARV_GC_PORT_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GC_PORT, ArvGcPortClass))
-#define ARV_IS_GC_PORT(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GC_PORT))
-#define ARV_IS_GC_PORT_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GC_PORT))
-#define ARV_GC_PORT_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GC_PORT, ArvGcPortClass))
+#define ARV_TYPE_GC_PORT (arv_gc_port_get_type ())
+G_DECLARE_FINAL_TYPE (ArvGcPort, arv_gc_port, ARV, GC_PORT, ArvGcFeatureNode)
 
-typedef struct _ArvGcPortPrivate ArvGcPortPrivate;
-typedef struct _ArvGcPortClass ArvGcPortClass;
-
-struct _ArvGcPort {
-	ArvGcFeatureNode node;
-
-	ArvGcPortPrivate *priv;
-};
-
-struct _ArvGcPortClass {
-	ArvGcFeatureNodeClass parent_class;
-};
-
-GType 		arv_gc_port_get_type 	(void);
 ArvGcNode *	arv_gc_port_new 	(void);
 void 		arv_gc_port_read	(ArvGcPort *port, void *buffer, guint64 address, guint64 length, GError **error);
 void 		arv_gc_port_write	(ArvGcPort *port, void *buffer, guint64 address, guint64 length, GError **error);

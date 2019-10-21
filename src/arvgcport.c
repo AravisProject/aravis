@@ -36,9 +36,19 @@
 #include <arvgc.h>
 #include <memory.h>
 
-struct _ArvGcPortPrivate {
+typedef struct {
 	ArvGcPropertyNode *chunk_id;
 	ArvGcPropertyNode *event_id;
+} ArvGcPortPrivate;
+
+struct _ArvGcPort {
+	ArvGcFeatureNode node;
+
+	ArvGcPortPrivate *priv;
+};
+
+struct _ArvGcPortClass {
+	ArvGcFeatureNodeClass parent_class;
 };
 
 G_DEFINE_TYPE_WITH_CODE (ArvGcPort, arv_gc_port, ARV_TYPE_GC_FEATURE_NODE, G_ADD_PRIVATE(ArvGcPort))
