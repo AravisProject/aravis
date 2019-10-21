@@ -38,28 +38,7 @@ typedef enum {
 } ArvXmlSchemaError;
 
 #define ARV_TYPE_XML_SCHEMA                  (arv_xml_schema_get_type ())
-#define ARV_XML_SCHEMA(obj)                  (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_XML_SCHEMA, ArvXmlSchema))
-#define ARV_IS_XML_SCHEMA(obj)               (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_XML_SCHEMA))
-#define ARV_XML_SCHEMA_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_XML_SCHEMA, ArvXmlSchemaClass))
-#define ARV_IS_XML_SCHEMA_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_XML_SCHEMA))
-#define ARV_XML_SCHEMA_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS ((obj), ARV_TYPE_XML_SCHEMA, ArvXmlSchemaClass))
-
-typedef struct _ArvXmlSchemaPrivate ArvXmlSchemaPrivate;
-typedef struct _ArvXmlSchemaClass   ArvXmlSchemaClass;
-
-struct _ArvXmlSchema
-{
-  GObject parent_instance;
-
-  ArvXmlSchemaPrivate *priv;
-};
-
-struct _ArvXmlSchemaClass
-{
-  GObjectClass parent_class;
-};
-
-GType arv_xml_schema_get_type (void);
+G_DECLARE_FINAL_TYPE (ArvXmlSchema, arv_xml_schema, ARV, XML_SCHEMA, GObject)
 
 ArvXmlSchema * 		arv_xml_schema_new_from_file 	(GFile *file);
 ArvXmlSchema * 		arv_xml_schema_new_from_path 	(const char *path);

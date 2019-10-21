@@ -34,13 +34,27 @@
 #include <arvdebug.h>
 #include <arvmisc.h>
 
-struct _ArvXmlSchemaPrivate {
+typedef struct {
 	char *xsd;
 	size_t xsd_size;
 	xmlSchemaParserCtxtPtr parser_ctxt;
 	xmlSchemaPtr schema;
 	xmlSchemaValidCtxtPtr valid_ctxt;
+} ArvXmlSchemaPrivate;
+
+struct _ArvXmlSchema
+{
+  GObject parent_instance;
+
+  ArvXmlSchemaPrivate *priv;
 };
+
+struct _ArvXmlSchemaClass
+{
+  GObjectClass parent_class;
+};
+
+G_DEFINE_TYPE_WITH_CODE (ArvXmlSchema, arv_xml_schema, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvXmlSchema))
 
 static GQuark
 arv_xml_schema_error_quark (void)
@@ -155,8 +169,6 @@ arv_xml_schema_new_from_path (const char *path)
 
 	return schema;
 }
-
-G_DEFINE_TYPE_WITH_CODE (ArvXmlSchema, arv_xml_schema, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvXmlSchema))
 
 static void
 arv_xml_schema_init (ArvXmlSchema *self)
