@@ -27,16 +27,12 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
-#include <arvtypes.h>
+#include <arvbuffer.h>
 #include <gio/gio.h>
 
 G_BEGIN_DECLS
 
 void arv_set_fake_camera_genicam_filename (const char *filename);
-
-typedef void (*ArvFakeCameraFillPattern) (ArvBuffer *buffer, void *fill_pattern_data,
-					  guint32 exposure_time_us, guint32 gain,
-					  ArvPixelFormat pixel_format);
 
 #define ARV_FAKE_CAMERA_MEMORY_SIZE	0x10000
 
@@ -90,6 +86,10 @@ typedef void (*ArvFakeCameraFillPattern) (ArvBuffer *buffer, void *fill_pattern_
 
 #define ARV_TYPE_FAKE_CAMERA             (arv_fake_camera_get_type ())
 G_DECLARE_FINAL_TYPE (ArvFakeCamera, arv_fake_camera, ARV, FAKE_CAMERA, GObject)
+
+typedef void (*ArvFakeCameraFillPattern) (ArvBuffer *buffer, void *fill_pattern_data,
+					  guint32 exposure_time_us, guint32 gain,
+					  ArvPixelFormat pixel_format);
 
 ArvFakeCamera * arv_fake_camera_new 		(const char *serial_number);
 ArvFakeCamera * arv_fake_camera_new_full 	(const char *serial_number, const char *genicam_filename);

@@ -32,7 +32,7 @@
 
 G_BEGIN_DECLS
 
-struct _ArvBufferPrivate {
+typedef struct {
 	size_t size;
 	gboolean is_preallocated;
 	unsigned char *data;
@@ -56,6 +56,16 @@ struct _ArvBufferPrivate {
 	guint32 height;
 
 	ArvPixelFormat pixel_format;
+} ArvBufferPrivate;
+
+struct _ArvBuffer {
+	GObject	object;
+
+	ArvBufferPrivate *priv;
+};
+
+struct _ArvBufferClass {
+	GObjectClass parent_class;
 };
 
 gboolean	arv_buffer_payload_type_has_chunks 	(ArvBufferPayloadType payload_type);

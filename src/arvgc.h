@@ -27,7 +27,7 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
-#include <arvtypes.h>
+#include <arvbuffer.h>
 #include <arvdomdocument.h>
 
 G_BEGIN_DECLS
