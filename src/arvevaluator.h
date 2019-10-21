@@ -32,26 +32,7 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_EVALUATOR             (arv_evaluator_get_type ())
-#define ARV_EVALUATOR(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_EVALUATOR, ArvEvaluator))
-#define ARV_EVALUATOR_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_EVALUATOR, ArvEvaluatorClass))
-#define ARV_IS_EVALUATOR(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_EVALUATOR))
-#define ARV_IS_EVALUATOR_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_EVALUATOR))
-#define ARV_EVALUATOR_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_EVALUATOR, ArvEvaluatorClass))
-
-typedef struct _ArvEvaluatorPrivate ArvEvaluatorPrivate;
-typedef struct _ArvEvaluatorClass ArvEvaluatorClass;
-
-struct _ArvEvaluator {
-	GObject	object;
-
-	ArvEvaluatorPrivate *priv;
-};
-
-struct _ArvEvaluatorClass {
-	GObjectClass parent_class;
-};
-
-GType arv_evaluator_get_type (void);
+G_DECLARE_FINAL_TYPE (ArvEvaluator, arv_evaluator, ARV, EVALUATOR, GObject)
 
 ArvEvaluator *	arv_evaluator_new			(const char *expression);
 void 		arv_evaluator_set_expression		(ArvEvaluator *evaluator, const char *expression);

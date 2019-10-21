@@ -52,6 +52,27 @@ typedef enum {
 	ARV_EVALUATOR_STATUS_FORBIDDEN_RECUSRION
 } ArvEvaluatorStatus;
 
+typedef struct {
+	char *expression;
+	GSList *rpn_stack;
+	ArvEvaluatorStatus parsing_status;
+	GHashTable *variables;
+	GHashTable *sub_expressions;
+	GHashTable *constants;
+} ArvEvaluatorPrivate;
+
+struct _ArvEvaluator {
+	GObject	object;
+
+	ArvEvaluatorPrivate *priv;
+};
+
+struct _ArvEvaluatorClass {
+	GObjectClass parent_class;
+};
+
+G_DEFINE_TYPE_WITH_CODE (ArvEvaluator, arv_evaluator, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvEvaluator))
+
 static const char *arv_evaluator_status_strings[] = {
 	"success",
 	"not parsed",
@@ -68,15 +89,6 @@ static const char *arv_evaluator_status_strings[] = {
 	"stack overflow",
 	"invalid double function",
 	"forbidden recursion"
-};
-
-struct _ArvEvaluatorPrivate {
-	char *expression;
-	GSList *rpn_stack;
-	ArvEvaluatorStatus parsing_status;
-	GHashTable *variables;
-	GHashTable *sub_expressions;
-	GHashTable *constants;
 };
 
 typedef enum {
@@ -1460,8 +1472,6 @@ arv_evaluator_new (const char *expression)
 
 	return evaluator;
 }
-
-G_DEFINE_TYPE_WITH_CODE (ArvEvaluator, arv_evaluator, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvEvaluator))
 
 static void
 arv_evaluator_init (ArvEvaluator *evaluator)
