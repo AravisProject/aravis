@@ -32,11 +32,7 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_REGISTER             	(arv_gc_register_get_type ())
-#define ARV_GC_REGISTER(obj)             	(G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_REGISTER, ArvGcRegister))
-#define ARV_IS_GC_REGISTER(obj)          	(G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GC_REGISTER))
-#define ARV_GC_REGISTER_GET_INTERFACE(obj)   	(G_TYPE_INSTANCE_GET_INTERFACE((obj), ARV_TYPE_GC_REGISTER, ArvGcRegisterInterface))
-
-typedef struct _ArvGcRegisterInterface ArvGcRegisterInterface;
+G_DECLARE_INTERFACE (ArvGcRegister, arv_gc_register, ARV, GC_REGISTER, GObject)
 
 struct _ArvGcRegisterInterface {
 	GTypeInterface parent;
@@ -46,8 +42,6 @@ struct _ArvGcRegisterInterface {
 	guint64		(*get_address) 		(ArvGcRegister *gc_register, GError **error);
 	guint64 	(*get_length)		(ArvGcRegister *gc_register, GError **error);
 };
-
-GType arv_gc_register_get_type (void);
 
 void 		arv_gc_register_get			(ArvGcRegister *gc_register, void *buffer, guint64 length, GError **error);
 void 		arv_gc_register_set			(ArvGcRegister *gc_register, const void *buffer, guint64 length, GError **error);
