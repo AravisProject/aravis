@@ -36,7 +36,33 @@
 #include <string.h>
 #include <stdlib.h>
 
-static GObjectClass *parent_class = NULL;
+struct _ArvGcIntegerNode {
+	ArvGcFeatureNode	node;
+
+	ArvGcPropertyNode *value;
+	ArvGcPropertyNode *minimum;
+	ArvGcPropertyNode *maximum;
+	ArvGcPropertyNode *increment;
+	ArvGcPropertyNode *unit;
+
+	ArvGcPropertyNode *index;
+	GSList *value_indexed_nodes;
+	ArvGcPropertyNode *value_default;
+
+	GSList *selecteds;		/* #ArvGcPropertyNode */
+	GSList *selected_features;	/* #ArvGcFeatureNode */
+};
+
+struct _ArvGcIntegerNodeClass {
+	ArvGcFeatureNodeClass parent_class;
+};
+
+static void arv_gc_integer_node_integer_interface_init (ArvGcIntegerInterface *interface);
+static void arv_gc_integer_node_selector_interface_init (ArvGcSelectorInterface *interface);
+
+G_DEFINE_TYPE_WITH_CODE (ArvGcIntegerNode, arv_gc_integer_node, ARV_TYPE_GC_FEATURE_NODE,
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_integer_node_integer_interface_init)
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_SELECTOR, arv_gc_integer_node_selector_interface_init))
 
 /* ArvDomNode implementation */
 
@@ -89,7 +115,7 @@ arv_gc_integer_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				node->selecteds = g_slist_prepend (node->selecteds, property_node);
 				break;
 			default:
-				ARV_DOM_NODE_CLASS (parent_class)->post_new_child (self, child);
+				ARV_DOM_NODE_CLASS (arv_gc_integer_node_parent_class)->post_new_child (self, child);
 				break;
 		}
 	}
@@ -155,7 +181,7 @@ arv_gc_integer_node_finalize (GObject *object)
 {
 	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (object);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_gc_integer_node_parent_class)->finalize (object);
 
 	g_clear_pointer (&gc_integer_node->value_indexed_nodes, g_slist_free);
 	g_clear_pointer (&gc_integer_node->selecteds, g_slist_free);
@@ -167,8 +193,6 @@ arv_gc_integer_node_class_init (ArvGcIntegerNodeClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
-
-	parent_class = g_type_class_peek_parent (this_class);
 
 	object_class->finalize = arv_gc_integer_node_finalize;
 	dom_node_class->get_node_name = arv_gc_integer_node_get_node_name;
@@ -414,7 +438,3 @@ arv_gc_integer_node_selector_interface_init (ArvGcSelectorInterface *interface)
 {
 	interface->get_selected_features = arv_gc_integer_node_get_selected_features;
 }
-
-G_DEFINE_TYPE_WITH_CODE (ArvGcIntegerNode, arv_gc_integer_node, ARV_TYPE_GC_FEATURE_NODE,
-			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_integer_node_integer_interface_init)
-			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_SELECTOR, arv_gc_integer_node_selector_interface_init))

@@ -34,36 +34,8 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_INTEGER_NODE             (arv_gc_integer_node_get_type ())
-#define ARV_GC_INTEGER_NODE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_INTEGER_NODE, ArvGcIntegerNode))
-#define ARV_GC_INTEGER_NODE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GC_INTEGER_NODE, ArvGcIntegerNodeClass))
-#define ARV_IS_GC_INTEGER_NODE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GC_INTEGER_NODE))
-#define ARV_IS_GC_INTEGER_NODE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GC_INTEGER_NODE))
-#define ARV_GC_INTEGER_NODE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GC_INTEGER_NODE, ArvGcIntegerNodeClass))
+G_DECLARE_FINAL_TYPE (ArvGcIntegerNode, arv_gc_integer_node, ARV, GC_INTEGER_NODE, ArvGcFeatureNode)
 
-typedef struct _ArvGcIntegerNodeClass ArvGcIntegerNodeClass;
-
-struct _ArvGcIntegerNode {
-	ArvGcFeatureNode	node;
-
-	ArvGcPropertyNode *value;
-	ArvGcPropertyNode *minimum;
-	ArvGcPropertyNode *maximum;
-	ArvGcPropertyNode *increment;
-	ArvGcPropertyNode *unit;
-
-	ArvGcPropertyNode *index;
-	GSList *value_indexed_nodes;
-	ArvGcPropertyNode *value_default;
-
-	GSList *selecteds;		/* #ArvGcPropertyNode */
-	GSList *selected_features;	/* #ArvGcFeatureNode */
-};
-
-struct _ArvGcIntegerNodeClass {
-	ArvGcFeatureNodeClass parent_class;
-};
-
-GType 		arv_gc_integer_node_get_type 	(void);
 ArvGcNode * 	arv_gc_integer_node_new 	(void);
 
 G_END_DECLS
