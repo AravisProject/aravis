@@ -80,6 +80,11 @@ void 			arv_gv_device_set_stream_options 		(ArvGvDevice *gv_device, ArvGvStreamO
 
 gboolean		arv_gv_device_is_controller			(ArvGvDevice *gv_device);
 
+gboolean 		arv_gv_device_issue_scheduled_action_command 	(guint32 device_key, guint32 group_key, guint32 group_mask,
+									 guint64 timestamp_ns, GInetAddress *broadcast_address,
+									 GInetAddress **inet_addresses, guint *n_acknowledges,
+									 GError **error);
+
 G_END_DECLS
 
 #endif

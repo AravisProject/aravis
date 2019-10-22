@@ -427,6 +427,15 @@ arv_gv_device_heartbeat_thread (void *data)
 
 /* ArvGvDevice implemenation */
 
+gboolean
+arv_gv_device_issue_scheduled_action_command 	(guint32 device_key, guint32 group_key, guint32 group_mask,
+						 guint64 timestamp_ns, GInetAddress *broadcast_address,
+						 GInetAddress **inet_addresses, guint *n_acknowledges,
+						 GError **error)
+{
+	return FALSE;
+}
+
 /**
  * arv_gv_device_take_control:
  * @gv_device: a #ArvGvDevice

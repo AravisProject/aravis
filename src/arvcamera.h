@@ -31,6 +31,7 @@
 #include <arvstream.h>
 #include <arvgvstream.h>
 #include <arvgvdevice.h>
+#include <gio/gio.h>
 
 G_BEGIN_DECLS
 
@@ -190,6 +191,18 @@ void		arv_camera_gv_set_packet_size_adjustment 	(ArvCamera *camera,
 								 ArvGvPacketSizeAdjustment adjustment);
 
 void 		arv_camera_gv_set_stream_options 	(ArvCamera *camera, ArvGvStreamOption options);
+
+void 		arv_camera_gv_configure_action_command 		(ArvCamera *camera, const char *command_name,
+								 guint32 device_key, guint32 group_key, guint32 group_mask,
+								 GError **error);
+const char ** 	arv_camera_gv_get_available_action_commands 	(ArvCamera *camera, guint *n_commands, GError **error);
+gboolean	arv_camera_gv_issue_action_command 		(guint32 device_key, guint32 group_key, guint32 group_mask,
+								 GInetAddress *broadcast_address,
+								 GInetAddress **inet_addresses, guint *n_acknowledges,
+								 GError **error);
+gboolean 	arv_camera_gv_issue_scheduled_action_command 	(guint32 device_key, guint32 group_key, guint32 group_mask,
+								 guint64 timestamp_ns, GInetAddress *broadcast_address,
+								 GInetAddress **inet_addresses, guint *n_acknowledges, GError **error);
 
 /* USB3Vision specific API */
 
