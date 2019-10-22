@@ -33,35 +33,12 @@
 
 G_BEGIN_DECLS
 
-#define ARV_TYPE_GC_SWISS_KNIFE             (arv_gc_swiss_knife_get_type ())
-#define ARV_GC_SWISS_KNIFE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_SWISS_KNIFE, ArvGcSwissKnife))
-#define ARV_GC_SWISS_KNIFE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GC_SWISS_KNIFE, ArvGcSwissKnifeClass))
-#define ARV_IS_GC_SWISS_KNIFE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GC_SWISS_KNIFE))
-#define ARV_IS_GC_SWISS_KNIFE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GC_SWISS_KNIFE))
-#define ARV_GC_SWISS_KNIFE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GC_SWISS_KNIFE, ArvGcSwissKnifeClass))
-
-typedef struct _ArvGcSwissKnifeClass ArvGcSwissKnifeClass;
-
-struct _ArvGcSwissKnife {
-	ArvGcFeatureNode	node;
-
-	GType value_type;
-	GSList *variables;	/* ArvGcVariableNode list */
-	GSList *constants;	/* ArvGcVariableNode list */
-	GSList *expressions;	/* ArvGcVariableNode list */
-
-	ArvGcPropertyNode *formula_node;
-
-	ArvEvaluator *formula;
-};
+#define ARV_TYPE_GC_SWISS_KNIFE  (arv_gc_swiss_knife_get_type ())
+G_DECLARE_DERIVABLE_TYPE (ArvGcSwissKnife, arv_gc_swiss_knife, ARV, GC_SWISS_KNIFE, ArvGcFeatureNode)
 
 struct _ArvGcSwissKnifeClass {
 	ArvGcFeatureNodeClass parent_class;
 };
-
-GType 		arv_gc_swiss_knife_get_type 	(void);
-
-G_DEFINE_AUTOPTR_CLEANUP_FUNC (ArvGcSwissKnife, g_object_unref)
 
 G_END_DECLS
 

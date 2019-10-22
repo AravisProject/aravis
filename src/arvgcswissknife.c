@@ -34,30 +34,41 @@
 #include <arvdebug.h>
 #include <string.h>
 
-G_DEFINE_ABSTRACT_TYPE (ArvGcSwissKnife, arv_gc_swiss_knife, ARV_TYPE_GC_FEATURE_NODE)
+typedef struct {
+	GType value_type;
+	GSList *variables;	/* ArvGcVariableNode list */
+	GSList *constants;	/* ArvGcVariableNode list */
+	GSList *expressions;	/* ArvGcVariableNode list */
+
+	ArvGcPropertyNode *formula_node;
+
+	ArvEvaluator *formula;
+} ArvGcSwissKnifePrivate;
+
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvGcSwissKnife, arv_gc_swiss_knife, ARV_TYPE_GC_FEATURE_NODE, G_ADD_PRIVATE (ArvGcSwissKnife))
 
 /* ArvDomNode implementation */
 
 static void
 arv_gc_swiss_knife_post_new_child (ArvDomNode *self, ArvDomNode *child)
 {
-	ArvGcSwissKnife *node = ARV_GC_SWISS_KNIFE (self);
+	ArvGcSwissKnifePrivate *priv = arv_gc_swiss_knife_get_instance_private (ARV_GC_SWISS_KNIFE (self));
 
 	if (ARV_IS_GC_PROPERTY_NODE (child)) {
 		ArvGcPropertyNode *property_node = ARV_GC_PROPERTY_NODE (child);
 
 		switch (arv_gc_property_node_get_node_type (property_node)) {
 			case ARV_GC_PROPERTY_NODE_TYPE_P_VARIABLE:
-				node->variables = g_slist_prepend (node->variables, property_node);
+				priv->variables = g_slist_prepend (priv->variables, property_node);
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_FORMULA:
-				node->formula_node = property_node;
+				priv->formula_node = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_EXPRESSION:
-				node->expressions = g_slist_prepend (node->expressions, property_node);
+				priv->expressions = g_slist_prepend (priv->expressions, property_node);
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_CONSTANT:
-				node->constants = g_slist_prepend (node->constants, property_node);
+				priv->constants = g_slist_prepend (priv->constants, property_node);
 				break;
 			default:
 				ARV_DOM_NODE_CLASS (arv_gc_swiss_knife_parent_class)->post_new_child (self, child);
@@ -75,21 +86,23 @@ arv_gc_swiss_knife_pre_remove_child (ArvDomNode *self, ArvDomNode *child)
 /* ArvGcFeatureNode implementation */
 
 static void
-arv_gc_swiss_knife_init (ArvGcSwissKnife *gc_swiss_knife)
+arv_gc_swiss_knife_init (ArvGcSwissKnife *self)
 {
-	gc_swiss_knife->formula = arv_evaluator_new (NULL);
+	ArvGcSwissKnifePrivate *priv = arv_gc_swiss_knife_get_instance_private (self);
+
+	priv->formula = arv_evaluator_new (NULL);
 }
 
 static void
 arv_gc_swiss_knife_finalize (GObject *object)
 {
-	ArvGcSwissKnife *gc_swiss_knife = ARV_GC_SWISS_KNIFE (object);
+	ArvGcSwissKnifePrivate *priv = arv_gc_swiss_knife_get_instance_private (ARV_GC_SWISS_KNIFE (object));
 
-	g_slist_free (gc_swiss_knife->variables);
-	g_slist_free (gc_swiss_knife->expressions);
-	g_slist_free (gc_swiss_knife->constants);
+	g_slist_free (priv->variables);
+	g_slist_free (priv->expressions);
+	g_slist_free (priv->constants);
 
-	g_clear_object (&gc_swiss_knife->formula);
+	g_clear_object (&priv->formula);
 
 	G_OBJECT_CLASS (arv_gc_swiss_knife_parent_class)->finalize (object);
 }
@@ -108,15 +121,16 @@ arv_gc_swiss_knife_class_init (ArvGcSwissKnifeClass *this_class)
 /* ArvGcInteger interface implementation */
 
 static void
-_update_variables (ArvGcSwissKnife *gc_swiss_knife, GError **error)
+_update_variables (ArvGcSwissKnife *self, GError **error)
 {
+	ArvGcSwissKnifePrivate *priv = arv_gc_swiss_knife_get_instance_private (self);
 	ArvGcNode *node;
 	GError *local_error = NULL;
 	GSList *iter;
 	const char *expression;
 
-	if (gc_swiss_knife->formula_node != NULL)
-		expression = arv_gc_property_node_get_string (gc_swiss_knife->formula_node, &local_error);
+	if (priv->formula_node != NULL)
+		expression = arv_gc_property_node_get_string (priv->formula_node, &local_error);
 	else
 		expression = "";
 
@@ -125,9 +139,9 @@ _update_variables (ArvGcSwissKnife *gc_swiss_knife, GError **error)
 		return;
 	}
 
-	arv_evaluator_set_expression (gc_swiss_knife->formula, expression);
+	arv_evaluator_set_expression (priv->formula, expression);
 
-	for (iter = gc_swiss_knife->expressions; iter != NULL; iter = iter->next) {
+	for (iter = priv->expressions; iter != NULL; iter = iter->next) {
 		const char *expression;
 		const char *name;
 
@@ -139,10 +153,10 @@ _update_variables (ArvGcSwissKnife *gc_swiss_knife, GError **error)
 
 		name = arv_gc_property_node_get_name (iter->data);
 
-		arv_evaluator_set_sub_expression (gc_swiss_knife->formula, name, expression);
+		arv_evaluator_set_sub_expression (priv->formula, name, expression);
 	}
 
-	for (iter = gc_swiss_knife->constants; iter != NULL; iter = iter->next) {
+	for (iter = priv->constants; iter != NULL; iter = iter->next) {
 		const char *constant;
 		const char *name;
 
@@ -154,10 +168,10 @@ _update_variables (ArvGcSwissKnife *gc_swiss_knife, GError **error)
 
 		name = arv_gc_property_node_get_name (iter->data);
 
-		arv_evaluator_set_constant (gc_swiss_knife->formula, name, constant);
+		arv_evaluator_set_constant (priv->formula, name, constant);
 	}
 
-	for (iter = gc_swiss_knife->variables; iter != NULL; iter = iter->next) {
+	for (iter = priv->variables; iter != NULL; iter = iter->next) {
 		ArvGcPropertyNode *variable_node = iter->data;
 
 		node = arv_gc_property_node_get_linked_node (ARV_GC_PROPERTY_NODE (variable_node));
@@ -171,7 +185,7 @@ _update_variables (ArvGcSwissKnife *gc_swiss_knife, GError **error)
 				return;
 			}
 
-			arv_evaluator_set_int64_variable (gc_swiss_knife->formula,
+			arv_evaluator_set_int64_variable (priv->formula,
 							  arv_gc_property_node_get_name (variable_node),
 							  value);
 		} else if (ARV_IS_GC_FLOAT (node)) {
@@ -184,17 +198,17 @@ _update_variables (ArvGcSwissKnife *gc_swiss_knife, GError **error)
 				return;
 			}
 
-			arv_evaluator_set_double_variable (gc_swiss_knife->formula,
+			arv_evaluator_set_double_variable (priv->formula,
 							  arv_gc_property_node_get_name (variable_node),
 							  value);
 		}
 	}
-
 }
 
 gint64
 arv_gc_swiss_knife_get_integer_value (ArvGcSwissKnife *self, GError **error)
 {
+	ArvGcSwissKnifePrivate *priv = arv_gc_swiss_knife_get_instance_private (self);
 	GError *local_error = NULL;
 
 	g_return_val_if_fail (ARV_IS_GC_SWISS_KNIFE (self), 0);
@@ -206,12 +220,13 @@ arv_gc_swiss_knife_get_integer_value (ArvGcSwissKnife *self, GError **error)
 		return 0;
 	}
 
-	return arv_evaluator_evaluate_as_int64 (self->formula, NULL);
+	return arv_evaluator_evaluate_as_int64 (priv->formula, NULL);
 }
 
 double
 arv_gc_swiss_knife_get_float_value (ArvGcSwissKnife *self, GError **error)
 {
+	ArvGcSwissKnifePrivate *priv = arv_gc_swiss_knife_get_instance_private (self);
 	GError *local_error = NULL;
 
 	g_return_val_if_fail (ARV_IS_GC_SWISS_KNIFE (self), 0.0);
@@ -223,5 +238,5 @@ arv_gc_swiss_knife_get_float_value (ArvGcSwissKnife *self, GError **error)
 		return 0.0;
 	}
 
-	return arv_evaluator_evaluate_as_double (self->formula, NULL);
+	return arv_evaluator_evaluate_as_double (priv->formula, NULL);
 }
