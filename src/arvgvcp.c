@@ -438,6 +438,50 @@ arv_gvcp_packet_new_packet_resend_cmd (guint64 frame_id,
 	return packet;
 }
 
+/**
+ * arv_gvcp_packet_new_action_cmd: (skip)
+ * @device_key: device key
+ * @group_key: group key
+ * @group_mask: group mask
+ * @timestamp: optional timestamp (<=0 if not used)
+ *
+ * Create a gvcp packet for an action command.
+ *
+ * Return value: (transfer full): a new #ArvGvcpPacket
+ */
+
+ArvGvcpPacket *
+arv_gvcp_packet_new_action_cmd (guint16 packet_id,
+				guint32 device_key, guint32 group_key,
+				guint32 group_mask, gint64 timestamp,
+				size_t *packet_size)
+{
+	ArvGvcpPacket *packet;
+	guint32 *data;
+
+	*packet_size = sizeof (ArvGvcpHeader) + 3 * sizeof (guint32);
+	if (timestamp <= 0)
+		*packet_size += sizeof (gint64);
+
+	packet = g_malloc (*packet_size);
+
+	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_CMD;
+	packet->header.packet_flags = 0;
+	packet->header.command = g_htons (ARV_GVCP_COMMAND_ACTION_CMD);
+	packet->header.size = g_htons (*packet_size - sizeof (ArvGvcpHeader));
+	packet->header.id = g_htons (packet_id);
+
+	data = (guint32 *) &packet->data;
+
+	data[0] = g_htonl (device_key);
+	data[1] = g_htonl (group_key);
+	data[2] = g_htonl (group_mask);
+	if (timestamp <=0)
+		*((gint64 *)&data[3]) = GINT64_TO_BE(timestamp);
+
+	return packet;
+}
+
 static const char *
 arv_enum_to_string (GType type,
 		    guint enum_value)

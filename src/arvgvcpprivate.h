@@ -297,7 +297,9 @@ typedef enum {
 	ARV_GVCP_COMMAND_READ_MEMORY_ACK =	0x0085,
 	ARV_GVCP_COMMAND_WRITE_MEMORY_CMD =	0x0086,
 	ARV_GVCP_COMMAND_WRITE_MEMORY_ACK =	0x0087,
-	ARV_GVCP_COMMAND_PENDING_ACK =		0x0089
+	ARV_GVCP_COMMAND_PENDING_ACK =		0x0089,
+	ARV_GVCP_COMMAND_ACTION_CMD =		0x0100,
+	ARV_GVCP_COMMAND_ACTION_ACK =		0x0101
 } ArvGvcpCommand;
 
 #pragma pack(push,1)
@@ -359,6 +361,10 @@ ArvGvcpPacket * 	arv_gvcp_packet_new_packet_resend_cmd 	(guint64 frame_id,
 								 guint32 first_block, guint32 last_block,
 								 gboolean extended_ids,
 								 guint16 packet_id, size_t *packet_size);
+ArvGvcpPacket * 	arv_gvcp_packet_new_action_cmd		(guint16 packet_id,
+								 guint32 device_key, guint32 group_key,
+								 guint32 group_mask, gint64 timestamp,
+								 size_t *packet_size);
 
 const char *		arv_gvcp_packet_type_to_string 		(ArvGvcpPacketType value);
 const char * 		arv_gvcp_command_to_string 		(ArvGvcpCommand value);
