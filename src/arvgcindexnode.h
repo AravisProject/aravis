@@ -33,26 +33,8 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_INDEX_NODE             (arv_gc_index_node_get_type ())
-#define ARV_GC_INDEX_NODE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_INDEX_NODE, ArvGcIndexNode))
-#define ARV_GC_INDEX_NODE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GC_INDEX_NODE, ArvGcIndexNodeClass))
-#define ARV_IS_GC_INDEX_NODE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GC_INDEX_NODE))
-#define ARV_IS_GC_INDEX_NODE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GC_INDEX_NODE))
-#define ARV_GC_INDEX_NODE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GC_INDEX_NODE, ArvGcIndexNodeClass))
+G_DECLARE_FINAL_TYPE (ArvGcIndexNode, arv_gc_index_node, ARV, GC_INDEX_NODE, ArvGcPropertyNode)
 
-typedef struct _ArvGcIndexNodeClass ArvGcIndexNodeClass;
-
-struct _ArvGcIndexNode {
-	ArvGcPropertyNode	base;
-
-	char *offset;
-	gboolean is_p_offset;
-};
-
-struct _ArvGcIndexNodeClass {
-	ArvGcPropertyNodeClass parent_class;
-};
-
-GType 		arv_gc_index_node_get_type 	(void);
 ArvGcNode * 	arv_gc_index_node_new 		(void);
 gint64		arv_gc_index_node_get_index	(ArvGcIndexNode *index_node, gint64 default_offset, GError **error);
 

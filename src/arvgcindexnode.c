@@ -33,7 +33,18 @@
 #include <arvmisc.h>
 #include <string.h>
 
-static GObjectClass *parent_class = NULL;
+struct _ArvGcIndexNode {
+	ArvGcPropertyNode	base;
+
+	char *offset;
+	gboolean is_p_offset;
+};
+
+struct _ArvGcIndexNodeClass {
+	ArvGcPropertyNodeClass parent_class;
+};
+
+G_DEFINE_TYPE (ArvGcIndexNode, arv_gc_index_node, ARV_TYPE_GC_PROPERTY_NODE)
 
 /* ArvDomNode implementation */
 
@@ -137,7 +148,7 @@ arv_gc_index_node_finalize (GObject *object)
 
 	g_free (index_node->offset);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_gc_index_node_parent_class)->finalize (object);
 }
 
 static void
@@ -147,13 +158,9 @@ arv_gc_index_node_class_init (ArvGcIndexNodeClass *this_class)
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
 	ArvDomElementClass *dom_element_class = ARV_DOM_ELEMENT_CLASS (this_class);
 
-	parent_class = g_type_class_peek_parent (this_class);
-
 	object_class->finalize = arv_gc_index_node_finalize;
 	dom_node_class->get_node_name = arv_gc_index_node_get_node_name;
 	dom_node_class->can_append_child = arv_gc_index_node_can_append_child;
 	dom_element_class->set_attribute = arv_gc_index_node_set_attribute;
 	dom_element_class->get_attribute = arv_gc_index_node_get_attribute;
 }
-
-G_DEFINE_TYPE (ArvGcIndexNode, arv_gc_index_node, ARV_TYPE_GC_PROPERTY_NODE)
