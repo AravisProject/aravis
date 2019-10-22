@@ -55,7 +55,7 @@ enum
   PROP_CM_DOMAIN
 };
 
-struct _ArvGvFakeCameraPrivate {
+typedef struct {
 	char *interface_name;
 	char *serial_number;
 	char *genicam_filename;
@@ -78,7 +78,19 @@ struct _ArvGvFakeCameraPrivate {
 	gboolean cancel;
 
 	double gvsp_lost_packet_ratio;
+} ArvGvFakeCameraPrivate;
+
+struct _ArvGvFakeCamera {
+	GObject	object;
+
+	ArvGvFakeCameraPrivate *priv;
 };
+
+struct _ArvGvFakeCameraClass {
+	GObjectClass parent_class;
+};
+
+G_DEFINE_TYPE_WITH_CODE (ArvGvFakeCamera, arv_gv_fake_camera, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvGvFakeCamera))
 
 static gboolean
 _g_inet_socket_address_is_equal (GInetSocketAddress *a, GInetSocketAddress *b)
@@ -686,8 +698,6 @@ arv_gv_fake_camera_is_running (ArvGvFakeCamera *gv_fake_camera)
 
 	return gv_fake_camera->priv->is_running;
 }
-
-G_DEFINE_TYPE_WITH_CODE (ArvGvFakeCamera, arv_gv_fake_camera, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvGvFakeCamera))
 
 static void
 arv_gv_fake_camera_init (ArvGvFakeCamera *gv_fake_camera)
