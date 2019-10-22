@@ -69,7 +69,7 @@ arv_gc_selector_get_selected_features (ArvGcSelector *gc_selector)
 
 	g_return_val_if_fail (ARV_IS_GC_SELECTOR (gc_selector), 0);
 
-	selector_interface = ARV_GC_SELECTOR_GET_INTERFACE (gc_selector);
+	selector_interface = ARV_GC_SELECTOR_GET_IFACE (gc_selector);
 
 	if (selector_interface->get_selected_features != NULL)
 		return selector_interface->get_selected_features (gc_selector);

@@ -31,20 +31,14 @@
 
 G_BEGIN_DECLS
 
-#define ARV_TYPE_GC_SELECTOR             	(arv_gc_selector_get_type ())
-#define ARV_GC_SELECTOR(obj)             	(G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_SELECTOR, ArvGcSelector))
-#define ARV_IS_GC_SELECTOR(obj)          	(G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GC_SELECTOR))
-#define ARV_GC_SELECTOR_GET_INTERFACE(obj)   	(G_TYPE_INSTANCE_GET_INTERFACE((obj), ARV_TYPE_GC_SELECTOR, ArvGcSelectorInterface))
-
-typedef struct _ArvGcSelectorInterface ArvGcSelectorInterface;
+#define ARV_TYPE_GC_SELECTOR (arv_gc_selector_get_type ())
+G_DECLARE_INTERFACE (ArvGcSelector, arv_gc_selector, ARV, GC_SELECTOR, GObject)
 
 struct _ArvGcSelectorInterface {
 	GTypeInterface parent;
 
 	const GSList *	(*get_selected_features)	(ArvGcSelector *gc_selector);
 };
-
-GType arv_gc_selector_get_type (void);
 
 gboolean 		arv_gc_selector_is_selector 		(ArvGcSelector *gc_selector);
 const GSList * 		arv_gc_selector_get_selected_features 	(ArvGcSelector *gc_selector);
