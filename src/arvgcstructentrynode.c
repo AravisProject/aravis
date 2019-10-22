@@ -38,6 +38,19 @@
 #include <stdlib.h>
 #include <string.h>
 
+struct _ArvGcStructEntryNode {
+	ArvGcPropertyNode *sign;
+	ArvGcPropertyNode *lsb;
+	ArvGcPropertyNode *msb;
+	ArvGcPropertyNode *cachable;
+
+	char v_string[G_ASCII_DTOSTR_BUF_SIZE];
+};
+
+struct _ArvGcStructEntryNodeClass {
+	ArvGcFeatureNodeClass parent_class;
+};
+
 static void arv_gc_struct_entry_node_register_interface_init (ArvGcRegisterInterface *interface);
 static void arv_gc_struct_entry_node_integer_interface_init (ArvGcIntegerInterface *interface);
 
