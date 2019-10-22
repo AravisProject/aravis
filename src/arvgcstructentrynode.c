@@ -39,6 +39,8 @@
 #include <string.h>
 
 struct _ArvGcStructEntryNode {
+	ArvGcFeatureNode node;
+
 	ArvGcPropertyNode *sign;
 	ArvGcPropertyNode *lsb;
 	ArvGcPropertyNode *msb;
