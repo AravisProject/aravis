@@ -2548,7 +2548,7 @@ arv_camera_set_chunk_mode (ArvCamera *camera, gboolean is_active)
 {
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
-	arv_camera_set_integer (camera, "ChunkModeActive", is_active ? 1 : 0);
+	arv_camera_set_boolean (camera, "ChunkModeActive", is_active);
 }
 
 /**
@@ -2567,7 +2567,7 @@ arv_camera_get_chunk_mode (ArvCamera *camera)
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
-	return arv_camera_get_integer (camera, "ChunkModeActive");
+	return arv_camera_get_boolean (camera, "ChunkModeActive");
 }
 
 /**
@@ -2589,7 +2589,7 @@ arv_camera_set_chunk_state (ArvCamera *camera, const char *chunk, gboolean is_en
 	g_return_if_fail (chunk != NULL && chunk[0] != '\0');
 
 	arv_camera_set_string (camera, "ChunkSelector", chunk);
-	arv_camera_set_integer (camera, "ChunkEnable", is_enabled ? 1 : 0);
+	arv_camera_set_boolean (camera, "ChunkEnable", is_enabled);
 }
 
 /**
@@ -2612,7 +2612,7 @@ arv_camera_get_chunk_state (ArvCamera *camera, const char *chunk)
 	g_return_val_if_fail (chunk != NULL && chunk[0] != '\0', FALSE);
 
 	arv_camera_set_string (camera, "ChunkSelector", chunk);
-	return arv_camera_get_integer (camera, "ChunkEnable");
+	return arv_camera_get_boolean (camera, "ChunkEnable");
 }
 
 /**
