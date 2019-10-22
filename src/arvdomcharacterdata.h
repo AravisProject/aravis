@@ -57,6 +57,8 @@ GType arv_dom_character_data_get_type (void);
 const char * 	arv_dom_character_data_get_data 	(ArvDomCharacterData* self);
 void 		arv_dom_character_data_set_data 	(ArvDomCharacterData* self, const char* value);
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (ArvDomCharacterData, g_object_unref)
+
 G_END_DECLS
 
 #endif

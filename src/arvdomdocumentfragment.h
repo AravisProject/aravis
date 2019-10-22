@@ -54,6 +54,8 @@ GType arv_dom_document_fragment_get_type (void);
 
 ArvDomDocumentFragment * 	arv_dom_document_fragment_new 		(void);
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (ArvDomDocumentFragment, g_object_unref)
+
 G_END_DECLS
 
 #endif

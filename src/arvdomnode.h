@@ -119,6 +119,8 @@ ArvDomDocument *	arv_dom_node_get_owner_document 	(ArvDomNode* self);
 void			arv_dom_node_write_to_stream		(ArvDomNode *self, GOutputStream *stream,
 								 GError **error);
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (ArvDomNode, g_object_unref)
+
 G_END_DECLS
 
 #endif

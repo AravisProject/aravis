@@ -57,6 +57,8 @@ GType arv_dom_node_list_get_type (void);
 ArvDomNode *		arv_dom_node_list_get_item 		(ArvDomNodeList *list, unsigned int index);
 unsigned int		arv_dom_node_list_get_length		(ArvDomNodeList *list);
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (ArvDomNodeList, g_object_unref)
+
 G_END_DECLS
 
 #endif

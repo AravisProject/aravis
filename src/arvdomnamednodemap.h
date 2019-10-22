@@ -63,6 +63,8 @@ ArvDomNode *		arv_dom_named_node_map_remove_named_item	(ArvDomNamedNodeMap *map,
 ArvDomNode *		arv_dom_named_node_map_get_item 		(ArvDomNamedNodeMap *map, unsigned int index);
 unsigned int		arv_dom_named_node_map_get_length		(ArvDomNamedNodeMap *map);
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (ArvDomNamedNodeMap, g_object_unref)
+
 G_END_DECLS
 
 #endif

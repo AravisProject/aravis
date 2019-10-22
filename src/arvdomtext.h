@@ -53,6 +53,8 @@ GType arv_dom_text_get_type (void);
 
 ArvDomNode 	*arv_dom_text_new 		(const char *data);
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (ArvDomText, g_object_unref)
+
 G_END_DECLS
 
 #endif
