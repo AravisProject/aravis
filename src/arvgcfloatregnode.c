@@ -21,6 +21,7 @@
  */
 
 #include <arvgcfloatregnode.h>
+#include <arvgcpropertynode.h>
 #include <arvgcfloat.h>
 #include <arvgcregister.h>
 #include <arvgc.h>

@@ -29,41 +29,11 @@
 
 #include <arvtypes.h>
 #include <arvgcfeaturenode.h>
-#include <arvgcpropertynode.h>
-#include <arvgcenums.h>
 
 G_BEGIN_DECLS
 
-#define ARV_TYPE_GC_REGISTER_NODE             (arv_gc_register_node_get_type ())
-#define ARV_GC_REGISTER_NODE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_REGISTER_NODE, ArvGcRegisterNode))
-#define ARV_GC_REGISTER_NODE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GC_REGISTER_NODE, ArvGcRegisterNodeClass))
-#define ARV_IS_GC_REGISTER_NODE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GC_REGISTER_NODE))
-#define ARV_IS_GC_REGISTER_NODE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GC_REGISTER_NODE))
-#define ARV_GC_REGISTER_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GC_REGISTER_NODE, ArvGcRegisterNodeClass))
-
-typedef struct _ArvGcRegisterNodeClass ArvGcRegisterNodeClass;
-
-struct _ArvGcRegisterNode {
-	ArvGcFeatureNode	node;
-
-	GSList *addresses;
-	GSList *swiss_knives;
-	ArvGcPropertyNode *index;
-	ArvGcPropertyNode *length;
-	ArvGcPropertyNode *port;
-	ArvGcPropertyNode *cachable;
-	ArvGcPropertyNode *polling_time;
-	ArvGcPropertyNode *endianess;
-
-	GSList *invalidators;		/* #ArvGcPropertyNode */
-
-	gboolean cached;
-	GHashTable *caches;
-	guint n_cache_hits;
-	guint n_cache_misses;
-
-	char v_string[G_ASCII_DTOSTR_BUF_SIZE];
-};
+#define ARV_TYPE_GC_REGISTER_NODE (arv_gc_register_node_get_type ())
+G_DECLARE_DERIVABLE_TYPE (ArvGcRegisterNode, arv_gc_register_node, ARV, GC_REGISTER_NODE, ArvGcFeatureNode)
 
 struct _ArvGcRegisterNodeClass {
 	ArvGcFeatureNodeClass parent_class;
@@ -71,10 +41,7 @@ struct _ArvGcRegisterNodeClass {
 	ArvGcCachable default_cachable;
 };
 
-GType 		arv_gc_register_node_get_type 			(void);
 ArvGcNode * 	arv_gc_register_node_new 			(void);
-
-G_DEFINE_AUTOPTR_CLEANUP_FUNC (ArvGcRegisterNode, g_object_unref)
 
 G_END_DECLS
 

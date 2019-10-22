@@ -22,6 +22,7 @@
 
 #include <arvgcmaskedintregnode.h>
 #include <arvgcregisternodeprivate.h>
+#include <arvgcpropertynode.h>
 #include <arvgcinteger.h>
 #include <arvgcselector.h>
 
