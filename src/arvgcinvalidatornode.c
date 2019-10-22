@@ -33,7 +33,17 @@
 #include <arvmisc.h>
 #include <string.h>
 
-static GObjectClass *parent_class = NULL;
+struct _ArvGcInvalidatorNode {
+	ArvGcPropertyNode	base;
+
+	guint64 change_index;
+};
+
+struct _ArvGcInvalidatorNodeClass {
+	ArvGcPropertyNodeClass parent_class;
+};
+
+G_DEFINE_TYPE (ArvGcInvalidatorNode, arv_gc_invalidator_node, ARV_TYPE_GC_PROPERTY_NODE)
 
 /* ArvDomNode implementation */
 
@@ -81,9 +91,5 @@ arv_gc_invalidator_node_class_init (ArvGcInvalidatorNodeClass *this_class)
 {
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
 
-	parent_class = g_type_class_peek_parent (this_class);
-
 	dom_node_class->get_node_name = arv_gc_invalidator_node_get_node_name;
 }
-
-G_DEFINE_TYPE (ArvGcInvalidatorNode, arv_gc_invalidator_node, ARV_TYPE_GC_PROPERTY_NODE)
