@@ -2079,6 +2079,9 @@ arv_camera_get_available_enumerations (ArvCamera *camera, const char *feature, g
 	GError *error = NULL;
 	gint64 *values;
 
+	if (n_values != NULL)
+		*n_values = 0;
+
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 	g_return_val_if_fail (feature != NULL, NULL);
 
@@ -2111,6 +2114,9 @@ arv_camera_get_available_enumerations_as_strings (ArvCamera *camera, const char 
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 	GError *error = NULL;
 	const char **strings;
+
+	if (n_values != NULL)
+		*n_values = 0;
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 	g_return_val_if_fail (feature != NULL, NULL);
@@ -2145,6 +2151,9 @@ arv_camera_get_available_enumerations_as_display_names (ArvCamera *camera, const
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 	GError *error = NULL;
 	const char **strings;
+
+	if (n_values != NULL)
+		*n_values = 0;
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 	g_return_val_if_fail (feature != NULL, NULL);
