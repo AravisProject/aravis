@@ -86,7 +86,21 @@ typedef enum {
 const char * 		arv_acquisition_mode_to_string 		(ArvAcquisitionMode value);
 ArvAcquisitionMode 	arv_acquisition_mode_from_string	(const char *string);
 
+/**
+ * ArvPixelFormat:
+ *
+ * A datatype to hold a pixel format.
+ */
+
 typedef guint32 ArvPixelFormat;
+
+/**
+ * ARV_TYPE_PIXEL_FORMAT:
+ *
+ * The #GType of a #ArvPixelFormat.
+ */
+
+#define ARV_TYPE_PIXEL_FORMAT G_TYPE_UINT32
 
 #define ARV_PIXEL_FORMAT_BIT_PER_PIXEL(pixel_format) (((pixel_format) >> 16) & 0xff)
 
@@ -173,7 +187,7 @@ typedef guint32 ArvPixelFormat;
 /* Custom */
 
 /**
- * ARV_PIXEL_FORMAT_CUSTOM_BAYER_GR_12_PACKED: (type guint32)
+ * ARV_PIXEL_FORMAT_CUSTOM_BAYER_GR_12_PACKED: (type ArvPixelFormat)
  */
 
 #define ARV_PIXEL_FORMAT_CUSTOM_BAYER_GR_12_PACKED  	0x810c0001u
