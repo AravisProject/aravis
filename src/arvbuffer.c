@@ -402,10 +402,10 @@ arv_buffer_get_frame_id (ArvBuffer *buffer)
 /**
  * arv_buffer_get_image_region:
  * @buffer: a #ArvBuffer
- * @x: (allow-none): image x offset placeholder
- * @y: (allow-none): image y offset placeholder
- * @width: (allow-none): image width placholder
- * @height: (allow-none): image height placeholder
+ * @x: (out) (optional): image x offset placeholder
+ * @y: (out) (optional): image y offset placeholder
+ * @width: (out) (optional): image width placholder
+ * @height: (out) (optional): image height placeholder
  *
  * Gets the image region. This function must only be called on buffer containing a @ARV_BUFFER_PAYLOAD_TYPE_IMAGE payload.
  *

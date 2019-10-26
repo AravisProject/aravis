@@ -141,6 +141,15 @@ arv_fake_camera_write_memory (ArvFakeCamera *camera, guint32 address, guint32 si
 	return TRUE;
 }
 
+/**
+ * arv_fake_camera_read_register:
+ * @camera: a #ArvFakeCamera
+ * @address: the register address
+ * @value: (out): the register value
+ *
+ * Return value: true if the read succeeded, false otherwise
+ */
+
 gboolean
 arv_fake_camera_read_register (ArvFakeCamera *camera, guint32 address, guint32 *value)
 {
@@ -190,6 +199,14 @@ arv_fake_camera_get_payload (ArvFakeCamera *camera)
 
 	return width * height * ARV_PIXEL_FORMAT_BIT_PER_PIXEL(pixel_format)/8;
 }
+
+/**
+ * arv_fake_camera_get_sleep_time_for_next_frame:
+ * @camera: a #ArvFakeCamera
+ * @next_timestamp_us: (out) (optional): the timestamp for the next frame in microseconds
+ *
+ * Return value: the sleep time for the next frame
+ */
 
 guint64
 arv_fake_camera_get_sleep_time_for_next_frame (ArvFakeCamera *camera, guint64 *next_timestamp_us)
@@ -573,6 +590,15 @@ arv_fake_camera_set_fill_pattern (ArvFakeCamera *camera,
 	g_mutex_unlock (&camera->priv->fill_pattern_mutex);
 }
 
+/**
+ * arv_fake_camera_fill_buffer:
+ * @camera: a #ArvFakeCamera
+ * @buffer: the #ArvBuffer to fill
+ * @packet_size: (out) (optional): the packet size
+ *
+ * Fill a buffer with data from the fake camera.
+ */
+
 void
 arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer, guint32 *packet_size)
 {
@@ -709,6 +735,14 @@ arv_fake_camera_get_heartbeat_timeout (ArvFakeCamera *camera)
 
 	return value;
 }
+
+/**
+ * arv_fake_camera_get_genicam_xml:
+ * @camera: a #ArvFakeCamera
+ * @size: (out) (optional): the size of the returned XML string
+ *
+ * Return value: (transfer none): the genicam XML description of the camera
+ */
 
 const char *
 arv_fake_camera_get_genicam_xml (ArvFakeCamera *camera, size_t *size)
