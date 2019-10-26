@@ -232,6 +232,15 @@ arv_gc_enumeration_get_int_value (ArvGcEnumeration *enumeration, GError **error)
 	return value;
 }
 
+/**
+ * arv_gc_enumeration_get_available_int_values:
+ * @enumeration: a #ArvGcEnumeration
+ * @n_values: (out): the number of values
+ * @error: (out): the error that occured, or NULL
+ *
+ * Return value: (transfer full) (array length=n_values): the values
+ */
+
 gint64 *
 arv_gc_enumeration_get_available_int_values (ArvGcEnumeration *enumeration, guint *n_values, GError **error)
 {

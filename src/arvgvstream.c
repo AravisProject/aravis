@@ -1174,6 +1174,12 @@ arv_gv_stream_new (ArvGvDevice *gv_device,
 
 /* ArvStream implementation */
 
+/**
+ * arv_gv_stream_get_statistics:
+ * @n_resent_packets: (out)
+ * @n_missing_packets: (out)
+ */
+
 void
 arv_gv_stream_get_statistics (ArvGvStream *gv_stream,
 			      guint64 *n_resent_packets,
