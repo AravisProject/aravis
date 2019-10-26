@@ -262,6 +262,8 @@ main (int argc, char **argv)
 
 	g_option_context_free (context);
 
+	arv_enable_interface ("Fake");
+
 	arv_debug_enable (arv_option_debug_domains);
 
 	if (arv_option_camera_name == NULL)

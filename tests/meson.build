@@ -16,6 +16,27 @@ foreach t: tests
   test (t[0], exe)
 endforeach
 
+python_tests = [
+	['fake.py',	[]]
+]
+
+if get_option ('introspection')
+	pymod = import ('python')
+
+	py = pymod.find_installation ('python3', required: false)
+
+	if py.found()
+		environment = [
+			'GI_TYPELIB_PATH=' + join_paths (meson.build_root() , 'src'),
+			'LD_LIBRARY_PATH=' + join_paths (meson.build_root() , 'src')
+		]
+
+		foreach t: python_tests
+			test (t[0], py, args: files (t[0]), env: environment)
+		endforeach
+	endif
+endif
+
 examples = [
 	['arv-device-test',		'arvdevicetest.c'],
 	['arv-genicam-test',		'arvgenicamtest.c'],
