@@ -1080,17 +1080,17 @@ arv_gv_stream_new (ArvGvDevice *gv_device,
 	g_return_val_if_fail (G_IS_INET_ADDRESS (interface_address), NULL);
 	g_return_val_if_fail (G_IS_INET_ADDRESS (device_address), NULL);
 
-	timestamp_tick_frequency = arv_gv_device_get_timestamp_tick_frequency (gv_device);
+	timestamp_tick_frequency = arv_gv_device_get_timestamp_tick_frequency (gv_device, NULL);
 	options = arv_gv_device_get_stream_options (gv_device);
 
-	packet_size = arv_gv_device_get_packet_size (gv_device);
+	packet_size = arv_gv_device_get_packet_size (gv_device, NULL);
 	if (packet_size <= ARV_GVSP_PACKET_PROTOCOL_OVERHEAD) {
-		arv_gv_device_set_packet_size (gv_device, ARV_GV_DEVICE_GVSP_PACKET_SIZE_DEFAULT);
+		arv_gv_device_set_packet_size (gv_device, ARV_GV_DEVICE_GVSP_PACKET_SIZE_DEFAULT, NULL);
 		arv_debug_device ("[GvStream::stream_new] Packet size set to default value (%d)",
 				  ARV_GV_DEVICE_GVSP_PACKET_SIZE_DEFAULT);
 	}
 
-	packet_size = arv_gv_device_get_packet_size (gv_device);
+	packet_size = arv_gv_device_get_packet_size (gv_device, NULL);
 	arv_debug_device ("[GvStream::stream_new] Packet size = %d byte(s)", packet_size);
 
 	g_return_val_if_fail (packet_size > ARV_GVSP_PACKET_PROTOCOL_OVERHEAD, NULL);

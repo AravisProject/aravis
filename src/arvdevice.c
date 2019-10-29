@@ -265,6 +265,29 @@ arv_device_get_feature (ArvDevice *device, const char *feature)
 	return arv_gc_get_node (genicam, feature);
 }
 
+/**
+ * arv_device_is_feature_available:
+ * @device: a #ArvDevice
+ * @feature: feature name
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Return: %TRUE if feature is available, %FALSE if not or on error.
+ *
+ * Since: 0.8.0
+ */
+
+gboolean
+arv_device_is_feature_available (ArvDevice *device, const char *feature, GError **error)
+{
+	ArvGcNode* node;
+
+	g_return_val_if_fail (ARV_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (feature != NULL, FALSE);
+
+	node = arv_device_get_feature (device, feature);
+	return ARV_IS_GC_FEATURE_NODE (node) && arv_gc_feature_node_is_available (ARV_GC_FEATURE_NODE (node), error);
+}
+
 static void *
 _get_feature (ArvDevice *device, GType node_type, const char *feature, GError **error)
 {

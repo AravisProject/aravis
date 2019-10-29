@@ -18,10 +18,10 @@ main (int argc, char **argv)
 		parser = arv_camera_create_chunk_parser (camera);
 
 		/* Enable chunk data */
-		arv_camera_set_chunks (camera, "Width,Height");
+		arv_camera_set_chunks (camera, "Width,Height", NULL);
 
 		/* retrieve image payload (number of bytes per image) */
-		payload = arv_camera_get_payload (camera);
+		payload = arv_camera_get_payload (camera, NULL);
 
 		/* Create a new stream object */
 		stream = arv_camera_create_stream (camera, NULL, NULL);
@@ -33,7 +33,7 @@ main (int argc, char **argv)
 			arv_stream_push_buffer (stream, arv_buffer_new (payload, NULL));
 
 			/* Start the video stream */
-			arv_camera_start_acquisition (camera);
+			arv_camera_start_acquisition (camera, NULL);
 
 			/* Retrieve the acquired buffer */
 			buffer = arv_stream_pop_buffer (stream);
@@ -44,7 +44,7 @@ main (int argc, char **argv)
 			g_object_unref (buffer);
 
 			/* Stop the video stream */
-			arv_camera_stop_acquisition (camera);
+			arv_camera_stop_acquisition (camera, NULL);
 
 			g_object_unref (stream);
 		} else

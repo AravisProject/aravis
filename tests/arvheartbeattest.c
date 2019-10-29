@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
     if (!ARV_IS_STREAM (stream)) {
 	    printf ("Invalid device\n");
     } else {
-	    payload = arv_camera_get_payload (camera);
+	    payload = arv_camera_get_payload (camera, NULL);
 
 	    if (ARV_IS_GV_STREAM (stream)) {
 		    g_object_set (stream,
@@ -98,11 +98,11 @@ int main(int argc, char *argv[])
 	    for (i = 0; i < 100; i++)
 		    arv_stream_push_buffer(stream, arv_buffer_new(payload, NULL));
 
-	    arv_camera_set_acquisition_mode(camera, ARV_ACQUISITION_MODE_CONTINUOUS);
+	    arv_camera_set_acquisition_mode(camera, ARV_ACQUISITION_MODE_CONTINUOUS, NULL);
 
 	    feature = ARV_GC_FEATURE_NODE (arv_device_get_feature (device, arv_option_feature_name));
 
-	    arv_camera_start_acquisition (camera);
+	    arv_camera_start_acquisition (camera, NULL);
 
 	    old_sigint_handler = signal (SIGINT, set_cancel);
 
@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
 	    printf ("Failures          = %Lu\n", (unsigned long long) n_failures);
 	    printf ("Underruns         = %Lu\n", (unsigned long long) n_underruns);
 
-	    arv_camera_stop_acquisition (camera);
+	    arv_camera_stop_acquisition (camera, NULL);
     }
 
     g_object_unref (camera);

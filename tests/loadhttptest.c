@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <arv.h>
 
+#define ARAVIS_COMPILATION
+#include "../src/arvgvdeviceprivate.h"
+
 int
 main (int argc, char **argv)
 {

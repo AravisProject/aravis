@@ -470,46 +470,52 @@ arv_gv_device_leave_control (ArvGvDevice *gv_device)
 }
 
 guint64
-arv_gv_device_get_timestamp_tick_frequency (ArvGvDevice *gv_device)
+arv_gv_device_get_timestamp_tick_frequency (ArvGvDevice *gv_device, GError **error)
 {
+	GError *local_error = NULL;
 	guint32 timestamp_tick_frequency_high;
 	guint32 timestamp_tick_frequency_low;
+	guint64 timestamp_tick_frequency;
 
 	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), 0);
 
-	if (arv_device_read_register (ARV_DEVICE (gv_device),
-				      ARV_GVBS_TIMESTAMP_TICK_FREQUENCY_HIGH_OFFSET,
-				      &timestamp_tick_frequency_high, NULL) &&
-	    arv_device_read_register (ARV_DEVICE (gv_device),
-				      ARV_GVBS_TIMESTAMP_TICK_FREQUENCY_LOW_OFFSET,
-				      &timestamp_tick_frequency_low, NULL)) {
-		guint64 timestamp_tick_frequency;
+	arv_device_read_register (ARV_DEVICE (gv_device),
+				  ARV_GVBS_TIMESTAMP_TICK_FREQUENCY_HIGH_OFFSET,
+				  &timestamp_tick_frequency_high, &local_error);
+	if (local_error == NULL)
+		arv_device_read_register (ARV_DEVICE (gv_device),
+					  ARV_GVBS_TIMESTAMP_TICK_FREQUENCY_LOW_OFFSET,
+					  &timestamp_tick_frequency_low, &local_error);
 
-		timestamp_tick_frequency = ((guint64) timestamp_tick_frequency_high << 32) |
-			timestamp_tick_frequency_low;
-		return timestamp_tick_frequency;
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return 0;
 	}
 
-	return 0;
+	timestamp_tick_frequency = ((guint64) timestamp_tick_frequency_high << 32) |
+		timestamp_tick_frequency_low;
+
+	return timestamp_tick_frequency;
 }
 
 guint
-arv_gv_device_get_packet_size (ArvGvDevice *gv_device)
+arv_gv_device_get_packet_size (ArvGvDevice *gv_device, GError **error)
 {
-	return arv_device_get_integer_feature_value (ARV_DEVICE (gv_device), "GevSCPSPacketSize", NULL);
+	return arv_device_get_integer_feature_value (ARV_DEVICE (gv_device), "GevSCPSPacketSize", error);
 }
 
 void
-arv_gv_device_set_packet_size (ArvGvDevice *gv_device, gint packet_size)
+arv_gv_device_set_packet_size (ArvGvDevice *gv_device, gint packet_size, GError **error)
 {
 	g_return_if_fail (packet_size > 0);
 
-	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevSCPSPacketSize", packet_size, NULL);
+	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevSCPSPacketSize", packet_size, error);
 }
 
 /**
  * arv_gv_device_auto_packet_size:
  * @gv_device: a #ArvGvDevice
+ * @error: a #GError placeholder, %NULL to ignore
  *
  * Automatically determine the biggest packet size that can be used data
  * streaming, and set GevSCPSPacketSize value accordingly. This function relies
@@ -522,7 +528,7 @@ arv_gv_device_set_packet_size (ArvGvDevice *gv_device, gint packet_size)
  */
 
 guint
-arv_gv_device_auto_packet_size (ArvGvDevice *gv_device)
+arv_gv_device_auto_packet_size (ArvGvDevice *gv_device, GError **error)
 {
 	ArvDevice *device = ARV_DEVICE (gv_device);
 	ArvGvDeviceIOData *io_data = gv_device->priv->io_data;

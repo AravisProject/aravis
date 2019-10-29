@@ -39,15 +39,14 @@ G_DECLARE_FINAL_TYPE (ArvGvDevice, arv_gv_device, ARV, GV_DEVICE, ArvDevice)
 
 ArvDevice * 		arv_gv_device_new 				(GInetAddress *interface_address, GInetAddress *device_address);
 
-guint64 		arv_gv_device_get_timestamp_tick_frequency	(ArvGvDevice *gv_device);
-GRegex * 		arv_gv_device_get_url_regex 			(void);
+guint64 		arv_gv_device_get_timestamp_tick_frequency	(ArvGvDevice *gv_device, GError **error);
 
 GSocketAddress *	arv_gv_device_get_interface_address  		(ArvGvDevice *device);
 GSocketAddress *	arv_gv_device_get_device_address  		(ArvGvDevice *device);
 
-guint			arv_gv_device_get_packet_size 			(ArvGvDevice *gv_device);
-void			arv_gv_device_set_packet_size 			(ArvGvDevice *gv_device, gint packet_size);
-guint			arv_gv_device_auto_packet_size 			(ArvGvDevice *gv_device);
+guint			arv_gv_device_get_packet_size 			(ArvGvDevice *gv_device, GError **error);
+void			arv_gv_device_set_packet_size 			(ArvGvDevice *gv_device, gint packet_size, GError **error);
+guint			arv_gv_device_auto_packet_size 			(ArvGvDevice *gv_device, GError **error);
 
 ArvGvStreamOption	arv_gv_device_get_stream_options		(ArvGvDevice *gv_device);
 void 			arv_gv_device_set_stream_options 		(ArvGvDevice *gv_device, ArvGvStreamOption options);

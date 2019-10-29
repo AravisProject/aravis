@@ -9,7 +9,7 @@ main (int argc, char **argv)
 	ArvBuffer *buffer;
 
 	camera = arv_camera_new (argc > 1 ? argv[1] : NULL);
-	buffer = arv_camera_acquisition (camera, 0);
+	buffer = arv_camera_acquisition (camera, 0, NULL);
 
 	if (ARV_IS_BUFFER (buffer))
 		printf ("Image successfully acquired\n");

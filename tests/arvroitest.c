@@ -86,7 +86,7 @@ switch_roi (gpointer user_data)
 	guint i;
 	guint n_deleted;
 
-	arv_camera_stop_acquisition (data->camera);
+	arv_camera_stop_acquisition (data->camera, NULL);
 
 	n_deleted = arv_stream_stop_thread (data->stream, TRUE);
 
@@ -99,8 +99,8 @@ switch_roi (gpointer user_data)
 	if (data->height > HEIGHT_MAX)
 		data->height = HEIGHT_MIN;
 
-	arv_camera_set_region (data->camera, 0, 0, data->width, data->height);
-	arv_camera_get_region (data->camera, NULL, NULL, &width, &height);
+	arv_camera_set_region (data->camera, 0, 0, data->width, data->height, NULL);
+	arv_camera_get_region (data->camera, NULL, NULL, &width, &height, NULL);
 
 	g_assert (width == data->width);
 	g_assert (height == data->height);
@@ -108,14 +108,14 @@ switch_roi (gpointer user_data)
 	printf ("image size set to %dx%d\n", width, height);
 
 
-	payload = arv_camera_get_payload (data->camera);
+	payload = arv_camera_get_payload (data->camera, NULL);
 
 	for (i = 0; i < N_BUFFERS; i++)
 		arv_stream_push_buffer (data->stream, arv_buffer_new (payload, NULL));
 
 	arv_stream_start_thread (data->stream);
 
-	arv_camera_start_acquisition (data->camera);
+	arv_camera_start_acquisition (data->camera, NULL);
 
 	return TRUE;
 }
@@ -153,15 +153,15 @@ main (int argc, char **argv)
 		guint64 n_failures;
 		guint64 n_underruns;
 
-		arv_camera_set_region (data.camera, 0, 0, data.width, data.height);
-		arv_camera_set_frame_rate (data.camera, 20.0);
-		arv_camera_get_region (data.camera, &x, &y, &width, &height);
+		arv_camera_set_region (data.camera, 0, 0, data.width, data.height, NULL);
+		arv_camera_set_frame_rate (data.camera, 20.0, NULL);
+		arv_camera_get_region (data.camera, &x, &y, &width, &height, NULL);
 
-		payload = arv_camera_get_payload (data.camera);
+		payload = arv_camera_get_payload (data.camera, NULL);
 
-		printf ("vendor name           = %s\n", arv_camera_get_vendor_name (data.camera));
-		printf ("model name            = %s\n", arv_camera_get_model_name (data.camera));
-		printf ("device id             = %s\n", arv_camera_get_device_id (data.camera));
+		printf ("vendor name           = %s\n", arv_camera_get_vendor_name (data.camera, NULL));
+		printf ("model name            = %s\n", arv_camera_get_model_name (data.camera, NULL));
+		printf ("device id             = %s\n", arv_camera_get_device_id (data.camera, NULL));
 		printf ("image x               = %d\n", x);
 		printf ("image y               = %d\n", y);
 		printf ("image width           = %d\n", width);
@@ -175,8 +175,8 @@ main (int argc, char **argv)
 			for (i = 0; i < N_BUFFERS; i++)
 				arv_stream_push_buffer (data.stream, arv_buffer_new (payload, NULL));
 
-			arv_camera_set_acquisition_mode (data.camera, ARV_ACQUISITION_MODE_CONTINUOUS);
-			arv_camera_start_acquisition (data.camera);
+			arv_camera_set_acquisition_mode (data.camera, ARV_ACQUISITION_MODE_CONTINUOUS, NULL);
+			arv_camera_start_acquisition (data.camera, NULL);
 
 			data.main_loop = g_main_loop_new (NULL, FALSE);
 
@@ -198,7 +198,7 @@ main (int argc, char **argv)
 			printf ("Failures          = %Lu\n", (unsigned long long) n_failures);
 			printf ("Underruns         = %Lu\n", (unsigned long long) n_underruns);
 
-			arv_camera_stop_acquisition (data.camera);
+			arv_camera_stop_acquisition (data.camera, NULL);
 
 			arv_stream_set_emit_signals (data.stream, FALSE);
 

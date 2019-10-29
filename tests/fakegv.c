@@ -66,10 +66,12 @@ register_test (void)
 static void
 acquisition_test (void)
 {
+	GError *error = NULL;
 	ArvBuffer *buffer;
 	gint x, y, width, height;
 
-	buffer = arv_camera_acquisition (camera, 0);
+	buffer = arv_camera_acquisition (camera, 0, &error);
+	g_assert (error == NULL);
 	g_assert (ARV_IS_BUFFER (buffer));
 
 	arv_buffer_get_image_region (buffer, &x, &y, &width, &height);
@@ -122,7 +124,7 @@ stream_test (void)
 	stream = arv_camera_create_stream (camera, NULL, NULL);
 	g_assert (ARV_IS_STREAM (stream));
 
-	payload = arv_camera_get_payload (camera);
+	payload = arv_camera_get_payload (camera, NULL);
 
 	for (i = 0; i < 5; i++)
 		arv_stream_push_buffer (stream, arv_buffer_new (payload, NULL));
@@ -130,12 +132,12 @@ stream_test (void)
 	g_signal_connect (stream, "new-buffer", G_CALLBACK (new_buffer_cb), &buffer_count);
 	arv_stream_set_emit_signals (stream, TRUE);
 
-	arv_camera_start_acquisition (camera);
+	arv_camera_start_acquisition (camera, NULL);
 
 	while (buffer_count < 10)
 		usleep (1000);
 
-	arv_camera_stop_acquisition (camera);
+	arv_camera_stop_acquisition (camera, NULL);
 	/* The following will block until the signal callback returns
 	 * which avoids a race and possible deadlock.
 	 */
@@ -167,7 +169,7 @@ dynamic_roi_test (void)
 	stream = arv_camera_create_stream (camera, NULL, NULL);
 	g_assert (ARV_IS_STREAM (stream));
 
-	payload = arv_camera_get_payload (camera);
+	payload = arv_camera_get_payload (camera, NULL);
 
 	g_signal_connect (stream, "new-buffer", G_CALLBACK (new_buffer_cb), &buffer_count);
 	arv_stream_set_emit_signals (stream, TRUE);
@@ -185,26 +187,26 @@ dynamic_roi_test (void)
 
 		buffer_count = 0;
 
-		arv_camera_set_region (camera, 0, 0, rois[j].width , rois[j].height);
-		arv_camera_get_region (camera, NULL, NULL, &width, &height);
+		arv_camera_set_region (camera, 0, 0, rois[j].width , rois[j].height, NULL);
+		arv_camera_get_region (camera, NULL, NULL, &width, &height, NULL);
 
 		g_assert (width == rois[j].width);
 		g_assert (height == rois[j].height);
 
-		payload = arv_camera_get_payload (camera);
+		payload = arv_camera_get_payload (camera, NULL);
 
 		for (i = 0; i < N_BUFFERS; i++)
 			arv_stream_push_buffer (stream, arv_buffer_new (payload, NULL));
 
 		arv_stream_start_thread (stream);
 
-		arv_camera_start_acquisition (camera);
+		arv_camera_start_acquisition (camera, NULL);
 
 		while (buffer_count < 10) {
 			usleep (10000);
 		}
 
-		arv_camera_stop_acquisition (camera);
+		arv_camera_stop_acquisition (camera, NULL);
 	}
 
 	arv_stream_set_emit_signals (stream, FALSE);

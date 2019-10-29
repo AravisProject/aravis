@@ -223,7 +223,7 @@ emit_software_trigger (void *abstract_data)
 {
 	ArvCamera *camera = abstract_data;
 
-	arv_camera_software_trigger (camera);
+	arv_camera_software_trigger (camera, NULL);
 
 	return TRUE;
 }
@@ -302,34 +302,34 @@ main (int argc, char **argv)
 			}
 		}
 
-		arv_camera_set_chunks (camera, arv_option_chunks);
-		arv_camera_set_region (camera, 0, 0, arv_option_width, arv_option_height);
-		arv_camera_set_binning (camera, arv_option_horizontal_binning, arv_option_vertical_binning);
-		arv_camera_set_exposure_time (camera, arv_option_exposure_time_us);
-		arv_camera_set_gain (camera, arv_option_gain);
+		arv_camera_set_chunks (camera, arv_option_chunks, NULL);
+		arv_camera_set_region (camera, 0, 0, arv_option_width, arv_option_height, NULL);
+		arv_camera_set_binning (camera, arv_option_horizontal_binning, arv_option_vertical_binning, NULL);
+		arv_camera_set_exposure_time (camera, arv_option_exposure_time_us, NULL);
+		arv_camera_set_gain (camera, arv_option_gain, NULL);
 
 		if (arv_camera_is_uv_device(camera)) {
-			arv_camera_uv_set_bandwidth (camera, arv_option_bandwidth_limit);
+			arv_camera_uv_set_bandwidth (camera, arv_option_bandwidth_limit, NULL);
 		}
 
 		if (arv_camera_is_gv_device (camera)) {
-			arv_camera_gv_select_stream_channel (camera, arv_option_gv_stream_channel);
-			arv_camera_gv_set_packet_delay (camera, arv_option_gv_packet_delay);
-			arv_camera_gv_set_packet_size (camera, arv_option_gv_packet_size);
+			arv_camera_gv_select_stream_channel (camera, arv_option_gv_stream_channel, NULL);
+			arv_camera_gv_set_packet_delay (camera, arv_option_gv_packet_delay, NULL);
+			arv_camera_gv_set_packet_size (camera, arv_option_gv_packet_size, NULL);
 			arv_camera_gv_set_stream_options (camera, arv_option_no_packet_socket ?
 							  ARV_GV_STREAM_OPTION_PACKET_SOCKET_DISABLED :
 							  ARV_GV_STREAM_OPTION_NONE);
 		}
 
-		arv_camera_get_region (camera, &x, &y, &width, &height);
-		arv_camera_get_binning (camera, &dx, &dy);
-		exposure = arv_camera_get_exposure_time (camera);
-		payload = arv_camera_get_payload (camera);
-		gain = arv_camera_get_gain (camera);
+		arv_camera_get_region (camera, &x, &y, &width, &height, NULL);
+		arv_camera_get_binning (camera, &dx, &dy, NULL);
+		exposure = arv_camera_get_exposure_time (camera, NULL);
+		payload = arv_camera_get_payload (camera, NULL);
+		gain = arv_camera_get_gain (camera, NULL);
 
-		printf ("vendor name           = %s\n", arv_camera_get_vendor_name (camera));
-		printf ("model name            = %s\n", arv_camera_get_model_name (camera));
-		printf ("device id             = %s\n", arv_camera_get_device_id (camera));
+		printf ("vendor name           = %s\n", arv_camera_get_vendor_name (camera, NULL));
+		printf ("model name            = %s\n", arv_camera_get_model_name (camera, NULL));
+		printf ("device id             = %s\n", arv_camera_get_device_id (camera, NULL));
 		printf ("image width           = %d\n", width);
 		printf ("image height          = %d\n", height);
 		printf ("horizontal binning    = %d\n", dx);
@@ -339,17 +339,17 @@ main (int argc, char **argv)
 		printf ("gain                  = %d dB\n", gain);
 
 		if (arv_camera_is_gv_device (camera)) {
-			printf ("gv n_stream channels  = %d\n", arv_camera_gv_get_n_stream_channels (camera));
-			printf ("gv current channel    = %d\n", arv_camera_gv_get_current_stream_channel (camera));
-			printf ("gv packet delay       = %" G_GINT64_FORMAT " ns\n", arv_camera_gv_get_packet_delay (camera));
-			printf ("gv packet size        = %d bytes\n", arv_camera_gv_get_packet_size (camera));
+			printf ("gv n_stream channels  = %d\n", arv_camera_gv_get_n_stream_channels (camera, NULL));
+			printf ("gv current channel    = %d\n", arv_camera_gv_get_current_stream_channel (camera, NULL));
+			printf ("gv packet delay       = %" G_GINT64_FORMAT " ns\n", arv_camera_gv_get_packet_delay (camera, NULL));
+			printf ("gv packet size        = %d bytes\n", arv_camera_gv_get_packet_size (camera, NULL));
 		}
 
 		if (arv_camera_is_uv_device (camera)) {
 			guint min,max;
 
-			arv_camera_uv_get_bandwidth_bounds (camera, &min, &max);
-			printf ("uv bandwidth limit     = %d [%d..%d]\n", arv_camera_uv_get_bandwidth (camera), min, max);
+			arv_camera_uv_get_bandwidth_bounds (camera, &min, &max, NULL);
+			printf ("uv bandwidth limit     = %d [%d..%d]\n", arv_camera_uv_get_bandwidth (camera, NULL), min, max);
 		}
 
 		stream = arv_camera_create_stream (camera, stream_cb, NULL);
@@ -378,22 +378,22 @@ main (int argc, char **argv)
 			for (i = 0; i < 50; i++)
 				arv_stream_push_buffer (stream, arv_buffer_new (payload, NULL));
 
-			arv_camera_set_acquisition_mode (camera, ARV_ACQUISITION_MODE_CONTINUOUS);
+			arv_camera_set_acquisition_mode (camera, ARV_ACQUISITION_MODE_CONTINUOUS, NULL);
 
 			if (arv_option_frequency > 0.0)
-				arv_camera_set_frame_rate (camera, arv_option_frequency);
+				arv_camera_set_frame_rate (camera, arv_option_frequency, NULL);
 
 			if (arv_option_trigger != NULL)
-				arv_camera_set_trigger (camera, arv_option_trigger);
+				arv_camera_set_trigger (camera, arv_option_trigger, NULL);
 
 			if (arv_option_software_trigger > 0.0) {
-				arv_camera_set_trigger (camera, "Software");
+				arv_camera_set_trigger (camera, "Software", NULL);
 				software_trigger_source = g_timeout_add ((double) (0.5 + 1000.0 /
 										   arv_option_software_trigger),
 									 emit_software_trigger, camera);
 			}
 
-			arv_camera_start_acquisition (camera);
+			arv_camera_start_acquisition (camera, NULL);
 
 			g_signal_connect (stream, "new-buffer", G_CALLBACK (new_buffer_cb), &data);
 			arv_stream_set_emit_signals (stream, TRUE);
@@ -422,7 +422,7 @@ main (int argc, char **argv)
 			printf ("Failures          = %Lu\n", (unsigned long long) n_failures);
 			printf ("Underruns         = %Lu\n", (unsigned long long) n_underruns);
 
-			arv_camera_stop_acquisition (camera);
+			arv_camera_stop_acquisition (camera, NULL);
 
 			arv_stream_set_emit_signals (stream, FALSE);
 
