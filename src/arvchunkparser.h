@@ -32,6 +32,10 @@
 
 G_BEGIN_DECLS
 
+#define ARV_CHUNK_PARSER_ERROR arv_chunk_parser_error_quark()
+
+GQuark 			arv_chunk_parser_error_quark 		(void);
+
 /**
  * ArvChunkParserError:
  * @ARV_CHUNK_PARSER_ERROR_INVALID_FEATURE_TYPE: invalid feature type

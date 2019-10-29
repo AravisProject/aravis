@@ -2388,20 +2388,20 @@ arv_camera_is_feature_available (ArvCamera *camera, const char *feature, GError 
 	return available;
 }
 
-ArvStatus
-arv_camera_get_status (ArvCamera *camera, GError **error)
+gboolean
+arv_camera_check_status (ArvCamera *camera, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
-	g_return_val_if_fail (ARV_IS_CAMERA (camera), ARV_STATUS_UNKNOWN);
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
 	if (priv->error == NULL)
-		return ARV_STATUS_SUCCESS;
+		return TRUE;
 
 	g_propagate_error (error, priv->error);
 	priv->error = NULL;
 
-	return ARV_STATUS_PROTOCOL_ERROR;
+	return FALSE;
 }
 
 /**

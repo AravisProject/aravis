@@ -31,15 +31,6 @@
 
 G_BEGIN_DECLS
 
-#define ARV_DEVICE_ERROR arv_device_error_quark()
-
-GQuark 		arv_device_error_quark 		(void);
-
-typedef enum {
-	ARV_DEVICE_ERROR_WRONG_FEATURE,
-	ARV_DEVICE_ERROR_FEATURE_NOT_FOUND
-} ArvDeviceError;
-
 void 		arv_device_emit_control_lost_signal 	(ArvDevice *device);
 
 G_END_DECLS

@@ -161,7 +161,7 @@ const char ** 	arv_camera_get_available_enumerations_as_display_names 	(ArvCamer
 
 gboolean 	arv_camera_is_feature_available 	(ArvCamera *camera, const char *feature, GError **error);
 
-ArvStatus 	arv_camera_get_status			(ArvCamera *camera, GError **error);
+gboolean 	arv_camera_check_status			(ArvCamera *camera, GError **error);
 
 /* GigEVision specific API */
 

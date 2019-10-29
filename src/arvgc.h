@@ -34,7 +34,7 @@ G_BEGIN_DECLS
 
 #define ARV_GC_ERROR arv_gc_error_quark()
 
-GQuark 		arv_gc_error_quark 		(void);
+GQuark arv_gc_error_quark (void);
 
 typedef enum {
 	ARV_GC_ERROR_PROPERTY_NOT_DEFINED,

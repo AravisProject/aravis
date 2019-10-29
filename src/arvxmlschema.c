@@ -56,19 +56,11 @@ struct _ArvXmlSchemaClass
 
 G_DEFINE_TYPE_WITH_CODE (ArvXmlSchema, arv_xml_schema, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvXmlSchema))
 
-static GQuark
+GQuark
 arv_xml_schema_error_quark (void)
 {
-	static GQuark q = 0;
-
-	if (q == 0) {
-		q = g_quark_from_static_string ("vmo-xml-schema-error-quark");
-	}
-
-	return q;
+	return g_quark_from_static_string ("arv-xml-schema-error-quark");
 }
-
-#define ARV_XML_SCHEMA_ERROR arv_xml_schema_error_quark ()
 
 typedef struct {
 	int line;

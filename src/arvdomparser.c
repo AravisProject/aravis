@@ -204,13 +204,7 @@ static xmlSAXHandler sax_handler = {
 static GQuark
 arv_dom_document_error_quark (void)
 {
-	static GQuark q = 0;
-
-        if (q == 0) {
-                q = g_quark_from_static_string ("lsm-dom-error-quark");
-        }
-
-        return q;
+	return g_quark_from_static_string ("arv-dom-error-quark");
 }
 
 #define ARV_DOM_DOCUMENT_ERROR arv_dom_document_error_quark ()

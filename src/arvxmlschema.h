@@ -33,6 +33,10 @@
 
 G_BEGIN_DECLS
 
+#define ARV_XML_SCHEMA_ERROR arv_xml_schema_error_quark()
+
+GQuark arv_xml_schema_error_quark (void);
+
 typedef enum {
 	ARV_XML_SCHEMA_ERROR_INVALID_STRUCTURE
 } ArvXmlSchemaError;
