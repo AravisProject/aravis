@@ -396,8 +396,6 @@ main (int argc, char **argv)
 
 	g_option_context_free (context);
 
-	arv_enable_interface ("Fake");
-
 	if (arv_option_cache_policy == NULL ||
 	    g_strcmp0 (arv_option_cache_policy, "disable") == 0)
 		cache_policy = ARV_REGISTER_CACHE_POLICY_DISABLE;
