@@ -32,18 +32,8 @@
 
 G_BEGIN_DECLS
 
-#define ARV_TYPE_DOM_ELEMENT             (arv_dom_element_get_type ())
-#define ARV_DOM_ELEMENT(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_DOM_ELEMENT, ArvDomElement))
-#define ARV_DOM_ELEMENT_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_DOM_ELEMENT, ArvDomElementClass))
-#define ARV_IS_DOM_ELEMENT(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_DOM_ELEMENT))
-#define ARV_IS_DOM_ELEMENT_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_DOM_ELEMENT))
-#define ARV_DOM_ELEMENT_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_DOM_ELEMENT, ArvDomElementClass))
-
-typedef struct _ArvDomElementClass ArvDomElementClass;
-
-struct _ArvDomElement {
-	ArvDomNode node;
-};
+#define ARV_TYPE_DOM_ELEMENT (arv_dom_element_get_type ())
+G_DECLARE_DERIVABLE_TYPE (ArvDomElement, arv_dom_element, ARV, DOM_ELEMENT, ArvDomNode)
 
 struct _ArvDomElementClass {
 	ArvDomNodeClass parent_class;
@@ -53,13 +43,9 @@ struct _ArvDomElementClass {
 	char *		(*get_serialized_attributes)	(ArvDomElement *self);
 };
 
-GType arv_dom_element_get_type (void);
-
 const char * 	arv_dom_element_get_tag_name 	(ArvDomElement *self);
 const char* 	arv_dom_element_get_attribute 	(ArvDomElement* self, const char* name);
 void 		arv_dom_element_set_attribute 	(ArvDomElement* self, const char* name, const char* attribute_value);
-
-G_DEFINE_AUTOPTR_CLEANUP_FUNC (ArvDomElement, g_object_unref)
 
 G_END_DECLS
 

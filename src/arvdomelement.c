@@ -29,7 +29,7 @@
 #include <arvdomelement.h>
 #include <string.h>
 
-static GObjectClass *parent_class = NULL;
+G_DEFINE_ABSTRACT_TYPE (ArvDomElement, arv_dom_element, ARV_TYPE_DOM_NODE)
 
 /* ArvDomNode implementation */
 
@@ -65,7 +65,7 @@ arv_dom_element_write_to_stream (ArvDomNode *self, GOutputStream *stream, GError
 	g_free (string);
 	g_free (attributes);
 
-	ARV_DOM_NODE_CLASS (parent_class)->write_to_stream (self, stream, error);
+	ARV_DOM_NODE_CLASS (arv_dom_element_parent_class)->write_to_stream (self, stream, error);
 
 	string = g_strdup_printf ("</\%s>\n", arv_dom_node_get_node_name (self));
 	g_output_stream_write (stream, string, strlen (string), NULL, error);
@@ -114,11 +114,7 @@ arv_dom_element_class_init (ArvDomElementClass *klass)
 {
 	ArvDomNodeClass *node_class = ARV_DOM_NODE_CLASS (klass);
 
-	parent_class = g_type_class_peek_parent (klass);
-
 	node_class->get_node_value = arv_dom_element_get_node_value;
 	node_class->get_node_type = arv_dom_element_get_node_type;
 	node_class->write_to_stream = arv_dom_element_write_to_stream;
 }
-
-G_DEFINE_ABSTRACT_TYPE (ArvDomElement, arv_dom_element, ARV_TYPE_DOM_NODE)
