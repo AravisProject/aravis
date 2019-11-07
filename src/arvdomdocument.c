@@ -34,7 +34,12 @@
 #include <gio/gio.h>
 #include <string.h>
 
-static GObjectClass *parent_class;
+typedef struct {
+	char *		url;
+
+} ArvDomDocumentPrivate;
+
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvDomDocument, arv_dom_document, ARV_TYPE_DOM_NODE, G_ADD_PRIVATE (ArvDomDocument))
 
 /* ArvDomNode implementation */
 
@@ -118,34 +123,40 @@ arv_dom_document_create_text_node (ArvDomDocument *self, const char *data)
 const char *
 arv_dom_document_get_url (ArvDomDocument *self)
 {
+	ArvDomDocumentPrivate *priv = arv_dom_document_get_instance_private (ARV_DOM_DOCUMENT (self));
+
 	g_return_val_if_fail (ARV_IS_DOM_DOCUMENT (self), NULL);
 
-	return self->url;
+	return priv->url;
 }
 
 void
 arv_dom_document_set_path (ArvDomDocument *self, const char *path)
 {
+	ArvDomDocumentPrivate *priv = arv_dom_document_get_instance_private (ARV_DOM_DOCUMENT (self));
+
 	g_return_if_fail (ARV_IS_DOM_DOCUMENT (self));
 
-	g_free (self->url);
+	g_free (priv->url);
 
 	if (path == NULL) {
-		self->url = NULL;
+		priv->url = NULL;
 		return;
 	}
 
-	self->url = arv_str_to_uri (path);
+	priv->url = arv_str_to_uri (path);
 }
 
 void
 arv_dom_document_set_url (ArvDomDocument *self, const char *url)
 {
+	ArvDomDocumentPrivate *priv = arv_dom_document_get_instance_private (ARV_DOM_DOCUMENT (self));
+
 	g_return_if_fail (ARV_IS_DOM_DOCUMENT (self));
 	g_return_if_fail (url == NULL || arv_str_is_uri (url));
 
-	g_free (self->url);
-	self->url = g_strdup (url);
+	g_free (priv->url);
+	priv->url = g_strdup (url);
 }
 
 /**
@@ -162,6 +173,7 @@ arv_dom_document_set_url (ArvDomDocument *self, const char *url)
 void *
 arv_dom_document_get_href_data (ArvDomDocument *self, const char *href, gsize *size)
 {
+	ArvDomDocumentPrivate *priv = arv_dom_document_get_instance_private (ARV_DOM_DOCUMENT (self));
 	GFile *file;
 	char *data = NULL;
 
@@ -176,13 +188,13 @@ arv_dom_document_get_href_data (ArvDomDocument *self, const char *href, gsize *s
 
 	file = g_file_new_for_uri (href);
 
-	if (!g_file_load_contents (file, NULL, &data, size, NULL, NULL) && self->url != NULL) {
+	if (!g_file_load_contents (file, NULL, &data, size, NULL, NULL) && priv->url != NULL) {
 		GFile *document_file;
 		GFile *parent_file;
 
 		g_object_unref (file);
 
-		document_file = g_file_new_for_uri (self->url);
+		document_file = g_file_new_for_uri (priv->url);
 		parent_file = g_file_get_parent (document_file);
 		file = g_file_resolve_relative_path (parent_file, href);
 		g_object_unref (document_file);
@@ -202,13 +214,13 @@ arv_dom_document_init (ArvDomDocument *document)
 }
 
 static void
-arv_dom_document_finalize (GObject *object)
+arv_dom_document_finalize (GObject *self)
 {
-	ArvDomDocument *document = ARV_DOM_DOCUMENT (object);
+	ArvDomDocumentPrivate *priv = arv_dom_document_get_instance_private (ARV_DOM_DOCUMENT (self));
 
-	g_free (document->url);
+	g_free (priv->url);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_dom_document_parent_class)->finalize (self);
 }
 
 /* ArvDomDocument class */
@@ -219,8 +231,6 @@ arv_dom_document_class_init (ArvDomDocumentClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	ArvDomNodeClass *node_class = ARV_DOM_NODE_CLASS (klass);
 
-	parent_class = g_type_class_peek_parent (klass);
-
 	object_class->finalize = arv_dom_document_finalize;
 
 	node_class->get_node_name = arv_dom_document_get_node_name;
@@ -228,6 +238,3 @@ arv_dom_document_class_init (ArvDomDocumentClass *klass)
 
 	klass->create_text_node = arv_dom_document_create_text_node_base;
 }
-
-G_DEFINE_ABSTRACT_TYPE (ArvDomDocument, arv_dom_document, ARV_TYPE_DOM_NODE)
-
