@@ -33,31 +33,14 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_DOM_CHARACTER_DATA             (arv_dom_character_data_get_type ())
-#define ARV_DOM_CHARACTER_DATA(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_DOM_CHARACTER_DATA, ArvDomCharacterData))
-#define ARV_DOM_CHARACTER_DATA_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_DOM_CHARACTER_DATA, ArvDomNodeClass))
-#define ARV_IS_DOM_CHARACTER_DATA(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_DOM_CHARACTER_DATA))
-#define ARV_IS_DOM_CHARACTER_DATA_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_DOM_CHARACTER_DATA))
-#define ARV_DOM_CHARACTER_DATA_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_DOM_CHARACTER_DATA, ArvDomCharacterDataClass))
-
-typedef struct _ArvDomCharacterDataClass ArvDomCharacterDataClass;
-
-struct _ArvDomCharacterData
-{
-	ArvDomNode node;
-
-	char *data;
-};
+G_DECLARE_DERIVABLE_TYPE (ArvDomCharacterData, arv_dom_character_data, ARV, DOM_CHARACTER_DATA, ArvDomNode)
 
 struct _ArvDomCharacterDataClass {
 	ArvDomNodeClass parent_class;
 };
 
-GType arv_dom_character_data_get_type (void);
-
 const char * 	arv_dom_character_data_get_data 	(ArvDomCharacterData* self);
 void 		arv_dom_character_data_set_data 	(ArvDomCharacterData* self, const char* value);
-
-G_DEFINE_AUTOPTR_CLEANUP_FUNC (ArvDomCharacterData, g_object_unref)
 
 G_END_DECLS
 

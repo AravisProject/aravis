@@ -41,7 +41,7 @@ arv_dom_text_get_node_name (ArvDomNode *node)
 static const char *
 arv_dom_text_get_node_value (ArvDomNode *node)
 {
-	return ARV_DOM_CHARACTER_DATA (node)->data;
+	return arv_dom_character_data_get_data (ARV_DOM_CHARACTER_DATA (node));
 }
 
 static ArvDomNodeType
