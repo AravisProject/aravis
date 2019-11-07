@@ -17,7 +17,8 @@ foreach t: tests
 endforeach
 
 python_tests = [
-	['fake.py',	[]]
+	['fake.py',		[]],
+	['exception.py',	[]]
 ]
 
 if get_option ('introspection')
