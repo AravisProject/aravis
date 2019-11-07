@@ -28,6 +28,8 @@
 
 #include <arvdomtext.h>
 
+G_DEFINE_TYPE (ArvDomText, arv_dom_text, ARV_TYPE_DOM_CHARACTER_DATA)
+
 /* ArvDomNode implementation */
 
 static const char *
@@ -78,5 +80,3 @@ arv_dom_text_class_init (ArvDomTextClass *klass)
 	node_class->get_node_value = arv_dom_text_get_node_value;
 	node_class->get_node_type = arv_dom_text_get_node_type;
 }
-
-G_DEFINE_TYPE (ArvDomText, arv_dom_text, ARV_TYPE_DOM_CHARACTER_DATA)

@@ -33,27 +33,13 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_DOM_TEXT             (arv_dom_text_get_type ())
-#define ARV_DOM_TEXT(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_DOM_TEXT, ArvDomText))
-#define ARV_DOM_TEXT_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_DOM_TEXT, ArvDomTextClass))
-#define ARV_IS_DOM_TEXT(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_DOM_TEXT))
-#define ARV_IS_DOM_TEXT_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_DOM_TEXT))
-#define ARV_DOM_TEXT_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_DOM_TEXT, ArvDomTextClass))
-
-typedef struct _ArvDomTextClass ArvDomTextClass;
-
-struct _ArvDomText {
-	ArvDomCharacterData	character_data;
-};
+G_DECLARE_DERIVABLE_TYPE (ArvDomText, arv_dom_text, ARV, DOM_TEXT, ArvDomCharacterData)
 
 struct _ArvDomTextClass {
 	ArvDomCharacterDataClass  parent_class;
 };
 
-GType arv_dom_text_get_type (void);
-
 ArvDomNode 	*arv_dom_text_new 		(const char *data);
-
-G_DEFINE_AUTOPTR_CLEANUP_FUNC (ArvDomText, g_object_unref)
 
 G_END_DECLS
 
