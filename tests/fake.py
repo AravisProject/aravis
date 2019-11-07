@@ -41,3 +41,8 @@ for i in range(0,20):
        stream.push_buffer (buffer)
 
 camera.stop_acquisition ()
+
+buffer = camera.acquisition (0)
+data = buffer.get_data ()
+
+assert len (data) == 20000
