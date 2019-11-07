@@ -228,7 +228,9 @@ _get_value_data (ArvGcPropertyNode *property_node)
 		ArvDomNode *iter;
 		GString *string = g_string_new (NULL);
 
-		for (iter = dom_node->first_child; iter != NULL; iter = iter->next_sibling)
+		for (iter = arv_dom_node_get_first_child (dom_node);
+		     iter != NULL;
+		     iter = arv_dom_node_get_next_sibling (iter))
 			g_string_append (string, arv_dom_character_data_get_data (ARV_DOM_CHARACTER_DATA (iter)));
 		g_free (priv->value_data);
 		priv->value_data = string->str;
@@ -245,11 +247,13 @@ _set_value_data (ArvGcPropertyNode *property_node, const char *data)
 	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (property_node);
 	ArvDomNode *dom_node = ARV_DOM_NODE (property_node);
 
-	if (dom_node->first_child != NULL) {
+	if (arv_dom_node_get_first_child (dom_node) != NULL) {
 		ArvDomNode *iter;
 
-		arv_dom_character_data_set_data (ARV_DOM_CHARACTER_DATA (dom_node->first_child), data);
-		for (iter = dom_node->first_child->next_sibling; iter != NULL; iter = iter->next_sibling)
+		arv_dom_character_data_set_data (ARV_DOM_CHARACTER_DATA (arv_dom_node_get_first_child (dom_node)), data);
+		for (iter = arv_dom_node_get_next_sibling (arv_dom_node_get_first_child (dom_node));
+		     iter != NULL;
+		     iter = arv_dom_node_get_next_sibling (iter))
 			arv_dom_character_data_set_data (ARV_DOM_CHARACTER_DATA (iter), "");
 	}
 
