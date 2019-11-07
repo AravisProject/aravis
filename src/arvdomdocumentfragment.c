@@ -29,7 +29,7 @@
 #include <arvdomdocumentfragment.h>
 #include <string.h>
 
-static GObjectClass *parent_class = NULL;
+G_DEFINE_ABSTRACT_TYPE (ArvDomDocumentFragment, arv_dom_document_fragment, ARV_TYPE_DOM_NODE)
 
 /* ArvDomNode implementation */
 
@@ -71,11 +71,7 @@ arv_dom_document_fragment_class_init (ArvDomDocumentFragmentClass *klass)
 {
 	ArvDomNodeClass *node_class = ARV_DOM_NODE_CLASS (klass);
 
-	parent_class = g_type_class_peek_parent (klass);
-
 	node_class->get_node_name = arv_dom_document_fragment_get_node_name;
 	node_class->get_node_value = arv_dom_document_fragment_get_node_value;
 	node_class->get_node_type = arv_dom_document_fragment_get_node_type;
 }
-
-G_DEFINE_ABSTRACT_TYPE (ArvDomDocumentFragment, arv_dom_document_fragment, ARV_TYPE_DOM_NODE)

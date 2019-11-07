@@ -34,27 +34,13 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_DOM_DOCUMENT_FRAGMENT             (arv_dom_document_fragment_get_type ())
-#define ARV_DOM_DOCUMENT_FRAGMENT(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_DOM_DOCUMENT_FRAGMENT, ArvDomDocumentFragment))
-#define ARV_DOM_DOCUMENT_FRAGMENT_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_DOM_DOCUMENT_FRAGMENT, ArvDomDocumentFragmentClass))
-#define ARV_IS_DOM_DOCUMENT_FRAGMENT(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_DOM_DOCUMENT_FRAGMENT))
-#define ARV_IS_DOM_DOCUMENT_FRAGMENT_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_DOM_DOCUMENT_FRAGMENT))
-#define ARV_DOM_DOCUMENT_FRAGMENT_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_DOM_DOCUMENT_FRAGMENT, ArvDomDocumentFragmentClass))
-
-typedef struct _ArvDomDocumentFragmentClass ArvDomDocumentFragmentClass;
-
-struct _ArvDomDocumentFragment {
-	ArvDomNode node;
-};
+G_DECLARE_DERIVABLE_TYPE (ArvDomDocumentFragment, arv_dom_document_fragment, ARV, DOM_DOCUMENT_FRAGMENT, ArvDomNode)
 
 struct _ArvDomDocumentFragmentClass {
 	ArvDomNodeClass parent_class;
 };
 
-GType arv_dom_document_fragment_get_type (void);
-
 ArvDomDocumentFragment * 	arv_dom_document_fragment_new 		(void);
-
-G_DEFINE_AUTOPTR_CLEANUP_FUNC (ArvDomDocumentFragment, g_object_unref)
 
 G_END_DECLS
 
