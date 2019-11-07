@@ -24,8 +24,9 @@
 #include <arvdomnamednodemap.h>
 #include <arvdomnode.h>
 
-/* ArvDomNamedNodeMap implementation */
+G_DEFINE_ABSTRACT_TYPE (ArvDomNamedNodeMap, arv_dom_named_node_map, G_TYPE_OBJECT)
 
+/* ArvDomNamedNodeMap implementation */
 
 /**
  * arv_dom_named_node_map_get_named_item:
@@ -110,5 +111,3 @@ static void
 arv_dom_named_node_map_class_init (ArvDomNamedNodeMapClass *klass)
 {
 }
-
-G_DEFINE_ABSTRACT_TYPE (ArvDomNamedNodeMap, arv_dom_named_node_map, G_TYPE_OBJECT)

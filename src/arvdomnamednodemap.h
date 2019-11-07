@@ -33,17 +33,7 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_DOM_NAMED_NODE_MAP             (arv_dom_named_node_map_get_type ())
-#define ARV_DOM_NAMED_NODE_MAP(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_DOM_NAMED_NODE_MAP, ArvDomNamedNodeMap))
-#define ARV_DOM_NAMED_NODE_MAP_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_DOM_NAMED_NODE_MAP, ArvDomNamedNodeMapClass))
-#define ARV_IS_DOM_NAMED_NODE_MAP(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_DOM_NAMED_NODE_MAP))
-#define ARV_IS_DOM_NAMED_NODE_MAP_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_DOM_NAMED_NODE_MAP))
-#define ARV_DOM_NAMED_NODE_MAP_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_DOM_NAMED_NODE_MAP, ArvDomNamedNodeMapClass))
-
-typedef struct _ArvDomNamedNodeMapClass ArvDomNamedNodeMapClass;
-
-struct _ArvDomNamedNodeMap {
-	GObject	object;
-};
+G_DECLARE_DERIVABLE_TYPE (ArvDomNamedNodeMap, arv_dom_named_node_map, ARV, DOM_NAMED_NODE_MAP, GObject)
 
 struct _ArvDomNamedNodeMapClass {
 	GObjectClass parent_class;
@@ -55,15 +45,11 @@ struct _ArvDomNamedNodeMapClass {
 	unsigned int	(*get_length)		(ArvDomNamedNodeMap *map);
 };
 
-GType arv_dom_named_node_map_get_type (void);
-
 ArvDomNode *		arv_dom_named_node_map_get_named_item 		(ArvDomNamedNodeMap *map, const char *name);
 ArvDomNode *		arv_dom_named_node_map_set_named_item 		(ArvDomNamedNodeMap *map, ArvDomNode *item);
 ArvDomNode *		arv_dom_named_node_map_remove_named_item	(ArvDomNamedNodeMap *map, const char *name);
 ArvDomNode *		arv_dom_named_node_map_get_item 		(ArvDomNamedNodeMap *map, unsigned int index);
 unsigned int		arv_dom_named_node_map_get_length		(ArvDomNamedNodeMap *map);
-
-G_DEFINE_AUTOPTR_CLEANUP_FUNC (ArvDomNamedNodeMap, g_object_unref)
 
 G_END_DECLS
 
