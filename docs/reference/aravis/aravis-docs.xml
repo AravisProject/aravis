@@ -109,6 +109,7 @@
 			<title>DOM</title>
 			<xi:include href="xml/arvdomnode.xml"/>
 			<xi:include href="xml/arvdomnodelist.xml"/>
+			<xi:include href="xml/arvdomnodechildlist.xml"/>
 			<xi:include href="xml/arvdomnamednodemap.xml"/>
 			<xi:include href="xml/arvdomdocument.xml"/>
 			<xi:include href="xml/arvdomdocumentfragment.xml"/>

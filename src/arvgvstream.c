@@ -1176,6 +1176,7 @@ arv_gv_stream_new (ArvGvDevice *gv_device,
 
 /**
  * arv_gv_stream_get_statistics:
+ * @gv_stream: a #ArvGvStream
  * @n_resent_packets: (out)
  * @n_missing_packets: (out)
  */
