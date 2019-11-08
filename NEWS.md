@@ -1,3 +1,12 @@
+Unstable release 0.7.3
+======================
+
+  * all: use gobject macros for class declarations (Emmanuel)
+  * camera: add a GError parameter to most functions (Emmanuel)
+  * python: add python tests in test suite (Emmanuel)
+  * usb3vision: improve reliability of camera connection (Dmitry)
+  * introspection: fix PixeflFormat type (Léo, Maarten)
+
 Unstable release 0.7.2
 ======================
 
@@ -316,7 +325,7 @@ Stable release.
   * camera: fix consistency of order of pixel format display names (Jure)
   * GV: fix parsing of hexadecimal address/length with 0x prefix in Genicam file URL
   * build: fix parallel compilation (make -j)
-  
+
 Release 0.1.15
 ==============
 
@@ -331,7 +340,7 @@ Release 0.1.15
   * genicam: fix unzipping of genicam data on not supporting unaligned memory access (Nial)
   * GV stream: use machine time for buffer timestamp if GevTimestampTickFrequency register does not exist
   * gstreamer plugin: add auto gain, auto exposure, x and y offset properties (Philipp)
-  
+
 Release 0.1.14
 ==============
 
@@ -351,7 +360,7 @@ Changes:
   * viewer: fix flicker on window resize
   * camera: use Gain feature instead of GainRaw when available
   * genicam: fix formula evaluation when they contain entities
-  * 
+
 Release 0.1.13
 ==============
 
@@ -491,7 +500,7 @@ Release 0.1.1
   * Allow detection of ethernet cameras on lo, for the GV camera simulator
   * Fix in gvcp support code
   * More unit tests
-  * Add support for <Group> GENICAM element 
+  * Add support for <Group> GENICAM element
   * Memory leak fixes
   * Record statistics on buffer reception times
   * Improve compilation on 64 bit platforms
