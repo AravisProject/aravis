@@ -5,7 +5,7 @@ Unstable release 0.7.3
   * camera: add a GError parameter to most functions (Emmanuel)
   * python: add python tests in test suite (Emmanuel)
   * usb3vision: improve reliability of camera connection (Dmitry)
-  * introspection: fix PixeflFormat type (Léo, Maarten)
+  * introspection: fix PixefFormat type (Léo, Maarten)
 
 Unstable release 0.7.2
 ======================
