@@ -1,37 +1,10 @@
 subdir ('xml')
 
-doc_ignore_headers = [
+doc_ignore_headers = library_private_headers + [
 	'arv.h',
 	'arvconfig.h',
 	'arvenumtypes.h',
-	'arvenumtypesprivate.h',
-
-	'arvbufferprivate.h',
-	'arvchunkparserprivate.h',
-	'arvdeviceprivate.h',
-	'arvfakedeviceprivate.h',
-	'arvfakeinterfaceprivate.h',
-	'arvfakestreamprivate.h',
-	'arvgcconverterprivate.h',
-	'arvgcfeaturenodeprivate.h',
-	'arvgcregisternodeprivate.h',
-	'arvgcswissknifeprivate.h',
-	'arvgvcpprivate.h',
-	'arvgvstreamprivate.h',
-	'arvgvdeviceprivate.h',
-	'arvgvinterfaceprivate.h',
-	'arvgvspprivate.h',
-	'arvinterfaceprivate.h',
-	'arvmiscprivate.h',
-	'arvrealtimeprivate.h',
-	'arvstreamprivate.h',
-	'arvwakeupprivate.h',
-
-	'arvuvdeviceprivate.h',
-	'arvuvinterfaceprivate.h',
-	'arvuvstreamprivate.h',
-	'arvuvspprivate.h',
-	'arvuvcpprivate.h'
+	'arvenumtypesprivate.h'
 ]
 
 if not enable_usb
