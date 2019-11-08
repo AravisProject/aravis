@@ -1,3 +1,5 @@
+doc_examples = files (['arvexample.c', 'arvchunkparsertest.c'])
+
 tests = [
 	['evaluator',	[]],
 	['buffer', 	[]],
