@@ -41,6 +41,7 @@
 #include <arvdomnamednodemap.h>
 #include <arvdomnode.h>
 #include <arvdomnodelist.h>
+#include <arvdomnodechildlist.h>
 #include <arvdomparser.h>
 #include <arvdomtext.h>
 
