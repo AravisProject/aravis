@@ -10,6 +10,8 @@ option('usb', type: 'boolean', value: true,
   description : 'Enable USB support')
 option('fast-heartbeat', type: 'boolean', value: false,
   description: 'Enable faster heartbeat rate')
+option('tests', type: 'boolean', value: true,
+  description: 'Build tests')
 
 # Documentation and introspection
 
