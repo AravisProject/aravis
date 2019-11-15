@@ -683,13 +683,14 @@ _process_packet (ArvGvStreamThreadData *thread_data, const ArvGvspPacket *packet
 			frame->error_packet_received = TRUE;
 
 			thread_data->n_error_packets++;
+		} else if (packet_id < frame->n_packets &&
+		           frame->packet_data[packet_id].received) {
+			/* Ignore duplicate packet */
+			thread_data->n_duplicated_packets++;
+			arv_gvsp_packet_debug (packet, packet_size, ARV_DEBUG_LEVEL_LOG);
 		} else {
-			/* Check for duplicated packets */
 			if (packet_id < frame->n_packets) {
-				if (frame->packet_data[packet_id].received)
-					thread_data->n_duplicated_packets++;
-				else
-					frame->packet_data[packet_id].received = TRUE;
+				frame->packet_data[packet_id].received = TRUE;
 			}
 
 			/* Keep track of last packet of a continuous block starting from packet 0 */
