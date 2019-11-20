@@ -897,8 +897,8 @@ arv_camera_get_frame_count_bounds (ArvCamera *camera, gint64 *min, gint64 *max, 
  * @frame_rate: frame rate, in Hz
  * @error: a #GError placeholder, %NULL to ignore
  *
- * Configures a fixed frame rate mode. Once acquisition start is triggered, the
- * video stream will be acquired with the given frame rate.
+ * Configures a fixed frame rate mode. Once acquisition start is triggered, the video stream will be acquired with the given frame rate. A
+ * negative or zero @frame_rate value disables the frame rate limit.
  *
  * Since: 0.2.0
  */
@@ -914,8 +914,15 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate, GError **error)
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
-	if (frame_rate <= 0.0)
+	if (frame_rate <= 0.0) {
+		if (arv_camera_is_feature_available (camera, "AcquisitionFrameRateEnable", &local_error)) {
+			if (local_error == NULL)
+				arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", FALSE, error);
+			else
+				g_propagate_error (error, local_error);
+		}
 		return;
+	}
 
 	arv_camera_get_frame_rate_bounds (camera, &minimum, &maximum, &local_error);
 	if (local_error != NULL) {
@@ -1008,6 +1015,12 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate, GError **error)
 						      priv->has_acquisition_frame_rate ?
 						      "AcquisitionFrameRate":
 						      "AcquisitionFrameRateAbs", frame_rate, &local_error);
+			if (local_error == NULL) {
+				if (arv_camera_is_feature_available (camera, "AcquisitionFrameRateEnable", &local_error)) {
+					if (local_error == NULL)
+						arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", TRUE, &local_error);
+				}
+			}
 			break;
 	}
 
