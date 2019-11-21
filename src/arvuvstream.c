@@ -175,7 +175,10 @@ arv_uv_stream_thread (void *data)
 
 						/* If the image was incomplete, drop the frame and try again. */
 						if (offset != buffer->priv->size) {
-							arv_debug_stream_thread ("Incomplete image received, dropping");
+							arv_debug_stream_thread ("Incomplete image received, dropping "
+										 "(received %" G_GUINT64_FORMAT
+										 " / expected %" G_GSIZE_FORMAT ")",
+										 offset, buffer->priv->size);
 
 							buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
 							arv_stream_push_output_buffer (thread_data->stream, buffer);
