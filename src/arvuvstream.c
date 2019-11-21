@@ -183,7 +183,7 @@ arv_uv_stream_thread (void *data)
 								thread_data->callback (thread_data->user_data,
 										       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
 										       buffer);
-							thread_data->n_underruns++;
+							thread_data->n_failures++;
 							buffer = NULL;
 						} else {
 							buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
