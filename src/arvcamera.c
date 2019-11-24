@@ -1905,6 +1905,24 @@ arv_camera_get_boolean (ArvCamera *camera, const char *feature, GError **error)
 }
 
 /**
+ * arv_camera_get_boolean_gi: (rename-to arv_camera_get_boolean)
+ * @camera: a #ArvCamera
+ * @feature: feature name
+ * @value: (out): output value
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Since: 0.8.0
+ */
+
+void
+arv_camera_get_boolean_gi (ArvCamera *camera, const char *feature, gboolean *value, GError **error)
+{
+	g_return_if_fail (value != NULL);
+
+	*value = arv_camera_get_boolean (camera, feature, error);
+}
+
+/**
  * arv_camera_set_string:
  * @camera: a #ArvCamera
  * @feature: feature name

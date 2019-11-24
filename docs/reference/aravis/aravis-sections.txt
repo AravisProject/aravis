@@ -130,6 +130,7 @@ ARV_CAMERA_GET_CLASS
 <SUBSECTION Private>
 ArvCameraPrivate
 ArvCameraClass
+arv_camera_get_boolean_gi
 </SECTION>
 
 <SECTION>
@@ -1046,6 +1047,7 @@ ARV_IS_GC_BOOLEAN_CLASS
 ARV_GC_BOOLEAN_GET_CLASS
 <SUBSECTION Private>
 ArvGcBooleanClass
+arv_gc_boolean_get_value_gi
 </SECTION>
 
 <SECTION>

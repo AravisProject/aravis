@@ -139,6 +139,7 @@ void 		arv_camera_execute_command 		(ArvCamera *camera, const char *feature, GEr
 
 void		arv_camera_set_boolean			(ArvCamera *camera, const char *feature, gboolean value, GError **error);
 gboolean	arv_camera_get_boolean			(ArvCamera *camera, const char *feature, GError **error);
+void		arv_camera_get_boolean_gi		(ArvCamera *camera, const char *feature, gboolean *value, GError **error);
 
 void		arv_camera_set_string			(ArvCamera *camera, const char *feature, const char *value, GError **error);
 const char *	arv_camera_get_string			(ArvCamera *camera, const char *feature, GError **error);

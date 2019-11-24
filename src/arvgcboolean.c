@@ -128,6 +128,16 @@ arv_gc_boolean_get_off_value (ArvGcBoolean *gc_boolean, GError **error)
 	return off_value;
 }
 
+/**
+ * arv_gc_boolean_get_value:
+ * @gc_boolean: a #ArvGcBoolean
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: the feature value.
+ *
+ * Since: 0.8.0
+ */
+
 gboolean
 arv_gc_boolean_get_value (ArvGcBoolean *gc_boolean, GError **error)
 {
@@ -156,6 +166,25 @@ arv_gc_boolean_get_value (ArvGcBoolean *gc_boolean, GError **error)
 	}
 
 	return value == on_value;
+}
+
+/**
+ * arv_gc_boolean_get_value_gi: (rename-to arv_gc_boolean_get_value)
+ * @gc_boolean: a #ArvGcBoolean
+ * @value: (out): feature value
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Get the feature value.
+ *
+ * Since: 0.8.0
+ */
+
+void
+arv_gc_boolean_get_value_gi (ArvGcBoolean *gc_boolean, gboolean *value, GError **error)
+{
+	g_return_if_fail (value != NULL);
+
+	*value = arv_gc_boolean_get_value (gc_boolean, error);
 }
 
 void
