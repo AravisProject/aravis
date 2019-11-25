@@ -18,9 +18,9 @@ from gi.repository import Aravis
 # Hexadecimal dump code from http://www.alexonlinux.com/hex-dump-functions
 
 def DumpBuffer (buf, length, caption="", dest=sys.stdout):
-	def ArvGetPrintableChar(str):
-		if str.isalpha():
-			return str
+	def ArvGetPrintableChar(c):
+		if c.isalpha():
+			return c
 		else:
 			return '.'
 
