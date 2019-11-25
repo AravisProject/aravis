@@ -39,6 +39,7 @@ G_DECLARE_FINAL_TYPE (ArvGcBoolean, arv_gc_boolean, ARV, GC_BOOLEAN, ArvGcFeatur
 ArvGcNode * 	arv_gc_boolean_new 		(void);
 
 gboolean 	arv_gc_boolean_get_value 	(ArvGcBoolean *gc_boolean, GError **error);
+void	 	arv_gc_boolean_get_value_gi 	(ArvGcBoolean *gc_boolean, gboolean *value, GError **error);
 void 		arv_gc_boolean_set_value 	(ArvGcBoolean *gc_boolean, gboolean v_boolean, GError **error);
 
 G_END_DECLS

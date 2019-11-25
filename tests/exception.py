@@ -48,3 +48,12 @@ try:
 
 except GLib.Error as err:
     assert err.matches (Aravis.device_error_quark(), Aravis.DeviceError.FEATURE_NOT_FOUND)
+
+value = camera.get_boolean ("TestBoolean")
+
+assert value == False
+
+camera.set_boolean ("TestBoolean", True)
+value = camera.get_boolean ("TestBoolean")
+
+assert value == True
