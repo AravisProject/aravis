@@ -1,0 +1,6 @@
+#!/bin/sh
+
+export GI_TYPELIB_PATH=@GI_TYPELIB_PATH@
+export LD_LIBRARY_PATH=@LD_LIBRARY_PATH@
+
+gdb -ex run --args python $*

@@ -40,6 +40,13 @@ if get_option('tests')
 				test (t[0], py, args: files (t[0]), env: environment)
 			endforeach
 		endif
+
+		py_script_config_data = configuration_data ()
+	        py_script_config_data.set ('GI_TYPELIB_PATH', join_paths (meson.build_root() , 'src'))
+	        py_script_config_data.set ('LD_LIBRARY_PATH', join_paths (meson.build_root() , 'src'))
+
+		configure_file (input: 'pylaunch.in', output: 'pylaunch', configuration: py_script_config_data)
+		configure_file (input: 'pylaunch-dbg.in', output: 'pylaunch-dbg', configuration: py_script_config_data)
 	endif
 
 	examples = [

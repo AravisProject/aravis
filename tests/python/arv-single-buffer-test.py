@@ -9,14 +9,16 @@
 #  LD_LIBRARY_PATH.
 
 import sys
-import time
+import gi
+
+gi.require_version ('Aravis', '0.8')
 
 from gi.repository import Aravis
 
 # Hexadecimal dump code from http://www.alexonlinux.com/hex-dump-functions
 
 def DumpBuffer (buf, length, caption="", dest=sys.stdout):
-	def GetPrintableChar(str):
+	def ArvGetPrintableChar(str):
 		if str.isalpha():
 			return str
 		else:
@@ -32,11 +34,11 @@ def DumpBuffer (buf, length, caption="", dest=sys.stdout):
 			l = length - i
 
 		dest.write('+%04x  ' % i)
-		s = ' '.join(["%02x" % ord(c) for c in buf[i:i + l]])
+		s = ' '.join(["%02x" % c for c in buf[i:i + l]])
 		dest.write(s)
 		sp = 49 - len(s)
 		dest.write(' ' * sp)
-		s = ''.join(["%c" % GetPrintableChar(c) for c in buf[i:i + l]])
+		s = ''.join(["%c" % ArvGetPrintableChar(str(chr(c))) for c in buf[i:i + l]])
 		dest.write(s)
 		dest.write('\n')
 
@@ -45,11 +47,11 @@ def DumpBuffer (buf, length, caption="", dest=sys.stdout):
 Aravis.enable_interface ("Fake")
 
 try:
-	if len(sys.argv) > 1:
-		camera = Aravis.Camera.new (sys.argv[1])
-	else:
-		camera = Aravis.Camera.new (None)
-except:
+    if len(sys.argv) > 1:
+            camera = Aravis.Camera.new (sys.argv[1])
+    else:
+            camera = Aravis.Camera.new (None)
+except TypeError:
 	print ("No camera found")
 	exit ()
 
@@ -57,30 +59,29 @@ payload = camera.get_payload ()
 
 [x,y,width,height] = camera.get_region ()
 
-print "Camera vendor : %s" %(camera.get_vendor_name ())
-print "Camera model  : %s" %(camera.get_model_name ())
-print "Camera id     : %s" %(camera.get_device_id ())
-print "ROI           : %dx%d at %d,%d" %(width, height, x, y)
-print "Payload       : %d" %(payload)
-print "Pixel format  : %s" %(camera.get_pixel_format_as_string ())
+print ("Camera vendor : %s" %(camera.get_vendor_name ()))
+print ("Camera model  : %s" %(camera.get_model_name ()))
+print ("ROI           : %dx%d at %d,%d" %(width, height, x, y))
+print ("Payload       : %d" %(payload))
+print ("Pixel format  : %s" %(camera.get_pixel_format_as_string ()))
 
 stream = camera.create_stream (None, None)
 
 stream.push_buffer (Aravis.Buffer.new_allocate (payload))
 
-print "Start acquisition"
+print ("Start acquisition")
 
 camera.start_acquisition ()
 
-print "Acquisition"
+print ("Acquisition")
 
-buffer = stream.pop_buffer ()
+image = stream.pop_buffer ()
 
-data = buffer.get_data ()
+data = image.get_data ()
 
 DumpBuffer (data, len(data), "Image buffer")
 
-print "Stop acquisition"
+print ("Stop acquisition")
 
 camera.stop_acquisition ()
 

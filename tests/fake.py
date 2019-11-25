@@ -8,7 +8,7 @@ Aravis.enable_interface ("Fake")
 
 camera = Aravis.Camera.new ("Fake_1")
 
-assert camera != None
+assert camera is not None
 
 camera.set_region (10,20,100,200)
 camera.set_frame_rate (50.0)
