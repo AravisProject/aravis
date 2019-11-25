@@ -51,9 +51,9 @@ except GLib.Error as err:
 
 value = camera.get_boolean ("TestBoolean")
 
-assert value == False
+assert value is False
 
 camera.set_boolean ("TestBoolean", True)
 value = camera.get_boolean ("TestBoolean")
 
-assert value == True
+assert value is True
