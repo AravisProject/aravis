@@ -22,7 +22,10 @@ if [ "$#" = 0 -a "x$NOCONFIGURE" = "x" ]; then
         echo "" >&2
 fi
 
-aclocal --install -I m4 || exit 1
+# Don't install system m4 files, as the newest versions of the m4 macros used by aravis
+# are not compatible with what is bundled with aravis.
+# aclocal --install -I m4 || exit 1
+
 intltoolize --force --copy --automake || exit 1
 gtkdocize --copy || exit 1
 autoreconf --verbose --force --install || exit 1
