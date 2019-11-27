@@ -35,6 +35,7 @@ G_BEGIN_DECLS
 typedef struct {
 	size_t size;
 	gboolean is_preallocated;
+	gboolean is_locked;
 	unsigned char *data;
 
 	void *user_data;
@@ -56,6 +57,9 @@ typedef struct {
 	guint32 height;
 
 	ArvPixelFormat pixel_format;
+
+	ArvBufferTryLockCallback try_lock_func;
+	ArvBufferUnlockCallback unlock_func;
 } ArvBufferPrivate;
 
 struct _ArvBuffer {

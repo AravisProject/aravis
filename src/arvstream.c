@@ -30,8 +30,8 @@
  * objects.
  */
 
+#include <arvbufferprivate.h>
 #include <arvstreamprivate.h>
-#include <arvbuffer.h>
 #include <arvdebug.h>
 
 enum {
@@ -76,6 +76,7 @@ arv_stream_push_buffer (ArvStream *stream, ArvBuffer *buffer)
 
 	g_return_if_fail (ARV_IS_STREAM (stream));
 	g_return_if_fail (ARV_IS_BUFFER (buffer));
+	g_return_if_fail (!buffer->priv->is_locked);
 
 	g_async_queue_push (priv->input_queue, buffer);
 }
@@ -161,6 +162,8 @@ arv_stream_timeout_pop_buffer (ArvStream *stream, guint64 timeout)
  *
  * Pops a buffer from the input queue of @stream.
  *
+ * Postcondition: the returned buffer is locked for use by aravis
+ *
  * Since: 0.2.0
  */
 
@@ -168,10 +171,28 @@ ArvBuffer *
 arv_stream_pop_input_buffer (ArvStream *stream)
 {
 	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+	ArvBuffer* buffer = NULL;
+	gint end;
 
 	g_return_val_if_fail (ARV_IS_STREAM (stream), NULL);
 
-	return g_async_queue_try_pop (priv->input_queue);
+	g_async_queue_lock (priv->input_queue);
+	end = g_async_queue_length_unlocked (priv->input_queue);
+
+	/* get the first buffer that we can lock */
+	for (gint i = 0; i < end; ++i) {
+		buffer = g_async_queue_pop_unlocked (priv->input_queue);
+		if (buffer->priv->try_lock_func(buffer)) {
+			buffer->priv->is_locked = TRUE;
+			break;
+		}
+
+		g_async_queue_push_unlocked (priv->input_queue, buffer);
+	}
+
+	g_async_queue_unlock (priv->input_queue);
+
+	return buffer;
 }
 
 void
@@ -181,6 +202,10 @@ arv_stream_push_output_buffer (ArvStream *stream, ArvBuffer *buffer)
 
 	g_return_if_fail (ARV_IS_STREAM (stream));
 	g_return_if_fail (ARV_IS_BUFFER (buffer));
+	g_return_if_fail (buffer->priv->is_locked);
+
+	buffer->priv->is_locked = FALSE;
+	buffer->priv->unlock_func (buffer);
 
 	g_async_queue_push (priv->output_queue, buffer);
 

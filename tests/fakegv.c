@@ -1,5 +1,6 @@
 #include <glib.h>
 #include <arv.h>
+#include <stdint.h>
 
 static ArvCamera *camera = NULL;
 
@@ -214,6 +215,103 @@ dynamic_roi_test (void)
 	g_clear_object (&stream);
 }
 
+
+#define BUFFER_LOCK_TEST_BUFFER_COUNT 5
+static int total_locks;
+static int total_unlocks;
+static int per_buffer_locks[BUFFER_LOCK_TEST_BUFFER_COUNT];
+static int per_buffer_unlocks[BUFFER_LOCK_TEST_BUFFER_COUNT];
+static gboolean available[BUFFER_LOCK_TEST_BUFFER_COUNT] = {
+	FALSE, TRUE, FALSE, FALSE, TRUE
+};
+
+static gboolean try_lock_cb(ArvBuffer* buffer)
+{
+	unsigned index = (uintptr_t)arv_buffer_get_user_data(buffer);
+	g_assert (index >= 0 && index < BUFFER_LOCK_TEST_BUFFER_COUNT);
+
+	if (available[index]) {
+		++total_locks;
+		++per_buffer_locks[index];
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+static void unlock_cb(ArvBuffer* buffer)
+{
+	unsigned index = (uintptr_t)arv_buffer_get_user_data(buffer);
+	g_assert (index >= 0 && index < BUFFER_LOCK_TEST_BUFFER_COUNT);
+	++total_unlocks;
+	++per_buffer_unlocks[index];
+}
+
+static void
+buffer_lock_test (void)
+{
+	ArvStream *stream;
+	size_t payload;
+	unsigned buffer_count = 0;
+	unsigned i;
+	unsigned locks = 0;
+	unsigned unlocks = 0;
+
+	stream = arv_camera_create_stream (camera, NULL, NULL);
+	g_assert (ARV_IS_STREAM (stream));
+
+	payload = arv_camera_get_payload (camera, NULL);
+
+	for (i = 0; i < BUFFER_LOCK_TEST_BUFFER_COUNT; i++) {
+		ArvBuffer* buffer = arv_buffer_new_lockable (payload, NULL, (void*)(uintptr_t)i, NULL, try_lock_cb, unlock_cb);
+		arv_stream_push_buffer (stream, buffer);
+	}
+
+	g_signal_connect (stream, "new-buffer", G_CALLBACK (new_buffer_cb), &buffer_count);
+	arv_stream_set_emit_signals (stream, TRUE);
+
+	arv_camera_start_acquisition (camera, NULL);
+
+	while (buffer_count < 10)
+		usleep (1000);
+
+	arv_camera_stop_acquisition (camera, NULL);
+	/* The following will block until the signal callback returns
+	 * which avoids a race and possible deadlock.
+	 */
+	arv_stream_set_emit_signals (stream, FALSE);
+
+	g_clear_object (&stream);
+
+	/* For actually testing the deadlock condition (see comment in
+	 * new_buffer_cb), one must wait a bit before leaving this test,
+	 * because otherwise the stream thread will be killed while sleeping. */
+	sleep (2);
+
+	/* number of lock / unlock counts must not be zero */
+	g_assert (total_locks > 0);
+	g_assert (total_unlocks > 0);
+
+	/* number of lock / unlock counts must match */
+	g_assert (total_locks == total_unlocks);
+
+	/* also per buffer */
+	for (i = 0; i < BUFFER_LOCK_TEST_BUFFER_COUNT; i++) {
+		g_assert (per_buffer_locks[i] == per_buffer_locks[i]);
+		locks += per_buffer_locks[i];
+		unlocks += per_buffer_locks[i];
+	}
+
+	/* per buffer lock/unlock must sum up to totals */
+	g_assert (total_locks == locks);
+	g_assert (total_unlocks == unlocks);
+
+	/* buffer 0, 2, 3 must not be used */
+	g_assert (per_buffer_locks[0] == 0);
+	g_assert (per_buffer_locks[2] == 0);
+	g_assert (per_buffer_locks[3] == 0);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -233,6 +331,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/fakegv/acquisition", acquisition_test);
 	g_test_add_func ("/fakegv/stream", stream_test);
 	g_test_add_func ("/fakegv/dynamic_roi", dynamic_roi_test);
+	g_test_add_func ("/fakegv/buffer_lock", buffer_lock_test);
 
 	result = g_test_run();
 
