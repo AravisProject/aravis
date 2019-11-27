@@ -380,6 +380,26 @@ arv_device_get_boolean_feature_value (ArvDevice *device, const char *feature, GE
 }
 
 /**
+ * arv_device_get_boolean_feature_value_gi: (rename-to arv_device_get_boolean_feature_value)
+ * @device: a #ArvDevice
+ * @feature: feature name
+ * @value: (out): feature value
+ * @error: a #GError placeholder
+ *
+ * Get the feature value, or %FALSE on error.
+ *
+ * Since: 0.8.0
+ */
+
+void
+arv_device_get_boolean_feature_value_gi	(ArvDevice *device, const char *feature, gboolean *value, GError **error)
+{
+	g_return_if_fail (value != NULL);
+
+	*value = arv_device_get_boolean_feature_value (device, feature, error);
+}
+
+/**
  * arv_device_set_string_feature_value:
  * @device: a #ArvDevice
  * @feature: feature name

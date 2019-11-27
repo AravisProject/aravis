@@ -334,6 +334,7 @@ ArvDeviceClass
 ArvDevicePrivate
 ARV_DEVICE_NAME_ILLEGAL_CHARACTERS
 ARV_DEVICE_NAME_REPLACEMENT_CHARACTER
+arv_device_get_boolean_feature_value_gi
 </SECTION>
 
 <SECTION>
