@@ -319,7 +319,6 @@ camera_api_test (void)
 	GError *error = NULL;
 	ArvCamera *camera;
 	ArvPixelFormat pixel_format;
-	gboolean success;
 	int x, y, w, h;
 	const char *string;
 	void *ptr;
@@ -445,23 +444,9 @@ camera_api_test (void)
 	g_assert (error == NULL);
 	g_assert_cmpfloat (d, ==, 1.0);
 
-	success = arv_camera_check_status (camera, &error);
-	g_assert (error == NULL);
-	g_assert (success);
-	g_assert (error == NULL);
-
 	arv_camera_set_integer (camera, "Unknown", 0, &error);
 	g_assert (error != NULL);
 	g_clear_error (&error);
-	success = arv_camera_check_status (camera, &error);
-	g_assert (!success);
-	g_assert (error != NULL);
-	g_clear_error (&error);
-
-	/* Status is reset after read */
-	success = arv_camera_check_status (camera, &error);
-	g_assert (success);
-	g_assert (error == NULL);
 
 	g_object_unref (camera);
 }

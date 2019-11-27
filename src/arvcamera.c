@@ -110,8 +110,6 @@ typedef struct {
 	gboolean has_exposure_time;
 	gboolean has_acquisition_frame_rate;
 	gboolean has_acquisition_frame_rate_enabled;
-
-	GError *error;	/* First error that changed camera status. Cleared after status read.  */
 } ArvCameraPrivate;
 
 G_DEFINE_TYPE_WITH_CODE (ArvCamera, arv_camera, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvCamera))
@@ -1799,24 +1797,6 @@ arv_camera_is_binning_available (ArvCamera *camera, GError **error)
 	return horizontal && vertical;
 }
 
-static void
-_update_status (ArvCamera *camera, const GError *error)
-{
-	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
-
-	if (error == NULL)
-		return;
-
-	if (priv->error != NULL) {
-		arv_warning_device ("[ArvCamera:_update_status] %s", error->message);
-	} else {
-		arv_warning_device ("[ArvCamera:_update_status] %s (Status changed)", error->message);
-
-		g_clear_error (&priv->error);
-		priv->error = g_error_copy (error);
-	}
-}
-
 /**
  * arv_camera_execute_command:
  * @camera: a #ArvCamera
@@ -1832,16 +1812,10 @@ void
 arv_camera_execute_command (ArvCamera *camera, const char *feature, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
-	GError *local_error = NULL;
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
-	g_return_if_fail (feature != NULL);
 
-	arv_device_execute_command (priv->device, feature, &local_error);
-	if (local_error != NULL) {
-		_update_status (camera, local_error);
-		g_propagate_error (error, local_error);
-	}
+	arv_device_execute_command (priv->device, feature, error);
 }
 
 /**
@@ -1860,16 +1834,10 @@ void
 arv_camera_set_boolean (ArvCamera *camera, const char *feature, gboolean value, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
-	GError *local_error = NULL;
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
-	g_return_if_fail (feature != NULL);
 
-	arv_device_set_boolean_feature_value (priv->device, feature, value, &local_error);
-	if (local_error != NULL) {
-		_update_status (camera, local_error);
-		g_propagate_error (error, local_error);
-	}
+	arv_device_set_boolean_feature_value (priv->device, feature, value, error);
 }
 
 /**
@@ -1887,21 +1855,10 @@ gboolean
 arv_camera_get_boolean (ArvCamera *camera, const char *feature, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
-	GError *local_error = NULL;
-	gboolean value;
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
-	g_return_val_if_fail (feature != NULL, FALSE);
 
-	value = arv_device_get_boolean_feature_value (priv->device, feature, &local_error);
-	if (local_error != NULL) {
-		_update_status (camera, local_error);
-		g_propagate_error (error, local_error);
-
-		return FALSE;
-	}
-
-	return value;
+	return arv_device_get_boolean_feature_value (priv->device, feature, error);
 }
 
 /**
@@ -1938,17 +1895,10 @@ void
 arv_camera_set_string (ArvCamera *camera, const char *feature, const char *value, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
-	GError *local_error = NULL;
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
-	g_return_if_fail (feature != NULL);
-	g_return_if_fail (value != NULL);
 
-	arv_device_set_string_feature_value (priv->device, feature, value, &local_error);
-	if (local_error != NULL) {
-		_update_status (camera, local_error);
-		g_propagate_error (error, local_error);
-	}
+	arv_device_set_string_feature_value (priv->device, feature, value, error);
 }
 
 /**
@@ -1966,21 +1916,10 @@ const char *
 arv_camera_get_string (ArvCamera *camera, const char *feature, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
-	GError *local_error = NULL;
-	const char *value;
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
-	g_return_val_if_fail (feature != NULL, FALSE);
 
-	value = arv_device_get_string_feature_value (priv->device, feature, &local_error);
-	if (local_error != NULL) {
-		_update_status (camera, local_error);
-		g_propagate_error (error, local_error);
-
-		return NULL;
-	}
-
-	return value;
+	return arv_device_get_string_feature_value (priv->device, feature, error);
 }
 
 /**
@@ -2001,14 +1940,8 @@ arv_camera_set_integer (ArvCamera *camera, const char *feature, gint64 value, GE
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
-	g_return_if_fail (feature != NULL);
-	GError *local_error = NULL;
 
-	arv_device_set_integer_feature_value (priv->device, feature, value, &local_error);
-	if (local_error != NULL) {
-		_update_status (camera, local_error);
-		g_propagate_error (error, local_error);
-	}
+	arv_device_set_integer_feature_value (priv->device, feature, value, error);
 }
 
 /**
@@ -2026,21 +1959,10 @@ gint64
 arv_camera_get_integer (ArvCamera *camera, const char *feature, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
-	GError *local_error = NULL;
-	gint64 value;
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0);
-	g_return_val_if_fail (feature != NULL, 0);
 
-	value = arv_device_get_integer_feature_value (priv->device, feature, &local_error);
-	if (local_error != NULL) {
-		_update_status (camera, local_error);
-		g_propagate_error (error, local_error);
-
-		return 0;
-	}
-
-	return value;
+	return arv_device_get_integer_feature_value (priv->device, feature, error);
 }
 
 /**
@@ -2060,16 +1982,15 @@ void
 arv_camera_get_integer_bounds (ArvCamera *camera, const char *feature, gint64 *min, gint64 *max, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
-	GError *local_error = NULL;
+
+	if (min != NULL)
+		*min = G_MININT64;
+	if (max != NULL)
+		*max = G_MAXINT64;
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
-	g_return_if_fail (feature != NULL);
 
-	arv_device_get_integer_feature_bounds (priv->device, feature, min, max, &local_error);
-	if (local_error != NULL) {
-		_update_status (camera, local_error);
-		g_propagate_error (error, local_error);
-	}
+	arv_device_get_integer_feature_bounds (priv->device, feature, min, max, error);
 }
 
 /**
@@ -2078,7 +1999,7 @@ arv_camera_get_integer_bounds (ArvCamera *camera, const char *feature, gint64 *m
  * @feature: feature name
  * @error: a #GError placeholder, %NULL to ignore
  *
- * Returns: @feature value increment.
+ * Returns: @feature value increment, or 1 on error.
  *
  * Since: 0.8.0
  */
@@ -2087,21 +2008,11 @@ gint64
 arv_camera_get_integer_increment (ArvCamera *camera, const char *feature, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
-	GError *local_error = NULL;
-	gint64 value = 1;
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), 1);
 	g_return_val_if_fail (feature != NULL, 1);
 
-	value = arv_device_get_integer_feature_increment (priv->device, feature, &local_error);
-	if (local_error != NULL) {
-		_update_status (camera, local_error);
-		g_propagate_error (error, local_error);
-
-		return 0;
-	}
-
-	return value;
+	return arv_device_get_integer_feature_increment (priv->device, feature, error);
 }
 
 static void
@@ -2121,7 +2032,6 @@ arv_camera_get_integer_bounds_as_gint (ArvCamera *camera, const char *feature, g
 
 	arv_device_get_integer_feature_bounds (priv->device, feature, &min64, &max64, &local_error);
 	if (local_error != NULL) {
-		_update_status (camera, local_error);
 		g_propagate_error (error, local_error);
 	} else {
 		if (min != NULL)
@@ -2148,7 +2058,6 @@ arv_camera_get_integer_bounds_as_guint (ArvCamera *camera, const char *feature, 
 
 	arv_device_get_integer_feature_bounds (priv->device, feature, &min64, &max64, &local_error);
 	if (local_error != NULL) {
-		_update_status (camera, local_error);
 		g_propagate_error (error, local_error);
 	} else {
 		if (min != NULL)
@@ -2175,7 +2084,6 @@ arv_camera_get_integer_bounds_as_double (ArvCamera *camera, const char *feature,
 
 	arv_device_get_integer_feature_bounds (priv->device, feature, &min64, &max64, &local_error);
 	if (local_error != NULL) {
-		_update_status (camera, local_error);
 		g_propagate_error (error, local_error);
 	} else {
 		if (min != NULL)
@@ -2201,16 +2109,10 @@ void
 arv_camera_set_float (ArvCamera *camera, const char *feature, double value, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
-	GError *local_error = NULL;
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
-	g_return_if_fail (feature != NULL);
 
-	arv_device_set_float_feature_value (priv->device, feature, value, &local_error);
-	if (local_error != NULL) {
-		_update_status (camera, local_error);
-		g_propagate_error (error, local_error);
-	}
+	arv_device_set_float_feature_value (priv->device, feature, value, error);
 }
 
 /**
@@ -2228,21 +2130,10 @@ double
 arv_camera_get_float (ArvCamera *camera, const char *feature, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
-	GError *local_error = NULL;
-	double value;
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0.0);
-	g_return_val_if_fail (feature != NULL, 0.0);
 
-	value = arv_device_get_float_feature_value (priv->device, feature, &local_error);
-	if (local_error != NULL) {
-		_update_status (camera, local_error);
-		g_propagate_error (error, local_error);
-
-		return 0.0;
-	}
-
-	return value;
+	return arv_device_get_float_feature_value (priv->device, feature, error);
 }
 
 /**
@@ -2262,16 +2153,15 @@ void
 arv_camera_get_float_bounds (ArvCamera *camera, const char *feature, double *min, double *max, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
-	GError *local_error = NULL;
+
+	if (min != NULL)
+		*min = -G_MAXDOUBLE;
+	if (max != NULL)
+		*max = G_MAXDOUBLE;
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
-	g_return_if_fail (feature != NULL);
 
-	arv_device_get_float_feature_bounds (priv->device, feature, min, max, &local_error);
-	if (local_error != NULL) {
-		_update_status (camera, local_error);
-		g_propagate_error (error, local_error);
-	}
+	arv_device_get_float_feature_bounds (priv->device, feature, min, max, error);
 }
 
 /**
@@ -2293,24 +2183,13 @@ gint64 *
 arv_camera_get_available_enumerations (ArvCamera *camera, const char *feature, guint *n_values, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
-	GError *local_error = NULL;
-	gint64 *values;
 
 	if (n_values != NULL)
 		*n_values = 0;
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
-	g_return_val_if_fail (feature != NULL, NULL);
 
-	values = arv_device_get_available_enumeration_feature_values (priv->device, feature, n_values, &local_error);
-	if (local_error != NULL) {
-		_update_status (camera, local_error);
-		g_propagate_error (error, local_error);
-
-		return NULL;
-	}
-
-	return values;
+	return arv_device_get_available_enumeration_feature_values (priv->device, feature, n_values, error);
 }
 
 /**
@@ -2332,22 +2211,13 @@ const char **
 arv_camera_get_available_enumerations_as_strings (ArvCamera *camera, const char *feature, guint *n_values, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
-	GError *local_error = NULL;
-	const char **strings;
 
 	if (n_values != NULL)
 		*n_values = 0;
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
-	g_return_val_if_fail (feature != NULL, NULL);
 
-	strings = arv_device_get_available_enumeration_feature_values_as_strings (priv->device, feature, n_values, &local_error);
-	if (local_error != NULL) {
-		_update_status (camera, local_error);
-		g_propagate_error (error, local_error);
-	}
-
-	return strings;
+	return arv_device_get_available_enumeration_feature_values_as_strings (priv->device, feature, n_values, error);
 }
 
 /**
@@ -2369,22 +2239,13 @@ const char **
 arv_camera_get_available_enumerations_as_display_names (ArvCamera *camera, const char *feature, guint *n_values, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
-	GError *local_error = NULL;
-	const char **strings;
 
 	if (n_values != NULL)
 		*n_values = 0;
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
-	g_return_val_if_fail (feature != NULL, NULL);
 
-	strings = arv_device_get_available_enumeration_feature_values_as_display_names (priv->device, feature, n_values, &local_error);
-	if (local_error != NULL) {
-		_update_status (camera, local_error);
-		g_propagate_error (error, local_error);
-	}
-
-	return strings;
+	return arv_device_get_available_enumeration_feature_values_as_display_names (priv->device, feature, n_values, error);
 }
 
 /**
@@ -2402,37 +2263,10 @@ gboolean
 arv_camera_is_feature_available (ArvCamera *camera, const char *feature, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
-	GError *local_error = NULL;
-	gboolean available = FALSE;
-
-	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
-	g_return_val_if_fail (feature != NULL, FALSE);
-
-	available = arv_device_is_feature_available (priv->device, feature, &local_error);
-	if (local_error != NULL) {
-		_update_status (camera, local_error);
-		g_propagate_error (error, local_error);
-
-		return FALSE;
-	}
-
-	return available;
-}
-
-gboolean
-arv_camera_check_status (ArvCamera *camera, GError **error)
-{
-	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
-	if (priv->error == NULL)
-		return TRUE;
-
-	g_propagate_error (error, priv->error);
-	priv->error = NULL;
-
-	return FALSE;
+	return arv_device_is_feature_available (priv->device, feature, error);
 }
 
 /**
@@ -2605,7 +2439,6 @@ arv_camera_gv_get_packet_delay (ArvCamera *camera, GError **error)
 void
 arv_camera_gv_set_packet_size (ArvCamera *camera, gint packet_size, GError **error)
 {
-	GError *local_error = NULL;
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
 	if (packet_size <= 0)
@@ -2613,11 +2446,7 @@ arv_camera_gv_set_packet_size (ArvCamera *camera, gint packet_size, GError **err
 
 	g_return_if_fail (arv_camera_is_gv_device (camera));
 
-	arv_gv_device_set_packet_size (ARV_GV_DEVICE (priv->device), packet_size, &local_error);
-	if (local_error != NULL) {
-		_update_status (camera, local_error);
-		g_propagate_error (error, local_error);
-	}
+	arv_gv_device_set_packet_size (ARV_GV_DEVICE (priv->device), packet_size, error);
 }
 
 /**
@@ -2634,20 +2463,10 @@ guint
 arv_camera_gv_get_packet_size (ArvCamera *camera, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
-	GError *local_error = NULL;
-	guint value;
 
 	g_return_val_if_fail (arv_camera_is_gv_device (camera), 0);
 
-	value = arv_gv_device_get_packet_size (ARV_GV_DEVICE (priv->device), &local_error);
-	if (local_error != NULL) {
-		_update_status (camera, local_error);
-		g_propagate_error (error, local_error);
-
-		return 0;
-	}
-
-	return value;
+	return arv_gv_device_get_packet_size (ARV_GV_DEVICE (priv->device), error);
 }
 
 /**
@@ -2669,20 +2488,10 @@ guint
 arv_camera_gv_auto_packet_size (ArvCamera *camera, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
-	GError *local_error = NULL;
-	guint value;
 
 	g_return_val_if_fail (arv_camera_is_gv_device (camera), 0);
 
-	value = arv_gv_device_auto_packet_size (ARV_GV_DEVICE (priv->device), &local_error);
-	if (local_error != NULL) {
-		_update_status (camera, local_error);
-		g_propagate_error (error, local_error);
-
-		return 0;
-	}
-
-	return value;
+	return arv_gv_device_auto_packet_size (ARV_GV_DEVICE (priv->device), error);
 }
 
 /**
@@ -3044,7 +2853,6 @@ arv_camera_finalize (GObject *object)
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (ARV_CAMERA (object));
 
 	g_clear_object (&priv->device);
-	g_clear_error (&priv->error);
 
 	G_OBJECT_CLASS (arv_camera_parent_class)->finalize (object);
 }
