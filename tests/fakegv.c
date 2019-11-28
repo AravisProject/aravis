@@ -216,19 +216,21 @@ dynamic_roi_test (void)
 }
 
 
-#define BUFFER_LOCK_TEST_BUFFER_COUNT 5
+#define RING_BUFFER_TEST_BUFFER_COUNT 5
 static int total_locks;
 static int total_unlocks;
-static int per_buffer_locks[BUFFER_LOCK_TEST_BUFFER_COUNT];
-static int per_buffer_unlocks[BUFFER_LOCK_TEST_BUFFER_COUNT];
-static gboolean available[BUFFER_LOCK_TEST_BUFFER_COUNT] = {
+static int per_buffer_locks[RING_BUFFER_TEST_BUFFER_COUNT];
+static int per_buffer_unlocks[RING_BUFFER_TEST_BUFFER_COUNT];
+static gboolean available[RING_BUFFER_TEST_BUFFER_COUNT] = {
 	FALSE, TRUE, FALSE, FALSE, TRUE
 };
 
-static gboolean try_lock_cb(ArvBuffer* buffer)
+static gboolean
+try_lock_cb (ArvStream *stream, ArvBuffer *buffer)
 {
+	(void)stream;
 	unsigned index = (uintptr_t)arv_buffer_get_user_data(buffer);
-	g_assert (index >= 0 && index < BUFFER_LOCK_TEST_BUFFER_COUNT);
+	g_assert (index >= 0 && index < RING_BUFFER_TEST_BUFFER_COUNT);
 
 	if (available[index]) {
 		++total_locks;
@@ -239,16 +241,33 @@ static gboolean try_lock_cb(ArvBuffer* buffer)
 	return FALSE;
 }
 
-static void unlock_cb(ArvBuffer* buffer)
+static void
+unlock_cb (ArvStream *stream, ArvBuffer *buffer)
 {
+	(void)stream;
 	unsigned index = (uintptr_t)arv_buffer_get_user_data(buffer);
-	g_assert (index >= 0 && index < BUFFER_LOCK_TEST_BUFFER_COUNT);
+	g_assert (index >= 0 && index < RING_BUFFER_TEST_BUFFER_COUNT);
 	++total_unlocks;
 	++per_buffer_unlocks[index];
 }
 
 static void
-buffer_lock_test (void)
+stream_cb (void *user_data, ArvStreamCallbackType type, ArvBuffer *buffer)
+{
+	switch (type) {
+	case ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE: {
+		unsigned* buffer_count = user_data;
+		g_assert (buffer);
+		(*buffer_count)++;
+	} break;
+	default:
+		break;
+	}
+
+}
+
+static void
+ring_buffer_mode_test (void)
 {
 	ArvStream *stream;
 	size_t payload;
@@ -257,18 +276,18 @@ buffer_lock_test (void)
 	unsigned locks = 0;
 	unsigned unlocks = 0;
 
-	stream = arv_camera_create_stream (camera, NULL, NULL);
+	stream = arv_camera_create_stream (camera, stream_cb, &buffer_count);
 	g_assert (ARV_IS_STREAM (stream));
 
 	payload = arv_camera_get_payload (camera, NULL);
 
-	for (i = 0; i < BUFFER_LOCK_TEST_BUFFER_COUNT; i++) {
-		ArvBuffer* buffer = arv_buffer_new_lockable (payload, NULL, (void*)(uintptr_t)i, NULL, try_lock_cb, unlock_cb);
+	for (i = 0; i < RING_BUFFER_TEST_BUFFER_COUNT; i++) {
+		ArvBuffer* buffer = arv_buffer_new_full (payload, NULL, (void*)(uintptr_t)i, NULL);
 		arv_stream_push_buffer (stream, buffer);
 	}
 
-	g_signal_connect (stream, "new-buffer", G_CALLBACK (new_buffer_cb), &buffer_count);
-	arv_stream_set_emit_signals (stream, TRUE);
+	arv_stream_set_ring_buffer_mode (stream, TRUE);
+	arv_stream_set_ring_buffer_callbacks (stream, &try_lock_cb, &unlock_cb);
 
 	arv_camera_start_acquisition (camera, NULL);
 
@@ -276,17 +295,8 @@ buffer_lock_test (void)
 		usleep (1000);
 
 	arv_camera_stop_acquisition (camera, NULL);
-	/* The following will block until the signal callback returns
-	 * which avoids a race and possible deadlock.
-	 */
-	arv_stream_set_emit_signals (stream, FALSE);
 
 	g_clear_object (&stream);
-
-	/* For actually testing the deadlock condition (see comment in
-	 * new_buffer_cb), one must wait a bit before leaving this test,
-	 * because otherwise the stream thread will be killed while sleeping. */
-	sleep (2);
 
 	/* number of lock / unlock counts must not be zero */
 	g_assert (total_locks > 0);
@@ -296,7 +306,7 @@ buffer_lock_test (void)
 	g_assert (total_locks == total_unlocks);
 
 	/* also per buffer */
-	for (i = 0; i < BUFFER_LOCK_TEST_BUFFER_COUNT; i++) {
+	for (i = 0; i < RING_BUFFER_TEST_BUFFER_COUNT; i++) {
 		g_assert (per_buffer_locks[i] == per_buffer_locks[i]);
 		locks += per_buffer_locks[i];
 		unlocks += per_buffer_locks[i];
@@ -331,7 +341,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/fakegv/acquisition", acquisition_test);
 	g_test_add_func ("/fakegv/stream", stream_test);
 	g_test_add_func ("/fakegv/dynamic_roi", dynamic_roi_test);
-	g_test_add_func ("/fakegv/buffer_lock", buffer_lock_test);
+	g_test_add_func ("/fakegv/ring_buffer_mode", ring_buffer_mode_test);
 
 	result = g_test_run();
 

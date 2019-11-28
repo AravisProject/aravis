@@ -34,17 +34,6 @@
 
 #include <arvbufferprivate.h>
 
-static gboolean nop_try_lock (ArvBuffer *buffer)
-{
-	(void)buffer;
-	return TRUE;
-}
-
-static void nop_unlock (ArvBuffer *buffer)
-{
-	(void)buffer;
-}
-
 gboolean
 arv_buffer_payload_type_has_chunks (ArvBufferPayloadType payload_type)
 {
@@ -60,62 +49,6 @@ arv_buffer_payload_type_has_aoi (ArvBufferPayloadType payload_type)
 	return (payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
 		payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA ||
 		payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE_EXTENDED_CHUNK);
-}
-
-/**
- * arv_buffer_new_lockable:
- * @size: payload size
- * @preallocated: (transfer none): preallocated memory buffer
- * @user_data: (transfer none): a pointer to user data associated to this buffer
- * @try_lock_func: an optional callback to lock the buffer
- * @unlock_func: an optional callback to unlock the buffer
- *
- * Creates a new buffer for the storage of the video stream images.
- * The data space can be either preallocated, and the caller is responsible
- * for it's deallocation, or allocated by this function. If it is the case,
- * data memory will be freed when the buffer is destroyed.
- *
- * If @user_data_destroy_func is non NULL, it will be called in order to destroy
- * user_data when the buffer is destroyed.
- *
- * The callbacks @try_lock_func and @unlock_func enable exclusive access to
- * the buffer data to store video stream images. Combined with preallocation
- * this enables zero-copy image acquisition and concurrent access by
- * aravis (writer) and its clients (readers).
- *
- * Returns: a new #ArvBuffer object
- *
- * Since: 0.8.0
- */
-
-ArvBuffer *
-arv_buffer_new_lockable (size_t size, void *preallocated, void *user_data,
-		GDestroyNotify user_data_destroy_func, ArvBufferTryLockCallback try_lock_func,
-		ArvBufferUnlockCallback unlock_func)
-{
-	ArvBuffer *buffer;
-
-	g_return_val_if_fail ((try_lock_func && unlock_func) || (!try_lock_func && !unlock_func), NULL);
-
-	buffer = g_object_new (ARV_TYPE_BUFFER, NULL);
-	buffer->priv->size = size;
-	buffer->priv->user_data = user_data;
-	buffer->priv->user_data_destroy_func = user_data_destroy_func;
-	buffer->priv->chunk_endianness = G_BIG_ENDIAN;
-	buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_UNKNOWN;
-	buffer->priv->is_locked = FALSE;
-	buffer->priv->try_lock_func = try_lock_func ? try_lock_func : nop_try_lock;
-	buffer->priv->unlock_func = unlock_func ? unlock_func : nop_unlock;
-
-	if (preallocated != NULL) {
-		buffer->priv->is_preallocated = TRUE;
-		buffer->priv->data = preallocated;
-	} else {
-		buffer->priv->is_preallocated = FALSE;
-		buffer->priv->data = g_malloc (size);
-	}
-
-	return buffer;
 }
 
 /**
@@ -141,7 +74,24 @@ arv_buffer_new_lockable (size_t size, void *preallocated, void *user_data,
 ArvBuffer *
 arv_buffer_new_full (size_t size, void *preallocated, void *user_data, GDestroyNotify user_data_destroy_func)
 {
-	return arv_buffer_new_lockable(size, preallocated, user_data, user_data_destroy_func, NULL, NULL);
+	ArvBuffer *buffer;
+
+	buffer = g_object_new (ARV_TYPE_BUFFER, NULL);
+	buffer->priv->size = size;
+	buffer->priv->user_data = user_data;
+	buffer->priv->user_data_destroy_func = user_data_destroy_func;
+	buffer->priv->chunk_endianness = G_BIG_ENDIAN;
+	buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_UNKNOWN;
+
+	if (preallocated != NULL) {
+		buffer->priv->is_preallocated = TRUE;
+		buffer->priv->data = preallocated;
+	} else {
+		buffer->priv->is_preallocated = FALSE;
+		buffer->priv->data = g_malloc (size);
+	}
+
+	return buffer;
 }
 
 /**

@@ -64,6 +64,8 @@ struct _ArvStreamClass {
 };
 
 typedef void (*ArvStreamCallback)	(void *user_data, ArvStreamCallbackType type, ArvBuffer *buffer);
+typedef gboolean (*ArvStreamTryLockBufferCallback)	(ArvStream *stream, ArvBuffer *buffer);
+typedef void (*ArvStreamUnlockBufferCallback)	(ArvStream *stream, ArvBuffer *buffer);
 
 void		arv_stream_push_buffer 			(ArvStream *stream, ArvBuffer *buffer);
 ArvBuffer *	arv_stream_pop_buffer			(ArvStream *stream);
@@ -83,6 +85,9 @@ void		arv_stream_get_statistics		(ArvStream *stream,
 void 		arv_stream_set_emit_signals 		(ArvStream *stream, gboolean emit_signals);
 gboolean 	arv_stream_get_emit_signals 		(ArvStream *stream);
 
+void		arv_stream_set_ring_buffer_mode		(ArvStream *stream, gboolean ring_buffer_mode);
+gboolean	arv_stream_get_ring_buffer_mode		(ArvStream *stream);
+void		arv_stream_set_ring_buffer_callbacks		(ArvStream *stream, ArvStreamTryLockBufferCallback try_lock_func, ArvStreamUnlockBufferCallback unlock_func);
 G_END_DECLS
 
 #endif

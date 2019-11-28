@@ -30,7 +30,7 @@
  * objects.
  */
 
-#include <arvbufferprivate.h>
+#include <arvbuffer.h>
 #include <arvstreamprivate.h>
 #include <arvdebug.h>
 
@@ -51,7 +51,11 @@ typedef struct {
 	GAsyncQueue *input_queue;
 	GAsyncQueue *output_queue;
 	GRecMutex mutex;
+	ArvStreamTryLockBufferCallback try_lock_buffer_cb;
+	ArvStreamUnlockBufferCallback unlock_buffer_cb;
 	gboolean emit_signals;
+	gboolean thread_started;
+	gboolean ring_buffer_mode;
 } ArvStreamPrivate;
 
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvStream, arv_stream, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvStream))
@@ -76,7 +80,7 @@ arv_stream_push_buffer (ArvStream *stream, ArvBuffer *buffer)
 
 	g_return_if_fail (ARV_IS_STREAM (stream));
 	g_return_if_fail (ARV_IS_BUFFER (buffer));
-	g_return_if_fail (!buffer->priv->is_locked);
+	g_return_if_fail (!priv->ring_buffer_mode || !priv->thread_started);
 
 	g_async_queue_push (priv->input_queue, buffer);
 }
@@ -102,6 +106,7 @@ arv_stream_pop_buffer (ArvStream *stream)
 	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
 
 	g_return_val_if_fail (ARV_IS_STREAM (stream), NULL);
+	g_return_val_if_fail (!priv->ring_buffer_mode || !priv->thread_started, NULL);
 
 	return g_async_queue_pop (priv->output_queue);
 }
@@ -127,6 +132,7 @@ arv_stream_try_pop_buffer (ArvStream *stream)
 	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
 
 	g_return_val_if_fail (ARV_IS_STREAM (stream), NULL);
+	g_return_val_if_fail (!priv->ring_buffer_mode || !priv->thread_started, NULL);
 
 	return g_async_queue_try_pop (priv->output_queue);
 }
@@ -152,6 +158,7 @@ arv_stream_timeout_pop_buffer (ArvStream *stream, guint64 timeout)
 	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
 
 	g_return_val_if_fail (ARV_IS_STREAM (stream), NULL);
+	g_return_val_if_fail (!priv->ring_buffer_mode || !priv->thread_started, NULL);
 
 	return g_async_queue_timeout_pop (priv->output_queue, timeout);
 }
@@ -172,27 +179,26 @@ arv_stream_pop_input_buffer (ArvStream *stream)
 {
 	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
 	ArvBuffer* buffer = NULL;
-	gint end;
 
 	g_return_val_if_fail (ARV_IS_STREAM (stream), NULL);
 
-	g_async_queue_lock (priv->input_queue);
-	end = g_async_queue_length_unlocked (priv->input_queue);
+	if (priv->ring_buffer_mode) {
+		gint end = g_async_queue_length_unlocked (priv->input_queue);
 
-	/* get the first buffer that we can lock */
-	for (gint i = 0; i < end; ++i) {
-		buffer = g_async_queue_pop_unlocked (priv->input_queue);
-		if (buffer->priv->try_lock_func(buffer)) {
-			buffer->priv->is_locked = TRUE;
-			break;
+		/* get the first buffer that we can lock */
+		for (gint i = 0; i < end; ++i) {
+			buffer = g_async_queue_pop_unlocked (priv->input_queue);
+			if (priv->try_lock_buffer_cb (stream, buffer)) {
+				break;
+			}
+
+			g_async_queue_push_unlocked (priv->input_queue, buffer);
 		}
 
-		g_async_queue_push_unlocked (priv->input_queue, buffer);
+		return buffer;
+	} else {
+		return g_async_queue_try_pop (priv->input_queue);
 	}
-
-	g_async_queue_unlock (priv->input_queue);
-
-	return buffer;
 }
 
 void
@@ -202,19 +208,21 @@ arv_stream_push_output_buffer (ArvStream *stream, ArvBuffer *buffer)
 
 	g_return_if_fail (ARV_IS_STREAM (stream));
 	g_return_if_fail (ARV_IS_BUFFER (buffer));
-	g_return_if_fail (buffer->priv->is_locked);
 
-	buffer->priv->is_locked = FALSE;
-	buffer->priv->unlock_func (buffer);
+	if (priv->ring_buffer_mode) {
+		priv->unlock_buffer_cb (stream, buffer);
 
-	g_async_queue_push (priv->output_queue, buffer);
+		g_async_queue_push_unlocked (priv->input_queue, buffer);
+	} else {
+		g_async_queue_push (priv->output_queue, buffer);
 
-	g_rec_mutex_lock (&priv->mutex);
+		g_rec_mutex_lock (&priv->mutex);
 
-	if (priv->emit_signals)
-		g_signal_emit (stream, arv_stream_signals[ARV_STREAM_SIGNAL_NEW_BUFFER], 0);
+		if (priv->emit_signals)
+			g_signal_emit (stream, arv_stream_signals[ARV_STREAM_SIGNAL_NEW_BUFFER], 0);
 
-	g_rec_mutex_unlock (&priv->mutex);
+		g_rec_mutex_unlock (&priv->mutex);
+	}
 }
 
 /**
@@ -261,6 +269,7 @@ arv_stream_get_n_buffers (ArvStream *stream, gint *n_input_buffers, gint *n_outp
 void
 arv_stream_start_thread (ArvStream *stream)
 {
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
 	ArvStreamClass *stream_class;
 
 	g_return_if_fail (ARV_IS_STREAM (stream));
@@ -269,6 +278,7 @@ arv_stream_start_thread (ArvStream *stream)
 	g_return_if_fail (stream_class->start_thread != NULL);
 
 	stream_class->start_thread (stream);
+	priv->thread_started = TRUE;
 }
 
 /**
@@ -300,6 +310,7 @@ arv_stream_stop_thread (ArvStream *stream, gboolean delete_buffers)
 	g_return_val_if_fail (stream_class->stop_thread != NULL, 0);
 
 	stream_class->stop_thread (stream);
+	priv->thread_started = FALSE;
 
 	if (!delete_buffers)
 		return 0;
@@ -454,6 +465,21 @@ arv_stream_get_property (GObject * object, guint prop_id,
 	}
 }
 
+static gboolean
+nop_try_lock_cb (ArvStream *stream, ArvBuffer *buffer)
+{
+	(void)stream;
+	(void)buffer;
+	return TRUE;
+}
+
+static void
+nop_unlock_cb (ArvStream *stream, ArvBuffer *buffer)
+{
+	(void)stream;
+	(void)buffer;
+}
+
 static void
 arv_stream_init (ArvStream *stream)
 {
@@ -465,6 +491,10 @@ arv_stream_init (ArvStream *stream)
 	priv->output_queue = g_async_queue_new ();
 
 	priv->emit_signals = FALSE;
+	priv->thread_started = FALSE;
+	priv->ring_buffer_mode = FALSE;
+	priv->try_lock_buffer_cb = &nop_try_lock_cb;
+	priv->unlock_buffer_cb = &nop_unlock_cb;
 
 	g_rec_mutex_init (&priv->mutex);
 }
@@ -534,17 +564,98 @@ arv_stream_class_init (ArvStreamClass *node_class)
 
 	arv_stream_signals[ARV_STREAM_SIGNAL_NEW_BUFFER] =
 		g_signal_new ("new-buffer",
-			      G_TYPE_FROM_CLASS (node_class),
-			      G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (ArvStreamClass, new_buffer),
-			      NULL, NULL,
-			      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
+				  G_TYPE_FROM_CLASS (node_class),
+				  G_SIGNAL_RUN_LAST,
+				  G_STRUCT_OFFSET (ArvStreamClass, new_buffer),
+				  NULL, NULL,
+				  g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
 
 	g_object_class_install_property (
 		object_class, ARV_STREAM_PROPERTY_EMIT_SIGNALS,
 		g_param_spec_boolean ("emit-signals", "Emit signals",
-				      "Emit signals", FALSE,
-				      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+					  "Emit signals", FALSE,
+					  G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
 		);
 }
 
+
+/**
+ * arv_stream_set_ring_buffer_mode:
+ * @stream: a #ArvStream
+ * @ring_buffer_mode: boolean flag
+ *
+ * Turn ring buffer mode on or off (off by default).
+ *
+ * In ring buffer mode, only the buffers added via @arv_stream_push_buffer
+ * are available to the acquisiition thread to store images. Adding additional
+ * buffers or removing buffers through @arv_stream_pop_buffer is disabled.
+ *
+ * While in ring buffer mode the stream does not emit the "new-buffer" signal for performance reasons.
+ * Set the stream callback when you create the stream to know when a buffer is ready (%ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE).
+ *
+ * This function must not be called after the acquisition thread
+ * has been started.
+ *
+ * Since: 0.8.0
+ */
+
+void
+arv_stream_set_ring_buffer_mode (ArvStream *stream, gboolean ring_buffer_mode)
+{
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+
+	g_return_if_fail (ARV_IS_STREAM (stream));
+	g_return_if_fail (!priv->thread_started);
+
+	priv->ring_buffer_mode = ring_buffer_mode;
+}
+
+/**
+ * arv_stream_get_ring_buffer_mode:
+ * @stream: a #ArvStream
+ *
+ * Check if ring buffer mode is enabled for @stream.
+ *
+ * Since: 0.8.0
+ */
+
+gboolean
+arv_stream_get_ring_buffer_mode (ArvStream *stream)
+{
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+
+	g_return_val_if_fail (ARV_IS_STREAM (stream), FALSE);
+
+	return priv->ring_buffer_mode;
+}
+
+/**
+ * arv_stream_set_ring_buffer_callbacks:
+ * @stream: a #ArvStream
+ * @try_lock_func: callback to lock a buffer
+ * @unlock_func: callback to unlock a buffer
+ *
+ * During image acquisition in ring buffer mode the
+ * thread that stores the images uses these callbacks to lock and unlock
+ * a buffer for writing.
+ *
+ * This function must not be called after the acquisition thread
+ * has been started.
+ *
+ * Since: 0.8.0
+ */
+
+void
+arv_stream_set_ring_buffer_callbacks (
+	ArvStream *stream, ArvStreamTryLockBufferCallback try_lock_func,
+	ArvStreamUnlockBufferCallback unlock_func)
+{
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+
+	g_return_if_fail (ARV_IS_STREAM (stream));
+	g_return_if_fail (!priv->thread_started);
+	g_return_if_fail ((try_lock_func && unlock_func) || (!try_lock_func && !unlock_func));
+
+	priv->try_lock_buffer_cb = try_lock_func ? try_lock_func : &nop_try_lock_cb;
+	priv->unlock_buffer_cb = unlock_func ? unlock_func : &nop_unlock_cb;
+}

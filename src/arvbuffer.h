@@ -89,17 +89,11 @@ typedef enum {
 G_DECLARE_FINAL_TYPE (ArvBuffer, arv_buffer, ARV, BUFFER, GObject)
 
 typedef void (*ArvFrameCallback)	(ArvBuffer *buffer);
-typedef gboolean (*ArvBufferTryLockCallback)	(ArvBuffer *buffer);
-typedef void (*ArvBufferUnlockCallback)	(ArvBuffer *buffer);
 
 ArvBuffer *		arv_buffer_new_allocate		(size_t size);
 ArvBuffer *		arv_buffer_new 			(size_t size, void *preallocated);
 ArvBuffer * 		arv_buffer_new_full		(size_t size, void *preallocated,
 						 	void *user_data, GDestroyNotify user_data_destroy_func);
-ArvBuffer * 		arv_buffer_new_lockable		(size_t size, void *preallocated,
-							void *user_data, GDestroyNotify user_data_destroy_func,
-							ArvBufferTryLockCallback try_lock_func,
-							ArvBufferUnlockCallback unlock_func);
 
 ArvBufferStatus		arv_buffer_get_status		(ArvBuffer *buffer);
 
