@@ -564,17 +564,17 @@ arv_stream_class_init (ArvStreamClass *node_class)
 
 	arv_stream_signals[ARV_STREAM_SIGNAL_NEW_BUFFER] =
 		g_signal_new ("new-buffer",
-				  G_TYPE_FROM_CLASS (node_class),
-				  G_SIGNAL_RUN_LAST,
-				  G_STRUCT_OFFSET (ArvStreamClass, new_buffer),
-				  NULL, NULL,
-				  g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
+			      G_TYPE_FROM_CLASS (node_class),
+			      G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (ArvStreamClass, new_buffer),
+			      NULL, NULL,
+			      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
 
 	g_object_class_install_property (
 		object_class, ARV_STREAM_PROPERTY_EMIT_SIGNALS,
 		g_param_spec_boolean ("emit-signals", "Emit signals",
-					  "Emit signals", FALSE,
-					  G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+				      "Emit signals", FALSE,
+				      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
 		);
 }
 
