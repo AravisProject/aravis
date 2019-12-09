@@ -41,7 +41,7 @@
 #include <string.h>
 #include <math.h>
 
-static const char *arv_fake_camera_genicam_filename = NULL;
+static char *arv_fake_camera_genicam_filename = NULL;
 
 /*
  * arv_set_fake_camera_genicam_filename:
@@ -54,7 +54,8 @@ static const char *arv_fake_camera_genicam_filename = NULL;
 void
 arv_set_fake_camera_genicam_filename (const char *filename)
 {
-	arv_fake_camera_genicam_filename = filename;
+	g_clear_pointer (&arv_fake_camera_genicam_filename, g_free);
+	arv_fake_camera_genicam_filename = g_strdup (filename);
 }
 
 static const char *
@@ -883,4 +884,10 @@ arv_fake_camera_class_init (ArvFakeCameraClass *fake_camera_class)
 	GObjectClass *object_class = G_OBJECT_CLASS (fake_camera_class);
 
 	object_class->finalize = arv_fake_camera_finalize;
+}
+
+static __attribute__((destructor)) void
+module_exit (void)
+{
+	arv_set_fake_camera_genicam_filename (NULL);
 }

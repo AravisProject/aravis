@@ -1,8 +1,11 @@
 import gi
+import os
 
 gi.require_version ('Aravis', '0.8')
 
 from gi.repository import Aravis
+
+Aravis.set_fake_camera_genicam_filename (os.getenv ('FAKE_GENICAM_PATH'))
 
 Aravis.enable_interface ("Fake")
 
