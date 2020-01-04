@@ -1304,7 +1304,7 @@ arv_gv_stream_finalize (GObject *object)
 		thread_data = gv_stream->priv->thread_data;
 
 		statistic_string = arv_statistic_to_string (thread_data->statistic);
-		arv_debug_stream (statistic_string);
+		arv_debug_stream ("%s",statistic_string);
 		g_free (statistic_string);
 		arv_statistic_free (thread_data->statistic);
 

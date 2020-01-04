@@ -57,53 +57,57 @@ extern ArvDebugCategory arv_debug_category_evaluator;
 extern ArvDebugCategory arv_debug_category_misc;
 extern ArvDebugCategory arv_debug_category_viewer;
 
-#define arv_debug_dom(...)	 	arv_debug (&arv_debug_category_dom, __VA_ARGS__)
-#define arv_log_dom(...)		arv_log (&arv_debug_category_dom, __VA_ARGS__)
-#define arv_warning_dom(...)		arv_warning (&arv_debug_category_dom, __VA_ARGS__)
+#define arv_debug_dom(...)	 	arv_d(&arv_debug_category_dom, __VA_ARGS__)
+#define arv_log_dom(...)		arv_l(&arv_debug_category_dom, __VA_ARGS__)
+#define arv_warning_dom(...)		arv_w(&arv_debug_category_dom, __VA_ARGS__)
 
-#define arv_debug_interface(...) 	arv_debug (&arv_debug_category_interface, __VA_ARGS__)
-#define arv_log_interface(...)		arv_log (&arv_debug_category_interface, __VA_ARGS__)
-#define arv_warning_interface(...)	arv_warning (&arv_debug_category_interface, __VA_ARGS__)
+#define arv_debug_interface(...) 	arv_d(&arv_debug_category_interface, __VA_ARGS__)
+#define arv_log_interface(...)		arv_l(&arv_debug_category_interface, __VA_ARGS__)
+#define arv_warning_interface(...)	arv_w(&arv_debug_category_interface, __VA_ARGS__)
 
-#define arv_debug_device(...) 		arv_debug (&arv_debug_category_device, __VA_ARGS__)
-#define arv_log_device(...)		arv_log (&arv_debug_category_device, __VA_ARGS__)
-#define arv_warning_device(...)		arv_warning (&arv_debug_category_device, __VA_ARGS__)
+#define arv_debug_device(...) 		arv_d(&arv_debug_category_device, __VA_ARGS__)
+#define arv_log_device(...)		arv_l(&arv_debug_category_device, __VA_ARGS__)
+#define arv_warning_device(...)		arv_w(&arv_debug_category_device, __VA_ARGS__)
 
-#define arv_debug_chunk(...) 		arv_debug (&arv_debug_category_chunk, __VA_ARGS__)
-#define arv_log_chunk(...)		arv_log (&arv_debug_category_chunk, __VA_ARGS__)
-#define arv_warning_chunk(...)		arv_warning (&arv_debug_category_chunk, __VA_ARGS__)
+#define arv_debug_chunk(...) 		arv_d(&arv_debug_category_chunk, __VA_ARGS__)
+#define arv_log_chunk(...)		arv_l(&arv_debug_category_chunk, __VA_ARGS__)
+#define arv_warning_chunk(...)		arv_w(&arv_debug_category_chunk, __VA_ARGS__)
 
-#define arv_debug_stream(...) 		arv_debug (&arv_debug_category_stream, __VA_ARGS__)
-#define arv_log_stream(...)		arv_log (&arv_debug_category_stream, __VA_ARGS__)
-#define arv_warning_stream(...)		arv_warning (&arv_debug_category_stream, __VA_ARGS__)
+#define arv_debug_stream(...) 		arv_d(&arv_debug_category_stream, __VA_ARGS__)
+#define arv_log_stream(...)		arv_l(&arv_debug_category_stream, __VA_ARGS__)
+#define arv_warning_stream(...)		arv_w(&arv_debug_category_stream, __VA_ARGS__)
 
-#define arv_debug_stream_thread(...) 	arv_debug (&arv_debug_category_stream_thread, __VA_ARGS__)
-#define arv_log_stream_thread(...)	arv_log (&arv_debug_category_stream_thread, __VA_ARGS__)
-#define arv_warning_stream_thread(...)	arv_warning (&arv_debug_category_stream_thread, __VA_ARGS__)
+#define arv_debug_stream_thread(...) 	arv_d(&arv_debug_category_stream_thread, __VA_ARGS__)
+#define arv_log_stream_thread(...)	arv_l(&arv_debug_category_stream_thread, __VA_ARGS__)
+#define arv_warning_stream_thread(...)	arv_w(&arv_debug_category_stream_thread, __VA_ARGS__)
 
-#define arv_debug_cp(...) 		arv_debug (&arv_debug_category_cp, __VA_ARGS__)
-#define arv_log_cp(...)			arv_log (&arv_debug_category_cp, __VA_ARGS__)
-#define arv_warning_cp(...)		arv_warning (&arv_debug_category_cp, __VA_ARGS__)
+#define arv_debug_cp(...) 		arv_d(&arv_debug_category_cp, __VA_ARGS__)
+#define arv_log_cp(...)			arv_l(&arv_debug_category_cp, __VA_ARGS__)
+#define arv_warning_cp(...)		arv_w(&arv_debug_category_cp, __VA_ARGS__)
 
-#define arv_debug_sp(...) 		arv_debug (&arv_debug_category_sp, __VA_ARGS__)
-#define arv_log_sp(...)			arv_log (&arv_debug_category_sp, __VA_ARGS__)
-#define arv_warning_sp(...)		arv_warning (&arv_debug_category_sp, __VA_ARGS__)
+#define arv_debug_sp(...) 		arv_d(&arv_debug_category_sp, __VA_ARGS__)
+#define arv_log_sp(...)			arv_l(&arv_debug_category_sp, __VA_ARGS__)
+#define arv_warning_sp(...)		arv_w(&arv_debug_category_sp, __VA_ARGS__)
 
-#define arv_debug_genicam(...) 		arv_debug (&arv_debug_category_genicam, __VA_ARGS__)
-#define arv_log_genicam(...)		arv_log (&arv_debug_category_genicam, __VA_ARGS__)
-#define arv_warning_genicam(...)		arv_warning (&arv_debug_category_genicam, __VA_ARGS__)
+#define arv_debug_genicam(...) 		arv_d(&arv_debug_category_genicam, __VA_ARGS__)
+#define arv_log_genicam(...)		arv_l(&arv_debug_category_genicam, __VA_ARGS__)
+#define arv_warning_genicam(...)		arv_w(&arv_debug_category_genicam, __VA_ARGS__)
 
-#define arv_debug_evaluator(...) 	arv_debug (&arv_debug_category_evaluator, __VA_ARGS__)
-#define arv_log_evaluator(...)		arv_log (&arv_debug_category_evaluator, __VA_ARGS__)
-#define arv_warning_evaluator(...)	arv_warning (&arv_debug_category_evaluator, __VA_ARGS__)
+#define arv_debug_evaluator(...) 	arv_d(&arv_debug_category_evaluator, __VA_ARGS__)
+#define arv_log_evaluator(...)		arv_l(&arv_debug_category_evaluator, __VA_ARGS__)
+#define arv_warning_evaluator(...)	arv_w(&arv_debug_category_evaluator, __VA_ARGS__)
 
-#define arv_debug_misc(...) 		arv_debug (&arv_debug_category_misc, __VA_ARGS__)
-#define arv_log_misc(...)		arv_log (&arv_debug_category_misc, __VA_ARGS__)
-#define arv_warning_misc(...)		arv_warning (&arv_debug_category_misc, __VA_ARGS__)
+#define arv_debug_misc(...) 		arv_d(&arv_debug_category_misc, __VA_ARGS__)
+#define arv_log_misc(...)		arv_l(&arv_debug_category_misc, __VA_ARGS__)
+#define arv_warning_misc(...)		arv_w(&arv_debug_category_misc, __VA_ARGS__)
 
-#define arv_debug_viewer(...)	 	arv_debug (&arv_debug_category_viewer, __VA_ARGS__)
-#define arv_log_viewer(...)		arv_log (&arv_debug_category_viewer, __VA_ARGS__)
-#define arv_warning_viewer(...)		arv_warning (&arv_debug_category_viewer, __VA_ARGS__)
+#define arv_debug_viewer(...)	 	arv_d(&arv_debug_category_viewer, __VA_ARGS__)
+#define arv_log_viewer(...)		arv_l(&arv_debug_category_viewer, __VA_ARGS__)
+#define arv_warning_viewer(...)		arv_w(&arv_debug_category_viewer, __VA_ARGS__)
+
+#define arv_d(cat, fmt, args...) arv_debug(cat, "%s:%d: %s "fmt, __FILE__, __LINE__, __func__, ##args)
+#define arv_l(cat, fmt, args...) arv_log(cat, "%s:%d: %s "fmt, __FILE__, __LINE__, __func__, ##args)
+#define arv_w(cat, fmt, args...) arv_warning(cat, "%s:%d: %s "fmt, __FILE__, __LINE__, __func__, ##args)
 
 void 		arv_warning 			(ArvDebugCategory *category, const char *format, ...);
 void 		arv_debug 			(ArvDebugCategory *category, const char *format, ...);
