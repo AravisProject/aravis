@@ -40,7 +40,6 @@
 #include <sys/socket.h>
 #include <stdio.h>
 #include <errno.h>
-#include <arvwakeupprivate.h>
 
 #if ARAVIS_HAS_PACKET_SOCKET
 #include <ifaddrs.h>
@@ -115,6 +114,8 @@ typedef struct {
 } ArvGvStreamFrameData;
 
 struct _ArvGvStreamThreadData {
+	GCancellable *cancellable;
+
 	ArvGvDevice *gv_device;
 	ArvStream *stream;
 
@@ -136,9 +137,6 @@ struct _ArvGvStreamThreadData {
 
 	guint64 timestamp_tick_frequency;
 	guint data_size;
-
-	gboolean exit_thread;
-	ArvWakeup *wakeup;
 
 	guint16 packet_id;
 
@@ -741,40 +739,44 @@ _loop (ArvGvStreamThreadData *thread_data)
 	poll_fd[0].events =  G_IO_IN;
 	poll_fd[0].revents = 0;
 
-	arv_wakeup_get_pollfd (thread_data->wakeup, &poll_fd[1]);
-
 	packet = g_malloc0 (ARV_GV_STREAM_INCOMING_BUFFER_SIZE);
 
-	do {
-		int n_events;
-		int errsv;
-
-		if (thread_data->frames != NULL)
-			timeout_ms = thread_data->packet_timeout_us / 1000;
-		else
-			timeout_ms = ARV_GV_STREAM_POLL_TIMEOUT_US / 1000;
-
+	if (g_cancellable_make_pollfd (thread_data->cancellable, &poll_fd[1])) {
 		do {
-			poll_fd[0].revents = 0;
+			int n_events;
+			int errsv;
 
-			n_events = g_poll (poll_fd, 2, timeout_ms);
-			errsv = errno;
+			if (thread_data->frames != NULL)
+				timeout_ms = thread_data->packet_timeout_us / 1000;
+			else
+				timeout_ms = ARV_GV_STREAM_POLL_TIMEOUT_US / 1000;
 
-		} while (n_events < 0 && errsv == EINTR);
+			do {
+				poll_fd[0].revents = 0;
 
-		time_us = g_get_monotonic_time ();
+				n_events = g_poll (poll_fd, 2, timeout_ms);
+				errsv = errno;
 
-		if (poll_fd[0].revents != 0) {
-			read_count = g_socket_receive (thread_data->socket, (char *) packet,
-						       ARV_GV_STREAM_INCOMING_BUFFER_SIZE, NULL, NULL);
+			} while (n_events < 0 && errsv == EINTR);
 
-			frame = _process_packet (thread_data, packet, read_count, time_us);
-		} else
-			frame = NULL;
+			time_us = g_get_monotonic_time ();
 
-		_check_frame_completion (thread_data, time_us, frame);
+			if (poll_fd[0].revents != 0) {
+				read_count = g_socket_receive (thread_data->socket, (char *) packet,
+							       ARV_GV_STREAM_INCOMING_BUFFER_SIZE, NULL, NULL);
 
-	} while (!g_atomic_int_get (&thread_data->exit_thread));
+				frame = _process_packet (thread_data, packet, read_count, time_us);
+			} else
+				frame = NULL;
+
+			_check_frame_completion (thread_data, time_us, frame);
+
+		} while (!g_cancellable_is_cancelled (thread_data->cancellable));
+
+		g_cancellable_release_fd (thread_data->cancellable);
+	} else {
+		g_error ("[ArvGvStream::_loop] Failed to create cancellable fd");
+	}
 
 	g_free (packet);
 }
@@ -917,53 +919,57 @@ _ring_buffer_loop (ArvGvStreamThreadData *thread_data)
 	poll_fd[0].events =  G_IO_IN;
 	poll_fd[0].revents = 0;
 
-	arv_wakeup_get_pollfd (thread_data->wakeup, &poll_fd[1]);
+	if (g_cancellable_make_pollfd (thread_data->cancellable, &poll_fd[1])) {
+		block_id = 0;
+		do {
+			ArvGvStreamBlockDescriptor *descriptor;
+			guint64 time_us;
 
-	block_id = 0;
-	do {
-		ArvGvStreamBlockDescriptor *descriptor;
-		guint64 time_us;
+			time_us = g_get_monotonic_time ();
 
-		time_us = g_get_monotonic_time ();
+			descriptor = (void *) (buffer + block_id * req.tp_block_size);
+			if ((descriptor->h1.block_status & TP_STATUS_USER) == 0) {
+				int n_events;
+				int errsv;
 
-		descriptor = (void *) (buffer + block_id * req.tp_block_size);
-		if ((descriptor->h1.block_status & TP_STATUS_USER) == 0) {
-			int n_events;
-			int errsv;
+				_check_frame_completion (thread_data, time_us, NULL);
 
-			_check_frame_completion (thread_data, time_us, NULL);
+				do {
+					n_events = g_poll (poll_fd, 2, 100);
+					errsv = errno;
+				} while (n_events < 0 && errsv == EINTR);
+			} else {
+				ArvGvStreamFrameData *frame;
+				const struct tpacket3_hdr *header;
+				unsigned i;
 
-			do {
-				n_events = g_poll (poll_fd, 2, 100);
-				errsv = errno;
-			} while (n_events < 0 && errsv == EINTR);
-		} else {
-			ArvGvStreamFrameData *frame;
-			const struct tpacket3_hdr *header;
-			unsigned i;
+				header = (void *) (((char *) descriptor) + descriptor->h1.offset_to_first_pkt);
 
-			header = (void *) (((char *) descriptor) + descriptor->h1.offset_to_first_pkt);
+				for (i = 0; i < descriptor->h1.num_pkts; i++) {
+					const struct iphdr *ip;
+					const ArvGvspPacket *packet;
+					size_t size;
 
-			for (i = 0; i < descriptor->h1.num_pkts; i++) {
-				const struct iphdr *ip;
-				const ArvGvspPacket *packet;
-				size_t size;
+					ip = (void *) (((char *) header) + header->tp_mac + ETH_HLEN);
+					packet = (void *) (((char *) ip) + sizeof (struct iphdr) + sizeof (struct udphdr));
+					size = g_ntohs (ip->tot_len) -  sizeof (struct iphdr) - sizeof (struct udphdr);
 
-				ip = (void *) (((char *) header) + header->tp_mac + ETH_HLEN);
-				packet = (void *) (((char *) ip) + sizeof (struct iphdr) + sizeof (struct udphdr));
-				size = g_ntohs (ip->tot_len) -  sizeof (struct iphdr) - sizeof (struct udphdr);
+					frame = _process_packet (thread_data, packet, size, time_us);
 
-				frame = _process_packet (thread_data, packet, size, time_us);
+					_check_frame_completion (thread_data, time_us, frame);
 
-				_check_frame_completion (thread_data, time_us, frame);
+					header = (void *) (((char *) header) + header->tp_next_offset);
+				}
 
-				header = (void *) (((char *) header) + header->tp_next_offset);
+				descriptor->h1.block_status = TP_STATUS_KERNEL;
+				block_id = (block_id + 1) % req.tp_block_nr;
 			}
+		} while (!g_cancellable_is_cancelled (thread_data->cancellable));
 
-			descriptor->h1.block_status = TP_STATUS_KERNEL;
-			block_id = (block_id + 1) % req.tp_block_nr;
-		}
-	} while (!g_atomic_int_get (&thread_data->exit_thread));
+		g_cancellable_release_fd (thread_data->cancellable);
+	} else {
+		g_error ("[ArvGvStream::_ring_buffer_loop] Failed to create cancellable fd");
+	}
 
 bind_error:
 	munmap (buffer, req.tp_block_size * req.tp_block_nr);
@@ -1024,12 +1030,14 @@ static void
 arv_gv_stream_start_thread (ArvStream *stream)
 {
 	ArvGvStream *gv_stream = ARV_GV_STREAM (stream);
+	ArvGvStreamThreadData *thread_data;
 
 	g_return_if_fail (gv_stream->priv->thread == NULL);
 	g_return_if_fail (gv_stream->priv->thread_data != NULL);
 
-	gv_stream->priv->thread_data->exit_thread = FALSE;
+	thread_data = gv_stream->priv->thread_data;
 
+	thread_data->cancellable = g_cancellable_new ();
 	gv_stream->priv->thread = g_thread_new ("arv_gv_stream", arv_gv_stream_thread, gv_stream->priv->thread_data);
 }
 
@@ -1044,9 +1052,9 @@ arv_gv_stream_stop_thread (ArvStream *stream)
 
 	thread_data = gv_stream->priv->thread_data;
 
-	g_atomic_int_set (&thread_data->exit_thread, TRUE);
-	arv_wakeup_signal (thread_data->wakeup);
+	g_cancellable_cancel (thread_data->cancellable);
 	g_thread_join (gv_stream->priv->thread);
+	g_clear_object (&thread_data->cancellable);
 
 	gv_stream->priv->thread = NULL;
 }
@@ -1112,7 +1120,6 @@ arv_gv_stream_new (ArvGvDevice *gv_device,
 	thread_data->timestamp_tick_frequency = timestamp_tick_frequency;
 	thread_data->data_size = packet_size - ARV_GVSP_PACKET_PROTOCOL_OVERHEAD;
 	thread_data->use_packet_socket = (options & ARV_GV_STREAM_OPTION_PACKET_SOCKET_DISABLED) == 0;
-	thread_data->exit_thread = FALSE;
 
 	thread_data->packet_id = 65300;
 	thread_data->last_frame_id = 0;
@@ -1162,8 +1169,6 @@ arv_gv_stream_new (ArvGvDevice *gv_device,
 	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevSCDA", g_htonl (*((guint32 *) address_bytes)), NULL);
 	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevSCPHostPort", thread_data->stream_port, NULL);
 	thread_data->source_stream_port = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device), "GevSCSP", NULL);
-
-	thread_data->wakeup = arv_wakeup_new();
 
 	arv_debug_stream ("[GvStream::stream_new] Destination stream port = %d", thread_data->stream_port);
 	arv_debug_stream ("[GvStream::stream_new] Source stream port = %d", thread_data->source_stream_port);
@@ -1346,7 +1351,6 @@ arv_gv_stream_finalize (GObject *object)
 		g_clear_object (&thread_data->interface_socket_address);
 		g_clear_object (&thread_data->socket);
 		g_clear_object (&thread_data->gv_device);
-		g_clear_pointer (&thread_data->wakeup, arv_wakeup_free);
 
 		g_clear_pointer (&thread_data, g_free);
 	}
