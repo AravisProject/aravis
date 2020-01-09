@@ -160,7 +160,7 @@ arv_tool_list_features (ArvGc *genicam, const char *feature, ArvToolListMode lis
 		if (list_mode == ARV_TOOL_LIST_MODE_DESCRIPTIONS) {
 			const char *description;
 
-			description = arv_gc_feature_node_get_description (ARV_GC_FEATURE_NODE (node), NULL);
+			description = arv_gc_feature_node_get_description (ARV_GC_FEATURE_NODE (node));
 			if (description)
 				printf ("%s\n", description);
 		}
@@ -232,7 +232,7 @@ arv_tool_execute_command (int argc, char **argv, ArvDevice *device, ArvRegisterC
 
 					printf ("%s: '%s'\n", arv_dom_node_get_node_name (ARV_DOM_NODE (node)), argv[i]);
 
-					description = arv_gc_feature_node_get_description (ARV_GC_FEATURE_NODE (node), NULL);
+					description = arv_gc_feature_node_get_description (ARV_GC_FEATURE_NODE (node));
 					if (description)
 						printf ("%s\n", description);
 				}

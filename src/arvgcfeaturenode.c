@@ -214,49 +214,29 @@ arv_gc_feature_node_get_name (ArvGcFeatureNode *node)
 }
 
 const char *
-arv_gc_feature_node_get_tooltip (ArvGcFeatureNode *node, GError **error)
+arv_gc_feature_node_get_tooltip (ArvGcFeatureNode *node)
 {
 	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (node);
-	const char *tooltip;
-	GError *local_error = NULL;
 
 	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (node), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	if (priv->tooltip == NULL)
 		return NULL;
 
-	tooltip = arv_gc_property_node_get_string (priv->tooltip, &local_error);
-
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return NULL;
-	}
-
-	return tooltip;
+	return arv_gc_property_node_get_string (priv->tooltip, NULL);
 }
 
 const char *
-arv_gc_feature_node_get_description (ArvGcFeatureNode *node, GError **error)
+arv_gc_feature_node_get_description (ArvGcFeatureNode *node)
 {
 	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (node);
-	const char *description;
-	GError *local_error = NULL;
 
 	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (node), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	if (priv->description == NULL)
 	       return NULL;
 
-	description = arv_gc_property_node_get_string (priv->description, &local_error);
-
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return NULL;
-	}
-
-	return description;
+	return arv_gc_property_node_get_string (priv->description, NULL);
 }
 
 ArvGcVisibility
@@ -270,26 +250,16 @@ arv_gc_feature_node_get_visibility (ArvGcFeatureNode *node)
 }
 
 const char *
-arv_gc_feature_node_get_display_name (ArvGcFeatureNode *node, GError **error)
+arv_gc_feature_node_get_display_name (ArvGcFeatureNode *node)
 {
 	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (node);
-	const char *display_name;
-	GError *local_error = NULL;
 
 	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (node), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	if (priv->display_name == NULL)
 	       return NULL;
 
-	display_name = arv_gc_property_node_get_string (priv->display_name, &local_error);
-
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return NULL;
-	}
-
-	return display_name;
+	return arv_gc_property_node_get_string (priv->display_name, NULL);
 }
 
 gboolean

@@ -380,7 +380,7 @@ _get_available_string_values (ArvGcEnumeration *enumeration, gboolean display_na
 	for (iter = available_entries, i = 0; iter != NULL; iter = iter->next, i++) {
 		const char *string = NULL;
 		if (display_name)
-			string = arv_gc_feature_node_get_display_name (iter->data, NULL);
+			string = arv_gc_feature_node_get_display_name (iter->data);
 		if (string == NULL)
 			string = arv_gc_feature_node_get_name (iter->data);
 		strings[i] = string;

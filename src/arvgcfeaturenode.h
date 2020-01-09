@@ -42,10 +42,10 @@ struct _ArvGcFeatureNodeClass {
 
 const char *		arv_gc_feature_node_get_name			(ArvGcFeatureNode *gc_feature_node);
 
-const char *		arv_gc_feature_node_get_tooltip			(ArvGcFeatureNode *gc_feature_node, GError **error);
-const char *		arv_gc_feature_node_get_description		(ArvGcFeatureNode *gc_feature_node, GError **error);
+const char *		arv_gc_feature_node_get_tooltip			(ArvGcFeatureNode *gc_feature_node);
+const char *		arv_gc_feature_node_get_description		(ArvGcFeatureNode *gc_feature_node);
+const char *		arv_gc_feature_node_get_display_name		(ArvGcFeatureNode *gc_feature_node);
 ArvGcVisibility		arv_gc_feature_node_get_visibility		(ArvGcFeatureNode *gc_feature_node);
-const char *		arv_gc_feature_node_get_display_name		(ArvGcFeatureNode *gc_feature_node, GError **error);
 
 gboolean		arv_gc_feature_node_is_available		(ArvGcFeatureNode *gc_feature_node, GError **error);
 gboolean		arv_gc_feature_node_is_implemented		(ArvGcFeatureNode *gc_feature_node, GError **error);
