@@ -750,7 +750,7 @@ arv_camera_acquisition (ArvCamera *camera, guint64 timeout, GError **error)
 {
 	GError *local_error = NULL;
 	ArvStream *stream;
-	ArvBuffer *buffer;
+	ArvBuffer *buffer = NULL;
 	gint payload;
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
@@ -763,7 +763,7 @@ arv_camera_acquisition (ArvCamera *camera, guint64 timeout, GError **error)
 	}
 	if (local_error == NULL)
 		arv_camera_start_acquisition (camera, &local_error);
-	if (local_error ==NULL) {
+	if (local_error == NULL) {
 		if (timeout > 0)
 			buffer = arv_stream_timeout_pop_buffer (stream, timeout);
 		else
