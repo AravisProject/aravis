@@ -48,6 +48,7 @@ typedef struct {
 
 	ArvGcPropertyNode *tooltip;
 	ArvGcPropertyNode *description;
+	ArvGcPropertyNode *visibility;
 	ArvGcPropertyNode *display_name;
 	ArvGcPropertyNode *is_implemented;
 	ArvGcPropertyNode *is_available;
@@ -84,6 +85,9 @@ arv_gc_feature_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_DESCRIPTION:
 				priv->description = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_VISIBILITY:
+				priv->visibility = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_NAME:
 				priv->display_name = property_node;
@@ -123,6 +127,9 @@ arv_gc_feature_node_pre_remove_child (ArvDomNode *self, ArvDomNode *child)
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_DESCRIPTION:
 				priv->description = NULL;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_VISIBILITY:
+				priv->visibility = NULL;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_NAME:
 				priv->description = NULL;
@@ -250,6 +257,16 @@ arv_gc_feature_node_get_description (ArvGcFeatureNode *node, GError **error)
 	}
 
 	return description;
+}
+
+ArvGcVisibility
+arv_gc_feature_node_get_visibility (ArvGcFeatureNode *node)
+{
+	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (node);
+
+	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (node), ARV_GC_VISIBILITY_UNDEFINED);
+
+	return arv_gc_property_node_get_visibility (priv->visibility, ARV_GC_VISIBILITY_BEGINNER);
 }
 
 const char *

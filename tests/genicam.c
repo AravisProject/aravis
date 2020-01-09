@@ -933,6 +933,38 @@ chunk_data_test (void)
 	g_object_unref (device);
 }
 
+static void
+visibility_test (void)
+{
+	ArvDevice *device;
+	ArvGc *genicam;
+	ArvGcNode *node;
+
+	device = arv_fake_device_new ("TEST0");
+	g_assert (ARV_IS_FAKE_DEVICE (device));
+
+	genicam = arv_device_get_genicam (device);
+	g_assert (ARV_IS_GC (genicam));
+
+	node = arv_gc_get_node (genicam, "RWInteger");
+	g_assert (ARV_IS_GC_FEATURE_NODE (node));
+	g_assert_cmpint (arv_gc_feature_node_get_visibility (ARV_GC_FEATURE_NODE (node)), ==, ARV_GC_VISIBILITY_INVISIBLE);
+
+	node = arv_gc_get_node (genicam, "RWFloat");
+	g_assert (ARV_IS_GC_FEATURE_NODE (node));
+	g_assert_cmpint (arv_gc_feature_node_get_visibility (ARV_GC_FEATURE_NODE (node)), ==, ARV_GC_VISIBILITY_GURU);
+
+	node = arv_gc_get_node (genicam, "RWBoolean");
+	g_assert (ARV_IS_GC_FEATURE_NODE (node));
+	g_assert_cmpint (arv_gc_feature_node_get_visibility (ARV_GC_FEATURE_NODE (node)), ==, ARV_GC_VISIBILITY_EXPERT);
+
+	node = arv_gc_get_node (genicam, "Enumeration");
+	g_assert (ARV_IS_GC_FEATURE_NODE (node));
+	g_assert_cmpint (arv_gc_feature_node_get_visibility (ARV_GC_FEATURE_NODE (node)), ==, ARV_GC_VISIBILITY_BEGINNER);
+
+	g_object_unref (device);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -954,6 +986,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/genicam/mandatory", mandatory_test);
 	g_test_add_func ("/genicam/chunk-data", chunk_data_test);
 	g_test_add_func ("/genicam/indexed", indexed_test);
+	g_test_add_func ("/genicam/visibility", visibility_test);
 
 	result = g_test_run();
 

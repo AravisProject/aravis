@@ -158,6 +158,8 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 		node = arv_gc_property_node_new_p_address ();
 	else if (strcmp (tag_name, "Description") == 0)
 		node = arv_gc_property_node_new_description ();
+	else if (strcmp (tag_name, "Visibility") == 0)
+		node = arv_gc_property_node_new_visibility ();
 	else if (strcmp (tag_name, "ToolTip") == 0)
 		node = arv_gc_property_node_new_tooltip ();
 	else if (strcmp (tag_name, "DisplayName") == 0)

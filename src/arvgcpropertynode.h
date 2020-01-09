@@ -38,6 +38,7 @@ typedef enum {
 	ARV_GC_PROPERTY_NODE_TYPE_VALUE,
 	ARV_GC_PROPERTY_NODE_TYPE_ADDRESS,
 	ARV_GC_PROPERTY_NODE_TYPE_DESCRIPTION,
+	ARV_GC_PROPERTY_NODE_TYPE_VISIBILITY,
 	ARV_GC_PROPERTY_NODE_TYPE_TOOLTIP,
 	ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_NAME,
 	ARV_GC_PROPERTY_NODE_TYPE_MINIMUM,
@@ -103,6 +104,7 @@ ArvGcNode * 	arv_gc_property_node_new_p_value		(void);
 ArvGcNode * 	arv_gc_property_node_new_address		(void);
 ArvGcNode * 	arv_gc_property_node_new_p_address		(void);
 ArvGcNode * 	arv_gc_property_node_new_description 		(void);
+ArvGcNode * 	arv_gc_property_node_new_visibility		(void);
 ArvGcNode * 	arv_gc_property_node_new_tooltip 		(void);
 ArvGcNode * 	arv_gc_property_node_new_display_name 		(void);
 ArvGcNode * 	arv_gc_property_node_new_minimum		(void);
@@ -160,6 +162,7 @@ guint	 		arv_gc_property_node_get_lsb		(ArvGcPropertyNode *self, guint default_v
 guint	 		arv_gc_property_node_get_msb		(ArvGcPropertyNode *self, guint default_value);
 ArvGcCachable		arv_gc_property_node_get_cachable	(ArvGcPropertyNode *self, ArvGcCachable default_value);
 ArvGcAccessMode		arv_gc_property_node_get_access_mode	(ArvGcPropertyNode *self, ArvGcAccessMode default_value);
+ArvGcVisibility 	arv_gc_property_node_get_visibility 	(ArvGcPropertyNode *self, ArvGcVisibility default_value);
 
 ArvGcNode *		arv_gc_property_node_get_linked_node	(ArvGcPropertyNode *node);
 ArvGcPropertyNodeType	arv_gc_property_node_get_node_type	(ArvGcPropertyNode *node);

@@ -72,6 +72,8 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 			return "Address";
 		case ARV_GC_PROPERTY_NODE_TYPE_DESCRIPTION:
 			return "Description";
+		case ARV_GC_PROPERTY_NODE_TYPE_VISIBILITY:
+			return "Visibility";
 		case ARV_GC_PROPERTY_NODE_TYPE_TOOLTIP:
 			return "ToolTip";
 		case ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_NAME:
@@ -545,6 +547,38 @@ ArvGcNode *
 arv_gc_property_node_new_description (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_DESCRIPTION);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_visibility (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_VISIBILITY);
+}
+
+ArvGcVisibility
+arv_gc_property_node_get_visibility (ArvGcPropertyNode *self, ArvGcVisibility default_value)
+{
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
+	const char *value;
+
+	if (self == NULL)
+		return default_value;
+
+	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	g_return_val_if_fail (priv->type == ARV_GC_PROPERTY_NODE_TYPE_VISIBILITY, ARV_GC_VISIBILITY_UNDEFINED);
+
+	value = _get_value_data (self);
+
+	if (g_strcmp0 (value, "Invisible") == 0)
+		return ARV_GC_VISIBILITY_INVISIBLE;
+	else if (g_strcmp0 (value, "Guru") == 0)
+		return ARV_GC_VISIBILITY_GURU;
+	else if (g_strcmp0 (value, "Expert") == 0)
+		return ARV_GC_VISIBILITY_EXPERT;
+	else if (g_strcmp0 (value, "Beginner") == 0)
+		return ARV_GC_VISIBILITY_BEGINNER;
+
+	return ARV_GC_VISIBILITY_UNDEFINED;
 }
 
 ArvGcNode *
