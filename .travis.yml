@@ -35,7 +35,7 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew link --force gettext ; fi
   - sudo pip3 install --upgrade pip
   - sudo pip3 install setuptools
-  - sudo pip3 install meson
+  - sudo pip3 install 'meson==0.47'
 
 script:
   - meson build -Dintrospection=false -Dviewer=false -Dgst-plugin=false -Ddocumentation=false
