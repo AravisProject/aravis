@@ -23,6 +23,7 @@
 #include <arvgcstringregnode.h>
 #include <arvgcstring.h>
 #include <arvgcregister.h>
+#include <string.h>
 
 typedef struct {
 	char *string;
