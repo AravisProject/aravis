@@ -376,7 +376,7 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 		return NULL;
 	}
 
-	buffer = arv_stream_pop_input_buffer (thread_data->stream);
+	buffer = arv_stream_pop_input_buffer (thread_data->stream); // pop empty
 	if (buffer == NULL) {
 		thread_data->n_underruns++;
 

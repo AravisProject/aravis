@@ -65,7 +65,9 @@ struct _ArvStreamClass {
 
 typedef void (*ArvStreamCallback)	(void *user_data, ArvStreamCallbackType type, ArvBuffer *buffer);
 
-void		arv_stream_push_buffer 			(ArvStream *stream, ArvBuffer *buffer);
+void		arv_stream_push_buffer 			(ArvStream *stream, ArvBuffer *empty_buffer);
+
+// return full buffer
 ArvBuffer *	arv_stream_pop_buffer			(ArvStream *stream);
 ArvBuffer *	arv_stream_try_pop_buffer		(ArvStream *stream);
 ArvBuffer * 	arv_stream_timeout_pop_buffer 		(ArvStream *stream, guint64 timeout);

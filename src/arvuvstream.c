@@ -142,7 +142,7 @@ arv_uv_stream_thread (void *data)
 						thread_data->n_failures++;
 						buffer = NULL;
 					}
-					buffer = arv_stream_pop_input_buffer (thread_data->stream);
+					buffer = arv_stream_pop_input_buffer (thread_data->stream); // get empty buffer
 					if (buffer != NULL) {
 						buffer->priv->system_timestamp_ns = g_get_real_time () * 1000LL;
 						buffer->priv->status = ARV_BUFFER_STATUS_FILLING;
@@ -190,6 +190,7 @@ arv_uv_stream_thread (void *data)
 							buffer = NULL;
 						} else {
 							buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
+							// push full buffer
 							arv_stream_push_output_buffer (thread_data->stream, buffer);
 							if (thread_data->callback != NULL)
 								thread_data->callback (thread_data->user_data,
