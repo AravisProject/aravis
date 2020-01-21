@@ -168,7 +168,7 @@ arv_gv_discover_socket_list_free (ArvGvDiscoverSocketList *socket_list)
 }
 
 static void
-arv_gv_discover_socket_list_send_discover_packet (ArvGvDiscoverSocketList *socket_list)
+arv_gv_discover_socket_list_send_discover_packet (ArvGvDiscoverSocketList *socket_list, const guint32 broadcast_addr)
 {
 	GInetAddress *broadcast_address;
 	GSocketAddress *broadcast_socket_address;
@@ -178,7 +178,7 @@ arv_gv_discover_socket_list_send_discover_packet (ArvGvDiscoverSocketList *socke
 
 	packet = arv_gvcp_packet_new_discovery_cmd (&size);
 
-	broadcast_address = g_inet_address_new_from_string ("255.255.255.255");
+	broadcast_address = g_inet_address_new_from_bytes ((const guint8*)(&broadcast_addr), G_SOCKET_FAMILY_IPV4 );
 	broadcast_socket_address = g_inet_socket_address_new (broadcast_address, ARV_GVCP_PORT);
 	g_object_unref (broadcast_address);
 
@@ -316,6 +316,8 @@ _discover (GHashTable *devices, const char *device_id)
 	char buffer[ARV_GV_INTERFACE_SOCKET_BUFFER_SIZE];
 	int count;
 	int i;
+        const guint32 global_broadcast=0xFFFFFFFF;
+        struct ifaddrs *addrs,*tmp;
 
 	g_assert (devices == NULL || device_id == NULL);
 
@@ -329,8 +331,15 @@ _discover (GHashTable *devices, const char *device_id)
 		return NULL;
 	}
 
-	arv_gv_discover_socket_list_send_discover_packet (socket_list);
-
+	arv_gv_discover_socket_list_send_discover_packet (socket_list,global_broadcast);
+        /* loop over system interfaces, and send discovery packets to all subnet broadcast addresses */
+        getifaddrs(&addrs);
+        for (tmp = addrs; tmp; tmp = tmp->ifa_next)
+          if (tmp->ifa_addr && tmp->ifa_addr->sa_family == AF_INET && tmp->ifa_broadaddr->sa_data)
+            arv_gv_discover_socket_list_send_discover_packet
+              (socket_list, ((struct sockaddr_in*)tmp->ifa_broadaddr)->sin_addr.s_addr);
+        freeifaddrs(addrs);
+        
 	do {
 		if (g_poll (socket_list->poll_fds, socket_list->n_sockets, ARV_GV_INTERFACE_DISCOVERY_TIMEOUT_MS) == 0) {
 			arv_gv_discover_socket_list_free (socket_list);
