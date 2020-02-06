@@ -31,7 +31,7 @@ compiler:
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install libxml2 glib gettext intltool gtk-doc libusb gobject-introspection; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ninja intltool; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew link --force gettext ; fi
   - sudo pip3 install --upgrade pip
   - sudo pip3 install setuptools
@@ -40,5 +40,7 @@ before_install:
 script:
   - meson build -Dintrospection=false -Dviewer=false -Dgst-plugin=false -Ddocumentation=false
   - cd build
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then meson configure -Dpacket-socket=false ; fi
+  - meson configure
   - ninja
   - ninja test
