@@ -167,10 +167,10 @@ arv_uvcp_packet_to_string (const ArvUvcpPacket *packet)
 				ArvUvcpReadMemoryCmd *cmd_packet = (void *) packet;
 
 				value = GUINT64_FROM_LE (cmd_packet->infos.address);
-				g_string_append_printf (string, "address      = 0x%016lx\n", value);
+				g_string_append_printf (string, "address      = 0x%016" G_GINT64_MODIFIER "x\n", value);
 				value = GUINT16_FROM_LE (cmd_packet->infos.size);
-				g_string_append_printf (string, "size         = %10lu (0x%08lx)\n",
-							value, value);
+				g_string_append_printf (string, "size         = %10" G_GINT64_MODIFIER "u (0x%08"
+							G_GINT64_MODIFIER "x)\n", value, value);
 				break;
 			}
 		case ARV_UVCP_COMMAND_READ_MEMORY_ACK:
@@ -182,7 +182,7 @@ arv_uvcp_packet_to_string (const ArvUvcpPacket *packet)
 				ArvUvcpWriteMemoryCmd *cmd_packet = (void *) packet;
 
 				value = GUINT64_FROM_LE (cmd_packet->infos.address);
-				g_string_append_printf (string, "address      = 0x%016lx\n", value);
+				g_string_append_printf (string, "address      = 0x%016" G_GINT64_MODIFIER "x\n", value);
 				break;
 			}
 		case ARV_UVCP_COMMAND_WRITE_MEMORY_ACK:
@@ -190,8 +190,8 @@ arv_uvcp_packet_to_string (const ArvUvcpPacket *packet)
 				ArvUvcpWriteMemoryAck *cmd_packet = (void *) packet;
 
 				value = GUINT64_FROM_LE (cmd_packet->infos.bytes_written);
-				g_string_append_printf (string, "written      = %10lu (0x%08lx)\n",
-							value, value);
+				g_string_append_printf (string, "written      = %10" G_GINT64_MODIFIER "u (0x%08"
+							G_GINT64_MODIFIER "x)\n", value, value);
 				break;
 			}
 	}

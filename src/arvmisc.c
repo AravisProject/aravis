@@ -249,7 +249,7 @@ arv_statistic_to_string (const ArvStatistic *statistic)
 		for (j = 0; j < statistic->n_histograms; j++) {
 			if (j == 0)
 				g_string_append_printf (string, "%8d", i * statistic->bin_step + statistic->offset);
-			g_string_append_printf (string, ";%8Lu", (unsigned long long) statistic->histograms[j].bins[i]);
+			g_string_append_printf (string, ";%8llu", (unsigned long long) statistic->histograms[j].bins[i]);
 		}
 		g_string_append (string, "\n");
 	}
@@ -259,14 +259,14 @@ arv_statistic_to_string (const ArvStatistic *statistic)
 	for (j = 0; j < statistic->n_histograms; j++) {
 		if (j == 0)
 			g_string_append_printf (string, ">=%6d", i * statistic->bin_step + statistic->offset);
-		g_string_append_printf (string, ";%8Lu", (unsigned long long) statistic->histograms[j].and_more);
+		g_string_append_printf (string, ";%8llu", (unsigned long long) statistic->histograms[j].and_more);
 	}
 	g_string_append (string, "\n");
 
 	for (j = 0; j < statistic->n_histograms; j++) {
 		if (j == 0)
 			g_string_append_printf (string, "< %6d", statistic->offset);
-		g_string_append_printf (string, ";%8Lu", (unsigned long long) statistic->histograms[j].and_less);
+		g_string_append_printf (string, ";%8llu", (unsigned long long) statistic->histograms[j].and_less);
 	}
 	g_string_append (string, "\n");
 
@@ -293,11 +293,11 @@ arv_statistic_to_string (const ArvStatistic *statistic)
 	for (j = 0; j < statistic->n_histograms; j++) {
 		if (j == 0)
 			g_string_append (string, "last max\nat:     ");
-		g_string_append_printf (string, ";%8Lu", (unsigned long long) statistic->histograms[j].last_seen_worst);
+		g_string_append_printf (string, ";%8llu", (unsigned long long) statistic->histograms[j].last_seen_worst);
 	}
 	g_string_append (string, "\n");
 
-	g_string_append_printf (string, "Counter = %8Lu", (unsigned long long) statistic->counter);
+	g_string_append_printf (string, "Counter = %8llu", (unsigned long long) statistic->counter);
 
 	str = string->str;
 	g_string_free (string, FALSE);
