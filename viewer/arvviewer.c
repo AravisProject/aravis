@@ -922,8 +922,6 @@ start_video (ArvViewer *viewer)
 	arv_camera_get_exposure_time_bounds (viewer->camera, &viewer->exposure_min, &viewer->exposure_max, NULL);
 	arv_camera_get_gain_bounds (viewer->camera, &gain_min, &gain_max, NULL);
 	frame_rate = arv_camera_get_frame_rate (viewer->camera, NULL);
-	auto_gain = arv_camera_get_gain_auto (viewer->camera, NULL) != ARV_AUTO_OFF;
-	auto_exposure = arv_camera_get_gain_auto (viewer->camera, NULL) != ARV_AUTO_OFF;
 
 	is_frame_rate_available = arv_camera_is_frame_rate_available (viewer->camera, NULL);
 	is_exposure_available = arv_camera_is_exposure_time_available (viewer->camera, NULL);
