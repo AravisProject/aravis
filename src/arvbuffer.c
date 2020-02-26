@@ -372,6 +372,11 @@ arv_buffer_get_frame_id (ArvBuffer *buffer)
 	return buffer->priv->frame_id;
 }
 
+void arv_buffer_set_frame_id(ArvBuffer *buffer, guint32 frameId)
+{
+  buffer->priv->frame_id=frameId;
+}
+
 /**
  * arv_buffer_get_image_region:
  * @buffer: a #ArvBuffer

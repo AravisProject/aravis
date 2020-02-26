@@ -122,6 +122,7 @@ void			arv_buffer_set_timestamp	(ArvBuffer *buffer, guint64 timestamp_ns);
 guint64			arv_buffer_get_system_timestamp	(ArvBuffer *buffer);
 void			arv_buffer_set_system_timestamp	(ArvBuffer *buffer, guint64 timestamp_ns);
 guint32 		arv_buffer_get_frame_id 	(ArvBuffer *buffer);
+void arv_buffer_set_frame_id(ArvBuffer *buffer, guint32);
 const void *		arv_buffer_get_data		(ArvBuffer *buffer, size_t *size);
 
 void			arv_buffer_get_image_region		(ArvBuffer *buffer, gint *x, gint *y, gint *width, gint *height);
