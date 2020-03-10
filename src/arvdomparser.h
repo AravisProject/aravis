@@ -40,20 +40,6 @@ ArvDomDocument * 	arv_dom_document_new_from_memory 	(const void *buffer, int siz
 ArvDomDocument * 	arv_dom_document_new_from_path 		(const char *path, GError **error);
 ArvDomDocument * 	arv_dom_document_new_from_url 		(const char *url, GError **error);
 
-void			arv_dom_document_save_to_stream		(ArvDomDocument *document,
-								 GOutputStream *stream,
-								 GError **error);
-void			arv_dom_document_save_to_memory		(ArvDomDocument *documennt,
-								 void **buffer,
-								 int *size,
-								 GError **error);
-void			arv_dom_document_save_to_path		(ArvDomDocument *documennt,
-								 const char *path,
-								 GError **error);
-void			arv_dom_document_save_to_url		(ArvDomDocument *documennt,
-								 const char *path,
-								 GError **error);
-
 G_END_DECLS
 
 #endif

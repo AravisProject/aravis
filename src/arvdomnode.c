@@ -590,29 +590,6 @@ arv_dom_node_has_child_nodes (ArvDomNode* self)
 }
 
 static void
-arv_dom_node_write_to_stream_default (ArvDomNode *self, GOutputStream *stream, GError **error)
-{
-	ArvDomNodePrivate *priv = arv_dom_node_get_instance_private (self);
-	ArvDomNode *child;
-
-	for (child = priv->first_child; child != NULL; child = arv_dom_node_get_next_sibling (child))
-		arv_dom_node_write_to_stream (child, stream, error);
-}
-
-void
-arv_dom_node_write_to_stream (ArvDomNode *self, GOutputStream *stream, GError **error)
-{
-	ArvDomNodeClass *node_class;
-
-	g_return_if_fail (ARV_IS_DOM_NODE (self));
-	g_return_if_fail (G_IS_OUTPUT_STREAM (stream));
-
-	node_class = ARV_DOM_NODE_GET_CLASS (self);
-	if (node_class->write_to_stream != NULL)
-		node_class->write_to_stream (self, stream, error);
-}
-
-static void
 arv_dom_node_init (ArvDomNode *node)
 {
 }
@@ -644,5 +621,4 @@ arv_dom_node_class_init (ArvDomNodeClass *node_class)
 	object_class->finalize = arv_dom_node_finalize;
 
 	node_class->can_append_child = arv_dom_node_can_append_child_default;
-	node_class->write_to_stream = arv_dom_node_write_to_stream_default;
 }

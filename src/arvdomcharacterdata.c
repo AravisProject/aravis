@@ -38,15 +38,6 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvDomCharacterData, arv_dom_character_data, A
 
 /* ArvDomNode implementation */
 
-static void
-arv_dom_character_data_write_to_stream (ArvDomNode *self, GOutputStream *stream, GError **error)
-{
-	ArvDomCharacterDataPrivate *priv = arv_dom_character_data_get_instance_private (ARV_DOM_CHARACTER_DATA (self));
-
-	if (priv->data != NULL)
-		g_output_stream_write (stream, priv->data, strlen (priv->data), NULL, error);
-}
-
 static const char *
 arv_dom_character_data_get_node_value (ArvDomNode* self)
 {
@@ -112,7 +103,6 @@ arv_dom_character_data_class_init (ArvDomCharacterDataClass *character_data_clas
 
 	object_class->finalize = arv_dom_character_data_finalize;
 
-	node_class->write_to_stream = arv_dom_character_data_write_to_stream;
 	node_class->set_node_value = arv_dom_character_data_set_node_value;
 	node_class->get_node_value = arv_dom_character_data_get_node_value;
 }
