@@ -43,6 +43,7 @@
 #include <arvcamera.h>
 #include <arvsystem.h>
 #include <arvgvinterface.h>
+#include <arvgcboolean.h>
 #include <arvgccommand.h>
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
@@ -991,7 +992,7 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate, GError **error)
 				arv_camera_set_string (camera, "TriggerMode", "Off", &local_error);
 			if (local_error == NULL) {
 				if (priv->has_acquisition_frame_rate_enabled)
-					arv_camera_set_integer (camera, "AcquisitionFrameRateEnabled", 1, &local_error);
+					arv_camera_set_boolean (camera, "AcquisitionFrameRateEnabled", TRUE, &local_error);
 				else
 					arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", TRUE, &local_error);
 			}
@@ -2925,7 +2926,7 @@ arv_camera_constructor (GType gtype, guint n_properties, GObjectConstructParam *
 	priv->has_exposure_time = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device, "ExposureTime"));
 	priv->has_acquisition_frame_rate = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device,
 										    "AcquisitionFrameRate"));
-	priv->has_acquisition_frame_rate_enabled = ARV_IS_GC_INTEGER (arv_device_get_feature (priv->device,
+	priv->has_acquisition_frame_rate_enabled = ARV_IS_GC_BOOLEAN (arv_device_get_feature (priv->device,
 											      "AcquisitionFrameRateEnabled"));
 
     return object;
