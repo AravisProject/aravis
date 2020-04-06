@@ -771,6 +771,56 @@ arv_device_get_available_enumeration_feature_values_as_display_names (ArvDevice 
 	return NULL;
 }
 
+gboolean
+arv_device_set_features_from_string (ArvDevice *device, const char *string, GError **error)
+{
+	GMatchInfo *match_info = NULL;
+	GError *local_error = NULL;
+	GRegex *regex;
+
+	g_return_val_if_fail (ARV_IS_DEVICE (device), FALSE);
+
+	if (string == NULL)
+		return TRUE;
+
+	regex = g_regex_new ("((?<Key>[^\\s\"'\\=]+)|\"(?<Key>[^\"]*)\"|'(?<Key>[^']*)')"
+			     "(?:\\=((?<Value>[^\\s\"']+)|\"(?<Value>[^\"]*)\"|'(?<Value>[^']*)'))?",
+			     G_REGEX_DUPNAMES, 0, NULL);
+
+	if (g_regex_match (regex, string, 0, &match_info)) {
+		while (g_match_info_matches (match_info) && local_error == NULL) {
+			ArvGcNode *feature;
+			char *key = g_match_info_fetch_named (match_info, "Key");
+			char *value = g_match_info_fetch_named (match_info, "Value");
+
+			feature = arv_device_get_feature (device, key);
+			if (ARV_IS_GC_FEATURE_NODE (feature)) {
+				if (value != NULL)
+					arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (feature), value, &local_error);
+				else
+					arv_device_execute_command (device, key, &local_error);
+			} else
+				g_set_error (&local_error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_FEATURE_NOT_FOUND,
+					     "node '%s' not found", key);
+
+			g_free (key);
+			g_free (value);
+
+			g_match_info_next (match_info, NULL);
+		}
+		g_match_info_unref (match_info);
+	}
+
+	g_regex_unref (regex);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 /**
  * arv_device_set_register_cache_policy:
  * @device: a #ArvDevice

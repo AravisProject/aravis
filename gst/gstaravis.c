@@ -60,6 +60,7 @@ enum
   PROP_PACKET_SIZE,
   PROP_AUTO_PACKET_SIZE,
   PROP_PACKET_RESEND,
+  PROP_FEATURES,
   PROP_NUM_BUFFERS
 };
 
@@ -254,6 +255,8 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 		gst_aravis->fixed_caps = caps;
 	} else
 		gst_aravis->fixed_caps = NULL;
+
+	arv_device_set_features_from_string (arv_camera_get_device (gst_aravis->camera), gst_aravis->features, NULL);
 
 	gst_aravis->payload = arv_camera_get_payload (gst_aravis->camera, NULL);
 	gst_aravis->stream = arv_camera_create_stream (gst_aravis->camera, NULL, NULL);
@@ -501,6 +504,7 @@ gst_aravis_finalize (GObject * object)
 
 	g_free (gst_aravis->camera_name);
 	gst_aravis->camera_name = NULL;
+	g_clear_pointer (&gst_aravis->features, g_free);
 
         G_OBJECT_CLASS (gst_aravis_parent_class)->finalize (object);
 }
@@ -565,6 +569,10 @@ gst_aravis_set_property (GObject * object, guint prop_id,
                 case PROP_PACKET_RESEND:
                         gst_aravis->packet_resend = g_value_get_boolean (value);
                         break;
+                case PROP_FEATURES:
+			g_free (gst_aravis->features);
+                        gst_aravis->features = g_value_dup_string (value);
+                        break;
                 case PROP_NUM_BUFFERS:
                         gst_aravis->num_buffers = g_value_get_int (value);
                         break;
@@ -620,6 +628,9 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
         	case PROP_PACKET_RESEND:
                         g_value_set_boolean (value, gst_aravis->packet_resend);
                         break;
+		case PROP_FEATURES:
+			g_value_set_string (value, gst_aravis->features);
+			break;
         	case PROP_NUM_BUFFERS:
                         g_value_set_int (value, gst_aravis->num_buffers);
                         break;
@@ -745,6 +756,14 @@ gst_aravis_class_init (GstAravisClass * klass)
 				       "Request dropped packets to be reissued by the camera",
 				       TRUE,
 				       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+	g_object_class_install_property
+		(gobject_class,
+		 PROP_FEATURES,
+		 g_param_spec_string ("features",
+				      "String of feature values",
+				      "Additional configuration parameters as a space separated list of feature assignations",
+				      NULL,
+				      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 	g_object_class_install_property
 		(gobject_class,

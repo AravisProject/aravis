@@ -451,6 +451,54 @@ camera_api_test (void)
 	g_object_unref (camera);
 }
 
+static void
+set_features_from_string_test (void)
+{
+	ArvDevice *device;
+	GError *error = NULL;
+	gboolean success;
+	gint64 int_value;
+
+	device = arv_fake_device_new ("TEST0");
+	g_assert (ARV_IS_FAKE_DEVICE (device));
+
+	success = arv_device_set_features_from_string (device, "PixelFormat=RGB8 Height=1048 AcquisitionStart", &error);
+	g_assert (success);
+	g_assert (error == NULL);
+
+	int_value = arv_device_get_integer_feature_value (device, "Height", NULL);
+	g_assert_cmpint (int_value, ==, 1048);
+
+	success = arv_device_set_features_from_string (device, "NotAFeature=NotAValue", &error);
+	g_assert (!success);
+	g_assert (error != NULL);
+	g_clear_error (&error);
+
+	success = arv_device_set_features_from_string (device, "NotAFeature", &error);
+	g_assert (!success);
+	g_assert (error != NULL);
+	g_clear_error (&error);
+
+	success = arv_device_set_features_from_string (device, "PixelFormat", &error);
+	g_assert (!success);
+	g_assert (error != NULL);
+	g_clear_error (&error);
+
+	success = arv_device_set_features_from_string (device, "StartAcquitision=Value", &error);
+	g_assert (!success);
+	g_assert (error != NULL);
+	g_clear_error (&error);
+
+	success = arv_device_set_features_from_string (device, "PixelFormat=RGB8    AcquisitionStart", &error);
+	g_assert (success);
+	g_assert (error == NULL);
+
+	success = arv_device_set_features_from_string (device, NULL, NULL);
+	g_assert (success);
+
+	g_object_unref (device);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -470,6 +518,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/fake/fake-device-error", fake_device_error_test);
 	g_test_add_func ("/fake/fake-stream", fake_stream_test);
 	g_test_add_func ("/fake/camera-api", camera_api_test);
+	g_test_add_func ("/fake/set-features-from-string", set_features_from_string_test);
 
 	result = g_test_run();
 

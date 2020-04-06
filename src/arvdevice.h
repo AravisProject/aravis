@@ -116,6 +116,9 @@ const char **	arv_device_get_available_enumeration_feature_values_as_strings		(A
 const char **	arv_device_get_available_enumeration_feature_values_as_display_names	(ArvDevice *device, const char *feature,
 											 guint *n_values, GError **error);
 
+
+gboolean 	arv_device_set_features_from_string 	(ArvDevice *device, const char *string, GError **error);
+
 void		arv_device_set_register_cache_policy	(ArvDevice *device, ArvRegisterCachePolicy policy);
 
 G_END_DECLS
