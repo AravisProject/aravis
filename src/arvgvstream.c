@@ -1406,8 +1406,8 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 		object_class, ARV_GV_STREAM_PROPERTY_PACKET_TIMEOUT,
 		g_param_spec_uint ("packet-timeout", "Packet timeout",
 				   "Packet timeout, in µs",
-				   1000,
-				   1000000000,
+				   0,
+				   G_MAXUINT,
 				   ARV_GV_STREAM_PACKET_TIMEOUT_US_DEFAULT,
 				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
 		);
@@ -1415,8 +1415,8 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 		object_class, ARV_GV_STREAM_PROPERTY_FRAME_RETENTION,
 		g_param_spec_uint ("frame-retention", "Frame retention",
 				   "Packet retention, in µs",
-				   1000,
-				   1000000000,
+				   0,
+				   G_MAXUINT,
 				   ARV_GV_STREAM_FRAME_RETENTION_US_DEFAULT,
 				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
 		);
