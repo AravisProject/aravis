@@ -35,7 +35,7 @@
 enum
 {
 	PROP_0,
-	PROP_FAKE_DEVICE_SERIAL_NBR,
+	PROP_FAKE_DEVICE_SERIAL_NUMBER,
 };
 
 typedef struct {
@@ -134,7 +134,7 @@ arv_fake_device_get_fake_camera	(ArvFakeDevice *device)
 ArvDevice *
 arv_fake_device_new (const char *serial_number)
 {
-	return g_initable_new (ARV_TYPE_FAKE_DEVICE, NULL, NULL, "serial-nbr", serial_number, NULL);
+	return g_initable_new (ARV_TYPE_FAKE_DEVICE, NULL, NULL, "serial-number", serial_number, NULL);
 }
 
 static void
@@ -193,7 +193,7 @@ arv_fake_device_set_property (GObject *self, guint prop_id, const GValue *value,
 
 	switch (prop_id)
 	{
-		case PROP_FAKE_DEVICE_SERIAL_NBR:
+		case PROP_FAKE_DEVICE_SERIAL_NUMBER:
 			priv->serial_number = g_value_dup_string (value);
 			break;
 		default:
@@ -222,8 +222,8 @@ arv_fake_device_class_init (ArvFakeDeviceClass *fake_device_class)
 
 	g_object_class_install_property
 		(object_class,
-		 PROP_FAKE_DEVICE_SERIAL_NBR,
-		 g_param_spec_string ("serial-nbr",
+		 PROP_FAKE_DEVICE_SERIAL_NUMBER,
+		 g_param_spec_string ("serial-number",
 				      "Serial number",
 				      "Fake device serial number",
 				      NULL,
