@@ -46,7 +46,7 @@ typedef struct {
 
 	guint32 chunk_endianness;
 
-	guint32 frame_id;
+	guint64 frame_id;
 	guint64 timestamp_ns;
 	guint64 system_timestamp_ns;
 

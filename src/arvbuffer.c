@@ -388,10 +388,10 @@ arv_buffer_set_system_timestamp (ArvBuffer *buffer, guint64 timestamp_ns)
  *
  * Returns: frame id, 0 on error.
  *
- * Since: 0.4.0
+ * Since: 0.8.0
  */
 
-guint32
+guint64
 arv_buffer_get_frame_id (ArvBuffer *buffer)
 {
 	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
