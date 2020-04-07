@@ -76,7 +76,7 @@ main (int argc, char **argv)
 	else
 		g_print ("Looking for camera '%s'\n", arv_option_camera_name);
 
-	device = arv_open_device (arv_option_camera_name);
+	device = arv_open_device (arv_option_camera_name, NULL);
 	if (device != NULL) {
 		ArvGc *genicam;
 		ArvGcNode *node;

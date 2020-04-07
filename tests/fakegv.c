@@ -226,7 +226,7 @@ main (int argc, char *argv[])
 
 	simulator = arv_gv_fake_camera_new ("lo", NULL);
 
-	camera = arv_camera_new ("Aravis-GV01");
+	camera = arv_camera_new ("Aravis-GV01", NULL);
 	g_assert (ARV_IS_CAMERA (camera));
 
 	g_test_add_func ("/fakegv/device_registers", register_test);

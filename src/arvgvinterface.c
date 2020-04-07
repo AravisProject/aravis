@@ -588,7 +588,7 @@ arv_gv_interface_camera_locate (ArvGvInterface *gv_interface, GInetAddress *devi
 }
 
 static ArvDevice *
-_open_device (ArvInterface *interface, GHashTable *devices, const char *device_id)
+_open_device (ArvInterface *interface, GHashTable *devices, const char *device_id, GError **error)
 {
 	ArvGvInterface *gv_interface;
 	ArvDevice *device = NULL;
@@ -636,7 +636,7 @@ _open_device (ArvInterface *interface, GHashTable *devices, const char *device_i
 					arv_gv_interface_camera_locate (gv_interface, device_address);
 
 				if (interface_address != NULL) {
-					device = arv_gv_device_new (interface_address, device_address);
+					device = arv_gv_device_new (interface_address, device_address, NULL);
 					g_object_unref (interface_address);
 				}
 			}
@@ -646,32 +646,41 @@ _open_device (ArvInterface *interface, GHashTable *devices, const char *device_i
 			}
 		}
 		freeaddrinfo (servinfo);
+
+		if (device == NULL)
+			g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
+				     "Can't connect to device at address '%s'", device_id);
+
 		return device;
 	}
 
 	device_address = _device_infos_to_ginetaddress (device_infos);
-	device = arv_gv_device_new (device_infos->interface_address, device_address);
+	device = arv_gv_device_new (device_infos->interface_address, device_address, error);
 	g_object_unref (device_address);
 
 	return device;
 }
 
 static ArvDevice *
-arv_gv_interface_open_device (ArvInterface *interface, const char *device_id)
+arv_gv_interface_open_device (ArvInterface *interface, const char *device_id, GError **error)
 {
 	ArvDevice *device;
 	ArvGvInterfaceDeviceInfos *device_infos;
+	GError *local_error = NULL;
 
-	device = _open_device (interface, ARV_GV_INTERFACE (interface)->priv->devices, device_id);
-	if (ARV_IS_DEVICE (device))
+	device = _open_device (interface, ARV_GV_INTERFACE (interface)->priv->devices, device_id, &local_error);
+	if (ARV_IS_DEVICE (device) || local_error != NULL) {
+		if (local_error != NULL)
+			g_propagate_error (error, local_error);
 		return device;
+	}
 
 	device_infos = _discover (NULL, device_id);
 	if (device_infos != NULL) {
 		GInetAddress *device_address;
 
 		device_address = _device_infos_to_ginetaddress (device_infos);
-		device = arv_gv_device_new (device_infos->interface_address, device_address);
+		device = arv_gv_device_new (device_infos->interface_address, device_address, error);
 		g_object_unref (device_address);
 
 		arv_gv_interface_device_infos_unref (device_infos);

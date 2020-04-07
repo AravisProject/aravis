@@ -318,6 +318,7 @@ arv_interface_get_device_protocol (ArvInterface *interface, unsigned int index)
  * arv_interface_open_device:
  * @interface: a #ArvInterface
  * @device_id: (allow-none): device unique id
+ * @error: a #GError placeholder, %NULL to ignore
  *
  * Creates a new #ArvDevice object corresponding to the given device id string.
  * The first available device is returned if @device_id is %NULL.
@@ -328,11 +329,11 @@ arv_interface_get_device_protocol (ArvInterface *interface, unsigned int index)
  */
 
 ArvDevice *
-arv_interface_open_device (ArvInterface *interface, const char *device_id)
+arv_interface_open_device (ArvInterface *interface, const char *device_id, GError **error)
 {
 	g_return_val_if_fail (ARV_IS_INTERFACE (interface), NULL);
 
-	return ARV_INTERFACE_GET_CLASS (interface)->open_device (interface, device_id);
+	return ARV_INTERFACE_GET_CLASS (interface)->open_device (interface, device_id, error);
 }
 
 static void

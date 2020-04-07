@@ -7,9 +7,10 @@ main (int argc, char **argv)
 	ArvCamera *camera;
 	ArvStream *stream;
 	ArvChunkParser *parser;
+	GError *error =NULL;
 
 	/* Instantiation of the first available camera */
-	camera = arv_camera_new (NULL);
+	camera = arv_camera_new (NULL, &error);
 
 	if (camera != NULL) {
 		gint payload;
@@ -52,8 +53,13 @@ main (int argc, char **argv)
 
 		g_object_unref (parser);
 		g_object_unref (camera);
-	} else
-		printf ("No camera found\n");
+	} else {
+		if (error != NULL) {
+			printf ("No camera found: %s\n", error->message);
+			g_clear_error (&error);
+		} else
+			printf ("No camera found\n");
+	}
 
 	return 0;
 }

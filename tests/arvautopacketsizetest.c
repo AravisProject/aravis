@@ -7,7 +7,7 @@ main (int argc, char **argv)
 {
 	ArvCamera *camera;
 
-	camera = arv_camera_new (argc > 1 ? argv[1] : NULL);
+	camera = arv_camera_new (argc > 1 ? argv[1] : NULL, NULL);
 	if (!ARV_IS_CAMERA (camera)) {
 		printf ("Camera not found\n");
 		return EXIT_FAILURE;

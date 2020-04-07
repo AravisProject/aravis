@@ -751,9 +751,9 @@ _open_usb_device (ArvUvDevice *uv_device, GError **error)
 }
 
 ArvDevice *
-arv_uv_device_new (const char *vendor, const char *product, const char *serial_number)
+arv_uv_device_new (const char *vendor, const char *product, const char *serial_number, GError **error)
 {
-	return g_initable_new (ARV_TYPE_UV_DEVICE, NULL, NULL,
+	return g_initable_new (ARV_TYPE_UV_DEVICE, NULL, error,
 			       "vendor", vendor,
 			       "product", product,
 			       "serial-number", serial_number,

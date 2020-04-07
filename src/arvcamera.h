@@ -40,7 +40,7 @@ struct _ArvCameraClass {
 	GObjectClass parent_class;
 };
 
-ArvCamera *	arv_camera_new			(const char *name);
+ArvCamera *	arv_camera_new			(const char *name, GError **error);
 ArvDevice *	arv_camera_get_device		(ArvCamera *camera);
 
 ArvStream *	arv_camera_create_stream	(ArvCamera *camera, ArvStreamCallback callback, void *user_data);

@@ -112,6 +112,8 @@ typedef struct {
 	gboolean has_exposure_time;
 	gboolean has_acquisition_frame_rate;
 	gboolean has_acquisition_frame_rate_enabled;
+
+	GError *init_error;
 } ArvCameraPrivate;
 
 static void arv_camera_initable_iface_init (GInitableIface *iface);
@@ -2819,6 +2821,7 @@ arv_camera_create_chunk_parser (ArvCamera *camera)
 /**
  * arv_camera_new:
  * @name: (allow-none): name of the camera.
+ * @error: a #GError placeholder, %NULL to ignore
  *
  * Creates a new #ArvCamera. If @name is null, it will instantiate the
  * first available camera.
@@ -2829,14 +2832,14 @@ arv_camera_create_chunk_parser (ArvCamera *camera)
  */
 
 ArvCamera *
-arv_camera_new (const char *name)
+arv_camera_new (const char *name, GError **error)
 {
 	/* if you need to apply or test for fixups based on the camera model
 	   please do so in arv_camera_constructor and not here, as this breaks
 	   objects created with g_object_new, which includes but is not limited to
 	   introspection users */
 
-	return g_initable_new (ARV_TYPE_CAMERA, NULL, NULL, "name", name, NULL);
+	return g_initable_new (ARV_TYPE_CAMERA, NULL, error, "name", name, NULL);
 }
 
 static void
@@ -2851,6 +2854,7 @@ arv_camera_finalize (GObject *object)
 
 	g_clear_pointer (&priv->name, g_free);
 	g_clear_object (&priv->device);
+	g_clear_error (&priv->init_error);
 
 	G_OBJECT_CLASS (arv_camera_parent_class)->finalize (object);
 }
@@ -2864,14 +2868,28 @@ arv_camera_constructed (GObject *object)
 	ArvCameraSeries series;
 	const char *vendor_name;
 	const char *model_name;
+	GError *error = NULL;
 
 	priv = arv_camera_get_instance_private (camera);
 
 	if (!priv->device)
-		priv->device = arv_open_device (priv->name);
+		priv->device = arv_open_device (priv->name, &error);
 
-	if (!ARV_IS_DEVICE (priv->device))
+	if (!ARV_IS_DEVICE (priv->device)) {
+		if (error == NULL) {
+			if (priv->name != NULL)
+				error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
+						     "Device '%s' not found", priv->name);
+			else
+				error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
+						     "No supported deice found");
+		}
+
+		g_clear_error (&priv->init_error);
+		priv->init_error = error;
+
 		return;
+	}
 
 	priv->genicam = arv_device_get_genicam (priv->device);
 
@@ -3004,14 +3022,10 @@ arv_camera_initable_init (GInitable     *initable,
 		return FALSE;
 	}
 
-	if (!ARV_IS_DEVICE (priv->device)) {
-		if (priv->name != NULL)
-			g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
-				     "Camera '%s' not found", priv->name);
-		else
-			g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
-				     "No camera found");
-		return FALSE;
+	if (priv->init_error != NULL) {
+		if (error != NULL)
+			*error = g_error_copy (priv->init_error);
+		 return FALSE;
 	}
 
 	return TRUE;

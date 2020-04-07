@@ -132,9 +132,9 @@ arv_fake_device_get_fake_camera	(ArvFakeDevice *device)
 }
 
 ArvDevice *
-arv_fake_device_new (const char *serial_number)
+arv_fake_device_new (const char *serial_number, GError **error)
 {
-	return g_initable_new (ARV_TYPE_FAKE_DEVICE, NULL, NULL, "serial-number", serial_number, NULL);
+	return g_initable_new (ARV_TYPE_FAKE_DEVICE, NULL, error, "serial-number", serial_number, NULL);
 }
 
 static void

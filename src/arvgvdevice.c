@@ -1186,9 +1186,9 @@ arv_gv_device_set_stream_options (ArvGvDevice *gv_device, ArvGvStreamOption opti
 }
 
 ArvDevice *
-arv_gv_device_new (GInetAddress *interface_address, GInetAddress *device_address)
+arv_gv_device_new (GInetAddress *interface_address, GInetAddress *device_address, GError **error)
 {
-	return g_initable_new (ARV_TYPE_GV_DEVICE, NULL, NULL,
+	return g_initable_new (ARV_TYPE_GV_DEVICE, NULL, error,
 			       "interface-address", interface_address,
 			       "device-address", device_address,
 			       NULL);

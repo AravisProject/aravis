@@ -378,17 +378,18 @@ arv_get_device_protocol	(unsigned int index)
 /**
  * arv_open_device:
  * @device_id: (allow-none): a device identifier string
+ * @error: a #GError placeholder, %NULL to ignore
  *
  * Open a device corresponding to the given identifier. A %NULL string makes
  * this function return the first available device.
  *
  * Return value: (transfer full): A new #ArvDevice instance.
  *
- * Since: 0.2.0
+ * Since: 0.8.0
  */
 
 ArvDevice *
-arv_open_device (const char *device_id)
+arv_open_device (const char *device_id, GError **error)
 {
 	unsigned int i;
 
@@ -399,9 +400,13 @@ arv_open_device (const char *device_id)
 		ArvDevice *device;
 
 		if (interfaces[i].is_available) {
+			GError *local_error = NULL;
+
 			interface = interfaces[i].get_interface_instance ();
-			device = arv_interface_open_device (interface, device_id);
-			if (device != NULL) {
+			device = arv_interface_open_device (interface, device_id, &local_error);
+			if (ARV_IS_DEVICE (device) || local_error != NULL) {
+				if (local_error != NULL)
+					g_propagate_error (error, local_error);
 				g_mutex_unlock (&arv_system_mutex);
 				return device;
 			}
@@ -409,6 +414,13 @@ arv_open_device (const char *device_id)
 	}
 
 	g_mutex_unlock (&arv_system_mutex);
+
+	if (device_id != NULL)
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
+			     "Device '%s' not found", device_id);
+	else
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
+			     "No supported device found");
 
 	return NULL;
 }

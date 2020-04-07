@@ -61,12 +61,13 @@ main (int argc, char **argv)
 	ApplicationData data;
 	ArvCamera *camera;
 	ArvStream *stream;
+	GError *error = NULL;
 	int i;
 
 	data.buffer_count = 0;
 
 	/* Instantiation of the first available camera */
-	camera = arv_camera_new (NULL);
+	camera = arv_camera_new (NULL, &error);
 
 	if (camera != NULL) {
 		void (*old_sigint_handler)(int);
@@ -124,8 +125,13 @@ main (int argc, char **argv)
 			printf ("Can't create stream thread (check if the device is not already used)\n");
 
 		g_object_unref (camera);
-	} else
-		printf ("No camera found\n");
+	} else {
+		if (error != NULL) {
+			printf ("No camera found: %s\n", error->message);
+			g_clear_error (&error);
+		} else
+			printf ("No camera found\n");
+	}
 
 	return 0;
 }

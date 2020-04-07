@@ -271,7 +271,7 @@ main (int argc, char **argv)
 	else
 		g_print ("Looking for camera '%s'\n", arv_option_camera_name);
 
-	camera = arv_camera_new (arv_option_camera_name);
+	camera = arv_camera_new (arv_option_camera_name, &error);
 	if (camera != NULL) {
 		void (*old_sigint_handler)(int);
 		gint payload;
@@ -431,8 +431,13 @@ main (int argc, char **argv)
 			printf ("Can't create stream thread (check if the device is not already used)\n");
 
 		g_object_unref (camera);
-	} else
-		printf ("No camera found\n");
+	} else {
+		if (error != NULL) {
+			printf ("No camera found: %s\n", error->message);
+			g_clear_error (&error);
+		} else
+			printf ("No camera found\n");
+	}
 
 	if (data.chunks != NULL)
 		g_strfreev (data.chunks);

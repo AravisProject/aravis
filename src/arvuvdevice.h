@@ -35,7 +35,8 @@ G_BEGIN_DECLS
 #define ARV_TYPE_UV_DEVICE             (arv_uv_device_get_type ())
 G_DECLARE_FINAL_TYPE (ArvUvDevice, arv_uv_device, ARV, UV_DEVICE, ArvDevice)
 
-ArvDevice * 	arv_uv_device_new 			(const char *vendor, const char *product, const char *serial_number);
+ArvDevice * 	arv_uv_device_new 			(const char *vendor, const char *product, const char *serial_number,
+							 GError **error);
 
 G_END_DECLS
 

@@ -7,10 +7,12 @@ trigger_registers_test (void)
 	ArvDevice *device;
 	ArvGc *genicam;
 	ArvGcNode *node;
+	GError *error = NULL;
 	gint64 address;
 
-	device = arv_fake_device_new ("TEST0");
+	device = arv_fake_device_new ("TEST0", &error);
 	g_assert (ARV_IS_FAKE_DEVICE (device));
+	g_assert (error == NULL);
 
 	genicam = arv_device_get_genicam (device);
 	g_assert (ARV_IS_GC (genicam));
@@ -47,11 +49,13 @@ registers_test (void)
 	ArvGcNode *node_a;
 	ArvGcNode *node_b;
 	ArvGcNode *node_c;
+	GError *error = NULL;
 	gint64 value;
 	gint64 address;
 
-	device = arv_fake_device_new ("TEST0");
+	device = arv_fake_device_new ("TEST0", &error);
 	g_assert (ARV_IS_FAKE_DEVICE (device));
+	g_assert (error == NULL);
 
 	genicam = arv_device_get_genicam (device);
 	g_assert (ARV_IS_GC (genicam));
@@ -127,6 +131,7 @@ static void
 fake_device_test (void)
 {
 	ArvDevice *device;
+	GError *error = NULL;
 	int int_value;
 	double dbl_value;
 	double boolean_value;
@@ -139,8 +144,9 @@ fake_device_test (void)
 	const char *genicam;
 	gsize size;
 
-	device = arv_fake_device_new ("TEST0");
+	device = arv_fake_device_new ("TEST0", &error);
 	g_assert (ARV_IS_FAKE_DEVICE (device));
+	g_assert (error == NULL);
 
 	genicam = arv_device_get_genicam_xml (device, &size);
 	g_assert (genicam != NULL);
@@ -230,8 +236,9 @@ fake_device_error_test (void)
 	int int_value;
 	double boolean_value;
 
-	device = arv_fake_device_new ("TEST0");
+	device = arv_fake_device_new ("TEST0", &error);
 	g_assert (ARV_IS_FAKE_DEVICE (device));
+	g_assert (error == NULL);
 
 	int_value = arv_device_get_integer_feature_value (device, "Unknown", &error);
 	g_assert_cmpint (int_value, ==, 0);
@@ -264,6 +271,7 @@ fake_stream_test (void)
 	ArvFakeCamera *fake_camera;
 	ArvStream *stream;
 	ArvBuffer *buffer;
+	GError *error = NULL;
 	guint64 n_completed_buffers;
 	guint64 n_failures;
 	guint64 n_underruns;
@@ -272,8 +280,9 @@ fake_stream_test (void)
 	gint payload;
 	gint counter = 0;
 
-	camera = arv_camera_new ("Fake_1");
+	camera = arv_camera_new ("Fake_1", &error);
 	g_assert (ARV_IS_CAMERA (camera));
+	g_assert (error == NULL);
 
 	device = arv_camera_get_device (camera);
 	g_assert (ARV_IS_DEVICE (device));
@@ -316,9 +325,9 @@ fake_stream_test (void)
 static void
 camera_api_test (void)
 {
-	GError *error = NULL;
 	ArvCamera *camera;
 	ArvPixelFormat pixel_format;
+	GError *error = NULL;
 	int x, y, w, h;
 	const char *string;
 	void *ptr;
@@ -326,8 +335,9 @@ camera_api_test (void)
 	gboolean b;
 	double d;
 
-	camera = arv_camera_new ("Fake_1");
+	camera = arv_camera_new ("Fake_1", &error);
 	g_assert (ARV_IS_CAMERA (camera));
+	g_assert (error == NULL);
 
 	string = arv_camera_get_vendor_name (camera, &error);
 	g_assert (error == NULL);
@@ -459,8 +469,9 @@ set_features_from_string_test (void)
 	gboolean success;
 	gint64 int_value;
 
-	device = arv_fake_device_new ("TEST0");
+	device = arv_fake_device_new ("TEST0", &error);
 	g_assert (ARV_IS_FAKE_DEVICE (device));
+	g_assert (error == NULL);
 
 	success = arv_device_set_features_from_string (device, "PixelFormat=RGB8 Height=1048 AcquisitionStart", &error);
 	g_assert (success);

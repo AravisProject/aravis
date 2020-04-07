@@ -288,7 +288,7 @@ gst_aravis_init_camera (GstAravis *gst_aravis)
 	if (gst_aravis->camera != NULL)
 		g_object_unref (gst_aravis->camera);
 
-	gst_aravis->camera = arv_camera_new (gst_aravis->camera_name);
+	gst_aravis->camera = arv_camera_new (gst_aravis->camera_name, NULL);
 
 	gst_aravis->gain = arv_camera_get_gain(gst_aravis->camera, NULL);
 	gst_aravis->gain_auto = arv_camera_is_gain_available(gst_aravis->camera, NULL);

@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 
     arv_debug_enable (arv_option_debug_domains);
 
-    camera = arv_camera_new (arv_option_camera_name);
+    camera = arv_camera_new (arv_option_camera_name, NULL);
     if (!ARV_IS_CAMERA (camera)) {
 	    printf ("Device not found\n");
 	    return EXIT_FAILURE;

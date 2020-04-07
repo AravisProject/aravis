@@ -39,7 +39,7 @@ struct _ArvInterfaceClass {
 	GObjectClass parent_class;
 
 	void 		(*update_device_list)		(ArvInterface *interface, GArray *device_ids);
-	ArvDevice *	(*open_device)			(ArvInterface *interface, const char *device_id);
+	ArvDevice *	(*open_device)			(ArvInterface *interface, const char *device_id, GError **error);
 
 	const char *	protocol;
 };
@@ -53,7 +53,7 @@ const char * 		arv_interface_get_device_vendor		(ArvInterface *interface, unsign
 const char * 		arv_interface_get_device_model		(ArvInterface *interface, unsigned int index);
 const char * 		arv_interface_get_device_serial_nbr	(ArvInterface *interface, unsigned int index);
 const char * 		arv_interface_get_device_protocol	(ArvInterface *interface, unsigned int index);
-ArvDevice * 		arv_interface_open_device 		(ArvInterface *interface, const char *device_id);
+ArvDevice * 		arv_interface_open_device 		(ArvInterface *interface, const char *device_id, GError **error);
 
 G_END_DECLS
 

@@ -298,10 +298,9 @@ arv_uv_interface_update_device_list (ArvInterface *interface, GArray *device_ids
 }
 
 static ArvDevice *
-_open_device (ArvInterface *interface, const char *device_id)
+_open_device (ArvInterface *interface, const char *device_id, GError **error)
 {
 	ArvUvInterface *uv_interface;
-	ArvDevice *device = NULL;
 	ArvUvInterfaceDeviceInfos *device_infos;
 
 	uv_interface = ARV_UV_INTERFACE (interface);
@@ -318,23 +317,25 @@ _open_device (ArvInterface *interface, const char *device_id)
 	if (device_infos == NULL)
 		return NULL;
 
-	device = arv_uv_device_new (device_infos->manufacturer, device_infos->product, device_infos->serial_nbr);
-
-	return device;
+	return arv_uv_device_new (device_infos->manufacturer, device_infos->product, device_infos->serial_nbr, error);
 }
 
 static ArvDevice *
-arv_uv_interface_open_device (ArvInterface *interface, const char *device_id)
+arv_uv_interface_open_device (ArvInterface *interface, const char *device_id, GError **error)
 {
 	ArvDevice *device;
+	GError *local_error = NULL;
 
-	device = _open_device (interface, device_id);
-	if (ARV_IS_DEVICE (device))
+	device = _open_device (interface, device_id, error);
+	if (ARV_IS_DEVICE (device) || local_error != NULL) {
+		if (local_error != NULL)
+			g_propagate_error (error, local_error);
 		return device;
+	}
 
 	_discover (ARV_UV_INTERFACE (interface), NULL);
 
-	return _open_device (interface, device_id);
+	return _open_device (interface, device_id, error);
 }
 
 static ArvInterface *uv_interface = NULL;

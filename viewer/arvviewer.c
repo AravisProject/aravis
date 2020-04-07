@@ -1119,7 +1119,7 @@ start_camera (ArvViewer *viewer, const char *camera_id)
 
 	stop_camera (viewer);
 
-	viewer->camera = arv_camera_new (camera_id);
+	viewer->camera = arv_camera_new (camera_id, NULL);
 
 	if (!ARV_IS_CAMERA (viewer->camera))
 		return FALSE;
