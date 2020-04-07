@@ -742,7 +742,7 @@ arv_uv_device_new (const char *vendor, const char *product, const char *serial_n
 	arv_debug_device ("[UvDevice::new] Product = %s", product);
 	arv_debug_device ("[UvDevice::new] S/N     = %s", serial_nbr);
 
-	uv_device = g_object_new (ARV_TYPE_UV_DEVICE, NULL);
+	uv_device = g_initable_new (ARV_TYPE_UV_DEVICE, NULL, NULL, NULL);
 
 	libusb_init (&uv_device->priv->usb);
 	uv_device->priv->vendor = g_strdup (vendor);

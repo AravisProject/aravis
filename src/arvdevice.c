@@ -54,6 +54,16 @@ arv_device_error_quark (void)
 	return g_quark_from_static_string ("arv-device-error-quark");
 }
 
+typedef struct {
+	GError *init_error;
+} ArvDevicePrivate;
+
+static void arv_device_initable_iface_init (GInitableIface *iface);
+
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvDevice, arv_device, G_TYPE_OBJECT,
+				  G_ADD_PRIVATE (ArvDevice)
+				  G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, arv_device_initable_iface_init))
+
 /**
  * arv_device_create_stream:
  * @device: a #ArvDevice
@@ -853,7 +863,16 @@ arv_device_emit_control_lost_signal (ArvDevice *device)
 	g_signal_emit (device, arv_device_signals[ARV_DEVICE_SIGNAL_CONTROL_LOST], 0);
 }
 
-G_DEFINE_ABSTRACT_TYPE (ArvDevice, arv_device, G_TYPE_OBJECT)
+
+void arv_device_set_init_error (ArvDevice *device, GError *error)
+{
+	ArvDevicePrivate *priv = arv_device_get_instance_private (device);
+
+	g_return_if_fail (ARV_IS_DEVICE (device));
+
+	g_clear_error (&priv->init_error);
+	priv->init_error = error;
+}
 
 static void
 arv_device_init (ArvDevice *device)
@@ -863,6 +882,10 @@ arv_device_init (ArvDevice *device)
 static void
 arv_device_finalize (GObject *object)
 {
+	ArvDevicePrivate *priv = arv_device_get_instance_private (ARV_DEVICE (object));
+
+	g_clear_error (&priv->init_error);
+
 	G_OBJECT_CLASS (arv_device_parent_class)->finalize (object);
 }
 
@@ -893,3 +916,35 @@ arv_device_class_init (ArvDeviceClass *device_class)
 			      NULL, NULL,
 			      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
 }
+
+static gboolean
+arv_device_initable_init (GInitable     *initable,
+			  GCancellable  *cancellable,
+			  GError       **error)
+{
+	ArvDevicePrivate *priv = arv_device_get_instance_private (ARV_DEVICE (initable));
+
+	g_return_val_if_fail (ARV_IS_DEVICE (initable), FALSE);
+
+	if (cancellable != NULL)
+	{
+		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+				     "Cancellable initialization not supported");
+		return FALSE;
+	}
+
+	if (priv->init_error) {
+		if (error != NULL)
+			*error = g_error_copy (priv->init_error);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static void
+arv_device_initable_iface_init (GInitableIface *iface)
+{
+	iface->init = arv_device_initable_init;
+}
+

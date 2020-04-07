@@ -46,6 +46,7 @@ GQuark 		arv_device_error_quark 		(void);
  * @ARV_DEVICE_ERROR_TRANSFER_ERROR: Transfer error
  * @ARV_DEVICE_ERROR_TIMEOUT: Timeout detected
  * @ARV_DEVICE_ERROR_NOT_FOUND: Device not found
+ * @ARV_DEVICE_ERROR_INVALID_PARAMETER: Invalid construction parameter
  */
 
 typedef enum {
@@ -56,6 +57,8 @@ typedef enum {
 	ARV_DEVICE_ERROR_TRANSFER_ERROR,
 	ARV_DEVICE_ERROR_TIMEOUT,
 	ARV_DEVICE_ERROR_NOT_FOUND,
+	ARV_DEVICE_ERROR_INVALID_PARAMETER,
+	ARV_DEVICE_ERROR_GENICAM_NOT_FOUND
 } ArvDeviceError;
 
 #define ARV_TYPE_DEVICE             (arv_device_get_type ())

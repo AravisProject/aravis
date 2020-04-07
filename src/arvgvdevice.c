@@ -1188,7 +1188,7 @@ arv_gv_device_new (GInetAddress *interface_address, GInetAddress *device_address
 	arv_debug_device ("[GvDevice::new] Device address = %s", address_string);
 	g_free (address_string);
 
-	gv_device = g_object_new (ARV_TYPE_GV_DEVICE, NULL);
+	gv_device = g_initable_new (ARV_TYPE_GV_DEVICE, NULL, NULL, NULL);
 
 	io_data = g_new0 (ArvGvDeviceIOData, 1);
 
