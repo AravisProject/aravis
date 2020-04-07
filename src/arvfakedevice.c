@@ -194,6 +194,7 @@ arv_fake_device_set_property (GObject *self, guint prop_id, const GValue *value,
 	switch (prop_id)
 	{
 		case PROP_FAKE_DEVICE_SERIAL_NUMBER:
+			g_free (priv->serial_number);
 			priv->serial_number = g_value_dup_string (value);
 			break;
 		default:
