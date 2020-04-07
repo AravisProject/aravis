@@ -114,7 +114,11 @@ typedef struct {
 	gboolean has_acquisition_frame_rate_enabled;
 } ArvCameraPrivate;
 
-G_DEFINE_TYPE_WITH_CODE (ArvCamera, arv_camera, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvCamera))
+static void arv_camera_initable_iface_init (GInitableIface *iface);
+
+G_DEFINE_TYPE_WITH_CODE (ArvCamera, arv_camera, G_TYPE_OBJECT,
+			 G_ADD_PRIVATE (ArvCamera)
+			 G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, arv_camera_initable_iface_init))
 
 enum
 {
@@ -2832,7 +2836,7 @@ arv_camera_new (const char *name)
 	   objects created with g_object_new, which includes but is not limited to
 	   introspection users */
 
-	return g_object_new (ARV_TYPE_CAMERA, "name", name, NULL);
+	return g_initable_new (ARV_TYPE_CAMERA, NULL, NULL, "name", name, NULL);
 }
 
 static void
@@ -2982,3 +2986,41 @@ arv_camera_class_init (ArvCameraClass *camera_class)
 				      ARV_TYPE_DEVICE,
 				      G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 }
+
+static gboolean
+arv_camera_initable_init (GInitable     *initable,
+			  GCancellable  *cancellable,
+			  GError       **error)
+{
+	ArvCamera *self = ARV_CAMERA (initable);
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (ARV_CAMERA (initable));
+
+	g_return_val_if_fail (ARV_IS_CAMERA (self), FALSE);
+
+	if (cancellable != NULL)
+	{
+		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+				     "Cancellable initialization not supported");
+		return FALSE;
+	}
+
+	if (!ARV_IS_DEVICE (priv->device)) {
+		if (priv->name != NULL)
+			g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
+				     "Camera '%s' not found", priv->name);
+		else
+			g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
+				     "No camera found");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+
+static void
+arv_camera_initable_iface_init (GInitableIface *iface)
+{
+	iface->init = arv_camera_initable_init;
+}
+
