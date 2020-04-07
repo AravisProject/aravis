@@ -864,7 +864,7 @@ arv_device_emit_control_lost_signal (ArvDevice *device)
 }
 
 
-void arv_device_set_init_error (ArvDevice *device, GError *error)
+void arv_device_take_init_error (ArvDevice *device, GError *error)
 {
 	ArvDevicePrivate *priv = arv_device_get_instance_private (device);
 

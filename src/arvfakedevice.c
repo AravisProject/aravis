@@ -162,9 +162,9 @@ arv_fake_device_constructed (GObject *self)
 	gsize genicam_xml_size;
 
 	if (priv->serial_number == NULL) {
-		arv_device_set_init_error (ARV_DEVICE (self),
-					   g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
-							"Can't construct a fake device without a serial number"));
+		arv_device_take_init_error (ARV_DEVICE (self),
+					    g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
+							 "Can't construct a fake device without a serial number"));
 		return;
 	}
 
@@ -172,16 +172,16 @@ arv_fake_device_constructed (GObject *self)
 	genicam_xml = arv_fake_camera_get_genicam_xml (priv->camera, &genicam_xml_size);
 
 	if (genicam_xml == NULL) {
-		arv_device_set_init_error (ARV_DEVICE (self),
-					   g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_GENICAM_NOT_FOUND,
-							"Genicam data not found"));
+		arv_device_take_init_error (ARV_DEVICE (self),
+					    g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_GENICAM_NOT_FOUND,
+							 "Genicam data not found"));
 		return;
 	}
 	priv->genicam = arv_gc_new (ARV_DEVICE (self), genicam_xml, genicam_xml_size);
 	if (!ARV_IS_GC (priv->genicam)) {
-		arv_device_set_init_error (ARV_DEVICE (self),
-					   g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_GENICAM_NOT_FOUND,
-							"Invalid Genicam data"));
+		arv_device_take_init_error (ARV_DEVICE (self),
+					    g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_GENICAM_NOT_FOUND,
+							 "Invalid Genicam data"));
 		return;
 	}
 }
