@@ -484,6 +484,11 @@ set_features_from_string_test (void)
 	g_assert (error != NULL);
 	g_clear_error (&error);
 
+	success = arv_device_set_features_from_string (device, "PixelFormat=NotAValidEntry", &error);
+	g_assert (!success);
+	g_assert (error != NULL);
+	g_clear_error (&error);
+
 	success = arv_device_set_features_from_string (device, "StartAcquitision=Value", &error);
 	g_assert (!success);
 	g_assert (error != NULL);
