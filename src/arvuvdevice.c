@@ -37,12 +37,20 @@
 #include <arvzip.h>
 #include <arvmisc.h>
 
+enum
+{
+	PROP_0,
+	PROP_UV_DEVICE_VENDOR,
+	PROP_UV_DEVICE_PRODUCT,
+	PROP_UV_DEVICE_SERIAL_NUMBER
+};
+
 #define ARV_UV_DEVICE_N_TRIES_MAX	5
 
 typedef struct {
 	char *vendor;
 	char *product;
-	char *serial_nbr;
+	char *serial_number;
 
 	libusb_context *usb;
 	libusb_device_handle *usb_device;
@@ -651,8 +659,8 @@ reset_endpoint (libusb_device_handle *usb_device, guint8 endpoint, guint8 endpoi
 	}
 }
 
-static void
-_open_usb_device (ArvUvDevice *uv_device)
+static gboolean
+_open_usb_device (ArvUvDevice *uv_device, GError **error)
 {
 	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (uv_device);
 	libusb_device **devices;
@@ -661,9 +669,9 @@ _open_usb_device (ArvUvDevice *uv_device)
 
 	count = libusb_get_device_list (priv->usb, &devices);
 	if (count < 0) {
-		arv_warning_device ("[[UvDevice::_open_usb_device] Failed to get USB device list: %s",
-				    libusb_error_name (count));
-		return;
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
+			     "Failed to get USB device list: %s", libusb_error_name (count));
+		return FALSE;
 	}
 
 	for (i = 0; i < count && priv->usb_device == NULL; i++) {
@@ -674,12 +682,12 @@ _open_usb_device (ArvUvDevice *uv_device)
 		    libusb_open (devices[i], &usb_device) == LIBUSB_SUCCESS) {
 			unsigned char *manufacturer;
 			unsigned char *product;
-			unsigned char *serial_nbr;
+			unsigned char *serial_number;
 			int index;
 
 			manufacturer = g_malloc0 (256);
 			product = g_malloc0 (256);
-			serial_nbr = g_malloc0 (256);
+			serial_number = g_malloc0 (256);
 
 			index = desc.iManufacturer;
 			if (index > 0)
@@ -689,11 +697,11 @@ _open_usb_device (ArvUvDevice *uv_device)
 				libusb_get_string_descriptor_ascii (usb_device, index, product, 256);
 			index = desc.iSerialNumber;
 			if (index > 0)
-				libusb_get_string_descriptor_ascii (usb_device, index, serial_nbr, 256);
+				libusb_get_string_descriptor_ascii (usb_device, index, serial_number, 256);
 
 			if (g_strcmp0 ((char * ) manufacturer, priv->vendor) == 0 &&
 			    g_strcmp0 ((char * ) product, priv->product) == 0 &&
-			    g_strcmp0 ((char * ) serial_nbr, priv->serial_nbr) == 0) {
+			    g_strcmp0 ((char * ) serial_number, priv->serial_number) == 0) {
 				struct libusb_config_descriptor *config;
 				struct libusb_endpoint_descriptor endpoint;
 				const struct libusb_interface *inter;
@@ -727,38 +735,50 @@ _open_usb_device (ArvUvDevice *uv_device)
 
 			g_free (manufacturer);
 			g_free (product);
-			g_free (serial_nbr);
+			g_free (serial_number);
 		}
 	}
 
 	libusb_free_device_list (devices, 1);
+
+	if (priv->usb_device == NULL) {
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
+			     "USB device '%s:%s:%s' not found", priv->vendor, priv->product, priv->serial_number);
+		return FALSE;
+	}
+
+	return TRUE;
 }
 
 ArvDevice *
-arv_uv_device_new (const char *vendor, const char *product, const char *serial_nbr)
+arv_uv_device_new (const char *vendor, const char *product, const char *serial_number)
 {
-	ArvUvDevicePrivate *priv;
-	ArvUvDevice *uv_device;
+	return g_initable_new (ARV_TYPE_UV_DEVICE, NULL, NULL,
+			       "vendor", vendor,
+			       "product", product,
+			       "serial-number", serial_number,
+			       NULL);
+}
 
-	g_return_val_if_fail (vendor != NULL, NULL);
-	g_return_val_if_fail (product != NULL, NULL);
-	g_return_val_if_fail (serial_nbr != NULL, NULL);
+void
+arv_uv_device_constructed (GObject *object)
+{
+	ArvUvDevice *uv_device = ARV_UV_DEVICE (object);
+	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (uv_device);
+	GError *error = NULL;
 
-	arv_debug_device ("[UvDevice::new] Vendor  = %s", vendor);
-	arv_debug_device ("[UvDevice::new] Product = %s", product);
-	arv_debug_device ("[UvDevice::new] S/N     = %s", serial_nbr);
-
-	uv_device = g_initable_new (ARV_TYPE_UV_DEVICE, NULL, NULL, NULL);
-	priv = arv_uv_device_get_instance_private (uv_device);
+	arv_debug_device ("[UvDevice::new] Vendor  = %s", priv->vendor);
+	arv_debug_device ("[UvDevice::new] Product = %s", priv->product);
+	arv_debug_device ("[UvDevice::new] S/N     = %s", priv->serial_number);
 
 	libusb_init (&priv->usb);
-	priv->vendor = g_strdup (vendor);
-	priv->product = g_strdup (product);
-	priv->serial_nbr = g_strdup (serial_nbr);
 	priv->packet_id = 65300; /* Start near the end of the circular counter */
 	priv->timeout_ms = 32;
 
-	_open_usb_device (uv_device);
+	if (!_open_usb_device (uv_device, &error)) {
+		arv_device_take_init_error (ARV_DEVICE (uv_device), error);
+		error = NULL;
+	}
 
 	arv_debug_device("[UvDevice::new] Using control endpoint %d, interface %d",
 			 priv->control_endpoint, priv->control_interface);
@@ -768,26 +788,27 @@ arv_uv_device_new (const char *vendor, const char *product, const char *serial_n
 	if (priv->usb_device == NULL ||
 	    libusb_claim_interface (priv->usb_device, priv->control_interface) < 0 ||
 	    libusb_claim_interface (priv->usb_device, priv->data_interface) < 0) {
-		arv_warning_device ("[UvDevice::new] Failed to claim USB interface to '%s - #%s'", product, serial_nbr);
-		g_object_unref (uv_device);
-		return NULL;
+		arv_device_take_init_error (ARV_DEVICE (uv_device), g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
+										 "Failed to claim USB interface to '%s:%s:%s'",
+										 priv->vendor, priv->product, priv->serial_number));
+		return;
 	}
 
 	if ( !_bootstrap (uv_device)){
-		arv_warning_device ("[UvDevice::new] Failed to bootstrap USB device");
-		g_object_unref (uv_device);
-		return NULL;
+		arv_device_take_init_error (ARV_DEVICE (uv_device), g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
+										 "Failed to bootstrap USB device '%s:%s:%s'",
+										 priv->vendor, priv->product, priv->serial_number));
+		return;
 	}
 
 	if (!ARV_IS_GC (priv->genicam)) {
-		arv_warning_device ("[UvDevice::new] Failed to load genicam data");
-		g_object_unref (uv_device);
-		return NULL;
+		arv_device_take_init_error (ARV_DEVICE (uv_device), g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_GENICAM_NOT_FOUND,
+										 "Failed to load Genicam data for USB device '%s:%s:%s'",
+										 priv->vendor, priv->product, priv->serial_number));
+		return;
 	}
 
 	reset_endpoint (priv->usb_device, priv->data_endpoint, LIBUSB_ENDPOINT_IN);
-
-	return ARV_DEVICE (uv_device);
 }
 
 static void
@@ -810,7 +831,7 @@ arv_uv_device_finalize (GObject *object)
 
 	g_clear_pointer (&priv->vendor, g_free);
 	g_clear_pointer (&priv->product, g_free);
-	g_clear_pointer (&priv->serial_nbr, g_free);
+	g_clear_pointer (&priv->serial_number, g_free);
 	g_clear_pointer (&priv->genicam_xml, g_free);
 	if (priv->usb_device != NULL) {
 		libusb_release_interface (priv->usb_device, priv->control_interface);
@@ -823,12 +844,39 @@ arv_uv_device_finalize (GObject *object)
 }
 
 static void
+arv_uv_device_set_property (GObject *self, guint prop_id, const GValue *value, GParamSpec *pspec)
+{
+	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (ARV_UV_DEVICE (self));
+
+	switch (prop_id)
+	{
+		case PROP_UV_DEVICE_VENDOR:
+			g_free (priv->vendor);
+			priv->vendor = g_value_dup_string (value);
+			break;
+		case PROP_UV_DEVICE_PRODUCT:
+			g_free (priv->product);
+			priv->product = g_value_dup_string (value);
+			break;
+		case PROP_UV_DEVICE_SERIAL_NUMBER:
+			g_free (priv->serial_number);
+			priv->serial_number = g_value_dup_string (value);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
+			break;
+	}
+}
+
+static void
 arv_uv_device_class_init (ArvUvDeviceClass *uv_device_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (uv_device_class);
 	ArvDeviceClass *device_class = ARV_DEVICE_CLASS (uv_device_class);
 
 	object_class->finalize = arv_uv_device_finalize;
+	object_class->constructed = arv_uv_device_constructed;
+	object_class->set_property = arv_uv_device_set_property;
 
 	device_class->create_stream = arv_uv_device_create_stream;
 	device_class->get_genicam_xml = arv_uv_device_get_genicam_xml;
@@ -837,4 +885,29 @@ arv_uv_device_class_init (ArvUvDeviceClass *uv_device_class)
 	device_class->write_memory = arv_uv_device_write_memory;
 	device_class->read_register = arv_uv_device_read_register;
 	device_class->write_register = arv_uv_device_write_register;
+
+	g_object_class_install_property
+		(object_class,
+		 PROP_UV_DEVICE_VENDOR,
+		 g_param_spec_string ("vendor",
+				      "Vendor",
+				      "USB3 device vendor string",
+				      NULL,
+				      G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property
+		(object_class,
+		 PROP_UV_DEVICE_PRODUCT,
+		 g_param_spec_string ("product",
+				      "Product",
+				      "USB3 device product string",
+				      NULL,
+				      G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property
+		(object_class,
+		 PROP_UV_DEVICE_SERIAL_NUMBER,
+		 g_param_spec_string ("serial-number",
+				      "Serial number",
+				      "USB3 device serial number",
+				      NULL,
+				      G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 }
