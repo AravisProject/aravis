@@ -101,6 +101,7 @@ typedef enum {
 } ArvCameraSeries;
 
 typedef struct {
+	char *name;
 	ArvDevice *device;
 	ArvGc *genicam;
 
@@ -118,6 +119,7 @@ G_DEFINE_TYPE_WITH_CODE (ArvCamera, arv_camera, G_TYPE_OBJECT, G_ADD_PRIVATE (Ar
 enum
 {
 	PROP_0,
+	PROP_CAMERA_NAME,
 	PROP_CAMERA_DEVICE
 };
 
@@ -2825,22 +2827,12 @@ arv_camera_create_chunk_parser (ArvCamera *camera)
 ArvCamera *
 arv_camera_new (const char *name)
 {
-	ArvCamera *camera;
-	ArvDevice *device;
-
-	device = arv_open_device (name);
-
-	if (!ARV_IS_DEVICE (device))
-		return NULL;
-
-	camera = g_object_new (ARV_TYPE_CAMERA, "device", device, NULL);
-
 	/* if you need to apply or test for fixups based on the camera model
 	   please do so in arv_camera_constructor and not here, as this breaks
 	   objects created with g_object_new, which includes but is not limited to
 	   introspection users */
 
-	return camera;
+	return g_object_new (ARV_TYPE_CAMERA, "name", name, NULL);
 }
 
 static void
@@ -2853,32 +2845,29 @@ arv_camera_finalize (GObject *object)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (ARV_CAMERA (object));
 
+	g_clear_pointer (&priv->name, g_free);
 	g_clear_object (&priv->device);
 
 	G_OBJECT_CLASS (arv_camera_parent_class)->finalize (object);
 }
 
-static GObject *
-arv_camera_constructor (GType gtype, guint n_properties, GObjectConstructParam *properties)
+static void
+arv_camera_constructed (GObject *object)
 {
+	ArvCamera *camera = ARV_CAMERA (object);
 	ArvCameraPrivate *priv;
-	GObject *object;
-	ArvCamera *camera;
 	ArvCameraVendor vendor;
 	ArvCameraSeries series;
 	const char *vendor_name;
 	const char *model_name;
 
-	object = G_OBJECT_CLASS (arv_camera_parent_class)->constructor (gtype, n_properties, properties);
-
-	camera = ARV_CAMERA (object);
 	priv = arv_camera_get_instance_private (camera);
 
 	if (!priv->device)
-		priv->device = arv_open_device (NULL);
+		priv->device = arv_open_device (priv->name);
 
 	if (!ARV_IS_DEVICE (priv->device))
-		return NULL;
+		return;
 
 	priv->genicam = arv_device_get_genicam (priv->device);
 
@@ -2928,8 +2917,6 @@ arv_camera_constructor (GType gtype, guint n_properties, GObjectConstructParam *
 										    "AcquisitionFrameRate"));
 	priv->has_acquisition_frame_rate_enabled = ARV_IS_GC_BOOLEAN (arv_device_get_feature (priv->device,
 											      "AcquisitionFrameRateEnabled"));
-
-    return object;
 }
 
 static void
@@ -2941,6 +2928,10 @@ arv_camera_set_property (GObject *object, guint prop_id, const GValue *value, GP
 	{
 		case PROP_CAMERA_DEVICE:
 			priv->device = g_value_get_object (value);
+			break;
+		case PROP_CAMERA_NAME:
+			g_free (priv->name);
+			priv->name = g_value_dup_string (value);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2970,15 +2961,24 @@ arv_camera_class_init (ArvCameraClass *camera_class)
 	GObjectClass *object_class = G_OBJECT_CLASS (camera_class);
 
 	object_class->finalize = arv_camera_finalize;
-	object_class->constructor = arv_camera_constructor;
+	object_class->constructed = arv_camera_constructed;
 	object_class->set_property = arv_camera_set_property;
 	object_class->get_property = arv_camera_get_property;
 
-	g_object_class_install_property (object_class,
-					 PROP_CAMERA_DEVICE,
-					 g_param_spec_object ("device",
-							      "device",
-							      "the device associated with this camera",
-							      ARV_TYPE_DEVICE,
-							      G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property
+		(object_class,
+		 PROP_CAMERA_NAME,
+		 g_param_spec_string ("name",
+				      "Camera name",
+				      "The camera name",
+				      NULL,
+				      G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property
+		(object_class,
+		 PROP_CAMERA_DEVICE,
+		 g_param_spec_object ("device",
+				      "Device",
+				      "The device associated with this camera",
+				      ARV_TYPE_DEVICE,
+				      G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 }
