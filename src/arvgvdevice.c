@@ -1185,6 +1185,17 @@ arv_gv_device_set_stream_options (ArvGvDevice *gv_device, ArvGvStreamOption opti
 	priv->stream_options = options;
 }
 
+/**
+ * arv_gv_device_new:
+ * @interface_address: address of the interface connected to the device
+ * @device_address: device address
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: a newly created #ArvDevice using GigE protocol
+ *
+ * Since: 0.8.0
+ */
+
 ArvDevice *
 arv_gv_device_new (GInetAddress *interface_address, GInetAddress *device_address, GError **error)
 {
