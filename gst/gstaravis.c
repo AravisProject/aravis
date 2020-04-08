@@ -90,7 +90,7 @@ gst_aravis_get_all_camera_caps (GstAravis *gst_aravis)
 
 	arv_camera_get_width_bounds (gst_aravis->camera, &min_width, &max_width, NULL);
 	arv_camera_get_height_bounds (gst_aravis->camera, &min_height, &max_height, NULL);
-	pixel_formats = arv_camera_get_available_pixel_formats (gst_aravis->camera, &n_pixel_formats, NULL);
+	pixel_formats = arv_camera_dup_available_pixel_formats (gst_aravis->camera, &n_pixel_formats, NULL);
 	arv_camera_get_frame_rate_bounds (gst_aravis->camera, &min_frame_rate, &max_frame_rate, NULL);
 
 	int min_frame_rate_numerator;

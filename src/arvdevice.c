@@ -692,7 +692,7 @@ arv_device_get_float_feature_bounds (ArvDevice *device, const char *feature, dou
 }
 
 /**
- * arv_device_get_available_enumeration_feature_values:
+ * arv_device_dup_available_enumeration_feature_values:
  * @device: an #ArvDevice
  * @feature: feature name
  * @n_values: placeholder for the number of returned values
@@ -707,7 +707,7 @@ arv_device_get_float_feature_bounds (ArvDevice *device, const char *feature, dou
  */
 
 gint64 *
-arv_device_get_available_enumeration_feature_values (ArvDevice *device, const char *feature, guint *n_values, GError **error)
+arv_device_dup_available_enumeration_feature_values (ArvDevice *device, const char *feature, guint *n_values, GError **error)
 {
 	ArvGcNode *node;
 
@@ -716,13 +716,13 @@ arv_device_get_available_enumeration_feature_values (ArvDevice *device, const ch
 
 	node = _get_feature (device, ARV_TYPE_GC_ENUMERATION, feature, error);
 	if (node != NULL)
-		return arv_gc_enumeration_get_available_int_values (ARV_GC_ENUMERATION (node), n_values, error);
+		return arv_gc_enumeration_dup_available_int_values (ARV_GC_ENUMERATION (node), n_values, error);
 
 	return NULL;
 }
 
 /**
- * arv_device_get_available_enumeration_feature_values_as_strings:
+ * arv_device_dup_available_enumeration_feature_values_as_strings:
  * @device: an #ArvDevice
  * @feature: feature name
  * @n_values: placeholder for the number of returned values
@@ -737,7 +737,7 @@ arv_device_get_available_enumeration_feature_values (ArvDevice *device, const ch
  */
 
 const char **
-arv_device_get_available_enumeration_feature_values_as_strings (ArvDevice *device, const char *feature, guint *n_values, GError **error)
+arv_device_dup_available_enumeration_feature_values_as_strings (ArvDevice *device, const char *feature, guint *n_values, GError **error)
 {
 	ArvGcNode *node;
 
@@ -746,13 +746,13 @@ arv_device_get_available_enumeration_feature_values_as_strings (ArvDevice *devic
 
 	node = _get_feature (device, ARV_TYPE_GC_ENUMERATION, feature, error);
 	if (node != NULL)
-		return arv_gc_enumeration_get_available_string_values (ARV_GC_ENUMERATION (node), n_values, error);
+		return arv_gc_enumeration_dup_available_string_values (ARV_GC_ENUMERATION (node), n_values, error);
 
 	return NULL;
 }
 
 /**
- * arv_device_get_available_enumeration_feature_values_as_display_names:
+ * arv_device_dup_available_enumeration_feature_values_as_display_names:
  * @device: an #ArvDevice
  * @feature: feature name
  * @n_values: placeholder for the number of returned values
@@ -767,7 +767,7 @@ arv_device_get_available_enumeration_feature_values_as_strings (ArvDevice *devic
  */
 
 const char **
-arv_device_get_available_enumeration_feature_values_as_display_names (ArvDevice *device, const char *feature, guint *n_values, GError **error)
+arv_device_dup_available_enumeration_feature_values_as_display_names (ArvDevice *device, const char *feature, guint *n_values, GError **error)
 {
 	ArvGcNode *node;
 
@@ -776,7 +776,7 @@ arv_device_get_available_enumeration_feature_values_as_display_names (ArvDevice 
 
 	node = _get_feature (device, ARV_TYPE_GC_ENUMERATION, feature, error);
 	if (node != NULL)
-		return arv_gc_enumeration_get_available_display_names (ARV_GC_ENUMERATION (node), n_values, error);
+		return arv_gc_enumeration_dup_available_display_names (ARV_GC_ENUMERATION (node), n_values, error);
 
 	return NULL;
 }

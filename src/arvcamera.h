@@ -77,9 +77,9 @@ void 		arv_camera_set_pixel_format 				(ArvCamera *camera, ArvPixelFormat format
 void		arv_camera_set_pixel_format_from_string 		(ArvCamera *camera, const char * format, GError **error);
 ArvPixelFormat	arv_camera_get_pixel_format 				(ArvCamera *camera, GError **error);
 const char * 	arv_camera_get_pixel_format_as_string			(ArvCamera *camera, GError **error);
-gint64 *	arv_camera_get_available_pixel_formats			(ArvCamera *camera, guint *n_pixel_formats, GError **error);
-const char **	arv_camera_get_available_pixel_formats_as_strings	(ArvCamera *camera, guint *n_pixel_formats, GError **error);
-const char **	arv_camera_get_available_pixel_formats_as_display_names	(ArvCamera *camera, guint *n_pixel_formats, GError **error);
+gint64 *	arv_camera_dup_available_pixel_formats			(ArvCamera *camera, guint *n_pixel_formats, GError **error);
+const char **	arv_camera_dup_available_pixel_formats_as_strings	(ArvCamera *camera, guint *n_pixel_formats, GError **error);
+const char **	arv_camera_dup_available_pixel_formats_as_display_names	(ArvCamera *camera, guint *n_pixel_formats, GError **error);
 
 /* Acquisition control */
 
@@ -104,8 +104,8 @@ void		arv_camera_get_frame_rate_bounds 	(ArvCamera *camera, double *min, double 
 void		arv_camera_set_trigger			(ArvCamera *camera, const char *source, GError **error);
 void 		arv_camera_set_trigger_source		(ArvCamera *camera, const char *source, GError **error);
 const char *	arv_camera_get_trigger_source		(ArvCamera *camera, GError **error);
-const char **	arv_camera_get_available_trigger_sources(ArvCamera *camera, guint *n_sources, GError **error);
-const char**    arv_camera_get_available_triggers       (ArvCamera *camera, guint *n_triggers, GError **error);
+const char **	arv_camera_dup_available_trigger_sources(ArvCamera *camera, guint *n_sources, GError **error);
+const char **   arv_camera_dup_available_triggers       (ArvCamera *camera, guint *n_triggers, GError **error);
 void            arv_camera_clear_triggers               (ArvCamera* camera, GError **error);
 void 		arv_camera_software_trigger 		(ArvCamera *camera, GError **error);
 
@@ -153,11 +153,11 @@ void		arv_camera_set_float			(ArvCamera *camera, const char *feature, double val
 double		arv_camera_get_float			(ArvCamera *camera, const char *feature, GError **error);
 void 		arv_camera_get_float_bounds 		(ArvCamera *camera, const char *feature, double *min, double *max, GError **error);
 
-gint64 *	arv_camera_get_available_enumerations			(ArvCamera *camera, const char *feature, guint *n_values,
+gint64 *	arv_camera_dup_available_enumerations			(ArvCamera *camera, const char *feature, guint *n_values,
 									 GError **error);
-const char **	arv_camera_get_available_enumerations_as_strings	(ArvCamera *camera, const char *feature, guint *n_values,
+const char **	arv_camera_dup_available_enumerations_as_strings	(ArvCamera *camera, const char *feature, guint *n_values,
 									 GError **error);
-const char ** 	arv_camera_get_available_enumerations_as_display_names 	(ArvCamera *camera, const char *feature, guint *n_values,
+const char ** 	arv_camera_dup_available_enumerations_as_display_names 	(ArvCamera *camera, const char *feature, guint *n_values,
 									 GError **error);
 
 gboolean 	arv_camera_is_feature_available 	(ArvCamera *camera, const char *feature, GError **error);

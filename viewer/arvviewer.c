@@ -1139,8 +1139,8 @@ start_camera (ArvViewer *viewer, const char *camera_id)
 	list_store = GTK_LIST_STORE (gtk_combo_box_get_model (GTK_COMBO_BOX (viewer->pixel_format_combo)));
 	gtk_list_store_clear (list_store);
 	n_valid_formats = 0;
-	pixel_format_strings = arv_camera_get_available_pixel_formats_as_strings (viewer->camera, &n_pixel_format_strings, NULL);
-	pixel_formats = arv_camera_get_available_pixel_formats (viewer->camera, &n_pixel_formats, NULL);
+	pixel_format_strings = arv_camera_dup_available_pixel_formats_as_strings (viewer->camera, &n_pixel_format_strings, NULL);
+	pixel_formats = arv_camera_dup_available_pixel_formats (viewer->camera, &n_pixel_formats, NULL);
 	g_assert (n_pixel_formats == n_pixel_format_strings);
 	pixel_format_string = arv_camera_get_pixel_format_as_string (viewer->camera, NULL);
 	for (i = 0; i < n_pixel_formats; i++) {

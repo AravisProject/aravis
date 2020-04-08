@@ -391,7 +391,7 @@ enumeration_test (void)
 	v_int64 = arv_gc_enumeration_get_int_value (ARV_GC_ENUMERATION (node), NULL);
 	g_assert_cmpint (v_int64, ==, 0);
 
-	values = arv_gc_enumeration_get_available_int_values (ARV_GC_ENUMERATION (node), &n_values, NULL);
+	values = arv_gc_enumeration_dup_available_int_values (ARV_GC_ENUMERATION (node), &n_values, NULL);
 	g_assert_cmpint (n_values, ==, 2);
 	g_assert (values != NULL);
 	g_free (values);

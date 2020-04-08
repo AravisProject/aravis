@@ -138,7 +138,7 @@ enum
  * Creates a new #ArvStream for video stream handling. See
  * #ArvStreamCallback for details regarding the callback function.
  *
- * Returns: (transfer full): a new #ArvStream.
+ * Returns: (transfer full): a new #ArvStream, to be freed after use with g_object_unref().
  *
  * Since: 0.2.0
  */
@@ -632,47 +632,49 @@ arv_camera_get_pixel_format_as_string (ArvCamera *camera, GError **error)
 }
 
 /**
- * arv_camera_get_available_pixel_formats:
+ * arv_camera_dup_available_pixel_formats:
  * @camera: a #ArvCamera
  * @n_pixel_formats: (out): number of different pixel formats
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Retrieves the list of all available pixel formats.
  *
- * Returns: (array length=n_pixel_formats) (transfer container): a newly allocated array of #ArvPixelFormat
+ * Returns: (array length=n_pixel_formats) (transfer container): a newly allocated array of #ArvPixelFormat, to be freed after use with
+ * g_free().
  *
  * Since: 0.8.0
  */
 
 gint64 *
-arv_camera_get_available_pixel_formats (ArvCamera *camera, guint *n_pixel_formats, GError **error)
+arv_camera_dup_available_pixel_formats (ArvCamera *camera, guint *n_pixel_formats, GError **error)
 {
-	return arv_camera_get_available_enumerations (camera, "PixelFormat", n_pixel_formats, error);
+	return arv_camera_dup_available_enumerations (camera, "PixelFormat", n_pixel_formats, error);
 }
 
 /**
- * arv_camera_get_available_pixel_formats_as_strings:
+ * arv_camera_dup_available_pixel_formats_as_strings:
  * @camera: a #ArvCamera
  * @n_pixel_formats: (out): number of different pixel formats
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Retrieves the list of all available pixel formats as strings.
  *
- * Returns: (array length=n_pixel_formats) (transfer container): a newly allocated array of strings.
+ * Returns: (array length=n_pixel_formats) (transfer container): a newly allocated array of strings, to be freed after use with
+ * g_free().
  *
  * Since: 0.8.0
  */
 
 const char **
-arv_camera_get_available_pixel_formats_as_strings (ArvCamera *camera, guint *n_pixel_formats, GError **error)
+arv_camera_dup_available_pixel_formats_as_strings (ArvCamera *camera, guint *n_pixel_formats, GError **error)
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
-	return arv_camera_get_available_enumerations_as_strings (camera, "PixelFormat", n_pixel_formats, error);
+	return arv_camera_dup_available_enumerations_as_strings (camera, "PixelFormat", n_pixel_formats, error);
 }
 
 /**
- * arv_camera_get_available_pixel_formats_as_display_names:
+ * arv_camera_dup_available_pixel_formats_as_display_names:
  * @camera: a #ArvCamera
  * @n_pixel_formats: (out): number of different pixel formats
  * @error: a #GError placeholder, %NULL to ignore
@@ -680,15 +682,16 @@ arv_camera_get_available_pixel_formats_as_strings (ArvCamera *camera, guint *n_p
  * Retrieves the list of all available pixel formats as display names.
  * In general, these human-readable strings cannot be used as settings.
  *
- * Returns: (array length=n_pixel_formats) (transfer container): a newly allocated array of string constants.
+ * Returns: (array length=n_pixel_formats) (transfer container): a newly allocated array of string constants, to be freed after use with
+ * g_free().
  *
  * Since: 0.8.0
  */
 
 const char **
-arv_camera_get_available_pixel_formats_as_display_names (ArvCamera *camera, guint *n_pixel_formats, GError **error)
+arv_camera_dup_available_pixel_formats_as_display_names (ArvCamera *camera, guint *n_pixel_formats, GError **error)
 {
-	return arv_camera_get_available_enumerations_as_display_names (camera, "PixelFormat", n_pixel_formats, error);
+	return arv_camera_dup_available_enumerations_as_display_names (camera, "PixelFormat", n_pixel_formats, error);
 }
 
 /* Acquisition control */
@@ -907,7 +910,7 @@ arv_camera_get_frame_count_bounds (ArvCamera *camera, gint64 *min, gint64 *max, 
  * Configures a fixed frame rate mode. Once acquisition start is triggered, the video stream will be acquired with the given frame rate. A
  * negative or zero @frame_rate value disables the frame rate limit.
  *
- * Since: 0.2.0
+ * Since: 0.8.0
  */
 
 void
@@ -977,7 +980,7 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate, GError **error)
 					guint n_values;
 					guint i;
 
-					values = arv_camera_get_available_enumerations (camera, "FPS", &n_values, &local_error);
+					values = arv_camera_dup_available_enumerations (camera, "FPS", &n_values, &local_error);
 					for (i = 0; i < n_values && local_error == NULL; i++) {
 						if (values[i] > 0) {
 							double e;
@@ -1116,7 +1119,7 @@ arv_camera_get_frame_rate_bounds (ArvCamera *camera, double *min, double *max, G
 				guint n_values;
 				guint i;
 
-				values = arv_camera_get_available_enumerations (camera, "FPS", &n_values, &local_error);
+				values = arv_camera_dup_available_enumerations (camera, "FPS", &n_values, &local_error);
 				if (local_error != NULL) {
 					g_propagate_error (error, local_error);
 					return;
@@ -1243,7 +1246,7 @@ arv_camera_get_trigger_source (ArvCamera *camera, GError **error)
 }
 
 /**
- * arv_camera_get_available_trigger_sources:
+ * arv_camera_dup_available_trigger_sources:
  * @camera: a #ArvCamera
  * @n_sources: (out): number of sources
  * @error: a #GError placeholder, %NULL to ignore
@@ -1256,13 +1259,13 @@ arv_camera_get_trigger_source (ArvCamera *camera, GError **error)
  */
 
 const char **
-arv_camera_get_available_trigger_sources (ArvCamera *camera, guint *n_sources, GError **error)
+arv_camera_dup_available_trigger_sources (ArvCamera *camera, guint *n_sources, GError **error)
 {
-	return arv_camera_get_available_enumerations_as_strings (camera, "TriggerSource", n_sources, error);
+	return arv_camera_dup_available_enumerations_as_strings (camera, "TriggerSource", n_sources, error);
 }
 
 /**
- * arv_camera_get_available_triggers:
+ * arv_camera_dup_available_triggers:
  * @camera: a #ArvCamera
  * @n_triggers: (out): number of available triggers
  * @error: a #GError placeholder, %NULL to ignore
@@ -1275,9 +1278,9 @@ arv_camera_get_available_trigger_sources (ArvCamera *camera, guint *n_sources, G
  */
 
 const char **
-arv_camera_get_available_triggers (ArvCamera *camera, guint *n_triggers, GError **error)
+arv_camera_dup_available_triggers (ArvCamera *camera, guint *n_triggers, GError **error)
 {
-	return arv_camera_get_available_enumerations_as_strings (camera, "TriggerSelector", n_triggers, error);
+	return arv_camera_dup_available_enumerations_as_strings (camera, "TriggerSelector", n_triggers, error);
 }
 
 /**
@@ -1300,13 +1303,15 @@ arv_camera_clear_triggers (ArvCamera* camera, GError **error)
 
         g_return_if_fail (ARV_IS_CAMERA (camera));
 
-	triggers = arv_camera_get_available_enumerations_as_strings (camera, "TriggerSelector", &n_triggers, &local_error);
+	triggers = arv_camera_dup_available_triggers (camera, &n_triggers, &local_error);
 
 	for (i = 0; i < n_triggers && local_error == NULL; i++) {
 		arv_camera_set_string (camera, "TriggerSelector", triggers[i], &local_error);
 		if (local_error == NULL)
 			arv_camera_set_string (camera, "TriggerMode", "Off", &local_error);
 	}
+
+	g_free (triggers);
 
 	if (local_error != NULL)
 		g_propagate_error (error, local_error);
@@ -2174,7 +2179,7 @@ arv_camera_get_float_bounds (ArvCamera *camera, const char *feature, double *min
 }
 
 /**
- * arv_camera_get_available_enumerations:
+ * arv_camera_dup_available_enumerations:
  * @camera: a #ArvCamera
  * @feature: feature name
  * @n_values: placeholder for the number of returned values
@@ -2189,7 +2194,7 @@ arv_camera_get_float_bounds (ArvCamera *camera, const char *feature, double *min
  */
 
 gint64 *
-arv_camera_get_available_enumerations (ArvCamera *camera, const char *feature, guint *n_values, GError **error)
+arv_camera_dup_available_enumerations (ArvCamera *camera, const char *feature, guint *n_values, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
@@ -2198,11 +2203,11 @@ arv_camera_get_available_enumerations (ArvCamera *camera, const char *feature, g
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
-	return arv_device_get_available_enumeration_feature_values (priv->device, feature, n_values, error);
+	return arv_device_dup_available_enumeration_feature_values (priv->device, feature, n_values, error);
 }
 
 /**
- * arv_camera_get_available_enumerations_as_strings:
+ * arv_camera_dup_available_enumerations_as_strings:
  * @camera: a #ArvCamera
  * @feature: feature name
  * @n_values: placeholder for the number of returned values
@@ -2217,7 +2222,7 @@ arv_camera_get_available_enumerations (ArvCamera *camera, const char *feature, g
  */
 
 const char **
-arv_camera_get_available_enumerations_as_strings (ArvCamera *camera, const char *feature, guint *n_values, GError **error)
+arv_camera_dup_available_enumerations_as_strings (ArvCamera *camera, const char *feature, guint *n_values, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
@@ -2226,11 +2231,11 @@ arv_camera_get_available_enumerations_as_strings (ArvCamera *camera, const char 
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
-	return arv_device_get_available_enumeration_feature_values_as_strings (priv->device, feature, n_values, error);
+	return arv_device_dup_available_enumeration_feature_values_as_strings (priv->device, feature, n_values, error);
 }
 
 /**
- * arv_camera_get_available_enumerations_as_display_names:
+ * arv_camera_dup_available_enumerations_as_display_names:
  * @camera: a #ArvCamera
  * @feature: feature name
  * @n_values: placeholder for the number of returned values
@@ -2245,7 +2250,7 @@ arv_camera_get_available_enumerations_as_strings (ArvCamera *camera, const char 
  */
 
 const char **
-arv_camera_get_available_enumerations_as_display_names (ArvCamera *camera, const char *feature, guint *n_values, GError **error)
+arv_camera_dup_available_enumerations_as_display_names (ArvCamera *camera, const char *feature, guint *n_values, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
@@ -2254,7 +2259,7 @@ arv_camera_get_available_enumerations_as_display_names (ArvCamera *camera, const
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
-	return arv_device_get_available_enumeration_feature_values_as_display_names (priv->device, feature, n_values, error);
+	return arv_device_dup_available_enumeration_feature_values_as_display_names (priv->device, feature, n_values, error);
 }
 
 /**
@@ -2344,7 +2349,7 @@ arv_camera_gv_select_stream_channel (ArvCamera *camera, gint channel_id, GError 
  *
  * Returns: The current stream channel id.
  *
- * Since: 0.4.0
+ * Since: 0.8.0
  */
 
 int
@@ -2766,7 +2771,7 @@ arv_camera_set_chunks (ArvCamera *camera, const char *chunk_list, GError **error
 		return;
 	}
 
-	available_chunks = arv_camera_get_available_enumerations_as_strings (camera, "ChunkSelector", &n_values, &local_error);
+	available_chunks = arv_camera_dup_available_enumerations_as_strings (camera, "ChunkSelector", &n_values, &local_error);
 	for (i = 0; i < n_values && local_error == NULL; i++) {
 		arv_camera_set_chunk_state (camera, available_chunks[i], FALSE, &local_error);
 	}
@@ -2828,7 +2833,7 @@ arv_camera_create_chunk_parser (ArvCamera *camera)
  *
  * Returns: a new #ArvCamera.
  *
- * Since: 0.2.0
+ * Since: 0.8.0
  */
 
 ArvCamera *

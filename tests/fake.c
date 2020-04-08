@@ -211,12 +211,12 @@ fake_device_test (void)
 	dbl_value = arv_device_get_float_feature_value (device,  "ExposureTimeAbs", NULL);
 	g_assert_cmpfloat (dbl_value, ==, 20.0);
 
-	values = arv_device_get_available_enumeration_feature_values (device, "GainAuto", &n_values, NULL);
+	values = arv_device_dup_available_enumeration_feature_values (device, "GainAuto", &n_values, NULL);
 	g_assert (values != NULL);
 	g_assert_cmpint (n_values, ==, 3);
 	g_free (values);
 
-	string_values = arv_device_get_available_enumeration_feature_values_as_strings (device, "GainAuto", &n_values, NULL);
+	string_values = arv_device_dup_available_enumeration_feature_values_as_strings (device, "GainAuto", &n_values, NULL);
 	g_assert (string_values != NULL);
 	g_assert_cmpint (n_values, ==, 3);
 	g_free (string_values);
@@ -408,19 +408,19 @@ camera_api_test (void)
 	g_assert (error == NULL);
 	g_assert_cmpint (pixel_format, ==, ARV_PIXEL_FORMAT_MONO_8);
 
-	ptr = arv_camera_get_available_pixel_formats (camera, &n, &error);
+	ptr = arv_camera_dup_available_pixel_formats (camera, &n, &error);
 	g_assert (error == NULL);
 	g_assert (ptr != NULL);
 	g_assert_cmpint (n, ==, 2);
 	g_clear_pointer (&ptr, g_free);
 
-	ptr = arv_camera_get_available_pixel_formats_as_strings (camera, &n, &error);
+	ptr = arv_camera_dup_available_pixel_formats_as_strings (camera, &n, &error);
 	g_assert (error == NULL);
 	g_assert (ptr != NULL);
 	g_assert_cmpint (n, ==, 2);
 	g_clear_pointer (&ptr, g_free);
 
-	ptr = arv_camera_get_available_pixel_formats_as_display_names (camera, &n, &error);
+	ptr = arv_camera_dup_available_pixel_formats_as_display_names (camera, &n, &error);
 	g_assert (error == NULL);
 	g_assert (ptr != NULL);
 	g_assert_cmpint (n, ==, 2);

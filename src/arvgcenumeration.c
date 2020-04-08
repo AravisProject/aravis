@@ -212,7 +212,7 @@ arv_gc_enumeration_get_int_value (ArvGcEnumeration *enumeration, GError **error)
 		return 0;
 	}
 
-	available_values = arv_gc_enumeration_get_available_int_values (enumeration, &n_values, &local_error);
+	available_values = arv_gc_enumeration_dup_available_int_values (enumeration, &n_values, &local_error);
 	if (local_error != NULL) {
 		g_propagate_error (error, local_error);
 		return value;
@@ -240,16 +240,18 @@ arv_gc_enumeration_get_int_value (ArvGcEnumeration *enumeration, GError **error)
 }
 
 /**
- * arv_gc_enumeration_get_available_int_values:
+ * arv_gc_enumeration_dup_available_int_values:
  * @enumeration: a #ArvGcEnumeration
  * @n_values: (out): the number of values
  * @error: (out): the error that occured, or NULL
  *
- * Return value: (transfer full) (array length=n_values): the values
+ * Return value: (transfer full) (array length=n_values): a newly allocated array of 64 bit integers, to be freed after use using g_free().
+ *
+ * Since: 0.8.0
  */
 
 gint64 *
-arv_gc_enumeration_get_available_int_values (ArvGcEnumeration *enumeration, guint *n_values, GError **error)
+arv_gc_enumeration_dup_available_int_values (ArvGcEnumeration *enumeration, guint *n_values, GError **error)
 {
 	gint64 *values;
 	const GSList *entries, *iter;
@@ -327,7 +329,7 @@ arv_gc_enumeration_get_available_int_values (ArvGcEnumeration *enumeration, guin
 }
 
 static const char **
-_get_available_string_values (ArvGcEnumeration *enumeration, gboolean display_name ,guint *n_values, GError **error)
+_dup_available_string_values (ArvGcEnumeration *enumeration, gboolean display_name ,guint *n_values, GError **error)
 {
 	const char ** strings;
 	const GSList *entries, *iter;
@@ -399,7 +401,7 @@ _get_available_string_values (ArvGcEnumeration *enumeration, gboolean display_na
 }
 
 /**
- * arv_gc_enumeration_get_available_string_values:
+ * arv_gc_enumeration_dup_available_string_values:
  * @enumeration: an #ArvGcEnumeration
  * @n_values: (out): placeholder for the number of values
  * @error: placeholder for error, may be NULL
@@ -408,16 +410,18 @@ _get_available_string_values (ArvGcEnumeration *enumeration, gboolean display_na
  *
  * Returns: (array length=n_values) (transfer container): an newly created array of const strings, which must freed after use using g_free,
  * %NULL on error.
+ *
+ * Since: 0.8.0
  */
 
 const char **
-arv_gc_enumeration_get_available_string_values (ArvGcEnumeration *enumeration, guint *n_values, GError **error)
+arv_gc_enumeration_dup_available_string_values (ArvGcEnumeration *enumeration, guint *n_values, GError **error)
 {
-	return _get_available_string_values (enumeration, FALSE, n_values, error);
+	return _dup_available_string_values (enumeration, FALSE, n_values, error);
 }
 
 /**
- * arv_gc_enumeration_get_available_display_names:
+ * arv_gc_enumeration_dup_available_display_names:
  * @enumeration: an #ArvGcEnumeration
  * @n_values: (out): placeholder for the number of values
  * @error: placeholder for error, may be NULL
@@ -431,9 +435,9 @@ arv_gc_enumeration_get_available_string_values (ArvGcEnumeration *enumeration, g
  */
 
 const char **
-arv_gc_enumeration_get_available_display_names (ArvGcEnumeration *enumeration, guint *n_values, GError **error)
+arv_gc_enumeration_dup_available_display_names (ArvGcEnumeration *enumeration, guint *n_values, GError **error)
 {
-	return _get_available_string_values (enumeration, TRUE, n_values, error);
+	return _dup_available_string_values (enumeration, TRUE, n_values, error);
 }
 
 gboolean
@@ -451,7 +455,7 @@ arv_gc_enumeration_set_int_value (ArvGcEnumeration *enumeration, gint64 value, G
 			unsigned i;
 			gboolean found = FALSE;
 
-			available_values = arv_gc_enumeration_get_available_int_values (enumeration, &n_values, &local_error);
+			available_values = arv_gc_enumeration_dup_available_int_values (enumeration, &n_values, &local_error);
 			if (local_error != NULL) {
 				g_propagate_error (error, local_error);
 				return FALSE;
