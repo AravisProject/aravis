@@ -36,6 +36,7 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (ArvFakeDevice, arv_fake_device, ARV, FAKE_DEVICE, ArvDevice)
 
 ArvDevice * 	arv_fake_device_new 			(const char *serial_number, GError **error);
+
 ArvFakeCamera *	arv_fake_device_get_fake_camera		(ArvFakeDevice *device);
 
 G_END_DECLS

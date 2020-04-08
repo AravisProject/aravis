@@ -119,6 +119,8 @@ arv_fake_device_write_register (ArvDevice *device, guint64 address, guint32 valu
  * @device: a fake device
  *
  * Return value: (transfer none): the #ArvFakeCamera used by this device instance.
+ *
+ * Since: 0.8.0
  */
 
 ArvFakeCamera *
@@ -130,6 +132,16 @@ arv_fake_device_get_fake_camera	(ArvFakeDevice *device)
 
 	return priv->camera;
 }
+
+/**
+ * arv_fake_device_new:
+ * @serial_number: fake device serial number
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: a newly created #ArvDevice simulating a real device
+ *
+ * Since: 0.8.0
+ */
 
 ArvDevice *
 arv_fake_device_new (const char *serial_number, GError **error)
