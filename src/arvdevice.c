@@ -781,6 +781,19 @@ arv_device_dup_available_enumeration_feature_values_as_display_names (ArvDevice 
 	return NULL;
 }
 
+/**
+ * arv_device_set_features_from_string:
+ * @device: a #ArvDevice
+ * @string: a space separated list of features assignments
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Set features from a string containing a list of space separated feature assignments or command names. For example:
+ *
+ * |[<!-- language="C" -->
+ * arv_device_set_features_from_string (device, "Width=256 Height=256 PixelFormat='Mono8' TriggerStart", &error);
+ * ]|
+ */
+
 gboolean
 arv_device_set_features_from_string (ArvDevice *device, const char *string, GError **error)
 {
