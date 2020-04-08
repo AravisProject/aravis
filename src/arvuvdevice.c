@@ -750,6 +750,17 @@ _open_usb_device (ArvUvDevice *uv_device, GError **error)
 	return TRUE;
 }
 
+/**
+ * arv_uv_device_new:
+ * @interface_address: address of the interface connected to the device
+ * @device_address: device address
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: a newly created #ArvDevice using USB3 based protocol
+ *
+ * Since: 0.8.0
+ */
+
 ArvDevice *
 arv_uv_device_new (const char *vendor, const char *product, const char *serial_number, GError **error)
 {
