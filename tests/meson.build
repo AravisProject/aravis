@@ -49,6 +49,8 @@ if get_option('tests')
 
 		configure_file (input: 'pylaunch.in', output: 'pylaunch', configuration: py_script_config_data)
 		configure_file (input: 'pylaunch-dbg.in', output: 'pylaunch-dbg', configuration: py_script_config_data)
+		configure_file (input: 'jslaunch.in', output: 'jslaunch', configuration: py_script_config_data)
+		configure_file (input: 'jslaunch-dbg.in', output: 'jslaunch-dbg', configuration: py_script_config_data)
 	endif
 
 	examples = [
