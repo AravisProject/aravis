@@ -793,6 +793,8 @@ arv_device_dup_available_enumeration_feature_values_as_display_names (ArvDevice 
  * |[<!-- language="C" -->
  * arv_device_set_features_from_string (device, "Width=256 Height=256 PixelFormat='Mono8' TriggerStart", &error);
  * ]|
+ *
+ * Since: 0.8.0
  */
 
 gboolean
@@ -856,6 +858,8 @@ arv_device_set_features_from_string (ArvDevice *device, const char *string, GErr
  * lead to incorrect readouts. Using the debug cache policy, and activating genicam debug output (export ARV_DEBUG=genicam), can help you to
  * check the cache validity. In this mode, every time the cache content is not in sync with the actual register value, a debug message is
  * printed on the console.</para></warning>
+ *
+ * Since: 0.8.0
  */
 
 void
