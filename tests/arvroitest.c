@@ -146,7 +146,8 @@ main (int argc, char **argv)
 	}
 
 	data.camera = arv_camera_new (camera_name, &error);
-	if (data.camera != NULL) {
+
+	if (ARV_IS_CAMERA (data.camera)) {
 		void (*old_sigint_handler)(int);
 		gint payload;
 		gint x, y, width, height;
@@ -168,8 +169,9 @@ main (int argc, char **argv)
 		printf ("image width           = %d\n", width);
 		printf ("image height          = %d\n", height);
 
-		data.stream = arv_camera_create_stream (data.camera, NULL, NULL);
-		if (data.stream != NULL) {
+		data.stream = arv_camera_create_stream (data.camera, NULL, NULL, &error);
+
+		if (ARV_IS_STREAM (data.stream)) {
 			g_signal_connect (data.stream, "new-buffer", G_CALLBACK (new_buffer_cb), &data);
 			arv_stream_set_emit_signals (data.stream, TRUE);
 
@@ -204,16 +206,20 @@ main (int argc, char **argv)
 			arv_stream_set_emit_signals (data.stream, FALSE);
 
 			g_object_unref (data.stream);
-		} else
-			printf ("Can't create stream thread (check if the device is not already used)\n");
+		} else {
+			printf ("Can't create stream thread%s%s\n",
+				error != NULL ? ": " : "",
+				error != NULL ? error->message : "");
+
+			g_clear_error (&error);
+		}
 
 		g_object_unref (data.camera);
 	} else {
-		if (error != NULL) {
-			printf ("No camera found: %s\n", error->message);
-			g_clear_error (&error);
-		} else
-			printf ("No camera found\n");
+		printf ("No camera found%s%s\n",
+			error != NULL ? ": " : "",
+			error != NULL ? error->message : "");
+		g_clear_error (&error);
 	}
 
 	return 0;

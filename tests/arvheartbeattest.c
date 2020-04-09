@@ -70,17 +70,27 @@ int main(int argc, char *argv[])
 
     arv_debug_enable (arv_option_debug_domains);
 
-    camera = arv_camera_new (arv_option_camera_name, NULL);
+    camera = arv_camera_new (arv_option_camera_name, &error);
     if (!ARV_IS_CAMERA (camera)) {
-	    printf ("Device not found\n");
+	    printf ("Device not found%s%s\n",
+		    error != NULL ? ": " : "",
+		    error != NULL ? error->message : "");
+	    g_clear_error (&error);
+
 	    return EXIT_FAILURE;
     }
 
     device = arv_camera_get_device (camera);
 
-    stream = arv_camera_create_stream (camera, NULL, NULL);
+    stream = arv_camera_create_stream (camera, NULL, NULL, &error);
     if (!ARV_IS_STREAM (stream)) {
-	    printf ("Invalid device\n");
+	    printf ("Invalid device%s%s\n",
+		    error != NULL ? ": " : "",
+		    error != NULL ? error->message : "");
+	    g_clear_error (&error);
+	    g_clear_object (&camera);
+
+	    return EXIT_FAILURE;
     } else {
 	    payload = arv_camera_get_payload (camera, NULL);
 

@@ -33,10 +33,7 @@
 
 G_BEGIN_DECLS
 
-ArvStream * 	arv_gv_stream_new			(ArvGvDevice *gv_device,
-							 GInetAddress *interface_address,
-							 GInetAddress *device_address,
-							 ArvStreamCallback callback, void *user_data);
+ArvStream * 	arv_gv_stream_new		(ArvGvDevice *gv_device, ArvStreamCallback callback, void *callback_data, GError **error);
 
 G_END_DECLS
 

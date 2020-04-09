@@ -40,11 +40,11 @@
 /* Acquisition thread */
 
 typedef struct {
-	ArvUvDevice *uv_device;
 	ArvStream *stream;
 
+	ArvUvDevice *uv_device;
 	ArvStreamCallback callback;
-	void *user_data;
+	void *callback_data;
 
 	size_t leader_size;
 	size_t payload_size;
@@ -61,18 +61,19 @@ typedef struct {
 
 typedef struct {
 	GThread *thread;
+
 	ArvUvStreamThreadData *thread_data;
 } ArvUvStreamPrivate;
 
 struct _ArvUvStream {
 	ArvStream	stream;
-
-	ArvUvStreamPrivate *priv;
 };
 
 struct _ArvUvStreamClass {
 	ArvStreamClass parent_class;
 };
+
+G_DEFINE_TYPE_WITH_CODE (ArvUvStream, arv_uv_stream, ARV_TYPE_STREAM, G_ADD_PRIVATE (ArvUvStream))
 
 static void *
 arv_uv_stream_thread (void *data)
@@ -89,7 +90,7 @@ arv_uv_stream_thread (void *data)
 	incoming_buffer = g_malloc (ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE);
 
 	if (thread_data->callback != NULL)
-		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
+		thread_data->callback (thread_data->callback_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
 
 	offset = 0;
 
@@ -136,7 +137,7 @@ arv_uv_stream_thread (void *data)
 						buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
 						arv_stream_push_output_buffer (thread_data->stream, buffer);
 						if (thread_data->callback != NULL)
-							thread_data->callback (thread_data->user_data,
+							thread_data->callback (thread_data->callback_data,
 									       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
 									       buffer);
 						thread_data->n_failures++;
@@ -161,7 +162,7 @@ arv_uv_stream_thread (void *data)
 						buffer->priv->timestamp_ns = arv_uvsp_packet_get_timestamp (packet);
 						offset = 0;
 						if (thread_data->callback != NULL)
-							thread_data->callback (thread_data->user_data,
+							thread_data->callback (thread_data->callback_data,
 									       ARV_STREAM_CALLBACK_TYPE_START_BUFFER,
 									       NULL);
 					} else
@@ -183,7 +184,7 @@ arv_uv_stream_thread (void *data)
 							buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
 							arv_stream_push_output_buffer (thread_data->stream, buffer);
 							if (thread_data->callback != NULL)
-								thread_data->callback (thread_data->user_data,
+								thread_data->callback (thread_data->callback_data,
 										       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
 										       buffer);
 							thread_data->n_failures++;
@@ -192,7 +193,7 @@ arv_uv_stream_thread (void *data)
 							buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
 							arv_stream_push_output_buffer (thread_data->stream, buffer);
 							if (thread_data->callback != NULL)
-								thread_data->callback (thread_data->user_data,
+								thread_data->callback (thread_data->callback_data,
 										       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
 										       buffer);
 							thread_data->n_completed_buffers++;
@@ -221,13 +222,13 @@ arv_uv_stream_thread (void *data)
 		buffer->priv->status = ARV_BUFFER_STATUS_ABORTED;
 		arv_stream_push_output_buffer (thread_data->stream, buffer);
 		if (thread_data->callback != NULL)
-			thread_data->callback (thread_data->user_data,
+			thread_data->callback (thread_data->callback_data,
 					       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
 					       buffer);
 	}
 
 	if (thread_data->callback != NULL)
-		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_EXIT, NULL);
+		thread_data->callback (thread_data->callback_data, ARV_STREAM_CALLBACK_TYPE_EXIT, NULL);
 
 	g_free (incoming_buffer);
 
@@ -252,6 +253,7 @@ static void
 arv_uv_stream_start_thread (ArvStream *stream)
 {
 	ArvUvStream *uv_stream = ARV_UV_STREAM (stream);
+	ArvUvStreamPrivate *priv = arv_uv_stream_get_instance_private (uv_stream);
 	ArvUvStreamThreadData *thread_data;
 	ArvDevice *device;
 	guint64 offset;
@@ -268,10 +270,10 @@ arv_uv_stream_start_thread (ArvStream *stream)
 	guint32 alignment;
 	guint32 aligned_maximum_transfer_size;
 
-	g_return_if_fail (uv_stream->priv->thread == NULL);
-	g_return_if_fail (uv_stream->priv->thread_data != NULL);
+	g_return_if_fail (priv->thread == NULL);
+	g_return_if_fail (priv->thread_data != NULL);
 
-	thread_data = uv_stream->priv->thread_data;
+	thread_data = priv->thread_data;
 
 	device = ARV_DEVICE (thread_data->uv_device);
 
@@ -334,27 +336,28 @@ arv_uv_stream_start_thread (ArvStream *stream)
 	thread_data->trailer_size = si_req_trailer_size;
 	thread_data->cancel = FALSE;
 
-	uv_stream->priv->thread = g_thread_new ("arv_uv_stream", arv_uv_stream_thread, uv_stream->priv->thread_data);
+	priv->thread = g_thread_new ("arv_uv_stream", arv_uv_stream_thread, priv->thread_data);
 }
 
 static void
 arv_uv_stream_stop_thread (ArvStream *stream)
 {
 	ArvUvStream *uv_stream = ARV_UV_STREAM (stream);
+	ArvUvStreamPrivate *priv = arv_uv_stream_get_instance_private (uv_stream);
 	ArvUvStreamThreadData *thread_data;
 	guint64 offset;
 	guint64 sirm_offset;
 	guint32 si_control;
 
-	g_return_if_fail (uv_stream->priv->thread != NULL);
-	g_return_if_fail (uv_stream->priv->thread_data != NULL);
+	g_return_if_fail (priv->thread != NULL);
+	g_return_if_fail (priv->thread_data != NULL);
 
-	thread_data = uv_stream->priv->thread_data;
+	thread_data = priv->thread_data;
 
-	g_atomic_int_set (&uv_stream->priv->thread_data->cancel, TRUE);
-	g_thread_join (uv_stream->priv->thread);
+	g_atomic_int_set (&priv->thread_data->cancel, TRUE);
+	g_thread_join (priv->thread);
 
-	uv_stream->priv->thread = NULL;
+	priv->thread = NULL;
 
 	si_control = 0x0;
 	arv_device_read_memory (ARV_DEVICE (thread_data->uv_device),
@@ -370,39 +373,46 @@ arv_uv_stream_stop_thread (ArvStream *stream)
  * arv_uv_stream_new: (skip)
  * @uv_device: a #ArvUvDevice
  * @callback: (scope call): image processing callback
- * @user_data: (closure): user data for @callback
+ * @callback_data: (closure): user data for @callback
+ * @error: a #GError placeholder, %NULL to ignore
  *
  * Return Value: (transfer full): a new #ArvStream.
  */
 
 ArvStream *
-arv_uv_stream_new (ArvUvDevice *uv_device, ArvStreamCallback callback, void *user_data)
+arv_uv_stream_new (ArvUvDevice *uv_device, ArvStreamCallback callback, void *callback_data, GError **error)
 {
-	ArvUvStream *uv_stream;
+	return g_initable_new (ARV_TYPE_UV_STREAM, NULL, error,
+			       "device", uv_device,
+			       "callback", callback,
+			       "callback-data", callback_data,
+			       NULL);
+}
+
+static void
+arv_uv_stream_constructed (GObject *object)
+{
+	ArvUvStream *uv_stream = ARV_UV_STREAM (object);
+	ArvStream *stream = ARV_STREAM (uv_stream);
+	ArvUvStreamPrivate *priv = arv_uv_stream_get_instance_private (uv_stream);
 	ArvUvStreamThreadData *thread_data;
-	ArvStream *stream;
-
-	g_return_val_if_fail (ARV_IS_UV_DEVICE (uv_device), NULL);
-
-	uv_stream = g_object_new (ARV_TYPE_UV_STREAM, NULL);
-
-	stream = ARV_STREAM (uv_stream);
 
 	thread_data = g_new (ArvUvStreamThreadData, 1);
-	thread_data->uv_device = g_object_ref (uv_device);
 	thread_data->stream = stream;
-	thread_data->callback = callback;
-	thread_data->user_data = user_data;
+
+	g_object_get (object,
+		      "device", &thread_data->uv_device,
+		      "callback", &thread_data->callback,
+		      "callback-data", &thread_data->callback_data,
+		      NULL);
 
 	thread_data->n_completed_buffers = 0;
 	thread_data->n_failures = 0;
 	thread_data->n_underruns = 0;
 
-	uv_stream->priv->thread_data = thread_data;
+	priv->thread_data = thread_data;
 
 	arv_uv_stream_start_thread (ARV_STREAM (uv_stream));
-
-	return ARV_STREAM (uv_stream);
 }
 
 /* ArvStream implementation */
@@ -414,34 +424,33 @@ arv_uv_stream_get_statistics (ArvStream *stream,
 				guint64 *n_underruns)
 {
 	ArvUvStream *uv_stream = ARV_UV_STREAM (stream);
+	ArvUvStreamPrivate *priv = arv_uv_stream_get_instance_private (uv_stream);
 	ArvUvStreamThreadData *thread_data;
 
-	thread_data = uv_stream->priv->thread_data;
+	thread_data = priv->thread_data;
 
 	*n_completed_buffers = thread_data->n_completed_buffers;
 	*n_failures = thread_data->n_failures;
 	*n_underruns = thread_data->n_underruns;
 }
 
-G_DEFINE_TYPE_WITH_CODE (ArvUvStream, arv_uv_stream, ARV_TYPE_STREAM, G_ADD_PRIVATE (ArvUvStream))
-
 static void
 arv_uv_stream_init (ArvUvStream *uv_stream)
 {
-	uv_stream->priv = arv_uv_stream_get_instance_private (uv_stream);
 }
 
 static void
 arv_uv_stream_finalize (GObject *object)
 {
 	ArvUvStream *uv_stream = ARV_UV_STREAM (object);
+	ArvUvStreamPrivate *priv = arv_uv_stream_get_instance_private (uv_stream);
 
 	arv_uv_stream_stop_thread (ARV_STREAM (uv_stream));
 
-	if (uv_stream->priv->thread_data != NULL) {
+	if (priv->thread_data != NULL) {
 		ArvUvStreamThreadData *thread_data;
 
-		thread_data = uv_stream->priv->thread_data;
+		thread_data = priv->thread_data;
 
 		arv_debug_stream ("[UvStream::finalize] n_completed_buffers    = %u",
 				  thread_data->n_completed_buffers);
@@ -450,8 +459,7 @@ arv_uv_stream_finalize (GObject *object)
 		arv_debug_stream ("[UvStream::finalize] n_underruns            = %u",
 				  thread_data->n_underruns);
 
-		g_clear_object (&thread_data->uv_device);
-		g_clear_pointer (&uv_stream->priv->thread_data, g_free);
+		g_clear_pointer (&priv->thread_data, g_free);
 	}
 
 	G_OBJECT_CLASS (arv_uv_stream_parent_class)->finalize (object);
@@ -463,6 +471,7 @@ arv_uv_stream_class_init (ArvUvStreamClass *uv_stream_class)
 	GObjectClass *object_class = G_OBJECT_CLASS (uv_stream_class);
 	ArvStreamClass *stream_class = ARV_STREAM_CLASS (uv_stream_class);
 
+	object_class->constructed = arv_uv_stream_constructed;
 	object_class->finalize = arv_uv_stream_finalize;
 
 	stream_class->start_thread = arv_uv_stream_start_thread;

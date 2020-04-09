@@ -69,6 +69,7 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvDevice, arv_device, G_TYPE_OBJECT,
  * @device: a #ArvDevice
  * @callback: (scope call): a frame processing callback
  * @user_data: (allow-none) (closure): user data for @callback
+ * @error: a #GError placeholder, %NULL to ignore
  *
  * Creates a new #ArvStream for video stream handling. See
  * @ArvStreamCallback for details regarding the callback function.
@@ -79,11 +80,11 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvDevice, arv_device, G_TYPE_OBJECT,
  */
 
 ArvStream *
-arv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data)
+arv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data, GError **error)
 {
 	g_return_val_if_fail (ARV_IS_DEVICE (device), NULL);
 
-	return ARV_DEVICE_GET_CLASS (device)->create_stream (device, callback, user_data);
+	return ARV_DEVICE_GET_CLASS (device)->create_stream (device, callback, user_data, error);
 }
 
 /**

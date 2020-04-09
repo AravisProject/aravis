@@ -120,7 +120,7 @@ struct _ArvGvStreamThreadData {
 	ArvStream *stream;
 
 	ArvStreamCallback callback;
-	void *user_data;
+	void *callback_data;
 
 	GSocket *socket;
 	GInetAddress *interface_address;
@@ -403,7 +403,7 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 
 	if (thread_data->callback != NULL &&
 	    frame->buffer != NULL)
-		thread_data->callback (thread_data->user_data,
+		thread_data->callback (thread_data->callback_data,
 				       ARV_STREAM_CALLBACK_TYPE_START_BUFFER,
 				       NULL);
 
@@ -533,7 +533,7 @@ _close_frame (ArvGvStreamThreadData *thread_data, ArvGvStreamFrameData *frame)
 
 	arv_stream_push_output_buffer (thread_data->stream, frame->buffer);
 	if (thread_data->callback != NULL)
-		thread_data->callback (thread_data->user_data,
+		thread_data->callback (thread_data->callback_data,
 				       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
 				       frame->buffer);
 
@@ -998,7 +998,7 @@ arv_gv_stream_thread (void *data)
 				 thread_data->frame_retention_us / 1000.0);
 
 	if (thread_data->callback != NULL)
-		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
+		thread_data->callback (thread_data->callback_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
 
 #if ARAVIS_HAS_PACKET_SOCKET
 	if (thread_data->use_packet_socket && (fd = socket (PF_PACKET, SOCK_RAW, g_htons (ETH_P_ALL))) >= 0) {
@@ -1011,7 +1011,7 @@ arv_gv_stream_thread (void *data)
 	_flush_frames (thread_data);
 
 	if (thread_data->callback != NULL)
-		thread_data->callback (thread_data->user_data, ARV_STREAM_CALLBACK_TYPE_EXIT, NULL);
+		thread_data->callback (thread_data->callback_data, ARV_STREAM_CALLBACK_TYPE_EXIT, NULL);
 
 	return NULL;
 }
@@ -1062,32 +1062,38 @@ arv_gv_stream_stop_thread (ArvStream *stream)
 /**
  * arv_gv_stream_new: (skip)
  * @gv_device: a #ArvGvDevice
- * @interface_address: inet interface address for gvsp
- * @device_address: inet device address for gvsp
  * @callback: (scope call): processing callback
- * @user_data: (closure): user data for @callback
+ * @callback_data: (closure): user data for @callback
  *
  * Return value: (transfer full): a new #ArvStream.
  */
 
 ArvStream *
-arv_gv_stream_new (ArvGvDevice *gv_device,
-		   GInetAddress *interface_address,
-		   GInetAddress *device_address,
-		   ArvStreamCallback callback, void *user_data)
+arv_gv_stream_new (ArvGvDevice *gv_device, ArvStreamCallback callback, void *callback_data, GError **error)
 {
+	return g_initable_new (ARV_TYPE_GV_STREAM, NULL, error,
+			       "device", gv_device,
+			       "callback", callback,
+			       "callback-data", callback_data,
+			       NULL);
+}
+
+void
+arv_gv_stream_constructed (GObject *object)
+{
+	ArvStream *stream = ARV_STREAM (object);
+	ArvGvStream *gv_stream = ARV_GV_STREAM (object);
 	ArvGvStreamThreadData *thread_data;
-	ArvGvStream *gv_stream;
-	ArvStream *stream;
 	ArvGvStreamOption options;
+	ArvGvDevice *gv_device = NULL;
+	GInetAddress *interface_address;
+	GInetAddress *device_address;
 	guint64 timestamp_tick_frequency;
 	const guint8 *address_bytes;
 	GInetSocketAddress *local_address;
 	guint packet_size;
 
-	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), NULL);
-	g_return_val_if_fail (G_IS_INET_ADDRESS (interface_address), NULL);
-	g_return_val_if_fail (G_IS_INET_ADDRESS (device_address), NULL);
+	g_object_get (object, "device", &gv_device, NULL);
 
 	timestamp_tick_frequency = arv_gv_device_get_timestamp_tick_frequency (gv_device, NULL);
 	options = arv_gv_device_get_stream_options (gv_device);
@@ -1102,17 +1108,22 @@ arv_gv_stream_new (ArvGvDevice *gv_device,
 	packet_size = arv_gv_device_get_packet_size (gv_device, NULL);
 	arv_debug_device ("[GvStream::stream_new] Packet size = %d byte(s)", packet_size);
 
-	g_return_val_if_fail (packet_size > ARV_GVSP_PACKET_PROTOCOL_OVERHEAD, NULL);
-
-	gv_stream = g_object_new (ARV_TYPE_GV_STREAM, NULL);
-
-	stream = ARV_STREAM (gv_stream);
+	if (packet_size <= ARV_GVSP_PACKET_PROTOCOL_OVERHEAD) {
+		arv_stream_take_init_error (stream, g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
+								 "Invalid packet size (%d byte(s))", packet_size));
+		return;
+	}
 
 	thread_data = g_new (ArvGvStreamThreadData, 1);
-	thread_data->gv_device = g_object_ref (gv_device);
+
 	thread_data->stream = stream;
-	thread_data->callback = callback;
-	thread_data->user_data = user_data;
+	thread_data->gv_device = gv_device;
+
+	g_object_get (object,
+		      "callback", &thread_data->callback,
+		      "callback-data", &thread_data->callback_data,
+		      NULL);
+
 	thread_data->packet_resend = ARV_GV_STREAM_PACKET_RESEND_ALWAYS;
 	thread_data->packet_request_ratio = ARV_GV_STREAM_PACKET_REQUEST_RATIO_DEFAULT;
 	thread_data->packet_timeout_us = ARV_GV_STREAM_PACKET_TIMEOUT_US_DEFAULT;
@@ -1152,6 +1163,9 @@ arv_gv_stream_new (ArvGvDevice *gv_device,
 
 	gv_stream->priv->thread_data = thread_data;
 
+	interface_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (arv_gv_device_get_interface_address (gv_device)));
+	device_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (arv_gv_device_get_device_address (gv_device)));
+
 	thread_data->socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
 					  G_SOCKET_TYPE_DATAGRAM,
 					  G_SOCKET_PROTOCOL_UDP, NULL);
@@ -1174,8 +1188,6 @@ arv_gv_stream_new (ArvGvDevice *gv_device,
 	arv_debug_stream ("[GvStream::stream_new] Source stream port = %d", thread_data->source_stream_port);
 
 	arv_gv_stream_start_thread (ARV_STREAM (gv_stream));
-
-	return ARV_STREAM (gv_stream);
 }
 
 /* ArvStream implementation */
@@ -1350,7 +1362,6 @@ arv_gv_stream_finalize (GObject *object)
 		g_clear_object (&thread_data->device_socket_address);
 		g_clear_object (&thread_data->interface_socket_address);
 		g_clear_object (&thread_data->socket);
-		g_clear_object (&thread_data->gv_device);
 
 		g_clear_pointer (&thread_data, g_free);
 	}
@@ -1364,6 +1375,7 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 	GObjectClass *object_class = G_OBJECT_CLASS (gv_stream_class);
 	ArvStreamClass *stream_class = ARV_STREAM_CLASS (gv_stream_class);
 
+	object_class->constructed = arv_gv_stream_constructed;
 	object_class->finalize = arv_gv_stream_finalize;
 	object_class->set_property = arv_gv_stream_set_property;
 	object_class->get_property = arv_gv_stream_get_property;

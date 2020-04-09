@@ -352,8 +352,8 @@ main (int argc, char **argv)
 			printf ("uv bandwidth limit     = %d [%d..%d]\n", arv_camera_uv_get_bandwidth (camera, NULL), min, max);
 		}
 
-		stream = arv_camera_create_stream (camera, stream_cb, NULL);
-		if (stream != NULL) {
+		stream = arv_camera_create_stream (camera, stream_cb, NULL, &error);
+		if (ARV_IS_STREAM (stream)) {
 			if (ARV_IS_GV_STREAM (stream)) {
 				if (arv_option_auto_socket_buffer)
 					g_object_set (stream,
@@ -427,16 +427,20 @@ main (int argc, char **argv)
 			arv_stream_set_emit_signals (stream, FALSE);
 
 			g_object_unref (stream);
-		} else
-			printf ("Can't create stream thread (check if the device is not already used)\n");
+		} else {
+			printf ("Can't create stream thread%s%s\n",
+				error != NULL ? ": " : "",
+				error != NULL ? error->message : "");
+
+			g_clear_error (&error);
+		}
 
 		g_object_unref (camera);
 	} else {
-		if (error != NULL) {
-			printf ("No camera found: %s\n", error->message);
-			g_clear_error (&error);
-		} else
-			printf ("No camera found\n");
+		printf ("No camera found%s%s\n",
+			error != NULL ? ": " : "",
+			error != NULL ? error->message : "");
+		g_clear_error (&error);
 	}
 
 	if (data.chunks != NULL)

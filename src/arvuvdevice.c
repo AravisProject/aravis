@@ -129,14 +129,9 @@ arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, ArvUvEndpointType endpoint_
 }
 
 static ArvStream *
-arv_uv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data)
+arv_uv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data, GError **error)
 {
-	ArvUvDevice *uv_device = ARV_UV_DEVICE (device);
-	ArvStream *stream;
-
-	stream = arv_uv_stream_new (uv_device, callback, user_data);
-
-	return stream;
+	return arv_uv_stream_new (ARV_UV_DEVICE (device), callback, user_data, error);
 }
 
 static gboolean

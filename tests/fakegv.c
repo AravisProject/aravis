@@ -117,12 +117,14 @@ static void
 stream_test (void)
 {
 	ArvStream *stream;
+	GError *error = NULL;
 	size_t payload;
 	unsigned buffer_count = 0;
 	unsigned i;
 
-	stream = arv_camera_create_stream (camera, NULL, NULL);
+	stream = arv_camera_create_stream (camera, NULL, NULL, &error);
 	g_assert (ARV_IS_STREAM (stream));
+	g_assert (error == NULL);
 
 	payload = arv_camera_get_payload (camera, NULL);
 
@@ -162,12 +164,14 @@ static void
 dynamic_roi_test (void)
 {
 	ArvStream *stream;
+	GError *error = NULL;
 	size_t payload;
 	unsigned buffer_count = 0;
 	unsigned i, j;
 
-	stream = arv_camera_create_stream (camera, NULL, NULL);
+	stream = arv_camera_create_stream (camera, NULL, NULL, &error);
 	g_assert (ARV_IS_STREAM (stream));
+	g_assert (error == NULL);
 
 	payload = arv_camera_get_payload (camera, NULL);
 

@@ -32,7 +32,9 @@
 
 #include <arvstreamprivate.h>
 #include <arvbuffer.h>
+#include <arvdevice.h>
 #include <arvdebug.h>
+#include <gio/gio.h>
 
 enum {
 	ARV_STREAM_SIGNAL_NEW_BUFFER,
@@ -44,7 +46,9 @@ static guint arv_stream_signals[ARV_STREAM_SIGNAL_LAST] = {0};
 enum {
 	ARV_STREAM_PROPERTY_0,
 	ARV_STREAM_PROPERTY_EMIT_SIGNALS,
-	ARV_STREAM_PROPERTY_LAST
+	ARV_STREAM_PROPERTY_DEVICE,
+	ARV_STREAM_PROPERTY_CALLBACK,
+	ARV_STREAM_PROPERTY_CALLBACK_DATA
 } ArvStreamProperties;
 
 typedef struct {
@@ -52,9 +56,19 @@ typedef struct {
 	GAsyncQueue *output_queue;
 	GRecMutex mutex;
 	gboolean emit_signals;
+
+	ArvUvDevice *device;
+	ArvStreamCallback callback;
+	void *callback_data;
+
+	GError *init_error;
 } ArvStreamPrivate;
 
-G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvStream, arv_stream, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvStream))
+static void arv_stream_initable_iface_init (GInitableIface *iface);
+
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvStream, arv_stream, G_TYPE_OBJECT,
+				  G_ADD_PRIVATE (ArvStream)
+				  G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, arv_stream_initable_iface_init))
 
 /**
  * arv_stream_push_buffer:
@@ -402,10 +416,21 @@ arv_stream_set_property (GObject * object, guint prop_id,
 			 const GValue * value, GParamSpec * pspec)
 {
 	ArvStream *stream = ARV_STREAM (object);
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
 
 	switch (prop_id) {
 		case ARV_STREAM_PROPERTY_EMIT_SIGNALS:
 			arv_stream_set_emit_signals (stream, g_value_get_boolean (value));
+			break;
+		case ARV_STREAM_PROPERTY_DEVICE:
+			g_clear_object (&priv->device);
+			priv->device = g_value_dup_object (value);
+			break;
+		case ARV_STREAM_PROPERTY_CALLBACK:
+			priv->callback = g_value_get_pointer (value);
+			break;
+		case ARV_STREAM_PROPERTY_CALLBACK_DATA:
+			priv->callback_data = g_value_get_pointer (value);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -418,15 +443,36 @@ arv_stream_get_property (GObject * object, guint prop_id,
 			 GValue * value, GParamSpec * pspec)
 {
 	ArvStream *stream = ARV_STREAM (object);
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
 
 	switch (prop_id) {
 		case ARV_STREAM_PROPERTY_EMIT_SIGNALS:
 			g_value_set_boolean (value, arv_stream_get_emit_signals (stream));
 			break;
+		case ARV_STREAM_PROPERTY_DEVICE:
+			g_value_set_object (value, priv->device);
+			break;
+		case ARV_STREAM_PROPERTY_CALLBACK:
+			g_value_set_pointer (value, priv->callback);
+			break;
+		case ARV_STREAM_PROPERTY_CALLBACK_DATA:
+			g_value_set_pointer (value, priv->callback_data);
+			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 			break;
 	}
+}
+
+void
+arv_stream_take_init_error (ArvStream *stream, GError *error)
+{
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+
+	g_return_if_fail (ARV_IS_STREAM (stream));
+
+	g_clear_error (&priv->init_error);
+	priv->init_error = error;
 }
 
 static void
@@ -478,6 +524,10 @@ arv_stream_finalize (GObject *object)
 
 	g_rec_mutex_clear (&priv->mutex);
 
+	g_clear_object (&priv->device);
+
+	g_clear_error (&priv->init_error);
+
 	G_OBJECT_CLASS (arv_stream_parent_class)->finalize (object);
 }
 
@@ -521,5 +571,58 @@ arv_stream_class_init (ArvStreamClass *node_class)
 				      "Emit signals", FALSE,
 				      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
 		);
+	g_object_class_install_property
+		(object_class,
+		 ARV_STREAM_PROPERTY_DEVICE,
+		 g_param_spec_object ("device",
+				      "Paret device",
+				      "A ArvDevice parent object",
+				      ARV_TYPE_DEVICE,
+				      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property
+		(object_class,
+		 ARV_STREAM_PROPERTY_CALLBACK,
+		 g_param_spec_pointer ("callback",
+				       "Stream callback",
+				       "Optional user callback",
+				       G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property
+		(object_class,
+		 ARV_STREAM_PROPERTY_CALLBACK_DATA,
+		 g_param_spec_pointer ("callback-data",
+				       "Stream callback data",
+				       "Optional user callback data",
+				       G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+}
+
+static gboolean
+arv_stream_initable_init (GInitable     *initable,
+			  GCancellable  *cancellable,
+			  GError       **error)
+{
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (ARV_STREAM (initable));
+
+	g_return_val_if_fail (ARV_IS_STREAM (initable), FALSE);
+
+	if (cancellable != NULL)
+	{
+		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+				     "Cancellable initialization not supported");
+		return FALSE;
+	}
+
+	if (priv->init_error) {
+		if (error != NULL)
+			*error = g_error_copy (priv->init_error);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static void
+arv_stream_initable_iface_init (GInitableIface *iface)
+{
+	iface->init = arv_stream_initable_init;
 }
 

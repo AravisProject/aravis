@@ -259,7 +259,7 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 	arv_device_set_features_from_string (arv_camera_get_device (gst_aravis->camera), gst_aravis->features, NULL);
 
 	gst_aravis->payload = arv_camera_get_payload (gst_aravis->camera, NULL);
-	gst_aravis->stream = arv_camera_create_stream (gst_aravis->camera, NULL, NULL);
+	gst_aravis->stream = arv_camera_create_stream (gst_aravis->camera, NULL, NULL, NULL);
 
 	if (ARV_IS_GV_STREAM (gst_aravis->stream)) {
 		if (gst_aravis->packet_resend)

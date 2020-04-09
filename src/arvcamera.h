@@ -43,7 +43,7 @@ struct _ArvCameraClass {
 ArvCamera *	arv_camera_new			(const char *name, GError **error);
 ArvDevice *	arv_camera_get_device		(ArvCamera *camera);
 
-ArvStream *	arv_camera_create_stream	(ArvCamera *camera, ArvStreamCallback callback, void *user_data);
+ArvStream *	arv_camera_create_stream	(ArvCamera *camera, ArvStreamCallback callback, void *user_data, GError **error);
 
 /* Device informations */
 

@@ -12,7 +12,7 @@ main (int argc, char **argv)
 	/* Instantiation of the first available camera */
 	camera = arv_camera_new (NULL, &error);
 
-	if (camera != NULL) {
+	if (ARV_IS_CAMERA (camera)) {
 		gint payload;
 
 		/* Instantiation of a chunk parser */
@@ -25,9 +25,9 @@ main (int argc, char **argv)
 		payload = arv_camera_get_payload (camera, NULL);
 
 		/* Create a new stream object */
-		stream = arv_camera_create_stream (camera, NULL, NULL);
+		stream = arv_camera_create_stream (camera, NULL, NULL, &error);
 
-		if (stream != NULL) {
+		if (ARV_IS_STREAM (stream)) {
 			ArvBuffer *buffer;
 
 			/* Push 1 buffer in the stream input buffer queue */
@@ -48,17 +48,20 @@ main (int argc, char **argv)
 			arv_camera_stop_acquisition (camera, NULL);
 
 			g_object_unref (stream);
-		} else
-			printf ("Can't create stream thread (check if the device is not already used)\n");
+		} else {
+			printf ("Can't create stream thread%s%s\n",
+				error != NULL ? ": " : "",
+				error != NULL ? error->message: "");
+			g_clear_error (&error);
+		}
 
 		g_object_unref (parser);
 		g_object_unref (camera);
 	} else {
-		if (error != NULL) {
-			printf ("No camera found: %s\n", error->message);
-			g_clear_error (&error);
-		} else
-			printf ("No camera found\n");
+		printf ("No camera found%s%s\n",
+			error != NULL ? ": " : "",
+			error != NULL ? error->message: "");
+		g_clear_error (&error);
 	}
 
 	return 0;

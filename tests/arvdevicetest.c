@@ -183,7 +183,7 @@ main (int argc, char **argv)
 			g_print ("reverse x           = %s\n", v_boolean ? "TRUE" : "FALSE");
 		}
 
-		stream = arv_device_create_stream (device, NULL, NULL);
+		stream = arv_device_create_stream (device, NULL, NULL, NULL);
 		if (arv_option_auto_buffer)
 			g_object_set (stream,
 				      "socket-buffer", ARV_GV_STREAM_SOCKET_BUFFER_AUTO,

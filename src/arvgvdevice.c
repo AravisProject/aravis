@@ -1053,14 +1053,12 @@ arv_gv_device_load_genicam (ArvGvDevice *gv_device)
 /* ArvDevice implemenation */
 
 static ArvStream *
-arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data)
+arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data, GError **error)
 {
 	ArvGvDevice *gv_device = ARV_GV_DEVICE (device);
 	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
 	ArvStream *stream;
 	guint32 n_stream_channels;
-	GInetAddress *interface_address;
-	GInetAddress *device_address;
 
 	n_stream_channels = arv_device_get_integer_feature_value (device, "GevStreamChannelCount", NULL);
 	arv_debug_device ("[GvDevice::create_stream] Number of stream channels = %d", n_stream_channels);
@@ -1073,10 +1071,7 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 		return NULL;
 	}
 
-	interface_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (priv->io_data->interface_address));
-	device_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (priv->io_data->device_address));
-
-	stream = arv_gv_stream_new (gv_device, interface_address, device_address, callback, user_data);
+	stream = arv_gv_stream_new (gv_device, callback, user_data, error);
 	if (!ARV_IS_STREAM (stream))
 		return NULL;
 

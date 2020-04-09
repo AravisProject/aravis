@@ -134,6 +134,7 @@ enum
  * @camera: a #ArvCamera
  * @callback: (scope call) (allow-none): a frame processing callback
  * @user_data: (closure) (allow-none): user data for @callback
+ * @error: a #GError placeholder, %NULL to ignore
  *
  * Creates a new #ArvStream for video stream handling. See
  * #ArvStreamCallback for details regarding the callback function.
@@ -144,13 +145,13 @@ enum
  */
 
 ArvStream *
-arv_camera_create_stream (ArvCamera *camera, ArvStreamCallback callback, gpointer user_data)
+arv_camera_create_stream (ArvCamera *camera, ArvStreamCallback callback, gpointer user_data, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
-	return arv_device_create_stream (priv->device, callback, user_data);
+	return arv_device_create_stream (priv->device, callback, user_data, error);
 }
 
 /* Device control */
@@ -767,23 +768,25 @@ arv_camera_acquisition (ArvCamera *camera, guint64 timeout, GError **error)
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
-	stream = arv_camera_create_stream (camera, NULL, NULL);
-	payload = arv_camera_get_payload (camera, &local_error);
-	if (local_error == NULL) {
-		arv_stream_push_buffer (stream,  arv_buffer_new (payload, NULL));
-		arv_camera_set_acquisition_mode (camera, ARV_ACQUISITION_MODE_SINGLE_FRAME, &local_error);
-	}
-	if (local_error == NULL)
-		arv_camera_start_acquisition (camera, &local_error);
-	if (local_error == NULL) {
-		if (timeout > 0)
-			buffer = arv_stream_timeout_pop_buffer (stream, timeout);
-		else
-			buffer = arv_stream_pop_buffer (stream);
-		arv_camera_stop_acquisition (camera, &local_error);
-	}
+	stream = arv_camera_create_stream (camera, NULL, NULL, &local_error);
+	if (ARV_IS_STREAM(stream)) {
+		payload = arv_camera_get_payload (camera, &local_error);
+		if (local_error == NULL) {
+			arv_stream_push_buffer (stream,  arv_buffer_new (payload, NULL));
+			arv_camera_set_acquisition_mode (camera, ARV_ACQUISITION_MODE_SINGLE_FRAME, &local_error);
+		}
+		if (local_error == NULL)
+			arv_camera_start_acquisition (camera, &local_error);
+		if (local_error == NULL) {
+			if (timeout > 0)
+				buffer = arv_stream_timeout_pop_buffer (stream, timeout);
+			else
+				buffer = arv_stream_pop_buffer (stream);
+			arv_camera_stop_acquisition (camera, &local_error);
+		}
 
-	g_object_unref (stream);
+		g_object_unref (stream);
+	}
 
 	if (local_error != NULL)
 		g_propagate_error (error, local_error);

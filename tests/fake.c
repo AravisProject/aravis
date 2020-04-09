@@ -290,8 +290,9 @@ fake_stream_test (void)
 	fake_camera = arv_fake_device_get_fake_camera (ARV_FAKE_DEVICE (device));
 	g_assert (ARV_IS_FAKE_CAMERA (fake_camera));
 
-	stream = arv_camera_create_stream (camera, NULL, NULL);
+	stream = arv_camera_create_stream (camera, NULL, NULL, &error);
 	g_assert (ARV_IS_STREAM (stream));
+	g_assert (error == NULL);
 
 	arv_fake_camera_set_fill_pattern (fake_camera, fill_pattern_cb, &counter);
 
