@@ -111,6 +111,7 @@ typedef struct {
 	gboolean has_gain;
 	gboolean has_exposure_time;
 	gboolean has_acquisition_frame_rate;
+	gboolean has_acquisition_frame_rate_auto;
 	gboolean has_acquisition_frame_rate_enabled;
 
 	GError *init_error;
@@ -1011,7 +1012,8 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate, GError **error)
 					arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", TRUE, &local_error);
 			}
 			if (local_error == NULL)
-				arv_camera_set_string (camera, "AcquisitionFrameRateAuto", "Off", &local_error);
+				if (priv->has_acquisition_frame_rate_auto)
+					arv_camera_set_string (camera, "AcquisitionFrameRateAuto", "Off", &local_error);
 			if (local_error == NULL)
 				arv_camera_set_float (camera, "AcquisitionFrameRate", frame_rate, &local_error);
 			break;
@@ -2945,6 +2947,8 @@ arv_camera_constructed (GObject *object)
 	priv->has_exposure_time = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device, "ExposureTime"));
 	priv->has_acquisition_frame_rate = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device,
 										    "AcquisitionFrameRate"));
+	priv->has_acquisition_frame_rate_auto = ARV_IS_GC_STRING (arv_device_get_feature (priv->device,
+											  "AcquisitionFrameRateAuto"));
 	priv->has_acquisition_frame_rate_enabled = ARV_IS_GC_BOOLEAN (arv_device_get_feature (priv->device,
 											      "AcquisitionFrameRateEnabled"));
 }
