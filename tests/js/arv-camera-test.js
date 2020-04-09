@@ -44,17 +44,31 @@ camera.set_frame_rate (10.0);
 let [x,y,width,height] = camera.get_region ();
 let payload = camera.get_payload ();
 
-log (payload);
+print ("Camera vendor : ", camera.get_vendor_name ());
+print ("Camera model  : ", camera.get_model_name ());
+print ("ROI           : ", width, "x", height, " at ", x, ",", y);
+print ("Payload       : ", payload);
+print ("Pixel format  : ", camera.get_pixel_format_as_string ());
 
-let stream = camera.create_stream (null, null);
+let stream = camera.create_stream (null);
 
-for (var i = 0; i < 100; i++)
-	stream.push_buffer (Aravis.Buffer.new_allocate (payload));
+for (var i = 0; i < 10; i++) {
+    stream.push_buffer (Aravis.Buffer.new_allocate (payload));
+}
+
+print ("Start Acquisition");
 
 camera.start_acquisition ();
 
-let buffer = stream.pop_buffer ();
+print ("Acquisition");
 
-log (buffer);
+for (var i = 0; i < 20; i++) {
+    let buffer = stream.pop_buffer ();
+    print (buffer);
+    if (buffer)
+	stream.push_buffer (buffer);
+}
+
+print ("Stop acquisition");
 
 camera.stop_acquisition ();
