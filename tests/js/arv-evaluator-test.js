@@ -40,12 +40,12 @@ let evaluator = Aravis.Evaluator.new ("1+2*4.4");
 let int_result = evaluator.evaluate_as_int64 ();
 let dbl_result = evaluator.evaluate_as_double ();
 
-log (int_result);
-log (dbl_result);
+print (int_result);
+print (dbl_result);
 
 evaluator.set_expression ("VAR+10");
 evaluator.set_double_variable ("VAR", 1.2);
 
-let dbl_result = evaluator.evaluate_as_double ();
+dbl_result = evaluator.evaluate_as_double ();
 
-log (dbl_result);
+print (dbl_result);
