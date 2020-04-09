@@ -42,6 +42,6 @@ let payload = genicam.get_node ("PayloadSize").get_value ();
 let width = genicam.get_node ("SensorWidth").get_value ();
 let height = genicam.get_node ("SensorHeight").get_value ();
 
-log (payload);
-log (width);
-log (height);
+print ("Payload : ", payload);
+print ("Width   : ", width);
+print ("Height  : ", height);

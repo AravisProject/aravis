@@ -52,7 +52,9 @@ print ("Pixel format  : ", camera.get_pixel_format_as_string ());
 
 let stream = camera.create_stream (null);
 
-for (var i = 0; i < 10; i++) {
+var i;
+
+for (i = 0; i < 10; i++) {
     stream.push_buffer (Aravis.Buffer.new_allocate (payload));
 }
 
@@ -62,11 +64,12 @@ camera.start_acquisition ();
 
 print ("Acquisition");
 
-for (var i = 0; i < 20; i++) {
+for (i = 0; i < 20; i++) {
     let buffer = stream.pop_buffer ();
     print (buffer);
-    if (buffer)
+    if (buffer) {
 	stream.push_buffer (buffer);
+    }
 }
 
 print ("Stop acquisition");

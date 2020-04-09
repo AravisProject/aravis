@@ -37,15 +37,15 @@ const Aravis = imports.gi.Aravis;
 
 let evaluator = Aravis.Evaluator.new ("1+2*4.4");
 
-let int_result = evaluator.evaluate_as_int64 ();
-let dbl_result = evaluator.evaluate_as_double ();
+let intResult = evaluator.evaluate_as_int64 ();
+let dblResult = evaluator.evaluate_as_double ();
 
-print (int_result);
-print (dbl_result);
+print (intResult);
+print (dblResult);
 
 evaluator.set_expression ("VAR+10");
 evaluator.set_double_variable ("VAR", 1.2);
 
-dbl_result = evaluator.evaluate_as_double ();
+dblResult = evaluator.evaluate_as_double ();
 
-print (dbl_result);
+print (dblResult);
