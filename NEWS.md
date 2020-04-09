@@ -1,3 +1,11 @@
+Unstable release 0.7.4
+======================
+
+  * camera/device/stream: add an error parameter to object intantiation functions (Emmanuel)
+  * camera: fix node type mismatch error in set_frame_rate (Arkadiusz)
+  * gigevision: ignore duplicated packets (Joris)
+  * build: make build of tests optional (Edgar)
+
 Unstable release 0.7.3
 ======================
 
@@ -160,7 +168,7 @@ Release 0.5.7
   * genicam: raw data support (Steve)
   * camera: multiframe acquisition mode (Lee)
   * camera: extension of the trigger API (Steve)
-  * gigevision: instantiation by IP address or hostname (Blaz, Arkadius)
+  * gigevision: instantiation by IP address or hostname (Blaz, Arkadiusz)
   * build: fix compilation with old glib (Blaz)
   * build: intructions and compilation fix for OSX (Christoffer, Fernando)
   * build: Travis and Coverity support on github (Emmanuel)
