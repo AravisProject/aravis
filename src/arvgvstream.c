@@ -82,8 +82,6 @@ typedef struct {
 
 struct _ArvGvStream {
 	ArvStream	stream;
-
-	ArvGvStreamPrivate *priv;
 };
 
 struct _ArvGvStreamClass {
@@ -1021,42 +1019,44 @@ arv_gv_stream_thread (void *data)
 guint16
 arv_gv_stream_get_port (ArvGvStream *gv_stream)
 {
+	ArvGvStreamPrivate *priv = arv_gv_stream_get_instance_private (gv_stream);
+
 	g_return_val_if_fail (ARV_IS_GV_STREAM (gv_stream), 0);
 
-	return gv_stream->priv->thread_data->stream_port;
+	return priv->thread_data->stream_port;
 }
 
 static void
 arv_gv_stream_start_thread (ArvStream *stream)
 {
-	ArvGvStream *gv_stream = ARV_GV_STREAM (stream);
+	ArvGvStreamPrivate *priv = arv_gv_stream_get_instance_private (ARV_GV_STREAM (stream));
 	ArvGvStreamThreadData *thread_data;
 
-	g_return_if_fail (gv_stream->priv->thread == NULL);
-	g_return_if_fail (gv_stream->priv->thread_data != NULL);
+	g_return_if_fail (priv->thread == NULL);
+	g_return_if_fail (priv->thread_data != NULL);
 
-	thread_data = gv_stream->priv->thread_data;
+	thread_data = priv->thread_data;
 
 	thread_data->cancellable = g_cancellable_new ();
-	gv_stream->priv->thread = g_thread_new ("arv_gv_stream", arv_gv_stream_thread, gv_stream->priv->thread_data);
+	priv->thread = g_thread_new ("arv_gv_stream", arv_gv_stream_thread, priv->thread_data);
 }
 
 static void
 arv_gv_stream_stop_thread (ArvStream *stream)
 {
-	ArvGvStream *gv_stream = ARV_GV_STREAM (stream);
+	ArvGvStreamPrivate *priv = arv_gv_stream_get_instance_private (ARV_GV_STREAM (stream));
 	ArvGvStreamThreadData *thread_data;
 
-	g_return_if_fail (gv_stream->priv->thread != NULL);
-	g_return_if_fail (gv_stream->priv->thread_data != NULL);
+	g_return_if_fail (priv->thread != NULL);
+	g_return_if_fail (priv->thread_data != NULL);
 
-	thread_data = gv_stream->priv->thread_data;
+	thread_data = priv->thread_data;
 
 	g_cancellable_cancel (thread_data->cancellable);
-	g_thread_join (gv_stream->priv->thread);
+	g_thread_join (priv->thread);
 	g_clear_object (&thread_data->cancellable);
 
-	gv_stream->priv->thread = NULL;
+	priv->thread = NULL;
 }
 
 /**
@@ -1083,6 +1083,7 @@ arv_gv_stream_constructed (GObject *object)
 {
 	ArvStream *stream = ARV_STREAM (object);
 	ArvGvStream *gv_stream = ARV_GV_STREAM (object);
+	ArvGvStreamPrivate *priv = arv_gv_stream_get_instance_private (ARV_GV_STREAM (stream));
 	ArvGvStreamThreadData *thread_data;
 	ArvGvStreamOption options;
 	ArvGvDevice *gv_device = NULL;
@@ -1161,7 +1162,7 @@ arv_gv_stream_constructed (GObject *object)
 	thread_data->socket_buffer_size = 0;
 	thread_data->current_socket_buffer_size = 0;
 
-	gv_stream->priv->thread_data = thread_data;
+	priv->thread_data = thread_data;
 
 	interface_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (arv_gv_device_get_interface_address (gv_device)));
 	device_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (arv_gv_device_get_device_address (gv_device)));
@@ -1205,11 +1206,12 @@ arv_gv_stream_get_statistics (ArvGvStream *gv_stream,
 			      guint64 *n_missing_packets)
 
 {
+	ArvGvStreamPrivate *priv = arv_gv_stream_get_instance_private (gv_stream);
 	ArvGvStreamThreadData *thread_data;
 
 	g_return_if_fail (ARV_IS_GV_STREAM (gv_stream));
 
-	thread_data = gv_stream->priv->thread_data;
+	thread_data = priv->thread_data;
 
 	if (n_resent_packets != NULL)
 		*n_resent_packets = thread_data->n_resent_packets;
@@ -1223,10 +1225,10 @@ _get_statistics (ArvStream *stream,
 		 guint64 *n_failures,
 		 guint64 *n_underruns)
 {
-	ArvGvStream *gv_stream = ARV_GV_STREAM (stream);
+	ArvGvStreamPrivate *priv = arv_gv_stream_get_instance_private (ARV_GV_STREAM (stream));
 	ArvGvStreamThreadData *thread_data;
 
-	thread_data = gv_stream->priv->thread_data;
+	thread_data = priv->thread_data;
 
 	*n_completed_buffers = thread_data->n_completed_buffers;
 	*n_failures = thread_data->n_failures;
@@ -1237,10 +1239,10 @@ static void
 arv_gv_stream_set_property (GObject * object, guint prop_id,
 			    const GValue * value, GParamSpec * pspec)
 {
-	ArvGvStream *gv_stream = ARV_GV_STREAM (object);
+	ArvGvStreamPrivate *priv = arv_gv_stream_get_instance_private (ARV_GV_STREAM (object));
 	ArvGvStreamThreadData *thread_data;
 
-	thread_data = gv_stream->priv->thread_data;
+	thread_data = priv->thread_data;
 
 	switch (prop_id) {
 		case ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER:
@@ -1271,10 +1273,10 @@ static void
 arv_gv_stream_get_property (GObject * object, guint prop_id,
 			    GValue * value, GParamSpec * pspec)
 {
-	ArvGvStream *gv_stream = ARV_GV_STREAM (object);
+	ArvGvStreamPrivate *priv = arv_gv_stream_get_instance_private (ARV_GV_STREAM (object));
 	ArvGvStreamThreadData *thread_data;
 
-	thread_data = gv_stream->priv->thread_data;
+	thread_data = priv->thread_data;
 
 	switch (prop_id) {
 		case ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER:
@@ -1304,21 +1306,20 @@ arv_gv_stream_get_property (GObject * object, guint prop_id,
 static void
 arv_gv_stream_init (ArvGvStream *gv_stream)
 {
-	gv_stream->priv = arv_gv_stream_get_instance_private (gv_stream);
 }
 
 static void
 arv_gv_stream_finalize (GObject *object)
 {
-	ArvGvStream *gv_stream = ARV_GV_STREAM (object);
+	ArvGvStreamPrivate *priv = arv_gv_stream_get_instance_private (ARV_GV_STREAM (object));
 
-	arv_gv_stream_stop_thread (ARV_STREAM (gv_stream));
+	arv_gv_stream_stop_thread (ARV_STREAM (object));
 
-	if (gv_stream->priv->thread_data != NULL) {
+	if (priv->thread_data != NULL) {
 		ArvGvStreamThreadData *thread_data;
 		char *statistic_string;
 
-		thread_data = gv_stream->priv->thread_data;
+		thread_data = priv->thread_data;
 
 		statistic_string = arv_statistic_to_string (thread_data->statistic);
 		arv_debug_stream (statistic_string);
