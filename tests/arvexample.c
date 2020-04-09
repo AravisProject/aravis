@@ -83,7 +83,7 @@ main (int argc, char **argv)
 		/* Create a new stream object */
 		stream = arv_camera_create_stream (camera, NULL, NULL, &error);
 
-		if (stream != NULL) {
+		if (ARV_IS_STREAM (stream)) {
 			/* Push 50 buffer in the stream input buffer queue */
 			for (i = 0; i < 50; i++)
 				arv_stream_push_buffer (stream, arv_buffer_new (payload, NULL));
