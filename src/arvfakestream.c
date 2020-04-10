@@ -171,7 +171,7 @@ arv_fake_stream_constructed (GObject *object)
 	ArvFakeStream *fake_stream = ARV_FAKE_STREAM (object);
 	ArvFakeStreamPrivate *priv = arv_fake_stream_get_instance_private (fake_stream);
 	ArvFakeStreamThreadData *thread_data;
-	ArvFakeDevice *fake_device = NULL;
+	g_autoptr (ArvFakeDevice) fake_device = NULL;
 
 	thread_data = g_new (ArvFakeStreamThreadData, 1);
 	thread_data->stream = stream;

@@ -114,7 +114,6 @@ typedef struct {
 struct _ArvGvStreamThreadData {
 	GCancellable *cancellable;
 
-	ArvGvDevice *gv_device;
 	ArvStream *stream;
 
 	ArvStreamCallback callback;
@@ -1086,7 +1085,7 @@ arv_gv_stream_constructed (GObject *object)
 	ArvGvStreamPrivate *priv = arv_gv_stream_get_instance_private (ARV_GV_STREAM (stream));
 	ArvGvStreamThreadData *thread_data;
 	ArvGvStreamOption options;
-	ArvGvDevice *gv_device = NULL;
+	g_autoptr (ArvGvDevice) gv_device = NULL;
 	GInetAddress *interface_address;
 	GInetAddress *device_address;
 	guint64 timestamp_tick_frequency;
@@ -1118,7 +1117,6 @@ arv_gv_stream_constructed (GObject *object)
 	thread_data = g_new (ArvGvStreamThreadData, 1);
 
 	thread_data->stream = stream;
-	thread_data->gv_device = gv_device;
 
 	g_object_get (object,
 		      "callback", &thread_data->callback,

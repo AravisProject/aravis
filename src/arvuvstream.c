@@ -459,6 +459,7 @@ arv_uv_stream_finalize (GObject *object)
 		arv_debug_stream ("[UvStream::finalize] n_underruns            = %u",
 				  thread_data->n_underruns);
 
+		g_clear_object (&thread_data->uv_device);
 		g_clear_pointer (&priv->thread_data, g_free);
 	}
 
