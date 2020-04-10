@@ -161,6 +161,7 @@ if (e) {
 
 * Forum: https://aravis-project.discourse.group
 * Github repository: https://github.com/AravisProject/aravis
+* Release notes: https://github.com/AravisProject/aravis/blob/master/NEWS.md
 * Aravis 0.6 documentation: https://aravisproject.github.io/docs/aravis-0.6/
 * Unstable Aravis 0.7 documentation: https://aravisproject.github.io/docs/aravis-0.7/
 * Genicam standard : http://www.genicam.org
