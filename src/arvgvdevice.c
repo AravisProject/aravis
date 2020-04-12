@@ -1063,11 +1063,16 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 	n_stream_channels = arv_device_get_integer_feature_value (device, "GevStreamChannelCount", NULL);
 	arv_debug_device ("[GvDevice::create_stream] Number of stream channels = %d", n_stream_channels);
 
-	if (n_stream_channels < 1)
+	if (n_stream_channels < 1) {
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NO_STREAM_CHANNEL,
+			     "No stream channel found");
 		return NULL;
+	}
 
 	if (!priv->io_data->is_controller) {
 		arv_warning_device ("[GvDevice::create_stream] Can't create stream without control access");
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_CONTROLLER,
+			     "Controller privilege required for streaming control");
 		return NULL;
 	}
 

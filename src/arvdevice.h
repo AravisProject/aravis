@@ -48,6 +48,8 @@ GQuark 		arv_device_error_quark 		(void);
  * @ARV_DEVICE_ERROR_NOT_FOUND: Device not found
  * @ARV_DEVICE_ERROR_INVALID_PARAMETER: Invalid construction parameter
  * @ARV_DEVICE_ERROR_GENICAM_NOT_FOUND: Missing Genicam data
+ * @ARV_DEVICE_ERROR_NO_STREAM_CHANNEL: No stream channel found
+ * @ARV_DEVICE_ERROR_NOT_CONTROLLER: Controller privilege required
  * @ARV_DEVICE_ERROR_UNKNOWN: Unknown error
  */
 
@@ -61,6 +63,8 @@ typedef enum {
 	ARV_DEVICE_ERROR_NOT_FOUND,
 	ARV_DEVICE_ERROR_INVALID_PARAMETER,
 	ARV_DEVICE_ERROR_GENICAM_NOT_FOUND,
+	ARV_DEVICE_ERROR_NO_STREAM_CHANNEL,
+	ARV_DEVICE_ERROR_NOT_CONTROLLER,
 	ARV_DEVICE_ERROR_UNKNOWN
 } ArvDeviceError;
 
