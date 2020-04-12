@@ -136,7 +136,11 @@ static const GOptionEntry arv_option_entries[] =
 
 typedef struct {
 	GMainLoop *main_loop;
+
 	int buffer_count;
+	int error_count;
+	size_t transferred;
+
 	ArvChunkParser *chunk_parser;
 	char **chunks;
 } ApplicationData;
@@ -156,8 +160,14 @@ new_buffer_cb (ArvStream *stream, ApplicationData *data)
 
 	buffer = arv_stream_try_pop_buffer (stream);
 	if (buffer != NULL) {
-		if (arv_buffer_get_status (buffer) == ARV_BUFFER_STATUS_SUCCESS)
+		if (arv_buffer_get_status (buffer) == ARV_BUFFER_STATUS_SUCCESS) {
+			size_t size = 0;
 			data->buffer_count++;
+			arv_buffer_get_data (buffer, &size);
+			data->transferred += size;
+		} else {
+			data->error_count++;
+		}
 
 		if (arv_buffer_has_chunks (buffer) && data->chunks != NULL) {
 			int i;
@@ -207,8 +217,17 @@ periodic_task_cb (void *abstract_data)
 {
 	ApplicationData *data = abstract_data;
 
-	printf ("Frame rate = %d Hz\n", data->buffer_count);
+	printf ("%3d frame%s - %7.3g MiB/s",
+		data->buffer_count,
+		data->buffer_count > 1 ? "s/s" : "/s ",
+		(double) data->transferred / 1e6);
+	if (data->error_count > 0)
+		printf (" - %d error%s\n", data->error_count, data->error_count > 1 ? "s" : "");
+	else
+		printf ("\n");
 	data->buffer_count = 0;
+	data->error_count = 0;
+	data->transferred = 0;
 
 	if (cancel) {
 		g_main_loop_quit (data->main_loop);
@@ -247,6 +266,8 @@ main (int argc, char **argv)
 	int i;
 
 	data.buffer_count = 0;
+	data.error_count = 0;
+	data.transferred = 0;
 	data.chunks = NULL;
 	data.chunk_parser = NULL;
 
@@ -401,7 +422,7 @@ main (int argc, char **argv)
 			g_signal_connect (arv_camera_get_device (camera), "control-lost",
 					  G_CALLBACK (control_lost_cb), NULL);
 
-			g_timeout_add_seconds (1, periodic_task_cb, &data);
+			g_timeout_add (1000, periodic_task_cb, &data);
 
 			data.main_loop = g_main_loop_new (NULL, FALSE);
 
