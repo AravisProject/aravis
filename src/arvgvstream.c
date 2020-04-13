@@ -1114,7 +1114,7 @@ arv_gv_stream_constructed (GObject *object)
 		return;
 	}
 
-	thread_data = g_new (ArvGvStreamThreadData, 1);
+	thread_data = g_new0 (ArvGvStreamThreadData, 1);
 
 	thread_data->stream = stream;
 
@@ -1132,33 +1132,12 @@ arv_gv_stream_constructed (GObject *object)
 	thread_data->use_packet_socket = (options & ARV_GV_STREAM_OPTION_PACKET_SOCKET_DISABLED) == 0;
 
 	thread_data->packet_id = 65300;
-	thread_data->last_frame_id = 0;
-
-	thread_data->n_completed_buffers = 0;
-	thread_data->n_failures = 0;
-	thread_data->n_underruns = 0;
-	thread_data->n_aborteds = 0;
-	thread_data->n_timeouts = 0;
-	thread_data->n_missing_frames = 0;
-
-	thread_data->n_size_mismatch_errors = 0;
-
-	thread_data->n_received_packets = 0;
-	thread_data->n_missing_packets = 0;
-	thread_data->n_error_packets = 0;
-	thread_data->n_ignored_packets = 0;
-	thread_data->n_resent_packets = 0;
-	thread_data->n_resend_requests = 0;
-	thread_data->n_duplicated_packets = 0;
 
 	thread_data->statistic = arv_statistic_new (1, 5000, 200, 0);
-	thread_data->statistic_count = 0;
 
 	arv_statistic_set_name (thread_data->statistic, 0, "Buffer reception time");
 
 	thread_data->socket_buffer_option = ARV_GV_STREAM_SOCKET_BUFFER_FIXED;
-	thread_data->socket_buffer_size = 0;
-	thread_data->current_socket_buffer_size = 0;
 
 	priv->thread_data = thread_data;
 
