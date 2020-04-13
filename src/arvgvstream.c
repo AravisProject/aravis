@@ -59,7 +59,7 @@
 #define ARV_GV_STREAM_POLL_TIMEOUT_US			1000000
 #define ARV_GV_STREAM_PACKET_TIMEOUT_US_DEFAULT		40000
 #define ARV_GV_STREAM_FRAME_RETENTION_US_DEFAULT	200000
-#define ARV_GV_STREAM_PACKET_REQUEST_RATIO_DEFAULT	0.10
+#define ARV_GV_STREAM_PACKET_REQUEST_RATIO_DEFAULT	0.25
 
 #define ARV_GV_STREAM_DISCARD_LATE_FRAME_THRESHOLD	100
 
@@ -109,6 +109,9 @@ typedef struct {
 
 	guint n_packets;
 	ArvGvStreamPacketData *packet_data;
+
+	guint n_packet_resend_requests;
+	gboolean resend_ratio_reached;
 } ArvGvStreamFrameData;
 
 struct _ArvGvStreamThreadData {
@@ -160,6 +163,7 @@ struct _ArvGvStreamThreadData {
 	guint n_ignored_packets;
 	guint n_resend_requests;
 	guint n_resent_packets;
+	guint n_resend_ratio_reached;
 	guint n_duplicated_packets;
 
 	ArvStatistic *statistic;
@@ -425,11 +429,11 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 		       guint32 packet_id,
 		       guint64 time_us)
 {
-	guint n_packet_requests = 0;
 	int i;
 
 	if (thread_data->packet_resend == ARV_GV_STREAM_PACKET_RESEND_NEVER ||
-	    frame->error_packet_received)
+	    frame->error_packet_received ||
+	    frame->resend_ratio_reached)
 		return;
 
 	if ((int) (frame->n_packets * thread_data->packet_request_ratio) <= 0)
@@ -448,15 +452,18 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 				if (first_missing >= 0) {
 					int j;
 
-					if (i - first_missing + n_packet_requests >
+					if (i - first_missing + frame->n_packet_resend_requests >
 					    (frame->n_packets * thread_data->packet_request_ratio)) {
-						n_packet_requests += i - first_missing;
+						frame->n_packet_resend_requests += i - first_missing;
 
-						arv_log_stream_thread ("[GvStream::missing_packet_check]"
+						arv_debug_stream_thread ("[GvStream::missing_packet_check]"
 									 " Maximum number of packet requests "
 									 "reached at dt = %" G_GINT64_FORMAT ", n_requests = %u/%u",
 									 time_us - frame->first_packet_time_us,
-									 n_packet_requests, frame->n_packets);
+									 frame->n_packet_resend_requests, frame->n_packets);
+
+						thread_data->n_resend_ratio_reached++;
+						frame->resend_ratio_reached = TRUE;
 
 						return;
 					}
@@ -479,15 +486,18 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 		if (first_missing >= 0) {
 			int j;
 
-			if (i - first_missing + n_packet_requests >
+			if (i - first_missing + frame->n_packet_resend_requests >
 			    (frame->n_packets * thread_data->packet_request_ratio)) {
-				n_packet_requests += i - first_missing;
+				frame->n_packet_resend_requests += i - first_missing;
 
-				arv_log_stream_thread ("[GvStream::missing_packet_check]"
+				arv_debug_stream_thread ("[GvStream::missing_packet_check]"
 						       " Maximum number of packet requests "
 						       "reached at dt = %" G_GINT64_FORMAT ", n_requests = %u/%u",
 						       time_us - frame->first_packet_time_us,
-						       n_packet_requests, frame->n_packets);
+						       frame->n_packet_resend_requests, frame->n_packets);
+
+				thread_data->n_resend_ratio_reached++;
+				frame->resend_ratio_reached = TRUE;
 
 				return;
 			}
@@ -1332,6 +1342,8 @@ arv_gv_stream_finalize (GObject *object)
 				  thread_data->n_resend_requests);
 		arv_debug_stream ("[GvStream::finalize] n_resent_packets       = %u",
 				  thread_data->n_resent_packets);
+		arv_debug_stream ("[GvStream::finalize] n_resend_ratio_reached = %u",
+				  thread_data->n_resend_ratio_reached);
 		arv_debug_stream ("[GvStream::finalize] n_duplicated_packets   = %u",
 				  thread_data->n_duplicated_packets);
 
