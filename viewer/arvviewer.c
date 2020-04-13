@@ -258,6 +258,7 @@ arv_viewer_value_from_log (double value, double min, double max)
 typedef struct {
 	GWeakRef stream;
 	ArvBuffer* arv_buffer;
+	void *data;
 } ArvGstBufferReleaseData;
 
 static void
@@ -267,11 +268,13 @@ gst_buffer_release_cb (void *user_data)
 
 	ArvStream* stream = g_weak_ref_get (&release_data->stream);
 
+	g_free (release_data->data);
+
 	if (stream) {
 		gint n_input_buffers, n_output_buffers;
 
 		arv_stream_get_n_buffers (stream, &n_input_buffers, &n_output_buffers);
-		arv_log_viewer ("push_buffer (%d,%d)", n_input_buffers, n_output_buffers);
+		arv_log_viewer ("push buffer (%d,%d)", n_input_buffers, n_output_buffers);
 
 		arv_stream_push_buffer (stream, release_data->arv_buffer);
 		g_object_unref (stream);
@@ -287,21 +290,26 @@ gst_buffer_release_cb (void *user_data)
 static GstBuffer *
 arv_to_gst_buffer (ArvBuffer *arv_buffer, ArvStream *stream)
 {
-	GstBuffer *buffer;
+	ArvGstBufferReleaseData* release_data;
 	int arv_row_stride;
 	int width, height;
 	char *buffer_data;
 	size_t buffer_size;
+	size_t size;
+	void *data;
 
 	buffer_data = (char *) arv_buffer_get_data (arv_buffer, &buffer_size);
 	arv_buffer_get_image_region (arv_buffer, NULL, NULL, &width, &height);
 	arv_row_stride = width * ARV_PIXEL_FORMAT_BIT_PER_PIXEL (arv_buffer_get_image_pixel_format (arv_buffer)) / 8;
 
+	release_data = g_new0 (ArvGstBufferReleaseData, 1);
+
+	g_weak_ref_init (&release_data->stream, stream);
+	release_data->arv_buffer = arv_buffer;
+
 	/* Gstreamer requires row stride to be a multiple of 4 */
 	if ((arv_row_stride & 0x3) != 0) {
 		int gst_row_stride;
-		size_t size;
-		void *data;
 		int i;
 
 		gst_row_stride = (arv_row_stride & ~(0x3)) + 4;
@@ -312,20 +320,16 @@ arv_to_gst_buffer (ArvBuffer *arv_buffer, ArvStream *stream)
 		for (i = 0; i < height; i++)
 			memcpy (((char *) data) + i * gst_row_stride, buffer_data + i * arv_row_stride, arv_row_stride);
 
-		buffer = gst_buffer_new_wrapped (data, size);
+		release_data->data = data;
+
 	} else {
-		ArvGstBufferReleaseData* release_data = g_new0 (ArvGstBufferReleaseData, 1);
-
-		g_weak_ref_init (&release_data->stream, stream);
-		release_data->arv_buffer = arv_buffer;
-
-		buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
-						      buffer_data, buffer_size,
-						      0, buffer_size,
-						      release_data, gst_buffer_release_cb);
+		data = buffer_data;
+		size = buffer_size;
 	}
 
-	return buffer;
+	return gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+					    data, size, 0, size,
+					    release_data, gst_buffer_release_cb);
 }
 
 static void
@@ -339,20 +343,22 @@ new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 		return;
 
 	arv_stream_get_n_buffers (stream, &n_input_buffers, &n_output_buffers);
-	arv_log_viewer ("pop_buffer (%d,%d)", n_input_buffers, n_output_buffers);
+	arv_log_viewer ("pop buffer (%d,%d)", n_input_buffers, n_output_buffers);
 
 	if (arv_buffer_get_status (arv_buffer) == ARV_BUFFER_STATUS_SUCCESS) {
 		size_t size;
 
 		arv_buffer_get_data (arv_buffer, &size);
-		gst_app_src_push_buffer (GST_APP_SRC (viewer->appsrc), arv_to_gst_buffer (arv_buffer, stream));
 
 		g_clear_object( &viewer->last_buffer );
 		viewer->last_buffer = g_object_ref( arv_buffer );
 
+		gst_app_src_push_buffer (GST_APP_SRC (viewer->appsrc), arv_to_gst_buffer (arv_buffer, stream));
+
 		viewer->n_images++;
 		viewer->n_bytes += size;
 	} else {
+		arv_log_viewer ("push discarded buffer");
 		arv_stream_push_buffer (stream, arv_buffer);
 		viewer->n_errors++;
 	}
