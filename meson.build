@@ -25,14 +25,12 @@ libz_dep = dependency ('zlib', required: true)
 
 libm = cc.find_library ('m', required: true)
 
-aravis_dependencies = [glib_dep, gobject_dep, gio_dep, xml2_dep, libz_dep, libm]
-aravis_dependency_str = 'glib-2.0 gobject-2.0 gio-2.0'
-aravis_private_dependency_str = 'libxml-2.0 zlib'
+aravis_public_dependencies = [glib_dep, gobject_dep, gio_dep]
+aravis_dependencies = [aravis_public_dependencies, xml2_dep, libz_dep, libm]
 
 enable_usb = get_option ('usb')
 if enable_usb
 	aravis_dependencies += dependency ('libusb-1.0', required: true)
-	aravis_private_dependency_str += ' libusb-1.0'
 endif
 
 subdir ('po')
