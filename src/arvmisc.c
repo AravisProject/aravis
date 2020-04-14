@@ -345,11 +345,12 @@ arv_value_copy (ArvValue *to, const ArvValue *from)
 ArvValue *
 arv_value_duplicate (const ArvValue *from)
 {
-	ArvValue *value = g_new (ArvValue, 1);
+	ArvValue *value;
 
 	if (from == NULL)
 		return NULL;
 
+	value = g_new (ArvValue, 1);
 	*value = *from;
 
 	return value;
