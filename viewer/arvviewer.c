@@ -979,7 +979,6 @@ start_video (ArvViewer *viewer)
 	for (i = 0; i < 5; i++)
 		arv_stream_push_buffer (viewer->stream, arv_buffer_new (payload, NULL));
 
-	arv_camera_get_region (viewer->camera, NULL, NULL, &width, &height, NULL);
 	set_camera_widgets(viewer);
 	pixel_format = arv_camera_get_pixel_format (viewer->camera, NULL);
 
@@ -1051,6 +1050,7 @@ start_video (ArvViewer *viewer)
 	g_object_set(G_OBJECT (videosink), "sync", FALSE, NULL);
 
 	caps = gst_caps_from_string (caps_string);
+	arv_camera_get_region (viewer->camera, NULL, NULL, &width, &height, NULL);
 	gst_caps_set_simple (caps,
 			     "width", G_TYPE_INT, width,
 			     "height", G_TYPE_INT, height,
