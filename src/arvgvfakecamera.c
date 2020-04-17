@@ -265,13 +265,11 @@ _thread (void *user_data)
 
 	do {
 		guint64 next_timestamp_us;
-		guint64 sleep_time_us;
 
 		if (is_streaming) {
-			sleep_time_us = arv_fake_camera_get_sleep_time_for_next_frame (gv_fake_camera->priv->camera, &next_timestamp_us);
+			arv_fake_camera_get_sleep_time_for_next_frame (gv_fake_camera->priv->camera, &next_timestamp_us);
 		} else {
-			sleep_time_us = 100000;
-			next_timestamp_us = g_get_real_time () + sleep_time_us;
+			next_timestamp_us = g_get_real_time () + 100000;
 		}
 
 		do {

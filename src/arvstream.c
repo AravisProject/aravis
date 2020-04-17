@@ -480,8 +480,6 @@ arv_stream_init (ArvStream *stream)
 {
 	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
 
-	priv = arv_stream_get_instance_private (stream);
-
 	priv->input_queue = g_async_queue_new ();
 	priv->output_queue = g_async_queue_new ();
 
