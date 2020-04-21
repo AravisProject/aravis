@@ -3,27 +3,22 @@ doc_examples = files (['arvexample.c', 'arvchunkparsertest.c'])
 if get_option('tests')
 
 	tests = [
-		['evaluator',	[]],
-		['buffer',		[]],
-		['misc',	[]],
-		['fake',	['-DGENICAM_FILENAME="@0@/src/arv-fake-camera.xml"'.format (meson.source_root ())]],
-		['fakegv',	['-DGENICAM_FILENAME="@0@/src/arv-fake-camera.xml"'.format (meson.source_root ())]],
-		['genicam',	['-DGENICAM_FILENAME="@0@/tests/data/genicam.xml"'.format (meson.source_root ())]]
+		['evaluator',	['main'],    []],
+		['buffer',	['main'],    []],
+		['misc',	['main'],    []],
+		['fake',	['main'],    ['-DGENICAM_FILENAME="@0@/src/arv-fake-camera.xml"'.format (meson.source_root ())]],
+		['fakegv',	['network'], ['-DGENICAM_FILENAME="@0@/src/arv-fake-camera.xml"'.format (meson.source_root ())]],
+		['genicam',	['main'],    ['-DGENICAM_FILENAME="@0@/tests/data/genicam.xml"'.format (meson.source_root ())]]
 	]
 
 	foreach t: tests
 		exe = executable (t[0], '@0@.c'.format (t[0]),
-						  c_args: [t[1]],
-						  link_with: aravis_library,
-						  dependencies: aravis_dependencies,
-						  include_directories: [library_inc])
-		test (t[0], exe)
+				  c_args: [t[2]],
+				  link_with: aravis_library,
+				  dependencies: aravis_dependencies,
+				  include_directories: [library_inc])
+		test (t[0], exe, suite: t[1])
 	endforeach
-
-	python_tests = [
-		['fake.py',		[]],
-		['exception.py',	[]]
-	]
 
 	if get_option ('introspection')
 		pymod = import ('python')
@@ -31,6 +26,11 @@ if get_option('tests')
 		py = pymod.find_installation ('python3', required: false)
 
 		if py.found()
+			python_tests = [
+			  ['fake.py',		[]],
+			  ['exception.py',	[]]
+			]
+
 			environment = [
 				'GI_TYPELIB_PATH=' + join_paths (meson.build_root() , 'src'),
 				'LD_LIBRARY_PATH=' + join_paths (meson.build_root() , 'src'),
@@ -38,7 +38,7 @@ if get_option('tests')
 			]
 
 			foreach t: python_tests
-				test (t[0], py, args: files (t[0]), env: environment)
+				test (t[0], py, suite: 'python', args: files (t[0]), env: environment)
 			endforeach
 		endif
 
