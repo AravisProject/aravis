@@ -14,7 +14,8 @@ viewer_headers = [
 
 viewer_c_args = [
 	'-I../src',
-	'-DARAVIS_LOCALE_DIR="@0@"'.format (join_paths (get_option ('prefix'), 'share', 'locale'))
+	'-DARAVIS_LOCALE_DIR="@0@"'.format (join_paths (get_option ('prefix'), 'share', 'locale')),
+	'-DARAVIS_GETTEXT="aravis-@0@"'.format (aravis_api_version)
 ]
 
 viewer_resources = gnome.compile_resources (
