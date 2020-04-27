@@ -38,6 +38,9 @@
 #include <time.h>
 #include <string.h>
 
+/* TODO: Add l10n */
+#define _(x) (x)
+
 #define GST_ARAVIS_DEFAULT_N_BUFFERS		50
 #define GST_ARAVIS_BUFFER_TIMEOUT_DEFAULT	2000000
 
@@ -282,41 +285,69 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 	return TRUE;
 }
 
-void
+static gboolean
 gst_aravis_init_camera (GstAravis *gst_aravis)
 {
+	GError *e = NULL;
+
 	if (gst_aravis->camera != NULL)
 		g_object_unref (gst_aravis->camera);
 
-	gst_aravis->camera = arv_camera_new (gst_aravis->camera_name, NULL);
+	gst_aravis->camera = arv_camera_new (gst_aravis->camera_name, &e);
+	if (e) {
+		GST_ELEMENT_ERROR (gst_aravis, RESOURCE, NOT_FOUND,
+			(_("Could not find camera \"%s\": %s"),
+			 gst_aravis->camera_name ? gst_aravis->camera_name : "",
+			 e->message),
+			(NULL));
+		g_clear_error (&e);
+		return FALSE;
+	}
 
-	gst_aravis->gain = arv_camera_get_gain(gst_aravis->camera, NULL);
-	gst_aravis->gain_auto = arv_camera_is_gain_available(gst_aravis->camera, NULL);
+	gst_aravis->gain = arv_camera_get_gain(gst_aravis->camera, &e);
+	if (!e) gst_aravis->gain_auto = arv_camera_is_gain_available(gst_aravis->camera, &e);
 
-	gst_aravis->exposure_time_us = arv_camera_get_exposure_time(gst_aravis->camera, NULL);
-	if (arv_camera_get_exposure_time_auto(gst_aravis->camera, NULL) == ARV_AUTO_OFF)
-		gst_aravis->exposure_auto = FALSE;
-	else
-		gst_aravis->exposure_auto = TRUE;
+	if (!e) gst_aravis->exposure_time_us = arv_camera_get_exposure_time(gst_aravis->camera, &e);
+	if (!e) {
+		if (arv_camera_get_exposure_time_auto(gst_aravis->camera, &e) == ARV_AUTO_OFF)
+			gst_aravis->exposure_auto = FALSE;
+		else
+			gst_aravis->exposure_auto = TRUE;
+	}
 
-	arv_camera_get_region (gst_aravis->camera, &gst_aravis->offset_x, &gst_aravis->offset_y, NULL, NULL, NULL);
-	arv_camera_get_binning (gst_aravis->camera, &gst_aravis->h_binning, &gst_aravis->v_binning, NULL);
-	gst_aravis->payload = 0;
+	if (!e) arv_camera_get_region (gst_aravis->camera, &gst_aravis->offset_x, &gst_aravis->offset_y, NULL, NULL, &e);
+	if (!e) arv_camera_get_binning (gst_aravis->camera, &gst_aravis->h_binning, &gst_aravis->v_binning, &e);
+	if (!e) gst_aravis->payload = 0;
+
+	if (e) {
+		GST_ELEMENT_ERROR (gst_aravis, RESOURCE, READ,
+			(_("Could not read camera \"%s\": %s"),
+			 gst_aravis->camera_name ? gst_aravis->camera_name : "",
+			 e->message),
+			(NULL));
+		g_object_unref (gst_aravis->camera);
+		gst_aravis->camera = NULL;
+		g_clear_error (&e);
+		return FALSE;
+	}
+
+	return TRUE;
 }
 
 static gboolean
 gst_aravis_start (GstBaseSrc *src)
 {
+	gboolean result = TRUE;
 	GstAravis* gst_aravis = GST_ARAVIS(src);
 
 	GST_LOG_OBJECT (gst_aravis, "Open camera '%s'", gst_aravis->camera_name);
 
 	if (gst_aravis->camera == NULL)
-		gst_aravis_init_camera (gst_aravis);
+		result = gst_aravis_init_camera (gst_aravis);
 
-	gst_aravis->all_caps = gst_aravis_get_all_camera_caps (gst_aravis);
+	if (result) gst_aravis->all_caps = gst_aravis_get_all_camera_caps (gst_aravis);
 
-	return TRUE;
+	return result;
 }
 
 
