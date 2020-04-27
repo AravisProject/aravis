@@ -28,6 +28,10 @@
 #include <libnotify/notify.h>
 #include <libintl.h>
 
+#if GST_GL_HAVE_WINDOW_X11 && defined (GDK_WINDOWING_X11)
+#include <gst/gl/x11/gstgldisplay_x11.h>
+#endif
+
 static char *arv_viewer_option_debug_domains = NULL;
 static char *arv_viewer_option_cache_policy = NULL;
 static gboolean arv_viewer_option_auto_socket_buffer = FALSE;
@@ -73,6 +77,10 @@ main (int argc, char **argv)
 	GOptionContext *context;
 	GError *error = NULL;
 	ArvRegisterCachePolicy cache_policy = ARV_REGISTER_CACHE_POLICY_DEFAULT;
+
+#if GST_GL_HAVE_WINDOW_X11 && defined(GDK_WINDOWING_X11)
+	XInitThreads ();
+#endif
 
 	bindtextdomain (ARAVIS_GETTEXT, ARAVIS_LOCALE_DIR);
 	bind_textdomain_codeset (ARAVIS_GETTEXT, "UTF-8");
