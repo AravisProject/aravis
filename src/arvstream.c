@@ -57,7 +57,7 @@ typedef struct {
 	GRecMutex mutex;
 	gboolean emit_signals;
 
-	ArvUvDevice *device;
+	ArvDevice *device;
 	ArvStreamCallback callback;
 	void *callback_data;
 

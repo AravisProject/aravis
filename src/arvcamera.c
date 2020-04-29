@@ -2551,7 +2551,9 @@ arv_camera_gv_set_stream_options (ArvCamera *camera, ArvGvStreamOption options)
 gboolean
 arv_camera_is_uv_device	(ArvCamera *camera)
 {
+#if ARAVIS_HAS_USB
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+#endif
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
