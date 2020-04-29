@@ -32,6 +32,17 @@ if enable_usb
 	aravis_dependencies += dependency ('libusb-1.0', required: true)
 endif
 
+has_if_packet = cc.has_header (join_paths ('linux','if_packet.h'))
+
+if get_option('packet-socket').enabled()
+  if not has_if_packet
+    error ('missing header for packet-socket support')
+  endif
+  enable_packet_socket = true
+else
+  enable_packet_socket = has_if_packet and get_option('packet-socket').auto()
+endif
+
 subdir ('src')
 subdir ('tests')
 

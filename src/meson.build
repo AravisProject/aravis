@@ -215,7 +215,7 @@ library_include_dir = join_paths (get_option ('includedir'), 'aravis-@0@'.format
 
 library_config_data = configuration_data ()
 library_config_data.set10 ('ARAVIS_HAS_USB', get_option ('usb'))
-library_config_data.set10 ('ARAVIS_HAS_PACKET_SOCKET', get_option ('packet-socket'))
+library_config_data.set10 ('ARAVIS_HAS_PACKET_SOCKET', enable_packet_socket)
 library_config_data.set10 ('ARAVIS_HAS_FAST_HEARTBEAT', get_option ('fast-heartbeat'))
 configure_file (input: 'arvfeatures.h.in', output: 'arvfeatures.h',
 		configuration: library_config_data, install_dir: library_include_dir)
