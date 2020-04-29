@@ -141,14 +141,14 @@ way to deal with this issue is the following construction:
 ```
 GError **error = NULL;
 
-if (!e) arv_camera_set_... (..., &e);
-if (!e) arv_camera_set_... (..., &e);
-if (!e) arv_camera_set_... (..., &e);
-if (!e) arv_camera_set_... (..., &e);
+if (!error) arv_camera_... (..., &error);
+if (!error) arv_camera_... (..., &error);
+if (!error) arv_camera_... (..., &error);
+if (!error) arv_camera_... (..., &error);
 
-if (e) {
+if (error) {
 	handle error here;
-	g_clear_error (&e);
+	g_clear_error (&error);
 }
 ```
 
