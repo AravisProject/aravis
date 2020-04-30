@@ -29,44 +29,34 @@ aravis_public_dependencies = [glib_dep, gobject_dep, gio_dep]
 aravis_dependencies = [aravis_public_dependencies, xml2_dep, libz_dep, libm, usb_dep]
 
 has_if_packet = cc.has_header (join_paths ('linux','if_packet.h'))
-
-if get_option('packet-socket').enabled()
+packet_socket_option = get_option('packet-socket')
+if packet_socket_option.enabled()
   if not has_if_packet
     error ('missing header for packet-socket support')
   endif
-  enable_packet_socket = true
+  packet_socket_enabled = true
 else
-  enable_packet_socket = has_if_packet and get_option('packet-socket').auto()
+  packet_socket_enabled = has_if_packet and packet_socket_option.auto()
 endif
 
 subdir ('src')
 subdir ('tests')
 
-if get_option ('viewer')
-	gtk_dep = dependency ('gtk+-3.0', version: '>=3.12', required: true)
-	gstreamer_base_dep = dependency ('gstreamer-base-1.0', required: true)
-	gstreamer_app_dep = dependency ('gstreamer-app-1.0', required: true)
-	gstreamer_video_dep = dependency ('gstreamer-video-1.0', required: true)
-	notify_dep = dependency ('libnotify', required: true)
+viewer_enabled = false
+viewer_option = get_option ('viewer')
+viewer_deps = aravis_dependencies + [dependency ('gtk+-3.0', version: '>=3.12', required: viewer_option),
+				     dependency ('gstreamer-base-1.0', required: viewer_option),
+				     dependency ('gstreamer-app-1.0', required: viewer_option),
+				     dependency ('gstreamer-video-1.0', required: viewer_option),
+				     dependency ('libnotify', required: viewer_option)]
+subdir ('po', if_found: viewer_deps)
+subdir ('viewer', if_found: viewer_deps)
 
-	aravis_viewer_dependencies = [aravis_dependencies, gtk_dep, gstreamer_base_dep, gstreamer_app_dep,
-		gstreamer_video_dep, notify_dep]
+gst_option = get_option ('gst-plugin')
+gst_deps = aravis_dependencies + [dependency ('gstreamer-base-1.0', required: gst_option),
+                                  dependency ('gstreamer-app-1.0', required: gst_option)]
+subdir('gst', if_found: gst_deps)
 
-	i18n = import ('i18n')
-
-	subdir ('po')
-	subdir ('viewer')
-endif
-
-if get_option ('gst-plugin')
-	gstreamer_base_dep = dependency ('gstreamer-base-1.0', required: true)
-	gstreamer_app_dep = dependency ('gstreamer-app-1.0', required: true)
-
-	gst_plugin_dependencies = [aravis_dependencies, gstreamer_base_dep]
-
-	gst_plugin_dir = join_paths (get_option ('libdir'), 'gstreamer-1.0')
-
-	subdir ('gst')
-endif
-
-subdir ('docs')
+doc_option = get_option('documentation')
+doc_deps = [find_program('gtkdoc-scan', required: doc_option), find_program('xsltproc', required: doc_option)]
+subdir('docs', if_found: doc_deps)

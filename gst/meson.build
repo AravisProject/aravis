@@ -1,3 +1,5 @@
+gst_plugin_dir = join_paths (get_option ('libdir'), 'gstreamer-1.0')
+
 gst_sources = [
 	'gstaravis.c'
 ]
@@ -19,7 +21,7 @@ gst_plugin = shared_library (gst_plugin_filename,
 			     link_with: aravis_library,
 			     c_args: gst_c_args,
 			     include_directories: [library_inc],
-			     dependencies: gst_plugin_dependencies,
+			     dependencies: gst_deps,
 			     install: true,
 			     install_dir: gst_plugin_dir)
 

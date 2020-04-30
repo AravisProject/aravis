@@ -40,9 +40,8 @@ before_install:
   - sudo pip3 install 'meson==0.47'
 
 script:
-  - meson build -Dintrospection=false -Dviewer=false -Dgst-plugin=false -Ddocumentation=false
+  - meson build
   - cd build
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then meson configure -Dpacket-socket=false ; fi
   - meson configure
   - ninja
   - meson test --no-suite="network"

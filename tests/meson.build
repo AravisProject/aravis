@@ -20,7 +20,7 @@ if get_option('tests')
 		test (t[0], exe, suite: t[1])
 	endforeach
 
-	if get_option ('introspection')
+	if introspection_enabled
 		pymod = import ('python')
 
 		py = pymod.find_installation ('python3', required: false)

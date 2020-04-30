@@ -215,7 +215,7 @@ library_include_dir = join_paths (get_option ('includedir'), 'aravis-@0@'.format
 
 library_config_data = configuration_data ()
 library_config_data.set10 ('ARAVIS_HAS_USB', usb_dep.found())
-library_config_data.set10 ('ARAVIS_HAS_PACKET_SOCKET', enable_packet_socket)
+library_config_data.set10 ('ARAVIS_HAS_PACKET_SOCKET', packet_socket_enabled)
 library_config_data.set10 ('ARAVIS_HAS_FAST_HEARTBEAT', get_option ('fast-heartbeat'))
 configure_file (input: 'arvfeatures.h.in', output: 'arvfeatures.h',
 		configuration: library_config_data, install_dir: library_include_dir)
@@ -273,16 +273,22 @@ foreach p: progs
 		install: true)
 endforeach
 
-if get_option ('introspection')
-	gnome.generate_gir(aravis_library,
-			   sources : [library_sources, library_headers, library_enums],
-			   nsversion : aravis_api_version,
-			   namespace : 'Aravis',
-			   symbol_prefix : 'arv_',
-			   identifier_prefix : 'Arv',
-			   export_packages : 'aravis',
-			   includes : ['GObject-2.0', 'Gio-2.0'],
-			   extra_args: '-DARAVIS_COMPILATION',
-			   install : true
-			  )
+introspection_option = get_option('introspection')
+introspection_enabled = false
+if introspection_option.auto() or introspection_option.enabled()
+  gir_scanner = find_program('g-ir-scanner', required: introspection_option)
+
+  if gir_scanner.found()
+    gnome.generate_gir(aravis_library,
+      sources : [library_sources, library_headers, library_enums],
+      nsversion : aravis_api_version,
+      namespace : 'Aravis',
+      symbol_prefix : 'arv_',
+      identifier_prefix : 'Arv',
+      export_packages : 'aravis',
+      includes : ['GObject-2.0', 'Gio-2.0'],
+      extra_args: '-DARAVIS_COMPILATION',
+      install : true)
+    introspection_enabled = true
+  endif
 endif

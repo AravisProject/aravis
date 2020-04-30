@@ -1,22 +1,14 @@
 # Features
 
-option('viewer', type: 'boolean', value: true,
-  description : 'Build simple viewer')
-option('gst-plugin', type: 'boolean', value: true,
-  description : 'Build GStreamer plugin')
-option('fast-heartbeat', type: 'boolean', value: false,
-  description: 'Enable faster heartbeat rate')
-option('tests', type: 'boolean', value: true,
-  description: 'Build tests')
+option('viewer', type: 'feature', value: 'auto', description : 'Build simple viewer')
+option('gst-plugin', type: 'feature', value: 'auto', description : 'Build GStreamer plugin')
+option('usb', type: 'feature', value: 'auto', description : 'Enable USB support')
+option('packet-socket', type: 'feature', value: 'auto', description : 'Enable packet socket support')
 
-option('usb', type: 'feature', value: 'auto',
-  description : 'Enable USB support')
-option('packet-socket', type: 'feature', value: 'auto',
-  description : 'Enable packet socket support')
+option('tests', type: 'boolean', value: true, description: 'Build tests')
+option('fast-heartbeat', type: 'boolean', value: false, description: 'Enable faster heartbeat rate')
 
 # Documentation and introspection
 
-option('documentation', type: 'boolean', value: true,
-  description: 'Build API reference (requires gtk-doc and xlstproc)')
-option('introspection', type: 'boolean', value: true,
-  description: 'Build introspection data (requires gobject-introspection)')
+option('documentation', type: 'feature', value: 'auto', description: 'Build API reference (requires gtk-doc and xlstproc)')
+option('introspection', type: 'feature', value: 'auto', description: 'Build introspection data (requires gobject-introspection)')

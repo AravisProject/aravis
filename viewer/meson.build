@@ -1,3 +1,5 @@
+viewer_enabled = true
+
 aravis_desktop_dir = join_paths (get_option ('datadir'), 'applications')
 aravis_app_data_dir = join_paths (get_option ('datadir'), 'metainfo')
 aravis_icon_dir = join_paths (get_option ('datadir'), 'icons', 'hicolor')
@@ -27,7 +29,7 @@ executable ('arv-viewer-@0@'.format (aravis_api_version),
 	    link_with: aravis_library,
 	    c_args: viewer_c_args,
 	    include_directories: [library_inc],
-	    dependencies: aravis_viewer_dependencies,
+	    dependencies: viewer_deps,
 	    install: true)
 
 install_subdir (join_paths ('icons', 'gnome'),
