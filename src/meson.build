@@ -277,8 +277,9 @@ introspection_option = get_option('introspection')
 introspection_enabled = false
 if introspection_option.auto() or introspection_option.enabled()
   gir_scanner = find_program('g-ir-scanner', required: introspection_option)
+  gi_dep = dependency('gobject-introspection-1.0', required: introspection_option)
 
-  if gir_scanner.found()
+  if gir_scanner.found() and gi_dep.found()
     gnome.generate_gir(aravis_library,
       sources : [library_sources, library_headers, library_enums],
       nsversion : aravis_api_version,
