@@ -24,9 +24,9 @@
  * SECTION: arvinterface
  * @short_description: Abstract base class for camera discovery
  *
- * #ArvCamera is an abstract base class for camera discovery. It maintains a
- * list of the available devices and help to instantiate the corresponding
- * #ArvDevice object. If user already knows the device id of the device, he should
+ * #ArvInterface is an abstract base class for camera discovery. It maintains a
+ * list of the available devices and helps to instantiate the corresponding
+ * #ArvDevice objects. If the user already knows the device id of the device, he should
  * not worry about this class and just use arv_camera_new() or
  * arv_open_device().
  */
