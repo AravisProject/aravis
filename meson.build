@@ -26,7 +26,10 @@ usb_dep = dependency ('libusb-1.0', required: get_option ('usb'))
 libm = cc.find_library ('m', required: true)
 
 aravis_public_dependencies = [glib_dep, gobject_dep, gio_dep]
-aravis_dependencies = [aravis_public_dependencies, xml2_dep, libz_dep, libm, usb_dep]
+aravis_dependencies = [aravis_public_dependencies, xml2_dep, libz_dep, libm]
+if usb_dep.found()
+  aravis_dependencies += usb_dep
+endif
 
 has_if_packet = cc.has_header (join_paths ('linux','if_packet.h'))
 packet_socket_option = get_option('packet-socket')
