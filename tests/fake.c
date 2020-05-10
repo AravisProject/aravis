@@ -403,6 +403,46 @@ camera_api_test (void)
 	g_assert (error == NULL);
 	g_assert_cmpstr (string, ==, "RGB8");
 
+	arv_camera_set_pixel_format (camera, ARV_PIXEL_FORMAT_BAYER_BG_8, &error);
+	g_assert (error == NULL);
+	pixel_format = arv_camera_get_pixel_format (camera, &error);
+	g_assert (error == NULL);
+	g_assert_cmpint (pixel_format, ==, ARV_PIXEL_FORMAT_BAYER_BG_8);
+
+	string = arv_camera_get_pixel_format_as_string (camera, &error);
+	g_assert (error == NULL);
+	g_assert_cmpstr (string, ==, "BayerBG8");
+
+	arv_camera_set_pixel_format (camera, ARV_PIXEL_FORMAT_BAYER_GB_8, &error);
+	g_assert (error == NULL);
+	pixel_format = arv_camera_get_pixel_format (camera, &error);
+	g_assert (error == NULL);
+	g_assert_cmpint (pixel_format, ==, ARV_PIXEL_FORMAT_BAYER_GB_8);
+
+	string = arv_camera_get_pixel_format_as_string (camera, &error);
+	g_assert (error == NULL);
+	g_assert_cmpstr (string, ==, "BayerGB8");
+
+	arv_camera_set_pixel_format (camera, ARV_PIXEL_FORMAT_BAYER_GR_8, &error);
+	g_assert (error == NULL);
+	pixel_format = arv_camera_get_pixel_format (camera, &error);
+	g_assert (error == NULL);
+	g_assert_cmpint (pixel_format, ==, ARV_PIXEL_FORMAT_BAYER_GR_8);
+
+	string = arv_camera_get_pixel_format_as_string (camera, &error);
+	g_assert (error == NULL);
+	g_assert_cmpstr (string, ==, "BayerGR8");
+
+	arv_camera_set_pixel_format (camera, ARV_PIXEL_FORMAT_BAYER_RG_8, &error);
+	g_assert (error == NULL);
+	pixel_format = arv_camera_get_pixel_format (camera, &error);
+	g_assert (error == NULL);
+	g_assert_cmpint (pixel_format, ==, ARV_PIXEL_FORMAT_BAYER_RG_8);
+
+	string = arv_camera_get_pixel_format_as_string (camera, &error);
+	g_assert (error == NULL);
+	g_assert_cmpstr (string, ==, "BayerRG8");
+
 	arv_camera_set_pixel_format_from_string (camera, "Mono8", &error);
 	g_assert (error == NULL);
 	pixel_format = arv_camera_get_pixel_format (camera, &error);
@@ -412,19 +452,19 @@ camera_api_test (void)
 	ptr = arv_camera_dup_available_pixel_formats (camera, &n, &error);
 	g_assert (error == NULL);
 	g_assert (ptr != NULL);
-	g_assert_cmpint (n, ==, 2);
+	g_assert_cmpint (n, ==, 6);
 	g_clear_pointer (&ptr, g_free);
 
 	ptr = arv_camera_dup_available_pixel_formats_as_strings (camera, &n, &error);
 	g_assert (error == NULL);
 	g_assert (ptr != NULL);
-	g_assert_cmpint (n, ==, 2);
+	g_assert_cmpint (n, ==, 6);
 	g_clear_pointer (&ptr, g_free);
 
 	ptr = arv_camera_dup_available_pixel_formats_as_display_names (camera, &n, &error);
 	g_assert (error == NULL);
 	g_assert (ptr != NULL);
-	g_assert_cmpint (n, ==, 2);
+	g_assert_cmpint (n, ==, 6);
 	g_clear_pointer (&ptr, g_free);
 
 	b = arv_camera_is_frame_rate_available (camera, &error);
