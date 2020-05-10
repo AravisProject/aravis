@@ -293,9 +293,9 @@ _get_pvalue_node (ArvGcPropertyNode *property_node)
 const char *
 arv_gc_property_node_get_name (ArvGcPropertyNode *node)
 {
-	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (node);
-
 	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (node), NULL);
+
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (node);
 
 	return priv->name;
 }
@@ -479,9 +479,9 @@ arv_gc_property_node_set_double (ArvGcPropertyNode *node, double v_double, GErro
 ArvGcPropertyNodeType
 arv_gc_property_node_get_node_type (ArvGcPropertyNode *node)
 {
-	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (node);
-
 	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (node), ARV_GC_PROPERTY_NODE_TYPE_UNKNOWN);
+
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (node);
 
 	return priv->type;
 }
@@ -558,13 +558,13 @@ arv_gc_property_node_new_visibility (void)
 ArvGcVisibility
 arv_gc_property_node_get_visibility (ArvGcPropertyNode *self, ArvGcVisibility default_value)
 {
-	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
 	const char *value;
 
 	if (self == NULL)
 		return default_value;
 
 	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
 	g_return_val_if_fail (priv->type == ARV_GC_PROPERTY_NODE_TYPE_VISIBILITY, ARV_GC_VISIBILITY_UNDEFINED);
 
 	value = _get_value_data (self);
@@ -752,13 +752,13 @@ arv_gc_property_node_new_imposed_access_mode (void)
 ArvGcAccessMode
 arv_gc_property_node_get_access_mode (ArvGcPropertyNode *self, ArvGcAccessMode default_value)
 {
-	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
 	const char *value;
 
 	if (self == NULL)
 		return default_value;
 
 	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
 	g_return_val_if_fail (priv->type == ARV_GC_PROPERTY_NODE_TYPE_ACCESS_MODE ||
 			      priv->type == ARV_GC_PROPERTY_NODE_TYPE_IMPOSED_ACCESS_MODE, default_value);
 
@@ -781,13 +781,13 @@ arv_gc_property_node_new_cachable (void)
 ArvGcCachable
 arv_gc_property_node_get_cachable (ArvGcPropertyNode *self, ArvGcCachable default_value)
 {
-	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
 	const char *value;
 
 	if (self == NULL)
 		return default_value;
 
 	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
 	g_return_val_if_fail (priv->type == ARV_GC_PROPERTY_NODE_TYPE_CACHABLE, default_value);
 
 	value = _get_value_data (self);
@@ -815,12 +815,11 @@ arv_gc_property_node_new_endianess (void)
 guint
 arv_gc_property_node_get_endianess (ArvGcPropertyNode *self, guint default_value)
 {
-	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
-
 	if (self == NULL)
 		return default_value;
 
 	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
 	g_return_val_if_fail (priv->type == ARV_GC_PROPERTY_NODE_TYPE_ENDIANESS, default_value);
 
 	if (g_strcmp0 (_get_value_data (self), "BigEndian") == 0)
@@ -838,12 +837,11 @@ arv_gc_property_node_new_sign (void)
 ArvGcSignedness
 arv_gc_property_node_get_sign (ArvGcPropertyNode *self, ArvGcSignedness default_value)
 {
-	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
-
 	if (self == NULL)
 		return default_value;
 
 	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
 	g_return_val_if_fail (priv->type == ARV_GC_PROPERTY_NODE_TYPE_SIGN, default_value);
 
 	if (g_strcmp0 (_get_value_data (self), "Unsigned") == 0)
@@ -861,12 +859,11 @@ arv_gc_property_node_new_lsb (void)
 guint
 arv_gc_property_node_get_lsb (ArvGcPropertyNode *self, guint default_value)
 {
-	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
-
 	if (self == NULL)
 		return default_value;
 
 	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
 	g_return_val_if_fail (priv->type == ARV_GC_PROPERTY_NODE_TYPE_LSB ||
 			      priv->type == ARV_GC_PROPERTY_NODE_TYPE_BIT, default_value);
 
@@ -882,12 +879,11 @@ arv_gc_property_node_new_msb (void)
 guint
 arv_gc_property_node_get_msb (ArvGcPropertyNode *self, guint default_value)
 {
-	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
-
 	if (self == NULL)
 		return default_value;
 
 	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
 	g_return_val_if_fail (priv->type == ARV_GC_PROPERTY_NODE_TYPE_MSB ||
 			      priv->type == ARV_GC_PROPERTY_NODE_TYPE_BIT, default_value);
 
