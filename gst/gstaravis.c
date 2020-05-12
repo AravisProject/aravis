@@ -60,6 +60,7 @@ enum
   PROP_V_BINNING,
   PROP_OFFSET_X,
   PROP_OFFSET_Y,
+  PROP_PACKET_DELAY,
   PROP_PACKET_SIZE,
   PROP_AUTO_PACKET_SIZE,
   PROP_PACKET_RESEND,
@@ -184,6 +185,14 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 	arv_camera_set_pixel_format (gst_aravis->camera, pixel_format, NULL);
 
 	if (arv_camera_is_gv_device (gst_aravis->camera)) {
+		if (gst_aravis->packet_delay >= 0) {
+			gint64 delay;
+			arv_camera_gv_set_packet_delay (gst_aravis->camera, gst_aravis->packet_delay, NULL);
+			delay = arv_camera_gv_get_packet_delay (gst_aravis->camera, NULL);
+			if (delay != gst_aravis->packet_delay)
+				GST_WARNING_OBJECT (gst_aravis, "Packet delay is %" G_GINT64_FORMAT " ns instead of %" G_GINT64_FORMAT,
+					delay, gst_aravis->packet_delay);
+		}
 		if (gst_aravis->packet_size > 0)
 			arv_camera_gv_set_packet_size (gst_aravis->camera, gst_aravis->packet_size, NULL);
 		if (gst_aravis->auto_packet_size)
@@ -496,6 +505,7 @@ gst_aravis_init (GstAravis *gst_aravis)
 	gst_aravis->offset_y = 0;
 	gst_aravis->h_binning = -1;
 	gst_aravis->v_binning = -1;
+	gst_aravis->packet_delay = -1;
 	gst_aravis->packet_size = -1;
 	gst_aravis->auto_packet_size = FALSE;
         gst_aravis->packet_resend = TRUE;
@@ -591,6 +601,9 @@ gst_aravis_set_property (GObject * object, guint prop_id,
 		case PROP_V_BINNING:
 			gst_aravis->v_binning = g_value_get_int (value);
 			break;
+		case PROP_PACKET_DELAY:
+			gst_aravis->packet_delay = g_value_get_int64 (value);
+			break;
                 case PROP_PACKET_SIZE:
                         gst_aravis->packet_size = g_value_get_int (value);
                         break;
@@ -649,6 +662,9 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 			break;
 		case PROP_V_BINNING:
 			g_value_set_int (value, gst_aravis->v_binning);
+			break;
+		case PROP_PACKET_DELAY:
+			g_value_set_int64 (value, gst_aravis->packet_delay);
 			break;
         	case PROP_PACKET_SIZE:
                         g_value_set_int (value, gst_aravis->packet_size);
@@ -762,6 +778,14 @@ gst_aravis_class_init (GstAravisClass * klass)
 				   "Vertical binning",
 				   "CCD vertical binning",
 				   1, G_MAXINT, 1,
+				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+	g_object_class_install_property
+		(gobject_class,
+		 PROP_PACKET_DELAY,
+		 g_param_spec_int64 ("packet-delay",
+				   "Packet delay",
+				   "GigEVision streaming inter packet delay (in ns, -1 = default)",
+				   0, G_MAXINT64/1000000000LL, 0,
 				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 	g_object_class_install_property
 		(gobject_class,

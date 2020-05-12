@@ -58,6 +58,7 @@ struct _GstAravis {
 	/* GigEVision parameters */
 	int packet_size;
 	gboolean auto_packet_size;
+	gint64 packet_delay;
         gboolean packet_resend;
 
 	gint payload;
