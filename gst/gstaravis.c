@@ -220,25 +220,29 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 
 	GST_DEBUG_OBJECT (gst_aravis, "Actual frame rate = %g Hz", arv_camera_get_frame_rate (gst_aravis->camera, NULL));
 
-	if(gst_aravis->gain_auto) {
-		arv_camera_set_gain_auto (gst_aravis->camera, ARV_AUTO_CONTINUOUS, NULL);
-		GST_DEBUG_OBJECT (gst_aravis, "Auto Gain = continuous");
-	} else {
+	if (gst_aravis->gain_auto_set) {
+		arv_camera_set_gain_auto (gst_aravis->camera, gst_aravis->gain_auto, NULL);
+		GST_DEBUG_OBJECT (gst_aravis, "Auto Gain = %s", arv_auto_to_string(gst_aravis->gain_auto));
+	}
+	if (gst_aravis->gain_auto == ARV_AUTO_OFF) {
 		if (gst_aravis->gain >= 0) {
 			GST_DEBUG_OBJECT (gst_aravis, "Gain = %g", gst_aravis->gain);
-			arv_camera_set_gain_auto (gst_aravis->camera, ARV_AUTO_OFF, NULL);
+			if (!gst_aravis->gain_auto_set)
+				arv_camera_set_gain_auto (gst_aravis->camera, ARV_AUTO_OFF, NULL);
 			arv_camera_set_gain (gst_aravis->camera, gst_aravis->gain, NULL);
 		}
 		GST_DEBUG_OBJECT (gst_aravis, "Actual gain = %g", arv_camera_get_gain (gst_aravis->camera, NULL));
 	}
 
-	if(gst_aravis->exposure_auto) {
-		arv_camera_set_exposure_time_auto (gst_aravis->camera, ARV_AUTO_CONTINUOUS, NULL);
-		GST_DEBUG_OBJECT (gst_aravis, "Auto Exposure = continuous");
-	} else {
+	if (gst_aravis->exposure_auto_set) {
+		arv_camera_set_exposure_time_auto (gst_aravis->camera, gst_aravis->exposure_auto, NULL);
+		GST_DEBUG_OBJECT (gst_aravis, "Auto Exposure = %s", arv_auto_to_string(gst_aravis->exposure_auto));
+	}
+	if (gst_aravis->exposure_auto == ARV_AUTO_OFF) {
 		if (gst_aravis->exposure_time_us > 0.0) {
 			GST_DEBUG_OBJECT (gst_aravis, "Exposure = %g µs", gst_aravis->exposure_time_us);
-			arv_camera_set_exposure_time_auto (gst_aravis->camera, ARV_AUTO_OFF, NULL);
+			if (!gst_aravis->exposure_auto_set)
+				arv_camera_set_exposure_time_auto (gst_aravis->camera, ARV_AUTO_OFF, NULL);
 			arv_camera_set_exposure_time (gst_aravis->camera, gst_aravis->exposure_time_us, NULL);
 		}
 		GST_DEBUG_OBJECT (gst_aravis, "Actual exposure = %g µs", arv_camera_get_exposure_time (gst_aravis->camera, NULL));
@@ -313,19 +317,7 @@ gst_aravis_init_camera (GstAravis *gst_aravis)
 		return FALSE;
 	}
 
-	gst_aravis->gain = arv_camera_get_gain(gst_aravis->camera, &error);
-	if (!error) gst_aravis->gain_auto = arv_camera_is_gain_available(gst_aravis->camera, &error);
-
-	if (!error) gst_aravis->exposure_time_us = arv_camera_get_exposure_time(gst_aravis->camera, &error);
-	if (!error) {
-		if (arv_camera_get_exposure_time_auto(gst_aravis->camera, &error) == ARV_AUTO_OFF)
-			gst_aravis->exposure_auto = FALSE;
-		else
-			gst_aravis->exposure_auto = TRUE;
-	}
-
 	if (!error) arv_camera_get_region (gst_aravis->camera, &gst_aravis->offset_x, &gst_aravis->offset_y, NULL, NULL, &error);
-	if (!error) arv_camera_get_binning (gst_aravis->camera, &gst_aravis->h_binning, &gst_aravis->v_binning, &error);
 	if (!error) gst_aravis->payload = 0;
 
 	if (error) {
@@ -498,9 +490,11 @@ gst_aravis_init (GstAravis *gst_aravis)
 	gst_aravis->camera_name = NULL;
 
 	gst_aravis->gain = -1;
-	gst_aravis->gain_auto = FALSE;
+	gst_aravis->gain_auto = ARV_AUTO_OFF;
+	gst_aravis->gain_auto_set = FALSE;
 	gst_aravis->exposure_time_us = -1;
-	gst_aravis->exposure_auto = FALSE;
+	gst_aravis->exposure_auto = ARV_AUTO_OFF;
+	gst_aravis->exposure_auto_set = FALSE;
 	gst_aravis->offset_x = 0;
 	gst_aravis->offset_y = 0;
 	gst_aravis->h_binning = -1;
@@ -556,6 +550,8 @@ gst_aravis_set_property (GObject * object, guint prop_id,
 {
 	GstAravis *gst_aravis = GST_ARAVIS (object);
 
+	GST_DEBUG_OBJECT (gst_aravis, "setting property %s", pspec->name);
+
 	switch (prop_id) {
 		case PROP_CAMERA_NAME:
 			g_free (gst_aravis->camera_name);
@@ -575,7 +571,8 @@ gst_aravis_set_property (GObject * object, guint prop_id,
 				arv_camera_set_gain (gst_aravis->camera, gst_aravis->gain, NULL);
 			break;
 		case PROP_GAIN_AUTO:
-			gst_aravis->gain_auto = g_value_get_boolean (value);
+			gst_aravis->gain_auto = g_value_get_boolean (value) ? ARV_AUTO_CONTINUOUS : ARV_AUTO_OFF;
+			gst_aravis->gain_auto_set = TRUE;
 			if (gst_aravis->camera != NULL)
 				arv_camera_set_gain_auto (gst_aravis->camera, gst_aravis->gain_auto, NULL);
 			break;
@@ -585,7 +582,8 @@ gst_aravis_set_property (GObject * object, guint prop_id,
 				arv_camera_set_exposure_time (gst_aravis->camera, gst_aravis->exposure_time_us, NULL);
 			break;
 		case PROP_EXPOSURE_AUTO:
-			gst_aravis->exposure_auto = g_value_get_boolean (value);
+			gst_aravis->exposure_auto = g_value_get_boolean (value) ? ARV_AUTO_CONTINUOUS : ARV_AUTO_OFF;
+			gst_aravis->exposure_auto_set = TRUE;
 			if (gst_aravis->camera != NULL)
 				arv_camera_set_exposure_time_auto (gst_aravis->camera, gst_aravis->exposure_auto, NULL);
 			break;
@@ -632,6 +630,8 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 {
 	GstAravis *gst_aravis = GST_ARAVIS (object);
 
+	GST_DEBUG_OBJECT (gst_aravis, "getting property %s", pspec->name);
+
 	switch (prop_id) {
 		case PROP_CAMERA_NAME:
 			g_value_set_string (value, gst_aravis->camera_name);
@@ -643,13 +643,23 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 			g_value_set_double (value, gst_aravis->gain);
 			break;
 		case PROP_GAIN_AUTO:
-			g_value_set_boolean (value, gst_aravis->gain_auto);
+			if (!gst_aravis->gain_auto_set && gst_aravis->camera) {
+				gst_aravis->gain_auto = arv_camera_get_gain_auto(gst_aravis->camera, NULL);
+			}
+			/* FIXME: Add a property for GEnum with ARV_AUTO_ONCE and
+			 * deprecate this */
+			g_value_set_boolean (value, gst_aravis->gain_auto != ARV_AUTO_OFF);
 			break;
 		case PROP_EXPOSURE:
 			g_value_set_double (value, gst_aravis->exposure_time_us);
 			break;
 		case PROP_EXPOSURE_AUTO:
-			g_value_set_boolean (value, gst_aravis->exposure_auto);
+			if (!gst_aravis->exposure_auto_set && gst_aravis->camera) {
+				gst_aravis->exposure_auto = arv_camera_get_exposure_time_auto(gst_aravis->camera, NULL);
+			}
+			/* FIXME: Add a property for GEnum with ARV_AUTO_ONCE and
+			 * deprecate this */
+			g_value_set_boolean (value, gst_aravis->exposure_auto != ARV_AUTO_OFF);
 			break;
 		case PROP_OFFSET_X:
 			g_value_set_int (value, gst_aravis->offset_x);
@@ -658,9 +668,15 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 			g_value_set_int (value, gst_aravis->offset_y);
 			break;
 		case PROP_H_BINNING:
+			if (gst_aravis->h_binning < 0 && gst_aravis->camera) {
+				arv_camera_get_binning (gst_aravis->camera, &gst_aravis->h_binning, NULL, NULL);
+			}
 			g_value_set_int (value, gst_aravis->h_binning);
 			break;
 		case PROP_V_BINNING:
+			if (gst_aravis->v_binning < 0 && gst_aravis->camera) {
+				arv_camera_get_binning (gst_aravis->camera, NULL, &gst_aravis->v_binning, NULL);
+			}
 			g_value_set_int (value, gst_aravis->v_binning);
 			break;
 		case PROP_PACKET_DELAY:
@@ -800,7 +816,7 @@ gst_aravis_class_init (GstAravisClass * klass)
 		 PROP_AUTO_PACKET_SIZE,
 		 g_param_spec_boolean ("auto-packet-size",
 				       "Auto Packet Size",
-				       "Negociate GigEVision streaming packet size",
+				       "Negotiate GigEVision streaming packet size",
 				       FALSE,
 				       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 	g_object_class_install_property
