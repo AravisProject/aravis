@@ -68,6 +68,26 @@ enum
   PROP_NUM_BUFFERS
 };
 
+#define GST_TYPE_ARV_AUTO (gst_arv_auto_get_type())
+static GType
+gst_arv_auto_get_type (void)
+{
+	static GType arv_auto_type = 0;
+
+	static const GEnumValue arv_autos[] = {
+		{ARV_AUTO_OFF, "Off", "off"},
+		{ARV_AUTO_ONCE, "Once", "once"},
+		{ARV_AUTO_CONTINUOUS, "Continuous", "on"},
+		{0, NULL, NULL},
+	};
+
+	if (!arv_auto_type)
+	{
+		arv_auto_type = g_enum_register_static("GstArvAuto", arv_autos);
+	}
+	return arv_auto_type;
+}
+
 G_DEFINE_TYPE (GstAravis, gst_aravis, GST_TYPE_PUSH_SRC);
 
 static GstStaticPadTemplate aravis_src_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -571,7 +591,7 @@ gst_aravis_set_property (GObject * object, guint prop_id,
 				arv_camera_set_gain (gst_aravis->camera, gst_aravis->gain, NULL);
 			break;
 		case PROP_GAIN_AUTO:
-			gst_aravis->gain_auto = g_value_get_boolean (value) ? ARV_AUTO_CONTINUOUS : ARV_AUTO_OFF;
+			gst_aravis->gain_auto = g_value_get_enum (value);
 			gst_aravis->gain_auto_set = TRUE;
 			if (gst_aravis->camera != NULL)
 				arv_camera_set_gain_auto (gst_aravis->camera, gst_aravis->gain_auto, NULL);
@@ -582,7 +602,7 @@ gst_aravis_set_property (GObject * object, guint prop_id,
 				arv_camera_set_exposure_time (gst_aravis->camera, gst_aravis->exposure_time_us, NULL);
 			break;
 		case PROP_EXPOSURE_AUTO:
-			gst_aravis->exposure_auto = g_value_get_boolean (value) ? ARV_AUTO_CONTINUOUS : ARV_AUTO_OFF;
+			gst_aravis->exposure_auto = g_value_get_enum (value);
 			gst_aravis->exposure_auto_set = TRUE;
 			if (gst_aravis->camera != NULL)
 				arv_camera_set_exposure_time_auto (gst_aravis->camera, gst_aravis->exposure_auto, NULL);
@@ -646,9 +666,7 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 			if (!gst_aravis->gain_auto_set && gst_aravis->camera) {
 				gst_aravis->gain_auto = arv_camera_get_gain_auto(gst_aravis->camera, NULL);
 			}
-			/* FIXME: Add a property for GEnum with ARV_AUTO_ONCE and
-			 * deprecate this */
-			g_value_set_boolean (value, gst_aravis->gain_auto != ARV_AUTO_OFF);
+			g_value_set_enum (value, gst_aravis->gain_auto);
 			break;
 		case PROP_EXPOSURE:
 			g_value_set_double (value, gst_aravis->exposure_time_us);
@@ -657,9 +675,7 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 			if (!gst_aravis->exposure_auto_set && gst_aravis->camera) {
 				gst_aravis->exposure_auto = arv_camera_get_exposure_time_auto(gst_aravis->camera, NULL);
 			}
-			/* FIXME: Add a property for GEnum with ARV_AUTO_ONCE and
-			 * deprecate this */
-			g_value_set_boolean (value, gst_aravis->exposure_auto != ARV_AUTO_OFF);
+			g_value_set_enum (value, gst_aravis->exposure_auto);
 			break;
 		case PROP_OFFSET_X:
 			g_value_set_int (value, gst_aravis->offset_x);
@@ -742,11 +758,11 @@ gst_aravis_class_init (GstAravisClass * klass)
 	g_object_class_install_property
 		(gobject_class,
 		 PROP_GAIN_AUTO,
-		 g_param_spec_boolean ("gain-auto",
-				       "Auto Gain",
-				       "Auto Gain Mode",
-				       TRUE,
-				       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+		 g_param_spec_enum ("gain-auto",
+				    "Auto Gain",
+				    "Auto Gain Mode",
+				    GST_TYPE_ARV_AUTO, ARV_AUTO_OFF,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 	g_object_class_install_property
 		(gobject_class,
 		 PROP_EXPOSURE,
@@ -758,11 +774,11 @@ gst_aravis_class_init (GstAravisClass * klass)
 	g_object_class_install_property
 		(gobject_class,
 		 PROP_EXPOSURE_AUTO,
-		 g_param_spec_boolean ("exposure-auto",
-				       "Auto Exposure",
-				       "Auto Exposure Mode",
-				       TRUE,
-				       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+		 g_param_spec_enum ("exposure-auto",
+				    "Auto Exposure",
+				    "Auto Exposure Mode",
+				    GST_TYPE_ARV_AUTO, ARV_AUTO_OFF,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 	g_object_class_install_property
 		(gobject_class,
 		 PROP_OFFSET_X,
