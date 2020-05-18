@@ -27,20 +27,12 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
-#include <arvtypes.h>
 #include <arvstream.h>
-#include <arvfakecamera.h>
 
 G_BEGIN_DECLS
 
 #define ARV_TYPE_FAKE_STREAM             (arv_fake_stream_get_type ())
-#define ARV_FAKE_STREAM(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_FAKE_STREAM, ArvFakeStream))
-#define ARV_FAKE_STREAM_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_FAKE_STREAM, ArvFakeStreamClass))
-#define ARV_IS_FAKE_STREAM(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_FAKE_STREAM))
-#define ARV_IS_FAKE_STREAM_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_FAKE_STREAM))
-#define ARV_FAKE_STREAM_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_FAKE_STREAM, ArvFakeStreamClass))
-
-GType arv_fake_stream_get_type (void);
+G_DECLARE_FINAL_TYPE (ArvFakeStream, arv_fake_stream, ARV, FAKE_STREAM, ArvStream)
 
 G_END_DECLS
 

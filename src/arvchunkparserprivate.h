@@ -31,10 +31,6 @@
 
 G_BEGIN_DECLS
 
-#define ARV_CHUNK_PARSER_ERROR arv_chunk_parser_error_quark()
-
-GQuark 			arv_chunk_parser_error_quark 		(void);
-
 G_END_DECLS
 
 #endif

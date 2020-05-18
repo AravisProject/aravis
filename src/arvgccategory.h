@@ -33,25 +33,8 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_CATEGORY             (arv_gc_category_get_type ())
-#define ARV_GC_CATEGORY(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_CATEGORY, ArvGcCategory))
-#define ARV_GC_CATEGORY_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GC_CATEGORY, ArvGcCategoryClass))
-#define ARV_IS_GC_CATEGORY(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GC_CATEGORY))
-#define ARV_IS_GC_CATEGORY_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GC_CATEGORY))
-#define ARV_GC_CATEGORY_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GC_CATEGORY, ArvGcCategoryClass))
+G_DECLARE_FINAL_TYPE (ArvGcCategory, arv_gc_category, ARV, GC_CATEGORY, ArvGcFeatureNode)
 
-typedef struct _ArvGcCategoryClass ArvGcCategoryClass;
-
-struct _ArvGcCategory {
-	ArvGcFeatureNode	base;
-
-	GSList *features;
-};
-
-struct _ArvGcCategoryClass {
-	ArvGcFeatureNodeClass parent_class;
-};
-
-GType 		arv_gc_category_get_type 	(void);
 ArvGcNode * 	arv_gc_category_new 		(void);
 const GSList * 	arv_gc_category_get_features 	(ArvGcCategory *category);
 

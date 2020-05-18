@@ -61,33 +61,35 @@ main (int argc, char **argv)
 	ApplicationData data;
 	ArvCamera *camera;
 	ArvStream *stream;
+	GError *error = NULL;
 	int i;
 
 	data.buffer_count = 0;
 
 	/* Instantiation of the first available camera */
-	camera = arv_camera_new (NULL);
+	camera = arv_camera_new (NULL, &error);
 
-	if (camera != NULL) {
+	if (ARV_IS_CAMERA (camera)) {
 		void (*old_sigint_handler)(int);
 		gint payload;
 
 		/* Set region of interrest to a 200x200 pixel area */
-		arv_camera_set_region (camera, 0, 0, 200, 200);
+		arv_camera_set_region (camera, 0, 0, 200, 200, NULL);
 		/* Set frame rate to 10 Hz */
-		arv_camera_set_frame_rate (camera, 10.0);
+		arv_camera_set_frame_rate (camera, 10.0, NULL);
 		/* retrieve image payload (number of bytes per image) */
-		payload = arv_camera_get_payload (camera);
+		payload = arv_camera_get_payload (camera, NULL);
 
 		/* Create a new stream object */
-		stream = arv_camera_create_stream (camera, NULL, NULL);
-		if (stream != NULL) {
+		stream = arv_camera_create_stream (camera, NULL, NULL, &error);
+
+		if (ARV_IS_STREAM (stream)) {
 			/* Push 50 buffer in the stream input buffer queue */
 			for (i = 0; i < 50; i++)
 				arv_stream_push_buffer (stream, arv_buffer_new (payload, NULL));
 
 			/* Start the video stream */
-			arv_camera_start_acquisition (camera);
+			arv_camera_start_acquisition (camera, NULL);
 
 			/* Connect the new-buffer signal */
 			g_signal_connect (stream, "new-buffer", G_CALLBACK (new_buffer_cb), &data);
@@ -114,18 +116,27 @@ main (int argc, char **argv)
 			g_main_loop_unref (data.main_loop);
 
 			/* Stop the video stream */
-			arv_camera_stop_acquisition (camera);
+			arv_camera_stop_acquisition (camera, NULL);
 
 			/* Signal must be inhibited to avoid stream thread running after the last unref */
 			arv_stream_set_emit_signals (stream, FALSE);
 
 			g_object_unref (stream);
-		} else
-			printf ("Can't create stream thread (check if the device is not already used)\n");
+		} else {
+			printf ("Can't create stream thread%s%s\n",
+				error != NULL ? ": " : "",
+				error != NULL ? error->message : "");
+
+			g_clear_error (&error);
+		}
 
 		g_object_unref (camera);
-	} else
-		printf ("No camera found\n");
+	} else {
+		printf ("No camera found%s%s\n",
+			error != NULL ? ": " : "",
+			error != NULL ? error->message : "");
+		g_clear_error (&error);
+	}
 
 	return 0;
 }

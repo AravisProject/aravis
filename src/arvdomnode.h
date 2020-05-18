@@ -49,23 +49,7 @@ typedef enum  {
 } ArvDomNodeType;
 
 #define ARV_TYPE_DOM_NODE             (arv_dom_node_get_type ())
-#define ARV_DOM_NODE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_DOM_NODE, ArvDomNode))
-#define ARV_DOM_NODE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_DOM_NODE, ArvDomNodeClass))
-#define ARV_IS_DOM_NODE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_DOM_NODE))
-#define ARV_IS_DOM_NODE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_DOM_NODE))
-#define ARV_DOM_NODE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_DOM_NODE, ArvDomNodeClass))
-
-typedef struct _ArvDomNodeClass ArvDomNodeClass;
-
-struct _ArvDomNode {
-	GObject	object;
-
-	ArvDomNode	*next_sibling;
-	ArvDomNode	*previous_sibling;
-	ArvDomNode	*parent_node;
-	ArvDomNode	*first_child;
-	ArvDomNode	*last_child;
-};
+G_DECLARE_DERIVABLE_TYPE (ArvDomNode, arv_dom_node, ARV, DOM_NODE, GObject)
 
 struct _ArvDomNodeClass {
 	GObjectClass parent_class;
@@ -87,11 +71,7 @@ struct _ArvDomNodeClass {
 	void			(*pre_remove_child) 	(ArvDomNode *parent, ArvDomNode *child);
 	void			(*changed)		(ArvDomNode *self);
 	gboolean		(*child_changed)	(ArvDomNode *self, ArvDomNode *child);
-
-	void			(*write_to_stream)	(ArvDomNode *self, GOutputStream *stream, GError **error);
 };
-
-GType arv_dom_node_get_type (void);
 
 const char * 		arv_dom_node_get_node_name 		(ArvDomNode* self);
 const char * 		arv_dom_node_get_node_value 		(ArvDomNode* self);
@@ -115,9 +95,6 @@ gboolean 		arv_dom_node_has_child_nodes 		(ArvDomNode* self);
 void 			arv_dom_node_changed 			(ArvDomNode *self);
 
 ArvDomDocument *	arv_dom_node_get_owner_document 	(ArvDomNode* self);
-
-void			arv_dom_node_write_to_stream		(ArvDomNode *self, GOutputStream *stream,
-								 GError **error);
 
 G_END_DECLS
 

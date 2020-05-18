@@ -9,22 +9,24 @@
 #  LD_LIBRARY_PATH.
 
 import sys
-import time
+import gi
+
+gi.require_version ('Aravis', '0.8')
 
 from gi.repository import Aravis
 
 Aravis.enable_interface ("Fake")
 
 try:
-	if len(sys.argv) > 1:
-		camera = Aravis.Camera.new (sys.argv[1])
-	else:
-		camera = Aravis.Camera.new (None)
-except:
+    if len(sys.argv) > 1:
+            camera = Aravis.Camera.new (sys.argv[1])
+    else:
+            camera = Aravis.Camera.new (None)
+except TypeError:
 	print ("No camera found")
 	exit ()
 
 device = camera.get_device ()
-genicam = device.get_genicam_xml ();
+genicam = device.get_genicam_xml ()
 
-print genicam;
+print (genicam)

@@ -28,7 +28,24 @@
 #include <arvgcregisterdescriptionnode.h>
 #include <string.h>
 
-static GObjectClass *parent_class = NULL;
+struct _ArvGcRegisterDescriptionNode {
+	ArvGcFeatureNode	node;
+
+	char *model_name;
+	char *vendor_name;
+	guint major_version;
+	guint minor_version;
+	guint subminor_version;
+	guint schema_major_version;
+	guint schema_minor_version;
+	guint schema_subminor_version;
+};
+
+struct _ArvGcRegisterDescriptionNodeClass {
+	ArvGcFeatureNodeClass parent_class;
+};
+
+G_DEFINE_TYPE (ArvGcRegisterDescriptionNode, arv_gc_register_description_node, ARV_TYPE_GC_FEATURE_NODE)
 
 /* ArvDomNode implementation */
 
@@ -62,7 +79,7 @@ arv_gc_register_description_node_set_attribute (ArvDomElement *self, const char*
 	} else if (strcmp (name, "SubMinorVersion") == 0) {
 		node->subminor_version = g_ascii_strtoll (value, NULL, 0);
 	} else
-		ARV_DOM_ELEMENT_CLASS (parent_class)->set_attribute (self, name, value);
+		ARV_DOM_ELEMENT_CLASS (arv_gc_register_description_node_parent_class)->set_attribute (self, name, value);
 }
 
 static const char *
@@ -75,7 +92,7 @@ arv_gc_register_description_node_get_attribute (ArvDomElement *self, const char 
 	else if (strcmp (name, "VendorName") == 0)
 		return node->vendor_name;
 	else
-		return ARV_DOM_ELEMENT_CLASS (parent_class)->get_attribute (self, name);
+		return ARV_DOM_ELEMENT_CLASS (arv_gc_register_description_node_parent_class)->get_attribute (self, name);
 }
 
 /* ArvGcRegisterDescriptionNode implementation */
@@ -155,7 +172,7 @@ arv_gc_register_description_node_finalize (GObject *object)
 	g_free (node->model_name);
 	g_free (node->vendor_name);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_gc_register_description_node_parent_class)->finalize (object);
 }
 
 static void
@@ -165,14 +182,8 @@ arv_gc_register_description_node_class_init (ArvGcRegisterDescriptionNodeClass *
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
 	ArvDomElementClass *dom_element_class = ARV_DOM_ELEMENT_CLASS (this_class);
 
-	parent_class = g_type_class_peek_parent (this_class);
-
 	object_class->finalize = arv_gc_register_description_node_finalize;
 	dom_node_class->get_node_name = arv_gc_register_description_node_get_node_name;
 	dom_element_class->set_attribute = arv_gc_register_description_node_set_attribute;
 	dom_element_class->get_attribute = arv_gc_register_description_node_get_attribute;
 }
-
-/* ArvGcInteger interface implementation */
-
-G_DEFINE_TYPE (ArvGcRegisterDescriptionNode, arv_gc_register_description_node, ARV_TYPE_GC_FEATURE_NODE)

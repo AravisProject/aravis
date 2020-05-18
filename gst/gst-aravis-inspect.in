@@ -1,0 +1,3 @@
+#!/bin/sh
+
+gst-inspect-1.0 --gst-plugin-load=@GST_PLUGIN_FILENAME@ $*

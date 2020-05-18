@@ -1,8 +1,0 @@
-#!/bin/sh
-
-exec_prefix=`pwd`
-
-export PATH=${exec_prefix}/bin:${PATH}
-
-gst-inspect-1.0 --gst-plugin-load=../gst/.libs/libgstaravis.0.6.so $*
-

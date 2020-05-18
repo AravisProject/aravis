@@ -43,7 +43,7 @@ arv_gc_float_get_value (ArvGcFloat *gc_float, GError **error)
 	g_return_val_if_fail (ARV_IS_GC_FLOAT (gc_float), 0.0);
 	g_return_val_if_fail (error == NULL || *error == NULL, 0.0);
 
-	return ARV_GC_FLOAT_GET_INTERFACE (gc_float)->get_value (gc_float, error);
+	return ARV_GC_FLOAT_GET_IFACE (gc_float)->get_value (gc_float, error);
 }
 
 void
@@ -52,7 +52,7 @@ arv_gc_float_set_value (ArvGcFloat *gc_float, double value, GError **error)
 	g_return_if_fail (ARV_IS_GC_FLOAT (gc_float));
 	g_return_if_fail (error == NULL || *error == NULL);
 
-	ARV_GC_FLOAT_GET_INTERFACE (gc_float)->set_value (gc_float, value, error);
+	ARV_GC_FLOAT_GET_IFACE (gc_float)->set_value (gc_float, value, error);
 }
 
 double
@@ -63,7 +63,7 @@ arv_gc_float_get_min (ArvGcFloat *gc_float, GError **error)
 	g_return_val_if_fail (ARV_IS_GC_FLOAT (gc_float), 0.0);
 	g_return_val_if_fail (error == NULL || *error == NULL, 0.0);
 
-	float_interface = ARV_GC_FLOAT_GET_INTERFACE (gc_float);
+	float_interface = ARV_GC_FLOAT_GET_IFACE (gc_float);
 
 	if (float_interface->get_min != NULL)
 		return float_interface->get_min (gc_float, error);
@@ -82,7 +82,7 @@ arv_gc_float_get_max (ArvGcFloat *gc_float, GError **error)
 	g_return_val_if_fail (ARV_IS_GC_FLOAT (gc_float), 0.0);
 	g_return_val_if_fail (error == NULL || *error == NULL, 0.0);
 
-	float_interface = ARV_GC_FLOAT_GET_INTERFACE (gc_float);
+	float_interface = ARV_GC_FLOAT_GET_IFACE (gc_float);
 
 	if (float_interface->get_max != NULL)
 		return float_interface->get_max (gc_float, error);
@@ -101,7 +101,7 @@ arv_gc_float_get_inc (ArvGcFloat *gc_float, GError **error)
 	g_return_val_if_fail (ARV_IS_GC_FLOAT (gc_float), 0.0);
 	g_return_val_if_fail (error == NULL || *error == NULL, 0.0);
 
-	float_interface = ARV_GC_FLOAT_GET_INTERFACE (gc_float);
+	float_interface = ARV_GC_FLOAT_GET_IFACE (gc_float);
 
 	if (float_interface->get_inc != NULL)
 		return float_interface->get_inc (gc_float, error);
@@ -120,7 +120,7 @@ arv_gc_float_get_unit	(ArvGcFloat *gc_float, GError **error)
 	g_return_val_if_fail (ARV_IS_GC_FLOAT (gc_float), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
-	float_interface = ARV_GC_FLOAT_GET_INTERFACE (gc_float);
+	float_interface = ARV_GC_FLOAT_GET_IFACE (gc_float);
 
 	if (float_interface->get_unit != NULL)
 		return float_interface->get_unit (gc_float, error);
@@ -138,7 +138,7 @@ void arv_gc_float_impose_min (ArvGcFloat *gc_float, double minimum, GError **err
 	g_return_if_fail (ARV_IS_GC_FLOAT (gc_float));
 	g_return_if_fail (error == NULL || *error == NULL);
 
-	float_interface = ARV_GC_FLOAT_GET_INTERFACE (gc_float);
+	float_interface = ARV_GC_FLOAT_GET_IFACE (gc_float);
 
 	if (float_interface->impose_min != NULL)
 		float_interface->impose_min (gc_float, minimum, error);
@@ -154,7 +154,7 @@ void arv_gc_float_impose_max (ArvGcFloat *gc_float, double maximum, GError **err
 	g_return_if_fail (ARV_IS_GC_FLOAT (gc_float));
 	g_return_if_fail (error == NULL || *error == NULL);
 
-	float_interface = ARV_GC_FLOAT_GET_INTERFACE (gc_float);
+	float_interface = ARV_GC_FLOAT_GET_IFACE (gc_float);
 
 	if (float_interface->impose_max != NULL)
 		float_interface->impose_max (gc_float, maximum, error);

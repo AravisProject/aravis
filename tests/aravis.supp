@@ -22,47 +22,31 @@
 		...
 		fun:_dl_init
 }
-
 {
-	g_type_register_static
-		Memcheck:Leak
-		fun:realloc
-		fun:g_realloc
-		...
-		fun:g_type_register_static
-		...
-		fun:_dl_init
+	g-type-register-static
+	Memcheck:Leak
+	match-leak-kinds:possible,reachable
+	fun:malloc
+	...
+	fun:g_type_register_static
 }
 
 {
-	g_type_register_static_app_malloc
-		Memcheck:Leak
-		fun:malloc
-		fun:realloc
-		fun:g_realloc
-		...
-		fun:g_type_register_static
-		fun:g_type_register_static_simple
+	g-type-register-static-realloc
+	Memcheck:Leak
+	match-leak-kinds:possible,reachable
+	fun:realloc
+	...
+	fun:g_type_register_static
 }
 
 {
-	g_type_register_static_app
-		Memcheck:Leak
-		fun:realloc
-		fun:g_realloc
-		...
-		fun:g_type_register_static
-		fun:g_type_register_static_simple
-}
-
-{
-	g_enum_register_static_app
-		Memcheck:Leak
-		fun:realloc
-		fun:g_realloc
-		...
-		fun:g_type_register_static
-		fun:g_enum_register_static
+	g-type-register-static-calloc
+	Memcheck:Leak
+	match-leak-kinds:reachable
+	fun:calloc
+	...
+	fun:g_type_register_static
 }
 
 {

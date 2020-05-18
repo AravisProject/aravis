@@ -24,6 +24,8 @@
 #include <arvdomnodelist.h>
 #include <arvdomnode.h>
 
+G_DEFINE_ABSTRACT_TYPE (ArvDomNodeList, arv_dom_node_list, G_TYPE_OBJECT)
+
 /* ArvDomNodeList implementation */
 
 /**
@@ -63,5 +65,3 @@ static void
 arv_dom_node_list_class_init (ArvDomNodeListClass *klass)
 {
 }
-
-G_DEFINE_ABSTRACT_TYPE (ArvDomNodeList, arv_dom_node_list, G_TYPE_OBJECT)

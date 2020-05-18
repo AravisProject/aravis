@@ -34,26 +34,8 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_COMMAND             (arv_gc_command_get_type ())
-#define ARV_GC_COMMAND(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_COMMAND, ArvGcCommand))
-#define ARV_GC_COMMAND_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GC_COMMAND, ArvGcCommandClass))
-#define ARV_IS_GC_COMMAND(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GC_COMMAND))
-#define ARV_IS_GC_COMMAND_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GC_COMMAND))
-#define ARV_GC_COMMAND_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GC_COMMAND, ArvGcCommandClass))
+G_DECLARE_FINAL_TYPE (ArvGcCommand, arv_gc_command, ARV, GC_COMMAND, ArvGcFeatureNode)
 
-typedef struct _ArvGcCommandClass ArvGcCommandClass;
-
-struct _ArvGcCommand {
-	ArvGcFeatureNode	node;
-
-	ArvGcPropertyNode *command_value;
-	ArvGcPropertyNode *value;
-};
-
-struct _ArvGcCommandClass {
-	ArvGcFeatureNodeClass parent_class;
-};
-
-GType 		arv_gc_command_get_type 	(void);
 ArvGcNode * 	arv_gc_command_new 		(void);
 void 		arv_gc_command_execute 		(ArvGcCommand *gc_command, GError **error);
 

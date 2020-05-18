@@ -21,6 +21,7 @@
  */
 
 #include <arvviewertypes.h>
+#include <arv.h>
 
 G_BEGIN_DECLS
 
@@ -34,6 +35,7 @@ void			arv_viewer_set_options		(ArvViewer *viewer,
 							 gboolean auto_socket_buffer,
 							 gboolean packet_resend,
 							 guint packet_timeout,
-							 guint frame_retention);
+							 guint frame_retention,
+							 ArvRegisterCachePolicy cache_policy);
 
 G_END_DECLS

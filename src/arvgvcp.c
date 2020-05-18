@@ -20,13 +20,14 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-/**
+/*
  * SECTION: arvgvcp
  * @short_description: GigEVision control packet handling
  */
 
-#include <arvgvcp.h>
+#include <arvgvcpprivate.h>
 #include <arvenumtypes.h>
+#include <arvenumtypesprivate.h>
 #include <string.h>
 #include <arvdebug.h>
 #include <arvstr.h>
@@ -53,16 +54,18 @@ arv_gvcp_packet_new_read_memory_cmd (guint32 address, guint32 size, guint16 pack
 {
 	ArvGvcpPacket *packet;
 	guint32 n_address = g_htonl (address);
-	guint32 n_size = g_htonl (size);
+	guint32 n_size;
 
 	g_return_val_if_fail (packet_size != NULL, NULL);
+
+	n_size = g_htonl (((size + sizeof (guint32) - 1) / sizeof (guint32)) * sizeof (guint32));
 
 	*packet_size = sizeof (ArvGvcpHeader) + 2 * sizeof (guint32);
 
 	packet = g_malloc (*packet_size);
 
 	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_CMD;
-	packet->header.packet_flags = 0;
+	packet->header.packet_flags = ARV_GVCP_CMD_PACKET_FLAGS_ACK_REQUIRED;
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_READ_MEMORY_CMD);
 	packet->header.size = g_htons (2 * sizeof (guint32));
 	packet->header.id = g_htons (packet_id);
@@ -119,24 +122,28 @@ arv_gvcp_packet_new_read_memory_ack (guint32 address, guint32 size, guint16 pack
  */
 
 ArvGvcpPacket *
-arv_gvcp_packet_new_write_memory_cmd (guint32 address, guint32 size, guint16 packet_id, size_t *packet_size)
+arv_gvcp_packet_new_write_memory_cmd (guint32 address, guint32 size, const char *buffer, guint16 packet_id, size_t *packet_size)
 {
 	ArvGvcpPacket *packet;
 	guint32 n_address = g_htonl (address);
+	guint32 actual_size;
 
 	g_return_val_if_fail (packet_size != NULL, NULL);
 
-	*packet_size = sizeof (ArvGvcpHeader) + sizeof (guint32) + size;
+	actual_size = ((size + sizeof (guint32) - 1) / sizeof (guint32)) * sizeof (guint32);
+
+	*packet_size = sizeof (ArvGvcpHeader) + sizeof (guint32) + actual_size;
 
 	packet = g_malloc (*packet_size);
 
 	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_CMD;
-	packet->header.packet_flags = 0;
+	packet->header.packet_flags = ARV_GVCP_CMD_PACKET_FLAGS_ACK_REQUIRED;
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_WRITE_MEMORY_CMD);
-	packet->header.size = g_htons (sizeof (guint32) + size);
+	packet->header.size = g_htons (sizeof (guint32) + actual_size);
 	packet->header.id = g_htons (packet_id);
 
 	memcpy (&packet->data, &n_address, sizeof (guint32));
+	memcpy ((char *) packet + sizeof (ArvGvcpPacket) + sizeof (guint32), buffer, size);
 
 	return packet;
 }
@@ -201,7 +208,7 @@ arv_gvcp_packet_new_read_register_cmd (guint32 address,
 	packet = g_malloc (*packet_size);
 
 	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_CMD;
-	packet->header.packet_flags = 0;
+	packet->header.packet_flags = ARV_GVCP_CMD_PACKET_FLAGS_ACK_REQUIRED;
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_READ_REGISTER_CMD);
 	packet->header.size = g_htons (sizeof (guint32));
 	packet->header.id = g_htons (packet_id);
@@ -231,7 +238,7 @@ arv_gvcp_packet_new_read_register_ack (guint32 value,
 
 	g_return_val_if_fail (packet_size != NULL, NULL);
 
-	*packet_size = sizeof (ArvGvcpHeader) + sizeof (guint32);
+	*packet_size = arv_gvcp_packet_get_read_register_ack_size ();
 
 	packet = g_malloc (*packet_size);
 
@@ -274,7 +281,7 @@ arv_gvcp_packet_new_write_register_cmd (guint32 address,
 	packet = g_malloc (*packet_size);
 
 	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_CMD;
-	packet->header.packet_flags = 0;
+	packet->header.packet_flags = ARV_GVCP_CMD_PACKET_FLAGS_ACK_REQUIRED;
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_WRITE_REGISTER_CMD);
 	packet->header.size = g_htons (2 * sizeof (guint32));
 	packet->header.id = g_htons (packet_id);
@@ -305,7 +312,7 @@ arv_gvcp_packet_new_write_register_ack 	(guint32 data_index,
 
 	g_return_val_if_fail (packet_size != NULL, NULL);
 
-	*packet_size = sizeof (ArvGvcpHeader) + sizeof (guint32);
+	*packet_size = arv_gvcp_packet_get_write_register_ack_size ();
 
 	packet = g_malloc (*packet_size);
 
@@ -340,7 +347,7 @@ arv_gvcp_packet_new_discovery_cmd (size_t *packet_size)
 	packet = g_malloc (*packet_size);
 
 	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_CMD;
-	packet->header.packet_flags = 0;
+	packet->header.packet_flags = ARV_GVCP_CMD_PACKET_FLAGS_ACK_REQUIRED;
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_DISCOVERY_CMD);
 	packet->header.size = g_htons (0x0000);
 	packet->header.id = g_htons (0xffff);
@@ -350,7 +357,7 @@ arv_gvcp_packet_new_discovery_cmd (size_t *packet_size)
 
 /**
  * arv_gvcp_packet_new_discovery_ack: (skip)
- * @id: packet id 
+ * @id: packet id
  * @packet_size: (out): packet size, in bytes
  *
  * Create a gvcp packet for a discovery acknowledge.
@@ -359,7 +366,7 @@ arv_gvcp_packet_new_discovery_cmd (size_t *packet_size)
  */
 
 ArvGvcpPacket *
-arv_gvcp_packet_new_discovery_ack (int id, size_t *packet_size)
+arv_gvcp_packet_new_discovery_ack (guint16 packet_id, size_t *packet_size)
 {
 	ArvGvcpPacket *packet;
 
@@ -373,7 +380,7 @@ arv_gvcp_packet_new_discovery_ack (int id, size_t *packet_size)
 	packet->header.packet_flags = 0;
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_DISCOVERY_ACK);
 	packet->header.size = g_htons (ARV_GVBS_DISCOVERY_DATA_SIZE);
-        packet->header.id = g_htons (id);
+        packet->header.id = g_htons (packet_id);
 
 	return packet;
 }
@@ -406,7 +413,7 @@ arv_gvcp_packet_new_packet_resend_cmd (guint32 frame_id,
 	packet = g_malloc (*packet_size);
 
 	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_CMD;
-	packet->header.packet_flags = ARV_GVCP_PACKET_FLAGS_ACK_REQUIRED;
+	packet->header.packet_flags = 0;
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_PACKET_RESEND_CMD);
 	packet->header.size = g_htons (3 * sizeof (guint32));
 	packet->header.id = g_htons (packet_id);
@@ -439,22 +446,105 @@ arv_enum_to_string (GType type,
 	return retval;
 }
 
-static const char *
+/**
+ * arv_gvcp_packet_type_to_string: (skip)
+ * @value: a #ArvGvcpPacketType
+ *
+ * Returns: (transfer none): packet type string.
+ */
+
+const char *
 arv_gvcp_packet_type_to_string (ArvGvcpPacketType value)
 {
-	return arv_enum_to_string (ARV_TYPE_GVCP_PACKET_TYPE, value);
+	const char *text;
+
+	text = arv_enum_to_string (ARV_TYPE_GVCP_PACKET_TYPE, value);
+
+	return text != NULL ? text : "unknown";
 }
 
-static const char *
-arv_gvcp_packet_flags_to_string (ArvGvcpPacketFlags value)
+/**
+ * arv_gvcp_packet_flags_to_string_new: (skip)
+ * @command: a #ArvGvcpCommand identifier
+ * @flags: a packet flag value
+ *
+ * Returns: (transfer full): a newly allocated string with the name of all active flags, to be freed after use.
+ */
+
+char *
+arv_gvcp_packet_flags_to_string_new (ArvGvcpCommand command, guint8 flags)
 {
-	return arv_enum_to_string (ARV_TYPE_GVCP_PACKET_FLAGS, value);
+	GString *string = g_string_new ("");
+	char *buffer = NULL;
+	unsigned i;
+
+	for (i = 0; i < 8; i++) {
+		if ((1 << i) & flags)
+			g_string_append_printf (string, "%s%s", string->len > 0 ? " " : "",
+						arv_enum_to_string (ARV_TYPE_GVCP_CMD_PACKET_FLAGS, 1 << i));
+	}
+
+	switch (command) {
+		case ARV_GVCP_COMMAND_DISCOVERY_CMD:
+			for (i = 0; i < 8; i++) {
+				if ((1 << i) & flags)
+					g_string_append_printf (string, "%s%s", string->len > 0 ? " " : "",
+								arv_enum_to_string (ARV_TYPE_GVCP_DISCOVERY_PACKET_FLAGS, 1 << i));
+			}
+			break;
+		case ARV_GVCP_COMMAND_PACKET_RESEND_CMD:
+			for (i = 0; i < 8; i++) {
+				if ((1 << i) & flags)
+					g_string_append_printf (string, "%s%s", string->len > 0 ? " " : "",
+								arv_enum_to_string (ARV_TYPE_GVCP_EVENT_PACKET_FLAGS, 1 << i));
+			}
+			break;
+		default:
+			break;
+	}
+
+	if (string->len == 0)
+		g_string_append (string, "none");
+
+	buffer = string->str;
+
+	g_string_free (string, FALSE);
+
+	return buffer;
 }
 
-static const char *
+/**
+ * arv_gvcp_error_to_string: (skip)
+ * @value: a #ArvGvcpError
+ *
+ * Returns: (transfer none): GVCP error name.
+ */
+
+const char *
+arv_gvcp_error_to_string (ArvGvcpError value)
+{
+	const char *text;
+
+	text = arv_enum_to_string (ARV_TYPE_GVCP_ERROR, value);
+
+	return text != NULL ? text : "unknown";
+}
+
+/**
+ * arv_gvcp_command_to_string: (skip)
+ * @value: a #ArvGvcpCommand
+ *
+ * Returns: (transfer none): GVCP command name.
+ */
+
+const char *
 arv_gvcp_command_to_string (ArvGvcpCommand value)
 {
-	return arv_enum_to_string (ARV_TYPE_GVCP_COMMAND, value);
+	const char *text;
+
+	text = arv_enum_to_string (ARV_TYPE_GVCP_COMMAND, value);
+
+	return text != NULL ? text : "unknown";
 }
 
 /**
@@ -481,8 +571,21 @@ arv_gvcp_packet_to_string (const ArvGvcpPacket *packet)
 
 	g_string_append_printf (string, "packet_type  = %s\n",
 				arv_gvcp_packet_type_to_string (packet->header.packet_type));
-	g_string_append_printf (string, "packet_flags = %s\n",
-				arv_gvcp_packet_flags_to_string (packet->header.packet_flags));
+	switch (packet->header.packet_type) {
+		case ARV_GVCP_PACKET_TYPE_CMD:
+			{
+				char *flags = arv_gvcp_packet_flags_to_string_new (g_ntohs (packet->header.command), packet->header.packet_flags);
+				g_string_append_printf (string, "packet_flags = %s\n", flags);
+				g_free (flags);
+			}
+			break;
+		case ARV_GVCP_PACKET_TYPE_ERROR:
+			g_string_append_printf (string, "error        = %s\n",
+						arv_gvcp_error_to_string (packet->header.packet_flags));
+			break;
+		default:
+			break;
+	}
 	g_string_append_printf (string, "command      = %s\n",
 				arv_gvcp_command_to_string (g_ntohs (packet->header.command)));
 	g_string_append_printf (string, "size         = %d\n", g_ntohs (packet->header.size));

@@ -31,11 +31,8 @@
 
 G_BEGIN_DECLS
 
-#define ARV_DEVICE_ERROR arv_device_error_quark()
-
-GQuark 		arv_device_error_quark 		(void);
-
 void 		arv_device_emit_control_lost_signal 	(ArvDevice *device);
+void		arv_device_take_init_error		(ArvDevice *device, GError *error);
 
 G_END_DECLS
 

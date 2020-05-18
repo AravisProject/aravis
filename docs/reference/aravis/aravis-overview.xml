@@ -24,11 +24,11 @@
 		</para>
 
 		<para>
-			#ArvCamera is a simple API for easy access of standard camera features.
+			ArvCamera is a simple API for easy access of standard camera features.
 		</para>
 
 		<para>
-			#ArvDevice and #ArvGc are more low level APIs, which enable the full
+			ArvDevice and ArvGc are more low level APIs, which enable the full
 			control of the cameras, allowing the use of the features specific to
 			each model.
 		</para>
@@ -58,36 +58,25 @@
 		<title>Building and Debugging Aravis</title>
 
 		<para>
-			On UNIX, Aravis uses the standard GNU build system, using
-			<application>autoconf</application> for package configuration
-			and resolving portability issues,
-			<application>automake</application> for building makefiles that
-			comply with the GNU Coding Standards, and
-			<application>libtool</application> for building shared
-			libraries on multiple platforms.  The normal sequence for
-			compiling and installing the Aravis library is thus:
-			<literallayout>
-				<userinput>./configure</userinput>
-				<userinput>make</userinput>
-				<userinput>make install</userinput>
-			</literallayout>
+		  Aravis is built using <ulink type="http" url="http://mesonbuild.com/">meson build system</ulink>. Release tarballs are
+		  stored on <ulink type="http" url="http://ftp.gnome.org/pub/GNOME/sources/aravis">http://ftp.gnome.org/pub/GNOME/sources/aravis</ulink>.
+		  You can build and install Aravis like <ulink type="http" url="http://mesonbuild.com/Quick-guide.html#compiling-a-meson-project">any other meson project</ulink>:
+		  <literallayout>
+		    <userinput>meson build</userinput>
+		    <userinput>cd build</userinput>
+		    <userinput>ninja</userinput>
+		    <userinput>ninja install</userinput>
+		  </literallayout>
 		</para>
 
 		<para>
-			The standard options provided by <application>GNU
-				autoconf</application> may be passed to the
-			<command>configure</command> script.  Please see the
-			<application>autoconf</application> documentation or run
-			<command>./configure --help</command> for information about the
-			standard options.
+		  The build can be configured at any time using <literal>meson configure</literal> in the build directory.
+		  meson configure invoked without any other argument will show the configuration options.
 		</para>
 
 		<para>
-			In addition to the standard options, there is a number of options to activate or deactivate features.
-			<itemizedlist>
-				<listitem>--enable-gst-plugin enables the compilation of the aravissrc gstreamer element</listitem>
-				<listitem>--enable-viewer makes the build system compile the viewer</listitem>
-			</itemizedlist>
+		  On some platforms (like Ubuntu), you may have to configure the dynamic linker (ld) to let it know where the aravis
+		  libraries are installed, and run ldconfig as root in order to update ld cache
 		</para>
 
 		<para>

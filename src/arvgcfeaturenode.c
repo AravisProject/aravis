@@ -31,26 +31,37 @@
 #include <arvgcfeaturenode.h>
 #include <arvgcpropertynode.h>
 #include <arvgc.h>
+#include <arvgcboolean.h>
+#include <arvgcinteger.h>
+#include <arvgcfloat.h>
+#include <arvgcstring.h>
+#include <arvgcenumeration.h>
+#include <arvgcenums.h>
 #include <arvmisc.h>
 #include <arvdebug.h>
 #include <string.h>
 
-static GObjectClass *parent_class = NULL;
-
-struct _ArvGcFeatureNodePrivate {
+typedef struct {
 
 	char *name;
 	ArvGcNameSpace name_space;
 
 	ArvGcPropertyNode *tooltip;
 	ArvGcPropertyNode *description;
+	ArvGcPropertyNode *visibility;
 	ArvGcPropertyNode *display_name;
 	ArvGcPropertyNode *is_implemented;
 	ArvGcPropertyNode *is_available;
 	ArvGcPropertyNode *is_locked;
+	ArvGcPropertyNode *access_mode;
+	ArvGcPropertyNode *imposed_access_mode;
 
-	gint modification_count;
-};
+	guint64 change_count;
+
+	char *string_buffer;
+} ArvGcFeatureNodePrivate;
+
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvGcFeatureNode, arv_gc_feature_node, ARV_TYPE_GC_NODE, G_ADD_PRIVATE (ArvGcFeatureNode))
 
 /* ArvDomNode implementation */
 
@@ -63,29 +74,38 @@ arv_gc_feature_node_can_append_child (ArvDomNode *self, ArvDomNode *child)
 static void
 arv_gc_feature_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 {
-	ArvGcFeatureNode *node = ARV_GC_FEATURE_NODE (self);
+	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (ARV_GC_FEATURE_NODE (self));
 
 	if (ARV_IS_GC_PROPERTY_NODE (child)) {
 		ArvGcPropertyNode *property_node = ARV_GC_PROPERTY_NODE (child);
 
 		switch (arv_gc_property_node_get_node_type (property_node)) {
 			case ARV_GC_PROPERTY_NODE_TYPE_TOOLTIP:
-				node->priv->tooltip = property_node;
+				priv->tooltip = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_DESCRIPTION:
-				node->priv->description = property_node;
+				priv->description = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_VISIBILITY:
+				priv->visibility = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_NAME:
-				node->priv->display_name = property_node;
+				priv->display_name = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_P_IS_AVAILABLE:
-				node->priv->is_available = property_node;
+				priv->is_available = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_P_IS_IMPLEMENTED:
-				node->priv->is_implemented = property_node;
+				priv->is_implemented = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_P_IS_LOCKED:
-				node->priv->is_locked = property_node;
+				priv->is_locked = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_ACCESS_MODE:
+				priv->access_mode = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_IMPOSED_ACCESS_MODE:
+				priv->imposed_access_mode = property_node;
 				break;
 			default:
 				break;
@@ -96,29 +116,38 @@ arv_gc_feature_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 static void
 arv_gc_feature_node_pre_remove_child (ArvDomNode *self, ArvDomNode *child)
 {
-	ArvGcFeatureNode *node = ARV_GC_FEATURE_NODE (self);
+	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (ARV_GC_FEATURE_NODE (self));
 
 	if (ARV_IS_GC_PROPERTY_NODE (child)) {
 		ArvGcPropertyNode *property_node = ARV_GC_PROPERTY_NODE (child);
 
 		switch (arv_gc_property_node_get_node_type (property_node)) {
 			case ARV_GC_PROPERTY_NODE_TYPE_TOOLTIP:
-				node->priv->tooltip = NULL;
+				priv->tooltip = NULL;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_DESCRIPTION:
-				node->priv->description = NULL;
+				priv->description = NULL;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_VISIBILITY:
+				priv->visibility = NULL;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_NAME:
-				node->priv->description = NULL;
+				priv->description = NULL;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_P_IS_AVAILABLE:
-				node->priv->is_available = NULL;
+				priv->is_available = NULL;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_P_IS_IMPLEMENTED:
-				node->priv->is_implemented = NULL;
+				priv->is_implemented = NULL;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_P_IS_LOCKED:
-				node->priv->is_locked = NULL;
+				priv->is_locked = NULL;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_ACCESS_MODE:
+				priv->access_mode = NULL;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_IMPOSED_ACCESS_MODE:
+				priv->imposed_access_mode =  NULL;
 				break;
 			default:
 				break;
@@ -131,23 +160,23 @@ arv_gc_feature_node_pre_remove_child (ArvDomNode *self, ArvDomNode *child)
 static void
 arv_gc_feature_node_set_attribute (ArvDomElement *self, const char *name, const char *value)
 {
-	ArvGcFeatureNode *node = ARV_GC_FEATURE_NODE (self);
+	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (ARV_GC_FEATURE_NODE (self));
 
 	if (strcmp (name, "Name") == 0) {
 		ArvGc *genicam;
 
-		g_free (node->priv->name);
-		node->priv->name = g_strdup (value);
+		g_free (priv->name);
+		priv->name = g_strdup (value);
 
 		genicam = arv_gc_node_get_genicam (ARV_GC_NODE (self));
 		/* Kludge around ugly Genicam specification (Really, pre-parsing for EnumEntry Name substitution ?) */
-		if (strcmp (arv_dom_node_get_node_name (ARV_DOM_NODE (node)), "EnumEntry") != 0)
-			arv_gc_register_feature_node (genicam, node);
+		if (strcmp (arv_dom_node_get_node_name (ARV_DOM_NODE (self)), "EnumEntry") != 0)
+			arv_gc_register_feature_node (genicam, ARV_GC_FEATURE_NODE (self));
 	} else if (strcmp (name, "NameSpace") == 0) {
 		if (g_strcmp0 (value, "Standard") == 0)
-			node->priv->name_space = ARV_GC_NAME_SPACE_STANDARD;
+			priv->name_space = ARV_GC_NAME_SPACE_STANDARD;
 		else
-			node->priv->name_space = ARV_GC_NAME_SPACE_CUSTOM;
+			priv->name_space = ARV_GC_NAME_SPACE_CUSTOM;
 	} else
 		arv_debug_dom ("[GcFeature::set_attribute] Unknown attribute '%s'", name);
 }
@@ -155,12 +184,12 @@ arv_gc_feature_node_set_attribute (ArvDomElement *self, const char *name, const 
 static const char *
 arv_gc_feature_node_get_attribute (ArvDomElement *self, const char *name)
 {
-	ArvGcFeatureNode *node = ARV_GC_FEATURE_NODE (self);
+	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (ARV_GC_FEATURE_NODE (self));
 
 	if (strcmp (name, "Name") == 0)
-		return node->priv->name;
+		return priv->name;
 	else if (strcmp (name, "NameSpace") == 0)
-		switch (node->priv->name_space) {
+		switch (priv->name_space) {
 			case ARV_GC_NAME_SPACE_STANDARD:
 				return "Standard";
 			default:
@@ -177,91 +206,77 @@ arv_gc_feature_node_get_attribute (ArvDomElement *self, const char *name)
 const char *
 arv_gc_feature_node_get_name (ArvGcFeatureNode *node)
 {
+	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (node);
+
 	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (node), NULL);
 
-	return node->priv->name;
+	return priv->name;
 }
 
 const char *
-arv_gc_feature_node_get_tooltip (ArvGcFeatureNode *node, GError **error)
+arv_gc_feature_node_get_tooltip (ArvGcFeatureNode *node)
 {
-	const char *tooltip;
-	GError *local_error = NULL;
+	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (node);
 
 	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (node), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
-	if (node->priv->tooltip == NULL)
+	if (priv->tooltip == NULL)
 		return NULL;
 
-	tooltip = arv_gc_property_node_get_string (node->priv->tooltip, &local_error);
-
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return NULL;
-	}
-
-	return tooltip;
+	return arv_gc_property_node_get_string (priv->tooltip, NULL);
 }
 
 const char *
-arv_gc_feature_node_get_description (ArvGcFeatureNode *node, GError **error)
+arv_gc_feature_node_get_description (ArvGcFeatureNode *node)
 {
-	const char *description;
-	GError *local_error = NULL;
+	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (node);
 
 	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (node), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
-	if (node->priv->description == NULL)
+	if (priv->description == NULL)
 	       return NULL;
 
-	description = arv_gc_property_node_get_string (node->priv->description, &local_error);
+	return arv_gc_property_node_get_string (priv->description, NULL);
+}
 
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return NULL;
-	}
+ArvGcVisibility
+arv_gc_feature_node_get_visibility (ArvGcFeatureNode *node)
+{
+	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (node);
 
-	return description;
+	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (node), ARV_GC_VISIBILITY_UNDEFINED);
+
+	return arv_gc_property_node_get_visibility (priv->visibility, ARV_GC_VISIBILITY_BEGINNER);
 }
 
 const char *
-arv_gc_feature_node_get_display_name (ArvGcFeatureNode *node, GError **error)
+arv_gc_feature_node_get_display_name (ArvGcFeatureNode *node)
 {
-	const char *display_name;
-	GError *local_error = NULL;
+	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (node);
 
 	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (node), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
-	if (node->priv->display_name == NULL)
+	if (priv->display_name == NULL)
 	       return NULL;
 
-	display_name = arv_gc_property_node_get_string (node->priv->display_name, &local_error);
-
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return NULL;
-	}
-
-	return display_name;
+	return arv_gc_property_node_get_string (priv->display_name, NULL);
 }
 
 gboolean
 arv_gc_feature_node_is_implemented (ArvGcFeatureNode *gc_feature_node, GError **error)
 {
+	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (gc_feature_node);
 	gboolean value;
 	GError *local_error = NULL;
 
 	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (gc_feature_node), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-	if (gc_feature_node->priv->is_implemented == NULL)
+	if (priv->is_implemented == NULL)
 		return TRUE;
 
 
-	value = arv_gc_property_node_get_int64 (gc_feature_node->priv->is_implemented, &local_error) != 0;
+	value = arv_gc_property_node_get_int64 (priv->is_implemented, &local_error) != 0;
 
 	if (local_error != NULL) {
 		g_propagate_error (error, local_error);
@@ -274,16 +289,17 @@ arv_gc_feature_node_is_implemented (ArvGcFeatureNode *gc_feature_node, GError **
 gboolean
 arv_gc_feature_node_is_available (ArvGcFeatureNode *gc_feature_node, GError **error)
 {
+	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (gc_feature_node);
 	gboolean value;
 	GError *local_error = NULL;
 
 	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (gc_feature_node), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-	if (gc_feature_node->priv->is_available == NULL)
+	if (priv->is_available == NULL)
 		return TRUE;
 
-	value = arv_gc_property_node_get_int64 (gc_feature_node->priv->is_available, &local_error) != 0;
+	value = arv_gc_property_node_get_int64 (priv->is_available, &local_error) != 0;
 
 	if (local_error != NULL) {
 		g_propagate_error (error, local_error);
@@ -296,15 +312,16 @@ arv_gc_feature_node_is_available (ArvGcFeatureNode *gc_feature_node, GError **er
 gboolean
 arv_gc_feature_node_is_locked (ArvGcFeatureNode *gc_feature_node, GError **error)
 {
+	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (gc_feature_node);
 	gboolean value;
 	GError *local_error = NULL;
 
 	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (gc_feature_node), FALSE);
 
-	if (gc_feature_node->priv->is_locked == NULL)
+	if (priv->is_locked == NULL)
 		return FALSE;
 
-	value = arv_gc_property_node_get_int64 (gc_feature_node->priv->is_locked, &local_error) != 0;
+	value = arv_gc_property_node_get_int64 (priv->is_locked, &local_error) != 0;
 
 	if (local_error != NULL) {
 		g_propagate_error (error, local_error);
@@ -314,29 +331,18 @@ arv_gc_feature_node_is_locked (ArvGcFeatureNode *gc_feature_node, GError **error
 	return value;
 }
 
-ArvGcFeatureNode *
-arv_gc_feature_node_new (void)
+#if 0
+ArvGcAccessMode
+arv_gc_feature_node_get_access_mode (ArvGcFeatureNode *self)
 {
-	ArvGcFeatureNode *node;
+	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (self), ARV_GC_ACCESS_MODE_RW);
 
-	node = g_object_new (ARV_TYPE_GC_FEATURE_NODE, NULL);
+	if (ARV_IS_GC_PROPERTY_NODE (self->priv->imposed_access_mode))
+	    return arv_gc_property_node_get_access_mode (self->priv->imposed_access_mode, ARV_GC_ACCESS_MODE_RW);
 
-	return node;
+	return arv_gc_property_node_get_access_mode (self->priv->access_mode, ARV_GC_ACCESS_MODE_RW);
 }
-
-GType
-arv_gc_feature_node_get_value_type (ArvGcFeatureNode *node)
-{
-	ArvGcFeatureNodeClass *node_class;
-
-	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (node), 0);
-
-	node_class = ARV_GC_FEATURE_NODE_GET_CLASS (node);
-	if (node_class->get_value_type != NULL)
-		return node_class->get_value_type (node);
-
-	return 0;
-}
+#endif
 
 /**
  * arv_gc_feature_node_set_value_from_string:
@@ -348,17 +354,25 @@ arv_gc_feature_node_get_value_type (ArvGcFeatureNode *node)
  */
 
 void
-arv_gc_feature_node_set_value_from_string (ArvGcFeatureNode *gc_feature_node, const char *string, GError **error)
+arv_gc_feature_node_set_value_from_string (ArvGcFeatureNode *self, const char *string, GError **error)
 {
-	ArvGcFeatureNodeClass *node_class;
-
-	g_return_if_fail (ARV_IS_GC_FEATURE_NODE (gc_feature_node));
-	g_return_if_fail (error == NULL || *error == NULL);
+	g_return_if_fail (ARV_IS_GC_FEATURE_NODE (self));
 	g_return_if_fail (string != NULL);
 
-	node_class = ARV_GC_FEATURE_NODE_GET_CLASS (gc_feature_node);
-	if (node_class->set_value_from_string != NULL)
-		node_class->set_value_from_string (gc_feature_node, string, error);
+	if (ARV_IS_GC_ENUMERATION (self)) {
+		arv_gc_enumeration_set_string_value (ARV_GC_ENUMERATION (self), string, error);
+	} else if (ARV_IS_GC_INTEGER (self)) {
+		arv_gc_integer_set_value (ARV_GC_INTEGER (self), g_ascii_strtoll (string, NULL, 0), error);
+	} else if (ARV_IS_GC_FLOAT (self)) {
+		arv_gc_float_set_value (ARV_GC_FLOAT (self), g_ascii_strtod (string, NULL), error);
+	} else if (ARV_IS_GC_STRING (self)) {
+		arv_gc_string_set_value (ARV_GC_STRING (self), string, error);
+	} else if (ARV_IS_GC_BOOLEAN (self)) {
+		arv_gc_boolean_set_value (ARV_GC_BOOLEAN (self), g_strcmp0 (string, "true") == 0 ? 1 : 0, error);
+	} else {
+		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_SET_FROM_STRING_UNDEFINED,
+			     "Don't know how to set %s value from string", arv_dom_node_get_node_name (ARV_DOM_NODE (self)));
+	}
 }
 
 /**
@@ -374,52 +388,71 @@ arv_gc_feature_node_set_value_from_string (ArvGcFeatureNode *gc_feature_node, co
  */
 
 const char *
-arv_gc_feature_node_get_value_as_string (ArvGcFeatureNode *gc_feature_node, GError **error)
+arv_gc_feature_node_get_value_as_string (ArvGcFeatureNode *self, GError **error)
 {
-	ArvGcFeatureNodeClass *node_class;
+	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (self);
 
-	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (gc_feature_node), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (self), NULL);
 
-	node_class = ARV_GC_FEATURE_NODE_GET_CLASS (gc_feature_node);
-	if (node_class->get_value_as_string != NULL)
-		return node_class->get_value_as_string (gc_feature_node, error);
+	if (ARV_IS_GC_ENUMERATION (self)) {
+		return arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (self), error);
+	} else if (ARV_IS_GC_INTEGER (self)) {
+		g_free (priv->string_buffer);
+		priv->string_buffer = g_strdup_printf ("%" G_GINT64_FORMAT, arv_gc_integer_get_value (ARV_GC_INTEGER (self), error));
+		return priv->string_buffer;
+	} else if (ARV_IS_GC_FLOAT (self)) {
+		g_free (priv->string_buffer);
+		priv->string_buffer = g_strdup_printf ("%g", arv_gc_float_get_value (ARV_GC_FLOAT (self), error));
+		return priv->string_buffer;
+	} else if (ARV_IS_GC_STRING (self)) {
+		return arv_gc_string_get_value (ARV_GC_STRING (self), error);
+	} else if (ARV_IS_GC_BOOLEAN (self)) {
+		return arv_gc_boolean_get_value (ARV_GC_BOOLEAN (self), error) ? "true" : "false";
+	}
+
+	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_SET_FROM_STRING_UNDEFINED,
+		     "Don't know how to set %s value from string", arv_dom_node_get_node_name (ARV_DOM_NODE (self)));
 
 	return NULL;
 }
 
 void
-arv_gc_feature_node_inc_modification_count (ArvGcFeatureNode *gc_feature_node)
+arv_gc_feature_node_increment_change_count (ArvGcFeatureNode *self)
 {
-	g_return_if_fail (ARV_IS_GC_FEATURE_NODE (gc_feature_node));
+	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (self);
 
-	gc_feature_node->priv->modification_count++;
+	g_return_if_fail (ARV_IS_GC_FEATURE_NODE (self));
+
+	priv->change_count++;
 }
 
-gint
-arv_gc_feature_node_get_modification_count (ArvGcFeatureNode *node)
+guint64
+arv_gc_feature_node_get_change_count (ArvGcFeatureNode *self)
 {
-	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (node), 0);
+	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (self);
 
-	return node->priv->modification_count;
+	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (self), 0);
+
+	return priv->change_count;
 }
 
 static void
-arv_gc_feature_node_init (ArvGcFeatureNode *gc_feature_node)
+arv_gc_feature_node_init (ArvGcFeatureNode *self)
 {
-	gc_feature_node->priv = G_TYPE_INSTANCE_GET_PRIVATE (gc_feature_node, ARV_TYPE_GC_FEATURE_NODE, ArvGcFeatureNodePrivate);
+	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (self);
 
-	gc_feature_node->priv->modification_count = 0;
+	priv->change_count = 0;
 }
 
 static void
 arv_gc_feature_node_finalize (GObject *object)
 {
-	ArvGcFeatureNode *node = ARV_GC_FEATURE_NODE(object);
+	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (ARV_GC_FEATURE_NODE(object));
 
-	g_free (node->priv->name);
+	g_clear_pointer (&priv->name, g_free);
+	g_clear_pointer (&priv->string_buffer, g_free);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_gc_feature_node_parent_class)->finalize (object);
 }
 
 static void
@@ -429,23 +462,10 @@ arv_gc_feature_node_class_init (ArvGcFeatureNodeClass *this_class)
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
 	ArvDomElementClass *dom_element_class = ARV_DOM_ELEMENT_CLASS (this_class);
 
-#if !GLIB_CHECK_VERSION(2,38,0)
-	g_type_class_add_private (this_class, sizeof (ArvGcFeatureNodePrivate));
-#endif
-
-	parent_class = g_type_class_peek_parent (this_class);
-
 	object_class->finalize = arv_gc_feature_node_finalize;
 	dom_node_class->can_append_child = arv_gc_feature_node_can_append_child;
 	dom_node_class->post_new_child = arv_gc_feature_node_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_feature_node_pre_remove_child;
 	dom_element_class->set_attribute = arv_gc_feature_node_set_attribute;
 	dom_element_class->get_attribute = arv_gc_feature_node_get_attribute;
-	this_class->get_value_type = NULL;
 }
-
-#if !GLIB_CHECK_VERSION(2,38,0)
-G_DEFINE_TYPE (ArvGcFeatureNode, arv_gc_feature_node, ARV_TYPE_GC_NODE)
-#else
-G_DEFINE_TYPE_WITH_CODE (ArvGcFeatureNode, arv_gc_feature_node, ARV_TYPE_GC_NODE, G_ADD_PRIVATE (ArvGcFeatureNode))
-#endif

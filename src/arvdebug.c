@@ -35,6 +35,12 @@ ArvDebugCategory arv_debug_category_interface =
 	.level = -1
 };
 
+ArvDebugCategory arv_debug_category_dom =
+{
+	.name = "dom",
+	.level = -1
+};
+
 ArvDebugCategory arv_debug_category_device =
 {
 	.name = "device",

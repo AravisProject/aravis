@@ -33,31 +33,16 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_INTERFACE             (arv_interface_get_type ())
-#define ARV_INTERFACE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_INTERFACE, ArvInterface))
-#define ARV_INTERFACE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_INTERFACE, ArvInterfaceClass))
-#define ARV_IS_INTERFACE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_INTERFACE))
-#define ARV_IS_INTERFACE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_INTERFACE))
-#define ARV_INTERFACE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_INTERFACE, ArvInterfaceClass))
-
-typedef struct _ArvInterfacePrivate ArvInterfacePrivate;
-typedef struct _ArvInterfaceClass ArvInterfaceClass;
-
-struct _ArvInterface {
-	GObject	object;
-
-	ArvInterfacePrivate *priv;
-};
+G_DECLARE_DERIVABLE_TYPE (ArvInterface, arv_interface, ARV, INTERFACE, GObject)
 
 struct _ArvInterfaceClass {
 	GObjectClass parent_class;
 
 	void 		(*update_device_list)		(ArvInterface *interface, GArray *device_ids);
-	ArvDevice *	(*open_device)			(ArvInterface *interface, const char *device_id);
+	ArvDevice *	(*open_device)			(ArvInterface *interface, const char *device_id, GError **error);
 
 	const char *	protocol;
 };
-
-GType arv_interface_get_type (void);
 
 void 			arv_interface_update_device_list 	(ArvInterface *interface);
 unsigned int 		arv_interface_get_n_devices 		(ArvInterface *interface);
@@ -68,7 +53,7 @@ const char * 		arv_interface_get_device_vendor		(ArvInterface *interface, unsign
 const char * 		arv_interface_get_device_model		(ArvInterface *interface, unsigned int index);
 const char * 		arv_interface_get_device_serial_nbr	(ArvInterface *interface, unsigned int index);
 const char * 		arv_interface_get_device_protocol	(ArvInterface *interface, unsigned int index);
-ArvDevice * 		arv_interface_open_device 		(ArvInterface *interface, const char *device_id);
+ArvDevice * 		arv_interface_open_device 		(ArvInterface *interface, const char *device_id, GError **error);
 
 G_END_DECLS
 

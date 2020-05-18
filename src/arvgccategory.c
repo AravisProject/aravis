@@ -30,7 +30,17 @@
 #include <arvgc.h>
 #include <string.h>
 
-static GObjectClass *parent_class = NULL;
+struct _ArvGcCategory {
+	ArvGcFeatureNode	base;
+
+	GSList *features;
+};
+
+struct _ArvGcCategoryClass {
+	ArvGcFeatureNodeClass parent_class;
+};
+
+G_DEFINE_TYPE (ArvGcCategory, arv_gc_category, ARV_TYPE_GC_FEATURE_NODE)
 
 /* ArvDomNode implementation */
 
@@ -117,7 +127,7 @@ arv_gc_category_finalize (GObject *object)
 
 	_free_features (category);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_gc_category_parent_class)->finalize (object);
 }
 
 static void
@@ -126,11 +136,7 @@ arv_gc_category_class_init (ArvGcCategoryClass *this_class)
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
 
-	parent_class = g_type_class_peek_parent (this_class);
-
 	object_class->finalize = arv_gc_category_finalize;
 	dom_node_class->get_node_name = arv_gc_category_get_node_name;
 	dom_node_class->can_append_child = arv_gc_category_can_append_child;
 }
-
-G_DEFINE_TYPE (ArvGcCategory, arv_gc_category, ARV_TYPE_GC_FEATURE_NODE)

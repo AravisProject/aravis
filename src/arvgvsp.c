@@ -20,16 +20,17 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-/**
+/*
  * SECTION: arvgvsp
  * @short_description: GigEVision stream packet handling
  */
 
-#include <arvgvsp.h>
 #include <arvdebug.h>
-#include <arvenumtypes.h>
-#include <string.h>
 #include <arvmisc.h>
+#include <arvenumtypes.h>
+#include <arvgvspprivate.h>
+#include <arvenumtypesprivate.h>
+#include <string.h>
 
 static ArvGvspPacket *
 arv_gvsp_packet_new (ArvGvspContentType content_type,
@@ -188,6 +189,9 @@ arv_gvsp_packet_to_string (const ArvGvspPacket *packet, size_t packet_size)
 					break;
 				case ARV_GVSP_PAYLOAD_TYPE_H264:
 					g_string_append (string, "payload_type = h264\n");
+					break;
+				case ARV_GVSP_PAYLOAD_TYPE_IMAGE_EXTENDED_CHUNK:
+					g_string_append (string, "payload_type = image extended chunk\n");
 					break;
 				default:
 					g_string_append (string, "payload_type = unknown\n");

@@ -66,17 +66,19 @@ typedef struct _ArvGcStructEntryNode		ArvGcStructEntryNode;
 typedef struct _ArvGcCommand			ArvGcCommand;
 typedef struct _ArvGcSwissKnife			ArvGcSwissKnife;
 typedef struct _ArvGcConverter			ArvGcConverter;
+typedef struct _ArvGcConverterNode		ArvGcConverterNode;
+typedef struct _ArvGcIntConverterNode		ArvGcIntConverterNode;
 typedef struct _ArvGcPort			ArvGcPort;
 
 typedef struct _ArvGcRegister		ArvGcRegister;
 typedef struct _ArvGcInteger		ArvGcInteger;
 typedef struct _ArvGcFloat		ArvGcFloat;
 typedef struct _ArvGcString		ArvGcString;
+typedef struct _ArvGcSelector		ArvGcSelector;
 
 typedef struct _ArvInterface 		ArvInterface;
 typedef struct _ArvDevice 		ArvDevice;
 typedef struct _ArvStream 		ArvStream;
-typedef struct _ArvBuffer 		ArvBuffer;
 typedef struct _ArvChunkParser		ArvChunkParser;
 
 typedef struct _ArvGvInterface 		ArvGvInterface;
@@ -89,17 +91,12 @@ typedef struct _ArvUvDevice		ArvUvDevice;
 typedef struct _ArvUvStream		ArvUvStream;
 #endif
 
-typedef struct _ArvFakeInterface	ArvFakeInterface;
-typedef struct _ArvFakeDevice		ArvFakeDevice;
-typedef struct _ArvFakeStream		ArvFakeStream;
 typedef struct _ArvFakeCamera		ArvFakeCamera;
 
 typedef struct _ArvGvFakeCamera		ArvGvFakeCamera;
 
 typedef struct _ArvZip			ArvZip;
 typedef struct _ArvZipFile 		ArvZipFile;
-
-typedef struct _ArvXmlSchema 		ArvXmlSchema;
 
 G_END_DECLS
 
