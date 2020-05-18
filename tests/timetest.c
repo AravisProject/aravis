@@ -6,25 +6,15 @@
 #include <glib.h>
 
 static gint64
-get_time_us (void)
-{
-	GTimeVal time;
-
-	g_get_current_time (&time);
-
-	return time.tv_sec * 1000000LL + time.tv_usec;
-}
-
-static gint64
 time_wait (gint64 usec )
 {
 	gint64 wt, st, tt;
 	gint64 i;
 
-	st = get_time_us ();
+	st = g_get_real_time ();
 	wt = st + usec;
-	for (i = 0, tt = get_time_us(); tt < wt; i++ )
-		tt = get_time_us ();
+	for (i = 0, tt = g_get_real_time(); tt < wt; i++ )
+		tt = g_get_real_time ();
 
   return tt-st;
 }
@@ -33,9 +23,9 @@ static gint64
 sleep_meas (gint64 usec) {
 	gint64 tt;
 
-	tt = get_time_us ();
+	tt = g_get_real_time ();
 	g_usleep (usec);
-	tt = get_time_us () - tt;
+	tt = g_get_real_time () - tt;
 
 	return tt;
 }

@@ -27,6 +27,7 @@
 
 #include <arvgccommand.h>
 #include <arvgcinteger.h>
+#include <arvgcfeaturenodeprivate.h>
 #include <arvgcport.h>
 #include <arvgc.h>
 #include <arvmisc.h>
@@ -34,7 +35,18 @@
 #include <stdlib.h>
 #include <string.h>
 
-static GObjectClass *parent_class = NULL;
+struct _ArvGcCommand {
+	ArvGcFeatureNode	node;
+
+	ArvGcPropertyNode *command_value;
+	ArvGcPropertyNode *value;
+};
+
+struct _ArvGcCommandClass {
+	ArvGcFeatureNodeClass parent_class;
+};
+
+G_DEFINE_TYPE (ArvGcCommand, arv_gc_command, ARV_TYPE_GC_FEATURE_NODE)
 
 /* ArvGcFeatureNode implementation */
 
@@ -62,7 +74,7 @@ arv_gc_command_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				node->command_value = property_node;
 				break;
 			default:
-				ARV_DOM_NODE_CLASS (parent_class)->post_new_child (self, child);
+				ARV_DOM_NODE_CLASS (arv_gc_command_parent_class)->post_new_child (self, child);
 				break;
 		}
 	}
@@ -99,6 +111,7 @@ arv_gc_command_execute (ArvGcCommand *gc_command, GError **error)
 		return;
 	}
 
+	arv_gc_feature_node_increment_change_count (ARV_GC_FEATURE_NODE (gc_command));
 	arv_gc_property_node_set_int64 (gc_command->value, command_value, &local_error);
 
 	if (local_error != NULL) {
@@ -129,7 +142,7 @@ arv_gc_command_init (ArvGcCommand *gc_command)
 static void
 arv_gc_command_finalize (GObject *object)
 {
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_gc_command_parent_class)->finalize (object);
 }
 
 static void
@@ -138,12 +151,8 @@ arv_gc_command_class_init (ArvGcCommandClass *this_class)
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
 
-	parent_class = g_type_class_peek_parent (this_class);
-
 	object_class->finalize = arv_gc_command_finalize;
 	dom_node_class->get_node_name = arv_gc_command_get_node_name;
 	dom_node_class->post_new_child = arv_gc_command_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_command_pre_remove_child;
 }
-
-G_DEFINE_TYPE (ArvGcCommand, arv_gc_command, ARV_TYPE_GC_FEATURE_NODE)

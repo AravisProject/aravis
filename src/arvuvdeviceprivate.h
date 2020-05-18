@@ -37,19 +37,6 @@ typedef enum {
 	ARV_UV_ENDPOINT_DATA
 } ArvUvEndpointType;
 
-typedef struct _ArvUvDeviceClass ArvUvDeviceClass;
-typedef struct _ArvUvDevicePrivate ArvUvDevicePrivate;
-
-struct _ArvUvDevice {
-	ArvDevice device;
-
-	ArvUvDevicePrivate *priv;
-};
-
-struct _ArvUvDeviceClass {
-	ArvDeviceClass parent_class;
-};
-
 gboolean 	arv_uv_device_bulk_transfer 		(ArvUvDevice *uv_device,
 							 ArvUvEndpointType endpoint_type, unsigned char endpoint_flags,
 							 void *data, size_t size, size_t *transferred_size,

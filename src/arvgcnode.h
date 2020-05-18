@@ -33,24 +33,11 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_NODE             (arv_gc_node_get_type ())
-#define ARV_GC_NODE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_NODE, ArvGcNode))
-#define ARV_GC_NODE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GC_NODE, ArvGcNodeClass))
-#define ARV_IS_GC_NODE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GC_NODE))
-#define ARV_IS_GC_NODE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GC_NODE))
-#define ARV_GC_NODE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GC_NODE, ArvGcNodeClass))
-
-typedef struct _ArvGcNodePrivate ArvGcNodePrivate;
-typedef struct _ArvGcNodeClass ArvGcNodeClass;
-
-struct _ArvGcNode {
-	ArvDomElement	base;
-};
+G_DECLARE_DERIVABLE_TYPE (ArvGcNode, arv_gc_node, ARV, GC_NODE, ArvDomElement)
 
 struct _ArvGcNodeClass {
 	ArvDomElementClass parent_class;
 };
-
-GType arv_gc_node_get_type (void);
 
 ArvGc * 	arv_gc_node_get_genicam			(ArvGcNode *gc_node);
 

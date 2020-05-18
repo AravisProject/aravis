@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
 		g_error_free (error);
 		error = NULL;
 	} else
-		printf ("RTTimeUSecMax = %Ld\n", rttime_usec_max);
+		printf ("RTTimeUSecMax = %lld\n", rttime_usec_max);
 
 	memset(&rlim, 0, sizeof(rlim));
 	rlim.rlim_cur = rlim.rlim_max = 100000000ULL; /* 100ms */

@@ -32,11 +32,7 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_STRING             		(arv_gc_string_get_type ())
-#define ARV_GC_STRING(obj)             		(G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_STRING, ArvGcString))
-#define ARV_IS_GC_STRING(obj)          		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GC_STRING))
-#define ARV_GC_STRING_GET_INTERFACE(obj)   	(G_TYPE_INSTANCE_GET_INTERFACE((obj), ARV_TYPE_GC_STRING, ArvGcStringInterface))
-
-typedef struct _ArvGcStringInterface ArvGcStringInterface;
+G_DECLARE_INTERFACE (ArvGcString, arv_gc_string, ARV, GC_STRING, GObject)
 
 struct _ArvGcStringInterface {
 	GTypeInterface parent;
@@ -45,8 +41,6 @@ struct _ArvGcStringInterface {
 	void		(*set_value)		(ArvGcString *gc_string, const char *value, GError **error);
 	gint64		(*get_max_length)	(ArvGcString *gc_string, GError **error);
 };
-
-GType arv_gc_string_get_type (void);
 
 const char *	arv_gc_string_get_value		(ArvGcString *gc_string, GError **error);
 void		arv_gc_string_set_value		(ArvGcString *gc_string, const char *value, GError **error);

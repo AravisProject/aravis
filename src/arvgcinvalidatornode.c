@@ -27,12 +27,23 @@
 
 #include <arvgcinvalidatornode.h>
 #include <arvgcpropertynode.h>
+#include <arvgcfeaturenodeprivate.h>
 #include <arvgc.h>
 #include <arvdomtext.h>
 #include <arvmisc.h>
 #include <string.h>
 
-static GObjectClass *parent_class = NULL;
+struct _ArvGcInvalidatorNode {
+	ArvGcPropertyNode	base;
+
+	guint64 change_index;
+};
+
+struct _ArvGcInvalidatorNodeClass {
+	ArvGcPropertyNodeClass parent_class;
+};
+
+G_DEFINE_TYPE (ArvGcInvalidatorNode, arv_gc_invalidator_node, ARV_TYPE_GC_PROPERTY_NODE)
 
 /* ArvDomNode implementation */
 
@@ -44,37 +55,35 @@ arv_gc_invalidator_node_get_node_name (ArvDomNode *node)
 
 /* ArvGcInvalidatorNode implementation */
 
-gint
-arv_gc_invalidator_node_get_modification_count (ArvGcInvalidatorNode *invalidator_node)
+gboolean
+arv_gc_invalidator_has_changed (ArvGcInvalidatorNode *self)
 {
-	g_return_val_if_fail (ARV_IS_GC_INVALIDATOR_NODE (invalidator_node), 0);
+	ArvGcNode *node;
+	guint64 change_count;
 
-	return invalidator_node->modification_count;
-}
+	g_return_val_if_fail (ARV_IS_GC_INVALIDATOR_NODE (self), FALSE);
 
-void
-arv_gc_invalidator_node_set_modification_count (ArvGcInvalidatorNode *invalidator_node, gint modification_count)
-{
-	g_return_if_fail (ARV_IS_GC_INVALIDATOR_NODE (invalidator_node));
+	node = arv_gc_property_node_get_linked_node (ARV_GC_PROPERTY_NODE (self));
+	change_count = arv_gc_feature_node_get_change_count (ARV_GC_FEATURE_NODE (node));
 
-	invalidator_node->modification_count = modification_count;
+	if (change_count != self->change_index) {
+		self->change_index = change_count;
+
+		return TRUE;
+	}
+
+	return FALSE;
 }
 
 ArvGcNode *
 arv_gc_invalidator_node_new (void)
 {
-	ArvGcPropertyNode *node;
-
-	node = g_object_new (ARV_TYPE_GC_INVALIDATOR_NODE, NULL);
-	node->type = ARV_GC_PROPERTY_NODE_TYPE_P_INVALIDATOR;
-
-	return ARV_GC_NODE (node);
+	return g_object_new (ARV_TYPE_GC_INVALIDATOR_NODE, "node-type", ARV_GC_PROPERTY_NODE_TYPE_P_INVALIDATOR, NULL);
 }
 
 static void
 arv_gc_invalidator_node_init (ArvGcInvalidatorNode *invalidator_node)
 {
-	invalidator_node->modification_count = 0;
 }
 
 static void
@@ -82,9 +91,5 @@ arv_gc_invalidator_node_class_init (ArvGcInvalidatorNodeClass *this_class)
 {
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
 
-	parent_class = g_type_class_peek_parent (this_class);
-
 	dom_node_class->get_node_name = arv_gc_invalidator_node_get_node_name;
 }
-
-G_DEFINE_TYPE (ArvGcInvalidatorNode, arv_gc_invalidator_node, ARV_TYPE_GC_PROPERTY_NODE)

@@ -39,7 +39,15 @@
 #define ARV_FAKE_MODEL 		"Fake"
 #define ARV_FAKE_SERIAL		"1"
 
-static GObjectClass *parent_class = NULL;
+struct _ArvFakeInterface {
+	ArvInterface	interface;
+};
+
+struct _ArvFakeInterfaceClass {
+	ArvInterfaceClass parent_class;
+};
+
+G_DEFINE_TYPE (ArvFakeInterface, arv_fake_interface, ARV_TYPE_INTERFACE)
 
 static void
 arv_fake_interface_update_device_list (ArvInterface *interface, GArray *device_ids)
@@ -61,11 +69,11 @@ arv_fake_interface_update_device_list (ArvInterface *interface, GArray *device_i
 }
 
 static ArvDevice *
-arv_fake_interface_open_device (ArvInterface *interface, const char *device_id)
+arv_fake_interface_open_device (ArvInterface *interface, const char *device_id, GError **error)
 {
 	if (g_strcmp0 (device_id, ARV_FAKE_DEVICE_ID) == 0 ||
 	    g_strcmp0 (device_id, ARV_FAKE_PHYSICAL_ID) == 0)
-		return arv_fake_device_new ("1");
+		return arv_fake_device_new ("1", error);
 
 	return NULL;
 }
@@ -115,7 +123,7 @@ arv_fake_interface_init (ArvFakeInterface *fake_interface)
 static void
 arv_fake_interface_finalize (GObject *object)
 {
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_fake_interface_parent_class)->finalize (object);
 }
 
 static void
@@ -124,8 +132,6 @@ arv_fake_interface_class_init (ArvFakeInterfaceClass *fake_interface_class)
 	GObjectClass *object_class = G_OBJECT_CLASS (fake_interface_class);
 	ArvInterfaceClass *interface_class = ARV_INTERFACE_CLASS (fake_interface_class);
 
-	parent_class = g_type_class_peek_parent (fake_interface_class);
-
 	object_class->finalize = arv_fake_interface_finalize;
 
 	interface_class->update_device_list = arv_fake_interface_update_device_list;
@@ -133,5 +139,3 @@ arv_fake_interface_class_init (ArvFakeInterfaceClass *fake_interface_class)
 
 	interface_class->protocol = "Fake";
 }
-
-G_DEFINE_TYPE (ArvFakeInterface, arv_fake_interface, ARV_TYPE_INTERFACE)

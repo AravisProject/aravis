@@ -33,15 +33,10 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_FAKE_DEVICE             (arv_fake_device_get_type ())
-#define ARV_FAKE_DEVICE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_FAKE_DEVICE, ArvFakeDevice))
-#define ARV_FAKE_DEVICE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_FAKE_DEVICE, ArvFakeDeviceClass))
-#define ARV_IS_FAKE_DEVICE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_FAKE_DEVICE))
-#define ARV_IS_FAKE_DEVICE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_FAKE_DEVICE))
-#define ARV_FAKE_DEVICE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_FAKE_DEVICE, ArvFakeDeviceClass))
+G_DECLARE_FINAL_TYPE (ArvFakeDevice, arv_fake_device, ARV, FAKE_DEVICE, ArvDevice)
 
-GType arv_fake_device_get_type (void);
+ArvDevice * 	arv_fake_device_new 			(const char *serial_number, GError **error);
 
-ArvDevice * 	arv_fake_device_new 			(const char *serial_number);
 ArvFakeCamera *	arv_fake_device_get_fake_camera		(ArvFakeDevice *device);
 
 G_END_DECLS

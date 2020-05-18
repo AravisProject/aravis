@@ -219,6 +219,18 @@
 
 	<Enumeration Name="PixelFormat" NameSpace="Standard">
 		<DisplayName>Pixel format</DisplayName>
+		<EnumEntry Name="BayerBG8" NameSpace="Standard">
+			<Value>17301515</Value>
+		</EnumEntry>
+		<EnumEntry Name="BayerGB8" NameSpace="Standard">
+			<Value>17301514</Value>
+		</EnumEntry>
+		<EnumEntry Name="BayerGR8" NameSpace="Standard">
+			<Value>17301512</Value>
+		</EnumEntry>
+		<EnumEntry Name="BayerRG8" NameSpace="Standard">
+			<Value>17301513</Value>
+		</EnumEntry>
 		<EnumEntry Name="Mono8" NameSpace="Standard">
 			<Value>17301505</Value>
 		</EnumEntry>
@@ -290,7 +302,13 @@
 		<Endianess>BigEndian</Endianess>
 	</IntReg>
 
-	<Converter Name="AcquisitionFrameRate" NameSpace="Standard">
+	<Float Name="AcquisitionFrameRate">
+	  <pValue>AcquisitionFrameRateConverter</pValue>
+	  <Min>0.1</Min>
+	  <Max>100.0</Max>
+	</Float>
+
+	<Converter Name="AcquisitionFrameRateConverter">
 		<Description>Frame rate, in frames per second.</Description>
 		<FormulaTo>(1000000 / FROM)</FormulaTo>
 		<FormulaFrom>(1000000 / TO)</FormulaFrom>
@@ -524,4 +542,3 @@
 	</Port>
 
 </RegisterDescription>
-

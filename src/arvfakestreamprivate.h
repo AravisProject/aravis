@@ -28,23 +28,11 @@
 #endif
 
 #include <arvfakestream.h>
+#include <arvfakedevice.h>
 
 G_BEGIN_DECLS
 
-typedef struct _ArvFakeStreamPrivate ArvFakeStreamPrivate;
-typedef struct _ArvFakeStreamClass ArvFakeStreamClass;
-
-struct _ArvFakeStream {
-	ArvStream	stream;
-
-	ArvFakeStreamPrivate *priv;
-};
-
-struct _ArvFakeStreamClass {
-	ArvStreamClass parent_class;
-};
-
-ArvStream * 	arv_fake_stream_new	(ArvFakeCamera *camera, ArvStreamCallback callback, void *user_data);
+ArvStream * 	arv_fake_stream_new	(ArvFakeDevice *device, ArvStreamCallback callback, void *callback_data, GError **error);
 
 G_END_DECLS
 

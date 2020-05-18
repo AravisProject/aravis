@@ -43,18 +43,18 @@ arv_gc_register_get (ArvGcRegister *gc_register, void *buffer, guint64 length, G
 	g_return_if_fail (length > 0);
 	g_return_if_fail (error == NULL || *error == NULL);
 
-	ARV_GC_REGISTER_GET_INTERFACE (gc_register)->get (gc_register, buffer, length, error);
+	ARV_GC_REGISTER_GET_IFACE (gc_register)->get (gc_register, buffer, length, error);
 }
 
 void
-arv_gc_register_set (ArvGcRegister *gc_register, void *buffer, guint64 length, GError **error)
+arv_gc_register_set (ArvGcRegister *gc_register, const void *buffer, guint64 length, GError **error)
 {
 	g_return_if_fail (ARV_IS_GC_REGISTER (gc_register));
 	g_return_if_fail (buffer != NULL);
 	g_return_if_fail (length > 0);
 	g_return_if_fail (error == NULL || *error == NULL);
 
-	ARV_GC_REGISTER_GET_INTERFACE (gc_register)->set (gc_register, buffer, length, error);
+	ARV_GC_REGISTER_GET_IFACE (gc_register)->set (gc_register, buffer, length, error);
 }
 
 guint64
@@ -63,7 +63,7 @@ arv_gc_register_get_address (ArvGcRegister *gc_register, GError **error)
 	g_return_val_if_fail (ARV_IS_GC_REGISTER (gc_register), 0);
 	g_return_val_if_fail (error == NULL || *error == NULL, 0);
 
-	return ARV_GC_REGISTER_GET_INTERFACE (gc_register)->get_address (gc_register, error);
+	return ARV_GC_REGISTER_GET_IFACE (gc_register)->get_address (gc_register, error);
 }
 
 guint64
@@ -72,5 +72,5 @@ arv_gc_register_get_length (ArvGcRegister *gc_register, GError **error)
 	g_return_val_if_fail (ARV_IS_GC_REGISTER (gc_register), 0);
 	g_return_val_if_fail (error == NULL || *error == NULL, 0);
 
-	return ARV_GC_REGISTER_GET_INTERFACE (gc_register)->get_length (gc_register, error);
+	return ARV_GC_REGISTER_GET_IFACE (gc_register)->get_length (gc_register, error);
 }

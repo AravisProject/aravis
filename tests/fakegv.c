@@ -15,61 +15,63 @@ register_test (void)
 	g_assert (ARV_IS_GV_DEVICE (device));
 
 	/* Check default */
-	int_value = arv_device_get_integer_feature_value (device, "Width");
+	int_value = arv_device_get_integer_feature_value (device, "Width", NULL);
 	g_assert_cmpint (int_value, ==, ARV_FAKE_CAMERA_WIDTH_DEFAULT);
 
-	arv_device_set_integer_feature_value (device, "Width", 1024);
-	int_value = arv_device_get_integer_feature_value (device, "Width");
+	arv_device_set_integer_feature_value (device, "Width", 1024, NULL);
+	int_value = arv_device_get_integer_feature_value (device, "Width", NULL);
 	g_assert_cmpint (int_value, ==, 1024);
 
 	/* Check default */
-	int_value = arv_device_get_integer_feature_value (device, "Height");
+	int_value = arv_device_get_integer_feature_value (device, "Height", NULL);
 	g_assert_cmpint (int_value, ==, ARV_FAKE_CAMERA_HEIGHT_DEFAULT);
 
-	arv_device_set_integer_feature_value (device, "Height", 1024);
-	int_value = arv_device_get_integer_feature_value (device, "Height");
+	arv_device_set_integer_feature_value (device, "Height", 1024, NULL);
+	int_value = arv_device_get_integer_feature_value (device, "Height", NULL);
 	g_assert_cmpint (int_value, ==, 1024);
 
-	int_value = arv_device_get_integer_feature_value (device, "BinningHorizontal");
+	int_value = arv_device_get_integer_feature_value (device, "BinningHorizontal", NULL);
 	g_assert_cmpint (int_value, ==, ARV_FAKE_CAMERA_BINNING_HORIZONTAL_DEFAULT);
-	int_value = arv_device_get_integer_feature_value (device, "BinningVertical");
+	int_value = arv_device_get_integer_feature_value (device, "BinningVertical", NULL);
 	g_assert_cmpint (int_value, ==, ARV_FAKE_CAMERA_BINNING_VERTICAL_DEFAULT);
-	int_value = arv_device_get_integer_feature_value (device, "PixelFormat");
+	int_value = arv_device_get_integer_feature_value (device, "PixelFormat", NULL);
 	g_assert_cmpint (int_value, ==, ARV_FAKE_CAMERA_PIXEL_FORMAT_DEFAULT);
 
-	dbl_value = arv_device_get_float_feature_value (device, "AcquisitionFrameRate");
+	dbl_value = arv_device_get_float_feature_value (device, "AcquisitionFrameRate", NULL);
 	g_assert_cmpfloat (dbl_value, ==, ARV_FAKE_CAMERA_ACQUISITION_FRAME_RATE_DEFAULT);
-	dbl_value = arv_device_get_float_feature_value (device,  "ExposureTimeAbs");
+	dbl_value = arv_device_get_float_feature_value (device,  "ExposureTimeAbs", NULL);
 	g_assert_cmpfloat (dbl_value, ==, ARV_FAKE_CAMERA_EXPOSURE_TIME_US_DEFAULT);
 
-	int_value = arv_device_get_integer_feature_value (device, "GainRaw");
+	int_value = arv_device_get_integer_feature_value (device, "GainRaw", NULL);
 	g_assert_cmpint (int_value, ==, 0);
-	int_value = arv_device_get_integer_feature_value (device, "GainAuto");
+	int_value = arv_device_get_integer_feature_value (device, "GainAuto", NULL);
 	g_assert_cmpint (int_value, ==, 1);
 
-	int_value = arv_device_get_integer_feature_value (device, "PayloadSize");
+	int_value = arv_device_get_integer_feature_value (device, "PayloadSize", NULL);
 	g_assert_cmpint (int_value, ==, 1024 * 1024);
 
-	arv_device_set_boolean_feature_value (device, "TestBoolean", FALSE);
-	boolean_value = arv_device_get_boolean_feature_value (device, "TestBoolean");
+	arv_device_set_boolean_feature_value (device, "TestBoolean", FALSE, NULL);
+	boolean_value = arv_device_get_boolean_feature_value (device, "TestBoolean", NULL);
 	g_assert_cmpint (boolean_value, ==, FALSE);
-	int_value = arv_device_get_integer_feature_value (device, "TestRegister");
+	int_value = arv_device_get_integer_feature_value (device, "TestRegister", NULL);
 	g_assert_cmpint (int_value, ==, 123);
 
-	arv_device_set_boolean_feature_value (device, "TestBoolean", TRUE);
-	boolean_value = arv_device_get_boolean_feature_value (device, "TestBoolean");
+	arv_device_set_boolean_feature_value (device, "TestBoolean", TRUE, NULL);
+	boolean_value = arv_device_get_boolean_feature_value (device, "TestBoolean", NULL);
 	g_assert_cmpint (boolean_value, ==, TRUE);
-	int_value = arv_device_get_integer_feature_value (device, "TestRegister");
+	int_value = arv_device_get_integer_feature_value (device, "TestRegister", NULL);
 	g_assert_cmpint (int_value, ==, 321);
 }
 
 static void
 acquisition_test (void)
 {
+	GError *error = NULL;
 	ArvBuffer *buffer;
 	gint x, y, width, height;
 
-	buffer = arv_camera_acquisition (camera, 0);
+	buffer = arv_camera_acquisition (camera, 0, &error);
+	g_assert (error == NULL);
 	g_assert (ARV_IS_BUFFER (buffer));
 
 	arv_buffer_get_image_region (buffer, &x, &y, &width, &height);
@@ -115,14 +117,16 @@ static void
 stream_test (void)
 {
 	ArvStream *stream;
+	GError *error = NULL;
 	size_t payload;
 	unsigned buffer_count = 0;
 	unsigned i;
 
-	stream = arv_camera_create_stream (camera, NULL, NULL);
+	stream = arv_camera_create_stream (camera, NULL, NULL, &error);
 	g_assert (ARV_IS_STREAM (stream));
+	g_assert (error == NULL);
 
-	payload = arv_camera_get_payload (camera);
+	payload = arv_camera_get_payload (camera, NULL);
 
 	for (i = 0; i < 5; i++)
 		arv_stream_push_buffer (stream, arv_buffer_new (payload, NULL));
@@ -130,12 +134,12 @@ stream_test (void)
 	g_signal_connect (stream, "new-buffer", G_CALLBACK (new_buffer_cb), &buffer_count);
 	arv_stream_set_emit_signals (stream, TRUE);
 
-	arv_camera_start_acquisition (camera);
+	arv_camera_start_acquisition (camera, NULL);
 
 	while (buffer_count < 10)
 		usleep (1000);
 
-	arv_camera_stop_acquisition (camera);
+	arv_camera_stop_acquisition (camera, NULL);
 	/* The following will block until the signal callback returns
 	 * which avoids a race and possible deadlock.
 	 */
@@ -160,14 +164,16 @@ static void
 dynamic_roi_test (void)
 {
 	ArvStream *stream;
+	GError *error = NULL;
 	size_t payload;
 	unsigned buffer_count = 0;
 	unsigned i, j;
 
-	stream = arv_camera_create_stream (camera, NULL, NULL);
+	stream = arv_camera_create_stream (camera, NULL, NULL, &error);
 	g_assert (ARV_IS_STREAM (stream));
+	g_assert (error == NULL);
 
-	payload = arv_camera_get_payload (camera);
+	payload = arv_camera_get_payload (camera, NULL);
 
 	g_signal_connect (stream, "new-buffer", G_CALLBACK (new_buffer_cb), &buffer_count);
 	arv_stream_set_emit_signals (stream, TRUE);
@@ -185,26 +191,26 @@ dynamic_roi_test (void)
 
 		buffer_count = 0;
 
-		arv_camera_set_region (camera, 0, 0, rois[j].width , rois[j].height);
-		arv_camera_get_region (camera, NULL, NULL, &width, &height);
+		arv_camera_set_region (camera, 0, 0, rois[j].width , rois[j].height, NULL);
+		arv_camera_get_region (camera, NULL, NULL, &width, &height, NULL);
 
 		g_assert (width == rois[j].width);
 		g_assert (height == rois[j].height);
 
-		payload = arv_camera_get_payload (camera);
+		payload = arv_camera_get_payload (camera, NULL);
 
 		for (i = 0; i < N_BUFFERS; i++)
 			arv_stream_push_buffer (stream, arv_buffer_new (payload, NULL));
 
 		arv_stream_start_thread (stream);
 
-		arv_camera_start_acquisition (camera);
+		arv_camera_start_acquisition (camera, NULL);
 
 		while (buffer_count < 10) {
 			usleep (10000);
 		}
 
-		arv_camera_stop_acquisition (camera);
+		arv_camera_stop_acquisition (camera, NULL);
 	}
 
 	arv_stream_set_emit_signals (stream, FALSE);
@@ -224,7 +230,7 @@ main (int argc, char *argv[])
 
 	simulator = arv_gv_fake_camera_new ("lo", NULL);
 
-	camera = arv_camera_new ("Aravis-GV01");
+	camera = arv_camera_new ("Aravis-GV01", NULL);
 	g_assert (ARV_IS_CAMERA (camera));
 
 	g_test_add_func ("/fakegv/device_registers", register_test);

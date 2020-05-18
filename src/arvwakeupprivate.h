@@ -17,8 +17,8 @@
  * Author: Ryan Lortie <desrt@desrt.ca>
  */
 
-#ifndef ARV_WAKEUP_H
-#define ARV_WAKEUP_H
+#ifndef ARV_WAKEUP_PRIVATE_H
+#define ARV_WAKEUP_PRIVATE_H
 
 #include <arvtypes.h>
 

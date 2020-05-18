@@ -4,6 +4,7 @@ library_sources = [
 	'arvsystem.c',
 	'arvevaluator.c',
 	'arvdomnode.c',
+	'arvdomnodechildlist.c',
 	'arvdomnodelist.c',
 	'arvdomnamednodemap.c',
 	'arvdomdocument.c',
@@ -30,14 +31,24 @@ library_sources = [
 	'arvgcintegernode.c',
 	'arvgcfloatnode.c',
 	'arvgcregisternode.c',
+	'arvgcintregnode.c',
+	'arvgcmaskedintregnode.c',
+	'arvgcfloatregnode.c',
+	'arvgcstringregnode.c',
+	'arvgcstructregnode.c',
 	'arvgcstructentrynode.c',
 	'arvgccommand.c',
 	'arvgcswissknife.c',
+	'arvgcswissknifenode.c',
+	'arvgcintswissknifenode.c',
 	'arvgcconverter.c',
+	'arvgcconverternode.c',
+	'arvgcintconverternode.c',
 	'arvgcport.c',
 	'arvgcregister.c',
 	'arvgcinteger.c',
 	'arvgcstring.c',
+	'arvgcselector.c',
 	'arvgcfloat.c',
 	'arvinterface.c',
 	'arvdevice.c',
@@ -68,60 +79,79 @@ library_no_introspection_sources = [
 library_headers = [
 	'arv.h',
 	'arvtypes.h',
-	'arvenums.h',
-	'arvdebug.h',
-	'arvsystem.h',
-	'arvevaluator.h',
-	'arvdomnode.h',
-	'arvdomnodelist.h',
-	'arvdomnamednodemap.h',
-	'arvdomdocument.h',
-	'arvdomdocumentfragment.h',
-	'arvdomelement.h',
-	'arvdomcharacterdata.h',
-	'arvdomtext.h',
-	'arvdomparser.h',
-	'arvdomimplementation.h',
-	'arvcamera.h',
-	'arvgc.h',
-	'arvgcnode.h',
-	'arvgcpropertynode.h',
-	'arvgcindexnode.h',
-	'arvgcvalueindexednode.h',
-	'arvgcinvalidatornode.h',
-	'arvgcfeaturenode.h',
-	'arvgcregisterdescriptionnode.h',
-	'arvgcgroupnode.h',
-	'arvgccategory.h',
-	'arvgcboolean.h',
-	'arvgcenumeration.h',
-	'arvgcenumentry.h',
-	'arvgcintegernode.h',
-	'arvgcfloatnode.h',
-	'arvgcregisternode.h',
-	'arvgcstructentrynode.h',
-	'arvgccommand.h',
-	'arvgcswissknife.h',
-	'arvgcconverter.h',
-	'arvgcport.h',
-	'arvgcregister.h',
-	'arvgcinteger.h',
-	'arvgcstring.h',
-	'arvgcfloat.h',
-	'arvinterface.h',
-	'arvdevice.h',
-	'arvstream.h',
+
 	'arvbuffer.h',
+	'arvcamera.h',
 	'arvchunkparser.h',
-	'arvgvinterface.h',
-	'arvgvdevice.h',
-	'arvgvstream.h',
-	'arvfakeinterface.h',
-	'arvfakedevice.h',
-	'arvfakestream.h',
+	'arvdebug.h',
+	'arvdevice.h',
+
+	'arvdomcharacterdata.h',
+	'arvdomdocumentfragment.h',
+	'arvdomdocument.h',
+	'arvdomelement.h',
+	'arvdomimplementation.h',
+	'arvdomnamednodemap.h',
+	'arvdomnode.h',
+	'arvdomnodechildlist.h',
+	'arvdomnodelist.h',
+	'arvdomparser.h',
+	'arvdomtext.h',
+
+	'arvenums.h',
+	'arvevaluator.h',
+
 	'arvfakecamera.h',
+	'arvfakedevice.h',
+	'arvfakeinterface.h',
+	'arvfakestream.h',
+
+	'arvgcboolean.h',
+	'arvgccategory.h',
+	'arvgccommand.h',
+	'arvgcconverter.h',
+	'arvgcconverternode.h',
+	'arvgcenumentry.h',
+	'arvgcenumeration.h',
+	'arvgcenums.h',
+	'arvgcfeaturenode.h',
+	'arvgcfloat.h',
+	'arvgcfloatnode.h',
+	'arvgcgroupnode.h',
+	'arvgc.h',
+	'arvgcindexnode.h',
+	'arvgcintconverternode.h',
+	'arvgcinteger.h',
+	'arvgcintegernode.h',
+	'arvgcinvalidatornode.h',
+	'arvgcnode.h',
+	'arvgcport.h',
+	'arvgcpropertynode.h',
+	'arvgcregisterdescriptionnode.h',
+	'arvgcregister.h',
+	'arvgcregisternode.h',
+	'arvgcintregnode.h',
+	'arvgcmaskedintregnode.h',
+	'arvgcfloatregnode.h',
+	'arvgcstringregnode.h',
+	'arvgcstructregnode.h',
+	'arvgcstring.h',
+	'arvgcselector.h',
+	'arvgcstructentrynode.h',
+	'arvgcswissknife.h',
+	'arvgcswissknifenode.h',
+	'arvgcintswissknifenode.h',
+	'arvgcvalueindexednode.h',
+
+	'arvgvdevice.h',
 	'arvgvfakecamera.h',
+	'arvgvinterface.h',
+	'arvgvstream.h',
+
+	'arvinterface.h',
+	'arvsystem.h',
 	'arvrealtime.h',
+	'arvstream.h',
 	'arvxmlschema.h'
 ]
 
@@ -132,27 +162,29 @@ library_private_headers = [
 	'arvfakedeviceprivate.h',
 	'arvfakeinterfaceprivate.h',
 	'arvfakestreamprivate.h',
+	'arvgcconverterprivate.h',
+	'arvgcfeaturenodeprivate.h',
+	'arvgcregisternodeprivate.h',
+	'arvgcswissknifeprivate.h',
+	'arvgvcpprivate.h',
 	'arvgvdeviceprivate.h',
 	'arvgvinterfaceprivate.h',
+	'arvgvspprivate.h',
 	'arvgvstreamprivate.h',
 	'arvinterfaceprivate.h',
+	'arvmiscprivate.h',
 	'arvrealtimeprivate.h',
 	'arvstreamprivate.h',
-	'arvuvdeviceprivate.h',
-	'arvuvinterfaceprivate.h',
-	'arvuvstreamprivate.h',
 	'arvwakeupprivate.h'
 ]
 
 library_no_introspection_headers = [
 	'arvmisc.h',
 	'arvzip.h',
-	'arvstr.h',
-	'arvgvcp.h',
-	'arvgvsp.h'
+	'arvstr.h'
 ]
 
-if get_option ('usb')
+if usb_dep.found()
 	library_sources += [
 		'arvuvinterface.c',
 		'arvuvdevice.c',
@@ -167,19 +199,23 @@ if get_option ('usb')
 		'arvuvdevice.h',
 		'arvuvstream.h'
 	]
-	library_no_introspection_headers += [
-		'arvuvcp.h',
-		'arvuvsp.h'
+	library_private_headers += [
+		'arvuvcpprivate.h',
+		'arvuvdeviceprivate.h',
+		'arvuvinterfaceprivate.h',
+		'arvuvstreamprivate.h',
+		'arvuvspprivate.h'
 		]
 endif
 
 library_enums = gnome.mkenums_simple ('arvenumtypes', sources: library_headers + library_no_introspection_headers)
+library_private_enums = gnome.mkenums_simple ('arvenumtypesprivate', sources: library_private_headers)
 
 library_include_dir = join_paths (get_option ('includedir'), 'aravis-@0@'.format (aravis_api_version))
 
 library_config_data = configuration_data ()
-library_config_data.set10 ('ARAVIS_HAS_USB', get_option ('usb'))
-library_config_data.set10 ('ARAVIS_HAS_PACKET_SOCKET', get_option ('packet-socket'))
+library_config_data.set10 ('ARAVIS_HAS_USB', usb_dep.found())
+library_config_data.set10 ('ARAVIS_HAS_PACKET_SOCKET', packet_socket_enabled)
 library_config_data.set10 ('ARAVIS_HAS_FAST_HEARTBEAT', get_option ('fast-heartbeat'))
 configure_file (input: 'arvfeatures.h.in', output: 'arvfeatures.h',
 		configuration: library_config_data, install_dir: library_include_dir)
@@ -207,7 +243,7 @@ library_c_args = [
 aravis_library = library ('aravis-@0@'.format (aravis_api_version),
 	library_sources, library_headers,
 	library_no_introspection_sources, library_no_introspection_headers, library_private_headers,
-	library_enums,
+	library_enums, library_private_enums,
 	version: aravis_version,
 	soversion: '0',
 	dependencies: aravis_dependencies,
@@ -215,16 +251,15 @@ aravis_library = library ('aravis-@0@'.format (aravis_api_version),
 	install: true)
 
 aravis_library_dependencies = declare_dependency (dependencies: aravis_dependencies,
-						  link_with: aravis_library)
+						  link_with: aravis_library, include_directories: library_inc)
 
-pkg.generate (libraries: [aravis_library, libm],
+pkg.generate (aravis_library,
 	      filebase: 'aravis-@0@'.format (aravis_api_version),
 	      version: aravis_version,
 	      subdirs: 'aravis-@0@'.format (aravis_api_version),
 	      name: 'Aravis',
 	      description: 'Camera control and image acquisition library',
-	      requires: aravis_dependency_str,
-	      requires_private: aravis_private_dependency_str)
+	      requires: aravis_public_dependencies)
 
 progs = [[ 'arv-tool', 			'arvtool.c'],
 	 [ 'arv-fake-gv-camera', 	'arvfakegvcamera.c']]
@@ -238,16 +273,23 @@ foreach p: progs
 		install: true)
 endforeach
 
-if get_option ('introspection')
-	gnome.generate_gir(aravis_library,
-			   sources : [library_sources, library_headers, library_enums],
-			   nsversion : aravis_api_version,
-			   namespace : 'Aravis',
-			   symbol_prefix : 'arv_',
-			   identifier_prefix : 'Arv',
-			   export_packages : 'aravis',
-			   includes : ['GObject-2.0', 'Gio-2.0'],
-			   extra_args: '-DARAVIS_COMPILATION',
-			   install : true
-			  )
+introspection_option = get_option('introspection')
+introspection_enabled = false
+if introspection_option.auto() or introspection_option.enabled()
+  gir_scanner = find_program('g-ir-scanner', required: introspection_option)
+  gi_dep = dependency('gobject-introspection-1.0', required: introspection_option)
+
+  if gir_scanner.found() and gi_dep.found()
+    gnome.generate_gir(aravis_library,
+      sources : [library_sources, library_headers, library_enums],
+      nsversion : aravis_api_version,
+      namespace : 'Aravis',
+      symbol_prefix : 'arv_',
+      identifier_prefix : 'Arv',
+      export_packages : 'aravis',
+      includes : ['GObject-2.0', 'Gio-2.0'],
+      extra_args: '-DARAVIS_COMPILATION',
+      install : true)
+    introspection_enabled = true
+  endif
 endif

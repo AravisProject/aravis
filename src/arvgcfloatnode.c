@@ -27,13 +27,36 @@
 
 #include <arvgcfloatnode.h>
 #include <arvgcfloat.h>
+#include <arvgcinteger.h>
 #include <arvgcvalueindexednode.h>
+#include <arvgcfeaturenodeprivate.h>
 #include <arvgc.h>
 #include <arvmisc.h>
 #include <arvstr.h>
 #include <string.h>
 
-static GObjectClass *parent_class = NULL;
+struct _ArvGcFloatNode {
+	ArvGcFeatureNode	node;
+
+	ArvGcPropertyNode *value;
+	ArvGcPropertyNode *minimum;
+	ArvGcPropertyNode *maximum;
+	ArvGcPropertyNode *increment;
+	ArvGcPropertyNode *unit;
+
+	ArvGcPropertyNode *index;
+	GSList *value_indexed_nodes;
+	ArvGcPropertyNode *value_default;
+};
+
+struct _ArvGcFloatNodeClass {
+	ArvGcFeatureNodeClass parent_class;
+};
+
+static void arv_gc_float_node_float_interface_init (ArvGcFloatInterface *interface);
+
+G_DEFINE_TYPE_WITH_CODE (ArvGcFloatNode, arv_gc_float_node, ARV_TYPE_GC_FEATURE_NODE,
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_FLOAT, arv_gc_float_node_float_interface_init))
 
 /* ArvDomNode implementation */
 
@@ -83,7 +106,7 @@ arv_gc_float_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				node->value_default = property_node;
 				break;
 			default:
-				ARV_DOM_NODE_CLASS (parent_class)->post_new_child (self, child);
+				ARV_DOM_NODE_CLASS (arv_gc_float_node_parent_class)->post_new_child (self, child);
 				break;
 		}
 	}
@@ -126,40 +149,6 @@ _get_value_node (ArvGcFloatNode *gc_float_node, GError **error)
 	return NULL;
 }
 
-static GType
-arv_gc_float_node_get_value_type (ArvGcFeatureNode *node)
-{
-	return G_TYPE_DOUBLE;
-}
-
-
-static void
-arv_gc_float_node_set_value_from_string (ArvGcFeatureNode *node, const char *string, GError **error)
-{
-	arv_gc_float_set_value (ARV_GC_FLOAT (node), g_ascii_strtod (string, NULL), error);
-}
-
-static const char *
-arv_gc_float_node_get_value_as_string (ArvGcFeatureNode *node, GError **error)
-{
-	ArvGcFloatNode *float_node = ARV_GC_FLOAT_NODE (node);
-	ArvGcPropertyNode *value_node;
-	GError *local_error = NULL;
-	const char *string;
-
-	value_node = _get_value_node (float_node, error);
-	if (value_node == NULL)
-		return NULL;
-
-	string = arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (value_node), &local_error);
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return NULL;
-	}
-
-	return string;
-}
-
 /* ArvGcFloatNode implementation */
 
 ArvGcNode *
@@ -182,7 +171,7 @@ arv_gc_float_node_finalize (GObject *object)
 {
 	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (object);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_gc_float_node_parent_class)->finalize (object);
 
 	g_slist_free (gc_float_node->value_indexed_nodes);
 }
@@ -192,17 +181,11 @@ arv_gc_float_node_class_init (ArvGcFloatNodeClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
-	ArvGcFeatureNodeClass *gc_feature_node_class = ARV_GC_FEATURE_NODE_CLASS (this_class);
-
-	parent_class = g_type_class_peek_parent (this_class);
 
 	object_class->finalize = arv_gc_float_node_finalize;
 	dom_node_class->get_node_name = arv_gc_float_node_get_node_name;
 	dom_node_class->post_new_child = arv_gc_float_node_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_float_node_pre_remove_child;
-	gc_feature_node_class->get_value_type = arv_gc_float_node_get_value_type;
-	gc_feature_node_class->set_value_from_string = arv_gc_float_node_set_value_from_string;
-	gc_feature_node_class->get_value_as_string = arv_gc_float_node_get_value_as_string;
 }
 
 /* ArvGcFloat interface implementation */
@@ -239,6 +222,7 @@ arv_gc_float_node_set_float_value (ArvGcFloat *gc_float, double value, GError **
 	if (value_node == NULL)
 		return;
 
+	arv_gc_feature_node_increment_change_count (ARV_GC_FEATURE_NODE (gc_float));
 	arv_gc_property_node_set_double (ARV_GC_PROPERTY_NODE (value_node), value, &local_error);
 	if (local_error != NULL)
 		g_propagate_error (error, local_error);
@@ -251,8 +235,25 @@ arv_gc_float_node_get_min (ArvGcFloat *gc_float, GError **error)
 	GError *local_error = NULL;
 	double value;
 
-	if (gc_float_node->minimum == NULL)
+	if (gc_float_node->minimum == NULL) {
+		ArvGcPropertyNode *value_node;
+
+		value_node = _get_value_node (gc_float_node, &local_error);
+		if (local_error != NULL) {
+			g_propagate_error (error, local_error);
+			return -G_MAXDOUBLE;
+		}
+
+		if (ARV_IS_GC_PROPERTY_NODE (value_node)) {
+			ArvGcNode *linked_node = arv_gc_property_node_get_linked_node (value_node);
+
+			if (ARV_IS_GC_INTEGER (linked_node))
+				return arv_gc_integer_get_min (ARV_GC_INTEGER (linked_node), error);
+			else if (ARV_IS_GC_FLOAT (linked_node))
+				return arv_gc_float_get_min (ARV_GC_FLOAT (linked_node), error);
+		}
 		return -G_MAXDOUBLE;
+	}
 
 	value = arv_gc_property_node_get_double (ARV_GC_PROPERTY_NODE (gc_float_node->minimum), &local_error);
 
@@ -271,8 +272,25 @@ arv_gc_float_node_get_max (ArvGcFloat *gc_float, GError **error)
 	GError *local_error = NULL;
 	double value;
 
-	if (gc_float_node->maximum == NULL)
+	if (gc_float_node->maximum == NULL) {
+		ArvGcPropertyNode *value_node;
+
+		value_node = _get_value_node (gc_float_node, &local_error);
+		if (local_error != NULL) {
+			g_propagate_error (error, local_error);
+			return G_MAXDOUBLE;
+		}
+
+		if (ARV_IS_GC_PROPERTY_NODE (value_node)) {
+			ArvGcNode *linked_node = arv_gc_property_node_get_linked_node (value_node);
+
+			if (ARV_IS_GC_INTEGER (linked_node))
+				return arv_gc_integer_get_max (ARV_GC_INTEGER (linked_node), error);
+			else if (ARV_IS_GC_FLOAT (linked_node))
+				return arv_gc_float_get_max (ARV_GC_FLOAT (linked_node), error);
+		}
 		return G_MAXDOUBLE;
+	}
 
 	value = arv_gc_property_node_get_double (ARV_GC_PROPERTY_NODE (gc_float_node->maximum), &local_error);
 
@@ -291,8 +309,26 @@ arv_gc_float_node_get_inc (ArvGcFloat *gc_float, GError **error)
 	GError *local_error = NULL;
 	double value;
 
-	if (gc_float_node->increment == NULL)
+	if (gc_float_node->increment == NULL) {
+		ArvGcPropertyNode *value_node;
+
+		value_node = _get_value_node (gc_float_node, &local_error);
+		if (local_error != NULL) {
+			g_propagate_error (error, local_error);
+			return 1.0;
+		}
+
+		if (ARV_IS_GC_PROPERTY_NODE (value_node)) {
+			ArvGcNode *linked_node = arv_gc_property_node_get_linked_node (value_node);
+
+			if (ARV_IS_GC_INTEGER (linked_node))
+				return arv_gc_integer_get_inc (ARV_GC_INTEGER (linked_node), error);
+			else if (ARV_IS_GC_FLOAT (linked_node))
+				return arv_gc_float_get_inc (ARV_GC_FLOAT (linked_node), error);
+		}
+
 		return 1.0;
+	}
 
 	value = arv_gc_property_node_get_double (ARV_GC_PROPERTY_NODE (gc_float_node->increment), &local_error);
 
@@ -366,6 +402,3 @@ arv_gc_float_node_float_interface_init (ArvGcFloatInterface *interface)
 	interface->impose_min = arv_gc_float_node_impose_min;
 	interface->impose_max = arv_gc_float_node_impose_max;
 }
-
-G_DEFINE_TYPE_WITH_CODE (ArvGcFloatNode, arv_gc_float_node, ARV_TYPE_GC_FEATURE_NODE,
-			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_FLOAT, arv_gc_float_node_float_interface_init))

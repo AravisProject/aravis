@@ -25,9 +25,11 @@
     <pFeature>ChunkInt</pFeature>
     <pFeature>ChunkString</pFeature>
     <pFeature>ChunkFloat</pFeature>
+    <pFeature>ChunkBoolean</pFeature>
   </Category>
 
   <Float Name="RWFloat">
+    <Visibility>Guru</Visibility>
     <Value>0.1</Value>
     <Min>-10.0</Min>
     <Max>10.0</Max>
@@ -54,6 +56,7 @@
   </Float>
 
   <Boolean Name="RWBoolean">
+    <Visibility>Expert</Visibility>
     <Value>1</Value>
   </Boolean>
 
@@ -68,6 +71,7 @@
   </Boolean>
 
   <Integer Name="RWInteger">
+    <Visibility>Invisible</Visibility>
     <Value>1</Value>
     <Min>-10</Min>
     <Max>10</Max>
@@ -135,6 +139,7 @@
     <Cachable>NoCache</Cachable>
     <PollingTime>5</PollingTime>
     <Sign>Unsigned</Sign>
+    <Unit>Pa</Unit>
     <Endianess>BigEndian</Endianess>
   </IntReg>
 
@@ -161,7 +166,7 @@
     <pPort>Device</pPort>
   </IntReg>
 
-  <IntReg Name="IntSignedRegisterC">
+  <IntReg Name="IntSigned32BitRegisterC">
     <Address>0x1004</Address>
     <Length>4</Length>
     <AccessMode>RW</AccessMode>
@@ -171,6 +176,92 @@
     <Sign>Signed</Sign>
     <pPort>Device</pPort>
   </IntReg>
+
+  <IntReg Name="IntUnsigned32BitRegisterC">
+    <Address>0x1004</Address>
+    <Length>4</Length>
+    <AccessMode>RW</AccessMode>
+    <Cachable>NoCache</Cachable>
+    <PollingTime>5</PollingTime>
+    <Endianess>BigEndian</Endianess>
+    <Sign>Unsigned</Sign>
+    <pPort>Device</pPort>
+  </IntReg>
+
+  <IntReg Name="IntSigned16BitRegisterC">
+    <Address>0x1000</Address>
+    <Length>2</Length>
+    <AccessMode>RW</AccessMode>
+    <Cachable>NoCache</Cachable>
+    <PollingTime>5</PollingTime>
+    <Endianess>BigEndian</Endianess>
+    <Sign>Signed</Sign>
+    <pPort>Device</pPort>
+  </IntReg>
+
+  <IntReg Name="IntUnsigned16BitRegisterC">
+    <Address>0x1000</Address>
+    <Length>2</Length>
+    <AccessMode>RW</AccessMode>
+    <Cachable>NoCache</Cachable>
+    <PollingTime>5</PollingTime>
+    <Endianess>BigEndian</Endianess>
+    <Sign>Unsigned</Sign>
+    <pPort>Device</pPort>
+  </IntReg>
+
+  <MaskedIntReg Name="MaskedIntSignedRegisterC">
+    <Address>0x1002</Address>
+    <Length>2</Length>
+    <AccessMode>RW</AccessMode>
+    <Cachable>NoCache</Cachable>
+    <PollingTime>5</PollingTime>
+    <Endianess>BigEndian</Endianess>
+    <LSB>7</LSB>
+    <MSB>4</MSB>
+    <Sign>Signed</Sign>
+    <Unit>V</Unit>
+    <pPort>Device</pPort>
+  </MaskedIntReg>
+
+  <MaskedIntReg Name="MaskedIntUnsignedRegisterC">
+    <Address>0x1002</Address>
+    <Length>2</Length>
+    <AccessMode>RW</AccessMode>
+    <Cachable>NoCache</Cachable>
+    <PollingTime>5</PollingTime>
+    <Endianess>BigEndian</Endianess>
+    <LSB>7</LSB>
+    <MSB>4</MSB>
+    <Sign>Unsigned</Sign>
+    <Unit>A</Unit>
+    <pPort>Device</pPort>
+  </MaskedIntReg>
+
+  <FloatReg Name="FloatReg4C">
+    <Address>0x1000</Address>
+    <Length>4</Length>
+    <Cachable>NoCache</Cachable>
+    <Endianess>LittleEndian</Endianess>
+    <Unit>mA</Unit>
+    <pPort>Device</pPort>
+  </FloatReg>
+
+  <FloatReg Name="FloatReg8C">
+    <Address>0x1000</Address>
+    <Length>8</Length>
+    <Cachable>NoCache</Cachable>
+    <Endianess>LittleEndian</Endianess>
+    <Unit>mV</Unit>
+    <pPort>Device</pPort>
+  </FloatReg>
+
+  <StringReg Name="StringReg">
+    <Address>0x1002</Address>
+    <Length>4</Length>
+    <Cachable>NoCache</Cachable>
+    <pPort>Device</pPort>
+  </StringReg>
 
   <IntSwissKnife Name="IntSwissKnifeTestEntity">
     <Formula>(0x12345678 &amp; 0x10305070)</Formula>
@@ -266,6 +357,26 @@
 
   <Port Name="StringPort">
     <ChunkID>87654321</ChunkID>
+  </Port>
+
+  <Boolean Name="ChunkBoolean">
+    <pValue>ChunkBooleanReg</pValue>
+    <OnValue>1</OnValue>
+    <OffValue>0</OffValue>
+  </Boolean>
+
+  <IntReg Name="ChunkBooleanReg">
+    <Address>0x00</Address>
+    <Length>1</Length>
+    <AccessMode>R</AccessMode>
+    <pPort>BooleanPort</pPort>
+    <Cachable>NoCache</Cachable>
+    <Sign>Unsigned</Sign>
+    <Endianess>BigEndian</Endianess>
+  </IntReg>
+
+  <Port Name="BooleanPort">
+    <ChunkID>12345680</ChunkID>
   </Port>
 
   <Converter Name="Converter">

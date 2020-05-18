@@ -28,17 +28,12 @@
 #endif
 
 #include <arvtypes.h>
+#include <arvstream.h>
 
 G_BEGIN_DECLS
 
 #define ARV_TYPE_UV_STREAM             (arv_uv_stream_get_type ())
-#define ARV_UV_STREAM(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_UV_STREAM, ArvUvStream))
-#define ARV_UV_STREAM_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_UV_STREAM, ArvUvStreamClass))
-#define ARV_IS_UV_STREAM(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_UV_STREAM))
-#define ARV_IS_UV_STREAM_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_UV_STREAM))
-#define ARV_UV_STREAM_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_UV_STREAM, ArvUvStreamClass))
-
-GType arv_uv_stream_get_type (void);
+G_DECLARE_FINAL_TYPE (ArvUvStream, arv_uv_stream, ARV, UV_STREAM, ArvStream)
 
 G_END_DECLS
 

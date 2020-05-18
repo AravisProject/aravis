@@ -33,13 +33,7 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_UV_INTERFACE             (arv_uv_interface_get_type ())
-#define ARV_UV_INTERFACE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_UV_INTERFACE, ArvUvInterface))
-#define ARV_UV_INTERFACE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_UV_INTERFACE, ArvUvInterfaceClass))
-#define ARV_IS_UV_INTERFACE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_UV_INTERFACE))
-#define ARV_IS_UV_INTERFACE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_UV_INTERFACE))
-#define ARV_UV_INTERFACE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_UV_INTERFACE, ArvUvInterfaceClass))
-
-GType arv_uv_interface_get_type (void);
+G_DECLARE_FINAL_TYPE (ArvUvInterface, arv_uv_interface, ARV, UV_INTERFACE, ArvInterface)
 
 ArvInterface * 		arv_uv_interface_get_instance 		(void);
 

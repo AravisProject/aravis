@@ -8,13 +8,22 @@
 #  You may also have to give the path to libaravis.so, using LD_PRELOAD or
 #  LD_LIBRARY_PATH.
 
+import gi
+
+gi.require_version ('Aravis', '0.8')
+
 from gi.repository import Aravis
 
-camera = Aravis.Camera.new (None)
+try:
+    camera = Aravis.Camera.new (None)
+except TypeError:
+    print ("No camera found")
+    exit ()
+
 device = camera.get_device ()
 
 device.set_integer_feature_value ("Width", 1024)
 device.set_integer_feature_value ("Height", 1024)
 
-print "Width =  %d" %(device.get_integer_feature_value ("Width"))
-print "Height = %d" %(device.get_integer_feature_value ("Height"))
+print ("Width =  %d" %(device.get_integer_feature_value ("Width")))
+print ("Height = %d" %(device.get_integer_feature_value ("Height")))

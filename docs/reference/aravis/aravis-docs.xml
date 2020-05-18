@@ -3,11 +3,14 @@
                "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
 [
   <!ENTITY % local.common.attrib "xmlns:xi  CDATA  #FIXED 'http://www.w3.org/2003/XInclude'">
+  <!ENTITY % gtkdocentities SYSTEM "xml/gtkdocentities.ent">
+  %gtkdocentities;
 ]>
+
 <book id="index">
 	<bookinfo>
-		<title>Aravis Reference Manual</title>
-		<releaseinfo>For Aravis 0.8.</releaseinfo>
+		<title>&package_name; Reference Manual</title>
+		<releaseinfo>For &package_name; &package_api_version;.</releaseinfo>
 		<legalnotice>
 			<para>
 				Permission is granted to copy, distribute and/or modify this
@@ -34,7 +37,7 @@
 	<xi:include href="xml/aravis-overview.xml"/>
 
 	<part id="aravis-reference">
-		<title>Aravis API reference</title>
+		<title>&package_name; API reference</title>
 
 		<chapter>
 			<title>Base</title>
@@ -72,7 +75,10 @@
 			<xi:include href="xml/arvgcenumeration.xml"/>
 			<xi:include href="xml/arvgcenumentry.xml"/>
 			<xi:include href="xml/arvgcconverter.xml"/>
+			<xi:include href="xml/arvgcconverternode.xml"/>
+			<xi:include href="xml/arvgcintconverternode.xml"/>
 			<xi:include href="xml/arvgcswissknife.xml"/>
+			<xi:include href="xml/arvgcselector.xml"/>
 			<xi:include href="xml/arvgcport.xml"/>
 		</chapter>
 
@@ -82,8 +88,6 @@
 			<xi:include href="xml/arvgvdevice.xml"/>
 			<xi:include href="xml/arvgvstream.xml"/>
 			<xi:include href="xml/arvgvfakecamera.xml"/>
-			<xi:include href="xml/arvgvcp.xml"/>
-			<xi:include href="xml/arvgvsp.xml"/>
 		</chapter>
 
 		<chapter>
@@ -91,8 +95,6 @@
 			<xi:include href="xml/arvuvinterface.xml"/>
 			<xi:include href="xml/arvuvdevice.xml"/>
 			<xi:include href="xml/arvuvstream.xml"/>
-			<xi:include href="xml/arvuvcp.xml"/>
-			<xi:include href="xml/arvuvsp.xml"/>
 		</chapter>
 
 		<chapter>
@@ -107,6 +109,7 @@
 			<title>DOM</title>
 			<xi:include href="xml/arvdomnode.xml"/>
 			<xi:include href="xml/arvdomnodelist.xml"/>
+			<xi:include href="xml/arvdomnodechildlist.xml"/>
 			<xi:include href="xml/arvdomnamednodemap.xml"/>
 			<xi:include href="xml/arvdomdocument.xml"/>
 			<xi:include href="xml/arvdomdocumentfragment.xml"/>
