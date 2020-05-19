@@ -212,7 +212,7 @@ arv_uv_stream_thread (void *data)
 					}
 					break;
 				default:
-					arv_debug_stream_thread ("Unkown packet type");
+					arv_debug_stream_thread ("Unknown packet type");
 					break;
 			}
 		}

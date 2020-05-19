@@ -67,7 +67,7 @@ arv_dom_implementation_create_document (const char *namespace_uri,
 
 	document_type = g_hash_table_lookup (document_types, qualified_name);
 	if (document_type == NULL) {
-		arv_debug_dom ("[ArvDomImplementation::create_document] Unknow document type (%s)",
+		arv_debug_dom ("[ArvDomImplementation::create_document] Unknown document type (%s)",
 			       qualified_name);
 		return NULL;
 	}
