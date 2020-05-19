@@ -271,7 +271,7 @@ arv_gc_struct_entry_node_get_min (ArvGcInteger *self, GError **error)
 	msb = arv_gc_property_node_get_msb (struct_entry->msb, 31);
 	signedness = arv_gc_property_node_get_sign (struct_entry->sign, ARV_GC_SIGNEDNESS_UNSIGNED);
 
-	/* TODO endianess */
+	/* TODO endianness */
 
 	if (signedness == ARV_GC_SIGNEDNESS_SIGNED) {
 		return -((1 << (msb - lsb  - 1)));
@@ -291,7 +291,7 @@ arv_gc_struct_entry_node_get_max (ArvGcInteger *self, GError **error)
 	msb = arv_gc_property_node_get_msb (struct_entry->msb, 31);
 	signedness = arv_gc_property_node_get_sign (struct_entry->sign, ARV_GC_SIGNEDNESS_UNSIGNED);
 
-	/* TODO endianess */
+	/* TODO endianness */
 
 	if (signedness == ARV_GC_SIGNEDNESS_SIGNED) {
 		return ((1 << (msb - lsb  - 1)) - 1);

@@ -1290,7 +1290,7 @@ arv_gv_device_constructed (GObject *object)
 
 	document = ARV_DOM_DOCUMENT (priv->genicam);
 	register_description = ARV_GC_REGISTER_DESCRIPTION_NODE (arv_dom_document_get_document_element (document));
-	arv_debug_device ("[GvDevice::new] Legacy endianess handling = %s",
+	arv_debug_device ("[GvDevice::new] Legacy endianness handling = %s",
 			  arv_gc_register_description_node_compare_schema_version (register_description, 1, 1, 0) < 0 ?
 			  "yes" : "no");
 }
