@@ -59,7 +59,7 @@ typedef enum {
 	ARV_GC_PROPERTY_NODE_TYPE_IMPOSED_ACCESS_MODE,
 	ARV_GC_PROPERTY_NODE_TYPE_CACHABLE,
 	ARV_GC_PROPERTY_NODE_TYPE_POLLING_TIME,
-	ARV_GC_PROPERTY_NODE_TYPE_ENDIANESS,
+	ARV_GC_PROPERTY_NODE_TYPE_ENDIANNESS,
 	ARV_GC_PROPERTY_NODE_TYPE_SIGN,
 	ARV_GC_PROPERTY_NODE_TYPE_LSB,
 	ARV_GC_PROPERTY_NODE_TYPE_MSB,
@@ -135,7 +135,7 @@ ArvGcNode * 	arv_gc_property_node_new_access_mode		(void);
 ArvGcNode * 	arv_gc_property_node_new_imposed_access_mode 	(void);
 ArvGcNode * 	arv_gc_property_node_new_cachable		(void);
 ArvGcNode * 	arv_gc_property_node_new_polling_time		(void);
-ArvGcNode * 	arv_gc_property_node_new_endianess		(void);
+ArvGcNode * 	arv_gc_property_node_new_endianness		(void);
 ArvGcNode * 	arv_gc_property_node_new_sign			(void);
 ArvGcNode * 	arv_gc_property_node_new_lsb			(void);
 ArvGcNode * 	arv_gc_property_node_new_msb			(void);
@@ -156,7 +156,7 @@ void			arv_gc_property_node_set_int64		(ArvGcPropertyNode *node, gint64 v_int64,
 double 			arv_gc_property_node_get_double 	(ArvGcPropertyNode *node, GError **error);
 void 			arv_gc_property_node_set_double 	(ArvGcPropertyNode *node, double v_double, GError **error);
 
-guint	 		arv_gc_property_node_get_endianess	(ArvGcPropertyNode *self, guint default_value);
+guint	 		arv_gc_property_node_get_endianness	(ArvGcPropertyNode *self, guint default_value);
 ArvGcSignedness		arv_gc_property_node_get_sign 		(ArvGcPropertyNode *self, ArvGcSignedness default_value);
 guint	 		arv_gc_property_node_get_lsb		(ArvGcPropertyNode *self, guint default_value);
 guint	 		arv_gc_property_node_get_msb		(ArvGcPropertyNode *self, guint default_value);

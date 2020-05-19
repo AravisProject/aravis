@@ -25,7 +25,7 @@
  * @short_description: Base class for Genicam property nodes
  *
  * #ArvGcPropertyNode provides a base class for the implementation of the different
- * types of Genicam property nodes (Value, pValue, Endianess...).
+ * types of Genicam property nodes (Value, pValue, Endianness...).
  */
 
 #include <arvgcpropertynode.h>
@@ -112,7 +112,7 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 			return "Cachable";
 		case ARV_GC_PROPERTY_NODE_TYPE_POLLING_TIME:
 			return "PollingTime";
-		case ARV_GC_PROPERTY_NODE_TYPE_ENDIANESS:
+		case ARV_GC_PROPERTY_NODE_TYPE_ENDIANNESS:
 			return "Endianess";
 		case ARV_GC_PROPERTY_NODE_TYPE_SIGN:
 			return "Sign";
@@ -807,13 +807,13 @@ arv_gc_property_node_new_polling_time (void)
 }
 
 ArvGcNode *
-arv_gc_property_node_new_endianess (void)
+arv_gc_property_node_new_endianness (void)
 {
-	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_ENDIANESS);
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_ENDIANNESS);
 }
 
 guint
-arv_gc_property_node_get_endianess (ArvGcPropertyNode *self, guint default_value)
+arv_gc_property_node_get_endianness (ArvGcPropertyNode *self, guint default_value)
 {
 	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
 
@@ -821,7 +821,7 @@ arv_gc_property_node_get_endianess (ArvGcPropertyNode *self, guint default_value
 		return default_value;
 
 	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
-	g_return_val_if_fail (priv->type == ARV_GC_PROPERTY_NODE_TYPE_ENDIANESS, default_value);
+	g_return_val_if_fail (priv->type == ARV_GC_PROPERTY_NODE_TYPE_ENDIANNESS, default_value);
 
 	if (g_strcmp0 (_get_value_data (self), "BigEndian") == 0)
 		return G_BIG_ENDIAN;
