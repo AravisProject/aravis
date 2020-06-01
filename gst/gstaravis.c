@@ -65,7 +65,7 @@ enum
   PROP_AUTO_PACKET_SIZE,
   PROP_PACKET_RESEND,
   PROP_FEATURES,
-  PROP_NUM_BUFFERS
+  PROP_NUM_ARV_BUFFERS
 };
 
 #define GST_TYPE_ARV_AUTO (gst_arv_auto_get_type())
@@ -323,7 +323,7 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 			g_object_set (gst_aravis->stream, "packet-resend", ARV_GV_STREAM_PACKET_RESEND_NEVER, NULL);
 	}
 
-	for (i = 0; i < gst_aravis->num_buffers; i++)
+	for (i = 0; i < gst_aravis->num_arv_buffers; i++)
 		arv_stream_push_buffer (gst_aravis->stream,
 					arv_buffer_new (gst_aravis->payload, NULL));
 
@@ -607,7 +607,7 @@ gst_aravis_init (GstAravis *gst_aravis)
 	gst_aravis->packet_size = -1;
 	gst_aravis->auto_packet_size = FALSE;
         gst_aravis->packet_resend = TRUE;
-        gst_aravis->num_buffers = GST_ARAVIS_DEFAULT_N_BUFFERS;
+	gst_aravis->num_arv_buffers = GST_ARAVIS_DEFAULT_N_BUFFERS;
 	gst_aravis->payload = 0;
 
 	gst_aravis->buffer_timeout_us = GST_ARAVIS_BUFFER_TIMEOUT_DEFAULT;
@@ -735,9 +735,9 @@ gst_aravis_set_property (GObject * object, guint prop_id,
                         gst_aravis->features = g_value_dup_string (value);
 			GST_OBJECT_UNLOCK (gst_aravis);
                         break;
-                case PROP_NUM_BUFFERS:
-                        gst_aravis->num_buffers = g_value_get_int (value);
-                        break;
+		case PROP_NUM_ARV_BUFFERS:
+			gst_aravis->num_arv_buffers = g_value_get_int (value);
+			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 			break;
@@ -820,9 +820,9 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 		case PROP_FEATURES:
 			g_value_set_string (value, gst_aravis->features);
 			break;
-        	case PROP_NUM_BUFFERS:
-                        g_value_set_int (value, gst_aravis->num_buffers);
-                        break;
+		case PROP_NUM_ARV_BUFFERS:
+			g_value_set_int (value, gst_aravis->num_arv_buffers);
+			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 			break;
@@ -964,12 +964,12 @@ gst_aravis_class_init (GstAravisClass * klass)
 
 	g_object_class_install_property
 		(gobject_class,
-		 PROP_NUM_BUFFERS,
-		 g_param_spec_int ("num-buffers",
-                                   "Number of Buffers",
-                                   "Number of video buffers to allocate for video frames",
-                                   1, G_MAXINT, GST_ARAVIS_DEFAULT_N_BUFFERS,
-                                   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+		 PROP_NUM_ARV_BUFFERS,
+		 g_param_spec_int ("num-arv-buffers",
+				   "Number of Buffers allocated",
+				   "Number of video buffers to allocate for video frames",
+				   1, G_MAXINT, GST_ARAVIS_DEFAULT_N_BUFFERS,
+				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
         GST_DEBUG_CATEGORY_INIT (aravis_debug, "aravissrc", 0, "Aravis interface");
 
