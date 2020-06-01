@@ -768,7 +768,7 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 				gst_aravis->gain_auto = arv_camera_get_gain_auto(gst_aravis->camera, NULL);
 			}
 			g_value_set_enum (value, gst_aravis->gain_auto);
-			GST_OBJECT_LOCK (gst_aravis);
+			GST_OBJECT_UNLOCK (gst_aravis);
 			break;
 		case PROP_EXPOSURE:
 			g_value_set_double (value, gst_aravis->exposure_time_us);
