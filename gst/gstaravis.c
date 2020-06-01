@@ -479,22 +479,22 @@ static GstFlowReturn
 gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 {
 	GstAravis *gst_aravis;
-	ArvBuffer *arv_buffer;
 	int arv_row_stride;
 	int width, height;
 	char *buffer_data;
 	size_t buffer_size;
 	guint64 timestamp_ns;
-	gboolean base_src_does_timestamp = gst_base_src_get_do_timestamp(GST_BASE_SRC(push_src));
+	gboolean base_src_does_timestamp;
+	ArvBuffer *arv_buffer = NULL;
 
 	gst_aravis = GST_ARAVIS (push_src);
+	base_src_does_timestamp = gst_base_src_get_do_timestamp(GST_BASE_SRC(push_src));
 
 	GST_OBJECT_LOCK (gst_aravis);
 
 	do {
+		if (arv_buffer) arv_stream_push_buffer (gst_aravis->stream, arv_buffer);
 		arv_buffer = arv_stream_timeout_pop_buffer (gst_aravis->stream, gst_aravis->buffer_timeout_us);
-		if (arv_buffer != NULL && arv_buffer_get_status (arv_buffer) != ARV_BUFFER_STATUS_SUCCESS)
-			arv_stream_push_buffer (gst_aravis->stream, arv_buffer);
 	} while (arv_buffer != NULL && arv_buffer_get_status (arv_buffer) != ARV_BUFFER_STATUS_SUCCESS);
 
 	if (arv_buffer == NULL)
@@ -509,7 +509,7 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 	if ((arv_row_stride & 0x3) != 0) {
 		int gst_row_stride;
 		size_t size;
-		void *data;
+		char *data;
 		int i;
 
 		gst_row_stride = (arv_row_stride & ~(0x3)) + 4;
@@ -518,10 +518,11 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 		data = g_malloc (size);
 
 		for (i = 0; i < height; i++)
-			memcpy (((char *) data) + i * gst_row_stride, buffer_data + i * arv_row_stride, arv_row_stride);
+			memcpy (data + i * gst_row_stride, buffer_data + i * arv_row_stride, arv_row_stride);
 
 		*buffer = gst_buffer_new_wrapped (data, size);
 	} else {
+		// FIXME Should arv_stream_push_buffer when the GstBuffer is destroyed
 		*buffer = gst_buffer_new_wrapped_full (0, buffer_data, buffer_size, 0, buffer_size, NULL, NULL);
 	}
 
