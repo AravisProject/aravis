@@ -414,8 +414,8 @@ arv_value_holds_double (ArvValue *value)
 }
 
 void
-arv_copy_memory_with_endianess (void *to, size_t to_size, guint to_endianess,
-				void *from, size_t from_size, guint from_endianess)
+arv_copy_memory_with_endianness (void *to, size_t to_size, guint to_endianness,
+				void *from, size_t from_size, guint from_endianness)
 {
 	char *to_ptr;
 	char *from_ptr;
@@ -424,8 +424,8 @@ arv_copy_memory_with_endianess (void *to, size_t to_size, guint to_endianess,
 	g_return_if_fail (to != NULL);
 	g_return_if_fail (from != NULL);
 
-	if (to_endianess == G_LITTLE_ENDIAN &&
-	    from_endianess == G_BIG_ENDIAN) {
+	if (to_endianness == G_LITTLE_ENDIAN &&
+	    from_endianness == G_BIG_ENDIAN) {
 		to_ptr = to;
 		from_ptr = ((char *) from) + from_size - 1;
 		if (to_size <= from_size) {
@@ -436,8 +436,8 @@ arv_copy_memory_with_endianess (void *to, size_t to_size, guint to_endianess,
 				*to_ptr = *from_ptr;
 			memset (((char *) to) + from_size, 0, to_size - from_size);
 		}
-	} else if (to_endianess == G_BIG_ENDIAN &&
-		   from_endianess == G_LITTLE_ENDIAN) {
+	} else if (to_endianness == G_BIG_ENDIAN &&
+		   from_endianness == G_LITTLE_ENDIAN) {
 		to_ptr = ((char *) to) + to_size - 1;
 		from_ptr = from;
 		if (to_size <= from_size) {
@@ -448,16 +448,16 @@ arv_copy_memory_with_endianess (void *to, size_t to_size, guint to_endianess,
 				*to_ptr = *from_ptr;
 			memset (to, 0, to_size - from_size);
 		}
-	} else if (to_endianess == G_LITTLE_ENDIAN &&
-		   from_endianess == G_LITTLE_ENDIAN) {
+	} else if (to_endianness == G_LITTLE_ENDIAN &&
+		   from_endianness == G_LITTLE_ENDIAN) {
 		if (to_size <= from_size)
 			memcpy (to, from, to_size);
 		else {
 			memcpy (to, from, from_size);
 			memset (((char *) to) + from_size, 0, to_size - from_size);
 		}
-	} else if (to_endianess == G_BIG_ENDIAN &&
-		   from_endianess == G_BIG_ENDIAN) {
+	} else if (to_endianness == G_BIG_ENDIAN &&
+		   from_endianness == G_BIG_ENDIAN) {
 		if (to_size <= from_size)
 			memcpy (to, ((char *) from) + from_size - to_size, to_size);
 		else {

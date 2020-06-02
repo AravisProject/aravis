@@ -364,7 +364,7 @@ arv_tool_execute_command (int argc, char **argv, ArvDevice *device, ArvRegisterC
 			g_strfreev (tokens);
 		}
 	} else {
-		printf ("Unkown command\n");
+		printf ("Unknown command\n");
 	}
 
 	if (arv_option_show_time)

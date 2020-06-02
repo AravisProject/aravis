@@ -59,8 +59,8 @@ double 		arv_value_get_double 		(ArvValue *value);
 gboolean 	arv_value_holds_int64 		(ArvValue *value);
 double 		arv_value_holds_double 		(ArvValue *value);
 
-void 		arv_copy_memory_with_endianess 	(void *to, size_t to_size, guint to_endianess,
-						 void *from, size_t from_size, guint from_endianess);
+void 		arv_copy_memory_with_endianness	(void *to, size_t to_size, guint to_endianness,
+						 void *from, size_t from_size, guint from_endianness);
 
 void * 		arv_decompress 			(void *input_buffer, size_t input_size, size_t *output_size);
 

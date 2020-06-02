@@ -27,12 +27,12 @@
 
 gint64 		arv_gc_register_node_get_masked_integer_value 	(ArvGcRegisterNode *gc_register_node,
 								 guint lsb, guint msb,
-								 ArvGcSignedness signedness, guint endianess,
+								 ArvGcSignedness signedness, guint endianness,
 								 ArvGcCachable cachable,
 								 gboolean is_masked, GError **error);
 void 		arv_gc_register_node_set_masked_integer_value 	(ArvGcRegisterNode *gc_register_node,
 								 guint lsb, guint msb,
-								 ArvGcSignedness signedness, guint endianess,
+								 ArvGcSignedness signedness, guint endianness,
 								 ArvGcCachable cachable,
 								 gboolean is_masked,
 								 gint64 value, GError **error);

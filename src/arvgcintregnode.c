@@ -29,7 +29,7 @@
 
 typedef struct {
 	ArvGcPropertyNode *sign;
-	ArvGcPropertyNode *endianess;
+	ArvGcPropertyNode *endianness;
 	ArvGcPropertyNode *unit;
 
 	GSList *selecteds;
@@ -63,8 +63,8 @@ arv_gc_int_reg_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 			case ARV_GC_PROPERTY_NODE_TYPE_SIGN:
 				priv->sign = property_node;
 				break;
-			case ARV_GC_PROPERTY_NODE_TYPE_ENDIANESS:
-				priv->endianess = property_node;
+			case ARV_GC_PROPERTY_NODE_TYPE_ENDIANNESS:
+				priv->endianness = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_UNIT:
 				priv->unit = property_node;
@@ -92,7 +92,7 @@ arv_gc_int_reg_node_get_integer_value (ArvGcInteger *self, GError **error)
 	return arv_gc_register_node_get_masked_integer_value (ARV_GC_REGISTER_NODE (self),
 							      0, 31,
 							      arv_gc_property_node_get_sign (priv->sign, ARV_GC_SIGNEDNESS_UNSIGNED),
-							      arv_gc_property_node_get_endianess (priv->endianess, G_LITTLE_ENDIAN),
+							      arv_gc_property_node_get_endianness (priv->endianness, G_LITTLE_ENDIAN),
 							      ARV_GC_CACHABLE_UNDEFINED,
 							      FALSE, error);
 }
@@ -105,7 +105,7 @@ arv_gc_int_reg_node_set_integer_value (ArvGcInteger *self, gint64 value, GError 
 	arv_gc_register_node_set_masked_integer_value (ARV_GC_REGISTER_NODE (self),
 						       0, 31,
 						       arv_gc_property_node_get_sign (priv->sign, ARV_GC_SIGNEDNESS_UNSIGNED),
-						       arv_gc_property_node_get_endianess (priv->endianess, G_LITTLE_ENDIAN),
+						       arv_gc_property_node_get_endianness (priv->endianness, G_LITTLE_ENDIAN),
 						       ARV_GC_CACHABLE_UNDEFINED,
 						       FALSE, value, error);
 }

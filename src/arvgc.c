@@ -230,7 +230,7 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 	else if (strcmp (tag_name, "PollingTime") == 0)
 		node = arv_gc_property_node_new_polling_time ();
 	else if (strcmp (tag_name, "Endianess") == 0)
-		node = arv_gc_property_node_new_endianess ();
+		node = arv_gc_property_node_new_endianness ();
 	else if (strcmp (tag_name, "Sign") == 0)
 		node = arv_gc_property_node_new_sign ();
 	else if (strcmp (tag_name, "LSB") == 0)

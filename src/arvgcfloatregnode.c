@@ -28,7 +28,7 @@
 #include <arvmisc.h>
 
 typedef struct {
-	ArvGcPropertyNode *endianess;
+	ArvGcPropertyNode *endianness;
 	ArvGcPropertyNode *unit;
 
 	GSList *selecteds;
@@ -56,8 +56,8 @@ arv_gc_float_reg_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 		ArvGcPropertyNode *property_node = ARV_GC_PROPERTY_NODE (child);
 
 		switch (arv_gc_property_node_get_node_type (property_node)) {
-			case ARV_GC_PROPERTY_NODE_TYPE_ENDIANESS:
-				priv->endianess = property_node;
+			case ARV_GC_PROPERTY_NODE_TYPE_ENDIANNESS:
+				priv->endianness = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_UNIT:
 				priv->unit = property_node;
@@ -84,11 +84,11 @@ arv_gc_float_reg_node_get_float_value (ArvGcFloat *self, GError **error)
 {
 	ArvGcFloatRegNodePrivate *priv = arv_gc_float_reg_node_get_instance_private (ARV_GC_FLOAT_REG_NODE (self));
 	GError *local_error = NULL;
-	guint endianess;
+	guint endianness;
 	gint64 length;
 	double v_double = 0.0;
 
-	endianess = arv_gc_property_node_get_endianess (priv->endianess, G_LITTLE_ENDIAN);
+	endianness = arv_gc_property_node_get_endianness (priv->endianness, G_LITTLE_ENDIAN);
 	length = arv_gc_register_get_length (ARV_GC_REGISTER (self), &local_error);
 	if (local_error == NULL) {
 		char *buffer;
@@ -99,13 +99,13 @@ arv_gc_float_reg_node_get_float_value (ArvGcFloat *self, GError **error)
 			if (length == 4) {
 				float v_float = 0.0;
 
-				arv_copy_memory_with_endianess (&v_float, sizeof (v_float), G_BYTE_ORDER,
-								buffer, length, endianess);
+				arv_copy_memory_with_endianness (&v_float, sizeof (v_float), G_BYTE_ORDER,
+								buffer, length, endianness);
 
 				v_double = v_float;
 			} else if (length == 8) {
-				arv_copy_memory_with_endianess (&v_double, sizeof (v_double), G_BYTE_ORDER,
-								buffer, length, endianess);
+				arv_copy_memory_with_endianness (&v_double, sizeof (v_double), G_BYTE_ORDER,
+								buffer, length, endianness);
 			} else {
 				g_set_error (&local_error, ARV_GC_ERROR, ARV_GC_ERROR_INVALID_LENGTH,
 					     "Invalid register length for FloatReg node");
@@ -125,10 +125,10 @@ arv_gc_float_reg_node_set_float_value (ArvGcFloat *self, gdouble value, GError *
 {
 	ArvGcFloatRegNodePrivate *priv = arv_gc_float_reg_node_get_instance_private (ARV_GC_FLOAT_REG_NODE (self));
 	GError *local_error = NULL;
-	guint endianess;
+	guint endianness;
 	gint64 length;
 
-	endianess = arv_gc_property_node_get_endianess (priv->endianess, G_LITTLE_ENDIAN);
+	endianness = arv_gc_property_node_get_endianness (priv->endianness, G_LITTLE_ENDIAN);
 	length = arv_gc_register_get_length (ARV_GC_REGISTER (self), &local_error);
 	if (local_error == NULL) {
 		char *buffer;
@@ -138,9 +138,9 @@ arv_gc_float_reg_node_set_float_value (ArvGcFloat *self, gdouble value, GError *
 			if (length == 4) {
 				float v_float = value;
 
-				arv_copy_memory_with_endianess (buffer, length, endianess, &v_float, sizeof (v_float), G_BYTE_ORDER);
+				arv_copy_memory_with_endianness (buffer, length, endianness, &v_float, sizeof (v_float), G_BYTE_ORDER);
 			} else if (length == 8) {
-				arv_copy_memory_with_endianess (buffer, length, endianess, &value, sizeof (value), G_BYTE_ORDER);
+				arv_copy_memory_with_endianness (buffer, length, endianness, &value, sizeof (value), G_BYTE_ORDER);
 			} else {
 				g_set_error (&local_error, ARV_GC_ERROR, ARV_GC_ERROR_INVALID_LENGTH,
 					     "Invalid register length for FloatReg node");
