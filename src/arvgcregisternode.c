@@ -80,6 +80,7 @@ typedef struct {
 	ArvGcPropertyNode *port;
 	ArvGcPropertyNode *cachable;
 	ArvGcPropertyNode *polling_time;
+	ArvGcPropertyNode *access_mode;
 	ArvGcPropertyNode *endianness;
 
 	GSList *invalidators;		/* #ArvGcPropertyNode */
@@ -138,6 +139,9 @@ arv_gc_register_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_ENDIANNESS:
 				priv->endianness = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_ACCESS_MODE:
+				priv->access_mode = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_P_INVALIDATOR:
 				priv->invalidators = g_slist_prepend (priv->invalidators, property_node);
@@ -299,6 +303,14 @@ _get_cache (ArvGcRegisterNode *self, gint64 *address, gint64 *length, GError **e
 		*length = key.length;
 
 	return cache;
+}
+
+static ArvGcAccessMode
+_get_access_mode (ArvGcRegisterNode *self)
+{
+	ArvGcRegisterNodePrivate *priv = arv_gc_register_node_get_instance_private (ARV_GC_REGISTER_NODE (self));
+
+	return arv_gc_property_node_get_access_mode(priv->access_mode, ARV_GC_ACCESS_MODE_RW);
 }
 
 static void
@@ -650,10 +662,12 @@ _set_integer_value (ArvGcRegisterNode *gc_register_node,
 		gint64 current_value;
 		guint64 mask;
 
-		_read_from_port (gc_register_node, address, length, cache, cachable, &local_error);
-		if (local_error != NULL) {
-			g_propagate_error (error, local_error);
-			return;
+		if (ARV_GC_ACCESS_MODE_WO != _get_access_mode(gc_register_node)) {
+			_read_from_port (gc_register_node, address, length, cache, cachable, &local_error);
+			if (local_error != NULL) {
+				g_propagate_error (error, local_error);
+				return;
+			}
 		}
 
 		arv_copy_memory_with_endianness (&current_value, sizeof (current_value), G_BYTE_ORDER,
