@@ -661,7 +661,7 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 	},
 
 /* Non 8bit bayer formats are not supported by gstreamer bayer plugin.
- * This feature is discussed in bug https://bugzilla.gnome.org/show_bug.cgi?id=693666 .*/
+ * This feature is discussed in bug https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/issues/86 .*/
 
 	{
 		ARV_PIXEL_FORMAT_YUV_422_PACKED,
