@@ -618,6 +618,13 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 		"video/x-raw-gray",	12,	12,	0
 	},
 	{
+		ARV_PIXEL_FORMAT_MONO_14,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",		"GRAY16_LE",
+		"video/x-raw-gray, bpp=(int)16, depth=(int)14",
+		"video/x-raw-gray",	16,	14,	0
+	},
+	{
 		ARV_PIXEL_FORMAT_MONO_10,
 		"video/x-raw, format=(string)GRAY16_LE",
 		"video/x-raw", 		"GRAY16_LE",
