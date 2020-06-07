@@ -1,3 +1,15 @@
+Unstable release 0.7.5
+======================
+
+  * gst-plugin: error handling and lock fixes (Marko)
+  * build: fix when aravis is used as a subproject (Rihards)
+  * build: fix viewer build without libusb (Guillaume)
+  * fake camera: implement bayer pixel formats (Bernardo)
+  * gcregister: don't try to read WO registers (Stefan)
+  * viewer: fix buffer leak (Emmanuel)
+  * gvstream: correctly handle resend request limit (Emmanuel)
+  * stream: device reference leak fix (Emmanuel)
+
 Unstable release 0.7.4
 ======================
 
