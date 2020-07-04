@@ -213,6 +213,16 @@ arv_gc_feature_node_get_name (ArvGcFeatureNode *node)
 	return priv->name;
 }
 
+ArvGcNameSpace
+arv_gc_feature_node_get_name_space (ArvGcFeatureNode *node)
+{
+	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (node);
+
+	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (node), ARV_GC_NAME_SPACE_CUSTOM);
+
+	return priv->name_space;
+}
+
 const char *
 arv_gc_feature_node_get_tooltip (ArvGcFeatureNode *node)
 {
