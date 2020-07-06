@@ -157,6 +157,69 @@ arv_gc_float_get_unit	(ArvGcFloat *gc_float, GError **error)
 	return NULL;
 }
 
+/**
+ * arv_gc_float_get_display_notation:
+ * @gc_float: a #ArvGcFloat
+ * @error: return location for a GError, or NULL
+ *
+ * Get number display notation.
+ *
+ * Returns: Number display notation as #ArvGcDisplayNotation.
+ *
+ * Since: 0.8.0
+ */
+
+ArvGcDisplayNotation
+arv_gc_float_get_display_notation (ArvGcFloat *gc_float, GError **error)
+{
+	ArvGcFloatInterface *float_interface;
+
+	g_return_val_if_fail (ARV_IS_GC_FLOAT (gc_float), ARV_GC_DISPLAY_NOTATION_AUTOMATIC);
+	g_return_val_if_fail (error == NULL || *error == NULL, ARV_GC_DISPLAY_NOTATION_AUTOMATIC);
+
+	float_interface = ARV_GC_FLOAT_GET_IFACE (gc_float);
+
+	if (float_interface->get_display_notation != NULL)
+		return float_interface->get_display_notation (gc_float, error);
+
+	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_PROPERTY_NOT_DEFINED, "<DisplayNotation> node not found for '%s'",
+		     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_float)));
+
+	return ARV_GC_DISPLAY_NOTATION_AUTOMATIC;
+}
+
+/**
+ * arv_gc_float_get_display_precision:
+ * @gc_float: a #ArvGcFloat
+ * @error: return location for a GError, or NULL
+ *
+ * Gets number of digits to show in user interface. This number should always be positive and represent
+ * total number of digits on left and right side of decimal.
+ *
+ * Returns: Number of digits to show.
+ *
+ * Since: 0.8.0
+ */
+
+gint64
+arv_gc_float_get_display_precision (ArvGcFloat *gc_float, GError **error)
+{
+	ArvGcFloatInterface *float_interface;
+
+	g_return_val_if_fail (ARV_IS_GC_FLOAT (gc_float), 6);
+	g_return_val_if_fail (error == NULL || *error == NULL, 6);
+
+	float_interface = ARV_GC_FLOAT_GET_IFACE (gc_float);
+
+	if (float_interface->get_display_precision != NULL)
+		return float_interface->get_display_precision (gc_float, error);
+
+	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_PROPERTY_NOT_DEFINED, "<DisplayPrecision> node not found for '%s'",
+		     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_float)));
+
+	return 6;
+}
+
 void arv_gc_float_impose_min (ArvGcFloat *gc_float, double minimum, GError **error)
 {
 	ArvGcFloatInterface *float_interface;

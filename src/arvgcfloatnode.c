@@ -44,6 +44,8 @@ struct _ArvGcFloatNode {
 	ArvGcPropertyNode *increment;
 	ArvGcPropertyNode *unit;
 	ArvGcPropertyNode *representation;
+	ArvGcPropertyNode *display_notation;
+	ArvGcPropertyNode *display_precision;
 
 	ArvGcPropertyNode *index;
 	GSList *value_indexed_nodes;
@@ -97,6 +99,12 @@ arv_gc_float_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_REPRESENTATION:
 				node->representation = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_NOTATION:
+				node->display_notation = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_PRECISION:
+				node->display_precision = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_P_INDEX:
 				node->index = property_node;
@@ -375,6 +383,28 @@ arv_gc_float_node_get_unit (ArvGcFloat *gc_float, GError **error)
 	return string;
 }
 
+static ArvGcDisplayNotation
+arv_gc_float_node_get_display_notation (ArvGcFloat *gc_float, GError **error)
+{
+	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_float);
+
+	if (gc_float_node->display_notation == NULL)
+		return ARV_GC_DISPLAY_NOTATION_AUTOMATIC;
+
+	return arv_gc_property_node_get_display_notation (ARV_GC_PROPERTY_NODE (gc_float_node->display_notation), ARV_GC_DISPLAY_NOTATION_AUTOMATIC);
+}
+
+static gint64
+arv_gc_float_node_get_display_precision (ArvGcFloat *gc_float, GError **error)
+{
+	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_float);
+
+	if (gc_float_node->display_precision == NULL)
+		return 6;
+
+	return arv_gc_property_node_get_display_precision (ARV_GC_PROPERTY_NODE (gc_float_node->display_precision), 6);
+}
+
 static void
 arv_gc_float_node_impose_min (ArvGcFloat *gc_float, double minimum, GError **error)
 {
@@ -415,6 +445,8 @@ arv_gc_float_node_float_interface_init (ArvGcFloatInterface *interface)
 	interface->get_inc = arv_gc_float_node_get_inc;
 	interface->get_representation = arv_gc_float_node_get_representation;
 	interface->get_unit = arv_gc_float_node_get_unit;
+	interface->get_display_notation = arv_gc_float_node_get_display_notation;
+	interface->get_display_precision = arv_gc_float_node_get_display_precision;
 	interface->impose_min = arv_gc_float_node_impose_min;
 	interface->impose_max = arv_gc_float_node_impose_max;
 }

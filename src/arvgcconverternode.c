@@ -146,6 +146,18 @@ arv_gc_converter_get_float_unit (ArvGcFloat *gc_float, GError **error)
 	return arv_gc_converter_get_unit (ARV_GC_CONVERTER (gc_float), error);
 }
 
+static ArvGcDisplayNotation
+arv_gc_converter_get_float_display_notation (ArvGcFloat *gc_float, GError **error)
+{
+	return arv_gc_converter_get_display_notation (ARV_GC_CONVERTER (gc_float), error);
+}
+
+static gint64
+arv_gc_converter_get_float_display_precision (ArvGcFloat *gc_float, GError **error)
+{
+	return arv_gc_converter_get_display_precision (ARV_GC_CONVERTER (gc_float), error);
+}
+
 static void
 arv_gc_converter_set_float_value (ArvGcFloat *gc_float, double value, GError **error)
 {
@@ -162,6 +174,8 @@ arv_gc_converter_node_float_interface_init (ArvGcFloatInterface *interface)
 	interface->set_value = arv_gc_converter_set_float_value;
 	interface->get_representation = arv_gc_converter_get_float_representation;
 	interface->get_unit = arv_gc_converter_get_float_unit;
+	interface->get_display_notation = arv_gc_converter_get_float_display_notation;
+	interface->get_display_precision = arv_gc_converter_get_float_display_precision;
 }
 
 G_DEFINE_TYPE_WITH_CODE (ArvGcConverterNode, arv_gc_converter_node, ARV_TYPE_GC_CONVERTER,

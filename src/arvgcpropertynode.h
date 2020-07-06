@@ -47,6 +47,8 @@ typedef enum {
 	ARV_GC_PROPERTY_NODE_TYPE_INCREMENT,
 	ARV_GC_PROPERTY_NODE_TYPE_IS_LINEAR,
 	ARV_GC_PROPERTY_NODE_TYPE_REPRESENTATION,
+	ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_NOTATION,
+	ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_PRECISION,
 	ARV_GC_PROPERTY_NODE_TYPE_UNIT,
 	ARV_GC_PROPERTY_NODE_TYPE_ON_VALUE,
 	ARV_GC_PROPERTY_NODE_TYPE_OFF_VALUE,
@@ -117,6 +119,8 @@ ArvGcNode * 	arv_gc_property_node_new_increment		(void);
 ArvGcNode * 	arv_gc_property_node_new_p_increment		(void);
 ArvGcNode * 	arv_gc_property_node_new_is_linear		(void);
 ArvGcNode * 	arv_gc_property_node_new_representation		(void);
+ArvGcNode * 	arv_gc_property_node_new_display_notation	(void);
+ArvGcNode * 	arv_gc_property_node_new_display_precision	(void);
 ArvGcNode * 	arv_gc_property_node_new_unit			(void);
 ArvGcNode * 	arv_gc_property_node_new_on_value 		(void);
 ArvGcNode * 	arv_gc_property_node_new_off_value 		(void);
@@ -149,26 +153,28 @@ ArvGcNode * 	arv_gc_property_node_new_event_id 		(void);
 ArvGcNode * 	arv_gc_property_node_new_value_default 		(void);
 ArvGcNode * 	arv_gc_property_node_new_p_value_default	(void);
 
-const char *		arv_gc_property_node_get_name		(ArvGcPropertyNode *node);
+const char *		arv_gc_property_node_get_name			(ArvGcPropertyNode *node);
 
-const char * 		arv_gc_property_node_get_string 	(ArvGcPropertyNode *node, GError **error);
-void	 		arv_gc_property_node_set_string 	(ArvGcPropertyNode *node, const char *string, GError **error);
-gint64			arv_gc_property_node_get_int64		(ArvGcPropertyNode *node, GError **error);
-void			arv_gc_property_node_set_int64		(ArvGcPropertyNode *node, gint64 v_int64, GError **error);
-double 			arv_gc_property_node_get_double 	(ArvGcPropertyNode *node, GError **error);
-void 			arv_gc_property_node_set_double 	(ArvGcPropertyNode *node, double v_double, GError **error);
+const char *		arv_gc_property_node_get_string			(ArvGcPropertyNode *node, GError **error);
+void			arv_gc_property_node_set_string			(ArvGcPropertyNode *node, const char *string, GError **error);
+gint64			arv_gc_property_node_get_int64			(ArvGcPropertyNode *node, GError **error);
+void			arv_gc_property_node_set_int64			(ArvGcPropertyNode *node, gint64 v_int64, GError **error);
+double			arv_gc_property_node_get_double			(ArvGcPropertyNode *node, GError **error);
+void			arv_gc_property_node_set_double			(ArvGcPropertyNode *node, double v_double, GError **error);
 
-guint	 		arv_gc_property_node_get_endianness	(ArvGcPropertyNode *self, guint default_value);
-ArvGcSignedness		arv_gc_property_node_get_sign 		(ArvGcPropertyNode *self, ArvGcSignedness default_value);
-guint	 		arv_gc_property_node_get_lsb		(ArvGcPropertyNode *self, guint default_value);
-guint	 		arv_gc_property_node_get_msb		(ArvGcPropertyNode *self, guint default_value);
-ArvGcCachable		arv_gc_property_node_get_cachable	(ArvGcPropertyNode *self, ArvGcCachable default_value);
-ArvGcAccessMode		arv_gc_property_node_get_access_mode	(ArvGcPropertyNode *self, ArvGcAccessMode default_value);
-ArvGcVisibility 	arv_gc_property_node_get_visibility 	(ArvGcPropertyNode *self, ArvGcVisibility default_value);
-ArvGcRepresentation 	arv_gc_property_node_get_representation (ArvGcPropertyNode *self, ArvGcRepresentation default_value);
+guint			arv_gc_property_node_get_endianness		(ArvGcPropertyNode *self, guint default_value);
+ArvGcSignedness		arv_gc_property_node_get_sign			(ArvGcPropertyNode *self, ArvGcSignedness default_value);
+guint			arv_gc_property_node_get_lsb			(ArvGcPropertyNode *self, guint default_value);
+guint			arv_gc_property_node_get_msb			(ArvGcPropertyNode *self, guint default_value);
+ArvGcCachable		arv_gc_property_node_get_cachable		(ArvGcPropertyNode *self, ArvGcCachable default_value);
+ArvGcAccessMode		arv_gc_property_node_get_access_mode		(ArvGcPropertyNode *self, ArvGcAccessMode default_value);
+ArvGcVisibility 	arv_gc_property_node_get_visibility		(ArvGcPropertyNode *self, ArvGcVisibility default_value);
+ArvGcRepresentation 	arv_gc_property_node_get_representation		(ArvGcPropertyNode *self, ArvGcRepresentation default_value);
+ArvGcDisplayNotation	arv_gc_property_node_get_display_notation	(ArvGcPropertyNode *self, ArvGcDisplayNotation default_value);
+gint64			arv_gc_property_node_get_display_precision	(ArvGcPropertyNode *self, gint64 default_value);
 
-ArvGcNode *		arv_gc_property_node_get_linked_node	(ArvGcPropertyNode *node);
-ArvGcPropertyNodeType	arv_gc_property_node_get_node_type	(ArvGcPropertyNode *node);
+ArvGcNode *		arv_gc_property_node_get_linked_node		(ArvGcPropertyNode *node);
+ArvGcPropertyNodeType	arv_gc_property_node_get_node_type		(ArvGcPropertyNode *node);
 
 G_END_DECLS
 
