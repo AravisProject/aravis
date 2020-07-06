@@ -78,6 +78,33 @@ typedef enum {
 	ARV_GC_VISIBILITY_BEGINNER
 } ArvGcVisibility;
 
+/**
+ * ArvGcRepresentation:
+ * @ARV_GC_REPRESENTATION_UNDEFINED: undefined representation
+ * @ARV_GC_REPRESENTATION_LINEAR: number presented on linear scale (e.g. on a linear slider)
+ * @ARV_GC_REPRESENTATION_LOGARITHMIC: number presented on logarithmic scale (e.g. on a logarithmic slider)
+ * @ARV_GC_REPRESENTATION_BOOLEAN: binary choice (e.g. a checkbox)
+ * @ARV_GC_REPRESENTATION_PURE_NUMBER: number presented in an editable field (e.g. a spinbox)
+ * @ARV_GC_REPRESENTATION_HEX_NUMBER: number presented in hexadecimal format
+ * @ARV_GC_REPRESENTATION_IPV4_ADDRESS: IPv4 address
+ * @ARV_GC_REPRESENTATION_MAC_ADDRESS: MAC address
+ *
+ * Number representation formats.
+ *
+ * Since: 0.8.0
+ */
+
+typedef enum {
+	ARV_GC_REPRESENTATION_UNDEFINED = -1,
+	ARV_GC_REPRESENTATION_LINEAR,
+	ARV_GC_REPRESENTATION_LOGARITHMIC,
+	ARV_GC_REPRESENTATION_BOOLEAN,
+	ARV_GC_REPRESENTATION_PURE_NUMBER,
+	ARV_GC_REPRESENTATION_HEX_NUMBER,
+	ARV_GC_REPRESENTATION_IPV4_ADDRESS,
+	ARV_GC_REPRESENTATION_MAC_ADDRESS
+} ArvGcRepresentation;
+
 G_END_DECLS
 
 #endif

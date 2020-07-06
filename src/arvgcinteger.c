@@ -112,6 +112,32 @@ arv_gc_integer_get_inc (ArvGcInteger *gc_integer, GError **error)
 	return 1;
 }
 
+/**
+ * arv_gc_integer_get_representation:
+ * @gc_integer: a #ArvGcInteger
+ * @error: return location for a GError, or NULL
+ *
+ * Get number representation format.
+ *
+ * Returns: Number representation format as #ArvGcRepresentation.
+ */
+
+ArvGcRepresentation
+arv_gc_integer_get_representation (ArvGcInteger *gc_integer, GError **error)
+{
+	ArvGcIntegerInterface *integer_interface;
+
+	g_return_val_if_fail (ARV_IS_GC_INTEGER (gc_integer), 0);
+	g_return_val_if_fail (error == NULL || *error == NULL, 0);
+
+	integer_interface = ARV_GC_INTEGER_GET_IFACE (gc_integer);
+
+	if (integer_interface->get_representation != NULL)
+		return integer_interface->get_representation (gc_integer, error);
+
+	return ARV_GC_REPRESENTATION_UNDEFINED;
+}
+
 const char *
 arv_gc_integer_get_unit	(ArvGcInteger *gc_integer, GError **error)
 {

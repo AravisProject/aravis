@@ -88,6 +88,8 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 			return "Inc";
 		case ARV_GC_PROPERTY_NODE_TYPE_IS_LINEAR:
 			return "IsLinear";
+		case ARV_GC_PROPERTY_NODE_TYPE_REPRESENTATION:
+			return "Representation";
 		case ARV_GC_PROPERTY_NODE_TYPE_UNIT:
 			return "Unit";
 		case ARV_GC_PROPERTY_NODE_TYPE_ON_VALUE:
@@ -639,6 +641,44 @@ ArvGcNode *
 arv_gc_property_node_new_is_linear (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_IS_LINEAR);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_representation (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_REPRESENTATION);
+}
+
+ArvGcRepresentation
+arv_gc_property_node_get_representation (ArvGcPropertyNode *self, ArvGcRepresentation default_value)
+{
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
+	const char *value;
+
+	if (self == NULL)
+		return default_value;
+
+	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	g_return_val_if_fail (priv->type == ARV_GC_PROPERTY_NODE_TYPE_REPRESENTATION, default_value);
+
+	value = _get_value_data (self);
+
+	if (g_strcmp0 (value, "Linear") == 0)
+		return ARV_GC_REPRESENTATION_LINEAR;
+	else if (g_strcmp0 (value, "Logarithmic") == 0)
+		return ARV_GC_REPRESENTATION_LOGARITHMIC;
+	else if (g_strcmp0 (value, "Boolean") == 0)
+		return ARV_GC_REPRESENTATION_BOOLEAN;
+	else if (g_strcmp0 (value, "PureNumber") == 0)
+		return ARV_GC_REPRESENTATION_PURE_NUMBER;
+	else if (g_strcmp0 (value, "HexNumber") == 0)
+		return ARV_GC_REPRESENTATION_HEX_NUMBER;
+	else if (g_strcmp0 (value, "IPV4Address") == 0)
+		return ARV_GC_REPRESENTATION_IPV4_ADDRESS;
+	else if (g_strcmp0 (value, "MACAddress") == 0)
+		return ARV_GC_REPRESENTATION_MAC_ADDRESS;
+
+	return default_value;
 }
 
 ArvGcNode *

@@ -43,6 +43,7 @@ typedef struct {
 	ArvGcPropertyNode *formula_to_node;
 	ArvGcPropertyNode *formula_from_node;
 	ArvGcPropertyNode *unit;
+	ArvGcPropertyNode *representation;
 	ArvGcPropertyNode *is_linear;
 	ArvGcPropertyNode *slope;
 
@@ -84,6 +85,9 @@ arv_gc_converter_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_UNIT:
 				priv->unit = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_REPRESENTATION:
+				priv->representation = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_IS_LINEAR:
 				priv->is_linear = property_node;
@@ -511,6 +515,19 @@ arv_gc_converter_convert_from_int64 (ArvGcConverter *gc_converter, gint64 value,
 	arv_gc_feature_node_increment_change_count (ARV_GC_FEATURE_NODE (gc_converter));
 	arv_evaluator_set_int64_variable (priv->formula_to, "FROM", value);
 	arv_gc_converter_update_to_variables (gc_converter, error);
+}
+
+ArvGcRepresentation
+arv_gc_converter_get_representation (ArvGcConverter *gc_converter, GError **error)
+{
+	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (gc_converter);
+
+	g_return_val_if_fail (ARV_IS_GC_CONVERTER (gc_converter), ARV_GC_REPRESENTATION_UNDEFINED);
+
+	if (priv->representation == NULL)
+		return ARV_GC_REPRESENTATION_UNDEFINED;
+
+	return arv_gc_property_node_get_representation (ARV_GC_PROPERTY_NODE (priv->representation), ARV_GC_REPRESENTATION_UNDEFINED);
 }
 
 const char *

@@ -182,6 +182,8 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 		node = arv_gc_property_node_new_slope ();
 	else if (strcmp (tag_name, "Unit") == 0)
 		node = arv_gc_property_node_new_unit ();
+	else if (strcmp (tag_name, "Representation") == 0)
+		node = arv_gc_property_node_new_representation ();
 	else if (strcmp (tag_name, "OnValue") == 0)
 		node = arv_gc_property_node_new_on_value ();
 	else if (strcmp (tag_name, "OffValue") == 0)
