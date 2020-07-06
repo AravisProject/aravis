@@ -632,6 +632,8 @@ arv_gc_feature_node_is_available
 arv_gc_feature_node_is_implemented
 arv_gc_feature_node_is_locked
 arv_gc_feature_node_get_visibility
+arv_gc_feature_node_get_imposed_access_mode
+arv_gc_feature_node_get_actual_access_mode
 <SUBSECTION Standard>
 ARV_GC_FEATURE_NODE
 ARV_IS_GC_FEATURE_NODE

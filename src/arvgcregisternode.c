@@ -306,11 +306,14 @@ _get_cache (ArvGcRegisterNode *self, gint64 *address, gint64 *length, GError **e
 }
 
 static ArvGcAccessMode
-_get_access_mode (ArvGcRegisterNode *self)
+arv_gc_register_node_get_access_mode (ArvGcFeatureNode *gc_feature_node)
 {
-	ArvGcRegisterNodePrivate *priv = arv_gc_register_node_get_instance_private (ARV_GC_REGISTER_NODE (self));
+	ArvGcRegisterNodePrivate *priv = arv_gc_register_node_get_instance_private (ARV_GC_REGISTER_NODE (gc_feature_node));
 
-	return arv_gc_property_node_get_access_mode(priv->access_mode, ARV_GC_ACCESS_MODE_RW);
+	if (priv->access_mode == NULL)
+		return ARV_GC_ACCESS_MODE_RO;
+
+	return arv_gc_property_node_get_access_mode (priv->access_mode, ARV_GC_ACCESS_MODE_RO);
 }
 
 static void
@@ -440,11 +443,13 @@ arv_gc_register_node_class_init (ArvGcRegisterNodeClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
+	ArvGcFeatureNodeClass *gc_feature_node_class = ARV_GC_FEATURE_NODE_CLASS (this_class);
 
 	object_class->finalize = arv_gc_register_node_finalize;
 	dom_node_class->get_node_name = arv_gc_register_node_get_node_name;
 	dom_node_class->post_new_child = arv_gc_register_node_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_register_node_pre_remove_child;
+	gc_feature_node_class->get_access_mode = arv_gc_register_node_get_access_mode;
 
 	this_class->default_cachable = ARV_GC_CACHABLE_WRITE_THROUGH;
 }
@@ -662,7 +667,7 @@ _set_integer_value (ArvGcRegisterNode *gc_register_node,
 		gint64 current_value;
 		guint64 mask;
 
-		if (ARV_GC_ACCESS_MODE_WO != _get_access_mode(gc_register_node)) {
+		if (ARV_GC_ACCESS_MODE_WO != arv_gc_register_node_get_access_mode(ARV_GC_FEATURE_NODE(gc_register_node))) {
 			_read_from_port (gc_register_node, address, length, cache, cachable, &local_error);
 			if (local_error != NULL) {
 				g_propagate_error (error, local_error);

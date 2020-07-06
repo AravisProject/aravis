@@ -38,6 +38,9 @@ G_DECLARE_DERIVABLE_TYPE (ArvGcFeatureNode, arv_gc_feature_node, ARV, GC_FEATURE
 
 struct _ArvGcFeatureNodeClass {
 	ArvGcNodeClass parent_class;
+
+	ArvGcFeatureNode *	(*get_pointed_node)	(ArvGcFeatureNode *gc_feature_node);
+	ArvGcAccessMode		(*get_access_mode)	(ArvGcFeatureNode *gc_feature_node);
 };
 
 const char *		arv_gc_feature_node_get_name			(ArvGcFeatureNode *gc_feature_node);
@@ -51,6 +54,9 @@ ArvGcVisibility		arv_gc_feature_node_get_visibility		(ArvGcFeatureNode *gc_featu
 gboolean		arv_gc_feature_node_is_available		(ArvGcFeatureNode *gc_feature_node, GError **error);
 gboolean		arv_gc_feature_node_is_implemented		(ArvGcFeatureNode *gc_feature_node, GError **error);
 gboolean		arv_gc_feature_node_is_locked			(ArvGcFeatureNode *gc_feature_node, GError **error);
+
+ArvGcAccessMode		arv_gc_feature_node_get_imposed_access_mode	(ArvGcFeatureNode *gc_feature_node);
+ArvGcAccessMode		arv_gc_feature_node_get_actual_access_mode	(ArvGcFeatureNode *gc_feature_node);
 
 void			arv_gc_feature_node_set_value_from_string	(ArvGcFeatureNode *gc_feature_node, const char *string,
 									 GError **error);

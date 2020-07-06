@@ -101,6 +101,12 @@ arv_gc_swiss_knife_init (ArvGcSwissKnife *self)
 	priv->formula = arv_evaluator_new (NULL);
 }
 
+static ArvGcAccessMode
+arv_gc_swiss_knife_get_access_mode (ArvGcFeatureNode *gc_feature_node)
+{
+	return ARV_GC_ACCESS_MODE_RO;
+}
+
 static void
 arv_gc_swiss_knife_finalize (GObject *object)
 {
@@ -120,10 +126,12 @@ arv_gc_swiss_knife_class_init (ArvGcSwissKnifeClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
+	ArvGcFeatureNodeClass *gc_feature_node_class = ARV_GC_FEATURE_NODE_CLASS (this_class);
 
 	object_class->finalize = arv_gc_swiss_knife_finalize;
 	dom_node_class->post_new_child = arv_gc_swiss_knife_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_swiss_knife_pre_remove_child;
+	gc_feature_node_class->get_access_mode = arv_gc_swiss_knife_get_access_mode;
 }
 
 /* ArvGcInteger interface implementation */

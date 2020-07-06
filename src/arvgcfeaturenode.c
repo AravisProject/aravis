@@ -53,7 +53,6 @@ typedef struct {
 	ArvGcPropertyNode *is_implemented;
 	ArvGcPropertyNode *is_available;
 	ArvGcPropertyNode *is_locked;
-	ArvGcPropertyNode *access_mode;
 	ArvGcPropertyNode *imposed_access_mode;
 
 	guint64 change_count;
@@ -101,9 +100,6 @@ arv_gc_feature_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 			case ARV_GC_PROPERTY_NODE_TYPE_P_IS_LOCKED:
 				priv->is_locked = property_node;
 				break;
-			case ARV_GC_PROPERTY_NODE_TYPE_ACCESS_MODE:
-				priv->access_mode = property_node;
-				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_IMPOSED_ACCESS_MODE:
 				priv->imposed_access_mode = property_node;
 				break;
@@ -142,9 +138,6 @@ arv_gc_feature_node_pre_remove_child (ArvDomNode *self, ArvDomNode *child)
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_P_IS_LOCKED:
 				priv->is_locked = NULL;
-				break;
-			case ARV_GC_PROPERTY_NODE_TYPE_ACCESS_MODE:
-				priv->access_mode = NULL;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_IMPOSED_ACCESS_MODE:
 				priv->imposed_access_mode =  NULL;
@@ -202,6 +195,22 @@ arv_gc_feature_node_get_attribute (ArvDomElement *self, const char *name)
 }
 
 /* ArvGcFeatureNode implementation */
+
+static ArvGcFeatureNode *
+arv_gc_feature_node_get_pointed_node (ArvGcFeatureNode *node)
+{
+	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (node), NULL);
+
+	return ARV_GC_FEATURE_NODE_GET_CLASS (node)->get_pointed_node (node);
+}
+
+static ArvGcAccessMode
+arv_gc_feature_node_get_access_mode (ArvGcFeatureNode *node)
+{
+	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (node), ARV_GC_ACCESS_MODE_UNDEFINED);
+
+	return ARV_GC_FEATURE_NODE_GET_CLASS (node)->get_access_mode (node);
+}
 
 const char *
 arv_gc_feature_node_get_name (ArvGcFeatureNode *node)
@@ -352,18 +361,65 @@ arv_gc_feature_node_is_locked (ArvGcFeatureNode *gc_feature_node, GError **error
 	return value;
 }
 
-#if 0
+/**
+ * arv_gc_feature_node_get_imposed_access_mode:
+ * @gc_feature_node: a #ArvGcFeatureNode
+ *
+ * Gets feature node imposed access mode property.
+ *
+ * <warning><para>Note that this function will not give the actual access mode. Please use
+ * #arv_gc_feature_node_get_actual_access_mode to get an access mode combined from imposed access
+ * mode and underlying register access mode properties.</para></warning>
+ *
+ * Returns: Access mode as #ArvGcAccessMode
+ *
+ * Since: 0.8.0
+ */
+
 ArvGcAccessMode
-arv_gc_feature_node_get_access_mode (ArvGcFeatureNode *self)
+arv_gc_feature_node_get_imposed_access_mode (ArvGcFeatureNode *gc_feature_node)
 {
-	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (self), ARV_GC_ACCESS_MODE_RW);
+	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (gc_feature_node);
 
-	if (ARV_IS_GC_PROPERTY_NODE (self->priv->imposed_access_mode))
-	    return arv_gc_property_node_get_access_mode (self->priv->imposed_access_mode, ARV_GC_ACCESS_MODE_RW);
+	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (gc_feature_node), ARV_GC_ACCESS_MODE_UNDEFINED);
 
-	return arv_gc_property_node_get_access_mode (self->priv->access_mode, ARV_GC_ACCESS_MODE_RW);
+	if (priv->imposed_access_mode == NULL)
+		return ARV_GC_ACCESS_MODE_RW;
+	return arv_gc_property_node_get_access_mode (priv->imposed_access_mode, ARV_GC_ACCESS_MODE_RW);
 }
-#endif
+
+/**
+ * arv_gc_feature_node_get_actual_access_mode:
+ * @gc_feature_node: a #ArvGcFeatureNode
+ *
+ * Gets feature node allowed access mode. This is a combination of Genicam ImposedAccessMode and
+ * AccessMode properties of underlying features and registers.
+ *
+ * Returns: Access mode as #ArvGcAccessMode
+ *
+ * Since: 0.8.0
+ */
+
+ArvGcAccessMode
+arv_gc_feature_node_get_actual_access_mode (ArvGcFeatureNode *gc_feature_node)
+{
+	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (gc_feature_node);
+	ArvGcAccessMode access_mode = ARV_GC_ACCESS_MODE_RO;
+	ArvGcAccessMode imposed_access_mode = ARV_GC_ACCESS_MODE_RW;
+
+	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (gc_feature_node), ARV_GC_ACCESS_MODE_UNDEFINED);
+
+	if (ARV_IS_GC_PROPERTY_NODE (priv->imposed_access_mode))
+		imposed_access_mode = arv_gc_property_node_get_access_mode (priv->imposed_access_mode, imposed_access_mode);
+
+	access_mode = arv_gc_feature_node_get_access_mode (gc_feature_node);
+	if (access_mode == ARV_GC_ACCESS_MODE_RO && imposed_access_mode == ARV_GC_ACCESS_MODE_RW) {
+		imposed_access_mode = ARV_GC_ACCESS_MODE_RO;
+	} else if (access_mode == ARV_GC_ACCESS_MODE_WO && imposed_access_mode == ARV_GC_ACCESS_MODE_RW) {
+		imposed_access_mode = ARV_GC_ACCESS_MODE_WO;
+	}
+	return imposed_access_mode;
+}
 
 /**
  * arv_gc_feature_node_set_value_from_string:
@@ -476,6 +532,22 @@ arv_gc_feature_node_finalize (GObject *object)
 	G_OBJECT_CLASS (arv_gc_feature_node_parent_class)->finalize (object);
 }
 
+static ArvGcFeatureNode *
+_get_pointed_node (ArvGcFeatureNode *gc_feature_node)
+{
+	return NULL;
+}
+
+static ArvGcAccessMode
+_get_access_mode (ArvGcFeatureNode *gc_feature_node)
+{
+	ArvGcFeatureNode *pointed_node = arv_gc_feature_node_get_pointed_node (gc_feature_node);
+	if (pointed_node)
+		return arv_gc_feature_node_get_access_mode (pointed_node);
+
+	return ARV_GC_ACCESS_MODE_RO;
+}
+
 static void
 arv_gc_feature_node_class_init (ArvGcFeatureNodeClass *this_class)
 {
@@ -489,4 +561,6 @@ arv_gc_feature_node_class_init (ArvGcFeatureNodeClass *this_class)
 	dom_node_class->pre_remove_child = arv_gc_feature_node_pre_remove_child;
 	dom_element_class->set_attribute = arv_gc_feature_node_set_attribute;
 	dom_element_class->get_attribute = arv_gc_feature_node_get_attribute;
+	this_class->get_pointed_node = _get_pointed_node;
+	this_class->get_access_mode = _get_access_mode;
 }

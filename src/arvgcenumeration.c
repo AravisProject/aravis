@@ -514,6 +514,22 @@ arv_gc_enumeration_get_entries (ArvGcEnumeration *enumeration)
 	return enumeration->entries;
 }
 
+static ArvGcFeatureNode *
+arv_gc_enumeration_get_pointed_node (ArvGcFeatureNode *gc_feature_node)
+{
+	ArvGcEnumeration *gc_enumeration = ARV_GC_ENUMERATION (gc_feature_node);
+	ArvGcNode *pvalue_node = NULL;
+
+	if (gc_enumeration->value == NULL)
+		return NULL;
+
+	pvalue_node = arv_gc_property_node_get_linked_node (gc_enumeration->value);
+	if (ARV_IS_GC_FEATURE_NODE (pvalue_node))
+		return ARV_GC_FEATURE_NODE (pvalue_node);
+
+	return NULL;
+}
+
 ArvGcNode *
 arv_gc_enumeration_new (void)
 {
@@ -546,13 +562,14 @@ arv_gc_enumeration_class_init (ArvGcEnumerationClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
+	ArvGcFeatureNodeClass *gc_feature_node_class = ARV_GC_FEATURE_NODE_CLASS (this_class);
 
 	object_class->finalize = arv_gc_enumeration_finalize;
-
 	dom_node_class->get_node_name = arv_gc_enumeration_get_node_name;
 	dom_node_class->can_append_child = arv_gc_enumeration_can_append_child;
 	dom_node_class->post_new_child = arv_gc_enumeration_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_enumeration_pre_remove_child;
+	gc_feature_node_class->get_pointed_node = arv_gc_enumeration_get_pointed_node;
 }
 
 /* ArvGcInteger interface implementation */

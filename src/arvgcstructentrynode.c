@@ -45,6 +45,7 @@ struct _ArvGcStructEntryNode {
 	ArvGcPropertyNode *representation;
 	ArvGcPropertyNode *lsb;
 	ArvGcPropertyNode *msb;
+	ArvGcPropertyNode *access_mode;
 	ArvGcPropertyNode *cachable;
 
 	char v_string[G_ASCII_DTOSTR_BUF_SIZE];
@@ -94,6 +95,9 @@ arv_gc_struct_entry_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				node->msb = property_node;
 				node->lsb = property_node;
 				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_ACCESS_MODE:
+				node->access_mode = property_node;
+				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_CACHABLE:
 				node->cachable = property_node;
 				break;
@@ -133,6 +137,17 @@ arv_gc_struct_entry_node_init (ArvGcStructEntryNode *gc_struct_entry_node)
 {
 }
 
+static ArvGcAccessMode
+arv_gc_struct_entry_node_get_access_mode (ArvGcFeatureNode *gc_feature_node)
+{
+	ArvGcStructEntryNode *self = ARV_GC_STRUCT_ENTRY_NODE(gc_feature_node);
+
+	if (self->access_mode == NULL)
+		return ARV_GC_ACCESS_MODE_RO;
+
+	return arv_gc_property_node_get_access_mode (self->access_mode, ARV_GC_ACCESS_MODE_RO);
+}
+
 static void
 arv_gc_struct_entry_node_finalize (GObject *object)
 {
@@ -144,11 +159,13 @@ arv_gc_struct_entry_node_class_init (ArvGcStructEntryNodeClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
+	ArvGcFeatureNodeClass *gc_feature_node_class = ARV_GC_FEATURE_NODE_CLASS (this_class);
 
 	object_class->finalize = arv_gc_struct_entry_node_finalize;
 	dom_node_class->get_node_name = arv_gc_struct_entry_node_get_node_name;
 	dom_node_class->post_new_child = arv_gc_struct_entry_node_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_struct_entry_node_pre_remove_child;
+	gc_feature_node_class->get_access_mode = arv_gc_struct_entry_node_get_access_mode;
 }
 
 /* ArvGcRegister interface implementation */
