@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <png.h>
 
 static char *arv_option_device_name = NULL;
 static char *arv_option_device_address = NULL;
@@ -55,6 +56,7 @@ description_content[] =
 "  values:                           list all available feature values\n"
 "  description [<feature>] ...:      show the full feature description\n"
 "  control <feature>[=<value>] ...:  read/write device features\n"
+"  snapshot [<png file>]:            save png snapshot\n"
 "\n"
 "If no command is given, this utility will list all the available devices.\n"
 "For the control command, direct access to device registers is provided using a R[address] syntax"
@@ -65,7 +67,8 @@ description_content[] =
 "arv-tool-" ARAVIS_API_VERSION " control Width=128 Height=128 Gain R[0x10000]=0x10\n"
 "arv-tool-" ARAVIS_API_VERSION " features\n"
 "arv-tool-" ARAVIS_API_VERSION " description Width Height\n"
-"arv-tool-" ARAVIS_API_VERSION " -n Basler-210ab4 genicam\n";
+"arv-tool-" ARAVIS_API_VERSION " -n Basler-210ab4 genicam\n"
+"arv-tool-" ARAVIS_API_VERSION " snapshot\n";
 
 typedef enum {
 	ARV_TOOL_LIST_MODE_FEATURES,
@@ -188,6 +191,43 @@ arv_tool_list_features (ArvGc *genicam, const char *feature, ArvToolListMode lis
 			}
 		}
 	}
+}
+
+static void
+snapshot(int argc, char **argv)
+{
+	g_autoptr(GError) err = NULL;
+	const char *device_id;
+	device_id = arv_option_device_address != NULL ? arv_option_device_address : arv_option_device_name;
+	g_autoptr(ArvCamera) cam;
+
+	cam = arv_camera_new (device_id, &err);
+	if (err) {
+		fprintf(stderr, "%s\n", err->message);
+		return;
+	}
+	g_autoptr(ArvBuffer) buffer;
+	buffer = arv_camera_acquisition (cam, 1e6, &err);
+	if (err) {
+		fprintf(stderr, "%s\n", err->message);
+		return;
+	}
+	char g_autofree *fn;
+	if (argc > 2) {
+		fn = g_strdup(argv[2]);
+	} else {
+		g_autoptr(GDateTime) time = g_date_time_new_now_local();
+		// sortable, compact 12 digit and still readable timestamp
+		fn = g_date_time_format(time, "A-%y%m%d+%H%M%S.png");
+	}
+
+	const char *data;
+	data = arv_buffer_get_data (buffer, NULL);
+
+	png_image image = { .version = PNG_IMAGE_VERSION, .format= PNG_FORMAT_GRAY,
+		.width = arv_buffer_get_image_width(buffer), .height = arv_buffer_get_image_height(buffer)};
+	png_image_write_to_file(&image, fn, 0, data, 0, NULL);
+	printf("%s\n", fn);
 }
 
 static void
@@ -409,6 +449,12 @@ main (int argc, char **argv)
 	}
 
 	arv_debug_enable (arv_option_debug_domains);
+
+	if (argc > 1 && g_strcmp0 (argv[1], "snapshot") == 0) {
+		snapshot(argc, argv);
+		arv_shutdown ();
+		return EXIT_SUCCESS;
+	}
 
 	device_id = arv_option_device_address != NULL ? arv_option_device_address : arv_option_device_name;
 	if (device_id != NULL) {

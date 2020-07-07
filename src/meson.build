@@ -269,7 +269,10 @@ foreach p: progs
 		p[1],
 		link_with: aravis_library,
 		c_args: library_c_args,
-		dependencies: aravis_dependencies,
+		dependencies: aravis_dependencies +
+		[
+			dependency('libpng'),
+		],
 		install: true)
 endforeach
 
