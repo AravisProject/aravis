@@ -23,6 +23,7 @@
 #include <arvgcstringregnode.h>
 #include <arvgcstring.h>
 #include <arvgcregister.h>
+#include <arvgc.h>
 #include <string.h>
 
 typedef struct {
@@ -71,8 +72,31 @@ arv_gc_string_reg_node_get_string_value (ArvGcString *self, GError **error)
 static void
 arv_gc_string_reg_node_set_string_value (ArvGcString *self, const char *value, GError **error)
 {
-	if (value != NULL)
-		arv_gc_register_set (ARV_GC_REGISTER (self), value, strlen (value), error);
+	GError *local_error = NULL;
+	gint64 str_length;
+	gint64 max_length;
+
+	if (value == NULL)
+		return;
+	str_length = strlen(value);
+
+	max_length = arv_gc_string_get_max_length (self, &local_error);
+	if (local_error == NULL) {
+		if (max_length < str_length) {
+			g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_INVALID_LENGTH,
+				     "String '%s' is too long for string register '%s'",
+				     value,
+				     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
+			return;
+		}
+		if (max_length > str_length)
+			str_length++;
+
+		arv_gc_register_set (ARV_GC_REGISTER (self), value, str_length, &local_error);
+	}
+
+	if (local_error != NULL)
+		g_propagate_error (error, local_error);
 }
 
 static gint64
