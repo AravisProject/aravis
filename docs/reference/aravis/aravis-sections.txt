@@ -620,6 +620,7 @@ ArvGcFeatureNode
 arv_gc_feature_node_get_value_as_string
 arv_gc_feature_node_set_value_from_string
 arv_gc_feature_node_get_name
+arv_gc_feature_node_get_name_space
 arv_gc_feature_node_get_display_name
 arv_gc_feature_node_get_tooltip
 arv_gc_feature_node_get_description
@@ -903,6 +904,7 @@ ArvFakeDevicePrivate
 ArvGc
 ArvRegisterCachePolicy
 ArvGcRepresentation
+ArvGcNameSpace
 arv_gc_new
 arv_gc_get_node
 arv_gc_get_device
@@ -921,7 +923,6 @@ ARV_GC_GET_CLASS
 <SUBSECTION Private>
 ArvGcPrivate
 ArvGcClass
-ArvGcNameSpace
 ArvGcAccessMode
 ArvGcCachable
 ArvGcSignedness

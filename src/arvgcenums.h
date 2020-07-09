@@ -31,6 +31,15 @@
 
 G_BEGIN_DECLS
 
+/**
+ * ArvGcNameSpace:
+ * @ARV_GC_NAME_SPACE_UNDEFINED: undefined name space
+ * @ARV_GC_NAME_SPACE_STANDARD: Genicam standardized name space
+ * @ARV_GC_NAME_SPACE_CUSTOM: non-standardized name space
+ *
+ * Name space types. Standardized name space features are documented in Genicam materials.
+ */
+
 typedef enum {
 	ARV_GC_NAME_SPACE_UNDEFINED = -1,
 	ARV_GC_NAME_SPACE_STANDARD,
