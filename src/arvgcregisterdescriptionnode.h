@@ -45,6 +45,15 @@ gboolean	arv_gc_register_description_node_check_schema_version	(ArvGcRegisterDes
 									 guint required_minor,
 									 guint required_subminor);
 
+char *		arv_gc_register_description_node_get_model_name			(ArvGcRegisterDescriptionNode* node);
+char *		arv_gc_register_description_node_get_vendor_name		(ArvGcRegisterDescriptionNode* node);
+guint 		arv_gc_register_description_node_get_major_version		(ArvGcRegisterDescriptionNode* node);
+guint 		arv_gc_register_description_node_get_minor_version		(ArvGcRegisterDescriptionNode* node);
+guint 		arv_gc_register_description_node_get_subminor_version		(ArvGcRegisterDescriptionNode* node);
+guint 		arv_gc_register_description_node_get_schema_major_version	(ArvGcRegisterDescriptionNode* node);
+guint 		arv_gc_register_description_node_get_schema_minor_version	(ArvGcRegisterDescriptionNode* node);
+guint 		arv_gc_register_description_node_get_schema_subminor_version	(ArvGcRegisterDescriptionNode* node);
+
 G_END_DECLS
 
 #endif
