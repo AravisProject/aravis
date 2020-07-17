@@ -51,6 +51,18 @@ arv_gc_int_swiss_knife_node_set_integer_value (ArvGcInteger *self, gint64 value,
 	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_READ_ONLY, "IntSwissKnife is read only");
 }
 
+static ArvGcRepresentation
+arv_gc_swiss_knife_node_get_integer_representation (ArvGcInteger *self, GError **error)
+{
+	return arv_gc_swiss_knife_get_representation (ARV_GC_SWISS_KNIFE (self), error);
+}
+
+static const char *
+arv_gc_swiss_knife_node_get_integer_unit (ArvGcInteger *self, GError **error)
+{
+	return arv_gc_swiss_knife_get_unit (ARV_GC_SWISS_KNIFE (self), error);
+}
+
 ArvGcNode *
 arv_gc_int_swiss_knife_node_new	(void)
 {
@@ -62,6 +74,8 @@ arv_gc_int_swiss_knife_node_integer_interface_init (ArvGcIntegerInterface *inter
 {
 	interface->get_value = arv_gc_int_swiss_knife_node_get_integer_value;
 	interface->set_value = arv_gc_int_swiss_knife_node_set_integer_value;
+	interface->get_representation = arv_gc_swiss_knife_node_get_integer_representation;
+	interface->get_unit = arv_gc_swiss_knife_node_get_integer_unit;
 }
 
 static void

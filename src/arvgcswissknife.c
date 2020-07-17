@@ -41,6 +41,8 @@ typedef struct {
 	GSList *expressions;	/* ArvGcVariableNode list */
 
 	ArvGcPropertyNode *formula_node;
+	ArvGcPropertyNode *unit;
+	ArvGcPropertyNode *representation;
 
 	ArvEvaluator *formula;
 } ArvGcSwissKnifePrivate;
@@ -63,6 +65,12 @@ arv_gc_swiss_knife_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_FORMULA:
 				priv->formula_node = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_UNIT:
+				priv->unit = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_REPRESENTATION:
+				priv->representation = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_EXPRESSION:
 				priv->expressions = g_slist_prepend (priv->expressions, property_node);
@@ -239,4 +247,30 @@ arv_gc_swiss_knife_get_float_value (ArvGcSwissKnife *self, GError **error)
 	}
 
 	return arv_evaluator_evaluate_as_double (priv->formula, NULL);
+}
+
+ArvGcRepresentation
+arv_gc_swiss_knife_get_representation (ArvGcSwissKnife *self, GError **error)
+{
+	ArvGcSwissKnifePrivate *priv = arv_gc_swiss_knife_get_instance_private (self);
+
+	g_return_val_if_fail (ARV_IS_GC_SWISS_KNIFE (self), ARV_GC_REPRESENTATION_UNDEFINED);
+
+	if (priv->representation == NULL)
+		return ARV_GC_REPRESENTATION_UNDEFINED;
+
+	return arv_gc_property_node_get_representation (ARV_GC_PROPERTY_NODE (priv->representation), ARV_GC_REPRESENTATION_UNDEFINED);
+}
+
+const char *
+arv_gc_swiss_knife_get_unit (ArvGcSwissKnife *self, GError **error)
+{
+	ArvGcSwissKnifePrivate *priv = arv_gc_swiss_knife_get_instance_private (self);
+
+	g_return_val_if_fail (ARV_IS_GC_SWISS_KNIFE (self), NULL);
+
+	if (priv->unit == NULL)
+		return NULL;
+
+	return arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (priv->unit), error);
 }

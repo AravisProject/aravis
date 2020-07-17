@@ -51,6 +51,18 @@ arv_gc_swiss_knife_node_set_float_value (ArvGcFloat *self, gdouble value, GError
 	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_READ_ONLY, "SwissKnife is read only");
 }
 
+static ArvGcRepresentation
+arv_gc_swiss_knife_node_get_float_representation (ArvGcFloat *self, GError **error)
+{
+	return arv_gc_swiss_knife_get_representation (ARV_GC_SWISS_KNIFE (self), error);
+}
+
+static const char *
+arv_gc_swiss_knife_node_get_float_unit (ArvGcFloat *self, GError **error)
+{
+	return arv_gc_swiss_knife_get_unit (ARV_GC_SWISS_KNIFE (self), error);
+}
+
 ArvGcNode *
 arv_gc_swiss_knife_node_new	(void)
 {
@@ -62,6 +74,8 @@ arv_gc_swiss_knife_node_float_interface_init (ArvGcFloatInterface *interface)
 {
 	interface->get_value = arv_gc_swiss_knife_node_get_float_value;
 	interface->set_value = arv_gc_swiss_knife_node_set_float_value;
+	interface->get_representation = arv_gc_swiss_knife_node_get_float_representation;
+	interface->get_unit = arv_gc_swiss_knife_node_get_float_unit;
 }
 
 static void

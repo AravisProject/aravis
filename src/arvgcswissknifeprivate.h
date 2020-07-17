@@ -25,7 +25,10 @@
 
 #include <arvgcswissknife.h>
 
-gint64		arv_gc_swiss_knife_get_integer_value		(ArvGcSwissKnife *self, GError **error);
-double 		arv_gc_swiss_knife_get_float_value 		(ArvGcSwissKnife *self, GError **error);
+ArvGcRepresentation	arv_gc_swiss_knife_get_representation	(ArvGcSwissKnife *self, GError **error);
+const char *		arv_gc_swiss_knife_get_unit		(ArvGcSwissKnife *self, GError **error);
+
+gint64			arv_gc_swiss_knife_get_integer_value	(ArvGcSwissKnife *self, GError **error);
+double			arv_gc_swiss_knife_get_float_value	(ArvGcSwissKnife *self, GError **error);
 
 #endif
