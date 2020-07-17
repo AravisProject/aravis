@@ -30,6 +30,7 @@
 typedef struct {
 	ArvGcPropertyNode *endianness;
 	ArvGcPropertyNode *unit;
+	ArvGcPropertyNode *representation;
 
 	GSList *selecteds;
 } ArvGcFloatRegNodePrivate;
@@ -62,11 +63,13 @@ arv_gc_float_reg_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 			case ARV_GC_PROPERTY_NODE_TYPE_UNIT:
 				priv->unit = property_node;
 				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_REPRESENTATION:
+				priv->representation = property_node;
+				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_P_SELECTED:
 				priv->selecteds = g_slist_prepend (priv->selecteds, property_node);
 				break;
 
-				/* TODO Representation */
 				/* TODO DisplayNotation */
 				/* TODO DisplayPrecision */
 
@@ -203,6 +206,17 @@ arv_gc_float_reg_node_get_max (ArvGcFloat *self, GError **error)
 	return G_MAXDOUBLE;
 }
 
+static ArvGcRepresentation
+arv_gc_float_reg_get_representation (ArvGcFloat *self, GError **error)
+{
+	ArvGcFloatRegNodePrivate *priv = arv_gc_float_reg_node_get_instance_private (ARV_GC_FLOAT_REG_NODE (self));
+
+	if (priv->representation == NULL)
+		return ARV_GC_REPRESENTATION_UNDEFINED;
+
+	return arv_gc_property_node_get_representation (priv->representation, ARV_GC_REPRESENTATION_UNDEFINED);
+}
+
 static const char *
 arv_gc_float_reg_node_get_unit (ArvGcFloat *self, GError **error)
 {
@@ -235,6 +249,7 @@ arv_gc_float_reg_node_float_interface_init (ArvGcFloatInterface *interface)
 	interface->set_value = arv_gc_float_reg_node_set_float_value;
 	interface->get_min = arv_gc_float_reg_node_get_min;
 	interface->get_max = arv_gc_float_reg_node_get_max;
+	interface->get_representation = arv_gc_float_reg_get_representation;
 	interface->get_unit = arv_gc_float_reg_node_get_unit;
 }
 

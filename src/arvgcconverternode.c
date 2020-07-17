@@ -134,6 +134,12 @@ _get_inc (ArvGcFloat *gc_float, GError **error)
 	return arv_gc_converter_convert_to_double (ARV_GC_CONVERTER (gc_float), ARV_GC_CONVERTER_NODE_TYPE_INC, &local_error);
 }
 
+static ArvGcRepresentation
+arv_gc_converter_get_float_representation (ArvGcFloat *gc_float, GError **error)
+{
+	return arv_gc_converter_get_representation (ARV_GC_CONVERTER (gc_float), error);
+}
+
 static const char *
 arv_gc_converter_get_float_unit (ArvGcFloat *gc_float, GError **error)
 {
@@ -154,6 +160,7 @@ arv_gc_converter_node_float_interface_init (ArvGcFloatInterface *interface)
 	interface->get_max = arv_gc_converter_get_float_max;
 	interface->get_inc = _get_inc;
 	interface->set_value = arv_gc_converter_set_float_value;
+	interface->get_representation = arv_gc_converter_get_float_representation;
 	interface->get_unit = arv_gc_converter_get_float_unit;
 }
 

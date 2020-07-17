@@ -35,6 +35,7 @@ typedef struct {
 	ArvGcPropertyNode *sign;
 	ArvGcPropertyNode *endianness;
 	ArvGcPropertyNode *unit;
+	ArvGcPropertyNode *representation;
 
 	GSList *selecteds;
 	GSList *selected_features;
@@ -83,12 +84,12 @@ arv_gc_masked_int_reg_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 			case ARV_GC_PROPERTY_NODE_TYPE_UNIT:
 				priv->unit = property_node;
 				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_REPRESENTATION:
+				priv->representation = property_node;
+				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_P_SELECTED:
 				priv->selecteds = g_slist_prepend (priv->selecteds, property_node);
 				break;
-
-				/* TODO Representation */
-
 			default:
 				ARV_DOM_NODE_CLASS (arv_gc_masked_int_reg_node_parent_class)->post_new_child (self, child);
 				break;
@@ -174,6 +175,17 @@ arv_gc_masked_int_reg_node_get_max (ArvGcInteger *self, GError **error)
 	}
 }
 
+static ArvGcRepresentation
+arv_gc_masked_int_reg_node_get_representation (ArvGcInteger *self, GError **error)
+{
+	ArvGcMaskedIntRegNodePrivate *priv = arv_gc_masked_int_reg_node_get_instance_private (ARV_GC_MASKED_INT_REG_NODE (self));
+
+	if (priv->representation == NULL)
+		return ARV_GC_REPRESENTATION_UNDEFINED;
+
+	return arv_gc_property_node_get_representation (priv->representation, ARV_GC_REPRESENTATION_UNDEFINED);
+}
+
 static const char *
 arv_gc_masked_int_reg_node_get_unit (ArvGcInteger *self, GError **error)
 {
@@ -206,6 +218,7 @@ arv_gc_masked_int_reg_node_integer_interface_init (ArvGcIntegerInterface *interf
 	interface->set_value = arv_gc_masked_int_reg_node_set_integer_value;
 	interface->get_min = arv_gc_masked_int_reg_node_get_min;
 	interface->get_max = arv_gc_masked_int_reg_node_get_max;
+	interface->get_representation = arv_gc_masked_int_reg_node_get_representation;
 	interface->get_unit = arv_gc_masked_int_reg_node_get_unit;
 }
 

@@ -42,6 +42,7 @@ struct _ArvGcStructEntryNode {
 	ArvGcFeatureNode node;
 
 	ArvGcPropertyNode *sign;
+	ArvGcPropertyNode *representation;
 	ArvGcPropertyNode *lsb;
 	ArvGcPropertyNode *msb;
 	ArvGcPropertyNode *cachable;
@@ -79,6 +80,9 @@ arv_gc_struct_entry_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 		switch (arv_gc_property_node_get_node_type (property_node)) {
 			case ARV_GC_PROPERTY_NODE_TYPE_SIGN:
 				node->sign = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_REPRESENTATION:
+				node->representation = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_LSB:
 				node->lsb = property_node;
@@ -300,6 +304,17 @@ arv_gc_struct_entry_node_get_max (ArvGcInteger *self, GError **error)
 	}
 }
 
+static ArvGcRepresentation
+arv_gc_struct_entry_node_get_representation (ArvGcInteger *self, GError **error)
+{
+	ArvGcStructEntryNode *struct_entry = ARV_GC_STRUCT_ENTRY_NODE (self);
+
+	if (struct_entry->representation == NULL)
+		return ARV_GC_REPRESENTATION_UNDEFINED;
+
+	return arv_gc_property_node_get_representation (struct_entry->representation, ARV_GC_REPRESENTATION_UNDEFINED);
+}
+
 static void
 arv_gc_struct_entry_node_integer_interface_init (ArvGcIntegerInterface *interface)
 {
@@ -307,4 +322,5 @@ arv_gc_struct_entry_node_integer_interface_init (ArvGcIntegerInterface *interfac
 	interface->set_value = arv_gc_struct_entry_node_set_integer_value;
 	interface->get_min = arv_gc_struct_entry_node_get_min;
 	interface->get_max = arv_gc_struct_entry_node_get_max;
+	interface->get_representation = arv_gc_struct_entry_node_get_representation;
 }

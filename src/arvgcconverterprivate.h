@@ -35,13 +35,14 @@ typedef enum {
 	ARV_GC_CONVERTER_NODE_TYPE_INC
 } ArvGcConverterNodeType;
 
-const char * 	arv_gc_converter_get_unit	 	(ArvGcConverter *gc_converter, GError **error);
-ArvGcIsLinear	arv_gc_converter_get_is_linear		(ArvGcConverter *gc_converter, GError **error);
+ArvGcRepresentation	arv_gc_converter_get_representation 	(ArvGcConverter *gc_converter, GError **error);
+const char * 		arv_gc_converter_get_unit	 	(ArvGcConverter *gc_converter, GError **error);
+ArvGcIsLinear		arv_gc_converter_get_is_linear		(ArvGcConverter *gc_converter, GError **error);
 
-gint64 		arv_gc_converter_convert_to_int64 	(ArvGcConverter *gc_converter, ArvGcConverterNodeType node_type, GError **error);
-double 		arv_gc_converter_convert_to_double 	(ArvGcConverter *gc_converter, ArvGcConverterNodeType node_type, GError **error);
-void 		arv_gc_converter_convert_from_int64 	(ArvGcConverter *gc_converter, gint64 value, GError **error);
-void		arv_gc_converter_convert_from_double 	(ArvGcConverter *gc_converter, double value, GError **error);
+gint64 			arv_gc_converter_convert_to_int64 	(ArvGcConverter *gc_converter, ArvGcConverterNodeType node_type, GError **error);
+double 			arv_gc_converter_convert_to_double 	(ArvGcConverter *gc_converter, ArvGcConverterNodeType node_type, GError **error);
+void 			arv_gc_converter_convert_from_int64 	(ArvGcConverter *gc_converter, gint64 value, GError **error);
+void			arv_gc_converter_convert_from_double 	(ArvGcConverter *gc_converter, double value, GError **error);
 
 G_END_DECLS
 

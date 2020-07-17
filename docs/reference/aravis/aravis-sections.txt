@@ -549,6 +549,8 @@ arv_gc_property_node_get_msb
 arv_gc_property_node_get_sign
 arv_gc_property_node_get_visibility
 arv_gc_property_node_new_visibility
+arv_gc_property_node_get_representation
+arv_gc_property_node_new_representation
 <SUBSECTION Standard>
 arv_gc_property_node_get_type
 ARV_GC_PROPERTY_NODE
@@ -759,6 +761,7 @@ arv_gc_integer_set_value
 arv_gc_integer_get_min
 arv_gc_integer_get_max
 arv_gc_integer_get_inc
+arv_gc_integer_get_representation
 arv_gc_integer_get_unit
 arv_gc_integer_impose_min
 arv_gc_integer_impose_max
@@ -899,6 +902,7 @@ ArvFakeDevicePrivate
 <TITLE>ArvGc</TITLE>
 ArvGc
 ArvRegisterCachePolicy
+ArvGcRepresentation
 arv_gc_new
 arv_gc_get_node
 arv_gc_get_device
@@ -1090,6 +1094,7 @@ arv_gc_float_set_value
 arv_gc_float_get_min
 arv_gc_float_get_max
 arv_gc_float_get_inc
+arv_gc_float_get_representation
 arv_gc_float_get_unit
 arv_gc_float_impose_min
 arv_gc_float_impose_max

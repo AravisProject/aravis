@@ -44,6 +44,7 @@ struct _ArvGcIntegerNode {
 	ArvGcPropertyNode *maximum;
 	ArvGcPropertyNode *increment;
 	ArvGcPropertyNode *unit;
+	ArvGcPropertyNode *representation;
 
 	ArvGcPropertyNode *index;
 	GSList *value_indexed_nodes;
@@ -99,6 +100,9 @@ arv_gc_integer_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_UNIT:
 				node->unit = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_REPRESENTATION:
+				node->representation = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_P_INDEX:
 				node->index = property_node;
@@ -354,6 +358,17 @@ arv_gc_integer_node_get_inc (ArvGcInteger *gc_integer, GError **error)
 	return value;
 }
 
+static ArvGcRepresentation
+arv_gc_integer_node_get_representation (ArvGcInteger *gc_integer, GError **error)
+{
+	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (gc_integer);
+
+	if (gc_integer_node->representation == NULL)
+		return ARV_GC_REPRESENTATION_UNDEFINED;
+
+	return arv_gc_property_node_get_representation (ARV_GC_PROPERTY_NODE (gc_integer_node->representation), ARV_GC_REPRESENTATION_UNDEFINED);
+}
+
 static const char *
 arv_gc_integer_node_get_unit (ArvGcInteger *gc_integer, GError **error)
 {
@@ -412,6 +427,7 @@ arv_gc_integer_node_integer_interface_init (ArvGcIntegerInterface *interface)
 	interface->get_min = arv_gc_integer_node_get_min;
 	interface->get_max = arv_gc_integer_node_get_max;
 	interface->get_inc = arv_gc_integer_node_get_inc;
+	interface->get_representation = arv_gc_integer_node_get_representation;
 	interface->get_unit = arv_gc_integer_node_get_unit;
 	interface->impose_min = arv_gc_integer_node_impose_min;
 	interface->impose_max = arv_gc_integer_node_impose_max;
