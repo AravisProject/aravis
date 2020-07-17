@@ -213,6 +213,17 @@ arv_gc_feature_node_get_name (ArvGcFeatureNode *node)
 	return priv->name;
 }
 
+/**
+ * arv_gc_feature_node_get_name_space:
+ * @gc_feature_node: a #ArvGcFeatureNode
+ *
+ * Get feature name space.
+ *
+ * Returns: Name space value as #ArvGcNameSpace.
+ *
+ * Since: 0.8.0
+ */
+
 ArvGcNameSpace
 arv_gc_feature_node_get_name_space (ArvGcFeatureNode *node)
 {
