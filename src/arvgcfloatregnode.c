@@ -24,6 +24,7 @@
 #include <arvgcpropertynode.h>
 #include <arvgcfloat.h>
 #include <arvgcregister.h>
+#include <arvgcdefaultsprivate.h>
 #include <arvgc.h>
 #include <arvmisc.h>
 
@@ -238,9 +239,9 @@ arv_gc_float_reg_node_get_display_notation (ArvGcFloat *self, GError **error)
 	ArvGcFloatRegNodePrivate *priv = arv_gc_float_reg_node_get_instance_private (ARV_GC_FLOAT_REG_NODE (self));
 
 	if (priv->display_notation == NULL)
-		return ARV_GC_DISPLAY_NOTATION_AUTOMATIC;
+		return ARV_GC_DISPLAY_NOTATION_DEFAULT;
 
-	return arv_gc_property_node_get_display_notation (ARV_GC_PROPERTY_NODE (priv->display_notation), ARV_GC_DISPLAY_NOTATION_AUTOMATIC);
+	return arv_gc_property_node_get_display_notation (ARV_GC_PROPERTY_NODE (priv->display_notation), ARV_GC_DISPLAY_NOTATION_DEFAULT);
 }
 
 static gint64
@@ -249,9 +250,9 @@ arv_gc_float_reg_node_get_display_precision (ArvGcFloat *self, GError **error)
 	ArvGcFloatRegNodePrivate *priv = arv_gc_float_reg_node_get_instance_private (ARV_GC_FLOAT_REG_NODE (self));
 
 	if (priv->display_precision == NULL)
-		return 6;
+		return ARV_GC_DISPLAY_PRECISION_DEFAULT;
 
-	return arv_gc_property_node_get_display_precision (ARV_GC_PROPERTY_NODE (priv->display_precision), 6);
+	return arv_gc_property_node_get_display_precision (ARV_GC_PROPERTY_NODE (priv->display_precision), ARV_GC_DISPLAY_PRECISION_DEFAULT);
 }
 
 /**

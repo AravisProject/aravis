@@ -27,6 +27,7 @@
 
 #include <arvgcfloat.h>
 #include <arvgcfeaturenode.h>
+#include <arvgcdefaultsprivate.h>
 #include <arvgc.h>
 #include <arvmisc.h>
 
@@ -174,8 +175,8 @@ arv_gc_float_get_display_notation (ArvGcFloat *gc_float, GError **error)
 {
 	ArvGcFloatInterface *float_interface;
 
-	g_return_val_if_fail (ARV_IS_GC_FLOAT (gc_float), ARV_GC_DISPLAY_NOTATION_AUTOMATIC);
-	g_return_val_if_fail (error == NULL || *error == NULL, ARV_GC_DISPLAY_NOTATION_AUTOMATIC);
+	g_return_val_if_fail (ARV_IS_GC_FLOAT (gc_float), ARV_GC_DISPLAY_NOTATION_DEFAULT);
+	g_return_val_if_fail (error == NULL || *error == NULL, ARV_GC_DISPLAY_NOTATION_DEFAULT);
 
 	float_interface = ARV_GC_FLOAT_GET_IFACE (gc_float);
 
@@ -185,7 +186,7 @@ arv_gc_float_get_display_notation (ArvGcFloat *gc_float, GError **error)
 	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_PROPERTY_NOT_DEFINED, "<DisplayNotation> node not found for '%s'",
 		     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_float)));
 
-	return ARV_GC_DISPLAY_NOTATION_AUTOMATIC;
+	return ARV_GC_DISPLAY_NOTATION_DEFAULT;
 }
 
 /**
@@ -206,8 +207,8 @@ arv_gc_float_get_display_precision (ArvGcFloat *gc_float, GError **error)
 {
 	ArvGcFloatInterface *float_interface;
 
-	g_return_val_if_fail (ARV_IS_GC_FLOAT (gc_float), 6);
-	g_return_val_if_fail (error == NULL || *error == NULL, 6);
+	g_return_val_if_fail (ARV_IS_GC_FLOAT (gc_float), ARV_GC_DISPLAY_PRECISION_DEFAULT);
+	g_return_val_if_fail (error == NULL || *error == NULL, ARV_GC_DISPLAY_PRECISION_DEFAULT);
 
 	float_interface = ARV_GC_FLOAT_GET_IFACE (gc_float);
 
@@ -217,7 +218,7 @@ arv_gc_float_get_display_precision (ArvGcFloat *gc_float, GError **error)
 	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_PROPERTY_NOT_DEFINED, "<DisplayPrecision> node not found for '%s'",
 		     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_float)));
 
-	return 6;
+	return ARV_GC_DISPLAY_PRECISION_DEFAULT;
 }
 
 void arv_gc_float_impose_min (ArvGcFloat *gc_float, double minimum, GError **error)
