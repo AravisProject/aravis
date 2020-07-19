@@ -114,6 +114,25 @@ typedef enum {
 	ARV_GC_REPRESENTATION_MAC_ADDRESS
 } ArvGcRepresentation;
 
+/**
+ * ArvGcDisplayNotation:
+ * @ARV_GC_DISPLAY_NOTATION_UNDEFINED: undefined number notation
+ * @ARV_GC_DISPLAY_NOTATION_AUTOMATIC: automatically detect whether to use fixed or scientific number notation
+ * @ARV_GC_DISPLAY_NOTATION_FIXED: used fixed (i.e. decimal) notation for displaying numbers
+ * @ARV_GC_DISPLAY_NOTATION_SCIENTIFIC: use scientific notation for displaying numbers
+ *
+ * Number display notations for showing numbers in user interfaces.
+ *
+ * Since: 0.8.0
+ */
+
+typedef enum {
+	ARV_GC_DISPLAY_NOTATION_UNDEFINED = -1,
+	ARV_GC_DISPLAY_NOTATION_AUTOMATIC,
+	ARV_GC_DISPLAY_NOTATION_FIXED,
+	ARV_GC_DISPLAY_NOTATION_SCIENTIFIC
+} ArvGcDisplayNotation;
+
 G_END_DECLS
 
 #endif

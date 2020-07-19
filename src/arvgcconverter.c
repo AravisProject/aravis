@@ -30,6 +30,7 @@
 #include <arvevaluator.h>
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
+#include <arvgcdefaultsprivate.h>
 #include <arvgc.h>
 #include <arvdebug.h>
 #include <string.h>
@@ -44,6 +45,8 @@ typedef struct {
 	ArvGcPropertyNode *formula_from_node;
 	ArvGcPropertyNode *unit;
 	ArvGcPropertyNode *representation;
+	ArvGcPropertyNode *display_notation;
+	ArvGcPropertyNode *display_precision;
 	ArvGcPropertyNode *is_linear;
 	ArvGcPropertyNode *slope;
 
@@ -88,6 +91,12 @@ arv_gc_converter_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_REPRESENTATION:
 				priv->representation = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_NOTATION:
+				priv->display_notation = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_PRECISION:
+				priv->display_precision = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_IS_LINEAR:
 				priv->is_linear = property_node;
@@ -541,4 +550,30 @@ arv_gc_converter_get_unit (ArvGcConverter *gc_converter, GError **error)
 		return NULL;
 
 	return arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (priv->unit), error);
+}
+
+ArvGcDisplayNotation
+arv_gc_converter_get_display_notation (ArvGcConverter *gc_converter, GError **error)
+{
+	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (gc_converter);
+
+	g_return_val_if_fail (ARV_IS_GC_CONVERTER (gc_converter), ARV_GC_DISPLAY_NOTATION_DEFAULT);
+
+	if (priv->display_notation == NULL)
+		return ARV_GC_DISPLAY_NOTATION_DEFAULT;
+
+	return arv_gc_property_node_get_display_notation (ARV_GC_PROPERTY_NODE (priv->display_notation), ARV_GC_DISPLAY_NOTATION_DEFAULT);
+}
+
+gint64
+arv_gc_converter_get_display_precision (ArvGcConverter *gc_converter, GError **error)
+{
+	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (gc_converter);
+
+	g_return_val_if_fail (ARV_IS_GC_CONVERTER (gc_converter), ARV_GC_DISPLAY_PRECISION_DEFAULT);
+
+	if (priv->display_precision == NULL)
+		return ARV_GC_DISPLAY_PRECISION_DEFAULT;
+
+	return arv_gc_property_node_get_display_precision (ARV_GC_PROPERTY_NODE (priv->display_precision), ARV_GC_DISPLAY_PRECISION_DEFAULT);
 }

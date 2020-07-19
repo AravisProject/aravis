@@ -24,6 +24,7 @@
 #include <arvgcpropertynode.h>
 #include <arvgcfloat.h>
 #include <arvgcregister.h>
+#include <arvgcdefaultsprivate.h>
 #include <arvgc.h>
 #include <arvmisc.h>
 
@@ -31,6 +32,8 @@ typedef struct {
 	ArvGcPropertyNode *endianness;
 	ArvGcPropertyNode *unit;
 	ArvGcPropertyNode *representation;
+	ArvGcPropertyNode *display_notation;
+	ArvGcPropertyNode *display_precision;
 
 	GSList *selecteds;
 } ArvGcFloatRegNodePrivate;
@@ -66,13 +69,15 @@ arv_gc_float_reg_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 			case ARV_GC_PROPERTY_NODE_TYPE_REPRESENTATION:
 				priv->representation = property_node;
 				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_NOTATION:
+				priv->display_notation = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_PRECISION:
+				priv->display_precision = property_node;
+				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_P_SELECTED:
 				priv->selecteds = g_slist_prepend (priv->selecteds, property_node);
 				break;
-
-				/* TODO DisplayNotation */
-				/* TODO DisplayPrecision */
-
 			default:
 				ARV_DOM_NODE_CLASS (arv_gc_float_reg_node_parent_class)->post_new_child (self, child);
 				break;
@@ -228,6 +233,28 @@ arv_gc_float_reg_node_get_unit (ArvGcFloat *self, GError **error)
 	return arv_gc_property_node_get_string (priv->unit, error);
 }
 
+static ArvGcDisplayNotation
+arv_gc_float_reg_node_get_display_notation (ArvGcFloat *self, GError **error)
+{
+	ArvGcFloatRegNodePrivate *priv = arv_gc_float_reg_node_get_instance_private (ARV_GC_FLOAT_REG_NODE (self));
+
+	if (priv->display_notation == NULL)
+		return ARV_GC_DISPLAY_NOTATION_DEFAULT;
+
+	return arv_gc_property_node_get_display_notation (ARV_GC_PROPERTY_NODE (priv->display_notation), ARV_GC_DISPLAY_NOTATION_DEFAULT);
+}
+
+static gint64
+arv_gc_float_reg_node_get_display_precision (ArvGcFloat *self, GError **error)
+{
+	ArvGcFloatRegNodePrivate *priv = arv_gc_float_reg_node_get_instance_private (ARV_GC_FLOAT_REG_NODE (self));
+
+	if (priv->display_precision == NULL)
+		return ARV_GC_DISPLAY_PRECISION_DEFAULT;
+
+	return arv_gc_property_node_get_display_precision (ARV_GC_PROPERTY_NODE (priv->display_precision), ARV_GC_DISPLAY_PRECISION_DEFAULT);
+}
+
 /**
  * arv_gc_float_reg_node_new:
  *
@@ -251,6 +278,8 @@ arv_gc_float_reg_node_float_interface_init (ArvGcFloatInterface *interface)
 	interface->get_max = arv_gc_float_reg_node_get_max;
 	interface->get_representation = arv_gc_float_reg_get_representation;
 	interface->get_unit = arv_gc_float_reg_node_get_unit;
+	interface->get_display_notation = arv_gc_float_reg_node_get_display_notation;
+	interface->get_display_precision = arv_gc_float_reg_node_get_display_precision;
 }
 
 static void

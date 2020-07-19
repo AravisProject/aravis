@@ -682,6 +682,56 @@ arv_gc_property_node_get_representation (ArvGcPropertyNode *self, ArvGcRepresent
 }
 
 ArvGcNode *
+arv_gc_property_node_new_display_notation (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_NOTATION);
+}
+
+ArvGcDisplayNotation
+arv_gc_property_node_get_display_notation (ArvGcPropertyNode *self, ArvGcDisplayNotation default_value)
+{
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
+	const char *value;
+
+	if (self == NULL)
+		return default_value;
+
+	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	g_return_val_if_fail (priv->type == ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_NOTATION, default_value);
+
+	value = _get_value_data (self);
+
+	if (g_strcmp0 (value, "Automatic") == 0)
+		return ARV_GC_DISPLAY_NOTATION_AUTOMATIC;
+	else if (g_strcmp0 (value, "Fixed") == 0)
+		return ARV_GC_DISPLAY_NOTATION_FIXED;
+	else if (g_strcmp0 (value, "Scientific") == 0)
+		return ARV_GC_DISPLAY_NOTATION_SCIENTIFIC;
+
+	return default_value;
+}
+
+ArvGcNode *
+arv_gc_property_node_new_display_precision (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_PRECISION);
+}
+
+gint64
+arv_gc_property_node_get_display_precision (ArvGcPropertyNode *self, gint64 default_value)
+{
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
+
+	if (self == NULL)
+		return default_value;
+
+	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	g_return_val_if_fail (priv->type == ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_PRECISION, default_value);
+
+	return g_ascii_strtoll (_get_value_data (self), NULL, 0);
+}
+
+ArvGcNode *
 arv_gc_property_node_new_unit (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_UNIT);
