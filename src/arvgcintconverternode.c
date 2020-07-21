@@ -132,9 +132,9 @@ arv_gc_converter_set_integer_value (ArvGcInteger *gc_integer, gint64 value, GErr
 }
 
 static ArvGcRepresentation
-arv_gc_converter_get_integer_representation (ArvGcInteger *gc_integer, GError **error)
+arv_gc_converter_get_integer_representation (ArvGcInteger *gc_integer)
 {
-	return arv_gc_converter_get_representation (ARV_GC_CONVERTER (gc_integer), error);
+	return arv_gc_converter_get_representation (ARV_GC_CONVERTER (gc_integer));
 }
 
 static const char *

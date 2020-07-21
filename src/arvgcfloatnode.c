@@ -354,7 +354,7 @@ arv_gc_float_node_get_inc (ArvGcFloat *gc_float, GError **error)
 }
 
 static ArvGcRepresentation
-arv_gc_float_node_get_representation (ArvGcFloat *gc_float, GError **error)
+arv_gc_float_node_get_representation (ArvGcFloat *gc_float)
 {
 	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_float);
 

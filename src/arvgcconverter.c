@@ -527,7 +527,7 @@ arv_gc_converter_convert_from_int64 (ArvGcConverter *gc_converter, gint64 value,
 }
 
 ArvGcRepresentation
-arv_gc_converter_get_representation (ArvGcConverter *gc_converter, GError **error)
+arv_gc_converter_get_representation (ArvGcConverter *gc_converter)
 {
 	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (gc_converter);
 

@@ -83,9 +83,9 @@ arv_gc_swiss_knife_node_set_float_value (ArvGcFloat *self, gdouble value, GError
 }
 
 static ArvGcRepresentation
-arv_gc_swiss_knife_node_get_float_representation (ArvGcFloat *self, GError **error)
+arv_gc_swiss_knife_node_get_float_representation (ArvGcFloat *self)
 {
-	return arv_gc_swiss_knife_get_representation (ARV_GC_SWISS_KNIFE (self), error);
+	return arv_gc_swiss_knife_get_representation (ARV_GC_SWISS_KNIFE (self));
 }
 
 static const char *

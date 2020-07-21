@@ -182,7 +182,7 @@ arv_gc_int_reg_node_get_inc (ArvGcInteger *self, GError **error)
 }
 
 static ArvGcRepresentation
-arv_gc_int_reg_node_get_representation (ArvGcInteger *self, GError **error)
+arv_gc_int_reg_node_get_representation (ArvGcInteger *self)
 {
 	ArvGcIntRegNodePrivate *priv = arv_gc_int_reg_node_get_instance_private (ARV_GC_INT_REG_NODE (self));
 

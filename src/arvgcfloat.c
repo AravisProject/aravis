@@ -116,7 +116,6 @@ arv_gc_float_get_inc (ArvGcFloat *gc_float, GError **error)
 /**
  * arv_gc_float_get_representation:
  * @gc_float: a #ArvGcFloat
- * @error: return location for a GError, or NULL
  *
  * Get number representation format.
  *
@@ -124,17 +123,16 @@ arv_gc_float_get_inc (ArvGcFloat *gc_float, GError **error)
  */
 
 ArvGcRepresentation
-arv_gc_float_get_representation (ArvGcFloat *gc_float, GError **error)
+arv_gc_float_get_representation (ArvGcFloat *gc_float)
 {
 	ArvGcFloatInterface *float_interface;
 
 	g_return_val_if_fail (ARV_IS_GC_FLOAT (gc_float), ARV_GC_REPRESENTATION_UNDEFINED);
-	g_return_val_if_fail (error == NULL || *error == NULL, ARV_GC_REPRESENTATION_UNDEFINED);
 
 	float_interface = ARV_GC_FLOAT_GET_IFACE (gc_float);
 
 	if (float_interface->get_representation != NULL)
-		return float_interface->get_representation (gc_float, error);
+		return float_interface->get_representation (gc_float);
 
 	return ARV_GC_REPRESENTATION_UNDEFINED;
 }

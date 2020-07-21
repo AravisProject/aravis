@@ -359,7 +359,7 @@ arv_gc_integer_node_get_inc (ArvGcInteger *gc_integer, GError **error)
 }
 
 static ArvGcRepresentation
-arv_gc_integer_node_get_representation (ArvGcInteger *gc_integer, GError **error)
+arv_gc_integer_node_get_representation (ArvGcInteger *gc_integer)
 {
 	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (gc_integer);
 

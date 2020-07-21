@@ -212,7 +212,7 @@ arv_gc_float_reg_node_get_max (ArvGcFloat *self, GError **error)
 }
 
 static ArvGcRepresentation
-arv_gc_float_reg_get_representation (ArvGcFloat *self, GError **error)
+arv_gc_float_reg_get_representation (ArvGcFloat *self)
 {
 	ArvGcFloatRegNodePrivate *priv = arv_gc_float_reg_node_get_instance_private (ARV_GC_FLOAT_REG_NODE (self));
 

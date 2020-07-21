@@ -135,9 +135,9 @@ _get_inc (ArvGcFloat *gc_float, GError **error)
 }
 
 static ArvGcRepresentation
-arv_gc_converter_get_float_representation (ArvGcFloat *gc_float, GError **error)
+arv_gc_converter_get_float_representation (ArvGcFloat *gc_float)
 {
-	return arv_gc_converter_get_representation (ARV_GC_CONVERTER (gc_float), error);
+	return arv_gc_converter_get_representation (ARV_GC_CONVERTER (gc_float));
 }
 
 static const char *

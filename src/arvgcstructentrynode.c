@@ -305,7 +305,7 @@ arv_gc_struct_entry_node_get_max (ArvGcInteger *self, GError **error)
 }
 
 static ArvGcRepresentation
-arv_gc_struct_entry_node_get_representation (ArvGcInteger *self, GError **error)
+arv_gc_struct_entry_node_get_representation (ArvGcInteger *self)
 {
 	ArvGcStructEntryNode *struct_entry = ARV_GC_STRUCT_ENTRY_NODE (self);
 

@@ -176,7 +176,7 @@ arv_gc_masked_int_reg_node_get_max (ArvGcInteger *self, GError **error)
 }
 
 static ArvGcRepresentation
-arv_gc_masked_int_reg_node_get_representation (ArvGcInteger *self, GError **error)
+arv_gc_masked_int_reg_node_get_representation (ArvGcInteger *self)
 {
 	ArvGcMaskedIntRegNodePrivate *priv = arv_gc_masked_int_reg_node_get_instance_private (ARV_GC_MASKED_INT_REG_NODE (self));
 

@@ -43,7 +43,7 @@ struct _ArvGcFloatInterface {
 	double			(*get_min)		(ArvGcFloat *gc_float, GError **error);
 	double			(*get_max)		(ArvGcFloat *gc_float, GError **error);
 	double			(*get_inc)		(ArvGcFloat *gc_float, GError **error);
-	ArvGcRepresentation	(*get_representation)	(ArvGcFloat *gc_float, GError **error);
+	ArvGcRepresentation	(*get_representation)	(ArvGcFloat *gc_float);
 	ArvGcDisplayNotation	(*get_display_notation) (ArvGcFloat *gc_float);
 	gint64			(*get_display_precision)(ArvGcFloat *gc_float);
 	const char *		(*get_unit)		(ArvGcFloat *gc_float);
@@ -56,7 +56,7 @@ void			arv_gc_float_set_value			(ArvGcFloat *gc_float, double value, GError **er
 double			arv_gc_float_get_min			(ArvGcFloat *gc_float, GError **error);
 double			arv_gc_float_get_max			(ArvGcFloat *gc_float, GError **error);
 double			arv_gc_float_get_inc			(ArvGcFloat *gc_float, GError **error);
-ArvGcRepresentation	arv_gc_float_get_representation		(ArvGcFloat *gc_float, GError **error);
+ArvGcRepresentation	arv_gc_float_get_representation		(ArvGcFloat *gc_float);
 const char *		arv_gc_float_get_unit			(ArvGcFloat *gc_float);
 ArvGcDisplayNotation	arv_gc_float_get_display_notation	(ArvGcFloat *gc_float);
 gint64			arv_gc_float_get_display_precision	(ArvGcFloat *gc_float);

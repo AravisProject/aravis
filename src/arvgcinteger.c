@@ -115,7 +115,6 @@ arv_gc_integer_get_inc (ArvGcInteger *gc_integer, GError **error)
 /**
  * arv_gc_integer_get_representation:
  * @gc_integer: a #ArvGcInteger
- * @error: return location for a GError, or NULL
  *
  * Get number representation format.
  *
@@ -123,17 +122,16 @@ arv_gc_integer_get_inc (ArvGcInteger *gc_integer, GError **error)
  */
 
 ArvGcRepresentation
-arv_gc_integer_get_representation (ArvGcInteger *gc_integer, GError **error)
+arv_gc_integer_get_representation (ArvGcInteger *gc_integer)
 {
 	ArvGcIntegerInterface *integer_interface;
 
 	g_return_val_if_fail (ARV_IS_GC_INTEGER (gc_integer), 0);
-	g_return_val_if_fail (error == NULL || *error == NULL, 0);
 
 	integer_interface = ARV_GC_INTEGER_GET_IFACE (gc_integer);
 
 	if (integer_interface->get_representation != NULL)
-		return integer_interface->get_representation (gc_integer, error);
+		return integer_interface->get_representation (gc_integer);
 
 	return ARV_GC_REPRESENTATION_UNDEFINED;
 }
