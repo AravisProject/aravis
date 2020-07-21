@@ -138,9 +138,9 @@ arv_gc_converter_get_integer_representation (ArvGcInteger *gc_integer, GError **
 }
 
 static const char *
-arv_gc_converter_get_integer_unit (ArvGcInteger *gc_integer, GError **error)
+arv_gc_converter_get_integer_unit (ArvGcInteger *gc_integer)
 {
-	return arv_gc_converter_get_unit (ARV_GC_CONVERTER (gc_integer), error);
+	return arv_gc_converter_get_unit (ARV_GC_CONVERTER (gc_integer));
 }
 
 static void

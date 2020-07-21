@@ -370,23 +370,14 @@ arv_gc_integer_node_get_representation (ArvGcInteger *gc_integer, GError **error
 }
 
 static const char *
-arv_gc_integer_node_get_unit (ArvGcInteger *gc_integer, GError **error)
+arv_gc_integer_node_get_unit (ArvGcInteger *gc_integer)
 {
 	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (gc_integer);
-	GError *local_error = NULL;
-	const char *string;
 
 	if (gc_integer_node->unit == NULL)
 		return NULL;
 
-	string = arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (gc_integer_node->unit), &local_error);
-
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return NULL;
-	}
-
-	return string;
+	return arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (gc_integer_node->unit), NULL);
 }
 
 static void

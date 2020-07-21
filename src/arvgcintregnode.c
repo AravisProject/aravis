@@ -193,14 +193,14 @@ arv_gc_int_reg_node_get_representation (ArvGcInteger *self, GError **error)
 }
 
 static const char *
-arv_gc_int_reg_node_get_unit (ArvGcInteger *self, GError **error)
+arv_gc_int_reg_node_get_unit (ArvGcInteger *self)
 {
 	ArvGcIntRegNodePrivate *priv = arv_gc_int_reg_node_get_instance_private (ARV_GC_INT_REG_NODE (self));
 
 	if (priv->unit == NULL)
 		return NULL;
 
-	return arv_gc_property_node_get_string (priv->unit, error);
+	return arv_gc_property_node_get_string (priv->unit, NULL);
 }
 
 /**

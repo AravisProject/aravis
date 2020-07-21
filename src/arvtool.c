@@ -103,7 +103,7 @@ arv_tool_list_features (ArvGc *genicam, const char *feature, ArvToolListMode lis
 							value = g_strdup_printf ("'%s'",
 										 arv_gc_string_get_value (ARV_GC_STRING (node), &error));
 						} else {
-							unit = arv_gc_integer_get_unit (ARV_GC_INTEGER (node), NULL);
+							unit = arv_gc_integer_get_unit (ARV_GC_INTEGER (node));
 
 							value = g_strdup_printf ("%" G_GINT64_FORMAT "%s%s",
 										 arv_gc_integer_get_value (ARV_GC_INTEGER (node), &error),
@@ -111,7 +111,7 @@ arv_tool_list_features (ArvGc *genicam, const char *feature, ArvToolListMode lis
 										 unit != NULL ? unit : "");
 						}
 					} else if (ARV_IS_GC_FLOAT (node)) {
-						unit = arv_gc_float_get_unit (ARV_GC_FLOAT (node), NULL);
+						unit = arv_gc_float_get_unit (ARV_GC_FLOAT (node));
 
 						value = g_strdup_printf ("%g%s%s",
 									 arv_gc_float_get_value (ARV_GC_FLOAT (node), &error),
@@ -273,7 +273,7 @@ arv_tool_execute_command (int argc, char **argv, ArvDevice *device, ArvRegisterC
 							min_int64 = arv_gc_integer_get_min (ARV_GC_INTEGER (feature), NULL);
 							max_int64 = arv_gc_integer_get_max (ARV_GC_INTEGER (feature), NULL);
 							inc_int64 = arv_gc_integer_get_inc (ARV_GC_INTEGER (feature), NULL);
-							unit = arv_gc_integer_get_unit (ARV_GC_INTEGER (feature), NULL);
+							unit = arv_gc_integer_get_unit (ARV_GC_INTEGER (feature));
 
 							value = arv_gc_integer_get_value (ARV_GC_INTEGER (feature), &error);
 
@@ -302,7 +302,7 @@ arv_tool_execute_command (int argc, char **argv, ArvDevice *device, ArvRegisterC
 							min_double = arv_gc_float_get_min (ARV_GC_FLOAT (feature), NULL);
 							max_double = arv_gc_float_get_max (ARV_GC_FLOAT (feature), NULL);
 							inc_double = arv_gc_float_get_inc (ARV_GC_FLOAT (feature), NULL);
-							unit = arv_gc_float_get_unit (ARV_GC_FLOAT (feature), NULL);
+							unit = arv_gc_float_get_unit (ARV_GC_FLOAT (feature));
 
 							value = arv_gc_float_get_value (ARV_GC_FLOAT (feature), &error);
 

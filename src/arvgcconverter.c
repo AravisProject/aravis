@@ -540,7 +540,7 @@ arv_gc_converter_get_representation (ArvGcConverter *gc_converter, GError **erro
 }
 
 const char *
-arv_gc_converter_get_unit (ArvGcConverter *gc_converter, GError **error)
+arv_gc_converter_get_unit (ArvGcConverter *gc_converter)
 {
 	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (gc_converter);
 
@@ -549,7 +549,7 @@ arv_gc_converter_get_unit (ArvGcConverter *gc_converter, GError **error)
 	if (priv->unit == NULL)
 		return NULL;
 
-	return arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (priv->unit), error);
+	return arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (priv->unit), NULL);
 }
 
 ArvGcDisplayNotation

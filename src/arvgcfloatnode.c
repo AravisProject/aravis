@@ -365,21 +365,15 @@ arv_gc_float_node_get_representation (ArvGcFloat *gc_float, GError **error)
 }
 
 static const char *
-arv_gc_float_node_get_unit (ArvGcFloat *gc_float, GError **error)
+arv_gc_float_node_get_unit (ArvGcFloat *gc_float)
 {
 	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_float);
-	GError *local_error = NULL;
 	const char *string;
 
 	if (gc_float_node->unit == NULL)
 		return NULL;
 
-	string = arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (gc_float_node->unit), &local_error);
-
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return NULL;
-	}
+	string = arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (gc_float_node->unit), NULL);
 
 	return string;
 }

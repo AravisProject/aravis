@@ -89,9 +89,9 @@ arv_gc_swiss_knife_node_get_float_representation (ArvGcFloat *self, GError **err
 }
 
 static const char *
-arv_gc_swiss_knife_node_get_float_unit (ArvGcFloat *self, GError **error)
+arv_gc_swiss_knife_node_get_float_unit (ArvGcFloat *self)
 {
-	return arv_gc_swiss_knife_get_unit (ARV_GC_SWISS_KNIFE (self), error);
+	return arv_gc_swiss_knife_get_unit (ARV_GC_SWISS_KNIFE (self));
 }
 
 static ArvGcDisplayNotation

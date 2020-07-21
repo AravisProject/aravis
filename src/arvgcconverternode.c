@@ -141,9 +141,9 @@ arv_gc_converter_get_float_representation (ArvGcFloat *gc_float, GError **error)
 }
 
 static const char *
-arv_gc_converter_get_float_unit (ArvGcFloat *gc_float, GError **error)
+arv_gc_converter_get_float_unit (ArvGcFloat *gc_float)
 {
-	return arv_gc_converter_get_unit (ARV_GC_CONVERTER (gc_float), error);
+	return arv_gc_converter_get_unit (ARV_GC_CONVERTER (gc_float));
 }
 
 static ArvGcDisplayNotation

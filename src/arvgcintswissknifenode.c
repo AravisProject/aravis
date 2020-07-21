@@ -58,9 +58,9 @@ arv_gc_swiss_knife_node_get_integer_representation (ArvGcInteger *self, GError *
 }
 
 static const char *
-arv_gc_swiss_knife_node_get_integer_unit (ArvGcInteger *self, GError **error)
+arv_gc_swiss_knife_node_get_integer_unit (ArvGcInteger *self)
 {
-	return arv_gc_swiss_knife_get_unit (ARV_GC_SWISS_KNIFE (self), error);
+	return arv_gc_swiss_knife_get_unit (ARV_GC_SWISS_KNIFE (self));
 }
 
 ArvGcNode *

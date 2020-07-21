@@ -140,20 +140,16 @@ arv_gc_float_get_representation (ArvGcFloat *gc_float, GError **error)
 }
 
 const char *
-arv_gc_float_get_unit	(ArvGcFloat *gc_float, GError **error)
+arv_gc_float_get_unit	(ArvGcFloat *gc_float)
 {
 	ArvGcFloatInterface *float_interface;
 
 	g_return_val_if_fail (ARV_IS_GC_FLOAT (gc_float), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	float_interface = ARV_GC_FLOAT_GET_IFACE (gc_float);
 
 	if (float_interface->get_unit != NULL)
-		return float_interface->get_unit (gc_float, error);
-
-	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_PROPERTY_NOT_DEFINED, "<Unit> node not found for '%s'",
-		     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_float)));
+		return float_interface->get_unit (gc_float);
 
 	return NULL;
 }
