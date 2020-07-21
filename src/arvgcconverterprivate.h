@@ -36,8 +36,8 @@ typedef enum {
 } ArvGcConverterNodeType;
 
 ArvGcRepresentation	arv_gc_converter_get_representation 	(ArvGcConverter *gc_converter, GError **error);
-ArvGcDisplayNotation	arv_gc_converter_get_display_notation	(ArvGcConverter *gc_converter, GError **error);
-gint64			arv_gc_converter_get_display_precision	(ArvGcConverter *gc_converter, GError **error);
+ArvGcDisplayNotation	arv_gc_converter_get_display_notation	(ArvGcConverter *gc_converter);
+gint64			arv_gc_converter_get_display_precision	(ArvGcConverter *gc_converter);
 const char * 		arv_gc_converter_get_unit	 	(ArvGcConverter *gc_converter);
 ArvGcIsLinear		arv_gc_converter_get_is_linear		(ArvGcConverter *gc_converter, GError **error);
 

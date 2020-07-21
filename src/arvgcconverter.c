@@ -553,7 +553,7 @@ arv_gc_converter_get_unit (ArvGcConverter *gc_converter)
 }
 
 ArvGcDisplayNotation
-arv_gc_converter_get_display_notation (ArvGcConverter *gc_converter, GError **error)
+arv_gc_converter_get_display_notation (ArvGcConverter *gc_converter)
 {
 	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (gc_converter);
 
@@ -566,7 +566,7 @@ arv_gc_converter_get_display_notation (ArvGcConverter *gc_converter, GError **er
 }
 
 gint64
-arv_gc_converter_get_display_precision (ArvGcConverter *gc_converter, GError **error)
+arv_gc_converter_get_display_precision (ArvGcConverter *gc_converter)
 {
 	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (gc_converter);
 

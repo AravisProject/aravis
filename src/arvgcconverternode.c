@@ -147,15 +147,15 @@ arv_gc_converter_get_float_unit (ArvGcFloat *gc_float)
 }
 
 static ArvGcDisplayNotation
-arv_gc_converter_get_float_display_notation (ArvGcFloat *gc_float, GError **error)
+arv_gc_converter_get_float_display_notation (ArvGcFloat *gc_float)
 {
-	return arv_gc_converter_get_display_notation (ARV_GC_CONVERTER (gc_float), error);
+	return arv_gc_converter_get_display_notation (ARV_GC_CONVERTER (gc_float));
 }
 
 static gint64
-arv_gc_converter_get_float_display_precision (ArvGcFloat *gc_float, GError **error)
+arv_gc_converter_get_float_display_precision (ArvGcFloat *gc_float)
 {
-	return arv_gc_converter_get_display_precision (ARV_GC_CONVERTER (gc_float), error);
+	return arv_gc_converter_get_display_precision (ARV_GC_CONVERTER (gc_float));
 }
 
 static void

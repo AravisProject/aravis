@@ -234,7 +234,7 @@ arv_gc_float_reg_node_get_unit (ArvGcFloat *self)
 }
 
 static ArvGcDisplayNotation
-arv_gc_float_reg_node_get_display_notation (ArvGcFloat *self, GError **error)
+arv_gc_float_reg_node_get_display_notation (ArvGcFloat *self)
 {
 	ArvGcFloatRegNodePrivate *priv = arv_gc_float_reg_node_get_instance_private (ARV_GC_FLOAT_REG_NODE (self));
 
@@ -245,7 +245,7 @@ arv_gc_float_reg_node_get_display_notation (ArvGcFloat *self, GError **error)
 }
 
 static gint64
-arv_gc_float_reg_node_get_display_precision (ArvGcFloat *self, GError **error)
+arv_gc_float_reg_node_get_display_precision (ArvGcFloat *self)
 {
 	ArvGcFloatRegNodePrivate *priv = arv_gc_float_reg_node_get_instance_private (ARV_GC_FLOAT_REG_NODE (self));
 

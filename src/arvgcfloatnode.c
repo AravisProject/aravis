@@ -379,7 +379,7 @@ arv_gc_float_node_get_unit (ArvGcFloat *gc_float)
 }
 
 static ArvGcDisplayNotation
-arv_gc_float_node_get_display_notation (ArvGcFloat *gc_float, GError **error)
+arv_gc_float_node_get_display_notation (ArvGcFloat *gc_float)
 {
 	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_float);
 
@@ -390,7 +390,7 @@ arv_gc_float_node_get_display_notation (ArvGcFloat *gc_float, GError **error)
 }
 
 static gint64
-arv_gc_float_node_get_display_precision (ArvGcFloat *gc_float, GError **error)
+arv_gc_float_node_get_display_precision (ArvGcFloat *gc_float)
 {
 	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_float);
 
