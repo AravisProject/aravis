@@ -907,8 +907,13 @@ ArvFakeDevicePrivate
 <TITLE>ArvGc</TITLE>
 ArvGc
 ArvRegisterCachePolicy
-ArvGcRepresentation
 ArvGcNameSpace
+ArvGcAccessMode
+ArvGcCachable
+ArvGcSignedness
+ArvGcIsLinear
+ArvGcVisibility
+ArvGcRepresentation
 ArvGcDisplayNotation
 arv_gc_new
 arv_gc_get_node
@@ -928,11 +933,6 @@ ARV_GC_GET_CLASS
 <SUBSECTION Private>
 ArvGcPrivate
 ArvGcClass
-ArvGcAccessMode
-ArvGcCachable
-ArvGcSignedness
-ArvGcIsLinear
-ArvGcVisibility
 arv_gc_get_int64_from_value
 arv_gc_set_int64_to_value
 arv_gc_get_double_from_value
