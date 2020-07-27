@@ -124,6 +124,22 @@ arv_gc_command_execute (ArvGcCommand *gc_command, GError **error)
 			 command_value);
 }
 
+static ArvGcFeatureNode *
+arv_gc_command_get_pointed_node (ArvGcFeatureNode *gc_feature_node)
+{
+	ArvGcCommand *gc_command = ARV_GC_COMMAND (gc_feature_node);
+	ArvGcNode *pvalue_node = NULL;
+
+	if (gc_command->value == NULL)
+		return NULL;
+
+	pvalue_node = arv_gc_property_node_get_linked_node (gc_command->value);
+	if (ARV_IS_GC_FEATURE_NODE (pvalue_node))
+		return ARV_GC_FEATURE_NODE (pvalue_node);
+
+	return NULL;
+}
+
 ArvGcNode *
 arv_gc_command_new (void)
 {
@@ -150,9 +166,11 @@ arv_gc_command_class_init (ArvGcCommandClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
+	ArvGcFeatureNodeClass *gc_feature_node_class = ARV_GC_FEATURE_NODE_CLASS (this_class);
 
 	object_class->finalize = arv_gc_command_finalize;
 	dom_node_class->get_node_name = arv_gc_command_get_node_name;
 	dom_node_class->post_new_child = arv_gc_command_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_command_pre_remove_child;
+	gc_feature_node_class->get_pointed_node = arv_gc_command_get_pointed_node;
 }

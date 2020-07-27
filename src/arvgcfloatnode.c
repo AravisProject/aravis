@@ -174,6 +174,22 @@ arv_gc_float_node_new (void)
 	return node;
 }
 
+static ArvGcFeatureNode *
+arv_gc_float_node_get_pointed_node (ArvGcFeatureNode *gc_feature_node)
+{
+	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_feature_node);
+	ArvGcNode *pvalue_node = NULL;
+
+	if (gc_float_node->value == NULL)
+		return NULL;
+
+	pvalue_node = arv_gc_property_node_get_linked_node (gc_float_node->value);
+	if (ARV_IS_GC_FEATURE_NODE (pvalue_node))
+		return ARV_GC_FEATURE_NODE (pvalue_node);
+
+	return NULL;
+}
+
 static void
 arv_gc_float_node_init (ArvGcFloatNode *gc_float_node)
 {
@@ -194,11 +210,13 @@ arv_gc_float_node_class_init (ArvGcFloatNodeClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
+	ArvGcFeatureNodeClass *gc_feature_node_class = ARV_GC_FEATURE_NODE_CLASS (this_class);
 
 	object_class->finalize = arv_gc_float_node_finalize;
 	dom_node_class->get_node_name = arv_gc_float_node_get_node_name;
 	dom_node_class->post_new_child = arv_gc_float_node_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_float_node_pre_remove_child;
+	gc_feature_node_class->get_pointed_node = arv_gc_float_node_get_pointed_node;
 }
 
 /* ArvGcFloat interface implementation */

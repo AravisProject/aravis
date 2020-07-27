@@ -858,8 +858,10 @@ arv_gc_property_node_get_access_mode (ArvGcPropertyNode *self, ArvGcAccessMode d
 		return ARV_GC_ACCESS_MODE_RO;
 	else if (g_strcmp0 (value, "WO") == 0)
 		return ARV_GC_ACCESS_MODE_WO;
+	else if (g_strcmp0 (value, "RW") == 0)
+		return ARV_GC_ACCESS_MODE_RW;
 
-	return ARV_GC_ACCESS_MODE_RW;
+	return default_value;
 }
 
 ArvGcNode *
