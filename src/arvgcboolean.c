@@ -214,7 +214,7 @@ arv_gc_boolean_set_value (ArvGcBoolean *gc_boolean, gboolean v_boolean, GError *
 }
 
 static ArvGcFeatureNode *
-arv_gc_boolean_get_pointed_node (ArvGcFeatureNode *gc_feature_node)
+arv_gc_boolean_get_linked_feature (ArvGcFeatureNode *gc_feature_node)
 {
 	ArvGcBoolean *gc_boolean = ARV_GC_BOOLEAN (gc_feature_node);
 	ArvGcNode *pvalue_node = NULL;
@@ -263,5 +263,5 @@ arv_gc_boolean_class_init (ArvGcBooleanClass *this_class)
 	dom_node_class->get_node_name = arv_gc_boolean_get_node_name;
 	dom_node_class->post_new_child = arv_gc_boolean_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_boolean_pre_remove_child;
-	gc_feature_node_class->get_pointed_node = arv_gc_boolean_get_pointed_node;
+	gc_feature_node_class->get_linked_feature = arv_gc_boolean_get_linked_feature;
 }

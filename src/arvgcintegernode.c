@@ -176,7 +176,7 @@ arv_gc_integer_node_new (void)
 }
 
 static ArvGcFeatureNode *
-arv_gc_integer_node_get_pointed_node (ArvGcFeatureNode *gc_feature_node)
+arv_gc_integer_node_get_linked_feature (ArvGcFeatureNode *gc_feature_node)
 {
 	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (gc_feature_node);
 	ArvGcNode *pvalue_node = NULL;
@@ -219,7 +219,7 @@ arv_gc_integer_node_class_init (ArvGcIntegerNodeClass *this_class)
 	dom_node_class->get_node_name = arv_gc_integer_node_get_node_name;
 	dom_node_class->post_new_child = arv_gc_integer_node_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_integer_node_pre_remove_child;
-	gc_feature_node_class->get_pointed_node = arv_gc_integer_node_get_pointed_node;
+	gc_feature_node_class->get_linked_feature = arv_gc_integer_node_get_linked_feature;
 }
 
 /* ArvGcInteger interface implementation */

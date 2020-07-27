@@ -197,11 +197,11 @@ arv_gc_feature_node_get_attribute (ArvDomElement *self, const char *name)
 /* ArvGcFeatureNode implementation */
 
 static ArvGcFeatureNode *
-arv_gc_feature_node_get_pointed_node (ArvGcFeatureNode *node)
+arv_gc_feature_node_get_linked_feature (ArvGcFeatureNode *node)
 {
 	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (node), NULL);
 
-	return ARV_GC_FEATURE_NODE_GET_CLASS (node)->get_pointed_node (node);
+	return ARV_GC_FEATURE_NODE_GET_CLASS (node)->get_linked_feature (node);
 }
 
 static ArvGcAccessMode
@@ -533,7 +533,7 @@ arv_gc_feature_node_finalize (GObject *object)
 }
 
 static ArvGcFeatureNode *
-_get_pointed_node (ArvGcFeatureNode *gc_feature_node)
+_get_linked_feature (ArvGcFeatureNode *gc_feature_node)
 {
 	return NULL;
 }
@@ -541,7 +541,7 @@ _get_pointed_node (ArvGcFeatureNode *gc_feature_node)
 static ArvGcAccessMode
 _get_access_mode (ArvGcFeatureNode *gc_feature_node)
 {
-	ArvGcFeatureNode *pointed_node = arv_gc_feature_node_get_pointed_node (gc_feature_node);
+	ArvGcFeatureNode *pointed_node = arv_gc_feature_node_get_linked_feature (gc_feature_node);
 	if (pointed_node)
 		return arv_gc_feature_node_get_access_mode (pointed_node);
 
@@ -561,6 +561,6 @@ arv_gc_feature_node_class_init (ArvGcFeatureNodeClass *this_class)
 	dom_node_class->pre_remove_child = arv_gc_feature_node_pre_remove_child;
 	dom_element_class->set_attribute = arv_gc_feature_node_set_attribute;
 	dom_element_class->get_attribute = arv_gc_feature_node_get_attribute;
-	this_class->get_pointed_node = _get_pointed_node;
+	this_class->get_linked_feature = _get_linked_feature;
 	this_class->get_access_mode = _get_access_mode;
 }

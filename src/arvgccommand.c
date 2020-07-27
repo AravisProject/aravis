@@ -125,7 +125,7 @@ arv_gc_command_execute (ArvGcCommand *gc_command, GError **error)
 }
 
 static ArvGcFeatureNode *
-arv_gc_command_get_pointed_node (ArvGcFeatureNode *gc_feature_node)
+arv_gc_command_get_linked_feature (ArvGcFeatureNode *gc_feature_node)
 {
 	ArvGcCommand *gc_command = ARV_GC_COMMAND (gc_feature_node);
 	ArvGcNode *pvalue_node = NULL;
@@ -172,5 +172,5 @@ arv_gc_command_class_init (ArvGcCommandClass *this_class)
 	dom_node_class->get_node_name = arv_gc_command_get_node_name;
 	dom_node_class->post_new_child = arv_gc_command_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_command_pre_remove_child;
-	gc_feature_node_class->get_pointed_node = arv_gc_command_get_pointed_node;
+	gc_feature_node_class->get_linked_feature = arv_gc_command_get_linked_feature;
 }

@@ -175,7 +175,7 @@ arv_gc_float_node_new (void)
 }
 
 static ArvGcFeatureNode *
-arv_gc_float_node_get_pointed_node (ArvGcFeatureNode *gc_feature_node)
+arv_gc_float_node_get_linked_feature (ArvGcFeatureNode *gc_feature_node)
 {
 	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_feature_node);
 	ArvGcNode *pvalue_node = NULL;
@@ -216,7 +216,7 @@ arv_gc_float_node_class_init (ArvGcFloatNodeClass *this_class)
 	dom_node_class->get_node_name = arv_gc_float_node_get_node_name;
 	dom_node_class->post_new_child = arv_gc_float_node_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_float_node_pre_remove_child;
-	gc_feature_node_class->get_pointed_node = arv_gc_float_node_get_pointed_node;
+	gc_feature_node_class->get_linked_feature = arv_gc_float_node_get_linked_feature;
 }
 
 /* ArvGcFloat interface implementation */

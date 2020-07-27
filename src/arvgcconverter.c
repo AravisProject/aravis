@@ -130,7 +130,7 @@ arv_gc_converter_init (ArvGcConverter *self)
 }
 
 static ArvGcFeatureNode *
-arv_gc_converter_get_pointed_node (ArvGcFeatureNode *gc_feature_node)
+arv_gc_converter_get_linked_feature (ArvGcFeatureNode *gc_feature_node)
 {
 	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (ARV_GC_CONVERTER (gc_feature_node));
 	ArvGcNode *pvalue_node = NULL;
@@ -170,7 +170,7 @@ arv_gc_converter_class_init (ArvGcConverterClass *this_class)
 	object_class->finalize = arv_gc_converter_finalize;
 	dom_node_class->post_new_child = arv_gc_converter_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_converter_pre_remove_child;
-	gc_feature_node_class->get_pointed_node = arv_gc_converter_get_pointed_node;
+	gc_feature_node_class->get_linked_feature = arv_gc_converter_get_linked_feature;
 }
 
 /* ArvGcInteger interface implementation */

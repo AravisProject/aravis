@@ -39,7 +39,7 @@ G_DECLARE_DERIVABLE_TYPE (ArvGcFeatureNode, arv_gc_feature_node, ARV, GC_FEATURE
 struct _ArvGcFeatureNodeClass {
 	ArvGcNodeClass parent_class;
 
-	ArvGcFeatureNode *	(*get_pointed_node)	(ArvGcFeatureNode *gc_feature_node);
+	ArvGcFeatureNode *	(*get_linked_feature)	(ArvGcFeatureNode *gc_feature_node);
 	ArvGcAccessMode		(*get_access_mode)	(ArvGcFeatureNode *gc_feature_node);
 };
 
