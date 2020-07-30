@@ -672,6 +672,25 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device, GError **error)
 	return packet_size;
 }
 
+/**
+ * arv_gv_device_is_controller:
+ * @gv_device: a #ArvGvDevice
+ *
+ * Returns: value indicating whether the ArvGvDevice has control access to the camera
+ *
+ * Since: 0.8.0
+ */
+
+gboolean
+arv_gv_device_is_controller (ArvGvDevice *gv_device)
+{
+	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
+
+	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), 0);
+	
+	return priv->io_data->is_controller;
+}
+
 static char *
 _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 {
