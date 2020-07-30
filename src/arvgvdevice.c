@@ -684,10 +684,10 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device, GError **error)
 gboolean
 arv_gv_device_is_controller (ArvGvDevice *gv_device)
 {
-	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), 0);
-	
 	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
 
+	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), 0);
+	
 	return priv->io_data->is_controller;
 }
 
