@@ -177,7 +177,7 @@ arv_gvsp_packet_to_string (const ArvGvspPacket *packet, size_t packet_size)
 	switch (content_type) {
 		case ARV_GVSP_CONTENT_TYPE_DATA_LEADER:
 			leader = (ArvGvspDataLeader *) &packet->data;
-			switch (g_ntohl (leader->payload_type)) {
+			switch (g_ntohs (leader->payload_type)) {
 				case ARV_GVSP_PAYLOAD_TYPE_IMAGE:
 					g_string_append (string, "payload_type = image\n");
 					break;
@@ -194,7 +194,8 @@ arv_gvsp_packet_to_string (const ArvGvspPacket *packet, size_t packet_size)
 					g_string_append (string, "payload_type = image extended chunk\n");
 					break;
 				default:
-					g_string_append (string, "payload_type = unknown\n");
+					g_string_append_printf (string, "payload_type = unknown (0x%08x)\n",
+								g_ntohs (leader->payload_type));
 					break;
 			}
 			g_string_append_printf (string, "pixel format = %s\n",
