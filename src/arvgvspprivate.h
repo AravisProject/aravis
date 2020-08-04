@@ -30,7 +30,7 @@
 G_BEGIN_DECLS
 
 #define ARV_GVSP_PACKET_EXTENDED_ID_MODE_MASK	0x80
-#define ARV_GVSP_PACKET_INFOS_ID_MASK		0x00ffffff
+#define ARV_GVSP_PACKET_ID_MASK			0x00ffffff
 #define ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_MASK	0x7f000000
 #define ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_POS	24
 
@@ -224,7 +224,7 @@ arv_gvsp_packet_get_packet_id (const ArvGvspPacket *packet)
 	} else {
 		ArvGvspHeader *header = (void *) &packet->header;
 
-		return g_ntohl (header->packet_infos) & ARV_GVSP_PACKET_INFOS_ID_MASK;
+		return g_ntohl (header->packet_infos) & ARV_GVSP_PACKET_ID_MASK;
 	}
 }
 

@@ -26,6 +26,7 @@
  */
 
 #include <arvgvcpprivate.h>
+#include <arvgvspprivate.h>
 #include <arvenumtypes.h>
 #include <arvenumtypesprivate.h>
 #include <string.h>
@@ -390,6 +391,7 @@ arv_gvcp_packet_new_discovery_ack (guint16 packet_id, size_t *packet_size)
  * @frame_id: frame id
  * @first_block: first missing packet
  * @last_block: last missing packet
+ * @extended_ids: use extended frame and block ids
  * @packet_id: packet id
  * @packet_size: (out): packet size, in bytes
  *
@@ -399,8 +401,9 @@ arv_gvcp_packet_new_discovery_ack (guint16 packet_id, size_t *packet_size)
  */
 
 ArvGvcpPacket *
-arv_gvcp_packet_new_packet_resend_cmd (guint32 frame_id,
+arv_gvcp_packet_new_packet_resend_cmd (guint64 frame_id,
 				       guint32 first_block, guint32 last_block,
+				       gboolean extended_ids,
 				       guint16 packet_id, size_t *packet_size)
 {
 	ArvGvcpPacket *packet;
@@ -408,21 +411,29 @@ arv_gvcp_packet_new_packet_resend_cmd (guint32 frame_id,
 
 	g_return_val_if_fail (packet_size != NULL, NULL);
 
-	*packet_size = sizeof (ArvGvcpHeader) + 3 * sizeof (guint32);
+	*packet_size = sizeof (ArvGvcpHeader) + sizeof (guint32) * (extended_ids ? 5 : 3);
 
 	packet = g_malloc (*packet_size);
 
 	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_CMD;
-	packet->header.packet_flags = 0;
+	packet->header.packet_flags = extended_ids ? ARV_GVCP_CMD_PACKET_FLAGS_EXTENDED_IDS : 0;
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_PACKET_RESEND_CMD);
 	packet->header.size = g_htons (3 * sizeof (guint32));
 	packet->header.id = g_htons (packet_id);
 
 	data = (guint32 *) &packet->data;
 
-	data[0] = g_htonl (frame_id);
-	data[1] = g_htonl (first_block);
-	data[2] = g_htonl (last_block);
+	if (extended_ids) {
+		data[0] = 0;
+		data[1] = g_htonl (first_block);
+		data[2] = g_htonl (last_block);
+		*((guint64 *) &data[3]) = GUINT64_TO_BE (frame_id);
+	} else {
+		data[0] = g_htonl ((guint32) frame_id);
+		/* With regular ids, only the 24 bits are valid */
+		data[1] = g_htonl (first_block & ARV_GVSP_PACKET_ID_MASK);
+		data[2] = g_htonl (last_block & ARV_GVSP_PACKET_ID_MASK);
+	}
 
 	return packet;
 }

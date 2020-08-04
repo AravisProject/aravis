@@ -232,11 +232,13 @@ typedef enum {
  * ArvGvcpCmdPacketFlags:
  * @ARV_GVCP_CMD_PACKET_FLAGS_NONE: no flag defined
  * @ARV_GVCP_CMD_PACKET_FLAGS_ACK_REQUIRED: acknowledge required
+ * @ARV_GVCP_CMD_PACKET_FLAGS_EXTENDED_IDS: use extended ids
  */
 
 typedef enum {
 	ARV_GVCP_CMD_PACKET_FLAGS_NONE =			0x00,
 	ARV_GVCP_CMD_PACKET_FLAGS_ACK_REQUIRED =		0x01,
+	ARV_GVCP_CMD_PACKET_FLAGS_EXTENDED_IDS =		0x10,
 } ArvGvcpCmdPacketFlags;
 
 /**
@@ -353,8 +355,9 @@ ArvGvcpPacket * 	arv_gvcp_packet_new_write_register_ack 	(guint32 data_index,
 								 guint16 packet_id, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_discovery_cmd 	(size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_discovery_ack 	(guint16 packet_id, size_t *packet_size);
-ArvGvcpPacket * 	arv_gvcp_packet_new_packet_resend_cmd 	(guint32 frame_id,
+ArvGvcpPacket * 	arv_gvcp_packet_new_packet_resend_cmd 	(guint64 frame_id,
 								 guint32 first_block, guint32 last_block,
+								 gboolean extended_ids,
 								 guint16 packet_id, size_t *packet_size);
 
 const char *		arv_gvcp_packet_type_to_string 		(ArvGvcpPacketType value);

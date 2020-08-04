@@ -112,6 +112,8 @@ typedef struct {
 
 	guint n_packet_resend_requests;
 	gboolean resend_ratio_reached;
+
+	gboolean extended_ids;
 } ArvGvStreamFrameData;
 
 struct _ArvGvStreamThreadData {
@@ -178,14 +180,15 @@ static void
 _send_packet_request (ArvGvStreamThreadData *thread_data,
 		      guint64 frame_id,
 		      guint32 first_block,
-		      guint32 last_block)
+		      guint32 last_block,
+		      gboolean extended_ids)
 {
 	ArvGvcpPacket *packet;
 	size_t packet_size;
 
 	thread_data->packet_id = arv_gvcp_next_packet_id (thread_data->packet_id);
 
-	packet = arv_gvcp_packet_new_packet_resend_cmd (frame_id, first_block, last_block,
+	packet = arv_gvcp_packet_new_packet_resend_cmd (frame_id, first_block, last_block, extended_ids,
 							thread_data->packet_id, &packet_size);
 
 	arv_log_stream_thread ("[GvStream::send_packet_request] frame_id = %" G_GUINT64_FORMAT
@@ -438,6 +441,8 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 
 	arv_log_stream_thread ("[GvStream::find_frame_data] Start frame %" G_GUINT64_FORMAT, frame_id);
 
+	frame->extended_ids = extended_ids;
+
 	return frame;
 }
 
@@ -491,8 +496,11 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 							       time_us - frame->first_packet_time_us,
 							       packet_id, frame->n_packets);
 
-					_send_packet_request (thread_data, frame->frame_id,
-							      first_missing, i - 1);
+					_send_packet_request (thread_data,
+							      frame->frame_id,
+							      first_missing,
+							      i - 1,
+							      frame->extended_ids);
 					for (j = first_missing; j < i; j++)
 						frame->packet_data[j].time_us = time_us;
 					thread_data->n_resend_requests += (i - first_missing);
@@ -526,8 +534,11 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 					       time_us - frame->first_packet_time_us,
 					       packet_id, frame->n_packets);
 
-			_send_packet_request (thread_data, frame->frame_id,
-					      first_missing, i - 1);
+			_send_packet_request (thread_data,
+					      frame->frame_id,
+					      first_missing,
+					      i - 1,
+					      frame->extended_ids);
 			for (j = first_missing; j < i; j++)
 				frame->packet_data[j].time_us = time_us;
 			thread_data->n_resend_requests += (i - first_missing);

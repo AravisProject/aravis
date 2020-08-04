@@ -56,7 +56,7 @@ arv_gvsp_packet_new (ArvGvspContentType content_type,
 
 	header = (void *) &packet->header;
 	header->frame_id = g_htons (frame_id);
-	header->packet_infos = g_htonl ((packet_id & ARV_GVSP_PACKET_INFOS_ID_MASK) |
+	header->packet_infos = g_htonl ((packet_id & ARV_GVSP_PACKET_ID_MASK) |
 					((content_type << ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_POS) &
 					 ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_MASK));
 
