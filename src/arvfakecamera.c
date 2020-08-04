@@ -722,6 +722,11 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer, guint32 *
 		return;
 	}
 
+	/* frame id is a 16 bit value, 0 is invalid */
+	camera->priv->frame_id = (camera->priv->frame_id + 1) % 65536;
+	if (camera->priv->frame_id == 0)
+		camera->priv->frame_id = 1;
+
 	buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_IMAGE;
 	buffer->priv->chunk_endianness = G_BIG_ENDIAN;
 	buffer->priv->width = width;
@@ -731,7 +736,7 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer, guint32 *
 	buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
 	buffer->priv->timestamp_ns = g_get_real_time () * 1000;
 	buffer->priv->system_timestamp_ns = buffer->priv->timestamp_ns;
-	buffer->priv->frame_id = camera->priv->frame_id++;
+	buffer->priv->frame_id = camera->priv->frame_id;
 	buffer->priv->pixel_format = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_PIXEL_FORMAT);
 
 	g_mutex_lock (&camera->priv->fill_pattern_mutex);
@@ -963,7 +968,7 @@ arv_fake_camera_init (ArvFakeCamera *fake_camera)
 	fake_camera->priv = arv_fake_camera_get_instance_private (fake_camera);
 
 	fake_camera->priv->trigger_frequency = 25.0;
-	fake_camera->priv->frame_id = 65000; /* Trigger circular counter bugs sooner */
+	fake_camera->priv->frame_id = 65400; /* Trigger circular counter bugs sooner */
 }
 
 static void
