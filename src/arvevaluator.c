@@ -283,7 +283,7 @@ arv_evaluator_token_debug (ArvEvaluatorToken *token, GHashTable *variables)
 					   value != NULL ? "" : " not found");
 			break;
 		case ARV_EVALUATOR_TOKEN_CONSTANT_INT64:
-			arv_log_evaluator ("(int64) %Ld", token->data.v_int64);
+			arv_log_evaluator ("(int64) %" G_GINT64_FORMAT, token->data.v_int64);
 			break;
 		case ARV_EVALUATOR_TOKEN_CONSTANT_DOUBLE:
 			arv_log_evaluator ("(double) %g", token->data.v_double);
@@ -966,7 +966,7 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 		*v_int64 = arv_value_get_int64 (&stack[0].value);
 
 	if (arv_value_holds_int64 (&stack[0].value))
-		arv_log_evaluator ("[Evaluator::evaluate] Result = (int64) %Ld", arv_value_get_int64 (&stack[0].value));
+		arv_log_evaluator ("[Evaluator::evaluate] Result = (int64) %" G_GINT64_FORMAT, arv_value_get_int64 (&stack[0].value));
 	else
 		arv_log_evaluator ("[Evaluator::evaluate] Result = (double) %g", arv_value_get_double (&stack[0].value));
 
@@ -1449,7 +1449,7 @@ arv_evaluator_set_int64_variable (ArvEvaluator *evaluator, const char *name, gin
 			     g_strdup (name),
 			     arv_value_new_int64 (v_int64));
 
-	arv_log_evaluator ("[Evaluator::set_int64_variable] %s = %Ld", name, v_int64);
+	arv_log_evaluator ("[Evaluator::set_int64_variable] %s = %" G_GINT64_FORMAT, name, v_int64);
 }
 
 /**

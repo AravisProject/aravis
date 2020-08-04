@@ -342,7 +342,8 @@ arv_gc_converter_update_from_variables (ArvGcConverter *gc_converter, ArvGcConve
 
 			arv_evaluator_set_double_variable (priv->formula_from, "TO", value);
 		} else {
-			arv_warning_genicam ("[GcConverter::set_value] Invalid pValue node '%s'", priv->value);
+			arv_warning_genicam ("[GcConverter::set_value] Invalid pValue node '%s'",
+					     arv_gc_property_node_get_string (priv->value, NULL));
 			g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_INVALID_PVALUE,
 				     "pValue node '%s' of '%s' is invalid",
 				     arv_gc_property_node_get_string (priv->value, NULL),
@@ -516,7 +517,7 @@ arv_gc_converter_update_to_variables (ArvGcConverter *gc_converter, GError **err
 			}
 		} else
 			arv_warning_genicam ("[GcConverter::set_value] Invalid pValue node '%s'",
-					     priv->value);
+					     arv_gc_property_node_get_string (priv->value, NULL));
 	}
 }
 

@@ -119,7 +119,7 @@ arv_gc_command_execute (ArvGcCommand *gc_command, GError **error)
 		return;
 	}
 
-	arv_log_genicam ("[GcCommand::execute] %s (0x%x)",
+	arv_log_genicam ("[GcCommand::execute] %s (0x%" G_GINT64_MODIFIER "x)",
 			 arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_command)),
 			 command_value);
 }

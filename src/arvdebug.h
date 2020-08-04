@@ -105,9 +105,9 @@ extern ArvDebugCategory arv_debug_category_viewer;
 #define arv_log_viewer(...)		arv_log (&arv_debug_category_viewer, __VA_ARGS__)
 #define arv_warning_viewer(...)		arv_warning (&arv_debug_category_viewer, __VA_ARGS__)
 
-void 		arv_warning 			(ArvDebugCategory *category, const char *format, ...);
-void 		arv_debug 			(ArvDebugCategory *category, const char *format, ...);
-void 		arv_log 			(ArvDebugCategory *category, const char *format, ...);
+void 		arv_warning 			(ArvDebugCategory *category, const char *format, ...) G_GNUC_PRINTF (2,3);
+void 		arv_debug 			(ArvDebugCategory *category, const char *format, ...) G_GNUC_PRINTF (2,3);
+void 		arv_log 			(ArvDebugCategory *category, const char *format, ...) G_GNUC_PRINTF (2,3);
 
 gboolean	arv_debug_check			(ArvDebugCategory *category, ArvDebugLevel level);
 void		arv_debug_enable		(const char *category_selection);

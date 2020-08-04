@@ -136,13 +136,13 @@ arv_gc_enumeration_get_string_value (ArvGcEnumeration *enumeration, GError **err
 			const char *string;
 
 			string = arv_gc_feature_node_get_name (iter->data);
-			arv_log_genicam ("[GcEnumeration::get_string_value] value = %Ld - string = %s",
+			arv_log_genicam ("[GcEnumeration::get_string_value] value = %" G_GINT64_FORMAT " - string = %s",
 					 value, string);
 			return string;
 		}
 	}
 
-	arv_warning_genicam ("[GcEnumeration::get_string_value] value = %Ld not found for node %s",
+	arv_warning_genicam ("[GcEnumeration::get_string_value] value = %" G_GINT64_FORMAT " not found for node %s",
 			     value, arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
 
 	return NULL;
@@ -163,7 +163,7 @@ arv_gc_enumeration_set_string_value (ArvGcEnumeration *enumeration, const char *
 
 			enum_value = arv_gc_enum_entry_get_value (iter->data, &local_error);
 
-			arv_log_genicam ("[GcEnumeration::set_string_value] value = %d - string = %s",
+			arv_log_genicam ("[GcEnumeration::set_string_value] value = %" G_GINT64_FORMAT " - string = %s",
 					 enum_value, value);
 
 			if (local_error != NULL) {

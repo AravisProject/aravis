@@ -895,7 +895,8 @@ arv_fake_camera_new_full (const char *serial_number, const char *genicam_filenam
 		filename = g_build_filename (ARAVIS_DATA_DIR, "arv-fake-camera.xml", NULL);
 
 	if (!g_file_get_contents (filename, &fake_camera->priv->genicam_xml, &fake_camera->priv->genicam_xml_size, &error)) {
-		arv_warning_device ("Failed to load genicam file '%s': %s", error != NULL ? error->message : "Unknown reason");
+		arv_warning_device ("Failed to load genicam file '%s': %s",
+				    filename, error != NULL ? error->message : "Unknown reason");
 		g_clear_error (&error);
 		fake_camera->priv->genicam_xml = NULL;
 		fake_camera->priv->genicam_xml_size = 0;

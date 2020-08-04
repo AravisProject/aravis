@@ -116,7 +116,7 @@ arv_uv_stream_thread (void *data)
 		else
 			packet = incoming_buffer;
 
-		arv_log_sp ("Asking for %u bytes", size);
+		arv_log_sp ("Asking for %" G_GSIZE_FORMAT " bytes", size);
 		arv_uv_device_bulk_transfer (thread_data->uv_device,  ARV_UV_ENDPOINT_DATA, LIBUSB_ENDPOINT_IN,
 					     packet, size, &transferred, 0, &error);
 
@@ -126,7 +126,7 @@ arv_uv_stream_thread (void *data)
 		} else {
 			ArvUvspPacketType packet_type;
 
-			arv_log_sp ("Received %d bytes", transferred);
+			arv_log_sp ("Received %" G_GSIZE_FORMAT " bytes", transferred);
 			arv_uvsp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
 			packet_type = arv_uvsp_packet_get_packet_type (packet);

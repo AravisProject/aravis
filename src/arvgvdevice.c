@@ -259,7 +259,7 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 
 						timeout_stop_ms = g_get_monotonic_time () / 1000 + pending_ack_timeout_ms;
 
-						arv_log_device ("[GvDevice::%s] Pending ack timeout = %d",
+						arv_log_device ("[GvDevice::%s] Pending ack timeout = %" G_GINT64_FORMAT,
 								operation, pending_ack_timeout_ms);
 					} else if (packet_type == ARV_GVCP_PACKET_TYPE_ERROR) {
 						expected_answer = command == ack_command &&

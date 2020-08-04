@@ -148,14 +148,15 @@ _read_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buffe
 
 	read_packet_size = arv_uvcp_packet_get_read_memory_ack_size (size);
 	if (read_packet_size > priv->ack_packet_size_max) {
-		arv_debug_device ("Invalid acknowledge packet size (%d / max: %d)",
+		arv_debug_device ("Invalid acknowledge packet size (%" G_GSIZE_FORMAT " / max: %d)",
 				  read_packet_size, priv->ack_packet_size_max);
 		return FALSE;
 	}
 
 	packet = arv_uvcp_packet_new_read_memory_cmd (address, size, 0, &packet_size);
 	if (packet_size > priv->cmd_packet_size_max) {
-		arv_debug_device ("Invalid command packet size (%d / max: %d)", packet_size, priv->cmd_packet_size_max);
+		arv_debug_device ("Invalid command packet size (%" G_GSIZE_FORMAT " / max: %d)",
+				  packet_size, priv->cmd_packet_size_max);
 		arv_uvcp_packet_free (packet);
 		return FALSE;
 	}
@@ -282,14 +283,15 @@ _write_memory (ArvUvDevice *uv_device, guint64 address, guint32 size, void *buff
 
 	read_packet_size = arv_uvcp_packet_get_write_memory_ack_size ();
 	if (read_packet_size > priv->ack_packet_size_max) {
-		arv_debug_device ("Invalid acknowledge packet size (%d / max: %d)",
+		arv_debug_device ("Invalid acknowledge packet size (%" G_GSIZE_FORMAT " / max: %d)",
 				  read_packet_size, priv->ack_packet_size_max);
 		return FALSE;
 	}
 
 	packet = arv_uvcp_packet_new_write_memory_cmd (address, size, 0, &packet_size);
 	if (packet_size > priv->cmd_packet_size_max) {
-		arv_debug_device ("Invalid command packet size (%d / max: %d)", packet_size, priv->cmd_packet_size_max);
+		arv_debug_device ("Invalid command packet size (%" G_GSIZE_FORMAT " / max: %d)",
+				  packet_size, priv->cmd_packet_size_max);
 		arv_uvcp_packet_free (packet);
 		return FALSE;
 	}

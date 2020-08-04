@@ -489,7 +489,7 @@ arv_gc_register_node_get (ArvGcRegister *gc_register, void *buffer, guint64 leng
 	} else
 		memcpy (buffer, cache, length);
 
-	arv_log_genicam ("[GcRegisterNode::get] 0x%Lx,%Ld", address, length);
+	arv_log_genicam ("[GcRegisterNode::get] 0x%" G_GINT64_MODIFIER "x,%" G_GUINT64_FORMAT, address, length);
 }
 
 static void
@@ -526,7 +526,7 @@ arv_gc_register_node_set (ArvGcRegister *gc_register, const void *buffer, guint6
 		return;
 	}
 
-	arv_log_genicam ("[GcRegisterNode::set] 0x%Lx,%Ld", address, length);
+	arv_log_genicam ("[GcRegisterNode::set] 0x%" G_GINT64_MODIFIER "x,%" G_GUINT64_FORMAT, address, length);
 }
 
 static guint64
@@ -595,7 +595,7 @@ _get_integer_value (ArvGcRegisterNode *gc_register_node,
 
 		arv_log_genicam ("[GcRegisterNode::_get_integer_value] reglsb = %d, regmsb, %d, lsb = %d, msb = %d",
 				 register_lsb, register_msb, lsb, msb);
-		arv_log_genicam ("[GcRegisterNode::_get_integer_value] value = 0x%08Lx", value);
+		arv_log_genicam ("[GcRegisterNode::_get_integer_value] value = 0x%08" G_GINT64_MODIFIER "x", value);
 
 		if (msb - lsb < 63)
 			mask = ((((guint64) 1) << (msb - lsb + 1)) - 1) << lsb;
@@ -610,7 +610,7 @@ _get_integer_value (ArvGcRegisterNode *gc_register_node,
 			value |= G_MAXUINT64 ^ (mask >> lsb);
 		}
 
-		arv_log_genicam ("[GcRegisterNode::_get_integer_value] mask  = 0x%08Lx", mask);
+		arv_log_genicam ("[GcRegisterNode::_get_integer_value] mask  = 0x%08" G_GINT64_MODIFIER "x", mask);
 	} else {
 		if (length < 8 &&
 		    ((value & (((guint64) 1) << (length * 8 - 1))) != 0) &&
@@ -618,7 +618,7 @@ _get_integer_value (ArvGcRegisterNode *gc_register_node,
 			value |= G_MAXUINT64 ^ ((((guint64) 1) << (length * 8)) - 1);
 	}
 
-	arv_log_genicam ("[GcRegisterNode::_get_integer_value] address = 0x%Lx, value = 0x%Lx",
+	arv_log_genicam ("[GcRegisterNode::_get_integer_value] address = 0x%" G_GINT64_MODIFIER "x, value = 0x%" G_GINT64_MODIFIER "x",
 			 _get_address (gc_register_node, NULL), value);
 
 	return value;
@@ -688,7 +688,7 @@ _set_integer_value (ArvGcRegisterNode *gc_register_node,
 
 		arv_log_genicam ("[GcRegisterNode::_set_integer_value] reglsb = %d, regmsb, %d, lsb = %d, msb = %d",
 				 register_lsb, register_msb, lsb, msb);
-		arv_log_genicam ("[GcRegisterNode::_set_integer_value] value = 0x%08Lx", value);
+		arv_log_genicam ("[GcRegisterNode::_set_integer_value] value = 0x%08" G_GINT64_MODIFIER "x", value);
 
 		if (msb - lsb < 63)
 			mask = ((((guint64) 1) << (msb - lsb + 1)) - 1) << lsb;
@@ -697,10 +697,10 @@ _set_integer_value (ArvGcRegisterNode *gc_register_node,
 
 		value = ((value << lsb) & mask) | (current_value & ~mask);
 
-		arv_log_genicam ("[GcRegisterNode::_set_integer_value] mask  = 0x%08Lx", mask);
+		arv_log_genicam ("[GcRegisterNode::_set_integer_value] mask  = 0x%08" G_GINT64_MODIFIER "x", mask);
 	}
 
-	arv_log_genicam ("[GcRegisterNode::_set_integer_value] address = 0x%Lx, value = 0x%Lx",
+	arv_log_genicam ("[GcRegisterNode::_set_integer_value] address = 0x%" G_GINT64_MODIFIER "x, value = 0x%" G_GINT64_MODIFIER "x",
 			 _get_address (gc_register_node, NULL), value);
 
 	arv_copy_memory_with_endianness (cache, length, endianness,
