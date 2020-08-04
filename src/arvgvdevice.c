@@ -457,10 +457,6 @@ arv_gv_device_take_control (ArvGvDevice *gv_device)
 
 	priv->io_data->is_controller = success;
 
-	/* Disable GVSP extended ID mode for now, it is not supported yet by ArvGvStream */
-	if (success)
-		arv_device_set_string_feature_value (ARV_DEVICE (gv_device), "GevGVSPExtendedIDMode", "Off", NULL);
-
 	if (!success)
 		arv_warning_device ("[GvDevice::take_control] Can't get control access");
 
