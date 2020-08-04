@@ -694,6 +694,8 @@ _process_packet (ArvGvStreamThreadData *thread_data, const ArvGvspPacket *packet
 			thread_data->n_duplicated_packets++;
 			arv_gvsp_packet_debug (packet, packet_size, ARV_DEBUG_LEVEL_LOG);
 		} else {
+			ArvGvspContentType content_type;
+
 			if (packet_id < frame->n_packets) {
 				frame->packet_data[packet_id].received = TRUE;
 			}
@@ -704,9 +706,14 @@ _process_packet (ArvGvStreamThreadData *thread_data, const ArvGvspPacket *packet
 					break;
 			frame->last_valid_packet = i - 1;
 
-			arv_gvsp_packet_debug (packet, packet_size, ARV_DEBUG_LEVEL_LOG);
+			content_type = arv_gvsp_packet_get_content_type (packet);
 
-			switch (arv_gvsp_packet_get_content_type (packet)) {
+			arv_gvsp_packet_debug (packet, packet_size,
+					       content_type == ARV_GVSP_CONTENT_TYPE_DATA_LEADER ?
+					       ARV_DEBUG_LEVEL_DEBUG :
+					       ARV_DEBUG_LEVEL_LOG);
+
+			switch (content_type) {
 				case ARV_GVSP_CONTENT_TYPE_DATA_LEADER:
 					_process_data_leader (thread_data, frame, packet, packet_id);
 					break;
