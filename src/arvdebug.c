@@ -218,6 +218,16 @@ arv_log (ArvDebugCategory *category, const char *format, ...)
 	va_end (args);
 }
 
+void
+arv_verbosely_log (ArvDebugCategory *category, const char *format, ...)
+{
+	va_list args;
+
+	va_start (args, format);
+	arv_debug_with_level (category, ARV_DEBUG_LEVEL_VERBOSE_LOG, format, args);
+	va_end (args);
+}
+
 /**
  * arv_debug_enable:
  * @category_selection: debug category configuration string
