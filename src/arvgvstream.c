@@ -192,7 +192,7 @@ _send_packet_request (ArvGvStreamThreadData *thread_data,
 							thread_data->packet_id, &packet_size);
 
 	arv_log_stream_thread ("[GvStream::send_packet_request] frame_id = %" G_GUINT64_FORMAT
-			       " (%" G_GUINT32_FORMAT " - %" G_GUINT32_FORMAT ")",
+			       " (from packet %" G_GUINT32_FORMAT " to %" G_GUINT32_FORMAT ")",
 			       frame_id, first_block, last_block);
 
 	arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
@@ -480,10 +480,13 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 						frame->n_packet_resend_requests += i - first_missing;
 
 						arv_debug_stream_thread ("[GvStream::missing_packet_check]"
-									 " Maximum number of packet requests "
-									 "reached at dt = %" G_GINT64_FORMAT ", n_requests = %u/%u",
+									 " Maximum number of requests "
+									 "reached at dt = %" G_GINT64_FORMAT
+									 ", n_packet_requests = %u (%u packets/frame), frame_id = %"
+									 G_GUINT64_FORMAT,
 									 time_us - frame->first_packet_time_us,
-									 frame->n_packet_resend_requests, frame->n_packets);
+									 frame->n_packet_resend_requests, frame->n_packets,
+									 frame->frame_id);
 
 						thread_data->n_resend_ratio_reached++;
 						frame->resend_ratio_reached = TRUE;
@@ -492,7 +495,8 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 					}
 
 					arv_log_stream_thread ("[GvStream::missing_packet_check]"
-							       " Resend request at dt = %" G_GINT64_FORMAT ", packet id = %u/%u",
+							       " Resend request at dt = %" G_GINT64_FORMAT
+							       ", packet id = %u (%u packets/frame)",
 							       time_us - frame->first_packet_time_us,
 							       packet_id, frame->n_packets);
 
@@ -517,10 +521,10 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 				frame->n_packet_resend_requests += i - first_missing;
 
 				arv_debug_stream_thread ("[GvStream::missing_packet_check]"
-						       " Maximum number of packet requests "
-						       "reached at dt = %" G_GINT64_FORMAT ", n_requests = %u/%u",
+						       " Maximum number of requests reached at dt = %" G_GINT64_FORMAT
+						       ", n_packet_requests = %u (%u packets/frame), frame_id = %" G_GUINT64_FORMAT,
 						       time_us - frame->first_packet_time_us,
-						       frame->n_packet_resend_requests, frame->n_packets);
+						       frame->n_packet_resend_requests, frame->n_packets, frame->frame_id);
 
 				thread_data->n_resend_ratio_reached++;
 				frame->resend_ratio_reached = TRUE;
@@ -530,7 +534,7 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 
 
 			arv_log_stream_thread ("[GvStream::missing_packet_check]"
-					       " Resend request at dt = %" G_GINT64_FORMAT", packet id = %u/%u",
+					       " Resend request at dt = %" G_GINT64_FORMAT", packet id = %u (%u packets/frame)",
 					       time_us - frame->first_packet_time_us,
 					       packet_id, frame->n_packets);
 
@@ -738,8 +742,8 @@ _process_packet (ArvGvStreamThreadData *thread_data, const ArvGvspPacket *packet
 			content_type = arv_gvsp_packet_get_content_type (packet);
 
 			arv_gvsp_packet_debug (packet, packet_size,
-					       content_type == ARV_GVSP_CONTENT_TYPE_DATA_LEADER ?
-					       ARV_DEBUG_LEVEL_DEBUG :
+					       content_type == ARV_GVSP_CONTENT_TYPE_DATA_BLOCK ?
+					       ARV_DEBUG_LEVEL_VERBOSE_LOG :
 					       ARV_DEBUG_LEVEL_LOG);
 
 			switch (content_type) {
