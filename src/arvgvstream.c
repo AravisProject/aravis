@@ -355,6 +355,8 @@ _process_data_trailer (ArvGvStreamThreadData *thread_data,
 
 static ArvGvStreamFrameData *
 _find_frame_data (ArvGvStreamThreadData *thread_data,
+		  const ArvGvspPacket *packet,
+		  size_t packet_size,
 		  guint64 frame_id,
 		  guint32 packet_id,
 		  gboolean extended_ids,
@@ -392,6 +394,7 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 		arv_debug_stream_thread ("[GvStream::find_frame_data] Discard late frame %" G_GUINT64_FORMAT
 					 " (last: %" G_GUINT64_FORMAT ")",
 					 frame_id, thread_data->last_frame_id);
+		arv_gvsp_packet_debug (packet, packet_size, ARV_DEBUG_LEVEL_DEBUG);
 		return NULL;
 	}
 
@@ -705,7 +708,7 @@ _process_packet (ArvGvStreamThreadData *thread_data, const ArvGvspPacket *packet
 		thread_data->first_packet = FALSE;
 	}
 
-	frame = _find_frame_data (thread_data, frame_id, packet_id, extended_ids, packet_size, time_us);
+	frame = _find_frame_data (thread_data, packet, packet_size, frame_id, packet_id, extended_ids, packet_size, time_us);
 
 	if (frame != NULL) {
 		ArvGvspPacketType packet_type = arv_gvsp_packet_get_packet_type (packet);
