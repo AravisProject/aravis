@@ -217,6 +217,8 @@ arv_gvsp_packet_to_string (const ArvGvspPacket *packet, size_t packet_size)
 			break;
 		case ARV_GVSP_CONTENT_TYPE_DATA_BLOCK:
 			break;
+		case ARV_GVSP_CONTENT_TYPE_ALL_IN:
+			break;
 	}
 
 	c_string = string->str;
