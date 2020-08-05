@@ -468,19 +468,31 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 	if (packet_id < frame->n_packets) {
 		int first_missing = -1;
 
-		for (i = frame->last_valid_packet + 1; i <= packet_id; i++) {
-			if (!frame->packet_data[i].received &&
-			    (frame->packet_data[i].time_us == 0 ||
-			     (time_us - frame->packet_data[i].time_us > thread_data->packet_timeout_us))) {
+		for (i = frame->last_valid_packet + 1; i <= packet_id + 1; i++) {
+			gboolean need_resend;
+
+			need_resend = i <= packet_id &&
+				!frame->packet_data[i].received &&
+				(frame->packet_data[i].time_us == 0 ||
+				 (time_us - frame->packet_data[i].time_us > thread_data->packet_timeout_us));
+
+			if (need_resend) {
 				if (first_missing < 0)
 					first_missing = i;
-			} else
+			}
+
+			if (i > packet_id || !need_resend) {
 				if (first_missing >= 0) {
+					int last_missing;
+					int n_missing_packets;
 					int j;
 
-					if (i - first_missing + frame->n_packet_resend_requests >
+					last_missing = i - 1;
+					n_missing_packets = last_missing - first_missing + 1;
+
+					if (frame->n_packet_resend_requests + n_missing_packets >
 					    (frame->n_packets * thread_data->packet_request_ratio)) {
-						frame->n_packet_resend_requests += i - first_missing;
+						frame->n_packet_resend_requests += n_missing_packets;
 
 						arv_debug_stream_thread ("[GvStream::missing_packet_check]"
 									 " Maximum number of requests "
@@ -506,49 +518,17 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 					_send_packet_request (thread_data,
 							      frame->frame_id,
 							      first_missing,
-							      i - 1,
+							      last_missing,
 							      frame->extended_ids);
-					for (j = first_missing; j < i; j++)
+
+					for (j = first_missing; j <= last_missing; j++)
 						frame->packet_data[j].time_us = time_us;
-					thread_data->n_resend_requests += (i - first_missing);
+
+					thread_data->n_resend_requests += n_missing_packets;
 
 					first_missing = -1;
 				}
-		}
-
-		if (first_missing >= 0) {
-			int j;
-
-			if (i - first_missing + frame->n_packet_resend_requests >
-			    (frame->n_packets * thread_data->packet_request_ratio)) {
-				frame->n_packet_resend_requests += i - first_missing;
-
-				arv_debug_stream_thread ("[GvStream::missing_packet_check]"
-						       " Maximum number of requests reached at dt = %" G_GINT64_FORMAT
-						       ", n_packet_requests = %u (%u packets/frame), frame_id = %" G_GUINT64_FORMAT,
-						       time_us - frame->first_packet_time_us,
-						       frame->n_packet_resend_requests, frame->n_packets, frame->frame_id);
-
-				thread_data->n_resend_ratio_reached++;
-				frame->resend_ratio_reached = TRUE;
-
-				return;
 			}
-
-
-			arv_log_stream_thread ("[GvStream::missing_packet_check]"
-					       " Resend request at dt = %" G_GINT64_FORMAT", packet id = %u (%u packets/frame)",
-					       time_us - frame->first_packet_time_us,
-					       packet_id, frame->n_packets);
-
-			_send_packet_request (thread_data,
-					      frame->frame_id,
-					      first_missing,
-					      i - 1,
-					      frame->extended_ids);
-			for (j = first_missing; j < i; j++)
-				frame->packet_data[j].time_us = time_us;
-			thread_data->n_resend_requests += (i - first_missing);
 		}
 	}
 }
