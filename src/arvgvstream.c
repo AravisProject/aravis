@@ -708,6 +708,8 @@ _process_packet (ArvGvStreamThreadData *thread_data, const ArvGvspPacket *packet
 		           frame->packet_data[packet_id].received) {
 			/* Ignore duplicate packet */
 			thread_data->n_duplicated_packets++;
+			arv_log_stream_thread ("[GvStream::process_packet] Duplicated packet %d for frame %" G_GUINT64_FORMAT,
+						 packet_id, frame->frame_id);
 			arv_gvsp_packet_debug (packet, packet_size, ARV_DEBUG_LEVEL_LOG);
 		} else {
 			ArvGvspContentType content_type;
