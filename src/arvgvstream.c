@@ -693,8 +693,7 @@ _process_packet (ArvGvStreamThreadData *thread_data, const ArvGvspPacket *packet
 	if (frame != NULL) {
 		ArvGvspPacketType packet_type = arv_gvsp_packet_get_packet_type (packet);
 
-		if (packet_type != ARV_GVSP_PACKET_TYPE_OK &&
-		    packet_type != ARV_GVSP_PACKET_TYPE_RESEND) {
+		if (arv_gvsp_packet_type_is_error (packet_type)) {
 			arv_debug_stream_thread ("[GvStream::process_packet]"
 						 " Error packet at dt = %" G_GINT64_FORMAT ", packet id = %u"
 						 " frame id = %" G_GUINT64_FORMAT,
