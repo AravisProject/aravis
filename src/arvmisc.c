@@ -21,7 +21,7 @@
  */
 
 #include <arvmiscprivate.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <string.h>
 #include <math.h>
 #include <stdio.h>

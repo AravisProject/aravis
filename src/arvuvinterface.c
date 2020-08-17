@@ -28,7 +28,7 @@
 #include <arvuvinterfaceprivate.h>
 #include <arvinterfaceprivate.h>
 #include <arvuvdeviceprivate.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <arvmisc.h>
 #include <arvstr.h>
 #include <libusb.h>

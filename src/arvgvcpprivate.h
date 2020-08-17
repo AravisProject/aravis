@@ -24,7 +24,7 @@
 #define ARV_GVCP_PRIVATE_H
 
 #include <arvtypes.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 
 G_BEGIN_DECLS
 

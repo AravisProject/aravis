@@ -59,7 +59,7 @@
 #include <arvgcintconverternode.h>
 #include <arvgcport.h>
 #include <arvbuffer.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <arvdomparser.h>
 #include <string.h>
 #include <stdarg.h>

@@ -38,7 +38,7 @@
 #include <arvgcenumeration.h>
 #include <arvgcenums.h>
 #include <arvmisc.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <string.h>
 
 typedef struct {

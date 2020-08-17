@@ -31,7 +31,7 @@
  */
 
 #include <arvzip.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <string.h>
 #include <zlib.h>
 

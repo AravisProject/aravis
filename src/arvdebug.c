@@ -25,9 +25,9 @@
  * @short_description: Debugging tools
  */
 
-#include <arvdebug.h>
 #include <glib/gprintf.h>
 #include <stdlib.h>
+#include <arvdebugprivate.h>
 
 ArvDebugCategory arv_debug_category_interface =
 {

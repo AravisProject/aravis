@@ -158,6 +158,7 @@ library_headers = [
 library_private_headers = [
 	'arvbufferprivate.h',
 	'arvchunkparserprivate.h',
+	'arvdebugprivate.h',
 	'arvdeviceprivate.h',
 	'arvfakedeviceprivate.h',
 	'arvfakeinterfaceprivate.h',

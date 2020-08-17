@@ -36,7 +36,7 @@
 #include <arvgc.h>
 #include <arvdomtext.h>
 #include <arvmisc.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <arvenumtypes.h>
 #include <string.h>
 

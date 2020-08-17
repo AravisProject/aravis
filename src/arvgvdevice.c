@@ -31,7 +31,7 @@
 #include <arvgccommand.h>
 #include <arvgcboolean.h>
 #include <arvgcregisterdescriptionnode.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <arvgvstreamprivate.h>
 #include <arvgvcpprivate.h>
 #include <arvgvspprivate.h>

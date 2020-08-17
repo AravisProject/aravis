@@ -30,7 +30,7 @@
 #include <arvdomnodechildlist.h>
 #include <arvdomnodelist.h>
 #include <arvdomdocument.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <glib/gprintf.h>
 #include <stdio.h>
 

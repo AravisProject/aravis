@@ -31,7 +31,7 @@
 #include <libxml/valid.h>
 #include <libxml/xmlschemas.h>
 #include <gio/gio.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <arvmisc.h>
 
 typedef struct {

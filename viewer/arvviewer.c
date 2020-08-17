@@ -25,6 +25,7 @@
 #include <gst/app/gstappsrc.h>
 #include <gst/video/videooverlay.h>
 #include <arv.h>
+#include <arvdebugprivate.h>
 #include <math.h>
 #include <memory.h>
 #include <libnotify/notify.h>

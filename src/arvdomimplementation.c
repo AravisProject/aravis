@@ -22,7 +22,7 @@
  */
 
 #include <arvdomimplementation.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <arvgc.h>
 #include <string.h>
 

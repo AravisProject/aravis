@@ -51,7 +51,7 @@
 #include <arvgcfloat.h>
 #include <arvgcstring.h>
 #include <arvgcboolean.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 
 enum {
 	ARV_CHUNK_PARSER_PROPERTY_0,

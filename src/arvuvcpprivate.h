@@ -28,7 +28,7 @@
 #endif
 
 #include <arvtypes.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 
 G_BEGIN_DECLS
 

@@ -28,7 +28,7 @@
 #endif
 #include <arvfakeinterfaceprivate.h>
 #include <arvdevice.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <string.h>
 #include <arvmisc.h>
 #include <arvdomimplementation.h>

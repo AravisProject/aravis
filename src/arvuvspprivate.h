@@ -23,13 +23,9 @@
 #ifndef ARV_UVSP_PRIVATE_H
 #define ARV_UVSP_PRIVATE_H
 
-#if !defined (ARV_H_INSIDE) && !defined (ARAVIS_COMPILATION)
-#error "Only <arv.h> can be included directly."
-#endif
-
 #include <arvtypes.h>
 #include <arvdebug.h>
-#include <arvbuffer.h>
+#include <arvbufferprivate.h>
 
 G_BEGIN_DECLS
 
