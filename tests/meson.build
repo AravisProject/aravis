@@ -57,6 +57,7 @@ if get_option('tests')
 		['arv-device-test',		'arvdevicetest.c'],
 		['arv-genicam-test',		'arvgenicamtest.c'],
 		['arv-evaluator-test',		'arvevaluatortest.c'],
+		['arv-enums-test',		'arvenums.c'],
 		['arv-zip-test',		'arvziptest.c'],
 		['arv-camera-test',		'arvcameratest.c'],
 		['arv-chunk-parser-test',	'arvchunkparsertest.c'],

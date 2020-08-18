@@ -81,6 +81,12 @@ typedef guint32 ArvPixelFormat;
 
 #define ARV_PIXEL_FORMAT_BIT_PER_PIXEL(pixel_format) (((pixel_format) >> 16) & 0xff)
 
+#define ARV_PIXEL_FORMAT_8_BIT(pixel_format) ((pixel_format & 0x00080000) && !(pixel_format & ~0x0318003f))
+
+#define ARV_PIXEL_FORMAT_12_BIT(pixel_format) ((pixel_format & 0x01000000) && !(pixel_format & ~0x011c007f))
+
+#define ARV_PIXEL_FORMAT_10_BIT(pixel_format) ((pixel_format & 0x01000000) && !(pixel_format & ~0x011e007f) && !ARV_PIXEL_FORMAT_8_BIT(pixel_format))
+
 /* Grey pixel formats */
 
 #define	ARV_PIXEL_FORMAT_MONO_8			((ArvPixelFormat) 0x01080001u)
