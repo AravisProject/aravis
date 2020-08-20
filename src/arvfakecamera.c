@@ -545,13 +545,15 @@ arv_fake_camera_diagonal_ramp (ArvBuffer *buffer, void *fill_pattern_data,
             for (y = 0; y < height; y++)
                 for (x = 0; x < width; x++) {
                     unsigned int index;
-					pixel_value = (x + buffer->priv->frame_id + y) % 255;
-					pixel_value *= scale;
-					index = CLAMP (pixel_value, 0, 255);
+		    unsigned char *pixel;
+
+		    pixel_value = (x + buffer->priv->frame_id + y) % 255;
+		    pixel_value *= scale;
+		    index = CLAMP (pixel_value, 0, 255);
 
                     // BG
                     // GR
-                    unsigned char *pixel = &buffer->priv->data [y * width + x];
+                    pixel = &buffer->priv->data [y * width + x];
                     if (x & 1) {
                         if (y & 1)
                             *pixel = jet_colormap [index].b;
@@ -570,13 +572,15 @@ arv_fake_camera_diagonal_ramp (ArvBuffer *buffer, void *fill_pattern_data,
             for (y = 0; y < height; y++)
                 for (x = 0; x < width; x++) {
                     unsigned int index;
-					pixel_value = (x + buffer->priv->frame_id + y) % 255;
-					pixel_value *= scale;
-					index = CLAMP (pixel_value, 0, 255);
+		    unsigned char *pixel;
+
+		    pixel_value = (x + buffer->priv->frame_id + y) % 255;
+		    pixel_value *= scale;
+		    index = CLAMP (pixel_value, 0, 255);
 
                     // GB
                     // RG
-                    unsigned char *pixel = &buffer->priv->data [y * width + x];
+                    pixel = &buffer->priv->data [y * width + x];
                     if (x & 1) {
                         if (y & 1)
                             *pixel = jet_colormap [index].g;
@@ -591,74 +595,78 @@ arv_fake_camera_diagonal_ramp (ArvBuffer *buffer, void *fill_pattern_data,
                 }
             break;
 
-        case ARV_PIXEL_FORMAT_BAYER_GR_8:
-            for (y = 0; y < height; y++)
-                for (x = 0; x < width; x++) {
-					unsigned int index;
-					pixel_value = (x + buffer->priv->frame_id + y) % 255;
-					pixel_value *= scale;
-					index = CLAMP (pixel_value, 0, 255);
+	case ARV_PIXEL_FORMAT_BAYER_GR_8:
+	    for (y = 0; y < height; y++)
+		    for (x = 0; x < width; x++) {
+			    unsigned int index;
+			    unsigned char *pixel;
 
-                    // GR
-                    // BG
-                    unsigned char *pixel = &buffer->priv->data [y * width + x];
-                    if (x & 1) {
-                        if (y & 1)
-                            *pixel = jet_colormap [index].g;
-                        else
-                            *pixel = jet_colormap [index].r;
-                    } else {
-                        if (y & 1)
-                            *pixel = jet_colormap [index].b;
-                        else
-                            *pixel = jet_colormap [index].g;
-                    }
-                }
-            break;
+			    pixel_value = (x + buffer->priv->frame_id + y) % 255;
+			    pixel_value *= scale;
+			    index = CLAMP (pixel_value, 0, 255);
+
+			    // GR
+			    // BG
+			    pixel = &buffer->priv->data [y * width + x];
+			    if (x & 1) {
+				    if (y & 1)
+					    *pixel = jet_colormap [index].g;
+				    else
+					    *pixel = jet_colormap [index].r;
+			    } else {
+				    if (y & 1)
+					    *pixel = jet_colormap [index].b;
+				    else
+					    *pixel = jet_colormap [index].g;
+			    }
+		    }
+	    break;
 
         case ARV_PIXEL_FORMAT_BAYER_RG_8:
-            for (y = 0; y < height; y++)
-                for (x = 0; x < width; x++) {
-					unsigned int index;
-					pixel_value = (x + buffer->priv->frame_id + y) % 255;
-					pixel_value *= scale;
-					index = CLAMP (pixel_value, 0, 255);
+	    for (y = 0; y < height; y++)
+		    for (x = 0; x < width; x++) {
+			    unsigned int index;
+			    unsigned char *pixel;
 
-                    // RG
-                    // GB
-                    unsigned char *pixel = &buffer->priv->data [y * width + x];
-                    if (x & 1) {
-                        if (y & 1)
-                            *pixel = jet_colormap [index].r;
-                        else
-                            *pixel = jet_colormap [index].g;
-                    } else {
-                        if (y & 1)
-                            *pixel = jet_colormap [index].g;
-                        else
-                            *pixel = jet_colormap [index].b;
-                    }
-                }
-            break;
+			    pixel_value = (x + buffer->priv->frame_id + y) % 255;
+			    pixel_value *= scale;
+			    index = CLAMP (pixel_value, 0, 255);
 
-		case ARV_PIXEL_FORMAT_RGB_8_PACKED:
-			for (y = 0; y < height; y++)
-				for (x = 0; x < width; x++) {
-					unsigned char *pixel = &buffer->priv->data [3 * (y * width + x)];
-					unsigned int index;
+			    // RG
+			    // GB
+			    pixel = &buffer->priv->data [y * width + x];
+			    if (x & 1) {
+				    if (y & 1)
+					    *pixel = jet_colormap [index].r;
+				    else
+					    *pixel = jet_colormap [index].g;
+			    } else {
+				    if (y & 1)
+					    *pixel = jet_colormap [index].g;
+				    else
+					    *pixel = jet_colormap [index].b;
+			    }
+		    }
+	    break;
 
-					pixel_value = (x + buffer->priv->frame_id + y) % 255;
-					pixel_value *= scale;
+	case ARV_PIXEL_FORMAT_RGB_8_PACKED:
+	    for (y = 0; y < height; y++)
+		    for (x = 0; x < width; x++) {
+			    unsigned char *pixel = &buffer->priv->data [3 * (y * width + x)];
+			    unsigned int index;
 
-					index = CLAMP (pixel_value, 0, 255);
+			    pixel_value = (x + buffer->priv->frame_id + y) % 255;
+			    pixel_value *= scale;
 
-					pixel[0] = jet_colormap [index].r;
-					pixel[1] = jet_colormap [index].g;
-					pixel[2] = jet_colormap [index].b;
-				}
+			    index = CLAMP (pixel_value, 0, 255);
 
-		default:
-			break;
+			    pixel[0] = jet_colormap [index].r;
+			    pixel[1] = jet_colormap [index].g;
+			    pixel[2] = jet_colormap [index].b;
+		    }
+
+	default:
+	    break;
 	}
 }
 
