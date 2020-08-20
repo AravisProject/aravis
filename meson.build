@@ -16,6 +16,25 @@ aravis_data_dir = join_paths (get_option ('datadir'), 'aravis-@0@'.format (aravi
 cc = meson.get_compiler ('c')
 cxx = meson.get_compiler ('cpp')
 
+if cc.get_id()=='gcc' or cc.get_id()=='clang'
+  warning_c_args = [
+    '-Wduplicated-branches',
+    '-Wimplicit-fallthrough',
+    '-Wmisleading-indentation',
+    '-Wstrict-prototypes',
+    '-Wunused',
+    '-Wdeclaration-after-statement',
+    '-Wformat=2',
+    '-Wimplicit-function-declaration',
+    '-Winit-self',
+    '-Wmissing-include-dirs',
+    '-Wmissing-prototypes',
+    '-Wpointer-arith',
+    ]
+
+  add_project_arguments(cc.get_supported_arguments(warning_c_args), language: 'c')
+endif
+
 glib_dep = dependency ('glib-2.0', version: '>=2.44', required: true)
 gobject_dep = dependency ('gobject-2.0', required: true)
 gio_dep = dependency ('gio-2.0', required: true)
