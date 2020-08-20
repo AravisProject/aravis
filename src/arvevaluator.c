@@ -561,6 +561,8 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 	integer_mode = v_int64 != NULL;
 
 	for (iter = token_stack; iter != NULL; iter = iter->next) {
+		int actual_arguments_count;
+
 		token = iter->data;
 
 		if (index < (arv_evaluator_token_infos[token->token_id].n_args - 1)) {
@@ -580,7 +582,7 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 
 		arv_evaluator_token_debug (token, variables);
 
-		int actual_arguments_count = arv_evaluator_token_infos[token->token_id].n_args;
+		actual_arguments_count = arv_evaluator_token_infos[token->token_id].n_args;
 
 		switch (token->token_id) {
 			case ARV_EVALUATOR_TOKEN_LOGICAL_AND:
