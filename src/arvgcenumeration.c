@@ -641,7 +641,7 @@ arv_gc_enumeration_string_interface_init (ArvGcStringInterface *interface)
 	interface->get_max_length = arv_gc_enumeration_get_max_string_length;
 }
 
-const GSList *
+static const GSList *
 arv_gc_enumeration_get_selected_features (ArvGcSelector *selector)
 {
 	ArvGcEnumeration *enumeration = ARV_GC_ENUMERATION (selector);

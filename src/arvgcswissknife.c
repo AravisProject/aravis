@@ -25,7 +25,7 @@
  * @short_description: Class for SwissKnife and IntSwissKnife nodes
  */
 
-#include <arvgcswissknife.h>
+#include <arvgcswissknifeprivate.h>
 #include <arvevaluator.h>
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
@@ -258,7 +258,7 @@ arv_gc_swiss_knife_get_float_value (ArvGcSwissKnife *self, GError **error)
 }
 
 ArvGcRepresentation
-arv_gc_swiss_knife_get_representation (ArvGcSwissKnife *self, GError **error)
+arv_gc_swiss_knife_get_representation (ArvGcSwissKnife *self)
 {
 	ArvGcSwissKnifePrivate *priv = arv_gc_swiss_knife_get_instance_private (self);
 
@@ -271,7 +271,7 @@ arv_gc_swiss_knife_get_representation (ArvGcSwissKnife *self, GError **error)
 }
 
 const char *
-arv_gc_swiss_knife_get_unit (ArvGcSwissKnife *self, GError **error)
+arv_gc_swiss_knife_get_unit (ArvGcSwissKnife *self)
 {
 	ArvGcSwissKnifePrivate *priv = arv_gc_swiss_knife_get_instance_private (self);
 
@@ -280,5 +280,5 @@ arv_gc_swiss_knife_get_unit (ArvGcSwissKnife *self, GError **error)
 	if (priv->unit == NULL)
 		return NULL;
 
-	return arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (priv->unit), error);
+	return arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (priv->unit), NULL);
 }

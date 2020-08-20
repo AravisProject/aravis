@@ -25,7 +25,7 @@
  * @short_description: Class for Register nodes
  */
 
-#include <arvgcregisternode.h>
+#include <arvgcregisternodeprivate.h>
 #include <arvgcindexnode.h>
 #include <arvgcinvalidatornode.h>
 #include <arvgcfeaturenodeprivate.h>
@@ -61,7 +61,7 @@ arv_gc_cache_key_hash (gconstpointer v)
 	return g_int64_hash (&((ArvGcCacheKey *) v)->address);
 }
 
-ArvGcCacheKey *
+static ArvGcCacheKey *
 arv_gc_cache_key_new (gint64 address, gint64 length)
 {
 	ArvGcCacheKey *key =  g_new (ArvGcCacheKey, 1);

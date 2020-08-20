@@ -769,7 +769,7 @@ arv_uv_device_new (const char *vendor, const char *product, const char *serial_n
 			       NULL);
 }
 
-void
+static void
 arv_uv_device_constructed (GObject *object)
 {
 	ArvUvDevice *uv_device = ARV_UV_DEVICE (object);

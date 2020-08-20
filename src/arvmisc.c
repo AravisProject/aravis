@@ -342,7 +342,7 @@ arv_value_copy (ArvValue *to, const ArvValue *from)
 	*to = *from;
 }
 
-ArvValue *
+static ArvValue *
 arv_value_duplicate (const ArvValue *from)
 {
 	ArvValue *value;

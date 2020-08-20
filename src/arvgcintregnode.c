@@ -229,7 +229,7 @@ arv_gc_int_reg_node_integer_interface_init (ArvGcIntegerInterface *interface)
 	interface->get_unit = arv_gc_int_reg_node_get_unit;
 }
 
-const GSList *
+static const GSList *
 arv_gc_int_reg_node_get_selected_features (ArvGcSelector *self)
 {
 	ArvGcIntRegNodePrivate *priv = arv_gc_int_reg_node_get_instance_private (ARV_GC_INT_REG_NODE (self));

@@ -222,7 +222,7 @@ arv_gc_masked_int_reg_node_integer_interface_init (ArvGcIntegerInterface *interf
 	interface->get_unit = arv_gc_masked_int_reg_node_get_unit;
 }
 
-const GSList *
+static const GSList *
 arv_gc_masked_int_reg_node_get_selected_features (ArvGcSelector *self)
 {
 	ArvGcMaskedIntRegNodePrivate *priv = arv_gc_masked_int_reg_node_get_instance_private (ARV_GC_MASKED_INT_REG_NODE (self));

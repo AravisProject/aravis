@@ -28,7 +28,7 @@
  * types of Genicam feature node (Group, Integer, Float, Enumeration...).
  */
 
-#include <arvgcfeaturenode.h>
+#include <arvgcfeaturenodeprivate.h>
 #include <arvgcpropertynode.h>
 #include <arvgc.h>
 #include <arvgcboolean.h>

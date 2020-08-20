@@ -194,7 +194,7 @@ arv_gc_converter_get_is_linear (ArvGcConverter *gc_converter, GError **error)
 	return ARV_GC_IS_LINEAR_NO;
 }
 
-gboolean
+static gboolean
 arv_gc_converter_update_from_variables (ArvGcConverter *gc_converter, ArvGcConverterNodeType node_type, GError **error)
 {
 	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (gc_converter);

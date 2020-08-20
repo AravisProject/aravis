@@ -152,7 +152,7 @@ printdev (libusb_device *device)
 }
 #endif
 
-ArvInterfaceDeviceIds *
+static ArvInterfaceDeviceIds *
 _usb_device_to_device_ids (ArvUvInterface *uv_interface, libusb_device *device)
 {
 	ArvInterfaceDeviceIds *device_ids = NULL;

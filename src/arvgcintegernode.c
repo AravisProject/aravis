@@ -442,7 +442,7 @@ arv_gc_integer_node_integer_interface_init (ArvGcIntegerInterface *interface)
 	interface->impose_max = arv_gc_integer_node_impose_max;
 }
 
-const GSList *
+static const GSList *
 arv_gc_integer_node_get_selected_features (ArvGcSelector *selector)
 {
 	ArvGcIntegerNode *integer = ARV_GC_INTEGER_NODE (selector);

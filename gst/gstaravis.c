@@ -425,7 +425,8 @@ gst_aravis_start (GstBaseSrc *src)
 }
 
 
-gboolean gst_aravis_stop( GstBaseSrc * src )
+static gboolean
+gst_aravis_stop( GstBaseSrc * src )
 {
 	GError *error = NULL;
 	GstAravis* gst_aravis = GST_ARAVIS(src);

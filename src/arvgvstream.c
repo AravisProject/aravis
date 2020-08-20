@@ -1111,7 +1111,7 @@ arv_gv_stream_new (ArvGvDevice *gv_device, ArvStreamCallback callback, void *cal
 			       NULL);
 }
 
-void
+static void
 arv_gv_stream_constructed (GObject *object)
 {
 	ArvStream *stream = ARV_STREAM (object);

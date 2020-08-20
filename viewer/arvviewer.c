@@ -26,6 +26,7 @@
 #include <gst/video/videooverlay.h>
 #include <arv.h>
 #include <arvdebugprivate.h>
+#include <arvviewer.h>
 #include <math.h>
 #include <memory.h>
 #include <libnotify/notify.h>
@@ -113,7 +114,7 @@ gstreamer_plugin_check (void)
 	return check_success;
 }
 
-typedef struct {
+struct  _ArvViewer {
 	GtkApplication parent_instance;
 
 	ArvCamera *camera;
@@ -200,7 +201,7 @@ typedef struct {
 	ArvRegisterCachePolicy cache_policy;
 
 	gulong video_window_xid;
-} ArvViewer;
+};
 
 typedef GtkApplicationClass ArvViewerClass;
 
@@ -444,7 +445,7 @@ gain_scale_cb (GtkRange *range, ArvViewer *viewer)
 	g_signal_handler_unblock (viewer->gain_spin_button, viewer->gain_spin_changed);
 }
 
-gboolean
+static gboolean
 update_exposure_cb (void *data)
 {
 	ArvViewer *viewer = data;
@@ -523,7 +524,7 @@ update_gain_ui (ArvViewer *viewer, gboolean is_auto)
 }
 
 
-void
+static void
 auto_gain_cb (GtkToggleButton *toggle, ArvViewer *viewer)
 {
 	gboolean is_auto;
@@ -600,7 +601,7 @@ set_camera_widgets(ArvViewer *viewer)
 	g_signal_handler_unblock (viewer->auto_exposure_toggle, viewer->auto_exposure_clicked);
 }
 
-void
+static void
 snapshot_cb (GtkButton *button, ArvViewer *viewer)
 {
 	GFile *file;
@@ -798,7 +799,7 @@ update_camera_region (ArvViewer *viewer)
 	g_signal_handler_unblock (viewer->camera_binning_y, viewer->camera_binning_y_changed);
 }
 
-void
+static void
 camera_region_cb (GtkSpinButton *spin_button, ArvViewer *viewer)
 {
 	int x = gtk_spin_button_get_value (GTK_SPIN_BUTTON (viewer->camera_x));
@@ -811,7 +812,7 @@ camera_region_cb (GtkSpinButton *spin_button, ArvViewer *viewer)
 	update_camera_region (viewer);
 }
 
-void
+static void
 camera_binning_cb (GtkSpinButton *spin_button, ArvViewer *viewer)
 {
 	int dx = gtk_spin_button_get_value (GTK_SPIN_BUTTON (viewer->camera_binning_x));
@@ -822,7 +823,7 @@ camera_binning_cb (GtkSpinButton *spin_button, ArvViewer *viewer)
 	update_camera_region (viewer);
 }
 
-void
+static void
 pixel_format_combo_cb (GtkComboBoxText *combo, ArvViewer *viewer)
 {
 	char *pixel_format;
@@ -832,7 +833,7 @@ pixel_format_combo_cb (GtkComboBoxText *combo, ArvViewer *viewer)
 	g_free (pixel_format);
 }
 
-void
+static void
 update_device_list_cb (GtkToolButton *button, ArvViewer *viewer)
 {
 	GtkListStore *list_store;
@@ -1236,19 +1237,19 @@ select_mode (ArvViewer *viewer, ArvViewerMode mode)
 
 }
 
-void
+static void
 switch_to_camera_list_cb (GtkToolButton *button, ArvViewer *viewer)
 {
 	select_mode (viewer, ARV_VIEWER_MODE_CAMERA_LIST);
 }
 
-void
+static void
 switch_to_video_mode_cb (GtkToolButton *button, ArvViewer *viewer)
 {
 	select_mode (viewer, ARV_VIEWER_MODE_VIDEO);
 }
 
-void
+static void
 arv_viewer_quit_cb (GtkApplicationWindow *window, ArvViewer *viewer)
 {
 	stop_camera (viewer);
