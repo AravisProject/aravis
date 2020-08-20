@@ -105,6 +105,10 @@ gst_aravis_get_all_camera_caps (GstAravis *gst_aravis, GError **error)
 	int min_height, min_width;
 	int max_height, max_width;
 	unsigned int n_pixel_formats, i;
+	int min_frame_rate_numerator;
+	int min_frame_rate_denominator;
+	int max_frame_rate_numerator;
+	int max_frame_rate_denominator;
 
 	g_return_val_if_fail (GST_IS_ARAVIS (gst_aravis), NULL);
 
@@ -122,12 +126,8 @@ gst_aravis_get_all_camera_caps (GstAravis *gst_aravis, GError **error)
 		return NULL;
 	}
 
-	int min_frame_rate_numerator;
-	int min_frame_rate_denominator;
 	gst_util_double_to_fraction (min_frame_rate, &min_frame_rate_numerator, &min_frame_rate_denominator);
 
-	int max_frame_rate_numerator;
-	int max_frame_rate_denominator;
 	gst_util_double_to_fraction (max_frame_rate, &max_frame_rate_numerator, &max_frame_rate_denominator);
 
 	caps = gst_caps_new_empty ();
