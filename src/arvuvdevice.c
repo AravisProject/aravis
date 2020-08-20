@@ -468,9 +468,9 @@ _bootstrap (ArvUvDevice *uv_device)
 	}
 
 	arv_debug_device ("MAX_DEVICE_RESPONSE_TIME = 0x%08x", response_time);
-	arv_debug_device ("DEVICE_CAPABILITY        = 0x%016lx", device_capability);
-	arv_debug_device ("SRBM_ADDRESS =             0x%016lx", offset);
-	arv_debug_device ("MANIFEST_TABLE_ADDRESS =   0x%016lx", manifest_table_address);
+	arv_debug_device ("DEVICE_CAPABILITY        = 0x%016" G_GINT64_MODIFIER "x", device_capability);
+	arv_debug_device ("SRBM_ADDRESS =             0x%016" G_GINT64_MODIFIER "x", offset);
+	arv_debug_device ("MANIFEST_TABLE_ADDRESS =   0x%016" G_GINT64_MODIFIER "x", manifest_table_address);
 
 	priv->timeout_ms = MAX (ARV_UVCP_DEFAULT_RESPONSE_TIME_MS, response_time);
 
@@ -486,7 +486,7 @@ _bootstrap (ArvUvDevice *uv_device)
 	arv_debug_device ("U3VCP_CAPABILITY =         0x%08x", u3vcp_capability);
 	arv_debug_device ("MAX_CMD_TRANSFER =         0x%08x", max_cmd_transfer);
 	arv_debug_device ("MAX_ACK_TRANSFER =         0x%08x", max_ack_transfer);
-	arv_debug_device ("SIRM_OFFSET =              0x%016lx", sirm_offset);
+	arv_debug_device ("SIRM_OFFSET =              0x%016" G_GINT64_MODIFIER "x", sirm_offset);
 
 	priv->cmd_packet_size_max = MIN (priv->cmd_packet_size_max, max_cmd_transfer);
 	priv->ack_packet_size_max = MIN (priv->ack_packet_size_max, max_ack_transfer);
@@ -509,7 +509,7 @@ _bootstrap (ArvUvDevice *uv_device)
 
 	arv_debug_device ("SI_INFO =                  0x%08x", si_info);
 	arv_debug_device ("SI_CONTROL =               0x%08x", si_control);
-	arv_debug_device ("SI_REQ_PAYLOAD_SIZE =      0x%016lx", si_req_payload_size);
+	arv_debug_device ("SI_REQ_PAYLOAD_SIZE =      0x%016" G_GINT64_MODIFIER "x", si_req_payload_size);
 	arv_debug_device ("SI_REQ_LEADER_SIZE =       0x%08x", si_req_leader_size);
 	arv_debug_device ("SI_REQ_TRAILER_SIZE =      0x%08x", si_req_trailer_size);
 	arv_debug_device ("SI_MAX_LEADER_SIZE =       0x%08x", si_max_leader_size);
@@ -526,15 +526,15 @@ _bootstrap (ArvUvDevice *uv_device)
 		return FALSE;
 	}
 
-	arv_debug_device ("MANIFEST_N_ENTRIES =       0x%016lx", manifest_n_entries);
+	arv_debug_device ("MANIFEST_N_ENTRIES =       0x%016" G_GINT64_MODIFIER "x", manifest_n_entries);
 
 	string = g_string_new ("");
 	arv_g_string_append_hex_dump (string, &entry, sizeof (entry));
 	arv_debug_device ("MANIFEST ENTRY\n%s", string->str);
 	g_string_free (string, TRUE);
 
-	arv_debug_device ("genicam address =          0x%016lx", entry.address);
-	arv_debug_device ("genicam size    =          0x%016lx", entry.size);
+	arv_debug_device ("genicam address =          0x%016" G_GINT64_MODIFIER "x", entry.address);
+	arv_debug_device ("genicam size    =          0x%016" G_GINT64_MODIFIER "x", entry.size);
 
 	data = g_malloc0 (entry.size);
 	success = success && arv_device_read_memory (device, entry.address, entry.size, data, NULL);

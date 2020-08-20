@@ -314,7 +314,7 @@ _process_data_block (ArvGvStreamThreadData *thread_data,
 	block_end = block_size + block_offset;
 
 	if (block_end > frame->buffer->priv->size) {
-		arv_debug_stream_thread ("[GvStream::process_data_block] %" G_GUINT64_FORMAT " unexpected bytes in packet %u "
+		arv_debug_stream_thread ("[GvStream::process_data_block] %" G_GINTPTR_FORMAT " unexpected bytes in packet %u "
 					 " for frame %" G_GUINT64_FORMAT,
 					 block_end - frame->buffer->priv->size,
 					 packet_id, frame->frame_id);
@@ -1333,7 +1333,7 @@ arv_gv_stream_finalize (GObject *object)
 		thread_data = priv->thread_data;
 
 		statistic_string = arv_statistic_to_string (thread_data->statistic);
-		arv_debug_stream (statistic_string);
+		arv_debug_stream ("%s", statistic_string);
 		g_free (statistic_string);
 		arv_statistic_free (thread_data->statistic);
 

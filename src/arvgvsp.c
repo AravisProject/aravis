@@ -180,7 +180,7 @@ arv_gvsp_packet_to_string (const ArvGvspPacket *packet, size_t packet_size)
 				arv_gvsp_packet_get_frame_id (packet),
 				arv_gvsp_packet_has_extended_ids (packet) ? " extended" : "");
 	g_string_append_printf (string, "packet_id    = %8u\n", arv_gvsp_packet_get_packet_id (packet));
-	g_string_append_printf (string, "data_size    = %8" G_GUINT64_FORMAT "\n", arv_gvsp_packet_get_data_size (packet, packet_size));
+	g_string_append_printf (string, "data_size    = %8" G_GSIZE_FORMAT "\n", arv_gvsp_packet_get_data_size (packet, packet_size));
 
 	switch (content_type) {
 		case ARV_GVSP_CONTENT_TYPE_DATA_LEADER:

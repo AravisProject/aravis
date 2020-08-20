@@ -171,7 +171,7 @@ arv_uv_stream_thread (void *data)
 				case ARV_UVSP_PACKET_TYPE_TRAILER:
 					if (buffer != NULL) {
 						arv_log_stream_thread ("Received %" G_GUINT64_FORMAT
-								       " bytes - expected %" G_GUINT64_FORMAT,
+								       " bytes - expected %zu",
 								       offset, buffer->priv->size);
 
 						/* If the image was incomplete, drop the frame and try again. */
@@ -287,7 +287,7 @@ arv_uv_stream_start_thread (ArvStream *stream)
 	alignment = 1 << ((si_info & ARV_SI_INFO_ALIGNMENT_MASK) >> ARV_SI_INFO_ALIGNMENT_SHIFT);
 
 	arv_debug_stream ("SI_INFO            =       0x%08x", si_info);
-	arv_debug_stream ("SI_REQ_PAYLOAD_SIZE =      0x%016lx", si_req_payload_size);
+	arv_debug_stream ("SI_REQ_PAYLOAD_SIZE =      0x%016" G_GINT64_MODIFIER "x", si_req_payload_size);
 	arv_debug_stream ("SI_REQ_LEADER_SIZE =       0x%08x", si_req_leader_size);
 	arv_debug_stream ("SI_REQ_TRAILER_SIZE =      0x%08x", si_req_trailer_size);
 
