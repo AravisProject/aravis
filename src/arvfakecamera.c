@@ -112,7 +112,7 @@ arv_fake_camera_read_memory (ArvFakeCamera *camera, guint32 address, guint32 siz
 
 		size = size - read_size;
 		address = ARV_FAKE_CAMERA_MEMORY_SIZE;
-		buffer = buffer + read_size;
+		buffer = ((char *) buffer) + read_size;
 	}
 
 	address -= ARV_FAKE_CAMERA_MEMORY_SIZE;
@@ -120,7 +120,7 @@ arv_fake_camera_read_memory (ArvFakeCamera *camera, guint32 address, guint32 siz
 
 	memcpy (buffer, ((char *) camera->priv->genicam_xml) + address, read_size);
 	if (read_size < size)
-		memset (buffer + read_size, 0, size - read_size);
+		memset (((char *) buffer) + read_size, 0, size - read_size);
 
 	return TRUE;
 }
