@@ -40,6 +40,9 @@ G_DECLARE_FINAL_TYPE (ArvGvDevice, arv_gv_device, ARV, GV_DEVICE, ArvDevice)
 ArvDevice * 		arv_gv_device_new 				(GInetAddress *interface_address, GInetAddress *device_address,
 									 GError **error);
 
+gboolean		arv_gv_device_take_control			(ArvGvDevice *gv_device, GError **error);
+gboolean		arv_gv_device_leave_control			(ArvGvDevice *gv_device, GError **error);
+
 guint64 		arv_gv_device_get_timestamp_tick_frequency	(ArvGvDevice *gv_device, GError **error);
 
 GSocketAddress *	arv_gv_device_get_interface_address  		(ArvGvDevice *device);
