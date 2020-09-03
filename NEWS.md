@@ -1,4 +1,9 @@
-Unstable release 0.8.0
+Stable release 0.8.1
+======================
+
+  * build: add more compilation warnings and fix them (Emmanuel)
+
+Stable release 0.8.0
 ======================
 
   * gigevision: ExtendedIds support (Hendrick, Emmanuel)
