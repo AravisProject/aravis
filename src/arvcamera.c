@@ -2837,7 +2837,7 @@ arv_camera_create_chunk_parser (ArvCamera *camera)
 
 /**
  * arv_camera_new:
- * @name: (allow-none): name of the camera.
+ * @name: (allow-none): name of the camera, the name format is "<vender name>-<serial number>"
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Creates a new #ArvCamera. If @name is null, it will instantiate the
