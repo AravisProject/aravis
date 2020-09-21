@@ -402,6 +402,7 @@ arv_buffer_get_frame_id (ArvBuffer *buffer)
 /**
  * arv_buffer_get_frame_id:
  * @buffer: a #ArvBuffer
+ * @frame_id: a #guint64
  *
  * Sets the buffer frame id. For GigEVision devices, valid values are in the
  * 1..65535 range. Useful for creating a replay fake camera.
@@ -412,6 +413,7 @@ arv_buffer_get_frame_id (ArvBuffer *buffer)
 void
 arv_buffer_set_frame_id(ArvBuffer *buffer, guint64 frame_id)
 {
+	g_return_if_fail (ARV_IS_BUFFER (buffer));
         buffer->priv->frame_id=frame_id;
 }
 
