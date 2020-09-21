@@ -33,7 +33,7 @@
 #include <arvgcfeaturenodeprivate.h>
 #include <arvgc.h>
 #include <arvmisc.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <string.h>
 
 struct _ArvGcEnumeration {
@@ -136,13 +136,13 @@ arv_gc_enumeration_get_string_value (ArvGcEnumeration *enumeration, GError **err
 			const char *string;
 
 			string = arv_gc_feature_node_get_name (iter->data);
-			arv_log_genicam ("[GcEnumeration::get_string_value] value = %Ld - string = %s",
+			arv_log_genicam ("[GcEnumeration::get_string_value] value = %" G_GINT64_FORMAT " - string = %s",
 					 value, string);
 			return string;
 		}
 	}
 
-	arv_warning_genicam ("[GcEnumeration::get_string_value] value = %Ld not found for node %s",
+	arv_warning_genicam ("[GcEnumeration::get_string_value] value = %" G_GINT64_FORMAT " not found for node %s",
 			     value, arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
 
 	return NULL;
@@ -163,7 +163,7 @@ arv_gc_enumeration_set_string_value (ArvGcEnumeration *enumeration, const char *
 
 			enum_value = arv_gc_enum_entry_get_value (iter->data, &local_error);
 
-			arv_log_genicam ("[GcEnumeration::set_string_value] value = %d - string = %s",
+			arv_log_genicam ("[GcEnumeration::set_string_value] value = %" G_GINT64_FORMAT " - string = %s",
 					 enum_value, value);
 
 			if (local_error != NULL) {
@@ -514,6 +514,22 @@ arv_gc_enumeration_get_entries (ArvGcEnumeration *enumeration)
 	return enumeration->entries;
 }
 
+static ArvGcFeatureNode *
+arv_gc_enumeration_get_linked_feature (ArvGcFeatureNode *gc_feature_node)
+{
+	ArvGcEnumeration *gc_enumeration = ARV_GC_ENUMERATION (gc_feature_node);
+	ArvGcNode *pvalue_node = NULL;
+
+	if (gc_enumeration->value == NULL)
+		return NULL;
+
+	pvalue_node = arv_gc_property_node_get_linked_node (gc_enumeration->value);
+	if (ARV_IS_GC_FEATURE_NODE (pvalue_node))
+		return ARV_GC_FEATURE_NODE (pvalue_node);
+
+	return NULL;
+}
+
 ArvGcNode *
 arv_gc_enumeration_new (void)
 {
@@ -546,13 +562,14 @@ arv_gc_enumeration_class_init (ArvGcEnumerationClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
+	ArvGcFeatureNodeClass *gc_feature_node_class = ARV_GC_FEATURE_NODE_CLASS (this_class);
 
 	object_class->finalize = arv_gc_enumeration_finalize;
-
 	dom_node_class->get_node_name = arv_gc_enumeration_get_node_name;
 	dom_node_class->can_append_child = arv_gc_enumeration_can_append_child;
 	dom_node_class->post_new_child = arv_gc_enumeration_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_enumeration_pre_remove_child;
+	gc_feature_node_class->get_linked_feature = arv_gc_enumeration_get_linked_feature;
 }
 
 /* ArvGcInteger interface implementation */
@@ -624,7 +641,7 @@ arv_gc_enumeration_string_interface_init (ArvGcStringInterface *interface)
 	interface->get_max_length = arv_gc_enumeration_get_max_string_length;
 }
 
-const GSList *
+static const GSList *
 arv_gc_enumeration_get_selected_features (ArvGcSelector *selector)
 {
 	ArvGcEnumeration *enumeration = ARV_GC_ENUMERATION (selector);

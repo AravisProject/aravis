@@ -337,7 +337,7 @@ _thread (void *user_data)
 
 			arv_fake_camera_fill_buffer (gv_fake_camera->priv->camera, image_buffer, &gv_packet_size);
 
-			arv_debug_stream_thread ("[GvFakeCamera::thread] Send frame %d", image_buffer->priv->frame_id);
+			arv_debug_stream_thread ("[GvFakeCamera::thread] Send frame %" G_GUINT64_FORMAT, image_buffer->priv->frame_id);
 
 			block_id = 0;
 
@@ -354,11 +354,11 @@ _thread (void *user_data)
 				g_socket_send_to (gv_fake_camera->priv->gvsp_socket, stream_address,
 						  packet_buffer, packet_size, NULL, &error);
 			else
-				arv_debug_stream_thread ("Drop GVSP leader packet frame:%u", image_buffer->priv->frame_id);
+				arv_debug_stream_thread ("Drop GVSP leader packet frame: %" G_GUINT64_FORMAT, image_buffer->priv->frame_id);
 
 			if (error != NULL) {
-				arv_warning_stream_thread ("[GvFakeCamera::thread] Failed to send leader for frame %d: %s",
-							   image_buffer->priv->frame_id, error->message);
+				arv_warning_stream_thread ("[GvFakeCamera::thread] Failed to send leader for frame %" G_GUINT64_FORMAT
+							   ": %s", image_buffer->priv->frame_id, error->message);
 				g_clear_error (&error);
 			}
 
@@ -380,13 +380,13 @@ _thread (void *user_data)
 					g_socket_send_to (gv_fake_camera->priv->gvsp_socket, stream_address,
 							  packet_buffer, packet_size, NULL, &error);
 				else
-					arv_debug_stream_thread ("Drop GVSP data packet frame:%d, block:%u", image_buffer->priv->frame_id, block_id);
+					arv_debug_stream_thread ("Drop GVSP data packet frame:%" G_GUINT64_FORMAT
+								 ", block:%u", image_buffer->priv->frame_id, block_id);
 
 				if (error != NULL) {
-					arv_debug_stream_thread ("[GvFakeCamera::thread] Failed to send frame block %d for frame: %s",
-								 block_id,
-								 image_buffer->priv->frame_id,
-								 error->message);
+					arv_debug_stream_thread ("[GvFakeCamera::thread] Failed to send frame block %d for frame"
+								 " %" G_GUINT64_FORMAT ": %s",
+								 block_id, image_buffer->priv->frame_id, error->message);
 					g_clear_error (&error);
 				}
 
@@ -402,12 +402,12 @@ _thread (void *user_data)
 				g_socket_send_to (gv_fake_camera->priv->gvsp_socket, stream_address,
 						  packet_buffer, packet_size, NULL, &error);
 			else
-				arv_debug_stream_thread ("Drop GVSP trailer packet frame:%d", image_buffer->priv->frame_id);
+				arv_debug_stream_thread ("Drop GVSP trailer packet frame: %" G_GUINT64_FORMAT,
+							 image_buffer->priv->frame_id);
 
 			if (error != NULL) {
-				arv_debug_stream_thread ("[GvFakeCamera::thread] Failed to send trailer for frame %d: %s",
-							 image_buffer->priv->frame_id,
-							 error->message);
+				arv_debug_stream_thread ("[GvFakeCamera::thread] Failed to send trailer for frame %" G_GUINT64_FORMAT
+							 ": %s", image_buffer->priv->frame_id, error->message);
 				g_clear_error (&error);
 			}
 

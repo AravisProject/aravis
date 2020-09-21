@@ -112,21 +112,41 @@ arv_gc_integer_get_inc (ArvGcInteger *gc_integer, GError **error)
 	return 1;
 }
 
+/**
+ * arv_gc_integer_get_representation:
+ * @gc_integer: a #ArvGcInteger
+ *
+ * Get number representation format.
+ *
+ * Returns: Number representation format as #ArvGcRepresentation.
+ */
+
+ArvGcRepresentation
+arv_gc_integer_get_representation (ArvGcInteger *gc_integer)
+{
+	ArvGcIntegerInterface *integer_interface;
+
+	g_return_val_if_fail (ARV_IS_GC_INTEGER (gc_integer), 0);
+
+	integer_interface = ARV_GC_INTEGER_GET_IFACE (gc_integer);
+
+	if (integer_interface->get_representation != NULL)
+		return integer_interface->get_representation (gc_integer);
+
+	return ARV_GC_REPRESENTATION_UNDEFINED;
+}
+
 const char *
-arv_gc_integer_get_unit	(ArvGcInteger *gc_integer, GError **error)
+arv_gc_integer_get_unit	(ArvGcInteger *gc_integer)
 {
 	ArvGcIntegerInterface *integer_interface;
 
 	g_return_val_if_fail (ARV_IS_GC_INTEGER (gc_integer), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	integer_interface = ARV_GC_INTEGER_GET_IFACE (gc_integer);
 
 	if (integer_interface->get_unit != NULL)
-		return integer_interface->get_unit (gc_integer, error);
-
-	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_PROPERTY_NOT_DEFINED, "<Unit> node not found for '%s'",
-		     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_integer)));
+		return integer_interface->get_unit (gc_integer);
 
 	return NULL;
 }

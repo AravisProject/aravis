@@ -28,7 +28,7 @@
 #include <arvuvinterfaceprivate.h>
 #include <arvinterfaceprivate.h>
 #include <arvuvdeviceprivate.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <arvmisc.h>
 #include <arvstr.h>
 #include <libusb.h>
@@ -152,7 +152,7 @@ printdev (libusb_device *device)
 }
 #endif
 
-ArvInterfaceDeviceIds *
+static ArvInterfaceDeviceIds *
 _usb_device_to_device_ids (ArvUvInterface *uv_interface, libusb_device *device)
 {
 	ArvInterfaceDeviceIds *device_ids = NULL;
@@ -280,7 +280,7 @@ _discover (ArvUvInterface *uv_interface,  GArray *device_ids)
 		}
 	}
 
-	arv_debug_interface ("Found %d USB3Vision device%s (among %d USB device%s)",
+	arv_debug_interface ("Found %d USB3Vision device%s (among %" G_GSSIZE_FORMAT " USB device%s)",
 			     uv_count , uv_count > 1 ? "s" : "",
 			     count, count > 1 ? "s" : "");
 

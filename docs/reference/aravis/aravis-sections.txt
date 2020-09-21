@@ -8,6 +8,7 @@ ARAVIS_MICRO_VERSION
 ARAVIS_MINOR_VERSION
 ARAVIS_HAS_PACKET_SOCKET
 ARAVIS_HAS_USB
+ARAVIS_HAS_FAST_HEARTBEAT
 ArvAuto
 arv_auto_from_string
 arv_auto_to_string
@@ -493,7 +494,7 @@ arv_gc_property_node_new_command_value
 arv_gc_property_node_new_constant
 arv_gc_property_node_new_description
 arv_gc_property_node_new_display_name
-arv_gc_property_node_new_endianess
+arv_gc_property_node_new_endianness
 arv_gc_property_node_new_expression
 arv_gc_property_node_new_formula
 arv_gc_property_node_new_formula_from
@@ -543,12 +544,18 @@ arv_gc_property_node_get_string
 arv_gc_property_node_set_string
 arv_gc_property_node_get_access_mode
 arv_gc_property_node_get_cachable
-arv_gc_property_node_get_endianess
+arv_gc_property_node_get_endianness
 arv_gc_property_node_get_lsb
 arv_gc_property_node_get_msb
 arv_gc_property_node_get_sign
 arv_gc_property_node_get_visibility
 arv_gc_property_node_new_visibility
+arv_gc_property_node_get_representation
+arv_gc_property_node_new_representation
+arv_gc_property_node_get_display_notation
+arv_gc_property_node_new_display_notation
+arv_gc_property_node_get_display_precision
+arv_gc_property_node_new_display_precision
 <SUBSECTION Standard>
 arv_gc_property_node_get_type
 ARV_GC_PROPERTY_NODE
@@ -618,6 +625,7 @@ ArvGcFeatureNode
 arv_gc_feature_node_get_value_as_string
 arv_gc_feature_node_set_value_from_string
 arv_gc_feature_node_get_name
+arv_gc_feature_node_get_name_space
 arv_gc_feature_node_get_display_name
 arv_gc_feature_node_get_tooltip
 arv_gc_feature_node_get_description
@@ -625,6 +633,8 @@ arv_gc_feature_node_is_available
 arv_gc_feature_node_is_implemented
 arv_gc_feature_node_is_locked
 arv_gc_feature_node_get_visibility
+arv_gc_feature_node_get_imposed_access_mode
+arv_gc_feature_node_get_actual_access_mode
 <SUBSECTION Standard>
 ARV_GC_FEATURE_NODE
 ARV_IS_GC_FEATURE_NODE
@@ -661,6 +671,14 @@ ArvGcRegisterDescriptionNode
 arv_gc_register_description_node_new
 arv_gc_register_description_node_compare_schema_version
 arv_gc_register_description_node_check_schema_version
+arv_gc_register_description_node_get_model_name
+arv_gc_register_description_node_get_vendor_name
+arv_gc_register_description_node_get_major_version
+arv_gc_register_description_node_get_minor_version
+arv_gc_register_description_node_get_subminor_version
+arv_gc_register_description_node_get_schema_major_version
+arv_gc_register_description_node_get_schema_minor_version
+arv_gc_register_description_node_get_schema_subminor_version
 arv_gc_register_feature_node
 <SUBSECTION Standard>
 arv_gc_register_description_node_get_type
@@ -751,6 +769,7 @@ arv_gc_integer_set_value
 arv_gc_integer_get_min
 arv_gc_integer_get_max
 arv_gc_integer_get_inc
+arv_gc_integer_get_representation
 arv_gc_integer_get_unit
 arv_gc_integer_impose_min
 arv_gc_integer_impose_max
@@ -891,6 +910,14 @@ ArvFakeDevicePrivate
 <TITLE>ArvGc</TITLE>
 ArvGc
 ArvRegisterCachePolicy
+ArvGcNameSpace
+ArvGcAccessMode
+ArvGcCachable
+ArvGcSignedness
+ArvGcIsLinear
+ArvGcVisibility
+ArvGcRepresentation
+ArvGcDisplayNotation
 arv_gc_new
 arv_gc_get_node
 arv_gc_get_device
@@ -909,12 +936,6 @@ ARV_GC_GET_CLASS
 <SUBSECTION Private>
 ArvGcPrivate
 ArvGcClass
-ArvGcNameSpace
-ArvGcAccessMode
-ArvGcCachable
-ArvGcSignedness
-ArvGcIsLinear
-ArvGcVisibility
 arv_gc_get_int64_from_value
 arv_gc_set_int64_to_value
 arv_gc_get_double_from_value
@@ -955,6 +976,7 @@ arv_gv_device_set_packet_size
 arv_gv_device_get_stream_options
 arv_gv_device_set_stream_options
 arv_gv_device_auto_packet_size
+arv_gv_device_is_controller
 <SUBSECTION Standard>
 ARV_GV_DEVICE
 ARV_IS_GV_DEVICE
@@ -1082,7 +1104,10 @@ arv_gc_float_set_value
 arv_gc_float_get_min
 arv_gc_float_get_max
 arv_gc_float_get_inc
+arv_gc_float_get_representation
 arv_gc_float_get_unit
+arv_gc_float_get_display_notation
+arv_gc_float_get_display_precision
 arv_gc_float_impose_min
 arv_gc_float_impose_max
 <SUBSECTION Standard>
@@ -1375,7 +1400,7 @@ arv_value_holds_double
 ARV_TYPE_VALUE
 arv_value_get_type
 ArvValue
-arv_copy_memory_with_endianess
+arv_copy_memory_with_endianness
 arv_decompress
 G_DEFINE_INTERFACE
 G_DEFINE_INTERFACE_WITH_CODE
@@ -1582,36 +1607,14 @@ ARV_DOM_CHARACTER_DATA_GET_CLASS
 <SECTION>
 <FILE>arvdebug</FILE>
 <TITLE>ArvDebug</TITLE>
-arv_debug
-arv_debug_check
 arv_debug_enable
-arv_debug_shutdown
 <SUBSECTION Private>
 ArvDebugLevel
-ArvDebugCategory
-arv_debug_category_device
-arv_debug_category_dom
-arv_debug_category_evaluator
-arv_debug_category_genicam
-arv_debug_category_cp
-arv_debug_category_sp
-arv_debug_category_interface
-arv_debug_category_misc
-arv_debug_category_stream
-arv_debug_category_stream_thread
-arv_debug_category_viewer
-arv_debug_device
-arv_debug_dom
-arv_debug_evaluator
-arv_debug_genicam
-arv_debug_cp
-arv_debug_sp
-arv_debug_interface
-arv_debug_misc
-arv_debug_stream
-arv_debug_stream_thread
-arv_debug_viewer
+arv_verbosely_log
+arv_verbosely_log_cp
+arv_verbosely_log_sp
 arv_log
+arv_log_chunk
 arv_log_device
 arv_log_dom
 arv_log_evaluator
@@ -1623,7 +1626,21 @@ arv_log_misc
 arv_log_stream
 arv_log_stream_thread
 arv_log_viewer
+arv_debug
+arv_debug_chunk
+arv_debug_device
+arv_debug_dom
+arv_debug_evaluator
+arv_debug_genicam
+arv_debug_cp
+arv_debug_sp
+arv_debug_interface
+arv_debug_misc
+arv_debug_stream
+arv_debug_stream_thread
+arv_debug_viewer
 arv_warning
+arv_warning_chunk
 arv_warning_device
 arv_warning_dom
 arv_warning_evaluator
@@ -1636,10 +1653,19 @@ arv_warning_stream
 arv_warning_stream_thread
 arv_warning_viewer
 arv_g_string_append_hex_dump
+ArvDebugCategory
 arv_debug_category_chunk
-arv_debug_chunk
-arv_log_chunk
-arv_warning_chunk
+arv_debug_category_device
+arv_debug_category_dom
+arv_debug_category_evaluator
+arv_debug_category_genicam
+arv_debug_category_cp
+arv_debug_category_sp
+arv_debug_category_interface
+arv_debug_category_misc
+arv_debug_category_stream
+arv_debug_category_stream_thread
+arv_debug_category_viewer
 </SECTION>
 
 <SECTION>

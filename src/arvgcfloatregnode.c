@@ -24,12 +24,16 @@
 #include <arvgcpropertynode.h>
 #include <arvgcfloat.h>
 #include <arvgcregister.h>
+#include <arvgcdefaultsprivate.h>
 #include <arvgc.h>
 #include <arvmisc.h>
 
 typedef struct {
-	ArvGcPropertyNode *endianess;
+	ArvGcPropertyNode *endianness;
 	ArvGcPropertyNode *unit;
+	ArvGcPropertyNode *representation;
+	ArvGcPropertyNode *display_notation;
+	ArvGcPropertyNode *display_precision;
 
 	GSList *selecteds;
 } ArvGcFloatRegNodePrivate;
@@ -56,20 +60,24 @@ arv_gc_float_reg_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 		ArvGcPropertyNode *property_node = ARV_GC_PROPERTY_NODE (child);
 
 		switch (arv_gc_property_node_get_node_type (property_node)) {
-			case ARV_GC_PROPERTY_NODE_TYPE_ENDIANESS:
-				priv->endianess = property_node;
+			case ARV_GC_PROPERTY_NODE_TYPE_ENDIANNESS:
+				priv->endianness = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_UNIT:
 				priv->unit = property_node;
 				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_REPRESENTATION:
+				priv->representation = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_NOTATION:
+				priv->display_notation = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_PRECISION:
+				priv->display_precision = property_node;
+				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_P_SELECTED:
 				priv->selecteds = g_slist_prepend (priv->selecteds, property_node);
 				break;
-
-				/* TODO Representation */
-				/* TODO DisplayNotation */
-				/* TODO DisplayPrecision */
-
 			default:
 				ARV_DOM_NODE_CLASS (arv_gc_float_reg_node_parent_class)->post_new_child (self, child);
 				break;
@@ -84,11 +92,11 @@ arv_gc_float_reg_node_get_float_value (ArvGcFloat *self, GError **error)
 {
 	ArvGcFloatRegNodePrivate *priv = arv_gc_float_reg_node_get_instance_private (ARV_GC_FLOAT_REG_NODE (self));
 	GError *local_error = NULL;
-	guint endianess;
+	guint endianness;
 	gint64 length;
 	double v_double = 0.0;
 
-	endianess = arv_gc_property_node_get_endianess (priv->endianess, G_LITTLE_ENDIAN);
+	endianness = arv_gc_property_node_get_endianness (priv->endianness, G_LITTLE_ENDIAN);
 	length = arv_gc_register_get_length (ARV_GC_REGISTER (self), &local_error);
 	if (local_error == NULL) {
 		char *buffer;
@@ -99,13 +107,13 @@ arv_gc_float_reg_node_get_float_value (ArvGcFloat *self, GError **error)
 			if (length == 4) {
 				float v_float = 0.0;
 
-				arv_copy_memory_with_endianess (&v_float, sizeof (v_float), G_BYTE_ORDER,
-								buffer, length, endianess);
+				arv_copy_memory_with_endianness (&v_float, sizeof (v_float), G_BYTE_ORDER,
+								buffer, length, endianness);
 
 				v_double = v_float;
 			} else if (length == 8) {
-				arv_copy_memory_with_endianess (&v_double, sizeof (v_double), G_BYTE_ORDER,
-								buffer, length, endianess);
+				arv_copy_memory_with_endianness (&v_double, sizeof (v_double), G_BYTE_ORDER,
+								buffer, length, endianness);
 			} else {
 				g_set_error (&local_error, ARV_GC_ERROR, ARV_GC_ERROR_INVALID_LENGTH,
 					     "Invalid register length for FloatReg node");
@@ -125,10 +133,10 @@ arv_gc_float_reg_node_set_float_value (ArvGcFloat *self, gdouble value, GError *
 {
 	ArvGcFloatRegNodePrivate *priv = arv_gc_float_reg_node_get_instance_private (ARV_GC_FLOAT_REG_NODE (self));
 	GError *local_error = NULL;
-	guint endianess;
+	guint endianness;
 	gint64 length;
 
-	endianess = arv_gc_property_node_get_endianess (priv->endianess, G_LITTLE_ENDIAN);
+	endianness = arv_gc_property_node_get_endianness (priv->endianness, G_LITTLE_ENDIAN);
 	length = arv_gc_register_get_length (ARV_GC_REGISTER (self), &local_error);
 	if (local_error == NULL) {
 		char *buffer;
@@ -138,9 +146,9 @@ arv_gc_float_reg_node_set_float_value (ArvGcFloat *self, gdouble value, GError *
 			if (length == 4) {
 				float v_float = value;
 
-				arv_copy_memory_with_endianess (buffer, length, endianess, &v_float, sizeof (v_float), G_BYTE_ORDER);
+				arv_copy_memory_with_endianness (buffer, length, endianness, &v_float, sizeof (v_float), G_BYTE_ORDER);
 			} else if (length == 8) {
-				arv_copy_memory_with_endianess (buffer, length, endianess, &value, sizeof (value), G_BYTE_ORDER);
+				arv_copy_memory_with_endianness (buffer, length, endianness, &value, sizeof (value), G_BYTE_ORDER);
 			} else {
 				g_set_error (&local_error, ARV_GC_ERROR, ARV_GC_ERROR_INVALID_LENGTH,
 					     "Invalid register length for FloatReg node");
@@ -203,15 +211,48 @@ arv_gc_float_reg_node_get_max (ArvGcFloat *self, GError **error)
 	return G_MAXDOUBLE;
 }
 
+static ArvGcRepresentation
+arv_gc_float_reg_get_representation (ArvGcFloat *self)
+{
+	ArvGcFloatRegNodePrivate *priv = arv_gc_float_reg_node_get_instance_private (ARV_GC_FLOAT_REG_NODE (self));
+
+	if (priv->representation == NULL)
+		return ARV_GC_REPRESENTATION_UNDEFINED;
+
+	return arv_gc_property_node_get_representation (priv->representation, ARV_GC_REPRESENTATION_UNDEFINED);
+}
+
 static const char *
-arv_gc_float_reg_node_get_unit (ArvGcFloat *self, GError **error)
+arv_gc_float_reg_node_get_unit (ArvGcFloat *self)
 {
 	ArvGcFloatRegNodePrivate *priv = arv_gc_float_reg_node_get_instance_private (ARV_GC_FLOAT_REG_NODE (self));
 
 	if (priv->unit == NULL)
 		return NULL;
 
-	return arv_gc_property_node_get_string (priv->unit, error);
+	return arv_gc_property_node_get_string (priv->unit, NULL);
+}
+
+static ArvGcDisplayNotation
+arv_gc_float_reg_node_get_display_notation (ArvGcFloat *self)
+{
+	ArvGcFloatRegNodePrivate *priv = arv_gc_float_reg_node_get_instance_private (ARV_GC_FLOAT_REG_NODE (self));
+
+	if (priv->display_notation == NULL)
+		return ARV_GC_DISPLAY_NOTATION_DEFAULT;
+
+	return arv_gc_property_node_get_display_notation (ARV_GC_PROPERTY_NODE (priv->display_notation), ARV_GC_DISPLAY_NOTATION_DEFAULT);
+}
+
+static gint64
+arv_gc_float_reg_node_get_display_precision (ArvGcFloat *self)
+{
+	ArvGcFloatRegNodePrivate *priv = arv_gc_float_reg_node_get_instance_private (ARV_GC_FLOAT_REG_NODE (self));
+
+	if (priv->display_precision == NULL)
+		return ARV_GC_DISPLAY_PRECISION_DEFAULT;
+
+	return arv_gc_property_node_get_display_precision (ARV_GC_PROPERTY_NODE (priv->display_precision), ARV_GC_DISPLAY_PRECISION_DEFAULT);
 }
 
 /**
@@ -235,7 +276,10 @@ arv_gc_float_reg_node_float_interface_init (ArvGcFloatInterface *interface)
 	interface->set_value = arv_gc_float_reg_node_set_float_value;
 	interface->get_min = arv_gc_float_reg_node_get_min;
 	interface->get_max = arv_gc_float_reg_node_get_max;
+	interface->get_representation = arv_gc_float_reg_get_representation;
 	interface->get_unit = arv_gc_float_reg_node_get_unit;
+	interface->get_display_notation = arv_gc_float_reg_node_get_display_notation;
+	interface->get_display_precision = arv_gc_float_reg_node_get_display_precision;
 }
 
 static void

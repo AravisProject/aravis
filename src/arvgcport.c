@@ -93,7 +93,7 @@ _pre_remove_child (ArvDomNode *self, ArvDomNode *child)
 /* ArvGcPort implementation */
 
 static gboolean
-_use_legacy_endianess_mechanism (ArvGcPort *port, guint64 length)
+_use_legacy_endianness_mechanism (ArvGcPort *port, guint64 length)
 {
 	ArvDomDocument *document;
 	ArvGcRegisterDescriptionNode *register_description;
@@ -147,7 +147,7 @@ arv_gc_port_read (ArvGcPort *port, void *buffer, guint64 address, guint64 length
 		if (ARV_IS_DEVICE (device)) {
 			/* For schema < 1.1.0 and length == 4, register read must be used instead of memory read.
 			 * Only applies to GigE Vision devices. See Appendix 3 of Genicam 2.0 specification. */
-			if (ARV_IS_GV_DEVICE (device) && _use_legacy_endianess_mechanism (port, length)) {
+			if (ARV_IS_GV_DEVICE (device) && _use_legacy_endianness_mechanism (port, length)) {
 				guint32 value = 0;
 
 				arv_device_read_register (device, address, &value, error);
@@ -208,7 +208,7 @@ arv_gc_port_write (ArvGcPort *port, void *buffer, guint64 address, guint64 lengt
 		if (ARV_IS_DEVICE (device)) {
 			/* For schema < 1.1.0 and length == 4, register write must be used instead of memory write.
 			 * Only applies to GigE Vision devices. See Appendix 3 of Genicam 2.0 specification. */
-			if (ARV_IS_GV_DEVICE (device) && _use_legacy_endianess_mechanism (port, length)) {
+			if (ARV_IS_GV_DEVICE (device) && _use_legacy_endianness_mechanism (port, length)) {
 				guint32 value;
 
 				/* For schema < 1.1.0, all registers are big endian. */

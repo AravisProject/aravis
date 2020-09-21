@@ -21,7 +21,7 @@
  * 	Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <arvdomimplementation.h>
 #include <arvdomnode.h>
 #include <arvdomelement.h>

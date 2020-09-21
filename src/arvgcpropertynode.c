@@ -25,7 +25,7 @@
  * @short_description: Base class for Genicam property nodes
  *
  * #ArvGcPropertyNode provides a base class for the implementation of the different
- * types of Genicam property nodes (Value, pValue, Endianess...).
+ * types of Genicam property nodes (Value, pValue, Endianness...).
  */
 
 #include <arvgcpropertynode.h>
@@ -36,7 +36,7 @@
 #include <arvgc.h>
 #include <arvdomtext.h>
 #include <arvmisc.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <arvenumtypes.h>
 #include <string.h>
 
@@ -88,6 +88,8 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 			return "Inc";
 		case ARV_GC_PROPERTY_NODE_TYPE_IS_LINEAR:
 			return "IsLinear";
+		case ARV_GC_PROPERTY_NODE_TYPE_REPRESENTATION:
+			return "Representation";
 		case ARV_GC_PROPERTY_NODE_TYPE_UNIT:
 			return "Unit";
 		case ARV_GC_PROPERTY_NODE_TYPE_ON_VALUE:
@@ -112,7 +114,7 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 			return "Cachable";
 		case ARV_GC_PROPERTY_NODE_TYPE_POLLING_TIME:
 			return "PollingTime";
-		case ARV_GC_PROPERTY_NODE_TYPE_ENDIANESS:
+		case ARV_GC_PROPERTY_NODE_TYPE_ENDIANNESS:
 			return "Endianess";
 		case ARV_GC_PROPERTY_NODE_TYPE_SIGN:
 			return "Sign";
@@ -202,7 +204,7 @@ arv_gc_property_node_set_attribute (ArvDomElement *self, const char *name, const
 		g_free (priv->name);
 		priv->name = g_strdup (value);
 	} else
-		arv_debug_dom ("[GcPropertyNode::set_attribute] Uknown attribute '%s'", name);
+		arv_debug_dom ("[GcPropertyNode::set_attribute] Unknown attribute '%s'", name);
 }
 
 static const char *
@@ -213,7 +215,7 @@ arv_gc_property_node_get_attribute (ArvDomElement *self, const char *name)
 	if (strcmp (name, "Name") == 0)
 		return priv->name;
 
-	arv_debug_dom ("[GcPropertyNode::set_attribute] Uknown attribute '%s'", name);
+	arv_debug_dom ("[GcPropertyNode::set_attribute] Unknown attribute '%s'", name);
 
 	return NULL;
 }
@@ -642,6 +644,94 @@ arv_gc_property_node_new_is_linear (void)
 }
 
 ArvGcNode *
+arv_gc_property_node_new_representation (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_REPRESENTATION);
+}
+
+ArvGcRepresentation
+arv_gc_property_node_get_representation (ArvGcPropertyNode *self, ArvGcRepresentation default_value)
+{
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
+	const char *value;
+
+	if (self == NULL)
+		return default_value;
+
+	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	g_return_val_if_fail (priv->type == ARV_GC_PROPERTY_NODE_TYPE_REPRESENTATION, default_value);
+
+	value = _get_value_data (self);
+
+	if (g_strcmp0 (value, "Linear") == 0)
+		return ARV_GC_REPRESENTATION_LINEAR;
+	else if (g_strcmp0 (value, "Logarithmic") == 0)
+		return ARV_GC_REPRESENTATION_LOGARITHMIC;
+	else if (g_strcmp0 (value, "Boolean") == 0)
+		return ARV_GC_REPRESENTATION_BOOLEAN;
+	else if (g_strcmp0 (value, "PureNumber") == 0)
+		return ARV_GC_REPRESENTATION_PURE_NUMBER;
+	else if (g_strcmp0 (value, "HexNumber") == 0)
+		return ARV_GC_REPRESENTATION_HEX_NUMBER;
+	else if (g_strcmp0 (value, "IPV4Address") == 0)
+		return ARV_GC_REPRESENTATION_IPV4_ADDRESS;
+	else if (g_strcmp0 (value, "MACAddress") == 0)
+		return ARV_GC_REPRESENTATION_MAC_ADDRESS;
+
+	return default_value;
+}
+
+ArvGcNode *
+arv_gc_property_node_new_display_notation (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_NOTATION);
+}
+
+ArvGcDisplayNotation
+arv_gc_property_node_get_display_notation (ArvGcPropertyNode *self, ArvGcDisplayNotation default_value)
+{
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
+	const char *value;
+
+	if (self == NULL)
+		return default_value;
+
+	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	g_return_val_if_fail (priv->type == ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_NOTATION, default_value);
+
+	value = _get_value_data (self);
+
+	if (g_strcmp0 (value, "Automatic") == 0)
+		return ARV_GC_DISPLAY_NOTATION_AUTOMATIC;
+	else if (g_strcmp0 (value, "Fixed") == 0)
+		return ARV_GC_DISPLAY_NOTATION_FIXED;
+	else if (g_strcmp0 (value, "Scientific") == 0)
+		return ARV_GC_DISPLAY_NOTATION_SCIENTIFIC;
+
+	return default_value;
+}
+
+ArvGcNode *
+arv_gc_property_node_new_display_precision (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_PRECISION);
+}
+
+gint64
+arv_gc_property_node_get_display_precision (ArvGcPropertyNode *self, gint64 default_value)
+{
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
+
+	if (self == NULL)
+		return default_value;
+
+	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	g_return_val_if_fail (priv->type == ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_PRECISION, default_value);
+
+	return g_ascii_strtoll (_get_value_data (self), NULL, 0);
+}
+
+ArvGcNode *
 arv_gc_property_node_new_unit (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_UNIT);
@@ -768,8 +858,10 @@ arv_gc_property_node_get_access_mode (ArvGcPropertyNode *self, ArvGcAccessMode d
 		return ARV_GC_ACCESS_MODE_RO;
 	else if (g_strcmp0 (value, "WO") == 0)
 		return ARV_GC_ACCESS_MODE_WO;
+	else if (g_strcmp0 (value, "RW") == 0)
+		return ARV_GC_ACCESS_MODE_RW;
 
-	return ARV_GC_ACCESS_MODE_RW;
+	return default_value;
 }
 
 ArvGcNode *
@@ -807,13 +899,13 @@ arv_gc_property_node_new_polling_time (void)
 }
 
 ArvGcNode *
-arv_gc_property_node_new_endianess (void)
+arv_gc_property_node_new_endianness (void)
 {
-	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_ENDIANESS);
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_ENDIANNESS);
 }
 
 guint
-arv_gc_property_node_get_endianess (ArvGcPropertyNode *self, guint default_value)
+arv_gc_property_node_get_endianness (ArvGcPropertyNode *self, guint default_value)
 {
 	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
 
@@ -821,7 +913,7 @@ arv_gc_property_node_get_endianess (ArvGcPropertyNode *self, guint default_value
 		return default_value;
 
 	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
-	g_return_val_if_fail (priv->type == ARV_GC_PROPERTY_NODE_TYPE_ENDIANESS, default_value);
+	g_return_val_if_fail (priv->type == ARV_GC_PROPERTY_NODE_TYPE_ENDIANNESS, default_value);
 
 	if (g_strcmp0 (_get_value_data (self), "BigEndian") == 0)
 		return G_BIG_ENDIAN;

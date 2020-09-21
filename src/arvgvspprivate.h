@@ -24,28 +24,27 @@
 #define ARV_GVSP_PRIVATE_H
 
 #include <arvtypes.h>
-#include <arvdebug.h>
 #include <arvbuffer.h>
+#include <arvdebugprivate.h>
 
 G_BEGIN_DECLS
 
-#define ARV_GVSP_PACKET_INFOS_ID_MASK		0x00ffffff
-#define ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_MASK	0xff000000
+#define ARV_GVSP_PACKET_EXTENDED_ID_MODE_MASK	0x80
+#define ARV_GVSP_PACKET_ID_MASK			0x00ffffff
+#define ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_MASK	0x7f000000
 #define ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_POS	24
-
-#define ARV_GVSP_PACKET_PROTOCOL_OVERHEAD	(20 + 8 + 8)		/* IP + UDP + GVSP headers */
 
 /**
  * ArvGvspPacketType:
  * @ARV_GVSP_PACKET_TYPE_OK: valid packet
  * @ARV_GVSP_PACKET_TYPE_RESEND: resent packet (BlackFly PointGrey camera support)
- * @ARV_GVSP_PACKET_TYPE_ERROR: error packet, indicating invalid resend request
+ * @ARV_GVSP_PACKET_TYPE_PACKET_UNAVAILABLE: error packet, indicating invalid resend request
  */
 
 typedef enum {
-	ARV_GVSP_PACKET_TYPE_OK =		0x0000,
-	ARV_GVSP_PACKET_TYPE_RESEND =		0x0100,
-	ARV_GVSP_PACKET_TYPE_ERROR =		0x800c
+	ARV_GVSP_PACKET_TYPE_OK =			0x0000,
+	ARV_GVSP_PACKET_TYPE_RESEND =			0x0100,
+	ARV_GVSP_PACKET_TYPE_PACKET_UNAVAILABLE =	0x800c
 } ArvGvspPacketType;
 
 /**
@@ -58,7 +57,8 @@ typedef enum {
 typedef enum {
 	ARV_GVSP_CONTENT_TYPE_DATA_LEADER = 	0x01,
 	ARV_GVSP_CONTENT_TYPE_DATA_TRAILER = 	0x02,
-	ARV_GVSP_CONTENT_TYPE_DATA_BLOCK =	0x03
+	ARV_GVSP_CONTENT_TYPE_DATA_BLOCK =	0x03,
+	ARV_GVSP_CONTENT_TYPE_ALL_IN =		0x04
 } ArvGvspContentType;
 
 /**
@@ -92,18 +92,26 @@ typedef enum {
 
 /**
  * ArvGvspHeader:
- * @packet_type: a #ArvGvspPacketType identifier
  * @frame_id: frame identifier
  * @packet_infos: #ArvGvspContentType and packet identifier in a 32 bit value
+ * @data: data byte array
  *
  * GVSP packet header structure.
  */
 
 typedef struct {
-	guint16 packet_type;
 	guint16 frame_id;
 	guint32 packet_infos;
+	guint8 data[];
 } ArvGvspHeader;
+
+typedef struct {
+	guint16 flags;
+	guint32 packet_infos;
+	guint64 frame_id;
+	guint32 packet_id;
+	guint8 data[];
+} ArvGvspExtendedHeader;
 
 /**
  * ArvGvspDataLeader:
@@ -148,16 +156,21 @@ typedef struct {
 
 /**
  * ArvGvspPacket:
+ * @packet_type: packet type, also known as status in wireshark dissector
  * @header: common GVSP packet header
- * @data: data byte array
  *
  * GVSP packet structure.
  */
 
 typedef struct {
-	ArvGvspHeader header;
-	guint8 data[];
+	guint16 packet_type;
+	guint8 header[];
 } ArvGvspPacket;
+
+ /* IP + UDP + GVSP headers */
+#define ARV_GVSP_PACKET_PROTOCOL_OVERHEAD		(20 + 8 + sizeof (ArvGvspPacket) + sizeof (ArvGvspHeader))
+ /* IP + UDP + GVSP extended headers */
+#define ARV_GVSP_PACKET_EXTENDED_PROTOCOL_OVERHEAD	(20 + 8 + sizeof (ArvGvspPacket) + sizeof (ArvGvspExtendedHeader))
 
 #pragma pack(pop)
 
@@ -177,26 +190,77 @@ void 			arv_gvsp_packet_debug 			(const ArvGvspPacket *packet, size_t packet_siz
 static inline ArvGvspPacketType
 arv_gvsp_packet_get_packet_type (const ArvGvspPacket *packet)
 {
-	return (ArvGvspPacketType) g_ntohs (packet->header.packet_type);
+	return (ArvGvspPacketType) g_ntohs (packet->packet_type);
+}
+
+static inline gboolean
+arv_gvsp_packet_type_is_error (const ArvGvspPacketType packet_type)
+{
+	return (packet_type & 0x8000) != 0;
+}
+
+static inline gboolean
+arv_gvsp_packet_has_extended_ids (const ArvGvspPacket *packet)
+{
+	return (packet->header[2] & ARV_GVSP_PACKET_EXTENDED_ID_MODE_MASK) != 0;
 }
 
 static inline ArvGvspContentType
 arv_gvsp_packet_get_content_type (const ArvGvspPacket *packet)
 {
-	return (ArvGvspContentType) ((g_ntohl (packet->header.packet_infos) & ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_MASK) >>
-		ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_POS);
+	if (arv_gvsp_packet_has_extended_ids (packet)) {
+		ArvGvspExtendedHeader *header = (void *) &packet->header;
+
+		return (ArvGvspContentType) ((g_ntohl (header->packet_infos) & ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_MASK) >>
+					     ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_POS);
+	} else {
+		ArvGvspHeader *header = (void *) &packet->header;
+
+		return (ArvGvspContentType) ((g_ntohl (header->packet_infos) & ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_MASK) >>
+					     ARV_GVSP_PACKET_INFOS_CONTENT_TYPE_POS);
+	}
 }
 
-static inline guint16
+static inline guint32
 arv_gvsp_packet_get_packet_id (const ArvGvspPacket *packet)
 {
-	return g_ntohl (packet->header.packet_infos) & ARV_GVSP_PACKET_INFOS_ID_MASK;
+	if (arv_gvsp_packet_has_extended_ids (packet)) {
+		ArvGvspExtendedHeader *header = (void *) &packet->header;
+
+		return g_ntohl (header->packet_id);
+	} else {
+		ArvGvspHeader *header = (void *) &packet->header;
+
+		return g_ntohl (header->packet_infos) & ARV_GVSP_PACKET_ID_MASK;
+	}
 }
 
-static inline guint16
+static inline guint64
 arv_gvsp_packet_get_frame_id (const ArvGvspPacket *packet)
 {
-	return g_ntohs (packet->header.frame_id);
+	if (arv_gvsp_packet_has_extended_ids (packet)) {
+		ArvGvspExtendedHeader *header = (void *) &packet->header;
+
+		return GUINT64_FROM_BE(header->frame_id);
+	} else {
+		ArvGvspHeader *header = (void *) &packet->header;
+
+		return g_ntohs (header->frame_id);
+	}
+}
+
+static inline void *
+arv_gvsp_packet_get_data (const ArvGvspPacket *packet)
+{
+	if (arv_gvsp_packet_has_extended_ids (packet)) {
+		ArvGvspExtendedHeader *header = (void *) &packet->header;
+
+		return &header->data;
+	} else {
+		ArvGvspHeader *header = (void *) &packet->header;
+
+		return &header->data;
+	}
 }
 
 static inline ArvBufferPayloadType
@@ -205,7 +269,7 @@ arv_gvsp_packet_get_buffer_payload_type (const ArvGvspPacket *packet)
 	ArvGvspDataLeader *leader;
 	ArvGvspPayloadType gvsp_payload_type;
 
-	leader = (ArvGvspDataLeader *) &packet->data;
+	leader = arv_gvsp_packet_get_data (packet);
 
 	gvsp_payload_type = (ArvGvspPayloadType) g_ntohs (leader->payload_type);
 
@@ -240,7 +304,7 @@ arv_gvsp_packet_get_x_offset (const ArvGvspPacket *packet)
 {
 	ArvGvspDataLeader *leader;
 
-	leader = (ArvGvspDataLeader *) &packet->data;
+	leader = arv_gvsp_packet_get_data (packet);
 	return g_ntohl (leader->x_offset);
 }
 
@@ -249,7 +313,7 @@ arv_gvsp_packet_get_y_offset (const ArvGvspPacket *packet)
 {
 	ArvGvspDataLeader *leader;
 
-	leader = (ArvGvspDataLeader *) &packet->data;
+	leader = arv_gvsp_packet_get_data (packet);
 	return g_ntohl (leader->y_offset);
 }
 
@@ -258,7 +322,7 @@ arv_gvsp_packet_get_width (const ArvGvspPacket *packet)
 {
 	ArvGvspDataLeader *leader;
 
-	leader = (ArvGvspDataLeader *) &packet->data;
+	leader = arv_gvsp_packet_get_data (packet);
 	return g_ntohl (leader->width);
 }
 
@@ -267,7 +331,7 @@ arv_gvsp_packet_get_height (const ArvGvspPacket *packet)
 {
 	ArvGvspDataLeader *leader;
 
-	leader = (ArvGvspDataLeader *) &packet->data;
+	leader = arv_gvsp_packet_get_data (packet);
 	return g_ntohl (leader->height);
 }
 
@@ -276,7 +340,7 @@ arv_gvsp_packet_get_pixel_format (const ArvGvspPacket *packet)
 {
 	ArvGvspDataLeader *leader;
 
-	leader = (ArvGvspDataLeader *) &packet->data;
+	leader = arv_gvsp_packet_get_data (packet);
 	return (ArvPixelFormat) g_ntohl (leader->pixel_format);
 }
 
@@ -291,7 +355,7 @@ arv_gvsp_packet_get_timestamp (const ArvGvspPacket *packet, guint64 timestamp_ti
 	if (timestamp_tick_frequency < 1)
 		return 0;
 
-	leader = (ArvGvspDataLeader *) &packet->data;
+	leader = arv_gvsp_packet_get_data (packet);
 
 	timestamp = ( (guint64) g_ntohl (leader->timestamp_high) << 32) | g_ntohl (leader->timestamp_low);
 
@@ -304,9 +368,12 @@ arv_gvsp_packet_get_timestamp (const ArvGvspPacket *packet, guint64 timestamp_ti
 }
 
 static inline size_t
-arv_gvsp_packet_get_data_size (size_t packet_size)
+arv_gvsp_packet_get_data_size (const ArvGvspPacket *packet, size_t packet_size)
 {
-	return packet_size - sizeof (ArvGvspHeader);
+	if (arv_gvsp_packet_has_extended_ids (packet))
+		return packet_size - sizeof (ArvGvspPacket) - sizeof (ArvGvspExtendedHeader);
+	else
+		return packet_size - sizeof (ArvGvspPacket) - sizeof (ArvGvspHeader);
 }
 
 G_END_DECLS

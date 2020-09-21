@@ -92,7 +92,7 @@ typedef guint32 ArvPixelFormat;
 #define ARV_PIXEL_FORMAT_MONO_12		((ArvPixelFormat) 0x01100005u)
 #define ARV_PIXEL_FORMAT_MONO_12_PACKED		((ArvPixelFormat) 0x010c0006u)
 
-#define ARV_PIXEL_FORMAT_MONO_14		((ArvPixelFormat) 0x01100025u) /* https://bugzilla.gnome.org/show_bug.cgi?id=655131 */
+#define ARV_PIXEL_FORMAT_MONO_14		((ArvPixelFormat) 0x01100025u)
 
 #define ARV_PIXEL_FORMAT_MONO_16		((ArvPixelFormat) 0x01100007u)
 

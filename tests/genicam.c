@@ -561,7 +561,7 @@ register_test (void)
 	g_assert_cmpint (value, ==, 0);
 	value = arv_gc_integer_get_max (ARV_GC_INTEGER (node_a), NULL);
 	g_assert_cmpint (value, ==, G_MAXINT64);
-	string = arv_gc_integer_get_unit (ARV_GC_INTEGER (node_a), NULL);
+	string = arv_gc_integer_get_unit (ARV_GC_INTEGER (node_a));
 	g_assert_cmpstr (string, ==, "Pa");
 
 	value = arv_gc_register_get_address (ARV_GC_REGISTER (node_a), NULL);
@@ -655,7 +655,7 @@ register_test (void)
 	g_assert_cmpint (value, ==, 7);
 	value = arv_gc_integer_get_inc (ARV_GC_INTEGER (node_sc), NULL);
 	g_assert_cmpint (value, ==, 1);
-	string = arv_gc_integer_get_unit (ARV_GC_INTEGER (node_sc), NULL);
+	string = arv_gc_integer_get_unit (ARV_GC_INTEGER (node_sc));
 	g_assert_cmpstr (string, ==, "V");
 
 	node_uc = arv_gc_get_node (genicam, "MaskedIntUnsignedRegisterC");
@@ -666,7 +666,7 @@ register_test (void)
 	g_assert_cmpint (value, ==, 15);
 	value = arv_gc_integer_get_inc (ARV_GC_INTEGER (node_uc), NULL);
 	g_assert_cmpint (value, ==, 1);
-	string = arv_gc_integer_get_unit (ARV_GC_INTEGER (node_uc), NULL);
+	string = arv_gc_integer_get_unit (ARV_GC_INTEGER (node_uc));
 	g_assert_cmpstr (string, ==, "A");
 
 	/* 4 byte FLoatReg */
@@ -679,7 +679,7 @@ register_test (void)
 	g_assert_cmpfloat (value_f, ==, -G_MAXFLOAT);
 	value_f = arv_gc_float_get_max (ARV_GC_FLOAT (node_f), NULL);
 	g_assert_cmpfloat (value_f, ==, G_MAXFLOAT);
-	string = arv_gc_float_get_unit (ARV_GC_FLOAT (node_f), NULL);
+	string = arv_gc_float_get_unit (ARV_GC_FLOAT (node_f));
 	g_assert_cmpstr (string, ==, "mA");
 
 	arv_gc_float_set_value (ARV_GC_FLOAT (node_f), 2.0, NULL);
@@ -700,7 +700,7 @@ register_test (void)
 	g_assert_cmpfloat (value_f, ==, -G_MAXDOUBLE);
 	value_f = arv_gc_float_get_max (ARV_GC_FLOAT (node_f), NULL);
 	g_assert_cmpfloat (value_f, ==, G_MAXDOUBLE);
-	string = arv_gc_float_get_unit (ARV_GC_FLOAT (node_f), NULL);
+	string = arv_gc_float_get_unit (ARV_GC_FLOAT (node_f));
 	g_assert_cmpstr (string, ==, "mV");
 
 	arv_gc_float_set_value (ARV_GC_FLOAT (node_f), 1.2, NULL);

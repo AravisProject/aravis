@@ -42,8 +42,10 @@ struct _ArvGcStructEntryNode {
 	ArvGcFeatureNode node;
 
 	ArvGcPropertyNode *sign;
+	ArvGcPropertyNode *representation;
 	ArvGcPropertyNode *lsb;
 	ArvGcPropertyNode *msb;
+	ArvGcPropertyNode *access_mode;
 	ArvGcPropertyNode *cachable;
 
 	char v_string[G_ASCII_DTOSTR_BUF_SIZE];
@@ -80,6 +82,9 @@ arv_gc_struct_entry_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 			case ARV_GC_PROPERTY_NODE_TYPE_SIGN:
 				node->sign = property_node;
 				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_REPRESENTATION:
+				node->representation = property_node;
+				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_LSB:
 				node->lsb = property_node;
 				break;
@@ -89,6 +94,9 @@ arv_gc_struct_entry_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 			case ARV_GC_PROPERTY_NODE_TYPE_BIT:
 				node->msb = property_node;
 				node->lsb = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_ACCESS_MODE:
+				node->access_mode = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_CACHABLE:
 				node->cachable = property_node;
@@ -129,6 +137,17 @@ arv_gc_struct_entry_node_init (ArvGcStructEntryNode *gc_struct_entry_node)
 {
 }
 
+static ArvGcAccessMode
+arv_gc_struct_entry_node_get_access_mode (ArvGcFeatureNode *gc_feature_node)
+{
+	ArvGcStructEntryNode *self = ARV_GC_STRUCT_ENTRY_NODE(gc_feature_node);
+
+	if (self->access_mode == NULL)
+		return ARV_GC_ACCESS_MODE_RO;
+
+	return arv_gc_property_node_get_access_mode (self->access_mode, ARV_GC_ACCESS_MODE_RO);
+}
+
 static void
 arv_gc_struct_entry_node_finalize (GObject *object)
 {
@@ -140,11 +159,13 @@ arv_gc_struct_entry_node_class_init (ArvGcStructEntryNodeClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
+	ArvGcFeatureNodeClass *gc_feature_node_class = ARV_GC_FEATURE_NODE_CLASS (this_class);
 
 	object_class->finalize = arv_gc_struct_entry_node_finalize;
 	dom_node_class->get_node_name = arv_gc_struct_entry_node_get_node_name;
 	dom_node_class->post_new_child = arv_gc_struct_entry_node_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_struct_entry_node_pre_remove_child;
+	gc_feature_node_class->get_access_mode = arv_gc_struct_entry_node_get_access_mode;
 }
 
 /* ArvGcRegister interface implementation */
@@ -271,7 +292,7 @@ arv_gc_struct_entry_node_get_min (ArvGcInteger *self, GError **error)
 	msb = arv_gc_property_node_get_msb (struct_entry->msb, 31);
 	signedness = arv_gc_property_node_get_sign (struct_entry->sign, ARV_GC_SIGNEDNESS_UNSIGNED);
 
-	/* TODO endianess */
+	/* TODO endianness */
 
 	if (signedness == ARV_GC_SIGNEDNESS_SIGNED) {
 		return -((1 << (msb - lsb  - 1)));
@@ -291,13 +312,24 @@ arv_gc_struct_entry_node_get_max (ArvGcInteger *self, GError **error)
 	msb = arv_gc_property_node_get_msb (struct_entry->msb, 31);
 	signedness = arv_gc_property_node_get_sign (struct_entry->sign, ARV_GC_SIGNEDNESS_UNSIGNED);
 
-	/* TODO endianess */
+	/* TODO endianness */
 
 	if (signedness == ARV_GC_SIGNEDNESS_SIGNED) {
 		return ((1 << (msb - lsb  - 1)) - 1);
 	} else {
 		return (1 << (msb - lsb)) - 1;
 	}
+}
+
+static ArvGcRepresentation
+arv_gc_struct_entry_node_get_representation (ArvGcInteger *self)
+{
+	ArvGcStructEntryNode *struct_entry = ARV_GC_STRUCT_ENTRY_NODE (self);
+
+	if (struct_entry->representation == NULL)
+		return ARV_GC_REPRESENTATION_UNDEFINED;
+
+	return arv_gc_property_node_get_representation (struct_entry->representation, ARV_GC_REPRESENTATION_UNDEFINED);
 }
 
 static void
@@ -307,4 +339,5 @@ arv_gc_struct_entry_node_integer_interface_init (ArvGcIntegerInterface *interfac
 	interface->set_value = arv_gc_struct_entry_node_set_integer_value;
 	interface->get_min = arv_gc_struct_entry_node_get_min;
 	interface->get_max = arv_gc_struct_entry_node_get_max;
+	interface->get_representation = arv_gc_struct_entry_node_get_representation;
 }

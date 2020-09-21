@@ -33,7 +33,7 @@
 #include <arvstreamprivate.h>
 #include <arvbuffer.h>
 #include <arvdevice.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <gio/gio.h>
 
 enum {

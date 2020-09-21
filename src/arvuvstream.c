@@ -116,7 +116,7 @@ arv_uv_stream_thread (void *data)
 		else
 			packet = incoming_buffer;
 
-		arv_log_sp ("Asking for %u bytes", size);
+		arv_log_sp ("Asking for %" G_GSIZE_FORMAT " bytes", size);
 		arv_uv_device_bulk_transfer (thread_data->uv_device,  ARV_UV_ENDPOINT_DATA, LIBUSB_ENDPOINT_IN,
 					     packet, size, &transferred, 0, &error);
 
@@ -126,7 +126,7 @@ arv_uv_stream_thread (void *data)
 		} else {
 			ArvUvspPacketType packet_type;
 
-			arv_log_sp ("Received %d bytes", transferred);
+			arv_log_sp ("Received %" G_GSIZE_FORMAT " bytes", transferred);
 			arv_uvsp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
 			packet_type = arv_uvsp_packet_get_packet_type (packet);
@@ -171,7 +171,7 @@ arv_uv_stream_thread (void *data)
 				case ARV_UVSP_PACKET_TYPE_TRAILER:
 					if (buffer != NULL) {
 						arv_log_stream_thread ("Received %" G_GUINT64_FORMAT
-								       " bytes - expected %" G_GUINT64_FORMAT,
+								       " bytes - expected %zu",
 								       offset, buffer->priv->size);
 
 						/* If the image was incomplete, drop the frame and try again. */
@@ -212,7 +212,7 @@ arv_uv_stream_thread (void *data)
 					}
 					break;
 				default:
-					arv_debug_stream_thread ("Unkown packet type");
+					arv_debug_stream_thread ("Unknown packet type");
 					break;
 			}
 		}
@@ -287,7 +287,7 @@ arv_uv_stream_start_thread (ArvStream *stream)
 	alignment = 1 << ((si_info & ARV_SI_INFO_ALIGNMENT_MASK) >> ARV_SI_INFO_ALIGNMENT_SHIFT);
 
 	arv_debug_stream ("SI_INFO            =       0x%08x", si_info);
-	arv_debug_stream ("SI_REQ_PAYLOAD_SIZE =      0x%016lx", si_req_payload_size);
+	arv_debug_stream ("SI_REQ_PAYLOAD_SIZE =      0x%016" G_GINT64_MODIFIER "x", si_req_payload_size);
 	arv_debug_stream ("SI_REQ_LEADER_SIZE =       0x%08x", si_req_leader_size);
 	arv_debug_stream ("SI_REQ_TRAILER_SIZE =      0x%08x", si_req_trailer_size);
 

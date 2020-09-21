@@ -27,7 +27,7 @@
  */
 
 #include <arvdomcharacterdata.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <string.h>
 
 typedef struct {
