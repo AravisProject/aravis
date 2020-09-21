@@ -414,7 +414,7 @@ void
 arv_buffer_set_frame_id(ArvBuffer *buffer, guint64 frame_id)
 {
 	g_return_if_fail (ARV_IS_BUFFER (buffer));
-        buffer->priv->frame_id=frame_id;
+	buffer->priv->frame_id=frame_id;
 }
 
 /**
