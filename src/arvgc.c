@@ -59,7 +59,7 @@
 #include <arvgcintconverternode.h>
 #include <arvgcport.h>
 #include <arvbuffer.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <arvdomparser.h>
 #include <string.h>
 #include <stdarg.h>
@@ -182,6 +182,12 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 		node = arv_gc_property_node_new_slope ();
 	else if (strcmp (tag_name, "Unit") == 0)
 		node = arv_gc_property_node_new_unit ();
+	else if (strcmp (tag_name, "Representation") == 0)
+		node = arv_gc_property_node_new_representation ();
+	else if (strcmp (tag_name, "DisplayNotation") == 0)
+		node = arv_gc_property_node_new_display_notation ();
+	else if (strcmp (tag_name, "DisplayPrecision") == 0)
+		node = arv_gc_property_node_new_display_precision ();
 	else if (strcmp (tag_name, "OnValue") == 0)
 		node = arv_gc_property_node_new_on_value ();
 	else if (strcmp (tag_name, "OffValue") == 0)
@@ -230,7 +236,7 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 	else if (strcmp (tag_name, "PollingTime") == 0)
 		node = arv_gc_property_node_new_polling_time ();
 	else if (strcmp (tag_name, "Endianess") == 0)
-		node = arv_gc_property_node_new_endianess ();
+		node = arv_gc_property_node_new_endianness ();
 	else if (strcmp (tag_name, "Sign") == 0)
 		node = arv_gc_property_node_new_sign ();
 	else if (strcmp (tag_name, "LSB") == 0)

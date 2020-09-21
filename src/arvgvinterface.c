@@ -30,7 +30,7 @@
 #include <arvinterfaceprivate.h>
 #include <arvgvdeviceprivate.h>
 #include <arvgvcpprivate.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <arvmisc.h>
 #include <arvstr.h>
 #include <glib/gprintf.h>

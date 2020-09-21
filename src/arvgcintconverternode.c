@@ -131,10 +131,16 @@ arv_gc_converter_set_integer_value (ArvGcInteger *gc_integer, gint64 value, GErr
 	arv_gc_converter_convert_from_int64 (ARV_GC_CONVERTER (gc_integer), value, error);
 }
 
-static const char *
-arv_gc_converter_get_integer_unit (ArvGcInteger *gc_integer, GError **error)
+static ArvGcRepresentation
+arv_gc_converter_get_integer_representation (ArvGcInteger *gc_integer)
 {
-	return arv_gc_converter_get_unit (ARV_GC_CONVERTER (gc_integer), error);
+	return arv_gc_converter_get_representation (ARV_GC_CONVERTER (gc_integer));
+}
+
+static const char *
+arv_gc_converter_get_integer_unit (ArvGcInteger *gc_integer)
+{
+	return arv_gc_converter_get_unit (ARV_GC_CONVERTER (gc_integer));
 }
 
 static void
@@ -145,6 +151,7 @@ arv_gc_int_converter_node_integer_interface_init (ArvGcIntegerInterface *interfa
 	interface->get_max = arv_gc_converter_get_integer_max;
 	interface->get_inc = _get_inc;
 	interface->set_value = arv_gc_converter_set_integer_value;
+	interface->get_representation = arv_gc_converter_get_integer_representation;
 	interface->get_unit = arv_gc_converter_get_integer_unit;
 }
 

@@ -25,9 +25,9 @@
  * @short_description: Debugging tools
  */
 
-#include <arvdebug.h>
 #include <glib/gprintf.h>
 #include <stdlib.h>
+#include <arvdebugprivate.h>
 
 ArvDebugCategory arv_debug_category_interface =
 {
@@ -215,6 +215,16 @@ arv_log (ArvDebugCategory *category, const char *format, ...)
 
 	va_start (args, format);
 	arv_debug_with_level (category, ARV_DEBUG_LEVEL_LOG, format, args);
+	va_end (args);
+}
+
+void
+arv_verbosely_log (ArvDebugCategory *category, const char *format, ...)
+{
+	va_list args;
+
+	va_start (args, format);
+	arv_debug_with_level (category, ARV_DEBUG_LEVEL_VERBOSE_LOG, format, args);
 	va_end (args);
 }
 

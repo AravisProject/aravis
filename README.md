@@ -14,15 +14,7 @@ Aravis is released under the LGPL v2+.
 
 ### Installing Aravis
 
-Up to the 0.6.x stable series, Aravis build system is based on Autotools. The recommended way to get the sources is to download the release tarballs from http://ftp.gnome.org/pub/GNOME/sources/aravis, and then compile it using the following commands:
-
-```
-./configure
-make
-make install
-```
-
-The current unstable serie of Aravis uses meson build system ( http://mesonbuild.com/ ). Release tarballs can be found at the same usual place. You can build and install Aravis like [any other meson project](http://mesonbuild.com/Quick-guide.html#compiling-a-meson-project):
+Aravis uses the meson build system ( http://mesonbuild.com/ ). After you have downloaded the latest release from [http://ftp.gnome.org/pub/GNOME/sources/aravis](http://ftp.gnome.org/pub/GNOME/sources/aravis), you can build and install Aravis like [any other meson project](http://mesonbuild.com/Quick-guide.html#compiling-a-meson-project):
 
 ```
 meson build
@@ -86,7 +78,7 @@ The GStreamer plugin depends on GStreamer1 in addition to the Aravis library dep
 
 The simple viewer depends on GStreamer1, Gtk+3, libnotify and the Aravis library dependencies.
 
-The required versions are specified in the [meson.build](https://github.com/AravisProject/aravis/blob/master/meson.build) file in Aravis sources (or [configure.ac](https://github.com/AravisProject/aravis/blob/aravis-0-6/configure.ac) if you are using the stable 0.6 series).
+The required versions are specified in the [meson.build](https://github.com/AravisProject/aravis/blob/master/meson.build) file in Aravis sources.
 
 It is perfectly possible to only build the library, reducing the dependencies to the bare minimum.
 
@@ -117,7 +109,7 @@ meson configure -Db_coverage=true
 ninja coverage
 ```
 
-The report is published in `build/meson-logs/coveragereport/index.html`. Help on code coverage improvment is welcomed.
+The report is published in `build/meson-logs/coveragereport/index.html`. Help on code coverage improvement is welcome.
 
 ### Programming examples
 
@@ -154,14 +146,12 @@ if (error) {
 
 ### Downloads
 
-* 0.6.x stable releases: http://ftp.gnome.org/pub/GNOME/sources/aravis/0.6/
-* 0.7.x unstable releases: http://ftp.gnome.org/pub/GNOME/sources/aravis/0.7/
+* 0.8.x stable releases: http://ftp.gnome.org/pub/GNOME/sources/aravis/0.8/
 
 ### Links
 
 * Forum: https://aravis-project.discourse.group
 * Github repository: https://github.com/AravisProject/aravis
 * Release notes: https://github.com/AravisProject/aravis/blob/master/NEWS.md
-* Aravis 0.6 documentation: https://aravisproject.github.io/docs/aravis-0.6/
-* Unstable Aravis 0.7 documentation: https://aravisproject.github.io/docs/aravis-0.7/
+* Aravis 0.8 documentation: https://aravisproject.github.io/docs/aravis-0.8/
 * Genicam standard : http://www.genicam.org

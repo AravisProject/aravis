@@ -1,3 +1,33 @@
+Stable release 0.8.1
+======================
+
+  * build: add more compilation warnings and fix them (Emmanuel)
+
+Stable release 0.8.0
+======================
+
+  * gigevision: ExtendedIds support (Hendrick, Emmanuel)
+  * gigevision: add get_control_access API (casperoo)
+  * genicam: implement proper AccessMode and ImposedAccessMode support (Siim)
+  * genicam: add or extend support for Representation, Unit, DisplayNotation and DisplayPrecision proerties (Siim)
+  * genicam: extend GcRregisterDescriptionNode API (Siim)
+  * genicam: improve String register (Siim)
+  * genicam: implement arv_gc_feature_get_name_space() (Siim)
+  * gst-plugin: don't shadow GstBaseSrc num-buffers property (Marko)
+  * usb3vision: add Daheng Imaging descriptors (Jakob)
+
+Unstable release 0.7.5
+======================
+
+  * gst-plugin: error handling and lock fixes (Marko)
+  * build: fix when aravis is used as a subproject (Rihards)
+  * build: fix viewer build without libusb (Guillaume)
+  * fake camera: implement bayer pixel formats (Bernardo)
+  * gcregister: don't try to read WO registers (Stefan)
+  * viewer: fix buffer leak (Emmanuel)
+  * gvstream: correctly handle resend request limit (Emmanuel)
+  * stream: device reference leak fix (Emmanuel)
+
 Unstable release 0.7.4
 ======================
 

@@ -31,7 +31,7 @@
 #include <arvgccommand.h>
 #include <arvgcboolean.h>
 #include <arvgcregisterdescriptionnode.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <arvgvstreamprivate.h>
 #include <arvgvcpprivate.h>
 #include <arvgvspprivate.h>
@@ -211,7 +211,7 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 	do {
 		GError *local_error = NULL;
 
-		arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
+		arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_VERBOSE_LOG);
 
 		success = g_socket_send_to (io_data->socket, io_data->device_address,
 					    (const char *) packet, packet_size,
@@ -245,7 +245,7 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 					ArvGvcpCommand command;
 					guint16 packet_id;
 
-					arv_gvcp_packet_debug (ack_packet, ARV_DEBUG_LEVEL_LOG);
+					arv_gvcp_packet_debug (ack_packet, ARV_DEBUG_LEVEL_VERBOSE_LOG);
 
 					packet_type = arv_gvcp_packet_get_packet_type (ack_packet);
 					command = arv_gvcp_packet_get_command (ack_packet);
@@ -259,7 +259,7 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 
 						timeout_stop_ms = g_get_monotonic_time () / 1000 + pending_ack_timeout_ms;
 
-						arv_log_device ("[GvDevice::%s] Pending ack timeout = %d",
+						arv_log_device ("[GvDevice::%s] Pending ack timeout = %" G_GINT64_FORMAT,
 								operation, pending_ack_timeout_ms);
 					} else if (packet_type == ARV_GVCP_PACKET_TYPE_ERROR) {
 						expected_answer = command == ack_command &&
@@ -456,10 +456,6 @@ arv_gv_device_take_control (ArvGvDevice *gv_device)
 					     ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_CONTROL, NULL);
 
 	priv->io_data->is_controller = success;
-
-	/* Disable GVSP extended ID mode for now, it is not supported yet by ArvGvStream */
-	if (success)
-		arv_device_set_string_feature_value (ARV_DEVICE (gv_device), "GevGVSPExtendedIDMode", "Off", NULL);
 
 	if (!success)
 		arv_warning_device ("[GvDevice::take_control] Can't get control access");
@@ -670,6 +666,25 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device, GError **error)
 	arv_device_set_integer_feature_value (device, "GevSCPSPacketSize", packet_size, NULL);
 
 	return packet_size;
+}
+
+/**
+ * arv_gv_device_is_controller:
+ * @gv_device: a #ArvGvDevice
+ *
+ * Returns: value indicating whether the ArvGvDevice has control access to the camera
+ *
+ * Since: 0.8.0
+ */
+
+gboolean
+arv_gv_device_is_controller (ArvGvDevice *gv_device)
+{
+	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
+
+	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), 0);
+	
+	return priv->io_data->is_controller;
 }
 
 static char *
@@ -1290,7 +1305,7 @@ arv_gv_device_constructed (GObject *object)
 
 	document = ARV_DOM_DOCUMENT (priv->genicam);
 	register_description = ARV_GC_REGISTER_DESCRIPTION_NODE (arv_dom_document_get_document_element (document));
-	arv_debug_device ("[GvDevice::new] Legacy endianess handling = %s",
+	arv_debug_device ("[GvDevice::new] Legacy endianness handling = %s",
 			  arv_gc_register_description_node_compare_schema_version (register_description, 1, 1, 0) < 0 ?
 			  "yes" : "no");
 }

@@ -21,7 +21,7 @@
  */
 
 #include <arvmiscprivate.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <string.h>
 #include <math.h>
 #include <stdio.h>
@@ -342,7 +342,7 @@ arv_value_copy (ArvValue *to, const ArvValue *from)
 	*to = *from;
 }
 
-ArvValue *
+static ArvValue *
 arv_value_duplicate (const ArvValue *from)
 {
 	ArvValue *value;
@@ -414,8 +414,8 @@ arv_value_holds_double (ArvValue *value)
 }
 
 void
-arv_copy_memory_with_endianess (void *to, size_t to_size, guint to_endianess,
-				void *from, size_t from_size, guint from_endianess)
+arv_copy_memory_with_endianness (void *to, size_t to_size, guint to_endianness,
+				void *from, size_t from_size, guint from_endianness)
 {
 	char *to_ptr;
 	char *from_ptr;
@@ -424,8 +424,8 @@ arv_copy_memory_with_endianess (void *to, size_t to_size, guint to_endianess,
 	g_return_if_fail (to != NULL);
 	g_return_if_fail (from != NULL);
 
-	if (to_endianess == G_LITTLE_ENDIAN &&
-	    from_endianess == G_BIG_ENDIAN) {
+	if (to_endianness == G_LITTLE_ENDIAN &&
+	    from_endianness == G_BIG_ENDIAN) {
 		to_ptr = to;
 		from_ptr = ((char *) from) + from_size - 1;
 		if (to_size <= from_size) {
@@ -436,8 +436,8 @@ arv_copy_memory_with_endianess (void *to, size_t to_size, guint to_endianess,
 				*to_ptr = *from_ptr;
 			memset (((char *) to) + from_size, 0, to_size - from_size);
 		}
-	} else if (to_endianess == G_BIG_ENDIAN &&
-		   from_endianess == G_LITTLE_ENDIAN) {
+	} else if (to_endianness == G_BIG_ENDIAN &&
+		   from_endianness == G_LITTLE_ENDIAN) {
 		to_ptr = ((char *) to) + to_size - 1;
 		from_ptr = from;
 		if (to_size <= from_size) {
@@ -448,16 +448,16 @@ arv_copy_memory_with_endianess (void *to, size_t to_size, guint to_endianess,
 				*to_ptr = *from_ptr;
 			memset (to, 0, to_size - from_size);
 		}
-	} else if (to_endianess == G_LITTLE_ENDIAN &&
-		   from_endianess == G_LITTLE_ENDIAN) {
+	} else if (to_endianness == G_LITTLE_ENDIAN &&
+		   from_endianness == G_LITTLE_ENDIAN) {
 		if (to_size <= from_size)
 			memcpy (to, from, to_size);
 		else {
 			memcpy (to, from, from_size);
 			memset (((char *) to) + from_size, 0, to_size - from_size);
 		}
-	} else if (to_endianess == G_BIG_ENDIAN &&
-		   from_endianess == G_BIG_ENDIAN) {
+	} else if (to_endianness == G_BIG_ENDIAN &&
+		   from_endianness == G_BIG_ENDIAN) {
 		if (to_size <= from_size)
 			memcpy (to, ((char *) from) + from_size - to_size, to_size);
 		else {
@@ -507,8 +507,8 @@ arv_decompress (void *input_buffer, size_t input_size, size_t *output_size)
 		stream.avail_in = MIN (input_size, ARV_DECOMPRESS_CHUNK);
 		stream.next_in = input_buffer;
 
-		arv_debug_misc ("[Decompress] Input ptr = 0x%x - Chunk size = %d - %c",
-				stream.next_in, stream.avail_in, *stream.next_in);
+		arv_debug_misc ("[Decompress] Input ptr = 0x%p - Chunk size = %d - %c",
+				(void *) stream.next_in, stream.avail_in, *stream.next_in);
 
 		input_size -= stream.avail_in;
 		input_buffer = ((char *) input_buffer) + stream.avail_in;
@@ -618,6 +618,13 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 		"video/x-raw-gray",	12,	12,	0
 	},
 	{
+		ARV_PIXEL_FORMAT_MONO_14,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",		"GRAY16_LE",
+		"video/x-raw-gray, bpp=(int)16, depth=(int)14",
+		"video/x-raw-gray",	16,	14,	0
+	},
+	{
 		ARV_PIXEL_FORMAT_MONO_10,
 		"video/x-raw, format=(string)GRAY16_LE",
 		"video/x-raw", 		"GRAY16_LE",
@@ -654,7 +661,7 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 	},
 
 /* Non 8bit bayer formats are not supported by gstreamer bayer plugin.
- * This feature is discussed in bug https://bugzilla.gnome.org/show_bug.cgi?id=693666 .*/
+ * This feature is discussed in bug https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/issues/86 .*/
 
 	{
 		ARV_PIXEL_FORMAT_YUV_422_PACKED,

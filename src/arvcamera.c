@@ -2852,7 +2852,7 @@ ArvCamera *
 arv_camera_new (const char *name, GError **error)
 {
 	/* if you need to apply or test for fixups based on the camera model
-	   please do so in arv_camera_constructor and not here, as this breaks
+	   please do so in arv_camera_constructed and not here, as this breaks
 	   objects created with g_object_new, which includes but is not limited to
 	   introspection users */
 
@@ -2899,7 +2899,7 @@ arv_camera_constructed (GObject *object)
 						     "Device '%s' not found", priv->name);
 			else
 				error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
-						     "No supported deice found");
+						     "No supported device found");
 		}
 
 		g_clear_error (&priv->init_error);
@@ -3056,4 +3056,3 @@ arv_camera_initable_iface_init (GInitableIface *iface)
 {
 	iface->init = arv_camera_initable_init;
 }
-

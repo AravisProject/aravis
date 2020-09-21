@@ -30,6 +30,7 @@
 #include <arvgcinteger.h>
 #include <arvgcvalueindexednode.h>
 #include <arvgcfeaturenodeprivate.h>
+#include <arvgcdefaultsprivate.h>
 #include <arvgc.h>
 #include <arvmisc.h>
 #include <arvstr.h>
@@ -43,6 +44,9 @@ struct _ArvGcFloatNode {
 	ArvGcPropertyNode *maximum;
 	ArvGcPropertyNode *increment;
 	ArvGcPropertyNode *unit;
+	ArvGcPropertyNode *representation;
+	ArvGcPropertyNode *display_notation;
+	ArvGcPropertyNode *display_precision;
 
 	ArvGcPropertyNode *index;
 	GSList *value_indexed_nodes;
@@ -93,6 +97,15 @@ arv_gc_float_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_UNIT:
 				node->unit = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_REPRESENTATION:
+				node->representation = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_NOTATION:
+				node->display_notation = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_PRECISION:
+				node->display_precision = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_P_INDEX:
 				node->index = property_node;
@@ -161,6 +174,22 @@ arv_gc_float_node_new (void)
 	return node;
 }
 
+static ArvGcFeatureNode *
+arv_gc_float_node_get_linked_feature (ArvGcFeatureNode *gc_feature_node)
+{
+	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_feature_node);
+	ArvGcNode *pvalue_node = NULL;
+
+	if (gc_float_node->value == NULL)
+		return NULL;
+
+	pvalue_node = arv_gc_property_node_get_linked_node (gc_float_node->value);
+	if (ARV_IS_GC_FEATURE_NODE (pvalue_node))
+		return ARV_GC_FEATURE_NODE (pvalue_node);
+
+	return NULL;
+}
+
 static void
 arv_gc_float_node_init (ArvGcFloatNode *gc_float_node)
 {
@@ -181,11 +210,13 @@ arv_gc_float_node_class_init (ArvGcFloatNodeClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
+	ArvGcFeatureNodeClass *gc_feature_node_class = ARV_GC_FEATURE_NODE_CLASS (this_class);
 
 	object_class->finalize = arv_gc_float_node_finalize;
 	dom_node_class->get_node_name = arv_gc_float_node_get_node_name;
 	dom_node_class->post_new_child = arv_gc_float_node_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_float_node_pre_remove_child;
+	gc_feature_node_class->get_linked_feature = arv_gc_float_node_get_linked_feature;
 }
 
 /* ArvGcFloat interface implementation */
@@ -340,24 +371,51 @@ arv_gc_float_node_get_inc (ArvGcFloat *gc_float, GError **error)
 	return value;
 }
 
-static const char *
-arv_gc_float_node_get_unit (ArvGcFloat *gc_float, GError **error)
+static ArvGcRepresentation
+arv_gc_float_node_get_representation (ArvGcFloat *gc_float)
 {
 	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_float);
-	GError *local_error = NULL;
+
+	if (gc_float_node->representation == NULL)
+		return ARV_GC_REPRESENTATION_UNDEFINED;
+
+	return arv_gc_property_node_get_representation (ARV_GC_PROPERTY_NODE (gc_float_node->representation), ARV_GC_REPRESENTATION_UNDEFINED);
+}
+
+static const char *
+arv_gc_float_node_get_unit (ArvGcFloat *gc_float)
+{
+	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_float);
 	const char *string;
 
 	if (gc_float_node->unit == NULL)
 		return NULL;
 
-	string = arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (gc_float_node->unit), &local_error);
-
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return NULL;
-	}
+	string = arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (gc_float_node->unit), NULL);
 
 	return string;
+}
+
+static ArvGcDisplayNotation
+arv_gc_float_node_get_display_notation (ArvGcFloat *gc_float)
+{
+	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_float);
+
+	if (gc_float_node->display_notation == NULL)
+		return ARV_GC_DISPLAY_NOTATION_DEFAULT;
+
+	return arv_gc_property_node_get_display_notation (ARV_GC_PROPERTY_NODE (gc_float_node->display_notation), ARV_GC_DISPLAY_NOTATION_DEFAULT);
+}
+
+static gint64
+arv_gc_float_node_get_display_precision (ArvGcFloat *gc_float)
+{
+	ArvGcFloatNode *gc_float_node = ARV_GC_FLOAT_NODE (gc_float);
+
+	if (gc_float_node->display_precision == NULL)
+		return ARV_GC_DISPLAY_PRECISION_DEFAULT;
+
+	return arv_gc_property_node_get_display_precision (ARV_GC_PROPERTY_NODE (gc_float_node->display_precision), ARV_GC_DISPLAY_PRECISION_DEFAULT);
 }
 
 static void
@@ -398,7 +456,10 @@ arv_gc_float_node_float_interface_init (ArvGcFloatInterface *interface)
 	interface->get_min = arv_gc_float_node_get_min;
 	interface->get_max = arv_gc_float_node_get_max;
 	interface->get_inc = arv_gc_float_node_get_inc;
+	interface->get_representation = arv_gc_float_node_get_representation;
 	interface->get_unit = arv_gc_float_node_get_unit;
+	interface->get_display_notation = arv_gc_float_node_get_display_notation;
+	interface->get_display_precision = arv_gc_float_node_get_display_precision;
 	interface->impose_min = arv_gc_float_node_impose_min;
 	interface->impose_max = arv_gc_float_node_impose_max;
 }
