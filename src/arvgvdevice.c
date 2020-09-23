@@ -228,7 +228,9 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 			do {
 				pending_ack = FALSE;
 
-				timeout_ms = MAX (0, timeout_stop_ms - g_get_monotonic_time () / 1000);
+				timeout_ms = timeout_stop_ms - g_get_monotonic_time () / 1000;
+				if (timeout_ms < 0)
+					timeout_ms = 0;
 
 				success = TRUE;
 				success = success && g_poll (&io_data->poll_in_event, 1, timeout_ms) > 0;
