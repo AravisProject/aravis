@@ -570,7 +570,9 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device, GError **error)
 		return packet_size;
 	}
 
-	inc = MAX (1, arv_device_get_integer_feature_increment (device, "GevSCPSPacketSize", NULL));
+	inc = arv_device_get_integer_feature_increment (device, "GevSCPSPacketSize", NULL);
+	if (inc < 1)
+		inc = 1;
 	arv_device_get_integer_feature_bounds (device, "GevSCPSPacketSize", &minimum, &maximum, NULL);
 	max_size = MIN (65536, maximum);
 	min_size = MAX (ARV_GVSP_PACKET_PROTOCOL_OVERHEAD, minimum);
