@@ -275,9 +275,11 @@ _thread (void *user_data)
 		do {
 			gint timeout_ms;
 
-			timeout_ms = MIN (100, (next_timestamp_us - g_get_real_time ()) / 1000LL);
+			timeout_ms =  (next_timestamp_us - g_get_real_time ()) / 1000LL;
 			if (timeout_ms < 0)
 				timeout_ms = 0;
+			else if (timeout_ms > 100)
+				timeout_ms = 100;
 
 			n_events = g_poll (gv_fake_camera->priv->socket_fds, gv_fake_camera->priv->n_socket_fds, timeout_ms);
 			if (n_events > 0) {
