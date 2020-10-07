@@ -541,6 +541,18 @@ arv_fake_camera_diagonal_ramp (ArvBuffer *buffer, void *fill_pattern_data,
 				}
 			break;
 
+		case ARV_PIXEL_FORMAT_MONO_16:
+			for (y = 0; y < height; y++)
+				for (x = 0; x < width; x++) {
+					unsigned short *pixel = (unsigned short *)&buffer->priv->data [2*y * width + 2*x];
+
+					pixel_value = (256*x + 256*buffer->priv->frame_id + 256*y) % 65535;
+					pixel_value *= scale;
+
+					*pixel = CLAMP (pixel_value, 0, 65535);
+				}
+			break;
+
         case ARV_PIXEL_FORMAT_BAYER_BG_8:
             for (y = 0; y < height; y++)
                 for (x = 0; x < width; x++) {
