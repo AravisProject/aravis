@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2016 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -31,7 +31,7 @@
 
 G_BEGIN_DECLS
 
-#ifdef ARAVIS_FAST_HEARTBEAT
+#if ARAVIS_HAS_FAST_HEARTBEAT
     #define ARV_GV_DEVICE_GVCP_N_RETRIES_DEFAULT    3
     #define ARV_GV_DEVICE_GVCP_TIMEOUT_MS_DEFAULT   25
     #define ARV_GV_DEVICE_HEARTBEAT_PERIOD_US       50000
@@ -49,18 +49,7 @@ G_BEGIN_DECLS
 
 #define ARV_GV_DEVICE_BUFFER_SIZE	1024
 
-typedef struct _ArvGvDeviceClass ArvGvDeviceClass;
-typedef struct _ArvGvDevicePrivate ArvGvDevicePrivate;
-
-struct _ArvGvDevice {
-	ArvDevice device;
-
-	ArvGvDevicePrivate *priv;
-};
-
-struct _ArvGvDeviceClass {
-	ArvDeviceClass parent_class;
-};
+GRegex * 		arv_gv_device_get_url_regex 			(void);
 
 G_END_DECLS
 

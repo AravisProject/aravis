@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2012 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -43,25 +43,44 @@
 #include <arvgcintegernode.h>
 #include <arvgcfloatnode.h>
 #include <arvgcregisternode.h>
+#include <arvgcintregnode.h>
+#include <arvgcmaskedintregnode.h>
+#include <arvgcfloatregnode.h>
+#include <arvgcstringregnode.h>
+#include <arvgcstructregnode.h>
 #include <arvgcstructentrynode.h>
 #include <arvgccommand.h>
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
 #include <arvgcboolean.h>
-#include <arvgcswissknife.h>
-#include <arvgcconverter.h>
+#include <arvgcswissknifenode.h>
+#include <arvgcintswissknifenode.h>
+#include <arvgcconverternode.h>
+#include <arvgcintconverternode.h>
 #include <arvgcport.h>
 #include <arvbuffer.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <arvdomparser.h>
 #include <string.h>
+#include <stdarg.h>
+#include <stdio.h>
 
-static GObjectClass *parent_class = NULL;
-
-struct _ArvGcPrivate {
+typedef struct {
 	GHashTable *nodes;
 	ArvDevice *device;
 	ArvBuffer *buffer;
+
+	ArvRegisterCachePolicy cache_policy;
+} ArvGcPrivate;
+
+struct _ArvGc {
+	ArvDomDocument base;
+
+	ArvGcPrivate *priv;
+};
+
+struct _ArvGcClass {
+	ArvDomDocumentClass parent_class;
 };
 
 GQuark
@@ -90,19 +109,21 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 	else if (strcmp (tag_name, "Command") == 0)
 		node = arv_gc_command_new ();
 	else if (strcmp (tag_name, "Converter") == 0)
-		node = arv_gc_converter_new ();
+		node = arv_gc_converter_node_new ();
 	else if (strcmp (tag_name, "IntConverter") == 0)
-		node = arv_gc_converter_new_integer ();
+		node = arv_gc_int_converter_node_new ();
+	else if (strcmp (tag_name, "Register") == 0)
+		node = arv_gc_register_node_new ();
 	else if (strcmp (tag_name, "IntReg") == 0)
-		node = arv_gc_register_node_new_integer ();
+		node = arv_gc_int_reg_node_new ();
 	else if (strcmp (tag_name, "MaskedIntReg") == 0)
-		node = arv_gc_register_node_new_masked_integer ();
+		node = arv_gc_masked_int_reg_node_new ();
 	else if (strcmp (tag_name, "FloatReg") == 0)
-		node = arv_gc_register_node_new_float ();
+		node = arv_gc_float_reg_node_new ();
 	else if (strcmp (tag_name, "StringReg") == 0)
-		node = arv_gc_register_node_new_string ();
+		node = arv_gc_string_reg_node_new ();
 	else if (strcmp (tag_name, "StructReg") == 0)
-		node = arv_gc_register_node_new_struct_register ();
+		node = arv_gc_struct_reg_node_new ();
 	else if (strcmp (tag_name, "StructEntry") == 0)
 		node = arv_gc_struct_entry_node_new ();
 	else if (strcmp (tag_name, "Integer") == 0)
@@ -116,9 +137,9 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 	else if (strcmp (tag_name, "EnumEntry") == 0)
 		node = arv_gc_enum_entry_new ();
 	else if (strcmp (tag_name, "SwissKnife") == 0)
-		node = arv_gc_swiss_knife_new ();
+		node = arv_gc_swiss_knife_node_new ();
 	else if (strcmp (tag_name, "IntSwissKnife") == 0)
-		node = arv_gc_swiss_knife_new_integer ();
+		node = arv_gc_int_swiss_knife_node_new ();
 	else if (strcmp (tag_name, "Port") == 0)
 		node = arv_gc_port_new ();
 	else if (strcmp (tag_name, "pIndex") == 0)
@@ -137,6 +158,8 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 		node = arv_gc_property_node_new_p_address ();
 	else if (strcmp (tag_name, "Description") == 0)
 		node = arv_gc_property_node_new_description ();
+	else if (strcmp (tag_name, "Visibility") == 0)
+		node = arv_gc_property_node_new_visibility ();
 	else if (strcmp (tag_name, "ToolTip") == 0)
 		node = arv_gc_property_node_new_tooltip ();
 	else if (strcmp (tag_name, "DisplayName") == 0)
@@ -153,8 +176,18 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 		node = arv_gc_property_node_new_increment ();
 	else if (strcmp (tag_name, "pInc") == 0)
 		node = arv_gc_property_node_new_p_increment ();
+	else if (strcmp (tag_name, "IsLinear") == 0)
+		node = arv_gc_property_node_new_is_linear ();
+	else if (strcmp (tag_name, "Slope") == 0)
+		node = arv_gc_property_node_new_slope ();
 	else if (strcmp (tag_name, "Unit") == 0)
 		node = arv_gc_property_node_new_unit ();
+	else if (strcmp (tag_name, "Representation") == 0)
+		node = arv_gc_property_node_new_representation ();
+	else if (strcmp (tag_name, "DisplayNotation") == 0)
+		node = arv_gc_property_node_new_display_notation ();
+	else if (strcmp (tag_name, "DisplayPrecision") == 0)
+		node = arv_gc_property_node_new_display_precision ();
 	else if (strcmp (tag_name, "OnValue") == 0)
 		node = arv_gc_property_node_new_on_value ();
 	else if (strcmp (tag_name, "OffValue") == 0)
@@ -165,6 +198,8 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 		node = arv_gc_property_node_new_p_is_available ();
 	else if (strcmp (tag_name, "pIsLocked") == 0)
 		node = arv_gc_property_node_new_p_is_locked ();
+	else if (strcmp (tag_name, "pSelected") == 0)
+		node = arv_gc_property_node_new_p_selected ();
 	else if (strcmp (tag_name, "Length") == 0)
 		node = arv_gc_property_node_new_length ();
 	else if (strcmp (tag_name, "pLength") == 0)
@@ -194,12 +229,14 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 
 	else if (strcmp (tag_name, "AccessMode") == 0)
 		node = arv_gc_property_node_new_access_mode ();
+	else if (strcmp (tag_name, "ImposedAccessMode") == 0)
+		node = arv_gc_property_node_new_imposed_access_mode ();
 	else if (strcmp (tag_name, "Cachable") == 0)
 		node = arv_gc_property_node_new_cachable ();
 	else if (strcmp (tag_name, "PollingTime") == 0)
 		node = arv_gc_property_node_new_polling_time ();
 	else if (strcmp (tag_name, "Endianess") == 0)
-		node = arv_gc_property_node_new_endianess ();
+		node = arv_gc_property_node_new_endianness ();
 	else if (strcmp (tag_name, "Sign") == 0)
 		node = arv_gc_property_node_new_sign ();
 	else if (strcmp (tag_name, "LSB") == 0)
@@ -218,11 +255,13 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 
 	else if (strcmp (tag_name, "ChunkID") == 0)
 		node = arv_gc_property_node_new_chunk_id ();
+	else if (strcmp (tag_name, "EventID") == 0)
+		node = arv_gc_property_node_new_event_id ();
 
 	else if (strcmp (tag_name, "Group") == 0)
 		node = arv_gc_group_node_new ();
 	else
-		arv_debug_dom ("[Genicam::create_element] Unknow tag (%s)", tag_name);
+		arv_debug_dom ("[Genicam::create_element] Unknown tag (%s)", tag_name);
 
 	return ARV_DOM_ELEMENT (node);
 }
@@ -288,16 +327,42 @@ arv_gc_register_feature_node (ArvGc *genicam, ArvGcFeatureNode *node)
 }
 
 void
-arv_gc_set_default_node_data (ArvGc *genicam, const char *node_name, const char *node_data)
+arv_gc_set_default_node_data (ArvGc *genicam, const char *node_name, ...)
 {
+	va_list args;
+	char *node_data;
+
 	g_return_if_fail (ARV_IS_GC (genicam));
 	g_return_if_fail (node_name != NULL);
-	g_return_if_fail (node_data != NULL);
 
 	if (arv_gc_get_node (genicam, node_name) != NULL)
 		return;
 
-	arv_dom_document_append_from_memory (ARV_DOM_DOCUMENT (genicam), NULL, node_data, -1, NULL);
+	arv_debug_genicam ("[Gc::set_default_node_data] Add '%s'", node_name);
+
+	va_start (args, node_name);
+	do {
+		node_data = va_arg (args, char *);
+		if (node_data != NULL)
+			arv_dom_document_append_from_memory (ARV_DOM_DOCUMENT (genicam), NULL, node_data, -1, NULL);
+	} while (node_data != NULL);
+	va_end (args);
+}
+
+void
+arv_gc_set_register_cache_policy (ArvGc *genicam, ArvRegisterCachePolicy policy)
+{
+	g_return_if_fail (ARV_IS_GC (genicam));
+
+	genicam->priv->cache_policy = policy;
+}
+
+ArvRegisterCachePolicy
+arv_gc_get_register_cache_policy (ArvGc *genicam)
+{
+	g_return_val_if_fail (ARV_IS_GC (genicam), ARV_REGISTER_CACHE_POLICY_DISABLE);
+
+	return genicam->priv->cache_policy;
 }
 
 static void
@@ -358,12 +423,15 @@ arv_gc_new (ArvDevice *device, const void *xml, size_t size)
 	return genicam;
 }
 
+G_DEFINE_TYPE_WITH_CODE (ArvGc, arv_gc, ARV_TYPE_DOM_DOCUMENT, G_ADD_PRIVATE (ArvGc))
+
 static void
 arv_gc_init (ArvGc *genicam)
 {
-	genicam->priv = G_TYPE_INSTANCE_GET_PRIVATE (genicam, ARV_TYPE_GC, ArvGcPrivate);
+	genicam->priv = arv_gc_get_instance_private (genicam);
 
 	genicam->priv->nodes = g_hash_table_new_full (g_str_hash, g_str_equal, NULL, g_object_unref);
+	genicam->priv->cache_policy = ARV_REGISTER_CACHE_POLICY_DISABLE;
 }
 
 static void
@@ -376,7 +444,7 @@ arv_gc_finalize (GObject *object)
 
 	g_hash_table_unref (genicam->priv->nodes);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_gc_parent_class)->finalize (object);
 }
 
 static void
@@ -386,13 +454,7 @@ arv_gc_class_init (ArvGcClass *node_class)
 	ArvDomNodeClass *d_node_class = ARV_DOM_NODE_CLASS (node_class);
 	ArvDomDocumentClass *d_document_class = ARV_DOM_DOCUMENT_CLASS (node_class);
 
-	g_type_class_add_private (node_class, sizeof (ArvGcPrivate));
-
-	parent_class = g_type_class_peek_parent (node_class);
-
 	object_class->finalize = arv_gc_finalize;
 	d_node_class->can_append_child = arv_gc_can_append_child;
 	d_document_class->create_element = arv_gc_create_element;
 }
-
-G_DEFINE_TYPE (ArvGc, arv_gc, ARV_TYPE_DOM_DOCUMENT)

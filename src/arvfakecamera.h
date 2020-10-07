@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2011 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -27,14 +27,12 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
-#include <arvtypes.h>
+#include <arvbuffer.h>
 #include <gio/gio.h>
 
 G_BEGIN_DECLS
 
-typedef void (*ArvFakeCameraFillPattern) (ArvBuffer *buffer, void *fill_pattern_data,
-					  guint32 exposure_time_us, guint32 gain,
-					  ArvPixelFormat pixel_format);
+void arv_set_fake_camera_genicam_filename (const char *filename);
 
 #define ARV_FAKE_CAMERA_MEMORY_SIZE	0x10000
 
@@ -87,28 +85,14 @@ typedef void (*ArvFakeCameraFillPattern) (ArvBuffer *buffer, void *fill_pattern_
 #define ARV_FAKE_CAMERA_REGISTER_GAIN_MODE		0x114
 
 #define ARV_TYPE_FAKE_CAMERA             (arv_fake_camera_get_type ())
-#define ARV_FAKE_CAMERA(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_FAKE_CAMERA, ArvFakeCamera))
-#define ARV_FAKE_CAMERA_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_FAKE_CAMERA, ArvFakeCameraClass))
-#define ARV_IS_FAKE_CAMERA(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_FAKE_CAMERA))
-#define ARV_IS_FAKE_CAMERA_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_FAKE_CAMERA))
-#define ARV_FAKE_CAMERA_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_FAKE_CAMERA, ArvFakeCameraClass))
+G_DECLARE_FINAL_TYPE (ArvFakeCamera, arv_fake_camera, ARV, FAKE_CAMERA, GObject)
 
-typedef struct _ArvFakeCameraClass ArvFakeCameraClass;
-typedef struct _ArvFakeCameraPrivate ArvFakeCameraPrivate;
-
-struct _ArvFakeCamera {
-	GObject object;
-
-	ArvFakeCameraPrivate *priv;
-};
-
-struct _ArvFakeCameraClass {
-	GObjectClass parent_class;
-};
-
-GType arv_fake_camera_get_type (void);
+typedef void (*ArvFakeCameraFillPattern) (ArvBuffer *buffer, void *fill_pattern_data,
+					  guint32 exposure_time_us, guint32 gain,
+					  ArvPixelFormat pixel_format);
 
 ArvFakeCamera * arv_fake_camera_new 		(const char *serial_number);
+ArvFakeCamera * arv_fake_camera_new_full 	(const char *serial_number, const char *genicam_filename);
 gboolean	arv_fake_camera_read_memory 	(ArvFakeCamera *camera, guint32 address, guint32 size, void *buffer);
 gboolean	arv_fake_camera_write_memory	(ArvFakeCamera *camera, guint32 address, guint32 size,
 						 const void *buffer);
@@ -134,8 +118,7 @@ void		arv_fake_camera_set_fill_pattern	(ArvFakeCamera *camera,
 							 void *fill_pattern_data);
 void 		arv_fake_camera_set_trigger_frequency 	(ArvFakeCamera *camera, double frequency);
 
-void 		arv_set_fake_camera_genicam_filename 	(const char *filename);
-const char *	arv_get_fake_camera_genicam_xml		(size_t *size);
+const char *	arv_fake_camera_get_genicam_xml 	(ArvFakeCamera *camera, size_t *size);
 
 G_END_DECLS
 

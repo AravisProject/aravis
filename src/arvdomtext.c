@@ -1,6 +1,6 @@
-/* Aravis
+/* Aravis - Digital camera library
  *
- * Copyright © 2007-2008 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,6 +28,8 @@
 
 #include <arvdomtext.h>
 
+G_DEFINE_TYPE (ArvDomText, arv_dom_text, ARV_TYPE_DOM_CHARACTER_DATA)
+
 /* ArvDomNode implementation */
 
 static const char *
@@ -39,7 +41,7 @@ arv_dom_text_get_node_name (ArvDomNode *node)
 static const char *
 arv_dom_text_get_node_value (ArvDomNode *node)
 {
-	return ARV_DOM_CHARACTER_DATA (node)->data;
+	return arv_dom_character_data_get_data (ARV_DOM_CHARACTER_DATA (node));
 }
 
 static ArvDomNodeType
@@ -78,5 +80,3 @@ arv_dom_text_class_init (ArvDomTextClass *klass)
 	node_class->get_node_value = arv_dom_text_get_node_value;
 	node_class->get_node_type = arv_dom_text_get_node_type;
 }
-
-G_DEFINE_TYPE (ArvDomText, arv_dom_text, ARV_TYPE_DOM_CHARACTER_DATA)

@@ -28,7 +28,7 @@
 ***/
 
 #include <arvrealtimeprivate.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <memory.h>
 #include <errno.h>
 #include <sched.h>

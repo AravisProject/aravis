@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2016 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -36,19 +36,6 @@ G_BEGIN_DECLS
 #define ARV_FAKE_INTERFACE_SOCKET_BUFFER_SIZE	1024
 
 G_END_DECLS
-
-typedef struct _ArvFakeInterfacePrivate ArvFakeInterfacePrivate;
-typedef struct _ArvFakeInterfaceClass ArvFakeInterfaceClass;
-
-struct _ArvFakeInterface {
-	ArvInterface	interface;
-
-	ArvFakeInterfacePrivate *priv;
-};
-
-struct _ArvFakeInterfaceClass {
-	ArvInterfaceClass parent_class;
-};
 
 void 			arv_fake_interface_destroy_instance 		(void);
 

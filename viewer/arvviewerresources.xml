@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/org/aravis/viewer">
+    <file compressed="true">arv-viewer.ui</file>
+    <file>icons/gnome/scalable/devices/aravis-gigevision-symbolic.svg</file>
+    <file>icons/gnome/scalable/devices/aravis-usb3vision-symbolic.svg</file>
+    <file>icons/gnome/scalable/devices/aravis-fake-symbolic.svg</file>
+  </gresource>
+</gresources>

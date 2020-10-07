@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,8 +20,8 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#ifndef ARV_TOOLS_H
-#define ARV_TOOLS_H
+#ifndef ARV_MISC_H
+#define ARV_MISC_H
 
 #if !defined (ARV_H_INSIDE) && !defined (ARAVIS_COMPILATION)
 #error "Only <arv.h> can be included directly."
@@ -47,13 +47,6 @@ char *			arv_statistic_to_string 	(const ArvStatistic *statistic);
 GType arv_value_get_type (void);
 
 typedef struct _ArvValue ArvValue;
-struct _ArvValue {
-	GType type;
-	union {
-		gint64 v_int64;
-		double v_double;
-	} data;
-};
 
 ArvValue * 	arv_value_new_double 		(double v_double);
 ArvValue * 	arv_value_new_int64 		(double v_int64);
@@ -66,8 +59,8 @@ double 		arv_value_get_double 		(ArvValue *value);
 gboolean 	arv_value_holds_int64 		(ArvValue *value);
 double 		arv_value_holds_double 		(ArvValue *value);
 
-void 		arv_copy_memory_with_endianess 	(void *to, size_t to_size, guint to_endianess,
-						 void *from, size_t from_size, guint from_endianess);
+void 		arv_copy_memory_with_endianness	(void *to, size_t to_size, guint to_endianness,
+						 void *from, size_t from_size, guint from_endianness);
 
 void * 		arv_decompress 			(void *input_buffer, size_t input_size, size_t *output_size);
 
@@ -77,57 +70,6 @@ const char * 	arv_pixel_format_to_gst_0_10_caps_string 	(ArvPixelFormat pixel_fo
 ArvPixelFormat 	arv_pixel_format_from_gst_0_10_caps 		(const char *name, int bpp, int depth, guint32 fourcc);
 
 const char *	arv_vendor_alias_lookup		(const char *vendor);
-
-/*
-   Compatibility with old glib
- */
-
-#if GLIB_CHECK_VERSION(2,36,0)
-#define arv_g_type_init()
-#else
-#define arv_g_type_init() g_type_init()
-#endif
-
-#if GLIB_CHECK_VERSION(2,32,0)
-
-#define ARV_DEFINE_STATIC_MUTEX(mutex) static GMutex mutex
-#define arv_g_mutex_lock(mutex) g_mutex_lock(mutex)
-#define arv_g_mutex_unlock(mutex) g_mutex_unlock(mutex)
-
-#define arv_g_thread_init(vtable)
-#define arv_g_thread_new(name,func,data) g_thread_new(name,func,data)
-
-#else
-
-#define ARV_DEFINE_STATIC_MUTEX(mutex) static GStaticMutex mutex = G_STATIC_MUTEX_INIT
-#define arv_g_mutex_lock(mutex) g_static_mutex_lock(mutex)
-#define arv_g_mutex_unlock(mutex) g_static_mutex_unlock(mutex)
-
-#define arv_g_thread_init(vtable) g_thread_init(vtable)
-#define arv_g_thread_new(name,func,data) g_thread_create(func,data,TRUE,NULL)
-
-#endif
-
-#if !GLIB_CHECK_VERSION(2,34,0)
-
-#define g_clear_pointer(pp, destroy)   		                          		\
-	G_STMT_START {                                                          	\
-		G_STATIC_ASSERT (sizeof *(pp) == sizeof (gpointer));                    \
-		/* Only one access, please */                                           \
-		gpointer *_pp = (gpointer *) (pp);                                      \
-		gpointer _p;                                                            \
-		/* This assignment is needed to avoid a gcc warning */                  \
-		GDestroyNotify _destroy = (GDestroyNotify) (destroy);                   \
-											\
-		_p = *_pp;                                                              \
-		if (_p)                                                                 \
-		{                                                                       \
-			*_pp = NULL;                                                    \
-			_destroy (_p);                                                  \
-		}                                                                       \
-	} G_STMT_END
-
-#endif
 
 G_END_DECLS
 

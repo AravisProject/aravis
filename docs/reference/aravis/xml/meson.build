@@ -1,0 +1,11 @@
+ent_conf = configuration_data()
+ent_conf.set('PACKAGE', 'Aravis')
+ent_conf.set('PACKAGE_BUGREPORT', 'https://github.com/AravisProject/aravis/issues')
+ent_conf.set('PACKAGE_NAME', 'Aravis')
+ent_conf.set('PACKAGE_STRING', 'aravis')
+ent_conf.set('PACKAGE_TARNAME', 'aravis-' + meson.project_version())
+ent_conf.set('PACKAGE_URL', 'https://github.com/AravisProject/aravis')
+ent_conf.set('PACKAGE_VERSION', meson.project_version())
+ent_conf.set('PACKAGE_API_VERSION', aravis_api_version)
+
+configure_file(input: 'gtkdocentities.ent.in', output: 'gtkdocentities.ent', configuration: ent_conf)

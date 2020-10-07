@@ -6,16 +6,20 @@
 
   <name xml:lang="en">Aravis</name>
   <shortdesc xml:lang="en">Acquisition library for industrial cameras</shortdesc>
+
   <homepage rdf:resource="https://github.com/AravisProject/aravis" />
   <mailing-list rdf:resource="http://www.freelists.org/list/aravis" />
   <download-page rdf:resource="http://download.gnome.org/sources/aravis/" />
   <bug-database rdf:resource="https://github.com/AravisProject/aravis/issues" />
   <category rdf:resource="http://api.gnome.org/doap-extensions#development" />
+  <programming-language>C</programming-language>
 
   <maintainer>
     <foaf:Person>
       <foaf:name>Emmanuel Pacaud</foaf:name>
       <foaf:mbox rdf:resource="mailto:emmanuel@gnome.org" />
+      <foaf:userid>emmanuel</foaf:userid>
     </foaf:Person>
   </maintainer>
+
 </Project>

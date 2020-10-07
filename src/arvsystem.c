@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,14 +22,18 @@
 
 #include <arvsystem.h>
 #include <arvgvinterfaceprivate.h>
-#include <arvconfig.h>
-#ifdef ARAVIS_BUILD_USB
+#include <arvfeatures.h>
+#if ARAVIS_HAS_USB
 #include <arvuvinterfaceprivate.h>
 #endif
 #include <arvfakeinterfaceprivate.h>
 #include <arvdevice.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <string.h>
+#include <arvmisc.h>
+#include <arvdomimplementation.h>
+
+static GMutex arv_system_mutex;
 
 /**
  * SECTION: arv
@@ -53,7 +57,7 @@ ArvInterfaceInfos interfaces[] = {
 		.get_interface_instance = arv_fake_interface_get_instance,
 		.destroy_interface_instance =  arv_fake_interface_destroy_instance
 	},
-#ifdef ARAVIS_BUILD_USB
+#if ARAVIS_HAS_USB
 	{	.interface_id = "USB3Vision",
 		.is_available = TRUE,
 		.get_interface_instance = arv_uv_interface_get_instance,
@@ -158,6 +162,8 @@ arv_update_device_list (void)
 {
 	unsigned int i;
 
+	g_mutex_lock (&arv_system_mutex);
+
 	for (i = 0; i < G_N_ELEMENTS (interfaces); i++) {
 		ArvInterface *interface;
 
@@ -166,6 +172,8 @@ arv_update_device_list (void)
 			arv_interface_update_device_list (interface);
 		}
 	}
+
+	g_mutex_unlock (&arv_system_mutex);
 }
 
 /**
@@ -183,6 +191,8 @@ arv_get_n_devices (void)
 	unsigned int n_devices = 0;
 	unsigned int i;
 
+	g_mutex_lock (&arv_system_mutex);
+
 	for (i = 0; i < G_N_ELEMENTS (interfaces); i++) {
 		ArvInterface *interface;
 
@@ -192,6 +202,8 @@ arv_get_n_devices (void)
 		}
 	}
 
+	g_mutex_unlock (&arv_system_mutex);
+
 	return n_devices;
 }
 
@@ -200,6 +212,9 @@ arv_get_info (unsigned int index, const char *get_info (ArvInterface *, guint))
 {
 	unsigned int offset = 0;
 	unsigned int i;
+	const char *info;
+
+	g_mutex_lock (&arv_system_mutex);
 
 	for (i = 0; i < G_N_ELEMENTS (interfaces); i++) {
 		ArvInterface *interface;
@@ -209,12 +224,19 @@ arv_get_info (unsigned int index, const char *get_info (ArvInterface *, guint))
 			interface = interfaces[i].get_interface_instance ();
 			n_devices = arv_interface_get_n_devices (interface);
 
-			if (index - offset < n_devices)
-				return get_info (interface, index - offset);
+			if (index - offset < n_devices) {
+				info = get_info (interface, index - offset);
+
+				g_mutex_unlock (&arv_system_mutex);
+
+				return info;
+			}
 
 			offset += n_devices;
 		}
 	}
+
+	g_mutex_unlock (&arv_system_mutex);
 
 	return NULL;
 }
@@ -356,31 +378,49 @@ arv_get_device_protocol	(unsigned int index)
 /**
  * arv_open_device:
  * @device_id: (allow-none): a device identifier string
+ * @error: a #GError placeholder, %NULL to ignore
  *
  * Open a device corresponding to the given identifier. A %NULL string makes
  * this function return the first available device.
  *
  * Return value: (transfer full): A new #ArvDevice instance.
  *
- * Since: 0.2.0
+ * Since: 0.8.0
  */
 
 ArvDevice *
-arv_open_device (const char *device_id)
+arv_open_device (const char *device_id, GError **error)
 {
 	unsigned int i;
+
+	g_mutex_lock (&arv_system_mutex);
 
 	for (i = 0; i < G_N_ELEMENTS (interfaces); i++) {
 		ArvInterface *interface;
 		ArvDevice *device;
 
 		if (interfaces[i].is_available) {
+			GError *local_error = NULL;
+
 			interface = interfaces[i].get_interface_instance ();
-			device = arv_interface_open_device (interface, device_id);
-			if (device != NULL)
+			device = arv_interface_open_device (interface, device_id, &local_error);
+			if (ARV_IS_DEVICE (device) || local_error != NULL) {
+				if (local_error != NULL)
+					g_propagate_error (error, local_error);
+				g_mutex_unlock (&arv_system_mutex);
 				return device;
+			}
 		}
 	}
+
+	g_mutex_unlock (&arv_system_mutex);
+
+	if (device_id != NULL)
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
+			     "Device '%s' not found", device_id);
+	else
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
+			     "No supported device found");
 
 	return NULL;
 }
@@ -390,7 +430,7 @@ arv_open_device (const char *device_id)
  *
  * Frees a number of ressources allocated by Aravis that would be otherwise
  * reported as memory leak by tools like Valgrind. The call to this function is
- * optional if you don't intend to check for memmory leaks.
+ * optional if you don't intend to check for memory leaks.
  */
 
 void
@@ -398,8 +438,14 @@ arv_shutdown (void)
 {
 	unsigned int i;
 
+	g_mutex_lock (&arv_system_mutex);
+
 	for (i = 0; i < G_N_ELEMENTS (interfaces); i++)
 		interfaces[i].destroy_interface_instance ();
 
 	arv_debug_shutdown ();
+
+	arv_dom_implementation_cleanup ();
+
+	g_mutex_unlock (&arv_system_mutex);
 }

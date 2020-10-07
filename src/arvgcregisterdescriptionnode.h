@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2012 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -33,32 +33,8 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_REGISTER_DESCRIPTION_NODE             (arv_gc_register_description_node_get_type ())
-#define ARV_GC_REGISTER_DESCRIPTION_NODE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_GC_REGISTER_DESCRIPTION_NODE, ArvGcRegisterDescriptionNode))
-#define ARV_GC_REGISTER_DESCRIPTION_NODE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_GC_REGISTER_DESCRIPTION_NODE, ArvGcRegisterDescriptionNodeClass))
-#define ARV_IS_GC_REGISTER_DESCRIPTION_NODE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_GC_REGISTER_DESCRIPTION_NODE))
-#define ARV_IS_GC_REGISTER_DESCRIPTION_NODE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_GC_REGISTER_DESCRIPTION_NODE))
-#define ARV_GC_REGISTER_DESCRIPTION_NODE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_GC_REGISTER_DESCRIPTION_NODE, ArvGcRegisterDescriptionNodeClass))
+G_DECLARE_FINAL_TYPE (ArvGcRegisterDescriptionNode, arv_gc_register_description_node, ARV, GC_REGISTER_DESCRIPTION_NODE, ArvGcFeatureNode)
 
-typedef struct _ArvGcRegisterDescriptionNodeClass ArvGcRegisterDescriptionNodeClass;
-
-struct _ArvGcRegisterDescriptionNode {
-	ArvGcFeatureNode	node;
-
-	char *model_name;
-	char *vendor_name;
-	guint major_version;
-	guint minor_version;
-	guint subminor_version;
-	guint schema_major_version;
-	guint schema_minor_version;
-	guint schema_subminor_version;
-};
-
-struct _ArvGcRegisterDescriptionNodeClass {
-	ArvGcFeatureNodeClass parent_class;
-};
-
-GType 		arv_gc_register_description_node_get_type 		(void);
 ArvGcNode * 	arv_gc_register_description_node_new 			(void);
 int		arv_gc_register_description_node_compare_schema_version	(ArvGcRegisterDescriptionNode *node,
 									 guint major,
@@ -68,6 +44,15 @@ gboolean	arv_gc_register_description_node_check_schema_version	(ArvGcRegisterDes
 									 guint required_major,
 									 guint required_minor,
 									 guint required_subminor);
+
+char *		arv_gc_register_description_node_get_model_name			(ArvGcRegisterDescriptionNode* node);
+char *		arv_gc_register_description_node_get_vendor_name		(ArvGcRegisterDescriptionNode* node);
+guint 		arv_gc_register_description_node_get_major_version		(ArvGcRegisterDescriptionNode* node);
+guint 		arv_gc_register_description_node_get_minor_version		(ArvGcRegisterDescriptionNode* node);
+guint 		arv_gc_register_description_node_get_subminor_version		(ArvGcRegisterDescriptionNode* node);
+guint 		arv_gc_register_description_node_get_schema_major_version	(ArvGcRegisterDescriptionNode* node);
+guint 		arv_gc_register_description_node_get_schema_minor_version	(ArvGcRegisterDescriptionNode* node);
+guint 		arv_gc_register_description_node_get_schema_subminor_version	(ArvGcRegisterDescriptionNode* node);
 
 G_END_DECLS
 

@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2016 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,15 +28,13 @@
 #include <arvuvinterfaceprivate.h>
 #include <arvinterfaceprivate.h>
 #include <arvuvdeviceprivate.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <arvmisc.h>
 #include <arvstr.h>
 #include <libusb.h>
 #include <stdio.h>
 
 /* ArvUvInterface implementation */
-
-static GObjectClass *parent_class = NULL;
 
 typedef struct {
 	char *name;
@@ -100,9 +98,19 @@ arv_uv_interface_device_infos_unref (ArvUvInterfaceDeviceInfos *infos)
 	}
 }
 
-struct _ArvUvInterfacePrivate {
+typedef struct {
 	GHashTable *devices;
 	libusb_context *usb;
+} ArvUvInterfacePrivate;
+
+struct _ArvUvInterface {
+	ArvInterface	interface;
+
+	ArvUvInterfacePrivate *priv;
+};
+
+struct _ArvUvInterfaceClass {
+	ArvInterfaceClass parent_class;
 };
 
 #if 0
@@ -144,7 +152,7 @@ printdev (libusb_device *device)
 }
 #endif
 
-ArvInterfaceDeviceIds *
+static ArvInterfaceDeviceIds *
 _usb_device_to_device_ids (ArvUvInterface *uv_interface, libusb_device *device)
 {
 	ArvInterfaceDeviceIds *device_ids = NULL;
@@ -159,7 +167,7 @@ _usb_device_to_device_ids (ArvUvInterface *uv_interface, libusb_device *device)
 
 	r = libusb_get_device_descriptor (device, &desc);
 	if (r < 0) {
-		g_warning ("Failed to get device descriptor");
+		arv_warning_interface ("Failed to get device descriptor");
 		return NULL;
 	}
 
@@ -272,7 +280,7 @@ _discover (ArvUvInterface *uv_interface,  GArray *device_ids)
 		}
 	}
 
-	arv_debug_interface ("Found %d USB3Vision device%s (among %d USB device%s)",
+	arv_debug_interface ("Found %d USB3Vision device%s (among %" G_GSSIZE_FORMAT " USB device%s)",
 			     uv_count , uv_count > 1 ? "s" : "",
 			     count, count > 1 ? "s" : "");
 
@@ -290,10 +298,9 @@ arv_uv_interface_update_device_list (ArvInterface *interface, GArray *device_ids
 }
 
 static ArvDevice *
-_open_device (ArvInterface *interface, const char *device_id)
+_open_device (ArvInterface *interface, const char *device_id, GError **error)
 {
 	ArvUvInterface *uv_interface;
-	ArvDevice *device = NULL;
 	ArvUvInterfaceDeviceInfos *device_infos;
 
 	uv_interface = ARV_UV_INTERFACE (interface);
@@ -310,27 +317,29 @@ _open_device (ArvInterface *interface, const char *device_id)
 	if (device_infos == NULL)
 		return NULL;
 
-	device = arv_uv_device_new (device_infos->manufacturer, device_infos->product, device_infos->serial_nbr);
-
-	return device;
+	return arv_uv_device_new (device_infos->manufacturer, device_infos->product, device_infos->serial_nbr, error);
 }
 
 static ArvDevice *
-arv_uv_interface_open_device (ArvInterface *interface, const char *device_id)
+arv_uv_interface_open_device (ArvInterface *interface, const char *device_id, GError **error)
 {
 	ArvDevice *device;
+	GError *local_error = NULL;
 
-	device = _open_device (interface, device_id);
-	if (ARV_IS_DEVICE (device))
+	device = _open_device (interface, device_id, error);
+	if (ARV_IS_DEVICE (device) || local_error != NULL) {
+		if (local_error != NULL)
+			g_propagate_error (error, local_error);
 		return device;
+	}
 
 	_discover (ARV_UV_INTERFACE (interface), NULL);
 
-	return _open_device (interface, device_id);
+	return _open_device (interface, device_id, error);
 }
 
 static ArvInterface *uv_interface = NULL;
-ARV_DEFINE_STATIC_MUTEX (uv_interface_mutex);
+static GMutex uv_interface_mutex;
 
 /**
  * arv_uv_interface_get_instance:
@@ -343,12 +352,12 @@ ARV_DEFINE_STATIC_MUTEX (uv_interface_mutex);
 ArvInterface *
 arv_uv_interface_get_instance (void)
 {
-	arv_g_mutex_lock (&uv_interface_mutex);
+	g_mutex_lock (&uv_interface_mutex);
 
 	if (uv_interface == NULL)
 		uv_interface = g_object_new (ARV_TYPE_UV_INTERFACE, NULL);
 
-	arv_g_mutex_unlock (&uv_interface_mutex);
+	g_mutex_unlock (&uv_interface_mutex);
 
 	return ARV_INTERFACE (uv_interface);
 }
@@ -356,19 +365,21 @@ arv_uv_interface_get_instance (void)
 void
 arv_uv_interface_destroy_instance (void)
 {
-	arv_g_mutex_lock (&uv_interface_mutex);
+	g_mutex_lock (&uv_interface_mutex);
 
 	g_clear_object (&uv_interface);
 
-	arv_g_mutex_unlock (&uv_interface_mutex);
+	g_mutex_unlock (&uv_interface_mutex);
 }
+
+G_DEFINE_TYPE_WITH_CODE (ArvUvInterface, arv_uv_interface, ARV_TYPE_INTERFACE, G_ADD_PRIVATE (ArvUvInterface))
 
 static void
 arv_uv_interface_init (ArvUvInterface *uv_interface)
 {
-	uv_interface->priv = G_TYPE_INSTANCE_GET_PRIVATE (uv_interface, ARV_TYPE_UV_INTERFACE, ArvUvInterfacePrivate);
-	libusb_init (&uv_interface->priv->usb);
+	uv_interface->priv = arv_uv_interface_get_instance_private (uv_interface);
 
+	libusb_init (&uv_interface->priv->usb);
 	uv_interface->priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal, NULL,
 							     (GDestroyNotify) arv_uv_interface_device_infos_unref);
 }
@@ -380,7 +391,7 @@ arv_uv_interface_finalize (GObject *object)
 
 	g_hash_table_unref (uv_interface->priv->devices);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_uv_interface_parent_class)->finalize (object);
 
 	libusb_exit (uv_interface->priv->usb);
 }
@@ -391,10 +402,6 @@ arv_uv_interface_class_init (ArvUvInterfaceClass *uv_interface_class)
 	GObjectClass *object_class = G_OBJECT_CLASS (uv_interface_class);
 	ArvInterfaceClass *interface_class = ARV_INTERFACE_CLASS (uv_interface_class);
 
-	g_type_class_add_private (uv_interface_class, sizeof (ArvUvInterfacePrivate));
-
-	parent_class = g_type_class_peek_parent (uv_interface_class);
-
 	object_class->finalize = arv_uv_interface_finalize;
 
 	interface_class->update_device_list = arv_uv_interface_update_device_list;
@@ -402,5 +409,3 @@ arv_uv_interface_class_init (ArvUvInterfaceClass *uv_interface_class)
 
 	interface_class->protocol = "USB3Vision";
 }
-
-G_DEFINE_TYPE (ArvUvInterface, arv_uv_interface, ARV_TYPE_INTERFACE)

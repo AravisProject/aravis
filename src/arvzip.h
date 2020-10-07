@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -68,7 +68,7 @@ size_t		arv_zip_file_get_uncompressed_size	(ArvZipFile *zip_file);
  *
  * On ARMv6 and later architectures, unaligned access is fully supported."
  *
- * Returns: a guint32 in machine endianess
+ * Returns: a guint32 in machine endianness
  */
 
 static inline guint32
@@ -95,7 +95,7 @@ arv_guint32_from_unaligned_le_ptr (const char *ptr, gint32 offset)
  *
  * See @arv_guint32_from_unaligned_le_ptr.
  *
- * Returns: a guint16 in machine endianess
+ * Returns: a guint16 in machine endianness
  */
 
 static inline guint16

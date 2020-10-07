@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -27,18 +27,31 @@
 
 #include <arvgcport.h>
 #include <arvgcregisterdescriptionnode.h>
+#include <arvgcfeaturenodeprivate.h>
 #include <arvdevice.h>
+#include <arvgvdevice.h>
 #include <arvchunkparserprivate.h>
 #include <arvbuffer.h>
 #include <arvgcpropertynode.h>
 #include <arvgc.h>
 #include <memory.h>
 
-static GObjectClass *parent_class = NULL;
-
-struct _ArvGcPortPrivate {
+typedef struct {
 	ArvGcPropertyNode *chunk_id;
+	ArvGcPropertyNode *event_id;
+} ArvGcPortPrivate;
+
+struct _ArvGcPort {
+	ArvGcFeatureNode node;
+
+	ArvGcPortPrivate *priv;
 };
+
+struct _ArvGcPortClass {
+	ArvGcFeatureNodeClass parent_class;
+};
+
+G_DEFINE_TYPE_WITH_CODE (ArvGcPort, arv_gc_port, ARV_TYPE_GC_FEATURE_NODE, G_ADD_PRIVATE(ArvGcPort))
 
 /* ArvDomNode implementation */
 
@@ -60,12 +73,15 @@ _post_new_child (ArvDomNode *self, ArvDomNode *child)
 			case ARV_GC_PROPERTY_NODE_TYPE_CHUNK_ID:
 				node->priv->chunk_id = property_node;
 				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_EVENT_ID:
+				node->priv->event_id = property_node;
+				break;
 			default:
-				ARV_DOM_NODE_CLASS (parent_class)->post_new_child (self, child);
+				ARV_DOM_NODE_CLASS (arv_gc_port_parent_class)->post_new_child (self, child);
 				break;
 		}
 	} else
-		ARV_DOM_NODE_CLASS (parent_class)->post_new_child (self, child);
+		ARV_DOM_NODE_CLASS (arv_gc_port_parent_class)->post_new_child (self, child);
 }
 
 static void
@@ -77,7 +93,7 @@ _pre_remove_child (ArvDomNode *self, ArvDomNode *child)
 /* ArvGcPort implementation */
 
 static gboolean
-_register_workaround_check (ArvGcPort *port, guint64 length)
+_use_legacy_endianness_mechanism (ArvGcPort *port, guint64 length)
 {
 	ArvDomDocument *document;
 	ArvGcRegisterDescriptionNode *register_description;
@@ -94,43 +110,18 @@ arv_gc_port_read (ArvGcPort *port, void *buffer, guint64 address, guint64 length
 	ArvGc *genicam;
 
 	g_return_if_fail (ARV_IS_GC_PORT (port));
-	g_return_if_fail (error == NULL || *error == NULL);
 	g_return_if_fail (buffer != NULL);
 
 	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (port));
 
-	if (port->priv->chunk_id == NULL) {
-		ArvDevice *device;
-
-		device = arv_gc_get_device (genicam);
-		if (ARV_IS_DEVICE (device)) {
-			/* For schema < 1.1.0 and length == 4, register read must be used instead of memory read.
-			 * See Appendix 3 of Genicam 2.0 specification. */
-			if (_register_workaround_check (port, length)) {
-				guint32 value;
-
-				/* For schema < 1.1.0, all registers are big endian. */
-				value = *((guint32 *) buffer);
-				value = GUINT32_FROM_BE (value);
-
-				arv_device_read_register (device, address, &value, error);
-				*((guint32 *) buffer) = GUINT32_TO_BE (value);
-			} else
-				arv_device_read_memory (device, address, length, buffer, error);
-		} else {
-			if (error != NULL && *error == NULL)
-				*error = g_error_new (ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_STATUS_INVALID_FEATURE_NAME,
-						      "[ArvGcPort::read] Invalid feature name");
-		}
-	} else {
+	if (port->priv->chunk_id != NULL) {
 		ArvBuffer *chunk_data_buffer;
 
 		chunk_data_buffer = arv_gc_get_buffer (genicam);
 
 		if (!ARV_IS_BUFFER (chunk_data_buffer)) {
-			if (error != NULL && *error == NULL)
-				*error = g_error_new (ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_STATUS_BUFFER_NOT_FOUND,
-						      "[ArvGcPort::read] Buffer not found");
+			g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_BUFFER_NOT_FOUND,
+				     "[ArvGcPort::read] Buffer not found");
 		} else {
 			char *chunk_data;
 			size_t chunk_data_size;
@@ -142,10 +133,32 @@ arv_gc_port_read (ArvGcPort *port, void *buffer, guint64 address, guint64 length
 			if (chunk_data != NULL) {
 				memcpy (buffer, chunk_data + address, MIN (chunk_data_size - address, length));
 			} else {
-				if (error != NULL && *error == NULL)
-					*error = g_error_new (ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_STATUS_CHUNK_NOT_FOUND,
-							      "[ArvGcPort::read] Chunk 0x%08x not found", chunk_id);
+				g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_CHUNK_NOT_FOUND,
+					     "[ArvGcPort::read] Chunk 0x%08x not found", chunk_id);
 			}
+		}
+	} else if (port->priv->event_id != NULL) {
+		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_NO_EVENT_IMPLEMENTATION,
+			     "[ArvGcPort::read] Event support is not implemented");
+	} else {
+		ArvDevice *device;
+
+		device = arv_gc_get_device (genicam);
+		if (ARV_IS_DEVICE (device)) {
+			/* For schema < 1.1.0 and length == 4, register read must be used instead of memory read.
+			 * Only applies to GigE Vision devices. See Appendix 3 of Genicam 2.0 specification. */
+			if (ARV_IS_GV_DEVICE (device) && _use_legacy_endianness_mechanism (port, length)) {
+				guint32 value = 0;
+
+				arv_device_read_register (device, address, &value, error);
+
+				/* For schema < 1.1.0, all registers are big endian. */
+				*((guint32 *) buffer) = GUINT32_TO_BE (value);
+			} else
+				arv_device_read_memory (device, address, length, buffer, error);
+		} else {
+			g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_NO_DEVICE_SET,
+				     "[ArvGcPort::read] No device set");
 		}
 	}
 }
@@ -157,41 +170,20 @@ arv_gc_port_write (ArvGcPort *port, void *buffer, guint64 address, guint64 lengt
 	ArvDevice *device;
 
 	g_return_if_fail (ARV_IS_GC_PORT (port));
-	g_return_if_fail (error == NULL || *error == NULL);
 	g_return_if_fail (buffer != NULL);
 
 	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (port));
 
-	if (port->priv->chunk_id == NULL) {
-		device = arv_gc_get_device (genicam);
+	arv_gc_feature_node_increment_change_count (ARV_GC_FEATURE_NODE (port));
 
-		if (ARV_IS_DEVICE (device)) {
-			/* For schema < 1.1.0 and length == 4, register write must be used instead of memory write.
-			 * See Appendix 3 of Genicam 2.0 specification. */
-			if (_register_workaround_check (port, length)) {
-				guint32 value;
-
-				/* For schema < 1.1.0, all registers are big endian. */
-				value = *((guint32 *) buffer);
-				value = GUINT32_FROM_BE (value);
-
-				arv_device_write_register (device, address, value, error);
-			} else
-				arv_device_write_memory (device, address, length, buffer, error);
-		} else {
-			if (error != NULL && *error == NULL)
-				*error = g_error_new (ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_STATUS_INVALID_FEATURE_NAME,
-						      "[ArvGcPort::write] Invalid feature name");
-		}
-	} else {
+	if (port->priv->chunk_id != NULL) {
 		ArvBuffer *chunk_data_buffer;
 
 		chunk_data_buffer = arv_gc_get_buffer (genicam);
 
 		if (!ARV_IS_BUFFER (chunk_data_buffer)) {
-			if (error != NULL && *error == NULL)
-				*error = g_error_new (ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_STATUS_BUFFER_NOT_FOUND,
-						      "[ArvGcPort::write] Buffer not found");
+			g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_BUFFER_NOT_FOUND,
+				     "[ArvGcPort::write] Buffer not found");
 		} else {
 			char *chunk_data;
 			size_t chunk_data_size;
@@ -203,10 +195,32 @@ arv_gc_port_write (ArvGcPort *port, void *buffer, guint64 address, guint64 lengt
 			if (chunk_data != NULL) {
 				memcpy (chunk_data + address, buffer, MIN (chunk_data_size - address, length));
 			} else {
-				if (error != NULL && *error == NULL)
-					*error = g_error_new (ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_STATUS_CHUNK_NOT_FOUND,
-							      "[ArvGcPort::write] Chunk 0x%08x not found", chunk_id);
+				g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_CHUNK_NOT_FOUND,
+					     "[ArvGcPort::write] Chunk 0x%08x not found", chunk_id);
 			}
+		}
+	} else if (port->priv->event_id != NULL) {
+		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_NO_EVENT_IMPLEMENTATION,
+			     "[ArvGcPort::read] Event support is not implemented");
+	} else {
+		device = arv_gc_get_device (genicam);
+
+		if (ARV_IS_DEVICE (device)) {
+			/* For schema < 1.1.0 and length == 4, register write must be used instead of memory write.
+			 * Only applies to GigE Vision devices. See Appendix 3 of Genicam 2.0 specification. */
+			if (ARV_IS_GV_DEVICE (device) && _use_legacy_endianness_mechanism (port, length)) {
+				guint32 value;
+
+				/* For schema < 1.1.0, all registers are big endian. */
+				value = *((guint32 *) buffer);
+				value = GUINT32_FROM_BE (value);
+
+				arv_device_write_register (device, address, value, error);
+			} else
+				arv_device_write_memory (device, address, length, buffer, error);
+		} else {
+			g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_NO_DEVICE_SET,
+				     "[ArvGcPort::read] No device set");
 		}
 	}
 }
@@ -224,14 +238,14 @@ arv_gc_port_new (void)
 static void
 arv_gc_port_init (ArvGcPort *gc_port)
 {
-	gc_port->priv = G_TYPE_INSTANCE_GET_PRIVATE (gc_port, ARV_TYPE_GC_PORT, ArvGcPortPrivate);
+	gc_port->priv = arv_gc_port_get_instance_private (gc_port);
 	gc_port->priv->chunk_id = 0;
 }
 
 static void
 _finalize (GObject *object)
 {
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_gc_port_parent_class)->finalize (object);
 }
 
 static void
@@ -240,14 +254,8 @@ arv_gc_port_class_init (ArvGcPortClass *this_class)
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
 
-	g_type_class_add_private (this_class, sizeof (ArvGcPortPrivate));
-
-	parent_class = g_type_class_peek_parent (this_class);
-
 	object_class->finalize = _finalize;
 	dom_node_class->get_node_name = _get_node_name;
 	dom_node_class->post_new_child = _post_new_child;
 	dom_node_class->pre_remove_child = _pre_remove_child;
 }
-
-G_DEFINE_TYPE (ArvGcPort, arv_gc_port, ARV_TYPE_GC_FEATURE_NODE)

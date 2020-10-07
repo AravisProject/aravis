@@ -8,6 +8,10 @@
 #  You may also have to give the path to libaravis.so, using LD_PRELOAD or
 #  LD_LIBRARY_PATH.
 
+import gi
+
+gi.require_version ('Aravis', '0.8')
+
 from gi.repository import Aravis
 
 evaluator = Aravis.Evaluator.new ("1+2*4.4")
@@ -15,12 +19,12 @@ evaluator = Aravis.Evaluator.new ("1+2*4.4")
 int_result = evaluator.evaluate_as_int64 ()
 dbl_result = evaluator.evaluate_as_double ()
 
-print int_result
-print dbl_result
+print (int_result)
+print (dbl_result)
 
 evaluator.set_expression ("VAR+10")
 evaluator.set_double_variable ("VAR", 1.2)
 
 dbl_result = evaluator.evaluate_as_double()
 
-print dbl_result
+print (dbl_result)

@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,8 +20,8 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#include <arvmisc.h>
-#include <arvdebug.h>
+#include <arvmiscprivate.h>
+#include <arvdebugprivate.h>
 #include <string.h>
 #include <math.h>
 #include <stdio.h>
@@ -96,8 +96,7 @@ arv_statistic_new (unsigned int n_histograms, unsigned n_bins, unsigned int bin_
 	g_return_val_if_fail (n_bins > 0, NULL);
 	g_return_val_if_fail (bin_step > 0, NULL);
 
-	statistic = g_new (ArvStatistic, 1);
-	g_return_val_if_fail (statistic != NULL, NULL);
+	statistic = g_new0 (ArvStatistic, 1);
 
 	statistic->n_histograms = n_histograms;
 	statistic->n_bins = n_bins;
@@ -105,20 +104,10 @@ arv_statistic_new (unsigned int n_histograms, unsigned n_bins, unsigned int bin_
 	statistic->offset = offset;
 
 	statistic->histograms = g_new (ArvHistogram, n_histograms);
-	if (statistic->histograms == NULL) {
-		_arv_statistic_free (statistic);
-		g_warning ("[ArvStatistic::new] failed to allocate histogram memory");
-		return NULL;
-	}
 
 	for (i = 0; i < statistic->n_histograms; i++) {
 		statistic->histograms[i].name = NULL;
 		statistic->histograms[i].bins = g_new (guint64, statistic->n_bins);
-		if (statistic->histograms[i].bins == NULL) {
-			arv_statistic_free (statistic);
-			g_warning ("[TolmStatistic::new] failed to allocate bin memory");
-			return NULL;
-		}
 	}
 
 	arv_statistic_reset (statistic);
@@ -260,7 +249,7 @@ arv_statistic_to_string (const ArvStatistic *statistic)
 		for (j = 0; j < statistic->n_histograms; j++) {
 			if (j == 0)
 				g_string_append_printf (string, "%8d", i * statistic->bin_step + statistic->offset);
-			g_string_append_printf (string, ";%8Lu", (unsigned long long) statistic->histograms[j].bins[i]);
+			g_string_append_printf (string, ";%8llu", (unsigned long long) statistic->histograms[j].bins[i]);
 		}
 		g_string_append (string, "\n");
 	}
@@ -270,14 +259,14 @@ arv_statistic_to_string (const ArvStatistic *statistic)
 	for (j = 0; j < statistic->n_histograms; j++) {
 		if (j == 0)
 			g_string_append_printf (string, ">=%6d", i * statistic->bin_step + statistic->offset);
-		g_string_append_printf (string, ";%8Lu", (unsigned long long) statistic->histograms[j].and_more);
+		g_string_append_printf (string, ";%8llu", (unsigned long long) statistic->histograms[j].and_more);
 	}
 	g_string_append (string, "\n");
 
 	for (j = 0; j < statistic->n_histograms; j++) {
 		if (j == 0)
 			g_string_append_printf (string, "< %6d", statistic->offset);
-		g_string_append_printf (string, ";%8Lu", (unsigned long long) statistic->histograms[j].and_less);
+		g_string_append_printf (string, ";%8llu", (unsigned long long) statistic->histograms[j].and_less);
 	}
 	g_string_append (string, "\n");
 
@@ -304,11 +293,11 @@ arv_statistic_to_string (const ArvStatistic *statistic)
 	for (j = 0; j < statistic->n_histograms; j++) {
 		if (j == 0)
 			g_string_append (string, "last max\nat:     ");
-		g_string_append_printf (string, ";%8Lu", (unsigned long long) statistic->histograms[j].last_seen_worst);
+		g_string_append_printf (string, ";%8llu", (unsigned long long) statistic->histograms[j].last_seen_worst);
 	}
 	g_string_append (string, "\n");
 
-	g_string_append_printf (string, "Counter = %8Lu", (unsigned long long) statistic->counter);
+	g_string_append_printf (string, "Counter = %8llu", (unsigned long long) statistic->counter);
 
 	str = string->str;
 	g_string_free (string, FALSE);
@@ -353,14 +342,15 @@ arv_value_copy (ArvValue *to, const ArvValue *from)
 	*to = *from;
 }
 
-ArvValue *
+static ArvValue *
 arv_value_duplicate (const ArvValue *from)
 {
-	ArvValue *value = g_new (ArvValue, 1);
+	ArvValue *value;
 
 	if (from == NULL)
 		return NULL;
 
+	value = g_new (ArvValue, 1);
 	*value = *from;
 
 	return value;
@@ -424,8 +414,8 @@ arv_value_holds_double (ArvValue *value)
 }
 
 void
-arv_copy_memory_with_endianess (void *to, size_t to_size, guint to_endianess,
-				void *from, size_t from_size, guint from_endianess)
+arv_copy_memory_with_endianness (void *to, size_t to_size, guint to_endianness,
+				void *from, size_t from_size, guint from_endianness)
 {
 	char *to_ptr;
 	char *from_ptr;
@@ -434,8 +424,8 @@ arv_copy_memory_with_endianess (void *to, size_t to_size, guint to_endianess,
 	g_return_if_fail (to != NULL);
 	g_return_if_fail (from != NULL);
 
-	if (to_endianess == G_LITTLE_ENDIAN &&
-	    from_endianess == G_BIG_ENDIAN) {
+	if (to_endianness == G_LITTLE_ENDIAN &&
+	    from_endianness == G_BIG_ENDIAN) {
 		to_ptr = to;
 		from_ptr = ((char *) from) + from_size - 1;
 		if (to_size <= from_size) {
@@ -446,8 +436,8 @@ arv_copy_memory_with_endianess (void *to, size_t to_size, guint to_endianess,
 				*to_ptr = *from_ptr;
 			memset (((char *) to) + from_size, 0, to_size - from_size);
 		}
-	} else if (to_endianess == G_BIG_ENDIAN &&
-		   from_endianess == G_LITTLE_ENDIAN) {
+	} else if (to_endianness == G_BIG_ENDIAN &&
+		   from_endianness == G_LITTLE_ENDIAN) {
 		to_ptr = ((char *) to) + to_size - 1;
 		from_ptr = from;
 		if (to_size <= from_size) {
@@ -458,16 +448,16 @@ arv_copy_memory_with_endianess (void *to, size_t to_size, guint to_endianess,
 				*to_ptr = *from_ptr;
 			memset (to, 0, to_size - from_size);
 		}
-	} else if (to_endianess == G_LITTLE_ENDIAN &&
-		   from_endianess == G_LITTLE_ENDIAN) {
+	} else if (to_endianness == G_LITTLE_ENDIAN &&
+		   from_endianness == G_LITTLE_ENDIAN) {
 		if (to_size <= from_size)
 			memcpy (to, from, to_size);
 		else {
 			memcpy (to, from, from_size);
 			memset (((char *) to) + from_size, 0, to_size - from_size);
 		}
-	} else if (to_endianess == G_BIG_ENDIAN &&
-		   from_endianess == G_BIG_ENDIAN) {
+	} else if (to_endianness == G_BIG_ENDIAN &&
+		   from_endianness == G_BIG_ENDIAN) {
 		if (to_size <= from_size)
 			memcpy (to, ((char *) from) + from_size - to_size, to_size);
 		else {
@@ -517,8 +507,8 @@ arv_decompress (void *input_buffer, size_t input_size, size_t *output_size)
 		stream.avail_in = MIN (input_size, ARV_DECOMPRESS_CHUNK);
 		stream.next_in = input_buffer;
 
-		arv_debug_misc ("[Decompress] Input ptr = 0x%x - Chunk size = %d - %c",
-				stream.next_in, stream.avail_in, *stream.next_in);
+		arv_debug_misc ("[Decompress] Input ptr = 0x%p - Chunk size = %d - %c",
+				(void *) stream.next_in, stream.avail_in, *stream.next_in);
 
 		input_size -= stream.avail_in;
 		input_buffer = ((char *) input_buffer) + stream.avail_in;
@@ -628,6 +618,13 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 		"video/x-raw-gray",	12,	12,	0
 	},
 	{
+		ARV_PIXEL_FORMAT_MONO_14,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",		"GRAY16_LE",
+		"video/x-raw-gray, bpp=(int)16, depth=(int)14",
+		"video/x-raw-gray",	16,	14,	0
+	},
+	{
 		ARV_PIXEL_FORMAT_MONO_10,
 		"video/x-raw, format=(string)GRAY16_LE",
 		"video/x-raw", 		"GRAY16_LE",
@@ -664,7 +661,7 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 	},
 
 /* Non 8bit bayer formats are not supported by gstreamer bayer plugin.
- * This feature is discussed in bug https://bugzilla.gnome.org/show_bug.cgi?id=693666 .*/
+ * This feature is discussed in bug https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/issues/86 .*/
 
 	{
 		ARV_PIXEL_FORMAT_YUV_422_PACKED,
@@ -796,7 +793,8 @@ static struct {
 	const char *alias;
 } vendor_aliases[] = {
 	{ "The Imaging Source Europe GmbH",		"TIS"},
-	{ "Point Grey Research",			"PointGrey"}
+	{ "Point Grey Research",			"PointGrey"},
+	{ "Lucid Vision Labs",				"LucidVision"}
 };
 
 /**

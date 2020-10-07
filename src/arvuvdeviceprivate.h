@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2016 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -36,19 +36,6 @@ typedef enum {
 	ARV_UV_ENDPOINT_CONTROL,
 	ARV_UV_ENDPOINT_DATA
 } ArvUvEndpointType;
-
-typedef struct _ArvUvDeviceClass ArvUvDeviceClass;
-typedef struct _ArvUvDevicePrivate ArvUvDevicePrivate;
-
-struct _ArvUvDevice {
-	ArvDevice device;
-
-	ArvUvDevicePrivate *priv;
-};
-
-struct _ArvUvDeviceClass {
-	ArvDeviceClass parent_class;
-};
 
 gboolean 	arv_uv_device_bulk_transfer 		(ArvUvDevice *uv_device,
 							 ArvUvEndpointType endpoint_type, unsigned char endpoint_flags,

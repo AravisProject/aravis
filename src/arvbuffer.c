@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -34,7 +34,22 @@
 
 #include <arvbufferprivate.h>
 
-static GObjectClass *parent_class = NULL;
+gboolean
+arv_buffer_payload_type_has_chunks (ArvBufferPayloadType payload_type)
+{
+	return (payload_type == ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA ||
+		payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA ||
+		payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE_EXTENDED_CHUNK);
+}
+
+gboolean
+arv_buffer_payload_type_has_aoi (ArvBufferPayloadType payload_type)
+{
+
+	return (payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
+		payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA ||
+		payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE_EXTENDED_CHUNK);
+}
 
 /**
  * arv_buffer_new_full:
@@ -65,6 +80,8 @@ arv_buffer_new_full (size_t size, void *preallocated, void *user_data, GDestroyN
 	buffer->priv->size = size;
 	buffer->priv->user_data = user_data;
 	buffer->priv->user_data_destroy_func = user_data_destroy_func;
+	buffer->priv->chunk_endianness = G_BIG_ENDIAN;
+	buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_UNKNOWN;
 
 	if (preallocated != NULL) {
 		buffer->priv->is_preallocated = TRUE;
@@ -146,6 +163,23 @@ typedef struct ARAVIS_PACKED_STRUCTURE {
 } ArvChunkInfos;
 
 /**
+ * arv_buffer_has_chunks:
+ * @buffer: a #ArvBuffer
+ *
+ * Returns: %TRUE if @buffer has a payload type that contains chunk data.
+ *
+ * Since: 0.8.0
+ */
+
+gboolean
+arv_buffer_has_chunks (ArvBuffer *buffer)
+{
+	return ARV_IS_BUFFER (buffer) &&
+		buffer->priv->status == ARV_BUFFER_STATUS_SUCCESS &&
+		arv_buffer_payload_type_has_chunks (buffer->priv->payload_type);
+}
+
+/**
  * arv_buffer_get_chunk_data:
  * @buffer: a #ArvBuffer
  * @chunk_id: chunk id
@@ -162,36 +196,44 @@ const void *
 arv_buffer_get_chunk_data (ArvBuffer *buffer, guint64 chunk_id, size_t *size)
 {
 	ArvChunkInfos *infos;
-	char *data;
+	unsigned char *data;
 	ptrdiff_t offset;
 
 	if (size != NULL)
 		*size = 0;
 
-	g_return_val_if_fail (ARV_IS_BUFFER (buffer), NULL);
+	g_return_val_if_fail (arv_buffer_has_chunks (buffer), NULL);
 	g_return_val_if_fail (buffer->priv->data != NULL, NULL);
-	g_return_val_if_fail (buffer->priv->gvsp_payload_type == ARV_GVSP_PAYLOAD_TYPE_CHUNK_DATA, NULL);
-
-	if (buffer->priv->status != ARV_BUFFER_STATUS_SUCCESS)
-		return NULL;
 
 	data = buffer->priv->data;
 	offset = buffer->priv->size - sizeof (ArvChunkInfos);
 	while (offset > 0) {
+		guint32 id;
+		guint32 chunk_size;
+
 		infos = (ArvChunkInfos *) &data[offset];
-		if (GUINT32_FROM_BE (infos->id) == chunk_id) {
+
+		if (buffer->priv->chunk_endianness == G_BIG_ENDIAN) {
+			id = GUINT32_FROM_BE (infos->id);
+			chunk_size = GUINT32_FROM_BE (infos->size);
+		} else {
+			id = GUINT32_FROM_LE (infos->id);
+			chunk_size = GUINT32_FROM_LE (infos->size);
+		}
+
+		if (id == chunk_id) {
 			ptrdiff_t data_offset;
 
-			data_offset = offset - GUINT32_FROM_BE (infos->size);
+			data_offset = offset - chunk_size;
 			if (data_offset >= 0) {
 				if (size != NULL)
-					*size = GUINT32_FROM_BE (infos->size);
+					*size = chunk_size;
 				return &data[data_offset];
 			} else
 		       		return NULL;
 		}
-		if (GUINT32_FROM_BE (infos->size) > 0)
-			offset = offset - GUINT32_FROM_BE (infos->size) - sizeof (ArvChunkInfos);
+		if (chunk_size > 0)
+			offset = offset - chunk_size - sizeof (ArvChunkInfos);
 		else
 			offset = 0;
 	};
@@ -253,28 +295,7 @@ arv_buffer_get_payload_type (ArvBuffer *buffer)
 {
 	g_return_val_if_fail (ARV_IS_BUFFER (buffer), -1);
 
-	switch (buffer->priv->gvsp_payload_type) {
-		case ARV_GVSP_PAYLOAD_TYPE_IMAGE:
-			return ARV_BUFFER_PAYLOAD_TYPE_IMAGE;
-		case ARV_GVSP_PAYLOAD_TYPE_RAWDATA:
-			return ARV_BUFFER_PAYLOAD_TYPE_RAWDATA;
-		case ARV_GVSP_PAYLOAD_TYPE_FILE:
-			return ARV_BUFFER_PAYLOAD_TYPE_FILE;
-		case ARV_GVSP_PAYLOAD_TYPE_CHUNK_DATA:
-			return ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA;
-		case ARV_GVSP_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA:
-			return ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA;
-		case ARV_GVSP_PAYLOAD_TYPE_JPEG:
-			return ARV_BUFFER_PAYLOAD_TYPE_JPEG;
-		case ARV_GVSP_PAYLOAD_TYPE_JPEG2000:
-			return ARV_BUFFER_PAYLOAD_TYPE_JPEG2000;
-		case ARV_GVSP_PAYLOAD_TYPE_H264:
-			return ARV_BUFFER_PAYLOAD_TYPE_H264;
-		case ARV_GVSP_PAYLOAD_TYPE_MULTIZONE_IMAGE:
-			return ARV_BUFFER_PAYLOAD_TYPE_MULTIZONE_IMAGE;
-		default:
-			return ARV_BUFFER_PAYLOAD_TYPE_UNKNOWN;
-	}
+	return buffer->priv->payload_type;
 }
 
 /**
@@ -367,10 +388,10 @@ arv_buffer_set_system_timestamp (ArvBuffer *buffer, guint64 timestamp_ns)
  *
  * Returns: frame id, 0 on error.
  *
- * Since: 0.4.0
+ * Since: 0.8.0
  */
 
-guint32
+guint64
 arv_buffer_get_frame_id (ArvBuffer *buffer)
 {
 	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
@@ -381,10 +402,10 @@ arv_buffer_get_frame_id (ArvBuffer *buffer)
 /**
  * arv_buffer_get_image_region:
  * @buffer: a #ArvBuffer
- * @x: (allow-none): image x offset placeholder
- * @y: (allow-none): image y offset placeholder
- * @width: (allow-none): image width placholder
- * @height: (allow-none): image height placeholder
+ * @x: (out) (optional): image x offset placeholder
+ * @y: (out) (optional): image y offset placeholder
+ * @width: (out) (optional): image width placholder
+ * @height: (out) (optional): image height placeholder
  *
  * Gets the image region. This function must only be called on buffer containing a @ARV_BUFFER_PAYLOAD_TYPE_IMAGE payload.
  *
@@ -395,7 +416,7 @@ void
 arv_buffer_get_image_region (ArvBuffer *buffer, gint *x, gint *y, gint *width, gint *height)
 {
 	g_return_if_fail (ARV_IS_BUFFER (buffer));
-	g_return_if_fail (buffer->priv->gvsp_payload_type == ARV_GVSP_PAYLOAD_TYPE_IMAGE);
+	g_return_if_fail (arv_buffer_payload_type_has_aoi (buffer->priv->payload_type));
 
 	if (x != NULL)
 		*x = buffer->priv->x_offset;
@@ -422,7 +443,7 @@ gint
 arv_buffer_get_image_width (ArvBuffer *buffer)
 {
 	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
-	g_return_val_if_fail (buffer->priv->gvsp_payload_type == ARV_GVSP_PAYLOAD_TYPE_IMAGE, 0);
+	g_return_val_if_fail (arv_buffer_payload_type_has_aoi (buffer->priv->payload_type), 0);
 
 	return buffer->priv->width;
 }
@@ -442,7 +463,7 @@ gint
 arv_buffer_get_image_height (ArvBuffer *buffer)
 {
 	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
-	g_return_val_if_fail (buffer->priv->gvsp_payload_type == ARV_GVSP_PAYLOAD_TYPE_IMAGE, 0);
+	g_return_val_if_fail (arv_buffer_payload_type_has_aoi (buffer->priv->payload_type), 0);
 
 	return buffer->priv->height;
 }
@@ -462,7 +483,7 @@ gint
 arv_buffer_get_image_x (ArvBuffer *buffer)
 {
 	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
-	g_return_val_if_fail (buffer->priv->gvsp_payload_type == ARV_GVSP_PAYLOAD_TYPE_IMAGE, 0);
+	g_return_val_if_fail (arv_buffer_payload_type_has_aoi (buffer->priv->payload_type), 0);
 
 	return buffer->priv->x_offset;
 }
@@ -482,7 +503,7 @@ gint
 arv_buffer_get_image_y (ArvBuffer *buffer)
 {
 	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
-	g_return_val_if_fail (buffer->priv->gvsp_payload_type == ARV_GVSP_PAYLOAD_TYPE_IMAGE, 0);
+	g_return_val_if_fail (arv_buffer_payload_type_has_aoi (buffer->priv->payload_type), 0);
 
 	return buffer->priv->y_offset;
 }
@@ -502,15 +523,17 @@ ArvPixelFormat
 arv_buffer_get_image_pixel_format (ArvBuffer *buffer)
 {
 	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
-	g_return_val_if_fail (buffer->priv->gvsp_payload_type == ARV_GVSP_PAYLOAD_TYPE_IMAGE, 0);
+	g_return_val_if_fail (arv_buffer_payload_type_has_aoi (buffer->priv->payload_type), 0);
 
 	return buffer->priv->pixel_format;
 }
 
+G_DEFINE_TYPE_WITH_CODE (ArvBuffer, arv_buffer, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvBuffer))
+
 static void
 arv_buffer_init (ArvBuffer *buffer)
 {
-	buffer->priv = G_TYPE_INSTANCE_GET_PRIVATE (buffer, ARV_TYPE_BUFFER, ArvBufferPrivate);
+	buffer->priv = arv_buffer_get_instance_private (buffer);
 	buffer->priv->status = ARV_BUFFER_STATUS_CLEARED;
 }
 
@@ -528,7 +551,7 @@ arv_buffer_finalize (GObject *object)
 	if (buffer->priv->user_data && buffer->priv->user_data_destroy_func)
 		buffer->priv->user_data_destroy_func (buffer->priv->user_data);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_buffer_parent_class)->finalize (object);
 }
 
 static void
@@ -536,11 +559,5 @@ arv_buffer_class_init (ArvBufferClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 
-	g_type_class_add_private (this_class, sizeof (ArvBufferPrivate));
-
-	parent_class = g_type_class_peek_parent (this_class);
-
 	object_class->finalize = arv_buffer_finalize;
 }
-
-G_DEFINE_TYPE (ArvBuffer, arv_buffer, G_TYPE_OBJECT)

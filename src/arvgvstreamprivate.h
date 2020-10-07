@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2016 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -33,23 +33,7 @@
 
 G_BEGIN_DECLS
 
-typedef struct _ArvGvStreamPrivate ArvGvStreamPrivate;
-typedef struct _ArvGvStreamClass ArvGvStreamClass;
-
-struct _ArvGvStream {
-	ArvStream	stream;
-
-	ArvGvStreamPrivate *priv;
-};
-
-struct _ArvGvStreamClass {
-	ArvStreamClass parent_class;
-};
-
-ArvStream * 	arv_gv_stream_new			(ArvGvDevice *gv_device,
-							 GInetAddress *interface_address,
-							 GInetAddress *device_address,
-							 ArvStreamCallback callback, void *user_data);
+ArvStream * 	arv_gv_stream_new		(ArvGvDevice *gv_device, ArvStreamCallback callback, void *callback_data, GError **error);
 
 G_END_DECLS
 

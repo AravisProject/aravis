@@ -1,6 +1,6 @@
-/* Aravis
+/* Aravis - Digital camera library
  *
- * Copyright © 2010 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,6 +23,8 @@
 
 #include <arvdomnodelist.h>
 #include <arvdomnode.h>
+
+G_DEFINE_ABSTRACT_TYPE (ArvDomNodeList, arv_dom_node_list, G_TYPE_OBJECT)
 
 /* ArvDomNodeList implementation */
 
@@ -63,5 +65,3 @@ static void
 arv_dom_node_list_class_init (ArvDomNodeListClass *klass)
 {
 }
-
-G_DEFINE_ABSTRACT_TYPE (ArvDomNodeList, arv_dom_node_list, G_TYPE_OBJECT)

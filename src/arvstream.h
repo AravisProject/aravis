@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -27,7 +27,7 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
-#include <arvtypes.h>
+#include <arvbuffer.h>
 
 G_BEGIN_DECLS
 
@@ -48,27 +48,14 @@ typedef enum {
 	ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE
 } ArvStreamCallbackType;
 
-typedef void (*ArvStreamCallback)	(void *user_data, ArvStreamCallbackType type, ArvBuffer *buffer);
-
 #define ARV_TYPE_STREAM             (arv_stream_get_type ())
-#define ARV_STREAM(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_STREAM, ArvStream))
-#define ARV_STREAM_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_STREAM, ArvStreamClass))
-#define ARV_IS_STREAM(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_STREAM))
-#define ARV_IS_STREAM_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_STREAM))
-#define ARV_STREAM_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_STREAM, ArvStreamClass))
-
-typedef struct _ArvStreamPrivate ArvStreamPrivate;
-typedef struct _ArvStreamClass ArvStreamClass;
-
-struct _ArvStream {
-	GObject	object;
-
-	ArvStreamPrivate *priv;
-};
+G_DECLARE_DERIVABLE_TYPE (ArvStream, arv_stream, ARV, STREAM, GObject)
 
 struct _ArvStreamClass {
 	GObjectClass parent_class;
 
+	void		(*start_thread)		(ArvStream *stream);
+	void		(*stop_thread)		(ArvStream *stream);
 	void		(*get_statistics)	(ArvStream *stream, guint64 *n_completed_buffers,
 						 guint64 *n_failures, guint64 *n_underruns);
 
@@ -76,7 +63,7 @@ struct _ArvStreamClass {
 	void        	(*new_buffer)   	(ArvStream *stream);
 };
 
-GType arv_stream_get_type (void);
+typedef void (*ArvStreamCallback)	(void *user_data, ArvStreamCallbackType type, ArvBuffer *buffer);
 
 void		arv_stream_push_buffer 			(ArvStream *stream, ArvBuffer *buffer);
 ArvBuffer *	arv_stream_pop_buffer			(ArvStream *stream);
@@ -85,6 +72,9 @@ ArvBuffer * 	arv_stream_timeout_pop_buffer 		(ArvStream *stream, guint64 timeout
 void 		arv_stream_get_n_buffers 		(ArvStream *stream,
 							 gint *n_input_buffers,
 							 gint *n_output_buffers);
+void		arv_stream_start_thread			(ArvStream *stream);
+unsigned int	arv_stream_stop_thread			(ArvStream *stream, gboolean delete_buffers);
+
 void		arv_stream_get_statistics		(ArvStream *stream,
 							 guint64 *n_completed_buffers,
 							 guint64 *n_failures,

@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2012 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,7 +25,7 @@
  * @short_description: Base class for Genicam property nodes
  *
  * #ArvGcPropertyNode provides a base class for the implementation of the different
- * types of Genicam property nodes (Value, pValue, Endianess...).
+ * types of Genicam property nodes (Value, pValue, Endianness...).
  */
 
 #include <arvgcpropertynode.h>
@@ -36,25 +36,44 @@
 #include <arvgc.h>
 #include <arvdomtext.h>
 #include <arvmisc.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
+#include <arvenumtypes.h>
 #include <string.h>
 
-static GObjectClass *parent_class = NULL;
+enum {
+	ARV_GC_PROPERTY_NODE_PROPERTY_0,
+	ARV_GC_PROPERTY_NODE_PROPERTY_TYPE
+} ArvGcPropertyNodeProperties;
+
+typedef struct {
+	ArvGcNode base;
+
+	ArvGcPropertyNodeType	type;
+
+	char *name;
+
+	gboolean value_data_up_to_date;
+	char *value_data;
+} ArvGcPropertyNodePrivate;
+
+G_DEFINE_TYPE_WITH_CODE (ArvGcPropertyNode, arv_gc_property_node, ARV_TYPE_GC_NODE, G_ADD_PRIVATE (ArvGcPropertyNode))
 
 /* ArvDomNode implementation */
 
 static const char *
 arv_gc_property_node_get_node_name (ArvDomNode *node)
 {
-	ArvGcPropertyNode *property_node = ARV_GC_PROPERTY_NODE (node);
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (ARV_GC_PROPERTY_NODE (node));
 
-	switch (property_node->type) {
+	switch (priv->type) {
 		case ARV_GC_PROPERTY_NODE_TYPE_VALUE:
 			return "Value";
 		case ARV_GC_PROPERTY_NODE_TYPE_ADDRESS:
 			return "Address";
 		case ARV_GC_PROPERTY_NODE_TYPE_DESCRIPTION:
 			return "Description";
+		case ARV_GC_PROPERTY_NODE_TYPE_VISIBILITY:
+			return "Visibility";
 		case ARV_GC_PROPERTY_NODE_TYPE_TOOLTIP:
 			return "ToolTip";
 		case ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_NAME:
@@ -63,8 +82,14 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 			return "Min";
 		case ARV_GC_PROPERTY_NODE_TYPE_MAXIMUM:
 			return "Max";
+		case ARV_GC_PROPERTY_NODE_TYPE_SLOPE:
+			return "Slope";
 		case ARV_GC_PROPERTY_NODE_TYPE_INCREMENT:
 			return "Inc";
+		case ARV_GC_PROPERTY_NODE_TYPE_IS_LINEAR:
+			return "IsLinear";
+		case ARV_GC_PROPERTY_NODE_TYPE_REPRESENTATION:
+			return "Representation";
 		case ARV_GC_PROPERTY_NODE_TYPE_UNIT:
 			return "Unit";
 		case ARV_GC_PROPERTY_NODE_TYPE_ON_VALUE:
@@ -89,7 +114,7 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 			return "Cachable";
 		case ARV_GC_PROPERTY_NODE_TYPE_POLLING_TIME:
 			return "PollingTime";
-		case ARV_GC_PROPERTY_NODE_TYPE_ENDIANESS:
+		case ARV_GC_PROPERTY_NODE_TYPE_ENDIANNESS:
 			return "Endianess";
 		case ARV_GC_PROPERTY_NODE_TYPE_SIGN:
 			return "Sign";
@@ -103,6 +128,8 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 			return "CommandValue";
 		case ARV_GC_PROPERTY_NODE_TYPE_CHUNK_ID:
 			return "ChunkID";
+		case ARV_GC_PROPERTY_NODE_TYPE_EVENT_ID:
+			return "EventID";
 		case ARV_GC_PROPERTY_NODE_TYPE_VALUE_DEFAULT:
 			return "ValueDefault";
 
@@ -118,6 +145,8 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 			return "pIsAvailable";
 		case ARV_GC_PROPERTY_NODE_TYPE_P_IS_LOCKED:
 			return "pIsLocked";
+		case ARV_GC_PROPERTY_NODE_TYPE_P_SELECTED:
+			return "pSelected";
 		case ARV_GC_PROPERTY_NODE_TYPE_P_MINIMUM:
 			return "pMin";
 		case ARV_GC_PROPERTY_NODE_TYPE_P_MAXIMUM:
@@ -151,17 +180,17 @@ _can_append_child (ArvDomNode *self, ArvDomNode *child)
 static void
 _post_new_child (ArvDomNode *parent, ArvDomNode *child)
 {
-	ArvGcPropertyNode *property_node = ARV_GC_PROPERTY_NODE (parent);
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (ARV_GC_PROPERTY_NODE (parent));
 
-	property_node->value_data_up_to_date = FALSE;
+	priv->value_data_up_to_date = FALSE;
 }
 
 static void
 _pre_remove_child (ArvDomNode *parent, ArvDomNode *child)
 {
-	ArvGcPropertyNode *property_node = ARV_GC_PROPERTY_NODE (parent);
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (ARV_GC_PROPERTY_NODE (parent));
 
-	property_node->value_data_up_to_date = FALSE;
+	priv->value_data_up_to_date = FALSE;
 }
 
 /* ArvDomElement implementation */
@@ -169,24 +198,24 @@ _pre_remove_child (ArvDomNode *parent, ArvDomNode *child)
 static void
 arv_gc_property_node_set_attribute (ArvDomElement *self, const char *name, const char *value)
 {
-	ArvGcPropertyNode *gc_property_node = ARV_GC_PROPERTY_NODE (self);
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (ARV_GC_PROPERTY_NODE (self));
 
 	if (strcmp (name, "Name") == 0) {
-		g_free (gc_property_node->name);
-		gc_property_node->name = g_strdup (value);
+		g_free (priv->name);
+		priv->name = g_strdup (value);
 	} else
-		arv_debug_dom ("[GcPropertyNode::set_attribute] Uknown attribute '%s'", name);
+		arv_debug_dom ("[GcPropertyNode::set_attribute] Unknown attribute '%s'", name);
 }
 
 static const char *
 arv_gc_property_node_get_attribute (ArvDomElement *self, const char *name)
 {
-	ArvGcPropertyNode *gc_property_node = ARV_GC_PROPERTY_NODE (self);
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (ARV_GC_PROPERTY_NODE (self));
 
 	if (strcmp (name, "Name") == 0)
-		return gc_property_node->name;
+		return priv->name;
 
-	arv_debug_dom ("[GcPropertyNode::set_attribute] Uknown attribute '%s'", name);
+	arv_debug_dom ("[GcPropertyNode::set_attribute] Unknown attribute '%s'", name);
 
 	return NULL;
 }
@@ -196,39 +225,45 @@ arv_gc_property_node_get_attribute (ArvDomElement *self, const char *name)
 static const char *
 _get_value_data (ArvGcPropertyNode *property_node)
 {
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (property_node);
 	ArvDomNode *dom_node = ARV_DOM_NODE (property_node);
 
-	if (!property_node->value_data_up_to_date) {
+	if (!priv->value_data_up_to_date) {
 		ArvDomNode *iter;
 		GString *string = g_string_new (NULL);
 
-		for (iter = dom_node->first_child; iter != NULL; iter = iter->next_sibling)
+		for (iter = arv_dom_node_get_first_child (dom_node);
+		     iter != NULL;
+		     iter = arv_dom_node_get_next_sibling (iter))
 			g_string_append (string, arv_dom_character_data_get_data (ARV_DOM_CHARACTER_DATA (iter)));
-		g_free (property_node->value_data);
-		property_node->value_data = string->str;
+		g_free (priv->value_data);
+		priv->value_data = string->str;
 		g_string_free (string, FALSE);
-		property_node->value_data_up_to_date = TRUE;
+		priv->value_data_up_to_date = TRUE;
 	}
 
-	return property_node->value_data;
+	return priv->value_data;
 }
 
 static void
 _set_value_data (ArvGcPropertyNode *property_node, const char *data)
 {
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (property_node);
 	ArvDomNode *dom_node = ARV_DOM_NODE (property_node);
 
-	if (dom_node->first_child != NULL) {
+	if (arv_dom_node_get_first_child (dom_node) != NULL) {
 		ArvDomNode *iter;
 
-		arv_dom_character_data_set_data (ARV_DOM_CHARACTER_DATA (dom_node->first_child), data);
-		for (iter = dom_node->first_child->next_sibling; iter != NULL; iter = iter->next_sibling)
+		arv_dom_character_data_set_data (ARV_DOM_CHARACTER_DATA (arv_dom_node_get_first_child (dom_node)), data);
+		for (iter = arv_dom_node_get_next_sibling (arv_dom_node_get_first_child (dom_node));
+		     iter != NULL;
+		     iter = arv_dom_node_get_next_sibling (iter))
 			arv_dom_character_data_set_data (ARV_DOM_CHARACTER_DATA (iter), "");
 	}
 
-	g_free (property_node->value_data);
-	property_node->value_data = g_strdup (data);
-	property_node->value_data_up_to_date = TRUE;
+	g_free (priv->value_data);
+	priv->value_data = g_strdup (data);
+	priv->value_data_up_to_date = TRUE;
 }
 
 static ArvDomNode *
@@ -238,7 +273,7 @@ _get_pvalue_node (ArvGcPropertyNode *property_node)
 	const char *node_name;
 	ArvGc *genicam;
 
-	if (property_node->type < ARV_GC_PROPERTY_NODE_TYPE_P_UNKNONW)
+	if (arv_gc_property_node_get_node_type (property_node) < ARV_GC_PROPERTY_NODE_TYPE_P_UNKNONW)
 		return NULL;
 
 	node_name = _get_value_data (property_node);
@@ -260,9 +295,11 @@ _get_pvalue_node (ArvGcPropertyNode *property_node)
 const char *
 arv_gc_property_node_get_name (ArvGcPropertyNode *node)
 {
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (node);
+
 	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (node), NULL);
 
-	return node->name;
+	return priv->name;
 }
 
 const char *
@@ -401,15 +438,9 @@ arv_gc_property_node_get_double (ArvGcPropertyNode *node, GError **error)
 
 
 	if (ARV_IS_GC_FLOAT (pvalue_node)) {
-		GError *local_error = NULL;
-		double value;
-
-		value = arv_gc_float_get_value (ARV_GC_FLOAT (pvalue_node), &local_error);
-
-		if (local_error != NULL)
-			g_propagate_error (error, local_error);
-
-		return value;
+		return arv_gc_float_get_value (ARV_GC_FLOAT (pvalue_node), error);
+	} else if (ARV_IS_GC_INTEGER (pvalue_node)) {
+		return arv_gc_integer_get_value (ARV_GC_INTEGER (pvalue_node), error);
 	}
 
 	arv_warning_genicam ("[GcPropertyNode::get_double] Invalid node '%s'",
@@ -436,13 +467,10 @@ arv_gc_property_node_set_double (ArvGcPropertyNode *node, double v_double, GErro
 	}
 
 	if (ARV_IS_GC_FLOAT (pvalue_node)) {
-		GError *local_error = NULL;
-
-		arv_gc_float_set_value (ARV_GC_FLOAT (pvalue_node), v_double, &local_error);
-
-		if (local_error != NULL)
-			g_propagate_error (error, local_error);
-
+		arv_gc_float_set_value (ARV_GC_FLOAT (pvalue_node), v_double, error);
+		return;
+	} else if (ARV_IS_GC_INTEGER (pvalue_node)) {
+		arv_gc_integer_set_value (ARV_GC_INTEGER (pvalue_node), v_double, error);
 		return;
 	}
 
@@ -453,16 +481,18 @@ arv_gc_property_node_set_double (ArvGcPropertyNode *node, double v_double, GErro
 ArvGcPropertyNodeType
 arv_gc_property_node_get_node_type (ArvGcPropertyNode *node)
 {
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (node);
+
 	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (node), ARV_GC_PROPERTY_NODE_TYPE_UNKNOWN);
 
-	return node->type;
+	return priv->type;
 }
 
 /**
  * arv_gc_property_node_get_linked_node:
  * @node: a #ArvGcPropertyNode
  *
- * Returns: (transfer none): the #ArvGcNode which @node points to.
+ * Returns: (transfer none): the #ArvGcNode which @node points to, %NULL if the property is not a pointer.
  */
 
 ArvGcNode *
@@ -471,7 +501,9 @@ arv_gc_property_node_get_linked_node (ArvGcPropertyNode *node)
 	ArvGc *genicam;
 
 	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (node), NULL);
-	g_return_val_if_fail (node->type > ARV_GC_PROPERTY_NODE_TYPE_P_UNKNONW, NULL);
+
+	if (arv_gc_property_node_get_node_type (node) <= ARV_GC_PROPERTY_NODE_TYPE_P_UNKNONW)
+		return NULL;
 
 	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (node));
 	return arv_gc_get_node (genicam, _get_value_data (node));
@@ -480,12 +512,7 @@ arv_gc_property_node_get_linked_node (ArvGcPropertyNode *node)
 static ArvGcNode *
 arv_gc_property_node_new (ArvGcPropertyNodeType type)
 {
-	ArvGcPropertyNode *node;
-
-	node = g_object_new (ARV_TYPE_GC_PROPERTY_NODE, NULL);
-	node->type = type;
-
-	return ARV_GC_NODE (node);
+	return g_object_new (ARV_TYPE_GC_PROPERTY_NODE, "node-type", type, NULL);
 }
 
 ArvGcNode *
@@ -525,6 +552,38 @@ arv_gc_property_node_new_description (void)
 }
 
 ArvGcNode *
+arv_gc_property_node_new_visibility (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_VISIBILITY);
+}
+
+ArvGcVisibility
+arv_gc_property_node_get_visibility (ArvGcPropertyNode *self, ArvGcVisibility default_value)
+{
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
+	const char *value;
+
+	if (self == NULL)
+		return default_value;
+
+	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	g_return_val_if_fail (priv->type == ARV_GC_PROPERTY_NODE_TYPE_VISIBILITY, ARV_GC_VISIBILITY_UNDEFINED);
+
+	value = _get_value_data (self);
+
+	if (g_strcmp0 (value, "Invisible") == 0)
+		return ARV_GC_VISIBILITY_INVISIBLE;
+	else if (g_strcmp0 (value, "Guru") == 0)
+		return ARV_GC_VISIBILITY_GURU;
+	else if (g_strcmp0 (value, "Expert") == 0)
+		return ARV_GC_VISIBILITY_EXPERT;
+	else if (g_strcmp0 (value, "Beginner") == 0)
+		return ARV_GC_VISIBILITY_BEGINNER;
+
+	return ARV_GC_VISIBILITY_UNDEFINED;
+}
+
+ArvGcNode *
 arv_gc_property_node_new_tooltip (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_TOOLTIP);
@@ -561,6 +620,12 @@ arv_gc_property_node_new_p_maximum (void)
 }
 
 ArvGcNode *
+arv_gc_property_node_new_slope (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_SLOPE);
+}
+
+ArvGcNode *
 arv_gc_property_node_new_increment (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_INCREMENT);
@@ -570,6 +635,100 @@ ArvGcNode *
 arv_gc_property_node_new_p_increment (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_P_INCREMENT);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_is_linear (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_IS_LINEAR);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_representation (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_REPRESENTATION);
+}
+
+ArvGcRepresentation
+arv_gc_property_node_get_representation (ArvGcPropertyNode *self, ArvGcRepresentation default_value)
+{
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
+	const char *value;
+
+	if (self == NULL)
+		return default_value;
+
+	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	g_return_val_if_fail (priv->type == ARV_GC_PROPERTY_NODE_TYPE_REPRESENTATION, default_value);
+
+	value = _get_value_data (self);
+
+	if (g_strcmp0 (value, "Linear") == 0)
+		return ARV_GC_REPRESENTATION_LINEAR;
+	else if (g_strcmp0 (value, "Logarithmic") == 0)
+		return ARV_GC_REPRESENTATION_LOGARITHMIC;
+	else if (g_strcmp0 (value, "Boolean") == 0)
+		return ARV_GC_REPRESENTATION_BOOLEAN;
+	else if (g_strcmp0 (value, "PureNumber") == 0)
+		return ARV_GC_REPRESENTATION_PURE_NUMBER;
+	else if (g_strcmp0 (value, "HexNumber") == 0)
+		return ARV_GC_REPRESENTATION_HEX_NUMBER;
+	else if (g_strcmp0 (value, "IPV4Address") == 0)
+		return ARV_GC_REPRESENTATION_IPV4_ADDRESS;
+	else if (g_strcmp0 (value, "MACAddress") == 0)
+		return ARV_GC_REPRESENTATION_MAC_ADDRESS;
+
+	return default_value;
+}
+
+ArvGcNode *
+arv_gc_property_node_new_display_notation (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_NOTATION);
+}
+
+ArvGcDisplayNotation
+arv_gc_property_node_get_display_notation (ArvGcPropertyNode *self, ArvGcDisplayNotation default_value)
+{
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
+	const char *value;
+
+	if (self == NULL)
+		return default_value;
+
+	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	g_return_val_if_fail (priv->type == ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_NOTATION, default_value);
+
+	value = _get_value_data (self);
+
+	if (g_strcmp0 (value, "Automatic") == 0)
+		return ARV_GC_DISPLAY_NOTATION_AUTOMATIC;
+	else if (g_strcmp0 (value, "Fixed") == 0)
+		return ARV_GC_DISPLAY_NOTATION_FIXED;
+	else if (g_strcmp0 (value, "Scientific") == 0)
+		return ARV_GC_DISPLAY_NOTATION_SCIENTIFIC;
+
+	return default_value;
+}
+
+ArvGcNode *
+arv_gc_property_node_new_display_precision (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_PRECISION);
+}
+
+gint64
+arv_gc_property_node_get_display_precision (ArvGcPropertyNode *self, gint64 default_value)
+{
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
+
+	if (self == NULL)
+		return default_value;
+
+	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	g_return_val_if_fail (priv->type == ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_PRECISION, default_value);
+
+	return g_ascii_strtoll (_get_value_data (self), NULL, 0);
 }
 
 ArvGcNode *
@@ -606,6 +765,12 @@ ArvGcNode *
 arv_gc_property_node_new_p_is_locked (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_P_IS_LOCKED);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_p_selected (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_P_SELECTED);
 }
 
 ArvGcNode *
@@ -669,9 +834,62 @@ arv_gc_property_node_new_access_mode (void)
 }
 
 ArvGcNode *
+arv_gc_property_node_new_imposed_access_mode (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_IMPOSED_ACCESS_MODE);
+}
+
+ArvGcAccessMode
+arv_gc_property_node_get_access_mode (ArvGcPropertyNode *self, ArvGcAccessMode default_value)
+{
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
+	const char *value;
+
+	if (self == NULL)
+		return default_value;
+
+	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	g_return_val_if_fail (priv->type == ARV_GC_PROPERTY_NODE_TYPE_ACCESS_MODE ||
+			      priv->type == ARV_GC_PROPERTY_NODE_TYPE_IMPOSED_ACCESS_MODE, default_value);
+
+	value = _get_value_data (self);
+
+	if (g_strcmp0 (value, "RO") == 0)
+		return ARV_GC_ACCESS_MODE_RO;
+	else if (g_strcmp0 (value, "WO") == 0)
+		return ARV_GC_ACCESS_MODE_WO;
+	else if (g_strcmp0 (value, "RW") == 0)
+		return ARV_GC_ACCESS_MODE_RW;
+
+	return default_value;
+}
+
+ArvGcNode *
 arv_gc_property_node_new_cachable (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_CACHABLE);
+}
+
+ArvGcCachable
+arv_gc_property_node_get_cachable (ArvGcPropertyNode *self, ArvGcCachable default_value)
+{
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
+	const char *value;
+
+	if (self == NULL)
+		return default_value;
+
+	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	g_return_val_if_fail (priv->type == ARV_GC_PROPERTY_NODE_TYPE_CACHABLE, default_value);
+
+	value = _get_value_data (self);
+
+	if (g_strcmp0 (value, "WriteAround") == 0)
+		return ARV_GC_CACHABLE_WRITE_AROUND;
+	else if (g_strcmp0 (value, "WriteThrough") == 0)
+		return ARV_GC_CACHABLE_WRITE_THROUGH;
+
+	return ARV_GC_CACHABLE_NO_CACHE;
 }
 
 ArvGcNode *
@@ -681,9 +899,26 @@ arv_gc_property_node_new_polling_time (void)
 }
 
 ArvGcNode *
-arv_gc_property_node_new_endianess (void)
+arv_gc_property_node_new_endianness (void)
 {
-	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_ENDIANESS);
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_ENDIANNESS);
+}
+
+guint
+arv_gc_property_node_get_endianness (ArvGcPropertyNode *self, guint default_value)
+{
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
+
+	if (self == NULL)
+		return default_value;
+
+	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	g_return_val_if_fail (priv->type == ARV_GC_PROPERTY_NODE_TYPE_ENDIANNESS, default_value);
+
+	if (g_strcmp0 (_get_value_data (self), "BigEndian") == 0)
+		return G_BIG_ENDIAN;
+
+	return G_LITTLE_ENDIAN;
 }
 
 ArvGcNode *
@@ -692,16 +927,63 @@ arv_gc_property_node_new_sign (void)
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_SIGN);
 }
 
+ArvGcSignedness
+arv_gc_property_node_get_sign (ArvGcPropertyNode *self, ArvGcSignedness default_value)
+{
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
+
+	if (self == NULL)
+		return default_value;
+
+	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	g_return_val_if_fail (priv->type == ARV_GC_PROPERTY_NODE_TYPE_SIGN, default_value);
+
+	if (g_strcmp0 (_get_value_data (self), "Unsigned") == 0)
+		return ARV_GC_SIGNEDNESS_UNSIGNED;
+
+	return ARV_GC_SIGNEDNESS_SIGNED;
+}
+
 ArvGcNode *
 arv_gc_property_node_new_lsb (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_LSB);
 }
 
+guint
+arv_gc_property_node_get_lsb (ArvGcPropertyNode *self, guint default_value)
+{
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
+
+	if (self == NULL)
+		return default_value;
+
+	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	g_return_val_if_fail (priv->type == ARV_GC_PROPERTY_NODE_TYPE_LSB ||
+			      priv->type == ARV_GC_PROPERTY_NODE_TYPE_BIT, default_value);
+
+	return g_ascii_strtoll (_get_value_data (self), NULL, 10);
+}
+
 ArvGcNode *
 arv_gc_property_node_new_msb (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_MSB);
+}
+
+guint
+arv_gc_property_node_get_msb (ArvGcPropertyNode *self, guint default_value)
+{
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
+
+	if (self == NULL)
+		return default_value;
+
+	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	g_return_val_if_fail (priv->type == ARV_GC_PROPERTY_NODE_TYPE_MSB ||
+			      priv->type == ARV_GC_PROPERTY_NODE_TYPE_BIT, default_value);
+
+	return g_ascii_strtoll (_get_value_data (self), NULL, 10);
 }
 
 ArvGcNode *
@@ -729,6 +1011,12 @@ arv_gc_property_node_new_chunk_id (void)
 }
 
 ArvGcNode *
+arv_gc_property_node_new_event_id (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_EVENT_ID);
+}
+
+ArvGcNode *
 arv_gc_property_node_new_value_default (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_VALUE_DEFAULT);
@@ -741,22 +1029,54 @@ arv_gc_property_node_new_p_value_default (void)
 }
 
 static void
-arv_gc_property_node_init (ArvGcPropertyNode *gc_property_node)
+_set_property (GObject * object, guint prop_id,
+	       const GValue * value, GParamSpec * pspec)
 {
-	gc_property_node->type = 0;
-	gc_property_node->value_data = NULL;
-	gc_property_node->value_data_up_to_date = FALSE;
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (ARV_GC_PROPERTY_NODE (object));
+
+	switch (prop_id) {
+		case ARV_GC_PROPERTY_NODE_PROPERTY_TYPE:
+			priv->type = g_value_get_enum (value);
+			break;
+		default:
+			g_assert_not_reached ();
+	}
+}
+
+static void
+_get_property (GObject * object, guint prop_id,
+	       GValue * value, GParamSpec * pspec)
+{
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (ARV_GC_PROPERTY_NODE (object));
+
+	switch (prop_id) {
+		case ARV_GC_PROPERTY_NODE_PROPERTY_TYPE:
+			g_value_set_enum (value, priv->type);
+			break;
+		default:
+			g_assert_not_reached ();
+	}
+}
+
+static void
+arv_gc_property_node_init (ArvGcPropertyNode *self)
+{
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
+
+	priv->type = ARV_GC_PROPERTY_NODE_TYPE_UNKNOWN;
+	priv->value_data = NULL;
+	priv->value_data_up_to_date = FALSE;
 }
 
 static void
 arv_gc_property_node_finalize (GObject *object)
 {
-	ArvGcPropertyNode *property_node = ARV_GC_PROPERTY_NODE (object);
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (ARV_GC_PROPERTY_NODE (object));
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_gc_property_node_parent_class)->finalize (object);
 
-	g_free (property_node->value_data);
-	g_free (property_node->name);
+	g_free (priv->value_data);
+	g_free (priv->name);
 }
 
 static void
@@ -766,15 +1086,22 @@ arv_gc_property_node_class_init (ArvGcPropertyNodeClass *this_class)
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
 	ArvDomElementClass *dom_element_class = ARV_DOM_ELEMENT_CLASS (this_class);
 
-	parent_class = g_type_class_peek_parent (this_class);
-
 	object_class->finalize = arv_gc_property_node_finalize;
+	object_class->set_property = _set_property;
+	object_class->get_property = _get_property;
 	dom_node_class->get_node_name = arv_gc_property_node_get_node_name;
 	dom_node_class->can_append_child = _can_append_child;
 	dom_node_class->post_new_child = _post_new_child;
 	dom_node_class->pre_remove_child = _pre_remove_child;
 	dom_element_class->set_attribute = arv_gc_property_node_set_attribute;
 	dom_element_class->get_attribute = arv_gc_property_node_get_attribute;
-}
 
-G_DEFINE_TYPE (ArvGcPropertyNode, arv_gc_property_node, ARV_TYPE_GC_NODE)
+	g_object_class_install_property (
+		object_class, ARV_GC_PROPERTY_NODE_PROPERTY_TYPE,
+		g_param_spec_enum ("node-type", "Node type",
+				   "Actual node type",
+				   ARV_TYPE_GC_PROPERTY_NODE_TYPE,
+				   ARV_GC_PROPERTY_NODE_TYPE_UNKNOWN,
+				   G_PARAM_READWRITE |  G_PARAM_CONSTRUCT_ONLY)
+		);
+}

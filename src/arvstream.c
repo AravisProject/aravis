@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -32,7 +32,9 @@
 
 #include <arvstreamprivate.h>
 #include <arvbuffer.h>
-#include <arvdebug.h>
+#include <arvdevice.h>
+#include <arvdebugprivate.h>
+#include <gio/gio.h>
 
 enum {
 	ARV_STREAM_SIGNAL_NEW_BUFFER,
@@ -44,22 +46,29 @@ static guint arv_stream_signals[ARV_STREAM_SIGNAL_LAST] = {0};
 enum {
 	ARV_STREAM_PROPERTY_0,
 	ARV_STREAM_PROPERTY_EMIT_SIGNALS,
-	ARV_STREAM_PROPERTY_LAST
+	ARV_STREAM_PROPERTY_DEVICE,
+	ARV_STREAM_PROPERTY_CALLBACK,
+	ARV_STREAM_PROPERTY_CALLBACK_DATA
 } ArvStreamProperties;
 
-static GObjectClass *parent_class = NULL;
-
-struct _ArvStreamPrivate {
+typedef struct {
 	GAsyncQueue *input_queue;
 	GAsyncQueue *output_queue;
-#if GLIB_CHECK_VERSION(2,32,0)
 	GRecMutex mutex;
-#else
-	GRecMutex *mutex;
-#endif
-
 	gboolean emit_signals;
-};
+
+	ArvDevice *device;
+	ArvStreamCallback callback;
+	void *callback_data;
+
+	GError *init_error;
+} ArvStreamPrivate;
+
+static void arv_stream_initable_iface_init (GInitableIface *iface);
+
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvStream, arv_stream, G_TYPE_OBJECT,
+				  G_ADD_PRIVATE (ArvStream)
+				  G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, arv_stream_initable_iface_init))
 
 /**
  * arv_stream_push_buffer:
@@ -77,10 +86,12 @@ struct _ArvStreamPrivate {
 void
 arv_stream_push_buffer (ArvStream *stream, ArvBuffer *buffer)
 {
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+
 	g_return_if_fail (ARV_IS_STREAM (stream));
 	g_return_if_fail (ARV_IS_BUFFER (buffer));
 
-	g_async_queue_push (stream->priv->input_queue, buffer);
+	g_async_queue_push (priv->input_queue, buffer);
 }
 
 /**
@@ -101,9 +112,11 @@ arv_stream_push_buffer (ArvStream *stream, ArvBuffer *buffer)
 ArvBuffer *
 arv_stream_pop_buffer (ArvStream *stream)
 {
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+
 	g_return_val_if_fail (ARV_IS_STREAM (stream), NULL);
 
-	return g_async_queue_pop (stream->priv->output_queue);
+	return g_async_queue_pop (priv->output_queue);
 }
 
 /**
@@ -124,9 +137,11 @@ arv_stream_pop_buffer (ArvStream *stream)
 ArvBuffer *
 arv_stream_try_pop_buffer (ArvStream *stream)
 {
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+
 	g_return_val_if_fail (ARV_IS_STREAM (stream), NULL);
 
-	return g_async_queue_try_pop (stream->priv->output_queue);
+	return g_async_queue_try_pop (priv->output_queue);
 }
 
 /**
@@ -147,20 +162,11 @@ arv_stream_try_pop_buffer (ArvStream *stream)
 ArvBuffer *
 arv_stream_timeout_pop_buffer (ArvStream *stream, guint64 timeout)
 {
-#if GLIB_CHECK_VERSION(2,32,0)
-	g_return_val_if_fail (ARV_IS_STREAM (stream), NULL);
-
-	return g_async_queue_timeout_pop (stream->priv->output_queue, timeout);
-#else
-	GTimeVal end_time;
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
 
 	g_return_val_if_fail (ARV_IS_STREAM (stream), NULL);
 
-	g_get_current_time (&end_time);
-	g_time_val_add (&end_time, timeout);
-
-	return g_async_queue_timed_pop (stream->priv->output_queue, &end_time);
-#endif
+	return g_async_queue_timeout_pop (priv->output_queue, timeout);
 }
 
 /**
@@ -175,33 +181,29 @@ arv_stream_timeout_pop_buffer (ArvStream *stream, guint64 timeout)
 ArvBuffer *
 arv_stream_pop_input_buffer (ArvStream *stream)
 {
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+
 	g_return_val_if_fail (ARV_IS_STREAM (stream), NULL);
 
-	return g_async_queue_try_pop (stream->priv->input_queue);
+	return g_async_queue_try_pop (priv->input_queue);
 }
 
 void
 arv_stream_push_output_buffer (ArvStream *stream, ArvBuffer *buffer)
 {
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+
 	g_return_if_fail (ARV_IS_STREAM (stream));
 	g_return_if_fail (ARV_IS_BUFFER (buffer));
 
-	g_async_queue_push (stream->priv->output_queue, buffer);
+	g_async_queue_push (priv->output_queue, buffer);
 
-#if GLIB_CHECK_VERSION(2,32,0)
-	g_rec_mutex_lock (&stream->priv->mutex);
-#else
-	g_rec_mutex_lock (stream->priv->mutex);
-#endif
+	g_rec_mutex_lock (&priv->mutex);
 
-	if (stream->priv->emit_signals)
+	if (priv->emit_signals)
 		g_signal_emit (stream, arv_stream_signals[ARV_STREAM_SIGNAL_NEW_BUFFER], 0);
 
-#if GLIB_CHECK_VERSION(2,32,0)
-	g_rec_mutex_unlock (&stream->priv->mutex);
-#else
-	g_rec_mutex_unlock (stream->priv->mutex);
-#endif
+	g_rec_mutex_unlock (&priv->mutex);
 }
 
 /**
@@ -218,6 +220,8 @@ arv_stream_push_output_buffer (ArvStream *stream, ArvBuffer *buffer)
 void
 arv_stream_get_n_buffers (ArvStream *stream, gint *n_input_buffers, gint *n_output_buffers)
 {
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+
 	if (!ARV_IS_STREAM (stream)) {
 		if (n_input_buffers != NULL)
 			*n_input_buffers = 0;
@@ -227,9 +231,91 @@ arv_stream_get_n_buffers (ArvStream *stream, gint *n_input_buffers, gint *n_outp
 	}
 
 	if (n_input_buffers != NULL)
-		*n_input_buffers = g_async_queue_length (stream->priv->input_queue);
+		*n_input_buffers = g_async_queue_length (priv->input_queue);
 	if (n_output_buffers != NULL)
-		*n_output_buffers = g_async_queue_length (stream->priv->output_queue);
+		*n_output_buffers = g_async_queue_length (priv->output_queue);
+}
+
+/**
+ * arv_stream_start_thread:
+ * @stream: a #ArvStream
+ *
+ * Start the stream receiving thread. The thread is automatically started when
+ * the #ArvStream object is instantiated, so this function is only useful if
+ * the thread was stopped using @arv_stream_stop_thread.
+ *
+ * Since: 0.6.2
+ */
+
+void
+arv_stream_start_thread (ArvStream *stream)
+{
+	ArvStreamClass *stream_class;
+
+	g_return_if_fail (ARV_IS_STREAM (stream));
+
+	stream_class = ARV_STREAM_GET_CLASS (stream);
+	g_return_if_fail (stream_class->start_thread != NULL);
+
+	stream_class->start_thread (stream);
+}
+
+/**
+ * arv_stream_stop_thread:
+ * @stream: a #ArvStream
+ * @delete_buffers: enable buffer deletion
+ *
+ * Stop the stream receiving thread, and optionally delete all the #ArvBuffer
+ * stored in the stream object queues. Main use of this function is to be able
+ * to quickly change an acquisition parameter that changes the payload size,
+ * without deleting/recreating the stream object.
+ *
+ * Returns: the number of deleted buffers if @delete_buffers == %TRUE, 0 otherwise.
+ *
+ * Since: 0.6.2
+ */
+
+unsigned int
+arv_stream_stop_thread (ArvStream *stream, gboolean delete_buffers)
+{
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+	ArvStreamClass *stream_class;
+	ArvBuffer *buffer;
+	unsigned int n_deleted = 0;
+
+	g_return_val_if_fail (ARV_IS_STREAM (stream), 0);
+
+	stream_class = ARV_STREAM_GET_CLASS (stream);
+	g_return_val_if_fail (stream_class->stop_thread != NULL, 0);
+
+	stream_class->stop_thread (stream);
+
+	if (!delete_buffers)
+		return 0;
+
+	g_async_queue_lock (priv->input_queue);
+	do {
+		buffer = g_async_queue_try_pop_unlocked (priv->input_queue);
+		if (buffer != NULL) {
+			g_object_unref (buffer);
+			n_deleted++;
+		}
+	} while (buffer != NULL);
+	g_async_queue_unlock (priv->input_queue);
+
+	g_async_queue_lock (priv->output_queue);
+	do {
+		buffer = g_async_queue_try_pop_unlocked (priv->output_queue);
+		if (buffer != NULL) {
+			g_object_unref (buffer);
+			n_deleted++;
+		}
+	} while (buffer != NULL);
+	g_async_queue_unlock (priv->output_queue);
+
+	arv_debug_stream ("[Stream::reset] Deleted %u buffers\n", n_deleted);
+
+	return n_deleted;
 }
 
 /**
@@ -286,21 +372,15 @@ arv_stream_get_statistics (ArvStream *stream,
 void
 arv_stream_set_emit_signals (ArvStream *stream, gboolean emit_signals)
 {
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+
 	g_return_if_fail (ARV_IS_STREAM (stream));
 
-#if GLIB_CHECK_VERSION(2,32,0)
-	g_rec_mutex_lock (&stream->priv->mutex);
-#else
-	g_rec_mutex_lock (stream->priv->mutex);
-#endif
+	g_rec_mutex_lock (&priv->mutex);
 
-	stream->priv->emit_signals = emit_signals;
+	priv->emit_signals = emit_signals;
 
-#if GLIB_CHECK_VERSION(2,32,0)
-	g_rec_mutex_unlock (&stream->priv->mutex);
-#else
-	g_rec_mutex_unlock (stream->priv->mutex);
-#endif
+	g_rec_mutex_unlock (&priv->mutex);
 }
 
 /**
@@ -317,22 +397,16 @@ arv_stream_set_emit_signals (ArvStream *stream, gboolean emit_signals)
 gboolean
 arv_stream_get_emit_signals (ArvStream *stream)
 {
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
 	gboolean ret;
+
 	g_return_val_if_fail (ARV_IS_STREAM (stream), FALSE);
 
-#if GLIB_CHECK_VERSION(2,32,0)
-	g_rec_mutex_lock (&stream->priv->mutex);
-#else
-	g_rec_mutex_lock (stream->priv->mutex);
-#endif
+	g_rec_mutex_lock (&priv->mutex);
 
-	ret = stream->priv->emit_signals;
+	ret = priv->emit_signals;
 
-#if GLIB_CHECK_VERSION(2,32,0)
-	g_rec_mutex_unlock (&stream->priv->mutex);
-#else
-	g_rec_mutex_unlock (stream->priv->mutex);
-#endif
+	g_rec_mutex_unlock (&priv->mutex);
 
 	return ret;
 }
@@ -342,10 +416,21 @@ arv_stream_set_property (GObject * object, guint prop_id,
 			 const GValue * value, GParamSpec * pspec)
 {
 	ArvStream *stream = ARV_STREAM (object);
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
 
 	switch (prop_id) {
 		case ARV_STREAM_PROPERTY_EMIT_SIGNALS:
 			arv_stream_set_emit_signals (stream, g_value_get_boolean (value));
+			break;
+		case ARV_STREAM_PROPERTY_DEVICE:
+			g_clear_object (&priv->device);
+			priv->device = g_value_dup_object (value);
+			break;
+		case ARV_STREAM_PROPERTY_CALLBACK:
+			priv->callback = g_value_get_pointer (value);
+			break;
+		case ARV_STREAM_PROPERTY_CALLBACK_DATA:
+			priv->callback_data = g_value_get_pointer (value);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -358,10 +443,20 @@ arv_stream_get_property (GObject * object, guint prop_id,
 			 GValue * value, GParamSpec * pspec)
 {
 	ArvStream *stream = ARV_STREAM (object);
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
 
 	switch (prop_id) {
 		case ARV_STREAM_PROPERTY_EMIT_SIGNALS:
 			g_value_set_boolean (value, arv_stream_get_emit_signals (stream));
+			break;
+		case ARV_STREAM_PROPERTY_DEVICE:
+			g_value_set_object (value, priv->device);
+			break;
+		case ARV_STREAM_PROPERTY_CALLBACK:
+			g_value_set_pointer (value, priv->callback);
+			break;
+		case ARV_STREAM_PROPERTY_CALLBACK_DATA:
+			g_value_set_pointer (value, priv->callback_data);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -369,71 +464,75 @@ arv_stream_get_property (GObject * object, guint prop_id,
 	}
 }
 
+void
+arv_stream_take_init_error (ArvStream *stream, GError *error)
+{
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+
+	g_return_if_fail (ARV_IS_STREAM (stream));
+
+	g_clear_error (&priv->init_error);
+	priv->init_error = error;
+}
+
 static void
 arv_stream_init (ArvStream *stream)
 {
-	stream->priv = G_TYPE_INSTANCE_GET_PRIVATE (stream, ARV_TYPE_STREAM, ArvStreamPrivate);
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
 
-	stream->priv->input_queue = g_async_queue_new ();
-	stream->priv->output_queue = g_async_queue_new ();
+	priv->input_queue = g_async_queue_new ();
+	priv->output_queue = g_async_queue_new ();
 
-	stream->priv->emit_signals = FALSE;
+	priv->emit_signals = FALSE;
 
-#if GLIB_CHECK_VERSION(2,32,0)
-	g_rec_mutex_init (&stream->priv->mutex);
-#else
-	stream->priv->mutex = g_rec_mutex_new ();
-#endif
+	g_rec_mutex_init (&priv->mutex);
 }
 
 static void
 arv_stream_finalize (GObject *object)
 {
 	ArvStream *stream = ARV_STREAM (object);
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
 	ArvBuffer *buffer;
 
 	arv_debug_stream ("[Stream::finalize] Flush %d buffer[s] in input queue",
-			  g_async_queue_length (stream->priv->input_queue));
+			  g_async_queue_length (priv->input_queue));
 	arv_debug_stream ("[Stream::finalize] Flush %d buffer[s] in output queue",
-			  g_async_queue_length (stream->priv->output_queue));
+			  g_async_queue_length (priv->output_queue));
 
-	if (stream->priv->emit_signals) {
+	if (priv->emit_signals) {
 		g_warning ("Stream finalized with 'new-buffer' signal enabled");
 		g_warning ("Please call arv_stream_set_emit_signals (stream, FALSE) before ArvStream object finalization");
 	}
 
 	do {
-		buffer = g_async_queue_try_pop (stream->priv->output_queue);
+		buffer = g_async_queue_try_pop (priv->output_queue);
 		if (buffer != NULL)
 			g_object_unref (buffer);
 	} while (buffer != NULL);
 
 	do {
-		buffer = g_async_queue_try_pop (stream->priv->input_queue);
+		buffer = g_async_queue_try_pop (priv->input_queue);
 		if (buffer != NULL)
 			g_object_unref (buffer);
 	} while (buffer != NULL);
 
-	g_async_queue_unref (stream->priv->input_queue);
-	g_async_queue_unref (stream->priv->output_queue);
+	g_async_queue_unref (priv->input_queue);
+	g_async_queue_unref (priv->output_queue);
 
-#if GLIB_CHECK_VERSION(2,32,0)
-	g_rec_mutex_clear (&stream->priv->mutex);
-#else
-	g_rec_mutex_free (stream->priv->mutex);
-#endif
+	g_rec_mutex_clear (&priv->mutex);
 
-	parent_class->finalize (object);
+	g_clear_object (&priv->device);
+
+	g_clear_error (&priv->init_error);
+
+	G_OBJECT_CLASS (arv_stream_parent_class)->finalize (object);
 }
 
 static void
 arv_stream_class_init (ArvStreamClass *node_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (node_class);
-
-	g_type_class_add_private (node_class, sizeof (ArvStreamPrivate));
-
-	parent_class = g_type_class_peek_parent (node_class);
 
 	object_class->finalize = arv_stream_finalize;
 	object_class->set_property = arv_stream_set_property;
@@ -470,7 +569,58 @@ arv_stream_class_init (ArvStreamClass *node_class)
 				      "Emit signals", FALSE,
 				      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
 		);
+	g_object_class_install_property
+		(object_class,
+		 ARV_STREAM_PROPERTY_DEVICE,
+		 g_param_spec_object ("device",
+				      "Paret device",
+				      "A ArvDevice parent object",
+				      ARV_TYPE_DEVICE,
+				      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property
+		(object_class,
+		 ARV_STREAM_PROPERTY_CALLBACK,
+		 g_param_spec_pointer ("callback",
+				       "Stream callback",
+				       "Optional user callback",
+				       G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property
+		(object_class,
+		 ARV_STREAM_PROPERTY_CALLBACK_DATA,
+		 g_param_spec_pointer ("callback-data",
+				       "Stream callback data",
+				       "Optional user callback data",
+				       G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 }
 
-G_DEFINE_ABSTRACT_TYPE (ArvStream, arv_stream, G_TYPE_OBJECT)
+static gboolean
+arv_stream_initable_init (GInitable     *initable,
+			  GCancellable  *cancellable,
+			  GError       **error)
+{
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (ARV_STREAM (initable));
+
+	g_return_val_if_fail (ARV_IS_STREAM (initable), FALSE);
+
+	if (cancellable != NULL)
+	{
+		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+				     "Cancellable initialization not supported");
+		return FALSE;
+	}
+
+	if (priv->init_error) {
+		if (error != NULL)
+			*error = g_error_copy (priv->init_error);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static void
+arv_stream_initable_iface_init (GInitableIface *iface)
+{
+	iface->init = arv_stream_initable_init;
+}
 

@@ -1,6 +1,6 @@
-/* Aravis
+/* Aravis - Digital camera library
  *
- * Copyright © 2007-2010 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -27,21 +27,16 @@
  */
 
 #include <arvdomcharacterdata.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <string.h>
 
-static GObjectClass *parent_class = NULL;
+typedef struct {
+	char *data;
+} ArvDomCharacterDataPrivate;
+
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvDomCharacterData, arv_dom_character_data, ARV_TYPE_DOM_NODE, G_ADD_PRIVATE (ArvDomCharacterData))
 
 /* ArvDomNode implementation */
-
-static void
-arv_dom_character_data_write_to_stream (ArvDomNode *self, GOutputStream *stream, GError **error)
-{
-	ArvDomCharacterData *character_data = ARV_DOM_CHARACTER_DATA (self);
-
-	if (character_data->data != NULL)
-		g_output_stream_write (stream, character_data->data, strlen (character_data->data), NULL, error);
-}
 
 static const char *
 arv_dom_character_data_get_node_value (ArvDomNode* self)
@@ -60,19 +55,23 @@ arv_dom_character_data_set_node_value (ArvDomNode* self, const char *value)
 const char *
 arv_dom_character_data_get_data (ArvDomCharacterData* self)
 {
+	ArvDomCharacterDataPrivate *priv = arv_dom_character_data_get_instance_private (ARV_DOM_CHARACTER_DATA (self));
+
 	g_return_val_if_fail (ARV_IS_DOM_CHARACTER_DATA (self), NULL);
 
-	return self->data;
+	return priv->data;
 }
 
 void
 arv_dom_character_data_set_data (ArvDomCharacterData* self, const char * value)
 {
+	ArvDomCharacterDataPrivate *priv = arv_dom_character_data_get_instance_private (ARV_DOM_CHARACTER_DATA (self));
+
 	g_return_if_fail (ARV_IS_DOM_CHARACTER_DATA (self));
 	g_return_if_fail (value != NULL);
 
-	g_free (self->data);
-	self->data = g_strdup (value);
+	g_free (priv->data);
+	priv->data = g_strdup (value);
 
 	arv_log_dom ("[ArvDomCharacterData::set_data] Value = '%s'", value);
 
@@ -85,13 +84,13 @@ arv_dom_character_data_init (ArvDomCharacterData *character_data)
 }
 
 static void
-arv_dom_character_data_finalize (GObject *object)
+arv_dom_character_data_finalize (GObject *self)
 {
-	ArvDomCharacterData *self = ARV_DOM_CHARACTER_DATA (object);
+	ArvDomCharacterDataPrivate *priv = arv_dom_character_data_get_instance_private (ARV_DOM_CHARACTER_DATA (self));
 
-	g_free (self->data);
+	g_free (priv->data);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_dom_character_data_parent_class)->finalize (self);
 }
 
 /* ArvDomCharacterData class */
@@ -102,13 +101,8 @@ arv_dom_character_data_class_init (ArvDomCharacterDataClass *character_data_clas
 	GObjectClass *object_class = G_OBJECT_CLASS (character_data_class);
 	ArvDomNodeClass *node_class = ARV_DOM_NODE_CLASS (character_data_class);
 
-	parent_class = g_type_class_peek_parent (character_data_class);
-
 	object_class->finalize = arv_dom_character_data_finalize;
 
-	node_class->write_to_stream = arv_dom_character_data_write_to_stream;
 	node_class->set_node_value = arv_dom_character_data_set_node_value;
 	node_class->get_node_value = arv_dom_character_data_get_node_value;
 }
-
-G_DEFINE_ABSTRACT_TYPE (ArvDomCharacterData, arv_dom_character_data, ARV_TYPE_DOM_NODE)

@@ -22,49 +22,49 @@
 		...
 		fun:_dl_init
 }
-
 {
-	g_type_register_static
-		Memcheck:Leak
-		fun:realloc
-		fun:g_realloc
-		...
-		fun:g_type_register_static
-		...
-		fun:_dl_init
+	g-type-register-static
+	Memcheck:Leak
+	match-leak-kinds:possible,reachable
+	fun:malloc
+	...
+	fun:g_type_register_static
 }
 
 {
-	g_type_register_static_app_malloc
+	g-type-register-static-realloc
+	Memcheck:Leak
+	match-leak-kinds:possible,reachable
+	fun:realloc
+	...
+	fun:g_type_register_static
+}
+
+{
+	g-type-register-static-calloc
+	Memcheck:Leak
+	match-leak-kinds:reachable
+	fun:calloc
+	...
+	fun:g_type_register_static
+}
+
+{
+	g_type_add_interface_static_app
 		Memcheck:Leak
 		fun:malloc
-		fun:realloc
-		fun:g_realloc
+		fun:g_malloc
+		fun:g_slice_alloc
 		...
-		fun:g_type_register_static
-		fun:g_type_register_static_simple
-		...
-		fun:main
+		fun:g_type_add_interface_static
 }
 
 {
-	g_type_register_static_app
+	g_type_create_instance
 		Memcheck:Leak
-		fun:realloc
-		fun:g_realloc
+		fun:g_type_create_instance
 		...
-		fun:g_type_register_static
-		fun:g_type_register_static_simple
-}
-
-{
-	g_enum_register_static_app
-		Memcheck:Leak
-		fun:realloc
-		fun:g_realloc
-		...
-		fun:g_type_register_static
-		fun:g_enum_register_static
+		fun:g_type_class_ref
 }
 
 {

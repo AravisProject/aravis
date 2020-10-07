@@ -1,0 +1,3 @@
+#!/bin/sh
+
+meson test --no-suite="python" --wrap="valgrind --tool=memcheck --leak-check=yes --suppressions=../tests/aravis.supp --error-exitcode=1" $@

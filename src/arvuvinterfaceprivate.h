@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2016 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -40,19 +40,6 @@
 #define ARV_UV_INTERFACE_DATA_PROTOCOL			0x02
 
 G_BEGIN_DECLS
-
-typedef struct _ArvUvInterfacePrivate ArvUvInterfacePrivate;
-typedef struct _ArvUvInterfaceClass ArvUvInterfaceClass;
-
-struct _ArvUvInterface {
-	ArvInterface	interface;
-
-	ArvUvInterfacePrivate *priv;
-};
-
-struct _ArvUvInterfaceClass {
-	ArvInterfaceClass parent_class;
-};
 
 void 			arv_uv_interface_destroy_instance 	(void);
 

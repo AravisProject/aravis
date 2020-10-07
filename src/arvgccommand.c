@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -27,14 +27,26 @@
 
 #include <arvgccommand.h>
 #include <arvgcinteger.h>
+#include <arvgcfeaturenodeprivate.h>
 #include <arvgcport.h>
 #include <arvgc.h>
 #include <arvmisc.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <stdlib.h>
 #include <string.h>
 
-static GObjectClass *parent_class = NULL;
+struct _ArvGcCommand {
+	ArvGcFeatureNode	node;
+
+	ArvGcPropertyNode *command_value;
+	ArvGcPropertyNode *value;
+};
+
+struct _ArvGcCommandClass {
+	ArvGcFeatureNodeClass parent_class;
+};
+
+G_DEFINE_TYPE (ArvGcCommand, arv_gc_command, ARV_TYPE_GC_FEATURE_NODE)
 
 /* ArvGcFeatureNode implementation */
 
@@ -62,7 +74,7 @@ arv_gc_command_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				node->command_value = property_node;
 				break;
 			default:
-				ARV_DOM_NODE_CLASS (parent_class)->post_new_child (self, child);
+				ARV_DOM_NODE_CLASS (arv_gc_command_parent_class)->post_new_child (self, child);
 				break;
 		}
 	}
@@ -99,6 +111,7 @@ arv_gc_command_execute (ArvGcCommand *gc_command, GError **error)
 		return;
 	}
 
+	arv_gc_feature_node_increment_change_count (ARV_GC_FEATURE_NODE (gc_command));
 	arv_gc_property_node_set_int64 (gc_command->value, command_value, &local_error);
 
 	if (local_error != NULL) {
@@ -106,9 +119,25 @@ arv_gc_command_execute (ArvGcCommand *gc_command, GError **error)
 		return;
 	}
 
-	arv_log_genicam ("[GcCommand::execute] %s (0x%x)",
+	arv_log_genicam ("[GcCommand::execute] %s (0x%" G_GINT64_MODIFIER "x)",
 			 arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_command)),
 			 command_value);
+}
+
+static ArvGcFeatureNode *
+arv_gc_command_get_linked_feature (ArvGcFeatureNode *gc_feature_node)
+{
+	ArvGcCommand *gc_command = ARV_GC_COMMAND (gc_feature_node);
+	ArvGcNode *pvalue_node = NULL;
+
+	if (gc_command->value == NULL)
+		return NULL;
+
+	pvalue_node = arv_gc_property_node_get_linked_node (gc_command->value);
+	if (ARV_IS_GC_FEATURE_NODE (pvalue_node))
+		return ARV_GC_FEATURE_NODE (pvalue_node);
+
+	return NULL;
 }
 
 ArvGcNode *
@@ -129,7 +158,7 @@ arv_gc_command_init (ArvGcCommand *gc_command)
 static void
 arv_gc_command_finalize (GObject *object)
 {
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_gc_command_parent_class)->finalize (object);
 }
 
 static void
@@ -137,13 +166,11 @@ arv_gc_command_class_init (ArvGcCommandClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
-
-	parent_class = g_type_class_peek_parent (this_class);
+	ArvGcFeatureNodeClass *gc_feature_node_class = ARV_GC_FEATURE_NODE_CLASS (this_class);
 
 	object_class->finalize = arv_gc_command_finalize;
 	dom_node_class->get_node_name = arv_gc_command_get_node_name;
 	dom_node_class->post_new_child = arv_gc_command_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_command_pre_remove_child;
+	gc_feature_node_class->get_linked_feature = arv_gc_command_get_linked_feature;
 }
-
-G_DEFINE_TYPE (ArvGcCommand, arv_gc_command, ARV_TYPE_GC_FEATURE_NODE)

@@ -1,8 +1,8 @@
 #include <arv.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "../src/arvgvsp.h"
-#include "../src/arvgvcp.h"
+#include "../src/arvgvspprivate.h"
+#include "../src/arvgvcpprivate.h"
 
 static gboolean cancel = FALSE;
 
@@ -57,9 +57,6 @@ main (int argc, char **argv)
 	unsigned buffer_count = 0;
 	guint64 start_time, time;
 
-	arv_g_thread_init (NULL);
-	arv_g_type_init ();
-
 	context = g_option_context_new (NULL);
 	g_option_context_add_main_entries (context, arv_option_entries, NULL);
 
@@ -79,7 +76,7 @@ main (int argc, char **argv)
 	else
 		g_print ("Looking for camera '%s'\n", arv_option_camera_name);
 
-	device = arv_open_device (arv_option_camera_name);
+	device = arv_open_device (arv_option_camera_name, NULL);
 	if (device != NULL) {
 		ArvGc *genicam;
 		ArvGcNode *node;
@@ -186,7 +183,7 @@ main (int argc, char **argv)
 			g_print ("reverse x           = %s\n", v_boolean ? "TRUE" : "FALSE");
 		}
 
-		stream = arv_device_create_stream (device, NULL, NULL);
+		stream = arv_device_create_stream (device, NULL, NULL, NULL);
 		if (arv_option_auto_buffer)
 			g_object_set (stream,
 				      "socket-buffer", ARV_GV_STREAM_SOCKET_BUFFER_AUTO,
@@ -243,9 +240,9 @@ main (int argc, char **argv)
 
 		arv_stream_get_statistics (stream, &n_processed_buffers, &n_failures, &n_underruns);
 
-		g_print ("Processed buffers = %Lu\n", (unsigned long long) n_processed_buffers);
-		g_print ("Failures          = %Lu\n", (unsigned long long) n_failures);
-		g_print ("Underruns         = %Lu\n", (unsigned long long) n_underruns);
+		g_print ("Processed buffers = %llu\n", (unsigned long long) n_processed_buffers);
+		g_print ("Failures          = %llu\n", (unsigned long long) n_failures);
+		g_print ("Underruns         = %llu\n", (unsigned long long) n_underruns);
 
 		node = arv_gc_get_node (genicam, "AcquisitionStop");
 		arv_gc_command_execute (ARV_GC_COMMAND (node), NULL);

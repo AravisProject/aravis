@@ -88,6 +88,11 @@ timestamp (void)
 	arv_buffer_set_timestamp (buffer, 1234);
 	g_assert_cmpint (arv_buffer_get_timestamp (buffer), == , 1234);
 
+	g_assert_cmpint (arv_buffer_get_system_timestamp (buffer), == , 0);
+
+	arv_buffer_set_system_timestamp (buffer, 1234);
+	g_assert_cmpint (arv_buffer_get_system_timestamp (buffer), == , 1234);
+
 	g_object_unref (buffer);
 }
 
@@ -114,8 +119,6 @@ main (int argc, char *argv[])
 	int result;
 
 	g_test_init (&argc, &argv, NULL);
-
-	arv_g_type_init ();
 
 	g_test_add_func ("/buffer/simple-buffer", simple_buffer_test);
 	g_test_add_func ("/buffer/preallocated-buffer", preallocated_buffer_test);

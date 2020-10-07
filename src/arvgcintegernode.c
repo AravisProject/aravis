@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2017 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -27,13 +27,43 @@
 
 #include <arvgcintegernode.h>
 #include <arvgcinteger.h>
+#include <arvgcfloat.h>
+#include <arvgcselector.h>
 #include <arvgcvalueindexednode.h>
+#include <arvgcfeaturenodeprivate.h>
 #include <arvgc.h>
 #include <arvmisc.h>
 #include <string.h>
 #include <stdlib.h>
 
-static GObjectClass *parent_class = NULL;
+struct _ArvGcIntegerNode {
+	ArvGcFeatureNode	node;
+
+	ArvGcPropertyNode *value;
+	ArvGcPropertyNode *minimum;
+	ArvGcPropertyNode *maximum;
+	ArvGcPropertyNode *increment;
+	ArvGcPropertyNode *unit;
+	ArvGcPropertyNode *representation;
+
+	ArvGcPropertyNode *index;
+	GSList *value_indexed_nodes;
+	ArvGcPropertyNode *value_default;
+
+	GSList *selecteds;		/* #ArvGcPropertyNode */
+	GSList *selected_features;	/* #ArvGcFeatureNode */
+};
+
+struct _ArvGcIntegerNodeClass {
+	ArvGcFeatureNodeClass parent_class;
+};
+
+static void arv_gc_integer_node_integer_interface_init (ArvGcIntegerInterface *interface);
+static void arv_gc_integer_node_selector_interface_init (ArvGcSelectorInterface *interface);
+
+G_DEFINE_TYPE_WITH_CODE (ArvGcIntegerNode, arv_gc_integer_node, ARV_TYPE_GC_FEATURE_NODE,
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_integer_node_integer_interface_init)
+			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_SELECTOR, arv_gc_integer_node_selector_interface_init))
 
 /* ArvDomNode implementation */
 
@@ -71,6 +101,9 @@ arv_gc_integer_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 			case ARV_GC_PROPERTY_NODE_TYPE_UNIT:
 				node->unit = property_node;
 				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_REPRESENTATION:
+				node->representation = property_node;
+				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_P_INDEX:
 				node->index = property_node;
 				break;
@@ -82,8 +115,11 @@ arv_gc_integer_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 			case ARV_GC_PROPERTY_NODE_TYPE_P_VALUE_DEFAULT:
 				node->value_default = property_node;
 				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_P_SELECTED:
+				node->selecteds = g_slist_prepend (node->selecteds, property_node);
+				break;
 			default:
-				ARV_DOM_NODE_CLASS (parent_class)->post_new_child (self, child);
+				ARV_DOM_NODE_CLASS (arv_gc_integer_node_parent_class)->post_new_child (self, child);
 				break;
 		}
 	}
@@ -127,39 +163,6 @@ _get_value_node (ArvGcIntegerNode *gc_integer_node, GError **error)
 	return NULL;
 }
 
-static GType
-arv_gc_integer_node_get_value_type (ArvGcFeatureNode *node)
-{
-	return G_TYPE_INT64;
-}
-
-static void
-arv_gc_integer_node_set_value_from_string (ArvGcFeatureNode *node, const char *string, GError **error)
-{
-	arv_gc_integer_set_value (ARV_GC_INTEGER (node), g_ascii_strtoll (string, NULL, 0), error);
-}
-
-static const char *
-arv_gc_integer_node_get_value_as_string (ArvGcFeatureNode *node, GError **error)
-{
-	ArvGcIntegerNode *integer_node = ARV_GC_INTEGER_NODE (node);
-	ArvGcPropertyNode *value_node;
-	GError *local_error = NULL;
-	const char *string;
-
-	value_node = _get_value_node (integer_node, error);
-	if (value_node == NULL)
-		return NULL;
-
-	string = arv_gc_property_node_get_string (value_node, &local_error);
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return NULL;
-	}
-
-	return string;
-}
-
 /* ArvGcIntegerNode implementation */
 
 ArvGcNode *
@@ -172,6 +175,22 @@ arv_gc_integer_node_new (void)
 	return node;
 }
 
+static ArvGcFeatureNode *
+arv_gc_integer_node_get_linked_feature (ArvGcFeatureNode *gc_feature_node)
+{
+	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (gc_feature_node);
+	ArvGcNode *pvalue_node = NULL;
+
+	if (gc_integer_node->value == NULL)
+		return NULL;
+
+	pvalue_node = arv_gc_property_node_get_linked_node (gc_integer_node->value);
+	if (ARV_IS_GC_FEATURE_NODE (pvalue_node))
+		return ARV_GC_FEATURE_NODE (pvalue_node);
+
+	return NULL;
+}
+
 static void
 arv_gc_integer_node_init (ArvGcIntegerNode *gc_integer_node)
 {
@@ -182,9 +201,11 @@ arv_gc_integer_node_finalize (GObject *object)
 {
 	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (object);
 
-	parent_class->finalize (object);
+	G_OBJECT_CLASS (arv_gc_integer_node_parent_class)->finalize (object);
 
-	g_slist_free (gc_integer_node->value_indexed_nodes);
+	g_clear_pointer (&gc_integer_node->value_indexed_nodes, g_slist_free);
+	g_clear_pointer (&gc_integer_node->selecteds, g_slist_free);
+	g_clear_pointer (&gc_integer_node->selected_features, g_slist_free);
 }
 
 static void
@@ -194,15 +215,11 @@ arv_gc_integer_node_class_init (ArvGcIntegerNodeClass *this_class)
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
 	ArvGcFeatureNodeClass *gc_feature_node_class = ARV_GC_FEATURE_NODE_CLASS (this_class);
 
-	parent_class = g_type_class_peek_parent (this_class);
-
 	object_class->finalize = arv_gc_integer_node_finalize;
 	dom_node_class->get_node_name = arv_gc_integer_node_get_node_name;
 	dom_node_class->post_new_child = arv_gc_integer_node_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_integer_node_pre_remove_child;
-	gc_feature_node_class->get_value_type = arv_gc_integer_node_get_value_type;
-	gc_feature_node_class->set_value_from_string = arv_gc_integer_node_set_value_from_string;
-	gc_feature_node_class->get_value_as_string = arv_gc_integer_node_get_value_as_string;
+	gc_feature_node_class->get_linked_feature = arv_gc_integer_node_get_linked_feature;
 }
 
 /* ArvGcInteger interface implementation */
@@ -239,6 +256,7 @@ arv_gc_integer_node_set_integer_value (ArvGcInteger *gc_integer, gint64 value, G
 	if (value_node == NULL)
 		return;
 
+	arv_gc_feature_node_increment_change_count (ARV_GC_FEATURE_NODE (gc_integer_node));
 	arv_gc_property_node_set_int64 (ARV_GC_PROPERTY_NODE (value_node), value, &local_error);
 	if (local_error != NULL)
 		g_propagate_error (error, local_error);
@@ -251,8 +269,26 @@ arv_gc_integer_node_get_min (ArvGcInteger *gc_integer, GError **error)
 	GError *local_error = NULL;
 	gint64 value;
 
-	if (gc_integer_node->minimum == NULL)
+	if (gc_integer_node->minimum == NULL) {
+		ArvGcPropertyNode *value_node;
+
+		value_node = _get_value_node (gc_integer_node, &local_error);
+		if (local_error != NULL) {
+			g_propagate_error (error, local_error);
+			return G_MININT64;
+		}
+
+		if (ARV_IS_GC_PROPERTY_NODE (value_node)) {
+			ArvGcNode *linked_node = arv_gc_property_node_get_linked_node (value_node);
+
+			if (ARV_IS_GC_INTEGER (linked_node))
+				return arv_gc_integer_get_min (ARV_GC_INTEGER (linked_node), error);
+			else if (ARV_IS_GC_FLOAT (linked_node))
+				return arv_gc_float_get_min (ARV_GC_FLOAT (linked_node), error);
+		}
+
 		return G_MININT64;
+	}
 
 	value = arv_gc_property_node_get_int64 (ARV_GC_PROPERTY_NODE (gc_integer_node->minimum), &local_error);
 
@@ -271,8 +307,26 @@ arv_gc_integer_node_get_max (ArvGcInteger *gc_integer, GError **error)
 	GError *local_error = NULL;
 	gint64 value;
 
-	if (gc_integer_node->maximum == NULL)
+	if (gc_integer_node->maximum == NULL) {
+		ArvGcPropertyNode *value_node;
+
+		value_node = _get_value_node (gc_integer_node, &local_error);
+		if (local_error != NULL) {
+			g_propagate_error (error, local_error);
+			return G_MAXINT64;
+		}
+
+		if (ARV_IS_GC_PROPERTY_NODE (value_node)) {
+			ArvGcNode *linked_node = arv_gc_property_node_get_linked_node (value_node);
+
+			if (ARV_IS_GC_INTEGER (linked_node))
+				return arv_gc_integer_get_max (ARV_GC_INTEGER (linked_node), error);
+			else if (ARV_IS_GC_FLOAT (linked_node))
+				return arv_gc_float_get_max (ARV_GC_FLOAT (linked_node), error);
+		}
+
 		return G_MAXINT64;
+	}
 
 	value = arv_gc_property_node_get_int64 (ARV_GC_PROPERTY_NODE (gc_integer_node->maximum), &local_error);
 
@@ -291,8 +345,26 @@ arv_gc_integer_node_get_inc (ArvGcInteger *gc_integer, GError **error)
 	GError *local_error = NULL;
 	gint64 value;
 
-	if (gc_integer_node->increment == NULL)
+	if (gc_integer_node->increment == NULL) {
+		ArvGcPropertyNode *value_node;
+
+		value_node = _get_value_node (gc_integer_node, &local_error);
+		if (local_error != NULL) {
+			g_propagate_error (error, local_error);
+			return 1;
+		}
+
+		if (ARV_IS_GC_PROPERTY_NODE (value_node)) {
+			ArvGcNode *linked_node = arv_gc_property_node_get_linked_node (value_node);
+
+			if (ARV_IS_GC_INTEGER (linked_node))
+				return arv_gc_integer_get_inc (ARV_GC_INTEGER (linked_node), error);
+			else if (ARV_IS_GC_FLOAT (linked_node))
+				return arv_gc_float_get_inc (ARV_GC_FLOAT (linked_node), error);
+		}
+
 		return 1;
+	}
 
 	value = arv_gc_property_node_get_int64 (ARV_GC_PROPERTY_NODE (gc_integer_node->increment), &local_error);
 
@@ -304,24 +376,26 @@ arv_gc_integer_node_get_inc (ArvGcInteger *gc_integer, GError **error)
 	return value;
 }
 
-static const char *
-arv_gc_integer_node_get_unit (ArvGcInteger *gc_integer, GError **error)
+static ArvGcRepresentation
+arv_gc_integer_node_get_representation (ArvGcInteger *gc_integer)
 {
 	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (gc_integer);
-	GError *local_error = NULL;
-	const char *string;
+
+	if (gc_integer_node->representation == NULL)
+		return ARV_GC_REPRESENTATION_UNDEFINED;
+
+	return arv_gc_property_node_get_representation (ARV_GC_PROPERTY_NODE (gc_integer_node->representation), ARV_GC_REPRESENTATION_UNDEFINED);
+}
+
+static const char *
+arv_gc_integer_node_get_unit (ArvGcInteger *gc_integer)
+{
+	ArvGcIntegerNode *gc_integer_node = ARV_GC_INTEGER_NODE (gc_integer);
 
 	if (gc_integer_node->unit == NULL)
 		return NULL;
 
-	string = arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (gc_integer_node->unit), &local_error);
-
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return NULL;
-	}
-
-	return string;
+	return arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (gc_integer_node->unit), NULL);
 }
 
 static void
@@ -362,10 +436,30 @@ arv_gc_integer_node_integer_interface_init (ArvGcIntegerInterface *interface)
 	interface->get_min = arv_gc_integer_node_get_min;
 	interface->get_max = arv_gc_integer_node_get_max;
 	interface->get_inc = arv_gc_integer_node_get_inc;
+	interface->get_representation = arv_gc_integer_node_get_representation;
 	interface->get_unit = arv_gc_integer_node_get_unit;
 	interface->impose_min = arv_gc_integer_node_impose_min;
 	interface->impose_max = arv_gc_integer_node_impose_max;
 }
 
-G_DEFINE_TYPE_WITH_CODE (ArvGcIntegerNode, arv_gc_integer_node, ARV_TYPE_GC_FEATURE_NODE,
-			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_integer_node_integer_interface_init))
+static const GSList *
+arv_gc_integer_node_get_selected_features (ArvGcSelector *selector)
+{
+	ArvGcIntegerNode *integer = ARV_GC_INTEGER_NODE (selector);
+	GSList *iter;
+
+	g_clear_pointer (&integer->selected_features, g_slist_free);
+	for (iter = integer->selecteds; iter != NULL; iter = iter->next) {
+		ArvGcFeatureNode *feature_node = ARV_GC_FEATURE_NODE (arv_gc_property_node_get_linked_node (iter->data));
+		if (ARV_IS_GC_FEATURE_NODE (feature_node))
+			integer->selected_features = g_slist_prepend (integer->selected_features, feature_node);
+	}
+
+	return integer->selected_features;
+}
+
+static void
+arv_gc_integer_node_selector_interface_init (ArvGcSelectorInterface *interface)
+{
+	interface->get_selected_features = arv_gc_integer_node_get_selected_features;
+}

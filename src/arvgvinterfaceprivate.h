@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2016 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -34,19 +34,7 @@ G_BEGIN_DECLS
 
 #define ARV_GV_INTERFACE_DISCOVERY_TIMEOUT_MS	1000
 #define ARV_GV_INTERFACE_SOCKET_BUFFER_SIZE	1024
-
-typedef struct _ArvGvInterfacePrivate ArvGvInterfacePrivate;
-typedef struct _ArvGvInterfaceClass ArvGvInterfaceClass;
-
-struct _ArvGvInterface {
-	ArvInterface	interface;
-
-	ArvGvInterfacePrivate *priv;
-};
-
-struct _ArvGvInterfaceClass {
-	ArvInterfaceClass parent_class;
-};
+#define ARV_GV_INTERFACE_DISCOVERY_SOCKET_BUFFER_SIZE	(256*1024)
 
 void 			arv_gv_interface_destroy_instance 	(void);
 

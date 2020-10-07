@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -30,8 +30,6 @@
 #include <arvtypes.h>
 
 G_BEGIN_DECLS
-
-typedef void (*ArvFrameCallback)	(ArvBuffer *buffer);
 
 /**
  * ArvBufferStatus:
@@ -70,6 +68,7 @@ typedef enum {
  * @ARV_BUFFER_PAYLOAD_TYPE_JPEG2000: JPEG2000 data
  * @ARV_BUFFER_PAYLOAD_TYPE_H264: h264 data
  * @ARV_BUFFER_PAYLOAD_TYPE_MULTIZONE_IMAGE: multizone image
+ * @ARV_BUFFER_PAYLOAD_TYPE_IMAGE_EXTENDED_CHUNK: image and chunk data
 */
 
 typedef enum {
@@ -82,30 +81,14 @@ typedef enum {
 	ARV_BUFFER_PAYLOAD_TYPE_JPEG = 			0x0006,
 	ARV_BUFFER_PAYLOAD_TYPE_JPEG2000 = 		0x0007,
 	ARV_BUFFER_PAYLOAD_TYPE_H264 = 			0x0008,
-	ARV_BUFFER_PAYLOAD_TYPE_MULTIZONE_IMAGE = 	0x0009
+	ARV_BUFFER_PAYLOAD_TYPE_MULTIZONE_IMAGE = 	0x0009,
+	ARV_BUFFER_PAYLOAD_TYPE_IMAGE_EXTENDED_CHUNK = 	0x4001
 } ArvBufferPayloadType;
 
 #define ARV_TYPE_BUFFER             (arv_buffer_get_type ())
-#define ARV_BUFFER(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), ARV_TYPE_BUFFER, ArvBuffer))
-#define ARV_BUFFER_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), ARV_TYPE_BUFFER, ArvBufferClass))
-#define ARV_IS_BUFFER(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ARV_TYPE_BUFFER))
-#define ARV_IS_BUFFER_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), ARV_TYPE_BUFFER))
-#define ARV_BUFFER_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), ARV_TYPE_BUFFER, ArvBufferClass))
+G_DECLARE_FINAL_TYPE (ArvBuffer, arv_buffer, ARV, BUFFER, GObject)
 
-typedef struct _ArvBufferPrivate ArvBufferPrivate;
-typedef struct _ArvBufferClass ArvBufferClass;
-
-struct _ArvBuffer {
-	GObject	object;
-
-	ArvBufferPrivate *priv;
-};
-
-struct _ArvBufferClass {
-	GObjectClass parent_class;
-};
-
-GType arv_buffer_get_type (void);
+typedef void (*ArvFrameCallback)	(ArvBuffer *buffer);
 
 ArvBuffer *		arv_buffer_new_allocate		(size_t size);
 ArvBuffer *		arv_buffer_new 			(size_t size, void *preallocated);
@@ -121,7 +104,7 @@ guint64			arv_buffer_get_timestamp	(ArvBuffer *buffer);
 void			arv_buffer_set_timestamp	(ArvBuffer *buffer, guint64 timestamp_ns);
 guint64			arv_buffer_get_system_timestamp	(ArvBuffer *buffer);
 void			arv_buffer_set_system_timestamp	(ArvBuffer *buffer, guint64 timestamp_ns);
-guint32 		arv_buffer_get_frame_id 	(ArvBuffer *buffer);
+guint64 		arv_buffer_get_frame_id 	(ArvBuffer *buffer);
 const void *		arv_buffer_get_data		(ArvBuffer *buffer, size_t *size);
 
 void			arv_buffer_get_image_region		(ArvBuffer *buffer, gint *x, gint *y, gint *width, gint *height);
@@ -131,6 +114,7 @@ gint			arv_buffer_get_image_x			(ArvBuffer *buffer);
 gint			arv_buffer_get_image_y			(ArvBuffer *buffer);
 ArvPixelFormat		arv_buffer_get_image_pixel_format	(ArvBuffer *buffer);
 
+gboolean		arv_buffer_has_chunks		(ArvBuffer *buffer);
 const void *		arv_buffer_get_chunk_data	(ArvBuffer *buffer, guint64 chunk_id, size_t *size);
 
 G_END_DECLS

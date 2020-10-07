@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2016 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,11 +20,11 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#include <arvuvsp.h>
+#include <arvuvspprivate.h>
 #include <arvstr.h>
 #include <arvmisc.h>
 
-/**
+/*
  * SECTION: arvuvsp
  * @short_description: USB3Vision stream packet handling
  */
@@ -56,7 +56,7 @@ arv_uvsp_packet_to_string (const ArvUvspPacket *packet)
 			g_string_append_printf (string, "size         = %d\n", GUINT16_FROM_LE (packet->header.size));
 			g_string_append_printf (string, "frame id     = %" G_GUINT64_FORMAT "\n",
 						GUINT64_FROM_LE (packet->header.frame_id));
-			switch (leader->infos.payload_type) {
+			switch (GUINT16_FROM_LE (leader->infos.payload_type)) {
 				case ARV_UVSP_PAYLOAD_TYPE_IMAGE:
 					g_string_append (string, "payload_type = image\n");
 					break;

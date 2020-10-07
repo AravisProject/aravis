@@ -23,8 +23,6 @@ main (int argc, char **argv)
 	GError *error = NULL;
 	int i;
 
-	arv_g_type_init ();
-
 	context = g_option_context_new (NULL);
 	g_option_context_add_main_entries (context, arv_option_entries, NULL);
 
@@ -56,14 +54,14 @@ main (int argc, char **argv)
 
 			node = arv_gc_get_node (genicam, "RegAcquisitionCommand");
 			if (node != NULL) {
-				g_print ("RegAcquisitionCommand address = 0x%Lx - length = 0x%Lx\n",
+				g_print ("RegAcquisitionCommand address = 0x%llx - length = 0x%llx\n",
 					 (unsigned long long) arv_gc_register_get_address (ARV_GC_REGISTER (node), NULL),
 					 (unsigned long long) arv_gc_register_get_length (ARV_GC_REGISTER (node), NULL));
 			}
 
 			node = arv_gc_get_node (genicam, "IntWidthIncrement");
 			if (node != NULL) {
-				g_print ("IntWidthIncrement value = %Ld\n",
+				g_print ("IntWidthIncrement value = %lld\n",
 					 (long long) arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL));
 			}
 

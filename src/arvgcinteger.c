@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -43,7 +43,7 @@ arv_gc_integer_get_value (ArvGcInteger *gc_integer, GError **error)
 	g_return_val_if_fail (ARV_IS_GC_INTEGER (gc_integer), 0);
 	g_return_val_if_fail (error == NULL || *error == NULL, 0);
 
-	return ARV_GC_INTEGER_GET_INTERFACE (gc_integer)->get_value (gc_integer, error);
+	return ARV_GC_INTEGER_GET_IFACE (gc_integer)->get_value (gc_integer, error);
 }
 
 void
@@ -52,7 +52,7 @@ arv_gc_integer_set_value (ArvGcInteger *gc_integer, gint64 value, GError **error
 	g_return_if_fail (ARV_IS_GC_INTEGER (gc_integer));
 	g_return_if_fail (error == NULL || *error == NULL);
 
-	ARV_GC_INTEGER_GET_INTERFACE (gc_integer)->set_value (gc_integer, value, error);
+	ARV_GC_INTEGER_GET_IFACE (gc_integer)->set_value (gc_integer, value, error);
 }
 
 gint64
@@ -63,7 +63,7 @@ arv_gc_integer_get_min (ArvGcInteger *gc_integer, GError **error)
 	g_return_val_if_fail (ARV_IS_GC_INTEGER (gc_integer), 0);
 	g_return_val_if_fail (error == NULL || *error == NULL, 0);
 
-	integer_interface = ARV_GC_INTEGER_GET_INTERFACE (gc_integer);
+	integer_interface = ARV_GC_INTEGER_GET_IFACE (gc_integer);
 
 	if (integer_interface->get_min != NULL)
 		return integer_interface->get_min (gc_integer, error);
@@ -82,7 +82,7 @@ arv_gc_integer_get_max (ArvGcInteger *gc_integer, GError **error)
 	g_return_val_if_fail (ARV_IS_GC_INTEGER (gc_integer), 0);
 	g_return_val_if_fail (error == NULL || *error == NULL, 0);
 
-	integer_interface = ARV_GC_INTEGER_GET_INTERFACE (gc_integer);
+	integer_interface = ARV_GC_INTEGER_GET_IFACE (gc_integer);
 
 	if (integer_interface->get_max != NULL)
 		return integer_interface->get_max (gc_integer, error);
@@ -101,7 +101,7 @@ arv_gc_integer_get_inc (ArvGcInteger *gc_integer, GError **error)
 	g_return_val_if_fail (ARV_IS_GC_INTEGER (gc_integer), 0);
 	g_return_val_if_fail (error == NULL || *error == NULL, 0);
 
-	integer_interface = ARV_GC_INTEGER_GET_INTERFACE (gc_integer);
+	integer_interface = ARV_GC_INTEGER_GET_IFACE (gc_integer);
 
 	if (integer_interface->get_inc != NULL)
 		return integer_interface->get_inc (gc_integer, error);
@@ -112,21 +112,41 @@ arv_gc_integer_get_inc (ArvGcInteger *gc_integer, GError **error)
 	return 1;
 }
 
+/**
+ * arv_gc_integer_get_representation:
+ * @gc_integer: a #ArvGcInteger
+ *
+ * Get number representation format.
+ *
+ * Returns: Number representation format as #ArvGcRepresentation.
+ */
+
+ArvGcRepresentation
+arv_gc_integer_get_representation (ArvGcInteger *gc_integer)
+{
+	ArvGcIntegerInterface *integer_interface;
+
+	g_return_val_if_fail (ARV_IS_GC_INTEGER (gc_integer), 0);
+
+	integer_interface = ARV_GC_INTEGER_GET_IFACE (gc_integer);
+
+	if (integer_interface->get_representation != NULL)
+		return integer_interface->get_representation (gc_integer);
+
+	return ARV_GC_REPRESENTATION_UNDEFINED;
+}
+
 const char *
-arv_gc_integer_get_unit	(ArvGcInteger *gc_integer, GError **error)
+arv_gc_integer_get_unit	(ArvGcInteger *gc_integer)
 {
 	ArvGcIntegerInterface *integer_interface;
 
 	g_return_val_if_fail (ARV_IS_GC_INTEGER (gc_integer), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
-	integer_interface = ARV_GC_INTEGER_GET_INTERFACE (gc_integer);
+	integer_interface = ARV_GC_INTEGER_GET_IFACE (gc_integer);
 
 	if (integer_interface->get_unit != NULL)
-		return integer_interface->get_unit (gc_integer, error);
-
-	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_PROPERTY_NOT_DEFINED, "<Unit> node not found for '%s'",
-		     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_integer)));
+		return integer_interface->get_unit (gc_integer);
 
 	return NULL;
 }
@@ -138,7 +158,7 @@ void arv_gc_integer_impose_min (ArvGcInteger *gc_integer, gint64 minimum, GError
 	g_return_if_fail (ARV_IS_GC_INTEGER (gc_integer));
 	g_return_if_fail (error == NULL || *error == NULL);
 
-	integer_interface = ARV_GC_INTEGER_GET_INTERFACE (gc_integer);
+	integer_interface = ARV_GC_INTEGER_GET_IFACE (gc_integer);
 
 	if (integer_interface->impose_min != NULL)
 		integer_interface->impose_min (gc_integer, minimum, error);
@@ -154,7 +174,7 @@ void arv_gc_integer_impose_max (ArvGcInteger *gc_integer, gint64 maximum, GError
 	g_return_if_fail (ARV_IS_GC_INTEGER (gc_integer));
 	g_return_if_fail (error == NULL || *error == NULL);
 
-	integer_interface = ARV_GC_INTEGER_GET_INTERFACE (gc_integer);
+	integer_interface = ARV_GC_INTEGER_GET_IFACE (gc_integer);
 
 	if (integer_interface->impose_max != NULL)
 		integer_interface->impose_max (gc_integer, maximum, error);

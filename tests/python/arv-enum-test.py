@@ -10,16 +10,15 @@
 
 import gi
 
-gi.require_version ('Aravis', '0.2')
+gi.require_version ('Aravis', '0.8')
 
 from gi.repository import Aravis
 
-print Aravis.Auto
-print Aravis.Auto.OFF
-print Aravis.BufferStatus
-print Aravis.DebugLevel
-print Aravis.DomNodeType
-print Aravis.GvStreamPacketResend
-print Aravis.GvspPacketType
+print (Aravis.Auto)
+print (Aravis.Auto.OFF)
+print (Aravis.BufferStatus)
+print (Aravis.DebugLevel)
+print (Aravis.DomNodeType)
+print (Aravis.GvStreamPacketResend)
 
-print Aravis.PIXEL_FORMAT_MONO_8
+print (Aravis.PIXEL_FORMAT_MONO_8)

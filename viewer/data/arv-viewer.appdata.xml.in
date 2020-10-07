@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Copyright 2014 Emmanuel Pacaud <emmanuel@gnome.org> -->
-<application>
+<component>
 	<translation type="gettext">aravis-@ARAVIS_API_VERSION@</translation>
-	<id type="desktop">arv-viewer.desktop</id>
+	<id>org.arv-viewer.desktop</id>
 	<metadata_license>CC0-1.0</metadata_license>
 	<project_license>GPL-2.0+</project_license>
 	<name>Aravis Viewer</name>
@@ -17,9 +17,11 @@
 		</p>
 	</description>
 	<screenshots>
-		<screenshot type="default" width="1024" height="576">https://git.gnome.org/browse/aravis/plain/viewer/data/aravis.png</screenshot>
+		<screenshot type="default">
+                        <image width="1024" height="576">https://raw.githubusercontent.com/AravisProject/aravis/master/viewer/icons/gnome/256x256/apps/aravis.png</image>
+                </screenshot>
 	</screenshots>
 	<url type="homepage">https://wiki.gnome.org/Projects/Aravis</url>
-	<updatecontact>emmanuel@gnome.org</updatecontact>
+	<update_contact>emmanuel@gnome.org</update_contact>
 	<project_group>GNOME</project_group>
-</application>
+</component>

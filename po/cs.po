@@ -9,8 +9,8 @@ msgstr ""
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/enter_bug.cgi?"
 "product=aravis&keywords=I18N+L10N&component=general\n"
 "POT-Creation-Date: 2014-08-15 19:58+0000\n"
-"PO-Revision-Date: 2014-08-18 22:37+0200\n"
-"Last-Translator: Marek Černocký <marek@manet.cz>\n"
+"PO-Revision-Date: 2018-05-05 20:39+0200\n"
+"Last-Translator: Jaroslav Svoboda <multi.flexi@seznam.cz>\n"
 "Language-Team: Czech <gnome-cs-list@gnome.org>\n"
 "Language: cs\n"
 "MIME-Version: 1.0\n"
@@ -25,7 +25,7 @@ msgstr "Aravis"
 
 #: ../viewer/arv-viewer.ui.h:2
 msgid "Frame rate:"
-msgstr "Snímková rychlost:"
+msgstr "Snímková frekvence  :"
 
 #: ../viewer/arv-viewer.ui.h:3
 msgid "Hz"
@@ -41,7 +41,7 @@ msgstr "Expozice:"
 
 #: ../viewer/arv-viewer.ui.h:6
 msgid "Gain:"
-msgstr "Citlivost:"
+msgstr "Zisk:"
 
 #: ../viewer/arv-viewer.ui.h:7
 msgid "µs"
@@ -61,7 +61,7 @@ msgstr "Jednoduchý prohlížeč Aravis"
 
 #: ../viewer/data/arv-viewer.desktop.in.in.h:3
 msgid "Display the video stream from your cameras"
-msgstr "Zobrazit vysílání videa z vašich kamer"
+msgstr "Zobrazit video stream z vašich kamer"
 
 #: ../viewer/data/arv-viewer.appdata.xml.in.h:1
 msgid "Aravis Viewer"
@@ -69,20 +69,20 @@ msgstr "Prohlížeč Aravis"
 
 #: ../viewer/data/arv-viewer.appdata.xml.in.h:2
 msgid "Simple viewer of video stream acquired using Aravis"
-msgstr "Jednoduchý prohlížeč videí zachycovaných přes knihovnu Aravis"
+msgstr "Jednoduchý prohlížeč video streamů získaných pomocí Aravis"
 
 #: ../viewer/data/arv-viewer.appdata.xml.in.h:3
 msgid ""
 "Aravis Viewer is a simple viewer used to display video streams from GENICAM-"
 "based Ethernet industrial cameras."
 msgstr ""
-"Prohlížeč Aravis je jednoduchý prohlížeč sloužící k zobrazení videa "
-"vysílaného z průmyslových kamer typu GENICAM připojených přes Ethernet."
+"Prohlížeč Aravis je jednoduchý prohlížeč sloužící k zobrazení video "
+"streamů z průmyslových kamer typu GENICAM připojených přes Ethernet."
 
 #: ../viewer/data/arv-viewer.appdata.xml.in.h:4
 msgid ""
 "It allows to control basic acquisition parameters, i.e. framerate, exposure "
 "and gain, and to save raw still images."
 msgstr ""
-"Umožňuje řídit základní parametry snímání, tj. snímkovou rychlost, expozici "
-"a citlivost a ukládat jednotlivé snímky."
+"Umožňuje nastavit základní parametry snímání, tj. snímkovou frekvenci, expozici "
+"a zisk a také ukládat jednotlivé RAW snímky."

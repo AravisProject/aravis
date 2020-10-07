@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2014 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -31,11 +31,8 @@
 
 G_BEGIN_DECLS
 
-#define ARV_DEVICE_ERROR arv_device_error_quark()
-
-GQuark 		arv_device_error_quark 		(void);
-
 void 		arv_device_emit_control_lost_signal 	(ArvDevice *device);
+void		arv_device_take_init_error		(ArvDevice *device, GError *error);
 
 G_END_DECLS
 

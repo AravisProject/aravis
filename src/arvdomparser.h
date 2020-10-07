@@ -1,6 +1,6 @@
-/* Aravis
+/* Aravis - Digital camera library
  *
- * Copyright © 2007-2009 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -39,20 +39,6 @@ void 			arv_dom_document_append_from_memory 	(ArvDomDocument *document, ArvDomNo
 ArvDomDocument * 	arv_dom_document_new_from_memory 	(const void *buffer, int size, GError **error);
 ArvDomDocument * 	arv_dom_document_new_from_path 		(const char *path, GError **error);
 ArvDomDocument * 	arv_dom_document_new_from_url 		(const char *url, GError **error);
-
-void			arv_dom_document_save_to_stream		(ArvDomDocument *document,
-								 GOutputStream *stream,
-								 GError **error);
-void			arv_dom_document_save_to_memory		(ArvDomDocument *documennt,
-								 void **buffer,
-								 int *size,
-								 GError **error);
-void			arv_dom_document_save_to_path		(ArvDomDocument *documennt,
-								 const char *path,
-								 GError **error);
-void			arv_dom_document_save_to_url		(ArvDomDocument *documennt,
-								 const char *path,
-								 GError **error);
 
 G_END_DECLS
 

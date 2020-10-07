@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <arv.h>
 
+#define ARAVIS_COMPILATION
+#include "../src/arvgvdeviceprivate.h"
+
 int
 main (int argc, char **argv)
 {
@@ -42,7 +45,7 @@ main (int argc, char **argv)
 
 	g_strfreev (tokens);
 
-	printf ("size = %lu\n", len);
+	printf ("size = %" G_GSIZE_FORMAT "\n", len);
 	printf ("%s\n", genicam != NULL ? genicam : "NULL");
 
 	g_free (genicam);

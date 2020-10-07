@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2010 Emmanuel Pacaud
+ * Copyright © 2009-2019 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,13 +25,19 @@
  * @short_description: Debugging tools
  */
 
-#include <arvdebug.h>
 #include <glib/gprintf.h>
 #include <stdlib.h>
+#include <arvdebugprivate.h>
 
 ArvDebugCategory arv_debug_category_interface =
 {
 	.name = "interface",
+	.level = -1
+};
+
+ArvDebugCategory arv_debug_category_dom =
+{
+	.name = "dom",
 	.level = -1
 };
 
@@ -86,6 +92,12 @@ ArvDebugCategory arv_debug_category_evaluator =
 ArvDebugCategory arv_debug_category_misc =
 {
 	.name = "misc",
+	.level = -1
+};
+
+ArvDebugCategory arv_debug_category_viewer =
+{
+	.name = "viewer",
 	.level = -1
 };
 
@@ -203,6 +215,16 @@ arv_log (ArvDebugCategory *category, const char *format, ...)
 
 	va_start (args, format);
 	arv_debug_with_level (category, ARV_DEBUG_LEVEL_LOG, format, args);
+	va_end (args);
+}
+
+void
+arv_verbosely_log (ArvDebugCategory *category, const char *format, ...)
+{
+	va_list args;
+
+	va_start (args, format);
+	arv_debug_with_level (category, ARV_DEBUG_LEVEL_VERBOSE_LOG, format, args);
 	va_end (args);
 }
 
