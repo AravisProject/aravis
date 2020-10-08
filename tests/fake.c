@@ -452,19 +452,19 @@ camera_api_test (void)
 	ptr = arv_camera_dup_available_pixel_formats (camera, &n, &error);
 	g_assert (error == NULL);
 	g_assert (ptr != NULL);
-	g_assert_cmpint (n, ==, 6);
+	g_assert_cmpint (n, ==, 7);
 	g_clear_pointer (&ptr, g_free);
 
 	ptr = arv_camera_dup_available_pixel_formats_as_strings (camera, &n, &error);
 	g_assert (error == NULL);
 	g_assert (ptr != NULL);
-	g_assert_cmpint (n, ==, 6);
+	g_assert_cmpint (n, ==, 7);
 	g_clear_pointer (&ptr, g_free);
 
 	ptr = arv_camera_dup_available_pixel_formats_as_display_names (camera, &n, &error);
 	g_assert (error == NULL);
 	g_assert (ptr != NULL);
-	g_assert_cmpint (n, ==, 6);
+	g_assert_cmpint (n, ==, 7);
 	g_clear_pointer (&ptr, g_free);
 
 	b = arv_camera_is_frame_rate_available (camera, &error);
