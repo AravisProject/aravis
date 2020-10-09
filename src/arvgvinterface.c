@@ -25,7 +25,6 @@
  * @short_description: GigEVision interface
  */
 
-#include <arpa/inet.h>
 #include <arvgvinterfaceprivate.h>
 #include <arvinterfaceprivate.h>
 #include <arvgvdeviceprivate.h>
@@ -36,13 +35,19 @@
 #include <glib/gprintf.h>
 #include <gio/gio.h>
 #include <sys/types.h>
+#include <stdlib.h>
+#include <string.h>
+
+#ifndef __MINGW32__
+#include <arpa/inet.h>
 #include <sys/socket.h>
 #include <net/if.h>
 #include <netdb.h>
 #include <ifaddrs.h>
-#include <stdlib.h>
-#include <string.h>
 #include <netinet/in.h>
+#else
+#include <winsock.h>
+#endif
 
 /* ArvGvDiscoverSocket implementation */
 

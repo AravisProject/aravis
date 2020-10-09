@@ -37,7 +37,11 @@
 #include <arvstr.h>
 #include <arvenumtypes.h>
 #include <string.h>
+#ifndef __MINGW32__
 #include <sys/socket.h>
+#else
+#include <winsock.h>
+#endif
 #include <stdio.h>
 #include <errno.h>
 

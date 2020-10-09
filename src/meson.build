@@ -61,8 +61,6 @@ library_sources = [
 	'arvfakeinterface.c',
 	'arvfakedevice.c',
 	'arvfakestream.c',
-	'arvfakecamera.c',
-	'arvgvfakecamera.c',
 	'arvrealtime.c',
 	'arvxmlschema.c'
 ]
@@ -101,7 +99,6 @@ library_headers = [
 	'arvenums.h',
 	'arvevaluator.h',
 
-	'arvfakecamera.h',
 	'arvfakedevice.h',
 	'arvfakeinterface.h',
 	'arvfakestream.h',
@@ -144,7 +141,6 @@ library_headers = [
 	'arvgcvalueindexednode.h',
 
 	'arvgvdevice.h',
-	'arvgvfakecamera.h',
 	'arvgvinterface.h',
 	'arvgvstream.h',
 
@@ -185,6 +181,11 @@ library_no_introspection_headers = [
 	'arvzip.h',
 	'arvstr.h'
 ]
+
+if host_machine.system()!='windows'
+	library_sources+=['arvfakecamera.c','arvgvfakecamera.c']
+	library_headers+=['arvfakecamera.h','arvgvfakecamera.h']
+endif
 
 if usb_dep.found()
 	library_sources += [

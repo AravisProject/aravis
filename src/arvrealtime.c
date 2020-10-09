@@ -34,8 +34,10 @@
 #include <sched.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#ifndef __MINGW32__
 #include <sys/resource.h>
 #include <sys/syscall.h>
+#endif
 
 #define RTKIT_SERVICE_NAME "org.freedesktop.RealtimeKit1"
 #define RTKIT_OBJECT_PATH "/org/freedesktop/RealtimeKit1"
@@ -218,9 +220,14 @@ arv_rtkit_make_high_priority (GDBusConnection *connection, pid_t thread, int nic
 #define RLIMIT_RTTIME 15
 #endif
 
+#ifndef __MINGW32__
 static pid_t _gettid(void) {
         return (pid_t) syscall(SYS_gettid);
 }
+#else
+#include <processthreadsapi.h>
+static pid_t _gettid(void) { return GetCurrentThreadId(); }
+#endif
 
 /**
  * arv_make_thread_realtime:
@@ -234,7 +241,7 @@ static pid_t _gettid(void) {
  * Since: 0.4.0
  */
 
-#ifndef __APPLE__
+#if !defined(__APPLE__) && !defined(__MINGW32__)
 gboolean
 arv_make_thread_realtime (int priority)
 {
