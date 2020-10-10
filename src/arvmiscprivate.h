@@ -25,6 +25,8 @@
 
 #include <arvmisc.h>
 
+#include <gio/gnetworking.h> // for struct sockaddr
+
 struct _ArvValue {
 	GType type;
 	union {
@@ -32,5 +34,14 @@ struct _ArvValue {
 		double v_double;
 	} data;
 };
+
+typedef struct _ArvIfaceAddr ArvIfaceAddr;
+
+struct _ArvIfaceAddr{
+	struct sockaddr *addr, *netmask, *broadaddr;
+	char* name;
+};
+
+void arv_iface_addr_free(ArvIfaceAddr* a);
 
 #endif

@@ -29,6 +29,11 @@
 
 #include <arvtypes.h>
 
+#ifdef G_OS_WIN32
+// for socklen_t
+#include <gio/gnetworking.h>
+#endif
+
 G_BEGIN_DECLS
 
 typedef struct _ArvStatistic ArvStatistic;
@@ -70,6 +75,19 @@ const char * 	arv_pixel_format_to_gst_0_10_caps_string 	(ArvPixelFormat pixel_fo
 ArvPixelFormat 	arv_pixel_format_from_gst_0_10_caps 		(const char *name, int bpp, int depth, guint32 fourcc);
 
 const char *	arv_vendor_alias_lookup		(const char *vendor);
+
+#define _ARV_IFACES
+
+#ifdef _ARV_IFACES
+GList* arv_enumerate_network_interfaces(void);
+void arv_enumerate_network_interfaces_free(GList*);
+
+#ifdef G_OS_WIN32
+// prototype is missing on mingw, let's reimplement
+const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt);
+#endif
+
+#endif
 
 G_END_DECLS
 
