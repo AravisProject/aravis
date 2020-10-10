@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
 	    while (!cancel) {
 		    ArvBuffer *buffer = arv_stream_timeout_pop_buffer(stream, 2000000);
 		    if (buffer) {
-			    usleep(10);
+			    g_usleep(10);
 			    arv_stream_push_buffer (stream, buffer);
 		    }
 

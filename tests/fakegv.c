@@ -107,7 +107,7 @@ new_buffer_cb (ArvStream *stream, unsigned *buffer_count)
 			 * be finalized in its stream thread contex (because
 			 * g_signal_emit holds a reference to stream), leading
 			 * to a deadlock. */
-			sleep (1);
+			g_usleep (1000000);
 		}
 		arv_stream_push_buffer (stream, buffer);
 	}
@@ -137,7 +137,7 @@ stream_test (void)
 	arv_camera_start_acquisition (camera, NULL);
 
 	while (buffer_count < 10)
-		usleep (1000);
+		g_usleep (1000);
 
 	arv_camera_stop_acquisition (camera, NULL);
 	/* The following will block until the signal callback returns
@@ -150,7 +150,7 @@ stream_test (void)
 	/* For actually testing the deadlock condition (see comment in
 	 * new_buffer_cb), one must wait a bit before leaving this test,
 	 * because otherwise the stream thread will be killed while sleeping. */
-	sleep (2);
+	g_usleep (2000000);
 }
 
 #define N_BUFFERS	5
@@ -207,7 +207,7 @@ dynamic_roi_test (void)
 		arv_camera_start_acquisition (camera, NULL);
 
 		while (buffer_count < 10) {
-			usleep (10000);
+			g_usleep (10000);
 		}
 
 		arv_camera_stop_acquisition (camera, NULL);
