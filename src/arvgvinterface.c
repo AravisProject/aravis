@@ -77,8 +77,14 @@ arv_gv_discover_socket_set_buffer_size (ArvGvDiscoverSocket *discover_socket, gi
 	int result;
 
 	socket_fd = g_socket_get_fd (discover_socket->socket);
-
+#ifndef G_OS_WIN32
 	result = setsockopt (socket_fd, SOL_SOCKET, SO_RCVBUF, &buffer_size, sizeof (buffer_size));
+#else
+	{
+		DWORD _buffer_size=buffer_size;
+		result = setsockopt (socket_fd, SOL_SOCKET, SO_RCVBUF, (const char*) &_buffer_size, sizeof (_buffer_size));
+	}
+#endif
 
 	return result == 0;
 }
