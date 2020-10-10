@@ -42,12 +42,18 @@ xml2_dep = dependency ('libxml-2.0', required: true)
 libz_dep = dependency ('zlib', required: true)
 usb_dep = dependency ('libusb-1.0', required: get_option ('usb'))
 
+
 libm = cc.find_library ('m', required: true)
 
 aravis_public_dependencies = [glib_dep, gobject_dep, gio_dep]
 aravis_dependencies = [aravis_public_dependencies, xml2_dep, libz_dep, libm]
 if usb_dep.found()
   aravis_dependencies += usb_dep
+endif
+
+if host_machine.system()=='windows'
+	ws2_32 = cc.find_library('ws2_32', required: true)
+	aravis_dependencies += ws2_32
 endif
 
 has_if_packet = cc.has_header (join_paths ('linux','if_packet.h'))
