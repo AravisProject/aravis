@@ -30,7 +30,7 @@
 #include <arvrealtime.h>
 #include <gio/gio.h>
 
-#ifdef __MINGW32__
+#ifdef G_OS_WIN32
 #include <unistd.h> // for pid_t
 #endif
 

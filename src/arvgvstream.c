@@ -34,13 +34,14 @@
 #include <arvgvcpprivate.h>
 #include <arvdebug.h>
 #include <arvmisc.h>
+#include <arvmiscprivate.h>
 #include <arvstr.h>
 #include <arvenumtypes.h>
 #include <string.h>
-#ifndef __MINGW32__
+#ifndef G_OS_WIN32
 #include <sys/socket.h>
 #else
-#include <winsock.h>
+#include <gio/gnetworking.h>
 #endif
 #include <stdio.h>
 #include <errno.h>

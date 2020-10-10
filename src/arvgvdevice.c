@@ -41,16 +41,16 @@
 #include <arvenumtypes.h>
 #include <string.h>
 #include <stdlib.h>
-#if !defined(__APPLE__) && !defined(__MINGW32__)
+#if !defined(__APPLE__) && !defined(G_OS_WIN32)
 #include <linux/ip.h>
 #endif
-#ifndef __MINGW32__
+#ifndef G_OS_WIN32
 #include <netinet/udp.h>
 #endif
 
 /* Shared data (main thread - heartbeat) */
 
-#ifdef __MINGW32__
+#ifdef G_OS_WIN32
 #include<stdint.h>
 typedef uint8_t u_int8_t;
 typedef uint16_t u_int16_t;
@@ -58,7 +58,7 @@ typedef uint32_t u_int32_t;
 struct udphdr { uint16_t source, dest, len, check; };
 #endif
 
-#if defined(__APPLE__) || defined(__MINGW32__)
+#if defined(__APPLE__) || defined(G_OS_WIN32)
 struct iphdr
   {
 #if __BYTE_ORDER == __LITTLE_ENDIAN

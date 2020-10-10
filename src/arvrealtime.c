@@ -34,7 +34,7 @@
 #include <sched.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#ifndef __MINGW32__
+#ifndef G_OS_WIN32
 #include <sys/resource.h>
 #include <sys/syscall.h>
 #endif
@@ -220,7 +220,7 @@ arv_rtkit_make_high_priority (GDBusConnection *connection, pid_t thread, int nic
 #define RLIMIT_RTTIME 15
 #endif
 
-#ifndef __MINGW32__
+#ifndef G_OS_WIN32
 static pid_t _gettid(void) {
         return (pid_t) syscall(SYS_gettid);
 }
@@ -241,7 +241,7 @@ static pid_t _gettid(void) { return GetCurrentThreadId(); }
  * Since: 0.4.0
  */
 
-#if !defined(__APPLE__) && !defined(__MINGW32__)
+#if !defined(__APPLE__) && !defined(G_OS_WIN32)
 gboolean
 arv_make_thread_realtime (int priority)
 {
@@ -289,7 +289,7 @@ arv_make_thread_realtime (int priority)
 gboolean
 arv_make_thread_realtime (int priority)
 {
-	arv_debug_misc ("SCHED API not supported on OSX");
+	arv_debug_misc ("SCHED API not supported on OSX/Windows");
 
 	return FALSE;
 }
