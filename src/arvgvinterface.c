@@ -31,6 +31,7 @@
 #include <arvgvcpprivate.h>
 #include <arvdebugprivate.h>
 #include <arvmisc.h>
+#include <arvmiscprivate.h>
 #include <arvstr.h>
 #include <glib/gprintf.h>
 #include <gio/gio.h>
@@ -46,7 +47,7 @@
 #include <ifaddrs.h>
 #include <netinet/in.h>
 #else
-#include <winsock.h>
+#include <gio/gnetworking.h>
 #endif
 
 /* ArvGvDiscoverSocket implementation */
@@ -93,12 +94,17 @@ arv_gv_discover_socket_list_new (void)
 {
 	ArvGvDiscoverSocketList *socket_list;
 	GSList *iter;
-	struct ifaddrs *ifap  = NULL;
+#ifndef _ARV_IFACES
+	struct ifaddrs *ifap = NULL;
 	struct ifaddrs *ifap_iter;
+#else
+	GList *ifaces, *iface_iter;
+#endif
 	int i;
 
 	socket_list = g_new0 (ArvGvDiscoverSocketList, 1);
 
+#ifndef _ARV_IFACES
 	if (getifaddrs (&ifap) < 0)
 		return socket_list;
 
@@ -107,15 +113,27 @@ arv_gv_discover_socket_list_new (void)
 		    (ifap_iter->ifa_flags & IFF_POINTOPOINT) == 0 &&
 		    (ifap_iter->ifa_addr != NULL) &&
 		    (ifap_iter->ifa_addr->sa_family == AF_INET)) {
+#else
+	ifaces=arv_enumerate_network_interfaces();
+
+	if(!ifaces)
+		return socket_list;
+
+	for (iface_iter=ifaces; iface_iter!=NULL; iface_iter=iface_iter->next){ {
+#endif
 			ArvGvDiscoverSocket *discover_socket = g_new0 (ArvGvDiscoverSocket, 1);
 			GSocketAddress *socket_address;
 			GInetAddress *inet_address;
 			char *inet_address_string;
 			GError *error = NULL;
 			gint buffer_size = ARV_GV_INTERFACE_DISCOVERY_SOCKET_BUFFER_SIZE;
-
+#ifndef _ARV_IFACES
 			socket_address = g_socket_address_new_from_native (ifap_iter->ifa_addr,
 									   sizeof (struct sockaddr));
+#else
+			socket_address = g_socket_address_new_from_native ((struct sockaddr*)((ArvIfaceAddr*)iface_iter->data)->addr,
+									   sizeof (struct sockaddr));
+#endif
 			inet_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address));
 			inet_address_string = g_inet_address_to_string (inet_address);
 			arv_debug_interface ("[GvDiscoverSocket::new] Add interface %s", inet_address_string);
@@ -133,8 +151,11 @@ arv_gv_discover_socket_list_new (void)
 			socket_list->n_sockets++;
 		}
 	}
-
+#ifndef _ARV_IFACES
 	freeifaddrs (ifap);
+#else
+	arv_enumerate_network_interfaces_free(ifaces);
+#endif
 
 	socket_list->poll_fds = g_new (GPollFD, socket_list->n_sockets);
 	for (i = 0, iter = socket_list->sockets; iter != NULL; i++, iter = iter->next) {
@@ -490,13 +511,17 @@ arv_gv_interface_camera_locate (ArvGvInterface *gv_interface, GInetAddress *devi
 	GSocketAddress *device_socket_address;
 	size_t size;
 	int i, count;
-
+#ifndef _ARV_IFACES
 	struct ifaddrs *ifap = NULL;
 	struct ifaddrs *ifap_iter;
+#else
+	GList *ifaces, *iface_iter;
+#endif
 	struct sockaddr_in device_sockaddr;
 
 	device_socket_address = g_inet_socket_address_new(device_address, ARV_GVCP_PORT);
 
+#ifndef _ARV_IFACES
 	if (getifaddrs(&ifap) >= 0) {
 		g_socket_address_to_native(device_socket_address, &device_sockaddr, sizeof(device_sockaddr), NULL);
 
@@ -522,9 +547,30 @@ arv_gv_interface_camera_locate (ArvGvInterface *gv_interface, GInetAddress *devi
 				}
 			}
 		}
-
 		freeifaddrs(ifap);
 	}
+#else
+	ifaces=arv_enumerate_network_interfaces();
+	if(ifaces){
+		g_socket_address_to_native(device_socket_address, &device_sockaddr, sizeof(device_sockaddr), NULL);
+		for (iface_iter=ifaces; iface_iter!=NULL; iface_iter=iface_iter->next){
+			struct sockaddr_in *sa = (struct sockaddr_in*)((ArvIfaceAddr*)iface_iter->data)->addr;
+			struct sockaddr_in *mask = (struct sockaddr_in*)((ArvIfaceAddr*)iface_iter->data)->netmask;
+			if ((sa->sin_addr.s_addr & mask->sin_addr.s_addr) == (device_sockaddr.sin_addr.s_addr & mask->sin_addr.s_addr)) {
+				GSocketAddress *socket_address = g_socket_address_new_from_native((struct sockaddr*)((ArvIfaceAddr*)iface_iter->data)->addr, sizeof(struct sockaddr));
+				GInetAddress *inet_address = g_object_ref(g_inet_socket_address_get_address(G_INET_SOCKET_ADDRESS(socket_address)));
+
+				arv_enumerate_network_interfaces_free(ifaces);
+
+				g_object_unref(socket_address);
+				g_object_unref(device_socket_address);
+
+				return inet_address;
+			}
+		}
+		arv_enumerate_network_interfaces_free(ifaces);
+	}
+#endif
 
 	socket_list = arv_gv_discover_socket_list_new();
 
