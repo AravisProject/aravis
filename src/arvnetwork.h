@@ -40,6 +40,14 @@ G_BEGIN_DECLS
 GList* arv_enumerate_network_interfaces(void);
 #endif
 
+typedef struct _ArvNetworkInterface ArvNetworkInterface;
+
+struct sockaddr* arv_network_interface_get_addr(ArvNetworkInterface* a);
+struct sockaddr* arv_network_interface_get_netmask(ArvNetworkInterface* a);
+struct sockaddr* arv_network_interface_get_broadaddr(ArvNetworkInterface* a);
+const char* arv_network_interface_get_name(ArvNetworkInterface* a);
+void arv_network_interface_free(ArvNetworkInterface* a);
+
 #ifdef G_OS_WIN32
 // prototype is missing on mingw, let's reimplement
 const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt);

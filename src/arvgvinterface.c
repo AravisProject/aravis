@@ -110,7 +110,7 @@ arv_gv_discover_socket_list_new (void)
 			socket_address = g_socket_address_new_from_native (ifap_iter->ifa_addr,
 									   sizeof (struct sockaddr));
 #else
-			socket_address = g_socket_address_new_from_native (((ArvNetworkInterface*)iface_iter->data)->addr,
+			socket_address = g_socket_address_new_from_native (arv_network_interface_get_addr((ArvNetworkInterface*)iface_iter->data),
 									   sizeof (struct sockaddr));
 #endif
 			inet_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address));
@@ -533,10 +533,10 @@ arv_gv_interface_camera_locate (ArvGvInterface *gv_interface, GInetAddress *devi
 	if(ifaces){
 		g_socket_address_to_native(device_socket_address, &device_sockaddr, sizeof(device_sockaddr), NULL);
 		for (iface_iter=ifaces; iface_iter!=NULL; iface_iter=iface_iter->next){
-			struct sockaddr_in *sa = (struct sockaddr_in*)((ArvNetworkInterface*)iface_iter->data)->addr;
-			struct sockaddr_in *mask = (struct sockaddr_in*)((ArvNetworkInterface*)iface_iter->data)->netmask;
+			struct sockaddr_in *sa = (struct sockaddr_in*)arv_network_interface_get_addr((ArvNetworkInterface*)iface_iter->data);
+			struct sockaddr_in *mask = (struct sockaddr_in*)arv_network_interface_get_netmask((ArvNetworkInterface*)iface_iter->data);
 			if ((sa->sin_addr.s_addr & mask->sin_addr.s_addr) == (device_sockaddr.sin_addr.s_addr & mask->sin_addr.s_addr)) {
-				GSocketAddress *socket_address = g_socket_address_new_from_native(((ArvNetworkInterface*)iface_iter->data)->addr, sizeof(struct sockaddr));
+				GSocketAddress *socket_address = g_socket_address_new_from_native(arv_network_interface_get_addr((ArvNetworkInterface*)iface_iter->data), sizeof(struct sockaddr));
 				GInetAddress *inet_address = g_object_ref(g_inet_socket_address_get_address(G_INET_SOCKET_ADDRESS(socket_address)));
 
 				g_list_free_full(ifaces,(GDestroyNotify)arv_network_interface_free);

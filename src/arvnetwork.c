@@ -85,6 +85,26 @@ arv_enumerate_network_interfaces(void){
 #endif
 
 
+struct sockaddr*
+arv_network_interface_get_addr(ArvNetworkInterface* a){
+	return a->addr;
+}
+
+struct sockaddr*
+arv_network_interface_get_netmask(ArvNetworkInterface* a){
+	return a->netmask;
+}
+
+struct sockaddr*
+arv_network_interface_get_broadaddr(ArvNetworkInterface* a){
+	return a->broadaddr;
+}
+
+const char*
+arv_network_interface_get_name(ArvNetworkInterface* a){
+	return a->name;
+}
+
 void arv_network_interface_free(ArvNetworkInterface* a){
 	g_clear_pointer (&a->addr, g_free);
 	g_clear_pointer (&a->netmask, g_free);

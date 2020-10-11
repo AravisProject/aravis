@@ -86,16 +86,12 @@ struct iphdr
 
 
 
-typedef struct _ArvNetworkInterface ArvNetworkInterface;
-
 struct _ArvNetworkInterface{
 	struct sockaddr *addr;
 	struct sockaddr *netmask;
 	struct sockaddr *broadaddr;
 	char* name;
 };
-
-void arv_network_interface_free(ArvNetworkInterface* a);
 
 gboolean arv_socket_set_recv_buffer_size(int socket_fd, gint buffer_size);
 
