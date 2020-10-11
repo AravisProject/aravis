@@ -36,7 +36,7 @@ struct _ArvNetworkInterface{
 	char* name;
 };
 
-void arv_iface_addr_free(ArvNetworkInterface* a);
+void arv_network_interface_free(ArvNetworkInterface* a);
 
 gboolean arv_socket_set_recv_buffer_size(int socket_fd, gint buffer_size);
 

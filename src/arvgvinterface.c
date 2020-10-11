@@ -129,7 +129,7 @@ arv_gv_discover_socket_list_new (void)
 			socket_address = g_socket_address_new_from_native (ifap_iter->ifa_addr,
 									   sizeof (struct sockaddr));
 #else
-			socket_address = g_socket_address_new_from_native ((struct sockaddr*)((ArvNetworkInterface*)iface_iter->data)->addr,
+			socket_address = g_socket_address_new_from_native (((ArvNetworkInterface*)iface_iter->data)->addr,
 									   sizeof (struct sockaddr));
 #endif
 			inet_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address));
@@ -152,7 +152,7 @@ arv_gv_discover_socket_list_new (void)
 #ifndef _ARV_IFACES
 	freeifaddrs (ifap);
 #else
-	arv_enumerate_network_interfaces_free(ifaces);
+	g_list_free_full(ifaces,(GDestroyNotify)arv_network_interface_free);
 #endif
 
 	socket_list->poll_fds = g_new (GPollFD, socket_list->n_sockets);
@@ -555,10 +555,10 @@ arv_gv_interface_camera_locate (ArvGvInterface *gv_interface, GInetAddress *devi
 			struct sockaddr_in *sa = (struct sockaddr_in*)((ArvNetworkInterface*)iface_iter->data)->addr;
 			struct sockaddr_in *mask = (struct sockaddr_in*)((ArvNetworkInterface*)iface_iter->data)->netmask;
 			if ((sa->sin_addr.s_addr & mask->sin_addr.s_addr) == (device_sockaddr.sin_addr.s_addr & mask->sin_addr.s_addr)) {
-				GSocketAddress *socket_address = g_socket_address_new_from_native((struct sockaddr*)((ArvNetworkInterface*)iface_iter->data)->addr, sizeof(struct sockaddr));
+				GSocketAddress *socket_address = g_socket_address_new_from_native(((ArvNetworkInterface*)iface_iter->data)->addr, sizeof(struct sockaddr));
 				GInetAddress *inet_address = g_object_ref(g_inet_socket_address_get_address(G_INET_SOCKET_ADDRESS(socket_address)));
 
-				arv_enumerate_network_interfaces_free(ifaces);
+				g_list_free_full(ifaces,(GDestroyNotify)arv_network_interface_free);
 
 				g_object_unref(socket_address);
 				g_object_unref(device_socket_address);
@@ -566,7 +566,7 @@ arv_gv_interface_camera_locate (ArvGvInterface *gv_interface, GInetAddress *devi
 				return inet_address;
 			}
 		}
-		arv_enumerate_network_interfaces_free(ifaces);
+		g_list_free_full(ifaces,(GDestroyNotify)arv_network_interface_free);
 	}
 #endif
 

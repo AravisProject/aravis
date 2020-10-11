@@ -517,7 +517,7 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 			socket_address = g_socket_address_new_from_native (ifap_iter->ifa_addr,
 									   sizeof (struct sockaddr));
 #else
-			socket_address = g_socket_address_new_from_native ((struct sockaddr*)((ArvNetworkInterface*)iface_iter->data)->addr,
+			socket_address = g_socket_address_new_from_native (((ArvNetworkInterface*)iface_iter->data)->addr,
 									   sizeof (struct sockaddr));
 #endif
 			gvcp_inet_address = g_object_ref (g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address)));
@@ -540,7 +540,7 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 				socket_address = g_socket_address_new_from_native (ifap_iter->ifa_broadaddr,
 									   sizeof (struct sockaddr));
 #else
-				socket_address = g_socket_address_new_from_native ((struct sockaddr*)((ArvNetworkInterface*)iface_iter->data)->broadaddr,
+				socket_address = g_socket_address_new_from_native (((ArvNetworkInterface*)iface_iter->data)->broadaddr,
 									   sizeof (struct sockaddr));
 #endif
 			inet_address = g_object_ref (g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address)));
@@ -578,7 +578,7 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 #ifndef _ARV_IFACES
 	freeifaddrs (ifap);
 #else
-	arv_enumerate_network_interfaces_free(ifaces);
+	g_list_free_full(ifaces,(GDestroyNotify)arv_network_interface_free);
 #endif
 
 	if (!success) {

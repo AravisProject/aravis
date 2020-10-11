@@ -84,19 +84,12 @@ arv_enumerate_network_interfaces(void){
 #endif
 
 
-void _arv_iface_addr_free(ArvNetworkInterface*);
-
-void _arv_iface_addr_free(ArvNetworkInterface* a){
+void arv_network_interface_free(ArvNetworkInterface* a){
 	if(a->addr) g_free(a->addr);
 	if(a->netmask) g_free(a->netmask);
 	if(a->broadaddr) g_free(a->broadaddr);
 	if(a->name) g_free(a->name);
 }
-
-void arv_enumerate_network_interfaces_free(GList* ifaces){
-	g_list_free_full(ifaces,(GDestroyNotify)_arv_iface_addr_free);
-}
-
 
 
 gboolean arv_socket_set_recv_buffer_size(int socket_fd, gint buffer_size){

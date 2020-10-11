@@ -40,7 +40,6 @@ G_BEGIN_DECLS
 
 #ifdef _ARV_IFACES
 GList* arv_enumerate_network_interfaces(void);
-void arv_enumerate_network_interfaces_free(GList*);
 #endif
 
 #ifdef G_OS_WIN32
