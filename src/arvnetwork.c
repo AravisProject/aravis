@@ -32,7 +32,8 @@ GList* arv_enumerate_network_interfaces(void){
 	return NULL;
 }
 
-// http://mingw-users.1079350.n2.nabble.com/IPv6-getaddrinfo-amp-inet-ntop-td5891996.html
+// mingw only defines inet_ntoa (ipv4-only), inet_ntop (IPv4 & IPv6) is missing from it headers
+// therefore we define it ourselves; code comes from https://www.mail-archive.com/users@ipv6.org/msg02107.html
 const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt)
 {
 	if (af == AF_INET)
