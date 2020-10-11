@@ -85,10 +85,10 @@ arv_enumerate_network_interfaces(void){
 
 
 void arv_network_interface_free(ArvNetworkInterface* a){
-	if(a->addr) g_free(a->addr);
-	if(a->netmask) g_free(a->netmask);
-	if(a->broadaddr) g_free(a->broadaddr);
-	if(a->name) g_free(a->name);
+	g_clear_pointer (&a->addr, g_free);
+	g_clear_pointer (&a->netmask, g_free);
+	g_clear_pointer (&a->broadaddr, g_free);
+	g_clear_pointer (&a->name, g_free);
 }
 
 
