@@ -20,17 +20,22 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#ifndef ARV_MISC_PRIVATE_H
-#define ARV_MISC_PRIVATE_H
+#ifndef ARV_NETWORK_PRIVATE_H
+#define ARV_NETWORK_PRIVATE_H
 
-#include <arvmisc.h>
+#include <arvnetwork.h>
 
-struct _ArvValue {
-	GType type;
-	union {
-		gint64 v_int64;
-		double v_double;
-	} data;
+#include <gio/gnetworking.h>
+
+typedef struct _ArvIfaceAddr ArvIfaceAddr;
+
+struct _ArvIfaceAddr{
+	struct sockaddr *addr;
+	struct sockaddr *netmask;
+	struct sockaddr *broadaddr;
+	char* name;
 };
+
+void arv_iface_addr_free(ArvIfaceAddr* a);
 
 #endif

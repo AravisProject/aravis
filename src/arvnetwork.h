@@ -20,17 +20,32 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#ifndef ARV_MISC_PRIVATE_H
-#define ARV_MISC_PRIVATE_H
+#ifndef ARV_NETWORK_H
+#define ARV_NETWORK_H
 
-#include <arvmisc.h>
+#if !defined (ARV_H_INSIDE) && !defined (ARAVIS_COMPILATION)
+#error "Only <arv.h> can be included directly."
+#endif
 
-struct _ArvValue {
-	GType type;
-	union {
-		gint64 v_int64;
-		double v_double;
-	} data;
-};
+#include <arvtypes.h>
+
+#ifdef G_OS_WIN32
+// for socklen_t
+#include <gio/gnetworking.h>
+#endif
+
+G_BEGIN_DECLS
+
+#define _ARV_IFACES
+
+#ifdef _ARV_IFACES
+GList* arv_enumerate_network_interfaces(void);
+void arv_enumerate_network_interfaces_free(GList*);
+#endif
+
+#ifdef G_OS_WIN32
+// prototype is missing on mingw, let's reimplement
+const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt);
+#endif
 
 #endif

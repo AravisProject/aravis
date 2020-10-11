@@ -69,6 +69,7 @@ library_sources = [
 
 library_no_introspection_sources = [
 	'arvmisc.c',
+	'arvnetwork.c',
 	'arvzip.c',
 	'arvstr.c',
 	'arvgvcp.c',
@@ -175,6 +176,7 @@ library_private_headers = [
 	'arvgvstreamprivate.h',
 	'arvinterfaceprivate.h',
 	'arvmiscprivate.h',
+	'arvnetworkprivate.h',
 	'arvrealtimeprivate.h',
 	'arvstreamprivate.h',
 	'arvwakeupprivate.h'
@@ -182,6 +184,7 @@ library_private_headers = [
 
 library_no_introspection_headers = [
 	'arvmisc.h',
+	'arvnetwork.h',
 	'arvzip.h',
 	'arvstr.h'
 ]

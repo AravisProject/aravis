@@ -27,10 +27,8 @@
 #include <arvgvspprivate.h>
 #include <arvmisc.h>
 #include <arvmiscprivate.h>
-#ifndef G_OS_WIN32
-#include <net/if.h>
-#include <ifaddrs.h>
-#endif
+#include <arvnetwork.h>
+#include <arvnetworkprivate.h>
 
 /**
  * SECTION: arvgvfakecamera
