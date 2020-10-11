@@ -42,7 +42,6 @@ xml2_dep = dependency ('libxml-2.0', required: true)
 libz_dep = dependency ('zlib', required: true)
 usb_dep = dependency ('libusb-1.0', required: get_option ('usb'))
 
-
 libm = cc.find_library ('m', required: true)
 
 aravis_public_dependencies = [glib_dep, gobject_dep, gio_dep]
@@ -52,6 +51,7 @@ if usb_dep.found()
 endif
 
 if host_machine.system()=='windows'
+	# socket functions need this library under Windows (winsock2)
 	ws2_32 = cc.find_library('ws2_32', required: true)
 	aravis_dependencies += ws2_32
 endif
