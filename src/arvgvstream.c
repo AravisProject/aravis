@@ -35,14 +35,11 @@
 #include <arvdebug.h>
 #include <arvmisc.h>
 #include <arvmiscprivate.h>
+#include <arvnetwork.h>
+#include <arvnetworkprivate.h>
 #include <arvstr.h>
 #include <arvenumtypes.h>
 #include <string.h>
-#ifndef G_OS_WIN32
-#include <sys/socket.h>
-#else
-#include <gio/gnetworking.h>
-#endif
 #include <stdio.h>
 #include <errno.h>
 

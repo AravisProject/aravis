@@ -68,8 +68,8 @@ arv_enumerate_network_interfaces(void){
 			(ifap_iter->ifa_flags & IFF_POINTOPOINT) == 0 &&
 			(ifap_iter->ifa_addr != NULL) &&
 			(ifap_iter->ifa_addr->sa_family == AF_INET)) {
-				ArvIfaceAddr* a=(ArvIfaceAddr*)g_malloc(sizeof(ArvIfaceAddr));
-				memset(a,0,sizeof(ArvIfaceAddr));
+				ArvNetworkInterface* a=(ArvNetworkInterface*)g_malloc(sizeof(ArvNetworkInterface));
+				memset(a,0,sizeof(ArvNetworkInterface));
 				a->addr=g_memdup(ifap_iter->ifa_addr,sizeof(struct sockaddr));
 				if(ifap_iter->ifa_netmask) a->netmask=g_memdup(ifap_iter->ifa_netmask,sizeof(struct sockaddr));
 				if(ifap_iter->ifa_ifu.ifu_broadaddr) a->broadaddr=g_memdup(ifap_iter->ifa_ifu.ifu_broadaddr,sizeof(struct sockaddr));
@@ -84,9 +84,9 @@ arv_enumerate_network_interfaces(void){
 #endif
 
 
-void _arv_iface_addr_free(ArvIfaceAddr*);
+void _arv_iface_addr_free(ArvNetworkInterface*);
 
-void _arv_iface_addr_free(ArvIfaceAddr* a){
+void _arv_iface_addr_free(ArvNetworkInterface* a){
 	if(a->addr) g_free(a->addr);
 	if(a->netmask) g_free(a->netmask);
 	if(a->broadaddr) g_free(a->broadaddr);

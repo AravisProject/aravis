@@ -27,15 +27,15 @@
 
 #include <gio/gnetworking.h>
 
-typedef struct _ArvIfaceAddr ArvIfaceAddr;
+typedef struct _ArvNetworkInterface ArvNetworkInterface;
 
-struct _ArvIfaceAddr{
+struct _ArvNetworkInterface{
 	struct sockaddr *addr;
 	struct sockaddr *netmask;
 	struct sockaddr *broadaddr;
 	char* name;
 };
 
-void arv_iface_addr_free(ArvIfaceAddr* a);
+void arv_iface_addr_free(ArvNetworkInterface* a);
 
 #endif
