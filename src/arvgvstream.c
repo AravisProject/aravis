@@ -229,16 +229,12 @@ _update_socket (ArvGvStreamThreadData *thread_data, ArvBuffer *buffer)
 	}
 
 	if (buffer_size != thread_data->current_socket_buffer_size) {
-		int result;
-#ifndef G_OS_WIN32
-		result = setsockopt (fd, SOL_SOCKET, SO_RCVBUF, &buffer_size, sizeof (buffer_size));
-#else
-		{
-			DWORD _buffer_size=buffer_size;
-			result = setsockopt (fd, SOL_SOCKET, SO_RCVBUF, (const char*) &_buffer_size, sizeof (_buffer_size));
-		}
-#endif
-		if (result == 0) {
+
+		gboolean result;
+
+		result = arv_socket_set_recv_buffer_size(fd, buffer_size);
+
+		if (result) {
 			thread_data->current_socket_buffer_size = buffer_size;
 			arv_debug_stream_thread ("[GvStream::update_socket] Socket buffer size set to %d", buffer_size);
 		} else {

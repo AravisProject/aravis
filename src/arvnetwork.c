@@ -98,3 +98,17 @@ void arv_enumerate_network_interfaces_free(GList* ifaces){
 }
 
 
+
+gboolean arv_socket_set_recv_buffer_size(int socket_fd, gint buffer_size){
+	int result;
+#ifndef G_OS_WIN32
+	result = setsockopt (socket_fd, SOL_SOCKET, SO_RCVBUF, &buffer_size, sizeof (buffer_size));
+#else
+	{
+		DWORD _buffer_size=buffer_size;
+		result = setsockopt (socket_fd, SOL_SOCKET, SO_RCVBUF, (const char*) &_buffer_size, sizeof (_buffer_size));
+	}
+#endif
+	return result == 0;
+}
+

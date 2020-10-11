@@ -38,4 +38,6 @@ struct _ArvNetworkInterface{
 
 void arv_iface_addr_free(ArvNetworkInterface* a);
 
+gboolean arv_socket_set_recv_buffer_size(int socket_fd, gint buffer_size);
+
 #endif
