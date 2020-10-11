@@ -29,10 +29,8 @@
 
 #include <arvtypes.h>
 
-#ifdef G_OS_WIN32
 // for socklen_t
 #include <gio/gnetworking.h>
-#endif
 
 G_BEGIN_DECLS
 

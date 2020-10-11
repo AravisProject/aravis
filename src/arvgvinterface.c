@@ -32,6 +32,8 @@
 #include <arvdebugprivate.h>
 #include <arvmisc.h>
 #include <arvmiscprivate.h>
+#include <arvnetwork.h>
+#include <arvnetworkprivate.h>
 #include <arvstr.h>
 #include <glib/gprintf.h>
 #include <gio/gio.h>
@@ -39,16 +41,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef __MINGW32__
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <net/if.h>
-#include <netdb.h>
-#include <ifaddrs.h>
-#include <netinet/in.h>
-#else
-#include <gio/gnetworking.h>
-#endif
 
 /* ArvGvDiscoverSocket implementation */
 

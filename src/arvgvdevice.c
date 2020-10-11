@@ -35,53 +35,15 @@
 #include <arvgvstreamprivate.h>
 #include <arvgvcpprivate.h>
 #include <arvgvspprivate.h>
+#include <arvnetworkprivate.h>
 #include <arvzip.h>
 #include <arvstr.h>
 #include <arvmisc.h>
 #include <arvenumtypes.h>
 #include <string.h>
 #include <stdlib.h>
-#if !defined(__APPLE__) && !defined(G_OS_WIN32)
-#include <linux/ip.h>
-#endif
-#ifndef G_OS_WIN32
-#include <netinet/udp.h>
-#endif
 
 /* Shared data (main thread - heartbeat) */
-
-#ifdef G_OS_WIN32
-#include<stdint.h>
-typedef uint8_t u_int8_t;
-typedef uint16_t u_int16_t;
-typedef uint32_t u_int32_t;
-struct udphdr { uint16_t source, dest, len, check; };
-#endif
-
-#if defined(__APPLE__) || defined(G_OS_WIN32)
-struct iphdr
-  {
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-    unsigned int ihl:4;
-    unsigned int version:4;
-#elif __BYTE_ORDER == __BIG_ENDIAN
-    unsigned int version:4;
-    unsigned int ihl:4;
-#else
-# error  "Please fix <bits/endian.h>"
-#endif
-    u_int8_t tos;
-    u_int16_t tot_len;
-    u_int16_t id;
-    u_int16_t frag_off;
-    u_int8_t ttl;
-    u_int8_t protocol;
-    u_int16_t check;
-    u_int32_t saddr;
-    u_int32_t daddr;
-    /*The options start here. */
-  };
-#endif
 
 enum
 {
