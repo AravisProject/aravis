@@ -479,7 +479,8 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 	struct ifaddrs *ifap_iter;
 	int return_value;
 #else
-	GList *ifaces, *iface_iter;
+	GList *ifaces;
+	GList *iface_iter;
 #endif
 	gboolean interface_found = FALSE;
 	gboolean success = TRUE;
@@ -499,8 +500,8 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 		    (ifap_iter->ifa_addr->sa_family == AF_INET) &&
 		    g_strcmp0 (ifap_iter->ifa_name, gv_fake_camera->priv->interface_name) == 0) {
 #else
-	ifaces=arv_enumerate_network_interfaces();
-	if(!ifaces){
+	ifaces = arv_enumerate_network_interfaces ();
+	if (!ifaces) {
 		arv_warning_device ("[GvFakeCamera::start] No network interface found");
 		return FALSE;
 	}
@@ -577,7 +578,7 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 #ifndef _ARV_IFACES
 	freeifaddrs (ifap);
 #else
-	g_list_free_full(ifaces,(GDestroyNotify)arv_network_interface_free);
+	g_list_free_full (ifaces, (GDestroyNotify) arv_network_interface_free);
 #endif
 
 	if (!success) {

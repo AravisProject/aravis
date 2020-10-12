@@ -36,8 +36,8 @@ struct _ArvNetworkInterface{
 
 
 #ifdef G_OS_WIN32
-GList* arv_enumerate_network_interfaces(void){
-	#warning NOT YET IMPLEMENTED
+GList* arv_enumerate_network_interfaces(void) {
+	#warning arv_enumerate_network_interface not yet implemented for WIN32
 	return NULL;
 }
 
@@ -68,52 +68,56 @@ const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt)
 
 #else
 GList*
-arv_enumerate_network_interfaces(void){
+arv_enumerate_network_interfaces(void) {
 	struct ifaddrs *ifap = NULL;
 	struct ifaddrs *ifap_iter;
 	GList* ret=NULL;
-	if(getifaddrs (&ifap) <0) return NULL;
+	if(getifaddrs (&ifap) <0)
+		return NULL;
 	for (ifap_iter = ifap; ifap_iter != NULL; ifap_iter = ifap_iter->ifa_next) {
 		if ((ifap_iter->ifa_flags & IFF_UP) != 0 &&
 			(ifap_iter->ifa_flags & IFF_POINTOPOINT) == 0 &&
 			(ifap_iter->ifa_addr != NULL) &&
 			(ifap_iter->ifa_addr->sa_family == AF_INET)) {
-				ArvNetworkInterface* a=(ArvNetworkInterface*)g_malloc(sizeof(ArvNetworkInterface));
-				memset(a,0,sizeof(ArvNetworkInterface));
-				a->addr=g_memdup(ifap_iter->ifa_addr,sizeof(struct sockaddr));
-				if(ifap_iter->ifa_netmask) a->netmask=g_memdup(ifap_iter->ifa_netmask,sizeof(struct sockaddr));
-				if(ifap_iter->ifa_ifu.ifu_broadaddr) a->broadaddr=g_memdup(ifap_iter->ifa_ifu.ifu_broadaddr,sizeof(struct sockaddr));
-				if(ifap_iter->ifa_name) a->name=g_strdup(ifap_iter->ifa_name);
-				ret=g_list_prepend(ret,a);
+				ArvNetworkInterface* a = (ArvNetworkInterface*)g_malloc(sizeof(ArvNetworkInterface));
+				memset (a,0,sizeof(ArvNetworkInterface));
+				a->addr = g_memdup (ifap_iter->ifa_addr, sizeof(struct sockaddr));
+				if (ifap_iter->ifa_netmask)
+					a->netmask = g_memdup (ifap_iter->ifa_netmask, sizeof(struct sockaddr));
+				if (ifap_iter->ifa_ifu.ifu_broadaddr)
+					a->broadaddr = g_memdup(ifap_iter->ifa_ifu.ifu_broadaddr, sizeof(struct sockaddr));
+				if (ifap_iter->ifa_name)
+					a->name = g_strdup(ifap_iter->ifa_name);
+				ret = g_list_prepend(ret, a);
 		}
 	}
 	freeifaddrs (ifap);
-	ret=g_list_reverse(ret);
+	ret = g_list_reverse(ret);
 	return ret;
 };
 #endif
 
 struct sockaddr*
-arv_network_interface_get_addr(ArvNetworkInterface* a){
+arv_network_interface_get_addr(ArvNetworkInterface* a) {
 	return a->addr;
 }
 
 struct sockaddr*
-arv_network_interface_get_netmask(ArvNetworkInterface* a){
+arv_network_interface_get_netmask(ArvNetworkInterface* a) {
 	return a->netmask;
 }
 
 struct sockaddr*
-arv_network_interface_get_broadaddr(ArvNetworkInterface* a){
+arv_network_interface_get_broadaddr(ArvNetworkInterface* a) {
 	return a->broadaddr;
 }
 
 const char*
-arv_network_interface_get_name(ArvNetworkInterface* a){
+arv_network_interface_get_name(ArvNetworkInterface* a) {
 	return a->name;
 }
 
-void arv_network_interface_free(ArvNetworkInterface* a){
+void arv_network_interface_free(ArvNetworkInterface* a) {
 	g_clear_pointer (&a->addr, g_free);
 	g_clear_pointer (&a->netmask, g_free);
 	g_clear_pointer (&a->broadaddr, g_free);
@@ -121,7 +125,7 @@ void arv_network_interface_free(ArvNetworkInterface* a){
 }
 
 
-gboolean arv_socket_set_recv_buffer_size(int socket_fd, gint buffer_size){
+gboolean arv_socket_set_recv_buffer_size(int socket_fd, gint buffer_size) {
 	int result;
 #ifndef G_OS_WIN32
 	result = setsockopt (socket_fd, SOL_SOCKET, SO_RCVBUF, &buffer_size, sizeof (buffer_size));
