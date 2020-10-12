@@ -83,11 +83,7 @@ struct iphdr
 #endif
 
 
-#define _ARV_IFACES
-
-#ifdef _ARV_IFACES
 GList* arv_enumerate_network_interfaces(void);
-#endif
 
 typedef struct _ArvNetworkInterface ArvNetworkInterface;
 
