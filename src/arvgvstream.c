@@ -35,7 +35,6 @@
 #include <arvdebug.h>
 #include <arvmisc.h>
 #include <arvmiscprivate.h>
-#include <arvnetwork.h>
 #include <arvnetworkprivate.h>
 #include <arvstr.h>
 #include <arvenumtypes.h>

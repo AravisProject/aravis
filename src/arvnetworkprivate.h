@@ -23,8 +23,6 @@
 #ifndef ARV_NETWORK_PRIVATE_H
 #define ARV_NETWORK_PRIVATE_H
 
-#include <arvnetwork.h>
-
 #ifndef __MINGW32__
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -85,14 +83,25 @@ struct iphdr
 #endif
 
 
+#define _ARV_IFACES
 
-struct _ArvNetworkInterface{
-	struct sockaddr *addr;
-	struct sockaddr *netmask;
-	struct sockaddr *broadaddr;
-	char* name;
-};
+#ifdef _ARV_IFACES
+GList* arv_enumerate_network_interfaces(void);
+#endif
+
+typedef struct _ArvNetworkInterface ArvNetworkInterface;
+
+struct sockaddr* arv_network_interface_get_addr(ArvNetworkInterface* a);
+struct sockaddr* arv_network_interface_get_netmask(ArvNetworkInterface* a);
+struct sockaddr* arv_network_interface_get_broadaddr(ArvNetworkInterface* a);
+const char* arv_network_interface_get_name(ArvNetworkInterface* a);
+void arv_network_interface_free(ArvNetworkInterface* a);
 
 gboolean arv_socket_set_recv_buffer_size(int socket_fd, gint buffer_size);
+
+#ifdef G_OS_WIN32
+// prototype is missing on mingw, let's reimplement
+const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt);
+#endif
 
 #endif

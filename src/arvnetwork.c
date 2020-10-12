@@ -26,6 +26,15 @@
 	#include <ifaddrs.h>
 #endif
 
+
+struct _ArvNetworkInterface{
+	struct sockaddr *addr;
+	struct sockaddr *netmask;
+	struct sockaddr *broadaddr;
+	char* name;
+};
+
+
 #ifdef G_OS_WIN32
 GList* arv_enumerate_network_interfaces(void){
 	#warning NOT YET IMPLEMENTED
@@ -83,7 +92,6 @@ arv_enumerate_network_interfaces(void){
 	return ret;
 };
 #endif
-
 
 struct sockaddr*
 arv_network_interface_get_addr(ArvNetworkInterface* a){

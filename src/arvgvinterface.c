@@ -32,7 +32,6 @@
 #include <arvdebugprivate.h>
 #include <arvmisc.h>
 #include <arvmiscprivate.h>
-#include <arvnetwork.h>
 #include <arvnetworkprivate.h>
 #include <arvstr.h>
 #include <glib/gprintf.h>

@@ -27,7 +27,6 @@
 #include <arvgvspprivate.h>
 #include <arvmisc.h>
 #include <arvmiscprivate.h>
-#include <arvnetwork.h>
 #include <arvnetworkprivate.h>
 
 /**

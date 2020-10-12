@@ -184,7 +184,6 @@ library_private_headers = [
 
 library_no_introspection_headers = [
 	'arvmisc.h',
-	'arvnetwork.h',
 	'arvzip.h',
 	'arvstr.h'
 ]
