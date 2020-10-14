@@ -95,7 +95,7 @@ main (int argc, char **argv)
 
 	if (arv_gv_fake_camera_is_running (gv_camera))
 		while (!cancel)
-			sleep (1);
+			g_usleep (1000000);
 	else
 		printf ("Failed to start camera\n");
 
