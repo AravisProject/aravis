@@ -67,10 +67,13 @@ if get_option('tests')
 		['arv-device-scan-test',	'arvdevicescantest.c'],
 		['arv-roi-test',		'arvroitest.c'],
 		['time-test',			'timetest.c'],
-		['realtime-test',		'realtimetest.c'],
 		['load-http-test',		'loadhttptest.c'],
 		['cpp-test',			'cpp.cc']
 	]
+
+	if host_machine.system()!='windows'
+		examples+=[['realtime-test','realtimetest.c']] # uses Linux RT API unavailable under mingw
+	endif
 
 	foreach example: examples
 		exe = executable (example[0], example[1],

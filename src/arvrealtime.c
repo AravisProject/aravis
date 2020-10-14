@@ -1,4 +1,4 @@
-/***
+/*
   Copyright 2009 Lennart Poettering
   Copyright 2010 David Henningsson <diwic@ubuntu.com>
   Copyright 2014 Emmanuel Pacaud <emmanuel@gnome.org>
@@ -25,7 +25,7 @@
 
   This file is based on rtkit sources, ported from libdbus to glib gdbus API.
 
-***/
+*/
 
 #include <arvrealtimeprivate.h>
 #include <arvdebugprivate.h>
@@ -34,8 +34,10 @@
 #include <sched.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#ifndef G_OS_WIN32
 #include <sys/resource.h>
 #include <sys/syscall.h>
+#endif
 
 #define RTKIT_SERVICE_NAME "org.freedesktop.RealtimeKit1"
 #define RTKIT_OBJECT_PATH "/org/freedesktop/RealtimeKit1"
@@ -218,9 +220,14 @@ arv_rtkit_make_high_priority (GDBusConnection *connection, pid_t thread, int nic
 #define RLIMIT_RTTIME 15
 #endif
 
+#ifndef G_OS_WIN32
 static pid_t _gettid(void) {
         return (pid_t) syscall(SYS_gettid);
 }
+#else
+#include <processthreadsapi.h>
+static pid_t _gettid(void) { return GetCurrentThreadId(); }
+#endif
 
 /**
  * arv_make_thread_realtime:
@@ -234,7 +241,7 @@ static pid_t _gettid(void) {
  * Since: 0.4.0
  */
 
-#ifndef __APPLE__
+#if !defined(__APPLE__) && !defined(G_OS_WIN32)
 gboolean
 arv_make_thread_realtime (int priority)
 {
@@ -282,7 +289,7 @@ arv_make_thread_realtime (int priority)
 gboolean
 arv_make_thread_realtime (int priority)
 {
-	arv_debug_misc ("SCHED API not supported on OSX");
+	arv_debug_misc ("SCHED API not supported on OSX/Windows");
 
 	return FALSE;
 }

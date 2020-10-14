@@ -34,10 +34,11 @@
 #include <arvgvcpprivate.h>
 #include <arvdebug.h>
 #include <arvmisc.h>
+#include <arvmiscprivate.h>
+#include <arvnetworkprivate.h>
 #include <arvstr.h>
 #include <arvenumtypes.h>
 #include <string.h>
-#include <sys/socket.h>
 #include <stdio.h>
 #include <errno.h>
 
@@ -227,10 +228,10 @@ _update_socket (ArvGvStreamThreadData *thread_data, ArvBuffer *buffer)
 	}
 
 	if (buffer_size != thread_data->current_socket_buffer_size) {
-		int result;
+		gboolean result;
 
-		result = setsockopt (fd, SOL_SOCKET, SO_RCVBUF, &buffer_size, sizeof (buffer_size));
-		if (result == 0) {
+		result = arv_socket_set_recv_buffer_size (fd, buffer_size);
+		if (result) {
 			thread_data->current_socket_buffer_size = buffer_size;
 			arv_debug_stream_thread ("[GvStream::update_socket] Socket buffer size set to %d", buffer_size);
 		} else {

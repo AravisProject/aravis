@@ -50,6 +50,12 @@ if usb_dep.found()
   aravis_dependencies += usb_dep
 endif
 
+if host_machine.system()=='windows'
+	# socket functions need this library under Windows (winsock2)
+	ws2_32 = cc.find_library('ws2_32', required: true)
+	aravis_dependencies += ws2_32
+endif
+
 has_if_packet = cc.has_header (join_paths ('linux','if_packet.h'))
 packet_socket_option = get_option('packet-socket')
 if packet_socket_option.enabled()
