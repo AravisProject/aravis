@@ -45,8 +45,8 @@ main (int argc, char **argv)
 
 	g_strfreev (tokens);
 
-	printf ("size = %" G_GSIZE_FORMAT "\n", len);
-	printf ("%s\n", genicam != NULL ? genicam : "NULL");
+	g_print ("size = %" G_GSIZE_FORMAT "\n", len);
+	g_print ("%s\n", genicam != NULL ? genicam : "NULL");
 
 	g_free (genicam);
 

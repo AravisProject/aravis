@@ -145,9 +145,9 @@ int main(int argc, char *argv[])
 
 	    arv_stream_get_statistics (stream, &n_completed_buffers, &n_failures, &n_underruns);
 
-	    printf ("\nCompleted buffers = %llu\n", (unsigned long long) n_completed_buffers);
-	    printf ("Failures          = %llu\n", (unsigned long long) n_failures);
-	    printf ("Underruns         = %llu\n", (unsigned long long) n_underruns);
+	    g_print ("\nCompleted buffers = %" G_GUINT64_FORMAT "\n", n_completed_buffers);
+	    g_print ("Failures          = %" G_GUINT64_FORMAT "\n", n_failures);
+	    g_print ("Underruns         = %" G_GUINT64_FORMAT "\n", n_underruns);
 
 	    arv_camera_stop_acquisition (camera, NULL);
     }

@@ -178,14 +178,14 @@ new_buffer_cb (ArvStream *stream, ApplicationData *data)
 
 				integer_value = arv_chunk_parser_get_integer_value (data->chunk_parser, buffer, data->chunks[i], &error);
 				if (error == NULL)
-					printf ("%s = %" G_GINT64_FORMAT "\n", data->chunks[i], integer_value);
+					g_print ("%s = %" G_GINT64_FORMAT "\n", data->chunks[i], integer_value);
 				else {
 					double float_value;
 
 					g_clear_error (&error);
 					float_value = arv_chunk_parser_get_float_value (data->chunk_parser, buffer, data->chunks[i], &error);
 					if (error == NULL)
-						printf ("%s = %g\n", data->chunks[i], float_value);
+						g_print ("%s = %g\n", data->chunks[i], float_value);
 					else
 						g_clear_error (&error);
 				}
@@ -362,7 +362,7 @@ main (int argc, char **argv)
 		if (arv_camera_is_gv_device (camera)) {
 			printf ("gv n_stream channels  = %d\n", arv_camera_gv_get_n_stream_channels (camera, NULL));
 			printf ("gv current channel    = %d\n", arv_camera_gv_get_current_stream_channel (camera, NULL));
-			printf ("gv packet delay       = %" G_GINT64_FORMAT " ns\n", arv_camera_gv_get_packet_delay (camera, NULL));
+			g_print ("gv packet delay       = %" G_GINT64_FORMAT " ns\n", arv_camera_gv_get_packet_delay (camera, NULL));
 			printf ("gv packet size        = %d bytes\n", arv_camera_gv_get_packet_size (camera, NULL));
 		}
 
@@ -439,9 +439,9 @@ main (int argc, char **argv)
 
 			arv_stream_get_statistics (stream, &n_completed_buffers, &n_failures, &n_underruns);
 
-			printf ("Completed buffers = %llu\n", (unsigned long long) n_completed_buffers);
-			printf ("Failures          = %llu\n", (unsigned long long) n_failures);
-			printf ("Underruns         = %llu\n", (unsigned long long) n_underruns);
+			g_print ("Completed buffers = %" G_GUINT64_FORMAT "\n", n_completed_buffers);
+			g_print ("Failures          = %" G_GUINT64_FORMAT "\n", n_failures);
+			g_print ("Underruns         = %" G_GUINT64_FORMAT "\n", n_underruns);
 
 			arv_camera_stop_acquisition (camera, NULL);
 
