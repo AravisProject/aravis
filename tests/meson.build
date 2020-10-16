@@ -6,9 +6,9 @@ if get_option('tests')
 		['evaluator',	['main'],    []],
 		['buffer',	['main'],    []],
 		['misc',	['main'],    []],
+		['genicam',	['main'],    ['-DGENICAM_FILENAME="@0@/tests/data/genicam.xml"'.format (meson.source_root ())]],
 		['fake',	['main'],    ['-DGENICAM_FILENAME="@0@/src/arv-fake-camera.xml"'.format (meson.source_root ())]],
-		['fakegv',	['network'], ['-DGENICAM_FILENAME="@0@/src/arv-fake-camera.xml"'.format (meson.source_root ())]],
-		['genicam',	['main'],    ['-DGENICAM_FILENAME="@0@/tests/data/genicam.xml"'.format (meson.source_root ())]]
+		['fakegv',	['network'], ['-DGENICAM_FILENAME="@0@/src/arv-fake-camera.xml"'.format (meson.source_root ())]]
 	]
 
 	foreach t: tests
