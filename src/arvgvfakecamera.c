@@ -487,7 +487,7 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 		return FALSE;
 	}
 
-	for (iface_iter = ifaces; iface_iter != NULL; iface_iter = iface_iter->next) {
+	for (iface_iter = ifaces; iface_iter != NULL && !interface_found; iface_iter = iface_iter->next) {
 		GSocketAddress *socket_address;
 		GInetAddress *inet_address;
 		GInetAddress *gvcp_inet_address;
