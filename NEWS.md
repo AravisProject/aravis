@@ -2,6 +2,8 @@ Stable release 0.8.2
 ====================
 
   * gcdevice: fix timeout race (casperoo)
+  * fakecamera: implement Mono16 pixel format (Hinko)
+  * Enable ppc64le in CI pipeline (nagesh)
 
 Stable release 0.8.1
 ====================
