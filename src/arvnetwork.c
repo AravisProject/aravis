@@ -220,6 +220,7 @@ arv_network_interface_free(ArvNetworkInterface *a) {
 	g_clear_pointer (&a->netmask, g_free);
 	g_clear_pointer (&a->broadaddr, g_free);
 	g_clear_pointer (&a->name, g_free);
+	g_free (a);
 }
 
 
