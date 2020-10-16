@@ -54,6 +54,7 @@ if get_option('tests')
 	endif
 
 	examples = [
+		['arv-network-test',		'arvnetworktest.c'],
 		['arv-device-test',		'arvdevicetest.c'],
 		['arv-genicam-test',		'arvgenicamtest.c'],
 		['arv-evaluator-test',		'arvevaluatortest.c'],
