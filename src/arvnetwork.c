@@ -21,9 +21,14 @@
  */
 
 #include <arvnetworkprivate.h>
+#include <arvdebugprivate.h>
 
 #ifndef G_OS_WIN32
 	#include <ifaddrs.h>
+#else
+	#include <winsock2.h>
+	#include <iphlpapi.h>
+	#include <winnt.h> // for PWCHAR
 #endif
 
 struct _ArvNetworkInterface{
@@ -34,12 +39,87 @@ struct _ArvNetworkInterface{
 };
 
 #ifdef G_OS_WIN32
+GList* arv_enumerate_network_interfaces(void) {
+	/*
+	 * docs: https://docs.microsoft.com/en-us/windows/win32/api/iphlpapi/nf-iphlpapi-getadaptersaddresses
+	 *
+	 * example source: https://github.com/zeromq/czmq/blob/master/src/ziflist.c#L284
+	 * question about a better solution: https://stackoverflow.com/q/64348510/761090
+	 */
+	ULONG outBufLen = 15000;
+	PIP_ADAPTER_ADDRESSES pAddresses = NULL;
+	PIP_ADAPTER_ADDRESSES pAddrIter = NULL;
+	GList* ret;
+	int iter = 0;
+	ULONG dwRetVal;
+	do {
+		pAddresses = (IP_ADAPTER_ADDRESSES*) malloc (outBufLen);
+		/* change family to AF_UNSPEC for both IPv4 and IPv6, later */
+		dwRetVal = GetAdaptersAddresses(
+			/* Family */ AF_INET,
+			/* Flags */
+				GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER,
+			/* Reserved */ NULL,
+			pAddresses,
+			&outBufLen
+		);
+		if (dwRetVal==ERROR_BUFFER_OVERFLOW) {
+			free (pAddresses);
+		} else {
+			break;
+		}
+		iter++;
+	} while ((dwRetVal == ERROR_BUFFER_OVERFLOW) && (iter<3));
 
-GList *
-arv_enumerate_network_interfaces (void)
-{
-	#warning arv_enumerate_network_interface not yet implemented for WIN32
-	return NULL;
+	if (dwRetVal != ERROR_SUCCESS){
+		arv_warning_interface ("Failed to enumerate network interfaces (GetAdaptersAddresses returned %lu)",dwRetVal);
+		return NULL;
+	}
+
+	ret = NULL;
+
+	for(pAddrIter = pAddresses; pAddrIter != NULL; pAddrIter = pAddrIter->Next){
+		PIP_ADAPTER_UNICAST_ADDRESS pUnicast = pAddrIter->FirstUnicastAddress;
+		PIP_ADAPTER_PREFIX pPrefix = pAddrIter->FirstPrefix;
+		struct sockaddr* lpSockaddr = pUnicast->Address.lpSockaddr;
+		ArvNetworkInterface* a;
+
+		gboolean ok = (pAddrIter->OperStatus == IfOperStatusUp)
+			&& (pUnicast && pPrefix)
+			/* extend for IPv6 here, later */
+			&& (lpSockaddr->sa_family == AF_INET)
+			&& (pPrefix->PrefixLength <= 32);
+
+		if (!ok) continue;
+
+		a = (ArvNetworkInterface*) g_malloc0(sizeof(ArvNetworkInterface));
+		if (lpSockaddr->sa_family == AF_INET){
+			struct sockaddr_in* mask;
+			struct sockaddr_in* broadaddr;
+			/* copy 3x so that sa_family is already set for netmask and broadaddr */
+			a->addr = g_memdup (lpSockaddr, sizeof(struct sockaddr));
+			a->netmask  = g_memdup (lpSockaddr, sizeof(struct sockaddr));
+			a->broadaddr  = g_memdup (lpSockaddr, sizeof(struct sockaddr));
+			/* adjust mask & broadcast */
+			mask = (struct sockaddr_in*) a->netmask;
+			mask->sin_addr.s_addr = htonl ((0xffffffffU) << (32 - pPrefix->PrefixLength));
+			broadaddr = (struct sockaddr_in*) a->broadaddr;
+			broadaddr->sin_addr.s_addr |= ~(mask->sin_addr.s_addr);
+		}
+		/* name is common to IPv4 and IPv6 */
+		{
+			PWCHAR name = pAddrIter->FriendlyName;
+			size_t asciiSize = wcstombs (0, name, 0) + 1;
+			a->name = (char *) g_malloc (asciiSize);
+			wcstombs (a->name, name, asciiSize);
+		}
+
+		ret = g_list_prepend(ret, a);
+	}
+	free (pAddresses);
+
+	ret = g_list_reverse(ret);
+	return ret;
 }
 
 /*
