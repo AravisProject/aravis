@@ -39,6 +39,7 @@ struct _ArvNetworkInterface{
 };
 
 #ifdef G_OS_WIN32
+
 GList* arv_enumerate_network_interfaces(void) {
 	/*
 	 * docs: https://docs.microsoft.com/en-us/windows/win32/api/iphlpapi/nf-iphlpapi-getadaptersaddresses
@@ -52,8 +53,31 @@ GList* arv_enumerate_network_interfaces(void) {
 	GList* ret;
 	int iter = 0;
 	ULONG dwRetVal;
+
+	/* pre-Vista windows don't have PIP_ADAPTER_UNICAST_ADDRESS onLinePrefixLength field.
+	 * To get netmask, we build pIPAddrTable (IPv4-only) and find netmask associated to each addr.
+	 * This means IPv6 will only work with >= Vista.
+	 * See https://stackoverflow.com/a/64358443/761090 for thorough explanation.
+	 */
+	#if WINVER < _WIN32_WINNT_VISTA
+		// https://docs.microsoft.com/en-us/windows/win32/api/iphlpapi/nf-iphlpapi-getipaddrtable
+		PMIB_IPADDRTABLE pIPAddrTable;
+		DWORD dwSize = 0;
+		/* Variables used to return error message */
+		pIPAddrTable = (MIB_IPADDRTABLE *) g_malloc(sizeof (MIB_IPADDRTABLE));
+		if (GetIpAddrTable(pIPAddrTable, &dwSize, 0) == ERROR_INSUFFICIENT_BUFFER) {
+			g_free(pIPAddrTable);
+			pIPAddrTable = (MIB_IPADDRTABLE *) g_malloc(dwSize);
+		}
+		dwRetVal = GetIpAddrTable( pIPAddrTable, &dwSize, 0 );
+		if (dwRetVal != NO_ERROR ) {
+			arv_warning_interface("GetIpAddrTable failed.");
+			g_free(pIPAddrTable);
+		}
+	#endif
+
 	do {
-		pAddresses = (IP_ADAPTER_ADDRESSES*) malloc (outBufLen);
+		pAddresses = (IP_ADAPTER_ADDRESSES*) g_malloc (outBufLen);
 		/* change family to AF_UNSPEC for both IPv4 and IPv6, later */
 		dwRetVal = GetAdaptersAddresses(
 			/* Family */ AF_INET,
@@ -64,7 +88,7 @@ GList* arv_enumerate_network_interfaces(void) {
 			&outBufLen
 		);
 		if (dwRetVal==ERROR_BUFFER_OVERFLOW) {
-			free (pAddresses);
+			g_free (pAddresses);
 		} else {
 			break;
 		}
@@ -76,47 +100,82 @@ GList* arv_enumerate_network_interfaces(void) {
 		return NULL;
 	}
 
+
 	ret = NULL;
 
 	for(pAddrIter = pAddresses; pAddrIter != NULL; pAddrIter = pAddrIter->Next){
-		PIP_ADAPTER_UNICAST_ADDRESS pUnicast = pAddrIter->FirstUnicastAddress;
-		PIP_ADAPTER_PREFIX pPrefix = pAddrIter->FirstPrefix;
-		struct sockaddr* lpSockaddr = pUnicast->Address.lpSockaddr;
-		ArvNetworkInterface* a;
+		PIP_ADAPTER_UNICAST_ADDRESS pUnicast;
+		for (pUnicast = pAddrIter->FirstUnicastAddress; pUnicast != NULL; pUnicast = pUnicast->Next){
+			// PIP_ADAPTER_PREFIX pPrefix = pAddrIter->FirstPrefix;
+			struct sockaddr* lpSockaddr = pUnicast->Address.lpSockaddr;
+			ArvNetworkInterface* a;
 
-		gboolean ok = (pAddrIter->OperStatus == IfOperStatusUp)
-			&& (pUnicast && pPrefix)
-			/* extend for IPv6 here, later */
-			&& (lpSockaddr->sa_family == AF_INET)
-			&& (pPrefix->PrefixLength <= 32);
+			gboolean ok = (pAddrIter->OperStatus == IfOperStatusUp)
+				/* extend for IPv6 here, later */
+				&& ((lpSockaddr->sa_family == AF_INET)
+				#if 0 && WINVER >= _WIN32_WINNT_VISTA
+					|| (lpSockaddr->sa_family == AF_INET6)
+				#endif
+				)
+			;
 
-		if (!ok) continue;
+			if (!ok) continue;
 
-		a = (ArvNetworkInterface*) g_malloc0(sizeof(ArvNetworkInterface));
-		if (lpSockaddr->sa_family == AF_INET){
-			struct sockaddr_in* mask;
-			struct sockaddr_in* broadaddr;
-			/* copy 3x so that sa_family is already set for netmask and broadaddr */
-			a->addr = g_memdup (lpSockaddr, sizeof(struct sockaddr));
-			a->netmask  = g_memdup (lpSockaddr, sizeof(struct sockaddr));
-			a->broadaddr  = g_memdup (lpSockaddr, sizeof(struct sockaddr));
-			/* adjust mask & broadcast */
-			mask = (struct sockaddr_in*) a->netmask;
-			mask->sin_addr.s_addr = htonl ((0xffffffffU) << (32 - pPrefix->PrefixLength));
-			broadaddr = (struct sockaddr_in*) a->broadaddr;
-			broadaddr->sin_addr.s_addr |= ~(mask->sin_addr.s_addr);
+			a = (ArvNetworkInterface*) g_malloc0(sizeof(ArvNetworkInterface));
+			if (lpSockaddr->sa_family == AF_INET){
+				struct sockaddr_in* mask;
+				struct sockaddr_in* broadaddr;
+
+				/* copy 3x so that sa_family is already set for netmask and broadaddr */
+				a->addr = g_memdup (lpSockaddr, sizeof(struct sockaddr));
+				a->netmask  = g_memdup (lpSockaddr, sizeof(struct sockaddr));
+				a->broadaddr  = g_memdup (lpSockaddr, sizeof(struct sockaddr));
+				/* adjust mask & broadcast */
+				mask = (struct sockaddr_in*) a->netmask;
+				#if WINVER >= _WIN32_WINNT_VISTA
+					mask->sin_addr.s_addr = htonl ((0xffffffffU) << (32 - pUnicast->OnLinkPrefixLength));
+				#else
+					{
+						int i;
+						gboolean match = FALSE;
+
+						for (i=0; i < pIPAddrTable->dwNumEntries; i++){
+							MIB_IPADDRROW* row=&pIPAddrTable->table[i];
+							/* both are in network byte order, no need to convert */
+							if (row->dwAddr == ((struct sockaddr_in*)a->addr)->sin_addr.s_addr){
+								match = TRUE;
+								mask->sin_addr.s_addr = row->dwMask;
+							}
+						}
+						if (!match){
+							arv_warning_interface("Failed to obtain netmask, using 255.255.255.255.");
+							mask->sin_addr.s_addr = 0xffffffffU;
+						}
+					}
+				#endif
+				broadaddr = (struct sockaddr_in*) a->broadaddr;
+				broadaddr->sin_addr.s_addr |= ~(mask->sin_addr.s_addr);
+			}
+			#if WINVER >= _WIN32_WINNT_VISTA
+			else if (lpSocketaddr->sa_family == AF_INET6){
+				arv_warning_interface("IPv6 support not yet implemented.");
+			}
+			#endif
+			/* name is common to IPv4 and IPv6 */
+			{
+				PWCHAR name = pAddrIter->FriendlyName;
+				size_t asciiSize = wcstombs (0, name, 0) + 1;
+				a->name = (char *) g_malloc (asciiSize);
+				wcstombs (a->name, name, asciiSize);
+			}
+
+			ret = g_list_prepend(ret, a);
 		}
-		/* name is common to IPv4 and IPv6 */
-		{
-			PWCHAR name = pAddrIter->FriendlyName;
-			size_t asciiSize = wcstombs (0, name, 0) + 1;
-			a->name = (char *) g_malloc (asciiSize);
-			wcstombs (a->name, name, asciiSize);
-		}
-
-		ret = g_list_prepend(ret, a);
 	}
 	free (pAddresses);
+	#if WINVER < _WIN32_WINNT_VISTA
+		g_free(pIPAddrTable);
+	#endif
 
 	ret = g_list_reverse(ret);
 	return ret;
