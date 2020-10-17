@@ -172,7 +172,7 @@ GList* arv_enumerate_network_interfaces(void) {
 			ret = g_list_prepend(ret, a);
 		}
 	}
-	free (pAddresses);
+	g_free (pAddresses);
 	#if WINVER < _WIN32_WINNT_VISTA
 		g_free(pIPAddrTable);
 	#endif
