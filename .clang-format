@@ -1,0 +1,16 @@
+# Aravis clang format configuration
+# https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+BasedOnStyle: GNU
+AlwaysBreakAfterDefinitionReturnType: All
+BreakBeforeBinaryOperators: None
+BinPackParameters: false
+SpaceAfterCStyleCast: true
+AlignAfterOpenBracket: true
+ColumnLimit: 120
+IndentCaseLabels: true
+UseTab: Always
+IndentWidth: 8
+TabWidth: 8
+BreakBeforeBraces: Mozilla
+PenaltyBreakBeforeFirstCallParameter: 1000
+AlignConsecutiveMacros: true
