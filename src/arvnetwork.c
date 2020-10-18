@@ -46,16 +46,28 @@ __attribute__((constructor))
 void arv_initialize_networking(void){
 	long res;
 	WSADATA wsaData;
+
 	/* not sure which version is really needed, just use 2.2 (latest) */
 	res = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (res != 0) {
+		/* error description functions should not be used when WSAStartup failed (not sure), do manually */
 		char *desc="[unknown error code]";
 		switch(res){
-			case WSASYSNOTREADY: desc="The underlying network subsystem is not ready for network communication."; break;
-			case WSAVERNOTSUPPORTED: desc="The version of Windows Sockets support requested is not provided by this particular Windows Sockets implementation."; break;
-			case WSAEINPROGRESS: desc="A blocking Windows Sockets 1.1 operation is in progress."; break;
-			case WSAEPROCLIM: desc="A limit on the number of tasks supported by the Windows Sockets implementation has been reached."; break;
-			case WSAEFAULT: desc="The lpWSAData parameter is not a valid pointer."; break;
+			case WSASYSNOTREADY:
+				desc="The underlying network subsystem is not ready for network communication.";
+				break;
+			case WSAVERNOTSUPPORTED:
+				desc="The version of Windows Sockets support requested is not provided by this particular Windows Sockets implementation.";
+				break;
+			case WSAEINPROGRESS:
+				desc="A blocking Windows Sockets 1.1 operation is in progress.";
+				break;
+			case WSAEPROCLIM:
+				desc="A limit on the number of tasks supported by the Windows Sockets implementation has been reached.";
+				break;
+			case WSAEFAULT:
+				desc="The lpWSAData parameter is not a valid pointer.";
+				break;
 		};
 		fprintf(stderr,"WSAStartup failed with error %ld: %s",res,desc);
 	}
@@ -219,7 +231,10 @@ inet_ntop (int af, const void *src, char *dst, socklen_t cnt)
 		in.sin_family = AF_INET;
 		memcpy (&in.sin_addr, src, sizeof(struct in_addr));
 		res = getnameinfo ((struct sockaddr *)&in, sizeof (struct sockaddr_in), dst, cnt, NULL, 0, NI_NUMERICHOST);
-		if ( res != 0) fprintf(stderr,"getnameinfo failed with error #%ld: %s\n",res,gai_strerror(res));
+		if ( res != 0) {
+			fprintf(stderr,"getnameinfo failed with error #%ld: %s\n",res,gai_strerror(res));
+			return NULL;
+		}
 		return dst;
 	} else if (af == AF_INET6) {
 		struct sockaddr_in6 in;
@@ -229,7 +244,10 @@ inet_ntop (int af, const void *src, char *dst, socklen_t cnt)
 		in.sin6_family = AF_INET6;
 		memcpy (&in.sin6_addr, src, sizeof(struct in_addr6));
 		res = getnameinfo ((struct sockaddr *)&in, sizeof (struct sockaddr_in6), dst, cnt, NULL, 0, NI_NUMERICHOST);
-		if ( res != 0 ) fprintf(stderr,"getnameinfo failed with error #%ld: %s\n",res,gai_strerror(res));
+		if ( res != 0 ) {
+			fprintf(stderr,"getnameinfo failed with error #%ld: %s\n",res,gai_strerror(res));
+			return NULL;
+		}
 		return dst;
 	}
 
