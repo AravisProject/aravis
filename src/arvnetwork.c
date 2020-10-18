@@ -41,7 +41,7 @@ struct _ArvNetworkInterface{
 #ifdef G_OS_WIN32
 // mandatory declaration
 __attribute__((constructor)) void arv_initialize_networking(void);
-__attribute__((constructor)) void arv_cleanup_networking(void);
+__attribute__((destructor)) void arv_cleanup_networking(void);
 
 __attribute__((constructor))
 void arv_initialize_networking(void){
@@ -187,8 +187,8 @@ GList* arv_enumerate_network_interfaces(void) {
 
 				/* copy 3x so that sa_family is already set for netmask and broadaddr */
 				a->addr = g_memdup (lpSockaddr, sizeof(struct sockaddr));
-				a->netmask  = g_memdup (lpSockaddr, sizeof(struct sockaddr));
-				a->broadaddr  = g_memdup (lpSockaddr, sizeof(struct sockaddr));
+				a->netmask = g_memdup (lpSockaddr, sizeof(struct sockaddr));
+				a->broadaddr = g_memdup (lpSockaddr, sizeof(struct sockaddr));
 				/* adjust mask & broadcast */
 				mask = (struct sockaddr_in*) a->netmask;
 				#if WINVER >= _WIN32_WINNT_VISTA
@@ -200,15 +200,19 @@ GList* arv_enumerate_network_interfaces(void) {
 
 						for (i=0; i < pIPAddrTable->dwNumEntries; i++){
 							MIB_IPADDRROW* row=&pIPAddrTable->table[i];
+							#if 0
+								fprintf(stderr,"row %d: %08lx: match with %08lx (mask %08lx): %d\n",i,((struct sockaddr_in*)a->addr)->sin_addr.s_addr,row->dwAddr,row->dwMask,row->dwAddr == ((struct sockaddr_in*)a->addr)->sin_addr.s_addr);
+							#endif
 							/* both are in network byte order, no need to convert */
 							if (row->dwAddr == ((struct sockaddr_in*)a->addr)->sin_addr.s_addr){
 								match = TRUE;
 								mask->sin_addr.s_addr = row->dwMask;
+								break;
 							}
 						}
 						if (!match){
-							arv_warning_interface("Failed to obtain netmask, using 255.255.255.255.");
-							mask->sin_addr.s_addr = 0xffffffffU;
+							arv_warning_interface("Failed to obtain netmask for %08lx (secondary address?), using 255.255.0.0.",((struct sockaddr_in*)a->addr)->sin_addr.s_addr);
+							mask->sin_addr.s_addr = htonl(0xffff0000U);
 						}
 					}
 				#endif

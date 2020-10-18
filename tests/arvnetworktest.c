@@ -30,7 +30,7 @@ main (int argc, char **argv){
 		if (fam==AF_INET){
 			inet_ntop (fam, &((struct sockaddr_in*)arv_network_interface_get_addr(ani))->sin_addr, &addr[0], _ALEN);
 			inet_ntop (fam, &((struct sockaddr_in*)arv_network_interface_get_netmask(ani))->sin_addr, &netmask[0], _ALEN);
-			inet_ntop (fam, &((struct sockaddr_in*)arv_network_interface_get_addr(ani))->sin_addr, &broadaddr[0], _ALEN);
+			inet_ntop (fam, &((struct sockaddr_in*)arv_network_interface_get_broadaddr(ani))->sin_addr, &broadaddr[0], _ALEN);
 			printf (_LINEFMT, "IPv4", addr, netmask, broadaddr, arv_network_interface_get_name(ani));
 		}
 		else if (fam==AF_INET6){
