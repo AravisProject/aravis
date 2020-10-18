@@ -1263,7 +1263,7 @@ video_frame_realize_cb (GtkWidget * widget, ArvViewer *viewer)
 	viewer->video_window_xid = GDK_WINDOW_XID (gtk_widget_get_window (widget));
 #endif
 #ifdef GDK_WINDOWING_WIN32
-	viewer->video_window_xid = (guintptr) GDK_WINDOW_HWND (gtk_widget_get_window (video_window));
+	viewer->video_window_xid = (guintptr) GDK_WINDOW_HWND (gtk_widget_get_window (widget));
 #endif
 }
 
@@ -1373,7 +1373,7 @@ startup (GApplication *application)
 }
 
 static void
-shutdown (GApplication *application)
+viewer_shutdown (GApplication *application)
 {
 	G_APPLICATION_CLASS (arv_viewer_parent_class)->shutdown (application);
 
@@ -1430,6 +1430,6 @@ arv_viewer_class_init (ArvViewerClass *class)
   object_class->finalize = finalize;
 
   application_class->startup = startup;
-  application_class->shutdown = shutdown;
+  application_class->shutdown = viewer_shutdown;
   application_class->activate = activate;
 }
