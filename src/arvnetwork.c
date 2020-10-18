@@ -41,6 +41,7 @@ struct _ArvNetworkInterface{
 #ifdef G_OS_WIN32
 // mandatory declaration
 __attribute__((constructor)) void arv_initialize_networking(void);
+__attribute__((constructor)) void arv_cleanup_networking(void);
 
 __attribute__((constructor))
 void arv_initialize_networking(void){
@@ -51,27 +52,51 @@ void arv_initialize_networking(void){
 	res = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (res != 0) {
 		/* error description functions should not be used when WSAStartup failed (not sure), do manually */
-		char *desc="[unknown error code]";
-		switch(res){
+		char *desc = "[unknown error code]";
+
+		switch (res) {
 			case WSASYSNOTREADY:
-				desc="The underlying network subsystem is not ready for network communication.";
+				desc = "The underlying network subsystem is not ready for network communication.";
 				break;
 			case WSAVERNOTSUPPORTED:
-				desc="The version of Windows Sockets support requested is not provided by this particular Windows Sockets implementation.";
+				desc = "The version of Windows Sockets support requested is not provided by this particular Windows Sockets implementation.";
 				break;
 			case WSAEINPROGRESS:
-				desc="A blocking Windows Sockets 1.1 operation is in progress.";
+				desc = "A blocking Windows Sockets 1.1 operation is in progress.";
 				break;
 			case WSAEPROCLIM:
-				desc="A limit on the number of tasks supported by the Windows Sockets implementation has been reached.";
+				desc = "A limit on the number of tasks supported by the Windows Sockets implementation has been reached.";
 				break;
 			case WSAEFAULT:
-				desc="The lpWSAData parameter is not a valid pointer.";
+				desc = "The lpWSAData parameter is not a valid pointer.";
 				break;
 		};
-		fprintf(stderr,"WSAStartup failed with error %ld: %s",res,desc);
+		g_critical ("WSAStartup failed with error %ld: %s", res, desc);
 	}
-	arv_debug_interface("WSAStartup done.");
+	arv_debug_interface ("WSAStartup done.");
+}
+
+__attribute__((destructor))
+void arv_cleanup_networking(void){
+	long res;
+
+	res=WSACleanup();
+	if (res != 0){
+		char *desc = "[unknown error code]";
+
+		switch (res) {
+			case WSANOTINITIALISED:
+				desc = "A successful WSAStartup call must occur before using this function.";
+				break;
+			case WSAENETDOWN:
+				desc = "The network subsystem has failed.";
+				break;
+			case WSAEINPROGRESS:
+				desc = "A blocking Windows Sockets 1.1 call is in progress, or the service provider is still processing a callback function.";
+				break;
+		};
+		g_critical ("WSACleanup failed with error %ld: %s", res, desc);
+	}
 }
 
 GList* arv_enumerate_network_interfaces(void) {
