@@ -39,12 +39,9 @@ struct _ArvNetworkInterface{
 };
 
 #ifdef G_OS_WIN32
-// mandatory declaration
-__attribute__((constructor)) void arv_initialize_networking(void);
-__attribute__((destructor)) void arv_cleanup_networking(void);
 
 __attribute__((constructor))
-void arv_initialize_networking(void){
+static void arv_initialize_networking(void){
 	long res;
 	WSADATA wsaData;
 
@@ -77,7 +74,7 @@ void arv_initialize_networking(void){
 }
 
 __attribute__((destructor))
-void arv_cleanup_networking(void){
+static void arv_cleanup_networking(void){
 	long res;
 
 	res=WSACleanup();
