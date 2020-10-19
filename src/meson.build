@@ -236,7 +236,7 @@ library_inc = include_directories ('.')
 
 install_headers (library_headers + library_no_introspection_headers, install_dir: library_include_dir)
 
-install_data ('arv-fake-camera.xml', install_dir: aravis_data_dir)
+# install_data ('arv-fake-camera.xml', install_dir: aravis_data_dir)
 
 library_c_args = [
 	'-DARAVIS_COMPILATION',

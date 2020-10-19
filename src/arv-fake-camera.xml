@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+   After each modification, run
 
+   xxd -i arv-fake-camera.xml arv-fake-camera-xml.inl
+-->
 <RegisterDescription
 	ModelName="Fake"
 	VendorName="Aravis"

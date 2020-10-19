@@ -41,6 +41,8 @@
 #include <string.h>
 #include <math.h>
 
+#include "arv-fake-camera-xml.inl"
+
 static char *arv_fake_camera_genicam_filename = NULL;
 
 /*
@@ -932,14 +934,19 @@ arv_fake_camera_new_full (const char *serial_number, const char *genicam_filenam
 	else if (arv_get_fake_camera_genicam_filename () != NULL)
 		filename = g_strdup (arv_get_fake_camera_genicam_filename ());
 	else
-		filename = g_build_filename (ARAVIS_DATA_DIR, "arv-fake-camera.xml", NULL);
+		filename = NULL;
 
-	if (!g_file_get_contents (filename, &fake_camera->priv->genicam_xml, &fake_camera->priv->genicam_xml_size, &error)) {
-		arv_warning_device ("Failed to load genicam file '%s': %s",
-				    filename, error != NULL ? error->message : "Unknown reason");
-		g_clear_error (&error);
-		fake_camera->priv->genicam_xml = NULL;
-		fake_camera->priv->genicam_xml_size = 0;
+	if (filename) {
+		if (!g_file_get_contents (filename, &fake_camera->priv->genicam_xml, &fake_camera->priv->genicam_xml_size, &error)) {
+			arv_warning_device ("Failed to load genicam file '%s': %s",
+					    filename, error != NULL ? error->message : "Unknown reason");
+			g_clear_error (&error);
+			fake_camera->priv->genicam_xml = NULL;
+			fake_camera->priv->genicam_xml_size = 0;
+		}
+	} else {
+		fake_camera->priv->genicam_xml = g_strndup ( (const char*) arv_fake_camera_xml, arv_fake_camera_xml_len);
+		fake_camera->priv->genicam_xml_size = arv_fake_camera_xml_len;
 	}
 
 	g_clear_pointer (&filename, g_free);
