@@ -1168,7 +1168,7 @@ arv_gv_stream_constructed (GObject *object)
 
 	thread_data->packet_id = 65300;
 
-	thread_data->statistic = arv_statistic_new (1, 5000, 200, 0);
+	thread_data->statistic = arv_statistic_new (1, 100, 2000, 0);
 
 	arv_statistic_set_name (thread_data->statistic, 0, "Buffer reception time");
 
