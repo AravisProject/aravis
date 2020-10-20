@@ -514,23 +514,43 @@ arv_gv_device_set_packet_size (ArvGvDevice *gv_device, gint packet_size, GError 
 	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevSCPSPacketSize", packet_size, error);
 }
 
-/**
- * arv_gv_device_auto_packet_size:
- * @gv_device: a #ArvGvDevice
- * @error: a #GError placeholder, %NULL to ignore
- *
- * Automatically determine the biggest packet size that can be used data
- * streaming, and set GevSCPSPacketSize value accordingly. This function relies
- * on the GevSCPSFireTestPacket feature. If this feature is not available, the
- * packet size will be set to a default value (1500 bytes).
- *
- * Returns: The packet size, in bytes.
- *
- * Since: 0.6.0
- */
+static gboolean
+test_packet_check (ArvDevice *device,
+		   GPollFD *poll_fd,
+		   GSocket *socket,
+		   char *buffer,
+		   guint packet_size,
+		   gboolean is_command)
+{
+	unsigned n_tries = 0;
+	int n_events;
+	size_t read_count;
 
-guint
-arv_gv_device_auto_packet_size (ArvGvDevice *gv_device, GError **error)
+	do {
+		if (is_command) {
+			arv_device_execute_command (device, "GevSCPSFireTestPacket", NULL);
+		} else {
+			arv_device_set_boolean_feature_value (device, "GevSCPSFireTestPacket", FALSE, NULL);
+			arv_device_set_boolean_feature_value (device, "GevSCPSFireTestPacket", TRUE, NULL);
+		}
+
+		do {
+			n_events = g_poll (poll_fd, 1, 10);
+			if (n_events != 0)
+				read_count = g_socket_receive (socket, buffer, 16384, NULL, NULL);
+			else
+				read_count = 0;
+			/* Discard late packets, read_count should be equal to packet size minus IP and UDP headers */
+		} while (n_events != 0 && read_count != (packet_size - sizeof (struct iphdr) - sizeof (struct udphdr)));
+
+		n_tries++;
+	} while (n_events == 0 && n_tries < 3);
+
+	return n_events != 0;
+}
+
+static guint
+auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 {
 	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
 	ArvDevice *device = ARV_DEVICE (gv_device);
@@ -544,13 +564,13 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device, GError **error)
 	guint16 port;
 	gboolean do_not_fragment;
 	gboolean is_command;
-	int n_events;
-	guint max_size, min_size, current_size;
+	guint max_size, min_size;
 	guint packet_size = 1500;
-	gint64 minimum, maximum;
+	gint64 minimum, maximum, current_packet_size;
 	guint inc;
 	char *buffer;
 	guint last_size = 0;
+	gboolean success;
 
 	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), 1500);
 
@@ -565,6 +585,7 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device, GError **error)
 	inc = arv_device_get_integer_feature_increment (device, "GevSCPSPacketSize", NULL);
 	if (inc < 1)
 		inc = 1;
+	current_packet_size = arv_device_get_integer_feature_value (device, "GevSCPSPacketSize", NULL);
 	arv_device_get_integer_feature_bounds (device, "GevSCPSPacketSize", &minimum, &maximum, NULL);
 	max_size = MIN (65536, maximum);
 	min_size = MAX (ARV_GVSP_PACKET_PROTOCOL_OVERHEAD, minimum);
@@ -601,67 +622,77 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device, GError **error)
 	poll_fd.events =  G_IO_IN;
 	poll_fd.revents = 0;
 
-	current_size = 1500;
-
 	buffer = g_malloc (max_size);
 
-	do {
-		size_t read_count;
-		unsigned n_tries = 0;
+	success = test_packet_check (device, &poll_fd, socket, buffer, current_packet_size, is_command);
 
-		current_size = ((current_size + inc - 1) / inc) * inc;
+	/* When exit_early is set, the function only checks the current packet size is working.
+	 * If not, the full automatic packet size adjustement is run. */
+	if (success && exit_early) {
+		arv_debug_device ("[GvDevice::auto_packet_size] Current packet size check successfull "
+				  "(%" G_GINT64_FORMAT " bytes)",
+				  current_packet_size);
 
-		arv_debug_device ("[GvDevice::auto_packet_size] Try packet size = %d", current_size);
-		arv_device_set_integer_feature_value (device, "GevSCPSPacketSize", current_size, NULL);
-
-		current_size = arv_device_get_integer_feature_value(device, "GevSCPSPacketSize", NULL);
-
-		if (current_size == last_size)
-			break;
-
-		last_size = current_size;
+		packet_size = current_packet_size;
+	} else {
+		guint current_size = CLAMP (current_packet_size, min_size, max_size);
 
 		do {
-			if (is_command) {
-				arv_device_execute_command (device, "GevSCPSFireTestPacket", NULL);
+			current_size = ((current_size + inc - 1) / inc) * inc;
+
+			arv_debug_device ("[GvDevice::auto_packet_size] Try packet size = %d", current_size);
+			arv_device_set_integer_feature_value (device, "GevSCPSPacketSize", current_size, NULL);
+
+			current_size = arv_device_get_integer_feature_value (device, "GevSCPSPacketSize", NULL);
+
+			if (current_size == last_size)
+				break;
+
+			last_size = current_size;
+
+			success = test_packet_check (device, &poll_fd, socket, buffer, current_size, is_command);
+
+			if (success) {
+				packet_size = current_size;
+				min_size = current_size;
+				current_size = (max_size - min_size) / 2 + min_size;
 			} else {
-				arv_device_set_boolean_feature_value (device, "GevSCPSFireTestPacket", FALSE, NULL);
-				arv_device_set_boolean_feature_value (device, "GevSCPSFireTestPacket", TRUE, NULL);
+				max_size = current_size;
+				current_size = (max_size - min_size) / 2 + min_size;
 			}
+		} while ((max_size - min_size) > 16);
 
-			do {
-				n_events = g_poll (&poll_fd, 1, 10);
-				if (n_events != 0)
-					read_count = g_socket_receive (socket, buffer, 16384, NULL, NULL);
-				else
-					read_count = 0;
-				/* Discard late packets, read_count should be equal to packet size minus IP and UDP headers */
-			} while (n_events != 0 && read_count != (current_size - sizeof (struct iphdr) - sizeof (struct udphdr)));
-
-			n_tries++;
-		} while (n_events == 0 && n_tries < 3);
-
-		if (n_events != 0) {
-			arv_debug_device ("[GvDevice::auto_packet_size] Received %d bytes", (int) read_count);
-
-			packet_size = current_size;
-			min_size = current_size;
-			current_size = (max_size - min_size) / 2 + min_size;
-		} else {
-			max_size = current_size;
-			current_size = (max_size - min_size) / 2 + min_size;
-		}
-	} while ((max_size - min_size) > 16);
+		arv_debug_device ("[GvDevice::auto_packet_size] Packet size set to %d bytes", packet_size);
+	}
 
 	g_clear_pointer (&buffer, g_free);
 	g_clear_object (&socket);
-
-	arv_debug_device ("[GvDevice::auto_packet_size] Packet size set to %d bytes", packet_size);
 
 	arv_device_set_boolean_feature_value (device, "GevSCPSDoNotFragment", do_not_fragment, NULL);
 	arv_device_set_integer_feature_value (device, "GevSCPSPacketSize", packet_size, NULL);
 
 	return packet_size;
+}
+
+/**
+ * arv_gv_device_auto_packet_size:
+ * @gv_device: a #ArvGvDevice
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Automatically determine the biggest packet size that can be used data
+ * streaming, and set GevSCPSPacketSize value accordingly. This function relies
+ * on the GevSCPSFireTestPacket feature. If this feature is not available, the
+ * packet size will be set to a default value (1500 bytes).
+ *
+ * Returns: The packet size, in bytes.
+ *
+ * Since: 0.6.0
+ */
+
+guint
+arv_gv_device_auto_packet_size (ArvGvDevice *gv_device, GError **error)
+{
+	return auto_packet_size (gv_device, FALSE, error);
 }
 
 /**
@@ -679,7 +710,7 @@ arv_gv_device_is_controller (ArvGvDevice *gv_device)
 	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
 
 	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), 0);
-	
+
 	return priv->io_data->is_controller;
 }
 
@@ -1065,6 +1096,7 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
 	ArvStream *stream;
 	guint32 n_stream_channels;
+	GError *local_error = NULL;
 
 	n_stream_channels = arv_device_get_integer_feature_value (device, "GevStreamChannelCount", NULL);
 	arv_debug_device ("[GvDevice::create_stream] Number of stream channels = %d", n_stream_channels);
@@ -1079,6 +1111,12 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 		arv_warning_device ("[GvDevice::create_stream] Can't create stream without control access");
 		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_CONTROLLER,
 			     "Controller privilege required for streaming control");
+		return NULL;
+	}
+
+	auto_packet_size (gv_device, TRUE, &local_error);
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
 		return NULL;
 	}
 
