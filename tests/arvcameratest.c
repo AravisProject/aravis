@@ -359,13 +359,6 @@ main (int argc, char **argv)
 		printf ("exposure              = %g µs\n", exposure);
 		printf ("gain                  = %d dB\n", gain);
 
-		if (arv_camera_is_gv_device (camera)) {
-			printf ("gv n_stream channels  = %d\n", arv_camera_gv_get_n_stream_channels (camera, NULL));
-			printf ("gv current channel    = %d\n", arv_camera_gv_get_current_stream_channel (camera, NULL));
-			g_print ("gv packet delay       = %" G_GINT64_FORMAT " ns\n", arv_camera_gv_get_packet_delay (camera, NULL));
-			printf ("gv packet size        = %d bytes\n", arv_camera_gv_get_packet_size (camera, NULL));
-		}
-
 		if (arv_camera_is_uv_device (camera)) {
 			guint min,max;
 
@@ -374,6 +367,16 @@ main (int argc, char **argv)
 		}
 
 		stream = arv_camera_create_stream (camera, stream_cb, NULL, &error);
+
+		if (arv_camera_is_gv_device (camera)) {
+			printf ("gv n_stream channels  = %d\n", arv_camera_gv_get_n_stream_channels (camera, NULL));
+			printf ("gv current channel    = %d\n",
+				arv_camera_gv_get_current_stream_channel (camera, NULL));
+			g_print ("gv packet delay       = %" G_GINT64_FORMAT " ns\n",
+				 arv_camera_gv_get_packet_delay (camera, NULL));
+			printf ("gv packet size        = %d bytes\n", arv_camera_gv_get_packet_size (camera, NULL));
+		}
+
 		if (ARV_IS_STREAM (stream)) {
 			if (ARV_IS_GV_STREAM (stream)) {
 				if (arv_option_auto_socket_buffer)
