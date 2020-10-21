@@ -324,7 +324,7 @@ else # Diff-only.
         | "${format_diff_args[@]}" \
             -p1 \
             -style="$style" \
-            -iregex="$exclusions_regex"'.*\.(c|cpp|cxx|cc|h|hpp|m|mm|js|java)' \
+            -iregex="$exclusions_regex"'.*\.(c|cpp|cxx|cc|m|mm|js|java)' \
             > "$patch_dest" \
         || exit 1
 
