@@ -91,6 +91,8 @@ typedef struct {
 
 	ArvGvStreamOption stream_options;
 	ArvGvPacketSizeAdjustement packet_size_adjustement;
+
+	gboolean first_stream_created;
 } ArvGvDevicePrivate ;
 
 struct _ArvGvDevice {
@@ -703,7 +705,10 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device, GError **error)
  * @adjustement: a #ArvGvPacketSizeAdjustement option
  *
  * Sets the option for the packet size adjustement happening at stream object creation. See
- * arv_gv_device_auto_packet_size().
+ * arv_gv_device_auto_packet_size() for a description of the packet adjustement feature. The default behaviour is
+ * @ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE_ONCE, which means the packet size is adjusted if the current packet size
+ * check fails, and only the first time arv_device_create_stream() is successfully called during @gv_device instance
+ * life.
  *
  * Since: 0.8.3
  */
@@ -1137,8 +1142,13 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 		return NULL;
 	}
 
-	if (priv->packet_size_adjustement != ARV_GV_PACKET_SIZE_ADJUSTEMENT_NEVER) {
-		auto_packet_size (gv_device, priv->packet_size_adjustement == ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE,
+	if (priv->packet_size_adjustement != ARV_GV_PACKET_SIZE_ADJUSTEMENT_NEVER &&
+	    ((priv->packet_size_adjustement != ARV_GV_PACKET_SIZE_ADJUSTEMENT_ONCE &&
+	      priv->packet_size_adjustement != ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE_ONCE) ||
+	     !priv->first_stream_created)) {
+		auto_packet_size (gv_device,
+				  priv->packet_size_adjustement == ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE ||
+				      priv->packet_size_adjustement == ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE_ONCE,
 				  &local_error);
 		if (local_error != NULL) {
 			g_propagate_error (error, local_error);
@@ -1152,6 +1162,8 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 
 	if (!priv->is_packet_resend_supported)
 		g_object_set (stream, "packet-resend", ARV_GV_STREAM_PACKET_RESEND_NEVER, NULL);
+
+	priv->first_stream_created = TRUE;
 
 	return stream;
 }
@@ -1526,6 +1538,7 @@ arv_gv_device_class_init (ArvGvDeviceClass *gv_device_class)
 					 g_param_spec_enum ("packet-size-adjustement", "Packet size adjustement",
 							    "Packet size adjustement option",
 							    ARV_TYPE_GV_PACKET_SIZE_ADJUSTEMENT,
-							    ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE,
-							    G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+							    ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE_ONCE,
+							    G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+								G_PARAM_CONSTRUCT));
 }

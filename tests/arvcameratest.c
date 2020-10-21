@@ -83,7 +83,8 @@ static const GOptionEntry arv_option_entries[] =
 	},
 	{
 		"packet-size-adjustement",		'j', 0, G_OPTION_ARG_STRING,
-		&arv_option_packet_size_adjustement,	"Packet size adjustement",  "{never|always|on-failure}"
+		&arv_option_packet_size_adjustement,	"Packet size adjustement",
+		"{never|always|once|on-failure|on-failure-once}"
 	},
 	{
 		"no-packet-resend",			'r', 0, G_OPTION_ARG_NONE,
@@ -341,12 +342,18 @@ main (int argc, char **argv)
 			arv_camera_uv_set_bandwidth (camera, arv_option_bandwidth_limit, NULL);
 		}
 
-		adjustement = ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE;
+		adjustement = ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE_ONCE;
 		if (arv_option_packet_size_adjustement != NULL) {
 			if (g_ascii_strcasecmp (arv_option_packet_size_adjustement, "always") == 0)
 				adjustement = ARV_GV_PACKET_SIZE_ADJUSTEMENT_ALWAYS;
 			else if (g_ascii_strcasecmp (arv_option_packet_size_adjustement, "never") == 0)
 				adjustement = ARV_GV_PACKET_SIZE_ADJUSTEMENT_NEVER;
+			else if (g_ascii_strcasecmp (arv_option_packet_size_adjustement, "once") == 0)
+				adjustement = ARV_GV_PACKET_SIZE_ADJUSTEMENT_ONCE;
+			else if (g_ascii_strcasecmp (arv_option_packet_size_adjustement, "on-failure") == 0)
+				adjustement = ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE;
+			else if (g_ascii_strcasecmp (arv_option_packet_size_adjustement, "on-failure-once") == 0)
+				adjustement = ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE_ONCE;
 		}
 
 		if (arv_camera_is_gv_device (camera)) {
