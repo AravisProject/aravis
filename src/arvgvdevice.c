@@ -49,7 +49,8 @@ enum
 {
 	PROP_0,
 	PROP_GV_DEVICE_INTERFACE_ADDRESS,
-	PROP_GV_DEVICE_DEVICE_ADDRESS
+	PROP_GV_DEVICE_DEVICE_ADDRESS,
+	PROP_GV_DEVICE_PACKET_SIZE_ADJUSTEMENT
 };
 
 typedef struct {
@@ -89,6 +90,7 @@ typedef struct {
 	gboolean is_write_memory_supported;
 
 	ArvGvStreamOption stream_options;
+	ArvGvPacketSizeAdjustement packet_size_adjustement;
 } ArvGvDevicePrivate ;
 
 struct _ArvGvDevice {
@@ -696,6 +698,27 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device, GError **error)
 }
 
 /**
+ * arv_gv_device_set_packet_size_adjustement:
+ * @gv_device: a #ArvGvDevice
+ * @adjustement: a #ArvGvPacketSizeAdjustement option
+ *
+ * Sets the option for the packet size adjustement happening at stream object creation. See
+ * arv_gv_device_auto_packet_size().
+ *
+ * Since: 0.8.3
+ */
+
+void
+arv_gv_device_set_packet_size_adjustement (ArvGvDevice *gv_device, ArvGvPacketSizeAdjustement adjustement)
+{
+	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
+
+	g_return_if_fail (ARV_IS_GV_DEVICE (gv_device));
+
+	priv->packet_size_adjustement = adjustement;
+}
+
+/**
  * arv_gv_device_is_controller:
  * @gv_device: a #ArvGvDevice
  *
@@ -1114,10 +1137,13 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 		return NULL;
 	}
 
-	auto_packet_size (gv_device, TRUE, &local_error);
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return NULL;
+	if (priv->packet_size_adjustement != ARV_GV_PACKET_SIZE_ADJUSTEMENT_NEVER) {
+		auto_packet_size (gv_device, priv->packet_size_adjustement == ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE,
+				  &local_error);
+		if (local_error != NULL) {
+			g_propagate_error (error, local_error);
+			return NULL;
+		}
 	}
 
 	stream = arv_gv_stream_new (gv_device, callback, user_data, error);
@@ -1437,8 +1463,26 @@ arv_gv_device_set_property (GObject *self, guint prop_id, const GValue *value, G
 			g_clear_object (&priv->device_address);
 			priv->device_address = g_value_dup_object (value);
 			break;
+		case PROP_GV_DEVICE_PACKET_SIZE_ADJUSTEMENT:
+			priv->packet_size_adjustement = g_value_get_enum (value);
+			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
+			break;
+	}
+}
+
+static void
+arv_gv_device_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+{
+	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (ARV_GV_DEVICE (object));
+
+	switch (prop_id) {
+		case PROP_GV_DEVICE_PACKET_SIZE_ADJUSTEMENT:
+			g_value_set_enum (value, priv->packet_size_adjustement);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 			break;
 	}
 }
@@ -1452,6 +1496,7 @@ arv_gv_device_class_init (ArvGvDeviceClass *gv_device_class)
 	object_class->finalize = arv_gv_device_finalize;
 	object_class->constructed = arv_gv_device_constructed;
 	object_class->set_property = arv_gv_device_set_property;
+	object_class->get_property = arv_gv_device_get_property;
 
 	device_class->create_stream = arv_gv_device_create_stream;
 	device_class->get_genicam_xml = arv_gv_device_get_genicam_xml;
@@ -1477,4 +1522,10 @@ arv_gv_device_class_init (ArvGvDeviceClass *gv_device_class)
 				      "The device address",
 				      G_TYPE_INET_ADDRESS,
 				      G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property (object_class, PROP_GV_DEVICE_PACKET_SIZE_ADJUSTEMENT,
+					 g_param_spec_enum ("packet-size-adjustement", "Packet size adjustement",
+							    "Packet size adjustement option",
+							    ARV_TYPE_GV_PACKET_SIZE_ADJUSTEMENT,
+							    ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE,
+							    G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }

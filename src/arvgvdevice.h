@@ -34,6 +34,21 @@
 
 G_BEGIN_DECLS
 
+/**
+ * ArvGvPacketSizeAdjustement:
+ * @ARV_GV_PACKET_SIZE_ADJUSTEMENT_NEVER: never adjust packet size
+ * @ARV_GV_PACKET_SIZE_ADJUSTEMENT_ALWAYS: always adjust the stream packet size
+ * @ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE: adjust packet size if test packet check fails with current packet
+ * size
+ */
+
+typedef enum
+{
+	ARV_GV_PACKET_SIZE_ADJUSTEMENT_NEVER,
+	ARV_GV_PACKET_SIZE_ADJUSTEMENT_ALWAYS,
+	ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE
+} ArvGvPacketSizeAdjustement;
+
 #define ARV_TYPE_GV_DEVICE             (arv_gv_device_get_type ())
 G_DECLARE_FINAL_TYPE (ArvGvDevice, arv_gv_device, ARV, GV_DEVICE, ArvDevice)
 
@@ -50,6 +65,8 @@ GSocketAddress *	arv_gv_device_get_device_address  		(ArvGvDevice *device);
 
 guint			arv_gv_device_get_packet_size 			(ArvGvDevice *gv_device, GError **error);
 void			arv_gv_device_set_packet_size 			(ArvGvDevice *gv_device, gint packet_size, GError **error);
+void 			arv_gv_device_set_packet_size_adjustement 	(ArvGvDevice *gv_device,
+									 ArvGvPacketSizeAdjustement adjustement);
 guint			arv_gv_device_auto_packet_size 			(ArvGvDevice *gv_device, GError **error);
 
 ArvGvStreamOption	arv_gv_device_get_stream_options		(ArvGvDevice *gv_device);
