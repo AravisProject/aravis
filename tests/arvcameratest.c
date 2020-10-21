@@ -342,7 +342,6 @@ main (int argc, char **argv)
 			arv_camera_uv_set_bandwidth (camera, arv_option_bandwidth_limit, NULL);
 		}
 
-		adjustement = ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE_ONCE;
 		if (arv_option_packet_size_adjustement != NULL) {
 			if (g_ascii_strcasecmp (arv_option_packet_size_adjustement, "always") == 0)
 				adjustement = ARV_GV_PACKET_SIZE_ADJUSTEMENT_ALWAYS;
@@ -363,7 +362,8 @@ main (int argc, char **argv)
 			arv_camera_gv_set_stream_options (camera, arv_option_no_packet_socket ?
 							  ARV_GV_STREAM_OPTION_PACKET_SOCKET_DISABLED :
 							  ARV_GV_STREAM_OPTION_NONE);
-			arv_camera_gv_set_packet_size_adjustement (camera, adjustement);
+			if (arv_option_packet_size_adjustement != NULL)
+				arv_camera_gv_set_packet_size_adjustement (camera, adjustement);
 		}
 
 		arv_camera_get_region (camera, &x, &y, &width, &height, NULL);
