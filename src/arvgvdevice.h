@@ -37,16 +37,20 @@ G_BEGIN_DECLS
 /**
  * ArvGvPacketSizeAdjustement:
  * @ARV_GV_PACKET_SIZE_ADJUSTEMENT_NEVER: never adjust packet size
+ * @ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE_ONCE: adjust packet size if test packet check fails the with current
+ * packet size, only on the first stream creation
+ * @ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE: adjust packet size if test packet check fails with current packet size
+ * @ARV_GV_PACKET_SIZE_ADJUSTEMENT_ONCE: adjust packet size on the first stream creation
  * @ARV_GV_PACKET_SIZE_ADJUSTEMENT_ALWAYS: always adjust the stream packet size
- * @ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE: adjust packet size if test packet check fails with current packet
- * size
  */
 
 typedef enum
 {
 	ARV_GV_PACKET_SIZE_ADJUSTEMENT_NEVER,
-	ARV_GV_PACKET_SIZE_ADJUSTEMENT_ALWAYS,
-	ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE
+	ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE_ONCE,
+	ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE,
+	ARV_GV_PACKET_SIZE_ADJUSTEMENT_ONCE,
+	ARV_GV_PACKET_SIZE_ADJUSTEMENT_ALWAYS
 } ArvGvPacketSizeAdjustement;
 
 #define ARV_TYPE_GV_DEVICE             (arv_gv_device_get_type ())
