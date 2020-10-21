@@ -569,8 +569,7 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 	gboolean do_not_fragment;
 	gboolean is_command;
 	guint max_size, min_size;
-	guint packet_size = 1500;
-	gint64 minimum, maximum, current_packet_size;
+	gint64 minimum, maximum, packet_size;
 	guint inc;
 	char *buffer;
 	guint last_size = 0;
@@ -580,27 +579,23 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 
 	node = arv_device_get_feature (device, "GevSCPSFireTestPacket");
 	if (!ARV_IS_GC_COMMAND (node) && !ARV_IS_GC_BOOLEAN (node)) {
-		arv_debug_device ("[GvDevice::auto_packet_size] No GevSCPSFireTestPacket feature found, "
-				  "use default packet size (%d bytes)",
-				  packet_size);
-		return packet_size;
+		arv_debug_device ("[GvDevice::auto_packet_size] No GevSCPSFireTestPacket feature found");
+		return arv_device_get_integer_feature_value (device, "GevSCPSPacketSize", error);
 	}
 
 	inc = arv_device_get_integer_feature_increment (device, "GevSCPSPacketSize", NULL);
 	if (inc < 1)
 		inc = 1;
-	current_packet_size = arv_device_get_integer_feature_value (device, "GevSCPSPacketSize", NULL);
+	packet_size = arv_device_get_integer_feature_value (device, "GevSCPSPacketSize", NULL);
 	arv_device_get_integer_feature_bounds (device, "GevSCPSPacketSize", &minimum, &maximum, NULL);
 	max_size = MIN (65536, maximum);
 	min_size = MAX (ARV_GVSP_PACKET_PROTOCOL_OVERHEAD, minimum);
 
 	if (max_size < min_size ||
 	    inc > max_size - min_size ||
-	    max_size < packet_size ||
-	    min_size > packet_size ||
 	    inc > 16) {
 		arv_warning_device ("[GvDevice::auto_packet_size] Invalid GevSCPSPacketSize properties");
-		return packet_size;
+		return arv_device_get_integer_feature_value (device, "GevSCPSPacketSize", error);
 	}
 
 	is_command = ARV_IS_GC_COMMAND (node);
@@ -628,18 +623,16 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 
 	buffer = g_malloc (max_size);
 
-	success = test_packet_check (device, &poll_fd, socket, buffer, current_packet_size, is_command);
+	success = test_packet_check (device, &poll_fd, socket, buffer, packet_size, is_command);
 
 	/* When exit_early is set, the function only checks the current packet size is working.
 	 * If not, the full automatic packet size adjustement is run. */
 	if (success && exit_early) {
 		arv_debug_device ("[GvDevice::auto_packet_size] Current packet size check successfull "
 				  "(%" G_GINT64_FORMAT " bytes)",
-				  current_packet_size);
-
-		packet_size = current_packet_size;
+				  packet_size);
 	} else {
-		guint current_size = CLAMP (current_packet_size, min_size, max_size);
+		guint current_size = CLAMP (packet_size, min_size, max_size);
 
 		do {
 			current_size = ((current_size + inc - 1) / inc) * inc;
@@ -666,14 +659,16 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 			}
 		} while ((max_size - min_size) > 16);
 
-		arv_debug_device ("[GvDevice::auto_packet_size] Packet size set to %d bytes", packet_size);
+		arv_device_set_integer_feature_value (device, "GevSCPSPacketSize", packet_size, error);
+
+		arv_debug_device ("[GvDevice::auto_packet_size] Packet size set to %" G_GINT64_FORMAT " bytes",
+				  packet_size);
 	}
 
 	g_clear_pointer (&buffer, g_free);
 	g_clear_object (&socket);
 
 	arv_device_set_boolean_feature_value (device, "GevSCPSDoNotFragment", do_not_fragment, NULL);
-	arv_device_set_integer_feature_value (device, "GevSCPSPacketSize", packet_size, NULL);
 
 	return packet_size;
 }
@@ -683,12 +678,10 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
  * @gv_device: a #ArvGvDevice
  * @error: a #GError placeholder, %NULL to ignore
  *
- * Automatically determine the biggest packet size that can be used data
- * streaming, and set GevSCPSPacketSize value accordingly. This function relies
- * on the GevSCPSFireTestPacket feature. If this feature is not available, the
- * packet size will be set to a default value (1500 bytes).
+ * Automatically determine the biggest packet size that can be used data streaming, and set GevSCPSPacketSize value
+ * accordingly. This function relies on the GevSCPSFireTestPacket feature.
  *
- * Returns: The packet size, in bytes.
+ * Returns: The automatic packet size, in bytes, or the current one if GevSCPSFireTestPacket is not supported.
  *
  * Since: 0.6.0
  */
