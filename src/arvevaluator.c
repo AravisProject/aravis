@@ -393,11 +393,11 @@ arv_get_next_token (char **expression, gboolean previous_token_was_operand, gboo
 				*expression += length_int64;
 			}
 		}
-	} else if (g_ascii_isalpha (**expression) || **expression=='_') {
+	} else if (g_ascii_isalpha (**expression) || **expression=='_' || **expression=='.') {
 		char *end = *expression;
 		ptrdiff_t token_length;
 
-		while (g_ascii_isalnum (*end) || *end == '_')
+		while (g_ascii_isalnum (*end) || *end == '_' || *end == '.')
 			end++;
 
 		token_length = end - *expression;
