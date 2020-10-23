@@ -419,17 +419,30 @@ arv_gv_device_heartbeat_thread (void *data)
 
 /* ArvGvDevice implemenation */
 
-static gboolean
-arv_gv_device_take_control (ArvGvDevice *gv_device)
+/**
+ * arv_gv_device_take_control:
+ * @gv_device: a #ArvGvDevice
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: whether the control was successfully acquired
+ *
+ * Since: 0.8.3
+ */
+
+gboolean
+arv_gv_device_take_control (ArvGvDevice *gv_device, GError **error)
 {
 	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
-	gboolean success;
+	gboolean success = TRUE;
 
-	success = arv_device_write_register (ARV_DEVICE (gv_device),
-					     ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET,
-					     ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_CONTROL, NULL);
+	if (!priv->io_data->is_controller) {
+		success = arv_device_write_register (ARV_DEVICE (gv_device),
+						     ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET,
+						     ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_CONTROL,
+						     error);
 
-	priv->io_data->is_controller = success;
+		priv->io_data->is_controller = success;
+	}
 
 	if (!success)
 		arv_warning_device ("[GvDevice::take_control] Can't get control access");
@@ -437,16 +450,35 @@ arv_gv_device_take_control (ArvGvDevice *gv_device)
 	return success;
 }
 
-static gboolean
-arv_gv_device_leave_control (ArvGvDevice *gv_device)
+/**
+ * arv_gv_device_leave_control:
+ * @gv_device: a #ArvGvDevice
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: whether the control was successfully relinquished
+ *
+ * Since: 0.8.3
+ */
+
+gboolean
+arv_gv_device_leave_control (ArvGvDevice *gv_device, GError **error)
 {
 	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
-	gboolean success;
+	gboolean success = TRUE;
 
-	priv->io_data->is_controller = FALSE;
+	if (priv->io_data->is_controller) {
+		priv->io_data->is_controller = FALSE;
 
-	success = arv_device_write_register (ARV_DEVICE (gv_device),
-					    ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET, 0, NULL);
+		success = arv_device_write_register (ARV_DEVICE (gv_device),
+						     ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET,
+						     0,
+						     error);
+
+		priv->io_data->is_controller = !success;
+	}
+
+	if (!success)
+		arv_warning_device ("[GvDevice::leave_control] Can't relinquish control access");
 
 	return success;
 }
@@ -1260,7 +1292,7 @@ arv_gv_device_constructed (GObject *object)
 		return;
 	}
 
-	arv_gv_device_take_control (gv_device);
+	arv_gv_device_take_control (gv_device, NULL);
 
 	heartbeat_data = g_new (ArvGvDeviceHeartbeatData, 1);
 	heartbeat_data->gv_device = gv_device;
@@ -1317,7 +1349,7 @@ arv_gv_device_finalize (GObject *object)
 		priv->heartbeat_thread = NULL;
 	}
 
-	arv_gv_device_leave_control (gv_device);
+	arv_gv_device_leave_control (gv_device, NULL);
 
 	io_data = priv->io_data;
 	g_clear_object (&io_data->device_address);
