@@ -936,7 +936,7 @@ arv_fake_camera_new_full (const char *serial_number, const char *genicam_filenam
 
 	if (filename) {
 		if (!g_file_get_contents (filename, &fake_camera->priv->genicam_xml, &fake_camera->priv->genicam_xml_size, &error)) {
-			arv_warning_device ("Failed to load genicam file '%s': %s",
+			g_critical ("Failed to load genicam file '%s': %s",
 					    filename, error != NULL ? error->message : "Unknown reason");
 			g_clear_error (&error);
 			fake_camera->priv->genicam_xml = NULL;
@@ -945,7 +945,7 @@ arv_fake_camera_new_full (const char *serial_number, const char *genicam_filenam
 	} else {
 		GBytes* bytes = g_resources_lookup_data("/org/gnome/aravis/arv-fake-camera.xml", G_RESOURCE_FLAGS_NONE, &error);
 		if (error != NULL) {
-			arv_warning_device ("Failed to load embedded resource arv-fake-camera.xml: %s",error->message);
+			g_critical ("Failed to load embedded resource arv-fake-camera.xml: %s",error->message);
 			g_clear_error (&error);
 		} else {
 			fake_camera->priv->genicam_xml = g_strndup (g_bytes_get_data(bytes,NULL), g_bytes_get_size(bytes));
