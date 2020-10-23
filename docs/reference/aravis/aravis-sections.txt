@@ -976,6 +976,8 @@ arv_gv_device_set_packet_size
 arv_gv_device_get_stream_options
 arv_gv_device_set_stream_options
 arv_gv_device_auto_packet_size
+arv_gv_device_take_control
+arv_gv_device_leave_control
 arv_gv_device_is_controller
 <SUBSECTION Standard>
 ARV_GV_DEVICE
