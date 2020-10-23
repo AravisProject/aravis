@@ -383,8 +383,7 @@ arv_buffer_set_system_timestamp (ArvBuffer *buffer, guint64 timestamp_ns)
  * arv_buffer_get_frame_id:
  * @buffer: a #ArvBuffer
  *
- * Gets the buffer frame id. For GigEVision devices, valid values are in the
- * 1..65535 range.
+ * Gets the buffer frame id. For GigEVision devices, 0 is an invalid value.
  *
  * Returns: frame id, 0 on error.
  *
@@ -397,6 +396,24 @@ arv_buffer_get_frame_id (ArvBuffer *buffer)
 	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
 
 	return buffer->priv->frame_id;
+}
+
+/**
+ * arv_buffer_get_frame_id:
+ * @buffer: a #ArvBuffer
+ * @frame_id: a #guint64
+ *
+ * Sets the buffer frame id.  For GigEVision devices, 0 is an invalid value.
+ *
+ * Since: 0.8.3
+ */
+
+void
+arv_buffer_set_frame_id (ArvBuffer *buffer, guint64 frame_id)
+{
+	g_return_if_fail (ARV_IS_BUFFER (buffer));
+
+	buffer->priv->frame_id = frame_id;
 }
 
 /**

@@ -104,6 +104,7 @@ guint64			arv_buffer_get_timestamp	(ArvBuffer *buffer);
 void			arv_buffer_set_timestamp	(ArvBuffer *buffer, guint64 timestamp_ns);
 guint64			arv_buffer_get_system_timestamp	(ArvBuffer *buffer);
 void			arv_buffer_set_system_timestamp	(ArvBuffer *buffer, guint64 timestamp_ns);
+void			arv_buffer_set_frame_id		(ArvBuffer *buffer, guint64 frame_id);
 guint64 		arv_buffer_get_frame_id 	(ArvBuffer *buffer);
 const void *		arv_buffer_get_data		(ArvBuffer *buffer, size_t *size);
 
