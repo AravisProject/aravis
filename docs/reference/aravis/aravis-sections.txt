@@ -152,6 +152,7 @@ arv_buffer_get_timestamp
 arv_buffer_set_timestamp
 arv_buffer_get_system_timestamp
 arv_buffer_set_system_timestamp
+arv_buffer_set_frame_id
 arv_buffer_get_frame_id
 arv_buffer_get_payload_type
 arv_buffer_get_status
@@ -976,6 +977,8 @@ arv_gv_device_set_packet_size
 arv_gv_device_get_stream_options
 arv_gv_device_set_stream_options
 arv_gv_device_auto_packet_size
+arv_gv_device_take_control
+arv_gv_device_leave_control
 arv_gv_device_is_controller
 <SUBSECTION Standard>
 ARV_GV_DEVICE
