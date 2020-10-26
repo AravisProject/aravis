@@ -63,6 +63,12 @@ typedef struct {
 
 	GPollFD poll_in_event;
 
+	#ifdef G_OS_WIN32
+		WSANETWORKEVENTS wsaNetEvents;
+		WSAEVENT hEvent;
+	#endif
+
+
 	void *buffer;
 
 	unsigned int gvcp_n_retries;
@@ -127,7 +133,6 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 	gboolean success = FALSE;
 	ArvGvcpError command_error = ARV_GVCP_ERROR_NONE;
 	int count;
-
 	switch (command) {
 		case ARV_GVCP_COMMAND_READ_MEMORY_CMD:
 			operation = "read_memory";
@@ -207,10 +212,13 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 				success = TRUE;
 				success = success && g_poll (&io_data->poll_in_event, 1, timeout_ms) > 0;
 
-				if (success)
+				if (success) {
+					#ifdef G_OS_WIN32
+						WSAEnumNetworkEvents (g_socket_get_fd(io_data->socket), io_data->hEvent, &io_data->wsaNetEvents);
+					#endif
 					count = g_socket_receive (io_data->socket, io_data->buffer,
 								  ARV_GV_DEVICE_BUFFER_SIZE, NULL, &local_error);
-				else
+				} else
 					count = 0;
 				success = success && (count >= sizeof (ArvGvcpHeader));
 
@@ -531,6 +539,11 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device, GError **error)
 	guint inc;
 	char *buffer;
 	guint last_size = 0;
+	#ifdef G_OS_WIN32
+		WSANETWORKEVENTS wsaNetEvents;
+		WSAEVENT hEvent;
+		int wsaRes;
+	#endif
 
 	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), 1500);
 
@@ -576,8 +589,16 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device, GError **error)
 
 	do_not_fragment = arv_device_get_boolean_feature_value (device, "GevSCPSDoNotFragment", NULL);
 	arv_device_set_boolean_feature_value (device, "GevSCPSDoNotFragment", TRUE, NULL);
-
-	poll_fd.fd = g_socket_get_fd (socket);
+	
+	#ifdef G_OS_WIN32
+		hEvent = WSACreateEvent();
+		g_assert (hEvent!=WSA_INVALID_EVENT);
+		poll_fd.fd = (guint64) hEvent;
+		wsaRes = WSAEventSelect (g_socket_get_fd (socket), hEvent, FD_READ);
+		g_assert (wsaRes == 0);
+	#else
+		poll_fd.fd = g_socket_get_fd (socket);
+	#endif
 	poll_fd.events =  G_IO_IN;
 	poll_fd.revents = 0;
 
@@ -611,6 +632,11 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device, GError **error)
 
 			do {
 				n_events = g_poll (&poll_fd, 1, 10);
+				#ifdef G_OS_WIN32
+					/* clear WSA-internal event records so that g_poll does not signal it again */
+					WSAEnumNetworkEvents (g_socket_get_fd(socket), hEvent, &wsaNetEvents);
+				#endif
+
 				if (n_events != 0)
 					read_count = g_socket_receive (socket, buffer, 16384, NULL, NULL);
 				else
@@ -635,6 +661,9 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device, GError **error)
 
 	g_clear_pointer (&buffer, g_free);
 	g_clear_object (&socket);
+	#ifdef G_OS_WIN32
+		WSACloseEvent(hEvent);
+	#endif
 
 	arv_debug_device ("[GvDevice::auto_packet_size] Packet size set to %d bytes", packet_size);
 
@@ -1208,6 +1237,9 @@ arv_gv_device_constructed (GObject *object)
 	GError *local_error = NULL;
 	char *address_string;
 	guint32 capabilities;
+	#ifdef G_OS_WIN32
+		int wsaRes;
+	#endif
 
 	if (!G_IS_INET_ADDRESS (priv->interface_address) ||
 	    !G_IS_INET_ADDRESS (priv->device_address)) {
@@ -1245,7 +1277,15 @@ arv_gv_device_constructed (GObject *object)
 	io_data->buffer = g_malloc (ARV_GV_DEVICE_BUFFER_SIZE);
 	io_data->gvcp_n_retries = ARV_GV_DEVICE_GVCP_N_RETRIES_DEFAULT;
 	io_data->gvcp_timeout_ms = ARV_GV_DEVICE_GVCP_TIMEOUT_MS_DEFAULT;
-	io_data->poll_in_event.fd = g_socket_get_fd (io_data->socket);
+	#ifdef G_OS_WIN32
+		io_data->hEvent = WSACreateEvent();
+		g_assert (io_data->hEvent!=WSA_INVALID_EVENT);
+		io_data->poll_in_event.fd = (guint64) io_data->hEvent;
+		wsaRes = WSAEventSelect (g_socket_get_fd (io_data->socket), io_data->hEvent, FD_READ);
+		g_assert (wsaRes == 0);
+	#else
+		io_data->poll_in_event.fd = g_socket_get_fd (io_data->socket);
+	#endif
 	io_data->poll_in_event.events =  G_IO_IN;
 	io_data->poll_in_event.revents = 0;
 
@@ -1325,6 +1365,9 @@ arv_gv_device_finalize (GObject *object)
 	g_clear_object (&io_data->socket);
 	g_clear_pointer (&io_data->buffer, g_free);
 	g_mutex_clear (&io_data->mutex);
+	#ifdef G_OS_WIN32
+		WSACloseEvent (io_data->hEvent);
+	#endif
 
 	g_clear_pointer (&priv->io_data, g_free);
 
