@@ -107,8 +107,7 @@ arv_gv_device_get_url_regex (void)
 static GRegex *arv_gv_device_url_regex = NULL;
 
 	if (arv_gv_device_url_regex == NULL)
-		arv_gv_device_url_regex = g_regex_new ("^(local:|file:|http:)(.+\\.[^;]+);?(?:0x)?([0-9:a-f]*)?;?(?:0x)?([0-9:a-f]*)?$",
-						       G_REGEX_CASELESS, 0, NULL);
+		arv_gv_device_url_regex = g_regex_new("[\\:;\\?]", G_REGEX_CASELESS, 0, NULL);
 
 	return arv_gv_device_url_regex;
 }
@@ -715,21 +714,21 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 
 	tokens = g_regex_split (arv_gv_device_get_url_regex (), filename, 0);
 
-	if (tokens[0] != NULL && tokens[1] != NULL) {
-		if (g_ascii_strcasecmp (tokens[1], "file:") == 0) {
+	if (tokens[0] != NULL) {
+		if (g_ascii_strcasecmp (tokens[0], "file") == 0) {
 			gsize len;
-			g_file_get_contents (tokens[2], &genicam, &len, NULL);
+			g_file_get_contents (tokens[1], &genicam, &len, NULL);
 			if (genicam)
 				*size = len;
-		} else if (g_ascii_strcasecmp (tokens[1], "local:") == 0 &&
+		} else if (g_ascii_strcasecmp (tokens[0], "local") == 0 &&
+			 tokens[1] != NULL &&
 			 tokens[2] != NULL &&
-			 tokens[3] != NULL &&
-			 tokens[4] != NULL) {
+			 tokens[3] != NULL) {
 			guint32 file_address;
 			guint32 file_size;
 
-			file_address = strtoul (tokens[3], NULL, 16);
-			file_size = strtoul (tokens[4], NULL, 16);
+			file_address = strtoul (tokens[2], NULL, 16);
+			file_size = strtoul (tokens[3], NULL, 16);
 
 			arv_debug_device ("[GvDevice::load_genicam] Xml address = 0x%x - size = 0x%x - %s",
 					  file_address, file_size, tokens[2]);
@@ -751,7 +750,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 						g_string_free (string, TRUE);
 					}
 
-					if (g_str_has_suffix (tokens[2], ".zip")) {
+					if (g_str_has_suffix (tokens[1], ".zip")) {
 						ArvZip *zip;
 						const GSList *zip_files;
 
@@ -783,7 +782,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 					*size = 0;
 				}
 			}
-		} else if (g_ascii_strcasecmp (tokens[1], "http:") == 0) {
+		} else if (g_ascii_strcasecmp (tokens[0], "http") == 0) {
 			GFile *file;
 			GFileInputStream *stream;
 

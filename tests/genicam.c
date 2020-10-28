@@ -745,28 +745,37 @@ url_test (void)
 
 	tokens = g_regex_split (arv_gv_device_get_url_regex (), "Local:Basler_Ace_GigE_e7c9b87e_Version_3_3.zip;c0000000;10cca", 0);
 
-	g_assert_cmpint (g_strv_length (tokens), ==, 6);
+	g_assert_cmpint (g_strv_length (tokens), ==, 4);
 
-	g_assert_cmpstr (tokens[0], ==, "");
-	g_assert_cmpstr (tokens[1], ==, "Local:");
-	g_assert_cmpstr (tokens[2], ==, "Basler_Ace_GigE_e7c9b87e_Version_3_3.zip");
-	g_assert_cmpstr (tokens[3], ==, "c0000000");
-	g_assert_cmpstr (tokens[4], ==, "10cca");
+	g_assert_cmpstr (tokens[0], ==, "Local");
+	g_assert_cmpstr (tokens[1], ==, "Basler_Ace_GigE_e7c9b87e_Version_3_3.zip");
+	g_assert_cmpuint (strtoul(tokens[2], NULL, 16), ==, 0xC0000000);
+	g_assert_cmpuint (strtoul(tokens[3], NULL, 16), ==, 0x10CCA);
 
 	g_strfreev (tokens);
 
 	tokens = g_regex_split (arv_gv_device_get_url_regex (), "Local:C4_2040_GigE_1.0.0.zip;0x8C400904;0x4D30", 0);
 
-	g_assert_cmpint (g_strv_length (tokens), ==, 6);
+	g_assert_cmpint (g_strv_length (tokens), ==, 4);
 
-	g_assert_cmpstr (tokens[0], ==, "");
-	g_assert_cmpstr (tokens[1], ==, "Local:");
-	g_assert_cmpstr (tokens[2], ==, "C4_2040_GigE_1.0.0.zip");
-	g_assert_cmpstr (tokens[3], ==, "8C400904");
-	g_assert_cmpstr (tokens[4], ==, "4D30");
+	g_assert_cmpstr (tokens[0], ==, "Local");
+	g_assert_cmpstr (tokens[1], ==, "C4_2040_GigE_1.0.0.zip");
+	g_assert_cmpuint (strtoul(tokens[2], NULL, 16), ==, 0x8C400904);
+	g_assert_cmpuint (strtoul(tokens[3], NULL, 16), ==, 0x4D30);
 
 	g_strfreev (tokens);
 
+	tokens = g_regex_split (arv_gv_device_get_url_regex (), "Local:Mikrotron_GmbH_MC206xS11_Rev0_00_007.zip;8001000;395C?SchemaVersion=1.1.0", 0);
+
+	g_assert_cmpint (g_strv_length (tokens), ==, 5);
+
+	g_assert_cmpstr (tokens[0], ==, "Local");
+	g_assert_cmpstr (tokens[1], ==, "Mikrotron_GmbH_MC206xS11_Rev0_00_007.zip");
+	g_assert_cmpuint (strtoul(tokens[2], NULL, 16), ==, 0x8001000);
+	g_assert_cmpuint (strtoul(tokens[3], NULL, 16), ==, 0x395C);
+	g_assert_cmpstr (tokens[4], ==, "SchemaVersion=1.1.0");
+
+	g_strfreev (tokens);
 }
 
 static void
