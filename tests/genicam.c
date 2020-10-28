@@ -777,6 +777,26 @@ url_test (void)
 	g_assert_cmpstr (tokens[4], ==, "SchemaVersion=1.1.0");
 
 	g_strfreev (tokens);
+
+	tokens = g_regex_split (arv_gv_device_get_url_regex(), "file:///C|program%20files/aravis/genicam.xml?SchemaVersion=1.0.0", 0);
+
+	g_assert_cmpint (g_strv_length (tokens), ==, 3);
+
+	g_assert_cmpstr (tokens[0], ==, "file");
+	g_assert_cmpstr (tokens[1], ==, "///C|program%20files/aravis/genicam.xml");
+	g_assert_cmpstr (tokens[2], ==, "SchemaVersion=1.0.0");
+
+	g_strfreev (tokens);
+
+	tokens = g_regex_split (arv_gv_device_get_url_regex(), "http://github.com/AravisProject/aravis/tree/master/tests/data/genicam.xml", 0);
+
+	g_assert_cmpint (g_strv_length (tokens), ==, 2);
+
+	g_assert_cmpstr (tokens[0], ==, "http");
+	g_assert_cmpstr (tokens[1], ==, "//github.com/AravisProject/aravis/tree/master/tests/data/genicam.xml");
+
+	g_strfreev (tokens);
+
 }
 
 static void
