@@ -715,7 +715,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 	tokens = g_regex_split (arv_gv_device_get_url_regex (), filename, 0);
 
 	if (tokens[0] != NULL) {
-		if (g_ascii_strcasecmp (tokens[0], "file") == 0) {
+		if ((tokens[1] != NULL) && (g_ascii_strcasecmp (tokens[0], "file") == 0)) {
 			gsize len;
 			g_file_get_contents (tokens[1], &genicam, &len, NULL);
 			if (genicam)
