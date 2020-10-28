@@ -1,6 +1,7 @@
 #include <glib.h>
 #include <arv.h>
 #include <string.h>
+#include <stdlib.h>
 
 #define ARAVIS_COMPILATION
 #include "../src/arvbufferprivate.h"
