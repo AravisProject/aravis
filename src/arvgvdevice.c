@@ -38,7 +38,7 @@
 #include <arvnetworkprivate.h>
 #include <arvzip.h>
 #include <arvstr.h>
-#include <arvmisc.h>
+#include <arvmiscprivate.h>
 #include <arvenumtypes.h>
 #include <string.h>
 #include <stdlib.h>
@@ -100,18 +100,6 @@ struct _ArvGvDeviceClass {
 };
 
 G_DEFINE_TYPE_WITH_CODE (ArvGvDevice, arv_gv_device, ARV_TYPE_DEVICE, G_ADD_PRIVATE (ArvGvDevice))
-
-GRegex *
-arv_gv_device_get_url_regex (void)
-{
-static GRegex *arv_gv_device_url_regex = NULL;
-
-	if (arv_gv_device_url_regex == NULL)
-		arv_gv_device_url_regex = g_regex_new ("^(local:|file:|http:)(.+\\.[^;]+);?(?:0x)?([0-9:a-f]*)?;?(?:0x)?([0-9:a-f]*)?$",
-						       G_REGEX_CASELESS, 0, NULL);
-
-	return arv_gv_device_url_regex;
-}
 
 static gboolean
 _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
@@ -699,8 +687,11 @@ static char *
 _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 {
 	char filename[ARV_GVBS_XML_URL_SIZE];
-	char **tokens;
 	char *genicam = NULL;
+	g_autofree char *scheme = NULL;
+	g_autofree char *path = NULL;
+	guint64 file_address;
+	guint64 file_size;
 
 	g_return_val_if_fail (size != NULL, NULL);
 
@@ -713,100 +704,92 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 
 	arv_debug_device ("[GvDevice::load_genicam] xml url = '%s' at 0x%x", filename, address);
 
-	tokens = g_regex_split (arv_gv_device_get_url_regex (), filename, 0);
+	arv_parse_genicam_url (filename, ARV_GVBS_XML_URL_SIZE, &scheme, NULL, &path, NULL, NULL,
+			       &file_address, &file_size);
 
-	if (tokens[0] != NULL && tokens[1] != NULL) {
-		if (g_ascii_strcasecmp (tokens[1], "file:") == 0) {
+	if (g_ascii_strcasecmp (scheme, "file") == 0) {
+		gsize len;
+
+		g_file_get_contents (path, &genicam, &len, NULL);
+		if (genicam)
+			*size = len;
+	} else if (g_ascii_strcasecmp (scheme, "local") == 0) {
+		arv_debug_device ("[GvDevice::load_genicam] Xml address = 0x%" G_GINT64_MODIFIER "x - "
+				  "size = 0x%" G_GINT64_MODIFIER "x - %s", file_address, file_size, path);
+
+		if (file_size > 0) {
+			genicam = g_malloc (file_size);
+			if (arv_device_read_memory (ARV_DEVICE (gv_device), file_address, file_size,
+						    genicam, NULL)) {
+
+				if (arv_debug_check (&arv_debug_category_misc, ARV_DEBUG_LEVEL_LOG)) {
+					GString *string = g_string_new ("");
+
+					g_string_append_printf (string,
+								"[GvDevice::load_genicam] Raw data size = 0x%"
+								G_GINT64_MODIFIER "x\n", file_size);
+					arv_g_string_append_hex_dump (string, genicam, file_size);
+
+					arv_log_misc ("%s", string->str);
+
+					g_string_free (string, TRUE);
+				}
+
+				if (g_str_has_suffix (path, ".zip")) {
+					ArvZip *zip;
+					const GSList *zip_files;
+
+					arv_debug_device ("[GvDevice::load_genicam] Zipped xml data");
+
+					zip = arv_zip_new (genicam, file_size);
+					zip_files = arv_zip_get_file_list (zip);
+
+					if (zip_files != NULL) {
+						const char *zip_filename;
+						void *tmp_buffer;
+						size_t tmp_buffer_size;
+
+						zip_filename = arv_zip_file_get_name (zip_files->data);
+						tmp_buffer = arv_zip_get_file (zip, zip_filename,
+									       &tmp_buffer_size);
+
+						g_free (genicam);
+						file_size = tmp_buffer_size;
+						genicam = tmp_buffer;
+					} else
+						arv_warning_device ("[GvDevice::load_genicam] Invalid format");
+					arv_zip_free (zip);
+				}
+				*size = file_size;
+			} else {
+				g_free (genicam);
+				genicam = NULL;
+				*size = 0;
+			}
+		}
+	} else if (g_ascii_strcasecmp (scheme, "http")) {
+		GFile *file;
+		GFileInputStream *stream;
+
+		file = g_file_new_for_uri (filename);
+		stream = g_file_read (file, NULL, NULL);
+		if(stream) {
+			GDataInputStream *data_stream;
 			gsize len;
-			g_file_get_contents (tokens[2], &genicam, &len, NULL);
+
+			data_stream = g_data_input_stream_new (G_INPUT_STREAM (stream));
+			genicam = g_data_input_stream_read_upto (data_stream, "", 0, &len, NULL, NULL);
+
 			if (genicam)
 				*size = len;
-		} else if (g_ascii_strcasecmp (tokens[1], "local:") == 0 &&
-			 tokens[2] != NULL &&
-			 tokens[3] != NULL &&
-			 tokens[4] != NULL) {
-			guint32 file_address;
-			guint32 file_size;
 
-			file_address = strtoul (tokens[3], NULL, 16);
-			file_size = strtoul (tokens[4], NULL, 16);
-
-			arv_debug_device ("[GvDevice::load_genicam] Xml address = 0x%x - size = 0x%x - %s",
-					  file_address, file_size, tokens[2]);
-
-			if (file_size > 0) {
-				genicam = g_malloc (file_size);
-				if (arv_device_read_memory (ARV_DEVICE (gv_device), file_address, file_size,
-							    genicam, NULL)) {
-
-					if (arv_debug_check (&arv_debug_category_misc, ARV_DEBUG_LEVEL_LOG)) {
-						GString *string = g_string_new ("");
-
-						g_string_append_printf (string,
-									"[GvDevice::load_genicam] Raw data size = 0x%x\n", file_size);
-						arv_g_string_append_hex_dump (string, genicam, file_size);
-
-						arv_log_misc ("%s", string->str);
-
-						g_string_free (string, TRUE);
-					}
-
-					if (g_str_has_suffix (tokens[2], ".zip")) {
-						ArvZip *zip;
-						const GSList *zip_files;
-
-						arv_debug_device ("[GvDevice::load_genicam] Zipped xml data");
-
-						zip = arv_zip_new (genicam, file_size);
-						zip_files = arv_zip_get_file_list (zip);
-
-						if (zip_files != NULL) {
-							const char *zip_filename;
-							void *tmp_buffer;
-							size_t tmp_buffer_size;
-
-							zip_filename = arv_zip_file_get_name (zip_files->data);
-							tmp_buffer = arv_zip_get_file (zip, zip_filename,
-										       &tmp_buffer_size);
-
-							g_free (genicam);
-							file_size = tmp_buffer_size;
-							genicam = tmp_buffer;
-						} else
-							arv_warning_device ("[GvDevice::load_genicam] Invalid format");
-						arv_zip_free (zip);
-					}
-					*size = file_size;
-				} else {
-					g_free (genicam);
-					genicam = NULL;
-					*size = 0;
-				}
-			}
-		} else if (g_ascii_strcasecmp (tokens[1], "http:") == 0) {
-			GFile *file;
-			GFileInputStream *stream;
-
-			file = g_file_new_for_uri (filename);
-			stream = g_file_read (file, NULL, NULL);
-			if(stream) {
-				GDataInputStream *data_stream;
-				gsize len;
-
-				data_stream = g_data_input_stream_new (G_INPUT_STREAM (stream));
-				genicam = g_data_input_stream_read_upto (data_stream, "", 0, &len, NULL, NULL);
-
-				if (genicam)
-					*size = len;
-
-				g_object_unref (data_stream);
-				g_object_unref (stream);
-			}
-			g_object_unref (file);
+			g_object_unref (data_stream);
+			g_object_unref (stream);
 		}
+		g_object_unref (file);
+	} else {
+		g_critical ("Unkown GENICAM url scheme: '%s'", filename);
 	}
-
-	g_strfreev (tokens);
 
 	return genicam;
 }

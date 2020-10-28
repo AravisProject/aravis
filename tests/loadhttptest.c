@@ -5,16 +5,17 @@
 #include <arv.h>
 
 #define ARAVIS_COMPILATION
-#include "../src/arvgvdeviceprivate.h"
+#include "../src/arvmiscprivate.h"
 
 int
 main (int argc, char **argv)
 {
 	GFile *file;
 	GFileInputStream *stream;
+	g_autofree char *scheme = NULL;
+	g_autofree char *path = NULL;
+	g_autofree char *genicam = NULL;
 	const char *filename;
-	char *genicam = NULL;
-	char **tokens;
 	gsize len = 0;
 
 	if (argc != 2) {
@@ -24,10 +25,8 @@ main (int argc, char **argv)
 
 	filename = argv[1];
 
-	tokens = g_regex_split (arv_gv_device_get_url_regex (), filename, 0);
-
-	if (tokens[0] != NULL && tokens[1] != NULL) {
-		if (g_ascii_strcasecmp (tokens[1], "http:") == 0) {
+	if (arv_parse_genicam_url (filename, -1, &scheme, NULL, &path, NULL, NULL, NULL, NULL)) {
+		if (g_ascii_strcasecmp (scheme, "http:") == 0) {
 			file = g_file_new_for_uri (filename);
 			stream = g_file_read (file, NULL, NULL);
 			if(stream) {
@@ -43,12 +42,8 @@ main (int argc, char **argv)
 		}
 	}
 
-	g_strfreev (tokens);
-
 	g_print ("size = %" G_GSIZE_FORMAT "\n", len);
 	g_print ("%s\n", genicam != NULL ? genicam : "NULL");
-
-	g_free (genicam);
 
 	return EXIT_SUCCESS;
 }

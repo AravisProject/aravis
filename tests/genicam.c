@@ -4,6 +4,7 @@
 
 #define ARAVIS_COMPILATION
 #include "../src/arvbufferprivate.h"
+#include "../src/arvmiscprivate.h"
 
 typedef struct {
 	const char *name;
@@ -738,35 +739,64 @@ register_test (void)
 
 GRegex *arv_gv_device_get_url_regex (void);
 
+const struct {
+	const char *url;
+	const char *scheme;
+	const char *authority;
+	const char *path;
+	const char *query;
+	const char *fragment;
+	guint64 address;
+	guint64 size;
+} genicam_urls[] = {
+	{ "Local:Basler_Ace_GigE_e7c9b87e_Version_3_3.zip;c0000000;10cca",
+		"Local", NULL, "Basler_Ace_GigE_e7c9b87e_Version_3_3.zip", NULL, NULL,
+		0xc0000000, 0x10cca },
+	{ "local:C4_2040_GigE_1.0.0.zip;0x8C400904;0x4D30",
+		"local", NULL, "C4_2040_GigE_1.0.0.zip", NULL, NULL,
+		0x8C400904, 0x4D30 },
+	{ "Local:Mikrotron_GmbH_MC206xS11_Rev0_00_007.zip;8001000;395C?SchemaVersion=1.1.0",
+		"Local", NULL, "Mikrotron_GmbH_MC206xS11_Rev0_00_007.zip", "SchemaVersion=1.1.0", NULL,
+		0x8001000, 0x395C },
+	{ "http://github.com/AravisProject/aravis/tree/master/tests/data/genicam.xml",
+		"http", "github.com", "/AravisProject/aravis/tree/master/tests/data/genicam.xml", NULL, NULL,
+		0, 0 },
+	{ "file:///C|program%20files/aravis/genicam.xml?SchemaVersion=1.0.0",
+		"file", NULL, "/C|program%20files/aravis/genicam.xml", "SchemaVersion=1.0.0", NULL,
+		0, 0}
+};
+
 static void
 url_test (void)
 {
-	char **tokens;
+	unsigned int i;
 
-	tokens = g_regex_split (arv_gv_device_get_url_regex (), "Local:Basler_Ace_GigE_e7c9b87e_Version_3_3.zip;c0000000;10cca", 0);
+	for (i = 0; i < G_N_ELEMENTS (genicam_urls); i++) {
+		gboolean success;
+		g_autofree char *scheme;
+		g_autofree char *authority;
+		g_autofree char *path;
+		g_autofree char *query;
+		g_autofree char *fragment;
+		guint64 address;
+		guint64 size;
 
-	g_assert_cmpint (g_strv_length (tokens), ==, 6);
+		success = arv_parse_genicam_url (genicam_urls[i].url, -1, &scheme, &authority, &path, &query, &fragment,
+						 &address, &size);
 
-	g_assert_cmpstr (tokens[0], ==, "");
-	g_assert_cmpstr (tokens[1], ==, "Local:");
-	g_assert_cmpstr (tokens[2], ==, "Basler_Ace_GigE_e7c9b87e_Version_3_3.zip");
-	g_assert_cmpstr (tokens[3], ==, "c0000000");
-	g_assert_cmpstr (tokens[4], ==, "10cca");
+		g_assert (success);
+		g_assert_cmpstr (scheme, ==, genicam_urls[i].scheme);
+		g_assert_cmpstr (authority, ==, genicam_urls[i].authority);
+		g_assert_cmpstr (path, ==, genicam_urls[i].path);
+		g_assert_cmpstr (query, ==, genicam_urls[i].query);
+		g_assert_cmpstr (fragment, ==, genicam_urls[i].fragment);
+		g_assert_cmpint (address, ==, genicam_urls[i].address);
+		g_assert_cmpint (size, ==, genicam_urls[i].size);
 
-	g_strfreev (tokens);
+		success = arv_parse_genicam_url (genicam_urls[i].url, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
-	tokens = g_regex_split (arv_gv_device_get_url_regex (), "Local:C4_2040_GigE_1.0.0.zip;0x8C400904;0x4D30", 0);
-
-	g_assert_cmpint (g_strv_length (tokens), ==, 6);
-
-	g_assert_cmpstr (tokens[0], ==, "");
-	g_assert_cmpstr (tokens[1], ==, "Local:");
-	g_assert_cmpstr (tokens[2], ==, "C4_2040_GigE_1.0.0.zip");
-	g_assert_cmpstr (tokens[3], ==, "8C400904");
-	g_assert_cmpstr (tokens[4], ==, "4D30");
-
-	g_strfreev (tokens);
-
+		g_assert (success);
+	}
 }
 
 static void
