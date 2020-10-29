@@ -64,8 +64,11 @@ typedef struct {
 
 	gboolean is_running;
 
-	GPollFD socket_fds[3];
+	GPollFD socket_fds[ARV_GV_FAKE_CAMERA_N_INPUT_SOCKETS];
 	guint n_socket_fds;
+	#ifdef G_OS_WIN32
+		WSAEVENT hEvents[ARV_GV_FAKE_CAMERA_N_INPUT_SOCKETS];
+	#endif
 
 	GSocketAddress *controller_address;
 	gint64 controller_time;
@@ -257,6 +260,9 @@ _thread (void *user_data)
 	GInputVector input_vector;
 	int n_events;
 	gboolean is_streaming = FALSE;
+	#ifdef G_OS_WIN32
+		WSANETWORKEVENTS wsaNetEvents;
+	#endif
 
 	input_vector.buffer = g_malloc0 (ARV_GV_FAKE_CAMERA_BUFFER_SIZE);
 	input_vector.size = ARV_GV_FAKE_CAMERA_BUFFER_SIZE;
@@ -292,6 +298,10 @@ _thread (void *user_data)
 					if (G_IS_SOCKET (socket)) {
 						GSocketAddress *remote_address = NULL;
 
+						#ifdef G_OS_WIN32
+							/* clear WSA-internal event records so that g_poll does not signal it again */
+							WSAEnumNetworkEvents (g_socket_get_fd(socket), gv_fake_camera->priv->hEvents[i], &wsaNetEvents);
+						#endif
 						count = g_socket_receive_message (socket, &remote_address, &input_vector, 1, NULL, NULL,
 										  NULL, NULL, NULL);
 						if (count > 0) {
@@ -529,7 +539,17 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 				GSocket *socket = gv_fake_camera->priv->input_sockets[i];
 
 				if (G_IS_SOCKET (socket)) {
-					gv_fake_camera->priv->socket_fds[n_socket_fds].fd = g_socket_get_fd (socket);
+					#ifdef G_OS_WIN32
+						int res;
+						
+						gv_fake_camera->priv->hEvents[n_socket_fds] = WSACreateEvent();
+						g_assert (gv_fake_camera->priv->hEvents[n_socket_fds] != WSA_INVALID_EVENT);
+						res = WSAEventSelect (g_socket_get_fd (socket), gv_fake_camera->priv->hEvents[n_socket_fds], FD_READ);
+						g_assert (res == 0);
+						gv_fake_camera->priv->socket_fds[n_socket_fds].fd = (gint64) gv_fake_camera->priv->hEvents[n_socket_fds];
+					#else
+						gv_fake_camera->priv->socket_fds[n_socket_fds].fd = g_socket_get_fd (socket);
+					#endif
 					gv_fake_camera->priv->socket_fds[n_socket_fds].events = G_IO_IN;
 					gv_fake_camera->priv->socket_fds[n_socket_fds].revents = 0;
 
@@ -580,8 +600,13 @@ arv_gv_fake_camera_stop (ArvGvFakeCamera *gv_fake_camera)
 	g_thread_join (gv_fake_camera->priv->thread);
 	gv_fake_camera->priv->thread = NULL;
 
-	for (i = 0; i < ARV_GV_FAKE_CAMERA_N_INPUT_SOCKETS; i++)
+	for (i = 0; i < ARV_GV_FAKE_CAMERA_N_INPUT_SOCKETS; i++) {
 		g_clear_object (&gv_fake_camera->priv->input_sockets[i]);
+		#ifdef G_OS_WIN32
+			// TODO: check error
+			WSACloseEvent(gv_fake_camera->priv->hEvents[i]);
+		#endif
+	}
 	g_clear_object (&gv_fake_camera->priv->gvsp_socket);
 
 	g_clear_object (&gv_fake_camera->priv->controller_address);

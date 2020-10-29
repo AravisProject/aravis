@@ -764,10 +764,23 @@ _loop (ArvGvStreamThreadData *thread_data)
 	guint64 time_us;
 	size_t read_count;
 	int timeout_ms;
+	#ifdef G_OS_WIN32
+		WSAEVENT hEvent;
+		WSANETWORKEVENTS wsaNetEvents;
+		int wsaRes;
+	#endif
 
 	arv_debug_stream ("[GvStream::loop] Standard socket method");
 
-	poll_fd[0].fd = g_socket_get_fd (thread_data->socket);
+	#ifdef G_OS_WIN32
+		hEvent = WSACreateEvent();
+		poll_fd[0].fd = (gint64) hEvent;
+		g_assert (hEvent != WSA_INVALID_EVENT);
+		wsaRes = WSAEventSelect (g_socket_get_fd (thread_data->socket), hEvent, FD_READ);
+		g_assert (wsaRes == 0);
+	#else
+		poll_fd[0].fd = g_socket_get_fd (thread_data->socket);
+	#endif
 	poll_fd[0].events =  G_IO_IN;
 	poll_fd[0].revents = 0;
 
@@ -794,6 +807,9 @@ _loop (ArvGvStreamThreadData *thread_data)
 			time_us = g_get_monotonic_time ();
 
 			if (poll_fd[0].revents != 0) {
+				#ifdef G_OS_WIN32
+					WSAEnumNetworkEvents (g_socket_get_fd(thread_data->socket), hEvent, &wsaNetEvents);
+				#endif
 				read_count = g_socket_receive (thread_data->socket, (char *) packet,
 							       ARV_GV_STREAM_INCOMING_BUFFER_SIZE, NULL, NULL);
 
@@ -809,7 +825,10 @@ _loop (ArvGvStreamThreadData *thread_data)
 	} else {
 		g_error ("[ArvGvStream::_loop] Failed to create cancellable fd");
 	}
-
+	
+	#ifdef G_OS_WIN32
+		WSACloseEvent(hEvent);
+	#endif
 	g_free (packet);
 }
 

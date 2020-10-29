@@ -108,7 +108,7 @@ arv_gv_discover_socket_list_new (void)
 		g_socket_bind (discover_socket->socket, discover_socket->interface_address, FALSE, &error);
 		#ifdef G_OS_WIN32
 			// TODO: check errors
-			discover_socket->hEvent = (void*) WSACreateEvent();
+			discover_socket->hEvent = WSACreateEvent();
 			g_assert (discover_socket->hEvent != WSA_INVALID_EVENT);
 			res = WSAEventSelect (g_socket_get_fd (discover_socket->socket), discover_socket->hEvent, FD_READ);
 			g_assert (res == 0);
@@ -497,6 +497,9 @@ arv_gv_interface_camera_locate (ArvGvInterface *gv_interface, GInetAddress *devi
 	GList *ifaces;
 	GList *iface_iter;
 	struct sockaddr_in device_sockaddr;
+	#ifdef G_OS_WIN32
+		WSANETWORKEVENTS wsaNetEvents;
+	#endif
 
 	device_socket_address = g_inet_socket_address_new(device_address, ARV_GVCP_PORT);
 
@@ -562,6 +565,11 @@ arv_gv_interface_camera_locate (ArvGvInterface *gv_interface, GInetAddress *devi
 
 		for (i = 0, iter = socket_list->sockets; iter != NULL; i++, iter = iter->next) {
 			ArvGvDiscoverSocket *socket = iter->data;
+			#ifdef G_OS_WIN32
+				/* clear WSA-internal event records so that g_poll does not signal it again */
+				WSAEnumNetworkEvents (g_socket_get_fd(socket->socket), socket->hEvent, &wsaNetEvents);
+			#endif
+
 
 			do {
 				g_socket_set_blocking (socket->socket, FALSE);
