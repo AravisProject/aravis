@@ -214,6 +214,7 @@ endif
 
 library_enums = gnome.mkenums_simple ('arvenumtypes', sources: library_headers + library_no_introspection_headers)
 library_private_enums = gnome.mkenums_simple ('arvenumtypesprivate', sources: library_private_headers)
+library_resources = gnome.compile_resources('arvresources','arvresources.xml')
 
 library_include_dir = join_paths (get_option ('includedir'), 'aravis-@0@'.format (aravis_api_version))
 
@@ -236,18 +237,16 @@ library_inc = include_directories ('.')
 
 install_headers (library_headers + library_no_introspection_headers, install_dir: library_include_dir)
 
-install_data ('arv-fake-camera.xml', install_dir: aravis_data_dir)
-
 library_c_args = [
 	'-DARAVIS_COMPILATION',
-         '-DARAVIS_DATA_DIR="@0@"'.format (join_paths(get_option ('prefix'), aravis_data_dir)),
-	 '-DARAVIS_API_VERSION="@0@"'.format (aravis_api_version)
-	 ]
+	'-DARAVIS_API_VERSION="@0@"'.format (aravis_api_version)
+	]
 
 aravis_library = library ('aravis-@0@'.format (aravis_api_version),
 	library_sources, library_headers,
 	library_no_introspection_sources, library_no_introspection_headers, library_private_headers,
 	library_enums, library_private_enums,
+	library_resources,
 	version: aravis_version,
 	soversion: '0',
 	dependencies: aravis_dependencies,

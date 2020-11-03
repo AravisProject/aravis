@@ -820,3 +820,111 @@ arv_vendor_alias_lookup	(const char *vendor)
 
 	return vendor;
 }
+
+/**
+ * arv_parse_genicam_url:
+ * @url: a genicam data URL
+ * @url_length: length of the URL string, -1 if NULL terminated
+ * @scheme: (allow-none): placeholder for scheme
+ * @authority: (allow-none): placeholder for authority
+ * @path: (allow-none): placeholder for path
+ * @query: (allow-none): placeholder for query
+ * @fragment: (allow-none): placeholder for fragment
+ * @address: (allow-none): placeholder for data adress in case of local URL
+ * @size: (allow-none): placeholder for data size in case of local URL
+ *
+ * Parse the Genicam data URL. The URL should at least contain a scheme and a path. If scheme is 'local', the path
+ * should also define the Genicam data address and size in the device memory.
+ *
+ * The placeholder are at least set to %NULL or 0 if they are valid addresses, and set to the corresponding URL part if
+ * found in the string. The returned strings must be freed using g_free().
+ *
+ * Returns: %TRUE if the URL was successfully parsed.
+ */
+
+gboolean
+arv_parse_genicam_url (const char *url, gssize url_length,
+		       char **scheme, char **authority, char **path, char **query, char **fragment,
+		       guint64 *address, guint64 *size)
+{
+	g_autoptr(GRegex) regex = NULL;
+	g_autoptr(GRegex) local_regex = NULL;
+	g_auto(GStrv) tokens = NULL;
+	g_auto(GStrv) local_tokens = NULL;
+	char *l_scheme = NULL;
+	char *l_authority = NULL;
+	char *l_path = NULL;
+	char *l_query = NULL;
+	char *l_fragment = NULL;
+
+	if (scheme != NULL)
+		*scheme = NULL;
+	if (authority != NULL)
+		*authority = NULL;
+	if (path != NULL)
+		*path = NULL;
+	if (query != NULL)
+		*query = NULL;
+	if (fragment != NULL)
+		*fragment = NULL;
+	if (address != NULL)
+		*address = 0;
+	if (size != NULL)
+		*size = 0;
+
+	g_return_val_if_fail (url != NULL, FALSE);
+
+	/* https://tools.ietf.org/html/rfc3986#appendix-B */
+	regex = g_regex_new ("^(([^:\\/?#]+):)?(\\/\\/([^\\/?#]*))?([^?#]*)(\\?([^#]*))?(#(.*))?",G_REGEX_CASELESS, 0, NULL);
+	if (regex == NULL)
+		return FALSE;
+
+	tokens = g_regex_split_full (regex, url, url_length, 0, 0, 10, NULL);
+
+	if (g_strv_length (tokens) < 6 || tokens[5][0] == '\0')
+		return FALSE;
+
+	l_scheme = tokens[2][0] != '\0' ? tokens[2] : NULL;
+	l_authority = tokens[4][0] != '\0' ? tokens[4] : NULL;
+
+	if (g_ascii_strcasecmp (l_scheme, "local") == 0) {
+		local_regex = g_regex_new ("(.+);(?:0x)?([0-9:a-f]*);(?:0x)?([0-9:a-f]*)", G_REGEX_CASELESS, 0, NULL);
+
+		if (local_regex == NULL)
+			return FALSE;
+
+		local_tokens = g_regex_split (local_regex, tokens[5], 0);
+
+		if (g_strv_length (local_tokens) < 4)
+			return FALSE;
+
+		l_path = local_tokens[1];
+
+		if (address != NULL)
+			*address = g_ascii_strtoll (local_tokens[2], NULL, 16);
+		if (size != NULL)
+			*size = g_ascii_strtoll (local_tokens[3], NULL, 16);
+	} else {
+		l_path = tokens[5];
+	}
+
+	if (tokens[6] != NULL && tokens[7] != NULL) {
+		l_query = tokens[7][0] != '\0' ? tokens[7] : NULL;
+
+		if (tokens[8] != NULL && tokens[9] != NULL)
+			l_fragment = tokens[9][0] != '\0' ? tokens[9] : NULL;
+	}
+
+	if (scheme != NULL)
+		*scheme = g_strdup( l_scheme);
+	if (authority != NULL)
+		*authority = g_strdup( l_authority);
+	if (path != NULL)
+		*path = g_strdup( l_path);
+	if (query != NULL)
+		*query = g_strdup( l_query);
+	if (fragment != NULL)
+		*fragment = g_strdup( l_fragment);
+
+	return TRUE;
+}

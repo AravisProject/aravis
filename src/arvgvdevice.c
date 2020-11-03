@@ -38,7 +38,7 @@
 #include <arvnetworkprivate.h>
 #include <arvzip.h>
 #include <arvstr.h>
-#include <arvmisc.h>
+#include <arvmiscprivate.h>
 #include <arvenumtypes.h>
 #include <string.h>
 #include <stdlib.h>
@@ -49,7 +49,8 @@ enum
 {
 	PROP_0,
 	PROP_GV_DEVICE_INTERFACE_ADDRESS,
-	PROP_GV_DEVICE_DEVICE_ADDRESS
+	PROP_GV_DEVICE_DEVICE_ADDRESS,
+	PROP_GV_DEVICE_PACKET_SIZE_ADJUSTEMENT
 };
 
 typedef struct {
@@ -89,6 +90,9 @@ typedef struct {
 	gboolean is_write_memory_supported;
 
 	ArvGvStreamOption stream_options;
+	ArvGvPacketSizeAdjustement packet_size_adjustement;
+
+	gboolean first_stream_created;
 } ArvGvDevicePrivate ;
 
 struct _ArvGvDevice {
@@ -100,18 +104,6 @@ struct _ArvGvDeviceClass {
 };
 
 G_DEFINE_TYPE_WITH_CODE (ArvGvDevice, arv_gv_device, ARV_TYPE_DEVICE, G_ADD_PRIVATE (ArvGvDevice))
-
-GRegex *
-arv_gv_device_get_url_regex (void)
-{
-static GRegex *arv_gv_device_url_regex = NULL;
-
-	if (arv_gv_device_url_regex == NULL)
-		arv_gv_device_url_regex = g_regex_new ("^(local:|file:|http:)(.+\\.[^;]+);?(?:0x)?([0-9:a-f]*)?;?(?:0x)?([0-9:a-f]*)?$",
-						       G_REGEX_CASELESS, 0, NULL);
-
-	return arv_gv_device_url_regex;
-}
 
 static gboolean
 _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
@@ -526,23 +518,43 @@ arv_gv_device_set_packet_size (ArvGvDevice *gv_device, gint packet_size, GError 
 	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevSCPSPacketSize", packet_size, error);
 }
 
-/**
- * arv_gv_device_auto_packet_size:
- * @gv_device: a #ArvGvDevice
- * @error: a #GError placeholder, %NULL to ignore
- *
- * Automatically determine the biggest packet size that can be used data
- * streaming, and set GevSCPSPacketSize value accordingly. This function relies
- * on the GevSCPSFireTestPacket feature. If this feature is not available, the
- * packet size will be set to a default value (1500 bytes).
- *
- * Returns: The packet size, in bytes.
- *
- * Since: 0.6.0
- */
+static gboolean
+test_packet_check (ArvDevice *device,
+		   GPollFD *poll_fd,
+		   GSocket *socket,
+		   char *buffer,
+		   guint packet_size,
+		   gboolean is_command)
+{
+	unsigned n_tries = 0;
+	int n_events;
+	size_t read_count;
 
-guint
-arv_gv_device_auto_packet_size (ArvGvDevice *gv_device, GError **error)
+	do {
+		if (is_command) {
+			arv_device_execute_command (device, "GevSCPSFireTestPacket", NULL);
+		} else {
+			arv_device_set_boolean_feature_value (device, "GevSCPSFireTestPacket", FALSE, NULL);
+			arv_device_set_boolean_feature_value (device, "GevSCPSFireTestPacket", TRUE, NULL);
+		}
+
+		do {
+			n_events = g_poll (poll_fd, 1, 10);
+			if (n_events != 0)
+				read_count = g_socket_receive (socket, buffer, 16384, NULL, NULL);
+			else
+				read_count = 0;
+			/* Discard late packets, read_count should be equal to packet size minus IP and UDP headers */
+		} while (n_events != 0 && read_count != (packet_size - sizeof (struct iphdr) - sizeof (struct udphdr)));
+
+		n_tries++;
+	} while (n_events == 0 && n_tries < 3);
+
+	return n_events != 0;
+}
+
+static guint
+auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 {
 	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
 	ArvDevice *device = ARV_DEVICE (gv_device);
@@ -556,38 +568,34 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device, GError **error)
 	guint16 port;
 	gboolean do_not_fragment;
 	gboolean is_command;
-	int n_events;
-	guint max_size, min_size, current_size;
-	guint packet_size = 1500;
-	gint64 minimum, maximum;
+	guint max_size, min_size;
+	gint64 minimum, maximum, packet_size;
 	guint inc;
 	char *buffer;
 	guint last_size = 0;
+	gboolean success;
 
 	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), 1500);
 
 	node = arv_device_get_feature (device, "GevSCPSFireTestPacket");
 	if (!ARV_IS_GC_COMMAND (node) && !ARV_IS_GC_BOOLEAN (node)) {
-		arv_debug_device ("[GvDevice::auto_packet_size] No GevSCPSFireTestPacket feature found, "
-				  "use default packet size (%d bytes)",
-				  packet_size);
-		return packet_size;
+		arv_debug_device ("[GvDevice::auto_packet_size] No GevSCPSFireTestPacket feature found");
+		return arv_device_get_integer_feature_value (device, "GevSCPSPacketSize", error);
 	}
 
 	inc = arv_device_get_integer_feature_increment (device, "GevSCPSPacketSize", NULL);
 	if (inc < 1)
 		inc = 1;
+	packet_size = arv_device_get_integer_feature_value (device, "GevSCPSPacketSize", NULL);
 	arv_device_get_integer_feature_bounds (device, "GevSCPSPacketSize", &minimum, &maximum, NULL);
 	max_size = MIN (65536, maximum);
 	min_size = MAX (ARV_GVSP_PACKET_PROTOCOL_OVERHEAD, minimum);
 
 	if (max_size < min_size ||
 	    inc > max_size - min_size ||
-	    max_size < packet_size ||
-	    min_size > packet_size ||
 	    inc > 16) {
 		arv_warning_device ("[GvDevice::auto_packet_size] Invalid GevSCPSPacketSize properties");
-		return packet_size;
+		return arv_device_get_integer_feature_value (device, "GevSCPSPacketSize", error);
 	}
 
 	is_command = ARV_IS_GC_COMMAND (node);
@@ -615,71 +623,99 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device, GError **error)
 
 	arv_gpollfd_prepare_all (&poll_fd, 1);
 
-	current_size = 1500;
-
 	buffer = g_malloc (max_size);
 
-	do {
-		size_t read_count;
-		unsigned n_tries = 0;
+	success = test_packet_check (device, &poll_fd, socket, buffer, packet_size, is_command);
 
-		current_size = ((current_size + inc - 1) / inc) * inc;
-
-		arv_debug_device ("[GvDevice::auto_packet_size] Try packet size = %d", current_size);
-		arv_device_set_integer_feature_value (device, "GevSCPSPacketSize", current_size, NULL);
-
-		current_size = arv_device_get_integer_feature_value(device, "GevSCPSPacketSize", NULL);
-
-		if (current_size == last_size)
-			break;
-
-		last_size = current_size;
+	/* When exit_early is set, the function only checks the current packet size is working.
+	 * If not, the full automatic packet size adjustement is run. */
+	if (success && exit_early) {
+		arv_debug_device ("[GvDevice::auto_packet_size] Current packet size check successfull "
+				  "(%" G_GINT64_FORMAT " bytes)",
+				  packet_size);
+	} else {
+		guint current_size = CLAMP (packet_size, min_size, max_size);
 
 		do {
-			if (is_command) {
-				arv_device_execute_command (device, "GevSCPSFireTestPacket", NULL);
+			current_size = ((current_size + inc - 1) / inc) * inc;
+
+			arv_debug_device ("[GvDevice::auto_packet_size] Try packet size = %d", current_size);
+			arv_device_set_integer_feature_value (device, "GevSCPSPacketSize", current_size, NULL);
+
+			current_size = arv_device_get_integer_feature_value (device, "GevSCPSPacketSize", NULL);
+
+			if (current_size == last_size)
+				break;
+
+			last_size = current_size;
+
+			success = test_packet_check (device, &poll_fd, socket, buffer, current_size, is_command);
+
+			if (success) {
+				packet_size = current_size;
+				min_size = current_size;
+				current_size = (max_size - min_size) / 2 + min_size;
 			} else {
-				arv_device_set_boolean_feature_value (device, "GevSCPSFireTestPacket", FALSE, NULL);
-				arv_device_set_boolean_feature_value (device, "GevSCPSFireTestPacket", TRUE, NULL);
+				max_size = current_size;
+				current_size = (max_size - min_size) / 2 + min_size;
 			}
+		} while ((max_size - min_size) > 16);
 
-			do {
-				n_events = g_poll (&poll_fd, 1, 10);
-				arv_gpollfd_clear_one (&poll_fd, socket);
+		arv_device_set_integer_feature_value (device, "GevSCPSPacketSize", packet_size, error);
 
-				if (n_events != 0)
-					read_count = g_socket_receive (socket, buffer, 16384, NULL, NULL);
-				else
-					read_count = 0;
-				/* Discard late packets, read_count should be equal to packet size minus IP and UDP headers */
-			} while (n_events != 0 && read_count != (current_size - sizeof (struct iphdr) - sizeof (struct udphdr)));
-
-			n_tries++;
-		} while (n_events == 0 && n_tries < 3);
-
-		if (n_events != 0) {
-			arv_debug_device ("[GvDevice::auto_packet_size] Received %d bytes", (int) read_count);
-
-			packet_size = current_size;
-			min_size = current_size;
-			current_size = (max_size - min_size) / 2 + min_size;
-		} else {
-			max_size = current_size;
-			current_size = (max_size - min_size) / 2 + min_size;
-		}
-	} while ((max_size - min_size) > 16);
+		arv_debug_device ("[GvDevice::auto_packet_size] Packet size set to %" G_GINT64_FORMAT " bytes",
+				  packet_size);
+	}
 
 	g_clear_pointer (&buffer, g_free);
 	g_clear_object (&socket);
 
-	arv_gpollfd_finish_all (&poll_fd, 1);
-
-	arv_debug_device ("[GvDevice::auto_packet_size] Packet size set to %d bytes", packet_size);
-
 	arv_device_set_boolean_feature_value (device, "GevSCPSDoNotFragment", do_not_fragment, NULL);
-	arv_device_set_integer_feature_value (device, "GevSCPSPacketSize", packet_size, NULL);
 
 	return packet_size;
+}
+
+/**
+ * arv_gv_device_auto_packet_size:
+ * @gv_device: a #ArvGvDevice
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Automatically determine the biggest packet size that can be used data streaming, and set GevSCPSPacketSize value
+ * accordingly. This function relies on the GevSCPSFireTestPacket feature.
+ *
+ * Returns: The automatic packet size, in bytes, or the current one if GevSCPSFireTestPacket is not supported.
+ *
+ * Since: 0.6.0
+ */
+
+guint
+arv_gv_device_auto_packet_size (ArvGvDevice *gv_device, GError **error)
+{
+	return auto_packet_size (gv_device, FALSE, error);
+}
+
+/**
+ * arv_gv_device_set_packet_size_adjustement:
+ * @gv_device: a #ArvGvDevice
+ * @adjustement: a #ArvGvPacketSizeAdjustement option
+ *
+ * Sets the option for the packet size adjustement happening at stream object creation. See
+ * arv_gv_device_auto_packet_size() for a description of the packet adjustement feature. The default behaviour is
+ * @ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE_ONCE, which means the packet size is adjusted if the current packet size
+ * check fails, and only the first time arv_device_create_stream() is successfully called during @gv_device instance
+ * life.
+ *
+ * Since: 0.8.3
+ */
+
+void
+arv_gv_device_set_packet_size_adjustement (ArvGvDevice *gv_device, ArvGvPacketSizeAdjustement adjustement)
+{
+	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
+
+	g_return_if_fail (ARV_IS_GV_DEVICE (gv_device));
+
+	priv->packet_size_adjustement = adjustement;
 }
 
 /**
@@ -697,7 +733,7 @@ arv_gv_device_is_controller (ArvGvDevice *gv_device)
 	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
 
 	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), 0);
-	
+
 	return priv->io_data->is_controller;
 }
 
@@ -705,8 +741,11 @@ static char *
 _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 {
 	char filename[ARV_GVBS_XML_URL_SIZE];
-	char **tokens;
 	char *genicam = NULL;
+	g_autofree char *scheme = NULL;
+	g_autofree char *path = NULL;
+	guint64 file_address;
+	guint64 file_size;
 
 	g_return_val_if_fail (size != NULL, NULL);
 
@@ -719,100 +758,92 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 
 	arv_debug_device ("[GvDevice::load_genicam] xml url = '%s' at 0x%x", filename, address);
 
-	tokens = g_regex_split (arv_gv_device_get_url_regex (), filename, 0);
+	arv_parse_genicam_url (filename, ARV_GVBS_XML_URL_SIZE, &scheme, NULL, &path, NULL, NULL,
+			       &file_address, &file_size);
 
-	if (tokens[0] != NULL && tokens[1] != NULL) {
-		if (g_ascii_strcasecmp (tokens[1], "file:") == 0) {
+	if (g_ascii_strcasecmp (scheme, "file") == 0) {
+		gsize len;
+
+		g_file_get_contents (path, &genicam, &len, NULL);
+		if (genicam)
+			*size = len;
+	} else if (g_ascii_strcasecmp (scheme, "local") == 0) {
+		arv_debug_device ("[GvDevice::load_genicam] Xml address = 0x%" G_GINT64_MODIFIER "x - "
+				  "size = 0x%" G_GINT64_MODIFIER "x - %s", file_address, file_size, path);
+
+		if (file_size > 0) {
+			genicam = g_malloc (file_size);
+			if (arv_device_read_memory (ARV_DEVICE (gv_device), file_address, file_size,
+						    genicam, NULL)) {
+
+				if (arv_debug_check (&arv_debug_category_misc, ARV_DEBUG_LEVEL_LOG)) {
+					GString *string = g_string_new ("");
+
+					g_string_append_printf (string,
+								"[GvDevice::load_genicam] Raw data size = 0x%"
+								G_GINT64_MODIFIER "x\n", file_size);
+					arv_g_string_append_hex_dump (string, genicam, file_size);
+
+					arv_log_misc ("%s", string->str);
+
+					g_string_free (string, TRUE);
+				}
+
+				if (g_str_has_suffix (path, ".zip")) {
+					ArvZip *zip;
+					const GSList *zip_files;
+
+					arv_debug_device ("[GvDevice::load_genicam] Zipped xml data");
+
+					zip = arv_zip_new (genicam, file_size);
+					zip_files = arv_zip_get_file_list (zip);
+
+					if (zip_files != NULL) {
+						const char *zip_filename;
+						void *tmp_buffer;
+						size_t tmp_buffer_size;
+
+						zip_filename = arv_zip_file_get_name (zip_files->data);
+						tmp_buffer = arv_zip_get_file (zip, zip_filename,
+									       &tmp_buffer_size);
+
+						g_free (genicam);
+						file_size = tmp_buffer_size;
+						genicam = tmp_buffer;
+					} else
+						arv_warning_device ("[GvDevice::load_genicam] Invalid format");
+					arv_zip_free (zip);
+				}
+				*size = file_size;
+			} else {
+				g_free (genicam);
+				genicam = NULL;
+				*size = 0;
+			}
+		}
+	} else if (g_ascii_strcasecmp (scheme, "http")) {
+		GFile *file;
+		GFileInputStream *stream;
+
+		file = g_file_new_for_uri (filename);
+		stream = g_file_read (file, NULL, NULL);
+		if(stream) {
+			GDataInputStream *data_stream;
 			gsize len;
-			g_file_get_contents (tokens[2], &genicam, &len, NULL);
+
+			data_stream = g_data_input_stream_new (G_INPUT_STREAM (stream));
+			genicam = g_data_input_stream_read_upto (data_stream, "", 0, &len, NULL, NULL);
+
 			if (genicam)
 				*size = len;
-		} else if (g_ascii_strcasecmp (tokens[1], "local:") == 0 &&
-			 tokens[2] != NULL &&
-			 tokens[3] != NULL &&
-			 tokens[4] != NULL) {
-			guint32 file_address;
-			guint32 file_size;
 
-			file_address = strtoul (tokens[3], NULL, 16);
-			file_size = strtoul (tokens[4], NULL, 16);
-
-			arv_debug_device ("[GvDevice::load_genicam] Xml address = 0x%x - size = 0x%x - %s",
-					  file_address, file_size, tokens[2]);
-
-			if (file_size > 0) {
-				genicam = g_malloc (file_size);
-				if (arv_device_read_memory (ARV_DEVICE (gv_device), file_address, file_size,
-							    genicam, NULL)) {
-
-					if (arv_debug_check (&arv_debug_category_misc, ARV_DEBUG_LEVEL_LOG)) {
-						GString *string = g_string_new ("");
-
-						g_string_append_printf (string,
-									"[GvDevice::load_genicam] Raw data size = 0x%x\n", file_size);
-						arv_g_string_append_hex_dump (string, genicam, file_size);
-
-						arv_log_misc ("%s", string->str);
-
-						g_string_free (string, TRUE);
-					}
-
-					if (g_str_has_suffix (tokens[2], ".zip")) {
-						ArvZip *zip;
-						const GSList *zip_files;
-
-						arv_debug_device ("[GvDevice::load_genicam] Zipped xml data");
-
-						zip = arv_zip_new (genicam, file_size);
-						zip_files = arv_zip_get_file_list (zip);
-
-						if (zip_files != NULL) {
-							const char *zip_filename;
-							void *tmp_buffer;
-							size_t tmp_buffer_size;
-
-							zip_filename = arv_zip_file_get_name (zip_files->data);
-							tmp_buffer = arv_zip_get_file (zip, zip_filename,
-										       &tmp_buffer_size);
-
-							g_free (genicam);
-							file_size = tmp_buffer_size;
-							genicam = tmp_buffer;
-						} else
-							arv_warning_device ("[GvDevice::load_genicam] Invalid format");
-						arv_zip_free (zip);
-					}
-					*size = file_size;
-				} else {
-					g_free (genicam);
-					genicam = NULL;
-					*size = 0;
-				}
-			}
-		} else if (g_ascii_strcasecmp (tokens[1], "http:") == 0) {
-			GFile *file;
-			GFileInputStream *stream;
-
-			file = g_file_new_for_uri (filename);
-			stream = g_file_read (file, NULL, NULL);
-			if(stream) {
-				GDataInputStream *data_stream;
-				gsize len;
-
-				data_stream = g_data_input_stream_new (G_INPUT_STREAM (stream));
-				genicam = g_data_input_stream_read_upto (data_stream, "", 0, &len, NULL, NULL);
-
-				if (genicam)
-					*size = len;
-
-				g_object_unref (data_stream);
-				g_object_unref (stream);
-			}
-			g_object_unref (file);
+			g_object_unref (data_stream);
+			g_object_unref (stream);
 		}
+		g_object_unref (file);
+	} else {
+		g_critical ("Unkown GENICAM url scheme: '%s'", filename);
 	}
-
-	g_strfreev (tokens);
 
 	return genicam;
 }
@@ -1088,6 +1119,7 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
 	ArvStream *stream;
 	guint32 n_stream_channels;
+	GError *local_error = NULL;
 
 	n_stream_channels = arv_device_get_integer_feature_value (device, "GevStreamChannelCount", NULL);
 	arv_debug_device ("[GvDevice::create_stream] Number of stream channels = %d", n_stream_channels);
@@ -1105,12 +1137,28 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 		return NULL;
 	}
 
+	if (priv->packet_size_adjustement != ARV_GV_PACKET_SIZE_ADJUSTEMENT_NEVER &&
+	    ((priv->packet_size_adjustement != ARV_GV_PACKET_SIZE_ADJUSTEMENT_ONCE &&
+	      priv->packet_size_adjustement != ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE_ONCE) ||
+	     !priv->first_stream_created)) {
+		auto_packet_size (gv_device,
+				  priv->packet_size_adjustement == ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE ||
+				      priv->packet_size_adjustement == ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE_ONCE,
+				  &local_error);
+		if (local_error != NULL) {
+			g_propagate_error (error, local_error);
+			return NULL;
+		}
+	}
+
 	stream = arv_gv_stream_new (gv_device, callback, user_data, error);
 	if (!ARV_IS_STREAM (stream))
 		return NULL;
 
 	if (!priv->is_packet_resend_supported)
 		g_object_set (stream, "packet-resend", ARV_GV_STREAM_PACKET_RESEND_NEVER, NULL);
+
+	priv->first_stream_created = TRUE;
 
 	return stream;
 }
@@ -1426,8 +1474,26 @@ arv_gv_device_set_property (GObject *self, guint prop_id, const GValue *value, G
 			g_clear_object (&priv->device_address);
 			priv->device_address = g_value_dup_object (value);
 			break;
+		case PROP_GV_DEVICE_PACKET_SIZE_ADJUSTEMENT:
+			priv->packet_size_adjustement = g_value_get_enum (value);
+			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
+			break;
+	}
+}
+
+static void
+arv_gv_device_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+{
+	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (ARV_GV_DEVICE (object));
+
+	switch (prop_id) {
+		case PROP_GV_DEVICE_PACKET_SIZE_ADJUSTEMENT:
+			g_value_set_enum (value, priv->packet_size_adjustement);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 			break;
 	}
 }
@@ -1441,6 +1507,7 @@ arv_gv_device_class_init (ArvGvDeviceClass *gv_device_class)
 	object_class->finalize = arv_gv_device_finalize;
 	object_class->constructed = arv_gv_device_constructed;
 	object_class->set_property = arv_gv_device_set_property;
+	object_class->get_property = arv_gv_device_get_property;
 
 	device_class->create_stream = arv_gv_device_create_stream;
 	device_class->get_genicam_xml = arv_gv_device_get_genicam_xml;
@@ -1466,4 +1533,11 @@ arv_gv_device_class_init (ArvGvDeviceClass *gv_device_class)
 				      "The device address",
 				      G_TYPE_INET_ADDRESS,
 				      G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property (object_class, PROP_GV_DEVICE_PACKET_SIZE_ADJUSTEMENT,
+					 g_param_spec_enum ("packet-size-adjustement", "Packet size adjustement",
+							    "Packet size adjustement option",
+							    ARV_TYPE_GV_PACKET_SIZE_ADJUSTEMENT,
+							    ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE_ONCE,
+							    G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+								G_PARAM_CONSTRUCT));
 }

@@ -399,7 +399,7 @@ arv_buffer_get_frame_id (ArvBuffer *buffer)
 }
 
 /**
- * arv_buffer_get_frame_id:
+ * arv_buffer_set_frame_id:
  * @buffer: a #ArvBuffer
  * @frame_id: a #guint64
  *

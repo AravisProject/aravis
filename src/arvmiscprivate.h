@@ -33,4 +33,9 @@ struct _ArvValue {
 	} data;
 };
 
+gboolean	arv_parse_genicam_url		(const char *url, gssize url_length,
+						 char **scheme, char **authority, char **path,
+						 char **query, char **fragment,
+						 guint64 *address, guint64 *size);
+
 #endif

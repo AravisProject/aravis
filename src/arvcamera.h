@@ -30,6 +30,7 @@
 #include <arvtypes.h>
 #include <arvstream.h>
 #include <arvgvstream.h>
+#include <arvgvdevice.h>
 
 G_BEGIN_DECLS
 
@@ -175,6 +176,8 @@ gint64 		arv_camera_gv_get_packet_delay 		(ArvCamera *camera, GError **error);
 void 		arv_camera_gv_set_packet_size 		(ArvCamera *camera, gint packet_size, GError **error);
 guint		arv_camera_gv_get_packet_size		(ArvCamera *camera, GError **error);
 guint		arv_camera_gv_auto_packet_size		(ArvCamera *camera, GError **error);
+void		arv_camera_gv_set_packet_size_adjustement 	(ArvCamera *camera,
+								 ArvGvPacketSizeAdjustement adjustement);
 
 void 		arv_camera_gv_set_stream_options 	(ArvCamera *camera, ArvGvStreamOption options);
 

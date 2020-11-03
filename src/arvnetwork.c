@@ -243,42 +243,33 @@ GList* arv_enumerate_network_interfaces(void) {
 
 /*
  * mingw only defines inet_ntoa (ipv4-only), inet_ntop (IPv4 & IPv6) is missing from it headers
- * therefore we define it ourselves; code comes from https://www.mail-archive.com/users@ipv6.org/msg02107.html
+ * for _WIN32_WINNT < 0x0600; therefore we define it ourselves
+ * The code comes from https://www.mail-archive.com/users@ipv6.org/msg02107.html.
  */
+#if _WIN32_WINNT < 0x0600
+	const char *
+	inet_ntop (int af, const void *src, char *dst, socklen_t cnt)
+	{
+		if (af == AF_INET) {
+			struct sockaddr_in in;
 
-const char *
-inet_ntop (int af, const void *src, char *dst, socklen_t cnt)
-{
-	if (af == AF_INET) {
-		struct sockaddr_in in;
-		long res;
+			memset (&in, 0, sizeof(in));
+			in.sin_family = AF_INET;
+			memcpy (&in.sin_addr, src, sizeof(struct in_addr));
+			getnameinfo ((struct sockaddr *)&in, sizeof (struct sockaddr_in), dst, cnt, NULL, 0, NI_NUMERICHOST);
+			return dst;
+		} else if (af == AF_INET6) {
+			struct sockaddr_in6 in;
 
-		memset (&in, 0, sizeof(in));
-		in.sin_family = AF_INET;
-		memcpy (&in.sin_addr, src, sizeof(struct in_addr));
-		res = getnameinfo ((struct sockaddr *)&in, sizeof (struct sockaddr_in), dst, cnt, NULL, 0, NI_NUMERICHOST);
-		if ( res != 0) {
-			fprintf(stderr,"getnameinfo failed with error #%ld: %s\n",res,gai_strerror(res));
-			return NULL;
+			memset (&in, 0, sizeof(in));
+			in.sin6_family = AF_INET6;
+			memcpy (&in.sin6_addr, src, sizeof(struct in_addr6));
+			getnameinfo ((struct sockaddr *)&in, sizeof (struct sockaddr_in6), dst, cnt, NULL, 0, NI_NUMERICHOST);
+			return dst;
 		}
-		return dst;
-	} else if (af == AF_INET6) {
-		struct sockaddr_in6 in;
-		long res;
-
-		memset (&in, 0, sizeof(in));
-		in.sin6_family = AF_INET6;
-		memcpy (&in.sin6_addr, src, sizeof(struct in_addr6));
-		res = getnameinfo ((struct sockaddr *)&in, sizeof (struct sockaddr_in6), dst, cnt, NULL, 0, NI_NUMERICHOST);
-		if ( res != 0 ) {
-			fprintf(stderr,"getnameinfo failed with error #%ld: %s\n",res,gai_strerror(res));
-			return NULL;
-		}
-		return dst;
+		return NULL;
 	}
-
-	return NULL;
-}
+#endif
 
 
 void

@@ -16,6 +16,7 @@ static int arv_option_vertical_binning = -1;
 static double arv_option_exposure_time_us = -1;
 static int arv_option_gain = -1;
 static gboolean arv_option_auto_socket_buffer = FALSE;
+static char *arv_option_packet_size_adjustement = NULL;
 static gboolean arv_option_no_packet_resend = FALSE;
 static double arv_option_packet_request_ratio = -1.0;
 static unsigned int arv_option_packet_timeout = 20;
@@ -29,6 +30,7 @@ static gboolean arv_option_no_packet_socket = FALSE;
 static char *arv_option_chunks = NULL;
 static unsigned int arv_option_bandwidth_limit = -1;
 
+/* clang-format off */
 static const GOptionEntry arv_option_entries[] =
 {
 	{
@@ -78,6 +80,11 @@ static const GOptionEntry arv_option_entries[] =
 	{
 		"auto",					'a', 0, G_OPTION_ARG_NONE,
 		&arv_option_auto_socket_buffer,		"Auto socket buffer size", NULL
+	},
+	{
+		"packet-size-adjustement",		'j', 0, G_OPTION_ARG_STRING,
+		&arv_option_packet_size_adjustement,	"Packet size adjustement",
+		"{never|always|once|on-failure|on-failure-once}"
 	},
 	{
 		"no-packet-resend",			'r', 0, G_OPTION_ARG_NONE,
@@ -133,6 +140,7 @@ static const GOptionEntry arv_option_entries[] =
 	},
 	{ NULL }
 };
+/* clang-format on */
 
 typedef struct {
 	GMainLoop *main_loop;
@@ -294,6 +302,7 @@ main (int argc, char **argv)
 
 	camera = arv_camera_new (arv_option_camera_name, &error);
 	if (camera != NULL) {
+		ArvGvPacketSizeAdjustement adjustement;
 		void (*old_sigint_handler)(int);
 		gint payload;
 		gint x, y, width, height;
@@ -333,6 +342,19 @@ main (int argc, char **argv)
 			arv_camera_uv_set_bandwidth (camera, arv_option_bandwidth_limit, NULL);
 		}
 
+		if (arv_option_packet_size_adjustement != NULL) {
+			if (g_ascii_strcasecmp (arv_option_packet_size_adjustement, "always") == 0)
+				adjustement = ARV_GV_PACKET_SIZE_ADJUSTEMENT_ALWAYS;
+			else if (g_ascii_strcasecmp (arv_option_packet_size_adjustement, "never") == 0)
+				adjustement = ARV_GV_PACKET_SIZE_ADJUSTEMENT_NEVER;
+			else if (g_ascii_strcasecmp (arv_option_packet_size_adjustement, "once") == 0)
+				adjustement = ARV_GV_PACKET_SIZE_ADJUSTEMENT_ONCE;
+			else if (g_ascii_strcasecmp (arv_option_packet_size_adjustement, "on-failure") == 0)
+				adjustement = ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE;
+			else if (g_ascii_strcasecmp (arv_option_packet_size_adjustement, "on-failure-once") == 0)
+				adjustement = ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE_ONCE;
+		}
+
 		if (arv_camera_is_gv_device (camera)) {
 			arv_camera_gv_select_stream_channel (camera, arv_option_gv_stream_channel, NULL);
 			arv_camera_gv_set_packet_delay (camera, arv_option_gv_packet_delay, NULL);
@@ -340,6 +362,8 @@ main (int argc, char **argv)
 			arv_camera_gv_set_stream_options (camera, arv_option_no_packet_socket ?
 							  ARV_GV_STREAM_OPTION_PACKET_SOCKET_DISABLED :
 							  ARV_GV_STREAM_OPTION_NONE);
+			if (arv_option_packet_size_adjustement != NULL)
+				arv_camera_gv_set_packet_size_adjustement (camera, adjustement);
 		}
 
 		arv_camera_get_region (camera, &x, &y, &width, &height, NULL);
@@ -359,13 +383,6 @@ main (int argc, char **argv)
 		printf ("exposure              = %g µs\n", exposure);
 		printf ("gain                  = %d dB\n", gain);
 
-		if (arv_camera_is_gv_device (camera)) {
-			printf ("gv n_stream channels  = %d\n", arv_camera_gv_get_n_stream_channels (camera, NULL));
-			printf ("gv current channel    = %d\n", arv_camera_gv_get_current_stream_channel (camera, NULL));
-			g_print ("gv packet delay       = %" G_GINT64_FORMAT " ns\n", arv_camera_gv_get_packet_delay (camera, NULL));
-			printf ("gv packet size        = %d bytes\n", arv_camera_gv_get_packet_size (camera, NULL));
-		}
-
 		if (arv_camera_is_uv_device (camera)) {
 			guint min,max;
 
@@ -374,6 +391,16 @@ main (int argc, char **argv)
 		}
 
 		stream = arv_camera_create_stream (camera, stream_cb, NULL, &error);
+
+		if (arv_camera_is_gv_device (camera)) {
+			printf ("gv n_stream channels  = %d\n", arv_camera_gv_get_n_stream_channels (camera, NULL));
+			printf ("gv current channel    = %d\n",
+				arv_camera_gv_get_current_stream_channel (camera, NULL));
+			g_print ("gv packet delay       = %" G_GINT64_FORMAT " ns\n",
+				 arv_camera_gv_get_packet_delay (camera, NULL));
+			printf ("gv packet size        = %d bytes\n", arv_camera_gv_get_packet_size (camera, NULL));
+		}
+
 		if (ARV_IS_STREAM (stream)) {
 			if (ARV_IS_GV_STREAM (stream)) {
 				if (arv_option_auto_socket_buffer)
