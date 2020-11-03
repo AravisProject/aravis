@@ -2863,6 +2863,28 @@ arv_camera_create_chunk_parser (ArvCamera *camera)
  * Creates a new #ArvCamera. If @name is null, it will instantiate the
  * first available camera.
  *
+ * If the camera is a GigEVision, @name can be either:
+ *
+ * - &lt;vendor&gt;-&lt;model&gt;-&lt;serial&gt;
+ * - &lt;vendor_alias&gt;-&lt;serial&gt;
+ * - &lt;vendor&gt;-&lt;serial&gt;
+ * - &lt;user_id&gt;
+ * - &lt;ip_address&gt;
+ * - &lt;mac_address&gt;
+ *
+ * For example:
+ *
+ * - The Imaging Source Europe GmbH-DFK 33GX265-39020369
+ * - The Imaging Source Europe GmbH-39020369
+ * - TIS-39020369
+ * - 192.168.0.2
+ * - 00:07:48:af:a2:61
+ *
+ * If the camera is a USB3Vision device, @name is either:
+ *
+ * - &lt;vendor_alias&gt;-&lt;serial&gt;
+ * - &lt;vendor&gt;-&lt;serial&gt;
+ *
  * Returns: a new #ArvCamera.
  *
  * Since: 0.8.0
