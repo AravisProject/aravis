@@ -33,6 +33,7 @@
 #endif
 
 #include <gio/gnetworking.h>
+#include <gio/gio.h>
 
 #if !defined(__APPLE__) && !defined(G_OS_WIN32)
 #include <linux/ip.h>
@@ -96,5 +97,10 @@ gboolean 		arv_socket_set_recv_buffer_size		(int socket_fd, gint buffer_size);
 /* prototype is missing on mingw, let's reimplement */
 const char *		inet_ntop				(int af, const void *src, char *dst, socklen_t cnt);
 #endif
+
+/* workaround for broken socket g_poll under Windows, otherwise no-op */
+void arv_gpollfd_prepare_all(GPollFD *fds, guint nfds);
+void arv_gpollfd_clear_one(GPollFD *fd, GSocket* socket);
+void arv_gpollfd_finish_all(GPollFD *fds, guint nfds);
 
 #endif

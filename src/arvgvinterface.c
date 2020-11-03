@@ -45,9 +45,6 @@
 typedef struct {
 	GSocketAddress *interface_address;
 	GSocket *socket;
-	#ifdef G_OS_WIN32
-		WSAEVENT hEvent;
-	#endif
 } ArvGvDiscoverSocket;
 
 static gboolean
@@ -77,7 +74,6 @@ arv_gv_discover_socket_list_new (void)
 	GList *ifaces;
 	GList *iface_iter;
 	int i;
-	int res;
 
 	socket_list = g_new0 (ArvGvDiscoverSocketList, 1);
 
@@ -106,13 +102,6 @@ arv_gv_discover_socket_list_new (void)
 							G_SOCKET_PROTOCOL_UDP, NULL);
 		arv_socket_set_recv_buffer_size (g_socket_get_fd (discover_socket->socket), buffer_size);
 		g_socket_bind (discover_socket->socket, discover_socket->interface_address, FALSE, &error);
-		#ifdef G_OS_WIN32
-			// TODO: check errors
-			discover_socket->hEvent = WSACreateEvent();
-			g_assert (discover_socket->hEvent != WSA_INVALID_EVENT);
-			res = WSAEventSelect (g_socket_get_fd (discover_socket->socket), discover_socket->hEvent, FD_READ);
-			g_assert (res == 0);
-		#endif
 
 		socket_list->sockets = g_slist_prepend (socket_list->sockets, discover_socket);
 		socket_list->n_sockets++;
@@ -123,14 +112,12 @@ arv_gv_discover_socket_list_new (void)
 	for (i = 0, iter = socket_list->sockets; iter != NULL; i++, iter = iter->next) {
 		ArvGvDiscoverSocket *discover_socket = iter->data;
 
-		#ifdef G_OS_WIN32
-			socket_list->poll_fds[i].fd = (gint64) discover_socket->hEvent;
-		#else
-			socket_list->poll_fds[i].fd = g_socket_get_fd (discover_socket->socket);
-		#endif
+		socket_list->poll_fds[i].fd = g_socket_get_fd (discover_socket->socket);
 		socket_list->poll_fds[i].events =  G_IO_IN;
 		socket_list->poll_fds[i].revents = 0;
 	}
+
+	arv_gpollfd_prepare_all(socket_list->poll_fds, socket_list->n_sockets);
 
 	return socket_list;
 }
@@ -142,15 +129,13 @@ arv_gv_discover_socket_list_free (ArvGvDiscoverSocketList *socket_list)
 
 	g_return_if_fail (socket_list != NULL);
 
+	arv_gpollfd_finish_all(socket_list->poll_fds, socket_list->n_sockets);
+
 	for (iter = socket_list->sockets; iter != NULL; iter = iter->next) {
 		ArvGvDiscoverSocket *discover_socket = iter->data;
 
 		g_object_unref (discover_socket->interface_address);
 		g_object_unref (discover_socket->socket);
-		#ifdef G_OS_WIN32
-			// TODO: check error
-			WSACloseEvent(discover_socket->hEvent);
-		#endif
 		g_free (discover_socket);
 	}
 	g_slist_free (socket_list->sockets);
@@ -322,9 +307,6 @@ _discover (GHashTable *devices, const char *device_id)
 	char buffer[ARV_GV_INTERFACE_SOCKET_BUFFER_SIZE];
 	int count;
 	int i;
-	#ifdef G_OS_WIN32
-		WSANETWORKEVENTS wsaNetEvents;
-	#endif
 
 	g_assert (devices == NULL || device_id == NULL);
 
@@ -354,10 +336,7 @@ _discover (GHashTable *devices, const char *device_id)
 		for (i = 0, iter = socket_list->sockets; iter != NULL; i++, iter = iter->next) {
 			ArvGvDiscoverSocket *discover_socket = iter->data;
 
-			#ifdef G_OS_WIN32
-				/* clear WSA-internal event records so that g_poll does not signal it again */
-				WSAEnumNetworkEvents (g_socket_get_fd(discover_socket->socket), discover_socket->hEvent, &wsaNetEvents);
-			#endif
+			arv_gpollfd_clear_one (&socket_list->poll_fds[i], discover_socket->socket);
 
 			do {
 				g_socket_set_blocking (discover_socket->socket, FALSE);
@@ -497,9 +476,6 @@ arv_gv_interface_camera_locate (ArvGvInterface *gv_interface, GInetAddress *devi
 	GList *ifaces;
 	GList *iface_iter;
 	struct sockaddr_in device_sockaddr;
-	#ifdef G_OS_WIN32
-		WSANETWORKEVENTS wsaNetEvents;
-	#endif
 
 	device_socket_address = g_inet_socket_address_new(device_address, ARV_GVCP_PORT);
 
@@ -565,11 +541,8 @@ arv_gv_interface_camera_locate (ArvGvInterface *gv_interface, GInetAddress *devi
 
 		for (i = 0, iter = socket_list->sockets; iter != NULL; i++, iter = iter->next) {
 			ArvGvDiscoverSocket *socket = iter->data;
-			#ifdef G_OS_WIN32
-				/* clear WSA-internal event records so that g_poll does not signal it again */
-				WSAEnumNetworkEvents (g_socket_get_fd(socket->socket), socket->hEvent, &wsaNetEvents);
-			#endif
 
+			arv_gpollfd_clear_one (&socket_list->poll_fds[i], socket->socket);
 
 			do {
 				g_socket_set_blocking (socket->socket, FALSE);

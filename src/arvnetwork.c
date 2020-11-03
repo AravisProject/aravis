@@ -280,6 +280,40 @@ inet_ntop (int af, const void *src, char *dst, socklen_t cnt)
 	return NULL;
 }
 
+
+void
+arv_gpollfd_prepare_all(GPollFD *fds, guint nfds){
+	guint i;
+	int wsaRes;
+
+	for (i = 0; i < nfds; i++){
+		gint64 fd = fds[i].fd;
+		fds[i].fd = (gint64) WSACreateEvent();
+		g_assert ((WSAEVENT) fds[i].fd != WSA_INVALID_EVENT);
+		wsaRes = WSAEventSelect (fd, (WSAEVENT) fds[i].fd, FD_READ);
+		g_assert (wsaRes == 0);
+	}
+}
+
+void
+arv_gpollfd_clear_one(GPollFD *fd, GSocket* socket){
+	WSANETWORKEVENTS wsaNetEvents;
+	int wsaRes;
+
+	wsaRes = WSAEnumNetworkEvents (g_socket_get_fd(socket), (WSAEVENT) fd->fd, &wsaNetEvents);
+	/* TODO: check return value, check wsaNetEvents for errors */
+}
+
+void
+arv_gpollfd_finish_all(GPollFD *fds, guint nfds){
+	guint i;
+
+	for (i = 0; i < nfds; i++){
+		WSACloseEvent( (WSAEVENT) fds[i].fd);
+	}
+}
+
+
 #else
 
 GList*
@@ -317,6 +351,23 @@ arv_enumerate_network_interfaces (void)
 
 	return g_list_reverse (ret);
 };
+
+void
+arv_gpollfd_prepare_all(GPollFD *fds, guint nfds)
+{
+	return;
+}
+void
+arv_gpollfd_clear_one(GPollFD *fds, GSocket* socket)
+{
+	return;
+}
+void
+arv_gpollfd_finish_all(GPollFD *fds, guint nfds)
+{
+	return;
+}
+
 #endif
 
 struct sockaddr *
