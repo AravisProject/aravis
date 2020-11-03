@@ -932,14 +932,32 @@ arv_fake_camera_new_full (const char *serial_number, const char *genicam_filenam
 	else if (arv_get_fake_camera_genicam_filename () != NULL)
 		filename = g_strdup (arv_get_fake_camera_genicam_filename ());
 	else
-		filename = g_build_filename (ARAVIS_DATA_DIR, "arv-fake-camera.xml", NULL);
+		filename = NULL;
 
-	if (!g_file_get_contents (filename, &fake_camera->priv->genicam_xml, &fake_camera->priv->genicam_xml_size, &error)) {
-		arv_warning_device ("Failed to load genicam file '%s': %s",
+	if (filename) {
+		if (!g_file_get_contents (filename,
+					  &fake_camera->priv->genicam_xml,
+					  &fake_camera->priv->genicam_xml_size,
+					  &error)) {
+			g_critical ("Failed to load genicam file '%s': %s",
 				    filename, error != NULL ? error->message : "Unknown reason");
-		g_clear_error (&error);
-		fake_camera->priv->genicam_xml = NULL;
-		fake_camera->priv->genicam_xml_size = 0;
+			g_clear_error (&error);
+			fake_camera->priv->genicam_xml = NULL;
+			fake_camera->priv->genicam_xml_size = 0;
+		}
+	} else {
+		GBytes *bytes = g_resources_lookup_data("/org/aravis/arv-fake-camera.xml",
+							G_RESOURCE_FLAGS_NONE, &error);
+
+		if (error != NULL) {
+			g_critical ("Failed to load embedded resource arv-fake-camera.xml: %s",error->message);
+			g_clear_error (&error);
+		} else {
+			fake_camera->priv->genicam_xml = g_strndup (g_bytes_get_data(bytes,NULL), g_bytes_get_size(bytes));
+			fake_camera->priv->genicam_xml_size = g_bytes_get_size(bytes);
+		}
+
+		g_bytes_unref (bytes);
 	}
 
 	g_clear_pointer (&filename, g_free);
