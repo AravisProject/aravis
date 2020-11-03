@@ -93,8 +93,10 @@ const char *		arv_network_interface_get_name		(ArvNetworkInterface *a);
 gboolean 		arv_socket_set_recv_buffer_size		(int socket_fd, gint buffer_size);
 
 #ifdef G_OS_WIN32
-/* prototype is missing on mingw, let's reimplement */
-const char *		inet_ntop				(int af, const void *src, char *dst, socklen_t cnt);
+	/* mingw only defines with _WIN32_WINNT>=0x0600, see https://github.com/AravisProject/aravis/issues/416#issuecomment-717220610 */
+	#if _WIN32_WINNT < 0x0600
+		const char * inet_ntop (int af, const void *src, char *dst, socklen_t cnt);
+	#endif
 #endif
 
 #endif
