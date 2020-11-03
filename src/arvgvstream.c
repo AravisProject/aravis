@@ -798,8 +798,8 @@ _loop (ArvGvStreamThreadData *thread_data)
 
 			do {
 				poll_fd[0].revents = 0;
-
 				n_events = g_poll (poll_fd, 2, timeout_ms);
+				// if(n_events==0) g_critical("g_poll timed out after %d ms",timeout_ms);
 				errsv = errno;
 
 			} while (n_events < 0 && errsv == EINTR);
