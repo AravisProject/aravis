@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
-
 <svg
    xmlns:osb="http://www.openswatchbook.org/uri/2009/osb"
    xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -17,8 +15,10 @@
    height="16.000002"
    id="svg7384"
    version="1.1"
-   inkscape:version="0.92.1 r"
+   inkscape:version="1.0.1 (3bc2e813f5, 2020-09-07)"
    width="16">
+  <title
+     id="title2741">Aravis fake icon</title>
   <metadata
      id="metadata90">
     <rdf:RDF>
@@ -27,8 +27,30 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title>Gnome Symbolic Icon Theme</dc:title>
+        <dc:title>Aravis fake icon</dc:title>
+        <cc:license
+           rdf:resource="http://creativecommons.org/licenses/by-sa/4.0/" />
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>Emmanuel Pacaud</dc:title>
+          </cc:Agent>
+        </dc:creator>
       </cc:Work>
+      <cc:License
+         rdf:about="http://creativecommons.org/licenses/by-sa/4.0/">
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Reproduction" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Distribution" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Notice" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Attribution" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#DerivativeWorks" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#ShareAlike" />
+      </cc:License>
     </rdf:RDF>
   </metadata>
   <sodipodi:namedview
@@ -59,12 +81,13 @@
      inkscape:snap-nodes="false"
      inkscape:snap-others="false"
      inkscape:snap-to-guides="true"
-     inkscape:window-height="960"
+     inkscape:window-height="1016"
      inkscape:window-maximized="1"
-     inkscape:window-width="1280"
+     inkscape:window-width="1920"
      inkscape:window-x="0"
-     inkscape:window-y="27"
-     inkscape:zoom="30.937627">
+     inkscape:window-y="0"
+     inkscape:zoom="30.937627"
+     inkscape:document-rotation="0">
     <inkscape:grid
        dotted="false"
        empspacing="2"
@@ -78,8 +101,6 @@
        type="xygrid"
        visible="true" />
   </sodipodi:namedview>
-  <title
-     id="title9167">Gnome Symbolic Icon Theme</title>
   <defs
      id="defs7386">
     <linearGradient
