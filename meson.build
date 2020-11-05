@@ -57,15 +57,22 @@ if host_machine.system()=='windows'
 	]
 endif
 
-has_if_packet = cc.has_header (join_paths ('linux','if_packet.h'))
 packet_socket_option = get_option('packet-socket')
-if packet_socket_option.enabled()
-  if not has_if_packet
-    error ('missing header for packet-socket support')
-  endif
-  packet_socket_enabled = true
-else
-  packet_socket_enabled = has_if_packet and packet_socket_option.auto()
+if host_machine.system()=='linux'
+	has_if_packet = cc.has_header (join_paths ('linux','if_packet.h'))
+	if packet_socket_option.enabled()
+		if not has_if_packet
+			error ('missing header for packet-socket support')
+		endif
+		packet_socket_enabled = true
+	else
+		packet_socket_enabled = has_if_packet and packet_socket_option.auto()
+	endif
+else # not Linux
+	if packet_socket_option.enabled()
+		warning('packet-socket option ignored on non-Linux')
+	endif
+	packet_socket_enabled = false
 endif
 
 subdir ('src')
