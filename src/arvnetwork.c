@@ -102,6 +102,8 @@ GList* arv_enumerate_network_interfaces(void) {
 	 *
 	 * example source: https://github.com/zeromq/czmq/blob/master/src/ziflist.c#L284
 	 * question about a better solution: https://stackoverflow.com/q/64348510/761090
+	 *
+	 * note: >= Vista code untested
 	 */
 	ULONG outBufLen = 15000;
 	PIP_ADAPTER_ADDRESSES pAddresses = NULL;
@@ -269,8 +271,33 @@ GList* arv_enumerate_network_interfaces(void) {
 		}
 		return NULL;
 	}
-#endif
+#endif /* _WIN32_WINNT < 0x0600 */
 
+
+/*
+ * g_poll does not work with sockets under windows correctly. The reason is that
+ * g_poll uses WaitForMultipleObjectEx API function which does not handle Winsock
+ * sockets descriptors directly. Instead, one should
+ *
+ * (a) create a new event (WSAEVENT) associated with each socket polled, and its
+ *     descriptor passed to g_poll instead (WSACreateEvent, WSAEventSelect);
+ *
+ * (b) when g_poll returns, the event must be cleared so that it is not returned
+ *     again (WSAEnumNetworkEvents);
+ *
+ * (c) events created in (a) must be closed (WSACloseEvent).
+ *
+ * These three points are respectively handled by arv_gpollfd_prepare_all,
+ * arv_gpollfd_clear_one and arv_gpollfd_finish_all. These functions are no-op
+ * for non-Windows builds.
+ *
+ * https://discourse.gnome.org/t/g-poll-times-out-with-windows is the original
+ * discussion of the issue.
+ *
+ * https://gitlab.gnome.org/GNOME/glib/-/issues/214 is GLib bug report
+ * (g_poll does not work on win32 sockets)
+ *
+ */
 
 void
 arv_gpollfd_prepare_all(GPollFD *fds, guint nfds){
@@ -305,7 +332,7 @@ arv_gpollfd_finish_all(GPollFD *fds, guint nfds){
 }
 
 
-#else
+#else /* not G_OS_WIN32 */
 
 GList*
 arv_enumerate_network_interfaces (void)
@@ -343,6 +370,8 @@ arv_enumerate_network_interfaces (void)
 	return g_list_reverse (ret);
 };
 
+/* no-op functions for Win32 GLib bug workaround, see above */
+
 void
 arv_gpollfd_prepare_all(GPollFD *fds, guint nfds)
 {
@@ -359,7 +388,7 @@ arv_gpollfd_finish_all(GPollFD *fds, guint nfds)
 	return;
 }
 
-#endif
+#endif /* G_OS_WIN32 */
 
 struct sockaddr *
 arv_network_interface_get_addr(ArvNetworkInterface* a)
