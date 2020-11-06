@@ -109,6 +109,7 @@ gst_aravis_get_all_camera_caps (GstAravis *gst_aravis, GError **error)
 	int min_frame_rate_denominator;
 	int max_frame_rate_numerator;
 	int max_frame_rate_denominator;
+	gboolean is_frame_rate_available;
 
 	g_return_val_if_fail (GST_IS_ARAVIS (gst_aravis), NULL);
 
@@ -119,16 +120,19 @@ gst_aravis_get_all_camera_caps (GstAravis *gst_aravis, GError **error)
 
 	arv_camera_get_width_bounds (gst_aravis->camera, &min_width, &max_width, &local_error);
 	if (!local_error) arv_camera_get_height_bounds (gst_aravis->camera, &min_height, &max_height, &local_error);
-	if (!local_error) pixel_formats = arv_camera_dup_available_pixel_formats (gst_aravis->camera, &n_pixel_formats, &local_error);
-	if (!local_error) arv_camera_get_frame_rate_bounds (gst_aravis->camera, &min_frame_rate, &max_frame_rate, &local_error);
+	if (!local_error) pixel_formats = arv_camera_dup_available_pixel_formats (gst_aravis->camera, &n_pixel_formats,
+										  &local_error);
+	is_frame_rate_available = arv_camera_is_frame_rate_available (gst_aravis->camera, NULL);
+	if (is_frame_rate_available) {
+		if (!local_error) arv_camera_get_frame_rate_bounds (gst_aravis->camera,
+								    &min_frame_rate, &max_frame_rate, &local_error);
+		gst_util_double_to_fraction (min_frame_rate, &min_frame_rate_numerator, &min_frame_rate_denominator);
+		gst_util_double_to_fraction (max_frame_rate, &max_frame_rate_numerator, &max_frame_rate_denominator);
+	}
 	if (local_error) {
 		g_propagate_error (error, local_error);
 		return NULL;
 	}
-
-	gst_util_double_to_fraction (min_frame_rate, &min_frame_rate_numerator, &min_frame_rate_denominator);
-
-	gst_util_double_to_fraction (max_frame_rate, &max_frame_rate_numerator, &max_frame_rate_denominator);
 
 	caps = gst_caps_new_empty ();
 	for (i = 0; i < n_pixel_formats; i++) {
@@ -143,10 +147,13 @@ gst_aravis_get_all_camera_caps (GstAravis *gst_aravis, GError **error)
 			gst_structure_set (structure,
 					   "width", GST_TYPE_INT_RANGE, min_width, max_width,
 					   "height", GST_TYPE_INT_RANGE, min_height, max_height,
-					   "framerate", GST_TYPE_FRACTION_RANGE,
-							   min_frame_rate_numerator, min_frame_rate_denominator,
-							   max_frame_rate_numerator, max_frame_rate_denominator,
 					   NULL);
+			if (is_frame_rate_available)
+				gst_structure_set (structure,
+						   "framerate", GST_TYPE_FRACTION_RANGE,
+						   min_frame_rate_numerator, min_frame_rate_denominator,
+						   max_frame_rate_numerator, max_frame_rate_denominator,
+						   NULL);
 			gst_caps_append_structure (caps, structure);
 		}
 	}
@@ -183,13 +190,14 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 	ArvPixelFormat pixel_format;
 	gint height, width;
 	int depth = 0, bpp = 0;
-	const GValue *frame_rate;
+	const GValue *frame_rate = NULL;
 	const char *caps_string;
 	const char *format_string;
 	unsigned int i;
 	ArvStream *orig_stream = NULL;
 	GstCaps *orig_fixed_caps = NULL;
 	gboolean result = FALSE;
+	gboolean is_frame_rate_available;
 
 	GST_LOG_OBJECT (gst_aravis, "Requested caps = %" GST_PTR_FORMAT, caps);
 
@@ -200,11 +208,14 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 	if (error)
 		goto errored;
 
+	is_frame_rate_available = arv_camera_is_frame_rate_available (gst_aravis->camera, NULL);
+
 	gst_structure_get_int (structure, "width", &width);
 	gst_structure_get_int (structure, "height", &height);
 	gst_structure_get_int (structure, "depth", &depth);
 	gst_structure_get_int (structure, "bpp", &bpp);
-	frame_rate = gst_structure_get_value (structure, "framerate");
+	if (is_frame_rate_available)
+		frame_rate = gst_structure_get_value (structure, "framerate");
 	format_string = gst_structure_get_string (structure, "format");
 
 	pixel_format = arv_pixel_format_from_gst_caps (gst_structure_get_name (structure), format_string, bpp, depth);
@@ -256,7 +267,9 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 
 	GST_DEBUG_OBJECT (gst_aravis, "Buffer timeout = %" G_GUINT64_FORMAT " µs", gst_aravis->buffer_timeout_us);
 
-	GST_DEBUG_OBJECT (gst_aravis, "Actual frame rate = %g Hz", arv_camera_get_frame_rate (gst_aravis->camera, NULL));
+	if (is_frame_rate_available)
+		GST_DEBUG_OBJECT (gst_aravis, "Actual frame rate = %g Hz",
+				  arv_camera_get_frame_rate (gst_aravis->camera, NULL));
 
 	if (!error && gst_aravis->gain_auto_set) {
 		arv_camera_set_gain_auto (gst_aravis->camera, gst_aravis->gain_auto, &error);
@@ -558,12 +571,15 @@ gst_aravis_fixate_caps (GstBaseSrc * bsrc, GstCaps * caps)
 	gint width;
 	gint height;
 	double frame_rate;
+	gboolean is_frame_rate_available;
 
 	g_return_val_if_fail (GST_IS_ARAVIS (bsrc), NULL);
 
 	GST_OBJECT_LOCK (gst_aravis);
 	arv_camera_get_region (gst_aravis->camera, NULL, NULL, &width, &height, &error);
-	if (!error) frame_rate = arv_camera_get_frame_rate (gst_aravis->camera, &error);
+	is_frame_rate_available = arv_camera_is_frame_rate_available (gst_aravis->camera, NULL);
+	if (is_frame_rate_available)
+		if (!error) frame_rate = arv_camera_get_frame_rate (gst_aravis->camera, &error);
 	GST_OBJECT_UNLOCK (gst_aravis);
 	if (error) {
 		GST_ELEMENT_ERROR (gst_aravis, RESOURCE, READ,
@@ -578,7 +594,9 @@ gst_aravis_fixate_caps (GstBaseSrc * bsrc, GstCaps * caps)
 
 		gst_structure_fixate_field_nearest_int (structure, "width", width);
 		gst_structure_fixate_field_nearest_int (structure, "height", height);
-		gst_structure_fixate_field_nearest_fraction (structure, "framerate", (double) (0.5 + frame_rate), 1);
+		if (is_frame_rate_available)
+			gst_structure_fixate_field_nearest_fraction (structure, "framerate",
+								     (double) (0.5 + frame_rate), 1);
 
 		GST_LOG_OBJECT (gst_aravis, "Fixate caps");
 	}
