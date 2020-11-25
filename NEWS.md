@@ -1,7 +1,15 @@
+Stable release 0.8.3
+====================
+
+  * gigevision: automatically adjust packet size if needed (Emmanuel)
+  * gstreamer: don't try to set frame rate if feature is not available (Emmanuel)
+  * genicam: fix pVariable name with dot (Arrigo)
+  * genicam: fix parsing of genicam data url (Emmanuel)
+
 Stable release 0.8.2
 ====================
 
-  * gcdevice: fix timeout race (casperoo)
+  * gvdevice: fix timeout race (casperoo)
   * fakecamera: implement Mono16 pixel format (Hinko)
   * Enable ppc64le in CI pipeline (nagesh)
 
