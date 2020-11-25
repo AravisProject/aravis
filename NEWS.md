@@ -5,6 +5,9 @@ Stable release 0.8.3
   * gstreamer: don't try to set frame rate if feature is not available (Emmanuel)
   * genicam: fix pVariable name with dot (Arrigo)
   * genicam: fix parsing of genicam data url (Emmanuel)
+  * buffer: add arv_buffer_set_frame_id API (Russel)
+  * usb3vision: add Dahua Technology USB id (H.F)
+  * build: prepartory work for windows compilation (Eudoxos)
 
 Stable release 0.8.2
 ====================
