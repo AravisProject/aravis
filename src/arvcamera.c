@@ -2540,23 +2540,23 @@ arv_camera_gv_set_stream_options (ArvCamera *camera, ArvGvStreamOption options)
 }
 
 /**
- * arv_camera_gv_set_packet_size_adjustement:
+ * arv_camera_gv_set_packet_size_adjustment:
  * @camera: a #ArvCamera
- * @adjustement: a #ArvGvPacketSizeAdjustement option
+ * @adjustment: a #ArvGvPacketSizeAdjustment option
  *
- * Sets the option for packet size adjustement that happens at stream object creation.
+ * Sets the option for packet size adjustment that happens at stream object creation.
  *
  * Since: 0.8.3
  */
 
 void
-arv_camera_gv_set_packet_size_adjustement (ArvCamera *camera, ArvGvPacketSizeAdjustement adjustement)
+arv_camera_gv_set_packet_size_adjustment (ArvCamera *camera, ArvGvPacketSizeAdjustment adjustment)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
 	g_return_if_fail (arv_camera_is_gv_device (camera));
 
-	arv_gv_device_set_packet_size_adjustement (ARV_GV_DEVICE (priv->device), adjustement);
+	arv_gv_device_set_packet_size_adjustment (ARV_GV_DEVICE (priv->device), adjustment);
 }
 
 /**

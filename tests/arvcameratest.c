@@ -16,7 +16,7 @@ static int arv_option_vertical_binning = -1;
 static double arv_option_exposure_time_us = -1;
 static int arv_option_gain = -1;
 static gboolean arv_option_auto_socket_buffer = FALSE;
-static char *arv_option_packet_size_adjustement = NULL;
+static char *arv_option_packet_size_adjustment = NULL;
 static gboolean arv_option_no_packet_resend = FALSE;
 static double arv_option_packet_request_ratio = -1.0;
 static unsigned int arv_option_packet_timeout = 20;
@@ -82,8 +82,8 @@ static const GOptionEntry arv_option_entries[] =
 		&arv_option_auto_socket_buffer,		"Auto socket buffer size", NULL
 	},
 	{
-		"packet-size-adjustement",		'j', 0, G_OPTION_ARG_STRING,
-		&arv_option_packet_size_adjustement,	"Packet size adjustement",
+		"packet-size-adjustment",		'j', 0, G_OPTION_ARG_STRING,
+		&arv_option_packet_size_adjustment,	"Packet size adjustment",
 		"{never|always|once|on-failure|on-failure-once}"
 	},
 	{
@@ -302,7 +302,7 @@ main (int argc, char **argv)
 
 	camera = arv_camera_new (arv_option_camera_name, &error);
 	if (camera != NULL) {
-		ArvGvPacketSizeAdjustement adjustement;
+		ArvGvPacketSizeAdjustment adjustment;
 		void (*old_sigint_handler)(int);
 		gint payload;
 		gint x, y, width, height;
@@ -342,17 +342,17 @@ main (int argc, char **argv)
 			arv_camera_uv_set_bandwidth (camera, arv_option_bandwidth_limit, NULL);
 		}
 
-		if (arv_option_packet_size_adjustement != NULL) {
-			if (g_ascii_strcasecmp (arv_option_packet_size_adjustement, "always") == 0)
-				adjustement = ARV_GV_PACKET_SIZE_ADJUSTEMENT_ALWAYS;
-			else if (g_ascii_strcasecmp (arv_option_packet_size_adjustement, "never") == 0)
-				adjustement = ARV_GV_PACKET_SIZE_ADJUSTEMENT_NEVER;
-			else if (g_ascii_strcasecmp (arv_option_packet_size_adjustement, "once") == 0)
-				adjustement = ARV_GV_PACKET_SIZE_ADJUSTEMENT_ONCE;
-			else if (g_ascii_strcasecmp (arv_option_packet_size_adjustement, "on-failure") == 0)
-				adjustement = ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE;
-			else if (g_ascii_strcasecmp (arv_option_packet_size_adjustement, "on-failure-once") == 0)
-				adjustement = ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE_ONCE;
+		if (arv_option_packet_size_adjustment != NULL) {
+			if (g_ascii_strcasecmp (arv_option_packet_size_adjustment, "always") == 0)
+				adjustment = ARV_GV_PACKET_SIZE_ADJUSTMENT_ALWAYS;
+			else if (g_ascii_strcasecmp (arv_option_packet_size_adjustment, "never") == 0)
+				adjustment = ARV_GV_PACKET_SIZE_ADJUSTMENT_NEVER;
+			else if (g_ascii_strcasecmp (arv_option_packet_size_adjustment, "once") == 0)
+				adjustment = ARV_GV_PACKET_SIZE_ADJUSTMENT_ONCE;
+			else if (g_ascii_strcasecmp (arv_option_packet_size_adjustment, "on-failure") == 0)
+				adjustment = ARV_GV_PACKET_SIZE_ADJUSTMENT_ON_FAILURE;
+			else if (g_ascii_strcasecmp (arv_option_packet_size_adjustment, "on-failure-once") == 0)
+				adjustment = ARV_GV_PACKET_SIZE_ADJUSTMENT_ON_FAILURE_ONCE;
 		}
 
 		if (arv_camera_is_gv_device (camera)) {
@@ -362,8 +362,8 @@ main (int argc, char **argv)
 			arv_camera_gv_set_stream_options (camera, arv_option_no_packet_socket ?
 							  ARV_GV_STREAM_OPTION_PACKET_SOCKET_DISABLED :
 							  ARV_GV_STREAM_OPTION_NONE);
-			if (arv_option_packet_size_adjustement != NULL)
-				arv_camera_gv_set_packet_size_adjustement (camera, adjustement);
+			if (arv_option_packet_size_adjustment != NULL)
+				arv_camera_gv_set_packet_size_adjustment (camera, adjustment);
 		}
 
 		arv_camera_get_region (camera, &x, &y, &width, &height, NULL);

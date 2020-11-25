@@ -90,7 +90,7 @@ typedef struct {
 	gboolean is_write_memory_supported;
 
 	ArvGvStreamOption stream_options;
-	ArvGvPacketSizeAdjustement packet_size_adjustement;
+	ArvGvPacketSizeAdjustment packet_size_adjustment;
 
 	gboolean first_stream_created;
 } ArvGvDevicePrivate ;
@@ -620,7 +620,7 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 	success = test_packet_check (device, &poll_fd, socket, buffer, packet_size, is_command);
 
 	/* When exit_early is set, the function only checks the current packet size is working.
-	 * If not, the full automatic packet size adjustement is run. */
+	 * If not, the full automatic packet size adjustment is run. */
 	if (success && exit_early) {
 		arv_debug_device ("[GvDevice::auto_packet_size] Current packet size check successfull "
 				  "(%" G_GINT64_FORMAT " bytes)",
@@ -687,12 +687,12 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device, GError **error)
 }
 
 /**
- * arv_gv_device_set_packet_size_adjustement:
+ * arv_gv_device_set_packet_size_adjustment:
  * @gv_device: a #ArvGvDevice
- * @adjustement: a #ArvGvPacketSizeAdjustement option
+ * @adjustment: a #ArvGvPacketSizeAdjustment option
  *
- * Sets the option for the packet size adjustement happening at stream object creation. See
- * arv_gv_device_auto_packet_size() for a description of the packet adjustement feature. The default behaviour is
+ * Sets the option for the packet size adjustment happening at stream object creation. See
+ * arv_gv_device_auto_packet_size() for a description of the packet adjustment feature. The default behaviour is
  * @ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE_ONCE, which means the packet size is adjusted if the current packet size
  * check fails, and only the first time arv_device_create_stream() is successfully called during @gv_device instance
  * life.
@@ -701,13 +701,13 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device, GError **error)
  */
 
 void
-arv_gv_device_set_packet_size_adjustement (ArvGvDevice *gv_device, ArvGvPacketSizeAdjustement adjustement)
+arv_gv_device_set_packet_size_adjustment (ArvGvDevice *gv_device, ArvGvPacketSizeAdjustment adjustment)
 {
 	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
 
 	g_return_if_fail (ARV_IS_GV_DEVICE (gv_device));
 
-	priv->packet_size_adjustement = adjustement;
+	priv->packet_size_adjustment = adjustment;
 }
 
 /**
@@ -1129,13 +1129,13 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 		return NULL;
 	}
 
-	if (priv->packet_size_adjustement != ARV_GV_PACKET_SIZE_ADJUSTEMENT_NEVER &&
-	    ((priv->packet_size_adjustement != ARV_GV_PACKET_SIZE_ADJUSTEMENT_ONCE &&
-	      priv->packet_size_adjustement != ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE_ONCE) ||
+	if (priv->packet_size_adjustment != ARV_GV_PACKET_SIZE_ADJUSTMENT_NEVER &&
+	    ((priv->packet_size_adjustment != ARV_GV_PACKET_SIZE_ADJUSTMENT_ONCE &&
+	      priv->packet_size_adjustment != ARV_GV_PACKET_SIZE_ADJUSTMENT_ON_FAILURE_ONCE) ||
 	     !priv->first_stream_created)) {
 		auto_packet_size (gv_device,
-				  priv->packet_size_adjustement == ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE ||
-				      priv->packet_size_adjustement == ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE_ONCE,
+				  priv->packet_size_adjustment == ARV_GV_PACKET_SIZE_ADJUSTMENT_ON_FAILURE ||
+				      priv->packet_size_adjustment == ARV_GV_PACKET_SIZE_ADJUSTMENT_ON_FAILURE_ONCE,
 				  &local_error);
 		if (local_error != NULL) {
 			g_propagate_error (error, local_error);
@@ -1463,7 +1463,7 @@ arv_gv_device_set_property (GObject *self, guint prop_id, const GValue *value, G
 			priv->device_address = g_value_dup_object (value);
 			break;
 		case PROP_GV_DEVICE_PACKET_SIZE_ADJUSTEMENT:
-			priv->packet_size_adjustement = g_value_get_enum (value);
+			priv->packet_size_adjustment = g_value_get_enum (value);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
@@ -1478,7 +1478,7 @@ arv_gv_device_get_property (GObject *object, guint prop_id, GValue *value, GPara
 
 	switch (prop_id) {
 		case PROP_GV_DEVICE_PACKET_SIZE_ADJUSTEMENT:
-			g_value_set_enum (value, priv->packet_size_adjustement);
+			g_value_set_enum (value, priv->packet_size_adjustment);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1522,10 +1522,10 @@ arv_gv_device_class_init (ArvGvDeviceClass *gv_device_class)
 				      G_TYPE_INET_ADDRESS,
 				      G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 	g_object_class_install_property (object_class, PROP_GV_DEVICE_PACKET_SIZE_ADJUSTEMENT,
-					 g_param_spec_enum ("packet-size-adjustement", "Packet size adjustement",
-							    "Packet size adjustement option",
-							    ARV_TYPE_GV_PACKET_SIZE_ADJUSTEMENT,
-							    ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE_ONCE,
+					 g_param_spec_enum ("packet-size-adjustment", "Packet size adjustment",
+							    "Packet size adjustment option",
+							    ARV_TYPE_GV_PACKET_SIZE_ADJUSTMENT,
+							    ARV_GV_PACKET_SIZE_ADJUSTMENT_ON_FAILURE_ONCE,
 							    G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
 								G_PARAM_CONSTRUCT));
 }
