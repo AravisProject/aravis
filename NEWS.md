@@ -1,3 +1,8 @@
+Stable release 0.8.4
+====================
+
+  * all: s/adjustement/adjustment/
+
 Stable release 0.8.3
 ====================
 
