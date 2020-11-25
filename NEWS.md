@@ -7,7 +7,7 @@ Stable release 0.8.3
   * genicam: fix parsing of genicam data url (Emmanuel)
   * buffer: add arv_buffer_set_frame_id API (Russel)
   * usb3vision: add Dahua Technology USB id (H.F)
-  * build: prepartory work for windows compilation (Eudoxos)
+  * build: preparatory work for windows compilation (Eudoxos)
 
 Stable release 0.8.2
 ====================
