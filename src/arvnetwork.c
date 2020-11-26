@@ -97,8 +97,10 @@ arv_enumerate_network_interfaces (void)
 			a->addr = g_memdup (ifap_iter->ifa_addr, sizeof(struct sockaddr));
 			if (ifap_iter->ifa_netmask)
 				a->netmask = g_memdup (ifap_iter->ifa_netmask, sizeof(struct sockaddr));
+#if !defined(__APPLE__)
 			if (ifap_iter->ifa_ifu.ifu_broadaddr)
 				a->broadaddr = g_memdup(ifap_iter->ifa_ifu.ifu_broadaddr, sizeof(struct sockaddr));
+#endif
 			if (ifap_iter->ifa_name)
 				a->name = g_strdup(ifap_iter->ifa_name);
 
