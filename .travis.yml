@@ -4,7 +4,7 @@ os:
 arch:
   - amd64
   - ppc64le
-language: C
+language: c
 
 osx_image: xcode12.2
 
@@ -12,7 +12,7 @@ compiler:
   - gcc
   - clang
 
-matrix:
+jobs:
   allow_failures:
     - os: osx
 
