@@ -1,3 +1,9 @@
+Stable release 0.8.5
+====================
+
+  * macOS: build fix
+  * travis:enable macOS
+
 Stable release 0.8.4
 ====================
 
