@@ -48,5 +48,4 @@ script:
   - ninja
   - meson test --no-suite="network"
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then meson test --suite="network" ; fi
-  - if [[ "$TRAVIS_CPU_ARCH" != "ppc64le" ]]; then ../tests/valgrind-memcheck --no-suite="network"; fi
-  - if [[ "$TRAVIS_CPU_ARCH" != "ppc64le" && "$TRAVIS_OS_NAME" != "osx" ]]; then ../tests/valgrind-memcheck --suite="network" ; fi
+  - if [[ "$TRAVIS_CPU_ARCH" != "ppc64le" && "$TRAVIS_OS_NAME" != "osx" ]]; then ../tests/valgrind-memcheck ; fi
