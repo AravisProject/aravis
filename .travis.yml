@@ -6,6 +6,8 @@ arch:
   - ppc64le
 language: C
 
+osx_image: xcode12.2
+
 compiler:
   - gcc
   - clang
@@ -31,11 +33,14 @@ addons:
       - gobject-introspection
       - valgrind
     update: true
+  homebrew:
+    packages:
+      - ninja
+      - intltool
+      - valgrind
+    update: true
 
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ninja intltool valgrind; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew link --force gettext ; fi
   - sudo pip3 install --upgrade setuptools pip
   - sudo pip3 install 'meson==0.47'
 
