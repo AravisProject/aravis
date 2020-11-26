@@ -29,6 +29,7 @@ addons:
       - libaudit-dev
       - python3-pip
       - python3-dev
+      - ninja-build
       - gobject-introspection
       - valgrind
     update: true
@@ -39,7 +40,8 @@ addons:
 
 before_install:
   - sudo pip3 install --upgrade setuptools pip
-  - sudo pip3 install ninja 'meson==0.47'
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then sudo pip3 install ninja ; fi
+  - sudo pip3 install 'meson==0.47'
 
 script:
   - meson build
