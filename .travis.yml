@@ -27,7 +27,6 @@ addons:
       - gtk-doc-tools
       - libusb-1.0-0-dev
       - libaudit-dev
-      - ninja-build
       - python3-pip
       - python3-dev
       - gobject-introspection
@@ -35,13 +34,12 @@ addons:
     update: true
   homebrew:
     packages:
-      - ninja
       - intltool
     update: true
 
 before_install:
   - sudo pip3 install --upgrade setuptools pip
-  - sudo pip3 install 'meson==0.47'
+  - sudo pip3 install ninja 'meson==0.47'
 
 script:
   - meson build
