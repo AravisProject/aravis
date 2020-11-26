@@ -27,17 +27,24 @@ The build can be configured at any time using `meson configure` in the build dir
 
 On some platforms (like Ubuntu), you may have to configure the dynamic linker (ld) to let it know where the aravis libraries are installed, and run ldconfig as root in order to update ld cache.
 
-#### Building on Mac OS X
+#### Building on macOS
 
-Using the GNU build system on Mac OS X is not directly supported, but can be mimicked by augmenting the install procedure above with some environment settings:
+Using the GNU build system on macOS is not directly supported, but can be mimicked by augmenting the install procedure above with some environment settings (tested on macOS Catalina):
 
 ```
-brew install gettext intltool gtk-doc libxml2 meson
-brew link --force gettext
-brew link --force libxml2
+brew install gettext intltool gtk-doc libxml2 meson libusb
 meson build
 ninja -C build
 ```
+
+If you want to be able to build the viewer, you have to install some additional packages:
+
+```
+brew install gtk+3 gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad libnotify gnome-icon-theme
+meson configure -Dviewer=enabled
+```
+
+Python bindings and camera simulator are not functional yet.
 
 ### Ethernet Device Performance
 
