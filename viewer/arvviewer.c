@@ -40,6 +40,7 @@
 static gboolean has_autovideo_sink = FALSE;
 static gboolean has_gtksink = FALSE;
 static gboolean has_gtkglsink = FALSE;
+static gboolean has_bayer2rgb = FALSE;
 
 static gboolean
 gstreamer_plugin_check (void)
@@ -56,8 +57,7 @@ gstreamer_plugin_check (void)
 		static char *plugins[] = {
 			"appsrc",
 			"videoconvert",
-			"videoflip",
-			"bayer2rgb"
+			"videoflip"
 		};
 
 		registry = gst_registry_get ();
@@ -88,6 +88,12 @@ gstreamer_plugin_check (void)
 		feature = gst_registry_lookup_feature (registry, "gtkglsink");
 		if (GST_IS_PLUGIN_FEATURE (feature)) {
 			has_gtkglsink = TRUE;
+			g_object_unref (feature);
+		}
+
+		feature = gst_registry_lookup_feature (registry, "bayer2rgb");
+		if (GST_IS_PLUGIN_FEATURE (feature)) {
+			has_bayer2rgb = TRUE;
 			g_object_unref (feature);
 		}
 
@@ -986,7 +992,8 @@ start_video (ArvViewer *viewer)
 	pixel_format = arv_camera_get_pixel_format (viewer->camera, NULL);
 
 	caps_string = arv_pixel_format_to_gst_caps_string (pixel_format);
-	if (caps_string == NULL) {
+	if (caps_string == NULL ||
+	    (g_str_has_prefix (caps_string, "video/x-bayer") && !has_bayer2rgb)) {
 		g_message ("GStreamer cannot understand the camera pixel format: 0x%x!\n", (int) pixel_format);
 		stop_video (viewer);
 		return FALSE;
@@ -1152,7 +1159,9 @@ start_camera (ArvViewer *viewer, const char *camera_id)
 	g_assert (n_pixel_formats == n_pixel_format_strings);
 	pixel_format_string = arv_camera_get_pixel_format_as_string (viewer->camera, NULL);
 	for (i = 0; i < n_pixel_formats; i++) {
-		if (arv_pixel_format_to_gst_caps_string (pixel_formats[i]) != NULL) {
+		const char *caps_string = arv_pixel_format_to_gst_caps_string (pixel_formats[i]);
+		if ( caps_string != NULL &&
+		    (has_bayer2rgb || !g_str_has_prefix (caps_string, "video/x-bayer"))) {
 			gtk_list_store_append (list_store, &iter);
 			gtk_list_store_set (list_store, &iter, 0, pixel_format_strings[i], -1);
 			if (g_strcmp0 (pixel_format_strings[i], pixel_format_string) == 0)
