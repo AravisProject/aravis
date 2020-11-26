@@ -37,7 +37,6 @@ addons:
     packages:
       - ninja
       - intltool
-      - valgrind
     update: true
 
 before_install:
