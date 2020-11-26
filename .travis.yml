@@ -4,17 +4,16 @@ os:
 arch:
   - amd64
   - ppc64le
-language: C
+language: c
+
+osx_image: xcode12.2
 
 compiler:
   - gcc
   - clang
 
-matrix:
-  exclude:
-    - os: osx
+jobs:
   allow_failures:
-    - os: osx
 
 dist: xenial
 
@@ -27,18 +26,20 @@ addons:
       - gtk-doc-tools
       - libusb-1.0-0-dev
       - libaudit-dev
-      - ninja-build
       - python3-pip
       - python3-dev
+      - ninja-build
       - gobject-introspection
       - valgrind
     update: true
+  homebrew:
+    packages:
+      - intltool
+    update: true
 
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ninja intltool valgrind; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew link --force gettext ; fi
   - sudo pip3 install --upgrade setuptools pip
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then sudo pip3 install ninja ; fi
   - sudo pip3 install 'meson==0.47'
 
 script:
@@ -48,5 +49,4 @@ script:
   - ninja
   - meson test --no-suite="network"
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then meson test --suite="network" ; fi
-  - if [[ "$TRAVIS_CPU_ARCH" != "ppc64le" ]]; then ../tests/valgrind-memcheck --no-suite="network"; fi
-  - if [[ "$TRAVIS_CPU_ARCH" != "ppc64le" && "$TRAVIS_OS_NAME" != "osx" ]]; then ../tests/valgrind-memcheck --suite="network" ; fi
+  - if [[ "$TRAVIS_CPU_ARCH" != "ppc64le" && "$TRAVIS_OS_NAME" != "osx" ]]; then ../tests/valgrind-memcheck ; fi
