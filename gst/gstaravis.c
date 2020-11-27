@@ -126,8 +126,10 @@ gst_aravis_get_all_camera_caps (GstAravis *gst_aravis, GError **error)
 	if (is_frame_rate_available) {
 		if (!local_error) arv_camera_get_frame_rate_bounds (gst_aravis->camera,
 								    &min_frame_rate, &max_frame_rate, &local_error);
-		gst_util_double_to_fraction (min_frame_rate, &min_frame_rate_numerator, &min_frame_rate_denominator);
-		gst_util_double_to_fraction (max_frame_rate, &max_frame_rate_numerator, &max_frame_rate_denominator);
+		if (!local_error) {
+			gst_util_double_to_fraction (min_frame_rate, &min_frame_rate_numerator, &min_frame_rate_denominator);
+			gst_util_double_to_fraction (max_frame_rate, &max_frame_rate_numerator, &max_frame_rate_denominator);
+		}
 	}
 	if (local_error) {
 		g_propagate_error (error, local_error);
