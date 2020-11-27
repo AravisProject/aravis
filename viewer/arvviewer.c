@@ -705,7 +705,7 @@ stream_cb (void *user_data, ArvStreamCallbackType type, ArvBuffer *buffer)
 	if (type == ARV_STREAM_CALLBACK_TYPE_INIT) {
 		if (!arv_make_thread_realtime (10) &&
 		    !arv_make_thread_high_priority (-10))
-			g_warning ("Failed to make stream thread high priority");
+			arv_warning_viewer ("Failed to make stream thread high priority");
 	}
 }
 
