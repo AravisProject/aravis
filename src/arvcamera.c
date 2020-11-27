@@ -2099,9 +2099,9 @@ arv_camera_get_integer_bounds_as_double (ArvCamera *camera, const char *feature,
 	gint64 min64, max64;
 
 	if (min != NULL)
-		*min = G_MININT64;
+		*min = -G_MAXDOUBLE;
 	if (max != NULL)
-		*max = G_MAXINT64;
+		*max = G_MAXDOUBLE;
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 	g_return_if_fail (feature != NULL);
