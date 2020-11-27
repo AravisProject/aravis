@@ -30,6 +30,7 @@ if cc.get_id()=='gcc' or cc.get_id()=='clang'
     '-Wmissing-include-dirs',
     '-Wmissing-prototypes',
     '-Wpointer-arith',
+    '-Wformat-nonliteral'
     ]
 
   add_project_arguments(cc.get_supported_arguments(warning_c_args), language: 'c')
