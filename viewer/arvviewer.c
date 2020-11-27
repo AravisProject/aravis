@@ -985,7 +985,7 @@ start_video (ArvViewer *viewer)
 
 	arv_stream_set_emit_signals (viewer->stream, TRUE);
 	payload = arv_camera_get_payload (viewer->camera, NULL);
-	for (i = 0; i < 5; i++)
+	for (i = 0; i < 10; i++)
 		arv_stream_push_buffer (viewer->stream, arv_buffer_new (payload, NULL));
 
 	set_camera_widgets(viewer);
