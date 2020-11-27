@@ -697,7 +697,10 @@ arv_fake_camera_diagonal_ramp (ArvBuffer *buffer, void *fill_pattern_data,
 					}
 				}
 			}
+			break;
+
 		default:
+			g_critical ("Unsupported pixel format");
 			break;
 	}
 }
