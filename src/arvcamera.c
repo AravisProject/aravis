@@ -2915,6 +2915,31 @@ arv_camera_new (const char *name, GError **error)
 	return g_initable_new (ARV_TYPE_CAMERA, NULL, error, "name", name, NULL);
 }
 
+/**
+ * arv_camera_new_with_device:
+ * @device: (transfer none): a #ArvDevice
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Creates a new #ArvCamera, using @device as its internal device object.
+ *
+ * Returns: a new #ArvCamera.
+ *
+ * Since: 0.8.6
+ */
+
+ArvCamera *
+arv_camera_new_with_device (ArvDevice *device, GError **error)
+{
+	g_return_val_if_fail (ARV_IS_DEVICE (device), NULL);
+
+	/* if you need to apply or test for fixups based on the camera model
+	   please do so in arv_camera_constructed and not here, as this breaks
+	   objects created with g_object_new, which includes but is not limited to
+	   introspection users */
+
+	return g_initable_new (ARV_TYPE_CAMERA, NULL, error, "device", device, NULL);
+}
+
 static void
 arv_camera_init (ArvCamera *camera)
 {

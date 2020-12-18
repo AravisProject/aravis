@@ -503,6 +503,53 @@ camera_api_test (void)
 }
 
 static void
+set_flag (gpointer user_data, GObject *object)
+{
+	gboolean *flag = user_data;
+
+	*flag = TRUE;
+}
+
+static void
+camera_device_test (void)
+{
+	ArvDevice *device;
+	ArvDevice *camera_device;
+	ArvCamera *camera;
+	GError *error = NULL;
+	gboolean device_released = FALSE;
+
+	device = arv_fake_device_new ("TEST0", &error);
+	g_assert (ARV_IS_FAKE_DEVICE (device));
+	g_assert (error == NULL);
+
+	g_object_weak_ref (G_OBJECT (device), set_flag, &device_released);
+
+	camera = arv_camera_new_with_device (device, &error);
+	g_assert (ARV_IS_CAMERA (camera));
+	g_assert (error == NULL);
+
+	camera_device = arv_camera_get_device (camera);
+	g_assert (ARV_IS_FAKE_DEVICE (camera_device));
+	g_assert (device == camera_device);
+
+	g_assert (!device_released);
+
+	g_object_unref (device);
+	g_assert (!device_released);
+
+	g_object_unref (camera);
+	g_assert (device_released);
+
+	g_test_expect_message (G_LOG_DOMAIN,
+			       G_LOG_LEVEL_CRITICAL,
+			       "*assertion*");
+	arv_camera_new_with_device (NULL, NULL);
+	g_test_assert_expected_messages ();
+
+}
+
+static void
 set_features_from_string_test (void)
 {
 	ArvDevice *device;
@@ -575,6 +622,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/fake/fake-device-error", fake_device_error_test);
 	g_test_add_func ("/fake/fake-stream", fake_stream_test);
 	g_test_add_func ("/fake/camera-api", camera_api_test);
+	g_test_add_func ("/fake/camera-device", camera_device_test);
 	g_test_add_func ("/fake/set-features-from-string", set_features_from_string_test);
 
 	result = g_test_run();
