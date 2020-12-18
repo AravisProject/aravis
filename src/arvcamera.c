@@ -3026,7 +3026,7 @@ arv_camera_set_property (GObject *object, guint prop_id, const GValue *value, GP
 	switch (prop_id)
 	{
 		case PROP_CAMERA_DEVICE:
-			priv->device = g_value_get_object (value);
+			priv->device = g_value_dup_object (value);
 			break;
 		case PROP_CAMERA_NAME:
 			g_free (priv->name);
@@ -3064,6 +3064,14 @@ arv_camera_class_init (ArvCameraClass *camera_class)
 	object_class->set_property = arv_camera_set_property;
 	object_class->get_property = arv_camera_get_property;
 
+	/**
+	 * ArvCamera:name:
+	 *
+	 * Internal device name for object construction
+	 *
+	 * Stability: Private
+	 */
+
 	g_object_class_install_property
 		(object_class,
 		 PROP_CAMERA_NAME,
@@ -3072,6 +3080,15 @@ arv_camera_class_init (ArvCameraClass *camera_class)
 				      "The camera name",
 				      NULL,
 				      G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+
+	/**
+	 * ArvCamera:device:
+	 *
+	 * Internal device object
+	 *
+	 * Stability: Private
+	 */
+
 	g_object_class_install_property
 		(object_class,
 		 PROP_CAMERA_DEVICE,
