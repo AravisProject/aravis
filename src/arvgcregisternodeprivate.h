@@ -36,5 +36,7 @@ void 		arv_gc_register_node_set_masked_integer_value 	(ArvGcRegisterNode *gc_reg
 								 ArvGcCachable cachable,
 								 gboolean is_masked,
 								 gint64 value, GError **error);
+guint 		arv_gc_register_node_get_endianness 		(ArvGcRegisterNode *register_node);
+
 
 #endif

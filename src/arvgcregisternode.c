@@ -234,7 +234,7 @@ _get_cachable (ArvGcRegisterNode *self)
 	return arv_gc_property_node_get_cachable (priv->cachable, ARV_GC_REGISTER_NODE_GET_CLASS (self)->default_cachable);
 }
 
-static ArvGcCachable
+static guint
 _get_endianness (ArvGcRegisterNode *self)
 {
 	ArvGcRegisterNodePrivate *priv = arv_gc_register_node_get_instance_private (ARV_GC_REGISTER_NODE (self));
@@ -733,3 +733,12 @@ arv_gc_register_node_set_masked_integer_value (ArvGcRegisterNode *self,
 
 	_set_integer_value (self, lsb, msb, signedness, endianness, cachable, is_masked, value, error);
 }
+
+guint
+arv_gc_register_node_get_endianness  (ArvGcRegisterNode *register_node)
+{
+	g_return_val_if_fail (ARV_IS_GC_REGISTER_NODE (register_node), G_BIG_ENDIAN);
+
+	return _get_endianness (register_node);
+}
+

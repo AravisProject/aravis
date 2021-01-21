@@ -25,6 +25,7 @@
 #include <arvgcpropertynode.h>
 #include <arvgcinteger.h>
 #include <arvgcselector.h>
+#include <arvgc.h>
 
 #define ARV_GC_MASKED_INT_REG_NODE_DEFAULT_SIGNEDNESS ARV_GC_SIGNEDNESS_UNSIGNED
 #define ARV_GC_MASKED_INT_REG_NODE_DEFAULT_ENDIANNESS G_LITTLE_ENDIAN
@@ -142,6 +143,14 @@ arv_gc_masked_int_reg_node_get_min (ArvGcInteger *self, GError **error)
 	signedness = arv_gc_property_node_get_sign (priv->sign, ARV_GC_MASKED_INT_REG_NODE_DEFAULT_SIGNEDNESS);
 	endianness =arv_gc_property_node_get_endianness (priv->endianness, ARV_GC_MASKED_INT_REG_NODE_DEFAULT_ENDIANNESS);
 
+	if ((endianness == G_BIG_ENDIAN && (msb > lsb)) ||
+	    (endianness != G_BIG_ENDIAN && (lsb > msb))) {
+		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_INVALID_BIT_RANGE,
+			     "Invalid bit range for node '%s'",
+			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
+		return G_MININT64;
+	}
+
 	if (signedness == ARV_GC_SIGNEDNESS_SIGNED) {
 		return endianness == G_BIG_ENDIAN ?
 			-((1 << (lsb - msb))) :
@@ -159,19 +168,27 @@ arv_gc_masked_int_reg_node_get_max (ArvGcInteger *self, GError **error)
 	ArvGcSignedness signedness;
 	guint endianness;
 
-	lsb = arv_gc_property_node_get_lsb (priv->lsb, 0);
-	msb = arv_gc_property_node_get_msb (priv->msb, 31);
 	signedness = arv_gc_property_node_get_sign (priv->sign, ARV_GC_MASKED_INT_REG_NODE_DEFAULT_SIGNEDNESS);
-	endianness =arv_gc_property_node_get_endianness (priv->endianness, ARV_GC_MASKED_INT_REG_NODE_DEFAULT_ENDIANNESS);
+	endianness = arv_gc_property_node_get_endianness (priv->endianness, ARV_GC_MASKED_INT_REG_NODE_DEFAULT_ENDIANNESS);
+	lsb = arv_gc_property_node_get_lsb (priv->lsb, endianness == G_BIG_ENDIAN ? 31 : 0);
+	msb = arv_gc_property_node_get_msb (priv->msb, endianness == G_BIG_ENDIAN ? 0 : 31);
+
+	if ((endianness == G_BIG_ENDIAN && (msb > lsb)) ||
+	    (endianness != G_BIG_ENDIAN && (lsb > msb))) {
+		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_INVALID_BIT_RANGE,
+			     "Invalid bit range for node '%s'",
+			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
+		return G_MAXINT64;
+	}
 
 	if (signedness == ARV_GC_SIGNEDNESS_SIGNED) {
 		return endianness == G_BIG_ENDIAN ?
-			((1 << (lsb - msb)) - 1) :
-			((1 << (msb - lsb)) - 1);
+			(((gint64) 1 << (lsb - msb)) - 1) :
+			(((gint64) 1 << (msb - lsb)) - 1);
 	} else {
 		return endianness == G_BIG_ENDIAN ?
-			(1 << (lsb - msb + 1)) - 1 :
-			(1 << (msb - lsb + 1)) - 1;
+			((gint64) 1 << (lsb - msb + 1)) - 1 :
+			((gint64) 1 << (msb - lsb + 1)) - 1;
 	}
 }
 
