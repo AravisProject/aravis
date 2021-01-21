@@ -46,9 +46,10 @@ registers_test (void)
 	ArvDevice *device;
 	ArvGc *genicam;
 	ArvGcNode *node;
-	ArvGcNode *node_a;
-	ArvGcNode *node_b;
-	ArvGcNode *node_c;
+	ArvGcNode *node_0_15;
+	ArvGcNode *node_16_31;
+	ArvGcNode *node_15;
+	ArvGcNode *node_0_31;
 	GError *error = NULL;
 	gint64 value;
 	gint64 address;
@@ -63,65 +64,95 @@ registers_test (void)
 	node = arv_gc_get_node (genicam, "TestRegister");
 	g_assert (ARV_IS_GC_NODE (node));
 
-	address = arv_gc_register_get_address (ARV_GC_REGISTER (node), NULL);
+	address = arv_gc_register_get_address (ARV_GC_REGISTER (node), &error);
 	g_assert_cmpint (address, ==, 0x1f0);
+	g_assert (error == NULL);
 
-	arv_gc_integer_set_value (ARV_GC_INTEGER (node), 0x12345678, NULL);
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node), 0x12345678, &error);
 	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
 	g_assert_cmpint (value, ==, 0x12345678);
+	g_assert (error == NULL);
 
-	node_a = arv_gc_get_node (genicam, "StructEntry_0_15");
-	g_assert (ARV_IS_GC_NODE (node_a));
-	node_b = arv_gc_get_node (genicam, "StructEntry_16_31");
-	g_assert (ARV_IS_GC_NODE (node_b));
-	node_c = arv_gc_get_node (genicam, "StructEntry_16");
-	g_assert (ARV_IS_GC_NODE (node_c));
+	node_0_15 = arv_gc_get_node (genicam, "StructEntry_0_15");
+	g_assert (ARV_IS_GC_NODE (node_0_15));
+	node_16_31 = arv_gc_get_node (genicam, "StructEntry_16_31");
+	g_assert (ARV_IS_GC_NODE (node_16_31));
+	node_15 = arv_gc_get_node (genicam, "StructEntry_15");
+	g_assert (ARV_IS_GC_NODE (node_15));
+	node_0_31 = arv_gc_get_node (genicam, "StructEntry_0_31");
+	g_assert (ARV_IS_GC_NODE (node_0_31));
 
-	value = arv_gc_register_get_address (ARV_GC_REGISTER (node_a), NULL);
+	value = arv_gc_register_get_address (ARV_GC_REGISTER (node_0_15), NULL);
 	g_assert_cmpint (value, ==, address);
-	value = arv_gc_register_get_address (ARV_GC_REGISTER (node_b), NULL);
+	value = arv_gc_register_get_address (ARV_GC_REGISTER (node_16_31), NULL);
 	g_assert_cmpint (value, ==, address);
-	value = arv_gc_register_get_address (ARV_GC_REGISTER (node_c), NULL);
+	value = arv_gc_register_get_address (ARV_GC_REGISTER (node_15), NULL);
+	g_assert_cmpint (value, ==, address);
+	value = arv_gc_register_get_address (ARV_GC_REGISTER (node_0_31), NULL);
 	g_assert_cmpint (value, ==, address);
 
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_a), NULL);
-	g_assert_cmpint (value, ==, 0x5678);
-
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_b), NULL);
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_0_15), NULL);
 	g_assert_cmpint (value, ==, 0x1234);
 
-	arv_gc_integer_set_value (ARV_GC_INTEGER (node_b), 0x10101010, NULL);
-
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_a), NULL);
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_16_31), NULL);
 	g_assert_cmpint (value, ==, 0x5678);
 
-	arv_gc_integer_set_value (ARV_GC_INTEGER (node_a), 0xabcdefaa, NULL);
+#if ARAVIS_HAS_BOUNDARY_CHECK
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_16_31), 0x10101010, &error);
+	g_assert (error != NULL);
+	g_assert (error->code == ARV_GC_ERROR_OUT_OF_RANGE);
+	g_clear_error (&error);
+#endif
 
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_a), NULL);
-	g_assert_cmpint (value, ==, -4182);
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_0_31), 0x10101010, &error);
+	g_assert (error == NULL);
 
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_b), NULL);
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_0_15), NULL);
 	g_assert_cmpint (value, ==, 0x1010);
 
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_c), NULL);
-	g_assert_cmpint (value, ==, 0x0);
+#if ARAVIS_HAS_BOUNDARY_CHECK
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_0_15), 0xabcdefaa, &error);
+	g_assert (error != NULL);
+	g_assert (error->code == ARV_GC_ERROR_OUT_OF_RANGE);
+	g_clear_error (&error);
+#endif
 
-	arv_gc_integer_set_value (ARV_GC_INTEGER (node_c), 0xff, NULL);
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_0_31), 0xabcdefaa, &error);
+	g_assert (error == NULL);
 
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_c), NULL);
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_0_15), NULL);
+	g_assert_cmpint (value, ==, 0xabcd);
+
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_16_31), NULL);
+	g_assert_cmpint (value, ==, -4182);
+
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_15), NULL);
+	g_assert_cmpint (value, ==, 0x1);
+
+#if ARAVIS_HAS_BOUNDARY_CHECK
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_15), 0xff, &error);
+	g_assert (error != NULL);
+	g_assert (error->code == ARV_GC_ERROR_OUT_OF_RANGE);
+	g_clear_error (&error);
+#endif
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_0_31), 0xffffff, &error);
+	g_assert (error == NULL);
+
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_15), NULL);
 	g_assert_cmpint (value, ==, 1);
 
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_b), NULL);
-	g_assert_cmpint (value, ==, 0x1011);
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_16_31), NULL);
+	g_assert_cmpint (value, ==, -1);
 
-	arv_gc_integer_set_value (ARV_GC_INTEGER (node_b), 0xff, NULL);
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_16_31), 0xff, NULL);
 
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_b), NULL);
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_16_31), NULL);
 	g_assert_cmpint (value, ==, 0xff);
 
-	arv_gc_integer_set_value (ARV_GC_INTEGER (node_c), 0x0, NULL);
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_15), 0x0, NULL);
 
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_c), NULL);
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_15), NULL);
 	g_assert_cmpint (value, ==, 0);
 
 	g_object_unref (device);

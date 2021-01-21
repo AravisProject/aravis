@@ -52,6 +52,46 @@ arv_gc_integer_set_value (ArvGcInteger *gc_integer, gint64 value, GError **error
 	g_return_if_fail (ARV_IS_GC_INTEGER (gc_integer));
 	g_return_if_fail (error == NULL || *error == NULL);
 
+#if ARAVIS_HAS_BOUNDARY_CHECK
+	ArvGcIntegerInterface *iface = ARV_GC_INTEGER_GET_IFACE (gc_integer);
+
+	if (iface->get_min != NULL) {
+		GError *local_error = NULL;
+		gint64 min = iface->get_min (gc_integer, &local_error);
+
+		if (local_error != NULL) {
+			g_propagate_error (error, local_error);
+			return;
+		}
+
+		if (value < min) {
+			g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_OUT_OF_RANGE,
+				     "Value '%" G_GINT64_FORMAT "' "
+				     "of node '%s' lower than allowed minimum '%" G_GINT64_FORMAT "'",
+				     value, arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_integer)), min);
+			return;
+		}
+	}
+
+	if (iface->get_max != NULL) {
+		GError *local_error = NULL;
+		gint64 max = iface->get_max (gc_integer, &local_error);
+
+		if (local_error != NULL) {
+			g_propagate_error (error, local_error);
+			return;
+		}
+
+		if (value > max) {
+			g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_OUT_OF_RANGE,
+				     "Value '%" G_GINT64_FORMAT "' "
+				     "of node '%s' greater than allowed maximum '%" G_GINT64_FORMAT "'",
+				     value, arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_integer)), max);
+			return;
+		}
+	}
+#endif
+
 	ARV_GC_INTEGER_GET_IFACE (gc_integer)->set_value (gc_integer, value, error);
 }
 

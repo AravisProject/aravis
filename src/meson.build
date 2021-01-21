@@ -222,6 +222,7 @@ library_config_data = configuration_data ()
 library_config_data.set10 ('ARAVIS_HAS_USB', usb_dep.found())
 library_config_data.set10 ('ARAVIS_HAS_PACKET_SOCKET', packet_socket_enabled)
 library_config_data.set10 ('ARAVIS_HAS_FAST_HEARTBEAT', get_option ('fast-heartbeat'))
+library_config_data.set10 ('ARAVIS_HAS_BOUNDARY_CHECK', get_option ('boundary-check'))
 configure_file (input: 'arvfeatures.h.in', output: 'arvfeatures.h',
 		configuration: library_config_data, install_dir: library_include_dir)
 

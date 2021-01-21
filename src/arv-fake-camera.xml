@@ -307,16 +307,20 @@
 
 	<Float Name="AcquisitionFrameRate">
 	  <pValue>AcquisitionFrameRateConverter</pValue>
-	  <Min>0.1</Min>
-	  <Max>100.0</Max>
 	</Float>
 
 	<Converter Name="AcquisitionFrameRateConverter">
 		<Description>Frame rate, in frames per second.</Description>
 		<FormulaTo>(1000000 / FROM)</FormulaTo>
 		<FormulaFrom>(1000000 / TO)</FormulaFrom>
-		<pValue>AcquisitionFramePeriodRegister</pValue>
+		<pValue>AcquisitionFramePeriod</pValue>
 	</Converter>
+
+	<Integer Name="AcquisitionFramePeriod" NameSpace="Custom">
+	  <pValue>AcquisitionFramePeriodRegister</pValue>
+	  <Min>1000</Min>
+	  <Max>10000000</Max>
+	</Integer>
 
 	<IntReg Name="AcquisitionFramePeriodRegister" NameSpace="Custom">
 		<Address>0x138</Address>
@@ -515,20 +519,26 @@
 		<pPort>Device</pPort>
 		<Endianess>BigEndian</Endianess>
 
-		<StructEntry Name="StructEntry_0_15" NameSpace="Custom">
+		<StructEntry Name="StructEntry_16_31" NameSpace="Custom">
 			<LSB>31</LSB>
 			<MSB>16</MSB>
 			<Sign>Signed</Sign>
 		</StructEntry>
 
-		<StructEntry Name="StructEntry_16_31" NameSpace="Custom">
+		<StructEntry Name="StructEntry_0_15" NameSpace="Custom">
 			<LSB>15</LSB>
 			<MSB>0</MSB>
 			<Sign>Unsigned</Sign>
 		</StructEntry>
 
-		<StructEntry Name="StructEntry_16" NameSpace="Custom">
+		<StructEntry Name="StructEntry_15" NameSpace="Custom">
 			<Bit>15</Bit>
+		</StructEntry>
+
+		<StructEntry Name="StructEntry_0_31" NameSpace="Custom">
+			<LSB>31</LSB>
+			<MSB>0</MSB>
+			<Sign>Unsigned</Sign>
 		</StructEntry>
 	</StructReg>
 
