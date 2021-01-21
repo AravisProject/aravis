@@ -1207,6 +1207,10 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source, GError **error)
 		arv_camera_set_string (camera, "TriggerSelector", "AcquisitionStart", &local_error);
 	if (local_error == NULL)
 		arv_camera_set_string (camera, "TriggerMode", "Off", &local_error);
+
+	if (local_error != NULL && local_error->code == ARV_GC_ERROR_ENUM_ENTRY_NOT_FOUND)
+		g_clear_error (&local_error);
+
 	if (local_error == NULL)
 		arv_camera_set_string (camera, "TriggerSelector", "FrameStart", &local_error);
 	if (local_error == NULL)
