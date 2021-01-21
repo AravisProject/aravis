@@ -285,40 +285,68 @@ static gint64
 arv_gc_struct_entry_node_get_min (ArvGcInteger *self, GError **error)
 {
 	ArvGcStructEntryNode *struct_entry = ARV_GC_STRUCT_ENTRY_NODE (self);
-	gint64 lsb, msb;
+	ArvDomNode *struct_register = arv_dom_node_get_parent_node (ARV_DOM_NODE (self));
+	gint64 lsb, msb, min;
 	ArvGcSignedness signedness;
+	guint endianness;
 
-	lsb = arv_gc_property_node_get_lsb (struct_entry->lsb, 0);
-	msb = arv_gc_property_node_get_msb (struct_entry->msb, 31);
 	signedness = arv_gc_property_node_get_sign (struct_entry->sign, ARV_GC_SIGNEDNESS_UNSIGNED);
+	endianness = arv_gc_register_node_get_endianness (ARV_GC_REGISTER_NODE (struct_register));
+	lsb = arv_gc_property_node_get_lsb (struct_entry->lsb, endianness == G_BIG_ENDIAN ? 31 : 0);
+	msb = arv_gc_property_node_get_msb (struct_entry->msb, endianness == G_BIG_ENDIAN ? 0 : 31);
 
-	/* TODO endianness */
+	if ((endianness == G_BIG_ENDIAN && (msb > lsb)) ||
+	    (endianness != G_BIG_ENDIAN && (lsb > msb))) {
+		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_INVALID_BIT_RANGE,
+			     "Invalid bit range for node '%s'",
+			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
+		return G_MAXINT64;
+	}
 
 	if (signedness == ARV_GC_SIGNEDNESS_SIGNED) {
-		return -((1 << (msb - lsb  - 1)));
+		min = endianness == G_BIG_ENDIAN ?
+			-(((gint64) 1 << (lsb - msb))) :
+			-(((gint64) 1 << (msb - lsb)));
 	} else {
-		return 0;
+		min = 0;
 	}
+
+	return min;
 }
 
 static gint64
 arv_gc_struct_entry_node_get_max (ArvGcInteger *self, GError **error)
 {
 	ArvGcStructEntryNode *struct_entry = ARV_GC_STRUCT_ENTRY_NODE (self);
-	gint64 lsb, msb;
+	ArvDomNode *struct_register = arv_dom_node_get_parent_node (ARV_DOM_NODE (self));
+	gint64 lsb, msb, max;
 	ArvGcSignedness signedness;
+	guint endianness;
 
-	lsb = arv_gc_property_node_get_lsb (struct_entry->lsb, 0);
-	msb = arv_gc_property_node_get_msb (struct_entry->msb, 31);
 	signedness = arv_gc_property_node_get_sign (struct_entry->sign, ARV_GC_SIGNEDNESS_UNSIGNED);
+	endianness = arv_gc_register_node_get_endianness (ARV_GC_REGISTER_NODE (struct_register));
+	lsb = arv_gc_property_node_get_lsb (struct_entry->lsb, endianness == G_BIG_ENDIAN ? 31 : 0);
+	msb = arv_gc_property_node_get_msb (struct_entry->msb, endianness == G_BIG_ENDIAN ? 0 : 31);
 
-	/* TODO endianness */
+	if ((endianness == G_BIG_ENDIAN && (msb > lsb)) ||
+	    (endianness != G_BIG_ENDIAN && (lsb > msb))) {
+		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_INVALID_BIT_RANGE,
+			     "Invalid bit range for node '%s'",
+			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
+		return G_MAXINT64;
+	}
 
 	if (signedness == ARV_GC_SIGNEDNESS_SIGNED) {
-		return ((1 << (msb - lsb  - 1)) - 1);
+		max = endianness == G_BIG_ENDIAN ?
+			(((gint64) 1 << (lsb - msb)) - 1) :
+			(((gint64) 1 << (msb - lsb)) - 1);
 	} else {
-		return (1 << (msb - lsb)) - 1;
+		max = endianness == G_BIG_ENDIAN ?
+			((gint64) 1 << (lsb - msb + 1)) - 1 :
+			((gint64) 1 << (msb - lsb + 1)) - 1;
 	}
+
+	return max;
 }
 
 static ArvGcRepresentation
