@@ -50,48 +50,53 @@ arv_gc_float_get_value (ArvGcFloat *gc_float, GError **error)
 void
 arv_gc_float_set_value (ArvGcFloat *gc_float, double value, GError **error)
 {
+	ArvGc *genicam;
+
 	g_return_if_fail (ARV_IS_GC_FLOAT (gc_float));
 	g_return_if_fail (error == NULL || *error == NULL);
 
-#if ARAVIS_HAS_BOUNDARY_CHECK
-	ArvGcFloatInterface *iface = ARV_GC_FLOAT_GET_IFACE (gc_float);
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_float));
+	g_return_if_fail (ARV_IS_GC (genicam));
 
-	if (iface->get_min != NULL) {
-		GError *local_error = NULL;
-		double min = iface->get_min (gc_float, &local_error);
+	if (arv_gc_get_range_check_policy (genicam) == ARV_RANGE_CHECK_POLICY_ENABLE) {
+		ArvGcFloatInterface *iface = ARV_GC_FLOAT_GET_IFACE (gc_float);
 
-		if (local_error != NULL) {
-			g_propagate_error (error, local_error);
-			return;
+		if (iface->get_min != NULL) {
+			GError *local_error = NULL;
+			double min = iface->get_min (gc_float, &local_error);
+
+			if (local_error != NULL) {
+				g_propagate_error (error, local_error);
+				return;
+			}
+
+			if (value < min) {
+				g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_OUT_OF_RANGE,
+					     "Value '%g' "
+					     "of node '%s' lower than allowed minimum '%g'",
+					     value, arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_float)), min);
+				return;
+			}
 		}
 
-		if (value < min) {
-			g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_OUT_OF_RANGE,
-				     "Value '%g' "
-				     "of node '%s' lower than allowed minimum '%g'",
-				     value, arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_float)), min);
-			return;
+		if (iface->get_max != NULL) {
+			GError *local_error = NULL;
+			double max = iface->get_max (gc_float, &local_error);
+
+			if (local_error != NULL) {
+				g_propagate_error (error, local_error);
+				return;
+			}
+
+			if (value > max) {
+				g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_OUT_OF_RANGE,
+					     "Value '%g' "
+					     "of node '%s' greater than allowed maximum '%g'",
+					     value, arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_float)), max);
+				return;
+			}
 		}
 	}
-
-	if (iface->get_max != NULL) {
-		GError *local_error = NULL;
-		double max = iface->get_max (gc_float, &local_error);
-
-		if (local_error != NULL) {
-			g_propagate_error (error, local_error);
-			return;
-		}
-
-		if (value > max) {
-			g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_OUT_OF_RANGE,
-				     "Value '%g' "
-				     "of node '%s' greater than allowed maximum '%g'",
-				     value, arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_float)), max);
-			return;
-		}
-	}
-#endif
 
 	ARV_GC_FLOAT_GET_IFACE (gc_float)->set_value (gc_float, value, error);
 }

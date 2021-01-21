@@ -70,6 +70,19 @@ typedef enum {
 	ARV_REGISTER_CACHE_POLICY_DEFAULT = ARV_REGISTER_CACHE_POLICY_DISABLE
 } ArvRegisterCachePolicy;
 
+/**
+ * ArvBoundaryCheckPolicy:
+ * @ARV_RANGE_CHECK_POLICY_DISABLE: never check if float or integer node value is in min/max range
+ * @ARV_RANGE_CHECK_POLICY_ENABLE: always check if if float or integer node is in min/max range
+ * @ARV_RANGE_CHECK_POLICY_DEFAULT: default range check policy
+ */
+
+typedef enum {
+	ARV_RANGE_CHECK_POLICY_DISABLE,
+	ARV_RANGE_CHECK_POLICY_ENABLE,
+	ARV_RANGE_CHECK_POLICY_DEFAULT = ARV_RANGE_CHECK_POLICY_DISABLE
+} ArvRangeCheckPolicy;
+
 #define ARV_TYPE_GC             (arv_gc_get_type ())
 G_DECLARE_FINAL_TYPE (ArvGc, arv_gc, ARV, GC, ArvDomDocument)
 
@@ -77,6 +90,8 @@ ArvGc * 		arv_gc_new 				(ArvDevice *device, const void *xml, size_t size);
 void 			arv_gc_register_feature_node 		(ArvGc *genicam, ArvGcFeatureNode *node);
 void			arv_gc_set_register_cache_policy	(ArvGc *genicam, ArvRegisterCachePolicy policy);
 ArvRegisterCachePolicy 	arv_gc_get_register_cache_policy 	(ArvGc *genicam);
+void			arv_gc_set_range_check_policy		(ArvGc *genicam, ArvRangeCheckPolicy policy);
+ArvRangeCheckPolicy 	arv_gc_get_range_check_policy	 	(ArvGc *genicam);
 void 			arv_gc_set_default_node_data 		(ArvGc *genicam, const char *node_name, ...) G_GNUC_NULL_TERMINATED;
 ArvGcNode *		arv_gc_get_node				(ArvGc *genicam, const char *name);
 ArvDevice *		arv_gc_get_device			(ArvGc *genicam);

@@ -873,6 +873,31 @@ arv_device_set_register_cache_policy (ArvDevice *device, ArvRegisterCachePolicy 
 	arv_gc_set_register_cache_policy (genicam, policy);
 }
 
+/**
+ * arv_device_set_range_check_policy:
+ * @device: a #ArvDevice
+ * @policy: range check policy
+ *
+ * Sets the range check policy. When enabled, before being set, the value of all nodes with an #ArvGcFloat or
+ * #ArvGcInteger interface will be checked against their Min and Max properties.
+ *
+ * <warning><para>Be aware that some camera may have wrong definition of Min and Max, as this check is defined as not
+ * mandatory in the Genicam specification. If this is the case, it will not possible to set the value of the features
+ * with faulty Min or Max definition. Range check is disabled by default.</para></warning>
+ *
+ * Since: 0.8.5
+ */
+
+void arv_device_set_range_check_policy	(ArvDevice *device, ArvRangeCheckPolicy policy)
+{
+	ArvGc *genicam;
+
+	g_return_if_fail (ARV_IS_DEVICE (device));
+
+	genicam = arv_device_get_genicam (device);
+	arv_gc_set_range_check_policy (genicam, policy);
+}
+
 void
 arv_device_emit_control_lost_signal (ArvDevice *device)
 {

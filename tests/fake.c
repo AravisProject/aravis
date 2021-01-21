@@ -61,6 +61,8 @@ registers_test (void)
 	genicam = arv_device_get_genicam (device);
 	g_assert (ARV_IS_GC (genicam));
 
+	arv_gc_set_range_check_policy (genicam, ARV_RANGE_CHECK_POLICY_ENABLE);
+
 	node = arv_gc_get_node (genicam, "TestRegister");
 	g_assert (ARV_IS_GC_NODE (node));
 
@@ -97,12 +99,10 @@ registers_test (void)
 	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_16_31), NULL);
 	g_assert_cmpint (value, ==, 0x5678);
 
-#if ARAVIS_HAS_BOUNDARY_CHECK
 	arv_gc_integer_set_value (ARV_GC_INTEGER (node_16_31), 0x10101010, &error);
 	g_assert (error != NULL);
 	g_assert (error->code == ARV_GC_ERROR_OUT_OF_RANGE);
 	g_clear_error (&error);
-#endif
 
 	arv_gc_integer_set_value (ARV_GC_INTEGER (node_0_31), 0x10101010, &error);
 	g_assert (error == NULL);
@@ -110,12 +110,10 @@ registers_test (void)
 	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_0_15), NULL);
 	g_assert_cmpint (value, ==, 0x1010);
 
-#if ARAVIS_HAS_BOUNDARY_CHECK
 	arv_gc_integer_set_value (ARV_GC_INTEGER (node_0_15), 0xabcdefaa, &error);
 	g_assert (error != NULL);
 	g_assert (error->code == ARV_GC_ERROR_OUT_OF_RANGE);
 	g_clear_error (&error);
-#endif
 
 	arv_gc_integer_set_value (ARV_GC_INTEGER (node_0_31), 0xabcdefaa, &error);
 	g_assert (error == NULL);
@@ -129,12 +127,10 @@ registers_test (void)
 	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_15), NULL);
 	g_assert_cmpint (value, ==, 0x1);
 
-#if ARAVIS_HAS_BOUNDARY_CHECK
 	arv_gc_integer_set_value (ARV_GC_INTEGER (node_15), 0xff, &error);
 	g_assert (error != NULL);
 	g_assert (error->code == ARV_GC_ERROR_OUT_OF_RANGE);
 	g_clear_error (&error);
-#endif
 
 	arv_gc_integer_set_value (ARV_GC_INTEGER (node_0_31), 0xffffff, &error);
 	g_assert (error == NULL);
