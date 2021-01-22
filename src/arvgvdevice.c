@@ -93,6 +93,8 @@ typedef struct {
 	ArvGvPacketSizeAdjustment packet_size_adjustment;
 
 	gboolean first_stream_created;
+
+	gboolean init_success;
 } ArvGvDevicePrivate ;
 
 struct _ArvGvDevice {
@@ -730,7 +732,7 @@ arv_gv_device_is_controller (ArvGvDevice *gv_device)
 }
 
 static char *
-_load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
+_load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size, GError **error)
 {
 	char filename[ARV_GVBS_XML_URL_SIZE];
 	char *genicam = NULL;
@@ -743,7 +745,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 
 	*size = 0;
 
-	if (!arv_device_read_memory (ARV_DEVICE (gv_device), address, ARV_GVBS_XML_URL_SIZE, filename, NULL))
+	if (!arv_device_read_memory (ARV_DEVICE (gv_device), address, ARV_GVBS_XML_URL_SIZE, filename, error))
 		return NULL;
 
 	filename[ARV_GVBS_XML_URL_SIZE - 1] = '\0';
@@ -841,12 +843,12 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 }
 
 static const char *
-arv_gv_device_get_genicam_xml (ArvDevice *device, size_t *size)
+_get_genicam_xml (ArvDevice *device, size_t *size, GError **error)
 {
 	ArvGvDevice *gv_device = ARV_GV_DEVICE (device);
 	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
+	GError *local_error = NULL;
 	char *xml;
-
 
 	if (priv->genicam_xml != NULL) {
 		*size = priv->genicam_xml_size;
@@ -855,9 +857,14 @@ arv_gv_device_get_genicam_xml (ArvDevice *device, size_t *size)
 
 	*size = 0;
 
-	xml = _load_genicam (gv_device, ARV_GVBS_XML_URL_0_OFFSET, size);
-	if (xml == NULL)
-		xml = _load_genicam (gv_device, ARV_GVBS_XML_URL_1_OFFSET, size);
+	xml = _load_genicam (gv_device, ARV_GVBS_XML_URL_0_OFFSET, size, &local_error);
+	if (xml == NULL && local_error == NULL)
+		xml = _load_genicam (gv_device, ARV_GVBS_XML_URL_1_OFFSET, size, &local_error);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return NULL;
+	}
 
 	priv->genicam_xml = xml;
 	priv->genicam_xml_size = *size;
@@ -865,14 +872,20 @@ arv_gv_device_get_genicam_xml (ArvDevice *device, size_t *size)
 	return xml;
 }
 
+static const char *
+arv_gv_device_get_genicam_xml (ArvDevice *device, size_t *size)
+{
+	return _get_genicam_xml (device, size, NULL);
+}
+
 static void
-arv_gv_device_load_genicam (ArvGvDevice *gv_device)
+arv_gv_device_load_genicam (ArvGvDevice *gv_device, GError **error)
 {
 	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
 	const char *genicam;
 	size_t size;
 
-	genicam = arv_gv_device_get_genicam_xml (ARV_DEVICE (gv_device), &size);
+	genicam = _get_genicam_xml (ARV_DEVICE (gv_device), &size, error);
 	if (genicam != NULL) {
 		priv->genicam = arv_gc_new (ARV_DEVICE (gv_device), genicam, size);
 
@@ -1313,11 +1326,12 @@ arv_gv_device_constructed (GObject *object)
 					G_SOCKET_TYPE_DATAGRAM,
 					G_SOCKET_PROTOCOL_UDP, NULL);
 	if (!g_socket_bind (io_data->socket, io_data->interface_address, FALSE, &local_error)) {
-		if (local_error)
+		if (local_error == NULL)
 			local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_UNKNOWN,
 						   "Unknown error trying to bind device interface");
 		arv_device_take_init_error (ARV_DEVICE (gv_device), local_error);
-		local_error = NULL;
+
+		return;
 	}
 
 	io_data->buffer = g_malloc (ARV_GV_DEVICE_BUFFER_SIZE);
@@ -1329,7 +1343,12 @@ arv_gv_device_constructed (GObject *object)
 
 	priv->io_data = io_data;
 
-	arv_gv_device_load_genicam (gv_device);
+	arv_gv_device_load_genicam (gv_device, &local_error);
+	if (local_error != NULL) {
+		arv_device_take_init_error (ARV_DEVICE (gv_device), local_error);
+
+		return;
+	}
 
 	if (!ARV_IS_GC (priv->genicam)) {
 		arv_device_take_init_error (ARV_DEVICE (object),
@@ -1362,6 +1381,8 @@ arv_gv_device_constructed (GObject *object)
 	arv_debug_device ("[GvDevice::new] Legacy endianness handling = %s",
 			  arv_gc_register_description_node_compare_schema_version (register_description, 1, 1, 0) < 0 ?
 			  "yes" : "no");
+
+	priv->init_success = TRUE;
 }
 
 static void
@@ -1395,7 +1416,8 @@ arv_gv_device_finalize (GObject *object)
 		priv->heartbeat_thread = NULL;
 	}
 
-	arv_gv_device_leave_control (gv_device, NULL);
+	if (priv->init_success)
+		arv_gv_device_leave_control (gv_device, NULL);
 
 	io_data = priv->io_data;
 	g_clear_object (&io_data->device_address);
