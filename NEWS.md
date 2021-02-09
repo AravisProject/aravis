@@ -1,3 +1,15 @@
+Stable release 0.8.6
+====================
+
+  * camera: handle GainRaw also as a float feature
+  * camera: add arv_camera_new_with_device()
+  * camera: ignore error on TriggerSelector and TriggerMode setting in arv_camera_set_trigger()
+  * gigevision: fail quicker if a device is not found at ArvGvDevice instantiation
+  * fakegvcamera: fix interface selection
+  * genicam: implement optional range check for integer and float node values, as a runtime option
+  * genicam: fix min/max computation for StructEntry and MaskedIntReg nodes
+  * gstplugin: don't fail camera init if gain or exposure features are not available
+
 Stable release 0.8.5
 ====================
 
