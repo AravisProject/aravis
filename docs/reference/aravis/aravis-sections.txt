@@ -14,6 +14,7 @@ arv_auto_from_string
 arv_auto_to_string
 ArvCamera
 arv_camera_new
+arv_camera_new_with_device
 arv_camera_create_stream
 arv_camera_get_device
 arv_camera_get_vendor_name
@@ -323,6 +324,7 @@ arv_device_dup_available_enumeration_feature_values
 arv_device_dup_available_enumeration_feature_values_as_strings
 arv_device_dup_available_enumeration_feature_values_as_display_names
 arv_device_set_features_from_string
+arv_device_set_range_check_policy
 arv_device_set_register_cache_policy
 <SUBSECTION Standard>
 ARV_DEVICE
@@ -912,6 +914,7 @@ ArvFakeDevicePrivate
 <FILE>arvgc</FILE>
 <TITLE>ArvGc</TITLE>
 ArvGc
+ArvRangeCheckPolicy
 ArvRegisterCachePolicy
 ArvGcNameSpace
 ArvGcAccessMode
@@ -926,6 +929,8 @@ arv_gc_get_node
 arv_gc_get_device
 arv_gc_get_buffer
 arv_gc_set_buffer
+arv_gc_get_range_check_policy
+arv_gc_set_range_check_policy
 arv_gc_get_register_cache_policy
 arv_gc_set_register_cache_policy
 <SUBSECTION Standard>

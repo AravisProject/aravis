@@ -885,7 +885,7 @@ arv_device_set_register_cache_policy (ArvDevice *device, ArvRegisterCachePolicy 
  * mandatory in the Genicam specification. If this is the case, it will not possible to set the value of the features
  * with faulty Min or Max definition. Range check is disabled by default.</para></warning>
  *
- * Since: 0.8.5
+ * Since: 0.8.6
  */
 
 void arv_device_set_range_check_policy	(ArvDevice *device, ArvRangeCheckPolicy policy)
