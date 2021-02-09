@@ -161,7 +161,6 @@
 			<title>Index of new symbols in 0.8</title>
 			<xi:include href="xml/api-index-0.8.0.xml"><xi:fallback /></xi:include>
 			<xi:include href="xml/api-index-0.8.3.xml"><xi:fallback /></xi:include>
-			<xi:include href="xml/api-index-0.8.5.xml"><xi:fallback /></xi:include>
 			<xi:include href="xml/api-index-0.8.6.xml"><xi:fallback /></xi:include>
 		</index>
 
