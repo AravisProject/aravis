@@ -1201,7 +1201,7 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source, GError **error)
 	g_return_if_fail (source != NULL);
 
 	if (priv->vendor == ARV_CAMERA_VENDOR_BASLER)
-		arv_camera_set_integer (camera, "AcquisitionFrameRateEnable", 0, &local_error);
+		arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", FALSE, &local_error);
 
 	if (local_error == NULL)
 		arv_camera_set_string (camera, "TriggerSelector", "AcquisitionStart", &local_error);
