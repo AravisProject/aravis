@@ -1261,11 +1261,10 @@ _get_detailed_statistics(ArvStream *stream,
 	thread_data = priv->thread_data;
 
 	*n_timeouts = thread_data->n_timeouts;
-        *n_missing_frames = thread_data->n_missing_frames;
+    *n_missing_frames = thread_data->n_missing_frames;
 	*n_resent_packets = thread_data->n_resent_packets;
 	*n_missing_packets = thread_data->n_missing_packets;
-        *n_resend_ratio_reached = thread_data->n_resend_ratio_reached;
-        printf("calling _get_detailed_statistics");
+    *n_resend_ratio_reached = thread_data->n_resend_ratio_reached;
 }
 
 
@@ -1420,7 +1419,7 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 	stream_class->start_thread = arv_gv_stream_start_thread;
 	stream_class->stop_thread = arv_gv_stream_stop_thread;
 	stream_class->get_statistics = _get_statistics;
-        stream_class->get_detailed_statistics = _get_detailed_statistics;
+    stream_class->get_detailed_statistics = _get_detailed_statistics;
 
 	g_object_class_install_property (
 		object_class, ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER,

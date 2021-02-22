@@ -400,8 +400,8 @@ arv_stream_get_detailed_statistics (ArvStream *stream,
 	*n_timeouts = 0;
 	*n_missing_frames = 0;
 	*n_resent_packets = 0;
-        *n_missing_packets = 0;
-        *n_resend_ratio_reached = 0;
+    *n_missing_packets = 0;
+    *n_resend_ratio_reached = 0;
 
 	g_return_if_fail (ARV_IS_STREAM (stream));
 
