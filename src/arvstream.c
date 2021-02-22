@@ -363,7 +363,7 @@ arv_stream_get_statistics (ArvStream *stream,
  * @n_timeouts: (out) (allow-none): number of timeouts
  * @n_missing_frames: (out) (allow-none): number of missing frames
  * @n_resent_packets: (out) (allow-none): number of resent packets
- * @n_missing_packets: (out) (allow-none): number of missing packets 
+ * @n_missing_packets: (out) (allow-none): number of missing packets
  * @n_resend_ratio_reached: (out) (allow-none): number of resend ratio reached
  *
  * An accessor to the stream statistics.
@@ -372,12 +372,12 @@ arv_stream_get_statistics (ArvStream *stream,
  */
 
 void
-arv_stream_get_detailed_statistics (ArvStream *stream, 
-                                    guint64 *n_timeouts, 
-                                    guint64 *n_missing_frames,
-                                    guint64 *n_resent_packets, 
-                                    guint64 *n_missing_packets, 
-                                    guint64 *n_resend_ratio_reached)
+arv_stream_get_detailed_statistics (ArvStream *stream,
+				    guint64 *n_timeouts,
+				    guint64 *n_missing_frames,
+				    guint64 *n_resent_packets,
+				    guint64 *n_missing_packets,
+				    guint64 *n_resend_ratio_reached)
 {
 	ArvStreamClass *stream_class;
 	guint64 dummy;
@@ -400,8 +400,8 @@ arv_stream_get_detailed_statistics (ArvStream *stream,
 	*n_timeouts = 0;
 	*n_missing_frames = 0;
 	*n_resent_packets = 0;
-    *n_missing_packets = 0;
-    *n_resend_ratio_reached = 0;
+	*n_missing_packets = 0;
+	*n_resend_ratio_reached = 0;
 
 	g_return_if_fail (ARV_IS_STREAM (stream));
 
@@ -676,4 +676,3 @@ arv_stream_initable_iface_init (GInitableIface *iface)
 {
 	iface->init = arv_stream_initable_init;
 }
-

@@ -705,7 +705,7 @@ _process_packet (ArvGvStreamThreadData *thread_data, const ArvGvspPacket *packet
 
 			thread_data->n_error_packets++;
 		} else if (packet_id < frame->n_packets &&
-		           frame->packet_data[packet_id].received) {
+			   frame->packet_data[packet_id].received) {
 			/* Ignore duplicate packet */
 			thread_data->n_duplicated_packets++;
 			arv_log_stream_thread ("[GvStream::process_packet] Duplicated packet %d for frame %" G_GUINT64_FORMAT,
@@ -856,7 +856,7 @@ _interface_index_from_address (guint32 ip)
     unsigned index = 0;
 
     if (getifaddrs(&ifaddr) == -1) {
-        return index;
+	return index;
     }
 
     for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
@@ -1247,13 +1247,13 @@ _get_statistics (ArvStream *stream,
 	*n_underruns = thread_data->n_underruns;
 }
 
-static void 
+static void
 _get_detailed_statistics(ArvStream *stream,
-                 guint64 *n_timeouts,
-                 guint64 *n_missing_frames,
-                 guint64 *n_resent_packets,
-                 guint64 *n_missing_packets,
-                 guint64 *n_resend_ratio_reached)
+		 guint64 *n_timeouts,
+		 guint64 *n_missing_frames,
+		 guint64 *n_resent_packets,
+		 guint64 *n_missing_packets,
+		 guint64 *n_resend_ratio_reached)
 {
 	ArvGvStreamPrivate *priv = arv_gv_stream_get_instance_private (ARV_GV_STREAM (stream));
 	ArvGvStreamThreadData *thread_data;
@@ -1261,10 +1261,10 @@ _get_detailed_statistics(ArvStream *stream,
 	thread_data = priv->thread_data;
 
 	*n_timeouts = thread_data->n_timeouts;
-    *n_missing_frames = thread_data->n_missing_frames;
+	*n_missing_frames = thread_data->n_missing_frames;
 	*n_resent_packets = thread_data->n_resent_packets;
 	*n_missing_packets = thread_data->n_missing_packets;
-    *n_resend_ratio_reached = thread_data->n_resend_ratio_reached;
+	*n_resend_ratio_reached = thread_data->n_resend_ratio_reached;
 }
 
 
