@@ -354,7 +354,60 @@ arv_stream_get_statistics (ArvStream *stream,
 
 	stream_class = ARV_STREAM_GET_CLASS (stream);
 	if (stream_class->get_statistics != NULL)
-		stream_class->get_statistics (stream, n_completed_buffers, n_failures, n_underruns);
+		stream_class->get_statistics (stream, n_completed_buffers, n_failures, n_underruns, n_resent_packets, n_missing_packets);
+}
+
+/**
+ * arv_stream_get_detailed_statistics:
+ * @stream: a #ArvStream
+ * @n_timeouts: (out) (allow-none): number of timeouts
+ * @n_missing_frames: (out) (allow-none): number of missing frames
+ * @n_resent_packets: (out) (allow-none): number of resent packets
+ * @n_missing_packets: (out) (allow-none): number of missing packets 
+ * @n_resend_ratio_reached: (out) (allow-none): number of resend ratio reached
+ *
+ * An accessor to the stream statistics.
+ *
+ * Since: 0.8.6
+ */
+
+void
+arv_stream_get_detailed_statistics (ArvStream *stream, 
+                                    guint64 *n_timeouts, 
+                                    guint64 *n_missing_frames,
+                                    guint64 *n_resent_packets, 
+                                    guint64 *n_missing_packets, 
+                                    guint64 *n_resend_ratio_reached)
+{
+	ArvStreamClass *stream_class;
+	guint64 dummy;
+
+	if (n_timeouts == NULL)
+		n_timeouts =  &dummy;
+
+	if (n_missing_frames == NULL)
+		n_missing_frames =  &dummy;
+
+	if (n_resent_packets == NULL)
+		n_resent_packets =  &dummy;
+
+	if (n_missing_packets == NULL)
+		n_missing_packets =  &dummy;
+
+	if (n_resend_ratio_reached == NULL)
+		n_resend_ratio_reached =  &dummy;
+
+	*n_timeouts = 0;
+	*n_missing_frames = 0;
+	*n_resent_packets = 0;
+        *n_missing_packets = 0;
+        *n_resend_ratio_reached = 0;
+
+	g_return_if_fail (ARV_IS_STREAM (stream));
+
+	stream_class = ARV_STREAM_GET_CLASS (stream);
+	if (stream_class->get_detailed_statistics != NULL)
+		stream_class->get_detailed_statistics (stream, n_timeouts, n_missing_frames, n_resent_packets, n_missing_packets, n_resend_ratio_reached);
 }
 
 /**

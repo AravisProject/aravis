@@ -1247,6 +1247,28 @@ _get_statistics (ArvStream *stream,
 	*n_underruns = thread_data->n_underruns;
 }
 
+static void 
+_get_detailed_statistics(ArvStream *stream,
+                 guint64 *n_timeouts,
+                 guint64 *n_missing_frames,
+                 guint64 *n_resent_packets,
+                 guint64 *n_missing_packets,
+                 guint64 *n_resend_ratio_reached)
+{
+	ArvGvStreamPrivate *priv = arv_gv_stream_get_instance_private (ARV_GV_STREAM (stream));
+	ArvGvStreamThreadData *thread_data;
+
+	thread_data = priv->thread_data;
+
+	*n_timeouts = thread_data->n_timeouts;
+        *n_missing_frames = thread_data->n_missing_frames;
+	*n_resent_packets = thread_data->n_resent_packets;
+	*n_missing_packets = thread_data->n_missing_packets;
+        *n_resend_ratio_reached = thread_data->n_resend_ratio_reached;
+        printf("calling _get_detailed_statistics");
+}
+
+
 static void
 arv_gv_stream_set_property (GObject * object, guint prop_id,
 			    const GValue * value, GParamSpec * pspec)
@@ -1398,6 +1420,7 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 	stream_class->start_thread = arv_gv_stream_start_thread;
 	stream_class->stop_thread = arv_gv_stream_stop_thread;
 	stream_class->get_statistics = _get_statistics;
+        stream_class->get_detailed_statistics = _get_detailed_statistics;
 
 	g_object_class_install_property (
 		object_class, ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER,
