@@ -81,9 +81,7 @@ unsigned int	arv_stream_stop_thread			(ArvStream *stream, gboolean delete_buffer
 void		arv_stream_get_statistics		(ArvStream *stream,
 							 guint64 *n_completed_buffers,
 							 guint64 *n_failures,
-							 guint64 *n_underruns,
-                                                         guint64 *n_resent_packets,
-                                                         guint64 *n_missing_packets);
+							 guint64 *n_underruns);
 
 void            arv_stream_get_detailed_statistics      (ArvStream *stream, 
                                                          guint64 *n_timeouts, 
