@@ -354,7 +354,7 @@ arv_stream_get_statistics (ArvStream *stream,
 
 	stream_class = ARV_STREAM_GET_CLASS (stream);
 	if (stream_class->get_statistics != NULL)
-		stream_class->get_statistics (stream, n_completed_buffers, n_failures, n_underruns, n_resent_packets, n_missing_packets);
+		stream_class->get_statistics (stream, n_completed_buffers, n_failures, n_underruns);
 }
 
 /**
