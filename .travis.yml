@@ -38,7 +38,7 @@ addons:
     update: true
 
 before_install:
-  - sudo pip3 install --upgrade setuptools pip
+  - sudo pip3 install --upgrade setuptools pip==20.3.4
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then sudo pip3 install ninja ; fi
   - sudo pip3 install 'meson==0.47'
 
