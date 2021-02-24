@@ -373,7 +373,7 @@ new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 }
 
 static void
-frame_rate_entry_cb (GtkEntry *entry, ArvViewer *viewer)
+_apply_frame_rate (GtkEntry *entry, ArvViewer *viewer, gboolean grab_focus)
 {
 	char *text;
 	double frame_rate;
@@ -385,14 +385,22 @@ frame_rate_entry_cb (GtkEntry *entry, ArvViewer *viewer)
 	frame_rate = arv_camera_get_frame_rate (viewer->camera, NULL);
 	text = g_strdup_printf ("%g", frame_rate);
 	gtk_entry_set_text (entry, text);
+	if (grab_focus)
+		gtk_widget_grab_focus (GTK_WIDGET(entry));
 	g_free (text);
+}
+
+static void
+frame_rate_entry_cb (GtkEntry *entry, ArvViewer *viewer)
+{
+	_apply_frame_rate (entry, viewer, TRUE);
 }
 
 static gboolean
 frame_rate_entry_focus_cb (GtkEntry *entry, GdkEventFocus *event,
 		    ArvViewer *viewer)
 {
-	frame_rate_entry_cb (entry, viewer);
+	_apply_frame_rate (entry, viewer, FALSE);
 
 	return FALSE;
 }
@@ -409,6 +417,7 @@ exposure_spin_cb (GtkSpinButton *spin_button, ArvViewer *viewer)
 
 	g_signal_handler_block (viewer->exposure_hscale, viewer->exposure_hscale_changed);
 	gtk_range_set_value (GTK_RANGE (viewer->exposure_hscale), log_exposure);
+	gtk_widget_grab_focus (GTK_WIDGET (spin_button));
 	g_signal_handler_unblock (viewer->exposure_hscale, viewer->exposure_hscale_changed);
 }
 
@@ -421,6 +430,7 @@ gain_spin_cb (GtkSpinButton *spin_button, ArvViewer *viewer)
 
 	g_signal_handler_block (viewer->gain_hscale, viewer->gain_hscale_changed);
 	gtk_range_set_value (GTK_RANGE (viewer->gain_hscale), gtk_spin_button_get_value (spin_button));
+	gtk_widget_grab_focus (GTK_WIDGET (spin_button));
 	g_signal_handler_unblock (viewer->gain_hscale, viewer->gain_hscale_changed);
 }
 
