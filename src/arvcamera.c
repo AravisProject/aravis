@@ -953,9 +953,13 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate, GError **error)
 
 	switch (priv->vendor) {
 		case ARV_CAMERA_VENDOR_BASLER:
+			/* Disabling AcquisitionStart is required on some Basler cameras. Just ignore a failure. */
 			arv_camera_set_string (camera, "TriggerSelector", "AcquisitionStart", &local_error);
 			if (local_error == NULL)
 				arv_camera_set_string (camera, "TriggerMode", "Off", &local_error);
+			else
+				g_clear_error (&local_error);
+
 			if (local_error == NULL)
 				arv_camera_set_string (camera, "TriggerSelector", "FrameStart", &local_error);
 			if (local_error == NULL)
