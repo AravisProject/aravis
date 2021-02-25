@@ -540,8 +540,10 @@ test_packet_check (ArvDevice *device,
 
 		do {
 			n_events = g_poll (poll_fd, 1, 10);
-			if (n_events != 0)
+			if (n_events != 0) {
+				arv_gpollfd_clear_one (poll_fd, socket);
 				read_count = g_socket_receive (socket, buffer, 16384, NULL, NULL);
+			}
 			else
 				read_count = 0;
 			/* Discard late packets, read_count should be equal to packet size minus IP and UDP headers */
@@ -669,6 +671,8 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 
 	g_clear_pointer (&buffer, g_free);
 	g_clear_object (&socket);
+
+	arv_gpollfd_finish_all(&poll_fd, 1);
 
 	arv_device_set_boolean_feature_value (device, "GevSCPSDoNotFragment", do_not_fragment, NULL);
 
