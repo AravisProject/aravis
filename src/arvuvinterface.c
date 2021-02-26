@@ -260,6 +260,8 @@ _discover (ArvUvInterface *uv_interface,  GArray *device_ids)
 		return;
 	}
 
+	g_hash_table_remove_all (uv_interface->priv->devices);
+
 	for (i = 0; i < count; i++) {
 		ArvInterfaceDeviceIds *ids;
 
