@@ -340,8 +340,8 @@ arv_uv_interface_open_device (ArvInterface *interface, const char *device_id, GE
 	return _open_device (interface, device_id, error);
 }
 
-static ArvInterface *uv_interface = NULL;
-static GMutex uv_interface_mutex;
+static ArvInterface *arv_uv_interface = NULL;
+static GMutex arv_uv_interface_mutex;
 
 /**
  * arv_uv_interface_get_instance:
@@ -354,24 +354,24 @@ static GMutex uv_interface_mutex;
 ArvInterface *
 arv_uv_interface_get_instance (void)
 {
-	g_mutex_lock (&uv_interface_mutex);
+	g_mutex_lock (&arv_uv_interface_mutex);
 
-	if (uv_interface == NULL)
-		uv_interface = g_object_new (ARV_TYPE_UV_INTERFACE, NULL);
+	if (arv_uv_interface == NULL)
+		arv_uv_interface = g_object_new (ARV_TYPE_UV_INTERFACE, NULL);
 
-	g_mutex_unlock (&uv_interface_mutex);
+	g_mutex_unlock (&arv_uv_interface_mutex);
 
-	return ARV_INTERFACE (uv_interface);
+	return ARV_INTERFACE (arv_uv_interface);
 }
 
 void
 arv_uv_interface_destroy_instance (void)
 {
-	g_mutex_lock (&uv_interface_mutex);
+	g_mutex_lock (&arv_uv_interface_mutex);
 
-	g_clear_object (&uv_interface);
+	g_clear_object (&arv_uv_interface);
 
-	g_mutex_unlock (&uv_interface_mutex);
+	g_mutex_unlock (&arv_uv_interface_mutex);
 }
 
 G_DEFINE_TYPE_WITH_CODE (ArvUvInterface, arv_uv_interface, ARV_TYPE_INTERFACE, G_ADD_PRIVATE (ArvUvInterface))
