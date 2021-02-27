@@ -34,10 +34,6 @@
 #include <sched.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#ifndef G_OS_WIN32
-#include <sys/resource.h>
-#include <sys/syscall.h>
-#endif
 
 #define RTKIT_SERVICE_NAME "org.freedesktop.RealtimeKit1"
 #define RTKIT_OBJECT_PATH "/org/freedesktop/RealtimeKit1"
@@ -220,14 +216,14 @@ arv_rtkit_make_high_priority (GDBusConnection *connection, pid_t thread, int nic
 #define RLIMIT_RTTIME 15
 #endif
 
-#ifndef G_OS_WIN32
+#if !defined(__APPLE__) && !defined(G_OS_WIN32)
+
+#include <sys/resource.h>
+#include <sys/syscall.h>
+
 static pid_t _gettid(void) {
         return (pid_t) syscall(SYS_gettid);
 }
-#else
-#include <processthreadsapi.h>
-static pid_t _gettid(void) { return GetCurrentThreadId(); }
-#endif
 
 /**
  * arv_make_thread_realtime:
@@ -241,7 +237,6 @@ static pid_t _gettid(void) { return GetCurrentThreadId(); }
  * Since: 0.4.0
  */
 
-#if !defined(__APPLE__) && !defined(G_OS_WIN32)
 gboolean
 arv_make_thread_realtime (int priority)
 {
@@ -285,15 +280,6 @@ arv_make_thread_realtime (int priority)
 	}
 	return TRUE;
 }
-#else
-gboolean
-arv_make_thread_realtime (int priority)
-{
-	arv_debug_misc ("SCHED API not supported on OSX/Windows");
-
-	return FALSE;
-}
-#endif
 
 /**
  * arv_make_thread_high_priority:
@@ -332,3 +318,22 @@ arv_make_thread_high_priority (int nice_level)
 
 	return TRUE;
 }
+
+#else
+
+gboolean
+arv_make_thread_realtime (int priority)
+{
+	arv_debug_misc ("SCHED API not supported on OSX/Windows");
+
+	return FALSE;
+}
+
+gboolean
+arv_make_thread_high_priority (int nice_level)
+{
+	arv_debug_misc ("RtKit not supported on OSX/Windows");
+
+	return FALSE;
+}
+#endif

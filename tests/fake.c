@@ -46,9 +46,10 @@ registers_test (void)
 	ArvDevice *device;
 	ArvGc *genicam;
 	ArvGcNode *node;
-	ArvGcNode *node_a;
-	ArvGcNode *node_b;
-	ArvGcNode *node_c;
+	ArvGcNode *node_0_15;
+	ArvGcNode *node_16_31;
+	ArvGcNode *node_15;
+	ArvGcNode *node_0_31;
 	GError *error = NULL;
 	gint64 value;
 	gint64 address;
@@ -60,68 +61,94 @@ registers_test (void)
 	genicam = arv_device_get_genicam (device);
 	g_assert (ARV_IS_GC (genicam));
 
+	arv_gc_set_range_check_policy (genicam, ARV_RANGE_CHECK_POLICY_ENABLE);
+
 	node = arv_gc_get_node (genicam, "TestRegister");
 	g_assert (ARV_IS_GC_NODE (node));
 
-	address = arv_gc_register_get_address (ARV_GC_REGISTER (node), NULL);
+	address = arv_gc_register_get_address (ARV_GC_REGISTER (node), &error);
 	g_assert_cmpint (address, ==, 0x1f0);
+	g_assert (error == NULL);
 
-	arv_gc_integer_set_value (ARV_GC_INTEGER (node), 0x12345678, NULL);
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node), 0x12345678, &error);
 	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
 	g_assert_cmpint (value, ==, 0x12345678);
+	g_assert (error == NULL);
 
-	node_a = arv_gc_get_node (genicam, "StructEntry_0_15");
-	g_assert (ARV_IS_GC_NODE (node_a));
-	node_b = arv_gc_get_node (genicam, "StructEntry_16_31");
-	g_assert (ARV_IS_GC_NODE (node_b));
-	node_c = arv_gc_get_node (genicam, "StructEntry_16");
-	g_assert (ARV_IS_GC_NODE (node_c));
+	node_0_15 = arv_gc_get_node (genicam, "StructEntry_0_15");
+	g_assert (ARV_IS_GC_NODE (node_0_15));
+	node_16_31 = arv_gc_get_node (genicam, "StructEntry_16_31");
+	g_assert (ARV_IS_GC_NODE (node_16_31));
+	node_15 = arv_gc_get_node (genicam, "StructEntry_15");
+	g_assert (ARV_IS_GC_NODE (node_15));
+	node_0_31 = arv_gc_get_node (genicam, "StructEntry_0_31");
+	g_assert (ARV_IS_GC_NODE (node_0_31));
 
-	value = arv_gc_register_get_address (ARV_GC_REGISTER (node_a), NULL);
+	value = arv_gc_register_get_address (ARV_GC_REGISTER (node_0_15), NULL);
 	g_assert_cmpint (value, ==, address);
-	value = arv_gc_register_get_address (ARV_GC_REGISTER (node_b), NULL);
+	value = arv_gc_register_get_address (ARV_GC_REGISTER (node_16_31), NULL);
 	g_assert_cmpint (value, ==, address);
-	value = arv_gc_register_get_address (ARV_GC_REGISTER (node_c), NULL);
+	value = arv_gc_register_get_address (ARV_GC_REGISTER (node_15), NULL);
+	g_assert_cmpint (value, ==, address);
+	value = arv_gc_register_get_address (ARV_GC_REGISTER (node_0_31), NULL);
 	g_assert_cmpint (value, ==, address);
 
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_a), NULL);
-	g_assert_cmpint (value, ==, 0x5678);
-
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_b), NULL);
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_0_15), NULL);
 	g_assert_cmpint (value, ==, 0x1234);
 
-	arv_gc_integer_set_value (ARV_GC_INTEGER (node_b), 0x10101010, NULL);
-
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_a), NULL);
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_16_31), NULL);
 	g_assert_cmpint (value, ==, 0x5678);
 
-	arv_gc_integer_set_value (ARV_GC_INTEGER (node_a), 0xabcdefaa, NULL);
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_16_31), 0x10101010, &error);
+	g_assert (error != NULL);
+	g_assert (error->code == ARV_GC_ERROR_OUT_OF_RANGE);
+	g_clear_error (&error);
 
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_a), NULL);
-	g_assert_cmpint (value, ==, -4182);
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_0_31), 0x10101010, &error);
+	g_assert (error == NULL);
 
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_b), NULL);
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_0_15), NULL);
 	g_assert_cmpint (value, ==, 0x1010);
 
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_c), NULL);
-	g_assert_cmpint (value, ==, 0x0);
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_0_15), 0xabcdefaa, &error);
+	g_assert (error != NULL);
+	g_assert (error->code == ARV_GC_ERROR_OUT_OF_RANGE);
+	g_clear_error (&error);
 
-	arv_gc_integer_set_value (ARV_GC_INTEGER (node_c), 0xff, NULL);
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_0_31), 0xabcdefaa, &error);
+	g_assert (error == NULL);
 
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_c), NULL);
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_0_15), NULL);
+	g_assert_cmpint (value, ==, 0xabcd);
+
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_16_31), NULL);
+	g_assert_cmpint (value, ==, -4182);
+
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_15), NULL);
+	g_assert_cmpint (value, ==, 0x1);
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_15), 0xff, &error);
+	g_assert (error != NULL);
+	g_assert (error->code == ARV_GC_ERROR_OUT_OF_RANGE);
+	g_clear_error (&error);
+
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_0_31), 0xffffff, &error);
+	g_assert (error == NULL);
+
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_15), NULL);
 	g_assert_cmpint (value, ==, 1);
 
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_b), NULL);
-	g_assert_cmpint (value, ==, 0x1011);
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_16_31), NULL);
+	g_assert_cmpint (value, ==, -1);
 
-	arv_gc_integer_set_value (ARV_GC_INTEGER (node_b), 0xff, NULL);
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_16_31), 0xff, NULL);
 
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_b), NULL);
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_16_31), NULL);
 	g_assert_cmpint (value, ==, 0xff);
 
-	arv_gc_integer_set_value (ARV_GC_INTEGER (node_c), 0x0, NULL);
+	arv_gc_integer_set_value (ARV_GC_INTEGER (node_15), 0x0, NULL);
 
-	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_c), NULL);
+	value = arv_gc_integer_get_value (ARV_GC_INTEGER (node_15), NULL);
 	g_assert_cmpint (value, ==, 0);
 
 	g_object_unref (device);
@@ -503,6 +530,53 @@ camera_api_test (void)
 }
 
 static void
+set_flag (gpointer user_data, GObject *object)
+{
+	gboolean *flag = user_data;
+
+	*flag = TRUE;
+}
+
+static void
+camera_device_test (void)
+{
+	ArvDevice *device;
+	ArvDevice *camera_device;
+	ArvCamera *camera;
+	GError *error = NULL;
+	gboolean device_released = FALSE;
+
+	device = arv_fake_device_new ("TEST0", &error);
+	g_assert (ARV_IS_FAKE_DEVICE (device));
+	g_assert (error == NULL);
+
+	g_object_weak_ref (G_OBJECT (device), set_flag, &device_released);
+
+	camera = arv_camera_new_with_device (device, &error);
+	g_assert (ARV_IS_CAMERA (camera));
+	g_assert (error == NULL);
+
+	camera_device = arv_camera_get_device (camera);
+	g_assert (ARV_IS_FAKE_DEVICE (camera_device));
+	g_assert (device == camera_device);
+
+	g_assert (!device_released);
+
+	g_object_unref (device);
+	g_assert (!device_released);
+
+	g_object_unref (camera);
+	g_assert (device_released);
+
+	g_test_expect_message (G_LOG_DOMAIN,
+			       G_LOG_LEVEL_CRITICAL,
+			       "*assertion*");
+	arv_camera_new_with_device (NULL, NULL);
+	g_test_assert_expected_messages ();
+
+}
+
+static void
 set_features_from_string_test (void)
 {
 	ArvDevice *device;
@@ -575,6 +649,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/fake/fake-device-error", fake_device_error_test);
 	g_test_add_func ("/fake/fake-stream", fake_stream_test);
 	g_test_add_func ("/fake/camera-api", camera_api_test);
+	g_test_add_func ("/fake/camera-device", camera_device_test);
 	g_test_add_func ("/fake/set-features-from-string", set_features_from_string_test);
 
 	result = g_test_run();

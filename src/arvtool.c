@@ -29,6 +29,7 @@ static char *arv_option_device_name = NULL;
 static char *arv_option_device_address = NULL;
 static char *arv_option_debug_domains = NULL;
 static char *arv_option_cache_policy = NULL;
+static char *arv_option_range_check_policy = NULL;
 static gboolean arv_option_show_time = FALSE;
 
 static const GOptionEntry arv_option_entries[] =
@@ -39,6 +40,8 @@ static const GOptionEntry arv_option_entries[] =
 		&arv_option_device_address,	NULL, "<device_address>"},
 	{ "cache-policy",	'c', 0, G_OPTION_ARG_STRING,
 		&arv_option_cache_policy, 	"Register cache policy", "[disable|enable|debug]" },
+	{ "range-check-policy",	'r', 0, G_OPTION_ARG_STRING,
+		&arv_option_range_check_policy,	"Range check policy", "[disable|enable]" },
 	{ "time",		't', 0, G_OPTION_ARG_NONE,
 		&arv_option_show_time, 		"Show execution time", NULL},
 	{ "debug", 		'd', 0, G_OPTION_ARG_STRING,
@@ -191,7 +194,9 @@ arv_tool_list_features (ArvGc *genicam, const char *feature, ArvToolListMode lis
 }
 
 static void
-arv_tool_execute_command (int argc, char **argv, ArvDevice *device, ArvRegisterCachePolicy cache_policy)
+arv_tool_execute_command (int argc, char **argv, ArvDevice *device,
+			  ArvRegisterCachePolicy cache_policy,
+			  ArvRangeCheckPolicy range_check_policy)
 {
 	ArvGc *genicam;
 	const char *command = argv[1];
@@ -201,6 +206,7 @@ arv_tool_execute_command (int argc, char **argv, ArvDevice *device, ArvRegisterC
 		return;
 
 	arv_device_set_register_cache_policy (device, cache_policy);
+	arv_device_set_range_check_policy (device, range_check_policy);
 
 	genicam = arv_device_get_genicam (device);
 
@@ -336,7 +342,10 @@ arv_tool_execute_command (int argc, char **argv, ArvDevice *device, ArvRegisterC
 					}
 
 					if (error != NULL) {
-							printf ("%s read error: %s\n", tokens[0], error->message);
+							printf ("%s %s error: %s\n",
+								tokens[0],
+								tokens[1] != NULL ? "write" : "read",
+								error->message);
 							g_clear_error (&error);
 					}
 				}
@@ -376,6 +385,7 @@ main (int argc, char **argv)
 {
 	ArvDevice *device;
 	ArvRegisterCachePolicy cache_policy = ARV_REGISTER_CACHE_POLICY_DEFAULT;
+	ArvRangeCheckPolicy range_check_policy = ARV_RANGE_CHECK_POLICY_DEFAULT;
 	const char *device_id;
 	GOptionContext *context;
 	GError *error = NULL;
@@ -408,6 +418,16 @@ main (int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
+	if (arv_option_range_check_policy == NULL ||
+	    g_strcmp0 (arv_option_range_check_policy, "disable") == 0)
+		range_check_policy = ARV_RANGE_CHECK_POLICY_DISABLE;
+	else if (g_strcmp0 (arv_option_range_check_policy, "enable") == 0)
+		range_check_policy = ARV_RANGE_CHECK_POLICY_ENABLE;
+	else {
+		printf ("Invalid range check policy\n");
+		return EXIT_FAILURE;
+	}
+
 	arv_debug_enable (arv_option_debug_domains);
 
 	device_id = arv_option_device_address != NULL ? arv_option_device_address : arv_option_device_name;
@@ -420,7 +440,7 @@ main (int argc, char **argv)
 			if (argc < 2)
 				printf ("%s\n", device_id);
 			else
-				arv_tool_execute_command (argc, argv, device, cache_policy);
+				arv_tool_execute_command (argc, argv, device, cache_policy, range_check_policy);
 			g_object_unref (device);
 		} else {
 			fprintf (stderr, "Device '%s' not found%s%s\n", device_id,
@@ -441,7 +461,7 @@ main (int argc, char **argv)
 
 				if (ARV_IS_DEVICE (device)) {
 					printf ("%s (%s)\n", device_id, arv_get_device_address (i));
-					arv_tool_execute_command (argc, argv, device, cache_policy);
+					arv_tool_execute_command (argc, argv, device, cache_policy, range_check_policy);
 
 					g_object_unref (device);
 				} else {

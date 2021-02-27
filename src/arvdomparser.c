@@ -157,6 +157,10 @@ arv_dom_parser_characters (void *user_data, const xmlChar *ch, int len)
 }
 
 #if 1
+static void arv_dom_parser_warning (void *user_data, const char *msg, ...) G_GNUC_PRINTF(2,3);
+static void arv_dom_parser_error (void *user_data, const char *msg, ...) G_GNUC_PRINTF(2,3);
+static void arv_dom_parser_fatal_error (void *user_data, const char *msg, ...) G_GNUC_PRINTF(2,3);
+
 static void
 arv_dom_parser_warning (void *user_data, const char *msg, ...)
 {

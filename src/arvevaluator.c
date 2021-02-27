@@ -1486,8 +1486,8 @@ arv_evaluator_init (ArvEvaluator *evaluator)
 	evaluator->priv->sub_expressions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	evaluator->priv->constants = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 
-	arv_evaluator_set_double_variable (evaluator, "PI", M_PI);
-	arv_evaluator_set_double_variable (evaluator, "E", M_E);
+	arv_evaluator_set_double_variable (evaluator, "PI", G_PI);
+	arv_evaluator_set_double_variable (evaluator, "E", G_E);
 }
 
 static void
