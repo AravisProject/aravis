@@ -109,6 +109,8 @@ typedef struct {
 	ArvCameraSeries series;
 
 	gboolean has_gain;
+	gboolean gain_raw_as_float;
+
 	gboolean has_exposure_time;
 	gboolean has_acquisition_frame_rate;
 	gboolean has_acquisition_frame_rate_auto;
@@ -951,9 +953,13 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate, GError **error)
 
 	switch (priv->vendor) {
 		case ARV_CAMERA_VENDOR_BASLER:
+			/* Disabling AcquisitionStart is required on some Basler cameras. Just ignore a failure. */
 			arv_camera_set_string (camera, "TriggerSelector", "AcquisitionStart", &local_error);
 			if (local_error == NULL)
 				arv_camera_set_string (camera, "TriggerMode", "Off", &local_error);
+			else
+				g_clear_error (&local_error);
+
 			if (local_error == NULL)
 				arv_camera_set_string (camera, "TriggerSelector", "FrameStart", &local_error);
 			if (local_error == NULL)
@@ -1199,12 +1205,16 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source, GError **error)
 	g_return_if_fail (source != NULL);
 
 	if (priv->vendor == ARV_CAMERA_VENDOR_BASLER)
-		arv_camera_set_integer (camera, "AcquisitionFrameRateEnable", 0, &local_error);
+		arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", FALSE, &local_error);
 
 	if (local_error == NULL)
 		arv_camera_set_string (camera, "TriggerSelector", "AcquisitionStart", &local_error);
 	if (local_error == NULL)
 		arv_camera_set_string (camera, "TriggerMode", "Off", &local_error);
+
+	if (local_error != NULL && local_error->code == ARV_GC_ERROR_ENUM_ENTRY_NOT_FOUND)
+		g_clear_error (&local_error);
+
 	if (local_error == NULL)
 		arv_camera_set_string (camera, "TriggerSelector", "FrameStart", &local_error);
 	if (local_error == NULL)
@@ -1536,8 +1546,12 @@ arv_camera_set_gain (ArvCamera *camera, double gain, GError **error)
 
 	if (priv->has_gain)
 		arv_camera_set_float (camera, "Gain", gain, error);
-	else
-		arv_camera_set_integer (camera, "GainRaw", gain, error);
+	else {
+		if (priv->gain_raw_as_float)
+			arv_camera_set_float (camera, "GainRaw", gain, error);
+		else
+			arv_camera_set_integer (camera, "GainRaw", gain, error);
+	}
 }
 
 /**
@@ -1559,6 +1573,8 @@ arv_camera_get_gain (ArvCamera *camera, GError **error)
 
 	if (priv->has_gain)
 		return arv_camera_get_float (camera, "Gain", error);
+	else if (priv->gain_raw_as_float)
+		return arv_camera_get_float (camera, "GainRaw", error);
 
 	return arv_camera_get_integer (camera, "GainRaw", error);
 }
@@ -1584,6 +1600,9 @@ arv_camera_get_gain_bounds (ArvCamera *camera, double *min, double *max, GError 
 
 	if (priv->has_gain) {
 		arv_camera_get_float_bounds (camera, "Gain", min, max, error);
+		return;
+	} else if (priv->gain_raw_as_float) {
+		arv_camera_get_float_bounds (camera, "GainRaw", min, max, error);
 		return;
 	}
 
@@ -1770,6 +1789,9 @@ arv_camera_is_gain_available (ArvCamera *camera, GError **error)
 
 	if (priv->has_gain)
 		return arv_camera_is_feature_available (camera, "Gain", error);
+
+	if (priv->gain_raw_as_float)
+		return arv_camera_is_feature_available (camera, "GainRaw", error);
 
 	return arv_camera_is_feature_available (camera, "GainRaw", error);
 }
@@ -2099,9 +2121,9 @@ arv_camera_get_integer_bounds_as_double (ArvCamera *camera, const char *feature,
 	gint64 min64, max64;
 
 	if (min != NULL)
-		*min = G_MININT64;
+		*min = -G_MAXDOUBLE;
 	if (max != NULL)
-		*max = G_MAXINT64;
+		*max = G_MAXDOUBLE;
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 	g_return_if_fail (feature != NULL);
@@ -2540,23 +2562,23 @@ arv_camera_gv_set_stream_options (ArvCamera *camera, ArvGvStreamOption options)
 }
 
 /**
- * arv_camera_gv_set_packet_size_adjustement:
+ * arv_camera_gv_set_packet_size_adjustment:
  * @camera: a #ArvCamera
- * @adjustement: a #ArvGvPacketSizeAdjustement option
+ * @adjustment: a #ArvGvPacketSizeAdjustment option
  *
- * Sets the option for packet size adjustement that happens at stream object creation.
+ * Sets the option for packet size adjustment that happens at stream object creation.
  *
  * Since: 0.8.3
  */
 
 void
-arv_camera_gv_set_packet_size_adjustement (ArvCamera *camera, ArvGvPacketSizeAdjustement adjustement)
+arv_camera_gv_set_packet_size_adjustment (ArvCamera *camera, ArvGvPacketSizeAdjustment adjustment)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
 	g_return_if_fail (arv_camera_is_gv_device (camera));
 
-	arv_gv_device_set_packet_size_adjustement (ARV_GV_DEVICE (priv->device), adjustement);
+	arv_gv_device_set_packet_size_adjustment (ARV_GV_DEVICE (priv->device), adjustment);
 }
 
 /**
@@ -2901,6 +2923,31 @@ arv_camera_new (const char *name, GError **error)
 	return g_initable_new (ARV_TYPE_CAMERA, NULL, error, "name", name, NULL);
 }
 
+/**
+ * arv_camera_new_with_device:
+ * @device: (transfer none): a #ArvDevice
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Creates a new #ArvCamera, using @device as its internal device object.
+ *
+ * Returns: a new #ArvCamera.
+ *
+ * Since: 0.8.6
+ */
+
+ArvCamera *
+arv_camera_new_with_device (ArvDevice *device, GError **error)
+{
+	g_return_val_if_fail (ARV_IS_DEVICE (device), NULL);
+
+	/* if you need to apply or test for fixups based on the camera model
+	   please do so in arv_camera_constructed and not here, as this breaks
+	   objects created with g_object_new, which includes but is not limited to
+	   introspection users */
+
+	return g_initable_new (ARV_TYPE_CAMERA, NULL, error, "device", device, NULL);
+}
+
 static void
 arv_camera_init (ArvCamera *camera)
 {
@@ -2993,6 +3040,8 @@ arv_camera_constructed (GObject *object)
 	priv->series = series;
 
 	priv->has_gain = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device, "Gain"));
+	priv->gain_raw_as_float = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device, "GainRaw"));
+
 	priv->has_exposure_time = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device, "ExposureTime"));
 	priv->has_acquisition_frame_rate = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device,
 										    "AcquisitionFrameRate"));
@@ -3010,7 +3059,7 @@ arv_camera_set_property (GObject *object, guint prop_id, const GValue *value, GP
 	switch (prop_id)
 	{
 		case PROP_CAMERA_DEVICE:
-			priv->device = g_value_get_object (value);
+			priv->device = g_value_dup_object (value);
 			break;
 		case PROP_CAMERA_NAME:
 			g_free (priv->name);
@@ -3048,6 +3097,14 @@ arv_camera_class_init (ArvCameraClass *camera_class)
 	object_class->set_property = arv_camera_set_property;
 	object_class->get_property = arv_camera_get_property;
 
+	/**
+	 * ArvCamera:name:
+	 *
+	 * Internal device name for object construction
+	 *
+	 * Stability: Private
+	 */
+
 	g_object_class_install_property
 		(object_class,
 		 PROP_CAMERA_NAME,
@@ -3056,6 +3113,15 @@ arv_camera_class_init (ArvCameraClass *camera_class)
 				      "The camera name",
 				      NULL,
 				      G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+
+	/**
+	 * ArvCamera:device:
+	 *
+	 * Internal device object
+	 *
+	 * Stability: Private
+	 */
+
 	g_object_class_install_property
 		(object_class,
 		 PROP_CAMERA_DEVICE,

@@ -275,7 +275,7 @@ _set_property (GObject * object, guint prop_id,
 	switch (prop_id) {
 		case ARV_CHUNK_PARSER_PROPERTY_GENICAM:
 			g_clear_object (&parser->priv->genicam);
-			parser->priv->genicam = g_object_ref (g_value_get_object (value));
+			parser->priv->genicam = g_value_dup_object (value);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -323,6 +323,14 @@ arv_chunk_parser_class_init (ArvChunkParserClass *node_class)
 	object_class->finalize = _finalize;
 	object_class->set_property = _set_property;
 	object_class->get_property = _get_property;
+
+	/**
+	 * ArvChunkParser:genicam:
+	 *
+	 * Internal Genicam object
+	 *
+	 * Stability: Private
+	 */
 
 	g_object_class_install_property (
 		object_class, ARV_CHUNK_PARSER_PROPERTY_GENICAM,

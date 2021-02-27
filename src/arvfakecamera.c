@@ -697,7 +697,10 @@ arv_fake_camera_diagonal_ramp (ArvBuffer *buffer, void *fill_pattern_data,
 					}
 				}
 			}
+			break;
+
 		default:
+			g_critical ("Unsupported pixel format");
 			break;
 	}
 }
@@ -947,7 +950,7 @@ arv_fake_camera_new_full (const char *serial_number, const char *genicam_filenam
 		}
 	} else {
 		GBytes *bytes = g_resources_lookup_data("/org/aravis/arv-fake-camera.xml",
-							G_RESOURCE_FLAGS_NONE, &error);
+							G_RESOURCE_LOOKUP_FLAGS_NONE, &error);
 
 		if (error != NULL) {
 			g_critical ("Failed to load embedded resource arv-fake-camera.xml: %s",error->message);

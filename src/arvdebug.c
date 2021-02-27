@@ -178,6 +178,11 @@ arv_debug_check	(ArvDebugCategory *category, ArvDebugLevel level)
 	return (int) level <= (int) category->level;
 }
 
+static void arv_debug_with_level (ArvDebugCategory *category,
+				  ArvDebugLevel level,
+				  const char *format,
+				  va_list args) G_GNUC_PRINTF(3,0);
+
 static void
 arv_debug_with_level (ArvDebugCategory *category, ArvDebugLevel level, const char *format, va_list args)
 {

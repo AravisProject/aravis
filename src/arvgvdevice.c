@@ -90,9 +90,11 @@ typedef struct {
 	gboolean is_write_memory_supported;
 
 	ArvGvStreamOption stream_options;
-	ArvGvPacketSizeAdjustement packet_size_adjustement;
+	ArvGvPacketSizeAdjustment packet_size_adjustment;
 
 	gboolean first_stream_created;
+
+	gboolean init_success;
 } ArvGvDevicePrivate ;
 
 struct _ArvGvDevice {
@@ -427,16 +429,14 @@ arv_gv_device_take_control (ArvGvDevice *gv_device, GError **error)
 	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
 	gboolean success = TRUE;
 
-	if (!priv->io_data->is_controller) {
-		success = arv_device_write_register (ARV_DEVICE (gv_device),
-						     ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET,
-						     ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_CONTROL,
-						     error);
+	success = arv_device_write_register (ARV_DEVICE (gv_device),
+					     ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET,
+					     ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_CONTROL,
+					     error);
 
-		priv->io_data->is_controller = success;
-	}
-
-	if (!success)
+	if (success)
+		priv->io_data->is_controller = TRUE;
+	else
 		arv_warning_device ("[GvDevice::take_control] Can't get control access");
 
 	return success;
@@ -458,18 +458,14 @@ arv_gv_device_leave_control (ArvGvDevice *gv_device, GError **error)
 	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
 	gboolean success = TRUE;
 
-	if (priv->io_data->is_controller) {
+	success = arv_device_write_register (ARV_DEVICE (gv_device),
+					     ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET,
+					     0,
+					     error);
+
+	if (success)
 		priv->io_data->is_controller = FALSE;
-
-		success = arv_device_write_register (ARV_DEVICE (gv_device),
-						     ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET,
-						     0,
-						     error);
-
-		priv->io_data->is_controller = !success;
-	}
-
-	if (!success)
+	else
 		arv_warning_device ("[GvDevice::leave_control] Can't relinquish control access");
 
 	return success;
@@ -630,7 +626,7 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 	success = test_packet_check (device, &poll_fd, socket, buffer, packet_size, is_command);
 
 	/* When exit_early is set, the function only checks the current packet size is working.
-	 * If not, the full automatic packet size adjustement is run. */
+	 * If not, the full automatic packet size adjustment is run. */
 	if (success && exit_early) {
 		arv_debug_device ("[GvDevice::auto_packet_size] Current packet size check successfull "
 				  "(%" G_GINT64_FORMAT " bytes)",
@@ -699,12 +695,12 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device, GError **error)
 }
 
 /**
- * arv_gv_device_set_packet_size_adjustement:
+ * arv_gv_device_set_packet_size_adjustment:
  * @gv_device: a #ArvGvDevice
- * @adjustement: a #ArvGvPacketSizeAdjustement option
+ * @adjustment: a #ArvGvPacketSizeAdjustment option
  *
- * Sets the option for the packet size adjustement happening at stream object creation. See
- * arv_gv_device_auto_packet_size() for a description of the packet adjustement feature. The default behaviour is
+ * Sets the option for the packet size adjustment happening at stream object creation. See
+ * arv_gv_device_auto_packet_size() for a description of the packet adjustment feature. The default behaviour is
  * @ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE_ONCE, which means the packet size is adjusted if the current packet size
  * check fails, and only the first time arv_device_create_stream() is successfully called during @gv_device instance
  * life.
@@ -713,13 +709,13 @@ arv_gv_device_auto_packet_size (ArvGvDevice *gv_device, GError **error)
  */
 
 void
-arv_gv_device_set_packet_size_adjustement (ArvGvDevice *gv_device, ArvGvPacketSizeAdjustement adjustement)
+arv_gv_device_set_packet_size_adjustment (ArvGvDevice *gv_device, ArvGvPacketSizeAdjustment adjustment)
 {
 	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
 
 	g_return_if_fail (ARV_IS_GV_DEVICE (gv_device));
 
-	priv->packet_size_adjustement = adjustement;
+	priv->packet_size_adjustment = adjustment;
 }
 
 /**
@@ -742,7 +738,7 @@ arv_gv_device_is_controller (ArvGvDevice *gv_device)
 }
 
 static char *
-_load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
+_load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size, GError **error)
 {
 	char filename[ARV_GVBS_XML_URL_SIZE];
 	char *genicam = NULL;
@@ -755,7 +751,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 
 	*size = 0;
 
-	if (!arv_device_read_memory (ARV_DEVICE (gv_device), address, ARV_GVBS_XML_URL_SIZE, filename, NULL))
+	if (!arv_device_read_memory (ARV_DEVICE (gv_device), address, ARV_GVBS_XML_URL_SIZE, filename, error))
 		return NULL;
 
 	filename[ARV_GVBS_XML_URL_SIZE - 1] = '\0';
@@ -853,12 +849,12 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size)
 }
 
 static const char *
-arv_gv_device_get_genicam_xml (ArvDevice *device, size_t *size)
+_get_genicam_xml (ArvDevice *device, size_t *size, GError **error)
 {
 	ArvGvDevice *gv_device = ARV_GV_DEVICE (device);
 	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
+	GError *local_error = NULL;
 	char *xml;
-
 
 	if (priv->genicam_xml != NULL) {
 		*size = priv->genicam_xml_size;
@@ -867,9 +863,14 @@ arv_gv_device_get_genicam_xml (ArvDevice *device, size_t *size)
 
 	*size = 0;
 
-	xml = _load_genicam (gv_device, ARV_GVBS_XML_URL_0_OFFSET, size);
-	if (xml == NULL)
-		xml = _load_genicam (gv_device, ARV_GVBS_XML_URL_1_OFFSET, size);
+	xml = _load_genicam (gv_device, ARV_GVBS_XML_URL_0_OFFSET, size, &local_error);
+	if (xml == NULL && local_error == NULL)
+		xml = _load_genicam (gv_device, ARV_GVBS_XML_URL_1_OFFSET, size, &local_error);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return NULL;
+	}
 
 	priv->genicam_xml = xml;
 	priv->genicam_xml_size = *size;
@@ -877,14 +878,20 @@ arv_gv_device_get_genicam_xml (ArvDevice *device, size_t *size)
 	return xml;
 }
 
+static const char *
+arv_gv_device_get_genicam_xml (ArvDevice *device, size_t *size)
+{
+	return _get_genicam_xml (device, size, NULL);
+}
+
 static void
-arv_gv_device_load_genicam (ArvGvDevice *gv_device)
+arv_gv_device_load_genicam (ArvGvDevice *gv_device, GError **error)
 {
 	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
 	const char *genicam;
 	size_t size;
 
-	genicam = arv_gv_device_get_genicam_xml (ARV_DEVICE (gv_device), &size);
+	genicam = _get_genicam_xml (ARV_DEVICE (gv_device), &size, error);
 	if (genicam != NULL) {
 		priv->genicam = arv_gc_new (ARV_DEVICE (gv_device), genicam, size);
 
@@ -1141,13 +1148,13 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 		return NULL;
 	}
 
-	if (priv->packet_size_adjustement != ARV_GV_PACKET_SIZE_ADJUSTEMENT_NEVER &&
-	    ((priv->packet_size_adjustement != ARV_GV_PACKET_SIZE_ADJUSTEMENT_ONCE &&
-	      priv->packet_size_adjustement != ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE_ONCE) ||
+	if (priv->packet_size_adjustment != ARV_GV_PACKET_SIZE_ADJUSTMENT_NEVER &&
+	    ((priv->packet_size_adjustment != ARV_GV_PACKET_SIZE_ADJUSTMENT_ONCE &&
+	      priv->packet_size_adjustment != ARV_GV_PACKET_SIZE_ADJUSTMENT_ON_FAILURE_ONCE) ||
 	     !priv->first_stream_created)) {
 		auto_packet_size (gv_device,
-				  priv->packet_size_adjustement == ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE ||
-				      priv->packet_size_adjustement == ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE_ONCE,
+				  priv->packet_size_adjustment == ARV_GV_PACKET_SIZE_ADJUSTMENT_ON_FAILURE ||
+				      priv->packet_size_adjustment == ARV_GV_PACKET_SIZE_ADJUSTMENT_ON_FAILURE_ONCE,
 				  &local_error);
 		if (local_error != NULL) {
 			g_propagate_error (error, local_error);
@@ -1325,11 +1332,12 @@ arv_gv_device_constructed (GObject *object)
 					G_SOCKET_TYPE_DATAGRAM,
 					G_SOCKET_PROTOCOL_UDP, NULL);
 	if (!g_socket_bind (io_data->socket, io_data->interface_address, FALSE, &local_error)) {
-		if (local_error)
+		if (local_error == NULL)
 			local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_UNKNOWN,
 						   "Unknown error trying to bind device interface");
 		arv_device_take_init_error (ARV_DEVICE (gv_device), local_error);
-		local_error = NULL;
+
+		return;
 	}
 
 	io_data->buffer = g_malloc (ARV_GV_DEVICE_BUFFER_SIZE);
@@ -1343,7 +1351,12 @@ arv_gv_device_constructed (GObject *object)
 
 	priv->io_data = io_data;
 
-	arv_gv_device_load_genicam (gv_device);
+	arv_gv_device_load_genicam (gv_device, &local_error);
+	if (local_error != NULL) {
+		arv_device_take_init_error (ARV_DEVICE (gv_device), local_error);
+
+		return;
+	}
 
 	if (!ARV_IS_GC (priv->genicam)) {
 		arv_device_take_init_error (ARV_DEVICE (object),
@@ -1376,6 +1389,8 @@ arv_gv_device_constructed (GObject *object)
 	arv_debug_device ("[GvDevice::new] Legacy endianness handling = %s",
 			  arv_gc_register_description_node_compare_schema_version (register_description, 1, 1, 0) < 0 ?
 			  "yes" : "no");
+
+	priv->init_success = TRUE;
 }
 
 static void
@@ -1409,7 +1424,8 @@ arv_gv_device_finalize (GObject *object)
 		priv->heartbeat_thread = NULL;
 	}
 
-	arv_gv_device_leave_control (gv_device, NULL);
+	if (priv->init_success)
+		arv_gv_device_leave_control (gv_device, NULL);
 
 	io_data = priv->io_data;
 	g_clear_object (&io_data->device_address);
@@ -1479,7 +1495,7 @@ arv_gv_device_set_property (GObject *self, guint prop_id, const GValue *value, G
 			priv->device_address = g_value_dup_object (value);
 			break;
 		case PROP_GV_DEVICE_PACKET_SIZE_ADJUSTEMENT:
-			priv->packet_size_adjustement = g_value_get_enum (value);
+			priv->packet_size_adjustment = g_value_get_enum (value);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
@@ -1494,7 +1510,7 @@ arv_gv_device_get_property (GObject *object, guint prop_id, GValue *value, GPara
 
 	switch (prop_id) {
 		case PROP_GV_DEVICE_PACKET_SIZE_ADJUSTEMENT:
-			g_value_set_enum (value, priv->packet_size_adjustement);
+			g_value_set_enum (value, priv->packet_size_adjustment);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1538,10 +1554,10 @@ arv_gv_device_class_init (ArvGvDeviceClass *gv_device_class)
 				      G_TYPE_INET_ADDRESS,
 				      G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 	g_object_class_install_property (object_class, PROP_GV_DEVICE_PACKET_SIZE_ADJUSTEMENT,
-					 g_param_spec_enum ("packet-size-adjustement", "Packet size adjustement",
-							    "Packet size adjustement option",
-							    ARV_TYPE_GV_PACKET_SIZE_ADJUSTEMENT,
-							    ARV_GV_PACKET_SIZE_ADJUSTEMENT_ON_FAILURE_ONCE,
+					 g_param_spec_enum ("packet-size-adjustment", "Packet size adjustment",
+							    "Packet size adjustment option",
+							    ARV_TYPE_GV_PACKET_SIZE_ADJUSTMENT,
+							    ARV_GV_PACKET_SIZE_ADJUSTMENT_ON_FAILURE_ONCE,
 							    G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
 								G_PARAM_CONSTRUCT));
 }

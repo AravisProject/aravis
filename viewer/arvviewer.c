@@ -40,6 +40,7 @@
 static gboolean has_autovideo_sink = FALSE;
 static gboolean has_gtksink = FALSE;
 static gboolean has_gtkglsink = FALSE;
+static gboolean has_bayer2rgb = FALSE;
 
 static gboolean
 gstreamer_plugin_check (void)
@@ -56,8 +57,7 @@ gstreamer_plugin_check (void)
 		static char *plugins[] = {
 			"appsrc",
 			"videoconvert",
-			"videoflip",
-			"bayer2rgb"
+			"videoflip"
 		};
 
 		registry = gst_registry_get ();
@@ -88,6 +88,12 @@ gstreamer_plugin_check (void)
 		feature = gst_registry_lookup_feature (registry, "gtkglsink");
 		if (GST_IS_PLUGIN_FEATURE (feature)) {
 			has_gtkglsink = TRUE;
+			g_object_unref (feature);
+		}
+
+		feature = gst_registry_lookup_feature (registry, "bayer2rgb");
+		if (GST_IS_PLUGIN_FEATURE (feature)) {
+			has_bayer2rgb = TRUE;
 			g_object_unref (feature);
 		}
 
@@ -367,7 +373,7 @@ new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 }
 
 static void
-frame_rate_entry_cb (GtkEntry *entry, ArvViewer *viewer)
+_apply_frame_rate (GtkEntry *entry, ArvViewer *viewer, gboolean grab_focus)
 {
 	char *text;
 	double frame_rate;
@@ -379,14 +385,22 @@ frame_rate_entry_cb (GtkEntry *entry, ArvViewer *viewer)
 	frame_rate = arv_camera_get_frame_rate (viewer->camera, NULL);
 	text = g_strdup_printf ("%g", frame_rate);
 	gtk_entry_set_text (entry, text);
+	if (grab_focus)
+		gtk_widget_grab_focus (GTK_WIDGET(entry));
 	g_free (text);
+}
+
+static void
+frame_rate_entry_cb (GtkEntry *entry, ArvViewer *viewer)
+{
+	_apply_frame_rate (entry, viewer, TRUE);
 }
 
 static gboolean
 frame_rate_entry_focus_cb (GtkEntry *entry, GdkEventFocus *event,
 		    ArvViewer *viewer)
 {
-	frame_rate_entry_cb (entry, viewer);
+	_apply_frame_rate (entry, viewer, FALSE);
 
 	return FALSE;
 }
@@ -403,6 +417,7 @@ exposure_spin_cb (GtkSpinButton *spin_button, ArvViewer *viewer)
 
 	g_signal_handler_block (viewer->exposure_hscale, viewer->exposure_hscale_changed);
 	gtk_range_set_value (GTK_RANGE (viewer->exposure_hscale), log_exposure);
+	gtk_widget_grab_focus (GTK_WIDGET (spin_button));
 	g_signal_handler_unblock (viewer->exposure_hscale, viewer->exposure_hscale_changed);
 }
 
@@ -415,6 +430,7 @@ gain_spin_cb (GtkSpinButton *spin_button, ArvViewer *viewer)
 
 	g_signal_handler_block (viewer->gain_hscale, viewer->gain_hscale_changed);
 	gtk_range_set_value (GTK_RANGE (viewer->gain_hscale), gtk_spin_button_get_value (spin_button));
+	gtk_widget_grab_focus (GTK_WIDGET (spin_button));
 	g_signal_handler_unblock (viewer->gain_hscale, viewer->gain_hscale_changed);
 }
 
@@ -699,7 +715,7 @@ stream_cb (void *user_data, ArvStreamCallbackType type, ArvBuffer *buffer)
 	if (type == ARV_STREAM_CALLBACK_TYPE_INIT) {
 		if (!arv_make_thread_realtime (10) &&
 		    !arv_make_thread_high_priority (-10))
-			g_warning ("Failed to make stream thread high priority");
+			arv_warning_viewer ("Failed to make stream thread high priority");
 	}
 }
 
@@ -979,14 +995,15 @@ start_video (ArvViewer *viewer)
 
 	arv_stream_set_emit_signals (viewer->stream, TRUE);
 	payload = arv_camera_get_payload (viewer->camera, NULL);
-	for (i = 0; i < 5; i++)
+	for (i = 0; i < 10; i++)
 		arv_stream_push_buffer (viewer->stream, arv_buffer_new (payload, NULL));
 
 	set_camera_widgets(viewer);
 	pixel_format = arv_camera_get_pixel_format (viewer->camera, NULL);
 
 	caps_string = arv_pixel_format_to_gst_caps_string (pixel_format);
-	if (caps_string == NULL) {
+	if (caps_string == NULL ||
+	    (g_str_has_prefix (caps_string, "video/x-bayer") && !has_bayer2rgb)) {
 		g_message ("GStreamer cannot understand the camera pixel format: 0x%x!\n", (int) pixel_format);
 		stop_video (viewer);
 		return FALSE;
@@ -1152,7 +1169,9 @@ start_camera (ArvViewer *viewer, const char *camera_id)
 	g_assert (n_pixel_formats == n_pixel_format_strings);
 	pixel_format_string = arv_camera_get_pixel_format_as_string (viewer->camera, NULL);
 	for (i = 0; i < n_pixel_formats; i++) {
-		if (arv_pixel_format_to_gst_caps_string (pixel_formats[i]) != NULL) {
+		const char *caps_string = arv_pixel_format_to_gst_caps_string (pixel_formats[i]);
+		if ( caps_string != NULL &&
+		    (has_bayer2rgb || !g_str_has_prefix (caps_string, "video/x-bayer"))) {
 			gtk_list_store_append (list_store, &iter);
 			gtk_list_store_set (list_store, &iter, 0, pixel_format_strings[i], -1);
 			if (g_strcmp0 (pixel_format_strings[i], pixel_format_string) == 0)

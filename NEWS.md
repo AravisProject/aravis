@@ -1,7 +1,41 @@
+Stable release 0.8.6
+====================
+
+  * camera: handle GainRaw also as a float feature
+  * camera: add arv_camera_new_with_device()
+  * camera: ignore error on TriggerSelector and TriggerMode setting in arv_camera_set_trigger()
+  * gigevision: fail quicker if a device is not found at ArvGvDevice instantiation
+  * fakegvcamera: fix interface selection
+  * genicam: implement optional range check for integer and float node values, as a runtime option
+  * genicam: fix min/max computation for StructEntry and MaskedIntReg nodes
+  * gstplugin: don't fail camera init if gain or exposure features are not available
+
+Stable release 0.8.5
+====================
+
+  * macOS: build fix
+  * travis:enable macOS
+
+Stable release 0.8.4
+====================
+
+  * all: s/adjustement/adjustment/
+
+Stable release 0.8.3
+====================
+
+  * gigevision: automatically adjust packet size if needed (Emmanuel)
+  * gstreamer: don't try to set frame rate if feature is not available (Emmanuel)
+  * genicam: fix pVariable name with dot (Arrigo)
+  * genicam: fix parsing of genicam data url (Emmanuel)
+  * buffer: add arv_buffer_set_frame_id API (Russel)
+  * usb3vision: add Dahua Technology USB id (H.F)
+  * build: preparatory work for windows compilation (Eudoxos)
+
 Stable release 0.8.2
 ====================
 
-  * gcdevice: fix timeout race (casperoo)
+  * gvdevice: fix timeout race (casperoo)
   * fakecamera: implement Mono16 pixel format (Hinko)
   * Enable ppc64le in CI pipeline (nagesh)
 

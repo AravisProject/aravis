@@ -1,4 +1,4 @@
-project ('aravis', 'c', 'cpp', version: '0.8.3', meson_version: '>=0.47.0')
+project ('aravis', 'c', 'cpp', version: '0.8.7', meson_version: '>=0.47.0')
 
 gnome = import('gnome')
 pkg = import ('pkgconfig')
@@ -30,6 +30,8 @@ if cc.get_id()=='gcc' or cc.get_id()=='clang'
     '-Wmissing-include-dirs',
     '-Wmissing-prototypes',
     '-Wpointer-arith',
+    '-Wformat-nonliteral',
+    '-Wenum-conversion'
     ]
 
   add_project_arguments(cc.get_supported_arguments(warning_c_args), language: 'c')

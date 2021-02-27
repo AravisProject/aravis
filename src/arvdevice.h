@@ -132,6 +132,7 @@ const char **	arv_device_dup_available_enumeration_feature_values_as_display_nam
 gboolean 	arv_device_set_features_from_string 	(ArvDevice *device, const char *string, GError **error);
 
 void		arv_device_set_register_cache_policy	(ArvDevice *device, ArvRegisterCachePolicy policy);
+void		arv_device_set_range_check_policy	(ArvDevice *device, ArvRangeCheckPolicy policy);
 
 G_END_DECLS
 
