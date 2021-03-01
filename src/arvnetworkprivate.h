@@ -17,7 +17,8 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  *
- * Author: Emmanuel Pacaud <emmanuel@gnome.org>
+ * Authors: Emmanuel Pacaud <emmanuel@gnome.org>
+ *          Václav Šmilauer <eu@doxos.eu>
  */
 
 #ifndef ARV_NETWORK_PRIVATE_H
