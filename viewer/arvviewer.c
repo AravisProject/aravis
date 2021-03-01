@@ -1282,7 +1282,7 @@ video_frame_realize_cb (GtkWidget * widget, ArvViewer *viewer)
 	viewer->video_window_xid = GDK_WINDOW_XID (gtk_widget_get_window (widget));
 #endif
 #ifdef GDK_WINDOWING_WIN32
-	viewer->video_window_xid = (guintptr) GDK_WINDOW_HWND (gtk_widget_get_window (video_window));
+	viewer->video_window_xid = (guintptr) GDK_WINDOW_HWND (gtk_widget_get_window (widget));
 #endif
 }
 
