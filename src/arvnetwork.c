@@ -21,9 +21,14 @@
  */
 
 #include <arvnetworkprivate.h>
+#include <arvdebugprivate.h>
 
 #ifndef G_OS_WIN32
 	#include <ifaddrs.h>
+#else
+	#include <winsock2.h>
+	#include <iphlpapi.h>
+	#include <winnt.h>	/* For PWCHAR */
 #endif
 
 struct _ArvNetworkInterface{
@@ -35,11 +40,211 @@ struct _ArvNetworkInterface{
 
 #ifdef G_OS_WIN32
 
+__attribute__((constructor)) static void
+arv_initialize_networking (void)
+{
+	long res;
+	WSADATA wsaData;
+
+	/* not sure which version is really needed, just use 2.2 (latest) */
+	res = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	if (res != 0) {
+		/* error description functions should not be used when WSAStartup failed (not sure), do manually */
+		char *desc = "[unknown error code]";
+
+		switch (res) {
+			case WSASYSNOTREADY:
+				desc = "The underlying network subsystem is not ready for network communication.";
+				break;
+			case WSAVERNOTSUPPORTED:
+				desc = "The version of Windows Sockets support requested is not provided by this particular Windows Sockets implementation.";
+				break;
+			case WSAEINPROGRESS:
+				desc = "A blocking Windows Sockets 1.1 operation is in progress.";
+				break;
+			case WSAEPROCLIM:
+				desc = "A limit on the number of tasks supported by the Windows Sockets implementation has been reached.";
+				break;
+			case WSAEFAULT:
+				desc = "The lpWSAData parameter is not a valid pointer.";
+				break;
+		};
+		g_critical ("WSAStartup failed with error %ld: %s", res, desc);
+	}
+	arv_debug_interface ("WSAStartup done.");
+}
+
+__attribute__((destructor)) static void
+arv_cleanup_networking (void)
+{
+	long res;
+
+	res=WSACleanup();
+	if (res != 0){
+		char *desc = "[unknown error code]";
+
+		switch (res) {
+			case WSANOTINITIALISED:
+				desc = "A successful WSAStartup call must occur before using this function.";
+				break;
+			case WSAENETDOWN:
+				desc = "The network subsystem has failed.";
+				break;
+			case WSAEINPROGRESS:
+				desc = "A blocking Windows Sockets 1.1 call is in progress, or the service provider is still processing a callback function.";
+				break;
+		};
+		g_critical ("WSACleanup failed with error %ld: %s", res, desc);
+	}
+}
+
 GList *
 arv_enumerate_network_interfaces (void)
 {
-	#warning arv_enumerate_network_interface not yet implemented for WIN32
-	return NULL;
+	/*
+	 * docs: https://docs.microsoft.com/en-us/windows/win32/api/iphlpapi/nf-iphlpapi-getadaptersaddresses
+	 *
+	 * example source: https://github.com/zeromq/czmq/blob/master/src/ziflist.c#L284
+	 * question about a better solution: https://stackoverflow.com/q/64348510/761090
+	 *
+	 * note: >= Vista code untested
+	 */
+	ULONG outBufLen = 15000;
+	PIP_ADAPTER_ADDRESSES pAddresses = NULL;
+	PIP_ADAPTER_ADDRESSES pAddrIter = NULL;
+	GList* ret;
+	int iter = 0;
+	ULONG dwRetVal;
+
+	/* pre-Vista windows don't have PIP_ADAPTER_UNICAST_ADDRESS onLinePrefixLength field.
+	 * To get netmask, we build pIPAddrTable (IPv4-only) and find netmask associated to each addr.
+	 * This means IPv6 will only work with >= Vista.
+	 * See https://stackoverflow.com/a/64358443/761090 for thorough explanation.
+	 */
+	#if WINVER < _WIN32_WINNT_VISTA
+		// https://docs.microsoft.com/en-us/windows/win32/api/iphlpapi/nf-iphlpapi-getipaddrtable
+		PMIB_IPADDRTABLE pIPAddrTable;
+		DWORD dwSize = 0;
+		/* Variables used to return error message */
+		pIPAddrTable = (MIB_IPADDRTABLE *) g_malloc(sizeof (MIB_IPADDRTABLE));
+		if (GetIpAddrTable(pIPAddrTable, &dwSize, 0) == ERROR_INSUFFICIENT_BUFFER) {
+			g_free(pIPAddrTable);
+			pIPAddrTable = (MIB_IPADDRTABLE *) g_malloc(dwSize);
+		}
+		dwRetVal = GetIpAddrTable( pIPAddrTable, &dwSize, 0 );
+		if (dwRetVal != NO_ERROR ) {
+			arv_warning_interface("GetIpAddrTable failed.");
+			g_free(pIPAddrTable);
+		}
+	#endif
+
+	do {
+		pAddresses = (IP_ADAPTER_ADDRESSES*) g_malloc (outBufLen);
+		/* change family to AF_UNSPEC for both IPv4 and IPv6, later */
+		dwRetVal = GetAdaptersAddresses(
+			/* Family */ AF_INET,
+			/* Flags */
+				GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER,
+			/* Reserved */ NULL,
+			pAddresses,
+			&outBufLen
+		);
+		if (dwRetVal==ERROR_BUFFER_OVERFLOW) {
+			g_free (pAddresses);
+		} else {
+			break;
+		}
+		iter++;
+	} while ((dwRetVal == ERROR_BUFFER_OVERFLOW) && (iter<3));
+
+	if (dwRetVal != ERROR_SUCCESS){
+		arv_warning_interface ("Failed to enumerate network interfaces (GetAdaptersAddresses returned %lu)",dwRetVal);
+		return NULL;
+	}
+
+
+	ret = NULL;
+
+	for(pAddrIter = pAddresses; pAddrIter != NULL; pAddrIter = pAddrIter->Next){
+		PIP_ADAPTER_UNICAST_ADDRESS pUnicast;
+		for (pUnicast = pAddrIter->FirstUnicastAddress; pUnicast != NULL; pUnicast = pUnicast->Next){
+			// PIP_ADAPTER_PREFIX pPrefix = pAddrIter->FirstPrefix;
+			struct sockaddr* lpSockaddr = pUnicast->Address.lpSockaddr;
+			ArvNetworkInterface* a;
+
+			gboolean ok = (pAddrIter->OperStatus == IfOperStatusUp)
+				/* extend for IPv6 here, later */
+				&& ((lpSockaddr->sa_family == AF_INET)
+				#if 0 && WINVER >= _WIN32_WINNT_VISTA
+					|| (lpSockaddr->sa_family == AF_INET6)
+				#endif
+				)
+			;
+
+			if (!ok) continue;
+
+			a = (ArvNetworkInterface*) g_malloc0(sizeof(ArvNetworkInterface));
+			if (lpSockaddr->sa_family == AF_INET){
+				struct sockaddr_in* mask;
+				struct sockaddr_in* broadaddr;
+
+				/* copy 3x so that sa_family is already set for netmask and broadaddr */
+				a->addr = g_memdup (lpSockaddr, sizeof(struct sockaddr));
+				a->netmask = g_memdup (lpSockaddr, sizeof(struct sockaddr));
+				a->broadaddr = g_memdup (lpSockaddr, sizeof(struct sockaddr));
+				/* adjust mask & broadcast */
+				mask = (struct sockaddr_in*) a->netmask;
+				#if WINVER >= _WIN32_WINNT_VISTA
+					mask->sin_addr.s_addr = htonl ((0xffffffffU) << (32 - pUnicast->OnLinkPrefixLength));
+				#else
+					{
+						int i;
+						gboolean match = FALSE;
+
+						for (i=0; i < pIPAddrTable->dwNumEntries; i++){
+							MIB_IPADDRROW* row=&pIPAddrTable->table[i];
+							#if 0
+								fprintf(stderr,"row %d: %08lx: match with %08lx (mask %08lx): %d\n",i,((struct sockaddr_in*)a->addr)->sin_addr.s_addr,row->dwAddr,row->dwMask,row->dwAddr == ((struct sockaddr_in*)a->addr)->sin_addr.s_addr);
+							#endif
+							/* both are in network byte order, no need to convert */
+							if (row->dwAddr == ((struct sockaddr_in*)a->addr)->sin_addr.s_addr){
+								match = TRUE;
+								mask->sin_addr.s_addr = row->dwMask;
+								break;
+							}
+						}
+						if (!match){
+							arv_warning_interface("Failed to obtain netmask for %08lx (secondary address?), using 255.255.0.0.",((struct sockaddr_in*)a->addr)->sin_addr.s_addr);
+							mask->sin_addr.s_addr = htonl(0xffff0000U);
+						}
+					}
+				#endif
+				broadaddr = (struct sockaddr_in*) a->broadaddr;
+				broadaddr->sin_addr.s_addr |= ~(mask->sin_addr.s_addr);
+			}
+			#if WINVER >= _WIN32_WINNT_VISTA
+			else if (lpSocketaddr->sa_family == AF_INET6){
+				arv_warning_interface("IPv6 support not yet implemented.");
+			}
+			#endif
+			/* name is common to IPv4 and IPv6 */
+			{
+				PWCHAR name = pAddrIter->FriendlyName;
+				size_t asciiSize = wcstombs (0, name, 0) + 1;
+				a->name = (char *) g_malloc (asciiSize);
+				wcstombs (a->name, name, asciiSize);
+			}
+
+			ret = g_list_prepend(ret, a);
+		}
+	}
+	g_free (pAddresses);
+	#if WINVER < _WIN32_WINNT_VISTA
+		g_free(pIPAddrTable);
+	#endif
+
+	ret = g_list_reverse(ret);
+	return ret;
 }
 
 /*
@@ -68,12 +273,70 @@ arv_enumerate_network_interfaces (void)
 			getnameinfo ((struct sockaddr *)&in, sizeof (struct sockaddr_in6), dst, cnt, NULL, 0, NI_NUMERICHOST);
 			return dst;
 		}
-
 		return NULL;
 	}
-#endif
+#endif /* _WIN32_WINNT < 0x0600 */
 
-#else
+
+/*
+ * g_poll does not work with sockets under windows correctly. The reason is that
+ * g_poll uses WaitForMultipleObjectEx API function which does not handle Winsock
+ * sockets descriptors directly. Instead, one should
+ *
+ * (a) create a new event (WSAEVENT) associated with each socket polled, and its
+ *     descriptor passed to g_poll instead (WSACreateEvent, WSAEventSelect);
+ *
+ * (b) when g_poll returns, the event must be cleared so that it is not returned
+ *     again (WSAEnumNetworkEvents);
+ *
+ * (c) events created in (a) must be closed (WSACloseEvent).
+ *
+ * These three points are respectively handled by arv_gpollfd_prepare_all,
+ * arv_gpollfd_clear_one and arv_gpollfd_finish_all. These functions are no-op
+ * for non-Windows builds.
+ *
+ * https://discourse.gnome.org/t/g-poll-times-out-with-windows is the original
+ * discussion of the issue.
+ *
+ * https://gitlab.gnome.org/GNOME/glib/-/issues/214 is GLib bug report
+ * (g_poll does not work on win32 sockets)
+ *
+ */
+
+void
+arv_gpollfd_prepare_all (GPollFD *fds, guint nfds){
+	guint i;
+	int wsaRes;
+
+	for (i = 0; i < nfds; i++) {
+		gint64 fd = fds[i].fd;
+		fds[i].fd = (gint64) WSACreateEvent();
+		g_assert ((WSAEVENT) fds[i].fd != WSA_INVALID_EVENT);
+		wsaRes = WSAEventSelect (fd, (WSAEVENT) fds[i].fd, FD_READ);
+		g_assert (wsaRes == 0);
+	}
+}
+
+void
+arv_gpollfd_clear_one (GPollFD *fd, GSocket* socket){
+	WSANETWORKEVENTS wsaNetEvents;
+	int wsaRes;
+
+	wsaRes = WSAEnumNetworkEvents (g_socket_get_fd(socket), (WSAEVENT) fd->fd, &wsaNetEvents);
+	/* TODO: check return value, check wsaNetEvents for errors */
+}
+
+void
+arv_gpollfd_finish_all (GPollFD *fds, guint nfds){
+	guint i;
+
+	for (i = 0; i < nfds; i++){
+		WSACloseEvent( (WSAEVENT) fds[i].fd);
+	}
+}
+
+
+#else /* not G_OS_WIN32 */
 
 GList*
 arv_enumerate_network_interfaces (void)
@@ -112,7 +375,26 @@ arv_enumerate_network_interfaces (void)
 
 	return g_list_reverse (ret);
 };
-#endif
+
+/* no-op functions for Win32 GLib bug workaround, see above */
+
+void
+arv_gpollfd_prepare_all(GPollFD *fds, guint nfds)
+{
+	return;
+}
+void
+arv_gpollfd_clear_one(GPollFD *fds, GSocket* socket)
+{
+	return;
+}
+void
+arv_gpollfd_finish_all(GPollFD *fds, guint nfds)
+{
+	return;
+}
+
+#endif /* G_OS_WIN32 */
 
 struct sockaddr *
 arv_network_interface_get_addr(ArvNetworkInterface* a)

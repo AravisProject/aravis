@@ -201,10 +201,11 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 				success = TRUE;
 				success = success && g_poll (&io_data->poll_in_event, 1, timeout_ms) > 0;
 
-				if (success)
+				if (success) {
+					arv_gpollfd_clear_one (&io_data->poll_in_event, io_data->socket);
 					count = g_socket_receive (io_data->socket, io_data->buffer,
 								  ARV_GV_DEVICE_BUFFER_SIZE, NULL, &local_error);
-				else
+				} else
 					count = 0;
 				success = success && (count >= sizeof (ArvGvcpHeader));
 
@@ -536,8 +537,10 @@ test_packet_check (ArvDevice *device,
 
 		do {
 			n_events = g_poll (poll_fd, 1, 10);
-			if (n_events != 0)
+			if (n_events != 0) {
+				arv_gpollfd_clear_one (poll_fd, socket);
 				read_count = g_socket_receive (socket, buffer, 16384, NULL, NULL);
+			}
 			else
 				read_count = 0;
 			/* Discard late packets, read_count should be equal to packet size minus IP and UDP headers */
@@ -617,6 +620,8 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 	poll_fd.events =  G_IO_IN;
 	poll_fd.revents = 0;
 
+	arv_gpollfd_prepare_all (&poll_fd, 1);
+
 	buffer = g_malloc (max_size);
 
 	success = test_packet_check (device, &poll_fd, socket, buffer, packet_size, is_command);
@@ -663,6 +668,8 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 
 	g_clear_pointer (&buffer, g_free);
 	g_clear_object (&socket);
+
+	arv_gpollfd_finish_all (&poll_fd, 1);
 
 	arv_device_set_boolean_feature_value (device, "GevSCPSDoNotFragment", do_not_fragment, NULL);
 
@@ -1341,6 +1348,8 @@ arv_gv_device_constructed (GObject *object)
 	io_data->poll_in_event.events =  G_IO_IN;
 	io_data->poll_in_event.revents = 0;
 
+	arv_gpollfd_prepare_all (&io_data->poll_in_event, 1);
+
 	priv->io_data = io_data;
 
 	arv_gv_device_load_genicam (gv_device, &local_error);
@@ -1425,6 +1434,8 @@ arv_gv_device_finalize (GObject *object)
 	g_clear_object (&io_data->socket);
 	g_clear_pointer (&io_data->buffer, g_free);
 	g_mutex_clear (&io_data->mutex);
+
+	arv_gpollfd_finish_all (&io_data->poll_in_event, 1);
 
 	g_clear_pointer (&priv->io_data, g_free);
 
