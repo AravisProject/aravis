@@ -64,7 +64,7 @@ typedef struct {
 
 	gboolean is_running;
 
-	GPollFD socket_fds[3];
+	GPollFD socket_fds[ARV_GV_FAKE_CAMERA_N_INPUT_SOCKETS];
 	guint n_socket_fds;
 
 	GSocketAddress *controller_address;
@@ -291,6 +291,8 @@ _thread (void *user_data)
 
 					if (G_IS_SOCKET (socket)) {
 						GSocketAddress *remote_address = NULL;
+
+						arv_gpollfd_clear_one (&gv_fake_camera->priv->socket_fds[i], socket);
 
 						count = g_socket_receive_message (socket, &remote_address, &input_vector, 1, NULL, NULL,
 										  NULL, NULL, NULL);
@@ -544,6 +546,8 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 
 			gv_fake_camera->priv->n_socket_fds = n_socket_fds;
 
+			arv_gpollfd_prepare_all (gv_fake_camera->priv->socket_fds, n_socket_fds);
+
 			interface_found = TRUE;
 		}
 	}
@@ -583,8 +587,11 @@ arv_gv_fake_camera_stop (ArvGvFakeCamera *gv_fake_camera)
 	g_thread_join (gv_fake_camera->priv->thread);
 	gv_fake_camera->priv->thread = NULL;
 
-	for (i = 0; i < ARV_GV_FAKE_CAMERA_N_INPUT_SOCKETS; i++)
+	arv_gpollfd_finish_all (gv_fake_camera->priv->socket_fds, gv_fake_camera->priv->n_socket_fds);
+
+	for (i = 0; i < ARV_GV_FAKE_CAMERA_N_INPUT_SOCKETS; i++) {
 		g_clear_object (&gv_fake_camera->priv->input_sockets[i]);
+	}
 	g_clear_object (&gv_fake_camera->priv->gvsp_socket);
 
 	g_clear_object (&gv_fake_camera->priv->controller_address);

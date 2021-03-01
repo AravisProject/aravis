@@ -117,6 +117,8 @@ arv_gv_discover_socket_list_new (void)
 		socket_list->poll_fds[i].revents = 0;
 	}
 
+	arv_gpollfd_prepare_all(socket_list->poll_fds, socket_list->n_sockets);
+
 	return socket_list;
 }
 
@@ -126,6 +128,8 @@ arv_gv_discover_socket_list_free (ArvGvDiscoverSocketList *socket_list)
 	GSList *iter;
 
 	g_return_if_fail (socket_list != NULL);
+
+	arv_gpollfd_finish_all (socket_list->poll_fds, socket_list->n_sockets);
 
 	for (iter = socket_list->sockets; iter != NULL; iter = iter->next) {
 		ArvGvDiscoverSocket *discover_socket = iter->data;
@@ -319,13 +323,25 @@ _discover (GHashTable *devices, const char *device_id)
 	arv_gv_discover_socket_list_send_discover_packet (socket_list);
 
 	do {
-		if (g_poll (socket_list->poll_fds, socket_list->n_sockets, ARV_GV_INTERFACE_DISCOVERY_TIMEOUT_MS) == 0) {
+		gint res;
+
+		res = g_poll (socket_list->poll_fds, socket_list->n_sockets, ARV_GV_INTERFACE_DISCOVERY_TIMEOUT_MS);
+		if (res <= 0) {
 			arv_gv_discover_socket_list_free (socket_list);
+
+			/* Timeout case */
+			if (res == 0)
+				return NULL;
+
+			g_critical ("g_poll returned %d (call was interrupted)", res);
+
 			return NULL;
 		}
 
 		for (i = 0, iter = socket_list->sockets; iter != NULL; i++, iter = iter->next) {
 			ArvGvDiscoverSocket *discover_socket = iter->data;
+
+			arv_gpollfd_clear_one (&socket_list->poll_fds[i], discover_socket->socket);
 
 			do {
 				g_socket_set_blocking (discover_socket->socket, FALSE);
@@ -530,6 +546,8 @@ arv_gv_interface_camera_locate (ArvGvInterface *gv_interface, GInetAddress *devi
 
 		for (i = 0, iter = socket_list->sockets; iter != NULL; i++, iter = iter->next) {
 			ArvGvDiscoverSocket *socket = iter->data;
+
+			arv_gpollfd_clear_one (&socket_list->poll_fds[i], socket->socket);
 
 			do {
 				g_socket_set_blocking (socket->socket, FALSE);

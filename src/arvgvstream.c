@@ -771,6 +771,8 @@ _loop (ArvGvStreamThreadData *thread_data)
 	poll_fd[0].events =  G_IO_IN;
 	poll_fd[0].revents = 0;
 
+	arv_gpollfd_prepare_all(poll_fd,1);
+
 	packet = g_malloc0 (ARV_GV_STREAM_INCOMING_BUFFER_SIZE);
 
 	if (g_cancellable_make_pollfd (thread_data->cancellable, &poll_fd[1])) {
@@ -785,7 +787,6 @@ _loop (ArvGvStreamThreadData *thread_data)
 
 			do {
 				poll_fd[0].revents = 0;
-
 				n_events = g_poll (poll_fd, 2, timeout_ms);
 				errsv = errno;
 
@@ -794,6 +795,7 @@ _loop (ArvGvStreamThreadData *thread_data)
 			time_us = g_get_monotonic_time ();
 
 			if (poll_fd[0].revents != 0) {
+				arv_gpollfd_clear_one (&poll_fd[0], thread_data->socket);
 				read_count = g_socket_receive (thread_data->socket, (char *) packet,
 							       ARV_GV_STREAM_INCOMING_BUFFER_SIZE, NULL, NULL);
 
@@ -810,6 +812,7 @@ _loop (ArvGvStreamThreadData *thread_data)
 		g_error ("[ArvGvStream::_loop] Failed to create cancellable fd");
 	}
 
+	arv_gpollfd_finish_all (poll_fd,1);
 	g_free (packet);
 }
 
