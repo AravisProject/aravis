@@ -1392,7 +1392,7 @@ startup (GApplication *application)
 }
 
 static void
-shutdown (GApplication *application)
+viewer_shutdown (GApplication *application)
 {
 	G_APPLICATION_CLASS (arv_viewer_parent_class)->shutdown (application);
 
@@ -1449,6 +1449,6 @@ arv_viewer_class_init (ArvViewerClass *class)
   object_class->finalize = finalize;
 
   application_class->startup = startup;
-  application_class->shutdown = shutdown;
+  application_class->shutdown = viewer_shutdown;
   application_class->activate = activate;
 }
