@@ -23,6 +23,7 @@
 
 #include <arvnetworkprivate.h>
 #include <arvdebugprivate.h>
+#include <arvmisc.h>
 
 #ifndef G_OS_WIN32
 	#include <ifaddrs.h>
@@ -190,9 +191,9 @@ arv_enumerate_network_interfaces (void)
 				struct sockaddr_in* broadaddr;
 
 				/* copy 3x so that sa_family is already set for netmask and broadaddr */
-				a->addr = g_memdup (lpSockaddr, sizeof(struct sockaddr));
-				a->netmask = g_memdup (lpSockaddr, sizeof(struct sockaddr));
-				a->broadaddr = g_memdup (lpSockaddr, sizeof(struct sockaddr));
+				a->addr = arv__memdup (lpSockaddr, sizeof(struct sockaddr));
+				a->netmask = arv_memdup (lpSockaddr, sizeof(struct sockaddr));
+				a->broadaddr = arv_memdup (lpSockaddr, sizeof(struct sockaddr));
 				/* adjust mask & broadcast */
 				mask = (struct sockaddr_in*) a->netmask;
 				#if WINVER >= _WIN32_WINNT_VISTA
@@ -358,12 +359,12 @@ arv_enumerate_network_interfaces (void)
 
 			a = g_new0 (ArvNetworkInterface, 1);
 
-			a->addr = g_memdup (ifap_iter->ifa_addr, sizeof(struct sockaddr));
+			a->addr = arv_memdup (ifap_iter->ifa_addr, sizeof(struct sockaddr));
 			if (ifap_iter->ifa_netmask)
-				a->netmask = g_memdup (ifap_iter->ifa_netmask, sizeof(struct sockaddr));
+				a->netmask = arv_memdup (ifap_iter->ifa_netmask, sizeof(struct sockaddr));
 #if !defined(__APPLE__)
 			if (ifap_iter->ifa_ifu.ifu_broadaddr)
-				a->broadaddr = g_memdup(ifap_iter->ifa_ifu.ifu_broadaddr, sizeof(struct sockaddr));
+				a->broadaddr = arv_memdup(ifap_iter->ifa_ifu.ifu_broadaddr, sizeof(struct sockaddr));
 #endif
 			if (ifap_iter->ifa_name)
 				a->name = g_strdup(ifap_iter->ifa_name);
