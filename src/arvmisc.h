@@ -71,6 +71,12 @@ ArvPixelFormat 	arv_pixel_format_from_gst_0_10_caps 		(const char *name, int bpp
 
 const char *	arv_vendor_alias_lookup		(const char *vendor);
 
+#if GLIB_CHECK_VERSION(2,68,0)
+#define arv_memdup(p,s) g_memdup2(p,s)
+#else
+#define arv_memdup(p,s) g_memdup(p,(size_t) s)
+#endif
+
 G_END_DECLS
 
 #endif
