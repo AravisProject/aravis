@@ -75,7 +75,7 @@ arv_gc_cache_key_new (gint64 address, gint64 length)
 typedef struct {
 	GSList *addresses;
 	GSList *swiss_knives;
-	ArvGcPropertyNode *index;
+	GSList *indexes;
 	ArvGcPropertyNode *length;
 	ArvGcPropertyNode *port;
 	ArvGcPropertyNode *cachable;
@@ -121,7 +121,7 @@ arv_gc_register_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				priv->addresses = g_slist_prepend (priv->addresses, child);
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_P_INDEX:
-				priv->index = property_node;
+				priv->indexes = g_slist_prepend (priv->indexes, child);
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_LENGTH:
 			case ARV_GC_PROPERTY_NODE_TYPE_P_LENGTH:
@@ -205,21 +205,22 @@ _get_address (ArvGcRegisterNode *self, GError **error)
 		}
 	}
 
-	if (priv->index != NULL) {
+	if (priv->indexes != NULL) {
 		gint64 length;
 
 		length = _get_length (self, &local_error);
-
 		if (local_error != NULL) {
 			g_propagate_error (error, local_error);
 			return 0;
 		}
 
-		value += arv_gc_index_node_get_index (ARV_GC_INDEX_NODE (priv->index), length, &local_error);
+		for (iter = priv->indexes; iter != NULL; iter = iter->next) {
+			value += arv_gc_index_node_get_index (ARV_GC_INDEX_NODE (iter->data), length, &local_error);
 
-		if (local_error != NULL) {
-			g_propagate_error (error, local_error);
-			return 0;
+			if (local_error != NULL) {
+				g_propagate_error (error, local_error);
+				return 0;
+			}
 		}
 	}
 
@@ -420,6 +421,7 @@ arv_gc_register_node_finalize (GObject *self)
 
 	g_slist_free (priv->addresses);
 	g_slist_free (priv->swiss_knives);
+	g_slist_free (priv->indexes);
 	g_slist_free (priv->invalidators);
 	g_clear_pointer (&priv->caches, g_hash_table_unref);
 
