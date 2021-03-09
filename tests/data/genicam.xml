@@ -481,6 +481,27 @@
     <Value>600.6</Value>
   </Float>
 
+  <Register Name="IndexedRegister">
+    <Address>100</Address>
+    <Address>20</Address>
+    <pIndex Offset="1000">IndexedRegisterIndex1</pIndex>
+    <pIndex Offset="10000">IndexedRegisterIndex2</pIndex>
+    <pIndex>IndexedRegisterIndex3</pIndex>
+    <Length>4</Length>
+  </Register>
+
+  <Integer Name="IndexedRegisterIndex1">
+    <Value>5</Value>
+  </Integer>
+
+  <Integer Name="IndexedRegisterIndex2">
+    <Value>3</Value>
+  </Integer>
+
+  <Integer Name="IndexedRegisterIndex3">
+    <Value>2</Value>
+  </Integer>
+
   <Port Name="Device" NameSpace="Standard">
   </Port>
 

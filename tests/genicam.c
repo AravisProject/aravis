@@ -254,6 +254,13 @@ indexed_test (void)
 	v_double = arv_gc_float_get_value (ARV_GC_FLOAT (node), NULL);
 	g_assert_cmpfloat (v_double, ==, 150.15);
 
+	node = arv_gc_get_node ((genicam), "IndexedRegister");
+	g_assert (ARV_IS_GC_REGISTER (node));
+
+	v_int64 = arv_gc_register_get_address (ARV_GC_REGISTER (node), &error);
+	g_assert (error == NULL);
+	g_assert_cmpint (v_int64, ==, 35128);
+
 	g_object_unref (device);
 }
 
