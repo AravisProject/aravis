@@ -224,7 +224,7 @@ arv_enumerate_network_interfaces (void)
 				broadaddr->sin_addr.s_addr |= ~(mask->sin_addr.s_addr);
 			}
 			#if WINVER >= _WIN32_WINNT_VISTA
-			else if (lpSocketaddr->sa_family == AF_INET6){
+			else if (lpSockaddr->sa_family == AF_INET6){
 				arv_warning_interface("IPv6 support not yet implemented.");
 			}
 			#endif
