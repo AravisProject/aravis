@@ -65,6 +65,7 @@ arv_uvcp_packet_new_read_memory_cmd (guint64 address, guint32 size, guint16 pack
 	packet->header.size = GUINT16_TO_LE (sizeof (ArvUvcpReadMemoryCmdInfos));
 	packet->header.id = GUINT16_TO_LE (packet_id);
 	packet->infos.address = GUINT64_TO_LE (address);
+	packet->infos.unknown = 0;
 	packet->infos.size = GUINT16_TO_LE (size);
 
 	return (ArvUvcpPacket *) packet;
