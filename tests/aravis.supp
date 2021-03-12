@@ -85,3 +85,45 @@
 		fun:g_type_class_ref
 		fun:g_type_class_ref
 }
+
+# libusb
+
+{
+	libusb_init_malloc
+		Memcheck:Leak
+		fun:malloc
+		...
+		fun:libusb_init
+		...
+		fun:arv_uv_interface_get_instance
+}
+
+{
+	libusb_init_calloc
+		Memcheck:Leak
+		fun:calloc
+		...
+		fun:libusb_init
+		...
+		fun:arv_uv_interface_get_instance
+}
+
+{
+	libusb_init_calloc
+		Memcheck:Leak
+		fun:realloc
+		...
+		fun:libusb_init
+		...
+		fun:arv_uv_interface_get_instance
+}
+
+{
+	libusb_open_malloc
+		Memcheck:Leak
+		fun:malloc
+		...
+		fun:libusb_open
+		...
+		fun:arv_open_device
+}
