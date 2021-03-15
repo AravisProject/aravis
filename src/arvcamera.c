@@ -1521,6 +1521,23 @@ arv_camera_get_exposure_time_auto (ArvCamera *camera, GError **error)
 	return arv_auto_from_string (arv_camera_get_string (camera, "ExposureAuto", error));
 }
 
+/*
+ * arv_camera_set_exposure_mode:
+ * @camera: a #ArvCamera
+ * @exspoure_mode: exposure mode
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Defines acquisition mode.
+ *
+ * Since: 0.8.7
+ */
+
+void
+arv_camera_set_exposure_mode (ArvCamera *camera, ArvExposureMode acquisition_mode, GError **error)
+{
+	arv_camera_set_string (camera, "ExposureMode", arv_exposure_mode_to_string (acquisition_mode), error);
+}
+
 /* Analog control */
 
 /**

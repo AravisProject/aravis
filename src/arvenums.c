@@ -74,3 +74,23 @@ arv_acquisition_mode_from_string (const char *string)
 	return _from_string (string, arv_acquisition_mode_strings,
 			     G_N_ELEMENTS (arv_acquisition_mode_strings));
 }
+
+static const char *arv_exposure_mode_strings[] = {
+	"Off",
+	"Timed",
+	"TriggerWidth",
+	"TriggerControlled"
+};
+
+const char *
+arv_exposure_mode_to_string (ArvExposureMode value)
+{
+	return arv_exposure_mode_strings[CLAMP (value, 0, ARV_EXPOSURE_MODE_OFF)];
+}
+
+ArvExposureMode
+arv_exposure_mode_from_string (const char *string)
+{
+	return _from_string (string, arv_exposure_mode_strings,
+			     G_N_ELEMENTS (arv_exposure_mode_strings));
+}

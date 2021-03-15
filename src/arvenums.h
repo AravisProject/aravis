@@ -49,9 +49,9 @@ ArvAuto 		arv_auto_from_string		(const char *string);
 
 /**
  * ArvAcquisitionMode:
- * @ARV_ACQUISITION_MODE_CONTINUOUS: continuous acquisition
+ * @ARV_ACQUISITION_MODE_CONTINUOUS: frames are captured continuously until stopped with the AcquisitionStop command.
  * @ARV_ACQUISITION_MODE_SINGLE_FRAME: only one frame will be acquired
- * @ARV_ACQUISITION_MODE_MULTI_FRAME: multiple frames will be acquired
+ * @ARV_ACQUISITION_MODE_MULTI_FRAME: the number of frames specified by AcquisitionFrameCount is captured.
  */
 
 typedef enum {
@@ -62,6 +62,30 @@ typedef enum {
 
 const char * 		arv_acquisition_mode_to_string 		(ArvAcquisitionMode value);
 ArvAcquisitionMode 	arv_acquisition_mode_from_string	(const char *string);
+
+/**
+ * ArvExposureMode:
+ * @ARV_EXPOSURE_MODE_OFF: disables the Exposure and let the shutter open.
+ * @ARV_EXPOSURE_MODE_TIMED: timed exposure. The exposure duration time is set using the ExposureTime or ExposureAuto
+ * features and the exposure starts with the FrameStart or LineStart.
+ * @ARV_EXPOSURE_MODE_TRIGGER_WIDTH: uses the width of the current Frame or Line trigger signal(s) pulse to control the
+ * exposure duration. Note that if the Frame or Line TriggerActivation is RisingEdge or LevelHigh, the exposure duration
+ * will be the time the trigger stays High. If TriggerActivation is FallingEdge or LevelLow, the exposure time will last
+ * as long as the trigger stays Low.
+ * @ARV_EXPOSURE_MODE_TRIGGER_CONTROLLED: uses one or more trigger signal(s) to control the exposure duration
+ * independently from the current Frame or Line triggers. See ExposureStart, ExposureEnd and ExposureActive of
+ * the TriggerSelector feature.
+ */
+
+typedef enum {
+	ARV_EXPOSURE_MODE_OFF,
+	ARV_EXPOSURE_MODE_TIMED,
+	ARV_EXPOSURE_MODE_TRIGGER_WIDTH,
+	ARV_EXPOSURE_MODE_TRIGGER_CONTROLLED
+} ArvExposureMode;
+
+const char * 		arv_exposure_mode_to_string 		(ArvExposureMode value);
+ArvExposureMode 	arv_exposure_mode_from_string		(const char *string);
 
 /**
  * ArvPixelFormat:
