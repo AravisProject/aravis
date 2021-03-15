@@ -120,6 +120,8 @@ void		arv_camera_get_exposure_time_bounds	(ArvCamera *camera, double *min, doubl
 void		arv_camera_set_exposure_time_auto	(ArvCamera *camera, ArvAuto auto_mode, GError **error);
 ArvAuto		arv_camera_get_exposure_time_auto	(ArvCamera *camera, GError **error);
 
+void		arv_camera_set_exposure_mode		(ArvCamera *camera, ArvExposureMode mode, GError **error);
+
 /* Analog control */
 
 gboolean 	arv_camera_is_gain_available		(ArvCamera *camera, GError **error);
