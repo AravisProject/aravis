@@ -111,7 +111,7 @@ static gboolean
 _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 			   guint64 address, size_t size, void *buffer, GError **error)
 {
-	ArvGvcpCommand ack_command;
+	ArvGvcpCommand expected_ack_command;
 	ArvGvcpPacket *ack_packet = io_data->buffer;
 	ArvGvcpPacket *packet;
 	const char *operation;
@@ -125,22 +125,22 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 	switch (command) {
 		case ARV_GVCP_COMMAND_READ_MEMORY_CMD:
 			operation = "read_memory";
-			ack_command = ARV_GVCP_COMMAND_READ_MEMORY_ACK;
+			expected_ack_command = ARV_GVCP_COMMAND_READ_MEMORY_ACK;
 			ack_size = arv_gvcp_packet_get_read_memory_ack_size (size);
 			break;
 		case ARV_GVCP_COMMAND_WRITE_MEMORY_CMD:
 			operation = "write_memory";
-			ack_command = ARV_GVCP_COMMAND_WRITE_MEMORY_ACK;
+			expected_ack_command = ARV_GVCP_COMMAND_WRITE_MEMORY_ACK;
 			ack_size = arv_gvcp_packet_get_write_memory_ack_size ();
 			break;
 		case ARV_GVCP_COMMAND_READ_REGISTER_CMD:
 			operation = "read_register";
-			ack_command = ARV_GVCP_COMMAND_READ_REGISTER_ACK;
+			expected_ack_command = ARV_GVCP_COMMAND_READ_REGISTER_ACK;
 			ack_size = arv_gvcp_packet_get_read_register_ack_size ();
 			break;
 		case ARV_GVCP_COMMAND_WRITE_REGISTER_CMD:
 			operation = "write_register";
-			ack_command = ARV_GVCP_COMMAND_WRITE_REGISTER_ACK;
+			expected_ack_command = ARV_GVCP_COMMAND_WRITE_REGISTER_ACK;
 			ack_size = arv_gvcp_packet_get_write_register_ack_size ();
 			break;
 		default:
@@ -211,16 +211,16 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 
 				if (success) {
 					ArvGvcpPacketType packet_type;
-					ArvGvcpCommand command;
+					ArvGvcpCommand ack_command;
 					guint16 packet_id;
 
 					arv_gvcp_packet_debug (ack_packet, ARV_DEBUG_LEVEL_VERBOSE_LOG);
 
 					packet_type = arv_gvcp_packet_get_packet_type (ack_packet);
-					command = arv_gvcp_packet_get_command (ack_packet);
+					ack_command = arv_gvcp_packet_get_command (ack_packet);
 					packet_id = arv_gvcp_packet_get_packet_id (ack_packet);
 
-					if (command == ARV_GVCP_COMMAND_PENDING_ACK &&
+					if (ack_command == ARV_GVCP_COMMAND_PENDING_ACK &&
 					    count >= arv_gvcp_packet_get_pending_ack_size ()) {
 						gint64 pending_ack_timeout_ms = arv_gvcp_packet_get_pending_ack_timeout (ack_packet);
 						pending_ack = TRUE;
@@ -231,7 +231,7 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 						arv_log_device ("[GvDevice::%s] Pending ack timeout = %" G_GINT64_FORMAT,
 								operation, pending_ack_timeout_ms);
 					} else if (packet_type == ARV_GVCP_PACKET_TYPE_ERROR) {
-						expected_answer = command == ack_command &&
+						expected_answer = ack_command == expected_ack_command &&
 							packet_id == io_data->packet_id;
 						if (!expected_answer) {
 							arv_debug_device ("[GvDevice::%s] Unexpected answer (0x%04x)", operation,
@@ -240,7 +240,7 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 							command_error = arv_gvcp_packet_get_packet_flags (ack_packet);
 					} else  {
 						expected_answer = packet_type == ARV_GVCP_PACKET_TYPE_ACK &&
-							command == ack_command &&
+							ack_command == expected_ack_command &&
 							packet_id == io_data->packet_id &&
 							count >= ack_size;
 						if (!expected_answer) {

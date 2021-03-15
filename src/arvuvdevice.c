@@ -139,7 +139,7 @@ _send_cmd_and_receive_ack (ArvUvDevice *uv_device, ArvUvcpCommand command,
 			   guint64 address, guint32 size, void *buffer, GError **error)
 {
 	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (uv_device);
-	ArvUvcpCommand ack_command;
+	ArvUvcpCommand expected_ack_command;
 	ArvUvcpPacket *ack_packet;
 	ArvUvcpPacket *packet;
 	const char *operation;
@@ -152,12 +152,12 @@ _send_cmd_and_receive_ack (ArvUvDevice *uv_device, ArvUvcpCommand command,
 	switch (command) {
 		case ARV_UVCP_COMMAND_READ_MEMORY_CMD:
 			operation = "read_memory";
-			ack_command = ARV_UVCP_COMMAND_READ_MEMORY_ACK;
+			expected_ack_command = ARV_UVCP_COMMAND_READ_MEMORY_ACK;
 			ack_size = arv_uvcp_packet_get_read_memory_ack_size (size);
 			break;
 		case ARV_UVCP_COMMAND_WRITE_MEMORY_CMD:
 			operation = "write_memory";
-			ack_command = ARV_UVCP_COMMAND_WRITE_MEMORY_ACK;
+			expected_ack_command = ARV_UVCP_COMMAND_WRITE_MEMORY_ACK;
 			ack_size = arv_uvcp_packet_get_write_memory_ack_size ();
 			break;
 		default:
@@ -230,16 +230,16 @@ _send_cmd_and_receive_ack (ArvUvDevice *uv_device, ArvUvcpCommand command,
 
 				if (success) {
 					ArvUvcpPacketType packet_type;
-					ArvUvcpCommand command;
+					ArvUvcpCommand ack_command;
 					guint16 packet_id;
 
 					arv_uvcp_packet_debug (ack_packet, ARV_DEBUG_LEVEL_LOG);
 
 					packet_type = arv_uvcp_packet_get_packet_type (ack_packet);
-					command = arv_uvcp_packet_get_command (ack_packet);
+					ack_command = arv_uvcp_packet_get_command (ack_packet);
 					packet_id = arv_uvcp_packet_get_packet_id (ack_packet);
 
-					if (command == ARV_UVCP_COMMAND_PENDING_ACK) {
+					if (ack_command == ARV_UVCP_COMMAND_PENDING_ACK) {
 						pending_ack = TRUE;
 						expected_answer = FALSE;
 
@@ -250,7 +250,7 @@ _send_cmd_and_receive_ack (ArvUvDevice *uv_device, ArvUvcpCommand command,
 					} else {
 						pending_ack = FALSE;
 						expected_answer = packet_type == ARV_UVCP_PACKET_TYPE_ACK &&
-							command == ack_command &&
+							ack_command == expected_ack_command &&
 							packet_id == priv->packet_id;
 						if (!expected_answer)
 							arv_debug_device ("[[UvDevice::%s] Unexpected answer (0x%04x)",
