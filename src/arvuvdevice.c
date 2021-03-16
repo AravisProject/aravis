@@ -229,13 +229,13 @@ _send_cmd_and_receive_ack (ArvUvDevice *uv_device, ArvUvcpCommand command,
 										  &transferred, 0, &local_error);
 
 				if (success) {
-					ArvUvcpPacketType packet_type;
+					ArvUvcpStatus status;
 					ArvUvcpCommand ack_command;
 					guint16 packet_id;
 
 					arv_uvcp_packet_debug (ack_packet, ARV_DEBUG_LEVEL_LOG);
 
-					packet_type = arv_uvcp_packet_get_packet_type (ack_packet);
+					status = arv_uvcp_packet_get_status (ack_packet);
 					ack_command = arv_uvcp_packet_get_command (ack_packet);
 					packet_id = arv_uvcp_packet_get_packet_id (ack_packet);
 
@@ -249,12 +249,12 @@ _send_cmd_and_receive_ack (ArvUvDevice *uv_device, ArvUvcpCommand command,
 								operation, timeout_ms);
 					} else {
 						pending_ack = FALSE;
-						expected_answer = packet_type == ARV_UVCP_PACKET_TYPE_ACK &&
+						expected_answer = status == ARV_UVCP_STATUS_SUCCESS &&
 							ack_command == expected_ack_command &&
 							packet_id == priv->packet_id;
 						if (!expected_answer)
 							arv_debug_device ("[[UvDevice::%s] Unexpected answer (0x%04x)",
-									  operation, packet_type);
+									  operation, status);
 					}
 				} else {
 					pending_ack = FALSE;
