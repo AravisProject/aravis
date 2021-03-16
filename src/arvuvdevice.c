@@ -109,7 +109,7 @@ arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, ArvUvEndpointType endpoint_
 
 	endpoint = (endpoint_type == ARV_UV_ENDPOINT_CONTROL) ? priv->control_endpoint : priv->data_endpoint;
 	result = libusb_bulk_transfer (priv->usb_device, endpoint | endpoint_flags, data, size, &transferred,
-				       MAX (priv->timeout_ms, timeout_ms));
+				       timeout_ms > 0 ? timeout_ms : priv->timeout_ms);
 
 	success = result >= 0;
 
@@ -147,7 +147,7 @@ _send_cmd_and_receive_ack (ArvUvDevice *uv_device, ArvUvcpCommand command,
 	size_t ack_size;
 	unsigned n_tries = 0;
 	gboolean success = FALSE;
-	guint32 timeout_ms = 0;
+	ArvUvcpStatus status = ARV_UVCP_STATUS_SUCCESS;
 
 	switch (command) {
 		case ARV_UVCP_COMMAND_READ_MEMORY_CMD:
@@ -217,19 +217,30 @@ _send_cmd_and_receive_ack (ArvUvDevice *uv_device, ArvUvcpCommand command,
 								  packet, packet_size,
 								  NULL, 0, &local_error);
 		if (success) {
+			gint timeout_ms;
+                        gint64 timeout_stop_ms;
+
 			gboolean pending_ack;
 			gboolean expected_answer;
 
+			timeout_stop_ms = g_get_monotonic_time () / 1000 + priv->timeout_ms;
+
 			do {
+				pending_ack = FALSE;
+
+				timeout_ms = timeout_stop_ms - g_get_monotonic_time () / 1000;
+                                if (timeout_ms < 0)
+                                        timeout_ms = 0;
+
 				success = TRUE;
 				success = success && arv_uv_device_bulk_transfer (uv_device,
 										  ARV_UV_ENDPOINT_CONTROL,
 										  LIBUSB_ENDPOINT_IN,
 										  ack_packet, ack_size,
-										  &transferred, 0, &local_error);
+										  &transferred, timeout_ms,
+										  &local_error);
 
 				if (success) {
-					ArvUvcpStatus status;
 					ArvUvcpCommand ack_command;
 					guint16 packet_id;
 
@@ -240,15 +251,24 @@ _send_cmd_and_receive_ack (ArvUvDevice *uv_device, ArvUvcpCommand command,
 					packet_id = arv_uvcp_packet_get_packet_id (ack_packet);
 
 					if (ack_command == ARV_UVCP_COMMAND_PENDING_ACK) {
+						gint64 pending_ack_timeout_ms;
 						pending_ack = TRUE;
 						expected_answer = FALSE;
 
-						timeout_ms = arv_uvcp_packet_get_pending_ack_timeout (ack_packet);
+						pending_ack_timeout_ms = arv_uvcp_packet_get_pending_ack_timeout (ack_packet);
 
-						arv_log_device ("[UvDevice::%s] Pending ack timeout = %d",
-								operation, timeout_ms);
+						timeout_stop_ms = g_get_monotonic_time () / 1000 + pending_ack_timeout_ms;
+
+						arv_log_device ("[UvDevice::%s] Pending ack timeout = %" G_GINT64_FORMAT,
+								operation, pending_ack_timeout_ms);
+					} if (status != ARV_UVCP_STATUS_SUCCESS) {
+						expected_answer = ack_command == expected_ack_command &&
+							packet_id == priv->packet_id;
+						if (!expected_answer) {
+							arv_debug_device ("[[UvDevice::%s] Unexpected answer (0x%04x)",
+									  operation, status);
+						}
 					} else {
-						pending_ack = FALSE;
 						expected_answer = status == ARV_UVCP_STATUS_SUCCESS &&
 							ack_command == expected_ack_command &&
 							packet_id == priv->packet_id;
@@ -257,7 +277,6 @@ _send_cmd_and_receive_ack (ArvUvDevice *uv_device, ArvUvcpCommand command,
 									  operation, status);
 					}
 				} else {
-					pending_ack = FALSE;
 					expected_answer = FALSE;
 					if (local_error != NULL)
 						arv_warning_device ("[UvDevice::%s] Ack reception error: %s",
@@ -265,11 +284,11 @@ _send_cmd_and_receive_ack (ArvUvDevice *uv_device, ArvUvcpCommand command,
 					g_clear_error (&local_error);
 				}
 
-			} while (pending_ack);
+			} while (pending_ack || (!expected_answer && timeout_ms));
 
 			success = success && expected_answer;
 
-			if (success) {
+			if (success && status == ARV_UVCP_STATUS_SUCCESS) {
 				switch (command) {
 					case ARV_UVCP_COMMAND_READ_MEMORY_CMD:
 						memcpy (buffer, arv_uvcp_packet_get_read_memory_ack_data (ack_packet), size);
@@ -293,10 +312,18 @@ _send_cmd_and_receive_ack (ArvUvDevice *uv_device, ArvUvcpCommand command,
 	g_free (ack_packet);
 	arv_uvcp_packet_free (packet);
 
+	success = success && status == ARV_UVCP_STATUS_SUCCESS;
+
 	if (!success) {
-		if (error != NULL && *error == NULL)
-			*error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_TIMEOUT,
-					      "[ArvDevice::%s] Timeout", operation);
+		if (error != NULL && *error == NULL) {
+			if (status != ARV_UVCP_STATUS_SUCCESS)
+				*error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_TIMEOUT,
+						      "USB3Vision %s error (%s)", operation,
+						      arv_uvcp_status_to_string (status));
+			else
+				*error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_TIMEOUT,
+						      "USB3Vision %s timeout", operation);
+		}
 	}
 
 	return success;
