@@ -90,20 +90,19 @@ G_BEGIN_DECLS
 /**
  * ArvUvcpStatus:
  * @ARV_UCVP_STATUS_SUCCESS: success
- * @ARV_UCVP_STATUS_GENCP_NOT_IMPLEMENTED: command not implemented in the device
- * @ARV_UCVP_STATUS_GENCP_INVALID_PARAMETER: at least one command parameter of CCD or SCD is invalid or out of range
- * @ARV_UVCP_STATUS_GENCP_INVALID_ADDRESS: attempt to access a not existing register address
- * @ARV_UVCP_STATUS_GENCP_WRITE_PROTECT: attempt to write to a read only register
- * @ARV_UVCP_STATUS_GENCP_BAD_ALIGNMENT: attempt to access registers with an address which is not aligned according to
- * the underlying technology
- * @ARV_UVCP_STATUS_GENCP_ACCESS_DENIED: attempt toread a non-readable or write a non-writable register address
- * @ARV_UVCP_STATUS_GENCP_BUSY: the command receiver is currently busy
- * @ARV_UVCP_STATUS_GENCP_MSG_TIMEOUT: timeout waiting for an acknowledge
- * @ARV_UVCP_STATUS_GENCP_INVALID_HEADER: the header of the received command is invalid. This includes CCD and SCD
- * fields but not the command payload
- * @ARV_UVCP_STATUS_GENCP_WRONG_CONFIG: the current receiver configuration does not allow the execution of the sent
- * command
- * @ARV_UVCP_STATUS_GENCP_ERROR: generic error
+ * @ARV_UCVP_STATUS_NOT_IMPLEMENTED: command not implemented in the device
+ * @ARV_UCVP_STATUS_INVALID_PARAMETER: at least one command parameter of CCD or SCD is invalid or out of range
+ * @ARV_UVCP_STATUS_INVALID_ADDRESS: attempt to access a not existing register address
+ * @ARV_UVCP_STATUS_WRITE_PROTECT: attempt to write to a read only register
+ * @ARV_UVCP_STATUS_BAD_ALIGNMENT: attempt to access registers with an address which is not aligned according to the
+ * underlying technology
+ * @ARV_UVCP_STATUS_ACCESS_DENIED: attempt toread a non-readable or write a non-writable register address
+ * @ARV_UVCP_STATUS_BUSY: the command receiver is currently busy
+ * @ARV_UVCP_STATUS_MSG_TIMEOUT: timeout waiting for an acknowledge
+ * @ARV_UVCP_STATUS_INVALID_HEADER: the header of the received command is invalid. This includes CCD and SCD fields but
+ * not the command payload
+ * @ARV_UVCP_STATUS_WRONG_CONFIG: the current receiver configuration does not allow the execution of the sent command
+ * @ARV_UVCP_STATUS_ERROR: generic error
  * @ARV_UVCP_STATUS_RESEND_NOT_SUPPORTED:
  * @ARV_UVCP_STATUS_DSI_ENDPOINT_HALTED:
  * @ARV_UVCP_STATUS_SI_PAYLOAD_SIZE_NOT_ALIGNED:
@@ -114,17 +113,17 @@ G_BEGIN_DECLS
 
 typedef enum {
 	ARV_UVCP_STATUS_SUCCESS					= 0x0000,
-	ARV_UVCP_STATUS_GENCP_NOT_IMPLEMENTED			= 0x8001,
-	ARV_UVCP_STATUS_GENCP_INVALID_PARAMETER			= 0x8002,
-	ARV_UVCP_STATUS_GENCP_INVALID_ADDRESS			= 0x8003,
-	ARV_UVCP_STATUS_GENCP_WRITE_PROTECT			= 0x8004,
-	ARV_UVCP_STATUS_GENCP_BAD_ALIGNMENT         		= 0x8005,
-	ARV_UVCP_STATUS_GENCP_ACCESS_DENIED         		= 0x8006,
-	ARV_UVCP_STATUS_GENCP_BUSY                  		= 0x8007,
-	ARV_UVCP_STATUS_GENCP_MSG_TIMEOUT           		= 0x800B,
-	ARV_UVCP_STATUS_GENCP_INVALID_HEADER        		= 0x800E,
-	ARV_UVCP_STATUS_GENCP_WRONG_CONFIG          		= 0x800F,
-	ARV_UVCP_STATUS_GENCP_ERROR                 		= 0x8FFF,
+	ARV_UVCP_STATUS_NOT_IMPLEMENTED				= 0x8001,
+	ARV_UVCP_STATUS_INVALID_PARAMETER			= 0x8002,
+	ARV_UVCP_STATUS_INVALID_ADDRESS				= 0x8003,
+	ARV_UVCP_STATUS_WRITE_PROTECT				= 0x8004,
+	ARV_UVCP_STATUS_BAD_ALIGNMENT         			= 0x8005,
+	ARV_UVCP_STATUS_ACCESS_DENIED         			= 0x8006,
+	ARV_UVCP_STATUS_BUSY                  			= 0x8007,
+	ARV_UVCP_STATUS_MSG_TIMEOUT           			= 0x800B,
+	ARV_UVCP_STATUS_INVALID_HEADER        			= 0x800E,
+	ARV_UVCP_STATUS_WRONG_CONFIG          			= 0x800F,
+	ARV_UVCP_STATUS_ERROR                 			= 0x8FFF,
 	ARV_UVCP_STATUS_RESEND_NOT_SUPPORTED        		= 0xA001,
 	ARV_UVCP_STATUS_DSI_ENDPOINT_HALTED         		= 0xA002,
 	ARV_UVCP_STATUS_SI_PAYLOAD_SIZE_NOT_ALIGNED 		= 0xA003,
@@ -297,7 +296,7 @@ static inline ArvUvcpStatus
 arv_uvcp_packet_get_status (const ArvUvcpPacket *packet)
 {
 	if (packet == NULL)
-		return ARV_UVCP_STATUS_GENCP_ERROR;
+		return ARV_UVCP_STATUS_ERROR;
 
 	return (ArvUvcpStatus) GUINT16_FROM_LE (packet->header.status);
 }
