@@ -86,6 +86,8 @@ typedef struct {
 	char *genicam_xml;
 	size_t genicam_xml_size;
 
+	gboolean is_big_endian_device;
+
 	gboolean is_packet_resend_supported;
 	gboolean is_write_memory_supported;
 
@@ -1306,6 +1308,7 @@ arv_gv_device_constructed (GObject *object)
 	GError *local_error = NULL;
 	char *address_string;
 	guint32 capabilities;
+	guint32 device_mode;
 
 	if (!G_IS_INET_ADDRESS (priv->interface_address) ||
 	    !G_IS_INET_ADDRESS (priv->device_address)) {
@@ -1378,12 +1381,16 @@ arv_gv_device_constructed (GObject *object)
 
 	priv->heartbeat_thread = g_thread_new ("arv_gv_heartbeat", arv_gv_device_heartbeat_thread, priv->heartbeat_data);
 
+	arv_device_read_register (ARV_DEVICE (gv_device), ARV_GVBS_DEVICE_MODE_OFFSET, &device_mode, NULL);
+	priv->is_big_endian_device = (device_mode & ARV_GVBS_DEVICE_MODE_BIG_ENDIAN) != 0;
+
 	arv_device_read_register (ARV_DEVICE (gv_device), ARV_GVBS_GVCP_CAPABILITY_OFFSET, &capabilities, NULL);
 	priv->is_packet_resend_supported = (capabilities & ARV_GVBS_GVCP_CAPABILITY_PACKET_RESEND) != 0;
 	priv->is_write_memory_supported = (capabilities & ARV_GVBS_GVCP_CAPABILITY_WRITE_MEMORY) != 0;
 
-	arv_debug_device ("[GvDevice::new] Packet resend = %s", priv->is_packet_resend_supported ? "yes" : "no");
-	arv_debug_device ("[GvDevice::new] Write memory = %s", priv->is_write_memory_supported ? "yes" : "no");
+	arv_debug_device ("[GvDevice::new] Device endianness = %s", priv->is_big_endian_device ? "big" : "little");
+	arv_debug_device ("[GvDevice::new] Packet resend     = %s", priv->is_packet_resend_supported ? "yes" : "no");
+	arv_debug_device ("[GvDevice::new] Write memory      = %s", priv->is_write_memory_supported ? "yes" : "no");
 
 	document = ARV_DOM_DOCUMENT (priv->genicam);
 	register_description = ARV_GC_REGISTER_DESCRIPTION_NODE (arv_dom_document_get_document_element (document));
