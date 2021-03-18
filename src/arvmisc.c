@@ -794,7 +794,8 @@ static struct {
 } vendor_aliases[] = {
 	{ "The Imaging Source Europe GmbH",		"TIS"},
 	{ "Point Grey Research",			"PointGrey"},
-	{ "Lucid Vision Labs",				"LucidVision"}
+	{ "Lucid Vision Labs",				"LucidVision"},
+	{ "New-Imaging-Technologies",			"NIT"}
 };
 
 /**
