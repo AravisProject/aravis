@@ -387,7 +387,7 @@ main (int argc, char **argv)
 			guint min,max;
 
 			arv_camera_uv_get_bandwidth_bounds (camera, &min, &max, NULL);
-			printf ("uv bandwidth limit     = %d [%d..%d]\n", arv_camera_uv_get_bandwidth (camera, NULL), min, max);
+			printf ("uv bandwidth limit    = %d [%d..%d]\n", arv_camera_uv_get_bandwidth (camera, NULL), min, max);
 		}
 
 		stream = arv_camera_create_stream (camera, stream_cb, NULL, &error);
