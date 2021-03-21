@@ -256,6 +256,7 @@ arv_uv_stream_start_thread (ArvStream *stream)
 	ArvUvStreamPrivate *priv = arv_uv_stream_get_instance_private (uv_stream);
 	ArvUvStreamThreadData *thread_data;
 	ArvDevice *device;
+	GError *error = NULL;
 	guint64 offset;
 	guint64 sirm_offset;
 	guint32 si_info;
@@ -329,7 +330,11 @@ arv_uv_stream_start_thread (ArvStream *stream)
 	arv_debug_stream ("SIRM_MAX_TRAILER_SIZE = 0x%08x", si_req_trailer_size);
 
 	si_control = ARV_SIRM_CONTROL_STREAM_ENABLE;
-	arv_device_write_memory (device, sirm_offset + ARV_SIRM_CONTROL, sizeof (si_control), &si_control, NULL);
+	arv_device_write_memory (device, sirm_offset + ARV_SIRM_CONTROL, sizeof (si_control), &si_control, &error);
+	if (error != NULL) {
+		g_warning ("Stream enable error: %s", error->message);
+		g_clear_error (&error);
+	}
 
 	thread_data->leader_size = si_req_leader_size;
 	thread_data->payload_size = si_payload_size;
