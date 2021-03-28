@@ -1,3 +1,14 @@
+Stable release 0.8.7
+====================
+
+  * camera: ignore Acquisitiontart feature setting failure (Emmanuel)
+  * camera: fix trigger setting for Basler cameras (Casperoo)
+  * camera: add set_exposure API (Emmanuel)
+  * gigevision: Windows support (Václav)
+  * usb3vision: better error packet handling (Emmanuel)
+  * genicam: allow get/set float from an int node (Emmanuel)
+  * genicam: allow multiple pIndex property nodes (Emmanuel)
+
 Stable release 0.8.6
 ====================
 
