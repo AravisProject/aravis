@@ -23,7 +23,7 @@
 
 #include <arvnetworkprivate.h>
 #include <arvdebugprivate.h>
-#include <arvmisc.h>
+#include <arvmiscprivate.h>
 
 #ifndef G_OS_WIN32
 	#include <ifaddrs.h>

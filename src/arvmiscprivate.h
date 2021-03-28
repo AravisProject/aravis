@@ -38,4 +38,10 @@ gboolean	arv_parse_genicam_url		(const char *url, gssize url_length,
 						 char **query, char **fragment,
 						 guint64 *address, guint64 *size);
 
+#if GLIB_CHECK_VERSION(2,68,0)
+#define arv_memdup(p,s) g_memdup2(p,s)
+#else
+#define arv_memdup(p,s) g_memdup(p,(size_t) s)
+#endif
+
 #endif
