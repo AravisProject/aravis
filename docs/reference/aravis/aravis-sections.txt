@@ -72,6 +72,7 @@ arv_camera_get_exposure_time
 arv_camera_get_exposure_time_bounds
 arv_camera_set_exposure_time_auto
 arv_camera_get_exposure_time_auto
+arv_camera_set_exposure_mode
 arv_camera_is_gain_available
 arv_camera_is_gain_auto_available
 arv_camera_set_gain
@@ -122,6 +123,9 @@ arv_camera_create_chunk_parser
 ArvAcquisitionMode
 arv_acquisition_mode_to_string
 arv_acquisition_mode_from_string
+ArvExposureMode
+arv_exposure_mode_from_string
+arv_exposure_mode_to_string
 <SUBSECTION Standard>
 ARV_CAMERA
 ARV_IS_CAMERA
