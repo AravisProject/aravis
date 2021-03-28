@@ -207,7 +207,8 @@ _send_packet_request (ArvGvStreamThreadData *thread_data,
 static void
 _update_socket (ArvGvStreamThreadData *thread_data, ArvBuffer *buffer)
 {
-	int buffer_size, fd;
+	int buffer_size = thread_data->current_socket_buffer_size;
+	int fd;
 
 	if (thread_data->socket_buffer_option == ARV_GV_STREAM_SOCKET_BUFFER_FIXED &&
 	    thread_data->socket_buffer_size <= 0)
