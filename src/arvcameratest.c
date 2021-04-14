@@ -5,7 +5,6 @@
 
 static char *arv_option_camera_name = NULL;
 static char *arv_option_debug_domains = NULL;
-static gboolean arv_option_snaphot = FALSE;
 static char *arv_option_trigger = NULL;
 static double arv_option_software_trigger = -1;
 static double arv_option_frequency = -1.0;
@@ -36,10 +35,6 @@ static const GOptionEntry arv_option_entries[] =
 	{
 		"name",					'n', 0, G_OPTION_ARG_STRING,
 		&arv_option_camera_name,		"Camera name", NULL
-	},
-	{
-		"snapshot",				's', 0, G_OPTION_ARG_NONE,
-		&arv_option_snaphot,			"Snapshot", NULL
 	},
 	{
 		"frequency", 				'f', 0, G_OPTION_ARG_DOUBLE,
