@@ -264,8 +264,11 @@ pkg.generate (aravis_library,
 	      description: 'Camera control and image acquisition library',
 	      requires: aravis_public_dependencies)
 
-progs = [[ 'arv-tool', 			'arvtool.c'],
-	 [ 'arv-fake-gv-camera', 	'arvfakegvcamera.c']]
+progs = [
+  [ 'arv-tool', 		'arvtool.c'],
+  [ 'arv-camera-test',		'arvcameratest.c'],
+  [ 'arv-fake-gv-camera', 	'arvfakegvcamera.c'],
+]
 
 foreach p: progs
 	executable ((p[0] + '-@0@').format (aravis_api_version),
