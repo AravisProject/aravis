@@ -98,6 +98,8 @@ arv_camera_set_float
 arv_camera_set_integer
 arv_camera_set_string
 ArvGvPacketSizeAdjustment
+arv_camera_set_range_check_policy
+arv_camera_set_register_cache_policy
 arv_camera_is_gv_device
 arv_camera_gv_get_n_stream_channels
 arv_camera_gv_select_stream_channel

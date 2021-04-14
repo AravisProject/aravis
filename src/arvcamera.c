@@ -2333,6 +2333,56 @@ arv_camera_is_feature_available (ArvCamera *camera, const char *feature, GError 
 }
 
 /**
+ * arv_camera_set_register_cache_policy:
+ * @camera: a #ArvCamera
+ * @policy: cache policy
+ *
+ * Sets the Genicam register cache policy.
+ *
+ * <warning><para>Be aware that some camera may have wrong Cachable properties defined in their Genicam metadata, which
+ * may lead to incorrect readouts. Using the debug cache policy, and activating genicam debug output (export
+ * ARV_DEBUG=genicam), can help you to check the cache validity. In this mode, every time the cache content is not in
+ * sync with the actual register value, a debug message is printed on the console.</para></warning>
+ *
+ * Since: 0.8.8
+ */
+
+void
+arv_camera_set_register_cache_policy (ArvCamera *camera, ArvRegisterCachePolicy policy)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_device_set_register_cache_policy (priv->device, policy);
+}
+
+/**
+ * arv_camera_set_range_check_policy:
+ * @camera: a #ArvCamera
+ * @policy: range check policy
+ *
+ * Sets the feature range check policy. When enabled, before being set, the value of all nodes with an #ArvGcFloat or
+ * #ArvGcInteger interface will be checked against their Min and Max properties.
+ *
+ * <warning><para>Be aware that some camera may have wrong definition of Min and Max, as this check is defined as not
+ * mandatory in the Genicam specification. If this is the case, it will not possible to set the value of the features
+ * with faulty Min or Max definition. Range check is disabled by default.</para></warning>
+ *
+ * Since: 0.8.8
+ */
+
+void arv_camera_set_range_check_policy	(ArvCamera *camera, ArvRangeCheckPolicy policy)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_device_set_range_check_policy (priv->device, policy);
+}
+
+
+/**
  * arv_camera_is_gv_device:
  * @camera: a #ArvCamera
  *

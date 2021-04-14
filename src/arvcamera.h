@@ -166,6 +166,11 @@ const char ** 	arv_camera_dup_available_enumerations_as_display_names 	(ArvCamer
 
 gboolean 	arv_camera_is_feature_available 	(ArvCamera *camera, const char *feature, GError **error);
 
+/* Runtime policies */
+
+void		arv_camera_set_register_cache_policy	(ArvCamera *camera, ArvRegisterCachePolicy policy);
+void		arv_camera_set_range_check_policy	(ArvCamera *camera, ArvRangeCheckPolicy policy);
+
 /* GigEVision specific API */
 
 gboolean	arv_camera_is_gv_device			(ArvCamera *camera);
