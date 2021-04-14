@@ -28,6 +28,8 @@ static gboolean arv_option_high_priority = FALSE;
 static gboolean arv_option_no_packet_socket = FALSE;
 static char *arv_option_chunks = NULL;
 static unsigned int arv_option_bandwidth_limit = -1;
+static char *arv_option_register_cache = NULL;
+static char *arv_option_range_check = NULL;
 
 /* clang-format off */
 static const GOptionEntry arv_option_entries[] =
@@ -124,6 +126,16 @@ static const GOptionEntry arv_option_entries[] =
 	{
 		"no-packet-socket",			'\0', 0, G_OPTION_ARG_NONE,
 		&arv_option_no_packet_socket,		"Disable use of packet socket", NULL
+	},
+	{
+		"register-cache",			'\0', 0, G_OPTION_ARG_STRING,
+		&arv_option_register_cache,		"Set register cache policy",
+		"{disable|enable|debug}}"
+	},
+	{
+		"range-check",				'\0', 0, G_OPTION_ARG_STRING,
+		&arv_option_range_check,		"Set feature range check policy",
+		"{disable|enable}"
 	},
 	{
 		"debug", 				'd', 0, G_OPTION_ARG_STRING,
@@ -308,6 +320,22 @@ main (int argc, char **argv)
 		guint64 n_underruns;
 		int gain;
 		guint software_trigger_source = 0;
+
+		if (arv_option_register_cache != NULL) {
+			if (g_ascii_strcasecmp (arv_option_register_cache, "enable") == 0)
+				arv_camera_set_register_cache_policy (camera, ARV_REGISTER_CACHE_POLICY_ENABLE);
+			else if (g_ascii_strcasecmp (arv_option_register_cache, "disable") == 0)
+				arv_camera_set_register_cache_policy (camera, ARV_REGISTER_CACHE_POLICY_DISABLE);
+			else if (g_ascii_strcasecmp (arv_option_register_cache, "debug") == 0)
+				arv_camera_set_register_cache_policy (camera, ARV_REGISTER_CACHE_POLICY_DEBUG);
+		}
+
+		if (arv_option_range_check != NULL) {
+			if (g_ascii_strcasecmp (arv_option_range_check, "enable") == 0)
+				arv_camera_set_range_check_policy (camera, ARV_RANGE_CHECK_POLICY_ENABLE);
+			else if (g_ascii_strcasecmp (arv_option_range_check, "disable") == 0)
+				arv_camera_set_range_check_policy (camera, ARV_RANGE_CHECK_POLICY_DISABLE);
+		}
 
 		if (arv_option_chunks != NULL) {
 			char *striped_chunks;
