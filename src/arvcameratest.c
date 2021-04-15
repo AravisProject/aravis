@@ -36,47 +36,58 @@ static const GOptionEntry arv_option_entries[] =
 {
 	{
 		"name",					'n', 0, G_OPTION_ARG_STRING,
-		&arv_option_camera_name,		"Camera name", NULL
+		&arv_option_camera_name,		"Camera name",
+		NULL
 	},
 	{
 		"frequency", 				'f', 0, G_OPTION_ARG_DOUBLE,
-		&arv_option_frequency,			"Acquisition frequency", NULL
+		&arv_option_frequency,			"Acquisition frequency",
+		NULL
 	},
 	{
 		"trigger",				't', 0, G_OPTION_ARG_STRING,
-		&arv_option_trigger,			"External trigger", NULL
+		&arv_option_trigger,			"External trigger",
+		NULL
 	},
 	{
 		"software-trigger",			'o', 0, G_OPTION_ARG_DOUBLE,
-		&arv_option_software_trigger,		"Emit software trigger", NULL
+		&arv_option_software_trigger,		"Emit software trigger",
+		NULL
 	},
 	{
 		"width", 				'w', 0, G_OPTION_ARG_INT,
-		&arv_option_width,			"Width", NULL
+		&arv_option_width,			"Width",
+		NULL
 	},
 	{
 		"height", 				'h', 0, G_OPTION_ARG_INT,
-		&arv_option_height, 			"Height", NULL
+		&arv_option_height, 			"Height",
+		NULL
 	},
 	{
 	       "h-binning", 				'\0', 0, G_OPTION_ARG_INT,
-		&arv_option_horizontal_binning,		"Horizontal binning", NULL
+		&arv_option_horizontal_binning,		"Horizontal binning",
+		NULL
 	},
 	{
 		"v-binning", 				'\0', 0, G_OPTION_ARG_INT,
-		&arv_option_vertical_binning, 		"Vertical binning", NULL
+		&arv_option_vertical_binning, 		"Vertical binning",
+		NULL
 	},
 	{
 		"exposure", 				'e', 0, G_OPTION_ARG_DOUBLE,
-		&arv_option_exposure_time_us, 		"Exposure time (µs)", NULL
+		&arv_option_exposure_time_us, 		"Exposure time (us)",
+		NULL
 	},
 	{
 		"gain", 				'g', 0, G_OPTION_ARG_INT,
-		&arv_option_gain,	 		"Gain (dB)", NULL
+		&arv_option_gain,	 		"Gain (dB)",
+		NULL
 	},
 	{
 		"auto",					'a', 0, G_OPTION_ARG_NONE,
-		&arv_option_auto_socket_buffer,		"Auto socket buffer size", NULL
+		&arv_option_auto_socket_buffer,		"Auto socket buffer size",
+		NULL
 	},
 	{
 		"packet-size-adjustment",		'j', 0, G_OPTION_ARG_STRING,
@@ -85,65 +96,79 @@ static const GOptionEntry arv_option_entries[] =
 	},
 	{
 		"no-packet-resend",			'r', 0, G_OPTION_ARG_NONE,
-		&arv_option_no_packet_resend,		"No packet resend", NULL
+		&arv_option_no_packet_resend,		"No packet resend",
+		NULL
 	},
 	{
 		"packet-request-ratio",			'q', 0, G_OPTION_ARG_DOUBLE,
-		&arv_option_packet_request_ratio,	"Packet resend request limit as a frame packet number ratio [0..2.0]", NULL
+		&arv_option_packet_request_ratio,
+		"Packet resend request limit as a frame packet number ratio [0..2.0]",
+		NULL
 	},
 	{
 		"packet-timeout", 			'p', 0, G_OPTION_ARG_INT,
-		&arv_option_packet_timeout, 		"Packet timeout (ms)", NULL
+		&arv_option_packet_timeout, 		"Packet timeout (ms)",
+		NULL
 	},
 	{
 		"frame-retention", 			'm', 0, G_OPTION_ARG_INT,
-		&arv_option_frame_retention, 		"Frame retention (ms)", NULL
+		&arv_option_frame_retention, 		"Frame retention (ms)",
+		NULL
 	},
 	{
 		"gv-stream-channel",			'c', 0, G_OPTION_ARG_INT,
-		&arv_option_gv_stream_channel,		"GigEVision stream channel id", NULL
+		&arv_option_gv_stream_channel,		"GigEVision stream channel id",
+		NULL
 	},
 	{
 		"gv-packet-delay",			'y', 0, G_OPTION_ARG_INT,
-		&arv_option_gv_packet_delay,		"GigEVision packet delay (ns)", NULL
+		&arv_option_gv_packet_delay,		"GigEVision packet delay (ns)",
+		NULL
 	},
 	{
 		"gv-packet-size",			'i', 0, G_OPTION_ARG_INT,
-		&arv_option_gv_packet_size,		"GigEVision packet size (bytes)", NULL
+		&arv_option_gv_packet_size,		"GigEVision packet size (bytes)",
+		NULL
 	},
 	{
 		"chunks", 				'u', 0, G_OPTION_ARG_STRING,
-		&arv_option_chunks,	 		"Chunks", NULL
+		&arv_option_chunks,	 		"Chunks",
+		NULL
 	},
 	{
 		"realtime",				'\0', 0, G_OPTION_ARG_NONE,
-		&arv_option_realtime,			"Make stream thread realtime", NULL
+		&arv_option_realtime,			"Make stream thread realtime",
+		NULL
 	},
 	{
 		"high-priority",			'\0', 0, G_OPTION_ARG_NONE,
-		&arv_option_high_priority,		"Make stream thread high priority", NULL
+		&arv_option_high_priority,		"Make stream thread high priority",
+		NULL
 	},
 	{
 		"no-packet-socket",			'\0', 0, G_OPTION_ARG_NONE,
-		&arv_option_no_packet_socket,		"Disable use of packet socket", NULL
+		&arv_option_no_packet_socket,		"Disable use of packet socket",
+		NULL
 	},
 	{
 		"register-cache",			'\0', 0, G_OPTION_ARG_STRING,
-		&arv_option_register_cache,		"Set register cache policy",
-		"{disable|enable|debug}}"
+		&arv_option_register_cache,		"Register cache policy",
+		"{disable|enable|debug}"
 	},
 	{
 		"range-check",				'\0', 0, G_OPTION_ARG_STRING,
-		&arv_option_range_check,		"Set feature range check policy",
+		&arv_option_range_check,		"Range check policy",
 		"{disable|enable}"
 	},
 	{
 		"debug", 				'd', 0, G_OPTION_ARG_STRING,
-		&arv_option_debug_domains, 		"Debug domains", NULL
+		&arv_option_debug_domains, 		"Debug domains",
+		NULL
 	},
 	{
 		"bandwidth-limit",			'b', 0, G_OPTION_ARG_INT,
-		&arv_option_bandwidth_limit,		"Desired USB3 Vision device bandwidth limit", NULL
+		&arv_option_bandwidth_limit,		"Desired USB3 Vision device bandwidth limit",
+		NULL
 	},
 	{ NULL }
 };
@@ -276,6 +301,8 @@ main (int argc, char **argv)
 	ApplicationData data;
 	ArvCamera *camera;
 	ArvStream *stream;
+	ArvRegisterCachePolicy register_cache_policy;
+	ArvRangeCheckPolicy range_check_policy;
 	GOptionContext *context;
 	GError *error = NULL;
 	int i;
@@ -297,6 +324,30 @@ main (int argc, char **argv)
 	}
 
 	g_option_context_free (context);
+
+	if (arv_option_register_cache == NULL)
+		register_cache_policy = ARV_REGISTER_CACHE_POLICY_DEFAULT;
+	else if (g_strcmp0 (arv_option_register_cache, "disable") == 0)
+		register_cache_policy = ARV_REGISTER_CACHE_POLICY_DISABLE;
+	else if (g_strcmp0 (arv_option_register_cache, "enable") == 0)
+		register_cache_policy = ARV_REGISTER_CACHE_POLICY_ENABLE;
+	else if (g_strcmp0 (arv_option_register_cache, "debug") == 0)
+		register_cache_policy = ARV_REGISTER_CACHE_POLICY_DEBUG;
+	else {
+		printf ("Invalid register cache policy\n");
+		return EXIT_FAILURE;
+	}
+
+	if (arv_option_range_check == NULL)
+		range_check_policy = ARV_RANGE_CHECK_POLICY_DEFAULT;
+	else if (g_strcmp0 (arv_option_range_check, "disable") == 0)
+		range_check_policy = ARV_RANGE_CHECK_POLICY_DISABLE;
+	else if (g_strcmp0 (arv_option_range_check, "enable") == 0)
+		range_check_policy = ARV_RANGE_CHECK_POLICY_ENABLE;
+	else {
+		printf ("Invalid range check policy\n");
+		return EXIT_FAILURE;
+	}
 
 	arv_enable_interface ("Fake");
 
@@ -321,21 +372,8 @@ main (int argc, char **argv)
 		int gain;
 		guint software_trigger_source = 0;
 
-		if (arv_option_register_cache != NULL) {
-			if (g_ascii_strcasecmp (arv_option_register_cache, "enable") == 0)
-				arv_camera_set_register_cache_policy (camera, ARV_REGISTER_CACHE_POLICY_ENABLE);
-			else if (g_ascii_strcasecmp (arv_option_register_cache, "disable") == 0)
-				arv_camera_set_register_cache_policy (camera, ARV_REGISTER_CACHE_POLICY_DISABLE);
-			else if (g_ascii_strcasecmp (arv_option_register_cache, "debug") == 0)
-				arv_camera_set_register_cache_policy (camera, ARV_REGISTER_CACHE_POLICY_DEBUG);
-		}
-
-		if (arv_option_range_check != NULL) {
-			if (g_ascii_strcasecmp (arv_option_range_check, "enable") == 0)
-				arv_camera_set_range_check_policy (camera, ARV_RANGE_CHECK_POLICY_ENABLE);
-			else if (g_ascii_strcasecmp (arv_option_range_check, "disable") == 0)
-				arv_camera_set_range_check_policy (camera, ARV_RANGE_CHECK_POLICY_DISABLE);
-		}
+		arv_camera_set_register_cache_policy (camera, register_cache_policy);
+		arv_camera_set_range_check_policy (camera, range_check_policy);
 
 		if (arv_option_chunks != NULL) {
 			char *striped_chunks;
