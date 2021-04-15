@@ -355,8 +355,8 @@ _read_from_port (ArvGcRegisterNode *self, gint64 address, gint64 length, void *b
 
 	if (cached && cache_policy == ARV_REGISTER_CACHE_POLICY_DEBUG) {
 		if (memcmp (cache, buffer, length) != 0)
-			printf ("Incorrect cache value for %s\n",
-				arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
+			arv_message ("Current and cached value mismatch for '%s'\n",
+				     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
 		g_free (cache);
 	}
 
