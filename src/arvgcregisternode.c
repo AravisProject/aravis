@@ -89,6 +89,7 @@ typedef struct {
 	GHashTable *caches;
 	guint n_cache_hits;
 	guint n_cache_misses;
+	guint n_cache_errors;
 
 	char v_string[G_ASCII_DTOSTR_BUF_SIZE];
 } ArvGcRegisterNodePrivate;
@@ -354,9 +355,11 @@ _read_from_port (ArvGcRegisterNode *self, gint64 address, gint64 length, void *b
 	}
 
 	if (cached && cache_policy == ARV_REGISTER_CACHE_POLICY_DEBUG) {
-		if (memcmp (cache, buffer, length) != 0)
+		if (memcmp (cache, buffer, length) != 0) {
 			arv_message ("Current and cached value mismatch for '%s'\n",
 				     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
+			priv->n_cache_errors++;
+		}
 		g_free (cache);
 	}
 
@@ -412,12 +415,14 @@ arv_gc_register_node_init (ArvGcRegisterNode *self)
 	priv->caches = g_hash_table_new_full (arv_gc_cache_key_hash, arv_gc_cache_key_equal, g_free, g_free);
 	priv->n_cache_hits = 0;
 	priv->n_cache_misses = 0;
+	priv->n_cache_errors = 0;
 }
 
 static void
 arv_gc_register_node_finalize (GObject *self)
 {
 	ArvGcRegisterNodePrivate *priv = arv_gc_register_node_get_instance_private (ARV_GC_REGISTER_NODE (self));
+	ArvGc *genicam;
 
 	g_slist_free (priv->addresses);
 	g_slist_free (priv->swiss_knives);
@@ -425,16 +430,30 @@ arv_gc_register_node_finalize (GObject *self)
 	g_slist_free (priv->invalidators);
 	g_clear_pointer (&priv->caches, g_hash_table_unref);
 
-	if (priv->n_cache_hits > 0 || priv->n_cache_misses > 0) {
-		const char *name = arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self));
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (self));
+	if (ARV_IS_GC (genicam)) {
+		ArvRegisterCachePolicy cache_policy;
 
-		if (name == NULL)
-			name = arv_dom_node_get_node_name (ARV_DOM_NODE (self));
+		cache_policy = arv_gc_get_register_cache_policy (genicam);
 
-		arv_debug_genicam ("Cache hits = %u / %u for %s",
-				   priv->n_cache_hits,
-				   priv->n_cache_hits + priv->n_cache_misses,
-				   name);
+		if (priv->n_cache_hits > 0 || priv->n_cache_misses > 0) {
+			const char *name = arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self));
+
+			if (name == NULL)
+				name = arv_dom_node_get_node_name (ARV_DOM_NODE (self));
+
+			if (cache_policy == ARV_REGISTER_CACHE_POLICY_DEBUG && priv->n_cache_errors)
+				arv_message ("%15s: cache hit(s) = %3u / %-3u  [%d error(s)]",
+					     name,
+					     priv->n_cache_hits,
+					     priv->n_cache_hits + priv->n_cache_misses,
+					     priv->n_cache_errors);
+			else
+				arv_log_genicam ("%-15s: cache hit(s) = %3u / %-3u",
+						 name,
+						 priv->n_cache_hits,
+						 priv->n_cache_hits + priv->n_cache_misses);
+		}
 	}
 
 	G_OBJECT_CLASS (arv_gc_register_node_parent_class)->finalize (self);
