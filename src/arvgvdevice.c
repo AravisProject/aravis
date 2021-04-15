@@ -1565,7 +1565,7 @@ arv_gv_device_class_init (ArvGvDeviceClass *gv_device_class)
 					 g_param_spec_enum ("packet-size-adjustment", "Packet size adjustment",
 							    "Packet size adjustment option",
 							    ARV_TYPE_GV_PACKET_SIZE_ADJUSTMENT,
-							    ARV_GV_PACKET_SIZE_ADJUSTMENT_ON_FAILURE_ONCE,
+							    ARV_GV_PACKET_SIZE_ADJUSTMENT_DEFAULT,
 							    G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
 								G_PARAM_CONSTRUCT));
 }

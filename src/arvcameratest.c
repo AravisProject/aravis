@@ -303,6 +303,7 @@ main (int argc, char **argv)
 	ArvStream *stream;
 	ArvRegisterCachePolicy register_cache_policy;
 	ArvRangeCheckPolicy range_check_policy;
+	ArvGvPacketSizeAdjustment adjustment;
 	GOptionContext *context;
 	GError *error = NULL;
 	int i;
@@ -349,6 +350,23 @@ main (int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
+	if (arv_option_packet_size_adjustment == NULL)
+		adjustment = ARV_GV_PACKET_SIZE_ADJUSTMENT_DEFAULT;
+	else if (g_strcmp0 (arv_option_packet_size_adjustment, "always") == 0)
+		adjustment = ARV_GV_PACKET_SIZE_ADJUSTMENT_ALWAYS;
+	else if (g_strcmp0 (arv_option_packet_size_adjustment, "never") == 0)
+		adjustment = ARV_GV_PACKET_SIZE_ADJUSTMENT_NEVER;
+	else if (g_strcmp0 (arv_option_packet_size_adjustment, "once") == 0)
+		adjustment = ARV_GV_PACKET_SIZE_ADJUSTMENT_ONCE;
+	else if (g_strcmp0 (arv_option_packet_size_adjustment, "on-failure") == 0)
+		adjustment = ARV_GV_PACKET_SIZE_ADJUSTMENT_ON_FAILURE;
+	else if (g_strcmp0 (arv_option_packet_size_adjustment, "on-failure-once") == 0)
+		adjustment = ARV_GV_PACKET_SIZE_ADJUSTMENT_ON_FAILURE_ONCE;
+	else {
+		printf ("Invalid GigEVision packet size adjustment\n");
+		return EXIT_FAILURE;
+	}
+
 	arv_enable_interface ("Fake");
 
 	arv_debug_enable (arv_option_debug_domains);
@@ -360,7 +378,6 @@ main (int argc, char **argv)
 
 	camera = arv_camera_new (arv_option_camera_name, &error);
 	if (camera != NULL) {
-		ArvGvPacketSizeAdjustment adjustment;
 		void (*old_sigint_handler)(int);
 		gint payload;
 		gint x, y, width, height;
@@ -401,19 +418,6 @@ main (int argc, char **argv)
 
 		if (arv_camera_is_uv_device(camera)) {
 			arv_camera_uv_set_bandwidth (camera, arv_option_bandwidth_limit, NULL);
-		}
-
-		if (arv_option_packet_size_adjustment != NULL) {
-			if (g_ascii_strcasecmp (arv_option_packet_size_adjustment, "always") == 0)
-				adjustment = ARV_GV_PACKET_SIZE_ADJUSTMENT_ALWAYS;
-			else if (g_ascii_strcasecmp (arv_option_packet_size_adjustment, "never") == 0)
-				adjustment = ARV_GV_PACKET_SIZE_ADJUSTMENT_NEVER;
-			else if (g_ascii_strcasecmp (arv_option_packet_size_adjustment, "once") == 0)
-				adjustment = ARV_GV_PACKET_SIZE_ADJUSTMENT_ONCE;
-			else if (g_ascii_strcasecmp (arv_option_packet_size_adjustment, "on-failure") == 0)
-				adjustment = ARV_GV_PACKET_SIZE_ADJUSTMENT_ON_FAILURE;
-			else if (g_ascii_strcasecmp (arv_option_packet_size_adjustment, "on-failure-once") == 0)
-				adjustment = ARV_GV_PACKET_SIZE_ADJUSTMENT_ON_FAILURE_ONCE;
 		}
 
 		if (arv_camera_is_gv_device (camera)) {

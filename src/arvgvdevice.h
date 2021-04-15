@@ -42,6 +42,7 @@ G_BEGIN_DECLS
  * @ARV_GV_PACKET_SIZE_ADJUSTMENT_ON_FAILURE: adjust packet size if test packet check fails with current packet size
  * @ARV_GV_PACKET_SIZE_ADJUSTMENT_ONCE: adjust packet size on the first stream creation
  * @ARV_GV_PACKET_SIZE_ADJUSTMENT_ALWAYS: always adjust the stream packet size
+ * @ARV_GV_PACKET_SIZE_ADJUSTMENT_DEFAULT: default adjustment, which is ON_FAILURE_ONCE
  */
 
 typedef enum
@@ -50,7 +51,8 @@ typedef enum
 	ARV_GV_PACKET_SIZE_ADJUSTMENT_ON_FAILURE_ONCE,
 	ARV_GV_PACKET_SIZE_ADJUSTMENT_ON_FAILURE,
 	ARV_GV_PACKET_SIZE_ADJUSTMENT_ONCE,
-	ARV_GV_PACKET_SIZE_ADJUSTMENT_ALWAYS
+	ARV_GV_PACKET_SIZE_ADJUSTMENT_ALWAYS,
+	ARV_GV_PACKET_SIZE_ADJUSTMENT_DEFAULT = ARV_GV_PACKET_SIZE_ADJUSTMENT_NEVER
 } ArvGvPacketSizeAdjustment;
 
 #define ARV_TYPE_GV_DEVICE             (arv_gv_device_get_type ())
