@@ -30,6 +30,8 @@
 #include <arvgcdefaultsprivate.h>
 #include <arvgc.h>
 #include <arvmisc.h>
+#include <stdio.h>
+#include <arvdebugprivate.h>
 
 static void
 arv_gc_float_default_init (ArvGcFloatInterface *gc_float_iface)
@@ -51,6 +53,8 @@ void
 arv_gc_float_set_value (ArvGcFloat *gc_float, double value, GError **error)
 {
 	ArvGc *genicam;
+	ArvRangeCheckPolicy policy;
+	GError *local_error = NULL;
 
 	g_return_if_fail (ARV_IS_GC_FLOAT (gc_float));
 	g_return_if_fail (error == NULL || *error == NULL);
@@ -58,43 +62,41 @@ arv_gc_float_set_value (ArvGcFloat *gc_float, double value, GError **error)
 	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_float));
 	g_return_if_fail (ARV_IS_GC (genicam));
 
-	if (arv_gc_get_range_check_policy (genicam) == ARV_RANGE_CHECK_POLICY_ENABLE) {
+	policy = arv_gc_get_range_check_policy (genicam);
+
+	if (policy != ARV_RANGE_CHECK_POLICY_DISABLE) {
 		ArvGcFloatInterface *iface = ARV_GC_FLOAT_GET_IFACE (gc_float);
 
 		if (iface->get_min != NULL) {
-			GError *local_error = NULL;
 			double min = iface->get_min (gc_float, &local_error);
 
-			if (local_error != NULL) {
-				g_propagate_error (error, local_error);
-				return;
-			}
-
-			if (value < min) {
-				g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_OUT_OF_RANGE,
+			if (local_error == NULL && value < min) {
+				g_set_error (&local_error, ARV_GC_ERROR, ARV_GC_ERROR_OUT_OF_RANGE,
 					     "Value '%g' "
-					     "of node '%s' lower than allowed minimum '%g'",
+					     "for node '%s' lower than allowed minimum '%g'",
 					     value, arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_float)), min);
-				return;
 			}
 		}
 
-		if (iface->get_max != NULL) {
-			GError *local_error = NULL;
+		if (local_error == NULL && iface->get_max != NULL) {
 			double max = iface->get_max (gc_float, &local_error);
 
-			if (local_error != NULL) {
+			if (local_error == NULL && value > max) {
+				g_set_error (&local_error, ARV_GC_ERROR, ARV_GC_ERROR_OUT_OF_RANGE,
+					     "Value '%g' "
+					     "for node '%s' greater than allowed maximum '%g'",
+					     value, arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_float)), max);
+			}
+		}
+
+		if (local_error != NULL) {
+			if (policy == ARV_RANGE_CHECK_POLICY_DEBUG) {
+				arv_message ("Range check (%s) ignored", local_error->message);
+			} else if (policy == ARV_RANGE_CHECK_POLICY_ENABLE) {
 				g_propagate_error (error, local_error);
 				return;
 			}
-
-			if (value > max) {
-				g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_OUT_OF_RANGE,
-					     "Value '%g' "
-					     "of node '%s' greater than allowed maximum '%g'",
-					     value, arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_float)), max);
-				return;
-			}
+			g_clear_error (&local_error);
 		}
 	}
 

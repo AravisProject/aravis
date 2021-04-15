@@ -443,6 +443,8 @@ main (int argc, char **argv)
 		range_check_policy = ARV_RANGE_CHECK_POLICY_DISABLE;
 	else if (g_strcmp0 (arv_option_range_check, "enable") == 0)
 		range_check_policy = ARV_RANGE_CHECK_POLICY_ENABLE;
+	else if (g_strcmp0 (arv_option_range_check, "debug") == 0)
+		range_check_policy = ARV_RANGE_CHECK_POLICY_DEBUG;
 	else {
 		printf ("Invalid range check policy\n");
 		return EXIT_FAILURE;
