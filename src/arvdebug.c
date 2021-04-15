@@ -233,6 +233,17 @@ arv_verbosely_log (ArvDebugCategory *category, const char *format, ...)
 	va_end (args);
 }
 
+void
+arv_message (const char *format, ...)
+{
+	va_list args;
+
+	va_start (args, format);
+	g_vprintf (format, args);
+	g_printf ("\n");
+	va_end (args);
+}
+
 /**
  * arv_debug_enable:
  * @category_selection: debug category configuration string

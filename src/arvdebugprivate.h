@@ -109,6 +109,8 @@ void 		arv_debug 			(ArvDebugCategory *category, const char *format, ...) G_GNUC
 void 		arv_log 			(ArvDebugCategory *category, const char *format, ...) G_GNUC_PRINTF (2,3);
 void 		arv_verbosely_log		(ArvDebugCategory *category, const char *format, ...) G_GNUC_PRINTF (2,3);
 
+void		arv_message			(const char *format, ...) G_GNUC_PRINTF (1,2);
+
 gboolean	arv_debug_check			(ArvDebugCategory *category, ArvDebugLevel level);
 void 		arv_debug_shutdown 		(void);
 
