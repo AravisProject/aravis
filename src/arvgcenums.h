@@ -177,6 +177,24 @@ typedef enum {
 	ARV_GC_DISPLAY_NOTATION_SCIENTIFIC
 } ArvGcDisplayNotation;
 
+/**
+ * ArvGcStreamable:
+ * @ARV_GC_STREAMABLE_UNDEFINED: undefined streamable
+ * @ARV_GC_STREAMABLE_NO: the feature can't be used for camera state persistence
+ * @ARV_GC_STREAMABLE_YES: the feature can be used for camera state persistence
+ *
+ * Denotes that the corresponding feature is prepared to be stored to and loaded from a file via the node tree.
+ * The idea is to persist the state of a camera by storing the features marked as Streamable and restore the state by
+ * writing those features back to the node tree.
+ *
+ * Since: 0.8.8
+ */
+typedef enum {
+	ARV_GC_STREAMABLE_UNDEFINED = -1,
+	ARV_GC_STREAMABLE_NO,
+	ARV_GC_STREAMABLE_YES
+} ArvGcStreamable;
+
 G_END_DECLS
 
 #endif

@@ -132,6 +132,8 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 			return "EventID";
 		case ARV_GC_PROPERTY_NODE_TYPE_VALUE_DEFAULT:
 			return "ValueDefault";
+		case ARV_GC_PROPERTY_NODE_TYPE_STREAMABLE:
+			return "Streamable";
 
 		case ARV_GC_PROPERTY_NODE_TYPE_P_FEATURE:
 			return "pFeature";
@@ -1017,6 +1019,34 @@ ArvGcNode *
 arv_gc_property_node_new_p_value_default (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_P_VALUE_DEFAULT);
+}
+
+ArvGcStreamable
+arv_gc_property_node_get_streamable (ArvGcPropertyNode *self, ArvGcStreamable default_value)
+{
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (self);
+	const char *value;
+
+	if (self == NULL)
+		return default_value;
+
+	g_return_val_if_fail (ARV_IS_GC_PROPERTY_NODE (self), default_value);
+	g_return_val_if_fail (priv->type == ARV_GC_PROPERTY_NODE_TYPE_STREAMABLE, default_value);
+
+	value = _get_value_data (self);
+
+	if (g_strcmp0 (value, "Yes") == 0)
+		return ARV_GC_STREAMABLE_YES;
+	else if (g_strcmp0 (value, "No") == 0)
+		return ARV_GC_STREAMABLE_NO;
+
+	return ARV_GC_STREAMABLE_NO;
+}
+
+ArvGcNode *
+arv_gc_property_node_new_streamable (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_STREAMABLE);
 }
 
 static void

@@ -72,6 +72,7 @@ typedef enum {
 	ARV_GC_PROPERTY_NODE_TYPE_EVENT_ID,
 	ARV_GC_PROPERTY_NODE_TYPE_VALUE_INDEXED,
 	ARV_GC_PROPERTY_NODE_TYPE_VALUE_DEFAULT,
+	ARV_GC_PROPERTY_NODE_TYPE_STREAMABLE,
 
 	ARV_GC_PROPERTY_NODE_TYPE_P_UNKNONW	= 1000,
 	ARV_GC_PROPERTY_NODE_TYPE_P_FEATURE,
@@ -152,6 +153,7 @@ ArvGcNode * 	arv_gc_property_node_new_chunk_id 		(void);
 ArvGcNode * 	arv_gc_property_node_new_event_id 		(void);
 ArvGcNode * 	arv_gc_property_node_new_value_default 		(void);
 ArvGcNode * 	arv_gc_property_node_new_p_value_default	(void);
+ArvGcNode * 	arv_gc_property_node_new_streamable		(void);
 
 const char *		arv_gc_property_node_get_name			(ArvGcPropertyNode *node);
 
@@ -172,6 +174,7 @@ ArvGcVisibility 	arv_gc_property_node_get_visibility		(ArvGcPropertyNode *self, 
 ArvGcRepresentation 	arv_gc_property_node_get_representation		(ArvGcPropertyNode *self, ArvGcRepresentation default_value);
 ArvGcDisplayNotation	arv_gc_property_node_get_display_notation	(ArvGcPropertyNode *self, ArvGcDisplayNotation default_value);
 gint64			arv_gc_property_node_get_display_precision	(ArvGcPropertyNode *self, gint64 default_value);
+ArvGcStreamable		arv_gc_property_node_get_streamable		(ArvGcPropertyNode *self, ArvGcStreamable default_value);
 
 ArvGcNode *		arv_gc_property_node_get_linked_node		(ArvGcPropertyNode *node);
 ArvGcPropertyNodeType	arv_gc_property_node_get_node_type		(ArvGcPropertyNode *node);

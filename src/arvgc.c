@@ -248,6 +248,8 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 		node = arv_gc_property_node_new_bit ();
 	else if (strcmp (tag_name, "pInvalidator") == 0)
 		node = arv_gc_invalidator_node_new ();
+	else if (strcmp (tag_name, "Streamable") == 0)
+		node = arv_gc_property_node_new_streamable ();
 
 	else if (strcmp (tag_name, "CommandValue") == 0)
 		node = arv_gc_property_node_new_command_value ();

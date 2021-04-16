@@ -54,6 +54,7 @@ typedef struct {
 	ArvGcPropertyNode *is_available;
 	ArvGcPropertyNode *is_locked;
 	ArvGcPropertyNode *imposed_access_mode;
+	ArvGcPropertyNode *streamable;
 
 	guint64 change_count;
 
@@ -102,6 +103,9 @@ arv_gc_feature_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_IMPOSED_ACCESS_MODE:
 				priv->imposed_access_mode = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_STREAMABLE:
+				priv->streamable = property_node;		/* TODO */
 				break;
 			default:
 				break;
