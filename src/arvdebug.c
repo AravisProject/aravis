@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2019 Emmanuel Pacaud
+ * Copyright © 2009-2021 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <arvdebugprivate.h>
 #include <arvenumtypesprivate.h>
+#include <unistd.h>
 
 ArvDebugCategoryInfos arv_debug_category_infos[] = {
 	{ .name = "interface", 		.description = "Device lookup for each supported protocol" },
@@ -43,6 +44,19 @@ ArvDebugCategoryInfos arv_debug_category_infos[] = {
 	{ .name = "evaluator", 		.description = "Expression evaluator" },
 	{ .name = "viewer", 		.description = "Simple viewer application" },
 	{ .name = "misc", 		.description = "Miscellaneous code" }
+};
+
+typedef struct {
+	const char *color;
+	const char *symbol;
+} ArvDebugLevelInfos;
+
+ArvDebugLevelInfos arv_debug_level_infos[] = {
+	{ .color = "",			.symbol = ""},
+	{ .color = "\033[1;31m",	.symbol = "❶ "},
+	{ .color = "\033[1;32m",	.symbol = "❷ "},
+	{ .color = "\033[1;34m",	.symbol = "❸ "},
+	{ .color = "\033[0m",		.symbol = "❹ "}
 };
 
 static gboolean
@@ -82,10 +96,30 @@ arv_debug_initialize (const char *debug_var)
 	return success;
 }
 
+static gboolean
+stderr_has_color_support (void)
+{
+#if GLIB_CHECK_VERSION(2,50,0)
+	static int has_color_support = -1;
+
+	if (has_color_support >= 0)
+		return has_color_support > 0;
+
+	has_color_support = g_log_writer_supports_color (STDERR_FILENO) ? 1 : 0;
+
+	return has_color_support;
+#else
+	return FALSE;
+#endif
+}
+
 gboolean
 arv_debug_check	(ArvDebugCategory category, ArvDebugLevel level)
 {
-	if (category < 0 || category >= G_N_ELEMENTS (arv_debug_category_infos))
+	if (category < 0 || category >= ARV_DEBUG_CATEGORY_N_ELEMENTS)
+		return FALSE;
+
+	if (level <= 0 || level >= ARV_DEBUG_LEVEL_N_ELEMENTS)
 		return FALSE;
 
 	if ((int) level <= (int) arv_debug_category_infos[category].level)
@@ -102,11 +136,32 @@ static void arv_debug_with_level (ArvDebugCategory category,
 static void
 arv_debug_with_level (ArvDebugCategory category, ArvDebugLevel level, const char *format, va_list args)
 {
+	gint64 now;
+	time_t now_secs;
+	struct tm *now_tm;
+	gchar time_buf[128];
+
 	if (!arv_debug_check (category, level))
 		return;
 
-	g_vprintf (format, args);
-	g_printf ("\n");
+	now = g_get_real_time ();
+	now_secs = (time_t) (now / 1000000);
+	now_tm = localtime (&now_secs);
+	strftime (time_buf, sizeof (time_buf), "%H:%M:%S", now_tm);
+
+	if (stderr_has_color_support ())
+		g_fprintf (stderr, "[\033[34m%s.%03d\033[0m] %s%s%s\033[0m> ",
+			  time_buf, (gint) ((now / 1000) % 1000),
+			  arv_debug_level_infos[level].color,
+			  arv_debug_level_infos[level].symbol,
+			  arv_debug_category_infos[category].name);
+	else
+		g_fprintf (stderr, "[%s.%03d] %s%s> ",
+			  time_buf, (gint) ((now / 1000) % 1000),
+			  arv_debug_level_infos[level].symbol,
+			  arv_debug_category_infos[category].name);
+	g_vfprintf (stderr, format, args);
+	g_fprintf (stderr, "\n");
 }
 
 void
@@ -155,8 +210,7 @@ arv_message (const char *format, ...)
 	va_list args;
 
 	va_start (args, format);
-	g_vprintf (format, args);
-	g_printf ("\n");
+	arv_debug_with_level (-1, -1, format, args);
 	va_end (args);
 }
 
