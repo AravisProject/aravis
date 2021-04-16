@@ -138,7 +138,7 @@ arv_debug_with_level (ArvDebugCategory category, ArvDebugLevel level, const char
 {
 	gint64 now;
 	time_t now_secs;
-	struct tm *now_tm;
+	struct tm now_tm;
 	gchar time_buf[128];
 
 	if (!arv_debug_check (category, level))
@@ -146,8 +146,8 @@ arv_debug_with_level (ArvDebugCategory category, ArvDebugLevel level, const char
 
 	now = g_get_real_time ();
 	now_secs = (time_t) (now / 1000000);
-	now_tm = localtime (&now_secs);
-	strftime (time_buf, sizeof (time_buf), "%H:%M:%S", now_tm);
+	localtime_r (&now_secs, &now_tm);
+	strftime (time_buf, sizeof (time_buf), "%H:%M:%S", &now_tm);
 
 	if (stderr_has_color_support ())
 		g_fprintf (stderr, "[\033[34m%s.%03d\033[0m] %s%s%s\033[0m> ",
