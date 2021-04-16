@@ -124,7 +124,7 @@ arv_uvsp_packet_debug (const ArvUvspPacket *packet, ArvDebugLevel level)
 {
 	char *string;
 
-	if (!arv_debug_check (&arv_debug_category_sp, level))
+	if (!arv_debug_check (ARV_DEBUG_CATEGORY_SP, level))
 		return;
 
 	string = arv_uvsp_packet_to_string (packet);

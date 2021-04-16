@@ -682,7 +682,7 @@ arv_gvcp_packet_debug (const ArvGvcpPacket *packet, ArvDebugLevel level)
 {
 	char *string;
 
-	if (!arv_debug_check (&arv_debug_category_cp, level))
+	if (!arv_debug_check (ARV_DEBUG_CATEGORY_CP, level))
 		return;
 
 	string = arv_gvcp_packet_to_string (packet);

@@ -20,6 +20,7 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+#include <arvdebugprivate.h>
 #include <arv.h>
 #include <stdlib.h>
 #include <string.h>
@@ -62,7 +63,7 @@ static const GOptionEntry arv_option_entries[] =
 	{
 		"debug", 			'd', 0, G_OPTION_ARG_STRING,
 		&arv_option_debug_domains, 	NULL,
-		"<category>[:<level>][,...]"
+		"{<category>[:<level>][,...]|help}"
 	},
 	{ NULL }
 };
@@ -86,7 +87,7 @@ description_content[] =
 "arv-tool-" ARAVIS_API_VERSION " control Width=128 Height=128 Gain R[0x10000]=0x10\n"
 "arv-tool-" ARAVIS_API_VERSION " features\n"
 "arv-tool-" ARAVIS_API_VERSION " description Width Height\n"
-"arv-tool-" ARAVIS_API_VERSION " -n Basler-210ab4 genicam\n";
+"arv-tool-" ARAVIS_API_VERSION " -n Basler-210ab4 genicam";
 
 typedef enum {
 	ARV_TOOL_LIST_MODE_FEATURES,
@@ -450,7 +451,13 @@ main (int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	arv_debug_enable (arv_option_debug_domains);
+	if (!arv_debug_enable (arv_option_debug_domains)) {
+		if (g_strcmp0 (arv_option_debug_domains, "help") != 0)
+			printf ("Invalid debug selection\n");
+		else
+			arv_debug_print ();
+		return EXIT_FAILURE;
+	}
 
 	device_id = arv_option_device_address != NULL ? arv_option_device_address : arv_option_device_name;
 	if (device_id != NULL) {

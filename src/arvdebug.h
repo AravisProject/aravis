@@ -31,7 +31,7 @@
 
 G_BEGIN_DECLS
 
-void		arv_debug_enable		(const char *category_selection);
+gboolean		arv_debug_enable		(const char *category_selection);
 
 G_END_DECLS
 

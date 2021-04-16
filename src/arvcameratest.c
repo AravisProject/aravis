@@ -1,3 +1,4 @@
+#include <arvdebugprivate.h>
 #include <arv.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -161,14 +162,14 @@ static const GOptionEntry arv_option_entries[] =
 		"{disable|enable}"
 	},
 	{
-		"debug", 				'd', 0, G_OPTION_ARG_STRING,
-		&arv_option_debug_domains, 		"Debug domains",
-		NULL
-	},
-	{
 		"bandwidth-limit",			'b', 0, G_OPTION_ARG_INT,
 		&arv_option_bandwidth_limit,		"Desired USB3 Vision device bandwidth limit",
 		NULL
+	},
+	{
+		"debug", 				'd', 0, G_OPTION_ARG_STRING,
+		&arv_option_debug_domains, 		NULL,
+		"{<category>[:<level>][,...]|help}"
 	},
 	{ NULL }
 };
@@ -366,6 +367,14 @@ main (int argc, char **argv)
 		adjustment = ARV_GV_PACKET_SIZE_ADJUSTMENT_ON_FAILURE_ONCE;
 	else {
 		printf ("Invalid GigEVision packet size adjustment\n");
+		return EXIT_FAILURE;
+	}
+
+	if (!arv_debug_enable (arv_option_debug_domains)) {
+		if (g_strcmp0 (arv_option_debug_domains, "help") != 0)
+			printf ("Invalid debug selection\n");
+		else
+			arv_debug_print ();
 		return EXIT_FAILURE;
 	}
 

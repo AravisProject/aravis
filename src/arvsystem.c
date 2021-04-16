@@ -443,8 +443,6 @@ arv_shutdown (void)
 	for (i = 0; i < G_N_ELEMENTS (interfaces); i++)
 		interfaces[i].destroy_interface_instance ();
 
-	arv_debug_shutdown ();
-
 	arv_dom_implementation_cleanup ();
 
 	g_mutex_unlock (&arv_system_mutex);

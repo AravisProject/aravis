@@ -28,163 +28,79 @@
 #include <glib/gprintf.h>
 #include <stdlib.h>
 #include <arvdebugprivate.h>
+#include <arvenumtypesprivate.h>
 
-ArvDebugCategory arv_debug_category_interface =
-{
-	.name = "interface",
-	.level = -1
+ArvDebugCategoryInfos arv_debug_category_infos[] = {
+	{ .name = "interface", 		.description = "Device lookup for each supported protocol" },
+	{ .name = "device", 		.description = "Device control" },
+	{ .name = "stream", 		.description = "Video stream management" },
+	{ .name = "stream-thread", 	.description = "Video stream thread (likely high volume output)" },
+	{ .name = "cp", 		.description = "Control protocol packets" },
+	{ .name = "sp", 		.description = "Stream protocol packets (likely high volume output)" },
+	{ .name = "genicam", 		.description = "Genicam specialized DOM elements" },
+	{ .name = "chunk", 		.description = "Chunk data code" },
+	{ .name = "dom", 		.description = "Genicam DOM document" },
+	{ .name = "evaluator", 		.description = "Expression evaluator" },
+	{ .name = "viewer", 		.description = "Simple viewer application" },
+	{ .name = "misc", 		.description = "Miscellaneous code" }
 };
 
-ArvDebugCategory arv_debug_category_dom =
-{
-	.name = "dom",
-	.level = -1
-};
-
-ArvDebugCategory arv_debug_category_device =
-{
-	.name = "device",
-	.level = -1
-};
-
-ArvDebugCategory arv_debug_category_chunk =
-{
-	.name = "chunk",
-	.level = -1
-};
-
-ArvDebugCategory arv_debug_category_stream =
-{
-	.name = "stream",
-	.level = -1
-};
-
-ArvDebugCategory arv_debug_category_stream_thread =
-{
-	.name = "stream-thread",
-	.level = -1
-};
-
-ArvDebugCategory arv_debug_category_cp =
-{
-	.name = "cp",
-	.level = -1
-};
-
-ArvDebugCategory arv_debug_category_sp =
-{
-	.name = "sp",
-	.level = -1
-};
-
-ArvDebugCategory arv_debug_category_genicam =
-{
-	.name = "genicam",
-	.level = -1
-};
-
-ArvDebugCategory arv_debug_category_evaluator =
-{
-	.name = "evaluator",
-	.level = -1
-};
-
-ArvDebugCategory arv_debug_category_misc =
-{
-	.name = "misc",
-	.level = -1
-};
-
-ArvDebugCategory arv_debug_category_viewer =
-{
-	.name = "viewer",
-	.level = -1
-};
-
-static GHashTable *arv_debug_categories = NULL;
-
-static void
-arv_debug_category_free (ArvDebugCategory *category)
-{
-	if (category != NULL) {
-		g_free (category->name);
-		g_free (category);
-	}
-}
-
-static void
+static gboolean
 arv_debug_initialize (const char *debug_var)
 {
-	if (arv_debug_categories != NULL)
-		return;
+	gboolean success = TRUE;
+	char **categories;
+	int i;
 
-	arv_debug_categories = g_hash_table_new_full (g_str_hash, g_str_equal, NULL,
-						      (GDestroyNotify) arv_debug_category_free);
+	if (debug_var == NULL)
+		return TRUE;
 
-	if (debug_var != NULL) {
-		char **categories;
-		int i;
+	categories = g_strsplit (debug_var, ",", -1);
+	for (i = 0; categories[i] != NULL; i++) {
+		char **infos;
+		unsigned int j;
 
-		categories = g_strsplit (debug_var, ",", -1);
-		for (i = 0; categories[i] != NULL; i++) {
-			ArvDebugCategory *category;
-			char **infos;
-
-			category = g_new0 (ArvDebugCategory, 1);
-
-			infos = g_strsplit (categories[i], ":", -1);
-			if (infos[0] != NULL) {
-				category->name = g_strdup (infos[0]);
-				if (infos[1] != NULL)
-					category->level = atoi (infos[1]);
-				else
-					category->level = ARV_DEBUG_LEVEL_DEBUG;
-
-				g_hash_table_insert (arv_debug_categories, category->name, category);
-			} else
-				g_free (category);
-
-			g_strfreev (infos);
+		infos = g_strsplit (categories[i], ":", -1);
+		if (infos[0] != NULL) {
+			for (j = 0; j < G_N_ELEMENTS (arv_debug_category_infos); j++) {
+				if (g_strcmp0 (arv_debug_category_infos[j].name, infos[0]) == 0 ||
+				    g_strcmp0 ("all", infos[0]) == 0) {
+					if (infos[1] != NULL)
+						arv_debug_category_infos[j].level = atoi (infos[1]);
+					else
+						arv_debug_category_infos[j].level = ARV_DEBUG_LEVEL_DEBUG;
+				} else {
+					success = FALSE;
+				}
+			}
 		}
-		g_strfreev (categories);
+
+		g_strfreev (infos);
 	}
+	g_strfreev (categories);
+
+	return success;
 }
 
 gboolean
-arv_debug_check	(ArvDebugCategory *category, ArvDebugLevel level)
+arv_debug_check	(ArvDebugCategory category, ArvDebugLevel level)
 {
-	ArvDebugCategory *configured_category;
-
-	if (category == NULL)
+	if (category < 0 || category >= G_N_ELEMENTS (arv_debug_category_infos))
 		return FALSE;
 
-	if ((int) level <= (int) category->level)
+	if ((int) level <= (int) arv_debug_category_infos[category].level)
 		return TRUE;
 
-	if ((int) category->level >= 0)
-		return FALSE;
-
-	arv_debug_initialize (g_getenv ("ARV_DEBUG"));
-
-	configured_category = g_hash_table_lookup (arv_debug_categories, category->name);
-	if (configured_category == NULL)
-		configured_category = g_hash_table_lookup (arv_debug_categories, "all");
-	if (configured_category != NULL)
-		category->level = configured_category->level;
-	else
-		category->level = 0;
-
-
-	return (int) level <= (int) category->level;
+	return FALSE;
 }
 
-static void arv_debug_with_level (ArvDebugCategory *category,
+static void arv_debug_with_level (ArvDebugCategory category,
 				  ArvDebugLevel level,
 				  const char *format,
 				  va_list args) G_GNUC_PRINTF(3,0);
 
 static void
-arv_debug_with_level (ArvDebugCategory *category, ArvDebugLevel level, const char *format, va_list args)
+arv_debug_with_level (ArvDebugCategory category, ArvDebugLevel level, const char *format, va_list args)
 {
 	if (!arv_debug_check (category, level))
 		return;
@@ -194,7 +110,7 @@ arv_debug_with_level (ArvDebugCategory *category, ArvDebugLevel level, const cha
 }
 
 void
-arv_warning (ArvDebugCategory *category, const char *format, ...)
+arv_warning (ArvDebugCategory category, const char *format, ...)
 {
 	va_list args;
 
@@ -204,7 +120,7 @@ arv_warning (ArvDebugCategory *category, const char *format, ...)
 }
 
 void
-arv_debug (ArvDebugCategory *category, const char *format, ...)
+arv_debug (ArvDebugCategory category, const char *format, ...)
 {
 	va_list args;
 
@@ -214,7 +130,7 @@ arv_debug (ArvDebugCategory *category, const char *format, ...)
 }
 
 void
-arv_log (ArvDebugCategory *category, const char *format, ...)
+arv_log (ArvDebugCategory category, const char *format, ...)
 {
 	va_list args;
 
@@ -224,7 +140,7 @@ arv_log (ArvDebugCategory *category, const char *format, ...)
 }
 
 void
-arv_verbosely_log (ArvDebugCategory *category, const char *format, ...)
+arv_verbosely_log (ArvDebugCategory category, const char *format, ...)
 {
 	va_list args;
 
@@ -254,21 +170,66 @@ arv_message (const char *format, ...)
  * <informalexample><programlisting>
  * arv_debug_enable ("gvcp:3,genicam");
  * </programlisting></informalexample>
+ *
+ * Returns: %TRUE on success
  */
 
-void
+gboolean
 arv_debug_enable (const char *category_selection)
 {
-	arv_debug_initialize (category_selection);
+	return arv_debug_initialize (category_selection);
+}
+
+static char *
+arv_debug_dup_infos_as_string (void)
+{
+	GEnumClass *debug_level_class = g_type_class_ref (ARV_TYPE_DEBUG_LEVEL);
+	GString *string = g_string_new ("");
+	unsigned int i;
+	char *str;
+
+	g_string_append (string, "Debug categories:\n");
+	for (i = 0; i < ARV_DEBUG_CATEGORY_N_ELEMENTS; i++) {
+		g_string_append_printf (string, "%-15s: %s\n",
+					arv_debug_category_infos[i].name,
+					arv_debug_category_infos[i].description);
+	}
+	g_string_append (string, "all            : Everything\n");
+
+	g_string_append (string, "\nDebug levels:\n");
+	for (i = 0; i < ARV_DEBUG_LEVEL_N_ELEMENTS; i++) {
+		GEnumValue *enum_value;
+
+		enum_value = g_enum_get_value (g_type_class_ref (ARV_TYPE_DEBUG_LEVEL), i);
+		if (enum_value != NULL)
+			g_string_append_printf (string, "%d: %s\n", i, enum_value->value_nick);
+	}
+
+	g_type_class_unref (debug_level_class);
+
+	str = string->str;
+	g_string_free (string, FALSE);
+
+	return str;
 }
 
 void
-arv_debug_shutdown (void)
+arv_debug_print (void)
 {
-	GHashTable *debug_categories = arv_debug_categories;
+	char *str;
 
-	arv_debug_categories = NULL;
-
-	if (debug_categories != NULL)
-		g_hash_table_unref (debug_categories);
+	str = arv_debug_dup_infos_as_string ();
+	printf ("%s", str);
+	g_free (str);
 }
+
+__attribute__((constructor)) static void
+arv_initialize_debug (void) {
+	unsigned int i;
+
+	for (i = 0; i < ARV_DEBUG_CATEGORY_N_ELEMENTS; i++)
+		arv_debug_category_infos[i].level = 0;
+
+	arv_debug_initialize (g_getenv ("ARV_DEBUG"));
+}
+
