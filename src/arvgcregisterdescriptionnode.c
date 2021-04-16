@@ -39,6 +39,10 @@ struct _ArvGcRegisterDescriptionNode {
 	guint schema_major_version;
 	guint schema_minor_version;
 	guint schema_subminor_version;
+	char *product_guid;
+	char *version_guid;
+	char *standard_namespace;
+	char *tooltip;
 };
 
 struct _ArvGcRegisterDescriptionNodeClass {
@@ -78,8 +82,23 @@ arv_gc_register_description_node_set_attribute (ArvDomElement *self, const char*
 		node->minor_version = g_ascii_strtoll (value, NULL, 0);
 	} else if (strcmp (name, "SubMinorVersion") == 0) {
 		node->subminor_version = g_ascii_strtoll (value, NULL, 0);
-	} else
+	} else if (strcmp (name, "ProductGuid") == 0) {
+		g_free (node->product_guid);
+		node->product_guid = g_strdup (value);
+	} else if (strcmp (name, "VersionGuid") == 0) {
+		g_free (node->version_guid);
+		node->version_guid = g_strdup (value);
+	} else if (strcmp (name, "StandardNameSpace") == 0) {
+		g_free (node->standard_namespace);
+		node->standard_namespace = g_strdup (value);
+	} else if (strcmp (name, "ToolTip") == 0) {
+		g_free (node->tooltip);
+		node->tooltip = g_strdup (value);
+	} else if (strcmp (name, "xmlns:xsi") != 0 &&
+		   strcmp (name, "xmlns") != 0 &&
+		   strcmp (name, "xsi:schemaLocation") != 0) {
 		ARV_DOM_ELEMENT_CLASS (arv_gc_register_description_node_parent_class)->set_attribute (self, name, value);
+	}
 }
 
 static const char *
@@ -337,6 +356,10 @@ arv_gc_register_description_node_finalize (GObject *object)
 
 	g_free (node->model_name);
 	g_free (node->vendor_name);
+	g_free (node->product_guid);
+	g_free (node->version_guid);
+	g_free (node->standard_namespace);
+	g_free (node->tooltip);
 
 	G_OBJECT_CLASS (arv_gc_register_description_node_parent_class)->finalize (object);
 }
