@@ -21,6 +21,7 @@
  */
 
 #include <arvviewer.h>
+#include <arvdebugprivate.h>
 #include <gtk/gtk.h>
 #include <gst/gst.h>
 #include <arv.h>
@@ -33,7 +34,8 @@
 #endif
 
 static char *arv_viewer_option_debug_domains = NULL;
-static char *arv_viewer_option_cache_policy = NULL;
+static char *arv_option_register_cache = NULL;
+static char *arv_option_range_check = NULL;
 static gboolean arv_viewer_option_auto_socket_buffer = FALSE;
 static gboolean arv_viewer_option_no_packet_resend = FALSE;
 static unsigned int arv_viewer_option_packet_timeout = 20;
@@ -58,12 +60,19 @@ static const GOptionEntry arv_viewer_option_entries[] =
 		&arv_viewer_option_frame_retention, 	"Frame retention (ms)", NULL
 	},
 	{
-		"cache-policy", 			'c', 0, G_OPTION_ARG_STRING,
-		&arv_viewer_option_cache_policy, 	"Register cache policy", "[disable|enable|debug]",
+		"register-cache",			'\0', 0, G_OPTION_ARG_STRING,
+		&arv_option_register_cache, 		"Register cache policy",
+		"{disable|enable|debug}"
+	},
+	{
+		"range-check",				'\0', 0, G_OPTION_ARG_STRING,
+		&arv_option_range_check,		"Range check policy",
+		"{disable|enable}"
 	},
 	{
 		"debug", 				'd', 0, G_OPTION_ARG_STRING,
-		&arv_viewer_option_debug_domains, 	"Debug domains", NULL
+		&arv_viewer_option_debug_domains, 	NULL,
+		"{<category>[:<level>][,...]|help}"
 	},
 	{ NULL }
 };
@@ -76,7 +85,8 @@ main (int argc, char **argv)
 	int status;
 	GOptionContext *context;
 	GError *error = NULL;
-	ArvRegisterCachePolicy cache_policy = ARV_REGISTER_CACHE_POLICY_DEFAULT;
+	ArvRegisterCachePolicy register_cache_policy;
+	ArvRangeCheckPolicy range_check_policy;
 
 #if GST_GL_HAVE_WINDOW_X11 && defined(GDK_WINDOWING_X11)
 	XInitThreads ();
@@ -105,17 +115,37 @@ main (int argc, char **argv)
 
 	g_option_context_free (context);
 
-	arv_debug_enable (arv_viewer_option_debug_domains);
-
-	if (arv_viewer_option_cache_policy == NULL ||
-	    g_strcmp0 (arv_viewer_option_cache_policy, "disable") == 0)
-		cache_policy = ARV_REGISTER_CACHE_POLICY_DISABLE;
-	else if (g_strcmp0 (arv_viewer_option_cache_policy, "enable") == 0)
-		cache_policy = ARV_REGISTER_CACHE_POLICY_ENABLE;
-	else if (g_strcmp0 (arv_viewer_option_cache_policy, "debug") == 0)
-		cache_policy = ARV_REGISTER_CACHE_POLICY_DEBUG;
+	if (arv_option_register_cache == NULL)
+		register_cache_policy = ARV_REGISTER_CACHE_POLICY_DEFAULT;
+	else if (g_strcmp0 (arv_option_register_cache, "disable") == 0)
+		register_cache_policy = ARV_REGISTER_CACHE_POLICY_DISABLE;
+	else if (g_strcmp0 (arv_option_register_cache, "enable") == 0)
+		register_cache_policy = ARV_REGISTER_CACHE_POLICY_ENABLE;
+	else if (g_strcmp0 (arv_option_register_cache, "debug") == 0)
+		register_cache_policy = ARV_REGISTER_CACHE_POLICY_DEBUG;
 	else {
-		printf ("Invalid cache policy\n");
+		printf ("Invalid register cache policy\n");
+		return EXIT_FAILURE;
+	}
+
+	if (arv_option_range_check == NULL)
+		range_check_policy = ARV_RANGE_CHECK_POLICY_DEFAULT;
+	else if (g_strcmp0 (arv_option_range_check, "disable") == 0)
+		range_check_policy = ARV_RANGE_CHECK_POLICY_DISABLE;
+	else if (g_strcmp0 (arv_option_range_check, "enable") == 0)
+		range_check_policy = ARV_RANGE_CHECK_POLICY_ENABLE;
+	else if (g_strcmp0 (arv_option_range_check, "debug") == 0)
+		range_check_policy = ARV_RANGE_CHECK_POLICY_DEBUG;
+	else {
+		printf ("Invalid range check policy\n");
+		return EXIT_FAILURE;
+	}
+
+	if (!arv_debug_enable (arv_viewer_option_debug_domains)) {
+		if (g_strcmp0 (arv_viewer_option_debug_domains, "help") != 0)
+			printf ("Invalid debug selection\n");
+		else
+			arv_debug_print ();
 		return EXIT_FAILURE;
 	}
 
@@ -128,7 +158,8 @@ main (int argc, char **argv)
 				!arv_viewer_option_no_packet_resend,
 				arv_viewer_option_packet_timeout,
 				arv_viewer_option_frame_retention,
-				cache_policy);
+				register_cache_policy,
+				range_check_policy);
 
 	notify_init ("Aravis Viewer");
 

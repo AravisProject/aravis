@@ -36,6 +36,7 @@ void			arv_viewer_set_options		(ArvViewer *viewer,
 							 gboolean packet_resend,
 							 guint packet_timeout,
 							 guint frame_retention,
-							 ArvRegisterCachePolicy cache_policy);
+							 ArvRegisterCachePolicy register_cache_policy,
+							 ArvRangeCheckPolicy range_check_policy);
 
 G_END_DECLS
