@@ -214,7 +214,7 @@ arv_debug_dup_infos_as_string (void)
 }
 
 void
-arv_debug_print (void)
+arv_debug_print_infos (void)
 {
 	char *str;
 

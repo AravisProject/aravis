@@ -119,7 +119,7 @@ void		arv_message			(const char *format, ...) G_GNUC_PRINTF (1,2);
 
 gboolean	arv_debug_check			(ArvDebugCategory category, ArvDebugLevel level);
 
-void 		arv_debug_print 		(void);
+void 		arv_debug_print_infos 		(void);
 
 G_END_DECLS
 

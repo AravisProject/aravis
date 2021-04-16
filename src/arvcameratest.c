@@ -374,7 +374,7 @@ main (int argc, char **argv)
 		if (g_strcmp0 (arv_option_debug_domains, "help") != 0)
 			printf ("Invalid debug selection\n");
 		else
-			arv_debug_print ();
+			arv_debug_print_infos ();
 		return EXIT_FAILURE;
 	}
 
