@@ -263,6 +263,8 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 
 	else if (strcmp (tag_name, "Group") == 0)
 		node = arv_gc_group_node_new ();
+	else if (strcmp (tag_name, "Extension") == 0)
+		node = NULL;
 	else
 		arv_debug_dom ("[Genicam::create_element] Unknown tag (%s)", tag_name);
 
