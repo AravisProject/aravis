@@ -766,6 +766,7 @@ _loop (ArvGvStreamThreadData *thread_data)
 	guint64 time_us;
 	size_t read_count;
 	int timeout_ms;
+	gboolean use_poll;
 
 	arv_debug_stream ("[GvStream::loop] Standard socket method");
 
@@ -777,42 +778,41 @@ _loop (ArvGvStreamThreadData *thread_data)
 
 	packet = g_malloc0 (ARV_GV_STREAM_INCOMING_BUFFER_SIZE);
 
-	if (g_cancellable_make_pollfd (thread_data->cancellable, &poll_fd[1])) {
+	use_poll = g_cancellable_make_pollfd (thread_data->cancellable, &poll_fd[1]);
+
+	do {
+		int n_events;
+		int errsv;
+
+		if (thread_data->frames != NULL)
+			timeout_ms = thread_data->packet_timeout_us / 1000;
+		else
+			timeout_ms = ARV_GV_STREAM_POLL_TIMEOUT_US / 1000;
+
 		do {
-			int n_events;
-			int errsv;
+			poll_fd[0].revents = 0;
+			n_events = g_poll (poll_fd, use_poll ?  2 : 1, timeout_ms);
+			errsv = errno;
 
-			if (thread_data->frames != NULL)
-				timeout_ms = thread_data->packet_timeout_us / 1000;
-			else
-				timeout_ms = ARV_GV_STREAM_POLL_TIMEOUT_US / 1000;
+		} while (n_events < 0 && errsv == EINTR);
 
-			do {
-				poll_fd[0].revents = 0;
-				n_events = g_poll (poll_fd, 2, timeout_ms);
-				errsv = errno;
+		time_us = g_get_monotonic_time ();
 
-			} while (n_events < 0 && errsv == EINTR);
+		if (poll_fd[0].revents != 0) {
+			arv_gpollfd_clear_one (&poll_fd[0], thread_data->socket);
+			read_count = g_socket_receive (thread_data->socket, (char *) packet,
+						       ARV_GV_STREAM_INCOMING_BUFFER_SIZE, NULL, NULL);
 
-			time_us = g_get_monotonic_time ();
+			frame = _process_packet (thread_data, packet, read_count, time_us);
+		} else
+			frame = NULL;
 
-			if (poll_fd[0].revents != 0) {
-				arv_gpollfd_clear_one (&poll_fd[0], thread_data->socket);
-				read_count = g_socket_receive (thread_data->socket, (char *) packet,
-							       ARV_GV_STREAM_INCOMING_BUFFER_SIZE, NULL, NULL);
+		_check_frame_completion (thread_data, time_us, frame);
 
-				frame = _process_packet (thread_data, packet, read_count, time_us);
-			} else
-				frame = NULL;
+	} while (!g_cancellable_is_cancelled (thread_data->cancellable));
 
-			_check_frame_completion (thread_data, time_us, frame);
-
-		} while (!g_cancellable_is_cancelled (thread_data->cancellable));
-
+	if (use_poll)
 		g_cancellable_release_fd (thread_data->cancellable);
-	} else {
-		g_error ("[ArvGvStream::_loop] Failed to create cancellable fd");
-	}
 
 	arv_gpollfd_finish_all (poll_fd,1);
 	g_free (packet);
@@ -901,6 +901,7 @@ _ring_buffer_loop (ArvGvStreamThreadData *thread_data)
 	const guint8 *bytes;
 	guint32 interface_address;
 	guint32 device_address;
+	gboolean use_poll;
 
 	arv_debug_stream ("[GvStream::loop] Packet socket method");
 
@@ -956,57 +957,56 @@ _ring_buffer_loop (ArvGvStreamThreadData *thread_data)
 	poll_fd[0].events =  G_IO_IN;
 	poll_fd[0].revents = 0;
 
-	if (g_cancellable_make_pollfd (thread_data->cancellable, &poll_fd[1])) {
-		block_id = 0;
-		do {
-			ArvGvStreamBlockDescriptor *descriptor;
-			guint64 time_us;
+	use_poll = g_cancellable_make_pollfd (thread_data->cancellable, &poll_fd[1]);
 
-			time_us = g_get_monotonic_time ();
+	block_id = 0;
+	do {
+		ArvGvStreamBlockDescriptor *descriptor;
+		guint64 time_us;
 
-			descriptor = (void *) (buffer + block_id * req.tp_block_size);
-			if ((descriptor->h1.block_status & TP_STATUS_USER) == 0) {
-				int n_events;
-				int errsv;
+		time_us = g_get_monotonic_time ();
 
-				_check_frame_completion (thread_data, time_us, NULL);
+		descriptor = (void *) (buffer + block_id * req.tp_block_size);
+		if ((descriptor->h1.block_status & TP_STATUS_USER) == 0) {
+			int n_events;
+			int errsv;
 
-				do {
-					n_events = g_poll (poll_fd, 2, 100);
-					errsv = errno;
-				} while (n_events < 0 && errsv == EINTR);
-			} else {
-				ArvGvStreamFrameData *frame;
-				const struct tpacket3_hdr *header;
-				unsigned i;
+			_check_frame_completion (thread_data, time_us, NULL);
 
-				header = (void *) (((char *) descriptor) + descriptor->h1.offset_to_first_pkt);
+			do {
+				n_events = g_poll (poll_fd, use_poll ? 2 : 1, 100);
+				errsv = errno;
+			} while (n_events < 0 && errsv == EINTR);
+		} else {
+			ArvGvStreamFrameData *frame;
+			const struct tpacket3_hdr *header;
+			unsigned i;
 
-				for (i = 0; i < descriptor->h1.num_pkts; i++) {
-					const struct iphdr *ip;
-					const ArvGvspPacket *packet;
-					size_t size;
+			header = (void *) (((char *) descriptor) + descriptor->h1.offset_to_first_pkt);
 
-					ip = (void *) (((char *) header) + header->tp_mac + ETH_HLEN);
-					packet = (void *) (((char *) ip) + sizeof (struct iphdr) + sizeof (struct udphdr));
-					size = g_ntohs (ip->tot_len) -  sizeof (struct iphdr) - sizeof (struct udphdr);
+			for (i = 0; i < descriptor->h1.num_pkts; i++) {
+				const struct iphdr *ip;
+				const ArvGvspPacket *packet;
+				size_t size;
 
-					frame = _process_packet (thread_data, packet, size, time_us);
+				ip = (void *) (((char *) header) + header->tp_mac + ETH_HLEN);
+				packet = (void *) (((char *) ip) + sizeof (struct iphdr) + sizeof (struct udphdr));
+				size = g_ntohs (ip->tot_len) -  sizeof (struct iphdr) - sizeof (struct udphdr);
 
-					_check_frame_completion (thread_data, time_us, frame);
+				frame = _process_packet (thread_data, packet, size, time_us);
 
-					header = (void *) (((char *) header) + header->tp_next_offset);
-				}
+				_check_frame_completion (thread_data, time_us, frame);
 
-				descriptor->h1.block_status = TP_STATUS_KERNEL;
-				block_id = (block_id + 1) % req.tp_block_nr;
+				header = (void *) (((char *) header) + header->tp_next_offset);
 			}
-		} while (!g_cancellable_is_cancelled (thread_data->cancellable));
 
+			descriptor->h1.block_status = TP_STATUS_KERNEL;
+			block_id = (block_id + 1) % req.tp_block_nr;
+		}
+	} while (!g_cancellable_is_cancelled (thread_data->cancellable));
+
+	if (use_poll)
 		g_cancellable_release_fd (thread_data->cancellable);
-	} else {
-		g_error ("[ArvGvStream::_ring_buffer_loop] Failed to create cancellable fd");
-	}
 
 bind_error:
 	munmap (buffer, req.tp_block_size * req.tp_block_nr);
