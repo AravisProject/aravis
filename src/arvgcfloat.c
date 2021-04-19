@@ -91,7 +91,7 @@ arv_gc_float_set_value (ArvGcFloat *gc_float, double value, GError **error)
 
 		if (local_error != NULL) {
 			if (policy == ARV_RANGE_CHECK_POLICY_DEBUG) {
-				arv_message ("Range check (%s) ignored", local_error->message);
+				arv_warning_policies ("Range check (%s) ignored", local_error->message);
 			} else if (policy == ARV_RANGE_CHECK_POLICY_ENABLE) {
 				g_propagate_error (error, local_error);
 				return;

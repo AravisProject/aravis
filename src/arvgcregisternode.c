@@ -356,8 +356,8 @@ _read_from_port (ArvGcRegisterNode *self, gint64 address, gint64 length, void *b
 
 	if (cached && cache_policy == ARV_REGISTER_CACHE_POLICY_DEBUG) {
 		if (memcmp (cache, buffer, length) != 0) {
-			arv_message ("Current and cached value mismatch for '%s'\n",
-				     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
+			arv_warning_policies ("Current and cached value mismatch for '%s'\n",
+					      arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
 			priv->n_cache_errors++;
 		}
 		g_free (cache);
@@ -443,16 +443,16 @@ arv_gc_register_node_finalize (GObject *self)
 				name = arv_dom_node_get_node_name (ARV_DOM_NODE (self));
 
 			if (cache_policy == ARV_REGISTER_CACHE_POLICY_DEBUG && priv->n_cache_errors)
-				arv_message ("%15s: cache hit(s) = %3u / %-3u  [%d error(s)]",
-					     name,
-					     priv->n_cache_hits,
-					     priv->n_cache_hits + priv->n_cache_misses,
-					     priv->n_cache_errors);
+				arv_warning_policies ("%15s: cache hit(s) = %3u / %-3u  [%d error(s)]",
+						      name,
+						      priv->n_cache_hits,
+						      priv->n_cache_hits + priv->n_cache_misses,
+						      priv->n_cache_errors);
 			else
-				arv_log_genicam ("%-15s: cache hit(s) = %3u / %-3u",
-						 name,
-						 priv->n_cache_hits,
-						 priv->n_cache_hits + priv->n_cache_misses);
+				arv_log_policies ("%-15s: cache hit(s) = %3u / %-3u",
+						  name,
+						  priv->n_cache_hits,
+						  priv->n_cache_hits + priv->n_cache_misses);
 		}
 	}
 

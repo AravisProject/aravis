@@ -39,11 +39,13 @@ ArvDebugCategoryInfos arv_debug_category_infos[] = {
 	{ .name = "cp", 		.description = "Control protocol packets" },
 	{ .name = "sp", 		.description = "Stream protocol packets (likely high volume output)" },
 	{ .name = "genicam", 		.description = "Genicam specialized DOM elements" },
+	{ .name = "policies", 		.description = "Genicam runtime configurable policies",
+					.level = ARV_DEBUG_LEVEL_DEBUG },
 	{ .name = "chunk", 		.description = "Chunk data code" },
 	{ .name = "dom", 		.description = "Genicam DOM document" },
 	{ .name = "evaluator", 		.description = "Expression evaluator" },
 	{ .name = "viewer", 		.description = "Simple viewer application" },
-	{ .name = "misc", 		.description = "Miscellaneous code" }
+	{ .name = "misc", 		.description = "Miscellaneous code" },
 };
 
 typedef struct {
@@ -205,16 +207,6 @@ arv_verbosely_log (ArvDebugCategory category, const char *format, ...)
 	va_end (args);
 }
 
-void
-arv_message (const char *format, ...)
-{
-	va_list args;
-
-	va_start (args, format);
-	arv_debug_with_level (-1, -1, format, args);
-	va_end (args);
-}
-
 /**
  * arv_debug_enable:
  * @category_selection: debug category configuration string
@@ -280,11 +272,6 @@ arv_debug_print_infos (void)
 
 __attribute__((constructor)) static void
 arv_initialize_debug (void) {
-	unsigned int i;
-
-	for (i = 0; i < ARV_DEBUG_CATEGORY_N_ELEMENTS; i++)
-		arv_debug_category_infos[i].level = 0;
-
 	arv_debug_initialize (g_getenv ("ARV_DEBUG"));
 }
 

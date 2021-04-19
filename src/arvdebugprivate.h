@@ -50,6 +50,7 @@ typedef enum {
 	ARV_DEBUG_CATEGORY_CP,
 	ARV_DEBUG_CATEGORY_SP,
 	ARV_DEBUG_CATEGORY_GENICAM,
+	ARV_DEBUG_CATEGORY_POLICIES,
 	ARV_DEBUG_CATEGORY_CHUNK,
 	ARV_DEBUG_CATEGORY_DOM,
 	ARV_DEBUG_CATEGORY_EVALUATOR,
@@ -98,6 +99,10 @@ extern ArvDebugCategoryInfos arv_debug_category_infos[];
 #define arv_debug_genicam(...) 		arv_debug (ARV_DEBUG_CATEGORY_GENICAM, __VA_ARGS__)
 #define arv_log_genicam(...)		arv_log (ARV_DEBUG_CATEGORY_GENICAM, __VA_ARGS__)
 
+#define arv_warning_policies(...)	arv_warning (ARV_DEBUG_CATEGORY_POLICIES, __VA_ARGS__)
+#define arv_debug_policies(...) 	arv_debug (ARV_DEBUG_CATEGORY_POLICIES, __VA_ARGS__)
+#define arv_log_policies(...)		arv_log (ARV_DEBUG_CATEGORY_POLICIES, __VA_ARGS__)
+
 #define arv_warning_evaluator(...)	arv_warning (ARV_DEBUG_CATEGORY_EVALUATOR, __VA_ARGS__)
 #define arv_debug_evaluator(...) 	arv_debug (ARV_DEBUG_CATEGORY_EVALUATOR, __VA_ARGS__)
 #define arv_log_evaluator(...)		arv_log (ARV_DEBUG_CATEGORY_EVALUATOR, __VA_ARGS__)
@@ -110,14 +115,12 @@ extern ArvDebugCategoryInfos arv_debug_category_infos[];
 #define arv_debug_viewer(...)	 	arv_debug (ARV_DEBUG_CATEGORY_VIEWER, __VA_ARGS__)
 #define arv_log_viewer(...)		arv_log (ARV_DEBUG_CATEGORY_VIEWER, __VA_ARGS__)
 
+gboolean	arv_debug_check			(ArvDebugCategory category, ArvDebugLevel level);
+
 void 		arv_warning 			(ArvDebugCategory category, const char *format, ...) G_GNUC_PRINTF (2,3);
 void 		arv_debug 			(ArvDebugCategory category, const char *format, ...) G_GNUC_PRINTF (2,3);
 void 		arv_log 			(ArvDebugCategory category, const char *format, ...) G_GNUC_PRINTF (2,3);
 void 		arv_verbosely_log		(ArvDebugCategory category, const char *format, ...) G_GNUC_PRINTF (2,3);
-
-void		arv_message			(const char *format, ...) G_GNUC_PRINTF (1,2);
-
-gboolean	arv_debug_check			(ArvDebugCategory category, ArvDebugLevel level);
 
 void 		arv_debug_print_infos 		(void);
 
