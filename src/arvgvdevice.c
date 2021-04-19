@@ -358,7 +358,8 @@ typedef struct {
 	ArvGvDevice *gv_device;
 	ArvGvDeviceIOData *io_data;
 	int period_us;
-	gboolean cancel;
+
+	GCancellable *cancellable;
 } ArvGvDeviceHeartbeatData;
 
 static void *
@@ -366,13 +367,22 @@ arv_gv_device_heartbeat_thread (void *data)
 {
 	ArvGvDeviceHeartbeatData *thread_data = data;
 	ArvGvDeviceIOData *io_data = thread_data->io_data;
+	GPollFD poll_fd;
+	gboolean use_poll;
 	GTimer *timer;
 	guint32 value;
 
 	timer = g_timer_new ();
 
+	use_poll = g_cancellable_make_pollfd (thread_data->cancellable, &poll_fd);
+
 	do {
-		g_usleep (thread_data->period_us);
+		if (use_poll)
+			g_poll (&poll_fd, 1, thread_data->period_us / 1000);
+		else
+			g_usleep (thread_data->period_us);
+
+		arv_debug_misc ("here");
 
 		if (io_data->is_controller) {
 			guint counter = 1;
@@ -385,12 +395,12 @@ arv_gv_device_heartbeat_thread (void *data)
 
 			while (!_read_register (io_data, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET, &value, NULL) &&
 			       g_timer_elapsed (timer, NULL) < ARV_GV_DEVICE_HEARTBEAT_RETRY_TIMEOUT_S &&
-			       !g_atomic_int_get (&thread_data->cancel)) {
+			       !g_cancellable_is_cancelled (thread_data->cancellable)) {
 				g_usleep (ARV_GV_DEVICE_HEARTBEAT_RETRY_DELAY_US);
 				counter++;
 			}
 
-			if (!g_atomic_int_get (&thread_data->cancel)) {
+			if (!g_cancellable_is_cancelled (thread_data->cancellable)) {
 				arv_log_device ("[GvDevice::Heartbeat] Ack value = %d", value);
 
 				if (counter > 1)
@@ -407,7 +417,10 @@ arv_gv_device_heartbeat_thread (void *data)
 			} else
 				io_data->is_controller = FALSE;
 		}
-	} while (!g_atomic_int_get (&thread_data->cancel));
+	} while (!g_cancellable_is_cancelled (thread_data->cancellable));
+
+	if (use_poll)
+		g_cancellable_release_fd (thread_data->cancellable);
 
 	g_timer_destroy (timer);
 
@@ -1375,7 +1388,7 @@ arv_gv_device_constructed (GObject *object)
 	heartbeat_data->gv_device = gv_device;
 	heartbeat_data->io_data = io_data;
 	heartbeat_data->period_us = ARV_GV_DEVICE_HEARTBEAT_PERIOD_US;
-	heartbeat_data->cancel = FALSE;
+	heartbeat_data->cancellable = g_cancellable_new ();
 
 	priv->heartbeat_data = heartbeat_data;
 
@@ -1424,8 +1437,10 @@ arv_gv_device_finalize (GObject *object)
 
 		heartbeat_data = priv->heartbeat_data;
 
-		g_atomic_int_set (&heartbeat_data->cancel, TRUE);
+		g_cancellable_cancel (heartbeat_data->cancellable);
 		g_thread_join (priv->heartbeat_thread);
+		g_clear_object (&heartbeat_data->cancellable);
+
 		g_clear_pointer (&heartbeat_data, g_free);
 
 		priv->heartbeat_data = NULL;
