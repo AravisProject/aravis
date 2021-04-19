@@ -76,6 +76,7 @@ arv_debug_initialize (const char *debug_var)
 
 		infos = g_strsplit (categories[i], ":", -1);
 		if (infos[0] != NULL) {
+			gboolean found = FALSE;
 			for (j = 0; j < G_N_ELEMENTS (arv_debug_category_infos); j++) {
 				if (g_strcmp0 (arv_debug_category_infos[j].name, infos[0]) == 0 ||
 				    g_strcmp0 ("all", infos[0]) == 0) {
@@ -83,12 +84,12 @@ arv_debug_initialize (const char *debug_var)
 						arv_debug_category_infos[j].level = atoi (infos[1]);
 					else
 						arv_debug_category_infos[j].level = ARV_DEBUG_LEVEL_DEBUG;
-				} else {
-					success = FALSE;
+					found = TRUE;
 				}
 			}
+			if (!found)
+				success = FALSE;
 		}
-
 		g_strfreev (infos);
 	}
 	g_strfreev (categories);
