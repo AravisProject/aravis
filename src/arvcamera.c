@@ -108,6 +108,8 @@ typedef struct {
 	ArvCameraVendor vendor;
 	ArvCameraSeries series;
 
+	gboolean has_serial_number;
+
 	gboolean has_gain;
 	gboolean gain_raw_as_float;
 
@@ -189,6 +191,29 @@ const char *
 arv_camera_get_model_name (ArvCamera *camera, GError **error)
 {
 	return arv_camera_get_string (camera, "DeviceModelName", error);
+}
+
+/**
+ * arv_camera_get_device_serial_number:
+ * @camera: a #ArvCamera
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: the camera device serial number.
+ *
+ * Since: 0.8.8
+ */
+
+const char *
+arv_camera_get_device_serial_number (ArvCamera *camera, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+
+	if (priv->has_serial_number)
+	    return arv_camera_get_string (camera, "DeviceSerialNumber", error);
+
+	return arv_camera_get_device_id (camera, error);
 }
 
 /**
@@ -3105,6 +3130,8 @@ arv_camera_constructed (GObject *object)
 
 	priv->vendor = vendor;
 	priv->series = series;
+
+	priv->has_serial_number = ARV_IS_GC_STRING (arv_device_get_feature (priv->device, "DeviceSerialNumber"));
 
 	priv->has_gain = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device, "Gain"));
 	priv->gain_raw_as_float = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device, "GainRaw"));

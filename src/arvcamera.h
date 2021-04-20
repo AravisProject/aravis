@@ -49,9 +49,10 @@ ArvStream *	arv_camera_create_stream	(ArvCamera *camera, ArvStreamCallback callb
 
 /* Device informations */
 
-const char *	arv_camera_get_vendor_name	(ArvCamera *camera, GError **error);
-const char *	arv_camera_get_model_name	(ArvCamera *camera, GError **error);
-const char *	arv_camera_get_device_id	(ArvCamera *camera, GError **error);
+const char *	arv_camera_get_vendor_name		(ArvCamera *camera, GError **error);
+const char *	arv_camera_get_model_name		(ArvCamera *camera, GError **error);
+const char * 	arv_camera_get_device_serial_number 	(ArvCamera *camera, GError **error);
+const char *	arv_camera_get_device_id		(ArvCamera *camera, GError **error);
 
 /* Image format control */
 
