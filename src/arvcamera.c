@@ -2569,8 +2569,18 @@ arv_camera_gv_get_packet_delay (ArvCamera *camera, GError **error)
 	GError *local_error = NULL;
 	gint64 tick_frequency;
 	gint64 value;
+	gboolean available;
 
 	g_return_val_if_fail (arv_camera_is_gv_device (camera), 0);
+
+	available = arv_camera_is_feature_available (camera, "GevSCPD", &local_error);
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return 0;
+	}
+
+	if (!available)
+		return 0;
 
 	tick_frequency = arv_camera_get_integer (camera, "GevTimestampTickFrequency", &local_error);
 	if (local_error != NULL) {
