@@ -2787,6 +2787,22 @@ arv_camera_uv_get_bandwidth_bounds (ArvCamera *camera, guint *min, guint *max, G
 }
 
 /**
+ * arv_camera_are_chunks_available:
+ * @camera: a #ArvCamera
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: %TRUE if chunk data are available
+ *
+ * Since: 0.8.8
+ */
+
+gboolean
+arv_camera_are_chunks_available	(ArvCamera *camera, GError **error)
+{
+	return arv_camera_is_feature_available (camera, "ChunkModeActive", error);
+}
+
+/**
  * arv_camera_set_chunk_mode:
  * @camera: a #ArvCamera
  * @is_active: wether to enable chunk data mode
