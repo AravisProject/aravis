@@ -651,7 +651,7 @@ snapshot_cb (GtkButton *button, ArvViewer *viewer)
 	date_string = g_date_time_format (date, "%Y-%m-%d-%H:%M:%S");
 	filename = g_strdup_printf ("%s-%s-%d-%d-%s-%s.raw",
 				    arv_camera_get_vendor_name (viewer->camera, NULL),
-				    arv_camera_get_device_id (viewer->camera, NULL),
+				    arv_camera_get_device_serial_number (viewer->camera, NULL),
 				    width,
 				    height,
 				    pixel_format != NULL ? pixel_format : "Unknown",
