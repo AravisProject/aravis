@@ -2539,8 +2539,15 @@ arv_camera_gv_set_packet_delay (ArvCamera *camera, gint64 delay_ns, GError **err
 		return;
 	}
 
-	if (tick_frequency <= 0)
+	if (tick_frequency <= 0) {
+		if (!arv_camera_is_feature_available (camera, "GevSCPD", NULL))
+			g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_FEATURE_NOT_FOUND,
+				     "GevSCPD not not found");
+		else
+			g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
+				     "Device returned an invalid timestamp tick frequency");
 		return;
+	}
 
 	value = tick_frequency * delay_ns / 1000000000LL;
 	arv_camera_set_integer (camera, "GevSCPD", value, error);
