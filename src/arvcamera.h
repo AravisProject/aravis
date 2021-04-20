@@ -200,6 +200,8 @@ void            arv_camera_uv_get_bandwidth_bounds      	(ArvCamera *camera, gui
 
 /* Chunk data */
 
+gboolean		arv_camera_are_chunks_available		(ArvCamera *camera, GError **error);
+
 void 			arv_camera_set_chunk_mode 	(ArvCamera *camera, gboolean is_active, GError **error);
 gboolean 		arv_camera_get_chunk_mode 	(ArvCamera *camera, GError **error);
 void 			arv_camera_set_chunk_state 	(ArvCamera *camera, const char *chunk, gboolean is_enabled, GError **error);
