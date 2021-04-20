@@ -270,7 +270,7 @@ arv_camera_get_sensor_size (ArvCamera *camera, gint *width, gint *height, GError
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Defines the region of interest which will be transmitted in the video
- * stream.
+ * stream. Negative @x or @y values, or not strictly positive @width or @height values are ignored.
  *
  * Since: 0.8.0
  */
@@ -477,7 +477,7 @@ arv_camera_get_height_increment (ArvCamera *camera, GError **error)
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Defines binning in both directions. Not all cameras support this
- * feature.
+ * feature. Negative @dx or @dy values are ignored.
  *
  * Since: 0.8.0
  */
@@ -1386,7 +1386,7 @@ arv_camera_software_trigger (ArvCamera *camera, GError **error)
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Sets exposure time. User should take care to set a value compatible with
- * the desired frame rate.
+ * the desired frame rate. Negative @exposure_time_us is ignored.
  *
  * Since: 0.8.0
  */
@@ -1571,7 +1571,7 @@ arv_camera_set_exposure_mode (ArvCamera *camera, ArvExposureMode acquisition_mod
  * @gain: gain value
  * @error: a #GError placeholder, %NULL to ignore
  *
- * Sets the gain of the ADC converter.
+ * Sets the gain of the ADC converter. Negative @gain is ignored.
  *
  * Since: 0.8.0
  */
@@ -2450,7 +2450,7 @@ arv_camera_gv_get_n_stream_channels (ArvCamera *camera, GError **error)
  * @channel_id: id of the channel to select
  * @error: a #GError placeholder, %NULL to ignore
  *
- * Select the current stream channel.
+ * Select the current stream channel. Negative @channel_id is ignored.
  *
  * Since: 0.8.0
  */
@@ -2492,7 +2492,7 @@ arv_camera_gv_get_current_stream_channel (ArvCamera *camera, GError **error)
  *
  * Configure the inter packet delay to insert between each packet for the current stream
  * channel. This can be used as a crude flow-control mechanism if the application or the network
- * infrastructure cannot keep up with the packets coming from the device.
+ * infrastructure cannot keep up with the packets coming from the device. Negative @delay_ns is ignored.
  *
  * Since: 0.8.0
  */
@@ -2570,6 +2570,7 @@ arv_camera_gv_get_packet_delay (ArvCamera *camera, GError **error)
  *
  * This does not include data leader and data trailer and the last data packet which might be of
  * smaller size (since packet size is not necessarily a multiple of block size for stream channel).
+ * Negative @packet_size is ignored.
  *
  * Since: 0.8.0
  */
@@ -2727,8 +2728,10 @@ arv_camera_uv_is_bandwidth_control_available (ArvCamera *camera, GError **error)
 /**
  * arv_camera_uv_set_bandwidth:
  * @camera: a #ArvCamera
- * @bandwidth: Desired bandwith limit in megabits/sec. Set to 0 to disable limit mode.
+ * @bandwidth: Bandwith limit, in megabits/sec
  * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Set the bandwith limit or, if @bandwith is not strictly positive, disable the limit.
  *
  * Since: 0.8.0
  */
