@@ -2458,10 +2458,22 @@ arv_camera_gv_get_n_stream_channels (ArvCamera *camera, GError **error)
 void
 arv_camera_gv_select_stream_channel (ArvCamera *camera, gint channel_id, GError **error)
 {
+	GError *local_error = NULL;
+	gboolean available;
+
 	if (channel_id < 0)
 		return;
 
 	g_return_if_fail (arv_camera_is_gv_device (camera));
+
+	available = arv_camera_is_feature_available (camera, "GevStreamChannelSelector", &local_error);
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return;
+	}
+
+	if (!available && channel_id == 0)
+		return;
 
 	arv_camera_set_integer (camera, "GevStreamChannelSelector", channel_id, error);
 }
@@ -2479,7 +2491,19 @@ arv_camera_gv_select_stream_channel (ArvCamera *camera, gint channel_id, GError 
 int
 arv_camera_gv_get_current_stream_channel (ArvCamera *camera, GError **error)
 {
+	GError *local_error = NULL;
+	gboolean available;
+
 	g_return_val_if_fail (arv_camera_is_gv_device (camera), 0);
+
+	available = arv_camera_is_feature_available (camera, "GevStreamChannelSelector", &local_error);
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return 0;
+	}
+
+	if (!available)
+		return 0;
 
 	return arv_camera_get_integer (camera, "GevStreamChannelSelector", error);
 }
