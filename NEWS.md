@@ -1,3 +1,13 @@
+Stable release 0.8.8
+====================
+
+  * arv-camera-test: promote to installed application (Emmanuel)
+  * applications: fix policy parameter consistency (Emmanuel)
+  * debug: timestamped and modernized output (Emmanuel)
+  * genicam: add a range check debug mode (Emmanuel)
+  * gvdevice: faster finalization (Emmanuel)
+  * camera: new DeviceSerialNumber getter (Emmanuel)
+
 Stable release 0.8.7
 ====================
 
