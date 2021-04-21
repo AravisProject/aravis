@@ -382,8 +382,6 @@ arv_gv_device_heartbeat_thread (void *data)
 		else
 			g_usleep (thread_data->period_us);
 
-		arv_debug_misc ("here");
-
 		if (io_data->is_controller) {
 			guint counter = 1;
 
