@@ -74,7 +74,7 @@ typedef enum {
  * ArvRangeCheckPolicy:
  * @ARV_RANGE_CHECK_POLICY_DISABLE: never check if float or integer node value is in min/max range
  * @ARV_RANGE_CHECK_POLICY_ENABLE: always check if if float or integer node is in min/max range
- * @ARV_RANGE_CHECK_POLICY_DEBUG: check the value, but only display an error message if the value is not allowed
+ * @ARV_RANGE_CHECK_POLICY_DEBUG: check the value, but only display an error message if the value is not allowed (Since 0.8.8)
  * @ARV_RANGE_CHECK_POLICY_DEFAULT: default range check policy
  *
  * Since: 0.8.6

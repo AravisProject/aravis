@@ -218,7 +218,7 @@ arv_verbosely_log (ArvDebugCategory category, const char *format, ...)
  * arv_debug_enable ("gvcp:3,genicam");
  * </programlisting></informalexample>
  *
- * Returns: %TRUE on success
+ * Returns: Since 0.8.8, %TRUE on success
  */
 
 gboolean
