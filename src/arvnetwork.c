@@ -191,7 +191,7 @@ arv_enumerate_network_interfaces (void)
 				struct sockaddr_in* broadaddr;
 
 				/* copy 3x so that sa_family is already set for netmask and broadaddr */
-				a->addr = arv__memdup (lpSockaddr, sizeof(struct sockaddr));
+				a->addr = arv_memdup (lpSockaddr, sizeof(struct sockaddr));
 				a->netmask = arv_memdup (lpSockaddr, sizeof(struct sockaddr));
 				a->broadaddr = arv_memdup (lpSockaddr, sizeof(struct sockaddr));
 				/* adjust mask & broadcast */
