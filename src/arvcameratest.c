@@ -393,7 +393,7 @@ main (int argc, char **argv)
 		const char *model_name;
 		const char *serial_number;
 		void (*old_sigint_handler)(int);
-		gint payload;
+		gint payload = 0;
 		gint width, height;
 		gint dx, dy;
 		double exposure;

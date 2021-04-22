@@ -100,7 +100,7 @@ gst_aravis_get_all_camera_caps (GstAravis *gst_aravis, GError **error)
 {
 	GError *local_error = NULL;
 	GstCaps *caps;
-	gint64 *pixel_formats;
+	gint64 *pixel_formats = NULL;
 	double min_frame_rate, max_frame_rate;
 	int min_height, min_width;
 	int max_height, max_width;
@@ -580,7 +580,7 @@ gst_aravis_fixate_caps (GstBaseSrc * bsrc, GstCaps * caps)
 	GstStructure *structure;
 	gint width;
 	gint height;
-	double frame_rate;
+	double frame_rate = 0.0;
 	gboolean is_frame_rate_available;
 
 	g_return_val_if_fail (GST_IS_ARAVIS (bsrc), NULL);
@@ -598,8 +598,7 @@ gst_aravis_fixate_caps (GstBaseSrc * bsrc, GstCaps * caps)
 			 error->message),
 			(NULL));
 		g_error_free (error);
-	}
-	else {
+	} else {
 		structure = gst_caps_get_structure (caps, 0);
 
 		gst_structure_fixate_field_nearest_int (structure, "width", width);
