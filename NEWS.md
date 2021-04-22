@@ -1,3 +1,8 @@
+Stable release 0.8.9
+====================
+
+  * windows: build fix (Emmanuel)
+
 Stable release 0.8.8
 ====================
 
