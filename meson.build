@@ -31,7 +31,8 @@ if cc.get_id()=='gcc' or cc.get_id()=='clang'
     '-Wmissing-prototypes',
     '-Wpointer-arith',
     '-Wformat-nonliteral',
-    '-Wenum-conversion'
+    '-Wenum-conversion',
+    '-Wmaybe-uninitialized'
     ]
 
   add_project_arguments(cc.get_supported_arguments(warning_c_args), language: 'c')
