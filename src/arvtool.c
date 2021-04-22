@@ -464,19 +464,21 @@ main (int argc, char **argv)
 		GError *error = NULL;
 
 		device = arv_open_device (device_id, &error);
-
 		if (ARV_IS_DEVICE (device)) {
-			if (argc < 2)
+			if (argc < 2) {
 				printf ("%s\n", device_id);
-			else
+			} else {
 				arv_tool_execute_command (argc, argv, device,
 							  register_cache_policy, range_check_policy);
+			}
 			g_object_unref (device);
 		} else {
-			fprintf (stderr, "Device '%s' not found%s%s\n", device_id,
-				 error != NULL ? ": " : "",
-				 error != NULL ? error->message : "");
-			g_clear_error (&error);
+			if (error != NULL) {
+				fprintf (stderr, "%s\n", error->message);
+				g_clear_error (&error);
+			} else {
+				fprintf (stderr, "Device '%s' not found", device_id);
+			}
 		}
 	} else {
 		arv_update_device_list ();
@@ -487,19 +489,22 @@ main (int argc, char **argv)
 				GError *error = NULL;
 
 				device_id = arv_get_device_id (i);
-				device = arv_open_device (device_id, &error);
+				printf ("%s (%s)\n", device_id, arv_get_device_address (i));
 
-				if (ARV_IS_DEVICE (device)) {
-					printf ("%s (%s)\n", device_id, arv_get_device_address (i));
-					arv_tool_execute_command (argc, argv, device,
-								  register_cache_policy, range_check_policy);
+				if (argc >= 2) {
+					device = arv_open_device (device_id, &error);
 
-					g_object_unref (device);
-				} else {
-					fprintf (stderr, "Failed to open device '%s'%s%s\n", device_id,
-						 error != NULL ? ": " : "",
-						 error != NULL ? error->message : "");
-					g_clear_error (&error);
+					if (ARV_IS_DEVICE (device)) {
+						arv_tool_execute_command (argc, argv, device,
+									  register_cache_policy, range_check_policy);
+
+						g_object_unref (device);
+					} else {
+						fprintf (stderr, "Failed to open device '%s'%s%s\n", device_id,
+							 error != NULL ? ": " : "",
+							 error != NULL ? error->message : "");
+						g_clear_error (&error);
+					}
 				}
 			}
 		} else {
