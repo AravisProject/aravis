@@ -55,10 +55,10 @@ typedef struct {
 
 ArvDebugLevelInfos arv_debug_level_infos[] = {
 	{ .color = "",			.symbol = ""},
-	{ .color = "\033[1;31m",	.symbol = "❶ "},
-	{ .color = "\033[1;32m",	.symbol = "❷ "},
-	{ .color = "\033[1;34m",	.symbol = "❸ "},
-	{ .color = "\033[0m",		.symbol = "❹ "}
+	{ .color = "\033[1;31m",	.symbol = "🆆 "},
+	{ .color = "\033[1;32m",	.symbol = "🅸 "},
+	{ .color = "\033[1;34m",	.symbol = "🅳 "},
+	{ .color = "\033[0m",		.symbol = "🆃 "}
 };
 
 static gboolean
