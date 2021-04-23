@@ -97,7 +97,7 @@ arv_zip_build_file_list (ArvZip *zip)
                 zip_file->offset = ARV_GUINT32_FROM_LE_PTR (ptr, 42);
 		zip_file->name = g_strndup (((char *) ptr) + 46, ARV_GUINT16_FROM_LE_PTR (ptr, 28));
 
-		arv_log_misc ("[Zip::list_files] %s", zip_file->name);
+		arv_debug_misc ("[Zip::list_files] %s", zip_file->name);
 
 		zip->files = g_slist_prepend (zip->files, zip_file);
 
@@ -190,11 +190,11 @@ arv_zip_new (const void *buffer, size_t size)
         zip->directory_offset = ARV_GUINT32_FROM_LE_PTR (ptr, 16);
         zip->header_size = zip->directory_position - (zip->directory_offset + zip->directory_size);
 
-	arv_log_misc ("[Zip::new] number of files = %d", zip->n_files);
-	arv_log_misc ("[Zip::new] directory position = 0x%08" G_GINTPTR_MODIFIER "x", zip->directory_position);
-	arv_log_misc ("[Zip::new] directory size = %" G_GSIZE_FORMAT, zip->directory_size);
-	arv_log_misc ("[Zip::new] directory offset = 0x%08" G_GINTPTR_MODIFIER "x", zip->directory_offset);
-	arv_log_misc ("[Zip::new] header size = %" G_GSIZE_FORMAT, zip->header_size);
+	arv_debug_misc ("[Zip::new] number of files = %d", zip->n_files);
+	arv_debug_misc ("[Zip::new] directory position = 0x%08" G_GINTPTR_MODIFIER "x", zip->directory_position);
+	arv_debug_misc ("[Zip::new] directory size = %" G_GSIZE_FORMAT, zip->directory_size);
+	arv_debug_misc ("[Zip::new] directory offset = 0x%08" G_GINTPTR_MODIFIER "x", zip->directory_offset);
+	arv_debug_misc ("[Zip::new] header size = %" G_GSIZE_FORMAT, zip->header_size);
 
         arv_zip_build_file_list (zip);
 

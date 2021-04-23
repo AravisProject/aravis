@@ -242,7 +242,7 @@ arv_gvsp_packet_debug (const ArvGvspPacket *packet, size_t packet_size, ArvDebug
 			arv_trace_sp ("%s", string);
 			break;
 		case ARV_DEBUG_LEVEL_LOG:
-			arv_log_sp ("%s", string);
+			arv_debug_sp ("%s", string);
 			break;
 		case ARV_DEBUG_LEVEL_INFO:
 			arv_info_sp ("%s", string);

@@ -230,7 +230,7 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 
 						timeout_stop_ms = g_get_monotonic_time () / 1000 + pending_ack_timeout_ms;
 
-						arv_log_device ("[GvDevice::%s] Pending ack timeout = %" G_GINT64_FORMAT,
+						arv_debug_device ("[GvDevice::%s] Pending ack timeout = %" G_GINT64_FORMAT,
 								operation, pending_ack_timeout_ms);
 					} else if (packet_type == ARV_GVCP_PACKET_TYPE_ERROR) {
 						expected_answer = ack_command == expected_ack_command &&
@@ -399,10 +399,10 @@ arv_gv_device_heartbeat_thread (void *data)
 			}
 
 			if (!g_cancellable_is_cancelled (thread_data->cancellable)) {
-				arv_log_device ("[GvDevice::Heartbeat] Ack value = %d", value);
+				arv_debug_device ("[GvDevice::Heartbeat] Ack value = %d", value);
 
 				if (counter > 1)
-					arv_log_device ("[GvDevice::Heartbeat] Tried %u times", counter);
+					arv_debug_device ("[GvDevice::Heartbeat] Tried %u times", counter);
 
 				if ((value & (ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_CONTROL |
 					      ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_EXCLUSIVE)) == 0) {
@@ -798,7 +798,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size, GError **
 								G_GINT64_MODIFIER "x\n", file_size);
 					arv_g_string_append_hex_dump (string, genicam, file_size);
 
-					arv_log_misc ("%s", string->str);
+					arv_debug_misc ("%s", string->str);
 
 					g_string_free (string, TRUE);
 				}

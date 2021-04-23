@@ -259,7 +259,7 @@ _send_cmd_and_receive_ack (ArvUvDevice *uv_device, ArvUvcpCommand command,
 
 						timeout_stop_ms = g_get_monotonic_time () / 1000 + pending_ack_timeout_ms;
 
-						arv_log_device ("[UvDevice::%s] Pending ack timeout = %" G_GINT64_FORMAT,
+						arv_debug_device ("[UvDevice::%s] Pending ack timeout = %" G_GINT64_FORMAT,
 								operation, pending_ack_timeout_ms);
 					} if (status != ARV_UVCP_STATUS_SUCCESS) {
 						expected_answer = ack_command == expected_ack_command &&

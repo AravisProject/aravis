@@ -192,7 +192,7 @@ _send_packet_request (ArvGvStreamThreadData *thread_data,
 	packet = arv_gvcp_packet_new_packet_resend_cmd (frame_id, first_block, last_block, extended_ids,
 							thread_data->packet_id, &packet_size);
 
-	arv_log_stream_thread ("[GvStream::send_packet_request] frame_id = %" G_GUINT64_FORMAT
+	arv_debug_stream_thread ("[GvStream::send_packet_request] frame_id = %" G_GUINT64_FORMAT
 			       " (from packet %" G_GUINT32_FORMAT " to %" G_GUINT32_FORMAT ")",
 			       frame_id, first_block, last_block);
 
@@ -281,7 +281,7 @@ _process_data_leader (ArvGvStreamThreadData *thread_data,
 
 	if (frame->packet_data[packet_id].time_us > 0) {
 		thread_data->n_resent_packets++;
-		arv_log_stream_thread ("[GvStream::process_data_leader] Received resent packet %u for frame %" G_GUINT64_FORMAT,
+		arv_debug_stream_thread ("[GvStream::process_data_leader] Received resent packet %u for frame %" G_GUINT64_FORMAT,
 				       packet_id, frame->frame_id);
 	}
 }
@@ -330,7 +330,7 @@ _process_data_block (ArvGvStreamThreadData *thread_data,
 
 	if (frame->packet_data[packet_id].time_us > 0) {
 		thread_data->n_resent_packets++;
-		arv_log_stream_thread ("[GvStream::process_data_block] Received resent packet %u for frame %" G_GUINT64_FORMAT,
+		arv_debug_stream_thread ("[GvStream::process_data_block] Received resent packet %u for frame %" G_GUINT64_FORMAT,
 				       packet_id, frame->frame_id);
 	}
 }
@@ -350,7 +350,7 @@ _process_data_trailer (ArvGvStreamThreadData *thread_data,
 
 	if (frame->packet_data[packet_id].time_us > 0) {
 		thread_data->n_resent_packets++;
-		arv_log_stream_thread ("[GvStream::process_data_trailer] Received resent packet %u for frame %" G_GUINT64_FORMAT,
+		arv_debug_stream_thread ("[GvStream::process_data_trailer] Received resent packet %u for frame %" G_GUINT64_FORMAT,
 				       packet_id, frame->frame_id);
 	}
 }
@@ -438,13 +438,13 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 
 	if (frame_id_inc > 1) {
 		thread_data->n_missing_frames++;
-		arv_log_stream_thread ("[GvStream::find_frame_data] Missed %" G_GINT64_FORMAT " frame(s) before %" G_GUINT64_FORMAT,
+		arv_debug_stream_thread ("[GvStream::find_frame_data] Missed %" G_GINT64_FORMAT " frame(s) before %" G_GUINT64_FORMAT,
 				       frame_id_inc - 1, frame_id);
 	}
 
 	thread_data->frames = g_slist_append (thread_data->frames, frame);
 
-	arv_log_stream_thread ("[GvStream::find_frame_data] Start frame %" G_GUINT64_FORMAT, frame_id);
+	arv_debug_stream_thread ("[GvStream::find_frame_data] Start frame %" G_GUINT64_FORMAT, frame_id);
 
 	frame->extended_ids = extended_ids;
 
@@ -511,7 +511,7 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 						return;
 					}
 
-					arv_log_stream_thread ("[GvStream::missing_packet_check]"
+					arv_debug_stream_thread ("[GvStream::missing_packet_check]"
 							       " Resend request at dt = %" G_GINT64_FORMAT
 							       ", packet id = %u (%u packets/frame)",
 							       time_us - frame->first_packet_time_us,
@@ -570,7 +570,7 @@ _close_frame (ArvGvStreamThreadData *thread_data, ArvGvStreamFrameData *frame)
 	} else
 		thread_data->statistic_count++;
 
-	arv_log_stream_thread ("[GvStream::close_frame] Close frame %" G_GUINT64_FORMAT, frame->frame_id);
+	arv_debug_stream_thread ("[GvStream::close_frame] Close frame %" G_GUINT64_FORMAT, frame->frame_id);
 
 	frame->buffer = NULL;
 	frame->frame_id = 0;
@@ -607,7 +607,7 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 		if (can_close_frame &&
 		    frame->last_valid_packet == frame->n_packets - 1) {
 			frame->buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
-			arv_log_stream_thread ("[GvStream::check_frame_completion] Completed frame %" G_GUINT64_FORMAT,
+			arv_debug_stream_thread ("[GvStream::check_frame_completion] Completed frame %" G_GUINT64_FORMAT,
 					       frame->frame_id);
 			_close_frame (thread_data, frame);
 			thread_data->frames = iter->next;
@@ -625,10 +625,10 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 #if 0
 			if (arv_debug_check (&arv_debug_category_stream_thread, ARV_DEBUG_LEVEL_LOG)) {
 				int i;
-				arv_log_stream_thread ("frame_id          = %Lu", frame->frame_id);
-				arv_log_stream_thread ("last_valid_packet = %d", frame->last_valid_packet);
+				arv_debug_stream_thread ("frame_id          = %Lu", frame->frame_id);
+				arv_debug_stream_thread ("last_valid_packet = %d", frame->last_valid_packet);
 				for (i = 0; i < frame->n_packets; i++) {
-					arv_log_stream_thread ("%d - time = %Lu%s", i,
+					arv_debug_stream_thread ("%d - time = %Lu%s", i,
 							       frame->packet_data[i].time_us,
 							       frame->packet_data[i].received ? " - OK" : "");
 				}
@@ -710,7 +710,7 @@ _process_packet (ArvGvStreamThreadData *thread_data, const ArvGvspPacket *packet
 		           frame->packet_data[packet_id].received) {
 			/* Ignore duplicate packet */
 			thread_data->n_duplicated_packets++;
-			arv_log_stream_thread ("[GvStream::process_packet] Duplicated packet %d for frame %" G_GUINT64_FORMAT,
+			arv_debug_stream_thread ("[GvStream::process_packet] Duplicated packet %d for frame %" G_GUINT64_FORMAT,
 						 packet_id, frame->frame_id);
 			arv_gvsp_packet_debug (packet, packet_size, ARV_DEBUG_LEVEL_LOG);
 		} else {

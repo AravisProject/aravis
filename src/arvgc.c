@@ -327,7 +327,7 @@ arv_gc_register_feature_node (ArvGc *genicam, ArvGcFeatureNode *node)
 	g_hash_table_remove (genicam->priv->nodes, (char *) name);
 	g_hash_table_insert (genicam->priv->nodes, (char *) name, node);
 
-	arv_log_genicam ("[Gc::register_feature_node] Register node '%s' [%s]", name,
+	arv_debug_genicam ("[Gc::register_feature_node] Register node '%s' [%s]", name,
 			 arv_dom_node_get_node_name (ARV_DOM_NODE (node)));
 }
 

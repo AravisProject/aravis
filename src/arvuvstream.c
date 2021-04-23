@@ -85,7 +85,7 @@ arv_uv_stream_thread (void *data)
 	guint64 offset;
 	size_t transferred;
 
-	arv_log_stream_thread ("Start USB3Vision stream thread");
+	arv_debug_stream_thread ("Start USB3Vision stream thread");
 
 	incoming_buffer = g_malloc (ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE);
 
@@ -116,7 +116,7 @@ arv_uv_stream_thread (void *data)
 		else
 			packet = incoming_buffer;
 
-		arv_log_sp ("Asking for %" G_GSIZE_FORMAT " bytes", size);
+		arv_debug_sp ("Asking for %" G_GSIZE_FORMAT " bytes", size);
 		arv_uv_device_bulk_transfer (thread_data->uv_device,  ARV_UV_ENDPOINT_DATA, LIBUSB_ENDPOINT_IN,
 					     packet, size, &transferred, 0, &error);
 
@@ -126,7 +126,7 @@ arv_uv_stream_thread (void *data)
 		} else {
 			ArvUvspPacketType packet_type;
 
-			arv_log_sp ("Received %" G_GSIZE_FORMAT " bytes", transferred);
+			arv_debug_sp ("Received %" G_GSIZE_FORMAT " bytes", transferred);
 			arv_uvsp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
 
 			packet_type = arv_uvsp_packet_get_packet_type (packet);
@@ -170,7 +170,7 @@ arv_uv_stream_thread (void *data)
 					break;
 				case ARV_UVSP_PACKET_TYPE_TRAILER:
 					if (buffer != NULL) {
-						arv_log_stream_thread ("Received %" G_GUINT64_FORMAT
+						arv_debug_stream_thread ("Received %" G_GUINT64_FORMAT
 								       " bytes - expected %zu",
 								       offset, buffer->priv->size);
 
@@ -233,7 +233,7 @@ arv_uv_stream_thread (void *data)
 	g_free (incoming_buffer);
 
         /* The thread was cancelled with unprocessed frame. Release it to prevent memory leak */
-	arv_log_stream_thread ("Stop USB3Vision stream thread");
+	arv_debug_stream_thread ("Stop USB3Vision stream thread");
 
 	return NULL;
 }

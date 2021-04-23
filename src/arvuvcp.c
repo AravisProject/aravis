@@ -232,7 +232,7 @@ arv_uvcp_packet_debug (const ArvUvcpPacket *packet, ArvDebugLevel level)
 	string = arv_uvcp_packet_to_string (packet);
 	switch (level) {
 		case ARV_DEBUG_LEVEL_LOG:
-			arv_log_cp ("%s", string);
+			arv_debug_cp ("%s", string);
 			break;
 		case ARV_DEBUG_LEVEL_INFO:
 			arv_info_cp ("%s", string);
