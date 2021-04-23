@@ -432,7 +432,9 @@ _thread (void *user_data)
 }
 
 static gboolean
-_create_and_bind_input_socket (GSocket **socket_out, const char *socket_name, GInetAddress *inet_address, unsigned int port, gboolean allow_reuse, gboolean blocking)
+_create_and_bind_input_socket (GSocket **socket_out, const char *socket_name,
+			       GInetAddress *inet_address, unsigned int port,
+			       gboolean allow_reuse, gboolean blocking)
 {
 	GSocket *socket;
 	GSocketAddress *socket_address;
@@ -464,7 +466,7 @@ _create_and_bind_input_socket (GSocket **socket_out, const char *socket_name, GI
 	g_clear_object (&socket_address);
 
 	if (success)
-		g_socket_set_blocking (socket, FALSE);
+		g_socket_set_blocking (socket, blocking);
 	else
 		g_clear_object (&socket);
 
@@ -504,7 +506,7 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 			arv_fake_camera_set_inet_address (gv_fake_camera->priv->camera, gvcp_inet_address);
 
 			success = success && _create_and_bind_input_socket (&gv_fake_camera->priv->gvsp_socket,
-									    "GVSP", gvcp_inet_address, 0, FALSE, FALSE);
+									    "GVSP", gvcp_inet_address, 0, FALSE, TRUE);
 			success = success && _create_and_bind_input_socket
 				(&gv_fake_camera->priv->input_sockets[ARV_GV_FAKE_CAMERA_INPUT_SOCKET_GVCP],
 				 "GVCP", gvcp_inet_address, ARV_GVCP_PORT, FALSE, FALSE);
