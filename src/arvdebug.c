@@ -178,7 +178,7 @@ arv_warning (ArvDebugCategory category, const char *format, ...)
 }
 
 void
-arv_debug (ArvDebugCategory category, const char *format, ...)
+arv_info (ArvDebugCategory category, const char *format, ...)
 {
 	va_list args;
 
@@ -188,7 +188,7 @@ arv_debug (ArvDebugCategory category, const char *format, ...)
 }
 
 void
-arv_log (ArvDebugCategory category, const char *format, ...)
+arv_debug (ArvDebugCategory category, const char *format, ...)
 {
 	va_list args;
 
@@ -198,7 +198,7 @@ arv_log (ArvDebugCategory category, const char *format, ...)
 }
 
 void
-arv_verbosely_log (ArvDebugCategory category, const char *format, ...)
+arv_trace (ArvDebugCategory category, const char *format, ...)
 {
 	va_list args;
 
