@@ -193,7 +193,7 @@ arv_log (ArvDebugCategory category, const char *format, ...)
 	va_list args;
 
 	va_start (args, format);
-	arv_debug_with_level (category, ARV_DEBUG_LEVEL_LOG, format, args);
+	arv_debug_with_level (category, ARV_DEBUG_LEVEL_DEBUG, format, args);
 	va_end (args);
 }
 
@@ -203,7 +203,7 @@ arv_verbosely_log (ArvDebugCategory category, const char *format, ...)
 	va_list args;
 
 	va_start (args, format);
-	arv_debug_with_level (category, ARV_DEBUG_LEVEL_VERBOSE_LOG, format, args);
+	arv_debug_with_level (category, ARV_DEBUG_LEVEL_TRACE, format, args);
 	va_end (args);
 }
 

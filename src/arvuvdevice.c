@@ -208,7 +208,7 @@ _send_cmd_and_receive_ack (ArvUvDevice *uv_device, ArvUvcpCommand command,
 		priv->packet_id = arv_uvcp_next_packet_id (priv->packet_id);
 		arv_uvcp_packet_set_packet_id (packet, priv->packet_id);
 
-		arv_uvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
+		arv_uvcp_packet_debug (packet, ARV_DEBUG_LEVEL_DEBUG);
 
 		success = TRUE;
 		success = success && arv_uv_device_bulk_transfer (uv_device,
@@ -244,7 +244,7 @@ _send_cmd_and_receive_ack (ArvUvDevice *uv_device, ArvUvcpCommand command,
 					ArvUvcpCommand ack_command;
 					guint16 packet_id;
 
-					arv_uvcp_packet_debug (ack_packet, ARV_DEBUG_LEVEL_LOG);
+					arv_uvcp_packet_debug (ack_packet, ARV_DEBUG_LEVEL_DEBUG);
 
 					status = arv_uvcp_packet_get_status (ack_packet);
 					ack_command = arv_uvcp_packet_get_command (ack_packet);

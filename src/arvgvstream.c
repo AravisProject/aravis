@@ -196,7 +196,7 @@ _send_packet_request (ArvGvStreamThreadData *thread_data,
 			       " (from packet %" G_GUINT32_FORMAT " to %" G_GUINT32_FORMAT ")",
 			       frame_id, first_block, last_block);
 
-	arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
+	arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_DEBUG);
 
 	g_socket_send_to (thread_data->socket, thread_data->device_socket_address, (const char *) packet, packet_size,
 			  NULL, NULL);
@@ -712,7 +712,7 @@ _process_packet (ArvGvStreamThreadData *thread_data, const ArvGvspPacket *packet
 			thread_data->n_duplicated_packets++;
 			arv_debug_stream_thread ("[GvStream::process_packet] Duplicated packet %d for frame %" G_GUINT64_FORMAT,
 						 packet_id, frame->frame_id);
-			arv_gvsp_packet_debug (packet, packet_size, ARV_DEBUG_LEVEL_LOG);
+			arv_gvsp_packet_debug (packet, packet_size, ARV_DEBUG_LEVEL_DEBUG);
 		} else {
 			ArvGvspContentType content_type;
 
@@ -730,8 +730,8 @@ _process_packet (ArvGvStreamThreadData *thread_data, const ArvGvspPacket *packet
 
 			arv_gvsp_packet_debug (packet, packet_size,
 					       content_type == ARV_GVSP_CONTENT_TYPE_DATA_BLOCK ?
-					       ARV_DEBUG_LEVEL_VERBOSE_LOG :
-					       ARV_DEBUG_LEVEL_LOG);
+					       ARV_DEBUG_LEVEL_TRACE :
+					       ARV_DEBUG_LEVEL_DEBUG);
 
 			switch (content_type) {
 				case ARV_GVSP_CONTENT_TYPE_DATA_LEADER:

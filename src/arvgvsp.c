@@ -238,10 +238,10 @@ arv_gvsp_packet_debug (const ArvGvspPacket *packet, size_t packet_size, ArvDebug
 
 	string = arv_gvsp_packet_to_string (packet, packet_size);
 	switch (level) {
-		case ARV_DEBUG_LEVEL_VERBOSE_LOG:
+		case ARV_DEBUG_LEVEL_TRACE:
 			arv_trace_sp ("%s", string);
 			break;
-		case ARV_DEBUG_LEVEL_LOG:
+		case ARV_DEBUG_LEVEL_DEBUG:
 			arv_debug_sp ("%s", string);
 			break;
 		case ARV_DEBUG_LEVEL_INFO:

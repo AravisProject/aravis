@@ -359,7 +359,7 @@ _discover (GHashTable *devices, const char *device_id)
 						char *address_string;
 						char *data = buffer + sizeof (ArvGvcpHeader);
 
-						arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
+						arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_DEBUG);
 
 						interface_address = g_inet_socket_address_get_address
 							(G_INET_SOCKET_ADDRESS (discover_socket->interface_address));

@@ -127,7 +127,7 @@ arv_uv_stream_thread (void *data)
 			ArvUvspPacketType packet_type;
 
 			arv_debug_sp ("Received %" G_GSIZE_FORMAT " bytes", transferred);
-			arv_uvsp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
+			arv_uvsp_packet_debug (packet, ARV_DEBUG_LEVEL_DEBUG);
 
 			packet_type = arv_uvsp_packet_get_packet_type (packet);
 			switch (packet_type) {

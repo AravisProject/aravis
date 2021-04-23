@@ -144,7 +144,7 @@ _handle_control_packet (ArvGvFakeCamera *gv_fake_camera, GSocket *socket,
 		write_access = TRUE;
 
 
-	arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
+	arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_DEBUG);
 
 	packet_id = arv_gvcp_packet_get_packet_id (packet);
 	packet_type = arv_gvcp_packet_get_packet_type (packet);
@@ -217,7 +217,7 @@ _handle_control_packet (ArvGvFakeCamera *gv_fake_camera, GSocket *socket,
 
 	if (ack_packet != NULL) {
 		g_socket_send_to (socket, remote_address, (char *) ack_packet, ack_packet_size, NULL, NULL);
-		arv_gvcp_packet_debug (ack_packet, ARV_DEBUG_LEVEL_LOG);
+		arv_gvcp_packet_debug (ack_packet, ARV_DEBUG_LEVEL_DEBUG);
 		g_free (ack_packet);
 
 		success = TRUE;

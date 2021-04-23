@@ -179,7 +179,7 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 	do {
 		GError *local_error = NULL;
 
-		arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_VERBOSE_LOG);
+		arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_TRACE);
 
 		success = g_socket_send_to (io_data->socket, io_data->device_address,
 					    (const char *) packet, packet_size,
@@ -216,7 +216,7 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 					ArvGvcpCommand ack_command;
 					guint16 packet_id;
 
-					arv_gvcp_packet_debug (ack_packet, ARV_DEBUG_LEVEL_VERBOSE_LOG);
+					arv_gvcp_packet_debug (ack_packet, ARV_DEBUG_LEVEL_TRACE);
 
 					packet_type = arv_gvcp_packet_get_packet_type (ack_packet);
 					ack_command = arv_gvcp_packet_get_command (ack_packet);
@@ -790,7 +790,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size, GError **
 			if (arv_device_read_memory (ARV_DEVICE (gv_device), file_address, file_size,
 						    genicam, NULL)) {
 
-				if (arv_debug_check (ARV_DEBUG_CATEGORY_MISC, ARV_DEBUG_LEVEL_LOG)) {
+				if (arv_debug_check (ARV_DEBUG_CATEGORY_MISC, ARV_DEBUG_LEVEL_DEBUG)) {
 					GString *string = g_string_new ("");
 
 					g_string_append_printf (string,

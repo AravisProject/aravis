@@ -129,7 +129,7 @@ arv_uvsp_packet_debug (const ArvUvspPacket *packet, ArvDebugLevel level)
 
 	string = arv_uvsp_packet_to_string (packet);
 	switch (level) {
-		case ARV_DEBUG_LEVEL_LOG:
+		case ARV_DEBUG_LEVEL_DEBUG:
 			arv_debug_sp ("%s", string);
 			break;
 		case ARV_DEBUG_LEVEL_INFO:
