@@ -88,19 +88,19 @@ extern ArvDebugCategoryInfos arv_debug_category_infos[];
 #define arv_warning_cp(...)		arv_warning (ARV_DEBUG_CATEGORY_CP, __VA_ARGS__)
 #define arv_info_cp(...) 		arv_debug (ARV_DEBUG_CATEGORY_CP, __VA_ARGS__)
 #define arv_log_cp(...)			arv_log (ARV_DEBUG_CATEGORY_CP, __VA_ARGS__)
-#define arv_verbosely_log_cp(...)	arv_verbosely_log (ARV_DEBUG_CATEGORY_CP, __VA_ARGS__)
+#define arv_trace_cp(...)		arv_verbosely_log (ARV_DEBUG_CATEGORY_CP, __VA_ARGS__)
 
 #define arv_warning_sp(...)		arv_warning (ARV_DEBUG_CATEGORY_SP, __VA_ARGS__)
 #define arv_info_sp(...) 		arv_debug (ARV_DEBUG_CATEGORY_SP, __VA_ARGS__)
 #define arv_log_sp(...)			arv_log (ARV_DEBUG_CATEGORY_SP, __VA_ARGS__)
-#define arv_verbosely_log_sp(...)	arv_verbosely_log (ARV_DEBUG_CATEGORY_SP, __VA_ARGS__)
+#define arv_trace_sp(...)		arv_verbosely_log (ARV_DEBUG_CATEGORY_SP, __VA_ARGS__)
 
 #define arv_warning_genicam(...)	arv_warning (ARV_DEBUG_CATEGORY_GENICAM, __VA_ARGS__)
 #define arv_info_genicam(...) 		arv_debug (ARV_DEBUG_CATEGORY_GENICAM, __VA_ARGS__)
 #define arv_log_genicam(...)		arv_log (ARV_DEBUG_CATEGORY_GENICAM, __VA_ARGS__)
 
 #define arv_warning_policies(...)	arv_warning (ARV_DEBUG_CATEGORY_POLICIES, __VA_ARGS__)
-#define arv_info_policies(...) 	arv_debug (ARV_DEBUG_CATEGORY_POLICIES, __VA_ARGS__)
+#define arv_info_policies(...) 		arv_debug (ARV_DEBUG_CATEGORY_POLICIES, __VA_ARGS__)
 #define arv_log_policies(...)		arv_log (ARV_DEBUG_CATEGORY_POLICIES, __VA_ARGS__)
 
 #define arv_warning_evaluator(...)	arv_warning (ARV_DEBUG_CATEGORY_EVALUATOR, __VA_ARGS__)
