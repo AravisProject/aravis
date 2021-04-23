@@ -282,7 +282,7 @@ _discover (ArvUvInterface *uv_interface,  GArray *device_ids)
 		}
 	}
 
-	arv_debug_interface ("Found %d USB3Vision device%s (among %" G_GSSIZE_FORMAT " USB device%s)",
+	arv_info_interface ("Found %d USB3Vision device%s (among %" G_GSSIZE_FORMAT " USB device%s)",
 			     uv_count , uv_count > 1 ? "s" : "",
 			     count, count > 1 ? "s" : "");
 

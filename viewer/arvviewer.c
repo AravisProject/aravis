@@ -290,7 +290,7 @@ gst_buffer_release_cb (void *user_data)
 		arv_stream_push_buffer (stream, release_data->arv_buffer);
 		g_object_unref (stream);
 	} else {
-		arv_debug_viewer ("invalid stream object");
+		arv_info_viewer ("invalid stream object");
 		g_object_unref (release_data->arv_buffer);
 	}
 

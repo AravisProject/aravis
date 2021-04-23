@@ -507,7 +507,7 @@ arv_decompress (void *input_buffer, size_t input_size, size_t *output_size)
 		stream.avail_in = MIN (input_size, ARV_DECOMPRESS_CHUNK);
 		stream.next_in = input_buffer;
 
-		arv_debug_misc ("[Decompress] Input ptr = 0x%p - Chunk size = %d - %c",
+		arv_info_misc ("[Decompress] Input ptr = 0x%p - Chunk size = %d - %c",
 				(void *) stream.next_in, stream.avail_in, *stream.next_in);
 
 		input_size -= stream.avail_in;

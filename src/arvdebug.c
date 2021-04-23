@@ -40,7 +40,7 @@ ArvDebugCategoryInfos arv_debug_category_infos[] = {
 	{ .name = "sp", 		.description = "Stream protocol packets (likely high volume output)" },
 	{ .name = "genicam", 		.description = "Genicam specialized DOM elements" },
 	{ .name = "policies", 		.description = "Genicam runtime configurable policies",
-					.level = ARV_DEBUG_LEVEL_DEBUG },
+					.level = ARV_DEBUG_LEVEL_INFO },
 	{ .name = "chunk", 		.description = "Chunk data code" },
 	{ .name = "dom", 		.description = "Genicam DOM document" },
 	{ .name = "evaluator", 		.description = "Expression evaluator" },
@@ -85,7 +85,7 @@ arv_debug_initialize (const char *debug_var)
 					if (infos[1] != NULL)
 						arv_debug_category_infos[j].level = atoi (infos[1]);
 					else
-						arv_debug_category_infos[j].level = ARV_DEBUG_LEVEL_DEBUG;
+						arv_debug_category_infos[j].level = ARV_DEBUG_LEVEL_INFO;
 					found = TRUE;
 				}
 			}
@@ -183,7 +183,7 @@ arv_debug (ArvDebugCategory category, const char *format, ...)
 	va_list args;
 
 	va_start (args, format);
-	arv_debug_with_level (category, ARV_DEBUG_LEVEL_DEBUG, format, args);
+	arv_debug_with_level (category, ARV_DEBUG_LEVEL_INFO, format, args);
 	va_end (args);
 }
 

@@ -132,8 +132,8 @@ arv_uvsp_packet_debug (const ArvUvspPacket *packet, ArvDebugLevel level)
 		case ARV_DEBUG_LEVEL_LOG:
 			arv_log_sp ("%s", string);
 			break;
-		case ARV_DEBUG_LEVEL_DEBUG:
-			arv_debug_sp ("%s", string);
+		case ARV_DEBUG_LEVEL_INFO:
+			arv_info_sp ("%s", string);
 			break;
 		case ARV_DEBUG_LEVEL_WARNING:
 			arv_warning_sp ("%s", string);

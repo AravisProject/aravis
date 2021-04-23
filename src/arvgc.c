@@ -266,7 +266,7 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 	else if (strcmp (tag_name, "Extension") == 0)
 		node = NULL;
 	else
-		arv_debug_dom ("[Genicam::create_element] Unknown tag (%s)", tag_name);
+		arv_info_dom ("[Genicam::create_element] Unknown tag (%s)", tag_name);
 
 	return ARV_DOM_ELEMENT (node);
 }
@@ -343,7 +343,7 @@ arv_gc_set_default_node_data (ArvGc *genicam, const char *node_name, ...)
 	if (arv_gc_get_node (genicam, node_name) != NULL)
 		return;
 
-	arv_debug_genicam ("[Gc::set_default_node_data] Add '%s'", node_name);
+	arv_info_genicam ("[Gc::set_default_node_data] Add '%s'", node_name);
 
 	va_start (args, node_name);
 	do {

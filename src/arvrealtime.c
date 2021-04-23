@@ -274,7 +274,7 @@ arv_make_thread_realtime (int priority)
 			return FALSE;
 		}
 
-		arv_debug_misc ("Thread became realtime with priority %d", priority);
+		arv_info_misc ("Thread became realtime with priority %d", priority);
 
 		return TRUE;
 	}
@@ -314,7 +314,7 @@ arv_make_thread_high_priority (int nice_level)
 		return FALSE;
 	}
 
-	arv_debug_misc ("Nice level successfully changed to %d", nice_level);
+	arv_info_misc ("Nice level successfully changed to %d", nice_level);
 
 	return TRUE;
 }
@@ -324,7 +324,7 @@ arv_make_thread_high_priority (int nice_level)
 gboolean
 arv_make_thread_realtime (int priority)
 {
-	arv_debug_misc ("SCHED API not supported on OSX/Windows");
+	arv_info_misc ("SCHED API not supported on OSX/Windows");
 
 	return FALSE;
 }
@@ -332,7 +332,7 @@ arv_make_thread_realtime (int priority)
 gboolean
 arv_make_thread_high_priority (int nice_level)
 {
-	arv_debug_misc ("RtKit not supported on OSX/Windows");
+	arv_info_misc ("RtKit not supported on OSX/Windows");
 
 	return FALSE;
 }
