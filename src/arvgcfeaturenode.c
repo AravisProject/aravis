@@ -175,7 +175,7 @@ arv_gc_feature_node_set_attribute (ArvDomElement *self, const char *name, const 
 		else
 			priv->name_space = ARV_GC_NAME_SPACE_CUSTOM;
 	} else
-		arv_debug_dom ("[GcFeature::set_attribute] Unknown attribute '%s'", name);
+		arv_info_dom ("[GcFeature::set_attribute] Unknown attribute '%s'", name);
 }
 
 static const char *
@@ -193,7 +193,7 @@ arv_gc_feature_node_get_attribute (ArvDomElement *self, const char *name)
 				return "Custom";
 		}
 
-	arv_debug_dom ("[GcFeature::set_attribute] Unknown attribute '%s'", name);
+	arv_info_dom ("[GcFeature::set_attribute] Unknown attribute '%s'", name);
 
 	return NULL;
 }

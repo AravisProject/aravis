@@ -278,18 +278,18 @@ arv_evaluator_token_debug (ArvEvaluatorToken *token, GHashTable *variables)
 	switch (token->token_id) {
 		case ARV_EVALUATOR_TOKEN_VARIABLE:
 			value = g_hash_table_lookup (variables, token->data.name);
-			arv_log_evaluator ("(var) %s = %g%s", token->data.name,
+			arv_debug_evaluator ("(var) %s = %g%s", token->data.name,
 					   value != NULL ? arv_value_get_double (value) : 0,
 					   value != NULL ? "" : " not found");
 			break;
 		case ARV_EVALUATOR_TOKEN_CONSTANT_INT64:
-			arv_log_evaluator ("(int64) %" G_GINT64_FORMAT, token->data.v_int64);
+			arv_debug_evaluator ("(int64) %" G_GINT64_FORMAT, token->data.v_int64);
 			break;
 		case ARV_EVALUATOR_TOKEN_CONSTANT_DOUBLE:
-			arv_log_evaluator ("(double) %g", token->data.v_double);
+			arv_debug_evaluator ("(double) %g", token->data.v_double);
 			break;
 		default:
-			arv_log_evaluator ("(operator) %s", arv_evaluator_token_infos[token->token_id].tag);
+			arv_debug_evaluator ("(operator) %s", arv_evaluator_token_infos[token->token_id].tag);
 	}
 }
 
@@ -968,9 +968,9 @@ evaluate (GSList *token_stack, GHashTable *variables, gint64 *v_int64, double *v
 		*v_int64 = arv_value_get_int64 (&stack[0].value);
 
 	if (arv_value_holds_int64 (&stack[0].value))
-		arv_log_evaluator ("[Evaluator::evaluate] Result = (int64) %" G_GINT64_FORMAT, arv_value_get_int64 (&stack[0].value));
+		arv_debug_evaluator ("[Evaluator::evaluate] Result = (int64) %" G_GINT64_FORMAT, arv_value_get_int64 (&stack[0].value));
 	else
-		arv_log_evaluator ("[Evaluator::evaluate] Result = (double) %g", arv_value_get_double (&stack[0].value));
+		arv_debug_evaluator ("[Evaluator::evaluate] Result = (double) %g", arv_value_get_double (&stack[0].value));
 
 	return ARV_EVALUATOR_STATUS_SUCCESS;
 CLEANUP:
@@ -1151,14 +1151,14 @@ parse_expression (ArvEvaluator *evaluator)
 
 	free_rpn_stack (evaluator);
 
-	arv_log_evaluator ("[Evaluator::parse_expression] %s", evaluator->priv->expression);
+	arv_debug_evaluator ("[Evaluator::parse_expression] %s", evaluator->priv->expression);
 
 	status = parse_to_stacks (evaluator, evaluator->priv->expression, &state);
 
 	if (status != ARV_EVALUATOR_STATUS_SUCCESS)
 		goto CLEANUP;
 
-	arv_log_evaluator ("[Evaluator::parse_expression] Found %d items in expression", state.count);
+	arv_debug_evaluator ("[Evaluator::parse_expression] Found %d items in expression", state.count);
 
 	while (state.operator_stack != NULL) {
 		if (arv_evaluator_token_is_left_parenthesis (state.operator_stack->data)) {
@@ -1175,8 +1175,8 @@ parse_expression (ArvEvaluator *evaluator)
 		arv_evaluator_token_free (iter->data);
 	g_slist_free (state.garbage_stack);
 
-	arv_log_evaluator ("[Evaluator::parse_expression] %d items in garbage list", count);
-	arv_log_evaluator ("[Evaluator::parse_expression] %d items in token list", g_slist_length (evaluator->priv->rpn_stack));
+	arv_debug_evaluator ("[Evaluator::parse_expression] %d items in garbage list", count);
+	arv_debug_evaluator ("[Evaluator::parse_expression] %d items in token list", g_slist_length (evaluator->priv->rpn_stack));
 
 	return evaluator->priv->rpn_stack == NULL ? ARV_EVALUATOR_STATUS_EMPTY_EXPRESSION : ARV_EVALUATOR_STATUS_SUCCESS;
 
@@ -1217,12 +1217,12 @@ arv_evaluator_evaluate_as_double (ArvEvaluator *evaluator, GError **error)
 
 	g_return_val_if_fail (ARV_IS_EVALUATOR (evaluator), 0.0);
 
-	arv_log_evaluator ("[Evaluator::evaluate_as_double] Expression = '%s'",
+	arv_debug_evaluator ("[Evaluator::evaluate_as_double] Expression = '%s'",
 			   evaluator->priv->expression);
 
 	if (evaluator->priv->parsing_status == ARV_EVALUATOR_STATUS_NOT_PARSED) {
 		evaluator->priv->parsing_status = parse_expression (evaluator);
-		arv_log_evaluator ("[Evaluator::evaluate_as_double] Parsing status = %d",
+		arv_debug_evaluator ("[Evaluator::evaluate_as_double] Parsing status = %d",
 				   evaluator->priv->parsing_status);
 	}
 
@@ -1249,12 +1249,12 @@ arv_evaluator_evaluate_as_int64 (ArvEvaluator *evaluator, GError **error)
 
 	g_return_val_if_fail (ARV_IS_EVALUATOR (evaluator), 0.0);
 
-	arv_log_evaluator ("[Evaluator::evaluate_as_int64] Expression = '%s'",
+	arv_debug_evaluator ("[Evaluator::evaluate_as_int64] Expression = '%s'",
 			   evaluator->priv->expression);
 
 	if (evaluator->priv->parsing_status == ARV_EVALUATOR_STATUS_NOT_PARSED) {
 		evaluator->priv->parsing_status = parse_expression (evaluator);
-		arv_log_evaluator ("[Evaluator::evaluate_as_int64] Parsing status = %d",
+		arv_debug_evaluator ("[Evaluator::evaluate_as_int64] Parsing status = %d",
 				   evaluator->priv->parsing_status);
 	}
 
@@ -1335,7 +1335,7 @@ arv_evaluator_set_sub_expression (ArvEvaluator *evaluator, const char *name, con
 
 	evaluator->priv->parsing_status = ARV_EVALUATOR_STATUS_NOT_PARSED;
 
-	arv_log_evaluator ("[Evaluator::set_sub_expression] %s = %s", name, expression);
+	arv_debug_evaluator ("[Evaluator::set_sub_expression] %s = %s", name, expression);
 }
 
 /**
@@ -1391,7 +1391,7 @@ arv_evaluator_set_constant (ArvEvaluator *evaluator, const char *name, const cha
 
 	evaluator->priv->parsing_status = ARV_EVALUATOR_STATUS_NOT_PARSED;
 
-	arv_log_evaluator ("[Evaluator::set_constant] %s = %s", name, constant);
+	arv_debug_evaluator ("[Evaluator::set_constant] %s = %s", name, constant);
 }
 
 /**
@@ -1431,7 +1431,7 @@ arv_evaluator_set_double_variable (ArvEvaluator *evaluator, const char *name, do
 			     g_strdup (name),
 			     arv_value_new_double (v_double));
 
-	arv_log_evaluator ("[Evaluator::set_double_variable] %s = %g",
+	arv_debug_evaluator ("[Evaluator::set_double_variable] %s = %g",
 			   name, v_double);
 }
 
@@ -1451,7 +1451,7 @@ arv_evaluator_set_int64_variable (ArvEvaluator *evaluator, const char *name, gin
 			     g_strdup (name),
 			     arv_value_new_int64 (v_int64));
 
-	arv_log_evaluator ("[Evaluator::set_int64_variable] %s = %" G_GINT64_FORMAT, name, v_int64);
+	arv_debug_evaluator ("[Evaluator::set_int64_variable] %s = %" G_GINT64_FORMAT, name, v_int64);
 }
 
 /**

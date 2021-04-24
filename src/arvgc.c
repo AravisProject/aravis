@@ -266,7 +266,7 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 	else if (strcmp (tag_name, "Extension") == 0)
 		node = NULL;
 	else
-		arv_debug_dom ("[Genicam::create_element] Unknown tag (%s)", tag_name);
+		arv_info_dom ("[Genicam::create_element] Unknown tag (%s)", tag_name);
 
 	return ARV_DOM_ELEMENT (node);
 }
@@ -327,7 +327,7 @@ arv_gc_register_feature_node (ArvGc *genicam, ArvGcFeatureNode *node)
 	g_hash_table_remove (genicam->priv->nodes, (char *) name);
 	g_hash_table_insert (genicam->priv->nodes, (char *) name, node);
 
-	arv_log_genicam ("[Gc::register_feature_node] Register node '%s' [%s]", name,
+	arv_debug_genicam ("[Gc::register_feature_node] Register node '%s' [%s]", name,
 			 arv_dom_node_get_node_name (ARV_DOM_NODE (node)));
 }
 
@@ -343,7 +343,7 @@ arv_gc_set_default_node_data (ArvGc *genicam, const char *node_name, ...)
 	if (arv_gc_get_node (genicam, node_name) != NULL)
 		return;
 
-	arv_debug_genicam ("[Gc::set_default_node_data] Add '%s'", node_name);
+	arv_info_genicam ("[Gc::set_default_node_data] Add '%s'", node_name);
 
 	va_start (args, node_name);
 	do {

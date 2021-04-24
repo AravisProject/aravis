@@ -285,12 +285,12 @@ gst_buffer_release_cb (void *user_data)
 		gint n_input_buffers, n_output_buffers;
 
 		arv_stream_get_n_buffers (stream, &n_input_buffers, &n_output_buffers);
-		arv_log_viewer ("push buffer (%d,%d)", n_input_buffers, n_output_buffers);
+		arv_debug_viewer ("push buffer (%d,%d)", n_input_buffers, n_output_buffers);
 
 		arv_stream_push_buffer (stream, release_data->arv_buffer);
 		g_object_unref (stream);
 	} else {
-		arv_debug_viewer ("invalid stream object");
+		arv_info_viewer ("invalid stream object");
 		g_object_unref (release_data->arv_buffer);
 	}
 
@@ -354,7 +354,7 @@ new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 		return;
 
 	arv_stream_get_n_buffers (stream, &n_input_buffers, &n_output_buffers);
-	arv_log_viewer ("pop buffer (%d,%d)", n_input_buffers, n_output_buffers);
+	arv_debug_viewer ("pop buffer (%d,%d)", n_input_buffers, n_output_buffers);
 
 	if (arv_buffer_get_status (arv_buffer) == ARV_BUFFER_STATUS_SUCCESS) {
 		size_t size;
@@ -369,7 +369,7 @@ new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 		viewer->n_images++;
 		viewer->n_bytes += size;
 	} else {
-		arv_log_viewer ("push discarded buffer");
+		arv_debug_viewer ("push discarded buffer");
 		arv_stream_push_buffer (stream, arv_buffer);
 		viewer->n_errors++;
 	}

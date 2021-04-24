@@ -40,7 +40,7 @@ ArvDebugCategoryInfos arv_debug_category_infos[] = {
 	{ .name = "sp", 		.description = "Stream protocol packets (likely high volume output)" },
 	{ .name = "genicam", 		.description = "Genicam specialized DOM elements" },
 	{ .name = "policies", 		.description = "Genicam runtime configurable policies",
-					.level = ARV_DEBUG_LEVEL_DEBUG },
+					.level = ARV_DEBUG_LEVEL_INFO },
 	{ .name = "chunk", 		.description = "Chunk data code" },
 	{ .name = "dom", 		.description = "Genicam DOM document" },
 	{ .name = "evaluator", 		.description = "Expression evaluator" },
@@ -55,10 +55,10 @@ typedef struct {
 
 ArvDebugLevelInfos arv_debug_level_infos[] = {
 	{ .color = "",			.symbol = ""},
-	{ .color = "\033[1;31m",	.symbol = "❶ "},
-	{ .color = "\033[1;32m",	.symbol = "❷ "},
-	{ .color = "\033[1;34m",	.symbol = "❸ "},
-	{ .color = "\033[0m",		.symbol = "❹ "}
+	{ .color = "\033[1;31m",	.symbol = "🆆 "},
+	{ .color = "\033[1;32m",	.symbol = "🅸 "},
+	{ .color = "\033[1;34m",	.symbol = "🅳 "},
+	{ .color = "\033[0m",		.symbol = "🆃 "}
 };
 
 static gboolean
@@ -85,7 +85,7 @@ arv_debug_initialize (const char *debug_var)
 					if (infos[1] != NULL)
 						arv_debug_category_infos[j].level = atoi (infos[1]);
 					else
-						arv_debug_category_infos[j].level = ARV_DEBUG_LEVEL_DEBUG;
+						arv_debug_category_infos[j].level = ARV_DEBUG_LEVEL_INFO;
 					found = TRUE;
 				}
 			}
@@ -178,6 +178,16 @@ arv_warning (ArvDebugCategory category, const char *format, ...)
 }
 
 void
+arv_info (ArvDebugCategory category, const char *format, ...)
+{
+	va_list args;
+
+	va_start (args, format);
+	arv_debug_with_level (category, ARV_DEBUG_LEVEL_INFO, format, args);
+	va_end (args);
+}
+
+void
 arv_debug (ArvDebugCategory category, const char *format, ...)
 {
 	va_list args;
@@ -188,22 +198,12 @@ arv_debug (ArvDebugCategory category, const char *format, ...)
 }
 
 void
-arv_log (ArvDebugCategory category, const char *format, ...)
+arv_trace (ArvDebugCategory category, const char *format, ...)
 {
 	va_list args;
 
 	va_start (args, format);
-	arv_debug_with_level (category, ARV_DEBUG_LEVEL_LOG, format, args);
-	va_end (args);
-}
-
-void
-arv_verbosely_log (ArvDebugCategory category, const char *format, ...)
-{
-	va_list args;
-
-	va_start (args, format);
-	arv_debug_with_level (category, ARV_DEBUG_LEVEL_VERBOSE_LOG, format, args);
+	arv_debug_with_level (category, ARV_DEBUG_LEVEL_TRACE, format, args);
 	va_end (args);
 }
 

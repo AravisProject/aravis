@@ -206,7 +206,7 @@ arv_gc_property_node_set_attribute (ArvDomElement *self, const char *name, const
 		g_free (priv->name);
 		priv->name = g_strdup (value);
 	} else
-		arv_debug_dom ("[GcPropertyNode::set_attribute] Unknown attribute '%s'", name);
+		arv_info_dom ("[GcPropertyNode::set_attribute] Unknown attribute '%s'", name);
 }
 
 static const char *
@@ -217,7 +217,7 @@ arv_gc_property_node_get_attribute (ArvDomElement *self, const char *name)
 	if (strcmp (name, "Name") == 0)
 		return priv->name;
 
-	arv_debug_dom ("[GcPropertyNode::set_attribute] Unknown attribute '%s'", name);
+	arv_info_dom ("[GcPropertyNode::set_attribute] Unknown attribute '%s'", name);
 
 	return NULL;
 }

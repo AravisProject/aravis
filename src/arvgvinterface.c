@@ -92,7 +92,7 @@ arv_gv_discover_socket_list_new (void)
 									sizeof (struct sockaddr));
 		inet_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address));
 		inet_address_string = g_inet_address_to_string (inet_address);
-		arv_debug_interface ("[GvDiscoverSocket::new] Add interface %s", inet_address_string);
+		arv_info_interface ("[GvDiscoverSocket::new] Add interface %s", inet_address_string);
 		g_free (inet_address_string);
 		discover_socket->interface_address = g_inet_socket_address_new (inet_address, 0);
 		g_object_unref (socket_address);
@@ -359,7 +359,7 @@ _discover (GHashTable *devices, const char *device_id)
 						char *address_string;
 						char *data = buffer + sizeof (ArvGvcpHeader);
 
-						arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
+						arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_DEBUG);
 
 						interface_address = g_inet_socket_address_get_address
 							(G_INET_SOCKET_ADDRESS (discover_socket->interface_address));
@@ -367,7 +367,7 @@ _discover (GHashTable *devices, const char *device_id)
 												  data);
 						address_string = g_inet_address_to_string (interface_address);
 
-						arv_debug_interface ("[GvInterface::discovery] Device '%s' found "
+						arv_info_interface ("[GvInterface::discovery] Device '%s' found "
 								     "(interface %s) user_id '%s' - MAC '%s'",
 								     device_infos->id,
 								     address_string,

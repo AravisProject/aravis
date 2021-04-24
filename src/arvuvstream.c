@@ -85,7 +85,7 @@ arv_uv_stream_thread (void *data)
 	guint64 offset;
 	size_t transferred;
 
-	arv_log_stream_thread ("Start USB3Vision stream thread");
+	arv_debug_stream_thread ("Start USB3Vision stream thread");
 
 	incoming_buffer = g_malloc (ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE);
 
@@ -116,7 +116,7 @@ arv_uv_stream_thread (void *data)
 		else
 			packet = incoming_buffer;
 
-		arv_log_sp ("Asking for %" G_GSIZE_FORMAT " bytes", size);
+		arv_debug_sp ("Asking for %" G_GSIZE_FORMAT " bytes", size);
 		arv_uv_device_bulk_transfer (thread_data->uv_device,  ARV_UV_ENDPOINT_DATA, LIBUSB_ENDPOINT_IN,
 					     packet, size, &transferred, 0, &error);
 
@@ -126,14 +126,14 @@ arv_uv_stream_thread (void *data)
 		} else {
 			ArvUvspPacketType packet_type;
 
-			arv_log_sp ("Received %" G_GSIZE_FORMAT " bytes", transferred);
-			arv_uvsp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
+			arv_debug_sp ("Received %" G_GSIZE_FORMAT " bytes", transferred);
+			arv_uvsp_packet_debug (packet, ARV_DEBUG_LEVEL_DEBUG);
 
 			packet_type = arv_uvsp_packet_get_packet_type (packet);
 			switch (packet_type) {
 				case ARV_UVSP_PACKET_TYPE_LEADER:
 					if (buffer != NULL) {
-						arv_debug_stream_thread ("New leader received while a buffer is still open");
+						arv_info_stream_thread ("New leader received while a buffer is still open");
 						buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
 						arv_stream_push_output_buffer (thread_data->stream, buffer);
 						if (thread_data->callback != NULL)
@@ -170,13 +170,13 @@ arv_uv_stream_thread (void *data)
 					break;
 				case ARV_UVSP_PACKET_TYPE_TRAILER:
 					if (buffer != NULL) {
-						arv_log_stream_thread ("Received %" G_GUINT64_FORMAT
+						arv_debug_stream_thread ("Received %" G_GUINT64_FORMAT
 								       " bytes - expected %zu",
 								       offset, buffer->priv->size);
 
 						/* If the image was incomplete, drop the frame and try again. */
 						if (offset != buffer->priv->size) {
-							arv_debug_stream_thread ("Incomplete image received, dropping "
+							arv_info_stream_thread ("Incomplete image received, dropping "
 										 "(received %" G_GUINT64_FORMAT
 										 " / expected %" G_GSIZE_FORMAT ")",
 										 offset, buffer->priv->size);
@@ -212,7 +212,7 @@ arv_uv_stream_thread (void *data)
 					}
 					break;
 				default:
-					arv_debug_stream_thread ("Unknown packet type");
+					arv_info_stream_thread ("Unknown packet type");
 					break;
 			}
 		}
@@ -233,7 +233,7 @@ arv_uv_stream_thread (void *data)
 	g_free (incoming_buffer);
 
         /* The thread was cancelled with unprocessed frame. Release it to prevent memory leak */
-	arv_log_stream_thread ("Stop USB3Vision stream thread");
+	arv_debug_stream_thread ("Stop USB3Vision stream thread");
 
 	return NULL;
 }
@@ -286,12 +286,12 @@ arv_uv_stream_start_thread (ArvStream *stream)
 
 	alignment = 1 << ((si_info & ARV_SIRM_INFO_ALIGNMENT_MASK) >> ARV_SIRM_INFO_ALIGNMENT_SHIFT);
 
-	arv_debug_stream ("SIRM_INFO             = 0x%08x", si_info);
-	arv_debug_stream ("SIRM_REQ_PAYLOAD_SIZE = 0x%016" G_GINT64_MODIFIER "x", si_req_payload_size);
-	arv_debug_stream ("SIRM_REQ_LEADER_SIZE  = 0x%08x", si_req_leader_size);
-	arv_debug_stream ("SIRM_REQ_TRAILER_SIZE = 0x%08x", si_req_trailer_size);
+	arv_info_stream ("SIRM_INFO             = 0x%08x", si_info);
+	arv_info_stream ("SIRM_REQ_PAYLOAD_SIZE = 0x%016" G_GINT64_MODIFIER "x", si_req_payload_size);
+	arv_info_stream ("SIRM_REQ_LEADER_SIZE  = 0x%08x", si_req_leader_size);
+	arv_info_stream ("SIRM_REQ_TRAILER_SIZE = 0x%08x", si_req_trailer_size);
 
-	arv_debug_stream ("Required alignment    = %d", alignment);
+	arv_info_stream ("Required alignment    = %d", alignment);
 
 	aligned_maximum_transfer_size = ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE / alignment * alignment;
 
@@ -321,12 +321,12 @@ arv_uv_stream_start_thread (ArvStream *stream)
 	arv_device_write_memory (device, sirm_offset + ARV_SIRM_TRANSFER1_SIZE, sizeof (si_transfer1_size), &si_transfer1_size, NULL);
 	arv_device_write_memory (device, sirm_offset + ARV_SIRM_TRANSFER2_SIZE, sizeof (si_transfer2_size), &si_transfer2_size, NULL);
 
-	arv_debug_stream ("SIRM_PAYLOAD_SIZE     = 0x%08x", si_payload_size);
-	arv_debug_stream ("SIRM_PAYLOAD_COUNT    = 0x%08x", si_payload_count);
-	arv_debug_stream ("SIRM_TRANSFER1_SIZE   = 0x%08x", si_transfer1_size);
-	arv_debug_stream ("SIRM_TRANSFER2_SIZE   = 0x%08x", si_transfer2_size);
-	arv_debug_stream ("SIRM_MAX_LEADER_SIZE  = 0x%08x", si_req_leader_size);
-	arv_debug_stream ("SIRM_MAX_TRAILER_SIZE = 0x%08x", si_req_trailer_size);
+	arv_info_stream ("SIRM_PAYLOAD_SIZE     = 0x%08x", si_payload_size);
+	arv_info_stream ("SIRM_PAYLOAD_COUNT    = 0x%08x", si_payload_count);
+	arv_info_stream ("SIRM_TRANSFER1_SIZE   = 0x%08x", si_transfer1_size);
+	arv_info_stream ("SIRM_TRANSFER2_SIZE   = 0x%08x", si_transfer2_size);
+	arv_info_stream ("SIRM_MAX_LEADER_SIZE  = 0x%08x", si_req_leader_size);
+	arv_info_stream ("SIRM_MAX_TRAILER_SIZE = 0x%08x", si_req_trailer_size);
 
 	si_control = ARV_SIRM_CONTROL_STREAM_ENABLE;
 	arv_device_write_memory (device, sirm_offset + ARV_SIRM_CONTROL, sizeof (si_control), &si_control, NULL);
@@ -452,11 +452,11 @@ arv_uv_stream_finalize (GObject *object)
 
 		thread_data = priv->thread_data;
 
-		arv_debug_stream ("[UvStream::finalize] n_completed_buffers    = %u",
+		arv_info_stream ("[UvStream::finalize] n_completed_buffers    = %u",
 				  thread_data->n_completed_buffers);
-		arv_debug_stream ("[UvStream::finalize] n_failures             = %u",
+		arv_info_stream ("[UvStream::finalize] n_failures             = %u",
 				  thread_data->n_failures);
-		arv_debug_stream ("[UvStream::finalize] n_underruns            = %u",
+		arv_info_stream ("[UvStream::finalize] n_underruns            = %u",
 				  thread_data->n_underruns);
 
 		g_clear_object (&thread_data->uv_device);

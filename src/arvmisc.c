@@ -507,7 +507,7 @@ arv_decompress (void *input_buffer, size_t input_size, size_t *output_size)
 		stream.avail_in = MIN (input_size, ARV_DECOMPRESS_CHUNK);
 		stream.next_in = input_buffer;
 
-		arv_debug_misc ("[Decompress] Input ptr = 0x%p - Chunk size = %d - %c",
+		arv_info_misc ("[Decompress] Input ptr = 0x%p - Chunk size = %d - %c",
 				(void *) stream.next_in, stream.avail_in, *stream.next_in);
 
 		input_size -= stream.avail_in;
@@ -713,7 +713,7 @@ arv_pixel_format_to_gst_caps_string (ArvPixelFormat pixel_format)
 		return NULL;
 	}
 
-	arv_log_misc ("[PixelFormat::to_gst_caps_string] 0x%08x -> %s",
+	arv_debug_misc ("[PixelFormat::to_gst_caps_string] 0x%08x -> %s",
 		      pixel_format, arv_gst_caps_infos[i].gst_caps_string);
 
 	return arv_gst_caps_infos[i].gst_caps_string;
@@ -758,7 +758,7 @@ arv_pixel_format_to_gst_0_10_caps_string (ArvPixelFormat pixel_format)
 		return NULL;
 	}
 
-	arv_log_misc ("[PixelFormat::to_gst_0_10_caps_string] 0x%08x -> %s",
+	arv_debug_misc ("[PixelFormat::to_gst_0_10_caps_string] 0x%08x -> %s",
 		      pixel_format, arv_gst_caps_infos[i].gst_0_10_caps_string);
 
 	return arv_gst_caps_infos[i].gst_0_10_caps_string;

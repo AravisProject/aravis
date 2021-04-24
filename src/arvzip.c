@@ -85,8 +85,8 @@ arv_zip_build_file_list (ArvZip *zip)
 	for (i = 0; i < zip->n_files; i++) {
 		ptr = zip->buffer + zip->header_size + offset;
 		if (ARV_GUINT32_FROM_LE_PTR (ptr, 0) != 0x02014b50) {
-			arv_debug_misc ("[Zip::build_file_list] Magic number of central directory not found (0x02014b50)");
-			arv_debug_misc ("[Zip::build_file_list] Expected at 0x%" G_GSIZE_MODIFIER "x - found 0x%08x instead",
+			arv_info_misc ("[Zip::build_file_list] Magic number of central directory not found (0x02014b50)");
+			arv_info_misc ("[Zip::build_file_list] Expected at 0x%" G_GSIZE_MODIFIER "x - found 0x%08x instead",
 					zip->header_size + offset, ARV_GUINT32_FROM_LE_PTR (ptr, 0));
 		       	return;
 		}
@@ -97,7 +97,7 @@ arv_zip_build_file_list (ArvZip *zip)
                 zip_file->offset = ARV_GUINT32_FROM_LE_PTR (ptr, 42);
 		zip_file->name = g_strndup (((char *) ptr) + 46, ARV_GUINT16_FROM_LE_PTR (ptr, 28));
 
-		arv_log_misc ("[Zip::list_files] %s", zip_file->name);
+		arv_debug_misc ("[Zip::list_files] %s", zip_file->name);
 
 		zip->files = g_slist_prepend (zip->files, zip_file);
 
@@ -131,7 +131,7 @@ arv_zip_get_file_data (ArvZip *zip, ArvZipFile *zip_file)
 	ptr = zip->buffer + zip_file->offset + zip->header_size;
 
         if (ARV_GUINT32_FROM_LE_PTR (ptr, 0) != 0x04034b50) {
-		arv_debug_misc ("[Zip::get_file_data] Magic number for file header not found (0x04034b50)");
+		arv_info_misc ("[Zip::get_file_data] Magic number for file header not found (0x04034b50)");
 	       	return -1;
 	}
 
@@ -174,14 +174,14 @@ arv_zip_new (const void *buffer, size_t size)
                 }
         }
 	if (!directory_found) {
-		arv_debug_misc ("[Zip::new] Magic number for end of central directory not found (0x06054b50)");
+		arv_info_misc ("[Zip::new] Magic number for end of central directory not found (0x06054b50)");
 		return zip;
 	}
 
 	ptr = zip->buffer + zip->directory_position;
         zip->n_files = ARV_GUINT16_FROM_LE_PTR (ptr, 10);
         if (ARV_GUINT16_FROM_LE_PTR (ptr, 8) != zip->n_files) {
-		arv_debug_misc ("[Zip::new] Mismatch in number of files");
+		arv_info_misc ("[Zip::new] Mismatch in number of files");
 		zip->n_files = 0;
 		return zip;
         }
@@ -190,11 +190,11 @@ arv_zip_new (const void *buffer, size_t size)
         zip->directory_offset = ARV_GUINT32_FROM_LE_PTR (ptr, 16);
         zip->header_size = zip->directory_position - (zip->directory_offset + zip->directory_size);
 
-	arv_log_misc ("[Zip::new] number of files = %d", zip->n_files);
-	arv_log_misc ("[Zip::new] directory position = 0x%08" G_GINTPTR_MODIFIER "x", zip->directory_position);
-	arv_log_misc ("[Zip::new] directory size = %" G_GSIZE_FORMAT, zip->directory_size);
-	arv_log_misc ("[Zip::new] directory offset = 0x%08" G_GINTPTR_MODIFIER "x", zip->directory_offset);
-	arv_log_misc ("[Zip::new] header size = %" G_GSIZE_FORMAT, zip->header_size);
+	arv_debug_misc ("[Zip::new] number of files = %d", zip->n_files);
+	arv_debug_misc ("[Zip::new] directory position = 0x%08" G_GINTPTR_MODIFIER "x", zip->directory_position);
+	arv_debug_misc ("[Zip::new] directory size = %" G_GSIZE_FORMAT, zip->directory_size);
+	arv_debug_misc ("[Zip::new] directory offset = 0x%08" G_GINTPTR_MODIFIER "x", zip->directory_offset);
+	arv_debug_misc ("[Zip::new] header size = %" G_GSIZE_FORMAT, zip->header_size);
 
         arv_zip_build_file_list (zip);
 

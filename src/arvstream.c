@@ -313,7 +313,7 @@ arv_stream_stop_thread (ArvStream *stream, gboolean delete_buffers)
 	} while (buffer != NULL);
 	g_async_queue_unlock (priv->output_queue);
 
-	arv_debug_stream ("[Stream::reset] Deleted %u buffers\n", n_deleted);
+	arv_info_stream ("[Stream::reset] Deleted %u buffers\n", n_deleted);
 
 	return n_deleted;
 }
@@ -495,9 +495,9 @@ arv_stream_finalize (GObject *object)
 	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
 	ArvBuffer *buffer;
 
-	arv_debug_stream ("[Stream::finalize] Flush %d buffer[s] in input queue",
+	arv_info_stream ("[Stream::finalize] Flush %d buffer[s] in input queue",
 			  g_async_queue_length (priv->input_queue));
-	arv_debug_stream ("[Stream::finalize] Flush %d buffer[s] in output queue",
+	arv_info_stream ("[Stream::finalize] Flush %d buffer[s] in output queue",
 			  g_async_queue_length (priv->output_queue));
 
 	if (priv->emit_signals) {

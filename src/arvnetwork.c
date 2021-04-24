@@ -73,7 +73,7 @@ arv_initialize_networking (void)
 		};
 		g_critical ("WSAStartup failed with error %ld: %s", res, desc);
 	}
-	arv_debug_interface ("WSAStartup done.");
+	arv_info_interface ("WSAStartup done.");
 }
 
 __attribute__((destructor)) static void

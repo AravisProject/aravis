@@ -179,7 +179,7 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 	do {
 		GError *local_error = NULL;
 
-		arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_VERBOSE_LOG);
+		arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_TRACE);
 
 		success = g_socket_send_to (io_data->socket, io_data->device_address,
 					    (const char *) packet, packet_size,
@@ -216,7 +216,7 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 					ArvGvcpCommand ack_command;
 					guint16 packet_id;
 
-					arv_gvcp_packet_debug (ack_packet, ARV_DEBUG_LEVEL_VERBOSE_LOG);
+					arv_gvcp_packet_debug (ack_packet, ARV_DEBUG_LEVEL_TRACE);
 
 					packet_type = arv_gvcp_packet_get_packet_type (ack_packet);
 					ack_command = arv_gvcp_packet_get_command (ack_packet);
@@ -230,13 +230,13 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 
 						timeout_stop_ms = g_get_monotonic_time () / 1000 + pending_ack_timeout_ms;
 
-						arv_log_device ("[GvDevice::%s] Pending ack timeout = %" G_GINT64_FORMAT,
+						arv_debug_device ("[GvDevice::%s] Pending ack timeout = %" G_GINT64_FORMAT,
 								operation, pending_ack_timeout_ms);
 					} else if (packet_type == ARV_GVCP_PACKET_TYPE_ERROR) {
 						expected_answer = ack_command == expected_ack_command &&
 							packet_id == io_data->packet_id;
 						if (!expected_answer) {
-							arv_debug_device ("[GvDevice::%s] Unexpected answer (0x%04x)", operation,
+							arv_info_device ("[GvDevice::%s] Unexpected answer (0x%04x)", operation,
 									  packet_type);
 						} else
 							command_error = arv_gvcp_packet_get_packet_flags (ack_packet);
@@ -246,7 +246,7 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 							packet_id == io_data->packet_id &&
 							count >= ack_size;
 						if (!expected_answer) {
-							arv_debug_device ("[GvDevice::%s] Unexpected answer (0x%04x)", operation,
+							arv_info_device ("[GvDevice::%s] Unexpected answer (0x%04x)", operation,
 									  packet_type);
 						}
 					}
@@ -399,10 +399,10 @@ arv_gv_device_heartbeat_thread (void *data)
 			}
 
 			if (!g_cancellable_is_cancelled (thread_data->cancellable)) {
-				arv_log_device ("[GvDevice::Heartbeat] Ack value = %d", value);
+				arv_debug_device ("[GvDevice::Heartbeat] Ack value = %d", value);
 
 				if (counter > 1)
-					arv_log_device ("[GvDevice::Heartbeat] Tried %u times", counter);
+					arv_debug_device ("[GvDevice::Heartbeat] Tried %u times", counter);
 
 				if ((value & (ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_CONTROL |
 					      ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_EXCLUSIVE)) == 0) {
@@ -591,7 +591,7 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 
 	node = arv_device_get_feature (device, "GevSCPSFireTestPacket");
 	if (!ARV_IS_GC_COMMAND (node) && !ARV_IS_GC_BOOLEAN (node)) {
-		arv_debug_device ("[GvDevice::auto_packet_size] No GevSCPSFireTestPacket feature found");
+		arv_info_device ("[GvDevice::auto_packet_size] No GevSCPSFireTestPacket feature found");
 		return arv_device_get_integer_feature_value (device, "GevSCPSPacketSize", error);
 	}
 
@@ -642,7 +642,7 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 	/* When exit_early is set, the function only checks the current packet size is working.
 	 * If not, the full automatic packet size adjustment is run. */
 	if (success && exit_early) {
-		arv_debug_device ("[GvDevice::auto_packet_size] Current packet size check successfull "
+		arv_info_device ("[GvDevice::auto_packet_size] Current packet size check successfull "
 				  "(%" G_GINT64_FORMAT " bytes)",
 				  packet_size);
 	} else {
@@ -651,7 +651,7 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 		do {
 			current_size = ((current_size + inc - 1) / inc) * inc;
 
-			arv_debug_device ("[GvDevice::auto_packet_size] Try packet size = %d", current_size);
+			arv_info_device ("[GvDevice::auto_packet_size] Try packet size = %d", current_size);
 			arv_device_set_integer_feature_value (device, "GevSCPSPacketSize", current_size, NULL);
 
 			current_size = arv_device_get_integer_feature_value (device, "GevSCPSPacketSize", NULL);
@@ -675,7 +675,7 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 
 		arv_device_set_integer_feature_value (device, "GevSCPSPacketSize", packet_size, error);
 
-		arv_debug_device ("[GvDevice::auto_packet_size] Packet size set to %" G_GINT64_FORMAT " bytes",
+		arv_info_device ("[GvDevice::auto_packet_size] Packet size set to %" G_GINT64_FORMAT " bytes",
 				  packet_size);
 	}
 
@@ -770,7 +770,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size, GError **
 
 	filename[ARV_GVBS_XML_URL_SIZE - 1] = '\0';
 
-	arv_debug_device ("[GvDevice::load_genicam] xml url = '%s' at 0x%x", filename, address);
+	arv_info_device ("[GvDevice::load_genicam] xml url = '%s' at 0x%x", filename, address);
 
 	arv_parse_genicam_url (filename, ARV_GVBS_XML_URL_SIZE, &scheme, NULL, &path, NULL, NULL,
 			       &file_address, &file_size);
@@ -782,7 +782,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size, GError **
 		if (genicam)
 			*size = len;
 	} else if (g_ascii_strcasecmp (scheme, "local") == 0) {
-		arv_debug_device ("[GvDevice::load_genicam] Xml address = 0x%" G_GINT64_MODIFIER "x - "
+		arv_info_device ("[GvDevice::load_genicam] Xml address = 0x%" G_GINT64_MODIFIER "x - "
 				  "size = 0x%" G_GINT64_MODIFIER "x - %s", file_address, file_size, path);
 
 		if (file_size > 0) {
@@ -790,7 +790,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size, GError **
 			if (arv_device_read_memory (ARV_DEVICE (gv_device), file_address, file_size,
 						    genicam, NULL)) {
 
-				if (arv_debug_check (ARV_DEBUG_CATEGORY_MISC, ARV_DEBUG_LEVEL_LOG)) {
+				if (arv_debug_check (ARV_DEBUG_CATEGORY_MISC, ARV_DEBUG_LEVEL_DEBUG)) {
 					GString *string = g_string_new ("");
 
 					g_string_append_printf (string,
@@ -798,7 +798,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size, GError **
 								G_GINT64_MODIFIER "x\n", file_size);
 					arv_g_string_append_hex_dump (string, genicam, file_size);
 
-					arv_log_misc ("%s", string->str);
+					arv_debug_misc ("%s", string->str);
 
 					g_string_free (string, TRUE);
 				}
@@ -807,7 +807,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size, GError **
 					ArvZip *zip;
 					const GSList *zip_files;
 
-					arv_debug_device ("[GvDevice::load_genicam] Zipped xml data");
+					arv_info_device ("[GvDevice::load_genicam] Zipped xml data");
 
 					zip = arv_zip_new (genicam, file_size);
 					zip_files = arv_zip_get_file_list (zip);
@@ -1147,7 +1147,7 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 	GError *local_error = NULL;
 
 	n_stream_channels = arv_device_get_integer_feature_value (device, "GevStreamChannelCount", NULL);
-	arv_debug_device ("[GvDevice::create_stream] Number of stream channels = %d", n_stream_channels);
+	arv_info_device ("[GvDevice::create_stream] Number of stream channels = %d", n_stream_channels);
 
 	if (n_stream_channels < 1) {
 		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NO_STREAM_CHANNEL,
@@ -1329,10 +1329,10 @@ arv_gv_device_constructed (GObject *object)
 	}
 
 	address_string = g_inet_address_to_string (priv->interface_address);
-	arv_debug_device ("[GvDevice::new] Interface address = %s", address_string);
+	arv_info_device ("[GvDevice::new] Interface address = %s", address_string);
 	g_free (address_string);
 	address_string = g_inet_address_to_string (priv->device_address);
-	arv_debug_device ("[GvDevice::new] Device address = %s", address_string);
+	arv_info_device ("[GvDevice::new] Device address = %s", address_string);
 	g_free (address_string);
 
 	io_data = g_new0 (ArvGvDeviceIOData, 1);
@@ -1399,13 +1399,13 @@ arv_gv_device_constructed (GObject *object)
 	priv->is_packet_resend_supported = (capabilities & ARV_GVBS_GVCP_CAPABILITY_PACKET_RESEND) != 0;
 	priv->is_write_memory_supported = (capabilities & ARV_GVBS_GVCP_CAPABILITY_WRITE_MEMORY) != 0;
 
-	arv_debug_device ("[GvDevice::new] Device endianness = %s", priv->is_big_endian_device ? "big" : "little");
-	arv_debug_device ("[GvDevice::new] Packet resend     = %s", priv->is_packet_resend_supported ? "yes" : "no");
-	arv_debug_device ("[GvDevice::new] Write memory      = %s", priv->is_write_memory_supported ? "yes" : "no");
+	arv_info_device ("[GvDevice::new] Device endianness = %s", priv->is_big_endian_device ? "big" : "little");
+	arv_info_device ("[GvDevice::new] Packet resend     = %s", priv->is_packet_resend_supported ? "yes" : "no");
+	arv_info_device ("[GvDevice::new] Write memory      = %s", priv->is_write_memory_supported ? "yes" : "no");
 
 	document = ARV_DOM_DOCUMENT (priv->genicam);
 	register_description = ARV_GC_REGISTER_DESCRIPTION_NODE (arv_dom_document_get_document_element (document));
-	arv_debug_device ("[GvDevice::new] Legacy endianness handling = %s",
+	arv_info_device ("[GvDevice::new] Legacy endianness handling = %s",
 			  arv_gc_register_description_node_compare_schema_version (register_description, 1, 1, 0) < 0 ?
 			  "yes" : "no");
 
