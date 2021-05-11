@@ -1288,6 +1288,15 @@ ArvGcMaskedIntRegNodeClass
 </SECTION>
 
 <SECTION>
+<FILE>arvgcstringnode</FILE>
+<TITLE>ArvGcStringNode</TITLE>
+ArvGcStringNode
+arv_gc_string_node_new
+<SUBSECTION Standard>
+ARV_TYPE_GC_STRING_NODE
+</SECTION>
+
+<SECTION>
 <FILE>arvgcstring</FILE>
 <TITLE>ArvGcString</TITLE>
 ArvGcString
