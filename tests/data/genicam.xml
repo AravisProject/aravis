@@ -256,6 +256,14 @@
     <pPort>Device</pPort>
   </FloatReg>
 
+  <String Name="StringNodeA">
+    <pValue>StringReg</pValue>
+  </String>
+
+  <String Name="StringNodeB">
+    <Value>Hello World!</Value>
+  </String>
+
   <StringReg Name="StringReg">
     <Address>0x1002</Address>
     <Length>4</Length>

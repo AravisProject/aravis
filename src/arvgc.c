@@ -47,6 +47,7 @@
 #include <arvgcmaskedintregnode.h>
 #include <arvgcfloatregnode.h>
 #include <arvgcstringregnode.h>
+#include <arvgcstringnode.h>
 #include <arvgcstructregnode.h>
 #include <arvgcstructentrynode.h>
 #include <arvgccommand.h>
@@ -121,6 +122,8 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 		node = arv_gc_masked_int_reg_node_new ();
 	else if (strcmp (tag_name, "FloatReg") == 0)
 		node = arv_gc_float_reg_node_new ();
+	else if (strcmp (tag_name, "String") == 0)
+		node = arv_gc_string_node_new ();
 	else if (strcmp (tag_name, "StringReg") == 0)
 		node = arv_gc_string_reg_node_new ();
 	else if (strcmp (tag_name, "StructReg") == 0)

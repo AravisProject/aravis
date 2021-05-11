@@ -744,6 +744,62 @@ register_test (void)
 	g_object_unref (device);
 }
 
+static void
+string_test (void)
+{
+	GError *error = NULL;
+	ArvDevice *device;
+	ArvGc *genicam;
+	ArvGcNode *node_str;
+	gint64 value;
+	const char *str;
+
+	device = arv_fake_device_new ("TEST0", &error);
+	g_assert (ARV_IS_FAKE_DEVICE (device));
+	g_assert (error == NULL);
+
+	genicam = arv_device_get_genicam (device);
+	g_assert (ARV_IS_GC (genicam));
+
+	node_str = arv_gc_get_node (genicam, "StringNodeA");
+	g_assert (ARV_IS_GC_STRING (node_str));
+
+	value = arv_gc_string_get_max_length (ARV_GC_STRING (node_str), &error);
+	g_assert_cmpint (value, ==, 4);
+	g_assert (error == NULL);
+
+	arv_gc_string_set_value (ARV_GC_STRING (node_str), "Too long", &error);
+	g_assert (error != NULL);
+	g_clear_error (&error);
+
+	arv_gc_string_set_value (ARV_GC_STRING (node_str), "Test", &error);
+	g_assert (error == NULL);
+
+	str = arv_gc_string_get_value (ARV_GC_STRING (node_str), &error);
+	g_assert_cmpstr (str, ==, "Test");
+	g_assert (error == NULL);
+
+	node_str = arv_gc_get_node (genicam, "StringNodeB");
+	g_assert (ARV_IS_GC_STRING (node_str));
+
+	value = arv_gc_string_get_max_length (ARV_GC_STRING (node_str), &error);
+	g_assert_cmpint (value, ==, 1024);
+	g_assert (error == NULL);
+
+	str = arv_gc_string_get_value (ARV_GC_STRING (node_str), &error);
+	g_assert_cmpstr (str, ==, "Hello World!");
+	g_assert (error == NULL);
+
+	arv_gc_string_set_value (ARV_GC_STRING (node_str), "It fits", &error);
+	g_assert (error == NULL);
+
+	str = arv_gc_string_get_value (ARV_GC_STRING (node_str), &error);
+	g_assert_cmpstr (str, ==, "It fits");
+	g_assert (error == NULL);
+
+	g_object_unref (device);
+}
+
 GRegex *arv_gv_device_get_url_regex (void);
 
 const struct {
@@ -1041,6 +1097,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/genicam/swissknife", swiss_knife_test);
 	g_test_add_func ("/genicam/converter", converter_test);
 	g_test_add_func ("/genicam/register", register_test);
+	g_test_add_func ("/genicam/string", string_test);
 	g_test_add_func ("/genicam/url", url_test);
 	g_test_add_func ("/genicam/mandatory", mandatory_test);
 	g_test_add_func ("/genicam/chunk-data", chunk_data_test);
