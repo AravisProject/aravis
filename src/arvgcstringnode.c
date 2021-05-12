@@ -179,7 +179,7 @@ arv_gc_string_node_get_max_length (ArvGcString *gc_string, GError **error)
 			return arv_gc_string_get_max_length (ARV_GC_STRING (linked_node), error);
 	}
 
-	return 1024;
+	return G_MAXINT64;
 }
 
 static void

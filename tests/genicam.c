@@ -783,7 +783,7 @@ string_test (void)
 	g_assert (ARV_IS_GC_STRING (node_str));
 
 	value = arv_gc_string_get_max_length (ARV_GC_STRING (node_str), &error);
-	g_assert_cmpint (value, ==, 1024);
+	g_assert_cmpint (value, ==, G_MAXINT64);
 	g_assert (error == NULL);
 
 	str = arv_gc_string_get_value (ARV_GC_STRING (node_str), &error);
