@@ -1,3 +1,12 @@
+Stable release 0.8.10
+=====================
+
+  * arv-tool: make device enumeration faster (Emmanuel)
+  * debug: rework debug log levels (Emmanuel)
+  * fakegvcamera: improve streaming reliability - partly fix #499 (Emmanuel)
+  * gvstream: fix use after reference release - fix #504 (Emmanuel)
+  * genicam: String node support - fix #507 (Emmanuel)
+
 Stable release 0.8.9
 ====================
 
