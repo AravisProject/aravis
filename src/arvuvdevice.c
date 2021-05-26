@@ -672,8 +672,17 @@ _open_usb_device (ArvUvDevice *uv_device, GError **error)
 				struct libusb_endpoint_descriptor endpoint;
 				const struct libusb_interface *inter;
 				const struct libusb_interface_descriptor *interdesc;
+                                int result;
 
 				priv->usb_device = usb_device;
+
+                                result = libusb_set_auto_detach_kernel_driver (usb_device, 1);
+                                if (result != 0) {
+                                        arv_warning_device ("Failed to set auto kernel detach feature "
+                                                            "for USB device '%s-%s-%s': %s",
+                                                            priv->vendor, priv->product, priv->serial_number,
+                                                            libusb_error_name (result));
+                                }
 
 				libusb_get_config_descriptor (devices[i], 0, &config);
 				for (j = 0; j < (int) config->bNumInterfaces; j++) {
