@@ -226,6 +226,21 @@ arv_gv_interface_device_infos_new (GInetAddress *interface_address,
 				   ARV_GVBS_SERIAL_NUMBER_SIZE);
 	infos->user_id = g_strndup ((char *) &infos->discovery_data[ARV_GVBS_USER_DEFINED_NAME_OFFSET],
 				    ARV_GVBS_USER_DEFINED_NAME_SIZE);
+	infos->mac = g_strdup_printf ("%02x:%02x:%02x:%02x:%02x:%02x",
+				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 2],
+				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 3],
+				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 4],
+				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 5],
+				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 6],
+				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 7]);
+
+        /* Some devices return a zero length string as the serial identifier.
+         * Use the MAC address as the serial number in this case */
+
+        if (infos->serial == NULL || infos->serial[0] == '\0') {
+                g_free (infos->serial);
+                infos->serial = g_strdup (infos->mac);
+        }
 
 	infos->id = g_strdup_printf ("%s-%s-%s", infos->vendor, infos->model, infos->serial);
 	arv_str_strip (infos->id, ARV_DEVICE_NAME_ILLEGAL_CHARACTERS, ARV_DEVICE_NAME_REPLACEMENT_CHARACTER);
@@ -238,13 +253,6 @@ arv_gv_interface_device_infos_new (GInetAddress *interface_address,
 
 	infos->interface_address = interface_address;
 
-	infos->mac = g_strdup_printf ("%02x:%02x:%02x:%02x:%02x:%02x",
-				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 2],
-				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 3],
-				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 4],
-				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 5],
-				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 6],
-				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 7]);
 	infos->ref_count = 1;
 
 	return infos;
