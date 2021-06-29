@@ -485,6 +485,7 @@ main (int argc, char **argv)
 		n_devices = arv_get_n_devices ();
 
 		if (n_devices > 0) {
+            printf("Found %d device%s:\n", n_devices, n_devices > 1 ? "s": "");
 			for (i = 0; i < n_devices; i++) {
 				GError *error = NULL;
 
