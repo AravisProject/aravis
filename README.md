@@ -19,7 +19,7 @@ Aravis is released under the LGPL v2+.
 
 Aravis uses the meson build system ( http://mesonbuild.com/ ). After you have
 downloaded the latest release from
-[http://ftp.gnome.org/pub/GNOME/sources/aravis](http://ftp.gnome.org/pub/GNOME/sources/aravis),
+[https://github.com/AravisProject/aravis/releases](https://github.com/AravisProject/aravis/releases),
 you can build and install Aravis like [any other meson
 project](http://mesonbuild.com/Quick-guide.html#compiling-a-meson-project):
 
