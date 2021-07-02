@@ -44,6 +44,23 @@ struct _ArvValue {
 	} data;
 };
 
+#define ARV_TYPE_VALUE (arv_value_get_type())
+
+GType arv_value_get_type (void);
+
+typedef struct _ArvValue ArvValue;
+
+ArvValue * 	arv_value_new_double 		(double v_double);
+ArvValue * 	arv_value_new_int64 		(double v_int64);
+void 		arv_value_free 			(ArvValue *value);
+void 		arv_value_copy 			(ArvValue *to, const ArvValue *from);
+void 		arv_value_set_int64 		(ArvValue *value, gint64 v_int64);
+void 		arv_value_set_double 		(ArvValue *value, double v_double);
+gint64 		arv_value_get_int64 		(ArvValue *value);
+double 		arv_value_get_double 		(ArvValue *value);
+gboolean 	arv_value_holds_int64 		(ArvValue *value);
+double 		arv_value_holds_double 		(ArvValue *value);
+
 gboolean	arv_parse_genicam_url		(const char *url, gssize url_length,
 						 char **scheme, char **authority, char **path,
 						 char **query, char **fragment,
