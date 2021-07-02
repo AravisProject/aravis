@@ -66,6 +66,13 @@ gboolean	arv_parse_genicam_url		(const char *url, gssize url_length,
 						 char **query, char **fragment,
 						 guint64 *address, guint64 *size);
 
+void 		arv_copy_memory_with_endianness	(void *to, size_t to_size, guint to_endianness,
+						 void *from, size_t from_size, guint from_endianness);
+
+void * 		arv_decompress 			(void *input_buffer, size_t input_size, size_t *output_size);
+
+const char *	arv_vendor_alias_lookup		(const char *vendor);
+
 #if GLIB_CHECK_VERSION(2,68,0)
 #define arv_memdup(p,s) g_memdup2(p,s)
 #else

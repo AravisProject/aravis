@@ -26,7 +26,7 @@
 #include <arvgcregister.h>
 #include <arvgcdefaultsprivate.h>
 #include <arvgc.h>
-#include <arvmisc.h>
+#include <arvmiscprivate.h>
 
 typedef struct {
 	ArvGcPropertyNode *endianness;

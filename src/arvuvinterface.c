@@ -29,7 +29,7 @@
 #include <arvinterfaceprivate.h>
 #include <arvuvdeviceprivate.h>
 #include <arvdebugprivate.h>
-#include <arvmisc.h>
+#include <arvmiscprivate.h>
 #include <arvstr.h>
 #include <libusb.h>
 #include <stdio.h>
