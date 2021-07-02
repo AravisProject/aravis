@@ -1,109 +1,109 @@
 <part id="aravis-overview">
-	<title>Overview</title>
+  <title>Overview</title>
 
-	<chapter id="aravis-introduction">
-		<title>Introduction</title>
+  <chapter id="aravis-introduction">
+    <title>Introduction</title>
 
-		<para>
-			Aravis is a GObject based library for the control and the video stream
-			acquisition of digital cameras.
-		</para>
+    <para>
+      Aravis is a GObject based library for the control and the video stream
+      acquisition of digital cameras.
+    </para>
 
-		<para>
-			While using GenICam xml files for the description of the camera
-			registers, it does not try to be a complete implementation of the
-			Genicam API as described in the GenAPI GenICam document. Nevertheless,
-			a good knowledge of the <ulink type="http"
-				url="http://www.genicam.org">GenICam</ulink> standard should
-			help the user to understand how Aravis operates.
-		</para>
+    <para>
+      While using GenICam xml files for the description of the camera
+      registers, it does not try to be a complete implementation of the
+      Genicam API as described in the GenAPI GenICam document. Nevertheless,
+      a good knowledge of the <ulink type="http"
+      url="http://www.genicam.org">GenICam</ulink> standard should
+      help the user to understand how Aravis operates.
+    </para>
 
-		<para>
-			Aravis currently provides an implementation of a gigabit ethernet UDP
-			based protocol, found in a lot of ethernet industrial cameras.
-		</para>
+    <para>
+      Aravis currently provides an implementation of a gigabit ethernet UDP
+      based protocol, found in a lot of ethernet industrial cameras.
+    </para>
 
-		<para>
-			ArvCamera is a simple API for easy access of standard camera features.
-		</para>
+    <para>
+      ArvCamera is a simple API for easy access of standard camera features.
+    </para>
 
-		<para>
-			ArvDevice and ArvGc are more low level APIs, which enable the full
-			control of the cameras, allowing the use of the features specific to
-			each model.
-		</para>
-	</chapter>
+    <para>
+      ArvDevice and ArvGc are more low level APIs, which enable the full
+      control of the cameras, allowing the use of the features specific to
+      each model.
+    </para>
+  </chapter>
 
-	<chapter id="thread-safety">
-		<title>Thread Safety</title>
+  <chapter id="thread-safety">
+    <title>Thread Safety</title>
 
-		<para>
-                  Aravis is not thread safe, which means one can not use the same object simultaneously from different
-                  threads, without using mutexes. But it is perfectly fine to use different aravis objects in different
-		  threads, with the exception of the ArvInterface instances.
-		</para>
+    <para>
+      Aravis is not thread safe, which means one can not use the same object simultaneously from different
+      threads, without using mutexes. But it is perfectly fine to use different aravis objects in different
+      threads, with the exception of the ArvInterface instances.
+    </para>
 
-		<para>
-                  A possible trap is that glib signal callbacks are called from the thread that emitted the
-                  corresponding signal. For example, the "new-buffer" callback is emitted from the stream packet
-                  receiving thread, which is an internal thread created by ArvGvStream. It is not safe to use ArvDevice
-                  and some ArvStream functions from this callback without using mutexes. The exceptions are
-                  arv_stream_push_buffer(), arv_stream_pop_buffer(), arv_stream_try_pop_buffer() and
-                  arv_stream_timeout_pop_buffer().
-		</para>
-	</chapter>
+    <para>
+      A possible trap is that glib signal callbacks are called from the thread that emitted the
+      corresponding signal. For example, the "new-buffer" callback is emitted from the stream packet
+      receiving thread, which is an internal thread created by ArvGvStream. It is not safe to use ArvDevice
+      and some ArvStream functions from this callback without using mutexes. The exceptions are
+      arv_stream_push_buffer(), arv_stream_pop_buffer(), arv_stream_try_pop_buffer() and
+      arv_stream_timeout_pop_buffer().
+    </para>
+  </chapter>
 
-	<chapter id="aravis-building">
-		<title>Building and Debugging Aravis</title>
+  <chapter id="aravis-building">
+    <title>Building and Debugging Aravis</title>
 
-		<para>
-		  Aravis is built using <ulink type="http" url="http://mesonbuild.com/">meson build system</ulink>. Release tarballs are
-		  stored on <ulink type="http" url="http://ftp.gnome.org/pub/GNOME/sources/aravis">http://ftp.gnome.org/pub/GNOME/sources/aravis</ulink>.
-		  You can build and install Aravis like <ulink type="http" url="http://mesonbuild.com/Quick-guide.html#compiling-a-meson-project">any other meson project</ulink>:
-		  <literallayout>
-		    <userinput>meson build</userinput>
-		    <userinput>cd build</userinput>
-		    <userinput>ninja</userinput>
-		    <userinput>ninja install</userinput>
-		  </literallayout>
-		</para>
+    <para>
+      Aravis is built using <ulink type="http" url="http://mesonbuild.com/">meson build system</ulink>. Release tarballs are
+      stored on <ulink type="http" url="https://github.com/AravisProject/aravis/releases">https://github.com/AravisProject/aravis/releases</ulink>.
+      You can build and install Aravis like <ulink type="http" url="http://mesonbuild.com/Quick-guide.html#compiling-a-meson-project">any other meson project</ulink>:
+      <literallayout>
+	<userinput>meson build</userinput>
+	<userinput>cd build</userinput>
+	<userinput>ninja</userinput>
+	<userinput>ninja install</userinput>
+      </literallayout>
+    </para>
 
-		<para>
-		  The build can be configured at any time using <literal>meson configure</literal> in the build directory.
-		  meson configure invoked without any other argument will show the configuration options.
-		</para>
+    <para>
+      The build can be configured at any time using <literal>meson configure</literal> in the build directory.
+	meson configure invoked without any other argument will show the configuration options.
+    </para>
 
-		<para>
-		  On some platforms (like Ubuntu), you may have to configure the dynamic linker (ld) to let it know where the aravis
-		  libraries are installed, and run ldconfig as root in order to update ld cache
-		</para>
+    <para>
+      On some platforms (like Ubuntu), you may have to configure the dynamic linker (ld) to let it know where the aravis
+      libraries are installed, and run ldconfig as root in order to update ld cache
+    </para>
 
-		<para>
-			The ARV_DEBUG environment variable can be set to a comma
-			separated list of debugging categories, which will make Aravis
-			print out different types of debugging informations to the
-			console. A debug level can also be specified, using a number from 0 (none) to
-			3 (log) separated from the category name by a colon. For example, the
-			following command before running an Aravis based application will make
-			Aravis print out all stream and device related informations:
-			<literallayout>
-				<userinput>export ARV_DEBUG=stream:3,device:3</userinput>
-			</literallayout>
-			Available categories are:
-			<itemizedlist>
-				<listitem>all</listitem>
-				<listitem>interface</listitem>
-				<listitem>device</listitem>
-				<listitem>chunk</listitem>
-				<listitem>stream</listitem>
-				<listitem>stream-thread</listitem>
-				<listitem>cp</listitem>
-				<listitem>sp</listitem>
-				<listitem>genicam</listitem>
-				<listitem>evaluator</listitem>
-				<listitem>dom</listitem>
-				<listitem>misc</listitem>
-			</itemizedlist>
-		</para>
-	</chapter>
+    <para>
+      The ARV_DEBUG environment variable can be set to a comma
+      separated list of debugging categories, which will make Aravis
+      print out different types of debugging informations to the
+      console. A debug level can also be specified, using a number from 0 (none) to
+      3 (log) separated from the category name by a colon. For example, the
+      following command before running an Aravis based application will make
+      Aravis print out all stream and device related informations:
+      <literallayout>
+	<userinput>export ARV_DEBUG=stream:3,device:3</userinput>
+      </literallayout>
+	Available categories are:
+      <itemizedlist>
+	<listitem>all</listitem>
+	<listitem>interface</listitem>
+	<listitem>device</listitem>
+	<listitem>chunk</listitem>
+	<listitem>stream</listitem>
+	<listitem>stream-thread</listitem>
+	<listitem>cp</listitem>
+	<listitem>sp</listitem>
+	<listitem>genicam</listitem>
+	<listitem>evaluator</listitem>
+	<listitem>dom</listitem>
+	<listitem>misc</listitem>
+      </itemizedlist>
+    </para>
+  </chapter>
 </part>
