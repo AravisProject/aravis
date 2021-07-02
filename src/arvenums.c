@@ -85,7 +85,7 @@ static const char *arv_exposure_mode_strings[] = {
 const char *
 arv_exposure_mode_to_string (ArvExposureMode value)
 {
-	return arv_exposure_mode_strings[CLAMP (value, 0, ARV_EXPOSURE_MODE_OFF)];
+	return arv_exposure_mode_strings[CLAMP (value, 0, ARV_EXPOSURE_MODE_TRIGGER_CONTROLLED)];
 }
 
 ArvExposureMode
