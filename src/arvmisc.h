@@ -31,17 +31,6 @@
 
 G_BEGIN_DECLS
 
-typedef struct _ArvStatistic ArvStatistic;
-
-ArvStatistic *		arv_statistic_new 		(guint n_histograms, guint n_bins, guint bin_step, int offset);
-void			arv_statistic_free		(ArvStatistic *statistic);
-void 			arv_statistic_reset 		(ArvStatistic *statistic);
-gboolean 		arv_statistic_fill 		(ArvStatistic *statistic, guint histogram_id, int value,
-							 guint64 counter);
-void 			arv_statistic_set_name 		(ArvStatistic *statistic, guint histogram_id, char const *name);
-
-char *			arv_statistic_to_string 	(const ArvStatistic *statistic);
-
 #define ARV_TYPE_VALUE (arv_value_get_type())
 
 GType arv_value_get_type (void);
