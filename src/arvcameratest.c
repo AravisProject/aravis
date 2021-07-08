@@ -497,30 +497,30 @@ main (int argc, char **argv)
 		}
 
 		if (success) {
-			printf ("vendor name           = %s\n", vendor_name);
-			printf ("model name            = %s\n", model_name);
-			printf ("device serial number  = %s\n", serial_number);
-			printf ("image width           = %d\n", width);
-			printf ("image height          = %d\n", height);
+			printf ("vendor name            = %s\n", vendor_name);
+			printf ("model name             = %s\n", model_name);
+			printf ("device serial number   = %s\n", serial_number);
+			printf ("image width            = %d\n", width);
+			printf ("image height           = %d\n", height);
 			if (arv_camera_is_binning_available (camera, NULL)) {
-				printf ("horizontal binning    = %d\n", dx);
-				printf ("vertical binning      = %d\n", dy);
+				printf ("horizontal binning     = %d\n", dx);
+				printf ("vertical binning       = %d\n", dy);
 			}
-			if (arv_camera_is_exposure_time_available (camera, NULL)) 
-				printf ("exposure              = %g µs\n", exposure);
+			if (arv_camera_is_exposure_time_available (camera, NULL))
+				printf ("exposure               = %g µs\n", exposure);
 			if (arv_camera_is_gain_available (camera, NULL))
-				printf ("gain                  = %d dB\n", gain);
-			printf ("payload               = %d bytes\n", payload);
+				printf ("gain                   = %d dB\n", gain);
+			printf ("payload                = %d bytes\n", payload);
 			if (arv_camera_is_uv_device (camera)) {
 				if (arv_camera_uv_is_bandwidth_control_available (camera, NULL)) {
-					printf ("uv bandwidth limit    = %d [%d..%d]\n", uv_bandwidth, min, max);
+					printf ("uv bandwidth limit     = %d [%d..%d]\n", uv_bandwidth, min, max);
 				}
 			}
 			if (arv_camera_is_gv_device (camera)) {
-				printf ("gv n_stream channels  = %d\n", gv_n_channels);
-				printf ("gv current channel    = %d\n", gv_channel_id);
-				printf ("gv packet delay       = %d ns\n", gv_packet_delay);
-				printf ("gv packet size        = %d bytes\n", gv_packet_size);
+				printf ("gv n_stream channels   = %d\n", gv_n_channels);
+				printf ("gv current channel     = %d\n", gv_channel_id);
+				printf ("gv packet delay        = %d ns\n", gv_packet_delay);
+				printf ("gv packet size         = %d bytes\n", gv_packet_size);
 			}
 
 		}
@@ -593,9 +593,13 @@ main (int argc, char **argv)
 
 			    arv_stream_get_statistics (stream, &n_completed_buffers, &n_failures, &n_underruns);
 
-			    g_print ("Completed buffers = %" G_GUINT64_FORMAT "\n", n_completed_buffers);
-			    g_print ("Failures          = %" G_GUINT64_FORMAT "\n", n_failures);
-			    g_print ("Underruns         = %" G_GUINT64_FORMAT "\n", n_underruns);
+                            for (i = 0; i < arv_stream_get_n_infos (stream); i++) {
+                                    if (arv_stream_get_info_type (stream, i) == G_TYPE_UINT64) {
+                                            g_print ("%-22s = %" G_GUINT64_FORMAT "\n",
+                                                     arv_stream_get_info_name (stream, i),
+                                                     arv_stream_get_info_uint64 (stream, i));
+                                    }
+                            }
 
 			    arv_camera_stop_acquisition (camera, NULL);
 
