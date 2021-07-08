@@ -35,6 +35,8 @@ ArvBuffer *	arv_stream_pop_input_buffer		(ArvStream *stream);
 void		arv_stream_push_output_buffer		(ArvStream *stream, ArvBuffer *buffer);
 void		arv_stream_take_init_error		(ArvStream *device, GError *error);
 
+void            arv_stream_declare_info                 (ArvStream *stream, const char *name, GType type, gpointer data);
+
 G_END_DECLS
 
 #endif

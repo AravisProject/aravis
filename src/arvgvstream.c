@@ -151,23 +151,23 @@ struct _ArvGvStreamThreadData {
 
 	/* Statistics */
 
-	guint n_completed_buffers;
-	guint n_failures;
-	guint n_timeouts;
-	guint n_underruns;
-	guint n_aborteds;
-	guint n_missing_frames;
+	guint64 n_completed_buffers;
+	guint64 n_failures;
+	guint64 n_underruns;
+	guint64 n_timeouts;
+	guint64 n_aborteds;
+	guint64 n_missing_frames;
 
-	guint n_size_mismatch_errors;
+	guint64 n_size_mismatch_errors;
 
-	guint n_received_packets;
-	guint n_missing_packets;
-	guint n_error_packets;
-	guint n_ignored_packets;
-	guint n_resend_requests;
-	guint n_resent_packets;
-	guint n_resend_ratio_reached;
-	guint n_duplicated_packets;
+	guint64 n_received_packets;
+	guint64 n_missing_packets;
+	guint64 n_error_packets;
+	guint64 n_ignored_packets;
+	guint64 n_resend_requests;
+	guint64 n_resent_packets;
+	guint64 n_resend_ratio_reached;
+	guint64 n_duplicated_packets;
 
 	ArvStatistic *statistic;
 	guint32 statistic_count;
@@ -1178,12 +1178,12 @@ arv_gv_stream_constructed (GObject *object)
 
 	priv->thread_data = thread_data;
 
-	interface_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (arv_gv_device_get_interface_address (gv_device)));
-	device_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (arv_gv_device_get_device_address (gv_device)));
+	interface_address = g_inet_socket_address_get_address
+                (G_INET_SOCKET_ADDRESS (arv_gv_device_get_interface_address (gv_device)));
+	device_address = g_inet_socket_address_get_address
+                (G_INET_SOCKET_ADDRESS (arv_gv_device_get_device_address (gv_device)));
 
-	thread_data->socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
-					  G_SOCKET_TYPE_DATAGRAM,
-					  G_SOCKET_PROTOCOL_UDP, NULL);
+	thread_data->socket = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, NULL);
 	thread_data->device_address = g_object_ref (device_address);
 	thread_data->interface_address = g_object_ref (interface_address);
 	thread_data->interface_socket_address = g_inet_socket_address_new (interface_address, 0);
@@ -1201,6 +1201,37 @@ arv_gv_stream_constructed (GObject *object)
 
 	arv_info_stream ("[GvStream::stream_new] Destination stream port = %d", thread_data->stream_port);
 	arv_info_stream ("[GvStream::stream_new] Source stream port = %d", thread_data->source_stream_port);
+
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_completed_buffers",
+                                 G_TYPE_UINT64, &thread_data->n_completed_buffers);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_failures",
+                                 G_TYPE_UINT64, &thread_data->n_failures);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_underruns",
+                                 G_TYPE_UINT64, &thread_data->n_underruns);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_timeouts",
+                                 G_TYPE_UINT64, &thread_data->n_timeouts);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_aborteds",
+                                 G_TYPE_UINT64, &thread_data->n_aborteds);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_missing_frames",
+                                 G_TYPE_UINT64, &thread_data->n_missing_frames);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_size_mismatch_errors",
+                                 G_TYPE_UINT64, &thread_data->n_size_mismatch_errors);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_received_packets",
+                                 G_TYPE_UINT64, &thread_data->n_received_packets);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_missing_packets",
+                                 G_TYPE_UINT64, &thread_data->n_missing_packets);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_error_packets",
+                                 G_TYPE_UINT64, &thread_data->n_error_packets);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_ignored_packets",
+                                 G_TYPE_UINT64, &thread_data->n_ignored_packets);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_resend_requests",
+                                 G_TYPE_UINT64, &thread_data->n_resend_requests);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_resent_packets",
+                                 G_TYPE_UINT64, &thread_data->n_resent_packets);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_resend_ratio_reached",
+                                 G_TYPE_UINT64, &thread_data->n_resend_ratio_reached);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_duplicated_packets",
+                                 G_TYPE_UINT64, &thread_data->n_duplicated_packets);
 
 	arv_gv_stream_start_thread (ARV_STREAM (gv_stream));
 }
@@ -1234,24 +1265,8 @@ arv_gv_stream_get_statistics (ArvGvStream *gv_stream,
 }
 
 static void
-_get_statistics (ArvStream *stream,
-		 guint64 *n_completed_buffers,
-		 guint64 *n_failures,
-		 guint64 *n_underruns)
-{
-	ArvGvStreamPrivate *priv = arv_gv_stream_get_instance_private (ARV_GV_STREAM (stream));
-	ArvGvStreamThreadData *thread_data;
-
-	thread_data = priv->thread_data;
-
-	*n_completed_buffers = thread_data->n_completed_buffers;
-	*n_failures = thread_data->n_failures;
-	*n_underruns = thread_data->n_underruns;
-}
-
-static void
 arv_gv_stream_set_property (GObject * object, guint prop_id,
-			    const GValue * value, GParamSpec * pspec)
+                            const GValue * value, GParamSpec * pspec)
 {
 	ArvGvStreamPrivate *priv = arv_gv_stream_get_instance_private (ARV_GV_STREAM (object));
 	ArvGvStreamThreadData *thread_data;
@@ -1340,38 +1355,38 @@ arv_gv_stream_finalize (GObject *object)
 		g_free (statistic_string);
 		arv_statistic_free (thread_data->statistic);
 
-		arv_info_stream ("[GvStream::finalize] n_completed_buffers    = %u",
+		arv_info_stream ("[GvStream::finalize] n_completed_buffers    = %" G_GUINT64_FORMAT,
 				  thread_data->n_completed_buffers);
-		arv_info_stream ("[GvStream::finalize] n_failures             = %u",
+		arv_info_stream ("[GvStream::finalize] n_failures             = %" G_GUINT64_FORMAT,
 				  thread_data->n_failures);
-		arv_info_stream ("[GvStream::finalize] n_timeouts             = %u",
-				  thread_data->n_timeouts);
-		arv_info_stream ("[GvStream::finalize] n_aborteds             = %u",
-				  thread_data->n_aborteds);
-		arv_info_stream ("[GvStream::finalize] n_underruns            = %u",
+		arv_info_stream ("[GvStream::finalize] n_underruns            = %" G_GUINT64_FORMAT,
 				  thread_data->n_underruns);
-		arv_info_stream ("[GvStream::finalize] n_missing_frames       = %u",
+		arv_info_stream ("[GvStream::finalize] n_timeouts             = %" G_GUINT64_FORMAT,
+				  thread_data->n_timeouts);
+		arv_info_stream ("[GvStream::finalize] n_aborteds             = %" G_GUINT64_FORMAT,
+				  thread_data->n_aborteds);
+		arv_info_stream ("[GvStream::finalize] n_missing_frames       = %" G_GUINT64_FORMAT,
 				  thread_data->n_missing_frames);
 
-		arv_info_stream ("[GvStream::finalize] n_size_mismatch_errors = %u",
+		arv_info_stream ("[GvStream::finalize] n_size_mismatch_errors = %" G_GUINT64_FORMAT,
 				  thread_data->n_size_mismatch_errors);
 
-		arv_info_stream ("[GvStream::finalize] n_received_packets     = %u",
+		arv_info_stream ("[GvStream::finalize] n_received_packets     = %" G_GUINT64_FORMAT,
 				  thread_data->n_received_packets);
-		arv_info_stream ("[GvStream::finalize] n_missing_packets      = %u",
+		arv_info_stream ("[GvStream::finalize] n_missing_packets      = %" G_GUINT64_FORMAT,
 				  thread_data->n_missing_packets);
-		arv_info_stream ("[GvStream::finalize] n_error_packets        = %u",
+		arv_info_stream ("[GvStream::finalize] n_error_packets        = %" G_GUINT64_FORMAT,
 				  thread_data->n_error_packets);
-		arv_info_stream ("[GvStream::finalize] n_ignored_packets      = %u",
+		arv_info_stream ("[GvStream::finalize] n_ignored_packets      = %" G_GUINT64_FORMAT,
 				  thread_data->n_ignored_packets);
 
-		arv_info_stream ("[GvStream::finalize] n_resend_requests      = %u",
+		arv_info_stream ("[GvStream::finalize] n_resend_requests      = %" G_GUINT64_FORMAT,
 				  thread_data->n_resend_requests);
-		arv_info_stream ("[GvStream::finalize] n_resent_packets       = %u",
+		arv_info_stream ("[GvStream::finalize] n_resent_packets       = %" G_GUINT64_FORMAT,
 				  thread_data->n_resent_packets);
-		arv_info_stream ("[GvStream::finalize] n_resend_ratio_reached = %u",
+		arv_info_stream ("[GvStream::finalize] n_resend_ratio_reached = %" G_GUINT64_FORMAT,
 				  thread_data->n_resend_ratio_reached);
-		arv_info_stream ("[GvStream::finalize] n_duplicated_packets   = %u",
+		arv_info_stream ("[GvStream::finalize] n_duplicated_packets   = %" G_GUINT64_FORMAT,
 				  thread_data->n_duplicated_packets);
 
 		g_clear_object (&thread_data->device_address);
@@ -1399,7 +1414,6 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 
 	stream_class->start_thread = arv_gv_stream_start_thread;
 	stream_class->stop_thread = arv_gv_stream_stop_thread;
-	stream_class->get_statistics = _get_statistics;
 
 	g_object_class_install_property (
 		object_class, ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER,

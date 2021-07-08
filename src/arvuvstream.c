@@ -54,9 +54,9 @@ typedef struct {
 
 	/* Statistics */
 
-	guint n_completed_buffers;
-	guint n_failures;
-	guint n_underruns;
+	guint64 n_completed_buffers;
+	guint64 n_failures;
+	guint64 n_underruns;
 } ArvUvStreamThreadData;
 
 typedef struct {
@@ -406,33 +406,19 @@ arv_uv_stream_constructed (GObject *object)
 		      "callback-data", &thread_data->callback_data,
 		      NULL);
 
-	thread_data->n_completed_buffers = 0;
-	thread_data->n_failures = 0;
-	thread_data->n_underruns = 0;
-
 	priv->thread_data = thread_data;
+
+        arv_stream_declare_info (ARV_STREAM (uv_stream), "n_completed_buffers",
+                                 G_TYPE_UINT64, &thread_data->n_completed_buffers);
+        arv_stream_declare_info (ARV_STREAM (uv_stream), "n_failures",
+                                 G_TYPE_UINT64, &thread_data->n_failures);
+        arv_stream_declare_info (ARV_STREAM (uv_stream), "n_underruns",
+                                 G_TYPE_UINT64, &thread_data->n_underruns);
 
 	arv_uv_stream_start_thread (ARV_STREAM (uv_stream));
 }
 
 /* ArvStream implementation */
-
-static void
-arv_uv_stream_get_statistics (ArvStream *stream,
-				guint64 *n_completed_buffers,
-				guint64 *n_failures,
-				guint64 *n_underruns)
-{
-	ArvUvStream *uv_stream = ARV_UV_STREAM (stream);
-	ArvUvStreamPrivate *priv = arv_uv_stream_get_instance_private (uv_stream);
-	ArvUvStreamThreadData *thread_data;
-
-	thread_data = priv->thread_data;
-
-	*n_completed_buffers = thread_data->n_completed_buffers;
-	*n_failures = thread_data->n_failures;
-	*n_underruns = thread_data->n_underruns;
-}
 
 static void
 arv_uv_stream_init (ArvUvStream *uv_stream)
@@ -452,11 +438,11 @@ arv_uv_stream_finalize (GObject *object)
 
 		thread_data = priv->thread_data;
 
-		arv_info_stream ("[UvStream::finalize] n_completed_buffers    = %u",
+		arv_info_stream ("[UvStream::finalize] n_completed_buffers    = %" G_GUINT64_FORMAT,
 				  thread_data->n_completed_buffers);
-		arv_info_stream ("[UvStream::finalize] n_failures             = %u",
+		arv_info_stream ("[UvStream::finalize] n_failures             = %" G_GUINT64_FORMAT,
 				  thread_data->n_failures);
-		arv_info_stream ("[UvStream::finalize] n_underruns            = %u",
+		arv_info_stream ("[UvStream::finalize] n_underruns            = %" G_GUINT64_FORMAT,
 				  thread_data->n_underruns);
 
 		g_clear_object (&thread_data->uv_device);
@@ -477,5 +463,4 @@ arv_uv_stream_class_init (ArvUvStreamClass *uv_stream_class)
 
 	stream_class->start_thread = arv_uv_stream_start_thread;
 	stream_class->stop_thread = arv_uv_stream_stop_thread;
-	stream_class->get_statistics = arv_uv_stream_get_statistics;
 }
