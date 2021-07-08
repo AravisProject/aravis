@@ -28,276 +28,277 @@
 #include <zlib.h>
 
 /**
- * SECTION: arvstatistic
+ * SECTION: arvhistogram
  * @short_description: An histogram tool
  */
 
-typedef struct _ArvHistogram ArvHistogram;
+typedef struct _ArvHistogramVariable ArvHistogramVariable;
 
-struct _ArvHistogram {
-	char *		name;
-
-	guint64		and_more;
-	guint64	 	and_less;
-	guint64	 	last_seen_worst;
-	int 	      	worst;
-	int 	        best;
-
-	guint64 *	bins;
-};
-
-struct _ArvStatistic {
-	guint n_histograms;
-	guint n_bins;
-	guint bin_step;
-	int offset;
+struct _ArvHistogramVariable {
+	char *name;
 
 	guint64 counter;
 
-	ArvHistogram *histograms;
+	guint64	and_more;
+	guint64	and_less;
+        guint64	last_seen_maximum;
+
+	double maximum;
+        double minimum;
+
+	guint64 *bins;
 };
 
-static void
-_arv_statistic_free (ArvStatistic *statistic)
-{
-	guint j;
+struct _ArvHistogram {
+	guint n_variables;
+	guint n_bins;
+	double bin_step;
+        double offset;
 
-	if (statistic == NULL)
-		return;
+	ArvHistogramVariable *variables;
 
-	if (statistic->histograms != NULL) {
-		for (j = 0; j < statistic->n_histograms && statistic->histograms[j].bins != NULL; j++) {
-			if (statistic->histograms[j].name != NULL)
-				g_free (statistic->histograms[j].name);
-			g_free (statistic->histograms[j].bins);
-		}
-		g_free (statistic->histograms);
-	}
-
-	g_free (statistic);
-}
+        gint  ref_count;
+};
 
 /**
- * arv_statistic_new: (skip)
- * @n_histograms: number of histograms
+ * arv_histogram_new: (skip)
+ * @n_variables: number of variables
  * @n_bins: number of bins for each histogram
  * @bin_step: bin step
  * @offset: offset of the first bin
- * Return value: a new #ArvStatistic structure
+ * Return value: a new #ArvHistogram structure
  */
 
-ArvStatistic *
-arv_statistic_new (unsigned int n_histograms, unsigned n_bins, unsigned int bin_step, int offset)
+ArvHistogram *
+arv_histogram_new (unsigned int n_variables, unsigned n_bins, double bin_step, double offset)
 {
-	ArvStatistic *statistic;
+	ArvHistogram *histogram;
 	unsigned int i;
 
-	g_return_val_if_fail (n_histograms > 0, NULL);
+	g_return_val_if_fail (n_variables > 0, NULL);
 	g_return_val_if_fail (n_bins > 0, NULL);
 	g_return_val_if_fail (bin_step > 0, NULL);
 
-	statistic = g_new0 (ArvStatistic, 1);
+	histogram = g_new0 (ArvHistogram, 1);
 
-	statistic->n_histograms = n_histograms;
-	statistic->n_bins = n_bins;
-	statistic->bin_step = bin_step;
-	statistic->offset = offset;
+        histogram->ref_count = 1;
 
-	statistic->histograms = g_new (ArvHistogram, n_histograms);
+	histogram->n_variables = n_variables;
+	histogram->n_bins = n_bins;
+	histogram->bin_step = bin_step;
+	histogram->offset = offset;
 
-	for (i = 0; i < statistic->n_histograms; i++) {
-		statistic->histograms[i].name = NULL;
-		statistic->histograms[i].bins = g_new (guint64, statistic->n_bins);
+	histogram->variables = g_new0 (ArvHistogramVariable, n_variables);
+
+	for (i = 0; i < histogram->n_variables; i++) {
+		histogram->variables[i].name = g_strdup_printf ("var%d", i);
+		histogram->variables[i].bins = g_new (guint64, histogram->n_bins);
 	}
 
-	arv_statistic_reset (statistic);
+	arv_histogram_reset (histogram);
 
-	return statistic;
+	return histogram;
+}
+
+ArvHistogram *
+arv_histogram_ref (ArvHistogram *histogram)
+{
+        g_return_val_if_fail (histogram != NULL, NULL);
+
+        g_atomic_int_inc (&histogram->ref_count);
+
+        return histogram;
 }
 
 void
-arv_statistic_free (ArvStatistic *statistic)
+arv_histogram_unref (ArvHistogram *histogram)
 {
-	g_return_if_fail (statistic != NULL);
+	g_return_if_fail (histogram != NULL);
 
-	_arv_statistic_free (statistic);
+        if (g_atomic_int_dec_and_test (&histogram->ref_count)) {
+                guint j;
+
+                if (histogram->variables != NULL) {
+                        for (j = 0; j < histogram->n_variables && histogram->variables[j].bins != NULL; j++) {
+                                g_free (histogram->variables[j].name);
+                                g_free (histogram->variables[j].bins);
+                        }
+                        g_free (histogram->variables);
+                }
+                g_free (histogram);
+        }
+}
+
+GType
+arv_histogram_get_type (void)
+{
+	GType type_id = 0;
+
+	if (type_id == 0)
+		type_id = g_pointer_type_register_static ("ArvHistogram");
+
+	return type_id;
 }
 
 void
-arv_statistic_reset (ArvStatistic *statistic)
+arv_histogram_reset (ArvHistogram *histogram)
 {
-	ArvHistogram *histogram;
+	ArvHistogramVariable *variable;
 	int i, j;
 
-	g_return_if_fail (statistic != NULL);
+	g_return_if_fail (histogram != NULL);
 
-	statistic->counter = 0;
+	for (j = 0; j < histogram->n_variables; j++) {
+		variable = &histogram->variables[j];
 
-	for (j = 0; j < statistic->n_histograms; j++) {
-		histogram = &statistic->histograms[j];
-
-		histogram->last_seen_worst = 0;
-		histogram->best = 0x7fffffff;
-		histogram->worst = 0x80000000;
-		histogram->and_more = histogram->and_less = 0;
-		for (i = 0; i < statistic->n_bins; i++)
-			histogram->bins[i] = 0;
+		variable->minimum = G_MAXDOUBLE;
+		variable->maximum = -G_MAXDOUBLE;
+		variable->last_seen_maximum = 0;
+		variable->and_more = variable->and_less = 0;
+                variable->counter = 0;
+		for (i = 0; i < histogram->n_bins; i++)
+			variable->bins[i] = 0;
 	}
 }
 
 void
-arv_statistic_set_name (ArvStatistic *statistic, unsigned int histogram_id, char const *name)
+arv_histogram_set_variable_name (ArvHistogram *histogram, unsigned int id, char const *name)
 {
-	ArvHistogram *histogram;
-	size_t length;
+	g_return_if_fail (histogram != NULL);
+	g_return_if_fail (id < histogram->n_variables);
 
-	g_return_if_fail (statistic != NULL);
-	g_return_if_fail (histogram_id < statistic->n_histograms);
-
-	histogram = &statistic->histograms[histogram_id];
-
-	if (histogram->name != NULL) {
-		g_free (histogram->name);
-		histogram->name = NULL;
-	}
-
-	if (name == NULL)
-		return;
-
-	length = strlen (name);
-	if (length < 1)
-		return;
-
-	histogram->name = g_malloc (length + 1);
-	if (histogram->name == NULL)
-		return;
-
-	memcpy (histogram->name, name, length + 1);
+        g_free (histogram->variables[id].name);
+        histogram->variables[id].name = g_strdup (name);
 }
 
 gboolean
-arv_statistic_fill (ArvStatistic *statistic, guint histogram_id, int value, guint64 counter)
+arv_histogram_fill (ArvHistogram *histogram, guint id, int value)
 {
-	ArvHistogram *histogram;
+	ArvHistogramVariable *variable;
 	unsigned int class;
 
-	if (statistic == NULL)
-		return FALSE;
-	if (histogram_id >= statistic->n_histograms)
-		return FALSE;
+        g_return_val_if_fail (histogram != NULL, FALSE);
+        g_return_val_if_fail (id < histogram->n_variables, FALSE);
 
-	statistic->counter = counter;
+	variable = &histogram->variables[id];
 
-	histogram = &statistic->histograms[histogram_id];
+	if (variable->minimum > value)
+		variable->minimum = value;
 
-	if (histogram->best > value)
-		histogram->best = value;
-
-	if (histogram->worst < value) {
-		histogram->worst = value;
-		histogram->last_seen_worst = counter;
+	if (variable->maximum < value) {
+		variable->maximum = value;
+		variable->last_seen_maximum = variable->counter;
 	}
 
-	class = (value - statistic->offset) / statistic->bin_step;
+	class = (value - histogram->offset) / histogram->bin_step;
 
-	if (value < statistic->offset)
-		histogram->and_less++;
-	else if (class >= statistic->n_bins)
-		histogram->and_more++;
+	if (value < histogram->offset)
+		variable->and_less++;
+	else if (class >= histogram->n_bins)
+		variable->and_more++;
 	else
-		histogram->bins[class]++;
+		variable->bins[class]++;
+
+	variable->counter++;
 
 	return TRUE;
 }
 
 char *
-arv_statistic_to_string (const ArvStatistic *statistic)
+arv_histogram_to_string (const ArvHistogram *histogram)
 {
 	int i, j, bin_max;
 	gboolean max_found = FALSE;
 	GString *string;
 	char *str;
 
-	g_return_val_if_fail (statistic != NULL, NULL);
+	g_return_val_if_fail (histogram != NULL, NULL);
 
 	string = g_string_new ("");
 
 	bin_max = 0;
-	for (i = statistic->n_bins - 1; i > 0 && !max_found; i--) {
-		for (j = 0; j < statistic->n_histograms && !max_found; j++) {
-			if (statistic->histograms[j].bins[i] != 0) {
+	for (i = histogram->n_bins - 1; i > 0 && !max_found; i--) {
+		for (j = 0; j < histogram->n_variables && !max_found; j++) {
+			if (histogram->variables[j].bins[i] != 0) {
 				bin_max = i;
 				max_found = TRUE;
 			}
 		}
 	}
 
-	if (bin_max >= statistic->n_bins)
-		bin_max = statistic->n_bins - 1;
+	if (bin_max >= histogram->n_bins)
+		bin_max = histogram->n_bins - 1;
 
-	for (j = 0; j < statistic->n_histograms; j++) {
+	for (j = 0; j < histogram->n_variables; j++) {
 		if (j == 0)
-			g_string_append (string, "  bins  ");
-		g_string_append_printf (string, ";%8.8s",
-					statistic->histograms[j].name != NULL ?
-					statistic->histograms[j].name :
+			g_string_append (string, "    bins    ");
+		g_string_append_printf (string, ";%12.12s",
+					histogram->variables[j].name != NULL ?
+					histogram->variables[j].name :
 					"  ----  ");
 	}
 	g_string_append (string, "\n");
 
 	for (i = 0; i <= bin_max; i++) {
-		for (j = 0; j < statistic->n_histograms; j++) {
+		for (j = 0; j < histogram->n_variables; j++) {
 			if (j == 0)
-				g_string_append_printf (string, "%8d", i * statistic->bin_step + statistic->offset);
-			g_string_append_printf (string, ";%8llu", (unsigned long long) statistic->histograms[j].bins[i]);
+				g_string_append_printf (string, "%12g", (double) i * histogram->bin_step + histogram->offset);
+			g_string_append_printf (string, ";%12llu", (unsigned long long) histogram->variables[j].bins[i]);
 		}
 		g_string_append (string, "\n");
 	}
 
 	g_string_append (string, "-------------\n");
 
-	for (j = 0; j < statistic->n_histograms; j++) {
+	for (j = 0; j < histogram->n_variables; j++) {
 		if (j == 0)
-			g_string_append_printf (string, ">=%6d", i * statistic->bin_step + statistic->offset);
-		g_string_append_printf (string, ";%8llu", (unsigned long long) statistic->histograms[j].and_more);
+			g_string_append_printf (string, ">=%10g", (double) i * histogram->bin_step + histogram->offset);
+		g_string_append_printf (string, ";%12llu", (unsigned long long) histogram->variables[j].and_more);
 	}
 	g_string_append (string, "\n");
 
-	for (j = 0; j < statistic->n_histograms; j++) {
+	for (j = 0; j < histogram->n_variables; j++) {
 		if (j == 0)
-			g_string_append_printf (string, "< %6d", statistic->offset);
-		g_string_append_printf (string, ";%8llu", (unsigned long long) statistic->histograms[j].and_less);
+			g_string_append_printf (string, "< %10g", histogram->offset);
+		g_string_append_printf (string, ";%12" G_GUINT64_FORMAT , histogram->variables[j].and_less);
 	}
 	g_string_append (string, "\n");
 
-	for (j = 0; j < statistic->n_histograms; j++) {
+	for (j = 0; j < histogram->n_variables; j++) {
 		if (j == 0)
-			g_string_append (string, "min     ");
-		if (statistic->histograms[j].best != 0x7fffffff)
-			g_string_append_printf (string, ";%8d", statistic->histograms[j].best);
+			g_string_append (string, "min         ");
+		if (histogram->variables[j].minimum != G_MAXDOUBLE)
+			g_string_append_printf (string, "%c%12g", j == 0 ? ':' : ';',
+                                                histogram->variables[j].minimum);
 		else
-			g_string_append_printf (string, ";%8s", "n/a");
+			g_string_append_printf (string, "%c%12s", j == 0 ? ':' : ';', "n/a");
 	}
 	g_string_append (string, "\n");
 
-	for (j = 0; j < statistic->n_histograms; j++) {
+	for (j = 0; j < histogram->n_variables; j++) {
 		if (j == 0)
-			g_string_append (string, "max     ");
-		if (statistic->histograms[j].worst != 0x80000000)
-			g_string_append_printf (string, ";%8d", statistic->histograms[j].worst);
+			g_string_append (string, "max         ");
+		if (histogram->variables[j].maximum != -G_MAXDOUBLE)
+			g_string_append_printf (string, "%c%12g", j == 0 ? ':' : ';',
+                                                histogram->variables[j].maximum);
 		else
-			g_string_append_printf (string, ";%8s", "n/a");
+			g_string_append_printf (string, "%c%12s", j == 0 ? ':' : ';', "n/a");
 	}
 	g_string_append (string, "\n");
 
-	for (j = 0; j < statistic->n_histograms; j++) {
+	for (j = 0; j < histogram->n_variables; j++) {
 		if (j == 0)
-			g_string_append (string, "last max\nat:     ");
-		g_string_append_printf (string, ";%8llu", (unsigned long long) statistic->histograms[j].last_seen_worst);
+			g_string_append (string, "last max at ");
+		g_string_append_printf (string, "%c%12" G_GUINT64_FORMAT, j == 0 ? ':' : ';',
+                                        histogram->variables[j].last_seen_maximum);
 	}
 	g_string_append (string, "\n");
 
-	g_string_append_printf (string, "Counter = %8llu", (unsigned long long) statistic->counter);
+	for (j = 0; j < histogram->n_variables; j++) {
+		if (j == 0)
+			g_string_append (string, "counter     ");
+		g_string_append_printf (string, ":%12llu", (unsigned long long) histogram->variables[j].counter);
+	}
 
 	str = string->str;
 	g_string_free (string, FALSE);

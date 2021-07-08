@@ -169,7 +169,7 @@ struct _ArvGvStreamThreadData {
 	guint64 n_resend_ratio_reached;
 	guint64 n_duplicated_packets;
 
-	ArvStatistic *statistic;
+	ArvHistogram *histogram;
 	guint32 statistic_count;
 
 	ArvGvStreamSocketBuffer socket_buffer_option;
@@ -561,9 +561,8 @@ _close_frame (ArvGvStreamThreadData *thread_data, ArvGvStreamFrameData *frame)
 				       frame->buffer);
 
 	if (thread_data->statistic_count > 5) {
-		arv_statistic_fill (thread_data->statistic, 0,
-				    g_get_monotonic_time () - frame->first_packet_time_us,
-				    frame->frame_id);
+		arv_histogram_fill (thread_data->histogram, 0,
+				    g_get_monotonic_time () - frame->first_packet_time_us);
 	} else
 		thread_data->statistic_count++;
 
@@ -1170,9 +1169,9 @@ arv_gv_stream_constructed (GObject *object)
 
 	thread_data->packet_id = 65300;
 
-	thread_data->statistic = arv_statistic_new (1, 100, 2000, 0);
+	thread_data->histogram = arv_histogram_new (1, 100, 2000, 0);
 
-	arv_statistic_set_name (thread_data->statistic, 0, "Buffer reception time");
+	arv_histogram_set_variable_name (thread_data->histogram, 0, "Buffer reception time");
 
 	thread_data->socket_buffer_option = ARV_GV_STREAM_SOCKET_BUFFER_FIXED;
 
@@ -1346,14 +1345,14 @@ arv_gv_stream_finalize (GObject *object)
 
 	if (priv->thread_data != NULL) {
 		ArvGvStreamThreadData *thread_data;
-		char *statistic_string;
+		char *histogram_string;
 
 		thread_data = priv->thread_data;
 
-		statistic_string = arv_statistic_to_string (thread_data->statistic);
-		arv_info_stream ("%s", statistic_string);
-		g_free (statistic_string);
-		arv_statistic_free (thread_data->statistic);
+		histogram_string = arv_histogram_to_string (thread_data->histogram);
+		arv_info_stream ("%s", histogram_string);
+		g_free (histogram_string);
+		arv_histogram_unref (thread_data->histogram);
 
 		arv_info_stream ("[GvStream::finalize] n_completed_buffers    = %" G_GUINT64_FORMAT,
 				  thread_data->n_completed_buffers);
