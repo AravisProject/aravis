@@ -25,16 +25,20 @@
 
 #include <arvmisc.h>
 
-typedef struct _ArvStatistic ArvStatistic;
+typedef struct _ArvHistogram ArvHistogram;
 
-ArvStatistic *		arv_statistic_new 		(guint n_histograms, guint n_bins, guint bin_step, int offset);
-void			arv_statistic_free		(ArvStatistic *statistic);
-void 			arv_statistic_reset 		(ArvStatistic *statistic);
-gboolean 		arv_statistic_fill 		(ArvStatistic *statistic, guint histogram_id, int value,
-							 guint64 counter);
-void 			arv_statistic_set_name 		(ArvStatistic *statistic, guint histogram_id, char const *name);
+#define ARV_TYPE_HISTOGRAM (arv_histogram_get_type())
 
-char *			arv_statistic_to_string 	(const ArvStatistic *statistic);
+GType arv_histogram_get_type (void);
+
+ArvHistogram *		arv_histogram_new 		(guint n_variables, guint n_bins, double bin_step, double offset);
+ArvHistogram *          arv_histogram_ref               (ArvHistogram *histogram);
+void                    arv_histogram_unref             (ArvHistogram *histogram);
+void 			arv_histogram_reset 		(ArvHistogram *histogram);
+gboolean 		arv_histogram_fill 		(ArvHistogram *histogram, guint histogram_id, int value);
+void 			arv_histogram_set_variable_name	(ArvHistogram *histogram, guint histogram_id, char const *name);
+
+char *			arv_histogram_to_string 	(const ArvHistogram *histogram);
 
 struct _ArvValue {
 	GType type;
