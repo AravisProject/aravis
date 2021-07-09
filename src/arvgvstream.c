@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2019 Emmanuel Pacaud
+ * Copyright © 2009-2021 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -117,6 +117,10 @@ struct _ArvGvStreamThreadData {
 	GCancellable *cancellable;
 
 	ArvStream *stream;
+
+        gboolean thread_started;
+        GMutex thread_started_mutex;
+        GCond thread_started_cond;
 
 	ArvStreamCallback callback;
 	void *callback_data;
@@ -780,6 +784,11 @@ _loop (ArvGvStreamThreadData *thread_data)
 
 	use_poll = g_cancellable_make_pollfd (thread_data->cancellable, &poll_fd[1]);
 
+        g_mutex_lock (&thread_data->thread_started_mutex);
+        thread_data->thread_started = TRUE;
+        g_cond_signal (&thread_data->thread_started_cond);
+        g_mutex_unlock (&thread_data->thread_started_mutex);
+
 	do {
                 int timeout_ms;
 		int n_events;
@@ -912,7 +921,7 @@ _ring_buffer_loop (ArvGvStreamThreadData *thread_data)
 	fd = socket (PF_PACKET, SOCK_RAW, g_htons (ETH_P_ALL));
 	if (fd < 0) {
 		arv_warning_stream_thread ("[GvStream::loop] Failed to create AF_PACKET socket");
-		return;
+		goto af_packet_error;
 	}
 
 	version = TPACKET_V3;
@@ -962,6 +971,11 @@ _ring_buffer_loop (ArvGvStreamThreadData *thread_data)
 	poll_fd[0].revents = 0;
 
 	use_poll = g_cancellable_make_pollfd (thread_data->cancellable, &poll_fd[1]);
+
+        g_mutex_lock (&thread_data->thread_started_mutex);
+        thread_data->thread_started = TRUE;
+        g_cond_signal (&thread_data->thread_started_cond);
+        g_mutex_unlock (&thread_data->thread_started_mutex);
 
 	block_id = 0;
 	do {
@@ -1023,6 +1037,11 @@ bind_error:
 socket_option_error:
 map_error:
 	close (fd);
+af_packet_error:
+        g_mutex_lock (&thread_data->thread_started_mutex);
+        thread_data->thread_started = TRUE;
+        g_cond_signal (&thread_data->thread_started_cond);
+        g_mutex_unlock (&thread_data->thread_started_mutex);
 }
 
 #endif /* ARAVIS_HAS_PACKET_SOCKET */
@@ -1086,8 +1105,15 @@ arv_gv_stream_start_thread (ArvStream *stream)
 
 	thread_data = priv->thread_data;
 
+        thread_data->thread_started = FALSE;
 	thread_data->cancellable = g_cancellable_new ();
 	priv->thread = g_thread_new ("arv_gv_stream", arv_gv_stream_thread, priv->thread_data);
+
+        g_mutex_lock (&thread_data->thread_started_mutex);
+        while (!thread_data->thread_started)
+                g_cond_wait (&thread_data->thread_started_cond,
+                             &thread_data->thread_started_mutex);
+        g_mutex_unlock (&thread_data->thread_started_mutex);
 }
 
 static void
