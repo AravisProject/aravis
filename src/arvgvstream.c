@@ -90,6 +90,7 @@ G_DEFINE_TYPE_WITH_CODE (ArvGvStream, arv_gv_stream, ARV_TYPE_STREAM, G_ADD_PRIV
 
 typedef struct {
 	gboolean received;
+        gboolean resend_requested;
 	guint64 time_us;
 } ArvGvStreamPacketData;
 
@@ -274,7 +275,7 @@ _process_data_leader (ArvGvStreamThreadData *thread_data,
 		frame->buffer->priv->pixel_format = arv_gvsp_packet_get_pixel_format (packet);
 	}
 
-	if (frame->packet_data[packet_id].time_us > 0) {
+	if (frame->packet_data[packet_id].resend_requested) {
 		thread_data->n_resent_packets++;
 		arv_debug_stream_thread ("[GvStream::process_data_leader] Received resent packet %u for frame %" G_GUINT64_FORMAT,
 				       packet_id, frame->frame_id);
@@ -323,7 +324,7 @@ _process_data_block (ArvGvStreamThreadData *thread_data,
 
 	memcpy (((char *) frame->buffer->priv->data) + block_offset, arv_gvsp_packet_get_data (packet), block_size);
 
-	if (frame->packet_data[packet_id].time_us > 0) {
+	if (frame->packet_data[packet_id].resend_requested) {
 		thread_data->n_resent_packets++;
 		arv_debug_stream_thread ("[GvStream::process_data_block] Received resent packet %u for frame %" G_GUINT64_FORMAT,
 				       packet_id, frame->frame_id);
@@ -343,7 +344,7 @@ _process_data_trailer (ArvGvStreamThreadData *thread_data,
 		return;
 	}
 
-	if (frame->packet_data[packet_id].time_us > 0) {
+	if (frame->packet_data[packet_id].resend_requested) {
 		thread_data->n_resent_packets++;
 		arv_debug_stream_thread ("[GvStream::process_data_trailer] Received resent packet %u for frame %" G_GUINT64_FORMAT,
 				       packet_id, frame->frame_id);
@@ -473,10 +474,12 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 		for (i = frame->last_valid_packet + 1; i <= packet_id + 1; i++) {
 			gboolean need_resend;
 
-			need_resend = i <= packet_id &&
-				!frame->packet_data[i].received &&
-				(frame->packet_data[i].time_us == 0 ||
-				 (time_us - frame->packet_data[i].time_us > thread_data->packet_timeout_us));
+			if (i <= packet_id && !frame->packet_data[i].received) {
+                                if (frame->packet_data[i].time_us <= 0)
+                                        frame->packet_data[i].time_us = time_us;
+                                need_resend = time_us - frame->packet_data[i].time_us > thread_data->packet_timeout_us;
+                        } else
+                                need_resend = FALSE;
 
 			if (need_resend) {
 				if (first_missing < 0)
@@ -523,8 +526,10 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 							      last_missing,
 							      frame->extended_ids);
 
-					for (j = first_missing; j <= last_missing; j++)
+					for (j = first_missing; j <= last_missing; j++) {
 						frame->packet_data[j].time_us = time_us;
+                                                frame->packet_data[j].resend_requested = TRUE;
+                                        }
 
 					thread_data->n_resend_requests += n_missing_packets;
 
