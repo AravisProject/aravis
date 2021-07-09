@@ -15,8 +15,10 @@ cameras. It currently implements the gigabit ethernet and USB3 protocols used by
 industrial cameras. It also provides a basic ethernet camera simulator and a
 simple video viewer.
 
-# ![](viewer/data/aravis.png)
-# ![](viewer/data/aravis-video.png)
+<p align="center">
+  <img src="viewer/data/aravis.png"/>
+  <img src="viewer/data/aravis-video.png"/>
+</p>
 
 Aravis is released under the LGPL v2+.
 
