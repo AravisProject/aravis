@@ -403,7 +403,7 @@ main (int argc, char **argv)
 		guint64 n_underruns;
 		guint uv_bandwidth;
 		guint min, max;
-		guint gv_n_channels, gv_channel_id, gv_packet_delay, gv_packet_size;
+		guint gv_n_channels, gv_channel_id, gv_packet_delay;
 		int gain;
 		guint software_trigger_source = 0;
 		gboolean success = TRUE;
@@ -486,7 +486,6 @@ main (int argc, char **argv)
 				if (error == NULL) gv_n_channels = arv_camera_gv_get_n_stream_channels (camera, &error);
 				if (error == NULL) gv_channel_id = arv_camera_gv_get_current_stream_channel (camera, &error);
 				if (error == NULL) gv_packet_delay = arv_camera_gv_get_packet_delay (camera, &error);
-				if (error == NULL) gv_packet_size = arv_camera_gv_get_packet_size (camera, &error);
 			}
 
 			if (error != NULL) {
@@ -521,13 +520,19 @@ main (int argc, char **argv)
 				printf ("gv n_stream channels   = %d\n", gv_n_channels);
 				printf ("gv current channel     = %d\n", gv_channel_id);
 				printf ("gv packet delay        = %d ns\n", gv_packet_delay);
-				printf ("gv packet size         = %d bytes\n", gv_packet_size);
 			}
 
 		}
 
 		if (success) {
 		    stream = arv_camera_create_stream (camera, stream_cb, NULL, &error);
+
+                    if (arv_camera_is_gv_device (camera)) {
+                            guint gv_packet_size;
+
+                            gv_packet_size = arv_camera_gv_get_packet_size (camera, &error);
+                            printf ("gv packet size         = %d bytes\n", gv_packet_size);
+                    }
 
 		    if (ARV_IS_STREAM (stream)) {
 			    if (ARV_IS_GV_STREAM (stream)) {
