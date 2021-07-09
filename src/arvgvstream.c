@@ -531,7 +531,9 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 }
 
 static void
-_close_frame (ArvGvStreamThreadData *thread_data, ArvGvStreamFrameData *frame)
+_close_frame (ArvGvStreamThreadData *thread_data,
+              guint64 time_us,
+              ArvGvStreamFrameData *frame)
 {
 	if (frame->buffer->priv->status == ARV_BUFFER_STATUS_SUCCESS)
 		thread_data->n_completed_buffers++;
@@ -555,11 +557,8 @@ _close_frame (ArvGvStreamThreadData *thread_data, ArvGvStreamFrameData *frame)
 				       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
 				       frame->buffer);
 
-	if (thread_data->statistic_count > 5) {
-		arv_histogram_fill (thread_data->histogram, 0,
-				    g_get_monotonic_time () - frame->first_packet_time_us);
-	} else
-		thread_data->statistic_count++;
+        arv_histogram_fill (thread_data->histogram, 0,
+                            time_us - frame->first_packet_time_us);
 
 	arv_debug_stream_thread ("[GvStream::close_frame] Close frame %" G_GUINT64_FORMAT, frame->frame_id);
 
@@ -588,7 +587,7 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 			frame->buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
 			arv_info_stream_thread ("[GvStream::check_frame_completion] Incomplete frame %" G_GUINT64_FORMAT,
 						 frame->frame_id);
-			_close_frame (thread_data, frame);
+			_close_frame (thread_data, time_us, frame);
 			thread_data->frames = iter->next;
 			g_slist_free_1 (iter);
 			iter = thread_data->frames;
@@ -600,7 +599,7 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 			frame->buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
 			arv_debug_stream_thread ("[GvStream::check_frame_completion] Completed frame %" G_GUINT64_FORMAT,
 					       frame->frame_id);
-			_close_frame (thread_data, frame);
+			_close_frame (thread_data, time_us, frame);
 			thread_data->frames = iter->next;
 			g_slist_free_1 (iter);
 			iter = thread_data->frames;
@@ -625,7 +624,7 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 				}
 			}
 #endif
-			_close_frame (thread_data, frame);
+			_close_frame (thread_data, time_us, frame);
 			thread_data->frames = iter->next;
 			g_slist_free_1 (iter);
 			iter = thread_data->frames;
@@ -646,7 +645,8 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 }
 
 static void
-_flush_frames (ArvGvStreamThreadData *thread_data)
+_flush_frames (ArvGvStreamThreadData *thread_data,
+               guint64 time_us)
 {
 	GSList *iter;
 	ArvGvStreamFrameData *frame;
@@ -654,7 +654,7 @@ _flush_frames (ArvGvStreamThreadData *thread_data)
 	for (iter = thread_data->frames; iter != NULL; iter = iter->next) {
 		frame = iter->data;
 		frame->buffer->priv->status = ARV_BUFFER_STATUS_ABORTED;
-		_close_frame (thread_data, frame);
+		_close_frame (thread_data, time_us, frame);
 	}
 
 	g_slist_free (thread_data->frames);
@@ -1042,7 +1042,7 @@ arv_gv_stream_thread (void *data)
 #endif
 		_loop (thread_data);
 
-	_flush_frames (thread_data);
+	_flush_frames (thread_data, g_get_monotonic_time ());
 
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->callback_data, ARV_STREAM_CALLBACK_TYPE_EXIT, NULL);
