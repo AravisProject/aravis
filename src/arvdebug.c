@@ -139,10 +139,14 @@ static void arv_debug_with_level (ArvDebugCategory category,
 static void
 arv_debug_with_level (ArvDebugCategory category, ArvDebugLevel level, const char *format, va_list args)
 {
+        g_autofree char *text = NULL;
+        g_autofree char *header = NULL;
+        char **lines;
 	gint64 now;
 	time_t now_secs;
 	struct tm now_tm;
 	gchar time_buf[128];
+        gint i;
 
 	if (!arv_debug_check (category, level))
 		return;
@@ -153,18 +157,32 @@ arv_debug_with_level (ArvDebugCategory category, ArvDebugLevel level, const char
 	strftime (time_buf, sizeof (time_buf), "%H:%M:%S", &now_tm);
 
 	if (stderr_has_color_support ())
-		g_fprintf (stderr, "[\033[34m%s.%03d\033[0m] %s%s%s\033[0m> ",
-			  time_buf, (gint) ((now / 1000) % 1000),
-			  arv_debug_level_infos[level].color,
-			  arv_debug_level_infos[level].symbol,
-			  arv_debug_category_infos[category].name);
-	else
-		g_fprintf (stderr, "[%s.%03d] %s%s> ",
-			  time_buf, (gint) ((now / 1000) % 1000),
-			  arv_debug_level_infos[level].symbol,
-			  arv_debug_category_infos[category].name);
-	g_vfprintf (stderr, format, args);
-	g_fprintf (stderr, "\n");
+                header = g_strdup_printf ("[\033[34m%s.%03d\033[0m] %s%s%s\033[0m> ",
+                                          time_buf, (gint) ((now / 1000) % 1000),
+                                          arv_debug_level_infos[level].color,
+                                          arv_debug_level_infos[level].symbol,
+                                          arv_debug_category_infos[category].name);
+        else
+                header = g_strdup_printf ("[%s.%03d] %s%s> ",
+                                          time_buf, (gint) ((now / 1000) % 1000),
+                                          arv_debug_level_infos[level].symbol,
+                                          arv_debug_category_infos[category].name);
+
+        if (header != NULL) {
+                int header_length = 19 + strlen (arv_debug_category_infos[category].name);
+
+                g_fprintf (stderr, "%s", header);
+
+                text = g_strdup_vprintf (format, args);
+                lines = g_strsplit (text, "\n", -1);
+
+                for (i = 0; lines[i] != NULL; i++) {
+                        if (strlen (lines[i]) >0)
+                                g_fprintf (stderr, "%*s%s\n", i > 0 ? header_length : 0, "", lines[i]);
+                }
+
+                g_strfreev (lines);
+        }
 }
 
 void
