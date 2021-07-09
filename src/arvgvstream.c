@@ -370,6 +370,9 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 	for (iter = thread_data->frames; iter != NULL; iter = iter->next) {
 		frame = iter->data;
 		if (frame->frame_id == frame_id) {
+                        arv_histogram_fill (thread_data->histogram, 1, time_us - frame->first_packet_time_us);
+                        arv_histogram_fill (thread_data->histogram, 2, time_us - frame->last_packet_time_us);
+
 			frame->last_packet_time_us = time_us;
 			return frame;
 		}
@@ -442,6 +445,8 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 	arv_debug_stream_thread ("[GvStream::find_frame_data] Start frame %" G_GUINT64_FORMAT, frame_id);
 
 	frame->extended_ids = extended_ids;
+
+        arv_histogram_fill (thread_data->histogram, 1, 0);
 
 	return frame;
 }
@@ -1173,9 +1178,11 @@ arv_gv_stream_constructed (GObject *object)
 
 	thread_data->packet_id = 65300;
 
-	thread_data->histogram = arv_histogram_new (1, 100, 2000, 0);
+	thread_data->histogram = arv_histogram_new (3, 100, 2000, 0);
 
-	arv_histogram_set_variable_name (thread_data->histogram, 0, "Buffer reception time");
+	arv_histogram_set_variable_name (thread_data->histogram, 0, "frame_retention");
+	arv_histogram_set_variable_name (thread_data->histogram, 1, "packet_time");
+	arv_histogram_set_variable_name (thread_data->histogram, 2, "inter_packet");
 
 	thread_data->socket_buffer_option = ARV_GV_STREAM_SOCKET_BUFFER_FIXED;
 
