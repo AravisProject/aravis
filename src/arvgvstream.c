@@ -756,7 +756,6 @@ _loop (ArvGvStreamThreadData *thread_data)
 	GPollFD poll_fd[2];
 	guint64 time_us;
 	size_t read_count;
-	int timeout_ms;
 	gboolean use_poll;
 
 	arv_info_stream ("[GvStream::loop] Standard socket method");
@@ -772,6 +771,7 @@ _loop (ArvGvStreamThreadData *thread_data)
 	use_poll = g_cancellable_make_pollfd (thread_data->cancellable, &poll_fd[1]);
 
 	do {
+                int timeout_ms;
 		int n_events;
 		int errsv;
 
@@ -787,16 +787,19 @@ _loop (ArvGvStreamThreadData *thread_data)
 
 		} while (n_events < 0 && errsv == EINTR);
 
-		time_us = g_get_monotonic_time ();
-
 		if (poll_fd[0].revents != 0) {
 			arv_gpollfd_clear_one (&poll_fd[0], thread_data->socket);
 			read_count = g_socket_receive (thread_data->socket, (char *) packet,
 						       ARV_GV_STREAM_INCOMING_BUFFER_SIZE, NULL, NULL);
 
+                        time_us = g_get_monotonic_time ();
+
 			frame = _process_packet (thread_data, packet, read_count, time_us);
-		} else
+		} else {
+                        time_us = g_get_monotonic_time ();
+
 			frame = NULL;
+                }
 
 		_check_frame_completion (thread_data, time_us, frame);
 
