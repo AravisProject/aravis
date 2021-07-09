@@ -1,7 +1,12 @@
+<h1 align="center">
+  <img src="viewer/icons/gnome/128x128/apps/aravis-0.8.png" alt="Aravis" width="128" height="128"/><br>
+  Aravis
+</h1>
+
+<p align="center"><strong>Your industrial vision library</strong></p>
+
 [![Build Status](https://travis-ci.org/AravisProject/aravis.svg?branch=master)](https://travis-ci.org/AravisProject/aravis)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/eaa741156c2041f19b35c336aedf426c)](https://www.codacy.com/gh/AravisProject/aravis/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=AravisProject/aravis&amp;utm_campaign=Badge_Grade)
-
-# ![](viewer/icons/gnome/128x128/apps/aravis-0.8.png)
 
 ### What is Aravis ?
 
