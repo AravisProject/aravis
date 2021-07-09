@@ -1,4 +1,5 @@
 #include <arvdebugprivate.h>
+#include <arvgvstreamprivate.h>
 #include <arv.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -19,8 +20,8 @@ static gboolean arv_option_auto_socket_buffer = FALSE;
 static char *arv_option_packet_size_adjustment = NULL;
 static gboolean arv_option_no_packet_resend = FALSE;
 static double arv_option_packet_request_ratio = -1.0;
-static unsigned int arv_option_packet_timeout = 20;
-static unsigned int arv_option_frame_retention = 100;
+static unsigned int arv_option_packet_timeout = ARV_GV_STREAM_PACKET_TIMEOUT_US_DEFAULT / 1000;
+static unsigned int arv_option_frame_retention = ARV_GV_STREAM_FRAME_RETENTION_US_DEFAULT / 1000;
 static int arv_option_gv_stream_channel = -1;
 static int arv_option_gv_packet_delay = -1;
 static int arv_option_gv_packet_size = -1;
