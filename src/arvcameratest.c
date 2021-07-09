@@ -32,6 +32,7 @@ static char *arv_option_chunks = NULL;
 static int arv_option_bandwidth_limit = -1;
 static char *arv_option_register_cache = NULL;
 static char *arv_option_range_check = NULL;
+static int arv_option_duration_s = -1;
 
 /* clang-format off */
 static const GOptionEntry arv_option_entries[] =
@@ -168,6 +169,11 @@ static const GOptionEntry arv_option_entries[] =
 		NULL
 	},
 	{
+		"duration",	        		'\0', 0, G_OPTION_ARG_INT,
+		&arv_option_duration_s,		        "Test duration (s)",
+		NULL
+	},
+	{
 		"debug", 				'd', 0, G_OPTION_ARG_STRING,
 		&arv_option_debug_domains, 		NULL,
 		"{<category>[:<level>][,...]|help}"
@@ -185,6 +191,8 @@ typedef struct {
 
 	ArvChunkParser *chunk_parser;
 	char **chunks;
+
+        gint64 start_time;
 } ApplicationData;
 
 static gboolean cancel = FALSE;
@@ -271,7 +279,9 @@ periodic_task_cb (void *abstract_data)
 	data->error_count = 0;
 	data->transferred = 0;
 
-	if (cancel) {
+	if (cancel ||
+            (arv_option_duration_s > 0 &&
+             (g_get_monotonic_time() - data->start_time) > 1000000 * arv_option_duration_s)) {
 		g_main_loop_quit (data->main_loop);
 		return FALSE;
 	}
@@ -581,6 +591,8 @@ main (int argc, char **argv)
 
 			    g_signal_connect (arv_camera_get_device (camera), "control-lost",
 					      G_CALLBACK (control_lost_cb), NULL);
+
+                            data.start_time = g_get_monotonic_time();
 
 			    g_timeout_add (1000, periodic_task_cb, &data);
 
