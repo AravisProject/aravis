@@ -959,13 +959,19 @@ _ring_buffer_loop (ArvGvStreamThreadData *thread_data)
 
 		descriptor = (void *) (buffer + block_id * req.tp_block_size);
 		if ((descriptor->h1.block_status & TP_STATUS_USER) == 0) {
+                        int timeout_ms;
 			int n_events;
 			int errsv;
 
 			_check_frame_completion (thread_data, time_us, NULL);
 
+                        if (thread_data->frames != NULL)
+                                timeout_ms = thread_data->packet_timeout_us / 1000;
+                        else
+                                timeout_ms = ARV_GV_STREAM_POLL_TIMEOUT_US / 1000;
+
 			do {
-				n_events = g_poll (poll_fd, use_poll ? 2 : 1, 100);
+				n_events = g_poll (poll_fd, use_poll ? 2 : 1,  timeout_ms);
 				errsv = errno;
 			} while (n_events < 0 && errsv == EINTR);
 		} else {
