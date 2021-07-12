@@ -886,6 +886,13 @@ arv_stream_set_emit_signals
 arv_make_thread_realtime
 arv_make_thread_high_priority
 arv_stream_get_statistics
+arv_stream_get_n_infos
+arv_stream_get_info_name
+arv_stream_get_info_type
+arv_stream_get_info_double
+arv_stream_get_info_double_by_name
+arv_stream_get_info_uint64
+arv_stream_get_info_uint64_by_name
 <SUBSECTION Standard>
 ARV_STREAM
 ARV_IS_STREAM
@@ -1388,18 +1395,6 @@ ARV_IS_GC_SELECTOR
 </SECTION>
 
 <SECTION>
-<FILE>arvstatistic</FILE>
-<TITLE>ArvStatistic</TITLE>
-ArvStatistic
-arv_statistic_new
-arv_statistic_free
-arv_statistic_reset
-arv_statistic_fill
-arv_statistic_set_name
-arv_statistic_to_string
-</SECTION>
-
-<SECTION>
 <FILE>arvstr</FILE>
 <TITLE>ArvStr</TITLE>
 arv_str_strip
@@ -1412,37 +1407,6 @@ arv_str_skip_colon_and_spaces
 arv_str_skip_comma_and_spaces
 arv_str_skip_semicolon_and_spaces
 arv_str_skip_spaces
-</SECTION>
-
-<SECTION>
-<FILE>arvvalue</FILE>
-<TITLE>ArvValue</TITLE>
-arv_value_new_double
-arv_value_new_int64
-arv_value_free
-arv_value_copy
-arv_value_set_int64
-arv_value_set_double
-arv_value_get_int64
-arv_value_get_double
-arv_value_holds_int64
-arv_value_holds_double
-<SUBSECTION Private>
-ARV_TYPE_VALUE
-arv_value_get_type
-ArvValue
-arv_copy_memory_with_endianness
-arv_decompress
-G_DEFINE_INTERFACE
-G_DEFINE_INTERFACE_WITH_CODE
-G_IMPLEMENT_INTERFACE
-arv_g_type_init
-ARV_DEFINE_STATIC_MUTEX
-arv_g_mutex_lock
-arv_g_mutex_unlock
-arv_g_thread_init
-arv_g_thread_new
-g_clear_pointer
 </SECTION>
 
 <SECTION>

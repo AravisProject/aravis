@@ -27,11 +27,6 @@
 #include <stdio.h>
 #include <zlib.h>
 
-/**
- * SECTION: arvhistogram
- * @short_description: An histogram tool
- */
-
 typedef struct _ArvHistogramVariable ArvHistogramVariable;
 
 struct _ArvHistogramVariable {
@@ -305,11 +300,6 @@ arv_histogram_to_string (const ArvHistogram *histogram)
 
 	return str;
 }
-
-/**
- * SECTION: arvvalue
- * @short_description: An int64/double value storage
- */
 
 ArvValue *
 arv_value_new_double (double v_double)

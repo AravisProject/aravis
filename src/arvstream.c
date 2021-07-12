@@ -441,6 +441,15 @@ arv_stream_declare_info (ArvStream *stream, const char *name, GType type, gpoint
         g_ptr_array_add (priv->infos, info);
 }
 
+/**
+ * arv_stream_get_n_infos:
+ * @stream: a #ArvStream
+ *
+ * Returns: the number of stream informations. These informations contain useful numbers about data transfer quality.
+ *
+ * Since: 0.8.11
+ */
+
 guint
 arv_stream_get_n_infos (ArvStream *stream)
 {
@@ -450,6 +459,16 @@ arv_stream_get_n_infos (ArvStream *stream)
 
         return priv->infos->len;
 }
+
+/**
+ * arv_stream_get_info_name:
+ * @stream: a #ArvStream
+ * @id: info id
+ *
+ * Returns: the name of the corresponding stream information.
+ *
+ * Since: 0.8.11
+ */
 
 const char *
 arv_stream_get_info_name (ArvStream *stream, guint id)
@@ -467,6 +486,17 @@ arv_stream_get_info_name (ArvStream *stream, guint id)
         return NULL;
 }
 
+/**
+ * arv_stream_get_info_type:
+ * @stream: a #ArvStream
+ * @id: info id
+ *
+ * Returns: the #GType of the corresponding stream information, which indicates what API to use to retrieve the
+ * information value (arv_stream_get_info_uint64() or arv_stream_get_info_double()).
+ *
+ * Since: 0.8.11
+ */
+
 GType
 arv_stream_get_info_type (ArvStream *stream, guint id)
 {
@@ -482,6 +512,16 @@ arv_stream_get_info_type (ArvStream *stream, guint id)
 
         return 0;
 }
+
+/**
+ * arv_stream_get_info_uint64:
+ * @stream: a #ArvStream
+ * @id: info id
+ *
+ * Returns: the value of the corresponding stream information, as a 64 bit unsigned integer.
+ *
+ * Since: 0.8.11
+ */
 
 guint64
 arv_stream_get_info_uint64 (ArvStream *stream, guint id)
@@ -501,6 +541,16 @@ arv_stream_get_info_uint64 (ArvStream *stream, guint id)
 
         return 0;
 }
+
+/**
+ * arv_stream_get_info_double:
+ * @stream: a #ArvStream
+ * @id: info id
+ *
+ * Returns: the value of the corresponding stream information, as a double.
+ *
+ * Since: 0.8.11
+ */
 
 double
 arv_stream_get_info_double (ArvStream *stream, guint id)
@@ -537,6 +587,16 @@ _find_info_by_name (ArvStream *stream, const char *name)
         return NULL;
 }
 
+/**
+ * arv_stream_get_info_uint64_by_name:
+ * @stream: a #ArvStream
+ * @name: info name
+ *
+ * Returns: the value of the corresponding stream information, as a 64 bit unsigned integer.
+ *
+ * Since: 0.8.11
+ */
+
 guint64
 arv_stream_get_info_uint64_by_name (ArvStream *stream, const char *name)
 {
@@ -552,6 +612,16 @@ arv_stream_get_info_uint64_by_name (ArvStream *stream, const char *name)
 
         return *((guint64 *) (info->data));
 }
+
+/**
+ * arv_stream_get_info_double_by_name:
+ * @stream: a #ArvStream
+ * @name: info name
+ *
+ * Returns: the value of the corresponding stream information, as a double.
+ *
+ * Since: 0.8.11
+ */
 
 double
 arv_stream_get_info_double_by_name (ArvStream *stream, const char *name)
