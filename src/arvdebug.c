@@ -141,30 +141,26 @@ arv_debug_with_level (ArvDebugCategory category, ArvDebugLevel level, const char
 {
         g_autofree char *text = NULL;
         g_autofree char *header = NULL;
+	g_autofree char *time_str = NULL;
+        g_autoptr (GDateTime) date = NULL;
         char **lines;
-	gint64 now;
-	time_t now_secs;
-	struct tm now_tm;
-	gchar time_buf[128];
         gint i;
 
 	if (!arv_debug_check (category, level))
 		return;
 
-	now = g_get_real_time ();
-	now_secs = (time_t) (now / 1000000);
-	localtime_r (&now_secs, &now_tm);
-	strftime (time_buf, sizeof (time_buf), "%H:%M:%S", &now_tm);
+        date = g_date_time_new_now_local ();
+        time_str = g_date_time_format (date, "%H:%M:%S.%f");
 
 	if (stderr_has_color_support ())
-                header = g_strdup_printf ("[\033[34m%s.%03d\033[0m] %s%s%s\033[0m> ",
-                                          time_buf, (gint) ((now / 1000) % 1000),
+                header = g_strdup_printf ("[\033[34m%.12s\033[0m] %s%s%s\033[0m> ",
+                                          time_str,
                                           arv_debug_level_infos[level].color,
                                           arv_debug_level_infos[level].symbol,
                                           arv_debug_category_infos[category].name);
         else
-                header = g_strdup_printf ("[%s.%03d] %s%s> ",
-                                          time_buf, (gint) ((now / 1000) % 1000),
+                header = g_strdup_printf ("[%.12s] %s%s> ",
+                                          time_str,
                                           arv_debug_level_infos[level].symbol,
                                           arv_debug_category_infos[category].name);
 
