@@ -349,7 +349,7 @@ fake_stream_test (void)
 	g_assert_cmpint (n_output_buffers, ==, 0);
 
         n_infos = arv_stream_get_n_infos (stream);
-        g_assert_cmpint (n_infos, ==, 3);
+        g_assert_cmpint (n_infos, ==, 5);
 
         info_name = arv_stream_get_info_name (stream, 0);
         g_assert_cmpstr (info_name, ==, "n_completed_buffers");
