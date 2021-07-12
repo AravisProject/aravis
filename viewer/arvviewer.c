@@ -722,9 +722,9 @@ update_status_bar_cb (void *data)
 	char *text;
 	gint64 time_ms = g_get_real_time () / 1000;
 	gint64 elapsed_time_ms = time_ms - viewer->last_status_bar_update_time_ms;
-	guint n_images = arv_stream_get_info_uint64_by_name (viewer->stream, "n_completed_buffers");
-	guint n_bytes = arv_stream_get_info_uint64_by_name (viewer->stream, "n_transferred_bytes");
-	guint n_errors = arv_stream_get_info_uint64_by_name (viewer->stream, "n_failures");
+	guint64 n_images = arv_stream_get_info_uint64_by_name (viewer->stream, "n_completed_buffers");
+	guint64 n_bytes = arv_stream_get_info_uint64_by_name (viewer->stream, "n_transferred_bytes");
+	guint64 n_errors = arv_stream_get_info_uint64_by_name (viewer->stream, "n_failures");
 
 	if (elapsed_time_ms == 0)
 		return TRUE;
@@ -735,7 +735,7 @@ update_status_bar_cb (void *data)
 	gtk_label_set_label (GTK_LABEL (viewer->fps_label), text);
 	g_free (text);
 
-	text = g_strdup_printf ("%u image%s / %u error%s",
+	text = g_strdup_printf ("%" G_GUINT64_FORMAT " image%s / %" G_GUINT64_FORMAT " error%s",
 				n_images, n_images > 0 ? "s" : "",
 				n_errors, n_errors > 0 ? "s" : "");
 	gtk_label_set_label (GTK_LABEL (viewer->image_label), text);
