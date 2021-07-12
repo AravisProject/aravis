@@ -47,6 +47,9 @@ typedef struct {
 	guint64 n_completed_buffers;
 	guint64 n_failures;
 	guint64 n_underruns;
+
+        guint64 n_transferred_bytes;
+        guint64 n_ignored_bytes;
 } ArvFakeStreamThreadData;
 
 typedef struct {
@@ -87,6 +90,9 @@ arv_fake_stream_thread (void *data)
 						       NULL);
 
 			arv_fake_camera_fill_buffer (thread_data->fake_camera, buffer, NULL);
+
+                        thread_data->n_transferred_bytes += buffer->priv->size;
+
 			if (buffer->priv->status == ARV_BUFFER_STATUS_SUCCESS)
 				thread_data->n_completed_buffers++;
 			else
@@ -192,6 +198,10 @@ arv_fake_stream_constructed (GObject *object)
                                  G_TYPE_UINT64, &thread_data->n_failures);
         arv_stream_declare_info (ARV_STREAM (fake_stream), "n_underruns",
                                  G_TYPE_UINT64, &thread_data->n_underruns);
+        arv_stream_declare_info (ARV_STREAM (fake_stream), "n_transferred_bytes",
+                                 G_TYPE_UINT64, &thread_data->n_transferred_bytes);
+        arv_stream_declare_info (ARV_STREAM (fake_stream), "n_ignored_bytes",
+                                 G_TYPE_UINT64, &thread_data->n_ignored_bytes);
 
 	priv->thread_data = thread_data;
 

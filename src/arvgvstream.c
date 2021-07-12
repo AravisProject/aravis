@@ -169,6 +169,9 @@ struct _ArvGvStreamThreadData {
 	guint64 n_resend_ratio_reached;
 	guint64 n_duplicated_packets;
 
+        guint64 n_transferred_bytes;
+        guint64 n_ignored_bytes;
+
 	ArvHistogram *histogram;
 	guint32 statistic_count;
 
@@ -711,6 +714,7 @@ _process_packet (ArvGvStreamThreadData *thread_data, const ArvGvspPacket *packet
 			frame->error_packet_received = TRUE;
 
 			thread_data->n_error_packets++;
+                        thread_data->n_transferred_bytes += packet_size;
 		} else if (packet_id < frame->n_packets &&
 		           frame->packet_data[packet_id].received) {
 			/* Ignore duplicate packet */
@@ -718,6 +722,8 @@ _process_packet (ArvGvStreamThreadData *thread_data, const ArvGvspPacket *packet
 			arv_debug_stream_thread ("[GvStream::process_packet] Duplicated packet %d for frame %" G_GUINT64_FORMAT,
 						 packet_id, frame->frame_id);
 			arv_gvsp_packet_debug (packet, packet_size, ARV_DEBUG_LEVEL_DEBUG);
+
+                        thread_data->n_transferred_bytes += packet_size;
 		} else {
 			ArvGvspContentType content_type;
 
@@ -741,23 +747,29 @@ _process_packet (ArvGvStreamThreadData *thread_data, const ArvGvspPacket *packet
 			switch (content_type) {
 				case ARV_GVSP_CONTENT_TYPE_DATA_LEADER:
 					_process_data_leader (thread_data, frame, packet, packet_id);
+                                        thread_data->n_transferred_bytes += packet_size;
 					break;
 				case ARV_GVSP_CONTENT_TYPE_DATA_BLOCK:
 					_process_data_block (thread_data, frame, packet, packet_id,
 							     packet_size);
+                                        thread_data->n_transferred_bytes += packet_size;
 					break;
 				case ARV_GVSP_CONTENT_TYPE_DATA_TRAILER:
 					_process_data_trailer (thread_data, frame, packet_id);
+                                        thread_data->n_transferred_bytes += packet_size;
 					break;
 				default:
 					thread_data->n_ignored_packets++;
+                                        thread_data->n_ignored_bytes += packet_size;
 					break;
 			}
 
 			_missing_packet_check (thread_data, frame, packet_id, time_us);
 		}
-	} else
-		thread_data->n_ignored_packets++;
+	} else {
+                thread_data->n_ignored_packets++;
+                thread_data->n_ignored_bytes += packet_size;
+        }
 
 	return frame;
 }
@@ -1273,6 +1285,10 @@ arv_gv_stream_constructed (GObject *object)
                                  G_TYPE_UINT64, &thread_data->n_resend_ratio_reached);
         arv_stream_declare_info (ARV_STREAM (gv_stream), "n_duplicated_packets",
                                  G_TYPE_UINT64, &thread_data->n_duplicated_packets);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_transferred_bytes",
+                                 G_TYPE_UINT64, &thread_data->n_transferred_bytes);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_ignored_bytes",
+                                 G_TYPE_UINT64, &thread_data->n_ignored_bytes);
 
 	arv_gv_stream_start_thread (ARV_STREAM (gv_stream));
 }
@@ -1429,6 +1445,11 @@ arv_gv_stream_finalize (GObject *object)
 				  thread_data->n_resend_ratio_reached);
 		arv_info_stream ("[GvStream::finalize] n_duplicated_packets   = %" G_GUINT64_FORMAT,
 				  thread_data->n_duplicated_packets);
+
+		arv_info_stream ("[GvStream::finalize] n_transferred_bytes    = %" G_GUINT64_FORMAT,
+				  thread_data->n_transferred_bytes);
+		arv_info_stream ("[GvStream::finalize] n_ignored_bytes        = %" G_GUINT64_FORMAT,
+				  thread_data->n_ignored_bytes);
 
 		g_clear_object (&thread_data->device_address);
 		g_clear_object (&thread_data->interface_address);

@@ -196,9 +196,6 @@ struct  _ArvViewer {
 	gint64 last_status_bar_update_time_ms;
 	unsigned last_n_images;
 	unsigned last_n_bytes;
-	unsigned n_images;
-	unsigned n_bytes;
-	unsigned n_errors;
 
 	gboolean auto_socket_buffer;
 	gboolean packet_resend;
@@ -365,13 +362,9 @@ new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 		viewer->last_buffer = g_object_ref( arv_buffer );
 
 		gst_app_src_push_buffer (GST_APP_SRC (viewer->appsrc), arv_to_gst_buffer (arv_buffer, stream));
-
-		viewer->n_images++;
-		viewer->n_bytes += size;
 	} else {
 		arv_debug_viewer ("push discarded buffer");
 		arv_stream_push_buffer (stream, arv_buffer);
-		viewer->n_errors++;
 	}
 }
 
@@ -729,9 +722,9 @@ update_status_bar_cb (void *data)
 	char *text;
 	gint64 time_ms = g_get_real_time () / 1000;
 	gint64 elapsed_time_ms = time_ms - viewer->last_status_bar_update_time_ms;
-	guint n_images = viewer->n_images;
-	guint n_bytes = viewer->n_bytes;
-	guint n_errors = viewer->n_errors;
+	guint n_images = arv_stream_get_info_uint64_by_name (viewer->stream, "n_completed_buffers");
+	guint n_bytes = arv_stream_get_info_uint64_by_name (viewer->stream, "n_transferred_bytes");
+	guint n_errors = arv_stream_get_info_uint64_by_name (viewer->stream, "n_failures");
 
 	if (elapsed_time_ms == 0)
 		return TRUE;
@@ -1097,9 +1090,6 @@ start_video (ArvViewer *viewer)
 	viewer->last_status_bar_update_time_ms = g_get_real_time () / 1000;
 	viewer->last_n_images = 0;
 	viewer->last_n_bytes = 0;
-	viewer->n_images = 0;
-	viewer->n_bytes = 0;
-	viewer->n_errors = 0;
 	viewer->status_bar_update_event = g_timeout_add_seconds (1, update_status_bar_cb, viewer);
 
 	g_signal_connect (viewer->stream, "new-buffer", G_CALLBACK (new_buffer_cb), viewer);
