@@ -410,7 +410,7 @@ arv_uv_stream_constructed (GObject *object)
 	ArvUvStreamPrivate *priv = arv_uv_stream_get_instance_private (uv_stream);
 	ArvUvStreamThreadData *thread_data;
 
-	thread_data = g_new (ArvUvStreamThreadData, 1);
+	thread_data = g_new0 (ArvUvStreamThreadData, 1);
 	thread_data->stream = stream;
 
 	g_object_get (object,
