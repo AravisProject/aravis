@@ -150,17 +150,17 @@ arv_debug_with_level (ArvDebugCategory category, ArvDebugLevel level, const char
 		return;
 
         date = g_date_time_new_now_local ();
-        time_str = g_date_time_format (date, "%H:%M:%S.%f");
+        time_str = g_date_time_format (date, "%H:%M:%S");
 
 	if (stderr_has_color_support ())
-                header = g_strdup_printf ("[\033[34m%.12s\033[0m] %s%s%s\033[0m> ",
-                                          time_str,
+                header = g_strdup_printf ("[\033[34m%s.%03d\033[0m] %s%s%s\033[0m> ",
+                                          time_str, g_date_time_get_microsecond (date) / 1000,
                                           arv_debug_level_infos[level].color,
                                           arv_debug_level_infos[level].symbol,
                                           arv_debug_category_infos[category].name);
         else
-                header = g_strdup_printf ("[%.12s] %s%s> ",
-                                          time_str,
+                header = g_strdup_printf ("[%s.%03d] %s%s> ",
+                                          time_str, g_date_time_get_microsecond (date) / 1000,
                                           arv_debug_level_infos[level].symbol,
                                           arv_debug_category_infos[category].name);
 
