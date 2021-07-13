@@ -1,3 +1,8 @@
+Stable release 0.8.13
+=====================
+
+  * viewer: fix incorrect bandwith and frame rate computation
+
 Stable release 0.8.12
 =====================
 
