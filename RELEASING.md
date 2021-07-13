@@ -48,29 +48,7 @@ $ git push origin ARAVIS_X_Y_Z
   need to repeat the entire process. Well, update, add a new NEWS entry, and
   make distcheck again.
 
-* Upload the tarball to ftp.gnome.org, by scp-ing it to master.gnome.org. All
-  module maintainers who wish to be able to upload tarballs should request a
-  shell account at master.gnome.org for this purpose -- see AccountPolicy.
-  Ask someone else to do it for you if you are waiting for an account.
-
-  For example:
-
-  ```
-$ scp aravis-0.1.3.tar.gz (user)@master.gnome.org:
-  ```
-
-  Then `ssh` into `master.gnome.org` and call `ftp-admin`. There are no extra
-  steps required for new modules.
-
-  For example:
-
-  ```
-$ ftpadmin install aravis-0.1.3.tar.gz
-  ```
-
-  This will move the tarball to the appropriate directory, do some additional
-  administrative stuff, and send an email to the ftp-release mailing list so
-  that the release-team will know about it.
+* Upload the tarball to github.
 
 * Increment the version number in `meson.build`, and push the change.
 
