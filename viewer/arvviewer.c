@@ -194,8 +194,8 @@ struct  _ArvViewer {
 
 	guint status_bar_update_event;
 	gint64 last_status_bar_update_time_ms;
-	unsigned last_n_images;
-	unsigned last_n_bytes;
+	guint64 last_n_images;
+	guint64 last_n_bytes;
 
 	gboolean auto_socket_buffer;
 	gboolean packet_resend;
