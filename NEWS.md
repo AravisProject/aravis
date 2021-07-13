@@ -1,3 +1,8 @@
+Stable release 0.8.12
+=====================
+
+  * usb3vision: initialize stream infos
+
 Stable release 0.8.11
 =====================
 
