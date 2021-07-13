@@ -1,7 +1,7 @@
 Stable release 0.8.14
 =====================
 
-  * debug: fir debug timestamp on older platforms (Emmanuel)
+  * debug: fix debug timestamp on older platforms (Emmanuel)
 
 Stable release 0.8.13
 =====================
