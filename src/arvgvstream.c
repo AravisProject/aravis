@@ -102,7 +102,7 @@ typedef struct {
 	guint64 first_packet_time_us;
 	guint64 last_packet_time_us;
 
-	gboolean error_packet_received;
+	gboolean disable_resend_request;
 
 	guint n_packets;
 	ArvGvStreamPacketData *packet_data;
@@ -167,6 +167,7 @@ struct _ArvGvStreamThreadData {
 	guint64 n_resend_requests;
 	guint64 n_resent_packets;
 	guint64 n_resend_ratio_reached;
+        guint64 n_resend_disabled;
 	guint64 n_duplicated_packets;
 
         guint64 n_transferred_bytes;
@@ -418,7 +419,7 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 
 	frame = g_new0 (ArvGvStreamFrameData, 1);
 
-	frame->error_packet_received = FALSE;
+	frame->disable_resend_request = FALSE;
 
 	frame->frame_id = frame_id;
 	frame->last_valid_packet = -1;
@@ -468,7 +469,7 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 	int i;
 
 	if (thread_data->packet_resend == ARV_GV_STREAM_PACKET_RESEND_NEVER ||
-	    frame->error_packet_received ||
+	    frame->disable_resend_request ||
 	    frame->resend_ratio_reached)
 		return;
 
@@ -705,13 +706,21 @@ _process_packet (ArvGvStreamThreadData *thread_data, const ArvGvspPacket *packet
 		ArvGvspPacketType packet_type = arv_gvsp_packet_get_packet_type (packet);
 
 		if (arv_gvsp_packet_type_is_error (packet_type)) {
+                        ArvGvcpError error = packet_type & 0xff;
+
 			arv_info_stream_thread ("[GvStream::process_packet]"
 						 " Error packet at dt = %" G_GINT64_FORMAT ", packet id = %u"
 						 " frame id = %" G_GUINT64_FORMAT,
 						 time_us - frame->first_packet_time_us,
 						 packet_id, frame->frame_id);
 			arv_gvsp_packet_debug (packet, packet_size, ARV_DEBUG_LEVEL_INFO);
-			frame->error_packet_received = TRUE;
+
+                        if (error == ARV_GVCP_ERROR_PACKET_AND_PREVIOUS_REMOVED_FROM_MEMORY ||
+                            error == ARV_GVCP_ERROR_PACKET_REMOVED_FROM_MEMORY ||
+                            error == ARV_GVCP_ERROR_PACKET_UNAVAILABLE) {
+                                frame->disable_resend_request = TRUE;
+                                thread_data->n_resend_disabled++;
+                        }
 
 			thread_data->n_error_packets++;
                         thread_data->n_transferred_bytes += packet_size;
@@ -1283,6 +1292,8 @@ arv_gv_stream_constructed (GObject *object)
                                  G_TYPE_UINT64, &thread_data->n_resent_packets);
         arv_stream_declare_info (ARV_STREAM (gv_stream), "n_resend_ratio_reached",
                                  G_TYPE_UINT64, &thread_data->n_resend_ratio_reached);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_resend_disabled",
+                                 G_TYPE_UINT64, &thread_data->n_resend_disabled);
         arv_stream_declare_info (ARV_STREAM (gv_stream), "n_duplicated_packets",
                                  G_TYPE_UINT64, &thread_data->n_duplicated_packets);
         arv_stream_declare_info (ARV_STREAM (gv_stream), "n_transferred_bytes",
@@ -1443,6 +1454,8 @@ arv_gv_stream_finalize (GObject *object)
 				  thread_data->n_resent_packets);
 		arv_info_stream ("[GvStream::finalize] n_resend_ratio_reached = %" G_GUINT64_FORMAT,
 				  thread_data->n_resend_ratio_reached);
+		arv_info_stream ("[GvStream::finalize] n_resend_disabled      = %" G_GUINT64_FORMAT,
+				  thread_data->n_resend_disabled);
 		arv_info_stream ("[GvStream::finalize] n_duplicated_packets   = %" G_GUINT64_FORMAT,
 				  thread_data->n_duplicated_packets);
 
