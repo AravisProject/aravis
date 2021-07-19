@@ -38,6 +38,7 @@ static char *arv_option_register_cache = NULL;
 static char *arv_option_range_check = NULL;
 static gboolean arv_viewer_option_auto_socket_buffer = FALSE;
 static gboolean arv_viewer_option_no_packet_resend = FALSE;
+static unsigned int arv_viewer_option_initial_packet_timeout = 1;
 static unsigned int arv_viewer_option_packet_timeout = 20;
 static unsigned int arv_viewer_option_frame_retention = 100;
 
@@ -50,6 +51,10 @@ static const GOptionEntry arv_viewer_option_entries[] =
 	{
 		"no-packet-resend",			'r', 0, G_OPTION_ARG_NONE,
 		&arv_viewer_option_no_packet_resend,	"No packet resend", NULL
+	},
+	{
+		"initial-packet-timeout", 		        'l', 0, G_OPTION_ARG_INT,
+		&arv_viewer_option_initial_packet_timeout, 	"Initial packet timeout (ms)", NULL
 	},
 	{
 		"packet-timeout", 			'p', 0, G_OPTION_ARG_INT,
@@ -156,6 +161,7 @@ main (int argc, char **argv)
 	arv_viewer_set_options (viewer,
 				arv_viewer_option_auto_socket_buffer,
 				!arv_viewer_option_no_packet_resend,
+				arv_viewer_option_initial_packet_timeout,
 				arv_viewer_option_packet_timeout,
 				arv_viewer_option_frame_retention,
 				register_cache_policy,

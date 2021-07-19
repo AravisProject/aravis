@@ -20,6 +20,7 @@ static gboolean arv_option_auto_socket_buffer = FALSE;
 static char *arv_option_packet_size_adjustment = NULL;
 static gboolean arv_option_no_packet_resend = FALSE;
 static double arv_option_packet_request_ratio = -1.0;
+static unsigned int arv_option_initial_packet_timeout = ARV_GV_STREAM_INITIAL_PACKET_TIMEOUT_US_DEFAULT / 1000;
 static unsigned int arv_option_packet_timeout = ARV_GV_STREAM_PACKET_TIMEOUT_US_DEFAULT / 1000;
 static unsigned int arv_option_frame_retention = ARV_GV_STREAM_FRAME_RETENTION_US_DEFAULT / 1000;
 static int arv_option_gv_stream_channel = -1;
@@ -106,6 +107,11 @@ static const GOptionEntry arv_option_entries[] =
 		"packet-request-ratio",			'q', 0, G_OPTION_ARG_DOUBLE,
 		&arv_option_packet_request_ratio,
 		"Packet resend request limit as a frame packet number ratio [0..2.0]",
+		NULL
+	},
+	{
+		"initial-packet-timeout", 		'l', 0, G_OPTION_ARG_INT,
+		&arv_option_initial_packet_timeout, 	"Initial packet timeout (ms)",
 		NULL
 	},
 	{
@@ -561,6 +567,7 @@ main (int argc, char **argv)
 							  NULL);
 
 				    g_object_set (stream,
+						  "initial-packet-timeout", (unsigned) arv_option_initial_packet_timeout * 1000,
 						  "packet-timeout", (unsigned) arv_option_packet_timeout * 1000,
 						  "frame-retention", (unsigned) arv_option_frame_retention * 1000,
 						  NULL);

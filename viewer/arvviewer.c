@@ -199,6 +199,7 @@ struct  _ArvViewer {
 
 	gboolean auto_socket_buffer;
 	gboolean packet_resend;
+	guint initial_packet_timeout;
 	guint packet_timeout;
 	guint frame_retention;
 	ArvRegisterCachePolicy register_cache_policy;
@@ -222,6 +223,7 @@ void
 arv_viewer_set_options (ArvViewer *viewer,
 			gboolean auto_socket_buffer,
 			gboolean packet_resend,
+			guint initial_packet_timeout,
 			guint packet_timeout,
 			guint frame_retention,
 			ArvRegisterCachePolicy register_cache_policy,
@@ -231,6 +233,7 @@ arv_viewer_set_options (ArvViewer *viewer,
 
 	viewer->auto_socket_buffer = auto_socket_buffer;
 	viewer->packet_resend = packet_resend;
+	viewer->initial_packet_timeout = initial_packet_timeout;
 	viewer->packet_timeout = packet_timeout;
 	viewer->frame_retention = frame_retention;
 	viewer->register_cache_policy = register_cache_policy;
@@ -984,6 +987,7 @@ start_video (ArvViewer *viewer)
 				      "packet-resend", ARV_GV_STREAM_PACKET_RESEND_NEVER,
 				      NULL);
 		g_object_set (viewer->stream,
+			      "initial-packet-timeout", (unsigned) viewer->initial_packet_timeout * 1000,
 			      "packet-timeout", (unsigned) viewer->packet_timeout * 1000,
 			      "frame-retention", (unsigned) viewer->frame_retention * 1000,
 			      NULL);

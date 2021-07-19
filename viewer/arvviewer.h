@@ -34,6 +34,7 @@ ArvViewer * 		arv_viewer_new 			(void);
 void			arv_viewer_set_options		(ArvViewer *viewer,
 							 gboolean auto_socket_buffer,
 							 gboolean packet_resend,
+							 guint initial_packet_timeout,
 							 guint packet_timeout,
 							 guint frame_retention,
 							 ArvRegisterCachePolicy register_cache_policy,
