@@ -1056,6 +1056,8 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate, GError **error)
 			arv_camera_set_string (camera, "TriggerSelector", "FrameStart", &local_error);
 			if (local_error == NULL)
 				arv_camera_set_string (camera, "TriggerMode", "Off", &local_error);
+                        else
+                                g_clear_error (&local_error);
 			if (local_error == NULL)
 				arv_camera_set_float (camera,
 						      priv->has_acquisition_frame_rate ?
