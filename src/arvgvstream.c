@@ -1083,13 +1083,6 @@ arv_gv_stream_thread (void *data)
 	thread_data->last_frame_id = 0;
 	thread_data->first_packet = TRUE;
 
-	arv_info_stream_thread ("[GvStream::stream_thread] Initial packet timeout = %g ms",
-				 thread_data->initial_packet_timeout_us / 1000.0);
-	arv_info_stream_thread ("[GvStream::stream_thread] Packet timeout         = %g ms",
-				 thread_data->packet_timeout_us / 1000.0);
-	arv_info_stream_thread ("[GvStream::stream_thread] Frame retention        = %g ms",
-				 thread_data->frame_retention_us / 1000.0);
-
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->callback_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
 
