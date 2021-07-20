@@ -1503,6 +1503,11 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 	stream_class->start_thread = arv_gv_stream_start_thread;
 	stream_class->stop_thread = arv_gv_stream_stop_thread;
 
+        /**
+         * ArvGvStream:socket-buffer:
+         *
+         * Incoming socket buffer policy.
+         */
 	g_object_class_install_property (
 		object_class, ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER,
 		g_param_spec_enum ("socket-buffer", "Socket buffer",
@@ -1511,6 +1516,12 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 				   ARV_GV_STREAM_SOCKET_BUFFER_AUTO,
 				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
 		);
+        /**
+         * ArvGvStream:socket-buffer-size:
+         *
+         * Size in bytes of the incoming socket buffer. A greater value helps to lower the number of missings packets,
+         * as the expense of an increased memory usage.
+         */
 	g_object_class_install_property (
 		object_class, ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER_SIZE,
 		g_param_spec_int ("socket-buffer-size", "Socket buffer size",
@@ -1518,6 +1529,11 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 				  -1, G_MAXINT, 0,
 				  G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
 		);
+        /**
+         * ArvGvStream:packet-resend:
+         *
+         * Packet resend policy. This only applies if the device supports packet resend.
+         */
 	g_object_class_install_property (
 		object_class, ARV_GV_STREAM_PROPERTY_PACKET_RESEND,
 		g_param_spec_enum ("packet-resend", "Packet resend",
@@ -1526,6 +1542,12 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 				   ARV_GV_STREAM_PACKET_RESEND_ALWAYS,
 				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
 		);
+        /**
+         * ArvGvStream:packet-request-ratio:
+         *
+         * Maximum number of packet resend requests for a given frame, as a percentage of the number of packets per
+         * frame.
+         */
 	g_object_class_install_property (
 		object_class, ARV_GV_STREAM_PROPERTY_PACKET_REQUEST_RATIO,
 		g_param_spec_double ("packet-request-ratio", "Packet request ratio",
@@ -1533,6 +1555,14 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 				     0.0, 2.0, ARV_GV_STREAM_PACKET_REQUEST_RATIO_DEFAULT,
 				     G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
 		);
+        /**
+         * ArvGvStream:initial-packet-timeout:
+         *
+         * Delay before asking for a packet resend after the packet was detected missing for the first time. The reason
+         * for this delay is, depending on the network topology, stream packets are not always received in increasing id
+         * order. As the missing packet detection happens at each received packet, by verifying if each previous packet
+         * has been received, we could emit useless packet resend requests if they are not ordered.
+         */
 	g_object_class_install_property (
 		object_class, ARV_GV_STREAM_PROPERTY_INITIAL_PACKET_TIMEOUT,
 		g_param_spec_uint ("initial-packet-timeout", "Initial packet timeout",
@@ -1542,6 +1572,11 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 				   ARV_GV_STREAM_INITIAL_PACKET_TIMEOUT_US_DEFAULT,
 				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
 		);
+        /**
+         * ArvGvStream:packet-timeout:
+         *
+         * Timeout while waiting for a packet after a resend request, before asking again.
+         */
 	g_object_class_install_property (
 		object_class, ARV_GV_STREAM_PROPERTY_PACKET_TIMEOUT,
 		g_param_spec_uint ("packet-timeout", "Packet timeout",
@@ -1551,6 +1586,12 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 				   ARV_GV_STREAM_PACKET_TIMEOUT_US_DEFAULT,
 				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
 		);
+        /**
+         * ArvGvStream:frame-retention:
+         *
+         * Amount of time Aravis is wating for frame completion after the last packet is received. A greater value will
+         * also increase the maximum frame latency in case of missing packets.
+         */
 	g_object_class_install_property (
 		object_class, ARV_GV_STREAM_PROPERTY_FRAME_RETENTION,
 		g_param_spec_uint ("frame-retention", "Frame retention",

@@ -46,7 +46,7 @@ typedef enum {
 /**
  * ArvGvStreamSocketBuffer:
  * @ARV_GV_STREAM_SOCKET_BUFFER_FIXED: socket buffer is set to a given fixed value
- * @ARV_GV_STREAM_SOCKET_BUFFER_AUTO: sockect buffer is set with respect to the payload size
+ * @ARV_GV_STREAM_SOCKET_BUFFER_AUTO: socket buffer size is set to the payload size
  */
 
 typedef enum {
