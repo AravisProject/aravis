@@ -340,7 +340,7 @@ arv_tool_execute_command (int argc, char **argv, ArvDevice *device,
 									g_string_append_printf (string, " min:%g", min_double);
 								if (max_double != G_MAXDOUBLE)
 									g_string_append_printf (string, " max:%g", max_double);
-								if (inc_double != 1)
+								if (inc_double != G_MINDOUBLE)
 									g_string_append_printf (string, " inc:%g", inc_double);
 
 								printf ("%s\n", string->str);

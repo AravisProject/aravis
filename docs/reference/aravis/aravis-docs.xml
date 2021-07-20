@@ -164,6 +164,7 @@
 			<xi:include href="xml/api-index-0.8.8.xml"><xi:fallback /></xi:include>
 			<xi:include href="xml/api-index-0.8.11.xml"><xi:fallback /></xi:include>
 			<xi:include href="xml/api-index-0.8.15.xml"><xi:fallback /></xi:include>
+			<xi:include href="xml/api-index-0.8.16.xml"><xi:fallback /></xi:include>
 		</index>
 
 		<xi:include href="xml/annotation-glossary.xml"><xi:fallback /></xi:include>

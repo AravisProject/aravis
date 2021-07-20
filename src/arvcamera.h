@@ -157,6 +157,7 @@ gint64		arv_camera_get_integer_increment	(ArvCamera *camera, const char *feature
 void		arv_camera_set_float			(ArvCamera *camera, const char *feature, double value, GError **error);
 double		arv_camera_get_float			(ArvCamera *camera, const char *feature, GError **error);
 void 		arv_camera_get_float_bounds 		(ArvCamera *camera, const char *feature, double *min, double *max, GError **error);
+double          arv_camera_get_float_increment          (ArvCamera *camera, const char *feature, GError **error);
 
 gint64 *	arv_camera_dup_available_enumerations			(ArvCamera *camera, const char *feature, guint *n_values,
 									 GError **error);

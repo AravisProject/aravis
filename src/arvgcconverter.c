@@ -329,6 +329,9 @@ arv_gc_converter_update_from_variables (ArvGcConverter *gc_converter, ArvGcConve
 					break;
 				case ARV_GC_CONVERTER_NODE_TYPE_INC:
 					value = arv_gc_float_get_inc (ARV_GC_FLOAT (node), &local_error);
+					/* Default increment, don't convert it */
+                                        if (value == G_MINDOUBLE)
+                                                return FALSE;
 					break;
 				default:
 					value =  arv_gc_float_get_value (ARV_GC_FLOAT (node), &local_error);

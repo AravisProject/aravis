@@ -2253,6 +2253,28 @@ arv_camera_get_float_bounds (ArvCamera *camera, const char *feature, double *min
 }
 
 /**
+ * arv_camera_get_float_increment:
+ * @camera: a #ArvCamera
+ * @feature: feature name
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: @feature value increment, or #G_MINDOUBLE on error.
+ *
+ * Since: 0.8.16
+ */
+
+double
+arv_camera_get_float_increment (ArvCamera *camera, const char *feature, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), 1);
+	g_return_val_if_fail (feature != NULL, 1);
+
+	return arv_device_get_float_feature_increment (priv->device, feature, error);
+}
+
+/**
  * arv_camera_dup_available_enumerations:
  * @camera: a #ArvCamera
  * @feature: feature name

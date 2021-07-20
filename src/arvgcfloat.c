@@ -103,6 +103,14 @@ arv_gc_float_set_value (ArvGcFloat *gc_float, double value, GError **error)
 	ARV_GC_FLOAT_GET_IFACE (gc_float)->set_value (gc_float, value, error);
 }
 
+/**
+ * arv_gc_float_get_min:
+ * @gc_float: a #ArvGcFloat
+ * @error: a #GError placeholder, NULL to ignore
+ *
+ * Returns: The feature Min property, -#G_MAXDOUBLE if not defined or on error
+ */
+
 double
 arv_gc_float_get_min (ArvGcFloat *gc_float, GError **error)
 {
@@ -121,6 +129,14 @@ arv_gc_float_get_min (ArvGcFloat *gc_float, GError **error)
 
 	return -G_MAXDOUBLE;
 }
+
+/**
+ * arv_gc_float_get_max:
+ * @gc_float: a #ArvGcFloat
+ * @error: a #GError placeholder, NULL to ignore
+ *
+ * Returns: The feature Max property, #G_MAXDOUBLE if not defined or on error
+ */
 
 double
 arv_gc_float_get_max (ArvGcFloat *gc_float, GError **error)
@@ -141,13 +157,21 @@ arv_gc_float_get_max (ArvGcFloat *gc_float, GError **error)
 	return G_MAXDOUBLE;
 }
 
+/**
+ * arv_gc_float_get_inc:
+ * @gc_float: a #ArvGcFloat
+ * @error: a #GError placeholder, NULL to ignore
+ *
+ * Returns: The feature Inc property, #G_MINDOUBLE if not defined or on error
+ */
+
 double
 arv_gc_float_get_inc (ArvGcFloat *gc_float, GError **error)
 {
 	ArvGcFloatInterface *float_interface;
 
-	g_return_val_if_fail (ARV_IS_GC_FLOAT (gc_float), 0.0);
-	g_return_val_if_fail (error == NULL || *error == NULL, 0.0);
+	g_return_val_if_fail (ARV_IS_GC_FLOAT (gc_float), G_MINDOUBLE);
+	g_return_val_if_fail (error == NULL || *error == NULL, G_MINDOUBLE);
 
 	float_interface = ARV_GC_FLOAT_GET_IFACE (gc_float);
 
@@ -157,7 +181,7 @@ arv_gc_float_get_inc (ArvGcFloat *gc_float, GError **error)
 	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_PROPERTY_NOT_DEFINED, "<Inc> node not found for '%s'",
 		     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_float)));
 
-	return 1;
+	return G_MINDOUBLE;
 }
 
 /**

@@ -125,11 +125,11 @@ _get_inc (ArvGcFloat *gc_float, GError **error)
 	is_linear = arv_gc_converter_get_is_linear (ARV_GC_CONVERTER (gc_float), &local_error);
 	if (local_error != NULL) {
 		g_propagate_error (error, local_error);
-		return 1.0;
+		return G_MINDOUBLE;
 	}
 
 	if (is_linear == ARV_GC_IS_LINEAR_NO)
-		return 1.0;
+		return G_MINDOUBLE;
 
 	return arv_gc_converter_convert_to_double (ARV_GC_CONVERTER (gc_float), ARV_GC_CONVERTER_NODE_TYPE_INC, &local_error);
 }

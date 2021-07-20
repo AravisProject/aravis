@@ -63,7 +63,7 @@ gint64			arv_gc_float_get_display_precision	(ArvGcFloat *gc_float);
 void			arv_gc_float_impose_min			(ArvGcFloat *gc_float, double minimum, GError **error);
 void			arv_gc_float_impose_max			(ArvGcFloat *gc_float, double maximum, GError **error);
 
-/* FIXME has_inc and get_inc are missing */
+/* FIXME has_inc is missing */
 
 G_END_DECLS
 

@@ -346,7 +346,7 @@ arv_gc_float_node_get_inc (ArvGcFloat *gc_float, GError **error)
 		value_node = _get_value_node (gc_float_node, &local_error);
 		if (local_error != NULL) {
 			g_propagate_error (error, local_error);
-			return 1.0;
+			return G_MINDOUBLE;
 		}
 
 		if (ARV_IS_GC_PROPERTY_NODE (value_node)) {
@@ -358,14 +358,14 @@ arv_gc_float_node_get_inc (ArvGcFloat *gc_float, GError **error)
 				return arv_gc_float_get_inc (ARV_GC_FLOAT (linked_node), error);
 		}
 
-		return 1.0;
+		return G_MINDOUBLE;
 	}
 
 	value = arv_gc_property_node_get_double (ARV_GC_PROPERTY_NODE (gc_float_node->increment), &local_error);
 
 	if (local_error != NULL) {
 		g_propagate_error (error, local_error);
-		return 1.0;
+		return G_MINDOUBLE;
 	}
 
 	return value;

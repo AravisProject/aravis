@@ -693,6 +693,43 @@ arv_device_get_float_feature_bounds (ArvDevice *device, const char *feature, dou
 }
 
 /**
+ * arv_device_get_float_feature_increment:
+ * @device: a #ArvDevice
+ * @feature: feature name
+ * @error: a #GError placeholder
+ *
+ * Not all float features have evenly distributed allowed values, which means the returned increment may not reflect the allowed value
+ * set.
+ *
+ * Returns: feature value increment, or #G_MINDOUBLE on error.
+ *
+ * Since: 0.8.16
+ */
+
+double
+arv_device_get_float_feature_increment (ArvDevice *device, const char *feature, GError **error)
+{
+	ArvGcNode *node;
+
+	node = _get_feature (device, ARV_TYPE_GC_FLOAT, feature, error);
+	if (node != NULL) {
+		GError *local_error = NULL;
+		double increment;
+
+		increment = arv_gc_float_get_inc (ARV_GC_FLOAT (node), &local_error);
+
+			if (local_error != NULL) {
+				g_propagate_error (error, local_error);
+				return G_MINDOUBLE;
+			}
+
+			return increment;
+	}
+
+	return G_MINDOUBLE;
+}
+
+/**
  * arv_device_dup_available_enumeration_feature_values:
  * @device: an #ArvDevice
  * @feature: feature name
