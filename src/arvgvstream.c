@@ -1173,6 +1173,113 @@ arv_gv_stream_new (ArvGvDevice *gv_device, ArvStreamCallback callback, void *cal
 			       NULL);
 }
 
+/* ArvStream implementation */
+
+/**
+ * arv_gv_stream_get_statistics:
+ * @gv_stream: a #ArvGvStream
+ * @n_resent_packets: (out)
+ * @n_missing_packets: (out)
+ */
+
+void
+arv_gv_stream_get_statistics (ArvGvStream *gv_stream,
+			      guint64 *n_resent_packets,
+			      guint64 *n_missing_packets)
+
+{
+	ArvGvStreamPrivate *priv = arv_gv_stream_get_instance_private (gv_stream);
+	ArvGvStreamThreadData *thread_data;
+
+	g_return_if_fail (ARV_IS_GV_STREAM (gv_stream));
+
+	thread_data = priv->thread_data;
+
+	if (n_resent_packets != NULL)
+		*n_resent_packets = thread_data->n_resent_packets;
+	if (n_missing_packets != NULL)
+		*n_missing_packets = thread_data->n_missing_packets;
+}
+
+static void
+arv_gv_stream_set_property (GObject * object, guint prop_id,
+                            const GValue * value, GParamSpec * pspec)
+{
+	ArvGvStreamPrivate *priv = arv_gv_stream_get_instance_private (ARV_GV_STREAM (object));
+	ArvGvStreamThreadData *thread_data;
+
+	thread_data = priv->thread_data;
+
+	switch (prop_id) {
+		case ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER:
+			thread_data->socket_buffer_option = g_value_get_enum (value);
+			break;
+		case ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER_SIZE:
+			thread_data->socket_buffer_size = g_value_get_int (value);
+			break;
+		case ARV_GV_STREAM_PROPERTY_PACKET_RESEND:
+			thread_data->packet_resend = g_value_get_enum (value);
+			break;
+		case ARV_GV_STREAM_PROPERTY_PACKET_REQUEST_RATIO:
+			thread_data->packet_request_ratio = g_value_get_double (value);
+			break;
+		case ARV_GV_STREAM_PROPERTY_INITIAL_PACKET_TIMEOUT:
+			thread_data->initial_packet_timeout_us = g_value_get_uint (value);
+			break;
+		case ARV_GV_STREAM_PROPERTY_PACKET_TIMEOUT:
+			thread_data->packet_timeout_us = g_value_get_uint (value);
+			break;
+		case ARV_GV_STREAM_PROPERTY_FRAME_RETENTION:
+			thread_data->frame_retention_us = g_value_get_uint (value);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+			break;
+	}
+}
+
+static void
+arv_gv_stream_get_property (GObject * object, guint prop_id,
+			    GValue * value, GParamSpec * pspec)
+{
+	ArvGvStreamPrivate *priv = arv_gv_stream_get_instance_private (ARV_GV_STREAM (object));
+	ArvGvStreamThreadData *thread_data;
+
+	thread_data = priv->thread_data;
+
+	switch (prop_id) {
+		case ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER:
+			g_value_set_enum (value, thread_data->socket_buffer_option);
+			break;
+		case ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER_SIZE:
+			g_value_set_int (value, thread_data->socket_buffer_size);
+			break;
+		case ARV_GV_STREAM_PROPERTY_PACKET_RESEND:
+			g_value_set_enum (value, thread_data->packet_resend);
+			break;
+		case ARV_GV_STREAM_PROPERTY_PACKET_REQUEST_RATIO:
+			g_value_set_double (value, thread_data->packet_request_ratio);
+			break;
+		case ARV_GV_STREAM_PROPERTY_INITIAL_PACKET_TIMEOUT:
+			g_value_set_uint (value, thread_data->initial_packet_timeout_us);
+			break;
+		case ARV_GV_STREAM_PROPERTY_PACKET_TIMEOUT:
+			g_value_set_uint (value, thread_data->packet_timeout_us);
+			break;
+		case ARV_GV_STREAM_PROPERTY_FRAME_RETENTION:
+			g_value_set_uint (value, thread_data->frame_retention_us);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+			break;
+	}
+}
+
+static void
+arv_gv_stream_init (ArvGvStream *gv_stream)
+{
+}
+
 static void
 arv_gv_stream_constructed (GObject *object)
 {
@@ -1304,113 +1411,6 @@ arv_gv_stream_constructed (GObject *object)
                                  G_TYPE_UINT64, &thread_data->n_ignored_bytes);
 
 	arv_gv_stream_start_thread (ARV_STREAM (gv_stream));
-}
-
-/* ArvStream implementation */
-
-/**
- * arv_gv_stream_get_statistics:
- * @gv_stream: a #ArvGvStream
- * @n_resent_packets: (out)
- * @n_missing_packets: (out)
- */
-
-void
-arv_gv_stream_get_statistics (ArvGvStream *gv_stream,
-			      guint64 *n_resent_packets,
-			      guint64 *n_missing_packets)
-
-{
-	ArvGvStreamPrivate *priv = arv_gv_stream_get_instance_private (gv_stream);
-	ArvGvStreamThreadData *thread_data;
-
-	g_return_if_fail (ARV_IS_GV_STREAM (gv_stream));
-
-	thread_data = priv->thread_data;
-
-	if (n_resent_packets != NULL)
-		*n_resent_packets = thread_data->n_resent_packets;
-	if (n_missing_packets != NULL)
-		*n_missing_packets = thread_data->n_missing_packets;
-}
-
-static void
-arv_gv_stream_set_property (GObject * object, guint prop_id,
-                            const GValue * value, GParamSpec * pspec)
-{
-	ArvGvStreamPrivate *priv = arv_gv_stream_get_instance_private (ARV_GV_STREAM (object));
-	ArvGvStreamThreadData *thread_data;
-
-	thread_data = priv->thread_data;
-
-	switch (prop_id) {
-		case ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER:
-			thread_data->socket_buffer_option = g_value_get_enum (value);
-			break;
-		case ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER_SIZE:
-			thread_data->socket_buffer_size = g_value_get_int (value);
-			break;
-		case ARV_GV_STREAM_PROPERTY_PACKET_RESEND:
-			thread_data->packet_resend = g_value_get_enum (value);
-			break;
-		case ARV_GV_STREAM_PROPERTY_PACKET_REQUEST_RATIO:
-			thread_data->packet_request_ratio = g_value_get_double (value);
-			break;
-		case ARV_GV_STREAM_PROPERTY_INITIAL_PACKET_TIMEOUT:
-			thread_data->initial_packet_timeout_us = g_value_get_uint (value);
-			break;
-		case ARV_GV_STREAM_PROPERTY_PACKET_TIMEOUT:
-			thread_data->packet_timeout_us = g_value_get_uint (value);
-			break;
-		case ARV_GV_STREAM_PROPERTY_FRAME_RETENTION:
-			thread_data->frame_retention_us = g_value_get_uint (value);
-			break;
-		default:
-			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-			break;
-	}
-}
-
-static void
-arv_gv_stream_get_property (GObject * object, guint prop_id,
-			    GValue * value, GParamSpec * pspec)
-{
-	ArvGvStreamPrivate *priv = arv_gv_stream_get_instance_private (ARV_GV_STREAM (object));
-	ArvGvStreamThreadData *thread_data;
-
-	thread_data = priv->thread_data;
-
-	switch (prop_id) {
-		case ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER:
-			g_value_set_enum (value, thread_data->socket_buffer_option);
-			break;
-		case ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER_SIZE:
-			g_value_set_int (value, thread_data->socket_buffer_size);
-			break;
-		case ARV_GV_STREAM_PROPERTY_PACKET_RESEND:
-			g_value_set_enum (value, thread_data->packet_resend);
-			break;
-		case ARV_GV_STREAM_PROPERTY_PACKET_REQUEST_RATIO:
-			g_value_set_double (value, thread_data->packet_request_ratio);
-			break;
-		case ARV_GV_STREAM_PROPERTY_INITIAL_PACKET_TIMEOUT:
-			g_value_set_uint (value, thread_data->initial_packet_timeout_us);
-			break;
-		case ARV_GV_STREAM_PROPERTY_PACKET_TIMEOUT:
-			g_value_set_uint (value, thread_data->packet_timeout_us);
-			break;
-		case ARV_GV_STREAM_PROPERTY_FRAME_RETENTION:
-			g_value_set_uint (value, thread_data->frame_retention_us);
-			break;
-		default:
-			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-			break;
-	}
-}
-
-static void
-arv_gv_stream_init (ArvGvStream *gv_stream)
-{
 }
 
 static void
