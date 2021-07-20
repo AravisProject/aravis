@@ -4,8 +4,7 @@
 #include <stdio.h>
 #include <arv.h>
 
-#define ARAVIS_COMPILATION
-#include "../src/arvmiscprivate.h"
+#include <arvmiscprivate.h>
 
 int
 main (int argc, char **argv)

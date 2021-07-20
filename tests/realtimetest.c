@@ -34,8 +34,7 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
-#define ARAVIS_COMPILATION
-#include <../src/arvrealtimeprivate.h>
+#include <arvrealtimeprivate.h>
 
 #ifndef SCHED_RESET_ON_FORK
 #define SCHED_RESET_ON_FORK 0x40000000

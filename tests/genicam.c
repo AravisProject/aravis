@@ -2,9 +2,8 @@
 #include <arv.h>
 #include <string.h>
 
-#define ARAVIS_COMPILATION
-#include "../src/arvbufferprivate.h"
-#include "../src/arvmiscprivate.h"
+#include <arvbufferprivate.h>
+#include <arvmiscprivate.h>
 
 typedef struct {
 	const char *name;
