@@ -1,3 +1,11 @@
+Stable release 0.8.15
+=====================
+
+  * gigevision: only disable packet resend after a packet unavailable error
+  * gigevision: add a new packet timeout for first packet resend request
+  * doc: improve GvStream property documentation
+  * code cleanup
+
 Stable release 0.8.14
 =====================
 
