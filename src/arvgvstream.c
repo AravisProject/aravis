@@ -92,7 +92,7 @@ G_DEFINE_TYPE_WITH_CODE (ArvGvStream, arv_gv_stream, ARV_TYPE_STREAM, G_ADD_PRIV
 typedef struct {
 	gboolean received;
         gboolean resend_requested;
-	guint64 time_us;
+	guint64 abs_timeout_us;
 } ArvGvStreamPacketData;
 
 typedef struct {
@@ -485,11 +485,10 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 			gboolean need_resend;
 
 			if (i <= packet_id && !frame->packet_data[i].received) {
-                                if (frame->packet_data[i].time_us <= 0)
-                                        frame->packet_data[i].time_us = time_us -
-                                                thread_data->packet_timeout_us +
+                                if (frame->packet_data[i].abs_timeout_us == 0)
+                                        frame->packet_data[i].abs_timeout_us = time_us +
                                                 thread_data->initial_packet_timeout_us;
-                                need_resend = time_us - frame->packet_data[i].time_us >= thread_data->packet_timeout_us;
+                                need_resend = time_us > frame->packet_data[i].abs_timeout_us;
                         } else
                                 need_resend = FALSE;
 
@@ -539,7 +538,8 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 							      frame->extended_ids);
 
 					for (j = first_missing; j <= last_missing; j++) {
-						frame->packet_data[j].time_us = time_us;
+						frame->packet_data[j].abs_timeout_us = time_us +
+                                                        thread_data->packet_timeout_us;
                                                 frame->packet_data[j].resend_requested = TRUE;
                                         }
 
