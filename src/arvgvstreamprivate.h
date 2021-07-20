@@ -23,10 +23,6 @@
 #ifndef ARV_GV_STREAM_PRIVATE_H
 #define ARV_GV_STREAM_PRIVATE_H
 
-#if !defined (ARV_H_INSIDE) && !defined (ARAVIS_COMPILATION)
-#error "Only <arv.h> can be included directly."
-#endif
-
 #include <arvgvstream.h>
 #include <arvstream.h>
 #include <gio/gio.h>
