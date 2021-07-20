@@ -206,6 +206,8 @@ arv_fake_stream_constructed (GObject *object)
 	priv->thread_data = thread_data;
 
 	arv_fake_stream_start_thread (ARV_STREAM (fake_stream));
+
+        G_OBJECT_CLASS (arv_fake_stream_parent_class)->constructed (object);
 }
 
 /* ArvStream implementation */

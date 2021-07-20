@@ -1321,6 +1321,8 @@ arv_gv_device_constructed (GObject *object)
 	guint32 capabilities;
 	guint32 device_mode;
 
+        G_OBJECT_CLASS (arv_gv_device_parent_class)->constructed (object);
+
 	if (!G_IS_INET_ADDRESS (priv->interface_address) ||
 	    !G_IS_INET_ADDRESS (priv->device_address)) {
 		arv_device_take_init_error (ARV_DEVICE (object), g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,

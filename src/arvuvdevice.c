@@ -755,6 +755,8 @@ arv_uv_device_constructed (GObject *object)
 	GError *error = NULL;
         int result;
 
+        G_OBJECT_CLASS (arv_uv_device_parent_class)->constructed (object);
+
 	arv_info_device ("[UvDevice::new] Vendor  = %s", priv->vendor);
 	arv_info_device ("[UvDevice::new] Product = %s", priv->product);
 	arv_info_device ("[UvDevice::new] S/N     = %s", priv->serial_number);

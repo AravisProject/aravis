@@ -3128,6 +3128,8 @@ arv_camera_constructed (GObject *object)
 	const char *model_name;
 	GError *error = NULL;
 
+        G_OBJECT_CLASS (arv_camera_parent_class)->constructed (object);
+
 	priv = arv_camera_get_instance_private (camera);
 
 	if (!priv->device)

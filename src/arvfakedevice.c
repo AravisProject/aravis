@@ -171,6 +171,8 @@ arv_fake_device_constructed (GObject *self)
 	const char *genicam_xml;
 	gsize genicam_xml_size;
 
+        G_OBJECT_CLASS (arv_fake_device_parent_class)->constructed (self);
+
 	if (priv->serial_number == NULL) {
 		arv_device_take_init_error (ARV_DEVICE (self),
 					    g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,

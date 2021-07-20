@@ -1196,6 +1196,8 @@ arv_gv_stream_constructed (GObject *object)
 	GInetSocketAddress *local_address;
 	guint packet_size;
 
+	G_OBJECT_CLASS (arv_gv_stream_parent_class)->constructed (object);
+
 	g_object_get (object, "device", &gv_device, NULL);
 
 	timestamp_tick_frequency = arv_gv_device_get_timestamp_tick_frequency (gv_device, NULL);
