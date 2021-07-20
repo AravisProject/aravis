@@ -22,6 +22,7 @@
 
 #include <arvviewer.h>
 #include <arvdebugprivate.h>
+#include <arvgvstreamprivate.h>
 #include <gtk/gtk.h>
 #include <gst/gst.h>
 #include <arv.h>
@@ -38,9 +39,9 @@ static char *arv_option_register_cache = NULL;
 static char *arv_option_range_check = NULL;
 static gboolean arv_viewer_option_auto_socket_buffer = FALSE;
 static gboolean arv_viewer_option_no_packet_resend = FALSE;
-static unsigned int arv_viewer_option_initial_packet_timeout = 1;
-static unsigned int arv_viewer_option_packet_timeout = 20;
-static unsigned int arv_viewer_option_frame_retention = 100;
+static unsigned int arv_viewer_option_initial_packet_timeout = ARV_GV_STREAM_INITIAL_PACKET_TIMEOUT_US_DEFAULT / 1000;
+static unsigned int arv_viewer_option_packet_timeout = ARV_GV_STREAM_PACKET_TIMEOUT_US_DEFAULT / 1000;
+static unsigned int arv_viewer_option_frame_retention = ARV_GV_STREAM_FRAME_RETENTION_US_DEFAULT / 1000;
 
 static const GOptionEntry arv_viewer_option_entries[] =
 {
