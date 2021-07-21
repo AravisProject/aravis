@@ -802,6 +802,12 @@ arv_camera_acquisition (ArvCamera *camera, guint64 timeout, GError **error)
 		if (local_error == NULL) {
 			arv_stream_push_buffer (stream,  arv_buffer_new (payload, NULL));
 			arv_camera_set_acquisition_mode (camera, ARV_ACQUISITION_MODE_SINGLE_FRAME, &local_error);
+                        if (local_error != NULL &&
+                            local_error->code == ARV_GC_ERROR_ENUM_ENTRY_NOT_FOUND) {
+                                g_clear_error (&local_error);
+                                /* Some cameras don't support SingleFrame, fall back to Continuous */
+                                arv_camera_set_acquisition_mode (camera, ARV_ACQUISITION_MODE_CONTINUOUS, &local_error);
+                        }
 		}
 		if (local_error == NULL)
 			arv_camera_start_acquisition (camera, &local_error);
