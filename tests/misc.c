@@ -178,6 +178,37 @@ arv_vendor_alias_lookup_test (void)
 	g_assert (alias == vendor_b);
 }
 
+struct {
+        guint64 pixel_format;
+} caps_data[] = {
+        { ARV_PIXEL_FORMAT_MONO_8 },
+        { ARV_PIXEL_FORMAT_MONO_10 },
+        { ARV_PIXEL_FORMAT_MONO_12 },
+        { ARV_PIXEL_FORMAT_MONO_12_PACKED },
+        { ARV_PIXEL_FORMAT_MONO_14 },
+        { ARV_PIXEL_FORMAT_MONO_16 },
+        { ARV_PIXEL_FORMAT_BAYER_GB_8 },
+        { ARV_PIXEL_FORMAT_BAYER_RG_8 },
+        { ARV_PIXEL_FORMAT_BAYER_GR_8 },
+        { ARV_PIXEL_FORMAT_BAYER_BG_8 },
+        { ARV_PIXEL_FORMAT_YUV_422_PACKED },
+        { ARV_PIXEL_FORMAT_YUV_422_YUYV_PACKED },
+        { ARV_PIXEL_FORMAT_CUSTOM_YUV_422_YUYV_PACKED },
+};
+
+static void
+caps_string_test (void)
+{
+        unsigned int i;
+
+        for (i = 0; i < G_N_ELEMENTS (caps_data); i++) {
+                const char *caps_string;
+
+                caps_string = arv_pixel_format_to_gst_caps_string (caps_data[i].pixel_format);
+                g_assert (caps_string != NULL);
+        }
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -191,6 +222,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/str/arv-str-parse-double", arv_str_parse_double_test);
 	g_test_add_func ("/str/arv-str-parse-double-list", arv_str_parse_double_list_test);
 	g_test_add_func ("/misc/arv-vendor-alias-lookup", arv_vendor_alias_lookup_test);
+	g_test_add_func ("/gstreamer/caps-string", caps_string_test);
 
 	result = g_test_run();
 
