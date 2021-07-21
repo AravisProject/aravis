@@ -1131,6 +1131,20 @@ stop_camera (ArvViewer *viewer)
 	g_clear_pointer (&viewer->camera_name, g_free);
 }
 
+static void
+set_sensitive (GtkCellLayout *cell_layout,
+               GtkCellRenderer *cell,
+               GtkTreeModel *tree_model,
+               GtkTreeIter *iter,
+               gpointer data)
+{
+        gboolean valid;
+
+        gtk_tree_model_get (tree_model, iter, 1, &valid, -1);
+
+        g_object_set(cell, "sensitive", valid, NULL);
+}
+
 static gboolean
 start_camera (ArvViewer *viewer, const char *camera_id)
 {
@@ -1141,6 +1155,8 @@ start_camera (ArvViewer *viewer, const char *camera_id)
 	const char **pixel_format_strings;
 	guint i, n_pixel_formats, n_pixel_format_strings, n_valid_formats;
 	gboolean binning_available;
+        gboolean bayer_tooltip = FALSE;
+        gint current_format = -1;
 
 	stop_camera (viewer);
 
@@ -1173,19 +1189,37 @@ start_camera (ArvViewer *viewer, const char *camera_id)
 	pixel_format_string = arv_camera_get_pixel_format_as_string (viewer->camera, NULL);
 	for (i = 0; i < n_pixel_formats; i++) {
 		const char *caps_string = arv_pixel_format_to_gst_caps_string (pixel_formats[i]);
-		if ( caps_string != NULL &&
-		    (has_bayer2rgb || !g_str_has_prefix (caps_string, "video/x-bayer"))) {
-			gtk_list_store_append (list_store, &iter);
-			gtk_list_store_set (list_store, &iter, 0, pixel_format_strings[i], -1);
-			if (g_strcmp0 (pixel_format_strings[i], pixel_format_string) == 0)
-				gtk_combo_box_set_active (GTK_COMBO_BOX (viewer->pixel_format_combo), n_valid_formats);
+                gboolean valid = FALSE;
+
+                gtk_list_store_append (list_store, &iter);
+
+                if (caps_string != NULL && g_str_has_prefix (caps_string, "video/x-bayer") && !has_bayer2rgb) {
+                        bayer_tooltip = TRUE;
+                } else if (caps_string != NULL) {
+			if (current_format < 0 ||
+                            g_strcmp0 (pixel_format_strings[i], pixel_format_string) == 0)
+                                current_format = i;
 			n_valid_formats++;
+                        valid = TRUE;
 		}
+
+                gtk_list_store_set (list_store, &iter,
+                                    0, pixel_format_strings[i],
+                                    1, valid,
+                                    -1);
 	}
 	g_free (pixel_formats);
 	g_free (pixel_format_strings);
 	gtk_widget_set_sensitive (viewer->pixel_format_combo, n_valid_formats > 1);
-	gtk_widget_set_sensitive (viewer->video_mode_button, TRUE);
+	gtk_widget_set_sensitive (viewer->video_mode_button, n_valid_formats > 1);
+
+	gtk_combo_box_set_active (GTK_COMBO_BOX (viewer->pixel_format_combo), current_format >= 0 ? current_format : 0);
+
+        gtk_widget_set_tooltip_text (GTK_WIDGET (viewer->pixel_format_combo),
+                                     bayer_tooltip ?
+                                     "Found bayer pixel formats, but the GStreamer bayer plugin "
+                                     "is not installed." :
+                                     NULL);
 
 	binning_available = arv_camera_is_binning_available (viewer->camera, NULL);
 	gtk_widget_set_sensitive (viewer->camera_binning_x, binning_available);
@@ -1294,6 +1328,8 @@ activate (GApplication *application)
 {
 	ArvViewer *viewer = (ArvViewer *) application;
 	g_autoptr (GtkBuilder) builder;
+        g_autoptr (GtkListStore) list_store = NULL;
+        GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
 
 	builder = gtk_builder_new_from_resource ("/org/aravis/viewer/arv-viewer.ui");
 
@@ -1330,6 +1366,14 @@ activate (GApplication *application)
 	viewer->flip_vertical_toggle = GTK_WIDGET (gtk_builder_get_object (builder, "flip_vertical_togglebutton"));
 	viewer->flip_horizontal_toggle = GTK_WIDGET (gtk_builder_get_object (builder, "flip_horizontal_togglebutton"));
 	viewer->acquisition_button = GTK_WIDGET (gtk_builder_get_object (builder, "acquisition_button"));
+
+        list_store = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_BOOLEAN);
+        gtk_combo_box_set_model (GTK_COMBO_BOX (viewer->pixel_format_combo), GTK_TREE_MODEL (list_store));
+
+        gtk_cell_layout_clear (GTK_CELL_LAYOUT (viewer->pixel_format_combo));
+        gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (viewer->pixel_format_combo), renderer, TRUE);
+        gtk_cell_layout_set_attributes (GTK_CELL_LAYOUT (viewer->pixel_format_combo), renderer, "text", 0, NULL);
+        gtk_cell_layout_set_cell_data_func (GTK_CELL_LAYOUT (viewer->pixel_format_combo), renderer, set_sensitive, NULL, NULL);
 
 	gtk_widget_set_no_show_all (viewer->trigger_combo_box, TRUE);
 
