@@ -266,8 +266,11 @@ pkg.generate (aravis_library,
 	      description: 'Camera control and image acquisition library',
 	      requires: aravis_public_dependencies)
 
+arv_test_resources = gnome.compile_resources('arvtestresources','arvtestresources.xml')
+
 progs = [
   [ 'arv-tool', 		'arvtool.c'],
+  [ 'arv-test', 		['arvtest.c'] + arv_test_resources],
   [ 'arv-camera-test',		'arvcameratest.c'],
   [ 'arv-fake-gv-camera', 	'arvfakegvcamera.c'],
 ]

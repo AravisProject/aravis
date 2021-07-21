@@ -32,7 +32,7 @@
 #include <libxml/xmlschemas.h>
 #include <gio/gio.h>
 #include <arvdebugprivate.h>
-#include <arvmisc.h>
+#include <arvmiscprivate.h>
 
 typedef struct {
 	char *xsd;
@@ -123,6 +123,30 @@ arv_xml_schema_validate (ArvXmlSchema *schema, const void *xml, size_t size, int
 	g_mutex_unlock (&mutex);
 
 	return result;
+}
+
+ArvXmlSchema *
+arv_xml_schema_new_from_memory (const char *buffer, size_t size)
+{
+	ArvXmlSchema *schema;
+
+        g_return_val_if_fail (buffer != NULL, NULL);
+        g_return_val_if_fail (size > 0, NULL);
+
+	schema = g_object_new (ARV_TYPE_XML_SCHEMA, NULL);
+
+        schema->priv->xsd = arv_memdup (buffer, size);
+        schema->priv->xsd_size = size;
+
+        schema->priv->parser_ctxt = xmlSchemaNewMemParserCtxt(schema->priv->xsd, schema->priv->xsd_size);
+	if (schema->priv->parser_ctxt != NULL)
+		schema->priv->schema = xmlSchemaParse (schema->priv->parser_ctxt);
+	if (schema->priv->schema != NULL)
+		schema->priv->valid_ctxt = xmlSchemaNewValidCtxt (schema->priv->schema);
+        else
+		arv_warning_dom ("[XmlSchema::new_from_memory] Invalid xsd data");
+
+	return schema;
 }
 
 ArvXmlSchema *

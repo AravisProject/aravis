@@ -1,0 +1,1221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--$Header$ -->
+<!-- ***************************************************************************
+*  (c) 2008 by Basler Vision Technologies
+*  Section: Vision Components
+*  Project: GenApi
+*  Author:  Fritz Dierks
+*
+*  License: This file is published under the license of the EMVA GenICam  Standard Group. 
+*  A text file describing the legal terms is included in  your installation as 'GenICam_license.pdf'. 
+*  If for some reason you are missing  this file please contact the EMVA or visit the website
+*  (http://www.genicam.org) for a full copy.
+* 
+*  THIS SOFTWARE IS PROVIDED BY THE EMVA GENICAM STANDARD GROUP "AS IS"
+*  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,  
+*  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR  
+*  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE EMVA GENICAM STANDARD  GROUP 
+*  OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,  SPECIAL, 
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT  LIMITED TO, 
+*  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,  DATA, OR PROFITS; 
+*  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY  THEORY OF LIABILITY, 
+*  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT  (INCLUDING NEGLIGENCE OR OTHERWISE) 
+*  ARISING IN ANY WAY OUT OF THE USE  OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+*  POSSIBILITY OF SUCH DAMAGE.
+******************************************************************************** -->
+<xs:schema xmlns="http://www.genicam.org/GenApi/Version_1_1" xmlns:mstns="http://www.genicam.org/GenApi/Version_1_1" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.genicam.org/GenApi/Version_1_1" elementFormDefault="qualified" id="GenApiSchema_1_1">
+	<xs:element name="RegisterDescription">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        The outer element of a device description file. It contains a set of nodes which are connected 
+        via pointers and which describe a mapping from features (like Gain) to a register space 
+        defined in terms of address and length.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence maxOccurs="unbounded">
+				<xs:group ref="NodesTemplate"/>
+			</xs:sequence>
+			<xs:attribute name="ModelName" type="CName_t" use="required"/>
+			<xs:attribute name="VendorName" type="CName_t" use="required"/>
+			<xs:attribute name="ToolTip" type="xs:string" use="optional"/>
+			<xs:attribute name="StandardNameSpace" type="StandardNameSpace_t" use="required"/>
+			<xs:attribute name="SchemaMajorVersion" type="nonNegativeHexOrDecimal_t" use="required" fixed="1"/>
+			<xs:attribute name="SchemaMinorVersion" type="nonNegativeHexOrDecimal_t" use="required" fixed="1"/>
+			<xs:attribute name="SchemaSubMinorVersion" type="nonNegativeHexOrDecimal_t" use="required"/>
+			<xs:attribute name="MajorVersion" type="nonNegativeHexOrDecimal_t" use="required"/>
+			<xs:attribute name="MinorVersion" type="nonNegativeHexOrDecimal_t" use="required"/>
+			<xs:attribute name="SubMinorVersion" type="nonNegativeHexOrDecimal_t" use="required"/>
+			<xs:attribute name="ProductGuid" type="GUID_t" use="required"/>
+			<xs:attribute name="VersionGuid" type="GUID_t" use="required"/>
+		</xs:complexType>
+		<xs:key name="IntegerKey">
+			<xs:selector xpath=".//mstns:AdvFeatureLock|.//mstns:Integer|.//mstns:IntKey|.//mstns:IntReg|.//mstns:MaskedIntReg|.//mstns:IntSwissKnife|.//mstns:SmartFeature|.//mstns:StructEntry|.//mstns:IntConverter"/>
+			<xs:field xpath="@Name"/>
+		</xs:key>
+		<xs:key name="IntegerOrEnumKey">
+			<xs:selector xpath=".//mstns:AdvFeatureLock|.//mstns:Integer|.//mstns:IntKey|.//mstns:IntReg|.//mstns:MaskedIntReg|.//mstns:IntSwissKnife|.//mstns:SmartFeature|.//mstns:StructEntry|.//mstns:IntConverter|.//mstns:Enumeration"/>
+			<xs:field xpath="@Name"/>
+		</xs:key>
+		<xs:key name="IntegerOrBooleanKey">
+			<xs:selector xpath=".//mstns:AdvFeatureLock|.//mstns:Integer|.//mstns:IntKey|.//mstns:IntReg|.//mstns:MaskedIntReg|.//mstns:IntSwissKnife|.//mstns:SmartFeature|.//mstns:StructEntry|.//mstns:IntConverter|.//mstns:Boolean"/>
+			<xs:field xpath="@Name"/>
+		</xs:key>
+		<xs:key name="PolyIntegerKey">
+			<xs:selector xpath=".//mstns:AdvFeatureLock|.//mstns:Integer|.//mstns:IntKey|.//mstns:IntReg|.//mstns:MaskedIntReg|.//mstns:IntSwissKnife|.//mstns:SmartFeature|.//mstns:StructEntry|.//mstns:IntConverter|.//mstns:Enumeration|.//mstns:Boolean|.//mstns:Converter|.//mstns:Float|.//mstns:FloatReg|.//mstns:SwissKnife"/>
+			<xs:field xpath="@Name"/>
+		</xs:key>
+		<xs:key name="PolyFloatKey">
+			<xs:selector xpath=".//mstns:Converter|.//mstns:Float|.//mstns:FloatReg|.//mstns:SwissKnife|.//mstns:AdvFeatureLock|.//mstns:Integer|.//mstns:IntKey|.//mstns:IntReg|.//mstns:MaskedIntReg|.//mstns:IntSwissKnife|.//mstns:SmartFeature|.//mstns:StructEntry|.//mstns:IntConverter|.//mstns:Enumeration"/>
+			<xs:field xpath="@Name"/>
+		</xs:key>
+		<xs:key name="FloatKey">
+			<xs:selector xpath=".//mstns:Converter|.//mstns:Float|.//mstns:FloatReg|.//mstns:SwissKnife"/>
+			<xs:field xpath="@Name"/>
+		</xs:key>
+		<xs:key name="StringKey">
+			<xs:selector xpath=".//mstns:String|.//mstns:StringReg|.//mstns:TextDesc"/>
+			<xs:field xpath="@Name"/>
+		</xs:key>
+		<xs:key name="IntegerOrFloatKey">
+			<xs:selector xpath=".//mstns:AdvFeatureLock|.//mstns:Integer|.//mstns:IntKey|.//mstns:IntReg|.//mstns:MaskedIntReg|.//mstns:IntSwissKnife|.//mstns:SmartFeature|.//mstns:StructEntry|.//mstns:Converter|.//mstns:IntConverter|.//mstns:Float|.//mstns:FloatReg|.//mstns:SwissKnife"/>
+			<xs:field xpath="@Name"/>
+		</xs:key>
+		<xs:key name="SelectedKey">
+			<xs:selector xpath=".//mstns:Node|.//mstns:IntReg|.//mstns:Enumeration|.//mstns:Integer|.//mstns:MaskedIntReg|.//mstns:Register|.//mstns:IntSwissKnife|.//mstns:Category|.//mstns:TextDesc|.//mstns:IntKey|.//mstns:FloatReg|.//mstns:Float|.//mstns:String|.//mstns:StringReg|.//mstns:SwissKnife|.//mstns:Converter|.//mstns:IntConverter|.//mstns:Boolean|.//mstns:Command|.//mstns:StructEntry"/>
+			<xs:field xpath="@Name"/>
+		</xs:key>
+		<xs:key name="RegisterKey">
+			<xs:selector xpath=".//mstns:Register|.//mstns:AdvFeatureLock|.//mstns:FloatReg|.//mstns:ConfRom|.//mstns:IntReg|.//mstns:MaskedIntReg|.//mstns:SmartFeature|.//mstns:StringReg|.//mstns:StructEntry"/>
+			<xs:field xpath="@Name"/>
+		</xs:key>
+		<xs:key name="PortKey">
+			<xs:selector xpath=".//mstns:Port"/>
+			<xs:field xpath="@Name"/>
+		</xs:key>
+		<xs:key name="FeatureKey">
+			<xs:selector xpath=".//mstns:Node|.//mstns:IntReg|.//mstns:Enumeration|.//mstns:Integer|.//mstns:MaskedIntReg|.//mstns:Register|.//mstns:IntSwissKnife|.//mstns:Category|.//mstns:TextDesc|.//mstns:IntKey|.//mstns:FloatReg|.//mstns:Float|.//mstns:String|.//mstns:StringReg|.//mstns:SwissKnife|.//mstns:Converter|.//mstns:IntConverter|.//mstns:Boolean|.//mstns:Command|.//mstns:StructReg/mstns:StructEntry|.//mstns:Port"/>
+			<xs:field xpath="@Name"/>
+		</xs:key>
+    <xs:key name="EnumerationKey">
+      <xs:selector xpath=".//mstns:Enumeration"/>
+      <xs:field xpath="@Name"/>
+    </xs:key>
+    <xs:key name="ConfRomKey">
+			<xs:selector xpath=".//mstns:ConfRom"/>
+			<xs:field xpath="@Name"/>
+		</xs:key>
+    <xs:keyref name="pError" refer="EnumerationKey">
+      <xs:selector xpath=".//mstns:*/mstns:pError"/>
+      <xs:field xpath="."/>
+    </xs:keyref>
+    <xs:keyref name="pAddress" refer="IntegerOrEnumKey">
+			<xs:selector xpath=".//mstns:Register/mstns:pAddress|.//mstns:AdvFeatureLock/mstns:pAddress|.//mstns:FloatReg/mstns:pAddress|.//mstns:ConfRom/mstns:pAddress|.//mstns:IntReg/mstns:pAddress|.//mstns:MaskedIntReg/mstns:pAddress|.//mstns:SmartFeature/mstns:pAddress|.//mstns:StringReg/mstns:pAddress|.//mstns:StructReg/mstns:StructEntry/mstns:pAddress"/>
+			<xs:field xpath="."/>
+		</xs:keyref>
+		<xs:keyref name="pIndex" refer="IntegerKey">
+			<xs:selector xpath=".//mstns:Register/mstns:pIndex|.//mstns:AdvFeatureLock/mstns:pIndex|.//mstns:FloatReg/mstns:pIndex|.//mstns:ConfRom/mstns:pIndex|.//mstns:IntReg/mstns:pIndex|.//mstns:MaskedIntReg/mstns:pIndex|.//mstns:SmartFeature/mstns:pIndex|.//mstns:StringReg/mstns:pIndex|.//mstns:StructReg/mstns:StructEntry/mstns:pIndex"/>
+			<xs:field xpath="."/>
+		</xs:keyref>
+		<xs:keyref name="pOffset" refer="IntegerKey">
+			<xs:selector xpath=".//mstns:Register/mstns:pIndex|.//mstns:AdvFeatureLock/mstns:pIndex|.//mstns:FloatReg/mstns:pIndex|.//mstns:ConfRom/mstns:pIndex|.//mstns:IntReg/mstns:pIndex|.//mstns:MaskedIntReg/mstns:pIndex|.//mstns:SmartFeature/mstns:pIndex|.//mstns:StringReg/mstns:pIndex|.//mstns:StructReg/mstns:StructEntry/mstns:pOffset"/>
+			<xs:field xpath="@pOffset"/>
+		</xs:keyref>
+		<xs:keyref name="pIndex_PolyInteger" refer="PolyIntegerKey">
+			<xs:selector xpath=".//mstns:Integer/mstns:pIndex"/>
+			<xs:field xpath="."/>
+		</xs:keyref>
+		<xs:keyref name="pLength" refer="IntegerKey">
+			<xs:selector xpath=".//mstns:Register/mstns:pLength|.//mstns:AdvFeatureLock/mstns:pLength|.//mstns:FloatReg/mstns:pLength|.//mstns:ConfRom/mstns:pLength|.//mstns:IntReg/mstns:pLength|.//mstns:MaskedIntReg/mstns:pLength|.//mstns:SmartFeature/mstns:pLength|.//mstns:StringReg/mstns:pLength|.//mstns:StructReg/mstns:StructEntry/mstns:pLength"/>
+			<xs:field xpath="."/>
+		</xs:keyref>
+		<xs:keyref name="pPort" refer="PortKey">
+			<xs:selector xpath=".//mstns:Register/mstns:pPort|.//mstns:AdvFeatureLock/mstns:pPort|.//mstns:FloatReg/mstns:pPort|.//mstns:ConfRom/mstns:pPort|.//mstns:IntReg/mstns:pPort|.//mstns:MaskedIntReg/mstns:pPort|.//mstns:SmartFeature/mstns:pPort|.//mstns:StringReg/mstns:pPort|.//mstns:StructReg/mstns:StructEntry/mstns:pPort"/>
+			<xs:field xpath="."/>
+		</xs:keyref>
+		<xs:keyref name="pFeature" refer="FeatureKey">
+			<xs:selector xpath=".//mstns:Category/mstns:pFeature"/>
+			<xs:field xpath="."/>
+		</xs:keyref>
+		<xs:keyref name="pSelected" refer="SelectedKey">
+			<xs:selector xpath=".//mstns:Enumeration/mstns:pSelected|.//mstns:Integer/mstns:pSelected|.//mstns:IntReg/mstns:pSelected|.//mstns:MaskedIntReg/mstns:pSelected|.//mstns:StructEntry/mstns:pSelected"/>
+			<xs:field xpath="."/>
+		</xs:keyref>
+		<xs:keyref name="pValue_PolyInteger" refer="PolyIntegerKey">
+			<xs:selector xpath=".//mstns:Integer/mstns:pValue|.//mstns:Command/mstns:pValue|.//mstns:Boolean/mstns:pValue|.//mstns:Enumeration/mstns:pValue|.//mstns:IntConverter/mstns:pValue"/>
+			<xs:field xpath="."/>
+		</xs:keyref>
+		<xs:keyref name="pValue_PolyFloat" refer="PolyFloatKey">
+			<xs:selector xpath=".//mstns:Float/mstns:pValue|.//mstns:Float/mstns:pValueDefault|.//mstns:Converter/mstns:pValue"/>
+			<xs:field xpath="."/>
+		</xs:keyref>
+		<xs:keyref name="pValue_String" refer="StringKey">
+			<xs:selector xpath=".//mstns:String/mstns:pValue"/>
+			<xs:field xpath="."/>
+		</xs:keyref>
+		<xs:keyref name="pMin_Integer" refer="PolyIntegerKey">
+			<xs:selector xpath=".//mstns:Integer/mstns:pMin"/>
+			<xs:field xpath="."/>
+		</xs:keyref>
+		<xs:keyref name="pMax_Integer" refer="PolyIntegerKey">
+			<xs:selector xpath=".//mstns:Integer/mstns:pMax"/>
+			<xs:field xpath="."/>
+		</xs:keyref>
+		<xs:keyref name="pInc_Integer" refer="PolyIntegerKey">
+			<xs:selector xpath=".//mstns:Integer/mstns:pInc"/>
+			<xs:field xpath="."/>
+		</xs:keyref>
+		<xs:keyref name="pMin_Float" refer="PolyFloatKey">
+			<xs:selector xpath=".//mstns:Float/mstns:pMin"/>
+			<xs:field xpath="."/>
+		</xs:keyref>
+		<xs:keyref name="pMax_Float" refer="PolyFloatKey">
+			<xs:selector xpath=".//mstns:Float/mstns:pMax"/>
+			<xs:field xpath="."/>
+		</xs:keyref>
+    <xs:keyref name="pInc_Float" refer="PolyFloatKey">
+      <xs:selector xpath=".//mstns:Float/mstns:pInc"/>
+      <xs:field xpath="."/>
+    </xs:keyref>
+    <xs:keyref name="pIsImplemented" refer="PolyIntegerKey">
+			<xs:selector xpath=".//mstns:Node/mstns:pIsImplemented|.//mstns:IntReg/mstns:pIsImplemented|.//mstns:Enumeration/mstns:pIsImplemented|.//mstns:Integer/mstns:pIsImplemented|.//mstns:MaskedIntReg/mstns:pIsImplemented|.//mstns:Register/mstns:pIsImplemented|.//mstns:IntSwissKnife/mstns:pIsImplemented|.//mstns:Category/mstns:pIsImplemented|.//mstns:TextDesc/mstns:pIsImplemented|.//mstns:IntKey/mstns:pIsImplemented|.//mstns:FloatReg/mstns:pIsImplemented|.//mstns:Float/mstns:pIsImplemented|.//mstns:String/mstns:pIsImplemented|.//mstns:StringReg/mstns:pIsImplemented|.//mstns:SwissKnife/mstns:pIsImplemented|.//mstns:Converter/mstns:pIsImplemented|.//mstns:Boolean/mstns:pIsImplemented|.//mstns:Command/mstns:pIsImplemented|.//mstns:StructReg/mstns:StructEntry/mstns:pIsImplemented|.//mstns:EnumEntry/mstns:pIsImplemented|.//mstns:Port/mstns:pIsImplemented|.//mstns:AdvFeatureLock/mstns:pIsImplemented|.//mstns:SmartFeature/mstns:pIsImplemented"/>
+			<xs:field xpath="."/>
+		</xs:keyref>
+		<xs:keyref name="pIsAvailable" refer="PolyIntegerKey">
+			<xs:selector xpath=".//mstns:Node/mstns:pIsAvailable|.//mstns:IntReg/mstns:pIsAvailable|.//mstns:Enumeration/mstns:pIsAvailable|.//mstns:EnumEntry/mstns:pIsAvailable|.//mstns:Integer/mstns:pIsAvailable|.//mstns:MaskedIntReg/mstns:pIsAvailable|.//mstns:Register/mstns:pIsAvailable|.//mstns:IntSwissKnife/mstns:pIsAvailable|.//mstns:Category/mstns:pIsAvailable|.//mstns:TextDesc/mstns:pIsAvailable|.//mstns:IntKey/mstns:pIsAvailable|.//mstns:FloatReg/mstns:pIsAvailable|.//mstns:Float/mstns:pIsAvailable|.//mstns:String/mstns:pIsAvailable|.//mstns:StringReg/mstns:pIsAvailable|.//mstns:SwissKnife/mstns:pIsAvailable|.//mstns:Converter/mstns:pIsAvailable|.//mstns:Boolean/mstns:pIsAvailable|.//mstns:Command/mstns:pIsAvailable|.//mstns:StructReg/mstns:StructEntry/mstns:pIsAvailable|.//mstns:EnumEntry/mstns:pIsAvailable|.//mstns:Port/mstns:pIsAvailable|.//mstns:AdvFeatureLock/mstns:pIsAvailable|.//mstns:SmartFeature/mstns:pIsAvailable"/>
+			<xs:field xpath="."/>
+		</xs:keyref>
+		<xs:keyref name="pIsLocked" refer="PolyIntegerKey">
+			<xs:selector xpath=".//mstns:Node/mstns:pIsLocked|.//mstns:IntReg/mstns:pIsLocked|.//mstns:Enumeration/mstns:pIsLocked|.//mstns:EnumEntry/mstns:pIsLocked|.//mstns:Integer/mstns:pIsLocked|.//mstns:MaskedIntReg/mstns:pIsLocked|.//mstns:Register/mstns:pIsLocked|.//mstns:IntSwissKnife/mstns:pIsLocked|.//mstns:Category/mstns:pIsLocked|.//mstns:TextDesc/mstns:pIsLocked|.//mstns:IntKey/mstns:pIsLocked|.//mstns:FloatReg/mstns:pIsLocked|.//mstns:Float/mstns:pIsLocked|.//mstns:String/mstns:pIsLocked|.//mstns:StringReg/mstns:pIsLocked|.//mstns:SwissKnife/mstns:pIsLocked|.//mstns:Converter/mstns:pIsLocked|.//mstns:Boolean/mstns:pIsLocked|.//mstns:Command/mstns:pIsLocked|.//mstns:StructReg/mstns:StructEntry/mstns:pIsLocked|.//mstns:EnumEntry/mstns:pIsLocked|.//mstns:Port/mstns:pIsLocked|.//mstns:AdvFeatureLock/mstns:pIsLocked|.//mstns:SmartFeature/mstns:pIsLocked"/>
+			<xs:field xpath="."/>
+		</xs:keyref>
+    <xs:keyref name="pBlockPolling" refer="PolyIntegerKey">
+      <xs:selector xpath=".//mstns:Node/mstns:pBlockPolling|.//mstns:IntReg/mstns:pBlockPolling|.//mstns:Enumeration/mstns:pBlockPolling|.//mstns:EnumEntry/mstns:pBlockPolling|.//mstns:Integer/mstns:pBlockPolling|.//mstns:MaskedIntReg/mstns:pBlockPolling|.//mstns:Register/mstns:pBlockPolling|.//mstns:IntSwissKnife/mstns:pBlockPolling|.//mstns:Category/mstns:pBlockPolling|.//mstns:TextDesc/mstns:pBlockPolling|.//mstns:IntKey/mstns:pBlockPolling|.//mstns:FloatReg/mstns:pBlockPolling|.//mstns:Float/mstns:pBlockPolling|.//mstns:String/mstns:pBlockPolling|.//mstns:StringReg/mstns:pBlockPolling|.//mstns:SwissKnife/mstns:pBlockPolling|.//mstns:Converter/mstns:pBlockPolling|.//mstns:Boolean/mstns:pBlockPolling|.//mstns:Command/mstns:pBlockPolling|.//mstns:StructReg/mstns:StructEntry/mstns:pBlockPolling|.//mstns:EnumEntry/mstns:pBlockPolling|.//mstns:Port/mstns:pBlockPolling|.//mstns:AdvFeatureLock/mstns:pBlockPolling|.//mstns:SmartFeature/mstns:pBlockPolling"/>
+      <xs:field xpath="."/>
+    </xs:keyref>
+    <xs:keyref name="pInvalidator" refer="FeatureKey">
+			<xs:selector xpath=".//mstns:Node/mstns:pInvalidator|.//mstns:IntReg/mstns:pInvalidator|.//mstns:Enumeration/mstns:pInvalidator|.//mstns:Integer/mstns:pInvalidator|.//mstns:MaskedIntReg/mstns:pInvalidator|.//mstns:Register/mstns:pInvalidator|.//mstns:IntSwissKnife/mstns:pInvalidator|.//mstns:Category/mstns:pInvalidator|.//mstns:TextDesc/mstns:pInvalidator|.//mstns:IntKey/mstns:pInvalidator|.//mstns:FloatReg/mstns:pInvalidator|.//mstns:Float/mstns:pInvalidator|.//mstns:String/mstns:pInvalidator|.//mstns:StringReg/mstns:pInvalidator|.//mstns:SwissKnife/mstns:pInvalidator|.//mstns:Converter/mstns:pInvalidator|.//mstns:Boolean/mstns:pInvalidator|.//mstns:Command/mstns:pInvalidator|.//mstns:StructReg/mstns:StructEntry/mstns:pInvalidator|.//mstns:EnumEntry/mstns:pInvalidator|.//mstns:Port/mstns:pInvalidator|.//mstns:AdvFeatureLock/mstns:pInvalidator|.//mstns:SmartFeature/mstns:pInvalidator"/>
+			<xs:field xpath="."/>
+		</xs:keyref>
+		<xs:keyref name="pVariable_Integer" refer="PolyIntegerKey">
+			<xs:selector xpath=".//mstns:IntSwissKnife/mstns:pVariable|.//mstns:IntConverter/mstns:pVariable"/>
+			<xs:field xpath="."/>
+		</xs:keyref>
+		<xs:keyref name="pVariable_Float" refer="PolyFloatKey">
+			<xs:selector xpath=".//mstns:SwissKnife/mstns:pVariable|.//mstns:Converter/mstns:pVariable"/>
+			<xs:field xpath="."/>
+		</xs:keyref>
+		<xs:keyref name="pChunkID" refer="StringKey">
+			<xs:selector xpath=".//mstns:Port/mstns:pChunkID"/>
+			<xs:field xpath="."/>
+		</xs:keyref>
+		<xs:keyref name="p1212Parser" refer="ConfRomKey">
+			<xs:selector xpath=".//mstns:TextDesc/mstns:p1212Parser|.//mstns:IntKey/mstns:p1212Parser"/>
+			<xs:field xpath="."/>
+		</xs:keyref>
+		<xs:keyref name="pCommandValue" refer="PolyIntegerKey">
+			<xs:selector xpath=".//mstns:Command/mstns:pCommandValue"/>
+			<xs:field xpath="."/>
+		</xs:keyref>
+		<xs:keyref name="pAlias" refer="FeatureKey">
+			<xs:selector xpath=".//mstns:*/mstns:pAlias"/>
+			<xs:field xpath="."/>
+		</xs:keyref>
+    <xs:keyref name="pCastAlias" refer="FeatureKey">
+      <xs:selector xpath=".//mstns:*/mstns:pCastAlias"/>
+      <xs:field xpath="."/>
+    </xs:keyref>
+  </xs:element>
+	<xs:group name="NodesTemplate">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        List of all possible node tpyes.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Node" type="NodeType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="Category" type="CategoryType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="Integer" type="IntegerType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="IntReg" type="IntRegType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="MaskedIntReg" type="MaskedIntRegType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="Boolean" type="BooleanType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="Command" type="CommandType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="Enumeration" type="EnumerationType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="Float" type="FloatType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="FloatReg" type="FloatRegType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="String" type="StringType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="StringReg" type="StringRegType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="Register" type="RegisterType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="Converter" type="ConverterType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="IntConverter" type="IntConverterType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="SwissKnife" type="SwissKnifeType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="IntSwissKnife" type="IntSwissKnifeType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="Port" type="PortType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="ConfRom" type="ConfRomType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="TextDesc" type="TextDescType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="IntKey" type="IntKeyType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="AdvFeatureLock" type="DcamLockType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="SmartFeature" type="SmartFeatureAdrType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="Group" type="GroupType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="StructReg" type="StructRegType" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:group>
+	<xs:complexType name="GroupType">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        Used for structuring device descripition files. Groups can be nested in any depth.
+        They have no meaning with respect to the device functionaliy and are stripped off the device
+        description file in a pre-processing step.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence maxOccurs="unbounded">
+			<xs:group ref="NodesTemplate"/>
+		</xs:sequence>
+		<xs:attribute name="Comment" type="xs:string" use="required"/>
+	</xs:complexType>
+	<xs:group name="NodeElementTemplate">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        Lists the elements which are common to (nearly) all nodes.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Extension" type="ExtensionType" minOccurs="0"/>
+			<xs:element name="ToolTip" type="nonEmptyString_t" minOccurs="0"/>
+			<xs:element name="Description" type="nonEmptyString_t" minOccurs="0"/>
+			<xs:element name="DisplayName" type="nonEmptyString_t" minOccurs="0"/>
+			<xs:element name="Visibility" type="Visibility_t" default="Beginner" minOccurs="0"/>
+			<xs:element name="DocuURL" type="DocURL_t" minOccurs="0"/>
+			<xs:element name="IsDeprecated" type="YesNo_t" default="No" minOccurs="0"/>
+			<xs:element name="EventID" type="Hex_t" minOccurs="0"/>
+			<xs:element name="pIsImplemented" type="CName_t" minOccurs="0"/>
+			<xs:element name="pIsAvailable" type="CName_t" minOccurs="0"/>
+			<xs:element name="pIsLocked" type="CName_t" minOccurs="0"/>
+      <xs:element name="pBlockPolling" type="CName_t" minOccurs="0"/>
+      <xs:element name="ImposedAccessMode" type="Access_t" default="RW" minOccurs="0"/>
+			<xs:element name="pError" type="CName_t" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="pAlias" type="CName_t" minOccurs="0"/>
+      <xs:element name="pCastAlias" type="CName_t" minOccurs="0"/>
+    </xs:sequence>
+	</xs:group>
+	<xs:attributeGroup name="NodeAttributeTemplate">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        Lists the attributes which are common to all nodes.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="Name" type="CName_t" use="required"/>
+		<xs:attribute name="NameSpace" type="NameSpace_t" default="Custom"/>
+    <xs:attribute name="MergePriority" type="MergePriority_t"/>
+    <xs:attribute name="ExposeStatic" type="YesNo_t"/>
+  </xs:attributeGroup>
+	<xs:group name="RegisterElementTemplate">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        Lists the elements which are common to all register nodes with a pLength element
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:group ref="NodeElementTemplate"/>
+			<xs:element name="Streamable" type="YesNo_t" default="No" minOccurs="0"/>
+			<xs:choice maxOccurs="unbounded">
+				<xs:element name="Address" type="HexOrDecimal_t"/>
+				<xs:element name="IntSwissKnife" type="IntSwissKnifeType"/>
+				<xs:element name="pAddress" type="CName_t"/>
+				<xs:element name="pIndex" type="pIndexType"/>
+			</xs:choice>
+			<xs:choice>
+				<xs:element name="Length" type="PositiveHexOrDecimal_t"/>
+				<xs:element name="pLength" type="CName_t"/>
+			</xs:choice>
+			<xs:element name="AccessMode" type="Access_t" default="RO"/>
+			<xs:element name="pPort" type="CName_t"/>
+			<xs:element name="Cachable" type="CachingMode_t" default="WriteThrough" minOccurs="0"/>
+			<xs:element name="PollingTime" type="nonNegativeHexOrDecimal_t" minOccurs="0"/>
+			<xs:element name="pInvalidator" type="CName_t" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:group>
+	<xs:complexType name="NodeType">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        The simple node with no functionality.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:group ref="NodeElementTemplate"/>
+      <xs:element name="pInvalidator" type="CName_t" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+		<xs:attributeGroup ref="NodeAttributeTemplate"/>
+	</xs:complexType>
+	<xs:complexType name="CategoryType">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        Contins references to features which are exposed to the user via API or GUI.
+        Can be nested in any depth. 
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:group ref="NodeElementTemplate"/>
+      <xs:element name="pInvalidator" type="CName_t" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="pFeature" type="CName_t" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="NodeAttributeTemplate"/>
+	</xs:complexType>
+	<xs:complexType name="IntegerType">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        Integer node which can be used to collect Value, Min, Max, and Inc or be used as Multiplexer
+        or be used as Replicator.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:group ref="NodeElementTemplate"/>
+      <xs:element name="pInvalidator" type="CName_t" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="Streamable" type="YesNo_t" default="No" minOccurs="0"/>
+			<xs:choice>
+				<xs:element name="Value" type="HexOrDecimal_t"/>
+				<xs:sequence>
+					<xs:element name="pValueCopy" type="CName_t" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element name="pValue" type="CName_t"/>
+					<xs:element name="pValueCopy" type="CName_t" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+				<xs:sequence>
+					<xs:element name="pIndex" type="CName_t"/>
+					<xs:choice maxOccurs="unbounded">
+						<xs:element name="ValueIndexed">
+							<xs:complexType>
+								<xs:simpleContent>
+									<xs:extension base="HexOrDecimal_t">
+										<xs:attribute name="Index" type="HexOrDecimal_t" use="required"/>
+									</xs:extension>
+								</xs:simpleContent>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="pValueIndexed">
+							<xs:complexType>
+								<xs:simpleContent>
+									<xs:extension base="CName_t">
+										<xs:attribute name="Index" type="HexOrDecimal_t" use="required"/>
+									</xs:extension>
+								</xs:simpleContent>
+							</xs:complexType>
+						</xs:element>
+					</xs:choice>
+					<xs:choice>
+						<xs:element name="ValueDefault" type="HexOrDecimal_t"/>
+						<xs:element name="pValueDefault" type="CName_t"/>
+					</xs:choice>
+				</xs:sequence>
+			</xs:choice>
+			<xs:choice minOccurs="0">
+				<xs:element name="Min" type="HexOrDecimal_t"/>
+				<xs:element name="pMin" type="CName_t"/>
+			</xs:choice>
+			<xs:choice minOccurs="0">
+				<xs:element name="Max" type="HexOrDecimal_t"/>
+				<xs:element name="pMax" type="CName_t"/>
+			</xs:choice>
+			<xs:choice minOccurs="0">
+				<xs:element name="Inc" type="PositiveHexOrDecimal_t"/>
+				<xs:element name="pInc" type="CName_t"/>
+			</xs:choice>
+			<xs:element name="Unit" type="nonEmptyString_t" minOccurs="0"/>
+			<xs:element name="Representation" type="IntRepresentation_t" minOccurs="0"/>
+      <!-- BEWARE : Don't use this entry - it is currently not supported and there only for future use -->
+      <xs:element name="ValidValueSet" type="nonEmptyString_t" minOccurs="0"/>
+      <!-- end BEWARE -->
+      <xs:element name="pSelected" type="CName_t" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="NodeAttributeTemplate"/>
+	</xs:complexType>
+	<xs:complexType name="IntRegType">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        Maps to a register of Integer type.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:group ref="RegisterElementTemplate"/>
+			<xs:element name="Sign" type="Sign_t" default="Unsigned" minOccurs="0"/>
+			<xs:element name="Endianess" type="Endianess_t" default="LittleEndian"/>
+			<xs:element name="Unit" type="nonEmptyString_t" minOccurs="0"/>
+			<xs:element name="Representation" type="IntRepresentation_t" minOccurs="0"/>
+			<xs:element name="pSelected" type="CName_t" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="NodeAttributeTemplate"/>
+	</xs:complexType>
+	<xs:complexType name="MaskedIntRegType">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        Maps to a subset (bit range) of a register of Integer type.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+      <xs:group ref="NodeElementTemplate"/>
+      <xs:element name="Streamable" type="YesNo_t" default="No" minOccurs="0"/>
+      <xs:choice maxOccurs="unbounded">
+        <xs:element name="Address" type="HexOrDecimal_t"/>
+        <xs:element name="IntSwissKnife" type="IntSwissKnifeType"/>
+        <xs:element name="pAddress" type="CName_t"/>
+        <xs:element name="pIndex" type="pIndexType"/>
+      </xs:choice>
+      <!-- note that the MaskedIntReg does not have a pLenght entry -->
+      <xs:element name="Length" type="PositiveHexOrDecimal_t"/>
+      <xs:element name="AccessMode" type="Access_t" default="RO"/>
+      <xs:element name="pPort" type="CName_t"/>
+      <xs:element name="Cachable" type="CachingMode_t" default="WriteThrough" minOccurs="0"/>
+      <xs:element name="PollingTime" type="nonNegativeHexOrDecimal_t" minOccurs="0"/>
+      <xs:element name="pInvalidator" type="CName_t" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:choice>
+				<xs:element name="Bit" type="nonNegativeHexOrDecimal_t"/>
+				<xs:sequence>
+					<xs:element name="LSB" type="nonNegativeHexOrDecimal_t"/>
+					<xs:element name="MSB" type="nonNegativeHexOrDecimal_t"/>
+				</xs:sequence>
+			</xs:choice>
+			<xs:element name="Sign" type="Sign_t" default="Unsigned" minOccurs="0"/>
+			<xs:element name="Endianess" type="Endianess_t" default="LittleEndian"/>
+			<xs:element name="Unit" type="nonEmptyString_t" minOccurs="0"/>
+			<xs:element name="Representation" type="IntRepresentation_t" minOccurs="0"/>
+			<xs:element name="pSelected" type="CName_t" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="NodeAttributeTemplate"/>
+	</xs:complexType>
+	<xs:complexType name="StructRegType">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        Describes a collection of subsets (bit ranges) on the same integer register
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:group ref="RegisterElementTemplate"/>
+			<xs:element name="Endianess" type="Endianess_t" default="LittleEndian"/>
+			<xs:element name="StructEntry" type="StructEntryType" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="Comment" type="xs:string" use="required"/>
+	</xs:complexType>
+	<xs:complexType name="StructEntryType">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        Describes a one subset (bit range) of a StructReg
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Extension" type="ExtensionType" minOccurs="0"/>
+			<xs:element name="ToolTip" type="nonEmptyString_t" minOccurs="0"/>
+			<xs:element name="Description" type="nonEmptyString_t" minOccurs="0"/>
+			<xs:element name="DisplayName" type="nonEmptyString_t" minOccurs="0"/>
+			<xs:element name="Visibility" type="Visibility_t" default="Beginner" minOccurs="0"/>
+      <xs:element name="DocuURL" type="DocURL_t" minOccurs="0"/>
+      <xs:element name="IsDeprecated" type="YesNo_t" default="No" minOccurs="0"/>
+      <xs:element name="EventID" type="Hex_t" minOccurs="0"/>
+			<xs:element name="pIsImplemented" type="CName_t" minOccurs="0"/>
+			<xs:element name="pIsAvailable" type="CName_t" minOccurs="0"/>
+			<xs:element name="pIsLocked" type="CName_t" minOccurs="0"/>
+      <xs:element name="pBlockPolling" type="CName_t" minOccurs="0"/>
+      <xs:element name="ImposedAccessMode" type="Access_t" default="RW" minOccurs="0"/>
+      <xs:element name="pError" type="CName_t" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="pAlias" type="CName_t" minOccurs="0"/>
+      <xs:element name="pCastAlias" type="CName_t" minOccurs="0"/>
+      <xs:element name="pInvalidator" type="CName_t" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="AccessMode" type="Access_t" minOccurs="0"/>
+      <xs:element name="Cachable" type="CachingMode_t" default="WriteThrough" minOccurs="0"/>
+      <xs:element name="PollingTime" type="nonNegativeHexOrDecimal_t" minOccurs="0"/>
+      <xs:element name="Streamable" type="YesNo_t" default="No" minOccurs="0"/>
+      <xs:choice>
+				<xs:element name="Bit" type="nonNegativeHexOrDecimal_t"/>
+				<xs:sequence>
+					<xs:element name="LSB" type="nonNegativeHexOrDecimal_t"/>
+					<xs:element name="MSB" type="nonNegativeHexOrDecimal_t"/>
+				</xs:sequence>
+			</xs:choice>
+			<xs:element name="Sign" type="Sign_t" default="Unsigned" minOccurs="0"/>
+      <xs:element name="Unit" type="nonEmptyString_t" minOccurs="0"/>
+      <xs:element name="Representation" type="IntRepresentation_t" minOccurs="0"/>
+      <xs:element name="pSelected" type="CName_t" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="NodeAttributeTemplate"/>
+	</xs:complexType>
+	<xs:complexType name="CommandType">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        A node for issuing commands.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:group ref="NodeElementTemplate"/>
+      <xs:element name="pInvalidator" type="CName_t" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:choice>
+				<xs:element name="Value" type="HexOrDecimal_t"/>
+				<xs:element name="pValue" type="CName_t"/>
+			</xs:choice>
+			<xs:choice>
+				<xs:element name="CommandValue" type="HexOrDecimal_t"/>
+				<xs:element name="pCommandValue" type="CName_t"/>
+			</xs:choice>
+			<xs:element name="PollingTime" type="nonNegativeHexOrDecimal_t" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="NodeAttributeTemplate"/>
+	</xs:complexType>
+	<xs:complexType name="BooleanType">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        A node for issuing boolean values based on an integer node
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:group ref="NodeElementTemplate"/>
+      <xs:element name="pInvalidator" type="CName_t" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="Streamable" type="YesNo_t" default="No" minOccurs="0"/>
+			<xs:choice>
+				<xs:element name="Value" type="xs:boolean"/>
+				<xs:element name="pValue" type="CName_t"/>
+			</xs:choice>
+			<xs:element name="OnValue" type="HexOrDecimal_t" minOccurs="0"/>
+			<xs:element name="OffValue" type="HexOrDecimal_t" minOccurs="0"/>
+      <xs:element name="pSelected" type="CName_t" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+		<xs:attributeGroup ref="NodeAttributeTemplate"/>
+	</xs:complexType>
+	<xs:complexType name="FloatType">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        Float node which can be used to collect Value, Min, and Max, or be used as Multiplexer.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:group ref="NodeElementTemplate"/>
+      <xs:element name="pInvalidator" type="CName_t" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="Streamable" type="YesNo_t" default="No" minOccurs="0"/>
+			<xs:choice>
+				<xs:element name="Value" type="xs:float"/>
+				<xs:element name="pValue" type="CName_t"/>
+				<xs:sequence>
+					<xs:element name="pIndex" type="CName_t"/>
+					<xs:choice maxOccurs="unbounded">
+						<xs:element name="ValueIndexed">
+							<xs:complexType>
+								<xs:simpleContent>
+									<xs:extension base="xs:float">
+										<xs:attribute name="Index" type="HexOrDecimal_t" use="required"/>
+									</xs:extension>
+								</xs:simpleContent>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="pValueIndexed">
+							<xs:complexType>
+								<xs:simpleContent>
+									<xs:extension base="CName_t">
+										<xs:attribute name="Index" type="HexOrDecimal_t" use="required"/>
+									</xs:extension>
+								</xs:simpleContent>
+							</xs:complexType>
+						</xs:element>
+					</xs:choice>
+					<xs:choice>
+						<xs:element name="ValueDefault" type="xs:float"/>
+						<xs:element name="pValueDefault" type="CName_t"/>
+					</xs:choice>
+				</xs:sequence>
+			</xs:choice>
+			<xs:choice minOccurs="0">
+				<xs:element name="Min" type="xs:float"/>
+				<xs:element name="pMin" type="CName_t"/>
+			</xs:choice>
+			<xs:choice minOccurs="0">
+				<xs:element name="Max" type="xs:float"/>
+				<xs:element name="pMax" type="CName_t"/>
+			</xs:choice>
+      <xs:choice minOccurs="0">
+        <xs:element name="Inc" type="xs:float"/>
+        <xs:element name="pInc" type="CName_t"/>
+      </xs:choice>
+      <xs:element name="Unit" type="nonEmptyString_t" minOccurs="0"/>
+			<xs:element name="Representation" type="FloatRepresentation_t" minOccurs="0"/>
+			<xs:element name="DisplayNotation" type="DisplayNotation_t" minOccurs="0"/>
+			<xs:element name="DisplayPrecision" type="HexOrDecimal_t" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="NodeAttributeTemplate"/>
+	</xs:complexType>
+	<xs:complexType name="ConverterType">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        Bi-directional Float swiss knife.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:group ref="NodeElementTemplate"/>
+      <xs:element name="pInvalidator" type="CName_t" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="Streamable" type="YesNo_t" default="No" minOccurs="0"/>
+			<xs:sequence>
+				<xs:element name="pVariable" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:string">
+								<xs:attribute name="Name" type="VariableName_t" use="required"/>
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="Constant" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:float">
+								<xs:attribute name="Name" type="CName_t" use="required"/>
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="Expression" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:string">
+								<xs:attribute name="Name" type="CName_t" use="required"/>
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="FormulaTo" type="xs:string"/>
+				<xs:element name="FormulaFrom" type="xs:string"/>
+			</xs:sequence>
+			<xs:element name="pValue" type="CName_t"/>
+			<xs:element name="Unit" type="nonEmptyString_t" minOccurs="0"/>
+			<xs:element name="Representation" type="FloatRepresentation_t" minOccurs="0"/>
+			<xs:element name="DisplayNotation" type="DisplayNotation_t" minOccurs="0"/>
+			<xs:element name="DisplayPrecision" type="HexOrDecimal_t" minOccurs="0"/>
+			<xs:element name="Slope" type="Slope_t" default="Automatic" minOccurs="0"/>
+      <xs:element name="IsLinear" type="YesNo_t" default="No" minOccurs="0"/>
+    </xs:sequence>
+		<xs:attributeGroup ref="NodeAttributeTemplate"/>
+	</xs:complexType>
+	<xs:complexType name="IntConverterType">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        Bi-directional Integer swiss knife.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:group ref="NodeElementTemplate"/>
+      <xs:element name="pInvalidator" type="CName_t" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="Streamable" type="YesNo_t" default="No" minOccurs="0"/>
+			<xs:sequence>
+				<xs:element name="pVariable" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:string">
+								<xs:attribute name="Name" type="VariableName_t" use="required"/>
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="Constant" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="HexOrDecimal_t">
+								<xs:attribute name="Name" type="CName_t" use="required"/>
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="Expression" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:string">
+								<xs:attribute name="Name" type="CName_t" use="required"/>
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="FormulaTo" type="xs:string"/>
+				<xs:element name="FormulaFrom" type="xs:string"/>
+			</xs:sequence>
+			<xs:choice>
+				<xs:element name="pValue" type="CName_t"/>
+			</xs:choice>
+			<xs:element name="Unit" type="nonEmptyString_t" minOccurs="0"/>
+			<xs:element name="Representation" type="IntRepresentation_t" minOccurs="0"/>
+			<xs:element name="Slope" type="Slope_t" default="Automatic" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="NodeAttributeTemplate"/>
+	</xs:complexType>
+	<xs:complexType name="FloatRegType">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        Maps to a Float register.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:group ref="RegisterElementTemplate"/>
+			<xs:element name="Endianess" type="Endianess_t" default="LittleEndian"/>
+			<xs:element name="Unit" type="nonEmptyString_t" minOccurs="0"/>
+			<xs:element name="Representation" type="FloatRepresentation_t" minOccurs="0"/>
+			<xs:element name="DisplayNotation" type="DisplayNotation_t" minOccurs="0"/>
+			<xs:element name="DisplayPrecision" type="HexOrDecimal_t" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="NodeAttributeTemplate"/>
+	</xs:complexType>
+	<xs:complexType name="EnumerationType">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        Enumeration mapping to an Integer.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:group ref="NodeElementTemplate"/>
+      <xs:element name="pInvalidator" type="CName_t" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="Streamable" type="YesNo_t" default="No" minOccurs="0"/>
+			<xs:element name="EnumEntry" type="EnumEntryType" maxOccurs="unbounded"/>
+			<xs:choice>
+				<xs:element name="Value" type="HexOrDecimal_t"/>
+				<xs:element name="pValue" type="CName_t"/>
+			</xs:choice>
+			<xs:element name="pSelected" type="CName_t" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="PollingTime" type="nonNegativeHexOrDecimal_t" minOccurs="0"/>
+    </xs:sequence>
+		<xs:attributeGroup ref="NodeAttributeTemplate"/>
+	</xs:complexType>
+	<xs:complexType name="EnumEntryType">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        Possible value of an Enumeration node
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:group ref="NodeElementTemplate"/>
+      <xs:element name="pInvalidator" type="CName_t" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="Value" type="HexOrDecimal_t"/>
+			<xs:element name="NumericValue" type="xs:float" minOccurs="0"/>
+			<xs:element name="Symbolic" type="CName_t" minOccurs="0"/>
+      <xs:element name="IsSelfClearing" type="YesNo_t" minOccurs="0" default="No"/>
+    </xs:sequence>
+		<xs:attributeGroup ref="NodeAttributeTemplate"/>
+	</xs:complexType>
+	<xs:complexType name="StringType">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        String node
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:group ref="NodeElementTemplate"/>
+      <xs:element name="pInvalidator" type="CName_t" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="Streamable" type="YesNo_t" default="No" minOccurs="0"/>
+		    <xs:choice>
+			<xs:element name="Value" type="xs:string"/>
+		           <xs:element name="pValue" type="CName_t"/>
+		    </xs:choice>
+		</xs:sequence>
+		<xs:attributeGroup ref="NodeAttributeTemplate"/>
+	</xs:complexType>
+	<xs:complexType name="StringRegType">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        String mapping to a register
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:group ref="RegisterElementTemplate"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="NodeAttributeTemplate"/>
+	</xs:complexType>
+	<xs:complexType name="RegisterType">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        Register exposed as byte array.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:group ref="RegisterElementTemplate"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="NodeAttributeTemplate"/>
+	</xs:complexType>
+	<xs:complexType name="SwissKnifeType">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        Uno-directional formula interpreter 
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:group ref="NodeElementTemplate"/>
+      <xs:element name="pInvalidator" type="CName_t" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="Streamable" type="YesNo_t" default="No" minOccurs="0"/>
+			<xs:element name="pVariable" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute name="Name" type="VariableName_t" use="required"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Constant" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:float">
+							<xs:attribute name="Name" type="CName_t" use="required"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Expression" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute name="Name" type="CName_t" use="required"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Formula" type="xs:string"/>
+			<xs:element name="Unit" type="nonEmptyString_t" minOccurs="0"/>
+			<xs:element name="Representation" type="FloatRepresentation_t" minOccurs="0"/>
+			<xs:element name="DisplayNotation" type="DisplayNotation_t" minOccurs="0"/>
+			<xs:element name="DisplayPrecision" type="HexOrDecimal_t" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="NodeAttributeTemplate"/>
+	</xs:complexType>
+	<xs:complexType name="IntSwissKnifeType">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        Uno-directional formula interpreter 
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:group ref="NodeElementTemplate"/>
+      <xs:element name="pInvalidator" type="CName_t" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="Streamable" type="YesNo_t" default="No" minOccurs="0"/>
+			<xs:element name="pVariable" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute name="Name" type="VariableName_t" use="required"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Constant" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="HexOrDecimal_t">
+							<xs:attribute name="Name" type="CName_t" use="required"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Expression" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute name="Name" type="CName_t" use="required"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Formula" type="xs:string"/>
+			<xs:element name="Unit" type="nonEmptyString_t" minOccurs="0"/>
+      <xs:element name="Representation" type="IntRepresentation_t" minOccurs="0"/>
+    </xs:sequence>
+		<xs:attributeGroup ref="NodeAttributeTemplate"/>
+	</xs:complexType>
+	<xs:complexType name="pIndexType">
+		<xs:simpleContent>
+			<xs:extension base="CName_t">
+				<xs:attribute name="Offset" type="HexOrDecimal_t"/>
+				<xs:attribute name="pOffset" type="CName_t"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="PortType">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        Node mapping to a port accessing the device's registers.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:group ref="NodeElementTemplate"/>
+      <xs:element name="pInvalidator" type="CName_t" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:choice minOccurs="0">
+				<xs:element name="ChunkID" type="Hex_t"/>
+				<xs:element name="pChunkID" type="CName_t"/>
+			</xs:choice>
+			<xs:element name="SwapEndianess" type="YesNo_t" default="No" minOccurs="0"/>
+			<xs:element name="CacheChunkData" type="YesNo_t" default="No" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="NodeAttributeTemplate"/>
+	</xs:complexType>
+	<xs:complexType name="ConfRomType">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        Accesses a IEEE1212 configuration ROM address block
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence maxOccurs="unbounded">
+			<xs:group ref="NodeElementTemplate"/>
+      <xs:element name="pInvalidator" type="CName_t" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="Unit" type="HexOrDecimal_t"/>
+			<xs:choice maxOccurs="unbounded">
+				<xs:element name="Address" type="nonNegativeHexOrDecimal_t"/>
+				<xs:element name="IntSwissKnife" type="IntSwissKnifeType"/>
+				<xs:element name="pAddress" type="CName_t"/>
+			</xs:choice>
+			<xs:element name="Length" type="nonNegativeHexOrDecimal_t"/>
+			<xs:element name="pPort" type="CName_t"/>
+			<xs:choice minOccurs="0" maxOccurs="unbounded">
+				<xs:element name="TextDesc" type="Key_t"/>
+				<xs:element name="IntKey" type="Key_t"/>
+			</xs:choice>
+		</xs:sequence>
+		<xs:attributeGroup ref="NodeAttributeTemplate"/>
+	</xs:complexType>
+	<xs:complexType name="TextDescType">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        Accesses a Text entry in a IEEE1212 configuration ROM address block
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="p1212Parser" type="CName_t"/>
+			<xs:element name="Key" type="HexOrDecimal_t"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="NodeAttributeTemplate"/>
+	</xs:complexType>
+	<xs:complexType name="IntKeyType">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        Accesses an Integer entry in a IEEE1212 configuration ROM address block
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="p1212Parser" type="CName_t"/>
+			<xs:element name="Key" type="HexOrDecimal_t"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="NodeAttributeTemplate"/>
+	</xs:complexType>
+	<xs:complexType name="DcamLockType">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        Gets the address of a DCAM smart feature
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:group ref="RegisterElementTemplate"/>
+			<xs:element name="FeatureID" type="HexOrDecimal_t"/>
+			<xs:element name="Timeout" type="nonNegativeHexOrDecimal_t" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="NodeAttributeTemplate"/>
+	</xs:complexType>
+	<xs:complexType name="SmartFeatureAdrType">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        Gets the address of a smart feature
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="FeatureID" type="xs:string"/>
+			<xs:choice maxOccurs="unbounded">
+				<xs:element name="Address" type="nonNegativeHexOrDecimal_t"/>
+				<xs:element name="IntSwissKnife" type="IntSwissKnifeType"/>
+				<xs:element name="pAddress" type="CName_t"/>
+			</xs:choice>
+			<xs:element name="pPort" type="CName_t"/>
+			<xs:element name="pIsImplemented" type="CName_t" minOccurs="0"/>
+			<xs:element name="pIsAvailable" type="CName_t" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="NodeAttributeTemplate"/>
+	</xs:complexType>
+	<xs:complexType name="ExtensionType">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+        Content to custom extend a device description file. The extension entries are stripped away
+        during pre-processing of the device description file.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:any processContents="skip" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="CName_t">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[A-Za-z][0-9A-Za-z_]*"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="UpperCaseString_t">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[A-Z][0-9A-Z_]*"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="nonEmptyString_t">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="CachingMode_t">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="WriteThrough">
+				<xs:annotation>
+					<xs:documentation>Cache on write and write into register</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="WriteAround">
+				<xs:annotation>
+					<xs:documentation>Write w/o cache, read updates cache</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="NoCache">
+				<xs:annotation>
+					<xs:documentation>Do not perform caching</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="HexOrDecimal_t">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="(0[xX][0-9A-Fa-f]+)|(-?[0-9]+)"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Hex_t">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="([0-9A-Fa-f][0-9A-Fa-f])+"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="PositiveHexOrDecimal_t">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="(0[xX][0-9A-Fa-f]+)|[1-9][0-9]*"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="nonNegativeHexOrDecimal_t">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="(0[xX][0-9A-Fa-f]+)|[0-9]+"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="IntegerLength_t">
+		<xs:restriction base="xs:integer">
+			<xs:minInclusive value="1"/>
+			<xs:maxInclusive value="8"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="FloatLength_t">
+		<xs:restriction base="xs:integer">
+			<xs:enumeration value="4"/>
+			<xs:enumeration value="8"/>
+		</xs:restriction>
+	</xs:simpleType>
+  <xs:simpleType name="MergePriority_t">
+    <xs:restriction base="xs:integer">
+      <xs:enumeration value="-1"/>
+      <xs:enumeration value="0"/>
+      <xs:enumeration value="+1"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="GUID_t">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Sign_t">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Signed"/>
+			<xs:enumeration value="Unsigned"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="SwissKnifeConversion_t">
+		<xs:simpleContent>
+			<xs:extension base="xs:string">
+				<xs:attribute name="Input" type="CName_t" use="required"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:simpleType name="NameSpace_t">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Custom"/>
+			<xs:enumeration value="Standard"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="StandardNameSpace_t">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="None"/>
+			<xs:enumeration value="IIDC"/>
+			<xs:enumeration value="GEV"/>
+			<xs:enumeration value="CL"/>
+      <xs:enumeration value="USB"/>
+    </xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="IntRepresentation_t">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Linear"/>
+			<xs:enumeration value="Logarithmic"/>
+			<xs:enumeration value="Boolean"/>
+			<xs:enumeration value="PureNumber"/>
+			<xs:enumeration value="HexNumber"/>
+			<xs:enumeration value="IPV4Address"/>
+			<xs:enumeration value="MACAddress"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="FloatRepresentation_t">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Linear"/>
+			<xs:enumeration value="Logarithmic"/>
+			<xs:enumeration value="PureNumber"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Access_t">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="RO"/>
+			<xs:enumeration value="WO"/>
+			<xs:enumeration value="RW"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Endianess_t">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="LittleEndian"/>
+			<xs:enumeration value="BigEndian"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Visibility_t">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Beginner"/>
+			<xs:enumeration value="Expert"/>
+			<xs:enumeration value="Guru"/>
+			<xs:enumeration value="Invisible"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="YesNo_t">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Yes"/>
+			<xs:enumeration value="No"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Slope_t">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Increasing"/>
+			<xs:enumeration value="Decreasing"/>
+			<xs:enumeration value="Varying"/>
+			<xs:enumeration value="Automatic"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="Key_t">
+		<xs:simpleContent>
+			<xs:extension base="HexOrDecimal_t">
+				<xs:attribute name="Name" type="CName_t" use="required"/>
+				<xs:attribute name="NameSpace" type="NameSpace_t" default="Custom"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:simpleType name="DisplayNotation_t">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Automatic"/>
+			<xs:enumeration value="Fixed"/>
+			<xs:enumeration value="Scientific"/>
+		</xs:restriction>
+	</xs:simpleType>
+  <xs:simpleType name="VariableName_t">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[A-Za-z][0-9A-Za-z_]*((.Value)|(.Max)|(.Min)|(.Inc)|(.AccessMode)|(.Visibility)|(.CachingMode)|(.Entry.[A-Za-z][0-9A-Za-z_]*))?"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="DocURL_t">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="http://.+"/>
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>
