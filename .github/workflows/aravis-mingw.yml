@@ -52,7 +52,7 @@ jobs:
         meson --buildtype=plain -Ddocumentation=disabled -Dgst-plugin=enabled -Dintrospection=enabled -Dusb=enabled -Dviewer=enabled . ./build
     - name: ninja install
       run: |
-        ninja -C ./build install
+        ninja -C ./build --verbose install
     - name: ninja test
       run: |
-        ninja -C ./build test
+        ninja -C ./build --verbose test
