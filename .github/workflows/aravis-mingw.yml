@@ -46,7 +46,9 @@ jobs:
           mingw-w64-${{matrix.env}}-gobject-introspection-runtime
     - name: meson
       run: |
-        mkdir build; meson --buildtype=plain -Ddocumentation=disabled -Dgst-plugin=enabled -Dintrospection=enabled -Dusb=enabled -Dviewer=enabled . ./build
+        mkdir build
+        ls -R
+        meson --buildtype=plain -Ddocumentation=disabled -Dgst-plugin=enabled -Dintrospection=enabled -Dusb=enabled -Dviewer=enabled . ./build
     - name: ninja install
       run: |
         ninja -C ./build install
