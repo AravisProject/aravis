@@ -20,6 +20,9 @@ jobs:
           - { sys: mingw32, env: i686 }
           - { sys: ucrt64,  env: ucrt-x86_64 }
           - { sys: clang64, env: clang-x86_64 }
+    defaults:
+      run:
+        shell: msys2 {0}
     steps:
     - uses: msys2/setup-msys2@v2
       with:
@@ -44,6 +47,6 @@ jobs:
     - name: meson
       run: |
         mkdir build; cd build; meson --buildtype=plain -Ddocumentation=disabled -Dgst-plugin=enabled -Dintrospection=enabled -Dusb=enabled -Dviewer=enabled
-    - name: ninja
+    - name: ninja install
       run: |
         ninja -C build install
