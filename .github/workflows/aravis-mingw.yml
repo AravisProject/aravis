@@ -53,6 +53,6 @@ jobs:
     - name: ninja install
       run: |
         ninja -C ./build --verbose install
-    - name: ninja test
+    - name: meson test
       run: |
-        ninja -C ./build --verbose test --no-suite="network"
+        meson test -C ./build --no-suite="network"
