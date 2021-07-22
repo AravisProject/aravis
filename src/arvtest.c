@@ -199,44 +199,48 @@ arv_test_new (void)
         return g_object_new (ARV_TYPE_TEST, NULL);
 }
 
-typedef struct {
-	gboolean genicam_success;
-	const char *genicam_error;
-
-	gboolean read_sensor_success;
-	gboolean sensor_size_success;
-	gint sensor_width;
-	gint sensor_height;
-
-        gboolean acquisition_success;
-} TestResult;
-
-static char *
-arv_test_get_key_file_string (ArvTest *test, ArvCamera *camera, const char *key)
+static double
+arv_test_camera_get_key_file_double (ArvTestCamera *test_camera, ArvTest *test, const char *key)
 {
         g_autofree char *group = NULL;
 
+        g_return_val_if_fail (test_camera != NULL, 0);
+        g_return_val_if_fail (ARV_IS_TEST (test), 0);
+
+        return g_key_file_get_double (test->key_file, test_camera->vendor_model, key, NULL);
+}
+
+static gint64
+arv_test_camera_get_key_file_int64 (ArvTestCamera *test_camera, ArvTest *test, const char *key)
+{
+        g_autofree char *group = NULL;
+
+        g_return_val_if_fail (test_camera != NULL, 0);
+        g_return_val_if_fail (ARV_IS_TEST (test), 0);
+
+        return g_key_file_get_int64 (test->key_file, test_camera->vendor_model, key, NULL);
+}
+
+static char *
+arv_test_camera_get_key_file_string (ArvTestCamera *test_camera, ArvTest *test, const char *key)
+{
+        g_autofree char *group = NULL;
+
+        g_return_val_if_fail (test_camera != NULL, NULL);
         g_return_val_if_fail (ARV_IS_TEST (test), NULL);
 
-        group = g_strdup_printf ("%s:%s",
-                                 arv_camera_get_vendor_name (camera, NULL),
-                                 arv_camera_get_model_name (camera, NULL));
-
-        return g_key_file_get_string (test->key_file, group, key, NULL);
+        return g_key_file_get_string (test->key_file, test_camera->vendor_model, key, NULL);
 }
 
 static gint *
-arv_test_get_key_file_integer_list (ArvTest *test, ArvCamera *camera, const char *key, gsize *size)
+arv_test_camera_get_key_file_integer_list (ArvTestCamera *test_camera, ArvTest *test, const char *key, gsize *size)
 {
         g_autofree char *group = NULL;
 
+        g_return_val_if_fail (test_camera != NULL, NULL);
         g_return_val_if_fail (ARV_IS_TEST (test), NULL);
 
-        group = g_strdup_printf ("%s:%s",
-                                 arv_camera_get_vendor_name (camera, NULL),
-                                 arv_camera_get_model_name (camera, NULL));
-
-        return g_key_file_get_integer_list (test->key_file, group, key, size, NULL);
+        return g_key_file_get_integer_list (test->key_file, test_camera->vendor_model, key, size, NULL);
 }
 
 static void
@@ -249,7 +253,7 @@ arv_test_genicam (ArvTest *test, ArvTestCamera *test_camera)
 
         g_return_if_fail (ARV_IS_TEST (test));
 
-        version = arv_test_get_key_file_string (test, test_camera->camera, "Schema");
+        version = arv_test_camera_get_key_file_string (test_camera, test, "Schema");
 
 	device = arv_camera_get_device (test_camera->camera);
 	genicam = arv_device_get_genicam_xml (device, &size);
@@ -282,7 +286,7 @@ arv_test_device_properties (ArvTest *test, ArvTestCamera *test_camera)
 
         g_return_if_fail (ARV_IS_TEST (test));
 
-        sensor_size = arv_test_get_key_file_integer_list (test, test_camera->camera, "SensorSize", &size);
+        sensor_size = arv_test_camera_get_key_file_integer_list (test_camera, test, "SensorSize", &size);
 
 	arv_camera_get_sensor_size (test_camera->camera, &sensor_width, &sensor_height, &error);
         arv_test_camera_add_result (test_camera, "Sensor size readout",
@@ -324,6 +328,62 @@ arv_test_acquisition (ArvTest *test, ArvTestCamera *test_camera)
                                     NULL);
 }
 
+static void
+arv_test_multiple_acquisition (ArvTest *test, ArvTestCamera *test_camera)
+{
+        g_autoptr (GError) error = NULL;
+        ArvStream *stream;
+        double frame_rate;
+        unsigned int i;
+        size_t payload_size;
+        gboolean success = TRUE;
+
+        g_return_if_fail (ARV_IS_TEST (test));
+
+        frame_rate = arv_test_camera_get_key_file_double (test_camera, test, "FrameRate");
+
+        arv_camera_set_frame_rate (test_camera->camera, frame_rate > 0 ? frame_rate : 10.0, &error);
+
+        if (error != NULL) {
+                arv_test_camera_add_result (test_camera, "MultipleAcquisition", ARV_TEST_STATUS_FAILURE,
+                                            error->message);
+                return;
+        }
+
+        stream = arv_camera_create_stream (test_camera->camera, NULL, NULL, &error);
+        if (error == NULL)
+                payload_size = arv_camera_get_payload (test_camera->camera, &error);
+        if (error == NULL) {
+                for (i = 0 ; i < 10; i++)
+                        arv_stream_push_buffer (stream, arv_buffer_new (payload_size, FALSE));
+        }
+        if (error == NULL)
+                arv_camera_start_acquisition (test_camera->camera, &error);
+        if (error == NULL) {
+                sleep (2);
+                for (i = 0 ; i < 10; i++) {
+                        ArvBuffer *buffer;
+
+                        buffer = arv_stream_timeout_pop_buffer (stream, 1000000);
+                        if (buffer == NULL)
+                                success = FALSE;
+                        else {
+                                if (arv_buffer_get_status (buffer) != ARV_BUFFER_STATUS_SUCCESS)
+                                        success = FALSE;
+                                arv_stream_push_buffer (stream, buffer);
+                        }
+                }
+        }
+        if (error == NULL)
+                arv_camera_stop_acquisition (test_camera->camera, &error);
+
+        g_object_unref (stream);
+
+        arv_test_camera_add_result (test_camera, "MultipleAcquisition",
+                                    success && error == NULL ? ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
+                                    error != NULL ? error->message : NULL);
+}
+
 static gboolean
 arv_test_run (ArvTest *test)
 {
@@ -344,6 +404,7 @@ arv_test_run (ArvTest *test)
 
 		arv_test_genicam (test, test_camera);
 		arv_test_device_properties (test, test_camera);
+                arv_test_multiple_acquisition (test, test_camera);
                 arv_test_acquisition (test, test_camera);
 	}
 
