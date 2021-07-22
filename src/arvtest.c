@@ -25,6 +25,119 @@
 #include <stdio.h>
 #include <arvdebugprivate.h>
 
+typedef enum {
+        ARV_TEST_STATUS_SUCCESS,
+        ARV_TEST_STATUS_FAILURE,
+        ARV_TEST_STATUS_IGNORED
+} ArvTestStatus;
+
+typedef struct {
+        char *test_name;
+        char *camera_name;
+        ArvTestStatus status;
+        char *comment;
+} ArvTestResult;
+
+#define ARV_TYPE_TEST_RESULT (arv_test_result_get_type())
+GType arv_test_result_get_type(void);
+
+static ArvTestResult *
+arv_test_result_new (const char *test_name, const char *camera_name, ArvTestStatus status, const char *comment)
+{
+        ArvTestResult *result = g_new0 (ArvTestResult, 1);
+
+        result->test_name = g_strdup (test_name);
+        result->camera_name = g_strdup (camera_name);
+        result->status = status;
+        result->comment = g_strdup (comment);
+
+        return result;
+}
+
+static ArvTestResult *
+arv_test_result_copy (ArvTestResult *result)
+{
+        return arv_test_result_new (result->test_name, result->camera_name, result->status, result->comment);
+}
+
+static void
+arv_test_result_free (ArvTestResult *result)
+{
+        if (result != NULL) {
+                g_free (result->test_name);
+                g_free (result->camera_name);
+                g_free (result->comment);
+                g_free (result);
+        }
+}
+
+G_DEFINE_BOXED_TYPE (ArvTestResult, arv_test_result, arv_test_result_copy, arv_test_result_free)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (ArvTestResult, arv_test_result_free)
+
+typedef struct {
+        char *id;
+        ArvCamera *camera;
+        char *vendor_model;
+        GSList *results;
+} ArvTestCamera;
+
+#define ARV_TYPE_TEST_CAMERA (arv_test_camera_get_type())
+GType arv_test_camera_get_type(void);
+
+static ArvTestCamera *
+arv_test_camera_new (const char *camera_id)
+{
+        ArvTestCamera *camera = g_new0 (ArvTestCamera, 1);
+
+        camera->id = g_strdup (camera_id);
+        camera->camera = arv_camera_new (camera_id, NULL);
+        camera->vendor_model = g_strdup_printf ("%s:%s",
+                                                arv_camera_get_vendor_name (camera->camera, NULL),
+                                                arv_camera_get_model_name (camera->camera, NULL));
+
+        return camera;
+}
+
+static ArvTestCamera *
+arv_test_camera_copy (ArvTestCamera *camera)
+{
+        return arv_test_camera_new (camera->id);
+}
+
+static void
+arv_test_camera_free (ArvTestCamera *camera)
+{
+        if (camera != NULL) {
+                g_free (camera->id);
+                g_object_unref (camera->camera);
+                g_free (camera->vendor_model);
+                g_free (camera);
+        }
+}
+
+static void
+arv_test_camera_add_result (ArvTestCamera *test_camera,
+                            const char *test_name, ArvTestStatus status, const char *comment)
+{
+        const char *status_str;
+
+        switch (status) {
+                case ARV_TEST_STATUS_SUCCESS: status_str = "SUCCESS"; break;
+                case ARV_TEST_STATUS_FAILURE: status_str = "FAILURE"; break;
+                case ARV_TEST_STATUS_IGNORED: status_str = "IGNORED"; break;
+                default: status_str = "";
+        }
+
+        printf ("%20s %s %s\n", test_name, status_str, comment != NULL ? comment : "");
+
+        test_camera->results = g_slist_append (test_camera->results,
+                                               arv_test_result_new (test_name, test_camera->vendor_model,
+                                                                    status, comment));
+}
+
+G_DEFINE_BOXED_TYPE (ArvTestCamera, arv_test_camera, arv_test_camera_copy, arv_test_camera_free)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (ArvTestCamera, arv_test_camera_free)
+
 #define ARV_TYPE_TEST arv_test_get_type()
 G_DECLARE_FINAL_TYPE (ArvTest, arv_test, ARV, TEST, GObject)
 
@@ -87,10 +200,6 @@ arv_test_new (void)
 }
 
 typedef struct {
-	int dummy;
-} TestData;
-
-typedef struct {
 	gboolean genicam_success;
 	const char *genicam_error;
 
@@ -101,20 +210,6 @@ typedef struct {
 
         gboolean acquisition_success;
 } TestResult;
-
-static void
-print_result (TestData *data, TestResult *result)
-{
-	printf ("Genicam: %s %s\n",
-		result->genicam_success ? "SUCCESS" : "FAILED",
-		result->genicam_error != NULL ? result->genicam_error : "");
-	if (result->read_sensor_success)
-		printf ("Sensor size read: %d %d\n", result->sensor_width, result->sensor_height);
-	else
-		printf ("Sensor size read: FAILED\n");
-        printf ("Sensor size: %s\n", result->sensor_size_success ? "SUCCESS" : "FAILED");
-        printf ("Acquisition: %s\n", result->acquisition_success ? "SUCCESS" : "FAILED");
-}
 
 static char *
 arv_test_get_key_file_string (ArvTest *test, ArvCamera *camera, const char *key)
@@ -144,83 +239,89 @@ arv_test_get_key_file_integer_list (ArvTest *test, ArvCamera *camera, const char
         return g_key_file_get_integer_list (test->key_file, group, key, size, NULL);
 }
 
-static gboolean
-arv_test_genicam (ArvTest *test, ArvCamera *camera, TestData *data, TestResult *result)
+static void
+arv_test_genicam (ArvTest *test, ArvTestCamera *test_camera)
 {
 	ArvDevice *device;
         g_autofree char *version;
 	const char *genicam;
 	size_t size;
 
-        g_return_val_if_fail (ARV_IS_TEST (test), FALSE);
+        g_return_if_fail (ARV_IS_TEST (test));
 
-        version = arv_test_get_key_file_string (test, camera, "Schema");
+        version = arv_test_get_key_file_string (test, test_camera->camera, "Schema");
 
-	device = arv_camera_get_device (camera);
+	device = arv_camera_get_device (test_camera->camera);
 	genicam = arv_device_get_genicam_xml (device, &size);
 
 	if (genicam == NULL) {
-		result->genicam_error = "Failed to retrieve Genicam data";
-		result->genicam_success = FALSE;
-
-		return FALSE;
+                arv_test_camera_add_result (test_camera, "Genicam", ARV_TEST_STATUS_FAILURE, "Failed to retrieve Genicam data");
+		return;
 	}
 
         if ((g_strcmp0 (version, "1.1") == 0 &&
              !arv_xml_schema_validate (test->schema_1_1, genicam, size, NULL, NULL, NULL)) ||
             (g_strcmp0 (version, "1.0") == 0 &&
              !arv_xml_schema_validate (test->schema_1_0, genicam, size, NULL, NULL, NULL))) {
-		result->genicam_error = "Invalid Genicam XML data";
-		result->genicam_success = FALSE;
-
-		return FALSE;
+                arv_test_camera_add_result (test_camera, "Genicam", ARV_TEST_STATUS_FAILURE, "Invalid Genicam XML data");
+		return;
 	}
 
-	result->genicam_error = NULL;
-	result->genicam_success = TRUE;
-
-	return TRUE;
+        arv_test_camera_add_result (test_camera, "Genicam", ARV_TEST_STATUS_SUCCESS, NULL);
 }
 
-static gboolean
-arv_test_device_properties (ArvTest *test, ArvCamera *camera, TestData *data, TestResult *result)
+static void
+arv_test_device_properties (ArvTest *test, ArvTestCamera *test_camera)
 {
         g_autoptr (GError) error = NULL;
         g_autofree gint *sensor_size = NULL;
+        g_autofree char *comment;
+        ArvTestStatus status;
+        gint sensor_width, sensor_height;
         gsize size = 0;
 
-        g_return_val_if_fail (ARV_IS_TEST (test), FALSE);
+        g_return_if_fail (ARV_IS_TEST (test));
 
-        sensor_size = arv_test_get_key_file_integer_list (test, camera, "SensorSize", &size);
+        sensor_size = arv_test_get_key_file_integer_list (test, test_camera->camera, "SensorSize", &size);
 
-	arv_camera_get_sensor_size (camera, &result->sensor_width, &result->sensor_height, &error);
+	arv_camera_get_sensor_size (test_camera->camera, &sensor_width, &sensor_height, &error);
+        arv_test_camera_add_result (test_camera, "Sensor size readout",
+                                    error == NULL ? ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
+                                    error != NULL ? error->message : NULL);
 
-	result->read_sensor_success = error == NULL;
+        comment = NULL;
 
-        result->sensor_size_success = error == NULL;
         if (error == NULL && size == 2) {
-                if (sensor_size[0] != result->sensor_width ||
-                    sensor_size[1] != result->sensor_height) {
-                        result->sensor_size_success = FALSE;
+                if (sensor_size[0] != sensor_width ||
+                    sensor_size[1] != sensor_height) {
+                        status = ARV_TEST_STATUS_FAILURE;
+                        comment = g_strdup_printf ("Found %dx%d instead of %dx%d",
+                                                   sensor_width, sensor_height,
+                                                   sensor_size[0], sensor_size[1]);
+                } else {
+                        status = ARV_TEST_STATUS_SUCCESS;
+                        comment = g_strdup_printf ("%dx%d", sensor_size[0], sensor_size[1]);
                 }
+        }  else {
+                status = ARV_TEST_STATUS_IGNORED;
         }
 
-        return result->read_sensor_success;
+        arv_test_camera_add_result (test_camera, "Sensor size check", status, comment);
 }
 
-static gboolean
-arv_test_acquisition (ArvTest *test, ArvCamera *camera, TestData *data, TestResult *result)
+static void
+arv_test_acquisition (ArvTest *test, ArvTestCamera *test_camera)
 {
         g_autoptr (GError) error = NULL;
         g_autoptr (ArvBuffer) buffer = NULL;
 
-        g_return_val_if_fail (ARV_IS_TEST (test), FALSE);
+        g_return_if_fail (ARV_IS_TEST (test));
 
-        buffer = arv_camera_acquisition (camera, 1000000, &error);
+        buffer = arv_camera_acquisition (test_camera->camera, 1000000, &error);
 
-        result->acquisition_success = error == NULL && ARV_IS_BUFFER (buffer);
-
-        return result->acquisition_success;
+        arv_test_camera_add_result (test_camera, "CameraAcquisition",
+                                    error == NULL ? ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
+                                    NULL);
 }
 
 static gboolean
@@ -234,23 +335,16 @@ arv_test_run (ArvTest *test)
 	arv_update_device_list ();
 	n_devices = arv_get_n_devices ();
 	for (i = 0; i < n_devices; i++) {
-	        g_autoptr (ArvCamera) camera = NULL;
+	        g_autoptr (ArvTestCamera) test_camera = NULL;
                 g_autoptr (GError) error = NULL;
-                g_autofree TestData *data = NULL;
-		g_autofree TestResult *result = NULL;
 
 		printf ("Testing device '%s' from '%s'\n", arv_get_device_model (i), arv_get_device_vendor (i));
 
-		data = g_new0 (TestData, 1);
-		result = g_new0 (TestResult, 1);
+		test_camera = arv_test_camera_new (arv_get_device_id (i));
 
-		camera = arv_camera_new (arv_get_device_id (i), &error);
-
-		arv_test_genicam (test, camera, data, result);
-		arv_test_device_properties (test, camera, data, result);
-                arv_test_acquisition (test, camera, data, result);
-
-		print_result (data, result);
+		arv_test_genicam (test, test_camera);
+		arv_test_device_properties (test, test_camera);
+                arv_test_acquisition (test, test_camera);
 	}
 
         return success;
