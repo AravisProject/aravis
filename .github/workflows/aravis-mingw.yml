@@ -13,6 +13,7 @@ jobs:
   test-mingw:
     runs-on: windows-latest
     strategy:
+      fail-fast: false # clang64 fails currently due to missing packages, still try the other ones
       matrix:
         include:
           - { sys: mingw64, env: x86_64 }
@@ -25,7 +26,7 @@ jobs:
         msystem: ${{matrix.sys}}
         release: true
         path-type: minimal
-        update: true
+        update: false
         install: >-
           mingw-w64-${{matrix.env}}-toolchain
           mingw-w64-${{matrix.env}}-gcc
