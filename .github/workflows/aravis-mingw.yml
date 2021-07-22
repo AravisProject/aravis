@@ -13,13 +13,13 @@ jobs:
   test-mingw:
     runs-on: windows-latest
     strategy:
-      fail-fast: false # clang64 fails currently due to missing packages, still try the other ones
+      fail-fast: false # see all failures, not just the first one
       matrix:
         include:
           - { sys: mingw64, env: x86_64 }
           - { sys: mingw32, env: i686 }
           - { sys: ucrt64,  env: ucrt-x86_64 }
-          - { sys: clang64, env: clang-x86_64 }
+          # - { sys: clang64, env: clang-x86_64 } # clang64 is missing libnotify package, disabled for now
     defaults:
       run:
         shell: msys2 {0}
@@ -48,8 +48,10 @@ jobs:
     - name: meson
       run: |
         mkdir build
-        ls -R
         meson --buildtype=plain -Ddocumentation=disabled -Dgst-plugin=enabled -Dintrospection=enabled -Dusb=enabled -Dviewer=enabled . ./build
     - name: ninja install
       run: |
         ninja -C ./build install
+    - name: ninja test
+      run: |
+        ninja -C ./build test
