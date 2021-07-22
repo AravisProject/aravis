@@ -1,0 +1,58 @@
+# MSYS2 setup with actions is described here:
+# https://github.com/marketplace/actions/setup-msys2
+
+name: Aravis-MinGW
+
+on:
+  push:
+    branches: [ master, action-mingw ]
+  pull_request:
+    branches: [ master, action-mingw ]
+
+jobs:
+  test-mingw:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false # see all failures, not just the first one
+      matrix:
+        include:
+          - { sys: mingw64, env: x86_64 }
+          - { sys: mingw32, env: i686 }
+          - { sys: ucrt64,  env: ucrt-x86_64 }
+          # - { sys: clang64, env: clang-x86_64 } # clang64 is missing libnotify package, disabled for now
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+    - uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{matrix.sys}}
+        release: true
+        path-type: minimal
+        update: false
+        install: >-
+          mingw-w64-${{matrix.env}}-toolchain
+          mingw-w64-${{matrix.env}}-gcc
+          mingw-w64-${{matrix.env}}-gobject-introspection
+          mingw-w64-${{matrix.env}}-meson
+          mingw-w64-${{matrix.env}}-gst-plugins-good
+          mingw-w64-${{matrix.env}}-gst-plugins-bad
+          mingw-w64-${{matrix.env}}-libnotify
+          mingw-w64-${{matrix.env}}-gstreamer
+          mingw-w64-${{matrix.env}}-gtk3
+          mingw-w64-${{matrix.env}}-libxml2
+          mingw-w64-${{matrix.env}}-zlib
+          mingw-w64-${{matrix.env}}-libusb
+          mingw-w64-${{matrix.env}}-gobject-introspection-runtime
+          mingw-w64-${{matrix.env}}-python-gobject
+    - uses: actions/checkout@v2
+    - name: meson
+      run: |
+        mkdir build
+        meson --buildtype=plain -Ddocumentation=disabled -Dgst-plugin=enabled -Dintrospection=enabled -Dusb=enabled -Dviewer=enabled . ./build
+    - name: ninja install
+      run: |
+        ninja -C ./build --verbose install
+    - name: meson test
+      run: |
+        meson test -C ./build --no-suite="network"
