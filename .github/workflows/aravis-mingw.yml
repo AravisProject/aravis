@@ -44,7 +44,7 @@ jobs:
           mingw-w64-${{matrix.env}}-zlib
           mingw-w64-${{matrix.env}}-libusb
           mingw-w64-${{matrix.env}}-gobject-introspection-runtime
-          mingw-w64-${{matrix.env}}-python-gobject # for tests
+          mingw-w64-${{matrix.env}}-python-gobject
     - uses: actions/checkout@v2
     - name: meson
       run: |
