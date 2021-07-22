@@ -25,12 +25,66 @@
 #include <stdio.h>
 #include <arvdebugprivate.h>
 
-typedef struct {
+#define ARV_TYPE_TEST arv_test_get_type()
+G_DECLARE_FINAL_TYPE (ArvTest, arv_test, ARV, TEST, GObject)
+
+struct _ArvTest {
+        GObject parent;
+
         GKeyFile *key_file;
 
         ArvXmlSchema *schema_1_1;
         ArvXmlSchema *schema_1_0;
-} ArvTest;
+};
+
+G_DEFINE_TYPE (ArvTest, arv_test, G_TYPE_OBJECT)
+
+static void
+arv_test_finalize (GObject *gobject)
+{
+        ArvTest *self = ARV_TEST (gobject);
+
+	g_clear_object(&self->schema_1_1);
+	g_clear_object(&self->schema_1_0);
+
+        g_clear_pointer (&self->key_file, g_key_file_unref);
+
+        G_OBJECT_CLASS (arv_test_parent_class)->finalize (gobject);
+}
+
+static void
+arv_test_class_init (ArvTestClass *test_class)
+{
+        GObjectClass *object_class = G_OBJECT_CLASS (test_class);
+
+        object_class->finalize = arv_test_finalize;
+}
+
+static void
+arv_test_init (ArvTest *self)
+{
+        g_autoptr (GBytes) bytes = NULL;
+
+        bytes = g_resources_lookup_data("/org/aravis/GenApiSchema_Version_1_0.xsd", G_RESOURCE_LOOKUP_FLAGS_NONE, NULL);
+        self->schema_1_0 = arv_xml_schema_new_from_memory (g_bytes_get_data (bytes, NULL), g_bytes_get_size (bytes));
+        g_clear_pointer (&bytes, g_bytes_unref);
+
+        bytes = g_resources_lookup_data("/org/aravis/GenApiSchema_Version_1_0.xsd", G_RESOURCE_LOOKUP_FLAGS_NONE, NULL);
+        self->schema_1_1 = arv_xml_schema_new_from_memory (g_bytes_get_data (bytes, NULL), g_bytes_get_size (bytes));
+        g_clear_pointer (&bytes, g_bytes_unref);
+
+        bytes = g_resources_lookup_data ("/org/aravis/arv-test.ini", G_RESOURCE_LOOKUP_FLAGS_NONE, NULL);
+        self->key_file = g_key_file_new ();
+        g_key_file_load_from_data (self->key_file, g_bytes_get_data (bytes, NULL), g_bytes_get_size (bytes),
+                                   G_KEY_FILE_NONE, NULL);
+
+}
+
+static ArvTest *
+arv_test_new (void)
+{
+        return g_object_new (ARV_TYPE_TEST, NULL);
+}
 
 typedef struct {
 	int dummy;
@@ -65,9 +119,13 @@ print_result (TestData *data, TestResult *result)
 static char *
 arv_test_get_key_file_string (ArvTest *test, ArvCamera *camera, const char *key)
 {
-        g_autofree char *group = g_strdup_printf ("%s:%s",
-                                                  arv_camera_get_vendor_name (camera, NULL),
-                                                  arv_camera_get_model_name (camera, NULL));
+        g_autofree char *group = NULL;
+
+        g_return_val_if_fail (ARV_IS_TEST (test), NULL);
+
+        group = g_strdup_printf ("%s:%s",
+                                 arv_camera_get_vendor_name (camera, NULL),
+                                 arv_camera_get_model_name (camera, NULL));
 
         return g_key_file_get_string (test->key_file, group, key, NULL);
 }
@@ -75,9 +133,13 @@ arv_test_get_key_file_string (ArvTest *test, ArvCamera *camera, const char *key)
 static gint *
 arv_test_get_key_file_integer_list (ArvTest *test, ArvCamera *camera, const char *key, gsize *size)
 {
-        g_autofree char *group = g_strdup_printf ("%s:%s",
-                                                  arv_camera_get_vendor_name (camera, NULL),
-                                                  arv_camera_get_model_name (camera, NULL));
+        g_autofree char *group = NULL;
+
+        g_return_val_if_fail (ARV_IS_TEST (test), NULL);
+
+        group = g_strdup_printf ("%s:%s",
+                                 arv_camera_get_vendor_name (camera, NULL),
+                                 arv_camera_get_model_name (camera, NULL));
 
         return g_key_file_get_integer_list (test->key_file, group, key, size, NULL);
 }
@@ -89,6 +151,8 @@ arv_test_genicam (ArvTest *test, ArvCamera *camera, TestData *data, TestResult *
         g_autofree char *version;
 	const char *genicam;
 	size_t size;
+
+        g_return_val_if_fail (ARV_IS_TEST (test), FALSE);
 
         version = arv_test_get_key_file_string (test, camera, "Schema");
 
@@ -125,6 +189,8 @@ arv_test_device_properties (ArvTest *test, ArvCamera *camera, TestData *data, Te
         g_autofree gint *sensor_size = NULL;
         gsize size = 0;
 
+        g_return_val_if_fail (ARV_IS_TEST (test), FALSE);
+
         sensor_size = arv_test_get_key_file_integer_list (test, camera, "SensorSize", &size);
 
 	arv_camera_get_sensor_size (camera, &result->sensor_width, &result->sensor_height, &error);
@@ -148,6 +214,8 @@ arv_test_acquisition (ArvTest *test, ArvCamera *camera, TestData *data, TestResu
         g_autoptr (GError) error = NULL;
         g_autoptr (ArvBuffer) buffer = NULL;
 
+        g_return_val_if_fail (ARV_IS_TEST (test), FALSE);
+
         buffer = arv_camera_acquisition (camera, 1000000, &error);
 
         result->acquisition_success = error == NULL && ARV_IS_BUFFER (buffer);
@@ -155,60 +223,13 @@ arv_test_acquisition (ArvTest *test, ArvCamera *camera, TestData *data, TestResu
         return result->acquisition_success;
 }
 
-static char *arv_option_debug_domains = NULL;
-
-static const GOptionEntry arv_option_entries[] =
+static gboolean
+arv_test_run (ArvTest *test)
 {
-	{
-		"debug", 				'd', 0, G_OPTION_ARG_STRING,
-		&arv_option_debug_domains, 		NULL,
-		"{<category>[:<level>][,...]|help}"
-	},
-	{ NULL }
-};
-
-int
-main (int argc, char **argv)
-{
-	GOptionContext *context;
-	GError *error = NULL;
-        ArvTest *test;
-        g_autoptr (GBytes) bytes = NULL;
 	unsigned n_devices, i;
+        gboolean success = TRUE;
 
-	context = g_option_context_new (NULL);
-	g_option_context_add_main_entries (context, arv_option_entries, NULL);
-
-	if (!g_option_context_parse (context, &argc, &argv, &error)) {
-		g_option_context_free (context);
-		g_print ("Option parsing failed: %s\n", error->message);
-		g_error_free (error);
-		return EXIT_FAILURE;
-	}
-
-	g_option_context_free (context);
-	if (!arv_debug_enable (arv_option_debug_domains)) {
-		if (g_strcmp0 (arv_option_debug_domains, "help") != 0)
-			printf ("Invalid debug selection\n");
-		else
-			arv_debug_print_infos ();
-		return EXIT_FAILURE;
-	}
-
-        test = g_new0 (ArvTest, 1);
-
-        bytes = g_resources_lookup_data("/org/aravis/GenApiSchema_Version_1_0.xsd", G_RESOURCE_LOOKUP_FLAGS_NONE, NULL);
-        test->schema_1_0 = arv_xml_schema_new_from_memory (g_bytes_get_data (bytes, NULL), g_bytes_get_size (bytes));
-        g_clear_pointer (&bytes, g_bytes_unref);
-
-        bytes = g_resources_lookup_data("/org/aravis/GenApiSchema_Version_1_0.xsd", G_RESOURCE_LOOKUP_FLAGS_NONE, NULL);
-        test->schema_1_1 = arv_xml_schema_new_from_memory (g_bytes_get_data (bytes, NULL), g_bytes_get_size (bytes));
-        g_clear_pointer (&bytes, g_bytes_unref);
-
-        bytes = g_resources_lookup_data ("/org/aravis/arv-test.ini", G_RESOURCE_LOOKUP_FLAGS_NONE, NULL);
-        test->key_file = g_key_file_new ();
-        g_key_file_load_from_data (test->key_file, g_bytes_get_data (bytes, NULL), g_bytes_get_size (bytes),
-                                   G_KEY_FILE_NONE, NULL);
+        g_return_val_if_fail (ARV_IS_TEST (test), FALSE);
 
 	arv_update_device_list ();
 	n_devices = arv_get_n_devices ();
@@ -232,12 +253,55 @@ main (int argc, char **argv)
 		print_result (data, result);
 	}
 
-	g_object_unref (test->schema_1_1);
-	g_object_unref (test->schema_1_0);
+        return success;
+}
 
-        g_key_file_unref (test->key_file);
+static char *arv_option_debug_domains = NULL;
+
+static const GOptionEntry arv_option_entries[] =
+{
+	{
+		"debug", 				'd', 0, G_OPTION_ARG_STRING,
+		&arv_option_debug_domains, 		NULL,
+		"{<category>[:<level>][,...]|help}"
+	},
+	{ NULL }
+};
+
+int
+main (int argc, char **argv)
+{
+	GOptionContext *context;
+	GError *error = NULL;
+        ArvTest *test = NULL;
+        gboolean success;
+
+	context = g_option_context_new (NULL);
+	g_option_context_add_main_entries (context, arv_option_entries, NULL);
+
+	if (!g_option_context_parse (context, &argc, &argv, &error)) {
+		g_option_context_free (context);
+		g_print ("Option parsing failed: %s\n", error->message);
+		g_error_free (error);
+		return EXIT_FAILURE;
+	}
+
+	g_option_context_free (context);
+	if (!arv_debug_enable (arv_option_debug_domains)) {
+		if (g_strcmp0 (arv_option_debug_domains, "help") != 0)
+			printf ("Invalid debug selection\n");
+		else
+			arv_debug_print_infos ();
+		return EXIT_FAILURE;
+	}
+
+        test = arv_test_new ();
+
+        success = arv_test_run (test);
+
+        g_clear_object (&test);
 
 	arv_shutdown ();
 
-	return EXIT_SUCCESS;
+	return success ? EXIT_SUCCESS : EXIT_FAILURE;
 }
