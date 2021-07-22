@@ -55,4 +55,4 @@ jobs:
         ninja -C ./build --verbose install
     - name: ninja test
       run: |
-        ninja -C ./build --verbose test
+        ninja -C ./build --verbose test --no-suite="network"
