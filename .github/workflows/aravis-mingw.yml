@@ -1,0 +1,47 @@
+# MSYS2 setup with actions is described here:
+# https://github.com/marketplace/actions/setup-msys2
+
+name: Aravis-MinGW
+
+on:
+  push:
+    branches: [ master, action-mingw ]
+  pull_request:
+    branches: [ master, action-mingw ]
+
+jobs:
+  test-mingw:
+    strategy:
+      matrix:
+        include:
+          - { sys: mingw64, env: x86_64 }
+          - { sys: mingw32, env: i686 }
+          - { sys: ucrt64,  env: ucrt-x86_64 }
+          - { sys: clang64, env: clang-x86_64 }
+    steps:
+    - uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{matrix.sys}}
+        release: true
+        path-type: minimal
+        update: true
+        install: >-
+          mingw-w64-${{matrix.env}}-toolchain
+          mingw-w64-${{matrix.env}}-gcc
+          mingw-w64-${{matrix.env}}-gobject-introspection
+          mingw-w64-${{matrix.env}}-meson
+          mingw-w64-${{matrix.env}}-gst-plugins-good
+          mingw-w64-${{matrix.env}}-gst-plugins-bad
+          mingw-w64-${{matrix.env}}-libnotify
+          mingw-w64-${{matrix.env}}-gstreamer
+          mingw-w64-${{matrix.env}}-gtk3
+          mingw-w64-${{matrix.env}}-libxml2
+          mingw-w64-${{matrix.env}}-zlib
+          mingw-w64-${{matrix.env}}-libusb
+          mingw-w64-${{matrix.env}}-gobject-introspection-runtime
+    - name: meson
+      run: |
+        mkdir build; cd build; meson --buildtype=plain -Ddocumentation=disabled -Dgst-plugin=enabled -Dintrospection=enabled -Dusb=enabled -Dviewer=enabled
+    - name: ninja
+      run: |
+        ninja -C build install
