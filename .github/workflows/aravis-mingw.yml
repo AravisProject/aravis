@@ -5,9 +5,10 @@ name: Aravis-MinGW
 
 on:
   push:
-    branches: [ master, action-mingw ]
+    branches: [ master ]
   pull_request:
-    branches: [ master, action-mingw ]
+    branches: [ master ]
+  workflow_dispatch:
 
 jobs:
   test-mingw:
