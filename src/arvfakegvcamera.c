@@ -42,7 +42,7 @@ static char *arv_option_debug_domains = NULL;
 static const GOptionEntry arv_option_entries[] =
 {
 	{ "interface",		'i', 0, G_OPTION_ARG_STRING,
-		&arv_option_interface_name,	"Listening interface name", "interface_id"},
+		&arv_option_interface_name,	"Listening interface name or address", "interface"},
 	{ "serial",             's', 0, G_OPTION_ARG_STRING,
 	        &arv_option_serial_number, 	"Fake camera serial number", "serial_nbr"},
 	{ "genicam",            'g', 0, G_OPTION_ARG_STRING,
@@ -66,6 +66,7 @@ description_content[] =
 "Examples:\n"
 "\n"
 "arv-fake-gv-camera-" ARAVIS_API_VERSION " -i eth0\n"
+"arv-fake-gv-camera-" ARAVIS_API_VERSION " -i 127.0.0.1\n"
 "arv-fake-gv-camera-" ARAVIS_API_VERSION " -s GV02 -d all\n";
 
 int

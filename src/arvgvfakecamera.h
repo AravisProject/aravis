@@ -32,7 +32,7 @@
 G_BEGIN_DECLS
 
 #define ARV_GV_FAKE_CAMERA_DEFAULT_SERIAL_NUMBER	"GV01"
-#define ARV_GV_FAKE_CAMERA_DEFAULT_INTERFACE		"lo"
+#define ARV_GV_FAKE_CAMERA_DEFAULT_INTERFACE		"127.0.0.1"
 
 #define ARV_TYPE_GV_FAKE_CAMERA (arv_gv_fake_camera_get_type ())
 G_DECLARE_FINAL_TYPE (ArvGvFakeCamera, arv_gv_fake_camera, ARV, GV_FAKE_CAMERA, GObject)
