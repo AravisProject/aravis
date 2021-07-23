@@ -1,4 +1,4 @@
-name: ci
+name: Aravis-CI
 
 on:
   push:
@@ -12,17 +12,50 @@ jobs:
   linux:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-python@v1
-      with:
-        python-version: '3.x'
-    - run: pip install meson ninja
-    - run: meson setup builddir/
+    - uses: actions/checkout@v2
+    - name: Install dependencies
+      run: |
+        pip install meson ninja
+        sudo apt update
+        sudo apt install python3 libusb-1.0-0-dev gobject-introspection valgrind libgstreamer-plugins-bad1.0-dev libnotify-dev libgtk-3-dev libgirepository1.0-dev python3-gi
+    - name: Build
+      run: |
+        meson --buildtype=plain -Ddocumentation=disabled -Dgst-plugin=enabled -Dintrospection=enabled -Dusb=enabled -Dviewer=enabled . ./build
+        ninja -C ./build
       env:
         CC: gcc
-    - run: meson test -C builddir/ -v
-    - uses: actions/upload-artifact@v1
+    - name: Tests
+      run: meson test -C build/ -v
+    - name: Valgrind
+      run: cd build && ../tests/valgrind-memcheck
+    - uses: actions/upload-artifact@v2
       if: failure()
       with:
         name: Linux_Meson_Testlog
-        path: builddir/meson-logs/testlog.txt
+        path: build/meson-logs/testlog.txt
+
+  macos:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+    - name: Install dependencies
+      run: |
+        pip install meson ninja
+        brew update
+        brew install gcc gettext intltool gtk-doc libxml2 libusb gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad libnotify gnome-icon-theme gobject-introspection
+    - name: Build
+      run: |
+        meson --buildtype=plain -Ddocumentation=disabled -Dgst-plugin=enabled -Dintrospection=disabled -Dusb=enabled -Dviewer=enabled . ./build
+        ninja -C ./build
+      env:
+        CC: gcc
+    - name: Tests
+      run: meson test -C build/ -v --no-suite="network"
+    - uses: actions/upload-artifact@v2
+      if: failure()
+      with:
+        name: MacOS_Meson_Testlog
+        path: build/meson-logs/testlog.txt
