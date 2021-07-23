@@ -478,6 +478,8 @@ _create_and_bind_input_socket (GSocket **socket_out, const char *socket_name,
 static gboolean
 arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 {
+        g_autoptr (GSocketAddress) interface_address = NULL;
+        GInetAddress *interface_inet_address = NULL;
 	GList *ifaces;
 	GList *iface_iter;
 	gboolean interface_found = FALSE;
@@ -491,18 +493,27 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 		return FALSE;
 	}
 
+        interface_address = g_inet_socket_address_new_from_string (gv_fake_camera->priv->interface_name, 0);
+        if (G_IS_SOCKET_ADDRESS (interface_address))
+                interface_inet_address =
+                        g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (interface_address));
+
 	for (iface_iter = ifaces; iface_iter != NULL && !interface_found; iface_iter = iface_iter->next) {
+                GSocketAddress *socket_address;
+                g_autoptr (GInetAddress) gvcp_inet_address = NULL;
+
+                socket_address = g_socket_address_new_from_native (arv_network_interface_get_addr(iface_iter->data),
+                                                                   sizeof (struct sockaddr));
+                gvcp_inet_address = g_object_ref (g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address)));
+                g_clear_object (&socket_address);
+
 		if (g_strcmp0 (gv_fake_camera->priv->interface_name,
-			       arv_network_interface_get_name (iface_iter->data)) == 0) {
-			GSocketAddress *socket_address;
+			       arv_network_interface_get_name (iface_iter->data)) == 0 ||
+                    (interface_inet_address != NULL &&
+                     g_inet_address_equal (gvcp_inet_address, interface_inet_address))) {
 			GInetAddress *inet_address;
-			GInetAddress *gvcp_inet_address;
 			unsigned int n_socket_fds;
 			unsigned int i;
-			socket_address = g_socket_address_new_from_native (arv_network_interface_get_addr(iface_iter->data),
-									   sizeof (struct sockaddr));
-			gvcp_inet_address = g_object_ref (g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address)));
-			g_clear_object (&socket_address);
 			arv_fake_camera_set_inet_address (gv_fake_camera->priv->camera, gvcp_inet_address);
 
 			success = success && _create_and_bind_input_socket (&gv_fake_camera->priv->gvsp_socket,
@@ -517,6 +528,7 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 					(&gv_fake_camera->priv->input_sockets[ARV_GV_FAKE_CAMERA_INPUT_SOCKET_GLOBAL_DISCOVERY],
 					 "Global discovery", inet_address, ARV_GVCP_PORT, TRUE, FALSE);
 			g_clear_object (&inet_address);
+
 			socket_address = g_socket_address_new_from_native (arv_network_interface_get_broadaddr(iface_iter->data),
 									   sizeof (struct sockaddr));
 			inet_address = g_object_ref (g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address)));
@@ -526,8 +538,6 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 					(&gv_fake_camera->priv->input_sockets[ARV_GV_FAKE_CAMERA_INPUT_SOCKET_SUBNET_DISCOVERY],
 					 "Subnet discovery", inet_address, ARV_GVCP_PORT, FALSE, FALSE);
 			g_clear_object (&inet_address);
-
-			g_clear_object (&gvcp_inet_address);
 
 			n_socket_fds = 0;
 			if (success) {
@@ -601,7 +611,7 @@ arv_gv_fake_camera_stop (ArvGvFakeCamera *gv_fake_camera)
 
 /**
  * arv_gv_fake_camera_new_full:
- * @interface_name: (nullable): listening network interface, default is lo
+ * @interface_name: (nullable): listening network interface, by name or IP address, default is 127.0.0.1
  * @serial_number: (nullable): fake device serial number, default is GV01
  * @genicam_filename: (nullable): path to alternative genicam data
  *
