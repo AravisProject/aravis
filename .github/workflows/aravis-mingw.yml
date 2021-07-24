@@ -54,6 +54,8 @@ jobs:
     - name: ninja install
       run: |
         ninja -C ./build --verbose install
+    - name: fakegv
+      run: ARV_DEBUG=all ./build/tests/fakegv
     - name: meson test
       run: |
         meson test -C ./build
