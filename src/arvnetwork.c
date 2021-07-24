@@ -449,3 +449,28 @@ arv_socket_set_recv_buffer_size (int socket_fd, gint buffer_size)
 	return result == 0;
 }
 
+
+ArvNetworkInterface*
+arv_network_get_interface_by_name (const char* name){
+	GList *ifaces;
+	GList *iface_iter;
+	ArvNetworkInterface *ret = NULL;
+
+	ifaces = arv_enumerate_network_interfaces ();
+
+	for (iface_iter = ifaces; iface_iter != NULL; iface_iter = iface_iter->next) {
+		if (g_strcmp0 (name, arv_network_interface_get_name (iface_iter->data)) == 0) 
+			break;
+	}
+
+	if(iface_iter != NULL){
+		/* remove the interface node from the list (deleted below) but don't delete its data */
+		ret = iface_iter->data;
+		ifaces = g_list_remove_link(ifaces, iface_iter);
+		g_list_free(iface_iter); 
+	}
+
+	g_list_free_full (ifaces, (GDestroyNotify) arv_network_interface_free);
+
+	return ret;
+}
