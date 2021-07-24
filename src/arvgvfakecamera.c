@@ -499,8 +499,6 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 		return FALSE;
 	}
 
-	g_critical("okay, the interface is %s",arv_network_interface_get_name(iface));
-
 	socket_address = g_socket_address_new_from_native (arv_network_interface_get_addr(iface),
 								sizeof (struct sockaddr));
 	gvcp_inet_address = g_object_ref (g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address)));
