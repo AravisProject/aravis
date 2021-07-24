@@ -474,3 +474,20 @@ arv_network_get_interface_by_name (const char* name){
 
 	return ret;
 }
+
+ArvNetworkInterface*
+arv_network_get_fake_ipv4_loopback(void){
+	ArvNetworkInterface* ret = (ArvNetworkInterface*) g_malloc0(sizeof(ArvNetworkInterface));
+	ret->name = g_strdup("<fake IPv4 localhost>");
+	ret->addr = g_malloc0(sizeof(struct sockaddr_in));
+	ret->addr->sa_family = AF_INET;
+	((struct sockaddr_in*)ret->addr)->sin_addr.s_addr = htonl(0x7f000001); // INADDR_LOOPBACK
+	ret->netmask = g_malloc0(sizeof(struct sockaddr_in));
+	ret->netmask->sa_family = AF_INET;
+	((struct sockaddr_in*)ret->netmask)->sin_addr.s_addr = htonl(0xff000000);
+	ret->broadaddr = g_malloc0(sizeof(struct sockaddr_in));
+	ret->broadaddr->sa_family = AF_INET;
+	((struct sockaddr_in*)ret->broadaddr)->sin_addr.s_addr = htonl(0x7fffffff);
+	return ret;
+}
+
