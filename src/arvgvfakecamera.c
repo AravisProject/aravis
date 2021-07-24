@@ -490,8 +490,8 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 	iface = arv_network_get_interface_by_address(gv_fake_camera->priv->interface_name);
 	if (iface == NULL) iface = arv_network_get_interface_by_name(gv_fake_camera->priv->interface_name);
 	#ifdef G_OS_WIN32
-		// fake "lo" interface in windows
-		if(iface == NULL && g_strcmp0 (gv_fake_camera->priv->interface_name,"lo") == 0)
+		// fake the default loopback interface in windows, in case not found
+		if(iface == NULL && g_strcmp0 (gv_fake_camera->priv->interface_name,ARV_GV_FAKE_CAMERA_DEFAULT_INTERFACE) == 0)
 			iface = arv_network_get_fake_ipv4_loopback();
 	#endif
 	if (iface == NULL) {
