@@ -487,14 +487,15 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 
 	g_return_val_if_fail (ARV_IS_GV_FAKE_CAMERA (gv_fake_camera), FALSE);
 
-	iface = arv_network_get_interface_by_name(gv_fake_camera->priv->interface_name);
+	iface = arv_network_get_interface_by_address(gv_fake_camera->priv->interface_name);
+	if (iface == NULL) iface = arv_network_get_interface_by_name(gv_fake_camera->priv->interface_name);
 	#ifdef G_OS_WIN32
 		// fake "lo" interface in windows
 		if(iface == NULL && g_strcmp0 (gv_fake_camera->priv->interface_name,"lo") == 0)
 			iface = arv_network_get_fake_ipv4_loopback();
 	#endif
 	if (iface == NULL) {
-		arv_warning_device ("[GvFakeCamera::start] No network interface named '%s' found.",gv_fake_camera->priv->interface_name);
+		arv_warning_device ("[GvFakeCamera::start] No network interface with address or name '%s' found.",gv_fake_camera->priv->interface_name);
 		return FALSE;
 	}
 
