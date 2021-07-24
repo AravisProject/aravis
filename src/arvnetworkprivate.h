@@ -86,6 +86,7 @@ typedef struct _ArvNetworkInterface ArvNetworkInterface;
 
 GList *			arv_enumerate_network_interfaces	(void);
 ArvNetworkInterface* arv_network_get_interface_by_name (const char* name);
+ArvNetworkInterface* arv_network_get_interface_by_address (const char* addr);
 ArvNetworkInterface* arv_network_get_fake_ipv4_loopback(void);
 
 void 			arv_network_interface_free		(ArvNetworkInterface *a);

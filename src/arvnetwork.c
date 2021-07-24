@@ -476,6 +476,45 @@ arv_network_get_interface_by_name (const char* name){
 }
 
 ArvNetworkInterface*
+arv_network_get_interface_by_address (const char* addr){
+	GInetSocketAddress *iaddr_s = NULL;
+	GInetAddress *iaddr = NULL;
+	GList *ifaces;
+	GList *iface_iter;
+	ArvNetworkInterface *ret = NULL;
+
+	ifaces = arv_enumerate_network_interfaces ();
+
+	if (!g_hostname_is_ip_address(addr)) return NULL;
+	iaddr_s = G_INET_SOCKET_ADDRESS (g_inet_socket_address_new_from_string (addr, 0));
+	if (iaddr_s == NULL) return NULL;
+	iaddr = g_inet_socket_address_get_address(iaddr_s);
+
+	for (iface_iter = ifaces; iface_iter != NULL; iface_iter = iface_iter->next) {
+		GSocketAddress *iface_sock_addr;
+		GInetAddress *iface_inet_addr;
+		iface_sock_addr = g_socket_address_new_from_native (arv_network_interface_get_addr(iface_iter->data), sizeof(struct sockaddr));
+		iface_inet_addr = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (iface_sock_addr));
+		if(g_inet_address_equal (iaddr,iface_inet_addr)){
+			g_clear_object(&iface_sock_addr);
+			break;
+		}
+		g_clear_object(&iface_sock_addr);
+	}
+
+	if(iface_iter != NULL){
+		ret = iface_iter->data;
+		ifaces = g_list_remove_link(ifaces, iface_iter);
+		g_list_free(iface_iter); 
+	}
+
+	g_clear_object(&iaddr_s);
+	g_list_free_full (ifaces, (GDestroyNotify) arv_network_interface_free);
+
+	return ret;
+}
+
+ArvNetworkInterface*
 arv_network_get_fake_ipv4_loopback(void){
 	ArvNetworkInterface* ret = (ArvNetworkInterface*) g_malloc0(sizeof(ArvNetworkInterface));
 	ret->name = g_strdup("<fake IPv4 localhost>");

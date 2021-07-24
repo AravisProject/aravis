@@ -12,12 +12,22 @@ int
 main (int argc, char **argv){
 	GList *ifaces;
 	GList *iface_iter;
+	ArvNetworkInterface* lo;
 
 	ifaces = arv_enumerate_network_interfaces ();
 	if (!ifaces) {
 		fprintf (stderr,"No network interfaces found (or enumeration failed).");
 		return 1;
 	}
+
+	lo=arv_network_get_interface_by_address("127.0.0.1");
+	if(lo) {
+		printf("(loopback 127.0.0.1 interface is '%s'.)\r\n",arv_network_interface_get_name(lo));
+		arv_network_interface_free(lo);
+	}
+	else
+		printf("(loopback 127.0.0.1 interface not found.)\r\n");
+
 	printf(_LINEFMT,"proto","address","mask","broadcast","interface");
 
 	for (iface_iter=ifaces; iface_iter!=NULL; iface_iter=iface_iter->next){
