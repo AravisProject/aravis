@@ -530,3 +530,19 @@ arv_network_get_fake_ipv4_loopback(void){
 	return ret;
 }
 
+gboolean arv_network_interface_is_loopback(ArvNetworkInterface *a){
+	if(!a) return FALSE;
+	if(a->addr->sa_family==AF_INET) return (ntohl(((struct sockaddr_in*)a->addr)->sin_addr.s_addr)>>24)==0x7f;
+	if(a->addr->sa_family==AF_INET6){
+		/* 16 unsigned chars in network byte order (big-endian),
+		loopback is ::1, i.e. zeros and 1 at the end */
+		unsigned char* i6=(unsigned char*)(&(((struct sockaddr_in6*)a->addr)->sin6_addr));
+		for(unsigned pos=0; pos<16; pos++){
+			if(i6[pos]!=0) return FALSE;
+		}
+		if(i6[16]!=1) return FALSE;
+		return TRUE;
+	}
+	return FALSE;
+}
+
