@@ -72,14 +72,14 @@ Python bindings and camera simulator are not functional yet.
 [MSYS2](https://msys2.org) provides native [Aravis packages](https://packages.msys2.org/base/mingw-w64-aravis).
 The package includes the DLL, headers and utilities (including the viewer).
 
-To built Aravis by yourself, refer to
+To built Aravis by yourself, install MSYS2 and enter the mingw64 shell. Refer to
 [Aravis' PKGBUILD](https://github.com/msys2/MINGW-packages/blob/master/mingw-w64-aravis/PKGBUILD)
 for list of dependencies (such as `mingw-w64-x86_64-libxml2` and so on) which must be installed prior
-to building. The build process itself is the same as on other platforms (meson/ninja).
+to building via `pacman -S ...`. The build process itself is the same as on other platforms (meson/ninja).
 
 ##### Cross-compilation for Windows
 
-Aravis for Windows can be also cross-compiled on Linux (and used in Wine) using [crossroad](https://pypi.org/project/crossroad/), provided that cross-compiler (`sudo apt install gcc-mingw-w64-x86-64` on Debian/Ubuntu) and native build tools (`sudo apt install meson ninja-build`) are installed:
+Aravis for Windows can be also cross-compiled on Linux (and used in Wine) using [crossroad](https://pypi.org/project/crossroad/), provided that cross-compiler and native build tools (`sudo apt install gcc-mingw-w64-x86-64 meson ninja=build` on Debian/Ubuntu) are installed:
 
 ```
 # note: use the git version, not the one from pypi
@@ -88,10 +88,13 @@ pip3 install --user git+git://git.tuxfamily.org/gitroot/crossroad/crossroad.git
 crossroad w64 aravis
 # install packages required for compilation; crossroad adds the mingw-w64_x86_64- prefix automatically
 crossroad install libnotify gstreamer gst-plugins-good gst-plugins-bad gst-plugins-bad gobject-introspection libusb gtk3 libxml2 zlib
-# configure the build, crossroad adjusts meson for cross-compilation
+# clone aravis sources
+git clone https://github.com/AravisProject/aravis
+cd aravis
+# configure, crossroad adjusts meson for cross-compilation; build directory is created
 crossroad meson build
 # compile and install
-ninja -B build install
+ninja -C build install
 ```
 
 ### Utilities
