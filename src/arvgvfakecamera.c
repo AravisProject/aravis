@@ -483,7 +483,6 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 	GList *ifaces;
 	GList *iface_iter;
 	gboolean interface_found = FALSE;
-	gboolean success = TRUE;
 
 	g_return_val_if_fail (ARV_IS_GV_FAKE_CAMERA (gv_fake_camera), FALSE);
 
@@ -516,15 +515,15 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 			unsigned int i;
 			arv_fake_camera_set_inet_address (gv_fake_camera->priv->camera, gvcp_inet_address);
 
-			success = success && _create_and_bind_input_socket (&gv_fake_camera->priv->gvsp_socket,
+			_create_and_bind_input_socket (&gv_fake_camera->priv->gvsp_socket,
 									    "GVSP", gvcp_inet_address, 0, FALSE, TRUE);
-			success = success && _create_and_bind_input_socket
+			_create_and_bind_input_socket
 				(&gv_fake_camera->priv->input_sockets[ARV_GV_FAKE_CAMERA_INPUT_SOCKET_GVCP],
 				 "GVCP", gvcp_inet_address, ARV_GVCP_PORT, FALSE, FALSE);
 
 			inet_address = g_inet_address_new_from_string ("255.255.255.255");
 			if (!g_inet_address_equal (gvcp_inet_address, inet_address))
-				success = success && _create_and_bind_input_socket
+				_create_and_bind_input_socket
 					(&gv_fake_camera->priv->input_sockets[ARV_GV_FAKE_CAMERA_INPUT_SOCKET_GLOBAL_DISCOVERY],
 					 "Global discovery", inet_address, ARV_GVCP_PORT, TRUE, FALSE);
 			g_clear_object (&inet_address);
@@ -534,27 +533,24 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 			inet_address = g_object_ref (g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address)));
 			g_clear_object (&socket_address);
 			if (!g_inet_address_equal (gvcp_inet_address, inet_address))
-				success = success && _create_and_bind_input_socket
+				_create_and_bind_input_socket
 					(&gv_fake_camera->priv->input_sockets[ARV_GV_FAKE_CAMERA_INPUT_SOCKET_SUBNET_DISCOVERY],
 					 "Subnet discovery", inet_address, ARV_GVCP_PORT, FALSE, FALSE);
 			g_clear_object (&inet_address);
 
 			n_socket_fds = 0;
-			if (success) {
-				for (i = 0; i < ARV_GV_FAKE_CAMERA_N_INPUT_SOCKETS; i++) {
-					GSocket *socket = gv_fake_camera->priv->input_sockets[i];
+			for (i = 0; i < ARV_GV_FAKE_CAMERA_N_INPUT_SOCKETS; i++) {
+				GSocket *socket = gv_fake_camera->priv->input_sockets[i];
 
-					if (G_IS_SOCKET (socket)) {
-						gv_fake_camera->priv->socket_fds[n_socket_fds].fd = g_socket_get_fd (socket);
-						gv_fake_camera->priv->socket_fds[n_socket_fds].events = G_IO_IN;
-						gv_fake_camera->priv->socket_fds[n_socket_fds].revents = 0;
+				if (G_IS_SOCKET (socket)) {
+					gv_fake_camera->priv->socket_fds[n_socket_fds].fd = g_socket_get_fd (socket);
+					gv_fake_camera->priv->socket_fds[n_socket_fds].events = G_IO_IN;
+					gv_fake_camera->priv->socket_fds[n_socket_fds].revents = 0;
 
-						n_socket_fds++;
-					}
+					n_socket_fds++;
 				}
-
-				arv_info_device ("Listening to %d sockets", n_socket_fds);
 			}
+			arv_info_device ("Listening to %d sockets", n_socket_fds);
 
 			gv_fake_camera->priv->n_socket_fds = n_socket_fds;
 
@@ -565,24 +561,10 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 	}
 	g_list_free_full (ifaces, (GDestroyNotify) arv_network_interface_free);
 
-	if (!success) {
-		unsigned int i;
-
-		for (i = 0; i < ARV_GV_FAKE_CAMERA_N_INPUT_SOCKETS; i++)
-			g_clear_object (&gv_fake_camera->priv->input_sockets[i]);
-		g_clear_object (&gv_fake_camera->priv->gvsp_socket);
-
-		return FALSE;
-	}
-
-	if (!interface_found) {
-		return FALSE;
-	}
-
 	gv_fake_camera->priv->cancel = FALSE;
 	gv_fake_camera->priv->thread = g_thread_new ("arv_fake_gv_fake_camera", _thread, gv_fake_camera);
 
-	return TRUE;
+	return interface_found;
 }
 
 static void
@@ -592,12 +574,12 @@ arv_gv_fake_camera_stop (ArvGvFakeCamera *gv_fake_camera)
 
 	g_return_if_fail (ARV_IS_GV_FAKE_CAMERA (gv_fake_camera));
 
-	if (gv_fake_camera->priv->thread == NULL)
-		return;
+	if (gv_fake_camera->priv->thread != NULL) {
 
-	g_atomic_int_set (&gv_fake_camera->priv->cancel, TRUE);
-	g_thread_join (gv_fake_camera->priv->thread);
-	gv_fake_camera->priv->thread = NULL;
+		g_atomic_int_set (&gv_fake_camera->priv->cancel, TRUE);
+		g_thread_join (gv_fake_camera->priv->thread);
+		gv_fake_camera->priv->thread = NULL;
+	}
 
 	arv_gpollfd_finish_all (gv_fake_camera->priv->socket_fds, gv_fake_camera->priv->n_socket_fds);
 
