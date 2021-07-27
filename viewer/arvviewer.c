@@ -1210,8 +1210,8 @@ start_camera (ArvViewer *viewer, const char *camera_id)
 	}
 	g_free (pixel_formats);
 	g_free (pixel_format_strings);
-	gtk_widget_set_sensitive (viewer->pixel_format_combo, n_valid_formats > 1);
-	gtk_widget_set_sensitive (viewer->video_mode_button, n_valid_formats > 1);
+	gtk_widget_set_sensitive (viewer->pixel_format_combo, n_valid_formats > 0);
+	gtk_widget_set_sensitive (viewer->video_mode_button, n_valid_formats > 0);
 
 	gtk_combo_box_set_active (GTK_COMBO_BOX (viewer->pixel_format_combo), current_format >= 0 ? current_format : 0);
 
