@@ -5,7 +5,8 @@
 
 <p align="center"><strong>Your industrial vision library</strong></p>
 
-[![Build Status](https://travis-ci.org/AravisProject/aravis.svg?branch=master)](https://travis-ci.org/AravisProject/aravis)
+[![Aravis-CI](https://github.com/AravisProject/aravis/actions/workflows/aravis-ci.yml/badge.svg)](https://github.com/AravisProject/aravis/actions/workflows/aravis-ci.yml)
+[![Aravis-MinGW](https://github.com/AravisProject/aravis/actions/workflows/aravis-mingw.yml/badge.svg)](https://github.com/AravisProject/aravis/actions/workflows/aravis-mingw.yml)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/eaa741156c2041f19b35c336aedf426c)](https://www.codacy.com/gh/AravisProject/aravis/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=AravisProject/aravis&amp;utm_campaign=Badge_Grade)
 
 ### What is Aravis ?
