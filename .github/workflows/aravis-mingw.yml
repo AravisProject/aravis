@@ -56,4 +56,4 @@ jobs:
         ninja -C ./build --verbose install
     - name: meson test
       run: |
-        meson test -C ./build --no-suite="network"
+        meson test -C ./build

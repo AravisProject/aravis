@@ -53,7 +53,7 @@ jobs:
       env:
         CC: gcc
     - name: Tests
-      run: meson test -C build/ -v --no-suite="network"
+      run: meson test -C build/ -v
     - uses: actions/upload-artifact@v2
       if: failure()
       with:
