@@ -178,6 +178,9 @@ arv_debug_with_level (ArvDebugCategory category, ArvDebugLevel level, const char
                 }
 
                 g_strfreev (lines);
+                #ifdef G_OS_WIN32
+                         fflush(stderr);
+                #endif
         }
 }
 
