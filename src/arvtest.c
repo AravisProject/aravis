@@ -407,11 +407,10 @@ arv_test_multiple_acquisition (ArvTest *test, ArvTestCamera *test_camera)
         if (error == NULL)
                 arv_camera_start_acquisition (test_camera->camera, &error);
         if (error == NULL) {
-                sleep (2);
                 for (i = 0 ; i < 10; i++) {
                         ArvBuffer *buffer;
 
-                        buffer = arv_stream_timeout_pop_buffer (stream, 1000000);
+                        buffer = arv_stream_timeout_pop_buffer (stream, 500000);
                         if (buffer == NULL)
                                 success = FALSE;
                         else {
