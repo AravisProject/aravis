@@ -365,7 +365,11 @@ arv_test_acquisition (ArvTest *test, ArvTestCamera *test_camera)
         buffer = arv_camera_acquisition (test_camera->camera, 1000000, &error);
 
         arv_test_camera_add_result (test_camera, "CameraAcquisition",
-                                    error == NULL ? ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
+                                    ARV_IS_BUFFER (buffer) &&
+                                    arv_buffer_get_status (buffer) == ARV_BUFFER_STATUS_SUCCESS &&
+                                    error == NULL ?
+                                    ARV_TEST_STATUS_SUCCESS :
+                                    ARV_TEST_STATUS_FAILURE,
                                     NULL);
 }
 
