@@ -44,6 +44,7 @@
 
 typedef struct {
 	GSocketAddress *interface_address;
+	GSocketAddress *broadcast_address;
 	GSocket *socket;
 } ArvGvDiscoverSocket;
 
@@ -84,20 +85,30 @@ arv_gv_discover_socket_list_new (void)
 	for (iface_iter = ifaces; iface_iter != NULL; iface_iter = iface_iter->next) {
 		ArvGvDiscoverSocket *discover_socket = g_new0 (ArvGvDiscoverSocket, 1);
 		GSocketAddress *socket_address;
+		GSocketAddress *socket_broadcast;
 		GInetAddress *inet_address;
+		GInetAddress *inet_broadcast;
 		char *inet_address_string;
+		char *inet_broadcast_string;
 		GError *error = NULL;
 		gint buffer_size = ARV_GV_INTERFACE_DISCOVERY_SOCKET_BUFFER_SIZE;
 		socket_address = g_socket_address_new_from_native (arv_network_interface_get_addr(iface_iter->data),
 									sizeof (struct sockaddr));
+		socket_broadcast = g_socket_address_new_from_native (arv_network_interface_get_broadaddr(iface_iter->data),
+									sizeof (struct sockaddr));
 		inet_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address));
+		inet_broadcast = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_broadcast));
 		inet_address_string = g_inet_address_to_string (inet_address);
-		arv_info_interface ("[GvDiscoverSocket::new] Add interface %s", inet_address_string);
+		inet_broadcast_string = g_inet_address_to_string (inet_broadcast);
+		arv_info_interface ("[GvDiscoverSocket::new] Add interface %s (%s)", inet_address_string, inet_broadcast_string);
 		g_free (inet_address_string);
+		g_free (inet_broadcast_string);
 		discover_socket->interface_address = g_inet_socket_address_new (inet_address, 0);
+		discover_socket->broadcast_address = g_inet_socket_address_new (inet_broadcast, ARV_GVCP_PORT);
 		g_object_unref (socket_address);
+		g_object_unref (socket_broadcast);
 
-		discover_socket->socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
+		discover_socket->socket = g_socket_new (g_inet_address_get_family (inet_address),
 							G_SOCKET_TYPE_DATAGRAM,
 							G_SOCKET_PROTOCOL_UDP, NULL);
 		arv_socket_set_recv_buffer_size (g_socket_get_fd (discover_socket->socket), buffer_size);
@@ -135,6 +146,7 @@ arv_gv_discover_socket_list_free (ArvGvDiscoverSocketList *socket_list)
 		ArvGvDiscoverSocket *discover_socket = iter->data;
 
 		g_object_unref (discover_socket->interface_address);
+		g_object_unref (discover_socket->broadcast_address);
 		g_object_unref (discover_socket->socket);
 		g_free (discover_socket);
 	}
@@ -151,17 +163,11 @@ arv_gv_discover_socket_list_free (ArvGvDiscoverSocketList *socket_list)
 static void
 arv_gv_discover_socket_list_send_discover_packet (ArvGvDiscoverSocketList *socket_list)
 {
-	GInetAddress *broadcast_address;
-	GSocketAddress *broadcast_socket_address;
 	ArvGvcpPacket *packet;
 	GSList *iter;
 	size_t size;
 
 	packet = arv_gvcp_packet_new_discovery_cmd (&size);
-
-	broadcast_address = g_inet_address_new_from_string ("255.255.255.255");
-	broadcast_socket_address = g_inet_socket_address_new (broadcast_address, ARV_GVCP_PORT);
-	g_object_unref (broadcast_address);
 
 	for (iter = socket_list->sockets; iter != NULL; iter = iter->next) {
 		ArvGvDiscoverSocket *discover_socket = iter->data;
@@ -169,7 +175,7 @@ arv_gv_discover_socket_list_send_discover_packet (ArvGvDiscoverSocketList *socke
 
 		arv_gv_discover_socket_set_broadcast (discover_socket, TRUE);
 		g_socket_send_to (discover_socket->socket,
-				  broadcast_socket_address,
+				  discover_socket->broadcast_address,
 				  (const char *) packet, size,
 				  NULL, &error);
 		if (error != NULL) {
@@ -179,7 +185,6 @@ arv_gv_discover_socket_list_send_discover_packet (ArvGvDiscoverSocketList *socke
 		arv_gv_discover_socket_set_broadcast (discover_socket, FALSE);
 	}
 
-	g_object_unref (broadcast_socket_address);
 
 	arv_gvcp_packet_free (packet);
 }
