@@ -85,12 +85,16 @@ struct iphdr
 typedef struct _ArvNetworkInterface ArvNetworkInterface;
 
 GList *			arv_enumerate_network_interfaces	(void);
+ArvNetworkInterface* arv_network_get_interface_by_name (const char* name);
+ArvNetworkInterface* arv_network_get_interface_by_address (const char* addr);
+ArvNetworkInterface* arv_network_get_fake_ipv4_loopback(void);
 
 void 			arv_network_interface_free		(ArvNetworkInterface *a);
 struct sockaddr *	arv_network_interface_get_addr		(ArvNetworkInterface *a);
 struct sockaddr *	arv_network_interface_get_netmask	(ArvNetworkInterface *a);
 struct sockaddr *	arv_network_interface_get_broadaddr	(ArvNetworkInterface *a);
 const char *		arv_network_interface_get_name		(ArvNetworkInterface *a);
+gboolean          arv_network_interface_is_loopback   (ArvNetworkInterface *a);
 
 gboolean 		arv_socket_set_recv_buffer_size		(int socket_fd, gint buffer_size);
 
