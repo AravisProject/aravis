@@ -86,8 +86,7 @@ viewer_option = get_option ('viewer')
 viewer_deps = aravis_dependencies + [dependency ('gtk+-3.0', version: '>=3.12', required: viewer_option),
 				     dependency ('gstreamer-base-1.0', required: viewer_option),
 				     dependency ('gstreamer-app-1.0', required: viewer_option),
-				     dependency ('gstreamer-video-1.0', required: viewer_option),
-				     dependency ('libnotify', required: viewer_option)]
+				     dependency ('gstreamer-video-1.0', required: viewer_option)]
 subdir ('po', if_found: viewer_deps)
 subdir ('viewer', if_found: viewer_deps)
 

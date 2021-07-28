@@ -27,7 +27,6 @@
 #include <gst/gst.h>
 #include <arv.h>
 #include <stdlib.h>
-#include <libnotify/notify.h>
 #include <libintl.h>
 
 #if GST_GL_HAVE_WINDOW_X11 && defined (GDK_WINDOWING_X11)
@@ -168,13 +167,9 @@ main (int argc, char **argv)
 				register_cache_policy,
 				range_check_policy);
 
-	notify_init ("Aravis Viewer");
-
 	status = g_application_run (G_APPLICATION (viewer), argc, argv);
 
 	g_object_unref (viewer);
-
-	notify_uninit ();
 
 	return status;
 }
