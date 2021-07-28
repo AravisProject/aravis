@@ -330,7 +330,7 @@ arv_test_device_properties (ArvTest *test, ArvTestCamera *test_camera)
         sensor_size = arv_test_camera_get_key_file_integer_list (test_camera, test, "SensorSize", &size);
 
 	arv_camera_get_sensor_size (test_camera->camera, &sensor_width, &sensor_height, &error);
-        arv_test_camera_add_result (test_camera, "Sensor size readout",
+        arv_test_camera_add_result (test_camera, "SensorSizeReadout",
                                     error == NULL ? ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
                                     error != NULL ? error->message : NULL);
 
@@ -351,7 +351,7 @@ arv_test_device_properties (ArvTest *test, ArvTestCamera *test_camera)
                 status = ARV_TEST_STATUS_IGNORED;
         }
 
-        arv_test_camera_add_result (test_camera, "Sensor size check", status, comment);
+        arv_test_camera_add_result (test_camera, "SensorSizeCheck", status, comment);
 }
 
 static void
