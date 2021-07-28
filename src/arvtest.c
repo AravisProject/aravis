@@ -109,6 +109,7 @@ static void
 arv_test_camera_free (ArvTestCamera *camera)
 {
         if (camera != NULL) {
+                g_slist_free_full (camera->results, (GDestroyNotify) arv_test_result_free);
                 g_free (camera->id);
                 g_object_unref (camera->camera);
                 g_free (camera->vendor_model);
