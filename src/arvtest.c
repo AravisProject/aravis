@@ -274,7 +274,9 @@ static void
 arv_test_genicam (ArvTest *test, ArvTestCamera *test_camera)
 {
 	ArvDevice *device;
-        g_autofree char *version;
+        ArvTestStatus status;
+        g_autofree char *version = NULL;
+        g_autofree char *comment = NULL;
 	const char *genicam;
 	size_t size;
 
@@ -285,20 +287,32 @@ arv_test_genicam (ArvTest *test, ArvTestCamera *test_camera)
 	device = arv_camera_get_device (test_camera->camera);
 	genicam = arv_device_get_genicam_xml (device, &size);
 
-	if (genicam == NULL) {
-                arv_test_camera_add_result (test_camera, "Genicam", ARV_TEST_STATUS_FAILURE, "Failed to retrieve Genicam data");
-		return;
-	}
+        arv_test_camera_add_result (test_camera, "GenicamLoad",
+                                    genicam != NULL ? ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
+                                    genicam != NULL ? "" : "Failed to retrieve Genicam data");
 
-        if ((g_strcmp0 (version, "1.1") == 0 &&
-             !arv_xml_schema_validate (test->schema_1_1, genicam, size, NULL, NULL, NULL)) ||
-            (g_strcmp0 (version, "1.0") == 0 &&
-             !arv_xml_schema_validate (test->schema_1_0, genicam, size, NULL, NULL, NULL))) {
-                arv_test_camera_add_result (test_camera, "Genicam", ARV_TEST_STATUS_FAILURE, "Invalid Genicam XML data");
-		return;
-	}
+	if (genicam == NULL)
+                return;
 
-        arv_test_camera_add_result (test_camera, "Genicam", ARV_TEST_STATUS_SUCCESS, NULL);
+        status = ARV_TEST_STATUS_IGNORED;
+
+        if (g_strcmp0 (version, "1.1") == 0) {
+                if (arv_xml_schema_validate (test->schema_1_1, genicam, size, NULL, NULL, NULL)) {
+                        status = ARV_TEST_STATUS_SUCCESS;
+                        comment = g_strdup_printf ("%s", version);
+                } else {
+                        status = ARV_TEST_STATUS_FAILURE;
+                }
+        } else if (g_strcmp0 (version, "1.0") == 0) {
+                if (arv_xml_schema_validate (test->schema_1_0, genicam, size, NULL, NULL, NULL)) {
+                        status = ARV_TEST_STATUS_SUCCESS;
+                        comment = g_strdup_printf ("%s", version);
+                } else {
+                        status = ARV_TEST_STATUS_FAILURE;
+                }
+        }
+
+        arv_test_camera_add_result (test_camera, "GenicamSchema", status, comment);
 }
 
 static void
