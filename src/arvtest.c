@@ -387,7 +387,9 @@ arv_test_multiple_acquisition (ArvTest *test, ArvTestCamera *test_camera)
 
         frame_rate = arv_test_camera_get_key_file_double (test_camera, test, "FrameRate");
 
-        arv_camera_set_frame_rate (test_camera->camera, frame_rate > 0 ? frame_rate : 10.0, &error);
+        arv_camera_set_acquisition_mode (test_camera->camera, ARV_ACQUISITION_MODE_CONTINUOUS, &error);
+        if (error == NULL)
+                arv_camera_set_frame_rate (test_camera->camera, frame_rate > 0 ? frame_rate : 10.0, &error);
 
         if (error != NULL) {
                 arv_test_camera_add_result (test_camera, "MultipleAcquisition", ARV_TEST_STATUS_FAILURE,
