@@ -24,12 +24,12 @@
 #include <gst/gst.h>
 #include <gst/app/gstappsrc.h>
 #include <gst/video/videooverlay.h>
+#include <gst/video/video.h>
 #include <arv.h>
 #include <arvdebugprivate.h>
 #include <arvviewer.h>
 #include <math.h>
 #include <memory.h>
-#include <libnotify/notify.h>
 #ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>  // for GDK_WINDOW_XID
 #endif
@@ -131,14 +131,13 @@ struct  _ArvViewer {
 	GstElement *pipeline;
 	GstElement *appsrc;
 	GstElement *transform;
+        GstElement *videosink;
 
 	guint rotation;
 	gboolean flip_vertical;
 	gboolean flip_horizontal;
 
 	double exposure_min, exposure_max;
-
-	NotifyNotification *notification;
 
 	GtkWidget *main_window;
 	GtkWidget *main_stack;
@@ -616,10 +615,41 @@ set_camera_widgets(ArvViewer *viewer)
 	g_signal_handler_unblock (viewer->auto_exposure_toggle, viewer->auto_exposure_clicked);
 }
 
+static gboolean
+_save_gst_sample_to_file (GstSample *sample, const char *path, const char *mime_type, GError **error)
+{
+        GstSample *converted;
+        GstCaps *caps;
+        GstBuffer *gst_buffer;
+        gboolean success = FALSE;
+
+        g_return_val_if_fail (GST_IS_SAMPLE (sample), FALSE);
+
+        caps = gst_caps_from_string (mime_type);
+        converted = gst_video_convert_sample (sample, caps, GST_CLOCK_TIME_NONE, NULL);
+        gst_caps_unref (caps);
+
+        gst_buffer = gst_sample_get_buffer (converted);
+        if (gst_buffer) {
+                GstMapInfo map;
+
+                gst_buffer_map (gst_buffer, &map, GST_MAP_READ);
+                success = g_file_set_contents (path, (void *) map.data, map.size, error);
+                gst_buffer_unmap (gst_buffer, &map);
+        } else
+        gst_sample_unref (converted);
+
+        return success;
+}
+
 static void
 snapshot_cb (GtkButton *button, ArvViewer *viewer)
 {
-	GFile *file;
+        GtkFileFilter *filter;
+        GtkFileFilter *filter_all;
+        GtkWidget *dialog;
+        GstSample *sample;
+        ArvBuffer *buffer;
 	char *path;
 	char *filename;
 	GDateTime *date;
@@ -628,20 +658,19 @@ snapshot_cb (GtkButton *button, ArvViewer *viewer)
 	const char *data;
 	const char *pixel_format;
 	size_t size;
+        gint result;
+
+        sample = gst_base_sink_get_last_sample (GST_BASE_SINK (viewer->videosink));
+        buffer = g_object_ref (viewer->last_buffer);
+
+        if (!ARV_IS_BUFFER (buffer) && !GST_IS_SAMPLE (sample))
+                return;
 
 	g_return_if_fail (ARV_IS_CAMERA (viewer->camera));
-	g_return_if_fail (ARV_IS_BUFFER (viewer->last_buffer));
 
 	pixel_format = arv_camera_get_pixel_format_as_string (viewer->camera, NULL);
-	arv_buffer_get_image_region (viewer->last_buffer, NULL, NULL, &width, &height);
-	data = arv_buffer_get_data (viewer->last_buffer, &size);
-
-	path = g_build_filename (g_get_user_special_dir (G_USER_DIRECTORY_PICTURES),
-					 "Aravis", NULL);
-	file = g_file_new_for_path (path);
-	g_free (path);
-	g_file_make_directory (file, NULL, NULL);
-	g_object_unref (file);
+	arv_buffer_get_image_region (buffer, NULL, NULL, &width, &height);
+	data = arv_buffer_get_data (buffer, &size);
 
 	date = g_date_time_new_now_local ();
 	date_string = g_date_time_format (date, "%Y-%m-%d-%H:%M:%S");
@@ -652,22 +681,75 @@ snapshot_cb (GtkButton *button, ArvViewer *viewer)
 				    height,
 				    pixel_format != NULL ? pixel_format : "Unknown",
 				    date_string);
-	path = g_build_filename (g_get_user_special_dir (G_USER_DIRECTORY_PICTURES),
-				 "Aravis", filename, NULL);
-	g_file_set_contents (path, data, size, NULL);
+	g_free (date_string);
+	g_date_time_unref (date);
 
-	if (viewer->notification) {
-		notify_notification_update (viewer->notification,
-					    "Snapshot saved to Image folder",
-					    path,
-					    "gtk-save");
-		notify_notification_show (viewer->notification, NULL);
-	}
+	path = g_build_filename (g_get_user_special_dir (G_USER_DIRECTORY_PICTURES), filename, NULL);
+
+        dialog = gtk_file_chooser_dialog_new ("Save Snapshot", GTK_WINDOW (viewer->main_window),
+                                              GTK_FILE_CHOOSER_ACTION_SAVE,
+                                              "_Cancel",
+                                              GTK_RESPONSE_CANCEL,
+                                              "_Save",
+                                              GTK_RESPONSE_ACCEPT,
+                                              NULL);
+        gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER (dialog), TRUE);
+        gtk_file_chooser_set_filename (GTK_FILE_CHOOSER (dialog), path);
+        gtk_file_chooser_set_current_name (GTK_FILE_CHOOSER (dialog), filename);
+
+        filter_all = gtk_file_filter_new ();
+        gtk_file_filter_set_name (filter_all, "Supported image formats");
+
+        if (GST_IS_SAMPLE (sample)) {
+                filter = gtk_file_filter_new ();
+                gtk_file_filter_add_mime_type (filter, "image/png");
+                gtk_file_filter_add_mime_type (filter_all, "image/png");
+                gtk_file_filter_set_name (filter, "PNG (*.png)");
+                gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (dialog), filter);
+
+                filter = gtk_file_filter_new ();
+                gtk_file_filter_add_mime_type (filter, "image/jpeg");
+                gtk_file_filter_add_mime_type (filter_all, "image/jpeg");
+                gtk_file_filter_set_name (filter, "JPEG (*.jpeg)");
+                gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (dialog), filter);
+        }
+
+        if (ARV_IS_BUFFER (buffer)) {
+                filter = gtk_file_filter_new ();
+                gtk_file_filter_add_pattern (filter, "*.raw");
+                gtk_file_filter_add_pattern (filter_all, "*.raw");
+                gtk_file_filter_set_name (filter, "Raw images (*.raw)");
+                gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (dialog), filter);
+        }
+
+        gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (dialog), filter_all);
+        gtk_file_chooser_set_filter (GTK_FILE_CHOOSER (dialog), filter_all);
 
 	g_free (path);
 	g_free (filename);
-	g_free (date_string);
-	g_date_time_unref (date);
+
+        result = gtk_dialog_run (GTK_DIALOG (dialog));
+        if (result == GTK_RESPONSE_ACCEPT) {
+                g_autofree char * content_type = NULL;
+                gboolean success = FALSE;
+
+                filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+
+                content_type = g_content_type_guess (filename, NULL, 0, NULL);
+
+                if (GST_IS_SAMPLE (sample) && g_content_type_is_mime_type (content_type, "image/png")) {
+                        success = _save_gst_sample_to_file (sample, filename, "image/png", NULL);
+                } else if (GST_IS_SAMPLE (sample) && g_content_type_is_mime_type (content_type, "image/jpeg")) {
+                        success = _save_gst_sample_to_file (sample, filename, "image/jpeg", NULL);
+                } else if (ARV_IS_BUFFER (buffer)) {
+                        success = g_file_set_contents (filename, data, size, NULL);
+                        g_free (filename);
+                }
+        }
+
+        gtk_widget_destroy (dialog);
+        g_clear_pointer (&sample, gst_sample_unref);
+        g_clear_object (&buffer);
 }
 
 static void
@@ -955,7 +1037,6 @@ static gboolean
 start_video (ArvViewer *viewer)
 {
 	GstElement *videoconvert;
-	GstElement *videosink;
 	GstCaps *caps;
 	ArvPixelFormat pixel_format;
 	unsigned payload;
@@ -1054,23 +1135,23 @@ start_video (ArvViewer *viewer)
 #else
 		{
 #endif
-			videosink = gst_element_factory_make ("gtksink", NULL);
-			gst_bin_add_many (GST_BIN (viewer->pipeline), videosink, NULL);
-			gst_element_link_many (viewer->transform, videosink, NULL);
+			viewer->videosink = gst_element_factory_make ("gtksink", NULL);
+			gst_bin_add_many (GST_BIN (viewer->pipeline), viewer->videosink, NULL);
+			gst_element_link_many (viewer->transform, viewer->videosink, NULL);
 		}
 
-		g_object_get (videosink, "widget", &video_widget, NULL);
+		g_object_get (viewer->videosink, "widget", &video_widget, NULL);
 		gtk_container_add (GTK_CONTAINER (viewer->video_frame), video_widget);
 		gtk_widget_show (video_widget);
 		g_object_set(G_OBJECT (video_widget), "force-aspect-ratio", TRUE, NULL);
 		gtk_widget_set_size_request (video_widget, 640, 480);
 	} else {
-		videosink = gst_element_factory_make ("autovideosink", NULL);
-		gst_bin_add (GST_BIN (viewer->pipeline), videosink);
-		gst_element_link_many (viewer->transform, videosink, NULL);
+		viewer->videosink = gst_element_factory_make ("autovideosink", NULL);
+		gst_bin_add (GST_BIN (viewer->pipeline), viewer->videosink);
+		gst_element_link_many (viewer->transform, viewer->videosink, NULL);
 	}
 
-	g_object_set(G_OBJECT (videosink), "sync", FALSE, NULL);
+	g_object_set(G_OBJECT (viewer->videosink), "sync", FALSE, NULL);
 
 	caps = gst_caps_from_string (caps_string);
 	arv_camera_get_region (viewer->camera, NULL, NULL, &width, &height, NULL);
@@ -1449,11 +1530,7 @@ viewer_shutdown (GApplication *application)
 static void
 finalize (GObject *object)
 {
-	ArvViewer *viewer = (ArvViewer *) object;
-
 	G_OBJECT_CLASS (arv_viewer_parent_class)->finalize (object);
-
-	g_clear_object (&viewer->notification);
 }
 
 ArvViewer *
@@ -1467,7 +1544,7 @@ arv_viewer_new (void)
   g_set_application_name ("ArvViewer");
 
   arv_viewer = g_object_new (arv_viewer_get_type (),
-			     "application-id", "org.aravis.ArvViewer",
+			     "application-id", "org.aravis.Aravis",
 			     "flags", G_APPLICATION_NON_UNIQUE,
 			     "inactivity-timeout", 30000,
 			     NULL);
@@ -1479,7 +1556,6 @@ arv_viewer_new (void)
 static void
 arv_viewer_init (ArvViewer *viewer)
 {
-	viewer->notification = notify_notification_new (NULL, NULL, NULL);
 	viewer->auto_socket_buffer = FALSE;
 	viewer->packet_resend = TRUE;
 	viewer->packet_timeout = 20;
