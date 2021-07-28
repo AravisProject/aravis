@@ -20,6 +20,7 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+#include <glib/gprintf.h>
 #include <arv.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -115,20 +116,45 @@ arv_test_camera_free (ArvTestCamera *camera)
         }
 }
 
+static gboolean
+stdout_has_color_support (void)
+{
+#if GLIB_CHECK_VERSION(2,50,0)
+	static int has_color_support = -1;
+
+	if (has_color_support >= 0)
+		return has_color_support > 0;
+
+	has_color_support = g_log_writer_supports_color (STDOUT_FILENO) ? 1 : 0;
+
+	return has_color_support;
+#else
+	return FALSE;
+#endif
+}
+
 static void
 arv_test_camera_add_result (ArvTestCamera *test_camera,
                             const char *test_name, ArvTestStatus status, const char *comment)
 {
         const char *status_str;
 
-        switch (status) {
-                case ARV_TEST_STATUS_SUCCESS: status_str = "SUCCESS"; break;
-                case ARV_TEST_STATUS_FAILURE: status_str = "FAILURE"; break;
-                case ARV_TEST_STATUS_IGNORED: status_str = "IGNORED"; break;
-                default: status_str = "";
-        }
+        if (stdout_has_color_support ())
+                switch (status) {
+                        case ARV_TEST_STATUS_SUCCESS: status_str = "\033[1;32mSUCCESS\033[0m"; break;
+                        case ARV_TEST_STATUS_FAILURE: status_str = "\033[1;31mFAILURE\033[0m"; break;
+                        case ARV_TEST_STATUS_IGNORED: status_str = "IGNORED"; break;
+                        default: status_str = "";
+                }
+        else
+                switch (status) {
+                        case ARV_TEST_STATUS_SUCCESS: status_str = "SUCCESS"; break;
+                        case ARV_TEST_STATUS_FAILURE: status_str = "FAILURE"; break;
+                        case ARV_TEST_STATUS_IGNORED: status_str = "IGNORED"; break;
+                        default: status_str = "";
+                }
 
-        printf ("%20s %s %s\n", test_name, status_str, comment != NULL ? comment : "");
+        g_fprintf (stdout, "%20s %s %s\n", test_name, status_str, comment != NULL ? comment : "");
 
         test_camera->results = g_slist_append (test_camera->results,
                                                arv_test_result_new (test_name, test_camera->vendor_model,
