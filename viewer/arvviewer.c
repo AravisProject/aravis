@@ -731,20 +731,21 @@ snapshot_cb (GtkButton *button, ArvViewer *viewer)
         result = gtk_dialog_run (GTK_DIALOG (dialog));
         if (result == GTK_RESPONSE_ACCEPT) {
                 g_autofree char * content_type = NULL;
-                gboolean success = FALSE;
 
                 filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
 
                 content_type = g_content_type_guess (filename, NULL, 0, NULL);
 
                 if (GST_IS_SAMPLE (sample) && g_content_type_is_mime_type (content_type, "image/png")) {
-                        success = _save_gst_sample_to_file (sample, filename, "image/png", NULL);
+                        _save_gst_sample_to_file (sample, filename, "image/png", NULL);
                 } else if (GST_IS_SAMPLE (sample) && g_content_type_is_mime_type (content_type, "image/jpeg")) {
-                        success = _save_gst_sample_to_file (sample, filename, "image/jpeg", NULL);
+                        _save_gst_sample_to_file (sample, filename, "image/jpeg", NULL);
                 } else if (ARV_IS_BUFFER (buffer)) {
-                        success = g_file_set_contents (filename, data, size, NULL);
+                        g_file_set_contents (filename, data, size, NULL);
                         g_free (filename);
                 }
+
+                /* TODO Handle save failure here. In-app notification ? */
         }
 
         gtk_widget_destroy (dialog);
