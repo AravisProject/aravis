@@ -237,6 +237,7 @@ arv_test_camera_get_key_file_double (ArvTestCamera *test_camera, ArvTest *test, 
         return g_key_file_get_double (test->key_file, test_camera->vendor_model, key, NULL);
 }
 
+#if 0
 static gint64
 arv_test_camera_get_key_file_int64 (ArvTestCamera *test_camera, ArvTest *test, const char *key)
 {
@@ -247,6 +248,7 @@ arv_test_camera_get_key_file_int64 (ArvTestCamera *test_camera, ArvTest *test, c
 
         return g_key_file_get_int64 (test->key_file, test_camera->vendor_model, key, NULL);
 }
+#endif
 
 static char *
 arv_test_camera_get_key_file_string (ArvTestCamera *test_camera, ArvTest *test, const char *key)
