@@ -27,6 +27,10 @@
 #include <stdio.h>
 #include <zlib.h>
 
+#ifdef G_OS_WIN32
+	 #include <windows.h>
+#endif
+
 typedef struct _ArvHistogramVariable ArvHistogramVariable;
 
 struct _ArvHistogramVariable {
@@ -920,3 +924,19 @@ arv_parse_genicam_url (const char *url, gssize url_length,
 
 	return TRUE;
 }
+
+
+gint64 arv_monotonic_time_us (void)
+{
+	 #ifdef G_OS_WIN32
+		  static LARGE_INTEGER freq = { .QuadPart = 0 };
+		  LARGE_INTEGER t;
+	 
+		  if (freq.QuadPart == 0) { QueryPerformanceFrequency(&freq); }
+		  QueryPerformanceCounter(&t);
+		  return (t.QuadPart*1000000) / freq.QuadPart;
+	 #else
+		  return g_get_monotonic_time();
+	 #endif
+}
+

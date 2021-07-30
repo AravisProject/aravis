@@ -77,6 +77,9 @@ void * 		arv_decompress 			(void *input_buffer, size_t input_size, size_t *outpu
 
 const char *	arv_vendor_alias_lookup		(const char *vendor);
 
+/* this only wraps g_get_monotonic_time on non-windows platforms */
+gint64 arv_monotonic_time_us (void);
+
 #if GLIB_CHECK_VERSION(2,68,0)
 #define arv_memdup(p,s) g_memdup2(p,s)
 #else
