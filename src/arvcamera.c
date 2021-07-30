@@ -1240,22 +1240,33 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source, GError **error)
 	if (priv->vendor == ARV_CAMERA_VENDOR_BASLER)
 		arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", FALSE, &local_error);
 
-	if (local_error == NULL)
+	if (local_error == NULL) {
 		arv_camera_set_string (camera, "TriggerSelector", "AcquisitionStart", &local_error);
-	if (local_error == NULL)
-		arv_camera_set_string (camera, "TriggerMode", "Off", &local_error);
+                if (local_error == NULL)
+                        arv_camera_set_string (camera, "TriggerMode", "Off", &local_error);
+                else if (local_error->code == ARV_DEVICE_ERROR_FEATURE_NOT_FOUND ||
+                         local_error->code == ARV_GC_ERROR_ENUM_ENTRY_NOT_FOUND)
+                        g_clear_error (&local_error);
+        }
 
-	if (local_error != NULL && local_error->code == ARV_GC_ERROR_ENUM_ENTRY_NOT_FOUND)
-		g_clear_error (&local_error);
-
-	if (local_error == NULL)
+	if (local_error == NULL) {
 		arv_camera_set_string (camera, "TriggerSelector", "FrameStart", &local_error);
-	if (local_error == NULL)
-		arv_camera_set_string (camera, "TriggerMode", "On", &local_error);
-	if (local_error == NULL)
+                if (local_error == NULL)
+                        arv_camera_set_string (camera, "TriggerMode", "On", &local_error);
+                else if (local_error->code == ARV_DEVICE_ERROR_FEATURE_NOT_FOUND ||
+                         local_error->code == ARV_GC_ERROR_ENUM_ENTRY_NOT_FOUND)
+                        g_clear_error (&local_error);
+        }
+
+	if (local_error == NULL) {
 		arv_camera_set_string (camera, "TriggerActivation", "RisingEdge", &local_error);
-	if (local_error == NULL)
-		arv_camera_set_string (camera, "TriggerSource", source, &local_error);
+                if (local_error->code == ARV_DEVICE_ERROR_FEATURE_NOT_FOUND ||
+                    local_error->code == ARV_GC_ERROR_ENUM_ENTRY_NOT_FOUND)
+                        g_clear_error (&local_error);
+        }
+
+        if (local_error == NULL)
+                arv_camera_set_string (camera, "TriggerSource", source, &local_error);
 
 	if (local_error != NULL)
 		g_propagate_error (error, local_error);
