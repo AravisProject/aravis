@@ -160,7 +160,8 @@ arv_enumerate_network_interfaces (void)
 	} while ((dwRetVal == ERROR_BUFFER_OVERFLOW) && (iter<3));
 
 	if (dwRetVal != ERROR_SUCCESS){
-		arv_warning_interface ("Failed to enumerate network interfaces (GetAdaptersAddresses returned %lu)",dwRetVal);
+		arv_warning_interface ("Failed to enumerate network interfaces (GetAdaptersAddresses returned %lu)",
+				       dwRetVal);
 		return NULL;
 	}
 
@@ -216,7 +217,7 @@ arv_enumerate_network_interfaces (void)
 							}
 						}
 						if (!match){
-							arv_warning_interface("Failed to obtain netmask for %08lx (secondary address?), using 255.255.0.0.",((struct sockaddr_in*)a->addr)->sin_addr.s_addr);
+							arv_warning_interface ("Failed to obtain netmask for %08lx (secondary address?), using 255.255.0.0.",((struct sockaddr_in*)a->addr)->sin_addr.s_addr);
 							mask->sin_addr.s_addr = htonl(0xffff0000U);
 						}
 					}
@@ -427,7 +428,8 @@ arv_network_interface_get_name(ArvNetworkInterface* a)
 }
 
 void
-arv_network_interface_free(ArvNetworkInterface *a) {
+arv_network_interface_free(ArvNetworkInterface *a)
+{
 	g_clear_pointer (&a->addr, g_free);
 	g_clear_pointer (&a->netmask, g_free);
 	g_clear_pointer (&a->broadaddr, g_free);
@@ -446,7 +448,8 @@ arv_socket_set_recv_buffer_size (int socket_fd, gint buffer_size)
 #else
 	{
 		DWORD _buffer_size=buffer_size;
-		result = setsockopt (socket_fd, SOL_SOCKET, SO_RCVBUF, (const char*) &_buffer_size, sizeof (_buffer_size));
+		result = setsockopt (socket_fd, SOL_SOCKET, SO_RCVBUF,
+				     (const char*) &_buffer_size, sizeof (_buffer_size));
 	}
 #endif
 
@@ -455,7 +458,8 @@ arv_socket_set_recv_buffer_size (int socket_fd, gint buffer_size)
 
 
 ArvNetworkInterface*
-arv_network_get_interface_by_name (const char* name){
+arv_network_get_interface_by_name (const char* name)
+{
 	GList *ifaces;
 	GList *iface_iter;
 	ArvNetworkInterface *ret = NULL;
@@ -463,7 +467,7 @@ arv_network_get_interface_by_name (const char* name){
 	ifaces = arv_enumerate_network_interfaces ();
 
 	for (iface_iter = ifaces; iface_iter != NULL; iface_iter = iface_iter->next) {
-		if (g_strcmp0 (name, arv_network_interface_get_name (iface_iter->data)) == 0) 
+		if (g_strcmp0 (name, arv_network_interface_get_name (iface_iter->data)) == 0)
 			break;
 	}
 
@@ -471,7 +475,7 @@ arv_network_get_interface_by_name (const char* name){
 		/* remove the interface node from the list (deleted below) but don't delete its data */
 		ret = iface_iter->data;
 		ifaces = g_list_remove_link(ifaces, iface_iter);
-		g_list_free(iface_iter); 
+		g_list_free(iface_iter);
 	}
 
 	g_list_free_full (ifaces, (GDestroyNotify) arv_network_interface_free);
@@ -480,7 +484,8 @@ arv_network_get_interface_by_name (const char* name){
 }
 
 ArvNetworkInterface*
-arv_network_get_interface_by_address (const char* addr){
+arv_network_get_interface_by_address (const char* addr)
+{
 	GInetSocketAddress *iaddr_s = NULL;
 	GInetAddress *iaddr = NULL;
 	GList *ifaces;
@@ -489,27 +494,33 @@ arv_network_get_interface_by_address (const char* addr){
 
 	ifaces = arv_enumerate_network_interfaces ();
 
-	if (!g_hostname_is_ip_address(addr)) return NULL;
+	if (!g_hostname_is_ip_address(addr))
+		return NULL;
+
 	iaddr_s = G_INET_SOCKET_ADDRESS (g_inet_socket_address_new_from_string (addr, 0));
-	if (iaddr_s == NULL) return NULL;
+	if (iaddr_s == NULL)
+		return NULL;
+
 	iaddr = g_inet_socket_address_get_address(iaddr_s);
 
 	for (iface_iter = ifaces; iface_iter != NULL; iface_iter = iface_iter->next) {
 		GSocketAddress *iface_sock_addr;
 		GInetAddress *iface_inet_addr;
-		iface_sock_addr = g_socket_address_new_from_native (arv_network_interface_get_addr(iface_iter->data), sizeof(struct sockaddr));
+
+		iface_sock_addr = g_socket_address_new_from_native
+			(arv_network_interface_get_addr (iface_iter->data), sizeof(struct sockaddr));
 		iface_inet_addr = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (iface_sock_addr));
-		if(g_inet_address_equal (iaddr,iface_inet_addr)){
-			g_clear_object(&iface_sock_addr);
+		if (g_inet_address_equal (iaddr,iface_inet_addr)) {
+			g_clear_object (&iface_sock_addr);
 			break;
 		}
 		g_clear_object(&iface_sock_addr);
 	}
 
-	if(iface_iter != NULL){
+	if (iface_iter != NULL) {
 		ret = iface_iter->data;
-		ifaces = g_list_remove_link(ifaces, iface_iter);
-		g_list_free(iface_iter);
+		ifaces = g_list_remove_link (ifaces, iface_iter);
+		g_list_free (iface_iter);
 	}
 
 	g_clear_object(&iaddr_s);
@@ -519,18 +530,21 @@ arv_network_get_interface_by_address (const char* addr){
 }
 
 ArvNetworkInterface*
-arv_network_get_fake_ipv4_loopback(void){
+arv_network_get_fake_ipv4_loopback (void)
+{
 	ArvNetworkInterface* ret = (ArvNetworkInterface*) g_malloc0(sizeof(ArvNetworkInterface));
-	ret->name = g_strdup("<fake IPv4 localhost>");
-	ret->addr = g_malloc0(sizeof(struct sockaddr_in));
+
+	ret->name = g_strdup ("<fake IPv4 localhost>");
+	ret->addr = g_malloc0 (sizeof(struct sockaddr_in));
 	ret->addr->sa_family = AF_INET;
 	((struct sockaddr_in*)ret->addr)->sin_addr.s_addr = htonl(0x7f000001); // INADDR_LOOPBACK
-	ret->netmask = g_malloc0(sizeof(struct sockaddr_in));
+	ret->netmask = g_malloc0 (sizeof(struct sockaddr_in));
 	ret->netmask->sa_family = AF_INET;
 	((struct sockaddr_in*)ret->netmask)->sin_addr.s_addr = htonl(0xff000000);
-	ret->broadaddr = g_malloc0(sizeof(struct sockaddr_in));
+	ret->broadaddr = g_malloc0 (sizeof(struct sockaddr_in));
 	ret->broadaddr->sa_family = AF_INET;
 	((struct sockaddr_in*)ret->broadaddr)->sin_addr.s_addr = htonl(0x7fffffff);
+
 	return ret;
 }
 
