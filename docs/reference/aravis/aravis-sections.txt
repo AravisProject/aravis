@@ -1688,6 +1688,7 @@ ArvZipFile
 <TITLE>ArvXmlSchema</TITLE>
 ARV_XML_SCHEMA_ERROR
 ArvXmlSchemaError
+arv_xml_schema_new_from_memory
 arv_xml_schema_new_from_file
 arv_xml_schema_new_from_path
 arv_xml_schema_validate
