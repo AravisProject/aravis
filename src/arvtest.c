@@ -322,7 +322,7 @@ arv_test_device_properties (ArvTest *test, ArvTestCamera *test_camera)
 {
         g_autoptr (GError) error = NULL;
         g_autofree gint *sensor_size = NULL;
-        g_autofree char *comment;
+        g_autofree char *comment = NULL;
         ArvTestStatus status;
         gint sensor_width, sensor_height;
         gsize size = 0;
@@ -335,8 +335,6 @@ arv_test_device_properties (ArvTest *test, ArvTestCamera *test_camera)
         arv_test_camera_add_result (test_camera, "SensorSizeReadout",
                                     error == NULL ? ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
                                     error != NULL ? error->message : NULL);
-
-        comment = NULL;
 
         if (error == NULL && size == 2) {
                 if (sensor_size[0] != sensor_width ||
