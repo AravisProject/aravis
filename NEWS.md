@@ -1,3 +1,20 @@
+Stable release 0.8.16
+=====================
+
+  * ci: use Github actions for linux and macOS (Emmanuel)
+  * ci: minGW support (Václav)
+  * gigevision: use proper broadcast addressese during discovery (Václav)
+  * camera: accessor to float feature increment (Emmanuel)
+  * camera: make set_trigger more robust (Emmanuel)
+  * camera: fallback to Continuous mode if SingleFrame is not available
+    (Emmanuel)
+  * viewer: allow to save a snapshot as png or jpeg image (Emmanuel)
+  * viewer: display all pixel formats in selector (Emmanuel)
+  * simulator: now works on Windows and macOS (Václav, Emmanuel)
+  * debug: fix output on Windows (Václav)
+  * doc: Windows build documentation (Václav)
+  * tests: new arv-test application for automated testing (Emmanuel)
+
 Stable release 0.8.15
 =====================
 
