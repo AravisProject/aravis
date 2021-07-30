@@ -398,6 +398,11 @@ main (int argc, char **argv)
 	arv_enable_interface ("Fake");
 
 	arv_debug_enable (arv_option_debug_domains);
+    
+    #ifdef G_OS_WIN32
+        setbuf(stderr,NULL);
+        setbuf(stdout,NULL);
+    #endif
 
 	if (arv_option_camera_name == NULL)
 		g_print ("Looking for the first available camera\n");

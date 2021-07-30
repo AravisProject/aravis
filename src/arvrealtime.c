@@ -35,6 +35,10 @@
 #include <sys/time.h>
 #include <sys/types.h>
 
+#ifdef G_OS_WIN32
+#include <windows.h>
+#endif
+
 #define RTKIT_SERVICE_NAME "org.freedesktop.RealtimeKit1"
 #define RTKIT_OBJECT_PATH "/org/freedesktop/RealtimeKit1"
 
@@ -319,12 +323,40 @@ arv_make_thread_high_priority (int nice_level)
 	return TRUE;
 }
 
+#elif defined(G_OS_WIN32)
+
+gboolean
+arv_make_thread_realtime (int priority)
+{
+	if(!SetPriorityClass(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL))
+   {
+		DWORD err = GetLastError();
+		arv_warning_misc ("SetPriorityClass(..., THREAD_PRIORITY_TIME_CRITICAL) failed (%lu)", err);
+		return FALSE;
+	}
+	g_critical("Thread made realtime!");
+	return TRUE;
+}
+
+gboolean
+arv_make_thread_high_priority (int priority)
+{
+	if(!SetPriorityClass(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL))
+   {
+		DWORD err = GetLastError();
+		arv_warning_misc ("SetPriorityClass(..., THREAD_PRIORITY_ABOVE_NORMAL) failed (%lu)", err);
+		return FALSE;
+	}
+	g_critical("Thread made high-priority!");
+	return TRUE;
+}
+
 #else
 
 gboolean
 arv_make_thread_realtime (int priority)
 {
-	arv_info_misc ("SCHED API not supported on OSX/Windows");
+	arv_info_misc ("SCHED API not supported on OSX");
 
 	return FALSE;
 }
@@ -332,7 +364,7 @@ arv_make_thread_realtime (int priority)
 gboolean
 arv_make_thread_high_priority (int nice_level)
 {
-	arv_info_misc ("RtKit not supported on OSX/Windows");
+	arv_info_misc ("RtKit not supported on OSX");
 
 	return FALSE;
 }
