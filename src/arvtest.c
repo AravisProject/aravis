@@ -229,8 +229,6 @@ arv_test_new (void)
 static double
 arv_test_camera_get_key_file_double (ArvTestCamera *test_camera, ArvTest *test, const char *key)
 {
-        g_autofree char *group = NULL;
-
         g_return_val_if_fail (test_camera != NULL, 0);
         g_return_val_if_fail (ARV_IS_TEST (test), 0);
 
@@ -241,8 +239,6 @@ arv_test_camera_get_key_file_double (ArvTestCamera *test_camera, ArvTest *test, 
 static gint64
 arv_test_camera_get_key_file_int64 (ArvTestCamera *test_camera, ArvTest *test, const char *key)
 {
-        g_autofree char *group = NULL;
-
         g_return_val_if_fail (test_camera != NULL, 0);
         g_return_val_if_fail (ARV_IS_TEST (test), 0);
 
@@ -253,8 +249,6 @@ arv_test_camera_get_key_file_int64 (ArvTestCamera *test_camera, ArvTest *test, c
 static char *
 arv_test_camera_get_key_file_string (ArvTestCamera *test_camera, ArvTest *test, const char *key)
 {
-        g_autofree char *group = NULL;
-
         g_return_val_if_fail (test_camera != NULL, NULL);
         g_return_val_if_fail (ARV_IS_TEST (test), NULL);
 
@@ -264,8 +258,6 @@ arv_test_camera_get_key_file_string (ArvTestCamera *test_camera, ArvTest *test, 
 static gint *
 arv_test_camera_get_key_file_integer_list (ArvTestCamera *test_camera, ArvTest *test, const char *key, gsize *size)
 {
-        g_autofree char *group = NULL;
-
         g_return_val_if_fail (test_camera != NULL, NULL);
         g_return_val_if_fail (ARV_IS_TEST (test), NULL);
 
@@ -442,7 +434,6 @@ arv_test_run (ArvTest *test)
 	n_devices = arv_get_n_devices ();
 	for (i = 0; i < n_devices; i++) {
 	        g_autoptr (ArvTestCamera) test_camera = NULL;
-                g_autoptr (GError) error = NULL;
 
 		printf ("Testing device '%s' from '%s'\n", arv_get_device_model (i), arv_get_device_vendor (i));
 
