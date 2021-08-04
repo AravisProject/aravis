@@ -231,12 +231,7 @@ main (int argc, char *argv[])
 	simulator = arv_gv_fake_camera_new ("127.0.0.1", "GVTest");
 	g_assert (ARV_IS_GV_FAKE_CAMERA (simulator));
 
-#if !defined(__APPLE__)
 	camera = arv_camera_new ("Aravis-GVTest", NULL);
-#else
-        /* Broadcast listening on 127.0.0.1 does not work on macOS, instantiate the camera by IP.*/
-	camera = arv_camera_new ("127.0.0.1", NULL);
-#endif
 	g_assert (ARV_IS_CAMERA (camera));
 
 	g_test_add_func ("/fakegv/device_registers", register_test);
