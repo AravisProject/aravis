@@ -37,6 +37,8 @@
 #include <gdk/gdkwin32.h>  // for GDK_WINDOW_HWND
 #endif
 
+#define ARV_VIEWER_NOTIFICATION_TIMEOUT 10
+
 static gboolean has_autovideo_sink = FALSE;
 static gboolean has_gtksink = FALSE;
 static gboolean has_gtkglsink = FALSE;
@@ -173,6 +175,13 @@ struct  _ArvViewer {
 	GtkWidget *auto_gain_toggle;
 	GtkWidget *acquisition_button;
 
+        GtkWidget *notification_revealer;
+        GtkWidget *notification_label;
+        GtkWidget *notification_details;
+        GtkWidget *notification_dismiss;
+
+        guint notification_timeout;
+
 	gulong camera_selected;
 	gulong exposure_spin_changed;
 	gulong gain_spin_changed;
@@ -263,6 +272,51 @@ arv_viewer_value_from_log (double value, double min, double max)
 		return min;
 
 	return pow (10.0, (value * (log10 (max) - log10 (min)) + log10 (min)));
+}
+
+static void
+notification_dismiss_clicked_cb (GtkButton *dismiss, ArvViewer *viewer)
+{
+        if (viewer->notification_timeout > 0)
+                g_source_remove (viewer->notification_timeout);
+
+        gtk_revealer_set_reveal_child (GTK_REVEALER (viewer->notification_revealer), FALSE);
+
+        viewer->notification_timeout = 0;
+}
+
+static gboolean
+hide_notification (gpointer user_data)
+{
+        ArvViewer *viewer = user_data;
+
+        gtk_revealer_set_reveal_child (GTK_REVEALER (viewer->notification_revealer), FALSE);
+        viewer->notification_timeout = 0;
+
+        return G_SOURCE_REMOVE;
+}
+
+static void
+arv_viewer_show_notification (ArvViewer *viewer, const char *message, const char *details)
+{
+        g_return_if_fail (ARV_IS_VIEWER (viewer));
+        g_return_if_fail (message != NULL);
+
+        if (viewer->notification_timeout > 0)
+                g_source_remove (viewer->notification_timeout);
+
+        gtk_revealer_set_reveal_child (GTK_REVEALER (viewer->notification_revealer), FALSE);
+        gtk_label_set_text (GTK_LABEL (viewer->notification_label), message);
+        if (details != NULL) {
+                g_autofree char *text = g_strdup_printf ("<small>%s</small>", details);
+                gtk_widget_show (viewer->notification_details);
+                gtk_label_set_markup (GTK_LABEL (viewer->notification_details), text);
+        } else {
+                gtk_widget_hide (viewer->notification_details);
+        }
+        gtk_revealer_set_reveal_child (GTK_REVEALER (viewer->notification_revealer), TRUE);
+
+        viewer->notification_timeout = g_timeout_add_seconds (ARV_VIEWER_NOTIFICATION_TIMEOUT, hide_notification, viewer);
 }
 
 typedef struct {
@@ -730,22 +784,26 @@ snapshot_cb (GtkButton *button, ArvViewer *viewer)
 
         result = gtk_dialog_run (GTK_DIALOG (dialog));
         if (result == GTK_RESPONSE_ACCEPT) {
+                g_autoptr (GError) error = NULL;
                 g_autofree char * content_type = NULL;
+                gboolean success = FALSE;
 
                 filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
 
                 content_type = g_content_type_guess (filename, NULL, 0, NULL);
 
                 if (GST_IS_SAMPLE (sample) && g_content_type_is_mime_type (content_type, "image/png")) {
-                        _save_gst_sample_to_file (sample, filename, "image/png", NULL);
+                        success = _save_gst_sample_to_file (sample, filename, "image/png", NULL);
                 } else if (GST_IS_SAMPLE (sample) && g_content_type_is_mime_type (content_type, "image/jpeg")) {
-                        _save_gst_sample_to_file (sample, filename, "image/jpeg", NULL);
+                        success = _save_gst_sample_to_file (sample, filename, "image/jpeg", NULL);
                 } else if (ARV_IS_BUFFER (buffer)) {
-                        g_file_set_contents (filename, data, size, NULL);
+                        success = g_file_set_contents (filename, data, size, &error);
                         g_free (filename);
                 }
 
-                /* TODO Handle save failure here. In-app notification ? */
+                if (!success)
+                        arv_viewer_show_notification (viewer, "Failed to save image to file",
+                                                      error != NULL ? error->message : NULL);
         }
 
         gtk_widget_destroy (dialog);
@@ -1448,6 +1506,14 @@ activate (GApplication *application)
 	viewer->flip_vertical_toggle = GTK_WIDGET (gtk_builder_get_object (builder, "flip_vertical_togglebutton"));
 	viewer->flip_horizontal_toggle = GTK_WIDGET (gtk_builder_get_object (builder, "flip_horizontal_togglebutton"));
 	viewer->acquisition_button = GTK_WIDGET (gtk_builder_get_object (builder, "acquisition_button"));
+
+        viewer->notification_revealer = GTK_WIDGET (gtk_builder_get_object (builder, "notification_revealer"));
+        viewer->notification_label = GTK_WIDGET (gtk_builder_get_object (builder, "notification_label"));
+        viewer->notification_details = GTK_WIDGET (gtk_builder_get_object (builder, "notification_details"));
+        viewer->notification_dismiss = GTK_WIDGET (gtk_builder_get_object (builder, "notification_dismiss"));
+
+        g_signal_connect (viewer->notification_dismiss, "clicked",
+                          G_CALLBACK (notification_dismiss_clicked_cb), viewer);
 
         list_store = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_BOOLEAN);
         gtk_combo_box_set_model (GTK_COMBO_BOX (viewer->pixel_format_combo), GTK_TREE_MODEL (list_store));
