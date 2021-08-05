@@ -32,7 +32,16 @@
 
 #include <arvstreamprivate.h>
 #include <arvbuffer.h>
-#include <arvdebug.h>
+#include <arvdevice.h>
+#include <arvdebugprivate.h>
+#include <gio/gio.h>
+
+typedef struct {
+        char *name;
+        char *description;
+        GType type;
+        gpointer data;
+} ArvStreamInfo;
 
 enum {
 	ARV_STREAM_SIGNAL_NEW_BUFFER,
@@ -44,7 +53,9 @@ static guint arv_stream_signals[ARV_STREAM_SIGNAL_LAST] = {0};
 enum {
 	ARV_STREAM_PROPERTY_0,
 	ARV_STREAM_PROPERTY_EMIT_SIGNALS,
-	ARV_STREAM_PROPERTY_LAST
+	ARV_STREAM_PROPERTY_DEVICE,
+	ARV_STREAM_PROPERTY_CALLBACK,
+	ARV_STREAM_PROPERTY_CALLBACK_DATA
 } ArvStreamProperties;
 
 typedef struct {
@@ -52,9 +63,21 @@ typedef struct {
 	GAsyncQueue *output_queue;
 	GRecMutex mutex;
 	gboolean emit_signals;
+
+	ArvDevice *device;
+	ArvStreamCallback callback;
+	void *callback_data;
+
+	GError *init_error;
+
+        GPtrArray *infos;
 } ArvStreamPrivate;
 
-G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvStream, arv_stream, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvStream))
+static void arv_stream_initable_iface_init (GInitableIface *iface);
+
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvStream, arv_stream, G_TYPE_OBJECT,
+				  G_ADD_PRIVATE (ArvStream)
+				  G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, arv_stream_initable_iface_init))
 
 /**
  * arv_stream_push_buffer:
@@ -299,7 +322,7 @@ arv_stream_stop_thread (ArvStream *stream, gboolean delete_buffers)
 	} while (buffer != NULL);
 	g_async_queue_unlock (priv->output_queue);
 
-	arv_debug_stream ("[Stream::reset] Deleted %u buffers\n", n_deleted);
+	arv_info_stream ("[Stream::reset] Deleted %u buffers\n", n_deleted);
 
 	return n_deleted;
 }
@@ -322,7 +345,6 @@ arv_stream_get_statistics (ArvStream *stream,
 			   guint64 *n_failures,
 			   guint64 *n_underruns)
 {
-	ArvStreamClass *stream_class;
 	guint64 dummy;
 
 	if (n_completed_buffers == NULL)
@@ -332,15 +354,9 @@ arv_stream_get_statistics (ArvStream *stream,
 	if (n_underruns == NULL)
 		n_underruns = &dummy;
 
-	*n_completed_buffers = 0;
-	*n_failures = 0;
-	*n_underruns = 0;
-
-	g_return_if_fail (ARV_IS_STREAM (stream));
-
-	stream_class = ARV_STREAM_GET_CLASS (stream);
-	if (stream_class->get_statistics != NULL)
-		stream_class->get_statistics (stream, n_completed_buffers, n_failures, n_underruns);
+	*n_completed_buffers = arv_stream_get_info_uint64_by_name (stream, "n_completed_buffers");
+	*n_failures = arv_stream_get_info_uint64_by_name (stream, "n_failures");
+	*n_underruns = arv_stream_get_info_uint64_by_name (stream, "n_underruns");
 }
 
 /**
@@ -397,15 +413,252 @@ arv_stream_get_emit_signals (ArvStream *stream)
 	return ret;
 }
 
+static void arv_stream_info_free (ArvStreamInfo *info)
+{
+        if (info == NULL)
+                return;
+
+        g_free (info->name);
+        g_free (info);
+}
+
+void
+arv_stream_declare_info (ArvStream *stream, const char *name, GType type, gpointer data)
+{
+        ArvStreamInfo *info;
+
+        ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+
+	g_return_if_fail (ARV_IS_STREAM (stream));
+        g_return_if_fail (type == G_TYPE_DOUBLE || type == G_TYPE_UINT64);
+        g_return_if_fail (data != NULL);
+
+        info = g_new0 (ArvStreamInfo, 1);
+        info->name = g_strdup (name);
+        info->type = type;
+        info->data = data;
+
+        g_ptr_array_add (priv->infos, info);
+}
+
+/**
+ * arv_stream_get_n_infos:
+ * @stream: a #ArvStream
+ *
+ * Returns: the number of stream informations. These informations contain useful numbers about data transfer quality.
+ *
+ * Since: 0.8.11
+ */
+
+guint
+arv_stream_get_n_infos (ArvStream *stream)
+{
+        ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+
+        g_return_val_if_fail (ARV_IS_STREAM (stream), 0);
+
+        return priv->infos->len;
+}
+
+/**
+ * arv_stream_get_info_name:
+ * @stream: a #ArvStream
+ * @id: info id
+ *
+ * Returns: the name of the corresponding stream information.
+ *
+ * Since: 0.8.11
+ */
+
+const char *
+arv_stream_get_info_name (ArvStream *stream, guint id)
+{
+        ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+        const ArvStreamInfo *info;
+
+        g_return_val_if_fail (ARV_IS_STREAM (stream), NULL);
+        g_return_val_if_fail (id < priv->infos->len, NULL);
+
+        info = g_ptr_array_index (priv->infos, id);
+        if (info != NULL)
+                return info->name;
+
+        return NULL;
+}
+
+/**
+ * arv_stream_get_info_type:
+ * @stream: a #ArvStream
+ * @id: info id
+ *
+ * Returns: the #GType of the corresponding stream information, which indicates what API to use to retrieve the
+ * information value (arv_stream_get_info_uint64() or arv_stream_get_info_double()).
+ *
+ * Since: 0.8.11
+ */
+
+GType
+arv_stream_get_info_type (ArvStream *stream, guint id)
+{
+        ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+        const ArvStreamInfo *info;
+
+        g_return_val_if_fail (ARV_IS_STREAM (stream), 0);
+        g_return_val_if_fail (id < priv->infos->len, 0);
+
+        info = g_ptr_array_index (priv->infos, id);
+        if (info != NULL)
+                return info->type;
+
+        return 0;
+}
+
+/**
+ * arv_stream_get_info_uint64:
+ * @stream: a #ArvStream
+ * @id: info id
+ *
+ * Returns: the value of the corresponding stream information, as a 64 bit unsigned integer.
+ *
+ * Since: 0.8.11
+ */
+
+guint64
+arv_stream_get_info_uint64 (ArvStream *stream, guint id)
+{
+        ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+        const ArvStreamInfo *info;
+
+        g_return_val_if_fail (ARV_IS_STREAM (stream), 0);
+        g_return_val_if_fail (id < priv->infos->len, 0);
+
+        info = g_ptr_array_index (priv->infos, id);
+
+        g_return_val_if_fail (info->type == G_TYPE_UINT64, 0);
+
+        if (info != NULL)
+                return *((guint64 *) (info->data));
+
+        return 0;
+}
+
+/**
+ * arv_stream_get_info_double:
+ * @stream: a #ArvStream
+ * @id: info id
+ *
+ * Returns: the value of the corresponding stream information, as a double.
+ *
+ * Since: 0.8.11
+ */
+
+double
+arv_stream_get_info_double (ArvStream *stream, guint id)
+{
+        ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+        const ArvStreamInfo *info;
+
+        g_return_val_if_fail (ARV_IS_STREAM (stream), 0);
+        g_return_val_if_fail (id < priv->infos->len, 0);
+
+        info = g_ptr_array_index (priv->infos, id);
+
+        g_return_val_if_fail (info->type == G_TYPE_DOUBLE, 0);
+
+        if (info != NULL)
+                return *((double *) (info->data));
+
+        return 0;
+}
+
+static const ArvStreamInfo *
+_find_info_by_name (ArvStream *stream, const char *name)
+{
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+        guint i;
+
+        for (i = 0; i < priv->infos->len; i++) {
+                ArvStreamInfo *info = g_ptr_array_index (priv->infos, i);
+
+                if (info != NULL && g_strcmp0 (name, info->name) == 0)
+                        return info;
+        }
+
+        return NULL;
+}
+
+/**
+ * arv_stream_get_info_uint64_by_name:
+ * @stream: a #ArvStream
+ * @name: info name
+ *
+ * Returns: the value of the corresponding stream information, as a 64 bit unsigned integer.
+ *
+ * Since: 0.8.11
+ */
+
+guint64
+arv_stream_get_info_uint64_by_name (ArvStream *stream, const char *name)
+{
+        const ArvStreamInfo *info;
+
+	g_return_val_if_fail (ARV_IS_STREAM (stream), 0);
+        g_return_val_if_fail (name != NULL, 0);
+
+        info = _find_info_by_name (stream, name);
+
+        g_return_val_if_fail (info != NULL, 0);
+        g_return_val_if_fail (info->type == G_TYPE_UINT64, 0);
+
+        return *((guint64 *) (info->data));
+}
+
+/**
+ * arv_stream_get_info_double_by_name:
+ * @stream: a #ArvStream
+ * @name: info name
+ *
+ * Returns: the value of the corresponding stream information, as a double.
+ *
+ * Since: 0.8.11
+ */
+
+double
+arv_stream_get_info_double_by_name (ArvStream *stream, const char *name)
+{
+        const ArvStreamInfo *info;
+
+	g_return_val_if_fail (ARV_IS_STREAM (stream), 0);
+        g_return_val_if_fail (name != NULL, 0);
+
+        info = _find_info_by_name (stream, name);
+
+        g_return_val_if_fail (info != NULL, 0);
+        g_return_val_if_fail (info->type == G_TYPE_DOUBLE, 0);
+
+        return *((double *) (info->data));
+}
+
 static void
 arv_stream_set_property (GObject * object, guint prop_id,
 			 const GValue * value, GParamSpec * pspec)
 {
 	ArvStream *stream = ARV_STREAM (object);
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
 
 	switch (prop_id) {
 		case ARV_STREAM_PROPERTY_EMIT_SIGNALS:
 			arv_stream_set_emit_signals (stream, g_value_get_boolean (value));
+			break;
+		case ARV_STREAM_PROPERTY_DEVICE:
+			g_clear_object (&priv->device);
+			priv->device = g_value_dup_object (value);
+			break;
+		case ARV_STREAM_PROPERTY_CALLBACK:
+			priv->callback = g_value_get_pointer (value);
+			break;
+		case ARV_STREAM_PROPERTY_CALLBACK_DATA:
+			priv->callback_data = g_value_get_pointer (value);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -418,10 +671,20 @@ arv_stream_get_property (GObject * object, guint prop_id,
 			 GValue * value, GParamSpec * pspec)
 {
 	ArvStream *stream = ARV_STREAM (object);
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
 
 	switch (prop_id) {
 		case ARV_STREAM_PROPERTY_EMIT_SIGNALS:
 			g_value_set_boolean (value, arv_stream_get_emit_signals (stream));
+			break;
+		case ARV_STREAM_PROPERTY_DEVICE:
+			g_value_set_object (value, priv->device);
+			break;
+		case ARV_STREAM_PROPERTY_CALLBACK:
+			g_value_set_pointer (value, priv->callback);
+			break;
+		case ARV_STREAM_PROPERTY_CALLBACK_DATA:
+			g_value_set_pointer (value, priv->callback_data);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -429,17 +692,28 @@ arv_stream_get_property (GObject * object, guint prop_id,
 	}
 }
 
+void
+arv_stream_take_init_error (ArvStream *stream, GError *error)
+{
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+
+	g_return_if_fail (ARV_IS_STREAM (stream));
+
+	g_clear_error (&priv->init_error);
+	priv->init_error = error;
+}
+
 static void
 arv_stream_init (ArvStream *stream)
 {
 	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
 
-	priv = arv_stream_get_instance_private (stream);
-
 	priv->input_queue = g_async_queue_new ();
 	priv->output_queue = g_async_queue_new ();
 
 	priv->emit_signals = FALSE;
+
+        priv->infos = g_ptr_array_new ();
 
 	g_rec_mutex_init (&priv->mutex);
 }
@@ -451,9 +725,9 @@ arv_stream_finalize (GObject *object)
 	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
 	ArvBuffer *buffer;
 
-	arv_debug_stream ("[Stream::finalize] Flush %d buffer[s] in input queue",
+	arv_info_stream ("[Stream::finalize] Flush %d buffer[s] in input queue",
 			  g_async_queue_length (priv->input_queue));
-	arv_debug_stream ("[Stream::finalize] Flush %d buffer[s] in output queue",
+	arv_info_stream ("[Stream::finalize] Flush %d buffer[s] in output queue",
 			  g_async_queue_length (priv->output_queue));
 
 	if (priv->emit_signals) {
@@ -477,6 +751,13 @@ arv_stream_finalize (GObject *object)
 	g_async_queue_unref (priv->output_queue);
 
 	g_rec_mutex_clear (&priv->mutex);
+
+	g_clear_object (&priv->device);
+
+	g_clear_error (&priv->init_error);
+
+        g_ptr_array_foreach (priv->infos, (GFunc) arv_stream_info_free, NULL);
+        g_clear_pointer (&priv->infos, g_ptr_array_unref);
 
 	G_OBJECT_CLASS (arv_stream_parent_class)->finalize (object);
 }
@@ -521,5 +802,58 @@ arv_stream_class_init (ArvStreamClass *node_class)
 				      "Emit signals", FALSE,
 				      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
 		);
+	g_object_class_install_property
+		(object_class,
+		 ARV_STREAM_PROPERTY_DEVICE,
+		 g_param_spec_object ("device",
+				      "Paret device",
+				      "A ArvDevice parent object",
+				      ARV_TYPE_DEVICE,
+				      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property
+		(object_class,
+		 ARV_STREAM_PROPERTY_CALLBACK,
+		 g_param_spec_pointer ("callback",
+				       "Stream callback",
+				       "Optional user callback",
+				       G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property
+		(object_class,
+		 ARV_STREAM_PROPERTY_CALLBACK_DATA,
+		 g_param_spec_pointer ("callback-data",
+				       "Stream callback data",
+				       "Optional user callback data",
+				       G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+}
+
+static gboolean
+arv_stream_initable_init (GInitable     *initable,
+			  GCancellable  *cancellable,
+			  GError       **error)
+{
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (ARV_STREAM (initable));
+
+	g_return_val_if_fail (ARV_IS_STREAM (initable), FALSE);
+
+	if (cancellable != NULL)
+	{
+		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+				     "Cancellable initialization not supported");
+		return FALSE;
+	}
+
+	if (priv->init_error) {
+		if (error != NULL)
+			*error = g_error_copy (priv->init_error);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static void
+arv_stream_initable_iface_init (GInitableIface *iface)
+{
+	iface->init = arv_stream_initable_init;
 }
 

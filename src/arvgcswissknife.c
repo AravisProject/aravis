@@ -25,7 +25,7 @@
  * @short_description: Class for SwissKnife and IntSwissKnife nodes
  */
 
-#include <arvgcswissknife.h>
+#include <arvgcswissknifeprivate.h>
 #include <arvevaluator.h>
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
@@ -41,6 +41,8 @@ typedef struct {
 	GSList *expressions;	/* ArvGcVariableNode list */
 
 	ArvGcPropertyNode *formula_node;
+	ArvGcPropertyNode *unit;
+	ArvGcPropertyNode *representation;
 
 	ArvEvaluator *formula;
 } ArvGcSwissKnifePrivate;
@@ -63,6 +65,12 @@ arv_gc_swiss_knife_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_FORMULA:
 				priv->formula_node = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_UNIT:
+				priv->unit = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_REPRESENTATION:
+				priv->representation = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_EXPRESSION:
 				priv->expressions = g_slist_prepend (priv->expressions, property_node);
@@ -93,6 +101,12 @@ arv_gc_swiss_knife_init (ArvGcSwissKnife *self)
 	priv->formula = arv_evaluator_new (NULL);
 }
 
+static ArvGcAccessMode
+arv_gc_swiss_knife_get_access_mode (ArvGcFeatureNode *gc_feature_node)
+{
+	return ARV_GC_ACCESS_MODE_RO;
+}
+
 static void
 arv_gc_swiss_knife_finalize (GObject *object)
 {
@@ -112,10 +126,12 @@ arv_gc_swiss_knife_class_init (ArvGcSwissKnifeClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
+	ArvGcFeatureNodeClass *gc_feature_node_class = ARV_GC_FEATURE_NODE_CLASS (this_class);
 
 	object_class->finalize = arv_gc_swiss_knife_finalize;
 	dom_node_class->post_new_child = arv_gc_swiss_knife_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_swiss_knife_pre_remove_child;
+	gc_feature_node_class->get_access_mode = arv_gc_swiss_knife_get_access_mode;
 }
 
 /* ArvGcInteger interface implementation */
@@ -239,4 +255,30 @@ arv_gc_swiss_knife_get_float_value (ArvGcSwissKnife *self, GError **error)
 	}
 
 	return arv_evaluator_evaluate_as_double (priv->formula, NULL);
+}
+
+ArvGcRepresentation
+arv_gc_swiss_knife_get_representation (ArvGcSwissKnife *self)
+{
+	ArvGcSwissKnifePrivate *priv = arv_gc_swiss_knife_get_instance_private (self);
+
+	g_return_val_if_fail (ARV_IS_GC_SWISS_KNIFE (self), ARV_GC_REPRESENTATION_UNDEFINED);
+
+	if (priv->representation == NULL)
+		return ARV_GC_REPRESENTATION_UNDEFINED;
+
+	return arv_gc_property_node_get_representation (ARV_GC_PROPERTY_NODE (priv->representation), ARV_GC_REPRESENTATION_UNDEFINED);
+}
+
+const char *
+arv_gc_swiss_knife_get_unit (ArvGcSwissKnife *self)
+{
+	ArvGcSwissKnifePrivate *priv = arv_gc_swiss_knife_get_instance_private (self);
+
+	g_return_val_if_fail (ARV_IS_GC_SWISS_KNIFE (self), NULL);
+
+	if (priv->unit == NULL)
+		return NULL;
+
+	return arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (priv->unit), NULL);
 }

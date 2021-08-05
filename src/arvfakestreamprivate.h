@@ -28,10 +28,11 @@
 #endif
 
 #include <arvfakestream.h>
+#include <arvfakedevice.h>
 
 G_BEGIN_DECLS
 
-ArvStream * 	arv_fake_stream_new	(ArvFakeCamera *camera, ArvStreamCallback callback, void *user_data);
+ArvStream * 	arv_fake_stream_new	(ArvFakeDevice *device, ArvStreamCallback callback, void *callback_data, GError **error);
 
 G_END_DECLS
 

@@ -44,7 +44,13 @@ GQuark 		arv_device_error_quark 		(void);
  * @ARV_DEVICE_ERROR_NOT_CONNECTED: Device is not connected
  * @ARV_DEVICE_ERROR_PROTOCOL_ERROR: Protocol error
  * @ARV_DEVICE_ERROR_TRANSFER_ERROR: Transfer error
- * @ARV_DEVICE_ERROR_TIMEOUT: Tiemout detected
+ * @ARV_DEVICE_ERROR_TIMEOUT: Timeout detected
+ * @ARV_DEVICE_ERROR_NOT_FOUND: Device not found
+ * @ARV_DEVICE_ERROR_INVALID_PARAMETER: Invalid construction parameter
+ * @ARV_DEVICE_ERROR_GENICAM_NOT_FOUND: Missing Genicam data
+ * @ARV_DEVICE_ERROR_NO_STREAM_CHANNEL: No stream channel found
+ * @ARV_DEVICE_ERROR_NOT_CONTROLLER: Controller privilege required
+ * @ARV_DEVICE_ERROR_UNKNOWN: Unknown error
  */
 
 typedef enum {
@@ -54,6 +60,12 @@ typedef enum {
 	ARV_DEVICE_ERROR_PROTOCOL_ERROR,
 	ARV_DEVICE_ERROR_TRANSFER_ERROR,
 	ARV_DEVICE_ERROR_TIMEOUT,
+	ARV_DEVICE_ERROR_NOT_FOUND,
+	ARV_DEVICE_ERROR_INVALID_PARAMETER,
+	ARV_DEVICE_ERROR_GENICAM_NOT_FOUND,
+	ARV_DEVICE_ERROR_NO_STREAM_CHANNEL,
+	ARV_DEVICE_ERROR_NOT_CONTROLLER,
+	ARV_DEVICE_ERROR_UNKNOWN
 } ArvDeviceError;
 
 #define ARV_TYPE_DEVICE             (arv_device_get_type ())
@@ -62,7 +74,7 @@ G_DECLARE_DERIVABLE_TYPE (ArvDevice, arv_device, ARV, DEVICE, GObject)
 struct _ArvDeviceClass {
 	GObjectClass parent_class;
 
-	ArvStream *	(*create_stream)	(ArvDevice *device, ArvStreamCallback callback, void *user_data);
+	ArvStream *	(*create_stream)	(ArvDevice *device, ArvStreamCallback callback, void *user_data, GError **error);
 
 	const char *	(*get_genicam_xml)	(ArvDevice *device, size_t *size);
 	ArvGc *		(*get_genicam)		(ArvDevice *device);
@@ -76,7 +88,7 @@ struct _ArvDeviceClass {
 	void		(*control_lost)		(ArvDevice *device);
 };
 
-ArvStream *	arv_device_create_stream	(ArvDevice *device, ArvStreamCallback callback, void *user_data);
+ArvStream *	arv_device_create_stream	(ArvDevice *device, ArvStreamCallback callback, void *user_data, GError **error);
 
 gboolean	arv_device_read_memory 		(ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error);
 gboolean	arv_device_write_memory	 	(ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error);
@@ -108,15 +120,20 @@ gint64		arv_device_get_integer_feature_increment(ArvDevice *device, const char *
 void		arv_device_set_float_feature_value	(ArvDevice *device, const char *feature, double value, GError **error);
 double		arv_device_get_float_feature_value	(ArvDevice *device, const char *feature, GError **error);
 void 		arv_device_get_float_feature_bounds 	(ArvDevice *device, const char *feature, double *min, double *max, GError **error);
+double          arv_device_get_float_feature_increment  (ArvDevice *device, const char *feature, GError **error);
 
-gint64 *	arv_device_get_available_enumeration_feature_values			(ArvDevice *device, const char *feature,
+gint64 *	arv_device_dup_available_enumeration_feature_values			(ArvDevice *device, const char *feature,
 											 guint *n_values, GError **error);
-const char **	arv_device_get_available_enumeration_feature_values_as_strings		(ArvDevice *device, const char *feature,
+const char **	arv_device_dup_available_enumeration_feature_values_as_strings		(ArvDevice *device, const char *feature,
 											 guint *n_values, GError **error);
-const char **	arv_device_get_available_enumeration_feature_values_as_display_names	(ArvDevice *device, const char *feature,
+const char **	arv_device_dup_available_enumeration_feature_values_as_display_names	(ArvDevice *device, const char *feature,
 											 guint *n_values, GError **error);
+
+
+gboolean 	arv_device_set_features_from_string 	(ArvDevice *device, const char *string, GError **error);
 
 void		arv_device_set_register_cache_policy	(ArvDevice *device, ArvRegisterCachePolicy policy);
+void		arv_device_set_range_check_policy	(ArvDevice *device, ArvRangeCheckPolicy policy);
 
 G_END_DECLS
 

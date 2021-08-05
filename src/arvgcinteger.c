@@ -29,6 +29,7 @@
 #include <arvgcfeaturenode.h>
 #include <arvgc.h>
 #include <arvmisc.h>
+#include <arvdebugprivate.h>
 
 static void
 arv_gc_integer_default_init (ArvGcIntegerInterface *gc_integer_iface)
@@ -49,8 +50,53 @@ arv_gc_integer_get_value (ArvGcInteger *gc_integer, GError **error)
 void
 arv_gc_integer_set_value (ArvGcInteger *gc_integer, gint64 value, GError **error)
 {
+	ArvGc *genicam;
+	ArvRangeCheckPolicy policy;
+	GError *local_error = NULL;
+
 	g_return_if_fail (ARV_IS_GC_INTEGER (gc_integer));
 	g_return_if_fail (error == NULL || *error == NULL);
+
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_integer));
+	g_return_if_fail (ARV_IS_GC (genicam));
+
+	policy = arv_gc_get_range_check_policy (genicam);
+
+	if (policy != ARV_RANGE_CHECK_POLICY_DISABLE) {
+		ArvGcIntegerInterface *iface = ARV_GC_INTEGER_GET_IFACE (gc_integer);
+
+		if (iface->get_min != NULL) {
+			gint64 min = iface->get_min (gc_integer, &local_error);
+
+			if (local_error == NULL && value < min) {
+				g_set_error (&local_error, ARV_GC_ERROR, ARV_GC_ERROR_OUT_OF_RANGE,
+					     "Value '%" G_GINT64_FORMAT "' "
+					     "for node '%s' lower than allowed minimum '%" G_GINT64_FORMAT "'",
+					     value, arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_integer)), min);
+			}
+		}
+
+		if (local_error == NULL && iface->get_max != NULL) {
+			gint64 max = iface->get_max (gc_integer, &local_error);
+
+			if (local_error == NULL && value > max) {
+				g_set_error (&local_error, ARV_GC_ERROR, ARV_GC_ERROR_OUT_OF_RANGE,
+					     "Value '%" G_GINT64_FORMAT "' "
+					     "for node '%s' greater than allowed maximum '%" G_GINT64_FORMAT "'",
+					     value, arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_integer)), max);
+			}
+		}
+
+		if (local_error != NULL) {
+			if (policy == ARV_RANGE_CHECK_POLICY_DEBUG) {
+				arv_warning_policies ("Range check (%s) ignored", local_error->message);
+			} else if (policy == ARV_RANGE_CHECK_POLICY_ENABLE) {
+				g_propagate_error (error, local_error);
+				return;
+			}
+			g_clear_error (&local_error);
+		}
+	}
 
 	ARV_GC_INTEGER_GET_IFACE (gc_integer)->set_value (gc_integer, value, error);
 }
@@ -112,21 +158,41 @@ arv_gc_integer_get_inc (ArvGcInteger *gc_integer, GError **error)
 	return 1;
 }
 
+/**
+ * arv_gc_integer_get_representation:
+ * @gc_integer: a #ArvGcInteger
+ *
+ * Get number representation format.
+ *
+ * Returns: Number representation format as #ArvGcRepresentation.
+ */
+
+ArvGcRepresentation
+arv_gc_integer_get_representation (ArvGcInteger *gc_integer)
+{
+	ArvGcIntegerInterface *integer_interface;
+
+	g_return_val_if_fail (ARV_IS_GC_INTEGER (gc_integer), 0);
+
+	integer_interface = ARV_GC_INTEGER_GET_IFACE (gc_integer);
+
+	if (integer_interface->get_representation != NULL)
+		return integer_interface->get_representation (gc_integer);
+
+	return ARV_GC_REPRESENTATION_UNDEFINED;
+}
+
 const char *
-arv_gc_integer_get_unit	(ArvGcInteger *gc_integer, GError **error)
+arv_gc_integer_get_unit	(ArvGcInteger *gc_integer)
 {
 	ArvGcIntegerInterface *integer_interface;
 
 	g_return_val_if_fail (ARV_IS_GC_INTEGER (gc_integer), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	integer_interface = ARV_GC_INTEGER_GET_IFACE (gc_integer);
 
 	if (integer_interface->get_unit != NULL)
-		return integer_interface->get_unit (gc_integer, error);
-
-	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_PROPERTY_NOT_DEFINED, "<Unit> node not found for '%s'",
-		     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_integer)));
+		return integer_interface->get_unit (gc_integer);
 
 	return NULL;
 }

@@ -30,8 +30,9 @@
 #include <arvevaluator.h>
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
+#include <arvgcdefaultsprivate.h>
 #include <arvgc.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <string.h>
 
 typedef struct {
@@ -43,6 +44,9 @@ typedef struct {
 	ArvGcPropertyNode *formula_to_node;
 	ArvGcPropertyNode *formula_from_node;
 	ArvGcPropertyNode *unit;
+	ArvGcPropertyNode *representation;
+	ArvGcPropertyNode *display_notation;
+	ArvGcPropertyNode *display_precision;
 	ArvGcPropertyNode *is_linear;
 	ArvGcPropertyNode *slope;
 
@@ -85,6 +89,15 @@ arv_gc_converter_post_new_child (ArvDomNode *self, ArvDomNode *child)
 			case ARV_GC_PROPERTY_NODE_TYPE_UNIT:
 				priv->unit = property_node;
 				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_REPRESENTATION:
+				priv->representation = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_NOTATION:
+				priv->display_notation = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_DISPLAY_PRECISION:
+				priv->display_precision = property_node;
+				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_IS_LINEAR:
 				priv->is_linear = property_node;
 				break;
@@ -116,6 +129,22 @@ arv_gc_converter_init (ArvGcConverter *self)
 	priv->value = NULL;
 }
 
+static ArvGcFeatureNode *
+arv_gc_converter_get_linked_feature (ArvGcFeatureNode *gc_feature_node)
+{
+	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (ARV_GC_CONVERTER (gc_feature_node));
+	ArvGcNode *pvalue_node = NULL;
+
+	if (priv->value == NULL)
+		return NULL;
+
+	pvalue_node = arv_gc_property_node_get_linked_node (priv->value);
+	if (ARV_IS_GC_FEATURE_NODE (pvalue_node))
+		return ARV_GC_FEATURE_NODE (pvalue_node);
+
+	return NULL;
+}
+
 static void
 arv_gc_converter_finalize (GObject *object)
 {
@@ -136,10 +165,12 @@ arv_gc_converter_class_init (ArvGcConverterClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
+	ArvGcFeatureNodeClass *gc_feature_node_class = ARV_GC_FEATURE_NODE_CLASS (this_class);
 
 	object_class->finalize = arv_gc_converter_finalize;
 	dom_node_class->post_new_child = arv_gc_converter_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_converter_pre_remove_child;
+	gc_feature_node_class->get_linked_feature = arv_gc_converter_get_linked_feature;
 }
 
 /* ArvGcInteger interface implementation */
@@ -163,7 +194,7 @@ arv_gc_converter_get_is_linear (ArvGcConverter *gc_converter, GError **error)
 	return ARV_GC_IS_LINEAR_NO;
 }
 
-gboolean
+static gboolean
 arv_gc_converter_update_from_variables (ArvGcConverter *gc_converter, ArvGcConverterNodeType node_type, GError **error)
 {
 	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (gc_converter);
@@ -298,6 +329,9 @@ arv_gc_converter_update_from_variables (ArvGcConverter *gc_converter, ArvGcConve
 					break;
 				case ARV_GC_CONVERTER_NODE_TYPE_INC:
 					value = arv_gc_float_get_inc (ARV_GC_FLOAT (node), &local_error);
+					/* Default increment, don't convert it */
+                                        if (value == G_MINDOUBLE)
+                                                return FALSE;
 					break;
 				default:
 					value =  arv_gc_float_get_value (ARV_GC_FLOAT (node), &local_error);
@@ -311,7 +345,8 @@ arv_gc_converter_update_from_variables (ArvGcConverter *gc_converter, ArvGcConve
 
 			arv_evaluator_set_double_variable (priv->formula_from, "TO", value);
 		} else {
-			arv_warning_genicam ("[GcConverter::set_value] Invalid pValue node '%s'", priv->value);
+			arv_warning_genicam ("[GcConverter::set_value] Invalid pValue node '%s'",
+					     arv_gc_property_node_get_string (priv->value, NULL));
 			g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_INVALID_PVALUE,
 				     "pValue node '%s' of '%s' is invalid",
 				     arv_gc_property_node_get_string (priv->value, NULL),
@@ -485,7 +520,7 @@ arv_gc_converter_update_to_variables (ArvGcConverter *gc_converter, GError **err
 			}
 		} else
 			arv_warning_genicam ("[GcConverter::set_value] Invalid pValue node '%s'",
-					     priv->value);
+					     arv_gc_property_node_get_string (priv->value, NULL));
 	}
 }
 
@@ -513,8 +548,21 @@ arv_gc_converter_convert_from_int64 (ArvGcConverter *gc_converter, gint64 value,
 	arv_gc_converter_update_to_variables (gc_converter, error);
 }
 
+ArvGcRepresentation
+arv_gc_converter_get_representation (ArvGcConverter *gc_converter)
+{
+	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (gc_converter);
+
+	g_return_val_if_fail (ARV_IS_GC_CONVERTER (gc_converter), ARV_GC_REPRESENTATION_UNDEFINED);
+
+	if (priv->representation == NULL)
+		return ARV_GC_REPRESENTATION_UNDEFINED;
+
+	return arv_gc_property_node_get_representation (ARV_GC_PROPERTY_NODE (priv->representation), ARV_GC_REPRESENTATION_UNDEFINED);
+}
+
 const char *
-arv_gc_converter_get_unit (ArvGcConverter *gc_converter, GError **error)
+arv_gc_converter_get_unit (ArvGcConverter *gc_converter)
 {
 	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (gc_converter);
 
@@ -523,5 +571,31 @@ arv_gc_converter_get_unit (ArvGcConverter *gc_converter, GError **error)
 	if (priv->unit == NULL)
 		return NULL;
 
-	return arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (priv->unit), error);
+	return arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (priv->unit), NULL);
+}
+
+ArvGcDisplayNotation
+arv_gc_converter_get_display_notation (ArvGcConverter *gc_converter)
+{
+	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (gc_converter);
+
+	g_return_val_if_fail (ARV_IS_GC_CONVERTER (gc_converter), ARV_GC_DISPLAY_NOTATION_DEFAULT);
+
+	if (priv->display_notation == NULL)
+		return ARV_GC_DISPLAY_NOTATION_DEFAULT;
+
+	return arv_gc_property_node_get_display_notation (ARV_GC_PROPERTY_NODE (priv->display_notation), ARV_GC_DISPLAY_NOTATION_DEFAULT);
+}
+
+gint64
+arv_gc_converter_get_display_precision (ArvGcConverter *gc_converter)
+{
+	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (gc_converter);
+
+	g_return_val_if_fail (ARV_IS_GC_CONVERTER (gc_converter), ARV_GC_DISPLAY_PRECISION_DEFAULT);
+
+	if (priv->display_precision == NULL)
+		return ARV_GC_DISPLAY_PRECISION_DEFAULT;
+
+	return arv_gc_property_node_get_display_precision (ARV_GC_PROPERTY_NODE (priv->display_precision), ARV_GC_DISPLAY_PRECISION_DEFAULT);
 }

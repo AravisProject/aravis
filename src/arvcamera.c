@@ -43,6 +43,7 @@
 #include <arvcamera.h>
 #include <arvsystem.h>
 #include <arvgvinterface.h>
+#include <arvgcboolean.h>
 #include <arvgccommand.h>
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
@@ -100,23 +101,36 @@ typedef enum {
 } ArvCameraSeries;
 
 typedef struct {
+	char *name;
 	ArvDevice *device;
 	ArvGc *genicam;
 
 	ArvCameraVendor vendor;
 	ArvCameraSeries series;
 
+	gboolean has_serial_number;
+
 	gboolean has_gain;
+	gboolean gain_raw_as_float;
+
 	gboolean has_exposure_time;
 	gboolean has_acquisition_frame_rate;
+	gboolean has_acquisition_frame_rate_auto;
 	gboolean has_acquisition_frame_rate_enabled;
+
+	GError *init_error;
 } ArvCameraPrivate;
 
-G_DEFINE_TYPE_WITH_CODE (ArvCamera, arv_camera, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvCamera))
+static void arv_camera_initable_iface_init (GInitableIface *iface);
+
+G_DEFINE_TYPE_WITH_CODE (ArvCamera, arv_camera, G_TYPE_OBJECT,
+			 G_ADD_PRIVATE (ArvCamera)
+			 G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, arv_camera_initable_iface_init))
 
 enum
 {
 	PROP_0,
+	PROP_CAMERA_NAME,
 	PROP_CAMERA_DEVICE
 };
 
@@ -125,23 +139,24 @@ enum
  * @camera: a #ArvCamera
  * @callback: (scope call) (allow-none): a frame processing callback
  * @user_data: (closure) (allow-none): user data for @callback
+ * @error: a #GError placeholder, %NULL to ignore
  *
  * Creates a new #ArvStream for video stream handling. See
  * #ArvStreamCallback for details regarding the callback function.
  *
- * Returns: (transfer full): a new #ArvStream.
+ * Returns: (transfer full): a new #ArvStream, to be freed after use with g_object_unref().
  *
  * Since: 0.2.0
  */
 
 ArvStream *
-arv_camera_create_stream (ArvCamera *camera, ArvStreamCallback callback, gpointer user_data)
+arv_camera_create_stream (ArvCamera *camera, ArvStreamCallback callback, gpointer user_data, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
-	return arv_device_create_stream (priv->device, callback, user_data);
+	return arv_device_create_stream (priv->device, callback, user_data, error);
 }
 
 /* Device control */
@@ -176,6 +191,29 @@ const char *
 arv_camera_get_model_name (ArvCamera *camera, GError **error)
 {
 	return arv_camera_get_string (camera, "DeviceModelName", error);
+}
+
+/**
+ * arv_camera_get_device_serial_number:
+ * @camera: a #ArvCamera
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: the camera device serial number.
+ *
+ * Since: 0.8.8
+ */
+
+const char *
+arv_camera_get_device_serial_number (ArvCamera *camera, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+
+	if (priv->has_serial_number)
+	    return arv_camera_get_string (camera, "DeviceSerialNumber", error);
+
+	return arv_camera_get_device_id (camera, error);
 }
 
 /**
@@ -232,7 +270,7 @@ arv_camera_get_sensor_size (ArvCamera *camera, gint *width, gint *height, GError
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Defines the region of interest which will be transmitted in the video
- * stream.
+ * stream. Negative @x or @y values, or not strictly positive @width or @height values are ignored.
  *
  * Since: 0.8.0
  */
@@ -439,7 +477,7 @@ arv_camera_get_height_increment (ArvCamera *camera, GError **error)
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Defines binning in both directions. Not all cameras support this
- * feature.
+ * feature. Negative @dx or @dy values are ignored.
  *
  * Since: 0.8.0
  */
@@ -623,47 +661,49 @@ arv_camera_get_pixel_format_as_string (ArvCamera *camera, GError **error)
 }
 
 /**
- * arv_camera_get_available_pixel_formats:
+ * arv_camera_dup_available_pixel_formats:
  * @camera: a #ArvCamera
  * @n_pixel_formats: (out): number of different pixel formats
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Retrieves the list of all available pixel formats.
  *
- * Returns: (array length=n_pixel_formats) (transfer container): a newly allocated array of #ArvPixelFormat
+ * Returns: (array length=n_pixel_formats) (transfer container): a newly allocated array of #ArvPixelFormat, to be freed after use with
+ * g_free().
  *
  * Since: 0.8.0
  */
 
 gint64 *
-arv_camera_get_available_pixel_formats (ArvCamera *camera, guint *n_pixel_formats, GError **error)
+arv_camera_dup_available_pixel_formats (ArvCamera *camera, guint *n_pixel_formats, GError **error)
 {
-	return arv_camera_get_available_enumerations (camera, "PixelFormat", n_pixel_formats, error);
+	return arv_camera_dup_available_enumerations (camera, "PixelFormat", n_pixel_formats, error);
 }
 
 /**
- * arv_camera_get_available_pixel_formats_as_strings:
+ * arv_camera_dup_available_pixel_formats_as_strings:
  * @camera: a #ArvCamera
  * @n_pixel_formats: (out): number of different pixel formats
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Retrieves the list of all available pixel formats as strings.
  *
- * Returns: (array length=n_pixel_formats) (transfer container): a newly allocated array of strings.
+ * Returns: (array length=n_pixel_formats) (transfer container): a newly allocated array of strings, to be freed after use with
+ * g_free().
  *
  * Since: 0.8.0
  */
 
 const char **
-arv_camera_get_available_pixel_formats_as_strings (ArvCamera *camera, guint *n_pixel_formats, GError **error)
+arv_camera_dup_available_pixel_formats_as_strings (ArvCamera *camera, guint *n_pixel_formats, GError **error)
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
-	return arv_camera_get_available_enumerations_as_strings (camera, "PixelFormat", n_pixel_formats, error);
+	return arv_camera_dup_available_enumerations_as_strings (camera, "PixelFormat", n_pixel_formats, error);
 }
 
 /**
- * arv_camera_get_available_pixel_formats_as_display_names:
+ * arv_camera_dup_available_pixel_formats_as_display_names:
  * @camera: a #ArvCamera
  * @n_pixel_formats: (out): number of different pixel formats
  * @error: a #GError placeholder, %NULL to ignore
@@ -671,15 +711,16 @@ arv_camera_get_available_pixel_formats_as_strings (ArvCamera *camera, guint *n_p
  * Retrieves the list of all available pixel formats as display names.
  * In general, these human-readable strings cannot be used as settings.
  *
- * Returns: (array length=n_pixel_formats) (transfer container): a newly allocated array of string constants.
+ * Returns: (array length=n_pixel_formats) (transfer container): a newly allocated array of string constants, to be freed after use with
+ * g_free().
  *
  * Since: 0.8.0
  */
 
 const char **
-arv_camera_get_available_pixel_formats_as_display_names (ArvCamera *camera, guint *n_pixel_formats, GError **error)
+arv_camera_dup_available_pixel_formats_as_display_names (ArvCamera *camera, guint *n_pixel_formats, GError **error)
 {
-	return arv_camera_get_available_enumerations_as_display_names (camera, "PixelFormat", n_pixel_formats, error);
+	return arv_camera_dup_available_enumerations_as_display_names (camera, "PixelFormat", n_pixel_formats, error);
 }
 
 /* Acquisition control */
@@ -755,23 +796,31 @@ arv_camera_acquisition (ArvCamera *camera, guint64 timeout, GError **error)
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
-	stream = arv_camera_create_stream (camera, NULL, NULL);
-	payload = arv_camera_get_payload (camera, &local_error);
-	if (local_error == NULL) {
-		arv_stream_push_buffer (stream,  arv_buffer_new (payload, NULL));
-		arv_camera_set_acquisition_mode (camera, ARV_ACQUISITION_MODE_SINGLE_FRAME, &local_error);
-	}
-	if (local_error == NULL)
-		arv_camera_start_acquisition (camera, &local_error);
-	if (local_error == NULL) {
-		if (timeout > 0)
-			buffer = arv_stream_timeout_pop_buffer (stream, timeout);
-		else
-			buffer = arv_stream_pop_buffer (stream);
-		arv_camera_stop_acquisition (camera, &local_error);
-	}
+	stream = arv_camera_create_stream (camera, NULL, NULL, &local_error);
+	if (ARV_IS_STREAM(stream)) {
+		payload = arv_camera_get_payload (camera, &local_error);
+		if (local_error == NULL) {
+			arv_stream_push_buffer (stream,  arv_buffer_new (payload, NULL));
+			arv_camera_set_acquisition_mode (camera, ARV_ACQUISITION_MODE_SINGLE_FRAME, &local_error);
+                        if (local_error != NULL &&
+                            local_error->code == ARV_GC_ERROR_ENUM_ENTRY_NOT_FOUND) {
+                                g_clear_error (&local_error);
+                                /* Some cameras don't support SingleFrame, fall back to Continuous */
+                                arv_camera_set_acquisition_mode (camera, ARV_ACQUISITION_MODE_CONTINUOUS, &local_error);
+                        }
+		}
+		if (local_error == NULL)
+			arv_camera_start_acquisition (camera, &local_error);
+		if (local_error == NULL) {
+			if (timeout > 0)
+				buffer = arv_stream_timeout_pop_buffer (stream, timeout);
+			else
+				buffer = arv_stream_pop_buffer (stream);
+			arv_camera_stop_acquisition (camera, &local_error);
+		}
 
-	g_object_unref (stream);
+		g_object_unref (stream);
+	}
 
 	if (local_error != NULL)
 		g_propagate_error (error, local_error);
@@ -898,7 +947,7 @@ arv_camera_get_frame_count_bounds (ArvCamera *camera, gint64 *min, gint64 *max, 
  * Configures a fixed frame rate mode. Once acquisition start is triggered, the video stream will be acquired with the given frame rate. A
  * negative or zero @frame_rate value disables the frame rate limit.
  *
- * Since: 0.2.0
+ * Since: 0.8.0
  */
 
 void
@@ -935,9 +984,13 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate, GError **error)
 
 	switch (priv->vendor) {
 		case ARV_CAMERA_VENDOR_BASLER:
+			/* Disabling AcquisitionStart is required on some Basler cameras. Just ignore a failure. */
 			arv_camera_set_string (camera, "TriggerSelector", "AcquisitionStart", &local_error);
 			if (local_error == NULL)
 				arv_camera_set_string (camera, "TriggerMode", "Off", &local_error);
+			else
+				g_clear_error (&local_error);
+
 			if (local_error == NULL)
 				arv_camera_set_string (camera, "TriggerSelector", "FrameStart", &local_error);
 			if (local_error == NULL)
@@ -968,7 +1021,7 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate, GError **error)
 					guint n_values;
 					guint i;
 
-					values = arv_camera_get_available_enumerations (camera, "FPS", &n_values, &local_error);
+					values = arv_camera_dup_available_enumerations (camera, "FPS", &n_values, &local_error);
 					for (i = 0; i < n_values && local_error == NULL; i++) {
 						if (values[i] > 0) {
 							double e;
@@ -991,12 +1044,13 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate, GError **error)
 				arv_camera_set_string (camera, "TriggerMode", "Off", &local_error);
 			if (local_error == NULL) {
 				if (priv->has_acquisition_frame_rate_enabled)
-					arv_camera_set_integer (camera, "AcquisitionFrameRateEnabled", 1, &local_error);
+					arv_camera_set_boolean (camera, "AcquisitionFrameRateEnabled", TRUE, &local_error);
 				else
 					arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", TRUE, &local_error);
 			}
 			if (local_error == NULL)
-				arv_camera_set_string (camera, "AcquisitionFrameRateAuto", "Off", &local_error);
+				if (priv->has_acquisition_frame_rate_auto)
+					arv_camera_set_string (camera, "AcquisitionFrameRateAuto", "Off", &local_error);
 			if (local_error == NULL)
 				arv_camera_set_float (camera, "AcquisitionFrameRate", frame_rate, &local_error);
 			break;
@@ -1008,6 +1062,8 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate, GError **error)
 			arv_camera_set_string (camera, "TriggerSelector", "FrameStart", &local_error);
 			if (local_error == NULL)
 				arv_camera_set_string (camera, "TriggerMode", "Off", &local_error);
+                        else
+                                g_clear_error (&local_error);
 			if (local_error == NULL)
 				arv_camera_set_float (camera,
 						      priv->has_acquisition_frame_rate ?
@@ -1107,11 +1163,16 @@ arv_camera_get_frame_rate_bounds (ArvCamera *camera, double *min, double *max, G
 				guint n_values;
 				guint i;
 
-				values = arv_camera_get_available_enumerations (camera, "FPS", &n_values, &local_error);
+				values = arv_camera_dup_available_enumerations (camera, "FPS", &n_values, &local_error);
 				if (local_error != NULL) {
 					g_propagate_error (error, local_error);
 					return;
 				}
+
+				if (max != NULL)
+					*max = 0;
+				if (min != NULL)
+					*min = 0;
 
 				for (i = 0; i < n_values; i++) {
 					if (values[i] > 0) {
@@ -1172,25 +1233,45 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 	GError *local_error = NULL;
+	gboolean has_frame_start = TRUE;
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 	g_return_if_fail (source != NULL);
 
 	if (priv->vendor == ARV_CAMERA_VENDOR_BASLER)
-		arv_camera_set_integer (camera, "AcquisitionFrameRateEnable", 0, &local_error);
+		arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", FALSE, &local_error);
 
-	if (local_error == NULL)
-		arv_camera_set_string (camera, "TriggerSelector", "AcquisitionStart", &local_error);
-	if (local_error == NULL)
-		arv_camera_set_string (camera, "TriggerMode", "Off", &local_error);
-	if (local_error == NULL)
+	if (local_error == NULL) {
 		arv_camera_set_string (camera, "TriggerSelector", "FrameStart", &local_error);
-	if (local_error == NULL)
-		arv_camera_set_string (camera, "TriggerMode", "On", &local_error);
-	if (local_error == NULL)
+                if (local_error == NULL)
+                        arv_camera_set_string (camera, "TriggerMode", "On", &local_error);
+                else if (local_error->code == ARV_DEVICE_ERROR_FEATURE_NOT_FOUND ||
+                         local_error->code == ARV_GC_ERROR_ENUM_ENTRY_NOT_FOUND) {
+                        g_clear_error (&local_error);
+			has_frame_start = FALSE;
+		}
+        }
+
+
+	if (local_error == NULL) {
+		arv_camera_set_string (camera, "TriggerSelector", "AcquisitionStart", &local_error);
+                if (local_error == NULL)
+                        arv_camera_set_string (camera, "TriggerMode",
+					       has_frame_start ? "Off" : "On", &local_error);
+                else if (local_error->code == ARV_DEVICE_ERROR_FEATURE_NOT_FOUND ||
+                         local_error->code == ARV_GC_ERROR_ENUM_ENTRY_NOT_FOUND)
+                        g_clear_error (&local_error);
+        }
+
+	if (local_error == NULL) {
 		arv_camera_set_string (camera, "TriggerActivation", "RisingEdge", &local_error);
-	if (local_error == NULL)
-		arv_camera_set_string (camera, "TriggerSource", source, &local_error);
+                if (local_error != NULL && (local_error->code == ARV_DEVICE_ERROR_FEATURE_NOT_FOUND ||
+					    local_error->code == ARV_GC_ERROR_ENUM_ENTRY_NOT_FOUND))
+                        g_clear_error (&local_error);
+        }
+
+        if (local_error == NULL)
+                arv_camera_set_string (camera, "TriggerSource", source, &local_error);
 
 	if (local_error != NULL)
 		g_propagate_error (error, local_error);
@@ -1234,7 +1315,7 @@ arv_camera_get_trigger_source (ArvCamera *camera, GError **error)
 }
 
 /**
- * arv_camera_get_available_trigger_sources:
+ * arv_camera_dup_available_trigger_sources:
  * @camera: a #ArvCamera
  * @n_sources: (out): number of sources
  * @error: a #GError placeholder, %NULL to ignore
@@ -1247,13 +1328,13 @@ arv_camera_get_trigger_source (ArvCamera *camera, GError **error)
  */
 
 const char **
-arv_camera_get_available_trigger_sources (ArvCamera *camera, guint *n_sources, GError **error)
+arv_camera_dup_available_trigger_sources (ArvCamera *camera, guint *n_sources, GError **error)
 {
-	return arv_camera_get_available_enumerations_as_strings (camera, "TriggerSource", n_sources, error);
+	return arv_camera_dup_available_enumerations_as_strings (camera, "TriggerSource", n_sources, error);
 }
 
 /**
- * arv_camera_get_available_triggers:
+ * arv_camera_dup_available_triggers:
  * @camera: a #ArvCamera
  * @n_triggers: (out): number of available triggers
  * @error: a #GError placeholder, %NULL to ignore
@@ -1266,9 +1347,9 @@ arv_camera_get_available_trigger_sources (ArvCamera *camera, guint *n_sources, G
  */
 
 const char **
-arv_camera_get_available_triggers (ArvCamera *camera, guint *n_triggers, GError **error)
+arv_camera_dup_available_triggers (ArvCamera *camera, guint *n_triggers, GError **error)
 {
-	return arv_camera_get_available_enumerations_as_strings (camera, "TriggerSelector", n_triggers, error);
+	return arv_camera_dup_available_enumerations_as_strings (camera, "TriggerSelector", n_triggers, error);
 }
 
 /**
@@ -1291,13 +1372,15 @@ arv_camera_clear_triggers (ArvCamera* camera, GError **error)
 
         g_return_if_fail (ARV_IS_CAMERA (camera));
 
-	triggers = arv_camera_get_available_enumerations_as_strings (camera, "TriggerSelector", &n_triggers, &local_error);
+	triggers = arv_camera_dup_available_triggers (camera, &n_triggers, &local_error);
 
 	for (i = 0; i < n_triggers && local_error == NULL; i++) {
 		arv_camera_set_string (camera, "TriggerSelector", triggers[i], &local_error);
 		if (local_error == NULL)
 			arv_camera_set_string (camera, "TriggerMode", "Off", &local_error);
 	}
+
+	g_free (triggers);
 
 	if (local_error != NULL)
 		g_propagate_error (error, local_error);
@@ -1327,7 +1410,7 @@ arv_camera_software_trigger (ArvCamera *camera, GError **error)
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Sets exposure time. User should take care to set a value compatible with
- * the desired frame rate.
+ * the desired frame rate. Negative @exposure_time_us is ignored.
  *
  * Since: 0.8.0
  */
@@ -1487,6 +1570,23 @@ arv_camera_get_exposure_time_auto (ArvCamera *camera, GError **error)
 	return arv_auto_from_string (arv_camera_get_string (camera, "ExposureAuto", error));
 }
 
+/*
+ * arv_camera_set_exposure_mode:
+ * @camera: a #ArvCamera
+ * @exspoure_mode: exposure mode
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Defines acquisition mode.
+ *
+ * Since: 0.8.7
+ */
+
+void
+arv_camera_set_exposure_mode (ArvCamera *camera, ArvExposureMode acquisition_mode, GError **error)
+{
+	arv_camera_set_string (camera, "ExposureMode", arv_exposure_mode_to_string (acquisition_mode), error);
+}
+
 /* Analog control */
 
 /**
@@ -1495,7 +1595,7 @@ arv_camera_get_exposure_time_auto (ArvCamera *camera, GError **error)
  * @gain: gain value
  * @error: a #GError placeholder, %NULL to ignore
  *
- * Sets the gain of the ADC converter.
+ * Sets the gain of the ADC converter. Negative @gain is ignored.
  *
  * Since: 0.8.0
  */
@@ -1512,8 +1612,12 @@ arv_camera_set_gain (ArvCamera *camera, double gain, GError **error)
 
 	if (priv->has_gain)
 		arv_camera_set_float (camera, "Gain", gain, error);
-	else
-		arv_camera_set_integer (camera, "GainRaw", gain, error);
+	else {
+		if (priv->gain_raw_as_float)
+			arv_camera_set_float (camera, "GainRaw", gain, error);
+		else
+			arv_camera_set_integer (camera, "GainRaw", gain, error);
+	}
 }
 
 /**
@@ -1535,6 +1639,8 @@ arv_camera_get_gain (ArvCamera *camera, GError **error)
 
 	if (priv->has_gain)
 		return arv_camera_get_float (camera, "Gain", error);
+	else if (priv->gain_raw_as_float)
+		return arv_camera_get_float (camera, "GainRaw", error);
 
 	return arv_camera_get_integer (camera, "GainRaw", error);
 }
@@ -1560,6 +1666,9 @@ arv_camera_get_gain_bounds (ArvCamera *camera, double *min, double *max, GError 
 
 	if (priv->has_gain) {
 		arv_camera_get_float_bounds (camera, "Gain", min, max, error);
+		return;
+	} else if (priv->gain_raw_as_float) {
+		arv_camera_get_float_bounds (camera, "GainRaw", min, max, error);
 		return;
 	}
 
@@ -1746,6 +1855,9 @@ arv_camera_is_gain_available (ArvCamera *camera, GError **error)
 
 	if (priv->has_gain)
 		return arv_camera_is_feature_available (camera, "Gain", error);
+
+	if (priv->gain_raw_as_float)
+		return arv_camera_is_feature_available (camera, "GainRaw", error);
 
 	return arv_camera_is_feature_available (camera, "GainRaw", error);
 }
@@ -2075,9 +2187,9 @@ arv_camera_get_integer_bounds_as_double (ArvCamera *camera, const char *feature,
 	gint64 min64, max64;
 
 	if (min != NULL)
-		*min = G_MININT64;
+		*min = -G_MAXDOUBLE;
 	if (max != NULL)
-		*max = G_MAXINT64;
+		*max = G_MAXDOUBLE;
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 	g_return_if_fail (feature != NULL);
@@ -2165,7 +2277,29 @@ arv_camera_get_float_bounds (ArvCamera *camera, const char *feature, double *min
 }
 
 /**
- * arv_camera_get_available_enumerations:
+ * arv_camera_get_float_increment:
+ * @camera: a #ArvCamera
+ * @feature: feature name
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: @feature value increment, or #G_MINDOUBLE on error.
+ *
+ * Since: 0.8.16
+ */
+
+double
+arv_camera_get_float_increment (ArvCamera *camera, const char *feature, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), 1);
+	g_return_val_if_fail (feature != NULL, 1);
+
+	return arv_device_get_float_feature_increment (priv->device, feature, error);
+}
+
+/**
+ * arv_camera_dup_available_enumerations:
  * @camera: a #ArvCamera
  * @feature: feature name
  * @n_values: placeholder for the number of returned values
@@ -2180,7 +2314,7 @@ arv_camera_get_float_bounds (ArvCamera *camera, const char *feature, double *min
  */
 
 gint64 *
-arv_camera_get_available_enumerations (ArvCamera *camera, const char *feature, guint *n_values, GError **error)
+arv_camera_dup_available_enumerations (ArvCamera *camera, const char *feature, guint *n_values, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
@@ -2189,11 +2323,11 @@ arv_camera_get_available_enumerations (ArvCamera *camera, const char *feature, g
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
-	return arv_device_get_available_enumeration_feature_values (priv->device, feature, n_values, error);
+	return arv_device_dup_available_enumeration_feature_values (priv->device, feature, n_values, error);
 }
 
 /**
- * arv_camera_get_available_enumerations_as_strings:
+ * arv_camera_dup_available_enumerations_as_strings:
  * @camera: a #ArvCamera
  * @feature: feature name
  * @n_values: placeholder for the number of returned values
@@ -2208,7 +2342,7 @@ arv_camera_get_available_enumerations (ArvCamera *camera, const char *feature, g
  */
 
 const char **
-arv_camera_get_available_enumerations_as_strings (ArvCamera *camera, const char *feature, guint *n_values, GError **error)
+arv_camera_dup_available_enumerations_as_strings (ArvCamera *camera, const char *feature, guint *n_values, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
@@ -2217,11 +2351,11 @@ arv_camera_get_available_enumerations_as_strings (ArvCamera *camera, const char 
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
-	return arv_device_get_available_enumeration_feature_values_as_strings (priv->device, feature, n_values, error);
+	return arv_device_dup_available_enumeration_feature_values_as_strings (priv->device, feature, n_values, error);
 }
 
 /**
- * arv_camera_get_available_enumerations_as_display_names:
+ * arv_camera_dup_available_enumerations_as_display_names:
  * @camera: a #ArvCamera
  * @feature: feature name
  * @n_values: placeholder for the number of returned values
@@ -2236,7 +2370,7 @@ arv_camera_get_available_enumerations_as_strings (ArvCamera *camera, const char 
  */
 
 const char **
-arv_camera_get_available_enumerations_as_display_names (ArvCamera *camera, const char *feature, guint *n_values, GError **error)
+arv_camera_dup_available_enumerations_as_display_names (ArvCamera *camera, const char *feature, guint *n_values, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
@@ -2245,7 +2379,7 @@ arv_camera_get_available_enumerations_as_display_names (ArvCamera *camera, const
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
-	return arv_device_get_available_enumeration_feature_values_as_display_names (priv->device, feature, n_values, error);
+	return arv_device_dup_available_enumeration_feature_values_as_display_names (priv->device, feature, n_values, error);
 }
 
 /**
@@ -2268,6 +2402,56 @@ arv_camera_is_feature_available (ArvCamera *camera, const char *feature, GError 
 
 	return arv_device_is_feature_available (priv->device, feature, error);
 }
+
+/**
+ * arv_camera_set_register_cache_policy:
+ * @camera: a #ArvCamera
+ * @policy: cache policy
+ *
+ * Sets the Genicam register cache policy.
+ *
+ * <warning><para>Be aware that some camera may have wrong Cachable properties defined in their Genicam metadata, which
+ * may lead to incorrect readouts. Using the debug cache policy, and activating genicam debug output (export
+ * ARV_DEBUG=genicam), can help you to check the cache validity. In this mode, every time the cache content is not in
+ * sync with the actual register value, a debug message is printed on the console.</para></warning>
+ *
+ * Since: 0.8.8
+ */
+
+void
+arv_camera_set_register_cache_policy (ArvCamera *camera, ArvRegisterCachePolicy policy)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_device_set_register_cache_policy (priv->device, policy);
+}
+
+/**
+ * arv_camera_set_range_check_policy:
+ * @camera: a #ArvCamera
+ * @policy: range check policy
+ *
+ * Sets the feature range check policy. When enabled, before being set, the value of all nodes with an #ArvGcFloat or
+ * #ArvGcInteger interface will be checked against their Min and Max properties.
+ *
+ * <warning><para>Be aware that some camera may have wrong definition of Min and Max, as this check is defined as not
+ * mandatory in the Genicam specification. If this is the case, it will not possible to set the value of the features
+ * with faulty Min or Max definition. Range check is disabled by default.</para></warning>
+ *
+ * Since: 0.8.8
+ */
+
+void arv_camera_set_range_check_policy	(ArvCamera *camera, ArvRangeCheckPolicy policy)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_device_set_range_check_policy (priv->device, policy);
+}
+
 
 /**
  * arv_camera_is_gv_device:
@@ -2312,7 +2496,7 @@ arv_camera_gv_get_n_stream_channels (ArvCamera *camera, GError **error)
  * @channel_id: id of the channel to select
  * @error: a #GError placeholder, %NULL to ignore
  *
- * Select the current stream channel.
+ * Select the current stream channel. Negative @channel_id is ignored.
  *
  * Since: 0.8.0
  */
@@ -2320,10 +2504,22 @@ arv_camera_gv_get_n_stream_channels (ArvCamera *camera, GError **error)
 void
 arv_camera_gv_select_stream_channel (ArvCamera *camera, gint channel_id, GError **error)
 {
+	GError *local_error = NULL;
+	gboolean available;
+
 	if (channel_id < 0)
 		return;
 
 	g_return_if_fail (arv_camera_is_gv_device (camera));
+
+	available = arv_camera_is_feature_available (camera, "GevStreamChannelSelector", &local_error);
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return;
+	}
+
+	if (!available && channel_id == 0)
+		return;
 
 	arv_camera_set_integer (camera, "GevStreamChannelSelector", channel_id, error);
 }
@@ -2335,13 +2531,25 @@ arv_camera_gv_select_stream_channel (ArvCamera *camera, gint channel_id, GError 
  *
  * Returns: The current stream channel id.
  *
- * Since: 0.4.0
+ * Since: 0.8.0
  */
 
 int
 arv_camera_gv_get_current_stream_channel (ArvCamera *camera, GError **error)
 {
+	GError *local_error = NULL;
+	gboolean available;
+
 	g_return_val_if_fail (arv_camera_is_gv_device (camera), 0);
+
+	available = arv_camera_is_feature_available (camera, "GevStreamChannelSelector", &local_error);
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return 0;
+	}
+
+	if (!available)
+		return 0;
 
 	return arv_camera_get_integer (camera, "GevStreamChannelSelector", error);
 }
@@ -2354,7 +2562,7 @@ arv_camera_gv_get_current_stream_channel (ArvCamera *camera, GError **error)
  *
  * Configure the inter packet delay to insert between each packet for the current stream
  * channel. This can be used as a crude flow-control mechanism if the application or the network
- * infrastructure cannot keep up with the packets coming from the device.
+ * infrastructure cannot keep up with the packets coming from the device. Negative @delay_ns is ignored.
  *
  * Since: 0.8.0
  */
@@ -2377,8 +2585,15 @@ arv_camera_gv_set_packet_delay (ArvCamera *camera, gint64 delay_ns, GError **err
 		return;
 	}
 
-	if (tick_frequency <= 0)
+	if (tick_frequency <= 0) {
+		if (!arv_camera_is_feature_available (camera, "GevSCPD", NULL))
+			g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_FEATURE_NOT_FOUND,
+				     "GevSCPD not not found");
+		else
+			g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
+				     "Device returned an invalid timestamp tick frequency");
 		return;
+	}
 
 	value = tick_frequency * delay_ns / 1000000000LL;
 	arv_camera_set_integer (camera, "GevSCPD", value, error);
@@ -2400,8 +2615,18 @@ arv_camera_gv_get_packet_delay (ArvCamera *camera, GError **error)
 	GError *local_error = NULL;
 	gint64 tick_frequency;
 	gint64 value;
+	gboolean available;
 
 	g_return_val_if_fail (arv_camera_is_gv_device (camera), 0);
+
+	available = arv_camera_is_feature_available (camera, "GevSCPD", &local_error);
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return 0;
+	}
+
+	if (!available)
+		return 0;
 
 	tick_frequency = arv_camera_get_integer (camera, "GevTimestampTickFrequency", &local_error);
 	if (local_error != NULL) {
@@ -2432,6 +2657,7 @@ arv_camera_gv_get_packet_delay (ArvCamera *camera, GError **error)
  *
  * This does not include data leader and data trailer and the last data packet which might be of
  * smaller size (since packet size is not necessarily a multiple of block size for stream channel).
+ * Negative @packet_size is ignored.
  *
  * Since: 0.8.0
  */
@@ -2516,6 +2742,26 @@ arv_camera_gv_set_stream_options (ArvCamera *camera, ArvGvStreamOption options)
 }
 
 /**
+ * arv_camera_gv_set_packet_size_adjustment:
+ * @camera: a #ArvCamera
+ * @adjustment: a #ArvGvPacketSizeAdjustment option
+ *
+ * Sets the option for packet size adjustment that happens at stream object creation.
+ *
+ * Since: 0.8.3
+ */
+
+void
+arv_camera_gv_set_packet_size_adjustment (ArvCamera *camera, ArvGvPacketSizeAdjustment adjustment)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_if_fail (arv_camera_is_gv_device (camera));
+
+	arv_gv_device_set_packet_size_adjustment (ARV_GV_DEVICE (priv->device), adjustment);
+}
+
+/**
  * arv_camera_is_uv_device:
  * @camera: a #ArvCamera
  *
@@ -2527,7 +2773,9 @@ arv_camera_gv_set_stream_options (ArvCamera *camera, ArvGvStreamOption options)
 gboolean
 arv_camera_is_uv_device	(ArvCamera *camera)
 {
+#if ARAVIS_HAS_USB
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+#endif
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
@@ -2567,8 +2815,10 @@ arv_camera_uv_is_bandwidth_control_available (ArvCamera *camera, GError **error)
 /**
  * arv_camera_uv_set_bandwidth:
  * @camera: a #ArvCamera
- * @bandwidth: Desired bandwith limit in megabits/sec. Set to 0 to disable limit mode.
+ * @bandwidth: Bandwith limit, in megabits/sec
  * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Set the bandwith limit or, if @bandwith is not strictly positive, disable the limit.
  *
  * Since: 0.8.0
  */
@@ -2624,6 +2874,22 @@ void
 arv_camera_uv_get_bandwidth_bounds (ArvCamera *camera, guint *min, guint *max, GError **error)
 {
 	arv_camera_get_integer_bounds_as_guint (camera, "DeviceLinkThroughputLimit", min, max, error);
+}
+
+/**
+ * arv_camera_are_chunks_available:
+ * @camera: a #ArvCamera
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: %TRUE if chunk data are available
+ *
+ * Since: 0.8.8
+ */
+
+gboolean
+arv_camera_are_chunks_available	(ArvCamera *camera, GError **error)
+{
+	return arv_camera_is_feature_available (camera, "ChunkModeActive", error);
 }
 
 /**
@@ -2757,7 +3023,7 @@ arv_camera_set_chunks (ArvCamera *camera, const char *chunk_list, GError **error
 		return;
 	}
 
-	available_chunks = arv_camera_get_available_enumerations_as_strings (camera, "ChunkSelector", &n_values, &local_error);
+	available_chunks = arv_camera_dup_available_enumerations_as_strings (camera, "ChunkSelector", &n_values, &local_error);
 	for (i = 0; i < n_values && local_error == NULL; i++) {
 		arv_camera_set_chunk_state (camera, available_chunks[i], FALSE, &local_error);
 	}
@@ -2812,34 +3078,72 @@ arv_camera_create_chunk_parser (ArvCamera *camera)
 /**
  * arv_camera_new:
  * @name: (allow-none): name of the camera.
+ * @error: a #GError placeholder, %NULL to ignore
  *
  * Creates a new #ArvCamera. If @name is null, it will instantiate the
  * first available camera.
  *
+ * If the camera is a GigEVision, @name can be either:
+ *
+ * - &lt;vendor&gt;-&lt;model&gt;-&lt;serial&gt;
+ * - &lt;vendor_alias&gt;-&lt;serial&gt;
+ * - &lt;vendor&gt;-&lt;serial&gt;
+ * - &lt;user_id&gt;
+ * - &lt;ip_address&gt;
+ * - &lt;mac_address&gt;
+ *
+ * For example:
+ *
+ * - The Imaging Source Europe GmbH-DFK 33GX265-39020369
+ * - The Imaging Source Europe GmbH-39020369
+ * - TIS-39020369
+ * - 192.168.0.2
+ * - 00:07:48:af:a2:61
+ *
+ * If the camera is a USB3Vision device, @name is either:
+ *
+ * - &lt;vendor_alias&gt;-&lt;serial&gt;
+ * - &lt;vendor&gt;-&lt;serial&gt;
+ *
  * Returns: a new #ArvCamera.
  *
- * Since: 0.2.0
+ * Since: 0.8.0
  */
 
 ArvCamera *
-arv_camera_new (const char *name)
+arv_camera_new (const char *name, GError **error)
 {
-	ArvCamera *camera;
-	ArvDevice *device;
-
-	device = arv_open_device (name);
-
-	if (!ARV_IS_DEVICE (device))
-		return NULL;
-
-	camera = g_object_new (ARV_TYPE_CAMERA, "device", device, NULL);
-
 	/* if you need to apply or test for fixups based on the camera model
-	   please do so in arv_camera_constructor and not here, as this breaks
+	   please do so in arv_camera_constructed and not here, as this breaks
 	   objects created with g_object_new, which includes but is not limited to
 	   introspection users */
 
-	return camera;
+	return g_initable_new (ARV_TYPE_CAMERA, NULL, error, "name", name, NULL);
+}
+
+/**
+ * arv_camera_new_with_device:
+ * @device: (transfer none): a #ArvDevice
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Creates a new #ArvCamera, using @device as its internal device object.
+ *
+ * Returns: a new #ArvCamera.
+ *
+ * Since: 0.8.6
+ */
+
+ArvCamera *
+arv_camera_new_with_device (ArvDevice *device, GError **error)
+{
+	g_return_val_if_fail (ARV_IS_DEVICE (device), NULL);
+
+	/* if you need to apply or test for fixups based on the camera model
+	   please do so in arv_camera_constructed and not here, as this breaks
+	   objects created with g_object_new, which includes but is not limited to
+	   introspection users */
+
+	return g_initable_new (ARV_TYPE_CAMERA, NULL, error, "device", device, NULL);
 }
 
 static void
@@ -2852,32 +3156,46 @@ arv_camera_finalize (GObject *object)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (ARV_CAMERA (object));
 
+	g_clear_pointer (&priv->name, g_free);
 	g_clear_object (&priv->device);
+	g_clear_error (&priv->init_error);
 
 	G_OBJECT_CLASS (arv_camera_parent_class)->finalize (object);
 }
 
-static GObject *
-arv_camera_constructor (GType gtype, guint n_properties, GObjectConstructParam *properties)
+static void
+arv_camera_constructed (GObject *object)
 {
+	ArvCamera *camera = ARV_CAMERA (object);
 	ArvCameraPrivate *priv;
-	GObject *object;
-	ArvCamera *camera;
 	ArvCameraVendor vendor;
 	ArvCameraSeries series;
 	const char *vendor_name;
 	const char *model_name;
+	GError *error = NULL;
 
-	object = G_OBJECT_CLASS (arv_camera_parent_class)->constructor (gtype, n_properties, properties);
+        G_OBJECT_CLASS (arv_camera_parent_class)->constructed (object);
 
-	camera = ARV_CAMERA (object);
 	priv = arv_camera_get_instance_private (camera);
 
 	if (!priv->device)
-		priv->device = arv_open_device (NULL);
+		priv->device = arv_open_device (priv->name, &error);
 
-	if (!ARV_IS_DEVICE (priv->device))
-		return NULL;
+	if (!ARV_IS_DEVICE (priv->device)) {
+		if (error == NULL) {
+			if (priv->name != NULL)
+				error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
+						     "Device '%s' not found", priv->name);
+			else
+				error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
+						     "No supported device found");
+		}
+
+		g_clear_error (&priv->init_error);
+		priv->init_error = error;
+
+		return;
+	}
 
 	priv->genicam = arv_device_get_genicam (priv->device);
 
@@ -2921,14 +3239,18 @@ arv_camera_constructor (GType gtype, guint n_properties, GObjectConstructParam *
 	priv->vendor = vendor;
 	priv->series = series;
 
+	priv->has_serial_number = ARV_IS_GC_STRING (arv_device_get_feature (priv->device, "DeviceSerialNumber"));
+
 	priv->has_gain = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device, "Gain"));
+	priv->gain_raw_as_float = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device, "GainRaw"));
+
 	priv->has_exposure_time = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device, "ExposureTime"));
 	priv->has_acquisition_frame_rate = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device,
 										    "AcquisitionFrameRate"));
-	priv->has_acquisition_frame_rate_enabled = ARV_IS_GC_INTEGER (arv_device_get_feature (priv->device,
+	priv->has_acquisition_frame_rate_auto = ARV_IS_GC_STRING (arv_device_get_feature (priv->device,
+											  "AcquisitionFrameRateAuto"));
+	priv->has_acquisition_frame_rate_enabled = ARV_IS_GC_BOOLEAN (arv_device_get_feature (priv->device,
 											      "AcquisitionFrameRateEnabled"));
-
-    return object;
 }
 
 static void
@@ -2939,7 +3261,11 @@ arv_camera_set_property (GObject *object, guint prop_id, const GValue *value, GP
 	switch (prop_id)
 	{
 		case PROP_CAMERA_DEVICE:
-			priv->device = g_value_get_object (value);
+			priv->device = g_value_dup_object (value);
+			break;
+		case PROP_CAMERA_NAME:
+			g_free (priv->name);
+			priv->name = g_value_dup_string (value);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2969,15 +3295,74 @@ arv_camera_class_init (ArvCameraClass *camera_class)
 	GObjectClass *object_class = G_OBJECT_CLASS (camera_class);
 
 	object_class->finalize = arv_camera_finalize;
-	object_class->constructor = arv_camera_constructor;
+	object_class->constructed = arv_camera_constructed;
 	object_class->set_property = arv_camera_set_property;
 	object_class->get_property = arv_camera_get_property;
 
-	g_object_class_install_property (object_class,
-					 PROP_CAMERA_DEVICE,
-					 g_param_spec_object ("device",
-							      "device",
-							      "the device associated with this camera",
-							      ARV_TYPE_DEVICE,
-							      G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+	/**
+	 * ArvCamera:name:
+	 *
+	 * Internal device name for object construction
+	 *
+	 * Stability: Private
+	 */
+
+	g_object_class_install_property
+		(object_class,
+		 PROP_CAMERA_NAME,
+		 g_param_spec_string ("name",
+				      "Camera name",
+				      "The camera name",
+				      NULL,
+				      G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+
+	/**
+	 * ArvCamera:device:
+	 *
+	 * Internal device object
+	 *
+	 * Stability: Private
+	 */
+
+	g_object_class_install_property
+		(object_class,
+		 PROP_CAMERA_DEVICE,
+		 g_param_spec_object ("device",
+				      "Device",
+				      "The device associated with this camera",
+				      ARV_TYPE_DEVICE,
+				      G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+}
+
+static gboolean
+arv_camera_initable_init (GInitable     *initable,
+			  GCancellable  *cancellable,
+			  GError       **error)
+{
+	ArvCamera *self = ARV_CAMERA (initable);
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (ARV_CAMERA (initable));
+
+	g_return_val_if_fail (ARV_IS_CAMERA (self), FALSE);
+
+	if (cancellable != NULL)
+	{
+		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+				     "Cancellable initialization not supported");
+		return FALSE;
+	}
+
+	if (priv->init_error != NULL) {
+		if (error != NULL)
+			*error = g_error_copy (priv->init_error);
+		 return FALSE;
+	}
+
+	return TRUE;
+}
+
+
+static void
+arv_camera_initable_iface_init (GInitableIface *iface)
+{
+	iface->init = arv_camera_initable_init;
 }

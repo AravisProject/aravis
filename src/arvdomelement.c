@@ -45,33 +45,6 @@ arv_dom_element_get_node_type (ArvDomNode *node)
 	return ARV_DOM_NODE_TYPE_ELEMENT_NODE;
 }
 
-static void
-arv_dom_element_write_to_stream (ArvDomNode *self, GOutputStream *stream, GError **error)
-{
-	ArvDomElementClass *element_class;
-	char *string;
-	char *attributes = NULL;
-
-	element_class = ARV_DOM_ELEMENT_GET_CLASS (self);
-	if (element_class->get_serialized_attributes != NULL)
-		attributes = element_class->get_serialized_attributes (ARV_DOM_ELEMENT (self));
-
-	if (attributes != NULL)
-		string = g_strdup_printf ("<%s %s>", arv_dom_node_get_node_name (self), attributes);
-	else
-		string = g_strdup_printf ("<%s>", arv_dom_node_get_node_name (self));
-
-	g_output_stream_write (stream, string, strlen (string), NULL, error);
-	g_free (string);
-	g_free (attributes);
-
-	ARV_DOM_NODE_CLASS (arv_dom_element_parent_class)->write_to_stream (self, stream, error);
-
-	string = g_strdup_printf ("</\%s>\n", arv_dom_node_get_node_name (self));
-	g_output_stream_write (stream, string, strlen (string), NULL, error);
-	g_free (string);
-}
-
 /* ArvDomElement implementation */
 
 const char *
@@ -116,5 +89,4 @@ arv_dom_element_class_init (ArvDomElementClass *klass)
 
 	node_class->get_node_value = arv_dom_element_get_node_value;
 	node_class->get_node_type = arv_dom_element_get_node_type;
-	node_class->write_to_stream = arv_dom_element_write_to_stream;
 }

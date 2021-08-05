@@ -28,6 +28,7 @@
 #endif
 
 #include <arvtypes.h>
+#include <arvgcenums.h>
 
 G_BEGIN_DECLS
 
@@ -37,26 +38,26 @@ G_DECLARE_INTERFACE (ArvGcInteger, arv_gc_integer, ARV, GC_INTEGER, GObject)
 struct _ArvGcIntegerInterface {
 	GTypeInterface parent;
 
-	gint64		(*get_value)		(ArvGcInteger *gc_integer, GError **error);
-	void		(*set_value)		(ArvGcInteger *gc_integer, gint64 value, GError **error);
-	gint64		(*get_min)		(ArvGcInteger *gc_integer, GError **error);
-	gint64		(*get_max)		(ArvGcInteger *gc_integer, GError **error);
-	gint64		(*get_inc)		(ArvGcInteger *gc_integer, GError **error);
-	const char *	(*get_unit)		(ArvGcInteger *gc_integer, GError **error);
-	void		(*impose_min)		(ArvGcInteger *gc_integer, gint64 minimum, GError **error);
-	void		(*impose_max)		(ArvGcInteger *gc_integer, gint64 maximum, GError **error);
+	gint64			(*get_value)		(ArvGcInteger *gc_integer, GError **error);
+	void			(*set_value)		(ArvGcInteger *gc_integer, gint64 value, GError **error);
+	gint64			(*get_min)		(ArvGcInteger *gc_integer, GError **error);
+	gint64			(*get_max)		(ArvGcInteger *gc_integer, GError **error);
+	gint64			(*get_inc)		(ArvGcInteger *gc_integer, GError **error);
+	ArvGcRepresentation	(*get_representation)	(ArvGcInteger *gc_integer);
+	const char *		(*get_unit)		(ArvGcInteger *gc_integer);
+	void			(*impose_min)		(ArvGcInteger *gc_integer, gint64 minimum, GError **error);
+	void			(*impose_max)		(ArvGcInteger *gc_integer, gint64 maximum, GError **error);
 };
 
-gint64		arv_gc_integer_get_value	(ArvGcInteger *gc_integer, GError **error);
-void		arv_gc_integer_set_value	(ArvGcInteger *gc_integer, gint64 value, GError **error);
-gint64		arv_gc_integer_get_min		(ArvGcInteger *gc_integer, GError **error);
-gint64		arv_gc_integer_get_max		(ArvGcInteger *gc_integer, GError **error);
-gint64		arv_gc_integer_get_inc		(ArvGcInteger *gc_integer, GError **error);
-const char *	arv_gc_integer_get_unit		(ArvGcInteger *gc_integer, GError **error);
-void		arv_gc_integer_impose_min	(ArvGcInteger *gc_integer, gint64 minimum, GError **error);
-void		arv_gc_integer_impose_max	(ArvGcInteger *gc_integer, gint64 maximum, GError **error);
-
-/* FIXME get_representation is missing */
+gint64			arv_gc_integer_get_value		(ArvGcInteger *gc_integer, GError **error);
+void			arv_gc_integer_set_value		(ArvGcInteger *gc_integer, gint64 value, GError **error);
+gint64			arv_gc_integer_get_min			(ArvGcInteger *gc_integer, GError **error);
+gint64			arv_gc_integer_get_max			(ArvGcInteger *gc_integer, GError **error);
+gint64			arv_gc_integer_get_inc			(ArvGcInteger *gc_integer, GError **error);
+ArvGcRepresentation	arv_gc_integer_get_representation	(ArvGcInteger *gc_integer);
+const char *		arv_gc_integer_get_unit			(ArvGcInteger *gc_integer);
+void			arv_gc_integer_impose_min		(ArvGcInteger *gc_integer, gint64 minimum, GError **error);
+void			arv_gc_integer_impose_max		(ArvGcInteger *gc_integer, gint64 maximum, GError **error);
 
 G_END_DECLS
 

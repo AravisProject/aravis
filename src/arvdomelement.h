@@ -40,7 +40,6 @@ struct _ArvDomElementClass {
 
 	const char* 	(*get_attribute) (ArvDomElement *self, const char *name);
 	void 		(*set_attribute) (ArvDomElement *self, const char *name, const char *attribute_value);
-	char *		(*get_serialized_attributes)	(ArvDomElement *self);
 };
 
 const char * 	arv_dom_element_get_tag_name 	(ArvDomElement *self);

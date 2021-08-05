@@ -4,4 +4,4 @@ export GI_TYPELIB_PATH=@GI_TYPELIB_PATH@
 export LD_LIBRARY_PATH=@LD_LIBRARY_PATH@
 export FAKE_GENICAM_PATH=@FAKE_GENICAM_PATH@
 
-gdb -ex run --args python $*
+gdb -ex run --args python3 $*

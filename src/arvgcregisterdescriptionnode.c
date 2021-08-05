@@ -39,6 +39,10 @@ struct _ArvGcRegisterDescriptionNode {
 	guint schema_major_version;
 	guint schema_minor_version;
 	guint schema_subminor_version;
+	char *product_guid;
+	char *version_guid;
+	char *standard_namespace;
+	char *tooltip;
 };
 
 struct _ArvGcRegisterDescriptionNodeClass {
@@ -78,8 +82,23 @@ arv_gc_register_description_node_set_attribute (ArvDomElement *self, const char*
 		node->minor_version = g_ascii_strtoll (value, NULL, 0);
 	} else if (strcmp (name, "SubMinorVersion") == 0) {
 		node->subminor_version = g_ascii_strtoll (value, NULL, 0);
-	} else
+	} else if (strcmp (name, "ProductGuid") == 0) {
+		g_free (node->product_guid);
+		node->product_guid = g_strdup (value);
+	} else if (strcmp (name, "VersionGuid") == 0) {
+		g_free (node->version_guid);
+		node->version_guid = g_strdup (value);
+	} else if (strcmp (name, "StandardNameSpace") == 0) {
+		g_free (node->standard_namespace);
+		node->standard_namespace = g_strdup (value);
+	} else if (strcmp (name, "ToolTip") == 0) {
+		g_free (node->tooltip);
+		node->tooltip = g_strdup (value);
+	} else if (strcmp (name, "xmlns:xsi") != 0 &&
+		   strcmp (name, "xmlns") != 0 &&
+		   strcmp (name, "xsi:schemaLocation") != 0) {
 		ARV_DOM_ELEMENT_CLASS (arv_gc_register_description_node_parent_class)->set_attribute (self, name, value);
+	}
 }
 
 static const char *
@@ -102,7 +121,7 @@ arv_gc_register_description_node_get_attribute (ArvDomElement *self, const char 
  * @node: a #ArvGcRegisterDescriptionNode
  * @major: major version number
  * @minor: minor version number
- * @subminor: sub mminor version number
+ * @subminor: sub minor version number
  *
  * Compare the Genicam document version to the given version.
  *
@@ -137,6 +156,20 @@ arv_gc_register_description_node_compare_schema_version (ArvGcRegisterDescriptio
 	return 0;
 }
 
+/**
+ * arv_gc_register_description_node_check_schema_version:
+ * @node: a #ArvGcRegisterDescriptionNode
+ * @required_major: required major version number
+ * @required_minor: required minor version number
+ * @required_subminor: required sub minor version number
+ *
+ * Checks if the Genicam document version is higher or equal to the given version.
+ *
+ * Returns: True if document version is higher or equal than the given version.
+ *
+ * Since: 0.6.0
+ */
+
 gboolean
 arv_gc_register_description_node_check_schema_version (ArvGcRegisterDescriptionNode *node,
 						       guint required_major,
@@ -144,6 +177,158 @@ arv_gc_register_description_node_check_schema_version (ArvGcRegisterDescriptionN
 						       guint required_subminor)
 {
 	return arv_gc_register_description_node_compare_schema_version (node, required_major, required_minor, required_subminor) >= 0;
+}
+
+/**
+ * arv_gc_register_description_node_get_model_name:
+ * @node: a #ArvGcRegisterDescriptionNode
+ *
+ * Gets camera model name for given Genicam document.
+ *
+ * Returns: Model name string.
+ *
+ * Since: 0.8.0
+ */
+
+char *
+arv_gc_register_description_node_get_model_name (ArvGcRegisterDescriptionNode* node)
+{
+	g_return_val_if_fail (ARV_IS_GC_REGISTER_DESCRIPTION_NODE (node), NULL);
+
+	return node->model_name;
+}
+
+/**
+ * arv_gc_register_description_node_get_vendor_name:
+ * @node: a #ArvGcRegisterDescriptionNode
+ *
+ * Gets camera vendor name for given Genicam document.
+ *
+ * Returns: Vendor name string.
+ *
+ * Since: 0.8.0
+ */
+
+char *
+arv_gc_register_description_node_get_vendor_name (ArvGcRegisterDescriptionNode* node)
+{
+	g_return_val_if_fail (ARV_IS_GC_REGISTER_DESCRIPTION_NODE (node), NULL);
+
+	return node->vendor_name;
+}
+
+/**
+ * arv_gc_register_description_node_get_major_version:
+ * @node: a #ArvGcRegisterDescriptionNode
+ *
+ * Gets Genicam document major version.
+ *
+ * Returns: Major version.
+ *
+ * Since: 0.8.0
+ */
+
+guint
+arv_gc_register_description_node_get_major_version (ArvGcRegisterDescriptionNode* node)
+{
+	g_return_val_if_fail (ARV_IS_GC_REGISTER_DESCRIPTION_NODE (node), 0);
+
+	return node->major_version;
+}
+
+/**
+ * arv_gc_register_description_node_get_minor_version:
+ * @node: a #ArvGcRegisterDescriptionNode
+ *
+ * Gets Genicam document minor version.
+ *
+ * Returns: Minor version.
+ *
+ * Since: 0.8.0
+ */
+
+guint
+arv_gc_register_description_node_get_minor_version (ArvGcRegisterDescriptionNode* node)
+{
+	g_return_val_if_fail (ARV_IS_GC_REGISTER_DESCRIPTION_NODE (node), 0);
+
+	return node->minor_version;
+}
+
+/**
+ * arv_gc_register_description_node_get_subminor_version:
+ * @node: a #ArvGcRegisterDescriptionNode
+ *
+ * Gets Genicam document sub minor version.
+ *
+ * Returns: Sub minor version.
+ *
+ * Since: 0.8.0
+ */
+
+guint
+arv_gc_register_description_node_get_subminor_version (ArvGcRegisterDescriptionNode* node)
+{
+	g_return_val_if_fail (ARV_IS_GC_REGISTER_DESCRIPTION_NODE (node), 0);
+
+	return node->subminor_version;
+}
+
+/**
+ * arv_gc_register_description_node_get_schema_major_version:
+ * @node: a #ArvGcRegisterDescriptionNode
+ *
+ * Gets Genicam document schema major version.
+ *
+ * Returns: Schema major version.
+ *
+ * Since: 0.8.0
+ */
+
+guint
+arv_gc_register_description_node_get_schema_major_version (ArvGcRegisterDescriptionNode* node)
+{
+	g_return_val_if_fail (ARV_IS_GC_REGISTER_DESCRIPTION_NODE (node), 0);
+
+	return node->schema_major_version;
+}
+
+/**
+ * arv_gc_register_description_node_get_schema_minor_version:
+ * @node: a #ArvGcRegisterDescriptionNode
+ *
+ * Gets Genicam document schema minor version.
+ *
+ * Returns: Schema minor version.
+ *
+ * Since: 0.8.0
+ */
+
+guint
+arv_gc_register_description_node_get_schema_minor_version (ArvGcRegisterDescriptionNode* node)
+{
+	g_return_val_if_fail (ARV_IS_GC_REGISTER_DESCRIPTION_NODE (node), 0);
+
+	return node->schema_minor_version;
+}
+
+/**
+ * arv_gc_register_description_node_get_schema_subminor_version:
+ * @node: a #ArvGcRegisterDescriptionNode
+ *
+ * Gets Genicam document schema sub minor version.
+ *
+ * Returns: Schema sub minor version.
+ *
+ * Since: 0.8.0
+ */
+
+guint
+arv_gc_register_description_node_get_schema_subminor_version (ArvGcRegisterDescriptionNode* node)
+{
+	g_return_val_if_fail (ARV_IS_GC_REGISTER_DESCRIPTION_NODE (node), 0);
+
+	return node->schema_subminor_version;
 }
 
 ArvGcNode *
@@ -171,6 +356,10 @@ arv_gc_register_description_node_finalize (GObject *object)
 
 	g_free (node->model_name);
 	g_free (node->vendor_name);
+	g_free (node->product_guid);
+	g_free (node->version_guid);
+	g_free (node->standard_namespace);
+	g_free (node->tooltip);
 
 	G_OBJECT_CLASS (arv_gc_register_description_node_parent_class)->finalize (object);
 }

@@ -69,17 +69,17 @@ arv_fake_interface_update_device_list (ArvInterface *interface, GArray *device_i
 }
 
 static ArvDevice *
-arv_fake_interface_open_device (ArvInterface *interface, const char *device_id)
+arv_fake_interface_open_device (ArvInterface *interface, const char *device_id, GError **error)
 {
 	if (g_strcmp0 (device_id, ARV_FAKE_DEVICE_ID) == 0 ||
 	    g_strcmp0 (device_id, ARV_FAKE_PHYSICAL_ID) == 0)
-		return arv_fake_device_new ("1");
+		return arv_fake_device_new ("1", error);
 
 	return NULL;
 }
 
-static ArvInterface *fake_interface = NULL;
-static GMutex fake_interface_mutex;
+static ArvInterface *arv_fake_interface = NULL;
+static GMutex arv_fake_interface_mutex;
 
 /**
  * arv_fake_interface_get_instance:
@@ -92,27 +92,27 @@ static GMutex fake_interface_mutex;
 ArvInterface *
 arv_fake_interface_get_instance (void)
 {
-	g_mutex_lock (&fake_interface_mutex);
+	g_mutex_lock (&arv_fake_interface_mutex);
 
-	if (fake_interface == NULL)
-		fake_interface = g_object_new (ARV_TYPE_FAKE_INTERFACE, NULL);
+	if (arv_fake_interface == NULL)
+		arv_fake_interface = g_object_new (ARV_TYPE_FAKE_INTERFACE, NULL);
 
-	g_mutex_unlock (&fake_interface_mutex);
+	g_mutex_unlock (&arv_fake_interface_mutex);
 
-	return ARV_INTERFACE (fake_interface);
+	return ARV_INTERFACE (arv_fake_interface);
 }
 
 void
 arv_fake_interface_destroy_instance (void)
 {
-	g_mutex_lock (&fake_interface_mutex);
+	g_mutex_lock (&arv_fake_interface_mutex);
 
-	if (fake_interface != NULL) {
-		g_object_unref (fake_interface);
-		fake_interface = NULL;
+	if (arv_fake_interface != NULL) {
+		g_object_unref (arv_fake_interface);
+		arv_fake_interface = NULL;
 	}
 
-	g_mutex_unlock (&fake_interface_mutex);
+	g_mutex_unlock (&arv_fake_interface_mutex);
 }
 
 static void

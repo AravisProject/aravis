@@ -25,29 +25,26 @@
  * @short_description: GigEVision interface
  */
 
-#include <arpa/inet.h>
 #include <arvgvinterfaceprivate.h>
 #include <arvinterfaceprivate.h>
 #include <arvgvdeviceprivate.h>
 #include <arvgvcpprivate.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <arvmisc.h>
+#include <arvmiscprivate.h>
+#include <arvnetworkprivate.h>
 #include <arvstr.h>
 #include <glib/gprintf.h>
 #include <gio/gio.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <net/if.h>
-#include <netdb.h>
-#include <ifaddrs.h>
 #include <stdlib.h>
 #include <string.h>
-#include <netinet/in.h>
 
 /* ArvGvDiscoverSocket implementation */
 
 typedef struct {
 	GSocketAddress *interface_address;
+	GSocketAddress *broadcast_address;
 	GSocket *socket;
 } ArvGvDiscoverSocket;
 
@@ -64,19 +61,6 @@ arv_gv_discover_socket_set_broadcast (ArvGvDiscoverSocket *discover_socket, gboo
 	return result == 0;
 }
 
-static gboolean
-arv_gv_discover_socket_set_buffer_size (ArvGvDiscoverSocket *discover_socket, gint buffer_size)
-{
-	int socket_fd;
-	int result;
-
-	socket_fd = g_socket_get_fd (discover_socket->socket);
-
-	result = setsockopt (socket_fd, SOL_SOCKET, SO_RCVBUF, &buffer_size, sizeof (buffer_size));
-
-	return result == 0;
-}
-
 typedef struct {
 	unsigned int n_sockets;
 	GSList *sockets;
@@ -88,48 +72,52 @@ arv_gv_discover_socket_list_new (void)
 {
 	ArvGvDiscoverSocketList *socket_list;
 	GSList *iter;
-	struct ifaddrs *ifap  = NULL;
-	struct ifaddrs *ifap_iter;
+	GList *ifaces;
+	GList *iface_iter;
 	int i;
 
 	socket_list = g_new0 (ArvGvDiscoverSocketList, 1);
 
-	if (getifaddrs (&ifap) < 0)
+	ifaces = arv_enumerate_network_interfaces ();
+	if (!ifaces)
 		return socket_list;
 
-	for (ifap_iter = ifap; ifap_iter != NULL; ifap_iter = ifap_iter->ifa_next) {
-		if ((ifap_iter->ifa_flags & IFF_UP) != 0 &&
-		    (ifap_iter->ifa_flags & IFF_POINTOPOINT) == 0 &&
-		    (ifap_iter->ifa_addr != NULL) &&
-		    (ifap_iter->ifa_addr->sa_family == AF_INET)) {
-			ArvGvDiscoverSocket *discover_socket = g_new0 (ArvGvDiscoverSocket, 1);
-			GSocketAddress *socket_address;
-			GInetAddress *inet_address;
-			char *inet_address_string;
-			GError *error = NULL;
-			gint buffer_size = ARV_GV_INTERFACE_DISCOVERY_SOCKET_BUFFER_SIZE;
+	for (iface_iter = ifaces; iface_iter != NULL; iface_iter = iface_iter->next) {
+		ArvGvDiscoverSocket *discover_socket = g_new0 (ArvGvDiscoverSocket, 1);
+		GSocketAddress *socket_address;
+		GSocketAddress *socket_broadcast;
+		GInetAddress *inet_address;
+		GInetAddress *inet_broadcast;
+		char *inet_address_string;
+		char *inet_broadcast_string;
+		GError *error = NULL;
+		gint buffer_size = ARV_GV_INTERFACE_DISCOVERY_SOCKET_BUFFER_SIZE;
+		socket_address = g_socket_address_new_from_native (arv_network_interface_get_addr(iface_iter->data),
+									sizeof (struct sockaddr));
+		socket_broadcast = g_socket_address_new_from_native (arv_network_interface_get_broadaddr(iface_iter->data),
+									sizeof (struct sockaddr));
+		inet_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address));
+		inet_broadcast = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_broadcast));
+		inet_address_string = g_inet_address_to_string (inet_address);
+		inet_broadcast_string = g_inet_address_to_string (inet_broadcast);
+		arv_info_interface ("[GvDiscoverSocket::new] Add interface %s (%s)", inet_address_string, inet_broadcast_string);
+		g_free (inet_address_string);
+		g_free (inet_broadcast_string);
+		discover_socket->interface_address = g_inet_socket_address_new (inet_address, 0);
+		discover_socket->broadcast_address = g_inet_socket_address_new (inet_broadcast, ARV_GVCP_PORT);
+		g_object_unref (socket_address);
+		g_object_unref (socket_broadcast);
 
-			socket_address = g_socket_address_new_from_native (ifap_iter->ifa_addr,
-									   sizeof (struct sockaddr));
-			inet_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address));
-			inet_address_string = g_inet_address_to_string (inet_address);
-			arv_debug_interface ("[GvDiscoverSocket::new] Add interface %s", inet_address_string);
-			g_free (inet_address_string);
-			discover_socket->interface_address = g_inet_socket_address_new (inet_address, 0);
-			g_object_unref (socket_address);
+		discover_socket->socket = g_socket_new (g_inet_address_get_family (inet_address),
+							G_SOCKET_TYPE_DATAGRAM,
+							G_SOCKET_PROTOCOL_UDP, NULL);
+		arv_socket_set_recv_buffer_size (g_socket_get_fd (discover_socket->socket), buffer_size);
+		g_socket_bind (discover_socket->socket, discover_socket->interface_address, FALSE, &error);
 
-			discover_socket->socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
-								G_SOCKET_TYPE_DATAGRAM,
-								G_SOCKET_PROTOCOL_UDP, NULL);
-			arv_gv_discover_socket_set_buffer_size (discover_socket, buffer_size);
-			g_socket_bind (discover_socket->socket, discover_socket->interface_address, FALSE, &error);
-
-			socket_list->sockets = g_slist_prepend (socket_list->sockets, discover_socket);
-			socket_list->n_sockets++;
-		}
+		socket_list->sockets = g_slist_prepend (socket_list->sockets, discover_socket);
+		socket_list->n_sockets++;
 	}
-
-	freeifaddrs (ifap);
+	g_list_free_full (ifaces, (GDestroyNotify) arv_network_interface_free);
 
 	socket_list->poll_fds = g_new (GPollFD, socket_list->n_sockets);
 	for (i = 0, iter = socket_list->sockets; iter != NULL; i++, iter = iter->next) {
@@ -139,6 +127,8 @@ arv_gv_discover_socket_list_new (void)
 		socket_list->poll_fds[i].events =  G_IO_IN;
 		socket_list->poll_fds[i].revents = 0;
 	}
+
+	arv_gpollfd_prepare_all(socket_list->poll_fds, socket_list->n_sockets);
 
 	return socket_list;
 }
@@ -150,10 +140,13 @@ arv_gv_discover_socket_list_free (ArvGvDiscoverSocketList *socket_list)
 
 	g_return_if_fail (socket_list != NULL);
 
+	arv_gpollfd_finish_all (socket_list->poll_fds, socket_list->n_sockets);
+
 	for (iter = socket_list->sockets; iter != NULL; iter = iter->next) {
 		ArvGvDiscoverSocket *discover_socket = iter->data;
 
 		g_object_unref (discover_socket->interface_address);
+		g_object_unref (discover_socket->broadcast_address);
 		g_object_unref (discover_socket->socket);
 		g_free (discover_socket);
 	}
@@ -170,17 +163,11 @@ arv_gv_discover_socket_list_free (ArvGvDiscoverSocketList *socket_list)
 static void
 arv_gv_discover_socket_list_send_discover_packet (ArvGvDiscoverSocketList *socket_list)
 {
-	GInetAddress *broadcast_address;
-	GSocketAddress *broadcast_socket_address;
 	ArvGvcpPacket *packet;
 	GSList *iter;
 	size_t size;
 
 	packet = arv_gvcp_packet_new_discovery_cmd (&size);
-
-	broadcast_address = g_inet_address_new_from_string ("255.255.255.255");
-	broadcast_socket_address = g_inet_socket_address_new (broadcast_address, ARV_GVCP_PORT);
-	g_object_unref (broadcast_address);
 
 	for (iter = socket_list->sockets; iter != NULL; iter = iter->next) {
 		ArvGvDiscoverSocket *discover_socket = iter->data;
@@ -188,7 +175,7 @@ arv_gv_discover_socket_list_send_discover_packet (ArvGvDiscoverSocketList *socke
 
 		arv_gv_discover_socket_set_broadcast (discover_socket, TRUE);
 		g_socket_send_to (discover_socket->socket,
-				  broadcast_socket_address,
+				  discover_socket->broadcast_address,
 				  (const char *) packet, size,
 				  NULL, &error);
 		if (error != NULL) {
@@ -198,7 +185,6 @@ arv_gv_discover_socket_list_send_discover_packet (ArvGvDiscoverSocketList *socke
 		arv_gv_discover_socket_set_broadcast (discover_socket, FALSE);
 	}
 
-	g_object_unref (broadcast_socket_address);
 
 	arv_gvcp_packet_free (packet);
 }
@@ -245,6 +231,21 @@ arv_gv_interface_device_infos_new (GInetAddress *interface_address,
 				   ARV_GVBS_SERIAL_NUMBER_SIZE);
 	infos->user_id = g_strndup ((char *) &infos->discovery_data[ARV_GVBS_USER_DEFINED_NAME_OFFSET],
 				    ARV_GVBS_USER_DEFINED_NAME_SIZE);
+	infos->mac = g_strdup_printf ("%02x:%02x:%02x:%02x:%02x:%02x",
+				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 2],
+				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 3],
+				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 4],
+				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 5],
+				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 6],
+				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 7]);
+
+        /* Some devices return a zero length string as the serial identifier.
+         * Use the MAC address as the serial number in this case */
+
+        if (infos->serial == NULL || infos->serial[0] == '\0') {
+                g_free (infos->serial);
+                infos->serial = g_strdup (infos->mac);
+        }
 
 	infos->id = g_strdup_printf ("%s-%s-%s", infos->vendor, infos->model, infos->serial);
 	arv_str_strip (infos->id, ARV_DEVICE_NAME_ILLEGAL_CHARACTERS, ARV_DEVICE_NAME_REPLACEMENT_CHARACTER);
@@ -257,13 +258,6 @@ arv_gv_interface_device_infos_new (GInetAddress *interface_address,
 
 	infos->interface_address = interface_address;
 
-	infos->mac = g_strdup_printf ("%02x:%02x:%02x:%02x:%02x:%02x",
-				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 2],
-				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 3],
-				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 4],
-				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 5],
-				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 6],
-				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 7]);
 	infos->ref_count = 1;
 
 	return infos;
@@ -342,13 +336,25 @@ _discover (GHashTable *devices, const char *device_id)
 	arv_gv_discover_socket_list_send_discover_packet (socket_list);
 
 	do {
-		if (g_poll (socket_list->poll_fds, socket_list->n_sockets, ARV_GV_INTERFACE_DISCOVERY_TIMEOUT_MS) == 0) {
+		gint res;
+
+		res = g_poll (socket_list->poll_fds, socket_list->n_sockets, ARV_GV_INTERFACE_DISCOVERY_TIMEOUT_MS);
+		if (res <= 0) {
 			arv_gv_discover_socket_list_free (socket_list);
+
+			/* Timeout case */
+			if (res == 0)
+				return NULL;
+
+			g_critical ("g_poll returned %d (call was interrupted)", res);
+
 			return NULL;
 		}
 
 		for (i = 0, iter = socket_list->sockets; iter != NULL; i++, iter = iter->next) {
 			ArvGvDiscoverSocket *discover_socket = iter->data;
+
+			arv_gpollfd_clear_one (&socket_list->poll_fds[i], discover_socket->socket);
 
 			do {
 				g_socket_set_blocking (discover_socket->socket, FALSE);
@@ -366,7 +372,7 @@ _discover (GHashTable *devices, const char *device_id)
 						char *address_string;
 						char *data = buffer + sizeof (ArvGvcpHeader);
 
-						arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_LOG);
+						arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_DEBUG);
 
 						interface_address = g_inet_socket_address_get_address
 							(G_INET_SOCKET_ADDRESS (discover_socket->interface_address));
@@ -374,7 +380,7 @@ _discover (GHashTable *devices, const char *device_id)
 												  data);
 						address_string = g_inet_address_to_string (interface_address);
 
-						arv_debug_interface ("[GvInterface::discovery] Device '%s' found "
+						arv_info_interface ("[GvInterface::discovery] Device '%s' found "
 								     "(interface %s) user_id '%s' - MAC '%s'",
 								     device_infos->id,
 								     address_string,
@@ -485,40 +491,34 @@ arv_gv_interface_camera_locate (ArvGvInterface *gv_interface, GInetAddress *devi
 	GSocketAddress *device_socket_address;
 	size_t size;
 	int i, count;
-
-	struct ifaddrs *ifap = NULL;
-	struct ifaddrs *ifap_iter;
+	GList *ifaces;
+	GList *iface_iter;
 	struct sockaddr_in device_sockaddr;
 
 	device_socket_address = g_inet_socket_address_new(device_address, ARV_GVCP_PORT);
 
-	if (getifaddrs(&ifap) >= 0) {
+	ifaces = arv_enumerate_network_interfaces ();
+	if (ifaces) {
 		g_socket_address_to_native(device_socket_address, &device_sockaddr, sizeof(device_sockaddr), NULL);
 
-		// find interface whose netmask matches the camera's address
-		for (ifap_iter = ifap; ifap_iter != NULL; ifap_iter = ifap_iter->ifa_next) {
-			if ((ifap_iter->ifa_flags & IFF_UP) != 0 &&
-			(ifap_iter->ifa_flags & IFF_POINTOPOINT) == 0 &&
-			(ifap_iter->ifa_netmask != NULL) &&
-			(ifap_iter->ifa_addr != NULL) &&
-			(ifap_iter->ifa_addr->sa_family == AF_INET)) {
-				struct sockaddr_in *sa = (struct sockaddr_in *)ifap_iter->ifa_addr;
-				struct sockaddr_in *mask = (struct sockaddr_in *)ifap_iter->ifa_netmask;
-				if ((sa->sin_addr.s_addr & mask->sin_addr.s_addr) == (device_sockaddr.sin_addr.s_addr & mask->sin_addr.s_addr)) {
-					GSocketAddress *socket_address = g_socket_address_new_from_native(ifap_iter->ifa_addr, sizeof(struct sockaddr));
-					GInetAddress *inet_address = g_object_ref(g_inet_socket_address_get_address(G_INET_SOCKET_ADDRESS(socket_address)));
+		for (iface_iter = ifaces; iface_iter != NULL; iface_iter = iface_iter->next) {
+			struct sockaddr_in *sa = (struct sockaddr_in*)arv_network_interface_get_addr(iface_iter->data);
+			struct sockaddr_in *mask = (struct sockaddr_in*)arv_network_interface_get_netmask(iface_iter->data);
+			if ((sa->sin_addr.s_addr & mask->sin_addr.s_addr) == (device_sockaddr.sin_addr.s_addr & mask->sin_addr.s_addr)) {
+				GSocketAddress *socket_address = g_socket_address_new_from_native
+					(arv_network_interface_get_addr(iface_iter->data), sizeof(struct sockaddr));
+				GInetAddress *inet_address = g_object_ref(g_inet_socket_address_get_address
+									  (G_INET_SOCKET_ADDRESS(socket_address)));
 
-					freeifaddrs(ifap);
+				g_list_free_full (ifaces, (GDestroyNotify) arv_network_interface_free);
 
-					g_object_unref(socket_address);
-					g_object_unref(device_socket_address);
+				g_object_unref(socket_address);
+				g_object_unref(device_socket_address);
 
-					return inet_address;
-				}
+				return inet_address;
 			}
 		}
-
-		freeifaddrs(ifap);
+		g_list_free_full (ifaces, (GDestroyNotify) arv_network_interface_free);
 	}
 
 	socket_list = arv_gv_discover_socket_list_new();
@@ -560,6 +560,8 @@ arv_gv_interface_camera_locate (ArvGvInterface *gv_interface, GInetAddress *devi
 		for (i = 0, iter = socket_list->sockets; iter != NULL; i++, iter = iter->next) {
 			ArvGvDiscoverSocket *socket = iter->data;
 
+			arv_gpollfd_clear_one (&socket_list->poll_fds[i], socket->socket);
+
 			do {
 				g_socket_set_blocking (socket->socket, FALSE);
 				count = g_socket_receive (socket->socket, buffer,
@@ -588,7 +590,7 @@ arv_gv_interface_camera_locate (ArvGvInterface *gv_interface, GInetAddress *devi
 }
 
 static ArvDevice *
-_open_device (ArvInterface *interface, GHashTable *devices, const char *device_id)
+_open_device (ArvInterface *interface, GHashTable *devices, const char *device_id, GError **error)
 {
 	ArvGvInterface *gv_interface;
 	ArvDevice *device = NULL;
@@ -636,7 +638,7 @@ _open_device (ArvInterface *interface, GHashTable *devices, const char *device_i
 					arv_gv_interface_camera_locate (gv_interface, device_address);
 
 				if (interface_address != NULL) {
-					device = arv_gv_device_new (interface_address, device_address);
+					device = arv_gv_device_new (interface_address, device_address, NULL);
 					g_object_unref (interface_address);
 				}
 			}
@@ -646,32 +648,41 @@ _open_device (ArvInterface *interface, GHashTable *devices, const char *device_i
 			}
 		}
 		freeaddrinfo (servinfo);
+
+		if (device == NULL)
+			g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
+				     "Can't connect to device at address '%s'", device_id);
+
 		return device;
 	}
 
 	device_address = _device_infos_to_ginetaddress (device_infos);
-	device = arv_gv_device_new (device_infos->interface_address, device_address);
+	device = arv_gv_device_new (device_infos->interface_address, device_address, error);
 	g_object_unref (device_address);
 
 	return device;
 }
 
 static ArvDevice *
-arv_gv_interface_open_device (ArvInterface *interface, const char *device_id)
+arv_gv_interface_open_device (ArvInterface *interface, const char *device_id, GError **error)
 {
 	ArvDevice *device;
 	ArvGvInterfaceDeviceInfos *device_infos;
+	GError *local_error = NULL;
 
-	device = _open_device (interface, ARV_GV_INTERFACE (interface)->priv->devices, device_id);
-	if (ARV_IS_DEVICE (device))
+	device = _open_device (interface, ARV_GV_INTERFACE (interface)->priv->devices, device_id, &local_error);
+	if (ARV_IS_DEVICE (device) || local_error != NULL) {
+		if (local_error != NULL)
+			g_propagate_error (error, local_error);
 		return device;
+	}
 
 	device_infos = _discover (NULL, device_id);
 	if (device_infos != NULL) {
 		GInetAddress *device_address;
 
 		device_address = _device_infos_to_ginetaddress (device_infos);
-		device = arv_gv_device_new (device_infos->interface_address, device_address);
+		device = arv_gv_device_new (device_infos->interface_address, device_address, error);
 		g_object_unref (device_address);
 
 		arv_gv_interface_device_infos_unref (device_infos);
@@ -682,8 +693,8 @@ arv_gv_interface_open_device (ArvInterface *interface, const char *device_id)
 	return NULL;
 }
 
-static ArvInterface *gv_interface = NULL;
-static GMutex gv_interface_mutex;
+static ArvInterface *arv_gv_interface = NULL;
+static GMutex arv_gv_interface_mutex;
 
 /**
  * arv_gv_interface_get_instance:
@@ -696,27 +707,27 @@ static GMutex gv_interface_mutex;
 ArvInterface *
 arv_gv_interface_get_instance (void)
 {
-	g_mutex_lock (&gv_interface_mutex);
+	g_mutex_lock (&arv_gv_interface_mutex);
 
-	if (gv_interface == NULL)
-		gv_interface = g_object_new (ARV_TYPE_GV_INTERFACE, NULL);
+	if (arv_gv_interface == NULL)
+		arv_gv_interface = g_object_new (ARV_TYPE_GV_INTERFACE, NULL);
 
-	g_mutex_unlock (&gv_interface_mutex);
+	g_mutex_unlock (&arv_gv_interface_mutex);
 
-	return ARV_INTERFACE (gv_interface);
+	return ARV_INTERFACE (arv_gv_interface);
 }
 
 void
 arv_gv_interface_destroy_instance (void)
 {
-	g_mutex_lock (&gv_interface_mutex);
+	g_mutex_lock (&arv_gv_interface_mutex);
 
-	if (gv_interface != NULL) {
-		g_object_unref (gv_interface);
-		gv_interface = NULL;
+	if (arv_gv_interface != NULL) {
+		g_object_unref (arv_gv_interface);
+		arv_gv_interface = NULL;
 	}
 
-	g_mutex_unlock (&gv_interface_mutex);
+	g_mutex_unlock (&arv_gv_interface_mutex);
 }
 
 static void

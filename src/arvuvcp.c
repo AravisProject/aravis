@@ -60,11 +60,12 @@ arv_uvcp_packet_new_read_memory_cmd (guint64 address, guint32 size, guint16 pack
 	packet = g_malloc (*packet_size);
 
 	packet->header.magic = GUINT32_TO_LE (ARV_UVCP_MAGIC);
-	packet->header.packet_type = GUINT16_TO_LE (ARV_UVCP_PACKET_TYPE_CMD);
+	packet->header.flags = GUINT16_TO_LE (ARV_UVCP_FLAGS_REQUEST_ACK);
 	packet->header.command = GUINT16_TO_LE (ARV_UVCP_COMMAND_READ_MEMORY_CMD);
 	packet->header.size = GUINT16_TO_LE (sizeof (ArvUvcpReadMemoryCmdInfos));
 	packet->header.id = GUINT16_TO_LE (packet_id);
 	packet->infos.address = GUINT64_TO_LE (address);
+	packet->infos.unknown = 0;
 	packet->infos.size = GUINT16_TO_LE (size);
 
 	return (ArvUvcpPacket *) packet;
@@ -93,7 +94,7 @@ arv_uvcp_packet_new_write_memory_cmd (guint64 address, guint32 size, guint16 pac
 	packet = g_malloc (*packet_size);
 
 	packet->header.magic = GUINT32_TO_LE (ARV_UVCP_MAGIC);
-	packet->header.packet_type = GUINT16_TO_LE (ARV_UVCP_PACKET_TYPE_CMD);
+	packet->header.flags = GUINT16_TO_LE (ARV_UVCP_FLAGS_REQUEST_ACK);
 	packet->header.command = GUINT16_TO_LE (ARV_UVCP_COMMAND_WRITE_MEMORY_CMD);
 	packet->header.size = GUINT16_TO_LE (sizeof (ArvUvcpWriteMemoryCmdInfos) + size);
 	packet->header.id = GUINT16_TO_LE (packet_id);
@@ -122,9 +123,9 @@ arv_enum_to_string (GType type,
 }
 
 const char *
-arv_uvcp_packet_type_to_string (ArvUvcpPacketType value)
+arv_uvcp_status_to_string (ArvUvcpStatus value)
 {
-	return arv_enum_to_string (ARV_TYPE_UVCP_PACKET_TYPE, value);
+	return arv_enum_to_string (ARV_TYPE_UVCP_STATUS, value);
 }
 
 const char *
@@ -145,6 +146,7 @@ arv_uvcp_command_to_string (ArvUvcpCommand value)
 char *
 arv_uvcp_packet_to_string (const ArvUvcpPacket *packet)
 {
+	ArvUvcpCommand command;
 	GString *string;
 	char *c_string;
 	int packet_size;
@@ -154,10 +156,14 @@ arv_uvcp_packet_to_string (const ArvUvcpPacket *packet)
 
 	string = g_string_new ("");
 
-	g_string_append_printf (string, "packet_type  = %s\n",
-				arv_uvcp_packet_type_to_string (GUINT16_FROM_LE (packet->header.packet_type)));
-	g_string_append_printf (string, "command      = %s\n",
-				arv_uvcp_command_to_string (GUINT16_FROM_LE (packet->header.command)));
+	command = arv_uvcp_packet_get_command (packet);
+
+	if ((command & 0x0001) != 0)
+		g_string_append_printf (string, "status       = %s\n",
+					arv_uvcp_status_to_string (arv_uvcp_packet_get_status (packet)));
+	else
+		g_string_append_printf (string, "flags        = 0x%04x\n", arv_uvcp_packet_get_flags (packet));
+	g_string_append_printf (string, "command      = %s\n", arv_uvcp_command_to_string (command));
 	g_string_append_printf (string, "size         = %d\n", GUINT16_FROM_LE (packet->header.size));
 	g_string_append_printf (string, "id           = %d\n", GUINT16_FROM_LE (packet->header.id));
 
@@ -167,10 +173,10 @@ arv_uvcp_packet_to_string (const ArvUvcpPacket *packet)
 				ArvUvcpReadMemoryCmd *cmd_packet = (void *) packet;
 
 				value = GUINT64_FROM_LE (cmd_packet->infos.address);
-				g_string_append_printf (string, "address      = 0x%016lx\n", value);
+				g_string_append_printf (string, "address      = 0x%016" G_GINT64_MODIFIER "x\n", value);
 				value = GUINT16_FROM_LE (cmd_packet->infos.size);
-				g_string_append_printf (string, "size         = %10lu (0x%08lx)\n",
-							value, value);
+				g_string_append_printf (string, "size         = %10" G_GINT64_MODIFIER "u (0x%08"
+							G_GINT64_MODIFIER "x)\n", value, value);
 				break;
 			}
 		case ARV_UVCP_COMMAND_READ_MEMORY_ACK:
@@ -182,7 +188,7 @@ arv_uvcp_packet_to_string (const ArvUvcpPacket *packet)
 				ArvUvcpWriteMemoryCmd *cmd_packet = (void *) packet;
 
 				value = GUINT64_FROM_LE (cmd_packet->infos.address);
-				g_string_append_printf (string, "address      = 0x%016lx\n", value);
+				g_string_append_printf (string, "address      = 0x%016" G_GINT64_MODIFIER "x\n", value);
 				break;
 			}
 		case ARV_UVCP_COMMAND_WRITE_MEMORY_ACK:
@@ -190,8 +196,8 @@ arv_uvcp_packet_to_string (const ArvUvcpPacket *packet)
 				ArvUvcpWriteMemoryAck *cmd_packet = (void *) packet;
 
 				value = GUINT64_FROM_LE (cmd_packet->infos.bytes_written);
-				g_string_append_printf (string, "written      = %10lu (0x%08lx)\n",
-							value, value);
+				g_string_append_printf (string, "written      = %10" G_GINT64_MODIFIER "u (0x%08"
+							G_GINT64_MODIFIER "x)\n", value, value);
 				break;
 			}
 	}
@@ -220,16 +226,16 @@ arv_uvcp_packet_debug (const ArvUvcpPacket *packet, ArvDebugLevel level)
 {
 	char *string;
 
-	if (!arv_debug_check (&arv_debug_category_cp, level))
+	if (!arv_debug_check (ARV_DEBUG_CATEGORY_CP, level))
 		return;
 
 	string = arv_uvcp_packet_to_string (packet);
 	switch (level) {
-		case ARV_DEBUG_LEVEL_LOG:
-			arv_log_cp ("%s", string);
-			break;
 		case ARV_DEBUG_LEVEL_DEBUG:
 			arv_debug_cp ("%s", string);
+			break;
+		case ARV_DEBUG_LEVEL_INFO:
+			arv_info_cp ("%s", string);
 			break;
 		case ARV_DEBUG_LEVEL_WARNING:
 			arv_warning_cp ("%s", string);

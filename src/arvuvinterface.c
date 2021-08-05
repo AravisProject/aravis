@@ -28,8 +28,8 @@
 #include <arvuvinterfaceprivate.h>
 #include <arvinterfaceprivate.h>
 #include <arvuvdeviceprivate.h>
-#include <arvdebug.h>
-#include <arvmisc.h>
+#include <arvdebugprivate.h>
+#include <arvmiscprivate.h>
 #include <arvstr.h>
 #include <libusb.h>
 #include <stdio.h>
@@ -152,7 +152,7 @@ printdev (libusb_device *device)
 }
 #endif
 
-ArvInterfaceDeviceIds *
+static ArvInterfaceDeviceIds *
 _usb_device_to_device_ids (ArvUvInterface *uv_interface, libusb_device *device)
 {
 	ArvInterfaceDeviceIds *device_ids = NULL;
@@ -260,6 +260,8 @@ _discover (ArvUvInterface *uv_interface,  GArray *device_ids)
 		return;
 	}
 
+	g_hash_table_remove_all (uv_interface->priv->devices);
+
 	for (i = 0; i < count; i++) {
 		ArvInterfaceDeviceIds *ids;
 
@@ -280,7 +282,7 @@ _discover (ArvUvInterface *uv_interface,  GArray *device_ids)
 		}
 	}
 
-	arv_debug_interface ("Found %d USB3Vision device%s (among %d USB device%s)",
+	arv_info_interface ("Found %d USB3Vision device%s (among %" G_GSSIZE_FORMAT " USB device%s)",
 			     uv_count , uv_count > 1 ? "s" : "",
 			     count, count > 1 ? "s" : "");
 
@@ -298,10 +300,9 @@ arv_uv_interface_update_device_list (ArvInterface *interface, GArray *device_ids
 }
 
 static ArvDevice *
-_open_device (ArvInterface *interface, const char *device_id)
+_open_device (ArvInterface *interface, const char *device_id, GError **error)
 {
 	ArvUvInterface *uv_interface;
-	ArvDevice *device = NULL;
 	ArvUvInterfaceDeviceInfos *device_infos;
 
 	uv_interface = ARV_UV_INTERFACE (interface);
@@ -318,27 +319,29 @@ _open_device (ArvInterface *interface, const char *device_id)
 	if (device_infos == NULL)
 		return NULL;
 
-	device = arv_uv_device_new (device_infos->manufacturer, device_infos->product, device_infos->serial_nbr);
-
-	return device;
+	return arv_uv_device_new (device_infos->manufacturer, device_infos->product, device_infos->serial_nbr, error);
 }
 
 static ArvDevice *
-arv_uv_interface_open_device (ArvInterface *interface, const char *device_id)
+arv_uv_interface_open_device (ArvInterface *interface, const char *device_id, GError **error)
 {
 	ArvDevice *device;
+	GError *local_error = NULL;
 
-	device = _open_device (interface, device_id);
-	if (ARV_IS_DEVICE (device))
+	device = _open_device (interface, device_id, error);
+	if (ARV_IS_DEVICE (device) || local_error != NULL) {
+		if (local_error != NULL)
+			g_propagate_error (error, local_error);
 		return device;
+	}
 
 	_discover (ARV_UV_INTERFACE (interface), NULL);
 
-	return _open_device (interface, device_id);
+	return _open_device (interface, device_id, error);
 }
 
-static ArvInterface *uv_interface = NULL;
-static GMutex uv_interface_mutex;
+static ArvInterface *arv_uv_interface = NULL;
+static GMutex arv_uv_interface_mutex;
 
 /**
  * arv_uv_interface_get_instance:
@@ -351,24 +354,24 @@ static GMutex uv_interface_mutex;
 ArvInterface *
 arv_uv_interface_get_instance (void)
 {
-	g_mutex_lock (&uv_interface_mutex);
+	g_mutex_lock (&arv_uv_interface_mutex);
 
-	if (uv_interface == NULL)
-		uv_interface = g_object_new (ARV_TYPE_UV_INTERFACE, NULL);
+	if (arv_uv_interface == NULL)
+		arv_uv_interface = g_object_new (ARV_TYPE_UV_INTERFACE, NULL);
 
-	g_mutex_unlock (&uv_interface_mutex);
+	g_mutex_unlock (&arv_uv_interface_mutex);
 
-	return ARV_INTERFACE (uv_interface);
+	return ARV_INTERFACE (arv_uv_interface);
 }
 
 void
 arv_uv_interface_destroy_instance (void)
 {
-	g_mutex_lock (&uv_interface_mutex);
+	g_mutex_lock (&arv_uv_interface_mutex);
 
-	g_clear_object (&uv_interface);
+	g_clear_object (&arv_uv_interface);
 
-	g_mutex_unlock (&uv_interface_mutex);
+	g_mutex_unlock (&arv_uv_interface_mutex);
 }
 
 G_DEFINE_TYPE_WITH_CODE (ArvUvInterface, arv_uv_interface, ARV_TYPE_INTERFACE, G_ADD_PRIVATE (ArvUvInterface))

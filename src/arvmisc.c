@@ -21,294 +21,289 @@
  */
 
 #include <arvmiscprivate.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <string.h>
 #include <math.h>
 #include <stdio.h>
 #include <zlib.h>
 
-/**
- * SECTION: arvstatistic
- * @short_description: An histogram tool
- */
+#ifdef G_OS_WIN32
+	 #include <windows.h>
+#endif
 
-typedef struct _ArvHistogram ArvHistogram;
+typedef struct _ArvHistogramVariable ArvHistogramVariable;
 
-struct _ArvHistogram {
-	char *		name;
-
-	guint64		and_more;
-	guint64	 	and_less;
-	guint64	 	last_seen_worst;
-	int 	      	worst;
-	int 	        best;
-
-	guint64 *	bins;
-};
-
-struct _ArvStatistic {
-	guint n_histograms;
-	guint n_bins;
-	guint bin_step;
-	int offset;
+struct _ArvHistogramVariable {
+	char *name;
 
 	guint64 counter;
 
-	ArvHistogram *histograms;
+	guint64	and_more;
+	guint64	and_less;
+        guint64	last_seen_maximum;
+
+	double maximum;
+        double minimum;
+
+	guint64 *bins;
 };
 
-static void
-_arv_statistic_free (ArvStatistic *statistic)
-{
-	guint j;
+struct _ArvHistogram {
+	guint n_variables;
+	guint n_bins;
+	double bin_step;
+        double offset;
 
-	if (statistic == NULL)
-		return;
+	ArvHistogramVariable *variables;
 
-	if (statistic->histograms != NULL) {
-		for (j = 0; j < statistic->n_histograms && statistic->histograms[j].bins != NULL; j++) {
-			if (statistic->histograms[j].name != NULL)
-				g_free (statistic->histograms[j].name);
-			g_free (statistic->histograms[j].bins);
-		}
-		g_free (statistic->histograms);
-	}
-
-	g_free (statistic);
-}
+        gint  ref_count;
+};
 
 /**
- * arv_statistic_new: (skip)
- * @n_histograms: number of histograms
+ * arv_histogram_new: (skip)
+ * @n_variables: number of variables
  * @n_bins: number of bins for each histogram
  * @bin_step: bin step
  * @offset: offset of the first bin
- * Return value: a new #ArvStatistic structure
+ * Return value: a new #ArvHistogram structure
  */
 
-ArvStatistic *
-arv_statistic_new (unsigned int n_histograms, unsigned n_bins, unsigned int bin_step, int offset)
+ArvHistogram *
+arv_histogram_new (unsigned int n_variables, unsigned n_bins, double bin_step, double offset)
 {
-	ArvStatistic *statistic;
+	ArvHistogram *histogram;
 	unsigned int i;
 
-	g_return_val_if_fail (n_histograms > 0, NULL);
+	g_return_val_if_fail (n_variables > 0, NULL);
 	g_return_val_if_fail (n_bins > 0, NULL);
 	g_return_val_if_fail (bin_step > 0, NULL);
 
-	statistic = g_new0 (ArvStatistic, 1);
+	histogram = g_new0 (ArvHistogram, 1);
 
-	statistic->n_histograms = n_histograms;
-	statistic->n_bins = n_bins;
-	statistic->bin_step = bin_step;
-	statistic->offset = offset;
+        histogram->ref_count = 1;
 
-	statistic->histograms = g_new (ArvHistogram, n_histograms);
+	histogram->n_variables = n_variables;
+	histogram->n_bins = n_bins;
+	histogram->bin_step = bin_step;
+	histogram->offset = offset;
 
-	for (i = 0; i < statistic->n_histograms; i++) {
-		statistic->histograms[i].name = NULL;
-		statistic->histograms[i].bins = g_new (guint64, statistic->n_bins);
+	histogram->variables = g_new0 (ArvHistogramVariable, n_variables);
+
+	for (i = 0; i < histogram->n_variables; i++) {
+		histogram->variables[i].name = g_strdup_printf ("var%d", i);
+		histogram->variables[i].bins = g_new (guint64, histogram->n_bins);
 	}
 
-	arv_statistic_reset (statistic);
+	arv_histogram_reset (histogram);
 
-	return statistic;
+	return histogram;
+}
+
+ArvHistogram *
+arv_histogram_ref (ArvHistogram *histogram)
+{
+        g_return_val_if_fail (histogram != NULL, NULL);
+
+        g_atomic_int_inc (&histogram->ref_count);
+
+        return histogram;
 }
 
 void
-arv_statistic_free (ArvStatistic *statistic)
+arv_histogram_unref (ArvHistogram *histogram)
 {
-	g_return_if_fail (statistic != NULL);
+	g_return_if_fail (histogram != NULL);
 
-	_arv_statistic_free (statistic);
+        if (g_atomic_int_dec_and_test (&histogram->ref_count)) {
+                guint j;
+
+                if (histogram->variables != NULL) {
+                        for (j = 0; j < histogram->n_variables && histogram->variables[j].bins != NULL; j++) {
+                                g_free (histogram->variables[j].name);
+                                g_free (histogram->variables[j].bins);
+                        }
+                        g_free (histogram->variables);
+                }
+                g_free (histogram);
+        }
+}
+
+GType
+arv_histogram_get_type (void)
+{
+	GType type_id = 0;
+
+	if (type_id == 0)
+		type_id = g_pointer_type_register_static ("ArvHistogram");
+
+	return type_id;
 }
 
 void
-arv_statistic_reset (ArvStatistic *statistic)
+arv_histogram_reset (ArvHistogram *histogram)
 {
-	ArvHistogram *histogram;
+	ArvHistogramVariable *variable;
 	int i, j;
 
-	g_return_if_fail (statistic != NULL);
+	g_return_if_fail (histogram != NULL);
 
-	statistic->counter = 0;
+	for (j = 0; j < histogram->n_variables; j++) {
+		variable = &histogram->variables[j];
 
-	for (j = 0; j < statistic->n_histograms; j++) {
-		histogram = &statistic->histograms[j];
-
-		histogram->last_seen_worst = 0;
-		histogram->best = 0x7fffffff;
-		histogram->worst = 0x80000000;
-		histogram->and_more = histogram->and_less = 0;
-		for (i = 0; i < statistic->n_bins; i++)
-			histogram->bins[i] = 0;
+		variable->minimum = G_MAXDOUBLE;
+		variable->maximum = -G_MAXDOUBLE;
+		variable->last_seen_maximum = 0;
+		variable->and_more = variable->and_less = 0;
+                variable->counter = 0;
+		for (i = 0; i < histogram->n_bins; i++)
+			variable->bins[i] = 0;
 	}
 }
 
 void
-arv_statistic_set_name (ArvStatistic *statistic, unsigned int histogram_id, char const *name)
+arv_histogram_set_variable_name (ArvHistogram *histogram, unsigned int id, char const *name)
 {
-	ArvHistogram *histogram;
-	size_t length;
+	g_return_if_fail (histogram != NULL);
+	g_return_if_fail (id < histogram->n_variables);
 
-	g_return_if_fail (statistic != NULL);
-	g_return_if_fail (histogram_id < statistic->n_histograms);
-
-	histogram = &statistic->histograms[histogram_id];
-
-	if (histogram->name != NULL) {
-		g_free (histogram->name);
-		histogram->name = NULL;
-	}
-
-	if (name == NULL)
-		return;
-
-	length = strlen (name);
-	if (length < 1)
-		return;
-
-	histogram->name = g_malloc (length + 1);
-	if (histogram->name == NULL)
-		return;
-
-	memcpy (histogram->name, name, length + 1);
+        g_free (histogram->variables[id].name);
+        histogram->variables[id].name = g_strdup (name);
 }
 
 gboolean
-arv_statistic_fill (ArvStatistic *statistic, guint histogram_id, int value, guint64 counter)
+arv_histogram_fill (ArvHistogram *histogram, guint id, int value)
 {
-	ArvHistogram *histogram;
+	ArvHistogramVariable *variable;
 	unsigned int class;
 
-	if (statistic == NULL)
-		return FALSE;
-	if (histogram_id >= statistic->n_histograms)
-		return FALSE;
+        g_return_val_if_fail (histogram != NULL, FALSE);
+        g_return_val_if_fail (id < histogram->n_variables, FALSE);
 
-	statistic->counter = counter;
+	variable = &histogram->variables[id];
 
-	histogram = &statistic->histograms[histogram_id];
+	if (variable->minimum > value)
+		variable->minimum = value;
 
-	if (histogram->best > value)
-		histogram->best = value;
-
-	if (histogram->worst < value) {
-		histogram->worst = value;
-		histogram->last_seen_worst = counter;
+	if (variable->maximum < value) {
+		variable->maximum = value;
+		variable->last_seen_maximum = variable->counter;
 	}
 
-	class = (value - statistic->offset) / statistic->bin_step;
+	class = (value - histogram->offset) / histogram->bin_step;
 
-	if (value < statistic->offset)
-		histogram->and_less++;
-	else if (class >= statistic->n_bins)
-		histogram->and_more++;
+	if (value < histogram->offset)
+		variable->and_less++;
+	else if (class >= histogram->n_bins)
+		variable->and_more++;
 	else
-		histogram->bins[class]++;
+		variable->bins[class]++;
+
+	variable->counter++;
 
 	return TRUE;
 }
 
 char *
-arv_statistic_to_string (const ArvStatistic *statistic)
+arv_histogram_to_string (const ArvHistogram *histogram)
 {
 	int i, j, bin_max;
 	gboolean max_found = FALSE;
 	GString *string;
 	char *str;
 
-	g_return_val_if_fail (statistic != NULL, NULL);
+	g_return_val_if_fail (histogram != NULL, NULL);
 
 	string = g_string_new ("");
 
 	bin_max = 0;
-	for (i = statistic->n_bins - 1; i > 0 && !max_found; i--) {
-		for (j = 0; j < statistic->n_histograms && !max_found; j++) {
-			if (statistic->histograms[j].bins[i] != 0) {
+	for (i = histogram->n_bins - 1; i > 0 && !max_found; i--) {
+		for (j = 0; j < histogram->n_variables && !max_found; j++) {
+			if (histogram->variables[j].bins[i] != 0) {
 				bin_max = i;
 				max_found = TRUE;
 			}
 		}
 	}
 
-	if (bin_max >= statistic->n_bins)
-		bin_max = statistic->n_bins - 1;
+	if (bin_max >= histogram->n_bins)
+		bin_max = histogram->n_bins - 1;
 
-	for (j = 0; j < statistic->n_histograms; j++) {
+	for (j = 0; j < histogram->n_variables; j++) {
 		if (j == 0)
-			g_string_append (string, "  bins  ");
-		g_string_append_printf (string, ";%8.8s",
-					statistic->histograms[j].name != NULL ?
-					statistic->histograms[j].name :
+			g_string_append (string, "    bins    ");
+		g_string_append_printf (string, ";%12.12s",
+					histogram->variables[j].name != NULL ?
+					histogram->variables[j].name :
 					"  ----  ");
 	}
 	g_string_append (string, "\n");
 
 	for (i = 0; i <= bin_max; i++) {
-		for (j = 0; j < statistic->n_histograms; j++) {
+		for (j = 0; j < histogram->n_variables; j++) {
 			if (j == 0)
-				g_string_append_printf (string, "%8d", i * statistic->bin_step + statistic->offset);
-			g_string_append_printf (string, ";%8Lu", (unsigned long long) statistic->histograms[j].bins[i]);
+				g_string_append_printf (string, "%12g", (double) i * histogram->bin_step + histogram->offset);
+			g_string_append_printf (string, ";%12llu", (unsigned long long) histogram->variables[j].bins[i]);
 		}
 		g_string_append (string, "\n");
 	}
 
 	g_string_append (string, "-------------\n");
 
-	for (j = 0; j < statistic->n_histograms; j++) {
+	for (j = 0; j < histogram->n_variables; j++) {
 		if (j == 0)
-			g_string_append_printf (string, ">=%6d", i * statistic->bin_step + statistic->offset);
-		g_string_append_printf (string, ";%8Lu", (unsigned long long) statistic->histograms[j].and_more);
+			g_string_append_printf (string, ">=%10g", (double) i * histogram->bin_step + histogram->offset);
+		g_string_append_printf (string, ";%12llu", (unsigned long long) histogram->variables[j].and_more);
 	}
 	g_string_append (string, "\n");
 
-	for (j = 0; j < statistic->n_histograms; j++) {
+	for (j = 0; j < histogram->n_variables; j++) {
 		if (j == 0)
-			g_string_append_printf (string, "< %6d", statistic->offset);
-		g_string_append_printf (string, ";%8Lu", (unsigned long long) statistic->histograms[j].and_less);
+			g_string_append_printf (string, "< %10g", histogram->offset);
+		g_string_append_printf (string, ";%12" G_GUINT64_FORMAT , histogram->variables[j].and_less);
 	}
 	g_string_append (string, "\n");
 
-	for (j = 0; j < statistic->n_histograms; j++) {
+	for (j = 0; j < histogram->n_variables; j++) {
 		if (j == 0)
-			g_string_append (string, "min     ");
-		if (statistic->histograms[j].best != 0x7fffffff)
-			g_string_append_printf (string, ";%8d", statistic->histograms[j].best);
+			g_string_append (string, "min         ");
+		if (histogram->variables[j].minimum != G_MAXDOUBLE)
+			g_string_append_printf (string, "%c%12g", j == 0 ? ':' : ';',
+                                                histogram->variables[j].minimum);
 		else
-			g_string_append_printf (string, ";%8s", "n/a");
+			g_string_append_printf (string, "%c%12s", j == 0 ? ':' : ';', "n/a");
 	}
 	g_string_append (string, "\n");
 
-	for (j = 0; j < statistic->n_histograms; j++) {
+	for (j = 0; j < histogram->n_variables; j++) {
 		if (j == 0)
-			g_string_append (string, "max     ");
-		if (statistic->histograms[j].worst != 0x80000000)
-			g_string_append_printf (string, ";%8d", statistic->histograms[j].worst);
+			g_string_append (string, "max         ");
+		if (histogram->variables[j].maximum != -G_MAXDOUBLE)
+			g_string_append_printf (string, "%c%12g", j == 0 ? ':' : ';',
+                                                histogram->variables[j].maximum);
 		else
-			g_string_append_printf (string, ";%8s", "n/a");
+			g_string_append_printf (string, "%c%12s", j == 0 ? ':' : ';', "n/a");
 	}
 	g_string_append (string, "\n");
 
-	for (j = 0; j < statistic->n_histograms; j++) {
+	for (j = 0; j < histogram->n_variables; j++) {
 		if (j == 0)
-			g_string_append (string, "last max\nat:     ");
-		g_string_append_printf (string, ";%8Lu", (unsigned long long) statistic->histograms[j].last_seen_worst);
+			g_string_append (string, "last max at ");
+		g_string_append_printf (string, "%c%12" G_GUINT64_FORMAT, j == 0 ? ':' : ';',
+                                        histogram->variables[j].last_seen_maximum);
 	}
 	g_string_append (string, "\n");
 
-	g_string_append_printf (string, "Counter = %8Lu", (unsigned long long) statistic->counter);
+	for (j = 0; j < histogram->n_variables; j++) {
+		if (j == 0)
+			g_string_append (string, "counter     ");
+		g_string_append_printf (string, ":%12llu", (unsigned long long) histogram->variables[j].counter);
+	}
 
 	str = string->str;
 	g_string_free (string, FALSE);
 
 	return str;
 }
-
-/**
- * SECTION: arvvalue
- * @short_description: An int64/double value storage
- */
 
 ArvValue *
 arv_value_new_double (double v_double)
@@ -342,14 +337,15 @@ arv_value_copy (ArvValue *to, const ArvValue *from)
 	*to = *from;
 }
 
-ArvValue *
+static ArvValue *
 arv_value_duplicate (const ArvValue *from)
 {
-	ArvValue *value = g_new (ArvValue, 1);
+	ArvValue *value;
 
 	if (from == NULL)
 		return NULL;
 
+	value = g_new (ArvValue, 1);
 	*value = *from;
 
 	return value;
@@ -413,8 +409,8 @@ arv_value_holds_double (ArvValue *value)
 }
 
 void
-arv_copy_memory_with_endianess (void *to, size_t to_size, guint to_endianess,
-				void *from, size_t from_size, guint from_endianess)
+arv_copy_memory_with_endianness (void *to, size_t to_size, guint to_endianness,
+				void *from, size_t from_size, guint from_endianness)
 {
 	char *to_ptr;
 	char *from_ptr;
@@ -423,8 +419,8 @@ arv_copy_memory_with_endianess (void *to, size_t to_size, guint to_endianess,
 	g_return_if_fail (to != NULL);
 	g_return_if_fail (from != NULL);
 
-	if (to_endianess == G_LITTLE_ENDIAN &&
-	    from_endianess == G_BIG_ENDIAN) {
+	if (to_endianness == G_LITTLE_ENDIAN &&
+	    from_endianness == G_BIG_ENDIAN) {
 		to_ptr = to;
 		from_ptr = ((char *) from) + from_size - 1;
 		if (to_size <= from_size) {
@@ -435,8 +431,8 @@ arv_copy_memory_with_endianess (void *to, size_t to_size, guint to_endianess,
 				*to_ptr = *from_ptr;
 			memset (((char *) to) + from_size, 0, to_size - from_size);
 		}
-	} else if (to_endianess == G_BIG_ENDIAN &&
-		   from_endianess == G_LITTLE_ENDIAN) {
+	} else if (to_endianness == G_BIG_ENDIAN &&
+		   from_endianness == G_LITTLE_ENDIAN) {
 		to_ptr = ((char *) to) + to_size - 1;
 		from_ptr = from;
 		if (to_size <= from_size) {
@@ -447,16 +443,16 @@ arv_copy_memory_with_endianess (void *to, size_t to_size, guint to_endianess,
 				*to_ptr = *from_ptr;
 			memset (to, 0, to_size - from_size);
 		}
-	} else if (to_endianess == G_LITTLE_ENDIAN &&
-		   from_endianess == G_LITTLE_ENDIAN) {
+	} else if (to_endianness == G_LITTLE_ENDIAN &&
+		   from_endianness == G_LITTLE_ENDIAN) {
 		if (to_size <= from_size)
 			memcpy (to, from, to_size);
 		else {
 			memcpy (to, from, from_size);
 			memset (((char *) to) + from_size, 0, to_size - from_size);
 		}
-	} else if (to_endianess == G_BIG_ENDIAN &&
-		   from_endianess == G_BIG_ENDIAN) {
+	} else if (to_endianness == G_BIG_ENDIAN &&
+		   from_endianness == G_BIG_ENDIAN) {
 		if (to_size <= from_size)
 			memcpy (to, ((char *) from) + from_size - to_size, to_size);
 		else {
@@ -506,8 +502,8 @@ arv_decompress (void *input_buffer, size_t input_size, size_t *output_size)
 		stream.avail_in = MIN (input_size, ARV_DECOMPRESS_CHUNK);
 		stream.next_in = input_buffer;
 
-		arv_debug_misc ("[Decompress] Input ptr = 0x%x - Chunk size = %d - %c",
-				stream.next_in, stream.avail_in, *stream.next_in);
+		arv_info_misc ("[Decompress] Input ptr = 0x%p - Chunk size = %d - %c",
+				(void *) stream.next_in, stream.avail_in, *stream.next_in);
 
 		input_size -= stream.avail_in;
 		input_buffer = ((char *) input_buffer) + stream.avail_in;
@@ -617,6 +613,13 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 		"video/x-raw-gray",	12,	12,	0
 	},
 	{
+		ARV_PIXEL_FORMAT_MONO_14,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",		"GRAY16_LE",
+		"video/x-raw-gray, bpp=(int)16, depth=(int)14",
+		"video/x-raw-gray",	16,	14,	0
+	},
+	{
 		ARV_PIXEL_FORMAT_MONO_10,
 		"video/x-raw, format=(string)GRAY16_LE",
 		"video/x-raw", 		"GRAY16_LE",
@@ -653,7 +656,7 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 	},
 
 /* Non 8bit bayer formats are not supported by gstreamer bayer plugin.
- * This feature is discussed in bug https://bugzilla.gnome.org/show_bug.cgi?id=693666 .*/
+ * This feature is discussed in bug https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/issues/86 .*/
 
 	{
 		ARV_PIXEL_FORMAT_YUV_422_PACKED,
@@ -705,7 +708,7 @@ arv_pixel_format_to_gst_caps_string (ArvPixelFormat pixel_format)
 		return NULL;
 	}
 
-	arv_log_misc ("[PixelFormat::to_gst_caps_string] 0x%08x -> %s",
+	arv_debug_misc ("[PixelFormat::to_gst_caps_string] 0x%08x -> %s",
 		      pixel_format, arv_gst_caps_infos[i].gst_caps_string);
 
 	return arv_gst_caps_infos[i].gst_caps_string;
@@ -750,7 +753,7 @@ arv_pixel_format_to_gst_0_10_caps_string (ArvPixelFormat pixel_format)
 		return NULL;
 	}
 
-	arv_log_misc ("[PixelFormat::to_gst_0_10_caps_string] 0x%08x -> %s",
+	arv_debug_misc ("[PixelFormat::to_gst_0_10_caps_string] 0x%08x -> %s",
 		      pixel_format, arv_gst_caps_infos[i].gst_0_10_caps_string);
 
 	return arv_gst_caps_infos[i].gst_0_10_caps_string;
@@ -786,7 +789,8 @@ static struct {
 } vendor_aliases[] = {
 	{ "The Imaging Source Europe GmbH",		"TIS"},
 	{ "Point Grey Research",			"PointGrey"},
-	{ "Lucid Vision Labs",				"LucidVision"}
+	{ "Lucid Vision Labs",				"LucidVision"},
+	{ "New-Imaging-Technologies",			"NIT"}
 };
 
 /**
@@ -812,3 +816,127 @@ arv_vendor_alias_lookup	(const char *vendor)
 
 	return vendor;
 }
+
+/**
+ * arv_parse_genicam_url:
+ * @url: a genicam data URL
+ * @url_length: length of the URL string, -1 if NULL terminated
+ * @scheme: (allow-none): placeholder for scheme
+ * @authority: (allow-none): placeholder for authority
+ * @path: (allow-none): placeholder for path
+ * @query: (allow-none): placeholder for query
+ * @fragment: (allow-none): placeholder for fragment
+ * @address: (allow-none): placeholder for data adress in case of local URL
+ * @size: (allow-none): placeholder for data size in case of local URL
+ *
+ * Parse the Genicam data URL. The URL should at least contain a scheme and a path. If scheme is 'local', the path
+ * should also define the Genicam data address and size in the device memory.
+ *
+ * The placeholder are at least set to %NULL or 0 if they are valid addresses, and set to the corresponding URL part if
+ * found in the string. The returned strings must be freed using g_free().
+ *
+ * Returns: %TRUE if the URL was successfully parsed.
+ */
+
+gboolean
+arv_parse_genicam_url (const char *url, gssize url_length,
+		       char **scheme, char **authority, char **path, char **query, char **fragment,
+		       guint64 *address, guint64 *size)
+{
+	g_autoptr(GRegex) regex = NULL;
+	g_autoptr(GRegex) local_regex = NULL;
+	g_auto(GStrv) tokens = NULL;
+	g_auto(GStrv) local_tokens = NULL;
+	char *l_scheme = NULL;
+	char *l_authority = NULL;
+	char *l_path = NULL;
+	char *l_query = NULL;
+	char *l_fragment = NULL;
+
+	if (scheme != NULL)
+		*scheme = NULL;
+	if (authority != NULL)
+		*authority = NULL;
+	if (path != NULL)
+		*path = NULL;
+	if (query != NULL)
+		*query = NULL;
+	if (fragment != NULL)
+		*fragment = NULL;
+	if (address != NULL)
+		*address = 0;
+	if (size != NULL)
+		*size = 0;
+
+	g_return_val_if_fail (url != NULL, FALSE);
+
+	/* https://tools.ietf.org/html/rfc3986#appendix-B */
+	regex = g_regex_new ("^(([^:\\/?#]+):)?(\\/\\/([^\\/?#]*))?([^?#]*)(\\?([^#]*))?(#(.*))?",G_REGEX_CASELESS, 0, NULL);
+	if (regex == NULL)
+		return FALSE;
+
+	tokens = g_regex_split_full (regex, url, url_length, 0, 0, 10, NULL);
+
+	if (g_strv_length (tokens) < 6 || tokens[5][0] == '\0')
+		return FALSE;
+
+	l_scheme = tokens[2][0] != '\0' ? tokens[2] : NULL;
+	l_authority = tokens[4][0] != '\0' ? tokens[4] : NULL;
+
+	if (g_ascii_strcasecmp (l_scheme, "local") == 0) {
+		local_regex = g_regex_new ("(.+);(?:0x)?([0-9:a-f]*);(?:0x)?([0-9:a-f]*)", G_REGEX_CASELESS, 0, NULL);
+
+		if (local_regex == NULL)
+			return FALSE;
+
+		local_tokens = g_regex_split (local_regex, tokens[5], 0);
+
+		if (g_strv_length (local_tokens) < 4)
+			return FALSE;
+
+		l_path = local_tokens[1];
+
+		if (address != NULL)
+			*address = g_ascii_strtoll (local_tokens[2], NULL, 16);
+		if (size != NULL)
+			*size = g_ascii_strtoll (local_tokens[3], NULL, 16);
+	} else {
+		l_path = tokens[5];
+	}
+
+	if (tokens[6] != NULL && tokens[7] != NULL) {
+		l_query = tokens[7][0] != '\0' ? tokens[7] : NULL;
+
+		if (tokens[8] != NULL && tokens[9] != NULL)
+			l_fragment = tokens[9][0] != '\0' ? tokens[9] : NULL;
+	}
+
+	if (scheme != NULL)
+		*scheme = g_strdup( l_scheme);
+	if (authority != NULL)
+		*authority = g_strdup( l_authority);
+	if (path != NULL)
+		*path = g_strdup( l_path);
+	if (query != NULL)
+		*query = g_strdup( l_query);
+	if (fragment != NULL)
+		*fragment = g_strdup( l_fragment);
+
+	return TRUE;
+}
+
+
+gint64 arv_monotonic_time_us (void)
+{
+	 #ifdef G_OS_WIN32
+		  static LARGE_INTEGER freq = { .QuadPart = 0 };
+		  LARGE_INTEGER t;
+	 
+		  if (freq.QuadPart == 0) { QueryPerformanceFrequency(&freq); }
+		  QueryPerformanceCounter(&t);
+		  return (t.QuadPart*1000000) / freq.QuadPart;
+	 #else
+		  return g_get_monotonic_time();
+	 #endif
+}
+

@@ -71,8 +71,6 @@ struct _ArvDomNodeClass {
 	void			(*pre_remove_child) 	(ArvDomNode *parent, ArvDomNode *child);
 	void			(*changed)		(ArvDomNode *self);
 	gboolean		(*child_changed)	(ArvDomNode *self, ArvDomNode *child);
-
-	void			(*write_to_stream)	(ArvDomNode *self, GOutputStream *stream, GError **error);
 };
 
 const char * 		arv_dom_node_get_node_name 		(ArvDomNode* self);
@@ -97,9 +95,6 @@ gboolean 		arv_dom_node_has_child_nodes 		(ArvDomNode* self);
 void 			arv_dom_node_changed 			(ArvDomNode *self);
 
 ArvDomDocument *	arv_dom_node_get_owner_document 	(ArvDomNode* self);
-
-void			arv_dom_node_write_to_stream		(ArvDomNode *self, GOutputStream *stream,
-								 GError **error);
 
 G_END_DECLS
 

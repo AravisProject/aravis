@@ -56,8 +56,6 @@ struct _ArvStreamClass {
 
 	void		(*start_thread)		(ArvStream *stream);
 	void		(*stop_thread)		(ArvStream *stream);
-	void		(*get_statistics)	(ArvStream *stream, guint64 *n_completed_buffers,
-						 guint64 *n_failures, guint64 *n_underruns);
 
 	/* signals */
 	void        	(*new_buffer)   	(ArvStream *stream);
@@ -79,6 +77,14 @@ void		arv_stream_get_statistics		(ArvStream *stream,
 							 guint64 *n_completed_buffers,
 							 guint64 *n_failures,
 							 guint64 *n_underruns);
+
+guint           arv_stream_get_n_infos                  (ArvStream *stream);
+const char *    arv_stream_get_info_name                (ArvStream *stream, guint id);
+GType           arv_stream_get_info_type                (ArvStream *stream, guint id);
+guint64         arv_stream_get_info_uint64              (ArvStream *stream, guint id);
+double          arv_stream_get_info_double              (ArvStream *stream, guint id);
+guint64         arv_stream_get_info_uint64_by_name      (ArvStream *stream, const char *name);
+double          arv_stream_get_info_double_by_name      (ArvStream *stream, const char *name);
 
 void 		arv_stream_set_emit_signals 		(ArvStream *stream, gboolean emit_signals);
 gboolean 	arv_stream_get_emit_signals 		(ArvStream *stream);

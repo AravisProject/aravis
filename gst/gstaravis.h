@@ -44,20 +44,23 @@ struct _GstAravis {
 	char *camera_name;
 
 	double gain;
-	gboolean gain_auto;
+	ArvAuto gain_auto;
+	gboolean gain_auto_set;
 	double exposure_time_us;
-	gboolean exposure_auto;
+	ArvAuto exposure_auto;
+	gboolean exposure_auto_set;
 
 	gint offset_x;
 	gint offset_y;
 
 	gint h_binning;
 	gint v_binning;
-        gint num_buffers;
+	gint num_arv_buffers;
 
 	/* GigEVision parameters */
 	int packet_size;
 	gboolean auto_packet_size;
+	gint64 packet_delay;
         gboolean packet_resend;
 
 	gint payload;
@@ -72,6 +75,8 @@ struct _GstAravis {
 
 	guint64 timestamp_offset;
 	guint64 last_timestamp;
+
+	char *features;
 };
 
 struct _GstAravisClass {

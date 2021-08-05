@@ -20,6 +20,7 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+#include <arvdebugprivate.h>
 #include <arv.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -41,15 +42,18 @@ static char *arv_option_debug_domains = NULL;
 static const GOptionEntry arv_option_entries[] =
 {
 	{ "interface",		'i', 0, G_OPTION_ARG_STRING,
-		&arv_option_interface_name,	"Listening interface name", "interface_id"},
+		&arv_option_interface_name,	"Listening interface name or address", "interface"},
 	{ "serial",             's', 0, G_OPTION_ARG_STRING,
 	        &arv_option_serial_number, 	"Fake camera serial number", "serial_nbr"},
 	{ "genicam",            'g', 0, G_OPTION_ARG_STRING,
 	        &arv_option_genicam_file, 	"XML Genicam file to use", "genicam_filename"},
 	{ "gvsp-lost-ratio",    'r', 0, G_OPTION_ARG_DOUBLE,
 	        &arv_option_gvsp_lost_ratio,	"GVSP lost packet ratio", "packet_per_thousand"},
-	{ "debug", 		'd', 0, G_OPTION_ARG_STRING,
-		&arv_option_debug_domains, 	NULL, "category[:level][,...]" },
+	{
+		"debug", 			'd', 0, G_OPTION_ARG_STRING,
+		&arv_option_debug_domains, 	NULL,
+		"{<category>[:<level>][,...]|help}"
+	},
 	{ NULL }
 };
 
@@ -62,6 +66,7 @@ description_content[] =
 "Examples:\n"
 "\n"
 "arv-fake-gv-camera-" ARAVIS_API_VERSION " -i eth0\n"
+"arv-fake-gv-camera-" ARAVIS_API_VERSION " -i 127.0.0.1\n"
 "arv-fake-gv-camera-" ARAVIS_API_VERSION " -s GV02 -d all\n";
 
 int
@@ -85,7 +90,13 @@ main (int argc, char **argv)
 
 	g_option_context_free (context);
 
-	arv_debug_enable (arv_option_debug_domains);
+	if (!arv_debug_enable (arv_option_debug_domains)) {
+		if (g_strcmp0 (arv_option_debug_domains, "help") != 0)
+			printf ("Invalid debug selection\n");
+		else
+			arv_debug_print_infos ();
+		return EXIT_FAILURE;
+	}
 
 	gv_camera = arv_gv_fake_camera_new_full (arv_option_interface_name, arv_option_serial_number, arv_option_genicam_file);
 
@@ -95,7 +106,7 @@ main (int argc, char **argv)
 
 	if (arv_gv_fake_camera_is_running (gv_camera))
 		while (!cancel)
-			sleep (1);
+			g_usleep (1000000);
 	else
 		printf ("Failed to start camera\n");
 

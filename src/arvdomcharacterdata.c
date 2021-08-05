@@ -27,7 +27,7 @@
  */
 
 #include <arvdomcharacterdata.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <string.h>
 
 typedef struct {
@@ -37,15 +37,6 @@ typedef struct {
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvDomCharacterData, arv_dom_character_data, ARV_TYPE_DOM_NODE, G_ADD_PRIVATE (ArvDomCharacterData))
 
 /* ArvDomNode implementation */
-
-static void
-arv_dom_character_data_write_to_stream (ArvDomNode *self, GOutputStream *stream, GError **error)
-{
-	ArvDomCharacterDataPrivate *priv = arv_dom_character_data_get_instance_private (ARV_DOM_CHARACTER_DATA (self));
-
-	if (priv->data != NULL)
-		g_output_stream_write (stream, priv->data, strlen (priv->data), NULL, error);
-}
 
 static const char *
 arv_dom_character_data_get_node_value (ArvDomNode* self)
@@ -82,7 +73,7 @@ arv_dom_character_data_set_data (ArvDomCharacterData* self, const char * value)
 	g_free (priv->data);
 	priv->data = g_strdup (value);
 
-	arv_log_dom ("[ArvDomCharacterData::set_data] Value = '%s'", value);
+	arv_debug_dom ("[ArvDomCharacterData::set_data] Value = '%s'", value);
 
 	arv_dom_node_changed (ARV_DOM_NODE (self));
 }
@@ -112,7 +103,6 @@ arv_dom_character_data_class_init (ArvDomCharacterDataClass *character_data_clas
 
 	object_class->finalize = arv_dom_character_data_finalize;
 
-	node_class->write_to_stream = arv_dom_character_data_write_to_stream;
 	node_class->set_node_value = arv_dom_character_data_set_node_value;
 	node_class->get_node_value = arv_dom_character_data_get_node_value;
 }

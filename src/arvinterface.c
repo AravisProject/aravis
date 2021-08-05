@@ -24,9 +24,9 @@
  * SECTION: arvinterface
  * @short_description: Abstract base class for camera discovery
  *
- * #ArvCamera is an abstract base class for camera discovery. It maintains a
- * list of the available devices and help to instantiate the corresponding
- * #ArvDevice object. If user already knows the device id of the device, he should
+ * #ArvInterface is an abstract base class for camera discovery. It maintains a
+ * list of the available devices and helps to instantiate the corresponding
+ * #ArvDevice objects. If the user already knows the device id of the device, he should
  * not worry about this class and just use arv_camera_new() or
  * arv_open_device().
  */
@@ -318,6 +318,7 @@ arv_interface_get_device_protocol (ArvInterface *interface, unsigned int index)
  * arv_interface_open_device:
  * @interface: a #ArvInterface
  * @device_id: (allow-none): device unique id
+ * @error: a #GError placeholder, %NULL to ignore
  *
  * Creates a new #ArvDevice object corresponding to the given device id string.
  * The first available device is returned if @device_id is %NULL.
@@ -328,11 +329,11 @@ arv_interface_get_device_protocol (ArvInterface *interface, unsigned int index)
  */
 
 ArvDevice *
-arv_interface_open_device (ArvInterface *interface, const char *device_id)
+arv_interface_open_device (ArvInterface *interface, const char *device_id, GError **error)
 {
 	g_return_val_if_fail (ARV_IS_INTERFACE (interface), NULL);
 
-	return ARV_INTERFACE_GET_CLASS (interface)->open_device (interface, device_id);
+	return ARV_INTERFACE_GET_CLASS (interface)->open_device (interface, device_id, error);
 }
 
 static void

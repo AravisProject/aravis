@@ -8,16 +8,18 @@ ARAVIS_MICRO_VERSION
 ARAVIS_MINOR_VERSION
 ARAVIS_HAS_PACKET_SOCKET
 ARAVIS_HAS_USB
+ARAVIS_HAS_FAST_HEARTBEAT
 ArvAuto
 arv_auto_from_string
 arv_auto_to_string
 ArvCamera
 arv_camera_new
+arv_camera_new_with_device
 arv_camera_create_stream
-arv_camera_check_status
 arv_camera_get_device
 arv_camera_get_vendor_name
 arv_camera_get_model_name
+arv_camera_get_device_serial_number
 arv_camera_get_device_id
 arv_camera_get_sensor_size
 arv_camera_set_region
@@ -41,9 +43,9 @@ arv_camera_set_pixel_format
 arv_camera_get_pixel_format
 arv_camera_get_pixel_format_as_string
 arv_camera_set_pixel_format_from_string
-arv_camera_get_available_pixel_formats
-arv_camera_get_available_pixel_formats_as_display_names
-arv_camera_get_available_pixel_formats_as_strings
+arv_camera_dup_available_pixel_formats
+arv_camera_dup_available_pixel_formats_as_display_names
+arv_camera_dup_available_pixel_formats_as_strings
 arv_camera_start_acquisition
 arv_camera_stop_acquisition
 arv_camera_abort_acquisition
@@ -60,8 +62,8 @@ arv_camera_get_frame_rate_bounds
 arv_camera_set_trigger
 arv_camera_set_trigger_source
 arv_camera_get_trigger_source
-arv_camera_get_available_trigger_sources
-arv_camera_get_available_triggers
+arv_camera_dup_available_trigger_sources
+arv_camera_dup_available_triggers
 arv_camera_clear_triggers
 arv_camera_software_trigger
 arv_camera_is_exposure_time_available
@@ -71,6 +73,7 @@ arv_camera_get_exposure_time
 arv_camera_get_exposure_time_bounds
 arv_camera_set_exposure_time_auto
 arv_camera_get_exposure_time_auto
+arv_camera_set_exposure_mode
 arv_camera_is_gain_available
 arv_camera_is_gain_auto_available
 arv_camera_set_gain
@@ -81,12 +84,13 @@ arv_camera_get_gain_auto
 arv_camera_get_payload
 arv_camera_is_feature_available
 arv_camera_execute_command
-arv_camera_get_available_enumerations
-arv_camera_get_available_enumerations_as_strings
-arv_camera_get_available_enumerations_as_display_names
+arv_camera_dup_available_enumerations
+arv_camera_dup_available_enumerations_as_strings
+arv_camera_dup_available_enumerations_as_display_names
 arv_camera_get_boolean
 arv_camera_get_float
 arv_camera_get_float_bounds
+arv_camera_get_float_increment
 arv_camera_get_integer
 arv_camera_get_integer_bounds
 arv_camera_get_integer_increment
@@ -95,6 +99,9 @@ arv_camera_set_boolean
 arv_camera_set_float
 arv_camera_set_integer
 arv_camera_set_string
+ArvGvPacketSizeAdjustment
+arv_camera_set_range_check_policy
+arv_camera_set_register_cache_policy
 arv_camera_is_gv_device
 arv_camera_gv_get_n_stream_channels
 arv_camera_gv_select_stream_channel
@@ -104,12 +111,14 @@ arv_camera_gv_set_packet_delay
 arv_camera_gv_get_packet_size
 arv_camera_gv_set_packet_size
 arv_camera_gv_auto_packet_size
+arv_camera_gv_set_packet_size_adjustment
 arv_camera_gv_set_stream_options
 arv_camera_is_uv_device
 arv_camera_uv_get_bandwidth
 arv_camera_uv_get_bandwidth_bounds
 arv_camera_uv_is_bandwidth_control_available
 arv_camera_uv_set_bandwidth
+arv_camera_are_chunks_available
 arv_camera_get_chunk_mode
 arv_camera_get_chunk_state
 arv_camera_set_chunk_mode
@@ -119,6 +128,9 @@ arv_camera_create_chunk_parser
 ArvAcquisitionMode
 arv_acquisition_mode_to_string
 arv_acquisition_mode_from_string
+ArvExposureMode
+arv_exposure_mode_from_string
+arv_exposure_mode_to_string
 <SUBSECTION Standard>
 ARV_CAMERA
 ARV_IS_CAMERA
@@ -152,6 +164,7 @@ arv_buffer_get_timestamp
 arv_buffer_set_timestamp
 arv_buffer_get_system_timestamp
 arv_buffer_set_system_timestamp
+arv_buffer_set_frame_id
 arv_buffer_get_frame_id
 arv_buffer_get_payload_type
 arv_buffer_get_status
@@ -316,9 +329,12 @@ arv_device_get_integer_feature_increment
 arv_device_set_float_feature_value
 arv_device_get_float_feature_value
 arv_device_get_float_feature_bounds
-arv_device_get_available_enumeration_feature_values
-arv_device_get_available_enumeration_feature_values_as_strings
-arv_device_get_available_enumeration_feature_values_as_display_names
+arv_device_get_float_feature_increment
+arv_device_dup_available_enumeration_feature_values
+arv_device_dup_available_enumeration_feature_values_as_strings
+arv_device_dup_available_enumeration_feature_values_as_display_names
+arv_device_set_features_from_string
+arv_device_set_range_check_policy
 arv_device_set_register_cache_policy
 <SUBSECTION Standard>
 ARV_DEVICE
@@ -493,7 +509,7 @@ arv_gc_property_node_new_command_value
 arv_gc_property_node_new_constant
 arv_gc_property_node_new_description
 arv_gc_property_node_new_display_name
-arv_gc_property_node_new_endianess
+arv_gc_property_node_new_endianness
 arv_gc_property_node_new_expression
 arv_gc_property_node_new_formula
 arv_gc_property_node_new_formula_from
@@ -543,10 +559,20 @@ arv_gc_property_node_get_string
 arv_gc_property_node_set_string
 arv_gc_property_node_get_access_mode
 arv_gc_property_node_get_cachable
-arv_gc_property_node_get_endianess
+arv_gc_property_node_get_endianness
 arv_gc_property_node_get_lsb
 arv_gc_property_node_get_msb
 arv_gc_property_node_get_sign
+arv_gc_property_node_get_visibility
+arv_gc_property_node_new_visibility
+arv_gc_property_node_get_representation
+arv_gc_property_node_new_representation
+arv_gc_property_node_get_display_notation
+arv_gc_property_node_new_display_notation
+arv_gc_property_node_get_display_precision
+arv_gc_property_node_new_display_precision
+arv_gc_property_node_new_streamable
+arv_gc_property_node_get_streamable
 <SUBSECTION Standard>
 arv_gc_property_node_get_type
 ARV_GC_PROPERTY_NODE
@@ -616,12 +642,16 @@ ArvGcFeatureNode
 arv_gc_feature_node_get_value_as_string
 arv_gc_feature_node_set_value_from_string
 arv_gc_feature_node_get_name
+arv_gc_feature_node_get_name_space
 arv_gc_feature_node_get_display_name
 arv_gc_feature_node_get_tooltip
 arv_gc_feature_node_get_description
 arv_gc_feature_node_is_available
 arv_gc_feature_node_is_implemented
 arv_gc_feature_node_is_locked
+arv_gc_feature_node_get_visibility
+arv_gc_feature_node_get_imposed_access_mode
+arv_gc_feature_node_get_actual_access_mode
 <SUBSECTION Standard>
 ARV_GC_FEATURE_NODE
 ARV_IS_GC_FEATURE_NODE
@@ -658,6 +688,14 @@ ArvGcRegisterDescriptionNode
 arv_gc_register_description_node_new
 arv_gc_register_description_node_compare_schema_version
 arv_gc_register_description_node_check_schema_version
+arv_gc_register_description_node_get_model_name
+arv_gc_register_description_node_get_vendor_name
+arv_gc_register_description_node_get_major_version
+arv_gc_register_description_node_get_minor_version
+arv_gc_register_description_node_get_subminor_version
+arv_gc_register_description_node_get_schema_major_version
+arv_gc_register_description_node_get_schema_minor_version
+arv_gc_register_description_node_get_schema_subminor_version
 arv_gc_register_feature_node
 <SUBSECTION Standard>
 arv_gc_register_description_node_get_type
@@ -696,9 +734,9 @@ arv_gc_enumeration_set_string_value
 arv_gc_enumeration_get_int_value
 arv_gc_enumeration_set_int_value
 arv_gc_enumeration_get_entries
-arv_gc_enumeration_get_available_int_values
-arv_gc_enumeration_get_available_string_values
-arv_gc_enumeration_get_available_display_names
+arv_gc_enumeration_dup_available_int_values
+arv_gc_enumeration_dup_available_string_values
+arv_gc_enumeration_dup_available_display_names
 <SUBSECTION Standard>
 ARV_GC_ENUMERATION
 ARV_IS_GC_ENUMERATION
@@ -748,6 +786,7 @@ arv_gc_integer_set_value
 arv_gc_integer_get_min
 arv_gc_integer_get_max
 arv_gc_integer_get_inc
+arv_gc_integer_get_representation
 arv_gc_integer_get_unit
 arv_gc_integer_impose_min
 arv_gc_integer_impose_max
@@ -849,6 +888,13 @@ arv_stream_set_emit_signals
 arv_make_thread_realtime
 arv_make_thread_high_priority
 arv_stream_get_statistics
+arv_stream_get_n_infos
+arv_stream_get_info_name
+arv_stream_get_info_type
+arv_stream_get_info_double
+arv_stream_get_info_double_by_name
+arv_stream_get_info_uint64
+arv_stream_get_info_uint64_by_name
 <SUBSECTION Standard>
 ARV_STREAM
 ARV_IS_STREAM
@@ -887,12 +933,24 @@ ArvFakeDevicePrivate
 <FILE>arvgc</FILE>
 <TITLE>ArvGc</TITLE>
 ArvGc
+ArvRangeCheckPolicy
 ArvRegisterCachePolicy
+ArvGcNameSpace
+ArvGcAccessMode
+ArvGcCachable
+ArvGcSignedness
+ArvGcIsLinear
+ArvGcVisibility
+ArvGcRepresentation
+ArvGcDisplayNotation
+ArvGcStreamable
 arv_gc_new
 arv_gc_get_node
 arv_gc_get_device
 arv_gc_get_buffer
 arv_gc_set_buffer
+arv_gc_get_range_check_policy
+arv_gc_set_range_check_policy
 arv_gc_get_register_cache_policy
 arv_gc_set_register_cache_policy
 <SUBSECTION Standard>
@@ -906,11 +964,6 @@ ARV_GC_GET_CLASS
 <SUBSECTION Private>
 ArvGcPrivate
 ArvGcClass
-ArvGcNameSpace
-ArvGcAccessMode
-ArvGcCachable
-ArvGcSignedness
-ArvGcIsLinear
 arv_gc_get_int64_from_value
 arv_gc_set_int64_to_value
 arv_gc_get_double_from_value
@@ -948,9 +1001,13 @@ arv_gv_device_get_device_address
 arv_gv_device_get_interface_address
 arv_gv_device_get_packet_size
 arv_gv_device_set_packet_size
+arv_gv_device_set_packet_size_adjustment
 arv_gv_device_get_stream_options
 arv_gv_device_set_stream_options
 arv_gv_device_auto_packet_size
+arv_gv_device_take_control
+arv_gv_device_leave_control
+arv_gv_device_is_controller
 <SUBSECTION Standard>
 ARV_GV_DEVICE
 ARV_IS_GV_DEVICE
@@ -1078,7 +1135,10 @@ arv_gc_float_set_value
 arv_gc_float_get_min
 arv_gc_float_get_max
 arv_gc_float_get_inc
+arv_gc_float_get_representation
 arv_gc_float_get_unit
+arv_gc_float_get_display_notation
+arv_gc_float_get_display_precision
 arv_gc_float_impose_min
 arv_gc_float_impose_max
 <SUBSECTION Standard>
@@ -1237,6 +1297,15 @@ ArvGcMaskedIntRegNodeClass
 </SECTION>
 
 <SECTION>
+<FILE>arvgcstringnode</FILE>
+<TITLE>ArvGcStringNode</TITLE>
+ArvGcStringNode
+arv_gc_string_node_new
+<SUBSECTION Standard>
+ARV_TYPE_GC_STRING_NODE
+</SECTION>
+
+<SECTION>
 <FILE>arvgcstring</FILE>
 <TITLE>ArvGcString</TITLE>
 ArvGcString
@@ -1328,18 +1397,6 @@ ARV_IS_GC_SELECTOR
 </SECTION>
 
 <SECTION>
-<FILE>arvstatistic</FILE>
-<TITLE>ArvStatistic</TITLE>
-ArvStatistic
-arv_statistic_new
-arv_statistic_free
-arv_statistic_reset
-arv_statistic_fill
-arv_statistic_set_name
-arv_statistic_to_string
-</SECTION>
-
-<SECTION>
 <FILE>arvstr</FILE>
 <TITLE>ArvStr</TITLE>
 arv_str_strip
@@ -1352,37 +1409,6 @@ arv_str_skip_colon_and_spaces
 arv_str_skip_comma_and_spaces
 arv_str_skip_semicolon_and_spaces
 arv_str_skip_spaces
-</SECTION>
-
-<SECTION>
-<FILE>arvvalue</FILE>
-<TITLE>ArvValue</TITLE>
-arv_value_new_double
-arv_value_new_int64
-arv_value_free
-arv_value_copy
-arv_value_set_int64
-arv_value_set_double
-arv_value_get_int64
-arv_value_get_double
-arv_value_holds_int64
-arv_value_holds_double
-<SUBSECTION Private>
-ARV_TYPE_VALUE
-arv_value_get_type
-ArvValue
-arv_copy_memory_with_endianess
-arv_decompress
-G_DEFINE_INTERFACE
-G_DEFINE_INTERFACE_WITH_CODE
-G_IMPLEMENT_INTERFACE
-arv_g_type_init
-ARV_DEFINE_STATIC_MUTEX
-arv_g_mutex_lock
-arv_g_mutex_unlock
-arv_g_thread_init
-arv_g_thread_new
-g_clear_pointer
 </SECTION>
 
 <SECTION>
@@ -1503,10 +1529,6 @@ arv_dom_document_append_from_memory
 arv_dom_document_new_from_memory
 arv_dom_document_new_from_path
 arv_dom_document_new_from_url
-arv_dom_document_save_to_stream
-arv_dom_document_save_to_memory
-arv_dom_document_save_to_path
-arv_dom_document_save_to_url
 arv_dom_document_get_document_element
 arv_dom_document_create_element
 arv_dom_document_create_text_node
@@ -1582,36 +1604,14 @@ ARV_DOM_CHARACTER_DATA_GET_CLASS
 <SECTION>
 <FILE>arvdebug</FILE>
 <TITLE>ArvDebug</TITLE>
-arv_debug
-arv_debug_check
 arv_debug_enable
-arv_debug_shutdown
 <SUBSECTION Private>
 ArvDebugLevel
-ArvDebugCategory
-arv_debug_category_device
-arv_debug_category_dom
-arv_debug_category_evaluator
-arv_debug_category_genicam
-arv_debug_category_cp
-arv_debug_category_sp
-arv_debug_category_interface
-arv_debug_category_misc
-arv_debug_category_stream
-arv_debug_category_stream_thread
-arv_debug_category_viewer
-arv_debug_device
-arv_debug_dom
-arv_debug_evaluator
-arv_debug_genicam
-arv_debug_cp
-arv_debug_sp
-arv_debug_interface
-arv_debug_misc
-arv_debug_stream
-arv_debug_stream_thread
-arv_debug_viewer
+arv_verbosely_log
+arv_verbosely_log_cp
+arv_verbosely_log_sp
 arv_log
+arv_log_chunk
 arv_log_device
 arv_log_dom
 arv_log_evaluator
@@ -1623,7 +1623,21 @@ arv_log_misc
 arv_log_stream
 arv_log_stream_thread
 arv_log_viewer
+arv_debug
+arv_debug_chunk
+arv_debug_device
+arv_debug_dom
+arv_debug_evaluator
+arv_debug_genicam
+arv_debug_cp
+arv_debug_sp
+arv_debug_interface
+arv_debug_misc
+arv_debug_stream
+arv_debug_stream_thread
+arv_debug_viewer
 arv_warning
+arv_warning_chunk
 arv_warning_device
 arv_warning_dom
 arv_warning_evaluator
@@ -1636,10 +1650,19 @@ arv_warning_stream
 arv_warning_stream_thread
 arv_warning_viewer
 arv_g_string_append_hex_dump
+ArvDebugCategory
 arv_debug_category_chunk
-arv_debug_chunk
-arv_log_chunk
-arv_warning_chunk
+arv_debug_category_device
+arv_debug_category_dom
+arv_debug_category_evaluator
+arv_debug_category_genicam
+arv_debug_category_cp
+arv_debug_category_sp
+arv_debug_category_interface
+arv_debug_category_misc
+arv_debug_category_stream
+arv_debug_category_stream_thread
+arv_debug_category_viewer
 </SECTION>
 
 <SECTION>
@@ -1665,6 +1688,7 @@ ArvZipFile
 <TITLE>ArvXmlSchema</TITLE>
 ARV_XML_SCHEMA_ERROR
 ArvXmlSchemaError
+arv_xml_schema_new_from_memory
 arv_xml_schema_new_from_file
 arv_xml_schema_new_from_path
 arv_xml_schema_validate

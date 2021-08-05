@@ -107,7 +107,7 @@ new_buffer_cb (ArvStream *stream, unsigned *buffer_count)
 			 * be finalized in its stream thread contex (because
 			 * g_signal_emit holds a reference to stream), leading
 			 * to a deadlock. */
-			sleep (1);
+			g_usleep (1000000);
 		}
 		arv_stream_push_buffer (stream, buffer);
 	}
@@ -117,12 +117,14 @@ static void
 stream_test (void)
 {
 	ArvStream *stream;
+	GError *error = NULL;
 	size_t payload;
 	unsigned buffer_count = 0;
 	unsigned i;
 
-	stream = arv_camera_create_stream (camera, NULL, NULL);
+	stream = arv_camera_create_stream (camera, NULL, NULL, &error);
 	g_assert (ARV_IS_STREAM (stream));
+	g_assert (error == NULL);
 
 	payload = arv_camera_get_payload (camera, NULL);
 
@@ -135,7 +137,7 @@ stream_test (void)
 	arv_camera_start_acquisition (camera, NULL);
 
 	while (buffer_count < 10)
-		usleep (1000);
+		g_usleep (1000);
 
 	arv_camera_stop_acquisition (camera, NULL);
 	/* The following will block until the signal callback returns
@@ -148,7 +150,7 @@ stream_test (void)
 	/* For actually testing the deadlock condition (see comment in
 	 * new_buffer_cb), one must wait a bit before leaving this test,
 	 * because otherwise the stream thread will be killed while sleeping. */
-	sleep (2);
+	g_usleep (2000000);
 }
 
 #define N_BUFFERS	5
@@ -162,12 +164,14 @@ static void
 dynamic_roi_test (void)
 {
 	ArvStream *stream;
+	GError *error = NULL;
 	size_t payload;
 	unsigned buffer_count = 0;
 	unsigned i, j;
 
-	stream = arv_camera_create_stream (camera, NULL, NULL);
+	stream = arv_camera_create_stream (camera, NULL, NULL, &error);
 	g_assert (ARV_IS_STREAM (stream));
+	g_assert (error == NULL);
 
 	payload = arv_camera_get_payload (camera, NULL);
 
@@ -203,7 +207,7 @@ dynamic_roi_test (void)
 		arv_camera_start_acquisition (camera, NULL);
 
 		while (buffer_count < 10) {
-			usleep (10000);
+			g_usleep (10000);
 		}
 
 		arv_camera_stop_acquisition (camera, NULL);
@@ -224,9 +228,10 @@ main (int argc, char *argv[])
 
 	arv_set_fake_camera_genicam_filename (GENICAM_FILENAME);
 
-	simulator = arv_gv_fake_camera_new ("lo", NULL);
+	simulator = arv_gv_fake_camera_new ("127.0.0.1", "GVTest");
+	g_assert (ARV_IS_GV_FAKE_CAMERA (simulator));
 
-	camera = arv_camera_new ("Aravis-GV01");
+	camera = arv_camera_new ("Aravis-GVTest", NULL);
 	g_assert (ARV_IS_CAMERA (camera));
 
 	g_test_add_func ("/fakegv/device_registers", register_test);

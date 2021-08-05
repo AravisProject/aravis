@@ -32,6 +32,7 @@ library_sources = [
 	'arvgcfloatnode.c',
 	'arvgcregisternode.c',
 	'arvgcintregnode.c',
+	'arvgcstringnode.c',
 	'arvgcmaskedintregnode.c',
 	'arvgcfloatregnode.c',
 	'arvgcstringregnode.c',
@@ -69,6 +70,7 @@ library_sources = [
 
 library_no_introspection_sources = [
 	'arvmisc.c',
+	'arvnetwork.c',
 	'arvzip.c',
 	'arvstr.c',
 	'arvgvcp.c',
@@ -131,6 +133,7 @@ library_headers = [
 	'arvgcregister.h',
 	'arvgcregisternode.h',
 	'arvgcintregnode.h',
+	'arvgcstringnode.h',
 	'arvgcmaskedintregnode.h',
 	'arvgcfloatregnode.h',
 	'arvgcstringregnode.h',
@@ -158,11 +161,13 @@ library_headers = [
 library_private_headers = [
 	'arvbufferprivate.h',
 	'arvchunkparserprivate.h',
+	'arvdebugprivate.h',
 	'arvdeviceprivate.h',
 	'arvfakedeviceprivate.h',
 	'arvfakeinterfaceprivate.h',
 	'arvfakestreamprivate.h',
 	'arvgcconverterprivate.h',
+	'arvgcdefaultsprivate.h',
 	'arvgcfeaturenodeprivate.h',
 	'arvgcregisternodeprivate.h',
 	'arvgcswissknifeprivate.h',
@@ -173,6 +178,7 @@ library_private_headers = [
 	'arvgvstreamprivate.h',
 	'arvinterfaceprivate.h',
 	'arvmiscprivate.h',
+	'arvnetworkprivate.h',
 	'arvrealtimeprivate.h',
 	'arvstreamprivate.h',
 	'arvwakeupprivate.h'
@@ -184,7 +190,7 @@ library_no_introspection_headers = [
 	'arvstr.h'
 ]
 
-if get_option ('usb')
+if usb_dep.found()
 	library_sources += [
 		'arvuvinterface.c',
 		'arvuvdevice.c',
@@ -210,12 +216,13 @@ endif
 
 library_enums = gnome.mkenums_simple ('arvenumtypes', sources: library_headers + library_no_introspection_headers)
 library_private_enums = gnome.mkenums_simple ('arvenumtypesprivate', sources: library_private_headers)
+library_resources = gnome.compile_resources('arvresources','arvresources.xml')
 
 library_include_dir = join_paths (get_option ('includedir'), 'aravis-@0@'.format (aravis_api_version))
 
 library_config_data = configuration_data ()
-library_config_data.set10 ('ARAVIS_HAS_USB', get_option ('usb'))
-library_config_data.set10 ('ARAVIS_HAS_PACKET_SOCKET', get_option ('packet-socket'))
+library_config_data.set10 ('ARAVIS_HAS_USB', usb_dep.found())
+library_config_data.set10 ('ARAVIS_HAS_PACKET_SOCKET', packet_socket_enabled)
 library_config_data.set10 ('ARAVIS_HAS_FAST_HEARTBEAT', get_option ('fast-heartbeat'))
 configure_file (input: 'arvfeatures.h.in', output: 'arvfeatures.h',
 		configuration: library_config_data, install_dir: library_include_dir)
@@ -232,18 +239,16 @@ library_inc = include_directories ('.')
 
 install_headers (library_headers + library_no_introspection_headers, install_dir: library_include_dir)
 
-install_data ('arv-fake-camera.xml', install_dir: aravis_data_dir)
-
 library_c_args = [
 	'-DARAVIS_COMPILATION',
-         '-DARAVIS_DATA_DIR="@0@"'.format (join_paths(get_option ('prefix'), aravis_data_dir)),
-	 '-DARAVIS_API_VERSION="@0@"'.format (aravis_api_version)
-	 ]
+	'-DARAVIS_API_VERSION="@0@"'.format (aravis_api_version)
+	]
 
 aravis_library = library ('aravis-@0@'.format (aravis_api_version),
 	library_sources, library_headers,
 	library_no_introspection_sources, library_no_introspection_headers, library_private_headers,
 	library_enums, library_private_enums,
+	library_resources,
 	version: aravis_version,
 	soversion: '0',
 	dependencies: aravis_dependencies,
@@ -251,19 +256,24 @@ aravis_library = library ('aravis-@0@'.format (aravis_api_version),
 	install: true)
 
 aravis_library_dependencies = declare_dependency (dependencies: aravis_dependencies,
-						  link_with: aravis_library)
+						  link_with: aravis_library, include_directories: library_inc)
 
-pkg.generate (libraries: [aravis_library, libm],
+pkg.generate (aravis_library,
 	      filebase: 'aravis-@0@'.format (aravis_api_version),
 	      version: aravis_version,
 	      subdirs: 'aravis-@0@'.format (aravis_api_version),
 	      name: 'Aravis',
 	      description: 'Camera control and image acquisition library',
-	      requires: aravis_dependency_str,
-	      requires_private: aravis_private_dependency_str)
+	      requires: aravis_public_dependencies)
 
-progs = [[ 'arv-tool', 			'arvtool.c'],
-	 [ 'arv-fake-gv-camera', 	'arvfakegvcamera.c']]
+arv_test_resources = gnome.compile_resources('arvtestresources','arvtestresources.xml')
+
+progs = [
+  [ 'arv-tool', 		'arvtool.c'],
+  [ 'arv-test', 		['arvtest.c'] + arv_test_resources],
+  [ 'arv-camera-test',		'arvcameratest.c'],
+  [ 'arv-fake-gv-camera', 	'arvfakegvcamera.c'],
+]
 
 foreach p: progs
 	executable ((p[0] + '-@0@').format (aravis_api_version),
@@ -274,16 +284,23 @@ foreach p: progs
 		install: true)
 endforeach
 
-if get_option ('introspection')
-	gnome.generate_gir(aravis_library,
-			   sources : [library_sources, library_headers, library_enums],
-			   nsversion : aravis_api_version,
-			   namespace : 'Aravis',
-			   symbol_prefix : 'arv_',
-			   identifier_prefix : 'Arv',
-			   export_packages : 'aravis',
-			   includes : ['GObject-2.0', 'Gio-2.0'],
-			   extra_args: '-DARAVIS_COMPILATION',
-			   install : true
-			  )
+introspection_option = get_option('introspection')
+introspection_enabled = false
+if introspection_option.auto() or introspection_option.enabled()
+  gir_scanner = find_program('g-ir-scanner', required: introspection_option)
+  gi_dep = dependency('gobject-introspection-1.0', required: introspection_option)
+
+  if gir_scanner.found() and gi_dep.found()
+    gnome.generate_gir(aravis_library,
+      sources : [library_sources, library_headers, library_enums],
+      nsversion : aravis_api_version,
+      namespace : 'Aravis',
+      symbol_prefix : 'arv_',
+      identifier_prefix : 'Arv',
+      export_packages : 'aravis',
+      includes : ['GObject-2.0', 'Gio-2.0'],
+      extra_args: '-DARAVIS_COMPILATION',
+      install : true)
+    introspection_enabled = true
+  endif
 endif

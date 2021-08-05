@@ -49,6 +49,7 @@ typedef enum {
 #define ARV_TYPE_XML_SCHEMA                  (arv_xml_schema_get_type ())
 G_DECLARE_FINAL_TYPE (ArvXmlSchema, arv_xml_schema, ARV, XML_SCHEMA, GObject)
 
+ArvXmlSchema *          arv_xml_schema_new_from_memory  (const char *buffer, size_t size);
 ArvXmlSchema * 		arv_xml_schema_new_from_file 	(GFile *file);
 ArvXmlSchema * 		arv_xml_schema_new_from_path 	(const char *path);
 gboolean 		arv_xml_schema_validate 	(ArvXmlSchema *schema, const void *xml, size_t size,

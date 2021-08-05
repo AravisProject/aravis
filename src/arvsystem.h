@@ -46,7 +46,7 @@ const char * 		arv_get_device_model	 	(unsigned int index);
 const char * 		arv_get_device_serial_nbr 	(unsigned int index);
 const char *		arv_get_device_protocol		(unsigned int index);
 
-ArvDevice * 		arv_open_device 		(const char *device_id);
+ArvDevice * 		arv_open_device 		(const char *device_id, GError **error);
 
 void 			arv_shutdown 			(void);
 

@@ -1,4 +1,4 @@
-/***
+/*
   Copyright 2009 Lennart Poettering
   Copyright 2010 David Henningsson <diwic@ubuntu.com>
   Copyright 2014 Emmanuel Pacaud <emmanuel@gnome.org>
@@ -25,17 +25,19 @@
 
   This file is based on rtkit sources, ported from libdbus to glib gdbus API.
 
-***/
+*/
 
 #include <arvrealtimeprivate.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <memory.h>
 #include <errno.h>
 #include <sched.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include <sys/resource.h>
-#include <sys/syscall.h>
+
+#ifdef G_OS_WIN32
+#include <windows.h>
+#endif
 
 #define RTKIT_SERVICE_NAME "org.freedesktop.RealtimeKit1"
 #define RTKIT_OBJECT_PATH "/org/freedesktop/RealtimeKit1"
@@ -218,6 +220,11 @@ arv_rtkit_make_high_priority (GDBusConnection *connection, pid_t thread, int nic
 #define RLIMIT_RTTIME 15
 #endif
 
+#if !defined(__APPLE__) && !defined(G_OS_WIN32)
+
+#include <sys/resource.h>
+#include <sys/syscall.h>
+
 static pid_t _gettid(void) {
         return (pid_t) syscall(SYS_gettid);
 }
@@ -234,7 +241,6 @@ static pid_t _gettid(void) {
  * Since: 0.4.0
  */
 
-#ifndef __APPLE__
 gboolean
 arv_make_thread_realtime (int priority)
 {
@@ -272,21 +278,12 @@ arv_make_thread_realtime (int priority)
 			return FALSE;
 		}
 
-		arv_debug_misc ("Thread became realtime with priority %d", priority);
+		arv_info_misc ("Thread became realtime with priority %d", priority);
 
 		return TRUE;
 	}
 	return TRUE;
 }
-#else
-gboolean
-arv_make_thread_realtime (int priority)
-{
-	arv_debug_misc ("SCHED API not supported on OSX");
-
-	return FALSE;
-}
-#endif
 
 /**
  * arv_make_thread_high_priority:
@@ -321,7 +318,54 @@ arv_make_thread_high_priority (int nice_level)
 		return FALSE;
 	}
 
-	arv_debug_misc ("Nice level successfully changed to %d", nice_level);
+	arv_info_misc ("Nice level successfully changed to %d", nice_level);
 
 	return TRUE;
 }
+
+#elif defined(G_OS_WIN32)
+
+gboolean
+arv_make_thread_realtime (int priority)
+{
+	if(!SetPriorityClass(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL))
+   {
+		DWORD err = GetLastError();
+		arv_warning_misc ("SetPriorityClass(..., THREAD_PRIORITY_TIME_CRITICAL) failed (%lu)", err);
+		return FALSE;
+	}
+	g_critical("Thread made realtime!");
+	return TRUE;
+}
+
+gboolean
+arv_make_thread_high_priority (int priority)
+{
+	if(!SetPriorityClass(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL))
+   {
+		DWORD err = GetLastError();
+		arv_warning_misc ("SetPriorityClass(..., THREAD_PRIORITY_ABOVE_NORMAL) failed (%lu)", err);
+		return FALSE;
+	}
+	g_critical("Thread made high-priority!");
+	return TRUE;
+}
+
+#else
+
+gboolean
+arv_make_thread_realtime (int priority)
+{
+	arv_info_misc ("SCHED API not supported on OSX");
+
+	return FALSE;
+}
+
+gboolean
+arv_make_thread_high_priority (int nice_level)
+{
+	arv_info_misc ("RtKit not supported on OSX");
+
+	return FALSE;
+}
+#endif

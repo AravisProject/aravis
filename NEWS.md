@@ -1,3 +1,171 @@
+Stable release 0.8.16
+=====================
+
+  * ci: use Github actions for linux and macOS (Emmanuel)
+  * ci: minGW support (Václav)
+  * gigevision: use proper broadcast addressese during discovery (Václav)
+  * camera: accessor to float feature increment (Emmanuel)
+  * camera: make set_trigger more robust (Emmanuel)
+  * camera: fallback to Continuous mode if SingleFrame is not available
+    (Emmanuel)
+  * viewer: allow to save a snapshot as png or jpeg image (Emmanuel)
+  * viewer: display all pixel formats in selector (Emmanuel)
+  * simulator: now works on Windows and macOS (Václav, Emmanuel)
+  * debug: fix output on Windows (Václav)
+  * doc: Windows build documentation (Václav)
+  * tests: new arv-test application for automated testing (Emmanuel)
+
+Stable release 0.8.15
+=====================
+
+  * gigevision: only disable packet resend after a packet unavailable error
+  * gigevision: add a new packet timeout for first packet resend request
+  * doc: improve GvStream property documentation
+  * code cleanup
+
+Stable release 0.8.14
+=====================
+
+  * debug: fix debug timestamp on older platforms (Emmanuel)
+
+Stable release 0.8.13
+=====================
+
+  * viewer: fix incorrect bandwith and frame rate computation
+
+Stable release 0.8.12
+=====================
+
+  * usb3vision: initialize stream infos
+
+Stable release 0.8.11
+=====================
+
+  * stream: add an extensible info API (Emmanuel)
+  * gvstream: improve packet resend request behaviour in case of unordered gvsp
+    packets (Emmanuel)
+  * gvstream: wait for thread setup during ArvGvStream initialization (Emmanuel)
+  * gigevision: use MAC as serial number fallback (Emmanuel)
+  * genicam: fix arv_exposure_mode_to_string (Martin)
+  * usb3vision: improve error reporting in case of libsub error (Emmanuel)
+  * usb3vision: automatically detach kernel driver (Emmanuel)
+  * cameratest: add a test duration parameter (Emmanuel)
+  * misc: rename internal ArvStatistic to ArvHistogram (Emmanuel)
+
+Stable release 0.8.10
+=====================
+
+  * arv-tool: make device enumeration faster (Emmanuel)
+  * debug: rework debug log levels (Emmanuel)
+  * fakegvcamera: improve streaming reliability - partly fix #499 (Emmanuel)
+  * gvstream: fix use after reference release - fix #504 (Emmanuel)
+  * genicam: String node support - fix #507 (Emmanuel)
+
+Stable release 0.8.9
+====================
+
+  * windows: build fix (Emmanuel)
+
+Stable release 0.8.8
+====================
+
+  * arv-camera-test: promote to installed application (Emmanuel)
+  * applications: fix policy parameter consistency (Emmanuel)
+  * debug: timestamped and modernized output (Emmanuel)
+  * genicam: add a range check debug mode (Emmanuel)
+  * gvdevice: faster finalization (Emmanuel)
+  * camera: new DeviceSerialNumber getter (Emmanuel)
+
+Stable release 0.8.7
+====================
+
+  * camera: ignore Acquisitiontart feature setting failure (Emmanuel)
+  * camera: fix trigger setting for Basler cameras (Casperoo)
+  * camera: add set_exposure API (Emmanuel)
+  * gigevision: Windows support (Václav)
+  * usb3vision: better error packet handling (Emmanuel)
+  * genicam: allow get/set float from an int node (Emmanuel)
+  * genicam: allow multiple pIndex property nodes (Emmanuel)
+
+Stable release 0.8.6
+====================
+
+  * camera: handle GainRaw also as a float feature
+  * camera: add arv_camera_new_with_device()
+  * camera: ignore error on TriggerSelector and TriggerMode setting in arv_camera_set_trigger()
+  * gigevision: fail quicker if a device is not found at ArvGvDevice instantiation
+  * fakegvcamera: fix interface selection
+  * genicam: implement optional range check for integer and float node values, as a runtime option
+  * genicam: fix min/max computation for StructEntry and MaskedIntReg nodes
+  * gstplugin: don't fail camera init if gain or exposure features are not available
+
+Stable release 0.8.5
+====================
+
+  * macOS: build fix
+  * travis:enable macOS
+
+Stable release 0.8.4
+====================
+
+  * all: s/adjustement/adjustment/
+
+Stable release 0.8.3
+====================
+
+  * gigevision: automatically adjust packet size if needed (Emmanuel)
+  * gstreamer: don't try to set frame rate if feature is not available (Emmanuel)
+  * genicam: fix pVariable name with dot (Arrigo)
+  * genicam: fix parsing of genicam data url (Emmanuel)
+  * buffer: add arv_buffer_set_frame_id API (Russel)
+  * usb3vision: add Dahua Technology USB id (H.F)
+  * build: preparatory work for windows compilation (Eudoxos)
+
+Stable release 0.8.2
+====================
+
+  * gvdevice: fix timeout race (casperoo)
+  * fakecamera: implement Mono16 pixel format (Hinko)
+  * Enable ppc64le in CI pipeline (nagesh)
+
+Stable release 0.8.1
+====================
+
+  * build: add more compilation warnings and fix them (Emmanuel)
+
+Stable release 0.8.0
+====================
+
+  * gigevision: ExtendedIds support (Hendrick, Emmanuel)
+  * gigevision: add get_control_access API (casperoo)
+  * genicam: implement proper AccessMode and ImposedAccessMode support (Siim)
+  * genicam: add or extend support for Representation, Unit, DisplayNotation and DisplayPrecision proerties (Siim)
+  * genicam: extend GcRregisterDescriptionNode API (Siim)
+  * genicam: improve String register (Siim)
+  * genicam: implement arv_gc_feature_get_name_space() (Siim)
+  * gst-plugin: don't shadow GstBaseSrc num-buffers property (Marko)
+  * usb3vision: add Daheng Imaging descriptors (Jakob)
+
+Unstable release 0.7.5
+======================
+
+  * gst-plugin: error handling and lock fixes (Marko)
+  * build: fix when aravis is used as a subproject (Rihards)
+  * build: fix viewer build without libusb (Guillaume)
+  * fake camera: implement bayer pixel formats (Bernardo)
+  * gcregister: don't try to read WO registers (Stefan)
+  * viewer: fix buffer leak (Emmanuel)
+  * gvstream: correctly handle resend request limit (Emmanuel)
+  * stream: device reference leak fix (Emmanuel)
+
+Unstable release 0.7.4
+======================
+
+  * camera/device/stream: add an error parameter to object intantiation functions (Emmanuel)
+  * camera: fix node type mismatch error in set_frame_rate (Arkadiusz)
+  * gigevision: ignore duplicated packets (Joris)
+  * build: make build of tests optional (Edgar)
+
 Unstable release 0.7.3
 ======================
 
@@ -160,7 +328,7 @@ Release 0.5.7
   * genicam: raw data support (Steve)
   * camera: multiframe acquisition mode (Lee)
   * camera: extension of the trigger API (Steve)
-  * gigevision: instantiation by IP address or hostname (Blaz, Arkadius)
+  * gigevision: instantiation by IP address or hostname (Blaz, Arkadiusz)
   * build: fix compilation with old glib (Blaz)
   * build: intructions and compilation fix for OSX (Christoffer, Fernando)
   * build: Travis and Coverity support on github (Emmanuel)

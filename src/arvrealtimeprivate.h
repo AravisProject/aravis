@@ -23,12 +23,12 @@
 #ifndef ARV_REALTIME_PRIVATE_H
 #define ARV_REALTIME_PRIVATE_H
 
-#if !defined (ARV_H_INSIDE) && !defined (ARAVIS_COMPILATION)
-#error "Only <arv.h> can be included directly."
-#endif
-
 #include <arvrealtime.h>
 #include <gio/gio.h>
+
+#ifdef G_OS_WIN32
+#include <unistd.h> /* for pid_t */
+#endif
 
 int 		arv_rtkit_get_max_realtime_priority	(GDBusConnection *connection, GError **error);
 int 		arv_rtkit_get_min_nice_level 		(GDBusConnection *connection, GError **error);

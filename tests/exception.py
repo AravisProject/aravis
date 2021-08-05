@@ -12,8 +12,8 @@ Aravis.enable_interface ("Fake")
 try:
     camera = Aravis.Camera.new ("NoCamera")
 
-except TypeError as err:
-    pass
+except GLib.Error as err:
+    assert err.matches (Aravis.device_error_quark(), Aravis.DeviceError.NOT_FOUND)
 
 camera = Aravis.Camera.new ("Fake_1")
 

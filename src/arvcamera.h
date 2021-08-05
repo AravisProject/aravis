@@ -30,6 +30,7 @@
 #include <arvtypes.h>
 #include <arvstream.h>
 #include <arvgvstream.h>
+#include <arvgvdevice.h>
 
 G_BEGIN_DECLS
 
@@ -40,16 +41,18 @@ struct _ArvCameraClass {
 	GObjectClass parent_class;
 };
 
-ArvCamera *	arv_camera_new			(const char *name);
+ArvCamera *	arv_camera_new			(const char *name, GError **error);
+ArvCamera * 	arv_camera_new_with_device 	(ArvDevice *device, GError **error);
 ArvDevice *	arv_camera_get_device		(ArvCamera *camera);
 
-ArvStream *	arv_camera_create_stream	(ArvCamera *camera, ArvStreamCallback callback, void *user_data);
+ArvStream *	arv_camera_create_stream	(ArvCamera *camera, ArvStreamCallback callback, void *user_data, GError **error);
 
 /* Device informations */
 
-const char *	arv_camera_get_vendor_name	(ArvCamera *camera, GError **error);
-const char *	arv_camera_get_model_name	(ArvCamera *camera, GError **error);
-const char *	arv_camera_get_device_id	(ArvCamera *camera, GError **error);
+const char *	arv_camera_get_vendor_name		(ArvCamera *camera, GError **error);
+const char *	arv_camera_get_model_name		(ArvCamera *camera, GError **error);
+const char * 	arv_camera_get_device_serial_number 	(ArvCamera *camera, GError **error);
+const char *	arv_camera_get_device_id		(ArvCamera *camera, GError **error);
 
 /* Image format control */
 
@@ -77,9 +80,9 @@ void 		arv_camera_set_pixel_format 				(ArvCamera *camera, ArvPixelFormat format
 void		arv_camera_set_pixel_format_from_string 		(ArvCamera *camera, const char * format, GError **error);
 ArvPixelFormat	arv_camera_get_pixel_format 				(ArvCamera *camera, GError **error);
 const char * 	arv_camera_get_pixel_format_as_string			(ArvCamera *camera, GError **error);
-gint64 *	arv_camera_get_available_pixel_formats			(ArvCamera *camera, guint *n_pixel_formats, GError **error);
-const char **	arv_camera_get_available_pixel_formats_as_strings	(ArvCamera *camera, guint *n_pixel_formats, GError **error);
-const char **	arv_camera_get_available_pixel_formats_as_display_names	(ArvCamera *camera, guint *n_pixel_formats, GError **error);
+gint64 *	arv_camera_dup_available_pixel_formats			(ArvCamera *camera, guint *n_pixel_formats, GError **error);
+const char **	arv_camera_dup_available_pixel_formats_as_strings	(ArvCamera *camera, guint *n_pixel_formats, GError **error);
+const char **	arv_camera_dup_available_pixel_formats_as_display_names	(ArvCamera *camera, guint *n_pixel_formats, GError **error);
 
 /* Acquisition control */
 
@@ -104,8 +107,8 @@ void		arv_camera_get_frame_rate_bounds 	(ArvCamera *camera, double *min, double 
 void		arv_camera_set_trigger			(ArvCamera *camera, const char *source, GError **error);
 void 		arv_camera_set_trigger_source		(ArvCamera *camera, const char *source, GError **error);
 const char *	arv_camera_get_trigger_source		(ArvCamera *camera, GError **error);
-const char **	arv_camera_get_available_trigger_sources(ArvCamera *camera, guint *n_sources, GError **error);
-const char**    arv_camera_get_available_triggers       (ArvCamera *camera, guint *n_triggers, GError **error);
+const char **	arv_camera_dup_available_trigger_sources(ArvCamera *camera, guint *n_sources, GError **error);
+const char **   arv_camera_dup_available_triggers       (ArvCamera *camera, guint *n_triggers, GError **error);
 void            arv_camera_clear_triggers               (ArvCamera* camera, GError **error);
 void 		arv_camera_software_trigger 		(ArvCamera *camera, GError **error);
 
@@ -117,6 +120,8 @@ double 		arv_camera_get_exposure_time 		(ArvCamera *camera, GError **error);
 void		arv_camera_get_exposure_time_bounds	(ArvCamera *camera, double *min, double *max, GError **error);
 void		arv_camera_set_exposure_time_auto	(ArvCamera *camera, ArvAuto auto_mode, GError **error);
 ArvAuto		arv_camera_get_exposure_time_auto	(ArvCamera *camera, GError **error);
+
+void		arv_camera_set_exposure_mode		(ArvCamera *camera, ArvExposureMode mode, GError **error);
 
 /* Analog control */
 
@@ -152,17 +157,21 @@ gint64		arv_camera_get_integer_increment	(ArvCamera *camera, const char *feature
 void		arv_camera_set_float			(ArvCamera *camera, const char *feature, double value, GError **error);
 double		arv_camera_get_float			(ArvCamera *camera, const char *feature, GError **error);
 void 		arv_camera_get_float_bounds 		(ArvCamera *camera, const char *feature, double *min, double *max, GError **error);
+double          arv_camera_get_float_increment          (ArvCamera *camera, const char *feature, GError **error);
 
-gint64 *	arv_camera_get_available_enumerations			(ArvCamera *camera, const char *feature, guint *n_values,
+gint64 *	arv_camera_dup_available_enumerations			(ArvCamera *camera, const char *feature, guint *n_values,
 									 GError **error);
-const char **	arv_camera_get_available_enumerations_as_strings	(ArvCamera *camera, const char *feature, guint *n_values,
+const char **	arv_camera_dup_available_enumerations_as_strings	(ArvCamera *camera, const char *feature, guint *n_values,
 									 GError **error);
-const char ** 	arv_camera_get_available_enumerations_as_display_names 	(ArvCamera *camera, const char *feature, guint *n_values,
+const char ** 	arv_camera_dup_available_enumerations_as_display_names 	(ArvCamera *camera, const char *feature, guint *n_values,
 									 GError **error);
 
 gboolean 	arv_camera_is_feature_available 	(ArvCamera *camera, const char *feature, GError **error);
 
-gboolean 	arv_camera_check_status			(ArvCamera *camera, GError **error);
+/* Runtime policies */
+
+void		arv_camera_set_register_cache_policy	(ArvCamera *camera, ArvRegisterCachePolicy policy);
+void		arv_camera_set_range_check_policy	(ArvCamera *camera, ArvRangeCheckPolicy policy);
 
 /* GigEVision specific API */
 
@@ -177,6 +186,8 @@ gint64 		arv_camera_gv_get_packet_delay 		(ArvCamera *camera, GError **error);
 void 		arv_camera_gv_set_packet_size 		(ArvCamera *camera, gint packet_size, GError **error);
 guint		arv_camera_gv_get_packet_size		(ArvCamera *camera, GError **error);
 guint		arv_camera_gv_auto_packet_size		(ArvCamera *camera, GError **error);
+void		arv_camera_gv_set_packet_size_adjustment 	(ArvCamera *camera,
+								 ArvGvPacketSizeAdjustment adjustment);
 
 void 		arv_camera_gv_set_stream_options 	(ArvCamera *camera, ArvGvStreamOption options);
 
@@ -189,6 +200,8 @@ guint           arv_camera_uv_get_bandwidth             	(ArvCamera *camera, GEr
 void            arv_camera_uv_get_bandwidth_bounds      	(ArvCamera *camera, guint *min, guint *max, GError **error);
 
 /* Chunk data */
+
+gboolean		arv_camera_are_chunks_available		(ArvCamera *camera, GError **error);
 
 void 			arv_camera_set_chunk_mode 	(ArvCamera *camera, gboolean is_active, GError **error);
 gboolean 		arv_camera_get_chunk_mode 	(ArvCamera *camera, GError **error);

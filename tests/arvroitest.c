@@ -124,6 +124,7 @@ int
 main (int argc, char **argv)
 {
 	ApplicationData data;
+	GError *error = NULL;
 	const char *camera_name = NULL;
 	int i;
 
@@ -144,8 +145,9 @@ main (int argc, char **argv)
 		g_print ("Looking for camera '%s'\n", camera_name);
 	}
 
-	data.camera = arv_camera_new (camera_name);
-	if (data.camera != NULL) {
+	data.camera = arv_camera_new (camera_name, &error);
+
+	if (ARV_IS_CAMERA (data.camera)) {
 		void (*old_sigint_handler)(int);
 		gint payload;
 		gint x, y, width, height;
@@ -167,8 +169,9 @@ main (int argc, char **argv)
 		printf ("image width           = %d\n", width);
 		printf ("image height          = %d\n", height);
 
-		data.stream = arv_camera_create_stream (data.camera, NULL, NULL);
-		if (data.stream != NULL) {
+		data.stream = arv_camera_create_stream (data.camera, NULL, NULL, &error);
+
+		if (ARV_IS_STREAM (data.stream)) {
 			g_signal_connect (data.stream, "new-buffer", G_CALLBACK (new_buffer_cb), &data);
 			arv_stream_set_emit_signals (data.stream, TRUE);
 
@@ -194,21 +197,30 @@ main (int argc, char **argv)
 
 			arv_stream_get_statistics (data.stream, &n_completed_buffers, &n_failures, &n_underruns);
 
-			printf ("Completed buffers = %Lu\n", (unsigned long long) n_completed_buffers);
-			printf ("Failures          = %Lu\n", (unsigned long long) n_failures);
-			printf ("Underruns         = %Lu\n", (unsigned long long) n_underruns);
+			g_print ("Completed buffers = %" G_GUINT64_FORMAT "\n", n_completed_buffers);
+			g_print ("Failures          = %" G_GUINT64_FORMAT "\n", n_failures);
+			g_print ("Underruns         = %" G_GUINT64_FORMAT "\n", n_underruns);
 
 			arv_camera_stop_acquisition (data.camera, NULL);
 
 			arv_stream_set_emit_signals (data.stream, FALSE);
 
 			g_object_unref (data.stream);
-		} else
-			printf ("Can't create stream thread (check if the device is not already used)\n");
+		} else {
+			printf ("Can't create stream thread%s%s\n",
+				error != NULL ? ": " : "",
+				error != NULL ? error->message : "");
+
+			g_clear_error (&error);
+		}
 
 		g_object_unref (data.camera);
-	} else
-		printf ("No camera found\n");
+	} else {
+		printf ("No camera found%s%s\n",
+			error != NULL ? ": " : "",
+			error != NULL ? error->message : "");
+		g_clear_error (&error);
+	}
 
 	return 0;
 }

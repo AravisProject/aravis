@@ -20,6 +20,7 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
+#include <arvdebugprivate.h>
 #include <arv.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,21 +29,42 @@
 static char *arv_option_device_name = NULL;
 static char *arv_option_device_address = NULL;
 static char *arv_option_debug_domains = NULL;
-static char *arv_option_cache_policy = NULL;
+static char *arv_option_register_cache = NULL;
+static char *arv_option_range_check = NULL;
 static gboolean arv_option_show_time = FALSE;
 
 static const GOptionEntry arv_option_entries[] =
 {
-	{ "name",		'n', 0, G_OPTION_ARG_STRING,
-		&arv_option_device_name,	NULL, "<device_name>"},
-	{ "address",		'a', 0, G_OPTION_ARG_STRING,
-		&arv_option_device_address,	NULL, "<device_address>"},
-	{ "cache-policy",	'c', 0, G_OPTION_ARG_STRING,
-		&arv_option_cache_policy, 	"Register cache policy", "[disable|enable|debug]" },
-	{ "time",		't', 0, G_OPTION_ARG_NONE,
-		&arv_option_show_time, 		"Show execution time", NULL},
-	{ "debug", 		'd', 0, G_OPTION_ARG_STRING,
-		&arv_option_debug_domains, 	NULL, "<category>[:<level>][,...]" },
+	{
+		"name",				'n', 0, G_OPTION_ARG_STRING,
+		&arv_option_device_name,	NULL,
+		"<device_name>"
+	},
+	{
+		"address",			'a', 0, G_OPTION_ARG_STRING,
+		&arv_option_device_address,	NULL,
+		"<device_address>"
+	},
+	{
+		"register-cache",		'\0', 0, G_OPTION_ARG_STRING,
+		&arv_option_register_cache, 	"Register cache policy",
+		"{disable|enable|debug}"
+	},
+	{
+		"range-check",			'\0', 0, G_OPTION_ARG_STRING,
+		&arv_option_range_check,	"Range check policy",
+		"{disable|enable}"
+	},
+	{
+		"time",				't', 0, G_OPTION_ARG_NONE,
+		&arv_option_show_time, 		"Show execution time",
+		NULL
+	},
+	{
+		"debug", 			'd', 0, G_OPTION_ARG_STRING,
+		&arv_option_debug_domains, 	NULL,
+		"{<category>[:<level>][,...]|help}"
+	},
 	{ NULL }
 };
 
@@ -65,7 +87,7 @@ description_content[] =
 "arv-tool-" ARAVIS_API_VERSION " control Width=128 Height=128 Gain R[0x10000]=0x10\n"
 "arv-tool-" ARAVIS_API_VERSION " features\n"
 "arv-tool-" ARAVIS_API_VERSION " description Width Height\n"
-"arv-tool-" ARAVIS_API_VERSION " -n Basler-210ab4 genicam\n";
+"arv-tool-" ARAVIS_API_VERSION " -n Basler-210ab4 genicam";
 
 typedef enum {
 	ARV_TOOL_LIST_MODE_FEATURES,
@@ -103,7 +125,7 @@ arv_tool_list_features (ArvGc *genicam, const char *feature, ArvToolListMode lis
 							value = g_strdup_printf ("'%s'",
 										 arv_gc_string_get_value (ARV_GC_STRING (node), &error));
 						} else {
-							unit = arv_gc_integer_get_unit (ARV_GC_INTEGER (node), NULL);
+							unit = arv_gc_integer_get_unit (ARV_GC_INTEGER (node));
 
 							value = g_strdup_printf ("%" G_GINT64_FORMAT "%s%s",
 										 arv_gc_integer_get_value (ARV_GC_INTEGER (node), &error),
@@ -111,7 +133,7 @@ arv_tool_list_features (ArvGc *genicam, const char *feature, ArvToolListMode lis
 										 unit != NULL ? unit : "");
 						}
 					} else if (ARV_IS_GC_FLOAT (node)) {
-						unit = arv_gc_float_get_unit (ARV_GC_FLOAT (node), NULL);
+						unit = arv_gc_float_get_unit (ARV_GC_FLOAT (node));
 
 						value = g_strdup_printf ("%g%s%s",
 									 arv_gc_float_get_value (ARV_GC_FLOAT (node), &error),
@@ -191,7 +213,9 @@ arv_tool_list_features (ArvGc *genicam, const char *feature, ArvToolListMode lis
 }
 
 static void
-arv_tool_execute_command (int argc, char **argv, ArvDevice *device, ArvRegisterCachePolicy cache_policy)
+arv_tool_execute_command (int argc, char **argv, ArvDevice *device,
+			  ArvRegisterCachePolicy register_cache_policy,
+			  ArvRangeCheckPolicy range_check_policy)
 {
 	ArvGc *genicam;
 	const char *command = argv[1];
@@ -200,7 +224,8 @@ arv_tool_execute_command (int argc, char **argv, ArvDevice *device, ArvRegisterC
 	if (device == NULL || argc < 2)
 		return;
 
-	arv_device_set_register_cache_policy (device, cache_policy);
+	arv_device_set_register_cache_policy (device, register_cache_policy);
+	arv_device_set_range_check_policy (device, range_check_policy);
 
 	genicam = arv_device_get_genicam (device);
 
@@ -273,7 +298,7 @@ arv_tool_execute_command (int argc, char **argv, ArvDevice *device, ArvRegisterC
 							min_int64 = arv_gc_integer_get_min (ARV_GC_INTEGER (feature), NULL);
 							max_int64 = arv_gc_integer_get_max (ARV_GC_INTEGER (feature), NULL);
 							inc_int64 = arv_gc_integer_get_inc (ARV_GC_INTEGER (feature), NULL);
-							unit = arv_gc_integer_get_unit (ARV_GC_INTEGER (feature), NULL);
+							unit = arv_gc_integer_get_unit (ARV_GC_INTEGER (feature));
 
 							value = arv_gc_integer_get_value (ARV_GC_INTEGER (feature), &error);
 
@@ -302,7 +327,7 @@ arv_tool_execute_command (int argc, char **argv, ArvDevice *device, ArvRegisterC
 							min_double = arv_gc_float_get_min (ARV_GC_FLOAT (feature), NULL);
 							max_double = arv_gc_float_get_max (ARV_GC_FLOAT (feature), NULL);
 							inc_double = arv_gc_float_get_inc (ARV_GC_FLOAT (feature), NULL);
-							unit = arv_gc_float_get_unit (ARV_GC_FLOAT (feature), NULL);
+							unit = arv_gc_float_get_unit (ARV_GC_FLOAT (feature));
 
 							value = arv_gc_float_get_value (ARV_GC_FLOAT (feature), &error);
 
@@ -315,7 +340,7 @@ arv_tool_execute_command (int argc, char **argv, ArvDevice *device, ArvRegisterC
 									g_string_append_printf (string, " min:%g", min_double);
 								if (max_double != G_MAXDOUBLE)
 									g_string_append_printf (string, " max:%g", max_double);
-								if (inc_double != 1)
+								if (inc_double != G_MINDOUBLE)
 									g_string_append_printf (string, " inc:%g", inc_double);
 
 								printf ("%s\n", string->str);
@@ -336,7 +361,10 @@ arv_tool_execute_command (int argc, char **argv, ArvDevice *device, ArvRegisterC
 					}
 
 					if (error != NULL) {
-							printf ("%s read error: %s\n", tokens[0], error->message);
+							printf ("%s %s error: %s\n",
+								tokens[0],
+								tokens[1] != NULL ? "write" : "read",
+								error->message);
 							g_clear_error (&error);
 					}
 				}
@@ -364,7 +392,7 @@ arv_tool_execute_command (int argc, char **argv, ArvDevice *device, ArvRegisterC
 			g_strfreev (tokens);
 		}
 	} else {
-		printf ("Unkown command\n");
+		printf ("Unknown command\n");
 	}
 
 	if (arv_option_show_time)
@@ -375,7 +403,8 @@ int
 main (int argc, char **argv)
 {
 	ArvDevice *device;
-	ArvRegisterCachePolicy cache_policy = ARV_REGISTER_CACHE_POLICY_DEFAULT;
+	ArvRegisterCachePolicy register_cache_policy;
+	ArvRangeCheckPolicy range_check_policy;
 	const char *device_id;
 	GOptionContext *context;
 	GError *error = NULL;
@@ -396,32 +425,60 @@ main (int argc, char **argv)
 
 	g_option_context_free (context);
 
-	if (arv_option_cache_policy == NULL ||
-	    g_strcmp0 (arv_option_cache_policy, "disable") == 0)
-		cache_policy = ARV_REGISTER_CACHE_POLICY_DISABLE;
-	else if (g_strcmp0 (arv_option_cache_policy, "enable") == 0)
-		cache_policy = ARV_REGISTER_CACHE_POLICY_ENABLE;
-	else if (g_strcmp0 (arv_option_cache_policy, "debug") == 0)
-		cache_policy = ARV_REGISTER_CACHE_POLICY_DEBUG;
+	if (arv_option_register_cache == NULL)
+		register_cache_policy = ARV_REGISTER_CACHE_POLICY_DEFAULT;
+	else if (g_strcmp0 (arv_option_register_cache, "disable") == 0)
+		register_cache_policy = ARV_REGISTER_CACHE_POLICY_DISABLE;
+	else if (g_strcmp0 (arv_option_register_cache, "enable") == 0)
+		register_cache_policy = ARV_REGISTER_CACHE_POLICY_ENABLE;
+	else if (g_strcmp0 (arv_option_register_cache, "debug") == 0)
+		register_cache_policy = ARV_REGISTER_CACHE_POLICY_DEBUG;
 	else {
-		printf ("Invalid cache policy\n");
+		printf ("Invalid register cache policy\n");
 		return EXIT_FAILURE;
 	}
 
-	arv_debug_enable (arv_option_debug_domains);
+	if (arv_option_range_check == NULL)
+		range_check_policy = ARV_RANGE_CHECK_POLICY_DEFAULT;
+	else if (g_strcmp0 (arv_option_range_check, "disable") == 0)
+		range_check_policy = ARV_RANGE_CHECK_POLICY_DISABLE;
+	else if (g_strcmp0 (arv_option_range_check, "enable") == 0)
+		range_check_policy = ARV_RANGE_CHECK_POLICY_ENABLE;
+	else if (g_strcmp0 (arv_option_range_check, "debug") == 0)
+		range_check_policy = ARV_RANGE_CHECK_POLICY_DEBUG;
+	else {
+		printf ("Invalid range check policy\n");
+		return EXIT_FAILURE;
+	}
+
+	if (!arv_debug_enable (arv_option_debug_domains)) {
+		if (g_strcmp0 (arv_option_debug_domains, "help") != 0)
+			printf ("Invalid debug selection\n");
+		else
+			arv_debug_print_infos ();
+		return EXIT_FAILURE;
+	}
 
 	device_id = arv_option_device_address != NULL ? arv_option_device_address : arv_option_device_name;
 	if (device_id != NULL) {
-		device = arv_open_device (device_id);
+		GError *error = NULL;
 
+		device = arv_open_device (device_id, &error);
 		if (ARV_IS_DEVICE (device)) {
-			if (argc < 2)
+			if (argc < 2) {
 				printf ("%s\n", device_id);
-			else
-				arv_tool_execute_command (argc, argv, device, cache_policy);
+			} else {
+				arv_tool_execute_command (argc, argv, device,
+							  register_cache_policy, range_check_policy);
+			}
 			g_object_unref (device);
 		} else {
-			fprintf (stderr, "Device '%s' not found\n", device_id);
+			if (error != NULL) {
+				fprintf (stderr, "%s\n", error->message);
+				g_clear_error (&error);
+			} else {
+				fprintf (stderr, "Device '%s' not found", device_id);
+			}
 		}
 	} else {
 		arv_update_device_list ();
@@ -429,14 +486,25 @@ main (int argc, char **argv)
 
 		if (n_devices > 0) {
 			for (i = 0; i < n_devices; i++) {
+				GError *error = NULL;
+
 				device_id = arv_get_device_id (i);
-				device = arv_open_device (device_id);
+				printf ("%s (%s)\n", device_id, arv_get_device_address (i));
 
-				if (ARV_IS_DEVICE (device)) {
-					printf ("%s (%s)\n", device_id, arv_get_device_address (i));
-					arv_tool_execute_command (argc, argv, device, cache_policy);
+				if (argc >= 2) {
+					device = arv_open_device (device_id, &error);
 
-					g_object_unref (device);
+					if (ARV_IS_DEVICE (device)) {
+						arv_tool_execute_command (argc, argv, device,
+									  register_cache_policy, range_check_policy);
+
+						g_object_unref (device);
+					} else {
+						fprintf (stderr, "Failed to open device '%s'%s%s\n", device_id,
+							 error != NULL ? ": " : "",
+							 error != NULL ? error->message : "");
+						g_clear_error (&error);
+					}
 				}
 			}
 		} else {

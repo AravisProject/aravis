@@ -54,11 +54,22 @@ arv_device_error_quark (void)
 	return g_quark_from_static_string ("arv-device-error-quark");
 }
 
+typedef struct {
+	GError *init_error;
+} ArvDevicePrivate;
+
+static void arv_device_initable_iface_init (GInitableIface *iface);
+
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvDevice, arv_device, G_TYPE_OBJECT,
+				  G_ADD_PRIVATE (ArvDevice)
+				  G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, arv_device_initable_iface_init))
+
 /**
  * arv_device_create_stream:
  * @device: a #ArvDevice
  * @callback: (scope call): a frame processing callback
  * @user_data: (allow-none) (closure): user data for @callback
+ * @error: a #GError placeholder, %NULL to ignore
  *
  * Creates a new #ArvStream for video stream handling. See
  * @ArvStreamCallback for details regarding the callback function.
@@ -69,11 +80,11 @@ arv_device_error_quark (void)
  */
 
 ArvStream *
-arv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data)
+arv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data, GError **error)
 {
 	g_return_val_if_fail (ARV_IS_DEVICE (device), NULL);
 
-	return ARV_DEVICE_GET_CLASS (device)->create_stream (device, callback, user_data);
+	return ARV_DEVICE_GET_CLASS (device)->create_stream (device, callback, user_data, error);
 }
 
 /**
@@ -682,7 +693,44 @@ arv_device_get_float_feature_bounds (ArvDevice *device, const char *feature, dou
 }
 
 /**
- * arv_device_get_available_enumeration_feature_values:
+ * arv_device_get_float_feature_increment:
+ * @device: a #ArvDevice
+ * @feature: feature name
+ * @error: a #GError placeholder
+ *
+ * Not all float features have evenly distributed allowed values, which means the returned increment may not reflect the allowed value
+ * set.
+ *
+ * Returns: feature value increment, or #G_MINDOUBLE on error.
+ *
+ * Since: 0.8.16
+ */
+
+double
+arv_device_get_float_feature_increment (ArvDevice *device, const char *feature, GError **error)
+{
+	ArvGcNode *node;
+
+	node = _get_feature (device, ARV_TYPE_GC_FLOAT, feature, error);
+	if (node != NULL) {
+		GError *local_error = NULL;
+		double increment;
+
+		increment = arv_gc_float_get_inc (ARV_GC_FLOAT (node), &local_error);
+
+			if (local_error != NULL) {
+				g_propagate_error (error, local_error);
+				return G_MINDOUBLE;
+			}
+
+			return increment;
+	}
+
+	return G_MINDOUBLE;
+}
+
+/**
+ * arv_device_dup_available_enumeration_feature_values:
  * @device: an #ArvDevice
  * @feature: feature name
  * @n_values: placeholder for the number of returned values
@@ -697,7 +745,7 @@ arv_device_get_float_feature_bounds (ArvDevice *device, const char *feature, dou
  */
 
 gint64 *
-arv_device_get_available_enumeration_feature_values (ArvDevice *device, const char *feature, guint *n_values, GError **error)
+arv_device_dup_available_enumeration_feature_values (ArvDevice *device, const char *feature, guint *n_values, GError **error)
 {
 	ArvGcNode *node;
 
@@ -706,13 +754,13 @@ arv_device_get_available_enumeration_feature_values (ArvDevice *device, const ch
 
 	node = _get_feature (device, ARV_TYPE_GC_ENUMERATION, feature, error);
 	if (node != NULL)
-		return arv_gc_enumeration_get_available_int_values (ARV_GC_ENUMERATION (node), n_values, error);
+		return arv_gc_enumeration_dup_available_int_values (ARV_GC_ENUMERATION (node), n_values, error);
 
 	return NULL;
 }
 
 /**
- * arv_device_get_available_enumeration_feature_values_as_strings:
+ * arv_device_dup_available_enumeration_feature_values_as_strings:
  * @device: an #ArvDevice
  * @feature: feature name
  * @n_values: placeholder for the number of returned values
@@ -727,7 +775,7 @@ arv_device_get_available_enumeration_feature_values (ArvDevice *device, const ch
  */
 
 const char **
-arv_device_get_available_enumeration_feature_values_as_strings (ArvDevice *device, const char *feature, guint *n_values, GError **error)
+arv_device_dup_available_enumeration_feature_values_as_strings (ArvDevice *device, const char *feature, guint *n_values, GError **error)
 {
 	ArvGcNode *node;
 
@@ -736,13 +784,13 @@ arv_device_get_available_enumeration_feature_values_as_strings (ArvDevice *devic
 
 	node = _get_feature (device, ARV_TYPE_GC_ENUMERATION, feature, error);
 	if (node != NULL)
-		return arv_gc_enumeration_get_available_string_values (ARV_GC_ENUMERATION (node), n_values, error);
+		return arv_gc_enumeration_dup_available_string_values (ARV_GC_ENUMERATION (node), n_values, error);
 
 	return NULL;
 }
 
 /**
- * arv_device_get_available_enumeration_feature_values_as_display_names:
+ * arv_device_dup_available_enumeration_feature_values_as_display_names:
  * @device: an #ArvDevice
  * @feature: feature name
  * @n_values: placeholder for the number of returned values
@@ -757,7 +805,7 @@ arv_device_get_available_enumeration_feature_values_as_strings (ArvDevice *devic
  */
 
 const char **
-arv_device_get_available_enumeration_feature_values_as_display_names (ArvDevice *device, const char *feature, guint *n_values, GError **error)
+arv_device_dup_available_enumeration_feature_values_as_display_names (ArvDevice *device, const char *feature, guint *n_values, GError **error)
 {
 	ArvGcNode *node;
 
@@ -766,9 +814,74 @@ arv_device_get_available_enumeration_feature_values_as_display_names (ArvDevice 
 
 	node = _get_feature (device, ARV_TYPE_GC_ENUMERATION, feature, error);
 	if (node != NULL)
-		return arv_gc_enumeration_get_available_display_names (ARV_GC_ENUMERATION (node), n_values, error);
+		return arv_gc_enumeration_dup_available_display_names (ARV_GC_ENUMERATION (node), n_values, error);
 
 	return NULL;
+}
+
+/**
+ * arv_device_set_features_from_string:
+ * @device: a #ArvDevice
+ * @string: a space separated list of features assignments
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Set features from a string containing a list of space separated feature assignments or command names. For example:
+ *
+ * |[<!-- language="C" -->
+ * arv_device_set_features_from_string (device, "Width=256 Height=256 PixelFormat='Mono8' TriggerStart", &error);
+ * ]|
+ *
+ * Since: 0.8.0
+ */
+
+gboolean
+arv_device_set_features_from_string (ArvDevice *device, const char *string, GError **error)
+{
+	GMatchInfo *match_info = NULL;
+	GError *local_error = NULL;
+	GRegex *regex;
+
+	g_return_val_if_fail (ARV_IS_DEVICE (device), FALSE);
+
+	if (string == NULL)
+		return TRUE;
+
+	regex = g_regex_new ("((?<Key>[^\\s\"'\\=]+)|\"(?<Key>[^\"]*)\"|'(?<Key>[^']*)')"
+			     "(?:\\=((?<Value>[^\\s\"']+)|\"(?<Value>[^\"]*)\"|'(?<Value>[^']*)'))?",
+			     G_REGEX_DUPNAMES, 0, NULL);
+
+	if (g_regex_match (regex, string, 0, &match_info)) {
+		while (g_match_info_matches (match_info) && local_error == NULL) {
+			ArvGcNode *feature;
+			char *key = g_match_info_fetch_named (match_info, "Key");
+			char *value = g_match_info_fetch_named (match_info, "Value");
+
+			feature = arv_device_get_feature (device, key);
+			if (ARV_IS_GC_FEATURE_NODE (feature)) {
+				if (value != NULL)
+					arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (feature), value, &local_error);
+				else
+					arv_device_execute_command (device, key, &local_error);
+			} else
+				g_set_error (&local_error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_FEATURE_NOT_FOUND,
+					     "node '%s' not found", key);
+
+			g_free (key);
+			g_free (value);
+
+			g_match_info_next (match_info, NULL);
+		}
+		g_match_info_unref (match_info);
+	}
+
+	g_regex_unref (regex);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return FALSE;
+	}
+
+	return TRUE;
 }
 
 /**
@@ -782,6 +895,8 @@ arv_device_get_available_enumeration_feature_values_as_display_names (ArvDevice 
  * lead to incorrect readouts. Using the debug cache policy, and activating genicam debug output (export ARV_DEBUG=genicam), can help you to
  * check the cache validity. In this mode, every time the cache content is not in sync with the actual register value, a debug message is
  * printed on the console.</para></warning>
+ *
+ * Since: 0.8.0
  */
 
 void
@@ -795,6 +910,31 @@ arv_device_set_register_cache_policy (ArvDevice *device, ArvRegisterCachePolicy 
 	arv_gc_set_register_cache_policy (genicam, policy);
 }
 
+/**
+ * arv_device_set_range_check_policy:
+ * @device: a #ArvDevice
+ * @policy: range check policy
+ *
+ * Sets the range check policy. When enabled, before being set, the value of all nodes with an #ArvGcFloat or
+ * #ArvGcInteger interface will be checked against their Min and Max properties.
+ *
+ * <warning><para>Be aware that some camera may have wrong definition of Min and Max, as this check is defined as not
+ * mandatory in the Genicam specification. If this is the case, it will not possible to set the value of the features
+ * with faulty Min or Max definition. Range check is disabled by default.</para></warning>
+ *
+ * Since: 0.8.6
+ */
+
+void arv_device_set_range_check_policy	(ArvDevice *device, ArvRangeCheckPolicy policy)
+{
+	ArvGc *genicam;
+
+	g_return_if_fail (ARV_IS_DEVICE (device));
+
+	genicam = arv_device_get_genicam (device);
+	arv_gc_set_range_check_policy (genicam, policy);
+}
+
 void
 arv_device_emit_control_lost_signal (ArvDevice *device)
 {
@@ -803,7 +943,16 @@ arv_device_emit_control_lost_signal (ArvDevice *device)
 	g_signal_emit (device, arv_device_signals[ARV_DEVICE_SIGNAL_CONTROL_LOST], 0);
 }
 
-G_DEFINE_ABSTRACT_TYPE (ArvDevice, arv_device, G_TYPE_OBJECT)
+
+void arv_device_take_init_error (ArvDevice *device, GError *error)
+{
+	ArvDevicePrivate *priv = arv_device_get_instance_private (device);
+
+	g_return_if_fail (ARV_IS_DEVICE (device));
+
+	g_clear_error (&priv->init_error);
+	priv->init_error = error;
+}
 
 static void
 arv_device_init (ArvDevice *device)
@@ -813,6 +962,10 @@ arv_device_init (ArvDevice *device)
 static void
 arv_device_finalize (GObject *object)
 {
+	ArvDevicePrivate *priv = arv_device_get_instance_private (ARV_DEVICE (object));
+
+	g_clear_error (&priv->init_error);
+
 	G_OBJECT_CLASS (arv_device_parent_class)->finalize (object);
 }
 
@@ -843,3 +996,35 @@ arv_device_class_init (ArvDeviceClass *device_class)
 			      NULL, NULL,
 			      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
 }
+
+static gboolean
+arv_device_initable_init (GInitable     *initable,
+			  GCancellable  *cancellable,
+			  GError       **error)
+{
+	ArvDevicePrivate *priv = arv_device_get_instance_private (ARV_DEVICE (initable));
+
+	g_return_val_if_fail (ARV_IS_DEVICE (initable), FALSE);
+
+	if (cancellable != NULL)
+	{
+		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+				     "Cancellable initialization not supported");
+		return FALSE;
+	}
+
+	if (priv->init_error) {
+		if (error != NULL)
+			*error = g_error_copy (priv->init_error);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static void
+arv_device_initable_iface_init (GInitableIface *iface)
+{
+	iface->init = arv_device_initable_init;
+}
+

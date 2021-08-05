@@ -7,7 +7,7 @@ doc_ignore_headers = library_private_headers + [
 	'arvenumtypesprivate.h'
 ]
 
-if not enable_usb
+if not usb_dep.found()
 	doc_ignore_headers += [
 		'arvuvinterface.h',
 		'arvuvdevice.h',

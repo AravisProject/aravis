@@ -24,7 +24,7 @@
 #define ARV_GVCP_PRIVATE_H
 
 #include <arvtypes.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 
 G_BEGIN_DECLS
 
@@ -220,7 +220,7 @@ typedef enum {
 	ARV_GVCP_ERROR_WRONG_CONFIG =					0x0f,
 	ARV_GVCP_ERROR_PACKET_NOT_YET_AVAILABLE =			0x10,
 	ARV_GVCP_ERROR_PACKET_AND_PREVIOUS_REMOVED_FROM_MEMORY =	0x11,
-	ARV_GVCP_ERROR_PACKET__REMOVED_FROM_MEMORY =			0x12,
+	ARV_GVCP_ERROR_PACKET_REMOVED_FROM_MEMORY =			0x12,
 	ARV_GVCP_ERROR_NO_REFERENCE_TIME =				0x13,
 	ARV_GVCP_ERROR_PACKET_TEMPORARILY_UNAVAILABLE =			0x14,
 	ARV_GVCP_ERROR_OVERFLOW =					0x15,
@@ -232,11 +232,13 @@ typedef enum {
  * ArvGvcpCmdPacketFlags:
  * @ARV_GVCP_CMD_PACKET_FLAGS_NONE: no flag defined
  * @ARV_GVCP_CMD_PACKET_FLAGS_ACK_REQUIRED: acknowledge required
+ * @ARV_GVCP_CMD_PACKET_FLAGS_EXTENDED_IDS: use extended ids
  */
 
 typedef enum {
 	ARV_GVCP_CMD_PACKET_FLAGS_NONE =			0x00,
 	ARV_GVCP_CMD_PACKET_FLAGS_ACK_REQUIRED =		0x01,
+	ARV_GVCP_CMD_PACKET_FLAGS_EXTENDED_IDS =		0x10,
 } ArvGvcpCmdPacketFlags;
 
 /**
@@ -353,8 +355,9 @@ ArvGvcpPacket * 	arv_gvcp_packet_new_write_register_ack 	(guint32 data_index,
 								 guint16 packet_id, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_discovery_cmd 	(size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_discovery_ack 	(guint16 packet_id, size_t *packet_size);
-ArvGvcpPacket * 	arv_gvcp_packet_new_packet_resend_cmd 	(guint32 frame_id,
+ArvGvcpPacket * 	arv_gvcp_packet_new_packet_resend_cmd 	(guint64 frame_id,
 								 guint32 first_block, guint32 last_block,
+								 gboolean extended_ids,
 								 guint16 packet_id, size_t *packet_size);
 
 const char *		arv_gvcp_packet_type_to_string 		(ArvGvcpPacketType value);

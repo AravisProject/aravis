@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2019 Emmanuel Pacaud
+ * Copyright © 2009-2021 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,171 +25,167 @@
  * @short_description: Debugging tools
  */
 
-#include <arvdebug.h>
 #include <glib/gprintf.h>
 #include <stdlib.h>
+#include <arvdebugprivate.h>
+#include <arvenumtypesprivate.h>
+#include <unistd.h>
 
-ArvDebugCategory arv_debug_category_interface =
-{
-	.name = "interface",
-	.level = -1
+ArvDebugCategoryInfos arv_debug_category_infos[] = {
+	{ .name = "interface", 		.description = "Device lookup for each supported protocol" },
+	{ .name = "device", 		.description = "Device control" },
+	{ .name = "stream", 		.description = "Video stream management" },
+	{ .name = "stream-thread", 	.description = "Video stream thread (likely high volume output)" },
+	{ .name = "cp", 		.description = "Control protocol packets" },
+	{ .name = "sp", 		.description = "Stream protocol packets (likely high volume output)" },
+	{ .name = "genicam", 		.description = "Genicam specialized DOM elements" },
+	{ .name = "policies", 		.description = "Genicam runtime configurable policies",
+					.level = ARV_DEBUG_LEVEL_INFO },
+	{ .name = "chunk", 		.description = "Chunk data code" },
+	{ .name = "dom", 		.description = "Genicam DOM document" },
+	{ .name = "evaluator", 		.description = "Expression evaluator" },
+	{ .name = "viewer", 		.description = "Simple viewer application" },
+	{ .name = "misc", 		.description = "Miscellaneous code" },
 };
 
-ArvDebugCategory arv_debug_category_dom =
-{
-	.name = "dom",
-	.level = -1
+typedef struct {
+	const char *color;
+	const char *symbol;
+} ArvDebugLevelInfos;
+
+ArvDebugLevelInfos arv_debug_level_infos[] = {
+	{ .color = "",			.symbol = ""},
+	{ .color = "\033[1;31m",	.symbol = "🆆 "},
+	{ .color = "\033[1;32m",	.symbol = "🅸 "},
+	{ .color = "\033[1;34m",	.symbol = "🅳 "},
+	{ .color = "\033[0m",		.symbol = "🆃 "}
 };
 
-ArvDebugCategory arv_debug_category_device =
-{
-	.name = "device",
-	.level = -1
-};
-
-ArvDebugCategory arv_debug_category_chunk =
-{
-	.name = "chunk",
-	.level = -1
-};
-
-ArvDebugCategory arv_debug_category_stream =
-{
-	.name = "stream",
-	.level = -1
-};
-
-ArvDebugCategory arv_debug_category_stream_thread =
-{
-	.name = "stream-thread",
-	.level = -1
-};
-
-ArvDebugCategory arv_debug_category_cp =
-{
-	.name = "cp",
-	.level = -1
-};
-
-ArvDebugCategory arv_debug_category_sp =
-{
-	.name = "sp",
-	.level = -1
-};
-
-ArvDebugCategory arv_debug_category_genicam =
-{
-	.name = "genicam",
-	.level = -1
-};
-
-ArvDebugCategory arv_debug_category_evaluator =
-{
-	.name = "evaluator",
-	.level = -1
-};
-
-ArvDebugCategory arv_debug_category_misc =
-{
-	.name = "misc",
-	.level = -1
-};
-
-ArvDebugCategory arv_debug_category_viewer =
-{
-	.name = "viewer",
-	.level = -1
-};
-
-static GHashTable *arv_debug_categories = NULL;
-
-static void
-arv_debug_category_free (ArvDebugCategory *category)
-{
-	if (category != NULL) {
-		g_free (category->name);
-		g_free (category);
-	}
-}
-
-static void
+static gboolean
 arv_debug_initialize (const char *debug_var)
 {
-	if (arv_debug_categories != NULL)
-		return;
+	gboolean success = TRUE;
+	char **categories;
+	int i;
 
-	arv_debug_categories = g_hash_table_new_full (g_str_hash, g_str_equal, NULL,
-						      (GDestroyNotify) arv_debug_category_free);
+	if (debug_var == NULL)
+		return TRUE;
 
-	if (debug_var != NULL) {
-		char **categories;
-		int i;
+	categories = g_strsplit (debug_var, ",", -1);
+	for (i = 0; categories[i] != NULL; i++) {
+		char **infos;
+		unsigned int j;
 
-		categories = g_strsplit (debug_var, ",", -1);
-		for (i = 0; categories[i] != NULL; i++) {
-			ArvDebugCategory *category;
-			char **infos;
-
-			category = g_new0 (ArvDebugCategory, 1);
-
-			infos = g_strsplit (categories[i], ":", -1);
-			if (infos[0] != NULL) {
-				category->name = g_strdup (infos[0]);
-				if (infos[1] != NULL)
-					category->level = atoi (infos[1]);
-				else
-					category->level = ARV_DEBUG_LEVEL_DEBUG;
-
-				g_hash_table_insert (arv_debug_categories, category->name, category);
-			} else
-				g_free (category);
-
-			g_strfreev (infos);
+		infos = g_strsplit (categories[i], ":", -1);
+		if (infos[0] != NULL) {
+			gboolean found = FALSE;
+			for (j = 0; j < G_N_ELEMENTS (arv_debug_category_infos); j++) {
+				if (g_strcmp0 (arv_debug_category_infos[j].name, infos[0]) == 0 ||
+				    g_strcmp0 ("all", infos[0]) == 0) {
+					if (infos[1] != NULL)
+						arv_debug_category_infos[j].level = atoi (infos[1]);
+					else
+						arv_debug_category_infos[j].level = ARV_DEBUG_LEVEL_INFO;
+					found = TRUE;
+				}
+			}
+			if (!found)
+				success = FALSE;
 		}
-		g_strfreev (categories);
+		g_strfreev (infos);
 	}
+	g_strfreev (categories);
+
+	return success;
+}
+
+static gboolean
+stderr_has_color_support (void)
+{
+#if GLIB_CHECK_VERSION(2,50,0)
+	static int has_color_support = -1;
+
+	if (has_color_support >= 0)
+		return has_color_support > 0;
+
+	has_color_support = g_log_writer_supports_color (STDERR_FILENO) ? 1 : 0;
+
+	return has_color_support;
+#else
+	return FALSE;
+#endif
 }
 
 gboolean
-arv_debug_check	(ArvDebugCategory *category, ArvDebugLevel level)
+arv_debug_check	(ArvDebugCategory category, ArvDebugLevel level)
 {
-	ArvDebugCategory *configured_category;
-
-	if (category == NULL)
+	if (category < 0 || category >= ARV_DEBUG_CATEGORY_N_ELEMENTS)
 		return FALSE;
 
-	if ((int) level <= (int) category->level)
+	if (level <= 0 || level >= ARV_DEBUG_LEVEL_N_ELEMENTS)
+		return FALSE;
+
+	if ((int) level <= (int) arv_debug_category_infos[category].level)
 		return TRUE;
 
-	if ((int) category->level >= 0)
-		return FALSE;
-
-	arv_debug_initialize (g_getenv ("ARV_DEBUG"));
-
-	configured_category = g_hash_table_lookup (arv_debug_categories, category->name);
-	if (configured_category == NULL)
-		configured_category = g_hash_table_lookup (arv_debug_categories, "all");
-	if (configured_category != NULL)
-		category->level = configured_category->level;
-	else
-		category->level = 0;
-
-
-	return (int) level <= (int) category->level;
+	return FALSE;
 }
 
+static void arv_debug_with_level (ArvDebugCategory category,
+				  ArvDebugLevel level,
+				  const char *format,
+				  va_list args) G_GNUC_PRINTF(3,0);
+
 static void
-arv_debug_with_level (ArvDebugCategory *category, ArvDebugLevel level, const char *format, va_list args)
+arv_debug_with_level (ArvDebugCategory category, ArvDebugLevel level, const char *format, va_list args)
 {
+        g_autofree char *text = NULL;
+        g_autofree char *header = NULL;
+	g_autofree char *time_str = NULL;
+        g_autoptr (GDateTime) date = NULL;
+        char **lines;
+        gint i;
+
 	if (!arv_debug_check (category, level))
 		return;
 
-	g_vprintf (format, args);
-	g_printf ("\n");
+        date = g_date_time_new_now_local ();
+        time_str = g_date_time_format (date, "%H:%M:%S");
+
+	if (stderr_has_color_support ())
+                header = g_strdup_printf ("[\033[34m%s.%03d\033[0m] %s%s%s\033[0m> ",
+                                          time_str, g_date_time_get_microsecond (date) / 1000,
+                                          arv_debug_level_infos[level].color,
+                                          arv_debug_level_infos[level].symbol,
+                                          arv_debug_category_infos[category].name);
+        else
+                header = g_strdup_printf ("[%s.%03d] %s%s> ",
+                                          time_str, g_date_time_get_microsecond (date) / 1000,
+                                          arv_debug_level_infos[level].symbol,
+                                          arv_debug_category_infos[category].name);
+
+        if (header != NULL) {
+                int header_length = 19 + strlen (arv_debug_category_infos[category].name);
+
+                g_fprintf (stderr, "%s", header);
+
+                text = g_strdup_vprintf (format, args);
+                lines = g_strsplit (text, "\n", -1);
+
+                for (i = 0; lines[i] != NULL; i++) {
+                        if (strlen (lines[i]) >0)
+                                g_fprintf (stderr, "%*s%s\n", i > 0 ? header_length : 0, "", lines[i]);
+                }
+
+                g_strfreev (lines);
+                #ifdef G_OS_WIN32
+                         fflush(stderr);
+                #endif
+        }
 }
 
 void
-arv_warning (ArvDebugCategory *category, const char *format, ...)
+arv_warning (ArvDebugCategory category, const char *format, ...)
 {
 	va_list args;
 
@@ -199,7 +195,17 @@ arv_warning (ArvDebugCategory *category, const char *format, ...)
 }
 
 void
-arv_debug (ArvDebugCategory *category, const char *format, ...)
+arv_info (ArvDebugCategory category, const char *format, ...)
+{
+	va_list args;
+
+	va_start (args, format);
+	arv_debug_with_level (category, ARV_DEBUG_LEVEL_INFO, format, args);
+	va_end (args);
+}
+
+void
+arv_debug (ArvDebugCategory category, const char *format, ...)
 {
 	va_list args;
 
@@ -209,12 +215,12 @@ arv_debug (ArvDebugCategory *category, const char *format, ...)
 }
 
 void
-arv_log (ArvDebugCategory *category, const char *format, ...)
+arv_trace (ArvDebugCategory category, const char *format, ...)
 {
 	va_list args;
 
 	va_start (args, format);
-	arv_debug_with_level (category, ARV_DEBUG_LEVEL_LOG, format, args);
+	arv_debug_with_level (category, ARV_DEBUG_LEVEL_TRACE, format, args);
 	va_end (args);
 }
 
@@ -228,21 +234,61 @@ arv_log (ArvDebugCategory *category, const char *format, ...)
  * <informalexample><programlisting>
  * arv_debug_enable ("gvcp:3,genicam");
  * </programlisting></informalexample>
+ *
+ * Returns: Since 0.8.8, %TRUE on success
  */
 
-void
+gboolean
 arv_debug_enable (const char *category_selection)
 {
-	arv_debug_initialize (category_selection);
+	return arv_debug_initialize (category_selection);
+}
+
+static char *
+arv_debug_dup_infos_as_string (void)
+{
+	GEnumClass *debug_level_class = g_type_class_ref (ARV_TYPE_DEBUG_LEVEL);
+	GString *string = g_string_new ("");
+	unsigned int i;
+	char *str;
+
+	g_string_append (string, "Debug categories:\n");
+	for (i = 0; i < ARV_DEBUG_CATEGORY_N_ELEMENTS; i++) {
+		g_string_append_printf (string, "%-15s: %s\n",
+					arv_debug_category_infos[i].name,
+					arv_debug_category_infos[i].description);
+	}
+	g_string_append (string, "all            : Everything\n");
+
+	g_string_append (string, "\nDebug levels:\n");
+	for (i = 0; i < ARV_DEBUG_LEVEL_N_ELEMENTS; i++) {
+		GEnumValue *enum_value;
+
+		enum_value = g_enum_get_value (g_type_class_ref (ARV_TYPE_DEBUG_LEVEL), i);
+		if (enum_value != NULL)
+			g_string_append_printf (string, "%d: %s\n", i, enum_value->value_nick);
+	}
+
+	g_type_class_unref (debug_level_class);
+
+	str = string->str;
+	g_string_free (string, FALSE);
+
+	return str;
 }
 
 void
-arv_debug_shutdown (void)
+arv_debug_print_infos (void)
 {
-	GHashTable *debug_categories = arv_debug_categories;
+	char *str;
 
-	arv_debug_categories = NULL;
-
-	if (debug_categories != NULL)
-		g_hash_table_unref (debug_categories);
+	str = arv_debug_dup_infos_as_string ();
+	printf ("%s", str);
+	g_free (str);
 }
+
+__attribute__((constructor)) static void
+arv_initialize_debug (void) {
+	arv_debug_initialize (g_getenv ("ARV_DEBUG"));
+}
+

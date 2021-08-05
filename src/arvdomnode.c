@@ -30,7 +30,7 @@
 #include <arvdomnodechildlist.h>
 #include <arvdomnodelist.h>
 #include <arvdomdocument.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <glib/gprintf.h>
 #include <stdio.h>
 
@@ -302,7 +302,7 @@ arv_dom_node_insert_before (ArvDomNode* self, ArvDomNode* new_child, ArvDomNode*
 	}
 
 	if (ref_child_priv->parent_node != self) {
-		arv_debug_dom ("[ArvDomNode::insert_before] Ref child '%s' doesn't belong to '%s'",
+		arv_info_dom ("[ArvDomNode::insert_before] Ref child '%s' doesn't belong to '%s'",
 			   arv_dom_node_get_node_name (ref_child),
 			   arv_dom_node_get_node_name (self));
 		g_object_unref (new_child);
@@ -310,7 +310,7 @@ arv_dom_node_insert_before (ArvDomNode* self, ArvDomNode* new_child, ArvDomNode*
 	}
 
 	if (!ARV_DOM_NODE_GET_CLASS (self)->can_append_child (self, new_child)) {
-		arv_log_dom ("[ArvDomNode::insert_before] Can't append '%s' to '%s'",
+		arv_debug_dom ("[ArvDomNode::insert_before] Can't append '%s' to '%s'",
 			   arv_dom_node_get_node_name (new_child),
 			   arv_dom_node_get_node_name (self));
 		g_object_unref (new_child);
@@ -380,7 +380,7 @@ arv_dom_node_replace_child (ArvDomNode* self, ArvDomNode* new_child, ArvDomNode*
 		arv_dom_node_remove_child (self, new_child);
 
 	if (old_child == NULL) {
-		arv_debug_dom ("[ArvDomNode::replace_child] old_child == NULL)");
+		arv_info_dom ("[ArvDomNode::replace_child] old_child == NULL)");
 		g_object_unref (new_child);
 		return NULL;
 	}
@@ -516,7 +516,7 @@ arv_dom_node_append_child (ArvDomNode* self, ArvDomNode* new_child)
 		arv_dom_node_remove_child (self, new_child);
 
 	if (!ARV_DOM_NODE_GET_CLASS (self)->can_append_child (self, new_child)) {
-		arv_log_dom ("[ArvDomNode::append_child] Can't append '%s' to '%s'",
+		arv_debug_dom ("[ArvDomNode::append_child] Can't append '%s' to '%s'",
 			       arv_dom_node_get_node_name (new_child),
 			       arv_dom_node_get_node_name (self));
 		g_object_unref (new_child);
@@ -590,29 +590,6 @@ arv_dom_node_has_child_nodes (ArvDomNode* self)
 }
 
 static void
-arv_dom_node_write_to_stream_default (ArvDomNode *self, GOutputStream *stream, GError **error)
-{
-	ArvDomNodePrivate *priv = arv_dom_node_get_instance_private (self);
-	ArvDomNode *child;
-
-	for (child = priv->first_child; child != NULL; child = arv_dom_node_get_next_sibling (child))
-		arv_dom_node_write_to_stream (child, stream, error);
-}
-
-void
-arv_dom_node_write_to_stream (ArvDomNode *self, GOutputStream *stream, GError **error)
-{
-	ArvDomNodeClass *node_class;
-
-	g_return_if_fail (ARV_IS_DOM_NODE (self));
-	g_return_if_fail (G_IS_OUTPUT_STREAM (stream));
-
-	node_class = ARV_DOM_NODE_GET_CLASS (self);
-	if (node_class->write_to_stream != NULL)
-		node_class->write_to_stream (self, stream, error);
-}
-
-static void
 arv_dom_node_init (ArvDomNode *node)
 {
 }
@@ -644,5 +621,4 @@ arv_dom_node_class_init (ArvDomNodeClass *node_class)
 	object_class->finalize = arv_dom_node_finalize;
 
 	node_class->can_append_child = arv_dom_node_can_append_child_default;
-	node_class->write_to_stream = arv_dom_node_write_to_stream_default;
 }

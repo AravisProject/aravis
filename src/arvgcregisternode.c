@@ -25,7 +25,7 @@
  * @short_description: Class for Register nodes
  */
 
-#include <arvgcregisternode.h>
+#include <arvgcregisternodeprivate.h>
 #include <arvgcindexnode.h>
 #include <arvgcinvalidatornode.h>
 #include <arvgcfeaturenodeprivate.h>
@@ -37,8 +37,8 @@
 #include <arvgcstring.h>
 #include <arvgcport.h>
 #include <arvgc.h>
-#include <arvmisc.h>
-#include <arvdebug.h>
+#include <arvmiscprivate.h>
+#include <arvdebugprivate.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -61,7 +61,7 @@ arv_gc_cache_key_hash (gconstpointer v)
 	return g_int64_hash (&((ArvGcCacheKey *) v)->address);
 }
 
-ArvGcCacheKey *
+static ArvGcCacheKey *
 arv_gc_cache_key_new (gint64 address, gint64 length)
 {
 	ArvGcCacheKey *key =  g_new (ArvGcCacheKey, 1);
@@ -75,12 +75,13 @@ arv_gc_cache_key_new (gint64 address, gint64 length)
 typedef struct {
 	GSList *addresses;
 	GSList *swiss_knives;
-	ArvGcPropertyNode *index;
+	GSList *indexes;
 	ArvGcPropertyNode *length;
 	ArvGcPropertyNode *port;
 	ArvGcPropertyNode *cachable;
 	ArvGcPropertyNode *polling_time;
-	ArvGcPropertyNode *endianess;
+	ArvGcPropertyNode *access_mode;
+	ArvGcPropertyNode *endianness;
 
 	GSList *invalidators;		/* #ArvGcPropertyNode */
 
@@ -88,6 +89,7 @@ typedef struct {
 	GHashTable *caches;
 	guint n_cache_hits;
 	guint n_cache_misses;
+	guint n_cache_errors;
 
 	char v_string[G_ASCII_DTOSTR_BUF_SIZE];
 } ArvGcRegisterNodePrivate;
@@ -120,7 +122,7 @@ arv_gc_register_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				priv->addresses = g_slist_prepend (priv->addresses, child);
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_P_INDEX:
-				priv->index = property_node;
+				priv->indexes = g_slist_prepend (priv->indexes, child);
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_LENGTH:
 			case ARV_GC_PROPERTY_NODE_TYPE_P_LENGTH:
@@ -136,8 +138,11 @@ arv_gc_register_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				/* TODO */
 				priv->polling_time = property_node;
 				break;
-			case ARV_GC_PROPERTY_NODE_TYPE_ENDIANESS:
-				priv->endianess = property_node;
+			case ARV_GC_PROPERTY_NODE_TYPE_ENDIANNESS:
+				priv->endianness = property_node;
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_ACCESS_MODE:
+				priv->access_mode = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_P_INVALIDATOR:
 				priv->invalidators = g_slist_prepend (priv->invalidators, property_node);
@@ -201,21 +206,22 @@ _get_address (ArvGcRegisterNode *self, GError **error)
 		}
 	}
 
-	if (priv->index != NULL) {
+	if (priv->indexes != NULL) {
 		gint64 length;
 
 		length = _get_length (self, &local_error);
-
 		if (local_error != NULL) {
 			g_propagate_error (error, local_error);
 			return 0;
 		}
 
-		value += arv_gc_index_node_get_index (ARV_GC_INDEX_NODE (priv->index), length, &local_error);
+		for (iter = priv->indexes; iter != NULL; iter = iter->next) {
+			value += arv_gc_index_node_get_index (ARV_GC_INDEX_NODE (iter->data), length, &local_error);
 
-		if (local_error != NULL) {
-			g_propagate_error (error, local_error);
-			return 0;
+			if (local_error != NULL) {
+				g_propagate_error (error, local_error);
+				return 0;
+			}
 		}
 	}
 
@@ -230,12 +236,12 @@ _get_cachable (ArvGcRegisterNode *self)
 	return arv_gc_property_node_get_cachable (priv->cachable, ARV_GC_REGISTER_NODE_GET_CLASS (self)->default_cachable);
 }
 
-static ArvGcCachable
-_get_endianess (ArvGcRegisterNode *self)
+static guint
+_get_endianness (ArvGcRegisterNode *self)
 {
 	ArvGcRegisterNodePrivate *priv = arv_gc_register_node_get_instance_private (ARV_GC_REGISTER_NODE (self));
 
-	return arv_gc_property_node_get_endianess (priv->endianess, G_LITTLE_ENDIAN);
+	return arv_gc_property_node_get_endianness (priv->endianness, G_LITTLE_ENDIAN);
 }
 
 static gboolean
@@ -301,6 +307,17 @@ _get_cache (ArvGcRegisterNode *self, gint64 *address, gint64 *length, GError **e
 	return cache;
 }
 
+static ArvGcAccessMode
+arv_gc_register_node_get_access_mode (ArvGcFeatureNode *gc_feature_node)
+{
+	ArvGcRegisterNodePrivate *priv = arv_gc_register_node_get_instance_private (ARV_GC_REGISTER_NODE (gc_feature_node));
+
+	if (priv->access_mode == NULL)
+		return ARV_GC_ACCESS_MODE_RO;
+
+	return arv_gc_property_node_get_access_mode (priv->access_mode, ARV_GC_ACCESS_MODE_RO);
+}
+
 static void
 _read_from_port (ArvGcRegisterNode *self, gint64 address, gint64 length, void *buffer, ArvGcCachable cachable, GError **error)
 {
@@ -338,9 +355,11 @@ _read_from_port (ArvGcRegisterNode *self, gint64 address, gint64 length, void *b
 	}
 
 	if (cached && cache_policy == ARV_REGISTER_CACHE_POLICY_DEBUG) {
-		if (memcmp (cache, buffer, length) != 0)
-			printf ("Incorrect cache value for %s\n",
-				arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
+		if (memcmp (cache, buffer, length) != 0) {
+			arv_warning_policies ("Current and cached value mismatch for '%s'\n",
+					      arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
+			priv->n_cache_errors++;
+		}
 		g_free (cache);
 	}
 
@@ -396,28 +415,45 @@ arv_gc_register_node_init (ArvGcRegisterNode *self)
 	priv->caches = g_hash_table_new_full (arv_gc_cache_key_hash, arv_gc_cache_key_equal, g_free, g_free);
 	priv->n_cache_hits = 0;
 	priv->n_cache_misses = 0;
+	priv->n_cache_errors = 0;
 }
 
 static void
 arv_gc_register_node_finalize (GObject *self)
 {
 	ArvGcRegisterNodePrivate *priv = arv_gc_register_node_get_instance_private (ARV_GC_REGISTER_NODE (self));
+	ArvGc *genicam;
 
 	g_slist_free (priv->addresses);
 	g_slist_free (priv->swiss_knives);
+	g_slist_free (priv->indexes);
 	g_slist_free (priv->invalidators);
 	g_clear_pointer (&priv->caches, g_hash_table_unref);
 
-	if (priv->n_cache_hits > 0 || priv->n_cache_misses > 0) {
-		const char *name = arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self));
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (self));
+	if (ARV_IS_GC (genicam)) {
+		ArvRegisterCachePolicy cache_policy;
 
-		if (name == NULL)
-			name = arv_dom_node_get_node_name (ARV_DOM_NODE (self));
+		cache_policy = arv_gc_get_register_cache_policy (genicam);
 
-		arv_debug_genicam ("Cache hits = %u / %u for %s",
-				   priv->n_cache_hits,
-				   priv->n_cache_hits + priv->n_cache_misses,
-				   name);
+		if (priv->n_cache_hits > 0 || priv->n_cache_misses > 0) {
+			const char *name = arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self));
+
+			if (name == NULL)
+				name = arv_dom_node_get_node_name (ARV_DOM_NODE (self));
+
+			if (cache_policy == ARV_REGISTER_CACHE_POLICY_DEBUG && priv->n_cache_errors)
+				arv_warning_policies ("%15s: cache hit(s) = %3u / %-3u  [%d error(s)]",
+						      name,
+						      priv->n_cache_hits,
+						      priv->n_cache_hits + priv->n_cache_misses,
+						      priv->n_cache_errors);
+			else
+				arv_debug_policies ("%-15s: cache hit(s) = %3u / %-3u",
+						  name,
+						  priv->n_cache_hits,
+						  priv->n_cache_hits + priv->n_cache_misses);
+		}
 	}
 
 	G_OBJECT_CLASS (arv_gc_register_node_parent_class)->finalize (self);
@@ -428,11 +464,13 @@ arv_gc_register_node_class_init (ArvGcRegisterNodeClass *this_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 	ArvDomNodeClass *dom_node_class = ARV_DOM_NODE_CLASS (this_class);
+	ArvGcFeatureNodeClass *gc_feature_node_class = ARV_GC_FEATURE_NODE_CLASS (this_class);
 
 	object_class->finalize = arv_gc_register_node_finalize;
 	dom_node_class->get_node_name = arv_gc_register_node_get_node_name;
 	dom_node_class->post_new_child = arv_gc_register_node_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_register_node_pre_remove_child;
+	gc_feature_node_class->get_access_mode = arv_gc_register_node_get_access_mode;
 
 	this_class->default_cachable = ARV_GC_CACHABLE_WRITE_THROUGH;
 }
@@ -472,7 +510,7 @@ arv_gc_register_node_get (ArvGcRegister *gc_register, void *buffer, guint64 leng
 	} else
 		memcpy (buffer, cache, length);
 
-	arv_log_genicam ("[GcRegisterNode::get] 0x%Lx,%Ld", address, length);
+	arv_debug_genicam ("[GcRegisterNode::get] 0x%" G_GINT64_MODIFIER "x,%" G_GUINT64_FORMAT, address, length);
 }
 
 static void
@@ -509,7 +547,7 @@ arv_gc_register_node_set (ArvGcRegister *gc_register, const void *buffer, guint6
 		return;
 	}
 
-	arv_log_genicam ("[GcRegisterNode::set] 0x%Lx,%Ld", address, length);
+	arv_debug_genicam ("[GcRegisterNode::set] 0x%" G_GINT64_MODIFIER "x,%" G_GUINT64_FORMAT, address, length);
 }
 
 static guint64
@@ -542,7 +580,7 @@ arv_gc_register_node_register_interface_init (ArvGcRegisterInterface *interface)
 static gint64
 _get_integer_value (ArvGcRegisterNode *gc_register_node,
 		    guint register_lsb, guint register_msb,
-		    ArvGcSignedness signedness, guint endianess,
+		    ArvGcSignedness signedness, guint endianness,
 		    ArvGcCachable cachable,
 		    gboolean is_masked, GError **error)
 {
@@ -562,13 +600,13 @@ _get_integer_value (ArvGcRegisterNode *gc_register_node,
 		return 0;
 	}
 
-	arv_copy_memory_with_endianess (&value, sizeof (value), G_BYTE_ORDER,
-					cache, length, endianess);
+	arv_copy_memory_with_endianness (&value, sizeof (value), G_BYTE_ORDER,
+					cache, length, endianness);
 
 	if (is_masked) {
 		guint64 mask;
 
-		if (endianess == G_LITTLE_ENDIAN) {
+		if (endianness == G_LITTLE_ENDIAN) {
 			msb = register_msb;
 			lsb = register_lsb;
 		} else {
@@ -576,9 +614,9 @@ _get_integer_value (ArvGcRegisterNode *gc_register_node,
 			msb = 8 * length - register_msb - 1;
 		}
 
-		arv_log_genicam ("[GcRegisterNode::_get_integer_value] reglsb = %d, regmsb, %d, lsb = %d, msb = %d",
+		arv_debug_genicam ("[GcRegisterNode::_get_integer_value] reglsb = %d, regmsb, %d, lsb = %d, msb = %d",
 				 register_lsb, register_msb, lsb, msb);
-		arv_log_genicam ("[GcRegisterNode::_get_integer_value] value = 0x%08Lx", value);
+		arv_debug_genicam ("[GcRegisterNode::_get_integer_value] value = 0x%08" G_GINT64_MODIFIER "x", value);
 
 		if (msb - lsb < 63)
 			mask = ((((guint64) 1) << (msb - lsb + 1)) - 1) << lsb;
@@ -593,7 +631,7 @@ _get_integer_value (ArvGcRegisterNode *gc_register_node,
 			value |= G_MAXUINT64 ^ (mask >> lsb);
 		}
 
-		arv_log_genicam ("[GcRegisterNode::_get_integer_value] mask  = 0x%08Lx", mask);
+		arv_debug_genicam ("[GcRegisterNode::_get_integer_value] mask  = 0x%08" G_GINT64_MODIFIER "x", mask);
 	} else {
 		if (length < 8 &&
 		    ((value & (((guint64) 1) << (length * 8 - 1))) != 0) &&
@@ -601,7 +639,7 @@ _get_integer_value (ArvGcRegisterNode *gc_register_node,
 			value |= G_MAXUINT64 ^ ((((guint64) 1) << (length * 8)) - 1);
 	}
 
-	arv_log_genicam ("[GcRegisterNode::_get_integer_value] address = 0x%Lx, value = 0x%Lx",
+	arv_debug_genicam ("[GcRegisterNode::_get_integer_value] address = 0x%" G_GINT64_MODIFIER "x, value = 0x%" G_GINT64_MODIFIER "x",
 			 _get_address (gc_register_node, NULL), value);
 
 	return value;
@@ -610,7 +648,7 @@ _get_integer_value (ArvGcRegisterNode *gc_register_node,
 gint64
 arv_gc_register_node_get_masked_integer_value (ArvGcRegisterNode *self,
 					       guint lsb, guint msb,
-					       ArvGcSignedness signedness, guint endianess,
+					       ArvGcSignedness signedness, guint endianness,
 					       ArvGcCachable cachable,
 					       gboolean is_masked, GError **error)
 {
@@ -620,16 +658,16 @@ arv_gc_register_node_get_masked_integer_value (ArvGcRegisterNode *self,
 	if (cachable == ARV_GC_CACHABLE_UNDEFINED)
 		cachable = _get_cachable (self);
 
-	if (endianess == 0)
-		endianess = _get_endianess (self);
+	if (endianness == 0)
+		endianness = _get_endianness (self);
 
-	return _get_integer_value (self, lsb, msb, signedness, endianess, cachable, is_masked, error);
+	return _get_integer_value (self, lsb, msb, signedness, endianness, cachable, is_masked, error);
 }
 
 static void
 _set_integer_value (ArvGcRegisterNode *gc_register_node,
 		    guint register_lsb, guint register_msb,
-		    ArvGcSignedness signedness, guint endianess,
+		    ArvGcSignedness signedness, guint endianness,
 		    ArvGcCachable cachable,
 		    gboolean is_masked, gint64 value, GError **error)
 {
@@ -650,16 +688,18 @@ _set_integer_value (ArvGcRegisterNode *gc_register_node,
 		gint64 current_value;
 		guint64 mask;
 
-		_read_from_port (gc_register_node, address, length, cache, cachable, &local_error);
-		if (local_error != NULL) {
-			g_propagate_error (error, local_error);
-			return;
+		if (ARV_GC_ACCESS_MODE_WO != arv_gc_register_node_get_access_mode(ARV_GC_FEATURE_NODE(gc_register_node))) {
+			_read_from_port (gc_register_node, address, length, cache, cachable, &local_error);
+			if (local_error != NULL) {
+				g_propagate_error (error, local_error);
+				return;
+			}
 		}
 
-		arv_copy_memory_with_endianess (&current_value, sizeof (current_value), G_BYTE_ORDER,
-						cache, length, endianess);
+		arv_copy_memory_with_endianness (&current_value, sizeof (current_value), G_BYTE_ORDER,
+						cache, length, endianness);
 
-		if (endianess == G_LITTLE_ENDIAN) {
+		if (endianness == G_LITTLE_ENDIAN) {
 			msb = register_msb;
 			lsb = register_lsb;
 		} else {
@@ -667,9 +707,9 @@ _set_integer_value (ArvGcRegisterNode *gc_register_node,
 			msb = 8 * length - register_msb - 1;
 		}
 
-		arv_log_genicam ("[GcRegisterNode::_set_integer_value] reglsb = %d, regmsb, %d, lsb = %d, msb = %d",
+		arv_debug_genicam ("[GcRegisterNode::_set_integer_value] reglsb = %d, regmsb, %d, lsb = %d, msb = %d",
 				 register_lsb, register_msb, lsb, msb);
-		arv_log_genicam ("[GcRegisterNode::_set_integer_value] value = 0x%08Lx", value);
+		arv_debug_genicam ("[GcRegisterNode::_set_integer_value] value = 0x%08" G_GINT64_MODIFIER "x", value);
 
 		if (msb - lsb < 63)
 			mask = ((((guint64) 1) << (msb - lsb + 1)) - 1) << lsb;
@@ -678,13 +718,13 @@ _set_integer_value (ArvGcRegisterNode *gc_register_node,
 
 		value = ((value << lsb) & mask) | (current_value & ~mask);
 
-		arv_log_genicam ("[GcRegisterNode::_set_integer_value] mask  = 0x%08Lx", mask);
+		arv_debug_genicam ("[GcRegisterNode::_set_integer_value] mask  = 0x%08" G_GINT64_MODIFIER "x", mask);
 	}
 
-	arv_log_genicam ("[GcRegisterNode::_set_integer_value] address = 0x%Lx, value = 0x%Lx",
+	arv_debug_genicam ("[GcRegisterNode::_set_integer_value] address = 0x%" G_GINT64_MODIFIER "x, value = 0x%" G_GINT64_MODIFIER "x",
 			 _get_address (gc_register_node, NULL), value);
 
-	arv_copy_memory_with_endianess (cache, length, endianess,
+	arv_copy_memory_with_endianness (cache, length, endianness,
 					&value, sizeof (value), G_BYTE_ORDER);
 
 	_write_to_port (gc_register_node, address, length, cache, cachable, &local_error);
@@ -698,7 +738,7 @@ _set_integer_value (ArvGcRegisterNode *gc_register_node,
 void
 arv_gc_register_node_set_masked_integer_value (ArvGcRegisterNode *self,
 					       guint lsb, guint msb,
-					       ArvGcSignedness signedness, guint endianess,
+					       ArvGcSignedness signedness, guint endianness,
 					       ArvGcCachable cachable,
 					       gboolean is_masked,
 					       gint64 value, GError **error)
@@ -709,8 +749,17 @@ arv_gc_register_node_set_masked_integer_value (ArvGcRegisterNode *self,
 	if (cachable == ARV_GC_CACHABLE_UNDEFINED)
 		cachable = _get_cachable (self);
 
-	if (endianess == 0)
-		endianess = _get_endianess (self);
+	if (endianness == 0)
+		endianness = _get_endianness (self);
 
-	_set_integer_value (self, lsb, msb, signedness, endianess, cachable, is_masked, value, error);
+	_set_integer_value (self, lsb, msb, signedness, endianness, cachable, is_masked, value, error);
 }
+
+guint
+arv_gc_register_node_get_endianness  (ArvGcRegisterNode *register_node)
+{
+	g_return_val_if_fail (ARV_IS_GC_REGISTER_NODE (register_node), G_BIG_ENDIAN);
+
+	return _get_endianness (register_node);
+}
+

@@ -29,8 +29,9 @@
 
 typedef struct {
 	ArvGcPropertyNode *sign;
-	ArvGcPropertyNode *endianess;
+	ArvGcPropertyNode *endianness;
 	ArvGcPropertyNode *unit;
+	ArvGcPropertyNode *representation;
 
 	GSList *selecteds;
 	GSList *selected_features;
@@ -63,18 +64,18 @@ arv_gc_int_reg_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 			case ARV_GC_PROPERTY_NODE_TYPE_SIGN:
 				priv->sign = property_node;
 				break;
-			case ARV_GC_PROPERTY_NODE_TYPE_ENDIANESS:
-				priv->endianess = property_node;
+			case ARV_GC_PROPERTY_NODE_TYPE_ENDIANNESS:
+				priv->endianness = property_node;
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_UNIT:
 				priv->unit = property_node;
 				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_REPRESENTATION:
+				priv->representation = property_node;
+				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_P_SELECTED:
 				priv->selecteds = g_slist_prepend (priv->selecteds, property_node);
 				break;
-
-				/* TODO Representation */
-
 			default:
 				ARV_DOM_NODE_CLASS (arv_gc_int_reg_node_parent_class)->post_new_child (self, child);
 				break;
@@ -92,7 +93,7 @@ arv_gc_int_reg_node_get_integer_value (ArvGcInteger *self, GError **error)
 	return arv_gc_register_node_get_masked_integer_value (ARV_GC_REGISTER_NODE (self),
 							      0, 31,
 							      arv_gc_property_node_get_sign (priv->sign, ARV_GC_SIGNEDNESS_UNSIGNED),
-							      arv_gc_property_node_get_endianess (priv->endianess, G_LITTLE_ENDIAN),
+							      arv_gc_property_node_get_endianness (priv->endianness, G_LITTLE_ENDIAN),
 							      ARV_GC_CACHABLE_UNDEFINED,
 							      FALSE, error);
 }
@@ -105,7 +106,7 @@ arv_gc_int_reg_node_set_integer_value (ArvGcInteger *self, gint64 value, GError 
 	arv_gc_register_node_set_masked_integer_value (ARV_GC_REGISTER_NODE (self),
 						       0, 31,
 						       arv_gc_property_node_get_sign (priv->sign, ARV_GC_SIGNEDNESS_UNSIGNED),
-						       arv_gc_property_node_get_endianess (priv->endianess, G_LITTLE_ENDIAN),
+						       arv_gc_property_node_get_endianness (priv->endianness, G_LITTLE_ENDIAN),
 						       ARV_GC_CACHABLE_UNDEFINED,
 						       FALSE, value, error);
 }
@@ -180,15 +181,26 @@ arv_gc_int_reg_node_get_inc (ArvGcInteger *self, GError **error)
 	return 1;
 }
 
+static ArvGcRepresentation
+arv_gc_int_reg_node_get_representation (ArvGcInteger *self)
+{
+	ArvGcIntRegNodePrivate *priv = arv_gc_int_reg_node_get_instance_private (ARV_GC_INT_REG_NODE (self));
+
+	if (priv->representation == NULL)
+		return ARV_GC_REPRESENTATION_UNDEFINED;
+
+	return arv_gc_property_node_get_representation (priv->representation, ARV_GC_REPRESENTATION_UNDEFINED);
+}
+
 static const char *
-arv_gc_int_reg_node_get_unit (ArvGcInteger *self, GError **error)
+arv_gc_int_reg_node_get_unit (ArvGcInteger *self)
 {
 	ArvGcIntRegNodePrivate *priv = arv_gc_int_reg_node_get_instance_private (ARV_GC_INT_REG_NODE (self));
 
 	if (priv->unit == NULL)
 		return NULL;
 
-	return arv_gc_property_node_get_string (priv->unit, error);
+	return arv_gc_property_node_get_string (priv->unit, NULL);
 }
 
 /**
@@ -213,10 +225,11 @@ arv_gc_int_reg_node_integer_interface_init (ArvGcIntegerInterface *interface)
 	interface->get_min = arv_gc_int_reg_node_get_min;
 	interface->get_max = arv_gc_int_reg_node_get_max;
 	interface->get_inc = arv_gc_int_reg_node_get_inc;
+	interface->get_representation = arv_gc_int_reg_node_get_representation;
 	interface->get_unit = arv_gc_int_reg_node_get_unit;
 }
 
-const GSList *
+static const GSList *
 arv_gc_int_reg_node_get_selected_features (ArvGcSelector *self)
 {
 	ArvGcIntRegNodePrivate *priv = arv_gc_int_reg_node_get_instance_private (ARV_GC_INT_REG_NODE (self));

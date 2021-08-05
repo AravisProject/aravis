@@ -112,7 +112,7 @@ arv_fake_camera_read_memory (ArvFakeCamera *camera, guint32 address, guint32 siz
 
 		size = size - read_size;
 		address = ARV_FAKE_CAMERA_MEMORY_SIZE;
-		buffer = buffer + read_size;
+		buffer = ((char *) buffer) + read_size;
 	}
 
 	address -= ARV_FAKE_CAMERA_MEMORY_SIZE;
@@ -120,7 +120,7 @@ arv_fake_camera_read_memory (ArvFakeCamera *camera, guint32 address, guint32 siz
 
 	memcpy (buffer, ((char *) camera->priv->genicam_xml) + address, read_size);
 	if (read_size < size)
-		memset (buffer + read_size, 0, size - read_size);
+		memset (((char *) buffer) + read_size, 0, size - read_size);
 
 	return TRUE;
 }
@@ -530,34 +530,177 @@ arv_fake_camera_diagonal_ramp (ArvBuffer *buffer, void *fill_pattern_data,
 	switch (pixel_format)
 	{
 		case ARV_PIXEL_FORMAT_MONO_8:
-			for (y = 0; y < height; y++)
-				for (x = 0; x < width; x++) {
-					unsigned char *pixel = &buffer->priv->data [y * width + x];
+			if (height * width <= buffer->priv->size) {
+				for (y = 0; y < height; y++) {
+					for (x = 0; x < width; x++) {
+						unsigned char *pixel = &buffer->priv->data [y * width + x];
 
-					pixel_value = (x + buffer->priv->frame_id + y) % 255;
-					pixel_value *= scale;
+						pixel_value = (x + buffer->priv->frame_id + y) % 255;
+						pixel_value *= scale;
 
-					*pixel = CLAMP (pixel_value, 0, 255);
+						*pixel = CLAMP (pixel_value, 0, 255);
+					}
 				}
+			}
+			break;
+
+		case ARV_PIXEL_FORMAT_MONO_16:
+			if (2 * height * width <= buffer->priv->size) {
+				for (y = 0; y < height; y++) {
+					for (x = 0; x < width; x++) {
+						unsigned short *pixel = (unsigned short *)&buffer->priv->data [2*y * width + 2*x];
+
+						pixel_value = (256*x + 256*buffer->priv->frame_id + 256*y) % 65535;
+						pixel_value *= scale;
+
+						*pixel = CLAMP (pixel_value, 0, 65535);
+					}
+				}
+			}
+			break;
+
+		case ARV_PIXEL_FORMAT_BAYER_BG_8:
+			if (height * width <= buffer->priv->size) {
+				for (y = 0; y < height; y++) {
+					for (x = 0; x < width; x++) {
+						unsigned int index;
+						unsigned char *pixel;
+
+						pixel_value = (x + buffer->priv->frame_id + y) % 255;
+						pixel_value *= scale;
+						index = CLAMP (pixel_value, 0, 255);
+
+						// BG
+						// GR
+						pixel = &buffer->priv->data [y * width + x];
+						if (x & 1) {
+							if (y & 1)
+								*pixel = jet_colormap [index].b;
+							else
+								*pixel = jet_colormap [index].g;
+						} else {
+							if (y & 1)
+								*pixel = jet_colormap [index].g;
+							else
+								*pixel = jet_colormap [index].r;
+						}
+					}
+				}
+			}
+			break;
+
+		case ARV_PIXEL_FORMAT_BAYER_GB_8:
+			if (height * width <= buffer->priv->size) {
+				for (y = 0; y < height; y++) {
+					for (x = 0; x < width; x++) {
+						unsigned int index;
+						unsigned char *pixel;
+
+						pixel_value = (x + buffer->priv->frame_id + y) % 255;
+						pixel_value *= scale;
+						index = CLAMP (pixel_value, 0, 255);
+
+						// GB
+						// RG
+						pixel = &buffer->priv->data [y * width + x];
+						if (x & 1) {
+							if (y & 1)
+								*pixel = jet_colormap [index].g;
+							else
+								*pixel = jet_colormap [index].b;
+						} else {
+							if (y & 1)
+								*pixel = jet_colormap [index].r;
+							else
+								*pixel = jet_colormap [index].g;
+						}
+					}
+				}
+			}
+			break;
+
+		case ARV_PIXEL_FORMAT_BAYER_GR_8:
+			if (height * width <= buffer->priv->size) {
+				for (y = 0; y < height; y++) {
+					for (x = 0; x < width; x++) {
+						unsigned int index;
+						unsigned char *pixel;
+
+						pixel_value = (x + buffer->priv->frame_id + y) % 255;
+						pixel_value *= scale;
+						index = CLAMP (pixel_value, 0, 255);
+
+						// GR
+						// BG
+						pixel = &buffer->priv->data [y * width + x];
+						if (x & 1) {
+							if (y & 1)
+								*pixel = jet_colormap [index].g;
+							else
+								*pixel = jet_colormap [index].r;
+						} else {
+							if (y & 1)
+								*pixel = jet_colormap [index].b;
+							else
+								*pixel = jet_colormap [index].g;
+						}
+					}
+				}
+			}
+			break;
+
+		case ARV_PIXEL_FORMAT_BAYER_RG_8:
+			if (height * width <= buffer->priv->size) {
+				for (y = 0; y < height; y++) {
+					for (x = 0; x < width; x++) {
+						unsigned int index;
+						unsigned char *pixel;
+
+						pixel_value = (x + buffer->priv->frame_id + y) % 255;
+						pixel_value *= scale;
+						index = CLAMP (pixel_value, 0, 255);
+
+						// RG
+						// GB
+						pixel = &buffer->priv->data [y * width + x];
+						if (x & 1) {
+							if (y & 1)
+								*pixel = jet_colormap [index].r;
+							else
+								*pixel = jet_colormap [index].g;
+						} else {
+							if (y & 1)
+								*pixel = jet_colormap [index].g;
+							else
+								*pixel = jet_colormap [index].b;
+						}
+					}
+				}
+			}
 			break;
 
 		case ARV_PIXEL_FORMAT_RGB_8_PACKED:
-			for (y = 0; y < height; y++)
-				for (x = 0; x < width; x++) {
-					unsigned char *pixel = &buffer->priv->data [3 * (y * width + x)];
-					unsigned int index;
+			if (3 * height * width <= buffer->priv->size) {
+				for (y = 0; y < height; y++) {
+					for (x = 0; x < width; x++) {
+						unsigned char *pixel = &buffer->priv->data [3 * (y * width + x)];
+						unsigned int index;
 
-					pixel_value = (x + buffer->priv->frame_id + y) % 255;
-					pixel_value *= scale;
+						pixel_value = (x + buffer->priv->frame_id + y) % 255;
+						pixel_value *= scale;
 
-					index = CLAMP (pixel_value, 0, 255);
+						index = CLAMP (pixel_value, 0, 255);
 
-					pixel[0] = jet_colormap [index].r;
-					pixel[1] = jet_colormap [index].g;
-					pixel[2] = jet_colormap [index].b;
+						pixel[0] = jet_colormap [index].r;
+						pixel[1] = jet_colormap [index].g;
+						pixel[2] = jet_colormap [index].b;
+					}
 				}
+			}
+			break;
 
 		default:
+			g_critical ("Unsupported pixel format");
 			break;
 	}
 }
@@ -622,6 +765,11 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer, guint32 *
 		return;
 	}
 
+	/* frame id is a 16 bit value, 0 is invalid */
+	camera->priv->frame_id = (camera->priv->frame_id + 1) % 65536;
+	if (camera->priv->frame_id == 0)
+		camera->priv->frame_id = 1;
+
 	buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_IMAGE;
 	buffer->priv->chunk_endianness = G_BIG_ENDIAN;
 	buffer->priv->width = width;
@@ -631,7 +779,7 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer, guint32 *
 	buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
 	buffer->priv->timestamp_ns = g_get_real_time () * 1000;
 	buffer->priv->system_timestamp_ns = buffer->priv->timestamp_ns;
-	buffer->priv->frame_id = camera->priv->frame_id++;
+	buffer->priv->frame_id = camera->priv->frame_id;
 	buffer->priv->pixel_format = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_PIXEL_FORMAT);
 
 	g_mutex_lock (&camera->priv->fill_pattern_mutex);
@@ -787,13 +935,32 @@ arv_fake_camera_new_full (const char *serial_number, const char *genicam_filenam
 	else if (arv_get_fake_camera_genicam_filename () != NULL)
 		filename = g_strdup (arv_get_fake_camera_genicam_filename ());
 	else
-		filename = g_build_filename (ARAVIS_DATA_DIR, "arv-fake-camera.xml", NULL);
+		filename = NULL;
 
-	if (!g_file_get_contents (filename, &fake_camera->priv->genicam_xml, &fake_camera->priv->genicam_xml_size, &error)) {
-		arv_warning_device ("Failed to load genicam file '%s': %s", error != NULL ? error->message : "Unknown reason");
-		g_clear_error (&error);
-		fake_camera->priv->genicam_xml = NULL;
-		fake_camera->priv->genicam_xml_size = 0;
+	if (filename) {
+		if (!g_file_get_contents (filename,
+					  &fake_camera->priv->genicam_xml,
+					  &fake_camera->priv->genicam_xml_size,
+					  &error)) {
+			g_critical ("Failed to load genicam file '%s': %s",
+				    filename, error != NULL ? error->message : "Unknown reason");
+			g_clear_error (&error);
+			fake_camera->priv->genicam_xml = NULL;
+			fake_camera->priv->genicam_xml_size = 0;
+		}
+	} else {
+		GBytes *bytes = g_resources_lookup_data("/org/aravis/arv-fake-camera.xml",
+							G_RESOURCE_LOOKUP_FLAGS_NONE, &error);
+
+		if (error != NULL) {
+			g_critical ("Failed to load embedded resource arv-fake-camera.xml: %s",error->message);
+			g_clear_error (&error);
+		} else {
+			fake_camera->priv->genicam_xml = g_strndup (g_bytes_get_data(bytes,NULL), g_bytes_get_size(bytes));
+			fake_camera->priv->genicam_xml_size = g_bytes_get_size(bytes);
+		}
+
+		g_bytes_unref (bytes);
 	}
 
 	g_clear_pointer (&filename, g_free);
@@ -863,7 +1030,7 @@ arv_fake_camera_init (ArvFakeCamera *fake_camera)
 	fake_camera->priv = arv_fake_camera_get_instance_private (fake_camera);
 
 	fake_camera->priv->trigger_frequency = 25.0;
-	fake_camera->priv->frame_id = 65000; /* Trigger circular counter bugs sooner */
+	fake_camera->priv->frame_id = 65400; /* Trigger circular counter bugs sooner */
 }
 
 static void

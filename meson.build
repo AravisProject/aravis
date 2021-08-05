@@ -1,7 +1,6 @@
-project ('aravis', 'c', 'cpp', version: '0.7.4', meson_version: '>=0.47.0')
+project ('aravis', 'c', 'cpp', version: '0.8.17', meson_version: '>=0.47.0')
 
 gnome = import('gnome')
-i18n = import ('i18n')
 pkg = import ('pkgconfig')
 
 aravis_version = meson.project_version ()
@@ -17,50 +16,85 @@ aravis_data_dir = join_paths (get_option ('datadir'), 'aravis-@0@'.format (aravi
 cc = meson.get_compiler ('c')
 cxx = meson.get_compiler ('cpp')
 
+if cc.get_id()=='gcc' or cc.get_id()=='clang'
+  warning_c_args = [
+    '-Wduplicated-branches',
+    '-Wimplicit-fallthrough',
+    '-Wmisleading-indentation',
+    '-Wstrict-prototypes',
+    '-Wunused',
+    '-Wdeclaration-after-statement',
+    '-Wformat=2',
+    '-Wimplicit-function-declaration',
+    '-Winit-self',
+    '-Wmissing-include-dirs',
+    '-Wmissing-prototypes',
+    '-Wpointer-arith',
+    '-Wformat-nonliteral',
+    '-Wenum-conversion',
+    '-Wmaybe-uninitialized'
+    ]
+
+  add_project_arguments(cc.get_supported_arguments(warning_c_args), language: 'c')
+endif
+
 glib_dep = dependency ('glib-2.0', version: '>=2.44', required: true)
 gobject_dep = dependency ('gobject-2.0', required: true)
 gio_dep = dependency ('gio-2.0', required: true)
 xml2_dep = dependency ('libxml-2.0', required: true)
 libz_dep = dependency ('zlib', required: true)
+usb_dep = dependency ('libusb-1.0', required: get_option ('usb'))
 
 libm = cc.find_library ('m', required: true)
 
-aravis_dependencies = [glib_dep, gobject_dep, gio_dep, xml2_dep, libz_dep, libm]
-aravis_dependency_str = 'glib-2.0 gobject-2.0 gio-2.0'
-aravis_private_dependency_str = 'libxml-2.0 zlib'
-
-enable_usb = get_option ('usb')
-if enable_usb
-	aravis_dependencies += dependency ('libusb-1.0', required: true)
-	aravis_private_dependency_str += ' libusb-1.0'
+aravis_public_dependencies = [glib_dep, gobject_dep, gio_dep]
+aravis_dependencies = [aravis_public_dependencies, xml2_dep, libz_dep, libm]
+if usb_dep.found()
+  aravis_dependencies += usb_dep
 endif
 
-subdir ('po')
+if host_machine.system()=='windows'
+	aravis_dependencies += [
+		cc.find_library('ws2_32', required: true),  # socket functions
+		cc.find_library('iphlpapi', required: true) # GetAdaptersAddresses
+	]
+endif
+
+packet_socket_option = get_option('packet-socket')
+if host_machine.system()=='linux'
+	has_if_packet = cc.has_header (join_paths ('linux','if_packet.h'))
+	if packet_socket_option.enabled()
+		if not has_if_packet
+			error ('missing header for packet-socket support')
+		endif
+		packet_socket_enabled = true
+	else
+		packet_socket_enabled = has_if_packet and packet_socket_option.auto()
+	endif
+else # not Linux
+	if packet_socket_option.enabled()
+		warning('packet-socket option ignored on non-Linux')
+	endif
+	packet_socket_enabled = false
+endif
+
 subdir ('src')
 subdir ('tests')
 
-if get_option ('viewer')
-	gtk_dep = dependency ('gtk+-3.0', version: '>=3.12', required: true)
-	gstreamer_base_dep = dependency ('gstreamer-base-1.0', required: true)
-	gstreamer_app_dep = dependency ('gstreamer-app-1.0', required: true)
-	gstreamer_video_dep = dependency ('gstreamer-video-1.0', required: true)
-	notify_dep = dependency ('libnotify', required: true)
+viewer_enabled = false
+viewer_option = get_option ('viewer')
+viewer_deps = aravis_dependencies + [dependency ('gtk+-3.0', version: '>=3.12', required: viewer_option),
+				     dependency ('gstreamer-base-1.0', required: viewer_option),
+				     dependency ('gstreamer-app-1.0', required: viewer_option),
+				     dependency ('gstreamer-video-1.0', required: viewer_option)]
+subdir ('po', if_found: viewer_deps)
+subdir ('viewer', if_found: viewer_deps)
 
-	aravis_viewer_dependencies = [aravis_dependencies, gtk_dep, gstreamer_base_dep, gstreamer_app_dep,
-		gstreamer_video_dep, notify_dep]
+gst_option = get_option ('gst-plugin')
+gst_deps = aravis_dependencies + [dependency ('gstreamer-base-1.0', required: gst_option),
+                                  dependency ('gstreamer-app-1.0', required: gst_option)]
+subdir('gst', if_found: gst_deps)
 
-	subdir ('viewer')
-endif
-
-if get_option ('gst-plugin')
-	gstreamer_base_dep = dependency ('gstreamer-base-1.0', required: true)
-	gstreamer_app_dep = dependency ('gstreamer-app-1.0', required: true)
-
-	gst_plugin_dependencies = [aravis_dependencies, gstreamer_base_dep]
-
-	gst_plugin_dir = join_paths (get_option ('libdir'), 'gstreamer-1.0')
-
-	subdir ('gst')
-endif
-
-subdir ('docs')
+doc_option = get_option('documentation')
+doc_deps = [find_program('gtkdoc-scan', required: doc_option), find_program('xsltproc', required: doc_option)]
+subdir('docs', if_found: doc_deps)

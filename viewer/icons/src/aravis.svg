@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
-
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
    xmlns:cc="http://creativecommons.org/ns#"
@@ -17,14 +15,14 @@
    height="128"
    id="svg11300"
    sodipodi:version="0.32"
-   inkscape:version="0.92.4 5da689c313, 2019-01-14"
-   sodipodi:docname="org.aravis.Aravis.svg"
+   inkscape:version="1.0.1 (3bc2e813f5, 2020-09-07)"
+   sodipodi:docname="aravis.svg"
    inkscape:output_extension="org.inkscape.output.svg.inkscape"
    version="1.0"
    style="display:inline;enable-background:new"
    viewBox="0 0 128 128">
   <title
-     id="title4162">Adwaita Icon Template</title>
+     id="title1321">Aravis icon</title>
   <defs
      id="defs3">
     <linearGradient
@@ -616,16 +614,16 @@
      inkscape:pageshadow="2"
      inkscape:zoom="4.6465763"
      inkscape:cx="74.380428"
-     inkscape:cy="56.242703"
+     inkscape:cy="47.634214"
      inkscape:current-layer="layer9-8"
      showgrid="true"
      inkscape:grid-bbox="true"
      inkscape:document-units="px"
      inkscape:showpageshadow="false"
-     inkscape:window-width="1600"
-     inkscape:window-height="836"
+     inkscape:window-width="1920"
+     inkscape:window-height="1016"
      inkscape:window-x="0"
-     inkscape:window-y="27"
+     inkscape:window-y="0"
      width="400px"
      height="300px"
      inkscape:snap-nodes="false"
@@ -653,7 +651,8 @@
      inkscape:snap-midpoints="false"
      inkscape:snap-smooth-nodes="false"
      inkscape:snap-text-baseline="true"
-     inkscape:snap-grids="true">
+     inkscape:snap-grids="true"
+     inkscape:document-rotation="0">
     <inkscape:grid
        type="xygrid"
        id="grid5883"
@@ -812,13 +811,13 @@
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
         <dc:creator>
           <cc:Agent>
-            <dc:title>GNOME Design Team</dc:title>
+            <dc:title>Emmanuel Pacaud</dc:title>
           </cc:Agent>
         </dc:creator>
         <dc:source />
         <cc:license
            rdf:resource="http://creativecommons.org/licenses/by-sa/4.0/" />
-        <dc:title>Adwaita Icon Template</dc:title>
+        <dc:title>Aravis icon</dc:title>
         <dc:subject>
           <rdf:Bag />
         </dc:subject>
@@ -1059,12 +1058,12 @@
          style="display:inline;overflow:visible;visibility:visible;fill:#f0f0f0;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.5;marker:none;enable-background:accumulate" />
       <text
          xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:4px;line-height:125%;font-family:Cantarell;-inkscape-font-specification:'Cantarell, Bold';text-align:start;writing-mode:lr-tb;text-anchor:start;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.33264872;enable-background:new"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:4px;line-height:125%;font-family:Cantarell;-inkscape-font-specification:'Cantarell, Bold';text-align:start;writing-mode:lr-tb;text-anchor:start;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.332649;enable-background:new"
          x="0"
          y="164"
          id="text863"
          inkscape:label="icon-name"><tspan
-           style="font-size:4px;stroke-width:0.33264872"
+           style="font-size:4px;stroke-width:0.332649"
            sodipodi:role="line"
            id="tspan861"
            x="0"
@@ -1074,13 +1073,13 @@
          id="text867"
          y="164"
          x="160"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:4px;line-height:125%;font-family:Cantarell;-inkscape-font-specification:'Cantarell, Bold';text-align:start;writing-mode:lr-tb;text-anchor:start;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.33264872;enable-background:new"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:4px;line-height:125%;font-family:Cantarell;-inkscape-font-specification:'Cantarell, Bold';text-align:start;writing-mode:lr-tb;text-anchor:start;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.332649;enable-background:new"
          xml:space="preserve"><tspan
            y="164"
            x="160"
            id="tspan865"
            sodipodi:role="line"
-           style="font-size:4px;stroke-width:0.33264872">Symbolic</tspan></text>
+           style="font-size:4px;stroke-width:0.332649">Symbolic</tspan></text>
       <g
          id="g1318"
          transform="translate(-502.58934,-158.75232)">
@@ -2934,21 +2933,21 @@
                id="text863-1"
                y="164"
                x="0"
-               style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:4px;line-height:125%;font-family:Cantarell;-inkscape-font-specification:'Cantarell, Bold';text-align:start;writing-mode:lr-tb;text-anchor:start;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.33264872;enable-background:new"
+               style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:4px;line-height:125%;font-family:Cantarell;-inkscape-font-specification:'Cantarell, Bold';text-align:start;writing-mode:lr-tb;text-anchor:start;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.332649;enable-background:new"
                xml:space="preserve"><tspan
                  y="164"
                  x="0"
                  id="tspan861-9"
                  sodipodi:role="line"
-                 style="font-size:4px;stroke-width:0.33264872">Hicolor</tspan></text>
+                 style="font-size:4px;stroke-width:0.332649">Hicolor</tspan></text>
             <text
                xml:space="preserve"
-               style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:4px;line-height:125%;font-family:Cantarell;-inkscape-font-specification:'Cantarell, Bold';text-align:start;writing-mode:lr-tb;text-anchor:start;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.33264872;enable-background:new"
+               style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:4px;line-height:125%;font-family:Cantarell;-inkscape-font-specification:'Cantarell, Bold';text-align:start;writing-mode:lr-tb;text-anchor:start;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.332649;enable-background:new"
                x="160"
                y="164"
                id="text867-4"
                inkscape:label="icon-name"><tspan
-                 style="font-size:4px;stroke-width:0.33264872"
+                 style="font-size:4px;stroke-width:0.332649"
                  sodipodi:role="line"
                  id="tspan865-7"
                  x="160"
