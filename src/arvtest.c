@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <arvdebugprivate.h>
+#include <math.h>
 
 typedef enum {
         ARV_TEST_STATUS_SUCCESS,
@@ -155,7 +156,7 @@ arv_test_camera_add_result (ArvTestCamera *test_camera,
                         default: status_str = "";
                 }
 
-        g_fprintf (stdout, "%20s %s %s\n", test_name, status_str, comment != NULL ? comment : "");
+        g_fprintf (stdout, "%30s %s %s\n", test_name, status_str, comment != NULL ? comment : "");
 
         test_camera->results = g_slist_append (test_camera->results,
                                                arv_test_result_new (test_name, test_camera->vendor_model,
@@ -369,19 +370,25 @@ static void
 arv_test_multiple_acquisition (ArvTest *test, ArvTestCamera *test_camera)
 {
         g_autoptr (GError) error = NULL;
+        g_autofree char *message = NULL;
         ArvStream *stream;
         double frame_rate;
         unsigned int i;
         size_t payload_size;
         gboolean success = TRUE;
+        gint64 start_time = -1;
+        gint64 end_time = -1;
+        gboolean frame_rate_success;
 
         g_return_if_fail (ARV_IS_TEST (test));
 
         frame_rate = arv_test_camera_get_key_file_double (test_camera, test, "FrameRate");
+        if (frame_rate <= 0.0)
+                frame_rate = 10.0;
 
         arv_camera_set_acquisition_mode (test_camera->camera, ARV_ACQUISITION_MODE_CONTINUOUS, &error);
         if (error == NULL)
-                arv_camera_set_frame_rate (test_camera->camera, frame_rate > 0 ? frame_rate : 10.0, &error);
+                arv_camera_set_frame_rate (test_camera->camera, frame_rate, &error);
 
         if (error != NULL) {
                 arv_test_camera_add_result (test_camera, "MultipleAcquisition", ARV_TEST_STATUS_FAILURE,
@@ -406,8 +413,14 @@ arv_test_multiple_acquisition (ArvTest *test, ArvTestCamera *test_camera)
                         if (buffer == NULL)
                                 success = FALSE;
                         else {
-                                if (arv_buffer_get_status (buffer) != ARV_BUFFER_STATUS_SUCCESS)
+                                if (arv_buffer_get_status (buffer) == ARV_BUFFER_STATUS_SUCCESS) {
+                                        if (start_time < 0)
+                                                start_time = arv_buffer_get_timestamp (buffer);
+                                        else
+                                                end_time = arv_buffer_get_timestamp (buffer);
+                                } else {
                                         success = FALSE;
+                                }
                                 arv_stream_push_buffer (stream, buffer);
                         }
                 }
@@ -420,6 +433,23 @@ arv_test_multiple_acquisition (ArvTest *test, ArvTestCamera *test_camera)
         arv_test_camera_add_result (test_camera, "MultipleAcquisition",
                                     success && error == NULL ? ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
                                     error != NULL ? error->message : NULL);
+
+        frame_rate_success = FALSE;
+
+        if (end_time > 0 && start_time > 0 && start_time != end_time) {
+                double actual_frame_rate = 9 * 1e9 / (end_time - start_time);
+                double frame_rate_error = fabs (actual_frame_rate - frame_rate) / frame_rate;
+
+                if (frame_rate_error < 0.05) {
+                        frame_rate_success = TRUE;
+                        message = g_strdup_printf ("%.2f", actual_frame_rate);
+                } else
+                        message = g_strdup_printf ("%.2f (expected:%.2f)", actual_frame_rate, frame_rate);
+        }
+
+        arv_test_camera_add_result (test_camera, "MultipleAcquisitionFrameRate",
+                                    frame_rate_success ? ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
+                                    message);
 }
 
 static gboolean
