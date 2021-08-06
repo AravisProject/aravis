@@ -172,6 +172,8 @@ G_DECLARE_FINAL_TYPE (ArvTest, arv_test, ARV, TEST, GObject)
 struct _ArvTest {
         GObject parent;
 
+        GPatternSpec *camera_selection;
+
         GKeyFile *key_file;
 
         ArvXmlSchema *schema_1_1;
@@ -185,10 +187,12 @@ arv_test_finalize (GObject *gobject)
 {
         ArvTest *self = ARV_TEST (gobject);
 
-	g_clear_object(&self->schema_1_1);
-	g_clear_object(&self->schema_1_0);
+	g_clear_object (&self->schema_1_1);
+	g_clear_object (&self->schema_1_0);
 
         g_clear_pointer (&self->key_file, g_key_file_unref);
+
+        g_clear_pointer (&self->camera_selection, g_pattern_spec_free);
 
         G_OBJECT_CLASS (arv_test_parent_class)->finalize (gobject);
 }
@@ -222,9 +226,15 @@ arv_test_init (ArvTest *self)
 }
 
 static ArvTest *
-arv_test_new (void)
+arv_test_new (const char *camera_selection)
 {
-        return g_object_new (ARV_TYPE_TEST, NULL);
+        ArvTest *test;
+
+        test = g_object_new (ARV_TYPE_TEST, NULL);
+
+        test->camera_selection = g_pattern_spec_new (camera_selection != NULL ? camera_selection : "*");
+
+        return test;
 }
 
 static double
@@ -463,25 +473,35 @@ arv_test_run (ArvTest *test)
 	arv_update_device_list ();
 	n_devices = arv_get_n_devices ();
 	for (i = 0; i < n_devices; i++) {
-	        g_autoptr (ArvTestCamera) test_camera = NULL;
+                const char *camera_id = arv_get_device_id (i);
 
-		printf ("Testing device '%s' from '%s'\n", arv_get_device_model (i), arv_get_device_vendor (i));
+                if (g_pattern_match_string (test->camera_selection, camera_id)) {
+                        g_autoptr (ArvTestCamera) test_camera = NULL;
 
-		test_camera = arv_test_camera_new (arv_get_device_id (i));
+                        printf ("Testing device '%s' from '%s'\n", arv_get_device_model (i), arv_get_device_vendor (i));
 
-		arv_test_genicam (test, test_camera);
-		arv_test_device_properties (test, test_camera);
-                arv_test_multiple_acquisition (test, test_camera);
-                arv_test_acquisition (test, test_camera);
+                        test_camera = arv_test_camera_new (camera_id);
+
+                        arv_test_genicam (test, test_camera);
+                        arv_test_device_properties (test, test_camera);
+                        arv_test_multiple_acquisition (test, test_camera);
+                        arv_test_acquisition (test, test_camera);
+                }
 	}
 
         return success;
 }
 
+static char *arv_option_camera_selection = NULL;
 static char *arv_option_debug_domains = NULL;
 
 static const GOptionEntry arv_option_entries[] =
 {
+	{
+		"name", 				'n', 0, G_OPTION_ARG_STRING,
+		&arv_option_camera_selection, 		NULL,
+		"<camera_id>"
+	},
 	{
 		"debug", 				'd', 0, G_OPTION_ARG_STRING,
 		&arv_option_debug_domains, 		NULL,
@@ -517,7 +537,7 @@ main (int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-        test = arv_test_new ();
+        test = arv_test_new (arv_option_camera_selection);
 
         success = arv_test_run (test);
 
