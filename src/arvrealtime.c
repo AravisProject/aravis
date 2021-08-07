@@ -31,13 +31,16 @@
 #include <arvdebugprivate.h>
 #include <memory.h>
 #include <errno.h>
-#include <sched.h>
-#include <sys/time.h>
-#include <sys/types.h>
 
 #ifdef G_OS_WIN32
 #include <windows.h>
+#else
+#include <sched.h>
+#include <sys/time.h>
+#include <sys/types.h>
 #endif
+
+#if !defined(__APPLE__) && !defined(G_OS_WIN32)
 
 #define RTKIT_SERVICE_NAME "org.freedesktop.RealtimeKit1"
 #define RTKIT_OBJECT_PATH "/org/freedesktop/RealtimeKit1"
@@ -219,8 +222,6 @@ arv_rtkit_make_high_priority (GDBusConnection *connection, pid_t thread, int nic
 #ifndef RLIMIT_RTTIME
 #define RLIMIT_RTTIME 15
 #endif
-
-#if !defined(__APPLE__) && !defined(G_OS_WIN32)
 
 #include <sys/resource.h>
 #include <sys/syscall.h>
