@@ -218,7 +218,7 @@ arv_test_init (ArvTest *self)
         self->schema_1_1 = arv_xml_schema_new_from_memory (g_bytes_get_data (bytes, NULL), g_bytes_get_size (bytes));
         g_clear_pointer (&bytes, g_bytes_unref);
 
-        bytes = g_resources_lookup_data ("/org/aravis/arv-test.ini", G_RESOURCE_LOOKUP_FLAGS_NONE, NULL);
+        bytes = g_resources_lookup_data ("/org/aravis/arv-test.cfg", G_RESOURCE_LOOKUP_FLAGS_NONE, NULL);
         self->key_file = g_key_file_new ();
         g_key_file_load_from_data (self->key_file, g_bytes_get_data (bytes, NULL), g_bytes_get_size (bytes),
                                    G_KEY_FILE_NONE, NULL);
