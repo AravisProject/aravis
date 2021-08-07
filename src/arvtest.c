@@ -27,6 +27,12 @@
 #include <arvdebugprivate.h>
 #include <math.h>
 
+#ifdef _MSC_VER
+#define STDOUT_FILENO _fileno(stdout)
+#else
+#include <unistd.h>
+#endif
+
 typedef enum {
         ARV_TEST_STATUS_SUCCESS,
         ARV_TEST_STATUS_FAILURE,

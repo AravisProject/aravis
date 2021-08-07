@@ -29,7 +29,12 @@
 #include <stdlib.h>
 #include <arvdebugprivate.h>
 #include <arvenumtypesprivate.h>
+
+#ifdef _MSC_VER
+#define STDERR_FILENO _fileno(stderr)
+#else
 #include <unistd.h>
+#endif
 
 ArvDebugCategoryInfos arv_debug_category_infos[] = {
 	{ .name = "interface", 		.description = "Device lookup for each supported protocol" },
