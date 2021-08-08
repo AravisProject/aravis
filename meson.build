@@ -37,6 +37,14 @@ if cc.get_id()=='gcc' or cc.get_id()=='clang'
     ]
 
   add_project_arguments(cc.get_supported_arguments(warning_c_args), language: 'c')
+elif cc.get_id()=='msvc'
+  warning_c_args = [
+    '/wd4244', # Disable int-float implicit casting warnings
+    '/wd4090', # Disable const qualifiers warnings
+    '/utf-8'
+  ]
+
+  add_project_arguments(cc.get_supported_arguments(warning_c_args), language: 'c')
 endif
 
 glib_dep = dependency ('glib-2.0', version: '>=2.44', required: true)
