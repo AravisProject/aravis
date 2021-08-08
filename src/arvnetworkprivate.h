@@ -26,7 +26,10 @@
 
 #include <arvapi.h>
 
-#ifndef __MINGW32__
+#include <gio/gnetworking.h>
+#include <gio/gio.h>
+
+#ifndef G_OS_WIN32
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <net/if.h>
@@ -34,9 +37,6 @@
 #include <ifaddrs.h>
 #include <netinet/in.h>
 #endif
-
-#include <gio/gnetworking.h>
-#include <gio/gio.h>
 
 #if !defined(__APPLE__) && !defined(G_OS_WIN32)
 #include <linux/ip.h>
