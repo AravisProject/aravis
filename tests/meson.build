@@ -71,8 +71,8 @@ if get_option('tests')
 		['cpp-test',			'cpp.cc']
 	]
 
-	if host_machine.system()!='windows'
-		examples+=[['realtime-test','realtimetest.c']] # uses Linux RT API unavailable under mingw
+	if host_machine.system()=='linux'
+		examples+=[['realtime-test','realtimetest.c']] # uses Linux RT API unavailable on other platforms
 	endif
 
 	foreach example: examples
