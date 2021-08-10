@@ -179,17 +179,16 @@ arv_gv_discover_socket_list_send_discover_packet (ArvGvDiscoverSocketList *socke
 		ArvGvDiscoverSocket *discover_socket = iter->data;
 		GError *error = NULL;
 
-                /* Try local broadcast first */
 		g_socket_send_to (discover_socket->socket,
                                   broadcast_socket_address,
 				  (const char *) packet, size,
 				  NULL, &error);
 
 		if (error != NULL) {
-			arv_warning_interface ("[ArvGVInterface::send_discover_packet] Error: %s", error->message);
+			arv_warning_interface ("[ArvGVInterface::send_discover_packet] "
+                                               "Error sending packet using local broadcast: %s", error->message);
 			g_clear_error (&error);
 
-                        /* In case of failure, try directed broadcast */
                         arv_gv_discover_socket_set_broadcast (discover_socket, TRUE);
                         g_socket_send_to (discover_socket->socket,
                                           discover_socket->broadcast_address,
@@ -197,7 +196,8 @@ arv_gv_discover_socket_list_send_discover_packet (ArvGvDiscoverSocketList *socke
                                           NULL, &error);
 
                         if (error != NULL) {
-                                arv_warning_interface ("[ArvGVInterface::send_discover_packet] Error: %s", error->message);
+                                arv_warning_interface ("[ArvGVInterface::send_discover_packet] "
+                                                       "Error sending packet using directed broadcast: %s", error->message);
                                 g_clear_error (&error);
                         }
                 }
