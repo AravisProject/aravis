@@ -398,7 +398,7 @@ main (int argc, char **argv)
 	arv_enable_interface ("Fake");
 
 	arv_debug_enable (arv_option_debug_domains);
-    
+
     #ifdef G_OS_WIN32
         setbuf(stderr,NULL);
         setbuf(stdout,NULL);
@@ -411,21 +411,23 @@ main (int argc, char **argv)
 
 	camera = arv_camera_new (arv_option_camera_name, &error);
 	if (camera != NULL) {
-		const char *vendor_name;
-		const char *model_name;
-		const char *serial_number;
+		const char *vendor_name =NULL;
+		const char *model_name = NULL;
+		const char *serial_number = NULL;
 		void (*old_sigint_handler)(int);
 		gint payload = 0;
 		gint width, height;
 		gint dx, dy;
-		double exposure;
+		double exposure = 0;
 		guint64 n_completed_buffers;
 		guint64 n_failures;
 		guint64 n_underruns;
-		guint uv_bandwidth;
+		guint uv_bandwidth = 0;
 		guint min, max;
-		guint gv_n_channels, gv_channel_id, gv_packet_delay;
-		int gain;
+		guint gv_n_channels = 0;
+                guint gv_channel_id = 0;
+                guint gv_packet_delay = 0;
+		int gain = 0;
 		guint software_trigger_source = 0;
 		gboolean success = TRUE;
 
