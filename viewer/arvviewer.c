@@ -702,8 +702,8 @@ snapshot_cb (GtkButton *button, ArvViewer *viewer)
         GtkFileFilter *filter;
         GtkFileFilter *filter_all;
         GtkWidget *dialog;
-        GstSample *sample;
-        ArvBuffer *buffer;
+        GstSample *sample = NULL;
+        ArvBuffer *buffer = NULL;
 	char *path;
 	char *filename;
 	GDateTime *date;
@@ -714,11 +714,15 @@ snapshot_cb (GtkButton *button, ArvViewer *viewer)
 	size_t size;
         gint result;
 
-        sample = gst_base_sink_get_last_sample (GST_BASE_SINK (viewer->videosink));
-        buffer = g_object_ref (viewer->last_buffer);
+        if (GST_IS_ELEMENT (viewer->videosink))
+                sample = gst_base_sink_get_last_sample (GST_BASE_SINK (viewer->videosink));
+        if (ARV_IS_BUFFER (viewer->last_buffer))
+                buffer = g_object_ref (viewer->last_buffer);
 
-        if (!ARV_IS_BUFFER (buffer) && !GST_IS_SAMPLE (sample))
+        if (!ARV_IS_BUFFER (buffer) && !GST_IS_SAMPLE (sample)) {
+                arv_viewer_show_notification (viewer, "No buffer available", NULL);
                 return;
+        }
 
 	g_return_if_fail (ARV_IS_CAMERA (viewer->camera));
 
