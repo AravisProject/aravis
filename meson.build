@@ -23,6 +23,7 @@ if cc.get_id()=='gcc' or cc.get_id()=='clang'
     '-Wmisleading-indentation',
     '-Wstrict-prototypes',
     '-Wunused',
+    '-Wunused-variable',
     '-Wdeclaration-after-statement',
     '-Wformat=2',
     '-Wimplicit-function-declaration',
