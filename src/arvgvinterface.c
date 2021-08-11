@@ -179,6 +179,8 @@ arv_gv_discover_socket_list_send_discover_packet (ArvGvDiscoverSocketList *socke
 		ArvGvDiscoverSocket *discover_socket = iter->data;
 		GError *error = NULL;
 
+                arv_gv_discover_socket_set_broadcast (discover_socket, TRUE);
+
 		g_socket_send_to (discover_socket->socket,
                                   broadcast_socket_address,
 				  (const char *) packet, size,
@@ -189,7 +191,6 @@ arv_gv_discover_socket_list_send_discover_packet (ArvGvDiscoverSocketList *socke
                                                "Error sending packet using local broadcast: %s", error->message);
 			g_clear_error (&error);
 
-                        arv_gv_discover_socket_set_broadcast (discover_socket, TRUE);
                         g_socket_send_to (discover_socket->socket,
                                           discover_socket->broadcast_address,
                                           (const char *) packet, size,
