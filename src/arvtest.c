@@ -539,8 +539,6 @@ arv_test_gige_vision (ArvTest *test, const char *test_name, ArvTestCamera *test_
 static void
 arv_test_usb3_vision (ArvTest *test, const char *test_name, ArvTestCamera *test_camera)
 {
-        g_autoptr (GError) error = NULL;
-
         g_return_if_fail (ARV_IS_TEST (test));
 
         if (!arv_camera_is_uv_device (test_camera->camera))
