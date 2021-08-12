@@ -433,6 +433,8 @@ arv_test_multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCame
         gint64 start_time = -1;
         gint64 end_time = -1;
         gboolean frame_rate_success;
+        guint n_completed_buffers = 0;
+        guint n_expected_buffers = 10;
 
         g_return_if_fail (ARV_IS_TEST (test));
 
@@ -452,13 +454,13 @@ arv_test_multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCame
         if (error == NULL)
                 payload_size = arv_camera_get_payload (test_camera->camera, &error);
         if (error == NULL) {
-                for (i = 0 ; i < 10; i++)
+                for (i = 0 ; i < 2; i++)
                         arv_stream_push_buffer (stream, arv_buffer_new (payload_size, FALSE));
         }
         if (error == NULL)
                 arv_camera_start_acquisition (test_camera->camera, &error);
         if (error == NULL) {
-                for (i = 0 ; i < 10; i++) {
+                for (i = 0 ; i < n_expected_buffers; i++) {
                         ArvBuffer *buffer;
 
                         buffer = arv_stream_timeout_pop_buffer (stream, 500000);
@@ -466,6 +468,7 @@ arv_test_multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCame
                                 success = FALSE;
                         else {
                                 if (arv_buffer_get_status (buffer) == ARV_BUFFER_STATUS_SUCCESS) {
+                                        n_completed_buffers++;
                                         if (start_time < 0)
                                                 start_time = arv_buffer_get_timestamp (buffer);
                                         else
@@ -482,9 +485,19 @@ arv_test_multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCame
 
         g_object_unref (stream);
 
+        if (success) {
+                message = g_strdup_printf ("%u/%u", n_completed_buffers, n_expected_buffers);
+        } else {
+                message = g_strdup_printf ("%u/%u%s%s", n_completed_buffers, n_expected_buffers,
+                                           error != NULL ? " " : "",
+                                           error != NULL ? error->message : "");
+        }
+
         arv_test_camera_add_result (test_camera, test_name, "BufferCheck",
                                     success && error == NULL ? ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
-                                    error != NULL ? error->message : NULL);
+                                    message);
+
+        g_clear_pointer (&message, g_free);
 
         frame_rate_success = FALSE;
 
