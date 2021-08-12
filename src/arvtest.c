@@ -591,6 +591,7 @@ arv_test_run (ArvTest *test)
 
 static char *arv_option_camera_selection = NULL;
 static char *arv_option_test_selection = NULL;
+static gint arv_option_n_iterations = 1;
 static char *arv_option_debug_domains = NULL;
 
 static const GOptionEntry arv_option_entries[] =
@@ -606,6 +607,11 @@ static const GOptionEntry arv_option_entries[] =
 		"<pattern>"
 	},
 	{
+		"iterations", 				'i', 0, G_OPTION_ARG_INT,
+		&arv_option_n_iterations, 		NULL,
+		"<n_iter>"
+	},
+	{
 		"debug", 				'd', 0, G_OPTION_ARG_STRING,
 		&arv_option_debug_domains, 		NULL,
 		"{<category>[:<level>][,...]|help}"
@@ -619,7 +625,8 @@ main (int argc, char **argv)
 	GOptionContext *context;
 	GError *error = NULL;
         ArvTest *test = NULL;
-        gboolean success;
+        gboolean success = TRUE;
+        int i;
 
 	context = g_option_context_new (NULL);
 	g_option_context_add_main_entries (context, arv_option_entries, NULL);
@@ -642,7 +649,10 @@ main (int argc, char **argv)
 
         test = arv_test_new (arv_option_camera_selection, arv_option_test_selection);
 
-        success = arv_test_run (test);
+        for (i = 0; i < arv_option_n_iterations; i++) {
+                if (!arv_test_run (test))
+                        success = FALSE;
+        }
 
         g_clear_object (&test);
 
