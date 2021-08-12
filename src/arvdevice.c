@@ -902,10 +902,14 @@ arv_device_set_features_from_string (ArvDevice *device, const char *string, GErr
 
 			feature = arv_device_get_feature (device, key);
 			if (ARV_IS_GC_FEATURE_NODE (feature)) {
-				if (value != NULL)
-					arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (feature), value, &local_error);
-				else
+				if (ARV_IS_GC_COMMAND (feature)) {
 					arv_device_execute_command (device, key, &local_error);
+				} else if (value != NULL) {
+					arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (feature), value, &local_error);
+				} else {
+					g_set_error (&local_error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,
+						     "feature node '%s' requires a parameter value to set", key);
+				}
 			} else
 				g_set_error (&local_error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_FEATURE_NOT_FOUND,
 					     "node '%s' not found", key);
