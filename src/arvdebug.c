@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <arvdebugprivate.h>
 #include <arvenumtypesprivate.h>
+#include <arvmiscprivate.h>
 
 #ifdef _MSC_VER
 #define STDERR_FILENO _fileno(stderr)
@@ -297,7 +298,8 @@ arv_debug_print_infos (void)
 	g_free (str);
 }
 
-__attribute__((constructor)) static void
+ARV_DEFINE_CONSTRUCTOR (arv_initialize_debug)
+static void
 arv_initialize_debug (void) {
 	arv_debug_initialize (g_getenv ("ARV_DEBUG"));
 }

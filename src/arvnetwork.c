@@ -42,7 +42,8 @@ struct _ArvNetworkInterface{
 
 #ifdef G_OS_WIN32
 
-__attribute__((constructor)) static void
+ARV_DEFINE_CONSTRUCTOR (arv_initialize_networking)
+static void
 arv_initialize_networking (void)
 {
 	long res;
@@ -76,7 +77,8 @@ arv_initialize_networking (void)
 	arv_info_interface ("WSAStartup done.");
 }
 
-__attribute__((destructor)) static void
+ARV_DEFINE_DESTRUCTOR (arv_cleanup_networking)
+static void
 arv_cleanup_networking (void)
 {
 	long res;
