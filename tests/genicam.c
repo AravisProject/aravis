@@ -888,10 +888,18 @@ mandatory_test (void)
 	g_object_unref (device);
 }
 
-typedef struct __attribute__((__packed__)) {
+#if defined (__GNUC__)
+#define ARV_PACK(_structure) _structure __attribute__((__packed__))
+#elif defined (_MSC_VER) && (_MSC_VER >= 1500)
+#define ARV_PACK(_structure) __pragma(pack(push, 1)) _structure __pragma(pack(pop))
+#else
+#error "Structure packing is not defined for this compiler!"
+#endif
+
+ARV_PACK(typedef struct {
 	guint32 id;
 	guint32 size;
-} ArvChunkInfos;
+}) ArvChunkInfos;
 
 static ArvBuffer *
 create_buffer_with_chunk_data (void)
