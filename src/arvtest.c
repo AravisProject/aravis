@@ -529,9 +529,9 @@ arv_test_multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCame
 
                 if (frame_rate_error < 0.05) {
                         frame_rate_success = TRUE;
-                        message = g_strdup_printf ("%.2f", actual_frame_rate);
+                        message = g_strdup_printf ("%.2f Hz", actual_frame_rate);
                 } else
-                        message = g_strdup_printf ("%.2f (expected:%.2f)", actual_frame_rate, frame_rate);
+                        message = g_strdup_printf ("%.2f Hz (expected:%.2f Hz)", actual_frame_rate, frame_rate);
         }
 
         arv_test_camera_add_result (test_camera, test_name, "FrameRate",
