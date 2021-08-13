@@ -41,52 +41,52 @@ static const GOptionEntry arv_option_entries[] =
 	{
 		"name",					'n', 0, G_OPTION_ARG_STRING,
 		&arv_option_camera_name,		"Camera name",
-		NULL
+		"<camera_id>"
 	},
 	{
 		"frequency", 				'f', 0, G_OPTION_ARG_DOUBLE,
 		&arv_option_frequency,			"Acquisition frequency",
-		NULL
+		"<Hz>"
 	},
 	{
 		"trigger",				't', 0, G_OPTION_ARG_STRING,
 		&arv_option_trigger,			"External trigger",
-		NULL
+		"<trigger_id>"
 	},
 	{
 		"software-trigger",			'o', 0, G_OPTION_ARG_DOUBLE,
 		&arv_option_software_trigger,		"Emit software trigger",
-		NULL
+		"<Hz>"
 	},
 	{
 		"width", 				'w', 0, G_OPTION_ARG_INT,
 		&arv_option_width,			"Width",
-		NULL
+		"<n_pixels>"
 	},
 	{
 		"height", 				'h', 0, G_OPTION_ARG_INT,
 		&arv_option_height, 			"Height",
-		NULL
+		"<n_pixels>"
 	},
 	{
 	       "h-binning", 				'\0', 0, G_OPTION_ARG_INT,
 		&arv_option_horizontal_binning,		"Horizontal binning",
-		NULL
+		"<n_pixels>"
 	},
 	{
 		"v-binning", 				'\0', 0, G_OPTION_ARG_INT,
 		&arv_option_vertical_binning, 		"Vertical binning",
-		NULL
+		"<n_pixels>"
 	},
 	{
 		"exposure", 				'e', 0, G_OPTION_ARG_DOUBLE,
-		&arv_option_exposure_time_us, 		"Exposure time (us)",
-		NULL
+		&arv_option_exposure_time_us, 		"Exposure time",
+		"<time_us>"
 	},
 	{
 		"gain", 				'g', 0, G_OPTION_ARG_INT,
 		&arv_option_gain,	 		"Gain (dB)",
-		NULL
+		"<dB>"
 	},
 	{
 		"auto",					'a', 0, G_OPTION_ARG_NONE,
@@ -106,43 +106,43 @@ static const GOptionEntry arv_option_entries[] =
 	{
 		"packet-request-ratio",			'q', 0, G_OPTION_ARG_DOUBLE,
 		&arv_option_packet_request_ratio,
-		"Packet resend request limit as a frame packet number ratio [0..2.0]",
-		NULL
+		"Packet resend request limit as a frame packet ratio",
+		"[0..2.0]"
 	},
 	{
 		"initial-packet-timeout", 		'l', 0, G_OPTION_ARG_INT,
-		&arv_option_initial_packet_timeout, 	"Initial packet timeout (ms)",
-		NULL
+		&arv_option_initial_packet_timeout, 	"Initial packet timeout",
+		"<ms>"
 	},
 	{
 		"packet-timeout", 			'p', 0, G_OPTION_ARG_INT,
-		&arv_option_packet_timeout, 		"Packet timeout (ms)",
-		NULL
+		&arv_option_packet_timeout, 		"Packet timeout",
+		"<ms>"
 	},
 	{
 		"frame-retention", 			'm', 0, G_OPTION_ARG_INT,
-		&arv_option_frame_retention, 		"Frame retention (ms)",
-		NULL
+		&arv_option_frame_retention, 		"Frame retention",
+	        "<ms>"
 	},
 	{
 		"gv-stream-channel",			'c', 0, G_OPTION_ARG_INT,
 		&arv_option_gv_stream_channel,		"GigEVision stream channel id",
-		NULL
+		"<id>"
 	},
 	{
 		"gv-packet-delay",			'y', 0, G_OPTION_ARG_INT,
-		&arv_option_gv_packet_delay,		"GigEVision packet delay (ns)",
-		NULL
+		&arv_option_gv_packet_delay,		"GigEVision packet delay",
+		"<ns>"
 	},
 	{
 		"gv-packet-size",			'i', 0, G_OPTION_ARG_INT,
-		&arv_option_gv_packet_size,		"GigEVision packet size (bytes)",
-		NULL
+		&arv_option_gv_packet_size,		"GigEVision packet size",
+		"<n_bytes>"
 	},
 	{
 		"chunks", 				'u', 0, G_OPTION_ARG_STRING,
 		&arv_option_chunks,	 		"Chunks",
-		NULL
+		"<chunk_id>[,<chunk_id>[...]]"
 	},
 	{
 		"realtime",				'\0', 0, G_OPTION_ARG_NONE,
