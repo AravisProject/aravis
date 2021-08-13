@@ -276,6 +276,22 @@ arv_test_camera_get_key_file_int64 (ArvTestCamera *test_camera, ArvTest *test, c
         return value;
 }
 
+static gboolean
+arv_test_camera_get_key_file_boolean (ArvTestCamera *test_camera, ArvTest *test, const char *key, gboolean default_value)
+{
+        g_autoptr (GError) error = NULL;
+        gboolean value;
+
+        g_return_val_if_fail (test_camera != NULL, 0);
+        g_return_val_if_fail (ARV_IS_TEST (test), 0);
+
+        value = g_key_file_get_boolean (test->key_file, test_camera->vendor_model, key, &error);
+        if (error != NULL)
+                return default_value;
+
+        return value;
+}
+
 static char *
 arv_test_camera_get_key_file_string (ArvTestCamera *test_camera, ArvTest *test, const char *key,
                                      const char *default_value)
@@ -435,10 +451,12 @@ arv_test_multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCame
         gboolean frame_rate_success;
         guint n_completed_buffers = 0;
         guint n_expected_buffers = 10;
+        gboolean use_system_timestamp;
 
         g_return_if_fail (ARV_IS_TEST (test));
 
         frame_rate = arv_test_camera_get_key_file_double (test_camera, test, "FrameRate", 10.0);
+        use_system_timestamp = arv_test_camera_get_key_file_boolean (test_camera, test, "UseSystemTimestamp", FALSE);
 
         arv_camera_set_acquisition_mode (test_camera->camera, ARV_ACQUISITION_MODE_CONTINUOUS, &error);
         if (error == NULL)
@@ -472,9 +490,13 @@ arv_test_multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCame
                                 if (arv_buffer_get_status (buffer) == ARV_BUFFER_STATUS_SUCCESS) {
                                         n_completed_buffers++;
                                         if (start_time < 0)
-                                                start_time = arv_buffer_get_timestamp (buffer);
+                                                start_time = use_system_timestamp ?
+                                                        arv_buffer_get_system_timestamp (buffer):
+                                                        arv_buffer_get_timestamp (buffer);
                                         else
-                                                end_time = arv_buffer_get_timestamp (buffer);
+                                                end_time = use_system_timestamp ?
+                                                        arv_buffer_get_system_timestamp (buffer):
+                                                        arv_buffer_get_timestamp (buffer);
                                 } else {
                                         success = FALSE;
                                 }
