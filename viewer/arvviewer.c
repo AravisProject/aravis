@@ -1156,6 +1156,7 @@ start_video (ArvViewer *viewer)
 		return FALSE;
 	}
 
+        arv_camera_set_acquisition_mode (viewer->camera, ARV_ACQUISITION_MODE_CONTINUOUS, NULL);
 	arv_camera_start_acquisition (viewer->camera, NULL);
 
 	viewer->pipeline = gst_pipeline_new ("pipeline");
