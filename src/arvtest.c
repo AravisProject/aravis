@@ -363,6 +363,9 @@ arv_test_genicam (ArvTest *test, const char *test_name, ArvTestCamera *test_came
                 } else {
                         status = ARV_TEST_STATUS_FAILURE;
                 }
+        } else if (version != NULL && g_ascii_strcasecmp (version, "ignore") == 0) {
+                status = ARV_TEST_STATUS_SUCCESS;
+                        comment = g_strdup ("Version check disabled");
         }
 
         arv_test_camera_add_result (test_camera, test_name, "Schema", status, comment);
@@ -418,7 +421,7 @@ arv_test_device_properties (ArvTest *test, const char *test_name, ArvTestCamera 
 }
 
 static void
-arv_test_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_camera)
+arv_test_single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_camera)
 {
         g_autoptr (GError) error = NULL;
         g_autoptr (ArvBuffer) buffer = NULL;
@@ -540,6 +543,82 @@ arv_test_multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCame
 }
 
 static void
+arv_test_software_trigger (ArvTest *test, const char *test_name, ArvTestCamera *test_camera)
+{
+        g_autoptr (GError) error = NULL;
+        g_autofree char *message = NULL;
+        ArvStream *stream;
+        unsigned int i;
+        size_t payload_size;
+        gboolean success = TRUE;
+        guint n_completed_buffers = 0;
+        guint n_expected_buffers = 5;
+
+        g_return_if_fail (ARV_IS_TEST (test));
+
+        arv_camera_set_acquisition_mode (test_camera->camera, ARV_ACQUISITION_MODE_CONTINUOUS, &error);
+        if (error == NULL)
+                arv_camera_set_trigger (test_camera->camera, "Software", &error);
+
+        if (error != NULL) {
+                arv_test_camera_add_result (test_camera, test_name, "BufferCheck",
+                                            ARV_TEST_STATUS_FAILURE, error->message);
+                return;
+        }
+
+        stream = arv_camera_create_stream (test_camera->camera, NULL, NULL, &error);
+        if (error == NULL)
+                payload_size = arv_camera_get_payload (test_camera->camera, &error);
+        if (error == NULL) {
+                for (i = 0 ; i < 2; i++)
+                        arv_stream_push_buffer (stream, arv_buffer_new (payload_size, FALSE));
+        }
+        if (error == NULL)
+                arv_camera_start_acquisition (test_camera->camera, &error);
+
+        for (i = 0 ; i < n_expected_buffers && error == NULL && success; i++) {
+                ArvBuffer *buffer;
+
+                if (error == NULL) {
+                        arv_camera_software_trigger (test_camera->camera, &error);
+                }
+
+                if (error == NULL) {
+                        buffer = arv_stream_timeout_pop_buffer (stream, 500000);
+                        if (buffer == NULL)
+                                success = FALSE;
+                        else {
+                                if (arv_buffer_get_status (buffer) == ARV_BUFFER_STATUS_SUCCESS) {
+                                        n_completed_buffers++;
+                                } else {
+                                        success = FALSE;
+                                }
+                                arv_stream_push_buffer (stream, buffer);
+                        }
+                }
+        }
+
+        if (error == NULL)
+                arv_camera_stop_acquisition (test_camera->camera, &error);
+
+        g_object_unref (stream);
+
+        if (success) {
+                message = g_strdup_printf ("%u/%u", n_completed_buffers, n_expected_buffers);
+        } else {
+                message = g_strdup_printf ("%u/%u%s%s", n_completed_buffers, n_expected_buffers,
+                                           error != NULL ? " " : "",
+                                           error != NULL ? error->message : "");
+        }
+
+        arv_test_camera_add_result (test_camera, test_name, "BufferCheck",
+                                    success && error == NULL ? ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
+                                    message);
+
+        g_clear_pointer (&message, g_free);
+}
+
+static void
 arv_test_gige_vision (ArvTest *test, const char *test_name, ArvTestCamera *test_camera)
 {
         g_autoptr (GError) error = NULL;
@@ -588,7 +667,8 @@ const struct {
         {"Genicam",                     arv_test_genicam,               FALSE},
         {"Properties",                  arv_test_device_properties,     FALSE},
         {"MultipleAcquisition",         arv_test_multiple_acquisition,  FALSE},
-        {"Acquisition",                 arv_test_acquisition,           FALSE},
+        {"SingleAcquisition",           arv_test_single_acquisition,    FALSE},
+        {"SoftwareTrigger",             arv_test_software_trigger,      FALSE},
         {"GigEVision",                  arv_test_gige_vision,           FALSE},
         {"USB3Vision",                  arv_test_usb3_vision,           FALSE}
 };
@@ -615,8 +695,17 @@ arv_test_run (ArvTest *test)
                         test_camera = arv_test_camera_new (camera_id);
 
                         for (j = 0; j < G_N_ELEMENTS (tests); j++) {
-                                if (g_pattern_match_string (test->test_selection, tests[j].name))
-                                        tests[j].run (test, tests[j].name, test_camera);
+                                if (g_pattern_match_string (test->test_selection, tests[j].name)) {
+                                        gboolean enable;
+
+                                        enable = arv_test_camera_get_key_file_boolean (test_camera, test, tests[j].name, TRUE);
+                                        if (enable)
+                                                tests[j].run (test, tests[j].name, test_camera);
+                                        else
+                                                arv_test_camera_add_result (test_camera, tests[j].name, "*",
+                                                                            ARV_TEST_STATUS_IGNORED, NULL);
+                                }
+
                         }
                 }
 	}
