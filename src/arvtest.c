@@ -476,8 +476,6 @@ arv_test_multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCame
                         arv_stream_push_buffer (stream, arv_buffer_new (payload_size, FALSE));
         }
         if (error == NULL)
-                arv_camera_set_acquisition_mode (test_camera->camera, ARV_ACQUISITION_MODE_CONTINUOUS, &error);
-        if (error == NULL)
                 arv_camera_start_acquisition (test_camera->camera, &error);
         if (error == NULL) {
                 for (i = 0 ; i < n_expected_buffers; i++) {
