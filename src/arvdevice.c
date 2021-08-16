@@ -820,6 +820,49 @@ arv_device_dup_available_enumeration_feature_values_as_display_names (ArvDevice 
 }
 
 /**
+ * arv_device_is_enumeration_entry_available:
+ * @device: an #ArvDevice instance
+ * @feature: enumeration feature name
+ * @entry: entry name
+ * @error: a #GError placeholder
+ *
+ * Returns: %TRUE if the feature and the feature entry are available
+ *
+ * Since: 0.8.17
+ */
+
+gboolean
+arv_device_is_enumeration_entry_available (ArvDevice *device, const char *feature, const char *entry, GError **error)
+{
+        GError *local_error = NULL;
+        const char **entries = NULL;
+        guint n_entries = 0;
+        gboolean is_available = FALSE;
+        unsigned int i;
+
+        if (!arv_device_is_feature_available (device, feature, &local_error)) {
+                g_propagate_error (error, local_error);
+                return FALSE;
+        }
+
+        entries = arv_device_dup_available_enumeration_feature_values_as_strings (device, feature, &n_entries,
+                                                                                  &local_error);
+
+        if (local_error != NULL) {
+                g_propagate_error (error, local_error);
+                return FALSE;
+        }
+
+        for (i = 0; i < n_entries && !is_available; i++) {
+                if (g_strcmp0 (entry, entries[i]) == 0)
+                        is_available = TRUE;
+        }
+        g_free (entries);
+
+        return is_available;
+}
+
+/**
  * arv_device_set_features_from_string:
  * @device: a #ArvDevice
  * @string: a space separated list of features assignments

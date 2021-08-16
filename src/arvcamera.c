@@ -990,11 +990,12 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate, GError **error)
 	switch (priv->vendor) {
 		case ARV_CAMERA_VENDOR_BASLER:
 			/* Disabling AcquisitionStart is required on some Basler cameras. Just ignore a failure. */
-			arv_camera_set_string (camera, "TriggerSelector", "AcquisitionStart", &local_error);
-			if (local_error == NULL)
-				arv_camera_set_string (camera, "TriggerMode", "Off", &local_error);
-			else
-				g_clear_error (&local_error);
+                        if (arv_camera_is_enumeration_entry_available (camera, "TriggerSelector", "AcquisitionStart",
+                                                                       &local_error)) {
+                                arv_camera_set_string (camera, "TriggerSelector", "AcquisitionStart", &local_error);
+                                if (local_error == NULL)
+                                        arv_camera_set_string (camera, "TriggerMode", "Off", &local_error);
+                        }
 
 			if (local_error == NULL)
 				arv_camera_set_string (camera, "TriggerSelector", "FrameStart", &local_error);
@@ -1064,24 +1065,34 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate, GError **error)
 		case ARV_CAMERA_VENDOR_XIMEA:
 		case ARV_CAMERA_VENDOR_MATRIX_VISION:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
-			arv_camera_set_string (camera, "TriggerSelector", "FrameStart", &local_error);
-			if (local_error == NULL)
-				arv_camera_set_string (camera, "TriggerMode", "Off", &local_error);
-                        else
-                                g_clear_error (&local_error);
-			if (local_error == NULL)
-				arv_camera_set_float (camera,
-						      priv->has_acquisition_frame_rate ?
-						      "AcquisitionFrameRate":
-						      "AcquisitionFrameRateAbs", frame_rate, &local_error);
-			if (local_error == NULL) {
-				if (arv_camera_is_feature_available (camera, "AcquisitionFrameRateEnable", &local_error)) {
-					if (local_error == NULL)
-						arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", TRUE, &local_error);
-				}
-			}
-			break;
-	}
+                        if (local_error == NULL &&
+                            arv_camera_is_enumeration_entry_available (camera, "TriggerSelector", "FrameStart",
+                                                                       &local_error)) {
+                                arv_camera_set_string (camera, "TriggerSelector", "FrameStart", &local_error);
+                                if (local_error == NULL)
+                                        arv_camera_set_string (camera, "TriggerMode", "Off", &local_error);
+                        }
+                        if (local_error == NULL &&
+                            arv_camera_is_enumeration_entry_available (camera, "TriggerSelector", "AcquisitionStart",
+                                                                       &local_error)) {
+                                arv_camera_set_string (camera, "TriggerSelector", "AcquisitionStart", &local_error);
+                                if (local_error == NULL)
+                                        arv_camera_set_string (camera, "TriggerMode", "Off", &local_error);
+                        }
+
+                        if (local_error == NULL)
+                                arv_camera_set_float (camera,
+                                                      priv->has_acquisition_frame_rate ?
+                                                      "AcquisitionFrameRate":
+                                                      "AcquisitionFrameRateAbs", frame_rate, &local_error);
+                        if (local_error == NULL) {
+                                if (arv_camera_is_feature_available (camera, "AcquisitionFrameRateEnable", &local_error)) {
+                                        if (local_error == NULL)
+                                                arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", TRUE, &local_error);
+                                }
+                        }
+                        break;
+        }
 
 	if (local_error != NULL)
 		g_propagate_error (error, local_error);
@@ -1246,33 +1257,26 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source, GError **error)
 	if (priv->vendor == ARV_CAMERA_VENDOR_BASLER)
 		arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", FALSE, &local_error);
 
-	if (local_error == NULL) {
-		arv_camera_set_string (camera, "TriggerSelector", "FrameStart", &local_error);
+	if (local_error == NULL &&
+           arv_camera_is_enumeration_entry_available (camera, "TriggerSelector", "FrameStart", &local_error)) {
+                arv_camera_set_string (camera, "TriggerSelector", "FrameStart", &local_error);
                 if (local_error == NULL)
                         arv_camera_set_string (camera, "TriggerMode", "On", &local_error);
-                else if (local_error->code == ARV_DEVICE_ERROR_FEATURE_NOT_FOUND ||
-                         local_error->code == ARV_GC_ERROR_ENUM_ENTRY_NOT_FOUND) {
-                        g_clear_error (&local_error);
-			has_frame_start = FALSE;
-		}
+        } else {
+                has_frame_start = FALSE;
         }
 
-
-	if (local_error == NULL) {
+	if (local_error == NULL &&
+           arv_camera_is_enumeration_entry_available (camera, "TriggerSelector", "AcquisitionStart", &local_error)) {
 		arv_camera_set_string (camera, "TriggerSelector", "AcquisitionStart", &local_error);
                 if (local_error == NULL)
                         arv_camera_set_string (camera, "TriggerMode",
 					       has_frame_start ? "Off" : "On", &local_error);
-                else if (local_error->code == ARV_DEVICE_ERROR_FEATURE_NOT_FOUND ||
-                         local_error->code == ARV_GC_ERROR_ENUM_ENTRY_NOT_FOUND)
-                        g_clear_error (&local_error);
         }
 
-        if (local_error == NULL && arv_camera_is_feature_available (camera, "TriggerActivation", NULL)) {
+        if (local_error == NULL
+            && arv_camera_is_enumeration_entry_available (camera, "TriggerActivation", "RisingEdge", &local_error)) {
                 arv_camera_set_string (camera, "TriggerActivation", "RisingEdge", &local_error);
-                if (local_error != NULL && (local_error->code == ARV_DEVICE_ERROR_FEATURE_NOT_FOUND ||
-                                            local_error->code == ARV_GC_ERROR_ENUM_ENTRY_NOT_FOUND))
-                        g_clear_error (&local_error);
         }
 
         if (local_error == NULL)
@@ -2385,6 +2389,28 @@ arv_camera_dup_available_enumerations_as_display_names (ArvCamera *camera, const
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
 	return arv_device_dup_available_enumeration_feature_values_as_display_names (priv->device, feature, n_values, error);
+}
+
+/**
+ * arv_camera_is_enumeration_entry_available:
+ * @camera: a #ArvCamera
+ * @feature: enumeration feature name
+ * @entry: entry name
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: %TRUE if the feature and the feature entry are available
+ *
+ * Since: 0.8.17
+ */
+
+gboolean
+arv_camera_is_enumeration_entry_available (ArvCamera *camera, const char *feature, const char *entry, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+        g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
+
+        return arv_device_is_enumeration_entry_available (priv->device, feature, entry, error);
 }
 
 /**
