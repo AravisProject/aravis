@@ -696,14 +696,21 @@ arv_test_run (ArvTest *test)
 
                         for (j = 0; j < G_N_ELEMENTS (tests); j++) {
                                 if (g_pattern_match_string (test->test_selection, tests[j].name)) {
-                                        gboolean enable;
 
-                                        enable = arv_test_camera_get_key_file_boolean (test_camera, test, tests[j].name, TRUE);
-                                        if (enable)
+                                        if (arv_test_camera_get_key_file_boolean (test_camera, test, tests[j].name, TRUE)) {
+                                                char *delay_name;
+                                                double delay;
+
+                                                delay_name = g_strdup_printf ("%sDelay", tests[j].name);
+                                                delay = arv_test_camera_get_key_file_double (test_camera, test,
+                                                                                             delay_name, 0);
+                                                g_usleep (1000000.0 * delay);
                                                 tests[j].run (test, tests[j].name, test_camera);
-                                        else
+                                                g_free (delay_name);
+                                        } else {
                                                 arv_test_camera_add_result (test_camera, tests[j].name, "*",
                                                                             ARV_TEST_STATUS_IGNORED, NULL);
+                                        }
                                 }
 
                         }
