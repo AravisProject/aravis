@@ -421,14 +421,55 @@ arv_test_device_properties (ArvTest *test, const char *test_name, ArvTestCamera 
 }
 
 static void
-arv_test_single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_camera)
+_single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_camera, gboolean chunk_test)
 {
         g_autoptr (GError) error = NULL;
         g_autoptr (ArvBuffer) buffer = NULL;
+        char **chunk_list = NULL;
+        ArvChunkParser *parser = NULL;
 
         g_return_if_fail (ARV_IS_TEST (test));
 
-        buffer = arv_camera_acquisition (test_camera->camera, 1000000, &error);
+        if (chunk_test) {
+                const char *chunks;
+                gboolean chunks_support = arv_test_camera_get_key_file_boolean (test_camera, test,
+                                                                                "ChunksSupport", TRUE);
+
+                if (!arv_camera_are_chunks_available (test_camera->camera, &error)) {
+                        arv_test_camera_add_result (test_camera, test_name, "NoSupport",
+                                                    error == NULL && ! chunks_support ?
+                                                    ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
+                                                    error != NULL ? error->message : NULL);
+                        return;
+                }
+
+                chunks = arv_test_camera_get_key_file_string (test_camera, test, "ChunkList", "OffsetX OffsetY");
+                chunk_list = g_strsplit_set (chunks, " ", -1);
+
+                parser = arv_camera_create_chunk_parser (test_camera->camera);
+
+                arv_camera_set_chunks (test_camera->camera, chunks, &error);
+        }
+
+        if (error == NULL)
+                buffer = arv_camera_acquisition (test_camera->camera, 1000000, &error);
+
+        if (chunk_test) {
+                int n_chunks = g_strv_length (chunk_list);
+
+                if (ARV_IS_BUFFER (buffer)) {
+                        int i;
+
+                        for (i = 0; i < n_chunks && error == NULL; i++) {
+                                char *chunk_name = g_strdup_printf ("Chunk%s", chunk_list[i]);
+                                arv_chunk_parser_get_integer_value (parser, buffer, chunk_name, &error);
+                                g_clear_pointer (&chunk_name, g_free);
+                        }
+                }
+
+                g_clear_object (&parser);
+                g_strfreev (chunk_list);
+        }
 
         arv_test_camera_add_result (test_camera, test_name, "BufferCheck",
                                     ARV_IS_BUFFER (buffer) &&
@@ -436,7 +477,19 @@ arv_test_single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera
                                     error == NULL ?
                                     ARV_TEST_STATUS_SUCCESS :
                                     ARV_TEST_STATUS_FAILURE,
-                                    NULL);
+                                    error != NULL ? error->message : NULL);
+}
+
+static void
+arv_test_single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_camera)
+{
+        _single_acquisition (test, test_name, test_camera, FALSE);
+}
+
+static void
+arv_test_chunks (ArvTest *test, const char *test_name, ArvTestCamera *test_camera)
+{
+        _single_acquisition (test, test_name, test_camera, TRUE);
 }
 
 static void
@@ -664,6 +717,7 @@ const struct {
         {"Properties",                  arv_test_device_properties,     FALSE},
         {"MultipleAcquisition",         arv_test_multiple_acquisition,  FALSE},
         {"SingleAcquisition",           arv_test_single_acquisition,    FALSE},
+        {"Chunks",                      arv_test_chunks,                FALSE},
         {"SoftwareTrigger",             arv_test_software_trigger,      FALSE},
         {"GigEVision",                  arv_test_gige_vision,           FALSE},
         {"USB3Vision",                  arv_test_usb3_vision,           FALSE}
