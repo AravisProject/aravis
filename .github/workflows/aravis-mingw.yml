@@ -56,3 +56,8 @@ jobs:
     - name: meson test
       run: |
         meson test -C ./build
+    - uses: actions/upload-artifact@v2
+      if: failure()
+      with:
+        name: ${{matrix.sys}}_Meson_Testlog
+        path: build/meson-logs/testlog.txt
