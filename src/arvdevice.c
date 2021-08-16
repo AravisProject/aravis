@@ -841,7 +841,8 @@ arv_device_is_enumeration_entry_available (ArvDevice *device, const char *featur
         unsigned int i;
 
         if (!arv_device_is_feature_available (device, feature, &local_error)) {
-                g_propagate_error (error, local_error);
+                if (local_error != NULL)
+                        g_propagate_error (error, local_error);
                 return FALSE;
         }
 
