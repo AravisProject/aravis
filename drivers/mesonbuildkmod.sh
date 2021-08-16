@@ -1,3 +1,5 @@
+#!/bin/sh
+
 mkdir -p "$2/drivers/kmod.dir"
 cp -Rf   "$1/drivers/"* "$2/drivers/kmod.dir"
 rm -f    "$2/drivers/kmod.dir/meson.build" "$2/drivers/kmod.dir/mesonbuild.sh"
