@@ -274,8 +274,16 @@ arv_tool_execute_command (int argc, char **argv, ArvDevice *device,
 			feature = arv_device_get_feature (device, tokens[0]);
 			if (ARV_IS_GC_FEATURE_NODE (feature)) {
 				if (ARV_IS_GC_COMMAND (feature)) {
-					arv_gc_command_execute (ARV_GC_COMMAND (feature), NULL);
-					printf ("%s executed\n", tokens[0]);
+					GError *error = NULL;
+
+					arv_gc_command_execute (ARV_GC_COMMAND (feature), &error);
+					if (error != NULL) {
+							printf ("%s execute error: %s\n",
+								tokens[0],
+								error->message);
+							g_clear_error (&error);
+					} else
+                                                printf ("%s executed\n", tokens[0]);
 				} else {
 					const char *unit;
 					GError *error = NULL;

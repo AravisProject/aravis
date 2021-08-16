@@ -781,6 +781,11 @@ arv_camera_abort_acquisition (ArvCamera *camera, GError **error)
  *
  * Acquire one image buffer.
  *
+ * <warning>
+ *   <para>arv_camera_acquisition() sets the camera in SingleFrame acquisition mode. You may have to put back the camera in
+ *   Continuous acquisition mode for later operations, using arv_camera_set_acquisition_mode().</para>
+ * </warning>
+ *
  * Returns: (transfer full): A new #ArvBuffer, NULL on error. The returned buffer must be freed using g_object_unref().
  *
  * Since: 0.8.0
@@ -1263,10 +1268,10 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source, GError **error)
                         g_clear_error (&local_error);
         }
 
-	if (local_error == NULL) {
-		arv_camera_set_string (camera, "TriggerActivation", "RisingEdge", &local_error);
+        if (local_error == NULL && arv_camera_is_feature_available (camera, "TriggerActivation", NULL)) {
+                arv_camera_set_string (camera, "TriggerActivation", "RisingEdge", &local_error);
                 if (local_error != NULL && (local_error->code == ARV_DEVICE_ERROR_FEATURE_NOT_FOUND ||
-					    local_error->code == ARV_GC_ERROR_ENUM_ENTRY_NOT_FOUND))
+                                            local_error->code == ARV_GC_ERROR_ENUM_ENTRY_NOT_FOUND))
                         g_clear_error (&local_error);
         }
 

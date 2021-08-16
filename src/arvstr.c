@@ -26,6 +26,8 @@
 #include <string.h>
 #include <math.h>
 
+#define ARV_STR_MAX_ILLEGAL_CHAR_LENGTH 512
+
 /**
  * SECTION: arvstr
  * @short_description: String utilities
@@ -60,7 +62,7 @@ arv_str_strip (char *str, const char *illegal_chars, char replacement_char)
 	if (str == NULL || illegal_chars == NULL)
 		return str;
 
-	n_illegal_chars = strlen (illegal_chars);
+	n_illegal_chars = strnlen (illegal_chars, ARV_STR_MAX_ILLEGAL_CHAR_LENGTH);
 	if (n_illegal_chars == 0)
 		return str;
 
@@ -100,7 +102,7 @@ arv_str_is_uri (const char *str)
 	if (str == NULL)
 		return FALSE;
 
-	if (strlen (str) < 4)
+	if (strnlen (str, 4) < 4)
 		return FALSE;
 
 	if (   (str[0] < 'a' || str[0] > 'z')
@@ -116,7 +118,7 @@ arv_str_is_uri (const char *str)
 	     || *p == '.';
 	     p++);
 
-	if (strlen (p) < 3)
+	if (strnlen (p, 3) < 3)
 		return FALSE;
 
 	return (p[0] == ':' && p[1] == '/' && p[2] == '/');
