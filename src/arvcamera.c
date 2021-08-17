@@ -2920,9 +2920,11 @@ arv_camera_uv_get_bandwidth_bounds (ArvCamera *camera, guint *min, guint *max, G
 gboolean
 arv_camera_are_chunks_available	(ArvCamera *camera, GError **error)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
         if (!arv_camera_is_feature_available (camera, "ChunkModeActive", error))
                 return FALSE;
-        return arv_camera_is_feature_available (camera, "ChunkSelector", error);
+        return ARV_IS_GC_ENUMERATION (arv_device_get_feature (priv->device, "ChunkSelector"));
 }
 
 /**
