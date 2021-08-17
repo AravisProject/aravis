@@ -747,12 +747,12 @@ event_thread_func(void *ctx)
 {
 	struct timeval tv = { 0, 100 };
 
-    while (event_thread_run)
-	{
-        libusb_handle_events_timeout(ctx, &tv);
-	}
+        while (event_thread_run)
+        {
+                libusb_handle_events_timeout(ctx, &tv);
+        }
 
-    return NULL;
+        return NULL;
 }
 
 /**

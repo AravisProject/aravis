@@ -716,6 +716,7 @@ arv_uv_stream_stop_thread (ArvStream *stream)
 	thread_data = priv->thread_data;
 
 	g_atomic_int_set (&priv->thread_data->cancel, TRUE);
+	g_cond_broadcast (&priv->thread_data->stream_event);
 	g_thread_join (priv->thread);
 
 	priv->thread = NULL;
