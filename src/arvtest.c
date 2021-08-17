@@ -731,10 +731,7 @@ arv_test_run (ArvTest *test)
 
         g_return_val_if_fail (ARV_IS_TEST (test), FALSE);
 
-	arv_update_device_list ();
 	n_devices = arv_get_n_devices ();
-
-        printf ("Found %d device%s\n", n_devices, n_devices > 1 ? "s" : "");
 
 	for (i = 0; i < n_devices; i++) {
                 const char *camera_id = arv_get_device_id (i);
@@ -811,6 +808,7 @@ main (int argc, char **argv)
         ArvTest *test = NULL;
         gboolean success = TRUE;
         int i;
+        int n_devices;
 
 	context = g_option_context_new (NULL);
 	g_option_context_add_main_entries (context, arv_option_entries, NULL);
@@ -832,6 +830,11 @@ main (int argc, char **argv)
 	}
 
         test = arv_test_new (arv_option_camera_selection, arv_option_test_selection);
+
+	arv_update_device_list ();
+	n_devices = arv_get_n_devices ();
+
+        printf ("Found %d device%s\n", n_devices, n_devices > 1 ? "s" : "");
 
         for (i = 0; i < arv_option_n_iterations; i++) {
                 if (!arv_test_run (test))
