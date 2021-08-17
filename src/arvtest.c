@@ -176,9 +176,6 @@ G_DECLARE_FINAL_TYPE (ArvTest, arv_test, ARV, TEST, GObject)
 struct _ArvTest {
         GObject parent;
 
-        GPatternSpec *camera_selection;
-        GPatternSpec *test_selection;
-
         GKeyFile *key_file;
 
         ArvXmlSchema *schema_1_1;
@@ -196,9 +193,6 @@ arv_test_finalize (GObject *gobject)
 	g_clear_object (&self->schema_1_0);
 
         g_clear_pointer (&self->key_file, g_key_file_unref);
-
-        g_clear_pointer (&self->camera_selection, g_pattern_spec_free);
-        g_clear_pointer (&self->test_selection, g_pattern_spec_free);
 
         G_OBJECT_CLASS (arv_test_parent_class)->finalize (gobject);
 }
@@ -232,16 +226,9 @@ arv_test_init (ArvTest *self)
 }
 
 static ArvTest *
-arv_test_new (const char *camera_selection, const char *test_selection)
+arv_test_new (void)
 {
-        ArvTest *test;
-
-        test = g_object_new (ARV_TYPE_TEST, NULL);
-
-        test->camera_selection = g_pattern_spec_new (camera_selection != NULL ? camera_selection : "*");
-        test->test_selection = g_pattern_spec_new (test_selection != NULL ? test_selection : "*");
-
-        return test;
+        return g_object_new (ARV_TYPE_TEST, NULL);
 }
 
 static double
@@ -733,64 +720,86 @@ const struct {
 };
 
 static gboolean
-arv_test_run (ArvTest *test)
+arv_test_run (ArvTest *test, unsigned int n_iterations,
+              const char *camera_selection,
+              const char *test_selection)
 {
-	unsigned n_devices, i;
+	unsigned n_devices, i, j;
         gboolean success = TRUE;
 
         g_return_val_if_fail (ARV_IS_TEST (test), FALSE);
 
+	arv_update_device_list ();
 	n_devices = arv_get_n_devices ();
 
-	for (i = 0; i < n_devices; i++) {
-                const char *camera_id = arv_get_device_id (i);
+        printf ("Found %d device%s\n", n_devices, n_devices > 1 ? "s" : "");
 
-                if (g_pattern_match_string (test->camera_selection, camera_id)) {
-                        g_autoptr (ArvTestCamera) test_camera = NULL;
-                        unsigned int j;
+        for (j = 0; j < n_iterations; j++) {
+                for (i = 0; i < n_devices; i++) {
+                        const char *camera_id = arv_get_device_id (i);
 
-                        printf ("Testing '%s:%s'\n", arv_get_device_vendor (i), arv_get_device_model (i));
+                        if (g_pattern_match_simple (camera_selection != NULL ? camera_selection : "*",
+                                                    camera_id)) {
+                                g_autoptr (ArvTestCamera) test_camera = NULL;
+                                unsigned int j;
 
-                        test_camera = arv_test_camera_new (camera_id);
+                                printf ("Testing '%s:%s'\n", arv_get_device_vendor (i), arv_get_device_model (i));
 
-                        for (j = 0; j < G_N_ELEMENTS (tests); j++) {
-                                if (g_pattern_match_string (test->test_selection, tests[j].name)) {
+                                test_camera = arv_test_camera_new (camera_id);
 
-                                        if (arv_test_camera_get_key_file_boolean (test_camera, test, tests[j].name, TRUE)) {
-                                                char *delay_name;
-                                                double delay;
+                                for (j = 0; j < G_N_ELEMENTS (tests); j++) {
+                                        if (g_pattern_match_simple (test_selection != NULL ? test_selection : "*",
+                                                                    tests[j].name)) {
 
-                                                delay_name = g_strdup_printf ("%sDelay", tests[j].name);
-                                                delay = arv_test_camera_get_key_file_double (test_camera, test,
-                                                                                             delay_name, 0);
-                                                g_usleep (1000000.0 * delay);
-                                                tests[j].run (test, tests[j].name, test_camera);
-                                                g_free (delay_name);
-                                        } else {
-                                                char *comment;
+                                                if (arv_test_camera_get_key_file_boolean (test_camera, test, tests[j].name, TRUE)) {
+                                                        char *delay_name;
+                                                        double delay;
 
-                                                arv_test_camera_add_result (test_camera, tests[j].name, "*",
-                                                                            ARV_TEST_STATUS_IGNORED, NULL);
+                                                        delay_name = g_strdup_printf ("%sDelay", tests[j].name);
+                                                        delay = arv_test_camera_get_key_file_double (test_camera, test,
+                                                                                                     delay_name, 0);
+                                                        g_usleep (1000000.0 * delay);
+                                                        tests[j].run (test, tests[j].name, test_camera);
+                                                        g_free (delay_name);
+                                                } else {
+                                                        char *comment;
 
-                                                comment = arv_test_camera_get_key_file_comment (test_camera, test,
-                                                                                                tests[j].name);
-                                                if (comment != NULL) {
-                                                        printf ("%s\n", comment);
-                                                        g_free (comment);
+                                                        arv_test_camera_add_result (test_camera, tests[j].name, "*",
+                                                                                    ARV_TEST_STATUS_IGNORED, NULL);
+
+                                                        comment = arv_test_camera_get_key_file_comment (test_camera, test,
+                                                                                                        tests[j].name);
+                                                        if (comment != NULL) {
+                                                                printf ("%s\n", comment);
+                                                                g_free (comment);
+                                                        }
                                                 }
                                         }
-                                }
 
+                                }
                         }
                 }
-	}
+        }
 
         return success;
+}
+
+static gboolean
+arv_test_set_configuration (ArvTest *test, const char *path, GError **error)
+{
+        g_return_val_if_fail (ARV_IS_TEST (test), FALSE);
+        g_return_val_if_fail (path != NULL, FALSE);
+
+        g_key_file_free (test->key_file);
+        test->key_file = g_key_file_new ();
+
+        return g_key_file_load_from_file (test->key_file, path, G_KEY_FILE_KEEP_COMMENTS, error);
 }
 
 static char *arv_option_camera_selection = NULL;
 static char *arv_option_test_selection = NULL;
 static gint arv_option_n_iterations = 1;
+static char *arv_option_configuration = NULL;
 static char *arv_option_debug_domains = NULL;
 
 static const GOptionEntry arv_option_entries[] =
@@ -804,6 +813,11 @@ static const GOptionEntry arv_option_entries[] =
 		"test", 				't', 0, G_OPTION_ARG_STRING,
 		&arv_option_test_selection, 		NULL,
 		"<pattern>"
+	},
+	{
+		"configuration", 			'c', 0, G_OPTION_ARG_STRING,
+		&arv_option_configuration, 		NULL,
+		"<path>"
 	},
 	{
 		"iterations", 				'i', 0, G_OPTION_ARG_INT,
@@ -825,8 +839,6 @@ main (int argc, char **argv)
 	GError *error = NULL;
         ArvTest *test = NULL;
         gboolean success = TRUE;
-        int i;
-        int n_devices;
 
 	context = g_option_context_new (NULL);
 	g_option_context_add_main_entries (context, arv_option_entries, NULL);
@@ -847,17 +859,19 @@ main (int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-        test = arv_test_new (arv_option_camera_selection, arv_option_test_selection);
+        test = arv_test_new ();
 
-	arv_update_device_list ();
-	n_devices = arv_get_n_devices ();
-
-        printf ("Found %d device%s\n", n_devices, n_devices > 1 ? "s" : "");
-
-        for (i = 0; i < arv_option_n_iterations; i++) {
-                if (!arv_test_run (test))
-                        success = FALSE;
+        if (arv_option_configuration != NULL) {
+                arv_test_set_configuration (test, arv_option_configuration, &error);
+                if (error != NULL) {
+                        printf ("Failed to open configuration file '%s': %s\n", arv_option_configuration,
+                                error->message);
+                        return EXIT_FAILURE;
+                }
         }
+
+        if (!arv_test_run (test, arv_option_n_iterations, arv_option_camera_selection, arv_option_test_selection))
+                success = FALSE;
 
         g_clear_object (&test);
 
