@@ -2920,7 +2920,9 @@ arv_camera_uv_get_bandwidth_bounds (ArvCamera *camera, guint *min, guint *max, G
 gboolean
 arv_camera_are_chunks_available	(ArvCamera *camera, GError **error)
 {
-	return arv_camera_is_feature_available (camera, "ChunkModeActive", error);
+        if (!arv_camera_is_feature_available (camera, "ChunkModeActive", error))
+                return FALSE;
+        return arv_camera_is_feature_available (camera, "ChunkSelector", error);
 }
 
 /**
