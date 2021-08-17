@@ -733,6 +733,9 @@ arv_test_run (ArvTest *test)
 
 	arv_update_device_list ();
 	n_devices = arv_get_n_devices ();
+
+        printf ("Found %d device%s\n", n_devices, n_devices > 1 ? "s" : "");
+
 	for (i = 0; i < n_devices; i++) {
                 const char *camera_id = arv_get_device_id (i);
 
@@ -740,7 +743,7 @@ arv_test_run (ArvTest *test)
                         g_autoptr (ArvTestCamera) test_camera = NULL;
                         unsigned int j;
 
-                        printf ("Testing device '%s' from '%s'\n", arv_get_device_model (i), arv_get_device_vendor (i));
+                        printf ("Testing '%s:%s'\n", arv_get_device_vendor (i), arv_get_device_model (i));
 
                         test_camera = arv_test_camera_new (camera_id);
 
