@@ -844,10 +844,6 @@ arv_uv_stream_finalize (GObject *object)
 		arv_info_stream ("[UvStream::finalize] n_ignored_bytes        = %" G_GUINT64_FORMAT,
 				  thread_data->statistics.n_ignored_bytes);
 
-		g_atomic_int_set (&thread_data->cancel, TRUE);
-		g_cond_broadcast (&thread_data->stream_event);
-		g_thread_join (priv->thread);
-
 		g_mutex_clear (&thread_data->stream_mtx);
 		g_cond_clear (&thread_data->stream_event);
 
