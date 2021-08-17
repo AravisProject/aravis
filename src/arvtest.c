@@ -149,7 +149,7 @@ arv_test_camera_add_result (ArvTestCamera *test_camera,
                 switch (status) {
                         case ARV_TEST_STATUS_SUCCESS: status_str = "\033[1;32mSUCCESS\033[0m"; break;
                         case ARV_TEST_STATUS_FAILURE: status_str = "\033[1;31mFAILURE\033[0m"; break;
-                        case ARV_TEST_STATUS_IGNORED: status_str = "IGNORED"; break;
+                        case ARV_TEST_STATUS_IGNORED: status_str = "\033[1;34mIGNORED\033[0m"; break;
                         default: status_str = "";
                 }
         else
