@@ -1,0 +1,81 @@
+name: Aravis-MSVC
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  test-msvc:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - version: 16
+          arch: x86_64
+          build_type_conan: Release
+          build_type_meson: release
+    steps:
+    - name: pip
+      run: |
+        pip install conan
+    - name: checkout
+      uses: actions/checkout@v2
+    - name: conan
+      env:
+        INPUT_CONANFILE: |
+          [requires]
+          pcre/8.45
+          glib/2.69.1
+          #gobject-introspection/1.68.0
+          gstreamer/1.19.1
+          #gtk/3.24.24
+          libxml2/2.9.12
+          zlib/1.2.11
+          libusb/1.0.24
+
+          [build_requires]
+          meson/0.59.0
+
+          [generators]
+          pkg_config
+          virtualenv
+          virtualbuildenv
+          virtualrunenv
+
+          [options]
+          pcre:with_utf=True
+          pcre:with_unicode_properties=True
+          pcre:with_stack_for_recursion=True
+      run: |
+        $Env:INPUT_CONANFILE | Out-File -FilePath ${{ github.workspace }}\conanfile.txt -Encoding utf8
+        conan install -s compiler="Visual Studio" -s compiler.version=${{ matrix.version }} -s arch=${{ matrix.arch }} -s build_type=${{ matrix.build_type_conan }} -b pcre -b missing -b cascade -if build .
+    - name: meson
+      run: |
+        .\build\activate.ps1
+        .\build\activate_build.ps1
+        .\build\activate_run.ps1
+        echo "::group::configure"
+        meson --prefix ${{ github.workspace }}\install --buildtype ${{ matrix.build_type_meson }} --pkg-config-path ${{ github.workspace }}\build -Ddocumentation=disabled -Dgst-plugin=disabled -Dintrospection=disabled -Dusb=enabled -Dviewer=disabled . .\build
+        echo "::endgroup::"
+        echo "::group::compile"
+        meson compile -C .\build -v
+        echo "::endgroup::"
+        echo "::group::install"
+        meson install -C .\build
+        echo "::endgroup::"
+    - name: test
+      run: |
+        .\build\activate.ps1
+        .\build\activate_build.ps1
+        .\build\activate_run.ps1
+        meson test -C .\build
+    - name: logs
+      uses: actions/upload-artifact@v2
+      if: failure()
+      with:
+        name: msvc_${{ matrix.version }}_${{ matrix.arch }}_${{ matrix.build_type_meson }}_Meson_Testlog
+        path: build/meson-logs/testlog.txt
