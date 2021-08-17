@@ -27,12 +27,13 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 
 G_BEGIN_DECLS
 
-gboolean	arv_make_thread_realtime 		(int priority);
-gboolean	arv_make_thread_high_priority 		(int nice_level);
+ARV_API gboolean	arv_make_thread_realtime 		(int priority);
+ARV_API gboolean	arv_make_thread_high_priority 		(int nice_level);
 
 G_END_DECLS
 

@@ -27,14 +27,15 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvgcconverter.h>
 
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_CONVERTER_NODE             (arv_gc_converter_node_get_type ())
-G_DECLARE_FINAL_TYPE (ArvGcConverterNode, arv_gc_converter_node, ARV, GC_CONVERTER_NODE, ArvGcConverter)
+ARV_API G_DECLARE_FINAL_TYPE (ArvGcConverterNode, arv_gc_converter_node, ARV, GC_CONVERTER_NODE, ArvGcConverter)
 
-ArvGcNode *	arv_gc_converter_node_new	(void);
+ARV_API ArvGcNode *	arv_gc_converter_node_new	(void);
 
 G_END_DECLS
 

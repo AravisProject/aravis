@@ -47,6 +47,15 @@ elif cc.get_id()=='msvc'
   add_project_arguments(cc.get_supported_arguments(warning_c_args), language: 'c')
 endif
 
+if cc.get_id() == 'msvc'
+  cc_export_define = '__declspec(dllexport) extern'
+elif cc.has_argument('-fvisibility=hidden')
+  add_project_arguments('-fvisibility=hidden', language: 'c')
+  cc_export_define = 'extern __attribute__ ((visibility ("default")))'
+else
+  cc_export_define = 'extern'
+endif
+
 glib_dep = dependency ('glib-2.0', version: '>=2.44', required: true)
 gobject_dep = dependency ('gobject-2.0', required: true)
 gio_dep = dependency ('gio-2.0', required: true)

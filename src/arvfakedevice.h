@@ -27,17 +27,18 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 #include <arvdevice.h>
 
 G_BEGIN_DECLS
 
 #define ARV_TYPE_FAKE_DEVICE             (arv_fake_device_get_type ())
-G_DECLARE_FINAL_TYPE (ArvFakeDevice, arv_fake_device, ARV, FAKE_DEVICE, ArvDevice)
+ARV_API G_DECLARE_FINAL_TYPE (ArvFakeDevice, arv_fake_device, ARV, FAKE_DEVICE, ArvDevice)
 
-ArvDevice * 	arv_fake_device_new 			(const char *serial_number, GError **error);
+ARV_API ArvDevice *		arv_fake_device_new 			(const char *serial_number, GError **error);
 
-ArvFakeCamera *	arv_fake_device_get_fake_camera		(ArvFakeDevice *device);
+ARV_API ArvFakeCamera *		arv_fake_device_get_fake_camera		(ArvFakeDevice *device);
 
 G_END_DECLS
 

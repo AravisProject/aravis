@@ -27,6 +27,7 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 #include <arvgcfeaturenode.h>
 #include <arvgcpropertynode.h>
@@ -34,11 +35,11 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_ENUM_ENTRY             (arv_gc_enum_entry_get_type ())
-G_DECLARE_FINAL_TYPE (ArvGcEnumEntry, arv_gc_enum_entry, ARV, GC_ENUM_ENTRY, ArvGcFeatureNode)
+ARV_API G_DECLARE_FINAL_TYPE (ArvGcEnumEntry, arv_gc_enum_entry, ARV, GC_ENUM_ENTRY, ArvGcFeatureNode)
 
-ArvGcNode * 	arv_gc_enum_entry_new 		(void);
+ARV_API ArvGcNode *	arv_gc_enum_entry_new		(void);
 
-gint64		arv_gc_enum_entry_get_value	(ArvGcEnumEntry *entry, GError **error);
+ARV_API gint64		arv_gc_enum_entry_get_value	(ArvGcEnumEntry *entry, GError **error);
 
 G_END_DECLS
 

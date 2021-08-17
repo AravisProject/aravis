@@ -27,17 +27,18 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 
 G_BEGIN_DECLS
 
-ArvZip * 	arv_zip_new 		(const void *buffer, size_t size);
-void 		arv_zip_free		(ArvZip *zip);
-void *		arv_zip_get_file	(ArvZip *zip, const char *name, size_t *size);
-const GSList *	arv_zip_get_file_list	(ArvZip *zip);
+ARV_API ArvZip *		arv_zip_new 		(const void *buffer, size_t size);
+ARV_API void			arv_zip_free		(ArvZip *zip);
+ARV_API void *			arv_zip_get_file	(ArvZip *zip, const char *name, size_t *size);
+ARV_API const GSList *		arv_zip_get_file_list	(ArvZip *zip);
 
-const char *	arv_zip_file_get_name			(ArvZipFile *zip_file);
-size_t		arv_zip_file_get_uncompressed_size	(ArvZipFile *zip_file);
+ARV_API const char *		arv_zip_file_get_name			(ArvZipFile *zip_file);
+ARV_API size_t			arv_zip_file_get_uncompressed_size	(ArvZipFile *zip_file);
 
 #define ARV_GUINT32_FROM_LE_PTR(ptr,offset) arv_guint32_from_unaligned_le_ptr (ptr, offset)
 #define ARV_GUINT16_FROM_LE_PTR(ptr,offset) arv_guint16_from_unaligned_le_ptr (ptr, offset)

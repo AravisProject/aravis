@@ -27,19 +27,20 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 #include <arvdomelement.h>
 
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_NODE             (arv_gc_node_get_type ())
-G_DECLARE_DERIVABLE_TYPE (ArvGcNode, arv_gc_node, ARV, GC_NODE, ArvDomElement)
+ARV_API G_DECLARE_DERIVABLE_TYPE (ArvGcNode, arv_gc_node, ARV, GC_NODE, ArvDomElement)
 
 struct _ArvGcNodeClass {
 	ArvDomElementClass parent_class;
 };
 
-ArvGc * 	arv_gc_node_get_genicam			(ArvGcNode *gc_node);
+ARV_API ArvGc *			arv_gc_node_get_genicam			(ArvGcNode *gc_node);
 
 G_END_DECLS
 

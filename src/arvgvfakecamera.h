@@ -27,6 +27,7 @@
 #ifndef ARV_GV_FAKE_CAMERA_H
 #define ARV_GV_FAKE_CAMERA_H
 
+#include <arvapi.h>
 #include <arvtypes.h>
 
 G_BEGIN_DECLS
@@ -35,12 +36,12 @@ G_BEGIN_DECLS
 #define ARV_GV_FAKE_CAMERA_DEFAULT_INTERFACE		"127.0.0.1"
 
 #define ARV_TYPE_GV_FAKE_CAMERA (arv_gv_fake_camera_get_type ())
-G_DECLARE_FINAL_TYPE (ArvGvFakeCamera, arv_gv_fake_camera, ARV, GV_FAKE_CAMERA, GObject)
+ARV_API G_DECLARE_FINAL_TYPE (ArvGvFakeCamera, arv_gv_fake_camera, ARV, GV_FAKE_CAMERA, GObject)
 
-ArvGvFakeCamera *		arv_gv_fake_camera_new			(const char *interface_name, const char *serial_number);
-ArvGvFakeCamera * 		arv_gv_fake_camera_new_full 		(const char *interface_name, const char *serial_number, const char *genicam_filename);
-gboolean			arv_gv_fake_camera_is_running		(ArvGvFakeCamera *gv_fake_camera);
-ArvFakeCamera *                 arv_gv_fake_camera_get_fake_camera   	(ArvGvFakeCamera *gv_fake_camera);
+ARV_API ArvGvFakeCamera *		arv_gv_fake_camera_new			(const char *interface_name, const char *serial_number);
+ARV_API ArvGvFakeCamera *		arv_gv_fake_camera_new_full		(const char *interface_name, const char *serial_number, const char *genicam_filename);
+ARV_API gboolean			arv_gv_fake_camera_is_running		(ArvGvFakeCamera *gv_fake_camera);
+ARV_API ArvFakeCamera *			arv_gv_fake_camera_get_fake_camera	(ArvGvFakeCamera *gv_fake_camera);
 
 G_END_DECLS
 

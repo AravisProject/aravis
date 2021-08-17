@@ -27,15 +27,16 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 #include <arvdevice.h>
 
 G_BEGIN_DECLS
 
 #define ARV_TYPE_UV_DEVICE             (arv_uv_device_get_type ())
-G_DECLARE_FINAL_TYPE (ArvUvDevice, arv_uv_device, ARV, UV_DEVICE, ArvDevice)
+ARV_API G_DECLARE_FINAL_TYPE (ArvUvDevice, arv_uv_device, ARV, UV_DEVICE, ArvDevice)
 
-ArvDevice * 	arv_uv_device_new 			(const char *vendor, const char *product, const char *serial_number,
+ARV_API ArvDevice *	arv_uv_device_new		(const char *vendor, const char *product, const char *serial_number,
 							 GError **error);
 
 G_END_DECLS

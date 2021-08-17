@@ -28,6 +28,7 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 #include <arvdomdocument.h>
 
@@ -35,12 +36,12 @@ G_BEGIN_DECLS
 
 typedef ArvDomDocument * (*ArvDomDocumentCreateFunction) (void);
 
-ArvDomDocument *	arv_dom_implementation_create_document 			(const char *namespace_uri,
+ARV_API ArvDomDocument *	arv_dom_implementation_create_document		(const char *namespace_uri,
 										 const char *qualified_name);
-void 			arv_dom_implementation_add_document_type 		(const char *qualified_name,
-					  					GType document_type);
+ARV_API void			arv_dom_implementation_add_document_type	(const char *qualified_name,
+										 GType document_type);
 
-void			arv_dom_implementation_cleanup 				(void);
+ARV_API void			arv_dom_implementation_cleanup			(void);
 
 G_END_DECLS
 

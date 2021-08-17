@@ -21,7 +21,7 @@ gnome.gtkdoc ('aravis',
 	                join_paths (meson.build_root (), 'src')],
 	      gobject_typesfile: 'aravis.types',
 	      dependencies: [aravis_library_dependencies],
-	      scan_args: ['--ignore-headers=' + ' '.join (doc_ignore_headers), '--rebuild-types'],
+	      scan_args: ['--ignore-headers=' + ' '.join (doc_ignore_headers), '--rebuild-types', '--ignore-decorator=ARV_API'],
 	      content_files: ['aravis-overview.xml', 'aravis-gv.xml'] + doc_examples,
 	      install_dir: 'aravis-@0@'.format (aravis_api_version),
 	      install: true)

@@ -27,12 +27,13 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvbuffer.h>
 #include <gio/gio.h>
 
 G_BEGIN_DECLS
 
-void arv_set_fake_camera_genicam_filename (const char *filename);
+ARV_API void			arv_set_fake_camera_genicam_filename (const char *filename);
 
 #define ARV_FAKE_CAMERA_MEMORY_SIZE	0x10000
 
@@ -85,40 +86,40 @@ void arv_set_fake_camera_genicam_filename (const char *filename);
 #define ARV_FAKE_CAMERA_REGISTER_GAIN_MODE		0x114
 
 #define ARV_TYPE_FAKE_CAMERA             (arv_fake_camera_get_type ())
-G_DECLARE_FINAL_TYPE (ArvFakeCamera, arv_fake_camera, ARV, FAKE_CAMERA, GObject)
+ARV_API G_DECLARE_FINAL_TYPE (ArvFakeCamera, arv_fake_camera, ARV, FAKE_CAMERA, GObject)
 
 typedef void (*ArvFakeCameraFillPattern) (ArvBuffer *buffer, void *fill_pattern_data,
 					  guint32 exposure_time_us, guint32 gain,
 					  ArvPixelFormat pixel_format);
 
-ArvFakeCamera * arv_fake_camera_new 		(const char *serial_number);
-ArvFakeCamera * arv_fake_camera_new_full 	(const char *serial_number, const char *genicam_filename);
-gboolean	arv_fake_camera_read_memory 	(ArvFakeCamera *camera, guint32 address, guint32 size, void *buffer);
-gboolean	arv_fake_camera_write_memory	(ArvFakeCamera *camera, guint32 address, guint32 size,
-						 const void *buffer);
-gboolean 	arv_fake_camera_read_register	(ArvFakeCamera *camera, guint32 address, guint32 *value);
-gboolean	arv_fake_camera_write_register 	(ArvFakeCamera *camera, guint32 address, guint32 value);
+ARV_API ArvFakeCamera *		arv_fake_camera_new		(const char *serial_number);
+ARV_API ArvFakeCamera *		arv_fake_camera_new_full	(const char *serial_number, const char *genicam_filename);
+ARV_API gboolean		arv_fake_camera_read_memory	(ArvFakeCamera *camera, guint32 address, guint32 size, void *buffer);
+ARV_API gboolean		arv_fake_camera_write_memory	(ArvFakeCamera *camera, guint32 address, guint32 size,
+								 const void *buffer);
+ARV_API gboolean		arv_fake_camera_read_register	(ArvFakeCamera *camera, guint32 address, guint32 *value);
+ARV_API gboolean		arv_fake_camera_write_register	(ArvFakeCamera *camera, guint32 address, guint32 value);
 
-size_t 		arv_fake_camera_get_payload 		(ArvFakeCamera *camera);
-void 		arv_fake_camera_wait_for_next_frame 	(ArvFakeCamera *camera);
-guint64 	arv_fake_camera_get_sleep_time_for_next_frame 	(ArvFakeCamera *camera, guint64 *next_timestamp_us);
-void		arv_fake_camera_fill_buffer		(ArvFakeCamera *camera, ArvBuffer *buffer,
-							 guint32 *packet_size);
+ARV_API size_t			arv_fake_camera_get_payload			(ArvFakeCamera *camera);
+ARV_API void			arv_fake_camera_wait_for_next_frame		(ArvFakeCamera *camera);
+ARV_API guint64			arv_fake_camera_get_sleep_time_for_next_frame	(ArvFakeCamera *camera, guint64 *next_timestamp_us);
+ARV_API void			arv_fake_camera_fill_buffer			(ArvFakeCamera *camera, ArvBuffer *buffer,
+										 guint32 *packet_size);
 
-guint32 	arv_fake_camera_get_acquisition_status 	(ArvFakeCamera *camera);
-GSocketAddress *arv_fake_camera_get_stream_address 	(ArvFakeCamera *camera);
-void		arv_fake_camera_set_inet_address	(ArvFakeCamera *camera, GInetAddress *address);
+ARV_API guint32 		arv_fake_camera_get_acquisition_status	(ArvFakeCamera *camera);
+ARV_API GSocketAddress *	arv_fake_camera_get_stream_address	(ArvFakeCamera *camera);
+ARV_API void			arv_fake_camera_set_inet_address	(ArvFakeCamera *camera, GInetAddress *address);
 
-guint32		arv_fake_camera_get_control_channel_privilege	(ArvFakeCamera *camera);
-void		arv_fake_camera_set_control_channel_privilege	(ArvFakeCamera *camera, guint32 privilege);
-guint32		arv_fake_camera_get_heartbeat_timeout		(ArvFakeCamera *camera);
+ARV_API guint32			arv_fake_camera_get_control_channel_privilege	(ArvFakeCamera *camera);
+ARV_API void			arv_fake_camera_set_control_channel_privilege	(ArvFakeCamera *camera, guint32 privilege);
+ARV_API guint32			arv_fake_camera_get_heartbeat_timeout		(ArvFakeCamera *camera);
 
-void		arv_fake_camera_set_fill_pattern	(ArvFakeCamera *camera,
-							 ArvFakeCameraFillPattern fill_pattern_callback,
-							 void *fill_pattern_data);
-void 		arv_fake_camera_set_trigger_frequency 	(ArvFakeCamera *camera, double frequency);
+ARV_API void			arv_fake_camera_set_fill_pattern	(ArvFakeCamera *camera,
+									 ArvFakeCameraFillPattern fill_pattern_callback,
+									 void *fill_pattern_data);
+ARV_API void			arv_fake_camera_set_trigger_frequency	(ArvFakeCamera *camera, double frequency);
 
-const char *	arv_fake_camera_get_genicam_xml 	(ArvFakeCamera *camera, size_t *size);
+ARV_API const char *		arv_fake_camera_get_genicam_xml		(ArvFakeCamera *camera, size_t *size);
 
 G_END_DECLS
 

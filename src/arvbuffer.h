@@ -27,6 +27,7 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 
 G_BEGIN_DECLS
@@ -86,37 +87,37 @@ typedef enum {
 } ArvBufferPayloadType;
 
 #define ARV_TYPE_BUFFER             (arv_buffer_get_type ())
-G_DECLARE_FINAL_TYPE (ArvBuffer, arv_buffer, ARV, BUFFER, GObject)
+ARV_API G_DECLARE_FINAL_TYPE (ArvBuffer, arv_buffer, ARV, BUFFER, GObject)
 
 typedef void (*ArvFrameCallback)	(ArvBuffer *buffer);
 
-ArvBuffer *		arv_buffer_new_allocate		(size_t size);
-ArvBuffer *		arv_buffer_new 			(size_t size, void *preallocated);
-ArvBuffer * 		arv_buffer_new_full		(size_t size, void *preallocated,
-						 	void *user_data, GDestroyNotify user_data_destroy_func);
+ARV_API ArvBuffer *		arv_buffer_new_allocate		(size_t size);
+ARV_API ArvBuffer *		arv_buffer_new			(size_t size, void *preallocated);
+ARV_API ArvBuffer * 		arv_buffer_new_full		(size_t size, void *preallocated,
+								 void *user_data, GDestroyNotify user_data_destroy_func);
 
-ArvBufferStatus		arv_buffer_get_status		(ArvBuffer *buffer);
+ARV_API ArvBufferStatus		arv_buffer_get_status		(ArvBuffer *buffer);
 
-const void *		arv_buffer_get_user_data	(ArvBuffer *buffer);
+ARV_API const void *		arv_buffer_get_user_data	(ArvBuffer *buffer);
 
-ArvBufferPayloadType	arv_buffer_get_payload_type	(ArvBuffer *buffer);
-guint64			arv_buffer_get_timestamp	(ArvBuffer *buffer);
-void			arv_buffer_set_timestamp	(ArvBuffer *buffer, guint64 timestamp_ns);
-guint64			arv_buffer_get_system_timestamp	(ArvBuffer *buffer);
-void			arv_buffer_set_system_timestamp	(ArvBuffer *buffer, guint64 timestamp_ns);
-void			arv_buffer_set_frame_id		(ArvBuffer *buffer, guint64 frame_id);
-guint64 		arv_buffer_get_frame_id 	(ArvBuffer *buffer);
-const void *		arv_buffer_get_data		(ArvBuffer *buffer, size_t *size);
+ARV_API ArvBufferPayloadType	arv_buffer_get_payload_type	(ArvBuffer *buffer);
+ARV_API guint64			arv_buffer_get_timestamp	(ArvBuffer *buffer);
+ARV_API void			arv_buffer_set_timestamp	(ArvBuffer *buffer, guint64 timestamp_ns);
+ARV_API guint64			arv_buffer_get_system_timestamp	(ArvBuffer *buffer);
+ARV_API void			arv_buffer_set_system_timestamp	(ArvBuffer *buffer, guint64 timestamp_ns);
+ARV_API void			arv_buffer_set_frame_id		(ArvBuffer *buffer, guint64 frame_id);
+ARV_API guint64 		arv_buffer_get_frame_id		(ArvBuffer *buffer);
+ARV_API const void *		arv_buffer_get_data		(ArvBuffer *buffer, size_t *size);
 
-void			arv_buffer_get_image_region		(ArvBuffer *buffer, gint *x, gint *y, gint *width, gint *height);
-gint			arv_buffer_get_image_width		(ArvBuffer *buffer);
-gint			arv_buffer_get_image_height		(ArvBuffer *buffer);
-gint			arv_buffer_get_image_x			(ArvBuffer *buffer);
-gint			arv_buffer_get_image_y			(ArvBuffer *buffer);
-ArvPixelFormat		arv_buffer_get_image_pixel_format	(ArvBuffer *buffer);
+ARV_API void			arv_buffer_get_image_region		(ArvBuffer *buffer, gint *x, gint *y, gint *width, gint *height);
+ARV_API gint			arv_buffer_get_image_width		(ArvBuffer *buffer);
+ARV_API gint			arv_buffer_get_image_height		(ArvBuffer *buffer);
+ARV_API gint			arv_buffer_get_image_x			(ArvBuffer *buffer);
+ARV_API gint			arv_buffer_get_image_y			(ArvBuffer *buffer);
+ARV_API ArvPixelFormat		arv_buffer_get_image_pixel_format	(ArvBuffer *buffer);
 
-gboolean		arv_buffer_has_chunks		(ArvBuffer *buffer);
-const void *		arv_buffer_get_chunk_data	(ArvBuffer *buffer, guint64 chunk_id, size_t *size);
+ARV_API gboolean		arv_buffer_has_chunks		(ArvBuffer *buffer);
+ARV_API const void *		arv_buffer_get_chunk_data	(ArvBuffer *buffer, guint64 chunk_id, size_t *size);
 
 G_END_DECLS
 

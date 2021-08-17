@@ -27,6 +27,7 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 #include <arvgcenums.h>
 #include <arvgcnode.h>
@@ -96,88 +97,88 @@ typedef enum {
 } ArvGcPropertyNodeType;
 
 #define ARV_TYPE_GC_PROPERTY_NODE             (arv_gc_property_node_get_type ())
-G_DECLARE_DERIVABLE_TYPE (ArvGcPropertyNode, arv_gc_property_node, ARV, GC_PROPERTY_NODE, ArvGcNode)
+ARV_API G_DECLARE_DERIVABLE_TYPE (ArvGcPropertyNode, arv_gc_property_node, ARV, GC_PROPERTY_NODE, ArvGcNode)
 
 struct _ArvGcPropertyNodeClass {
 	ArvGcNodeClass parent_class;
 };
 
-ArvGcNode * 	arv_gc_property_node_new_p_feature 		(void);
-ArvGcNode * 	arv_gc_property_node_new_value 			(void);
-ArvGcNode * 	arv_gc_property_node_new_p_value		(void);
-ArvGcNode * 	arv_gc_property_node_new_address		(void);
-ArvGcNode * 	arv_gc_property_node_new_p_address		(void);
-ArvGcNode * 	arv_gc_property_node_new_description 		(void);
-ArvGcNode * 	arv_gc_property_node_new_visibility		(void);
-ArvGcNode * 	arv_gc_property_node_new_tooltip 		(void);
-ArvGcNode * 	arv_gc_property_node_new_display_name 		(void);
-ArvGcNode * 	arv_gc_property_node_new_minimum		(void);
-ArvGcNode * 	arv_gc_property_node_new_p_minimum		(void);
-ArvGcNode * 	arv_gc_property_node_new_maximum		(void);
-ArvGcNode * 	arv_gc_property_node_new_p_maximum		(void);
-ArvGcNode * 	arv_gc_property_node_new_slope			(void);
-ArvGcNode * 	arv_gc_property_node_new_increment		(void);
-ArvGcNode * 	arv_gc_property_node_new_p_increment		(void);
-ArvGcNode * 	arv_gc_property_node_new_is_linear		(void);
-ArvGcNode * 	arv_gc_property_node_new_representation		(void);
-ArvGcNode * 	arv_gc_property_node_new_display_notation	(void);
-ArvGcNode * 	arv_gc_property_node_new_display_precision	(void);
-ArvGcNode * 	arv_gc_property_node_new_unit			(void);
-ArvGcNode * 	arv_gc_property_node_new_on_value 		(void);
-ArvGcNode * 	arv_gc_property_node_new_off_value 		(void);
-ArvGcNode * 	arv_gc_property_node_new_p_is_implemented 	(void);
-ArvGcNode * 	arv_gc_property_node_new_p_is_available 	(void);
-ArvGcNode * 	arv_gc_property_node_new_p_is_locked	 	(void);
-ArvGcNode * 	arv_gc_property_node_new_p_selected 		(void);
-ArvGcNode * 	arv_gc_property_node_new_length			(void);
-ArvGcNode * 	arv_gc_property_node_new_p_length		(void);
-ArvGcNode * 	arv_gc_property_node_new_p_port 		(void);
-ArvGcNode * 	arv_gc_property_node_new_p_variable 		(void);
-ArvGcNode * 	arv_gc_property_node_new_formula		(void);
-ArvGcNode * 	arv_gc_property_node_new_formula_to		(void);
-ArvGcNode * 	arv_gc_property_node_new_formula_from		(void);
-ArvGcNode * 	arv_gc_property_node_new_expression		(void);
-ArvGcNode * 	arv_gc_property_node_new_constant		(void);
-ArvGcNode * 	arv_gc_property_node_new_access_mode		(void);
-ArvGcNode * 	arv_gc_property_node_new_imposed_access_mode 	(void);
-ArvGcNode * 	arv_gc_property_node_new_cachable		(void);
-ArvGcNode * 	arv_gc_property_node_new_polling_time		(void);
-ArvGcNode * 	arv_gc_property_node_new_endianness		(void);
-ArvGcNode * 	arv_gc_property_node_new_sign			(void);
-ArvGcNode * 	arv_gc_property_node_new_lsb			(void);
-ArvGcNode * 	arv_gc_property_node_new_msb			(void);
-ArvGcNode * 	arv_gc_property_node_new_bit			(void);
-ArvGcNode * 	arv_gc_property_node_new_command_value		(void);
-ArvGcNode * 	arv_gc_property_node_new_p_command_value	(void);
-ArvGcNode * 	arv_gc_property_node_new_chunk_id 		(void);
-ArvGcNode * 	arv_gc_property_node_new_event_id 		(void);
-ArvGcNode * 	arv_gc_property_node_new_value_default 		(void);
-ArvGcNode * 	arv_gc_property_node_new_p_value_default	(void);
-ArvGcNode * 	arv_gc_property_node_new_streamable		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_p_feature 		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_value 			(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_p_value		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_address		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_p_address		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_description 		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_visibility		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_tooltip 		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_display_name 		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_minimum		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_p_minimum		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_maximum		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_p_maximum		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_slope			(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_increment		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_p_increment		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_is_linear		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_representation		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_display_notation	(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_display_precision	(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_unit			(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_on_value		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_off_value		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_p_is_implemented	(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_p_is_available		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_p_is_locked		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_p_selected		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_length			(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_p_length		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_p_port			(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_p_variable		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_formula		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_formula_to		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_formula_from		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_expression		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_constant		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_access_mode		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_imposed_access_mode	(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_cachable		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_polling_time		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_endianness		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_sign			(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_lsb			(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_msb			(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_bit			(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_command_value		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_p_command_value	(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_chunk_id		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_event_id		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_value_default		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_p_value_default	(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_streamable		(void);
 
-const char *		arv_gc_property_node_get_name			(ArvGcPropertyNode *node);
+ARV_API const char *		arv_gc_property_node_get_name			(ArvGcPropertyNode *node);
 
-const char *		arv_gc_property_node_get_string			(ArvGcPropertyNode *node, GError **error);
-void			arv_gc_property_node_set_string			(ArvGcPropertyNode *node, const char *string, GError **error);
-gint64			arv_gc_property_node_get_int64			(ArvGcPropertyNode *node, GError **error);
-void			arv_gc_property_node_set_int64			(ArvGcPropertyNode *node, gint64 v_int64, GError **error);
-double			arv_gc_property_node_get_double			(ArvGcPropertyNode *node, GError **error);
-void			arv_gc_property_node_set_double			(ArvGcPropertyNode *node, double v_double, GError **error);
+ARV_API const char *		arv_gc_property_node_get_string			(ArvGcPropertyNode *node, GError **error);
+ARV_API void			arv_gc_property_node_set_string			(ArvGcPropertyNode *node, const char *string, GError **error);
+ARV_API gint64			arv_gc_property_node_get_int64			(ArvGcPropertyNode *node, GError **error);
+ARV_API void			arv_gc_property_node_set_int64			(ArvGcPropertyNode *node, gint64 v_int64, GError **error);
+ARV_API double			arv_gc_property_node_get_double			(ArvGcPropertyNode *node, GError **error);
+ARV_API void			arv_gc_property_node_set_double			(ArvGcPropertyNode *node, double v_double, GError **error);
 
-guint			arv_gc_property_node_get_endianness		(ArvGcPropertyNode *self, guint default_value);
-ArvGcSignedness		arv_gc_property_node_get_sign			(ArvGcPropertyNode *self, ArvGcSignedness default_value);
-guint			arv_gc_property_node_get_lsb			(ArvGcPropertyNode *self, guint default_value);
-guint			arv_gc_property_node_get_msb			(ArvGcPropertyNode *self, guint default_value);
-ArvGcCachable		arv_gc_property_node_get_cachable		(ArvGcPropertyNode *self, ArvGcCachable default_value);
-ArvGcAccessMode		arv_gc_property_node_get_access_mode		(ArvGcPropertyNode *self, ArvGcAccessMode default_value);
-ArvGcVisibility 	arv_gc_property_node_get_visibility		(ArvGcPropertyNode *self, ArvGcVisibility default_value);
-ArvGcRepresentation 	arv_gc_property_node_get_representation		(ArvGcPropertyNode *self, ArvGcRepresentation default_value);
-ArvGcDisplayNotation	arv_gc_property_node_get_display_notation	(ArvGcPropertyNode *self, ArvGcDisplayNotation default_value);
-gint64			arv_gc_property_node_get_display_precision	(ArvGcPropertyNode *self, gint64 default_value);
-ArvGcStreamable		arv_gc_property_node_get_streamable		(ArvGcPropertyNode *self, ArvGcStreamable default_value);
+ARV_API guint			arv_gc_property_node_get_endianness		(ArvGcPropertyNode *self, guint default_value);
+ARV_API ArvGcSignedness		arv_gc_property_node_get_sign			(ArvGcPropertyNode *self, ArvGcSignedness default_value);
+ARV_API guint			arv_gc_property_node_get_lsb			(ArvGcPropertyNode *self, guint default_value);
+ARV_API guint			arv_gc_property_node_get_msb			(ArvGcPropertyNode *self, guint default_value);
+ARV_API ArvGcCachable		arv_gc_property_node_get_cachable		(ArvGcPropertyNode *self, ArvGcCachable default_value);
+ARV_API ArvGcAccessMode		arv_gc_property_node_get_access_mode		(ArvGcPropertyNode *self, ArvGcAccessMode default_value);
+ARV_API ArvGcVisibility		arv_gc_property_node_get_visibility		(ArvGcPropertyNode *self, ArvGcVisibility default_value);
+ARV_API ArvGcRepresentation	arv_gc_property_node_get_representation		(ArvGcPropertyNode *self, ArvGcRepresentation default_value);
+ARV_API ArvGcDisplayNotation	arv_gc_property_node_get_display_notation	(ArvGcPropertyNode *self, ArvGcDisplayNotation default_value);
+ARV_API gint64			arv_gc_property_node_get_display_precision	(ArvGcPropertyNode *self, gint64 default_value);
+ARV_API ArvGcStreamable		arv_gc_property_node_get_streamable		(ArvGcPropertyNode *self, ArvGcStreamable default_value);
 
-ArvGcNode *		arv_gc_property_node_get_linked_node		(ArvGcPropertyNode *node);
-ArvGcPropertyNodeType	arv_gc_property_node_get_node_type		(ArvGcPropertyNode *node);
+ARV_API ArvGcNode *		arv_gc_property_node_get_linked_node		(ArvGcPropertyNode *node);
+ARV_API ArvGcPropertyNodeType	arv_gc_property_node_get_node_type		(ArvGcPropertyNode *node);
 
 G_END_DECLS
 

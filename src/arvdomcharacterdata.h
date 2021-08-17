@@ -28,19 +28,20 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvdomnode.h>
 
 G_BEGIN_DECLS
 
 #define ARV_TYPE_DOM_CHARACTER_DATA             (arv_dom_character_data_get_type ())
-G_DECLARE_DERIVABLE_TYPE (ArvDomCharacterData, arv_dom_character_data, ARV, DOM_CHARACTER_DATA, ArvDomNode)
+ARV_API G_DECLARE_DERIVABLE_TYPE (ArvDomCharacterData, arv_dom_character_data, ARV, DOM_CHARACTER_DATA, ArvDomNode)
 
 struct _ArvDomCharacterDataClass {
 	ArvDomNodeClass parent_class;
 };
 
-const char * 	arv_dom_character_data_get_data 	(ArvDomCharacterData* self);
-void 		arv_dom_character_data_set_data 	(ArvDomCharacterData* self, const char* value);
+ARV_API const char *	arv_dom_character_data_get_data		(ArvDomCharacterData *self);
+ARV_API void		arv_dom_character_data_set_data		(ArvDomCharacterData *self, const char *value);
 
 G_END_DECLS
 

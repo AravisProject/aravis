@@ -27,6 +27,7 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <glib-object.h>
 
 G_BEGIN_DECLS
@@ -44,8 +45,8 @@ typedef enum {
 	ARV_AUTO_CONTINUOUS
 } ArvAuto;
 
-const char * 		arv_auto_to_string 		(ArvAuto value);
-ArvAuto 		arv_auto_from_string		(const char *string);
+ARV_API const char *		arv_auto_to_string		(ArvAuto value);
+ARV_API ArvAuto 		arv_auto_from_string		(const char *string);
 
 /**
  * ArvAcquisitionMode:
@@ -60,8 +61,8 @@ typedef enum {
 	ARV_ACQUISITION_MODE_MULTI_FRAME
 } ArvAcquisitionMode;
 
-const char * 		arv_acquisition_mode_to_string 		(ArvAcquisitionMode value);
-ArvAcquisitionMode 	arv_acquisition_mode_from_string	(const char *string);
+ARV_API const char *		arv_acquisition_mode_to_string		(ArvAcquisitionMode value);
+ARV_API ArvAcquisitionMode	arv_acquisition_mode_from_string	(const char *string);
 
 /**
  * ArvExposureMode:
@@ -84,8 +85,8 @@ typedef enum {
 	ARV_EXPOSURE_MODE_TRIGGER_CONTROLLED
 } ArvExposureMode;
 
-const char * 		arv_exposure_mode_to_string 		(ArvExposureMode value);
-ArvExposureMode 	arv_exposure_mode_from_string		(const char *string);
+ARV_API const char *		arv_exposure_mode_to_string		(ArvExposureMode value);
+ARV_API ArvExposureMode		arv_exposure_mode_from_string		(const char *string);
 
 /**
  * ArvPixelFormat:

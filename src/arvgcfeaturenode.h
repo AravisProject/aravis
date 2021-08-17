@@ -27,6 +27,7 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 #include <arvgcnode.h>
 #include <arvgcenums.h>
@@ -34,7 +35,7 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_FEATURE_NODE             (arv_gc_feature_node_get_type ())
-G_DECLARE_DERIVABLE_TYPE (ArvGcFeatureNode, arv_gc_feature_node, ARV, GC_FEATURE_NODE, ArvGcNode)
+ARV_API G_DECLARE_DERIVABLE_TYPE (ArvGcFeatureNode, arv_gc_feature_node, ARV, GC_FEATURE_NODE, ArvGcNode)
 
 struct _ArvGcFeatureNodeClass {
 	ArvGcNodeClass parent_class;
@@ -43,24 +44,24 @@ struct _ArvGcFeatureNodeClass {
 	ArvGcAccessMode		(*get_access_mode)	(ArvGcFeatureNode *gc_feature_node);
 };
 
-const char *		arv_gc_feature_node_get_name			(ArvGcFeatureNode *gc_feature_node);
-ArvGcNameSpace		arv_gc_feature_node_get_name_space		(ArvGcFeatureNode *gc_feature_node);
+ARV_API const char *		arv_gc_feature_node_get_name			(ArvGcFeatureNode *gc_feature_node);
+ARV_API ArvGcNameSpace		arv_gc_feature_node_get_name_space		(ArvGcFeatureNode *gc_feature_node);
 
-const char *		arv_gc_feature_node_get_tooltip			(ArvGcFeatureNode *gc_feature_node);
-const char *		arv_gc_feature_node_get_description		(ArvGcFeatureNode *gc_feature_node);
-const char *		arv_gc_feature_node_get_display_name		(ArvGcFeatureNode *gc_feature_node);
-ArvGcVisibility		arv_gc_feature_node_get_visibility		(ArvGcFeatureNode *gc_feature_node);
+ARV_API const char *		arv_gc_feature_node_get_tooltip			(ArvGcFeatureNode *gc_feature_node);
+ARV_API const char *		arv_gc_feature_node_get_description		(ArvGcFeatureNode *gc_feature_node);
+ARV_API const char *		arv_gc_feature_node_get_display_name		(ArvGcFeatureNode *gc_feature_node);
+ARV_API ArvGcVisibility		arv_gc_feature_node_get_visibility		(ArvGcFeatureNode *gc_feature_node);
 
-gboolean		arv_gc_feature_node_is_available		(ArvGcFeatureNode *gc_feature_node, GError **error);
-gboolean		arv_gc_feature_node_is_implemented		(ArvGcFeatureNode *gc_feature_node, GError **error);
-gboolean		arv_gc_feature_node_is_locked			(ArvGcFeatureNode *gc_feature_node, GError **error);
+ARV_API gboolean		arv_gc_feature_node_is_available		(ArvGcFeatureNode *gc_feature_node, GError **error);
+ARV_API gboolean		arv_gc_feature_node_is_implemented		(ArvGcFeatureNode *gc_feature_node, GError **error);
+ARV_API gboolean		arv_gc_feature_node_is_locked			(ArvGcFeatureNode *gc_feature_node, GError **error);
 
-ArvGcAccessMode		arv_gc_feature_node_get_imposed_access_mode	(ArvGcFeatureNode *gc_feature_node);
-ArvGcAccessMode		arv_gc_feature_node_get_actual_access_mode	(ArvGcFeatureNode *gc_feature_node);
+ARV_API ArvGcAccessMode		arv_gc_feature_node_get_imposed_access_mode	(ArvGcFeatureNode *gc_feature_node);
+ARV_API ArvGcAccessMode		arv_gc_feature_node_get_actual_access_mode	(ArvGcFeatureNode *gc_feature_node);
 
-void			arv_gc_feature_node_set_value_from_string	(ArvGcFeatureNode *gc_feature_node, const char *string,
-									 GError **error);
-const char *		arv_gc_feature_node_get_value_as_string		(ArvGcFeatureNode *gc_feature_node, GError **error);
+ARV_API void			arv_gc_feature_node_set_value_from_string	(ArvGcFeatureNode *gc_feature_node, const char *string,
+										 GError **error);
+ARV_API const char *		arv_gc_feature_node_get_value_as_string		(ArvGcFeatureNode *gc_feature_node, GError **error);
 
 G_END_DECLS
 

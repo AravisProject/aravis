@@ -23,6 +23,7 @@
 #ifndef ARV_MISC_PRIVATE_H
 #define ARV_MISC_PRIVATE_H
 
+#include <arvapi.h>
 #include <arvmisc.h>
 
 typedef struct _ArvHistogram ArvHistogram;
@@ -65,7 +66,8 @@ double 		arv_value_get_double 		(ArvValue *value);
 gboolean 	arv_value_holds_int64 		(ArvValue *value);
 double 		arv_value_holds_double 		(ArvValue *value);
 
-gboolean	arv_parse_genicam_url		(const char *url, gssize url_length,
+/* private, but used by tests */
+ARV_API gboolean	arv_parse_genicam_url	(const char *url, gssize url_length,
 						 char **scheme, char **authority, char **path,
 						 char **query, char **fragment,
 						 guint64 *address, guint64 *size);
@@ -75,7 +77,8 @@ void 		arv_copy_memory_with_endianness	(void *to, size_t to_size, guint to_endia
 
 void * 		arv_decompress 			(void *input_buffer, size_t input_size, size_t *output_size);
 
-const char *	arv_vendor_alias_lookup		(const char *vendor);
+/* private, but used by tests */
+ARV_API const char *	arv_vendor_alias_lookup	(const char *vendor);
 
 /* this only wraps g_get_monotonic_time on non-windows platforms */
 gint64 arv_monotonic_time_us (void);
