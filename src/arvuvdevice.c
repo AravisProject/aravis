@@ -842,8 +842,9 @@ arv_uv_device_constructed (GObject *object)
                 return;
         }
 
+	// NOTE: It seems async mode can work with reset_endpoint. What's the original issue?
 	// FIXME: Async mode dosn't work with reset_endpoint
-	if (mode_sync)
+	//if (mode_sync)
 	    reset_endpoint (priv->usb_device, priv->data_endpoint, LIBUSB_ENDPOINT_IN);
 
 	priv->event_thread_run = 1;
