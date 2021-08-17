@@ -27,6 +27,7 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 #include <arvgc.h>
 
@@ -34,7 +35,7 @@ G_BEGIN_DECLS
 
 #define ARV_CHUNK_PARSER_ERROR arv_chunk_parser_error_quark()
 
-GQuark 			arv_chunk_parser_error_quark 		(void);
+ARV_API GQuark		arv_chunk_parser_error_quark		(void);
 
 /**
  * ArvChunkParserError:
@@ -50,17 +51,17 @@ typedef enum {
 } ArvChunkParserError;
 
 #define ARV_TYPE_CHUNK_PARSER             (arv_chunk_parser_get_type ())
-G_DECLARE_FINAL_TYPE (ArvChunkParser, arv_chunk_parser, ARV, CHUNK_PARSER, GObject)
+ARV_API G_DECLARE_FINAL_TYPE (ArvChunkParser, arv_chunk_parser, ARV, CHUNK_PARSER, GObject)
 
-ArvChunkParser *	arv_chunk_parser_new 			(const char *xml, gsize size);
-gboolean		arv_chunk_parser_get_boolean_value	(ArvChunkParser *parser, ArvBuffer *buffer,
-								 const char *chunk, GError **error);
-const char *		arv_chunk_parser_get_string_value	(ArvChunkParser *parser, ArvBuffer *buffer,
-								 const char *chunk, GError **error);
-gint64			arv_chunk_parser_get_integer_value	(ArvChunkParser *parser, ArvBuffer *buffer,
-								 const char *chunk, GError **error);
-double			arv_chunk_parser_get_float_value	(ArvChunkParser *parser, ArvBuffer *buffer,
-								 const char *chunk, GError **error);
+ARV_API ArvChunkParser *	arv_chunk_parser_new 			(const char *xml, gsize size);
+ARV_API gboolean		arv_chunk_parser_get_boolean_value	(ArvChunkParser *parser, ArvBuffer *buffer,
+									 const char *chunk, GError **error);
+ARV_API const char *		arv_chunk_parser_get_string_value	(ArvChunkParser *parser, ArvBuffer *buffer,
+									 const char *chunk, GError **error);
+ARV_API gint64			arv_chunk_parser_get_integer_value	(ArvChunkParser *parser, ArvBuffer *buffer,
+									 const char *chunk, GError **error);
+ARV_API double			arv_chunk_parser_get_float_value	(ArvChunkParser *parser, ArvBuffer *buffer,
+									 const char *chunk, GError **error);
 
 G_END_DECLS
 

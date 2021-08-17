@@ -27,12 +27,13 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvstream.h>
 
 G_BEGIN_DECLS
 
 #define ARV_TYPE_FAKE_STREAM             (arv_fake_stream_get_type ())
-G_DECLARE_FINAL_TYPE (ArvFakeStream, arv_fake_stream, ARV, FAKE_STREAM, ArvStream)
+ARV_API G_DECLARE_FINAL_TYPE (ArvFakeStream, arv_fake_stream, ARV, FAKE_STREAM, ArvStream)
 
 G_END_DECLS
 

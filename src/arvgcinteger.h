@@ -27,13 +27,14 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 #include <arvgcenums.h>
 
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_INTEGER             	(arv_gc_integer_get_type ())
-G_DECLARE_INTERFACE (ArvGcInteger, arv_gc_integer, ARV, GC_INTEGER, GObject)
+ARV_API G_DECLARE_INTERFACE (ArvGcInteger, arv_gc_integer, ARV, GC_INTEGER, GObject)
 
 struct _ArvGcIntegerInterface {
 	GTypeInterface parent;
@@ -49,15 +50,15 @@ struct _ArvGcIntegerInterface {
 	void			(*impose_max)		(ArvGcInteger *gc_integer, gint64 maximum, GError **error);
 };
 
-gint64			arv_gc_integer_get_value		(ArvGcInteger *gc_integer, GError **error);
-void			arv_gc_integer_set_value		(ArvGcInteger *gc_integer, gint64 value, GError **error);
-gint64			arv_gc_integer_get_min			(ArvGcInteger *gc_integer, GError **error);
-gint64			arv_gc_integer_get_max			(ArvGcInteger *gc_integer, GError **error);
-gint64			arv_gc_integer_get_inc			(ArvGcInteger *gc_integer, GError **error);
-ArvGcRepresentation	arv_gc_integer_get_representation	(ArvGcInteger *gc_integer);
-const char *		arv_gc_integer_get_unit			(ArvGcInteger *gc_integer);
-void			arv_gc_integer_impose_min		(ArvGcInteger *gc_integer, gint64 minimum, GError **error);
-void			arv_gc_integer_impose_max		(ArvGcInteger *gc_integer, gint64 maximum, GError **error);
+ARV_API gint64			arv_gc_integer_get_value		(ArvGcInteger *gc_integer, GError **error);
+ARV_API void			arv_gc_integer_set_value		(ArvGcInteger *gc_integer, gint64 value, GError **error);
+ARV_API gint64			arv_gc_integer_get_min			(ArvGcInteger *gc_integer, GError **error);
+ARV_API gint64			arv_gc_integer_get_max			(ArvGcInteger *gc_integer, GError **error);
+ARV_API gint64			arv_gc_integer_get_inc			(ArvGcInteger *gc_integer, GError **error);
+ARV_API ArvGcRepresentation	arv_gc_integer_get_representation	(ArvGcInteger *gc_integer);
+ARV_API const char *		arv_gc_integer_get_unit			(ArvGcInteger *gc_integer);
+ARV_API void			arv_gc_integer_impose_min		(ArvGcInteger *gc_integer, gint64 minimum, GError **error);
+ARV_API void			arv_gc_integer_impose_max		(ArvGcInteger *gc_integer, gint64 maximum, GError **error);
 
 G_END_DECLS
 

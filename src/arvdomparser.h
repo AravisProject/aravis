@@ -28,17 +28,18 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvdomdocument.h>
 #include <gio/gio.h>
 
 G_BEGIN_DECLS
 
-void 			arv_dom_document_append_from_memory 	(ArvDomDocument *document, ArvDomNode *node,
-								 const void *buffer, int size, GError **error);
+ARV_API void			arv_dom_document_append_from_memory	(ArvDomDocument *document, ArvDomNode *node,
+										 const void *buffer, int size, GError **error);
 
-ArvDomDocument * 	arv_dom_document_new_from_memory 	(const void *buffer, int size, GError **error);
-ArvDomDocument * 	arv_dom_document_new_from_path 		(const char *path, GError **error);
-ArvDomDocument * 	arv_dom_document_new_from_url 		(const char *url, GError **error);
+ARV_API ArvDomDocument *	arv_dom_document_new_from_memory	(const void *buffer, int size, GError **error);
+ARV_API ArvDomDocument *	arv_dom_document_new_from_path		(const char *path, GError **error);
+ARV_API ArvDomDocument *	arv_dom_document_new_from_url		(const char *url, GError **error);
 
 G_END_DECLS
 

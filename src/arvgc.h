@@ -27,6 +27,7 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvbuffer.h>
 #include <arvdomdocument.h>
 
@@ -34,7 +35,7 @@ G_BEGIN_DECLS
 
 #define ARV_GC_ERROR arv_gc_error_quark()
 
-GQuark arv_gc_error_quark (void);
+ARV_API GQuark arv_gc_error_quark (void);
 
 typedef enum {
 	ARV_GC_ERROR_PROPERTY_NOT_DEFINED,
@@ -88,19 +89,19 @@ typedef enum {
 } ArvRangeCheckPolicy;
 
 #define ARV_TYPE_GC             (arv_gc_get_type ())
-G_DECLARE_FINAL_TYPE (ArvGc, arv_gc, ARV, GC, ArvDomDocument)
+ARV_API G_DECLARE_FINAL_TYPE (ArvGc, arv_gc, ARV, GC, ArvDomDocument)
 
-ArvGc * 		arv_gc_new 				(ArvDevice *device, const void *xml, size_t size);
-void 			arv_gc_register_feature_node 		(ArvGc *genicam, ArvGcFeatureNode *node);
-void			arv_gc_set_register_cache_policy	(ArvGc *genicam, ArvRegisterCachePolicy policy);
-ArvRegisterCachePolicy 	arv_gc_get_register_cache_policy 	(ArvGc *genicam);
-void			arv_gc_set_range_check_policy		(ArvGc *genicam, ArvRangeCheckPolicy policy);
-ArvRangeCheckPolicy 	arv_gc_get_range_check_policy	 	(ArvGc *genicam);
-void 			arv_gc_set_default_node_data 		(ArvGc *genicam, const char *node_name, ...) G_GNUC_NULL_TERMINATED;
-ArvGcNode *		arv_gc_get_node				(ArvGc *genicam, const char *name);
-ArvDevice *		arv_gc_get_device			(ArvGc *genicam);
-void			arv_gc_set_buffer			(ArvGc *genicam, ArvBuffer *buffer);
-ArvBuffer *		arv_gc_get_buffer			(ArvGc *genicam);
+ARV_API ArvGc *				arv_gc_new				(ArvDevice *device, const void *xml, size_t size);
+ARV_API void				arv_gc_register_feature_node		(ArvGc *genicam, ArvGcFeatureNode *node);
+ARV_API void				arv_gc_set_register_cache_policy	(ArvGc *genicam, ArvRegisterCachePolicy policy);
+ARV_API ArvRegisterCachePolicy		arv_gc_get_register_cache_policy	(ArvGc *genicam);
+ARV_API void				arv_gc_set_range_check_policy		(ArvGc *genicam, ArvRangeCheckPolicy policy);
+ARV_API ArvRangeCheckPolicy		arv_gc_get_range_check_policy		(ArvGc *genicam);
+ARV_API void				arv_gc_set_default_node_data		(ArvGc *genicam, const char *node_name, ...) G_GNUC_NULL_TERMINATED;
+ARV_API ArvGcNode *			arv_gc_get_node				(ArvGc *genicam, const char *name);
+ARV_API ArvDevice *			arv_gc_get_device			(ArvGc *genicam);
+ARV_API void				arv_gc_set_buffer			(ArvGc *genicam, ArvBuffer *buffer);
+ARV_API ArvBuffer *			arv_gc_get_buffer			(ArvGc *genicam);
 
 G_END_DECLS
 

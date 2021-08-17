@@ -28,12 +28,13 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 
 G_BEGIN_DECLS
 
 #define ARV_TYPE_DOM_NODE_LIST             (arv_dom_node_list_get_type ())
-G_DECLARE_DERIVABLE_TYPE (ArvDomNodeList, arv_dom_node_list, ARV, DOM_NODE_LIST, GObject)
+ARV_API G_DECLARE_DERIVABLE_TYPE (ArvDomNodeList, arv_dom_node_list, ARV, DOM_NODE_LIST, GObject)
 
 struct _ArvDomNodeListClass {
 	GObjectClass parent_class;
@@ -42,8 +43,8 @@ struct _ArvDomNodeListClass {
 	unsigned int	(*get_length)		(ArvDomNodeList *list);
 };
 
-ArvDomNode *		arv_dom_node_list_get_item 		(ArvDomNodeList *list, unsigned int index);
-unsigned int		arv_dom_node_list_get_length		(ArvDomNodeList *list);
+ARV_API ArvDomNode *		arv_dom_node_list_get_item		(ArvDomNodeList *list, unsigned int index);
+ARV_API unsigned int		arv_dom_node_list_get_length		(ArvDomNodeList *list);
 
 G_END_DECLS
 

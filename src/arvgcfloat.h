@@ -27,13 +27,14 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 #include <arvgcenums.h>
 
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_FLOAT             	(arv_gc_float_get_type ())
-G_DECLARE_INTERFACE (ArvGcFloat, arv_gc_float, ARV, GC_FLOAT, GObject)
+ARV_API G_DECLARE_INTERFACE (ArvGcFloat, arv_gc_float, ARV, GC_FLOAT, GObject)
 
 struct _ArvGcFloatInterface {
 	GTypeInterface parent;
@@ -51,17 +52,17 @@ struct _ArvGcFloatInterface {
 	void			(*impose_max)		(ArvGcFloat *gc_float, double maximum, GError **error);
 };
 
-double			arv_gc_float_get_value			(ArvGcFloat *gc_float, GError **error);
-void			arv_gc_float_set_value			(ArvGcFloat *gc_float, double value, GError **error);
-double			arv_gc_float_get_min			(ArvGcFloat *gc_float, GError **error);
-double			arv_gc_float_get_max			(ArvGcFloat *gc_float, GError **error);
-double			arv_gc_float_get_inc			(ArvGcFloat *gc_float, GError **error);
-ArvGcRepresentation	arv_gc_float_get_representation		(ArvGcFloat *gc_float);
-const char *		arv_gc_float_get_unit			(ArvGcFloat *gc_float);
-ArvGcDisplayNotation	arv_gc_float_get_display_notation	(ArvGcFloat *gc_float);
-gint64			arv_gc_float_get_display_precision	(ArvGcFloat *gc_float);
-void			arv_gc_float_impose_min			(ArvGcFloat *gc_float, double minimum, GError **error);
-void			arv_gc_float_impose_max			(ArvGcFloat *gc_float, double maximum, GError **error);
+ARV_API double			arv_gc_float_get_value			(ArvGcFloat *gc_float, GError **error);
+ARV_API void			arv_gc_float_set_value			(ArvGcFloat *gc_float, double value, GError **error);
+ARV_API double			arv_gc_float_get_min			(ArvGcFloat *gc_float, GError **error);
+ARV_API double			arv_gc_float_get_max			(ArvGcFloat *gc_float, GError **error);
+ARV_API double			arv_gc_float_get_inc			(ArvGcFloat *gc_float, GError **error);
+ARV_API ArvGcRepresentation	arv_gc_float_get_representation		(ArvGcFloat *gc_float);
+ARV_API const char *		arv_gc_float_get_unit			(ArvGcFloat *gc_float);
+ARV_API ArvGcDisplayNotation	arv_gc_float_get_display_notation	(ArvGcFloat *gc_float);
+ARV_API gint64			arv_gc_float_get_display_precision	(ArvGcFloat *gc_float);
+ARV_API void			arv_gc_float_impose_min			(ArvGcFloat *gc_float, double minimum, GError **error);
+ARV_API void			arv_gc_float_impose_max			(ArvGcFloat *gc_float, double maximum, GError **error);
 
 /* FIXME has_inc is missing */
 

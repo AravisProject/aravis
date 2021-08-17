@@ -117,12 +117,14 @@ extern ArvDebugCategoryInfos arv_debug_category_infos[];
 
 gboolean	arv_debug_check			(ArvDebugCategory category, ArvDebugLevel level);
 
-void 		arv_warning 			(ArvDebugCategory category, const char *format, ...) G_GNUC_PRINTF (2,3);
-void 		arv_info 			(ArvDebugCategory category, const char *format, ...) G_GNUC_PRINTF (2,3);
-void 		arv_debug 			(ArvDebugCategory category, const char *format, ...) G_GNUC_PRINTF (2,3);
-void 		arv_trace			(ArvDebugCategory category, const char *format, ...) G_GNUC_PRINTF (2,3);
+/* private, but used by viewer */
+ARV_API void	arv_warning 			(ArvDebugCategory category, const char *format, ...) G_GNUC_PRINTF (2,3);
+ARV_API void	arv_info 			(ArvDebugCategory category, const char *format, ...) G_GNUC_PRINTF (2,3);
+ARV_API void	arv_debug 			(ArvDebugCategory category, const char *format, ...) G_GNUC_PRINTF (2,3);
+ARV_API void	arv_trace			(ArvDebugCategory category, const char *format, ...) G_GNUC_PRINTF (2,3);
 
-void 		arv_debug_print_infos 		(void);
+/* private, but export for use in debugging tools */
+ARV_API void	arv_debug_print_infos		(void);
 
 G_END_DECLS
 

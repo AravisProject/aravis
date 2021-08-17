@@ -27,12 +27,13 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_SELECTOR (arv_gc_selector_get_type ())
-G_DECLARE_INTERFACE (ArvGcSelector, arv_gc_selector, ARV, GC_SELECTOR, GObject)
+ARV_API G_DECLARE_INTERFACE (ArvGcSelector, arv_gc_selector, ARV, GC_SELECTOR, GObject)
 
 struct _ArvGcSelectorInterface {
 	GTypeInterface parent;
@@ -40,8 +41,8 @@ struct _ArvGcSelectorInterface {
 	const GSList *	(*get_selected_features)	(ArvGcSelector *gc_selector);
 };
 
-gboolean 		arv_gc_selector_is_selector 		(ArvGcSelector *gc_selector);
-const GSList * 		arv_gc_selector_get_selected_features 	(ArvGcSelector *gc_selector);
+ARV_API gboolean		arv_gc_selector_is_selector		(ArvGcSelector *gc_selector);
+ARV_API const GSList *		arv_gc_selector_get_selected_features	(ArvGcSelector *gc_selector);
 
 G_END_DECLS
 

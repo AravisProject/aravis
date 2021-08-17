@@ -27,32 +27,33 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 #include <arvgcfeaturenode.h>
 
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_REGISTER_DESCRIPTION_NODE             (arv_gc_register_description_node_get_type ())
-G_DECLARE_FINAL_TYPE (ArvGcRegisterDescriptionNode, arv_gc_register_description_node, ARV, GC_REGISTER_DESCRIPTION_NODE, ArvGcFeatureNode)
+ARV_API G_DECLARE_FINAL_TYPE (ArvGcRegisterDescriptionNode, arv_gc_register_description_node, ARV, GC_REGISTER_DESCRIPTION_NODE, ArvGcFeatureNode)
 
-ArvGcNode * 	arv_gc_register_description_node_new 			(void);
-int		arv_gc_register_description_node_compare_schema_version	(ArvGcRegisterDescriptionNode *node,
-									 guint major,
-									 guint minor,
-									 guint subminor);
-gboolean	arv_gc_register_description_node_check_schema_version	(ArvGcRegisterDescriptionNode *node,
-									 guint required_major,
-									 guint required_minor,
-									 guint required_subminor);
+ARV_API ArvGcNode *	arv_gc_register_description_node_new				(void);
+ARV_API int		arv_gc_register_description_node_compare_schema_version		(ArvGcRegisterDescriptionNode *node,
+											 guint major,
+											 guint minor,
+											 guint subminor);
+ARV_API gboolean	arv_gc_register_description_node_check_schema_version		(ArvGcRegisterDescriptionNode *node,
+											 guint required_major,
+											 guint required_minor,
+											 guint required_subminor);
 
-char *		arv_gc_register_description_node_get_model_name			(ArvGcRegisterDescriptionNode* node);
-char *		arv_gc_register_description_node_get_vendor_name		(ArvGcRegisterDescriptionNode* node);
-guint 		arv_gc_register_description_node_get_major_version		(ArvGcRegisterDescriptionNode* node);
-guint 		arv_gc_register_description_node_get_minor_version		(ArvGcRegisterDescriptionNode* node);
-guint 		arv_gc_register_description_node_get_subminor_version		(ArvGcRegisterDescriptionNode* node);
-guint 		arv_gc_register_description_node_get_schema_major_version	(ArvGcRegisterDescriptionNode* node);
-guint 		arv_gc_register_description_node_get_schema_minor_version	(ArvGcRegisterDescriptionNode* node);
-guint 		arv_gc_register_description_node_get_schema_subminor_version	(ArvGcRegisterDescriptionNode* node);
+ARV_API char *		arv_gc_register_description_node_get_model_name			(ArvGcRegisterDescriptionNode* node);
+ARV_API char *		arv_gc_register_description_node_get_vendor_name		(ArvGcRegisterDescriptionNode* node);
+ARV_API guint		arv_gc_register_description_node_get_major_version		(ArvGcRegisterDescriptionNode* node);
+ARV_API guint		arv_gc_register_description_node_get_minor_version		(ArvGcRegisterDescriptionNode* node);
+ARV_API guint		arv_gc_register_description_node_get_subminor_version		(ArvGcRegisterDescriptionNode* node);
+ARV_API guint		arv_gc_register_description_node_get_schema_major_version	(ArvGcRegisterDescriptionNode* node);
+ARV_API guint		arv_gc_register_description_node_get_schema_minor_version	(ArvGcRegisterDescriptionNode* node);
+ARV_API guint		arv_gc_register_description_node_get_schema_subminor_version	(ArvGcRegisterDescriptionNode* node);
 
 G_END_DECLS
 

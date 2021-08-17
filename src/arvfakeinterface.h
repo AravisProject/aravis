@@ -27,15 +27,16 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 #include <arvinterface.h>
 
 G_BEGIN_DECLS
 
 #define ARV_TYPE_FAKE_INTERFACE             (arv_fake_interface_get_type ())
-G_DECLARE_FINAL_TYPE (ArvFakeInterface, arv_fake_interface, ARV, FAKE_INTERFACE, ArvInterface)
+ARV_API G_DECLARE_FINAL_TYPE (ArvFakeInterface, arv_fake_interface, ARV, FAKE_INTERFACE, ArvInterface)
 
-ArvInterface * 		arv_fake_interface_get_instance 		(void);
+ARV_API ArvInterface *		arv_fake_interface_get_instance			(void);
 
 G_END_DECLS
 

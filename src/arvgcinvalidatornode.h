@@ -27,16 +27,17 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 #include <arvgcpropertynode.h>
 
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_INVALIDATOR_NODE             (arv_gc_invalidator_node_get_type ())
-G_DECLARE_FINAL_TYPE (ArvGcInvalidatorNode, arv_gc_invalidator_node, ARV, GC_INVALIDATOR_NODE, ArvGcPropertyNode)
+ARV_API G_DECLARE_FINAL_TYPE (ArvGcInvalidatorNode, arv_gc_invalidator_node, ARV, GC_INVALIDATOR_NODE, ArvGcPropertyNode)
 
-ArvGcNode * 	arv_gc_invalidator_node_new 			(void);
-gboolean 	arv_gc_invalidator_has_changed 			(ArvGcInvalidatorNode *self);
+ARV_API ArvGcNode *		arv_gc_invalidator_node_new		(void);
+ARV_API gboolean		arv_gc_invalidator_has_changed		(ArvGcInvalidatorNode *self);
 
 G_END_DECLS
 

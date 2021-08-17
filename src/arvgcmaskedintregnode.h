@@ -27,18 +27,19 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvgcregisternode.h>
 
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_MASKED_INT_REG_NODE             (arv_gc_masked_int_reg_node_get_type ())
-G_DECLARE_DERIVABLE_TYPE (ArvGcMaskedIntRegNode, arv_gc_masked_int_reg_node, ARV, GC_MASKED_INT_REG_NODE, ArvGcRegisterNode)
+ARV_API G_DECLARE_DERIVABLE_TYPE (ArvGcMaskedIntRegNode, arv_gc_masked_int_reg_node, ARV, GC_MASKED_INT_REG_NODE, ArvGcRegisterNode)
 
 struct _ArvGcMaskedIntRegNodeClass {
 	ArvGcRegisterNodeClass parent_class;
 };
 
-ArvGcNode *	arv_gc_masked_int_reg_node_new			(void);
+ARV_API ArvGcNode *		arv_gc_masked_int_reg_node_new		(void);
 
 G_END_DECLS
 

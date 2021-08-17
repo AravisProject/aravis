@@ -24,6 +24,8 @@
 #ifndef ARV_NETWORK_PRIVATE_H
 #define ARV_NETWORK_PRIVATE_H
 
+#include <arvapi.h>
+
 #ifndef __MINGW32__
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -84,19 +86,21 @@ struct iphdr
 
 typedef struct _ArvNetworkInterface ArvNetworkInterface;
 
-GList *			arv_enumerate_network_interfaces	(void);
-ArvNetworkInterface* arv_network_get_interface_by_name (const char* name);
-ArvNetworkInterface* arv_network_get_interface_by_address (const char* addr);
-ArvNetworkInterface* arv_network_get_fake_ipv4_loopback(void);
+/* private, but used by tests */
+ARV_API GList *		arv_enumerate_network_interfaces	(void);
+ArvNetworkInterface*	arv_network_get_interface_by_name	(const char* name);
+ArvNetworkInterface*	arv_network_get_interface_by_address	(const char* addr);
+ArvNetworkInterface*	arv_network_get_fake_ipv4_loopback	(void);
 
-void 			arv_network_interface_free		(ArvNetworkInterface *a);
-struct sockaddr *	arv_network_interface_get_addr		(ArvNetworkInterface *a);
-struct sockaddr *	arv_network_interface_get_netmask	(ArvNetworkInterface *a);
-struct sockaddr *	arv_network_interface_get_broadaddr	(ArvNetworkInterface *a);
-const char *		arv_network_interface_get_name		(ArvNetworkInterface *a);
-gboolean          arv_network_interface_is_loopback   (ArvNetworkInterface *a);
+/* private, but used by tests */
+ARV_API void 			arv_network_interface_free		(ArvNetworkInterface *a);
+ARV_API struct sockaddr *	arv_network_interface_get_addr		(ArvNetworkInterface *a);
+ARV_API struct sockaddr *	arv_network_interface_get_netmask	(ArvNetworkInterface *a);
+ARV_API struct sockaddr *	arv_network_interface_get_broadaddr	(ArvNetworkInterface *a);
+ARV_API const char *		arv_network_interface_get_name		(ArvNetworkInterface *a);
+ARV_API gboolean		arv_network_interface_is_loopback	(ArvNetworkInterface *a);
 
-gboolean 		arv_socket_set_recv_buffer_size		(int socket_fd, gint buffer_size);
+gboolean			arv_socket_set_recv_buffer_size		(int socket_fd, gint buffer_size);
 
 #ifdef G_OS_WIN32
 	/* mingw only defines with _WIN32_WINNT>=0x0600, see

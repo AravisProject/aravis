@@ -28,6 +28,7 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 #include <gio/gio.h>
 
@@ -35,7 +36,7 @@ G_BEGIN_DECLS
 
 #define ARV_XML_SCHEMA_ERROR arv_xml_schema_error_quark()
 
-GQuark arv_xml_schema_error_quark (void);
+ARV_API GQuark		arv_xml_schema_error_quark	(void);
 
 /**
  * ArvXmlSchemaError:
@@ -47,12 +48,12 @@ typedef enum {
 } ArvXmlSchemaError;
 
 #define ARV_TYPE_XML_SCHEMA                  (arv_xml_schema_get_type ())
-G_DECLARE_FINAL_TYPE (ArvXmlSchema, arv_xml_schema, ARV, XML_SCHEMA, GObject)
+ARV_API G_DECLARE_FINAL_TYPE (ArvXmlSchema, arv_xml_schema, ARV, XML_SCHEMA, GObject)
 
-ArvXmlSchema *          arv_xml_schema_new_from_memory  (const char *buffer, size_t size);
-ArvXmlSchema * 		arv_xml_schema_new_from_file 	(GFile *file);
-ArvXmlSchema * 		arv_xml_schema_new_from_path 	(const char *path);
-gboolean 		arv_xml_schema_validate 	(ArvXmlSchema *schema, const void *xml, size_t size,
+ARV_API ArvXmlSchema *	arv_xml_schema_new_from_memory	(const char *buffer, size_t size);
+ARV_API ArvXmlSchema *	arv_xml_schema_new_from_file	(GFile *file);
+ARV_API ArvXmlSchema *	arv_xml_schema_new_from_path	(const char *path);
+ARV_API gboolean 	arv_xml_schema_validate		(ArvXmlSchema *schema, const void *xml, size_t size,
 							 int *line, int *column, GError **error);
 
 G_END_DECLS

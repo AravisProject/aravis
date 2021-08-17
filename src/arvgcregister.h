@@ -27,12 +27,13 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_REGISTER             	(arv_gc_register_get_type ())
-G_DECLARE_INTERFACE (ArvGcRegister, arv_gc_register, ARV, GC_REGISTER, GObject)
+ARV_API G_DECLARE_INTERFACE (ArvGcRegister, arv_gc_register, ARV, GC_REGISTER, GObject)
 
 struct _ArvGcRegisterInterface {
 	GTypeInterface parent;
@@ -43,10 +44,10 @@ struct _ArvGcRegisterInterface {
 	guint64 	(*get_length)		(ArvGcRegister *gc_register, GError **error);
 };
 
-void 		arv_gc_register_get			(ArvGcRegister *gc_register, void *buffer, guint64 length, GError **error);
-void 		arv_gc_register_set			(ArvGcRegister *gc_register, const void *buffer, guint64 length, GError **error);
-guint64 	arv_gc_register_get_address 		(ArvGcRegister *gc_register, GError **error);
-guint64 	arv_gc_register_get_length		(ArvGcRegister *gc_register, GError **error);
+ARV_API void		arv_gc_register_get		(ArvGcRegister *gc_register, void *buffer, guint64 length, GError **error);
+ARV_API void		arv_gc_register_set		(ArvGcRegister *gc_register, const void *buffer, guint64 length, GError **error);
+ARV_API guint64		arv_gc_register_get_address	(ArvGcRegister *gc_register, GError **error);
+ARV_API guint64		arv_gc_register_get_length	(ArvGcRegister *gc_register, GError **error);
 
 G_END_DECLS
 

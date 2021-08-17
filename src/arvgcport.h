@@ -27,17 +27,18 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 #include <arvgcfeaturenode.h>
 
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_PORT (arv_gc_port_get_type ())
-G_DECLARE_FINAL_TYPE (ArvGcPort, arv_gc_port, ARV, GC_PORT, ArvGcFeatureNode)
+ARV_API G_DECLARE_FINAL_TYPE (ArvGcPort, arv_gc_port, ARV, GC_PORT, ArvGcFeatureNode)
 
-ArvGcNode *	arv_gc_port_new 	(void);
-void 		arv_gc_port_read	(ArvGcPort *port, void *buffer, guint64 address, guint64 length, GError **error);
-void 		arv_gc_port_write	(ArvGcPort *port, void *buffer, guint64 address, guint64 length, GError **error);
+ARV_API ArvGcNode *	arv_gc_port_new		(void);
+ARV_API void		arv_gc_port_read	(ArvGcPort *port, void *buffer, guint64 address, guint64 length, GError **error);
+ARV_API void		arv_gc_port_write	(ArvGcPort *port, void *buffer, guint64 address, guint64 length, GError **error);
 
 G_END_DECLS
 

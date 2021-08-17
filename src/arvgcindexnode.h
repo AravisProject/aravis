@@ -27,16 +27,17 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 #include <arvgcpropertynode.h>
 
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_INDEX_NODE             (arv_gc_index_node_get_type ())
-G_DECLARE_FINAL_TYPE (ArvGcIndexNode, arv_gc_index_node, ARV, GC_INDEX_NODE, ArvGcPropertyNode)
+ARV_API G_DECLARE_FINAL_TYPE (ArvGcIndexNode, arv_gc_index_node, ARV, GC_INDEX_NODE, ArvGcPropertyNode)
 
-ArvGcNode * 	arv_gc_index_node_new 		(void);
-gint64		arv_gc_index_node_get_index	(ArvGcIndexNode *index_node, gint64 default_offset, GError **error);
+ARV_API ArvGcNode *		arv_gc_index_node_new		(void);
+ARV_API gint64			arv_gc_index_node_get_index	(ArvGcIndexNode *index_node, gint64 default_offset, GError **error);
 
 G_END_DECLS
 
