@@ -227,7 +227,7 @@ arv_test_init (ArvTest *self)
         bytes = g_resources_lookup_data ("/org/aravis/arv-test.cfg", G_RESOURCE_LOOKUP_FLAGS_NONE, NULL);
         self->key_file = g_key_file_new ();
         g_key_file_load_from_data (self->key_file, g_bytes_get_data (bytes, NULL), g_bytes_get_size (bytes),
-                                   G_KEY_FILE_NONE, NULL);
+                                   G_KEY_FILE_KEEP_COMMENTS, NULL);
 
 }
 
@@ -309,6 +309,15 @@ arv_test_camera_get_key_file_string (ArvTestCamera *test_camera, ArvTest *test, 
         }
 
         return value;
+}
+
+static char *
+arv_test_camera_get_key_file_comment (ArvTestCamera *test_camera, ArvTest *test, const char *key)
+{
+        g_return_val_if_fail (test_camera != NULL, NULL);
+        g_return_val_if_fail (ARV_IS_TEST (test), NULL);
+
+        return g_key_file_get_comment (test->key_file, test_camera->vendor_model, key, NULL);
 }
 
 static gint *
@@ -758,8 +767,17 @@ arv_test_run (ArvTest *test)
                                                 tests[j].run (test, tests[j].name, test_camera);
                                                 g_free (delay_name);
                                         } else {
+                                                char *comment;
+
                                                 arv_test_camera_add_result (test_camera, tests[j].name, "*",
                                                                             ARV_TEST_STATUS_IGNORED, NULL);
+
+                                                comment = arv_test_camera_get_key_file_comment (test_camera, test,
+                                                                                                tests[j].name);
+                                                if (comment != NULL) {
+                                                        printf ("%s\n", comment);
+                                                        g_free (comment);
+                                                }
                                         }
                                 }
 
