@@ -70,6 +70,9 @@ typedef struct {
         guint8 control_endpoint;
         guint8 data_endpoint;
 	gboolean disconnected;
+
+	int event_thread_run;
+	GThread* event_thread;
 } ArvUvDevicePrivate;
 
 struct _ArvUvDevice {
@@ -739,17 +742,16 @@ _open_usb_device (ArvUvDevice *uv_device, GError **error)
 	return TRUE;
 }
 
-static int event_thread_run = 1;
-static GThread* event_thread = NULL;
-
 static gpointer
-event_thread_func(void *ctx)
+event_thread_func(void *p)
 {
+	ArvUvDevicePrivate *priv = (ArvUvDevicePrivate *)p;
+
 	struct timeval tv = { 0, 100 };
 
-        while (event_thread_run)
+        while (priv->event_thread_run)
         {
-                libusb_handle_events_timeout(ctx, &tv);
+                libusb_handle_events_timeout(priv->usb, &tv);
         }
 
         return NULL;
@@ -844,8 +846,8 @@ arv_uv_device_constructed (GObject *object)
 	if (mode_sync)
 	    reset_endpoint (priv->usb_device, priv->data_endpoint, LIBUSB_ENDPOINT_IN);
 
-	event_thread_run = 1;
-	event_thread = g_thread_new( "libusb events", event_thread_func, priv->usb );
+	priv->event_thread_run = 1;
+	priv->event_thread = g_thread_new( "libusb events", event_thread_func, priv);
 }
 
 static void
@@ -865,8 +867,8 @@ arv_uv_device_finalize (GObject *object)
 
 	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (uv_device);
 
-	event_thread_run = 0;
-	g_thread_join( event_thread );
+	priv->event_thread_run = 0;
+	g_thread_join( priv->event_thread );
 
 	g_clear_object (&priv->genicam);
 
