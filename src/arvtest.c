@@ -832,6 +832,14 @@ static const GOptionEntry arv_option_entries[] =
 	{ NULL }
 };
 
+static const char *summary =
+"arv-test is an automated test utility that tries to exercise most of the\n"
+"Aravis functionalities. By default it runs all the tests on all the detected\n"
+"devices, but devices and tests can be selected using a glob pattern.\n\n"
+"A default configuration file is bundled in the executable, but an\n"
+"alternative one with entries specific to the camera you want to test\n"
+"can be specified.";
+
 int
 main (int argc, char **argv)
 {
@@ -841,6 +849,7 @@ main (int argc, char **argv)
         gboolean success = TRUE;
 
 	context = g_option_context_new (NULL);
+        g_option_context_set_summary (context, summary);
 	g_option_context_add_main_entries (context, arv_option_entries, NULL);
 
 	if (!g_option_context_parse (context, &argc, &argv, &error)) {
