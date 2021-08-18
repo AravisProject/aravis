@@ -835,11 +835,11 @@ url_test (void)
 
 	for (i = 0; i < G_N_ELEMENTS (genicam_urls); i++) {
 		gboolean success;
-		g_autofree char *scheme;
-		g_autofree char *authority;
-		g_autofree char *path;
-		g_autofree char *query;
-		g_autofree char *fragment;
+		char *scheme = NULL;
+		char *authority = NULL;
+		char *path = NULL;
+		char *query = NULL;
+		char *fragment = NULL;
 		guint64 address;
 		guint64 size;
 
@@ -858,6 +858,12 @@ url_test (void)
 		success = arv_parse_genicam_url (genicam_urls[i].url, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
 		g_assert (success);
+
+		g_free (scheme);
+		g_free (authority);
+		g_free (path);
+		g_free (query);
+		g_free (fragment);
 	}
 }
 

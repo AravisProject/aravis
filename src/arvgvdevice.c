@@ -756,8 +756,8 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size, GError **
 {
 	char filename[ARV_GVBS_XML_URL_SIZE];
 	char *genicam = NULL;
-	g_autofree char *scheme = NULL;
-	g_autofree char *path = NULL;
+	char *scheme = NULL;
+	char *path = NULL;
 	guint64 file_address;
 	guint64 file_size;
 
@@ -858,6 +858,9 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size, GError **
 	} else {
 		g_critical ("Unkown GENICAM url scheme: '%s'", filename);
 	}
+
+	g_free (scheme);
+	g_free (path);
 
 	return genicam;
 }

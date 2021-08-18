@@ -1290,7 +1290,7 @@ arv_gv_stream_constructed (GObject *object)
 	ArvGvStream *gv_stream = ARV_GV_STREAM (object);
 	ArvGvStreamPrivate *priv = arv_gv_stream_get_instance_private (ARV_GV_STREAM (stream));
 	ArvGvStreamOption options;
-	g_autoptr (ArvGvDevice) gv_device = NULL;
+	ArvGvDevice *gv_device = NULL;
 	GInetAddress *interface_address;
 	GInetAddress *device_address;
 	guint64 timestamp_tick_frequency;
@@ -1318,6 +1318,7 @@ arv_gv_stream_constructed (GObject *object)
 	if (packet_size <= ARV_GVSP_PACKET_PROTOCOL_OVERHEAD) {
 		arv_stream_take_init_error (stream, g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
 								 "Invalid packet size (%d byte(s))", packet_size));
+		g_clear_object (&gv_device);
 		return;
 	}
 
@@ -1402,6 +1403,8 @@ arv_gv_stream_constructed (GObject *object)
                                  G_TYPE_UINT64, &priv->thread_data->n_ignored_bytes);
 
 	arv_gv_stream_start_thread (ARV_STREAM (gv_stream));
+
+	g_clear_object (&gv_device);
 }
 
 static void
