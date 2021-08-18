@@ -139,10 +139,10 @@ static void arv_debug_with_level (ArvDebugCategory category,
 static void
 arv_debug_with_level (ArvDebugCategory category, ArvDebugLevel level, const char *format, va_list args)
 {
-        g_autofree char *text = NULL;
-        g_autofree char *header = NULL;
-	g_autofree char *time_str = NULL;
-        g_autoptr (GDateTime) date = NULL;
+        char *text = NULL;
+        char *header = NULL;
+	char *time_str = NULL;
+        GDateTime *date = NULL;
         char **lines;
         gint i;
 
@@ -182,6 +182,11 @@ arv_debug_with_level (ArvDebugCategory category, ArvDebugLevel level, const char
                          fflush(stderr);
                 #endif
         }
+
+        g_free (text);
+        g_free (header);
+        g_free (time_str);
+        g_date_time_unref (date);
 }
 
 void
