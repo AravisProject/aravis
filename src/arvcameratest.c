@@ -462,8 +462,11 @@ main (int argc, char **argv)
 		if (error == NULL) arv_camera_set_exposure_time (camera, arv_option_exposure_time_us, &error);
 		if (error == NULL) arv_camera_set_gain (camera, arv_option_gain, &error);
 
-		if (arv_camera_is_uv_device(camera) && arv_option_bandwidth_limit >= 0) {
-			if (error == NULL) arv_camera_uv_set_bandwidth (camera, arv_option_bandwidth_limit, &error);
+		if (arv_camera_is_uv_device(camera)) {
+			if (error == NULL) arv_uv_device_set_usb_mode(ARV_UV_DEVICE(arv_camera_get_device(camera)), ARV_UV_USB_MODE_ASYNC);
+			if (arv_option_bandwidth_limit >= 0) {
+				if (error == NULL) arv_camera_uv_set_bandwidth (camera, arv_option_bandwidth_limit, &error);
+			}
 		}
 
 		if (arv_camera_is_gv_device (camera)) {
