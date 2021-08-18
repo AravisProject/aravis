@@ -71,6 +71,8 @@ typedef struct {
         guint8 data_endpoint;
 	gboolean disconnected;
 
+	ArvUvUSBMode usb_mode;
+
 	int event_thread_run;
 	GThread* event_thread;
 } ArvUvDevicePrivate;
@@ -148,7 +150,8 @@ arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, ArvUvEndpointType endpoint_
 static ArvStream *
 arv_uv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data, GError **error)
 {
-	return arv_uv_stream_new (ARV_UV_DEVICE (device), callback, user_data, error);
+	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (ARV_UV_DEVICE (device));
+	return arv_uv_stream_new (ARV_UV_DEVICE (device), callback, user_data, priv->usb_mode, error);
 }
 
 static gboolean
@@ -758,6 +761,29 @@ event_thread_func(void *p)
 }
 
 /**
+ * arv_uv_device_set_usb_mode:
+ * @uv_device: a #ArvUvDevice
+ * @usb_mode: a #ArvUvUSBMode option
+ *
+ * Sets the option to utilize the USB synchronous or asynchronous device I/O API. The default mode is @ARV_UV_USB_MODE_SYNC,
+ * which means USB bulk transfer will be synchronously executed. This mode is qualified to work, but it has the performance issue
+ * with some high framerate device. Using @ARV_UV_USB_MODE_ASYNC possibly improves the bandwidth.
+ *
+ * Since:
+ */
+
+void
+arv_uv_device_set_usb_mode (ArvUvDevice *uv_device, ArvUvUSBMode usb_mode)
+{
+	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (uv_device);
+
+	g_return_if_fail (ARV_IS_UV_DEVICE (uv_device));
+
+	priv->usb_mode = usb_mode;
+}
+
+
+/**
  * arv_uv_device_new:
  * @vendor: USB3 vendor string
  * @product: USB3 product string
@@ -846,6 +872,8 @@ arv_uv_device_constructed (GObject *object)
 	// FIXME: Async mode dosn't work with reset_endpoint
 	//if (mode_sync)
 	    reset_endpoint (priv->usb_device, priv->data_endpoint, LIBUSB_ENDPOINT_IN);
+
+	priv->usb_mode = ARV_UV_USB_MODE_SYNC;
 
 	priv->event_thread_run = 1;
 	priv->event_thread = g_thread_new( "libusb events", event_thread_func, priv);

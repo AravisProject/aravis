@@ -32,11 +32,24 @@
 
 G_BEGIN_DECLS
 
+/**
+ * ArvUvUSBMode:
+ * @ARV_UV_USB_MODE_SYNC: utilize libusb synchronous device I/O API
+ * @ARV_UV_USB_MODE_ASYNC: utilize libusb asynchronous device I/O API
+ */
+typedef enum
+{
+	ARV_UV_USB_MODE_SYNC,
+	ARV_UV_USB_MODE_ASYNC
+} ArvUvUSBMode;
+
 #define ARV_TYPE_UV_DEVICE             (arv_uv_device_get_type ())
 G_DECLARE_FINAL_TYPE (ArvUvDevice, arv_uv_device, ARV, UV_DEVICE, ArvDevice)
 
 ArvDevice * 	arv_uv_device_new 			(const char *vendor, const char *product, const char *serial_number,
 							 GError **error);
+
+void 		arv_uv_device_set_usb_mode		(ArvUvDevice *uv_device, ArvUvUSBMode usb_mode);
 
 G_END_DECLS
 

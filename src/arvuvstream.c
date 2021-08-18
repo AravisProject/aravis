@@ -25,6 +25,7 @@
  * @short_description: USB3Vision video stream
  */
 
+#include <arvenumtypes.h>
 #include <arvuvstreamprivate.h>
 #include <arvstreamprivate.h>
 #include <arvbufferprivate.h>
@@ -37,6 +38,11 @@
 
 #define ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE	(1024*1024*1)
 #define ARV_UV_STREAM_MAXIMUM_SUBMIT_TOTAL	(8*1024*1024)
+
+enum {
+	ARV_UV_STREAM_PROPERTY_0,
+	ARV_UV_STREAM_PROPERTY_USB_MODE
+} ArvUvStreamProperties;
 
 /* Acquisition thread */
 
@@ -73,6 +79,8 @@ typedef struct {
 
 typedef struct {
 	GThread *thread;
+
+	ArvUvUSBMode usb_mode;
 
 	ArvUvStreamThreadData *thread_data;
 } ArvUvStreamPrivate;
@@ -159,6 +167,7 @@ void arv_uv_stream_leader_cb (struct libusb_transfer *transfer)
 
 	g_atomic_int_dec_and_test (&ctx->num_submitted);
 	g_atomic_int_add (ctx->total_submitted_bytes, -transfer->length);
+	ctx->statistics->n_transferred_bytes += transfer->length;
 	arv_uv_stream_buffer_context_notify_transfer_completed (ctx);
 }
 
@@ -206,6 +215,7 @@ void arv_uv_stream_trailer_cb (struct libusb_transfer *transfer)
 
 	g_atomic_int_dec_and_test( &ctx->num_submitted );
 	g_atomic_int_add (ctx->total_submitted_bytes, -transfer->length);
+	ctx->statistics->n_transferred_bytes += transfer->length;
 	arv_uv_stream_buffer_context_notify_transfer_completed (ctx);
 }
 
@@ -226,6 +236,7 @@ void arv_uv_stream_payload_cb (struct libusb_transfer *transfer)
 
 	g_atomic_int_dec_and_test( &ctx->num_submitted );
 	g_atomic_int_add (ctx->total_submitted_bytes, -transfer->length);
+	ctx->statistics->n_transferred_bytes += transfer->length;
 	arv_uv_stream_buffer_context_notify_transfer_completed (ctx);
 }
 
@@ -380,13 +391,8 @@ arv_uv_stream_thread_async (void *data)
 
 		if( buffer == NULL ) {
 			thread_data->statistics.n_underruns += 1;
-#if 0 // arv_stream_push_buffer needs to notify us...
-			g_mutex_lock (&thread_data->stream_mtx);
-			g_cond_wait (&thread_data->stream_event, &thread_data->stream_mtx);
-			g_mutex_unlock (&thread_data->stream_mtx);
-#else
-			//usleep( 1 );
-#endif
+			// NOTE: n_ignored_bytes is not accumulated because it doesn't submit next USB transfer
+			// if buffer is shortage. It means back pressure might be hanlded by USB slave side.
 			continue;
 		}
 
@@ -434,7 +440,7 @@ arv_uv_stream_thread_sync (void *data)
 	guint64 offset;
 	size_t transferred;
 
-	arv_debug_stream_thread ("Start USB3Vision stream thread");
+	arv_debug_stream_thread ("Start sync USB3Vision stream thread");
 
 	incoming_buffer = g_malloc (ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE);
 
@@ -696,7 +702,7 @@ arv_uv_stream_start_thread (ArvStream *stream)
 	thread_data->cancel = FALSE;
 
 	priv->thread = g_thread_new ("arv_uv_stream",
-                                 mode_sync ? arv_uv_stream_thread_sync : arv_uv_stream_thread_async,
+                                 priv->usb_mode == ARV_UV_USB_MODE_SYNC ? arv_uv_stream_thread_sync : arv_uv_stream_thread_async,
                                  priv->thread_data);
 }
 
@@ -742,12 +748,13 @@ arv_uv_stream_stop_thread (ArvStream *stream)
  */
 
 ArvStream *
-arv_uv_stream_new (ArvUvDevice *uv_device, ArvStreamCallback callback, void *callback_data, GError **error)
+arv_uv_stream_new (ArvUvDevice *uv_device, ArvStreamCallback callback, void *callback_data, ArvUvUSBMode usb_mode, GError **error)
 {
 	return g_initable_new (ARV_TYPE_UV_STREAM, NULL, error,
 			       "device", uv_device,
 			       "callback", callback,
 			       "callback-data", callback_data,
+			       "usb-mode", usb_mode,
 			       NULL);
 }
 
@@ -777,6 +784,7 @@ arv_uv_stream_constructed (GObject *object)
 		      "device", &thread_data->uv_device,
 		      "callback", &thread_data->callback,
 		      "callback-data", &thread_data->callback_data,
+		      "usb-mode", &priv->usb_mode,
 		      NULL);
 
 	priv->thread_data = thread_data;
@@ -797,26 +805,44 @@ arv_uv_stream_constructed (GObject *object)
 
 /* ArvStream implementation */
 
+
 static void
-arv_uv_stream_get_statistics (ArvStream *stream,
-				guint64 *n_completed_buffers,
-				guint64 *n_failures,
-				guint64 *n_underruns)
+arv_uv_stream_set_property (GObject * object, guint prop_id,
+                            const GValue * value, GParamSpec * pspec)
 {
-	ArvUvStream *uv_stream = ARV_UV_STREAM (stream);
-	ArvUvStreamPrivate *priv = arv_uv_stream_get_instance_private (uv_stream);
-	ArvUvStreamThreadData *thread_data;
+	ArvUvStreamPrivate *priv = arv_uv_stream_get_instance_private (ARV_UV_STREAM (object));
 
-	thread_data = priv->thread_data;
+	switch (prop_id) {
+		case ARV_UV_STREAM_PROPERTY_USB_MODE:
+			priv->usb_mode=  g_value_get_enum(value);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+			break;
+	}
+}
 
-	*n_completed_buffers = thread_data->statistics.n_completed_buffers;
-	*n_failures = thread_data->statistics.n_failures;
-	*n_underruns = thread_data->statistics.n_underruns;
+static void
+arv_uv_stream_get_property (GObject * object, guint prop_id,
+			    GValue * value, GParamSpec * pspec)
+{
+	ArvUvStreamPrivate *priv = arv_uv_stream_get_instance_private (ARV_UV_STREAM (object));
+
+	switch (prop_id) {
+		case ARV_UV_STREAM_PROPERTY_USB_MODE:
+			g_value_set_enum (value, priv->usb_mode);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+			break;
+	}
+
 }
 
 static void
 arv_uv_stream_init (ArvUvStream *uv_stream)
 {
+
 }
 
 static void
@@ -862,7 +888,23 @@ arv_uv_stream_class_init (ArvUvStreamClass *uv_stream_class)
 
 	object_class->constructed = arv_uv_stream_constructed;
 	object_class->finalize = arv_uv_stream_finalize;
+	object_class->set_property = arv_uv_stream_set_property;
+	object_class->get_property = arv_uv_stream_get_property;
 
 	stream_class->start_thread = arv_uv_stream_start_thread;
 	stream_class->stop_thread = arv_uv_stream_stop_thread;
+
+        /**
+         * ArvUvStream:usb-mode:
+         *
+         * USB device I/O mode.
+         */
+	g_object_class_install_property (
+		object_class, ARV_UV_STREAM_PROPERTY_USB_MODE,
+		g_param_spec_enum ("usb-mode", "USB mode",
+				   "USB device I/O mode",
+				   ARV_TYPE_UV_USB_MODE,
+				   ARV_UV_USB_MODE_SYNC,
+				  G_PARAM_CONSTRUCT_ONLY |  G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+		);
 }
