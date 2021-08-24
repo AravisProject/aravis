@@ -722,7 +722,8 @@ const struct {
 static gboolean
 arv_test_run (ArvTest *test, unsigned int n_iterations,
               const char *camera_selection,
-              const char *test_selection)
+              const char *test_selection,
+	      ArvUvUSBMode usb_mode)
 {
 	unsigned n_devices, i, j;
         gboolean success = TRUE;
@@ -746,6 +747,10 @@ arv_test_run (ArvTest *test, unsigned int n_iterations,
                                 printf ("Testing '%s:%s'\n", arv_get_device_vendor (i), arv_get_device_model (i));
 
                                 test_camera = arv_test_camera_new (camera_id);
+
+				if (arv_camera_is_uv_device(test_camera->camera)) {
+					arv_camera_uv_set_usb_mode(test_camera->camera, usb_mode, NULL);
+				}
 
                                 for (j = 0; j < G_N_ELEMENTS (tests); j++) {
                                         if (g_pattern_match_simple (test_selection != NULL ? test_selection : "*",
@@ -801,6 +806,7 @@ static char *arv_option_test_selection = NULL;
 static gint arv_option_n_iterations = 1;
 static char *arv_option_configuration = NULL;
 static char *arv_option_debug_domains = NULL;
+static char *arv_option_uv_usb_mode = NULL;
 
 static const GOptionEntry arv_option_entries[] =
 {
@@ -829,6 +835,11 @@ static const GOptionEntry arv_option_entries[] =
 		&arv_option_debug_domains, 		NULL,
 		"{<category>[:<level>][,...]|help}"
 	},
+	{
+		"uv-usb-mode",				'\0', 0, G_OPTION_ARG_STRING,
+		&arv_option_uv_usb_mode,		"USB device I/O mode",
+		"{sync|async}"
+	},
 	{ NULL }
 };
 
@@ -847,6 +858,7 @@ main (int argc, char **argv)
 	GError *error = NULL;
         ArvTest *test = NULL;
         gboolean success = TRUE;
+	ArvUvUSBMode usb_mode;
 
 	context = g_option_context_new (NULL);
         g_option_context_set_summary (context, summary);
@@ -879,7 +891,18 @@ main (int argc, char **argv)
                 }
         }
 
-        if (!arv_test_run (test, arv_option_n_iterations, arv_option_camera_selection, arv_option_test_selection))
+	if (arv_option_uv_usb_mode == NULL)
+		usb_mode = ARV_UV_USB_MODE_DEFAULT;
+	else if (g_strcmp0 (arv_option_uv_usb_mode, "sync") == 0)
+		usb_mode = ARV_UV_USB_MODE_SYNC;
+	else if (g_strcmp0 (arv_option_uv_usb_mode, "async") == 0)
+		usb_mode = ARV_UV_USB_MODE_ASYNC;
+	else {
+		printf ("Invalid USB device I/O mode\n");
+		return EXIT_FAILURE;
+	}
+
+        if (!arv_test_run (test, arv_option_n_iterations, arv_option_camera_selection, arv_option_test_selection, usb_mode))
                 success = FALSE;
 
         g_clear_object (&test);
