@@ -873,7 +873,7 @@ arv_uv_device_constructed (GObject *object)
 	//if (mode_sync)
 	    reset_endpoint (priv->usb_device, priv->data_endpoint, LIBUSB_ENDPOINT_IN);
 
-	priv->usb_mode = ARV_UV_USB_MODE_SYNC;
+	priv->usb_mode = ARV_UV_USB_MODE_DEFAULT;
 
 	priv->event_thread_run = 1;
 	priv->event_thread = g_thread_new( "libusb events", event_thread_func, priv);

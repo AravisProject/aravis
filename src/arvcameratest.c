@@ -34,6 +34,7 @@ static int arv_option_bandwidth_limit = -1;
 static char *arv_option_register_cache = NULL;
 static char *arv_option_range_check = NULL;
 static int arv_option_duration_s = -1;
+static char *arv_option_uv_usb_mode = NULL;
 
 /* clang-format off */
 static const GOptionEntry arv_option_entries[] =
@@ -138,6 +139,11 @@ static const GOptionEntry arv_option_entries[] =
 		"gv-packet-size",			'i', 0, G_OPTION_ARG_INT,
 		&arv_option_gv_packet_size,		"GigEVision packet size",
 		"<n_bytes>"
+	},
+	{
+		"uv-usb-mode",				'\0', 0, G_OPTION_ARG_STRING,
+		&arv_option_uv_usb_mode,		"USB device I/O mode",
+		"{sync|async}"
 	},
 	{
 		"chunks", 				'u', 0, G_OPTION_ARG_STRING,
@@ -322,6 +328,7 @@ main (int argc, char **argv)
 	ArvRegisterCachePolicy register_cache_policy;
 	ArvRangeCheckPolicy range_check_policy;
 	ArvGvPacketSizeAdjustment adjustment;
+	ArvUvUSBMode usb_mode;
 	GOptionContext *context;
 	GError *error = NULL;
 	int i;
@@ -384,6 +391,17 @@ main (int argc, char **argv)
 		adjustment = ARV_GV_PACKET_SIZE_ADJUSTMENT_ON_FAILURE_ONCE;
 	else {
 		printf ("Invalid GigEVision packet size adjustment\n");
+		return EXIT_FAILURE;
+	}
+
+	if (arv_option_uv_usb_mode == NULL)
+		usb_mode = ARV_UV_USB_MODE_DEFAULT;
+	else if (g_strcmp0 (arv_option_uv_usb_mode, "sync") == 0)
+		usb_mode = ARV_UV_USB_MODE_SYNC;
+	else if (g_strcmp0 (arv_option_uv_usb_mode, "async") == 0)
+		usb_mode = ARV_UV_USB_MODE_ASYNC;
+	else {
+		printf ("Invalid USB device I/O mode\n");
 		return EXIT_FAILURE;
 	}
 
@@ -463,7 +481,7 @@ main (int argc, char **argv)
 		if (error == NULL) arv_camera_set_gain (camera, arv_option_gain, &error);
 
 		if (arv_camera_is_uv_device(camera)) {
-			if (error == NULL) arv_uv_device_set_usb_mode(ARV_UV_DEVICE(arv_camera_get_device(camera)), ARV_UV_USB_MODE_ASYNC);
+			if (error == NULL) arv_camera_uv_set_usb_mode(camera, usb_mode, &error);
 			if (arv_option_bandwidth_limit >= 0) {
 				if (error == NULL) arv_camera_uv_set_bandwidth (camera, arv_option_bandwidth_limit, &error);
 			}

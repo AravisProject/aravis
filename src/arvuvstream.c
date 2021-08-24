@@ -701,9 +701,14 @@ arv_uv_stream_start_thread (ArvStream *stream)
 	thread_data->trailer_size = si_req_trailer_size;
 	thread_data->cancel = FALSE;
 
-	priv->thread = g_thread_new ("arv_uv_stream",
-                                 priv->usb_mode == ARV_UV_USB_MODE_SYNC ? arv_uv_stream_thread_sync : arv_uv_stream_thread_async,
-                                 priv->thread_data);
+	if (priv->usb_mode)
+		priv->thread = g_thread_new ("arv_uv_stream", arv_uv_stream_thread_sync, priv->thread_data);
+	else if (priv->usb_mode == ARV_UV_USB_MODE_SYNC)
+		priv->thread = g_thread_new ("arv_uv_stream", arv_uv_stream_thread_sync, priv->thread_data);
+	else if (priv->usb_mode == ARV_UV_USB_MODE_ASYNC)
+		priv->thread = g_thread_new ("arv_uv_stream", arv_uv_stream_thread_async, priv->thread_data);
+	else
+		g_assert_not_reached ();
 }
 
 static void
