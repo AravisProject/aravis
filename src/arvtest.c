@@ -95,15 +95,20 @@ GType arv_test_camera_get_type(void);
 static ArvTestCamera *
 arv_test_camera_new (const char *camera_id)
 {
-        ArvTestCamera *camera = g_new0 (ArvTestCamera, 1);
+        ArvTestCamera *test_camera;
+        ArvCamera *camera = arv_camera_new (camera_id, NULL);
 
-        camera->id = g_strdup (camera_id);
-        camera->camera = arv_camera_new (camera_id, NULL);
-        camera->vendor_model = g_strdup_printf ("%s:%s",
-                                                arv_camera_get_vendor_name (camera->camera, NULL),
-                                                arv_camera_get_model_name (camera->camera, NULL));
+        if (!ARV_IS_CAMERA (camera))
+                return NULL;
 
-        return camera;
+        test_camera = g_new0 (ArvTestCamera, 1);
+        test_camera->id = g_strdup (camera_id);
+        test_camera->camera = camera;
+        test_camera->vendor_model = g_strdup_printf ("%s:%s",
+                                                     arv_camera_get_vendor_name (test_camera->camera, NULL),
+                                                     arv_camera_get_model_name (test_camera->camera, NULL));
+
+        return test_camera;
 }
 
 static ArvTestCamera *
@@ -116,10 +121,11 @@ static void
 arv_test_camera_free (ArvTestCamera *camera)
 {
         if (camera != NULL) {
-                g_slist_free_full (camera->results, (GDestroyNotify) arv_test_result_free);
-                g_free (camera->id);
-                g_object_unref (camera->camera);
-                g_free (camera->vendor_model);
+                if (camera->results != NULL)
+                        g_slist_free_full (camera->results, (GDestroyNotify) arv_test_result_free);
+                g_clear_pointer (&camera->id, g_free);
+                g_clear_object (&camera->camera);
+                g_clear_pointer (&camera->vendor_model, g_free);
                 g_free (camera);
         }
 }
@@ -583,7 +589,7 @@ arv_test_multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCame
         if (error == NULL)
                 arv_camera_stop_acquisition (test_camera->camera, &error);
 
-        g_object_unref (stream);
+        g_clear_object (&stream);
 
         if (success) {
                 message = g_strdup_printf ("%u/%u", n_completed_buffers, n_expected_buffers);
@@ -680,7 +686,7 @@ arv_test_software_trigger (ArvTest *test, const char *test_name, ArvTestCamera *
         if (error == NULL)
                 arv_camera_stop_acquisition (test_camera->camera, &error);
 
-        g_object_unref (stream);
+        g_clear_object (&stream);
 
         message = g_strdup_printf ("%u/%u%s%s", n_completed_buffers, n_expected_buffers,
                                    error != NULL ? " " : "",
@@ -775,35 +781,45 @@ arv_test_run (ArvTest *test, unsigned int n_iterations,
                                 ArvTestCamera* test_camera = NULL;
                                 unsigned int j;
 
-                                printf ("Testing '%s:%s'\n", arv_get_device_vendor (i), arv_get_device_model (i));
-
                                 test_camera = arv_test_camera_new (camera_id);
+                                if (test_camera == NULL) {
+                                        printf ("Failed to connect to '%s:%s'\n",
+                                                arv_get_device_vendor (i), arv_get_device_model (i));
+                                } else {
+                                        printf ("Testing '%s:%s'\n",
+                                                arv_get_device_vendor (i), arv_get_device_model (i));
 
-                                for (j = 0; j < G_N_ELEMENTS (tests); j++) {
-                                        if (g_pattern_match_simple (test_selection != NULL ? test_selection : "*",
-                                                                    tests[j].name)) {
+                                        for (j = 0; j < G_N_ELEMENTS (tests); j++) {
+                                                if (g_pattern_match_simple (test_selection != NULL ? test_selection : "*",
+                                                                            tests[j].name)) {
 
-                                                if (arv_test_camera_get_key_file_boolean (test_camera, test, tests[j].name, TRUE)) {
-                                                        char *delay_name;
-                                                        double delay;
+                                                        if (arv_test_camera_get_key_file_boolean (test_camera, test,
+                                                                                                  tests[j].name, TRUE)) {
+                                                                char *delay_name;
+                                                                double delay;
 
-                                                        delay_name = g_strdup_printf ("%sDelay", tests[j].name);
-                                                        delay = arv_test_camera_get_key_file_double (test_camera, test,
-                                                                                                     delay_name, 0);
-                                                        g_usleep (1000000.0 * delay);
-                                                        tests[j].run (test, tests[j].name, test_camera);
-                                                        g_free (delay_name);
-                                                } else {
-                                                        char *comment;
+                                                                delay_name = g_strdup_printf ("%sDelay", tests[j].name);
+                                                                delay = arv_test_camera_get_key_file_double (test_camera,
+                                                                                                             test,
+                                                                                                             delay_name,
+                                                                                                             0);
+                                                                g_usleep (1000000.0 * delay);
+                                                                tests[j].run (test, tests[j].name, test_camera);
+                                                                g_free (delay_name);
+                                                        } else {
+                                                                char *comment;
 
-                                                        arv_test_camera_add_result (test_camera, tests[j].name, "*",
-                                                                                    ARV_TEST_STATUS_IGNORED, NULL);
+                                                                arv_test_camera_add_result (test_camera, tests[j].name,
+                                                                                            "*", ARV_TEST_STATUS_IGNORED,
+                                                                                            NULL);
 
-                                                        comment = arv_test_camera_get_key_file_comment (test_camera, test,
-                                                                                                        tests[j].name);
-                                                        if (comment != NULL) {
-                                                                printf ("%s\n", comment);
-                                                                g_free (comment);
+                                                                comment = arv_test_camera_get_key_file_comment
+                                                                        (test_camera, test,
+                                                                         tests[j].name);
+                                                                if (comment != NULL) {
+                                                                        printf ("%s\n", comment);
+                                                                        g_free (comment);
+                                                                }
                                                         }
                                                 }
                                         }
