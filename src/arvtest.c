@@ -639,10 +639,23 @@ arv_test_software_trigger (ArvTest *test, const char *test_name, ArvTestCamera *
         unsigned int i;
         size_t payload_size;
         gboolean success = TRUE;
+        gboolean software_trigger_support;
         guint n_completed_buffers = 0;
         guint n_expected_buffers = 5;
 
         g_return_if_fail (ARV_IS_TEST (test));
+
+        software_trigger_support = arv_test_camera_get_key_file_boolean (test_camera, test,
+                                                                         "SoftwareTriggerSupport", TRUE);
+
+        if (!arv_camera_is_software_trigger_available (test_camera->camera, &error)) {
+                        arv_test_camera_add_result (test_camera, test_name, "NoSupport",
+                                                    error == NULL && ! software_trigger_support ?
+                                                    ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
+                                                    error != NULL ? error->message : NULL);
+			g_clear_error (&error);
+                        return;
+        }
 
         arv_camera_set_acquisition_mode (test_camera->camera, ARV_ACQUISITION_MODE_CONTINUOUS, &error);
         if (error == NULL)
