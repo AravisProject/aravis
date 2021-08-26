@@ -457,7 +457,7 @@ _single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_c
         g_return_if_fail (ARV_IS_TEST (test));
 
         if (chunk_test) {
-                const char *chunks;
+                char *chunks;
                 gboolean chunks_support = arv_test_camera_get_key_file_boolean (test_camera, test,
                                                                                 "ChunksSupport", TRUE);
 
@@ -476,6 +476,8 @@ _single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_c
                 parser = arv_camera_create_chunk_parser (test_camera->camera);
 
                 arv_camera_set_chunks (test_camera->camera, chunks, &error);
+
+                g_free (chunks);
         }
 
         if (error == NULL)
