@@ -177,6 +177,8 @@ arv_test_camera_add_result (ArvTestCamera *test_camera,
         test_camera->results = g_slist_append (test_camera->results,
                                                arv_test_result_new (title, test_camera->vendor_model,
                                                                     status, comment));
+
+        g_clear_pointer (&title, g_free);
 }
 
 G_DEFINE_BOXED_TYPE (ArvTestCamera, arv_test_camera, arv_test_camera_copy, arv_test_camera_free)
@@ -826,7 +828,7 @@ arv_test_run (ArvTest *test, unsigned int n_iterations,
 
                                 }
 
-                                g_clear_pointer (&test_camera, g_free);
+                                g_clear_pointer (&test_camera, arv_test_camera_free);
                         }
                 }
         }
