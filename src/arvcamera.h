@@ -111,6 +111,7 @@ ARV_API const char *	arv_camera_get_trigger_source		(ArvCamera *camera, GError *
 ARV_API const char **	arv_camera_dup_available_trigger_sources(ArvCamera *camera, guint *n_sources, GError **error);
 ARV_API const char **	arv_camera_dup_available_triggers	(ArvCamera *camera, guint *n_triggers, GError **error);
 ARV_API void		arv_camera_clear_triggers		(ArvCamera *camera, GError **error);
+ARV_API gboolean	arv_camera_is_software_trigger_available(ArvCamera *camera, GError **error);
 ARV_API void		arv_camera_software_trigger		(ArvCamera *camera, GError **error);
 
 ARV_API gboolean	arv_camera_is_exposure_time_available	(ArvCamera *camera, GError **error);
