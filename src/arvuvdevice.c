@@ -42,7 +42,8 @@ enum
 	PROP_0,
 	PROP_UV_DEVICE_VENDOR,
 	PROP_UV_DEVICE_PRODUCT,
-	PROP_UV_DEVICE_SERIAL_NUMBER
+	PROP_UV_DEVICE_SERIAL_NUMBER,
+	PROP_UV_DEVICE_GUID
 };
 
 #define ARV_UV_DEVICE_N_TRIES_MAX	5
@@ -51,6 +52,7 @@ typedef struct {
 	char *vendor;
 	char *product;
 	char *serial_number;
+	char *guid;
 
 	libusb_context *usb;
 	libusb_device_handle *usb_device;
@@ -730,6 +732,7 @@ _open_usb_device (ArvUvDevice *uv_device, GError **error)
  * @vendor: USB3 vendor string
  * @product: USB3 product string
  * @serial_number: device serial number
+ * @guid: device GUID
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Returns: a newly created #ArvDevice using USB3 based protocol
@@ -738,12 +741,13 @@ _open_usb_device (ArvUvDevice *uv_device, GError **error)
  */
 
 ArvDevice *
-arv_uv_device_new (const char *vendor, const char *product, const char *serial_number, GError **error)
+arv_uv_device_new (const char *vendor, const char *product, const char *serial_number, const char *guid, GError **error)
 {
 	return g_initable_new (ARV_TYPE_UV_DEVICE, NULL, error,
 			       "vendor", vendor,
 			       "product", product,
 			       "serial-number", serial_number,
+			       "guid", guid,
 			       NULL);
 }
 
@@ -760,6 +764,7 @@ arv_uv_device_constructed (GObject *object)
 	arv_info_device ("[UvDevice::new] Vendor  = %s", priv->vendor);
 	arv_info_device ("[UvDevice::new] Product = %s", priv->product);
 	arv_info_device ("[UvDevice::new] S/N     = %s", priv->serial_number);
+	arv_info_device ("[UvDevice::new] GUID    = %s", priv->guid);
 
 	libusb_init (&priv->usb);
 	priv->packet_id = 65300; /* Start near the end of the circular counter */
@@ -779,8 +784,8 @@ arv_uv_device_constructed (GObject *object)
         if (result != 0) {
 		arv_device_take_init_error (ARV_DEVICE (uv_device),
                                             g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
-                                                         "Failed to claim USB interface to '%s-%s-%s': %s",
-                                                         priv->vendor, priv->product, priv->serial_number,
+                                                         "Failed to claim USB interface to '%s-%s-%s-%s': %s",
+                                                         priv->vendor, priv->product, priv->serial_number, priv->guid,
                                                          libusb_error_name (result)));
                 return;
         }
@@ -789,8 +794,8 @@ arv_uv_device_constructed (GObject *object)
         if (result != 0) {
 		arv_device_take_init_error (ARV_DEVICE (uv_device),
                                             g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
-                                                         "Failed to claim USB interface to '%s-%s-%s': %s",
-                                                         priv->vendor, priv->product, priv->serial_number,
+                                                         "Failed to claim USB interface to '%s-%s-%s-%s': %s",
+                                                         priv->vendor, priv->product, priv->serial_number, priv->guid,
                                                          libusb_error_name (result)));
                 return;
         }
@@ -799,16 +804,16 @@ arv_uv_device_constructed (GObject *object)
 	if ( !_bootstrap (uv_device)){
 		arv_device_take_init_error (ARV_DEVICE (uv_device),
                                             g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
-                                                         "Failed to bootstrap USB device '%s-%s-%s'",
-                                                         priv->vendor, priv->product, priv->serial_number));
+                                                         "Failed to bootstrap USB device '%s-%s-%s-%s'",
+                                                         priv->vendor, priv->product, priv->serial_number, priv->guid));
                 return;
         }
 
 	if (!ARV_IS_GC (priv->genicam)) {
 		arv_device_take_init_error (ARV_DEVICE (uv_device),
                                             g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_GENICAM_NOT_FOUND,
-                                                         "Failed to load Genicam data for USB device '%s-%s-%s'",
-                                                         priv->vendor, priv->product, priv->serial_number));
+                                                         "Failed to load Genicam data for USB device '%s-%s-%s-%s'",
+                                                         priv->vendor, priv->product, priv->serial_number, priv->guid));
                 return;
         }
 
@@ -866,6 +871,10 @@ arv_uv_device_set_property (GObject *self, guint prop_id, const GValue *value, G
 			g_free (priv->serial_number);
 			priv->serial_number = g_value_dup_string (value);
 			break;
+		case PROP_UV_DEVICE_GUID:
+			g_free (priv->guid);
+			priv->guid = g_value_dup_string (value);
+			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
 			break;
@@ -912,6 +921,14 @@ arv_uv_device_class_init (ArvUvDeviceClass *uv_device_class)
 		 g_param_spec_string ("serial-number",
 				      "Serial number",
 				      "USB3 device serial number",
+				      NULL,
+				      G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property
+		(object_class,
+		 PROP_UV_DEVICE_GUID,
+		 g_param_spec_string ("guid",
+				      "GUID",
+				      "USB3 device GUID",
 				      NULL,
 				      G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 }
