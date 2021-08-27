@@ -24,6 +24,7 @@
 #ifndef ARV_DOM_NAMED_NODE_MAP_H
 #define ARV_DOM_NAMED_NODE_MAP_H
 
+#include <arvapi.h>
 #include <arvtypes.h>
 
 #if !defined (ARV_H_INSIDE) && !defined (ARAVIS_COMPILATION)
@@ -33,7 +34,7 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_DOM_NAMED_NODE_MAP             (arv_dom_named_node_map_get_type ())
-G_DECLARE_DERIVABLE_TYPE (ArvDomNamedNodeMap, arv_dom_named_node_map, ARV, DOM_NAMED_NODE_MAP, GObject)
+ARV_API G_DECLARE_DERIVABLE_TYPE (ArvDomNamedNodeMap, arv_dom_named_node_map, ARV, DOM_NAMED_NODE_MAP, GObject)
 
 struct _ArvDomNamedNodeMapClass {
 	GObjectClass parent_class;
@@ -45,11 +46,11 @@ struct _ArvDomNamedNodeMapClass {
 	unsigned int	(*get_length)		(ArvDomNamedNodeMap *map);
 };
 
-ArvDomNode *		arv_dom_named_node_map_get_named_item 		(ArvDomNamedNodeMap *map, const char *name);
-ArvDomNode *		arv_dom_named_node_map_set_named_item 		(ArvDomNamedNodeMap *map, ArvDomNode *item);
-ArvDomNode *		arv_dom_named_node_map_remove_named_item	(ArvDomNamedNodeMap *map, const char *name);
-ArvDomNode *		arv_dom_named_node_map_get_item 		(ArvDomNamedNodeMap *map, unsigned int index);
-unsigned int		arv_dom_named_node_map_get_length		(ArvDomNamedNodeMap *map);
+ARV_API ArvDomNode *		arv_dom_named_node_map_get_named_item		(ArvDomNamedNodeMap *map, const char *name);
+ARV_API ArvDomNode *		arv_dom_named_node_map_set_named_item		(ArvDomNamedNodeMap *map, ArvDomNode *item);
+ARV_API ArvDomNode *		arv_dom_named_node_map_remove_named_item	(ArvDomNamedNodeMap *map, const char *name);
+ARV_API ArvDomNode *		arv_dom_named_node_map_get_item 		(ArvDomNamedNodeMap *map, unsigned int index);
+ARV_API unsigned int		arv_dom_named_node_map_get_length		(ArvDomNamedNodeMap *map);
 
 G_END_DECLS
 

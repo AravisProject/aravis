@@ -29,7 +29,13 @@
 #include <stdlib.h>
 #include <arvdebugprivate.h>
 #include <arvenumtypesprivate.h>
+#include <arvmiscprivate.h>
+
+#ifdef _MSC_VER
+#define STDERR_FILENO _fileno(stderr)
+#else
 #include <unistd.h>
+#endif
 
 ArvDebugCategoryInfos arv_debug_category_infos[] = {
 	{ .name = "interface", 		.description = "Device lookup for each supported protocol" },
@@ -139,10 +145,10 @@ static void arv_debug_with_level (ArvDebugCategory category,
 static void
 arv_debug_with_level (ArvDebugCategory category, ArvDebugLevel level, const char *format, va_list args)
 {
-        g_autofree char *text = NULL;
-        g_autofree char *header = NULL;
-	g_autofree char *time_str = NULL;
-        g_autoptr (GDateTime) date = NULL;
+        char *text = NULL;
+        char *header = NULL;
+	char *time_str = NULL;
+        GDateTime *date = NULL;
         char **lines;
         gint i;
 
@@ -182,6 +188,11 @@ arv_debug_with_level (ArvDebugCategory category, ArvDebugLevel level, const char
                          fflush(stderr);
                 #endif
         }
+
+        g_free (text);
+        g_free (header);
+        g_free (time_str);
+        g_date_time_unref (date);
 }
 
 void
@@ -287,7 +298,8 @@ arv_debug_print_infos (void)
 	g_free (str);
 }
 
-__attribute__((constructor)) static void
+ARV_DEFINE_CONSTRUCTOR (arv_initialize_debug)
+static void
 arv_initialize_debug (void) {
 	arv_debug_initialize (g_getenv ("ARV_DEBUG"));
 }

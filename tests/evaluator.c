@@ -36,7 +36,7 @@ static const ExpressionTestData expression_test_data[] = {
 	{"/evaluator/sqrt",				"SQRT(16)",			4,	TRUE,	4.0},
 	{"/evaluator/tan",				"TAN(0)",			0,	TRUE,	0.0},
 	{"/evaluator/atan",				"ATAN(0)",			0,	TRUE,	0.0},
-	{"/evaluator/exp",				"EXP(1)",			2,	TRUE,	M_E},
+	{"/evaluator/exp",				"EXP(1)",			2,	TRUE,	G_E},
 	{"/evaluator/trunc-plus",			"TRUNC(10.7)",			10,	TRUE,	10.0},
 	{"/evaluator/trunc-minus",			"TRUNC(-11.9)",			-11,	TRUE,	-11.0},
 	{"/evaluator/round-plus",			"ROUND(10.1)",			10,	TRUE,	10.0},

@@ -27,6 +27,7 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 #include <arvgcfeaturenode.h>
 #include <arvgcpropertynode.h>
@@ -34,9 +35,9 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_INTEGER_NODE             (arv_gc_integer_node_get_type ())
-G_DECLARE_FINAL_TYPE (ArvGcIntegerNode, arv_gc_integer_node, ARV, GC_INTEGER_NODE, ArvGcFeatureNode)
+ARV_API G_DECLARE_FINAL_TYPE (ArvGcIntegerNode, arv_gc_integer_node, ARV, GC_INTEGER_NODE, ArvGcFeatureNode)
 
-ArvGcNode * 	arv_gc_integer_node_new 	(void);
+ARV_API ArvGcNode *		arv_gc_integer_node_new			(void);
 
 G_END_DECLS
 

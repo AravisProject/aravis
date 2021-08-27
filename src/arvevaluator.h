@@ -27,24 +27,25 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 
 G_BEGIN_DECLS
 
 #define ARV_TYPE_EVALUATOR             (arv_evaluator_get_type ())
-G_DECLARE_FINAL_TYPE (ArvEvaluator, arv_evaluator, ARV, EVALUATOR, GObject)
+ARV_API G_DECLARE_FINAL_TYPE (ArvEvaluator, arv_evaluator, ARV, EVALUATOR, GObject)
 
-ArvEvaluator *	arv_evaluator_new			(const char *expression);
-void 		arv_evaluator_set_expression		(ArvEvaluator *evaluator, const char *expression);
-const char *	arv_evaluator_get_expression		(ArvEvaluator *evaluator);
-void		arv_evaluator_set_sub_expression	(ArvEvaluator *evaluator, const char *name, const char *expression);
-const char *	arv_evaluator_get_sub_expression	(ArvEvaluator *evaluator, const char *name);
-void		arv_evaluator_set_constant		(ArvEvaluator *evaluator, const char *name, const char *constant);
-const char *	arv_evaluator_get_constant		(ArvEvaluator *evaluator, const char *name);
-double		arv_evaluator_evaluate_as_double	(ArvEvaluator *evaluator, GError **error);
-gint64		arv_evaluator_evaluate_as_int64		(ArvEvaluator *evaluator, GError **error);
-void		arv_evaluator_set_double_variable	(ArvEvaluator *evaluator, const char *name, double v_double);
-void		arv_evaluator_set_int64_variable	(ArvEvaluator *evaluator, const char *name, gint64 v_int64);
+ARV_API ArvEvaluator *		arv_evaluator_new			(const char *expression);
+ARV_API void 			arv_evaluator_set_expression		(ArvEvaluator *evaluator, const char *expression);
+ARV_API const char *		arv_evaluator_get_expression		(ArvEvaluator *evaluator);
+ARV_API void			arv_evaluator_set_sub_expression	(ArvEvaluator *evaluator, const char *name, const char *expression);
+ARV_API const char *		arv_evaluator_get_sub_expression	(ArvEvaluator *evaluator, const char *name);
+ARV_API void			arv_evaluator_set_constant		(ArvEvaluator *evaluator, const char *name, const char *constant);
+ARV_API const char *		arv_evaluator_get_constant		(ArvEvaluator *evaluator, const char *name);
+ARV_API double			arv_evaluator_evaluate_as_double	(ArvEvaluator *evaluator, GError **error);
+ARV_API gint64			arv_evaluator_evaluate_as_int64		(ArvEvaluator *evaluator, GError **error);
+ARV_API void			arv_evaluator_set_double_variable	(ArvEvaluator *evaluator, const char *name, double v_double);
+ARV_API void			arv_evaluator_set_int64_variable	(ArvEvaluator *evaluator, const char *name, gint64 v_int64);
 
 G_END_DECLS
 

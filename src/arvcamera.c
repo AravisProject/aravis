@@ -1396,6 +1396,22 @@ arv_camera_clear_triggers (ArvCamera* camera, GError **error)
 }
 
 /**
+ * arv_camera_is_software_trigger_available:
+ * @camera: a #ArvCamera
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: %TRUE% if software is an available valid trigger source.
+ *
+ * Since: 0.8.17
+ */
+
+gboolean
+arv_camera_is_software_trigger_available (ArvCamera *camera, GError **error)
+{
+        return arv_camera_is_enumeration_entry_available (camera, "TriggerSource", "Software", error);
+}
+
+/**
  * arv_camera_software_trigger:
  * @camera: a #ArvCamera
  * @error: a #GError placeholder, %NULL to ignore

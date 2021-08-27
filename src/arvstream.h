@@ -27,6 +27,7 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvbuffer.h>
 
 G_BEGIN_DECLS
@@ -49,7 +50,7 @@ typedef enum {
 } ArvStreamCallbackType;
 
 #define ARV_TYPE_STREAM             (arv_stream_get_type ())
-G_DECLARE_DERIVABLE_TYPE (ArvStream, arv_stream, ARV, STREAM, GObject)
+ARV_API G_DECLARE_DERIVABLE_TYPE (ArvStream, arv_stream, ARV, STREAM, GObject)
 
 struct _ArvStreamClass {
 	GObjectClass parent_class;
@@ -63,31 +64,31 @@ struct _ArvStreamClass {
 
 typedef void (*ArvStreamCallback)	(void *user_data, ArvStreamCallbackType type, ArvBuffer *buffer);
 
-void		arv_stream_push_buffer 			(ArvStream *stream, ArvBuffer *buffer);
-ArvBuffer *	arv_stream_pop_buffer			(ArvStream *stream);
-ArvBuffer *	arv_stream_try_pop_buffer		(ArvStream *stream);
-ArvBuffer * 	arv_stream_timeout_pop_buffer 		(ArvStream *stream, guint64 timeout);
-void 		arv_stream_get_n_buffers 		(ArvStream *stream,
-							 gint *n_input_buffers,
-							 gint *n_output_buffers);
-void		arv_stream_start_thread			(ArvStream *stream);
-unsigned int	arv_stream_stop_thread			(ArvStream *stream, gboolean delete_buffers);
+ARV_API void		arv_stream_push_buffer			(ArvStream *stream, ArvBuffer *buffer);
+ARV_API ArvBuffer *	arv_stream_pop_buffer			(ArvStream *stream);
+ARV_API ArvBuffer *	arv_stream_try_pop_buffer		(ArvStream *stream);
+ARV_API ArvBuffer *	arv_stream_timeout_pop_buffer		(ArvStream *stream, guint64 timeout);
+ARV_API void		arv_stream_get_n_buffers		(ArvStream *stream,
+								 gint *n_input_buffers,
+								 gint *n_output_buffers);
+ARV_API void		arv_stream_start_thread			(ArvStream *stream);
+ARV_API unsigned int	arv_stream_stop_thread			(ArvStream *stream, gboolean delete_buffers);
 
-void		arv_stream_get_statistics		(ArvStream *stream,
-							 guint64 *n_completed_buffers,
-							 guint64 *n_failures,
-							 guint64 *n_underruns);
+ARV_API void		arv_stream_get_statistics		(ArvStream *stream,
+								 guint64 *n_completed_buffers,
+								 guint64 *n_failures,
+								 guint64 *n_underruns);
 
-guint           arv_stream_get_n_infos                  (ArvStream *stream);
-const char *    arv_stream_get_info_name                (ArvStream *stream, guint id);
-GType           arv_stream_get_info_type                (ArvStream *stream, guint id);
-guint64         arv_stream_get_info_uint64              (ArvStream *stream, guint id);
-double          arv_stream_get_info_double              (ArvStream *stream, guint id);
-guint64         arv_stream_get_info_uint64_by_name      (ArvStream *stream, const char *name);
-double          arv_stream_get_info_double_by_name      (ArvStream *stream, const char *name);
+ARV_API guint		arv_stream_get_n_infos			(ArvStream *stream);
+ARV_API const char *	arv_stream_get_info_name		(ArvStream *stream, guint id);
+ARV_API GType		arv_stream_get_info_type		(ArvStream *stream, guint id);
+ARV_API guint64		arv_stream_get_info_uint64		(ArvStream *stream, guint id);
+ARV_API double		arv_stream_get_info_double		(ArvStream *stream, guint id);
+ARV_API guint64		arv_stream_get_info_uint64_by_name	(ArvStream *stream, const char *name);
+ARV_API double		arv_stream_get_info_double_by_name	(ArvStream *stream, const char *name);
 
-void 		arv_stream_set_emit_signals 		(ArvStream *stream, gboolean emit_signals);
-gboolean 	arv_stream_get_emit_signals 		(ArvStream *stream);
+ARV_API void		arv_stream_set_emit_signals		(ArvStream *stream, gboolean emit_signals);
+ARV_API gboolean	arv_stream_get_emit_signals		(ArvStream *stream);
 
 G_END_DECLS
 

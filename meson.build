@@ -37,6 +37,23 @@ if cc.get_id()=='gcc' or cc.get_id()=='clang'
     ]
 
   add_project_arguments(cc.get_supported_arguments(warning_c_args), language: 'c')
+elif cc.get_id()=='msvc'
+  warning_c_args = [
+    '/wd4244', # Disable int-float implicit casting warnings
+    '/wd4090', # Disable const qualifiers warnings
+    '/utf-8'
+  ]
+
+  add_project_arguments(cc.get_supported_arguments(warning_c_args), language: 'c')
+endif
+
+if cc.get_id() == 'msvc'
+  cc_export_define = '__declspec(dllexport) extern'
+elif cc.has_argument('-fvisibility=hidden')
+  add_project_arguments('-fvisibility=hidden', language: 'c')
+  cc_export_define = 'extern __attribute__ ((visibility ("default")))'
+else
+  cc_export_define = 'extern'
 endif
 
 glib_dep = dependency ('glib-2.0', version: '>=2.44', required: true)
@@ -46,10 +63,12 @@ xml2_dep = dependency ('libxml-2.0', required: true)
 libz_dep = dependency ('zlib', required: true)
 usb_dep = dependency ('libusb-1.0', required: get_option ('usb'))
 
-libm = cc.find_library ('m', required: true)
-
 aravis_public_dependencies = [glib_dep, gobject_dep, gio_dep]
-aravis_dependencies = [aravis_public_dependencies, xml2_dep, libz_dep, libm]
+aravis_dependencies = [aravis_public_dependencies, xml2_dep, libz_dep]
+if cc.get_id()!='msvc'
+	libm = cc.find_library ('m', required: true)
+	aravis_dependencies += libm
+endif
 if usb_dep.found()
   aravis_dependencies += usb_dep
 endif

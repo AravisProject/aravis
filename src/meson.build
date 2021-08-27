@@ -214,11 +214,17 @@ if usb_dep.found()
 		]
 endif
 
-library_enums = gnome.mkenums_simple ('arvenumtypes', sources: library_headers + library_no_introspection_headers)
+library_enums = gnome.mkenums_simple ('arvenumtypes', decorator: 'ARV_API', header_prefix: '#include <arvapi.h>',
+				      sources: library_headers + library_no_introspection_headers)
 library_private_enums = gnome.mkenums_simple ('arvenumtypesprivate', sources: library_private_headers)
 library_resources = gnome.compile_resources('arvresources','arvresources.xml')
 
 library_include_dir = join_paths (get_option ('includedir'), 'aravis-@0@'.format (aravis_api_version))
+
+api_config_data = configuration_data ()
+api_config_data.set ('ARV_API', cc_export_define)
+configure_file (input: 'arvapi.h.in', output: 'arvapi.h',
+		configuration: api_config_data, install_dir: library_include_dir)
 
 library_config_data = configuration_data ()
 library_config_data.set10 ('ARAVIS_HAS_USB', usb_dep.found())

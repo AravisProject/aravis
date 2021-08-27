@@ -27,6 +27,7 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 #include <arvgcfeaturenode.h>
 #include <arvgcpropertynode.h>
@@ -34,19 +35,19 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_ENUMERATION (arv_gc_enumeration_get_type ())
-G_DECLARE_FINAL_TYPE (ArvGcEnumeration, arv_gc_enumeration, ARV, GC_ENUMERATION, ArvGcFeatureNode)
+ARV_API G_DECLARE_FINAL_TYPE (ArvGcEnumeration, arv_gc_enumeration, ARV, GC_ENUMERATION, ArvGcFeatureNode)
 
-ArvGcNode * 	arv_gc_enumeration_new 				(void);
+ARV_API ArvGcNode *		arv_gc_enumeration_new				(void);
 
-const GSList *	arv_gc_enumeration_get_entries			(ArvGcEnumeration *enumeration);
+ARV_API const GSList *		arv_gc_enumeration_get_entries			(ArvGcEnumeration *enumeration);
 
-const char *	arv_gc_enumeration_get_string_value		(ArvGcEnumeration *enumeration, GError **error);
-gboolean	arv_gc_enumeration_set_string_value		(ArvGcEnumeration *enumeration, const char *value, GError **error);
-gint64 		arv_gc_enumeration_get_int_value		(ArvGcEnumeration *enumeration, GError **error);
-gboolean	arv_gc_enumeration_set_int_value		(ArvGcEnumeration *enumeration, gint64 value, GError **error);
-gint64 *	arv_gc_enumeration_dup_available_int_values	(ArvGcEnumeration *enumeration,	guint *n_values, GError **error);
-const char **	arv_gc_enumeration_dup_available_string_values	(ArvGcEnumeration *enumeration,	guint *n_values, GError **error);
-const char **	arv_gc_enumeration_dup_available_display_names 	(ArvGcEnumeration *enumeration, guint *n_values, GError **error);
+ARV_API const char *		arv_gc_enumeration_get_string_value		(ArvGcEnumeration *enumeration, GError **error);
+ARV_API gboolean		arv_gc_enumeration_set_string_value		(ArvGcEnumeration *enumeration, const char *value, GError **error);
+ARV_API gint64			arv_gc_enumeration_get_int_value		(ArvGcEnumeration *enumeration, GError **error);
+ARV_API gboolean		arv_gc_enumeration_set_int_value		(ArvGcEnumeration *enumeration, gint64 value, GError **error);
+ARV_API gint64 *		arv_gc_enumeration_dup_available_int_values	(ArvGcEnumeration *enumeration,	guint *n_values, GError **error);
+ARV_API const char **		arv_gc_enumeration_dup_available_string_values	(ArvGcEnumeration *enumeration,	guint *n_values, GError **error);
+ARV_API const char **		arv_gc_enumeration_dup_available_display_names	(ArvGcEnumeration *enumeration, guint *n_values, GError **error);
 
 G_END_DECLS
 

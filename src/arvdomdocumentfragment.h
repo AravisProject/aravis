@@ -28,19 +28,20 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 #include <arvdomnode.h>
 
 G_BEGIN_DECLS
 
 #define ARV_TYPE_DOM_DOCUMENT_FRAGMENT             (arv_dom_document_fragment_get_type ())
-G_DECLARE_DERIVABLE_TYPE (ArvDomDocumentFragment, arv_dom_document_fragment, ARV, DOM_DOCUMENT_FRAGMENT, ArvDomNode)
+ARV_API G_DECLARE_DERIVABLE_TYPE (ArvDomDocumentFragment, arv_dom_document_fragment, ARV, DOM_DOCUMENT_FRAGMENT, ArvDomNode)
 
 struct _ArvDomDocumentFragmentClass {
 	ArvDomNodeClass parent_class;
 };
 
-ArvDomDocumentFragment * 	arv_dom_document_fragment_new 		(void);
+ARV_API ArvDomDocumentFragment *	arv_dom_document_fragment_new		(void);
 
 G_END_DECLS
 

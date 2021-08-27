@@ -27,6 +27,7 @@
 #ifndef ARV_GV_DEVICE_H
 #define ARV_GV_DEVICE_H
 
+#include <arvapi.h>
 #include <arvtypes.h>
 #include <arvdevice.h>
 #include <arvgvstream.h>
@@ -56,29 +57,29 @@ typedef enum
 } ArvGvPacketSizeAdjustment;
 
 #define ARV_TYPE_GV_DEVICE             (arv_gv_device_get_type ())
-G_DECLARE_FINAL_TYPE (ArvGvDevice, arv_gv_device, ARV, GV_DEVICE, ArvDevice)
+ARV_API G_DECLARE_FINAL_TYPE (ArvGvDevice, arv_gv_device, ARV, GV_DEVICE, ArvDevice)
 
-ArvDevice * 		arv_gv_device_new 				(GInetAddress *interface_address, GInetAddress *device_address,
-									 GError **error);
+ARV_API ArvDevice *		arv_gv_device_new				(GInetAddress *interface_address, GInetAddress *device_address,
+										 GError **error);
 
-gboolean		arv_gv_device_take_control			(ArvGvDevice *gv_device, GError **error);
-gboolean		arv_gv_device_leave_control			(ArvGvDevice *gv_device, GError **error);
+ARV_API gboolean		arv_gv_device_take_control			(ArvGvDevice *gv_device, GError **error);
+ARV_API gboolean		arv_gv_device_leave_control			(ArvGvDevice *gv_device, GError **error);
 
-guint64 		arv_gv_device_get_timestamp_tick_frequency	(ArvGvDevice *gv_device, GError **error);
+ARV_API guint64			arv_gv_device_get_timestamp_tick_frequency	(ArvGvDevice *gv_device, GError **error);
 
-GSocketAddress *	arv_gv_device_get_interface_address  		(ArvGvDevice *device);
-GSocketAddress *	arv_gv_device_get_device_address  		(ArvGvDevice *device);
+ARV_API GSocketAddress *	arv_gv_device_get_interface_address		(ArvGvDevice *device);
+ARV_API GSocketAddress *	arv_gv_device_get_device_address		(ArvGvDevice *device);
 
-guint			arv_gv_device_get_packet_size 			(ArvGvDevice *gv_device, GError **error);
-void			arv_gv_device_set_packet_size 			(ArvGvDevice *gv_device, gint packet_size, GError **error);
-void 			arv_gv_device_set_packet_size_adjustment 	(ArvGvDevice *gv_device,
-									 ArvGvPacketSizeAdjustment adjustment);
-guint			arv_gv_device_auto_packet_size 			(ArvGvDevice *gv_device, GError **error);
+ARV_API guint			arv_gv_device_get_packet_size			(ArvGvDevice *gv_device, GError **error);
+ARV_API void			arv_gv_device_set_packet_size			(ArvGvDevice *gv_device, gint packet_size, GError **error);
+ARV_API void			arv_gv_device_set_packet_size_adjustment	(ArvGvDevice *gv_device,
+										 ArvGvPacketSizeAdjustment adjustment);
+ARV_API guint			arv_gv_device_auto_packet_size			(ArvGvDevice *gv_device, GError **error);
 
-ArvGvStreamOption	arv_gv_device_get_stream_options		(ArvGvDevice *gv_device);
-void 			arv_gv_device_set_stream_options 		(ArvGvDevice *gv_device, ArvGvStreamOption options);
+ARV_API ArvGvStreamOption	arv_gv_device_get_stream_options		(ArvGvDevice *gv_device);
+ARV_API void			arv_gv_device_set_stream_options		(ArvGvDevice *gv_device, ArvGvStreamOption options);
 
-gboolean		arv_gv_device_is_controller			(ArvGvDevice *gv_device);
+ARV_API gboolean		arv_gv_device_is_controller			(ArvGvDevice *gv_device);
 
 G_END_DECLS
 

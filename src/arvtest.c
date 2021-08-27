@@ -27,6 +27,12 @@
 #include <arvdebugprivate.h>
 #include <math.h>
 
+#ifdef _MSC_VER
+#define STDOUT_FILENO _fileno(stdout)
+#else
+#include <unistd.h>
+#endif
+
 typedef enum {
         ARV_TEST_STATUS_SUCCESS,
         ARV_TEST_STATUS_FAILURE,
@@ -89,15 +95,20 @@ GType arv_test_camera_get_type(void);
 static ArvTestCamera *
 arv_test_camera_new (const char *camera_id)
 {
-        ArvTestCamera *camera = g_new0 (ArvTestCamera, 1);
+        ArvTestCamera *test_camera;
+        ArvCamera *camera = arv_camera_new (camera_id, NULL);
 
-        camera->id = g_strdup (camera_id);
-        camera->camera = arv_camera_new (camera_id, NULL);
-        camera->vendor_model = g_strdup_printf ("%s:%s",
-                                                arv_camera_get_vendor_name (camera->camera, NULL),
-                                                arv_camera_get_model_name (camera->camera, NULL));
+        if (!ARV_IS_CAMERA (camera))
+                return NULL;
 
-        return camera;
+        test_camera = g_new0 (ArvTestCamera, 1);
+        test_camera->id = g_strdup (camera_id);
+        test_camera->camera = camera;
+        test_camera->vendor_model = g_strdup_printf ("%s:%s",
+                                                     arv_camera_get_vendor_name (test_camera->camera, NULL),
+                                                     arv_camera_get_model_name (test_camera->camera, NULL));
+
+        return test_camera;
 }
 
 static ArvTestCamera *
@@ -110,10 +121,11 @@ static void
 arv_test_camera_free (ArvTestCamera *camera)
 {
         if (camera != NULL) {
-                g_slist_free_full (camera->results, (GDestroyNotify) arv_test_result_free);
-                g_free (camera->id);
-                g_object_unref (camera->camera);
-                g_free (camera->vendor_model);
+                if (camera->results != NULL)
+                        g_slist_free_full (camera->results, (GDestroyNotify) arv_test_result_free);
+                g_clear_pointer (&camera->id, g_free);
+                g_clear_object (&camera->camera);
+                g_clear_pointer (&camera->vendor_model, g_free);
                 g_free (camera);
         }
 }
@@ -165,6 +177,8 @@ arv_test_camera_add_result (ArvTestCamera *test_camera,
         test_camera->results = g_slist_append (test_camera->results,
                                                arv_test_result_new (title, test_camera->vendor_model,
                                                                     status, comment));
+
+        g_clear_pointer (&title, g_free);
 }
 
 G_DEFINE_BOXED_TYPE (ArvTestCamera, arv_test_camera, arv_test_camera_copy, arv_test_camera_free)
@@ -208,7 +222,7 @@ arv_test_class_init (ArvTestClass *test_class)
 static void
 arv_test_init (ArvTest *self)
 {
-        g_autoptr (GBytes) bytes = NULL;
+        GBytes *bytes = NULL;
 
         bytes = g_resources_lookup_data("/org/aravis/GenApiSchema_Version_1_0.xsd", G_RESOURCE_LOOKUP_FLAGS_NONE, NULL);
         self->schema_1_0 = arv_xml_schema_new_from_memory (g_bytes_get_data (bytes, NULL), g_bytes_get_size (bytes));
@@ -222,7 +236,7 @@ arv_test_init (ArvTest *self)
         self->key_file = g_key_file_new ();
         g_key_file_load_from_data (self->key_file, g_bytes_get_data (bytes, NULL), g_bytes_get_size (bytes),
                                    G_KEY_FILE_KEEP_COMMENTS, NULL);
-
+        g_clear_pointer (&bytes, g_bytes_unref);
 }
 
 static ArvTest *
@@ -234,15 +248,17 @@ arv_test_new (void)
 static double
 arv_test_camera_get_key_file_double (ArvTestCamera *test_camera, ArvTest *test, const char *key, double default_value)
 {
-        g_autoptr (GError) error = NULL;
+        GError *error = NULL;
         double value;
 
         g_return_val_if_fail (test_camera != NULL, 0);
         g_return_val_if_fail (ARV_IS_TEST (test), 0);
 
         value = g_key_file_get_double (test->key_file, test_camera->vendor_model, key, &error);
-        if (error != NULL)
+        if (error != NULL) {
+                g_clear_error (&error);
                 return default_value;
+        }
 
         return value;
 }
@@ -250,15 +266,17 @@ arv_test_camera_get_key_file_double (ArvTestCamera *test_camera, ArvTest *test, 
 static gint64
 arv_test_camera_get_key_file_int64 (ArvTestCamera *test_camera, ArvTest *test, const char *key, gint64 default_value)
 {
-        g_autoptr (GError) error = NULL;
+        GError *error = NULL;
         gint64 value;
 
         g_return_val_if_fail (test_camera != NULL, 0);
         g_return_val_if_fail (ARV_IS_TEST (test), 0);
 
         value = g_key_file_get_int64 (test->key_file, test_camera->vendor_model, key, &error);
-        if (error != NULL)
+        if (error != NULL) {
+                g_clear_error (&error);
                 return default_value;
+        }
 
         return value;
 }
@@ -266,15 +284,17 @@ arv_test_camera_get_key_file_int64 (ArvTestCamera *test_camera, ArvTest *test, c
 static gboolean
 arv_test_camera_get_key_file_boolean (ArvTestCamera *test_camera, ArvTest *test, const char *key, gboolean default_value)
 {
-        g_autoptr (GError) error = NULL;
+        GError* error = NULL;
         gboolean value;
 
         g_return_val_if_fail (test_camera != NULL, 0);
         g_return_val_if_fail (ARV_IS_TEST (test), 0);
 
         value = g_key_file_get_boolean (test->key_file, test_camera->vendor_model, key, &error);
-        if (error != NULL)
+        if (error != NULL) {
+                g_clear_error (&error);
                 return default_value;
+        }
 
         return value;
 }
@@ -283,7 +303,7 @@ static char *
 arv_test_camera_get_key_file_string (ArvTestCamera *test_camera, ArvTest *test, const char *key,
                                      const char *default_value)
 {
-        g_autoptr (GError) error = NULL;
+        GError *error = NULL;
         char *value;
 
         g_return_val_if_fail (test_camera != NULL, NULL);
@@ -291,6 +311,7 @@ arv_test_camera_get_key_file_string (ArvTestCamera *test_camera, ArvTest *test, 
 
         value = g_key_file_get_string (test->key_file, test_camera->vendor_model, key, &error);
         if (error != NULL) {
+                g_clear_error (&error);
                 g_free (value);
                 return g_strdup (default_value);
         }
@@ -324,8 +345,8 @@ arv_test_genicam (ArvTest *test, const char *test_name, ArvTestCamera *test_came
 {
 	ArvDevice *device;
         ArvTestStatus status;
-        g_autofree char *version = NULL;
-        g_autofree char *comment = NULL;
+        char *version = NULL;
+        char *comment = NULL;
 	const char *genicam;
 	size_t size;
 
@@ -340,8 +361,10 @@ arv_test_genicam (ArvTest *test, const char *test_name, ArvTestCamera *test_came
                                     genicam != NULL ? ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
                                     genicam != NULL ? "" : "Failed to retrieve Genicam data");
 
-	if (genicam == NULL)
+	if (genicam == NULL) {
+                g_free (version);
                 return;
+        }
 
         status = ARV_TEST_STATUS_IGNORED;
 
@@ -365,14 +388,17 @@ arv_test_genicam (ArvTest *test, const char *test_name, ArvTestCamera *test_came
         }
 
         arv_test_camera_add_result (test_camera, test_name, "Schema", status, comment);
+
+        g_free (version);
+        g_free (comment);
 }
 
 static void
 arv_test_device_properties (ArvTest *test, const char *test_name, ArvTestCamera *test_camera)
 {
-        g_autoptr (GError) error = NULL;
-        g_autofree gint *sensor_size = NULL;
-        g_autofree char *comment = NULL;
+        GError *error = NULL;
+        gint *sensor_size = NULL;
+        char *comment = NULL;
         ArvTestStatus status;
         gint sensor_width, sensor_height;
         gsize size = 0;
@@ -414,20 +440,24 @@ arv_test_device_properties (ArvTest *test, const char *test_name, ArvTestCamera 
         arv_test_camera_add_result (test_camera, test_name, "ExposureTimeReadout",
                                     error == NULL ? ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
                                     error != NULL ? error->message : NULL);
+
+        g_clear_error (&error);
+        g_free (sensor_size);
+        g_free (comment);
 }
 
 static void
 _single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_camera, gboolean chunk_test)
 {
-        g_autoptr (GError) error = NULL;
-        g_autoptr (ArvBuffer) buffer = NULL;
+        GError *error = NULL;
+        ArvBuffer *buffer = NULL;
         char **chunk_list = NULL;
         ArvChunkParser *parser = NULL;
 
         g_return_if_fail (ARV_IS_TEST (test));
 
         if (chunk_test) {
-                const char *chunks;
+                char *chunks;
                 gboolean chunks_support = arv_test_camera_get_key_file_boolean (test_camera, test,
                                                                                 "ChunksSupport", TRUE);
 
@@ -436,6 +466,7 @@ _single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_c
                                                     error == NULL && ! chunks_support ?
                                                     ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
                                                     error != NULL ? error->message : NULL);
+			g_clear_error (&error);
                         return;
                 }
 
@@ -445,6 +476,8 @@ _single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_c
                 parser = arv_camera_create_chunk_parser (test_camera->camera);
 
                 arv_camera_set_chunks (test_camera->camera, chunks, &error);
+
+                g_free (chunks);
         }
 
         if (error == NULL)
@@ -474,6 +507,8 @@ _single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_c
                                     ARV_TEST_STATUS_SUCCESS :
                                     ARV_TEST_STATUS_FAILURE,
                                     error != NULL ? error->message : NULL);
+        g_clear_error (&error);
+        g_clear_object (&buffer);
 }
 
 static void
@@ -491,8 +526,8 @@ arv_test_chunks (ArvTest *test, const char *test_name, ArvTestCamera *test_camer
 static void
 arv_test_multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_camera)
 {
-        g_autoptr (GError) error = NULL;
-        g_autofree char *message = NULL;
+        GError *error = NULL;
+        char *message = NULL;
         ArvStream *stream;
         double frame_rate;
         unsigned int i;
@@ -517,6 +552,7 @@ arv_test_multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCame
         if (error != NULL) {
                 arv_test_camera_add_result (test_camera, test_name, "BufferCheck",
                                             ARV_TEST_STATUS_FAILURE, error->message);
+                g_clear_error (&error);
                 return;
         }
 
@@ -557,7 +593,7 @@ arv_test_multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCame
         if (error == NULL)
                 arv_camera_stop_acquisition (test_camera->camera, &error);
 
-        g_object_unref (stream);
+        g_clear_object (&stream);
 
         if (success) {
                 message = g_strdup_printf ("%u/%u", n_completed_buffers, n_expected_buffers);
@@ -589,21 +625,37 @@ arv_test_multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCame
         arv_test_camera_add_result (test_camera, test_name, "FrameRate",
                                     frame_rate_success ? ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
                                     message);
+
+        g_clear_error (&error);
+        g_clear_pointer (&message, g_free);
 }
 
 static void
 arv_test_software_trigger (ArvTest *test, const char *test_name, ArvTestCamera *test_camera)
 {
-        g_autoptr (GError) error = NULL;
-        g_autofree char *message = NULL;
+        GError* error = NULL;
+        char *message = NULL;
         ArvStream *stream;
         unsigned int i;
         size_t payload_size;
         gboolean success = TRUE;
+        gboolean software_trigger_support;
         guint n_completed_buffers = 0;
         guint n_expected_buffers = 5;
 
         g_return_if_fail (ARV_IS_TEST (test));
+
+        software_trigger_support = arv_test_camera_get_key_file_boolean (test_camera, test,
+                                                                         "SoftwareTriggerSupport", TRUE);
+
+        if (!arv_camera_is_software_trigger_available (test_camera->camera, &error)) {
+                        arv_test_camera_add_result (test_camera, test_name, "NoSupport",
+                                                    error == NULL && ! software_trigger_support ?
+                                                    ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
+                                                    error != NULL ? error->message : NULL);
+			g_clear_error (&error);
+                        return;
+        }
 
         arv_camera_set_acquisition_mode (test_camera->camera, ARV_ACQUISITION_MODE_CONTINUOUS, &error);
         if (error == NULL)
@@ -612,6 +664,7 @@ arv_test_software_trigger (ArvTest *test, const char *test_name, ArvTestCamera *
         if (error != NULL) {
                 arv_test_camera_add_result (test_camera, test_name, "BufferCheck",
                                             ARV_TEST_STATUS_FAILURE, error->message);
+                g_clear_error (&error);
                 return;
         }
 
@@ -650,7 +703,7 @@ arv_test_software_trigger (ArvTest *test, const char *test_name, ArvTestCamera *
         if (error == NULL)
                 arv_camera_stop_acquisition (test_camera->camera, &error);
 
-        g_object_unref (stream);
+        g_clear_object (&stream);
 
         message = g_strdup_printf ("%u/%u%s%s", n_completed_buffers, n_expected_buffers,
                                    error != NULL ? " " : "",
@@ -660,13 +713,14 @@ arv_test_software_trigger (ArvTest *test, const char *test_name, ArvTestCamera *
                                     success && error == NULL ? ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
                                     message);
 
+        g_clear_error (&error);
         g_clear_pointer (&message, g_free);
 }
 
 static void
 arv_test_gige_vision (ArvTest *test, const char *test_name, ArvTestCamera *test_camera)
 {
-        g_autoptr (GError) error = NULL;
+        GError *error = NULL;
         gint64 expected_n_stream_channels;
         gint64 n_stream_channels;
 
@@ -693,6 +747,7 @@ arv_test_gige_vision (ArvTest *test, const char *test_name, ArvTestCamera *test_
                 arv_test_camera_add_result (test_camera, test_name, "StreamChannel",
                                             ARV_TEST_STATUS_IGNORED, NULL);
         }
+        g_clear_error (&error);
 }
 
 static void
@@ -741,47 +796,60 @@ arv_test_run (ArvTest *test, unsigned int n_iterations,
 
                         if (g_pattern_match_simple (camera_selection != NULL ? camera_selection : "*",
                                                     camera_id)) {
-                                g_autoptr (ArvTestCamera) test_camera = NULL;
+                                ArvTestCamera* test_camera = NULL;
                                 unsigned int j;
-
-                                printf ("Testing '%s:%s'\n", arv_get_device_vendor (i), arv_get_device_model (i));
 
                                 test_camera = arv_test_camera_new (camera_id);
 
-				if (arv_camera_is_uv_device(test_camera->camera)) {
-					arv_camera_uv_set_usb_mode(test_camera->camera, usb_mode, NULL);
-				}
+                                if (test_camera == NULL) {
+                                        printf ("Failed to connect to '%s:%s'\n",
+                                                arv_get_device_vendor (i), arv_get_device_model (i));
+                                } else {
+                                        printf ("Testing '%s:%s'\n",
+                                                arv_get_device_vendor (i), arv_get_device_model (i));
 
-                                for (j = 0; j < G_N_ELEMENTS (tests); j++) {
-                                        if (g_pattern_match_simple (test_selection != NULL ? test_selection : "*",
-                                                                    tests[j].name)) {
+					if (arv_camera_is_uv_device(test_camera->camera)) {
+						arv_camera_uv_set_usb_mode(test_camera->camera, usb_mode, NULL);
+					}
 
-                                                if (arv_test_camera_get_key_file_boolean (test_camera, test, tests[j].name, TRUE)) {
-                                                        char *delay_name;
-                                                        double delay;
+                                        for (j = 0; j < G_N_ELEMENTS (tests); j++) {
+                                                if (g_pattern_match_simple (test_selection != NULL ? test_selection : "*",
+                                                                            tests[j].name)) {
 
-                                                        delay_name = g_strdup_printf ("%sDelay", tests[j].name);
-                                                        delay = arv_test_camera_get_key_file_double (test_camera, test,
-                                                                                                     delay_name, 0);
-                                                        g_usleep (1000000.0 * delay);
-                                                        tests[j].run (test, tests[j].name, test_camera);
-                                                        g_free (delay_name);
-                                                } else {
-                                                        char *comment;
+                                                        if (arv_test_camera_get_key_file_boolean (test_camera, test,
+                                                                                                  tests[j].name, TRUE)) {
+                                                                char *delay_name;
+                                                                double delay;
 
-                                                        arv_test_camera_add_result (test_camera, tests[j].name, "*",
-                                                                                    ARV_TEST_STATUS_IGNORED, NULL);
+                                                                delay_name = g_strdup_printf ("%sDelay", tests[j].name);
+                                                                delay = arv_test_camera_get_key_file_double (test_camera,
+                                                                                                             test,
+                                                                                                             delay_name,
+                                                                                                             0);
+                                                                g_usleep (1000000.0 * delay);
+                                                                tests[j].run (test, tests[j].name, test_camera);
+                                                                g_free (delay_name);
+                                                        } else {
+                                                                char *comment;
 
-                                                        comment = arv_test_camera_get_key_file_comment (test_camera, test,
-                                                                                                        tests[j].name);
-                                                        if (comment != NULL) {
-                                                                printf ("%s\n", comment);
-                                                                g_free (comment);
+                                                                arv_test_camera_add_result (test_camera, tests[j].name,
+                                                                                            "*", ARV_TEST_STATUS_IGNORED,
+                                                                                            NULL);
+
+                                                                comment = arv_test_camera_get_key_file_comment
+                                                                        (test_camera, test,
+                                                                         tests[j].name);
+                                                                if (comment != NULL) {
+                                                                        printf ("%s\n", comment);
+                                                                        g_free (comment);
+                                                                }
                                                         }
                                                 }
                                         }
 
                                 }
+
+                                g_clear_pointer (&test_camera, arv_test_camera_free);
                         }
                 }
         }

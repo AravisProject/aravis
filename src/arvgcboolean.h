@@ -27,6 +27,7 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 #include <arvgcfeaturenode.h>
 #include <arvgcpropertynode.h>
@@ -34,13 +35,13 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_BOOLEAN             (arv_gc_boolean_get_type ())
-G_DECLARE_FINAL_TYPE (ArvGcBoolean, arv_gc_boolean, ARV, GC_BOOLEAN, ArvGcFeatureNode)
+ARV_API G_DECLARE_FINAL_TYPE (ArvGcBoolean, arv_gc_boolean, ARV, GC_BOOLEAN, ArvGcFeatureNode)
 
-ArvGcNode * 	arv_gc_boolean_new 		(void);
+ARV_API ArvGcNode *	arv_gc_boolean_new		(void);
 
-gboolean 	arv_gc_boolean_get_value 	(ArvGcBoolean *gc_boolean, GError **error);
-void	 	arv_gc_boolean_get_value_gi 	(ArvGcBoolean *gc_boolean, gboolean *value, GError **error);
-void 		arv_gc_boolean_set_value 	(ArvGcBoolean *gc_boolean, gboolean v_boolean, GError **error);
+ARV_API gboolean	arv_gc_boolean_get_value	(ArvGcBoolean *gc_boolean, GError **error);
+ARV_API void		arv_gc_boolean_get_value_gi	(ArvGcBoolean *gc_boolean, gboolean *value, GError **error);
+ARV_API void		arv_gc_boolean_set_value	(ArvGcBoolean *gc_boolean, gboolean v_boolean, GError **error);
 
 G_END_DECLS
 

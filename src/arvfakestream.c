@@ -177,7 +177,7 @@ arv_fake_stream_constructed (GObject *object)
 	ArvFakeStream *fake_stream = ARV_FAKE_STREAM (object);
 	ArvFakeStreamPrivate *priv = arv_fake_stream_get_instance_private (fake_stream);
 	ArvFakeStreamThreadData *thread_data;
-	g_autoptr (ArvFakeDevice) fake_device = NULL;
+	ArvFakeDevice *fake_device = NULL;
 
 	thread_data = g_new0 (ArvFakeStreamThreadData, 1);
 	thread_data->stream = stream;
@@ -208,6 +208,8 @@ arv_fake_stream_constructed (GObject *object)
 	arv_fake_stream_start_thread (ARV_STREAM (fake_stream));
 
         G_OBJECT_CLASS (arv_fake_stream_parent_class)->constructed (object);
+
+        g_clear_object (&fake_device);
 }
 
 /* ArvStream implementation */
