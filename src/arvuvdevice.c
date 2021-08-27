@@ -648,6 +648,34 @@ reset_endpoint (libusb_device_handle *usb_device, guint8 endpoint, guint8 endpoi
 	}
 }
 
+static int
+get_guid_index(libusb_device * device) {
+	struct libusb_config_descriptor *config;
+	const struct libusb_interface *inter;
+	const struct libusb_interface_descriptor *interdesc;
+	int guid_index = -1;
+	int i, j;
+
+	libusb_get_config_descriptor (device, 0, &config);
+	for (i = 0; i < (int) config->bNumInterfaces; i++) {
+		inter = &config->interface[i];
+		for (j = 0; j < inter->num_altsetting; j++) {
+			interdesc = &inter->altsetting[j];
+			if (interdesc->bInterfaceClass == ARV_UV_INTERFACE_INTERFACE_CLASS &&
+			    interdesc->bInterfaceSubClass == ARV_UV_INTERFACE_INTERFACE_SUBCLASS) {
+				if (interdesc->bInterfaceProtocol == ARV_UV_INTERFACE_CONTROL_PROTOCOL &&
+				    interdesc->extra &&
+				    interdesc->extra_length >= ARV_UV_INTERFACE_GUID_INDEX_OFFSET + sizeof(unsigned char)) {
+					guid_index = (int) (*(interdesc->extra + ARV_UV_INTERFACE_GUID_INDEX_OFFSET));
+				}
+			}
+		}
+	}
+	libusb_free_config_descriptor (config);
+
+	return guid_index;
+}
+
 static gboolean
 _open_usb_device (ArvUvDevice *uv_device, GError **error)
 {
@@ -672,11 +700,13 @@ _open_usb_device (ArvUvDevice *uv_device, GError **error)
 			unsigned char *manufacturer;
 			unsigned char *product;
 			unsigned char *serial_number;
+			unsigned char *guid;
 			int index;
 
 			manufacturer = g_malloc0 (256);
 			product = g_malloc0 (256);
 			serial_number = g_malloc0 (256);
+			guid = g_malloc0 (256);
 
 			index = desc.iManufacturer;
 			if (index > 0)
@@ -687,10 +717,14 @@ _open_usb_device (ArvUvDevice *uv_device, GError **error)
 			index = desc.iSerialNumber;
 			if (index > 0)
 				libusb_get_string_descriptor_ascii (usb_device, index, serial_number, 256);
+			index = get_guid_index(devices[i]);
+			if (index > 0)
+				libusb_get_string_descriptor_ascii (usb_device, index, guid, 256);
 
 			if (g_strcmp0 ((char * ) manufacturer, priv->vendor) == 0 &&
 			    g_strcmp0 ((char * ) product, priv->product) == 0 &&
-			    g_strcmp0 ((char * ) serial_number, priv->serial_number) == 0) {
+			    g_strcmp0 ((char * ) serial_number, priv->serial_number) == 0 &&
+			    g_strcmp0 ((char * ) guid, priv->guid) == 0) {
 				struct libusb_config_descriptor *config;
 				struct libusb_endpoint_descriptor endpoint;
 				const struct libusb_interface *inter;
@@ -734,6 +768,7 @@ _open_usb_device (ArvUvDevice *uv_device, GError **error)
 			g_free (manufacturer);
 			g_free (product);
 			g_free (serial_number);
+			g_free (guid);
 		}
 	}
 
