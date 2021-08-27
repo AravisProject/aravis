@@ -71,4 +71,4 @@ while not handler.SIGINT:
 
     counter = counter + 1
 
-camera.start_acquisition()
+camera.stop_acquisition()
