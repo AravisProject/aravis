@@ -40,8 +40,8 @@
 #define ARV_UV_STREAM_MAXIMUM_SUBMIT_TOTAL	(8*1024*1024)
 
 enum {
-	ARV_UV_STREAM_PROPERTY_0,
-	ARV_UV_STREAM_PROPERTY_USB_MODE
+       ARV_UV_STREAM_PROPERTY_0,
+       ARV_UV_STREAM_PROPERTY_USB_MODE
 } ArvUvStreamProperties;
 
 /* Acquisition thread */
@@ -79,10 +79,8 @@ typedef struct {
 
 typedef struct {
 	GThread *thread;
-
-	ArvUvUSBMode usb_mode;
-
 	ArvUvStreamThreadData *thread_data;
+	ArvUvUSBMode usb_mode;
 } ArvUvStreamPrivate;
 
 struct _ArvUvStream {
@@ -701,7 +699,7 @@ arv_uv_stream_start_thread (ArvStream *stream)
 	thread_data->trailer_size = si_req_trailer_size;
 	thread_data->cancel = FALSE;
 
-	if (priv->usb_mode)
+	if (priv->usb_mode == ARV_UV_USB_MODE_DEFAULT)
 		priv->thread = g_thread_new ("arv_uv_stream", arv_uv_stream_thread_sync, priv->thread_data);
 	else if (priv->usb_mode == ARV_UV_USB_MODE_SYNC)
 		priv->thread = g_thread_new ("arv_uv_stream", arv_uv_stream_thread_sync, priv->thread_data);
@@ -789,7 +787,6 @@ arv_uv_stream_constructed (GObject *object)
 		      "device", &thread_data->uv_device,
 		      "callback", &thread_data->callback,
 		      "callback-data", &thread_data->callback_data,
-		      "usb-mode", &priv->usb_mode,
 		      NULL);
 
 	priv->thread_data = thread_data;
@@ -810,38 +807,20 @@ arv_uv_stream_constructed (GObject *object)
 
 /* ArvStream implementation */
 
-
 static void
 arv_uv_stream_set_property (GObject * object, guint prop_id,
                             const GValue * value, GParamSpec * pspec)
 {
-	ArvUvStreamPrivate *priv = arv_uv_stream_get_instance_private (ARV_UV_STREAM (object));
+       ArvUvStreamPrivate *priv = arv_uv_stream_get_instance_private (ARV_UV_STREAM (object));
 
-	switch (prop_id) {
-		case ARV_UV_STREAM_PROPERTY_USB_MODE:
-			priv->usb_mode=  g_value_get_enum(value);
-			break;
-		default:
-			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-			break;
-	}
-}
-
-static void
-arv_uv_stream_get_property (GObject * object, guint prop_id,
-			    GValue * value, GParamSpec * pspec)
-{
-	ArvUvStreamPrivate *priv = arv_uv_stream_get_instance_private (ARV_UV_STREAM (object));
-
-	switch (prop_id) {
-		case ARV_UV_STREAM_PROPERTY_USB_MODE:
-			g_value_set_enum (value, priv->usb_mode);
-			break;
-		default:
-			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-			break;
-	}
-
+       switch (prop_id) {
+               case ARV_UV_STREAM_PROPERTY_USB_MODE:
+                       priv->usb_mode = g_value_get_enum(value);
+                       break;
+               default:
+                       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+                       break;
+       }
 }
 
 static void
@@ -894,22 +873,22 @@ arv_uv_stream_class_init (ArvUvStreamClass *uv_stream_class)
 	object_class->constructed = arv_uv_stream_constructed;
 	object_class->finalize = arv_uv_stream_finalize;
 	object_class->set_property = arv_uv_stream_set_property;
-	object_class->get_property = arv_uv_stream_get_property;
 
 	stream_class->start_thread = arv_uv_stream_start_thread;
 	stream_class->stop_thread = arv_uv_stream_stop_thread;
 
-        /**
-         * ArvUvStream:usb-mode:
-         *
-         * USB device I/O mode.
-         */
-	g_object_class_install_property (
-		object_class, ARV_UV_STREAM_PROPERTY_USB_MODE,
-		g_param_spec_enum ("usb-mode", "USB mode",
-				   "USB device I/O mode",
-				   ARV_TYPE_UV_USB_MODE,
-				   ARV_UV_USB_MODE_SYNC,
-				  G_PARAM_CONSTRUCT_ONLY |  G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+         /**
+          * ArvUvStream:usb-mode:
+          *
+          * USB device I/O mode.
+          */
+        g_object_class_install_property (
+                object_class, ARV_UV_STREAM_PROPERTY_USB_MODE,
+                g_param_spec_enum ("usb-mode", "USB mode",
+                                   "USB device I/O mode",
+                                   ARV_TYPE_UV_USB_MODE,
+                                   ARV_UV_USB_MODE_SYNC,
+				   G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)
 		);
+
 }
