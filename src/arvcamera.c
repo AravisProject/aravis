@@ -1259,28 +1259,31 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source, GError **error)
 
 	if (local_error == NULL &&
            arv_camera_is_enumeration_entry_available (camera, "TriggerSelector", "FrameStart", &local_error)) {
-                arv_camera_set_string (camera, "TriggerSelector", "FrameStart", &local_error);
-                if (local_error == NULL)
-                        arv_camera_set_string (camera, "TriggerMode", "On", &local_error);
-        } else {
-                has_frame_start = FALSE;
-        }
+		arv_camera_set_string (camera, "TriggerSelector", "FrameStart", &local_error);
+		if (local_error == NULL)
+			arv_camera_set_string (camera, "TriggerMode", "On", &local_error);
+	} else {
+		has_frame_start = FALSE;
+	}
 
 	if (local_error == NULL &&
            arv_camera_is_enumeration_entry_available (camera, "TriggerSelector", "AcquisitionStart", &local_error)) {
 		arv_camera_set_string (camera, "TriggerSelector", "AcquisitionStart", &local_error);
-                if (local_error == NULL)
-                        arv_camera_set_string (camera, "TriggerMode",
+		if (local_error == NULL)
+			arv_camera_set_string (camera, "TriggerMode",
 					       has_frame_start ? "Off" : "On", &local_error);
-        }
+		if (local_error == NULL && has_frame_start) {
+			arv_camera_set_string (camera, "TriggerSelector", "FrameStart", &local_error);
+		}
 
-        if (local_error == NULL
-            && arv_camera_is_enumeration_entry_available (camera, "TriggerActivation", "RisingEdge", &local_error)) {
-                arv_camera_set_string (camera, "TriggerActivation", "RisingEdge", &local_error);
-        }
+		if (local_error == NULL
+		    && arv_camera_is_enumeration_entry_available (camera, "TriggerActivation", "RisingEdge", &local_error)) {
+			arv_camera_set_string (camera, "TriggerActivation", "RisingEdge", &local_error);
+		}
 
-        if (local_error == NULL)
-                arv_camera_set_string (camera, "TriggerSource", source, &local_error);
+		if (local_error == NULL)
+			arv_camera_set_string (camera, "TriggerSource", source, &local_error);
+	}
 
 	if (local_error != NULL)
 		g_propagate_error (error, local_error);
