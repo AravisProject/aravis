@@ -2924,6 +2924,25 @@ arv_camera_uv_get_bandwidth_bounds (ArvCamera *camera, guint *min, guint *max, G
 }
 
 /**
+ * arv_camera_uv_set_usb_mode:
+ * @camera: a #ArvCamera
+ * @usb_mode: a #ArvUvUsbMode option
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Since: 0.8.17
+ */
+
+void
+arv_camera_uv_set_usb_mode (ArvCamera *camera, ArvUvUsbMode usb_mode, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_if_fail (arv_camera_is_uv_device (camera));
+
+	arv_uv_device_set_usb_mode (ARV_UV_DEVICE (priv->device), usb_mode);
+}
+
+/**
  * arv_camera_are_chunks_available:
  * @camera: a #ArvCamera
  * @error: a #GError placeholder, %NULL to ignore

@@ -31,6 +31,7 @@
 #include <arvuvcpprivate.h>
 #include <arvgc.h>
 #include <arvdebug.h>
+#include <arvenumtypes.h>
 #include <libusb.h>
 #include <string.h>
 #include <arvstr.h>
@@ -70,6 +71,11 @@ typedef struct {
         guint8 control_endpoint;
         guint8 data_endpoint;
 	gboolean disconnected;
+
+	ArvUvUsbMode usb_mode;
+
+	int event_thread_run;
+	GThread* event_thread;
 } ArvUvDevicePrivate;
 
 struct _ArvUvDevice {
@@ -85,6 +91,20 @@ G_DEFINE_TYPE_WITH_CODE (ArvUvDevice, arv_uv_device, ARV_TYPE_DEVICE, G_ADD_PRIV
 /* ArvDevice implementation */
 
 /* ArvUvDevice implementation */
+
+void arv_uv_device_fill_bulk_transfer (struct libusb_transfer* transfer, ArvUvDevice *uv_device,
+				ArvUvEndpointType endpoint_type, unsigned char endpoint_flags,
+				void *data, size_t size,
+				libusb_transfer_cb_fn callback, void* callback_data,
+				unsigned int timeout)
+{
+	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (uv_device);
+	guint8 endpoint;
+
+	endpoint = (endpoint_type == ARV_UV_ENDPOINT_CONTROL) ? priv->control_endpoint : priv->data_endpoint;
+
+	libusb_fill_bulk_transfer( transfer, priv->usb_device, endpoint | endpoint_flags, data, size, callback, callback_data, timeout );
+}
 
 gboolean
 arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, ArvUvEndpointType endpoint_type, unsigned char endpoint_flags, void *data,
@@ -131,7 +151,8 @@ arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, ArvUvEndpointType endpoint_
 static ArvStream *
 arv_uv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data, GError **error)
 {
-	return arv_uv_stream_new (ARV_UV_DEVICE (device), callback, user_data, error);
+	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (ARV_UV_DEVICE (device));
+	return arv_uv_stream_new (ARV_UV_DEVICE (device), callback, user_data, priv->usb_mode, error);
 }
 
 static gboolean
@@ -725,6 +746,44 @@ _open_usb_device (ArvUvDevice *uv_device, GError **error)
 	return TRUE;
 }
 
+static gpointer
+event_thread_func(void *p)
+{
+	ArvUvDevicePrivate *priv = (ArvUvDevicePrivate *)p;
+
+	struct timeval tv = { 0, 100 };
+
+        while (priv->event_thread_run)
+        {
+                libusb_handle_events_timeout(priv->usb, &tv);
+        }
+
+        return NULL;
+}
+
+/**
+ * arv_uv_device_set_usb_mode:
+ * @uv_device: a #ArvUvDevice
+ * @usb_mode: a #ArvUvUsbMode option
+ *
+ * Sets the option to utilize the USB synchronous or asynchronous device I/O API. The default mode is
+ * @ARV_UV_USB_MODE_SYNC, which means USB bulk transfer will be synchronously executed. This mode is qualified to work,
+ * but it has the performance issue with some high framerate device. Using @ARV_UV_USB_MODE_ASYNC possibly improves the
+ * bandwidth.
+ *
+ * Since: 0.8.17
+ */
+
+void
+arv_uv_device_set_usb_mode (ArvUvDevice *uv_device, ArvUvUsbMode usb_mode)
+{
+	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (uv_device);
+
+	g_return_if_fail (ARV_IS_UV_DEVICE (uv_device));
+
+	priv->usb_mode = usb_mode;
+}
+
 /**
  * arv_uv_device_new:
  * @vendor: USB3 vendor string
@@ -736,7 +795,6 @@ _open_usb_device (ArvUvDevice *uv_device, GError **error)
  *
  * Since: 0.8.0
  */
-
 ArvDevice *
 arv_uv_device_new (const char *vendor, const char *product, const char *serial_number, GError **error)
 {
@@ -777,7 +835,7 @@ arv_uv_device_constructed (GObject *object)
 
         result = libusb_claim_interface (priv->usb_device, priv->control_interface);
         if (result != 0) {
-		arv_device_take_init_error (ARV_DEVICE (uv_device),
+                arv_device_take_init_error (ARV_DEVICE (uv_device),
                                             g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
                                                          "Failed to claim USB interface to '%s-%s-%s': %s",
                                                          priv->vendor, priv->product, priv->serial_number,
@@ -787,14 +845,13 @@ arv_uv_device_constructed (GObject *object)
 
         result = libusb_claim_interface (priv->usb_device, priv->data_interface);
         if (result != 0) {
-		arv_device_take_init_error (ARV_DEVICE (uv_device),
+                arv_device_take_init_error (ARV_DEVICE (uv_device),
                                             g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
                                                          "Failed to claim USB interface to '%s-%s-%s': %s",
                                                          priv->vendor, priv->product, priv->serial_number,
                                                          libusb_error_name (result)));
                 return;
         }
-
 
 	if ( !_bootstrap (uv_device)){
 		arv_device_take_init_error (ARV_DEVICE (uv_device),
@@ -812,7 +869,12 @@ arv_uv_device_constructed (GObject *object)
                 return;
         }
 
-	reset_endpoint (priv->usb_device, priv->data_endpoint, LIBUSB_ENDPOINT_IN);
+        reset_endpoint (priv->usb_device, priv->data_endpoint, LIBUSB_ENDPOINT_IN);
+
+	priv->usb_mode = ARV_UV_USB_MODE_DEFAULT;
+
+	priv->event_thread_run = 1;
+	priv->event_thread = g_thread_new( "libusb events", event_thread_func, priv);
 }
 
 static void
@@ -829,7 +891,11 @@ static void
 arv_uv_device_finalize (GObject *object)
 {
 	ArvUvDevice *uv_device = ARV_UV_DEVICE (object);
+
 	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (uv_device);
+
+	priv->event_thread_run = 0;
+	g_thread_join( priv->event_thread );
 
 	g_clear_object (&priv->genicam);
 
