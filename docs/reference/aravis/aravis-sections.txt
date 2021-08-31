@@ -85,6 +85,7 @@ arv_camera_get_gain_auto
 arv_camera_get_payload
 arv_camera_is_feature_available
 arv_camera_execute_command
+arv_camera_is_enumeration_entry_available
 arv_camera_dup_available_enumerations
 arv_camera_dup_available_enumerations_as_strings
 arv_camera_dup_available_enumerations_as_display_names
@@ -115,6 +116,7 @@ arv_camera_gv_auto_packet_size
 arv_camera_gv_set_packet_size_adjustment
 arv_camera_gv_set_stream_options
 arv_camera_is_uv_device
+arv_camera_uv_set_usb_mode
 arv_camera_uv_get_bandwidth
 arv_camera_uv_get_bandwidth_bounds
 arv_camera_uv_is_bandwidth_control_available
@@ -141,6 +143,7 @@ ARV_CAMERA_CLASS
 ARV_IS_CAMERA_CLASS
 ARV_CAMERA_GET_CLASS
 <SUBSECTION Private>
+ARV_API
 ArvCameraPrivate
 ArvCameraClass
 arv_camera_get_boolean_gi
@@ -331,6 +334,7 @@ arv_device_set_float_feature_value
 arv_device_get_float_feature_value
 arv_device_get_float_feature_bounds
 arv_device_get_float_feature_increment
+arv_device_is_enumeration_entry_available
 arv_device_dup_available_enumeration_feature_values
 arv_device_dup_available_enumeration_feature_values_as_strings
 arv_device_dup_available_enumeration_feature_values_as_display_names
@@ -408,6 +412,8 @@ ARV_UV_DEVICE_GET_CLASS
 ArvUvDeviceClass
 ArvUvDevicePrivate
 arv_uv_device_get_type
+ArvUvUsbMode
+arv_uv_device_set_usb_mode
 <SUBSECTION Private>
 arv_uv_device_new
 arv_uv_device_bulk_transfer
