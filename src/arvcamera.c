@@ -2927,13 +2927,12 @@ arv_camera_uv_get_bandwidth_bounds (ArvCamera *camera, guint *min, guint *max, G
  * arv_camera_uv_set_usb_mode:
  * @camera: a #ArvCamera
  * @usb_mode: a #ArvUvUsbMode option
- * @error: a #GError placeholder, %NULL to ignore
  *
  * Since: 0.8.17
  */
 
 void
-arv_camera_uv_set_usb_mode (ArvCamera *camera, ArvUvUsbMode usb_mode, GError **error)
+arv_camera_uv_set_usb_mode (ArvCamera *camera, ArvUvUsbMode usb_mode)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 

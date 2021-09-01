@@ -809,7 +809,7 @@ arv_test_run (ArvTest *test, unsigned int n_iterations,
                                                 arv_get_device_vendor (i), arv_get_device_model (i));
 
 					if (arv_camera_is_uv_device (test_camera->camera))
-						arv_camera_uv_set_usb_mode (test_camera->camera, usb_mode, NULL);
+						arv_camera_uv_set_usb_mode (test_camera->camera, usb_mode);
 
                                         for (j = 0; j < G_N_ELEMENTS (tests); j++) {
                                                 if (g_pattern_match_simple (test_selection != NULL ? test_selection : "*",

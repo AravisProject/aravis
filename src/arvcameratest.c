@@ -480,9 +480,9 @@ main (int argc, char **argv)
 		if (error == NULL) arv_camera_set_exposure_time (camera, arv_option_exposure_time_us, &error);
 		if (error == NULL) arv_camera_set_gain (camera, arv_option_gain, &error);
 
-		if (arv_camera_is_uv_device(camera)) {
+		if (arv_camera_is_uv_device (camera)) {
 			if (error == NULL)
-                                arv_camera_uv_set_usb_mode (camera, usb_mode, &error);
+                                arv_camera_uv_set_usb_mode (camera, usb_mode);
 			if (error == NULL && arv_option_bandwidth_limit >= 0)
                                         arv_camera_uv_set_bandwidth (camera, arv_option_bandwidth_limit, &error);
 		}
