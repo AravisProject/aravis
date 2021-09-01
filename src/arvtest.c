@@ -898,7 +898,7 @@ static const GOptionEntry arv_option_entries[] =
 		"<n_iter>"
 	},
 	{
-		"usb-mode",				'u', 0, G_OPTION_ARG_STRING,
+		"usb-mode",				's', 0, G_OPTION_ARG_STRING,
 		&arv_option_uv_usb_mode,		"USB device I/O mode",
 		"{sync|async}"
 	},
