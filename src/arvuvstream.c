@@ -603,7 +603,6 @@ arv_uv_stream_thread_sync (void *data)
 
 	g_free (incoming_buffer);
 
-        /* The thread was cancelled with unprocessed frame. Release it to prevent memory leak */
 	arv_debug_stream_thread ("Stop USB3Vision stream thread");
 
 	return NULL;
