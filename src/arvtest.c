@@ -914,9 +914,8 @@ static const char *summary =
 "arv-test is an automated test utility that tries to exercise most of the\n"
 "Aravis functionalities. By default it runs all the tests on all the detected\n"
 "devices, but devices and tests can be selected using a glob pattern.\n\n"
-"A default configuration file is bundled in the executable, but an\n"
-"alternative one with entries specific to the camera you want to test\n"
-"can be specified.";
+"A default configuration file is bundled in the executable. An alternative\n"
+"one with entries specific to the camera you want to test can be specified.";
 
 int
 main (int argc, char **argv)
