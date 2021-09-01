@@ -751,7 +751,7 @@ event_thread_func(void *p)
 {
 	ArvUvDevicePrivate *priv = (ArvUvDevicePrivate *)p;
 
-	struct timeval tv = { 0, 100 };
+	struct timeval tv = { 0, 100000 };
 
         while (priv->event_thread_run)
         {
@@ -874,7 +874,7 @@ arv_uv_device_constructed (GObject *object)
 	priv->usb_mode = ARV_UV_USB_MODE_DEFAULT;
 
 	priv->event_thread_run = 1;
-	priv->event_thread = g_thread_new( "libusb events", event_thread_func, priv);
+	priv->event_thread = g_thread_new ( "arv_libusb", event_thread_func, priv);
 }
 
 static void
