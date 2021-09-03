@@ -52,6 +52,10 @@ trigger_registers_test (void)
 										 "TriggerActivationRegister")), NULL);
 	g_assert_cmpint (address, ==, ARV_FAKE_CAMERA_REGISTER_TRIGGER_ACTIVATION);
 
+	address = arv_gc_register_get_address (ARV_GC_REGISTER (arv_gc_get_node (genicam,
+										 "TriggerSoftwareCommandRegister")), NULL);
+	g_assert_cmpint (address, ==, ARV_FAKE_CAMERA_REGISTER_TRIGGER_SOFTWARE);
+
 	arv_device_set_string_feature_value (device, "TriggerSelector", "AcquisitionStart", NULL);
 
 	address = arv_gc_register_get_address (ARV_GC_REGISTER (node), NULL);
@@ -631,6 +635,45 @@ camera_device_test (void)
 }
 
 static void
+camera_trigger_selector_test (void)
+{
+	ArvCamera *camera;
+	GError *error = NULL;
+	const char *string;
+
+	camera = arv_camera_new ("Fake_1", &error);
+	g_assert (ARV_IS_CAMERA (camera));
+	g_assert (error == NULL);
+
+	/* Enable TriggerMode on FrameStart */
+	arv_camera_set_string (camera, "TriggerSelector", "FrameStart", &error);
+	g_assert (error == NULL);
+	arv_camera_set_string (camera, "TriggerMode", "On", &error);
+	g_assert (error == NULL);
+	string = arv_camera_get_string(camera, "TriggerMode", &error);
+	g_assert (error == NULL);
+	g_assert_cmpstr (string, ==, "On");
+
+	/* Disable TriggerMode on AcquisitionStart */
+	arv_camera_set_string (camera, "TriggerSelector", "AcquisitionStart", &error);
+	g_assert (error == NULL);
+	arv_camera_set_string (camera, "TriggerMode", "Off", &error);
+	g_assert (error == NULL);
+	string = arv_camera_get_string(camera, "TriggerMode", &error);
+	g_assert (error == NULL);
+	g_assert_cmpstr (string, ==, "Off");
+
+	/* Re-check TriggerMode value on FrameStart */
+	arv_camera_set_string (camera, "TriggerSelector", "FrameStart", &error);
+	g_assert (error == NULL);
+	string = arv_camera_get_string(camera, "TriggerMode", &error);
+	g_assert (error == NULL);
+	g_assert_cmpstr (string, ==, "On");
+
+	g_object_unref (camera);
+}
+
+static void
 set_features_from_string_test (void)
 {
 	ArvDevice *device;
@@ -705,6 +748,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/fake/fake-stream", fake_stream_test);
 	g_test_add_func ("/fake/camera-api", camera_api_test);
 	g_test_add_func ("/fake/camera-device", camera_device_test);
+	g_test_add_func ("/fake/camera-trigger-selector", camera_trigger_selector_test);
 	g_test_add_func ("/fake/set-features-from-string", set_features_from_string_test);
 
 	result = g_test_run();
