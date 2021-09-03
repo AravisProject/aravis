@@ -52,6 +52,10 @@ trigger_registers_test (void)
 										 "TriggerActivationRegister")), NULL);
 	g_assert_cmpint (address, ==, ARV_FAKE_CAMERA_REGISTER_TRIGGER_ACTIVATION);
 
+	address = arv_gc_register_get_address (ARV_GC_REGISTER (arv_gc_get_node (genicam,
+										 "TriggerSoftwareCommandRegister")), NULL);
+	g_assert_cmpint (address, ==, ARV_FAKE_CAMERA_REGISTER_TRIGGER_SOFTWARE);
+
 	arv_device_set_string_feature_value (device, "TriggerSelector", "AcquisitionStart", NULL);
 
 	address = arv_gc_register_get_address (ARV_GC_REGISTER (node), NULL);
