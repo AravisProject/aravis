@@ -258,6 +258,11 @@
 		<pFeature>AcquisitionMode</pFeature>
 		<pFeature>AcquisitionStart</pFeature>
 		<pFeature>AcquisitionStop</pFeature>
+		<pFeature>TriggerSelector</pFeature>
+		<pFeature>TriggerMode</pFeature>
+		<pFeature>TriggerSoftware</pFeature>
+		<pFeature>TriggerSource</pFeature>
+		<pFeature>TriggerActivation</pFeature>
 		<pFeature>ExposureTimeAbs</pFeature>
 	</Category>
 
@@ -371,6 +376,9 @@
 		<EnumEntry Name="Line0" NameSpace="Standard">
 			<Value>0</Value>
 		</EnumEntry>
+		<EnumEntry Name="Software" NameSpace="Standard">
+			<Value>1</Value>
+		</EnumEntry>
 		<pValue>TriggerSourceRegister</pValue>
 	</Enumeration>
 
@@ -397,6 +405,21 @@
 		<pIndex Offset="0x20">TriggerSelectorInteger</pIndex>
 		<Length>4</Length>
 		<AccessMode>RW</AccessMode>
+		<pPort>Device</pPort>
+		<Sign>Unsigned</Sign>
+		<Endianess>BigEndian</Endianess>
+	</IntReg>
+
+	<Command Name="TriggerSoftware" NameSpace="Standard">
+		<Description>Generates an internal trigger. TriggerSource must be set to Software.</Description>
+		<pValue>TriggerSoftwareCommandRegister</pValue>
+		<CommandValue>1</CommandValue>
+	</Command>
+
+	<IntReg Name="TriggerSoftwareCommandRegister" NameSpace="Custom">
+		<Address>0x30c</Address>
+		<Length>4</Length>
+		<AccessMode>WO</AccessMode>
 		<pPort>Device</pPort>
 		<Sign>Unsigned</Sign>
 		<Endianess>BigEndian</Endianess>

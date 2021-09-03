@@ -859,6 +859,43 @@ arv_fake_camera_set_trigger_frequency (ArvFakeCamera *camera, double frequency)
 	camera->priv->trigger_frequency = frequency;
 }
 
+gboolean
+arv_fake_camera_check_and_acknowledge_software_trigger (ArvFakeCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_FAKE_CAMERA (camera), FALSE);
+
+
+	if (_get_register (camera, ARV_FAKE_CAMERA_REGISTER_TRIGGER_SOFTWARE) == 1) {
+		arv_fake_camera_write_register (camera, ARV_FAKE_CAMERA_REGISTER_TRIGGER_SOFTWARE, 0);
+		return TRUE;
+	}
+	return FALSE;
+}
+
+gboolean
+arv_fake_camera_is_in_free_running_mode (ArvFakeCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_FAKE_CAMERA (camera), FALSE);
+
+	if (_get_register (camera, ARV_FAKE_CAMERA_REGISTER_TRIGGER_MODE) == 0 &&
+	    _get_register (camera, ARV_FAKE_CAMERA_REGISTER_ACQUISITION_FRAME_PERIOD_US) > 0) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
+gboolean
+arv_fake_camera_is_in_software_trigger_mode (ArvFakeCamera *camera)
+{
+	g_return_val_if_fail (ARV_IS_FAKE_CAMERA (camera), FALSE);
+
+	if (_get_register (camera, ARV_FAKE_CAMERA_REGISTER_TRIGGER_MODE) == 1 &&
+	    _get_register (camera, ARV_FAKE_CAMERA_REGISTER_TRIGGER_SOURCE) == 1) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
 guint32
 arv_fake_camera_get_control_channel_privilege (ArvFakeCamera *camera)
 {
@@ -1001,6 +1038,11 @@ arv_fake_camera_new_full (const char *serial_number, const char *genicam_filenam
 					1000000.0 / ARV_FAKE_CAMERA_ACQUISITION_FRAME_RATE_DEFAULT);
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_EXPOSURE_TIME_US,
 					ARV_FAKE_CAMERA_EXPOSURE_TIME_US_DEFAULT);
+
+	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_TRIGGER_MODE, 0);
+	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_TRIGGER_SOURCE, 0);
+	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_TRIGGER_ACTIVATION, 0);
+	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_TRIGGER_SOFTWARE, 0);
 
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_GAIN_RAW, 0);
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_GAIN_MODE, 1);
