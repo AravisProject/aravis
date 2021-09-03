@@ -27,13 +27,14 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvgcfeaturenode.h>
 #include <arvgcpropertynode.h>
 
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_CONVERTER             (arv_gc_converter_get_type ())
-G_DECLARE_DERIVABLE_TYPE (ArvGcConverter, arv_gc_converter, ARV, GC_CONVERTER, ArvGcFeatureNode)
+ARV_API G_DECLARE_DERIVABLE_TYPE (ArvGcConverter, arv_gc_converter, ARV, GC_CONVERTER, ArvGcFeatureNode)
 
 struct _ArvGcConverterClass {
 	ArvGcFeatureNodeClass parent_class;

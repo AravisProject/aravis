@@ -27,28 +27,29 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 
 G_BEGIN_DECLS
 
-unsigned int 		arv_get_n_interfaces 		(void);
-const char * 		arv_get_interface_id 		(unsigned int index);
-void 			arv_enable_interface 		(const char *interface_id);
-void 			arv_disable_interface		(const char *interface_id);
+ARV_API unsigned int		arv_get_n_interfaces		(void);
+ARV_API const char *		arv_get_interface_id		(unsigned int index);
+ARV_API void			arv_enable_interface		(const char *interface_id);
+ARV_API void			arv_disable_interface		(const char *interface_id);
 
-void 			arv_update_device_list 		(void);
-unsigned int 		arv_get_n_devices 		(void);
-const char * 		arv_get_device_id 		(unsigned int index);
-const char * 		arv_get_device_physical_id 	(unsigned int index);
-const char * 		arv_get_device_address 		(unsigned int index);
-const char * 		arv_get_device_vendor	 	(unsigned int index);
-const char * 		arv_get_device_model	 	(unsigned int index);
-const char * 		arv_get_device_serial_nbr 	(unsigned int index);
-const char *		arv_get_device_protocol		(unsigned int index);
+ARV_API void			arv_update_device_list		(void);
+ARV_API unsigned int		arv_get_n_devices		(void);
+ARV_API const char *		arv_get_device_id		(unsigned int index);
+ARV_API const char *		arv_get_device_physical_id	(unsigned int index);
+ARV_API const char *		arv_get_device_address		(unsigned int index);
+ARV_API const char *		arv_get_device_vendor		(unsigned int index);
+ARV_API const char *		arv_get_device_model		(unsigned int index);
+ARV_API const char *		arv_get_device_serial_nbr	(unsigned int index);
+ARV_API const char *		arv_get_device_protocol		(unsigned int index);
 
-ArvDevice * 		arv_open_device 		(const char *device_id, GError **error);
+ARV_API ArvDevice *		arv_open_device			(const char *device_id, GError **error);
 
-void 			arv_shutdown 			(void);
+ARV_API void			arv_shutdown			(void);
 
 G_END_DECLS
 

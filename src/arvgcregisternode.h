@@ -27,13 +27,14 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 #include <arvgcfeaturenode.h>
 
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_REGISTER_NODE (arv_gc_register_node_get_type ())
-G_DECLARE_DERIVABLE_TYPE (ArvGcRegisterNode, arv_gc_register_node, ARV, GC_REGISTER_NODE, ArvGcFeatureNode)
+ARV_API G_DECLARE_DERIVABLE_TYPE (ArvGcRegisterNode, arv_gc_register_node, ARV, GC_REGISTER_NODE, ArvGcFeatureNode)
 
 struct _ArvGcRegisterNodeClass {
 	ArvGcFeatureNodeClass parent_class;
@@ -41,7 +42,7 @@ struct _ArvGcRegisterNodeClass {
 	ArvGcCachable default_cachable;
 };
 
-ArvGcNode * 	arv_gc_register_node_new 			(void);
+ARV_API ArvGcNode *		arv_gc_register_node_new		(void);
 
 G_END_DECLS
 

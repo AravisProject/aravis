@@ -27,14 +27,15 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 
 G_BEGIN_DECLS
 
-const char * 	arv_pixel_format_to_gst_caps_string 		(ArvPixelFormat pixel_format);
-ArvPixelFormat 	arv_pixel_format_from_gst_caps 			(const char *name, const char *format, int bpp, int depth);
-const char * 	arv_pixel_format_to_gst_0_10_caps_string 	(ArvPixelFormat pixel_format);
-ArvPixelFormat 	arv_pixel_format_from_gst_0_10_caps 		(const char *name, int bpp, int depth, guint32 fourcc);
+ARV_API const char *		arv_pixel_format_to_gst_caps_string		(ArvPixelFormat pixel_format);
+ARV_API ArvPixelFormat		arv_pixel_format_from_gst_caps			(const char *name, const char *format, int bpp, int depth);
+ARV_API const char *		arv_pixel_format_to_gst_0_10_caps_string	(ArvPixelFormat pixel_format);
+ARV_API ArvPixelFormat		arv_pixel_format_from_gst_0_10_caps		(const char *name, int bpp, int depth, guint32 fourcc);
 
 G_END_DECLS
 

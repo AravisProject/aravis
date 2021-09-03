@@ -23,6 +23,7 @@
 #ifndef ARV_MISC_PRIVATE_H
 #define ARV_MISC_PRIVATE_H
 
+#include <arvapi.h>
 #include <arvmisc.h>
 
 typedef struct _ArvHistogram ArvHistogram;
@@ -65,7 +66,8 @@ double 		arv_value_get_double 		(ArvValue *value);
 gboolean 	arv_value_holds_int64 		(ArvValue *value);
 double 		arv_value_holds_double 		(ArvValue *value);
 
-gboolean	arv_parse_genicam_url		(const char *url, gssize url_length,
+/* private, but used by tests */
+ARV_API gboolean	arv_parse_genicam_url	(const char *url, gssize url_length,
 						 char **scheme, char **authority, char **path,
 						 char **query, char **fragment,
 						 guint64 *address, guint64 *size);
@@ -75,7 +77,8 @@ void 		arv_copy_memory_with_endianness	(void *to, size_t to_size, guint to_endia
 
 void * 		arv_decompress 			(void *input_buffer, size_t input_size, size_t *output_size);
 
-const char *	arv_vendor_alias_lookup		(const char *vendor);
+/* private, but used by tests */
+ARV_API const char *	arv_vendor_alias_lookup	(const char *vendor);
 
 /* this only wraps g_get_monotonic_time on non-windows platforms */
 gint64 arv_monotonic_time_us (void);
@@ -84,6 +87,45 @@ gint64 arv_monotonic_time_us (void);
 #define arv_memdup(p,s) g_memdup2(p,s)
 #else
 #define arv_memdup(p,s) g_memdup(p,(size_t) s)
+#endif
+
+/* See 'glib/gconstrutor.h' for some extra details on how the following constructor/destructor macros work */
+#if  __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 7)
+
+#define ARV_DEFINE_CONSTRUCTOR(_func) static void __attribute__((constructor)) _func (void);
+#define ARV_DEFINE_DESTRUCTOR(_func) static void __attribute__((destructor)) _func (void);
+
+#elif defined (_MSC_VER) && (_MSC_VER >= 1500)
+
+#include <stdlib.h>
+
+#ifdef _M_IX86
+#define ARV_MSVC_SYMBOL_PREFIX "_"
+#else
+#define ARV_MSVC_SYMBOL_PREFIX ""
+#endif
+
+#define ARV_MSVC_CTOR(_func,_sym_prefix) \
+    static void _func(void); \
+    extern int (* _array ## _func)(void);              \
+    int _func ## _wrapper(void) { _func(); g_slist_find (NULL,  _array ## _func); return 0; } \
+    __pragma(comment(linker,"/include:" _sym_prefix # _func "_wrapper")) \
+    __pragma(section(".CRT$XCU",read)) \
+    __declspec(allocate(".CRT$XCU")) int (* _array ## _func)(void) = _func ## _wrapper;
+
+#define ARV_MSVC_DTOR(_func,_sym_prefix) \
+    static void _func(void); \
+    extern int (* _array ## _func)(void);              \
+    int _func ## _constructor(void) { atexit (_func); g_slist_find (NULL,  _array ## _func); return 0; } \
+    __pragma(comment(linker,"/include:" _sym_prefix # _func "_constructor")) \
+    __pragma(section(".CRT$XCU",read)) \
+    __declspec(allocate(".CRT$XCU")) int (* _array ## _func)(void) = _func ## _constructor;
+
+#define ARV_DEFINE_CONSTRUCTOR(_func) ARV_MSVC_CTOR (_func, ARV_MSVC_SYMBOL_PREFIX)
+#define ARV_DEFINE_DESTRUCTOR(_func) ARV_MSVC_DTOR (_func, ARV_MSVC_SYMBOL_PREFIX)
+
+#else
+#error "Constructors/destructors are not supported on this compiler!"
 #endif
 
 #endif

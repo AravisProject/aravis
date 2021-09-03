@@ -27,13 +27,14 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 #include <arvdevice.h>
 
 G_BEGIN_DECLS
 
 #define ARV_TYPE_INTERFACE             (arv_interface_get_type ())
-G_DECLARE_DERIVABLE_TYPE (ArvInterface, arv_interface, ARV, INTERFACE, GObject)
+ARV_API G_DECLARE_DERIVABLE_TYPE (ArvInterface, arv_interface, ARV, INTERFACE, GObject)
 
 struct _ArvInterfaceClass {
 	GObjectClass parent_class;
@@ -44,16 +45,16 @@ struct _ArvInterfaceClass {
 	const char *	protocol;
 };
 
-void 			arv_interface_update_device_list 	(ArvInterface *interface);
-unsigned int 		arv_interface_get_n_devices 		(ArvInterface *interface);
-const char * 		arv_interface_get_device_id 		(ArvInterface *interface, unsigned int index);
-const char * 		arv_interface_get_device_physical_id 	(ArvInterface *interface, unsigned int index);
-const char * 		arv_interface_get_device_address	(ArvInterface *interface, unsigned int index);
-const char * 		arv_interface_get_device_vendor		(ArvInterface *interface, unsigned int index);
-const char * 		arv_interface_get_device_model		(ArvInterface *interface, unsigned int index);
-const char * 		arv_interface_get_device_serial_nbr	(ArvInterface *interface, unsigned int index);
-const char * 		arv_interface_get_device_protocol	(ArvInterface *interface, unsigned int index);
-ArvDevice * 		arv_interface_open_device 		(ArvInterface *interface, const char *device_id, GError **error);
+ARV_API void			arv_interface_update_device_list	(ArvInterface *interface);
+ARV_API unsigned int		arv_interface_get_n_devices		(ArvInterface *interface);
+ARV_API const char *		arv_interface_get_device_id		(ArvInterface *interface, unsigned int index);
+ARV_API const char *		arv_interface_get_device_physical_id	(ArvInterface *interface, unsigned int index);
+ARV_API const char *		arv_interface_get_device_address	(ArvInterface *interface, unsigned int index);
+ARV_API const char *		arv_interface_get_device_vendor		(ArvInterface *interface, unsigned int index);
+ARV_API const char *		arv_interface_get_device_model		(ArvInterface *interface, unsigned int index);
+ARV_API const char *		arv_interface_get_device_serial_nbr	(ArvInterface *interface, unsigned int index);
+ARV_API const char *		arv_interface_get_device_protocol	(ArvInterface *interface, unsigned int index);
+ARV_API ArvDevice *		arv_interface_open_device		(ArvInterface *interface, const char *device_id, GError **error);
 
 G_END_DECLS
 

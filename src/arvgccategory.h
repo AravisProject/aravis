@@ -27,16 +27,17 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 #include <arvgcfeaturenode.h>
 
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_CATEGORY             (arv_gc_category_get_type ())
-G_DECLARE_FINAL_TYPE (ArvGcCategory, arv_gc_category, ARV, GC_CATEGORY, ArvGcFeatureNode)
+ARV_API G_DECLARE_FINAL_TYPE (ArvGcCategory, arv_gc_category, ARV, GC_CATEGORY, ArvGcFeatureNode)
 
-ArvGcNode * 	arv_gc_category_new 		(void);
-const GSList * 	arv_gc_category_get_features 	(ArvGcCategory *category);
+ARV_API ArvGcNode *		arv_gc_category_new		(void);
+ARV_API const GSList *		arv_gc_category_get_features	(ArvGcCategory *category);
 
 G_END_DECLS
 

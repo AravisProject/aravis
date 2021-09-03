@@ -1396,6 +1396,22 @@ arv_camera_clear_triggers (ArvCamera* camera, GError **error)
 }
 
 /**
+ * arv_camera_is_software_trigger_available:
+ * @camera: a #ArvCamera
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: %TRUE% if software is an available valid trigger source.
+ *
+ * Since: 0.8.17
+ */
+
+gboolean
+arv_camera_is_software_trigger_available (ArvCamera *camera, GError **error)
+{
+        return arv_camera_is_enumeration_entry_available (camera, "TriggerSource", "Software", error);
+}
+
+/**
  * arv_camera_software_trigger:
  * @camera: a #ArvCamera
  * @error: a #GError placeholder, %NULL to ignore
@@ -2905,6 +2921,24 @@ void
 arv_camera_uv_get_bandwidth_bounds (ArvCamera *camera, guint *min, guint *max, GError **error)
 {
 	arv_camera_get_integer_bounds_as_guint (camera, "DeviceLinkThroughputLimit", min, max, error);
+}
+
+/**
+ * arv_camera_uv_set_usb_mode:
+ * @camera: a #ArvCamera
+ * @usb_mode: a #ArvUvUsbMode option
+ *
+ * Since: 0.8.17
+ */
+
+void
+arv_camera_uv_set_usb_mode (ArvCamera *camera, ArvUvUsbMode usb_mode)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_if_fail (arv_camera_is_uv_device (camera));
+
+	arv_uv_device_set_usb_mode (ARV_UV_DEVICE (priv->device), usb_mode);
 }
 
 /**

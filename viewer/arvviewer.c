@@ -212,6 +212,7 @@ struct  _ArvViewer {
 	guint frame_retention;
 	ArvRegisterCachePolicy register_cache_policy;
 	ArvRangeCheckPolicy range_check_policy;
+        ArvUvUsbMode usb_mode;
 
 	gulong video_window_xid;
 };
@@ -235,7 +236,8 @@ arv_viewer_set_options (ArvViewer *viewer,
 			guint packet_timeout,
 			guint frame_retention,
 			ArvRegisterCachePolicy register_cache_policy,
-			ArvRangeCheckPolicy range_check_policy)
+			ArvRangeCheckPolicy range_check_policy,
+                        ArvUvUsbMode usb_mode)
 {
 	g_return_if_fail (viewer != NULL);
 
@@ -246,6 +248,7 @@ arv_viewer_set_options (ArvViewer *viewer,
 	viewer->frame_retention = frame_retention;
 	viewer->register_cache_policy = register_cache_policy;
 	viewer->range_check_policy = range_check_policy;
+        viewer->usb_mode = usb_mode;
 }
 
 static double
@@ -1314,6 +1317,9 @@ start_camera (ArvViewer *viewer, const char *camera_id)
 					      viewer->register_cache_policy);
 	arv_device_set_range_check_policy (arv_camera_get_device (viewer->camera),
 					   viewer->range_check_policy);
+
+        if (arv_camera_is_uv_device (viewer->camera))
+                arv_camera_uv_set_usb_mode (viewer->camera, viewer->usb_mode);
 
 	viewer->camera_name = g_strdup (camera_id);
 

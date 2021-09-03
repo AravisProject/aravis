@@ -41,6 +41,7 @@ static gboolean arv_viewer_option_no_packet_resend = FALSE;
 static unsigned int arv_viewer_option_initial_packet_timeout = ARV_GV_STREAM_INITIAL_PACKET_TIMEOUT_US_DEFAULT / 1000;
 static unsigned int arv_viewer_option_packet_timeout = ARV_GV_STREAM_PACKET_TIMEOUT_US_DEFAULT / 1000;
 static unsigned int arv_viewer_option_frame_retention = ARV_GV_STREAM_FRAME_RETENTION_US_DEFAULT / 1000;
+static char *arv_option_uv_usb_mode = NULL;
 
 static const GOptionEntry arv_viewer_option_entries[] =
 {
@@ -75,6 +76,11 @@ static const GOptionEntry arv_viewer_option_entries[] =
 		"{disable|enable}"
 	},
 	{
+		"usb-mode",				's', 0, G_OPTION_ARG_STRING,
+		&arv_option_uv_usb_mode,		"USB device I/O mode",
+		"{sync|async}"
+	},
+	{
 		"debug", 				'd', 0, G_OPTION_ARG_STRING,
 		&arv_viewer_option_debug_domains, 	NULL,
 		"{<category>[:<level>][,...]|help}"
@@ -92,6 +98,7 @@ main (int argc, char **argv)
 	GError *error = NULL;
 	ArvRegisterCachePolicy register_cache_policy;
 	ArvRangeCheckPolicy range_check_policy;
+	ArvUvUsbMode usb_mode;
 
 #if GST_GL_HAVE_WINDOW_X11 && defined(GDK_WINDOWING_X11)
 	XInitThreads ();
@@ -146,6 +153,17 @@ main (int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
+	if (arv_option_uv_usb_mode == NULL)
+		usb_mode = ARV_UV_USB_MODE_DEFAULT;
+	else if (g_strcmp0 (arv_option_uv_usb_mode, "sync") == 0)
+		usb_mode = ARV_UV_USB_MODE_SYNC;
+	else if (g_strcmp0 (arv_option_uv_usb_mode, "async") == 0)
+		usb_mode = ARV_UV_USB_MODE_ASYNC;
+	else {
+		printf ("Invalid USB device I/O mode\n");
+		return EXIT_FAILURE;
+	}
+
 	if (!arv_debug_enable (arv_viewer_option_debug_domains)) {
 		if (g_strcmp0 (arv_viewer_option_debug_domains, "help") != 0)
 			printf ("Invalid debug selection\n");
@@ -165,7 +183,8 @@ main (int argc, char **argv)
 				arv_viewer_option_packet_timeout,
 				arv_viewer_option_frame_retention,
 				register_cache_policy,
-				range_check_policy);
+				range_check_policy,
+                                usb_mode);
 
 	status = g_application_run (G_APPLICATION (viewer), argc, argv);
 

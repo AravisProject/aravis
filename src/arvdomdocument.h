@@ -28,13 +28,14 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 #include <arvdomnode.h>
 
 G_BEGIN_DECLS
 
 #define ARV_TYPE_DOM_DOCUMENT             (arv_dom_document_get_type ())
-G_DECLARE_DERIVABLE_TYPE (ArvDomDocument, arv_dom_document, ARV, DOM_DOCUMENT, ArvDomNode)
+ARV_API G_DECLARE_DERIVABLE_TYPE (ArvDomDocument, arv_dom_document, ARV, DOM_DOCUMENT, ArvDomNode)
 
 struct _ArvDomDocumentClass {
 	ArvDomNodeClass parent_class;
@@ -44,15 +45,15 @@ struct _ArvDomDocumentClass {
 	ArvDomText * 	(*create_text_node) 	(ArvDomDocument* self, const char *data);
 };
 
-ArvDomElement* 	arv_dom_document_get_document_element 	(ArvDomDocument* self);
-ArvDomElement* 	arv_dom_document_create_element 	(ArvDomDocument* self, const char *tag_name);
-ArvDomText* 	arv_dom_document_create_text_node 	(ArvDomDocument* self, const char *data);
+ARV_API ArvDomElement*		arv_dom_document_get_document_element	(ArvDomDocument *self);
+ARV_API ArvDomElement*		arv_dom_document_create_element		(ArvDomDocument *self, const char *tag_name);
+ARV_API ArvDomText*		arv_dom_document_create_text_node	(ArvDomDocument *self, const char *data);
 
-const char * 	arv_dom_document_get_url 		(ArvDomDocument *self);
-void		arv_dom_document_set_url		(ArvDomDocument *self, const char *url);
-void 		arv_dom_document_set_path 		(ArvDomDocument *self, const char *path);
+ARV_API const char *		arv_dom_document_get_url		(ArvDomDocument *self);
+ARV_API void			arv_dom_document_set_url		(ArvDomDocument *self, const char *url);
+ARV_API void			arv_dom_document_set_path		(ArvDomDocument *self, const char *path);
 
-void * 		arv_dom_document_get_href_data 		(ArvDomDocument *self, const char *href, gsize *size);
+ARV_API void *			arv_dom_document_get_href_data		(ArvDomDocument *self, const char *href, gsize *size);
 
 G_END_DECLS
 

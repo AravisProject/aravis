@@ -27,12 +27,13 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_STRING             		(arv_gc_string_get_type ())
-G_DECLARE_INTERFACE (ArvGcString, arv_gc_string, ARV, GC_STRING, GObject)
+ARV_API G_DECLARE_INTERFACE (ArvGcString, arv_gc_string, ARV, GC_STRING, GObject)
 
 struct _ArvGcStringInterface {
 	GTypeInterface parent;
@@ -42,9 +43,9 @@ struct _ArvGcStringInterface {
 	gint64		(*get_max_length)	(ArvGcString *gc_string, GError **error);
 };
 
-const char *	arv_gc_string_get_value		(ArvGcString *gc_string, GError **error);
-void		arv_gc_string_set_value		(ArvGcString *gc_string, const char *value, GError **error);
-gint64		arv_gc_string_get_max_length	(ArvGcString *gc_string, GError **error);
+ARV_API const char *	arv_gc_string_get_value		(ArvGcString *gc_string, GError **error);
+ARV_API void		arv_gc_string_set_value		(ArvGcString *gc_string, const char *value, GError **error);
+ARV_API gint64		arv_gc_string_get_max_length	(ArvGcString *gc_string, GError **error);
 
 G_END_DECLS
 

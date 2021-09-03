@@ -27,17 +27,18 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 
 G_BEGIN_DECLS
 
-char * 		arv_str_strip 		(char *str, const char *illegal_chars, char replacement_char);
+ARV_API char *		arv_str_strip			(char *str, const char *illegal_chars, char replacement_char);
 
-gboolean 	arv_str_is_uri 		(const char *str);
-char *   	arv_str_to_uri 		(const char *str);
+ARV_API gboolean	arv_str_is_uri			(const char *str);
+ARV_API char *		arv_str_to_uri			(const char *str);
 
-gboolean 	arv_str_parse_double 		(char **str, double *x);
-unsigned int 	arv_str_parse_double_list 	(char **str, unsigned int n_values, double *values);
+ARV_API gboolean	arv_str_parse_double		(char **str, double *x);
+ARV_API unsigned int	arv_str_parse_double_list	(char **str, unsigned int n_values, double *values);
 
 static inline void
 arv_str_skip_spaces (char **str)
@@ -74,7 +75,7 @@ arv_str_skip_colon_and_spaces (char **str)
 		(*str)++;
 }
 
-void		arv_g_string_append_hex_dump (GString *string, const void *data, size_t size);
+ARV_API void		arv_g_string_append_hex_dump	(GString *string, const void *data, size_t size);
 
 G_END_DECLS
 

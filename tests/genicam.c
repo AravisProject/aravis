@@ -835,11 +835,11 @@ url_test (void)
 
 	for (i = 0; i < G_N_ELEMENTS (genicam_urls); i++) {
 		gboolean success;
-		g_autofree char *scheme;
-		g_autofree char *authority;
-		g_autofree char *path;
-		g_autofree char *query;
-		g_autofree char *fragment;
+		char *scheme = NULL;
+		char *authority = NULL;
+		char *path = NULL;
+		char *query = NULL;
+		char *fragment = NULL;
 		guint64 address;
 		guint64 size;
 
@@ -858,6 +858,12 @@ url_test (void)
 		success = arv_parse_genicam_url (genicam_urls[i].url, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
 		g_assert (success);
+
+		g_free (scheme);
+		g_free (authority);
+		g_free (path);
+		g_free (query);
+		g_free (fragment);
 	}
 }
 
@@ -882,10 +888,18 @@ mandatory_test (void)
 	g_object_unref (device);
 }
 
-typedef struct __attribute__((__packed__)) {
+#if defined (__GNUC__)
+#define ARV_PACK(_structure) _structure __attribute__((__packed__))
+#elif defined (_MSC_VER) && (_MSC_VER >= 1500)
+#define ARV_PACK(_structure) __pragma(pack(push, 1)) _structure __pragma(pack(pop))
+#else
+#error "Structure packing is not defined for this compiler!"
+#endif
+
+ARV_PACK(typedef struct {
 	guint32 id;
 	guint32 size;
-} ArvChunkInfos;
+}) ArvChunkInfos;
 
 static ArvBuffer *
 create_buffer_with_chunk_data (void)

@@ -27,6 +27,7 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 #include <arvgcfeaturenode.h>
 #include <arvgcpropertynode.h>
@@ -34,9 +35,9 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_STRING_NODE             (arv_gc_string_node_get_type ())
-G_DECLARE_FINAL_TYPE (ArvGcStringNode, arv_gc_string_node, ARV, GC_STRING_NODE, ArvGcFeatureNode)
+ARV_API G_DECLARE_FINAL_TYPE (ArvGcStringNode, arv_gc_string_node, ARV, GC_STRING_NODE, ArvGcFeatureNode)
 
-ArvGcNode * 	arv_gc_string_node_new 		(void);
+ARV_API ArvGcNode *		arv_gc_string_node_new			(void);
 
 G_END_DECLS
 

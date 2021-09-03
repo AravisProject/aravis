@@ -11,9 +11,9 @@ main (int argc, char **argv)
 {
 	GFile *file;
 	GFileInputStream *stream;
-	g_autofree char *scheme = NULL;
-	g_autofree char *path = NULL;
-	g_autofree char *genicam = NULL;
+	char *scheme = NULL;
+	char *path = NULL;
+	char *genicam = NULL;
 	const char *filename;
 	gsize len = 0;
 
@@ -43,6 +43,10 @@ main (int argc, char **argv)
 
 	g_print ("size = %" G_GSIZE_FORMAT "\n", len);
 	g_print ("%s\n", genicam != NULL ? genicam : "NULL");
+
+	g_free (scheme);
+	g_free (path);
+	g_free (genicam);
 
 	return EXIT_SUCCESS;
 }

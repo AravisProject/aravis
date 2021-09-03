@@ -843,10 +843,10 @@ arv_parse_genicam_url (const char *url, gssize url_length,
 		       char **scheme, char **authority, char **path, char **query, char **fragment,
 		       guint64 *address, guint64 *size)
 {
-	g_autoptr(GRegex) regex = NULL;
-	g_autoptr(GRegex) local_regex = NULL;
-	g_auto(GStrv) tokens = NULL;
-	g_auto(GStrv) local_tokens = NULL;
+	GRegex *regex = NULL;
+	GRegex *local_regex = NULL;
+	GStrv tokens = NULL;
+	GStrv local_tokens = NULL;
 	char *l_scheme = NULL;
 	char *l_authority = NULL;
 	char *l_path = NULL;
@@ -876,9 +876,12 @@ arv_parse_genicam_url (const char *url, gssize url_length,
 		return FALSE;
 
 	tokens = g_regex_split_full (regex, url, url_length, 0, 0, 10, NULL);
+	g_clear_pointer (&regex, g_regex_unref);
 
-	if (g_strv_length (tokens) < 6 || tokens[5][0] == '\0')
+	if (g_strv_length (tokens) < 6 || tokens[5][0] == '\0') {
+		g_strfreev (tokens);
 		return FALSE;
+	}
 
 	l_scheme = tokens[2][0] != '\0' ? tokens[2] : NULL;
 	l_authority = tokens[4][0] != '\0' ? tokens[4] : NULL;
@@ -886,13 +889,19 @@ arv_parse_genicam_url (const char *url, gssize url_length,
 	if (g_ascii_strcasecmp (l_scheme, "local") == 0) {
 		local_regex = g_regex_new ("(.+);(?:0x)?([0-9:a-f]*);(?:0x)?([0-9:a-f]*)", G_REGEX_CASELESS, 0, NULL);
 
-		if (local_regex == NULL)
+		if (local_regex == NULL) {
+			g_strfreev (tokens);
 			return FALSE;
+		}
 
 		local_tokens = g_regex_split (local_regex, tokens[5], 0);
+		g_clear_pointer (&local_regex, g_regex_unref);
 
-		if (g_strv_length (local_tokens) < 4)
+		if (g_strv_length (local_tokens) < 4) {
+			g_strfreev (tokens);
+			g_strfreev (local_tokens);
 			return FALSE;
+		}
 
 		l_path = local_tokens[1];
 
@@ -921,6 +930,9 @@ arv_parse_genicam_url (const char *url, gssize url_length,
 		*query = g_strdup( l_query);
 	if (fragment != NULL)
 		*fragment = g_strdup( l_fragment);
+
+	g_strfreev (tokens);
+	g_strfreev (local_tokens);
 
 	return TRUE;
 }

@@ -27,6 +27,7 @@
 #error "Only <arv.h> can be included directly."
 #endif
 
+#include <arvapi.h>
 #include <arvtypes.h>
 #include <arvgcfeaturenode.h>
 #include <arvgcpropertynode.h>
@@ -34,7 +35,7 @@
 G_BEGIN_DECLS
 
 #define ARV_TYPE_GC_SWISS_KNIFE  (arv_gc_swiss_knife_get_type ())
-G_DECLARE_DERIVABLE_TYPE (ArvGcSwissKnife, arv_gc_swiss_knife, ARV, GC_SWISS_KNIFE, ArvGcFeatureNode)
+ARV_API G_DECLARE_DERIVABLE_TYPE (ArvGcSwissKnife, arv_gc_swiss_knife, ARV, GC_SWISS_KNIFE, ArvGcFeatureNode)
 
 struct _ArvGcSwissKnifeClass {
 	ArvGcFeatureNodeClass parent_class;

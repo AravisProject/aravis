@@ -37,7 +37,7 @@
 #include <arvgvcpprivate.h>
 #include <arvbufferprivate.h>
 #include <arvdebug.h>
-#include <arvmisc.h>
+#include <arvmiscprivate.h>
 #include <string.h>
 #include <math.h>
 
@@ -1053,8 +1053,9 @@ arv_fake_camera_class_init (ArvFakeCameraClass *fake_camera_class)
 	object_class->finalize = arv_fake_camera_finalize;
 }
 
-static __attribute__((destructor)) void
-module_exit (void)
+ARV_DEFINE_DESTRUCTOR (arv_fake_camera_destructor)
+static void
+arv_fake_camera_destructor (void)
 {
 	arv_set_fake_camera_genicam_filename (NULL);
 }

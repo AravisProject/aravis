@@ -38,6 +38,7 @@ void			arv_viewer_set_options		(ArvViewer *viewer,
 							 guint packet_timeout,
 							 guint frame_retention,
 							 ArvRegisterCachePolicy register_cache_policy,
-							 ArvRangeCheckPolicy range_check_policy);
+							 ArvRangeCheckPolicy range_check_policy,
+                                                         ArvUvUsbMode usb_mode);
 
 G_END_DECLS
