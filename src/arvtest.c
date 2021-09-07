@@ -648,7 +648,7 @@ arv_test_software_trigger (ArvTest *test, const char *test_name, ArvTestCamera *
         software_trigger_support = arv_test_camera_get_key_file_boolean (test_camera, test,
                                                                          "SoftwareTriggerSupport", TRUE);
 
-        if (!arv_camera_is_software_trigger_available (test_camera->camera, &error)) {
+        if (!arv_camera_is_software_trigger_supported (test_camera->camera, &error)) {
                         arv_test_camera_add_result (test_camera, test_name, "NoSupport",
                                                     error == NULL && ! software_trigger_support ?
                                                     ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,

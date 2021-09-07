@@ -1396,19 +1396,21 @@ arv_camera_clear_triggers (ArvCamera* camera, GError **error)
 }
 
 /**
- * arv_camera_is_software_trigger_available:
+ * arv_camera_is_software_trigger_supported:
  * @camera: a #ArvCamera
  * @error: a #GError placeholder, %NULL to ignore
  *
- * Returns: %TRUE% if software is an available valid trigger source.
+ * Returns: %TRUE% if software trigger is supported.
  *
  * Since: 0.8.17
  */
 
 gboolean
-arv_camera_is_software_trigger_available (ArvCamera *camera, GError **error)
+arv_camera_is_software_trigger_supported (ArvCamera *camera, GError **error)
 {
-        return arv_camera_is_enumeration_entry_available (camera, "TriggerSource", "Software", error);
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+        return ARV_IS_GC_COMMAND (arv_device_get_feature (priv->device, "TriggerSoftware"));
 }
 
 /**
