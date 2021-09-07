@@ -772,7 +772,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size, GError **
 
 	arv_info_device ("[GvDevice::load_genicam] xml url = '%s' at 0x%x", filename, address);
 
-	arv_parse_genicam_url (filename, ARV_GVBS_XML_URL_SIZE, &scheme, NULL, &path, NULL, NULL,
+	arv_parse_genicam_url (filename, -1, &scheme, NULL, &path, NULL, NULL,
 			       &file_address, &file_size);
 
 	if (g_ascii_strcasecmp (scheme, "file") == 0) {
