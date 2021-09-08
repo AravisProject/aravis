@@ -1248,7 +1248,7 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source, GError **error)
 	gboolean has_frame_start = FALSE;
 	gboolean has_acquisition_start = FALSE;
         const char **triggers = NULL;
-        guint n_triggers;
+        guint n_triggers = 0;
         unsigned int i;
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
@@ -1257,9 +1257,8 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source, GError **error)
 	if (arv_camera_is_feature_available (camera, "AcquisitionFrameRateEnable", NULL))
                 arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", FALSE, &local_error);
 
-        if (local_error == NULL)
-                triggers = arv_camera_dup_available_enumerations_as_strings (camera, "TriggerSelector", &n_triggers,
-                                                                             &local_error);
+	triggers = arv_camera_dup_available_enumerations_as_strings (camera, "TriggerSelector", &n_triggers,
+								     &local_error);
 
         for (i = 0; i < n_triggers && local_error == NULL; i++) {
                 arv_camera_set_string (camera, "TriggerSelector", triggers[i], &local_error);
