@@ -2936,11 +2936,13 @@ arv_camera_uv_get_bandwidth_bounds (ArvCamera *camera, guint *min, guint *max, G
 void
 arv_camera_uv_set_usb_mode (ArvCamera *camera, ArvUvUsbMode usb_mode)
 {
+#if ARAVIS_HAS_USB
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
 	g_return_if_fail (arv_camera_is_uv_device (camera));
 
 	arv_uv_device_set_usb_mode (ARV_UV_DEVICE (priv->device), usb_mode);
+#endif
 }
 
 /**
