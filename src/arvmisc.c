@@ -970,7 +970,7 @@ arv_regex_new_from_glob_pattern (const char *glob, gboolean caseless)
 
 	for (i = 0; globs[i] != NULL; i++) {
 		/* Ignore empty strings */
-		if (strlen (globs[i]) < 1)
+		if (globs[i][0] == '\0')
 		    continue;
 
 		if (i > 0)
