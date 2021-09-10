@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <arvdebugprivate.h>
+#include <arvmiscprivate.h>
 #include <math.h>
 
 #ifdef _MSC_VER
@@ -780,6 +781,8 @@ arv_test_run (ArvTest *test, unsigned int n_iterations,
               const char *test_selection,
 	      ArvUvUsbMode usb_mode)
 {
+        GRegex *camera_regex;
+        GRegex *test_regex;
 	unsigned n_devices, i, j;
         gboolean success = TRUE;
 
@@ -790,12 +793,14 @@ arv_test_run (ArvTest *test, unsigned int n_iterations,
 
         printf ("Found %d device%s\n", n_devices, n_devices > 1 ? "s" : "");
 
+        camera_regex = arv_regex_new_from_glob_pattern (camera_selection != NULL ? camera_selection : "*", TRUE);
+        test_regex = arv_regex_new_from_glob_pattern (test_selection != NULL ? test_selection : "*", TRUE);
+
         for (j = 0; j < n_iterations; j++) {
                 for (i = 0; i < n_devices; i++) {
                         const char *camera_id = arv_get_device_id (i);
 
-                        if (g_pattern_match_simple (camera_selection != NULL ? camera_selection : "*",
-                                                    camera_id)) {
+                        if (g_regex_match (camera_regex, camera_id, 0, NULL)) {
                                 ArvTestCamera* test_camera = NULL;
                                 unsigned int j;
 
@@ -812,8 +817,7 @@ arv_test_run (ArvTest *test, unsigned int n_iterations,
 						arv_camera_uv_set_usb_mode (test_camera->camera, usb_mode);
 
                                         for (j = 0; j < G_N_ELEMENTS (tests); j++) {
-                                                if (g_pattern_match_simple (test_selection != NULL ? test_selection : "*",
-                                                                            tests[j].name)) {
+                                                if (g_regex_match (test_regex, tests[j].name, 0, NULL)) {
 
                                                         if (arv_test_camera_get_key_file_boolean (test_camera, test,
                                                                                                   tests[j].name, TRUE)) {
@@ -852,6 +856,9 @@ arv_test_run (ArvTest *test, unsigned int n_iterations,
                         }
                 }
         }
+
+        g_regex_unref (camera_regex);
+        g_regex_unref (test_regex);
 
         return success;
 }
