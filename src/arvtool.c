@@ -27,7 +27,7 @@
 #include <string.h>
 #include <stdio.h>
 
-static char *arv_option_device_name = NULL;
+static char *arv_option_device_selection = NULL;
 static char *arv_option_device_address = NULL;
 static char *arv_option_debug_domains = NULL;
 static char *arv_option_register_cache = NULL;
@@ -38,8 +38,8 @@ static const GOptionEntry arv_option_entries[] =
 {
 	{
 		"name",				'n', 0, G_OPTION_ARG_STRING,
-		&arv_option_device_name,	NULL,
-		"<device_name>"
+		&arv_option_device_selection,	NULL,
+		"<pattern>"
 	},
 	{
 		"address",			'a', 0, G_OPTION_ARG_STRING,
@@ -451,11 +451,14 @@ main (int argc, char **argv)
 	ArvDevice *device;
 	ArvRegisterCachePolicy register_cache_policy;
 	ArvRangeCheckPolicy range_check_policy;
+        GRegex *regex;
 	const char *device_id;
 	GOptionContext *context;
 	GError *error = NULL;
 	unsigned int n_devices;
+        unsigned int n_found_devices = 0;
 	unsigned int i;
+        gboolean is_glob_pattern = FALSE;
 
 	context = g_option_context_new (" command <parameters>");
 	g_option_context_set_summary (context, "Small utility for basic control of a Genicam device.");
@@ -505,7 +508,15 @@ main (int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	device_id = arv_option_device_address != NULL ? arv_option_device_address : arv_option_device_name;
+        for (i = 0; arv_option_device_selection != NULL && arv_option_device_selection[i] != '\0'; i++)
+                if (arv_option_device_selection[i] == '*' ||
+                    arv_option_device_selection[i] == '?' ||
+                    arv_option_device_selection[i] == '|')
+                        is_glob_pattern = TRUE;
+
+	device_id = arv_option_device_address != NULL ?
+                arv_option_device_address :
+                (is_glob_pattern ? NULL : arv_option_device_selection);
 	if (device_id != NULL) {
 		GError *error = NULL;
 
@@ -516,47 +527,66 @@ main (int argc, char **argv)
 			} else {
 				arv_tool_execute_command (argc, argv, device,
 							  register_cache_policy, range_check_policy);
-			}
+                        }
 			g_object_unref (device);
-		} else {
-			if (error != NULL) {
-				fprintf (stderr, "%s\n", error->message);
-				g_clear_error (&error);
-			} else {
-				fprintf (stderr, "Device '%s' not found", device_id);
-			}
-		}
-	} else {
-		arv_update_device_list ();
-		n_devices = arv_get_n_devices ();
+                } else {
+                        if (error != NULL) {
+                                fprintf (stderr, "%s\n", error->message);
+                                g_clear_error (&error);
+                        } else {
+                                fprintf (stderr, "Device '%s' not found", device_id);
+                        }
+                }
 
-		if (n_devices > 0) {
-			for (i = 0; i < n_devices; i++) {
-				GError *error = NULL;
+                arv_shutdown ();
 
-				device_id = arv_get_device_id (i);
-				printf ("%s (%s)\n", device_id, arv_get_device_address (i));
+                return EXIT_SUCCESS;
+        }
 
-				if (argc >= 2) {
-					device = arv_open_device (device_id, &error);
+        arv_update_device_list ();
+        n_devices = arv_get_n_devices ();
 
-					if (ARV_IS_DEVICE (device)) {
-						arv_tool_execute_command (argc, argv, device,
-									  register_cache_policy, range_check_policy);
+        regex = arv_regex_new_from_glob_pattern (arv_option_device_selection != NULL ?
+                                                 arv_option_device_selection : "*", TRUE);
 
-						g_object_unref (device);
-					} else {
-						fprintf (stderr, "Failed to open device '%s'%s%s\n", device_id,
-							 error != NULL ? ": " : "",
-							 error != NULL ? error->message : "");
-						g_clear_error (&error);
-					}
-				}
-			}
-		} else {
-			fprintf (stderr, "No device found\n");
-		}
-	}
+        if (n_devices > 0) {
+                for (i = 0; i < n_devices; i++) {
+                        GError *error = NULL;
+
+                        device_id = arv_get_device_id (i);
+
+                        if (g_regex_match (regex, device_id, 0, NULL)) {
+                                n_found_devices++;
+
+                                printf ("%s (%s)\n", device_id, arv_get_device_address (i));
+
+                                if (argc >= 2) {
+                                        device = arv_open_device (device_id, &error);
+
+                                        if (ARV_IS_DEVICE (device)) {
+                                                arv_tool_execute_command (argc, argv, device,
+                                                                          register_cache_policy, range_check_policy);
+
+                                                g_object_unref (device);
+                                        } else {
+                                                fprintf (stderr, "Failed to open device '%s'%s%s\n", device_id,
+                                                         error != NULL ? ": " : "",
+                                                         error != NULL ? error->message : "");
+                                                g_clear_error (&error);
+                                        }
+                                }
+                        }
+                }
+        }
+
+        if (n_found_devices < 1) {
+                if (n_devices > 0)
+                        fprintf (stderr, "No matching device found (%d filtered out)\n", n_devices);
+                else
+                        fprintf (stderr, "No device found\n");
+        }
+
+        g_regex_unref (regex);
 
 	arv_shutdown ();
 
