@@ -89,6 +89,8 @@ gint64 arv_monotonic_time_us (void);
 #define arv_memdup(p,s) g_memdup(p,(size_t) s)
 #endif
 
+ARV_API GRegex *        arv_regex_new_from_glob_pattern (const char *glob, gboolean caseless);
+
 /* See 'glib/gconstrutor.h' for some extra details on how the following constructor/destructor macros work */
 #if  __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 7)
 
