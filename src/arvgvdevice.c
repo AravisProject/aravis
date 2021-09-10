@@ -533,6 +533,7 @@ test_packet_check (ArvDevice *device,
 		   GPollFD *poll_fd,
 		   GSocket *socket,
 		   char *buffer,
+                   guint max_size,
 		   guint packet_size,
 		   gboolean is_command)
 {
@@ -552,7 +553,7 @@ test_packet_check (ArvDevice *device,
 			n_events = g_poll (poll_fd, 1, 10);
 			if (n_events != 0) {
 				arv_gpollfd_clear_one (poll_fd, socket);
-				read_count = g_socket_receive (socket, buffer, 16384, NULL, NULL);
+				read_count = g_socket_receive (socket, buffer, max_size, NULL, NULL);
 			}
 			else
 				read_count = 0;
@@ -637,7 +638,7 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 
 	buffer = g_malloc (max_size);
 
-	success = test_packet_check (device, &poll_fd, socket, buffer, packet_size, is_command);
+	success = test_packet_check (device, &poll_fd, socket, buffer, max_size, packet_size, is_command);
 
 	/* When exit_early is set, the function only checks the current packet size is working.
 	 * If not, the full automatic packet size adjustment is run. */
@@ -661,7 +662,8 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 
 			last_size = current_size;
 
-			success = test_packet_check (device, &poll_fd, socket, buffer, current_size, is_command);
+			success = test_packet_check (device, &poll_fd, socket, buffer, max_size, current_size,
+                                                     is_command);
 
 			if (success) {
 				packet_size = current_size;
@@ -772,7 +774,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size, GError **
 
 	arv_info_device ("[GvDevice::load_genicam] xml url = '%s' at 0x%x", filename, address);
 
-	arv_parse_genicam_url (filename, ARV_GVBS_XML_URL_SIZE, &scheme, NULL, &path, NULL, NULL,
+	arv_parse_genicam_url (filename, -1, &scheme, NULL, &path, NULL, NULL,
 			       &file_address, &file_size);
 
 	if (g_ascii_strcasecmp (scheme, "file") == 0) {

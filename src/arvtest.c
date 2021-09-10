@@ -648,7 +648,7 @@ arv_test_software_trigger (ArvTest *test, const char *test_name, ArvTestCamera *
         software_trigger_support = arv_test_camera_get_key_file_boolean (test_camera, test,
                                                                          "SoftwareTriggerSupport", TRUE);
 
-        if (!arv_camera_is_software_trigger_available (test_camera->camera, &error)) {
+        if (!arv_camera_is_software_trigger_supported (test_camera->camera, &error)) {
                         arv_test_camera_add_result (test_camera, test_name, "NoSupport",
                                                     error == NULL && ! software_trigger_support ?
                                                     ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
@@ -914,9 +914,8 @@ static const char *summary =
 "arv-test is an automated test utility that tries to exercise most of the\n"
 "Aravis functionalities. By default it runs all the tests on all the detected\n"
 "devices, but devices and tests can be selected using a glob pattern.\n\n"
-"A default configuration file is bundled in the executable, but an\n"
-"alternative one with entries specific to the camera you want to test\n"
-"can be specified.";
+"A default configuration file is bundled in the executable. An alternative\n"
+"one with entries specific to the camera you want to test can be specified.";
 
 int
 main (int argc, char **argv)

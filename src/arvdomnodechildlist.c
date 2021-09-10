@@ -62,7 +62,7 @@ arv_dom_node_child_list_get_item (ArvDomNodeList *list, unsigned int index)
 	if (child_list->parent_node == NULL)
 		return NULL;
 
-	for (iter = arv_dom_node_get_first_child (arv_dom_node_get_parent_node (ARV_DOM_NODE (child_list)));
+	for (iter = arv_dom_node_get_first_child (child_list->parent_node);
 	     iter != NULL; iter = arv_dom_node_get_next_sibling (iter)) {
 		if (i == index)
 			return iter;
@@ -82,7 +82,7 @@ arv_dom_node_child_list_get_length (ArvDomNodeList *list)
 	if (child_list->parent_node == NULL)
 		return 0;
 
-	for (iter = arv_dom_node_get_first_child (arv_dom_node_get_parent_node (ARV_DOM_NODE (child_list)));
+	for (iter = arv_dom_node_get_first_child (child_list->parent_node);
 	     iter != NULL;
 	     iter = arv_dom_node_get_next_sibling (iter))
 		length++;
