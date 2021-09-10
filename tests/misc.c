@@ -209,6 +209,66 @@ caps_string_test (void)
         }
 }
 
+struct {
+	const char *glob_pattern;
+	const char *pattern;
+} glob_patterns[] = {
+	{	"*Foo*",				"^.*Foo.*$"},
+	{	"Bar",					"^Bar$"},
+	{	"http://www.gnome.org/index.html",	"^http://www\\.gnome\\.org/index\\.html$"},
+	{	" Foo*  |  Bar*  ",			"^Foo.*$|^Bar.*$"}
+};
+
+static void
+glob_test (void)
+{
+	unsigned i;
+
+	for (i = 0; i < G_N_ELEMENTS (glob_patterns); i++) {
+		GRegex *regex;
+		const char *pattern;
+
+		regex = arv_regex_new_from_glob_pattern (glob_patterns[i].glob_pattern, TRUE);
+		g_assert (regex != NULL);
+		pattern = g_regex_get_pattern (regex);
+		g_assert_cmpstr (pattern, ==, glob_patterns[i].pattern);
+		g_regex_unref (regex);
+	}
+}
+
+struct {
+	const char *glob;
+	const char *check;
+        const char *check_caseless;
+} match_data[] = {
+	{	"Foo*",		"Foobar",       "foobar"},
+	{	"Foo*",		"Foo",          "foo"},
+	{	"*Bar",		"fooBar",       "foobar"},
+	{	"*Bar",		"Bar",          "bar"},
+	{	"FooBar",	"FooBar",       "foobar"},
+	{	"???{Foo}*r",	"bar{Foo}bar",  "bar{foo}bar"}
+};
+
+static void
+match_test (void)
+{
+	unsigned i;
+
+	for (i = 0; i < G_N_ELEMENTS (match_data); i++) {
+		GRegex *regex;
+
+		regex = arv_regex_new_from_glob_pattern (match_data[i].glob,FALSE);
+		g_assert (regex != NULL);
+		g_assert (g_regex_match (regex, match_data[i].check, 0, NULL));
+		g_regex_unref (regex);
+
+		regex = arv_regex_new_from_glob_pattern (match_data[i].glob, TRUE);
+		g_assert (regex != NULL);
+		g_assert (g_regex_match (regex, match_data[i].check_caseless, 0, NULL));
+		g_regex_unref (regex);
+	}
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -223,6 +283,9 @@ main (int argc, char *argv[])
 	g_test_add_func ("/str/arv-str-parse-double-list", arv_str_parse_double_list_test);
 	g_test_add_func ("/misc/arv-vendor-alias-lookup", arv_vendor_alias_lookup_test);
 	g_test_add_func ("/gstreamer/caps-string", caps_string_test);
+	g_test_add_func ("/misc/globs", glob_test);
+	g_test_add_func ("/misc/matches", match_test);
+
 
 	result = g_test_run();
 
@@ -230,4 +293,3 @@ main (int argc, char *argv[])
 
 	return result;
 }
-
