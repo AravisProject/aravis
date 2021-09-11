@@ -65,7 +65,7 @@ arv_camera_get_trigger_source
 arv_camera_dup_available_trigger_sources
 arv_camera_dup_available_triggers
 arv_camera_clear_triggers
-arv_camera_is_software_trigger_available
+arv_camera_is_software_trigger_supported
 arv_camera_software_trigger
 arv_camera_is_exposure_time_available
 arv_camera_is_exposure_auto_available
@@ -416,6 +416,7 @@ ArvUvUsbMode
 arv_uv_device_set_usb_mode
 <SUBSECTION Private>
 arv_uv_device_new
+arv_uv_device_new_from_guid
 arv_uv_device_bulk_transfer
 </SECTION>
 
