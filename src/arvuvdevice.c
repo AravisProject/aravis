@@ -721,15 +721,19 @@ _open_usb_device (ArvUvDevice *uv_device, GError **error)
 			if (index > 0)
 				libusb_get_string_descriptor_ascii (usb_device, index, guid, 256);
 
-			if (g_strcmp0 ((char * ) manufacturer, priv->vendor) == 0 &&
-			    g_strcmp0 ((char * ) product, priv->product) == 0 &&
-			    g_strcmp0 ((char * ) serial_number, priv->serial_number) == 0 &&
-			    g_strcmp0 ((char * ) guid, priv->guid) == 0) {
-				struct libusb_config_descriptor *config;
-				struct libusb_endpoint_descriptor endpoint;
-				const struct libusb_interface *inter;
-				const struct libusb_interface_descriptor *interdesc;
-                                int result;
+			if ((priv->vendor != NULL &&
+                             g_strcmp0 ((char * ) manufacturer, priv->vendor) == 0 &&
+                             priv->product != NULL &&
+                             g_strcmp0 ((char * ) product, priv->product) == 0 &&
+                             priv->serial_number != NULL &&
+                             g_strcmp0 ((char * ) serial_number, priv->serial_number) == 0) ||
+                            (priv->guid != NULL &&
+                             g_strcmp0 ((char * ) guid, priv->guid) == 0)) {
+                            struct libusb_config_descriptor *config;
+                            struct libusb_endpoint_descriptor endpoint;
+                            const struct libusb_interface *inter;
+                            const struct libusb_interface_descriptor *interdesc;
+                            int result;
 
 				priv->usb_device = usb_device;
 
@@ -826,20 +830,37 @@ arv_uv_device_set_usb_mode (ArvUvDevice *uv_device, ArvUvUsbMode usb_mode)
  * @vendor: USB3 vendor string
  * @product: USB3 product string
  * @serial_number: device serial number
- * @guid: device GUID
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Returns: a newly created #ArvDevice using USB3 based protocol
  *
  * Since: 0.8.0
  */
+
 ArvDevice *
-arv_uv_device_new (const char *vendor, const char *product, const char *serial_number, const char *guid, GError **error)
+arv_uv_device_new (const char *vendor, const char *product, const char *serial_number, GError **error)
 {
 	return g_initable_new (ARV_TYPE_UV_DEVICE, NULL, error,
 			       "vendor", vendor,
 			       "product", product,
 			       "serial-number", serial_number,
+			       NULL);
+}
+
+/**
+ * arv_uv_device_new_from_guid:
+ * @guid: device GUID
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: a newly created #ArvDevice using USB3 based protocol
+ *
+ * Since: 0.8.17
+ */
+
+ArvDevice *
+arv_uv_device_new_from_guid (const char *guid, GError **error)
+{
+	return g_initable_new (ARV_TYPE_UV_DEVICE, NULL, error,
 			       "guid", guid,
 			       NULL);
 }
@@ -854,10 +875,14 @@ arv_uv_device_constructed (GObject *object)
 
         G_OBJECT_CLASS (arv_uv_device_parent_class)->constructed (object);
 
-	arv_info_device ("[UvDevice::new] Vendor  = %s", priv->vendor);
-	arv_info_device ("[UvDevice::new] Product = %s", priv->product);
-	arv_info_device ("[UvDevice::new] S/N     = %s", priv->serial_number);
-	arv_info_device ("[UvDevice::new] GUID    = %s", priv->guid);
+        if (priv->vendor != NULL)
+                arv_info_device ("[UvDevice::new] Vendor  = %s", priv->vendor);
+        if (priv->product != NULL)
+                arv_info_device ("[UvDevice::new] Product = %s", priv->product);
+        if (priv->serial_number != NULL)
+                arv_info_device ("[UvDevice::new] S/N     = %s", priv->serial_number);
+        if (priv->guid != NULL)
+                arv_info_device ("[UvDevice::new] GUID    = %s", priv->guid);
 
 	libusb_init (&priv->usb);
 	priv->packet_id = 65300; /* Start near the end of the circular counter */
