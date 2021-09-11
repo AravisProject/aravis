@@ -240,17 +240,20 @@ _usb_device_to_device_ids (ArvUvInterface *uv_interface, libusb_device *device)
 		if (index > 0)
 			libusb_get_string_descriptor_ascii (device_handle, index, guid, 256);
 
-		device_infos = arv_uv_interface_device_infos_new ((char *) manufacturer, (char *) product, (char *) serial_nbr, (char *) guid);
+		device_infos = arv_uv_interface_device_infos_new ((char *) manufacturer, (char *) product,
+                                                                  (char *) serial_nbr, (char *) guid);
 		g_hash_table_replace (uv_interface->priv->devices, device_infos->id,
 				      arv_uv_interface_device_infos_ref (device_infos));
 		g_hash_table_replace (uv_interface->priv->devices, device_infos->name,
 				      arv_uv_interface_device_infos_ref (device_infos));
 		g_hash_table_replace (uv_interface->priv->devices, device_infos->full_name,
 				      arv_uv_interface_device_infos_ref (device_infos));
+		g_hash_table_replace (uv_interface->priv->devices, device_infos->guid,
+				      arv_uv_interface_device_infos_ref (device_infos));
 		arv_uv_interface_device_infos_unref (device_infos);
 
 		device_ids->device = g_strdup (device_infos->id);
-		device_ids->physical = g_strdup ("USB3");	/* FIXME */
+		device_ids->physical = g_strdup (device_infos->guid);
 		device_ids->address = g_strdup ("USB3");	/* FIXME */
 		device_ids->vendor = g_strdup (device_infos->manufacturer);
 		device_ids->model = g_strdup (device_infos->product);
