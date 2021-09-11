@@ -336,7 +336,7 @@ _open_device (ArvInterface *interface, const char *device_id, GError **error)
 	if (device_infos == NULL)
 		return NULL;
 
-	return arv_uv_device_new (device_infos->manufacturer, device_infos->product, device_infos->serial_nbr, error);
+	return arv_uv_device_new (device_infos->manufacturer, device_infos->product, device_infos->serial_nbr, device_infos->guid, error);
 }
 
 static ArvDevice *

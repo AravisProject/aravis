@@ -50,7 +50,8 @@ typedef enum
 #define ARV_TYPE_UV_DEVICE             (arv_uv_device_get_type ())
 ARV_API G_DECLARE_FINAL_TYPE (ArvUvDevice, arv_uv_device, ARV, UV_DEVICE, ArvDevice)
 
-ARV_API ArvDevice *	arv_uv_device_new		(const char *vendor, const char *product, const char *serial_number,
+ARV_API ArvDevice * 	arv_uv_device_new 		(const char *vendor, const char *product,
+                                                         const char *serial_number, const char *guid,
 							 GError **error);
 
 ARV_API void 		arv_uv_device_set_usb_mode	(ArvUvDevice *uv_device, ArvUvUsbMode usb_mode);
