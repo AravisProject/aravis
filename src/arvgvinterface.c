@@ -412,28 +412,37 @@ _discover (GHashTable *devices, const char *device_id)
 						g_free (address_string);
 
 						if (devices != NULL) {
-							if (device_infos->id != NULL && device_infos->id[0] != '\0')
-								g_hash_table_replace (devices, device_infos->id,
-										      arv_gv_interface_device_infos_ref (device_infos));
-							if (device_infos->user_id != NULL && device_infos->user_id[0] != '\0')
-								g_hash_table_replace (devices, device_infos->user_id,
-										      arv_gv_interface_device_infos_ref (device_infos));
-							if (device_infos->vendor_serial != NULL && device_infos->vendor_serial[0] != '\0')
-								g_hash_table_replace (devices, device_infos->vendor_serial,
-										      arv_gv_interface_device_infos_ref (device_infos));
-							if (device_infos->vendor_alias_serial != NULL && device_infos->vendor_alias_serial[0] != '\0')
-								g_hash_table_replace (devices, device_infos->vendor_alias_serial,
-										      arv_gv_interface_device_infos_ref (device_infos));
-							g_hash_table_replace (devices, device_infos->mac,
-									      arv_gv_interface_device_infos_ref (device_infos));
-						} else {
-							if (device_id == NULL ||
-							    g_strcmp0 (device_infos->id, device_id) == 0 ||
-							    g_strcmp0 (device_infos->user_id, device_id) == 0 ||
-							    g_strcmp0 (device_infos->vendor_serial, device_id) == 0 ||
-							    g_strcmp0 (device_infos->vendor_alias_serial, device_id) == 0 ||
-							    g_strcmp0 (device_infos->mac, device_id) == 0) {
-								arv_gv_discover_socket_list_free (socket_list);
+							if (device_infos->id != NULL &&
+                                                            device_infos->id[0] != '\0')
+								g_hash_table_replace
+                                                                        (devices, device_infos->id,
+                                                                         arv_gv_interface_device_infos_ref (device_infos));
+                                                        if (device_infos->user_id != NULL &&
+                                                            device_infos->user_id[0] != '\0')
+                                                                g_hash_table_replace
+                                                                        (devices, device_infos->user_id,
+                                                                         arv_gv_interface_device_infos_ref (device_infos));
+                                                        if (device_infos->vendor_serial != NULL &&
+                                                            device_infos->vendor_serial[0] != '\0')
+                                                                g_hash_table_replace
+                                                                        (devices, device_infos->vendor_serial,
+                                                                         arv_gv_interface_device_infos_ref (device_infos));
+                                                        if (device_infos->vendor_alias_serial != NULL &&
+                                                            device_infos->vendor_alias_serial[0] != '\0')
+                                                                g_hash_table_replace
+                                                                        (devices, device_infos->vendor_alias_serial,
+                                                                         arv_gv_interface_device_infos_ref (device_infos));
+                                                        g_hash_table_replace
+                                                                (devices, device_infos->mac,
+                                                                 arv_gv_interface_device_infos_ref (device_infos));
+                                                } else {
+                                                        if (device_id == NULL ||
+                                                            g_strcmp0 (device_infos->id, device_id) == 0 ||
+                                                            g_strcmp0 (device_infos->user_id, device_id) == 0 ||
+                                                            g_strcmp0 (device_infos->vendor_serial, device_id) == 0 ||
+                                                            g_strcmp0 (device_infos->vendor_alias_serial, device_id) == 0 ||
+                                                            g_strcmp0 (device_infos->mac, device_id) == 0) {
+                                                                arv_gv_discover_socket_list_free (socket_list);
 
 								return device_infos;
 							}
