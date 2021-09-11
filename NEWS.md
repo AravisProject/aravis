@@ -1,9 +1,20 @@
+Stable release 0.8.17
+=====================
+
+  * windows: Microsoft Visual C++ support (Siim)
+  * usb3vision: async mode (Takuro, Constantine)
+  * usb3vision: use GUID for device disambiguation (Takuro)
+  * test: extend test coverage in arv-test (Emmanuel)
+  * viewer: in-app notification for save error (Emmanuel)
+  * camera: make set_trigger more robust (Emmanuel)
+  * tool: add glob pattern based device and feature selection (Emmanuel)
+
 Stable release 0.8.16
 =====================
 
   * ci: use Github actions for linux and macOS (Emmanuel)
   * ci: minGW support (Václav)
-  * gigevision: use proper broadcast addressese during discovery (Václav)
+  * gigevision: use proper broadcast addresses during discovery (Václav)
   * camera: accessor to float feature increment (Emmanuel)
   * camera: make set_trigger more robust (Emmanuel)
   * camera: fallback to Continuous mode if SingleFrame is not available
