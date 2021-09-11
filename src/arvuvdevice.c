@@ -942,6 +942,7 @@ arv_uv_device_finalize (GObject *object)
 	g_clear_pointer (&priv->vendor, g_free);
 	g_clear_pointer (&priv->product, g_free);
 	g_clear_pointer (&priv->serial_number, g_free);
+        g_clear_pointer (&priv->guid, g_free);
 	g_clear_pointer (&priv->genicam_xml, g_free);
 	if (priv->usb_device != NULL) {
 		libusb_release_interface (priv->usb_device, priv->control_interface);
