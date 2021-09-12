@@ -26,6 +26,9 @@
 #if ARAVIS_HAS_USB
 #include <arvuvinterfaceprivate.h>
 #endif
+#if ARAVIS_HAS_V4L2
+#include <arvv4l2interfaceprivate.h>
+#endif
 #include <arvfakeinterfaceprivate.h>
 #include <arvgentlinterfaceprivate.h>
 #include <arvdevice.h>
@@ -66,6 +69,13 @@ ArvInterfaceInfos interfaces[] = {
 		.is_available = TRUE,
 		.get_interface_instance = arv_uv_interface_get_instance,
 		.destroy_interface_instance = arv_uv_interface_destroy_instance
+	},
+#endif
+#if ARAVIS_HAS_V4L2
+	{	.interface_id = "V4L2",
+		.is_available = TRUE,
+		.get_interface_instance = arv_v4l2_interface_get_instance,
+		.destroy_interface_instance = arv_v4l2_interface_destroy_instance
 	},
 #endif
 	{	.interface_id = "GigEVision",
