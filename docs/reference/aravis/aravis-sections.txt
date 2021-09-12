@@ -401,6 +401,10 @@ arv_uv_interface_destroy_instance
 <SECTION>
 <FILE>arvuvdevice</FILE>
 <TITLE>ArvUvDevice</TITLE>
+ArvUvUsbMode
+arv_uv_device_new
+arv_uv_device_new_from_guid
+arv_uv_device_set_usb_mode
 <SUBSECTION Standard>
 ArvUvDevice
 ARV_IS_UV_DEVICE
@@ -412,11 +416,7 @@ ARV_UV_DEVICE_GET_CLASS
 ArvUvDeviceClass
 ArvUvDevicePrivate
 arv_uv_device_get_type
-ArvUvUsbMode
-arv_uv_device_set_usb_mode
 <SUBSECTION Private>
-arv_uv_device_new
-arv_uv_device_new_from_guid
 arv_uv_device_bulk_transfer
 </SECTION>
 
