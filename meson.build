@@ -63,6 +63,8 @@ xml2_dep = dependency ('libxml-2.0', required: true)
 libz_dep = dependency ('zlib', required: true)
 usb_dep = dependency ('libusb-1.0', required: get_option ('usb'))
 gmodule_dep = dependency ('gmodule-2.0', required: true)
+v4l2_dep = dependency('libv4l2', required: get_option('v4l2'))
+gudev_dep = dependency('gudev-1.0', required: get_option('v4l2'))
 
 aravis_public_dependencies = [glib_dep, gobject_dep, gio_dep]
 aravis_dependencies = [aravis_public_dependencies, xml2_dep, libz_dep, gmodule_dep]
@@ -70,8 +72,13 @@ if cc.get_id()!='msvc'
 	libm = cc.find_library ('m', required: true)
 	aravis_dependencies += libm
 endif
+
 if usb_dep.found()
   aravis_dependencies += usb_dep
+endif
+
+if v4l2_dep.found()
+  aravis_dependencies += [v4l2_dep, gudev_dep]
 endif
 
 if host_machine.system()=='windows'

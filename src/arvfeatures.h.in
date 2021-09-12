@@ -38,11 +38,21 @@
 #define ARAVIS_HAS_USB @ARAVIS_HAS_USB@
 
 /**
+ * ARAVIS_HAS_V4L2
+ *
+ * ARAVIS_HAS_V4L2 is defined as 1 if aravis is compiled with V4L2 support, 0 if not.
+ *
+ * Since: 0.8.7
+ */
+
+#define ARAVIS_HAS_V4L2 @ARAVIS_HAS_V4L2@
+
+/**
  * ARAVIS_HAS_PACKET_SOCKET
  *
  * ARAVIS_HAS_PACKET_SOCKET is defined as 1 if aravis is compiled with packet socket support, 0 if not.
  *
- * Since: 0.6.0
+ * Since: 0.8.0
  */
 
 #define ARAVIS_HAS_PACKET_SOCKET @ARAVIS_HAS_PACKET_SOCKET@

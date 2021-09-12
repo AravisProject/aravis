@@ -117,6 +117,12 @@
 #include <arvuvstream.h>
 #endif
 
+#if ARAVIS_HAS_V4L2
+#include <arvv4l2interface.h>
+#include <arvv4l2device.h>
+#include <arvv4l2stream.h>
+#endif
+
 #include <arvversion.h>
 #include <arvzip.h>
 #include <arvxmlschema.h>
