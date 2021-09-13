@@ -166,6 +166,7 @@ library_private_headers = [
 	'arvfakedeviceprivate.h',
 	'arvfakeinterfaceprivate.h',
 	'arvfakestreamprivate.h',
+	'arvgcprivate.h',
 	'arvgcconverterprivate.h',
 	'arvgcdefaultsprivate.h',
 	'arvgcfeaturenodeprivate.h',

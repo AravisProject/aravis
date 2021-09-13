@@ -29,7 +29,7 @@
  * standard format. See http://www.genicam.org.
  */
 
-#include <arvgc.h>
+#include <arvgcprivate.h>
 #include <arvgcnode.h>
 #include <arvgcpropertynode.h>
 #include <arvgcindexnode.h>
@@ -73,6 +73,8 @@ typedef struct {
 
 	ArvRegisterCachePolicy cache_policy;
 	ArvRangeCheckPolicy range_check_policy;
+
+        unsigned n_register_cache_errors;
 } ArvGcPrivate;
 
 struct _ArvGc {
@@ -426,6 +428,16 @@ arv_gc_get_buffer (ArvGc *genicam)
 	g_return_val_if_fail (ARV_IS_GC (genicam), NULL);
 
 	return genicam->priv->buffer;
+}
+
+guint64
+arv_gc_register_cache_error_add (ArvGc *genicam, guint64 n_errors)
+{
+	g_return_val_if_fail (ARV_IS_GC (genicam), 0);
+
+        genicam->priv->n_register_cache_errors += n_errors;
+
+        return genicam->priv->n_register_cache_errors;
 }
 
 ArvGc *
