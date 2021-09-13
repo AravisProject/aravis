@@ -36,7 +36,7 @@
 #include <arvgcfloat.h>
 #include <arvgcstring.h>
 #include <arvgcport.h>
-#include <arvgc.h>
+#include <arvgcprivate.h>
 #include <arvmiscprivate.h>
 #include <arvdebugprivate.h>
 #include <stdlib.h>
@@ -359,6 +359,8 @@ _read_from_port (ArvGcRegisterNode *self, gint64 address, gint64 length, void *b
 			arv_warning_policies ("Current and cached value mismatch for '%s'\n",
 					      arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
 			priv->n_cache_errors++;
+
+                        arv_gc_register_cache_error_add (arv_gc_node_get_genicam (ARV_GC_NODE (self)), 1);
 		}
 		g_free (cache);
 	}

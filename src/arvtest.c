@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <arvdebugprivate.h>
 #include <arvmiscprivate.h>
+#include <arvgcprivate.h>
 #include <math.h>
 
 #ifdef _MSC_VER
@@ -88,13 +89,14 @@ typedef struct {
         ArvCamera *camera;
         char *vendor_model;
         GSList *results;
+        gboolean cache_check;
 } ArvTestCamera;
 
 #define ARV_TYPE_TEST_CAMERA (arv_test_camera_get_type())
 GType arv_test_camera_get_type(void);
 
 static ArvTestCamera *
-arv_test_camera_new (const char *camera_id)
+arv_test_camera_new (const char *camera_id, gboolean cache_check)
 {
         ArvTestCamera *test_camera;
         ArvCamera *camera = arv_camera_new (camera_id, NULL);
@@ -108,14 +110,18 @@ arv_test_camera_new (const char *camera_id)
         test_camera->vendor_model = g_strdup_printf ("%s:%s",
                                                      arv_camera_get_vendor_name (test_camera->camera, NULL),
                                                      arv_camera_get_model_name (test_camera->camera, NULL));
+        test_camera->cache_check = cache_check;
+
+        if (cache_check)
+                arv_camera_set_register_cache_policy (test_camera->camera, ARV_REGISTER_CACHE_POLICY_DEBUG);
 
         return test_camera;
 }
 
 static ArvTestCamera *
-arv_test_camera_copy (ArvTestCamera *camera)
+arv_test_camera_copy (ArvTestCamera *self)
 {
-        return arv_test_camera_new (camera->id);
+        return arv_test_camera_new (self->id, self->cache_check);
 }
 
 static void
@@ -339,6 +345,16 @@ arv_test_camera_get_key_file_integer_list (ArvTestCamera *test_camera, ArvTest *
         g_return_val_if_fail (ARV_IS_TEST (test), NULL);
 
         return g_key_file_get_integer_list (test->key_file, test_camera->vendor_model, key, size, NULL);
+}
+
+static guint64
+arv_test_camera_get_n_register_cache_errors (ArvTestCamera *test_camera)
+{
+        ArvGc *genicam;
+
+        genicam = arv_device_get_genicam (arv_camera_get_device (test_camera->camera));
+
+        return arv_gc_register_cache_error_add (genicam, 0);
 }
 
 static void
@@ -779,7 +795,8 @@ static gboolean
 arv_test_run (ArvTest *test, unsigned int n_iterations,
               const char *camera_selection,
               const char *test_selection,
-	      ArvUvUsbMode usb_mode)
+	      ArvUvUsbMode usb_mode,
+              gboolean cache_check)
 {
         GRegex *camera_regex;
         GRegex *test_regex;
@@ -804,7 +821,7 @@ arv_test_run (ArvTest *test, unsigned int n_iterations,
                                 ArvTestCamera* test_camera = NULL;
                                 unsigned int j;
 
-                                test_camera = arv_test_camera_new (camera_id);
+                                test_camera = arv_test_camera_new (camera_id, cache_check);
 
                                 if (test_camera == NULL) {
                                         printf ("Failed to connect to '%s:%s'\n",
@@ -852,6 +869,23 @@ arv_test_run (ArvTest *test, unsigned int n_iterations,
 
                                 }
 
+                                if (cache_check) {
+                                        guint64 n_cache_errors;
+                                        char *comment = NULL;
+
+                                        n_cache_errors = arv_test_camera_get_n_register_cache_errors (test_camera);
+
+                                        if (n_cache_errors > 0)
+                                                comment = g_strdup_printf ("%" G_GUINT64_FORMAT " error(s)", n_cache_errors);
+
+                                        arv_test_camera_add_result (test_camera, "Genicam", "RegisterCache",
+                                                                    n_cache_errors == 0 ?
+                                                                    ARV_TEST_STATUS_SUCCESS :
+                                                                    ARV_TEST_STATUS_FAILURE,
+                                                                    comment);
+                                        g_free (comment);
+                                }
+
                                 g_clear_pointer (&test_camera, arv_test_camera_free);
                         }
                 }
@@ -881,6 +915,7 @@ static gint arv_option_n_iterations = 1;
 static char *arv_option_configuration = NULL;
 static char *arv_option_debug_domains = NULL;
 static char *arv_option_uv_usb_mode = NULL;
+static gboolean arv_option_cache_check = FALSE;
 
 static const GOptionEntry arv_option_entries[] =
 {
@@ -909,6 +944,11 @@ static const GOptionEntry arv_option_entries[] =
 		&arv_option_uv_usb_mode,		"USB device I/O mode",
 		"{sync|async}"
 	},
+        {
+		"cache-check",				'a', 0, G_OPTION_ARG_NONE,
+		&arv_option_cache_check,		"Register cache check",
+		NULL
+        },
 	{
 		"debug", 				'd', 0, G_OPTION_ARG_STRING,
 		&arv_option_debug_domains, 		NULL,
@@ -975,7 +1015,12 @@ main (int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-        if (!arv_test_run (test, arv_option_n_iterations, arv_option_camera_selection, arv_option_test_selection, usb_mode))
+        if (!arv_test_run (test,
+                           arv_option_n_iterations,
+                           arv_option_camera_selection,
+                           arv_option_test_selection,
+                           usb_mode,
+                           arv_option_cache_check))
                 success = FALSE;
 
         g_clear_object (&test);
