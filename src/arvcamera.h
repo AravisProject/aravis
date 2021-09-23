@@ -32,7 +32,9 @@
 #include <arvstream.h>
 #include <arvgvstream.h>
 #include <arvgvdevice.h>
+#if ARAVIS_HAS_USB
 #include <arvuvdevice.h>
+#endif
 
 G_BEGIN_DECLS
 
