@@ -198,16 +198,12 @@ ARV_API void		arv_camera_gv_set_packet_size_adjustment	(ArvCamera *camera,
 
 ARV_API void		arv_camera_gv_set_stream_options		(ArvCamera *camera, ArvGvStreamOption options);
 
-/* USB3Vision specific API */
-#if ARAVIS_HAS_USB
-
 ARV_API gboolean	arv_camera_is_uv_device				(ArvCamera *camera);
 ARV_API gboolean	arv_camera_uv_is_bandwidth_control_available	(ArvCamera *camera, GError **error);
 ARV_API void		arv_camera_uv_set_bandwidth			(ArvCamera *camera, guint bandwidth, GError **error);
 ARV_API guint		arv_camera_uv_get_bandwidth			(ArvCamera *camera, GError **error);
 ARV_API void		arv_camera_uv_get_bandwidth_bounds		(ArvCamera *camera, guint *min, guint *max, GError **error);
 ARV_API void            arv_camera_uv_set_usb_mode			(ArvCamera *camera, ArvUvUsbMode usb_mode);
-#endif
 
 /* Chunk data */
 
