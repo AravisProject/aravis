@@ -1,4 +1,4 @@
-name: Aravis-CI
+name: Aravis-Linux
 
 on:
   push:
@@ -34,30 +34,4 @@ jobs:
       if: failure()
       with:
         name: Linux_Meson_Testlog
-        path: build/meson-logs/testlog.txt
-
-  macos:
-    runs-on: macos-latest
-    steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
-    - name: Install dependencies
-      run: |
-        pip install meson ninja
-        brew update
-        brew install gcc gettext intltool gtk-doc libxml2 libusb gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad gnome-icon-theme gobject-introspection
-    - name: Build
-      run: |
-        meson --buildtype=plain -Ddocumentation=disabled -Dgst-plugin=enabled -Dintrospection=disabled -Dusb=enabled -Dviewer=enabled . ./build
-        ninja -C ./build
-      env:
-        CC: gcc
-    - name: Tests
-      run: meson test -C build/ -v
-    - uses: actions/upload-artifact@v2
-      if: failure()
-      with:
-        name: MacOS_Meson_Testlog
         path: build/meson-logs/testlog.txt
