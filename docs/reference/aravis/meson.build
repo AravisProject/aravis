@@ -11,7 +11,12 @@ if not usb_dep.found()
 	doc_ignore_headers += [
 		'arvuvinterface.h',
 		'arvuvdevice.h',
-		'arvuvstream.h'
+		'arvuvstream.h',
+		'arvuvspprivate.h',
+		'arvuvcpprivate.h',
+		'arvuvdeviceprivate.h',
+		'arvuvinterfaceprivate.h',
+		'arvuvstreamprivate.h'
 	]
 endif
 
