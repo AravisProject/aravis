@@ -382,9 +382,9 @@ ARV_FAKE_INTERFACE_SOCKET_BUFFER_SIZE
 <SECTION>
 <FILE>arvuvinterface</FILE>
 <TITLE>ArvUvInterface</TITLE>
-ArvUvInterface
 arv_uv_interface_get_instance
 <SUBSECTION Standard>
+ArvUvInterface
 ARV_IS_UV_INTERFACE
 ARV_IS_UV_INTERFACE_CLASS
 ARV_TYPE_UV_INTERFACE
