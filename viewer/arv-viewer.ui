@@ -59,8 +59,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
         <property name="visible">True</property>
         <property name="can-focus">False</property>
         <property name="valign">start</property>
-        <property name="margin-left">6</property>
-        <property name="margin-right">6</property>
+        <property name="margin-start">6</property>
+        <property name="margin-end">6</property>
         <property name="margin-top">6</property>
         <property name="margin-bottom">6</property>
         <property name="row-spacing">6</property>
@@ -256,6 +256,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
               <object class="GtkBox" id="camera_box">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
+                <property name="margin-start">6</property>
+                <property name="margin-end">6</property>
                 <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkScrolledWindow">
@@ -375,6 +377,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="valign">end</property>
+                    <property name="margin-start">6</property>
+                    <property name="margin-end">6</property>
                     <property name="margin-top">12</property>
                     <property name="margin-bottom">12</property>
                     <property name="row-spacing">6</property>
