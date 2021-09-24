@@ -1,3 +1,9 @@
+Stable release 0.8.18
+=====================
+
+  * usb3vision: fix header inclusion when USB is disabled (Marc)
+  * tests: register cache test (Emmanuel)
+
 Stable release 0.8.17
 =====================
 
