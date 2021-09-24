@@ -89,6 +89,20 @@ ARV_API const char *		arv_exposure_mode_to_string		(ArvExposureMode value);
 ARV_API ArvExposureMode		arv_exposure_mode_from_string		(const char *string);
 
 /**
+ * ArvUvUsbMode:
+ * @ARV_UV_USB_MODE_SYNC: utilize libusb synchronous device I/O API
+ * @ARV_UV_USB_MODE_ASYNC: utilize libusb asynchronous device I/O API
+ * @ARV_UV_USB_MODE_DEFAULT: default usb mode
+ */
+
+typedef enum
+{
+	ARV_UV_USB_MODE_SYNC,
+	ARV_UV_USB_MODE_ASYNC,
+        ARV_UV_USB_MODE_DEFAULT = ARV_UV_USB_MODE_SYNC
+} ArvUvUsbMode;
+
+/**
  * ArvPixelFormat:
  *
  * A datatype to hold a pixel format.
