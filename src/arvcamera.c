@@ -1752,6 +1752,93 @@ arv_camera_get_gain_auto (ArvCamera *camera, GError **error)
 	return arv_auto_from_string (arv_camera_get_string (camera, "GainAuto", error));
 }
 
+
+/**
+ * arv_camera_set_brightness:
+ * @camera: a #ArvCamera
+ * @gain: brightness value
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Sets the brightness level (also known as black level).
+ *
+ * Since: 0.8.18
+ */
+
+void
+arv_camera_set_brightness (ArvCamera *camera, guint64 brightness, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+//	if (priv->has_brightness)
+//		arv_camera_set_float (camera, "Gain", gain, error);
+//	else {
+//		if (priv->gain_raw_as_float)
+//			arv_camera_set_float (camera, "GainRaw", gain, error);
+//		else
+//			arv_camera_set_integer (camera, "GainRaw", gain, error);
+//	}
+}
+
+/**
+ * arv_camera_get_brightness:
+ * @camera: a #ArvCamera
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: the current brightness setting.
+ *
+ * Since: 0.8.18
+ */
+
+guint64
+arv_camera_get_brightness (ArvCamera *camera, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0.0);
+
+//	if (priv->has_brightness)
+//		return arv_camera_get_float (camera, "Gain", error);
+//	else if (priv->gain_raw_as_float)
+//		return arv_camera_get_float (camera, "GainRaw", error);
+//
+//	return arv_camera_get_integer (camera, "GainRaw", error);
+	return 0;
+}
+
+/**
+ * arv_camera_get_brightness_bounds:
+ * @camera: a #ArvCamera
+ * @min: (out): minimum brightness
+ * @max: (out): maximum brightness
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Retrieves brightness bounds.
+ *
+ * Since: 0.8.18
+ */
+
+void
+arv_camera_get_brightness_bounds (ArvCamera *camera, guint64 *min, guint64 *max, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+//	if (priv->has_brightness) {
+//		arv_camera_get_float_bounds (camera, "Gain", min, max, error);
+//		return;
+//	} else if (priv->gain_raw_as_float) {
+//		arv_camera_get_float_bounds (camera, "GainRaw", min, max, error);
+//		return;
+//	}
+//
+//	arv_camera_get_integer_bounds_as_double (camera, "GainRaw", min, max, error);
+
+	return;
+}
+
 /* Transport layer control */
 
 /**
