@@ -1776,18 +1776,6 @@ arv_camera_is_brightness_available (ArvCamera *camera, GError **error) {
 		return arv_camera_is_feature_available (camera, "BlackLevelRaw", error);
 }
 
-
-/**
- * arv_camera_set_brightness:
- * @camera: a #ArvCamera
- * @gain: brightness value
- * @error: a #GError placeholder, %NULL to ignore
- *
- * Sets the brightness level (also known as black level).
- *
- * Since: 0.8.18
- */
-
 void
 arv_camera_set_brightness (ArvCamera *camera, double brightness, GError **error)
 {
