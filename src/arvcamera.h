@@ -137,9 +137,9 @@ ARV_API void		arv_camera_set_gain_auto		(ArvCamera *camera, ArvAuto auto_mode, G
 ARV_API ArvAuto		arv_camera_get_gain_auto		(ArvCamera *camera, GError **error);
 
 ARV_API gboolean	arv_camera_is_brightness_available	(ArvCamera *camera, GError **error);
-ARV_API void		arv_camera_set_brightness			(ArvCamera *camera, guint64 brightness, GError **error);
-ARV_API guint64		arv_camera_get_brightness			(ArvCamera *camera, GError **error);
-ARV_API void		arv_camera_get_brightness_bounds	(ArvCamera *camera, guint64 *min, guint64 *max, GError **error);
+ARV_API void		arv_camera_set_brightness			(ArvCamera *camera, double brightness, GError **error);
+ARV_API double		arv_camera_get_brightness			(ArvCamera *camera, GError **error);
+ARV_API void		arv_camera_get_brightness_bounds	(ArvCamera *camera, double *min, double *max, GError **error);
 
 /* Transport layer control */
 
