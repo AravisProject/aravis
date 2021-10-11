@@ -1908,8 +1908,6 @@ arv_camera_is_gain_available (ArvCamera *camera, GError **error)
 		return arv_camera_is_feature_available (camera, "GainRaw", error);
 	if (priv->gain_abs_as_float)
 		return arv_camera_is_feature_available (camera, "GainAbs", error);
-	if (priv->gain_abs_as_float)
-		return arv_camera_is_feature_available (camera, "GainAbs", error);
 
 	return arv_camera_is_feature_available (camera, "GainRaw", error);
 }
