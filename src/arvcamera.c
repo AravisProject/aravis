@@ -113,7 +113,7 @@ typedef struct {
 	gboolean has_gain;
 	gboolean gain_raw_as_float;
 
-	gboolean brightness_as_float;
+	gboolean blacklevel_as_brightness_float;
 
 	gboolean has_exposure_time;
 	gboolean has_acquisition_frame_rate;
@@ -1755,86 +1755,99 @@ arv_camera_get_gain_auto (ArvCamera *camera, GError **error)
 }
 
 /**
- * arv_camera_is_brightness_available:
+ * arv_camera_is_black_level_available:
  * @camera: a #ArvCamera
- * @error: a #GError placeholder, %NULL to ingore
+ * @error: a #GError placeholder, %NULL to ignore
  *
- * Returns: %TRUE if Brightness (BlackLevel) feature is available.
+ * Returns: %TRUE if BlackLevel feature is available.
  *
- * Since: 0.8.18
+ * Since: 0.8.19
  */
 
 gboolean
-arv_camera_is_brightness_available (ArvCamera *camera, GError **error) {
+arv_camera_is_black_level_available (ArvCamera *camera, GError **error) {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
-	if (priv->brightness_as_float)
+	if (priv->blacklevel_as_brightness_float)
 		return arv_camera_is_feature_available (camera, "Brightness", error);
 	else
 		return arv_camera_is_feature_available (camera, "BlackLevelRaw", error);
+	// TODO: add BlackLevel as default, as it is the SFNC standard
 }
 
+/**
+ * arv_camera_set_black_level:
+ * @camera: a #ArvCamera
+ * @blacklevel: blacklevel value
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Since: 0.8.19
+ */
+
 void
-arv_camera_set_brightness (ArvCamera *camera, double brightness, GError **error)
+arv_camera_set_black_level (ArvCamera *camera, double blacklevel, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
-	if (priv->brightness_as_float)
-		arv_camera_set_float (camera, "Brightness", brightness, error);
+	if (priv->blacklevel_as_brightness_float)
+		arv_camera_set_float (camera, "Brightness", blacklevel, error);
 	else
-		arv_camera_set_integer (camera, "BlackLevelRaw", brightness, error);
+		arv_camera_set_integer (camera, "BlackLevelRaw", blacklevel, error);
+	// TODO: add BlackLevel as default, as it is the SFNC standard
 }
 
 /**
- * arv_camera_get_brightness:
+ * arv_camera_get_black_level:
  * @camera: a #ArvCamera
  * @error: a #GError placeholder, %NULL to ignore
  *
- * Returns: the current brightness setting.
+ * Returns: the current blacklevel setting.
  *
- * Since: 0.8.18
+ * Since: 0.8.19
  */
 
 double
-arv_camera_get_brightness (ArvCamera *camera, GError **error)
+arv_camera_get_black_level (ArvCamera *camera, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0.0);
 
-	if (priv->brightness_as_float)
+	if (priv->blacklevel_as_brightness_float)
 		return arv_camera_get_float (camera, "Brightness", error);
 	else
 		return arv_camera_get_integer (camera, "BlackLevelRaw", error);
+	// TODO: add BlackLevel as default, as it is the SFNC standard
 }
 
 /**
- * arv_camera_get_brightness_bounds:
+ * arv_camera_get_black_level_bounds:
  * @camera: a #ArvCamera
- * @min: (out): minimum brightness
- * @max: (out): maximum brightness
+ * @min: (out): minimum blacklevel
+ * @max: (out): maximum blacklevel
  * @error: a #GError placeholder, %NULL to ignore
  *
- * Retrieves brightness bounds.
+ * Retrieves blacklevel bounds.
  *
- * Since: 0.8.18
+ * Since: 0.8.19
  */
 
 void
-arv_camera_get_brightness_bounds (ArvCamera *camera, double *min, double *max, GError **error)
+arv_camera_get_black_level_bounds (ArvCamera *camera, double *min, double *max, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
-	if (priv->brightness_as_float)
+	if (priv->blacklevel_as_brightness_float)
 		arv_camera_get_float_bounds (camera, "Brightness", min, max, error);
 	else
 		arv_camera_get_integer_bounds_as_double (camera, "BlackLevelRaw", min, max, error);
+	// TODO: add BlackLevel as default, as it is the SFNC standard
 }
 
 /* Transport layer control */
@@ -3424,7 +3437,7 @@ arv_camera_constructed (GObject *object)
 	priv->has_gain = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device, "Gain"));
 	priv->gain_raw_as_float = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device, "GainRaw"));
 
-	priv->brightness_as_float = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device, "Brightness"));
+	priv->blacklevel_as_brightness_float = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device, "Brightness"));
 
 	priv->has_exposure_time = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device, "ExposureTime"));
 	priv->has_acquisition_frame_rate = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device,
