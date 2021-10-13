@@ -1251,7 +1251,8 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source, GError **error)
 {
 	GError *local_error = NULL;
 	gboolean has_frame_start = FALSE;
-	gboolean has_acquisition_start = FALSE;
+        gboolean has_frame_burst_start = FALSE; /* Hikrobot, Basler devices */
+	gboolean has_acquisition_start = FALSE; /* Smartek devices */
         const char **triggers = NULL;
         guint n_triggers = 0;
         unsigned int i;
@@ -1270,6 +1271,8 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source, GError **error)
                 if (local_error == NULL) {
                         if (g_strcmp0 (triggers[i], "FrameStart") == 0)
                                 has_frame_start = TRUE;
+                        else if (g_strcmp0 (triggers[i], "FrameBurstStart") == 0)
+                                has_frame_burst_start = TRUE;
                         else if (g_strcmp0 (triggers[i], "AcquisitionStart") == 0)
                                 has_acquisition_start = TRUE;
                         arv_camera_set_string (camera, "TriggerMode", "Off", &local_error);
@@ -1279,6 +1282,8 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source, GError **error)
         if (local_error == NULL) {
                 if (has_frame_start) {
                         arv_camera_set_string (camera, "TriggerSelector", "FrameStart", &local_error);
+                } else if (has_frame_burst_start) {
+                        arv_camera_set_string (camera, "TriggerSelector", "FrameBurstStart", &local_error);
                 } else if (has_acquisition_start) {
                         arv_camera_set_string (camera, "TriggerSelector", "AcquisitionStart", &local_error);
                 } else {
