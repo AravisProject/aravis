@@ -54,7 +54,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
     <property name="can-focus">False</property>
     <property name="relative-to">acquisition_button</property>
     <child>
-      <!-- n-columns=5 n-rows=3 -->
+      <!-- n-columns=5 n-rows=4 -->
       <object class="GtkGrid" id="grid2">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
@@ -162,6 +162,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
             <property name="width-chars">11</property>
             <property name="primary-icon-activatable">False</property>
             <property name="secondary-icon-activatable">False</property>
+            <property name="numeric">True</property>
           </object>
           <packing>
             <property name="left-attach">2</property>
@@ -176,6 +177,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
             <property name="width-chars">11</property>
             <property name="primary-icon-activatable">False</property>
             <property name="secondary-icon-activatable">False</property>
+            <property name="input-purpose">digits</property>
+            <property name="digits">2</property>
+            <property name="numeric">True</property>
           </object>
           <packing>
             <property name="left-attach">2</property>
@@ -236,6 +240,62 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
             <property name="left-attach">0</property>
             <property name="top-attach">0</property>
           </packing>
+        </child>
+        <child>
+          <object class="GtkToggleButton" id="auto_black_level_togglebutton">
+            <property name="label" translatable="yes">Auto</property>
+            <property name="use-action-appearance">False</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+          </object>
+          <packing>
+            <property name="left-attach">0</property>
+            <property name="top-attach">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="label1">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="label" translatable="yes">Black level:</property>
+            <property name="xalign">1</property>
+          </object>
+          <packing>
+            <property name="left-attach">1</property>
+            <property name="top-attach">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSpinButton" id="black_level_spinbutton">
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="invisible-char">•</property>
+            <property name="width-chars">11</property>
+            <property name="primary-icon-activatable">False</property>
+            <property name="secondary-icon-activatable">False</property>
+            <property name="input-purpose">digits</property>
+            <property name="digits">2</property>
+            <property name="numeric">True</property>
+          </object>
+          <packing>
+            <property name="left-attach">2</property>
+            <property name="top-attach">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkHScale" id="black_level_hscale">
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="draw-value">False</property>
+          </object>
+          <packing>
+            <property name="left-attach">4</property>
+            <property name="top-attach">3</property>
+          </packing>
+        </child>
+        <child>
+          <placeholder/>
         </child>
       </object>
     </child>
