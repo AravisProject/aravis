@@ -1808,7 +1808,7 @@ arv_camera_set_black_level (ArvCamera *camera, double blacklevel, GError **error
 	else if (priv->uses_blacklevelraw)
 		arv_camera_set_integer (camera, "BlackLevelRaw", blacklevel, error);
 	else
-		arv_camera_set_integer (camera, "BlackLevel", blacklevel, error);
+		arv_camera_set_float (camera, "BlackLevel", blacklevel, error);
 }
 
 /**
@@ -1833,7 +1833,7 @@ arv_camera_get_black_level (ArvCamera *camera, GError **error)
 	else if (priv->uses_blacklevelraw)
 		return arv_camera_get_integer (camera, "BlackLevelRaw", error);
 	else
-		return arv_camera_get_integer (camera, "BlackLevel", error);
+		return arv_camera_get_float (camera, "BlackLevel", error);
 }
 
 /**
@@ -1860,7 +1860,7 @@ arv_camera_get_black_level_bounds (ArvCamera *camera, double *min, double *max, 
 	else if (priv->uses_blacklevelraw)
 		arv_camera_get_integer_bounds_as_double (camera, "BlackLevelRaw", min, max, error);
 	else
-		arv_camera_get_integer_bounds_as_double (camera, "BlackLevel", min, max, error);
+		arv_camera_get_float_bounds (camera, "BlackLevel", min, max, error);
 }
 
 /* Transport layer control */
