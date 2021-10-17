@@ -1863,6 +1863,41 @@ arv_camera_get_black_level_bounds (ArvCamera *camera, double *min, double *max, 
 		arv_camera_get_float_bounds (camera, "BlackLevel", min, max, error);
 }
 
+/**
+ * arv_camera_set_black_level_auto:
+ * @camera: a #ArvCamera
+ * @auto_mode: auto black_level mode selection
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Configures automatic black level feature.
+ *
+ * Since: 0.8.19
+ **/
+
+void
+arv_camera_set_black_level_auto (ArvCamera *camera, ArvAuto auto_mode, GError **error)
+{
+	arv_camera_set_string (camera, "BlackLevelAuto", arv_auto_to_string (auto_mode), error);
+}
+
+/**
+ * arv_camera_get_black_level_auto:
+ * @camera: a #ArvCamera
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: auto black level mode selection
+ *
+ * Since: 0.8.19
+ **/
+
+ArvAuto
+arv_camera_get_black_level_auto (ArvCamera *camera, GError **error)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), ARV_AUTO_OFF);
+
+	return arv_auto_from_string (arv_camera_get_string (camera, "BlackLevelAuto", error));
+}
+
 /* Transport layer control */
 
 /**
@@ -2020,7 +2055,7 @@ arv_camera_is_gain_available (ArvCamera *camera, GError **error)
  * @camera: a #ArvCamera
  * @error: a #GError placeholder, %NULL to ingore
  *
- * Returns: %TRUE if Gain feature is available.
+ * Returns: %TRUE if auto gain feature is available.
  *
  * Since: 0.8.0
  */
@@ -2029,6 +2064,22 @@ gboolean
 arv_camera_is_gain_auto_available (ArvCamera *camera, GError **error)
 {
 	return arv_camera_is_feature_available (camera, "GainAuto", error);
+}
+
+/**
+ * arv_camera_is_black_level_auto_available:
+ * @camera: a #ArvCamera
+ * @error: a #GError placeholder, %NULL to ingore
+ *
+ * Returns: %TRUE if auto black level feature is available.
+ *
+ * Since: 0.8.19
+ */
+
+gboolean
+arv_camera_is_black_level_auto_available (ArvCamera *camera, GError **error)
+{
+	return arv_camera_is_feature_available (camera, "BlackLevelAuto", error);
 }
 
 /**
