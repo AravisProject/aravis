@@ -154,7 +154,9 @@ tree is just a wrapper shell script):
 sudo setcap cap_net_raw+ep arv-viewer
 ```
 
-### USB Permissions
+### USB
+
+#### Permissions
 
 By default, USB devices permissions may not be sufficient to allow any user to
 access the USB3 cameras. This permissions can be changed by using an udev rule
@@ -164,6 +166,16 @@ the distribution you are using). This file only contains declarations for a
 couple of vendors. If you want to add an entry with the vendor of your camera,
 the output of `lsusb` command will give you the vendor id, which is the first 4
 digits of the ID field.
+
+#### Performance
+
+Aravis uses by default the synchronous libusb API. But it can be told to use the
+asynchronous API for better performances, especially on embedded platform like
+RapsberryPi or Nvidia Jetson boards. The function to use is
+`arv_camera_set_usb_mode()`.
+
+`arv-viewer` and `arv-camera-test` can also use the asynchronous API, if
+`usb-mode` option is set to `async`.
 
 ### Dependencies
 
