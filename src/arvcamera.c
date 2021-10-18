@@ -114,8 +114,9 @@ typedef struct {
 	gboolean gain_raw_as_float;
 	gboolean gain_abs_as_float;
 
-	gboolean blacklevel_as_brightness_float;
-	gboolean uses_blacklevelraw;
+	gboolean has_brightness;
+	gboolean has_black_level_raw;
+        gboolean has_black_level;
 
 	gboolean has_exposure_time;
 	gboolean has_acquisition_frame_rate;
@@ -1779,12 +1780,14 @@ arv_camera_is_black_level_available (ArvCamera *camera, GError **error) {
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
-	if (priv->blacklevel_as_brightness_float)
+	if (priv->has_brightness)
 		return arv_camera_is_feature_available (camera, "Brightness", error);
-	else if (priv->uses_blacklevelraw)
+	else if (priv->has_black_level_raw)
 		return arv_camera_is_feature_available (camera, "BlackLevelRaw", error);
-	else
+	else if (priv->has_black_level)
 		return arv_camera_is_feature_available (camera, "BlackLevel", error);
+
+        return FALSE;
 }
 
 /**
@@ -1803,9 +1806,9 @@ arv_camera_set_black_level (ArvCamera *camera, double blacklevel, GError **error
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
-	if (priv->blacklevel_as_brightness_float)
+	if (priv->has_brightness)
 		arv_camera_set_float (camera, "Brightness", blacklevel, error);
-	else if (priv->uses_blacklevelraw)
+	else if (priv->has_black_level_raw)
 		arv_camera_set_integer (camera, "BlackLevelRaw", blacklevel, error);
 	else
 		arv_camera_set_float (camera, "BlackLevel", blacklevel, error);
@@ -1828,9 +1831,9 @@ arv_camera_get_black_level (ArvCamera *camera, GError **error)
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0.0);
 
-	if (priv->blacklevel_as_brightness_float)
+	if (priv->has_brightness)
 		return arv_camera_get_float (camera, "Brightness", error);
-	else if (priv->uses_blacklevelraw)
+	else if (priv->has_black_level_raw)
 		return arv_camera_get_integer (camera, "BlackLevelRaw", error);
 	else
 		return arv_camera_get_float (camera, "BlackLevel", error);
@@ -1855,9 +1858,9 @@ arv_camera_get_black_level_bounds (ArvCamera *camera, double *min, double *max, 
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
-	if (priv->blacklevel_as_brightness_float)
+	if (priv->has_brightness)
 		arv_camera_get_float_bounds (camera, "Brightness", min, max, error);
-	else if (priv->uses_blacklevelraw)
+	else if (priv->has_black_level_raw)
 		arv_camera_get_integer_bounds_as_double (camera, "BlackLevelRaw", min, max, error);
 	else
 		arv_camera_get_float_bounds (camera, "BlackLevel", min, max, error);
@@ -3504,8 +3507,9 @@ arv_camera_constructed (GObject *object)
 	priv->gain_raw_as_float = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device, "GainRaw"));
 	priv->gain_abs_as_float = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device, "GainAbs"));
 
-	priv->blacklevel_as_brightness_float = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device, "Brightness"));
-	priv->uses_blacklevelraw = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device, "BlackLevelRaw"));
+	priv->has_brightness = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device, "Brightness"));
+	priv->has_black_level_raw = ARV_IS_GC_INTEGER (arv_device_get_feature (priv->device, "BlackLevelRaw"));
+	priv->has_black_level = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device, "BlackLevel"));
 
 	priv->has_exposure_time = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device, "ExposureTime"));
 	priv->has_acquisition_frame_rate = ARV_IS_GC_FLOAT (arv_device_get_feature (priv->device,
