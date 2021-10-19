@@ -1,3 +1,12 @@
+Stable release 0.8.19
+=====================
+
+  * camera: black level support (Brian)
+  * camera: GainAbs support for gain setting (Brian)
+  * camera: FrameBurstStart support for trigger configuration (Emmanuel)
+  * viewer: minor layout fixes (Emmanuel)
+  * ci: MSVC improvements (Siim)
+
 Stable release 0.8.18
 =====================
 
