@@ -329,7 +329,8 @@ arv_make_thread_high_priority (int nice_level)
 gboolean
 arv_make_thread_realtime (int priority)
 {
-	if(!SetPriorityClass(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL))
+	SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
+	if(!SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL))
    {
 		DWORD err = GetLastError();
 		arv_warning_misc ("SetPriorityClass(..., THREAD_PRIORITY_TIME_CRITICAL) failed (%lu)", err);
@@ -342,10 +343,10 @@ arv_make_thread_realtime (int priority)
 gboolean
 arv_make_thread_high_priority (int priority)
 {
-	if(!SetPriorityClass(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL))
+	if(!SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST))
    {
 		DWORD err = GetLastError();
-		arv_warning_misc ("SetPriorityClass(..., THREAD_PRIORITY_ABOVE_NORMAL) failed (%lu)", err);
+		arv_warning_misc ("SetPriorityClass(..., THREAD_PRIORITY_HIGHEST) failed (%lu)", err);
 		return FALSE;
 	}
 	g_critical("Thread made high-priority!");
