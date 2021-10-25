@@ -8,8 +8,7 @@ configure_file (input: files('arv-viewer.appdata.xml.in'),
 		configuration: appdata_conf,
 		install_dir: aravis_app_data_dir)
 
-desktop = i18n.merge_file ('desktop',
-			   input: configure_file (input: files('arv-viewer.desktop.in.in'),
+desktop = i18n.merge_file (input: configure_file (input: files('arv-viewer.desktop.in.in'),
 						  output: 'arv-viewer.desktop.in',
 						  configuration: appdata_conf),
 			   output: 'arv-viewer-@0@.desktop'.format (aravis_api_version),
