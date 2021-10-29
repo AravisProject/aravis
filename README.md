@@ -175,7 +175,9 @@ RapsberryPi or Nvidia Jetson boards. The function to use is
 `arv_camera_set_usb_mode()`.
 
 `arv-viewer` and `arv-camera-test` can also use the asynchronous API, if
-`usb-mode` option is set to `async`.
+`usb-mode` option is set to `async`. When using the GStreamer plugin,
+the asynchronous API can be used by setting the `usb_asynchronous` property
+to `true`.
 
 ### Dependencies
 
