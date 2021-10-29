@@ -336,7 +336,7 @@ arv_make_thread_realtime (int priority)
 		arv_warning_misc ("SetPriorityClass(..., THREAD_PRIORITY_TIME_CRITICAL) failed (%lu)", err);
 		return FALSE;
 	}
-	g_critical("Thread made realtime!");
+	arv_info_misc ("Thread made realtime!");
 	return TRUE;
 }
 
@@ -349,7 +349,7 @@ arv_make_thread_high_priority (int priority)
 		arv_warning_misc ("SetPriorityClass(..., THREAD_PRIORITY_HIGHEST) failed (%lu)", err);
 		return FALSE;
 	}
-	g_critical("Thread made high-priority!");
+	arv_info_misc ("Thread made high-priority!");
 	return TRUE;
 }
 
