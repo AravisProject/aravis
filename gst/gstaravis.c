@@ -65,7 +65,8 @@ enum
   PROP_AUTO_PACKET_SIZE,
   PROP_PACKET_RESEND,
   PROP_FEATURES,
-  PROP_NUM_ARV_BUFFERS
+  PROP_NUM_ARV_BUFFERS,
+  PROP_USB_ASYNCHRONOUS
 };
 
 #define GST_TYPE_ARV_AUTO (gst_arv_auto_get_type())
@@ -396,6 +397,7 @@ gst_aravis_init_camera (GstAravis *gst_aravis, GError **error)
 
 	if (!local_error) arv_camera_get_region (gst_aravis->camera, &gst_aravis->offset_x, &gst_aravis->offset_y, NULL, NULL, &local_error);
 	if (!local_error) gst_aravis->payload = 0;
+	if (!local_error) arv_camera_uv_set_usb_mode (gst_aravis->camera, gst_aravis->usb_asynchronous ? ARV_UV_USB_MODE_SYNC : ARV_UV_USB_MODE_ASYNC);
 
 	if (local_error) {
 		g_clear_object (&gst_aravis->camera);
@@ -637,6 +639,7 @@ gst_aravis_init (GstAravis *gst_aravis)
         gst_aravis->packet_resend = TRUE;
 	gst_aravis->num_arv_buffers = GST_ARAVIS_DEFAULT_N_BUFFERS;
 	gst_aravis->payload = 0;
+	gst_aravis->usb_asynchronous = FALSE;
 
 	gst_aravis->buffer_timeout_us = GST_ARAVIS_BUFFER_TIMEOUT_DEFAULT;
 
@@ -768,6 +771,9 @@ gst_aravis_set_property (GObject * object, guint prop_id,
 		case PROP_NUM_ARV_BUFFERS:
 			gst_aravis->num_arv_buffers = g_value_get_int (value);
 			break;
+		case PROP_USB_ASYNCHRONOUS:
+			gst_aravis->usb_asynchronous = g_value_get_boolean (value);
+			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 			break;
@@ -854,6 +860,9 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 			break;
 		case PROP_NUM_ARV_BUFFERS:
 			g_value_set_int (value, gst_aravis->num_arv_buffers);
+			break;
+		case PROP_USB_ASYNCHRONOUS:
+			g_value_set_boolean (value, gst_aravis->usb_asynchronous);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1002,6 +1011,15 @@ gst_aravis_class_init (GstAravisClass * klass)
 				   "Number of video buffers to allocate for video frames",
 				   1, G_MAXINT, GST_ARAVIS_DEFAULT_N_BUFFERS,
 				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+	g_object_class_install_property
+	    (gobject_class,
+	     PROP_USB_ASYNCHRONOUS,
+	     g_param_spec_boolean ("usb-asynchronous",
+			       "Asynchronous USB mode",
+			       "Enable asynchronous instead of synchronous USB mode",
+			       FALSE,
+			       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
         GST_DEBUG_CATEGORY_INIT (aravis_debug, "aravissrc", 0, "Aravis interface");
 
