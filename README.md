@@ -172,7 +172,7 @@ digits of the ID field.
 Aravis uses by default the synchronous libusb API. But it can be told to use the
 asynchronous API for better performances, especially on embedded platform like
 RapsberryPi or Nvidia Jetson boards. The function to use is
-`arv_camera_set_usb_mode()`.
+`arv_camera_uv_set_usb_mode()`.
 
 `arv-viewer` and `arv-camera-test` can also use the asynchronous API, if
 `usb-mode` option is set to `async`. When using the GStreamer plugin,
