@@ -48,6 +48,18 @@ On some platforms (like Ubuntu), you may have to configure the dynamic linker
 (ld) to let it know where the aravis libraries are installed, and run ldconfig
 as root in order to update ld cache.
 
+#### Install dependencies on Ubuntu 20.04
+
+Prior to running `meson` and `ninja`, dependencies can be installed using the
+following(tested on Ubuntu 20.04):
+
+```
+sudo apt install libxml2-dev libglib2.0-dev cmake libusb-1.0-0-dev gobject-introspection \
+                 libgtk-3-dev gtk-doc-tools  xsltproc libgstreamer1.0-dev \
+		 libgstreamer-plugins-base1.0-dev libgstreamer-plugins-good1.0-dev \
+		 libgirepository1.0-dev
+```
+
 #### Building on macOS
 
 Using the GNU build system on macOS is not directly supported, but can be
