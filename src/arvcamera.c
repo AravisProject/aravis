@@ -72,6 +72,7 @@ static void arv_camera_get_integer_bounds_as_double (ArvCamera *camera, const ch
  * @ARV_CAMERA_VENDOR_POINT_GREY_FLIR: PointGrey / FLIR
  * @ARV_CAMERA_VENDOR_XIMEA: XIMEA GmbH
  * @ARV_CAMERA_VENDOR_MATRIX_VISION: Matrix Vision GmbH
+ * @ARV_CAMERA_VENDOR_LUCID_VISION_LABS: Lucid Vision Labs
  */
 
 typedef enum {
@@ -83,7 +84,8 @@ typedef enum {
 	ARV_CAMERA_VENDOR_POINT_GREY_FLIR,
 	ARV_CAMERA_VENDOR_RICOH,
 	ARV_CAMERA_VENDOR_XIMEA,
-	ARV_CAMERA_VENDOR_MATRIX_VISION
+	ARV_CAMERA_VENDOR_MATRIX_VISION,
+	ARV_CAMERA_VENDOR_LUCID_VISION_LABS
 } ArvCameraVendor;
 
 typedef enum {
@@ -97,7 +99,8 @@ typedef enum {
 	ARV_CAMERA_SERIES_POINT_GREY_FLIR,
 	ARV_CAMERA_SERIES_RICOH,
 	ARV_CAMERA_SERIES_XIMEA,
-	ARV_CAMERA_SERIES_MATRIX_VISION
+	ARV_CAMERA_SERIES_MATRIX_VISION,
+	ARV_CAMERA_SERIES_LUCID_VISION_LABS
 } ArvCameraSeries;
 
 typedef struct {
@@ -1064,6 +1067,7 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate, GError **error)
 			}
 			break;
 		case ARV_CAMERA_VENDOR_POINT_GREY_FLIR:
+		case ARV_CAMERA_VENDOR_LUCID_VISION_LABS:
 			if (local_error == NULL) {
 				if (priv->has_acquisition_frame_rate_enabled)
 					arv_camera_set_boolean (camera, "AcquisitionFrameRateEnabled", TRUE, &local_error);
@@ -1136,6 +1140,7 @@ arv_camera_get_frame_rate (ArvCamera *camera, GError **error)
 					return arv_camera_get_float (camera, "FPS", error);
 			}
 		case ARV_CAMERA_VENDOR_POINT_GREY_FLIR:
+		case ARV_CAMERA_VENDOR_LUCID_VISION_LABS:
 		case ARV_CAMERA_VENDOR_DALSA:
 		case ARV_CAMERA_VENDOR_RICOH:
 		case ARV_CAMERA_VENDOR_BASLER:
@@ -1213,6 +1218,7 @@ arv_camera_get_frame_rate_bounds (ArvCamera *camera, double *min, double *max, G
 			arv_camera_get_float_bounds (camera, "AcquisitionFrameRateAbs", min, max, error);
 			break;
 		case ARV_CAMERA_VENDOR_POINT_GREY_FLIR:
+		case ARV_CAMERA_VENDOR_LUCID_VISION_LABS:
 		case ARV_CAMERA_VENDOR_DALSA:
 		case ARV_CAMERA_VENDOR_RICOH:
 		case ARV_CAMERA_VENDOR_BASLER:
@@ -1971,6 +1977,7 @@ arv_camera_is_frame_rate_available (ArvCamera *camera, GError **error)
 		case ARV_CAMERA_VENDOR_TIS:
 			return arv_camera_is_feature_available (camera, "FPS", error);
 		case ARV_CAMERA_VENDOR_POINT_GREY_FLIR:
+		case ARV_CAMERA_VENDOR_LUCID_VISION_LABS:
 		case ARV_CAMERA_VENDOR_DALSA:
 		case ARV_CAMERA_VENDOR_RICOH:
 		case ARV_CAMERA_VENDOR_BASLER:
@@ -3498,6 +3505,9 @@ arv_camera_constructed (GObject *object)
 	} else if (g_strcmp0 (vendor_name, "MATRIX VISION GmbH") == 0) {
 		vendor = ARV_CAMERA_VENDOR_MATRIX_VISION;
 		series = ARV_CAMERA_SERIES_MATRIX_VISION;
+	} else if (g_strcmp0 (vendor_name, "Lucid Vision Labs") == 0) {
+		vendor = ARV_CAMERA_VENDOR_LUCID_VISION_LABS;
+		series = ARV_CAMERA_SERIES_LUCID_VISION_LABS;
 	} else {
 		vendor = ARV_CAMERA_VENDOR_UNKNOWN;
 		series = ARV_CAMERA_SERIES_UNKNOWN;
