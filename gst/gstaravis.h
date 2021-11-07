@@ -63,7 +63,7 @@ struct _GstAravis {
 	gint64 packet_delay;
         gboolean packet_resend;
 
-	gboolean usb_asynchronous;
+	ArvUvUsbMode usb_mode;
 
 	gint payload;
 
