@@ -236,6 +236,7 @@ configure_file (input: 'arvfeatures.h.in', output: 'arvfeatures.h',
 
 version_config_data = configuration_data ()
 version_config_data.set ('ARAVIS_VERSION', aravis_version)
+version_config_data.set ('ARAVIS_API_VERSION', aravis_api_version)
 version_config_data.set ('ARAVIS_MAJOR_VERSION', aravis_major_version)
 version_config_data.set ('ARAVIS_MINOR_VERSION', aravis_minor_version)
 version_config_data.set ('ARAVIS_MICRO_VERSION', aravis_micro_version)
@@ -247,8 +248,7 @@ library_inc = include_directories ('.')
 install_headers (library_headers + library_no_introspection_headers, install_dir: library_include_dir)
 
 library_c_args = [
-	'-DARAVIS_COMPILATION',
-	'-DARAVIS_API_VERSION="@0@"'.format (aravis_api_version)
+	'-DARAVIS_COMPILATION'
 	]
 
 aravis_library = library ('aravis-@0@'.format (aravis_api_version),
