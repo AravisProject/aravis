@@ -22,6 +22,7 @@
 
 #include <arvmiscprivate.h>
 #include <arvdebugprivate.h>
+#include <arvversion.h>
 #include <string.h>
 #include <math.h>
 #include <stdio.h>
@@ -30,6 +31,75 @@
 #ifdef G_OS_WIN32
 	 #include <windows.h>
 #endif
+
+/**
+ * arv_get_major_version:
+ *
+ * Returns the major version number of the Aravis library.
+ *
+ * For example, in Aravis version 0.8.20 this is 0.
+ *
+ * This function is in the library, so it represents the Aravis library
+ * your code is running against. Contrast with the %ARAVIS_MAJOR_VERSION
+ * macro, which represents the major version of the Aravis headers you
+ * have included when compiling your code.
+ *
+ * Returns: the major version number of the Aravis library
+ *
+ * Since: 0.8.20
+ */
+
+guint
+arv_get_major_version (void)
+{
+        return ARAVIS_MAJOR_VERSION;
+}
+
+/**
+ * arv_get_minor_version:
+ *
+ * Returns the minor version number of the Aravis library.
+ *
+ * For example, in Aravis version 0.8.20 this is 8.
+ *
+ * This function is in the library, so it represents the Aravis library
+ * your code is running against. Contrast with the %ARAVIS_MINOR_VERSION
+ * macro, which represents the minor version of the Aravis headers you
+ * have included when compiling your code.
+ *
+ * Returns: the minor version number of the Aravis library
+ *
+ * Since: 0.8.20
+ */
+
+guint
+arv_get_minor_version (void)
+{
+        return ARAVIS_MINOR_VERSION;
+}
+
+/**
+ * arv_get_micro_version:
+ *
+ * Returns the micro version number of the Aravis library.
+ *
+ * For example, in Aravis version 0.8.20 this is 20.
+ *
+ * This function is in the library, so it represents the Aravis library
+ * your code is running against. Contrast with the %ARAVIS_MICRO_VERSION
+ * macro, which represents the micro version of the Aravis headers you
+ * have included when compiling your code.
+ *
+ * Returns: the micro version number of the Aravis library
+ *
+ * Since: 0.8.20
+ */
+
+guint
+arv_get_micro_version (void)
+{
+        return ARAVIS_MICRO_VERSION;
+}
 
 typedef struct _ArvHistogramVariable ArvHistogramVariable;
 

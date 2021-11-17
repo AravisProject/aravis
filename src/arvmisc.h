@@ -32,10 +32,16 @@
 
 G_BEGIN_DECLS
 
+ARV_API guint                   arv_get_major_version           (void);
+ARV_API guint                   arv_get_minor_version           (void);
+ARV_API guint                   arv_get_micro_version           (void);
+
 ARV_API const char *		arv_pixel_format_to_gst_caps_string		(ArvPixelFormat pixel_format);
-ARV_API ArvPixelFormat		arv_pixel_format_from_gst_caps			(const char *name, const char *format, int bpp, int depth);
+ARV_API ArvPixelFormat		arv_pixel_format_from_gst_caps			(const char *name, const char *format,
+                                                                                 int bpp, int depth);
 ARV_API const char *		arv_pixel_format_to_gst_0_10_caps_string	(ArvPixelFormat pixel_format);
-ARV_API ArvPixelFormat		arv_pixel_format_from_gst_0_10_caps		(const char *name, int bpp, int depth, guint32 fourcc);
+ARV_API ArvPixelFormat		arv_pixel_format_from_gst_0_10_caps		(const char *name, int bpp,
+                                                                                 int depth, guint32 fourcc);
 
 G_END_DECLS
 
