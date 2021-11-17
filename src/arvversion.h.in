@@ -42,6 +42,16 @@ G_BEGIN_DECLS
 #define ARAVIS_VERSION "@ARAVIS_VERSION@"
 
 /**
+ * ARAVIS_API_VERSION:
+ *
+ * The version of the Aravis library API.
+ *
+ * Since: 0.8.20
+ */
+
+#define ARAVIS_API_VERSION "@ARAVIS_API_VERSION@"
+
+/**
  * ARAVIS_MAJOR_VERSION:
  *
  * The major version of the Aravis library.
