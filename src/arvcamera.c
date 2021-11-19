@@ -1086,17 +1086,17 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate, GError **error)
 		case ARV_CAMERA_VENDOR_XIMEA:
 		case ARV_CAMERA_VENDOR_MATRIX_VISION:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
-                        if (local_error == NULL)
-                                arv_camera_set_float (camera,
-                                                      priv->has_acquisition_frame_rate ?
-                                                      "AcquisitionFrameRate":
-                                                      "AcquisitionFrameRateAbs", frame_rate, &local_error);
                         if (local_error == NULL) {
                                 if (arv_camera_is_feature_available (camera, "AcquisitionFrameRateEnable", &local_error)) {
                                         if (local_error == NULL)
                                                 arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", TRUE, &local_error);
                                 }
                         }
+                        if (local_error == NULL)
+                                arv_camera_set_float (camera,
+                                                      priv->has_acquisition_frame_rate ?
+                                                      "AcquisitionFrameRate":
+                                                      "AcquisitionFrameRateAbs", frame_rate, &local_error);
                         break;
         }
 
