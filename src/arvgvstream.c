@@ -932,7 +932,7 @@ _ring_buffer_loop (ArvGvStreamThreadData *thread_data)
 	GPollFD poll_fd[2];
 	char *buffer;
 	struct tpacket_req3 req;
-	struct sockaddr_ll local_address;
+	struct sockaddr_ll local_address = {0};
 	enum tpacket_versions version;
 	int fd;
 	unsigned block_id;
