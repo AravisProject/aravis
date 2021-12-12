@@ -957,7 +957,8 @@ arv_parse_genicam_url (const char *url, gssize url_length,
 	l_authority = tokens[4][0] != '\0' ? tokens[4] : NULL;
 
 	if (g_ascii_strcasecmp (l_scheme, "local") == 0) {
-		local_regex = g_regex_new ("(.+);(?:0x)?([0-9:a-f]*);(?:0x)?([0-9:a-f]*)", G_REGEX_CASELESS, 0, NULL);
+	local_regex = g_regex_new ("(?:\\s*)?(.+);(?:\\s*)?(?:0x)?([0-9:a-f]*);(?:\\s*)?(?:0x)?([0-9:a-f]*)",
+                                           G_REGEX_CASELESS, 0, NULL);
 
 		if (local_regex == NULL) {
 			g_strfreev (tokens);

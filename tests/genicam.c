@@ -825,7 +825,13 @@ const struct {
 		0, 0 },
 	{ "file:///C|program%20files/aravis/genicam.xml?SchemaVersion=1.0.0",
 		"file", NULL, "/C|program%20files/aravis/genicam.xml", "SchemaVersion=1.0.0", NULL,
-		0, 0}
+		0, 0},
+        { "Local: guide_gige_test.zip; 00010000; 06c5",
+                "Local", NULL, "guide_gige_test.zip", NULL, NULL,
+                0x10000, 0x6c5},
+        { "Local:   guide_gige_test.zip;    00010000;    06c5",
+                "Local", NULL, "guide_gige_test.zip", NULL, NULL,
+                0x10000, 0x6c5}
 };
 
 static void
