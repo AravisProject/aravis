@@ -4,6 +4,27 @@
 static ArvCamera *camera = NULL;
 
 static void
+discovery_test (void)
+{
+        int n_devices;
+        int i;
+
+        n_devices = arv_get_n_devices ();
+
+        for (i = 0; i < n_devices; i++) {
+                if (g_strcmp0 (arv_get_device_vendor (i), "Aravis") == 0 &&
+                    g_strcmp0 (arv_get_device_model (i), "Fake") == 0 &&
+                    g_strcmp0 (arv_get_device_serial_nbr (i), "GVTest") == 0 &&
+                    g_strcmp0 (arv_get_device_manufacturer_info (i), "none") == 0 &&
+                    g_strcmp0 (arv_get_device_id (i), "Aravis-Fake-GVTest") == 0 &&
+                    g_strcmp0 (arv_get_device_physical_id (i), "00:00:00:00:00:00") == 0)
+                        return;
+        }
+
+        g_assert_not_reached ();
+}
+
+static void
 register_test (void)
 {
 	ArvDevice *device;
@@ -234,6 +255,9 @@ main (int argc, char *argv[])
 	camera = arv_camera_new ("Aravis-GVTest", NULL);
 	g_assert (ARV_IS_CAMERA (camera));
 
+	arv_update_device_list ();
+
+	g_test_add_func ("/fakegv/discovery", discovery_test);
 	g_test_add_func ("/fakegv/device_registers", register_test);
 	g_test_add_func ("/fakegv/acquisition", acquisition_test);
 	g_test_add_func ("/fakegv/stream", stream_test);

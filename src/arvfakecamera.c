@@ -969,6 +969,7 @@ arv_fake_camera_new_full (const char *serial_number, const char *genicam_filenam
 
 	strcpy (((char *) memory) + ARV_GVBS_MANUFACTURER_NAME_OFFSET, "Aravis");
 	strcpy (((char *) memory) + ARV_GVBS_MODEL_NAME_OFFSET, "Fake");
+	strcpy (((char *) memory) + ARV_GVBS_MANUFACTURER_INFO_OFFSET, "none");
 	strcpy (((char *) memory) + ARV_GVBS_DEVICE_VERSION_OFFSET, ARAVIS_VERSION);
 	strcpy (((char *) memory) + ARV_GVBS_SERIAL_NUMBER_OFFSET, serial_number);
 

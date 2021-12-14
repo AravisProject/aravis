@@ -279,6 +279,7 @@ arv_get_device_physical_id
 arv_get_device_model
 arv_get_device_serial_nbr
 arv_get_device_vendor
+arv_get_device_manufacturer_info
 arv_get_device_address
 arv_get_device_protocol
 arv_open_device
@@ -298,6 +299,7 @@ arv_interface_get_device_model
 arv_interface_get_device_physical_id
 arv_interface_get_device_serial_nbr
 arv_interface_get_device_vendor
+arv_interface_get_device_manufacturer_info
 arv_interface_get_device_protocol
 arv_interface_get_n_devices
 arv_interface_open_device

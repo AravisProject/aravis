@@ -32,12 +32,13 @@
 #include <arvdebug.h>
 #include <arvmisc.h>
 
-#define ARV_FAKE_DEVICE_ID 	"Fake_1"
-#define ARV_FAKE_PHYSICAL_ID 	"Fake_1"
-#define ARV_FAKE_ADDRESS 	"0.0.0.0"
-#define ARV_FAKE_VENDOR 	"Aravis"
-#define ARV_FAKE_MODEL 		"Fake"
-#define ARV_FAKE_SERIAL		"1"
+#define ARV_FAKE_DEVICE_ID 	        "Fake_1"
+#define ARV_FAKE_PHYSICAL_ID 	        "Fake_1"
+#define ARV_FAKE_ADDRESS 	        "0.0.0.0"
+#define ARV_FAKE_VENDOR 	        "Aravis"
+#define ARV_FAKE_MANUFACTURER_INFO      "none"
+#define ARV_FAKE_MODEL 		        "Fake"
+#define ARV_FAKE_SERIAL		        "1"
 
 struct _ArvFakeInterface {
 	ArvInterface	interface;
@@ -62,6 +63,7 @@ arv_fake_interface_update_device_list (ArvInterface *interface, GArray *device_i
 	ids->physical = g_strdup (ARV_FAKE_PHYSICAL_ID);
 	ids->address = g_strdup (ARV_FAKE_ADDRESS);
 	ids->vendor = g_strdup (ARV_FAKE_VENDOR);
+        ids->manufacturer_info = g_strdup (ARV_FAKE_MANUFACTURER_INFO);
 	ids->model = g_strdup (ARV_FAKE_MODEL);
 	ids->serial_nbr = g_strdup (ARV_FAKE_SERIAL);
 
