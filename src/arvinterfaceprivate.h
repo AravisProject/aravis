@@ -40,6 +40,7 @@ typedef struct {
 	char *physical;
 	char *address;
 	char *vendor;
+	char *manufacturer_info;
 	char *model;
 	char *serial_nbr;
 } ArvInterfaceDeviceIds;

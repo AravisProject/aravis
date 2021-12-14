@@ -45,16 +45,18 @@ struct _ArvInterfaceClass {
 	const char *	protocol;
 };
 
-ARV_API void			arv_interface_update_device_list	(ArvInterface *interface);
-ARV_API unsigned int		arv_interface_get_n_devices		(ArvInterface *interface);
-ARV_API const char *		arv_interface_get_device_id		(ArvInterface *interface, unsigned int index);
-ARV_API const char *		arv_interface_get_device_physical_id	(ArvInterface *interface, unsigned int index);
-ARV_API const char *		arv_interface_get_device_address	(ArvInterface *interface, unsigned int index);
-ARV_API const char *		arv_interface_get_device_vendor		(ArvInterface *interface, unsigned int index);
-ARV_API const char *		arv_interface_get_device_model		(ArvInterface *interface, unsigned int index);
-ARV_API const char *		arv_interface_get_device_serial_nbr	(ArvInterface *interface, unsigned int index);
-ARV_API const char *		arv_interface_get_device_protocol	(ArvInterface *interface, unsigned int index);
-ARV_API ArvDevice *		arv_interface_open_device		(ArvInterface *interface, const char *device_id, GError **error);
+ARV_API void		arv_interface_update_device_list	        (ArvInterface *interface);
+ARV_API unsigned int	arv_interface_get_n_devices		        (ArvInterface *interface);
+ARV_API const char *	arv_interface_get_device_id		        (ArvInterface *interface, unsigned int index);
+ARV_API const char *	arv_interface_get_device_physical_id	        (ArvInterface *interface, unsigned int index);
+ARV_API const char *	arv_interface_get_device_address	        (ArvInterface *interface, unsigned int index);
+ARV_API const char *	arv_interface_get_device_vendor		        (ArvInterface *interface, unsigned int index);
+ARV_API const char *	arv_interface_get_device_manufacturer_info	(ArvInterface *interface, unsigned int index);
+ARV_API const char *	arv_interface_get_device_model		        (ArvInterface *interface, unsigned int index);
+ARV_API const char *	arv_interface_get_device_serial_nbr	        (ArvInterface *interface, unsigned int index);
+ARV_API const char *	arv_interface_get_device_protocol	        (ArvInterface *interface, unsigned int index);
+ARV_API ArvDevice *	arv_interface_open_device		        (ArvInterface *interface, const char *device_id,
+                                                                         GError **error);
 
 G_END_DECLS
 

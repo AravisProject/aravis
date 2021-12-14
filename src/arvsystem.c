@@ -302,6 +302,26 @@ arv_get_device_vendor	(unsigned int index)
 }
 
 /**
+ * arv_get_device_manufacturer_info:
+ * @index: device index
+ *
+ * Queries the device manufacturer info.
+ *
+ * Prior to this call the arv_update_device_list()
+ * function must be called.
+ *
+ * Returns: (transfer none): the device manufacturer info, NULL on error
+ *
+ * Since: 0.8.20
+ */
+
+const char *
+arv_get_device_manufacturer_info (unsigned int index)
+{
+	return arv_get_info (index, arv_interface_get_device_manufacturer_info);
+}
+
+/**
  * arv_get_device_model:
  * @index: device index
  *

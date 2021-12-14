@@ -219,6 +219,7 @@ typedef struct {
 	char *vendor_serial;
 	char *vendor_alias_serial;
 	char *vendor;
+        char *manufacturer_info;
 	char *model;
 	char *serial;
 	char *mac;
@@ -247,19 +248,21 @@ arv_gv_interface_device_infos_new (GInetAddress *interface_address,
 
 	infos->vendor = g_strndup ((char *) &infos->discovery_data[ARV_GVBS_MANUFACTURER_NAME_OFFSET],
 				   ARV_GVBS_MANUFACTURER_NAME_SIZE);
-	infos->model = g_strndup ((char *) &infos->discovery_data[ARV_GVBS_MODEL_NAME_OFFSET],
-				  ARV_GVBS_MODEL_NAME_SIZE);
-	infos->serial = g_strndup ((char *) &infos->discovery_data[ARV_GVBS_SERIAL_NUMBER_OFFSET],
-				   ARV_GVBS_SERIAL_NUMBER_SIZE);
-	infos->user_id = g_strndup ((char *) &infos->discovery_data[ARV_GVBS_USER_DEFINED_NAME_OFFSET],
-				    ARV_GVBS_USER_DEFINED_NAME_SIZE);
-	infos->mac = g_strdup_printf ("%02x:%02x:%02x:%02x:%02x:%02x",
-				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 2],
-				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 3],
-				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 4],
-				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 5],
-				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 6],
-				      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 7]);
+        infos->manufacturer_info = g_strndup ((char *) &infos->discovery_data[ARV_GVBS_MANUFACTURER_INFO_OFFSET],
+                                              ARV_GVBS_MANUFACTURER_INFO_SIZE);
+        infos->model = g_strndup ((char *) &infos->discovery_data[ARV_GVBS_MODEL_NAME_OFFSET],
+                                  ARV_GVBS_MODEL_NAME_SIZE);
+        infos->serial = g_strndup ((char *) &infos->discovery_data[ARV_GVBS_SERIAL_NUMBER_OFFSET],
+                                   ARV_GVBS_SERIAL_NUMBER_SIZE);
+        infos->user_id = g_strndup ((char *) &infos->discovery_data[ARV_GVBS_USER_DEFINED_NAME_OFFSET],
+                                    ARV_GVBS_USER_DEFINED_NAME_SIZE);
+        infos->mac = g_strdup_printf ("%02x:%02x:%02x:%02x:%02x:%02x",
+                                      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 2],
+                                      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 3],
+                                      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 4],
+                                      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 5],
+                                      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 6],
+                                      infos->discovery_data[ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 7]);
 
         /* Some devices return a zero length string as the serial identifier.
          * Use the MAC address as the serial number in this case */
@@ -309,6 +312,7 @@ arv_gv_interface_device_infos_unref (ArvGvInterfaceDeviceInfos *infos)
 		g_free (infos->vendor_serial);
 		g_free (infos->vendor_alias_serial);
 		g_free (infos->vendor);
+		g_free (infos->manufacturer_info);
 		g_free (infos->model);
 		g_free (infos->serial);
 		g_free (infos->mac);
@@ -502,6 +506,7 @@ arv_gv_interface_update_device_list (ArvInterface *interface, GArray *device_ids
 			ids->physical = g_strdup (infos->mac);
 			ids->address = g_inet_address_to_string (device_address);
 			ids->vendor = g_strdup (infos->vendor);
+                        ids->manufacturer_info = g_strdup (infos->manufacturer_info);
 			ids->model = g_strdup (infos->model);
 			ids->serial_nbr = g_strdup (infos->serial);
 

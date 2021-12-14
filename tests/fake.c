@@ -2,6 +2,27 @@
 #include <arv.h>
 
 static void
+discovery_test (void)
+{
+        int n_devices;
+        int i;
+
+        n_devices = arv_get_n_devices ();
+
+        for (i = 0; i < n_devices; i++) {
+                if (g_strcmp0 (arv_get_device_vendor (i), "Aravis") == 0 &&
+                    g_strcmp0 (arv_get_device_model (i), "Fake") == 0 &&
+                    g_strcmp0 (arv_get_device_serial_nbr (i), "1") == 0 &&
+                    g_strcmp0 (arv_get_device_manufacturer_info (i), "none") == 0 &&
+                    g_strcmp0 (arv_get_device_id (i), "Fake_1") == 0 &&
+                    g_strcmp0 (arv_get_device_physical_id (i), "Fake_1") == 0)
+                        return;
+        }
+
+        g_assert_not_reached ();
+}
+
+static void
 trigger_registers_test (void)
 {
 	ArvDevice *device;
@@ -676,6 +697,7 @@ main (int argc, char *argv[])
 
 	arv_update_device_list ();
 
+	g_test_add_func ("/fake/discovery-test", discovery_test);
 	g_test_add_func ("/fake/trigger-registers", trigger_registers_test);
 	g_test_add_func ("/fake/registers", registers_test);
 	g_test_add_func ("/fake/fake-device", fake_device_test);

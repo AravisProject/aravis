@@ -50,6 +50,7 @@ arv_interface_clear_device_ids (ArvInterface *interface)
 		g_free (g_array_index (priv->device_ids, ArvInterfaceDeviceIds *, i)->physical);
 		g_free (g_array_index (priv->device_ids, ArvInterfaceDeviceIds *, i)->address);
 		g_free (g_array_index (priv->device_ids, ArvInterfaceDeviceIds *, i)->vendor);
+		g_free (g_array_index (priv->device_ids, ArvInterfaceDeviceIds *, i)->manufacturer_info);
 		g_free (g_array_index (priv->device_ids, ArvInterfaceDeviceIds *, i)->model);
 		g_free (g_array_index (priv->device_ids, ArvInterfaceDeviceIds *, i)->serial_nbr);
 		g_free (g_array_index (priv->device_ids, ArvInterfaceDeviceIds *, i));
@@ -230,6 +231,35 @@ arv_interface_get_device_vendor (ArvInterface *interface, unsigned int index)
 		return NULL;
 
 	return g_array_index (priv->device_ids, ArvInterfaceDeviceIds *, index)->vendor;
+}
+
+/**
+ * arv_interface_get_device_manufacturer_info:
+ * @interface: a #ArvInterface
+ * @index: device index
+ *
+ * Queries the device manufacturer info.
+ *
+ * Prior to this call the arv_interface_update_device_list()
+ * function must be called.
+ *
+ * Returns: (transfer none): the device manufacturer info, NULL on error
+ *
+ * Since: 0.8.20
+ */
+
+const char *
+arv_interface_get_device_manufacturer_info (ArvInterface *interface, unsigned int index)
+{
+	ArvInterfacePrivate *priv = arv_interface_get_instance_private (interface);
+
+	g_return_val_if_fail (ARV_IS_INTERFACE (interface), 0);
+	g_return_val_if_fail (priv->device_ids != NULL, 0);
+
+	if (index >= priv->device_ids->len)
+		return NULL;
+
+	return g_array_index (priv->device_ids, ArvInterfaceDeviceIds *, index)->manufacturer_info;
 }
 
 /**
