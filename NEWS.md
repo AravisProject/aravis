@@ -3,6 +3,8 @@ Stable release 0.8.20
 
   * camera: make set_frame_rate more robust for Basler cameras (Thies)
   * misc: add runtime version API (Emmanuel)
+  * misc: ignore leading spaces in genicam data url (Emmanuel)
+  * misc: add get_device_manufacturer_info API (Emmanuel)
   * qa: fix incorrect memory access (Jose)
   * gstreamer: allow to select asynchronous USB mode (Christian)
   * windows: fix thread priority helpers (Garfeng)
