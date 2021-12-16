@@ -1,3 +1,14 @@
+Stable release 0.8.20
+=====================
+
+  * camera: make set_frame_rate more robust for Basler cameras (Thies)
+  * misc: add runtime version API (Emmanuel)
+  * qa: fix incorrect memory access (Jose)
+  * gstreamer: allow to select asynchronous USB mode (Christian)
+  * windows: fix thread priority helpers (Garfeng)
+  * meson: fix compilation using meson 0.60 (Emmanuel)
+  * doc: ubuntu 20.04 build do cimprovements (Brian)
+
 Stable release 0.8.19
 =====================
 
