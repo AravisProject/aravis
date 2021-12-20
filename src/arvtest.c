@@ -541,12 +541,12 @@ arv_test_chunks (ArvTest *test, const char *test_name, ArvTestCamera *test_camer
 }
 
 static void
-arv_test_multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_camera)
+_multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_camera,
+                       double frame_rate, gboolean use_system_timestamp)
 {
         GError *error = NULL;
         char *message = NULL;
         ArvStream *stream;
-        double frame_rate;
         unsigned int i;
         size_t payload_size;
         gboolean success = TRUE;
@@ -555,12 +555,6 @@ arv_test_multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCame
         gboolean frame_rate_success;
         guint n_completed_buffers = 0;
         guint n_expected_buffers = 10;
-        gboolean use_system_timestamp;
-
-        g_return_if_fail (ARV_IS_TEST (test));
-
-        frame_rate = arv_test_camera_get_key_file_double (test_camera, test, "FrameRate", 10.0);
-        use_system_timestamp = arv_test_camera_get_key_file_boolean (test_camera, test, "UseSystemTimestamp", FALSE);
 
         arv_camera_set_acquisition_mode (test_camera->camera, ARV_ACQUISITION_MODE_CONTINUOUS, &error);
         if (error == NULL)
@@ -645,6 +639,34 @@ arv_test_multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCame
 
         g_clear_error (&error);
         g_clear_pointer (&message, g_free);
+}
+
+static void
+arv_test_multiple_acquisition_a (ArvTest *test, const char *test_name, ArvTestCamera *test_camera)
+{
+        double frame_rate;
+        gboolean use_system_timestamp;
+
+        g_return_if_fail (ARV_IS_TEST (test));
+
+        use_system_timestamp = arv_test_camera_get_key_file_boolean (test_camera, test, "UseSystemTimestamp", FALSE);
+        frame_rate = arv_test_camera_get_key_file_double (test_camera, test, "FrameRateA", 10.0);
+
+        _multiple_acquisition (test, test_name, test_camera, frame_rate, use_system_timestamp);
+}
+
+static void
+arv_test_multiple_acquisition_b (ArvTest *test, const char *test_name, ArvTestCamera *test_camera)
+{
+        double frame_rate;
+        gboolean use_system_timestamp;
+
+        g_return_if_fail (ARV_IS_TEST (test));
+
+        use_system_timestamp = arv_test_camera_get_key_file_boolean (test_camera, test, "UseSystemTimestamp", FALSE);
+        frame_rate = arv_test_camera_get_key_file_double (test_camera, test, "FrameRateB", 5.0);
+
+        _multiple_acquisition (test, test_name, test_camera, frame_rate, use_system_timestamp);
 }
 
 static void
@@ -783,10 +805,11 @@ const struct {
 } tests[] = {
         {"Genicam",                     arv_test_genicam,               FALSE},
         {"Properties",                  arv_test_device_properties,     FALSE},
-        {"MultipleAcquisition",         arv_test_multiple_acquisition,  FALSE},
+        {"MultipleAcquisitionA",        arv_test_multiple_acquisition_a,FALSE},
+        {"SoftwareTrigger",             arv_test_software_trigger,      FALSE},
+        {"MultipleAcquisitionB",        arv_test_multiple_acquisition_b,FALSE},
         {"SingleAcquisition",           arv_test_single_acquisition,    FALSE},
         {"Chunks",                      arv_test_chunks,                FALSE},
-        {"SoftwareTrigger",             arv_test_software_trigger,      FALSE},
         {"GigEVision",                  arv_test_gige_vision,           FALSE},
         {"USB3Vision",                  arv_test_usb3_vision,           FALSE}
 };
