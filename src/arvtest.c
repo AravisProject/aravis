@@ -626,7 +626,7 @@ _multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test
                 double actual_frame_rate = 9 * 1e9 / (end_time - start_time);
                 double frame_rate_error = fabs (actual_frame_rate - frame_rate) / frame_rate;
 
-                if (frame_rate_error < 0.05) {
+                if (frame_rate_error < 0.10) {
                         frame_rate_success = TRUE;
                         message = g_strdup_printf ("%.2f Hz", actual_frame_rate);
                 } else
