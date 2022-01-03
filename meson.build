@@ -110,6 +110,7 @@ viewer_deps = aravis_dependencies + [dependency ('gtk+-3.0', version: '>=3.12', 
 subdir ('po', if_found: viewer_deps)
 subdir ('viewer', if_found: viewer_deps)
 
+gst_enabled = false
 gst_option = get_option ('gst-plugin')
 gst_deps = aravis_dependencies + [dependency ('gstreamer-base-1.0', required: gst_option),
                                   dependency ('gstreamer-app-1.0', required: gst_option)]
@@ -119,4 +120,23 @@ doc_option = get_option('documentation')
 doc_deps = [find_program('gtkdoc-scan', required: doc_option), find_program('xsltproc', required: doc_option)]
 subdir('docs', if_found: doc_deps)
 
-meson.override_dependency('aravis', aravis_library_dependencies)
+meson.override_dependency ('aravis-' + aravis_api_version, aravis_library_dependencies)
+
+summary (
+  {
+  'prefix': get_option('prefix'),
+  'bindir': get_option('bindir'),
+  'libdir': get_option('libdir'),
+  'datadir': get_option('datadir'),
+  },
+  section: 'Directories'
+)
+
+summary (
+  {
+  'Viewer': viewer_enabled,
+  'GStreamer plugin': gst_enabled,
+  'USB support': usb_dep.found(),
+  },
+  section: 'Options'
+)
