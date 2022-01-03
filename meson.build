@@ -1,4 +1,4 @@
-project ('aravis', 'c', 'cpp', version: '0.8.21', meson_version: '>=0.47.0')
+project ('aravis', 'c', 'cpp', version: '0.8.21', meson_version: '>=0.54.0')
 
 gnome = import('gnome')
 pkg = import ('pkgconfig')
@@ -118,3 +118,5 @@ subdir('gst', if_found: gst_deps)
 doc_option = get_option('documentation')
 doc_deps = [find_program('gtkdoc-scan', required: doc_option), find_program('xsltproc', required: doc_option)]
 subdir('docs', if_found: doc_deps)
+
+meson.override_dependency('aravis', aravis_library_dependencies)
