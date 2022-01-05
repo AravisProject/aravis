@@ -22,8 +22,8 @@ endif
 
 gnome.gtkdoc ('aravis',
 	      main_xml: 'aravis-docs.xml',
-	      src_dir: [join_paths (meson.source_root (), 'src'),
-	                join_paths (meson.build_root (), 'src')],
+	      src_dir: [meson.project_source_root () / 'src',
+	                meson.project_build_root () / 'src'],
 	      gobject_typesfile: 'aravis.types',
 	      dependencies: [aravis_library_dependencies],
 	      scan_args: ['--ignore-headers=' + ' '.join (doc_ignore_headers), '--rebuild-types', '--ignore-decorator=ARV_API'],

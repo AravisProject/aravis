@@ -11,7 +11,7 @@ aravis_major_version = versions[0].to_int ()
 aravis_minor_version = versions[1].to_int ()
 aravis_micro_version = versions[2].to_int ()
 
-aravis_data_dir = join_paths (get_option ('datadir'), 'aravis-@0@'.format (aravis_api_version))
+aravis_data_dir = get_option ('datadir') / 'aravis-@0@'.format (aravis_api_version)
 
 cc = meson.get_compiler ('c')
 cxx = meson.get_compiler ('cpp')
@@ -82,7 +82,7 @@ endif
 
 packet_socket_option = get_option('packet-socket')
 if host_machine.system()=='linux'
-	has_if_packet = cc.has_header (join_paths ('linux','if_packet.h'))
+	has_if_packet = cc.has_header ('linux' /'if_packet.h')
 	if packet_socket_option.enabled()
 		if not has_if_packet
 			error ('missing header for packet-socket support')

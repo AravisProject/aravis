@@ -1,6 +1,6 @@
 gst_enabled = true
 
-gst_plugin_dir = join_paths (get_option ('libdir'), 'gstreamer-1.0')
+gst_plugin_dir = get_option ('libdir') / 'gstreamer-1.0'
 
 gst_sources = [
 	'gstaravis.c'

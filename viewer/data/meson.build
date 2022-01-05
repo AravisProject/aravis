@@ -1,4 +1,4 @@
-po_dir = join_paths (meson.source_root (), 'po')
+po_dir = join_paths (meson.project_source_root (), 'po')
 
 appdata_conf = configuration_data()
 appdata_conf.set ('ARAVIS_API_VERSION', aravis_api_version)
