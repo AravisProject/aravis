@@ -7,6 +7,7 @@ extraction:
         - python3-wheel
     after_prepare:
       - pip3 install meson==0.56
+      - export PATH="$HOME/.local/bin:$PATH"
   python:
     python_setup:
       version: 3
