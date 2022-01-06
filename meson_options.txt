@@ -8,6 +8,10 @@ option('packet-socket', type: 'feature', value: 'auto', description : 'Enable pa
 option('tests', type: 'boolean', value: true, description: 'Build tests')
 option('fast-heartbeat', type: 'boolean', value: false, description: 'Enable faster heartbeat rate')
 
+# Parameters
+
+option('gv-n-buffers', type: 'integer', min: 1, value: 16, description: 'Number of buffers used to receive GVSP packets')
+
 # Documentation and introspection
 
 option('documentation', type: 'feature', value: 'auto', description: 'Build API reference (requires gtk-doc and xlstproc)')

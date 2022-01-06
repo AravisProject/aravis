@@ -30,6 +30,7 @@
 #include <arvstreamprivate.h>
 #include <arvbufferprivate.h>
 #include <arvfeatures.h>
+#include <arvparamsprivate.h>
 #include <arvgvspprivate.h>
 #include <arvgvcpprivate.h>
 #include <arvdebug.h>
@@ -56,7 +57,6 @@
 #endif
 
 #define ARV_GV_STREAM_INCOMING_BUFFER_SIZE	65536
-#define ARV_GV_STREAM_NUM_MSGS	16
 
 #define ARV_GV_STREAM_DISCARD_LATE_FRAME_THRESHOLD	100
 
@@ -798,8 +798,8 @@ _loop (ArvGvStreamThreadData *thread_data)
 	int n_msgs;
 	gboolean use_poll;
 	unsigned i;
-	GInputVector packet_iv[ARV_GV_STREAM_NUM_MSGS] = { {NULL, 0}, };
-	GInputMessage packet_im[ARV_GV_STREAM_NUM_MSGS] = { {NULL, NULL, 0, 0, 0, NULL, NULL}, };
+	GInputVector packet_iv[ARV_GV_STREAM_NUM_BUFFERS] = { {NULL, 0}, };
+	GInputMessage packet_im[ARV_GV_STREAM_NUM_BUFFERS] = { {NULL, NULL, 0, 0, 0, NULL, NULL}, };
 
 	arv_info_stream ("[GvStream::loop] Standard socket method");
 
@@ -809,9 +809,9 @@ _loop (ArvGvStreamThreadData *thread_data)
 
 	arv_gpollfd_prepare_all(poll_fd,1);
 
-	packet_buffers = g_malloc0 (ARV_GV_STREAM_INCOMING_BUFFER_SIZE * ARV_GV_STREAM_NUM_MSGS);
+	packet_buffers = g_malloc0 (ARV_GV_STREAM_INCOMING_BUFFER_SIZE * ARV_GV_STREAM_NUM_BUFFERS);
 
-	for (i = 0; i < ARV_GV_STREAM_NUM_MSGS; i++) {
+	for (i = 0; i < ARV_GV_STREAM_NUM_BUFFERS; i++) {
 		packet_iv[i].buffer = (char *) packet_buffers + i * ARV_GV_STREAM_INCOMING_BUFFER_SIZE;
 		packet_iv[i].size = ARV_GV_STREAM_INCOMING_BUFFER_SIZE;
 		packet_im[i].vectors = &packet_iv[i];
@@ -846,7 +846,7 @@ _loop (ArvGvStreamThreadData *thread_data)
 			arv_gpollfd_clear_one (&poll_fd[0], thread_data->socket);
 			n_msgs = g_socket_receive_messages (thread_data->socket,
 		 					    packet_im,
-		 					    ARV_GV_STREAM_NUM_MSGS,
+		 					    ARV_GV_STREAM_NUM_BUFFERS,
 		 					    G_SOCKET_MSG_NONE,
 		 					    NULL,
 		 					    NULL);
