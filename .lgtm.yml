@@ -1,0 +1,12 @@
+extraction:
+  cpp:
+    prepare:
+      packages:
+        - python3-pip
+        - python3-setuptools
+        - python3-wheel
+    after_prepare:
+      - pip3 install meson==0.55
+  python:
+    python_setup:
+      version: 3
