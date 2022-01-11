@@ -49,7 +49,7 @@ jobs:
     - name: meson
       run: |
         mkdir build
-        meson --buildtype=plain -Ddocumentation=disabled -Dgst-plugin=enabled -Dintrospection=enabled -Dusb=enabled -Dviewer=enabled . ./build
+        meson --buildtype=plain -Ddocumentation=disabled -Dgst-plugin=enabled -Dintrospection=enabled -Dusb=enabled -Dviewer=enabled -Dgv-n-buffers=1 . ./build
     - name: ninja install
       run: |
         ninja -C ./build --verbose install
