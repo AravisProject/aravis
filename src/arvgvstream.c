@@ -56,8 +56,6 @@
 #include <sys/mman.h>
 #endif
 
-#define ARV_GV_STREAM_INCOMING_BUFFER_SIZE	65536
-
 #define ARV_GV_STREAM_DISCARD_LATE_FRAME_THRESHOLD	100
 
 enum {
@@ -800,6 +798,8 @@ _loop (ArvGvStreamThreadData *thread_data)
 	unsigned i;
 	GInputVector packet_iv[ARV_GV_STREAM_NUM_BUFFERS] = { {NULL, 0}, };
 	GInputMessage packet_im[ARV_GV_STREAM_NUM_BUFFERS] = { {NULL, NULL, 0, 0, 0, NULL, NULL}, };
+	// we don't need to consider the IP and UDP header size
+	guint packet_buffer_size = thread_data->scps_packet_size - 20 - 8;
 
 	arv_info_stream ("[GvStream::loop] Standard socket method");
 
@@ -809,11 +809,11 @@ _loop (ArvGvStreamThreadData *thread_data)
 
 	arv_gpollfd_prepare_all(poll_fd,1);
 
-	packet_buffers = g_malloc0 (ARV_GV_STREAM_INCOMING_BUFFER_SIZE * ARV_GV_STREAM_NUM_BUFFERS);
+	packet_buffers = g_malloc0 (packet_buffer_size * ARV_GV_STREAM_NUM_BUFFERS);
 
 	for (i = 0; i < ARV_GV_STREAM_NUM_BUFFERS; i++) {
-		packet_iv[i].buffer = (char *) packet_buffers + i * ARV_GV_STREAM_INCOMING_BUFFER_SIZE;
-		packet_iv[i].size = ARV_GV_STREAM_INCOMING_BUFFER_SIZE;
+		packet_iv[i].buffer = (char *) packet_buffers + i * packet_buffer_size;
+		packet_iv[i].size = packet_buffer_size;
 		packet_im[i].vectors = &packet_iv[i];
 		packet_im[i].num_vectors = 1;
 	}
