@@ -30,6 +30,7 @@
 #include <arvstreamprivate.h>
 #include <arvbufferprivate.h>
 #include <arvfeatures.h>
+#include <arvparamsprivate.h>
 #include <arvgvspprivate.h>
 #include <arvgvcpprivate.h>
 #include <arvdebug.h>
@@ -54,8 +55,6 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 #endif
-
-#define ARV_GV_STREAM_INCOMING_BUFFER_SIZE	65536
 
 #define ARV_GV_STREAM_DISCARD_LATE_FRAME_THRESHOLD	100
 
@@ -791,11 +790,16 @@ static void
 _loop (ArvGvStreamThreadData *thread_data)
 {
 	ArvGvStreamFrameData *frame;
-	ArvGvspPacket *packet;
+	ArvGvspPacket *packet_buffers;
 	GPollFD poll_fd[2];
 	guint64 time_us;
-	size_t read_count;
+	int n_msgs;
 	gboolean use_poll;
+	unsigned i;
+	GInputVector packet_iv[ARV_GV_STREAM_NUM_BUFFERS] = { {NULL, 0}, };
+	GInputMessage packet_im[ARV_GV_STREAM_NUM_BUFFERS] = { {NULL, NULL, 0, 0, 0, NULL, NULL}, };
+	// we don't need to consider the IP and UDP header size
+	guint packet_buffer_size = thread_data->scps_packet_size - 20 - 8;
 
 	arv_info_stream ("[GvStream::loop] Standard socket method");
 
@@ -805,7 +809,14 @@ _loop (ArvGvStreamThreadData *thread_data)
 
 	arv_gpollfd_prepare_all(poll_fd,1);
 
-	packet = g_malloc0 (ARV_GV_STREAM_INCOMING_BUFFER_SIZE);
+	packet_buffers = g_malloc0 (packet_buffer_size * ARV_GV_STREAM_NUM_BUFFERS);
+
+	for (i = 0; i < ARV_GV_STREAM_NUM_BUFFERS; i++) {
+		packet_iv[i].buffer = (char *) packet_buffers + i * packet_buffer_size;
+		packet_iv[i].size = packet_buffer_size;
+		packet_im[i].vectors = &packet_iv[i];
+		packet_im[i].num_vectors = 1;
+	}
 
 	use_poll = g_cancellable_make_pollfd (thread_data->cancellable, &poll_fd[1]);
 
@@ -833,19 +844,24 @@ _loop (ArvGvStreamThreadData *thread_data)
 
 		if (poll_fd[0].revents != 0) {
 			arv_gpollfd_clear_one (&poll_fd[0], thread_data->socket);
-			read_count = g_socket_receive (thread_data->socket, (char *) packet,
-						       ARV_GV_STREAM_INCOMING_BUFFER_SIZE, NULL, NULL);
-
-                        time_us = g_get_monotonic_time ();
-
-			frame = _process_packet (thread_data, packet, read_count, time_us);
+			n_msgs = g_socket_receive_messages (thread_data->socket,
+		 					    packet_im,
+		 					    ARV_GV_STREAM_NUM_BUFFERS,
+		 					    G_SOCKET_MSG_NONE,
+		 					    NULL,
+		 					    NULL);
+			time_us = g_get_monotonic_time ();
+			for (i = 0; i < n_msgs; i++) {
+				frame = _process_packet (thread_data,
+						 	 packet_iv[i].buffer,
+						 	 packet_im[i].bytes_received,
+						 	 time_us);
+				_check_frame_completion (thread_data, time_us, frame);
+			}
 		} else {
-                        time_us = g_get_monotonic_time ();
-
-			frame = NULL;
+			time_us = g_get_monotonic_time ();
+			_check_frame_completion (thread_data, time_us, NULL);
                 }
-
-		_check_frame_completion (thread_data, time_us, frame);
 
 	} while (!g_cancellable_is_cancelled (thread_data->cancellable));
 
@@ -853,7 +869,7 @@ _loop (ArvGvStreamThreadData *thread_data)
 		g_cancellable_release_fd (thread_data->cancellable);
 
 	arv_gpollfd_finish_all (poll_fd,1);
-	g_free (packet);
+	g_free (packet_buffers);
 }
 
 
@@ -1351,6 +1367,7 @@ arv_gv_stream_constructed (GObject *object)
 	priv->thread_data->interface_address = g_object_ref (interface_address);
 	priv->thread_data->interface_socket_address = g_inet_socket_address_new (interface_address, 0);
 	priv->thread_data->device_socket_address = g_inet_socket_address_new (device_address, ARV_GVCP_PORT);
+	g_socket_set_blocking (priv->thread_data->socket, FALSE);
 	g_socket_bind (priv->thread_data->socket, priv->thread_data->interface_socket_address, FALSE, NULL);
 
 	local_address = G_INET_SOCKET_ADDRESS (g_socket_get_local_address (priv->thread_data->socket, NULL));

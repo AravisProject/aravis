@@ -227,12 +227,17 @@ api_config_data.set ('ARV_API', cc_export_define)
 configure_file (input: 'arvapi.h.in', output: 'arvapi.h',
 		configuration: api_config_data, install_dir: library_include_dir)
 
-library_config_data = configuration_data ()
-library_config_data.set10 ('ARAVIS_HAS_USB', usb_dep.found())
-library_config_data.set10 ('ARAVIS_HAS_PACKET_SOCKET', packet_socket_enabled)
-library_config_data.set10 ('ARAVIS_HAS_FAST_HEARTBEAT', get_option ('fast-heartbeat'))
+features_library_config_data = configuration_data ()
+features_library_config_data.set10 ('ARAVIS_HAS_USB', usb_dep.found())
+features_library_config_data.set10 ('ARAVIS_HAS_PACKET_SOCKET', packet_socket_enabled)
+features_library_config_data.set10 ('ARAVIS_HAS_FAST_HEARTBEAT', get_option ('fast-heartbeat'))
 configure_file (input: 'arvfeatures.h.in', output: 'arvfeatures.h',
-		configuration: library_config_data, install_dir: library_include_dir)
+		configuration: features_library_config_data, install_dir: library_include_dir)
+
+params_library_config_data = configuration_data ()
+params_library_config_data.set ('ARV_GV_STREAM_NUM_BUFFERS', get_option ('gv-n-buffers'))
+configure_file (input: 'arvparamsprivate.h.in', output: 'arvparamsprivate.h',
+		configuration: params_library_config_data)
 
 version_config_data = configuration_data ()
 version_config_data.set ('ARAVIS_VERSION', aravis_version)
