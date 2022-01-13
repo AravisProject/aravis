@@ -88,9 +88,12 @@ Python bindings and camera simulator are not functional yet.
 The package includes the DLL, headers and utilities (including the viewer).
 
 To built Aravis by yourself, install MSYS2 and enter the mingw64 shell. Refer to
-[Aravis' PKGBUILD](https://github.com/msys2/MINGW-packages/blob/master/mingw-w64-aravis/PKGBUILD)
+the [mingw CI configuration file](https://github.com/AravisProject/aravis/blob/main/.github/workflows/aravis-mingw.yml)
 for list of dependencies (such as `mingw-w64-x86_64-libxml2` and so on) which must be installed prior
 to building via `pacman -S ...`. The build process itself is the same as on other platforms (meson/ninja).
+
+Alternatively, you can build Aravis using Microsoft Visual C++ (MSVC) and Conan
+package manager. Have a look at the [msvc CI configuration file](https://github.com/AravisProject/aravis/blob/main/.github/workflows/aravis-msvc.yml).
 
 ##### Cross-compilation for Windows
 
