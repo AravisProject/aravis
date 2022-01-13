@@ -30,6 +30,7 @@
 #include <gio/gio.h>
 
 #ifndef G_OS_WIN32
+#include <sys/param.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <net/if.h>
@@ -38,8 +39,13 @@
 #include <netinet/in.h>
 #endif
 
-#if !defined(__APPLE__) && !defined(G_OS_WIN32)
+#ifdef __linux__
 #include <linux/ip.h>
+#endif
+
+#if defined(__APPLE__) || defined(BSD)
+#include <netinet/ip.h>
+#define iphdr ip
 #endif
 
 #ifndef G_OS_WIN32
@@ -47,7 +53,7 @@
 #endif
 
 #ifdef G_OS_WIN32
-#include<stdint.h>
+#include <stdint.h>
 typedef uint8_t u_int8_t;
 typedef uint16_t u_int16_t;
 typedef uint32_t u_int32_t;
@@ -59,7 +65,7 @@ struct udphdr {
 };
 #endif
 
-#if defined(__APPLE__) || defined(G_OS_WIN32)
+#if defined(G_OS_WIN32)
 struct iphdr
   {
 #if __BYTE_ORDER == __LITTLE_ENDIAN

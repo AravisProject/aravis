@@ -365,9 +365,18 @@ arv_enumerate_network_interfaces (void)
 			a->addr = arv_memdup (ifap_iter->ifa_addr, sizeof(struct sockaddr));
 			if (ifap_iter->ifa_netmask)
 				a->netmask = arv_memdup (ifap_iter->ifa_netmask, sizeof(struct sockaddr));
-#if defined(__APPLE__) && defined(__MACH__)
-			if (ifap_iter->ifa_broadaddr)
-				a->broadaddr = arv_memdup(ifap_iter->ifa_broadaddr, sizeof(struct sockaddr));
+#if (defined(__APPLE__) && defined(__MACH__)) || defined(BSD)
+			if (ifap_iter->ifa_broadaddr &&
+			    ifap_iter->ifa_broadaddr->sa_len != 0) {
+				a->broadaddr = arv_memdup(ifap_iter->ifa_broadaddr, ifap_iter->ifa_broadaddr->sa_len);
+			} else {
+				/* Interface have no broadcast address,
+				 * IFF_BROADCAST probably not set,
+				 * this workaround to pass fakecamera
+				 * test that uses 127.0.0.1 address on
+				 * loopback interface. */
+				a->broadaddr = arv_memdup(ifap_iter->ifa_addr, ifap_iter->ifa_addr->sa_len);
+			}
 #else
 			if (ifap_iter->ifa_ifu.ifu_broadaddr)
 				a->broadaddr = arv_memdup(ifap_iter->ifa_ifu.ifu_broadaddr, sizeof(struct sockaddr));

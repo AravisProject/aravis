@@ -35,12 +35,13 @@
 #ifdef G_OS_WIN32
 #include <windows.h>
 #else
+#include <sys/param.h>
 #include <sched.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #endif
 
-#if !defined(__APPLE__) && !defined(G_OS_WIN32)
+#if !defined(__APPLE__) && !defined(G_OS_WIN32) && !defined(BSD)
 
 #define RTKIT_SERVICE_NAME "org.freedesktop.RealtimeKit1"
 #define RTKIT_OBJECT_PATH "/org/freedesktop/RealtimeKit1"
