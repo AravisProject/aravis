@@ -24,18 +24,9 @@
  * SECTION:arvcamera
  * @short_description: Class for generic camera control
  *
- * #ArvCamera is a class for the generic control of cameras. It hides the
- * complexity of the genicam interface by providing a simple API, with the
- * drawback of not exposing all the available features. See #ArvDevice and
- * #ArvGc for a more advanced use of the Aravis library.
- *
- * <example id="arv-example"><title>Example use of the ArvCamera API</title>
- * <programlisting>
- * <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" href="../../../../tests/arvexample.c">
- *   <xi:fallback>FIXME: MISSING XINCLUDE CONTENT</xi:fallback>
- * </xi:include>
- * </programlisting>
- * </example>
+ * [class@Aravis.Camera] is a class for the generic control of cameras. It hides the complexity of the genicam interface
+ * by providing a simple API, with the drawback of not exposing all the available features. See [class@Aravis.Device]
+ * and [class@Aravis.Gc] for a more advanced use of the Aravis library.
  */
 
 #include <arvfeatures.h>
