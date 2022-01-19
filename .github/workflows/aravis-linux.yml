@@ -35,8 +35,8 @@ jobs:
       with:
         name: Linux_Meson_Testlog
         path: build/meson-logs/testlog.txt
-    - uses: actions/upload-artifact@v1
+    - name: Documentation
+      uses: peaceiris/actions-gh-pages@v3
       with:
-        name: documentation
-        path: build/docs/reference/aravis/aravis-0.8
-
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+      publish_dir: ./build/docs/reference/aravis/aravis-0.8
