@@ -15,7 +15,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Install dependencies
       run: |
-        pip3 install meson ninja Markdown tolm typogrify
+        pip3 install meson ninja Markdown toml typogrify
         sudo apt update
         sudo apt install python3 libusb-1.0-0-dev gobject-introspection valgrind libgstreamer-plugins-bad1.0-dev libgtk-3-dev libgirepository1.0-dev python3-gi
     - name: Build
