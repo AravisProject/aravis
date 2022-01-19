@@ -97,14 +97,16 @@ SPDX-License-Identifier: Apache-2.0 OR GPL-3.0-or-later
 <p>Aravis is not thread safe, which means one can not use the same object
 simultaneously from different threads, without using mutexes. But it is
 perfectly fine to use different aravis objects in different threads, with the
-exception of the ArvInterface&nbsp;instances.</p>
+exception of the <a href="class.Interface.html"><code>ArvInterface</code></a>&nbsp;instances.</p>
 <p>A possible trap is that glib signal callbacks are called from the thread that
-emitted the corresponding signal. For example, the &#8220;new-buffer&#8221; callback is
-emitted from the stream packet receiving thread, which is an internal thread
-created by ArvGvStream. It is not safe to use ArvDevice and some ArvStream
-functions from this callback without using mutexes. The exceptions are
-arv_stream_push_buffer(), arv_stream_pop_buffer(), <code>arv_stream_try_pop_buffer()</code>
-and&nbsp;arv_stream_timeout_pop_buffer().</p>
+emitted the corresponding signal. For example, the
+<a href="signal.Stream.new-buffer.html"><code>ArvStream::new-buffer</code></a> callback is emitted from the stream packet
+receiving thread, which is an internal thread created by
+<a href="class.GvStream.html"><code>ArvGvStream</code></a>. It is not safe to use <a href="class.Device.html"><code>ArvDevice</code></a> and some
+<a href="class.Stream.html"><code>ArvStream</code></a> functions from this callback without using mutexes. The
+exceptions are <a href="method.Stream.push_buffer.html"><code>arv_stream_push_buffer()</code></a>,
+<a href="method.Stream.pop_buffer.html"><code>arv_stream_pop_buffer()</code></a>, <a href="method.Stream.try_pop_buffer.html"><code>arv_stream_try_pop_buffer()</code></a> and
+<a href="method.Stream.timeout_pop_buffer.html"><code>arv_stream_timeout_pop_buffer()</code></a>.</p>
     </div>
   </section>
 </section>
