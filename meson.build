@@ -116,8 +116,7 @@ gst_deps = aravis_dependencies + [dependency ('gstreamer-base-1.0', required: gs
                                   dependency ('gstreamer-app-1.0', required: gst_option)]
 subdir('gst', if_found: gst_deps)
 
-doc_option = get_option('documentation')
-doc_deps = [find_program('gtkdoc-scan', required: doc_option), find_program('xsltproc', required: doc_option)]
+doc_deps = dependency ('gi-docgen', version:'>= 2021.1', fallback: ['gi-docgen', 'dummy_dep'], required:get_option('documentation'))
 subdir('docs', if_found: doc_deps)
 
 meson.override_dependency ('aravis-' + aravis_api_version, aravis_library_dependencies)

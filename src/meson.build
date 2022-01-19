@@ -303,13 +303,14 @@ if introspection_option.auto() or introspection_option.enabled()
   gi_dep = dependency('gobject-introspection-1.0', required: introspection_option)
 
   if gir_scanner.found() and gi_dep.found()
-    gnome.generate_gir(aravis_library,
+    aravis_gir = gnome.generate_gir(aravis_library,
       sources : [library_sources, library_headers, library_enums],
       nsversion : aravis_api_version,
       namespace : 'Aravis',
       symbol_prefix : 'arv_',
       identifier_prefix : 'Arv',
-      export_packages : 'aravis',
+      header: 'arv.h',
+      export_packages : 'aravis-@0@'.format(aravis_api_version),
       includes : ['GObject-2.0', 'Gio-2.0'],
       extra_args: '-DARAVIS_COMPILATION',
       install : true)
