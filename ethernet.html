@@ -1,0 +1,142 @@
+<!--
+SPDX-FileCopyrightText: 2021 GNOME Foundation
+
+SPDX-License-Identifier: Apache-2.0 OR GPL-3.0-or-later
+-->
+
+<!--
+SPDX-FileCopyrightText: 2021 GNOME Foundation
+
+SPDX-License-Identifier: Apache-2.0 OR GPL-3.0-or-later
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Aravis &ndash; 0.8: Ethernet Devices</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta charset="utf-8" />
+
+  
+  <meta property="og:type" content="website"/>
+
+  
+  <meta property="og:image:width" content="256"/>
+  <meta property="og:image:height" content="256"/>
+  <meta property="og:image:secure_url" content="aravis.svg"/>
+  <meta property="og:image:alt" content="Aravis-0.8"/>
+  
+
+  
+  <meta property="og:title" content="Aravis: Ethernet Devices"/>
+  <meta property="og:description" content="Reference for Aravis-0.8: Ethernet Devices"/>
+  <meta name="twitter:title" content="Aravis: Ethernet Devices"/>
+  <meta name="twitter:description" content="Reference for Aravis-0.8: Ethernet Devices"/>
+
+
+  
+  <meta name="twitter:card" content="summary"/>
+
+  
+  
+  
+  <link rel="search" type="application/opensearchdescription+xml" title="Aravis" href="opensearch.xml">
+  
+  
+
+  <link rel="stylesheet" href="style.css" type="text/css" />
+
+  
+
+  
+  <script src="urlmap.js"></script>
+  
+  
+  <script src="fzy.js"></script>
+  <script src="search.js"></script>
+  
+  <script src="main.js"></script>
+  <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+</head>
+
+<body>
+  <div id="body-wrapper" tabindex="-1">
+
+    <nav class="sidebar devhelp-hidden">
+      
+      <div class="section">
+        <img src="aravis.svg" class="logo"/>
+      </div>
+      
+      
+      <div class="search section">
+        <form id="search-form" autocomplete="off">
+          <input id="search-input" type="text" name="do-not-autocomplete" placeholder="Click, or press 's' to search" autocomplete="off"/>
+        </form>
+      </div>
+      
+      <div class="section namespace">
+        <h3><a href="index.html">Aravis</a></h3>
+        <p>API Version: 0.8</p>
+        
+        <p>Library Version: 0.8.21</p>
+        
+      </div>
+      
+      
+    </nav>
+    
+    <button id="btn-to-top" class="hidden"><span class="up-arrow"></span></button>
+
+    
+<section id="main" class="content">
+  <section>
+    <div class="docblock">
+    <h1 id="ethernet-device-performance">Ethernet Device Performance<a class="md-anchor" href="#ethernet-device-performance" title="Permanent link"></a></h1>
+<h2 id="stream-packet-size">Stream Packet Size<a class="md-anchor" href="#stream-packet-size" title="Permanent link"></a></h2>
+<p>One way to increase streaming performance is to increase the stream packet size.
+<code>arv_camera_gv_set_packet_size()</code> and <code>arv_camera_gv_auto_packet_size()</code> allow you
+to change this parameter. By default, the network adapter of your machine will
+probably not let you receive packet bigger than 1500 bytes, which is the default
+Maximum Transfer Unit (<span class="caps">MTU</span>). It means if you want to use big packets, you also
+have to increase the network adapter <span class="caps">MTU</span> to a greater walue (8192 bytes being a
+recommended value). The exact procedure to change the <span class="caps">MTU</span> depends on the
+distribution you are using. Please refer to the administrator manual of your&nbsp;distribution.</p>
+<p>On Fedora, <span class="caps">MTU</span> can be changed using the network setting panel. Edit the wired
+network settings. <span class="caps">MTU</span> parameter is in the Identity&nbsp;page.</p>
+<p>On Debian / Ubuntu you can add a line &#8220;mtu 8192&#8221; to /etc/network/interfaces
+under the correct&nbsp;device.</p>
+<div class="codehilite"><pre><span></span>iface ethusb0 inet static
+    address 192.168.45.1
+    netmask 255.255.255.0
+    broadcast 192.168.45.255
+    mtu 8192
+</pre></div>
+
+<p>Please note if your device is not connected directly to the machine, you may
+also have to tweak the active devices on your&nbsp;network.</p>
+<h2 id="packet-socket-support">Packet Socket Support<a class="md-anchor" href="#packet-socket-support" title="Permanent link"></a></h2>
+<p>Aravis can use packet sockets for the video receiving thread. But this mode
+requires extended capabilities. If you want to allow your application to use
+packet socket, you must set the <code>cap_net_raw</code> capability using <code>setcap</code>. For
+example, the following command gives this capability to the Aravis viewer (You
+should do this on the installed arv-viewer executable, has the one in the source
+tree is just a wrapper shell&nbsp;script):</p>
+<div class="codehilite"><pre><span></span>sudo setcap cap_net_raw+ep arv-viewer
+</pre></div>
+    </div>
+  </section>
+</section>
+
+
+    
+
+    <section id="search" class="content hidden"></section>
+
+    <footer>
+    
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!--
+SPDX-FileCopyrightText: 2021 GNOME Foundation
+
+SPDX-License-Identifier: Apache-2.0 OR GPL-3.0-or-later
+-->
+
+<!--
+SPDX-FileCopyrightText: 2021 GNOME Foundation
+
+SPDX-License-Identifier: Apache-2.0 OR GPL-3.0-or-later
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Aravis &ndash; 0.8: Thread Safety</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta charset="utf-8" />
+
+  
+  <meta property="og:type" content="website"/>
+
+  
+  <meta property="og:image:width" content="256"/>
+  <meta property="og:image:height" content="256"/>
+  <meta property="og:image:secure_url" content="aravis.svg"/>
+  <meta property="og:image:alt" content="Aravis-0.8"/>
+  
+
+  
+  <meta property="og:title" content="Aravis: Thread Safety"/>
+  <meta property="og:description" content="Reference for Aravis-0.8: Thread Safety"/>
+  <meta name="twitter:title" content="Aravis: Thread Safety"/>
+  <meta name="twitter:description" content="Reference for Aravis-0.8: Thread Safety"/>
+
+
+  
+  <meta name="twitter:card" content="summary"/>
+
+  
+  
+  
+  <link rel="search" type="application/opensearchdescription+xml" title="Aravis" href="opensearch.xml">
+  
+  
+
+  <link rel="stylesheet" href="style.css" type="text/css" />
+
+  
+
+  
+  <script src="urlmap.js"></script>
+  
+  
+  <script src="fzy.js"></script>
+  <script src="search.js"></script>
+  
+  <script src="main.js"></script>
+  <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+</head>
+
+<body>
+  <div id="body-wrapper" tabindex="-1">
+
+    <nav class="sidebar devhelp-hidden">
+      
+      <div class="section">
+        <img src="aravis.svg" class="logo"/>
+      </div>
+      
+      
+      <div class="search section">
+        <form id="search-form" autocomplete="off">
+          <input id="search-input" type="text" name="do-not-autocomplete" placeholder="Click, or press 's' to search" autocomplete="off"/>
+        </form>
+      </div>
+      
+      <div class="section namespace">
+        <h3><a href="index.html">Aravis</a></h3>
+        <p>API Version: 0.8</p>
+        
+        <p>Library Version: 0.8.21</p>
+        
+      </div>
+      
+      
+    </nav>
+    
+    <button id="btn-to-top" class="hidden"><span class="up-arrow"></span></button>
+
+    
+<section id="main" class="content">
+  <section>
+    <div class="docblock">
+    <h1 id="thread-safety">Thread Safety<a class="md-anchor" href="#thread-safety" title="Permanent link"></a></h1>
+<p>Aravis is not thread safe, which means one can not use the same object
+simultaneously from different threads, without using mutexes. But it is
+perfectly fine to use different aravis objects in different threads, with the
+exception of the ArvInterface&nbsp;instances.</p>
+<p>A possible trap is that glib signal callbacks are called from the thread that
+emitted the corresponding signal. For example, the &#8220;new-buffer&#8221; callback is
+emitted from the stream packet receiving thread, which is an internal thread
+created by ArvGvStream. It is not safe to use ArvDevice and some ArvStream
+functions from this callback without using mutexes. The exceptions are
+arv_stream_push_buffer(), arv_stream_pop_buffer(), <code>arv_stream_try_pop_buffer()</code>
+and&nbsp;arv_stream_timeout_pop_buffer().</p>
+    </div>
+  </section>
+</section>
+
+
+    
+
+    <section id="search" class="content hidden"></section>
+
+    <footer>
+    
+    </footer>
+  </div>
+</body>
+</html>
