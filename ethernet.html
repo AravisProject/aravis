@@ -96,13 +96,14 @@ SPDX-License-Identifier: Apache-2.0 OR GPL-3.0-or-later
     <h1 id="ethernet-device-performance">Ethernet Device Performance<a class="md-anchor" href="#ethernet-device-performance" title="Permanent link"></a></h1>
 <h2 id="stream-packet-size">Stream Packet Size<a class="md-anchor" href="#stream-packet-size" title="Permanent link"></a></h2>
 <p>One way to increase streaming performance is to increase the stream packet size.
-<code>arv_camera_gv_set_packet_size()</code> and <code>arv_camera_gv_auto_packet_size()</code> allow you
-to change this parameter. By default, the network adapter of your machine will
-probably not let you receive packet bigger than 1500 bytes, which is the default
-Maximum Transfer Unit (<span class="caps">MTU</span>). It means if you want to use big packets, you also
-have to increase the network adapter <span class="caps">MTU</span> to a greater walue (8192 bytes being a
-recommended value). The exact procedure to change the <span class="caps">MTU</span> depends on the
-distribution you are using. Please refer to the administrator manual of your&nbsp;distribution.</p>
+<a href="method.Camera.gv_set_packet_size.html"><code>arv_camera_gv_set_packet_size()</code></a> and
+<a href="method.Camera.gv_auto_packet_size.html"><code>arv_camera_gv_auto_packet_size()</code></a> allow you to change this parameter.
+By default, the network adapter of your machine will probably not let you
+receive packet bigger than 1500 bytes, which is the default Maximum Transfer
+Unit (<span class="caps">MTU</span>). It means if you want to use big packets, you also have to increase
+the network adapter <span class="caps">MTU</span> to a greater walue (8192 bytes being a recommended
+value). The exact procedure to change the <span class="caps">MTU</span> depends on the distribution you
+are using. Please refer to the administrator manual of your&nbsp;distribution.</p>
 <p>On Fedora, <span class="caps">MTU</span> can be changed using the network setting panel. Edit the wired
 network settings. <span class="caps">MTU</span> parameter is in the Identity&nbsp;page.</p>
 <p>On Debian / Ubuntu you can add a line &#8220;mtu 8192&#8221; to /etc/network/interfaces
@@ -120,9 +121,7 @@ also have to tweak the active devices on your&nbsp;network.</p>
 <p>Aravis can use packet sockets for the video receiving thread. But this mode
 requires extended capabilities. If you want to allow your application to use
 packet socket, you must set the <code>cap_net_raw</code> capability using <code>setcap</code>. For
-example, the following command gives this capability to the Aravis viewer (You
-should do this on the installed arv-viewer executable, has the one in the source
-tree is just a wrapper shell&nbsp;script):</p>
+example, the following command gives this capability to the Aravis&nbsp;viewer:</p>
 <div class="codehilite"><pre><span></span>sudo setcap cap_net_raw+ep arv-viewer
 </pre></div>
     </div>
