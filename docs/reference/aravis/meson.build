@@ -13,7 +13,13 @@ docs_dir = get_option('datadir') / 'doc'
 expand_content_md_files = [
   'introduction.md',
   'building.md',
-  'thread-safety.md'
+  'examples.md',
+  'utilities.md',
+  'ethernet.md',
+  'usb.md',
+  'thread-safety.md',
+  'porting-0.8.md',
+  'tests.md'
 ]
 
 aravis_toml=configure_file(

@@ -30,7 +30,13 @@ base_url = "https://github.com/AravisProject/aravis/tree/main"
 content_files = [
 	'introduction.md',
 	'building.md',
-	'thread-safety.md'
+	'examples.md',
+	'utilities.md',
+	'ethernet.md',
+	'usb.md',
+	'thread-safety.md',
+	'porting-0.8.md',
+	'tests.md'
 ]
 content_images = [
 	'../../../viewer/icons/src/aravis.svg'

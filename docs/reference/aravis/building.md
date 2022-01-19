@@ -1,4 +1,4 @@
-Title: Building and Debugging Aravis
+Title: Installation and Debug
 
 # Installing Aravis
 
@@ -55,15 +55,13 @@ brew install gtk+3 gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad l
 meson configure -Dviewer=enabled
 ```
 
-Python bindings and camera simulator are not functional yet.
-
 ## Building on Windows
 
 [MSYS2](https://msys2.org) provides native [Aravis
 packages](https://packages.msys2.org/base/mingw-w64-aravis).  The package
 includes the DLL, headers and utilities (including the viewer).
 
-To built Aravis by yourself, install MSYS2 and enter the mingw64 shell. Refer to
+To build Aravis by yourself, install MSYS2 and enter the mingw64 shell. Refer to
 the [mingw CI configuration
 file](https://github.com/AravisProject/aravis/blob/main/.github/workflows/aravis-mingw.yml)
 for list of dependencies (such as `mingw-w64-x86_64-libxml2` and so on) which
@@ -97,12 +95,12 @@ crossroad meson build
 ninja -C build install
 ```
 
-# Debuggin Aravis
+# Debugging Aravis
 
-The ARV_DEBUG environment variable can be set to a comma separated list of
+The `ARV_DEBUG` environment variable can be set to a comma separated list of
 debugging categories, which will make Aravis print out different types of
 debugging informations to the console. A debug level can also be specified,
-using a number from 0 (none) to 3 (log) separated from the category name by a
+using a number from 0 (none) to 4 (trace) separated from the category name by a
 colon. For example, the following command before running an Aravis based
 application will make Aravis print out all stream and device related
 informations:
@@ -112,13 +110,19 @@ export ARV_DEBUG=stream:3,device:3
 ```
 Available categories are:
 
-* all
-* interface
-* devices
-* stream-thread
-* cp
-* sp
-* genicam
-* evaluator
-* dom
-* misc
+* interface      : Device lookup for each supported protocol
+* device         : Device control
+* stream         : Video stream management
+* stream-thread  : Video stream thread (likely high volume output)
+* cp             : Control protocol packets
+* sp             : Stream protocol packets (likely high volume output)
+* genicam        : Genicam specialized DOM elements
+* policies       : Genicam runtime configurable policies
+* chunk          : Chunk data code
+* dom            : Genicam DOM document
+* evaluator      : Expression evaluator
+* viewer         : Simple viewer application
+* misc           : Miscellaneous code
+* all            : Everything
+
+
