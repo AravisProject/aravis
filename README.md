@@ -28,22 +28,23 @@ Aravis is released under the LGPL v2+.
 ### Documentation
 
 The latest documentation is available
-[here](https://aravisproject.github.io/aravis).
+[here](https://aravisproject.github.io/aravis). You will find how to install
+Aravis on Linux, macOS and Windows, how to tweak your system in order to get the
+best performances, and the API documentation.
 
 ### Dependencies
 
-The Aravis library depends on libxml2 and glib2, with an optional USB support
-depending on libusb1, and an optional packet socket support depending on
-libaudit.
+The Aravis library depends on zlib, libxml2 and glib2, with an optional USB
+support depending on libusb1.
 
 The GStreamer plugin depends on GStreamer1 in addition to the Aravis library
 dependencies.
 
-The simple viewer depends on GStreamer1, Gtk+3, libnotify and the Aravis library
+The simple viewer depends on GStreamer1, Gtk+3 and the Aravis library
 dependencies.
 
 The required versions are specified in the
-[meson.build](https://github.com/AravisProject/aravis/blob/master/meson.build)
+[meson.build](https://github.com/AravisProject/aravis/blob/main/meson.build)
 file in Aravis sources.
 
 It is perfectly possible to only build the library, reducing the dependencies to
