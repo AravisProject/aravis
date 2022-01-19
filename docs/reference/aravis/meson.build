@@ -1,32 +1,51 @@
-subdir ('xml')
+toml_conf = configuration_data()
+toml_conf.set('version', meson.project_version())
 
-doc_ignore_headers = library_private_headers + [
-	'arv.h',
-	'arvconfig.h',
-	'arvenumtypes.h',
-	'arvenumtypesprivate.h'
+gidocgen = find_program('gi-docgen')
+
+gidocgen_common_args = [
+  '--quiet',
+  '--no-namespace-dir',
 ]
 
-if not usb_dep.found()
-	doc_ignore_headers += [
-		'arvuvinterface.h',
-		'arvuvdevice.h',
-		'arvuvstream.h',
-		'arvuvspprivate.h',
-		'arvuvcpprivate.h',
-		'arvuvdeviceprivate.h',
-		'arvuvinterfaceprivate.h',
-		'arvuvstreamprivate.h'
-	]
-endif
+docs_dir = get_option('datadir') / 'doc'
 
-gnome.gtkdoc ('aravis',
-	      main_xml: 'aravis-docs.xml',
-	      src_dir: [meson.project_source_root () / 'src',
-	                meson.project_build_root () / 'src'],
-	      gobject_typesfile: 'aravis.types',
-	      dependencies: [aravis_library_dependencies],
-	      scan_args: ['--ignore-headers=' + ' '.join (doc_ignore_headers), '--rebuild-types', '--ignore-decorator=ARV_API'],
-	      content_files: ['aravis-overview.xml', 'aravis-gv.xml'] + doc_examples,
-	      install_dir: 'aravis-@0@'.format (aravis_api_version),
-	      install: true)
+expand_content_md_files = [
+  'introduction.md',
+  'building.md',
+  'examples.md',
+  'utilities.md',
+  'ethernet.md',
+  'usb.md',
+  'thread-safety.md',
+  'porting-0.8.md',
+  'tests.md'
+]
+
+aravis_toml=configure_file(
+  input: 'aravis.toml.in',
+  output: 'aravis.toml',
+  configuration: toml_conf,
+  install: true,
+  install_dir: docs_dir / 'aravis-@0@'.format(aravis_api_version)
+)
+
+custom_target(
+  'aravis-doc',
+  input: [ aravis_toml, aravis_gir[0] ],
+  output: 'aravis-@0@'.format(aravis_api_version),
+  command: [
+    gidocgen,
+    'generate',
+    gidocgen_common_args,
+    '--add-include-path=@0@'.format(meson.current_build_dir() / '../../../src'),
+    '--config=@INPUT0@',
+    '--output-dir=@OUTPUT@',
+    '--content-dir=@0@'.format(meson.current_source_dir()),
+    '@INPUT1@'
+    ],
+    depend_files: [ expand_content_md_files ],
+    build_by_default: true,
+    install: true,
+    install_dir: docs_dir
+  )
