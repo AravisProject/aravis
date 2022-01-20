@@ -56,7 +56,7 @@ else
   cc_export_define = 'extern'
 endif
 
-glib_dep = dependency ('glib-2.0', version: '>=2.44', required: true)
+glib_dep = dependency ('glib-2.0', version: '>=2.52', required: true)
 gobject_dep = dependency ('gobject-2.0', required: true)
 gio_dep = dependency ('gio-2.0', required: true)
 xml2_dep = dependency ('libxml-2.0', required: true)
