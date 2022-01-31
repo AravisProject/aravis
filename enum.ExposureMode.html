@@ -165,18 +165,18 @@ SPDX-License-Identifier: Apache-2.0 OR GPL-3.0-or-later
         </tr>
       
         <tr>
-          <td><code title="Value: 0">ARV_EXPOSURE_MODE_OFF</code></td>
+          <td><a id="off" href="#off"><code title="Value: 0">ARV_EXPOSURE_MODE_OFF</code></a></td>
           <td><p>Disables the Exposure and let the shutter&nbsp;open.</p></td>
         </tr>
       
         <tr>
-          <td><code title="Value: 1">ARV_EXPOSURE_MODE_TIMED</code></td>
+          <td><a id="timed" href="#timed"><code title="Value: 1">ARV_EXPOSURE_MODE_TIMED</code></a></td>
           <td><p>Timed exposure. The exposure duration time is set using the ExposureTime or ExposureAuto
 features and the exposure starts with the FrameStart or&nbsp;LineStart.</p></td>
         </tr>
       
         <tr>
-          <td><code title="Value: 2">ARV_EXPOSURE_MODE_TRIGGER_WIDTH</code></td>
+          <td><a id="trigger_width" href="#trigger_width"><code title="Value: 2">ARV_EXPOSURE_MODE_TRIGGER_WIDTH</code></a></td>
           <td><p>Uses the width of the current Frame or Line trigger signal(s) pulse to control the
 exposure duration. Note that if the Frame or Line TriggerActivation is RisingEdge or LevelHigh, the exposure duration
 will be the time the trigger stays High. If TriggerActivation is FallingEdge or LevelLow, the exposure time will last
@@ -184,7 +184,7 @@ as long as the trigger stays&nbsp;Low.</p></td>
         </tr>
       
         <tr>
-          <td><code title="Value: 3">ARV_EXPOSURE_MODE_TRIGGER_CONTROLLED</code></td>
+          <td><a id="trigger_controlled" href="#trigger_controlled"><code title="Value: 3">ARV_EXPOSURE_MODE_TRIGGER_CONTROLLED</code></a></td>
           <td><p>Uses one or more trigger signal(s) to control the exposure duration
 independently from the current Frame or Line triggers. See ExposureStart, ExposureEnd and ExposureActive of
 the TriggerSelector&nbsp;feature.</p></td>
@@ -238,6 +238,9 @@ the TriggerSelector&nbsp;feature.</p></td>
     <p id="toc-title">Content</p>
     <ul class="toc-list">
       <li class="toc-list-item"><a href="#description"><span class="link-text">Description</span></a></li>
+      <li class="toc-list-item"><a href="#members"><span class="link-text">Members</span></a></li>
+      
+
       
 <li class="toc-list-item"><a href="#type-functions"><span class="link-text">Functions</span></a></li>
 

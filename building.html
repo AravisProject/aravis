@@ -120,6 +120,15 @@ following(tested on Ubuntu&nbsp;20.04):</p>
                  libgirepository1.0-dev
 </pre></div>
 
+<h2 id="install-dependencies-on-fedora-3435">Install dependencies on Fedora 34/35<a class="md-anchor" href="#install-dependencies-on-fedora-3435" title="Permanent link"></a></h2>
+<p>Due to differences in the deb and rpm package ecosystems dependencies can be
+installed on  Fedora (tested on 34 and 35)&nbsp;with:</p>
+<div class="codehilite"><pre><span></span>sudo dnf install libxml2-devel glib2-devel cmake libusb1-devel gobject-introspection <span class="se">\</span>
+                 gobject-introspection-devel gstreamer1-plugins-base-devel gtk3-devel <span class="se">\</span>
+                 gtk-doc libxslt gstreamer1-devel gstreamer1-plugins-good python3-gobject <span class="se">\</span>
+                 g++ meson
+</pre></div>
+
 <h2 id="building-on-macos">Building on macOS<a class="md-anchor" href="#building-on-macos" title="Permanent link"></a></h2>
 <p>Using the <span class="caps">GNU</span> build system on macOS is not directly supported, but can be
 mimicked by augmenting the install procedure above with some environment
@@ -200,6 +209,35 @@ application will make Aravis print out all stream and device related&nbsp;inform
 
 
     
+<div id="toc" class="toc">
+  <nav aria-labelledby="toc-title">
+    <p id="toc-title">Content</p>
+    <ul class="toc-list">
+      
+        
+        <li class="toc-list-item"><a href="#installing-aravis"><span class="link-text">Installing Aravis</span></a></li>
+          
+          <ul class="toc-list">
+          
+            <li class="toc-list-item"><a href="#install-dependencies-on-ubuntu-2004"><span class="link-text">Install dependencies on Ubuntu 20.04</span></a></li>
+          
+            <li class="toc-list-item"><a href="#install-dependencies-on-fedora-3435"><span class="link-text">Install dependencies on Fedora 34/35</span></a></li>
+          
+            <li class="toc-list-item"><a href="#building-on-macos"><span class="link-text">Building on macOS</span></a></li>
+          
+            <li class="toc-list-item"><a href="#building-on-windows"><span class="link-text">Building on Windows</span></a></li>
+          
+          </ul>
+          
+        
+        <li class="toc-list-item"><a href="#debugging-aravis"><span class="link-text">Debugging Aravis</span></a></li>
+          
+        
+      
+    </ul>
+  </nav>
+</div>
+
 
     <section id="search" class="content hidden"></section>
 
