@@ -35,6 +35,17 @@ sudo apt install libxml2-dev libglib2.0-dev cmake libusb-1.0-0-dev gobject-intro
                  libgirepository1.0-dev
 ```
 
+## Install dependencies on Fedora 34/35
+Due to differences in the deb and rpm package ecosystems dependencies can be
+installed on  Fedora (tested on 34 and 35) with:
+
+```sh
+sudo dnf install libxml2-devel glib2-devel cmake libusb1-devel gobject-introspection \
+                 gobject-introspection-devel gstreamer1-plugins-base-devel gtk3-devel \
+                 gtk-doc libxslt gstreamer1-devel gstreamer1-plugins-good python3-gobject \
+                 g++ meson
+```
+
 ## Building on macOS
 
 Using the GNU build system on macOS is not directly supported, but can be
