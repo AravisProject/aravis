@@ -171,6 +171,7 @@ _send_cmd_and_receive_ack (ArvUvDevice *uv_device, ArvUvcpCommand command,
 	unsigned n_tries = 0;
 	gboolean success = FALSE;
 	ArvUvcpStatus status = ARV_UVCP_STATUS_SUCCESS;
+	static GMutex transfer_mutex;
 
 	switch (command) {
 		case ARV_UVCP_COMMAND_READ_MEMORY_CMD:
@@ -223,6 +224,8 @@ _send_cmd_and_receive_ack (ArvUvDevice *uv_device, ArvUvcpCommand command,
 	}
 
 	ack_packet = g_malloc (ack_size);
+
+	g_mutex_lock(&transfer_mutex);
 
 	do {
 		GError *local_error = NULL;
@@ -331,6 +334,8 @@ _send_cmd_and_receive_ack (ArvUvDevice *uv_device, ArvUvcpCommand command,
 
 		n_tries++;
 	} while (!success && n_tries < ARV_UV_DEVICE_N_TRIES_MAX);
+
+	g_mutex_unlock(&transfer_mutex);
 
 	g_free (ack_packet);
 	arv_uvcp_packet_free (packet);
