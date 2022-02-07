@@ -78,6 +78,8 @@ typedef struct {
 
 	int event_thread_run;
 	GThread* event_thread;
+
+        GMutex transfer_mutex;
 } ArvUvDevicePrivate;
 
 struct _ArvUvDevice {
@@ -171,7 +173,6 @@ _send_cmd_and_receive_ack (ArvUvDevice *uv_device, ArvUvcpCommand command,
 	unsigned n_tries = 0;
 	gboolean success = FALSE;
 	ArvUvcpStatus status = ARV_UVCP_STATUS_SUCCESS;
-	static GMutex transfer_mutex;
 
 	switch (command) {
 		case ARV_UVCP_COMMAND_READ_MEMORY_CMD:
@@ -225,7 +226,7 @@ _send_cmd_and_receive_ack (ArvUvDevice *uv_device, ArvUvcpCommand command,
 
 	ack_packet = g_malloc (ack_size);
 
-	g_mutex_lock(&transfer_mutex);
+	g_mutex_lock (&priv->transfer_mutex);
 
 	do {
 		GError *local_error = NULL;
@@ -335,7 +336,7 @@ _send_cmd_and_receive_ack (ArvUvDevice *uv_device, ArvUvcpCommand command,
 		n_tries++;
 	} while (!success && n_tries < ARV_UV_DEVICE_N_TRIES_MAX);
 
-	g_mutex_unlock(&transfer_mutex);
+	g_mutex_unlock (&priv->transfer_mutex);
 
 	g_free (ack_packet);
 	arv_uvcp_packet_free (packet);
@@ -880,6 +881,8 @@ arv_uv_device_constructed (GObject *object)
 
         G_OBJECT_CLASS (arv_uv_device_parent_class)->constructed (object);
 
+        g_mutex_init (&priv->transfer_mutex);
+
         if (priv->vendor != NULL)
                 arv_info_device ("[UvDevice::new] Vendor  = %s", priv->vendor);
         if (priv->product != NULL)
@@ -980,6 +983,7 @@ arv_uv_device_finalize (GObject *object)
 		libusb_close (priv->usb_device);
 	}
 	libusb_exit (priv->usb);
+        g_mutex_clear (&priv->transfer_mutex);
 
 	G_OBJECT_CLASS (arv_uv_device_parent_class)->finalize (object);
 }
