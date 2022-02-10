@@ -114,8 +114,6 @@ typedef struct {
 
 G_DEFINE_TYPE_WITH_CODE (ArvUvStream, arv_uv_stream, ARV_TYPE_STREAM, G_ADD_PRIVATE (ArvUvStream))
 
-int mode_sync;
-
 static void
 arv_uv_stream_buffer_context_wait_transfer_completed (ArvUvStreamBufferContext* ctx)
 {
