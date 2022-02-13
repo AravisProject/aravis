@@ -59,6 +59,9 @@ struct _ArvStreamClass {
 	void		(*start_thread)		(ArvStream *stream);
 	void		(*stop_thread)		(ArvStream *stream);
 
+        unsigned int    (*create_buffers)       (ArvStream *stream, unsigned int n_buffers, size_t size,
+                                                 void *user_data, GDestroyNotify user_data_destroy_func);
+
 	/* signals */
 	void        	(*new_buffer)   	(ArvStream *stream);
 };
@@ -83,6 +86,10 @@ struct _ArvStreamClass {
  */
 
 typedef void (*ArvStreamCallback)	(void *user_data, ArvStreamCallbackType type, ArvBuffer *buffer);
+
+ARV_API unsigned int    arv_stream_create_buffers               (ArvStream *stream, unsigned int n_buffers,
+                                                                 void *user_data, GDestroyNotify user_data_destroy_func,
+                                                                 GError **error);
 
 ARV_API void		arv_stream_push_buffer			(ArvStream *stream, ArvBuffer *buffer);
 ARV_API ArvBuffer *	arv_stream_pop_buffer			(ArvStream *stream);
