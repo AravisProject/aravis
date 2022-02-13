@@ -79,6 +79,35 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvStream, arv_stream, G_TYPE_OBJECT,
 				  G_ADD_PRIVATE (ArvStream)
 				  G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, arv_stream_initable_iface_init))
 
+unsigned int
+arv_stream_create_buffers (ArvStream *stream, unsigned int n_buffers,
+                           void *user_data, GDestroyNotify user_data_destroy_func,
+                           GError **error)
+{
+	ArvStreamClass *stream_class;
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+        size_t payload_size;
+        unsigned int i;
+
+	g_return_val_if_fail (ARV_IS_STREAM (stream), 0);
+	g_return_val_if_fail (n_buffers > 0, 0);
+        g_return_val_if_fail (ARV_IS_DEVICE (priv->device), 0);
+
+        payload_size = arv_device_get_integer_feature_value (priv->device, "PayloadSize", error);
+        if (payload_size < 1)
+                return 0;
+
+	stream_class = ARV_STREAM_GET_CLASS (stream);
+        if (stream_class->create_buffers != NULL)
+                return stream_class->create_buffers (stream, n_buffers, payload_size, user_data, user_data_destroy_func);
+
+        for (i = 0; i < n_buffers; i++)
+                arv_stream_push_buffer (stream, arv_buffer_new_full (payload_size, NULL,
+                                                                     user_data, user_data_destroy_func));
+
+        return n_buffers;
+}
+
 /**
  * arv_stream_push_buffer:
  * @stream: a #ArvStream

@@ -114,6 +114,25 @@ typedef struct {
 
 G_DEFINE_TYPE_WITH_CODE (ArvUvStream, arv_uv_stream, ARV_TYPE_STREAM, G_ADD_PRIVATE (ArvUvStream))
 
+typedef struct {
+        void *buffer;
+        gboolean is_dev_mem;
+        void *user_data;
+        GDestroyNotify user_data_destroy_func;
+} ArvUvStreamBufferInfos;
+
+static void
+_destroy_buffer (void *abstract_data)
+{
+}
+
+static unsigned int
+arv_uv_stream_create_buffers (ArvStream *stream, unsigned int n_buffers, size_t size,
+                              void *user_data, GDestroyNotify user_data_destroy_func)
+{
+        return 0;
+}
+
 static void
 arv_uv_stream_buffer_context_wait_transfer_completed (ArvUvStreamBufferContext* ctx)
 {
