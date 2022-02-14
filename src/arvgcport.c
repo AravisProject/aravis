@@ -121,7 +121,8 @@ arv_gc_port_read (ArvGcPort *port, void *buffer, guint64 address, guint64 length
 
 		if (!ARV_IS_BUFFER (chunk_data_buffer)) {
 			g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_BUFFER_NOT_FOUND,
-				     "[ArvGcPort::read] Buffer not found");
+				     "[%s] Buffer not found",
+                                     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (port)));
 		} else {
 			char *chunk_data;
 			size_t chunk_data_size;
@@ -134,12 +135,15 @@ arv_gc_port_read (ArvGcPort *port, void *buffer, guint64 address, guint64 length
 				memcpy (buffer, chunk_data + address, MIN (chunk_data_size - address, length));
 			} else {
 				g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_CHUNK_NOT_FOUND,
-					     "[ArvGcPort::read] Chunk 0x%08x not found", chunk_id);
+					     "[%s] Chunk 0x%08x not found",
+                                             arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (port)),
+                                             chunk_id);
 			}
 		}
 	} else if (port->priv->event_id != NULL) {
 		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_NO_EVENT_IMPLEMENTATION,
-			     "[ArvGcPort::read] Event support is not implemented");
+			     "[%s] Events not implemented",
+                             arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (port)));
 	} else {
 		ArvDevice *device;
 
@@ -158,7 +162,8 @@ arv_gc_port_read (ArvGcPort *port, void *buffer, guint64 address, guint64 length
 				arv_device_read_memory (device, address, length, buffer, error);
 		} else {
 			g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_NO_DEVICE_SET,
-				     "[ArvGcPort::read] No device set");
+				     "[%s] No device set",
+                                     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (port)));
 		}
 	}
 }
@@ -183,7 +188,8 @@ arv_gc_port_write (ArvGcPort *port, void *buffer, guint64 address, guint64 lengt
 
 		if (!ARV_IS_BUFFER (chunk_data_buffer)) {
 			g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_BUFFER_NOT_FOUND,
-				     "[ArvGcPort::write] Buffer not found");
+				     "[%s] Buffer not found",
+                                     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (port)));
 		} else {
 			char *chunk_data;
 			size_t chunk_data_size;
@@ -196,12 +202,15 @@ arv_gc_port_write (ArvGcPort *port, void *buffer, guint64 address, guint64 lengt
 				memcpy (chunk_data + address, buffer, MIN (chunk_data_size - address, length));
 			} else {
 				g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_CHUNK_NOT_FOUND,
-					     "[ArvGcPort::write] Chunk 0x%08x not found", chunk_id);
+					     "[%s] Chunk 0x%08x not found",
+                                             arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (port)),
+                                             chunk_id);
 			}
 		}
 	} else if (port->priv->event_id != NULL) {
 		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_NO_EVENT_IMPLEMENTATION,
-			     "[ArvGcPort::read] Event support is not implemented");
+			     "[%s] Events  not implemented",
+                             arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (port)));
 	} else {
 		device = arv_gc_get_device (genicam);
 
@@ -220,7 +229,8 @@ arv_gc_port_write (ArvGcPort *port, void *buffer, guint64 address, guint64 lengt
 				arv_device_write_memory (device, address, length, buffer, error);
 		} else {
 			g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_NO_DEVICE_SET,
-				     "[ArvGcPort::read] No device set");
+				     "[%s] No device set",
+                                     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (port)));
 		}
 	}
 }

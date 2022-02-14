@@ -107,7 +107,8 @@ arv_gc_command_execute (ArvGcCommand *gc_command, GError **error)
 	command_value = arv_gc_property_node_get_int64 (gc_command->command_value, &local_error);
 
 	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
+		g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_command)));
 		return;
 	}
 
@@ -115,7 +116,8 @@ arv_gc_command_execute (ArvGcCommand *gc_command, GError **error)
 	arv_gc_property_node_set_int64 (gc_command->value, command_value, &local_error);
 
 	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
+		g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_command)));
 		return;
 	}
 

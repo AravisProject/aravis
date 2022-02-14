@@ -48,7 +48,8 @@ arv_gc_int_swiss_knife_node_get_integer_value (ArvGcInteger *self, GError **erro
 static void
 arv_gc_int_swiss_knife_node_set_integer_value (ArvGcInteger *self, gint64 value, GError **error)
 {
-	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_READ_ONLY, "IntSwissKnife is read only");
+	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_READ_ONLY, "[%s] Read only IntSwissKnife",
+                     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
 }
 
 static ArvGcRepresentation

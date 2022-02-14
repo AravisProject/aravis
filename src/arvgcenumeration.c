@@ -118,7 +118,8 @@ arv_gc_enumeration_get_string_value (ArvGcEnumeration *enumeration, GError **err
 	value = arv_gc_enumeration_get_int_value (enumeration, &local_error);
 
 	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
+		g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
 		return NULL;
 	}
 
@@ -128,9 +129,10 @@ arv_gc_enumeration_get_string_value (ArvGcEnumeration *enumeration, GError **err
 		enum_value = arv_gc_enum_entry_get_value (iter->data, &local_error);
 
 		if (local_error != NULL) {
-			g_propagate_error (error, local_error);
-			return NULL;
-		}
+                        g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                                    arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
+                        return NULL;
+                }
 
 		if (enum_value == value) {
 			const char *string;
@@ -167,14 +169,16 @@ arv_gc_enumeration_set_string_value (ArvGcEnumeration *enumeration, const char *
 					 enum_value, value);
 
 			if (local_error != NULL) {
-				g_propagate_error (error, local_error);
-				return FALSE;
-			}
+                                g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
+                                return FALSE;
+                        }
 
 			arv_gc_enumeration_set_int_value (enumeration, enum_value, &local_error);
 
 			if (local_error != NULL) {
-				g_propagate_error (error, local_error);
+                                g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
 				return FALSE;
 			}
 
@@ -183,8 +187,8 @@ arv_gc_enumeration_set_string_value (ArvGcEnumeration *enumeration, const char *
 
 	arv_warning_genicam ("[GcEnumeration::set_string_value] entry %s not found", value);
 
-	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_ENUM_ENTRY_NOT_FOUND, "'%s' is not an entry of enumeration '%s'",
-		     value, arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
+	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_ENUM_ENTRY_NOT_FOUND, "[%s] '%s' not an entry",
+		     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)), value);
 
 	return FALSE;
 }
@@ -208,7 +212,8 @@ arv_gc_enumeration_get_int_value (ArvGcEnumeration *enumeration, GError **error)
 	value = arv_gc_property_node_get_int64 (enumeration->value, &local_error);
 
 	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
+		g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
 		return 0;
 	}
 
@@ -220,7 +225,7 @@ arv_gc_enumeration_get_int_value (ArvGcEnumeration *enumeration, GError **error)
 
 	if (available_values == NULL) {
 		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_EMPTY_ENUMERATION,
-			     "No available entry found in <Enumeration> '%s'",
+			     "[%s] No available entry",
 			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
 		return value;
 	}
@@ -233,7 +238,7 @@ arv_gc_enumeration_get_int_value (ArvGcEnumeration *enumeration, GError **error)
 
 	if (!found)
 		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_OUT_OF_RANGE,
-			     "Value not found in <Enumeration> '%s'",
+			     "[%s] Value not found",
 			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
 
 	return value;
@@ -275,7 +280,8 @@ arv_gc_enumeration_dup_available_int_values (ArvGcEnumeration *enumeration, guin
 		is_available = arv_gc_feature_node_is_available (iter->data, &local_error);
 
 		if (local_error != NULL) {
-			g_propagate_error (error, local_error);
+			g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                                    arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
 			*n_values = 0;
 			g_slist_free (available_entries);
 
@@ -288,9 +294,10 @@ arv_gc_enumeration_dup_available_int_values (ArvGcEnumeration *enumeration, guin
 			is_implemented = arv_gc_feature_node_is_implemented (iter->data, &local_error);
 
 			if (local_error != NULL) {
-				g_propagate_error (error, local_error);
-				*n_values = 0;
-				g_slist_free (available_entries);
+                                g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
+                                *n_values = 0;
+                                g_slist_free (available_entries);
 
 				return NULL;
 			}
@@ -313,10 +320,11 @@ arv_gc_enumeration_dup_available_int_values (ArvGcEnumeration *enumeration, guin
 		values[i] = arv_gc_enum_entry_get_value (iter->data, &local_error);
 
 		if (local_error != NULL) {
-			g_propagate_error (error, local_error);
-			*n_values = 0;
-			g_slist_free (available_entries);
-			g_free (values);
+                        g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                                    arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
+                        *n_values = 0;
+                        g_slist_free (available_entries);
+                        g_free (values);
 
 			return NULL;
 		}
@@ -353,7 +361,8 @@ _dup_available_string_values (ArvGcEnumeration *enumeration, gboolean display_na
 		is_available = arv_gc_feature_node_is_available (iter->data, &local_error);
 
 		if (local_error != NULL) {
-			g_propagate_error (error, local_error);
+                        g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                                    arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
 			*n_values = 0;
 			g_slist_free (available_entries);
 
@@ -366,9 +375,10 @@ _dup_available_string_values (ArvGcEnumeration *enumeration, gboolean display_na
 			is_implemented = arv_gc_feature_node_is_implemented (iter->data, &local_error);
 
 			if (local_error != NULL) {
-				g_propagate_error (error, local_error);
-				*n_values = 0;
-				g_slist_free (available_entries);
+                                g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
+                                *n_values = 0;
+                                g_slist_free (available_entries);
 
 				return NULL;
 			}
@@ -457,13 +467,14 @@ arv_gc_enumeration_set_int_value (ArvGcEnumeration *enumeration, gint64 value, G
 
 			available_values = arv_gc_enumeration_dup_available_int_values (enumeration, &n_values, &local_error);
 			if (local_error != NULL) {
-				g_propagate_error (error, local_error);
+                                g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
 				return FALSE;
 			}
 
 			if (available_values == NULL) {
 				g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_EMPTY_ENUMERATION,
-					     "No available entry found in <Enumeration> '%s'",
+					     "[%s] No available entry found",
 					     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
 				return FALSE;
 			}
@@ -476,8 +487,9 @@ arv_gc_enumeration_set_int_value (ArvGcEnumeration *enumeration, gint64 value, G
 
 			if (!found) {
 				g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_OUT_OF_RANGE,
-					     "Value not found in <Enumeration> '%s'",
-					     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
+					     "[%s] Value %" G_GINT64_FORMAT " not found",
+					     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)),
+                                             value);
 				return FALSE;
 			}
 		}
@@ -486,15 +498,16 @@ arv_gc_enumeration_set_int_value (ArvGcEnumeration *enumeration, gint64 value, G
 		arv_gc_property_node_set_int64 (enumeration->value, value, &local_error);
 
 		if (local_error != NULL) {
-			g_propagate_error (error, local_error);
-			return FALSE;
-		}
+                        g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                                    arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
+                        return FALSE;
+                }
 
 		return TRUE;
 	}
 
 	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_PROPERTY_NOT_DEFINED,
-		     "<Value> node node found for '%s'", arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
+		     "[%s] <Value> node not found", arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
 
 	return FALSE;
 }

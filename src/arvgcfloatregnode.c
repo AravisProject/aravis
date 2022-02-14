@@ -123,7 +123,8 @@ arv_gc_float_reg_node_get_float_value (ArvGcFloat *self, GError **error)
 	}
 
 	if (local_error != NULL)
-		g_propagate_error (error, local_error);
+		g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
 
 	return v_double;
 }
@@ -162,7 +163,8 @@ arv_gc_float_reg_node_set_float_value (ArvGcFloat *self, gdouble value, GError *
 	}
 
 	if (local_error != NULL)
-		g_propagate_error (error, local_error);
+		g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
 }
 
 static double
@@ -183,7 +185,8 @@ arv_gc_float_reg_node_get_min (ArvGcFloat *self, GError **error)
 		return -G_MAXDOUBLE;
 
 	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_INVALID_LENGTH,
-		     "Invalid register length for FloatReg node");
+		     "[%s] Invalid register length for FloatReg node",
+                     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
 
 	return -G_MAXDOUBLE;
 }
@@ -206,7 +209,8 @@ arv_gc_float_reg_node_get_max (ArvGcFloat *self, GError **error)
 		return G_MAXDOUBLE;
 
 	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_INVALID_LENGTH,
-		     "Invalid register length for FloatReg node");
+		     "[%s] Invalid register length for FloatReg node",
+                     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
 
 	return G_MAXDOUBLE;
 }

@@ -150,7 +150,8 @@ arv_gc_string_node_get_string_value (ArvGcString *gc_string, GError **error)
 	if (ARV_IS_GC_PROPERTY_NODE (gc_string_node->value)) {
 		value = arv_gc_property_node_get_string (gc_string_node->value, &local_error);
 		if (local_error != NULL) {
-			g_propagate_error (error, local_error);
+			g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                                    arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_string)));
 			return NULL;
 		}
 	}
@@ -162,9 +163,14 @@ static void
 arv_gc_string_node_set_string_value (ArvGcString *gc_string, const char *value, GError **error)
 {
 	ArvGcStringNode *gc_string_node = ARV_GC_STRING_NODE (gc_string);
+	GError *local_error = NULL;
 
-	if (ARV_IS_GC_PROPERTY_NODE (gc_string_node->value))
-		arv_gc_property_node_set_string (gc_string_node->value, value, error);
+	if (ARV_IS_GC_PROPERTY_NODE (gc_string_node->value)) {
+		arv_gc_property_node_set_string (gc_string_node->value, value, &local_error);
+                if (local_error != NULL)
+                        g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                                    arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_string)));
+        }
 }
 
 static gint64

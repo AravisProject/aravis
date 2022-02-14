@@ -114,7 +114,7 @@ arv_chunk_parser_get_boolean_value (ArvChunkParser *parser, ArvBuffer *buffer, c
 		}
 	} else {
 		g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_INVALID_FEATURE_TYPE,
-			     "Node '%s' is not a boolean", chunk);
+			     "[%s] Not a boolean", chunk);
 	}
 
 	return value;
@@ -153,7 +153,7 @@ arv_chunk_parser_get_string_value (ArvChunkParser *parser, ArvBuffer *buffer, co
 		}
 	} else {
 		g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_INVALID_FEATURE_TYPE,
-			     "Node '%s' is not a string", chunk);
+			     "[%s] Not a string", chunk);
 	}
 
 	return string;
@@ -192,7 +192,7 @@ arv_chunk_parser_get_integer_value (ArvChunkParser *parser, ArvBuffer *buffer, c
 		}
 	} else {
 		g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_INVALID_FEATURE_TYPE,
-			     "Node '%s' is not an integer", chunk);
+			     "[%s] Not an integer", chunk);
 	}
 
 	return value;
@@ -231,7 +231,7 @@ arv_chunk_parser_get_float_value (ArvChunkParser *parser, ArvBuffer *buffer, con
 		}
 	} else {
 		g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_INVALID_FEATURE_TYPE,
-			     "Node '%s' is not a float", chunk);
+			     "[%s] Not a float", chunk);
 	}
 
 	return value;

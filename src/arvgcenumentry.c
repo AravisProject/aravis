@@ -94,7 +94,8 @@ arv_gc_enum_entry_get_value (ArvGcEnumEntry *entry, GError **error)
 	value = arv_gc_property_node_get_int64 (entry->value, &local_error);
 
 	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
+		g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (entry)));
 		return 0;
 	}
 
