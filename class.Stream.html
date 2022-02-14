@@ -100,6 +100,8 @@ SPDX-License-Identifier: Apache-2.0 OR GPL-3.0-or-later
   <h5>Instance methods</h5>
   <div class="links">
   
+    <a class="method" href="method.Stream.create_buffers.html">create_buffers</a>
+  
     <a class="method" href="method.Stream.get_emit_signals.html">get_emit_signals</a>
   
     <a class="method" href="method.Stream.get_info_double.html">get_info_double</a>
@@ -172,6 +174,8 @@ SPDX-License-Identifier: Apache-2.0 OR GPL-3.0-or-later
 <div class="section">
   <h5>Virtual methods</h5>
   <div class="links">
+  
+    <a class="method" href="vfunc.Stream.create_buffers.html">create_buffers</a>
   
     <a class="method" href="vfunc.Stream.new_buffer.html">new_buffer</a>
   
@@ -296,6 +300,14 @@ objects.</p>
       </h4>
 
       <div class="docblock">
+      
+        <div class="">
+          <h6><a href="method.Stream.create_buffers.html">arv_stream_create_buffers</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          
+        </div>
       
         <div class="">
           <h6><a href="method.Stream.get_emit_signals.html">arv_stream_get_emit_signals</a></h6>
@@ -603,6 +615,13 @@ its value set through g_object_set_property(), g_object_set(), et&nbsp;al.</p>
   void (* stop_thread) (
     ArvStream* stream
   );
+  unsigned int (* create_buffers) (
+    ArvStream* stream,
+    unsigned int n_buffers,
+    size_t size,
+    void* user_data,
+    GDestroyNotify user_data_destroy_func
+  );
   void (* new_buffer) (
     ArvStream* stream
   );
@@ -648,6 +667,21 @@ its value set through g_object_set_property(), g_object_set(), et&nbsp;al.</p>
         </td>
         
         <tr>
+          <td style="vertical-align:top"><code>create_buffers</code></td>
+          <td style="vertical-align:top"><pre><code>unsigned int (* create_buffers) (
+    ArvStream* stream,
+    unsigned int n_buffers,
+    size_t size,
+    void* user_data,
+    GDestroyNotify user_data_destroy_func
+  )</code></pre></td>
+        </tr>
+        <tr>
+          <td>&nbsp;</td>
+          <td style="vertical-align:top">No description available.</td>
+        </td>
+        
+        <tr>
           <td style="vertical-align:top"><code>new_buffer</code></td>
           <td style="vertical-align:top"><pre><code>void (* new_buffer) (
     ArvStream* stream
@@ -672,6 +706,16 @@ its value set through g_object_set_property(), g_object_set(), et&nbsp;al.</p>
       </h4>
 
       <div class="docblock">
+      
+      <div class="">
+        <h6 id="vfunc-create_buffers"><a href="vfunc.Stream.create_buffers.html">Aravis.StreamClass.create_buffers</a></h6>
+
+        <div class="docblock">
+          No description available.
+        </div>
+
+          
+      </div>
       
       <div class="">
         <h6 id="vfunc-new_buffer"><a href="vfunc.Stream.new_buffer.html">Aravis.StreamClass.new_buffer</a></h6>

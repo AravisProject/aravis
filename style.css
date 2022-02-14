@@ -63,7 +63,7 @@
   --table-font-size: 0.92em;    /* Tables often contain lots information. It's better to scale them down a big to get more sutff fitted inside */
 
   /* misc */
-  --prefered-content-width: 90ch; /* The preferred width for the readable content */
+  --preferred-content-width: 90ch; /* The preferred width for the readable content */
   --anchor-sign: "#";
 
 }
@@ -524,6 +524,10 @@ footer {
   padding-top: .25em;
 }
 
+ul.toc-list > ul.toc-list {
+  padding-left: 1em;
+}
+
 /*********************************
  * ANCHORS & TOGGLERS
  *********************************/
@@ -600,7 +604,7 @@ footer {
 .content {
   padding: 2em 4em;
   overflow: visible;
-  max-width: calc(var(--prefered-content-width) + 8em);
+  max-width: calc(var(--preferred-content-width) + 8em);
 }
 
 .content table:not(.table-display) {

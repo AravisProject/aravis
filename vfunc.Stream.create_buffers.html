@@ -1,0 +1,294 @@
+<!--
+SPDX-FileCopyrightText: 2021 GNOME Foundation
+
+SPDX-License-Identifier: Apache-2.0 OR GPL-3.0-or-later
+-->
+
+<!--
+SPDX-FileCopyrightText: 2021 GNOME Foundation
+
+SPDX-License-Identifier: Apache-2.0 OR GPL-3.0-or-later
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Aravis.Stream.create_buffers</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta charset="utf-8" />
+
+  
+  <meta property="og:type" content="website"/>
+
+  
+  <meta property="og:image:width" content="256"/>
+  <meta property="og:image:height" content="256"/>
+  <meta property="og:image:secure_url" content="aravis.svg"/>
+  <meta property="og:image:alt" content="Aravis-0.8"/>
+  
+
+  
+  <meta property="og:title" content="Aravis.Stream.create_buffers"/>
+  <meta property="og:description" content="Reference for Aravis.Stream.create_buffers"/>
+  <meta name="twitter:title" content="Aravis.Stream.create_buffers"/>
+  <meta name="twitter:description" content="Reference for Aravis.Stream.create_buffers"/>
+
+
+  
+  <meta name="twitter:card" content="summary"/>
+
+  
+  
+  
+  <link rel="search" type="application/opensearchdescription+xml" title="Aravis" href="opensearch.xml">
+  
+  
+
+  <link rel="stylesheet" href="style.css" type="text/css" />
+
+  
+
+  
+  <script src="urlmap.js"></script>
+  
+  
+  <script src="fzy.js"></script>
+  <script src="search.js"></script>
+  
+  <script src="main.js"></script>
+  <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+</head>
+
+<body>
+  <div id="body-wrapper" tabindex="-1">
+
+    <nav class="sidebar devhelp-hidden">
+      
+      <div class="section">
+        <img src="aravis.svg" class="logo"/>
+      </div>
+      
+      
+      <div class="search section">
+        <form id="search-form" autocomplete="off">
+          <input id="search-input" type="text" name="do-not-autocomplete" placeholder="Click, or press 's' to search" autocomplete="off"/>
+        </form>
+      </div>
+      
+      <div class="section namespace">
+        <h3><a href="index.html">Aravis</a></h3>
+        <p>API Version: 0.8</p>
+        
+        <p>Library Version: 0.8.21</p>
+        
+      </div>
+      
+<div class="section">
+  <h5>Type</h5>
+  <div class="links">
+    <a href="class.Stream.html">Stream</a>
+  </div>
+</div>
+<div class="section">
+  <h5>Virtual methods</h5>
+  <div class="links">
+  
+    <a class="method current" href="vfunc.Stream.create_buffers.html">create_buffers</a>
+  
+    <a class="method" href="vfunc.Stream.new_buffer.html">new_buffer</a>
+  
+    <a class="method" href="vfunc.Stream.start_thread.html">start_thread</a>
+  
+    <a class="method" href="vfunc.Stream.stop_thread.html">stop_thread</a>
+  
+  </div>
+</div>
+
+    </nav>
+    
+    <button id="btn-to-top" class="hidden"><span class="up-arrow"></span></button>
+
+    
+<section id="main" class="content">
+  <header>
+    <h3>Virtual Method</h3>
+    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.Stream.html">Stream</a><span class="sep"></span>create_buffers</h1>
+  </header>
+
+  <section>
+    <div class="declaration toggle-wrapper">
+      <h4 id="declaration">
+        Declaration
+        <a href="#declaration" class="anchor"></a>
+        
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/tree/src/arvstream.h#L61">[src]</a>
+        
+      </h4>
+
+      <div class="docblock c-decl">
+        <pre><code><div class="highlight"><pre><span></span><span class="kt">unsigned</span> <span class="kt">int</span>
+<span class="n">create_buffers</span> <span class="p">(</span>
+  <span class="n">ArvStream</span><span class="o">*</span> <span class="n">stream</span><span class="p">,</span>
+  <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">n_buffers</span><span class="p">,</span>
+  <span class="kt">size_t</span> <span class="n">size</span><span class="p">,</span>
+  <span class="kt">void</span><span class="o">*</span> <span class="n">user_data</span><span class="p">,</span>
+  <span class="n">GDestroyNotify</span> <span class="n">user_data_destroy_func</span>
+<span class="p">)</span>
+</pre></div>
+</code></pre>
+      </div>
+    </div>
+
+    <div class="description toggle-wrapper">
+      <h4 id="description">
+        Description
+        <a href="#description" class="anchor"></a>
+        
+      </h4>
+
+      <div class="docblock">
+        No description available.
+      </div>
+
+      <div class="docblock">
+        <table>
+          
+          
+          
+        </table>
+      </div>
+
+      
+    </div>
+
+    
+    <div class="parameters toggle-wrapper">
+      <h4 id="parameters">
+        Parameters
+        <a href="#parameters" class="anchor"></a>
+      </h4>
+
+      <div class="docblock">
+        <table class="arguments">
+          
+          <tr class="arg-name">
+            <td><code>n_buffers</code></td>
+            <td><code>unsigned int</code></td>
+          </tr>
+          <tr class="arg-description">
+            <td>&nbsp;</td>
+            <td>No description available.</td>
+          </tr>
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          <tr class="arg-name">
+            <td><code>size</code></td>
+            <td><code>size_t</code></td>
+          </tr>
+          <tr class="arg-description">
+            <td>&nbsp;</td>
+            <td>No description available.</td>
+          </tr>
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          <tr class="arg-name">
+            <td><code>user_data</code></td>
+            <td><code>void*</code></td>
+          </tr>
+          <tr class="arg-description">
+            <td>&nbsp;</td>
+            <td>No description available.</td>
+          </tr>
+          
+          <tr><td>&nbsp;</td><td>The argument can be <code>NULL</code>.</td></tr>
+          
+          
+          
+          
+          
+          <tr><td>&nbsp;</td><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
+          
+          
+          <tr class="arg-name">
+            <td><code>user_data_destroy_func</code></td>
+            <td><a href="javascript:void(0)" data-link="callback.DestroyNotify.html" data-namespace="GLib" class="external"><code>GDestroyNotify</code></a></td>
+          </tr>
+          <tr class="arg-description">
+            <td>&nbsp;</td>
+            <td>No description available.</td>
+          </tr>
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+        </table>
+      </div>
+    </div>
+    
+
+    
+    <div class="return-value toggle-wrapper">
+      <h4 id="return-value">
+        Return value
+        <a href="#return-value" class="anchor"></a>
+      </h4>
+
+      <div class="docblock">
+        <table class="returns">
+          <tr class="arg-name">
+            <td>Returns:</td>
+            <td><code>unsigned int</code></td>
+          </tr>
+          <tr class="arg-description">
+            <td>&nbsp;</td>
+            <td>No description available.</td>
+          </tr>
+          
+          
+          
+          
+          
+          
+        </table>
+      </div>
+    </div>
+    
+
+  </section>
+</section>
+
+
+    
+
+    <section id="search" class="content hidden"></section>
+
+    <footer>
+    
+    </footer>
+  </div>
+</body>
+</html>
