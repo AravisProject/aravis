@@ -178,6 +178,7 @@ arv_gc_converter_class_init (ArvGcConverterClass *this_class)
 ArvGcIsLinear
 arv_gc_converter_get_is_linear (ArvGcConverter *gc_converter, GError **error)
 {
+        GError *local_error = NULL;
 	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (gc_converter);
 	const char *string;
 
@@ -186,7 +187,11 @@ arv_gc_converter_get_is_linear (ArvGcConverter *gc_converter, GError **error)
 	if (priv->is_linear == NULL)
 		return ARV_GC_IS_LINEAR_NO;
 
-	string = arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (priv->is_linear), error);
+	string = arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (priv->is_linear), &local_error);
+
+        if (local_error != NULL)
+                g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_converter)));
 
 	if (g_strcmp0 ("Yes", string) == 0)
 		return ARV_GC_IS_LINEAR_YES;
@@ -209,7 +214,7 @@ arv_gc_converter_update_from_variables (ArvGcConverter *gc_converter, ArvGcConve
 		expression = "";
 
 	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
+                g_propagate_error (error, local_error);
 		return FALSE;
 	}
 
@@ -221,9 +226,9 @@ arv_gc_converter_update_from_variables (ArvGcConverter *gc_converter, ArvGcConve
 
 		expression = arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (iter->data), &local_error);
 		if (local_error != NULL) {
-			g_propagate_error (error, local_error);
-			return FALSE;
-		}
+                        g_propagate_error (error, local_error);
+                        return FALSE;
+                }
 
 		name = arv_gc_property_node_get_name (iter->data);
 
@@ -236,7 +241,7 @@ arv_gc_converter_update_from_variables (ArvGcConverter *gc_converter, ArvGcConve
 
 		constant = arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (iter->data), &local_error);
 		if (local_error != NULL) {
-			g_propagate_error (error, local_error);
+                        g_propagate_error (error, local_error);
 			return FALSE;
 		}
 
@@ -255,9 +260,9 @@ arv_gc_converter_update_from_variables (ArvGcConverter *gc_converter, ArvGcConve
 			value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), &local_error);
 
 			if (local_error != NULL) {
-				g_propagate_error (error, local_error);
-				return FALSE;
-			}
+                                g_propagate_error (error, local_error);
+                                return FALSE;
+                        }
 
 			arv_evaluator_set_int64_variable (priv->formula_from,
 							  arv_gc_property_node_get_name (variable_node),
@@ -268,7 +273,7 @@ arv_gc_converter_update_from_variables (ArvGcConverter *gc_converter, ArvGcConve
 			value =  arv_gc_float_get_value (ARV_GC_FLOAT (node), &local_error);
 
 			if (local_error != NULL) {
-				g_propagate_error (error, local_error);
+                                g_propagate_error (error, local_error);
 				return FALSE;
 			}
 
@@ -306,7 +311,7 @@ arv_gc_converter_update_from_variables (ArvGcConverter *gc_converter, ArvGcConve
 			}
 
 			if (local_error != NULL) {
-				g_propagate_error (error, local_error);
+                                g_propagate_error (error, local_error);
 				return FALSE;
 			}
 
@@ -339,24 +344,22 @@ arv_gc_converter_update_from_variables (ArvGcConverter *gc_converter, ArvGcConve
 			}
 
 			if (local_error != NULL) {
-				g_propagate_error (error, local_error);
-				return FALSE;
-			}
+                                g_propagate_error (error, local_error);
+                                return FALSE;
+                        }
 
 			arv_evaluator_set_double_variable (priv->formula_from, "TO", value);
 		} else {
 			arv_warning_genicam ("[GcConverter::set_value] Invalid pValue node '%s'",
 					     arv_gc_property_node_get_string (priv->value, NULL));
 			g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_INVALID_PVALUE,
-				     "pValue node '%s' of '%s' is invalid",
-				     arv_gc_property_node_get_string (priv->value, NULL),
-				     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_converter)));
+				     "Invalid pValue node '%s'",
+				     arv_gc_property_node_get_string (priv->value, NULL));
 			return FALSE;
 		}
 	} else {
 		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_PVALUE_NOT_DEFINED,
-			     "pValue node of '%s' converter is not defined",
-			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_converter)));
+			     "pValue node not defined");
 		return FALSE;
 	}
 
@@ -368,12 +371,14 @@ arv_gc_converter_convert_to_double (ArvGcConverter *gc_converter, ArvGcConverter
 {
 	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (gc_converter);
 	GError *local_error = NULL;
+        double value;
 
 	g_return_val_if_fail (ARV_IS_GC_CONVERTER (gc_converter), 0.0);
 
 	if (!arv_gc_converter_update_from_variables (gc_converter, node_type, &local_error)) {
 		if (local_error != NULL)
-			g_propagate_error (error, local_error);
+                        g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                                    arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_converter)));
 
 		switch (node_type) {
 			case ARV_GC_CONVERTER_NODE_TYPE_MIN:
@@ -385,7 +390,13 @@ arv_gc_converter_convert_to_double (ArvGcConverter *gc_converter, ArvGcConverter
 		}
 	}
 
-	return arv_evaluator_evaluate_as_double (priv->formula_from, NULL);
+	value = arv_evaluator_evaluate_as_double (priv->formula_from, &local_error);
+
+        if (local_error != NULL)
+                g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_converter)));
+
+        return value;
 }
 
 gint64
@@ -393,12 +404,14 @@ arv_gc_converter_convert_to_int64 (ArvGcConverter *gc_converter, ArvGcConverterN
 {
 	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (gc_converter);
 	GError *local_error = NULL;
+        gint64 value;
 
 	g_return_val_if_fail (ARV_IS_GC_CONVERTER (gc_converter), 0);
 
 	if (!arv_gc_converter_update_from_variables (gc_converter, node_type, &local_error)) {
 		if (local_error != NULL)
-			g_propagate_error (error, local_error);
+                        g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                                    arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_converter)));
 
 		switch (node_type) {
 			case ARV_GC_CONVERTER_NODE_TYPE_MIN:
@@ -410,7 +423,13 @@ arv_gc_converter_convert_to_int64 (ArvGcConverter *gc_converter, ArvGcConverterN
 		}
 	}
 
-	return arv_evaluator_evaluate_as_double (priv->formula_from, NULL);
+	value = arv_evaluator_evaluate_as_double (priv->formula_from, &local_error);
+
+        if (local_error != NULL)
+                g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_converter)));
+
+        return value;
 }
 
 static void
@@ -428,7 +447,7 @@ arv_gc_converter_update_to_variables (ArvGcConverter *gc_converter, GError **err
 		expression = "";
 
 	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
+                g_propagate_error (error, local_error);
 		return;
 	}
 
@@ -528,24 +547,34 @@ void
 arv_gc_converter_convert_from_double (ArvGcConverter *gc_converter, double value, GError **error)
 {
 	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (gc_converter);
+        GError *local_error = NULL;
 
 	g_return_if_fail (ARV_IS_GC_CONVERTER (gc_converter));
 
 	arv_gc_feature_node_increment_change_count (ARV_GC_FEATURE_NODE (gc_converter));
 	arv_evaluator_set_double_variable (priv->formula_to, "FROM", value);
-	arv_gc_converter_update_to_variables (gc_converter, error);
+	arv_gc_converter_update_to_variables (gc_converter, &local_error);
+
+        if (local_error != NULL)
+                g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_converter)));
 }
 
 void
 arv_gc_converter_convert_from_int64 (ArvGcConverter *gc_converter, gint64 value, GError **error)
 {
 	ArvGcConverterPrivate *priv = arv_gc_converter_get_instance_private (gc_converter);
+        GError *local_error = NULL;
 
 	g_return_if_fail (ARV_IS_GC_CONVERTER (gc_converter));
 
 	arv_gc_feature_node_increment_change_count (ARV_GC_FEATURE_NODE (gc_converter));
 	arv_evaluator_set_int64_variable (priv->formula_to, "FROM", value);
-	arv_gc_converter_update_to_variables (gc_converter, error);
+	arv_gc_converter_update_to_variables (gc_converter, &local_error);
+
+        if (local_error != NULL)
+                g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_converter)));
 }
 
 ArvGcRepresentation
@@ -558,7 +587,8 @@ arv_gc_converter_get_representation (ArvGcConverter *gc_converter)
 	if (priv->representation == NULL)
 		return ARV_GC_REPRESENTATION_UNDEFINED;
 
-	return arv_gc_property_node_get_representation (ARV_GC_PROPERTY_NODE (priv->representation), ARV_GC_REPRESENTATION_UNDEFINED);
+	return arv_gc_property_node_get_representation (ARV_GC_PROPERTY_NODE (priv->representation),
+                                                        ARV_GC_REPRESENTATION_UNDEFINED);
 }
 
 const char *

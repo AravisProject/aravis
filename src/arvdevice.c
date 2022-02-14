@@ -311,13 +311,13 @@ _get_feature (ArvDevice *device, GType node_type, const char *feature, GError **
 
 	if (node == NULL) {
 		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_FEATURE_NOT_FOUND,
-			     "node '%s' not found", feature);
+			     "[%s] Not found", feature);
 		return NULL;
 	}
 
 	if (!(G_TYPE_CHECK_INSTANCE_TYPE ((node), node_type))) {
 		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_WRONG_FEATURE,
-			     "node '%s' [%s]  is not a %s", feature, G_OBJECT_TYPE_NAME (node), g_type_name (node_type));
+			     "[%s:%s] Not a %s", feature, G_OBJECT_TYPE_NAME (node), g_type_name (node_type));
 		return NULL;
 	}
 
@@ -908,11 +908,11 @@ arv_device_set_features_from_string (ArvDevice *device, const char *string, GErr
 					arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (feature), value, &local_error);
 				} else {
 					g_set_error (&local_error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,
-						     "feature node '%s' requires a parameter value to set", key);
+						     "[%s] Require a parameter value to set", key);
 				}
 			} else
 				g_set_error (&local_error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_FEATURE_NOT_FOUND,
-					     "node '%s' not found", key);
+					     "[%s] Not found", key);
 
 			g_free (key);
 			g_free (value);

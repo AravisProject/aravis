@@ -169,11 +169,19 @@ static gint64
 _get_length (ArvGcRegisterNode *self, GError **error)
 {
 	ArvGcRegisterNodePrivate *priv = arv_gc_register_node_get_instance_private (ARV_GC_REGISTER_NODE (self));
+        GError *local_error = NULL;
+        gint64 value;
 
 	if (priv->length == NULL)
 		return 4;
 
-	return arv_gc_property_node_get_int64 (priv->length, error);
+	value = arv_gc_property_node_get_int64 (priv->length, &local_error);
+
+        if (local_error != NULL)
+                g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
+
+        return value;
 }
 
 static guint64
@@ -192,7 +200,8 @@ _get_address (ArvGcRegisterNode *self, GError **error)
 		value += arv_gc_property_node_get_int64 (iter->data, &local_error);
 
 		if (local_error != NULL) {
-			g_propagate_error (error, local_error);
+			g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                                    arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
 			return 0;
 		}
 	}
@@ -201,7 +210,8 @@ _get_address (ArvGcRegisterNode *self, GError **error)
 		value += arv_gc_integer_get_value (iter->data, &local_error);
 
 		if (local_error != NULL) {
-			g_propagate_error (error, local_error);
+			g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                                    arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
 			return 0;
 		}
 	}
@@ -211,7 +221,8 @@ _get_address (ArvGcRegisterNode *self, GError **error)
 
 		length = _get_length (self, &local_error);
 		if (local_error != NULL) {
-			g_propagate_error (error, local_error);
+			g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                                    arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
 			return 0;
 		}
 
@@ -219,11 +230,12 @@ _get_address (ArvGcRegisterNode *self, GError **error)
 			value += arv_gc_index_node_get_index (ARV_GC_INDEX_NODE (iter->data), length, &local_error);
 
 			if (local_error != NULL) {
-				g_propagate_error (error, local_error);
-				return 0;
-			}
-		}
-	}
+                                g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
+                                return 0;
+                        }
+                }
+        }
 
 	return value;
 }
@@ -333,7 +345,7 @@ _read_from_port (ArvGcRegisterNode *self, gint64 address, gint64 length, void *b
 	port = arv_gc_property_node_get_linked_node (priv->port);
 	if (!ARV_IS_GC_PORT (port)) {
 		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_NODE_NOT_FOUND,
-			     "Port not found for node '%s'",
+			     "[%s] Port not found for node",
 			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
 		priv->cached = FALSE;
 		return;
@@ -348,11 +360,12 @@ _read_from_port (ArvGcRegisterNode *self, gint64 address, gint64 length, void *b
 		arv_gc_port_read (ARV_GC_PORT (port), buffer, address, length, &local_error);
 
 	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		priv->cached = FALSE;
-		g_free (cache);
-		return;
-	}
+                g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
+                priv->cached = FALSE;
+                g_free (cache);
+                return;
+        }
 
 	if (cached && cache_policy == ARV_REGISTER_CACHE_POLICY_DEBUG) {
 		if (memcmp (cache, buffer, length) != 0) {
@@ -381,7 +394,7 @@ _write_to_port (ArvGcRegisterNode *self, gint64 address, gint64 length, void *bu
 	port = arv_gc_property_node_get_linked_node (priv->port);
 	if (!ARV_IS_GC_PORT (port)) {
 		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_NODE_NOT_FOUND,
-			     "Port not found for node '%s'",
+			     "[%s] Port not found for node",
 			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
 		priv->cached = FALSE;
 		return;
@@ -391,7 +404,8 @@ _write_to_port (ArvGcRegisterNode *self, gint64 address, gint64 length, void *bu
 	arv_gc_port_write (ARV_GC_PORT (port), buffer, address, length, &local_error);
 
 	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
+                g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
 		priv->cached = FALSE;
 		return;
 	}
@@ -496,7 +510,8 @@ arv_gc_register_node_get (ArvGcRegister *gc_register, void *buffer, guint64 leng
 
 	if (length < cache_length) {
 		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_INVALID_LENGTH,
-			     "Register get failed due to data not fitting into buffer");
+			     "[%s] Register get failed due to data not fitting into buffer",
+                             arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_register)));
 		return;
 	}
 
@@ -532,7 +547,8 @@ arv_gc_register_node_set (ArvGcRegister *gc_register, const void *buffer, guint6
 
 	if (cache_length < length) {
 		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_INVALID_LENGTH,
-			     "Register set failed due to data not fitting into register");
+			     "[%s] Register set failed due to data not fitting into register",
+                             arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_register)));
 		return;
 	}
 

@@ -64,7 +64,8 @@ arv_gc_string_reg_node_get_string_value (ArvGcString *self, GError **error)
 	}
 
 	if (local_error != NULL)
-		g_propagate_error (error, local_error);
+		g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
 
 	return priv->string;
 }
@@ -84,9 +85,9 @@ arv_gc_string_reg_node_set_string_value (ArvGcString *self, const char *value, G
 	if (local_error == NULL) {
 		if (max_length < str_length) {
 			g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_INVALID_LENGTH,
-				     "String '%s' is too long for string register '%s'",
-				     value,
-				     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
+				     "[%s] string '%s' too long (max: %" G_GINT64_FORMAT ")",
+                                     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)),
+				     value, max_length);
 			return;
 		}
 		if (max_length > str_length)
@@ -96,7 +97,8 @@ arv_gc_string_reg_node_set_string_value (ArvGcString *self, const char *value, G
 	}
 
 	if (local_error != NULL)
-		g_propagate_error (error, local_error);
+		g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
 }
 
 static gint64

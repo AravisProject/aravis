@@ -79,7 +79,8 @@ arv_gc_swiss_knife_node_get_float_value (ArvGcFloat *self, GError **error)
 static void
 arv_gc_swiss_knife_node_set_float_value (ArvGcFloat *self, gdouble value, GError **error)
 {
-	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_READ_ONLY, "SwissKnife is read only");
+	g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_READ_ONLY, "[%s] SwissKnife is read only",
+                     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
 }
 
 static ArvGcRepresentation

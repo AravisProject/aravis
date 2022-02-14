@@ -298,7 +298,7 @@ arv_gc_struct_entry_node_get_min (ArvGcInteger *self, GError **error)
 	if ((endianness == G_BIG_ENDIAN && (msb > lsb)) ||
 	    (endianness != G_BIG_ENDIAN && (lsb > msb))) {
 		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_INVALID_BIT_RANGE,
-			     "Invalid bit range for node '%s'",
+			     "[%s] Invalid bit range for node",
 			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
 		return G_MAXINT64;
 	}
@@ -331,7 +331,7 @@ arv_gc_struct_entry_node_get_max (ArvGcInteger *self, GError **error)
 	if ((endianness == G_BIG_ENDIAN && (msb > lsb)) ||
 	    (endianness != G_BIG_ENDIAN && (lsb > msb))) {
 		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_INVALID_BIT_RANGE,
-			     "Invalid bit range for node '%s'",
+			     "[%s] Invalid bit range for node",
 			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
 		return G_MAXINT64;
 	}

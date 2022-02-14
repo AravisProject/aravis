@@ -151,7 +151,8 @@ _update_variables (ArvGcSwissKnife *self, GError **error)
 		expression = "";
 
 	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
+		g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
 		return;
 	}
 
@@ -163,9 +164,10 @@ _update_variables (ArvGcSwissKnife *self, GError **error)
 
 		expression = arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (iter->data), &local_error);
 		if (local_error != NULL) {
-			g_propagate_error (error, local_error);
-			return;
-		}
+                        g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                                    arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
+                        return;
+                }
 
 		name = arv_gc_property_node_get_name (iter->data);
 
@@ -178,7 +180,8 @@ _update_variables (ArvGcSwissKnife *self, GError **error)
 
 		constant = arv_gc_property_node_get_string (ARV_GC_PROPERTY_NODE (iter->data), &local_error);
 		if (local_error != NULL) {
-			g_propagate_error (error, local_error);
+                        g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                                    arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
 			return;
 		}
 
@@ -197,9 +200,10 @@ _update_variables (ArvGcSwissKnife *self, GError **error)
 			value = arv_gc_integer_get_value (ARV_GC_INTEGER (node), &local_error);
 
 			if (local_error != NULL) {
-				g_propagate_error (error, local_error);
-				return;
-			}
+                                g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
+                                return;
+                        }
 
 			arv_evaluator_set_int64_variable (priv->formula,
 							  arv_gc_property_node_get_name (variable_node),
@@ -210,7 +214,8 @@ _update_variables (ArvGcSwissKnife *self, GError **error)
 			value = arv_gc_float_get_value (ARV_GC_FLOAT (node), &local_error);
 
 			if (local_error != NULL) {
-				g_propagate_error (error, local_error);
+                                g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
 				return;
 			}
 
@@ -232,9 +237,10 @@ arv_gc_swiss_knife_get_integer_value (ArvGcSwissKnife *self, GError **error)
 	_update_variables (self, &local_error);
 
 	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return 0;
-	}
+                g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
+                return 0;
+        }
 
 	return arv_evaluator_evaluate_as_int64 (priv->formula, NULL);
 }
@@ -250,7 +256,8 @@ arv_gc_swiss_knife_get_float_value (ArvGcSwissKnife *self, GError **error)
 	_update_variables (self, &local_error);
 
 	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
+                g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
 		return 0.0;
 	}
 

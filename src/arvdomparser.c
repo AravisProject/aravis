@@ -242,7 +242,7 @@ _parse_memory (ArvDomDocument *document, ArvDomNode *node,
 		g_set_error (error,
 			     ARV_DOM_DOCUMENT_ERROR,
 			     ARV_DOM_DOCUMENT_ERROR_INVALID_XML,
-			     "Invalid document.");
+			     "Invalid document");
 	}
 
 	return state.document;

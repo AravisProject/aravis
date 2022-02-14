@@ -1200,7 +1200,7 @@ arv_evaluator_set_error (GError **error, ArvEvaluatorStatus status)
 	g_set_error (error,
 		     g_quark_from_string ("Aravis"),
 		     status,
-		     "Parsing error: %s",
+		     "Parsing error (%s)",
 		     arv_evaluator_status_strings [MIN (status,
 							G_N_ELEMENTS (arv_evaluator_status_strings)-1)]);
 

@@ -233,14 +233,19 @@ arv_gc_integer_node_get_integer_value (ArvGcInteger *gc_integer, GError **error)
 	gint64 value;
 
 	value_node = _get_value_node (gc_integer_node, error);
-	if (value_node == NULL)
-		return 0;
+	if (value_node == NULL) {
+                if (local_error != NULL)
+                        g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                                    arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_integer_node)));
+                return 0;
+        }
 
 	value = arv_gc_property_node_get_int64 (ARV_GC_PROPERTY_NODE (value_node), &local_error);
 	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return 0;
-	}
+                g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_integer_node)));
+                return 0;
+        }
 
 	return value;
 }
@@ -253,13 +258,18 @@ arv_gc_integer_node_set_integer_value (ArvGcInteger *gc_integer, gint64 value, G
 	GError *local_error = NULL;
 
 	value_node = _get_value_node (gc_integer_node, error);
-	if (value_node == NULL)
+	if (value_node == NULL) {
+                if (local_error != NULL)
+                        g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                                    arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_integer_node)));
 		return;
+        }
 
 	arv_gc_feature_node_increment_change_count (ARV_GC_FEATURE_NODE (gc_integer_node));
 	arv_gc_property_node_set_int64 (ARV_GC_PROPERTY_NODE (value_node), value, &local_error);
 	if (local_error != NULL)
-		g_propagate_error (error, local_error);
+                g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_integer_node)));
 }
 
 static gint64
@@ -271,29 +281,30 @@ arv_gc_integer_node_get_min (ArvGcInteger *gc_integer, GError **error)
 
 	if (gc_integer_node->minimum == NULL) {
 		ArvGcPropertyNode *value_node;
+                gint64 value = G_MININT64;
 
 		value_node = _get_value_node (gc_integer_node, &local_error);
-		if (local_error != NULL) {
-			g_propagate_error (error, local_error);
-			return G_MININT64;
-		}
-
-		if (ARV_IS_GC_PROPERTY_NODE (value_node)) {
+		if (local_error == NULL && ARV_IS_GC_PROPERTY_NODE (value_node)) {
 			ArvGcNode *linked_node = arv_gc_property_node_get_linked_node (value_node);
 
 			if (ARV_IS_GC_INTEGER (linked_node))
-				return arv_gc_integer_get_min (ARV_GC_INTEGER (linked_node), error);
+				value = arv_gc_integer_get_min (ARV_GC_INTEGER (linked_node), &local_error);
 			else if (ARV_IS_GC_FLOAT (linked_node))
-				return arv_gc_float_get_min (ARV_GC_FLOAT (linked_node), error);
+				value = arv_gc_float_get_min (ARV_GC_FLOAT (linked_node), &local_error);
 		}
 
-		return G_MININT64;
-	}
+                if (local_error != NULL)
+                        g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                                    arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_integer_node)));
+
+                return value;
+        }
 
 	value = arv_gc_property_node_get_int64 (ARV_GC_PROPERTY_NODE (gc_integer_node->minimum), &local_error);
 
 	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
+                g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_integer_node)));
 		return G_MININT64;
 	}
 
@@ -309,29 +320,30 @@ arv_gc_integer_node_get_max (ArvGcInteger *gc_integer, GError **error)
 
 	if (gc_integer_node->maximum == NULL) {
 		ArvGcPropertyNode *value_node;
+                gint64 value = G_MAXINT64;
 
 		value_node = _get_value_node (gc_integer_node, &local_error);
-		if (local_error != NULL) {
-			g_propagate_error (error, local_error);
-			return G_MAXINT64;
-		}
-
-		if (ARV_IS_GC_PROPERTY_NODE (value_node)) {
+		if (local_error == NULL && ARV_IS_GC_PROPERTY_NODE (value_node)) {
 			ArvGcNode *linked_node = arv_gc_property_node_get_linked_node (value_node);
 
 			if (ARV_IS_GC_INTEGER (linked_node))
-				return arv_gc_integer_get_max (ARV_GC_INTEGER (linked_node), error);
+				value = arv_gc_integer_get_max (ARV_GC_INTEGER (linked_node), &local_error);
 			else if (ARV_IS_GC_FLOAT (linked_node))
-				return arv_gc_float_get_max (ARV_GC_FLOAT (linked_node), error);
+				value = arv_gc_float_get_max (ARV_GC_FLOAT (linked_node), &local_error);
 		}
 
-		return G_MAXINT64;
+                if (local_error != NULL)
+                        g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                                    arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_integer_node)));
+
+		return value;
 	}
 
 	value = arv_gc_property_node_get_int64 (ARV_GC_PROPERTY_NODE (gc_integer_node->maximum), &local_error);
 
 	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
+                g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_integer_node)));
 		return G_MAXINT64;
 	}
 
@@ -347,29 +359,30 @@ arv_gc_integer_node_get_inc (ArvGcInteger *gc_integer, GError **error)
 
 	if (gc_integer_node->increment == NULL) {
 		ArvGcPropertyNode *value_node;
+                gint64 value = 1;
 
 		value_node = _get_value_node (gc_integer_node, &local_error);
-		if (local_error != NULL) {
-			g_propagate_error (error, local_error);
-			return 1;
-		}
-
-		if (ARV_IS_GC_PROPERTY_NODE (value_node)) {
+		if (local_error == NULL && ARV_IS_GC_PROPERTY_NODE (value_node)) {
 			ArvGcNode *linked_node = arv_gc_property_node_get_linked_node (value_node);
 
 			if (ARV_IS_GC_INTEGER (linked_node))
-				return arv_gc_integer_get_inc (ARV_GC_INTEGER (linked_node), error);
+				value = arv_gc_integer_get_inc (ARV_GC_INTEGER (linked_node), &local_error);
 			else if (ARV_IS_GC_FLOAT (linked_node))
-				return arv_gc_float_get_inc (ARV_GC_FLOAT (linked_node), error);
+				value = arv_gc_float_get_inc (ARV_GC_FLOAT (linked_node), &local_error);
 		}
 
-		return 1;
+                if (local_error != NULL)
+                        g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                                    arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_integer_node)));
+
+		return value;
 	}
 
 	value = arv_gc_property_node_get_int64 (ARV_GC_PROPERTY_NODE (gc_integer_node->increment), &local_error);
 
 	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
+                g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_integer_node)));
 		return 1;
 	}
 
@@ -410,7 +423,8 @@ arv_gc_integer_node_impose_min (ArvGcInteger *gc_integer, gint64 minimum, GError
 	arv_gc_property_node_set_int64 (ARV_GC_PROPERTY_NODE (gc_integer_node->minimum), minimum, &local_error);
 
 	if (local_error != NULL)
-		g_propagate_error (error, local_error);
+                g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_integer_node)));
 }
 
 static void
@@ -425,7 +439,8 @@ arv_gc_integer_node_impose_max (ArvGcInteger *gc_integer, gint64 maximum, GError
 	arv_gc_property_node_set_int64 (ARV_GC_PROPERTY_NODE (gc_integer_node->maximum), maximum, &local_error);
 
 	if (local_error != NULL)
-		g_propagate_error (error, local_error);
+                g_propagate_prefixed_error (error, local_error, "[%s] ",
+                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_integer_node)));
 }
 
 static void
