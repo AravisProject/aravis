@@ -114,6 +114,9 @@ arv_tool_show_feature (ArvGcFeatureNode *node, ArvToolListMode list_mode, int le
                         char *value = NULL;
                         GError *error = NULL;
                         gboolean is_selector;
+                        const char *access_mode;
+
+                        access_mode = arv_gc_access_mode_to_string (arv_gc_feature_node_get_actual_access_mode (node));
 
                         if (list_mode == ARV_TOOL_LIST_MODE_VALUES) {
                                 const char *unit;
@@ -157,13 +160,13 @@ arv_tool_show_feature (ArvGcFeatureNode *node, ArvToolListMode list_mode, int le
                                 g_clear_error (&error);
                         } else {
                                 if (value != NULL && value[0] != '\0')
-                                        printf ("%*s%-12s: '%s' = %s\n", 4 * level, "",
+                                        printf ("%*s%-13s: [%s] '%s' = %s\n", 4 * level, "",
                                                 arv_dom_node_get_node_name (ARV_DOM_NODE (node)),
-                                                arv_gc_feature_node_get_name (node), value);
+                                                access_mode, arv_gc_feature_node_get_name (node), value);
                                 else
-                                        printf ("%*s%-12s: '%s'\n", 4 * level, "",
+                                        printf ("%*s%-13s: [%s] '%s'\n", 4 * level, "",
                                                 arv_dom_node_get_node_name (ARV_DOM_NODE (node)),
-                                                arv_gc_feature_node_get_name (node));
+                                                access_mode, arv_gc_feature_node_get_name (node));
 
                                 if (is_selector) {
                                         const GSList *iter;

@@ -28,6 +28,7 @@
 #endif
 
 #include <glib-object.h>
+#include <arvapi.h>
 
 G_BEGIN_DECLS
 
@@ -63,6 +64,9 @@ typedef enum {
 	ARV_GC_ACCESS_MODE_WO,
 	ARV_GC_ACCESS_MODE_RW
 } ArvGcAccessMode;
+
+ARV_API const char *            arv_gc_access_mode_to_string    (ArvGcAccessMode value);
+ARV_API ArvGcAccessMode         arv_gc_access_mode_from_string  (const char *string);
 
 /**
  * ArvGcCachable:
