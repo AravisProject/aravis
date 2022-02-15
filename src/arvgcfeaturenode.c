@@ -573,7 +573,7 @@ _get_access_mode (ArvGcFeatureNode *gc_feature_node)
 	if (pointed_node)
 		return arv_gc_feature_node_get_access_mode (pointed_node);
 
-	return ARV_GC_ACCESS_MODE_RO;
+	return ARV_GC_FEATURE_NODE_GET_CLASS (gc_feature_node)->default_access_mode;
 }
 
 static void
@@ -591,4 +591,5 @@ arv_gc_feature_node_class_init (ArvGcFeatureNodeClass *this_class)
 	dom_element_class->get_attribute = arv_gc_feature_node_get_attribute;
 	this_class->get_linked_feature = _get_linked_feature;
 	this_class->get_access_mode = _get_access_mode;
+        this_class->default_access_mode = ARV_GC_ACCESS_MODE_RO;
 }
