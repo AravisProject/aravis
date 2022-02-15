@@ -1106,6 +1106,7 @@ category_test (void)
 	ArvGc *genicam;
 	ArvGcNode *node;
 	GError *error = NULL;
+        const GSList *features;
 
 	device = arv_fake_device_new ("TEST0", &error);
 	g_assert (ARV_IS_FAKE_DEVICE (device));
@@ -1121,6 +1122,10 @@ category_test (void)
         g_assert_cmpstr (arv_gc_feature_node_get_description (ARV_GC_FEATURE_NODE (node)), ==, "description");
         g_assert_cmpstr (arv_gc_feature_node_get_tooltip (ARV_GC_FEATURE_NODE (node)), ==, "tooltip");
         g_assert_cmpstr (arv_gc_feature_node_get_display_name (ARV_GC_FEATURE_NODE (node)), ==, "display_name");
+
+        features = arv_gc_category_get_features (ARV_GC_CATEGORY (node));
+
+        g_assert_cmpint (g_slist_length ((GSList *) features), ==, 8);
 
 	g_object_unref (device);
 }
