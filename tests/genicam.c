@@ -1099,6 +1099,32 @@ visibility_test (void)
 	g_object_unref (device);
 }
 
+static void
+category_test (void)
+{
+	ArvDevice *device;
+	ArvGc *genicam;
+	ArvGcNode *node;
+	GError *error = NULL;
+
+	device = arv_fake_device_new ("TEST0", &error);
+	g_assert (ARV_IS_FAKE_DEVICE (device));
+	g_assert (error == NULL);
+
+	genicam = arv_device_get_genicam (device);
+	g_assert (ARV_IS_GC (genicam));
+
+	node = arv_gc_get_node (genicam, "Root");
+	g_assert (ARV_IS_GC_FEATURE_NODE (node));
+        g_assert (ARV_IS_GC_CATEGORY (node));
+
+        g_assert_cmpstr (arv_gc_feature_node_get_description (ARV_GC_FEATURE_NODE (node)), ==, "description");
+        g_assert_cmpstr (arv_gc_feature_node_get_tooltip (ARV_GC_FEATURE_NODE (node)), ==, "tooltip");
+        g_assert_cmpstr (arv_gc_feature_node_get_display_name (ARV_GC_FEATURE_NODE (node)), ==, "display_name");
+
+	g_object_unref (device);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -1122,6 +1148,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/genicam/chunk-data", chunk_data_test);
 	g_test_add_func ("/genicam/indexed", indexed_test);
 	g_test_add_func ("/genicam/visibility", visibility_test);
+	g_test_add_func ("/genicam/category", category_test);
 
 	result = g_test_run();
 

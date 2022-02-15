@@ -18,6 +18,9 @@
   xsi:schemaLocation="http://www.genicam.org/GenApi/Version_1_0 GenApiSchema.xsd">
 
   <Category Name="Root" NameSpace="Standard">
+    <Description>description</Description>
+    <ToolTip>tooltip</ToolTip>
+    <DisplayName>display_name</DisplayName>
     <pFeature>RWFloat</pFeature>
     <pFeature>RWBoolean</pFeature>
     <pFeature>RWInteger</pFeature>
