@@ -134,6 +134,18 @@
     <Value>0x50</Value>
   </Integer>
 
+  <IntReg Name="ROIntRegisterA">
+    <Address>0x1000</Address>
+    <pAddress>IntRegisterAddress</pAddress>
+    <Length>8</Length>
+    <AccessMode>RO</AccessMode>
+    <Cachable>NoCache</Cachable>
+    <PollingTime>5</PollingTime>
+    <Sign>Unsigned</Sign>
+    <Unit>Pa</Unit>
+    <Endianess>BigEndian</Endianess>
+  </IntReg>
+
   <IntReg Name="IntRegisterA">
     <Address>0x1000</Address>
     <pAddress>IntRegisterAddress</pAddress>
@@ -244,6 +256,7 @@
   <FloatReg Name="FloatReg4C">
     <Address>0x1000</Address>
     <Length>4</Length>
+    <AccessMode>RW</AccessMode>
     <Cachable>NoCache</Cachable>
     <Endianess>LittleEndian</Endianess>
     <Unit>mA</Unit>
@@ -253,6 +266,7 @@
   <FloatReg Name="FloatReg8C">
     <Address>0x1000</Address>
     <Length>8</Length>
+    <AccessMode>RW</AccessMode>
     <Cachable>NoCache</Cachable>
     <Endianess>LittleEndian</Endianess>
     <Unit>mV</Unit>
@@ -270,6 +284,7 @@
   <StringReg Name="StringReg">
     <Address>0x1002</Address>
     <Length>4</Length>
+    <AccessMode>RW</AccessMode>
     <Cachable>NoCache</Cachable>
     <pPort>Device</pPort>
   </StringReg>
@@ -389,6 +404,12 @@
   <Port Name="BooleanPort">
     <ChunkID>12345680</ChunkID>
   </Port>
+
+  <Converter Name="ROConverter">
+    <FormulaTo> 0.5 * FROM</FormulaTo>
+    <FormulaFrom> 2.0 * TO</FormulaFrom>
+    <pValue>ROIntRegisterA</pValue>
+  </Converter>
 
   <Converter Name="Converter">
     <FormulaTo> 0.5 * FROM</FormulaTo>
