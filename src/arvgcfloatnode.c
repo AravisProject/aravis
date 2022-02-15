@@ -217,6 +217,7 @@ arv_gc_float_node_class_init (ArvGcFloatNodeClass *this_class)
 	dom_node_class->post_new_child = arv_gc_float_node_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_float_node_pre_remove_child;
 	gc_feature_node_class->get_linked_feature = arv_gc_float_node_get_linked_feature;
+        gc_feature_node_class->default_access_mode = ARV_GC_ACCESS_MODE_RW;
 }
 
 /* ArvGcFloat interface implementation */

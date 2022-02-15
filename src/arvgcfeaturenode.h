@@ -42,6 +42,8 @@ struct _ArvGcFeatureNodeClass {
 
 	ArvGcFeatureNode *	(*get_linked_feature)	(ArvGcFeatureNode *gc_feature_node);
 	ArvGcAccessMode		(*get_access_mode)	(ArvGcFeatureNode *gc_feature_node);
+
+        ArvGcAccessMode        default_access_mode;
 };
 
 ARV_API const char *		arv_gc_feature_node_get_name			(ArvGcFeatureNode *gc_feature_node);
