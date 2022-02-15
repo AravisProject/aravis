@@ -53,8 +53,7 @@ arv_gc_category_get_node_name (ArvDomNode *node)
 static gboolean
 arv_gc_category_can_append_child (ArvDomNode *parent, ArvDomNode *child)
 {
-	return ARV_IS_GC_PROPERTY_NODE (child) &&
-		arv_gc_property_node_get_node_type (ARV_GC_PROPERTY_NODE (child)) == ARV_GC_PROPERTY_NODE_TYPE_P_FEATURE;
+	return ARV_IS_GC_PROPERTY_NODE (child);
 }
 
 /* ArvGcCategory implementation */
