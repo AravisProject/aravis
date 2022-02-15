@@ -15,6 +15,7 @@ library_sources = [
 	'arvdomparser.c',
 	'arvdomimplementation.c',
 	'arvcamera.c',
+        'arvgcenums.c',
 	'arvgc.c',
 	'arvgcnode.c',
 	'arvgcpropertynode.c',
