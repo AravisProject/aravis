@@ -45,6 +45,7 @@ typedef struct {
 
 	char *name;
 	ArvGcNameSpace name_space;
+        char *comment;
 
 	ArvGcPropertyNode *tooltip;
 	ArvGcPropertyNode *description;
@@ -174,6 +175,9 @@ arv_gc_feature_node_set_attribute (ArvDomElement *self, const char *name, const 
 			priv->name_space = ARV_GC_NAME_SPACE_STANDARD;
 		else
 			priv->name_space = ARV_GC_NAME_SPACE_CUSTOM;
+	} else if (strcmp (name, "Comment") == 0) {
+                g_free (priv->comment);
+                priv->comment = g_strdup (value);
 	} else
 		arv_info_dom ("[GcFeature::set_attribute] Unknown attribute '%s'", name);
 }
@@ -185,13 +189,16 @@ arv_gc_feature_node_get_attribute (ArvDomElement *self, const char *name)
 
 	if (strcmp (name, "Name") == 0)
 		return priv->name;
-	else if (strcmp (name, "NameSpace") == 0)
+	else if (strcmp (name, "NameSpace") == 0) {
 		switch (priv->name_space) {
 			case ARV_GC_NAME_SPACE_STANDARD:
 				return "Standard";
 			default:
 				return "Custom";
-		}
+                }
+        } else if (strcmp (name, "Comment") == 0) {
+                return priv->comment;
+        }
 
 	arv_info_dom ("[GcFeature::set_attribute] Unknown attribute '%s'", name);
 
@@ -547,6 +554,7 @@ arv_gc_feature_node_finalize (GObject *object)
 	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (ARV_GC_FEATURE_NODE(object));
 
 	g_clear_pointer (&priv->name, g_free);
+        g_clear_pointer (&priv->comment, g_free);
 	g_clear_pointer (&priv->string_buffer, g_free);
 
 	G_OBJECT_CLASS (arv_gc_feature_node_parent_class)->finalize (object);
