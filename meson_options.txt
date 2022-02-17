@@ -14,5 +14,5 @@ option('gv-n-buffers', type: 'integer', min: 1, value: 16, description: 'Number 
 
 # Documentation and introspection
 
-option('documentation', type: 'feature', value: 'auto', description: 'Build API reference (requires gtk-doc and xlstproc)')
 option('introspection', type: 'feature', value: 'auto', description: 'Build introspection data (requires gobject-introspection)')
+option('documentation', type: 'feature', value: 'auto', description: 'Build documentation (requires gi-docgen)')
