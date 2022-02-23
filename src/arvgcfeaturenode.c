@@ -356,7 +356,7 @@ gboolean
 arv_gc_feature_node_is_locked (ArvGcFeatureNode *gc_feature_node, GError **error)
 {
 	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (gc_feature_node);
-	gboolean value;
+	gboolean locked;
 	GError *local_error = NULL;
 
 	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (gc_feature_node), FALSE);
@@ -364,7 +364,7 @@ arv_gc_feature_node_is_locked (ArvGcFeatureNode *gc_feature_node, GError **error
 	if (priv->is_locked == NULL)
 		return FALSE;
 
-	value = arv_gc_property_node_get_int64 (priv->is_locked, &local_error) != 0;
+	locked = arv_gc_property_node_get_int64 (priv->is_locked, &local_error) != 0;
 
 	if (local_error != NULL) {
                 g_propagate_prefixed_error (error, local_error, "[%s ]",
@@ -372,7 +372,7 @@ arv_gc_feature_node_is_locked (ArvGcFeatureNode *gc_feature_node, GError **error
 		return FALSE;
 	}
 
-	return value;
+	return locked;
 }
 
 /**

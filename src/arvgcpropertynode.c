@@ -32,6 +32,7 @@
 #include <arvgcfeaturenode.h>
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
+#include <arvgcboolean.h>
 #include <arvgcstring.h>
 #include <arvgc.h>
 #include <arvdomtext.h>
@@ -379,6 +380,8 @@ arv_gc_property_node_get_int64 (ArvGcPropertyNode *node, GError **error)
 		return arv_gc_integer_get_value (ARV_GC_INTEGER (pvalue_node), error);
 	} else if (ARV_IS_GC_FLOAT (pvalue_node)) {
 		return (gint64) arv_gc_float_get_value (ARV_GC_FLOAT (pvalue_node), error);
+	} else if (ARV_IS_GC_BOOLEAN (pvalue_node)) {
+		return arv_gc_boolean_get_value (ARV_GC_BOOLEAN (pvalue_node), error) ? 1 : 0;
 	}
 
 	arv_warning_genicam ("[GcPropertyNode::get_int64] Invalid node '%s'",

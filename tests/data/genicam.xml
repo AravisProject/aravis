@@ -534,6 +534,37 @@
     <Value>2</Value>
   </Integer>
 
+  <Integer Name="LockedByInteger">
+    <pIsLocked>IntegerLock</pIsLocked>
+    <Value>0</Value>
+  </Integer>
+
+  <Integer Name="LockedByFloat">
+    <pIsLocked>FloatLock</pIsLocked>
+    <Value>0</Value>
+  </Integer>
+
+  <Integer Name="LockedByBoolean">
+    <pIsLocked>BooleanLock</pIsLocked>
+    <Value>0</Value>
+  </Integer>
+
+  <Integer Name="IntegerLock">
+    <Value>0</Value>
+  </Integer>
+
+  <Float Name="FloatLock">
+    <Value>0</Value>
+  </Float>
+
+  <Boolean Name="BooleanLock">
+    <Value>0</Value>
+  </Boolean>
+
+  <Integer Name="NoLock">
+    <Value>0</Value>
+  </Integer>
+
   <Port Name="Device" NameSpace="Standard">
   </Port>
 

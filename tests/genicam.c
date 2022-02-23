@@ -1225,6 +1225,64 @@ category_test (void)
 	g_object_unref (device);
 }
 
+static void
+lock_test (void)
+{
+	ArvDevice *device;
+	ArvGc *genicam;
+	ArvGcNode *node;
+	ArvGcNode *lock;
+	GError *error = NULL;
+
+	device = arv_fake_device_new ("TEST0", &error);
+	g_assert (ARV_IS_FAKE_DEVICE (device));
+	g_assert (error == NULL);
+
+	genicam = arv_device_get_genicam (device);
+	g_assert (ARV_IS_GC (genicam));
+
+	node = arv_gc_get_node (genicam, "LockedByInteger");
+	g_assert (ARV_IS_GC_INTEGER_NODE (node));
+        lock = arv_gc_get_node (genicam, "IntegerLock");
+	g_assert (ARV_IS_GC_INTEGER (lock));
+
+        g_assert (!arv_gc_feature_node_is_locked (ARV_GC_FEATURE_NODE (node), &error));
+        g_assert (error == NULL);
+
+        arv_gc_integer_set_value (ARV_GC_INTEGER (lock), 10, &error);
+        g_assert (arv_gc_feature_node_is_locked (ARV_GC_FEATURE_NODE (node), &error));
+        g_assert (error == NULL);
+
+	node = arv_gc_get_node (genicam, "LockedByFloat");
+	g_assert (ARV_IS_GC_INTEGER_NODE (node));
+        lock = arv_gc_get_node (genicam, "FloatLock");
+	g_assert (ARV_IS_GC_FLOAT (lock));
+
+        g_assert (!arv_gc_feature_node_is_locked (ARV_GC_FEATURE_NODE (node), &error));
+        g_assert (error == NULL);
+
+        arv_gc_float_set_value (ARV_GC_FLOAT (lock), 10.0, &error);
+        g_assert (arv_gc_feature_node_is_locked (ARV_GC_FEATURE_NODE (node), &error));
+        g_assert (error == NULL);
+
+	node = arv_gc_get_node (genicam, "LockedByBoolean");
+	g_assert (ARV_IS_GC_INTEGER_NODE (node));
+        lock = arv_gc_get_node (genicam, "BooleanLock");
+	g_assert (ARV_IS_GC_BOOLEAN (lock));
+
+        g_assert (!arv_gc_feature_node_is_locked (ARV_GC_FEATURE_NODE (node), &error));
+        g_assert (error == NULL);
+
+        arv_gc_boolean_set_value (ARV_GC_BOOLEAN (lock), TRUE, &error);
+        g_assert (arv_gc_feature_node_is_locked (ARV_GC_FEATURE_NODE (node), &error));
+        g_assert (error == NULL);
+
+	node = arv_gc_get_node (genicam, "NoLock");
+	g_assert (ARV_IS_GC_INTEGER_NODE (node));
+        g_assert (!arv_gc_feature_node_is_locked (ARV_GC_FEATURE_NODE (node), &error));
+
+	g_object_unref (device);
+}
 int
 main (int argc, char *argv[])
 {
@@ -1249,6 +1307,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/genicam/indexed", indexed_test);
 	g_test_add_func ("/genicam/visibility", visibility_test);
 	g_test_add_func ("/genicam/category", category_test);
+	g_test_add_func ("/genicam/lock", lock_test);
 
 	result = g_test_run();
 
