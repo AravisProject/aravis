@@ -418,7 +418,7 @@ arv_gvcp_packet_new_packet_resend_cmd (guint64 frame_id,
 	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_CMD;
 	packet->header.packet_flags = extended_ids ? ARV_GVCP_CMD_PACKET_FLAGS_EXTENDED_IDS : 0;
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_PACKET_RESEND_CMD);
-	packet->header.size = g_htons (3 * sizeof (guint32));
+	packet->header.size = g_htons ((extended_ids ? 5 : 3) * sizeof (guint32));
 	packet->header.id = g_htons (packet_id);
 
 	data = (guint32 *) &packet->data;
