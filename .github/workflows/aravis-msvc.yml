@@ -14,7 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-        - version: 16
+        - version: 17
           arch: x86_64
           build_type_conan: Release
           build_type_meson: release
