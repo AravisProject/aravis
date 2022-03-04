@@ -1,3 +1,16 @@
+Stable release 0.8.21
+=====================
+
+  * build: FreeBSD support #620 (Rim)
+  * gigevision: performance improvement of standard socket method #617 (Emilio)
+  * usb3vision: prevent USB command mix up #622 (Edgar)
+  * usb3vision: fix PacketResend size field in extended ID mode #642 (Alexander)
+  * genicam: allow more Category child nodes #632 (Emmanuel)
+  * genicam: AccessMode fixes #634 (Emmanuel)
+  * genicam: fix pIsLocked when target is a Boolean node #638 (Emmanuel)
+  * doc: port to gi-docgen #621 (Emmanuel)
+  * git: default branch is main now (Emmanuel)
+
 Stable release 0.8.20
 =====================
 
