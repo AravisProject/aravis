@@ -18,7 +18,7 @@
 	</description>
 	<screenshots>
 		<screenshot type="default">
-                        <image width="1024" height="576">https://raw.githubusercontent.com/AravisProject/aravis/master/viewer/icons/gnome/256x256/apps/aravis.png</image>
+                        <image width="1024" height="576">https://raw.githubusercontent.com/AravisProject/aravis/main/viewer/icons/gnome/256x256/apps/aravis.png</image>
                 </screenshot>
 	</screenshots>
 	<url type="homepage">https://wiki.gnome.org/Projects/Aravis</url>
