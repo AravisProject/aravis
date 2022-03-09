@@ -200,8 +200,7 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 				if (timeout_ms < 0)
 					timeout_ms = 0;
 
-				success = TRUE;
-				success = success && g_poll (&io_data->poll_in_event, 1, timeout_ms) > 0;
+				success = g_poll (&io_data->poll_in_event, 1, timeout_ms) > 0;
 
 				if (success) {
 					arv_gpollfd_clear_one (&io_data->poll_in_event, io_data->socket);
@@ -232,22 +231,18 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 
 						arv_debug_device ("[GvDevice::%s] Pending ack timeout = %" G_GINT64_FORMAT,
 								operation, pending_ack_timeout_ms);
-					} else if (packet_type == ARV_GVCP_PACKET_TYPE_ERROR) {
-						expected_answer = ack_command == expected_ack_command &&
-							packet_id == io_data->packet_id;
-						if (!expected_answer) {
-							arv_info_device ("[GvDevice::%s] Unexpected answer (0x%04x)", operation,
-									  packet_type);
-						} else
-							command_error = arv_gvcp_packet_get_packet_flags (ack_packet);
 					} else  {
 						expected_answer = packet_type == ARV_GVCP_PACKET_TYPE_ACK &&
 							ack_command == expected_ack_command &&
 							packet_id == io_data->packet_id &&
 							count >= ack_size;
+						command_error = arv_gvcp_packet_get_packet_flags (ack_packet);
 						if (!expected_answer) {
-							arv_info_device ("[GvDevice::%s] Unexpected answer (0x%04x)", operation,
+							arv_warning_device ("[GvDevice::%s] Unexpected answer (0x%04x)", operation,
 									  packet_type);
+						}
+						if (command_error != ARV_GVCP_ERROR_NONE) {
+							arv_warning_device ("[GvDevice::%s] Command error: %s", operation, arv_gvcp_error_to_string (command_error));
 						}
 					}
 				} else {
@@ -259,11 +254,11 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 						arv_warning_device ("[GvDevice::%s] Ack reception timeout", operation);
 					g_clear_error (&local_error);
 				}
-			} while (pending_ack || (!expected_answer && timeout_ms > 0));
+			} while (pending_ack && timeout_ms > 0);
 
-			success = success && expected_answer;
+			success = success && expected_answer && command_error == ARV_GVCP_ERROR_NONE;
 
-			if (success && command_error == ARV_GVCP_ERROR_NONE) {
+			if (success) {
 				switch (command) {
 					case ARV_GVCP_COMMAND_READ_MEMORY_CMD:
 						memcpy (buffer, arv_gvcp_packet_get_read_memory_ack_data (ack_packet), size);
@@ -291,8 +286,6 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 	arv_gvcp_packet_free (packet);
 
 	g_mutex_unlock (&io_data->mutex);
-
-	success = success && command_error == ARV_GVCP_ERROR_NONE;
 
 	if (!success) {
 		switch (command) {
