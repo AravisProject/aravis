@@ -232,11 +232,12 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 
 						arv_debug_device ("[GvDevice::%s] Pending ack timeout = %" G_GINT64_FORMAT,
 								operation, pending_ack_timeout_ms);
-					} else if (packet_type == ARV_GVCP_PACKET_TYPE_ERROR) {
+					} else if (packet_type == ARV_GVCP_PACKET_TYPE_ERROR ||
+                                                   packet_type == ARV_GVCP_PACKET_TYPE_UNKNOWN_ERROR) {
 						expected_answer = ack_command == expected_ack_command &&
 							packet_id == io_data->packet_id;
 						if (!expected_answer) {
-							arv_info_device ("[GvDevice::%s] Unexpected answer (0x%04x)", operation,
+							arv_info_device ("[GvDevice::%s] Unexpected answer (0x%02x)", operation,
 									  packet_type);
 						} else
 							command_error = arv_gvcp_packet_get_packet_flags (ack_packet);
@@ -246,7 +247,7 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 							packet_id == io_data->packet_id &&
 							count >= ack_size;
 						if (!expected_answer) {
-							arv_info_device ("[GvDevice::%s] Unexpected answer (0x%04x)", operation,
+							arv_info_device ("[GvDevice::%s] Unexpected answer (0x%02x)", operation,
 									  packet_type);
 						}
 					}
