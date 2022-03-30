@@ -388,7 +388,8 @@ arv_uv_stream_thread_async (void *data)
 
 	ctx_lookup = g_hash_table_new_full( g_direct_hash, g_direct_equal, NULL, arv_uv_stream_buffer_context_free );
 
-	while (!g_atomic_int_get (&thread_data->cancel)) {
+	while (!g_atomic_int_get (&thread_data->cancel) &&
+               arv_uv_device_is_connected (thread_data->uv_device)) {
 		ArvUvStreamBufferContext* ctx;
 
                 buffer = arv_stream_pop_input_buffer (thread_data->stream);
