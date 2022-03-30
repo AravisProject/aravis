@@ -686,7 +686,7 @@ auto_black_level_cb (GtkToggleButton *toggle, ArvViewer *viewer)
 static void
 set_camera_widgets(ArvViewer *viewer)
 {
-	g_autofree char *string;
+	g_autofree char *string = NULL;
 	gboolean is_frame_rate_available;
 	double gain_min, gain_max;
 	gboolean is_gain_available;
@@ -1585,7 +1585,7 @@ static void
 activate (GApplication *application)
 {
 	ArvViewer *viewer = (ArvViewer *) application;
-	g_autoptr (GtkBuilder) builder;
+	g_autoptr (GtkBuilder) builder = NULL;
         g_autoptr (GtkListStore) list_store = NULL;
         GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
 
