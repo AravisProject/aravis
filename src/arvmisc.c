@@ -386,7 +386,7 @@ arv_value_new_double (double v_double)
 }
 
 ArvValue *
-arv_value_new_int64 (double v_int64)
+arv_value_new_int64 (gint64 v_int64)
 {
 	ArvValue *value = g_new (ArvValue, 1);
 	value->type = G_TYPE_INT64;
