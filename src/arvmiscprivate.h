@@ -56,7 +56,7 @@ GType arv_value_get_type (void);
 typedef struct _ArvValue ArvValue;
 
 ArvValue * 	arv_value_new_double 		(double v_double);
-ArvValue * 	arv_value_new_int64 		(double v_int64);
+ArvValue * 	arv_value_new_int64 		(gint64 v_int64);
 void 		arv_value_free 			(ArvValue *value);
 void 		arv_value_copy 			(ArvValue *to, const ArvValue *from);
 void 		arv_value_set_int64 		(ArvValue *value, gint64 v_int64);
