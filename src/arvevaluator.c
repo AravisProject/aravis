@@ -278,19 +278,27 @@ arv_evaluator_token_debug (ArvEvaluatorToken *token, GHashTable *variables)
 	switch (token->token_id) {
 		case ARV_EVALUATOR_TOKEN_VARIABLE:
 			value = g_hash_table_lookup (variables, token->data.name);
-			arv_debug_evaluator ("(var) %s = %g%s", token->data.name,
-					   value != NULL ? arv_value_get_double (value) : 0,
-					   value != NULL ? "" : " not found");
-			break;
-		case ARV_EVALUATOR_TOKEN_CONSTANT_INT64:
-			arv_debug_evaluator ("(int64) %" G_GINT64_FORMAT, token->data.v_int64);
-			break;
-		case ARV_EVALUATOR_TOKEN_CONSTANT_DOUBLE:
-			arv_debug_evaluator ("(double) %g", token->data.v_double);
-			break;
-		default:
-			arv_debug_evaluator ("(operator) %s", arv_evaluator_token_infos[token->token_id].tag);
-	}
+                        if (value != NULL && arv_value_holds_double (value))
+                                arv_debug_evaluator ("(var) %s = %g (double)",
+                                                     token->data.name,
+                                                     arv_value_get_double (value));
+                        else if (value != NULL && arv_value_holds_int64 (value))
+                                arv_debug_evaluator ("(var) %s = 0x%016" G_GINT64_MODIFIER "x %" G_GINT64_FORMAT" (int64)",
+                                                     token->data.name,
+                                                     arv_value_get_int64 (value),
+                                                     arv_value_get_int64 (value));
+                        else
+                                arv_debug_evaluator ("(var) %s not found", token->data.name);
+                        break;
+                case ARV_EVALUATOR_TOKEN_CONSTANT_INT64:
+                        arv_debug_evaluator ("(int64) %" G_GINT64_FORMAT, token->data.v_int64);
+                        break;
+                case ARV_EVALUATOR_TOKEN_CONSTANT_DOUBLE:
+                        arv_debug_evaluator ("(double) %g", token->data.v_double);
+                        break;
+                default:
+                        arv_debug_evaluator ("(operator) %s", arv_evaluator_token_infos[token->token_id].tag);
+        }
 }
 
 static gboolean
