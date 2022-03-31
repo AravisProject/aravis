@@ -101,7 +101,7 @@ static const ExpressionTestData expression_test_data[] = {
 
 	{"/evaluator/bugs/681048-remaining-op",		"(0 & 1)=0?((0 & 1)+2):1",		2,	FALSE,	2.0},
 	{"/evaluator/bugs/743025-division-by-zero",	"(4/(20/10000))",			2000,	TRUE,	2000.0},
-	{"/evaluator/bugs/gh98-not-operatorprecedence",	"(~(~0xC2000221|0xFEFFFFFF)) ? 2:0", 	0, 	FALSE,	0.0}
+	{"/evaluator/bugs/gh98-not-operatorprecedence",	"(~(~0xC2000221|0xFEFFFFFF)) ? 2:0", 	0, 	FALSE,	0.0},
 };
 
 static void
@@ -185,7 +185,12 @@ set_int64_variable_test (void)
 
 	arv_evaluator_set_int64_variable (evaluator, "A_1", 123);
 	v_int64 = arv_evaluator_evaluate_as_int64 (evaluator, &error);
-	g_assert_cmpfloat (v_int64, ==, 123);
+	g_assert_cmpint (v_int64, ==, 123);
+	g_assert (error == NULL);
+
+	arv_evaluator_set_int64_variable (evaluator, "A_1", 0x7fffffffffffffff);
+	v_int64 = arv_evaluator_evaluate_as_int64 (evaluator, &error);
+	g_assert_cmpint (v_int64, ==, 0x7fffffffffffffff);
 	g_assert (error == NULL);
 
 	g_object_unref (evaluator);
