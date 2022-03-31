@@ -1435,9 +1435,9 @@ arv_evaluator_set_double_variable (ArvEvaluator *evaluator, const char *name, do
 	if (old_value != NULL && (arv_value_get_double (old_value) == v_double))
 		return;
 
-	g_hash_table_insert (evaluator->priv->variables,
-			     g_strdup (name),
-			     arv_value_new_double (v_double));
+        g_hash_table_replace (evaluator->priv->variables,
+                              g_strdup (name),
+                              arv_value_new_double (v_double));
 
 	arv_debug_evaluator ("[Evaluator::set_double_variable] %s = %g",
 			   name, v_double);
@@ -1455,9 +1455,9 @@ arv_evaluator_set_int64_variable (ArvEvaluator *evaluator, const char *name, gin
 	if (old_value != NULL && (arv_value_get_int64 (old_value) == v_int64))
 		return;
 
-	g_hash_table_insert (evaluator->priv->variables,
-			     g_strdup (name),
-			     arv_value_new_int64 (v_int64));
+        g_hash_table_replace (evaluator->priv->variables,
+                              g_strdup (name),
+                              arv_value_new_int64 (v_int64));
 
 	arv_debug_evaluator ("[Evaluator::set_int64_variable] %s = %" G_GINT64_FORMAT, name, v_int64);
 }
