@@ -21,6 +21,8 @@
     <Description>description</Description>
     <ToolTip>tooltip</ToolTip>
     <DisplayName>display_name</DisplayName>
+    <pIsImplemented>Available</pIsImplemented>
+    <pIsAvailable>Available</pIsAvailable>
     <pFeature>RWFloat</pFeature>
     <pFeature>RWBoolean</pFeature>
     <pFeature>RWInteger</pFeature>
@@ -124,6 +126,10 @@
 
   <Integer Name="NotAvailable">
     <Value>0</Value>
+  </Integer>
+
+  <Integer Name="Available">
+    <Value>1</Value>
   </Integer>
 
   <Integer Name="EnumerationValue">

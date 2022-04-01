@@ -91,14 +91,17 @@ arv_gc_category_get_features (ArvGcCategory *category)
 	for (iter = arv_dom_node_get_first_child (ARV_DOM_NODE (category));
 	     iter != NULL;
 	     iter = arv_dom_node_get_next_sibling (iter)) {
-		node = arv_gc_property_node_get_linked_node (ARV_GC_PROPERTY_NODE (iter));
-		if (ARV_IS_GC_FEATURE_NODE (node)) {
-			char *name;
+                if (arv_gc_property_node_get_node_type (ARV_GC_PROPERTY_NODE (iter)) ==
+                    ARV_GC_PROPERTY_NODE_TYPE_P_FEATURE) {
+                        node = arv_gc_property_node_get_linked_node (ARV_GC_PROPERTY_NODE (iter));
+                        if (ARV_IS_GC_FEATURE_NODE (node)) {
+                                char *name;
 
-			name = g_strdup (arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (node)));
-			category->features = g_slist_append (category->features, name);
-		}
-	}
+                                name = g_strdup (arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (node)));
+                                category->features = g_slist_append (category->features, name);
+                        }
+                }
+        }
 
 	return category->features;
 }
