@@ -415,9 +415,11 @@ gst_aravis_init_camera (GstAravis *gst_aravis, GError **error)
 
 	gst_aravis->camera = arv_camera_new (gst_aravis->camera_name, &local_error);
 
-	if (!local_error) arv_camera_get_region (gst_aravis->camera, &gst_aravis->offset_x, &gst_aravis->offset_y, NULL, NULL, &local_error);
+	if (!local_error) arv_camera_get_region (gst_aravis->camera, &gst_aravis->offset_x,
+                                                 &gst_aravis->offset_y, NULL, NULL, &local_error);
 	if (!local_error) gst_aravis->payload = 0;
-	if (!local_error) arv_camera_uv_set_usb_mode (gst_aravis->camera, gst_aravis->usb_mode);
+	if (!local_error && arv_camera_is_uv_device (gst_aravis->camera))
+                arv_camera_uv_set_usb_mode (gst_aravis->camera, gst_aravis->usb_mode);
 
 	if (local_error) {
 		g_clear_object (&gst_aravis->camera);
