@@ -205,6 +205,12 @@ ARV_API void		arv_camera_gv_set_packet_size_adjustment	(ArvCamera *camera,
 
 ARV_API void		arv_camera_gv_set_stream_options		(ArvCamera *camera, ArvGvStreamOption options);
 
+ARV_API void		arv_camera_gv_get_persistent_ip			(ArvCamera *camera, GInetAddress **ip, GInetAddressMask **mask, GInetAddress **gateway, GError **error);
+ARV_API void		arv_camera_gv_set_persistent_ip_from_string	(ArvCamera *camera, const char *ip, const char *mask, const char *gateway, GError **error);
+ARV_API void		arv_camera_gv_set_persistent_ip			(ArvCamera *camera, GInetAddress *ip, GInetAddressMask *mask, GInetAddress *gateway, GError **error);
+ARV_API ArvGvIpConfigurationMode	arv_camera_gv_get_ip_configuration_mode	(ArvCamera *camera, GError **error);
+ARV_API void		arv_camera_gv_set_ip_configuration_mode		(ArvCamera *camera, ArvGvIpConfigurationMode mode, GError **error);
+
 ARV_API gboolean	arv_camera_is_uv_device				(ArvCamera *camera);
 ARV_API gboolean	arv_camera_uv_is_bandwidth_control_available	(ArvCamera *camera, GError **error);
 ARV_API void		arv_camera_uv_set_bandwidth			(ArvCamera *camera, guint bandwidth, GError **error);
