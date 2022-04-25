@@ -33,6 +33,7 @@ static char *arv_option_chunks = NULL;
 static int arv_option_bandwidth_limit = -1;
 static char *arv_option_register_cache = NULL;
 static char *arv_option_range_check = NULL;
+static char *arv_option_access_check = NULL;
 static int arv_option_duration_s = -1;
 static char *arv_option_uv_usb_mode = NULL;
 
@@ -173,6 +174,11 @@ static const GOptionEntry arv_option_entries[] =
 	{
 		"range-check",				'\0', 0, G_OPTION_ARG_STRING,
 		&arv_option_range_check,		"Range check policy",
+		"{disable|enable|debug}"
+	},
+	{
+		"access-check",			        '\0', 0, G_OPTION_ARG_STRING,
+		&arv_option_access_check,	        "Feature access check policy",
 		"{disable|enable}"
 	},
 	{
@@ -327,6 +333,7 @@ main (int argc, char **argv)
 	ArvStream *stream;
 	ArvRegisterCachePolicy register_cache_policy;
 	ArvRangeCheckPolicy range_check_policy;
+        ArvAccessCheckPolicy access_check_policy;
 	ArvGvPacketSizeAdjustment adjustment;
 	ArvUvUsbMode usb_mode;
 	GOptionContext *context;
@@ -374,6 +381,17 @@ main (int argc, char **argv)
 		range_check_policy = ARV_RANGE_CHECK_POLICY_DEBUG;
 	else {
 		printf ("Invalid range check policy\n");
+		return EXIT_FAILURE;
+	}
+
+	if (arv_option_access_check == NULL)
+		access_check_policy = ARV_ACCESS_CHECK_POLICY_DEFAULT;
+	else if (g_strcmp0 (arv_option_access_check, "disable") == 0)
+		access_check_policy = ARV_ACCESS_CHECK_POLICY_DISABLE;
+	else if (g_strcmp0 (arv_option_access_check, "enable") == 0)
+		access_check_policy = ARV_ACCESS_CHECK_POLICY_ENABLE;
+	else {
+		printf ("Invalid access check policy\n");
 		return EXIT_FAILURE;
 	}
 
@@ -451,6 +469,7 @@ main (int argc, char **argv)
 
 		arv_camera_set_register_cache_policy (camera, register_cache_policy);
 		arv_camera_set_range_check_policy (camera, range_check_policy);
+                arv_camera_set_access_check_policy (camera, access_check_policy);
 
 		if (arv_option_chunks != NULL) {
 			char *striped_chunks;
