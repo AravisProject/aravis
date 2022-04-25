@@ -28,6 +28,7 @@
 #endif
 
 #include <arvapi.h>
+#include <arvgcenums.h>
 #include <arvtypes.h>
 #include <arvstream.h>
 #include <arvchunkparser.h>
@@ -101,6 +102,7 @@ ARV_API ArvGc *		arv_device_get_genicam			(ArvDevice *device);
 
 ARV_API gboolean 	arv_device_is_feature_available		(ArvDevice *device, const char *feature, GError **error);
 ARV_API ArvGcNode *	arv_device_get_feature			(ArvDevice *device, const char *feature);
+ARV_API ArvGcAccessMode	arv_device_get_feature_access_mode	(ArvDevice *device, const char *feature);
 
 ARV_API ArvChunkParser *arv_device_create_chunk_parser		(ArvDevice *device);
 
@@ -136,6 +138,7 @@ ARV_API gboolean	arv_device_set_features_from_string	(ArvDevice *device, const c
 
 ARV_API void		arv_device_set_register_cache_policy	(ArvDevice *device, ArvRegisterCachePolicy policy);
 ARV_API void		arv_device_set_range_check_policy	(ArvDevice *device, ArvRangeCheckPolicy policy);
+ARV_API void            arv_device_set_access_check_policy      (ArvDevice *device, ArvAccessCheckPolicy policy);
 
 G_END_DECLS
 

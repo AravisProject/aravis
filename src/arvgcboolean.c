@@ -153,6 +153,9 @@ arv_gc_boolean_get_value (ArvGcBoolean *gc_boolean, GError **error)
 	if (gc_boolean->value == NULL)
 		return FALSE;
 
+        if (!arv_gc_feature_node_check_read_access (ARV_GC_FEATURE_NODE (gc_boolean), error))
+                return FALSE;
+
 	value = arv_gc_property_node_get_int64 (gc_boolean->value, &local_error);
 
 	if (local_error != NULL) {
@@ -205,6 +208,9 @@ arv_gc_boolean_set_value (ArvGcBoolean *gc_boolean, gboolean v_boolean, GError *
 
 	g_return_if_fail (ARV_IS_GC_BOOLEAN (gc_boolean));
 	g_return_if_fail (error == NULL || *error == NULL);
+
+        if (!arv_gc_feature_node_check_write_access (ARV_GC_FEATURE_NODE (gc_boolean), error))
+                return;
 
 	if (v_boolean)
 		value = arv_gc_boolean_get_on_value (gc_boolean, &local_error);

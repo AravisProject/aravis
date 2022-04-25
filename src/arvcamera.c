@@ -2673,7 +2673,8 @@ arv_camera_set_register_cache_policy (ArvCamera *camera, ArvRegisterCachePolicy 
  * Since: 0.8.8
  */
 
-void arv_camera_set_range_check_policy	(ArvCamera *camera, ArvRangeCheckPolicy policy)
+void
+arv_camera_set_range_check_policy (ArvCamera *camera, ArvRangeCheckPolicy policy)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
@@ -2681,6 +2682,31 @@ void arv_camera_set_range_check_policy	(ArvCamera *camera, ArvRangeCheckPolicy p
 
 	arv_device_set_range_check_policy (priv->device, policy);
 }
+
+/**
+ * arv_camera_set_access_check_policy:
+ * @camera: a #ArvCamera
+ * @policy: access check policy
+ *
+ * Sets the feature access check policy. When enabled, before being accessed, the actual read/write access of register
+ * is checked using AccessMode properties. On some devices, it helps to avoid forbidden writes to registers that may put
+ * the device in a bad state.
+ *
+ * <warning><para>Access check is disabled by default.</para></warning>
+ *
+ * Since: 0.8.22
+ */
+
+void
+arv_camera_set_access_check_policy (ArvCamera *camera, ArvAccessCheckPolicy policy)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_device_set_access_check_policy (priv->device, policy);
+}
+
 
 
 /**

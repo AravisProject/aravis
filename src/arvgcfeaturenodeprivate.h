@@ -25,11 +25,59 @@
 #define ARV_GC_FEATURE_NODE_PRIVATE_H
 
 #include <arvgcfeaturenode.h>
+#include <arvgc.h>
+#include <arvgcenums.h>
 
 G_BEGIN_DECLS
 
 void			arv_gc_feature_node_increment_change_count	(ArvGcFeatureNode *gc_feature_node);
 guint64 		arv_gc_feature_node_get_change_count 		(ArvGcFeatureNode *gc_feature_node);
+
+static inline gboolean
+arv_gc_feature_node_check_write_access (ArvGcFeatureNode *gc_feature_node, GError **error)
+{
+	ArvGc *genicam;
+        ArvAccessCheckPolicy policy;
+
+        g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (gc_feature_node), FALSE);
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_feature_node));
+	g_return_val_if_fail (ARV_IS_GC (genicam), FALSE);
+
+        policy = arv_gc_get_access_check_policy (genicam);
+        if (policy != ARV_ACCESS_CHECK_POLICY_ENABLE)
+                return TRUE;
+
+        if (arv_gc_feature_node_get_actual_access_mode (gc_feature_node) != ARV_GC_ACCESS_MODE_RO)
+                return TRUE;
+
+        g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_READ_ONLY, "[%s] Write error on read only feature",
+                     arv_gc_feature_node_get_name (gc_feature_node));
+
+        return FALSE;
+}
+
+static inline gboolean
+arv_gc_feature_node_check_read_access (ArvGcFeatureNode *gc_feature_node, GError **error)
+{
+	ArvGc *genicam;
+        ArvAccessCheckPolicy policy;
+
+        g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (gc_feature_node), FALSE);
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_feature_node));
+	g_return_val_if_fail (ARV_IS_GC (genicam), FALSE);
+
+        policy = arv_gc_get_access_check_policy (genicam);
+        if (policy != ARV_ACCESS_CHECK_POLICY_ENABLE)
+                return TRUE;
+
+        if (arv_gc_feature_node_get_actual_access_mode (gc_feature_node) != ARV_GC_ACCESS_MODE_WO)
+                return TRUE;
+
+        g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_READ_ONLY, "[%s] Read error on write only feature",
+                     arv_gc_feature_node_get_name (gc_feature_node));
+
+        return FALSE;
+}
 
 G_END_DECLS
 

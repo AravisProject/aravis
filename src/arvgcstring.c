@@ -27,6 +27,7 @@
 
 #include <arvgcstring.h>
 #include <arvmisc.h>
+#include <arvgcfeaturenodeprivate.h>
 
 static void
 arv_gc_string_default_init (ArvGcStringInterface *gc_string_iface)
@@ -51,6 +52,9 @@ arv_gc_string_get_value (ArvGcString *gc_string, GError **error)
 	g_return_val_if_fail (ARV_IS_GC_STRING (gc_string), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
+        if (!arv_gc_feature_node_check_read_access (ARV_GC_FEATURE_NODE (gc_string), error))
+                return NULL;
+
 	return ARV_GC_STRING_GET_IFACE (gc_string)->get_value (gc_string, error);
 }
 
@@ -68,6 +72,9 @@ arv_gc_string_set_value (ArvGcString *gc_string, const char *value, GError **err
 {
 	g_return_if_fail (ARV_IS_GC_STRING (gc_string));
 	g_return_if_fail (error == NULL || *error == NULL);
+
+        if (!arv_gc_feature_node_check_write_access (ARV_GC_FEATURE_NODE (gc_string), error))
+                return;
 
 	ARV_GC_STRING_GET_IFACE (gc_string)->set_value (gc_string, value, error);
 }

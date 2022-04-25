@@ -73,6 +73,7 @@ typedef struct {
 
 	ArvRegisterCachePolicy cache_policy;
 	ArvRangeCheckPolicy range_check_policy;
+	ArvAccessCheckPolicy access_check_policy;
 
         unsigned n_register_cache_errors;
 } ArvGcPrivate;
@@ -389,6 +390,22 @@ arv_gc_get_range_check_policy (ArvGc *genicam)
 	g_return_val_if_fail (ARV_IS_GC (genicam), ARV_RANGE_CHECK_POLICY_DISABLE);
 
 	return genicam->priv->range_check_policy;
+}
+
+void
+arv_gc_set_access_check_policy (ArvGc *genicam, ArvAccessCheckPolicy policy)
+{
+	g_return_if_fail (ARV_IS_GC (genicam));
+
+	genicam->priv->access_check_policy = policy;
+}
+
+ArvAccessCheckPolicy
+arv_gc_get_access_check_policy (ArvGc *genicam)
+{
+	g_return_val_if_fail (ARV_IS_GC (genicam), ARV_ACCESS_CHECK_POLICY_DISABLE);
+
+	return genicam->priv->access_check_policy;
 }
 
 static void
