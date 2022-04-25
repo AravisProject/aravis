@@ -35,6 +35,7 @@
 #include <arvgccommand.h>
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
+#include <arvgcfeaturenode.h>
 #include <arvgcboolean.h>
 #include <arvgcenumeration.h>
 #include <arvgcstring.h>
@@ -274,6 +275,29 @@ arv_device_get_feature (ArvDevice *device, const char *feature)
 	g_return_val_if_fail (ARV_IS_GC (genicam), NULL);
 
 	return arv_gc_get_node (genicam, feature);
+}
+
+/**
+ * arv_device_get_feature_access_mode:
+ * @device: a #ArvDevice
+ * @feature: feature name
+ *
+ * Return value: The actual feature access mode, which is a combination of ImposedAccessMode property and actual
+ * register access mode.
+ *
+ * Since: 0.8.22
+ */
+
+ArvGcAccessMode
+arv_device_get_feature_access_mode (ArvDevice *device, const char *feature)
+{
+	ArvGcNode* node;
+
+	g_return_val_if_fail (ARV_IS_DEVICE (device), ARV_GC_ACCESS_MODE_UNDEFINED);
+	g_return_val_if_fail (feature != NULL, ARV_GC_ACCESS_MODE_UNDEFINED);
+
+	node = arv_device_get_feature (device, feature);
+	return ARV_IS_GC_FEATURE_NODE (node) && arv_gc_feature_node_get_actual_access_mode (ARV_GC_FEATURE_NODE (node));
 }
 
 /**
@@ -939,10 +963,10 @@ arv_device_set_features_from_string (ArvDevice *device, const char *string, GErr
  *
  * Sets the register cache policy.
  *
- * <warning><para>Be aware that some camera may have wrong Cachable properties defined in their Genicam metadata, which may
- * lead to incorrect readouts. Using the debug cache policy, and activating genicam debug output (export ARV_DEBUG=genicam), can help you to
- * check the cache validity. In this mode, every time the cache content is not in sync with the actual register value, a debug message is
- * printed on the console.</para></warning>
+ * <warning><para>Be aware that some camera may have wrong Cachable properties defined in their Genicam metadata, which
+ * may lead to incorrect readouts. Using the debug cache policy, and activating genicam debug output (export
+ * ARV_DEBUG=genicam), can help you to check the cache validity. In this mode, every time the cache content is not in
+ * sync with the actual register value, a debug message is printed on the console.</para></warning>
  *
  * Since: 0.8.0
  */
@@ -973,7 +997,8 @@ arv_device_set_register_cache_policy (ArvDevice *device, ArvRegisterCachePolicy 
  * Since: 0.8.6
  */
 
-void arv_device_set_range_check_policy	(ArvDevice *device, ArvRangeCheckPolicy policy)
+void
+arv_device_set_range_check_policy (ArvDevice *device, ArvRangeCheckPolicy policy)
 {
 	ArvGc *genicam;
 
@@ -981,6 +1006,31 @@ void arv_device_set_range_check_policy	(ArvDevice *device, ArvRangeCheckPolicy p
 
 	genicam = arv_device_get_genicam (device);
 	arv_gc_set_range_check_policy (genicam, policy);
+}
+
+/**
+ * arv_device_set_access_check_policy:
+ * @device: a #ArvDevice
+ * @policy: access check policy
+ *
+ * Sets the feature access check policy. When enabled, before being accessed, the actual read/write access of register
+ * is checked using AccessMode properties. On some devices, it helps to avoid forbidden writes to registers that may put
+ * the device in a bad state.
+ *
+ * <warning><para>Access check is disabled by default.</para></warning>
+ *
+ * Since: 0.8.22
+ */
+
+void
+arv_device_set_access_check_policy (ArvDevice *device, ArvAccessCheckPolicy policy)
+{
+	ArvGc *genicam;
+
+	g_return_if_fail (ARV_IS_DEVICE (device));
+
+	genicam = arv_device_get_genicam (device);
+	arv_gc_set_access_check_policy (genicam, policy);
 }
 
 void
