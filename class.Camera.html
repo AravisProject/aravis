@@ -285,6 +285,8 @@ SPDX-License-Identifier: Apache-2.0 OR GPL-3.0-or-later
   
     <a class="method" href="method.Camera.is_uv_device.html">is_uv_device</a>
   
+    <a class="method" href="method.Camera.set_access_check_policy.html">set_access_check_policy</a>
+  
     <a class="method" href="method.Camera.set_acquisition_mode.html">set_acquisition_mode</a>
   
     <a class="method" href="method.Camera.set_binning.html">set_binning</a>
@@ -1212,6 +1214,16 @@ set before the call to&nbsp;arv_camera_create_stream().</p>
             No description available.
           </div>
           <div class="docblock"><p>Available since: 0.6.0</p></div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.set_access_check_policy.html">arv_camera_set_access_check_policy</a></h6>
+          <div class="docblock">
+            <p>Sets the feature access check policy. When enabled, before being accessed, the actual read/write access of register
+is checked using AccessMode properties. On some devices, it helps to avoid forbidden writes to registers that may put
+the device in a bad&nbsp;state.</p>
+          </div>
+          <div class="docblock"><p>Available since: 0.8.22</p></div>
         </div>
       
         <div class="">
