@@ -353,6 +353,58 @@ _write_register (ArvGvDeviceIOData *io_data, guint32 address, guint32 value, GEr
 					  address, sizeof (guint32), &value, error);
 }
 
+static gboolean
+arv_gv_device_read_memory (ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error)
+{
+	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (ARV_GV_DEVICE (device));
+	int i;
+	gint32 block_size;
+
+	for (i = 0; i < (size + ARV_GVCP_DATA_SIZE_MAX - 1) / ARV_GVCP_DATA_SIZE_MAX; i++) {
+		block_size = MIN (ARV_GVCP_DATA_SIZE_MAX, size - i * ARV_GVCP_DATA_SIZE_MAX);
+		if (!_read_memory (priv->io_data,
+				   address + i * ARV_GVCP_DATA_SIZE_MAX,
+				   block_size, ((char *) buffer) + i * ARV_GVCP_DATA_SIZE_MAX, error))
+			return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
+arv_gv_device_write_memory (ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error)
+{
+	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (ARV_GV_DEVICE (device));
+	int i;
+	gint32 block_size;
+
+	for (i = 0; i < (size + ARV_GVCP_DATA_SIZE_MAX - 1) / ARV_GVCP_DATA_SIZE_MAX; i++) {
+		block_size = MIN (ARV_GVCP_DATA_SIZE_MAX, size - i * ARV_GVCP_DATA_SIZE_MAX);
+		if (!_write_memory (priv->io_data,
+				    address + i * ARV_GVCP_DATA_SIZE_MAX,
+				    block_size, ((char *) buffer) + i * ARV_GVCP_DATA_SIZE_MAX, error))
+			return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
+arv_gv_device_read_register (ArvDevice *device, guint64 address, guint32 *value, GError **error)
+{
+	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (ARV_GV_DEVICE (device));
+
+	return _read_register (priv->io_data, address, value, error);
+}
+
+static gboolean
+arv_gv_device_write_register (ArvDevice *device, guint64 address, guint32 value, GError **error)
+{
+	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (ARV_GV_DEVICE (device));
+
+	return _write_register (priv->io_data, address, value, error);
+}
+
 /* Heartbeat thread */
 
 typedef struct {
@@ -444,7 +496,7 @@ arv_gv_device_take_control (ArvGvDevice *gv_device, GError **error)
 	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
 	gboolean success = TRUE;
 
-	success = arv_device_write_register (ARV_DEVICE (gv_device),
+	success = arv_gv_device_write_register (ARV_DEVICE (gv_device),
 					     ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET,
 					     ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_CONTROL,
 					     error);
@@ -473,7 +525,7 @@ arv_gv_device_leave_control (ArvGvDevice *gv_device, GError **error)
 	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
 	gboolean success = TRUE;
 
-	success = arv_device_write_register (ARV_DEVICE (gv_device),
+	success = arv_gv_device_write_register (ARV_DEVICE (gv_device),
 					     ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET,
 					     0,
 					     error);
@@ -496,11 +548,11 @@ arv_gv_device_get_timestamp_tick_frequency (ArvGvDevice *gv_device, GError **err
 
 	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), 0);
 
-	arv_device_read_register (ARV_DEVICE (gv_device),
+	arv_gv_device_read_register (ARV_DEVICE (gv_device),
 				  ARV_GVBS_TIMESTAMP_TICK_FREQUENCY_HIGH_OFFSET,
 				  &timestamp_tick_frequency_high, &local_error);
 	if (local_error == NULL)
-		arv_device_read_register (ARV_DEVICE (gv_device),
+		arv_gv_device_read_register (ARV_DEVICE (gv_device),
 					  ARV_GVBS_TIMESTAMP_TICK_FREQUENCY_LOW_OFFSET,
 					  &timestamp_tick_frequency_low, &local_error);
 
@@ -768,7 +820,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size, GError **
 
 	*size = 0;
 
-	if (!arv_device_read_memory (ARV_DEVICE (gv_device), address, ARV_GVBS_XML_URL_SIZE, filename, error))
+	if (!arv_gv_device_read_memory (ARV_DEVICE (gv_device), address, ARV_GVBS_XML_URL_SIZE, filename, error))
 		return NULL;
 
 	filename[ARV_GVBS_XML_URL_SIZE - 1] = '\0';
@@ -790,7 +842,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size, GError **
 
 		if (file_size > 0) {
 			genicam = g_malloc (file_size);
-			if (arv_device_read_memory (ARV_DEVICE (gv_device), file_address, file_size,
+			if (arv_gv_device_read_memory (ARV_DEVICE (gv_device), file_address, file_size,
 						    genicam, NULL)) {
 
 				if (arv_debug_check (ARV_DEBUG_CATEGORY_MISC, ARV_DEBUG_LEVEL_DEBUG)) {
@@ -1202,58 +1254,6 @@ arv_gv_device_get_genicam (ArvDevice *device)
 	return priv->genicam;
 }
 
-static gboolean
-arv_gv_device_read_memory (ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error)
-{
-	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (ARV_GV_DEVICE (device));
-	int i;
-	gint32 block_size;
-
-	for (i = 0; i < (size + ARV_GVCP_DATA_SIZE_MAX - 1) / ARV_GVCP_DATA_SIZE_MAX; i++) {
-		block_size = MIN (ARV_GVCP_DATA_SIZE_MAX, size - i * ARV_GVCP_DATA_SIZE_MAX);
-		if (!_read_memory (priv->io_data,
-				   address + i * ARV_GVCP_DATA_SIZE_MAX,
-				   block_size, ((char *) buffer) + i * ARV_GVCP_DATA_SIZE_MAX, error))
-			return FALSE;
-	}
-
-	return TRUE;
-}
-
-static gboolean
-arv_gv_device_write_memory (ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error)
-{
-	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (ARV_GV_DEVICE (device));
-	int i;
-	gint32 block_size;
-
-	for (i = 0; i < (size + ARV_GVCP_DATA_SIZE_MAX - 1) / ARV_GVCP_DATA_SIZE_MAX; i++) {
-		block_size = MIN (ARV_GVCP_DATA_SIZE_MAX, size - i * ARV_GVCP_DATA_SIZE_MAX);
-		if (!_write_memory (priv->io_data,
-				    address + i * ARV_GVCP_DATA_SIZE_MAX,
-				    block_size, ((char *) buffer) + i * ARV_GVCP_DATA_SIZE_MAX, error))
-			return FALSE;
-	}
-
-	return TRUE;
-}
-
-static gboolean
-arv_gv_device_read_register (ArvDevice *device, guint64 address, guint32 *value, GError **error)
-{
-	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (ARV_GV_DEVICE (device));
-
-	return _read_register (priv->io_data, address, value, error);
-}
-
-static gboolean
-arv_gv_device_write_register (ArvDevice *device, guint64 address, guint32 value, GError **error)
-{
-	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (ARV_GV_DEVICE (device));
-
-	return _write_register (priv->io_data, address, value, error);
-}
-
 /**
  * arv_gv_device_get_stream_options:
  * @gv_device: a #ArvGvDevice
@@ -1400,10 +1400,10 @@ arv_gv_device_constructed (GObject *object)
 
 	priv->heartbeat_thread = g_thread_new ("arv_gv_heartbeat", arv_gv_device_heartbeat_thread, priv->heartbeat_data);
 
-	arv_device_read_register (ARV_DEVICE (gv_device), ARV_GVBS_DEVICE_MODE_OFFSET, &device_mode, NULL);
+	arv_gv_device_read_register (ARV_DEVICE (gv_device), ARV_GVBS_DEVICE_MODE_OFFSET, &device_mode, NULL);
 	priv->is_big_endian_device = (device_mode & ARV_GVBS_DEVICE_MODE_BIG_ENDIAN) != 0;
 
-	arv_device_read_register (ARV_DEVICE (gv_device), ARV_GVBS_GVCP_CAPABILITY_OFFSET, &capabilities, NULL);
+	arv_gv_device_read_register (ARV_DEVICE (gv_device), ARV_GVBS_GVCP_CAPABILITY_OFFSET, &capabilities, NULL);
 	priv->is_packet_resend_supported = (capabilities & ARV_GVBS_GVCP_CAPABILITY_PACKET_RESEND) != 0;
 	priv->is_write_memory_supported = (capabilities & ARV_GVBS_GVCP_CAPABILITY_WRITE_MEMORY) != 0;
 
