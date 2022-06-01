@@ -1153,6 +1153,48 @@ arv_gv_device_load_genicam (ArvGvDevice *gv_device, GError **error)
 	if (genicam != NULL) {
 		priv->genicam = arv_gc_new (ARV_DEVICE (gv_device), genicam, size);
 
+		arv_gc_set_default_node_data (priv->genicam, "GevCurrentIPConfigurationLLA",
+					      "<Boolean Name=\"GevCurrentIPConfigurationLLA\">"
+					      "  <pIsLocked>TLParamsLocked</pIsLocked>"
+					      "  <pValue>ArvGevCurrentIPConfigurationLLA</pValue>"
+					      "</Boolean>",
+					      "<MaskedIntReg Name=\"ArvGevCurrentIPConfigurationLLA\">"
+					      "  <Address>0x14</Address>"
+					      "  <Length>4</Length>"
+					      "  <AccessMode>RW</AccessMode>"
+					      "  <pPort>Device</pPort>"
+					      "  <Cachable>NoCache</Cachable>"
+					      "  <Bit>29</Bit>"
+					      "</MaskedIntReg>",
+					      NULL);
+		arv_gc_set_default_node_data (priv->genicam, "GevCurrentIPConfigurationDHCP",
+					      "<Boolean Name=\"GevCurrentIPConfigurationDHCP\">"
+					      "  <pIsLocked>TLParamsLocked</pIsLocked>"
+					      "  <pValue>ArvGevCurrentIPConfigurationDHCP</pValue>"
+					      "</Boolean>",
+					      "<MaskedIntReg Name=\"ArvGevCurrentIPConfigurationDHCP\">"
+					      "  <Address>0x14</Address>"
+					      "  <Length>4</Length>"
+					      "  <AccessMode>RW</AccessMode>"
+					      "  <pPort>Device</pPort>"
+					      "  <Cachable>NoCache</Cachable>"
+					      "  <Bit>30</Bit>"
+					      "</MaskedIntReg>",
+					      NULL);
+		arv_gc_set_default_node_data (priv->genicam, "GevCurrentIPConfigurationPersistentIP",
+					      "<Boolean Name=\"GevCurrentIPConfigurationPersistentIP\">"
+					      "  <pIsLocked>TLParamsLocked</pIsLocked>"
+					      "  <pValue>ArvGevCurrentIPConfigurationPersistentIP</pValue>"
+					      "</Boolean>",
+					      "<MaskedIntReg Name=\"ArvGevCurrentIPConfigurationPersistentIP\">"
+					      "  <Address>0x14</Address>"
+					      "  <Length>4</Length>"
+					      "  <AccessMode>RW</AccessMode>"
+					      "  <pPort>Device</pPort>"
+					      "  <Cachable>NoCache</Cachable>"
+					      "  <Bit>31</Bit>"
+					      "</MaskedIntReg>",
+					      NULL);
 		arv_gc_set_default_node_data (priv->genicam, "DeviceVendorName",
 					      "<StringReg Name=\"DeviceVendorName\">"
 					      "<DisplayName>Vendor Name</DisplayName>"
