@@ -26,7 +26,7 @@
  */
 
 #include <arvgcinteger.h>
-#include <arvgcfeaturenode.h>
+#include <arvgcfeaturenodeprivate.h>
 #include <arvgc.h>
 #include <arvmisc.h>
 #include <arvdebugprivate.h>
@@ -44,6 +44,9 @@ arv_gc_integer_get_value (ArvGcInteger *gc_integer, GError **error)
 	g_return_val_if_fail (ARV_IS_GC_INTEGER (gc_integer), 0);
 	g_return_val_if_fail (error == NULL || *error == NULL, 0);
 
+        if (!arv_gc_feature_node_check_read_access (ARV_GC_FEATURE_NODE (gc_integer), error))
+                return 0;
+
 	return ARV_GC_INTEGER_GET_IFACE (gc_integer)->get_value (gc_integer, error);
 }
 
@@ -56,6 +59,9 @@ arv_gc_integer_set_value (ArvGcInteger *gc_integer, gint64 value, GError **error
 
 	g_return_if_fail (ARV_IS_GC_INTEGER (gc_integer));
 	g_return_if_fail (error == NULL || *error == NULL);
+
+        if (!arv_gc_feature_node_check_write_access (ARV_GC_FEATURE_NODE (gc_integer), error))
+                return;
 
 	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (gc_integer));
 	g_return_if_fail (ARV_IS_GC (genicam));

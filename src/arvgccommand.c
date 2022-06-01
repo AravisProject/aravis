@@ -104,6 +104,9 @@ arv_gc_command_execute (ArvGcCommand *gc_command, GError **error)
 	if (gc_command->value == NULL)
 		return;
 
+        if (!arv_gc_feature_node_check_write_access (ARV_GC_FEATURE_NODE (gc_command), error))
+                return;
+
 	command_value = arv_gc_property_node_get_int64 (gc_command->command_value, &local_error);
 
 	if (local_error != NULL) {

@@ -939,30 +939,6 @@ arv_camera_get_frame_count_bounds (ArvCamera *camera, gint64 *min, gint64 *max, 
 	arv_camera_get_integer_bounds (camera, "AcquisitionFrameCount", min, max, error);
 }
 
-static void
-arv_camera_disable_all_triggers (ArvCamera *camera, GError **error)
-{
-	GError *local_error = NULL;
-        const char **triggers = NULL;
-        guint n_triggers;
-        unsigned int i;
-
-	g_return_if_fail (ARV_IS_CAMERA (camera));
-
-        triggers = arv_camera_dup_available_enumerations_as_strings (camera, "TriggerSelector", &n_triggers,
-                                                                     &local_error);
-
-        for (i = 0; i < n_triggers && local_error == NULL; i++) {
-                arv_camera_set_string (camera, "TriggerSelector", triggers[i], &local_error);
-                if (local_error == NULL)
-                        arv_camera_set_string (camera, "TriggerMode", "Off", &local_error);
-        }
-        g_free (triggers);
-
-	if (local_error != NULL)
-		g_propagate_error (error, local_error);
-}
-
 /**
  * arv_camera_set_frame_rate:
  * @camera: a #ArvCamera
@@ -998,7 +974,7 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate, GError **error)
 		return;
 	}
 
-        arv_camera_disable_all_triggers (camera, &local_error);
+	arv_camera_clear_triggers (camera, &local_error);
 	if (local_error != NULL) {
 		g_propagate_error (error, local_error);
 		return;
@@ -2673,7 +2649,8 @@ arv_camera_set_register_cache_policy (ArvCamera *camera, ArvRegisterCachePolicy 
  * Since: 0.8.8
  */
 
-void arv_camera_set_range_check_policy	(ArvCamera *camera, ArvRangeCheckPolicy policy)
+void
+arv_camera_set_range_check_policy (ArvCamera *camera, ArvRangeCheckPolicy policy)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
@@ -2681,6 +2658,31 @@ void arv_camera_set_range_check_policy	(ArvCamera *camera, ArvRangeCheckPolicy p
 
 	arv_device_set_range_check_policy (priv->device, policy);
 }
+
+/**
+ * arv_camera_set_access_check_policy:
+ * @camera: a #ArvCamera
+ * @policy: access check policy
+ *
+ * Sets the feature access check policy. When enabled, before being accessed, the actual read/write access of register
+ * is checked using AccessMode properties. On some devices, it helps to avoid forbidden writes to registers that may put
+ * the device in a bad state.
+ *
+ * <warning><para>Access check is disabled by default.</para></warning>
+ *
+ * Since: 0.8.22
+ */
+
+void
+arv_camera_set_access_check_policy (ArvCamera *camera, ArvAccessCheckPolicy policy)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_device_set_access_check_policy (priv->device, policy);
+}
+
 
 
 /**

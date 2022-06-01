@@ -185,6 +185,7 @@ ARV_API gboolean	arv_camera_is_feature_available			(ArvCamera *camera, const cha
 
 ARV_API void		arv_camera_set_register_cache_policy		(ArvCamera *camera, ArvRegisterCachePolicy policy);
 ARV_API void		arv_camera_set_range_check_policy		(ArvCamera *camera, ArvRangeCheckPolicy policy);
+ARV_API void            arv_camera_set_access_check_policy	        (ArvCamera *camera, ArvAccessCheckPolicy policy);
 
 /* GigEVision specific API */
 

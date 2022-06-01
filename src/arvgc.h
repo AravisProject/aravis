@@ -88,6 +88,21 @@ typedef enum {
 	ARV_RANGE_CHECK_POLICY_DEFAULT = ARV_RANGE_CHECK_POLICY_DISABLE
 } ArvRangeCheckPolicy;
 
+/**
+ * ArvAccessCheckPolicy:
+ * @ARV_ACCESS_CHECK_POLICY_DISABLE: never check the register access mode
+ * @ARV_ACCESS_CHECK_POLICY_ENABLE: always check the register access mode
+ * @ARV_ACCESSE_CHECK_POLICY_DEFAULT: default access check policy
+ *
+ * Since: 0.8.6
+ */
+
+typedef enum {
+	ARV_ACCESS_CHECK_POLICY_DISABLE,
+	ARV_ACCESS_CHECK_POLICY_ENABLE,
+	ARV_ACCESS_CHECK_POLICY_DEFAULT = ARV_ACCESS_CHECK_POLICY_DISABLE
+} ArvAccessCheckPolicy;
+
 #define ARV_TYPE_GC             (arv_gc_get_type ())
 ARV_API G_DECLARE_FINAL_TYPE (ArvGc, arv_gc, ARV, GC, ArvDomDocument)
 
@@ -97,7 +112,10 @@ ARV_API void				arv_gc_set_register_cache_policy	(ArvGc *genicam, ArvRegisterCac
 ARV_API ArvRegisterCachePolicy		arv_gc_get_register_cache_policy	(ArvGc *genicam);
 ARV_API void				arv_gc_set_range_check_policy		(ArvGc *genicam, ArvRangeCheckPolicy policy);
 ARV_API ArvRangeCheckPolicy		arv_gc_get_range_check_policy		(ArvGc *genicam);
-ARV_API void				arv_gc_set_default_node_data		(ArvGc *genicam, const char *node_name, ...) G_GNUC_NULL_TERMINATED;
+ARV_API void                            arv_gc_set_access_check_policy          (ArvGc *genicam, ArvAccessCheckPolicy policy);
+ARV_API ArvAccessCheckPolicy            arv_gc_get_access_check_policy          (ArvGc *genicam);
+ARV_API void				arv_gc_set_default_node_data		(ArvGc *genicam, const char *node_name, ...)
+                                                                                G_GNUC_NULL_TERMINATED;
 ARV_API ArvGcNode *			arv_gc_get_node				(ArvGc *genicam, const char *name);
 ARV_API ArvDevice *			arv_gc_get_device			(ArvGc *genicam);
 ARV_API void				arv_gc_set_buffer			(ArvGc *genicam, ArvBuffer *buffer);

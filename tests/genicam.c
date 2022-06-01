@@ -1012,8 +1012,7 @@ create_buffer_with_chunk_data (void)
 	guint32 *int_value;
 	guint8 *boolean_value;
 	guint offset;
-	double float_value;
-	int i;
+	guint64 *float_value;
 
 	size = 64 + 8 + 64 + 8 + 1 + 5 * sizeof (ArvChunkInfos);
 
@@ -1044,9 +1043,8 @@ create_buffer_with_chunk_data (void)
 	chunk_infos->id = GUINT32_TO_BE (0x12345679);
 	chunk_infos->size = GUINT32_TO_BE (8);
 
-	float_value = 1.1;
-	for (i = 0; i < sizeof (float_value); i++)
-		data[offset - i - 1] = ((char *) &float_value)[i];
+        float_value = (guint64 *) &data[offset - 8];
+	*float_value = GUINT64_TO_BE (0x3FF199999999999A); /* Hexadecimal representation of 1.1 as double */
 
 	offset -= 8 + sizeof (ArvChunkInfos);
 	chunk_infos = (ArvChunkInfos *) &data[offset];
