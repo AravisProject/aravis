@@ -63,6 +63,7 @@ static void arv_camera_get_integer_bounds_as_double (ArvCamera *camera, const ch
  * @ARV_CAMERA_VENDOR_POINT_GREY_FLIR: PointGrey / FLIR
  * @ARV_CAMERA_VENDOR_XIMEA: XIMEA GmbH
  * @ARV_CAMERA_VENDOR_MATRIX_VISION: Matrix Vision GmbH
+ * @ARV_CAMERA_VENDOR_IMPERX: Imperx, Inc
  */
 
 typedef enum {
@@ -74,7 +75,8 @@ typedef enum {
 	ARV_CAMERA_VENDOR_POINT_GREY_FLIR,
 	ARV_CAMERA_VENDOR_RICOH,
 	ARV_CAMERA_VENDOR_XIMEA,
-	ARV_CAMERA_VENDOR_MATRIX_VISION
+	ARV_CAMERA_VENDOR_MATRIX_VISION,
+	ARV_CAMERA_VENDOR_IMPERX
 } ArvCameraVendor;
 
 typedef enum {
@@ -88,7 +90,9 @@ typedef enum {
 	ARV_CAMERA_SERIES_POINT_GREY_FLIR,
 	ARV_CAMERA_SERIES_RICOH,
 	ARV_CAMERA_SERIES_XIMEA,
-	ARV_CAMERA_SERIES_MATRIX_VISION
+	ARV_CAMERA_SERIES_MATRIX_VISION,
+	ARV_CAMERA_SERIES_IMPERX_CHEETAH,
+	ARV_CAMERA_SERIES_IMPERX_OTHER
 } ArvCameraSeries;
 
 typedef struct {
@@ -1094,6 +1098,7 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate, GError **error)
 		case ARV_CAMERA_VENDOR_RICOH:
 		case ARV_CAMERA_VENDOR_XIMEA:
 		case ARV_CAMERA_VENDOR_MATRIX_VISION:
+		case ARV_CAMERA_VENDOR_IMPERX:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
                         if (local_error == NULL) {
                                 if (arv_camera_is_feature_available (camera, "AcquisitionFrameRateEnable", &local_error)) {
@@ -1155,6 +1160,7 @@ arv_camera_get_frame_rate (ArvCamera *camera, GError **error)
 		case ARV_CAMERA_VENDOR_BASLER:
 		case ARV_CAMERA_VENDOR_XIMEA:
 		case ARV_CAMERA_VENDOR_MATRIX_VISION:
+		case ARV_CAMERA_VENDOR_IMPERX:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
 			return arv_camera_get_float (camera,
 						     priv->has_acquisition_frame_rate ?
@@ -1232,6 +1238,7 @@ arv_camera_get_frame_rate_bounds (ArvCamera *camera, double *min, double *max, G
 		case ARV_CAMERA_VENDOR_BASLER:
 	        case ARV_CAMERA_VENDOR_XIMEA:
 		case ARV_CAMERA_VENDOR_MATRIX_VISION:
+		case ARV_CAMERA_VENDOR_IMPERX:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
 			arv_camera_get_float_bounds (camera,
 						     priv->has_acquisition_frame_rate ?
@@ -1512,6 +1519,7 @@ arv_camera_set_exposure_time (ArvCamera *camera, double exposure_time_us, GError
 		case ARV_CAMERA_SERIES_XIMEA:
 			arv_camera_set_integer (camera, "ExposureTime", exposure_time_us, &local_error);
 			break;
+		case ARV_CAMERA_SERIES_IMPERX_CHEETAH:
 		case ARV_CAMERA_SERIES_MATRIX_VISION:
 			arv_camera_set_string (camera, "ExposureMode", "Timed", &local_error);
 			if (local_error == NULL)
@@ -2000,6 +2008,7 @@ arv_camera_is_frame_rate_available (ArvCamera *camera, GError **error)
 		case ARV_CAMERA_VENDOR_BASLER:
 	        case ARV_CAMERA_VENDOR_XIMEA:
 		case ARV_CAMERA_VENDOR_MATRIX_VISION:
+		case ARV_CAMERA_VENDOR_IMPERX:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
 			return arv_camera_is_feature_available (camera,
 								priv->has_acquisition_frame_rate ?
@@ -2026,11 +2035,13 @@ arv_camera_is_exposure_time_available (ArvCamera *camera, GError **error)
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
-	switch (priv->vendor) {
-		case ARV_CAMERA_VENDOR_XIMEA:
+	switch (priv->series) {
+		case ARV_CAMERA_SERIES_XIMEA:
 			return arv_camera_is_feature_available (camera, "ExposureTime", error);
-		case ARV_CAMERA_VENDOR_RICOH:
+		case ARV_CAMERA_SERIES_RICOH:
 			return arv_camera_is_feature_available (camera, "ExposureTimeRaw", error);
+		case ARV_CAMERA_SERIES_IMPERX_CHEETAH:
+			return arv_camera_is_feature_available (camera, "ExposureMode", error);
 		default:
 			return arv_camera_is_feature_available (camera,
 								priv->has_exposure_time ?  "ExposureTime" : "ExposureTimeAbs",
@@ -3668,6 +3679,12 @@ arv_camera_constructed (GObject *object)
 	} else if (g_strcmp0 (vendor_name, "MATRIX VISION GmbH") == 0) {
 		vendor = ARV_CAMERA_VENDOR_MATRIX_VISION;
 		series = ARV_CAMERA_SERIES_MATRIX_VISION;
+	} else if (g_strcmp0 (vendor_name, "Imperx, Inc") == 0) {
+		vendor = ARV_CAMERA_VENDOR_IMPERX;
+		if (g_str_has_prefix (model_name, "POE-C"))
+			series = ARV_CAMERA_SERIES_IMPERX_CHEETAH;
+		else
+			series = ARV_CAMERA_SERIES_IMPERX_OTHER;
 	} else {
 		vendor = ARV_CAMERA_VENDOR_UNKNOWN;
 		series = ARV_CAMERA_SERIES_UNKNOWN;
