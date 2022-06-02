@@ -37,8 +37,19 @@
 #include <memory.h>
 
 typedef struct {
+	const char *vendor_selection;
+	const char *model_selection;
+} ArvGvLegacyInfos;
+
+static ArvGvLegacyInfos arv_gc_port_legacy_infos[] = {
+   { .vendor_selection = "Imperx", .model_selection = "IpxGEVCamera"},
+};
+
+typedef struct {
 	ArvGcPropertyNode *chunk_id;
 	ArvGcPropertyNode *event_id;
+	gboolean has_done_legacy_check;
+	gboolean has_legacy_infos;
 } ArvGcPortPrivate;
 
 struct _ArvGcPort {
@@ -95,13 +106,34 @@ _pre_remove_child (ArvDomNode *self, ArvDomNode *child)
 static gboolean
 _use_legacy_endianness_mechanism (ArvGcPort *port, guint64 length)
 {
-	ArvDomDocument *document;
-	ArvGcRegisterDescriptionNode *register_description;
+	if (!port->priv->has_done_legacy_check) {
+		ArvDomDocument *document;
+		ArvGcRegisterDescriptionNode *register_description;
+		const char *vendor_name;
+		const char *model_name;
+		int i;
 
-	document = arv_dom_node_get_owner_document (ARV_DOM_NODE (port));
-	register_description = ARV_GC_REGISTER_DESCRIPTION_NODE (arv_dom_document_get_document_element (document));
+		document = arv_dom_node_get_owner_document (ARV_DOM_NODE (port));
+		register_description = ARV_GC_REGISTER_DESCRIPTION_NODE (arv_dom_document_get_document_element (document));
+		vendor_name = arv_gc_register_description_node_get_vendor_name(register_description);
+		model_name = arv_gc_register_description_node_get_model_name(register_description);
 
-	return length == 4 && (arv_gc_register_description_node_compare_schema_version (register_description, 1, 1, 0) < 0);
+		if (arv_gc_register_description_node_compare_schema_version (register_description, 1, 1, 0) < 0) {
+			port->priv->has_legacy_infos = TRUE;
+		} else {
+			for (i = 0; i < G_N_ELEMENTS (arv_gc_port_legacy_infos); i++) {
+				if (g_pattern_match_simple(arv_gc_port_legacy_infos[i].vendor_selection, vendor_name) == TRUE &&
+					g_pattern_match_simple(arv_gc_port_legacy_infos[i].model_selection, model_name) == TRUE) {
+					port->priv->has_legacy_infos = TRUE;
+					break;
+				}
+			}
+		}
+
+		port->priv->has_done_legacy_check = TRUE;
+	}
+
+	return length == 4 && port->priv->has_legacy_infos;
 }
 
 void
@@ -250,6 +282,8 @@ arv_gc_port_init (ArvGcPort *gc_port)
 {
 	gc_port->priv = arv_gc_port_get_instance_private (gc_port);
 	gc_port->priv->chunk_id = 0;
+	gc_port->priv->has_done_legacy_check = FALSE;
+	gc_port->priv->has_legacy_infos = FALSE;
 }
 
 static void
