@@ -56,7 +56,7 @@ arv_buffer_payload_type_has_aoi (ArvBufferPayloadType payload_type)
  * @size: payload size
  * @preallocated: (transfer none): preallocated memory buffer
  * @user_data: (transfer none): a pointer to user data associated to this buffer
- * @user_data_destroy_func: an optional user data destroy callback
+ * @user_data_destroy_func: (nullable): an optional user data destroy callback
  *
  * Creates a new buffer for the storage of the video stream images.
  * The data space can be either preallocated, and the caller is responsible
