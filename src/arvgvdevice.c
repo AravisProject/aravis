@@ -881,14 +881,16 @@ arv_gv_device_set_persistent_ip (ArvGvDevice *gv_device, GInetAddress *ip, GInet
 	/* GigEVision specification does not support IPv6. */
 	if (g_inet_address_get_family (ip) != G_SOCKET_FAMILY_IPV4) {
 		local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER, "IP address is not IPv4 address");
+		g_propagate_error (error, local_error);
+		return;
 	}
 	if (g_inet_address_mask_get_family (mask) != G_SOCKET_FAMILY_IPV4) {
 		local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER, "Netmask is not IPv4 address");
+		g_propagate_error (error, local_error);
+		return;
 	}
 	if (g_inet_address_get_family (gateway) != G_SOCKET_FAMILY_IPV4) {
 		local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER, "Gateway address is not IPv4 address");
-	}
-	if (local_error != NULL) {
 		g_propagate_error (error, local_error);
 		return;
 	}

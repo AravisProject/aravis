@@ -3056,18 +3056,16 @@ arv_camera_gv_set_persistent_ip_from_string (ArvCamera *camera, const char *ip, 
 
 	if (ip_gi == NULL) {
 		local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER, "IP address could not be parsed: \"%s\"", ip);
-	}
-	if (mask_gi == NULL) {
+	}else if (mask_gi == NULL) {
 		local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER, "Netmask could not be parsed: \"%s\"", mask);
-	}
-	if (gateway_gi == NULL) {
+	}else if (gateway_gi == NULL) {
 		local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER, "Gateway address could not be parsed: \"%s\"", gateway);
 	}
 	if (local_error != NULL){
+		g_propagate_error (error, local_error);
 		g_object_unref (ip_gi);
 		g_object_unref (mask_gi);
 		g_object_unref (gateway_gi);
-		g_propagate_error (error, local_error);
 		return;
 	}
 
