@@ -803,7 +803,6 @@ arv_gv_device_set_packet_size_adjustment (ArvGvDevice *gv_device, ArvGvPacketSiz
 void
 arv_gv_device_get_persistent_ip (ArvGvDevice *gv_device, GInetAddress **ip, GInetAddressMask **mask, GInetAddress **gateway, GError **error)
 {
-	GError *local_error = NULL;
 	guint32 ip_int;
 	guint32 mask_int;
 	guint32 gateway_int;
@@ -813,13 +812,9 @@ arv_gv_device_get_persistent_ip (ArvGvDevice *gv_device, GInetAddress **ip, GIne
 	g_return_if_fail (ARV_IS_GV_DEVICE (gv_device));
 	g_return_if_fail (ip != NULL);
 
-	ip_int = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device), "GevPersistentIPAddress", &local_error);
-	mask_int = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device), "GevPersistentSubnetMask", &local_error);
-	gateway_int = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device), "GevPersistentDefaultGateway", &local_error);
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return;
-	}
+	ip_int = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device), "GevPersistentIPAddress", NULL);
+	mask_int = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device), "GevPersistentSubnetMask", NULL);
+	gateway_int = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device), "GevPersistentDefaultGateway", NULL);
 
 	buffer[0] = (ip_int >> 24) & 0xff;
 	buffer[1] = (ip_int >> 16) & 0xff;
@@ -833,7 +828,7 @@ arv_gv_device_get_persistent_ip (ArvGvDevice *gv_device, GInetAddress **ip, GIne
 		buffer[2] = (mask_int >> 8) & 0xff;
 		buffer[3] = mask_int & 0xff;
 		netmask = g_inet_address_new_from_bytes (buffer, G_SOCKET_FAMILY_IPV4);
-		*mask = g_inet_address_mask_new (netmask, 32, &local_error);
+		*mask = g_inet_address_mask_new (netmask, 32, NULL);
 		g_object_unref (netmask);
 	}
 
@@ -910,12 +905,10 @@ arv_gv_device_set_persistent_ip (ArvGvDevice *gv_device, GInetAddress *ip, GInet
 	}
 	gateway_int = ((guint32)gateway_bytes[0] << 24) | (gateway_bytes[1] << 16) | (gateway_bytes[2] << 8) | gateway_bytes[3];
 
-	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevPersistentIPAddress", ip_int, &local_error);
-	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevPersistentSubnetMask", mask_int, &local_error);
-	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevPersistentDefaultGateway", gateway_int, &local_error);
-	arv_gv_device_set_ip_configuration_mode (gv_device, ARV_GV_IP_CONFIGURATION_MODE_PERSISTENT_IP, &local_error);
-	if (local_error != NULL)
-		g_propagate_error (error, local_error);
+	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevPersistentIPAddress", ip_int, NULL);
+	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevPersistentSubnetMask", mask_int, NULL);
+	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevPersistentDefaultGateway", gateway_int, NULL);
+	arv_gv_device_set_ip_configuration_mode (gv_device, ARV_GV_IP_CONFIGURATION_MODE_PERSISTENT_IP, NULL);
 }
 
 /**
@@ -954,25 +947,22 @@ arv_gv_device_get_ip_configuration_mode (ArvGvDevice *gv_device, GError **error)
 void
 arv_gv_device_set_ip_configuration_mode (ArvGvDevice *gv_device, ArvGvIpConfigurationMode mode, GError **error)
 {
-	GError *local_error = NULL;
 	g_return_if_fail (ARV_IS_GV_DEVICE (gv_device));
 	g_return_if_fail ((mode == ARV_GV_IP_CONFIGURATION_MODE_DHCP) || (mode == ARV_GV_IP_CONFIGURATION_MODE_PERSISTENT_IP) || (mode == ARV_GV_IP_CONFIGURATION_MODE_LLA));
 
 	if (mode == ARV_GV_IP_CONFIGURATION_MODE_PERSISTENT_IP) {
 		/* Persistent IP: disable DHCP, enable persistent IP */
-		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device), "GevCurrentIPConfigurationDHCP", FALSE, &local_error);
-		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device), "GevCurrentIPConfigurationPersistentIP", TRUE, &local_error);
+		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device), "GevCurrentIPConfigurationDHCP", FALSE, NULL);
+		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device), "GevCurrentIPConfigurationPersistentIP", TRUE, NULL);
 	} else if (mode == ARV_GV_IP_CONFIGURATION_MODE_DHCP) {
 		/* DHCP: enable DHCP, disable persistent IP */
-		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device), "GevCurrentIPConfigurationDHCP", TRUE, &local_error);
-		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device), "GevCurrentIPConfigurationPersistentIP", FALSE, &local_error);
+		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device), "GevCurrentIPConfigurationDHCP", TRUE, NULL);
+		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device), "GevCurrentIPConfigurationPersistentIP", FALSE, NULL);
 	} else {
 		/* LLA: disable both */
-		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device), "GevCurrentIPConfigurationDHCP", FALSE, &local_error);
-		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device), "GevCurrentIPConfigurationPersistentIP", FALSE, &local_error);
+		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device), "GevCurrentIPConfigurationDHCP", FALSE, NULL);
+		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device), "GevCurrentIPConfigurationPersistentIP", FALSE, NULL);
 	}
-	if (local_error != NULL)
-		g_propagate_error (error, local_error);
 }
 
 /**
