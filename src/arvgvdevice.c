@@ -797,11 +797,13 @@ arv_gv_device_set_packet_size_adjustment (ArvGvDevice *gv_device, ArvGvPacketSiz
  *
  * Get the persistent IP address setting of device.
  *
- * Since: 0.8.x
+ * Since: 0.8.22
  */
 
 void
-arv_gv_device_get_persistent_ip (ArvGvDevice *gv_device, GInetAddress **ip, GInetAddressMask **mask, GInetAddress **gateway, GError **error)
+arv_gv_device_get_persistent_ip (ArvGvDevice *gv_device,
+                                 GInetAddress **ip, GInetAddressMask **mask, GInetAddress **gateway,
+                                 GError **error)
 {
 	guint32 be_ip_int;
 	guint32 be_mask_int;
@@ -815,7 +817,7 @@ arv_gv_device_get_persistent_ip (ArvGvDevice *gv_device, GInetAddress **ip, GIne
 
 	value = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device), "GevPersistentIPAddress", NULL);
 	be_ip_int = GUINT32_TO_BE(value);
-	
+
 	buffer[0] = be_ip_int & 0xff;
 	buffer[1] = (be_ip_int >> 8) & 0xff;
 	buffer[2] = (be_ip_int >> 16) & 0xff;
@@ -858,11 +860,13 @@ arv_gv_device_get_persistent_ip (ArvGvDevice *gv_device, GInetAddress **ip, GIne
  * Sets the persistent IP address to device.
  * Also disable DHCP then enable persistent IP mode.
  *
- * Since: 0.8.x
+ * Since: 0.8.22
  */
 
 void
-arv_gv_device_set_persistent_ip (ArvGvDevice *gv_device, GInetAddress *ip, GInetAddressMask *mask, GInetAddress *gateway, GError **error)
+arv_gv_device_set_persistent_ip (ArvGvDevice *gv_device,
+                                 GInetAddress *ip, GInetAddressMask *mask, GInetAddress *gateway,
+                                 GError **error)
 {
 	GError *local_error = NULL;
 	const guint8 *ip_bytes;
@@ -931,7 +935,7 @@ arv_gv_device_set_persistent_ip (ArvGvDevice *gv_device, GInetAddress *ip, GInet
  *
  * Returns: IP address configuration mode
  *
- * Since: 0.8.x
+ * Since: 0.8.22
  */
 
 ArvGvIpConfigurationMode
@@ -942,7 +946,6 @@ arv_gv_device_get_ip_configuration_mode (ArvGvDevice *gv_device, GError **error)
 	return arv_device_get_integer_feature_value (ARV_DEVICE (gv_device), "GevIPConfigurationStatus", error);
 }
 
-
 /**
  * arv_gv_device_set_ip_configuration_mode:
  * @gv_device: a #ArvGvDevice
@@ -952,14 +955,16 @@ arv_gv_device_get_ip_configuration_mode (ArvGvDevice *gv_device, GError **error)
  * Sets the IP address configuration mode.
  * Available modes are ARV_GV_IP_CONFIGURATION_MODE_DHCP, ARV_GV_IP_CONFIGURATION_MODE_PERSISTENT_IP, ARV_GV_IP_CONFIGURATION_MODE_LLA
  *
- * Since: 0.8.x
+ * Since: 0.8.22
  */
 
 void
 arv_gv_device_set_ip_configuration_mode (ArvGvDevice *gv_device, ArvGvIpConfigurationMode mode, GError **error)
 {
 	g_return_if_fail (ARV_IS_GV_DEVICE (gv_device));
-	g_return_if_fail ((mode == ARV_GV_IP_CONFIGURATION_MODE_DHCP) || (mode == ARV_GV_IP_CONFIGURATION_MODE_PERSISTENT_IP) || (mode == ARV_GV_IP_CONFIGURATION_MODE_LLA));
+	g_return_if_fail ((mode == ARV_GV_IP_CONFIGURATION_MODE_DHCP) ||
+                          (mode == ARV_GV_IP_CONFIGURATION_MODE_PERSISTENT_IP) ||
+                          (mode == ARV_GV_IP_CONFIGURATION_MODE_LLA));
 
 	if (mode == ARV_GV_IP_CONFIGURATION_MODE_PERSISTENT_IP) {
 		/* Persistent IP: disable DHCP, enable persistent IP */
