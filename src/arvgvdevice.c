@@ -864,7 +864,6 @@ arv_gv_device_get_persistent_ip (ArvGvDevice *gv_device, GInetAddress **ip, GIne
 void
 arv_gv_device_set_persistent_ip (ArvGvDevice *gv_device, GInetAddress *ip, GInetAddressMask *mask, GInetAddress *gateway, GError **error)
 {
-	GError *local_error = NULL;
 	const guint8 *ip_bytes;
 	guint mask_length;
 	const guint8 *gateway_bytes;
@@ -882,18 +881,18 @@ arv_gv_device_set_persistent_ip (ArvGvDevice *gv_device, GInetAddress *ip, GInet
 
 	/* GigEVision specification does not support IPv6. */
 	if (g_inet_address_get_family (ip) != G_SOCKET_FAMILY_IPV4) {
-		local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER, "IP address is not IPv4 address");
-		g_propagate_error (error, local_error);
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,
+				     "IP address is not IPv4 address");
 		return;
 	}
 	if (g_inet_address_mask_get_family (mask) != G_SOCKET_FAMILY_IPV4) {
-		local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER, "Netmask is not IPv4 address");
-		g_propagate_error (error, local_error);
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,
+					 "Netmask is not IPv4 address");
 		return;
 	}
 	if (g_inet_address_get_family (gateway) != G_SOCKET_FAMILY_IPV4) {
-		local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER, "Gateway address is not IPv4 address");
-		g_propagate_error (error, local_error);
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,
+					 "Gateway address is not IPv4 address");
 		return;
 	}
 
