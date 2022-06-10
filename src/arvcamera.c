@@ -2996,9 +2996,9 @@ arv_camera_gv_set_packet_size_adjustment (ArvCamera *camera, ArvGvPacketSizeAdju
 /**
  * arv_camera_gv_get_persistent_ip:
  * @camera: a #ArvCamera
- * @ip: a IP address placeholder
- * @mask: a netmask placeholder, %NULL to ignore
- * @gateway: a gateway IP address placeholder, %NULL to ignore
+ * @ip: (out): a IP address placeholder
+ * @mask: (out) (optional): a netmask placeholder, %NULL to ignore
+ * @gateway: (out) (optional): a gateway IP address placeholder, %NULL to ignore
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Get the persistent IP address setting of camera.
@@ -3053,9 +3053,9 @@ arv_camera_gv_set_persistent_ip_from_string (ArvCamera *camera, const char *ip, 
 	}
 	if (local_error != NULL){
 		g_propagate_error (error, local_error);
-		g_object_unref (ip_gi);
-		g_object_unref (mask_gi);
-		g_object_unref (gateway_gi);
+		g_clear_object (&ip_gi);
+		g_clear_object (&mask_gi);
+		g_clear_object (&gateway_gi);
 		return;
 	}
 

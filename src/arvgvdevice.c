@@ -790,9 +790,9 @@ arv_gv_device_set_packet_size_adjustment (ArvGvDevice *gv_device, ArvGvPacketSiz
 /**
  * arv_gv_device_get_persistent_ip:
  * @gv_device: a #ArvGvDevice
- * @ip: a IP address placeholder
- * @mask: a netmask placeholder, %NULL to ignore
- * @gateway: a gateway IP address placeholder, %NULL to ignore
+ * @ip: (out): a IP address placeholder
+ * @mask: (out) (optional): a netmask placeholder, %NULL to ignore
+ * @gateway: (out) (optional): a gateway IP address placeholder, %NULL to ignore
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Get the persistent IP address setting of device.
