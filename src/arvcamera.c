@@ -3013,11 +3013,13 @@ arv_camera_gv_set_packet_size_adjustment (ArvCamera *camera, ArvGvPacketSizeAdju
  *
  * Get the persistent IP address setting of camera.
  *
- * Since: 0.8.x
+ * Since: 0.8.22
  */
 
 void
-arv_camera_gv_get_persistent_ip (ArvCamera *camera, GInetAddress **ip, GInetAddressMask **mask, GInetAddress **gateway, GError **error)
+arv_camera_gv_get_persistent_ip (ArvCamera *camera,
+                                 GInetAddress **ip, GInetAddressMask **mask, GInetAddress **gateway,
+                                 GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
@@ -3036,11 +3038,13 @@ arv_camera_gv_get_persistent_ip (ArvCamera *camera, GInetAddress **ip, GInetAddr
  *
  * Sets the persistent IP address to camera.
  *
- * Since: 0.8.x
+ * Since: 0.8.22
  */
 
 void
-arv_camera_gv_set_persistent_ip_from_string (ArvCamera *camera, const char *ip, const char *mask, const char *gateway, GError **error)
+arv_camera_gv_set_persistent_ip_from_string (ArvCamera *camera,
+                                             const char *ip, const char *mask, const char *gateway,
+                                             GError **error)
 {
 	GError *local_error = NULL;
 	GInetAddress *ip_gi;
@@ -3055,11 +3059,14 @@ arv_camera_gv_set_persistent_ip_from_string (ArvCamera *camera, const char *ip, 
 	gateway_gi = g_inet_address_new_from_string (gateway);
 
 	if (ip_gi == NULL) {
-		local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER, "IP address could not be parsed: \"%s\"", ip);
+		local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,
+                                           "IP address could not be parsed: \"%s\"", ip);
 	}else if (mask_gi == NULL) {
-		local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER, "Netmask could not be parsed: \"%s\"", mask);
+		local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,
+                                           "Netmask could not be parsed: \"%s\"", mask);
 	}else if (gateway_gi == NULL) {
-		local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER, "Gateway address could not be parsed: \"%s\"", gateway);
+		local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,
+                                           "Gateway address could not be parsed: \"%s\"", gateway);
 	}
 	if (local_error != NULL){
 		g_propagate_error (error, local_error);
@@ -3085,11 +3092,13 @@ arv_camera_gv_set_persistent_ip_from_string (ArvCamera *camera, const char *ip, 
  *
  * Sets the persistent IP address to camera.
  *
- * Since: 0.8.x
+ * Since: 0.8.22
  */
- 
+
 void
-arv_camera_gv_set_persistent_ip (ArvCamera *camera, GInetAddress *ip, GInetAddressMask *mask, GInetAddress *gateway, GError **error)
+arv_camera_gv_set_persistent_ip (ArvCamera *camera,
+                                 GInetAddress *ip, GInetAddressMask *mask, GInetAddress *gateway,
+                                 GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
@@ -3107,14 +3116,14 @@ arv_camera_gv_set_persistent_ip (ArvCamera *camera, GInetAddress *ip, GInetAddre
  *
  * Returns: IP address configuration mode
  *
- * Since: 0.8.x
+ * Since: 0.8.22
  */
 
 ArvGvIpConfigurationMode
 arv_camera_gv_get_ip_configuration_mode(ArvCamera *camera, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
-	
+
 	g_return_val_if_fail (arv_camera_is_gv_device (camera), 0);
 
 	return arv_gv_device_get_ip_configuration_mode (ARV_GV_DEVICE (priv->device), error);
@@ -3127,16 +3136,17 @@ arv_camera_gv_get_ip_configuration_mode(ArvCamera *camera, GError **error)
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Sets the IP address configuration mode.
- * Available modes are ARV_GV_IP_CONFIGURATION_MODE_DHCP, ARV_GV_IP_CONFIGURATION_MODE_PERSISTENT_IP, ARV_GV_IP_CONFIGURATION_MODE_LLA
+ * Available modes are ARV_GV_IP_CONFIGURATION_MODE_DHCP, ARV_GV_IP_CONFIGURATION_MODE_PERSISTENT_IP,
+ * ARV_GV_IP_CONFIGURATION_MODE_LLA
  *
- * Since: 0.8.x
+ * Since: 0.8.22
  */
 
 void
 arv_camera_gv_set_ip_configuration_mode (ArvCamera *camera, ArvGvIpConfigurationMode mode, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
-	
+
 	g_return_if_fail (arv_camera_is_gv_device (camera));
 
 	arv_gv_device_set_ip_configuration_mode (ARV_GV_DEVICE (priv->device), mode, error);
