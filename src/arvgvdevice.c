@@ -788,6 +788,181 @@ arv_gv_device_set_packet_size_adjustment (ArvGvDevice *gv_device, ArvGvPacketSiz
 }
 
 /**
+ * arv_gv_device_get_persistent_ip:
+ * @gv_device: a #ArvGvDevice
+ * @ip: (out): a IP address placeholder
+ * @mask: (out) (optional): a netmask placeholder, %NULL to ignore
+ * @gateway: (out) (optional): a gateway IP address placeholder, %NULL to ignore
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Get the persistent IP address setting of device.
+ *
+ * Since: 0.8.x
+ */
+
+void
+arv_gv_device_get_persistent_ip (ArvGvDevice *gv_device, GInetAddress **ip, GInetAddressMask **mask, GInetAddress **gateway, GError **error)
+{
+	guint32 be_ip_int;
+	guint32 be_mask_int;
+	guint32 be_gateway_int;
+	guint32 value;
+	GInetAddress *netmask;
+
+	g_return_if_fail (ARV_IS_GV_DEVICE (gv_device));
+	g_return_if_fail (ip != NULL);
+
+	value = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device), "GevPersistentIPAddress", NULL);
+	be_ip_int = g_htonl(value);
+	
+	*ip = g_inet_address_new_from_bytes ((guint8 *) &be_ip_int, G_SOCKET_FAMILY_IPV4);
+
+	if (mask != NULL) {
+		value = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device), "GevPersistentSubnetMask", NULL);
+		be_mask_int = g_htonl(value);
+
+		netmask = g_inet_address_new_from_bytes ((guint8 *) &be_mask_int, G_SOCKET_FAMILY_IPV4);
+		*mask = g_inet_address_mask_new (netmask, 32, NULL);
+		g_object_unref (netmask);
+	}
+
+	if (gateway != NULL) {
+		value = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device), "GevPersistentDefaultGateway", NULL);
+		be_gateway_int = g_htonl(value);
+
+		*gateway = g_inet_address_new_from_bytes ((guint8 *) &be_gateway_int, G_SOCKET_FAMILY_IPV4);
+	}
+}
+
+/**
+ * arv_gv_device_set_persistent_ip:
+ * @gv_device: a #ArvGvDevice
+ * @ip: IPv4 address
+ * @mask: Netmask
+ * @gateway: Gateway IPv4 address
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Sets the persistent IP address to device.
+ * Also disable DHCP then enable persistent IP mode.
+ *
+ * Since: 0.8.x
+ */
+
+void
+arv_gv_device_set_persistent_ip (ArvGvDevice *gv_device, GInetAddress *ip, GInetAddressMask *mask, GInetAddress *gateway, GError **error)
+{
+	const guint8 *ip_bytes;
+	guint mask_length;
+	const guint8 *gateway_bytes;
+	guint32 ip_int;
+	guint32 mask_int;
+	guint32 gateway_int;
+	guint32 be_value;
+	const guint8 *mask_bytes;
+
+	g_return_if_fail (ARV_IS_GV_DEVICE (gv_device));
+
+	g_return_if_fail (G_IS_INET_ADDRESS (ip));
+	g_return_if_fail (G_IS_INET_ADDRESS_MASK (mask));
+	g_return_if_fail (G_IS_INET_ADDRESS (gateway));
+
+	/* GigEVision specification does not support IPv6. */
+	if (g_inet_address_get_family (ip) != G_SOCKET_FAMILY_IPV4) {
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,
+				     "IP address is not IPv4 address");
+		return;
+	}
+	if (g_inet_address_mask_get_family (mask) != G_SOCKET_FAMILY_IPV4) {
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,
+					 "Netmask is not IPv4 address");
+		return;
+	}
+	if (g_inet_address_get_family (gateway) != G_SOCKET_FAMILY_IPV4) {
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,
+					 "Gateway address is not IPv4 address");
+		return;
+	}
+
+	ip_bytes = g_inet_address_to_bytes (ip);
+	mask_length = g_inet_address_mask_get_length (mask);
+	mask_bytes = g_inet_address_to_bytes (g_inet_address_mask_get_address (mask));
+	gateway_bytes = g_inet_address_to_bytes (gateway);
+
+	be_value = ((guint32)ip_bytes[0] << 24) | (ip_bytes[1] << 16) | (ip_bytes[2] << 8) | ip_bytes[3];
+	ip_int = GUINT32_FROM_BE(be_value);
+	if (mask_length == 32) {
+		/* Bitmask format (255.255.255.0). */
+		be_value = ((guint32)mask_bytes[0] << 24) | (mask_bytes[1] << 16) | (mask_bytes[2] << 8) | mask_bytes[3];
+	} else {
+		/* CIDR(slash) format (192.168.1.0/24). */
+		be_value = ~(~(guint32)0 >> mask_length);
+	}
+	mask_int = GUINT32_FROM_BE(be_value);
+
+	be_value = ((guint32)gateway_bytes[0] << 24) | (gateway_bytes[1] << 16) | (gateway_bytes[2] << 8) | gateway_bytes[3];
+	gateway_int = GUINT32_FROM_BE(be_value);
+
+	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevPersistentIPAddress", ip_int, NULL);
+	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevPersistentSubnetMask", mask_int, NULL);
+	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevPersistentDefaultGateway", gateway_int, NULL);
+	arv_gv_device_set_ip_configuration_mode (gv_device, ARV_GV_IP_CONFIGURATION_MODE_PERSISTENT_IP, NULL);
+}
+
+/**
+ * arv_gv_device_get_ip_configuration_mode:
+ * @gv_device: a #ArvGvDevice
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Get the IP address configuration mode.
+ *
+ * Returns: IP address configuration mode
+ *
+ * Since: 0.8.x
+ */
+
+ArvGvIpConfigurationMode
+arv_gv_device_get_ip_configuration_mode (ArvGvDevice *gv_device, GError **error)
+{
+	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), 0);
+
+	return arv_device_get_integer_feature_value (ARV_DEVICE (gv_device), "GevIPConfigurationStatus", error);
+}
+
+
+/**
+ * arv_gv_device_set_ip_configuration_mode:
+ * @gv_device: a #ArvGvDevice
+ * @mode: IP address configuration mode
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Sets the IP address configuration mode.
+ * Available modes are ARV_GV_IP_CONFIGURATION_MODE_DHCP, ARV_GV_IP_CONFIGURATION_MODE_PERSISTENT_IP, ARV_GV_IP_CONFIGURATION_MODE_LLA
+ *
+ * Since: 0.8.x
+ */
+
+void
+arv_gv_device_set_ip_configuration_mode (ArvGvDevice *gv_device, ArvGvIpConfigurationMode mode, GError **error)
+{
+	g_return_if_fail (ARV_IS_GV_DEVICE (gv_device));
+	g_return_if_fail ((mode == ARV_GV_IP_CONFIGURATION_MODE_DHCP) || (mode == ARV_GV_IP_CONFIGURATION_MODE_PERSISTENT_IP) || (mode == ARV_GV_IP_CONFIGURATION_MODE_LLA));
+
+	if (mode == ARV_GV_IP_CONFIGURATION_MODE_PERSISTENT_IP) {
+		/* Persistent IP: disable DHCP, enable persistent IP */
+		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device), "GevCurrentIPConfigurationDHCP", FALSE, NULL);
+		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device), "GevCurrentIPConfigurationPersistentIP", TRUE, NULL);
+	} else if (mode == ARV_GV_IP_CONFIGURATION_MODE_DHCP) {
+		/* DHCP: enable DHCP, disable persistent IP */
+		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device), "GevCurrentIPConfigurationDHCP", TRUE, NULL);
+		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device), "GevCurrentIPConfigurationPersistentIP", FALSE, NULL);
+	} else {
+		/* LLA: disable both */
+		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device), "GevCurrentIPConfigurationDHCP", FALSE, NULL);
+		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device), "GevCurrentIPConfigurationPersistentIP", FALSE, NULL);
+	}
+}
+
+/**
  * arv_gv_device_is_controller:
  * @gv_device: a #ArvGvDevice
  *
@@ -967,6 +1142,48 @@ arv_gv_device_load_genicam (ArvGvDevice *gv_device, GError **error)
 	if (genicam != NULL) {
 		priv->genicam = arv_gc_new (ARV_DEVICE (gv_device), genicam, size);
 
+		arv_gc_set_default_node_data (priv->genicam, "GevCurrentIPConfigurationLLA",
+					      "<Boolean Name=\"GevCurrentIPConfigurationLLA\">"
+					      "  <pIsLocked>TLParamsLocked</pIsLocked>"
+					      "  <pValue>ArvGevCurrentIPConfigurationLLA</pValue>"
+					      "</Boolean>",
+					      "<MaskedIntReg Name=\"ArvGevCurrentIPConfigurationLLA\">"
+					      "  <Address>0x14</Address>"
+					      "  <Length>4</Length>"
+					      "  <AccessMode>RW</AccessMode>"
+					      "  <pPort>Device</pPort>"
+					      "  <Cachable>NoCache</Cachable>"
+					      "  <Bit>29</Bit>"
+					      "</MaskedIntReg>",
+					      NULL);
+		arv_gc_set_default_node_data (priv->genicam, "GevCurrentIPConfigurationDHCP",
+					      "<Boolean Name=\"GevCurrentIPConfigurationDHCP\">"
+					      "  <pIsLocked>TLParamsLocked</pIsLocked>"
+					      "  <pValue>ArvGevCurrentIPConfigurationDHCP</pValue>"
+					      "</Boolean>",
+					      "<MaskedIntReg Name=\"ArvGevCurrentIPConfigurationDHCP\">"
+					      "  <Address>0x14</Address>"
+					      "  <Length>4</Length>"
+					      "  <AccessMode>RW</AccessMode>"
+					      "  <pPort>Device</pPort>"
+					      "  <Cachable>NoCache</Cachable>"
+					      "  <Bit>30</Bit>"
+					      "</MaskedIntReg>",
+					      NULL);
+		arv_gc_set_default_node_data (priv->genicam, "GevCurrentIPConfigurationPersistentIP",
+					      "<Boolean Name=\"GevCurrentIPConfigurationPersistentIP\">"
+					      "  <pIsLocked>TLParamsLocked</pIsLocked>"
+					      "  <pValue>ArvGevCurrentIPConfigurationPersistentIP</pValue>"
+					      "</Boolean>",
+					      "<MaskedIntReg Name=\"ArvGevCurrentIPConfigurationPersistentIP\">"
+					      "  <Address>0x14</Address>"
+					      "  <Length>4</Length>"
+					      "  <AccessMode>RW</AccessMode>"
+					      "  <pPort>Device</pPort>"
+					      "  <Cachable>NoCache</Cachable>"
+					      "  <Bit>31</Bit>"
+					      "</MaskedIntReg>",
+					      NULL);
 		arv_gc_set_default_node_data (priv->genicam, "DeviceVendorName",
 					      "<StringReg Name=\"DeviceVendorName\">"
 					      "<DisplayName>Vendor Name</DisplayName>"
@@ -1007,6 +1224,30 @@ arv_gv_device_load_genicam (ArvGvDevice *gv_device, GError **error)
 					      "<AccessMode>RO</AccessMode>"
 					      "<pPort>Device</pPort>"
 					      "</StringReg>", NULL);
+		arv_gc_set_default_node_data (priv->genicam, "GevPersistentIPAddress",
+					      "<IntReg Name=\"GevPersistentIPAddress\">"
+					      "<Address>0x64c</Address>"
+					      "<Length>4</Length>"
+					      "<AccessMode>RW</AccessMode>"
+					      "<Endianess>BigEndian</Endianess>"
+					      "<pPort>Device</pPort>"
+					      "</IntReg>", NULL);
+		arv_gc_set_default_node_data (priv->genicam, "GevPersistentSubnetMask",
+					      "<IntReg Name=\"GevPersistentSubnetMask\">"
+					      "<Address>0x65c</Address>"
+					      "<Length>4</Length>"
+					      "<AccessMode>RW</AccessMode>"
+					      "<Endianess>BigEndian</Endianess>"
+					      "<pPort>Device</pPort>"
+					      "</IntReg>", NULL);
+		arv_gc_set_default_node_data (priv->genicam, "GevPersistentDefaultGateway",
+					      "<IntReg Name=\"GevPersistentDefaultGateway\">"
+					      "<Address>0x66c</Address>"
+					      "<Length>4</Length>"
+					      "<AccessMode>RW</AccessMode>"
+					      "<Endianess>BigEndian</Endianess>"
+					      "<pPort>Device</pPort>"
+					      "</IntReg>", NULL);
 		arv_gc_set_default_node_data (priv->genicam, "GevStreamChannelCount",
 					      "<IntReg Name=\"GevStreamChannelCount\">"
 					      "<Address>0x904</Address>"

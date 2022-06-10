@@ -56,6 +56,15 @@ typedef enum
 	ARV_GV_PACKET_SIZE_ADJUSTMENT_DEFAULT = ARV_GV_PACKET_SIZE_ADJUSTMENT_ON_FAILURE_ONCE
 } ArvGvPacketSizeAdjustment;
 
+typedef enum
+{
+	ARV_GV_IP_CONFIGURATION_MODE_NONE,
+	ARV_GV_IP_CONFIGURATION_MODE_PERSISTENT_IP,
+	ARV_GV_IP_CONFIGURATION_MODE_DHCP,
+	ARV_GV_IP_CONFIGURATION_MODE_LLA,
+	ARV_GV_IP_CONFIGURATION_MODE_FORCE_IP
+} ArvGvIpConfigurationMode;
+
 #define ARV_TYPE_GV_DEVICE             (arv_gv_device_get_type ())
 ARV_API G_DECLARE_FINAL_TYPE (ArvGvDevice, arv_gv_device, ARV, GV_DEVICE, ArvDevice)
 
@@ -78,6 +87,11 @@ ARV_API guint			arv_gv_device_auto_packet_size			(ArvGvDevice *gv_device, GError
 
 ARV_API ArvGvStreamOption	arv_gv_device_get_stream_options		(ArvGvDevice *gv_device);
 ARV_API void			arv_gv_device_set_stream_options		(ArvGvDevice *gv_device, ArvGvStreamOption options);
+
+ARV_API void			arv_gv_device_get_persistent_ip			(ArvGvDevice *gv_device, GInetAddress **ip, GInetAddressMask **mask, GInetAddress **gateway, GError **error);
+ARV_API void			arv_gv_device_set_persistent_ip			(ArvGvDevice *gv_device, GInetAddress *ip, GInetAddressMask *mask, GInetAddress *gateway, GError **error);
+ARV_API ArvGvIpConfigurationMode	arv_gv_device_get_ip_configuration_mode	(ArvGvDevice *gv_device, GError **error);
+ARV_API void			arv_gv_device_set_ip_configuration_mode		(ArvGvDevice *gv_device, ArvGvIpConfigurationMode mode, GError **error);
 
 ARV_API gboolean		arv_gv_device_is_controller			(ArvGvDevice *gv_device);
 
