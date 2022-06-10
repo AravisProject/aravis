@@ -808,42 +808,29 @@ arv_gv_device_get_persistent_ip (ArvGvDevice *gv_device, GInetAddress **ip, GIne
 	guint32 be_gateway_int;
 	guint32 value;
 	GInetAddress *netmask;
-	guint8 buffer[4];
 
 	g_return_if_fail (ARV_IS_GV_DEVICE (gv_device));
 	g_return_if_fail (ip != NULL);
 
 	value = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device), "GevPersistentIPAddress", NULL);
-	be_ip_int = GUINT32_TO_BE(value);
+	be_ip_int = g_htonl(value);
 	
-	buffer[0] = be_ip_int & 0xff;
-	buffer[1] = (be_ip_int >> 8) & 0xff;
-	buffer[2] = (be_ip_int >> 16) & 0xff;
-	buffer[3] = (be_ip_int >> 24) & 0xff;
-	*ip = g_inet_address_new_from_bytes (buffer, G_SOCKET_FAMILY_IPV4);
+	*ip = g_inet_address_new_from_bytes ((guint8 *) &be_ip_int, G_SOCKET_FAMILY_IPV4);
 
 	if (mask != NULL) {
 		value = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device), "GevPersistentSubnetMask", NULL);
-		be_mask_int = GUINT32_TO_BE(value);
+		be_mask_int = g_htonl(value);
 
-		buffer[0] = be_mask_int & 0xff;
-		buffer[1] = (be_mask_int >> 8) & 0xff;
-		buffer[2] = (be_mask_int >> 16) & 0xff;
-		buffer[3] = (be_mask_int >> 24) & 0xff;
-		netmask = g_inet_address_new_from_bytes (buffer, G_SOCKET_FAMILY_IPV4);
+		netmask = g_inet_address_new_from_bytes ((guint8 *) &be_mask_int, G_SOCKET_FAMILY_IPV4);
 		*mask = g_inet_address_mask_new (netmask, 32, NULL);
 		g_object_unref (netmask);
 	}
 
 	if (gateway != NULL) {
 		value = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device), "GevPersistentDefaultGateway", NULL);
-		be_gateway_int = GUINT32_TO_BE(value);
+		be_gateway_int = g_htonl(value);
 
-		buffer[0] = be_gateway_int & 0xff;
-		buffer[1] = (be_gateway_int >> 8) & 0xff;
-		buffer[2] = (be_gateway_int >> 16) & 0xff;
-		buffer[3] = (be_gateway_int >> 24) & 0xff;
-		*gateway = g_inet_address_new_from_bytes (buffer, G_SOCKET_FAMILY_IPV4);
+		*gateway = g_inet_address_new_from_bytes ((guint8 *) &be_gateway_int, G_SOCKET_FAMILY_IPV4);
 	}
 }
 
