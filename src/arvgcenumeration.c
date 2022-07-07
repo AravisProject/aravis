@@ -317,10 +317,6 @@ _get_int_value (ArvGcEnumeration *enumeration, GError **error)
 {
 	GError *local_error = NULL;
 	gint64 value;
-	gint64 *available_values;
-	unsigned n_values;
-	unsigned i;
-	gboolean found = FALSE;
 
 	g_return_val_if_fail (ARV_IS_GC_ENUMERATION (enumeration), 0);
 	g_return_val_if_fail (error == NULL || *error == NULL, 0);
@@ -335,30 +331,6 @@ _get_int_value (ArvGcEnumeration *enumeration, GError **error)
                                             arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
 		return 0;
 	}
-
-	available_values = arv_gc_enumeration_dup_available_int_values (enumeration, &n_values, &local_error);
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return value;
-	}
-
-	if (available_values == NULL) {
-		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_EMPTY_ENUMERATION,
-			     "[%s] No available entry",
-			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
-		return value;
-	}
-
-	for (i = 0; i < n_values; i++)
-		if (available_values[i] == value)
-			found = TRUE;
-
-	g_free (available_values);
-
-	if (!found)
-		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_OUT_OF_RANGE,
-			     "[%s] Value not found",
-			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
 
 	return value;
 }
