@@ -1018,11 +1018,9 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate, GError **error)
 		return;
 	}
 
-	arv_camera_clear_triggers (camera, &local_error);
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return;
-	}
+        /* Ignore the error in order to be able to change the frame rate during the acquisition, as some devices don't
+         * allow to change TriggerMode if the acquisition is already started. */
+	arv_camera_clear_triggers (camera, NULL);
 
 	arv_camera_get_frame_rate_bounds (camera, &minimum, &maximum, &local_error);
 	if (local_error != NULL) {
