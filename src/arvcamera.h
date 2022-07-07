@@ -57,6 +57,8 @@ ARV_API const char *	arv_camera_get_device_id		(ArvCamera *camera, GError **erro
 
 /* Image format control */
 
+ARV_API gboolean        arv_camera_is_region_offset_available    (ArvCamera *camera, GError **error);
+
 ARV_API void 		arv_camera_get_sensor_size 		(ArvCamera *camera, gint *width, gint *height, GError **error);
 ARV_API void		arv_camera_set_region			(ArvCamera *camera, gint x, gint y, gint width, gint height, GError **error);
 ARV_API void		arv_camera_get_region			(ArvCamera *camera, gint *x, gint *y, gint *width, gint *height, GError **error);

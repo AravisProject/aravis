@@ -114,6 +114,8 @@ typedef struct {
 	gboolean has_acquisition_frame_rate_auto;
 	gboolean has_acquisition_frame_rate_enabled;
 
+        gboolean has_region_offset;
+
 	GError *init_error;
 } ArvCameraPrivate;
 
@@ -256,6 +258,30 @@ arv_camera_get_sensor_size (ArvCamera *camera, gint *width, gint *height, GError
 		g_propagate_error (error, local_error);
 }
 
+gboolean
+arv_camera_is_region_offset_available (ArvCamera *camera, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+        GError *local_error = NULL;
+        gboolean has_offset_x, has_offset_y;
+
+        g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
+
+        if (!priv->has_region_offset)
+                return FALSE;
+
+        has_offset_x = arv_camera_is_feature_available (camera, "OffsetX", &local_error);
+        if (local_error == NULL)
+                has_offset_y = arv_camera_is_feature_available (camera, "OffsetY", &local_error);
+
+        if (local_error != NULL) {
+                g_propagate_error (error, local_error);
+                return FALSE;
+        }
+
+        return has_offset_x && has_offset_y;
+}
+
 /**
  * arv_camera_set_region:
  * @camera: a #ArvCamera
@@ -274,22 +300,29 @@ arv_camera_get_sensor_size (ArvCamera *camera, gint *width, gint *height, GError
 void
 arv_camera_set_region (ArvCamera *camera, gint x, gint y, gint width, gint height, GError **error)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 	GError *local_error = NULL;
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
-	if (x >= 0)
-		arv_camera_set_integer (camera, "OffsetX", 0, &local_error);
-	if (y >= 0 && local_error == NULL)
-		arv_camera_set_integer (camera, "OffsetY", 0, &local_error);
-	if (width > 0 && local_error == NULL)
-		arv_camera_set_integer (camera, "Width", width, &local_error);
-	if (height > 0 && local_error == NULL)
-		arv_camera_set_integer (camera, "Height", height, &local_error);
-	if (x >= 0 && local_error == NULL)
-		arv_camera_set_integer (camera, "OffsetX", x, &local_error);
-	if (y >= 0 && local_error == NULL)
-		arv_camera_set_integer (camera, "OffsetY", y, &local_error);
+        if (priv->has_region_offset) {
+                if (x >= 0)
+                        arv_camera_set_integer (camera, "OffsetX", 0, &local_error);
+                if (y >= 0 && local_error == NULL)
+                        arv_camera_set_integer (camera, "OffsetY", 0, &local_error);
+        }
+
+        if (width > 0 && local_error == NULL)
+                arv_camera_set_integer (camera, "Width", width, &local_error);
+        if (height > 0 && local_error == NULL)
+                arv_camera_set_integer (camera, "Height", height, &local_error);
+
+        if (priv->has_region_offset) {
+                if (x >= 0 && local_error == NULL)
+                        arv_camera_set_integer (camera, "OffsetX", x, &local_error);
+                if (y >= 0 && local_error == NULL)
+                        arv_camera_set_integer (camera, "OffsetY", y, &local_error);
+        }
 
 	if (local_error != NULL)
 		g_propagate_error (error, local_error);
@@ -312,14 +345,15 @@ arv_camera_set_region (ArvCamera *camera, gint x, gint y, gint width, gint heigh
 void
 arv_camera_get_region (ArvCamera *camera, gint *x, gint *y, gint *width, gint *height, GError **error)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 	GError *local_error = NULL;
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
 	if (x != NULL)
-		*x = arv_camera_get_integer (camera, "OffsetX", &local_error);
+		*x = priv->has_region_offset ? arv_camera_get_integer (camera, "OffsetX", &local_error) : 0;
 	if (y != NULL && local_error == NULL)
-		*y = arv_camera_get_integer (camera, "OffsetY", &local_error);
+		*y = priv->has_region_offset ? arv_camera_get_integer (camera, "OffsetY", &local_error) : 0;
 	if (width != NULL && local_error == NULL)
 		*width = arv_camera_get_integer (camera, "Width", &local_error);
 	if (height != NULL && local_error == NULL)
@@ -3680,6 +3714,9 @@ arv_camera_constructed (GObject *object)
 											  "AcquisitionFrameRateAuto"));
 	priv->has_acquisition_frame_rate_enabled = ARV_IS_GC_BOOLEAN (arv_device_get_feature (priv->device,
 											      "AcquisitionFrameRateEnabled"));
+
+        priv->has_region_offset = ARV_IS_GC_INTEGER(arv_device_get_feature(priv->device, "OffsetX")) &&
+                ARV_IS_GC_INTEGER(arv_device_get_feature(priv->device, "OffsetY"));
 }
 
 static void
