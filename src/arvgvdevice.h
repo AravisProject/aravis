@@ -90,6 +90,7 @@ ARV_API void			arv_gv_device_set_stream_options		(ArvGvDevice *gv_device, ArvGvS
 
 ARV_API void			arv_gv_device_get_persistent_ip			(ArvGvDevice *gv_device, GInetAddress **ip, GInetAddressMask **mask, GInetAddress **gateway, GError **error);
 ARV_API void			arv_gv_device_set_persistent_ip			(ArvGvDevice *gv_device, GInetAddress *ip, GInetAddressMask *mask, GInetAddress *gateway, GError **error);
+ARV_API void			arv_gv_device_set_persistent_ip_from_string	(ArvGvDevice *gv_device, const char *ip, const char *mask, const char *gateway, GError **error);
 ARV_API ArvGvIpConfigurationMode	arv_gv_device_get_ip_configuration_mode	(ArvGvDevice *gv_device, GError **error);
 ARV_API void			arv_gv_device_set_ip_configuration_mode		(ArvGvDevice *gv_device, ArvGvIpConfigurationMode mode, GError **error);
 

@@ -915,6 +915,59 @@ arv_gv_device_set_persistent_ip (ArvGvDevice *gv_device,
 	arv_gv_device_set_ip_configuration_mode (gv_device, ARV_GV_IP_CONFIGURATION_MODE_PERSISTENT_IP, NULL);
 }
 
+
+/**
+ * arv_gv_device_set_persistent_ip_from_string:
+ * @gv_device: a #ArvGvDevice
+ * @ip: IPv4 address in string format
+ * @mask: netmask in string format
+ * @gateway: Gateway IPv4 address in string format
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Sets the persistent IP address to device.
+ *
+ * Since: 0.8.22
+ */
+
+void
+arv_gv_device_set_persistent_ip_from_string (ArvGvDevice *gv_device,
+                                             const char *ip, const char *mask, const char *gateway,
+                                             GError **error)
+{
+	GError *local_error = NULL;
+	GInetAddress *ip_gi = NULL;
+	GInetAddressMask *mask_gi = NULL;
+	GInetAddress *gateway_gi = NULL;
+
+	g_return_if_fail (ARV_IS_GV_DEVICE (gv_device));
+
+	ip_gi = g_inet_address_new_from_string (ip);
+	mask_gi = g_inet_address_mask_new_from_string (mask, NULL);
+	gateway_gi = g_inet_address_new_from_string (gateway);
+
+	if (ip_gi == NULL) {
+		local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,
+                                           "IP address could not be parsed: \"%s\"", ip);
+	}else if (mask_gi == NULL) {
+		local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,
+                                           "Netmask could not be parsed: \"%s\"", mask);
+	}else if (gateway_gi == NULL) {
+		local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,
+                                           "Gateway address could not be parsed: \"%s\"", gateway);
+	}
+	if (local_error != NULL){
+		g_propagate_error (error, local_error);
+		g_clear_object (&ip_gi);
+		g_clear_object (&mask_gi);
+		g_clear_object (&gateway_gi);
+		return;
+	}
+	arv_gv_device_set_persistent_ip (gv_device, ip_gi, mask_gi, gateway_gi, error);
+	g_object_unref (ip_gi);
+	g_object_unref (mask_gi);
+	g_object_unref (gateway_gi);
+}
+
 /**
  * arv_gv_device_get_ip_configuration_mode:
  * @gv_device: a #ArvGvDevice
