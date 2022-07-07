@@ -1015,9 +1015,26 @@ arv_gv_device_set_persistent_ip_from_string (ArvGvDevice *gv_device,
 ArvGvIpConfigurationMode
 arv_gv_device_get_ip_configuration_mode (ArvGvDevice *gv_device, GError **error)
 {
+	gboolean dhcp_enabled;
+	gboolean persistent_ip_enabled;
+
 	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), 0);
 
-	return arv_device_get_integer_feature_value (ARV_DEVICE (gv_device), "GevIPConfigurationStatus", error);
+	if (arv_device_is_feature_available (ARV_DEVICE (gv_device), "GevIPConfigurationStatus", error))
+		return arv_device_get_integer_feature_value (ARV_DEVICE (gv_device), "GevIPConfigurationStatus", error);
+
+	dhcp_enabled = arv_device_get_boolean_feature_value( ARV_DEVICE (gv_device), "GevCurrentIPConfigurationDHCP", error);
+	if (*error != NULL)
+		return ARV_GV_IP_CONFIGURATION_MODE_NONE;
+	persistent_ip_enabled = arv_device_get_boolean_feature_value( ARV_DEVICE (gv_device), "GevCurrentIPConfigurationPersistentIP", error);
+	if (*error != NULL)
+		return ARV_GV_IP_CONFIGURATION_MODE_NONE;
+
+	if (dhcp_enabled && !persistent_ip_enabled)
+		return ARV_GV_IP_CONFIGURATION_MODE_DHCP;
+	if (!dhcp_enabled && persistent_ip_enabled)
+		return ARV_GV_IP_CONFIGURATION_MODE_PERSISTENT_IP;
+	return ARV_GV_IP_CONFIGURATION_MODE_LLA;
 }
 
 
