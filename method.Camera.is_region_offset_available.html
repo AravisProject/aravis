@@ -7,7 +7,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Aravis.Camera.set_integer</title>
+  <title>Aravis.Camera.is_region_offset_available</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <meta charset="utf-8" />
@@ -23,10 +23,10 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
 
   
-  <meta priority="og:title" content="Aravis.Camera.set_integer"/>
-  <meta priority="og:description" content="Reference for Aravis.Camera.set_integer"/>
-  <meta name="twitter:title" content="Aravis.Camera.set_integer"/>
-  <meta name="twitter:description" content="Reference for Aravis.Camera.set_integer"/>
+  <meta priority="og:title" content="Aravis.Camera.is_region_offset_available"/>
+  <meta priority="og:description" content="Reference for Aravis.Camera.is_region_offset_available"/>
+  <meta name="twitter:title" content="Aravis.Camera.is_region_offset_available"/>
+  <meta name="twitter:description" content="Reference for Aravis.Camera.is_region_offset_available"/>
 
 
   
@@ -268,7 +268,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.Camera.is_gv_device.html">is_gv_device</a>
   
-    <a class="method" href="method.Camera.is_region_offset_available.html">is_region_offset_available</a>
+    <a class="method current" href="method.Camera.is_region_offset_available.html">is_region_offset_available</a>
   
     <a class="method" href="method.Camera.is_software_trigger_supported.html">is_software_trigger_supported</a>
   
@@ -308,7 +308,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.Camera.set_gain_auto.html">set_gain_auto</a>
   
-    <a class="method current" href="method.Camera.set_integer.html">set_integer</a>
+    <a class="method" href="method.Camera.set_integer.html">set_integer</a>
   
     <a class="method" href="method.Camera.set_pixel_format.html">set_pixel_format</a>
   
@@ -353,7 +353,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <section id="main" class="content">
   <header>
     <h3>Method</h3>
-    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.Camera.html">Camera</a><span class="sep"></span>set_integer</h1>
+    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.Camera.html">Camera</a><span class="sep"></span>is_region_offset_available</h1>
   </header>
 
   <section>
@@ -362,16 +362,14 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Declaration
         <a class="anchor" href="#declaration"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/tree/src/arvcamera.h#L165">[src]</a>
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/tree/src/arvcamera.h#L60">[src]</a>
         
       </h4>
 
       <div class="docblock c-decl">
-        <pre><code><div class="highlight"><pre><span></span><span class="kt">void</span>
-<span class="n">arv_camera_set_integer</span> <span class="p">(</span>
-  <span class="n">ArvCamera</span><span class="o">*</span> <span class="n">camera</span><span class="p">,</span>
-  <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">feature</span><span class="p">,</span>
-  <span class="n">gint64</span> <span class="n">value</span><span class="p">,</span>
+        <pre><code><div class="highlight"><pre><span></span><span class="n">gboolean</span>
+<span class="n">arv_camera_is_region_offset_available</span> <span class="p">(</span>
+  <span class="n">ArvCamera</span><span class="o">*</span> <span class="n">camera</span>
   <span class="n">GError</span><span class="o">**</span> <span class="n">error</span>
 <span class="p">)</span>
 </pre></div>
@@ -384,19 +382,15 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Description
         <a class="anchor" href="#description"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/tree/src/arvcamera.c#L2265">[src]</a>
-        
       </h4>
 
       <div class="docblock">
-        <p>Set an integer feature&nbsp;value.</p>
+        No description available.
       </div>
 
       <div class="docblock">
         <table>
           
-          
-          <tr><td>Available since:</td><td>0.8.0</td></tr>
           
           
           
@@ -409,66 +403,33 @@ SPDX-License-Identifier: LGPL-2.1-or-later
     </div>
 
     
-    <div class="parameters toggle-wrapper">
-      <h4 id="parameters">
-        Parameters
-        <a href="#parameters" class="anchor"></a>
+
+    
+    <div class="return-value toggle-wrapper">
+      <h4 id="return-value">
+        Return value
+        <a href="#return-value" class="anchor"></a>
       </h4>
 
       <div class="docblock">
-        <table class="arguments">
-          
+        <table class="returns">
           <tr class="arg-name">
-            <td><code>feature</code></td>
-            <td><code>const char*</code></td>
+            <td>Returns:</td>
+            <td><code>gboolean</code></td>
           </tr>
           <tr class="arg-description">
             <td>&nbsp;</td>
-            <td><p>Feature&nbsp;name.</p></td>
+            <td>No description available.</td>
           </tr>
           
           
           
           
           
-          
-          
-          <tr><td>&nbsp;</td><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
-          <tr><td>&nbsp;</td><td>The value is a NUL terminated UTF-8 string.</td></tr>
-          
-          <tr class="arg-name">
-            <td><code>value</code></td>
-            <td><code>gint64</code></td>
-          </tr>
-          <tr class="arg-description">
-            <td>&nbsp;</td>
-            <td><p>New feature&nbsp;value.</p></td>
-          </tr>
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          <tr class="arg-name">
-            <td><code>error</code></td>
-            <td><code>GError **</code></td>
-          </tr>
-          <tr class="arg-description">
-            <td>&nbsp;</td>
-            <td>The return location for a <code>GError*</code>, or <code>NULL</code>.</td>
-          </tr>
           
         </table>
       </div>
     </div>
-    
-
     
 
   </section>
