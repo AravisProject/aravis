@@ -258,6 +258,16 @@ arv_camera_get_sensor_size (ArvCamera *camera, gint *width, gint *height, GError
 		g_propagate_error (error, local_error);
 }
 
+/**
+ * arv_camera_is_region_offset_available:
+ * @camera: a #ArvCamera
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: %TRUE% if OffsetX and OffsetY features are available.
+ *
+ * Since: 0.8.22
+ */
+
 gboolean
 arv_camera_is_region_offset_available (ArvCamera *camera, GError **error)
 {
