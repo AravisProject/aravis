@@ -90,6 +90,7 @@ description_content[] =
 "  values:                           list all available feature values\n"
 "  description [<feature>] ...:      show the full feature description\n"
 "  control <feature>[=<value>] ...:  read/write device features\n"
+"  network <setting>[=<value>]:      read/write network settings\n"
 "\n"
 "If no command is given, this utility will list all the available devices.\n"
 "For the control command, direct access to device registers is provided using a R[address] syntax"
@@ -100,7 +101,10 @@ description_content[] =
 "arv-tool-" ARAVIS_API_VERSION " control Width=128 Height=128 Gain R[0x10000]=0x10\n"
 "arv-tool-" ARAVIS_API_VERSION " features\n"
 "arv-tool-" ARAVIS_API_VERSION " description Width Height\n"
+"arv-tool-" ARAVIS_API_VERSION " network mode=PersistentIP\n"
+"arv-tool-" ARAVIS_API_VERSION " network ip=192.168.0.1 mask=255.255.255.0 gateway=192.168.0.254\n"
 "arv-tool-" ARAVIS_API_VERSION " -n Basler-210ab4 genicam";
+
 
 typedef enum {
 	ARV_TOOL_LIST_MODE_FEATURES,
@@ -395,6 +399,187 @@ arv_tool_control (int argc, char **argv, ArvDevice *device)
 }
 
 static void
+arv_tool_show_network_mode (ArvGvDevice* gv_device, GError** error)
+{
+        GError *local_error = NULL;
+        ArvGvIpConfigurationMode mode;
+
+        mode = arv_gv_device_get_ip_configuration_mode (gv_device, &local_error);
+        if (local_error != NULL) {
+                g_propagate_error (error, local_error);
+                return;
+        }
+
+        switch (mode) {
+                case ARV_GV_IP_CONFIGURATION_MODE_NONE:
+                        printf ("Mode: None\n");
+                        break;
+                case ARV_GV_IP_CONFIGURATION_MODE_PERSISTENT_IP:
+                        printf ("Mode: PersistentIP\n");
+                        break;
+                case ARV_GV_IP_CONFIGURATION_MODE_DHCP:
+                        printf ("Mode: DHCP\n");
+                        break;
+                case ARV_GV_IP_CONFIGURATION_MODE_LLA:
+                        printf ("Mode: LLA\n");
+                        break;
+                case ARV_GV_IP_CONFIGURATION_MODE_FORCE_IP:
+                        printf ("Mode: ForceIP\n");
+                        break;
+        }
+}
+
+static void
+arv_tool_show_current_ip (ArvGvDevice* gv_device, GError** error)
+{
+        GError *local_error = NULL;
+        GInetAddress* ip;
+        GInetAddressMask* mask;
+        GInetAddress* gateway;
+        gchar* ip_str;
+        gchar* mask_str;
+        gchar* gateway_str;
+
+        arv_gv_device_get_current_ip (gv_device, &ip, &mask, &gateway, &local_error);
+        if (local_error != NULL) {
+                g_propagate_error (error, local_error);
+                return;
+        }
+
+        ip_str = g_inet_address_to_string (ip);
+        mask_str = g_inet_address_mask_to_string (mask);
+        gateway_str = g_inet_address_to_string (gateway);
+
+        g_object_unref(ip);
+        g_object_unref(mask);
+        g_object_unref(gateway);
+
+        printf ("Current IP: %s\nCurrent Mask: %s\nCurrent Gateway: %s\n", ip_str, mask_str, gateway_str);
+
+        g_free (ip_str);
+        g_free (mask_str);
+        g_free (gateway_str);
+}
+
+static void
+arv_tool_show_persistent_ip (ArvGvDevice* gv_device, gboolean show_ip, gboolean show_mask, gboolean show_gateway, GError** error)
+{
+        GError *local_error = NULL;
+        GInetAddress* ip;
+        GInetAddressMask* mask;
+        GInetAddress* gateway;
+        gchar* ip_str;
+        gchar* mask_str;
+        gchar* gateway_str;
+
+        arv_gv_device_get_persistent_ip (gv_device, &ip, &mask, &gateway, &local_error);
+        if (local_error != NULL) {
+                g_propagate_error (error, local_error);
+                return;
+        }
+
+        ip_str = g_inet_address_to_string (ip);
+        mask_str = g_inet_address_mask_to_string (mask);
+        gateway_str = g_inet_address_to_string (gateway);
+
+        g_object_unref(ip);
+        g_object_unref(mask);
+        g_object_unref(gateway);
+
+        if (show_ip)
+                printf ("Persistent IP: %s\n", ip_str);
+        if (show_mask)
+                printf ("Persistent Mask: %s\n", mask_str);
+        if (show_gateway)
+                printf ("Persistent Gateway: %s\n", gateway_str);
+
+        g_free (ip_str);
+        g_free (mask_str);
+        g_free (gateway_str);
+}
+
+
+static void
+arv_tool_network (int argc, char **argv, ArvDevice *device)
+{
+        ArvGvDevice* gv_device = NULL;
+
+        if (!ARV_IS_GV_DEVICE (device)) {
+                printf ("This is not a GV device\n");
+                return;
+        }
+
+        gv_device = ARV_GV_DEVICE (device);
+        if (argv[2] == NULL) {
+                GError *error = NULL;
+
+                arv_tool_show_network_mode (gv_device, &error);
+                if (error == NULL) {
+                        arv_tool_show_current_ip (gv_device, &error);
+                }
+                if (error == NULL) {
+                        arv_tool_show_persistent_ip (gv_device, TRUE, TRUE, TRUE, &error);
+                }
+                if (error != NULL) {
+                        printf ("%s error: %s\n", argv[2], error->message);
+                        g_clear_error (&error);
+                }
+        } else {
+                int i;
+
+                for (i = 2; i < argc; i++) {
+                        GError *error = NULL;
+                        char **tokens;
+
+                        tokens = g_strsplit (argv[i], "=", 2);
+                        if (g_strcmp0 (tokens[0], "mode") == 0) {
+                                if (tokens[1] != NULL) {
+                                        ArvGvIpConfigurationMode mode;
+
+                                        if (g_ascii_strcasecmp (tokens[1], "PersistentIP") == 0)
+                                                mode = ARV_GV_IP_CONFIGURATION_MODE_PERSISTENT_IP;
+                                        else if (g_ascii_strcasecmp (tokens[1], "DHCP") == 0)
+                                                mode = ARV_GV_IP_CONFIGURATION_MODE_DHCP;
+                                        else if (g_ascii_strcasecmp (tokens[1], "LLA") == 0)
+                                                mode = ARV_GV_IP_CONFIGURATION_MODE_LLA;
+                                        else {
+                                                printf ("Unknown mode \"%s\". Avalaible modes: PersistentIP, DHCP and LLA\n", tokens[1]);
+                                                return;
+                                        }
+                                        arv_gv_device_set_ip_configuration_mode (gv_device, mode, &error);
+                                } else {
+                                        arv_tool_show_network_mode (gv_device, &error);
+                                }
+                        } else if (g_strcmp0 (tokens[0], "ip") == 0) {
+                                if (tokens[1] != NULL) {
+                                        arv_gv_device_set_persistent_ip_from_string (gv_device, tokens[1], NULL, NULL, &error);
+                                } else {
+                                        arv_tool_show_persistent_ip (gv_device, TRUE, FALSE, FALSE, &error);
+                                }
+                        } else if (g_strcmp0 (tokens[0], "mask") == 0) {
+                                if (tokens[1] != NULL) {
+                                        arv_gv_device_set_persistent_ip_from_string (gv_device, NULL, tokens[1], NULL, &error);
+                                } else {
+                                        arv_tool_show_persistent_ip (gv_device, FALSE, TRUE, FALSE, &error);
+                                }
+                        } else if (g_strcmp0 (tokens[0], "gateway") == 0) {
+                                if (tokens[1] != NULL) {
+                                        arv_gv_device_set_persistent_ip_from_string (gv_device, NULL, NULL, tokens[1], &error);
+                                } else {
+                                        arv_tool_show_persistent_ip (gv_device, FALSE, FALSE, TRUE, &error);
+                                }
+                        }
+                        if (error != NULL) {
+                                printf ("%s error: %s\n", argv[i], error->message);
+                                g_clear_error (&error);
+                                return;
+                        }
+                        g_strfreev (tokens);
+                }
+        }
+}
+
+static void
 arv_tool_execute_command (int argc, char **argv, ArvDevice *device,
 			  ArvRegisterCachePolicy register_cache_policy,
 			  ArvRangeCheckPolicy range_check_policy,
@@ -454,6 +639,8 @@ arv_tool_execute_command (int argc, char **argv, ArvDevice *device,
                 }
 	} else if (g_strcmp0 (command, "control") == 0) {
                 arv_tool_control (argc, argv, device);
+        } else if (g_strcmp0 (command, "network") == 0) {
+                arv_tool_network (argc, argv, device);
 	} else {
 		printf ("Unknown command\n");
 	}
