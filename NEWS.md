@@ -1,3 +1,23 @@
+Stable release 0.8.22
+=====================
+
+  * camera: new network command for IP settings (Romain, Masahiro)
+  * camera: don't fail if TriggerSelector is not available (Romain)
+  * camera: make region setting work even without Offset features (Emmanuel)
+  * camera: allow frame rate setting during acquisition on more devices #683 (Emmanuel)
+  * gstplugin: allow low frame rate with external triggers (Edgar)
+  * genicam: list for forced legacy mode (Romain)
+  * genicam: access mode check policy (Emmanuel)
+  * genicam: fix inifinite loop during availability check #678 (Emmanuel)
+  * u3v: use libusb device-left event for control lost detection (Emmanuel)
+  * genicam: fix information loss #656 (Emmanuel)
+  * fake_camera: add TriggerSoftware support (Romain)
+  * build: appdata fix (Chiara)
+  * build: disable documentation by default (Emmanuel)
+  * tests: fix ChunkFloat test on big endian platform #670 (Emmanuel)
+  * introspection: fix user_data_destroy_func annotations (Thomas)
+  * misc: memory leak and warning fixes (Emmanuel)
+
 Stable release 0.8.21
 =====================
 
