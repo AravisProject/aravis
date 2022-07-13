@@ -7,7 +7,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Aravis.GvDevice.get_timestamp_tick_frequency</title>
+  <title>Aravis.GvDevice.set_persistent_ip_from_string</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <meta charset="utf-8" />
@@ -23,10 +23,10 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
 
   
-  <meta priority="og:title" content="Aravis.GvDevice.get_timestamp_tick_frequency"/>
-  <meta priority="og:description" content="Reference for Aravis.GvDevice.get_timestamp_tick_frequency"/>
-  <meta name="twitter:title" content="Aravis.GvDevice.get_timestamp_tick_frequency"/>
-  <meta name="twitter:description" content="Reference for Aravis.GvDevice.get_timestamp_tick_frequency"/>
+  <meta priority="og:title" content="Aravis.GvDevice.set_persistent_ip_from_string"/>
+  <meta priority="og:description" content="Reference for Aravis.GvDevice.set_persistent_ip_from_string"/>
+  <meta name="twitter:title" content="Aravis.GvDevice.set_persistent_ip_from_string"/>
+  <meta name="twitter:description" content="Reference for Aravis.GvDevice.set_persistent_ip_from_string"/>
 
 
   
@@ -104,7 +104,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.GvDevice.get_stream_options.html">get_stream_options</a>
   
-    <a class="method current" href="method.GvDevice.get_timestamp_tick_frequency.html">get_timestamp_tick_frequency</a>
+    <a class="method" href="method.GvDevice.get_timestamp_tick_frequency.html">get_timestamp_tick_frequency</a>
   
     <a class="method" href="method.GvDevice.is_controller.html">is_controller</a>
   
@@ -118,7 +118,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.GvDevice.set_persistent_ip.html">set_persistent_ip</a>
   
-    <a class="method" href="method.GvDevice.set_persistent_ip_from_string.html">set_persistent_ip_from_string</a>
+    <a class="method current" href="method.GvDevice.set_persistent_ip_from_string.html">set_persistent_ip_from_string</a>
   
     <a class="method" href="method.GvDevice.set_stream_options.html">set_stream_options</a>
   
@@ -135,7 +135,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <section id="main" class="content">
   <header>
     <h3>Method</h3>
-    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.GvDevice.html">GvDevice</a><span class="sep"></span>get_timestamp_tick_frequency</h1>
+    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.GvDevice.html">GvDevice</a><span class="sep"></span>set_persistent_ip_from_string</h1>
   </header>
 
   <section>
@@ -144,14 +144,17 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Declaration
         <a class="anchor" href="#declaration"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/tree/src/arvgvdevice.h#L77">[src]</a>
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/tree/src/arvgvdevice.h#L94">[src]</a>
         
       </h4>
 
       <div class="docblock c-decl">
-        <pre><code><div class="highlight"><pre><span></span><span class="n">guint64</span>
-<span class="n">arv_gv_device_get_timestamp_tick_frequency</span> <span class="p">(</span>
-  <span class="n">ArvGvDevice</span><span class="o">*</span> <span class="n">gv_device</span>
+        <pre><code><div class="highlight"><pre><span></span><span class="kt">void</span>
+<span class="n">arv_gv_device_set_persistent_ip_from_string</span> <span class="p">(</span>
+  <span class="n">ArvGvDevice</span><span class="o">*</span> <span class="n">gv_device</span><span class="p">,</span>
+  <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">ip</span><span class="p">,</span>
+  <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">mask</span><span class="p">,</span>
+  <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">gateway</span><span class="p">,</span>
   <span class="n">GError</span><span class="o">**</span> <span class="n">error</span>
 <span class="p">)</span>
 </pre></div>
@@ -164,15 +167,19 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Description
         <a class="anchor" href="#description"></a>
         
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/tree/src/arvgvdevice.c#L998">[src]</a>
+        
       </h4>
 
       <div class="docblock">
-        No description available.
+        <p>Sets the persistent <span class="caps">IP</span> address to&nbsp;device.</p>
       </div>
 
       <div class="docblock">
         <table>
           
+          
+          <tr><td>Available since:</td><td>0.8.22</td></tr>
           
           
           
@@ -185,33 +192,84 @@ SPDX-License-Identifier: LGPL-2.1-or-later
     </div>
 
     
-
-    
-    <div class="return-value toggle-wrapper">
-      <h4 id="return-value">
-        Return value
-        <a href="#return-value" class="anchor"></a>
+    <div class="parameters toggle-wrapper">
+      <h4 id="parameters">
+        Parameters
+        <a href="#parameters" class="anchor"></a>
       </h4>
 
       <div class="docblock">
-        <table class="returns">
+        <table class="arguments">
+          
           <tr class="arg-name">
-            <td>Returns:</td>
-            <td><code>guint64</code></td>
+            <td><code>ip</code></td>
+            <td><code>const char*</code></td>
           </tr>
           <tr class="arg-description">
             <td>&nbsp;</td>
-            <td>No description available.</td>
+            <td><p>IPv4 address in string&nbsp;format.</p></td>
           </tr>
           
+          <tr><td>&nbsp;</td><td>The argument can be <code>NULL</code>.</td></tr>
           
           
           
           
+          
+          <tr><td>&nbsp;</td><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
+          <tr><td>&nbsp;</td><td>The value is a NUL terminated UTF-8 string.</td></tr>
+          
+          <tr class="arg-name">
+            <td><code>mask</code></td>
+            <td><code>const char*</code></td>
+          </tr>
+          <tr class="arg-description">
+            <td>&nbsp;</td>
+            <td><p>Netmask in string&nbsp;format.</p></td>
+          </tr>
+          
+          <tr><td>&nbsp;</td><td>The argument can be <code>NULL</code>.</td></tr>
+          
+          
+          
+          
+          
+          <tr><td>&nbsp;</td><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
+          <tr><td>&nbsp;</td><td>The value is a NUL terminated UTF-8 string.</td></tr>
+          
+          <tr class="arg-name">
+            <td><code>gateway</code></td>
+            <td><code>const char*</code></td>
+          </tr>
+          <tr class="arg-description">
+            <td>&nbsp;</td>
+            <td><p>Gateway IPv4 address in string&nbsp;format.</p></td>
+          </tr>
+          
+          <tr><td>&nbsp;</td><td>The argument can be <code>NULL</code>.</td></tr>
+          
+          
+          
+          
+          
+          <tr><td>&nbsp;</td><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
+          <tr><td>&nbsp;</td><td>The value is a NUL terminated UTF-8 string.</td></tr>
+          
+          
+          <tr class="arg-name">
+            <td><code>error</code></td>
+            <td><code>GError **</code></td>
+          </tr>
+          <tr class="arg-description">
+            <td>&nbsp;</td>
+            <td>The return location for a <code>GError*</code>, or <code>NULL</code>.</td>
+          </tr>
           
         </table>
       </div>
     </div>
+    
+
     
 
   </section>

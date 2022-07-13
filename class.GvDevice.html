@@ -105,6 +105,8 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.GvDevice.auto_packet_size.html">auto_packet_size</a>
   
+    <a class="method" href="method.GvDevice.get_current_ip.html">get_current_ip</a>
+  
     <a class="method" href="method.GvDevice.get_device_address.html">get_device_address</a>
   
     <a class="method" href="method.GvDevice.get_interface_address.html">get_interface_address</a>
@@ -130,6 +132,8 @@ SPDX-License-Identifier: LGPL-2.1-or-later
     <a class="method" href="method.GvDevice.set_packet_size_adjustment.html">set_packet_size_adjustment</a>
   
     <a class="method" href="method.GvDevice.set_persistent_ip.html">set_persistent_ip</a>
+  
+    <a class="method" href="method.GvDevice.set_persistent_ip_from_string.html">set_persistent_ip_from_string</a>
   
     <a class="method" href="method.GvDevice.set_stream_options.html">set_stream_options</a>
   
@@ -291,6 +295,14 @@ accordingly. This function relies on the GevSCPSFireTestPacket&nbsp;feature.</p>
         </div>
       
         <div class="">
+          <h6><a href="method.GvDevice.get_current_ip.html">arv_gv_device_get_current_ip</a></h6>
+          <div class="docblock">
+            <p>Get the current <span class="caps">IP</span> address setting of&nbsp;device.</p>
+          </div>
+          <div class="docblock"><p>Available since: 0.8.22</p></div>
+        </div>
+      
+        <div class="">
           <h6><a href="method.GvDevice.get_device_address.html">arv_gv_device_get_device_address</a></h6>
           <div class="docblock">
             No description available.
@@ -395,6 +407,14 @@ check fails, and only the first time <code>arv_device_create_stream()</code> is 
           <div class="docblock">
             <p>Sets the persistent <span class="caps">IP</span> address to device.
 Also disable <span class="caps">DHCP</span> then enable persistent <span class="caps">IP</span>&nbsp;mode.</p>
+          </div>
+          <div class="docblock"><p>Available since: 0.8.22</p></div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.GvDevice.set_persistent_ip_from_string.html">arv_gv_device_set_persistent_ip_from_string</a></h6>
+          <div class="docblock">
+            <p>Sets the persistent <span class="caps">IP</span> address to&nbsp;device.</p>
           </div>
           <div class="docblock"><p>Available since: 0.8.22</p></div>
         </div>
