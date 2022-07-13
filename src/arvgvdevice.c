@@ -788,6 +788,58 @@ arv_gv_device_set_packet_size_adjustment (ArvGvDevice *gv_device, ArvGvPacketSiz
 }
 
 /**
+ * arv_gv_device_get_current_ip:
+ * @gv_device: a #ArvGvDevice
+ * @ip: (out): a IP address placeholder
+ * @mask: (out) (optional): a netmask placeholder
+ * @gateway: (out) (optional): a gateway IP address placeholder
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Get the current IP address setting of device.
+ *
+ * Since: 0.8.22
+ */
+
+void
+arv_gv_device_get_current_ip (ArvGvDevice *gv_device,
+                              GInetAddress **ip, GInetAddressMask **mask, GInetAddress **gateway,
+                              GError **error)
+{
+	guint32 be_ip_int;
+	guint32 be_mask_int;
+	guint32 be_gateway_int;
+	guint32 value;
+	GInetAddress *netmask;
+
+	g_return_if_fail (ARV_IS_GV_DEVICE (gv_device));
+	g_return_if_fail (ip != NULL);
+
+	value = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device),
+                                                      "GevCurrentIPAddress", NULL);
+	be_ip_int = g_htonl(value);
+
+	*ip = g_inet_address_new_from_bytes ((guint8 *) &be_ip_int, G_SOCKET_FAMILY_IPV4);
+
+	if (mask != NULL) {
+		value = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device),
+                                                              "GevCurrentSubnetMask", NULL);
+		be_mask_int = g_htonl(value);
+
+		netmask = g_inet_address_new_from_bytes ((guint8 *) &be_mask_int, G_SOCKET_FAMILY_IPV4);
+		*mask = g_inet_address_mask_new (netmask, 32, NULL);
+		g_object_unref (netmask);
+	}
+
+	if (gateway != NULL) {
+		value = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device),
+                                                              "GevCurrentDefaultGateway", NULL);
+		be_gateway_int = g_htonl(value);
+
+		*gateway = g_inet_address_new_from_bytes ((guint8 *) &be_gateway_int, G_SOCKET_FAMILY_IPV4);
+	}
+}
+
+/**
  * arv_gv_device_get_persistent_ip:
  * @gv_device: a #ArvGvDevice
  * @ip: (out): a IP address placeholder
