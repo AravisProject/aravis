@@ -28,6 +28,7 @@ jobs:
       env:
         INPUT_CONANFILE: |
           [requires]
+          libiconv/1.17
           glib/2.70.0
           #gobject-introspection/1.69.0
           gstreamer/1.19.1
@@ -52,7 +53,7 @@ jobs:
           gst-plugins-base:shared=True
       run: |
         $Env:INPUT_CONANFILE | Out-File -FilePath ${{ github.workspace }}\conanfile.txt -Encoding utf8
-        conan install -s compiler="Visual Studio" -s compiler.version=${{ matrix.version }} -s arch=${{ matrix.arch }} -s build_type=${{ matrix.build_type_conan }} -b pcre -b missing -b cascade -if build .
+        conan install -s os="Windows" -s compiler="Visual Studio" -s compiler.version=${{ matrix.version }} -s arch=${{ matrix.arch }} -s build_type=${{ matrix.build_type_conan }} -b pcre -b missing -b cascade -if build .
     - name: meson
       run: |
         .\build\activate.ps1
