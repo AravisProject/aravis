@@ -40,9 +40,9 @@ typedef struct {
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvInterface, arv_interface, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvInterface))
 
 static void
-arv_interface_clear_device_ids (ArvInterface *interface)
+arv_interface_clear_device_ids (ArvInterface *iface)
 {
-	ArvInterfacePrivate *priv = arv_interface_get_instance_private (interface);
+	ArvInterfacePrivate *priv = arv_interface_get_instance_private (iface);
 	unsigned int i;
 
 	for (i = 0; i < priv->device_ids->len; i++) {
@@ -71,7 +71,7 @@ _compare_device_ids (ArvInterfaceDeviceIds **a, ArvInterfaceDeviceIds **b)
 
 /**
  * arv_interface_update_device_list:
- * @interface: a #ArvInterface
+ * @iface: a #ArvInterface
  *
  * Updates the internal list of available devices. This may change the
  * connection between a list index and a device ID.
@@ -80,21 +80,21 @@ _compare_device_ids (ArvInterfaceDeviceIds **a, ArvInterfaceDeviceIds **b)
  */
 
 void
-arv_interface_update_device_list (ArvInterface *interface)
+arv_interface_update_device_list (ArvInterface *iface)
 {
-	ArvInterfacePrivate *priv = arv_interface_get_instance_private (interface);
-	g_return_if_fail (ARV_IS_INTERFACE (interface));
+	ArvInterfacePrivate *priv = arv_interface_get_instance_private (iface);
+	g_return_if_fail (ARV_IS_INTERFACE (iface));
 
-	arv_interface_clear_device_ids (interface);
+	arv_interface_clear_device_ids (iface);
 
-	ARV_INTERFACE_GET_CLASS (interface)->update_device_list (interface, priv->device_ids);
+	ARV_INTERFACE_GET_CLASS (iface)->update_device_list (iface, priv->device_ids);
 
 	g_array_sort (priv->device_ids, (GCompareFunc) _compare_device_ids);
 }
 
 /**
  * arv_interface_get_n_devices:
- * @interface: a #ArvInterface
+ * @iface: a #ArvInterface
  *
  * Queries the number of available devices on this interface. Prior to this
  * call the @arv_interface_update_device_list function must be called. The list content will not
@@ -106,11 +106,11 @@ arv_interface_update_device_list (ArvInterface *interface)
  */
 
 unsigned int
-arv_interface_get_n_devices (ArvInterface *interface)
+arv_interface_get_n_devices (ArvInterface *iface)
 {
-	ArvInterfacePrivate *priv = arv_interface_get_instance_private (interface);
+	ArvInterfacePrivate *priv = arv_interface_get_instance_private (iface);
 
-	g_return_val_if_fail (ARV_IS_INTERFACE (interface), 0);
+	g_return_val_if_fail (ARV_IS_INTERFACE (iface), 0);
 	g_return_val_if_fail (priv->device_ids != NULL, 0);
 
 	return priv->device_ids->len;
@@ -118,7 +118,7 @@ arv_interface_get_n_devices (ArvInterface *interface)
 
 /**
  * arv_interface_get_device_id:
- * @interface: a #ArvInterface
+ * @iface: a #ArvInterface
  * @index: device index
  *
  * Queries the unique device id corresponding to index.  Prior to this
@@ -130,11 +130,11 @@ arv_interface_get_n_devices (ArvInterface *interface)
  */
 
 const char *
-arv_interface_get_device_id (ArvInterface *interface, unsigned int index)
+arv_interface_get_device_id (ArvInterface *iface, unsigned int index)
 {
-	ArvInterfacePrivate *priv = arv_interface_get_instance_private (interface);
+	ArvInterfacePrivate *priv = arv_interface_get_instance_private (iface);
 
-	g_return_val_if_fail (ARV_IS_INTERFACE (interface), 0);
+	g_return_val_if_fail (ARV_IS_INTERFACE (iface), 0);
 	g_return_val_if_fail (priv->device_ids != NULL, 0);
 
 	if (index >= priv->device_ids->len)
@@ -145,7 +145,7 @@ arv_interface_get_device_id (ArvInterface *interface, unsigned int index)
 
 /**
  * arv_interface_get_device_physical_id:
- * @interface: a #ArvInterface
+ * @iface: a #ArvInterface
  * @index: device index
  *
  * Queries the physical device id corresponding to index such
@@ -161,11 +161,11 @@ arv_interface_get_device_id (ArvInterface *interface, unsigned int index)
  */
 
 const char *
-arv_interface_get_device_physical_id (ArvInterface *interface, unsigned int index)
+arv_interface_get_device_physical_id (ArvInterface *iface, unsigned int index)
 {
-	ArvInterfacePrivate *priv = arv_interface_get_instance_private (interface);
+	ArvInterfacePrivate *priv = arv_interface_get_instance_private (iface);
 
-	g_return_val_if_fail (ARV_IS_INTERFACE (interface), 0);
+	g_return_val_if_fail (ARV_IS_INTERFACE (iface), 0);
 	g_return_val_if_fail (priv->device_ids != NULL, 0);
 
 	if (index >= priv->device_ids->len)
@@ -176,7 +176,7 @@ arv_interface_get_device_physical_id (ArvInterface *interface, unsigned int inde
 
 /**
  * arv_interface_get_device_address:
- * @interface: a #ArvInterface
+ * @iface: a #ArvInterface
  * @index: device index
  *
  * queries the device address (IP address in the case of an ethernet camera). Useful
@@ -191,11 +191,11 @@ arv_interface_get_device_physical_id (ArvInterface *interface, unsigned int inde
  */
 
 const char *
-arv_interface_get_device_address (ArvInterface *interface, unsigned int index)
+arv_interface_get_device_address (ArvInterface *iface, unsigned int index)
 {
-	ArvInterfacePrivate *priv = arv_interface_get_instance_private (interface);
+	ArvInterfacePrivate *priv = arv_interface_get_instance_private (iface);
 
-	g_return_val_if_fail (ARV_IS_INTERFACE (interface), 0);
+	g_return_val_if_fail (ARV_IS_INTERFACE (iface), 0);
 	g_return_val_if_fail (priv->device_ids != NULL, 0);
 
 	if (index >= priv->device_ids->len)
@@ -206,7 +206,7 @@ arv_interface_get_device_address (ArvInterface *interface, unsigned int index)
 
 /**
  * arv_interface_get_device_vendor:
- * @interface: a #ArvInterface
+ * @iface: a #ArvInterface
  * @index: device index
  *
  * Queries the device vendor.
@@ -220,11 +220,11 @@ arv_interface_get_device_address (ArvInterface *interface, unsigned int index)
  */
 
 const char *
-arv_interface_get_device_vendor (ArvInterface *interface, unsigned int index)
+arv_interface_get_device_vendor (ArvInterface *iface, unsigned int index)
 {
-	ArvInterfacePrivate *priv = arv_interface_get_instance_private (interface);
+	ArvInterfacePrivate *priv = arv_interface_get_instance_private (iface);
 
-	g_return_val_if_fail (ARV_IS_INTERFACE (interface), 0);
+	g_return_val_if_fail (ARV_IS_INTERFACE (iface), 0);
 	g_return_val_if_fail (priv->device_ids != NULL, 0);
 
 	if (index >= priv->device_ids->len)
@@ -235,7 +235,7 @@ arv_interface_get_device_vendor (ArvInterface *interface, unsigned int index)
 
 /**
  * arv_interface_get_device_manufacturer_info:
- * @interface: a #ArvInterface
+ * @iface: a #ArvInterface
  * @index: device index
  *
  * Queries the device manufacturer info.
@@ -249,11 +249,11 @@ arv_interface_get_device_vendor (ArvInterface *interface, unsigned int index)
  */
 
 const char *
-arv_interface_get_device_manufacturer_info (ArvInterface *interface, unsigned int index)
+arv_interface_get_device_manufacturer_info (ArvInterface *iface, unsigned int index)
 {
-	ArvInterfacePrivate *priv = arv_interface_get_instance_private (interface);
+	ArvInterfacePrivate *priv = arv_interface_get_instance_private (iface);
 
-	g_return_val_if_fail (ARV_IS_INTERFACE (interface), 0);
+	g_return_val_if_fail (ARV_IS_INTERFACE (iface), 0);
 	g_return_val_if_fail (priv->device_ids != NULL, 0);
 
 	if (index >= priv->device_ids->len)
@@ -264,7 +264,7 @@ arv_interface_get_device_manufacturer_info (ArvInterface *interface, unsigned in
 
 /**
  * arv_interface_get_device_model:
- * @interface: a #ArvInterface
+ * @iface: a #ArvInterface
  * @index: device index
  *
  * Queries the device model.
@@ -278,11 +278,11 @@ arv_interface_get_device_manufacturer_info (ArvInterface *interface, unsigned in
  */
 
 const char *
-arv_interface_get_device_model (ArvInterface *interface, unsigned int index)
+arv_interface_get_device_model (ArvInterface *iface, unsigned int index)
 {
-	ArvInterfacePrivate *priv = arv_interface_get_instance_private (interface);
+	ArvInterfacePrivate *priv = arv_interface_get_instance_private (iface);
 
-	g_return_val_if_fail (ARV_IS_INTERFACE (interface), 0);
+	g_return_val_if_fail (ARV_IS_INTERFACE (iface), 0);
 	g_return_val_if_fail (priv->device_ids != NULL, 0);
 
 	if (index >= priv->device_ids->len)
@@ -293,7 +293,7 @@ arv_interface_get_device_model (ArvInterface *interface, unsigned int index)
 
 /**
  * arv_interface_get_device_serial_nbr:
- * @interface: a #ArvInterface
+ * @iface: a #ArvInterface
  * @index: device index
  *
  * Queries the device serial.
@@ -307,11 +307,11 @@ arv_interface_get_device_model (ArvInterface *interface, unsigned int index)
  */
 
 const char *
-arv_interface_get_device_serial_nbr (ArvInterface *interface, unsigned int index)
+arv_interface_get_device_serial_nbr (ArvInterface *iface, unsigned int index)
 {
-	ArvInterfacePrivate *priv = arv_interface_get_instance_private (interface);
+	ArvInterfacePrivate *priv = arv_interface_get_instance_private (iface);
 
-	g_return_val_if_fail (ARV_IS_INTERFACE (interface), 0);
+	g_return_val_if_fail (ARV_IS_INTERFACE (iface), 0);
 	g_return_val_if_fail (priv->device_ids != NULL, 0);
 
 	if (index >= priv->device_ids->len)
@@ -322,7 +322,7 @@ arv_interface_get_device_serial_nbr (ArvInterface *interface, unsigned int index
 
 /**
  * arv_interface_get_device_protocol:
- * @interface: a #ArvInterface
+ * @iface: a #ArvInterface
  * @index: device index
  *
  * Queries the device protocol. Possible values are 'USB3Vision', 'GigEVision'
@@ -337,16 +337,16 @@ arv_interface_get_device_serial_nbr (ArvInterface *interface, unsigned int index
  */
 
 const char *
-arv_interface_get_device_protocol (ArvInterface *interface, unsigned int index)
+arv_interface_get_device_protocol (ArvInterface *iface, unsigned int index)
 {
-	g_return_val_if_fail (ARV_IS_INTERFACE (interface), NULL);
+	g_return_val_if_fail (ARV_IS_INTERFACE (iface), NULL);
 
-	return ARV_INTERFACE_GET_CLASS (interface)->protocol;
+	return ARV_INTERFACE_GET_CLASS (iface)->protocol;
 }
 
 /**
  * arv_interface_open_device:
- * @interface: a #ArvInterface
+ * @iface: a #ArvInterface
  * @device_id: (allow-none): device unique id
  * @error: a #GError placeholder, %NULL to ignore
  *
@@ -359,17 +359,17 @@ arv_interface_get_device_protocol (ArvInterface *interface, unsigned int index)
  */
 
 ArvDevice *
-arv_interface_open_device (ArvInterface *interface, const char *device_id, GError **error)
+arv_interface_open_device (ArvInterface *iface, const char *device_id, GError **error)
 {
-	g_return_val_if_fail (ARV_IS_INTERFACE (interface), NULL);
+	g_return_val_if_fail (ARV_IS_INTERFACE (iface), NULL);
 
-	return ARV_INTERFACE_GET_CLASS (interface)->open_device (interface, device_id, error);
+	return ARV_INTERFACE_GET_CLASS (iface)->open_device (iface, device_id, error);
 }
 
 static void
-arv_interface_init (ArvInterface *interface)
+arv_interface_init (ArvInterface *iface)
 {
-	ArvInterfacePrivate *priv = arv_interface_get_instance_private (interface);
+	ArvInterfacePrivate *priv = arv_interface_get_instance_private (iface);
 
 	priv->device_ids = g_array_new (FALSE, TRUE, sizeof (ArvInterfaceDeviceIds *));
 }
@@ -377,12 +377,12 @@ arv_interface_init (ArvInterface *interface)
 static void
 arv_interface_finalize (GObject *object)
 {
-	ArvInterface *interface = ARV_INTERFACE (object);
-	ArvInterfacePrivate *priv = arv_interface_get_instance_private (interface);
+	ArvInterface *iface = ARV_INTERFACE (object);
+	ArvInterfacePrivate *priv = arv_interface_get_instance_private (iface);
 
 	G_OBJECT_CLASS (arv_interface_parent_class)->finalize (object);
 
-	arv_interface_clear_device_ids (interface);
+	arv_interface_clear_device_ids (iface);
 	g_array_free (priv->device_ids, TRUE);
 	priv->device_ids = NULL;
 }
