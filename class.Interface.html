@@ -396,11 +396,11 @@ its value set through g_object_set_property(), g_object_set(), et&nbsp;al.</p>
         <pre><code>struct AravisInterfaceClass {
   GObjectClass parent_class;
   void (* update_device_list) (
-    ArvInterface* interface,
+    ArvInterface* iface,
     GArray* device_ids
   );
   ArvDevice* (* open_device) (
-    ArvInterface* interface,
+    ArvInterface* iface,
     const char* device_id,
     GError** error
   );
@@ -431,7 +431,7 @@ its value set through g_object_set_property(), g_object_set(), et&nbsp;al.</p>
         <tr>
           <td style="vertical-align:top"><code>update_device_list</code></td>
           <td style="vertical-align:top"><pre><code>void (* update_device_list) (
-    ArvInterface* interface,
+    ArvInterface* iface,
     GArray* device_ids
   )</code></pre></td>
         </tr>
@@ -443,7 +443,7 @@ its value set through g_object_set_property(), g_object_set(), et&nbsp;al.</p>
         <tr>
           <td style="vertical-align:top"><code>open_device</code></td>
           <td style="vertical-align:top"><pre><code>ArvDevice* (* open_device) (
-    ArvInterface* interface,
+    ArvInterface* iface,
     const char* device_id,
     GError** error
   )</code></pre></td>
