@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2019 Emmanuel Pacaud
+ * Copyright © 2009-2022 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,7 +18,7 @@
  * Boston, MA 02110-1301, USA.
  *
  * Author:
- * 	Emmanuel Pacaud <emmanuel@gnome.org>
+ * 	Emmanuel Pacaud <emmanuel.pacaud@free.fr>
  */
 
 #ifndef ARV_DOM_NODE_LIST_H
