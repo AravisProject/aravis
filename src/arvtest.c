@@ -819,7 +819,8 @@ arv_test_run (ArvTest *test, unsigned int n_iterations,
               const char *camera_selection,
               const char *test_selection,
 	      ArvUvUsbMode usb_mode,
-              gboolean cache_check)
+              gboolean cache_check,
+              gboolean packet_socket)
 {
         GRegex *camera_regex;
         GRegex *test_regex;
@@ -855,6 +856,12 @@ arv_test_run (ArvTest *test, unsigned int n_iterations,
 
 					if (arv_camera_is_uv_device (test_camera->camera))
 						arv_camera_uv_set_usb_mode (test_camera->camera, usb_mode);
+
+                                        if (arv_camera_is_gv_device(test_camera->camera))
+                                                arv_camera_gv_set_stream_options (test_camera->camera,
+                                                                                  packet_socket ?
+                                                                                  ARV_GV_STREAM_OPTION_NONE :
+                                                                                  ARV_GV_STREAM_OPTION_PACKET_SOCKET_DISABLED);
 
                                         for (j = 0; j < G_N_ELEMENTS (tests); j++) {
                                                 if (g_regex_match (test_regex, tests[j].name, 0, NULL)) {
@@ -939,6 +946,7 @@ static char *arv_option_configuration = NULL;
 static char *arv_option_debug_domains = NULL;
 static char *arv_option_uv_usb_mode = NULL;
 static gboolean arv_option_cache_check = FALSE;
+static gboolean arv_option_packet_socket = FALSE;
 
 static const GOptionEntry arv_option_entries[] =
 {
@@ -972,6 +980,11 @@ static const GOptionEntry arv_option_entries[] =
 		&arv_option_cache_check,		"Register cache check",
 		NULL
         },
+	{
+		"packet-socket",			'\0', 0, G_OPTION_ARG_NONE,
+		&arv_option_packet_socket,		"Enable use of packet socket",
+		NULL
+	},
 	{
 		"debug", 				'd', 0, G_OPTION_ARG_STRING,
 		&arv_option_debug_domains, 		NULL,
@@ -1043,7 +1056,8 @@ main (int argc, char **argv)
                            arv_option_camera_selection,
                            arv_option_test_selection,
                            usb_mode,
-                           arv_option_cache_check))
+                           arv_option_cache_check,
+                           arv_option_packet_socket))
                 success = FALSE;
 
         g_clear_object (&test);
