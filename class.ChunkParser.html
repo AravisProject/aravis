@@ -151,7 +151,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
           Description
           <a href="#description" class="anchor"></a>
           
-          <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/tree/src/arvchunkparser.c#L23">[src]</a>
+          <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvchunkparser.c#L23">[src]</a>
           
         </h4>
 
@@ -160,22 +160,14 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 }</pre></code>
 
         <div class="docblock">
-          <p><code>ArvChunkParser</code> provides a class for the instantiation of chunk parsers used
-for the extraction of chunk data stored in the stream&nbsp;payload.</p>
-<p>Chunks are tagged blocks of data stored in a <code>ArvBuffer</code> containing
-a #ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA payload. The tags allow a chunk
-parser to dissect the data payload into its elements and to identify the&nbsp;content.</p>
-<p>Chunk data are enabled using either <code>arv_camera_set_chunks()</code> or
-arv_camera_set_chunk_mode(). Both functions are simple convenience wrappers
-that handle the setting of ChunkModeActive, ChunkSelector and ChunkEnable
+          <p><a href="class.ChunkParser.html"><code>ArvChunkParser</code></a> provides a class for the instantiation of chunk parsers used for the extraction of chunk data
+stored in the stream&nbsp;payload.</p>
+<p>Chunks are tagged blocks of data stored in a <a href="class.Buffer.html"><code>ArvBuffer</code></a> containing a <code>ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA</code>
+payload. The tags allow a chunk parser to dissect the data payload into its elements and to identify the&nbsp;content.</p>
+<p>Chunk data are enabled using either <a href="method.Camera.set_chunks.html"><code>arv_camera_set_chunks()</code></a> or <a href="method.Camera.set_chunk_mode.html"><code>arv_camera_set_chunk_mode()</code></a>. Both
+functions are simple convenience wrappers that handle the setting of ChunkModeActive, ChunkSelector and ChunkEnable
 <span class="caps">GENICAM</span>&nbsp;features.</p>
-<p><example id="arv-chunk-parser-test"><title>Example use of the ArvChunkParser <span class="caps">API</span></title>
-<programlisting>
-<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" href="../../../../tests/arvchunkparsertest.c">
-  <xi:fallback><span class="caps">FIXME</span>: <span class="caps">MISSING</span> <span class="caps">XINCLUDE</span> <span class="caps">CONTENT</span></xi:fallback>
-</xi:include>
-</programlisting>
-</example></p>
+<p>Here is an example of this <span class="caps">API</span> in use: <a href="https://github.com/AravisProject/aravis/blob/main/tests/arvchunkparsertest.c">tests/arvchunkparsertest.c</a></p>
         </div>
 
         <div class="docblock">

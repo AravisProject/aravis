@@ -122,7 +122,11 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   <h5>Dependencies</h5>
   <div class="links">
   
+    <a href="https://docs.gtk.org/glib/" class="external">GLib</a>
+  
     <a href="https://docs.gtk.org/gobject/" class="external">GObject</a>
+  
+    <a href="https://docs.gtk.org/gio/" class="external">GIO</a>
   
   </div>
 </div>
@@ -175,6 +179,15 @@ SPDX-License-Identifier: LGPL-2.1-or-later
       <div class="docblock">
         <table>
         
+          
+          <tr>
+            <td><strong>GLib</strong>&mdash;2.0</td>
+            <td>Portable utility library</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td><a href="https://docs.gtk.org/glib/" class="external">Browse documentation</a></td>
+          </tr>
           
         
           
@@ -252,12 +265,8 @@ SPDX-License-Identifier: LGPL-2.1-or-later
           <tr class="section-item">
             <td><a title="Buffer" class="symbol" href="class.Buffer.html">Buffer</a></td>
             
-            <td class="docblock-summary"><p><code>ArvBuffer</code> provides a class for the instantiation of buffers used for the
-storage of the separate images of the video stream. The actual data space
-may either be allocated by <code>ArvBuffer</code> during an object instatiation, of
-preallocated. <code>ArvBuffer</code> also allows the transmission of image metadata,
-such as offsets and size of the transmitted region of interrest, pixel
-format and time&nbsp;stamp.</p></td>
+            <td class="docblock-summary"><p><code>ArvBuffer</code> provides a class for the instantiation of buffers used for the storage of the separate images of
+the video&nbsp;stream.</p></td>
             
           </tr>
           
@@ -273,8 +282,8 @@ and <code>ArvGc</code> for a more advanced use of the Aravis&nbsp;library.</p></
           <tr class="section-item">
             <td><a title="ChunkParser" class="symbol" href="class.ChunkParser.html">ChunkParser</a></td>
             
-            <td class="docblock-summary"><p><code>ArvChunkParser</code> provides a class for the instantiation of chunk parsers used
-for the extraction of chunk data stored in the stream&nbsp;payload.</p></td>
+            <td class="docblock-summary"><p><code>ArvChunkParser</code> provides a class for the instantiation of chunk parsers used for the extraction of chunk data
+stored in the stream&nbsp;payload.</p></td>
             
           </tr>
           
@@ -989,7 +998,8 @@ writing those features back to the node&nbsp;tree.</p></td>
           <tr class="section-item">
             <td><a title="StreamCallbackType" class="symbol" href="enum.StreamCallbackType.html">StreamCallbackType</a></td>
             
-            <td class="docblock-summary"><p>Describes when the stream callback is&nbsp;called.</p></td>
+            <td class="docblock-summary"><p>Describes when the reason the stream callback is called. You are probably more interested in
+<code>ARV_STREAM_CALLBACK_TYPE_INIT</code> and <code>ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE</code>.</p></td>
             
           </tr>
           
@@ -1082,7 +1092,9 @@ writing those features back to the node&nbsp;tree.</p></td>
           <tr class="section-item">
             <td><a title="StreamCallback" class="symbol" href="callback.StreamCallback.html">StreamCallback</a></td>
             
-            <td class="docblock-summary"></td>
+            <td class="docblock-summary"><p>This is the signature of the callback passed on an <code>ArvStream</code> instantiation, which will be called on the stream
+receiving thread initialization and finalization, and on every received buffer, once when the buffer is pulled from
+the buffer queue, and one more when the buffer is done (successfully or&nbsp;not).</p></td>
             
           </tr>
           
@@ -1107,8 +1119,8 @@ writing those features back to the node&nbsp;tree.</p></td>
           <tr class="section-item">
             <td><a title="debug_enable" class="symbol" href="func.debug_enable.html">debug_enable</a></td>
             
-            <td class="docblock-summary"><p>Configures the debug output using a configuration string consisting of a comma separated list of debug categories or category/debug level pair. This function overwrites the configuration done by ARV_DEBUG environment variable.
-For example, enabling debug level 3 of the gvcp category and default debug level of category genicam is done&nbsp;using:</p></td>
+            <td class="docblock-summary"><p>Configures the debug output using a configuration string consisting of a comma separated list of debug categories or
+category/debug level&nbsp;pair.</p></td>
             
           </tr>
           

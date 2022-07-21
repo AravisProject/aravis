@@ -104,7 +104,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Declaration
         <a href="#declaration" class="anchor"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/tree/src/arvdebug.h#L35">[src]</a>
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvdebug.h#L35">[src]</a>
         
       </h4>
 
@@ -123,21 +123,24 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Description
         <a href="#description" class="anchor"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/tree/src/arvdebug.c#L238">[src]</a>
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvdebug.c#L237">[src]</a>
         
       </h4>
 
       <div class="docblock">
-        <p>Configures the debug output using a configuration string consisting of a comma separated list of debug categories or category/debug level pair. This function overwrites the configuration done by ARV_DEBUG environment variable.
-For example, enabling debug level 3 of the gvcp category and default debug level of category genicam is done&nbsp;using:</p>
-<p><informalexample><programlisting>
-arv_debug_enable (&#8220;gvcp:3,genicam&#8221;);
-</programlisting></informalexample></p>
+        <p>Configures the debug output using a configuration string consisting of a comma separated list of debug categories or
+category/debug level&nbsp;pair.</p>
+<p>This function overwrites the configuration done by <code>ARV_DEBUG</code> environment variable.  For example, enabling debug level
+3 of the gvcp category and default debug level of category genicam is done&nbsp;using:</p>
+<div class="codehilite"><pre><span></span><span class="n">arv_debug_enable</span> <span class="p">(</span><span class="s">&quot;gvcp:3,genicam&quot;</span><span class="p">);</span>
+</pre></div>
       </div>
 
       <div class="docblock">
         <table>
           
+          
+          <tr><td>Available since:</td><td>0.8.8</td></tr>
           
           
           
@@ -198,7 +201,7 @@ arv_debug_enable (&#8220;gvcp:3,genicam&#8221;);
           </tr>
           <tr class="arg-description">
             <td>&nbsp;</td>
-            <td><p>Since 0.8.8, <code>TRUE</code> on&nbsp;success.</p></td>
+            <td><p><code>TRUE</code> on&nbsp;success.</p></td>
           </tr>
           
           
