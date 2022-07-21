@@ -89,8 +89,6 @@ typedef enum {
 #define ARV_TYPE_BUFFER             (arv_buffer_get_type ())
 ARV_API G_DECLARE_FINAL_TYPE (ArvBuffer, arv_buffer, ARV, BUFFER, GObject)
 
-typedef void (*ArvFrameCallback)	(ArvBuffer *buffer);
-
 ARV_API ArvBuffer *		arv_buffer_new_allocate		(size_t size);
 ARV_API ArvBuffer *		arv_buffer_new			(size_t size, void *preallocated);
 ARV_API ArvBuffer * 		arv_buffer_new_full		(size_t size, void *preallocated,
