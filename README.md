@@ -57,10 +57,10 @@ aravis project: code, bug reports, testing...
 
 However, contributions to both Gigabit Ethernet and USB3 protocol code (files
 `src/arvuv*.[ch]` `src/arvgv*.[ch]`) must not be based on the corresponding
-specification documents published by the [AIA](http://www.visiononline.org/), as
+specification documents published by the [A3](https://www.automate.org/vision), as
 this organization forbids the use of their documents for the development of an
 open source implementation of the specifications. So, if you want to contribute
-to this part of Aravis, don't use the AIA documents and state clearly in the
+to this part of Aravis, don't use the A3 documents and state clearly in the
 pull request your work is not based on them.
 
 ### Links
