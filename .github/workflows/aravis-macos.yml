@@ -20,7 +20,7 @@ jobs:
       run: |
         pip install meson ninja
         brew update
-        brew install gcc gettext intltool gtk-doc libxml2 libusb gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad gnome-icon-theme gobject-introspection
+        brew install gcc gettext intltool gtk-doc libxml2 libusb gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad gnome-icon-theme gobject-introspection glib-utils
     - name: Build
       run: |
         meson --buildtype=plain -Ddocumentation=disabled -Dgst-plugin=enabled -Dintrospection=disabled -Dusb=enabled -Dviewer=enabled . ./build
