@@ -878,6 +878,30 @@ _loop (ArvGvStreamThreadData *thread_data)
 static void
 _set_socket_filter (int socket, guint32 source_ip, guint32 source_port, guint32 destination_ip, guint32 destination_port)
 {
+
+/*
+ * sudo tcpdump -i lo -e -nn  "udp and src host 192.168.0.1 and src port 10 and dst host 192.168.0.2 and dst port 20" -d
+ *
+ * (000) ldh      [12]
+ * (001) jeq      #0x86dd          jt 17	jf 2
+ * (002) jeq      #0x800           jt 3	        jf 17
+ * (003) ldb      [23]
+ * (004) jeq      #0x11            jt 5	        jf 17
+ * (005) ld       [26]
+ * (006) jeq      #0xc0a80001      jt 7	        jf 17           Source host
+ * (007) ldh      [20]
+ * (008) jset     #0x1fff          jt 17	jf 9
+ * (009) ldxb     4*([14]&0xf)
+ * (010) ldh      [x + 14]
+ * (011) jeq      #0xa             jt 12	jf 17           Source port
+ * (012) ld       [30]
+ * (013) jeq      #0xc0a80002      jt 14	jf 17           Destination host
+ * (014) ldh      [x + 16]
+ * (015) jeq      #0x14            jt 16	jf 17           Destination port
+ * (016) ret      #262144
+ * (017) ret      #0
+ */
+
 	struct sock_filter bpf[18] = {
 		{ 0x28, 0, 0, 0x0000000c },
 		{ 0x15, 15, 0, 0x000086dd },
