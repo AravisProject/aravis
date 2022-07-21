@@ -879,6 +879,7 @@ static void
 _set_socket_filter (int socket, guint32 source_ip, guint32 source_port, guint32 destination_ip, guint32 destination_port)
 {
 
+#if 0
 /*
  * sudo tcpdump -i lo -e -nn  "udp and src host 192.168.0.1 and src port 10 and dst host 192.168.0.2 and dst port 20" -d
  *
@@ -902,7 +903,7 @@ _set_socket_filter (int socket, guint32 source_ip, guint32 source_port, guint32 
  * (017) ret      #0
  */
 
-	struct sock_filter bpf[18] = {
+	struct sock_filter bpf[] = {
 		{ 0x28, 0, 0, 0x0000000c },
 		{ 0x15, 15, 0, 0x000086dd },
 		{ 0x15, 0, 14, 0x00000800 },
@@ -922,7 +923,49 @@ _set_socket_filter (int socket, guint32 source_ip, guint32 source_port, guint32 
 		{ 0x6, 0, 0, 0x00040000 },
 		{ 0x6, 0, 0, 0x00000000 }
 	};
-	struct sock_fprog bpf_prog = {sizeof(bpf) / sizeof(struct sock_filter), bpf};
+#else /* Variant without source port check. */
+/*
+ * sudo tcpdump -i lo -e -nn  "udp and src host 192.168.0.1 and dst host 192.168.0.2 and dst port 20" -d
+ *
+ * (000) ldh      [12]
+ * (001) jeq      #0x86dd          jt 15	jf 2
+ * (002) jeq      #0x800           jt 3	jf 15
+ * (003) ldb      [23]
+ * (004) jeq      #0x11            jt 5	jf 15
+ * (005) ld       [26]
+ * (006) jeq      #0xc0a80001      jt 7	jf 15
+ * (007) ld       [30]
+ * (008) jeq      #0xc0a80002      jt 9	jf 15
+ * (009) ldh      [20]
+ * (010) jset     #0x1fff          jt 15	jf 11
+ * (011) ldxb     4*([14]&0xf)
+ * (012) ldh      [x + 16]
+ * (013) jeq      #0x14            jt 14	jf 15
+ * (014) ret      #262144
+ * (015) ret      #0
+ */
+
+	struct sock_filter bpf[] = {
+		{ 0x28, 0, 0, 0x0000000c },
+		{ 0x15, 13, 0, 0x000086dd },
+		{ 0x15, 0, 12, 0x00000800 },
+		{ 0x30, 0, 0, 0x00000017 },
+		{ 0x15, 0, 10, 0x00000011 },
+		{ 0x20, 0, 0, 0x0000001a },
+		{ 0x15, 0, 8, source_ip },
+		{ 0x20, 0, 0, 0x0000001e },
+		{ 0x15, 0, 6, destination_ip },
+                { 0x28, 0, 0, 0x00000014},
+		{ 0x45, 4, 0, 0x00001fff },
+		{ 0xb1, 0, 0, 0x0000000e },
+		{ 0x48, 0, 0, 0x00000010 },
+		{ 0x15, 0, 1, destination_port },
+		{ 0x6, 0, 0, 0x00040000 },
+		{ 0x6, 0, 0, 0x00000000 }
+	};
+#endif
+
+	struct sock_fprog bpf_prog = {G_N_ELEMENTS (bpf), bpf};
 
 	arv_info_stream_thread ("[GvStream::set_socket_filter] source ip = 0x%08x - port = %d - dest ip = 0x%08x - port %d",
 				 source_ip, source_port, destination_ip, destination_port);
