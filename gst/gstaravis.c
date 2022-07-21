@@ -2,7 +2,7 @@
  * Copyright © 2006 Eric Jonas <jonas@mit.edu>
  * Copyright © 2006 Antoine Tremblay <hexa00@gmail.com>
  * Copyright © 2010 United States Government, Joshua M. Doe <joshua.doe@us.army.mil>
- * Copyright © 2010-2019 Emmanuel Pacaud <emmanuel@gnome.org>
+ * Copyright © 2010-2019 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -1104,7 +1104,7 @@ gst_aravis_class_init (GstAravisClass * klass)
 					      "Aravis Video Source",
 					      "Source/Video",
 					      "Aravis based source",
-					      "Emmanuel Pacaud <emmanuel@gnome.org>");
+					      "Emmanuel Pacaud <emmanuel.pacaud@free.fr>");
 	gst_element_class_add_pad_template (element_class,
 					    gst_static_pad_template_get (&aravis_src_template));
 
