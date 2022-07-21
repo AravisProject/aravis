@@ -139,10 +139,10 @@ enum
  * @user_data: (closure) (allow-none): user data for @callback
  * @error: a #GError placeholder, %NULL to ignore
  *
- * Creates a new #ArvStream for video stream handling. See
- * #ArvStreamCallback for details regarding the callback function.
+ * Creates a new [class@ArvStream] for video stream reception. See
+ * [callback@ArvStreamCallback] for details regarding the callback function.
  *
- * Returns: (transfer full): a new #ArvStream, to be freed after use with g_object_unref().
+ * Returns: (transfer full): a new [class@ArvStream], to be freed after use with [method@GObject.Object.unref].
  *
  * Since: 0.2.0
  */
@@ -3495,9 +3495,9 @@ arv_camera_set_chunks (ArvCamera *camera, const char *chunk_list, GError **error
  * arv_camera_create_chunk_parser:
  * @camera: a #ArvCamera
  *
- * Creates a new #ArvChunkParser object, used for the extraction of chunk data from #ArvBuffer.
+ * Creates a new [class@ArvChunkParser] object, used for the extraction of chunk data from [class@ArvBuffer].
  *
- * Returns: (transfer full): a new #ArvChunkParser.
+ * Returns: (transfer full): a new [class@ArvChunkParser].
  *
  * Since: 0.4.0
  */

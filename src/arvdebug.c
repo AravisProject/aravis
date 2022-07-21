@@ -21,8 +21,7 @@
  */
 
 /**
- * SECTION: arvdebug
- * @short_description: Debugging tools
+ * ArvDebug:
  */
 
 #include <glib/gprintf.h>
@@ -239,14 +238,18 @@ arv_trace (ArvDebugCategory category, const char *format, ...)
  * arv_debug_enable:
  * @category_selection: debug category configuration string
  *
- * Configures the debug output using a configuration string consisting of a comma separated list of debug categories or category/debug level pair. This function overwrites the configuration done by ARV_DEBUG environment variable.
- * For example, enabling debug level 3 of the gvcp category and default debug level of category genicam is done using:
+ * Configures the debug output using a configuration string consisting of a comma separated list of debug categories or
+ * category/debug level pair.
  *
- * <informalexample><programlisting>
+ * This function overwrites the configuration done by `ARV_DEBUG` environment variable.  For example, enabling debug level
+ * 3 of the gvcp category and default debug level of category genicam is done using:
+ *
+ * ```C
  * arv_debug_enable ("gvcp:3,genicam");
- * </programlisting></informalexample>
+ * ```
  *
- * Returns: Since 0.8.8, %TRUE on success
+ * Returns: %TRUE on success
+ * Since: 0.8.8
  */
 
 gboolean

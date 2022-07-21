@@ -21,15 +21,14 @@
  */
 
 /**
- * SECTION: arvbuffer
- * @short_description: Buffer for storage of video frames
+ * ArvBuffer:
  *
- * #ArvBuffer provides a class for the instantiation of buffers used for the
- * storage of the separate images of the video stream. The actual data space
- * may either be allocated by #ArvBuffer during an object instatiation, of
- * preallocated. #ArvBuffer also allows the transmission of image metadata,
- * such as offsets and size of the transmitted region of interrest, pixel
- * format and time stamp.
+ * [class@ArvBuffer] provides a class for the instantiation of buffers used for the storage of the separate images of
+ * the video stream.
+ *
+ * The actual data space may either be allocated by [class@ArvBuffer] during an object instantiation, of pre-allocated.
+ * [class@ArvBuffer] also allows the transmission of image metadata, such as offsets and size of the transmitted region of
+ * interest, pixel format and time stamp.
  */
 
 #include <arvbufferprivate.h>
@@ -66,7 +65,7 @@ arv_buffer_payload_type_has_aoi (ArvBufferPayloadType payload_type)
  * If @user_data_destroy_func is non NULL, it will be called in order to destroy
  * user_data when the buffer is destroyed.
  *
- * Returns: a new #ArvBuffer object
+ * Returns: a new [class@ArvBuffer] object
  *
  * Since: 0.2.0
  */

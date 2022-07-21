@@ -21,28 +21,19 @@
  */
 
 /**
- * SECTION: arvchunkparser
- * @short_description: Parser for extraction of chunk data from buffers
+ * ArvChunkParser:
  *
- * #ArvChunkParser provides a class for the instantiation of chunk parsers used
- * for the extraction of chunk data stored in the stream payload.
+ * [class@ArvChunkParser] provides a class for the instantiation of chunk parsers used for the extraction of chunk data
+ * stored in the stream payload.
  *
- * Chunks are tagged blocks of data stored in a #ArvBuffer containing
- * a #ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA payload. The tags allow a chunk
- * parser to dissect the data payload into its elements and to identify the content.
+ * Chunks are tagged blocks of data stored in a [class@ArvBuffer] containing a @ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA
+ * payload. The tags allow a chunk parser to dissect the data payload into its elements and to identify the content.
  *
- * Chunk data are enabled using either arv_camera_set_chunks() or
- * arv_camera_set_chunk_mode(). Both functions are simple convenience wrappers
- * that handle the setting of ChunkModeActive, ChunkSelector and ChunkEnable
+ * Chunk data are enabled using either [method@ArvCamera.set_chunks] or [method@ArvCamera.set_chunk_mode]. Both
+ * functions are simple convenience wrappers that handle the setting of ChunkModeActive, ChunkSelector and ChunkEnable
  * GENICAM features.
  *
- * <example id="arv-chunk-parser-test"><title>Example use of the ArvChunkParser API</title>
- * <programlisting>
- * <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" href="../../../../tests/arvchunkparsertest.c">
- *   <xi:fallback>FIXME: MISSING XINCLUDE CONTENT</xi:fallback>
- * </xi:include>
- * </programlisting>
- * </example>
+ * Here is an example of this API in use: [tests/arvchunkparsertest.c](https://github.com/AravisProject/aravis/blob/main/tests/arvchunkparsertest.c)
  */
 
 #include <arvchunkparserprivate.h>
