@@ -1,7 +1,7 @@
 #include <linux/module.h>
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Emmanuel Pacaud <emmanuel@gnome.org>");
+MODULE_AUTHOR("Emmanuel Pacaud <emmanuel.pacaud@free.fr>");
 
 int
 init_module(void)
