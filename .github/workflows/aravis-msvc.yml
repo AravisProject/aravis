@@ -9,12 +9,12 @@ on:
 
 jobs:
   msvc:
-    runs-on: windows-latest
+    runs-on: windows-2019
     strategy:
       fail-fast: false
       matrix:
         include:
-        - version: 17
+        - version: 16
           arch: x86_64
           build_type_conan: Release
           build_type_meson: release
@@ -31,8 +31,8 @@ jobs:
           libiconv/1.17
           glib/2.70.0
           #gobject-introspection/1.69.0
-          gstreamer/1.19.1
-          gst-plugins-base/1.19.1
+          #gstreamer/1.19.1
+          #gst-plugins-base/1.19.1
           #gtk/4.4.0
           libxml2/2.9.12
           zlib/1.2.11
@@ -60,7 +60,7 @@ jobs:
         .\build\activate_build.ps1
         .\build\activate_run.ps1
         echo "::group::configure"
-        meson --prefix ${{ github.workspace }}\install --buildtype ${{ matrix.build_type_meson }} --pkg-config-path ${{ github.workspace }}\build -Ddocumentation=disabled -Dgst-plugin=enabled -Dintrospection=disabled -Dusb=enabled -Dviewer=disabled -Dgv-n-buffers=1 . .\build
+        meson --prefix ${{ github.workspace }}\install --buildtype ${{ matrix.build_type_meson }} --pkg-config-path ${{ github.workspace }}\build -Ddocumentation=disabled -Dgst-plugin=disabled -Dintrospection=disabled -Dusb=enabled -Dviewer=disabled -Dgv-n-buffers=1 . .\build
         echo "::endgroup::"
         echo "::group::compile"
         meson compile -C .\build -v
