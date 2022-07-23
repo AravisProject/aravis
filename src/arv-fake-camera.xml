@@ -336,6 +336,21 @@
 		<Endianess>BigEndian</Endianess>
 	</IntReg>
 
+  <Integer Name="AcquisitionFrameCount" NameSpace="Custom">
+    <pValue>AcquisitionFrameCountRegister</pValue>
+    <Min>1</Min>
+    <Max>65535</Max>
+  </Integer>
+
+  <IntReg Name="AcquisitionFrameCountRegister" NameSpace="Custom">
+    <Address>0x310</Address>
+    <Length>4</Length>
+    <AccessMode>RW</AccessMode>
+    <pPort>Device</pPort>
+    <Sign>Unsigned</Sign>
+    <Endianess>BigEndian</Endianess>
+  </IntReg>
+
 	<Enumeration Name="TriggerSelector" NameSpace="Standard">
 		<EnumEntry Name="FrameStart" NameSpace="Standard">
 			<Value>0</Value>
