@@ -212,6 +212,7 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 	GstStructure *structure;
 	ArvPixelFormat pixel_format;
 	gint height, width;
+	gint current_height, current_width;
 	int depth = 0, bpp = 0;
 	const GValue *frame_rate = NULL;
 	const char *caps_string;
@@ -231,9 +232,12 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 	structure = gst_caps_get_structure (caps, 0);
 
 	GST_OBJECT_LOCK (gst_aravis);
-	arv_camera_get_region (gst_aravis->camera, NULL, NULL, &width, &height, &error);
+	arv_camera_get_region (gst_aravis->camera, NULL, NULL, &current_width, &current_height, &error);
 	if (error)
 		goto errored;
+
+        width = current_width;
+        height = current_height;
 
 	is_frame_rate_available = arv_camera_is_frame_rate_available (gst_aravis->camera, NULL);
 	is_gain_available = arv_camera_is_gain_available (gst_aravis->camera, NULL);
@@ -262,7 +266,16 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 
 	if (!error) arv_camera_set_pixel_format (gst_aravis->camera, pixel_format, &error);
 	if (!error) arv_camera_set_binning (gst_aravis->camera, gst_aravis->h_binning, gst_aravis->v_binning, &error);
-	if (!error) arv_camera_set_region (gst_aravis->camera, gst_aravis->offset_x, gst_aravis->offset_y, width, height, &error);
+	if (!error) {
+                if (width != current_width || height != current_height)
+                        arv_camera_set_region (gst_aravis->camera,
+                                               gst_aravis->offset_x, gst_aravis->offset_y,
+                                               width, height, &error);
+                else
+                        arv_camera_set_region (gst_aravis->camera,
+                                               gst_aravis->offset_x, gst_aravis->offset_y,
+                                               -1, -1, &error);
+        }
 
 	if (!error && arv_camera_is_gv_device (gst_aravis->camera)) {
 		if (gst_aravis->packet_delay >= 0) {
