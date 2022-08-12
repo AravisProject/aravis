@@ -338,6 +338,13 @@ blockquote > *:last-child > *:last-child > *:last-child {
   margin-bottom: 0;
 }
 
+/* allow easily adding a frame around images, by appending
+ * #frame to the url
+ */
+img[src$="#frame"] {
+  border: 1px solid var(--text-color);
+}
+
 /*********************************
  * PAGE STRUCTURE
  *********************************/

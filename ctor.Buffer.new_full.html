@@ -171,82 +171,79 @@ user_data when the buffer is&nbsp;destroyed.</p>
       </h4>
 
       <div class="docblock">
-        <table class="arguments">
+        <dl class="arguments">
           
-          <tr class="arg-name">
-            <td><code>size</code></td>
-            <td><code>size_t</code></td>
-          </tr>
-          <tr class="arg-description">
-            <td>&nbsp;</td>
-            <td><p>Payload&nbsp;size.</p></td>
-          </tr>
+          <dt class="arg-name"><code>size</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<code>size_t</code></p>
+            <p><p>Payload&nbsp;size.</p></p>
+            <table>
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            </table>
+          </dd>
           
+          <dt class="arg-name"><code>preallocated</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<code>void*</code></p>
+            <p><p>Preallocated memory&nbsp;buffer.</p></p>
+            <table>
+            
+            <tr><td>The argument can be <code>NULL</code>.</td></tr>
+            
+            
+            
+            
+            
+            <tr><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
+            
+            </table>
+          </dd>
           
+          <dt class="arg-name"><code>user_data</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<code>void*</code></p>
+            <p><p>A pointer to user data associated to this&nbsp;buffer.</p></p>
+            <table>
+            
+            <tr><td>The argument can be <code>NULL</code>.</td></tr>
+            
+            
+            
+            
+            
+            <tr><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
+            
+            </table>
+          </dd>
           
+          <dt class="arg-name"><code>user_data_destroy_func</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<a href="javascript:void(0)" data-link="callback.DestroyNotify.html" data-namespace="GLib" class="external"><code>GDestroyNotify</code></a></p>
+            <p><p>An optional user data destroy&nbsp;callback.</p></p>
+            <table>
+            
+            <tr><td>The argument can be <code>NULL</code>.</td></tr>
+            
+            
+            
+            
+            
+            
+            
+            </table>
+          </dd>
           
+
           
-          
-          
-          
-          
-          
-          <tr class="arg-name">
-            <td><code>preallocated</code></td>
-            <td><code>void*</code></td>
-          </tr>
-          <tr class="arg-description">
-            <td>&nbsp;</td>
-            <td><p>Preallocated memory&nbsp;buffer.</p></td>
-          </tr>
-          
-          <tr><td>&nbsp;</td><td>The argument can be <code>NULL</code>.</td></tr>
-          
-          
-          
-          
-          
-          <tr><td>&nbsp;</td><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
-          
-          
-          <tr class="arg-name">
-            <td><code>user_data</code></td>
-            <td><code>void*</code></td>
-          </tr>
-          <tr class="arg-description">
-            <td>&nbsp;</td>
-            <td><p>A pointer to user data associated to this&nbsp;buffer.</p></td>
-          </tr>
-          
-          <tr><td>&nbsp;</td><td>The argument can be <code>NULL</code>.</td></tr>
-          
-          
-          
-          
-          
-          <tr><td>&nbsp;</td><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
-          
-          
-          <tr class="arg-name">
-            <td><code>user_data_destroy_func</code></td>
-            <td><a href="javascript:void(0)" data-link="callback.DestroyNotify.html" data-namespace="GLib" class="external"><code>GDestroyNotify</code></a></td>
-          </tr>
-          <tr class="arg-description">
-            <td>&nbsp;</td>
-            <td><p>An optional user data destroy&nbsp;callback.</p></td>
-          </tr>
-          
-          <tr><td>&nbsp;</td><td>The argument can be <code>NULL</code>.</td></tr>
-          
-          
-          
-          
-          
-          
-          
-          
-          
-        </table>
+        </dl>
       </div>
     </div>
     
@@ -259,22 +256,22 @@ user_data when the buffer is&nbsp;destroyed.</p>
       </h4>
 
       <div class="docblock">
-        <table class="returns">
-          <tr class="arg-name">
-            <td>Returns:</td>
-            <td><a href="class.Buffer.html"><code>ArvBuffer</code></a></td>
-          </tr>
-          <tr class="arg-description">
-            <td>&nbsp;</td>
-            <td><p>A new <a href="class.Buffer.html"><code>ArvBuffer</code></a>&nbsp;object.</p></td>
-          </tr>
-          
-          
-          
-          <tr><td>&nbsp;</td><td title="transfer: full">The caller of the function takes ownership of the data, and is responsible for freeing it.</td></tr>
-          
-          
-        </table>
+        <div class="returns">
+          <div class="arg-description">
+            <p><em>Type:</em>&nbsp;<a href="class.Buffer.html"><code>ArvBuffer</code></a></p>
+            <p><p>A new <a href="class.Buffer.html"><code>ArvBuffer</code></a>&nbsp;object.</p></p>
+          </div>
+          <div>
+            <table>
+            
+            
+            
+            <tr><td title="transfer: full">The caller of the function takes ownership of the data, and is responsible for freeing it.</td></tr>
+            
+            
+            </table>
+          </div>
+        </div>
       </div>
     </div>
     

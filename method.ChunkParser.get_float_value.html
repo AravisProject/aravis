@@ -166,55 +166,51 @@ SPDX-License-Identifier: LGPL-2.1-or-later
       </h4>
 
       <div class="docblock">
-        <table class="arguments">
+        <dl class="arguments">
           
-          <tr class="arg-name">
-            <td><code>buffer</code></td>
-            <td><a href="class.Buffer.html"><code>ArvBuffer</code></a></td>
-          </tr>
-          <tr class="arg-description">
-            <td>&nbsp;</td>
-            <td><p>A <code>ArvBuffer</code> with a #ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA&nbsp;payload.</p></td>
-          </tr>
+          <dt class="arg-name"><code>buffer</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<a href="class.Buffer.html"><code>ArvBuffer</code></a></p>
+            <p><p>A <code>ArvBuffer</code> with a #ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA&nbsp;payload.</p></p>
+            <table>
+            
+            
+            
+            
+            
+            
+            
+            <tr><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
+            
+            </table>
+          </dd>
           
+          <dt class="arg-name"><code>chunk</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<code>const char*</code></p>
+            <p><p>Chunk data&nbsp;name.</p></p>
+            <table>
+            
+            
+            
+            
+            
+            
+            
+            <tr><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
+            <tr><td>The value is a NUL terminated UTF-8 string.</td></tr>
+            </table>
+          </dd>
           
+
           
+          <dt class="arg-name"><code>error</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<code>GError **</code></p>
+            <p>The return location for a <code>GError*</code>, or <code>NULL</code>.</p>
+          </dd>
           
-          
-          
-          
-          <tr><td>&nbsp;</td><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
-          
-          
-          <tr class="arg-name">
-            <td><code>chunk</code></td>
-            <td><code>const char*</code></td>
-          </tr>
-          <tr class="arg-description">
-            <td>&nbsp;</td>
-            <td><p>Chunk data&nbsp;name.</p></td>
-          </tr>
-          
-          
-          
-          
-          
-          
-          
-          <tr><td>&nbsp;</td><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
-          <tr><td>&nbsp;</td><td>The value is a NUL terminated UTF-8 string.</td></tr>
-          
-          
-          <tr class="arg-name">
-            <td><code>error</code></td>
-            <td><code>GError **</code></td>
-          </tr>
-          <tr class="arg-description">
-            <td>&nbsp;</td>
-            <td>The return location for a <code>GError*</code>, or <code>NULL</code>.</td>
-          </tr>
-          
-        </table>
+        </dl>
       </div>
     </div>
     
@@ -227,22 +223,22 @@ SPDX-License-Identifier: LGPL-2.1-or-later
       </h4>
 
       <div class="docblock">
-        <table class="returns">
-          <tr class="arg-name">
-            <td>Returns:</td>
-            <td><code>double</code></td>
-          </tr>
-          <tr class="arg-description">
-            <td>&nbsp;</td>
-            <td><p>The float chunk data&nbsp;value.</p></td>
-          </tr>
-          
-          
-          
-          
-          
-          
-        </table>
+        <div class="returns">
+          <div class="arg-description">
+            <p><em>Type:</em>&nbsp;<code>double</code></p>
+            <p><p>The float chunk data&nbsp;value.</p></p>
+          </div>
+          <div>
+            <table>
+            
+            
+            
+            
+            
+            
+            </table>
+          </div>
+        </div>
       </div>
     </div>
     

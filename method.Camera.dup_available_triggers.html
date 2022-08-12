@@ -415,37 +415,34 @@ SPDX-License-Identifier: LGPL-2.1-or-later
       </h4>
 
       <div class="docblock">
-        <table class="arguments">
+        <dl class="arguments">
           
-          <tr class="arg-name">
-            <td><code>n_triggers</code></td>
-            <td><code>guint*</code></td>
-          </tr>
-          <tr class="arg-description">
-            <td>&nbsp;</td>
-            <td><p>Number of available&nbsp;triggers.</p></td>
-          </tr>
-          <tr><td>&nbsp;</td><td title="direction: out">The argument will be set by the function.</td></tr>
+          <dt class="arg-name"><code>n_triggers</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<code>guint*</code></p>
+            <p><p>Number of available&nbsp;triggers.</p></p>
+            <table>
+            <tr><td title="direction: out">The argument will be set by the function.</td></tr>
+            
+            
+            
+            
+            
+            
+            
+            
+            </table>
+          </dd>
           
+
           
+          <dt class="arg-name"><code>error</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<code>GError **</code></p>
+            <p>The return location for a <code>GError*</code>, or <code>NULL</code>.</p>
+          </dd>
           
-          
-          
-          
-          
-          
-          
-          
-          <tr class="arg-name">
-            <td><code>error</code></td>
-            <td><code>GError **</code></td>
-          </tr>
-          <tr class="arg-description">
-            <td>&nbsp;</td>
-            <td>The return location for a <code>GError*</code>, or <code>NULL</code>.</td>
-          </tr>
-          
-        </table>
+        </dl>
       </div>
     </div>
     
@@ -458,22 +455,22 @@ SPDX-License-Identifier: LGPL-2.1-or-later
       </h4>
 
       <div class="docblock">
-        <table class="returns">
-          <tr class="arg-name">
-            <td>Returns:</td>
-            <td>An array of&nbsp;<code>utf8</code></td>
-          </tr>
-          <tr class="arg-description">
-            <td>&nbsp;</td>
-            <td><p>A newly allocated array of strings, which must be freed using&nbsp;g_free().</p></td>
-          </tr>
-          
-          
-          <tr><td>&nbsp;</td><td>The length of the array is in the <code>n_triggers</code> argument.</td></tr>
-          <tr><td>&nbsp;</td><td title="transfer: container">The caller of the method takes ownership of the data container, but not the data inside it.</td></tr>
-          
-          <tr><td>&nbsp;</td><td>Each element is a NUL terminated UTF-8 string.</td></tr>
-        </table>
+        <div class="returns">
+          <div class="arg-description">
+            <p><em>Type:</em>&nbsp;An array of&nbsp;<code>utf8</code></p>
+            <p><p>A newly allocated array of strings, which must be freed using&nbsp;g_free().</p></p>
+          </div>
+          <div>
+            <table>
+            
+            
+            <tr><td>The length of the array is in the <code>n_triggers</code> argument.</td></tr>
+            <tr><td title="transfer: container">The caller of the method takes ownership of the data container, but not the data inside it.</td></tr>
+            
+            <tr><td>Each element is a NUL terminated UTF-8 string.</td></tr>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
     

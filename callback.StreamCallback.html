@@ -161,64 +161,62 @@ happen&nbsp;elsewhere.</p>
       </h4>
 
       <div class="docblock">
-        <table class="arguments">
+        <dl class="arguments">
           
-          <tr class="arg-name">
-            <td><code>user_data</code></td>
-            <td><code>void*</code></td>
-          </tr>
-          <tr class="arg-description">
-            <td>&nbsp;</td>
-            <td><p>A pointer to user data associated to this&nbsp;callback.</p></td>
-          </tr>
+          <dt class="arg-name"><code>user_data</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<code>void*</code></p>
+            <p><p>A pointer to user data associated to this&nbsp;callback.</p></p>
+            <table>
+            
+            <tr><td>The argument can be <code>NULL</code>.</td></tr>
+            
+            
+            
+            
+            
+            <tr><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
+            
+            </table>
+          </dd>
           
-          <tr><td>&nbsp;</td><td>The argument can be <code>NULL</code>.</td></tr>
+          <dt class="arg-name"><code>type</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<a href="enum.StreamCallbackType.html"><code>ArvStreamCallbackType</code></a></p>
+            <p><p>Reason of the callback&nbsp;call.</p></p>
+            <table>
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            </table>
+          </dd>
           
+          <dt class="arg-name"><code>buffer</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<a href="class.Buffer.html"><code>ArvBuffer</code></a></p>
+            <p><p>A <a href="class.Buffer.html"><code>ArvBuffer</code></a>&nbsp;object.</p></p>
+            <table>
+            
+            
+            
+            
+            
+            
+            
+            <tr><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
+            
+            </table>
+          </dd>
           
+
           
-          
-          
-          <tr><td>&nbsp;</td><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
-          
-          
-          <tr class="arg-name">
-            <td><code>type</code></td>
-            <td><a href="enum.StreamCallbackType.html"><code>ArvStreamCallbackType</code></a></td>
-          </tr>
-          <tr class="arg-description">
-            <td>&nbsp;</td>
-            <td><p>Reason of the callback&nbsp;call.</p></td>
-          </tr>
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          <tr class="arg-name">
-            <td><code>buffer</code></td>
-            <td><a href="class.Buffer.html"><code>ArvBuffer</code></a></td>
-          </tr>
-          <tr class="arg-description">
-            <td>&nbsp;</td>
-            <td><p>A <a href="class.Buffer.html"><code>ArvBuffer</code></a>&nbsp;object.</p></td>
-          </tr>
-          
-          
-          
-          
-          
-          
-          
-          <tr><td>&nbsp;</td><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
-          
-          
-          
-        </table>
+        </dl>
       </div>
     </div>
     

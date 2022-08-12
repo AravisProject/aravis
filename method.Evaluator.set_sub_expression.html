@@ -182,46 +182,45 @@ A sub-expression may not reference another&nbsp;sub-expression.</p>
       </h4>
 
       <div class="docblock">
-        <table class="arguments">
+        <dl class="arguments">
           
-          <tr class="arg-name">
-            <td><code>name</code></td>
-            <td><code>const char*</code></td>
-          </tr>
-          <tr class="arg-description">
-            <td>&nbsp;</td>
-            <td><p>Sub-expression&nbsp;name.</p></td>
-          </tr>
+          <dt class="arg-name"><code>name</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<code>const char*</code></p>
+            <p><p>Sub-expression&nbsp;name.</p></p>
+            <table>
+            
+            
+            
+            
+            
+            
+            
+            <tr><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
+            <tr><td>The value is a NUL terminated UTF-8 string.</td></tr>
+            </table>
+          </dd>
           
+          <dt class="arg-name"><code>expression</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<code>const char*</code></p>
+            <p><p>Sub-pexression&nbsp;formula.</p></p>
+            <table>
+            
+            <tr><td>The argument can be <code>NULL</code>.</td></tr>
+            
+            
+            
+            
+            
+            <tr><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
+            <tr><td>The value is a NUL terminated UTF-8 string.</td></tr>
+            </table>
+          </dd>
           
+
           
-          
-          
-          
-          
-          <tr><td>&nbsp;</td><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
-          <tr><td>&nbsp;</td><td>The value is a NUL terminated UTF-8 string.</td></tr>
-          
-          <tr class="arg-name">
-            <td><code>expression</code></td>
-            <td><code>const char*</code></td>
-          </tr>
-          <tr class="arg-description">
-            <td>&nbsp;</td>
-            <td><p>Sub-pexression&nbsp;formula.</p></td>
-          </tr>
-          
-          <tr><td>&nbsp;</td><td>The argument can be <code>NULL</code>.</td></tr>
-          
-          
-          
-          
-          
-          <tr><td>&nbsp;</td><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
-          <tr><td>&nbsp;</td><td>The value is a NUL terminated UTF-8 string.</td></tr>
-          
-          
-        </table>
+        </dl>
       </div>
     </div>
     

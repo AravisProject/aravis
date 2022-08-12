@@ -417,55 +417,51 @@ if chunk mode is active. Please see&nbsp;arv_camera_set_chunk_mode().</p>
       </h4>
 
       <div class="docblock">
-        <table class="arguments">
+        <dl class="arguments">
           
-          <tr class="arg-name">
-            <td><code>chunk</code></td>
-            <td><code>const char*</code></td>
-          </tr>
-          <tr class="arg-description">
-            <td>&nbsp;</td>
-            <td><p>Chunk data&nbsp;name.</p></td>
-          </tr>
+          <dt class="arg-name"><code>chunk</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<code>const char*</code></p>
+            <p><p>Chunk data&nbsp;name.</p></p>
+            <table>
+            
+            
+            
+            
+            
+            
+            
+            <tr><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
+            <tr><td>The value is a NUL terminated UTF-8 string.</td></tr>
+            </table>
+          </dd>
           
+          <dt class="arg-name"><code>is_enabled</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<code>gboolean</code></p>
+            <p><p>Wether to enable this&nbsp;chunk.</p></p>
+            <table>
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            </table>
+          </dd>
           
+
           
+          <dt class="arg-name"><code>error</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<code>GError **</code></p>
+            <p>The return location for a <code>GError*</code>, or <code>NULL</code>.</p>
+          </dd>
           
-          
-          
-          
-          <tr><td>&nbsp;</td><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
-          <tr><td>&nbsp;</td><td>The value is a NUL terminated UTF-8 string.</td></tr>
-          
-          <tr class="arg-name">
-            <td><code>is_enabled</code></td>
-            <td><code>gboolean</code></td>
-          </tr>
-          <tr class="arg-description">
-            <td>&nbsp;</td>
-            <td><p>Wether to enable this&nbsp;chunk.</p></td>
-          </tr>
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          <tr class="arg-name">
-            <td><code>error</code></td>
-            <td><code>GError **</code></td>
-          </tr>
-          <tr class="arg-description">
-            <td>&nbsp;</td>
-            <td>The return location for a <code>GError*</code>, or <code>NULL</code>.</td>
-          </tr>
-          
-        </table>
+        </dl>
       </div>
     </div>
     

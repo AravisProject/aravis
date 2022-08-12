@@ -419,37 +419,34 @@ SPDX-License-Identifier: LGPL-2.1-or-later
       </h4>
 
       <div class="docblock">
-        <table class="arguments">
+        <dl class="arguments">
           
-          <tr class="arg-name">
-            <td><code>timeout</code></td>
-            <td><code>guint64</code></td>
-          </tr>
-          <tr class="arg-description">
-            <td>&nbsp;</td>
-            <td><p>Acquisition timeout in µs. Zero means no&nbsp;timeout.</p></td>
-          </tr>
+          <dt class="arg-name"><code>timeout</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<code>guint64</code></p>
+            <p><p>Acquisition timeout in µs. Zero means no&nbsp;timeout.</p></p>
+            <table>
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            </table>
+          </dd>
           
+
           
+          <dt class="arg-name"><code>error</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<code>GError **</code></p>
+            <p>The return location for a <code>GError*</code>, or <code>NULL</code>.</p>
+          </dd>
           
-          
-          
-          
-          
-          
-          
-          
-          
-          <tr class="arg-name">
-            <td><code>error</code></td>
-            <td><code>GError **</code></td>
-          </tr>
-          <tr class="arg-description">
-            <td>&nbsp;</td>
-            <td>The return location for a <code>GError*</code>, or <code>NULL</code>.</td>
-          </tr>
-          
-        </table>
+        </dl>
       </div>
     </div>
     
@@ -462,22 +459,22 @@ SPDX-License-Identifier: LGPL-2.1-or-later
       </h4>
 
       <div class="docblock">
-        <table class="returns">
-          <tr class="arg-name">
-            <td>Returns:</td>
-            <td><a href="class.Buffer.html"><code>ArvBuffer</code></a></td>
-          </tr>
-          <tr class="arg-description">
-            <td>&nbsp;</td>
-            <td><p>A new <code>ArvBuffer</code>, <span class="caps">NULL</span> on error. The returned buffer must be freed using&nbsp;g_object_unref().</p></td>
-          </tr>
-          
-          
-          
-          <tr><td>&nbsp;</td><td title="transfer: full">The caller of the method takes ownership of the data, and is responsible for freeing it.</td></tr>
-          
-          
-        </table>
+        <div class="returns">
+          <div class="arg-description">
+            <p><em>Type:</em>&nbsp;<a href="class.Buffer.html"><code>ArvBuffer</code></a></p>
+            <p><p>A new <code>ArvBuffer</code>, <span class="caps">NULL</span> on error. The returned buffer must be freed using&nbsp;g_object_unref().</p></p>
+          </div>
+          <div>
+            <table>
+            
+            
+            
+            <tr><td title="transfer: full">The caller of the method takes ownership of the data, and is responsible for freeing it.</td></tr>
+            
+            
+            </table>
+          </div>
+        </div>
       </div>
     </div>
     
