@@ -270,8 +270,13 @@ SPDX-License-Identifier: LGPL-2.1-or-later
           
           <dt class="arg-name"><code>error</code></dt>
           <dd class="arg-description">
-            <p><em>Type:</em>&nbsp;<code>GError **</code></p>
-            <p>The return location for a <code>GError*</code>, or <code>NULL</code>.</p>
+            <p><em>Type:</em>&nbsp;<a href="javascript:void(0)" data-namespace="GLib" data-link="struct.Error.html" class="external"><code>GError **</code></a></p>
+            <p>The return location for an error.</p>
+            <table>
+              <tr><td>The argument can be <code>NULL</code>.</td></tr>
+              <tr><td>The argument will be set to <code>NULL</code> by the function if there are no errors.</td></tr>
+              <tr><td>In case of error, the argument will be set and the caller will take ownership of the data, and be responsible for freeing it.</td></tr>
+            </table>
           </dd>
           
         </dl>

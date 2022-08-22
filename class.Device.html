@@ -728,124 +728,70 @@ its value set through g_object_set_property(), g_object_set(), et&nbsp;al.</p>
       <div class="docblock">
         <h6>Class members</h6>
 
-        <table class="members">
+        <dl class="members">
         
-        <tr>
-          <td style="vertical-align:top"><code>parent_class</code></td>
-          <td style="vertical-align:top"><pre><code>GObjectClass</code></pre></td>
-        </tr>
-        <tr>
-          <td>&nbsp;</td>
-          <td style="vertical-align:top">No description available.</td>
-        </td>
+          <dt><code>parent_class: GObjectClass</code></dt>
+          <dd>No description available.</dd>
         
-        <tr>
-          <td style="vertical-align:top"><code>create_stream</code></td>
-          <td style="vertical-align:top"><pre><code>ArvStream* (* create_stream) (
+          <dt><code>create_stream: ArvStream* (* create_stream) (
     ArvDevice* device,
     ArvStreamCallback callback,
     void* user_data,
     GError** error
-  )</code></pre></td>
-        </tr>
-        <tr>
-          <td>&nbsp;</td>
-          <td style="vertical-align:top">No description available.</td>
-        </td>
+  )</code></dt>
+          <dd>No description available.</dd>
         
-        <tr>
-          <td style="vertical-align:top"><code>get_genicam_xml</code></td>
-          <td style="vertical-align:top"><pre><code>const char* (* get_genicam_xml) (
+          <dt><code>get_genicam_xml: const char* (* get_genicam_xml) (
     ArvDevice* device,
     size_t* size
-  )</code></pre></td>
-        </tr>
-        <tr>
-          <td>&nbsp;</td>
-          <td style="vertical-align:top">No description available.</td>
-        </td>
+  )</code></dt>
+          <dd>No description available.</dd>
         
-        <tr>
-          <td style="vertical-align:top"><code>get_genicam</code></td>
-          <td style="vertical-align:top"><pre><code>ArvGc* (* get_genicam) (
+          <dt><code>get_genicam: ArvGc* (* get_genicam) (
     ArvDevice* device
-  )</code></pre></td>
-        </tr>
-        <tr>
-          <td>&nbsp;</td>
-          <td style="vertical-align:top">No description available.</td>
-        </td>
+  )</code></dt>
+          <dd>No description available.</dd>
         
-        <tr>
-          <td style="vertical-align:top"><code>read_memory</code></td>
-          <td style="vertical-align:top"><pre><code>gboolean (* read_memory) (
+          <dt><code>read_memory: gboolean (* read_memory) (
     ArvDevice* device,
     guint64 address,
     guint32 size,
     void* buffer,
     GError** error
-  )</code></pre></td>
-        </tr>
-        <tr>
-          <td>&nbsp;</td>
-          <td style="vertical-align:top">No description available.</td>
-        </td>
+  )</code></dt>
+          <dd>No description available.</dd>
         
-        <tr>
-          <td style="vertical-align:top"><code>write_memory</code></td>
-          <td style="vertical-align:top"><pre><code>gboolean (* write_memory) (
+          <dt><code>write_memory: gboolean (* write_memory) (
     ArvDevice* device,
     guint64 address,
     guint32 size,
     void* buffer,
     GError** error
-  )</code></pre></td>
-        </tr>
-        <tr>
-          <td>&nbsp;</td>
-          <td style="vertical-align:top">No description available.</td>
-        </td>
+  )</code></dt>
+          <dd>No description available.</dd>
         
-        <tr>
-          <td style="vertical-align:top"><code>read_register</code></td>
-          <td style="vertical-align:top"><pre><code>gboolean (* read_register) (
+          <dt><code>read_register: gboolean (* read_register) (
     ArvDevice* device,
     guint64 address,
     guint32* value,
     GError** error
-  )</code></pre></td>
-        </tr>
-        <tr>
-          <td>&nbsp;</td>
-          <td style="vertical-align:top">No description available.</td>
-        </td>
+  )</code></dt>
+          <dd>No description available.</dd>
         
-        <tr>
-          <td style="vertical-align:top"><code>write_register</code></td>
-          <td style="vertical-align:top"><pre><code>gboolean (* write_register) (
+          <dt><code>write_register: gboolean (* write_register) (
     ArvDevice* device,
     guint64 address,
     guint32 value,
     GError** error
-  )</code></pre></td>
-        </tr>
-        <tr>
-          <td>&nbsp;</td>
-          <td style="vertical-align:top">No description available.</td>
-        </td>
+  )</code></dt>
+          <dd>No description available.</dd>
         
-        <tr>
-          <td style="vertical-align:top"><code>control_lost</code></td>
-          <td style="vertical-align:top"><pre><code>void (* control_lost) (
+          <dt><code>control_lost: void (* control_lost) (
     ArvDevice* device
-  )</code></pre></td>
-        </tr>
-        <tr>
-          <td>&nbsp;</td>
-          <td style="vertical-align:top">No description available.</td>
-        </td>
+  )</code></dt>
+          <dd>No description available.</dd>
         
-        </table>
+        </dd>
       </div>
       
     </div>

@@ -506,122 +506,62 @@ its value set through g_object_set_property(), g_object_set(), et&nbsp;al.</p>
       <div class="docblock">
         <h6>Class members</h6>
 
-        <table class="members">
+        <dl class="members">
         
-        <tr>
-          <td style="vertical-align:top"><code>parent_class</code></td>
-          <td style="vertical-align:top"><pre><code>GObjectClass</code></pre></td>
-        </tr>
-        <tr>
-          <td>&nbsp;</td>
-          <td style="vertical-align:top">No description available.</td>
-        </td>
+          <dt><code>parent_class: GObjectClass</code></dt>
+          <dd>No description available.</dd>
         
-        <tr>
-          <td style="vertical-align:top"><code>get_node_name</code></td>
-          <td style="vertical-align:top"><pre><code>const char* (* get_node_name) (
+          <dt><code>get_node_name: const char* (* get_node_name) (
     ArvDomNode* self
-  )</code></pre></td>
-        </tr>
-        <tr>
-          <td>&nbsp;</td>
-          <td style="vertical-align:top">No description available.</td>
-        </td>
+  )</code></dt>
+          <dd>No description available.</dd>
         
-        <tr>
-          <td style="vertical-align:top"><code>get_node_value</code></td>
-          <td style="vertical-align:top"><pre><code>const char* (* get_node_value) (
+          <dt><code>get_node_value: const char* (* get_node_value) (
     ArvDomNode* self
-  )</code></pre></td>
-        </tr>
-        <tr>
-          <td>&nbsp;</td>
-          <td style="vertical-align:top">No description available.</td>
-        </td>
+  )</code></dt>
+          <dd>No description available.</dd>
         
-        <tr>
-          <td style="vertical-align:top"><code>set_node_value</code></td>
-          <td style="vertical-align:top"><pre><code>void (* set_node_value) (
+          <dt><code>set_node_value: void (* set_node_value) (
     ArvDomNode* self,
     const char* new_value
-  )</code></pre></td>
-        </tr>
-        <tr>
-          <td>&nbsp;</td>
-          <td style="vertical-align:top">No description available.</td>
-        </td>
+  )</code></dt>
+          <dd>No description available.</dd>
         
-        <tr>
-          <td style="vertical-align:top"><code>get_node_type</code></td>
-          <td style="vertical-align:top"><pre><code>ArvDomNodeType (* get_node_type) (
+          <dt><code>get_node_type: ArvDomNodeType (* get_node_type) (
     ArvDomNode* self
-  )</code></pre></td>
-        </tr>
-        <tr>
-          <td>&nbsp;</td>
-          <td style="vertical-align:top">No description available.</td>
-        </td>
+  )</code></dt>
+          <dd>No description available.</dd>
         
-        <tr>
-          <td style="vertical-align:top"><code>can_append_child</code></td>
-          <td style="vertical-align:top"><pre><code>gboolean (* can_append_child) (
+          <dt><code>can_append_child: gboolean (* can_append_child) (
     ArvDomNode* self,
     ArvDomNode* new_child
-  )</code></pre></td>
-        </tr>
-        <tr>
-          <td>&nbsp;</td>
-          <td style="vertical-align:top">No description available.</td>
-        </td>
+  )</code></dt>
+          <dd>No description available.</dd>
         
-        <tr>
-          <td style="vertical-align:top"><code>post_new_child</code></td>
-          <td style="vertical-align:top"><pre><code>void (* post_new_child) (
+          <dt><code>post_new_child: void (* post_new_child) (
     ArvDomNode* parent,
     ArvDomNode* child
-  )</code></pre></td>
-        </tr>
-        <tr>
-          <td>&nbsp;</td>
-          <td style="vertical-align:top">No description available.</td>
-        </td>
+  )</code></dt>
+          <dd>No description available.</dd>
         
-        <tr>
-          <td style="vertical-align:top"><code>pre_remove_child</code></td>
-          <td style="vertical-align:top"><pre><code>void (* pre_remove_child) (
+          <dt><code>pre_remove_child: void (* pre_remove_child) (
     ArvDomNode* parent,
     ArvDomNode* child
-  )</code></pre></td>
-        </tr>
-        <tr>
-          <td>&nbsp;</td>
-          <td style="vertical-align:top">No description available.</td>
-        </td>
+  )</code></dt>
+          <dd>No description available.</dd>
         
-        <tr>
-          <td style="vertical-align:top"><code>changed</code></td>
-          <td style="vertical-align:top"><pre><code>void (* changed) (
+          <dt><code>changed: void (* changed) (
     ArvDomNode* self
-  )</code></pre></td>
-        </tr>
-        <tr>
-          <td>&nbsp;</td>
-          <td style="vertical-align:top">No description available.</td>
-        </td>
+  )</code></dt>
+          <dd>No description available.</dd>
         
-        <tr>
-          <td style="vertical-align:top"><code>child_changed</code></td>
-          <td style="vertical-align:top"><pre><code>gboolean (* child_changed) (
+          <dt><code>child_changed: gboolean (* child_changed) (
     ArvDomNode* self,
     ArvDomNode* child
-  )</code></pre></td>
-        </tr>
-        <tr>
-          <td>&nbsp;</td>
-          <td style="vertical-align:top">No description available.</td>
-        </td>
+  )</code></dt>
+          <dd>No description available.</dd>
         
-        </table>
+        </dd>
       </div>
       
     </div>

@@ -417,52 +417,28 @@ its value set through g_object_set_property(), g_object_set(), et&nbsp;al.</p>
       <div class="docblock">
         <h6>Class members</h6>
 
-        <table class="members">
+        <dl class="members">
         
-        <tr>
-          <td style="vertical-align:top"><code>parent_class</code></td>
-          <td style="vertical-align:top"><pre><code>GObjectClass</code></pre></td>
-        </tr>
-        <tr>
-          <td>&nbsp;</td>
-          <td style="vertical-align:top">No description available.</td>
-        </td>
+          <dt><code>parent_class: GObjectClass</code></dt>
+          <dd>No description available.</dd>
         
-        <tr>
-          <td style="vertical-align:top"><code>update_device_list</code></td>
-          <td style="vertical-align:top"><pre><code>void (* update_device_list) (
+          <dt><code>update_device_list: void (* update_device_list) (
     ArvInterface* iface,
     GArray* device_ids
-  )</code></pre></td>
-        </tr>
-        <tr>
-          <td>&nbsp;</td>
-          <td style="vertical-align:top">No description available.</td>
-        </td>
+  )</code></dt>
+          <dd>No description available.</dd>
         
-        <tr>
-          <td style="vertical-align:top"><code>open_device</code></td>
-          <td style="vertical-align:top"><pre><code>ArvDevice* (* open_device) (
+          <dt><code>open_device: ArvDevice* (* open_device) (
     ArvInterface* iface,
     const char* device_id,
     GError** error
-  )</code></pre></td>
-        </tr>
-        <tr>
-          <td>&nbsp;</td>
-          <td style="vertical-align:top">No description available.</td>
-        </td>
+  )</code></dt>
+          <dd>No description available.</dd>
         
-        <tr>
-          <td style="vertical-align:top"><code>protocol</code></td>
-          <td style="vertical-align:top"><pre><code>const char*</code></pre></td>
-        </tr>
-        <tr>
-          <td>&nbsp;</td>
-          <td style="vertical-align:top">No description available.</td>
-        </td>
+          <dt><code>protocol: const char*</code></dt>
+          <dd>No description available.</dd>
         
-        </table>
+        </dd>
       </div>
       
     </div>
