@@ -111,6 +111,8 @@ arv_gc_property_node_get_node_name (ArvDomNode *node)
 			return "Constant";
 		case ARV_GC_PROPERTY_NODE_TYPE_ACCESS_MODE:
 			return "AccessMode";
+		case ARV_GC_PROPERTY_NODE_TYPE_IMPOSED_ACCESS_MODE:
+			return "ImposedAccessMode";
 		case ARV_GC_PROPERTY_NODE_TYPE_CACHABLE:
 			return "Cachable";
 		case ARV_GC_PROPERTY_NODE_TYPE_POLLING_TIME:
