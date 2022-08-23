@@ -571,6 +571,76 @@
     <Value>0</Value>
   </Integer>
 
+  <!-- Access mode tests -->
+
+  <Integer Name="RWRegister_ImposedAccessModeRW">
+    <pValue>RWRegister</pValue>
+    <ImposedAccessMode>RW</ImposedAccessMode>
+  </Integer>
+
+  <Integer Name="RWRegister_ImposedAccessModeRO">
+    <pValue>RWRegister</pValue>
+    <ImposedAccessMode>RO</ImposedAccessMode>
+  </Integer>
+
+  <Integer Name="RORegister_ImposedAccessModeRW">
+    <pValue>RORegister</pValue>
+    <ImposedAccessMode>RW</ImposedAccessMode>
+  </Integer>
+
+  <Integer Name="RORegister_ImposedAccessModeRO">
+    <pValue>RORegister</pValue>
+    <ImposedAccessMode>RO</ImposedAccessMode>
+  </Integer>
+
+  <Integer Name="RWStructEntry_ImposedAccessModeRW">
+    <pValue>RWStructEntry</pValue>
+    <ImposedAccessMode>RW</ImposedAccessMode>
+  </Integer>
+
+  <Integer Name="RWStructEntry_ImposedAccessModeRO">
+    <pValue>RWStructEntry</pValue>
+    <ImposedAccessMode>RO</ImposedAccessMode>
+  </Integer>
+
+  <Integer Name="ROStructEntry_ImposedAccessModeRW">
+    <pValue>ROStructEntry</pValue>
+    <ImposedAccessMode>RW</ImposedAccessMode>
+  </Integer>
+
+  <Integer Name="ROStructEntry_ImposedAccessModeRO">
+    <pValue>ROStructEntry</pValue>
+    <ImposedAccessMode>RO</ImposedAccessMode>
+  </Integer>
+
+  <IntReg Name="RWRegister">
+    <Address>0x1100</Address>
+    <Length>4</Length>
+    <AccessMode>RW</AccessMode>
+    <pPort>Device</pPort>
+  </IntReg>
+
+  <IntReg Name="RORegister">
+    <Address>0x1100</Address>
+    <Length>4</Length>
+    <AccessMode>RO</AccessMode>
+    <pPort>Device</pPort>
+  </IntReg>
+
+  <StructReg Comment="RWStructRegister">
+    <Address>0x1100</Address>
+    <Length>4</Length>
+    <AccessMode>RW</AccessMode>
+    <pPort>Device</pPort>
+    <StructEntry Name="RWStructEntry">
+      <Bit>0</Bit>
+    </StructEntry>
+    <StructEntry Name="ROStructEntry">
+      <Bit>1</Bit>
+      <AccessMode>RO</AccessMode>
+    </StructEntry>
+  </StructReg>
+
   <Port Name="Device" NameSpace="Standard">
   </Port>
 

@@ -1281,6 +1281,66 @@ lock_test (void)
 
 	g_object_unref (device);
 }
+
+static void
+access_mode_test (void)
+{
+	ArvDevice *device;
+	ArvGc *genicam;
+	ArvGcNode *node;
+        ArvGcAccessMode access_mode;
+	GError *error = NULL;
+
+	device = arv_fake_device_new ("TEST0", &error);
+	g_assert (ARV_IS_FAKE_DEVICE (device));
+	g_assert (error == NULL);
+
+	genicam = arv_device_get_genicam (device);
+	g_assert (ARV_IS_GC (genicam));
+
+	node = arv_gc_get_node (genicam, "RWRegister_ImposedAccessModeRW");
+	g_assert (ARV_IS_GC_FEATURE_NODE (node));
+        access_mode = arv_gc_feature_node_get_actual_access_mode (ARV_GC_FEATURE_NODE (node));
+        g_assert_cmpint (access_mode, ==, ARV_GC_ACCESS_MODE_RW);
+
+	node = arv_gc_get_node (genicam, "RWRegister_ImposedAccessModeRO");
+	g_assert (ARV_IS_GC_FEATURE_NODE (node));
+        access_mode = arv_gc_feature_node_get_actual_access_mode (ARV_GC_FEATURE_NODE (node));
+        g_assert_cmpint (access_mode, ==, ARV_GC_ACCESS_MODE_RO);
+
+	node = arv_gc_get_node (genicam, "RORegister_ImposedAccessModeRW");
+	g_assert (ARV_IS_GC_FEATURE_NODE (node));
+        access_mode = arv_gc_feature_node_get_actual_access_mode (ARV_GC_FEATURE_NODE (node));
+        g_assert_cmpint (access_mode, ==, ARV_GC_ACCESS_MODE_RO);
+
+	node = arv_gc_get_node (genicam, "RORegister_ImposedAccessModeRO");
+	g_assert (ARV_IS_GC_FEATURE_NODE (node));
+        access_mode = arv_gc_feature_node_get_actual_access_mode (ARV_GC_FEATURE_NODE (node));
+        g_assert_cmpint (access_mode, ==, ARV_GC_ACCESS_MODE_RO);
+
+	node = arv_gc_get_node (genicam, "RWStructEntry_ImposedAccessModeRW");
+	g_assert (ARV_IS_GC_FEATURE_NODE (node));
+        access_mode = arv_gc_feature_node_get_actual_access_mode (ARV_GC_FEATURE_NODE (node));
+        g_assert_cmpint (access_mode, ==, ARV_GC_ACCESS_MODE_RW);
+
+	node = arv_gc_get_node (genicam, "RWStructEntry_ImposedAccessModeRO");
+	g_assert (ARV_IS_GC_FEATURE_NODE (node));
+        access_mode = arv_gc_feature_node_get_actual_access_mode (ARV_GC_FEATURE_NODE (node));
+        g_assert_cmpint (access_mode, ==, ARV_GC_ACCESS_MODE_RO);
+
+	node = arv_gc_get_node (genicam, "ROStructEntry_ImposedAccessModeRW");
+	g_assert (ARV_IS_GC_FEATURE_NODE (node));
+        access_mode = arv_gc_feature_node_get_actual_access_mode (ARV_GC_FEATURE_NODE (node));
+        g_assert_cmpint (access_mode, ==, ARV_GC_ACCESS_MODE_RO);
+
+	node = arv_gc_get_node (genicam, "ROStructEntry_ImposedAccessModeRO");
+	g_assert (ARV_IS_GC_FEATURE_NODE (node));
+        access_mode = arv_gc_feature_node_get_actual_access_mode (ARV_GC_FEATURE_NODE (node));
+        g_assert_cmpint (access_mode, ==, ARV_GC_ACCESS_MODE_RO);
+
+	g_object_unref (device);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -1306,6 +1366,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/genicam/visibility", visibility_test);
 	g_test_add_func ("/genicam/category", category_test);
 	g_test_add_func ("/genicam/lock", lock_test);
+	g_test_add_func ("/genicam/access-mode", access_mode_test);
 
 	result = g_test_run();
 
