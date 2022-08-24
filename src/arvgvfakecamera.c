@@ -462,8 +462,8 @@ _create_and_bind_input_socket (GSocket **socket_out, const char *socket_name,
 		return FALSE;
 	}
 
-	socket_address = g_inet_socket_address_new (inet_address, port);
-	success = g_socket_bind (socket, socket_address, allow_reuse, &error);
+	socket_address = arv_socket_bind_with_range (socket, inet_address, port, allow_reuse, &error);
+        success = G_IS_INET_SOCKET_ADDRESS (socket_address);
 
 	if (error != NULL) {
 		arv_warning_device ("Failed to bind %s socket: %s", socket_name, error->message);

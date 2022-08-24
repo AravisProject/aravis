@@ -690,9 +690,8 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 	}
 
 	interface_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (priv->io_data->interface_address));
-	interface_socket_address = g_inet_socket_address_new (interface_address, 0);
 	socket = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, NULL);
-	g_socket_bind (socket, interface_socket_address, FALSE, NULL);
+	interface_socket_address = arv_socket_bind_with_range (socket, interface_address, 0, FALSE, NULL);
 	local_address = G_INET_SOCKET_ADDRESS (g_socket_get_local_address (socket, NULL));
 	port = g_inet_socket_address_get_port (local_address);
 
@@ -1989,12 +1988,14 @@ arv_gv_device_constructed (GObject *object)
 
 	io_data->packet_id = 65300; /* Start near the end of the circular counter */
 
-	io_data->interface_address = g_inet_socket_address_new (priv->interface_address, 0);
 	io_data->device_address = g_inet_socket_address_new (priv->device_address, ARV_GVCP_PORT);
 	io_data->socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
 					G_SOCKET_TYPE_DATAGRAM,
 					G_SOCKET_PROTOCOL_UDP, NULL);
-	if (!g_socket_bind (io_data->socket, io_data->interface_address, FALSE, &local_error)) {
+        io_data->interface_address = arv_socket_bind_with_range (io_data->socket, priv->interface_address, 0,
+                                                                 FALSE, &local_error);
+
+	if (io_data->interface_address == NULL) {
 		if (local_error == NULL)
 			local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_UNKNOWN,
 						   "Unknown error trying to bind device interface");
