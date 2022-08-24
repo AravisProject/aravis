@@ -29,6 +29,19 @@
 #include <gio/gnetworking.h>
 #include <gio/gio.h>
 
+#define ARV_NETWORK_ERROR arv_network_error_quark()
+
+ARV_API GQuark		arv_network_error_quark		(void);
+
+/**
+ * ArvNetworkError:
+ * @ARV_NETWORK_ERROR_PORT_EXHAUSTION: No more available port in constrained port range
+ */
+
+typedef enum {
+	ARV_NETWORK_ERROR_PORT_EXHAUSTION
+} ArvNetworkError;
+
 #ifndef G_OS_WIN32
 #include <sys/param.h>
 #include <arpa/inet.h>
@@ -121,5 +134,11 @@ gboolean			arv_socket_set_recv_buffer_size		(int socket_fd, gint buffer_size);
 void			arv_gpollfd_prepare_all			(GPollFD *fds, guint nfds);
 void			arv_gpollfd_clear_one			(GPollFD *fd, GSocket* socket);
 void 			arv_gpollfd_finish_all			(GPollFD *fds, guint nfds);
+
+/* Port range constrained socket binding */
+
+void                    arv_set_port_range                      (guint16 min, guint16 max);
+GSocketAddress *        arv_socket_bind_with_range              (GSocket *socket, GInetAddress *address, guint16 port,
+                                                                 gboolean allow_reuse, GError **error);
 
 #endif

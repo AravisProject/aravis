@@ -25,6 +25,12 @@
 #include <arvdebugprivate.h>
 #include <arvmiscprivate.h>
 
+GQuark
+arv_network_error_quark (void)
+{
+	return g_quark_from_static_string ("arv-network-error-quark");
+}
+
 #ifndef G_OS_WIN32
 	#include <ifaddrs.h>
 #else
@@ -588,4 +594,76 @@ arv_network_interface_is_loopback(ArvNetworkInterface *a)
 	return FALSE;
 }
 
+static GMutex arv_port_mutex;
 
+static guint32 arv_port_minimum = 10000;
+static guint32 arv_port_maximum = 10010;
+static guint32 arv_last_port_offset = 10;
+
+void
+arv_set_port_range (guint16 min, guint16 max)
+{
+        g_return_if_fail (min <= max);
+
+        g_mutex_lock (&arv_port_mutex);
+
+        arv_port_minimum = min;
+        arv_port_maximum = max;
+        arv_last_port_offset = arv_port_maximum - arv_port_minimum;
+
+        g_mutex_unlock (&arv_port_mutex);
+}
+
+GSocketAddress *
+arv_socket_bind_with_range (GSocket *socket, GInetAddress *address, guint16 port, gboolean allow_reuse, GError **error)
+{
+        GSocketAddress *socket_address = NULL;
+        GError *local_error = NULL;
+        gboolean success;
+        guint32 i;
+
+        g_mutex_lock (&arv_port_mutex);
+
+        if (port != 0 || (arv_port_minimum == 0 && arv_port_maximum == 0)) {
+                socket_address = g_inet_socket_address_new (address, port);
+
+                success = g_socket_bind (socket, socket_address, allow_reuse, error);
+
+                if (!success)
+                        g_clear_object (&socket_address);
+
+                g_mutex_unlock (&arv_port_mutex);
+                return socket_address;
+        }
+
+        for (i = 0; i <= arv_port_maximum - arv_port_minimum; i++) {
+                arv_last_port_offset = (arv_last_port_offset + 1) % (arv_port_maximum - arv_port_minimum + 1);
+
+                arv_debug_misc ("Try port %u in range [%u..%u]", arv_port_minimum + arv_last_port_offset,
+                                arv_port_minimum, arv_port_maximum);
+
+                socket_address = g_inet_socket_address_new (address, arv_port_minimum + arv_last_port_offset);
+                success = g_socket_bind (socket, socket_address, allow_reuse, &local_error);
+                if (success) {
+                        g_mutex_unlock (&arv_port_mutex);
+                        return socket_address;
+                }
+
+                g_clear_object (&socket_address);
+
+                if (local_error != NULL) {
+                        if (local_error->domain != G_IO_ERROR || local_error->code != G_IO_ERROR_ADDRESS_IN_USE) {
+                                g_propagate_error (error, local_error);
+                                g_mutex_unlock (&arv_port_mutex);
+                                return NULL;
+                        }
+                        g_clear_error (&local_error);
+                }
+        }
+
+        g_set_error (error, ARV_NETWORK_ERROR, ARV_NETWORK_ERROR_PORT_EXHAUSTION,
+                     "No more available port in range [%u..%u]", arv_port_minimum, arv_port_maximum);
+
+        g_mutex_unlock (&arv_port_mutex);
+        return NULL;
+}
