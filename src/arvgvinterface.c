@@ -67,6 +67,15 @@ typedef struct {
 	GPollFD *poll_fds;
 } ArvGvDiscoverSocketList;
 
+static void
+arv_gv_discover_socket_free (ArvGvDiscoverSocket *discover_socket)
+{
+        g_clear_object (&discover_socket->interface_address);
+        g_clear_object (&discover_socket->broadcast_address);
+        g_clear_object (&discover_socket->socket);
+        g_free (discover_socket);
+}
+
 static ArvGvDiscoverSocketList *
 arv_gv_discover_socket_list_new (void)
 {
@@ -142,14 +151,8 @@ arv_gv_discover_socket_list_free (ArvGvDiscoverSocketList *socket_list)
 
 	arv_gpollfd_finish_all (socket_list->poll_fds, socket_list->n_sockets);
 
-	for (iter = socket_list->sockets; iter != NULL; iter = iter->next) {
-		ArvGvDiscoverSocket *discover_socket = iter->data;
-
-		g_object_unref (discover_socket->interface_address);
-		g_object_unref (discover_socket->broadcast_address);
-		g_object_unref (discover_socket->socket);
-		g_free (discover_socket);
-	}
+	for (iter = socket_list->sockets; iter != NULL; iter = iter->next)
+                arv_gv_discover_socket_free (iter->data);
 	g_slist_free (socket_list->sockets);
 	g_free (socket_list->poll_fds);
 
