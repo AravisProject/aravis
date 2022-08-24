@@ -1655,10 +1655,11 @@ arv_gv_stream_constructed (GObject *object)
 	priv->thread_data->socket = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, NULL);
 	priv->thread_data->device_address = g_object_ref (device_address);
 	priv->thread_data->interface_address = g_object_ref (interface_address);
-	priv->thread_data->interface_socket_address = g_inet_socket_address_new (interface_address, 0);
 	priv->thread_data->device_socket_address = g_inet_socket_address_new (device_address, ARV_GVCP_PORT);
 	g_socket_set_blocking (priv->thread_data->socket, FALSE);
-	g_socket_bind (priv->thread_data->socket, priv->thread_data->interface_socket_address, FALSE, NULL);
+
+	priv->thread_data->interface_socket_address = arv_socket_bind_with_range (priv->thread_data->socket,
+                                                                                  interface_address, 0, FALSE, NULL);
 
 	local_address = G_INET_SOCKET_ADDRESS (g_socket_get_local_address (priv->thread_data->socket, NULL));
 	priv->thread_data->stream_port = g_inet_socket_address_get_port (local_address);
