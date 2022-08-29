@@ -592,9 +592,6 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 		}
 
 		triggerModeEnabled = strcmp(value, "On") == 0;
-		if (triggerModeEnabled) {
-			GST_LOG_OBJECT (gst_aravis, "TriggeMode is set to On, pipeline will wait for a stream.");
-		}
 	}
 
 	GST_OBJECT_LOCK (gst_aravis);
