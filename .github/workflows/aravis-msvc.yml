@@ -22,6 +22,9 @@ jobs:
     - name: pip
       run: |
         pip install conan
+    - name: disable-perl
+      run: |
+        rm -r C:\Strawberry\perl
     - name: checkout
       uses: actions/checkout@v2
     - name: conan
@@ -31,8 +34,8 @@ jobs:
           libiconv/1.17
           glib/2.70.0
           #gobject-introspection/1.69.0
-          #gstreamer/1.19.1
-          #gst-plugins-base/1.19.1
+          gstreamer/1.19.1
+          gst-plugins-base/1.19.1
           #gtk/4.4.0
           libxml2/2.9.12
           zlib/1.2.11
@@ -40,6 +43,7 @@ jobs:
 
           [build_requires]
           meson/0.59.2
+          pkgconf/1.7.4
 
           [generators]
           pkg_config
