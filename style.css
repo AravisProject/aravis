@@ -24,6 +24,8 @@
   --sidebar-selected-bg: var(--primary);
   --sidebar-hover-bg: rgba(127, 127, 127, 0.2);
   --sidebar-text-color: #fafafa;
+  --sidebar-search-bg: rgba(127, 127, 127, 0.25);
+  --sidebar-search-focus-bg: rgba(127, 127, 127, 0.3);
   --sidebar-padding: 1.5em;
 
   /* boxes, e.g. code blocks */
@@ -104,28 +106,6 @@
 ::selection {
   color: white;
   background: var(--primary);
-}
-
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-thumb {
-  border-radius: 10px;
-  background: rgba(128, 128, 128, 0.6);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(128, 128, 128, 1);
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(128, 128, 128, 0.15);
-}
-
-* {
-  scrollbar-width: initial;
 }
 
 body {
@@ -401,7 +381,6 @@ footer {
  * SIDEBAR
  *********************************/
 .sidebar {
-  scrollbar-width: thin;
   background: var(--sidebar-bg);
   border-right: 1px solid var(--sidebar-bg);
   min-width: 35ch;
@@ -412,6 +391,7 @@ footer {
   z-index: 2;
   height: 100vh;
   overflow-y: auto;
+  color-scheme: dark;
 }
 
 .sidebar a,
@@ -492,15 +472,21 @@ footer {
 }
 
 .sidebar .search input[type="text"] {
-  border-color: transparent;
+  border: none;
   width: 100%;
-  border: 1px solid #ccc;
   border-radius: 50px;
-  padding: 6px 12px;
+  padding: 8px 14px;
   display: inline-block;
   font-size: 14px;
-  box-shadow: inset 0 1px 3px #ddd;
-  transition: border .3s linear;
+  outline: transparent;
+  background: var(--sidebar-search-bg);
+  color: var(--sidebar-text-color);
+  transition: background-color 150ms ease;
+}
+
+.sidebar .search input[type="text"]:hover,
+.sidebar .search input[type="text"]:focus {
+  background: var(--sidebar-search-focus-bg);
 }
 
 .toc {
