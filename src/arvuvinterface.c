@@ -173,11 +173,12 @@ _usb_device_to_device_ids (ArvUvInterface *uv_interface, libusb_device *device)
 	gboolean control_protocol_found;
 	gboolean data_protocol_found;
 	int guid_index = -1;
-	int r, i, j;
+	int result, i, j;
 
-	r = libusb_get_device_descriptor (device, &desc);
-	if (r < 0) {
-		arv_warning_interface ("Failed to get device descriptor");
+	result = libusb_get_device_descriptor (device, &desc);
+	if (result < 0) {
+		arv_warning_interface ("Failed to get device descriptor: %s",
+				       libusb_error_name (result));
 		return NULL;
 	}
 
@@ -212,7 +213,8 @@ _usb_device_to_device_ids (ArvUvInterface *uv_interface, libusb_device *device)
 	if (!control_protocol_found || !data_protocol_found)
 		return NULL;
 
-	if (libusb_open (device, &device_handle) == LIBUSB_SUCCESS) {
+        result = libusb_open (device, &device_handle);
+	if (result == LIBUSB_SUCCESS) {
 		ArvUvInterfaceDeviceInfos *device_infos;
 		unsigned char *manufacturer;
 		unsigned char *product;
@@ -267,7 +269,8 @@ _usb_device_to_device_ids (ArvUvInterface *uv_interface, libusb_device *device)
 
 		libusb_close (device_handle);
 	} else
-		arv_warning_interface ("Failed to open USB device");
+		arv_warning_interface ("Failed to open USB device: %s",
+				       libusb_error_name (result));
 
 	return device_ids;
 }
@@ -277,19 +280,22 @@ _discover (ArvUvInterface *uv_interface,  GArray *device_ids)
 {
 	libusb_device **devices;
 	unsigned uv_count = 0;
-	ssize_t count;
+	ssize_t result;
 	unsigned i;
 
-	count = libusb_get_device_list(uv_interface->priv->usb, &devices);
-	if (count < 0) {
-		arv_warning_interface ("[[UvInterface:_discover] Failed to get USB device list: %s",
-				       libusb_error_name (count));
+        if (uv_interface->priv->usb == NULL)
+                return;
+
+	result = libusb_get_device_list(uv_interface->priv->usb, &devices);
+	if (result < 0) {
+		arv_warning_interface ("Failed to get USB device list: %s",
+				       libusb_error_name (result));
 		return;
 	}
 
 	g_hash_table_remove_all (uv_interface->priv->devices);
 
-	for (i = 0; i < count; i++) {
+	for (i = 0; i < result; i++) {
 		ArvInterfaceDeviceIds *ids;
 
 		ids = _usb_device_to_device_ids (uv_interface, devices[i]);
@@ -312,7 +318,7 @@ _discover (ArvUvInterface *uv_interface,  GArray *device_ids)
 
 	arv_info_interface ("Found %d USB3Vision device%s (among %" G_GSSIZE_FORMAT " USB device%s)",
 			     uv_count , uv_count > 1 ? "s" : "",
-			     count, count > 1 ? "s" : "");
+			     result, result > 1 ? "s" : "");
 
 	libusb_free_device_list (devices, 1);
 }
@@ -407,9 +413,15 @@ G_DEFINE_TYPE_WITH_CODE (ArvUvInterface, arv_uv_interface, ARV_TYPE_INTERFACE, G
 static void
 arv_uv_interface_init (ArvUvInterface *uv_interface)
 {
+        int result;
+
 	uv_interface->priv = arv_uv_interface_get_instance_private (uv_interface);
 
-	libusb_init (&uv_interface->priv->usb);
+	result = libusb_init (&uv_interface->priv->usb);
+        if (result != 0)
+		arv_warning_interface ("Failed to initialize USB library: %s",
+				       libusb_error_name (result));
+
 	uv_interface->priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal, NULL,
 							     (GDestroyNotify) arv_uv_interface_device_infos_unref);
 }
@@ -423,7 +435,8 @@ arv_uv_interface_finalize (GObject *object)
 
 	G_OBJECT_CLASS (arv_uv_interface_parent_class)->finalize (object);
 
-	libusb_exit (uv_interface->priv->usb);
+        if (uv_interface->priv->usb != NULL)
+                libusb_exit (uv_interface->priv->usb);
 }
 
 static void
