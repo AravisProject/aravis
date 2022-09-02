@@ -24,23 +24,10 @@
 #ifndef ARV_NETWORK_PRIVATE_H
 #define ARV_NETWORK_PRIVATE_H
 
-#include <arvapi.h>
+#include <arvnetwork.h>
 
 #include <gio/gnetworking.h>
 #include <gio/gio.h>
-
-#define ARV_NETWORK_ERROR arv_network_error_quark()
-
-ARV_API GQuark		arv_network_error_quark		(void);
-
-/**
- * ArvNetworkError:
- * @ARV_NETWORK_ERROR_PORT_EXHAUSTION: No more available port in constrained port range
- */
-
-typedef enum {
-	ARV_NETWORK_ERROR_PORT_EXHAUSTION
-} ArvNetworkError;
 
 #ifndef G_OS_WIN32
 #include <sys/param.h>
