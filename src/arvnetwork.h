@@ -45,6 +45,9 @@ typedef enum {
 	ARV_NETWORK_ERROR_PORT_EXHAUSTION
 } ArvNetworkError;
 
+ARV_API gboolean        arv_set_gv_port_range              (guint16 port_min, guint16 port_max);
+ARV_API gboolean        arv_set_gv_port_range_from_string  (const char *range);
+
 G_END_DECLS
 
 #endif
