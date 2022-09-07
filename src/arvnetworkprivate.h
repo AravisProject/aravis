@@ -124,7 +124,6 @@ void 			arv_gpollfd_finish_all			(GPollFD *fds, guint nfds);
 
 /* Port range constrained socket binding */
 
-void                    arv_set_port_range                      (guint16 min, guint16 max);
 GSocketAddress *        arv_socket_bind_with_range              (GSocket *socket, GInetAddress *address, guint16 port,
                                                                  gboolean allow_reuse, GError **error);
 

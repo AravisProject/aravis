@@ -596,14 +596,69 @@ arv_network_interface_is_loopback(ArvNetworkInterface *a)
 
 static GMutex arv_port_mutex;
 
-static guint32 arv_port_minimum = 10000;
-static guint32 arv_port_maximum = 10010;
-static guint32 arv_last_port_offset = 10;
+static guint32 arv_port_minimum = 0;
+static guint32 arv_port_maximum = 0;
+static guint32 arv_last_port_offset = 0;
 
-void
-arv_set_port_range (guint16 min, guint16 max)
+/**
+ * arv_set_gv_port_range_from_string:
+ * @range: a port range as string (<min>-<max>)
+ *
+ * Restrict the port range to be used by the gv protocol for listening to incoming packets. `0-0` disables the port
+ * range limit.
+ *
+ * Returns: %TRUE% if the operation was successful
+ *
+ * Sinces: 0.8.23
+ */
+
+gboolean
+arv_set_gv_port_range_from_string (const char *range)
 {
-        g_return_if_fail (min <= max);
+        GRegex *regex;
+        GMatchInfo *match_info = NULL;
+        gboolean success;
+
+        g_return_val_if_fail (range != NULL, FALSE);
+
+        regex = g_regex_new ("^([\\d]+)-([\\d]+)$", 0, 0, NULL);
+        success = g_regex_match (regex, range, 0, &match_info);
+
+        if (success && g_match_info_get_match_count (match_info) == 3) {
+                guint16 min, max;
+
+                min = g_ascii_strtoull (g_match_info_fetch (match_info, 1), NULL, 10);
+                max = g_ascii_strtoull (g_match_info_fetch (match_info, 2), NULL, 10);
+
+                if (min > max)
+                        return FALSE;
+
+                success = arv_set_gv_port_range (min, max);
+        }
+
+        g_clear_pointer (&match_info, g_match_info_unref);
+        g_clear_pointer (&regex, g_regex_unref);
+
+        return success;
+}
+
+/**
+ * arv_set_gv_port_range:
+ * @min: minimum port number
+ * @max: maximum port number
+ *
+ * Restrict the port range to be used by the gv protocol for listening to incoming packets. `min = 0` and `max = 0`
+ * disables the port range limit.
+ *
+ * Returns: %TRUE% if the operation was successful
+ *
+ * Sinces: 0.8.23
+ */
+
+gboolean
+arv_set_gv_port_range (guint16 min, guint16 max)
+{
+        g_return_val_if_fail (min <= max, FALSE);
 
         g_mutex_lock (&arv_port_mutex);
 
@@ -612,6 +667,8 @@ arv_set_port_range (guint16 min, guint16 max)
         arv_last_port_offset = arv_port_maximum - arv_port_minimum;
 
         g_mutex_unlock (&arv_port_mutex);
+
+        return TRUE;
 }
 
 GSocketAddress *
