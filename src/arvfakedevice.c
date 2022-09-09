@@ -59,9 +59,9 @@ G_DEFINE_TYPE_WITH_CODE (ArvFakeDevice, arv_fake_device, ARV_TYPE_DEVICE, G_ADD_
 /* ArvDevice implemenation */
 
 static ArvStream *
-arv_fake_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data, GError **error)
+arv_fake_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data, GDestroyNotify destroy, GError **error)
 {
-	return arv_fake_stream_new (ARV_FAKE_DEVICE (device), callback, user_data, error);
+	return arv_fake_stream_new (ARV_FAKE_DEVICE (device), callback, user_data, destroy, error);
 }
 
 static const char *

@@ -792,13 +792,14 @@ arv_uv_stream_stop_thread (ArvStream *stream)
  */
 
 ArvStream *
-arv_uv_stream_new (ArvUvDevice *uv_device, ArvStreamCallback callback, void *callback_data,
+arv_uv_stream_new (ArvUvDevice *uv_device, ArvStreamCallback callback, void *callback_data, GDestroyNotify destroy,
                    ArvUvUsbMode usb_mode, GError **error)
 {
 	return g_initable_new (ARV_TYPE_UV_STREAM, NULL, error,
 			       "device", uv_device,
 			       "callback", callback,
 			       "callback-data", callback_data,
+						 "destroy-notify", destroy,
 			       "usb-mode", usb_mode,
 			       NULL);
 }

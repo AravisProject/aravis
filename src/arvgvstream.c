@@ -1247,12 +1247,13 @@ arv_gv_stream_stop_thread (ArvStream *stream)
  */
 
 ArvStream *
-arv_gv_stream_new (ArvGvDevice *gv_device, ArvStreamCallback callback, void *callback_data, GError **error)
+arv_gv_stream_new (ArvGvDevice *gv_device, ArvStreamCallback callback, void *callback_data, GDestroyNotify destroy, GError **error)
 {
 	return g_initable_new (ARV_TYPE_GV_STREAM, NULL, error,
 			       "device", gv_device,
 			       "callback", callback,
 			       "callback-data", callback_data,
+						 "destroy-notify", destroy,
 			       NULL);
 }
 

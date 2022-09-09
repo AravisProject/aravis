@@ -1607,7 +1607,7 @@ arv_gv_device_load_genicam (ArvGvDevice *gv_device, GError **error)
 /* ArvDevice implemenation */
 
 static ArvStream *
-arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data, GError **error)
+arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data, GDestroyNotify destroy, GError **error)
 {
 	ArvGvDevice *gv_device = ARV_GV_DEVICE (device);
 	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
@@ -1645,7 +1645,7 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 		}
 	}
 
-	stream = arv_gv_stream_new (gv_device, callback, user_data, error);
+	stream = arv_gv_stream_new (gv_device, callback, user_data, destroy, error);
 	if (!ARV_IS_STREAM (stream))
 		return NULL;
 

@@ -167,10 +167,10 @@ arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, ArvUvEndpointType endpoint_
 }
 
 static ArvStream *
-arv_uv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data, GError **error)
+arv_uv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data, GDestroyNotify destroy, GError **error)
 {
 	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (ARV_UV_DEVICE (device));
-	return arv_uv_stream_new (ARV_UV_DEVICE (device), callback, user_data, priv->usb_mode, error);
+	return arv_uv_stream_new (ARV_UV_DEVICE (device), callback, user_data, destroy, priv->usb_mode, error);
 }
 
 static gboolean
