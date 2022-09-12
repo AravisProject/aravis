@@ -170,7 +170,7 @@ arv_camera_create_stream (ArvCamera *camera, ArvStreamCallback callback, gpointe
  *
  * Returns: (transfer full): a new [class@ArvStream], to be freed after use with [method@GObject.Object.unref].
  *
- * Since: 0.2.0
+ * Since: 0.8.23
  */
 
 ArvStream *

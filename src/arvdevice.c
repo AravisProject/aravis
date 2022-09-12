@@ -99,7 +99,7 @@ arv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *u
  *
  * Return value: (transfer full): a new #ArvStream.
  *
- * Since: 0.2.0
+ * Since: 0.8.23
  */
 
 ArvStream *
