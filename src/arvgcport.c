@@ -43,6 +43,7 @@ typedef struct {
 
 static ArvGvLegacyInfos arv_gc_port_legacy_infos[] = {
    { .vendor_selection = "Imperx", .model_selection = "IpxGEVCamera"},
+   { .vendor_selection = "PleoraTechnologiesInc", .model_selection = "NTxGigE"},
 };
 
 typedef struct {
