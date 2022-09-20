@@ -7,7 +7,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Aravis.Device.set_register_cache_policy</title>
+  <title>Aravis.Device.create_stream_full</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <meta charset="utf-8" />
@@ -23,10 +23,10 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
 
   
-  <meta priority="og:title" content="Aravis.Device.set_register_cache_policy"/>
-  <meta priority="og:description" content="Reference for Aravis.Device.set_register_cache_policy"/>
-  <meta name="twitter:title" content="Aravis.Device.set_register_cache_policy"/>
-  <meta name="twitter:description" content="Reference for Aravis.Device.set_register_cache_policy"/>
+  <meta priority="og:title" content="Aravis.Device.create_stream_full"/>
+  <meta priority="og:description" content="Reference for Aravis.Device.create_stream_full"/>
+  <meta name="twitter:title" content="Aravis.Device.create_stream_full"/>
+  <meta name="twitter:description" content="Reference for Aravis.Device.create_stream_full"/>
 
 
   
@@ -92,7 +92,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.Device.create_stream.html">create_stream</a>
   
-    <a class="method" href="method.Device.create_stream_full.html">create_stream_full</a>
+    <a class="method current" href="method.Device.create_stream_full.html">create_stream_full</a>
   
     <a class="method" href="method.Device.dup_available_enumeration_feature_values.html">dup_available_enumeration_feature_values</a>
   
@@ -148,7 +148,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.Device.set_range_check_policy.html">set_range_check_policy</a>
   
-    <a class="method current" href="method.Device.set_register_cache_policy.html">set_register_cache_policy</a>
+    <a class="method" href="method.Device.set_register_cache_policy.html">set_register_cache_policy</a>
   
     <a class="method" href="method.Device.set_string_feature_value.html">set_string_feature_value</a>
   
@@ -167,7 +167,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <section id="main" class="content">
   <header>
     <h3>Method</h3>
-    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.Device.html">Device</a><span class="sep"></span>set_register_cache_policy</h1>
+    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.Device.html">Device</a><span class="sep"></span>create_stream_full</h1>
   </header>
 
   <section>
@@ -176,15 +176,18 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Declaration
         <a class="anchor" href="#declaration"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvdevice.h#L140">[src]</a>
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvdevice.h#L94">[src]</a>
         
       </h4>
 
       <div class="docblock c-decl">
-        <pre><code><div class="highlight"><pre><span></span><span class="kt">void</span>
-<span class="n">arv_device_set_register_cache_policy</span> <span class="p">(</span>
+        <pre><code><div class="highlight"><pre><span></span><span class="n">ArvStream</span><span class="o">*</span>
+<span class="n">arv_device_create_stream_full</span> <span class="p">(</span>
   <span class="n">ArvDevice</span><span class="o">*</span> <span class="n">device</span><span class="p">,</span>
-  <span class="n">ArvRegisterCachePolicy</span> <span class="n">policy</span>
+  <span class="n">ArvStreamCallback</span> <span class="n">callback</span><span class="p">,</span>
+  <span class="kt">void</span><span class="o">*</span> <span class="n">user_data</span><span class="p">,</span>
+  <span class="n">GDestroyNotify</span> <span class="n">destroy</span><span class="p">,</span>
+  <span class="n">GError</span><span class="o">**</span> <span class="n">error</span>
 <span class="p">)</span>
 </pre></div>
 </code></pre>
@@ -196,26 +199,25 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Description
         <a class="anchor" href="#description"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvdevice.c#L981">[src]</a>
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvdevice.c#L89">[src]</a>
         
       </h4>
 
       <div class="docblock">
-        <p>Sets the register cache&nbsp;policy.</p>
-<p><warning><para>Be aware that some camera may have wrong Cachable properties defined in their Genicam metadata, which
-may lead to incorrect readouts. Using the debug cache policy, and activating genicam debug output (export
-ARV_DEBUG=genicam), can help you to check the cache validity. In this mode, every time the cache content is not in
-sync with the actual register value, a debug message is printed on the console.</para></warning></p>
+        <p>Creates a new <code>ArvStream</code> for video stream handling. See
+<code>ArvStreamCallback</code> for details regarding the callback&nbsp;function.</p>
       </div>
 
       <div class="docblock">
         <table>
           
           
-          <tr><td>Available since:</td><td>0.8.0</td></tr>
+          <tr><td>Available since:</td><td>0.8.23</td></tr>
           
           
           
+          
+          <tr><td>This method is renamed to <a href="method.Device.create_stream.html"><code>arv_device_create_stream()</code></a> in language bindings</td></tr>
           
           
         </table>
@@ -234,10 +236,44 @@ sync with the actual register value, a debug message is printed on the console.<
       <div class="docblock">
         <dl class="arguments">
           
-          <dt class="arg-name"><code>policy</code></dt>
+          <dt class="arg-name"><code>callback</code></dt>
           <dd class="arg-description">
-            <p><em>Type:</em>&nbsp;<a href="enum.RegisterCachePolicy.html"><code>ArvRegisterCachePolicy</code></a></p>
-            <p><p>Cache&nbsp;policy.</p></p>
+            <p><em>Type:</em>&nbsp;<a href="callback.StreamCallback.html"><code>ArvStreamCallback</code></a></p>
+            <p><p>A frame processing&nbsp;callback.</p></p>
+            <table>
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            </table>
+          </dd>
+          
+          <dt class="arg-name"><code>user_data</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<code>void*</code></p>
+            <p><p>User data for <code>callback</code>.</p></p>
+            <table>
+            
+            <tr><td>The argument can be <code>NULL</code>.</td></tr>
+            
+            
+            
+            
+            
+            <tr><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
+            
+            </table>
+          </dd>
+          
+          <dt class="arg-name"><code>destroy</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<a href="javascript:void(0)" data-link="callback.DestroyNotify.html" data-namespace="GLib" class="external"><code>GDestroyNotify</code></a></p>
+            <p><p>A <code>GDestroyNotify</code> placeholder, <code>NULL</code> to&nbsp;ignore.</p></p>
             <table>
             
             
@@ -253,11 +289,49 @@ sync with the actual register value, a debug message is printed on the console.<
           
 
           
+          <dt class="arg-name"><code>error</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<a href="javascript:void(0)" data-namespace="GLib" data-link="struct.Error.html" class="external"><code>GError **</code></a></p>
+            <p>The return location for <a href="https://docs.gtk.org/glib/error-reporting.html#rules-for-use-of-gerror">a recoverable error</a>.</p>
+            <table>
+              <tr><td>The argument can be <code>NULL</code>.</td></tr>
+              <tr><td>If the return location is not <code>NULL</code>, then you must initialize it to a <code>NULL</code> <code>GError*</code>.</td></tr>
+              <tr><td>The argument will left initialized to <code>NULL</code> by the method if there are no errors.</td></tr>
+              <tr><td>In case of error, the argument will be set to a newly allocated <code>GError</code>; the caller will take ownership of the data, and be responsible for freeing it.</td></tr>
+            </table>
+          </dd>
+          
         </dl>
       </div>
     </div>
     
 
+    
+    <div class="return-value toggle-wrapper">
+      <h4 id="return-value">
+        Return value
+        <a href="#return-value" class="anchor"></a>
+      </h4>
+
+      <div class="docblock">
+        <div class="returns">
+          <div class="arg-description">
+            <p><em>Type:</em>&nbsp;<a href="class.Stream.html"><code>ArvStream</code></a></p>
+            <p><p>A new <code>ArvStream</code>.</p></p>
+          </div>
+          <div>
+            <table>
+            
+            
+            
+            <tr><td title="transfer: full">The caller of the method takes ownership of the data, and is responsible for freeing it.</td></tr>
+            
+            
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
     
 
   </section>

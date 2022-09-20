@@ -134,6 +134,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   <span class="n">ArvDevice</span><span class="o">*</span> <span class="n">device</span><span class="p">,</span>
   <span class="n">ArvStreamCallback</span> <span class="n">callback</span><span class="p">,</span>
   <span class="kt">void</span><span class="o">*</span> <span class="n">user_data</span><span class="p">,</span>
+  <span class="n">GDestroyNotify</span> <span class="n">destroy</span><span class="p">,</span>
   <span class="n">GError</span><span class="o">**</span> <span class="n">error</span>
 <span class="p">)</span>
 </pre></div>
@@ -146,20 +147,15 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Description
         <a href="#description" class="anchor"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvdevice.c#L68">[src]</a>
-        
       </h4>
 
       <div class="docblock">
-        <p>Creates a new <code>ArvStream</code> for video stream handling. See
-<code>ArvStreamCallback</code> for details regarding the callback&nbsp;function.</p>
+        No description available.
       </div>
 
       <div class="docblock">
         <table>
           
-          
-          <tr><td>Available since:</td><td>0.2.0</td></tr>
           
           
         </table>
@@ -181,7 +177,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
           <dt class="arg-name"><code>callback</code></dt>
           <dd class="arg-description">
             <p><em>Type:</em>&nbsp;<a href="callback.StreamCallback.html"><code>ArvStreamCallback</code></a></p>
-            <p><p>A frame processing&nbsp;callback.</p></p>
+            <p>No description available.</p>
             <table>
             
             
@@ -198,7 +194,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
           <dt class="arg-name"><code>user_data</code></dt>
           <dd class="arg-description">
             <p><em>Type:</em>&nbsp;<code>void*</code></p>
-            <p><p>User data for <code>callback</code>.</p></p>
+            <p>No description available.</p>
             <table>
             
             <tr><td>The argument can be <code>NULL</code>.</td></tr>
@@ -208,6 +204,23 @@ SPDX-License-Identifier: LGPL-2.1-or-later
             
             
             <tr><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
+            
+            </table>
+          </dd>
+          
+          <dt class="arg-name"><code>destroy</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<a href="javascript:void(0)" data-link="callback.DestroyNotify.html" data-namespace="GLib" class="external"><code>GDestroyNotify</code></a></p>
+            <p>No description available.</p>
+            <table>
+            
+            
+            
+            
+            
+            
+            
+            
             
             </table>
           </dd>
@@ -242,14 +255,14 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         <div class="returns">
           <div>
             <p><em>Type:</em>&nbsp;<a href="class.Stream.html"><code>ArvStream</code></a></p>
-            <p><p>A new <code>ArvStream</code>.</p></p>
+            <p>No description available.</p>
           </div>
           <div>
             <table>
             
             
             
-            <tr><td title="transfer: full">The caller of the function takes ownership of the data, and is responsible for freeing it.</td></tr>
+            <tr><td title="transfer: none">The data is owned by the called function.</td></tr>
             
             
             </table>

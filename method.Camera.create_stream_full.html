@@ -7,7 +7,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Aravis.Camera.get_frame_rate</title>
+  <title>Aravis.Camera.create_stream_full</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <meta charset="utf-8" />
@@ -23,10 +23,10 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
 
   
-  <meta priority="og:title" content="Aravis.Camera.get_frame_rate"/>
-  <meta priority="og:description" content="Reference for Aravis.Camera.get_frame_rate"/>
-  <meta name="twitter:title" content="Aravis.Camera.get_frame_rate"/>
-  <meta name="twitter:description" content="Reference for Aravis.Camera.get_frame_rate"/>
+  <meta priority="og:title" content="Aravis.Camera.create_stream_full"/>
+  <meta priority="og:description" content="Reference for Aravis.Camera.create_stream_full"/>
+  <meta name="twitter:title" content="Aravis.Camera.create_stream_full"/>
+  <meta name="twitter:description" content="Reference for Aravis.Camera.create_stream_full"/>
 
 
   
@@ -100,7 +100,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.Camera.create_stream.html">create_stream</a>
   
-    <a class="method" href="method.Camera.create_stream_full.html">create_stream_full</a>
+    <a class="method current" href="method.Camera.create_stream_full.html">create_stream_full</a>
   
     <a class="method" href="method.Camera.dup_available_enumerations.html">dup_available_enumerations</a>
   
@@ -160,7 +160,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.Camera.get_frame_count_bounds.html">get_frame_count_bounds</a>
   
-    <a class="method current" href="method.Camera.get_frame_rate.html">get_frame_rate</a>
+    <a class="method" href="method.Camera.get_frame_rate.html">get_frame_rate</a>
   
     <a class="method" href="method.Camera.get_frame_rate_bounds.html">get_frame_rate_bounds</a>
   
@@ -355,7 +355,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <section id="main" class="content">
   <header>
     <h3>Method</h3>
-    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.Camera.html">Camera</a><span class="sep"></span>get_frame_rate</h1>
+    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.Camera.html">Camera</a><span class="sep"></span>create_stream_full</h1>
   </header>
 
   <section>
@@ -364,14 +364,17 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Declaration
         <a class="anchor" href="#declaration"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvcamera.h#L109">[src]</a>
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvcamera.h#L50">[src]</a>
         
       </h4>
 
       <div class="docblock c-decl">
-        <pre><code><div class="highlight"><pre><span></span><span class="kt">double</span>
-<span class="n">arv_camera_get_frame_rate</span> <span class="p">(</span>
-  <span class="n">ArvCamera</span><span class="o">*</span> <span class="n">camera</span>
+        <pre><code><div class="highlight"><pre><span></span><span class="n">ArvStream</span><span class="o">*</span>
+<span class="n">arv_camera_create_stream_full</span> <span class="p">(</span>
+  <span class="n">ArvCamera</span><span class="o">*</span> <span class="n">camera</span><span class="p">,</span>
+  <span class="n">ArvStreamCallback</span> <span class="n">callback</span><span class="p">,</span>
+  <span class="kt">void</span><span class="o">*</span> <span class="n">user_data</span><span class="p">,</span>
+  <span class="n">GDestroyNotify</span> <span class="n">destroy</span><span class="p">,</span>
   <span class="n">GError</span><span class="o">**</span> <span class="n">error</span>
 <span class="p">)</span>
 </pre></div>
@@ -384,20 +387,25 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Description
         <a class="anchor" href="#description"></a>
         
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvcamera.c#L160">[src]</a>
+        
       </h4>
 
       <div class="docblock">
-        No description available.
+        <p>Creates a new <a href="class.Stream.html"><code>ArvStream</code></a> for video stream reception. See
+<a href="callback.StreamCallback.html"><code>ArvStreamCallback</code></a> for details regarding the callback&nbsp;function.</p>
       </div>
 
       <div class="docblock">
         <table>
           
           
-          <tr><td>Available since:</td><td>0.8.0</td></tr>
+          <tr><td>Available since:</td><td>0.8.23</td></tr>
           
           
           
+          
+          <tr><td>This method is renamed to <a href="method.Camera.create_stream.html"><code>arv_camera_create_stream()</code></a> in language bindings</td></tr>
           
           
         </table>
@@ -406,6 +414,84 @@ SPDX-License-Identifier: LGPL-2.1-or-later
       
     </div>
 
+    
+    <div class="parameters toggle-wrapper">
+      <h4 id="parameters">
+        Parameters
+        <a href="#parameters" class="anchor"></a>
+      </h4>
+
+      <div class="docblock">
+        <dl class="arguments">
+          
+          <dt class="arg-name"><code>callback</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<a href="callback.StreamCallback.html"><code>ArvStreamCallback</code></a></p>
+            <p><p>A frame processing&nbsp;callback.</p></p>
+            <table>
+            
+            <tr><td>The argument can be <code>NULL</code>.</td></tr>
+            
+            
+            
+            
+            
+            
+            
+            </table>
+          </dd>
+          
+          <dt class="arg-name"><code>user_data</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<code>void*</code></p>
+            <p><p>User data for <code>callback</code>.</p></p>
+            <table>
+            
+            <tr><td>The argument can be <code>NULL</code>.</td></tr>
+            
+            
+            
+            
+            
+            <tr><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
+            
+            </table>
+          </dd>
+          
+          <dt class="arg-name"><code>destroy</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<a href="javascript:void(0)" data-link="callback.DestroyNotify.html" data-namespace="GLib" class="external"><code>GDestroyNotify</code></a></p>
+            <p><p>A <code>GDestroyNotify</code> placeholder, <code>NULL</code> to&nbsp;ignore.</p></p>
+            <table>
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            </table>
+          </dd>
+          
+
+          
+          <dt class="arg-name"><code>error</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<a href="javascript:void(0)" data-namespace="GLib" data-link="struct.Error.html" class="external"><code>GError **</code></a></p>
+            <p>The return location for <a href="https://docs.gtk.org/glib/error-reporting.html#rules-for-use-of-gerror">a recoverable error</a>.</p>
+            <table>
+              <tr><td>The argument can be <code>NULL</code>.</td></tr>
+              <tr><td>If the return location is not <code>NULL</code>, then you must initialize it to a <code>NULL</code> <code>GError*</code>.</td></tr>
+              <tr><td>The argument will left initialized to <code>NULL</code> by the method if there are no errors.</td></tr>
+              <tr><td>In case of error, the argument will be set to a newly allocated <code>GError</code>; the caller will take ownership of the data, and be responsible for freeing it.</td></tr>
+            </table>
+          </dd>
+          
+        </dl>
+      </div>
+    </div>
     
 
     
@@ -418,15 +504,15 @@ SPDX-License-Identifier: LGPL-2.1-or-later
       <div class="docblock">
         <div class="returns">
           <div class="arg-description">
-            <p><em>Type:</em>&nbsp;<code>double</code></p>
-            <p><p>Actual frame rate, in&nbsp;Hz.</p></p>
+            <p><em>Type:</em>&nbsp;<a href="class.Stream.html"><code>ArvStream</code></a></p>
+            <p><p>A new <a href="class.Stream.html"><code>ArvStream</code></a>, to be freed after use with <a href="javascript:void(0)" data-namespace="GObject" data-link="method.Object.unref.html" class="external"><code>g_object_unref()</code></a>.</p></p>
           </div>
           <div>
             <table>
             
             
             
-            
+            <tr><td title="transfer: full">The caller of the method takes ownership of the data, and is responsible for freeing it.</td></tr>
             
             
             </table>

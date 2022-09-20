@@ -98,6 +98,8 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.Device.create_stream.html">create_stream</a>
   
+    <a class="method" href="method.Device.create_stream_full.html">create_stream_full</a>
+  
     <a class="method" href="method.Device.dup_available_enumeration_feature_values.html">dup_available_enumeration_feature_values</a>
   
     <a class="method" href="method.Device.dup_available_enumeration_feature_values_as_display_names.html">dup_available_enumeration_feature_values_as_display_names</a>
@@ -332,6 +334,15 @@ advanced&nbsp;uses.</p>
 <code>ArvStreamCallback</code> for details regarding the callback&nbsp;function.</p>
           </div>
           <div class="docblock"><p>Available since: 0.2.0</p></div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Device.create_stream_full.html">arv_device_create_stream_full</a></h6>
+          <div class="docblock">
+            <p>Creates a new <code>ArvStream</code> for video stream handling. See
+<code>ArvStreamCallback</code> for details regarding the callback&nbsp;function.</p>
+          </div>
+          <div class="docblock"><p>Available since: 0.8.23</p></div>
         </div>
       
         <div class="">
@@ -678,6 +689,7 @@ its value set through g_object_set_property(), g_object_set(), et&nbsp;al.</p>
     ArvDevice* device,
     ArvStreamCallback callback,
     void* user_data,
+    GDestroyNotify destroy,
     GError** error
   );
   const char* (* get_genicam_xml) (
@@ -737,6 +749,7 @@ its value set through g_object_set_property(), g_object_set(), et&nbsp;al.</p>
     ArvDevice* device,
     ArvStreamCallback callback,
     void* user_data,
+    GDestroyNotify destroy,
     GError** error
   )</code></dt>
           <dd>No description available.</dd>
@@ -820,11 +833,10 @@ its value set through g_object_set_property(), g_object_set(), et&nbsp;al.</p>
         <h6 id="vfunc-create_stream"><a href="vfunc.Device.create_stream.html">Aravis.DeviceClass.create_stream</a></h6>
 
         <div class="docblock">
-          <p>Creates a new <code>ArvStream</code> for video stream handling. See
-<code>ArvStreamCallback</code> for details regarding the callback&nbsp;function.</p>
+          No description available.
         </div>
 
-          <div class="docblock"><p>Available since: 0.2.0</p></div>
+          
       </div>
       
       <div class="">
