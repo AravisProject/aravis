@@ -137,7 +137,7 @@ enum
 };
 
 /**
- * arv_camera_create_stream:
+ * arv_camera_create_stream: (skip)
  * @camera: a #ArvCamera
  * @callback: (scope call) (allow-none): a frame processing callback
  * @user_data: (closure) (allow-none): user data for @callback
@@ -154,11 +154,33 @@ enum
 ArvStream *
 arv_camera_create_stream (ArvCamera *camera, ArvStreamCallback callback, gpointer user_data, GError **error)
 {
+	return arv_camera_create_stream_full(camera, callback, user_data, NULL, error);
+}
+
+/**
+ * arv_camera_create_stream_full: (rename-to arv_camera_create_stream)
+ * @camera: a #ArvCamera
+ * @callback: (scope notified) (allow-none): a frame processing callback
+ * @user_data: (closure) (allow-none): user data for @callback
+ * @destroy: a #GDestroyNotify placeholder, %NULL to ignore
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Creates a new [class@ArvStream] for video stream reception. See
+ * [callback@ArvStreamCallback] for details regarding the callback function.
+ *
+ * Returns: (transfer full): a new [class@ArvStream], to be freed after use with [method@GObject.Object.unref].
+ *
+ * Since: 0.8.23
+ */
+
+ArvStream *
+arv_camera_create_stream_full (ArvCamera *camera, ArvStreamCallback callback, gpointer user_data, GDestroyNotify destroy, GError **error)
+{
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
-	return arv_device_create_stream (priv->device, callback, user_data, error);
+	return arv_device_create_stream_full (priv->device, callback, user_data, destroy, error);
 }
 
 /* Device control */

@@ -161,12 +161,13 @@ arv_fake_stream_stop_thread (ArvStream *stream)
  */
 
 ArvStream *
-arv_fake_stream_new (ArvFakeDevice *device, ArvStreamCallback callback, void *callback_data, GError **error)
+arv_fake_stream_new (ArvFakeDevice *device, ArvStreamCallback callback, void *callback_data, GDestroyNotify destroy, GError **error)
 {
 	return g_initable_new (ARV_TYPE_FAKE_STREAM, NULL, error,
 			       "device", device,
 			       "callback", callback,
 			       "callback-data", callback_data,
+						 "destroy-notify", destroy,
 			       NULL);
 }
 
