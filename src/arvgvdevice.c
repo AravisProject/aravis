@@ -611,7 +611,7 @@ test_packet_check (ArvDevice *device,
 			else
 				read_count = 0;
 			/* Discard late packets, read_count should be equal to packet size minus IP and UDP headers */
-		} while (n_events != 0 && read_count != (packet_size - sizeof (struct iphdr) - sizeof (struct udphdr)));
+		} while (n_events != 0 && read_count != (packet_size - ARV_GVSP_PACKET_UDP_OVERHEAD));
 
 		n_tries++;
 	} while (n_events == 0 && n_tries < 3);
@@ -654,12 +654,11 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 		inc = 1;
 	packet_size = arv_device_get_integer_feature_value (device, "GevSCPSPacketSize", NULL);
 	arv_device_get_integer_feature_bounds (device, "GevSCPSPacketSize", &minimum, &maximum, NULL);
-	max_size = MIN (65536, maximum);
-	min_size = MAX (ARV_GVSP_PACKET_PROTOCOL_OVERHEAD, minimum);
+	max_size = MIN (ARV_GVSP_MAXIMUM_PACKET_SIZE, maximum);
+	min_size = MAX (ARV_GVSP_MINIMUM_PACKET_SIZE, minimum);
 
 	if (max_size < min_size ||
-	    inc > max_size - min_size ||
-	    inc > 16) {
+	    inc > max_size - min_size) {
 		arv_warning_device ("[GvDevice::auto_packet_size] Invalid GevSCPSPacketSize properties");
 		return arv_device_get_integer_feature_value (device, "GevSCPSPacketSize", error);
 	}
@@ -700,18 +699,18 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 				  "(%" G_GINT64_FORMAT " bytes)",
 				  packet_size);
 	} else {
-		guint current_size = CLAMP (packet_size, min_size, max_size);
+                GError *local_error = NULL;
+		guint current_size = packet_size;
 
 		do {
-			current_size = ((current_size + inc - 1) / inc) * inc;
+			if (current_size == last_size ||
+                            min_size + inc >= max_size)
+				break;
 
 			arv_info_device ("[GvDevice::auto_packet_size] Try packet size = %d", current_size);
 			arv_device_set_integer_feature_value (device, "GevSCPSPacketSize", current_size, NULL);
 
-			current_size = arv_device_get_integer_feature_value (device, "GevSCPSPacketSize", NULL);
-
-			if (current_size == last_size)
-				break;
+			current_size = arv_device_get_integer_feature_value (device, "GevSCPSPacketSize", &local_error);
 
 			last_size = current_size;
 
@@ -720,19 +719,26 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 
 			if (success) {
 				packet_size = current_size;
+                                if (current_size == max_size)
+                                        break;
+
 				min_size = current_size;
-				current_size = (max_size - min_size) / 2 + min_size;
 			} else {
 				max_size = current_size;
-				current_size = (max_size - min_size) / 2 + min_size;
 			}
-		} while ((max_size - min_size) > 16);
 
-		arv_device_set_integer_feature_value (device, "GevSCPSPacketSize", packet_size, error);
+                        current_size = min_size + (((max_size - min_size) / 2 + 1) / inc) * inc;
+		} while (TRUE);
 
-		arv_info_device ("[GvDevice::auto_packet_size] Packet size set to %" G_GINT64_FORMAT " bytes",
-				  packet_size);
-	}
+                if (local_error == NULL) {
+                        arv_device_set_integer_feature_value (device, "GevSCPSPacketSize", packet_size, error);
+
+                        arv_info_device ("[GvDevice::auto_packet_size] Packet size set to %" G_GINT64_FORMAT " bytes",
+                                         packet_size);
+                } else {
+                        g_propagate_error (error, local_error);
+                }
+        }
 
 	g_clear_pointer (&buffer, g_free);
 	g_clear_object (&socket);
