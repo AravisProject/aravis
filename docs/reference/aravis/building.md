@@ -32,7 +32,7 @@ following(tested on Ubuntu 20.04):
 sudo apt install libxml2-dev libglib2.0-dev cmake libusb-1.0-0-dev gobject-introspection \
                  libgtk-3-dev gtk-doc-tools  xsltproc libgstreamer1.0-dev \
                  libgstreamer-plugins-base1.0-dev libgstreamer-plugins-good1.0-dev \
-                 libgirepository1.0-dev
+                 libgirepository1.0-dev gettext
 ```
 
 ## Install dependencies on Fedora 34/35
@@ -43,7 +43,7 @@ installed on  Fedora (tested on 34 and 35) with:
 sudo dnf install libxml2-devel glib2-devel cmake libusb1-devel gobject-introspection \
                  gobject-introspection-devel gstreamer1-plugins-base-devel gtk3-devel \
                  gtk-doc libxslt gstreamer1-devel gstreamer1-plugins-good python3-gobject \
-                 g++ meson
+                 g++ meson gettext
 ```
 
 ## Building on macOS
