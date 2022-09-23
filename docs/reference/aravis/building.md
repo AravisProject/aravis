@@ -119,21 +119,30 @@ informations:
 ```
 export ARV_DEBUG=stream:3,device:3
 ```
-Available categories are:
 
-* interface      : Device lookup for each supported protocol
-* device         : Device control
-* stream         : Video stream management
-* stream-thread  : Video stream thread (likely high volume output)
-* cp             : Control protocol packets
-* sp             : Stream protocol packets (likely high volume output)
-* genicam        : Genicam specialized DOM elements
-* policies       : Genicam runtime configurable policies
-* chunk          : Chunk data code
-* dom            : Genicam DOM document
-* evaluator      : Expression evaluator
-* viewer         : Simple viewer application
-* misc           : Miscellaneous code
-* all            : Everything
+Available debug level and categories are:
 
+```
+Debug categories:
+interface      : Device lookup for each supported protocol
+device         : Device control
+stream         : Video stream management
+stream-thread  : Video stream thread (likely high volume output)
+cp             : Control protocol packets
+sp             : Stream protocol packets (likely high volume output)
+genicam        : Genicam specialized DOM elements
+policies       : Genicam runtime configurable policies
+chunk          : Chunk data code
+dom            : Genicam DOM document
+evaluator      : Expression evaluator
+viewer         : Simple viewer application
+misc           : Miscellaneous code
+all            : Everything
 
+Debug levels:
+0: none
+1: warning
+2: info
+3: debug
+4: trace
+```
