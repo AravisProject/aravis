@@ -180,23 +180,30 @@ application will make Aravis print out all stream and device related&nbsp;inform
 <div class="codehilite"><pre><span></span>export ARV_DEBUG=stream:3,device:3
 </pre></div>
 
-<p>Available categories&nbsp;are:</p>
-<ul>
-<li>interface      : Device lookup for each supported&nbsp;protocol</li>
-<li>device         : Device&nbsp;control</li>
-<li>stream         : Video stream&nbsp;management</li>
-<li>stream-thread  : Video stream thread (likely high volume&nbsp;output)</li>
-<li>cp             : Control protocol&nbsp;packets</li>
-<li>sp             : Stream protocol packets (likely high volume&nbsp;output)</li>
-<li>genicam        : Genicam specialized <span class="caps">DOM</span>&nbsp;elements</li>
-<li>policies       : Genicam runtime configurable&nbsp;policies</li>
-<li>chunk          : Chunk data&nbsp;code</li>
-<li>dom            : Genicam <span class="caps">DOM</span>&nbsp;document</li>
-<li>evaluator      : Expression&nbsp;evaluator</li>
-<li>viewer         : Simple viewer&nbsp;application</li>
-<li>misc           : Miscellaneous&nbsp;code</li>
-<li>all            :&nbsp;Everything</li>
-</ul>
+<p>Available debug level and categories&nbsp;are:</p>
+<div class="codehilite"><pre><span></span>Debug categories:
+interface      : Device lookup for each supported protocol
+device         : Device control
+stream         : Video stream management
+stream-thread  : Video stream thread (likely high volume output)
+cp             : Control protocol packets
+sp             : Stream protocol packets (likely high volume output)
+genicam        : Genicam specialized DOM elements
+policies       : Genicam runtime configurable policies
+chunk          : Chunk data code
+dom            : Genicam DOM document
+evaluator      : Expression evaluator
+viewer         : Simple viewer application
+misc           : Miscellaneous code
+all            : Everything
+
+Debug levels:
+0: none
+1: warning
+2: info
+3: debug
+4: trace
+</pre></div>
     </div>
   </section>
 </section>
