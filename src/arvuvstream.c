@@ -50,6 +50,7 @@ typedef struct {
         guint64 n_completed_buffers;
         guint64 n_failures;
         guint64 n_underruns;
+        guint64 n_aborted;
 
         guint64 n_transferred_bytes;
         guint64 n_ignored_bytes;
@@ -109,6 +110,8 @@ typedef struct {
 
 	gint *total_submitted_bytes;
 
+        gboolean is_aborting;
+
 	ArvStreamStatistics *statistics;
 } ArvUvStreamBufferContext;
 
@@ -137,9 +140,12 @@ void arv_uv_stream_leader_cb (struct libusb_transfer *transfer)
 	ArvUvspPacket *packet = (ArvUvspPacket*)transfer->buffer;
 
         if (ctx->buffer != NULL) {
-                switch (transfer->status) {
-                        case LIBUSB_TRANSFER_COMPLETED:
-                                arv_uvsp_packet_debug (packet, ARV_DEBUG_LEVEL_DEBUG);
+                if (ctx->is_aborting) {
+                        ctx->buffer->priv->status = ARV_BUFFER_STATUS_ABORTED;
+                } else {
+                        switch (transfer->status) {
+                                case LIBUSB_TRANSFER_COMPLETED:
+                                        arv_uvsp_packet_debug (packet, ARV_DEBUG_LEVEL_DEBUG);
 
                                 if (arv_uvsp_packet_get_packet_type (packet) != ARV_UVSP_PACKET_TYPE_LEADER) {
                                         arv_warning_stream_thread ("Unexpected packet type (was expecting leader packet)");
@@ -161,9 +167,11 @@ void arv_uv_stream_leader_cb (struct libusb_transfer *transfer)
                                 ctx->buffer->priv->timestamp_ns = arv_uvsp_packet_get_timestamp (packet);
                                 break;
                         default:
-                                arv_warning_stream_thread ("Leader transfer failed: transfer->status = %d", transfer->status);
+                                arv_warning_stream_thread ("Leader transfer failed: transfer->status = %d",
+                                                           transfer->status);
                                 ctx->buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
                                 break;
+                        }
                 }
         }
 
@@ -179,14 +187,19 @@ void arv_uv_stream_payload_cb (struct libusb_transfer *transfer)
 	ArvUvStreamBufferContext *ctx = transfer->user_data;
 
         if (ctx->buffer != NULL) {
-                switch (transfer->status) {
-                        case LIBUSB_TRANSFER_COMPLETED:
-                                ctx->total_payload_transferred += transfer->actual_length;
-                                break;
-                        default:
-                                arv_warning_stream_thread ("Payload transfer failed: transfer->status = %d", transfer->status);
-                                ctx->buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
-                                break;
+                if (ctx->is_aborting) {
+                        ctx->buffer->priv->status = ARV_BUFFER_STATUS_ABORTED;
+                } else {
+                        switch (transfer->status) {
+                                case LIBUSB_TRANSFER_COMPLETED:
+                                        ctx->total_payload_transferred += transfer->actual_length;
+                                        break;
+                                default:
+                                        arv_warning_stream_thread ("Payload transfer failed: transfer->status = %d",
+                                                                   transfer->status);
+                                        ctx->buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
+                                        break;
+                        }
                 }
         }
 
@@ -203,38 +216,44 @@ void arv_uv_stream_trailer_cb (struct libusb_transfer *transfer)
 	ArvUvspPacket *packet = (ArvUvspPacket*)transfer->buffer;
 
         if (ctx->buffer != NULL) {
-                switch (transfer->status) {
-                        case LIBUSB_TRANSFER_COMPLETED:
-                                arv_uvsp_packet_debug (packet, ARV_DEBUG_LEVEL_DEBUG);
+                if (ctx->is_aborting) {
+                        ctx->buffer->priv->status = ARV_BUFFER_STATUS_ABORTED;
+                        ctx->statistics->n_aborted += 1;
+                } else {
+                        switch (transfer->status) {
+                                case LIBUSB_TRANSFER_COMPLETED:
+                                        arv_uvsp_packet_debug (packet, ARV_DEBUG_LEVEL_DEBUG);
 
-                                if (arv_uvsp_packet_get_packet_type (packet) != ARV_UVSP_PACKET_TYPE_TRAILER) {
-                                        arv_warning_stream_thread ("Unexpected packet type (was expecting trailer packet)");
+                                        if (arv_uvsp_packet_get_packet_type (packet) != ARV_UVSP_PACKET_TYPE_TRAILER) {
+                                                arv_warning_stream_thread ("Unexpected packet type (was expecting trailer packet)");
+                                                ctx->buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
+                                                break;
+                                        }
+
+                                        arv_debug_stream_thread ("Total payload: %zu bytes", ctx->total_payload_transferred);
+                                        if (ctx->total_payload_transferred < ctx->buffer->priv->size) {
+                                                arv_warning_stream_thread ("Total payload smaller than expected");
+                                                ctx->buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
+                                                break;
+                                        }
+
+                                        break;
+                                default:
+                                        arv_warning_stream_thread ("Trailer transfer failed: transfer->status = %d",
+                                                                   transfer->status);
                                         ctx->buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
                                         break;
-                                }
+                        }
 
-                                arv_debug_stream_thread ("Total payload: %zu bytes", ctx->total_payload_transferred);
-                                if (ctx->total_payload_transferred < ctx->buffer->priv->size) {
-                                        arv_warning_stream_thread ("Total payload smaller than expected");
-                                        ctx->buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
+                        switch (ctx->buffer->priv->status) {
+                                case ARV_BUFFER_STATUS_FILLING:
+                                        ctx->buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
+                                        ctx->statistics->n_completed_buffers += 1;
                                         break;
-                                }
-
-                                break;
-                        default:
-                                arv_warning_stream_thread ("Trailer transfer failed: transfer->status = %d", transfer->status);
-                                ctx->buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
-                                break;
-                }
-
-                switch (ctx->buffer->priv->status) {
-                        case ARV_BUFFER_STATUS_FILLING:
-                                ctx->buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
-                                ctx->statistics->n_completed_buffers += 1;
-                                break;
-                        default:
-                                ctx->statistics->n_failures += 1;
-                                break;
+                                default:
+                                        ctx->statistics->n_failures += 1;
+                                        break;
+                        }
                 }
 
                 arv_stream_push_output_buffer (ctx->stream, ctx->buffer);
@@ -386,6 +405,8 @@ arv_uv_stream_buffer_context_cancel (gpointer key, gpointer value, gpointer user
 {
 	ArvUvStreamBufferContext* ctx = value;
 	int i;
+
+        ctx->is_aborting = TRUE;
 
 	libusb_cancel_transfer (ctx->leader_transfer );
 
@@ -611,6 +632,7 @@ arv_uv_stream_thread_sync (void *data)
 
         if (buffer != NULL) {
 		buffer->priv->status = ARV_BUFFER_STATUS_ABORTED;
+                thread_data->statistics.n_aborted++;
 		arv_stream_push_output_buffer (thread_data->stream, buffer);
 		if (thread_data->callback != NULL)
 			thread_data->callback (thread_data->callback_data,
@@ -823,6 +845,7 @@ arv_uv_stream_constructed (GObject *object)
 	thread_data->statistics.n_completed_buffers = 0;
 	thread_data->statistics.n_failures = 0;
 	thread_data->statistics.n_underruns = 0;
+        thread_data->statistics.n_aborted = 0;
 	thread_data->statistics.n_transferred_bytes = 0;
 	thread_data->statistics.n_ignored_bytes = 0;
 
@@ -840,6 +863,8 @@ arv_uv_stream_constructed (GObject *object)
                                  G_TYPE_UINT64, &thread_data->statistics.n_failures);
         arv_stream_declare_info (ARV_STREAM (uv_stream), "n_underruns",
                                  G_TYPE_UINT64, &thread_data->statistics.n_underruns);
+        arv_stream_declare_info (ARV_STREAM (uv_stream), "n_aborted",
+                                 G_TYPE_UINT64, &thread_data->statistics.n_aborted);
         arv_stream_declare_info (ARV_STREAM (uv_stream), "n_transferred_bytes",
                                  G_TYPE_UINT64, &thread_data->statistics.n_transferred_bytes);
         arv_stream_declare_info (ARV_STREAM (uv_stream), "n_ignored_bytes",
@@ -891,6 +916,8 @@ arv_uv_stream_finalize (GObject *object)
 				  thread_data->statistics.n_failures);
 		arv_info_stream ("[UvStream::finalize] n_underruns            = %" G_GUINT64_FORMAT,
 				  thread_data->statistics.n_underruns);
+		arv_info_stream ("[UvStream::finalize] n_aborted              = %" G_GUINT64_FORMAT,
+				  thread_data->statistics.n_aborted);
 
 		arv_info_stream ("[UvStream::finalize] n_transferred_bytes    = %" G_GUINT64_FORMAT,
 				  thread_data->statistics.n_transferred_bytes);
