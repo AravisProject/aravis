@@ -156,7 +156,7 @@ struct _ArvGvStreamThreadData {
 	guint64 n_failures;
 	guint64 n_underruns;
 	guint64 n_timeouts;
-	guint64 n_aborteds;
+	guint64 n_aborted;
 	guint64 n_missing_frames;
 
 	guint64 n_size_mismatch_errors;
@@ -566,7 +566,7 @@ _close_frame (ArvGvStreamThreadData *thread_data,
 		thread_data->n_timeouts++;
 
 	if (frame->buffer->priv->status == ARV_BUFFER_STATUS_ABORTED)
-		thread_data->n_aborteds++;
+		thread_data->n_aborted++;
 
 	if (frame->buffer->priv->status != ARV_BUFFER_STATUS_SUCCESS &&
 	    frame->buffer->priv->status != ARV_BUFFER_STATUS_ABORTED)
@@ -1458,8 +1458,8 @@ arv_gv_stream_constructed (GObject *object)
                                  G_TYPE_UINT64, &priv->thread_data->n_underruns);
         arv_stream_declare_info (ARV_STREAM (gv_stream), "n_timeouts",
                                  G_TYPE_UINT64, &priv->thread_data->n_timeouts);
-        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_aborteds",
-                                 G_TYPE_UINT64, &priv->thread_data->n_aborteds);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_aborted",
+                                 G_TYPE_UINT64, &priv->thread_data->n_aborted);
         arv_stream_declare_info (ARV_STREAM (gv_stream), "n_missing_frames",
                                  G_TYPE_UINT64, &priv->thread_data->n_missing_frames);
         arv_stream_declare_info (ARV_STREAM (gv_stream), "n_size_mismatch_errors",
@@ -1518,8 +1518,8 @@ arv_gv_stream_finalize (GObject *object)
 				  thread_data->n_underruns);
 		arv_info_stream ("[GvStream::finalize] n_timeouts             = %" G_GUINT64_FORMAT,
 				  thread_data->n_timeouts);
-		arv_info_stream ("[GvStream::finalize] n_aborteds             = %" G_GUINT64_FORMAT,
-				  thread_data->n_aborteds);
+		arv_info_stream ("[GvStream::finalize] n_aborted              = %" G_GUINT64_FORMAT,
+				  thread_data->n_aborted);
 		arv_info_stream ("[GvStream::finalize] n_missing_frames       = %" G_GUINT64_FORMAT,
 				  thread_data->n_missing_frames);
 
