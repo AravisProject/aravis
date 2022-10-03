@@ -530,7 +530,7 @@ arv_fake_camera_diagonal_ramp (ArvBuffer *buffer, void *fill_pattern_data,
 	switch (pixel_format)
 	{
 		case ARV_PIXEL_FORMAT_MONO_8:
-			if (height * width <= buffer->priv->size) {
+			if (height * width <= buffer->priv->allocated_size) {
 				for (y = 0; y < height; y++) {
 					for (x = 0; x < width; x++) {
 						unsigned char *pixel = &buffer->priv->data [y * width + x];
@@ -541,11 +541,12 @@ arv_fake_camera_diagonal_ramp (ArvBuffer *buffer, void *fill_pattern_data,
 						*pixel = CLAMP (pixel_value, 0, 255);
 					}
 				}
+                                buffer->priv->received_size = height * width;
 			}
 			break;
 
 		case ARV_PIXEL_FORMAT_MONO_16:
-			if (2 * height * width <= buffer->priv->size) {
+			if (2 * height * width <= buffer->priv->allocated_size) {
 				for (y = 0; y < height; y++) {
 					for (x = 0; x < width; x++) {
 						unsigned short *pixel = (unsigned short *)&buffer->priv->data [2*y * width + 2*x];
@@ -556,11 +557,12 @@ arv_fake_camera_diagonal_ramp (ArvBuffer *buffer, void *fill_pattern_data,
 						*pixel = CLAMP (pixel_value, 0, 65535);
 					}
 				}
+                                buffer->priv->received_size = 2 * height * width;
 			}
 			break;
 
 		case ARV_PIXEL_FORMAT_BAYER_BG_8:
-			if (height * width <= buffer->priv->size) {
+			if (height * width <= buffer->priv->allocated_size) {
 				for (y = 0; y < height; y++) {
 					for (x = 0; x < width; x++) {
 						unsigned int index;
@@ -586,11 +588,12 @@ arv_fake_camera_diagonal_ramp (ArvBuffer *buffer, void *fill_pattern_data,
 						}
 					}
 				}
+                                buffer->priv->received_size = height * width;
 			}
 			break;
 
 		case ARV_PIXEL_FORMAT_BAYER_GB_8:
-			if (height * width <= buffer->priv->size) {
+			if (height * width <= buffer->priv->allocated_size) {
 				for (y = 0; y < height; y++) {
 					for (x = 0; x < width; x++) {
 						unsigned int index;
@@ -616,11 +619,12 @@ arv_fake_camera_diagonal_ramp (ArvBuffer *buffer, void *fill_pattern_data,
 						}
 					}
 				}
+                                buffer->priv->received_size = height * width;
 			}
 			break;
 
 		case ARV_PIXEL_FORMAT_BAYER_GR_8:
-			if (height * width <= buffer->priv->size) {
+			if (height * width <= buffer->priv->allocated_size) {
 				for (y = 0; y < height; y++) {
 					for (x = 0; x < width; x++) {
 						unsigned int index;
@@ -646,11 +650,12 @@ arv_fake_camera_diagonal_ramp (ArvBuffer *buffer, void *fill_pattern_data,
 						}
 					}
 				}
+                                buffer->priv->received_size = height * width;
 			}
 			break;
 
 		case ARV_PIXEL_FORMAT_BAYER_RG_8:
-			if (height * width <= buffer->priv->size) {
+			if (height * width <= buffer->priv->allocated_size) {
 				for (y = 0; y < height; y++) {
 					for (x = 0; x < width; x++) {
 						unsigned int index;
@@ -676,11 +681,12 @@ arv_fake_camera_diagonal_ramp (ArvBuffer *buffer, void *fill_pattern_data,
 						}
 					}
 				}
+                                buffer->priv->received_size = height * width;
 			}
 			break;
 
 		case ARV_PIXEL_FORMAT_RGB_8_PACKED:
-			if (3 * height * width <= buffer->priv->size) {
+			if (3 * height * width <= buffer->priv->allocated_size) {
 				for (y = 0; y < height; y++) {
 					for (x = 0; x < width; x++) {
 						unsigned char *pixel = &buffer->priv->data [3 * (y * width + x)];
@@ -696,6 +702,7 @@ arv_fake_camera_diagonal_ramp (ArvBuffer *buffer, void *fill_pattern_data,
 						pixel[2] = jet_colormap [index].b;
 					}
 				}
+                                buffer->priv->received_size = 3 * height * width;
 			}
 			break;
 
@@ -760,7 +767,7 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer, guint32 *
 	height = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_HEIGHT);
 	payload = arv_fake_camera_get_payload (camera);
 
-	if (buffer->priv->size < payload) {
+	if (buffer->priv->allocated_size < payload) {
 		buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
 		return;
 	}
