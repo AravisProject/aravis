@@ -35,6 +35,7 @@ new_buffer_cb (ArvStream *stream, ApplicationData *data)
 
 	buffer = arv_stream_try_pop_buffer (stream);
 	if (buffer != NULL) {
+
 		if (arv_buffer_get_status (buffer) == ARV_BUFFER_STATUS_SUCCESS)
 			data->buffer_count++;
 
@@ -80,17 +81,15 @@ static gboolean
 switch_roi (gpointer user_data)
 {
 	ApplicationData *data = user_data;
-	gint payload;
 	gint width;
 	gint height;
-	guint i;
-	guint n_deleted;
+        guint n_deleted;
 
 	arv_camera_stop_acquisition (data->camera, NULL);
 
-	n_deleted = arv_stream_stop_thread (data->stream, TRUE);
+        n_deleted = arv_stream_stop_thread (data->stream, FALSE);
 
-	g_assert (n_deleted == N_BUFFERS);
+        g_assert (n_deleted == 0);
 
 	data->width += SIZE_INC;
 	if (data->width > WIDTH_MAX)
@@ -107,13 +106,7 @@ switch_roi (gpointer user_data)
 
 	printf ("image size set to %dx%d\n", width, height);
 
-
-	payload = arv_camera_get_payload (data->camera, NULL);
-
-	for (i = 0; i < N_BUFFERS; i++)
-		arv_stream_push_buffer (data->stream, arv_buffer_new (payload, NULL));
-
-	arv_stream_start_thread (data->stream);
+        arv_stream_start_thread (data->stream);
 
 	arv_camera_start_acquisition (data->camera, NULL);
 
@@ -149,17 +142,19 @@ main (int argc, char **argv)
 
 	if (ARV_IS_CAMERA (data.camera)) {
 		void (*old_sigint_handler)(int);
-		gint payload;
+		gint max_payload;
 		gint x, y, width, height;
 		guint64 n_completed_buffers;
 		guint64 n_failures;
 		guint64 n_underruns;
 
-		arv_camera_set_region (data.camera, 0, 0, data.width, data.height, NULL);
+		arv_camera_set_region (data.camera, 0, 0, WIDTH_MAX, HEIGHT_MAX, NULL);
+
+		max_payload = arv_camera_get_payload (data.camera, NULL);
+
 		arv_camera_set_frame_rate (data.camera, 20.0, NULL);
 		arv_camera_get_region (data.camera, &x, &y, &width, &height, NULL);
-
-		payload = arv_camera_get_payload (data.camera, NULL);
+		arv_camera_set_region (data.camera, 0, 0, data.width, data.height, NULL);
 
 		printf ("vendor name           = %s\n", arv_camera_get_vendor_name (data.camera, NULL));
 		printf ("model name            = %s\n", arv_camera_get_model_name (data.camera, NULL));
@@ -176,7 +171,7 @@ main (int argc, char **argv)
 			arv_stream_set_emit_signals (data.stream, TRUE);
 
 			for (i = 0; i < N_BUFFERS; i++)
-				arv_stream_push_buffer (data.stream, arv_buffer_new (payload, NULL));
+				arv_stream_push_buffer (data.stream, arv_buffer_new (max_payload, NULL));
 
 			arv_camera_set_acquisition_mode (data.camera, ARV_ACQUISITION_MODE_CONTINUOUS, NULL);
 			arv_camera_start_acquisition (data.camera, NULL);

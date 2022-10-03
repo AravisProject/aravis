@@ -63,8 +63,11 @@ typedef struct {
 	ArvStreamCallback callback;
 	void *callback_data;
 
+        size_t expected_size;
 	size_t leader_size;
 	size_t payload_size;
+        guint32 payload_count;
+        size_t transfer1_size;
 	size_t trailer_size;
 
 	gboolean cancel;
@@ -100,6 +103,7 @@ typedef struct {
 	GCond* transfer_completed_event;
 
 	size_t total_payload_transferred;
+        size_t expected_size;
 
 	guint8 *leader_buffer, *trailer_buffer;
 
@@ -231,9 +235,11 @@ void arv_uv_stream_trailer_cb (struct libusb_transfer *transfer)
                                         }
 
                                         arv_debug_stream_thread ("Total payload: %zu bytes", ctx->total_payload_transferred);
-                                        if (ctx->total_payload_transferred < ctx->buffer->priv->size) {
-                                                arv_warning_stream_thread ("Total payload smaller than expected");
-                                                ctx->buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
+                                        if (ctx->total_payload_transferred != ctx->expected_size) {
+                                                arv_warning_stream_thread ("Unexpected total payload size (received %"
+                                                                           G_GSIZE_FORMAT " - expected %" G_GSIZE_FORMAT")",
+                                                                           ctx->total_payload_transferred, ctx->expected_size);
+                                                ctx->buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
                                                 break;
                                         }
 
@@ -248,6 +254,7 @@ void arv_uv_stream_trailer_cb (struct libusb_transfer *transfer)
                         switch (ctx->buffer->priv->status) {
                                 case ARV_BUFFER_STATUS_FILLING:
                                         ctx->buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
+                                        ctx->buffer->priv->received_size = ctx->total_payload_transferred;
                                         ctx->statistics->n_completed_buffers += 1;
                                         break;
                                 default:
@@ -269,7 +276,7 @@ void arv_uv_stream_trailer_cb (struct libusb_transfer *transfer)
 static ArvUvStreamBufferContext*
 arv_uv_stream_buffer_context_new (ArvBuffer *buffer, ArvUvStreamThreadData *thread_data, gint *total_submitted_bytes)
 {
-	ArvUvStreamBufferContext* ctx = g_malloc (sizeof(ArvUvStreamBufferContext));
+	ArvUvStreamBufferContext* ctx = g_malloc0 (sizeof(ArvUvStreamBufferContext));
 	int i;
 	size_t offset = 0;
 
@@ -286,11 +293,11 @@ arv_uv_stream_buffer_context_new (ArvBuffer *buffer, ArvUvStreamThreadData *thre
 		arv_uv_stream_leader_cb, ctx,
 		0);
 
-	ctx->num_payload_transfers = (buffer->priv->size - 1) / thread_data->payload_size + 1;
+	ctx->num_payload_transfers = (buffer->priv->allocated_size - 1) / thread_data->payload_size + 1;
 	ctx->payload_transfers = g_malloc (ctx->num_payload_transfers * sizeof(struct libusb_transfer*));
 
 	for (i = 0; i < ctx->num_payload_transfers; ++i) {
-		size_t size = MIN (thread_data->payload_size, buffer->priv->size - offset);
+		size_t size = MIN (thread_data->payload_size, buffer->priv->allocated_size - offset);
 
 		ctx->payload_transfers[i] = libusb_alloc_transfer(0);
 
@@ -383,7 +390,7 @@ _submit_transfer (ArvUvStreamBufferContext* ctx, struct libusb_transfer* transfe
 }
 
 static void
-arv_uv_stream_buffer_context_submit (ArvUvStreamBufferContext* ctx, ArvBuffer *buffer, gboolean *cancel)
+arv_uv_stream_buffer_context_submit (ArvUvStreamBufferContext* ctx, ArvBuffer *buffer, ArvUvStreamThreadData *thread_data)
 {
 	int i;
 
@@ -391,13 +398,15 @@ arv_uv_stream_buffer_context_submit (ArvUvStreamBufferContext* ctx, ArvBuffer *b
         ctx->total_payload_transferred = 0;
         buffer->priv->status = ARV_BUFFER_STATUS_FILLING;
 
-        _submit_transfer (ctx, ctx->leader_transfer, cancel);
+        ctx->expected_size = thread_data->expected_size;
+
+        _submit_transfer (ctx, ctx->leader_transfer, &thread_data->cancel);
 
         for (i = 0; i < ctx->num_payload_transfers; ++i) {
-                _submit_transfer (ctx, ctx->payload_transfers[i], cancel);
+                _submit_transfer (ctx, ctx->payload_transfers[i], &thread_data->cancel);
         }
 
-        _submit_transfer (ctx, ctx->trailer_transfer, cancel);
+        _submit_transfer (ctx, ctx->trailer_transfer, &thread_data->cancel);
 }
 
 static void
@@ -462,7 +471,7 @@ arv_uv_stream_thread_async (void *data)
 			g_hash_table_insert (ctx_lookup, buffer, ctx);
 		}
 
-                arv_uv_stream_buffer_context_submit (ctx, buffer, &thread_data->cancel);
+                arv_uv_stream_buffer_context_submit (ctx, buffer, thread_data);
 	}
 
 	g_hash_table_foreach (ctx_lookup, arv_uv_stream_buffer_context_cancel, NULL);
@@ -504,8 +513,8 @@ arv_uv_stream_thread_sync (void *data)
 		if (buffer == NULL)
 			size = ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE;
 		else {
-			if (offset < buffer->priv->size)
-				size = MIN (thread_data->payload_size, buffer->priv->size - offset);
+			if (offset < buffer->priv->allocated_size)
+				size = MIN (thread_data->payload_size, buffer->priv->allocated_size - offset);
 			else
 				size = thread_data->trailer_size;
 		}
@@ -513,7 +522,7 @@ arv_uv_stream_thread_sync (void *data)
 		/* Avoid unnecessary memory copy by transferring data directly to the image buffer */
 		if (buffer != NULL &&
 		    buffer->priv->status == ARV_BUFFER_STATUS_FILLING &&
-		    offset + size <= buffer->priv->size)
+		    offset + size <= buffer->priv->allocated_size)
 			packet = (ArvUvspPacket *) (buffer->priv->data + offset);
 		else
 			packet = incoming_buffer;
@@ -549,6 +558,7 @@ arv_uv_stream_thread_sync (void *data)
 					if (buffer != NULL) {
 						buffer->priv->system_timestamp_ns = g_get_real_time () * 1000LL;
 						buffer->priv->status = ARV_BUFFER_STATUS_FILLING;
+                                                buffer->priv->received_size = 0;
 						buffer->priv->payload_type = arv_uvsp_packet_get_buffer_payload_type (packet);
 						buffer->priv->chunk_endianness = G_LITTLE_ENDIAN;
 						if (buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
@@ -575,60 +585,60 @@ arv_uv_stream_thread_sync (void *data)
                                         break;
 				case ARV_UVSP_PACKET_TYPE_TRAILER:
 					if (buffer != NULL) {
-						arv_debug_stream_thread ("Received %" G_GUINT64_FORMAT
-								       " bytes - expected %zu",
-								       offset, buffer->priv->size);
+						arv_debug_stream_thread ("Received %" G_GUINT64_FORMAT " bytes",
+								       offset);
 
-						/* If the image was incomplete, drop the frame and try again. */
-						if (offset != buffer->priv->size) {
-							arv_info_stream_thread ("Incomplete image received, dropping "
-										 "(received %" G_GUINT64_FORMAT
-										 " / expected %" G_GSIZE_FORMAT ")",
-										 offset, buffer->priv->size);
+                                                if (offset != thread_data->expected_size) {
+                                                        arv_info_stream_thread ("Incomplete image received, dropping "
+                                                                                "(received %" G_GUINT64_FORMAT
+                                                                                " / expected %" G_GSIZE_FORMAT ")",
+                                                                                offset, thread_data->expected_size);
 
-							buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
-							arv_stream_push_output_buffer (thread_data->stream, buffer);
-							if (thread_data->callback != NULL)
-								thread_data->callback (thread_data->callback_data,
-										       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
-										       buffer);
-							thread_data->statistics.n_failures++;
-                                                        thread_data->statistics.n_ignored_bytes += transferred;
-                                                        buffer = NULL;
-						} else {
-							buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
-							arv_stream_push_output_buffer (thread_data->stream, buffer);
-							if (thread_data->callback != NULL)
-								thread_data->callback (thread_data->callback_data,
-										       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
-										       buffer);
+                                                       buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
+                                                       arv_stream_push_output_buffer (thread_data->stream, buffer);
+                                                       if (thread_data->callback != NULL)
+                                                               thread_data->callback (thread_data->callback_data,
+                                                                                      ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
+                                                                                      buffer);
+                                                       thread_data->statistics.n_failures++;
+                                                       thread_data->statistics.n_ignored_bytes += transferred;
+                                                       buffer = NULL;
+                                                } else {
+                                                        buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
+                                                        buffer->priv->received_size = offset;
+                                                        arv_stream_push_output_buffer (thread_data->stream, buffer);
+                                                        if (thread_data->callback != NULL)
+                                                                thread_data->callback (thread_data->callback_data,
+                                                                                       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
+                                                                                       buffer);
                                                         thread_data->statistics.n_completed_buffers++;
                                                         thread_data->statistics.n_transferred_bytes += transferred;
                                                         buffer = NULL;
                                                 }
-					}
-					break;
-				case ARV_UVSP_PACKET_TYPE_DATA:
-					if (buffer != NULL && buffer->priv->status == ARV_BUFFER_STATUS_FILLING) {
-						if (offset + transferred <= buffer->priv->size) {
-							if (packet == incoming_buffer)
-								memcpy (((char *) buffer->priv->data) + offset, packet, transferred);
-							offset += transferred;
+                                        }
+                                        break;
+                                case ARV_UVSP_PACKET_TYPE_DATA:
+                                        if (buffer != NULL && buffer->priv->status == ARV_BUFFER_STATUS_FILLING) {
+                                                if (offset + transferred <= buffer->priv->allocated_size) {
+                                                        if (packet == incoming_buffer)
+                                                                memcpy (((char *) buffer->priv->data) + offset,
+                                                                        packet, transferred);
+                                                        offset += transferred;
                                                         thread_data->statistics.n_transferred_bytes += transferred;
-						} else {
-							buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
+                                                } else {
+                                                        buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
                                                         thread_data->statistics.n_ignored_bytes += transferred;
                                                 }
-					} else {
-                                                        thread_data->statistics.n_ignored_bytes += transferred;
+                                        } else {
+                                                thread_data->statistics.n_ignored_bytes += transferred;
                                         }
-					break;
-				default:
-					arv_info_stream_thread ("Unknown packet type");
-					break;
-			}
-		}
-	}
+                                        break;
+                                default:
+                                        arv_info_stream_thread ("Unknown packet type");
+                                        break;
+                        }
+                }
+        }
 
         if (buffer != NULL) {
 		buffer->priv->status = ARV_BUFFER_STATUS_ABORTED;
@@ -678,6 +688,8 @@ arv_uv_stream_start_thread (ArvStream *stream)
 	guint32 si_payload_count;
 	guint32 si_transfer1_size;
 	guint32 si_transfer2_size;
+	guint32 si_leader_size;
+	guint32 si_trailer_size;
 	guint32 si_control;
 	guint32 alignment;
 	guint32 aligned_maximum_transfer_size;
@@ -715,27 +727,27 @@ arv_uv_stream_start_thread (ArvStream *stream)
 
 	if (si_req_leader_size < 1) {
 		arv_warning_stream ("Wrong SI_REQ_LEADER_SIZE value, using %d instead", aligned_maximum_transfer_size);
-		si_req_leader_size = aligned_maximum_transfer_size;
+		si_leader_size = aligned_maximum_transfer_size;
 	} else {
-		si_req_leader_size = align (si_req_leader_size, alignment);
+		si_leader_size = align (si_req_leader_size, alignment);
 	}
 
 	if (si_req_trailer_size < 1) {
 		arv_warning_stream ("Wrong SI_REQ_TRAILER_SIZE value, using %d instead", aligned_maximum_transfer_size);
-		si_req_trailer_size = aligned_maximum_transfer_size;
+		si_trailer_size = aligned_maximum_transfer_size;
 	} else {
-		si_req_trailer_size = align (si_req_trailer_size, alignment);
+		si_trailer_size = align (si_req_trailer_size, alignment);
 	}
 
-	si_payload_size = aligned_maximum_transfer_size;
+	si_payload_size = MIN(si_req_payload_size , aligned_maximum_transfer_size);
 	si_payload_count=  si_req_payload_size / si_payload_size;
 	si_transfer1_size = align(si_req_payload_size % si_payload_size, alignment);
 	si_transfer2_size = 0;
 
 	arv_device_write_memory (device, sirm_offset + ARV_SIRM_MAX_LEADER_SIZE,
-                                 sizeof (si_req_leader_size), &si_req_leader_size, NULL);
+                                 sizeof (si_leader_size), &si_leader_size, NULL);
 	arv_device_write_memory (device, sirm_offset + ARV_SIRM_MAX_TRAILER_SIZE,
-                                 sizeof (si_req_trailer_size), &si_req_trailer_size, NULL);
+                                 sizeof (si_trailer_size), &si_trailer_size, NULL);
 	arv_device_write_memory (device, sirm_offset + ARV_SIRM_PAYLOAD_SIZE,
                                  sizeof (si_payload_size), &si_payload_size, NULL);
 	arv_device_write_memory (device, sirm_offset + ARV_SIRM_PAYLOAD_COUNT,
@@ -749,15 +761,18 @@ arv_uv_stream_start_thread (ArvStream *stream)
 	arv_info_stream ("SIRM_PAYLOAD_COUNT    = 0x%08x", si_payload_count);
 	arv_info_stream ("SIRM_TRANSFER1_SIZE   = 0x%08x", si_transfer1_size);
 	arv_info_stream ("SIRM_TRANSFER2_SIZE   = 0x%08x", si_transfer2_size);
-	arv_info_stream ("SIRM_MAX_LEADER_SIZE  = 0x%08x", si_req_leader_size);
-	arv_info_stream ("SIRM_MAX_TRAILER_SIZE = 0x%08x", si_req_trailer_size);
+	arv_info_stream ("SIRM_MAX_LEADER_SIZE  = 0x%08x", si_leader_size);
+	arv_info_stream ("SIRM_MAX_TRAILER_SIZE = 0x%08x", si_trailer_size);
 
 	si_control = ARV_SIRM_CONTROL_STREAM_ENABLE;
 	arv_device_write_memory (device, sirm_offset + ARV_SIRM_CONTROL, sizeof (si_control), &si_control, NULL);
 
-	thread_data->leader_size = si_req_leader_size;
+        thread_data->expected_size = si_req_payload_size;
+	thread_data->leader_size = si_leader_size;
 	thread_data->payload_size = si_payload_size;
-	thread_data->trailer_size = si_req_trailer_size;
+        thread_data->payload_count = si_payload_count;
+        thread_data->transfer1_size = si_transfer1_size;
+	thread_data->trailer_size = si_trailer_size;
 	thread_data->cancel = FALSE;
 
         switch (priv->usb_mode) {

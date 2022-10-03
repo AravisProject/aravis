@@ -1019,7 +1019,7 @@ create_buffer_with_chunk_data (void)
 	buffer = arv_buffer_new (size, NULL);
 	buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA;
 	buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
-	data = (char *) arv_buffer_get_data (buffer, &size);
+	data = (char *) arv_buffer_get_data (buffer, NULL);
 
 	memset ((char *) data, '\0', size);
 
