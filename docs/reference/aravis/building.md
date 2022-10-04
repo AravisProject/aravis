@@ -23,6 +23,10 @@ On some platforms (like Ubuntu), you may have to configure the dynamic linker
 (ld) to let it know where the aravis libraries are installed, and run ldconfig
 as root in order to update ld cache.
 
+```sh
+sudo ldconfig
+```
+
 ## Install dependencies on Ubuntu 20.04
 
 Prior to running `meson` and `ninja`, dependencies can be installed using the
