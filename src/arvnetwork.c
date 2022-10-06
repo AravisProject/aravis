@@ -721,6 +721,8 @@ arv_socket_bind_with_range (GSocket *socket, GInetAddress *address, guint16 port
         g_set_error (error, ARV_NETWORK_ERROR, ARV_NETWORK_ERROR_PORT_EXHAUSTION,
                      "No more available port in range [%u..%u]", arv_port_minimum, arv_port_maximum);
 
+        arv_warning_misc ("No more port available in range [%u..%u]", arv_port_minimum, arv_port_maximum);
+
         g_mutex_unlock (&arv_port_mutex);
         return NULL;
 }
