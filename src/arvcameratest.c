@@ -16,6 +16,7 @@ static int arv_option_horizontal_binning = -1;
 static int arv_option_vertical_binning = -1;
 static double arv_option_exposure_time_us = -1;
 static int arv_option_gain = -1;
+static char *arv_option_features = NULL;
 static gboolean arv_option_auto_socket_buffer = FALSE;
 static char *arv_option_packet_size_adjustment = NULL;
 static gboolean arv_option_no_packet_resend = FALSE;
@@ -93,6 +94,11 @@ static const GOptionEntry arv_option_entries[] =
 	{
 		"auto",					'a', 0, G_OPTION_ARG_NONE,
 		&arv_option_auto_socket_buffer,		"Auto socket buffer size",
+		NULL
+	},
+	{
+		"features",				'\0', 0, G_OPTION_ARG_STRING,
+		&arv_option_features,		        "Additional configuration as a space separated list of features",
 		NULL
 	},
 	{
@@ -517,6 +523,9 @@ main (int argc, char **argv)
 			if (arv_option_packet_size_adjustment != NULL)
 				arv_camera_gv_set_packet_size_adjustment (camera, adjustment);
 		}
+
+                if (error == NULL && arv_option_features != NULL)
+                        arv_device_set_features_from_string (arv_camera_get_device (camera), arv_option_features, &error);
 
 		if (error != NULL) {
 			printf ("Failed to configure the device: %s\n", error->message);
