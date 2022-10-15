@@ -107,6 +107,24 @@ integer_test (void)
 	v_string = arv_gc_feature_node_get_value_as_string (ARV_GC_FEATURE_NODE (node), NULL);
 	g_assert_cmpstr (v_string, ==, "1");
 
+        arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (node), "4", &error);
+        g_assert (error == NULL);
+	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), &error);
+        g_assert (error == NULL);
+	g_assert_cmpint (v_int64, ==, 4);
+
+        arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (node), "0xf", &error);
+        g_assert (error == NULL);
+	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), &error);
+        g_assert (error == NULL);
+	g_assert_cmpint (v_int64, ==, 15);
+
+        arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (node), "0.4", &error);
+        g_assert (error != NULL);
+        g_assert (error->domain == ARV_GC_ERROR);
+        g_assert (error->code == ARV_GC_ERROR_INVALID_SYNTAX);
+        g_clear_error (&error);
+
 	arv_gc_integer_set_value (ARV_GC_INTEGER (node), 2, NULL);
 	v_int64 = arv_gc_integer_get_value (ARV_GC_INTEGER (node), NULL);
 	g_assert_cmpint (v_int64, ==, 2);
@@ -308,6 +326,53 @@ boolean_test (void)
 	v_string = arv_gc_feature_node_get_value_as_string (ARV_GC_FEATURE_NODE (node), NULL);
 	g_assert_cmpstr (v_string, ==, "false");
 
+        arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (node), "True", &error);
+        g_assert (error == NULL);
+	v_boolean = arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node), NULL);
+	g_assert_cmpint (v_boolean, ==, TRUE);
+
+        arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (node), "False", &error);
+        g_assert (error == NULL);
+	v_boolean = arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node), NULL);
+	g_assert_cmpint (v_boolean, ==, FALSE);
+
+        arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (node), "true", &error);
+        g_assert (error == NULL);
+	v_boolean = arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node), NULL);
+	g_assert_cmpint (v_boolean, ==, TRUE);
+
+        arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (node), "false", &error);
+        g_assert (error == NULL);
+	v_boolean = arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node), NULL);
+	g_assert_cmpint (v_boolean, ==, FALSE);
+
+        arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (node), "1", &error);
+        g_assert (error == NULL);
+	v_boolean = arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node), NULL);
+	g_assert_cmpint (v_boolean, ==, TRUE);
+
+        arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (node), "0", &error);
+        g_assert (error == NULL);
+	v_boolean = arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node), NULL);
+	g_assert_cmpint (v_boolean, ==, FALSE);
+
+        arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (node), "what", &error);
+        g_assert (error != NULL);
+        g_assert (error->domain == ARV_GC_ERROR);
+        g_assert (error->code == ARV_GC_ERROR_INVALID_SYNTAX);
+        g_clear_error (&error);
+
+        arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (node), "2", &error);
+        g_assert (error != NULL);
+        g_assert (error->domain == ARV_GC_ERROR);
+        g_assert (error->code == ARV_GC_ERROR_INVALID_SYNTAX);
+        g_clear_error (&error);
+
+        arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (node), "0", &error);
+        g_assert (error == NULL);
+	v_boolean = arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node), NULL);
+	g_assert_cmpint (v_boolean, ==, FALSE);
+
 	node = arv_gc_get_node (genicam, "P_RWBoolean");
 	g_assert (ARV_IS_GC_BOOLEAN (node));
 
@@ -366,6 +431,18 @@ float_test (void)
 
 	v_string = arv_gc_feature_node_get_value_as_string (ARV_GC_FEATURE_NODE (node), NULL);
 	g_assert_cmpstr (v_string, ==, "0.1");
+
+        arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (node), "0.4", &error);
+        g_assert (error == NULL);
+	v_double = arv_gc_float_get_value (ARV_GC_FLOAT (node), &error);
+        g_assert (error == NULL);
+	g_assert_cmpfloat (v_double, ==, 0.4);
+
+        arv_gc_feature_node_set_value_from_string (ARV_GC_FEATURE_NODE (node), "0.4.", &error);
+        g_assert (error != NULL);
+        g_assert (error->domain == ARV_GC_ERROR);
+        g_assert (error->code == ARV_GC_ERROR_INVALID_SYNTAX);
+        g_clear_error (&error);
 
 	arv_gc_float_set_value (ARV_GC_FLOAT (node), 0.2, NULL);
 	v_double = arv_gc_float_get_value (ARV_GC_FLOAT (node), NULL);

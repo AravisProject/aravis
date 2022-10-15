@@ -455,13 +455,47 @@ arv_gc_feature_node_set_value_from_string (ArvGcFeatureNode *self, const char *s
 	if (ARV_IS_GC_ENUMERATION (self)) {
 		arv_gc_enumeration_set_string_value (ARV_GC_ENUMERATION (self), string, &local_error);
 	} else if (ARV_IS_GC_INTEGER (self)) {
-		arv_gc_integer_set_value (ARV_GC_INTEGER (self), g_ascii_strtoll (string, NULL, 0), &local_error);
+                gint64 value;
+                char *end = NULL;
+
+                value = g_ascii_strtoll (string, &end, 0);
+
+                if (end == NULL || end[0] != '\0') {
+                        g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_INVALID_SYNTAX,
+                                     "Invalid string for an integer feature (%s)", string);
+                        return;
+                }
+
+		arv_gc_integer_set_value (ARV_GC_INTEGER (self), value, &local_error);
 	} else if (ARV_IS_GC_FLOAT (self)) {
-		arv_gc_float_set_value (ARV_GC_FLOAT (self), g_ascii_strtod (string, NULL), &local_error);
+                double value;
+                char *end = NULL;
+
+                value = g_ascii_strtod (string, &end);
+
+                if (end == NULL || end[0] != '\0') {
+                        g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_INVALID_SYNTAX,
+                                     "Invalid string for a float feature (%s)", string);
+                        return;
+                }
+
+		arv_gc_float_set_value (ARV_GC_FLOAT (self), value, &local_error);
 	} else if (ARV_IS_GC_STRING (self)) {
 		arv_gc_string_set_value (ARV_GC_STRING (self), string, &local_error);
 	} else if (ARV_IS_GC_BOOLEAN (self)) {
-		arv_gc_boolean_set_value (ARV_GC_BOOLEAN (self), g_strcmp0 (string, "true") == 0 ? 1 : 0, &local_error);
+                gboolean value;
+
+                if (g_ascii_strcasecmp (string, "false") == 0 || g_ascii_strcasecmp (string, "0") == 0)
+                        value = FALSE;
+                else if (g_ascii_strcasecmp (string, "true") == 0 || g_ascii_strcasecmp (string, "1") == 0)
+                        value = TRUE;
+                else {
+                        g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_INVALID_SYNTAX,
+                                     "Invalid string for a boolean feature (%s)", string);
+                        return;
+                }
+
+		arv_gc_boolean_set_value (ARV_GC_BOOLEAN (self), value, &local_error);
 	} else {
 		g_set_error (&local_error, ARV_GC_ERROR, ARV_GC_ERROR_SET_FROM_STRING_UNDEFINED,
 			     "Don't know how to set value from string");
