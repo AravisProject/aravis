@@ -33,21 +33,16 @@
 
 #include <arvbufferprivate.h>
 
-gboolean
-arv_buffer_payload_type_has_chunks (ArvBufferPayloadType payload_type)
+static gboolean
+arv_buffer_part_is_image (ArvBuffer *buffer, guint part_id)
 {
-	return (payload_type == ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA ||
-		payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA ||
-		payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE_EXTENDED_CHUNK);
-}
-
-gboolean
-arv_buffer_payload_type_has_aoi (ArvBufferPayloadType payload_type)
-{
-
-	return (payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
-		payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA ||
-		payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE_EXTENDED_CHUNK);
+	return (ARV_IS_BUFFER (buffer) &&
+                buffer->priv->status == ARV_BUFFER_STATUS_SUCCESS &&
+                buffer->priv->n_parts > 0 &&
+                part_id < buffer->priv->n_parts &&
+                (buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
+                 buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA ||
+                 buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_MULTIPART));
 }
 
 /**
@@ -81,6 +76,8 @@ arv_buffer_new_full (size_t size, void *preallocated, void *user_data, GDestroyN
 	buffer->priv->user_data_destroy_func = user_data_destroy_func;
 	buffer->priv->chunk_endianness = G_BIG_ENDIAN;
 	buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_UNKNOWN;
+        buffer->priv->parts = g_new0 (ArvBufferPartInfos, 1);
+        buffer->priv->n_parts = 1;
 
 	if (preallocated != NULL) {
 		buffer->priv->is_preallocated = TRUE;
@@ -175,7 +172,7 @@ arv_buffer_has_chunks (ArvBuffer *buffer)
 {
 	return ARV_IS_BUFFER (buffer) &&
 		buffer->priv->status == ARV_BUFFER_STATUS_SUCCESS &&
-		arv_buffer_payload_type_has_chunks (buffer->priv->payload_type);
+                buffer->priv->has_chunks;
 }
 
 /**
@@ -205,7 +202,7 @@ arv_buffer_get_chunk_data (ArvBuffer *buffer, guint64 chunk_id, size_t *size)
 	g_return_val_if_fail (buffer->priv->data != NULL, NULL);
 
 	data = buffer->priv->data;
-	offset = buffer->priv->allocated_size - sizeof (ArvChunkInfos);
+	offset = buffer->priv->received_size - sizeof (ArvChunkInfos);
 	while (offset > 0) {
 		guint32 id;
 		guint32 chunk_size;
@@ -416,119 +413,186 @@ arv_buffer_set_frame_id (ArvBuffer *buffer, guint64 frame_id)
 }
 
 /**
- * arv_buffer_get_image_region:
+ * arv_buffer_get_part_pixel_format:
  * @buffer: a #ArvBuffer
- * @x: (out) (optional): image x offset placeholder
- * @y: (out) (optional): image y offset placeholder
- * @width: (out) (optional): image width placholder
- * @height: (out) (optional): image height placeholder
+ * @oart_id: a part id
  *
- * Gets the image region. This function must only be called on buffer containing a @ARV_BUFFER_PAYLOAD_TYPE_IMAGE payload.
+ * Gets the part pixel format.
  *
- * Since: 0.4.0
+ * This function must only be called if buffer payload is either @ARV_BUFFER_PAYLOAD_TYPE_IMAGE,
+ * @ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA or @ARV_BUFFER_PAYLOAD_TYPE_MULTIPART.
+ *
+ * Returns: part pixel format.
+ *
+ * Since: 0.8.23
+ */
+
+ArvPixelFormat
+arv_buffer_get_part_pixel_format (ArvBuffer *buffer, guint part_id)
+{
+	g_return_val_if_fail (arv_buffer_part_is_image (buffer, part_id), 0);
+
+	return buffer->priv->parts[part_id].pixel_format;
+}
+
+/**
+ * arv_buffer_get_part_region:
+ * @buffer: a #ArvBuffer
+ * @oart_id: a part id
+ * @x: (out) (optional): x offset placeholder
+ * @y: (out) (optional): y offset placeholder
+ * @width: (out) (optional): width placholder
+ * @height: (out) (optional): height placeholder
+ *
+ * Gets the part region.
+ *
+ * This function must only be called if buffer payload is either @ARV_BUFFER_PAYLOAD_TYPE_IMAGE,
+ * @ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA or @ARV_BUFFER_PAYLOAD_TYPE_MULTIPART.
+ *
+ * Since: 0.8.23
  */
 
 void
-arv_buffer_get_image_region (ArvBuffer *buffer, gint *x, gint *y, gint *width, gint *height)
+arv_buffer_get_part_region (ArvBuffer *buffer, guint part_id, gint *x, gint *y, gint *width, gint *height)
 {
-	g_return_if_fail (ARV_IS_BUFFER (buffer));
-	g_return_if_fail (arv_buffer_payload_type_has_aoi (buffer->priv->payload_type));
+	g_return_if_fail (arv_buffer_part_is_image (buffer, part_id));
 
 	if (x != NULL)
-		*x = buffer->priv->x_offset;
+		*x = buffer->priv->parts[part_id].x_offset;
 	if (y != NULL)
-		*y = buffer->priv->y_offset;
+		*y = buffer->priv->parts[part_id].y_offset;
 	if (width != NULL)
-		*width = buffer->priv->width;
+		*width = buffer->priv->parts[part_id].width;
 	if (height != NULL)
-		*height = buffer->priv->height;
+		*height = buffer->priv->parts[part_id].height;
 }
 
 /**
- * arv_buffer_get_image_width:
+ * arv_buffer_get_image_padding:
  * @buffer: a #ArvBuffer
+ * @oart_id: a part id
+ * @x_padding: (out) (optional): x offset placeholder
+ * @y_padding: (out) (optional): y offset placeholder
  *
- * Gets the image width. This function must only be called on buffer containing a @ARV_BUFFER_PAYLOAD_TYPE_IMAGE payload.
+ * Gets the part padding.
  *
- * Returns: image width, in pixels.
+ * This function must only be called if buffer payload is either @ARV_BUFFER_PAYLOAD_TYPE_IMAGE,
+ * @ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA or @ARV_BUFFER_PAYLOAD_TYPE_MULTIPART.
  *
- * Since: 0.4.0
+ * Since: 0.8.23
  */
 
-gint
-arv_buffer_get_image_width (ArvBuffer *buffer)
+void
+arv_buffer_get_part_padding (ArvBuffer *buffer, guint part_id, gint *x_padding, gint *y_padding)
 {
-	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
-	g_return_val_if_fail (arv_buffer_payload_type_has_aoi (buffer->priv->payload_type), 0);
+	g_return_if_fail (arv_buffer_part_is_image (buffer, part_id));
 
-	return buffer->priv->width;
+	if (x_padding != NULL)
+		*x_padding = buffer->priv->parts[part_id].x_padding;
+	if (y_padding != NULL)
+		*y_padding = buffer->priv->parts[part_id].y_padding;
 }
 
 /**
- * arv_buffer_get_image_height:
+ * arv_buffer_get_part_width:
  * @buffer: a #ArvBuffer
+ * @oart_id: a part id
  *
- * Gets the image width. This function must only be called on buffer containing a @ARV_BUFFER_PAYLOAD_TYPE_IMAGE payload.
+ * Gets the part width.
  *
- * Returns: image height, in pixels.
+ * This function must only be called if buffer payload is either @ARV_BUFFER_PAYLOAD_TYPE_IMAGE,
+ * @ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA or @ARV_BUFFER_PAYLOAD_TYPE_MULTIPART.
  *
- * Since: 0.4.0
+ * Returns: width, in pixels.
+ *
+ * Since: 0.8.23
  */
 
 gint
-arv_buffer_get_image_height (ArvBuffer *buffer)
+arv_buffer_get_part_width (ArvBuffer *buffer, guint part_id)
 {
-	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
-	g_return_val_if_fail (arv_buffer_payload_type_has_aoi (buffer->priv->payload_type), 0);
+	g_return_val_if_fail (arv_buffer_part_is_image (buffer, part_id), 0);
 
-	return buffer->priv->height;
+	return buffer->priv->parts[part_id].width;
 }
 
 /**
- * arv_buffer_get_image_x:
+ * arv_buffer_get_part_height:
  * @buffer: a #ArvBuffer
+ * @oart_id: a part id
  *
- * Gets the image x offset. This function must only be called on buffer containing a @ARV_BUFFER_PAYLOAD_TYPE_IMAGE payload.
+ * Gets the part height.
  *
- * Returns: image x offset, in pixels.
+ * This function must only be called if buffer payload is either @ARV_BUFFER_PAYLOAD_TYPE_IMAGE,
+ * @ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA or @ARV_BUFFER_PAYLOAD_TYPE_MULTIPART.
  *
- * Since: 0.4.0
+ * Returns: height, in pixels.
+ *
+ * Since: 0.8.23
  */
 
 gint
-arv_buffer_get_image_x (ArvBuffer *buffer)
+arv_buffer_get_part_height (ArvBuffer *buffer, guint part_id)
 {
-	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
-	g_return_val_if_fail (arv_buffer_payload_type_has_aoi (buffer->priv->payload_type), 0);
+	g_return_val_if_fail (arv_buffer_part_is_image (buffer, part_id), 0);
 
-	return buffer->priv->x_offset;
+	return buffer->priv->parts[part_id].height;
 }
 
 /**
- * arv_buffer_get_image_y:
+ * arv_buffer_get_part_x:
  * @buffer: a #ArvBuffer
+ * @oart_id: a part id
  *
- * Gets the image y offset. This function must only be called on buffer containing a @ARV_BUFFER_PAYLOAD_TYPE_IMAGE payload.
+ * Gets the part x offset.
  *
- * Returns: image y offset, in pixels.
+ * This function must only be called if buffer payload is either @ARV_BUFFER_PAYLOAD_TYPE_IMAGE,
+ * @ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA or @ARV_BUFFER_PAYLOAD_TYPE_MULTIPART.
  *
- * Since: 0.4.0
+ * Returns: x offset, in pixels.
+ *
+ * Since: 0.8.23
  */
 
 gint
-arv_buffer_get_image_y (ArvBuffer *buffer)
+arv_buffer_get_part_x (ArvBuffer *buffer, guint part_id)
 {
-	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
-	g_return_val_if_fail (arv_buffer_payload_type_has_aoi (buffer->priv->payload_type), 0);
+	g_return_val_if_fail (arv_buffer_part_is_image (buffer, part_id), 0);
 
-	return buffer->priv->y_offset;
+	return buffer->priv->parts[part_id].x_offset;
+}
+
+/**
+ * arv_buffer_get_part_y:
+ * @buffer: a #ArvBuffer
+ * @oart_id: a part id
+ *
+ * Gets the part y_offset.
+ *
+ * This function must only be called if buffer payload is either @ARV_BUFFER_PAYLOAD_TYPE_IMAGE,
+ * @ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA or @ARV_BUFFER_PAYLOAD_TYPE_MULTIPART.
+ *
+ * Returns: y offset, in pixels.
+ *
+ * Since: 0.8.23
+ */
+
+gint
+arv_buffer_get_part_y (ArvBuffer *buffer, guint part_id)
+{
+	g_return_val_if_fail (arv_buffer_part_is_image (buffer, part_id), 0);
+
+	return buffer->priv->parts[part_id].y_offset;
 }
 
 /**
  * arv_buffer_get_image_pixel_format:
  * @buffer: a #ArvBuffer
  *
- * Gets the image pixel format. This function must only be called on buffer containing a @ARV_BUFFER_PAYLOAD_TYPE_IMAGE payload.
+ * Gets the image pixel format.
+ *
+ * This function must only be called if buffer payload is either @ARV_BUFFER_PAYLOAD_TYPE_IMAGE,
+ * @ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA or @ARV_BUFFER_PAYLOAD_TYPE_MULTIPART.
  *
  * Returns: image pixel format.
  *
@@ -538,10 +602,148 @@ arv_buffer_get_image_y (ArvBuffer *buffer)
 ArvPixelFormat
 arv_buffer_get_image_pixel_format (ArvBuffer *buffer)
 {
-	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
-	g_return_val_if_fail (arv_buffer_payload_type_has_aoi (buffer->priv->payload_type), 0);
+        return arv_buffer_get_part_pixel_format (buffer, 0);
+}
 
-	return buffer->priv->pixel_format;
+/**
+ * arv_buffer_get_image_region:
+ * @buffer: a #ArvBuffer
+ * @x: (out) (optional): image x offset placeholder
+ * @y: (out) (optional): image y offset placeholder
+ * @width: (out) (optional): image width placholder
+ * @height: (out) (optional): image height placeholder
+ *
+ * Gets the image region.
+ *
+ * This function must only be called if buffer payload is either @ARV_BUFFER_PAYLOAD_TYPE_IMAGE,
+ * @ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA or @ARV_BUFFER_PAYLOAD_TYPE_MULTIPART.
+ *
+ * Since: 0.4.0
+ */
+
+void
+arv_buffer_get_image_region (ArvBuffer *buffer, gint *x, gint *y, gint *width, gint *height)
+{
+        arv_buffer_get_part_region (buffer, 0, x, y, width, height);
+}
+
+/**
+ * arv_buffer_get_image_padding:
+ * @buffer: a #ArvBuffer
+ * @x_padding: (out) (optional): image x offset placeholder
+ * @y_padding: (out) (optional): image y offset placeholder
+ *
+ * Gets the image padding.
+ *
+ * This function must only be called if buffer payload is either @ARV_BUFFER_PAYLOAD_TYPE_IMAGE,
+ * @ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA or @ARV_BUFFER_PAYLOAD_TYPE_MULTIPART.
+ *
+ * Since: 0.8.23
+ */
+
+void
+arv_buffer_get_image_padding (ArvBuffer *buffer, gint *x_padding, gint *y_padding)
+{
+        return arv_buffer_get_part_padding (buffer, 0, x_padding, y_padding);
+}
+
+/**
+ * arv_buffer_get_image_width:
+ * @buffer: a #ArvBuffer
+ *
+ * Gets the image width.
+ *
+ * This function must only be called if buffer payload is either @ARV_BUFFER_PAYLOAD_TYPE_IMAGE,
+ * @ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA or @ARV_BUFFER_PAYLOAD_TYPE_MULTIPART.
+ *
+ * Returns: image width, in pixels.
+ *
+ * Since: 0.4.0
+ */
+
+gint
+arv_buffer_get_image_width (ArvBuffer *buffer)
+{
+        return arv_buffer_get_part_width (buffer, 0);
+}
+
+/**
+ * arv_buffer_get_image_height:
+ * @buffer: a #ArvBuffer
+ *
+ * Gets the image width.
+ *
+ * This function must only be called if buffer payload is either @ARV_BUFFER_PAYLOAD_TYPE_IMAGE,
+ * @ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA or @ARV_BUFFER_PAYLOAD_TYPE_MULTIPART.
+ *
+ * Returns: image height, in pixels.
+ *
+ * Since: 0.4.0
+ */
+
+gint
+arv_buffer_get_image_height (ArvBuffer *buffer)
+{
+        return arv_buffer_get_part_height (buffer, 0);
+}
+
+/**
+ * arv_buffer_get_image_x:
+ * @buffer: a #ArvBuffer
+ *
+ * Gets the image x offset.
+ *
+ * This function must only be called if buffer payload is either @ARV_BUFFER_PAYLOAD_TYPE_IMAGE,
+ * @ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA or @ARV_BUFFER_PAYLOAD_TYPE_MULTIPART.
+ *
+ * Returns: image x offset, in pixels.
+ *
+ * Since: 0.4.0
+ */
+
+gint
+arv_buffer_get_image_x (ArvBuffer *buffer)
+{
+        return arv_buffer_get_part_x (buffer, 0);
+}
+
+/**
+ * arv_buffer_get_image_y:
+ * @buffer: a #ArvBuffer
+ *
+ * Gets the image y offset.
+ *
+ * This function must only be called if buffer payload is either @ARV_BUFFER_PAYLOAD_TYPE_IMAGE,
+ * @ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA or @ARV_BUFFER_PAYLOAD_TYPE_MULTIPART.
+ *
+ * Returns: image y offset, in pixels.
+ *
+ * Since: 0.4.0
+ */
+
+gint
+arv_buffer_get_image_y (ArvBuffer *buffer)
+{
+        return arv_buffer_get_part_y (buffer, 0);
+}
+
+void
+arv_buffer_set_n_parts (ArvBuffer* buffer, guint n_parts)
+{
+        g_return_if_fail (ARV_IS_BUFFER(buffer));
+
+        if (G_UNLIKELY (n_parts == 0)) {
+                buffer->priv->n_parts = 0;
+                g_clear_pointer (&buffer->priv->parts, g_free);
+
+                return;
+        }
+
+        if (buffer->priv->n_parts != n_parts)
+                buffer->priv->parts = g_realloc_n (buffer->priv->parts, n_parts, sizeof (ArvBufferPartInfos));
+
+        memset (buffer->priv->parts, 0, n_parts * sizeof (ArvBufferPartInfos));
+        buffer->priv->n_parts = n_parts;
 }
 
 G_DEFINE_TYPE_WITH_CODE (ArvBuffer, arv_buffer, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvBuffer))
@@ -557,6 +759,9 @@ static void
 arv_buffer_finalize (GObject *object)
 {
 	ArvBuffer *buffer = ARV_BUFFER (object);
+
+        buffer->priv->n_parts = 0;
+        g_clear_pointer (&buffer->priv->parts, g_free);
 
 	if (!buffer->priv->is_preallocated) {
 		g_free (buffer->priv->data);

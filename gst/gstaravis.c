@@ -1067,7 +1067,7 @@ gst_aravis_class_init (GstAravisClass * klass)
 		 g_param_spec_int ("packet-size",
 				   "Packet size",
 				   "GigEVision streaming packet size",
-				   ARV_GVSP_PACKET_PROTOCOL_OVERHEAD, 65500, 1500,
+				   ARV_GVSP_PACKET_PROTOCOL_OVERHEAD(FALSE), 65500, 1500,
 				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 	g_object_class_install_property
 		(gobject_class,
