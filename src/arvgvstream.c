@@ -40,6 +40,7 @@
 #include <arvnetworkprivate.h>
 #include <arvstr.h>
 #include <arvenumtypes.h>
+#include <stddef.h>
 #include <string.h>
 #include <stdio.h>
 #include <errno.h>
@@ -98,6 +99,8 @@ typedef struct {
 typedef struct {
 	ArvBuffer *buffer;
 	guint64 frame_id;
+
+        gboolean leader_received;
 
         gsize received_size;
 
@@ -250,127 +253,62 @@ _update_socket (ArvGvStreamThreadData *thread_data, ArvBuffer *buffer)
 	}
 }
 
-static void
-_process_data_leader (ArvGvStreamThreadData *thread_data,
-		      ArvGvStreamFrameData *frame,
-		      const ArvGvspPacket *packet,
-		      guint32 packet_id)
+static unsigned int
+_compute_n_expected_packets (const ArvGvspPacket *packet, size_t allocated_size, size_t packet_size)
 {
-	if (frame->buffer->priv->status != ARV_BUFFER_STATUS_FILLING)
-		return;
-
-	if (packet_id != 0) {
-		frame->buffer->priv->status = ARV_BUFFER_STATUS_WRONG_PACKET_ID;
-		return;
-	}
-
-	frame->buffer->priv->payload_type = arv_gvsp_packet_get_buffer_payload_type (packet);
-	frame->buffer->priv->frame_id = frame->frame_id;
-	frame->buffer->priv->chunk_endianness = G_BIG_ENDIAN;
-
-	frame->buffer->priv->system_timestamp_ns = g_get_real_time() * 1000LL;
-	if (frame->buffer->priv->payload_type != ARV_BUFFER_PAYLOAD_TYPE_H264) {
-		if (G_LIKELY (thread_data->timestamp_tick_frequency != 0))
-			frame->buffer->priv->timestamp_ns = arv_gvsp_packet_get_timestamp (packet,
-											   thread_data->timestamp_tick_frequency);
-		else {
-			frame->buffer->priv->timestamp_ns = frame->buffer->priv->system_timestamp_ns;
-		}
-	} else
-		frame->buffer->priv->timestamp_ns = frame->buffer->priv->system_timestamp_ns;
-
-	if (arv_buffer_payload_type_has_aoi (frame->buffer->priv->payload_type)) {
-		frame->buffer->priv->x_offset = arv_gvsp_packet_get_x_offset (packet);
-		frame->buffer->priv->y_offset = arv_gvsp_packet_get_y_offset (packet);
-		frame->buffer->priv->width = arv_gvsp_packet_get_width (packet);
-		frame->buffer->priv->height = arv_gvsp_packet_get_height (packet);
-		frame->buffer->priv->pixel_format = arv_gvsp_packet_get_pixel_format (packet);
-	}
-
-	if (frame->packet_data[packet_id].resend_requested) {
-		thread_data->n_resent_packets++;
-		arv_debug_stream_thread ("[GvStream::process_data_leader] Received resent packet %u for frame %" G_GUINT64_FORMAT,
-				       packet_id, frame->frame_id);
-	}
-}
-
-static void
-_process_data_block (ArvGvStreamThreadData *thread_data,
-		     ArvGvStreamFrameData *frame,
-		     const ArvGvspPacket *packet,
-		     guint32 packet_id,
-		     size_t read_count)
-{
-	size_t block_size;
-	ptrdiff_t block_offset;
-	ptrdiff_t block_end;
-	gboolean extended_ids;
-
-	if (frame->buffer->priv->status != ARV_BUFFER_STATUS_FILLING)
-		return;
-
-	if (packet_id > frame->n_packets - 2 || packet_id < 1) {
-		arv_gvsp_packet_debug (packet, read_count, ARV_DEBUG_LEVEL_INFO);
-		frame->buffer->priv->status = ARV_BUFFER_STATUS_WRONG_PACKET_ID;
-		return;
-	}
+        ArvGvspContentType content_type;
+        ArvBufferPayloadType payload_type;
+        gboolean extended_ids;
+	guint32 block_size;
 
 	extended_ids = arv_gvsp_packet_has_extended_ids (packet);
+        content_type = arv_gvsp_packet_get_content_type (packet);
 
-	block_size = arv_gvsp_packet_get_data_size (packet, read_count);
-	block_offset = (packet_id - 1) * (thread_data->scps_packet_size - (extended_ids ?
-									   ARV_GVSP_PACKET_EXTENDED_PROTOCOL_OVERHEAD :
-									   ARV_GVSP_PACKET_PROTOCOL_OVERHEAD));
-	block_end = block_size + block_offset;
+        switch (content_type) {
+                case ARV_GVSP_CONTENT_TYPE_LEADER:
+                        payload_type = arv_gvsp_leader_packet_get_buffer_payload_type(packet, NULL);
+                        if (payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
+                            payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA) {
+                                block_size = packet_size - ARV_GVSP_PAYLOAD_PACKET_PROTOCOL_OVERHEAD (extended_ids);
+                                return (allocated_size + block_size - 1) / block_size + (2 /* leader + trailer */);
+                        } else if (payload_type == ARV_BUFFER_PAYLOAD_TYPE_MULTIPART) {
+                                unsigned int n_parts;
+                                unsigned int n_packets = 0;
+                                unsigned int i;
 
-	if (block_end > frame->buffer->priv->allocated_size) {
-		arv_info_stream_thread ("[GvStream::process_data_block] %" G_GINTPTR_FORMAT " unexpected bytes in packet %u "
-					 " for frame %" G_GUINT64_FORMAT,
-					 block_end - frame->buffer->priv->allocated_size,
-					 packet_id, frame->frame_id);
-		thread_data->n_size_mismatch_errors++;
+                                n_parts = arv_gvsp_leader_packet_get_multipart_n_parts(packet);
+                                block_size = packet_size - ARV_GVSP_MULTIPART_PACKET_PROTOCOL_OVERHEAD (extended_ids);
 
-		block_end = frame->buffer->priv->allocated_size;
-		block_size = block_end - block_offset;
-	}
+                                for (i = 0; i < n_parts; i++) {
+                                        n_packets += (arv_gvsp_leader_packet_get_multipart_size (packet, i) +
+                                                      block_size - 1) / block_size;
+                                }
 
-	memcpy (((char *) frame->buffer->priv->data) + block_offset, arv_gvsp_packet_get_data (packet), block_size);
-
-        frame->received_size += block_size;
-
-	if (frame->packet_data[packet_id].resend_requested) {
-		thread_data->n_resent_packets++;
-		arv_debug_stream_thread ("[GvStream::process_data_block] Received resent packet %u for frame %" G_GUINT64_FORMAT,
-				       packet_id, frame->frame_id);
-	}
-}
-
-static void
-_process_data_trailer (ArvGvStreamThreadData *thread_data,
-		       ArvGvStreamFrameData *frame,
-		       guint32 packet_id)
-{
-	if (frame->buffer->priv->status != ARV_BUFFER_STATUS_FILLING)
-		return;
-
-	if (packet_id > frame->n_packets - 1) {
-		frame->buffer->priv->status = ARV_BUFFER_STATUS_WRONG_PACKET_ID;
-                return;
+                                return n_packets + (2 /* leader + trailer */);
+                        } else {
+                                return 0;
+                        }
+                        break;
+                case ARV_GVSP_CONTENT_TYPE_PAYLOAD:
+                        block_size = packet_size - ARV_GVSP_PAYLOAD_PACKET_PROTOCOL_OVERHEAD (extended_ids);
+                        return (allocated_size + block_size - 1) / block_size + (2 /* leader + trailer */);
+                case ARV_GVSP_CONTENT_TYPE_MULTIPART:
+                        block_size = packet_size - ARV_GVSP_MULTIPART_PACKET_PROTOCOL_OVERHEAD (extended_ids);
+                        return (allocated_size + block_size - 1) / block_size +
+                                (2 /* leader + trailer */) + (255 /* n_parts_max) */);
+                        break;
+                case ARV_GVSP_CONTENT_TYPE_TRAILER:
+                        return arv_gvsp_packet_get_packet_id (packet) + 1;
+                        break;
+                case ARV_GVSP_CONTENT_TYPE_ALL_IN:
+                        return 1;
+                case ARV_GVSP_CONTENT_TYPE_H264:
+                case ARV_GVSP_CONTENT_TYPE_GENDC:
+                case ARV_GVSP_CONTENT_TYPE_MULTIZONE:
+                        break;
         }
 
-        /* Trailer packet received before expected, because the actual payload size is smaller than the buffer size */
-        if (frame->n_packets != packet_id + 1) {
-		arv_debug_stream_thread ("[GvStream::process_data_trailer] Update expected number of packets (%u → %u)",
-                                         frame->n_packets, packet_id + 1);
-                frame->n_packets = packet_id + 1;
-        }
-
-	if (frame->packet_data[packet_id].resend_requested) {
-		thread_data->n_resent_packets++;
-		arv_debug_stream_thread ("[GvStream::process_data_trailer] Received resent packet %u for frame %"
-                                         G_GUINT64_FORMAT,
-                                         packet_id, frame->frame_id);
-        }
+        return 0;
 }
 
 static ArvGvStreamFrameData *
@@ -379,7 +317,6 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 		  size_t packet_size,
 		  guint64 frame_id,
 		  guint32 packet_id,
-		  gboolean extended_ids,
 		  size_t read_count,
 		  guint64 time_us)
 {
@@ -388,7 +325,9 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 	GSList *iter;
 	guint n_packets = 0;
 	gint64 frame_id_inc;
-	guint32 block_size;
+        gboolean extended_ids;
+
+	extended_ids = arv_gvsp_packet_has_extended_ids (packet);
 
 	for (iter = thread_data->frames; iter != NULL; iter = iter->next) {
 		frame = iter->data;
@@ -428,8 +367,13 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 		return NULL;
 	}
 
-	block_size = thread_data->scps_packet_size -
-		(extended_ids ? ARV_GVSP_PACKET_EXTENDED_PROTOCOL_OVERHEAD : ARV_GVSP_PACKET_PROTOCOL_OVERHEAD);
+	n_packets = _compute_n_expected_packets (packet,
+                                                 buffer->priv->allocated_size,
+                                                 thread_data->scps_packet_size);
+        if (n_packets < 1) {
+                arv_stream_push_output_buffer(thread_data->stream, buffer);
+                return NULL;
+        }
 
 	frame = g_new0 (ArvGvStreamFrameData, 1);
 
@@ -441,8 +385,6 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 	frame->buffer = buffer;
 	_update_socket (thread_data, frame->buffer);
 	frame->buffer->priv->status = ARV_BUFFER_STATUS_FILLING;
-        frame->buffer->priv->received_size = 0;
-	n_packets = (frame->buffer->priv->allocated_size + block_size - 1) / block_size + 2;
 
 	frame->first_packet_time_us = time_us;
 	frame->last_packet_time_us = time_us;
@@ -460,8 +402,9 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 
 	if (frame_id_inc > 1) {
 		thread_data->n_missing_frames++;
-		arv_debug_stream_thread ("[GvStream::find_frame_data] Missed %" G_GINT64_FORMAT " frame(s) before %" G_GUINT64_FORMAT,
-				       frame_id_inc - 1, frame_id);
+		arv_debug_stream_thread ("[GvStream::find_frame_data] Missed %" G_GINT64_FORMAT
+                                         " frame(s) before %" G_GUINT64_FORMAT,
+                                         frame_id_inc - 1, frame_id);
 	}
 
 	thread_data->frames = g_slist_append (thread_data->frames, frame);
@@ -473,6 +416,206 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
         arv_histogram_fill (thread_data->histogram, 1, 0);
 
 	return frame;
+}
+
+static void
+_process_data_leader (ArvGvStreamThreadData *thread_data,
+		      ArvGvStreamFrameData *frame,
+		      const ArvGvspPacket *packet,
+		      guint32 packet_id)
+{
+	if (frame->buffer->priv->status != ARV_BUFFER_STATUS_FILLING)
+		return;
+
+	if (packet_id != 0) {
+		frame->buffer->priv->status = ARV_BUFFER_STATUS_WRONG_PACKET_ID;
+		return;
+	}
+
+        frame->leader_received = TRUE;
+
+	frame->buffer->priv->payload_type = arv_gvsp_leader_packet_get_buffer_payload_type
+                (packet, &frame->buffer->priv->has_chunks);
+	frame->buffer->priv->frame_id = frame->frame_id;
+	frame->buffer->priv->chunk_endianness = G_BIG_ENDIAN;
+
+	frame->buffer->priv->system_timestamp_ns = g_get_real_time() * 1000LL;
+
+        if (frame->buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
+            frame->buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA) {
+                guint64 timestamp;
+
+                arv_buffer_set_n_parts (frame->buffer, 1);
+
+                timestamp = arv_gvsp_leader_packet_get_timestamp(packet);
+
+                arv_gvsp_leader_packet_get_image_infos (packet,
+                                                        &frame->buffer->priv->parts[0].pixel_format,
+                                                        &frame->buffer->priv->parts[0].width,
+                                                        &frame->buffer->priv->parts[0].height,
+                                                        &frame->buffer->priv->parts[0].x_offset,
+                                                        &frame->buffer->priv->parts[0].y_offset,
+                                                        &frame->buffer->priv->parts[0].x_padding,
+                                                        &frame->buffer->priv->parts[0].y_padding);
+
+		if (G_LIKELY (thread_data->timestamp_tick_frequency != 0))
+			frame->buffer->priv->timestamp_ns =
+                                arv_gvsp_timestamp_to_ns (timestamp, thread_data->timestamp_tick_frequency);
+		else
+			frame->buffer->priv->timestamp_ns = frame->buffer->priv->system_timestamp_ns;
+        } else if (frame->buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_MULTIPART) {
+                guint64 timestamp;
+                unsigned int i;
+                guint n_parts;
+
+                n_parts = arv_gvsp_leader_packet_get_multipart_n_parts(packet);
+
+                timestamp = arv_gvsp_leader_packet_get_timestamp(packet);
+
+                arv_buffer_set_n_parts (frame->buffer, n_parts);
+
+                for (i = 0; i < n_parts; i++) {
+                        arv_gvsp_leader_packet_get_multipart_infos (packet, i,
+                                                                    &frame->buffer->priv->parts[i].size,
+                                                                    &frame->buffer->priv->parts[i].pixel_format,
+                                                                    &frame->buffer->priv->parts[i].width,
+                                                                    &frame->buffer->priv->parts[i].height,
+                                                                    &frame->buffer->priv->parts[i].x_offset,
+                                                                    &frame->buffer->priv->parts[i].y_offset,
+                                                                    &frame->buffer->priv->parts[i].x_padding,
+                                                                    &frame->buffer->priv->parts[i].y_padding);
+                }
+
+		if (G_LIKELY (thread_data->timestamp_tick_frequency != 0))
+			frame->buffer->priv->timestamp_ns =
+                                arv_gvsp_timestamp_to_ns (timestamp, thread_data->timestamp_tick_frequency);
+		else
+			frame->buffer->priv->timestamp_ns = frame->buffer->priv->system_timestamp_ns;
+        } else {
+                frame->buffer->priv->timestamp_ns = frame->buffer->priv->system_timestamp_ns;
+        }
+
+	if (frame->packet_data[packet_id].resend_requested) {
+		thread_data->n_resent_packets++;
+		arv_debug_stream_thread ("[GvStream::process_data_leader] Received resent packet %u for frame %" G_GUINT64_FORMAT,
+				       packet_id, frame->frame_id);
+	}
+}
+
+static void
+_process_payload_block (ArvGvStreamThreadData *thread_data,
+		     ArvGvStreamFrameData *frame,
+		     const ArvGvspPacket *packet,
+		     guint32 packet_id,
+		     size_t read_count)
+{
+	size_t block_size;
+	ptrdiff_t block_offset;
+	ptrdiff_t block_end;
+	gboolean extended_ids;
+
+	if (frame->buffer->priv->status != ARV_BUFFER_STATUS_FILLING)
+		return;
+
+	if (packet_id > frame->n_packets - 2 || packet_id < 1) {
+		arv_gvsp_packet_debug (packet, read_count, ARV_DEBUG_LEVEL_INFO);
+		frame->buffer->priv->status = ARV_BUFFER_STATUS_WRONG_PACKET_ID;
+		return;
+	}
+
+	extended_ids = arv_gvsp_packet_has_extended_ids (packet);
+
+	block_size = arv_gvsp_payload_packet_get_data_size (packet, read_count);
+	block_offset = (packet_id - 1) * (thread_data->scps_packet_size -
+                                         ARV_GVSP_PAYLOAD_PACKET_PROTOCOL_OVERHEAD (extended_ids));
+	block_end = block_size + block_offset;
+
+	if (block_end > frame->buffer->priv->allocated_size) {
+		arv_info_stream_thread ("[GvStream::process_data_block] %" G_GINTPTR_FORMAT " unexpected bytes in packet %u "
+					 " for frame %" G_GUINT64_FORMAT,
+					 block_end - frame->buffer->priv->allocated_size,
+					 packet_id, frame->frame_id);
+		thread_data->n_size_mismatch_errors++;
+
+		block_end = frame->buffer->priv->allocated_size;
+		block_size = block_end - block_offset;
+	}
+
+	memcpy (((char *) frame->buffer->priv->data) + block_offset, arv_gvsp_packet_get_data (packet), block_size);
+
+        frame->received_size += block_size;
+
+	if (frame->packet_data[packet_id].resend_requested) {
+		thread_data->n_resent_packets++;
+		arv_debug_stream_thread ("[GvStream::process_data_block] Received resent packet %u for frame %" G_GUINT64_FORMAT,
+				       packet_id, frame->frame_id);
+	}
+}
+
+static void
+_process_multipart_block (ArvGvStreamThreadData *thread_data,
+                          ArvGvStreamFrameData *frame,
+                          const ArvGvspPacket *packet,
+                          guint32 packet_id,
+                          size_t read_count)
+{
+        guint part_id;
+        ptrdiff_t block_offset;
+
+	if (frame->buffer->priv->status != ARV_BUFFER_STATUS_FILLING)
+		return;
+
+        if (arv_gvsp_multipart_packet_get_infos (packet, &part_id, &block_offset)) {
+                size_t block_size;
+                ptrdiff_t block_end;
+                void *data;
+
+                block_size = arv_gvsp_multipart_packet_get_data_size (packet, read_count);
+
+                block_end = block_offset + block_size;
+
+                if (block_end > frame->buffer->priv->allocated_size) {
+                        arv_info_stream_thread ("[GvStream::process_multipart_block] %" G_GINTPTR_FORMAT
+                                                " unexpected bytes in packet %u "
+                                                " for frame %" G_GUINT64_FORMAT,
+                                                block_end - frame->buffer->priv->allocated_size,
+                                                packet_id, frame->frame_id);
+                        return;
+                }
+
+                data = arv_gvsp_multipart_packet_get_data (packet);
+                memcpy ((char *) frame->buffer->priv->data + block_offset, data, block_size);
+
+                frame->received_size += block_size;
+        }
+}
+
+static void
+_process_data_trailer (ArvGvStreamThreadData *thread_data,
+		       ArvGvStreamFrameData *frame,
+		       guint32 packet_id)
+{
+	if (frame->buffer->priv->status != ARV_BUFFER_STATUS_FILLING)
+		return;
+
+	if (packet_id > frame->n_packets - 1) {
+		frame->buffer->priv->status = ARV_BUFFER_STATUS_WRONG_PACKET_ID;
+                return;
+        }
+
+        /* Trailer packet received before expected, because the actual payload size is smaller than the buffer size */
+        if (frame->n_packets != packet_id + 1) {
+		arv_debug_stream_thread ("[GvStream::process_data_trailer] Update expected number of packets (%u → %u)",
+                                         frame->n_packets, packet_id + 1);
+                frame->n_packets = packet_id + 1;
+        }
+
+	if (frame->packet_data[packet_id].resend_requested) {
+		thread_data->n_resent_packets++;
+		arv_debug_stream_thread ("[GvStream::process_data_trailer] Received resent packet %u for frame %"
+                                         G_GUINT64_FORMAT,
+                                         packet_id, frame->frame_id);
+        }
 }
 
 static void
@@ -633,6 +776,12 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 		    frame->last_valid_packet == frame->n_packets - 1) {
 			frame->buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
                         frame->buffer->priv->received_size = frame->received_size;
+
+                        if (frame->buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
+                            frame->buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA) {
+                                frame->buffer->priv->parts[0].size = frame->received_size;
+                        }
+
 			arv_debug_stream_thread ("[GvStream::check_frame_completion] Completed frame %" G_GUINT64_FORMAT,
 					       frame->frame_id);
 			_close_frame (thread_data, time_us, frame);
@@ -704,12 +853,10 @@ _process_packet (ArvGvStreamThreadData *thread_data, const ArvGvspPacket *packet
 	ArvGvStreamFrameData *frame;
 	guint32 packet_id;
 	guint64 frame_id;
-	gboolean extended_ids;
 	int i;
 
 	thread_data->n_received_packets++;
 
-	extended_ids = arv_gvsp_packet_has_extended_ids (packet);
 	frame_id = arv_gvsp_packet_get_frame_id (packet);
 	packet_id = arv_gvsp_packet_get_packet_id (packet);
 
@@ -718,7 +865,7 @@ _process_packet (ArvGvStreamThreadData *thread_data, const ArvGvspPacket *packet
 		thread_data->first_packet = FALSE;
 	}
 
-	frame = _find_frame_data (thread_data, packet, packet_size, frame_id, packet_id, extended_ids, packet_size, time_us);
+	frame = _find_frame_data (thread_data, packet, packet_size, frame_id, packet_id, packet_size, time_us);
 
 	if (frame != NULL) {
 		ArvGvspPacketType packet_type = arv_gvsp_packet_get_packet_type (packet);
@@ -754,44 +901,50 @@ _process_packet (ArvGvStreamThreadData *thread_data, const ArvGvspPacket *packet
 		} else {
 			ArvGvspContentType content_type;
 
-			if (packet_id < frame->n_packets) {
-				frame->packet_data[packet_id].received = TRUE;
-			}
+                        if (packet_id < frame->n_packets) {
+                                frame->packet_data[packet_id].received = TRUE;
+                        }
 
-			/* Keep track of last packet of a continuous block starting from packet 0 */
-			for (i = frame->last_valid_packet + 1; i < frame->n_packets; i++)
-				if (!frame->packet_data[i].received)
-					break;
-			frame->last_valid_packet = i - 1;
+                        /* Keep track of last packet of a continuous block starting from packet 0 */
+                        for (i = frame->last_valid_packet + 1; i < frame->n_packets; i++)
+                                if (!frame->packet_data[i].received)
+                                        break;
+                        frame->last_valid_packet = i - 1;
 
-			content_type = arv_gvsp_packet_get_content_type (packet);
+                        content_type = arv_gvsp_packet_get_content_type (packet);
 
-			arv_gvsp_packet_debug (packet, packet_size,
-					       content_type == ARV_GVSP_CONTENT_TYPE_DATA_BLOCK ?
-					       ARV_DEBUG_LEVEL_TRACE :
-					       ARV_DEBUG_LEVEL_DEBUG);
+                        arv_gvsp_packet_debug (packet, packet_size,
+                                               content_type == ARV_GVSP_CONTENT_TYPE_LEADER ||
+                                               content_type == ARV_GVSP_CONTENT_TYPE_TRAILER ?
+                                               ARV_DEBUG_LEVEL_DEBUG :
+                                               ARV_DEBUG_LEVEL_TRACE);
 
-			switch (content_type) {
-				case ARV_GVSP_CONTENT_TYPE_DATA_LEADER:
-					_process_data_leader (thread_data, frame, packet, packet_id);
+                        switch (content_type) {
+                                case ARV_GVSP_CONTENT_TYPE_LEADER:
+                                        _process_data_leader (thread_data, frame, packet, packet_id);
                                         thread_data->n_transferred_bytes += packet_size;
-					break;
-				case ARV_GVSP_CONTENT_TYPE_DATA_BLOCK:
-					_process_data_block (thread_data, frame, packet, packet_id,
-							     packet_size);
+                                        break;
+                                case ARV_GVSP_CONTENT_TYPE_PAYLOAD:
+                                        _process_payload_block (thread_data, frame, packet, packet_id,
+                                                                packet_size);
                                         thread_data->n_transferred_bytes += packet_size;
-					break;
-				case ARV_GVSP_CONTENT_TYPE_DATA_TRAILER:
-					_process_data_trailer (thread_data, frame, packet_id);
+                                        break;
+                                case ARV_GVSP_CONTENT_TYPE_MULTIPART:
+                                        _process_multipart_block (thread_data, frame, packet, packet_id,
+                                                                  packet_size);
                                         thread_data->n_transferred_bytes += packet_size;
-					break;
-				default:
-					thread_data->n_ignored_packets++;
+                                        break;
+                                case ARV_GVSP_CONTENT_TYPE_TRAILER:
+                                        _process_data_trailer (thread_data, frame, packet_id);
+                                        thread_data->n_transferred_bytes += packet_size;
+                                        break;
+                                default:
+                                        thread_data->n_ignored_packets++;
                                         thread_data->n_ignored_bytes += packet_size;
-					break;
-			}
+                                        break;
+                        }
 
-			_missing_packet_check (thread_data, frame, packet_id, time_us);
+                        _missing_packet_check (thread_data, frame, packet_id, time_us);
 		}
 	} else {
                 thread_data->n_ignored_packets++;
@@ -1414,7 +1567,7 @@ arv_gv_stream_constructed (GObject *object)
 	options = arv_gv_device_get_stream_options (gv_device);
 
 	packet_size = arv_gv_device_get_packet_size (gv_device, NULL);
-	if (packet_size <= ARV_GVSP_PACKET_PROTOCOL_OVERHEAD) {
+	if (packet_size <= ARV_GVSP_PACKET_PROTOCOL_OVERHEAD(FALSE)) {
 		arv_gv_device_set_packet_size (gv_device, ARV_GV_DEVICE_GVSP_PACKET_SIZE_DEFAULT, NULL);
 		arv_info_device ("[GvStream::stream_new] Packet size set to default value (%d)",
 				  ARV_GV_DEVICE_GVSP_PACKET_SIZE_DEFAULT);
@@ -1423,7 +1576,7 @@ arv_gv_stream_constructed (GObject *object)
 	packet_size = arv_gv_device_get_packet_size (gv_device, NULL);
 	arv_info_device ("[GvStream::stream_new] Packet size = %d byte(s)", packet_size);
 
-	if (packet_size <= ARV_GVSP_PACKET_PROTOCOL_OVERHEAD) {
+	if (packet_size <= ARV_GVSP_PACKET_PROTOCOL_OVERHEAD(FALSE)) {
 		arv_stream_take_init_error (stream, g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
 								 "Invalid packet size (%d byte(s))", packet_size));
 		g_clear_object (&gv_device);

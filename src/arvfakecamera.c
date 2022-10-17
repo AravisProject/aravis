@@ -519,11 +519,11 @@ arv_fake_camera_diagonal_ramp (ArvBuffer *buffer, void *fill_pattern_data,
 	guint32 width;
 	guint32 height;
 
-	if (buffer == NULL)
-		return;
+        g_return_if_fail (buffer != NULL);
+        g_return_if_fail (buffer->priv->n_parts == 1);
 
-	width = buffer->priv->width;
-	height = buffer->priv->height;
+	width = buffer->priv->parts[0].width;
+	height = buffer->priv->parts[0].height;
 
 	scale = 1.0 + gain + log10 ((double) exposure_time_us / 10000.0);
 
@@ -763,6 +763,8 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer, guint32 *
 	if (camera == NULL || buffer == NULL)
 		return;
 
+        arv_buffer_set_n_parts(buffer, 1);
+
 	width = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_WIDTH);
 	height = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_HEIGHT);
 	payload = arv_fake_camera_get_payload (camera);
@@ -779,15 +781,17 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer, guint32 *
 
 	buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_IMAGE;
 	buffer->priv->chunk_endianness = G_BIG_ENDIAN;
-	buffer->priv->width = width;
-	buffer->priv->height = height;
-        buffer->priv->x_offset = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_X_OFFSET);
-        buffer->priv->y_offset = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_Y_OFFSET);
+	buffer->priv->parts[0].width = width;
+	buffer->priv->parts[0].height = height;
+        buffer->priv->parts[0].x_offset = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_X_OFFSET);
+        buffer->priv->parts[0].y_offset = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_Y_OFFSET);
+        buffer->priv->parts[0].x_padding = 0;
+        buffer->priv->parts[0].y_padding = 0;
 	buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
 	buffer->priv->timestamp_ns = g_get_real_time () * 1000;
 	buffer->priv->system_timestamp_ns = buffer->priv->timestamp_ns;
 	buffer->priv->frame_id = camera->priv->frame_id;
-	buffer->priv->pixel_format = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_PIXEL_FORMAT);
+	buffer->priv->parts[0].pixel_format = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_PIXEL_FORMAT);
 
 	g_mutex_lock (&camera->priv->fill_pattern_mutex);
 
@@ -798,6 +802,8 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer, guint32 *
 					     exposure_time_us, gain, pixel_format);
 
 	g_mutex_unlock (&camera->priv->fill_pattern_mutex);
+
+        buffer->priv->parts[0].size = buffer->priv->received_size;
 
 	if (packet_size != NULL)
 		*packet_size =
