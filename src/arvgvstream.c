@@ -25,6 +25,7 @@
  * @short_description: GigEVision stream
  */
 
+#include <arvdebugprivate.h>
 #include <arvgvstreamprivate.h>
 #include <arvgvdeviceprivate.h>
 #include <arvstreamprivate.h>
@@ -807,9 +808,8 @@ _loop (ArvGvStreamThreadData *thread_data)
 	ArvGvspPacket *packet_buffers;
 	GPollFD poll_fd[2];
 	guint64 time_us;
-	int n_msgs;
 	gboolean use_poll;
-	unsigned i;
+	int i;
 	GInputVector packet_iv[ARV_GV_STREAM_NUM_BUFFERS] = { {NULL, 0}, };
 	GInputMessage packet_im[ARV_GV_STREAM_NUM_BUFFERS] = { {NULL, NULL, 0, 0, 0, NULL, NULL}, };
 	// we don't need to consider the IP and UDP header size
@@ -857,24 +857,34 @@ _loop (ArvGvStreamThreadData *thread_data)
 		} while (n_events < 0 && errsv == EINTR);
 
 		if (poll_fd[0].revents != 0) {
+                        GError *error = NULL;
+                        int n_msgs;
+
 			arv_gpollfd_clear_one (&poll_fd[0], thread_data->socket);
 			n_msgs = g_socket_receive_messages (thread_data->socket,
 		 					    packet_im,
 		 					    ARV_GV_STREAM_NUM_BUFFERS,
 		 					    G_SOCKET_MSG_NONE,
 		 					    NULL,
-		 					    NULL);
-			time_us = g_get_monotonic_time ();
-			for (i = 0; i < n_msgs; i++) {
-				frame = _process_packet (thread_data,
-						 	 packet_iv[i].buffer,
-						 	 packet_im[i].bytes_received,
-						 	 time_us);
-				_check_frame_completion (thread_data, time_us, frame);
-			}
-		} else {
-			time_us = g_get_monotonic_time ();
-			_check_frame_completion (thread_data, time_us, NULL);
+		 					    &error);
+
+                        if (G_LIKELY(n_msgs > 0)) {
+                                time_us = g_get_monotonic_time ();
+                                for (i = 0; i < n_msgs; i++) {
+                                        frame = _process_packet (thread_data,
+                                                                 packet_iv[i].buffer,
+                                                                 packet_im[i].bytes_received,
+                                                                 time_us);
+                                        _check_frame_completion (thread_data, time_us, frame);
+                                }
+                        } else {
+                                arv_warning_stream_thread ("[GvStream::loop] receive_messages failed: %s",
+                                                           error != NULL ? error->message : "Unknown reason");
+                                g_clear_error (&error);
+                        }
+                } else {
+                        time_us = g_get_monotonic_time ();
+                        _check_frame_completion (thread_data, time_us, NULL);
                 }
 
 	} while (!g_cancellable_is_cancelled (thread_data->cancellable));
