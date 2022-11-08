@@ -534,6 +534,8 @@ arv_uv_stream_thread_sync (void *data)
 		if (error != NULL) {
 			arv_warning_sp ("USB transfer error: %s", error->message);
 			g_clear_error (&error);
+                } else if (transferred < 1) {
+			arv_warning_sp ("No data transferred");
 		} else {
 			ArvUvspPacketType packet_type;
 
