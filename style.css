@@ -27,6 +27,12 @@
   --sidebar-search-bg: rgba(127, 127, 127, 0.25);
   --sidebar-search-focus-bg: rgba(127, 127, 127, 0.3);
   --sidebar-padding: 1.5em;
+  --warning-bg-color: #e5a50a;
+  --warning-fg-color: rgba(0, 0, 0, 0.8);
+  --error-bg-color: #e01b24;
+  --error-fg-color: #ffffff;
+  --accent-bg-color: #3584e4;
+  --accent-fg-color: #ffffff;
 
   /* boxes, e.g. code blocks */
   --box-bg: rgba(135, 135, 135, 0.085);
@@ -86,6 +92,12 @@
     --box-bg: rgba(135, 135, 135, 0.1);
     --box-text-color: #fff;
     --heading-docblock-color: #b7b7b7;
+    --warning-bg-color: #cd9309;
+    --warning-fg-color: rgba(0, 0, 0, 0.8);
+    --error-bg-color: #c01c28;
+    --error-fg-color: #ffffff;
+    --accent-bg-color: #3584e4;
+    --accent-fg-color: #ffffff;
   }
 }
 
@@ -407,6 +419,15 @@ footer {
 
 .sidebar .section > ul > li {
   margin-right: -10px;
+}
+
+.sidebar .generator > p {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  font-size: 0.8em;
+  opacity: 0.8;
+  position: relative;
+  bottom: 0;
 }
 
 .sidebar .section h3, .sidebar .section h5 {
@@ -848,6 +869,26 @@ table.returns tr.arg-description td {
   background-color: var(--primary);
 }
 
+.emblem {
+  padding: 0 0.75em;
+  border-radius: 9999px;
+  font-size: 80%;
+}
+
+.emblem.available-next {
+  background-color: var(--warning-bg-color);
+  color: var(--warning-fg-color);
+}
+
+.emblem.deprecated {
+  background-color: var(--error-bg-color);
+  color: var(--error-fg-color);
+}
+
+.emblem.available {
+  background-color: var(--accent-bg-color);
+  color: var(--accent-fg-color);
+}
 
 /*************************************************************
  SYMBOLS
