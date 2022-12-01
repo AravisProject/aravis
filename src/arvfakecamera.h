@@ -74,6 +74,7 @@ ARV_API void			arv_set_fake_camera_genicam_filename (const char *filename);
 #define ARV_FAKE_CAMERA_REGISTER_TRIGGER_SOURCE		0x304
 #define ARV_FAKE_CAMERA_REGISTER_TRIGGER_ACTIVATION	0x308
 #define ARV_FAKE_CAMERA_REGISTER_TRIGGER_SOFTWARE	0x30c
+#define ARV_FAKE_CAMERA_ACQUISITION_FRAME_COUNT		0x310
 
 #define ARV_FAKE_CAMERA_REGISTER_ACQUISITION		0x124
 #define ARV_FAKE_CAMERA_REGISTER_EXPOSURE_TIME_US	0x120
@@ -122,6 +123,9 @@ ARV_API void			arv_fake_camera_set_trigger_frequency	(ArvFakeCamera *camera, dou
 ARV_API gboolean		arv_fake_camera_is_in_free_running_mode (ArvFakeCamera *camera);
 ARV_API gboolean		arv_fake_camera_is_in_software_trigger_mode (ArvFakeCamera *camera);
 ARV_API gboolean		arv_fake_camera_check_and_acknowledge_software_trigger (ArvFakeCamera *camera);
+
+guint64 arv_fake_camera_get_frame_period (ArvFakeCamera *camera);
+int arv_fake_camera_get_acquisition_frame_count (ArvFakeCamera *camera);
 
 ARV_API const char *		arv_fake_camera_get_genicam_xml		(ArvFakeCamera *camera, size_t *size);
 

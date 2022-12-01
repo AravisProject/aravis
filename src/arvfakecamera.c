@@ -72,6 +72,7 @@ typedef struct {
 
 	guint32 frame_id;
 	double trigger_frequency;
+        int frameSeqCount;
 
 	GMutex fill_pattern_mutex;
 
@@ -218,10 +219,20 @@ arv_fake_camera_get_sleep_time_for_next_frame (ArvFakeCamera *camera, guint64 *n
 
 	g_return_val_if_fail (ARV_IS_FAKE_CAMERA (camera), 0);
 
-	if (_get_register (camera, ARV_FAKE_CAMERA_REGISTER_TRIGGER_MODE) == 1)
+	if (_get_register (camera, ARV_FAKE_CAMERA_REGISTER_TRIGGER_MODE) == 1 &&
+	    camera->priv->frameSeqCount >= _get_register (camera, ARV_FAKE_CAMERA_ACQUISITION_FRAME_COUNT)) {
 		frame_period_time_us = 1000000L / camera->priv->trigger_frequency;
-	else
-		frame_period_time_us = (guint64) _get_register (camera, ARV_FAKE_CAMERA_REGISTER_ACQUISITION_FRAME_PERIOD_US);
+		
+                /*
+                //consider the time of the sequence inside the time between triggers?
+                frame_period_time_us -= _get_register(camera, ARV_FAKE_CAMERA_ACQUISITION_FRAME_COUNT) * _get_register (camera, ARV_FAKE_CAMERA_REGISTER_ACQUISITION_FRAME_PERIOD_US)
+                */
+        }
+	else {
+		frame_period_time_us =
+		    (guint64) _get_register (camera, ARV_FAKE_CAMERA_REGISTER_ACQUISITION_FRAME_PERIOD_US);
+	}
+		
 
 	if (frame_period_time_us == 0) {
 		arv_warning_misc ("Invalid zero frame period, defaulting to 1 second");
@@ -873,9 +884,17 @@ arv_fake_camera_check_and_acknowledge_software_trigger (ArvFakeCamera *camera)
 
 
 	if (_get_register (camera, ARV_FAKE_CAMERA_REGISTER_TRIGGER_SOFTWARE) == 1) {
+
 		arv_fake_camera_write_register (camera, ARV_FAKE_CAMERA_REGISTER_TRIGGER_SOFTWARE, 0);
+		camera->priv->frameSeqCount = 1;
 		return TRUE;
-	}
+	} else if (camera->priv->frameSeqCount < _get_register (camera, ARV_FAKE_CAMERA_ACQUISITION_FRAME_COUNT)) {
+		camera->priv->frameSeqCount++;
+		if (camera->priv->frameSeqCount == _get_register (camera, ARV_FAKE_CAMERA_ACQUISITION_FRAME_COUNT)) {
+			camera->priv->frameSeqCount = 65535;
+                }
+		return TRUE;
+        }
 	return FALSE;
 }
 
@@ -911,6 +930,18 @@ arv_fake_camera_get_control_channel_privilege (ArvFakeCamera *camera)
 	arv_fake_camera_read_register (camera, ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET, &value);
 
 	return value;
+}
+
+guint64
+arv_fake_camera_get_frame_period(ArvFakeCamera* camera)
+{
+	return _get_register (camera, ARV_FAKE_CAMERA_REGISTER_ACQUISITION_FRAME_PERIOD_US);
+}
+
+int
+arv_fake_camera_get_acquisition_frame_count (ArvFakeCamera *camera)
+{
+	return _get_register (camera, ARV_FAKE_CAMERA_ACQUISITION_FRAME_COUNT);
 }
 
 void
@@ -1081,6 +1112,7 @@ arv_fake_camera_init (ArvFakeCamera *fake_camera)
 
 	fake_camera->priv->trigger_frequency = 25.0;
 	fake_camera->priv->frame_id = 65400; /* Trigger circular counter bugs sooner */
+	fake_camera->priv->frameSeqCount = 65535;//max possible value by default for acquisition count
 }
 
 static void
