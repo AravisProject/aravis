@@ -102,6 +102,7 @@ typedef struct {
 	guint64 first_packet_time_us;
 	guint64 last_packet_time_us;
 
+	gboolean haveMoreThanLeader;
 	gboolean disable_resend_request;
 
 	guint n_packets;
@@ -333,6 +334,8 @@ _process_data_block (ArvGvStreamThreadData *thread_data,
 
 	memcpy (((char *) frame->buffer->priv->data) + block_offset, arv_gvsp_packet_get_data (packet), block_size);
 
+	frame->haveMoreThanLeader = TRUE;
+
 	if (frame->packet_data[packet_id].resend_requested) {
 		thread_data->n_resent_packets++;
 		arv_debug_stream_thread ("[GvStream::process_data_block] Received resent packet %u for frame %" G_GUINT64_FORMAT,
@@ -352,6 +355,8 @@ _process_data_trailer (ArvGvStreamThreadData *thread_data,
 		frame->buffer->priv->status = ARV_BUFFER_STATUS_WRONG_PACKET_ID;
 		return;
 	}
+
+	frame->haveMoreThanLeader = TRUE;
 
 	if (frame->packet_data[packet_id].resend_requested) {
 		thread_data->n_resent_packets++;
@@ -421,6 +426,7 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 	frame = g_new0 (ArvGvStreamFrameData, 1);
 
 	frame->disable_resend_request = FALSE;
+	frame->haveMoreThanLeader = FALSE;
 
 	frame->frame_id = frame_id;
 	frame->last_valid_packet = -1;
@@ -628,6 +634,7 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 		}
 
 		if (can_close_frame &&
+			frame->haveMoreThanLeader &&
 		    time_us - frame->last_packet_time_us >= thread_data->frame_retention_us) {
 			frame->buffer->priv->status = ARV_BUFFER_STATUS_TIMEOUT;
 			arv_warning_stream_thread ("[GvStream::check_frame_completion] Timeout for frame %"
