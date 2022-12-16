@@ -29,7 +29,7 @@
 G_BEGIN_DECLS
 
 typedef struct {
-	size_t size;
+	size_t allocated_size;
 	gboolean is_preallocated;
 	unsigned char *data;
 
@@ -37,6 +37,7 @@ typedef struct {
 	GDestroyNotify user_data_destroy_func;
 
 	ArvBufferStatus status;
+	size_t received_size;
 
 	ArvBufferPayloadType payload_type;
 

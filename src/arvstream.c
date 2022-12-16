@@ -55,7 +55,8 @@ enum {
 	ARV_STREAM_PROPERTY_EMIT_SIGNALS,
 	ARV_STREAM_PROPERTY_DEVICE,
 	ARV_STREAM_PROPERTY_CALLBACK,
-	ARV_STREAM_PROPERTY_CALLBACK_DATA
+	ARV_STREAM_PROPERTY_CALLBACK_DATA,
+	ARV_STREAM_PROPERTY_DESTROY_NOTIFY
 } ArvStreamProperties;
 
 typedef struct {
@@ -67,6 +68,7 @@ typedef struct {
 	ArvDevice *device;
 	ArvStreamCallback callback;
 	void *callback_data;
+	GDestroyNotify destroy_notify;
 
 	GError *init_error;
 
@@ -660,6 +662,9 @@ arv_stream_set_property (GObject * object, guint prop_id,
 		case ARV_STREAM_PROPERTY_CALLBACK_DATA:
 			priv->callback_data = g_value_get_pointer (value);
 			break;
+		case ARV_STREAM_PROPERTY_DESTROY_NOTIFY:
+			priv->destroy_notify = g_value_get_pointer (value);
+			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 			break;
@@ -759,6 +764,10 @@ arv_stream_finalize (GObject *object)
         g_ptr_array_foreach (priv->infos, (GFunc) arv_stream_info_free, NULL);
         g_clear_pointer (&priv->infos, g_ptr_array_unref);
 
+	if (priv->destroy_notify != NULL) {
+		priv->destroy_notify(priv->callback_data);
+	}
+
 	G_OBJECT_CLASS (arv_stream_parent_class)->finalize (object);
 }
 
@@ -823,6 +832,13 @@ arv_stream_class_init (ArvStreamClass *node_class)
 		 g_param_spec_pointer ("callback-data",
 				       "Stream callback data",
 				       "Optional user callback data",
+				       G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property
+		(object_class,
+		 ARV_STREAM_PROPERTY_DESTROY_NOTIFY,
+		 g_param_spec_pointer ("destroy-notify",
+				       "Destroy notify",
+				       "Optional destroy notify",
 				       G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 }
 

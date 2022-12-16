@@ -167,6 +167,12 @@ typedef struct {
 	guint8 header[];
 } ArvGvspPacket;
 
+/* Minimum ethernet frame size minus ethernet protocol overhead */
+#define ARV_GVSP_MINIMUM_PACKET_SIZE                    (64 - 14 - 4)
+/* Maximum ethernet frame size minus ethernet protocol overhead */
+#define ARV_GVSP_MAXIMUM_PACKET_SIZE                    (65536 - 14 - 4)
+ /* IP + UDP */
+#define ARV_GVSP_PACKET_UDP_OVERHEAD    		(20 + 8)
  /* IP + UDP + GVSP headers */
 #define ARV_GVSP_PACKET_PROTOCOL_OVERHEAD		(20 + 8 + sizeof (ArvGvspPacket) + sizeof (ArvGvspHeader))
  /* IP + UDP + GVSP extended headers */
