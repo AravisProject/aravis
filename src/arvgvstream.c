@@ -644,7 +644,7 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 
 		if (can_close_frame &&
 		    // do not timeout on the current frame if the LEADER packet is so far the ONLY valid packet received
-			(frame != current_frame || frame->last_valid_packet != 0) &&
+			((current_frame != NULL && frame != current_frame) || frame->last_valid_packet != 0) &&
 		    time_us - frame->last_packet_time_us >= thread_data->frame_retention_us) {
 			frame->buffer->priv->status = ARV_BUFFER_STATUS_TIMEOUT;
 			arv_warning_stream_thread ("[GvStream::check_frame_completion] Timeout for frame %"
@@ -1123,7 +1123,6 @@ _ring_buffer_loop (ArvGvStreamThreadData *thread_data)
                         int timeout_ms;
 			int n_events;
 			int errsv;
-
 			_check_frame_completion (thread_data, time_us, NULL);
 
                         if (thread_data->frames != NULL)
@@ -1152,7 +1151,6 @@ _ring_buffer_loop (ArvGvStreamThreadData *thread_data)
 				size = g_ntohs (ip->tot_len) -  sizeof (struct iphdr) - sizeof (struct udphdr);
 
 				frame = _process_packet (thread_data, packet, size, time_us);
-
 				_check_frame_completion (thread_data, time_us, frame);
 
 				header = (void *) (((char *) header) + header->tp_next_offset);
