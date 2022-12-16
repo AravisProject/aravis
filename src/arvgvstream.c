@@ -643,8 +643,8 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 		}
 
 		if (can_close_frame &&
-		    // do not timeout on a frame if the LEADER packet is so far the ONLY valid packet received
-			frame->last_valid_packet != 0 &&
+		    // do not timeout on the current frame if the LEADER packet is so far the ONLY valid packet received
+			(frame != current_frame || frame->last_valid_packet != 0) &&
 		    time_us - frame->last_packet_time_us >= thread_data->frame_retention_us) {
 			frame->buffer->priv->status = ARV_BUFFER_STATUS_TIMEOUT;
 			arv_warning_stream_thread ("[GvStream::check_frame_completion] Timeout for frame %"
