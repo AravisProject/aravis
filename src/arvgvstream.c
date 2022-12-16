@@ -647,7 +647,6 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 			frame->last_valid_packet != 0 &&
 		    time_us - frame->last_packet_time_us >= thread_data->frame_retention_us) {
 			frame->buffer->priv->status = ARV_BUFFER_STATUS_TIMEOUT;
-			printf("closing frame: last_valid_packet --> %d\n", frame->last_valid_packet);
 			arv_warning_stream_thread ("[GvStream::check_frame_completion] Timeout for frame %"
 						   G_GUINT64_FORMAT " at dt = %" G_GUINT64_FORMAT,
 						   frame->frame_id, time_us - frame->first_packet_time_us);
