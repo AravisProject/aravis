@@ -92,17 +92,17 @@ SPDX-License-Identifier: LGPL-2.1-or-later
     <h1 id="unit-tests">Unit Tests<a class="md-anchor" href="#unit-tests" title="Permanent link"></a></h1>
 <p>Aravis has a set of unit tests that helps to catch regressions and memory leaks
 during the development. The test suite is run using the following&nbsp;commands:</p>
-<div class="codehilite"><pre><span></span>ninja <span class="nb">test</span>
-</pre></div>
+<div class="codehilite"><pre><span></span><code>ninja <span class="nb">test</span>
+</code></pre></div>
 
 <p>The is a small helper script that run the same tests under valgrind memmory&nbsp;checker</p>
-<div class="codehilite"><pre><span></span>../tests/valgrind-memcheck
-</pre></div>
+<div class="codehilite"><pre><span></span><code>../tests/valgrind-memcheck
+</code></pre></div>
 
 <p>All the code is not covered yet by the tests. Code coverage can be obtained&nbsp;using:</p>
-<div class="codehilite"><pre><span></span>meson configure -Db_coverage<span class="o">=</span><span class="nb">true</span>
+<div class="codehilite"><pre><span></span><code>meson configure -Db_coverage<span class="o">=</span><span class="nb">true</span>
 ninja coverage
-</pre></div>
+</code></pre></div>
 
 <p>The report is published in <code>build/meson-logs/coveragereport/index.html</code>. Help on
 code coverage improvement is&nbsp;welcome.</p>

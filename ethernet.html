@@ -105,37 +105,37 @@ lost packets because of a full buffer. You can try the <code>--auto</code> param
 <p>In you application, this can be tweaked using <code>g_object_set()</code> on the stream
 object. For example, this code, to be called before
 <a href="method.Camera.start_acquisition.html"><code>arv_camera_start_acquisition()</code></a>, will enable the auto buffer size&nbsp;mode:</p>
-<div class="codehilite"><pre><span></span><span class="n">g_object_set</span> <span class="p">(</span><span class="n">stream</span><span class="p">,</span>
-          <span class="s">&quot;socket-buffer&quot;</span><span class="p">,</span> <span class="n">ARV_GV_STREAM_SOCKET_BUFFER_AUTO</span><span class="p">,</span>
-          <span class="s">&quot;socket-buffer-size&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-          <span class="nb">NULL</span><span class="p">);</span>
-</pre></div>
+<div class="codehilite"><pre><span></span><code><span class="n">g_object_set</span><span class="w"> </span><span class="p">(</span><span class="n">stream</span><span class="p">,</span><span class="w"></span>
+<span class="w">          </span><span class="s">&quot;socket-buffer&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">ARV_GV_STREAM_SOCKET_BUFFER_AUTO</span><span class="p">,</span><span class="w"></span>
+<span class="w">          </span><span class="s">&quot;socket-buffer-size&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"></span>
+<span class="w">          </span><span class="nb">NULL</span><span class="p">);</span><span class="w"></span>
+</code></pre></div>
 
 <h2 id="receiving-thread-priority">Receiving Thread Priority<a class="md-anchor" href="#receiving-thread-priority" title="Permanent link"></a></h2>
 <p>It is possible to increase the receiving thread priority. You can experiment
 with thread priority using the <code>--realtime</code> or <code>--high-priority</code> options of
 <code>arv-camera-test</code>.</p>
 <p>In your code, stream thread priority can be changed in the stream buffer&nbsp;callback:</p>
-<div class="codehilite"><pre><span></span><span class="k">static</span> <span class="kt">void</span>
-<span class="nf">stream_cb</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">user_data</span><span class="p">,</span> <span class="n">ArvStreamCallbackType</span> <span class="n">type</span><span class="p">,</span> <span class="n">ArvBuffer</span> <span class="o">*</span><span class="n">buffer</span><span class="p">)</span>
-<span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">type</span> <span class="o">==</span> <span class="n">ARV_STREAM_CALLBACK_TYPE_INIT</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">arv_make_thread_realtime</span> <span class="p">(</span><span class="mi">10</span><span class="p">))</span>
-            <span class="n">printf</span> <span class="p">(</span><span class="s">&quot;Failed to make stream thread realtime</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+<div class="codehilite"><pre><span></span><code><span class="k">static</span><span class="w"> </span><span class="kt">void</span><span class="w"></span>
+<span class="nf">stream_cb</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">user_data</span><span class="p">,</span><span class="w"> </span><span class="n">ArvStreamCallbackType</span><span class="w"> </span><span class="n">type</span><span class="p">,</span><span class="w"> </span><span class="n">ArvBuffer</span><span class="w"> </span><span class="o">*</span><span class="n">buffer</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">type</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">ARV_STREAM_CALLBACK_TYPE_INIT</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">arv_make_thread_realtime</span><span class="w"> </span><span class="p">(</span><span class="mi">10</span><span class="p">))</span><span class="w"></span>
+<span class="w">            </span><span class="n">printf</span><span class="w"> </span><span class="p">(</span><span class="s">&quot;Failed to make stream thread realtime</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
 
 <p>or:</p>
-<div class="codehilite"><pre><span></span><span class="k">static</span> <span class="kt">void</span>
-<span class="nf">stream_cb</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">user_data</span><span class="p">,</span> <span class="n">ArvStreamCallbackType</span> <span class="n">type</span><span class="p">,</span> <span class="n">ArvBuffer</span> <span class="o">*</span><span class="n">buffer</span><span class="p">)</span>
-<span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">type</span> <span class="o">==</span> <span class="n">ARV_STREAM_CALLBACK_TYPE_INIT</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">arv_make_thread_high_priority</span> <span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">))</span>
-            <span class="n">printf</span> <span class="p">(</span><span class="s">&quot;Failed to make stream thread high priority</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+<div class="codehilite"><pre><span></span><code><span class="k">static</span><span class="w"> </span><span class="kt">void</span><span class="w"></span>
+<span class="nf">stream_cb</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">user_data</span><span class="p">,</span><span class="w"> </span><span class="n">ArvStreamCallbackType</span><span class="w"> </span><span class="n">type</span><span class="p">,</span><span class="w"> </span><span class="n">ArvBuffer</span><span class="w"> </span><span class="o">*</span><span class="n">buffer</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">type</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">ARV_STREAM_CALLBACK_TYPE_INIT</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">arv_make_thread_high_priority</span><span class="w"> </span><span class="p">(</span><span class="mi">-10</span><span class="p">))</span><span class="w"></span>
+<span class="w">            </span><span class="n">printf</span><span class="w"> </span><span class="p">(</span><span class="s">&quot;Failed to make stream thread high priority</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
 
 <h2 id="stream-packet-size">Stream Packet Size<a class="md-anchor" href="#stream-packet-size" title="Permanent link"></a></h2>
 <p>One way to increase streaming performance and lower the <span class="caps">CPU</span> use is to increase
@@ -151,12 +151,12 @@ are using. Please refer to the administrator manual of your&nbsp;distribution.</
 network settings. <span class="caps">MTU</span> parameter is in the Identity&nbsp;page.</p>
 <p>On Debian / Ubuntu you can add a line &#8220;mtu 8192&#8221; to /etc/network/interfaces
 under the correct&nbsp;device.</p>
-<div class="codehilite"><pre><span></span>iface ethusb0 inet static
+<div class="codehilite"><pre><span></span><code>iface ethusb0 inet static
     address 192.168.45.1
     netmask 255.255.255.0
     broadcast 192.168.45.255
     mtu 8192
-</pre></div>
+</code></pre></div>
 
 <p>Please note if your device is not connected directly to the machine, you may
 also have to tweak the active devices on your&nbsp;network.</p>
@@ -165,8 +165,8 @@ also have to tweak the active devices on your&nbsp;network.</p>
 requires extended capabilities. If you want to allow your application to use
 packet socket, you must set the <code>cap_net_raw</code> capability using <code>setcap</code>. For
 example, the following command gives this capability to the Aravis&nbsp;viewer:</p>
-<div class="codehilite"><pre><span></span>sudo setcap cap_net_raw+ep arv-viewer
-</pre></div>
+<div class="codehilite"><pre><span></span><code>sudo setcap cap_net_raw+ep arv-viewer
+</code></pre></div>
     </div>
   </section>
 </section>
