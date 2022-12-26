@@ -9,7 +9,7 @@ you can build and install Aravis like [any other meson
 project](http://mesonbuild.com/Quick-guide.html#compiling-a-meson-project):
 
 ```sh
-meson build
+meson setup build
 cd build
 ninja
 ninja install
@@ -58,7 +58,7 @@ settings (tested on macOS Catalina):
 
 ```sh
 brew install gettext intltool gtk-doc libxml2 meson libusb
-meson build
+meson setup build
 ninja -C build
 ```
 
@@ -105,7 +105,7 @@ crossroad install libnotify gstreamer gst-plugins-good gst-plugins-bad gst-plugi
 git clone https://github.com/AravisProject/aravis
 cd aravis
 # configure, crossroad adjusts meson for cross-compilation; build directory is created
-crossroad meson build
+crossroad meson setup build
 # compile and install
 ninja -C build install
 ```
