@@ -67,7 +67,7 @@ packages:
 
 ```sh
 brew install gtk+3 gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad libnotify gnome-icon-theme
-meson configure -Dviewer=enabled
+meson configure -Dviewer=enabled build
 ```
 
 ## Building on Windows
