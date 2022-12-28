@@ -190,16 +190,16 @@ static const GOptionEntry arv_option_entries[] =
 	{
 		"bandwidth-limit",			'b', 0, G_OPTION_ARG_INT,
 		&arv_option_bandwidth_limit,		"Desired USB3 Vision device bandwidth limit",
-		NULL
+		"<limit>"
 	},
 	{
 		"duration",	        		'\0', 0, G_OPTION_ARG_INT,
 		&arv_option_duration_s,		        "Test duration (s)",
-		NULL
+		"<s>"
 	},
 	{
 		"debug", 				'd', 0, G_OPTION_ARG_STRING,
-		&arv_option_debug_domains, 		NULL,
+		&arv_option_debug_domains, 		"Debug output selection",
 		"{<category>[:<level>][,...]|help}"
 	},
 	{ NULL }
