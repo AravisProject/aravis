@@ -75,7 +75,7 @@ static const GOptionEntry arv_option_entries[] =
 	},
 	{
 		"version", 			'v', 0, G_OPTION_ARG_NONE,
-		&arv_option_show_version,     	"Show library version",
+		&arv_option_show_version,     	"Show version",
                 NULL
 	},
 	{ NULL }
@@ -90,7 +90,7 @@ description_content[] =
 "  values:                           list all available feature values\n"
 "  description [<feature>] ...:      show the full feature description\n"
 "  control <feature>[=<value>] ...:  read/write device features\n"
-"  network <setting>[=<value>]:      read/write network settings\n"
+"  network <setting>[=<value>]...:   read/write network settings\n"
 "\n"
 "If no command is given, this utility will list all the available devices.\n"
 "For the control command, direct access to device registers is provided using a R[address] syntax"
