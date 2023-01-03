@@ -481,6 +481,10 @@ arv_uv_stream_thread_sync (void *data)
 		arv_uv_device_bulk_transfer (thread_data->uv_device,  ARV_UV_ENDPOINT_DATA, LIBUSB_ENDPOINT_IN,
 					     packet, size, &transferred, 0, &error);
 
+      if ((error != NULL) && (transferred > 0) && (error->code == ARV_DEVICE_ERROR_TIMEOUT)) {
+         arv_warning_sp("TIMEOUT ERROR WITH TRANSFERED = %lu, CLEARING ERROR", transferred);
+         g_clear_error(&error);
+      }
 		if (error != NULL) {
 			arv_warning_sp ("USB transfer error: %s", error->message);
 			g_clear_error (&error);
