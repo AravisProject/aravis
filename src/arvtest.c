@@ -500,17 +500,24 @@ _single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_c
         if (error == NULL)
                 buffer = arv_camera_acquisition (test_camera->camera, 1000000, &error);
 
-        if (chunk_test) {
+        if (error == NULL && (!ARV_IS_BUFFER (buffer) || arv_buffer_get_status(buffer) != ARV_BUFFER_STATUS_SUCCESS)) {
+                g_set_error (&error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_TRANSFER_ERROR,
+                             "Buffer transfer failure");
+        }
+
+        if (error == NULL && chunk_test) {
                 int n_chunks = g_strv_length (chunk_list);
+                int i;
 
-                if (ARV_IS_BUFFER (buffer)) {
-                        int i;
-
+                if (arv_buffer_has_chunks(buffer)) {
                         for (i = 0; i < n_chunks && error == NULL; i++) {
                                 char *chunk_name = g_strdup_printf ("Chunk%s", chunk_list[i]);
                                 arv_chunk_parser_get_integer_value (parser, buffer, chunk_name, &error);
                                 g_clear_pointer (&chunk_name, g_free);
                         }
+                } else {
+                        g_set_error (&error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_TRANSFER_ERROR,
+                                     "No chunk found in buffer");
                 }
 
                 g_clear_object (&parser);
