@@ -419,6 +419,7 @@ arv_test_device_properties (ArvTest *test, const char *test_name, ArvTestCamera 
         ArvTestStatus status;
         gint sensor_width, sensor_height;
         gsize size = 0;
+        gboolean available;
 
         g_return_if_fail (ARV_IS_TEST (test));
 
@@ -447,16 +448,40 @@ arv_test_device_properties (ArvTest *test, const char *test_name, ArvTestCamera 
         arv_test_camera_add_result (test_camera, test_name, "SensorSizeCheck", status, comment);
 
         g_clear_error (&error);
-        arv_camera_get_gain (test_camera->camera, &error);
-        arv_test_camera_add_result (test_camera, test_name, "GainReadout",
-                                    error == NULL ? ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
+        available = arv_camera_is_gain_available(test_camera->camera, &error);
+        arv_test_camera_add_result (test_camera, test_name, "GainAvailable",
+                                    error == NULL &&
+                                    available == arv_test_camera_get_key_file_boolean(test_camera, test,
+                                                                                      "GainAvailable",
+                                                                                      TRUE) ?
+                                    ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
                                     error != NULL ? error->message : NULL);
 
+        if (available) {
+                g_clear_error (&error);
+                arv_camera_get_gain (test_camera->camera, &error);
+                arv_test_camera_add_result (test_camera, test_name, "GainReadout",
+                                            error == NULL ? ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
+                                            error != NULL ? error->message : NULL);
+        }
+
         g_clear_error (&error);
-        arv_camera_get_exposure_time (test_camera->camera, &error);
-        arv_test_camera_add_result (test_camera, test_name, "ExposureTimeReadout",
-                                    error == NULL ? ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
+        available = arv_camera_is_exposure_time_available (test_camera->camera, &error);
+        arv_test_camera_add_result (test_camera, test_name, "ExposureTimeAvailable",
+                                    error == NULL &&
+                                    available == arv_test_camera_get_key_file_boolean(test_camera, test,
+                                                                                      "ExposureTimeAvailable",
+                                                                                      TRUE) ?
+                                    ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
                                     error != NULL ? error->message : NULL);
+
+        if (available) {
+                g_clear_error (&error);
+                arv_camera_get_exposure_time (test_camera->camera, &error);
+                arv_test_camera_add_result (test_camera, test_name, "ExposureTimeReadout",
+                                            error == NULL ? ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
+                                            error != NULL ? error->message : NULL);
+        }
 
         g_clear_error (&error);
         g_free (sensor_size);
@@ -865,10 +890,11 @@ arv_test_run (ArvTest *test, unsigned int n_iterations,
 						arv_camera_uv_set_usb_mode (test_camera->camera, usb_mode);
 
                                         if (arv_camera_is_gv_device(test_camera->camera))
-                                                arv_camera_gv_set_stream_options (test_camera->camera,
-                                                                                  packet_socket ?
-                                                                                  ARV_GV_STREAM_OPTION_NONE :
-                                                                                  ARV_GV_STREAM_OPTION_PACKET_SOCKET_DISABLED);
+                                                arv_camera_gv_set_stream_options
+                                                        (test_camera->camera,
+                                                         packet_socket ?
+                                                         ARV_GV_STREAM_OPTION_NONE :
+                                                         ARV_GV_STREAM_OPTION_PACKET_SOCKET_DISABLED);
 
                                         for (j = 0; j < G_N_ELEMENTS (tests); j++) {
                                                 if (g_regex_match (test_regex, tests[j].name, 0, NULL)) {
@@ -879,10 +905,8 @@ arv_test_run (ArvTest *test, unsigned int n_iterations,
                                                                 double delay;
 
                                                                 delay_name = g_strdup_printf ("%sDelay", tests[j].name);
-                                                                delay = arv_test_camera_get_key_file_double (test_camera,
-                                                                                                             test,
-                                                                                                             delay_name,
-                                                                                                             0);
+                                                                delay = arv_test_camera_get_key_file_double
+                                                                        (test_camera, test, delay_name, 0);
                                                                 g_usleep (1000000.0 * delay);
                                                                 tests[j].run (test, tests[j].name, test_camera);
                                                                 g_free (delay_name);
@@ -913,7 +937,8 @@ arv_test_run (ArvTest *test, unsigned int n_iterations,
                                         n_cache_errors = arv_test_camera_get_n_register_cache_errors (test_camera);
 
                                         if (n_cache_errors > 0)
-                                                comment = g_strdup_printf ("%" G_GUINT64_FORMAT " error(s)", n_cache_errors);
+                                                comment = g_strdup_printf ("%" G_GUINT64_FORMAT " error(s)",
+                                                                           n_cache_errors);
 
                                         arv_test_camera_add_result (test_camera, "Genicam", "RegisterCache",
                                                                     n_cache_errors == 0 ?
