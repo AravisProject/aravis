@@ -1848,7 +1848,7 @@ arv_camera_select_gain (ArvCamera *camera, const char *gainSelector, GError **er
  *
  * Retrieves the list of all available gain selectors as strings.
  *
- * Returns: (array length=n_pixel_formats) (transfer container): a newly allocated array of strings, to be freed after use with
+ * Returns: (array length=n_selectors) (transfer container): a newly allocated array of strings, to be freed after use with
  * g_free().
  *
  * Since: 0.8.23
@@ -1962,7 +1962,7 @@ arv_camera_select_black_level (ArvCamera *camera, const char *blackLevelSelector
  *
  * Retrieves the list of all available black level selectors as strings.
  *
- * Returns: (array length=n_pixel_formats) (transfer container): a newly allocated array of strings, to be freed after use with
+ * Returns: (array length=n_selectors) (transfer container): a newly allocated array of strings, to be freed after use with
  * g_free().
  *
  * Since: 0.8.23
