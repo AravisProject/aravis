@@ -1835,8 +1835,10 @@ arv_camera_get_gain_auto (ArvCamera *camera, GError **error)
  **/
 
 void
-arv_camera_select_gain (ArvCamera *camera, const char *gainSelector, GError **error) {
+arv_camera_select_gain (ArvCamera *camera, const char *gainSelector, GError **error)
+{
 	arv_camera_set_string (camera, "GainSelector", gainSelector, error);
+}
 
 /**
  * arv_camera_dup_available_gains:
@@ -1947,7 +1949,8 @@ arv_camera_get_black_level (ArvCamera *camera, GError **error)
  **/
 
 void
-arv_camera_select_black_level (ArvCamera *camera, const char *blackLevelSelector, GError **error) {
+arv_camera_select_black_level (ArvCamera *camera, const char *blackLevelSelector, GError **error)
+{
 	arv_camera_set_string (camera, "BlackLevelSelector", blackLevelSelector, error);
 }
 
