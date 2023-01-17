@@ -47,6 +47,7 @@ ARV_API ArvCamera *	arv_camera_new_with_device	(ArvDevice *device, GError **erro
 ARV_API ArvDevice *	arv_camera_get_device		(ArvCamera *camera);
 
 ARV_API ArvStream *	arv_camera_create_stream	(ArvCamera *camera, ArvStreamCallback callback, void *user_data, GError **error);
+ARV_API ArvStream *	arv_camera_create_stream_full	(ArvCamera *camera, ArvStreamCallback callback, void *user_data, GDestroyNotify destroy, GError **error);
 
 /* Device informations */
 
@@ -133,7 +134,6 @@ ARV_API gboolean	arv_camera_is_gain_available		(ArvCamera *camera, GError **erro
 ARV_API gboolean	arv_camera_is_gain_auto_available	(ArvCamera *camera, GError **error);
 ARV_API void		arv_camera_select_gain				(ArvCamera *camera, const char *selector, GError **error);
 ARV_API const char **	arv_camera_dup_available_gains	(ArvCamera *camera, guint *n_selectors, GError **error);
-
 
 ARV_API void		arv_camera_set_gain			(ArvCamera *camera, double gain, GError **error);
 ARV_API double		arv_camera_get_gain			(ArvCamera *camera, GError **error);

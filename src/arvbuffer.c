@@ -76,7 +76,7 @@ arv_buffer_new_full (size_t size, void *preallocated, void *user_data, GDestroyN
 	ArvBuffer *buffer;
 
 	buffer = g_object_new (ARV_TYPE_BUFFER, NULL);
-	buffer->priv->size = size;
+	buffer->priv->allocated_size = size;
 	buffer->priv->user_data = user_data;
 	buffer->priv->user_data_destroy_func = user_data_destroy_func;
 	buffer->priv->chunk_endianness = G_BIG_ENDIAN;
@@ -151,7 +151,7 @@ arv_buffer_get_data (ArvBuffer *buffer, size_t *size)
 	g_return_val_if_fail (ARV_IS_BUFFER (buffer), NULL);
 
 	if (size != NULL)
-		*size = buffer->priv->size;
+		*size = buffer->priv->received_size;
 
 	return buffer->priv->data;
 }
@@ -205,7 +205,7 @@ arv_buffer_get_chunk_data (ArvBuffer *buffer, guint64 chunk_id, size_t *size)
 	g_return_val_if_fail (buffer->priv->data != NULL, NULL);
 
 	data = buffer->priv->data;
-	offset = buffer->priv->size - sizeof (ArvChunkInfos);
+	offset = buffer->priv->allocated_size - sizeof (ArvChunkInfos);
 	while (offset > 0) {
 		guint32 id;
 		guint32 chunk_size;
@@ -561,7 +561,7 @@ arv_buffer_finalize (GObject *object)
 	if (!buffer->priv->is_preallocated) {
 		g_free (buffer->priv->data);
 		buffer->priv->data = NULL;
-		buffer->priv->size = 0;
+		buffer->priv->allocated_size = 0;
 	}
 
 	if (buffer->priv->user_data && buffer->priv->user_data_destroy_func)

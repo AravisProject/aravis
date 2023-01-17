@@ -746,8 +746,15 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 		ARV_PIXEL_FORMAT_RGB_8_PACKED,
 		"video/x-raw, format=(string)RGB",
 		"video/x-raw",		"RGB",
-		"video/x-raw-rgb, format=(string)RGB, bpp=(int)24, depth=(int)24",
+		"video/x-raw-rgb, format=(string)RGB, bpp=(int)24, depth=(int)8",
 		"video/x-raw-rgb",	24,	24,	0
+	},
+	{
+		ARV_PIXEL_FORMAT_RGBA_8_PACKED,
+		"video/x-raw, format=(string)RGBA",
+		"video/x-raw",		"RGBA",
+		"video/x-raw-rgba, format=(string)RGBA, bpp=(int)32, depth=(int)8",
+		"video/x-raw-rgba",	32,	8,	0
 	},
 	{
 		ARV_PIXEL_FORMAT_CUSTOM_YUV_422_YUYV_PACKED,

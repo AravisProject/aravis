@@ -94,3 +94,44 @@ arv_exposure_mode_from_string (const char *string)
 	return _from_string (string, arv_exposure_mode_strings,
 			     G_N_ELEMENTS (arv_exposure_mode_strings));
 }
+
+
+static const char *arv_selector_strings[] = {
+	"All",
+	"Red",
+	"Green",
+	"Blue",
+	"Y",
+	"U",
+	"V",
+	"Tap1",
+	"Tap2",
+	"AnalogAll",
+	"AnalogRed",
+	"AnalogGreen",
+	"AnalogBlue",
+	"AnalogY",
+	"AnalogU",
+	"AnalogV",
+	"AnalogTap1",
+	"AnalogTap2",
+	"DigitalAll",
+	"DigitalRed",
+	"DigitalGreen",
+	"DigitalBlue",
+	"DigitalY",
+	"DigitalU"
+};
+
+const char *
+arv_selector_to_string (ArvSelector value)
+{
+	return arv_selector_strings[CLAMP (value, 0, ARV_SELECTOR_DIGITAL_U)];
+}
+
+ArvSelector
+arv_selector_from_string (const char *string)
+{
+	return _from_string (string, arv_selector_strings,
+						 G_N_ELEMENTS (arv_gain_selector_strings));
+}

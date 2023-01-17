@@ -1,4 +1,0 @@
-src/*.c
-viewer/*.c
-gst/*.c
-tests/*.c

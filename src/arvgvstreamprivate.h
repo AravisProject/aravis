@@ -35,7 +35,7 @@ G_BEGIN_DECLS
 #define ARV_GV_STREAM_FRAME_RETENTION_US_DEFAULT	100000
 #define ARV_GV_STREAM_PACKET_REQUEST_RATIO_DEFAULT	0.25
 
-ArvStream * 	arv_gv_stream_new		(ArvGvDevice *gv_device, ArvStreamCallback callback, void *callback_data, GError **error);
+ArvStream * 	arv_gv_stream_new		(ArvGvDevice *gv_device, ArvStreamCallback callback, void *callback_data, GDestroyNotify destroy, GError **error);
 
 G_END_DECLS
 

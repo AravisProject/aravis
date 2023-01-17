@@ -32,7 +32,7 @@
 
 G_BEGIN_DECLS
 
-ArvStream * 	arv_fake_stream_new	(ArvFakeDevice *device, ArvStreamCallback callback, void *callback_data, GError **error);
+ArvStream * 	arv_fake_stream_new	(ArvFakeDevice *device, ArvStreamCallback callback, void *callback_data, GDestroyNotify destroy, GError **error);
 
 G_END_DECLS
 

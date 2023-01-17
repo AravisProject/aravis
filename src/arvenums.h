@@ -89,6 +89,66 @@ ARV_API const char *		arv_exposure_mode_to_string		(ArvExposureMode value);
 ARV_API ArvExposureMode		arv_exposure_mode_from_string		(const char *string);
 
 /**
+ * ArvGainSelector:
+ * @ARV_GAIN_SELECTOR_ALL: Gain will be applied to all channels or taps.
+ * @ARV_GAIN_SELECTOR_RED: Gain will be applied to the red channel.
+ * @ARV_GAIN_SELECTOR_GREEN: Gain will be applied to the green channel.
+ * @ARV_GAIN_SELECTOR_BLUE: Gain will be applied to the blue channel.
+ * @ARV_GAIN_SELECTOR_Y: Gain will be applied to Y channel.
+ * @ARV_GAIN_SELECTOR_U: Gain will be applied to U channel.
+ * @ARV_GAIN_SELECTOR_V: Gain will be applied to V channel.
+ * @ARV_GAIN_SELECTOR_TAP1: Gain will be applied to Tap 1.
+ * @ARV_GAIN_SELECTOR_TAP2: Gain will be applied to Tap 2.
+ * ...
+ * @ARV_GAIN_SELECTOR_ANALOG_ALL: Gain will be applied to all analog channels or taps.
+ * @ARV_GAIN_SELECTOR_ANALOG_RED: Gain will be applied to the red analog channel.
+ * @ARV_GAIN_SELECTOR_ANALOG_GREEN: Gain will be applied to the green analog channel.
+ * @ARV_GAIN_SELECTOR_ANALOG_BLUE: Gain will be applied to the blue analog channel.
+ * @ARV_GAIN_SELECTOR_ANALOG_Y: Gain will be applied to Y analog channel.
+ * @ARV_GAIN_SELECTOR_ANALOG_U: Gain will be applied to U analog channel.
+ * @ARV_GAIN_SELECTOR_ANALOG_V: Gain will be applied to V analog channel.
+ * @ARV_GAIN_SELECTOR_ANALOG_TAP1: Analog gain will be applied to Tap 1.
+ * @ARV_GAIN_SELECTOR_ANALOG_TAP2: Analog gain will be applied to Tap 2.
+ * ...
+ * @ARV_GAIN_SELECTOR_DIGITAL_ALL: Gain will be applied to all digital channels or taps.
+ * @ARV_GAIN_SELECTOR_DIGITAL_RED: Gain will be applied to the red digital channel.
+ * @ARV_GAIN_SELECTOR_DIGITAL_GREEN: Gain will be applied to the green digital channel.
+ * @ARV_GAIN_SELECTOR_DIGITAL_BLUE: Gain will be applied to the blue digital channel.
+ * @ARV_GAIN_SELECTOR_DIGITAL_Y: Gain will be applied to Y digital channel.
+ * @ARV_GAIN_SELECTOR_DIGITAL_U: Gain will be applied to U digital channel. 
+ */
+
+typedef enum {
+	ARV_GAIN_SELECTOR_ALL,
+	ARV_GAIN_SELECTOR_RED,
+	ARV_GAIN_SELECTOR_GREEN,
+	ARV_GAIN_SELECTOR_BLUE,
+	ARV_GAIN_SELECTOR_Y,
+	ARV_GAIN_SELECTOR_U,
+	ARV_GAIN_SELECTOR_V,
+	ARV_GAIN_SELECTOR_TAP1,
+	ARV_GAIN_SELECTOR_TAP2,
+	ARV_GAIN_SELECTOR_ANALOG_ALL,
+	ARV_GAIN_SELECTOR_ANALOG_RED,
+	ARV_GAIN_SELECTOR_ANALOG_GREEN,
+	ARV_GAIN_SELECTOR_ANALOG_BLUE,
+	ARV_GAIN_SELECTOR_ANALOG_Y,
+	ARV_GAIN_SELECTOR_ANALOG_U,
+	ARV_GAIN_SELECTOR_ANALOG_V,
+	ARV_GAIN_SELECTOR_ANALOG_TAP1,
+	ARV_GAIN_SELECTOR_ANALOG_TAP2,
+	ARV_GAIN_SELECTOR_DIGITAL_ALL,
+	ARV_GAIN_SELECTOR_DIGITAL_RED,
+	ARV_GAIN_SELECTOR_DIGITAL_GREEN,
+	ARV_GAIN_SELECTOR_DIGITAL_BLUE,
+	ARV_GAIN_SELECTOR_DIGITAL_Y,
+	ARV_GAIN_SELECTOR_DIGITAL_U
+} ArvSelector;
+
+ARV_API const char *		arv_selector_to_string		(ArvSelector value);
+ARV_API ArvSelector			arv_selector_from_string	(const char *string);
+
+/**
  * ArvUvUsbMode:
  * @ARV_UV_USB_MODE_SYNC: utilize libusb synchronous device I/O API
  * @ARV_UV_USB_MODE_ASYNC: utilize libusb asynchronous device I/O API

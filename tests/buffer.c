@@ -15,7 +15,7 @@ simple_buffer_test (void)
 	data = arv_buffer_get_data (buffer, &size);
 
 	g_assert (data != NULL);
-	g_assert (size == 1024);
+	g_assert (size == 0);
 
 	g_assert (arv_buffer_get_payload_type (buffer) == ARV_BUFFER_PAYLOAD_TYPE_UNKNOWN);
 	g_assert (arv_buffer_get_status (buffer) == ARV_BUFFER_STATUS_CLEARED);
@@ -65,7 +65,7 @@ full_buffer_test (void)
 	data = arv_buffer_get_data (buffer, &size);
 
 	g_assert (data != NULL);
-	g_assert (size == 1024);
+	g_assert (size == 0);
 
 	g_assert (arv_buffer_get_payload_type (buffer) == ARV_BUFFER_PAYLOAD_TYPE_UNKNOWN);
 	g_assert (arv_buffer_get_status (buffer) == ARV_BUFFER_STATUS_CLEARED);
@@ -108,7 +108,7 @@ allocate (void)
 	data = arv_buffer_get_data (buffer, &size);
 
 	g_assert (data != NULL);
-	g_assert (size == 512);
+	g_assert (size == 0);
 
 	g_object_unref (buffer);
 }
