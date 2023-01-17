@@ -1826,7 +1826,7 @@ arv_camera_get_gain_auto (ArvCamera *camera, GError **error)
 /**
  * arv_camera_select_gain:
  * @camera: a #ArvCamera
- * @gainSelector: gain #ArvSelector selection
+ * @gainSelector: gain selector
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Configures Gain Selector feature.
