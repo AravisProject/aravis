@@ -1835,14 +1835,8 @@ arv_camera_get_gain_auto (ArvCamera *camera, GError **error)
  **/
 
 void
-<<<<<<< HEAD
 arv_camera_select_gain (ArvCamera *camera, const char *gainSelector, GError **error) {
 	arv_camera_set_string (camera, "GainSelector", gainSelector, error);
-=======
-arv_camera_select_gain (ArvCamera *camera, ArvSelector gainSelector, GError **error) {
-	arv_camera_set_string (camera, "GainSelector", arv_selector_to_string (gainSelector), error);
->>>>>>> 456602264e07327a98166d3e850bdd9a1f13fe13
-}
 
 /**
  * arv_camera_dup_available_gains:
@@ -1850,33 +1844,20 @@ arv_camera_select_gain (ArvCamera *camera, ArvSelector gainSelector, GError **er
  * @n_selectors: (out): number of different gain selectors
  * @error: a #GError placeholder, %NULL to ignore
  *
-<<<<<<< HEAD
  * Retrieves the list of all available gain selectors as strings.
  *
  * Returns: (array length=n_pixel_formats) (transfer container): a newly allocated array of strings, to be freed after use with
-=======
- * Retrieves the list of all available gain selectors.
- *
- * Returns: (array length=n_gain_selectors) (transfer container): a newly allocated array of #ArvGainSelector, to be freed after use with
->>>>>>> 456602264e07327a98166d3e850bdd9a1f13fe13
  * g_free().
  *
  * Since: 0.8.23
  */
 
-<<<<<<< HEAD
 const char **
 arv_camera_dup_available_gains (ArvCamera *camera, guint *n_selectors, GError **error)
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
 	return arv_camera_dup_available_enumerations_as_strings (camera, "GainSelector", n_selectors, error);
-=======
-gint64 *
-arv_camera_dup_available_gains (ArvCamera *camera, guint *n_selectors, GError **error)
-{
-	return arv_camera_dup_available_enumerations (camera, "GainSelector", n_selectors, error);
->>>>>>> 456602264e07327a98166d3e850bdd9a1f13fe13
 }
 
 /**
@@ -1957,11 +1938,7 @@ arv_camera_get_black_level (ArvCamera *camera, GError **error)
 /**
  * arv_camera_select_black_level:
  * @camera: a #ArvCamera
-<<<<<<< HEAD
  * @blackLevelSelector: black level selection
-=======
- * @blackLevelSelector: black level #ArvSelector selection
->>>>>>> 456602264e07327a98166d3e850bdd9a1f13fe13
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Configures Black Level Selector feature.
@@ -1970,13 +1947,8 @@ arv_camera_get_black_level (ArvCamera *camera, GError **error)
  **/
 
 void
-<<<<<<< HEAD
 arv_camera_select_black_level (ArvCamera *camera, const char *blackLevelSelector, GError **error) {
 	arv_camera_set_string (camera, "BlackLevelSelector", blackLevelSelector, error);
-=======
-arv_camera_select_black_level (ArvCamera *camera, ArvSelector blackLevelSelector, GError **error) {
-	arv_camera_set_string (camera, "BlackLevelSelector", arv_selector_to_string (blackLevelSelector), error);
->>>>>>> 456602264e07327a98166d3e850bdd9a1f13fe13
 }
 
 /**
@@ -1985,33 +1957,20 @@ arv_camera_select_black_level (ArvCamera *camera, ArvSelector blackLevelSelector
  * @n_selectors: (out): number of different black level selectors
  * @error: a #GError placeholder, %NULL to ignore
  *
-<<<<<<< HEAD
  * Retrieves the list of all available black level selectors as strings.
  *
  * Returns: (array length=n_pixel_formats) (transfer container): a newly allocated array of strings, to be freed after use with
-=======
- * Retrieves the list of all available black level selectors.
- *
- * Returns: (array length=n_selectors) (transfer container): a newly allocated array of #ArvSelector, to be freed after use with
->>>>>>> 456602264e07327a98166d3e850bdd9a1f13fe13
  * g_free().
  *
  * Since: 0.8.23
  */
 
-<<<<<<< HEAD
 const char **
 arv_camera_dup_available_black_levels (ArvCamera *camera, guint *n_selectors, GError **error)
 {
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
 
 	return arv_camera_dup_available_enumerations_as_strings (camera, "BlackLevelSelector", n_selectors, error);
-=======
-gint64 *
-arv_camera_dup_available_black_levels (ArvCamera *camera, guint *n_selectors, GError **error)
-{
-	return arv_camera_dup_available_enumerations (camera, "BlackLevelSelector", n_selectors, error);
->>>>>>> 456602264e07327a98166d3e850bdd9a1f13fe13
 }
 
 /**
