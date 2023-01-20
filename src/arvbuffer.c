@@ -42,7 +42,16 @@ arv_buffer_part_is_image (ArvBuffer *buffer, guint part_id)
                 part_id < buffer->priv->n_parts &&
                 (buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
                  buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA ||
-                 buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_MULTIPART));
+                 buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_MULTIPART) &&
+                (buffer->priv->parts[part_id].data_type == ARV_BUFFER_PART_DATA_TYPE_2D_IMAGE ||
+                 buffer->priv->parts[part_id].data_type == ARV_BUFFER_PART_DATA_TYPE_2D_PLANE_BIPLANAR ||
+                 buffer->priv->parts[part_id].data_type == ARV_BUFFER_PART_DATA_TYPE_2D_PLANE_TRIPLANAR ||
+                 buffer->priv->parts[part_id].data_type == ARV_BUFFER_PART_DATA_TYPE_2D_PLANE_QUADPLANAR ||
+                 buffer->priv->parts[part_id].data_type == ARV_BUFFER_PART_DATA_TYPE_3D_IMAGE ||
+                 buffer->priv->parts[part_id].data_type == ARV_BUFFER_PART_DATA_TYPE_3D_PLANE_BIPLANAR ||
+                 buffer->priv->parts[part_id].data_type == ARV_BUFFER_PART_DATA_TYPE_3D_PLANE_TRIPLANAR ||
+                 buffer->priv->parts[part_id].data_type == ARV_BUFFER_PART_DATA_TYPE_3D_PLANE_QUADPLANAR ||
+                 buffer->priv->parts[part_id].data_type == ARV_BUFFER_PART_DATA_TYPE_CONFIDENCE_MAP));
 }
 
 /**
@@ -410,6 +419,24 @@ arv_buffer_set_frame_id (ArvBuffer *buffer, guint64 frame_id)
 	g_return_if_fail (ARV_IS_BUFFER (buffer));
 
 	buffer->priv->frame_id = frame_id;
+}
+
+const void *
+arv_buffer_get_part_data (ArvBuffer *buffer, guint part_id, size_t *size)
+{
+	g_return_val_if_fail (ARV_IS_BUFFER (buffer), NULL);
+        g_return_val_if_fail (part_id < buffer->priv->n_parts, NULL);
+
+        return buffer->priv->data + buffer->priv->parts[part_id].data_offset;
+}
+
+ArvBufferPartDataType
+arv_buffer_get_part_data_type (ArvBuffer *buffer, guint part_id)
+{
+	g_return_val_if_fail (ARV_IS_BUFFER (buffer), ARV_BUFFER_PART_DATA_TYPE_UNKNOWN);
+        g_return_val_if_fail (part_id < buffer->priv->n_parts, ARV_BUFFER_PART_DATA_TYPE_UNKNOWN);
+
+        return buffer->priv->parts[part_id].data_type;
 }
 
 /**

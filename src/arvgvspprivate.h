@@ -71,21 +71,6 @@ typedef enum {
         ARV_GVSP_CONTENT_TYPE_GENDC =           0x08
 } ArvGvspContentType;
 
-typedef enum {
-        ARV_GVSP_MULTIPART_DATA_TYPE_2DPLANEBIPLANAR =  0x0002,
-        ARV_GVSP_MULTIPART_DATA_TYPE_2DPLANETRIPLANAR = 0x0003,
-        ARV_GVSP_MULTIPART_DATA_TYPE_2DPLANEQUADPLANAR =0x0004,
-        ARV_GVSP_MULTIPART_DATA_TYPE_3DIMAGE =          0x0005,
-        ARV_GVSP_MULTIPART_DATA_TYPE_3DPLANEBIPLANAR =  0x0006,
-        ARV_GVSP_MULTIPART_DATA_TYPE_3DPLANETRIPLANAR = 0x0007,
-        ARV_GVSP_MULTIPART_DATA_TYPE_3DPLANEQUADPLANAR =0x0008,
-        ARV_GVSP_MULTIPART_DATA_TYPE_CONFIDENCEMAP =    0x0009,
-        ARV_GVSP_MULTIPART_DATA_TYPE_CHUNKDATA =        0x000A,
-        ARV_GVSP_MULTIPART_DATA_TYPE_JPEG =             0x000B,
-        ARV_GVSP_MULTIPART_DATA_TYPE_JPEG2000 =         0x000C,
-        ARV_GVSP_MULTIPART_DATA_TYPE_DEVICESPECIFIC =   0x8000,
-} ArvGvspMultipartDataType;
-
 #pragma pack(push,1)
 
 /**
@@ -161,7 +146,7 @@ typedef struct {
 } ArvGvspImageLeader;
 
 typedef struct {
-        guint16 ArvGvspMultipartDataType;
+        guint16 data_type;
         guint16 part_length_high;
         guint32 part_length_low;
 	guint32 pixel_format;
@@ -432,6 +417,7 @@ arv_gvsp_leader_packet_get_multipart_n_parts (const ArvGvspPacket *packet)
 static inline gboolean
 arv_gvsp_leader_packet_get_multipart_infos (const ArvGvspPacket *packet,
                                             unsigned int part_id,
+                                            ArvBufferPartDataType *data_type,
                                             guint64 *size,
                                             ArvPixelFormat *pixel_format,
                                             guint32 *width,
@@ -452,6 +438,7 @@ arv_gvsp_leader_packet_get_multipart_infos (const ArvGvspPacket *packet,
         leader = arv_gvsp_packet_get_data (packet);
         infos = &leader->parts[part_id];
 
+        *data_type = g_ntohs (infos->data_type);
         *size = g_ntohl (infos->part_length_low) + (((guint64) g_ntohs (infos->part_length_high)) << 32);
         *pixel_format = g_ntohl (infos->pixel_format);
         *width = g_ntohl (infos->width);

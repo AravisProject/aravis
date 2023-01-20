@@ -25,14 +25,15 @@
 
 #include <arvbuffer.h>
 #include <arvgvspprivate.h>
+#include <stddef.h>
 
 G_BEGIN_DECLS
 
 typedef struct {
+        ptrdiff_t data_offset;
+        ArvBufferPartDataType data_type;
         size_t size;
-
 	ArvPixelFormat pixel_format;
-
 	guint32 width;
 	guint32 height;
 	guint32 x_offset;

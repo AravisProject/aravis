@@ -164,6 +164,9 @@ void arv_uv_stream_leader_cb (struct libusb_transfer *transfer)
                                 if (ctx->buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
                                     ctx->buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA) {
                                         arv_buffer_set_n_parts(ctx->buffer, 1);
+                                        ctx->buffer->priv->parts[0].data_offset = 0;
+                                        ctx->buffer->priv->parts[0].data_type = ARV_BUFFER_PART_DATA_TYPE_2D_IMAGE;
+                                        ctx->buffer->priv->parts[0].pixel_format = arv_uvsp_packet_get_pixel_format (packet);
                                         arv_uvsp_packet_get_region (packet,
                                                                     &ctx->buffer->priv->parts[0].width,
                                                                     &ctx->buffer->priv->parts[0].height,
@@ -171,7 +174,6 @@ void arv_uv_stream_leader_cb (struct libusb_transfer *transfer)
                                                                     &ctx->buffer->priv->parts[0].y_offset,
                                                                     &ctx->buffer->priv->parts[0].x_padding,
                                                                     &ctx->buffer->priv->parts[0].y_padding);
-                                        ctx->buffer->priv->parts[0].pixel_format = arv_uvsp_packet_get_pixel_format (packet);
                                 }
                                 ctx->buffer->priv->frame_id = arv_uvsp_packet_get_frame_id (packet);
                                 ctx->buffer->priv->timestamp_ns = arv_uvsp_packet_get_timestamp (packet);
@@ -574,6 +576,11 @@ arv_uv_stream_thread_sync (void *data)
 						if (buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
 						    buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA) {
                                                         arv_buffer_set_n_parts(buffer, 1);
+                                                        buffer->priv->parts[0].data_offset = 0;
+                                                        buffer->priv->parts[0].data_type =
+                                                                ARV_BUFFER_PART_DATA_TYPE_2D_IMAGE;
+							buffer->priv->parts[0].pixel_format =
+                                                                arv_uvsp_packet_get_pixel_format (packet);
 							arv_uvsp_packet_get_region (packet,
 										    &buffer->priv->parts[0].width,
 										    &buffer->priv->parts[0].height,
@@ -581,8 +588,6 @@ arv_uv_stream_thread_sync (void *data)
 										    &buffer->priv->parts[0].y_offset,
                                                                                     &buffer->priv->parts[0].x_padding,
                                                                                     &buffer->priv->parts[0].y_padding);
-							buffer->priv->parts[0].pixel_format =
-                                                                arv_uvsp_packet_get_pixel_format (packet);
 						}
 						buffer->priv->frame_id = arv_uvsp_packet_get_frame_id (packet);
 						buffer->priv->timestamp_ns = arv_uvsp_packet_get_timestamp (packet);

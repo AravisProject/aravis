@@ -781,17 +781,20 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer, guint32 *
 
 	buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_IMAGE;
 	buffer->priv->chunk_endianness = G_BIG_ENDIAN;
+	buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
+	buffer->priv->timestamp_ns = g_get_real_time () * 1000;
+	buffer->priv->system_timestamp_ns = buffer->priv->timestamp_ns;
+	buffer->priv->frame_id = camera->priv->frame_id;
+
+        buffer->priv->parts[0].data_offset = 0;
+        buffer->priv->parts[0].data_type = ARV_BUFFER_PART_DATA_TYPE_2D_IMAGE;
+	buffer->priv->parts[0].pixel_format = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_PIXEL_FORMAT);
 	buffer->priv->parts[0].width = width;
 	buffer->priv->parts[0].height = height;
         buffer->priv->parts[0].x_offset = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_X_OFFSET);
         buffer->priv->parts[0].y_offset = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_Y_OFFSET);
         buffer->priv->parts[0].x_padding = 0;
         buffer->priv->parts[0].y_padding = 0;
-	buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
-	buffer->priv->timestamp_ns = g_get_real_time () * 1000;
-	buffer->priv->system_timestamp_ns = buffer->priv->timestamp_ns;
-	buffer->priv->frame_id = camera->priv->frame_id;
-	buffer->priv->parts[0].pixel_format = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_PIXEL_FORMAT);
 
 	g_mutex_lock (&camera->priv->fill_pattern_mutex);
 

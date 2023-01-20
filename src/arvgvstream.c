@@ -449,6 +449,8 @@ _process_data_leader (ArvGvStreamThreadData *thread_data,
 
                 timestamp = arv_gvsp_leader_packet_get_timestamp(packet);
 
+                frame->buffer->priv->parts[0].data_offset = 0;
+                frame->buffer->priv->parts[0].data_type = ARV_BUFFER_PART_DATA_TYPE_2D_IMAGE;
                 arv_gvsp_leader_packet_get_image_infos (packet,
                                                         &frame->buffer->priv->parts[0].pixel_format,
                                                         &frame->buffer->priv->parts[0].width,
@@ -467,6 +469,7 @@ _process_data_leader (ArvGvStreamThreadData *thread_data,
                 guint64 timestamp;
                 unsigned int i;
                 guint n_parts;
+                ptrdiff_t offset = 0;
 
                 n_parts = arv_gvsp_leader_packet_get_multipart_n_parts(packet);
 
@@ -475,7 +478,9 @@ _process_data_leader (ArvGvStreamThreadData *thread_data,
                 arv_buffer_set_n_parts (frame->buffer, n_parts);
 
                 for (i = 0; i < n_parts; i++) {
+                        frame->buffer->priv->parts[0].data_offset = offset;
                         arv_gvsp_leader_packet_get_multipart_infos (packet, i,
+                                                                    &frame->buffer->priv->parts[i].data_type,
                                                                     &frame->buffer->priv->parts[i].size,
                                                                     &frame->buffer->priv->parts[i].pixel_format,
                                                                     &frame->buffer->priv->parts[i].width,
@@ -484,6 +489,7 @@ _process_data_leader (ArvGvStreamThreadData *thread_data,
                                                                     &frame->buffer->priv->parts[i].y_offset,
                                                                     &frame->buffer->priv->parts[i].x_padding,
                                                                     &frame->buffer->priv->parts[i].y_padding);
+                        offset += frame->buffer->priv->parts[i].size;
                 }
 
 		if (G_LIKELY (thread_data->timestamp_tick_frequency != 0))
