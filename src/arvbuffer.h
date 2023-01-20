@@ -74,7 +74,7 @@ typedef enum {
 */
 
 typedef enum {
-	ARV_BUFFER_PAYLOAD_TYPE_UNKNOWN = 		-1,
+	ARV_BUFFER_PAYLOAD_TYPE_UNKNOWN =               -1,
 	ARV_BUFFER_PAYLOAD_TYPE_NO_DATA =		0x0000,
 	ARV_BUFFER_PAYLOAD_TYPE_IMAGE =			0x0001,
 	ARV_BUFFER_PAYLOAD_TYPE_RAWDATA = 		0x0002,
@@ -85,8 +85,25 @@ typedef enum {
 	ARV_BUFFER_PAYLOAD_TYPE_JPEG2000 = 		0x0007,
 	ARV_BUFFER_PAYLOAD_TYPE_H264 = 			0x0008,
 	ARV_BUFFER_PAYLOAD_TYPE_MULTIZONE_IMAGE = 	0x0009,
-	ARV_BUFFER_PAYLOAD_TYPE_MULTIPART =      	0x000a
+	ARV_BUFFER_PAYLOAD_TYPE_MULTIPART =             0x000a
 } ArvBufferPayloadType;
+
+typedef enum {
+        ARV_BUFFER_PART_DATA_TYPE_UNKNOWN =             -1,
+        ARV_BUFFER_PART_DATA_TYPE_2D_IMAGE =            0x0001,
+        ARV_BUFFER_PART_DATA_TYPE_2D_PLANE_BIPLANAR =   0x0002,
+        ARV_BUFFER_PART_DATA_TYPE_2D_PLANE_TRIPLANAR =  0x0003,
+        ARV_BUFFER_PART_DATA_TYPE_2D_PLANE_QUADPLANAR = 0x0004,
+        ARV_BUFFER_PART_DATA_TYPE_3D_IMAGE =            0x0005,
+        ARV_BUFFER_PART_DATA_TYPE_3D_PLANE_BIPLANAR =   0x0006,
+        ARV_BUFFER_PART_DATA_TYPE_3D_PLANE_TRIPLANAR =  0x0007,
+        ARV_BUFFER_PART_DATA_TYPE_3D_PLANE_QUADPLANAR = 0x0008,
+        ARV_BUFFER_PART_DATA_TYPE_CONFIDENCE_MAP =      0x0009,
+        ARV_BUFFER_PART_DATA_TYPE_CHUNK_DATA =          0x000A,
+        ARV_BUFFER_PART_DATA_TYPE_JPEG =                0x000B,
+        ARV_BUFFER_PART_DATA_TYPE_JPEG2000 =            0x000C,
+        ARV_BUFFER_PART_DATA_TYPE_DEVICE_SPECIFIC =     0x8000,
+} ArvBufferPartDataType;
 
 #define ARV_TYPE_BUFFER             (arv_buffer_get_type ())
 ARV_API G_DECLARE_FINAL_TYPE (ArvBuffer, arv_buffer, ARV, BUFFER, GObject)
@@ -110,6 +127,8 @@ ARV_API guint64 		arv_buffer_get_frame_id		(ArvBuffer *buffer);
 ARV_API const void *		arv_buffer_get_data		(ArvBuffer *buffer, size_t *size);
 
 ARV_API guint                   arv_buffer_get_n_parts                  (ArvBuffer *buffer);
+ARV_API const void *		arv_buffer_get_part_data		(ArvBuffer *buffer, guint part_id, size_t *size);
+ARV_API ArvBufferPartDataType	arv_buffer_get_part_data_type	        (ArvBuffer *buffer, guint part_id);
 ARV_API ArvPixelFormat		arv_buffer_get_part_pixel_format	(ArvBuffer *buffer, guint part_id);
 ARV_API void			arv_buffer_get_part_region		(ArvBuffer *buffer, guint part_id,
                                                                          gint *x, gint *y,
