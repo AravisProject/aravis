@@ -442,7 +442,7 @@ arv_buffer_get_part_data_type (ArvBuffer *buffer, guint part_id)
 /**
  * arv_buffer_get_part_pixel_format:
  * @buffer: a #ArvBuffer
- * @oart_id: a part id
+ * @part_id: a part id
  *
  * Gets the part pixel format.
  *
@@ -465,7 +465,7 @@ arv_buffer_get_part_pixel_format (ArvBuffer *buffer, guint part_id)
 /**
  * arv_buffer_get_part_region:
  * @buffer: a #ArvBuffer
- * @oart_id: a part id
+ * @part_id: a part id
  * @x: (out) (optional): x offset placeholder
  * @y: (out) (optional): y offset placeholder
  * @width: (out) (optional): width placholder
@@ -497,7 +497,7 @@ arv_buffer_get_part_region (ArvBuffer *buffer, guint part_id, gint *x, gint *y, 
 /**
  * arv_buffer_get_image_padding:
  * @buffer: a #ArvBuffer
- * @oart_id: a part id
+ * @part_id: a part id
  * @x_padding: (out) (optional): x offset placeholder
  * @y_padding: (out) (optional): y offset placeholder
  *
@@ -523,7 +523,7 @@ arv_buffer_get_part_padding (ArvBuffer *buffer, guint part_id, gint *x_padding, 
 /**
  * arv_buffer_get_part_width:
  * @buffer: a #ArvBuffer
- * @oart_id: a part id
+ * @part_id: a part id
  *
  * Gets the part width.
  *
@@ -546,7 +546,7 @@ arv_buffer_get_part_width (ArvBuffer *buffer, guint part_id)
 /**
  * arv_buffer_get_part_height:
  * @buffer: a #ArvBuffer
- * @oart_id: a part id
+ * @part_id: a part id
  *
  * Gets the part height.
  *
@@ -569,7 +569,7 @@ arv_buffer_get_part_height (ArvBuffer *buffer, guint part_id)
 /**
  * arv_buffer_get_part_x:
  * @buffer: a #ArvBuffer
- * @oart_id: a part id
+ * @part_id: a part id
  *
  * Gets the part x offset.
  *
@@ -592,7 +592,7 @@ arv_buffer_get_part_x (ArvBuffer *buffer, guint part_id)
 /**
  * arv_buffer_get_part_y:
  * @buffer: a #ArvBuffer
- * @oart_id: a part id
+ * @part_id: a part id
  *
  * Gets the part y_offset.
  *
