@@ -30,11 +30,11 @@ jobs:
       run: meson test -C build/ -v
     - name: Valgrind
       run: cd build && ../tests/valgrind-memcheck
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       if: failure()
       with:
         name: Linux_Meson_Testlog
-        path: build/meson-logs/testlog.txt
+        path: build/meson-logs/testlog*.txt
     - name: Documentation
       uses: peaceiris/actions-gh-pages@v3
       if: ${{ github.ref == 'refs/heads/main' }}
