@@ -1586,6 +1586,33 @@ arv_gv_device_load_genicam (ArvGvDevice *gv_device, GError **error)
 					      "  <Endianess>BigEndian</Endianess>"
 					      "</MaskedIntReg>",
 					      NULL);
+		arv_gc_set_default_node_data (priv->genicam, "GevSCCFGMultipart",
+                                              "<Boolean Name=\"GevSCCFGMultipart\">"
+                                              "  <pValue>ArvGevSCCFGMultipartReg</pValue>"
+                                              "  <pIsImplemented>ArvGevSCCAPMultipartReg</pIsImplemented>"
+					      "  <pIsLocked>TLParamsLocked</pIsLocked>"
+                                              "</Boolean>",
+					      "<MaskedIntReg Name=\"ArvGevSCCAPMultipartReg\">"
+					      "  <Address>0xd20</Address>"
+					      "  <pAddress>GevSCPAddrCalc</pAddress>"
+					      "  <Length>4</Length>"
+					      "  <AccessMode>RW</AccessMode>"
+					      "  <pPort>Device</pPort>"
+					      "  <Cachable>NoCache</Cachable>"
+					      "  <Bit>25</Bit>"
+					      "  <Endianess>BigEndian</Endianess>"
+					      "</MaskedIntReg>",
+					      "<MaskedIntReg Name=\"ArvGevSCCFGMultipartReg\">"
+					      "  <Address>0xd24</Address>"
+					      "  <pAddress>GevSCPAddrCalc</pAddress>"
+					      "  <Length>4</Length>"
+					      "  <AccessMode>RW</AccessMode>"
+					      "  <pPort>Device</pPort>"
+					      "  <Cachable>NoCache</Cachable>"
+					      "  <Bit>25</Bit>"
+					      "  <Endianess>BigEndian</Endianess>"
+					      "</MaskedIntReg>",
+					      NULL);
 		arv_gc_set_default_node_data (priv->genicam, "GevSCPAddrCalc",
 					      "<IntSwissKnife Name= \"GevSCPAddrCalc\">"
 					      "  <pVariable Name=\"SEL\">ArvGevStreamChannelSelector</pVariable>"

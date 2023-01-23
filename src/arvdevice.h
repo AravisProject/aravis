@@ -102,6 +102,7 @@ ARV_API const char *	arv_device_get_genicam_xml		(ArvDevice *device, size_t *siz
 ARV_API ArvGc *		arv_device_get_genicam			(ArvDevice *device);
 
 ARV_API gboolean 	arv_device_is_feature_available		(ArvDevice *device, const char *feature, GError **error);
+ARV_API gboolean 	arv_device_is_feature_implemented	(ArvDevice *device, const char *feature, GError **error);
 ARV_API ArvGcNode *	arv_device_get_feature			(ArvDevice *device, const char *feature);
 ARV_API ArvGcAccessMode	arv_device_get_feature_access_mode	(ArvDevice *device, const char *feature);
 

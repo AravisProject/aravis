@@ -489,14 +489,58 @@ arv_test_device_properties (ArvTest *test, const char *test_name, ArvTestCamera 
 }
 
 static void
-_single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_camera, gboolean chunk_test)
+_single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_camera,
+                     gboolean chunk_test, gboolean multipart_test)
 {
         GError *error = NULL;
         ArvBuffer *buffer = NULL;
         char **chunk_list = NULL;
         ArvChunkParser *parser = NULL;
+        char *component = NULL;
+        guint n_parts = 1;
 
         g_return_if_fail (ARV_IS_TEST (test));
+
+        if (multipart_test) {
+                char  *multiparts = arv_test_camera_get_key_file_string (test_camera, test, "Multipart", NULL);
+                char **parts;
+                gboolean multipart_supported;
+                gboolean multipart_expected;
+                guint i;
+
+                parts = multiparts != NULL ? g_strsplit(multiparts, " ", -1) : NULL;
+                n_parts = parts != NULL ? g_strv_length(parts) : 0;
+
+                multipart_supported = arv_camera_gv_is_multipart_supported (test_camera->camera, &error);
+                multipart_expected = n_parts > 1;
+
+                if (!multipart_expected || (multipart_supported != multipart_expected)) {
+                        arv_test_camera_add_result (test_camera, test_name, "NoSupport",
+                                                    error == NULL && (multipart_expected == multipart_supported) ?
+                                                    ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
+                                                    error != NULL ? error->message : NULL);
+                        g_clear_error (&error);
+                        return;
+                }
+
+                arv_camera_gv_set_multipart(test_camera->camera, TRUE, &error);
+                arv_test_camera_add_result (test_camera, test_name, "Enable",
+                                            error == NULL ? ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
+                                            error != NULL ? error->message : NULL);
+                if (error != NULL) {
+                        g_clear_error (&error);
+                        return;
+                }
+
+                for (i = 0; i < n_parts && error == NULL; i++) {
+                        arv_camera_select_and_enable_component(test_camera->camera, parts[i], i == 0, &error);
+                }
+
+                component = g_strdup (parts[0]);
+
+                g_clear_pointer (&parts, g_strfreev);
+                g_free (multiparts);
+        }
 
         if (chunk_test) {
                 char *chunks;
@@ -530,6 +574,13 @@ _single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_c
                              "Buffer transfer failure");
         }
 
+        if (error == NULL && ARV_IS_BUFFER (buffer)) {
+                if (arv_buffer_get_n_parts(buffer) != n_parts)
+                        g_set_error (&error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_TRANSFER_ERROR,
+                                     "Invalid number of parts (found: %u - expected: %u)",
+                                     arv_buffer_get_n_parts(buffer), n_parts);
+        }
+
         if (error == NULL && chunk_test) {
                 int n_chunks = g_strv_length (chunk_list);
                 int i;
@@ -549,6 +600,16 @@ _single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_c
                 g_strfreev (chunk_list);
         }
 
+        if (chunk_test)
+                arv_camera_set_chunks (test_camera->camera, NULL, NULL);
+
+        if (error == NULL && multipart_test) {
+                arv_camera_gv_set_multipart (test_camera->camera, FALSE, &error);
+                if (error == NULL) arv_camera_select_and_enable_component(test_camera->camera, component, TRUE, &error);
+
+                g_free (component);
+        }
+
         arv_test_camera_add_result (test_camera, test_name, "BufferCheck",
                                     ARV_IS_BUFFER (buffer) &&
                                     arv_buffer_get_status (buffer) == ARV_BUFFER_STATUS_SUCCESS &&
@@ -563,13 +624,22 @@ _single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_c
 static void
 arv_test_single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_camera)
 {
-        _single_acquisition (test, test_name, test_camera, FALSE);
+        _single_acquisition (test, test_name, test_camera, FALSE, FALSE);
+}
+
+static void
+arv_test_multipart (ArvTest *test, const char  *test_name, ArvTestCamera *test_camera)
+{
+        if (!arv_camera_is_gv_device (test_camera->camera))
+                return;
+
+        _single_acquisition (test, test_name, test_camera, FALSE, TRUE);
 }
 
 static void
 arv_test_chunks (ArvTest *test, const char *test_name, ArvTestCamera *test_camera)
 {
-        _single_acquisition (test, test_name, test_camera, TRUE);
+        _single_acquisition (test, test_name, test_camera, TRUE, FALSE);
 }
 
 static void
@@ -841,6 +911,7 @@ const struct {
         {"SoftwareTrigger",             arv_test_software_trigger,      FALSE},
         {"MultipleAcquisitionB",        arv_test_multiple_acquisition_b,FALSE},
         {"SingleAcquisition",           arv_test_single_acquisition,    FALSE},
+        {"Multipart",                   arv_test_multipart,             FALSE},
         {"Chunks",                      arv_test_chunks,                FALSE},
         {"GigEVision",                  arv_test_gige_vision,           FALSE},
         {"USB3Vision",                  arv_test_usb3_vision,           FALSE}
@@ -920,6 +991,7 @@ arv_test_run (ArvTest *test, unsigned int n_iterations,
                                                                 comment = arv_test_camera_get_key_file_comment
                                                                         (test_camera, test,
                                                                          tests[j].name);
+
                                                                 if (comment != NULL) {
                                                                         printf ("%s\n", comment);
                                                                         g_free (comment);

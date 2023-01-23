@@ -142,7 +142,7 @@ arv_buffer_new_allocate (size_t size)
 /**
  * arv_buffer_get_data:
  * @buffer: a #ArvBuffer
- * @size: (allow-none): location to store data size, or %NULL
+ * @size: (out) (optional): location to store data size, or %NULL
  *
  * Buffer data accessor.
  *
@@ -421,6 +421,34 @@ arv_buffer_set_frame_id (ArvBuffer *buffer, guint64 frame_id)
 	buffer->priv->frame_id = frame_id;
 }
 
+/**
+ * arv_buffer_get_n_parts:
+ * @buffer: a #ArvBuffer
+ *
+ * Returns: the number of part in the buffer.
+ *
+ * Since: 0.8.23
+ */
+
+guint
+arv_buffer_get_n_parts (ArvBuffer *buffer)
+{
+	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
+
+        return buffer->priv->n_parts;
+}
+
+/**
+ * arv_buffer_get_part_data:
+ * @buffer: a #ArvBuffer
+ * @part_id: part id
+ * @size: (out) (optional): data size placeholder
+ *
+ * Returns: (array length=size) (element-type guint8): a pointer to the part data.
+ *
+ * Since: 0.8.23
+ */
+
 const void *
 arv_buffer_get_part_data (ArvBuffer *buffer, guint part_id, size_t *size)
 {
@@ -429,6 +457,16 @@ arv_buffer_get_part_data (ArvBuffer *buffer, guint part_id, size_t *size)
 
         return buffer->priv->data + buffer->priv->parts[part_id].data_offset;
 }
+
+/**
+ * arv_buffer_get_part_data_type:
+ * @buffer: a #ArvBuffer
+ * @part_id: part id
+ *
+ * Returns: the part #ArvBufferPartDataType
+ *
+ * Since: 0.8.23
+ */
 
 ArvBufferPartDataType
 arv_buffer_get_part_data_type (ArvBuffer *buffer, guint part_id)
@@ -468,7 +506,7 @@ arv_buffer_get_part_pixel_format (ArvBuffer *buffer, guint part_id)
  * @part_id: a part id
  * @x: (out) (optional): x offset placeholder
  * @y: (out) (optional): y offset placeholder
- * @width: (out) (optional): width placholder
+ * @width: (out) (optional): width placeholder
  * @height: (out) (optional): height placeholder
  *
  * Gets the part region.
