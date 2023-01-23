@@ -418,7 +418,7 @@ static inline gboolean
 arv_gvsp_leader_packet_get_multipart_infos (const ArvGvspPacket *packet,
                                             unsigned int part_id,
                                             ArvBufferPartDataType *data_type,
-                                            guint64 *size,
+                                            size_t *size,
                                             ArvPixelFormat *pixel_format,
                                             guint32 *width,
                                             guint32 *height,
