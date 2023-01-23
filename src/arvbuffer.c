@@ -533,7 +533,7 @@ arv_buffer_get_part_region (ArvBuffer *buffer, guint part_id, gint *x, gint *y, 
 }
 
 /**
- * arv_buffer_get_image_padding:
+ * arv_buffer_get_part_padding:
  * @buffer: a #ArvBuffer
  * @part_id: a part id
  * @x_padding: (out) (optional): x offset placeholder
