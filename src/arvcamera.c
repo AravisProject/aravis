@@ -289,7 +289,7 @@ arv_camera_get_sensor_size (ArvCamera *camera, gint *width, gint *height, GError
  * @camera: a #ArvCamera
  * @error: a #GError placeholder, %NULL to ignore
  *
- * Returns: %TRUE% if OffsetX and OffsetY features are available.
+ * Returns: %TRUE if OffsetX and OffsetY features are available.
  *
  * Since: 0.8.22
  */
@@ -1476,7 +1476,7 @@ arv_camera_clear_triggers (ArvCamera* camera, GError **error)
  * @camera: a #ArvCamera
  * @error: a #GError placeholder, %NULL to ignore
  *
- * Returns: %TRUE% if software trigger is supported.
+ * Returns: %TRUE if software trigger is supported by @camera.
  *
  * Since: 0.8.17
  */
@@ -1484,9 +1484,7 @@ arv_camera_clear_triggers (ArvCamera* camera, GError **error)
 gboolean
 arv_camera_is_software_trigger_supported (ArvCamera *camera, GError **error)
 {
-	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
-
-        return ARV_IS_GC_COMMAND (arv_device_get_feature (priv->device, "TriggerSoftware"));
+        return arv_camera_is_feature_implemented (camera, "TriggerSoftware", error);
 }
 
 /**
@@ -1958,6 +1956,71 @@ arv_camera_get_black_level_auto (ArvCamera *camera, GError **error)
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), ARV_AUTO_OFF);
 
 	return arv_auto_from_string (arv_camera_get_string (camera, "BlackLevelAuto", error));
+}
+
+/* Component control */
+
+/**
+ * arv_camera_dup_available_components:
+ * @camera: a #ArvCamera
+ * @n_components: (out) (optional) : number of available components
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Retrieves the list of available components.
+ *
+ * Returns: (array length=n_components) (transfer container): a newly allocated array of strings, to be freed after use with
+ * g_free().
+ *
+ * Since: 0.8.23
+ */
+
+const char **
+arv_camera_dup_available_components (ArvCamera *camera, guint *n_components, GError **error)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+
+	return arv_camera_dup_available_enumerations_as_strings (camera, "ComponentSelector", n_components, error);
+}
+
+/**
+ * arv_camera_select_and_enable_component:
+ * @camera: a #ArvCamera
+ * @component: component to select
+ * @disable_others: %TRUE to disable all the other components
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Select and enable the given component.
+ *
+ * Since: 0.8.23
+ */
+
+void
+arv_camera_select_and_enable_component (ArvCamera *camera, const char *component, gboolean disable_others,
+                                        GError
+                                        **error)
+{
+        GError *local_error = NULL;
+
+        g_return_if_fail (ARV_IS_CAMERA(camera));
+
+        if (disable_others) {
+                guint n_components, i;
+                const char **components = arv_camera_dup_available_components(camera, &n_components, &local_error);
+
+                for (i = 0; i < n_components && local_error == NULL; i++) {
+                        arv_camera_set_string (camera, "ComponentSelector", components[i], &local_error);
+                        if (local_error == NULL)
+                                arv_camera_set_boolean(camera, "ComponentEnable", FALSE, &local_error);
+                }
+        }
+
+        if (local_error == NULL) arv_camera_set_string (camera, "ComponentSelector", component, &local_error);
+        if (local_error == NULL) arv_camera_set_boolean(camera, "ComponentEnable", TRUE, &local_error);
+
+        if (local_error != NULL) {
+                g_propagate_error(error, local_error);
+                return;
+        }
 }
 
 /* Transport layer control */
@@ -2695,6 +2758,27 @@ arv_camera_is_feature_available (ArvCamera *camera, const char *feature, GError 
 }
 
 /**
+ * arv_camera_is_feature_implemented:
+ * @camera: a #ArvCamera
+ * @feature: feature name
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Return: %TRUE if feature is implemented, %FALSE if not or on error.
+ *
+ * Since: 0.8.23
+ */
+
+gboolean
+arv_camera_is_feature_implemented (ArvCamera *camera, const char *feature, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
+
+	return arv_device_is_feature_implemented (priv->device, feature, error);
+}
+
+/**
  * arv_camera_set_register_cache_policy:
  * @camera: a #ArvCamera
  * @policy: cache policy
@@ -2869,6 +2953,61 @@ arv_camera_gv_get_current_stream_channel (ArvCamera *camera, GError **error)
 		return 0;
 
 	return arv_camera_get_integer (camera, "GevStreamChannelSelector", error);
+}
+
+/**
+ * arv_camera_gv_set_multipart:
+ * @camera: a #ArvCamera
+ * @enable: %TRUE to enable multipart
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Control multipart payload support
+ *
+ * Since: 0.8.23
+ */
+
+void
+arv_camera_gv_set_multipart (ArvCamera *camera, gboolean enable, GError **error)
+{
+	g_return_if_fail (arv_camera_is_gv_device (camera));
+
+        arv_camera_set_boolean (camera, "GevSCCFGMultipart", enable, error);
+}
+
+/**
+ * arv_camera_gv_get_multipart:
+ * @camera: a #ArvCamera
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: %TRUE if multipart payload support is enabled.
+ *
+ * Since: 0.8.23
+ */
+
+gboolean
+arv_camera_gv_get_multipart (ArvCamera *camera, GError **error)
+{
+	g_return_val_if_fail (arv_camera_is_gv_device (camera), FALSE);
+
+        return arv_camera_get_boolean (camera, "GevSCCFGMultipart", error);
+}
+
+/**
+ * arv_camera_gv_is_multipart_supported:
+ * @camera: a #ArvCamera
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: %TRUE if multipart payload is supported by @camera.
+ *
+ * Since: 0.8.23
+ */
+
+gboolean
+arv_camera_gv_is_multipart_supported (ArvCamera *camera, GError **error)
+{
+	g_return_val_if_fail (arv_camera_is_gv_device (camera), FALSE);
+
+        return arv_camera_is_feature_implemented (camera, "GevSCCFGMultipart", error);
 }
 
 /**
