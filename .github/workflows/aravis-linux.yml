@@ -29,7 +29,7 @@ jobs:
     - name: Tests
       run: meson test -C build/ -v
     - name: Valgrind
-      run: cd build && ../tests/valgrind-memcheck
+      run: meson test -C build/ -v --setup=valgrind
     - uses: actions/upload-artifact@v3
       if: failure()
       with:
