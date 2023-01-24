@@ -707,12 +707,15 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
                             min_size + inc >= max_size)
 				break;
 
-			arv_info_device ("[GvDevice::auto_packet_size] Try packet size = %d", current_size);
+			last_size = current_size;
+
+			arv_info_device ("[GvDevice::auto_packet_size] Try packet size = %d (min: %d - max: %d - inc: %d)",
+                                         current_size, min_size, max_size, inc);
 			arv_device_set_integer_feature_value (device, "GevSCPSPacketSize", current_size, NULL);
 
 			current_size = arv_device_get_integer_feature_value (device, "GevSCPSPacketSize", &local_error);
-
-			last_size = current_size;
+                        if (local_error != NULL)
+                                break;
 
 			success = test_packet_check (device, &poll_fd, socket, buffer, max_size, current_size,
                                                      is_command);
