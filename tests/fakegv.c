@@ -94,6 +94,7 @@ acquisition_test (void)
 	buffer = arv_camera_acquisition (camera, 0, &error);
 	g_assert (error == NULL);
 	g_assert (ARV_IS_BUFFER (buffer));
+        g_assert (arv_buffer_get_status(buffer) == ARV_BUFFER_STATUS_SUCCESS);
 
 	arv_buffer_get_image_region (buffer, &x, &y, &width, &height);
 
