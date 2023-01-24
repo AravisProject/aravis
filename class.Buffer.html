@@ -114,6 +114,8 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.Buffer.get_image_height.html">get_image_height</a>
   
+    <a class="method" href="method.Buffer.get_image_padding.html">get_image_padding</a>
+  
     <a class="method" href="method.Buffer.get_image_pixel_format.html">get_image_pixel_format</a>
   
     <a class="method" href="method.Buffer.get_image_region.html">get_image_region</a>
@@ -123,6 +125,26 @@ SPDX-License-Identifier: LGPL-2.1-or-later
     <a class="method" href="method.Buffer.get_image_x.html">get_image_x</a>
   
     <a class="method" href="method.Buffer.get_image_y.html">get_image_y</a>
+  
+    <a class="method" href="method.Buffer.get_n_parts.html">get_n_parts</a>
+  
+    <a class="method" href="method.Buffer.get_part_data.html">get_part_data</a>
+  
+    <a class="method" href="method.Buffer.get_part_data_type.html">get_part_data_type</a>
+  
+    <a class="method" href="method.Buffer.get_part_height.html">get_part_height</a>
+  
+    <a class="method" href="method.Buffer.get_part_padding.html">get_part_padding</a>
+  
+    <a class="method" href="method.Buffer.get_part_pixel_format.html">get_part_pixel_format</a>
+  
+    <a class="method" href="method.Buffer.get_part_region.html">get_part_region</a>
+  
+    <a class="method" href="method.Buffer.get_part_width.html">get_part_width</a>
+  
+    <a class="method" href="method.Buffer.get_part_x.html">get_part_x</a>
+  
+    <a class="method" href="method.Buffer.get_part_y.html">get_part_y</a>
   
     <a class="method" href="method.Buffer.get_payload_type.html">get_payload_type</a>
   
@@ -326,7 +348,7 @@ data memory will be freed when the buffer is&nbsp;destroyed.</p>
         <div class="">
           <h6><a href="method.Buffer.get_image_height.html">arv_buffer_get_image_height</a></h6>
           <div class="docblock">
-            <p>Gets the image width. This function must only be called on buffer containing a <code>ARV_BUFFER_PAYLOAD_TYPE_IMAGE</code> payload.</p>
+            <p>Gets the image&nbsp;width.</p>
           </div>
           <div class="docblock">
             <p><span class="emblem available">since: 0.4.0</span></p>
@@ -334,9 +356,19 @@ data memory will be freed when the buffer is&nbsp;destroyed.</p>
         </div>
       
         <div class="">
+          <h6><a href="method.Buffer.get_image_padding.html">arv_buffer_get_image_padding</a></h6>
+          <div class="docblock">
+            <p>Gets the image&nbsp;padding.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
           <h6><a href="method.Buffer.get_image_pixel_format.html">arv_buffer_get_image_pixel_format</a></h6>
           <div class="docblock">
-            <p>Gets the image pixel format. This function must only be called on buffer containing a <code>ARV_BUFFER_PAYLOAD_TYPE_IMAGE</code> payload.</p>
+            <p>Gets the image pixel&nbsp;format.</p>
           </div>
           <div class="docblock">
             <p><span class="emblem available">since: 0.4.0</span></p>
@@ -346,7 +378,7 @@ data memory will be freed when the buffer is&nbsp;destroyed.</p>
         <div class="">
           <h6><a href="method.Buffer.get_image_region.html">arv_buffer_get_image_region</a></h6>
           <div class="docblock">
-            <p>Gets the image region. This function must only be called on buffer containing a <code>ARV_BUFFER_PAYLOAD_TYPE_IMAGE</code> payload.</p>
+            <p>Gets the image&nbsp;region.</p>
           </div>
           <div class="docblock">
             <p><span class="emblem available">since: 0.4.0</span></p>
@@ -356,7 +388,7 @@ data memory will be freed when the buffer is&nbsp;destroyed.</p>
         <div class="">
           <h6><a href="method.Buffer.get_image_width.html">arv_buffer_get_image_width</a></h6>
           <div class="docblock">
-            <p>Gets the image width. This function must only be called on buffer containing a <code>ARV_BUFFER_PAYLOAD_TYPE_IMAGE</code> payload.</p>
+            <p>Gets the image&nbsp;width.</p>
           </div>
           <div class="docblock">
             <p><span class="emblem available">since: 0.4.0</span></p>
@@ -366,7 +398,7 @@ data memory will be freed when the buffer is&nbsp;destroyed.</p>
         <div class="">
           <h6><a href="method.Buffer.get_image_x.html">arv_buffer_get_image_x</a></h6>
           <div class="docblock">
-            <p>Gets the image x offset. This function must only be called on buffer containing a <code>ARV_BUFFER_PAYLOAD_TYPE_IMAGE</code> payload.</p>
+            <p>Gets the image x&nbsp;offset.</p>
           </div>
           <div class="docblock">
             <p><span class="emblem available">since: 0.4.0</span></p>
@@ -376,10 +408,110 @@ data memory will be freed when the buffer is&nbsp;destroyed.</p>
         <div class="">
           <h6><a href="method.Buffer.get_image_y.html">arv_buffer_get_image_y</a></h6>
           <div class="docblock">
-            <p>Gets the image y offset. This function must only be called on buffer containing a <code>ARV_BUFFER_PAYLOAD_TYPE_IMAGE</code> payload.</p>
+            <p>Gets the image y&nbsp;offset.</p>
           </div>
           <div class="docblock">
             <p><span class="emblem available">since: 0.4.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_n_parts.html">arv_buffer_get_n_parts</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_part_data.html">arv_buffer_get_part_data</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_part_data_type.html">arv_buffer_get_part_data_type</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_part_height.html">arv_buffer_get_part_height</a></h6>
+          <div class="docblock">
+            <p>Gets the part&nbsp;height.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_part_padding.html">arv_buffer_get_part_padding</a></h6>
+          <div class="docblock">
+            <p>Gets the part&nbsp;padding.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_part_pixel_format.html">arv_buffer_get_part_pixel_format</a></h6>
+          <div class="docblock">
+            <p>Gets the part pixel&nbsp;format.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_part_region.html">arv_buffer_get_part_region</a></h6>
+          <div class="docblock">
+            <p>Gets the part&nbsp;region.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_part_width.html">arv_buffer_get_part_width</a></h6>
+          <div class="docblock">
+            <p>Gets the part&nbsp;width.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_part_x.html">arv_buffer_get_part_x</a></h6>
+          <div class="docblock">
+            <p>Gets the part x&nbsp;offset.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_part_y.html">arv_buffer_get_part_y</a></h6>
+          <div class="docblock">
+            <p>Gets the part&nbsp;y_offset.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
           </div>
         </div>
       

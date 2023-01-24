@@ -118,6 +118,8 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.Camera.create_stream_full.html">create_stream_full</a>
   
+    <a class="method" href="method.Camera.dup_available_components.html">dup_available_components</a>
+  
     <a class="method" href="method.Camera.dup_available_enumerations.html">dup_available_enumerations</a>
   
     <a class="method" href="method.Camera.dup_available_enumerations_as_display_names.html">dup_available_enumerations_as_display_names</a>
@@ -240,6 +242,8 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.Camera.gv_get_ip_configuration_mode.html">gv_get_ip_configuration_mode</a>
   
+    <a class="method" href="method.Camera.gv_get_multipart.html">gv_get_multipart</a>
+  
     <a class="method" href="method.Camera.gv_get_n_stream_channels.html">gv_get_n_stream_channels</a>
   
     <a class="method" href="method.Camera.gv_get_packet_delay.html">gv_get_packet_delay</a>
@@ -248,9 +252,13 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.Camera.gv_get_persistent_ip.html">gv_get_persistent_ip</a>
   
+    <a class="method" href="method.Camera.gv_is_multipart_supported.html">gv_is_multipart_supported</a>
+  
     <a class="method" href="method.Camera.gv_select_stream_channel.html">gv_select_stream_channel</a>
   
     <a class="method" href="method.Camera.gv_set_ip_configuration_mode.html">gv_set_ip_configuration_mode</a>
+  
+    <a class="method" href="method.Camera.gv_set_multipart.html">gv_set_multipart</a>
   
     <a class="method" href="method.Camera.gv_set_packet_delay.html">gv_set_packet_delay</a>
   
@@ -278,6 +286,8 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.Camera.is_feature_available.html">is_feature_available</a>
   
+    <a class="method" href="method.Camera.is_feature_implemented.html">is_feature_implemented</a>
+  
     <a class="method" href="method.Camera.is_frame_rate_available.html">is_frame_rate_available</a>
   
     <a class="method" href="method.Camera.is_gain_auto_available.html">is_gain_auto_available</a>
@@ -291,6 +301,8 @@ SPDX-License-Identifier: LGPL-2.1-or-later
     <a class="method" href="method.Camera.is_software_trigger_supported.html">is_software_trigger_supported</a>
   
     <a class="method" href="method.Camera.is_uv_device.html">is_uv_device</a>
+  
+    <a class="method" href="method.Camera.select_and_enable_component.html">select_and_enable_component</a>
   
     <a class="method" href="method.Camera.set_access_check_policy.html">set_access_check_policy</a>
   
@@ -586,6 +598,16 @@ first available&nbsp;camera.</p>
           <div class="docblock">
             <p>Creates a new <code>ArvStream</code> for video stream reception. See
 <code>ArvStreamCallback</code> for details regarding the callback&nbsp;function.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.dup_available_components.html">arv_camera_dup_available_components</a></h6>
+          <div class="docblock">
+            <p>Retrieves the list of available&nbsp;components.</p>
           </div>
           <div class="docblock">
             <p><span class="emblem available">since: 0.8.23</span></p>
@@ -1210,6 +1232,16 @@ packet size will be set to a default value (1500&nbsp;bytes).</p>
         </div>
       
         <div class="">
+          <h6><a href="method.Camera.gv_get_multipart.html">arv_camera_gv_get_multipart</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
           <h6><a href="method.Camera.gv_get_n_stream_channels.html">arv_camera_gv_get_n_stream_channels</a></h6>
           <div class="docblock">
             No description available.
@@ -1250,6 +1282,16 @@ packet size will be set to a default value (1500&nbsp;bytes).</p>
         </div>
       
         <div class="">
+          <h6><a href="method.Camera.gv_is_multipart_supported.html">arv_camera_gv_is_multipart_supported</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
           <h6><a href="method.Camera.gv_select_stream_channel.html">arv_camera_gv_select_stream_channel</a></h6>
           <div class="docblock">
             <p>Select the current stream channel. Negative <code>channel_id</code> is&nbsp;ignored.</p>
@@ -1267,6 +1309,16 @@ Available modes are ARV_GV_IP_CONFIGURATION_MODE_DHCP, ARV_GV_IP_CONFIGURATION_M
           </div>
           <div class="docblock">
             <p><span class="emblem available">since: 0.8.22</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.gv_set_multipart.html">arv_camera_gv_set_multipart</a></h6>
+          <div class="docblock">
+            <p>Control multipart payload&nbsp;support.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
           </div>
         </div>
       
@@ -1405,6 +1457,16 @@ set before the call to&nbsp;arv_camera_create_stream().</p>
         </div>
       
         <div class="">
+          <h6><a href="method.Camera.is_feature_implemented.html">arv_camera_is_feature_implemented</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
           <h6><a href="method.Camera.is_frame_rate_available.html">arv_camera_is_frame_rate_available</a></h6>
           <div class="docblock">
             No description available.
@@ -1471,6 +1533,16 @@ set before the call to&nbsp;arv_camera_create_stream().</p>
           </div>
           <div class="docblock">
             <p><span class="emblem available">since: 0.6.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.select_and_enable_component.html">arv_camera_select_and_enable_component</a></h6>
+          <div class="docblock">
+            <p>Select and enable the given&nbsp;component.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
           </div>
         </div>
       

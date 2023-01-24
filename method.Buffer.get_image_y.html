@@ -95,6 +95,8 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.Buffer.get_image_height.html">get_image_height</a>
   
+    <a class="method" href="method.Buffer.get_image_padding.html">get_image_padding</a>
+  
     <a class="method" href="method.Buffer.get_image_pixel_format.html">get_image_pixel_format</a>
   
     <a class="method" href="method.Buffer.get_image_region.html">get_image_region</a>
@@ -104,6 +106,26 @@ SPDX-License-Identifier: LGPL-2.1-or-later
     <a class="method" href="method.Buffer.get_image_x.html">get_image_x</a>
   
     <a class="method current" href="method.Buffer.get_image_y.html">get_image_y</a>
+  
+    <a class="method" href="method.Buffer.get_n_parts.html">get_n_parts</a>
+  
+    <a class="method" href="method.Buffer.get_part_data.html">get_part_data</a>
+  
+    <a class="method" href="method.Buffer.get_part_data_type.html">get_part_data_type</a>
+  
+    <a class="method" href="method.Buffer.get_part_height.html">get_part_height</a>
+  
+    <a class="method" href="method.Buffer.get_part_padding.html">get_part_padding</a>
+  
+    <a class="method" href="method.Buffer.get_part_pixel_format.html">get_part_pixel_format</a>
+  
+    <a class="method" href="method.Buffer.get_part_region.html">get_part_region</a>
+  
+    <a class="method" href="method.Buffer.get_part_width.html">get_part_width</a>
+  
+    <a class="method" href="method.Buffer.get_part_x.html">get_part_x</a>
+  
+    <a class="method" href="method.Buffer.get_part_y.html">get_part_y</a>
   
     <a class="method" href="method.Buffer.get_payload_type.html">get_payload_type</a>
   
@@ -150,7 +172,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Declaration
         <a class="anchor" href="#declaration"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvbuffer.h#L114">[src]</a>
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvbuffer.h#L152">[src]</a>
         
       </h4>
 
@@ -169,12 +191,14 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Description
         <a class="anchor" href="#description"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvbuffer.c#L507">[src]</a>
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvbuffer.c#L775">[src]</a>
         
       </h4>
 
       <div class="docblock">
-        <p>Gets the image y offset. This function must only be called on buffer containing a <code>ARV_BUFFER_PAYLOAD_TYPE_IMAGE</code> payload.</p>
+        <p>Gets the image y&nbsp;offset.</p>
+<p>This function must only be called if buffer payload is either <code>ARV_BUFFER_PAYLOAD_TYPE_IMAGE</code>,
+<code>ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA</code> or <code>ARV_BUFFER_PAYLOAD_TYPE_MULTIPART</code>.</p>
       </div>
 
       <div class="docblock">
