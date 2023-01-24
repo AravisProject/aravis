@@ -11,7 +11,7 @@ if get_option('tests')
       '--suppressions=' + meson.project_source_root() / 'tests' / 'aravis.supp',
       '--error-exitcode=1'
     ],
-    env:['DEBUGINFOD_URLS='],
+    env:['DEBUGINFOD_URLS=', 'ARV_TEST_IGNORE_BUFFER='],
     exclude_suites:['python'],
     timeout_multiplier:10
   )
