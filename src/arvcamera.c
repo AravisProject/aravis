@@ -3005,9 +3005,23 @@ arv_camera_gv_get_multipart (ArvCamera *camera, GError **error)
 gboolean
 arv_camera_gv_is_multipart_supported (ArvCamera *camera, GError **error)
 {
+        GError *local_error = NULL;
+        gboolean is_supported;
+
 	g_return_val_if_fail (arv_camera_is_gv_device (camera), FALSE);
 
-        return arv_camera_is_feature_implemented (camera, "GevSCCFGMultipart", error);
+        is_supported = arv_camera_is_feature_implemented (camera, "GevSCCFGMultipart", &local_error);
+
+        /* Ignore invalid address error, the needed registers are optional */
+        if (local_error != NULL) {
+                if (local_error->domain == ARV_DEVICE_ERROR &&
+                    local_error->code == ARV_DEVICE_ERROR_PROTOCOL_ERROR_INVALID_ADDRESS)
+                        g_clear_error (&local_error);
+                else
+                        g_propagate_error(error, local_error);
+        }
+
+        return is_supported;
 }
 
 /**
