@@ -94,6 +94,31 @@ struct _ArvUvDeviceClass {
 
 G_DEFINE_TYPE_WITH_CODE (ArvUvDevice, arv_uv_device, ARV_TYPE_DEVICE, G_ADD_PRIVATE (ArvUvDevice))
 
+static ArvDeviceError
+arv_uvcp_status_to_device_error (ArvUvcpStatus status)
+{
+        switch (status) {
+                case ARV_UVCP_STATUS_NOT_IMPLEMENTED:
+                        return ARV_DEVICE_ERROR_PROTOCOL_ERROR_NOT_IMPLEMENTED;
+                case ARV_UVCP_STATUS_INVALID_PARAMETER:
+                        return ARV_DEVICE_ERROR_PROTOCOL_ERROR_INVALID_PARAMETER;
+                case ARV_UVCP_STATUS_INVALID_ADDRESS:
+                        return ARV_DEVICE_ERROR_PROTOCOL_ERROR_INVALID_ADDRESS;
+                case ARV_UVCP_STATUS_WRITE_PROTECT:
+                        return ARV_DEVICE_ERROR_PROTOCOL_ERROR_WRITE_PROTECT;
+                case ARV_UVCP_STATUS_BAD_ALIGNMENT:
+                        return ARV_DEVICE_ERROR_PROTOCOL_ERROR_BAD_ALIGNMENT;
+                case ARV_UVCP_STATUS_ACCESS_DENIED:
+                        return ARV_DEVICE_ERROR_PROTOCOL_ERROR_ACCESS_DENIED;
+                case ARV_UVCP_STATUS_BUSY:
+                        return ARV_DEVICE_ERROR_PROTOCOL_ERROR_BUSY;
+                default:
+                        break;
+        }
+
+        return ARV_DEVICE_ERROR_PROTOCOL_ERROR;
+}
+
 /* ArvDevice implementation */
 
 /* ArvUvDevice implementation */
@@ -360,7 +385,7 @@ _send_cmd_and_receive_ack (ArvUvDevice *uv_device, ArvUvcpCommand command,
 	if (!success) {
 		if (error != NULL && *error == NULL) {
 			if (status != ARV_UVCP_STATUS_SUCCESS)
-				*error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_TIMEOUT,
+				*error = g_error_new (ARV_DEVICE_ERROR, arv_uvcp_status_to_device_error (status),
 						      "USB3Vision %s error (%s)", operation,
 						      arv_uvcp_status_to_string (status));
 			else

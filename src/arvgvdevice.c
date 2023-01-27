@@ -109,6 +109,31 @@ struct _ArvGvDeviceClass {
 
 G_DEFINE_TYPE_WITH_CODE (ArvGvDevice, arv_gv_device, ARV_TYPE_DEVICE, G_ADD_PRIVATE (ArvGvDevice))
 
+static ArvDeviceError
+arv_gvcp_error_to_device_error (ArvGvcpError code)
+{
+        switch (code) {
+                case ARV_GVCP_ERROR_NOT_IMPLEMENTED:
+                        return ARV_DEVICE_ERROR_PROTOCOL_ERROR_NOT_IMPLEMENTED;
+                case ARV_GVCP_ERROR_INVALID_PARAMETER:
+                        return ARV_DEVICE_ERROR_PROTOCOL_ERROR_INVALID_PARAMETER;
+                case ARV_GVCP_ERROR_INVALID_ACCESS:
+                        return ARV_DEVICE_ERROR_PROTOCOL_ERROR_INVALID_ADDRESS;
+                case ARV_GVCP_ERROR_WRITE_PROTECT:
+                        return ARV_DEVICE_ERROR_PROTOCOL_ERROR_WRITE_PROTECT;
+                case ARV_GVCP_ERROR_BAD_ALIGNMENT:
+                        return ARV_DEVICE_ERROR_PROTOCOL_ERROR_BAD_ALIGNMENT;
+                case ARV_GVCP_ERROR_ACCESS_DENIED:
+                        return ARV_DEVICE_ERROR_PROTOCOL_ERROR_ACCESS_DENIED;
+                case ARV_GVCP_ERROR_BUSY:
+                        return ARV_DEVICE_ERROR_PROTOCOL_ERROR_BUSY;
+                default:
+                        break;
+        }
+
+        return ARV_DEVICE_ERROR_PROTOCOL_ERROR;
+}
+
 static gboolean
 _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 			   guint64 address, size_t size, void *buffer, GError **error)
@@ -313,7 +338,7 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 
 		if (error != NULL && *error == NULL) {
 			if (command_error != ARV_GVCP_ERROR_NONE)
-				*error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
+				*error = g_error_new (ARV_DEVICE_ERROR, arv_gvcp_error_to_device_error (command_error),
 						      "GigEVision %s error (%s)", operation,
 						      arv_gvcp_error_to_string (command_error));
 			else
