@@ -383,16 +383,14 @@ _send_cmd_and_receive_ack (ArvUvDevice *uv_device, ArvUvcpCommand command,
 	success = success && status == ARV_UVCP_STATUS_SUCCESS;
 
 	if (!success) {
-		if (error != NULL && *error == NULL) {
-			if (status != ARV_UVCP_STATUS_SUCCESS)
-				*error = g_error_new (ARV_DEVICE_ERROR, arv_uvcp_status_to_device_error (status),
-						      "USB3Vision %s error (%s)", operation,
-						      arv_uvcp_status_to_string (status));
-			else
-				*error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_TIMEOUT,
-						      "USB3Vision %s timeout", operation);
-		}
-	}
+                if (status != ARV_UVCP_STATUS_SUCCESS)
+                        g_set_error (error, ARV_DEVICE_ERROR, arv_uvcp_status_to_device_error (status),
+                                     "USB3Vision %s error (%s)", operation,
+                                     arv_uvcp_status_to_string (status));
+                else
+                        g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_TIMEOUT,
+                                     "USB3Vision %s timeout", operation);
+        }
 
 	return success;
 }
