@@ -377,6 +377,7 @@ arv_tool_control (int argc, char **argv, ArvDevice *device)
                         if (g_strrstr (tokens[0], "R[") == tokens[0]) {
                                 guint32 value;
                                 guint32 address;
+                                GError *error = NULL;
 
                                 address = g_ascii_strtoll(&tokens[0][2], NULL, 0);
 
@@ -384,13 +385,22 @@ arv_tool_control (int argc, char **argv, ArvDevice *device)
                                         arv_device_write_register (device,
                                                                    address,
                                                                    g_ascii_strtoll (tokens[1],
-                                                                                    NULL, 0), NULL); /* TODO error handling */
+                                                                                    NULL, 0), &error);
+                                        if (error != NULL)
+                                                printf ("R[0x%08x] write error: %s\n", address, error->message);
                                 }
 
-                                arv_device_read_register (device, address, &value, NULL); /* TODO error handling */
+                                if (error == NULL) {
+                                        arv_device_read_register (device, address, &value, &error);
+                                        if (error == NULL) {
+                                                printf ("R[0x%08x] = 0x%08x\n",
+                                                        address, value);
+                                        } else {
+                                                printf ("R[0x%08x] read error: %s\n", address, error->message);
+                                        }
+                                }
 
-                                printf ("R[0x%08x] = 0x%08x\n",
-                                        address, value);
+                                g_clear_error(&error);
                         } else
                                 printf ("Feature '%s' not found\n", tokens[0]);
                 }
