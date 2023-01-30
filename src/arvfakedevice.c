@@ -26,6 +26,7 @@
  */
 
 #include <arvdeviceprivate.h>
+#include <arvgvdeviceprivate.h>
 #include <arvfakedeviceprivate.h>
 #include <arvfakestreamprivate.h>
 #include <arvfakecamera.h>
@@ -196,6 +197,8 @@ arv_fake_device_constructed (GObject *self)
 							 "Invalid Genicam data"));
 		return;
 	}
+
+        arv_gc_set_default_gv_features(priv->genicam);
 }
 
 static void
