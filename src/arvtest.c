@@ -864,6 +864,7 @@ arv_test_gige_vision (ArvTest *test, const char *test_name, ArvTestCamera *test_
         GError *error = NULL;
         gint64 expected_n_stream_channels;
         gint64 n_stream_channels;
+        char *message;
 
         g_return_if_fail (ARV_IS_TEST (test));
 
@@ -873,10 +874,15 @@ arv_test_gige_vision (ArvTest *test, const char *test_name, ArvTestCamera *test_
         expected_n_stream_channels = arv_test_camera_get_key_file_int64 (test_camera, test, "NStreamChannels", 1);
 
         n_stream_channels = arv_camera_gv_get_n_stream_channels (test_camera->camera, &error);
+
+        if (error != NULL)
+                message = g_strdup_printf("%s", error->message);
+        else
+                message = g_strdup_printf("%" G_GINT64_FORMAT, n_stream_channels);
         arv_test_camera_add_result (test_camera, test_name, "NStreamChannels",
                                     n_stream_channels == expected_n_stream_channels && error == NULL ?
-                                    ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
-                                    error != NULL ? error->message : NULL);
+                                    ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE, message);
+        g_clear_pointer(&message, g_free);
 
         g_clear_error (&error);
         if (expected_n_stream_channels > 0) {
