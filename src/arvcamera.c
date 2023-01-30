@@ -2888,7 +2888,7 @@ arv_camera_gv_get_n_stream_channels (ArvCamera *camera, GError **error)
 {
 	g_return_val_if_fail (arv_camera_is_gv_device (camera), 0);
 
-	return arv_camera_get_integer (camera, "GevStreamChannelCount", error);
+	return arv_camera_get_integer (camera, "ArvGevStreamChannelCount", error);
 }
 
 /**
@@ -2905,24 +2905,12 @@ arv_camera_gv_get_n_stream_channels (ArvCamera *camera, GError **error)
 void
 arv_camera_gv_select_stream_channel (ArvCamera *camera, gint channel_id, GError **error)
 {
-	GError *local_error = NULL;
-	gboolean available;
-
 	if (channel_id < 0)
 		return;
 
 	g_return_if_fail (arv_camera_is_gv_device (camera));
 
-	available = arv_camera_is_feature_available (camera, "GevStreamChannelSelector", &local_error);
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return;
-	}
-
-	if (!available && channel_id == 0)
-		return;
-
-	arv_camera_set_integer (camera, "GevStreamChannelSelector", channel_id, error);
+	arv_camera_set_integer (camera, "ArvGevStreamChannelSelector", channel_id, error);
 }
 
 /**
@@ -2938,21 +2926,9 @@ arv_camera_gv_select_stream_channel (ArvCamera *camera, gint channel_id, GError 
 int
 arv_camera_gv_get_current_stream_channel (ArvCamera *camera, GError **error)
 {
-	GError *local_error = NULL;
-	gboolean available;
-
 	g_return_val_if_fail (arv_camera_is_gv_device (camera), 0);
 
-	available = arv_camera_is_feature_available (camera, "GevStreamChannelSelector", &local_error);
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return 0;
-	}
-
-	if (!available)
-		return 0;
-
-	return arv_camera_get_integer (camera, "GevStreamChannelSelector", error);
+	return arv_camera_get_integer (camera, "ArvGevStreamChannelSelector", error);
 }
 
 /**
@@ -2971,7 +2947,7 @@ arv_camera_gv_set_multipart (ArvCamera *camera, gboolean enable, GError **error)
 {
 	g_return_if_fail (arv_camera_is_gv_device (camera));
 
-        arv_camera_set_boolean (camera, "GevSCCFGMultipart", enable, error);
+        arv_camera_set_boolean (camera, "ArvGevSCCFGMultipart", enable, error);
 }
 
 /**
@@ -2989,7 +2965,7 @@ arv_camera_gv_get_multipart (ArvCamera *camera, GError **error)
 {
 	g_return_val_if_fail (arv_camera_is_gv_device (camera), FALSE);
 
-        return arv_camera_get_boolean (camera, "GevSCCFGMultipart", error);
+        return arv_camera_get_boolean (camera, "ArvGevSCCFGMultipart", error);
 }
 
 /**
@@ -3010,12 +2986,13 @@ arv_camera_gv_is_multipart_supported (ArvCamera *camera, GError **error)
 
 	g_return_val_if_fail (arv_camera_is_gv_device (camera), FALSE);
 
-        is_supported = arv_camera_is_feature_implemented (camera, "GevSCCFGMultipart", &local_error);
+        is_supported = arv_camera_is_feature_implemented (camera, "ArvGevSCCFGMultipart", &local_error);
 
         /* Ignore invalid address error, the needed registers are optional */
         if (local_error != NULL) {
                 if (local_error->domain == ARV_DEVICE_ERROR &&
-                    local_error->code == ARV_DEVICE_ERROR_PROTOCOL_ERROR_INVALID_ADDRESS)
+                    (local_error->code == ARV_DEVICE_ERROR_PROTOCOL_ERROR_INVALID_ADDRESS ||
+                     local_error->code == ARV_DEVICE_ERROR_PROTOCOL_ERROR_ACCESS_DENIED))
                         g_clear_error (&local_error);
                 else
                         g_propagate_error(error, local_error);
@@ -3049,7 +3026,7 @@ arv_camera_gv_set_packet_delay (ArvCamera *camera, gint64 delay_ns, GError **err
 
 	g_return_if_fail (arv_camera_is_gv_device (camera));
 
-	tick_frequency = arv_camera_get_integer (camera, "GevTimestampTickFrequency", &local_error);
+	tick_frequency = arv_camera_get_integer (camera, "ArvGevTimestampTickFrequency", &local_error);
 	if (local_error != NULL) {
 		g_propagate_error (error, local_error);
 		return;
@@ -3098,7 +3075,7 @@ arv_camera_gv_get_packet_delay (ArvCamera *camera, GError **error)
 	if (!available)
 		return 0;
 
-	tick_frequency = arv_camera_get_integer (camera, "GevTimestampTickFrequency", &local_error);
+	tick_frequency = arv_camera_get_integer (camera, "ArvGevTimestampTickFrequency", &local_error);
 	if (local_error != NULL) {
 		g_propagate_error (error, local_error);
 		return 0;

@@ -593,7 +593,7 @@ arv_gv_device_get_timestamp_tick_frequency (ArvGvDevice *gv_device, GError **err
 guint
 arv_gv_device_get_packet_size (ArvGvDevice *gv_device, GError **error)
 {
-	return arv_device_get_integer_feature_value (ARV_DEVICE (gv_device), "GevSCPSPacketSize", error);
+	return arv_device_get_integer_feature_value (ARV_DEVICE (gv_device), "ArvGevSCPSPacketSize", error);
 }
 
 void
@@ -601,7 +601,7 @@ arv_gv_device_set_packet_size (ArvGvDevice *gv_device, gint packet_size, GError 
 {
 	g_return_if_fail (packet_size > 0);
 
-	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevSCPSPacketSize", packet_size, error);
+	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "ArvGevSCPSPacketSize", packet_size, error);
 }
 
 static gboolean
@@ -610,20 +610,19 @@ test_packet_check (ArvDevice *device,
 		   GSocket *socket,
 		   char *buffer,
                    guint max_size,
-		   guint packet_size,
-		   gboolean is_command)
+		   guint packet_size)
 {
+        GError *error = NULL;
 	unsigned n_tries = 0;
 	int n_events;
 	size_t read_count;
 
 	do {
-		if (is_command) {
-			arv_device_execute_command (device, "GevSCPSFireTestPacket", NULL);
-		} else {
-			arv_device_set_boolean_feature_value (device, "GevSCPSFireTestPacket", FALSE, NULL);
-			arv_device_set_boolean_feature_value (device, "GevSCPSFireTestPacket", TRUE, NULL);
-		}
+                arv_device_execute_command (device, "ArvGevSCPSFireTestPacket", &error);
+                if (error != NULL) {
+                        arv_warning_device("Test packet check fire failed (%s)", error->message);
+                        g_clear_error(&error);
+                }
 
 		do {
 			n_events = g_poll (poll_fd, 1, 10);
@@ -647,7 +646,7 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 {
 	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
 	ArvDevice *device = ARV_DEVICE (gv_device);
-	ArvGcNode *node;
+        ArvGcNode *node;
 	GSocket *socket;
 	GInetAddress *interface_address;
 	GSocketAddress *interface_socket_address;
@@ -656,7 +655,6 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 	const guint8 *address_bytes;
 	guint16 port;
 	gboolean do_not_fragment;
-	gboolean is_command;
 	guint max_size, min_size;
 	gint64 minimum, maximum, packet_size;
 	guint inc;
@@ -666,27 +664,30 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 
 	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), 1500);
 
-	node = arv_device_get_feature (device, "GevSCPSFireTestPacket");
+        node = arv_device_get_feature (device, "GevSCPSFireTestPacket");
 	if (!ARV_IS_GC_COMMAND (node) && !ARV_IS_GC_BOOLEAN (node)) {
 		arv_info_device ("[GvDevice::auto_packet_size] No GevSCPSFireTestPacket feature found");
-		return arv_device_get_integer_feature_value (device, "GevSCPSPacketSize", error);
+		return arv_device_get_integer_feature_value (device, "ArvGevSCPSPacketSize", error);
 	}
 
+	packet_size = arv_device_get_integer_feature_value (device, "ArvGevSCPSPacketSize", NULL);
+
+        /* PacketSize boundaries registers are device specific. Use the standard feature name for finding boundaries. If
+         * this feature is not present in the device Genicam data, it will fallback to the default definition inserted
+         * in arv_gv_device_load_genicam */
+	arv_device_get_integer_feature_bounds (device, "GevSCPSPacketSize", &minimum, &maximum, NULL);
 	inc = arv_device_get_integer_feature_increment (device, "GevSCPSPacketSize", NULL);
 	if (inc < 1)
 		inc = 1;
-	packet_size = arv_device_get_integer_feature_value (device, "GevSCPSPacketSize", NULL);
-	arv_device_get_integer_feature_bounds (device, "GevSCPSPacketSize", &minimum, &maximum, NULL);
+
 	max_size = MIN (ARV_GVSP_MAXIMUM_PACKET_SIZE, maximum);
 	min_size = MAX (ARV_GVSP_MINIMUM_PACKET_SIZE, minimum);
 
 	if (max_size < min_size ||
 	    inc > max_size - min_size) {
-		arv_warning_device ("[GvDevice::auto_packet_size] Invalid GevSCPSPacketSize properties");
-		return arv_device_get_integer_feature_value (device, "GevSCPSPacketSize", error);
+		arv_warning_device ("[GvDevice::auto_packet_size] Invalid ArvGevSCPSPacketSize properties");
+		return arv_device_get_integer_feature_value (device, "ArvGevSCPSPacketSize", error);
 	}
-
-	is_command = ARV_IS_GC_COMMAND (node);
 
 	interface_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (priv->io_data->interface_address));
 	interface_socket_address = g_inet_socket_address_new (interface_address, 0);
@@ -696,14 +697,14 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 	port = g_inet_socket_address_get_port (local_address);
 
 	address_bytes = g_inet_address_to_bytes (interface_address);
-	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevSCDA", g_htonl (*((guint32 *) address_bytes)), NULL);
-	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevSCPHostPort", port, NULL);
+	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "ArvGevSCDA", g_htonl (*((guint32 *) address_bytes)), NULL);
+	arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "ArvGevSCPHostPort", port, NULL);
 
 	g_clear_object (&local_address);
 	g_clear_object (&interface_socket_address);
 
-	do_not_fragment = arv_device_get_boolean_feature_value (device, "GevSCPSDoNotFragment", NULL);
-	arv_device_set_boolean_feature_value (device, "GevSCPSDoNotFragment", TRUE, NULL);
+	do_not_fragment = arv_device_get_boolean_feature_value (device, "ArvGevSCPSDoNotFragment", NULL);
+	arv_device_set_boolean_feature_value (device, "ArvGevSCPSDoNotFragment", TRUE, NULL);
 
 	poll_fd.fd = g_socket_get_fd (socket);
 	poll_fd.events =  G_IO_IN;
@@ -713,7 +714,7 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 
 	buffer = g_malloc (max_size);
 
-	success = test_packet_check (device, &poll_fd, socket, buffer, max_size, packet_size, is_command);
+	success = test_packet_check (device, &poll_fd, socket, buffer, max_size, packet_size);
 
 	/* When exit_early is set, the function only checks the current packet size is working.
 	 * If not, the full automatic packet size adjustment is run. */
@@ -734,14 +735,13 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 
 			arv_info_device ("[GvDevice::auto_packet_size] Try packet size = %d (min: %d - max: %d - inc: %d)",
                                          current_size, min_size, max_size, inc);
-			arv_device_set_integer_feature_value (device, "GevSCPSPacketSize", current_size, NULL);
+			arv_device_set_integer_feature_value (device, "ArvGevSCPSPacketSize", current_size, NULL);
 
-			current_size = arv_device_get_integer_feature_value (device, "GevSCPSPacketSize", &local_error);
+			current_size = arv_device_get_integer_feature_value (device, "ArvGevSCPSPacketSize", &local_error);
                         if (local_error != NULL)
                                 break;
 
-			success = test_packet_check (device, &poll_fd, socket, buffer, max_size, current_size,
-                                                     is_command);
+			success = test_packet_check (device, &poll_fd, socket, buffer, max_size, current_size);
 
 			if (success) {
 				packet_size = current_size;
@@ -757,7 +757,7 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 		} while (TRUE);
 
                 if (local_error == NULL) {
-                        arv_device_set_integer_feature_value (device, "GevSCPSPacketSize", packet_size, error);
+                        arv_device_set_integer_feature_value (device, "ArvGevSCPSPacketSize", packet_size, error);
 
                         arv_info_device ("[GvDevice::auto_packet_size] Packet size set to %" G_GINT64_FORMAT " bytes",
                                          packet_size);
@@ -771,7 +771,7 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 
 	arv_gpollfd_finish_all (&poll_fd, 1);
 
-	arv_device_set_boolean_feature_value (device, "GevSCPSDoNotFragment", do_not_fragment, NULL);
+	arv_device_set_boolean_feature_value (device, "ArvGevSCPSDoNotFragment", do_not_fragment, NULL);
 
 	return packet_size;
 }
@@ -781,7 +781,7 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
  * @gv_device: a #ArvGvDevice
  * @error: a #GError placeholder, %NULL to ignore
  *
- * Automatically determine the biggest packet size that can be used data streaming, and set GevSCPSPacketSize value
+ * Automatically determine the biggest packet size that can be used data streaming, and set ArvGevSCPSPacketSize value
  * accordingly. This function relies on the GevSCPSFireTestPacket feature.
  *
  * Returns: The automatic packet size, in bytes, or the current one if GevSCPSFireTestPacket is not supported.
@@ -899,14 +899,14 @@ arv_gv_device_get_persistent_ip (ArvGvDevice *gv_device,
 	g_return_if_fail (ip != NULL);
 
 	value = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device),
-                                                      "GevPersistentIPAddress", NULL);
+                                                      "ArvGevPersistentIPAddress", NULL);
 	be_ip_int = g_htonl(value);
 
 	*ip = g_inet_address_new_from_bytes ((guint8 *) &be_ip_int, G_SOCKET_FAMILY_IPV4);
 
 	if (mask != NULL) {
 		value = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device),
-                                                              "GevPersistentSubnetMask", NULL);
+                                                              "ArvGevPersistentSubnetMask", NULL);
 		be_mask_int = g_htonl(value);
 
 		netmask = g_inet_address_new_from_bytes ((guint8 *) &be_mask_int, G_SOCKET_FAMILY_IPV4);
@@ -916,7 +916,7 @@ arv_gv_device_get_persistent_ip (ArvGvDevice *gv_device,
 
 	if (gateway != NULL) {
 		value = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device),
-                                                              "GevPersistentDefaultGateway", NULL);
+                                                              "ArvGevPersistentDefaultGateway", NULL);
 		be_gateway_int = g_htonl(value);
 
 		*gateway = g_inet_address_new_from_bytes ((guint8 *) &be_gateway_int, G_SOCKET_FAMILY_IPV4);
@@ -961,7 +961,7 @@ arv_gv_device_set_persistent_ip (ArvGvDevice *gv_device,
 		be_value = ((guint32)ip_bytes[3] << 24) | (ip_bytes[2] << 16) | (ip_bytes[1] << 8) | ip_bytes[0];
 		ip_int = GUINT32_FROM_BE(be_value);
 
-		arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevPersistentIPAddress", ip_int, &local_error);
+		arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "ArvGevPersistentIPAddress", ip_int, &local_error);
 		if (local_error != NULL) {
 			g_propagate_error(error, local_error);
 			return;
@@ -993,7 +993,7 @@ arv_gv_device_set_persistent_ip (ArvGvDevice *gv_device,
 			be_value = ~(~(guint32)0 >> mask_length);
 		}
 		mask_int = GUINT32_FROM_BE(be_value);
-		arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevPersistentSubnetMask", mask_int, &local_error);
+		arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "ArvGevPersistentSubnetMask", mask_int, &local_error);
 		if (local_error != NULL) {
 			g_propagate_error(error, local_error);
 			return;
@@ -1016,7 +1016,7 @@ arv_gv_device_set_persistent_ip (ArvGvDevice *gv_device,
 		gateway_bytes = g_inet_address_to_bytes (gateway);
 		be_value = ((guint32)gateway_bytes[3] << 24) | (gateway_bytes[2] << 16) | (gateway_bytes[1] << 8) | gateway_bytes[0];
 		gateway_int = GUINT32_FROM_BE(be_value);
-		arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "GevPersistentDefaultGateway", gateway_int, &local_error);
+		arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "ArvGevPersistentDefaultGateway", gateway_int, &local_error);
 		if (local_error != NULL) {
 			g_propagate_error(error, local_error);
 			return;
@@ -1107,10 +1107,11 @@ arv_gv_device_get_ip_configuration_mode (ArvGvDevice *gv_device, GError **error)
 	if (arv_device_is_feature_available (ARV_DEVICE (gv_device), "GevIPConfigurationStatus", error))
 		return arv_device_get_integer_feature_value (ARV_DEVICE (gv_device), "GevIPConfigurationStatus", error);
 
-	dhcp_enabled = arv_device_get_boolean_feature_value( ARV_DEVICE (gv_device), "GevCurrentIPConfigurationDHCP", error);
+	dhcp_enabled = arv_device_get_boolean_feature_value( ARV_DEVICE (gv_device), "ArvGevCurrentIPConfigurationDHCP", error);
 	if (*error != NULL)
 		return ARV_GV_IP_CONFIGURATION_MODE_NONE;
-	persistent_ip_enabled = arv_device_get_boolean_feature_value( ARV_DEVICE (gv_device), "GevCurrentIPConfigurationPersistentIP", error);
+	persistent_ip_enabled = arv_device_get_boolean_feature_value( ARV_DEVICE (gv_device),
+                                                                      "ArvGevCurrentIPConfigurationPersistentIP", error);
 	if (*error != NULL)
 		return ARV_GV_IP_CONFIGURATION_MODE_NONE;
 
@@ -1146,21 +1147,21 @@ arv_gv_device_set_ip_configuration_mode (ArvGvDevice *gv_device, ArvGvIpConfigur
 	if (mode == ARV_GV_IP_CONFIGURATION_MODE_PERSISTENT_IP) {
 		/* Persistent IP: disable DHCP, enable persistent IP */
 		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device),
-                                                      "GevCurrentIPConfigurationDHCP", FALSE, NULL);
+                                                      "ArvGevCurrentIPConfigurationDHCP", FALSE, NULL);
 		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device),
-                                                      "GevCurrentIPConfigurationPersistentIP", TRUE, NULL);
+                                                      "ArvGevCurrentIPConfigurationPersistentIP", TRUE, NULL);
 	} else if (mode == ARV_GV_IP_CONFIGURATION_MODE_DHCP) {
 		/* DHCP: enable DHCP, disable persistent IP */
 		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device),
-                                                      "GevCurrentIPConfigurationDHCP", TRUE, NULL);
+                                                      "ArvGevCurrentIPConfigurationDHCP", TRUE, NULL);
 		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device),
-                                                      "GevCurrentIPConfigurationPersistentIP", FALSE, NULL);
+                                                      "ArvGevCurrentIPConfigurationPersistentIP", FALSE, NULL);
 	} else {
 		/* LLA: disable both */
 		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device),
-                                                      "GevCurrentIPConfigurationDHCP", FALSE, NULL);
+                                                      "ArvGevCurrentIPConfigurationDHCP", FALSE, NULL);
 		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device),
-                                                      "GevCurrentIPConfigurationPersistentIP", FALSE, NULL);
+                                                      "ArvGevCurrentIPConfigurationPersistentIP", FALSE, NULL);
 	}
 }
 
@@ -1333,6 +1334,378 @@ arv_gv_device_get_genicam_xml (ArvDevice *device, size_t *size)
 	return _get_genicam_xml (device, size, NULL);
 }
 
+void
+arv_gc_set_default_gv_features (ArvGc *genicam)
+{
+        g_return_if_fail (ARV_IS_GC (genicam));
+
+        /* Shared features */
+
+        arv_gc_set_default_node_data (genicam, "DeviceVendorName",
+                                      "<StringReg Name=\"DeviceVendorName\">"
+                                      "  <DisplayName>Vendor Name</DisplayName>"
+                                      "  <Address>0x48</Address>"
+                                      "  <Length>32</Length>"
+                                      "  <AccessMode>RO</AccessMode>"
+                                      "  <pPort>Device</pPort>"
+                                      "</StringReg>", NULL);
+        arv_gc_set_default_node_data (genicam, "DeviceModelName",
+                                      "<StringReg Name=\"DeviceModelName\">"
+                                      "<DisplayName>Model Name</DisplayName>"
+                                      "<Address>0x68</Address>"
+                                      "<Length>32</Length>"
+                                      "<AccessMode>RO</AccessMode>"
+                                      "<pPort>Device</pPort>"
+                                      "</StringReg>", NULL);
+        arv_gc_set_default_node_data (genicam, "DeviceVersion",
+                                      "<StringReg Name=\"DeviceVersion\">"
+                                      "<DisplayName>Device Version</DisplayName>"
+                                      "<Address>0x88</Address>"
+                                      "<Length>32</Length>"
+                                      "<AccessMode>RO</AccessMode>"
+                                      "<pPort>Device</pPort>"
+                                      "</StringReg>", NULL);
+        arv_gc_set_default_node_data (genicam, "DeviceManufacturerInfo",
+                                      "<StringReg Name=\"DeviceManufacturerInfo\">"
+                                      "<DisplayName>Manufacturer Info</DisplayName>"
+                                      "<Address>0xa8</Address>"
+                                      "<Length>48</Length>"
+                                      "<AccessMode>RO</AccessMode>"
+                                      "<pPort>Device</pPort>"
+                                      "</StringReg>", NULL);
+        arv_gc_set_default_node_data (genicam, "DeviceID",
+                                      "<StringReg Name=\"DeviceID\">"
+                                      "<DisplayName>Device ID</DisplayName>"
+                                      "<Address>0xd8</Address>"
+                                      "<Length>16</Length>"
+                                      "<AccessMode>RO</AccessMode>"
+                                      "<pPort>Device</pPort>"
+                                      "</StringReg>", NULL);
+
+        /* Arv prefixed GigEVision features */
+
+        arv_gc_set_default_node_data (genicam, "ArvGevCurrentIPConfigurationLLA",
+                                      "<Boolean Name=\"ArvGevCurrentIPConfigurationLLA\">"
+                                      "  <pIsLocked>TLParamsLocked</pIsLocked>"
+                                      "  <pValue>ArvGevCurrentIPConfigurationLLAReg</pValue>"
+                                      "</Boolean>",
+                                      "<MaskedIntReg Name=\"ArvGevCurrentIPConfigurationLLAReg\">"
+                                      "  <Address>0x14</Address>"
+                                      "  <Length>4</Length>"
+                                      "  <AccessMode>RW</AccessMode>"
+                                      "  <pPort>Device</pPort>"
+                                      "  <Cachable>NoCache</Cachable>"
+                                      "  <Bit>29</Bit>"
+                                      "</MaskedIntReg>",
+                                      NULL);
+        arv_gc_set_default_node_data (genicam, "ArvGevCurrentIPConfigurationDHCP",
+                                      "<Boolean Name=\"ArvGevCurrentIPConfigurationDHCP\">"
+                                      "  <pIsLocked>TLParamsLocked</pIsLocked>"
+                                      "  <pValue>ArvGevCurrentIPConfigurationDHCPReg</pValue>"
+                                      "</Boolean>",
+                                      "<MaskedIntReg Name=\"ArvGevCurrentIPConfigurationDHCPReg\">"
+                                      "  <Address>0x14</Address>"
+                                      "  <Length>4</Length>"
+                                      "  <AccessMode>RW</AccessMode>"
+                                      "  <pPort>Device</pPort>"
+                                      "  <Cachable>NoCache</Cachable>"
+                                      "  <Bit>30</Bit>"
+                                      "</MaskedIntReg>",
+                                      NULL);
+        arv_gc_set_default_node_data (genicam, "ArvGevCurrentIPConfigurationPersistentIP",
+                                      "<Boolean Name=\"ArvGevCurrentIPConfigurationPersistentIP\">"
+                                      "  <pIsLocked>TLParamsLocked</pIsLocked>"
+                                      "  <pValue>ArvGevCurrentIPConfigurationPersistentIPReg</pValue>"
+                                      "</Boolean>",
+                                      "<MaskedIntReg Name=\"ArvGevCurrentIPConfigurationPersistentIPReg\">"
+                                      "  <Address>0x14</Address>"
+                                      "  <Length>4</Length>"
+                                      "  <AccessMode>RW</AccessMode>"
+                                      "  <pPort>Device</pPort>"
+                                      "  <Cachable>NoCache</Cachable>"
+                                      "  <Bit>31</Bit>"
+                                      "</MaskedIntReg>",
+                                      NULL);
+        arv_gc_set_default_node_data (genicam, "ArvGevPersistentIPAddress",
+                                      "<IntReg Name=\"ArvGevPersistentIPAddress\">"
+                                      "<Address>0x64c</Address>"
+                                      "<Length>4</Length>"
+                                      "<AccessMode>RW</AccessMode>"
+                                      "<Endianess>BigEndian</Endianess>"
+                                      "<pPort>Device</pPort>"
+                                      "</IntReg>", NULL);
+        arv_gc_set_default_node_data (genicam, "ArvGevPersistentSubnetMask",
+                                      "<IntReg Name=\"ArvGevPersistentSubnetMask\">"
+                                      "<Address>0x65c</Address>"
+                                      "<Length>4</Length>"
+                                      "<AccessMode>RW</AccessMode>"
+                                      "<Endianess>BigEndian</Endianess>"
+                                      "<pPort>Device</pPort>"
+                                      "</IntReg>", NULL);
+        arv_gc_set_default_node_data (genicam, "ArvGevPersistentDefaultGateway",
+                                      "<IntReg Name=\"ArvGevPersistentDefaultGateway\">"
+                                      "<Address>0x66c</Address>"
+                                      "<Length>4</Length>"
+                                      "<AccessMode>RW</AccessMode>"
+                                      "<Endianess>BigEndian</Endianess>"
+                                      "<pPort>Device</pPort>"
+                                      "</IntReg>",
+                                      NULL);
+        arv_gc_set_default_node_data (genicam, "ArvGevStreamChannelCount",
+                                      "<IntReg Name=\"ArvGevStreamChannelCount\">"
+                                      "  <Address>0x904</Address>"
+                                      "  <Length>4</Length>"
+                                      "  <AccessMode>RW</AccessMode>"
+                                      "  <Endianess>BigEndian</Endianess>"
+                                      "  <pPort>Device</pPort>"
+                                      "</IntReg>",
+                                      NULL);
+        arv_gc_set_default_node_data (genicam, "ArvGevStreamChannelSelector",
+                                      "<Integer Name=\"ArvGevStreamChannelSelector\">"
+                                      "  <Value>0</Value>"
+                                      "  <Min>0</Min>"
+                                      "  <pMax>ArvGevStreamChannelMax</pMax>"
+                                      "  <Inc>1</Inc>"
+                                      "</Integer>",
+                                      "<IntSwissKnife Name= \"ArvGevStreamChannelMax\">"
+                                      "  <pVariable Name=\"CNT\">ArvGevStreamChannelCount</pVariable>"
+                                      "  <Formula>CNT - 1</Formula>"
+                                      "</IntSwissKnife>",
+                                      NULL);
+        arv_gc_set_default_node_data (genicam, "ArvGevSCPAddrCalc",
+                                      "<IntSwissKnife Name= \"ArvGevSCPAddrCalc\">"
+                                      "  <pVariable Name=\"SEL\">ArvGevStreamChannelSelector</pVariable>"
+                                      "  <Formula>SEL * 0x40</Formula>"
+                                      "</IntSwissKnife>",
+                                      NULL);
+        arv_gc_set_default_node_data (genicam, "ArvGevTimestampTickFrequency",
+                                      "<Integer Name=\"ArvGevTimestampTickFrequency\">"
+                                      "<pValue>ArvGevTimestampTickFrequencyCalc</pValue>"
+                                      "</Integer>",
+                                      "<IntSwissKnife Name=\"ArvGevTimestampTickFrequencyCalc\">"
+                                      "<pVariable Name=\"HIGH\">ArvGevTimestampTickFrequencyHigh</pVariable>"
+                                      "<pVariable Name=\"LOW\">ArvGevTimestampTickFrequencyLow</pVariable>"
+                                      "<Formula>(HIGH&lt;&lt; 32) | LOW</Formula>"
+                                      "</IntSwissKnife>",
+                                      "<MaskedIntReg Name=\"ArvGevTimestampTickFrequencyHigh\">"
+                                      "<Visibility>Invisible</Visibility>"
+                                      "<Address>0x93C</Address>"
+                                      "<Length>4</Length>"
+                                      "<AccessMode>RO</AccessMode>"
+                                      "<pPort>Device</pPort>"
+                                      "<LSB>31</LSB>"
+                                      "<MSB>0</MSB>"
+                                      "<Sign>Unsigned</Sign>"
+                                      "<Endianess>BigEndian</Endianess>"
+                                      "</MaskedIntReg>",
+                                      "<MaskedIntReg Name=\"ArvGevTimestampTickFrequencyLow\">"
+                                              "<Visibility>Invisible</Visibility>"
+                                              "<Address>0x940</Address>"
+                                              "<Length>4</Length>"
+                                              "<AccessMode>RO</AccessMode>"
+                                              "<pPort>Device</pPort>"
+                                              "<LSB>31</LSB>"
+                                              "<MSB>0</MSB>"
+                                              "<Sign>Unsigned</Sign>"
+                                              "<Endianess>BigEndian</Endianess>"
+                                              "</MaskedIntReg>", NULL);
+        arv_gc_set_default_node_data (genicam, "ArvGevSCPHostPort",
+                                      "<Integer Name=\"ArvGevSCPHostPort\">"
+                                      "  <Visibility>Expert</Visibility>"
+                                      "  <pIsLocked>TLParamsLocked</pIsLocked>"
+                                      "  <pValue>ArvGevSCPHostPortReg</pValue>"
+                                      "</Integer>",
+                                      "<MaskedIntReg Name=\"ArvGevSCPHostPortReg\">"
+                                      "  <Address>0xd00</Address>"
+                                      "  <pAddress>ArvGevSCPAddrCalc</pAddress>"
+                                      "  <Length>4</Length>"
+                                      "  <AccessMode>RW</AccessMode>"
+                                      "  <pPort>Device</pPort>"
+                                      "  <Cachable>NoCache</Cachable>"
+                                      "  <LSB>31</LSB>"
+                                      "  <MSB>16</MSB>"
+                                      "  <Sign>Unsigned</Sign>"
+                                      "  <Endianess>BigEndian</Endianess>"
+                                      "</MaskedIntReg>",
+                                      NULL);
+        arv_gc_set_default_node_data (genicam, "ArvGevSCPSFireTestPacket",
+                                      "<Command Name=\"ArvGevSCPSFireTestPacket\">"
+                                      "  <pIsLocked>TLParamsLocked</pIsLocked>"
+                                      "  <pValue>ArvGevSCPSFireTestPacketReg</pValue>"
+                                      "  <CommandValue>1</CommandValue>"
+                                      "</Command>",
+                                      "<MaskedIntReg Name=\"ArvGevSCPSFireTestPacketReg\">"
+                                      "  <Address>0x0d04</Address>"
+                                      "  <pAddress>ArvGevSCPAddrCalc</pAddress>"
+                                      "  <Length>4</Length>"
+                                      "  <AccessMode>RW</AccessMode>"
+                                      "  <pPort>Device</pPort>"
+                                      "  <Bit>0</Bit>"
+                                      "  <Endianess>BigEndian</Endianess>"
+                                      "</MaskedIntReg>",
+                                      NULL);
+        arv_gc_set_default_node_data (genicam, "ArvGevSCPSDoNotFragment",
+                                      "<Boolean Name=\"ArvGevSCPSDoNotFragment\">"
+                                      "  <pIsLocked>TLParamsLocked</pIsLocked>"
+                                      "  <pValue>ArvGevSCPSDoNotFragmentReg</pValue>"
+                                      "</Boolean>",
+                                      "<MaskedIntReg Name=\"ArvGevSCPSDoNotFragmentReg\">"
+                                      "  <Address>0x0d04</Address>"
+                                      "  <pAddress>ArvGevSCPAddrCalc</pAddress>"
+                                      "  <Length>4</Length>"
+                                      "  <AccessMode>RW</AccessMode>"
+                                      "  <pPort>Device</pPort>"
+                                      "  <Cachable>NoCache</Cachable>"
+                                      "  <Bit>1</Bit>"
+                                      "  <Endianess>BigEndian</Endianess>"
+                                      "</MaskedIntReg>",
+                                      NULL);
+        arv_gc_set_default_node_data (genicam, "ArvGevSCPSBigEndian",
+                                      "<Boolean Name=\"ArvGevSCPSBigEndian\">"
+                                      "  <pIsLocked>TLParamsLocked</pIsLocked>"
+                                      "  <pValue>ArvGevSCPSBigEndianReg</pValue>"
+                                      "</Boolean>",
+                                      "  <MaskedIntReg Name=\"ArvGevSCPSBigEndianReg\">"
+                                      "  <Address>0x0d04</Address>"
+                                      "  <pAddress>ArvGevSCPAddrCalc</pAddress>"
+                                      "  <Length>4</Length>"
+                                      "  <AccessMode>RW</AccessMode>"
+                                      "  <pPort>Device</pPort>"
+                                      "  <Cachable>NoCache</Cachable>"
+                                      "  <Bit>2</Bit>"
+                                      "</MaskedIntReg>",
+                                      NULL);
+        arv_gc_set_default_node_data (genicam, "ArvGevSCPSPacketSize",
+                                      "<Integer Name=\"ArvGevSCPSPacketSize\">"
+                                      "  <Visibility>Expert</Visibility>"
+                                      "  <pIsLocked>TLParamsLocked</pIsLocked>"
+                                      "  <pValue>ArvGevSCPSPacketSizeReg</pValue>"
+                                      "  <Inc>4</Inc>"
+                                      "</Integer>",
+                                      "<MaskedIntReg Name=\"ArvGevSCPSPacketSizeReg\">"
+                                      "  <Address>0xd04</Address>"
+                                      "  <pAddress>ArvGevSCPAddrCalc</pAddress>"
+                                      "  <Length>4</Length>"
+                                      "  <AccessMode>RW</AccessMode>"
+                                      "  <pPort>Device</pPort>"
+                                      "  <Cachable>NoCache</Cachable>"
+                                      "  <LSB>31</LSB>"
+                                      "  <MSB>16</MSB>"
+                                      "  <Sign>Unsigned</Sign>"
+                                      "  <Endianess>BigEndian</Endianess>"
+                                      "</MaskedIntReg>",
+                                      NULL);
+        arv_gc_set_default_node_data (genicam, "ArvGevSCPD",
+                                      "<Integer Name=\"ArvGevSCPD\">"
+                                      "  <Visibility>Expert</Visibility>"
+                                      "  <pIsLocked>TLParamsLocked</pIsLocked>"
+                                      "  <pValue>ArvGevSCPDReg</pValue>"
+                                      "</Integer>",
+                                      "<IntReg Name=\"ArvGevSCPDReg\">"
+                                      "  <Address>0xd08</Address>"
+                                      "  <pAddress>ArvGevSCPAddrCalc</pAddress>"
+                                      "  <Length>4</Length>"
+                                      "  <AccessMode>RW</AccessMode>"
+                                      "  <pPort>Device</pPort>"
+                                      "  <Cachable>NoCache</Cachable>"
+                                      "  <Sign>Unsigned</Sign>"
+                                      "  <Endianess>BigEndian</Endianess>"
+                                      "</IntReg>",
+                                      NULL);
+        arv_gc_set_default_node_data (genicam, "ArvGevSCDA",
+                                      "<Integer Name=\"ArvGevSCDA\">"
+                                      "  <Visibility>Expert</Visibility>"
+                                      "  <pIsLocked>TLParamsLocked</pIsLocked>"
+                                      "  <pValue>ArvGevSCDAReg</pValue>"
+                                      "</Integer>",
+                                      "<IntReg Name=\"ArvGevSCDAReg\">"
+                                      "  <Address>0xd18</Address>"
+                                      "  <pAddress>ArvGevSCPAddrCalc</pAddress>"
+                                      "  <Length>4</Length>"
+                                      "  <AccessMode>RW</AccessMode>"
+                                      "  <pPort>Device</pPort>"
+                                      "  <Cachable>NoCache</Cachable>"
+                                      "  <Sign>Unsigned</Sign>"
+                                      "  <Endianess>BigEndian</Endianess>"
+                                      "</IntReg>",
+                                      NULL);
+        arv_gc_set_default_node_data (genicam, "ArvGevSCSP",
+                                      "<Integer Name=\"ArvGevSCSP\">"
+                                      "  <Visibility>Expert</Visibility>"
+                                      "  <pIsLocked>TLParamsLocked</pIsLocked>"
+                                      "  <pValue>ArvGevSCSPReg</pValue>"
+                                      "</Integer>",
+                                      "<MaskedIntReg Name=\"ArvGevSCSPReg\">"
+                                      "  <Address>0xd1c</Address>"
+                                      "  <pAddress>ArvGevSCPAddrCalc</pAddress>"
+                                      "  <Length>4</Length>"
+                                      "  <AccessMode>RO</AccessMode>"
+                                      "  <pPort>Device</pPort>"
+                                      "  <Cachable>NoCache</Cachable>"
+                                      "  <LSB>31</LSB>"
+                                      "  <MSB>16</MSB>"
+                                      "  <Sign>Unsigned</Sign>"
+                                      "  <Endianess>BigEndian</Endianess>"
+                                      "</MaskedIntReg>",
+                                      NULL);
+        arv_gc_set_default_node_data (genicam, "ArvGevSCCFGMultipart",
+                                      "<Boolean Name=\"ArvGevSCCFGMultipart\">"
+                                      "  <pValue>ArvGevSCCFGMultipartReg</pValue>"
+                                      "  <pIsImplemented>ArvGevSCCAPMultipartReg</pIsImplemented>"
+                                      "  <pIsLocked>TLParamsLocked</pIsLocked>"
+                                      "</Boolean>",
+                                      "<MaskedIntReg Name=\"ArvGevSCCAPMultipartReg\">"
+                                      "  <Address>0xd20</Address>"
+                                      "  <pAddress>ArvGevSCPAddrCalc</pAddress>"
+                                      "  <Length>4</Length>"
+                                      "  <AccessMode>RW</AccessMode>"
+                                      "  <pPort>Device</pPort>"
+                                      "  <Cachable>NoCache</Cachable>"
+                                      "  <Bit>25</Bit>"
+                                      "  <Endianess>BigEndian</Endianess>"
+                                      "</MaskedIntReg>",
+                                      "<MaskedIntReg Name=\"ArvGevSCCFGMultipartReg\">"
+                                      "  <Address>0xd24</Address>"
+                                      "  <pAddress>ArvGevSCPAddrCalc</pAddress>"
+                                      "  <Length>4</Length>"
+                                      "  <AccessMode>RW</AccessMode>"
+                                      "  <pPort>Device</pPort>"
+                                      "  <Cachable>NoCache</Cachable>"
+                                      "  <Bit>25</Bit>"
+                                      "  <Endianess>BigEndian</Endianess>"
+                                      "</MaskedIntReg>",
+                NULL);
+        arv_gc_set_default_node_data (genicam, "TLParamsLocked",
+                                      "<Integer Name=\"TLParamsLocked\">"
+                                      "<Visibility>Invisible</Visibility>"
+                                      "<Value>0</Value>"
+                                      "<Min>0</Min>"
+                                      "<Max>1</Max>"
+                                      "</Integer>",
+                                      NULL);
+
+        /* GevSCPSPacketSize feature definition just for default boundaries */
+        arv_gc_set_default_node_data (genicam, "GevSCPSPacketSize",
+                                      "<Integer Name=\"GevSCPSPacketSize\">"
+                                      "  <Visibility>Expert</Visibility>"
+                                      "  <pIsLocked>TLParamsLocked</pIsLocked>"
+                                      "  <pValue>ArvGevSCPSPacketSizeReg</pValue>"
+                                      "  <Min>220</Min>"
+                                      "  <Max>16404</Max>"
+                                      "  <Inc>4</Inc>"
+                                      "</Integer>",
+                                      NULL);
+        arv_gc_set_default_node_data (genicam, "GevSCPD",
+                                      "<Integer Name=\"GevSCPD\">"
+                                      "  <Visibility>Expert</Visibility>"
+                                      "  <pIsLocked>TLParamsLocked</pIsLocked>"
+                                      "  <pValue>ArvGevSCPDReg</pValue>"
+                                      "  <Min>0</Min>"
+                                      "  <Max>1000</Max>"
+                                      "</Integer>",
+                                      NULL);
+}
+
 static void
 arv_gv_device_load_genicam (ArvGvDevice *gv_device, GError **error)
 {
@@ -1344,322 +1717,7 @@ arv_gv_device_load_genicam (ArvGvDevice *gv_device, GError **error)
 	if (genicam != NULL) {
 		priv->genicam = arv_gc_new (ARV_DEVICE (gv_device), genicam, size);
 
-		arv_gc_set_default_node_data (priv->genicam, "GevCurrentIPConfigurationLLA",
-					      "<Boolean Name=\"GevCurrentIPConfigurationLLA\">"
-					      "  <pIsLocked>TLParamsLocked</pIsLocked>"
-					      "  <pValue>ArvGevCurrentIPConfigurationLLA</pValue>"
-					      "</Boolean>",
-					      "<MaskedIntReg Name=\"ArvGevCurrentIPConfigurationLLA\">"
-					      "  <Address>0x14</Address>"
-					      "  <Length>4</Length>"
-					      "  <AccessMode>RW</AccessMode>"
-					      "  <pPort>Device</pPort>"
-					      "  <Cachable>NoCache</Cachable>"
-					      "  <Bit>29</Bit>"
-					      "</MaskedIntReg>",
-					      NULL);
-		arv_gc_set_default_node_data (priv->genicam, "GevCurrentIPConfigurationDHCP",
-					      "<Boolean Name=\"GevCurrentIPConfigurationDHCP\">"
-					      "  <pIsLocked>TLParamsLocked</pIsLocked>"
-					      "  <pValue>ArvGevCurrentIPConfigurationDHCP</pValue>"
-					      "</Boolean>",
-					      "<MaskedIntReg Name=\"ArvGevCurrentIPConfigurationDHCP\">"
-					      "  <Address>0x14</Address>"
-					      "  <Length>4</Length>"
-					      "  <AccessMode>RW</AccessMode>"
-					      "  <pPort>Device</pPort>"
-					      "  <Cachable>NoCache</Cachable>"
-					      "  <Bit>30</Bit>"
-					      "</MaskedIntReg>",
-					      NULL);
-		arv_gc_set_default_node_data (priv->genicam, "GevCurrentIPConfigurationPersistentIP",
-					      "<Boolean Name=\"GevCurrentIPConfigurationPersistentIP\">"
-					      "  <pIsLocked>TLParamsLocked</pIsLocked>"
-					      "  <pValue>ArvGevCurrentIPConfigurationPersistentIP</pValue>"
-					      "</Boolean>",
-					      "<MaskedIntReg Name=\"ArvGevCurrentIPConfigurationPersistentIP\">"
-					      "  <Address>0x14</Address>"
-					      "  <Length>4</Length>"
-					      "  <AccessMode>RW</AccessMode>"
-					      "  <pPort>Device</pPort>"
-					      "  <Cachable>NoCache</Cachable>"
-					      "  <Bit>31</Bit>"
-					      "</MaskedIntReg>",
-					      NULL);
-		arv_gc_set_default_node_data (priv->genicam, "DeviceVendorName",
-					      "<StringReg Name=\"DeviceVendorName\">"
-					      "<DisplayName>Vendor Name</DisplayName>"
-					      "<Address>0x48</Address>"
-					      "<Length>32</Length>"
-					      "<AccessMode>RO</AccessMode>"
-					      "<pPort>Device</pPort>"
-					      "</StringReg>", NULL);
-		arv_gc_set_default_node_data (priv->genicam, "DeviceModelName",
-					      "<StringReg Name=\"DeviceModelName\">"
-					      "<DisplayName>Model Name</DisplayName>"
-					      "<Address>0x68</Address>"
-					      "<Length>32</Length>"
-					      "<AccessMode>RO</AccessMode>"
-					      "<pPort>Device</pPort>"
-					      "</StringReg>", NULL);
-		arv_gc_set_default_node_data (priv->genicam, "DeviceVersion",
-					      "<StringReg Name=\"DeviceVersion\">"
-					      "<DisplayName>Device Version</DisplayName>"
-					      "<Address>0x88</Address>"
-					      "<Length>32</Length>"
-					      "<AccessMode>RO</AccessMode>"
-					      "<pPort>Device</pPort>"
-					      "</StringReg>", NULL);
-		arv_gc_set_default_node_data (priv->genicam, "DeviceManufacturerInfo",
-					      "<StringReg Name=\"DeviceManufacturerInfo\">"
-					      "<DisplayName>Manufacturer Info</DisplayName>"
-					      "<Address>0xa8</Address>"
-					      "<Length>48</Length>"
-					      "<AccessMode>RO</AccessMode>"
-					      "<pPort>Device</pPort>"
-					      "</StringReg>", NULL);
-		arv_gc_set_default_node_data (priv->genicam, "DeviceID",
-					      "<StringReg Name=\"DeviceID\">"
-					      "<DisplayName>Device ID</DisplayName>"
-					      "<Address>0xd8</Address>"
-					      "<Length>16</Length>"
-					      "<AccessMode>RO</AccessMode>"
-					      "<pPort>Device</pPort>"
-					      "</StringReg>", NULL);
-		arv_gc_set_default_node_data (priv->genicam, "GevPersistentIPAddress",
-					      "<IntReg Name=\"GevPersistentIPAddress\">"
-					      "<Address>0x64c</Address>"
-					      "<Length>4</Length>"
-					      "<AccessMode>RW</AccessMode>"
-					      "<Endianess>BigEndian</Endianess>"
-					      "<pPort>Device</pPort>"
-					      "</IntReg>", NULL);
-		arv_gc_set_default_node_data (priv->genicam, "GevPersistentSubnetMask",
-					      "<IntReg Name=\"GevPersistentSubnetMask\">"
-					      "<Address>0x65c</Address>"
-					      "<Length>4</Length>"
-					      "<AccessMode>RW</AccessMode>"
-					      "<Endianess>BigEndian</Endianess>"
-					      "<pPort>Device</pPort>"
-					      "</IntReg>", NULL);
-		arv_gc_set_default_node_data (priv->genicam, "GevPersistentDefaultGateway",
-					      "<IntReg Name=\"GevPersistentDefaultGateway\">"
-					      "<Address>0x66c</Address>"
-					      "<Length>4</Length>"
-					      "<AccessMode>RW</AccessMode>"
-					      "<Endianess>BigEndian</Endianess>"
-					      "<pPort>Device</pPort>"
-					      "</IntReg>", NULL);
-		arv_gc_set_default_node_data (priv->genicam, "GevStreamChannelCount",
-					      "<IntReg Name=\"GevStreamChannelCount\">"
-					      "<Address>0x904</Address>"
-					      "<Length>4</Length>"
-					      "<AccessMode>RO</AccessMode>"
-					      "<Endianess>BigEndian</Endianess>"
-					      "<pPort>Device</pPort>"
-					      "</IntReg>", NULL);
-		arv_gc_set_default_node_data (priv->genicam, "GevTimestampTickFrequency",
-					      "<Integer Name=\"GevTimestampTickFrequency\">"
-					      "<pValue>ArvGevTimestampTickFrequencyCalc</pValue>"
-					      "</Integer>",
-					      "<IntSwissKnife Name=\"ArvGevTimestampTickFrequencyCalc\">"
-					      "<pVariable Name=\"HIGH\">ArvGevTimestampTickFrequencyHigh</pVariable>"
-					      "<pVariable Name=\"LOW\">ArvGevTimestampTickFrequencyLow</pVariable>"
-					      "<Formula>(HIGH&lt;&lt; 32) | LOW</Formula>"
-					      "</IntSwissKnife>",
-					      "<MaskedIntReg Name=\"ArvGevTimestampTickFrequencyHigh\">"
-					      "<Visibility>Invisible</Visibility>"
-					      "<Address>0x93C</Address>"
-					      "<Length>4</Length>"
-					      "<AccessMode>RO</AccessMode>"
-					      "<pPort>Device</pPort>"
-					      "<LSB>31</LSB>"
-					      "<MSB>0</MSB>"
-					      "<Sign>Unsigned</Sign>"
-					      "<Endianess>BigEndian</Endianess>"
-					      "</MaskedIntReg>",
-					      "<MaskedIntReg Name=\"ArvGevTimestampTickFrequencyLow\">"
-					      "<Visibility>Invisible</Visibility>"
-					      "<Address>0x940</Address>"
-					      "<Length>4</Length>"
-					      "<AccessMode>RO</AccessMode>"
-					      "<pPort>Device</pPort>"
-					      "<LSB>31</LSB>"
-					      "<MSB>0</MSB>"
-					      "<Sign>Unsigned</Sign>"
-					      "<Endianess>BigEndian</Endianess>"
-					      "</MaskedIntReg>", NULL);
-		arv_gc_set_default_node_data (priv->genicam, "GevSCPHostPort",
-					      "<Integer Name=\"GevSCPHostPort\">"
-					      "  <Visibility>Expert</Visibility>"
-					      "  <pIsLocked>TLParamsLocked</pIsLocked>"
-					      "  <pValue>ArvGevSCPHostPortReg</pValue>"
-					      "</Integer>",
-					      "<MaskedIntReg Name=\"ArvGevSCPHostPortReg\">"
-					      "  <Address>0xd00</Address>"
-					      "  <pAddress>GevSCPAddrCalc</pAddress>"
-					      "  <Length>4</Length>"
-					      "  <AccessMode>RW</AccessMode>"
-					      "  <pPort>Device</pPort>"
-					      "  <Cachable>NoCache</Cachable>"
-					      "  <LSB>31</LSB>"
-					      "  <MSB>16</MSB>"
-					      "  <Sign>Unsigned</Sign>"
-					      "  <Endianess>BigEndian</Endianess>"
-					      "</MaskedIntReg>",
-					      NULL);
-#if 0
-		arv_gc_set_default_node_data (priv->genicam, "GevSCPSFireTestPacket",
-					      "<Command Name=\"GevSCPSFireTestPacket\">"
-					      "<pIsLocked>TLParamsLocked</pIsLocked>"
-					      "<pValue>GevSCPSFireTestPacketReg</pValue>"
-					      "<CommandValue>1</CommandValue>"
-					      "</Boolean>");
-		arv_gc_set_default_node_data (priv->genicam, "GevSCPSFireTestPacketReg",
-					      "<MaskedIntReg Name=\"GevSCPSFireTestPacketReg\">"
-					      "<Address>0x0d04</Address>"
-					      "<pAddress>GevSCPAddrCalc</pAddress>"
-					      "<Length>4</Length>"
-					      "<AccessMode>RW</AccessMode>"
-					      "<Bit>0</Bit>"
-					      "</MaskedIntReg>");
-#endif
-		arv_gc_set_default_node_data (priv->genicam, "GevSCPSDoNotFragment",
-					      "<Boolean Name=\"GevSCPSDoNotFragment\">"
-					      "  <pIsLocked>TLParamsLocked</pIsLocked>"
-					      "  <pValue>ArvGevSCPSDoNotFragmentReg</pValue>"
-					      "</Boolean>",
-					      "<MaskedIntReg Name=\"ArvGevSCPSDoNotFragmentReg\">"
-					      "  <Address>0x0d04</Address>"
-					      "  <pAddress>GevSCPAddrCalc</pAddress>"
-					      "  <Length>4</Length>"
-					      "  <AccessMode>RW</AccessMode>"
-					      "  <pPort>Device</pPort>"
-					      "  <Cachable>NoCache</Cachable>"
-					      "  <Bit>1</Bit>"
-					      "</MaskedIntReg>",
-					      NULL);
-		arv_gc_set_default_node_data (priv->genicam, "GevSCPSBigEndian",
-					      "<Boolean Name=\"GevSCPSBigEndian\">"
-					      "  <pIsLocked>TLParamsLocked</pIsLocked>"
-					      "  <pValue>ArvGevSCPSBigEndianReg</pValue>"
-					      "</Boolean>",
-					      "  <MaskedIntReg Name=\"ArvGevSCPSBigEndianReg\">"
-					      "  <Address>0x0d04</Address>"
-					      "  <pAddress>GevSCPAddrCalc</pAddress>"
-					      "  <Length>4</Length>"
-					      "  <AccessMode>RW</AccessMode>"
-					      "  <pPort>Device</pPort>"
-					      "  <Cachable>NoCache</Cachable>"
-					      "  <Bit>2</Bit>"
-					      "</MaskedIntReg>",
-					      NULL);
-		arv_gc_set_default_node_data (priv->genicam, "GevSCPSPacketSize",
-					      "<Integer Name=\"GevSCPSPacketSize\">"
-					      "  <Visibility>Expert</Visibility>"
-					      "  <pIsLocked>TLParamsLocked</pIsLocked>"
-					      "  <pValue>ArvGevSCPSPacketSizeReg</pValue>"
-					      "</Integer>",
-					      "<MaskedIntReg Name=\"ArvGevSCPSPacketSizeReg\">"
-					      "  <Address>0xd04</Address>"
-					      "  <pAddress>GevSCPAddrCalc</pAddress>"
-					      "  <Length>4</Length>"
-					      "  <AccessMode>RW</AccessMode>"
-					      "  <pPort>Device</pPort>"
-					      "  <Cachable>NoCache</Cachable>"
-					      "  <LSB>31</LSB>"
-					      "  <MSB>16</MSB>"
-					      "  <Sign>Unsigned</Sign>"
-					      "  <Endianess>BigEndian</Endianess>"
-					      "</MaskedIntReg>",
-					      NULL);
-		arv_gc_set_default_node_data (priv->genicam, "GevSCDA",
-					      "<Integer Name=\"GevSCDA\">"
-					      "  <Visibility>Expert</Visibility>"
-					      "  <pIsLocked>TLParamsLocked</pIsLocked>"
-					      "  <pValue>ArvGevSCDAReg</pValue>"
-					      "</Integer>",
-					      "<IntReg Name=\"ArvGevSCDAReg\">"
-					      "  <Address>0xd18</Address>"
-					      "  <pAddress>GevSCPAddrCalc</pAddress>"
-					      "  <Length>4</Length>"
-					      "  <AccessMode>RW</AccessMode>"
-					      "  <pPort>Device</pPort>"
-					      "  <Cachable>NoCache</Cachable>"
-					      "  <Sign>Unsigned</Sign>"
-					      "  <Endianess>BigEndian</Endianess>"
-					      "</IntReg>",
-					      NULL);
-		arv_gc_set_default_node_data (priv->genicam, "GevSCSP",
-					      "<Integer Name=\"GevSCSP\">"
-					      "  <Visibility>Expert</Visibility>"
-					      "  <pIsLocked>TLParamsLocked</pIsLocked>"
-					      "  <pValue>ArvGevSCSPReg</pValue>"
-					      "</Integer>",
-					      "<MaskedIntReg Name=\"ArvGevSCSPReg\">"
-					      "  <Address>0xd1c</Address>"
-					      "  <pAddress>GevSCPAddrCalc</pAddress>"
-					      "  <Length>4</Length>"
-					      "  <AccessMode>RO</AccessMode>"
-					      "  <pPort>Device</pPort>"
-					      "  <Cachable>NoCache</Cachable>"
-					      "  <LSB>31</LSB>"
-					      "  <MSB>16</MSB>"
-					      "  <Sign>Unsigned</Sign>"
-					      "  <Endianess>BigEndian</Endianess>"
-					      "</MaskedIntReg>",
-					      NULL);
-		arv_gc_set_default_node_data (priv->genicam, "GevSCCFGMultipart",
-                                              "<Boolean Name=\"GevSCCFGMultipart\">"
-                                              "  <pValue>ArvGevSCCFGMultipartReg</pValue>"
-                                              "  <pIsImplemented>ArvGevSCCAPMultipartReg</pIsImplemented>"
-					      "  <pIsLocked>TLParamsLocked</pIsLocked>"
-                                              "</Boolean>",
-					      "<MaskedIntReg Name=\"ArvGevSCCAPMultipartReg\">"
-					      "  <Address>0xd20</Address>"
-					      "  <pAddress>GevSCPAddrCalc</pAddress>"
-					      "  <Length>4</Length>"
-					      "  <AccessMode>RW</AccessMode>"
-					      "  <pPort>Device</pPort>"
-					      "  <Cachable>NoCache</Cachable>"
-					      "  <Bit>25</Bit>"
-					      "  <Endianess>BigEndian</Endianess>"
-					      "</MaskedIntReg>",
-					      "<MaskedIntReg Name=\"ArvGevSCCFGMultipartReg\">"
-					      "  <Address>0xd24</Address>"
-					      "  <pAddress>GevSCPAddrCalc</pAddress>"
-					      "  <Length>4</Length>"
-					      "  <AccessMode>RW</AccessMode>"
-					      "  <pPort>Device</pPort>"
-					      "  <Cachable>NoCache</Cachable>"
-					      "  <Bit>25</Bit>"
-					      "  <Endianess>BigEndian</Endianess>"
-					      "</MaskedIntReg>",
-					      NULL);
-		arv_gc_set_default_node_data (priv->genicam, "GevSCPAddrCalc",
-					      "<IntSwissKnife Name= \"GevSCPAddrCalc\">"
-					      "  <pVariable Name=\"SEL\">ArvGevStreamChannelSelector</pVariable>"
-					      "  <Formula>SEL * 0x40</Formula>"
-					      "</IntSwissKnife>",
-					      "<Integer Name=\"ArvGevStreamChannelSelector\">"
-					      "  <Value>0</Value>"
-					      "  <Min>0</Min>"
-					      "  <pMax>ArvGevStreamChannelSelectorMax</pMax>"
-					      "  <Inc>1</Inc>"
-					      "</Integer>",
-					      "<IntSwissKnife Name=\"ArvGevStreamChannelSelectorMax\">"
-					      "  <pVariable Name=\"N_STREAM_CHANNELS\">NumberOfStreamChannels</pVariable>"
-					      "  <Formula>N_STREAM_CHANNELS - 1</Formula>"
-					      "</IntSwissKnife>",
-					      NULL);
-		arv_gc_set_default_node_data (priv->genicam, "TLParamsLocked",
-					      "<Integer Name=\"TLParamsLocked\">"
-					      "<Visibility>Invisible</Visibility>"
-					      "<Value>0</Value>"
-					      "<Min>0</Min>"
-					      "<Max>1</Max>"
-					      "</Integer>",
-					      NULL);
+                arv_gc_set_default_gv_features(priv->genicam);
 	}
 }
 
@@ -1674,7 +1732,7 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 	guint32 n_stream_channels;
 	GError *local_error = NULL;
 
-	n_stream_channels = arv_device_get_integer_feature_value (device, "GevStreamChannelCount", NULL);
+	n_stream_channels = arv_device_get_integer_feature_value (device, "ArvGevStreamChannelCount", NULL);
 	arv_info_device ("[GvDevice::create_stream] Number of stream channels = %d", n_stream_channels);
 
 	if (n_stream_channels < 1) {
