@@ -1694,8 +1694,18 @@ static void
 arv_gv_stream_finalize (GObject *object)
 {
 	ArvGvStreamPrivate *priv = arv_gv_stream_get_instance_private (ARV_GV_STREAM (object));
+        GError *error = NULL;
 
 	arv_gv_stream_stop_thread (ARV_STREAM (object));
+
+        /* Stop the stream channel. We use a raw register write here, as the Genicam based access rely on
+         * ArvGevStreamSelector state, and we don't want to change it here. */
+        arv_device_write_register(ARV_DEVICE(priv->gv_device), 0xd00 + 0x40 * priv->stream_channel, 0x0000, &error);
+
+        if (error != NULL) {
+                arv_warning_stream ("Failed to stop stream channel %d (%s)", priv->stream_channel, error->message);
+                g_clear_error(&error);
+        }
 
 	if (priv->thread_data != NULL) {
 		ArvGvStreamThreadData *thread_data;
