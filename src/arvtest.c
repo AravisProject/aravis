@@ -779,6 +779,7 @@ arv_test_software_trigger (ArvTest *test, const char *test_name, ArvTestCamera *
         gboolean software_trigger_support;
         guint n_completed_buffers = 0;
         guint n_expected_buffers = 5;
+        double delay_s;
 
         g_return_if_fail (ARV_IS_TEST (test));
 
@@ -793,6 +794,8 @@ arv_test_software_trigger (ArvTest *test, const char *test_name, ArvTestCamera *
 			g_clear_error (&error);
                         return;
         }
+
+        delay_s = arv_test_camera_get_key_file_double (test_camera, test, "SoftwareTriggerWait", 0);
 
         arv_camera_set_acquisition_mode (test_camera->camera, ARV_ACQUISITION_MODE_CONTINUOUS, &error);
         if (error == NULL)
@@ -819,6 +822,8 @@ arv_test_software_trigger (ArvTest *test, const char *test_name, ArvTestCamera *
                 ArvBuffer *buffer;
 
                 if (error == NULL) {
+                        if (i > 0)
+                                g_usleep (1000000.0 * delay_s);
                         arv_camera_software_trigger (test_camera->camera, &error);
                 }
 
