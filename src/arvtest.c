@@ -501,6 +501,8 @@ _single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_c
 
         g_return_if_fail (ARV_IS_TEST (test));
 
+        g_assert (!(multipart_test & chunk_test));
+
         if (multipart_test) {
                 char  *multiparts = arv_test_camera_get_key_file_string (test_camera, test, "Multipart", NULL);
                 char **parts;
@@ -546,6 +548,8 @@ _single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_c
                 char *chunks;
                 gboolean chunks_support = arv_test_camera_get_key_file_boolean (test_camera, test,
                                                                                 "ChunksSupport", TRUE);
+                n_parts = arv_test_camera_get_key_file_int64 (test_camera, test,
+                                                              "ChunksNParts", 1);
 
                 if (!arv_camera_are_chunks_available (test_camera->camera, &error)) {
                         arv_test_camera_add_result (test_camera, test_name, "NoSupport",
