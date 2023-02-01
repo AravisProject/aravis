@@ -272,7 +272,8 @@ _compute_n_expected_packets (const ArvGvspPacket *packet, size_t allocated_size,
                 case ARV_GVSP_CONTENT_TYPE_LEADER:
                         payload_type = arv_gvsp_leader_packet_get_buffer_payload_type(packet, NULL);
                         if (payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
-                            payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA) {
+                            payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA ||
+                            payload_type == ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA) {
                                 block_size = packet_size - ARV_GVSP_PAYLOAD_PACKET_PROTOCOL_OVERHEAD (extended_ids);
                                 return (allocated_size + block_size - 1) / block_size + (2 /* leader + trailer */);
                         } else if (payload_type == ARV_BUFFER_PAYLOAD_TYPE_MULTIPART) {
@@ -464,6 +465,15 @@ _process_data_leader (ArvGvStreamThreadData *thread_data,
                                                         &frame->buffer->priv->parts[0].x_padding,
                                                         &frame->buffer->priv->parts[0].y_padding);
 
+		if (G_LIKELY (thread_data->timestamp_tick_frequency != 0))
+			frame->buffer->priv->timestamp_ns =
+                                arv_gvsp_timestamp_to_ns (timestamp, thread_data->timestamp_tick_frequency);
+		else
+			frame->buffer->priv->timestamp_ns = frame->buffer->priv->system_timestamp_ns;
+        } else if (frame->buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA) {
+                guint64 timestamp;
+                arv_buffer_set_n_parts (frame->buffer, 0);
+                timestamp = arv_gvsp_leader_packet_get_timestamp(packet);
 		if (G_LIKELY (thread_data->timestamp_tick_frequency != 0))
 			frame->buffer->priv->timestamp_ns =
                                 arv_gvsp_timestamp_to_ns (timestamp, thread_data->timestamp_tick_frequency);
