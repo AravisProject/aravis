@@ -3612,8 +3612,7 @@ arv_camera_set_chunks (ArvCamera *camera, const char *chunk_list, GError **error
 	const char **available_chunks;
 	char **chunks;
 	char *striped_chunk_list;
-	gboolean enable_chunk_data = FALSE;
-	guint i;
+	guint i, j;
 	guint n_values;
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
@@ -3623,26 +3622,54 @@ arv_camera_set_chunks (ArvCamera *camera, const char *chunk_list, GError **error
 		return;
 	}
 
-	available_chunks = arv_camera_dup_available_enumerations_as_strings (camera, "ChunkSelector", &n_values, &local_error);
-	for (i = 0; i < n_values && local_error == NULL; i++) {
-		arv_camera_set_chunk_state (camera, available_chunks[i], FALSE, &local_error);
-	}
-	g_free (available_chunks);
-
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return;
-	}
-
 	striped_chunk_list = g_strdup (chunk_list);
 	arv_str_strip (striped_chunk_list, " ,:;", ',');
 	chunks = g_strsplit_set (striped_chunk_list, " ,:;", -1);
 	g_free (striped_chunk_list);
 
-	for (i = 0; chunks[i] != NULL && local_error == NULL; i++) {
-		arv_camera_set_chunk_state (camera, chunks[i], TRUE, &local_error);
-		enable_chunk_data = TRUE;
-	}
+        if (chunks == NULL || chunks[0] == NULL) {
+                g_strfreev (chunks);
+		arv_camera_set_chunk_mode (camera, FALSE, error);
+		return;
+        }
+
+	arv_camera_set_chunk_mode (camera, TRUE, &local_error);
+
+        if (local_error == NULL) {
+                available_chunks = arv_camera_dup_available_enumerations_as_strings (camera,
+                                                                                     "ChunkSelector",
+                                                                                     &n_values, &local_error);
+                for (j = 0; chunks[j] != NULL && local_error == NULL; j++) {
+                        gboolean found = FALSE;
+                        for (i = 0; i < n_values && local_error == NULL; i++) {
+                                if (g_strcmp0 (available_chunks[i], chunks[j]) == 0) {
+                                        found = TRUE;
+                                        break;
+                                }
+                        }
+                        if (!found) {
+                                g_set_error (&local_error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_FEATURE_NOT_FOUND,
+                                             "%s not found in available chunks", chunks[j]);
+                        }
+                }
+
+                for (i = 0; i < n_values && local_error == NULL; i++) {
+                        gboolean found = FALSE;
+                        for (j = 0; chunks[j] != NULL && local_error == NULL; j++) {
+                                if (g_strcmp0 (available_chunks[i], chunks[j]) == 0) {
+                                        found = TRUE;
+                                        break;
+                                }
+                        }
+                        /* This is normally not needed, but is there as a workaround for an issue with a Basler
+                         * acA1300-30gc which seems to reset ChunkActiveMode on every ChunkEnable=false */
+                        arv_camera_set_chunk_mode (camera, TRUE, &local_error);
+                        if (local_error == NULL)
+                                arv_camera_set_chunk_state (camera, available_chunks[i], found, &local_error);
+                }
+
+                g_free (available_chunks);
+        }
 
 	g_strfreev (chunks);
 
@@ -3650,8 +3677,6 @@ arv_camera_set_chunks (ArvCamera *camera, const char *chunk_list, GError **error
 		g_propagate_error (error, local_error);
 		return;
 	}
-
-	arv_camera_set_chunk_mode (camera, enable_chunk_data, error);
 }
 
 /**
