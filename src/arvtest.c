@@ -682,7 +682,7 @@ _multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test
                 for (i = 0 ; i < n_expected_buffers; i++) {
                         ArvBuffer *buffer;
 
-                        buffer = arv_stream_timeout_pop_buffer (stream, 500000);
+                        buffer = arv_stream_timeout_pop_buffer (stream, i == 0 ? 5000000 : 500000);
                         if (buffer == NULL)
                                 success = FALSE;
                         else {
