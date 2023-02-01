@@ -708,13 +708,9 @@ _multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test
 
         g_clear_object (&stream);
 
-        if (success) {
-                message = g_strdup_printf ("%u/%u", n_completed_buffers, n_expected_buffers);
-        } else {
-                message = g_strdup_printf ("%u/%u%s%s", n_completed_buffers, n_expected_buffers,
-                                           error != NULL ? " " : "",
-                                           error != NULL ? error->message : "");
-        }
+        message = g_strdup_printf ("%u/%u%s%s", n_completed_buffers, n_expected_buffers,
+                                   error != NULL ? " " : "",
+                                   error != NULL ? error->message : "");
 
         arv_test_camera_add_result (test_camera, test_name, "BufferCheck",
                                     success && error == NULL ? ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
