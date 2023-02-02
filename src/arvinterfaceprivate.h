@@ -45,6 +45,9 @@ typedef struct {
 	char *serial_nbr;
 } ArvInterfaceDeviceIds;
 
+void            arv_interface_set_flags         (ArvInterface *iface, int flags);
+int             arv_interface_get_flags         (ArvInterface *iface);
+
 G_END_DECLS
 
 #endif

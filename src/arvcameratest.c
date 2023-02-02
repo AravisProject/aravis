@@ -39,6 +39,7 @@ static char *arv_option_access_check = NULL;
 static int arv_option_duration_s = -1;
 static char *arv_option_uv_usb_mode = NULL;
 static gboolean arv_option_show_version = FALSE;
+static gboolean arv_option_gv_allow_broadcast_discovery_ack = FALSE;
 
 /* clang-format off */
 static const GOptionEntry arv_option_entries[] =
@@ -203,6 +204,12 @@ static const GOptionEntry arv_option_entries[] =
 		"duration",	        		'\0', 0, G_OPTION_ARG_INT,
 		&arv_option_duration_s,		        "Test duration (s)",
 		"<s>"
+	},
+	{
+		"gv-allow-broadcast-discovery-ack",     '\0', 0, G_OPTION_ARG_NONE,
+		&arv_option_gv_allow_broadcast_discovery_ack,
+                "Allow broadcast discovery ack",
+		NULL
 	},
 	{
 		"debug", 				'd', 0, G_OPTION_ARG_STRING,
@@ -464,6 +471,9 @@ main (int argc, char **argv)
 			arv_debug_print_infos ();
 		return EXIT_FAILURE;
 	}
+
+        if (arv_option_gv_allow_broadcast_discovery_ack)
+                arv_set_interface_flags ("GigEVision", ARV_GV_INTERFACE_FLAGS_ALLOW_BROADCAST_DISCOVERY_ACK);
 
 	arv_enable_interface ("Fake");
 

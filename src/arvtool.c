@@ -33,6 +33,7 @@ static char *arv_option_debug_domains = NULL;
 static char *arv_option_register_cache = NULL;
 static char *arv_option_range_check = NULL;
 static char *arv_option_access_check = NULL;
+static gboolean arv_option_gv_allow_broadcast_discovery_ack = FALSE;
 static gboolean arv_option_show_time = FALSE;
 static gboolean arv_option_show_version = FALSE;
 
@@ -62,6 +63,13 @@ static const GOptionEntry arv_option_entries[] =
 		"access-check",			'\0', 0, G_OPTION_ARG_STRING,
 		&arv_option_access_check,	"Feature access check policy",
 		"{disable|enable}"
+	},
+	{
+		"gv-allow-broadcast-discovery-ack",
+                '\0', 0, G_OPTION_ARG_NONE,
+		&arv_option_gv_allow_broadcast_discovery_ack,
+                "Allow broadcast discovery ack",
+		NULL
 	},
 	{
 		"time",				't', 0, G_OPTION_ARG_NONE,
@@ -747,6 +755,9 @@ main (int argc, char **argv)
                     arv_option_device_selection[i] == '?' ||
                     arv_option_device_selection[i] == '|')
                         is_glob_pattern = TRUE;
+
+        if (arv_option_gv_allow_broadcast_discovery_ack)
+                arv_set_interface_flags ("GigEVision", ARV_GV_INTERFACE_FLAGS_ALLOW_BROADCAST_DISCOVERY_ACK);
 
 	device_id = arv_option_device_address != NULL ?
                 arv_option_device_address :

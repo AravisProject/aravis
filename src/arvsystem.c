@@ -151,6 +151,25 @@ arv_disable_interface (const char *interface_id)
 	g_warning ("[Arv::enable_interface] Unknown interface '%s'", interface_id);
 }
 
+void
+arv_set_interface_flags(const char *interface_id, int flags)
+{
+	guint i;
+
+	g_return_if_fail (interface_id != NULL);
+
+	for (i = 0; i < G_N_ELEMENTS (interfaces); i++)
+		if (strcmp (interface_id, interfaces[i].interface_id) == 0) {
+                        ArvInterface *iface;
+
+			iface = interfaces[i].get_interface_instance ();
+			arv_interface_set_flags (iface, flags);
+			return;
+		}
+
+	g_warning ("[Arv::enable_interface] Unknown interface '%s'", interface_id);
+}
+
 /**
  * arv_update_device_list:
  *
