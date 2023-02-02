@@ -151,6 +151,16 @@ arv_disable_interface (const char *interface_id)
 	g_warning ("[Arv::enable_interface] Unknown interface '%s'", interface_id);
 }
 
+/**
+ * arv_set_interface_flags:
+ * @interface_id: name of the interface
+ * @flags: interface flags
+ *
+ * Set the device specific flags.
+ *
+ * Since: 0.8.23
+ */
+
 void
 arv_set_interface_flags(const char *interface_id, int flags)
 {
