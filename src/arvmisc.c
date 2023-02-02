@@ -762,7 +762,50 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 		"video/x-raw",		"YUY2",
 		"video/x-raw-yuv, format=(fourcc)YUYU2",
 		"video/x-raw-yuv",	0,	0,	ARV_MAKE_FOURCC ('Y','U','Y','2')
-	}
+	},
+
+	{
+		ARV_PIXEL_FORMAT_COORD3D_A_8,
+		"video/x-raw, format=(string)GRAY8",
+		"video/x-raw", 		"GRAY8",
+		"video/x-raw-gray, bpp=(int)8, depth=(int)8",
+		"video/x-raw-gray",	8,	8,	0
+	},
+	{
+		ARV_PIXEL_FORMAT_COORD3D_B_8,
+		"video/x-raw, format=(string)GRAY8",
+		"video/x-raw", 		"GRAY8",
+		"video/x-raw-gray, bpp=(int)8, depth=(int)8",
+		"video/x-raw-gray",	8,	8,	0
+	},
+	{
+		ARV_PIXEL_FORMAT_COORD3D_C_8,
+		"video/x-raw, format=(string)GRAY8",
+		"video/x-raw", 		"GRAY8",
+		"video/x-raw-gray, bpp=(int)8, depth=(int)8",
+		"video/x-raw-gray",	8,	8,	0
+	},
+	{
+		ARV_PIXEL_FORMAT_COORD3D_A_16,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",		"GRAY16_LE",
+		"video/x-raw-gray, bpp=(int)16, depth=(int)16",
+		"video/x-raw-gray",	16,	16,	0
+	},
+	{
+		ARV_PIXEL_FORMAT_COORD3D_B_16,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",		"GRAY16_LE",
+		"video/x-raw-gray, bpp=(int)16, depth=(int)16",
+		"video/x-raw-gray",	16,	16,	0
+	},
+	{
+		ARV_PIXEL_FORMAT_COORD3D_C_16,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",		"GRAY16_LE",
+		"video/x-raw-gray, bpp=(int)16, depth=(int)16",
+		"video/x-raw-gray",	16,	16,	0
+	},
 };
 
 /**
