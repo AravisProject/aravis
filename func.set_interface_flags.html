@@ -7,7 +7,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Aravis.open_device</title>
+  <title>Aravis.set_interface_flags</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <meta charset="utf-8" />
@@ -23,10 +23,10 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
 
   
-  <meta property="og:title" content="Aravis.open_device"/>
-  <meta property="og:description" content="Reference for Aravis.open_device"/>
-  <meta name="twitter:title" content="Aravis.open_device"/>
-  <meta name="twitter:description" content="Reference for Aravis.open_device"/>
+  <meta property="og:title" content="Aravis.set_interface_flags"/>
+  <meta property="og:description" content="Reference for Aravis.set_interface_flags"/>
+  <meta name="twitter:title" content="Aravis.set_interface_flags"/>
+  <meta name="twitter:description" content="Reference for Aravis.set_interface_flags"/>
 
 
   
@@ -97,27 +97,27 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <section id="main" class="content">
   <header>
     <h3>Function </h3>
-    <h1><a href="index.html">Aravis</a><span class="sep"></span>open_device</h1>
+    <h1><a href="index.html">Aravis</a><span class="sep"></span>set_interface_flags</h1>
   </header>
 
   <section>
     <div class="docblock">
-      <p><span class="emblem available">since: 0.8.0</span></p>
+      <p></p>
     </div>
     <div class="declaration toggle-wrapper">
       <h4 id="declaration" style="display:flex;">
         Declaration
         <a href="#declaration" class="anchor"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvsystem.h#L52">[src]</a>
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvsystem.h#L39">[src]</a>
         
       </h4>
 
       <div class="docblock">
-        <pre><code><div class="highlight"><pre><span></span><span class="n">ArvDevice</span><span class="o">*</span><span class="w"></span>
-<span class="n">arv_open_device</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
-<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">device_id</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="n">GError</span><span class="o">**</span><span class="w"> </span><span class="n">error</span><span class="w"></span>
+        <pre><code><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"></span>
+<span class="n">arv_set_interface_flags</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">interface_id</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">flags</span><span class="w"></span>
 <span class="p">)</span><span class="w"></span>
 </pre></div>
 </code></pre>
@@ -129,18 +129,15 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Description
         <a href="#description" class="anchor"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvsystem.c#L417">[src]</a>
-        
       </h4>
 
       <div class="docblock">
-        <p>Open a device corresponding to the given identifier. A <code>NULL</code> string makes
-this function return the first available&nbsp;device.</p>
+        No description available.
       </div>
 
       <div class="docblock">
         
-        <p>Available since: 0.8.0</p>
+        
         
         
         
@@ -160,13 +157,13 @@ this function return the first available&nbsp;device.</p>
       <div class="docblock">
         <dl class="arguments">
           
-          <dt class="arg-name"><code>device_id</code></dt>
+          <dt class="arg-name"><code>interface_id</code></dt>
           <dd class="arg-description">
             <p><em>Type:</em>&nbsp;<code>const char*</code></p>
-            <p><p>A device identifier&nbsp;string.</p></p>
+            <p>No description available.</p>
             <table>
             
-            <tr><td>The argument can be <code>NULL</code>.</td></tr>
+            
             
             
             
@@ -177,51 +174,30 @@ this function return the first available&nbsp;device.</p>
             </table>
           </dd>
           
-
-          
-          <dt class="arg-name"><code>error</code></dt>
+          <dt class="arg-name"><code>flags</code></dt>
           <dd class="arg-description">
-            <p><em>Type:</em>&nbsp;<a href="javascript:void(0)" data-namespace="GLib" data-link="struct.Error.html" class="external"><code>GError **</code></a></p>
-            <p>The return location for <a href="https://docs.gtk.org/glib/error-reporting.html#rules-for-use-of-gerror">a recoverable error</a>.</p>
+            <p><em>Type:</em>&nbsp;<code>int</code></p>
+            <p>No description available.</p>
             <table>
-              <tr><td>The argument can be <code>NULL</code>.</td></tr>
-              <tr><td>If the return location is not <code>NULL</code>, then you must initialize it to a <code>NULL</code> <code>GError*</code>.</td></tr>
-              <tr><td>The argument will left initialized to <code>NULL</code> by the function if there are no errors.</td></tr>
-              <tr><td>In case of error, the argument will be set to a newly allocated <code>GError</code>; the caller will take ownership of the data, and be responsible for freeing it.</td></tr>
+            
+            
+            
+            
+            
+            
+            
+            
+            
             </table>
           </dd>
+          
+
           
         </dl>
       </div>
     </div>
     
 
-    
-    <div class="return-value toggle-wrapper">
-      <h4 id="return-value">
-        Return value
-        <a href="#return-value" class="anchor"></a>
-      </h4>
-
-      <div class="docblock">
-        <div class="returns">
-          <div class="arg-description">
-            <p><em>Type:</em>&nbsp;<a href="class.Device.html"><code>ArvDevice</code></a></p>
-            <p><p>A new <code>ArvDevice</code> instance.</p></td>
-          </div>
-          <div>
-            <table>
-            
-            
-            
-            <tr><td title="transfer: full">The caller of the function takes ownership of the data, and is responsible for freeing it.</td></tr>
-            
-            
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
     
   </section>
 </section>
