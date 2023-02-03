@@ -822,53 +822,73 @@ arv_gv_device_set_packet_size_adjustment (ArvGvDevice *gv_device, ArvGvPacketSiz
 /**
  * arv_gv_device_get_current_ip:
  * @gv_device: a #ArvGvDevice
- * @ip: (out): a IP address placeholder
+ * @ip: (out) (optional): a IP address placeholder
  * @mask: (out) (optional): a netmask placeholder
  * @gateway: (out) (optional): a gateway IP address placeholder
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Get the current IP address setting of device.
  *
+ * Returns: %TRUE on success
+ *
  * Since: 0.8.22
  */
 
-void
+gboolean
 arv_gv_device_get_current_ip (ArvGvDevice *gv_device,
                               GInetAddress **ip, GInetAddressMask **mask, GInetAddress **gateway,
                               GError **error)
 {
+        GError *local_error = NULL;
 	guint32 be_ip_int;
 	guint32 be_mask_int;
 	guint32 be_gateway_int;
 	guint32 value;
 	GInetAddress *netmask;
 
-	g_return_if_fail (ARV_IS_GV_DEVICE (gv_device));
-	g_return_if_fail (ip != NULL);
+	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), FALSE);
 
-	value = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device),
-                                                      "GevCurrentIPAddress", NULL);
-	be_ip_int = g_htonl(value);
+        if (ip != NULL) {
+                *ip = NULL;
+                value = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device),
+                                                              "ArvGevCurrentIPAddress", &local_error);
 
-	*ip = g_inet_address_new_from_bytes ((guint8 *) &be_ip_int, G_SOCKET_FAMILY_IPV4);
+                be_ip_int = g_htonl(value);
+        }
 
-	if (mask != NULL) {
+	if (mask != NULL && local_error == NULL) {
+                *mask = NULL;
 		value = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device),
-                                                              "GevCurrentSubnetMask", NULL);
+                                                              "ArvGevCurrentSubnetMask", &local_error);
 		be_mask_int = g_htonl(value);
+        }
 
+	if (gateway != NULL && local_error == NULL) {
+                *gateway = NULL;
+		value = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device),
+                                                              "ArvGevCurrentDefaultGateway", &local_error);
+		be_gateway_int = g_htonl(value);
+        }
+
+
+        if (local_error != NULL) {
+                g_propagate_error(error, local_error);
+                return FALSE;
+        }
+
+        if (ip != NULL)
+                        *ip = g_inet_address_new_from_bytes ((guint8 *) &be_ip_int, G_SOCKET_FAMILY_IPV4);
+
+        if (mask != NULL) {
 		netmask = g_inet_address_new_from_bytes ((guint8 *) &be_mask_int, G_SOCKET_FAMILY_IPV4);
 		*mask = g_inet_address_mask_new (netmask, 32, NULL);
 		g_object_unref (netmask);
 	}
 
-	if (gateway != NULL) {
-		value = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device),
-                                                              "GevCurrentDefaultGateway", NULL);
-		be_gateway_int = g_htonl(value);
-
+        if (gateway != NULL)
 		*gateway = g_inet_address_new_from_bytes ((guint8 *) &be_gateway_int, G_SOCKET_FAMILY_IPV4);
-	}
+
+        return TRUE;
 }
 
 /**
@@ -881,46 +901,66 @@ arv_gv_device_get_current_ip (ArvGvDevice *gv_device,
  *
  * Get the persistent IP address setting of device.
  *
+ * Returns: %TRUE on success
+ *
  * Since: 0.8.22
  */
 
-void
+gboolean
 arv_gv_device_get_persistent_ip (ArvGvDevice *gv_device,
                                  GInetAddress **ip, GInetAddressMask **mask, GInetAddress **gateway,
                                  GError **error)
 {
+        GError *local_error = NULL;
 	guint32 be_ip_int;
 	guint32 be_mask_int;
 	guint32 be_gateway_int;
 	guint32 value;
 	GInetAddress *netmask;
 
-	g_return_if_fail (ARV_IS_GV_DEVICE (gv_device));
-	g_return_if_fail (ip != NULL);
+	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), FALSE);
 
-	value = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device),
-                                                      "ArvGevPersistentIPAddress", NULL);
-	be_ip_int = g_htonl(value);
+        if (ip != NULL) {
+                *ip = NULL;
+                value = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device),
+                                                              "ArvGevPersistentIPAddress", &local_error);
 
-	*ip = g_inet_address_new_from_bytes ((guint8 *) &be_ip_int, G_SOCKET_FAMILY_IPV4);
+                be_ip_int = g_htonl(value);
+        }
 
-	if (mask != NULL) {
+	if (mask != NULL && local_error == NULL) {
+                *mask = NULL;
 		value = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device),
-                                                              "ArvGevPersistentSubnetMask", NULL);
+                                                              "ArvGevPersistentSubnetMask", &local_error);
 		be_mask_int = g_htonl(value);
+        }
 
+	if (gateway != NULL && local_error == NULL) {
+                *gateway = NULL;
+		value = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device),
+                                                              "ArvGevPersistentDefaultGateway", &local_error);
+		be_gateway_int = g_htonl(value);
+        }
+
+
+        if (local_error != NULL) {
+                g_propagate_error(error, local_error);
+                return FALSE;
+        }
+
+        if (ip != NULL)
+                        *ip = g_inet_address_new_from_bytes ((guint8 *) &be_ip_int, G_SOCKET_FAMILY_IPV4);
+
+        if (mask != NULL) {
 		netmask = g_inet_address_new_from_bytes ((guint8 *) &be_mask_int, G_SOCKET_FAMILY_IPV4);
 		*mask = g_inet_address_mask_new (netmask, 32, NULL);
 		g_object_unref (netmask);
 	}
 
-	if (gateway != NULL) {
-		value = arv_device_get_integer_feature_value (ARV_DEVICE (gv_device),
-                                                              "ArvGevPersistentDefaultGateway", NULL);
-		be_gateway_int = g_htonl(value);
-
+        if (gateway != NULL)
 		*gateway = g_inet_address_new_from_bytes ((guint8 *) &be_gateway_int, G_SOCKET_FAMILY_IPV4);
-	}
+
+        return TRUE;
 }
 
 /**
@@ -934,15 +974,17 @@ arv_gv_device_get_persistent_ip (ArvGvDevice *gv_device,
  * Sets the persistent IP address to device.
  * Also disable DHCP then enable persistent IP mode.
  *
+ * Returns: %TRUE on success
+ *
  * Since: 0.8.22
  */
 
-void
+gboolean
 arv_gv_device_set_persistent_ip (ArvGvDevice *gv_device,
                                  GInetAddress *ip, GInetAddressMask *mask, GInetAddress *gateway,
                                  GError **error)
 {
-	g_return_if_fail (ARV_IS_GV_DEVICE (gv_device));
+	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), FALSE);
 
 	if (G_IS_INET_ADDRESS (ip)) {
 		GError *local_error = NULL;
@@ -954,7 +996,7 @@ arv_gv_device_set_persistent_ip (ArvGvDevice *gv_device,
 		if (g_inet_address_get_family (ip) != G_SOCKET_FAMILY_IPV4) {
 			g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,
 						"IP address is not IPv4 address");
-			return;
+			return FALSE;
 		}
 
 		ip_bytes = g_inet_address_to_bytes (ip);
@@ -964,7 +1006,7 @@ arv_gv_device_set_persistent_ip (ArvGvDevice *gv_device,
 		arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "ArvGevPersistentIPAddress", ip_int, &local_error);
 		if (local_error != NULL) {
 			g_propagate_error(error, local_error);
-			return;
+			return FALSE;
 		}
 	}
 
@@ -979,7 +1021,7 @@ arv_gv_device_set_persistent_ip (ArvGvDevice *gv_device,
 		if (g_inet_address_mask_get_family (mask) != G_SOCKET_FAMILY_IPV4) {
 			g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,
 						"Netmask is not IPv4 address");
-			return;
+			return FALSE;
 		}
 
 		mask_length = g_inet_address_mask_get_length (mask);
@@ -996,7 +1038,7 @@ arv_gv_device_set_persistent_ip (ArvGvDevice *gv_device,
 		arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "ArvGevPersistentSubnetMask", mask_int, &local_error);
 		if (local_error != NULL) {
 			g_propagate_error(error, local_error);
-			return;
+			return FALSE;
 		}
 	}
 
@@ -1010,20 +1052,25 @@ arv_gv_device_set_persistent_ip (ArvGvDevice *gv_device,
 		if (g_inet_address_get_family (gateway) != G_SOCKET_FAMILY_IPV4) {
 			g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,
 						"Gateway address is not IPv4 address");
-			return;
+			return FALSE;
 		}
 
 		gateway_bytes = g_inet_address_to_bytes (gateway);
-		be_value = ((guint32)gateway_bytes[3] << 24) | (gateway_bytes[2] << 16) | (gateway_bytes[1] << 8) | gateway_bytes[0];
+		be_value =
+                        ((guint32)gateway_bytes[3] << 24) |
+                        (gateway_bytes[2] << 16) |
+                        (gateway_bytes[1] << 8) |
+                        gateway_bytes[0];
 		gateway_int = GUINT32_FROM_BE(be_value);
-		arv_device_set_integer_feature_value (ARV_DEVICE (gv_device), "ArvGevPersistentDefaultGateway", gateway_int, &local_error);
+		arv_device_set_integer_feature_value (ARV_DEVICE (gv_device),
+                                                      "ArvGevPersistentDefaultGateway", gateway_int, &local_error);
 		if (local_error != NULL) {
 			g_propagate_error(error, local_error);
-			return;
+			return FALSE;
 		}
 	}
 
-	arv_gv_device_set_ip_configuration_mode (gv_device, ARV_GV_IP_CONFIGURATION_MODE_PERSISTENT_IP, error);
+	return arv_gv_device_set_ip_configuration_mode (gv_device, ARV_GV_IP_CONFIGURATION_MODE_PERSISTENT_IP, error);
 }
 
 
@@ -1037,10 +1084,12 @@ arv_gv_device_set_persistent_ip (ArvGvDevice *gv_device,
  *
  * Sets the persistent IP address to device.
  *
+ * Returns: %TRUE on success
+ *
  * Since: 0.8.22
  */
 
-void
+gboolean
 arv_gv_device_set_persistent_ip_from_string (ArvGvDevice *gv_device,
                                              const char *ip, const char *mask, const char *gateway,
                                              GError **error)
@@ -1050,7 +1099,7 @@ arv_gv_device_set_persistent_ip_from_string (ArvGvDevice *gv_device,
 	GInetAddressMask *mask_gi = NULL;
 	GInetAddress *gateway_gi = NULL;
 
-	g_return_if_fail (ARV_IS_GV_DEVICE (gv_device));
+	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), FALSE);
 
 	if (ip != NULL)
 		ip_gi = g_inet_address_new_from_string (ip);
@@ -1071,17 +1120,20 @@ arv_gv_device_set_persistent_ip_from_string (ArvGvDevice *gv_device,
 		local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,
                                            "Gateway address could not be parsed: \"%s\"", gateway);
 	}
-	if (local_error != NULL){
-		g_propagate_error (error, local_error);
-		g_clear_object (&ip_gi);
-		g_clear_object (&mask_gi);
-		g_clear_object (&gateway_gi);
-		return;
-	}
-	arv_gv_device_set_persistent_ip (gv_device, ip_gi, mask_gi, gateway_gi, error);
+
+	if (local_error == NULL)
+                arv_gv_device_set_persistent_ip (gv_device, ip_gi, mask_gi, gateway_gi, &local_error);
+
 	g_clear_object (&ip_gi);
 	g_clear_object (&mask_gi);
 	g_clear_object (&gateway_gi);
+
+	if (local_error != NULL){
+		g_propagate_error (error, local_error);
+		return FALSE;
+	}
+
+        return TRUE;
 }
 
 /**
@@ -1099,26 +1151,32 @@ arv_gv_device_set_persistent_ip_from_string (ArvGvDevice *gv_device,
 ArvGvIpConfigurationMode
 arv_gv_device_get_ip_configuration_mode (ArvGvDevice *gv_device, GError **error)
 {
+        GError *local_error = NULL;
 	gboolean dhcp_enabled;
 	gboolean persistent_ip_enabled;
 
 	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), 0);
 
-	if (arv_device_is_feature_available (ARV_DEVICE (gv_device), "GevIPConfigurationStatus", error))
-		return arv_device_get_integer_feature_value (ARV_DEVICE (gv_device), "GevIPConfigurationStatus", error);
-
-	dhcp_enabled = arv_device_get_boolean_feature_value( ARV_DEVICE (gv_device), "ArvGevCurrentIPConfigurationDHCP", error);
-	if (*error != NULL)
+	dhcp_enabled = arv_device_get_boolean_feature_value( ARV_DEVICE (gv_device),
+                                                             "ArvGevCurrentIPConfigurationDHCP",
+                                                             &local_error);
+	if (local_error != NULL) {
+                g_propagate_error(error, local_error);
 		return ARV_GV_IP_CONFIGURATION_MODE_NONE;
+        }
+
 	persistent_ip_enabled = arv_device_get_boolean_feature_value( ARV_DEVICE (gv_device),
-                                                                      "ArvGevCurrentIPConfigurationPersistentIP", error);
-	if (*error != NULL)
+                                                                      "ArvGevCurrentIPConfigurationPersistentIP",
+                                                                      &local_error);
+	if (local_error != NULL) {
+                g_propagate_error(error, local_error);
 		return ARV_GV_IP_CONFIGURATION_MODE_NONE;
+        }
 
-	if (dhcp_enabled && !persistent_ip_enabled)
-		return ARV_GV_IP_CONFIGURATION_MODE_DHCP;
-	if (!dhcp_enabled && persistent_ip_enabled)
+	if (persistent_ip_enabled)
 		return ARV_GV_IP_CONFIGURATION_MODE_PERSISTENT_IP;
+	if (dhcp_enabled)
+		return ARV_GV_IP_CONFIGURATION_MODE_DHCP;
 	return ARV_GV_IP_CONFIGURATION_MODE_LLA;
 }
 
@@ -1133,36 +1191,50 @@ arv_gv_device_get_ip_configuration_mode (ArvGvDevice *gv_device, GError **error)
  * Available modes are ARV_GV_IP_CONFIGURATION_MODE_DHCP, ARV_GV_IP_CONFIGURATION_MODE_PERSISTENT_IP,
  * ARV_GV_IP_CONFIGURATION_MODE_LLA
  *
+ * Returns: %TRUE on success
+ *
  * Since: 0.8.22
  */
 
-void
+gboolean
 arv_gv_device_set_ip_configuration_mode (ArvGvDevice *gv_device, ArvGvIpConfigurationMode mode, GError **error)
 {
-	g_return_if_fail (ARV_IS_GV_DEVICE (gv_device));
-        g_return_if_fail ((mode == ARV_GV_IP_CONFIGURATION_MODE_DHCP) ||
+        GError *local_error = NULL;
+
+	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), FALSE);
+        g_return_val_if_fail ((mode == ARV_GV_IP_CONFIGURATION_MODE_DHCP) ||
                           (mode == ARV_GV_IP_CONFIGURATION_MODE_PERSISTENT_IP) ||
-                          (mode == ARV_GV_IP_CONFIGURATION_MODE_LLA));
+                          (mode == ARV_GV_IP_CONFIGURATION_MODE_LLA), FALSE);
 
 	if (mode == ARV_GV_IP_CONFIGURATION_MODE_PERSISTENT_IP) {
 		/* Persistent IP: disable DHCP, enable persistent IP */
 		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device),
-                                                      "ArvGevCurrentIPConfigurationDHCP", FALSE, NULL);
-		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device),
-                                                      "ArvGevCurrentIPConfigurationPersistentIP", TRUE, NULL);
+                                                      "ArvGevCurrentIPConfigurationDHCP", FALSE, &local_error);
+		if (local_error == NULL)
+                        arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device),
+                                                      "ArvGevCurrentIPConfigurationPersistentIP", TRUE, &local_error);
 	} else if (mode == ARV_GV_IP_CONFIGURATION_MODE_DHCP) {
 		/* DHCP: enable DHCP, disable persistent IP */
 		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device),
-                                                      "ArvGevCurrentIPConfigurationDHCP", TRUE, NULL);
-		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device),
-                                                      "ArvGevCurrentIPConfigurationPersistentIP", FALSE, NULL);
+                                                      "ArvGevCurrentIPConfigurationDHCP", TRUE, &local_error);
+		if (local_error == NULL)
+                        arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device),
+                                                      "ArvGevCurrentIPConfigurationPersistentIP", FALSE, &local_error);
 	} else {
 		/* LLA: disable both */
 		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device),
-                                                      "ArvGevCurrentIPConfigurationDHCP", FALSE, NULL);
-		arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device),
-                                                      "ArvGevCurrentIPConfigurationPersistentIP", FALSE, NULL);
+                                                      "ArvGevCurrentIPConfigurationDHCP", FALSE, &local_error);
+		if (local_error == NULL)
+                    arv_device_set_boolean_feature_value (ARV_DEVICE (gv_device),
+                                                      "ArvGevCurrentIPConfigurationPersistentIP", FALSE, &local_error);
 	}
+
+        if (local_error != NULL) {
+                g_propagate_error(error, local_error);
+                return FALSE;
+        }
+
+        return TRUE;
 }
 
 /**
@@ -1351,35 +1423,35 @@ arv_gc_set_default_gv_features (ArvGc *genicam)
                                       "</StringReg>", NULL);
         arv_gc_set_default_node_data (genicam, "DeviceModelName",
                                       "<StringReg Name=\"DeviceModelName\">"
-                                      "<DisplayName>Model Name</DisplayName>"
-                                      "<Address>0x68</Address>"
-                                      "<Length>32</Length>"
-                                      "<AccessMode>RO</AccessMode>"
-                                      "<pPort>Device</pPort>"
+                                      "  <DisplayName>Model Name</DisplayName>"
+                                      "  <Address>0x68</Address>"
+                                      "  <Length>32</Length>"
+                                      "  <AccessMode>RO</AccessMode>"
+                                      "  <pPort>Device</pPort>"
                                       "</StringReg>", NULL);
         arv_gc_set_default_node_data (genicam, "DeviceVersion",
                                       "<StringReg Name=\"DeviceVersion\">"
-                                      "<DisplayName>Device Version</DisplayName>"
-                                      "<Address>0x88</Address>"
-                                      "<Length>32</Length>"
-                                      "<AccessMode>RO</AccessMode>"
-                                      "<pPort>Device</pPort>"
+                                      "  <DisplayName>Device Version</DisplayName>"
+                                      "  <Address>0x88</Address>"
+                                      "  <Length>32</Length>"
+                                      "  <AccessMode>RO</AccessMode>"
+                                      "  <pPort>Device</pPort>"
                                       "</StringReg>", NULL);
         arv_gc_set_default_node_data (genicam, "DeviceManufacturerInfo",
                                       "<StringReg Name=\"DeviceManufacturerInfo\">"
-                                      "<DisplayName>Manufacturer Info</DisplayName>"
-                                      "<Address>0xa8</Address>"
-                                      "<Length>48</Length>"
-                                      "<AccessMode>RO</AccessMode>"
-                                      "<pPort>Device</pPort>"
+                                      "  <DisplayName>Manufacturer Info</DisplayName>"
+                                      "  <Address>0xa8</Address>"
+                                      "  <Length>48</Length>"
+                                      "  <AccessMode>RO</AccessMode>"
+                                      "  <pPort>Device</pPort>"
                                       "</StringReg>", NULL);
         arv_gc_set_default_node_data (genicam, "DeviceID",
                                       "<StringReg Name=\"DeviceID\">"
-                                      "<DisplayName>Device ID</DisplayName>"
-                                      "<Address>0xd8</Address>"
-                                      "<Length>16</Length>"
-                                      "<AccessMode>RO</AccessMode>"
-                                      "<pPort>Device</pPort>"
+                                      "  <DisplayName>Device ID</DisplayName>"
+                                      "  <Address>0xd8</Address>"
+                                      "  <Length>16</Length>"
+                                      "  <AccessMode>RO</AccessMode>"
+                                      "  <pPort>Device</pPort>"
                                       "</StringReg>", NULL);
 
         /* Arv prefixed GigEVision features */
@@ -1393,6 +1465,7 @@ arv_gc_set_default_gv_features (ArvGc *genicam)
                                       "  <Address>0x14</Address>"
                                       "  <Length>4</Length>"
                                       "  <AccessMode>RW</AccessMode>"
+                                      "  <Endianess>BigEndian</Endianess>"
                                       "  <pPort>Device</pPort>"
                                       "  <Cachable>NoCache</Cachable>"
                                       "  <Bit>29</Bit>"
@@ -1407,6 +1480,7 @@ arv_gc_set_default_gv_features (ArvGc *genicam)
                                       "  <Address>0x14</Address>"
                                       "  <Length>4</Length>"
                                       "  <AccessMode>RW</AccessMode>"
+                                      "  <Endianess>BigEndian</Endianess>"
                                       "  <pPort>Device</pPort>"
                                       "  <Cachable>NoCache</Cachable>"
                                       "  <Bit>30</Bit>"
@@ -1421,34 +1495,62 @@ arv_gc_set_default_gv_features (ArvGc *genicam)
                                       "  <Address>0x14</Address>"
                                       "  <Length>4</Length>"
                                       "  <AccessMode>RW</AccessMode>"
+                                      "  <Endianess>BigEndian</Endianess>"
                                       "  <pPort>Device</pPort>"
                                       "  <Cachable>NoCache</Cachable>"
                                       "  <Bit>31</Bit>"
                                       "</MaskedIntReg>",
                                       NULL);
+        arv_gc_set_default_node_data (genicam, "ArvGevCurrentIPAddress",
+                                      "<IntReg Name=\"ArvGevCurrentIPAddress\">"
+                                      "  <Address>0x24</Address>"
+                                      "  <Length>4</Length>"
+                                      "  <AccessMode>RO</AccessMode>"
+                                      "  <Sign>Unsigned</Sign>"
+                                      "  <Endianess>BigEndian</Endianess>"
+                                      "  <pPort>Device</pPort>"
+                                      "</IntReg>", NULL);
+        arv_gc_set_default_node_data (genicam, "ArvGevCurrentSubnetMask",
+                                      "<IntReg Name=\"ArvGevCurrentSubnetMask\">"
+                                      "  <Address>0x34</Address>"
+                                      "  <Length>4</Length>"
+                                      "  <AccessMode>RO</AccessMode>"
+                                      "  <Sign>Unsigned</Sign>"
+                                      "  <Endianess>BigEndian</Endianess>"
+                                      "  <pPort>Device</pPort>"
+                                      "</IntReg>", NULL);
+        arv_gc_set_default_node_data (genicam, "ArvGevCurrentDefaultGateway",
+                                      "<IntReg Name=\"ArvGevCurrentDefaultGateway\">"
+                                      "  <Address>0x44</Address>"
+                                      "  <Length>4</Length>"
+                                      "  <AccessMode>RO</AccessMode>"
+                                      "  <Sign>Unsigned</Sign>"
+                                      "  <Endianess>BigEndian</Endianess>"
+                                      "  <pPort>Device</pPort>"
+                                      "</IntReg>", NULL);
         arv_gc_set_default_node_data (genicam, "ArvGevPersistentIPAddress",
                                       "<IntReg Name=\"ArvGevPersistentIPAddress\">"
-                                      "<Address>0x64c</Address>"
-                                      "<Length>4</Length>"
-                                      "<AccessMode>RW</AccessMode>"
-                                      "<Endianess>BigEndian</Endianess>"
-                                      "<pPort>Device</pPort>"
+                                      "  <Address>0x64c</Address>"
+                                      "  <Length>4</Length>"
+                                      "  <AccessMode>RW</AccessMode>"
+                                      "  <Endianess>BigEndian</Endianess>"
+                                      "  <pPort>Device</pPort>"
                                       "</IntReg>", NULL);
         arv_gc_set_default_node_data (genicam, "ArvGevPersistentSubnetMask",
                                       "<IntReg Name=\"ArvGevPersistentSubnetMask\">"
-                                      "<Address>0x65c</Address>"
-                                      "<Length>4</Length>"
-                                      "<AccessMode>RW</AccessMode>"
-                                      "<Endianess>BigEndian</Endianess>"
-                                      "<pPort>Device</pPort>"
+                                      "  <Address>0x65c</Address>"
+                                      "  <Length>4</Length>"
+                                      "  <AccessMode>RW</AccessMode>"
+                                      "  <Endianess>BigEndian</Endianess>"
+                                      "  <pPort>Device</pPort>"
                                       "</IntReg>", NULL);
         arv_gc_set_default_node_data (genicam, "ArvGevPersistentDefaultGateway",
                                       "<IntReg Name=\"ArvGevPersistentDefaultGateway\">"
-                                      "<Address>0x66c</Address>"
-                                      "<Length>4</Length>"
-                                      "<AccessMode>RW</AccessMode>"
-                                      "<Endianess>BigEndian</Endianess>"
-                                      "<pPort>Device</pPort>"
+                                      "  <Address>0x66c</Address>"
+                                      "  <Length>4</Length>"
+                                      "  <AccessMode>RW</AccessMode>"
+                                      "  <Endianess>BigEndian</Endianess>"
+                                      "  <pPort>Device</pPort>"
                                       "</IntReg>",
                                       NULL);
         arv_gc_set_default_node_data (genicam, "ArvGevStreamChannelCount",
@@ -1480,35 +1582,35 @@ arv_gc_set_default_gv_features (ArvGc *genicam)
                                       NULL);
         arv_gc_set_default_node_data (genicam, "ArvGevTimestampTickFrequency",
                                       "<Integer Name=\"ArvGevTimestampTickFrequency\">"
-                                      "<pValue>ArvGevTimestampTickFrequencyCalc</pValue>"
+                                      "  <pValue>ArvGevTimestampTickFrequencyCalc</pValue>"
                                       "</Integer>",
                                       "<IntSwissKnife Name=\"ArvGevTimestampTickFrequencyCalc\">"
-                                      "<pVariable Name=\"HIGH\">ArvGevTimestampTickFrequencyHigh</pVariable>"
-                                      "<pVariable Name=\"LOW\">ArvGevTimestampTickFrequencyLow</pVariable>"
-                                      "<Formula>(HIGH&lt;&lt; 32) | LOW</Formula>"
+                                      "  <pVariable Name=\"HIGH\">ArvGevTimestampTickFrequencyHigh</pVariable>"
+                                      "  <pVariable Name=\"LOW\">ArvGevTimestampTickFrequencyLow</pVariable>"
+                                      "  <Formula>(HIGH&lt;&lt; 32) | LOW</Formula>"
                                       "</IntSwissKnife>",
                                       "<MaskedIntReg Name=\"ArvGevTimestampTickFrequencyHigh\">"
-                                      "<Visibility>Invisible</Visibility>"
-                                      "<Address>0x93C</Address>"
-                                      "<Length>4</Length>"
-                                      "<AccessMode>RO</AccessMode>"
-                                      "<pPort>Device</pPort>"
-                                      "<LSB>31</LSB>"
-                                      "<MSB>0</MSB>"
-                                      "<Sign>Unsigned</Sign>"
-                                      "<Endianess>BigEndian</Endianess>"
+                                      "  <Visibility>Invisible</Visibility>"
+                                      "  <Address>0x93C</Address>"
+                                      "  <Length>4</Length>"
+                                      "  <AccessMode>RO</AccessMode>"
+                                      "  <pPort>Device</pPort>"
+                                      "  <LSB>31</LSB>"
+                                      "  <MSB>0</MSB>"
+                                      "  <Sign>Unsigned</Sign>"
+                                      "  <Endianess>BigEndian</Endianess>"
                                       "</MaskedIntReg>",
                                       "<MaskedIntReg Name=\"ArvGevTimestampTickFrequencyLow\">"
-                                              "<Visibility>Invisible</Visibility>"
-                                              "<Address>0x940</Address>"
-                                              "<Length>4</Length>"
-                                              "<AccessMode>RO</AccessMode>"
-                                              "<pPort>Device</pPort>"
-                                              "<LSB>31</LSB>"
-                                              "<MSB>0</MSB>"
-                                              "<Sign>Unsigned</Sign>"
-                                              "<Endianess>BigEndian</Endianess>"
-                                              "</MaskedIntReg>", NULL);
+                                      "  <Visibility>Invisible</Visibility>"
+                                      "  <Address>0x940</Address>"
+                                      "  <Length>4</Length>"
+                                      "  <AccessMode>RO</AccessMode>"
+                                      "  <pPort>Device</pPort>"
+                                      "  <LSB>31</LSB>"
+                                      "  <MSB>0</MSB>"
+                                      "  <Sign>Unsigned</Sign>"
+                                      "  <Endianess>BigEndian</Endianess>"
+                                      "</MaskedIntReg>", NULL);
         arv_gc_set_default_node_data (genicam, "ArvGevSCPHostPort",
                                       "<Integer Name=\"ArvGevSCPHostPort\">"
                                       "  <Visibility>Expert</Visibility>"
@@ -1573,6 +1675,7 @@ arv_gc_set_default_gv_features (ArvGc *genicam)
                                       "  <pPort>Device</pPort>"
                                       "  <Cachable>NoCache</Cachable>"
                                       "  <Bit>2</Bit>"
+                                      "  <Endianess>BigEndian</Endianess>"
                                       "</MaskedIntReg>",
                                       NULL);
         arv_gc_set_default_node_data (genicam, "ArvGevSCPSPacketSize",
@@ -1677,11 +1780,11 @@ arv_gc_set_default_gv_features (ArvGc *genicam)
                 NULL);
         arv_gc_set_default_node_data (genicam, "TLParamsLocked",
                                       "<Integer Name=\"TLParamsLocked\">"
-                                      "<Visibility>Invisible</Visibility>"
-                                      "<Value>0</Value>"
-                                      "<Min>0</Min>"
-                                      "<Max>1</Max>"
-                                      "</Integer>",
+                                      "  <Visibility>Invisible</Visibility>"
+                                      "  <Value>0</Value>"
+                                      "  <Min>0</Min>"
+                                      "  <Max>1</Max>"
+                                      "  </Integer>",
                                       NULL);
 
         /* GevSCPSPacketSize feature definition just for default boundaries */

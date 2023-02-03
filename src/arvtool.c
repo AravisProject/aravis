@@ -561,7 +561,8 @@ arv_tool_network (int argc, char **argv, ArvDevice *device)
                                         else if (g_ascii_strcasecmp (tokens[1], "LLA") == 0)
                                                 mode = ARV_GV_IP_CONFIGURATION_MODE_LLA;
                                         else {
-                                                printf ("Unknown mode \"%s\". Avalaible modes: PersistentIP, DHCP and LLA\n", tokens[1]);
+                                                printf ("Unknown mode \"%s\". Avalaible modes: PersistentIP, DHCP and LLA\n",
+                                                        tokens[1]);
                                                 return;
                                         }
                                         arv_gv_device_set_ip_configuration_mode (gv_device, mode, &error);
