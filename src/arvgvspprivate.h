@@ -556,7 +556,16 @@ static inline void *
 arv_gvsp_multipart_packet_get_data (const ArvGvspPacket *packet)
 {
         if (arv_gvsp_packet_get_content_type (packet) == ARV_GVSP_CONTENT_TYPE_MULTIPART) {
-                return (char *) packet + sizeof (ArvGvspPacket) + sizeof (ArvGvspHeader) + sizeof (ArvGvspMultipart);
+                if (arv_gvsp_packet_has_extended_ids (packet))
+                        return (char *) packet +
+                                sizeof (ArvGvspPacket) +
+                                sizeof (ArvGvspExtendedHeader) +
+                                sizeof (ArvGvspMultipart);
+                else
+                        return (char *) packet +
+                                sizeof (ArvGvspPacket) +
+                                sizeof (ArvGvspHeader) +
+                                sizeof (ArvGvspMultipart);
         }
 
         return NULL;
