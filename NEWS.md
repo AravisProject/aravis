@@ -1,3 +1,9 @@
+Stable release 0.8.24
+=====================
+
+  * gv: fix multipart data accessor (Emmanuel)
+  * gv: improve error handling of network API (Emmanuel)
+
 Stable release 0.8.23
 =====================
 
