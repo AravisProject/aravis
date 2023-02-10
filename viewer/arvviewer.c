@@ -209,6 +209,9 @@ struct  _ArvViewer {
 	gulong component_changed;
 	gulong component_toggled;
 	gulong pixel_format_changed;
+        gulong rotate_cw_clicked;
+        gulong flip_vertical_clicked;
+        gulong flip_horizontal_clicked;
 
 	guint gain_update_event;
 	guint black_level_update_event;
@@ -1649,6 +1652,12 @@ select_mode (ArvViewer *viewer, ArvViewerMode mode)
 			stop_video (viewer);
 			break;
 		case ARV_VIEWER_MODE_VIDEO:
+                        g_signal_handler_block (viewer->flip_vertical_toggle, viewer->flip_vertical_clicked);
+                        g_signal_handler_block (viewer->flip_horizontal_toggle, viewer->flip_horizontal_clicked);
+                        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON(viewer->flip_vertical_toggle), FALSE);
+                        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON(viewer->flip_horizontal_toggle), FALSE);
+                        g_signal_handler_unblock (viewer->flip_vertical_toggle, viewer->flip_vertical_clicked);
+                        g_signal_handler_unblock (viewer->flip_horizontal_toggle, viewer->flip_horizontal_clicked);
 			video_visibility = TRUE;
 			arv_camera_get_region (viewer->camera, &x, &y, &width, &height, NULL);
 			subtitle = g_strdup_printf ("%s %dx%d@%d,%d %s",
@@ -1792,9 +1801,12 @@ activate (GApplication *application)
 	g_signal_connect (viewer->back_button, "clicked", G_CALLBACK (switch_to_camera_list_cb), viewer);
 	g_signal_connect (viewer->main_window, "destroy", G_CALLBACK (arv_viewer_quit_cb), viewer);
 	g_signal_connect (viewer->snapshot_button, "clicked", G_CALLBACK (snapshot_cb), viewer);
-	g_signal_connect (viewer->rotate_cw_button, "clicked", G_CALLBACK (rotate_cw_cb), viewer);
-	g_signal_connect (viewer->flip_horizontal_toggle, "clicked", G_CALLBACK (flip_horizontal_cb), viewer);
-	g_signal_connect (viewer->flip_vertical_toggle, "clicked", G_CALLBACK (flip_vertical_cb), viewer);
+	viewer->rotate_cw_clicked = g_signal_connect (viewer->rotate_cw_button, "clicked",
+                                                      G_CALLBACK (rotate_cw_cb), viewer);
+	viewer->flip_horizontal_clicked = g_signal_connect (viewer->flip_horizontal_toggle,
+                                                            "clicked", G_CALLBACK (flip_horizontal_cb), viewer);
+	viewer->flip_vertical_clicked = g_signal_connect (viewer->flip_vertical_toggle, "clicked",
+                                                          G_CALLBACK (flip_vertical_cb), viewer);
 	g_signal_connect (viewer->frame_rate_entry, "activate", G_CALLBACK (frame_rate_entry_cb), viewer);
 	g_signal_connect (viewer->frame_rate_entry, "focus-out-event", G_CALLBACK (frame_rate_entry_focus_cb), viewer);
 
