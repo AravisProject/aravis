@@ -417,7 +417,8 @@ arv_gvsp_leader_packet_get_multipart_n_parts (const ArvGvspPacket *packet)
 
 static inline gboolean
 arv_gvsp_leader_packet_get_multipart_infos (const ArvGvspPacket *packet,
-                                            unsigned int part_id,
+                                            guint part_id,
+                                            guint *purpose_id,
                                             ArvBufferPartDataType *data_type,
                                             size_t *size,
                                             ArvPixelFormat *pixel_format,
@@ -439,6 +440,7 @@ arv_gvsp_leader_packet_get_multipart_infos (const ArvGvspPacket *packet,
         leader = arv_gvsp_packet_get_data (packet);
         infos = &leader->parts[part_id];
 
+        *purpose_id = g_ntohs(infos->data_purpose_id);
         *data_type = g_ntohs (infos->data_type);
         *size = g_ntohl (infos->part_length_low) + (((guint64) g_ntohs (infos->part_length_high)) << 32);
         *pixel_format = g_ntohl (infos->pixel_format);
@@ -494,7 +496,6 @@ arv_gvsp_leader_packet_get_image_infos (const ArvGvspPacket *packet,
                 *y_offset = g_ntohl (leader->infos.y_offset);
                 *x_padding = g_ntohs (leader->infos.x_padding);
                 *y_padding = g_ntohs (leader->infos.y_padding);
-
                 return TRUE;
         }
 

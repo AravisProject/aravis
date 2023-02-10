@@ -31,8 +31,9 @@ G_BEGIN_DECLS
 
 typedef struct {
         ptrdiff_t data_offset;
-        ArvBufferPartDataType data_type;
         size_t size;
+        guint component_id;
+        ArvBufferPartDataType data_type;
 	ArvPixelFormat pixel_format;
 	guint32 width;
 	guint32 height;
