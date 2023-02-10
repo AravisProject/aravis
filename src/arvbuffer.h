@@ -127,7 +127,9 @@ ARV_API guint64 		arv_buffer_get_frame_id		(ArvBuffer *buffer);
 ARV_API const void *		arv_buffer_get_data		(ArvBuffer *buffer, size_t *size);
 
 ARV_API guint                   arv_buffer_get_n_parts                  (ArvBuffer *buffer);
+ARV_API gint                    arv_buffer_find_component               (ArvBuffer *buffer, guint component_id);
 ARV_API const void *		arv_buffer_get_part_data		(ArvBuffer *buffer, guint part_id, size_t *size);
+ARV_API guint   		arv_buffer_get_part_component_id	(ArvBuffer *buffer, guint part_id);
 ARV_API ArvBufferPartDataType	arv_buffer_get_part_data_type	        (ArvBuffer *buffer, guint part_id);
 ARV_API ArvPixelFormat		arv_buffer_get_part_pixel_format	(ArvBuffer *buffer, guint part_id);
 ARV_API void			arv_buffer_get_part_region		(ArvBuffer *buffer, guint part_id,

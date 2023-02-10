@@ -787,6 +787,7 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer, guint32 *
 	buffer->priv->frame_id = camera->priv->frame_id;
 
         buffer->priv->parts[0].data_offset = 0;
+        buffer->priv->parts[0].component_id = 0;
         buffer->priv->parts[0].data_type = ARV_BUFFER_PART_DATA_TYPE_2D_IMAGE;
 	buffer->priv->parts[0].pixel_format = _get_register (camera, ARV_FAKE_CAMERA_REGISTER_PIXEL_FORMAT);
 	buffer->priv->parts[0].width = width;

@@ -439,6 +439,32 @@ arv_buffer_get_n_parts (ArvBuffer *buffer)
 }
 
 /**
+ * arv_buffer_find_component:
+ * @buffer: a #ArvBuffer
+ * @component_id: the component id to find
+ *
+ * Search for the part corresponding to @component_id
+ *
+ * Return: the corresponding part id, -1 if not found.
+ *
+ * Since: 0.8.25
+ */
+
+gint
+arv_buffer_find_component (ArvBuffer *buffer, guint component_id)
+{
+        guint i;
+
+	g_return_val_if_fail (ARV_IS_BUFFER (buffer), -1);
+
+        for (i = 0; i < buffer->priv->n_parts; i++)
+                if (buffer->priv->parts[i].component_id == component_id)
+                        return i;
+
+        return -1;
+}
+
+/**
  * arv_buffer_get_part_data:
  * @buffer: a #ArvBuffer
  * @part_id: part id
@@ -459,6 +485,25 @@ arv_buffer_get_part_data (ArvBuffer *buffer, guint part_id, size_t *size)
                 *size = buffer->priv->parts[part_id].size;
 
         return buffer->priv->data + buffer->priv->parts[part_id].data_offset;
+}
+
+/**
+ * arv_buffer_get_part_component_id:
+ * @buffer: a #ArvBuffer
+ * @part_id: part id
+ *
+ * Returns: the part component id value
+ *
+ * Since: 0.8.25
+ */
+
+guint
+arv_buffer_get_part_component_id (ArvBuffer *buffer, guint part_id)
+{
+	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0);
+        g_return_val_if_fail (part_id < buffer->priv->n_parts, 0);
+
+        return buffer->priv->parts[part_id].component_id;
 }
 
 /**

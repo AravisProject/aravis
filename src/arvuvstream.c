@@ -165,6 +165,7 @@ void arv_uv_stream_leader_cb (struct libusb_transfer *transfer)
                                     ctx->buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA) {
                                         arv_buffer_set_n_parts(ctx->buffer, 1);
                                         ctx->buffer->priv->parts[0].data_offset = 0;
+                                        ctx->buffer->priv->parts[0].component_id = 0;
                                         ctx->buffer->priv->parts[0].data_type = ARV_BUFFER_PART_DATA_TYPE_2D_IMAGE;
                                         ctx->buffer->priv->parts[0].pixel_format = arv_uvsp_packet_get_pixel_format (packet);
                                         arv_uvsp_packet_get_region (packet,
@@ -577,6 +578,7 @@ arv_uv_stream_thread_sync (void *data)
 						    buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA) {
                                                         arv_buffer_set_n_parts(buffer, 1);
                                                         buffer->priv->parts[0].data_offset = 0;
+                                                        buffer->priv->parts[0].component_id = 0;
                                                         buffer->priv->parts[0].data_type =
                                                                 ARV_BUFFER_PART_DATA_TYPE_2D_IMAGE;
 							buffer->priv->parts[0].pixel_format =
