@@ -1,3 +1,10 @@
+Stable release 0.8.25
+=====================
+
+  * viewer: add component selection support (Emmanuel)
+  * buffer: add component id getter (Emmanuel)
+  * buffer: fix multipart informations (Emmanuel)
+
 Stable release 0.8.24
 =====================
 
