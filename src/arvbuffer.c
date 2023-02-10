@@ -455,6 +455,9 @@ arv_buffer_get_part_data (ArvBuffer *buffer, guint part_id, size_t *size)
 	g_return_val_if_fail (ARV_IS_BUFFER (buffer), NULL);
         g_return_val_if_fail (part_id < buffer->priv->n_parts, NULL);
 
+        if (size != NULL)
+                *size = buffer->priv->parts[part_id].size;
+
         return buffer->priv->data + buffer->priv->parts[part_id].data_offset;
 }
 
