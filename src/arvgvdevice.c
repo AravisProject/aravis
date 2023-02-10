@@ -1528,6 +1528,14 @@ arv_gc_set_default_gv_features (ArvGc *genicam)
                                       "  <Endianess>BigEndian</Endianess>"
                                       "  <pPort>Device</pPort>"
                                       "</IntReg>", NULL);
+        arv_gc_set_default_node_data (genicam, "ArvGevNumberOfNetworkInterfaces",
+                                      "<IntReg Name=\"ArvGevNumberOfNetworkInterfaces\">"
+                                      "  <Address>0x600</Address>"
+                                      "  <Length>4</Length>"
+                                      "  <AccessMode>RO</AccessMode>"
+                                      "  <Endianess>BigEndian</Endianess>"
+                                      "  <pPort>Device</pPort>"
+                                      "</IntReg>", NULL);
         arv_gc_set_default_node_data (genicam, "ArvGevPersistentIPAddress",
                                       "<IntReg Name=\"ArvGevPersistentIPAddress\">"
                                       "  <Address>0x64c</Address>"

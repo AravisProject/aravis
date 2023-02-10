@@ -213,6 +213,7 @@ ARV_API void            arv_camera_set_access_check_policy	        (ArvCamera *c
 
 ARV_API gboolean	arv_camera_is_gv_device				(ArvCamera *camera);
 
+ARV_API gint            arv_camera_gv_get_n_network_interfaces          (ArvCamera *camera, GError **error);
 ARV_API gint		arv_camera_gv_get_n_stream_channels		(ArvCamera *camera, GError **error);
 ARV_API void		arv_camera_gv_select_stream_channel		(ArvCamera *camera, gint channel_id, GError **error);
 ARV_API int		arv_camera_gv_get_current_stream_channel	(ArvCamera *camera, GError **error);
