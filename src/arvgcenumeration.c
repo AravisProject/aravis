@@ -247,7 +247,7 @@ _dup_available_string_values (ArvGcEnumeration *enumeration, gboolean display_na
 
 			if (is_implemented) {
 				(*n_values)++;
-				available_entries = g_slist_prepend (available_entries, iter->data);
+				available_entries = g_slist_append (available_entries, iter->data);
 			}
 		}
 	}
