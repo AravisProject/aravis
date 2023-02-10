@@ -140,6 +140,7 @@ ARV_API gint			arv_buffer_get_part_height		(ArvBuffer *buffer, guint part_id);
 ARV_API gint			arv_buffer_get_part_x		        (ArvBuffer *buffer, guint part_id);
 ARV_API gint			arv_buffer_get_part_y		        (ArvBuffer *buffer, guint part_id);
 
+ARV_API const void *		arv_buffer_get_image_data		(ArvBuffer *buffer, size_t *size);
 ARV_API ArvPixelFormat		arv_buffer_get_image_pixel_format	(ArvBuffer *buffer);
 ARV_API void			arv_buffer_get_image_region		(ArvBuffer *buffer,
                                                                          gint *x, gint *y,

@@ -654,6 +654,22 @@ arv_buffer_get_part_y (ArvBuffer *buffer, guint part_id)
 }
 
 /**
+ * arv_buffer_get_image_data:
+ * @buffer: a #ArvBuffer
+ * @size: (out) (optional): data size placeholder
+ *
+ * Returns: (array length=size) (element-type guint8): a pointer to the image data.
+ *
+ * Since: 0.8.25
+ */
+
+const void *
+arv_buffer_get_image_data (ArvBuffer *buffer, size_t *size)
+{
+        return arv_buffer_get_part_data (buffer, 0, size);
+}
+
+/**
  * arv_buffer_get_image_pixel_format:
  * @buffer: a #ArvBuffer
  *
