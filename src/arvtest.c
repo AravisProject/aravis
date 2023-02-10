@@ -867,14 +867,29 @@ static void
 arv_test_gige_vision (ArvTest *test, const char *test_name, ArvTestCamera *test_camera)
 {
         GError *error = NULL;
-        gint64 expected_n_stream_channels;
-        gint64 n_stream_channels;
+        gint expected_n_stream_channels;
+        gint n_stream_channels;
+        gint expected_n_network_interfaces;
+        gint n_network_interfaces;
         char *message;
 
         g_return_if_fail (ARV_IS_TEST (test));
 
         if (!arv_camera_is_gv_device (test_camera->camera))
                 return;
+
+        expected_n_network_interfaces = arv_test_camera_get_key_file_int64 (test_camera, test, "NNetworkInterfaces", 1);
+
+        n_network_interfaces = arv_camera_gv_get_n_network_interfaces (test_camera->camera, &error);
+
+        if (error != NULL)
+                message = g_strdup_printf("%s", error->message);
+        else
+                message = g_strdup_printf("%d", n_network_interfaces);
+        arv_test_camera_add_result (test_camera, test_name, "NNetworkInterfaces",
+                                    n_network_interfaces == expected_n_network_interfaces && error == NULL ?
+                                    ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE, message);
+        g_clear_pointer(&message, g_free);
 
         expected_n_stream_channels = arv_test_camera_get_key_file_int64 (test_camera, test, "NStreamChannels", 1);
 
@@ -883,7 +898,7 @@ arv_test_gige_vision (ArvTest *test, const char *test_name, ArvTestCamera *test_
         if (error != NULL)
                 message = g_strdup_printf("%s", error->message);
         else
-                message = g_strdup_printf("%" G_GINT64_FORMAT, n_stream_channels);
+                message = g_strdup_printf("%d", n_stream_channels);
         arv_test_camera_add_result (test_camera, test_name, "NStreamChannels",
                                     n_stream_channels == expected_n_stream_channels && error == NULL ?
                                     ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE, message);

@@ -1071,6 +1071,8 @@ arv_fake_camera_new_full (const char *serial_number, const char *genicam_filenam
 
 	arv_fake_camera_write_register (fake_camera, ARV_GVBS_STREAM_CHANNEL_0_PACKET_SIZE_OFFSET, 1400);
 
+	arv_fake_camera_write_register (fake_camera, ARV_GVBS_N_NETWORK_INTERFACES_OFFSET, 1);
+
 	arv_fake_camera_write_register (fake_camera, ARV_GVBS_N_STREAM_CHANNELS_OFFSET, 1);
 
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_TEST, ARV_FAKE_CAMERA_TEST_REGISTER_DEFAULT);

@@ -2932,6 +2932,24 @@ arv_camera_is_gv_device	(ArvCamera *camera)
 }
 
 /**
+ * arv_camera_gv_get_n_network_interfaces:
+ * @camera: a #ArvCamera
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: the number of device network interfaces.
+ *
+ * Since: 0.8.25
+ */
+
+gint
+arv_camera_gv_get_n_network_interfaces (ArvCamera *camera, GError **error)
+{
+	g_return_val_if_fail (arv_camera_is_gv_device (camera), 0);
+
+	return arv_camera_get_integer (camera, "ArvGevNumberOfNetworkInterfaces", error);
+}
+
+/**
  * arv_camera_gv_get_n_stream_channels:
  * @camera: a #ArvCamera
  * @error: a #GError placeholder, %NULL to ignore
