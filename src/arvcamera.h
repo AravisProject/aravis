@@ -35,6 +35,14 @@
 
 G_BEGIN_DECLS
 
+typedef enum {
+        ARV_COMPONENT_SELECTION_FLAGS_NONE,
+        ARV_COMPONENT_SELECTION_FLAGS_ENABLE,
+        ARV_COMPONENT_SELECTION_FLAGS_DISABLE,
+        ARV_COMPONENT_SELECTION_FLAGS_EXCLUSIVE_ENABLE,
+        ARV_COMPONENT_SELECTION_FLAGS_ENABLE_ALL,
+} ArvComponentSelectionFlags;
+
 #define ARV_TYPE_CAMERA             (arv_camera_get_type ())
 ARV_API G_DECLARE_DERIVABLE_TYPE (ArvCamera, arv_camera, ARV, CAMERA, GObject)
 
@@ -150,9 +158,13 @@ ARV_API ArvAuto		arv_camera_get_black_level_auto		(ArvCamera *camera, GError **e
 
 /* Component control */
 
+ARV_API gboolean	arv_camera_is_component_available	(ArvCamera *camera, GError **error);
 ARV_API const char **   arv_camera_dup_available_components     (ArvCamera *camera, guint *n_components, GError **error);
 ARV_API void            arv_camera_select_and_enable_component  (ArvCamera *camera, const char *component,
                                                                  gboolean disable_others, GError **error);
+ARV_API gboolean        arv_camera_select_component             (ArvCamera *camera, const char *component,
+                                                                 ArvComponentSelectionFlags flags, guint *id,
+                                                                 GError **error);
 
 /* Transport layer control */
 

@@ -1961,6 +1961,22 @@ arv_camera_get_black_level_auto (ArvCamera *camera, GError **error)
 /* Component control */
 
 /**
+ * arv_camera_is_component_available:
+ * @camera: a #ArvCamera
+ * @error: a #GError placeholder, %NULL to ingore
+ *
+ * Returns: %TRUE if Component features are available.
+ *
+ * Since: 0.8.25
+ */
+
+gboolean
+arv_camera_is_component_available (ArvCamera *camera, GError **error)
+{
+        return arv_camera_is_feature_available (camera, "ComponentSelector", error);
+}
+
+/**
  * arv_camera_dup_available_components:
  * @camera: a #ArvCamera
  * @n_components: (out) (optional) : number of available components
@@ -1983,6 +1999,67 @@ arv_camera_dup_available_components (ArvCamera *camera, guint *n_components, GEr
 }
 
 /**
+ * arv_camera_select_component:
+ * @camera: a #ArvCamera
+ * @component: component to select
+ * @flags: a #ArvComponentSelectionFlags
+ * @component_id: (optional): a placeholder for the component id
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Select and enable or disable the given @component.
+ *
+ * Returns: %TRUE if the component is enabled
+ *
+ * Since: 0.8.25
+ */
+
+gboolean
+arv_camera_select_component (ArvCamera *camera, const char *component,
+                             ArvComponentSelectionFlags flags, guint *component_id,
+                             GError **error)
+{
+        GError *local_error = NULL;
+        gboolean is_enabled = !(flags == ARV_COMPONENT_SELECTION_FLAGS_DISABLE);
+
+        g_return_val_if_fail (ARV_IS_CAMERA(camera), FALSE);
+
+        if (flags == ARV_COMPONENT_SELECTION_FLAGS_EXCLUSIVE_ENABLE ||
+            flags == ARV_COMPONENT_SELECTION_FLAGS_ENABLE_ALL) {
+                guint n_components, i;
+                const char **components = arv_camera_dup_available_components(camera, &n_components, &local_error);
+
+                for (i = 0; i < n_components && local_error == NULL; i++) {
+                        arv_camera_set_string (camera, "ComponentSelector", components[i], &local_error);
+                        if (local_error == NULL)
+                                arv_camera_set_boolean(camera, "ComponentEnable",
+                                                       flags == ARV_COMPONENT_SELECTION_FLAGS_ENABLE_ALL,
+                                                       &local_error);
+                }
+        }
+
+        if (local_error == NULL) arv_camera_set_string (camera, "ComponentSelector", component, &local_error);
+        if (local_error == NULL &&
+            flags != ARV_COMPONENT_SELECTION_FLAGS_NONE &&
+            flags != ARV_COMPONENT_SELECTION_FLAGS_ENABLE_ALL)
+                arv_camera_set_boolean(camera, "ComponentEnable",
+                                       flags == ARV_COMPONENT_SELECTION_FLAGS_DISABLE ? FALSE: TRUE,
+                                       &local_error);
+
+        if (component_id != NULL && local_error == NULL)
+                *component_id = arv_camera_get_integer(camera, "ComponentIDValue", &local_error);
+
+        if (local_error == NULL && flags == ARV_COMPONENT_SELECTION_FLAGS_NONE)
+                is_enabled = arv_camera_get_boolean(camera, "ComponentEnable", &local_error);
+
+        if (local_error != NULL) {
+                g_propagate_error(error, local_error);
+                return FALSE;
+        }
+
+        return is_enabled;
+}
+
+/**
  * arv_camera_select_and_enable_component:
  * @camera: a #ArvCamera
  * @component: component to select
@@ -1995,32 +2072,13 @@ arv_camera_dup_available_components (ArvCamera *camera, guint *n_components, GEr
  */
 
 void
-arv_camera_select_and_enable_component (ArvCamera *camera, const char *component, gboolean disable_others,
-                                        GError
-                                        **error)
+arv_camera_select_and_enable_component (ArvCamera *camera, const char *component, gboolean disable_others, GError **error)
 {
-        GError *local_error = NULL;
-
-        g_return_if_fail (ARV_IS_CAMERA(camera));
-
-        if (disable_others) {
-                guint n_components, i;
-                const char **components = arv_camera_dup_available_components(camera, &n_components, &local_error);
-
-                for (i = 0; i < n_components && local_error == NULL; i++) {
-                        arv_camera_set_string (camera, "ComponentSelector", components[i], &local_error);
-                        if (local_error == NULL)
-                                arv_camera_set_boolean(camera, "ComponentEnable", FALSE, &local_error);
-                }
-        }
-
-        if (local_error == NULL) arv_camera_set_string (camera, "ComponentSelector", component, &local_error);
-        if (local_error == NULL) arv_camera_set_boolean(camera, "ComponentEnable", TRUE, &local_error);
-
-        if (local_error != NULL) {
-                g_propagate_error(error, local_error);
-                return;
-        }
+        arv_camera_select_component(camera, component,
+                                    disable_others ?
+                                    ARV_COMPONENT_SELECTION_FLAGS_EXCLUSIVE_ENABLE :
+                                    ARV_COMPONENT_SELECTION_FLAGS_ENABLE,
+                                    NULL, error);
 }
 
 /* Transport layer control */
