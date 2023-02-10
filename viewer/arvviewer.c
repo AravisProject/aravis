@@ -1878,7 +1878,7 @@ activate (GApplication *application)
                                                              G_CALLBACK (camera_binning_cb), viewer);
 
 	gtk_widget_set_sensitive (viewer->camera_parameters, FALSE);
-	gtk_revealer_set_reveal_child (GTK_REVEALER(viewer->camera_parameters), TRUE);
+	gtk_revealer_set_reveal_child (GTK_REVEALER(viewer->camera_parameters), FALSE);
 
 	select_mode (viewer, ARV_VIEWER_MODE_CAMERA_LIST);
 	update_device_list_cb (GTK_TOOL_BUTTON (viewer->refresh_button), viewer);
