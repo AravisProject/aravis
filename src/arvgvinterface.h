@@ -33,6 +33,17 @@
 
 G_BEGIN_DECLS
 
+/**
+ * ArvGvInterfaceFlags:
+ * @ARV_GV_INTERFACE_FLAGS_ALLOW_BROADCAST_DISCOVERY_ACK: allow gv devices to broadcast the discovery acknowledge packet
+ *
+ * Since: 0.8.23
+ */
+
+typedef enum {
+        ARV_GV_INTERFACE_FLAGS_ALLOW_BROADCAST_DISCOVERY_ACK =  1 << 0
+} ArvGvInterfaceFlags;
+
 #define ARV_TYPE_GV_INTERFACE             (arv_gv_interface_get_type ())
 ARV_API G_DECLARE_FINAL_TYPE (ArvGvInterface, arv_gv_interface, ARV, GV_INTERFACE, ArvInterface)
 

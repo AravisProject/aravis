@@ -42,6 +42,7 @@ static unsigned int arv_viewer_option_initial_packet_timeout = ARV_GV_STREAM_INI
 static unsigned int arv_viewer_option_packet_timeout = ARV_GV_STREAM_PACKET_TIMEOUT_US_DEFAULT / 1000;
 static unsigned int arv_viewer_option_frame_retention = ARV_GV_STREAM_FRAME_RETENTION_US_DEFAULT / 1000;
 static char *arv_option_uv_usb_mode = NULL;
+static gboolean arv_option_show_version = FALSE;
 
 static const GOptionEntry arv_viewer_option_entries[] =
 {
@@ -85,6 +86,11 @@ static const GOptionEntry arv_viewer_option_entries[] =
 		&arv_viewer_option_debug_domains, 	NULL,
 		"{<category>[:<level>][,...]|help}"
 	},
+	{
+		"version", 			'v', 0, G_OPTION_ARG_NONE,
+		&arv_option_show_version,     	"Show version",
+                NULL
+	},
 	{ NULL }
 };
 
@@ -126,6 +132,14 @@ main (int argc, char **argv)
 	}
 
 	g_option_context_free (context);
+
+        if (arv_option_show_version) {
+                printf ("%u.%u.%u\n",
+                        arv_get_major_version (),
+                        arv_get_minor_version (),
+                        arv_get_micro_version ());
+                return EXIT_SUCCESS;
+        }
 
 	if (arv_option_register_cache == NULL)
 		register_cache_policy = ARV_REGISTER_CACHE_POLICY_DEFAULT;

@@ -35,6 +35,14 @@
 
 G_BEGIN_DECLS
 
+typedef enum {
+        ARV_COMPONENT_SELECTION_FLAGS_NONE,
+        ARV_COMPONENT_SELECTION_FLAGS_ENABLE,
+        ARV_COMPONENT_SELECTION_FLAGS_DISABLE,
+        ARV_COMPONENT_SELECTION_FLAGS_EXCLUSIVE_ENABLE,
+        ARV_COMPONENT_SELECTION_FLAGS_ENABLE_ALL,
+} ArvComponentSelectionFlags;
+
 #define ARV_TYPE_CAMERA             (arv_camera_get_type ())
 ARV_API G_DECLARE_DERIVABLE_TYPE (ArvCamera, arv_camera, ARV, CAMERA, GObject)
 
@@ -148,6 +156,16 @@ ARV_API void		arv_camera_get_black_level_bounds	(ArvCamera *camera, double *min,
 ARV_API void		arv_camera_set_black_level_auto		(ArvCamera *camera, ArvAuto auto_mode, GError **error);
 ARV_API ArvAuto		arv_camera_get_black_level_auto		(ArvCamera *camera, GError **error);
 
+/* Component control */
+
+ARV_API gboolean	arv_camera_is_component_available	(ArvCamera *camera, GError **error);
+ARV_API const char **   arv_camera_dup_available_components     (ArvCamera *camera, guint *n_components, GError **error);
+ARV_API void            arv_camera_select_and_enable_component  (ArvCamera *camera, const char *component,
+                                                                 gboolean disable_others, GError **error);
+ARV_API gboolean        arv_camera_select_component             (ArvCamera *camera, const char *component,
+                                                                 ArvComponentSelectionFlags flags, guint *id,
+                                                                 GError **error);
+
 /* Transport layer control */
 
 ARV_API guint		arv_camera_get_payload			(ArvCamera *camera, GError **error);
@@ -183,6 +201,7 @@ ARV_API gboolean        arv_camera_is_enumeration_entry_available               
 										 const char *entry, GError **error);
 
 ARV_API gboolean	arv_camera_is_feature_available			(ArvCamera *camera, const char *feature, GError **error);
+ARV_API gboolean        arv_camera_is_feature_implemented               (ArvCamera *camera, const char *feature, GError **error);
 
 /* Runtime policies */
 
@@ -194,9 +213,14 @@ ARV_API void            arv_camera_set_access_check_policy	        (ArvCamera *c
 
 ARV_API gboolean	arv_camera_is_gv_device				(ArvCamera *camera);
 
+ARV_API gint            arv_camera_gv_get_n_network_interfaces          (ArvCamera *camera, GError **error);
 ARV_API gint		arv_camera_gv_get_n_stream_channels		(ArvCamera *camera, GError **error);
 ARV_API void		arv_camera_gv_select_stream_channel		(ArvCamera *camera, gint channel_id, GError **error);
 ARV_API int		arv_camera_gv_get_current_stream_channel	(ArvCamera *camera, GError **error);
+
+ARV_API gboolean        arv_camera_gv_is_multipart_supported            (ArvCamera *camera, GError **error);
+ARV_API void            arv_camera_gv_set_multipart                     (ArvCamera *camera, gboolean enable, GError **error);
+ARV_API gboolean        arv_camera_gv_get_multipart                     (ArvCamera *camera, GError **error);
 
 ARV_API void		arv_camera_gv_set_packet_delay			(ArvCamera *camera, gint64 delay_ns, GError **error);
 ARV_API gint64		arv_camera_gv_get_packet_delay			(ArvCamera *camera, GError **error);

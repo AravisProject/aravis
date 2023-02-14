@@ -40,8 +40,8 @@ G_BEGIN_DECLS
  */
 
 typedef enum {
-	ARV_GV_STREAM_OPTION_NONE = 0,
-	ARV_GV_STREAM_OPTION_PACKET_SOCKET_DISABLED
+	ARV_GV_STREAM_OPTION_NONE =                             0,
+	ARV_GV_STREAM_OPTION_PACKET_SOCKET_DISABLED =           1 << 0,
 } ArvGvStreamOption;
 
 /**

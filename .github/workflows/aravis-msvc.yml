@@ -32,18 +32,18 @@ jobs:
         INPUT_CONANFILE: |
           [requires]
           libiconv/1.17
-          glib/2.70.0
+          glib/2.74.1
           #gobject-introspection/1.69.0
-          gstreamer/1.19.1
-          gst-plugins-base/1.19.1
+          gstreamer/1.19.2
+          gst-plugins-base/1.19.2
           #gtk/4.4.0
-          libxml2/2.9.12
-          zlib/1.2.11
-          libusb/1.0.24
+          libxml2/2.10.3
+          zlib/1.2.13
+          libusb/1.0.26
 
           [build_requires]
           meson/0.59.2
-          pkgconf/1.7.4
+          pkgconf/1.9.3
 
           [generators]
           pkg_config

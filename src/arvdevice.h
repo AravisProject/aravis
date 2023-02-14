@@ -67,7 +67,14 @@ typedef enum {
 	ARV_DEVICE_ERROR_GENICAM_NOT_FOUND,
 	ARV_DEVICE_ERROR_NO_STREAM_CHANNEL,
 	ARV_DEVICE_ERROR_NOT_CONTROLLER,
-	ARV_DEVICE_ERROR_UNKNOWN
+	ARV_DEVICE_ERROR_UNKNOWN,
+        ARV_DEVICE_ERROR_PROTOCOL_ERROR_NOT_IMPLEMENTED,
+        ARV_DEVICE_ERROR_PROTOCOL_ERROR_INVALID_PARAMETER,
+        ARV_DEVICE_ERROR_PROTOCOL_ERROR_INVALID_ADDRESS,
+        ARV_DEVICE_ERROR_PROTOCOL_ERROR_WRITE_PROTECT,
+        ARV_DEVICE_ERROR_PROTOCOL_ERROR_BAD_ALIGNMENT,
+        ARV_DEVICE_ERROR_PROTOCOL_ERROR_ACCESS_DENIED,
+        ARV_DEVICE_ERROR_PROTOCOL_ERROR_BUSY
 } ArvDeviceError;
 
 #define ARV_TYPE_DEVICE             (arv_device_get_type ())
@@ -102,6 +109,7 @@ ARV_API const char *	arv_device_get_genicam_xml		(ArvDevice *device, size_t *siz
 ARV_API ArvGc *		arv_device_get_genicam			(ArvDevice *device);
 
 ARV_API gboolean 	arv_device_is_feature_available		(ArvDevice *device, const char *feature, GError **error);
+ARV_API gboolean 	arv_device_is_feature_implemented	(ArvDevice *device, const char *feature, GError **error);
 ARV_API ArvGcNode *	arv_device_get_feature			(ArvDevice *device, const char *feature);
 ARV_API ArvGcAccessMode	arv_device_get_feature_access_mode	(ArvDevice *device, const char *feature);
 

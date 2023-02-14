@@ -50,6 +50,7 @@ G_BEGIN_DECLS
 #define ARV_GV_DEVICE_BUFFER_SIZE	1024
 
 GRegex * 		arv_gv_device_get_url_regex 			(void);
+void                    arv_gc_set_default_gv_features                  (ArvGc *genicam);
 
 G_END_DECLS
 

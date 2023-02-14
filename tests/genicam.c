@@ -1095,6 +1095,8 @@ create_buffer_with_chunk_data (void)
 
 	buffer = arv_buffer_new (size, NULL);
 	buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA;
+        buffer->priv->has_chunks = TRUE;
+        buffer->priv->received_size = size;
 	buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
 	data = (char *) arv_buffer_get_data (buffer, NULL);
 

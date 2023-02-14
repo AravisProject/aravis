@@ -161,7 +161,7 @@ arv_gv_discover_socket_list_free (ArvGvDiscoverSocketList *socket_list)
 }
 
 static void
-arv_gv_discover_socket_list_send_discover_packet (ArvGvDiscoverSocketList *socket_list)
+arv_gv_discover_socket_list_send_discover_packet (ArvGvDiscoverSocketList *socket_list, gboolean allow_broadcast_discovery_ack)
 {
         GInetAddress *broadcast_address;
         GSocketAddress *broadcast_socket_address;
@@ -169,7 +169,7 @@ arv_gv_discover_socket_list_send_discover_packet (ArvGvDiscoverSocketList *socke
         GSList *iter;
         size_t size;
 
-	packet = arv_gvcp_packet_new_discovery_cmd (&size);
+	packet = arv_gvcp_packet_new_discovery_cmd (allow_broadcast_discovery_ack, &size);
 
         broadcast_address = g_inet_address_new_from_string ("255.255.255.255");
         broadcast_socket_address = g_inet_socket_address_new (broadcast_address, ARV_GVCP_PORT);
@@ -339,7 +339,7 @@ struct _ArvGvInterfaceClass {
 G_DEFINE_TYPE_WITH_CODE (ArvGvInterface, arv_gv_interface, ARV_TYPE_INTERFACE, G_ADD_PRIVATE (ArvGvInterface))
 
 static ArvGvInterfaceDeviceInfos *
-_discover (GHashTable *devices, const char *device_id)
+_discover (GHashTable *devices, const char *device_id, gboolean allow_broadcast_discovery_ack)
 {
 	ArvGvDiscoverSocketList *socket_list;
 	GSList *iter;
@@ -359,7 +359,7 @@ _discover (GHashTable *devices, const char *device_id)
 		return NULL;
 	}
 
-	arv_gv_discover_socket_list_send_discover_packet (socket_list);
+	arv_gv_discover_socket_list_send_discover_packet (socket_list, allow_broadcast_discovery_ack);
 
 	do {
 		gint res;
@@ -463,7 +463,9 @@ _discover (GHashTable *devices, const char *device_id)
 static void
 arv_gv_interface_discover (ArvGvInterface *gv_interface)
 {
-	_discover (gv_interface->priv->devices, NULL);
+        int flags = arv_interface_get_flags (ARV_INTERFACE(gv_interface));
+
+	_discover (gv_interface->priv->devices, NULL, flags & ARV_GV_INTERFACE_FLAGS_ALLOW_BROADCAST_DISCOVERY_ACK);
 }
 
 static GInetAddress *
@@ -705,6 +707,7 @@ arv_gv_interface_open_device (ArvInterface *interface, const char *device_id, GE
 	ArvDevice *device;
 	ArvGvInterfaceDeviceInfos *device_infos;
 	GError *local_error = NULL;
+        int flags;
 
 	device = _open_device (interface, ARV_GV_INTERFACE (interface)->priv->devices, device_id, &local_error);
 	if (ARV_IS_DEVICE (device) || local_error != NULL) {
@@ -713,7 +716,8 @@ arv_gv_interface_open_device (ArvInterface *interface, const char *device_id, GE
 		return device;
 	}
 
-	device_infos = _discover (NULL, device_id);
+        flags = arv_interface_get_flags (interface);
+	device_infos = _discover (NULL, device_id, flags & ARV_GVCP_DISCOVERY_PACKET_FLAGS_ALLOW_BROADCAST_ACK);
 	if (device_infos != NULL) {
 		GInetAddress *device_address;
 

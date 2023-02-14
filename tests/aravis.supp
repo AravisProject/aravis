@@ -3,6 +3,13 @@
 #
 
 {
+	g_match_info_fetch_named_glib_2.74.1_issue_2881
+		Memcheck:Addr4
+		...
+		fun:g_match_info_fetch_named
+}
+
+{
 	glib initialisation
 		Memcheck:Leak
 		fun:calloc
