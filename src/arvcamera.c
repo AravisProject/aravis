@@ -2003,7 +2003,7 @@ arv_camera_dup_available_components (ArvCamera *camera, guint *n_components, GEr
  * @camera: a #ArvCamera
  * @component: component to select
  * @flags: a #ArvComponentSelectionFlags
- * @component_id: (optional): a placeholder for the component id
+ * @component_id: (out) (optional): a placeholder for the component id
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Select and enable or disable the given @component.

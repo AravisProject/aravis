@@ -163,7 +163,7 @@ ARV_API const char **   arv_camera_dup_available_components     (ArvCamera *came
 ARV_API void            arv_camera_select_and_enable_component  (ArvCamera *camera, const char *component,
                                                                  gboolean disable_others, GError **error);
 ARV_API gboolean        arv_camera_select_component             (ArvCamera *camera, const char *component,
-                                                                 ArvComponentSelectionFlags flags, guint *id,
+                                                                 ArvComponentSelectionFlags flags, guint *component_id,
                                                                  GError **error);
 
 /* Transport layer control */
