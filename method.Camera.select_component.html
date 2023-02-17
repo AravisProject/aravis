@@ -398,7 +398,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <span class="w">  </span><span class="n">ArvCamera</span><span class="o">*</span><span class="w"> </span><span class="n">camera</span><span class="p">,</span><span class="w"></span>
 <span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">component</span><span class="p">,</span><span class="w"></span>
 <span class="w">  </span><span class="n">ArvComponentSelectionFlags</span><span class="w"> </span><span class="n">flags</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="n">guint</span><span class="o">*</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="n">guint</span><span class="o">*</span><span class="w"> </span><span class="n">component_id</span><span class="p">,</span><span class="w"></span>
 <span class="w">  </span><span class="n">GError</span><span class="o">**</span><span class="w"> </span><span class="n">error</span><span class="w"></span>
 <span class="p">)</span><span class="w"></span>
 </pre></div>
@@ -475,19 +475,19 @@ SPDX-License-Identifier: LGPL-2.1-or-later
             </table>
           </dd>
           
-          <dt class="arg-name"><code>id</code></dt>
+          <dt class="arg-name"><code>component_id</code></dt>
           <dd class="arg-description">
             <p><em>Type:</em>&nbsp;<code>guint*</code></p>
-            <p>No description available.</p>
+            <p><p>A placeholder for the component&nbsp;id.</p></p>
             <table>
+            <tr><td title="direction: out">The argument will be set by the function.</td></tr>
+            
+            
+            <tr><td>The argument can be <code>NULL</code>.</td></tr>
             
             
             
             
-            
-            
-            
-            <tr><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
             
             </table>
           </dd>
