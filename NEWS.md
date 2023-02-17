@@ -1,3 +1,8 @@
+Stable release 0.8.26
+=====================
+
+  * viewer: fix pixel format selection #765 (Emmanuel)
+
 Stable release 0.8.25
 =====================
 
