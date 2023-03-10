@@ -7,7 +7,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Aravis.Camera.get_height_bounds</title>
+  <title>Aravis.Camera.select_gain</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <meta charset="utf-8" />
@@ -23,10 +23,10 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
 
   
-  <meta priority="og:title" content="Aravis.Camera.get_height_bounds"/>
-  <meta priority="og:description" content="Reference for Aravis.Camera.get_height_bounds"/>
-  <meta name="twitter:title" content="Aravis.Camera.get_height_bounds"/>
-  <meta name="twitter:description" content="Reference for Aravis.Camera.get_height_bounds"/>
+  <meta priority="og:title" content="Aravis.Camera.select_gain"/>
+  <meta priority="og:description" content="Reference for Aravis.Camera.select_gain"/>
+  <meta name="twitter:title" content="Aravis.Camera.select_gain"/>
+  <meta name="twitter:description" content="Reference for Aravis.Camera.select_gain"/>
 
 
   
@@ -175,7 +175,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.Camera.get_gain_bounds.html">get_gain_bounds</a>
   
-    <a class="method current" href="method.Camera.get_height_bounds.html">get_height_bounds</a>
+    <a class="method" href="method.Camera.get_height_bounds.html">get_height_bounds</a>
   
     <a class="method" href="method.Camera.get_height_increment.html">get_height_increment</a>
   
@@ -299,7 +299,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.Camera.select_component.html">select_component</a>
   
-    <a class="method" href="method.Camera.select_gain.html">select_gain</a>
+    <a class="method current" href="method.Camera.select_gain.html">select_gain</a>
   
     <a class="method" href="method.Camera.set_access_check_policy.html">set_access_check_policy</a>
   
@@ -385,12 +385,12 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <section id="main" class="content">
   <header>
     <h3>Method</h3>
-    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.Camera.html">Camera</a><span class="sep"></span>get_height_bounds</h1>
+    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.Camera.html">Camera</a><span class="sep"></span>select_gain</h1>
   </header>
 
   <section>
     <div class="docblock">
-      <p><span class="emblem available">since: 0.8.0</span></p>
+      <p><span class="emblem available">since: 0.8.27</span></p>
     </div>
 
     <div class="declaration toggle-wrapper">
@@ -398,16 +398,15 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Declaration
         <a class="anchor" href="#declaration"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvcamera.h#L80">[src]</a>
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvcamera.h#L144">[src]</a>
         
       </h4>
 
       <div class="docblock c-decl">
         <pre><code><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"></span>
-<span class="n">arv_camera_get_height_bounds</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
+<span class="n">arv_camera_select_gain</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
 <span class="w">  </span><span class="n">ArvCamera</span><span class="o">*</span><span class="w"> </span><span class="n">camera</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="n">gint</span><span class="o">*</span><span class="w"> </span><span class="n">min</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="n">gint</span><span class="o">*</span><span class="w"> </span><span class="n">max</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">selector</span><span class="p">,</span><span class="w"></span>
 <span class="w">  </span><span class="n">GError</span><span class="o">**</span><span class="w"> </span><span class="n">error</span><span class="w"></span>
 <span class="p">)</span><span class="w"></span>
 </pre></div>
@@ -420,17 +419,17 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Description
         <a class="anchor" href="#description"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvcamera.c#L504">[src]</a>
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvcamera.c#L1872">[src]</a>
         
       </h4>
 
       <div class="docblock">
-        <p>Retrieves the valid range for image&nbsp;height.</p>
+        <p>Configures Gain Selector&nbsp;feature.</p>
       </div>
 
       <div class="docblock">
         
-        <p>Available since: 0.8.0</p>
+        <p>Available since: 0.8.27</p>
         
         
         
@@ -450,12 +449,11 @@ SPDX-License-Identifier: LGPL-2.1-or-later
       <div class="docblock">
         <dl class="arguments">
           
-          <dt class="arg-name"><code>min</code></dt>
+          <dt class="arg-name"><code>selector</code></dt>
           <dd class="arg-description">
-            <p><em>Type:</em>&nbsp;<code>gint*</code></p>
-            <p><p>Minimum&nbsp;height.</p></p>
+            <p><em>Type:</em>&nbsp;<code>const char*</code></p>
+            <p>No description available.</p>
             <table>
-            <tr><td title="direction: out">The argument will be set by the function.</td></tr>
             
             
             
@@ -463,24 +461,8 @@ SPDX-License-Identifier: LGPL-2.1-or-later
             
             
             
-            
-            </table>
-          </dd>
-          
-          <dt class="arg-name"><code>max</code></dt>
-          <dd class="arg-description">
-            <p><em>Type:</em>&nbsp;<code>gint*</code></p>
-            <p><p>Maximum&nbsp;height.</p></p>
-            <table>
-            <tr><td title="direction: out">The argument will be set by the function.</td></tr>
-            
-            
-            
-            
-            
-            
-            
-            
+            <tr><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
+            <tr><td>The value is a NUL terminated UTF-8 string.</td></tr>
             </table>
           </dd>
           
