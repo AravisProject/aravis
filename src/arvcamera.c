@@ -1877,7 +1877,7 @@ arv_camera_get_gain_auto (ArvCamera *camera, GError **error)
  *
  * Configures Gain Selector feature.
  *
- * Since: 0.8.23
+ * Since: 0.8.27
  **/
 
 void
@@ -1897,7 +1897,7 @@ arv_camera_select_gain (ArvCamera *camera, const char *gainSelector, GError **er
  * Returns: (array length=n_selectors) (transfer container): a newly allocated array of strings, to be freed after use with
  * g_free().
  *
- * Since: 0.8.23
+ * Since: 0.8.27
  */
 
 const char **
@@ -1991,7 +1991,7 @@ arv_camera_get_black_level (ArvCamera *camera, GError **error)
  *
  * Configures Black Level Selector feature.
  *
- * Since: 0.8.23
+ * Since: 0.8.27
  **/
 
 void
@@ -2011,7 +2011,7 @@ arv_camera_select_black_level (ArvCamera *camera, const char *blackLevelSelector
  * Returns: (array length=n_selectors) (transfer container): a newly allocated array of strings, to be freed after use with
  * g_free().
  *
- * Since: 0.8.23
+ * Since: 0.8.27
  */
 
 const char **
