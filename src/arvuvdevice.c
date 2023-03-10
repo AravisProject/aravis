@@ -94,6 +94,31 @@ struct _ArvUvDeviceClass {
 
 G_DEFINE_TYPE_WITH_CODE (ArvUvDevice, arv_uv_device, ARV_TYPE_DEVICE, G_ADD_PRIVATE (ArvUvDevice))
 
+static ArvDeviceError
+arv_uvcp_status_to_device_error (ArvUvcpStatus status)
+{
+        switch (status) {
+                case ARV_UVCP_STATUS_NOT_IMPLEMENTED:
+                        return ARV_DEVICE_ERROR_PROTOCOL_ERROR_NOT_IMPLEMENTED;
+                case ARV_UVCP_STATUS_INVALID_PARAMETER:
+                        return ARV_DEVICE_ERROR_PROTOCOL_ERROR_INVALID_PARAMETER;
+                case ARV_UVCP_STATUS_INVALID_ADDRESS:
+                        return ARV_DEVICE_ERROR_PROTOCOL_ERROR_INVALID_ADDRESS;
+                case ARV_UVCP_STATUS_WRITE_PROTECT:
+                        return ARV_DEVICE_ERROR_PROTOCOL_ERROR_WRITE_PROTECT;
+                case ARV_UVCP_STATUS_BAD_ALIGNMENT:
+                        return ARV_DEVICE_ERROR_PROTOCOL_ERROR_BAD_ALIGNMENT;
+                case ARV_UVCP_STATUS_ACCESS_DENIED:
+                        return ARV_DEVICE_ERROR_PROTOCOL_ERROR_ACCESS_DENIED;
+                case ARV_UVCP_STATUS_BUSY:
+                        return ARV_DEVICE_ERROR_PROTOCOL_ERROR_BUSY;
+                default:
+                        break;
+        }
+
+        return ARV_DEVICE_ERROR_PROTOCOL_ERROR;
+}
+
 /* ArvDevice implementation */
 
 /* ArvUvDevice implementation */
@@ -358,16 +383,14 @@ _send_cmd_and_receive_ack (ArvUvDevice *uv_device, ArvUvcpCommand command,
 	success = success && status == ARV_UVCP_STATUS_SUCCESS;
 
 	if (!success) {
-		if (error != NULL && *error == NULL) {
-			if (status != ARV_UVCP_STATUS_SUCCESS)
-				*error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_TIMEOUT,
-						      "USB3Vision %s error (%s)", operation,
-						      arv_uvcp_status_to_string (status));
-			else
-				*error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_TIMEOUT,
-						      "USB3Vision %s timeout", operation);
-		}
-	}
+                if (status != ARV_UVCP_STATUS_SUCCESS)
+                        g_set_error (error, ARV_DEVICE_ERROR, arv_uvcp_status_to_device_error (status),
+                                     "USB3Vision %s error (%s)", operation,
+                                     arv_uvcp_status_to_string (status));
+                else
+                        g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_TIMEOUT,
+                                     "USB3Vision %s timeout", operation);
+        }
 
 	return success;
 }
@@ -439,7 +462,7 @@ _bootstrap (ArvUvDevice *uv_device)
 	guint64 device_capability;
 	guint32 max_cmd_transfer;
 	guint32 max_ack_transfer;
-	guint32 u3vcp_capability;
+	guint64 u3vcp_capability;
 	guint64 sirm_offset;
 	guint32 si_info;
 	guint32 si_control;
@@ -470,10 +493,14 @@ _bootstrap (ArvUvDevice *uv_device)
 	manufacturer[63] = 0;
 	arv_info_device ("MANUFACTURER_NAME =        '%s'", manufacturer);
 
-	success = success && arv_device_read_memory (device, ARV_ABRM_SBRM_ADDRESS, sizeof (guint64), &offset, NULL);
-	success = success && arv_device_read_memory (device, ARV_ABRM_MAX_DEVICE_RESPONSE_TIME, sizeof (guint32), &response_time, NULL);
-	success = success && arv_device_read_memory (device, ARV_ABRM_DEVICE_CAPABILITY, sizeof (guint64), &device_capability, NULL);
-	success = success && arv_device_read_memory (device, ARV_ABRM_MANIFEST_TABLE_ADDRESS, sizeof (guint64), &manifest_table_address, NULL);
+	success = success && arv_device_read_memory (device, ARV_ABRM_SBRM_ADDRESS,
+                                                     sizeof (offset), &offset, NULL);
+	success = success && arv_device_read_memory (device, ARV_ABRM_MAX_DEVICE_RESPONSE_TIME,
+                                                     sizeof (response_time), &response_time, NULL);
+	success = success && arv_device_read_memory (device, ARV_ABRM_DEVICE_CAPABILITY,
+                                                     sizeof (device_capability), &device_capability, NULL);
+	success = success && arv_device_read_memory (device, ARV_ABRM_MANIFEST_TABLE_ADDRESS,
+                                                     sizeof (manifest_table_address), &manifest_table_address, NULL);
 	if (!success) {
 		arv_warning_device ("[UvDevice::_bootstrap] Error during memory read");
 		return FALSE;
@@ -486,16 +513,20 @@ _bootstrap (ArvUvDevice *uv_device)
 
 	priv->timeout_ms = MAX (ARV_UVCP_DEFAULT_RESPONSE_TIME_MS, response_time);
 
-	success = success && arv_device_read_memory (device, offset + ARV_SBRM_U3VCP_CAPABILITY, sizeof (guint32), &u3vcp_capability, NULL);
-	success = success && arv_device_read_memory (device, offset + ARV_SBRM_MAX_CMD_TRANSFER, sizeof (guint32), &max_cmd_transfer, NULL);
-	success = success && arv_device_read_memory (device, offset + ARV_SBRM_MAX_ACK_TRANSFER, sizeof (guint32), &max_ack_transfer, NULL);
-	success = success && arv_device_read_memory (device, offset + ARV_SBRM_SIRM_ADDRESS, sizeof (guint64), &sirm_offset, NULL);
+	success = success && arv_device_read_memory (device, offset + ARV_SBRM_U3VCP_CAPABILITY,
+                                                     sizeof (u3vcp_capability), &u3vcp_capability, NULL);
+	success = success && arv_device_read_memory (device, offset + ARV_SBRM_MAX_CMD_TRANSFER,
+                                                     sizeof (max_cmd_transfer), &max_cmd_transfer, NULL);
+	success = success && arv_device_read_memory (device, offset + ARV_SBRM_MAX_ACK_TRANSFER,
+                                                     sizeof (max_ack_transfer), &max_ack_transfer, NULL);
+	success = success && arv_device_read_memory (device, offset + ARV_SBRM_SIRM_ADDRESS,
+                                                     sizeof (sirm_offset), &sirm_offset, NULL);
 	if (!success) {
 		arv_warning_device ("[UvDevice::_bootstrap] Error during memory read");
 		return FALSE;
 	}
 
-	arv_info_device ("U3VCP_CAPABILITY =         0x%08x", u3vcp_capability);
+	arv_info_device ("U3VCP_CAPABILITY =         0x%016" G_GINT64_MODIFIER "x", u3vcp_capability);
 	arv_info_device ("MAX_CMD_TRANSFER =         0x%08x", max_cmd_transfer);
 	arv_info_device ("MAX_ACK_TRANSFER =         0x%08x", max_ack_transfer);
 	arv_info_device ("SIRM_OFFSET =              0x%016" G_GINT64_MODIFIER "x", sirm_offset);
@@ -503,17 +534,28 @@ _bootstrap (ArvUvDevice *uv_device)
 	priv->cmd_packet_size_max = MIN (priv->cmd_packet_size_max, max_cmd_transfer);
 	priv->ack_packet_size_max = MIN (priv->ack_packet_size_max, max_ack_transfer);
 
-	success = success && arv_device_read_memory (device, sirm_offset + ARV_SIRM_INFO, sizeof (si_info), &si_info, NULL);
-	success = success && arv_device_read_memory (device, sirm_offset + ARV_SIRM_CONTROL, sizeof (si_control), &si_control, NULL);
-	success = success && arv_device_read_memory (device, sirm_offset + ARV_SIRM_REQ_PAYLOAD_SIZE, sizeof (si_req_payload_size), &si_req_payload_size, NULL);
-	success = success && arv_device_read_memory (device, sirm_offset + ARV_SIRM_REQ_LEADER_SIZE, sizeof (si_req_leader_size), &si_req_leader_size, NULL);
-	success = success && arv_device_read_memory (device, sirm_offset + ARV_SIRM_REQ_TRAILER_SIZE, sizeof (si_req_trailer_size), &si_req_trailer_size, NULL);
-	success = success && arv_device_read_memory (device, sirm_offset + ARV_SIRM_MAX_LEADER_SIZE, sizeof (si_max_leader_size), &si_max_leader_size, NULL);
-	success = success && arv_device_read_memory (device, sirm_offset + ARV_SIRM_PAYLOAD_SIZE, sizeof (si_payload_size), &si_payload_size, NULL);
-	success = success && arv_device_read_memory (device, sirm_offset + ARV_SIRM_PAYLOAD_COUNT, sizeof (si_payload_count), &si_payload_count, NULL);
-	success = success && arv_device_read_memory (device, sirm_offset + ARV_SIRM_TRANSFER1_SIZE, sizeof (si_transfer1_size), &si_transfer1_size, NULL);
-	success = success && arv_device_read_memory (device, sirm_offset + ARV_SIRM_TRANSFER2_SIZE, sizeof (si_transfer2_size), &si_transfer2_size, NULL);
-	success = success && arv_device_read_memory (device, sirm_offset + ARV_SIRM_MAX_TRAILER_SIZE, sizeof (si_max_trailer_size), &si_max_trailer_size, NULL);
+	success = success && arv_device_read_memory (device, sirm_offset + ARV_SIRM_INFO,
+                                                     sizeof (si_info), &si_info, NULL);
+	success = success && arv_device_read_memory (device, sirm_offset + ARV_SIRM_CONTROL,
+                                                     sizeof (si_control), &si_control, NULL);
+	success = success && arv_device_read_memory (device, sirm_offset + ARV_SIRM_REQ_PAYLOAD_SIZE,
+                                                     sizeof (si_req_payload_size), &si_req_payload_size, NULL);
+	success = success && arv_device_read_memory (device, sirm_offset + ARV_SIRM_REQ_LEADER_SIZE,
+                                                     sizeof (si_req_leader_size), &si_req_leader_size, NULL);
+	success = success && arv_device_read_memory (device, sirm_offset + ARV_SIRM_REQ_TRAILER_SIZE,
+                                                     sizeof (si_req_trailer_size), &si_req_trailer_size, NULL);
+	success = success && arv_device_read_memory (device, sirm_offset + ARV_SIRM_MAX_LEADER_SIZE,
+                                                     sizeof (si_max_leader_size), &si_max_leader_size, NULL);
+	success = success && arv_device_read_memory (device, sirm_offset + ARV_SIRM_PAYLOAD_SIZE,
+                                                     sizeof (si_payload_size), &si_payload_size, NULL);
+	success = success && arv_device_read_memory (device, sirm_offset + ARV_SIRM_PAYLOAD_COUNT,
+                                                     sizeof (si_payload_count), &si_payload_count, NULL);
+	success = success && arv_device_read_memory (device, sirm_offset + ARV_SIRM_TRANSFER1_SIZE,
+                                                     sizeof (si_transfer1_size), &si_transfer1_size, NULL);
+	success = success && arv_device_read_memory (device, sirm_offset + ARV_SIRM_TRANSFER2_SIZE,
+                                                     sizeof (si_transfer2_size), &si_transfer2_size, NULL);
+	success = success && arv_device_read_memory (device, sirm_offset + ARV_SIRM_MAX_TRAILER_SIZE,
+                                                     sizeof (si_max_trailer_size), &si_max_trailer_size, NULL);
 	if (!success) {
 		arv_warning_device ("[UvDevice::_bootstrap] Error during memory read");
 		return FALSE;
@@ -531,8 +573,10 @@ _bootstrap (ArvUvDevice *uv_device)
 	arv_info_device ("SIRM_TRANSFER2_SIZE =        0x%08x", si_transfer2_size);
 	arv_info_device ("SIRM_MAX_TRAILER_SIZE =      0x%08x", si_max_trailer_size);
 
-	success = success && arv_device_read_memory (device, manifest_table_address, sizeof (guint64), &manifest_n_entries, NULL);
-	success = success && arv_device_read_memory (device, manifest_table_address + 0x08, sizeof (entry), &entry, NULL);
+	success = success && arv_device_read_memory (device, manifest_table_address,
+                                                     sizeof (manifest_n_entries), &manifest_n_entries, NULL);
+	success = success && arv_device_read_memory (device, manifest_table_address + 0x08,
+                                                     sizeof (entry), &entry, NULL);
 	if (!success) {
 		arv_warning_device ("[UvDevice::_bootstrap] Error during memory read");
 		return FALSE;
@@ -1017,7 +1061,8 @@ arv_uv_device_finalize (GObject *object)
         libusb_hotplug_deregister_callback (priv->usb, priv->hotplug_cb_handle);
 
 	priv->event_thread_run = 0;
-	g_thread_join (priv->event_thread);
+        if (priv->event_thread)
+                g_thread_join (priv->event_thread);
 
 	g_clear_object (&priv->genicam);
 

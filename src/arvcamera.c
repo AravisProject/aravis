@@ -289,7 +289,7 @@ arv_camera_get_sensor_size (ArvCamera *camera, gint *width, gint *height, GError
  * @camera: a #ArvCamera
  * @error: a #GError placeholder, %NULL to ignore
  *
- * Returns: %TRUE% if OffsetX and OffsetY features are available.
+ * Returns: %TRUE if OffsetX and OffsetY features are available.
  *
  * Since: 0.8.22
  */
@@ -1035,17 +1035,16 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate, GError **error)
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
 	if (frame_rate <= 0.0) {
-		if (arv_camera_is_feature_available (camera, "AcquisitionFrameRateEnable", &local_error)) {
-			if (local_error == NULL)
-				arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", FALSE, error);
-			else
-				g_propagate_error (error, local_error);
+		arv_camera_set_frame_rate_enable(camera, FALSE, &local_error);
+		if (local_error != NULL)
+		{
+			g_propagate_error (error, local_error);
 		}
 		return;
 	}
 
-        /* Ignore the error in order to be able to change the frame rate during the acquisition, as some devices don't
-         * allow to change TriggerMode if the acquisition is already started. */
+	/* Ignore the error in order to be able to change the frame rate during the acquisition, as some devices don't
+	* allow to change TriggerMode if the acquisition is already started. */
 	arv_camera_clear_triggers (camera, NULL);
 
 	arv_camera_get_frame_rate_bounds (camera, &minimum, &maximum, &local_error);
@@ -1062,11 +1061,7 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate, GError **error)
 	switch (priv->vendor) {
 		case ARV_CAMERA_VENDOR_BASLER:
 			if (local_error == NULL){
-				if (arv_camera_is_feature_available (camera, "AcquisitionFrameRateEnable", &local_error)){
-					/* enable is optional on some devices */
-					if (local_error == NULL)
-						arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", TRUE, &local_error);
-				}
+				arv_camera_set_frame_rate_enable(camera, TRUE, &local_error);
 			}
 			if (local_error == NULL)
 				arv_camera_set_float (camera,
@@ -1104,17 +1099,15 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate, GError **error)
 			}
 			break;
 		case ARV_CAMERA_VENDOR_POINT_GREY_FLIR:
-			if (local_error == NULL) {
-				if (priv->has_acquisition_frame_rate_enabled)
-					arv_camera_set_boolean (camera, "AcquisitionFrameRateEnabled", TRUE, &local_error);
-				else
-					arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", TRUE, &local_error);
+			arv_camera_set_frame_rate_enable(camera, TRUE, &local_error);
+			if (local_error == NULL && priv->has_acquisition_frame_rate_auto) {
+				arv_camera_set_string (camera, "AcquisitionFrameRateAuto", "Off", &local_error);
 			}
-			if (local_error == NULL)
-				if (priv->has_acquisition_frame_rate_auto)
-					arv_camera_set_string (camera, "AcquisitionFrameRateAuto", "Off", &local_error);
-			if (local_error == NULL)
+
+			if (local_error == NULL) {
 				arv_camera_set_float (camera, "AcquisitionFrameRate", frame_rate, &local_error);
+			}
+
 			break;
 		case ARV_CAMERA_VENDOR_DALSA:
 		case ARV_CAMERA_VENDOR_RICOH:
@@ -1122,19 +1115,14 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate, GError **error)
 		case ARV_CAMERA_VENDOR_MATRIX_VISION:
 		case ARV_CAMERA_VENDOR_IMPERX:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
-                        if (local_error == NULL) {
-                                if (arv_camera_is_feature_available (camera, "AcquisitionFrameRateEnable", &local_error)) {
-                                        if (local_error == NULL)
-                                                arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", TRUE, &local_error);
-                                }
-                        }
-                        if (local_error == NULL)
-                                arv_camera_set_float (camera,
-                                                      priv->has_acquisition_frame_rate ?
-                                                      "AcquisitionFrameRate":
-                                                      "AcquisitionFrameRateAbs", frame_rate, &local_error);
-                        break;
-        }
+			arv_camera_set_frame_rate_enable(camera, TRUE, &local_error);
+			if (local_error == NULL)
+				arv_camera_set_float (camera,
+															priv->has_acquisition_frame_rate ?
+															"AcquisitionFrameRate":
+															"AcquisitionFrameRateAbs", frame_rate, &local_error);
+			break;
+	}
 
 	if (local_error != NULL)
 		g_propagate_error (error, local_error);
@@ -1268,6 +1256,66 @@ arv_camera_get_frame_rate_bounds (ArvCamera *camera, double *min, double *max, G
 						     "AcquisitionFrameRateAbs",
 						     min, max, error);
 			break;
+	}
+}
+
+/*
+* arv_camera_set_frame_rate_enable:
+* @camera: an #ArvCamera
+* @enable: true to enable, false to disable
+* @error: a #GError placeholer, %NULL to ignore
+*
+* Configures whether to enable the upper frame rate limit set by #arv_camera_set_frame_rate.
+* Implements vendor specific quirks if needed.
+* Since: 0.8.26
+*/
+void
+arv_camera_set_frame_rate_enable(ArvCamera *camera, gboolean enable, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+	GError *local_error = NULL;
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+  switch (priv->vendor) {
+		case ARV_CAMERA_VENDOR_BASLER:
+			if (local_error == NULL){
+				if (arv_camera_is_feature_available (camera, "AcquisitionFrameRateEnable", &local_error)){
+					/* enable is optional on some devices */
+					if (local_error == NULL)
+						arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", enable, &local_error);
+				}
+			}
+			break;
+		case ARV_CAMERA_VENDOR_POINT_GREY_FLIR:
+			if (local_error == NULL) {
+				if (priv->has_acquisition_frame_rate_enabled)				
+					arv_camera_set_boolean (camera, "AcquisitionFrameRateEnabled", enable, &local_error);
+				else
+					arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", enable, &local_error);
+			}
+			break;
+		case ARV_CAMERA_VENDOR_DALSA:
+		case ARV_CAMERA_VENDOR_RICOH:
+		case ARV_CAMERA_VENDOR_XIMEA:
+		case ARV_CAMERA_VENDOR_MATRIX_VISION:
+		case ARV_CAMERA_VENDOR_IMPERX:	
+		case ARV_CAMERA_VENDOR_UNKNOWN:
+			if (local_error == NULL) {
+				if (arv_camera_is_feature_available (camera, "AcquisitionFrameRateEnable", &local_error)) {
+					if (local_error == NULL)
+						arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", TRUE, &local_error);
+					}
+			}
+			break;
+		case ARV_CAMERA_VENDOR_PROSILICA:
+		case ARV_CAMERA_VENDOR_TIS:
+		default:
+			break; /* No specific frame rate enable code */
+	}
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
 	}
 }
 
@@ -1476,7 +1524,7 @@ arv_camera_clear_triggers (ArvCamera* camera, GError **error)
  * @camera: a #ArvCamera
  * @error: a #GError placeholder, %NULL to ignore
  *
- * Returns: %TRUE% if software trigger is supported.
+ * Returns: %TRUE if software trigger is supported by @camera.
  *
  * Since: 0.8.17
  */
@@ -1484,9 +1532,7 @@ arv_camera_clear_triggers (ArvCamera* camera, GError **error)
 gboolean
 arv_camera_is_software_trigger_supported (ArvCamera *camera, GError **error)
 {
-	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
-
-        return ARV_IS_GC_COMMAND (arv_device_get_feature (priv->device, "TriggerSoftware"));
+        return arv_camera_is_feature_implemented (camera, "TriggerSoftware", error);
 }
 
 /**
@@ -2036,6 +2082,129 @@ arv_camera_get_black_level_auto (ArvCamera *camera, GError **error)
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), ARV_AUTO_OFF);
 
 	return arv_auto_from_string (arv_camera_get_string (camera, "BlackLevelAuto", error));
+}
+
+/* Component control */
+
+/**
+ * arv_camera_is_component_available:
+ * @camera: a #ArvCamera
+ * @error: a #GError placeholder, %NULL to ingore
+ *
+ * Returns: %TRUE if Component features are available.
+ *
+ * Since: 0.8.25
+ */
+
+gboolean
+arv_camera_is_component_available (ArvCamera *camera, GError **error)
+{
+        return arv_camera_is_feature_available (camera, "ComponentSelector", error);
+}
+
+/**
+ * arv_camera_dup_available_components:
+ * @camera: a #ArvCamera
+ * @n_components: (out) (optional) : number of available components
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Retrieves the list of available components.
+ *
+ * Returns: (array length=n_components) (transfer container): a newly allocated array of strings, to be freed after use with
+ * g_free().
+ *
+ * Since: 0.8.23
+ */
+
+const char **
+arv_camera_dup_available_components (ArvCamera *camera, guint *n_components, GError **error)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+
+	return arv_camera_dup_available_enumerations_as_strings (camera, "ComponentSelector", n_components, error);
+}
+
+/**
+ * arv_camera_select_component:
+ * @camera: a #ArvCamera
+ * @component: component to select
+ * @flags: a #ArvComponentSelectionFlags
+ * @component_id: (out) (optional): a placeholder for the component id
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Select and enable or disable the given @component.
+ *
+ * Returns: %TRUE if the component is enabled
+ *
+ * Since: 0.8.25
+ */
+
+gboolean
+arv_camera_select_component (ArvCamera *camera, const char *component,
+                             ArvComponentSelectionFlags flags, guint *component_id,
+                             GError **error)
+{
+        GError *local_error = NULL;
+        gboolean is_enabled = !(flags == ARV_COMPONENT_SELECTION_FLAGS_DISABLE);
+
+        g_return_val_if_fail (ARV_IS_CAMERA(camera), FALSE);
+
+        if (flags == ARV_COMPONENT_SELECTION_FLAGS_EXCLUSIVE_ENABLE ||
+            flags == ARV_COMPONENT_SELECTION_FLAGS_ENABLE_ALL) {
+                guint n_components, i;
+                const char **components = arv_camera_dup_available_components(camera, &n_components, &local_error);
+
+                for (i = 0; i < n_components && local_error == NULL; i++) {
+                        arv_camera_set_string (camera, "ComponentSelector", components[i], &local_error);
+                        if (local_error == NULL)
+                                arv_camera_set_boolean(camera, "ComponentEnable",
+                                                       flags == ARV_COMPONENT_SELECTION_FLAGS_ENABLE_ALL,
+                                                       &local_error);
+                }
+        }
+
+        if (local_error == NULL) arv_camera_set_string (camera, "ComponentSelector", component, &local_error);
+        if (local_error == NULL &&
+            flags != ARV_COMPONENT_SELECTION_FLAGS_NONE &&
+            flags != ARV_COMPONENT_SELECTION_FLAGS_ENABLE_ALL)
+                arv_camera_set_boolean(camera, "ComponentEnable",
+                                       flags == ARV_COMPONENT_SELECTION_FLAGS_DISABLE ? FALSE: TRUE,
+                                       &local_error);
+
+        if (component_id != NULL && local_error == NULL)
+                *component_id = arv_camera_get_integer(camera, "ComponentIDValue", &local_error);
+
+        if (local_error == NULL && flags == ARV_COMPONENT_SELECTION_FLAGS_NONE)
+                is_enabled = arv_camera_get_boolean(camera, "ComponentEnable", &local_error);
+
+        if (local_error != NULL) {
+                g_propagate_error(error, local_error);
+                return FALSE;
+        }
+
+        return is_enabled;
+}
+
+/**
+ * arv_camera_select_and_enable_component:
+ * @camera: a #ArvCamera
+ * @component: component to select
+ * @disable_others: %TRUE to disable all the other components
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Select and enable the given component.
+ *
+ * Since: 0.8.23
+ */
+
+void
+arv_camera_select_and_enable_component (ArvCamera *camera, const char *component, gboolean disable_others, GError **error)
+{
+        arv_camera_select_component(camera, component,
+                                    disable_others ?
+                                    ARV_COMPONENT_SELECTION_FLAGS_EXCLUSIVE_ENABLE :
+                                    ARV_COMPONENT_SELECTION_FLAGS_ENABLE,
+                                    NULL, error);
 }
 
 /* Transport layer control */
@@ -2773,6 +2942,27 @@ arv_camera_is_feature_available (ArvCamera *camera, const char *feature, GError 
 }
 
 /**
+ * arv_camera_is_feature_implemented:
+ * @camera: a #ArvCamera
+ * @feature: feature name
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Return: %TRUE if feature is implemented, %FALSE if not or on error.
+ *
+ * Since: 0.8.23
+ */
+
+gboolean
+arv_camera_is_feature_implemented (ArvCamera *camera, const char *feature, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
+
+	return arv_device_is_feature_implemented (priv->device, feature, error);
+}
+
+/**
  * arv_camera_set_register_cache_policy:
  * @camera: a #ArvCamera
  * @policy: cache policy
@@ -2868,6 +3058,24 @@ arv_camera_is_gv_device	(ArvCamera *camera)
 }
 
 /**
+ * arv_camera_gv_get_n_network_interfaces:
+ * @camera: a #ArvCamera
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: the number of device network interfaces.
+ *
+ * Since: 0.8.25
+ */
+
+gint
+arv_camera_gv_get_n_network_interfaces (ArvCamera *camera, GError **error)
+{
+	g_return_val_if_fail (arv_camera_is_gv_device (camera), 0);
+
+	return arv_camera_get_integer (camera, "ArvGevNumberOfNetworkInterfaces", error);
+}
+
+/**
  * arv_camera_gv_get_n_stream_channels:
  * @camera: a #ArvCamera
  * @error: a #GError placeholder, %NULL to ignore
@@ -2882,7 +3090,7 @@ arv_camera_gv_get_n_stream_channels (ArvCamera *camera, GError **error)
 {
 	g_return_val_if_fail (arv_camera_is_gv_device (camera), 0);
 
-	return arv_camera_get_integer (camera, "GevStreamChannelCount", error);
+	return arv_camera_get_integer (camera, "ArvGevStreamChannelCount", error);
 }
 
 /**
@@ -2899,24 +3107,12 @@ arv_camera_gv_get_n_stream_channels (ArvCamera *camera, GError **error)
 void
 arv_camera_gv_select_stream_channel (ArvCamera *camera, gint channel_id, GError **error)
 {
-	GError *local_error = NULL;
-	gboolean available;
-
 	if (channel_id < 0)
 		return;
 
 	g_return_if_fail (arv_camera_is_gv_device (camera));
 
-	available = arv_camera_is_feature_available (camera, "GevStreamChannelSelector", &local_error);
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return;
-	}
-
-	if (!available && channel_id == 0)
-		return;
-
-	arv_camera_set_integer (camera, "GevStreamChannelSelector", channel_id, error);
+	arv_camera_set_integer (camera, "ArvGevStreamChannelSelector", channel_id, error);
 }
 
 /**
@@ -2932,21 +3128,79 @@ arv_camera_gv_select_stream_channel (ArvCamera *camera, gint channel_id, GError 
 int
 arv_camera_gv_get_current_stream_channel (ArvCamera *camera, GError **error)
 {
-	GError *local_error = NULL;
-	gboolean available;
-
 	g_return_val_if_fail (arv_camera_is_gv_device (camera), 0);
 
-	available = arv_camera_is_feature_available (camera, "GevStreamChannelSelector", &local_error);
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return 0;
-	}
+	return arv_camera_get_integer (camera, "ArvGevStreamChannelSelector", error);
+}
 
-	if (!available)
-		return 0;
+/**
+ * arv_camera_gv_set_multipart:
+ * @camera: a #ArvCamera
+ * @enable: %TRUE to enable multipart
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Control multipart payload support
+ *
+ * Since: 0.8.23
+ */
 
-	return arv_camera_get_integer (camera, "GevStreamChannelSelector", error);
+void
+arv_camera_gv_set_multipart (ArvCamera *camera, gboolean enable, GError **error)
+{
+	g_return_if_fail (arv_camera_is_gv_device (camera));
+
+        arv_camera_set_boolean (camera, "ArvGevSCCFGMultipart", enable, error);
+}
+
+/**
+ * arv_camera_gv_get_multipart:
+ * @camera: a #ArvCamera
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: %TRUE if multipart payload support is enabled.
+ *
+ * Since: 0.8.23
+ */
+
+gboolean
+arv_camera_gv_get_multipart (ArvCamera *camera, GError **error)
+{
+	g_return_val_if_fail (arv_camera_is_gv_device (camera), FALSE);
+
+        return arv_camera_get_boolean (camera, "ArvGevSCCFGMultipart", error);
+}
+
+/**
+ * arv_camera_gv_is_multipart_supported:
+ * @camera: a #ArvCamera
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: %TRUE if multipart payload is supported by @camera.
+ *
+ * Since: 0.8.23
+ */
+
+gboolean
+arv_camera_gv_is_multipart_supported (ArvCamera *camera, GError **error)
+{
+        GError *local_error = NULL;
+        gboolean is_supported;
+
+	g_return_val_if_fail (arv_camera_is_gv_device (camera), FALSE);
+
+        is_supported = arv_camera_is_feature_implemented (camera, "ArvGevSCCFGMultipart", &local_error);
+
+        /* Ignore invalid address error, the needed registers are optional */
+        if (local_error != NULL) {
+                if (local_error->domain == ARV_DEVICE_ERROR &&
+                    (local_error->code == ARV_DEVICE_ERROR_PROTOCOL_ERROR_INVALID_ADDRESS ||
+                     local_error->code == ARV_DEVICE_ERROR_PROTOCOL_ERROR_ACCESS_DENIED))
+                        g_clear_error (&local_error);
+                else
+                        g_propagate_error(error, local_error);
+        }
+
+        return is_supported;
 }
 
 /**
@@ -2974,7 +3228,7 @@ arv_camera_gv_set_packet_delay (ArvCamera *camera, gint64 delay_ns, GError **err
 
 	g_return_if_fail (arv_camera_is_gv_device (camera));
 
-	tick_frequency = arv_camera_get_integer (camera, "GevTimestampTickFrequency", &local_error);
+	tick_frequency = arv_camera_get_integer (camera, "ArvGevTimestampTickFrequency", &local_error);
 	if (local_error != NULL) {
 		g_propagate_error (error, local_error);
 		return;
@@ -3023,7 +3277,7 @@ arv_camera_gv_get_packet_delay (ArvCamera *camera, GError **error)
 	if (!available)
 		return 0;
 
-	tick_frequency = arv_camera_get_integer (camera, "GevTimestampTickFrequency", &local_error);
+	tick_frequency = arv_camera_get_integer (camera, "ArvGevTimestampTickFrequency", &local_error);
 	if (local_error != NULL) {
 		g_propagate_error (error, local_error);
 		return 0;
@@ -3560,8 +3814,7 @@ arv_camera_set_chunks (ArvCamera *camera, const char *chunk_list, GError **error
 	const char **available_chunks;
 	char **chunks;
 	char *striped_chunk_list;
-	gboolean enable_chunk_data = FALSE;
-	guint i;
+	guint i, j;
 	guint n_values;
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
@@ -3571,26 +3824,54 @@ arv_camera_set_chunks (ArvCamera *camera, const char *chunk_list, GError **error
 		return;
 	}
 
-	available_chunks = arv_camera_dup_available_enumerations_as_strings (camera, "ChunkSelector", &n_values, &local_error);
-	for (i = 0; i < n_values && local_error == NULL; i++) {
-		arv_camera_set_chunk_state (camera, available_chunks[i], FALSE, &local_error);
-	}
-	g_free (available_chunks);
-
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return;
-	}
-
 	striped_chunk_list = g_strdup (chunk_list);
 	arv_str_strip (striped_chunk_list, " ,:;", ',');
 	chunks = g_strsplit_set (striped_chunk_list, " ,:;", -1);
 	g_free (striped_chunk_list);
 
-	for (i = 0; chunks[i] != NULL && local_error == NULL; i++) {
-		arv_camera_set_chunk_state (camera, chunks[i], TRUE, &local_error);
-		enable_chunk_data = TRUE;
-	}
+        if (chunks == NULL || chunks[0] == NULL) {
+                g_strfreev (chunks);
+		arv_camera_set_chunk_mode (camera, FALSE, error);
+		return;
+        }
+
+	arv_camera_set_chunk_mode (camera, TRUE, &local_error);
+
+        if (local_error == NULL) {
+                available_chunks = arv_camera_dup_available_enumerations_as_strings (camera,
+                                                                                     "ChunkSelector",
+                                                                                     &n_values, &local_error);
+                for (j = 0; chunks[j] != NULL && local_error == NULL; j++) {
+                        gboolean found = FALSE;
+                        for (i = 0; i < n_values && local_error == NULL; i++) {
+                                if (g_strcmp0 (available_chunks[i], chunks[j]) == 0) {
+                                        found = TRUE;
+                                        break;
+                                }
+                        }
+                        if (!found) {
+                                g_set_error (&local_error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_FEATURE_NOT_FOUND,
+                                             "%s not found in available chunks", chunks[j]);
+                        }
+                }
+
+                for (i = 0; i < n_values && local_error == NULL; i++) {
+                        gboolean found = FALSE;
+                        for (j = 0; chunks[j] != NULL && local_error == NULL; j++) {
+                                if (g_strcmp0 (available_chunks[i], chunks[j]) == 0) {
+                                        found = TRUE;
+                                        break;
+                                }
+                        }
+                        /* This is normally not needed, but is there as a workaround for an issue with a Basler
+                         * acA1300-30gc which seems to reset ChunkActiveMode on every ChunkEnable=false */
+                        arv_camera_set_chunk_mode (camera, TRUE, &local_error);
+                        if (local_error == NULL)
+                                arv_camera_set_chunk_state (camera, available_chunks[i], found, &local_error);
+                }
+
+                g_free (available_chunks);
+        }
 
 	g_strfreev (chunks);
 
@@ -3598,8 +3879,6 @@ arv_camera_set_chunks (ArvCamera *camera, const char *chunk_list, GError **error
 		g_propagate_error (error, local_error);
 		return;
 	}
-
-	arv_camera_set_chunk_mode (camera, enable_chunk_data, error);
 }
 
 /**

@@ -66,6 +66,10 @@ double 		arv_value_get_double 		(ArvValue *value);
 gboolean 	arv_value_holds_int64 		(ArvValue *value);
 double 		arv_value_holds_double 		(ArvValue *value);
 
+/* Compatibility functions */
+
+char *          arv_g_string_free_and_steal     (GString *string) G_GNUC_WARN_UNUSED_RESULT;
+
 /* private, but used by tests */
 ARV_API gboolean	arv_parse_genicam_url	(const char *url, gssize url_length,
 						 char **scheme, char **authority, char **path,

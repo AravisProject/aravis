@@ -1,3 +1,40 @@
+Stable release 0.8.26
+=====================
+
+  * viewer: fix pixel format selection #765 (Emmanuel)
+
+Stable release 0.8.25
+=====================
+
+  * viewer: add component selection support (Emmanuel)
+  * buffer: add component id getter (Emmanuel)
+  * buffer: fix multipart informations (Emmanuel)
+
+Stable release 0.8.24
+=====================
+
+  * gv: fix multipart data accessor (Emmanuel)
+  * gv: improve error handling of network API (Emmanuel)
+
+Stable release 0.8.23
+=====================
+
+  * python: fix crash in stream callback #714 (Cyril)
+  * gv: multipart support (Emmanuel)
+  * gv: chunk data payload support (Emmanuel)
+  * gv: use the trailer packet for expected data size calculation (Emmanuel)
+  * gv: reset SCPx register on stream finalization
+  * gv: API to allow discovery ack broadcast (Emmanuel)
+  * gv: add more legacy endianness entries (Tomohisa, Radim, Emmanuel)
+  * gv: fix infinite loop in auto packet size (Emmanuel)
+  * gv: don't use source port in socket packet mode (Emmanuel)
+  * genicam: AccessMode improvements (Emmanuel)
+  * camera: add a Component API (Emmanuel)
+  * buffer: part access API (Emmanuel)
+  * cameratest: allow to set features from a string (Emmanuel)
+  * ci: windows build fixes (Momoko, Emmanuel)
+  * doc: improvements (Masahiro, Emmanuel)
+
 Stable release 0.8.22
 =====================
 

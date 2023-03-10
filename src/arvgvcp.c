@@ -27,6 +27,7 @@
 
 #include <arvgvcpprivate.h>
 #include <arvgvspprivate.h>
+#include <arvmiscprivate.h>
 #include <arvenumtypes.h>
 #include <arvenumtypesprivate.h>
 #include <string.h>
@@ -337,7 +338,7 @@ arv_gvcp_packet_new_write_register_ack 	(guint32 data_index,
  */
 
 ArvGvcpPacket *
-arv_gvcp_packet_new_discovery_cmd (size_t *packet_size)
+arv_gvcp_packet_new_discovery_cmd (gboolean allow_broadcat_discovery_ack, size_t *packet_size)
 {
 	ArvGvcpPacket *packet;
 
@@ -348,7 +349,8 @@ arv_gvcp_packet_new_discovery_cmd (size_t *packet_size)
 	packet = g_malloc (*packet_size);
 
 	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_CMD;
-	packet->header.packet_flags = ARV_GVCP_CMD_PACKET_FLAGS_ACK_REQUIRED;
+	packet->header.packet_flags = ARV_GVCP_CMD_PACKET_FLAGS_ACK_REQUIRED |
+                (allow_broadcat_discovery_ack ? ARV_GVCP_DISCOVERY_PACKET_FLAGS_ALLOW_BROADCAST_ACK : 0);
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_DISCOVERY_CMD);
 	packet->header.size = g_htons (0x0000);
 	packet->header.id = g_htons (0xffff);
@@ -486,7 +488,6 @@ char *
 arv_gvcp_packet_flags_to_string_new (ArvGvcpCommand command, guint8 flags)
 {
 	GString *string = g_string_new ("");
-	char *buffer = NULL;
 	unsigned i;
 
 	for (i = 0; i < 8; i++) {
@@ -517,11 +518,7 @@ arv_gvcp_packet_flags_to_string_new (ArvGvcpCommand command, guint8 flags)
 	if (string->len == 0)
 		g_string_append (string, "none");
 
-	buffer = string->str;
-
-	g_string_free (string, FALSE);
-
-	return buffer;
+        return arv_g_string_free_and_steal(string);
 }
 
 /**
@@ -571,7 +568,6 @@ char *
 arv_gvcp_packet_to_string (const ArvGvcpPacket *packet)
 {
 	GString *string;
-	char *c_string;
 	char *data;
 	int packet_size;
 	guint32 value;
@@ -662,11 +658,7 @@ arv_gvcp_packet_to_string (const ArvGvcpPacket *packet)
 
 	arv_g_string_append_hex_dump (string, packet, packet_size);
 
-	c_string = string->str;
-
-	g_string_free (string, FALSE);
-
-	return c_string;
+        return arv_g_string_free_and_steal(string);
 }
 
 /**

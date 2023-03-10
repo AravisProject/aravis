@@ -35,6 +35,7 @@
 
 typedef struct {
 	GArray *device_ids;
+        int flags;
 } ArvInterfacePrivate;
 
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvInterface, arv_interface, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvInterface))
@@ -90,6 +91,24 @@ arv_interface_update_device_list (ArvInterface *iface)
 	ARV_INTERFACE_GET_CLASS (iface)->update_device_list (iface, priv->device_ids);
 
 	g_array_sort (priv->device_ids, (GCompareFunc) _compare_device_ids);
+}
+
+void
+arv_interface_set_flags (ArvInterface *iface, int flags)
+{
+	ArvInterfacePrivate *priv = arv_interface_get_instance_private (iface);
+	g_return_if_fail (ARV_IS_INTERFACE (iface));
+
+        priv->flags = flags;
+}
+
+int
+arv_interface_get_flags (ArvInterface *iface)
+{
+	ArvInterfacePrivate *priv = arv_interface_get_instance_private (iface);
+	g_return_val_if_fail (ARV_IS_INTERFACE (iface), 0);
+
+        return priv->flags;
 }
 
 /**

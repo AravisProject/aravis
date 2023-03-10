@@ -22,7 +22,7 @@
 
 #include <arvuvspprivate.h>
 #include <arvstr.h>
-#include <arvmisc.h>
+#include <arvmiscprivate.h>
 
 /*
  * SECTION: arvuvsp
@@ -44,7 +44,6 @@ arv_uvsp_packet_to_string (const ArvUvspPacket *packet)
 	ArvUvspLeader *leader = (ArvUvspLeader *) packet;
 	ArvUvspTrailer *trailer = (ArvUvspTrailer *) packet;
 	GString *string;
-	char *c_string;
 
 	g_return_val_if_fail (packet != NULL, NULL);
 
@@ -57,14 +56,11 @@ arv_uvsp_packet_to_string (const ArvUvspPacket *packet)
 			g_string_append_printf (string, "frame id     = %" G_GUINT64_FORMAT "\n",
 						GUINT64_FROM_LE (packet->header.frame_id));
 			switch (GUINT16_FROM_LE (leader->infos.payload_type)) {
-				case ARV_UVSP_PAYLOAD_TYPE_IMAGE:
+				case ARV_BUFFER_PAYLOAD_TYPE_NO_DATA:
+					g_string_append (string, "payload_type = no data\n");
+                                        break;
+				case ARV_BUFFER_PAYLOAD_TYPE_IMAGE:
 					g_string_append (string, "payload_type = image\n");
-					break;
-				case ARV_UVSP_PAYLOAD_TYPE_CHUNK:
-					g_string_append (string, "payload_type = chunk\n");
-					break;
-				case ARV_UVSP_PAYLOAD_TYPE_EXTENDED_CHUNK:
-					g_string_append (string, "payload_type = extended chunk\n");
 					break;
 				default:
 					g_string_append (string, "payload_type = unknown\n");
@@ -104,11 +100,7 @@ arv_uvsp_packet_to_string (const ArvUvspPacket *packet)
 	}
 #endif
 
-	c_string = string->str;
-
-	g_string_free (string, FALSE);
-
-	return c_string;
+        return arv_g_string_free_and_steal(string);
 }
 
 /**

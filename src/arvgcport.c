@@ -42,9 +42,11 @@ typedef struct {
 } ArvGvLegacyInfos;
 
 static ArvGvLegacyInfos arv_gc_port_legacy_infos[] = {
-   { .vendor_selection = "Imperx", .model_selection = "IpxGEVCamera"},
-   { .vendor_selection = "PleoraTechnologiesInc", .model_selection = "NTxGigE"},
-   { .vendor_selection = "KowaOptronics", .model_selection = "SC130ET3"},
+   { .vendor_selection = "Imperx",                      .model_selection = "IpxGEVCamera"},
+   { .vendor_selection = "KowaOptronics",               .model_selection = "SC130ET3"},
+   { .vendor_selection = "PleoraTechnologiesInc",       .model_selection = "iPORTCLGigE"},
+   { .vendor_selection = "PleoraTechnologiesInc",       .model_selection = "NTxGigE"},
+   { .vendor_selection = "Sony",                        .model_selection = "XCG_CGSeries"},
 };
 
 typedef struct {

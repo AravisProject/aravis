@@ -349,13 +349,16 @@ _thread (void *user_data)
 				block_id = 0;
 
 				packet_size = ARV_GV_FAKE_CAMERA_BUFFER_SIZE;
-				arv_gvsp_packet_new_data_leader (image_buffer->priv->frame_id,
-								block_id,
-								image_buffer->priv->timestamp_ns,
-								image_buffer->priv->pixel_format,
-								image_buffer->priv->width, image_buffer->priv->height,
-								image_buffer->priv->x_offset, image_buffer->priv->y_offset,
-								packet_buffer, &packet_size);
+                                arv_gvsp_packet_new_image_leader (image_buffer->priv->frame_id,
+                                                                  block_id,
+                                                                  arv_buffer_get_timestamp(image_buffer),
+                                                                  arv_buffer_get_image_pixel_format(image_buffer),
+                                                                  arv_buffer_get_image_width(image_buffer),
+                                                                  arv_buffer_get_image_height(image_buffer),
+                                                                  arv_buffer_get_image_x(image_buffer),
+                                                                  arv_buffer_get_image_y(image_buffer),
+                                                                  0, 0,
+                                                                  packet_buffer, &packet_size);
 
 				if (g_random_double () >= gv_fake_camera->priv->gvsp_lost_packet_ratio)
 					g_socket_send_to (gv_fake_camera->priv->gvsp_socket, stream_address,
@@ -375,13 +378,13 @@ _thread (void *user_data)
 				while (offset < payload) {
 					size_t data_size;
 
-					data_size = MIN (gv_packet_size - ARV_GVSP_PACKET_PROTOCOL_OVERHEAD,
+					data_size = MIN (gv_packet_size - ARV_GVSP_PACKET_PROTOCOL_OVERHEAD (FALSE),
 							payload - offset);
 
 					packet_size = ARV_GV_FAKE_CAMERA_BUFFER_SIZE;
-					arv_gvsp_packet_new_data_block (image_buffer->priv->frame_id, block_id,
-									data_size, ((char *) image_buffer->priv->data) + offset,
-									packet_buffer, &packet_size);
+                                        arv_gvsp_packet_new_payload (image_buffer->priv->frame_id, block_id,
+                                                                     data_size, ((char *) image_buffer->priv->data) + offset,
+                                                                     packet_buffer, &packet_size);
 
 					if (g_random_double () >= gv_fake_camera->priv->gvsp_lost_packet_ratio)
 						g_socket_send_to (gv_fake_camera->priv->gvsp_socket, stream_address,

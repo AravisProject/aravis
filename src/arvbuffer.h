@@ -60,20 +60,22 @@ typedef enum {
 /**
  * ArvBufferPayloadType:
  * @ARV_BUFFER_PAYLOAD_TYPE_UNKNOWN: unknown payload type
+ * @ARV_BUFFER_PAYLOAD_TYPE_NO_DATA: no data
  * @ARV_BUFFER_PAYLOAD_TYPE_IMAGE: image data
- * @ARV_BUFFER_PAYLOAD_TYPE_RAWDATA: raw data
- * @ARV_BUFFER_PAYLOAD_TYPE_FILE: file
- * @ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA: chunk data
+ * @ARV_BUFFER_PAYLOAD_TYPE_RAWDATA: raw data (not supported)
+ * @ARV_BUFFER_PAYLOAD_TYPE_FILE: file (not supported)
+ * @ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA: chunk data (not supported)
  * @ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA: extended chunk data
- * @ARV_BUFFER_PAYLOAD_TYPE_JPEG: JPEG data
- * @ARV_BUFFER_PAYLOAD_TYPE_JPEG2000: JPEG2000 data
- * @ARV_BUFFER_PAYLOAD_TYPE_H264: h264 data
- * @ARV_BUFFER_PAYLOAD_TYPE_MULTIZONE_IMAGE: multizone image
- * @ARV_BUFFER_PAYLOAD_TYPE_IMAGE_EXTENDED_CHUNK: image and chunk data
+ * @ARV_BUFFER_PAYLOAD_TYPE_JPEG: JPEG data (not supported)
+ * @ARV_BUFFER_PAYLOAD_TYPE_JPEG2000: JPEG2000 data (not supported)
+ * @ARV_BUFFER_PAYLOAD_TYPE_H264: h264 data (not supported)
+ * @ARV_BUFFER_PAYLOAD_TYPE_MULTIZONE_IMAGE: multizone image (not supported)
+ * @ARV_BUFFER_PAYLOAD_TYPE_MULTIPART: multipart data
 */
 
 typedef enum {
-	ARV_BUFFER_PAYLOAD_TYPE_UNKNOWN = 		-1,
+	ARV_BUFFER_PAYLOAD_TYPE_UNKNOWN =               -1,
+	ARV_BUFFER_PAYLOAD_TYPE_NO_DATA =		0x0000,
 	ARV_BUFFER_PAYLOAD_TYPE_IMAGE =			0x0001,
 	ARV_BUFFER_PAYLOAD_TYPE_RAWDATA = 		0x0002,
 	ARV_BUFFER_PAYLOAD_TYPE_FILE = 			0x0003,
@@ -83,8 +85,25 @@ typedef enum {
 	ARV_BUFFER_PAYLOAD_TYPE_JPEG2000 = 		0x0007,
 	ARV_BUFFER_PAYLOAD_TYPE_H264 = 			0x0008,
 	ARV_BUFFER_PAYLOAD_TYPE_MULTIZONE_IMAGE = 	0x0009,
-	ARV_BUFFER_PAYLOAD_TYPE_IMAGE_EXTENDED_CHUNK = 	0x4001
+	ARV_BUFFER_PAYLOAD_TYPE_MULTIPART =             0x000a
 } ArvBufferPayloadType;
+
+typedef enum {
+        ARV_BUFFER_PART_DATA_TYPE_UNKNOWN =             -1,
+        ARV_BUFFER_PART_DATA_TYPE_2D_IMAGE =            0x0001,
+        ARV_BUFFER_PART_DATA_TYPE_2D_PLANE_BIPLANAR =   0x0002,
+        ARV_BUFFER_PART_DATA_TYPE_2D_PLANE_TRIPLANAR =  0x0003,
+        ARV_BUFFER_PART_DATA_TYPE_2D_PLANE_QUADPLANAR = 0x0004,
+        ARV_BUFFER_PART_DATA_TYPE_3D_IMAGE =            0x0005,
+        ARV_BUFFER_PART_DATA_TYPE_3D_PLANE_BIPLANAR =   0x0006,
+        ARV_BUFFER_PART_DATA_TYPE_3D_PLANE_TRIPLANAR =  0x0007,
+        ARV_BUFFER_PART_DATA_TYPE_3D_PLANE_QUADPLANAR = 0x0008,
+        ARV_BUFFER_PART_DATA_TYPE_CONFIDENCE_MAP =      0x0009,
+        ARV_BUFFER_PART_DATA_TYPE_CHUNK_DATA =          0x000A,
+        ARV_BUFFER_PART_DATA_TYPE_JPEG =                0x000B,
+        ARV_BUFFER_PART_DATA_TYPE_JPEG2000 =            0x000C,
+        ARV_BUFFER_PART_DATA_TYPE_DEVICE_SPECIFIC =     0x8000,
+} ArvBufferPartDataType;
 
 #define ARV_TYPE_BUFFER             (arv_buffer_get_type ())
 ARV_API G_DECLARE_FINAL_TYPE (ArvBuffer, arv_buffer, ARV, BUFFER, GObject)
@@ -107,12 +126,33 @@ ARV_API void			arv_buffer_set_frame_id		(ArvBuffer *buffer, guint64 frame_id);
 ARV_API guint64 		arv_buffer_get_frame_id		(ArvBuffer *buffer);
 ARV_API const void *		arv_buffer_get_data		(ArvBuffer *buffer, size_t *size);
 
-ARV_API void			arv_buffer_get_image_region		(ArvBuffer *buffer, gint *x, gint *y, gint *width, gint *height);
+ARV_API guint                   arv_buffer_get_n_parts                  (ArvBuffer *buffer);
+ARV_API gint                    arv_buffer_find_component               (ArvBuffer *buffer, guint component_id);
+ARV_API const void *		arv_buffer_get_part_data		(ArvBuffer *buffer, guint part_id, size_t *size);
+ARV_API guint   		arv_buffer_get_part_component_id	(ArvBuffer *buffer, guint part_id);
+ARV_API ArvBufferPartDataType	arv_buffer_get_part_data_type	        (ArvBuffer *buffer, guint part_id);
+ARV_API ArvPixelFormat		arv_buffer_get_part_pixel_format	(ArvBuffer *buffer, guint part_id);
+ARV_API void			arv_buffer_get_part_region		(ArvBuffer *buffer, guint part_id,
+                                                                         gint *x, gint *y,
+                                                                         gint *width, gint *height);
+ARV_API void			arv_buffer_get_part_padding	        (ArvBuffer *buffer, guint part_id,
+                                                                         gint *x_padding, gint *y_padding);
+ARV_API gint			arv_buffer_get_part_width		(ArvBuffer *buffer, guint part_id);
+ARV_API gint			arv_buffer_get_part_height		(ArvBuffer *buffer, guint part_id);
+ARV_API gint			arv_buffer_get_part_x		        (ArvBuffer *buffer, guint part_id);
+ARV_API gint			arv_buffer_get_part_y		        (ArvBuffer *buffer, guint part_id);
+
+ARV_API const void *		arv_buffer_get_image_data		(ArvBuffer *buffer, size_t *size);
+ARV_API ArvPixelFormat		arv_buffer_get_image_pixel_format	(ArvBuffer *buffer);
+ARV_API void			arv_buffer_get_image_region		(ArvBuffer *buffer,
+                                                                         gint *x, gint *y,
+                                                                         gint *width, gint *height);
+ARV_API void			arv_buffer_get_image_padding		(ArvBuffer *buffer,
+                                                                         gint *x_padding, gint *y_padding);
 ARV_API gint			arv_buffer_get_image_width		(ArvBuffer *buffer);
 ARV_API gint			arv_buffer_get_image_height		(ArvBuffer *buffer);
 ARV_API gint			arv_buffer_get_image_x			(ArvBuffer *buffer);
 ARV_API gint			arv_buffer_get_image_y			(ArvBuffer *buffer);
-ARV_API ArvPixelFormat		arv_buffer_get_image_pixel_format	(ArvBuffer *buffer);
 
 ARV_API gboolean		arv_buffer_has_chunks		(ArvBuffer *buffer);
 ARV_API const void *		arv_buffer_get_chunk_data	(ArvBuffer *buffer, guint64 chunk_id, size_t *size);

@@ -345,6 +345,29 @@ arv_device_is_feature_available (ArvDevice *device, const char *feature, GError 
 	return ARV_IS_GC_FEATURE_NODE (node) && arv_gc_feature_node_is_available (ARV_GC_FEATURE_NODE (node), error);
 }
 
+/**
+ * arv_device_is_feature_implemented:
+ * @device: a #ArvDevice
+ * @feature: feature name
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Return: %TRUE if feature is implemented, %FALSE if not or on error.
+ *
+ * Since: 0.8.23
+ */
+
+gboolean
+arv_device_is_feature_implemented (ArvDevice *device, const char *feature, GError **error)
+{
+	ArvGcNode* node;
+
+	g_return_val_if_fail (ARV_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (feature != NULL, FALSE);
+
+	node = arv_device_get_feature (device, feature);
+	return ARV_IS_GC_FEATURE_NODE (node) && arv_gc_feature_node_is_implemented (ARV_GC_FEATURE_NODE (node), error);
+}
+
 static void *
 _get_feature (ArvDevice *device, GType node_type, const char *feature, GError **error)
 {

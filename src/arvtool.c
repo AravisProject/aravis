@@ -33,6 +33,7 @@ static char *arv_option_debug_domains = NULL;
 static char *arv_option_register_cache = NULL;
 static char *arv_option_range_check = NULL;
 static char *arv_option_access_check = NULL;
+static gboolean arv_option_gv_allow_broadcast_discovery_ack = FALSE;
 static gboolean arv_option_show_time = FALSE;
 static gboolean arv_option_show_version = FALSE;
 
@@ -62,6 +63,13 @@ static const GOptionEntry arv_option_entries[] =
 		"access-check",			'\0', 0, G_OPTION_ARG_STRING,
 		&arv_option_access_check,	"Feature access check policy",
 		"{disable|enable}"
+	},
+	{
+		"gv-allow-broadcast-discovery-ack",
+                '\0', 0, G_OPTION_ARG_NONE,
+		&arv_option_gv_allow_broadcast_discovery_ack,
+                "Allow broadcast discovery ack",
+		NULL
 	},
 	{
 		"time",				't', 0, G_OPTION_ARG_NONE,
@@ -377,6 +385,7 @@ arv_tool_control (int argc, char **argv, ArvDevice *device)
                         if (g_strrstr (tokens[0], "R[") == tokens[0]) {
                                 guint32 value;
                                 guint32 address;
+                                GError *error = NULL;
 
                                 address = g_ascii_strtoll(&tokens[0][2], NULL, 0);
 
@@ -384,13 +393,22 @@ arv_tool_control (int argc, char **argv, ArvDevice *device)
                                         arv_device_write_register (device,
                                                                    address,
                                                                    g_ascii_strtoll (tokens[1],
-                                                                                    NULL, 0), NULL); /* TODO error handling */
+                                                                                    NULL, 0), &error);
+                                        if (error != NULL)
+                                                printf ("R[0x%08x] write error: %s\n", address, error->message);
                                 }
 
-                                arv_device_read_register (device, address, &value, NULL); /* TODO error handling */
+                                if (error == NULL) {
+                                        arv_device_read_register (device, address, &value, &error);
+                                        if (error == NULL) {
+                                                printf ("R[0x%08x] = 0x%08x\n",
+                                                        address, value);
+                                        } else {
+                                                printf ("R[0x%08x] read error: %s\n", address, error->message);
+                                        }
+                                }
 
-                                printf ("R[0x%08x] = 0x%08x\n",
-                                        address, value);
+                                g_clear_error(&error);
                         } else
                                 printf ("Feature '%s' not found\n", tokens[0]);
                 }
@@ -543,7 +561,8 @@ arv_tool_network (int argc, char **argv, ArvDevice *device)
                                         else if (g_ascii_strcasecmp (tokens[1], "LLA") == 0)
                                                 mode = ARV_GV_IP_CONFIGURATION_MODE_LLA;
                                         else {
-                                                printf ("Unknown mode \"%s\". Avalaible modes: PersistentIP, DHCP and LLA\n", tokens[1]);
+                                                printf ("Unknown mode \"%s\". Avalaible modes: PersistentIP, DHCP and LLA\n",
+                                                        tokens[1]);
                                                 return;
                                         }
                                         arv_gv_device_set_ip_configuration_mode (gv_device, mode, &error);
@@ -737,6 +756,9 @@ main (int argc, char **argv)
                     arv_option_device_selection[i] == '?' ||
                     arv_option_device_selection[i] == '|')
                         is_glob_pattern = TRUE;
+
+        if (arv_option_gv_allow_broadcast_discovery_ack)
+                arv_set_interface_flags ("GigEVision", ARV_GV_INTERFACE_FLAGS_ALLOW_BROADCAST_DISCOVERY_ACK);
 
 	device_id = arv_option_device_address != NULL ?
                 arv_option_device_address :

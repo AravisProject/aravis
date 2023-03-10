@@ -25,8 +25,23 @@
 
 #include <arvbuffer.h>
 #include <arvgvspprivate.h>
+#include <stddef.h>
 
 G_BEGIN_DECLS
+
+typedef struct {
+        ptrdiff_t data_offset;
+        size_t size;
+        guint component_id;
+        ArvBufferPartDataType data_type;
+	ArvPixelFormat pixel_format;
+	guint32 width;
+	guint32 height;
+	guint32 x_offset;
+	guint32 y_offset;
+	guint32 x_padding;
+	guint32 y_padding;
+} ArvBufferPartInfos;
 
 typedef struct {
 	size_t allocated_size;
@@ -37,9 +52,10 @@ typedef struct {
 	GDestroyNotify user_data_destroy_func;
 
 	ArvBufferStatus status;
-	size_t received_size;
+        size_t received_size;
 
 	ArvBufferPayloadType payload_type;
+        gboolean has_chunks;
 
 	guint32 chunk_endianness;
 
@@ -47,12 +63,8 @@ typedef struct {
 	guint64 timestamp_ns;
 	guint64 system_timestamp_ns;
 
-	guint32 x_offset;
-	guint32 y_offset;
-	guint32 width;
-	guint32 height;
-
-	ArvPixelFormat pixel_format;
+        guint n_parts;
+        ArvBufferPartInfos *parts;
 } ArvBufferPrivate;
 
 struct _ArvBuffer {
@@ -65,8 +77,7 @@ struct _ArvBufferClass {
 	GObjectClass parent_class;
 };
 
-gboolean	arv_buffer_payload_type_has_chunks 	(ArvBufferPayloadType payload_type);
-gboolean	arv_buffer_payload_type_has_aoi 	(ArvBufferPayloadType payload_type);
+void            arv_buffer_set_n_parts                  (ArvBuffer* buffer, guint n_parts);
 
 G_END_DECLS
 

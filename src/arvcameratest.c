@@ -30,6 +30,7 @@ static int arv_option_gv_packet_size = -1;
 static gboolean arv_option_realtime = FALSE;
 static gboolean arv_option_high_priority = FALSE;
 static gboolean arv_option_no_packet_socket = FALSE;
+static gboolean arv_option_multipart = FALSE;
 static char *arv_option_chunks = NULL;
 static int arv_option_bandwidth_limit = -1;
 static char *arv_option_register_cache = NULL;
@@ -38,6 +39,7 @@ static char *arv_option_access_check = NULL;
 static int arv_option_duration_s = -1;
 static char *arv_option_uv_usb_mode = NULL;
 static gboolean arv_option_show_version = FALSE;
+static gboolean arv_option_gv_allow_broadcast_discovery_ack = FALSE;
 
 /* clang-format off */
 static const GOptionEntry arv_option_entries[] =
@@ -174,6 +176,11 @@ static const GOptionEntry arv_option_entries[] =
 		NULL
 	},
 	{
+		"multipart",    			'\0', 0, G_OPTION_ARG_NONE,
+		&arv_option_multipart,		"Enable multipart payload",
+		NULL
+	},
+	{
 		"register-cache",			'\0', 0, G_OPTION_ARG_STRING,
 		&arv_option_register_cache,		"Register cache policy",
 		"{disable|enable|debug}"
@@ -197,6 +204,12 @@ static const GOptionEntry arv_option_entries[] =
 		"duration",	        		'\0', 0, G_OPTION_ARG_INT,
 		&arv_option_duration_s,		        "Test duration (s)",
 		"<s>"
+	},
+	{
+		"gv-allow-broadcast-discovery-ack",     '\0', 0, G_OPTION_ARG_NONE,
+		&arv_option_gv_allow_broadcast_discovery_ack,
+                "Allow broadcast discovery ack",
+		NULL
 	},
 	{
 		"debug", 				'd', 0, G_OPTION_ARG_STRING,
@@ -459,6 +472,9 @@ main (int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
+        if (arv_option_gv_allow_broadcast_discovery_ack)
+                arv_set_interface_flags ("GigEVision", ARV_GV_INTERFACE_FLAGS_ALLOW_BROADCAST_DISCOVERY_ACK);
+
 	arv_enable_interface ("Fake");
 
 	arv_debug_enable (arv_option_debug_domains);
@@ -538,13 +554,14 @@ main (int argc, char **argv)
 			if (error == NULL) arv_camera_gv_select_stream_channel (camera, arv_option_gv_stream_channel, &error);
 			if (error == NULL) arv_camera_gv_set_packet_delay (camera, arv_option_gv_packet_delay, &error);
 			if (error == NULL) arv_camera_gv_set_packet_size (camera, arv_option_gv_packet_size, &error);
-
-			arv_camera_gv_set_stream_options (camera, arv_option_no_packet_socket ?
-							  ARV_GV_STREAM_OPTION_PACKET_SOCKET_DISABLED :
-							  ARV_GV_STREAM_OPTION_NONE);
-			if (arv_option_packet_size_adjustment != NULL)
-				arv_camera_gv_set_packet_size_adjustment (camera, adjustment);
-		}
+                        arv_camera_gv_set_stream_options (camera, arv_option_no_packet_socket ?
+                                                          ARV_GV_STREAM_OPTION_PACKET_SOCKET_DISABLED :
+                                                          ARV_GV_STREAM_OPTION_NONE);
+                        if (arv_option_packet_size_adjustment != NULL)
+                                arv_camera_gv_set_packet_size_adjustment (camera, adjustment);
+                        if (error == NULL) arv_camera_gv_set_multipart (camera, TRUE,
+                                                                        arv_option_multipart ? &error : NULL);
+                }
 
                 if (error == NULL && arv_option_features != NULL)
                         arv_device_set_features_from_string (arv_camera_get_device (camera), arv_option_features, &error);
