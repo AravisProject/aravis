@@ -7,7 +7,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Aravis.Camera.get_width_increment</title>
+  <title>Aravis.Camera.set_frame_rate_enable</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <meta charset="utf-8" />
@@ -23,10 +23,10 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
 
   
-  <meta priority="og:title" content="Aravis.Camera.get_width_increment"/>
-  <meta priority="og:description" content="Reference for Aravis.Camera.get_width_increment"/>
-  <meta name="twitter:title" content="Aravis.Camera.get_width_increment"/>
-  <meta name="twitter:description" content="Reference for Aravis.Camera.get_width_increment"/>
+  <meta priority="og:title" content="Aravis.Camera.set_frame_rate_enable"/>
+  <meta priority="og:description" content="Reference for Aravis.Camera.set_frame_rate_enable"/>
+  <meta name="twitter:title" content="Aravis.Camera.set_frame_rate_enable"/>
+  <meta name="twitter:description" content="Reference for Aravis.Camera.set_frame_rate_enable"/>
 
 
   
@@ -201,7 +201,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.Camera.get_width_bounds.html">get_width_bounds</a>
   
-    <a class="method current" href="method.Camera.get_width_increment.html">get_width_increment</a>
+    <a class="method" href="method.Camera.get_width_increment.html">get_width_increment</a>
   
     <a class="method" href="method.Camera.get_x_binning_bounds.html">get_x_binning_bounds</a>
   
@@ -323,7 +323,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.Camera.set_frame_rate.html">set_frame_rate</a>
   
-    <a class="method" href="method.Camera.set_frame_rate_enable.html">set_frame_rate_enable</a>
+    <a class="method current" href="method.Camera.set_frame_rate_enable.html">set_frame_rate_enable</a>
   
     <a class="method" href="method.Camera.set_gain.html">set_gain</a>
   
@@ -377,12 +377,12 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <section id="main" class="content">
   <header>
     <h3>Method</h3>
-    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.Camera.html">Camera</a><span class="sep"></span>get_width_increment</h1>
+    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.Camera.html">Camera</a><span class="sep"></span>set_frame_rate_enable</h1>
   </header>
 
   <section>
     <div class="docblock">
-      <p><span class="emblem available">since: 0.8.0</span></p>
+      <p></p>
     </div>
 
     <div class="declaration toggle-wrapper">
@@ -390,14 +390,15 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Declaration
         <a class="anchor" href="#declaration"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvcamera.h#L79">[src]</a>
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvcamera.h#L113">[src]</a>
         
       </h4>
 
       <div class="docblock c-decl">
-        <pre><code><div class="highlight"><pre><span></span><span class="n">gint</span><span class="w"></span>
-<span class="n">arv_camera_get_width_increment</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
-<span class="w">  </span><span class="n">ArvCamera</span><span class="o">*</span><span class="w"> </span><span class="n">camera</span><span class="w"></span>
+        <pre><code><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"></span>
+<span class="n">arv_camera_set_frame_rate_enable</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
+<span class="w">  </span><span class="n">ArvCamera</span><span class="o">*</span><span class="w"> </span><span class="n">camera</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="n">gboolean</span><span class="w"> </span><span class="n">enable</span><span class="p">,</span><span class="w"></span>
 <span class="w">  </span><span class="n">GError</span><span class="o">**</span><span class="w"> </span><span class="n">error</span><span class="w"></span>
 <span class="p">)</span><span class="w"></span>
 </pre></div>
@@ -418,7 +419,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 
       <div class="docblock">
         
-        <p>Available since: 0.8.0</p>
+        
         
         
         
@@ -429,21 +430,19 @@ SPDX-License-Identifier: LGPL-2.1-or-later
     </div>
 
     
-
-    
-    <div class="return-value toggle-wrapper">
-      <h4 id="return-value">
-        Return value
-        <a href="#return-value" class="anchor"></a>
+    <div class="parameters toggle-wrapper">
+      <h4 id="parameters">
+        Parameters
+        <a href="#parameters" class="anchor"></a>
       </h4>
 
       <div class="docblock">
-        <div class="returns">
-          <div class="arg-description">
-            <p><em>Type:</em>&nbsp;<code>gint</code></p>
-            <p><p>Width value&nbsp;increment.</p></p>
-          </div>
-          <div>
+        <dl class="arguments">
+          
+          <dt class="arg-name"><code>enable</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<code>gboolean</code></p>
+            <p>No description available.</p>
             <table>
             
             
@@ -451,11 +450,31 @@ SPDX-License-Identifier: LGPL-2.1-or-later
             
             
             
+            
+            
+            
             </table>
-          </div>
-        </div>
+          </dd>
+          
+
+          
+          <dt class="arg-name"><code>error</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<a href="javascript:void(0)" data-namespace="GLib" data-link="struct.Error.html" class="external"><code>GError **</code></a></p>
+            <p>The return location for <a href="https://docs.gtk.org/glib/error-reporting.html#rules-for-use-of-gerror">a recoverable error</a>.</p>
+            <table>
+              <tr><td>The argument can be <code>NULL</code>.</td></tr>
+              <tr><td>If the return location is not <code>NULL</code>, then you must initialize it to a <code>NULL</code> <code>GError*</code>.</td></tr>
+              <tr><td>The argument will left initialized to <code>NULL</code> by the method if there are no errors.</td></tr>
+              <tr><td>In case of error, the argument will be set to a newly allocated <code>GError</code>; the caller will take ownership of the data, and be responsible for freeing it.</td></tr>
+            </table>
+          </dd>
+          
+        </dl>
       </div>
     </div>
+    
+
     
 
   </section>
