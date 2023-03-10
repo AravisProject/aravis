@@ -1870,6 +1870,45 @@ arv_camera_get_gain_auto (ArvCamera *camera, GError **error)
 }
 
 /**
+ * arv_camera_select_gain:
+ * @camera: a #ArvCamera
+ * @gainSelector: gain selector
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Configures Gain Selector feature.
+ *
+ * Since: 0.8.27
+ **/
+
+void
+arv_camera_select_gain (ArvCamera *camera, const char *gainSelector, GError **error)
+{
+	arv_camera_set_string (camera, "GainSelector", gainSelector, error);
+}
+
+/**
+ * arv_camera_dup_available_gains:
+ * @camera: a #ArvCamera
+ * @n_selectors: (out): number of different gain selectors
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Retrieves the list of all available gain selectors as strings.
+ *
+ * Returns: (array length=n_selectors) (transfer container): a newly allocated array of strings, to be freed after use with
+ * g_free().
+ *
+ * Since: 0.8.27
+ */
+
+const char **
+arv_camera_dup_available_gains (ArvCamera *camera, guint *n_selectors, GError **error)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+
+	return arv_camera_dup_available_enumerations_as_strings (camera, "GainSelector", n_selectors, error);
+}
+
+/**
  * arv_camera_is_black_level_available:
  * @camera: a #ArvCamera
  * @error: a #GError placeholder, %NULL to ignore
@@ -1942,6 +1981,45 @@ arv_camera_get_black_level (ArvCamera *camera, GError **error)
 		return arv_camera_get_integer (camera, "BlackLevelRaw", error);
 	else
 		return arv_camera_get_float (camera, "BlackLevel", error);
+}
+
+/**
+ * arv_camera_select_black_level:
+ * @camera: a #ArvCamera
+ * @blackLevelSelector: black level selection
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Configures Black Level Selector feature.
+ *
+ * Since: 0.8.27
+ **/
+
+void
+arv_camera_select_black_level (ArvCamera *camera, const char *blackLevelSelector, GError **error)
+{
+	arv_camera_set_string (camera, "BlackLevelSelector", blackLevelSelector, error);
+}
+
+/**
+ * arv_camera_dup_available_black_levels:
+ * @camera: a #ArvCamera
+ * @n_selectors: (out): number of different black level selectors
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Retrieves the list of all available black level selectors as strings.
+ *
+ * Returns: (array length=n_selectors) (transfer container): a newly allocated array of strings, to be freed after use with
+ * g_free().
+ *
+ * Since: 0.8.27
+ */
+
+const char **
+arv_camera_dup_available_black_levels (ArvCamera *camera, guint *n_selectors, GError **error)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+
+	return arv_camera_dup_available_enumerations_as_strings (camera, "BlackLevelSelector", n_selectors, error);
 }
 
 /**
