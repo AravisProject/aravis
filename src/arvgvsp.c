@@ -26,7 +26,7 @@
  */
 
 #include <arvdebug.h>
-#include <arvmisc.h>
+#include <arvmiscprivate.h>
 #include <arvenumtypes.h>
 #include <arvgvspprivate.h>
 #include <arvenumtypesprivate.h>
@@ -173,7 +173,6 @@ arv_gvsp_packet_to_string (const ArvGvspPacket *packet, size_t packet_size)
         guint part_id;
         ptrdiff_t offset;
 	GString *string;
-	char *c_string;
 
 	string = g_string_new ("");
 
@@ -275,11 +274,7 @@ arv_gvsp_packet_to_string (const ArvGvspPacket *packet, size_t packet_size)
                         break;
         }
 
-	c_string = string->str;
-
-	g_string_free (string, FALSE);
-
-	return c_string;
+        return arv_g_string_free_and_steal(string);
 }
 
 void

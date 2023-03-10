@@ -36,7 +36,7 @@
 #include <arvgcstring.h>
 #include <arvgc.h>
 #include <arvdomtext.h>
-#include <arvmisc.h>
+#include <arvmiscprivate.h>
 #include <arvdebugprivate.h>
 #include <arvenumtypes.h>
 #include <string.h>
@@ -242,8 +242,7 @@ _get_value_data (ArvGcPropertyNode *property_node)
 		     iter = arv_dom_node_get_next_sibling (iter))
 			g_string_append (string, arv_dom_character_data_get_data (ARV_DOM_CHARACTER_DATA (iter)));
 		g_free (priv->value_data);
-		priv->value_data = string->str;
-		g_string_free (string, FALSE);
+		priv->value_data = arv_g_string_free_and_steal(string);
 		priv->value_data_up_to_date = TRUE;
 	}
 

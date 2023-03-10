@@ -22,7 +22,7 @@
 
 #include <arvuvspprivate.h>
 #include <arvstr.h>
-#include <arvmisc.h>
+#include <arvmiscprivate.h>
 
 /*
  * SECTION: arvuvsp
@@ -44,7 +44,6 @@ arv_uvsp_packet_to_string (const ArvUvspPacket *packet)
 	ArvUvspLeader *leader = (ArvUvspLeader *) packet;
 	ArvUvspTrailer *trailer = (ArvUvspTrailer *) packet;
 	GString *string;
-	char *c_string;
 
 	g_return_val_if_fail (packet != NULL, NULL);
 
@@ -101,11 +100,7 @@ arv_uvsp_packet_to_string (const ArvUvspPacket *packet)
 	}
 #endif
 
-	c_string = string->str;
-
-	g_string_free (string, FALSE);
-
-	return c_string;
+        return arv_g_string_free_and_steal(string);
 }
 
 /**
