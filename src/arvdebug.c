@@ -264,7 +264,6 @@ arv_debug_dup_infos_as_string (void)
 	GEnumClass *debug_level_class = g_type_class_ref (ARV_TYPE_DEBUG_LEVEL);
 	GString *string = g_string_new ("");
 	unsigned int i;
-	char *str;
 
 	g_string_append (string, "Debug categories:\n");
 	for (i = 0; i < ARV_DEBUG_CATEGORY_N_ELEMENTS; i++) {
@@ -285,10 +284,7 @@ arv_debug_dup_infos_as_string (void)
 
 	g_type_class_unref (debug_level_class);
 
-	str = string->str;
-	g_string_free (string, FALSE);
-
-	return str;
+        return arv_g_string_free_and_steal(string);
 }
 
 void

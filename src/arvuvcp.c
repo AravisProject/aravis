@@ -25,6 +25,7 @@
  * @short_description: USB3Vision control packet handling
  */
 
+#include <arvmiscprivate.h>
 #include <arvuvcpprivate.h>
 #include <arvenumtypesprivate.h>
 #include <arvdebug.h>
@@ -148,7 +149,6 @@ arv_uvcp_packet_to_string (const ArvUvcpPacket *packet)
 {
 	ArvUvcpCommand command;
 	GString *string;
-	char *c_string;
 	int packet_size;
 	guint64 value;
 
@@ -206,11 +206,7 @@ arv_uvcp_packet_to_string (const ArvUvcpPacket *packet)
 
 	arv_g_string_append_hex_dump (string, packet, packet_size);
 
-	c_string = string->str;
-
-	g_string_free (string, FALSE);
-
-	return c_string;
+        return arv_g_string_free_and_steal(string);
 }
 
 /**
