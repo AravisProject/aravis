@@ -314,7 +314,7 @@ static inline ArvUvcpFlags
 arv_uvcp_packet_get_flags (const ArvUvcpPacket *packet)
 {
 	if (packet == NULL)
-		return 0;
+		return (ArvUvcpFlags) 0;
 
 	return (ArvUvcpFlags) GUINT16_FROM_LE (packet->header.flags);
 }

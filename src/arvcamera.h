@@ -141,8 +141,8 @@ ARV_API void		arv_camera_set_exposure_mode		(ArvCamera *camera, ArvExposureMode 
 
 ARV_API gboolean	arv_camera_is_gain_available		(ArvCamera *camera, GError **error);
 ARV_API gboolean	arv_camera_is_gain_auto_available	(ArvCamera *camera, GError **error);
-ARV_API void		arv_camera_select_gain				(ArvCamera *camera, const char *selector, GError **error);
-ARV_API const char **	arv_camera_dup_available_gains	(ArvCamera *camera, guint *n_selectors, GError **error);
+ARV_API void		arv_camera_select_gain			(ArvCamera *camera, const char *gainSelector, GError **error);
+ARV_API const char **	arv_camera_dup_available_gains	        (ArvCamera *camera, guint *n_selectors, GError **error);
 
 ARV_API void		arv_camera_set_gain			(ArvCamera *camera, double gain, GError **error);
 ARV_API double		arv_camera_get_gain			(ArvCamera *camera, GError **error);
@@ -152,8 +152,8 @@ ARV_API ArvAuto		arv_camera_get_gain_auto		(ArvCamera *camera, GError **error);
 
 ARV_API gboolean	arv_camera_is_black_level_available	(ArvCamera *camera, GError **error);
 ARV_API gboolean	arv_camera_is_black_level_auto_available(ArvCamera *camera, GError **error);
-ARV_API void		arv_camera_select_black_level		(ArvCamera *camera, const char *selector, GError **error);
-ARV_API const char **	arv_camera_dup_available_black_level(ArvCamera *camera, guint *n_selectors, GError **error);
+ARV_API void		arv_camera_select_black_level		(ArvCamera *camera, const char *blackLevelSelector, GError **error);
+ARV_API const char **	arv_camera_dup_available_black_levels   (ArvCamera *camera, guint *n_selectors, GError **error);
 
 ARV_API void		arv_camera_set_black_level		(ArvCamera *camera, double blacklevel, GError **error);
 ARV_API double		arv_camera_get_black_level		(ArvCamera *camera, GError **error);

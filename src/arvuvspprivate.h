@@ -123,7 +123,7 @@ arv_uvsp_packet_get_buffer_payload_type (ArvUvspPacket *packet, gboolean *has_ch
         if (has_chunks != NULL)
                 *has_chunks = (payload_type & 0x4000) != 0;
 
-        return payload_type & 0x3fff;
+        return (ArvBufferPayloadType) (payload_type & 0x3fff);
 }
 
 static inline guint64
