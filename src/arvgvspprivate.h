@@ -372,7 +372,7 @@ arv_gvsp_leader_packet_get_buffer_payload_type (const ArvGvspPacket *packet, gbo
                 ArvGvspLeader *leader;
                 guint16 payload_type;
 
-                leader = (ArvGvspLeader*) arv_gvsp_packet_get_data (packet);
+                leader = (ArvGvspLeader *) arv_gvsp_packet_get_data (packet);
                 payload_type = g_ntohs (leader->payload_type);
 
                 if (has_chunks != NULL)
@@ -391,7 +391,7 @@ arv_gvsp_leader_packet_get_timestamp (const ArvGvspPacket *packet)
         if (G_LIKELY (arv_gvsp_packet_get_content_type (packet) == ARV_GVSP_CONTENT_TYPE_LEADER)) {
                 ArvGvspLeader *leader;
 
-                leader = (ArvGvspLeader*) arv_gvsp_packet_get_data (packet);
+                leader = (ArvGvspLeader *) arv_gvsp_packet_get_data (packet);
 
                 return ((guint64) g_ntohl (leader->timestamp_high) << 32) | g_ntohl (leader->timestamp_low);
         }
@@ -437,7 +437,7 @@ arv_gvsp_leader_packet_get_multipart_infos (const ArvGvspPacket *packet,
         if (part_id >= n_parts)
                 return FALSE;
 
-        leader = (ArvGvspMultipartLeader*) arv_gvsp_packet_get_data (packet);
+        leader = (ArvGvspMultipartLeader *) arv_gvsp_packet_get_data (packet);
         infos = &leader->parts[part_id];
 
         *purpose_id = g_ntohs(infos->data_purpose_id);
@@ -466,7 +466,7 @@ arv_gvsp_leader_packet_get_multipart_size (const ArvGvspPacket *packet,
         if (part_id >= n_parts)
                 return 0;
 
-        leader = (ArvGvspMultipartLeader*) arv_gvsp_packet_get_data (packet);
+        leader = (ArvGvspMultipartLeader *) arv_gvsp_packet_get_data (packet);
         infos = &leader->parts[part_id];
 
         return g_ntohl (infos->part_length_low) + (((guint64) g_ntohs (infos->part_length_high)) << 32);
@@ -487,7 +487,7 @@ arv_gvsp_leader_packet_get_image_infos (const ArvGvspPacket *packet,
             payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA) {
                 ArvGvspImageLeader *leader;
 
-                leader = (ArvGvspImageLeader*) arv_gvsp_packet_get_data (packet);
+                leader = (ArvGvspImageLeader *) arv_gvsp_packet_get_data (packet);
 
                 *pixel_format = g_ntohl (leader->infos.pixel_format);
                 *width = g_ntohl (leader->infos.width);
@@ -526,7 +526,7 @@ arv_gvsp_multipart_packet_get_infos (const ArvGvspPacket *packet, guint *part_id
                 return FALSE;
         }
 
-        multipart = (ArvGvspMultipart*) arv_gvsp_packet_get_data(packet);
+        multipart = (ArvGvspMultipart *) arv_gvsp_packet_get_data(packet);
 
         *part_id = multipart->part_id;
         *offset = ( (guint64) g_ntohs(multipart->offset_high) << 32) + g_ntohl(multipart->offset_low);
