@@ -1872,7 +1872,7 @@ arv_camera_get_gain_auto (ArvCamera *camera, GError **error)
 /**
  * arv_camera_select_gain:
  * @camera: a #ArvCamera
- * @gainSelector: gain selector
+ * @selector: gain selector
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Configures Gain Selector feature.
@@ -1881,9 +1881,9 @@ arv_camera_get_gain_auto (ArvCamera *camera, GError **error)
  **/
 
 void
-arv_camera_select_gain (ArvCamera *camera, const char *gainSelector, GError **error)
+arv_camera_select_gain (ArvCamera *camera, const char *selector, GError **error)
 {
-	arv_camera_set_string (camera, "GainSelector", gainSelector, error);
+	arv_camera_set_string (camera, "GainSelector", selector, error);
 }
 
 /**
@@ -1986,7 +1986,7 @@ arv_camera_get_black_level (ArvCamera *camera, GError **error)
 /**
  * arv_camera_select_black_level:
  * @camera: a #ArvCamera
- * @blackLevelSelector: black level selection
+ * @selector: black level selection
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Configures Black Level Selector feature.
@@ -1995,9 +1995,9 @@ arv_camera_get_black_level (ArvCamera *camera, GError **error)
  **/
 
 void
-arv_camera_select_black_level (ArvCamera *camera, const char *blackLevelSelector, GError **error)
+arv_camera_select_black_level (ArvCamera *camera, const char *selector, GError **error)
 {
-	arv_camera_set_string (camera, "BlackLevelSelector", blackLevelSelector, error);
+	arv_camera_set_string (camera, "BlackLevelSelector", selector, error);
 }
 
 /**
