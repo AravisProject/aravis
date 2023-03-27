@@ -7,7 +7,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Aravis.Camera.dup_available_black_level</title>
+  <title>Aravis.Camera.dup_available_black_levels</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <meta charset="utf-8" />
@@ -23,10 +23,10 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
 
   
-  <meta priority="og:title" content="Aravis.Camera.dup_available_black_level"/>
-  <meta priority="og:description" content="Reference for Aravis.Camera.dup_available_black_level"/>
-  <meta name="twitter:title" content="Aravis.Camera.dup_available_black_level"/>
-  <meta name="twitter:description" content="Reference for Aravis.Camera.dup_available_black_level"/>
+  <meta priority="og:title" content="Aravis.Camera.dup_available_black_levels"/>
+  <meta priority="og:description" content="Reference for Aravis.Camera.dup_available_black_levels"/>
+  <meta name="twitter:title" content="Aravis.Camera.dup_available_black_levels"/>
+  <meta name="twitter:description" content="Reference for Aravis.Camera.dup_available_black_levels"/>
 
 
   
@@ -101,7 +101,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.Camera.create_stream_full.html">create_stream_full</a>
   
-    <a class="method current" href="method.Camera.dup_available_black_level.html">dup_available_black_level</a>
+    <a class="method current" href="method.Camera.dup_available_black_levels.html">dup_available_black_levels</a>
   
     <a class="method" href="method.Camera.dup_available_components.html">dup_available_components</a>
   
@@ -385,12 +385,12 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <section id="main" class="content">
   <header>
     <h3>Method</h3>
-    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.Camera.html">Camera</a><span class="sep"></span>dup_available_black_level</h1>
+    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.Camera.html">Camera</a><span class="sep"></span>dup_available_black_levels</h1>
   </header>
 
   <section>
     <div class="docblock">
-      <p></p>
+      <p><span class="emblem available">since: 0.8.27</span></p>
     </div>
 
     <div class="declaration toggle-wrapper">
@@ -404,7 +404,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 
       <div class="docblock c-decl">
         <pre><code><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">**</span><span class="w"></span>
-<span class="n">arv_camera_dup_available_black_level</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
+<span class="n">arv_camera_dup_available_black_levels</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
 <span class="w">  </span><span class="n">ArvCamera</span><span class="o">*</span><span class="w"> </span><span class="n">camera</span><span class="p">,</span><span class="w"></span>
 <span class="w">  </span><span class="n">guint</span><span class="o">*</span><span class="w"> </span><span class="n">n_selectors</span><span class="p">,</span><span class="w"></span>
 <span class="w">  </span><span class="n">GError</span><span class="o">**</span><span class="w"> </span><span class="n">error</span><span class="w"></span>
@@ -419,17 +419,19 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Description
         <a class="anchor" href="#description"></a>
         
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvcamera.c#L2003">[src]</a>
+        
       </h4>
 
       <div class="docblock">
-        No description available.
+        <p>Retrieves the list of all available black level selectors as&nbsp;strings.</p>
       </div>
 
       <div class="docblock">
         
+        <p>Available since: 0.8.27</p>
         
         
-        <p>This method is not directly available to language bindings.</p>
         
         
       </div>
@@ -450,8 +452,9 @@ SPDX-License-Identifier: LGPL-2.1-or-later
           <dt class="arg-name"><code>n_selectors</code></dt>
           <dd class="arg-description">
             <p><em>Type:</em>&nbsp;<code>guint*</code></p>
-            <p>No description available.</p>
+            <p><p>Number of different black level&nbsp;selectors.</p></p>
             <table>
+            <tr><td title="direction: out">The argument will be set by the function.</td></tr>
             
             
             
@@ -459,7 +462,6 @@ SPDX-License-Identifier: LGPL-2.1-or-later
             
             
             
-            <tr><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
             
             </table>
           </dd>
@@ -494,14 +496,14 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         <div class="returns">
           <div class="arg-description">
             <p><em>Type:</em>&nbsp;An array of&nbsp;<code>utf8</code></p>
-            <p>No description available.</p>
+            <p><p>A newly allocated array of strings, to be freed after use with&nbsp;g_free().</p></p>
           </div>
           <div>
             <table>
-            <tr><td>The array is <code>NULL</code>-terminated.</td></tr>
             
             
-            <tr><td title="transfer: none">The data is owned by the instance.</td></tr>
+            <tr><td>The length of the array is in the <code>n_selectors</code> argument.</td></tr>
+            <tr><td title="transfer: container">The caller of the method takes ownership of the data container, but not the data inside it.</td></tr>
             
             <tr><td>Each element is a NUL terminated UTF-8 string.</td></tr>
             </table>
