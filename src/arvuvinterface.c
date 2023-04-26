@@ -242,6 +242,13 @@ _usb_device_to_device_ids (ArvUvInterface *uv_interface, libusb_device *device)
 		if (index > 0)
 			libusb_get_string_descriptor_ascii (device_handle, index, guid, 256);
 
+		/*
+		 * When guid_index is wrongly equal to the product index, append the serial number
+		 * Matching code in arvuvdevice.c
+		 */
+		if (index == desc.iProduct)
+			snprintf((char *)guid, 256, "%s-%s", product, serial_nbr);
+
 		device_infos = arv_uv_interface_device_infos_new ((char *) manufacturer, (char *) product,
                                                                   (char *) serial_nbr, (char *) guid);
 		g_hash_table_replace (uv_interface->priv->devices, device_infos->id,

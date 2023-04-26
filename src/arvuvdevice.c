@@ -37,6 +37,7 @@
 #include <arvstr.h>
 #include <arvzip.h>
 #include <arvmisc.h>
+#include <stdio.h>
 
 enum
 {
@@ -784,6 +785,13 @@ _open_usb_device (ArvUvDevice *uv_device, GError **error)
 			index = get_guid_index(devices[i]);
 			if (index > 0)
 				libusb_get_string_descriptor_ascii (usb_device, index, guid, 256);
+
+			/*
+			 * When guid_index is wrongly equal to the product index, append the serial number
+			 * Matching code in arvuvinterface.c
+			 */
+			if (index == desc.iProduct)
+				snprintf((char *)guid, 256, "%s-%s", product, serial_number);
 
 			if ((priv->vendor != NULL &&
                              g_strcmp0 ((char * ) manufacturer, priv->vendor) == 0 &&
