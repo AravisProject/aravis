@@ -720,7 +720,34 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 		"video/x-raw-bayer, format=(string)bggr, bpp=(int)8, depth=(int)8",
 		"video/x-raw-bayer",	8,	8,	ARV_MAKE_FOURCC ('b','g','g','r')
 	},
-
+	{
+		ARV_PIXEL_FORMAT_BAYER_GR_16,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-bayer, format=(string)grbg, bpp=(int)16, depth=(int)16",
+		"video/x-raw-gray",	16,	16,	ARV_MAKE_FOURCC ('g','r','b','g')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_RG_16,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-bayer, format=(string)rggb, bpp=(int)16, depth=(int)16",
+		"video/x-raw-gray",	16,	16,	ARV_MAKE_FOURCC ('r','g','g','b')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GB_16,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-bayer, format=(string)gbrg, bpp=(int)16, depth=(int)16",
+		"video/x-raw-gray",	16,	16,	ARV_MAKE_FOURCC ('g','b','r','g')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_BG_16,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-gray, format=(string)bggr, bpp=(int)16, depth=(int)16",
+		"video/x-raw-gray",	16,	16,	ARV_MAKE_FOURCC ('b','g','g','r')
+	},
 /* Non 8bit bayer formats are not supported by gstreamer bayer plugin.
  * This feature is discussed in bug https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/issues/86 .*/
 
