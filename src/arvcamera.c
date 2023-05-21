@@ -1035,17 +1035,16 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate, GError **error)
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
 	if (frame_rate <= 0.0) {
-		if (arv_camera_is_feature_available (camera, "AcquisitionFrameRateEnable", &local_error)) {
-			if (local_error == NULL)
-				arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", FALSE, error);
-			else
-				g_propagate_error (error, local_error);
+		arv_camera_set_frame_rate_enable(camera, FALSE, &local_error);
+		if (local_error != NULL)
+		{
+			g_propagate_error (error, local_error);
 		}
 		return;
 	}
 
-        /* Ignore the error in order to be able to change the frame rate during the acquisition, as some devices don't
-         * allow to change TriggerMode if the acquisition is already started. */
+	/* Ignore the error in order to be able to change the frame rate during the acquisition, as some devices don't
+	* allow to change TriggerMode if the acquisition is already started. */
 	arv_camera_clear_triggers (camera, NULL);
 
 	arv_camera_get_frame_rate_bounds (camera, &minimum, &maximum, &local_error);
@@ -1062,11 +1061,7 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate, GError **error)
 	switch (priv->vendor) {
 		case ARV_CAMERA_VENDOR_BASLER:
 			if (local_error == NULL){
-				if (arv_camera_is_feature_available (camera, "AcquisitionFrameRateEnable", &local_error)){
-					/* enable is optional on some devices */
-					if (local_error == NULL)
-						arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", TRUE, &local_error);
-				}
+				arv_camera_set_frame_rate_enable(camera, TRUE, &local_error);
 			}
 			if (local_error == NULL)
 				arv_camera_set_float (camera,
@@ -1104,17 +1099,15 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate, GError **error)
 			}
 			break;
 		case ARV_CAMERA_VENDOR_POINT_GREY_FLIR:
-			if (local_error == NULL) {
-				if (priv->has_acquisition_frame_rate_enabled)
-					arv_camera_set_boolean (camera, "AcquisitionFrameRateEnabled", TRUE, &local_error);
-				else
-					arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", TRUE, &local_error);
+			arv_camera_set_frame_rate_enable(camera, TRUE, &local_error);
+			if (local_error == NULL && priv->has_acquisition_frame_rate_auto) {
+				arv_camera_set_string (camera, "AcquisitionFrameRateAuto", "Off", &local_error);
 			}
-			if (local_error == NULL)
-				if (priv->has_acquisition_frame_rate_auto)
-					arv_camera_set_string (camera, "AcquisitionFrameRateAuto", "Off", &local_error);
-			if (local_error == NULL)
+
+			if (local_error == NULL) {
 				arv_camera_set_float (camera, "AcquisitionFrameRate", frame_rate, &local_error);
+			}
+
 			break;
 		case ARV_CAMERA_VENDOR_DALSA:
 		case ARV_CAMERA_VENDOR_RICOH:
@@ -1122,19 +1115,14 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate, GError **error)
 		case ARV_CAMERA_VENDOR_MATRIX_VISION:
 		case ARV_CAMERA_VENDOR_IMPERX:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
-                        if (local_error == NULL) {
-                                if (arv_camera_is_feature_available (camera, "AcquisitionFrameRateEnable", &local_error)) {
-                                        if (local_error == NULL)
-                                                arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", TRUE, &local_error);
-                                }
-                        }
-                        if (local_error == NULL)
-                                arv_camera_set_float (camera,
-                                                      priv->has_acquisition_frame_rate ?
-                                                      "AcquisitionFrameRate":
-                                                      "AcquisitionFrameRateAbs", frame_rate, &local_error);
-                        break;
-        }
+			arv_camera_set_frame_rate_enable(camera, TRUE, &local_error);
+			if (local_error == NULL)
+				arv_camera_set_float (camera,
+															priv->has_acquisition_frame_rate ?
+															"AcquisitionFrameRate":
+															"AcquisitionFrameRateAbs", frame_rate, &local_error);
+			break;
+	}
 
 	if (local_error != NULL)
 		g_propagate_error (error, local_error);
@@ -1268,6 +1256,66 @@ arv_camera_get_frame_rate_bounds (ArvCamera *camera, double *min, double *max, G
 						     "AcquisitionFrameRateAbs",
 						     min, max, error);
 			break;
+	}
+}
+
+/*
+* arv_camera_set_frame_rate_enable:
+* @camera: an #ArvCamera
+* @enable: true to enable, false to disable
+* @error: a #GError placeholer, %NULL to ignore
+*
+* Configures whether to enable the upper frame rate limit set by #arv_camera_set_frame_rate.
+* Implements vendor specific quirks if needed.
+* Since: 0.8.26
+*/
+void
+arv_camera_set_frame_rate_enable(ArvCamera *camera, gboolean enable, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+	GError *local_error = NULL;
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+  switch (priv->vendor) {
+		case ARV_CAMERA_VENDOR_BASLER:
+			if (local_error == NULL){
+				if (arv_camera_is_feature_available (camera, "AcquisitionFrameRateEnable", &local_error)){
+					/* enable is optional on some devices */
+					if (local_error == NULL)
+						arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", enable, &local_error);
+				}
+			}
+			break;
+		case ARV_CAMERA_VENDOR_POINT_GREY_FLIR:
+			if (local_error == NULL) {
+				if (priv->has_acquisition_frame_rate_enabled)				
+					arv_camera_set_boolean (camera, "AcquisitionFrameRateEnabled", enable, &local_error);
+				else
+					arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", enable, &local_error);
+			}
+			break;
+		case ARV_CAMERA_VENDOR_DALSA:
+		case ARV_CAMERA_VENDOR_RICOH:
+		case ARV_CAMERA_VENDOR_XIMEA:
+		case ARV_CAMERA_VENDOR_MATRIX_VISION:
+		case ARV_CAMERA_VENDOR_IMPERX:	
+		case ARV_CAMERA_VENDOR_UNKNOWN:
+			if (local_error == NULL) {
+				if (arv_camera_is_feature_available (camera, "AcquisitionFrameRateEnable", &local_error)) {
+					if (local_error == NULL)
+						arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", TRUE, &local_error);
+					}
+			}
+			break;
+		case ARV_CAMERA_VENDOR_PROSILICA:
+		case ARV_CAMERA_VENDOR_TIS:
+		default:
+			break; /* No specific frame rate enable code */
+	}
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
 	}
 }
 
@@ -1822,6 +1870,45 @@ arv_camera_get_gain_auto (ArvCamera *camera, GError **error)
 }
 
 /**
+ * arv_camera_select_gain:
+ * @camera: a #ArvCamera
+ * @selector: gain selector
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Configures Gain Selector feature.
+ *
+ * Since: 0.8.27
+ **/
+
+void
+arv_camera_select_gain (ArvCamera *camera, const char *selector, GError **error)
+{
+	arv_camera_set_string (camera, "GainSelector", selector, error);
+}
+
+/**
+ * arv_camera_dup_available_gains:
+ * @camera: a #ArvCamera
+ * @n_selectors: (out): number of different gain selectors
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Retrieves the list of all available gain selectors as strings.
+ *
+ * Returns: (array length=n_selectors) (transfer container): a newly allocated array of strings, to be freed after use with
+ * g_free().
+ *
+ * Since: 0.8.27
+ */
+
+const char **
+arv_camera_dup_available_gains (ArvCamera *camera, guint *n_selectors, GError **error)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+
+	return arv_camera_dup_available_enumerations_as_strings (camera, "GainSelector", n_selectors, error);
+}
+
+/**
  * arv_camera_is_black_level_available:
  * @camera: a #ArvCamera
  * @error: a #GError placeholder, %NULL to ignore
@@ -1894,6 +1981,45 @@ arv_camera_get_black_level (ArvCamera *camera, GError **error)
 		return arv_camera_get_integer (camera, "BlackLevelRaw", error);
 	else
 		return arv_camera_get_float (camera, "BlackLevel", error);
+}
+
+/**
+ * arv_camera_select_black_level:
+ * @camera: a #ArvCamera
+ * @selector: black level selection
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Configures Black Level Selector feature.
+ *
+ * Since: 0.8.27
+ **/
+
+void
+arv_camera_select_black_level (ArvCamera *camera, const char *selector, GError **error)
+{
+	arv_camera_set_string (camera, "BlackLevelSelector", selector, error);
+}
+
+/**
+ * arv_camera_dup_available_black_levels:
+ * @camera: a #ArvCamera
+ * @n_selectors: (out): number of different black level selectors
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Retrieves the list of all available black level selectors as strings.
+ *
+ * Returns: (array length=n_selectors) (transfer container): a newly allocated array of strings, to be freed after use with
+ * g_free().
+ *
+ * Since: 0.8.27
+ */
+
+const char **
+arv_camera_dup_available_black_levels (ArvCamera *camera, guint *n_selectors, GError **error)
+{
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+
+	return arv_camera_dup_available_enumerations_as_strings (camera, "BlackLevelSelector", n_selectors, error);
 }
 
 /**

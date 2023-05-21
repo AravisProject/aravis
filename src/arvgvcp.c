@@ -27,6 +27,7 @@
 
 #include <arvgvcpprivate.h>
 #include <arvgvspprivate.h>
+#include <arvmiscprivate.h>
 #include <arvenumtypes.h>
 #include <arvenumtypesprivate.h>
 #include <string.h>
@@ -487,7 +488,6 @@ char *
 arv_gvcp_packet_flags_to_string_new (ArvGvcpCommand command, guint8 flags)
 {
 	GString *string = g_string_new ("");
-	char *buffer = NULL;
 	unsigned i;
 
 	for (i = 0; i < 8; i++) {
@@ -518,11 +518,7 @@ arv_gvcp_packet_flags_to_string_new (ArvGvcpCommand command, guint8 flags)
 	if (string->len == 0)
 		g_string_append (string, "none");
 
-	buffer = string->str;
-
-	g_string_free (string, FALSE);
-
-	return buffer;
+        return arv_g_string_free_and_steal(string);
 }
 
 /**
@@ -572,7 +568,6 @@ char *
 arv_gvcp_packet_to_string (const ArvGvcpPacket *packet)
 {
 	GString *string;
-	char *c_string;
 	char *data;
 	int packet_size;
 	guint32 value;
@@ -663,11 +658,7 @@ arv_gvcp_packet_to_string (const ArvGvcpPacket *packet)
 
 	arv_g_string_append_hex_dump (string, packet, packet_size);
 
-	c_string = string->str;
-
-	g_string_free (string, FALSE);
-
-	return c_string;
+        return arv_g_string_free_and_steal(string);
 }
 
 /**

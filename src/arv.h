@@ -85,6 +85,7 @@
 #include <arvgcregisternode.h>
 #include <arvgcselector.h>
 #include <arvgcstring.h>
+#include <arvgcstringnode.h>
 #include <arvgcstringregnode.h>
 #include <arvgcstructregnode.h>
 #include <arvgcstructentrynode.h>

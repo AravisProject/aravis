@@ -1061,7 +1061,8 @@ arv_uv_device_finalize (GObject *object)
         libusb_hotplug_deregister_callback (priv->usb, priv->hotplug_cb_handle);
 
 	priv->event_thread_run = 0;
-	g_thread_join (priv->event_thread);
+        if (priv->event_thread)
+                g_thread_join (priv->event_thread);
 
 	g_clear_object (&priv->genicam);
 
