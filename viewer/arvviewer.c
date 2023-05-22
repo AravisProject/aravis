@@ -820,6 +820,7 @@ _save_gst_sample_to_file (GstSample *sample, const char *path, const char *mime_
         return success;
 }
 
+
 static void
 snapshot_cb (GtkButton *button, ArvViewer *viewer)
 {
@@ -902,6 +903,12 @@ snapshot_cb (GtkButton *button, ArvViewer *viewer)
                 gtk_file_filter_add_pattern (filter_all, "*.raw");
                 gtk_file_filter_set_name (filter, "Raw images (*.raw)");
                 gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (dialog), filter);
+                
+                filter = gtk_file_filter_new ();
+                gtk_file_filter_add_mime_type (filter, "image/x-adobe-dng");
+                gtk_file_filter_add_mime_type (filter_all, "image/x-adobe-dng");
+                gtk_file_filter_set_name (filter, "DNG raw image (*.dng)");
+                gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (dialog), filter);
         }
 
         gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (dialog), filter_all);
@@ -924,7 +931,12 @@ snapshot_cb (GtkButton *button, ArvViewer *viewer)
                         success = _save_gst_sample_to_file (sample, filename, "image/png", NULL);
                 } else if (GST_IS_SAMPLE (sample) && g_content_type_is_mime_type (content_type, "image/jpeg")) {
                         success = _save_gst_sample_to_file (sample, filename, "image/jpeg", NULL);
-                } else if (ARV_IS_BUFFER (buffer)) {
+                } else if (ARV_IS_BUFFER (buffer) && g_content_type_is_mime_type (content_type, "image/x-adobe-dng")) {
+                	// TODO: implement DNG support
+                	success = g_file_set_contents (filename, data, size, &error);
+                	g_free (filename);
+                } else if (ARV_IS_BUFFER (buffer) && g_content_type_is_mime_type (content_type, "image/x-panasonic-rw")) {
+                	// GIO guesses that MIME type for ".raw" files, so this is what we look for when writing unformatted raw files
                         success = g_file_set_contents (filename, data, size, &error);
                         g_free (filename);
                 }
