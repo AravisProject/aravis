@@ -61,6 +61,7 @@ gobject_dep = dependency ('gobject-2.0', required: true)
 gio_dep = dependency ('gio-2.0', required: true)
 xml2_dep = dependency ('libxml-2.0', required: true)
 libz_dep = dependency ('zlib', required: true)
+libtiff_dep = dependency ('libtiff-4', required: true)
 usb_dep = dependency ('libusb-1.0', required: get_option ('usb'))
 
 aravis_public_dependencies = [glib_dep, gobject_dep, gio_dep]
@@ -106,7 +107,8 @@ viewer_option = get_option ('viewer')
 viewer_deps = aravis_dependencies + [dependency ('gtk+-3.0', version: '>=3.12', required: viewer_option),
 				     dependency ('gstreamer-base-1.0', required: viewer_option),
 				     dependency ('gstreamer-app-1.0', required: viewer_option),
-				     dependency ('gstreamer-video-1.0', required: viewer_option)]
+				     dependency ('gstreamer-video-1.0', required: viewer_option),
+				     dependency ('libtiff-4', required: viewer_option)]
 subdir ('po', if_found: viewer_deps)
 subdir ('viewer', if_found: viewer_deps)
 
