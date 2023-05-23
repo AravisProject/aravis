@@ -139,8 +139,6 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--heading-font-family);
   font-weight: var(--heading-weight);
   margin: 1.75em 0 0.75em 0;
-  display: flex;
-  align-items: center;
 }
 
 h1 {
@@ -764,16 +762,14 @@ kbd {
   padding-right: 0;
 }
 
-table.enum-members,
-table.results {
+table.enum-members {
   border-radius: var(--box-radius);
   border: 1px solid var(--text-color-muted);
   border-spacing: 0 0 !important;
   font-size: 80%;
 }
 
-table.enum-members tr th,
-table.results tr th {
+table.enum-members tr th {
   border-top-color: var(--body-bg);
   background-color: var(--box-bg);
   border-bottom: 1px solid var(--text-color-muted);
@@ -785,37 +781,22 @@ table.enum-members tr td:first-child {
   padding-left: .5em;
 }
 
-table.results tr th:first-child,
-table.results tr td:first-child {
-  padding-left: .5em;
-}
-
 table.enum-members tr th:last-child,
-table.enum-members tr td:last-child,
-table.results tr th:last-child,
-table.results tr td:last-child {
+table.enum-members tr td:last-child {
   max-width: 35em;
   padding-right: .5em;
 }
 
-table.results tr td code {
-  font-size: 100%;
-}
-
-table.arguments tr td,
-table.returns tr td {
+table.arguments tr td {
   color: var(--text-color-muted);
 }
 
-table.arguments tr td:first-child,
-table.returns tr td:first-child {
+table.arguments tr td:first-child {
   min-width: 12em;
 }
 
 table.arguments tr.arg-name td,
-table.arguments tr.arg-description td,
-table.returns tr.arg-name td,
-table.returns tr.arg-description td {
+table.arguments tr.arg-description td {
   color: var(--text-color);
 }
 
@@ -886,6 +867,33 @@ table.returns tr.arg-description td {
 }
 
 .emblem.available {
+  background-color: var(--accent-bg-color);
+  color: var(--accent-fg-color);
+}
+
+dt.result {
+  padding: .5em 0;
+}
+
+.result.emblem.alias,
+.result.emblem.bitfield,
+.result.emblem.callback,
+.result.emblem.class,
+.result.emblem.constant,
+.result.emblem.extra_content,
+.result.emblem.ctor,
+.result.emblem.domain,
+.result.emblem.enum,
+.result.emblem.function_macro,
+.result.emblem.function,
+.result.emblem.interface,
+.result.emblem.method,
+.result.emblem.property,
+.result.emblem.record,
+.result.emblem.signal,
+.result.emblem.type_func,
+.result.emblem.union,
+.result.emblem.vfunc {
   background-color: var(--accent-bg-color);
   color: var(--accent-fg-color);
 }
