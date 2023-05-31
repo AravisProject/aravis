@@ -101,3 +101,28 @@ example, the following command gives this capability to the Aravis viewer:
 ```
 sudo setcap cap_net_raw+ep arv-viewer
 ```
+
+# Legacy endianess mechanism
+
+Some GigEVision devices incorrectly report a Genicam schema version greater or
+equal to 1.1, while implementing the legacy behavior for register access. We
+maintain a list in
+[arvgcport.c](https://github.com/AravisProject/aravis/blob/6f1d65608dcecef2326ae2b3a542f5f59771ea32/src/arvgcport.c#L44)
+which allows to force the use of the legacy endianness mechanism.
+
+The documentation about the legacy endianness mechanism is in the 3.1 appendix
+('Endianess of GigE Vision Cameras') of the GenICam Standard.
+
+There is a chance this part of Aravis is due to a misunderstanding of how a
+GigEVision device is supposed to behave (Remember we can not use the GigEVision
+specification documentation).  But until now, there was no evidence in the issue
+reports it is the case. If you think this should be implemented differently,
+don't hesitate to explain your thoughts on Aravis issue report system, or even
+better, to open a pull request. The related Aravis issues are available here:
+[https://github.com/AravisProject/aravis/labels/5. Genicam 1.0 legacy
+mode](https://github.com/AravisProject/aravis/labels/5.%20Genicam%201.0%20legacy%20mode).
+
+Meanwhile, if you want to add a device to the exception list, please open an
+issue on github, giving the vendor name and model name as found in the Genicam
+data of your device, using the `genicam` command of `arv-tool`. They are stored
+in the ModelName and VendorName attributes of the RegisterDescription element.
