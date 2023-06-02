@@ -41,6 +41,24 @@ typedef struct {
 	const char *model_selection;
 } ArvGvLegacyInfos;
 
+/*
+ * Some GigEVision devices incorrectly report a Genicam schema version greater or equal to 1.1, while implementing the
+ * legacy behavior for register access. This list allows to force the use of the legacy endianness mechanism. Vendor and
+ * model listed below are those found in the Genicam XML data, which can be obtained using the `genicam` command of
+ * `arv-tool`.  They are stored in the ModelName and VendorName attributes of the RegisterDescription element.
+ *
+ * The documentation about the legacy endianness mechanism is in the 3.1 appendix ('Endianess of GigE Vision Cameras')
+ * of the GenICam Standard.
+ *
+ * There is a chance this part of Aravis is due to a misunderstanding of how a GigEVision device is supposed to behave
+ * (Remember we can not use the GigEVision specification documentation).  But until now, there was no evidence in the
+ * issue reports it is the case. If you think this should be implemented differently, don't hesitate to explain your
+ * thoughts on Aravis issue report system, or even better, to open a pull request. The related Aravis issues are
+ * available here:
+ *
+ * https://github.com/AravisProject/aravis/labels/5.%20Genicam%201.0%20legacy%20mode
+ */
+
 static ArvGvLegacyInfos arv_gc_port_legacy_infos[] = {
    { .vendor_selection = "Imperx",                      .model_selection = "IpxGEVCamera"},
    { .vendor_selection = "KowaOptronics",               .model_selection = "SC130ET3"},

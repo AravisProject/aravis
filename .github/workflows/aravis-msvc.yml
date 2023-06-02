@@ -32,7 +32,7 @@ jobs:
         INPUT_CONANFILE: |
           [requires]
           libiconv/1.17
-          glib/2.74.1
+          glib/2.76.2
           #gobject-introspection/1.69.0
           gstreamer/1.19.2
           gst-plugins-base/1.19.2
