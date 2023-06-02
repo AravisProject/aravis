@@ -29,9 +29,12 @@
 #include <arv.h>
 #include <arvdebugprivate.h>
 #include <arvviewer.h>
+#include <arvviewerfeatures.h>
 #include <math.h>
 #include <memory.h>
+#ifdef ARAVIS_HAS_TIFF
 #include <tiffio.h>
+#endif
 #ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>  // for GDK_WINDOW_XID
 #endif
@@ -821,6 +824,7 @@ _save_gst_sample_to_file (GstSample *sample, const char *path, const char *mime_
         return success;
 }
 
+#ifdef ARAVIS_HAS_TIFF
 static gboolean
 _save_arv_buffer_to_dng_file (ArvBuffer *buffer, GstSample *sample, const char *path, GError **error)
 {
@@ -995,6 +999,7 @@ _save_arv_buffer_to_dng_file (ArvBuffer *buffer, GstSample *sample, const char *
 	
         return success;
 }
+#endif
 
 static void
 snapshot_cb (GtkButton *button, ArvViewer *viewer)
@@ -1079,11 +1084,13 @@ snapshot_cb (GtkButton *button, ArvViewer *viewer)
                 gtk_file_filter_set_name (filter, "Raw images (*.raw)");
                 gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (dialog), filter);
                 
+                #ifdef ARAVIS_HAS_TIFF
                 filter = gtk_file_filter_new ();
                 gtk_file_filter_add_mime_type (filter, "image/x-adobe-dng");
                 gtk_file_filter_add_mime_type (filter_all, "image/x-adobe-dng");
                 gtk_file_filter_set_name (filter, "DNG raw image (*.dng)");
                 gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (dialog), filter);
+                #endif
         }
 
         gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (dialog), filter_all);
@@ -1106,10 +1113,14 @@ snapshot_cb (GtkButton *button, ArvViewer *viewer)
                         success = _save_gst_sample_to_file (sample, filename, "image/png", NULL);
                 } else if (GST_IS_SAMPLE (sample) && g_content_type_is_mime_type (content_type, "image/jpeg")) {
                         success = _save_gst_sample_to_file (sample, filename, "image/jpeg", NULL);
-                } else if (ARV_IS_BUFFER (buffer) && g_content_type_is_mime_type (content_type, "image/x-adobe-dng")) {
+                } 
+                #ifdef ARAVIS_HAS_TIFF 
+                else if (ARV_IS_BUFFER (buffer) && g_content_type_is_mime_type (content_type, "image/x-adobe-dng")) {
                 	success = _save_arv_buffer_to_dng_file (buffer, sample, filename, &error); 
                 	g_free (filename);
-                } else if (ARV_IS_BUFFER (buffer) && g_content_type_is_mime_type (content_type, "image/x-panasonic-rw")) {
+                } 
+                #endif
+                else if (ARV_IS_BUFFER (buffer) && g_content_type_is_mime_type (content_type, "image/x-panasonic-rw")) {
                 	// GIO guesses that MIME type for ".raw" files, so this is what we look for when writing unformatted raw files
                         success = g_file_set_contents (filename, data, size, &error);
                         g_free (filename);
