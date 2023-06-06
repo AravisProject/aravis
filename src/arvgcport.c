@@ -64,6 +64,7 @@ static ArvGvLegacyInfos arv_gc_port_legacy_infos[] = {
    { .vendor_selection = "KowaOptronics",               .model_selection = "SC130ET3"},
    { .vendor_selection = "PleoraTechnologiesInc",       .model_selection = "iPORTCLGigE"},
    { .vendor_selection = "PleoraTechnologiesInc",       .model_selection = "NTxGigE"},
+   { .vendor_selection = "TeledyneDALSA",               .model_selection = "ICE"},
    { .vendor_selection = "Sony",                        .model_selection = "XCG_CGSeries"},
 };
 
