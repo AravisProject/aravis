@@ -1053,6 +1053,18 @@ arv_gc_property_node_new_streamable (void)
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_STREAMABLE);
 }
 
+ArvGcNode *
+arv_gc_property_node_new_p_alias (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_P_ALIAS);
+}
+
+ArvGcNode *
+arv_gc_property_node_new_p_cast_alias (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_P_CAST_ALIAS);
+}
+
 static void
 _set_property (GObject * object, guint prop_id,
 	       const GValue * value, GParamSpec * pspec)
