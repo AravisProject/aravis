@@ -1054,6 +1054,12 @@ arv_gc_property_node_new_streamable (void)
 }
 
 ArvGcNode *
+arv_gc_property_node_new_is_deprecated (void)
+{
+	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_IS_DEPRECATED);
+}
+
+ArvGcNode *
 arv_gc_property_node_new_p_alias (void)
 {
 	return arv_gc_property_node_new (ARV_GC_PROPERTY_NODE_TYPE_P_ALIAS);

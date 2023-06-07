@@ -74,6 +74,7 @@ typedef enum {
 	ARV_GC_PROPERTY_NODE_TYPE_VALUE_INDEXED,
 	ARV_GC_PROPERTY_NODE_TYPE_VALUE_DEFAULT,
 	ARV_GC_PROPERTY_NODE_TYPE_STREAMABLE,
+        ARV_GC_PROPERTY_NODE_TYPE_IS_DEPRECATED,
 
 	ARV_GC_PROPERTY_NODE_TYPE_P_UNKNONW	= 1000,
 	ARV_GC_PROPERTY_NODE_TYPE_P_FEATURE,
@@ -157,6 +158,7 @@ ARV_API ArvGcNode *		arv_gc_property_node_new_event_id		(void);
 ARV_API ArvGcNode *		arv_gc_property_node_new_value_default		(void);
 ARV_API ArvGcNode *		arv_gc_property_node_new_p_value_default	(void);
 ARV_API ArvGcNode *		arv_gc_property_node_new_streamable		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_is_deprecated		(void);
 ARV_API ArvGcNode *		arv_gc_property_node_new_p_alias		(void);
 ARV_API ArvGcNode *		arv_gc_property_node_new_p_cast_alias		(void);
 

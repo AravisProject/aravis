@@ -56,6 +56,7 @@ typedef struct {
 	ArvGcPropertyNode *is_locked;
 	ArvGcPropertyNode *imposed_access_mode;
 	ArvGcPropertyNode *streamable;
+        ArvGcPropertyNode *is_deprecated;
         ArvGcPropertyNode *alias;
         ArvGcPropertyNode *cast_alias;
 
@@ -109,6 +110,9 @@ arv_gc_feature_node_post_new_child (ArvDomNode *self, ArvDomNode *child)
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_STREAMABLE:
 				priv->streamable = property_node;       	/* TODO */
+				break;
+			case ARV_GC_PROPERTY_NODE_TYPE_IS_DEPRECATED:
+				priv->is_deprecated = property_node;       	/* TODO */
 				break;
 			case ARV_GC_PROPERTY_NODE_TYPE_P_ALIAS:
 				priv->alias = property_node;		        /* TODO */
