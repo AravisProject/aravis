@@ -993,7 +993,7 @@ arv_uv_device_constructed (GObject *object)
         if (result != 0) {
                 arv_device_take_init_error (ARV_DEVICE (uv_device),
                                             g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
-                                                         "Failed to claim USB interface to '%s-%s-%s-%s': %s",
+                                                         "Failed to claim USB control interface to '%s-%s-%s-%s': %s",
                                                          priv->vendor, priv->product, priv->serial_number, priv->guid,
                                                          libusb_error_name (result)));
                 return;
@@ -1003,7 +1003,7 @@ arv_uv_device_constructed (GObject *object)
         if (result != 0) {
                 arv_device_take_init_error (ARV_DEVICE (uv_device),
                                             g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
-                                                         "Failed to claim USB interface to '%s-%s-%s-%s': %s",
+                                                         "Failed to claim USB data interface to '%s-%s-%s-%s': %s",
                                                          priv->vendor, priv->product, priv->serial_number, priv->guid,
                                                          libusb_error_name (result)));
                 return;
