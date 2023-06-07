@@ -561,17 +561,17 @@ _bootstrap (ArvUvDevice *uv_device)
 		return FALSE;
 	}
 
-	arv_info_device ("SIRM_INFO =                  0x%08x", si_info);
-	arv_info_device ("SIRM_CONTROL =               0x%08x", si_control);
-	arv_info_device ("SIRM_REQ_PAYLOAD_SIZE =      0x%016" G_GINT64_MODIFIER "x", si_req_payload_size);
-	arv_info_device ("SIRM_REQ_LEADER_SIZE =       0x%08x", si_req_leader_size);
-	arv_info_device ("SIRM_REQ_TRAILER_SIZE =      0x%08x", si_req_trailer_size);
-	arv_info_device ("SIRM_MAX_LEADER_SIZE =       0x%08x", si_max_leader_size);
-	arv_info_device ("SIRM_PAYLOAD_SIZE =          0x%08x", si_payload_size);
-	arv_info_device ("SIRM_PAYLOAD_COUNT =         0x%08x", si_payload_count);
-	arv_info_device ("SIRM_TRANSFER1_SIZE =        0x%08x", si_transfer1_size);
-	arv_info_device ("SIRM_TRANSFER2_SIZE =        0x%08x", si_transfer2_size);
-	arv_info_device ("SIRM_MAX_TRAILER_SIZE =      0x%08x", si_max_trailer_size);
+	arv_info_device ("SIRM_INFO =                0x%08x", si_info);
+	arv_info_device ("SIRM_CONTROL =             0x%08x", si_control);
+	arv_info_device ("SIRM_REQ_PAYLOAD_SIZE =    0x%016" G_GINT64_MODIFIER "x", si_req_payload_size);
+	arv_info_device ("SIRM_REQ_LEADER_SIZE =     0x%08x", si_req_leader_size);
+	arv_info_device ("SIRM_REQ_TRAILER_SIZE =    0x%08x", si_req_trailer_size);
+	arv_info_device ("SIRM_MAX_LEADER_SIZE =     0x%08x", si_max_leader_size);
+	arv_info_device ("SIRM_PAYLOAD_SIZE =        0x%08x", si_payload_size);
+	arv_info_device ("SIRM_PAYLOAD_COUNT =       0x%08x", si_payload_count);
+	arv_info_device ("SIRM_TRANSFER1_SIZE =      0x%08x", si_transfer1_size);
+	arv_info_device ("SIRM_TRANSFER2_SIZE =      0x%08x", si_transfer2_size);
+	arv_info_device ("SIRM_MAX_TRAILER_SIZE =    0x%08x", si_max_trailer_size);
 
 	success = success && arv_device_read_memory (device, manifest_table_address,
                                                      sizeof (manifest_n_entries), &manifest_n_entries, NULL);
