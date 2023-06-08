@@ -256,6 +256,12 @@ arv_gc_create_element (ArvDomDocument *document, const char *tag_name)
 		node = arv_gc_invalidator_node_new ();
 	else if (strcmp (tag_name, "Streamable") == 0)
 		node = arv_gc_property_node_new_streamable ();
+	else if (strcmp (tag_name, "IsDeprecated") == 0)
+		node = arv_gc_property_node_new_is_deprecated ();
+	else if (strcmp (tag_name, "pAlias") == 0)
+		node = arv_gc_property_node_new_p_alias ();
+	else if (strcmp (tag_name, "pCastAlias") == 0)
+		node = arv_gc_property_node_new_p_cast_alias ();
 
 	else if (strcmp (tag_name, "CommandValue") == 0)
 		node = arv_gc_property_node_new_command_value ();
