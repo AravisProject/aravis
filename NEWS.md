@@ -6,7 +6,7 @@ Stable release 0.8.27
   * gv: start packet timeout after the first non leader packet #746 (Brian)
   * gv: auto packet size fix (Emmanuel)
   * gv: add more camera to the legacy endianness mechanism exception list (Emmanuel)
-  * u3v: fix u3vcp_cpability register size (Emmanuel)
+  * u3v: fix u3vcp_capability register size (Emmanuel)
   * chore: compilation warning fixes (Marco, Emmanuel)
   * ci: pipeline babysitting (Emmanuel)
   * doc: link fix (Henrique)
