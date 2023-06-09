@@ -12,10 +12,10 @@ Here are the steps to follow to create a new aravis release:
   easily done with a command such as:
 
   ```
-git log --stat X.Y.Z..
+git log --stat x.y.z..
   ```
 
-  where X.Y.Z is the previous release version.
+  where x.y.z is the previous release version.
 
   Summarize major changes briefly in a style similar to other
   entries in NEWS. Take special care to note any additions in
@@ -40,13 +40,13 @@ Distribution package /home/pacaud/Sources/aravis/build/meson-dist/aravis-0.7.2.t
   the release directory.
 
   ```
-$ git tag -a ARAVIS_X_Y_Z (from whatever branch you're releasing)
-$ git push origin ARAVIS_X_Y_Z
+$ git tag -a x.y.z (from whatever branch you're releasing)
+$ git push origin x.y.z
   ```
 
   If that fails because someone has pushed since you last updated, then you'll
   need to repeat the entire process. Well, update, add a new NEWS entry, and
-  make distcheck again.
+  ninja dist again.
 
 * Upload the tarball to github.
 
