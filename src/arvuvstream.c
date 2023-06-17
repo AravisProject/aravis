@@ -138,7 +138,7 @@ arv_uv_stream_buffer_context_notify_transfer_completed (ArvUvStreamBufferContext
 }
 
 static
-void arv_uv_stream_leader_cb (struct libusb_transfer *transfer)
+void LIBUSB_CALL arv_uv_stream_leader_cb (struct libusb_transfer *transfer)
 {
 	ArvUvStreamBufferContext *ctx = transfer->user_data;
 	ArvUvspPacket *packet = (ArvUvspPacket*)transfer->buffer;
@@ -195,7 +195,7 @@ void arv_uv_stream_leader_cb (struct libusb_transfer *transfer)
 }
 
 static
-void arv_uv_stream_payload_cb (struct libusb_transfer *transfer)
+void LIBUSB_CALL arv_uv_stream_payload_cb (struct libusb_transfer *transfer)
 {
 	ArvUvStreamBufferContext *ctx = transfer->user_data;
 
@@ -223,7 +223,7 @@ void arv_uv_stream_payload_cb (struct libusb_transfer *transfer)
 }
 
 static
-void arv_uv_stream_trailer_cb (struct libusb_transfer *transfer)
+void LIBUSB_CALL arv_uv_stream_trailer_cb (struct libusb_transfer *transfer)
 {
 	ArvUvStreamBufferContext *ctx = transfer->user_data;
 	ArvUvspPacket *packet = (ArvUvspPacket*)transfer->buffer;
