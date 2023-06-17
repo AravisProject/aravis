@@ -12,8 +12,8 @@ jobs:
   macos:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
       with:
         python-version: '3.x'
     - name: Unbreak Python in Github Actions
@@ -33,7 +33,7 @@ jobs:
         CC: gcc
     - name: Tests
       run: meson test -C build/ -v
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       if: failure()
       with:
         name: MacOS_Meson_Testlog

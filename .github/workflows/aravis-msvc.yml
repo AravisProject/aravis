@@ -26,7 +26,7 @@ jobs:
       run: |
         rm -r C:\Strawberry\perl
     - name: checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: conan
       env:
         INPUT_CONANFILE: |
@@ -79,7 +79,7 @@ jobs:
         .\build\activate_run.ps1
         meson test -C .\build
     - name: logs
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       if: failure()
       with:
         name: msvc_${{ matrix.version }}_${{ matrix.arch }}_${{ matrix.build_type_meson }}_Meson_Testlog
