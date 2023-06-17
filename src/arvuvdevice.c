@@ -929,7 +929,7 @@ arv_uv_device_new_from_guid (const char *guid, GError **error)
 			       NULL);
 }
 
-static int _disconnect_event (libusb_context *ctx,
+static int LIBUSB_CALL _disconnect_event (libusb_context *ctx,
                               libusb_device *device,
                               libusb_hotplug_event event,
                               void *user_data)
