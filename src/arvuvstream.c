@@ -180,8 +180,8 @@ void LIBUSB_CALL arv_uv_stream_leader_cb (struct libusb_transfer *transfer)
                                 ctx->buffer->priv->timestamp_ns = arv_uvsp_packet_get_timestamp (packet);
                                 break;
                         default:
-                                arv_warning_stream_thread ("Leader transfer failed: transfer->status = %d",
-                                                           transfer->status);
+                                arv_warning_stream_thread ("Leader transfer failed (%s)",
+                                                           libusb_error_name (transfer->status));
                                 ctx->buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
                                 break;
                         }
@@ -208,8 +208,8 @@ void LIBUSB_CALL arv_uv_stream_payload_cb (struct libusb_transfer *transfer)
                                         ctx->total_payload_transferred += transfer->actual_length;
                                         break;
                                 default:
-                                        arv_warning_stream_thread ("Payload transfer failed: transfer->status = %d",
-                                                                   transfer->status);
+                                        arv_warning_stream_thread ("Payload transfer failed (%s)",
+                                                                   libusb_error_name (transfer->status));
                                         ctx->buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
                                         break;
                         }
@@ -254,8 +254,8 @@ void LIBUSB_CALL arv_uv_stream_trailer_cb (struct libusb_transfer *transfer)
 
                                         break;
                                 default:
-                                        arv_warning_stream_thread ("Trailer transfer failed: transfer->status = %d",
-                                                                   transfer->status);
+                                        arv_warning_stream_thread ("Trailer transfer failed (%s)",
+                                                                   libusb_error_name(transfer->status));
                                         ctx->buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
                                         break;
                         }
