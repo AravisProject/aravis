@@ -39,6 +39,8 @@
 #define ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE	(1024*1024*1)
 #define ARV_UV_STREAM_MAXIMUM_SUBMIT_TOTAL	(8*1024*1024)
 
+#define ARV_UV_STREAM_POP_INPUT_BUFFER_TIMEOUT_US       10000
+
 enum {
        ARV_UV_STREAM_PROPERTY_0,
        ARV_UV_STREAM_PROPERTY_USB_MODE
@@ -463,7 +465,8 @@ arv_uv_stream_thread_async (void *data)
                arv_uv_device_is_connected (thread_data->uv_device)) {
 		ArvUvStreamBufferContext* ctx;
 
-                buffer = arv_stream_pop_input_buffer (thread_data->stream);
+                buffer = arv_stream_timeout_pop_input_buffer (thread_data->stream,
+                                                              ARV_UV_STREAM_POP_INPUT_BUFFER_TIMEOUT_US);
 
 		if( buffer == NULL ) {
 			thread_data->statistics.n_underruns += 1;
