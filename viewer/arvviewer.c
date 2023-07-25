@@ -39,7 +39,7 @@
 #endif
 
 #define ARV_VIEWER_NOTIFICATION_TIMEOUT 10
-#define ARV_VIEWER_N_BUFFERS 5
+#define ARV_VIEWER_N_BUFFERS 10
 
 static gboolean has_autovideo_sink = FALSE;
 static gboolean has_gtksink = FALSE;
