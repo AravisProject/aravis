@@ -39,6 +39,7 @@
 #endif
 
 #define ARV_VIEWER_NOTIFICATION_TIMEOUT 10
+#define ARV_VIEWER_N_BUFFERS 5
 
 static gboolean has_autovideo_sink = FALSE;
 static gboolean has_gtksink = FALSE;
@@ -433,7 +434,9 @@ new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 	arv_stream_get_n_buffers (stream, &n_input_buffers, &n_output_buffers);
 	arv_debug_viewer ("pop buffer (%d,%d)", n_input_buffers, n_output_buffers);
 
-	if (arv_buffer_get_status (arv_buffer) == ARV_BUFFER_STATUS_SUCCESS) {
+	if (arv_buffer_get_status (arv_buffer) == ARV_BUFFER_STATUS_SUCCESS &&
+            /* Ensure there is still available buffers for the stream thread */
+            n_input_buffers + n_output_buffers > 0) {
 		size_t size;
                 gint part_id;
 
@@ -1387,7 +1390,7 @@ start_video (ArvViewer *viewer)
 
 	arv_stream_set_emit_signals (viewer->stream, TRUE);
 	payload = arv_camera_get_payload (viewer->camera, NULL);
-	for (i = 0; i < 10; i++)
+	for (i = 0; i < ARV_VIEWER_N_BUFFERS; i++)
 		arv_stream_push_buffer (viewer->stream, arv_buffer_new (payload, NULL));
 
 	set_camera_widgets(viewer);
