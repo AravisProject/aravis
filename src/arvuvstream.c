@@ -40,6 +40,7 @@
 #define ARV_UV_STREAM_MAXIMUM_SUBMIT_TOTAL	(8*1024*1024)
 
 #define ARV_UV_STREAM_POP_INPUT_BUFFER_TIMEOUT_US       10000
+#define ARV_UV_STREAM_TRANSFER_WAIT_TIMEOUT_MS          10
 
 enum {
        ARV_UV_STREAM_PROPERTY_0,
@@ -124,10 +125,19 @@ typedef struct {
 G_DEFINE_TYPE_WITH_CODE (ArvUvStream, arv_uv_stream, ARV_TYPE_STREAM, G_ADD_PRIVATE (ArvUvStream))
 
 static void
-arv_uv_stream_buffer_context_wait_transfer_completed (ArvUvStreamBufferContext* ctx)
+arv_uv_stream_buffer_context_wait_transfer_completed (ArvUvStreamBufferContext* ctx, gint64 timeout_ms)
 {
 	g_mutex_lock( ctx->transfer_completed_mtx );
-	g_cond_wait( ctx->transfer_completed_event, ctx->transfer_completed_mtx );
+
+        if (timeout_ms > 0) {
+                gint64 end_time;
+
+                end_time = g_get_monotonic_time() + timeout_ms * G_TIME_SPAN_MILLISECOND;
+                g_cond_wait_until (ctx->transfer_completed_event, ctx->transfer_completed_mtx, end_time);
+        } else {
+                g_cond_wait( ctx->transfer_completed_event, ctx->transfer_completed_mtx );
+        }
+
 	g_mutex_unlock( ctx->transfer_completed_mtx );
 }
 
@@ -369,7 +379,7 @@ _submit_transfer (ArvUvStreamBufferContext* ctx, struct libusb_transfer* transfe
 {
 	while (!g_atomic_int_get (cancel) &&
                ((g_atomic_int_get(ctx->total_submitted_bytes) + transfer->length) > ARV_UV_STREAM_MAXIMUM_SUBMIT_TOTAL)) {
-		arv_uv_stream_buffer_context_wait_transfer_completed (ctx);
+		arv_uv_stream_buffer_context_wait_transfer_completed (ctx, ARV_UV_STREAM_TRANSFER_WAIT_TIMEOUT_MS);
 	}
 
 	while (!g_atomic_int_get (cancel)) {
@@ -391,7 +401,7 @@ _submit_transfer (ArvUvStreamBufferContext* ctx, struct libusb_transfer* transfe
                          * In order to allow more memory to be used for submitted buffers, increase usbfs_memory_mb:
                          * sudo modprobe usbcore usbfs_memory_mb=1000
                         */
-			arv_uv_stream_buffer_context_wait_transfer_completed (ctx);
+			arv_uv_stream_buffer_context_wait_transfer_completed (ctx, ARV_UV_STREAM_TRANSFER_WAIT_TIMEOUT_MS);
 			break;
 
 		default:
@@ -439,7 +449,7 @@ arv_uv_stream_buffer_context_cancel (gpointer key, gpointer value, gpointer user
 
 	while (ctx->num_submitted > 0)
 	{
-		arv_uv_stream_buffer_context_wait_transfer_completed (ctx);
+		arv_uv_stream_buffer_context_wait_transfer_completed (ctx, ARV_UV_STREAM_TRANSFER_WAIT_TIMEOUT_MS);
 	}
 }
 
