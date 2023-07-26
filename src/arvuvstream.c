@@ -62,6 +62,10 @@ typedef struct {
 typedef struct {
 	ArvStream *stream;
 
+        gboolean thread_started;
+        GMutex thread_started_mutex;
+        GCond thread_started_cond;
+
 	ArvUvDevice *uv_device;
 	ArvStreamCallback callback;
 	void *callback_data;
@@ -88,6 +92,8 @@ typedef struct {
 	GThread *thread;
 	ArvUvStreamThreadData *thread_data;
 	ArvUvUsbMode usb_mode;
+
+        guint64 sirm_address;
 } ArvUvStreamPrivate;
 
 struct _ArvUvStream {
@@ -462,6 +468,7 @@ arv_uv_stream_thread_async (void *data)
 	gint total_submitted_bytes = 0;
 
 	arv_debug_stream_thread ("Start async USB3Vision stream thread");
+
 	arv_debug_stream_thread ("leader_size = %zu", thread_data->leader_size );
 	arv_debug_stream_thread ("payload_size = %zu", thread_data->payload_size );
 	arv_debug_stream_thread ("trailer_size = %zu", thread_data->trailer_size );
@@ -470,6 +477,11 @@ arv_uv_stream_thread_async (void *data)
 		thread_data->callback (thread_data->callback_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
 
 	ctx_lookup = g_hash_table_new_full( g_direct_hash, g_direct_equal, NULL, arv_uv_stream_buffer_context_free );
+
+        g_mutex_lock (&thread_data->thread_started_mutex);
+        thread_data->thread_started = TRUE;
+        g_cond_signal (&thread_data->thread_started_cond);
+        g_mutex_unlock (&thread_data->thread_started_mutex);
 
 	while (!g_atomic_int_get (&thread_data->cancel) &&
                arv_uv_device_is_connected (thread_data->uv_device)) {
@@ -527,6 +539,11 @@ arv_uv_stream_thread_sync (void *data)
 		thread_data->callback (thread_data->callback_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
 
 	offset = 0;
+
+        g_mutex_lock (&thread_data->thread_started_mutex);
+        thread_data->thread_started = TRUE;
+        g_cond_signal (&thread_data->thread_started_cond);
+        g_mutex_unlock (&thread_data->thread_started_mutex);
 
 	while (!g_atomic_int_get (&thread_data->cancel)) {
 		GError *error = NULL;
@@ -713,8 +730,7 @@ arv_uv_stream_start_thread (ArvStream *stream)
 	ArvUvStreamPrivate *priv = arv_uv_stream_get_instance_private (uv_stream);
 	ArvUvStreamThreadData *thread_data;
 	ArvDevice *device;
-	guint64 offset;
-	guint64 sirm_offset;
+        guint64 sbrm_address;
 	guint32 si_info;
 	guint64 si_req_payload_size;
 	guint32 si_req_leader_size;
@@ -737,16 +753,17 @@ arv_uv_stream_start_thread (ArvStream *stream)
 	device = ARV_DEVICE (thread_data->uv_device);
 
 	arv_device_read_memory (device, ARV_ABRM_SBRM_ADDRESS,
-                                sizeof (guint64), &offset, NULL);
-	arv_device_read_memory (device, offset + ARV_SBRM_SIRM_ADDRESS,
-                                sizeof (guint64), &sirm_offset, NULL);
-	arv_device_read_memory (device, sirm_offset + ARV_SIRM_INFO,
+                                sizeof (guint64), &sbrm_address, NULL);
+	arv_device_read_memory (device, sbrm_address + ARV_SBRM_SIRM_ADDRESS,
+                                sizeof (guint64), &priv->sirm_address, NULL);
+
+	arv_device_read_memory (device, priv->sirm_address + ARV_SIRM_INFO,
                                 sizeof (si_info), &si_info, NULL);
-	arv_device_read_memory (device, sirm_offset + ARV_SIRM_REQ_PAYLOAD_SIZE,
+	arv_device_read_memory (device, priv->sirm_address + ARV_SIRM_REQ_PAYLOAD_SIZE,
                                 sizeof (si_req_payload_size), &si_req_payload_size, NULL);
-	arv_device_read_memory (device, sirm_offset + ARV_SIRM_REQ_LEADER_SIZE,
+	arv_device_read_memory (device, priv->sirm_address + ARV_SIRM_REQ_LEADER_SIZE,
                                 sizeof (si_req_leader_size), &si_req_leader_size, NULL);
-	arv_device_read_memory (device, sirm_offset + ARV_SIRM_REQ_TRAILER_SIZE,
+	arv_device_read_memory (device, priv->sirm_address + ARV_SIRM_REQ_TRAILER_SIZE,
                                 sizeof (si_req_trailer_size), &si_req_trailer_size, NULL);
 
 	alignment = 1 << ((si_info & ARV_SIRM_INFO_ALIGNMENT_MASK) >> ARV_SIRM_INFO_ALIGNMENT_SHIFT);
@@ -779,17 +796,17 @@ arv_uv_stream_start_thread (ArvStream *stream)
 	si_transfer1_size = align(si_req_payload_size % si_payload_size, alignment);
 	si_transfer2_size = 0;
 
-	arv_device_write_memory (device, sirm_offset + ARV_SIRM_MAX_LEADER_SIZE,
+	arv_device_write_memory (device, priv->sirm_address + ARV_SIRM_MAX_LEADER_SIZE,
                                  sizeof (si_leader_size), &si_leader_size, NULL);
-	arv_device_write_memory (device, sirm_offset + ARV_SIRM_MAX_TRAILER_SIZE,
+	arv_device_write_memory (device, priv->sirm_address + ARV_SIRM_MAX_TRAILER_SIZE,
                                  sizeof (si_trailer_size), &si_trailer_size, NULL);
-	arv_device_write_memory (device, sirm_offset + ARV_SIRM_PAYLOAD_SIZE,
+	arv_device_write_memory (device, priv->sirm_address + ARV_SIRM_PAYLOAD_SIZE,
                                  sizeof (si_payload_size), &si_payload_size, NULL);
-	arv_device_write_memory (device, sirm_offset + ARV_SIRM_PAYLOAD_COUNT,
+	arv_device_write_memory (device, priv->sirm_address + ARV_SIRM_PAYLOAD_COUNT,
                                  sizeof (si_payload_count), &si_payload_count, NULL);
-	arv_device_write_memory (device, sirm_offset + ARV_SIRM_TRANSFER1_SIZE,
+	arv_device_write_memory (device, priv->sirm_address + ARV_SIRM_TRANSFER1_SIZE,
                                  sizeof (si_transfer1_size), &si_transfer1_size, NULL);
-	arv_device_write_memory (device, sirm_offset + ARV_SIRM_TRANSFER2_SIZE,
+	arv_device_write_memory (device, priv->sirm_address + ARV_SIRM_TRANSFER2_SIZE,
                                  sizeof (si_transfer2_size), &si_transfer2_size, NULL);
 
 	arv_info_stream ("SIRM_PAYLOAD_SIZE     = 0x%08x", si_payload_size);
@@ -798,9 +815,6 @@ arv_uv_stream_start_thread (ArvStream *stream)
 	arv_info_stream ("SIRM_TRANSFER2_SIZE   = 0x%08x", si_transfer2_size);
 	arv_info_stream ("SIRM_MAX_LEADER_SIZE  = 0x%08x", si_leader_size);
 	arv_info_stream ("SIRM_MAX_TRAILER_SIZE = 0x%08x", si_trailer_size);
-
-	si_control = ARV_SIRM_CONTROL_STREAM_ENABLE;
-	arv_device_write_memory (device, sirm_offset + ARV_SIRM_CONTROL, sizeof (si_control), &si_control, NULL);
 
         thread_data->expected_size = si_req_payload_size;
 	thread_data->leader_size = si_leader_size;
@@ -820,6 +834,15 @@ arv_uv_stream_start_thread (ArvStream *stream)
                 default:
                         g_assert_not_reached ();
         }
+
+        g_mutex_lock (&thread_data->thread_started_mutex);
+        while (!thread_data->thread_started)
+                g_cond_wait (&thread_data->thread_started_cond,
+                             &thread_data->thread_started_mutex);
+        g_mutex_unlock (&thread_data->thread_started_mutex);
+
+        si_control = ARV_SIRM_CONTROL_STREAM_ENABLE;
+        arv_device_write_memory (device, priv->sirm_address + ARV_SIRM_CONTROL, sizeof (si_control), &si_control, NULL);
 }
 
 static void
@@ -828,8 +851,6 @@ arv_uv_stream_stop_thread (ArvStream *stream)
 	ArvUvStream *uv_stream = ARV_UV_STREAM (stream);
 	ArvUvStreamPrivate *priv = arv_uv_stream_get_instance_private (uv_stream);
 	ArvUvStreamThreadData *thread_data;
-	guint64 offset;
-	guint64 sirm_offset;
 	guint32 si_control;
 
 	g_return_if_fail (priv->thread != NULL);
@@ -844,12 +865,8 @@ arv_uv_stream_stop_thread (ArvStream *stream)
 	priv->thread = NULL;
 
 	si_control = 0x0;
-	arv_device_read_memory (ARV_DEVICE (thread_data->uv_device),
-				ARV_ABRM_SBRM_ADDRESS, sizeof (guint64), &offset, NULL);
-	arv_device_read_memory (ARV_DEVICE (thread_data->uv_device),
-				offset + ARV_SBRM_SIRM_ADDRESS, sizeof (guint64), &sirm_offset, NULL);
 	arv_device_write_memory (ARV_DEVICE (thread_data->uv_device),
-				 sirm_offset + ARV_SIRM_CONTROL, sizeof (si_control), &si_control, NULL);
+				 priv->sirm_address + ARV_SIRM_CONTROL, sizeof (si_control), &si_control, NULL);
 
 }
 
