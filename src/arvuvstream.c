@@ -467,7 +467,7 @@ arv_uv_stream_thread_async (void *data)
 	GHashTable *ctx_lookup;
 	gint total_submitted_bytes = 0;
 
-	arv_debug_stream_thread ("Start async USB3Vision stream thread");
+	arv_info_stream_thread ("Start async USB3Vision stream thread");
 
 	arv_debug_stream_thread ("leader_size = %zu", thread_data->leader_size );
 	arv_debug_stream_thread ("payload_size = %zu", thread_data->payload_size );
@@ -516,7 +516,7 @@ arv_uv_stream_thread_async (void *data)
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->callback_data, ARV_STREAM_CALLBACK_TYPE_EXIT, NULL);
 
-	arv_debug_stream_thread ("Stop USB3Vision stream thread");
+	arv_info_stream_thread ("Stop USB3Vision async stream thread");
 
 	return NULL;
 }
@@ -531,7 +531,7 @@ arv_uv_stream_thread_sync (void *data)
 	guint64 offset;
 	size_t transferred;
 
-	arv_debug_stream_thread ("Start sync USB3Vision stream thread");
+	arv_info_stream_thread ("Start sync USB3Vision stream thread");
 
 	incoming_buffer = g_malloc (ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE);
 
@@ -707,7 +707,7 @@ arv_uv_stream_thread_sync (void *data)
 
 	g_free (incoming_buffer);
 
-	arv_debug_stream_thread ("Stop USB3Vision stream thread");
+	arv_info_stream_thread ("Stop USB3Vision sync stream thread");
 
 	return NULL;
 }
