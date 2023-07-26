@@ -712,6 +712,18 @@ reset_endpoint (libusb_device_handle *usb_device, guint8 endpoint, guint8 endpoi
 	}
 }
 
+gboolean
+arv_uv_device_reset_stream_endpoint (ArvUvDevice *device)
+{
+	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (ARV_UV_DEVICE (device));
+
+        g_return_val_if_fail(ARV_IS_UV_DEVICE(device), FALSE);
+
+        reset_endpoint (priv->usb_device, priv->data_endpoint, LIBUSB_ENDPOINT_IN);
+
+        return TRUE;
+}
+
 static int
 get_guid_index(libusb_device * device) {
 	struct libusb_config_descriptor *config;
