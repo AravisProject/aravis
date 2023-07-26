@@ -1037,8 +1037,6 @@ arv_uv_device_constructed (GObject *object)
                 return;
         }
 
-        reset_endpoint (priv->usb_device, priv->data_endpoint, LIBUSB_ENDPOINT_IN);
-
         libusb_hotplug_register_callback (priv->usb, LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT, 0,
                                           LIBUSB_HOTPLUG_MATCH_ANY,
                                           LIBUSB_HOTPLUG_MATCH_ANY,
