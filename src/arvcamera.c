@@ -1081,14 +1081,16 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate, GError **error)
 					guint n_values;
 					guint i;
 
-					values = arv_camera_dup_available_enumerations (camera, "FPS", &n_values, &local_error);
+					values = arv_camera_dup_available_enumerations (camera, "FPS",
+                                                                                        &n_values, &local_error);
 					for (i = 0; i < n_values && local_error == NULL; i++) {
 						if (values[i] > 0) {
 							double e;
 
 							e = (int)((10000000/(double) values[i]) * 100 + 0.5) / 100.0;
 							if (e == frame_rate) {
-								arv_camera_set_integer (camera, "FPS", values[i], &local_error);
+								arv_camera_set_integer (camera, "FPS",
+                                                                                        values[i], &local_error);
 								break;
 							}
 						}
@@ -1118,11 +1120,11 @@ arv_camera_set_frame_rate (ArvCamera *camera, double frame_rate, GError **error)
 			arv_camera_set_frame_rate_enable(camera, TRUE, &local_error);
 			if (local_error == NULL)
 				arv_camera_set_float (camera,
-															priv->has_acquisition_frame_rate ?
-															"AcquisitionFrameRate":
-															"AcquisitionFrameRateAbs", frame_rate, &local_error);
-			break;
-	}
+                                                      priv->has_acquisition_frame_rate ?
+                                                      "AcquisitionFrameRate":
+                                                      "AcquisitionFrameRateAbs", frame_rate, &local_error);
+                        break;
+        }
 
 	if (local_error != NULL)
 		g_propagate_error (error, local_error);
@@ -1289,7 +1291,7 @@ arv_camera_set_frame_rate_enable(ArvCamera *camera, gboolean enable, GError **er
 			break;
 		case ARV_CAMERA_VENDOR_POINT_GREY_FLIR:
 			if (local_error == NULL) {
-				if (priv->has_acquisition_frame_rate_enabled)				
+				if (priv->has_acquisition_frame_rate_enabled)
 					arv_camera_set_boolean (camera, "AcquisitionFrameRateEnabled", enable, &local_error);
 				else
 					arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", enable, &local_error);
@@ -1299,7 +1301,7 @@ arv_camera_set_frame_rate_enable(ArvCamera *camera, gboolean enable, GError **er
 		case ARV_CAMERA_VENDOR_RICOH:
 		case ARV_CAMERA_VENDOR_XIMEA:
 		case ARV_CAMERA_VENDOR_MATRIX_VISION:
-		case ARV_CAMERA_VENDOR_IMPERX:	
+		case ARV_CAMERA_VENDOR_IMPERX:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
 			if (local_error == NULL) {
 				if (arv_camera_is_feature_available (camera, "AcquisitionFrameRateEnable", &local_error)) {
