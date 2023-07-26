@@ -39,7 +39,7 @@
 #define ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE	(1024*1024*1)
 #define ARV_UV_STREAM_MAXIMUM_SUBMIT_TOTAL	(8*1024*1024)
 
-#define ARV_UV_STREAM_POP_INPUT_BUFFER_TIMEOUT_US       10000
+#define ARV_UV_STREAM_POP_INPUT_BUFFER_TIMEOUT_MS       10
 #define ARV_UV_STREAM_TRANSFER_WAIT_TIMEOUT_MS          10
 
 enum {
@@ -476,7 +476,7 @@ arv_uv_stream_thread_async (void *data)
 		ArvUvStreamBufferContext* ctx;
 
                 buffer = arv_stream_timeout_pop_input_buffer (thread_data->stream,
-                                                              ARV_UV_STREAM_POP_INPUT_BUFFER_TIMEOUT_US);
+                                                              ARV_UV_STREAM_POP_INPUT_BUFFER_TIMEOUT_MS * 1000);
 
 		if( buffer == NULL ) {
 			thread_data->statistics.n_underruns += 1;
