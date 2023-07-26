@@ -51,6 +51,8 @@ void            arv_uv_device_fill_bulk_transfer        (struct libusb_transfer*
 
 gboolean        arv_uv_device_is_connected              (ArvUvDevice *uv_device);
 
+gboolean        arv_uv_device_reset_stream_endpoint     (ArvUvDevice *device);
+
 G_END_DECLS
 
 #endif
