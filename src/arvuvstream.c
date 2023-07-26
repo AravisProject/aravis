@@ -841,6 +841,8 @@ arv_uv_stream_start_thread (ArvStream *stream)
                              &thread_data->thread_started_mutex);
         g_mutex_unlock (&thread_data->thread_started_mutex);
 
+        arv_uv_device_reset_stream_endpoint (thread_data->uv_device);
+
         si_control = ARV_SIRM_CONTROL_STREAM_ENABLE;
         arv_device_write_memory (device, priv->sirm_address + ARV_SIRM_CONTROL, sizeof (si_control), &si_control, NULL);
 }
