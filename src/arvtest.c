@@ -369,7 +369,7 @@ arv_test_genicam (ArvTest *test, const char *test_name, ArvTestCamera *test_came
 
         g_return_if_fail (ARV_IS_TEST (test));
 
-        version = arv_test_camera_get_key_file_string (test_camera, test, "Schema", NULL);
+        version = arv_test_camera_get_key_file_string (test_camera, test, "Schema", "Invalid");
 
 	device = arv_camera_get_device (test_camera->camera);
 	genicam = arv_device_get_genicam_xml (device, &size);
@@ -399,9 +399,9 @@ arv_test_genicam (ArvTest *test, const char *test_name, ArvTestCamera *test_came
                 } else {
                         status = ARV_TEST_STATUS_FAILURE;
                 }
-        } else if (version != NULL && g_ascii_strcasecmp (version, "ignore") == 0) {
+        } else if (version != NULL && g_ascii_strcasecmp (version, "Invalid") == 0) {
                 status = ARV_TEST_STATUS_SUCCESS;
-                        comment = g_strdup ("Version check disabled");
+                        comment = g_strdup ("Schema validation disabled");
         }
 
         arv_test_camera_add_result (test_camera, test_name, "Schema", status, comment);
