@@ -1,3 +1,13 @@
+Stable release 0.8.28
+=====================
+
+  * usb3vision: make async libusb default (Emmanuel)
+  * usb3vision: improve CPU use when no buffer is available for the stream thread (Emmanuel)
+  * usb3vision: don't wait forever for USB transfer completion (Emmanuel)
+  * usb3vision: enable stream after the receiving stream thread is started (Emmanuel)
+  * viewer: avoid buffer exhaustion if GStreamer pipeline is late (Emmanuel)
+  * build: fix clang 32 bits compilation (Nath)
+
 Stable release 0.8.27
 =====================
 
