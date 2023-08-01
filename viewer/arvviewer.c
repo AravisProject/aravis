@@ -1917,10 +1917,10 @@ arv_viewer_new (void)
   if (!gstreamer_plugin_check ())
 	  return NULL;
 
-  g_set_application_name ("ArvViewer");
+  g_set_application_name ("Aravis Viewer");
 
   arv_viewer = g_object_new (arv_viewer_get_type (),
-			     "application-id", "org.aravis.Aravis",
+			     "application-id", "org.aravis.viewer",
 			     "flags", G_APPLICATION_NON_UNIQUE,
 			     "inactivity-timeout", 30000,
 			     NULL);
