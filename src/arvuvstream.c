@@ -86,6 +86,7 @@ typedef struct {
 	/* Statistics */
 	ArvStreamStatistics statistics;
 
+        gint n_buffer_in_use;
 } ArvUvStreamThreadData;
 
 typedef struct {
@@ -129,6 +130,8 @@ typedef struct {
         gboolean is_aborting;
 
 	ArvStreamStatistics *statistics;
+
+        gint *n_buffer_in_use;
 } ArvUvStreamBufferContext;
 
 G_DEFINE_TYPE_WITH_CODE (ArvUvStream, arv_uv_stream, ARV_TYPE_STREAM, G_ADD_PRIVATE (ArvUvStream))
@@ -299,6 +302,7 @@ void LIBUSB_CALL arv_uv_stream_trailer_cb (struct libusb_transfer *transfer)
                         ctx->callback (ctx->callback_data,
                                        ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
                                        ctx->buffer);
+                g_atomic_int_dec_and_test(ctx->n_buffer_in_use);
                 ctx->buffer = NULL;
         }
 
@@ -321,6 +325,7 @@ arv_uv_stream_buffer_context_new (ArvBuffer *buffer, ArvUvStreamThreadData *thre
         ctx->callback_data = thread_data->callback_data;
 	ctx->transfer_completed_mtx = &thread_data->stream_mtx;
 	ctx->transfer_completed_event = &thread_data->stream_event;
+        ctx->n_buffer_in_use = &thread_data->n_buffer_in_use;
 
 	ctx->leader_buffer = g_malloc (thread_data->leader_size);
 	ctx->leader_transfer = libusb_alloc_transfer (0);
@@ -387,6 +392,7 @@ arv_uv_stream_buffer_context_free (gpointer data)
                         ctx->callback (ctx->callback_data,
                                        ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
                                        ctx->buffer);
+                g_atomic_int_dec_and_test(ctx->n_buffer_in_use);
                 ctx->buffer = NULL;
         }
 
@@ -509,11 +515,14 @@ arv_uv_stream_thread_async (void *data)
                                                               ARV_UV_STREAM_POP_INPUT_BUFFER_TIMEOUT_MS * 1000);
 
 		if( buffer == NULL ) {
-			thread_data->statistics.n_underruns += 1;
+                        if (thread_data->n_buffer_in_use == 0)
+                                thread_data->statistics.n_underruns += 1;
                         /* NOTE: n_ignored_bytes is not accumulated because it doesn't submit next USB transfer if
                          * buffer is shortage. It means back pressure might be hanlded by USB slave side. */
 			continue;
-		}
+		} else {
+                        g_atomic_int_inc(&thread_data->n_buffer_in_use);
+                }
 
 		ctx = g_hash_table_lookup( ctx_lookup, buffer );
 		if (!ctx) {
@@ -612,10 +621,12 @@ arv_uv_stream_thread_sync (void *data)
 									       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
 									       buffer);
 						thread_data->statistics.n_failures++;
+                                                g_atomic_int_dec_and_test(&thread_data->n_buffer_in_use);
 						buffer = NULL;
 					}
 					buffer = arv_stream_pop_input_buffer (thread_data->stream);
 					if (buffer != NULL) {
+                                                g_atomic_int_inc(&thread_data->n_buffer_in_use);
 						buffer->priv->system_timestamp_ns = g_get_real_time () * 1000LL;
 						buffer->priv->status = ARV_BUFFER_STATUS_FILLING;
                                                 buffer->priv->received_size = 0;
@@ -671,6 +682,7 @@ arv_uv_stream_thread_sync (void *data)
                                                                                       buffer);
                                                        thread_data->statistics.n_failures++;
                                                        thread_data->statistics.n_ignored_bytes += transferred;
+                                                        g_atomic_int_dec_and_test(&thread_data->n_buffer_in_use);
                                                        buffer = NULL;
                                                 } else {
                                                         buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
@@ -683,6 +695,7 @@ arv_uv_stream_thread_sync (void *data)
                                                                                        buffer);
                                                         thread_data->statistics.n_completed_buffers++;
                                                         thread_data->statistics.n_transferred_bytes += transferred;
+                                                        g_atomic_int_dec_and_test(&thread_data->n_buffer_in_use);
                                                         buffer = NULL;
                                                 }
                                         }
@@ -718,6 +731,7 @@ arv_uv_stream_thread_sync (void *data)
 			thread_data->callback (thread_data->callback_data,
 					       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
 					       buffer);
+                g_atomic_int_dec_and_test(&thread_data->n_buffer_in_use);
 	}
 
 	if (thread_data->callback != NULL)
@@ -840,6 +854,7 @@ arv_uv_stream_start_thread (ArvStream *stream)
         thread_data->payload_count = si_payload_count;
         thread_data->transfer1_size = si_transfer1_size;
 	thread_data->trailer_size = si_trailer_size;
+        thread_data->n_buffer_in_use = 0;
 	thread_data->cancel = FALSE;
 
         switch (priv->usb_mode) {
@@ -887,7 +902,6 @@ arv_uv_stream_stop_thread (ArvStream *stream)
 	si_control = 0x0;
 	arv_device_write_memory (ARV_DEVICE (thread_data->uv_device),
 				 priv->sirm_address + ARV_SIRM_CONTROL, sizeof (si_control), &si_control, NULL);
-
 }
 
 /**
