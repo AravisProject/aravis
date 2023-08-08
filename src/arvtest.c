@@ -27,6 +27,7 @@
 #include <arvdebugprivate.h>
 #include <arvmiscprivate.h>
 #include <arvgcprivate.h>
+#include <arvbufferprivate.h>
 #include <math.h>
 
 #ifdef _MSC_VER
@@ -646,6 +647,39 @@ arv_test_chunks (ArvTest *test, const char *test_name, ArvTestCamera *test_camer
         _single_acquisition (test, test_name, test_camera, TRUE, FALSE);
 }
 
+typedef struct {
+        unsigned int n_init;
+        unsigned int n_start;
+        unsigned int n_done;
+        unsigned int n_success;
+        unsigned int n_exit;
+} _StreamCallbackData;
+
+static void
+_stream_calback (gpointer data, ArvStreamCallbackType type, ArvBuffer *buffer)
+{
+        _StreamCallbackData *callback_data = data;
+
+        switch (type) {
+                case ARV_STREAM_CALLBACK_TYPE_INIT:
+                        callback_data->n_init++;
+                        break;
+                case ARV_STREAM_CALLBACK_TYPE_START_BUFFER:
+                        callback_data->n_start++;
+                        break;
+                case ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE:
+                        callback_data->n_done++;
+                        if (buffer->priv->status == ARV_BUFFER_STATUS_SUCCESS)
+                                callback_data->n_success++;
+                        break;
+                case ARV_STREAM_CALLBACK_TYPE_EXIT:
+                        callback_data->n_exit++;
+                        break;
+                default:
+                        break;
+        }
+}
+
 static void
 _multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_camera,
                        double frame_rate, gboolean use_system_timestamp)
@@ -653,6 +687,7 @@ _multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test
         GError *error = NULL;
         char *message = NULL;
         ArvStream *stream;
+        _StreamCallbackData callback_data;
         unsigned int i;
         size_t payload_size;
         gboolean success = TRUE;
@@ -673,7 +708,12 @@ _multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test
                 return;
         }
 
-        stream = arv_camera_create_stream (test_camera->camera, NULL, NULL, &error);
+        callback_data.n_init = 0;
+        callback_data.n_start = 0;
+        callback_data.n_done = 0;
+        callback_data.n_success = 0;
+        callback_data.n_exit = 0;
+        stream = arv_camera_create_stream (test_camera->camera, _stream_calback, &callback_data, &error);
         if (error == NULL)
                 payload_size = arv_camera_get_payload (test_camera->camera, &error);
         if (error == NULL) {
@@ -712,14 +752,18 @@ _multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test
 
         g_clear_object (&stream);
 
+        success = success &&
+                callback_data.n_init == 1 &&
+                callback_data.n_start == callback_data.n_done &&
+                callback_data.n_success == n_expected_buffers &&
+                callback_data.n_exit == 1;
+
         message = g_strdup_printf ("%u/%u%s%s", n_completed_buffers, n_expected_buffers,
                                    error != NULL ? " " : "",
                                    error != NULL ? error->message : "");
-
         arv_test_camera_add_result (test_camera, test_name, "BufferCheck",
                                     success && error == NULL ? ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
                                     message);
-
         g_clear_pointer (&message, g_free);
 
         frame_rate_success = FALSE;
@@ -777,6 +821,7 @@ arv_test_software_trigger (ArvTest *test, const char *test_name, ArvTestCamera *
         GError* error = NULL;
         char *message = NULL;
         ArvStream *stream;
+        _StreamCallbackData callback_data;
         unsigned int i;
         size_t payload_size;
         gboolean success = TRUE;
@@ -812,7 +857,12 @@ arv_test_software_trigger (ArvTest *test, const char *test_name, ArvTestCamera *
                 return;
         }
 
-        stream = arv_camera_create_stream (test_camera->camera, NULL, NULL, &error);
+        callback_data.n_init = 0;
+        callback_data.n_start = 0;
+        callback_data.n_done = 0;
+        callback_data.n_success = 0;
+        callback_data.n_exit = 0;
+        stream = arv_camera_create_stream (test_camera->camera, _stream_calback, &callback_data, &error);
         if (error == NULL)
                 payload_size = arv_camera_get_payload (test_camera->camera, &error);
         if (error == NULL) {
@@ -851,16 +901,21 @@ arv_test_software_trigger (ArvTest *test, const char *test_name, ArvTestCamera *
 
         g_clear_object (&stream);
 
+        success = success &&
+                callback_data.n_init == 1 &&
+                callback_data.n_start == callback_data.n_done &&
+                callback_data.n_success == n_expected_buffers &&
+                callback_data.n_exit == 1;
+
         message = g_strdup_printf ("%u/%u%s%s", n_completed_buffers, n_expected_buffers,
                                    error != NULL ? " " : "",
                                    error != NULL ? error->message : "");
-
         arv_test_camera_add_result (test_camera, test_name, "BufferCheck",
                                     success && error == NULL ? ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
                                     message);
+        g_clear_pointer (&message, g_free);
 
         g_clear_error (&error);
-        g_clear_pointer (&message, g_free);
 }
 
 static void
