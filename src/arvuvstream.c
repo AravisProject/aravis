@@ -108,6 +108,9 @@ typedef struct {
 	ArvBuffer *buffer;
 	ArvStream *stream;
 
+        ArvStreamCallback callback;
+        gpointer callback_data;
+
 	GMutex* transfer_completed_mtx;
 	GCond* transfer_completed_event;
 
@@ -292,6 +295,10 @@ void LIBUSB_CALL arv_uv_stream_trailer_cb (struct libusb_transfer *transfer)
                 }
 
                 arv_stream_push_output_buffer (ctx->stream, ctx->buffer);
+                if (ctx->callback != NULL)
+                        ctx->callback (ctx->callback_data,
+                                       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
+                                       ctx->buffer);
                 ctx->buffer = NULL;
         }
 
@@ -310,6 +317,8 @@ arv_uv_stream_buffer_context_new (ArvBuffer *buffer, ArvUvStreamThreadData *thre
 
 	ctx->buffer = NULL;
 	ctx->stream = thread_data->stream;
+        ctx->callback = thread_data->callback;
+        ctx->callback_data = thread_data->callback_data;
 	ctx->transfer_completed_mtx = &thread_data->stream_mtx;
 	ctx->transfer_completed_event = &thread_data->stream_event;
 
@@ -374,6 +383,10 @@ arv_uv_stream_buffer_context_free (gpointer data)
         if (ctx->buffer != NULL) {
                 ctx->buffer->priv->status = ARV_BUFFER_STATUS_ABORTED;
                 arv_stream_push_output_buffer (ctx->stream, ctx->buffer);
+                if (ctx->callback != NULL)
+                        ctx->callback (ctx->callback_data,
+                                       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
+                                       ctx->buffer);
                 ctx->buffer = NULL;
         }
 
@@ -421,6 +434,11 @@ static void
 arv_uv_stream_buffer_context_submit (ArvUvStreamBufferContext* ctx, ArvBuffer *buffer, ArvUvStreamThreadData *thread_data)
 {
 	int i;
+
+        if (ctx->callback != NULL)
+                ctx->callback (ctx->callback_data,
+                               ARV_STREAM_CALLBACK_TYPE_START_BUFFER,
+                               buffer);
 
         ctx->buffer = buffer;
         ctx->total_payload_transferred = 0;
