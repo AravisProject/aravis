@@ -377,6 +377,11 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
                                                  thread_data->scps_packet_size);
         if (n_packets < 1) {
                 arv_stream_push_output_buffer(thread_data->stream, buffer);
+	        buffer->priv->status = ARV_BUFFER_STATUS_ABORTED;
+                if (thread_data->callback != NULL)
+                        thread_data->callback (thread_data->callback_data,
+                                               ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
+                                               frame->buffer);
                 return NULL;
         }
 
