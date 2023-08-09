@@ -1,3 +1,9 @@
+Stable release 0.8.29
+=====================
+
+  * usb3vision: fix callbacks triggering in async mode (Emmanuel)
+  * usb3vision: fix underrun counting (Emmanuel)
+
 Stable release 0.8.28
 =====================
 
