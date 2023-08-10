@@ -1081,24 +1081,23 @@ arv_test_run (ArvTest *test, unsigned int n_iterations,
                                                 }
                                         }
 
-                                }
+                                        if (cache_check) {
+                                                guint64 n_cache_errors;
+                                                char *comment = NULL;
 
-                                if (cache_check) {
-                                        guint64 n_cache_errors;
-                                        char *comment = NULL;
+                                                n_cache_errors = arv_test_camera_get_n_register_cache_errors (test_camera);
 
-                                        n_cache_errors = arv_test_camera_get_n_register_cache_errors (test_camera);
+                                                if (n_cache_errors > 0)
+                                                        comment = g_strdup_printf ("%" G_GUINT64_FORMAT " error(s)",
+                                                                                   n_cache_errors);
 
-                                        if (n_cache_errors > 0)
-                                                comment = g_strdup_printf ("%" G_GUINT64_FORMAT " error(s)",
-                                                                           n_cache_errors);
-
-                                        arv_test_camera_add_result (test_camera, "Genicam", "RegisterCache",
-                                                                    n_cache_errors == 0 ?
-                                                                    ARV_TEST_STATUS_SUCCESS :
-                                                                    ARV_TEST_STATUS_FAILURE,
-                                                                    comment);
-                                        g_free (comment);
+                                                arv_test_camera_add_result (test_camera, "Genicam", "RegisterCache",
+                                                                            n_cache_errors == 0 ?
+                                                                            ARV_TEST_STATUS_SUCCESS :
+                                                                            ARV_TEST_STATUS_FAILURE,
+                                                                            comment);
+                                                g_free (comment);
+                                        }
                                 }
 
                                 g_clear_pointer (&test_camera, arv_test_camera_free);
