@@ -83,7 +83,6 @@ arv_gv_discover_socket_list_new (void)
 		return socket_list;
 
 	for (iface_iter = ifaces; iface_iter != NULL; iface_iter = iface_iter->next) {
-		ArvGvDiscoverSocket *discover_socket_bind_any = g_new0 (ArvGvDiscoverSocket, 1);
 		ArvGvDiscoverSocket *discover_socket = g_new0 (ArvGvDiscoverSocket, 1);
 		GSocketAddress *socket_address;
 		GSocketAddress *socket_broadcast;
@@ -109,38 +108,27 @@ arv_gv_discover_socket_list_new (void)
 		arv_info_interface ("[GvDiscoverSocket::new] Add interface %s (%s)", inet_address_string, inet_broadcast_string);
 		g_free (inet_address_string);
 		g_free (inet_broadcast_string);
-		discover_socket_bind_any->interface_address = g_inet_socket_address_new (inet_address, 0);
-		discover_socket_bind_any->broadcast_address = g_inet_socket_address_new (inet_broadcast, ARV_GVCP_PORT);
 		discover_socket->interface_address = g_inet_socket_address_new (inet_address, 0);
 		discover_socket->broadcast_address = g_inet_socket_address_new (inet_broadcast, ARV_GVCP_PORT);
-
 		g_object_unref (socket_address);
 		g_object_unref (socket_broadcast);
 
-		discover_socket_bind_any->socket = g_socket_new (g_inet_address_get_family (inet_address),
-							G_SOCKET_TYPE_DATAGRAM,
-							G_SOCKET_PROTOCOL_UDP, NULL);
 		discover_socket->socket = g_socket_new (g_inet_address_get_family (inet_address),
 							G_SOCKET_TYPE_DATAGRAM,
 							G_SOCKET_PROTOCOL_UDP, NULL);
-		arv_socket_set_recv_buffer_size (g_socket_get_fd (discover_socket_bind_any->socket), buffer_size);
 		arv_socket_set_recv_buffer_size (g_socket_get_fd (discover_socket->socket), buffer_size);
-
 
 		any_address = g_inet_address_new_any (G_SOCKET_FAMILY_IPV4);
 		any_socket_address = g_inet_socket_address_new (any_address, 0);
-		g_socket_bind (discover_socket->socket, discover_socket->interface_address, FALSE, &error);
-		socket_list->sockets = g_slist_prepend (socket_list->sockets, discover_socket);
-		socket_list->n_sockets++;
-		g_socket_bind (discover_socket_bind_any->socket, any_socket_address, FALSE, &error);
+		g_socket_bind (discover_socket->socket, any_socket_address, FALSE, &error);
 		g_object_unref (any_socket_address);
 		g_object_unref (any_address);
 
 		interface_name = arv_network_interface_get_name (iface_iter->data);
-		socket_fd = g_socket_get_fd(discover_socket_bind_any->socket);
+		socket_fd = g_socket_get_fd(discover_socket->socket);
 		setsockopt (socket_fd, SOL_SOCKET, SO_BINDTODEVICE, interface_name, strlen (interface_name));
 
-		socket_list->sockets = g_slist_prepend (socket_list->sockets, discover_socket_bind_any);
+		socket_list->sockets = g_slist_prepend (socket_list->sockets, discover_socket);
 		socket_list->n_sockets++;
 	}
 	g_list_free_full (ifaces, (GDestroyNotify) arv_network_interface_free);
