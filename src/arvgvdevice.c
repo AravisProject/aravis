@@ -1966,7 +1966,7 @@ arv_gv_device_constructed (GObject *object)
 	char *address_string;
 	guint32 capabilities;
 	guint32 device_mode;
-	GSocketAddress *any_socket_address;
+	GSocketAddress *socket_address;
 	GInetAddress *any_address;
 	int socket_fd;
 	struct ifaddrs *addrs, *iap;
@@ -2002,20 +2002,6 @@ arv_gv_device_constructed (GObject *object)
 					G_SOCKET_TYPE_DATAGRAM,
 					G_SOCKET_PROTOCOL_UDP, NULL);
 
-	any_address = g_inet_address_new_any (G_SOCKET_FAMILY_IPV4);
-	any_socket_address = g_inet_socket_address_new (any_address, 0);
- 
-	if (!g_socket_bind (io_data->socket, any_socket_address, FALSE, &local_error)) {
-		if (local_error == NULL)
-			local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_UNKNOWN,
-							"Unknown error trying to bind device interface");
-		arv_device_take_init_error (ARV_DEVICE (gv_device), local_error);
-
-		return;
-	}
-	g_object_unref (any_socket_address);
-	g_object_unref (any_address);
-
 	// we have to grab the interface name
 	if (getifaddrs (&addrs) <0) {
 		arv_device_take_init_error (ARV_DEVICE (object),
@@ -2041,7 +2027,25 @@ arv_gv_device_constructed (GObject *object)
 	freeifaddrs (addrs);
 
 	socket_fd = g_socket_get_fd(io_data->socket);
-	setsockopt (socket_fd, SOL_SOCKET, SO_BINDTODEVICE, interface_name, strlen (interface_name));
+	if (setsockopt (socket_fd, SOL_SOCKET, SO_BINDTODEVICE, interface_name, strlen (interface_name)) == 0) {
+		any_address = g_inet_address_new_any (G_SOCKET_FAMILY_IPV4);
+		socket_address = g_inet_socket_address_new (any_address, 0);
+		g_object_unref (any_address);
+	} else {
+		socket_address = g_inet_socket_address_new (priv->interface_address, 0);
+	}
+
+	if (!g_socket_bind (io_data->socket, socket_address, FALSE, &local_error)) {
+		if (local_error == NULL)
+			local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_UNKNOWN,
+							"Unknown error trying to bind device interface");
+		arv_device_take_init_error (ARV_DEVICE (gv_device), local_error);
+		g_object_unref (socket_address);
+
+		return;
+	}
+	g_object_unref (socket_address);
+
 
 	io_data->buffer = g_malloc (ARV_GV_DEVICE_BUFFER_SIZE);
 	io_data->gvcp_n_retries = ARV_GV_DEVICE_GVCP_N_RETRIES_DEFAULT;
