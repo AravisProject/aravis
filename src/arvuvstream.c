@@ -762,6 +762,7 @@ arv_uv_stream_start_thread (ArvStream *stream)
 	ArvUvStreamPrivate *priv = arv_uv_stream_get_instance_private (uv_stream);
 	ArvUvStreamThreadData *thread_data;
 	ArvDevice *device;
+        GError *error = NULL;
         guint64 sbrm_address;
 	guint32 si_info;
 	guint64 si_req_payload_size;
@@ -877,7 +878,12 @@ arv_uv_stream_start_thread (ArvStream *stream)
         arv_uv_device_reset_stream_endpoint (thread_data->uv_device);
 
         si_control = ARV_SIRM_CONTROL_STREAM_ENABLE;
-        arv_device_write_memory (device, priv->sirm_address + ARV_SIRM_CONTROL, sizeof (si_control), &si_control, NULL);
+        arv_device_write_memory (device, priv->sirm_address + ARV_SIRM_CONTROL, sizeof (si_control), &si_control, &error);
+        if (error != NULL) {
+                arv_warning_stream ("Failed to enable stream (%s)",
+                                    error->message);
+                g_clear_error(&error);
+        }
 }
 
 static void
@@ -887,6 +893,7 @@ arv_uv_stream_stop_thread (ArvStream *stream)
 	ArvUvStreamPrivate *priv = arv_uv_stream_get_instance_private (uv_stream);
 	ArvUvStreamThreadData *thread_data;
 	guint32 si_control;
+        GError *error = NULL;
 
 	g_return_if_fail (priv->thread != NULL);
 	g_return_if_fail (priv->thread_data != NULL);
@@ -901,7 +908,12 @@ arv_uv_stream_stop_thread (ArvStream *stream)
 
 	si_control = 0x0;
 	arv_device_write_memory (ARV_DEVICE (thread_data->uv_device),
-				 priv->sirm_address + ARV_SIRM_CONTROL, sizeof (si_control), &si_control, NULL);
+				 priv->sirm_address + ARV_SIRM_CONTROL, sizeof (si_control), &si_control, &error);
+        if (error != NULL) {
+                arv_warning_stream ("Failed to disable stream (%s)",
+                                    error->message);
+                g_clear_error(&error);
+        }
 }
 
 /**

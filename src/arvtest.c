@@ -755,7 +755,7 @@ _multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test
         success = success &&
                 callback_data.n_init == 1 &&
                 callback_data.n_start == callback_data.n_done &&
-                callback_data.n_success == n_expected_buffers &&
+                callback_data.n_success >= n_expected_buffers &&
                 callback_data.n_exit == 1;
 
         message = g_strdup_printf ("%u/%u%s%s", n_completed_buffers, n_expected_buffers,

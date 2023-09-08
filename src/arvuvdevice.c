@@ -325,30 +325,39 @@ _send_cmd_and_receive_ack (ArvUvDevice *uv_device, ArvUvcpCommand command,
 
 						timeout_stop_ms = g_get_monotonic_time () / 1000 + pending_ack_timeout_ms;
 
-						arv_debug_device ("[UvDevice::%s] Pending ack timeout = %" G_GINT64_FORMAT,
-								operation, pending_ack_timeout_ms);
+						arv_debug_device ("[UvDevice::%s] Try %d/%d: "
+                                                                  "pending ack timeout = %" G_GINT64_FORMAT,
+                                                                  operation, n_tries + 1, ARV_UV_DEVICE_N_TRIES_MAX,
+                                                                  pending_ack_timeout_ms);
 					} if (status != ARV_UVCP_STATUS_SUCCESS) {
 						expected_answer = ack_command == expected_ack_command &&
 							packet_id == priv->packet_id;
 						if (!expected_answer) {
-							arv_info_device ("[[UvDevice::%s] Unexpected answer (0x%04x)",
-									  operation, status);
+							arv_info_device ("[[UvDevice::%s] Try %d/%d: "
+                                                                         "unexpected answer (0x%04x)",
+                                                                         operation, n_tries + 1,
+                                                                         ARV_UV_DEVICE_N_TRIES_MAX,
+									 status);
 						}
 					} else {
 						expected_answer = status == ARV_UVCP_STATUS_SUCCESS &&
 							ack_command == expected_ack_command &&
 							packet_id == priv->packet_id;
 						if (!expected_answer)
-							arv_info_device ("[[UvDevice::%s] Unexpected answer (0x%04x)",
-									  operation, status);
+							arv_info_device ("[[UvDevice::%s] Try %d/%d: "
+                                                                         "unexpected answer (0x%04x)",
+                                                                         operation, n_tries + 1,
+                                                                         ARV_UV_DEVICE_N_TRIES_MAX,
+									 status);
 					}
 				} else {
 					expected_answer = FALSE;
 					if (local_error != NULL)
-						arv_warning_device ("[UvDevice::%s] Ack reception error: %s",
-								    operation, local_error->message);
-					g_clear_error (&local_error);
-				}
+                                                arv_warning_device ("[UvDevice::%s] Try %d/%d: ack reception error: %s",
+                                                                    operation, n_tries + 1, ARV_UV_DEVICE_N_TRIES_MAX,
+                                                                    local_error->message);
+                                        g_clear_error (&local_error);
+                                }
 
 			} while (pending_ack || (!expected_answer && timeout_ms));
 
@@ -367,10 +376,11 @@ _send_cmd_and_receive_ack (ArvUvDevice *uv_device, ArvUvcpCommand command,
 			}
 		} else {
 			if (local_error != NULL)
-				arv_warning_device ("[UvDevice::%s] Command sending error: %s",
-						    operation, local_error->message);
-			g_clear_error (&local_error);
-		}
+				arv_warning_device ("[UvDevice::%s] Try %d/%d: command sending error: %s",
+                                                    operation, n_tries + 1, ARV_UV_DEVICE_N_TRIES_MAX,
+                                                    local_error->message);
+                        g_clear_error (&local_error);
+                }
 
 		n_tries++;
 	} while (!success && n_tries < ARV_UV_DEVICE_N_TRIES_MAX);
