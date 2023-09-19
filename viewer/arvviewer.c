@@ -281,7 +281,7 @@ arv_viewer_value_to_log (double value, double min, double max)
 	if (value < min)
 		return 0.0;
 
-	return (log10 (value) - log10 (min)) / (log10 (max) - log10 (min));
+	return (log10 (value + 1.0) - log10 (min + 1.0)) / (log10 (max + 1.0) - log10 (min + 1.0));
 }
 
 static double
@@ -295,7 +295,7 @@ arv_viewer_value_from_log (double value, double min, double max)
 	if (value < 0.0)
 		return min;
 
-	return pow (10.0, (value * (log10 (max) - log10 (min)) + log10 (min)));
+	return pow (10.0, (value * (log10 (max + 1.0) - log10 (min + 1.0)) + log10 (min + 1.0))) - 1.0;
 }
 
 static void
