@@ -113,6 +113,8 @@ ARV_API gboolean 	arv_device_is_feature_implemented	(ArvDevice *device, const ch
 ARV_API ArvGcNode *	arv_device_get_feature			(ArvDevice *device, const char *feature);
 ARV_API ArvGcAccessMode	arv_device_get_feature_access_mode	(ArvDevice *device, const char *feature);
 
+ARV_API ArvGcRepresentation	arv_device_get_feature_representation	(ArvDevice *device, const char *feature);
+
 ARV_API ArvChunkParser *arv_device_create_chunk_parser		(ArvDevice *device);
 
 ARV_API void		arv_device_execute_command		(ArvDevice *device, const char *feature, GError **error);

@@ -142,7 +142,11 @@ struct  _ArvViewer {
 	gboolean flip_vertical;
 	gboolean flip_horizontal;
 
+	double gain_min, gain_max;
 	double exposure_min, exposure_max;
+
+	ArvGcRepresentation gain_representation;
+	ArvGcRepresentation exposure_time_representation;
 
 	GtkWidget *main_window;
 	GtkWidget *main_stack;
@@ -493,14 +497,15 @@ static void
 exposure_spin_cb (GtkSpinButton *spin_button, ArvViewer *viewer)
 {
 	double exposure = gtk_spin_button_get_value (spin_button);
-	double log_exposure = arv_viewer_value_to_log (exposure, viewer->exposure_min, viewer->exposure_max);
+	double scaled_exposure = viewer->exposure_time_representation == ARV_GC_REPRESENTATION_LOGARITHMIC ? 
+		arv_viewer_value_to_log (exposure, viewer->exposure_min, viewer->exposure_max) : exposure;
 
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (viewer->auto_exposure_toggle), FALSE);
 
 	arv_camera_set_exposure_time (viewer->camera, exposure, NULL);
 
 	g_signal_handler_block (viewer->exposure_hscale, viewer->exposure_hscale_changed);
-	gtk_range_set_value (GTK_RANGE (viewer->exposure_hscale), log_exposure);
+	gtk_range_set_value (GTK_RANGE (viewer->exposure_hscale), scaled_exposure);
 	gtk_widget_grab_focus (GTK_WIDGET (spin_button));
 	g_signal_handler_unblock (viewer->exposure_hscale, viewer->exposure_hscale_changed);
 }
@@ -508,12 +513,16 @@ exposure_spin_cb (GtkSpinButton *spin_button, ArvViewer *viewer)
 static void
 gain_spin_cb (GtkSpinButton *spin_button, ArvViewer *viewer)
 {
+	double gain = gtk_spin_button_get_value (spin_button);
+	double scaled_gain = viewer->gain_representation == ARV_GC_REPRESENTATION_LOGARITHMIC ? 
+		arv_viewer_value_to_log (gain, viewer->gain_min, viewer->gain_max) : gain;
+
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (viewer->auto_gain_toggle), FALSE);
 
 	arv_camera_set_gain (viewer->camera, gtk_spin_button_get_value (spin_button), NULL);
 
 	g_signal_handler_block (viewer->gain_hscale, viewer->gain_hscale_changed);
-	gtk_range_set_value (GTK_RANGE (viewer->gain_hscale), gtk_spin_button_get_value (spin_button));
+	gtk_range_set_value (GTK_RANGE (viewer->gain_hscale), scaled_gain);
 	gtk_widget_grab_focus (GTK_WIDGET (spin_button));
 	g_signal_handler_unblock (viewer->gain_hscale, viewer->gain_hscale_changed);
 }
@@ -534,8 +543,9 @@ black_level_spin_cb (GtkSpinButton *spin_button, ArvViewer *viewer)
 static void
 exposure_scale_cb (GtkRange *range, ArvViewer *viewer)
 {
-	double log_exposure = gtk_range_get_value (range);
-	double exposure = arv_viewer_value_from_log (log_exposure, viewer->exposure_min, viewer->exposure_max);
+	double scaled_exposure = gtk_range_get_value (range);
+	double exposure = viewer->exposure_time_representation == ARV_GC_REPRESENTATION_LOGARITHMIC ?
+		arv_viewer_value_from_log (scaled_exposure, viewer->exposure_min, viewer->exposure_max) : scaled_exposure;
 
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (viewer->auto_exposure_toggle), FALSE);
 
@@ -549,12 +559,15 @@ exposure_scale_cb (GtkRange *range, ArvViewer *viewer)
 static void
 gain_scale_cb (GtkRange *range, ArvViewer *viewer)
 {
+	double scaled_gain = gtk_range_get_value (range);
+	double gain = viewer->gain_representation == ARV_GC_REPRESENTATION_LOGARITHMIC ?
+		arv_viewer_value_from_log (scaled_gain, viewer->gain_min, viewer->gain_max) : scaled_gain;
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (viewer->auto_gain_toggle), FALSE);
 
-	arv_camera_set_gain (viewer->camera, gtk_range_get_value (range), NULL);
+	arv_camera_set_gain (viewer->camera, gain, NULL);
 
 	g_signal_handler_block (viewer->gain_spin_button, viewer->gain_spin_changed);
-	gtk_spin_button_set_value (GTK_SPIN_BUTTON (viewer->gain_spin_button), gtk_range_get_value (range));
+	gtk_spin_button_set_value (GTK_SPIN_BUTTON (viewer->gain_spin_button), gain);
 	g_signal_handler_unblock (viewer->gain_spin_button, viewer->gain_spin_changed);
 }
 
@@ -575,14 +588,15 @@ update_exposure_cb (void *data)
 {
 	ArvViewer *viewer = data;
 	double exposure;
-	double log_exposure;
+	double scaled_exposure;
 
 	exposure = arv_camera_get_exposure_time (viewer->camera, NULL);
-	log_exposure = arv_viewer_value_to_log (exposure, viewer->exposure_min, viewer->exposure_max);
+	scaled_exposure = viewer->exposure_time_representation == ARV_GC_REPRESENTATION_LOGARITHMIC ? 
+		arv_viewer_value_to_log (exposure, viewer->exposure_min, viewer->exposure_max) : exposure;
 
 	g_signal_handler_block (viewer->exposure_hscale, viewer->exposure_hscale_changed);
 	g_signal_handler_block (viewer->exposure_spin_button, viewer->exposure_spin_changed);
-	gtk_range_set_value (GTK_RANGE (viewer->exposure_hscale), log_exposure);
+	gtk_range_set_value (GTK_RANGE (viewer->exposure_hscale), scaled_exposure);
 	gtk_spin_button_set_value (GTK_SPIN_BUTTON (viewer->exposure_spin_button), exposure);
 	g_signal_handler_unblock (viewer->exposure_spin_button, viewer->exposure_spin_changed);
 	g_signal_handler_unblock (viewer->exposure_hscale, viewer->exposure_hscale_changed);
@@ -620,17 +634,21 @@ update_gain_cb (void *data)
 {
 	ArvViewer *viewer = data;
 	double gain;
+	double scaled_gain;
 
 	gain = arv_camera_get_gain (viewer->camera, NULL);
+	scaled_gain = viewer->gain_representation == ARV_GC_REPRESENTATION_LOGARITHMIC ? 
+		arv_viewer_value_to_log (gain, viewer->gain_min, viewer->gain_max) : gain;
 
 	g_signal_handler_block (viewer->gain_hscale, viewer->gain_hscale_changed);
 	g_signal_handler_block (viewer->gain_spin_button, viewer->gain_spin_changed);
-	gtk_range_set_value (GTK_RANGE (viewer->gain_hscale), gain);
+	gtk_range_set_value (GTK_RANGE (viewer->gain_hscale), scaled_gain);
 	gtk_spin_button_set_value (GTK_SPIN_BUTTON (viewer->gain_spin_button), gain);
 	g_signal_handler_unblock (viewer->gain_spin_button, viewer->gain_spin_changed);
 	g_signal_handler_unblock (viewer->gain_hscale, viewer->gain_hscale_changed);
 
 	return TRUE;
+
 }
 
 static void
@@ -710,14 +728,13 @@ set_camera_widgets(ArvViewer *viewer)
 {
 	g_autofree char *string = NULL;
 	gboolean is_frame_rate_available;
-	double gain_min, gain_max;
 	gboolean is_gain_available;
 	gboolean auto_gain;
 	double black_level_min, black_level_max;
 	gboolean is_black_level_available;
 	gboolean auto_black_level;
 	gboolean is_exposure_available;
-        gboolean auto_exposure;
+	gboolean auto_exposure;
 
 	g_signal_handler_block (viewer->gain_hscale, viewer->gain_hscale_changed);
 	g_signal_handler_block (viewer->gain_spin_button, viewer->gain_spin_changed);
@@ -731,16 +748,14 @@ set_camera_widgets(ArvViewer *viewer)
 				   viewer->exposure_min, viewer->exposure_max);
 	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->exposure_spin_button), 200.0, 1000.0);
 
-	arv_camera_get_gain_bounds (viewer->camera, &gain_min, &gain_max, NULL);
-	gtk_spin_button_set_range (GTK_SPIN_BUTTON (viewer->gain_spin_button), gain_min, gain_max);
+	arv_camera_get_gain_bounds (viewer->camera, &viewer->gain_min, &viewer->gain_max, NULL);
+	gtk_spin_button_set_range (GTK_SPIN_BUTTON (viewer->gain_spin_button), viewer->gain_min, viewer->gain_max);
 	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->gain_spin_button), 1, 10);
 
 	arv_camera_get_black_level_bounds (viewer->camera, &black_level_min, &black_level_max, NULL);
 	gtk_spin_button_set_range (GTK_SPIN_BUTTON (viewer->black_level_spin_button), black_level_min, black_level_max);
 	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->black_level_spin_button), 1, 10);
 
-	gtk_range_set_range (GTK_RANGE (viewer->exposure_hscale), 0.0, 1.0);
-	gtk_range_set_range (GTK_RANGE (viewer->gain_hscale), gain_min, gain_max);
 	gtk_range_set_range (GTK_RANGE (viewer->black_level_hscale), black_level_min, black_level_max);
 
 	is_frame_rate_available = arv_camera_is_frame_rate_available (viewer->camera, NULL);
@@ -750,16 +765,64 @@ set_camera_widgets(ArvViewer *viewer)
 	gtk_entry_set_text (GTK_ENTRY (viewer->frame_rate_entry), string);
 
 	is_gain_available = arv_camera_is_gain_available (viewer->camera, NULL);
-	gtk_widget_set_sensitive (viewer->gain_hscale, is_gain_available);
-	gtk_widget_set_sensitive (viewer->gain_spin_button, is_gain_available);
+	if (is_gain_available){
+		viewer->gain_representation = arv_camera_get_gain_representation(viewer->camera);
+		switch(viewer->gain_representation){
+			case ARV_GC_REPRESENTATION_UNDEFINED:
+			case ARV_GC_REPRESENTATION_LINEAR:
+				gtk_range_set_range (GTK_RANGE (viewer->exposure_hscale), viewer->exposure_min, viewer->exposure_max);
+				gtk_widget_set_sensitive (viewer->gain_hscale, is_gain_available);
+				gtk_widget_set_sensitive (viewer->gain_spin_button, is_gain_available);
+				break;
+			case ARV_GC_REPRESENTATION_LOGARITHMIC:
+				gtk_range_set_range (GTK_RANGE (viewer->exposure_hscale), 0.0, 1.0);
+				gtk_widget_set_sensitive (viewer->gain_hscale, is_gain_available);
+				gtk_widget_set_sensitive (viewer->gain_spin_button, is_gain_available);
+				break;
+			case ARV_GC_REPRESENTATION_PURE_NUMBER:
+				gtk_widget_set_sensitive (viewer->gain_hscale, FALSE);
+				gtk_widget_set_sensitive (viewer->gain_spin_button, is_gain_available);
+				break;
+			default:
+				gtk_widget_set_sensitive (viewer->gain_hscale, FALSE);
+				gtk_widget_set_sensitive (viewer->gain_spin_button, FALSE);
+		}
+	}else{
+		gtk_widget_set_sensitive (viewer->gain_hscale, FALSE);
+		gtk_widget_set_sensitive (viewer->gain_spin_button, FALSE);
+	}
 
 	is_black_level_available = arv_camera_is_black_level_available (viewer->camera, NULL);
 	gtk_widget_set_sensitive (viewer->black_level_hscale, is_black_level_available);
 	gtk_widget_set_sensitive (viewer->black_level_spin_button, is_black_level_available);
 
 	is_exposure_available = arv_camera_is_exposure_time_available (viewer->camera, NULL);
-	gtk_widget_set_sensitive (viewer->exposure_hscale, is_exposure_available);
-	gtk_widget_set_sensitive (viewer->exposure_spin_button, is_exposure_available);
+	if (is_exposure_available){
+		viewer->exposure_time_representation = arv_camera_get_exposure_time_representation(viewer->camera);
+		switch(viewer->exposure_time_representation){
+			case ARV_GC_REPRESENTATION_UNDEFINED:
+			case ARV_GC_REPRESENTATION_LINEAR:
+				gtk_range_set_range (GTK_RANGE (viewer->gain_hscale), viewer->gain_min, viewer->gain_max);
+				gtk_widget_set_sensitive (viewer->exposure_hscale, is_gain_available);
+				gtk_widget_set_sensitive (viewer->exposure_spin_button, is_gain_available);
+				break;
+			case ARV_GC_REPRESENTATION_LOGARITHMIC:
+				gtk_range_set_range (GTK_RANGE (viewer->gain_hscale), 0.0, 1.0);
+				gtk_widget_set_sensitive (viewer->exposure_hscale, is_gain_available);
+				gtk_widget_set_sensitive (viewer->exposure_spin_button, is_gain_available);
+				break;
+			case ARV_GC_REPRESENTATION_PURE_NUMBER:
+				gtk_widget_set_sensitive (viewer->exposure_hscale, FALSE);
+				gtk_widget_set_sensitive (viewer->exposure_spin_button, is_gain_available);
+				break;
+			default:
+				gtk_widget_set_sensitive (viewer->exposure_hscale, FALSE);
+				gtk_widget_set_sensitive (viewer->exposure_spin_button, FALSE);
+		}
+	}else{
+		gtk_widget_set_sensitive (viewer->exposure_hscale, FALSE);
+		gtk_widget_set_sensitive (viewer->exposure_spin_button, FALSE);
+	}
 
 	g_signal_handler_unblock (viewer->gain_hscale, viewer->gain_hscale_changed);
 	g_signal_handler_unblock (viewer->gain_spin_button, viewer->gain_spin_changed);
