@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2022 Emmanuel Pacaud
+ * Copyright © 2009-2023 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -99,7 +99,7 @@ typedef enum
 {
 	ARV_UV_USB_MODE_SYNC,
 	ARV_UV_USB_MODE_ASYNC,
-        ARV_UV_USB_MODE_DEFAULT = ARV_UV_USB_MODE_SYNC
+        ARV_UV_USB_MODE_DEFAULT = ARV_UV_USB_MODE_ASYNC
 } ArvUvUsbMode;
 
 /**

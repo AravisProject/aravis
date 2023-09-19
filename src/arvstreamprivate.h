@@ -32,6 +32,7 @@
 G_BEGIN_DECLS
 
 ArvBuffer *	arv_stream_pop_input_buffer		(ArvStream *stream);
+ArvBuffer *     arv_stream_timeout_pop_input_buffer     (ArvStream *stream, guint64 timeout);
 void		arv_stream_push_output_buffer		(ArvStream *stream, ArvBuffer *buffer);
 void		arv_stream_take_init_error		(ArvStream *device, GError *error);
 

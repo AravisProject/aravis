@@ -279,7 +279,6 @@ arv_histogram_to_string (const ArvHistogram *histogram)
 	int i, j, bin_max;
 	gboolean max_found = FALSE;
 	GString *string;
-	char *str;
 
 	g_return_val_if_fail (histogram != NULL, NULL);
 
@@ -369,10 +368,7 @@ arv_histogram_to_string (const ArvHistogram *histogram)
 		g_string_append_printf (string, ":%12llu", (unsigned long long) histogram->variables[j].counter);
 	}
 
-	str = string->str;
-	g_string_free (string, FALSE);
-
-	return str;
+        return arv_g_string_free_and_steal(string);
 }
 
 ArvValue *
@@ -1157,4 +1153,18 @@ arv_regex_new_from_glob_pattern (const char *glob, gboolean caseless)
 	g_string_free (regex_pattern, TRUE);
 
 	return regex;
+}
+
+char *
+arv_g_string_free_and_steal (GString *string)
+{
+#if GLIB_CHECK_VERSION(2,75,4)
+        return g_string_free_and_steal(string);
+#else
+        char *buffer = string->str;
+
+        g_string_free (string, FALSE);
+
+        return buffer;
+#endif
 }

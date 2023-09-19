@@ -39,6 +39,9 @@
 #define ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE	(1024*1024*1)
 #define ARV_UV_STREAM_MAXIMUM_SUBMIT_TOTAL	(8*1024*1024)
 
+#define ARV_UV_STREAM_POP_INPUT_BUFFER_TIMEOUT_MS       10
+#define ARV_UV_STREAM_TRANSFER_WAIT_TIMEOUT_MS          10
+
 enum {
        ARV_UV_STREAM_PROPERTY_0,
        ARV_UV_STREAM_PROPERTY_USB_MODE
@@ -58,6 +61,10 @@ typedef struct {
 
 typedef struct {
 	ArvStream *stream;
+
+        gboolean thread_started;
+        GMutex thread_started_mutex;
+        GCond thread_started_cond;
 
 	ArvUvDevice *uv_device;
 	ArvStreamCallback callback;
@@ -79,12 +86,15 @@ typedef struct {
 	/* Statistics */
 	ArvStreamStatistics statistics;
 
+        gint n_buffer_in_use;
 } ArvUvStreamThreadData;
 
 typedef struct {
 	GThread *thread;
 	ArvUvStreamThreadData *thread_data;
 	ArvUvUsbMode usb_mode;
+
+        guint64 sirm_address;
 } ArvUvStreamPrivate;
 
 struct _ArvUvStream {
@@ -98,6 +108,9 @@ struct _ArvUvStreamClass {
 typedef struct {
 	ArvBuffer *buffer;
 	ArvStream *stream;
+
+        ArvStreamCallback callback;
+        gpointer callback_data;
 
 	GMutex* transfer_completed_mtx;
 	GCond* transfer_completed_event;
@@ -117,15 +130,26 @@ typedef struct {
         gboolean is_aborting;
 
 	ArvStreamStatistics *statistics;
+
+        gint *n_buffer_in_use;
 } ArvUvStreamBufferContext;
 
 G_DEFINE_TYPE_WITH_CODE (ArvUvStream, arv_uv_stream, ARV_TYPE_STREAM, G_ADD_PRIVATE (ArvUvStream))
 
 static void
-arv_uv_stream_buffer_context_wait_transfer_completed (ArvUvStreamBufferContext* ctx)
+arv_uv_stream_buffer_context_wait_transfer_completed (ArvUvStreamBufferContext* ctx, gint64 timeout_ms)
 {
 	g_mutex_lock( ctx->transfer_completed_mtx );
-	g_cond_wait( ctx->transfer_completed_event, ctx->transfer_completed_mtx );
+
+        if (timeout_ms > 0) {
+                gint64 end_time;
+
+                end_time = g_get_monotonic_time() + timeout_ms * G_TIME_SPAN_MILLISECOND;
+                g_cond_wait_until (ctx->transfer_completed_event, ctx->transfer_completed_mtx, end_time);
+        } else {
+                g_cond_wait( ctx->transfer_completed_event, ctx->transfer_completed_mtx );
+        }
+
 	g_mutex_unlock( ctx->transfer_completed_mtx );
 }
 
@@ -138,7 +162,7 @@ arv_uv_stream_buffer_context_notify_transfer_completed (ArvUvStreamBufferContext
 }
 
 static
-void arv_uv_stream_leader_cb (struct libusb_transfer *transfer)
+void LIBUSB_CALL arv_uv_stream_leader_cb (struct libusb_transfer *transfer)
 {
 	ArvUvStreamBufferContext *ctx = transfer->user_data;
 	ArvUvspPacket *packet = (ArvUvspPacket*)transfer->buffer;
@@ -180,8 +204,8 @@ void arv_uv_stream_leader_cb (struct libusb_transfer *transfer)
                                 ctx->buffer->priv->timestamp_ns = arv_uvsp_packet_get_timestamp (packet);
                                 break;
                         default:
-                                arv_warning_stream_thread ("Leader transfer failed: transfer->status = %d",
-                                                           transfer->status);
+                                arv_warning_stream_thread ("Leader transfer failed (%s)",
+                                                           libusb_error_name (transfer->status));
                                 ctx->buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
                                 break;
                         }
@@ -195,7 +219,7 @@ void arv_uv_stream_leader_cb (struct libusb_transfer *transfer)
 }
 
 static
-void arv_uv_stream_payload_cb (struct libusb_transfer *transfer)
+void LIBUSB_CALL arv_uv_stream_payload_cb (struct libusb_transfer *transfer)
 {
 	ArvUvStreamBufferContext *ctx = transfer->user_data;
 
@@ -208,8 +232,8 @@ void arv_uv_stream_payload_cb (struct libusb_transfer *transfer)
                                         ctx->total_payload_transferred += transfer->actual_length;
                                         break;
                                 default:
-                                        arv_warning_stream_thread ("Payload transfer failed: transfer->status = %d",
-                                                                   transfer->status);
+                                        arv_warning_stream_thread ("Payload transfer failed (%s)",
+                                                                   libusb_error_name (transfer->status));
                                         ctx->buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
                                         break;
                         }
@@ -223,7 +247,7 @@ void arv_uv_stream_payload_cb (struct libusb_transfer *transfer)
 }
 
 static
-void arv_uv_stream_trailer_cb (struct libusb_transfer *transfer)
+void LIBUSB_CALL arv_uv_stream_trailer_cb (struct libusb_transfer *transfer)
 {
 	ArvUvStreamBufferContext *ctx = transfer->user_data;
 	ArvUvspPacket *packet = (ArvUvspPacket*)transfer->buffer;
@@ -254,8 +278,8 @@ void arv_uv_stream_trailer_cb (struct libusb_transfer *transfer)
 
                                         break;
                                 default:
-                                        arv_warning_stream_thread ("Trailer transfer failed: transfer->status = %d",
-                                                                   transfer->status);
+                                        arv_warning_stream_thread ("Trailer transfer failed (%s)",
+                                                                   libusb_error_name(transfer->status));
                                         ctx->buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
                                         break;
                         }
@@ -274,6 +298,11 @@ void arv_uv_stream_trailer_cb (struct libusb_transfer *transfer)
                 }
 
                 arv_stream_push_output_buffer (ctx->stream, ctx->buffer);
+                if (ctx->callback != NULL)
+                        ctx->callback (ctx->callback_data,
+                                       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
+                                       ctx->buffer);
+                g_atomic_int_dec_and_test(ctx->n_buffer_in_use);
                 ctx->buffer = NULL;
         }
 
@@ -292,8 +321,11 @@ arv_uv_stream_buffer_context_new (ArvBuffer *buffer, ArvUvStreamThreadData *thre
 
 	ctx->buffer = NULL;
 	ctx->stream = thread_data->stream;
+        ctx->callback = thread_data->callback;
+        ctx->callback_data = thread_data->callback_data;
 	ctx->transfer_completed_mtx = &thread_data->stream_mtx;
 	ctx->transfer_completed_event = &thread_data->stream_event;
+        ctx->n_buffer_in_use = &thread_data->n_buffer_in_use;
 
 	ctx->leader_buffer = g_malloc (thread_data->leader_size);
 	ctx->leader_transfer = libusb_alloc_transfer (0);
@@ -356,6 +388,11 @@ arv_uv_stream_buffer_context_free (gpointer data)
         if (ctx->buffer != NULL) {
                 ctx->buffer->priv->status = ARV_BUFFER_STATUS_ABORTED;
                 arv_stream_push_output_buffer (ctx->stream, ctx->buffer);
+                if (ctx->callback != NULL)
+                        ctx->callback (ctx->callback_data,
+                                       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
+                                       ctx->buffer);
+                g_atomic_int_dec_and_test(ctx->n_buffer_in_use);
                 ctx->buffer = NULL;
         }
 
@@ -367,7 +404,7 @@ _submit_transfer (ArvUvStreamBufferContext* ctx, struct libusb_transfer* transfe
 {
 	while (!g_atomic_int_get (cancel) &&
                ((g_atomic_int_get(ctx->total_submitted_bytes) + transfer->length) > ARV_UV_STREAM_MAXIMUM_SUBMIT_TOTAL)) {
-		arv_uv_stream_buffer_context_wait_transfer_completed (ctx);
+		arv_uv_stream_buffer_context_wait_transfer_completed (ctx, ARV_UV_STREAM_TRANSFER_WAIT_TIMEOUT_MS);
 	}
 
 	while (!g_atomic_int_get (cancel)) {
@@ -389,7 +426,7 @@ _submit_transfer (ArvUvStreamBufferContext* ctx, struct libusb_transfer* transfe
                          * In order to allow more memory to be used for submitted buffers, increase usbfs_memory_mb:
                          * sudo modprobe usbcore usbfs_memory_mb=1000
                         */
-			arv_uv_stream_buffer_context_wait_transfer_completed (ctx);
+			arv_uv_stream_buffer_context_wait_transfer_completed (ctx, ARV_UV_STREAM_TRANSFER_WAIT_TIMEOUT_MS);
 			break;
 
 		default:
@@ -403,6 +440,11 @@ static void
 arv_uv_stream_buffer_context_submit (ArvUvStreamBufferContext* ctx, ArvBuffer *buffer, ArvUvStreamThreadData *thread_data)
 {
 	int i;
+
+        if (ctx->callback != NULL)
+                ctx->callback (ctx->callback_data,
+                               ARV_STREAM_CALLBACK_TYPE_START_BUFFER,
+                               buffer);
 
         ctx->buffer = buffer;
         ctx->total_payload_transferred = 0;
@@ -437,7 +479,7 @@ arv_uv_stream_buffer_context_cancel (gpointer key, gpointer value, gpointer user
 
 	while (ctx->num_submitted > 0)
 	{
-		arv_uv_stream_buffer_context_wait_transfer_completed (ctx);
+		arv_uv_stream_buffer_context_wait_transfer_completed (ctx, ARV_UV_STREAM_TRANSFER_WAIT_TIMEOUT_MS);
 	}
 }
 
@@ -449,7 +491,8 @@ arv_uv_stream_thread_async (void *data)
 	GHashTable *ctx_lookup;
 	gint total_submitted_bytes = 0;
 
-	arv_debug_stream_thread ("Start async USB3Vision stream thread");
+	arv_info_stream_thread ("Start async USB3Vision stream thread");
+
 	arv_debug_stream_thread ("leader_size = %zu", thread_data->leader_size );
 	arv_debug_stream_thread ("payload_size = %zu", thread_data->payload_size );
 	arv_debug_stream_thread ("trailer_size = %zu", thread_data->trailer_size );
@@ -459,18 +502,27 @@ arv_uv_stream_thread_async (void *data)
 
 	ctx_lookup = g_hash_table_new_full( g_direct_hash, g_direct_equal, NULL, arv_uv_stream_buffer_context_free );
 
+        g_mutex_lock (&thread_data->thread_started_mutex);
+        thread_data->thread_started = TRUE;
+        g_cond_signal (&thread_data->thread_started_cond);
+        g_mutex_unlock (&thread_data->thread_started_mutex);
+
 	while (!g_atomic_int_get (&thread_data->cancel) &&
                arv_uv_device_is_connected (thread_data->uv_device)) {
 		ArvUvStreamBufferContext* ctx;
 
-                buffer = arv_stream_pop_input_buffer (thread_data->stream);
+                buffer = arv_stream_timeout_pop_input_buffer (thread_data->stream,
+                                                              ARV_UV_STREAM_POP_INPUT_BUFFER_TIMEOUT_MS * 1000);
 
 		if( buffer == NULL ) {
-			thread_data->statistics.n_underruns += 1;
+                        if (thread_data->n_buffer_in_use == 0)
+                                thread_data->statistics.n_underruns += 1;
                         /* NOTE: n_ignored_bytes is not accumulated because it doesn't submit next USB transfer if
                          * buffer is shortage. It means back pressure might be hanlded by USB slave side. */
 			continue;
-		}
+		} else {
+                        g_atomic_int_inc(&thread_data->n_buffer_in_use);
+                }
 
 		ctx = g_hash_table_lookup( ctx_lookup, buffer );
 		if (!ctx) {
@@ -491,7 +543,7 @@ arv_uv_stream_thread_async (void *data)
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->callback_data, ARV_STREAM_CALLBACK_TYPE_EXIT, NULL);
 
-	arv_debug_stream_thread ("Stop USB3Vision stream thread");
+	arv_info_stream_thread ("Stop USB3Vision async stream thread");
 
 	return NULL;
 }
@@ -506,7 +558,7 @@ arv_uv_stream_thread_sync (void *data)
 	guint64 offset;
 	size_t transferred;
 
-	arv_debug_stream_thread ("Start sync USB3Vision stream thread");
+	arv_info_stream_thread ("Start sync USB3Vision stream thread");
 
 	incoming_buffer = g_malloc (ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE);
 
@@ -514,6 +566,11 @@ arv_uv_stream_thread_sync (void *data)
 		thread_data->callback (thread_data->callback_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
 
 	offset = 0;
+
+        g_mutex_lock (&thread_data->thread_started_mutex);
+        thread_data->thread_started = TRUE;
+        g_cond_signal (&thread_data->thread_started_cond);
+        g_mutex_unlock (&thread_data->thread_started_mutex);
 
 	while (!g_atomic_int_get (&thread_data->cancel)) {
 		GError *error = NULL;
@@ -564,10 +621,12 @@ arv_uv_stream_thread_sync (void *data)
 									       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
 									       buffer);
 						thread_data->statistics.n_failures++;
+                                                g_atomic_int_dec_and_test(&thread_data->n_buffer_in_use);
 						buffer = NULL;
 					}
 					buffer = arv_stream_pop_input_buffer (thread_data->stream);
 					if (buffer != NULL) {
+                                                g_atomic_int_inc(&thread_data->n_buffer_in_use);
 						buffer->priv->system_timestamp_ns = g_get_real_time () * 1000LL;
 						buffer->priv->status = ARV_BUFFER_STATUS_FILLING;
                                                 buffer->priv->received_size = 0;
@@ -623,6 +682,7 @@ arv_uv_stream_thread_sync (void *data)
                                                                                       buffer);
                                                        thread_data->statistics.n_failures++;
                                                        thread_data->statistics.n_ignored_bytes += transferred;
+                                                        g_atomic_int_dec_and_test(&thread_data->n_buffer_in_use);
                                                        buffer = NULL;
                                                 } else {
                                                         buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
@@ -635,6 +695,7 @@ arv_uv_stream_thread_sync (void *data)
                                                                                        buffer);
                                                         thread_data->statistics.n_completed_buffers++;
                                                         thread_data->statistics.n_transferred_bytes += transferred;
+                                                        g_atomic_int_dec_and_test(&thread_data->n_buffer_in_use);
                                                         buffer = NULL;
                                                 }
                                         }
@@ -670,6 +731,7 @@ arv_uv_stream_thread_sync (void *data)
 			thread_data->callback (thread_data->callback_data,
 					       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
 					       buffer);
+                g_atomic_int_dec_and_test(&thread_data->n_buffer_in_use);
 	}
 
 	if (thread_data->callback != NULL)
@@ -677,7 +739,7 @@ arv_uv_stream_thread_sync (void *data)
 
 	g_free (incoming_buffer);
 
-	arv_debug_stream_thread ("Stop USB3Vision stream thread");
+	arv_info_stream_thread ("Stop USB3Vision sync stream thread");
 
 	return NULL;
 }
@@ -700,8 +762,8 @@ arv_uv_stream_start_thread (ArvStream *stream)
 	ArvUvStreamPrivate *priv = arv_uv_stream_get_instance_private (uv_stream);
 	ArvUvStreamThreadData *thread_data;
 	ArvDevice *device;
-	guint64 offset;
-	guint64 sirm_offset;
+        GError *error = NULL;
+        guint64 sbrm_address;
 	guint32 si_info;
 	guint64 si_req_payload_size;
 	guint32 si_req_leader_size;
@@ -724,16 +786,17 @@ arv_uv_stream_start_thread (ArvStream *stream)
 	device = ARV_DEVICE (thread_data->uv_device);
 
 	arv_device_read_memory (device, ARV_ABRM_SBRM_ADDRESS,
-                                sizeof (guint64), &offset, NULL);
-	arv_device_read_memory (device, offset + ARV_SBRM_SIRM_ADDRESS,
-                                sizeof (guint64), &sirm_offset, NULL);
-	arv_device_read_memory (device, sirm_offset + ARV_SIRM_INFO,
+                                sizeof (guint64), &sbrm_address, NULL);
+	arv_device_read_memory (device, sbrm_address + ARV_SBRM_SIRM_ADDRESS,
+                                sizeof (guint64), &priv->sirm_address, NULL);
+
+	arv_device_read_memory (device, priv->sirm_address + ARV_SIRM_INFO,
                                 sizeof (si_info), &si_info, NULL);
-	arv_device_read_memory (device, sirm_offset + ARV_SIRM_REQ_PAYLOAD_SIZE,
+	arv_device_read_memory (device, priv->sirm_address + ARV_SIRM_REQ_PAYLOAD_SIZE,
                                 sizeof (si_req_payload_size), &si_req_payload_size, NULL);
-	arv_device_read_memory (device, sirm_offset + ARV_SIRM_REQ_LEADER_SIZE,
+	arv_device_read_memory (device, priv->sirm_address + ARV_SIRM_REQ_LEADER_SIZE,
                                 sizeof (si_req_leader_size), &si_req_leader_size, NULL);
-	arv_device_read_memory (device, sirm_offset + ARV_SIRM_REQ_TRAILER_SIZE,
+	arv_device_read_memory (device, priv->sirm_address + ARV_SIRM_REQ_TRAILER_SIZE,
                                 sizeof (si_req_trailer_size), &si_req_trailer_size, NULL);
 
 	alignment = 1 << ((si_info & ARV_SIRM_INFO_ALIGNMENT_MASK) >> ARV_SIRM_INFO_ALIGNMENT_SHIFT);
@@ -766,17 +829,17 @@ arv_uv_stream_start_thread (ArvStream *stream)
 	si_transfer1_size = align(si_req_payload_size % si_payload_size, alignment);
 	si_transfer2_size = 0;
 
-	arv_device_write_memory (device, sirm_offset + ARV_SIRM_MAX_LEADER_SIZE,
+	arv_device_write_memory (device, priv->sirm_address + ARV_SIRM_MAX_LEADER_SIZE,
                                  sizeof (si_leader_size), &si_leader_size, NULL);
-	arv_device_write_memory (device, sirm_offset + ARV_SIRM_MAX_TRAILER_SIZE,
+	arv_device_write_memory (device, priv->sirm_address + ARV_SIRM_MAX_TRAILER_SIZE,
                                  sizeof (si_trailer_size), &si_trailer_size, NULL);
-	arv_device_write_memory (device, sirm_offset + ARV_SIRM_PAYLOAD_SIZE,
+	arv_device_write_memory (device, priv->sirm_address + ARV_SIRM_PAYLOAD_SIZE,
                                  sizeof (si_payload_size), &si_payload_size, NULL);
-	arv_device_write_memory (device, sirm_offset + ARV_SIRM_PAYLOAD_COUNT,
+	arv_device_write_memory (device, priv->sirm_address + ARV_SIRM_PAYLOAD_COUNT,
                                  sizeof (si_payload_count), &si_payload_count, NULL);
-	arv_device_write_memory (device, sirm_offset + ARV_SIRM_TRANSFER1_SIZE,
+	arv_device_write_memory (device, priv->sirm_address + ARV_SIRM_TRANSFER1_SIZE,
                                  sizeof (si_transfer1_size), &si_transfer1_size, NULL);
-	arv_device_write_memory (device, sirm_offset + ARV_SIRM_TRANSFER2_SIZE,
+	arv_device_write_memory (device, priv->sirm_address + ARV_SIRM_TRANSFER2_SIZE,
                                  sizeof (si_transfer2_size), &si_transfer2_size, NULL);
 
 	arv_info_stream ("SIRM_PAYLOAD_SIZE     = 0x%08x", si_payload_size);
@@ -786,15 +849,13 @@ arv_uv_stream_start_thread (ArvStream *stream)
 	arv_info_stream ("SIRM_MAX_LEADER_SIZE  = 0x%08x", si_leader_size);
 	arv_info_stream ("SIRM_MAX_TRAILER_SIZE = 0x%08x", si_trailer_size);
 
-	si_control = ARV_SIRM_CONTROL_STREAM_ENABLE;
-	arv_device_write_memory (device, sirm_offset + ARV_SIRM_CONTROL, sizeof (si_control), &si_control, NULL);
-
         thread_data->expected_size = si_req_payload_size;
 	thread_data->leader_size = si_leader_size;
 	thread_data->payload_size = si_payload_size;
         thread_data->payload_count = si_payload_count;
         thread_data->transfer1_size = si_transfer1_size;
 	thread_data->trailer_size = si_trailer_size;
+        thread_data->n_buffer_in_use = 0;
 	thread_data->cancel = FALSE;
 
         switch (priv->usb_mode) {
@@ -807,6 +868,22 @@ arv_uv_stream_start_thread (ArvStream *stream)
                 default:
                         g_assert_not_reached ();
         }
+
+        g_mutex_lock (&thread_data->thread_started_mutex);
+        while (!thread_data->thread_started)
+                g_cond_wait (&thread_data->thread_started_cond,
+                             &thread_data->thread_started_mutex);
+        g_mutex_unlock (&thread_data->thread_started_mutex);
+
+        arv_uv_device_reset_stream_endpoint (thread_data->uv_device);
+
+        si_control = ARV_SIRM_CONTROL_STREAM_ENABLE;
+        arv_device_write_memory (device, priv->sirm_address + ARV_SIRM_CONTROL, sizeof (si_control), &si_control, &error);
+        if (error != NULL) {
+                arv_warning_stream ("Failed to enable stream (%s)",
+                                    error->message);
+                g_clear_error(&error);
+        }
 }
 
 static void
@@ -815,9 +892,8 @@ arv_uv_stream_stop_thread (ArvStream *stream)
 	ArvUvStream *uv_stream = ARV_UV_STREAM (stream);
 	ArvUvStreamPrivate *priv = arv_uv_stream_get_instance_private (uv_stream);
 	ArvUvStreamThreadData *thread_data;
-	guint64 offset;
-	guint64 sirm_offset;
 	guint32 si_control;
+        GError *error = NULL;
 
 	g_return_if_fail (priv->thread != NULL);
 	g_return_if_fail (priv->thread_data != NULL);
@@ -831,13 +907,13 @@ arv_uv_stream_stop_thread (ArvStream *stream)
 	priv->thread = NULL;
 
 	si_control = 0x0;
-	arv_device_read_memory (ARV_DEVICE (thread_data->uv_device),
-				ARV_ABRM_SBRM_ADDRESS, sizeof (guint64), &offset, NULL);
-	arv_device_read_memory (ARV_DEVICE (thread_data->uv_device),
-				offset + ARV_SBRM_SIRM_ADDRESS, sizeof (guint64), &sirm_offset, NULL);
 	arv_device_write_memory (ARV_DEVICE (thread_data->uv_device),
-				 sirm_offset + ARV_SIRM_CONTROL, sizeof (si_control), &si_control, NULL);
-
+				 priv->sirm_address + ARV_SIRM_CONTROL, sizeof (si_control), &si_control, &error);
+        if (error != NULL) {
+                arv_warning_stream ("Failed to disable stream (%s)",
+                                    error->message);
+                g_clear_error(&error);
+        }
 }
 
 /**

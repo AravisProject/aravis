@@ -74,6 +74,7 @@ typedef enum {
 	ARV_GC_PROPERTY_NODE_TYPE_VALUE_INDEXED,
 	ARV_GC_PROPERTY_NODE_TYPE_VALUE_DEFAULT,
 	ARV_GC_PROPERTY_NODE_TYPE_STREAMABLE,
+        ARV_GC_PROPERTY_NODE_TYPE_IS_DEPRECATED,
 
 	ARV_GC_PROPERTY_NODE_TYPE_P_UNKNONW	= 1000,
 	ARV_GC_PROPERTY_NODE_TYPE_P_FEATURE,
@@ -93,7 +94,9 @@ typedef enum {
 	ARV_GC_PROPERTY_NODE_TYPE_P_INVALIDATOR,
 	ARV_GC_PROPERTY_NODE_TYPE_P_COMMAND_VALUE,
 	ARV_GC_PROPERTY_NODE_TYPE_P_VALUE_INDEXED,
-	ARV_GC_PROPERTY_NODE_TYPE_P_VALUE_DEFAULT
+	ARV_GC_PROPERTY_NODE_TYPE_P_VALUE_DEFAULT,
+        ARV_GC_PROPERTY_NODE_TYPE_P_ALIAS,
+        ARV_GC_PROPERTY_NODE_TYPE_P_CAST_ALIAS
 } ArvGcPropertyNodeType;
 
 #define ARV_TYPE_GC_PROPERTY_NODE             (arv_gc_property_node_get_type ())
@@ -155,6 +158,9 @@ ARV_API ArvGcNode *		arv_gc_property_node_new_event_id		(void);
 ARV_API ArvGcNode *		arv_gc_property_node_new_value_default		(void);
 ARV_API ArvGcNode *		arv_gc_property_node_new_p_value_default	(void);
 ARV_API ArvGcNode *		arv_gc_property_node_new_streamable		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_is_deprecated		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_p_alias		(void);
+ARV_API ArvGcNode *		arv_gc_property_node_new_p_cast_alias		(void);
 
 ARV_API const char *		arv_gc_property_node_get_name			(ArvGcPropertyNode *node);
 

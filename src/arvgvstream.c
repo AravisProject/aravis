@@ -376,7 +376,12 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
                                                  buffer->priv->allocated_size,
                                                  thread_data->scps_packet_size);
         if (n_packets < 1) {
+	        buffer->priv->status = ARV_BUFFER_STATUS_PAYLOAD_NOT_SUPPORTED;
                 arv_stream_push_output_buffer(thread_data->stream, buffer);
+                if (thread_data->callback != NULL)
+                        thread_data->callback (thread_data->callback_data,
+                                               ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
+                                               frame->buffer);
                 return NULL;
         }
 
@@ -814,6 +819,10 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 		}
 
 		if (can_close_frame &&
+                    /* Do not timeout on the most recent frame if the LEADER packet is so far the ONLY
+                     * valid packet received. This is needed by some devices sending the leader packet early, at
+                     * acquisition start. */
+                    (frame->frame_id != thread_data->last_frame_id || frame->last_valid_packet != 0) &&
 		    time_us - frame->last_packet_time_us >= thread_data->frame_retention_us) {
 			frame->buffer->priv->status = ARV_BUFFER_STATUS_TIMEOUT;
 			arv_warning_stream_thread ("[GvStream::check_frame_completion] Timeout for frame %"
