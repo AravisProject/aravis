@@ -146,6 +146,8 @@ _use_legacy_endianness_mechanism (ArvGcPort *port, guint64 length)
 
 		if (arv_gc_register_description_node_compare_schema_version (register_description, 1, 1, 0) < 0) {
 			port->priv->has_legacy_infos = TRUE;
+		} else if (g_getenv("ARV_QUIRK_LEGACY_ENDIANNESS")) {
+			port->priv->has_legacy_infos = TRUE;
 		} else {
 			for (i = 0; i < G_N_ELEMENTS (arv_gc_port_legacy_infos); i++) {
 				if (g_pattern_match_simple(arv_gc_port_legacy_infos[i].vendor_selection, vendor_name) == TRUE &&
