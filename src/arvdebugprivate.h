@@ -56,6 +56,7 @@ typedef enum {
 	ARV_DEBUG_CATEGORY_EVALUATOR,
 	ARV_DEBUG_CATEGORY_VIEWER,
 	ARV_DEBUG_CATEGORY_MISC,
+	ARV_DEBUG_CATEGORY_GENTL,
 	ARV_DEBUG_CATEGORY_N_ELEMENTS
 } ArvDebugCategory;
 
@@ -110,6 +111,11 @@ extern ArvDebugCategoryInfos arv_debug_category_infos[];
 #define arv_warning_misc(...)		arv_warning (ARV_DEBUG_CATEGORY_MISC, __VA_ARGS__)
 #define arv_info_misc(...) 		arv_info (ARV_DEBUG_CATEGORY_MISC, __VA_ARGS__)
 #define arv_debug_misc(...)		arv_debug (ARV_DEBUG_CATEGORY_MISC, __VA_ARGS__)
+
+#define arv_warning_gentl(...)		arv_warning (ARV_DEBUG_CATEGORY_GENTL, __VA_ARGS__)
+#define arv_info_gentl(...) 		arv_info (ARV_DEBUG_CATEGORY_GENTL, __VA_ARGS__)
+#define arv_debug_gentl(...)		arv_debug (ARV_DEBUG_CATEGORY_GENTL, __VA_ARGS__)
+#define arv_trace_gentl(...)		arv_trace (ARV_DEBUG_CATEGORY_GENTL, __VA_ARGS__)
 
 #define arv_warning_viewer(...)		arv_warning (ARV_DEBUG_CATEGORY_VIEWER, __VA_ARGS__)
 #define arv_info_viewer(...)	 	arv_info (ARV_DEBUG_CATEGORY_VIEWER, __VA_ARGS__)
