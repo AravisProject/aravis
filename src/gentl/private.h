@@ -1,3 +1,9 @@
+/*
+MinGW needs <stdint.h> prior to GenTL_v1_6.h for uint64_t and others;
+since GenTL_v1_6.h may not be modified as per license, include here instead.
+*/
+#include<stdint.h>
+
 #include"GenTL_v1_6.h"
 
 #include<glib-object.h>
