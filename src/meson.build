@@ -318,3 +318,5 @@ if introspection_option.auto() or introspection_option.enabled()
     introspection_enabled = true
   endif
 endif
+
+subdir('gentl')
