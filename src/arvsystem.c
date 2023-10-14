@@ -98,6 +98,44 @@ arv_get_n_interfaces (void)
 
 
 /**
+ * arv_get_interface:
+ *
+ * Gets an interface by index.
+ *
+ * Return value: (transfer none): An #ArvInterface instance.
+ */
+ArvInterface*
+arv_get_interface (unsigned int index)
+{
+	if (index >= G_N_ELEMENTS (interfaces))
+		return NULL;
+
+	return interfaces[index].get_interface_instance ();
+}
+
+/**
+ * arv_get_interface_by_id:
+ *
+ * Gets an interface by id.
+ *
+ * Return value: (transfer none): An #ArvInterface instance.
+ */
+ArvInterface*
+arv_get_interface_by_id (const char* interface_id)
+{
+	guint i;
+
+	g_return_val_if_fail (interface_id != NULL, NULL);
+
+	for (i = 0; i < G_N_ELEMENTS (interfaces) ; i++)
+		if (strcmp (interface_id, interfaces[i].interface_id) == 0) {
+			return interfaces[i].get_interface_instance ();
+		}
+	
+	return NULL;
+}
+
+/**
  * arv_get_interface_id:
  * @index: interface index
  *
