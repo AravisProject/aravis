@@ -29,6 +29,7 @@ const char _XML_IF[]=
 "  xsi:schemaLocation=\"http://www.genicam.org/GenApi/Version_1_1 http://www.genicam.org/GenApi/GenApiSchema_Version_1_1.xsd\""
 "/>";
 
+#define _GC_CHECK_HANDLE { GENTL_ENSURE_INIT; if(hPort==NULL) return GC_ERR_INVALID_HANDLE; }
 
 GC_API GCGetInfo               ( TL_INFO_CMD iInfoCmd, INFO_DATATYPE *piType, void *pBuffer, size_t *piSize){
 	arv_trace_gentl("%s (iInfoCmd=%d)",__FUNCTION__,iInfoCmd);
@@ -83,16 +84,22 @@ GC_API GCCloseLib              ( void ){
 
 GC_API GCReadPort              ( PORT_HANDLE hPort, uint64_t iAddress, void *pBuffer, size_t *piSize ){
 	arv_trace_gentl("%s (hPort=%s[%p],iAddress=%#lx,pBuffer=%p,piSize=%ld)",__FUNCTION__,G_OBJECT_TYPE_NAME(hPort),hPort,iAddress,pBuffer,*piSize);
-	GENTL_ENSURE_INIT;
+	_GC_CHECK_HANDLE;
 	if(ARV_IS_TRANSPORT_LAYER(hPort) || ARV_IS_INTERFACE(hPort)){
 		if(iAddress>0) arv_warning_gentl("iAddress!=0 for system XML; value ignored.");
 		return gentl_to_buf(INFO_DATATYPE_STRING,pBuffer,ARV_IS_TRANSPORT_LAYER(hPort)?_XML_TL:_XML_IF,piSize,NULL);
 	}
-	GENTL_NYI_DETAIL("only TL/IF ports implemented (hPort=%s[%p])",G_OBJECT_TYPE_NAME(hPort),hPort);
+	if(ARV_IS_CAMERA(hPort)){
+		if(!arv_device_read_memory(arv_camera_get_device(hPort),iAddress,*piSize,pBuffer,&gentl_err)) return GC_ERR_IO;
+		return GC_ERR_SUCCESS;
+	}
+	if(ARV_IS_DEVICE(hPort)){
+		if(!arv_device_read_memory(ARV_DEVICE(hPort),iAddress,*piSize,pBuffer,&gentl_err)) return GC_ERR_IO;
+		return GC_ERR_SUCCESS;
+	}
+	GENTL_NYI_DETAIL("only TL/IF/DEV/PORT ports implemented (hPort=%s[%p])",G_OBJECT_TYPE_NAME(hPort),hPort);
 	#if 0
 		// something like this for device port, in the future
-		if(!arv_device_read_memory(ARV_DEVICE(dev),iAddress,*piSize,pBuffer,&gentl_err)) return GC_ERR_IO;
-		return GC_ERR_SUCCESS;
 	#endif
 }
 GC_API GCWritePort             ( PORT_HANDLE hPort, uint64_t iAddress, const void *pBuffer, size_t *piSize ){ GENTL_NYI; }
@@ -100,35 +107,62 @@ GC_API GCGetPortURL            ( PORT_HANDLE hPort, char *sURL, size_t *piSize )
 
 GC_API GCGetPortInfo           ( PORT_HANDLE hPort, PORT_INFO_CMD iInfoCmd, INFO_DATATYPE *piType, void *pBuffer, size_t *piSize ){
 	arv_trace_gentl("%s (hPort=%s[%p],iInfoCmd=%d,pBuffer=%p)",__FUNCTION__,G_OBJECT_TYPE_NAME(hPort),hPort,iInfoCmd,pBuffer);
-	GENTL_ENSURE_INIT;
+	_GC_CHECK_HANDLE;
 	if(ARV_IS_TRANSPORT_LAYER(hPort) || ARV_IS_INTERFACE(hPort)){
 		switch(iInfoCmd){
 			case PORT_INFO_PORTNAME: return gentl_to_buf(INFO_DATATYPE_STRING,pBuffer,"Aravis-GenTL",piSize,piType);
 			default:
-				GENTL_NYI_DETAIL("TL/IF port, iInfoCmd=%d",iInfoCmd);
+				GENTL_NYI_DETAIL("TL/IF port: hPort=%s[%p], iInfoCmd=%d",G_OBJECT_TYPE_NAME(hPort),hPort,iInfoCmd);
 		}
 	}
-	GENTL_NYI_DETAIL("only TL/IF ports implemented (hPort=%s[%p])",G_OBJECT_TYPE_NAME(hPort),hPort);
+	if(ARV_IS_CAMERA(hPort)){
+		switch(iInfoCmd){
+			case PORT_INFO_PORTNAME:
+				const char* id=arv_camera_get_device_id(hPort,&gentl_err);
+				if(id==NULL) return GC_ERR_IO;
+				return gentl_to_buf(INFO_DATATYPE_STRING,pBuffer,id,piSize,piType);
+			default:
+				GENTL_NYI_DETAIL("DEV port: hPort=%s[%p], iInfoCmd=%d",G_OBJECT_TYPE_NAME(hPort),hPort,iInfoCmd);
+		}
+	}
+	if(ARV_IS_DEVICE(hPort)){
+		switch(iInfoCmd){
+			case PORT_INFO_PORTNAME: {
+				const char* n;
+				n=arv_device_get_string_feature_value(hPort,"DeviceID",&gentl_err);
+				if(n==NULL) return GC_ERR_IO;
+				return gentl_to_buf(INFO_DATATYPE_STRING,pBuffer,n,piSize,piType);
+			}
+			default:
+				GENTL_NYI_DETAIL("PORT port: hPort=%s[%p], iInfoCmd=%d",G_OBJECT_TYPE_NAME(hPort),hPort,iInfoCmd);
+		}
+	}
+	GENTL_NYI_DETAIL("only TL/IF/DEV ports implemented (hPort=%s[%p])",G_OBJECT_TYPE_NAME(hPort),hPort);
 }
-GC_API GCRegisterEvent         ( EVENTSRC_HANDLE hEventSrc, EVENT_TYPE iEventID, EVENT_HANDLE *phEvent ){ GENTL_NYI; }
+GC_API GCRegisterEvent         ( EVENTSRC_HANDLE hEventSrc, EVENT_TYPE iEventID, EVENT_HANDLE *phEvent ){
+	//gentl_err = g_error_new (GENTL_ERROR, GC_ERR_NOT_AVAILABLE, "%s: events not supported.", __FUNCTION__);
+	//return GC_ERR_NOT_AVAILABLE;
+	GENTL_NYI;
+}
 GC_API GCUnregisterEvent       ( EVENTSRC_HANDLE hEventSrc, EVENT_TYPE iEventID ){ GENTL_NYI; }
 
 /* GenTL v1.1 */
 GC_API GCGetNumPortURLs        ( PORT_HANDLE hPort, uint32_t *piNumURLs ){
-	GENTL_ENSURE_INIT;
 	arv_trace_gentl("%s (hPort=%s[%p])",__FUNCTION__,G_OBJECT_TYPE_NAME(hPort),hPort);
-	if(hPort==NULL) return GC_ERR_INVALID_HANDLE;
+	_GC_CHECK_HANDLE;
 	if(piNumURLs==NULL) return GC_ERR_INVALID_PARAMETER;
 	if(ARV_IS_TRANSPORT_LAYER(hPort)) { *piNumURLs=1; }
 	else if(ARV_IS_INTERFACE(hPort)){ *piNumURLs=arv_interface_get_n_devices(ARV_INTERFACE(hPort)); }
-	else { GENTL_NYI_DETAIL("only TL/IF ports implemented (hPort=%s[%p])",G_OBJECT_TYPE_NAME(hPort),hPort); }
+	else if(ARV_IS_CAMERA(hPort)){ *piNumURLs=1; }
+	else if(ARV_IS_DEVICE(hPort)){ *piNumURLs=1; }
+	else { GENTL_NYI_DETAIL("only TL/IF/DEV/PORT ports implemented (hPort=%s[%p])",G_OBJECT_TYPE_NAME(hPort),hPort); }
 	arv_trace_gentl("   (returning %d)",*piNumURLs);
 	return GC_ERR_SUCCESS;
 }
 
 GC_API GCGetPortURLInfo        ( PORT_HANDLE hPort, uint32_t iURLIndex, URL_INFO_CMD iInfoCmd, INFO_DATATYPE *piType, void *pBuffer, size_t *piSize ){
-	GENTL_ENSURE_INIT;
 	arv_trace_gentl("%s (hPort=%s[%p],iURLIndex=%d,iInfoCmd=%d)",__FUNCTION__,G_OBJECT_TYPE_NAME(hPort),hPort,iURLIndex,iInfoCmd);
+	_GC_CHECK_HANDLE;
 	if(ARV_IS_TRANSPORT_LAYER(hPort) || ARV_IS_INTERFACE(hPort)){
 		switch(iInfoCmd){
 			case URL_INFO_URL: {
@@ -140,7 +174,31 @@ GC_API GCGetPortURLInfo        ( PORT_HANDLE hPort, uint32_t iURLIndex, URL_INFO
 			default: GENTL_NYI_DETAIL("TL/IF port; iInfoCmd=%d",iInfoCmd);
 		}
 	}
-	GENTL_NYI_DETAIL("only TL/IF ports implemented (hPort=%s[%p])",G_OBJECT_TYPE_NAME(hPort),hPort);
+	if(ARV_IS_CAMERA(hPort)){
+		switch(iInfoCmd){
+			case URL_INFO_URL: {
+				char url[ARV_GVBS_XML_URL_SIZE];
+				/* FIXME: this won't work for USB cams for sure */
+				// if(!ARV_IS_DEVICE(hPort)) GENTL_NYI_DETAIL("hPort=%s[%p]: not a ArvDevice, URL not implemented",G_OBJECT_TYPE_NAME(hPort),hPort);
+				/* arv_dom_document_get_url won't work, see https://github.com/AravisProject/aravis/issues/829 */
+				/* copied from arvgvdevice.c, _load_genicam */
+				if (!arv_device_read_memory( arv_camera_get_device(ARV_CAMERA(hPort)), ARV_GVBS_XML_URL_0_OFFSET, ARV_GVBS_XML_URL_SIZE, url, &gentl_err)) return GC_ERR_IO;
+				return gentl_to_buf(INFO_DATATYPE_STRING,pBuffer,url,piSize,piType);
+			}
+			default: GENTL_NYI_DETAIL("DEV port, iInfoCmd=%d",iInfoCmd);
+		}
+	}
+	if(ARV_IS_DEVICE(hPort)){
+		switch(iInfoCmd){
+			case URL_INFO_URL: {
+				char url[ARV_GVBS_XML_URL_SIZE];
+				if (!arv_device_read_memory(ARV_DEVICE(hPort), ARV_GVBS_XML_URL_0_OFFSET, ARV_GVBS_XML_URL_SIZE, url, &gentl_err)) return GC_ERR_IO;
+				return gentl_to_buf(INFO_DATATYPE_STRING,pBuffer,url,piSize,piType);
+			}
+			default: GENTL_NYI_DETAIL("PORT port, iInfoCmd=%d",iInfoCmd);
+		}
+	}
+	GENTL_NYI_DETAIL("only TL/IF/DEV ports implemented (hPort=%s[%p])",G_OBJECT_TYPE_NAME(hPort),hPort);
 	#if 0
 		#if 0
 			const char *url=NULL;
