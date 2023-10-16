@@ -1,0 +1,500 @@
+/* Aravis - Digital camera library
+ *
+ * Copyright © 2023 Xiaoqiang Wang
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General
+ * Public License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
+ *
+ * Author: Xiaoqiang Wang <xiaoqiang.wang@psi.ch>
+ */
+
+/**
+ * SECTION: arvgentlstream
+ * @short_description: GenTL stream
+ */
+
+#include <arvdebugprivate.h>
+#include <arvgentlsystemprivate.h>
+#include <arvgentlstreamprivate.h>
+#include <arvgentldeviceprivate.h>
+#include <arvstreamprivate.h>
+#include <arvbufferprivate.h>
+#include <arvdebug.h>
+#include <stdio.h>
+
+enum
+{
+	PROP_0,
+	PROP_STREAM_N_BUFFERS
+};
+
+typedef struct {
+	ArvStream *stream;
+
+	gboolean thread_started;
+	GMutex thread_started_mutex;
+	GCond thread_started_cond;
+
+	ArvGenTLDevice *gentl_device;
+	ArvStreamCallback callback;
+	void *callback_data;
+
+	GCancellable *cancellable;
+
+	/* Statistics */
+	guint64 n_completed_buffers;
+	guint64 n_failures;
+	guint64 n_transferred_bytes;
+
+	/* Notification for completed transfers and cancellation */
+	GMutex stream_mtx;
+	GCond stream_event;
+} ArvGenTLStreamThreadData;
+
+typedef struct {
+	ArvGenTLDevice *gentl_device;
+	DS_HANDLE gentl_stream;
+	EVENT_HANDLE gentl_event;
+	guint n_buffers;
+
+	GThread *thread;
+	ArvGenTLStreamThreadData *thread_data;
+} ArvGenTLStreamPrivate;
+
+struct _ArvGenTLStream {
+	ArvStream stream;
+};
+
+struct _ArvGenTLStreamClass {
+	ArvStreamClass parent_class;
+};
+
+G_DEFINE_TYPE_WITH_CODE (ArvGenTLStream, arv_gentl_stream, ARV_TYPE_STREAM, G_ADD_PRIVATE (ArvGenTLStream))
+
+/* Acquisition thread */
+
+static gboolean
+_gentl_buffer_info_ptr(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_HANDLE buffer, BUFFER_INFO_CMD info_cmd, void** value)
+{
+	GC_ERROR error;
+	INFO_DATATYPE type;
+	size_t size = sizeof(void*);
+	error = gentl->DSGetBufferInfo(datastream, buffer, info_cmd, &type, value, &size);
+	return error == GC_ERR_SUCCESS;
+}
+
+static gboolean
+_gentl_buffer_info_sizet(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_HANDLE buffer, BUFFER_INFO_CMD info_cmd, size_t *value)
+{
+	GC_ERROR error;
+	INFO_DATATYPE type;
+	size_t size = sizeof(size_t);
+	error = gentl->DSGetBufferInfo(datastream, buffer, info_cmd, &type, value, &size);
+	return error == GC_ERR_SUCCESS;
+}
+
+static gboolean
+_gentl_buffer_info_uint64(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_HANDLE buffer, BUFFER_INFO_CMD info_cmd, uint64_t *value)
+{
+	GC_ERROR error;
+	INFO_DATATYPE type = INFO_DATATYPE_UINT64;
+	size_t size = sizeof(uint64_t);
+	error = gentl->DSGetBufferInfo(datastream, buffer, info_cmd, &type, value, &size);
+	return error == GC_ERR_SUCCESS;
+}
+
+static void
+_gentl_buffer_to_arv_buffer(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_HANDLE gentl_buffer, ArvBuffer *arv_buffer)
+{
+	size_t payload_type = PAYLOAD_TYPE_UNKNOWN;
+	size_t data_size, actual_size, image_offset, width, height, x_offset, y_offset, x_padding, y_padding;
+	uint64_t pixel_format, timestamp = 0;
+	void *data;
+
+	_gentl_buffer_info_sizet(gentl, datastream, gentl_buffer, BUFFER_INFO_PAYLOADTYPE, &payload_type);
+	arv_buffer->priv->payload_type = payload_type;
+
+	if (payload_type == PAYLOAD_TYPE_MULTI_PART) {
+		arv_warning_stream_thread("Multi-Part payload not supported");
+		arv_buffer->priv->status = ARV_BUFFER_STATUS_PAYLOAD_NOT_SUPPORTED;
+		return;
+	}
+
+	_gentl_buffer_info_uint64(gentl, datastream, gentl_buffer, BUFFER_INFO_FRAMEID, &arv_buffer->priv->frame_id);
+	
+	if (!_gentl_buffer_info_uint64(gentl, datastream, gentl_buffer, BUFFER_INFO_TIMESTAMP_NS, &timestamp))
+		_gentl_buffer_info_uint64(gentl, datastream, gentl_buffer, BUFFER_INFO_TIMESTAMP, &timestamp);
+	arv_buffer->priv->timestamp_ns = timestamp;
+
+	_gentl_buffer_info_sizet(gentl, datastream, gentl_buffer, BUFFER_INFO_DATA_SIZE, &data_size);
+	_gentl_buffer_info_sizet(gentl, datastream, gentl_buffer, BUFFER_INFO_SIZE_FILLED, &actual_size);
+
+	arv_buffer->priv->received_size = actual_size;
+
+	_gentl_buffer_info_ptr(gentl, datastream, gentl_buffer, BUFFER_INFO_BASE, &data);
+	memcpy(arv_buffer->priv->data, data, data_size);
+
+	arv_buffer_set_n_parts(arv_buffer, 1);
+	
+	arv_buffer->priv->parts[0].component_id = 0;
+	arv_buffer->priv->parts[0].data_type = ARV_BUFFER_PART_DATA_TYPE_2D_IMAGE;
+	arv_buffer->priv->parts[0].size = data_size;
+
+	_gentl_buffer_info_sizet(gentl, datastream, gentl_buffer, BUFFER_INFO_IMAGEOFFSET, &image_offset);
+	arv_buffer->priv->parts[0].data_offset = image_offset;
+
+	_gentl_buffer_info_uint64(gentl, datastream, gentl_buffer, BUFFER_INFO_PIXELFORMAT, &pixel_format);
+	arv_buffer->priv->parts[0].pixel_format = pixel_format;
+
+	_gentl_buffer_info_sizet(gentl, datastream, gentl_buffer, BUFFER_INFO_WIDTH, &width);
+	arv_buffer->priv->parts[0].width = width;
+
+	_gentl_buffer_info_sizet(gentl, datastream, gentl_buffer, BUFFER_INFO_HEIGHT, &height);
+	arv_buffer->priv->parts[0].height = height;
+
+	_gentl_buffer_info_sizet(gentl, datastream, gentl_buffer, BUFFER_INFO_XOFFSET, &x_offset);
+	arv_buffer->priv->parts[0].x_offset = x_offset;
+
+	_gentl_buffer_info_sizet(gentl, datastream, gentl_buffer, BUFFER_INFO_YOFFSET, &y_offset);
+	arv_buffer->priv->parts[0].y_offset = y_offset;
+
+	_gentl_buffer_info_sizet(gentl, datastream, gentl_buffer, BUFFER_INFO_XPADDING, &x_padding);
+	arv_buffer->priv->parts[0].x_padding = x_padding;
+
+	_gentl_buffer_info_sizet(gentl, datastream, gentl_buffer, BUFFER_INFO_YPADDING, &y_padding);
+	arv_buffer->priv->parts[0].y_padding = y_padding;
+
+	arv_buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
+}
+
+static void
+_loop (ArvGenTLStreamThreadData *thread_data)
+{
+	ArvGenTLStreamPrivate *priv = arv_gentl_stream_get_instance_private (ARV_GENTL_STREAM (thread_data->stream));
+	ArvGenTLSystem *gentl_system = arv_gentl_device_get_system(priv->gentl_device);
+	ArvGenTLModule *gentl = arv_gentl_system_get_gentl(gentl_system);
+
+	ArvBuffer *arv_buffer;
+	BUFFER_HANDLE gentl_buffer;
+	GC_ERROR error;
+
+	g_mutex_lock (&thread_data->thread_started_mutex);
+	thread_data->thread_started = TRUE;
+	g_cond_signal (&thread_data->thread_started_cond);
+	g_mutex_unlock (&thread_data->thread_started_mutex);
+
+ 
+	error = gentl->GCRegisterEvent(priv->gentl_stream, EVENT_NEW_BUFFER, &priv->gentl_event);
+	if (error != GC_ERR_SUCCESS) {
+		arv_warning_stream("GCRegisterEvent[NEW_BUFFER]: %d\n", error);
+		g_cancellable_cancel(thread_data->cancellable);
+	}
+
+	do {
+		EVENT_NEW_BUFFER_DATA NewImageEventData = {NULL, NULL};
+		size_t size = sizeof(EVENT_NEW_BUFFER_DATA);
+		error = gentl->EventGetData(priv->gentl_event, &NewImageEventData, &size, SIZE_MAX);
+		if (error != GC_ERR_SUCCESS) {
+			arv_warning_stream("EventGetData[NEW_BUFFER]: %d\n", error);
+			break;
+		}
+	
+		arv_buffer = arv_stream_pop_input_buffer (thread_data->stream);
+		gentl_buffer = NewImageEventData.BufferHandle;
+		thread_data->n_completed_buffers += 1;
+		thread_data->n_transferred_bytes += arv_buffer->priv->allocated_size;
+
+		_gentl_buffer_to_arv_buffer(gentl, priv->gentl_stream, gentl_buffer, arv_buffer);
+
+		arv_stream_push_output_buffer(thread_data->stream, arv_buffer);
+		if (thread_data->callback != NULL)
+			thread_data->callback (thread_data->callback_data,
+				ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
+				arv_buffer);
+
+		gentl->DSQueueBuffer(priv->gentl_stream, gentl_buffer);
+	} while (!g_cancellable_is_cancelled (thread_data->cancellable));
+
+	gentl->GCUnregisterEvent(priv->gentl_event, EVENT_NEW_BUFFER);
+}
+
+static void *
+arv_gentl_stream_thread (void *data)
+{
+	ArvGenTLStreamThreadData *thread_data = data;
+
+	if (thread_data->callback != NULL)
+		thread_data->callback (thread_data->callback_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
+
+	_loop (thread_data);
+
+	if (thread_data->callback != NULL)
+		thread_data->callback (thread_data->callback_data, ARV_STREAM_CALLBACK_TYPE_EXIT, NULL);
+
+	return NULL;
+}
+
+/* ArvGenTLStream implementation */
+
+static void
+arv_gentl_stream_start_thread (ArvStream *stream)
+{
+	ArvGenTLStreamPrivate *priv = arv_gentl_stream_get_instance_private (ARV_GENTL_STREAM (stream));
+	ArvGenTLStreamThreadData *thread_data;
+
+	g_return_if_fail (priv->thread == NULL);
+	g_return_if_fail (priv->thread_data != NULL);
+
+	thread_data = priv->thread_data;
+
+	thread_data->gentl_device = priv->gentl_device;
+	thread_data->thread_started = FALSE;
+	thread_data->cancellable = g_cancellable_new ();
+	priv->thread = g_thread_new ("arv_gentl_stream", arv_gentl_stream_thread, priv->thread_data);
+
+	g_mutex_lock (&thread_data->thread_started_mutex);
+	while (!thread_data->thread_started)
+		g_cond_wait (&thread_data->thread_started_cond,
+				&thread_data->thread_started_mutex);
+	g_mutex_unlock (&thread_data->thread_started_mutex);
+}
+
+static void
+arv_gentl_stream_stop_thread (ArvStream *stream)
+{
+	ArvGenTLStreamPrivate *priv = arv_gentl_stream_get_instance_private (ARV_GENTL_STREAM (stream));
+	ArvGenTLStreamThreadData *thread_data;
+
+	g_return_if_fail (priv->thread != NULL);
+	g_return_if_fail (priv->thread_data != NULL);
+
+	thread_data = priv->thread_data;
+
+	g_cancellable_cancel (thread_data->cancellable);
+	g_thread_join (priv->thread);
+	g_clear_object (&thread_data->cancellable);
+
+	priv->thread = NULL;
+}
+
+static void
+arv_gentl_stream_start_acquisition (ArvStream *stream)
+{
+	ArvGenTLStreamPrivate *priv = arv_gentl_stream_get_instance_private (ARV_GENTL_STREAM (stream));
+	ArvGenTLSystem *gentl_system = arv_gentl_device_get_system(priv->gentl_device);
+	ArvGenTLModule *gentl = arv_gentl_system_get_gentl(gentl_system);
+	ArvBuffer *arv_buffer;
+	BUFFER_HANDLE gentl_buffer;
+	size_t payload_size;
+	GC_ERROR error;
+
+	/* Get payload size from an input buffer */
+	arv_buffer = arv_stream_pop_input_buffer (stream);
+	if (arv_buffer == NULL) {
+		arv_warning_stream("Input buffer empty");
+		return;
+	}
+	payload_size = arv_buffer->priv->allocated_size;
+	arv_stream_push_buffer(stream, arv_buffer);
+
+	/* Allocate, announce and queue buffers */
+	for (guint i=0; i<priv->n_buffers; i++) {
+		error = gentl->DSAllocAndAnnounceBuffer(priv->gentl_stream, payload_size, NULL, &gentl_buffer);
+		if (error != GC_ERR_SUCCESS) {
+			arv_warning_stream("[DSAllocaAndAnnounceBuffer]: %d", error);
+			break;
+		}
+		error = gentl->DSQueueBuffer(priv->gentl_stream, gentl_buffer);
+		if (error != GC_ERR_SUCCESS) {
+			arv_warning_stream("[DSQueueBuffer]: %d", error);
+			break;
+		}
+	}
+
+	/* Start acquisition */
+	error = gentl->DSStartAcquisition(priv->gentl_stream, ACQ_START_FLAGS_DEFAULT, GENTL_INFINITE);
+	if (error != GC_ERR_SUCCESS) {
+		arv_warning_stream("[DSStartAcquisition]: %d", error);
+	}
+}
+
+static void
+arv_gentl_stream_stop_acquisition(ArvStream *stream)
+{
+	ArvGenTLStreamPrivate *priv = arv_gentl_stream_get_instance_private (ARV_GENTL_STREAM (stream));
+	ArvGenTLSystem *gentl_system = arv_gentl_device_get_system(priv->gentl_device);
+	ArvGenTLModule *gentl = arv_gentl_system_get_gentl(gentl_system);
+	GC_ERROR error;
+
+	error = gentl->EventKill(priv->gentl_event);
+	error = gentl->DSStopAcquisition(priv->gentl_stream, ACQ_STOP_FLAGS_DEFAULT);
+	error = gentl->DSFlushQueue(priv->gentl_stream, ACQ_QUEUE_ALL_DISCARD);
+	do {
+		BUFFER_HANDLE gentl_buffer;
+		error = gentl->DSGetBufferID(priv->gentl_stream, 0, &gentl_buffer);
+		if (error != GC_ERR_SUCCESS)
+			break;
+		gentl->DSRevokeBuffer(priv->gentl_stream, gentl_buffer, NULL, NULL);
+	} while (1);
+}
+
+/**
+ * arv_gentl_stream_new: (skip)
+ * @gentl_device: a #ArvGenTLDevice
+ * @callback: (scope call): processing callback
+ * @callback_data: (closure): user data for @callback
+ *
+ * Return value: (transfer full): a new #ArvStream.
+ */
+
+ArvStream *
+arv_gentl_stream_new (ArvGenTLDevice *gentl_device, ArvStreamCallback callback, void *callback_data, GDestroyNotify destroy, GError **error)
+{
+	return g_initable_new (ARV_TYPE_GENTL_STREAM, NULL, error,
+			"device",  gentl_device,
+			"callback", callback,
+			"callback-data", callback_data,
+			"destroy-notify", destroy,
+			NULL);
+}
+
+/* ArvStream implementation */
+
+static void
+arv_gentl_stream_init (ArvGenTLStream *gentl_stream)
+{
+	ArvGenTLStreamPrivate *priv = arv_gentl_stream_get_instance_private (gentl_stream);
+
+	priv->thread_data = g_new0 (ArvGenTLStreamThreadData, 1);
+	priv->n_buffers = ARV_GENTL_STREAM_DEFAULT_N_BUFFERS;
+}
+
+static void
+arv_gentl_stream_set_property (GObject *self, guint prop_id, const GValue *value, GParamSpec *pspec)
+{
+	ArvGenTLStreamPrivate *priv = arv_gentl_stream_get_instance_private (ARV_GENTL_STREAM (self));
+
+	switch (prop_id)
+	{
+		case PROP_STREAM_N_BUFFERS:
+			priv->n_buffers = g_value_get_uint(value);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
+			break;
+	}
+}
+
+static void
+arv_gentl_stream_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+{
+	ArvGenTLStreamPrivate *priv = arv_gentl_stream_get_instance_private (ARV_GENTL_STREAM (object));
+
+	switch (prop_id)
+	{
+		case PROP_STREAM_N_BUFFERS:
+			g_value_set_uint(value, priv->n_buffers);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+			break;
+	}
+}
+
+static void
+arv_gentl_stream_constructed (GObject *object)
+{
+	ArvStream *stream = ARV_STREAM (object);
+	ArvGenTLStream *gentl_stream = ARV_GENTL_STREAM (stream);
+	ArvGenTLStreamPrivate *priv = arv_gentl_stream_get_instance_private (gentl_stream);
+
+	G_OBJECT_CLASS (arv_gentl_stream_parent_class)->constructed (object);
+
+	g_object_get (object,
+		"device",&priv->gentl_device,
+		"callback", &priv->thread_data->callback,
+		"callback-data", &priv->thread_data->callback_data,
+		NULL);
+
+	priv->gentl_stream = arv_gentl_device_open_stream(priv->gentl_device);
+	priv->thread_data->stream = stream;
+
+	arv_stream_declare_info (stream, "n_completed_buffers",
+				 G_TYPE_UINT64, &priv->thread_data->n_completed_buffers);
+	arv_stream_declare_info (stream, "n_failures",
+				 G_TYPE_UINT64, &priv->thread_data->n_failures);
+	arv_stream_declare_info (stream, "n_transferred_bytes",
+				 G_TYPE_UINT64, &priv->thread_data->n_transferred_bytes);
+
+	arv_gentl_stream_start_thread (stream);
+}
+
+static void
+arv_gentl_stream_finalize (GObject *object)
+{
+	ArvGenTLStreamPrivate *priv = arv_gentl_stream_get_instance_private (ARV_GENTL_STREAM (object));
+	ArvGenTLSystem *gentl_system = arv_gentl_device_get_system(priv->gentl_device);
+	ArvGenTLModule *gentl = arv_gentl_system_get_gentl(gentl_system);
+	GC_ERROR error;
+
+	arv_gentl_stream_stop_thread (ARV_STREAM (object));
+
+	/* Close the data stream. */
+	arv_info_stream("Close stream");
+	error = gentl->DSClose(priv->gentl_stream);
+	if (error != GC_ERR_SUCCESS) {
+		arv_warning_stream ("DSClose: %d", error);
+	}
+
+	if (priv->thread_data != NULL) {
+		ArvGenTLStreamThreadData *thread_data;
+
+		thread_data = priv->thread_data;
+		g_clear_pointer (&thread_data, g_free);
+	}
+
+	g_clear_object (&priv->gentl_device);
+
+	G_OBJECT_CLASS (arv_gentl_stream_parent_class)->finalize (object);
+}
+
+static void
+arv_gentl_stream_class_init (ArvGenTLStreamClass *gentl_stream_class)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS (gentl_stream_class);
+	ArvStreamClass *stream_class = ARV_STREAM_CLASS (gentl_stream_class);
+
+	object_class->constructed = arv_gentl_stream_constructed;
+	object_class->finalize = arv_gentl_stream_finalize;
+	object_class->get_property = arv_gentl_stream_get_property;
+	object_class->set_property = arv_gentl_stream_set_property;
+
+	stream_class->start_thread = arv_gentl_stream_start_thread;
+	stream_class->stop_thread = arv_gentl_stream_stop_thread;
+
+	stream_class->start_acquisition = arv_gentl_stream_start_acquisition;
+	stream_class->stop_acquisition = arv_gentl_stream_stop_acquisition;
+
+	g_object_class_install_property
+		(object_class,
+		 PROP_STREAM_N_BUFFERS,
+		 g_param_spec_uint ("n-buffers",
+				      "Number of buffers",
+				      "Number of buffers",
+				      ARV_GENTL_STREAM_MIN_N_BUFFERS,
+				      ARV_GENTL_STREAM_MAX_N_BUFFERS,
+				      ARV_GENTL_STREAM_DEFAULT_N_BUFFERS,
+				      G_PARAM_READWRITE));
+}

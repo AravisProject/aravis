@@ -47,6 +47,7 @@
 #if ARAVIS_HAS_USB
 #include <arvuvdevice.h>
 #endif
+#include <arvgentldevice.h>
 #include <arvenums.h>
 #include <arvstr.h>
 
@@ -880,14 +881,17 @@ arv_camera_acquisition (ArvCamera *camera, guint64 timeout, GError **error)
                                 arv_camera_set_acquisition_mode (camera, ARV_ACQUISITION_MODE_CONTINUOUS, &local_error);
                         }
 		}
-		if (local_error == NULL)
+		if (local_error == NULL) {
+			arv_stream_start_acquisition (stream);
 			arv_camera_start_acquisition (camera, &local_error);
+		}
 		if (local_error == NULL) {
 			if (timeout > 0)
 				buffer = arv_stream_timeout_pop_buffer (stream, timeout);
 			else
 				buffer = arv_stream_pop_buffer (stream);
 			arv_camera_stop_acquisition (camera, &local_error);
+			arv_stream_stop_acquisition (stream);
 		}
 
 		g_object_unref (stream);
@@ -3674,6 +3678,25 @@ arv_camera_uv_set_usb_mode (ArvCamera *camera, ArvUvUsbMode usb_mode)
 #if ARAVIS_HAS_USB
 	arv_uv_device_set_usb_mode (ARV_UV_DEVICE (priv->device), usb_mode);
 #endif
+}
+
+/**
+ * arv_camera_is_gentl_device:
+ * @camera: a #ArvCamera
+ *
+ * Returns: %TRUE if @camera is a GenTL device.
+ *
+ * Since: 0.9.0
+ */
+
+gboolean
+arv_camera_is_gentl_device	(ArvCamera *camera)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
+
+	return ARV_IS_GENTL_DEVICE (priv->device);
 }
 
 /**

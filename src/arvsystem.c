@@ -27,6 +27,7 @@
 #include <arvuvinterfaceprivate.h>
 #endif
 #include <arvfakeinterfaceprivate.h>
+#include <arvgentlinterfaceprivate.h>
 #include <arvdevice.h>
 #include <arvdebugprivate.h>
 #include <string.h>
@@ -68,6 +69,11 @@ ArvInterfaceInfos interfaces[] = {
 		.is_available = TRUE,
 		.get_interface_instance = arv_gv_interface_get_instance,
 		.destroy_interface_instance = arv_gv_interface_destroy_instance
+	},
+	{	.interface_id = "GenTL",
+		.is_available = TRUE,
+		.get_interface_instance = arv_gentl_interface_get_instance,
+		.destroy_interface_instance = arv_gentl_interface_destroy_instance
 	}
 };
 

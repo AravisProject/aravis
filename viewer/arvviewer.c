@@ -1294,6 +1294,9 @@ stop_video (ArvViewer *viewer)
 	if (ARV_IS_CAMERA (viewer->camera))
 		arv_camera_stop_acquisition (viewer->camera, NULL);
 
+	if (ARV_IS_STREAM (viewer->stream))
+		arv_stream_stop_acquisition (viewer->stream);
+
 	gtk_container_foreach (GTK_CONTAINER (viewer->video_frame), remove_widget, viewer->video_frame);
 
 	if (viewer->status_bar_update_event > 0) {
@@ -1392,6 +1395,7 @@ start_video (ArvViewer *viewer)
 	payload = arv_camera_get_payload (viewer->camera, NULL);
 	for (i = 0; i < ARV_VIEWER_N_BUFFERS; i++)
 		arv_stream_push_buffer (viewer->stream, arv_buffer_new (payload, NULL));
+        arv_stream_start_acquisition(viewer->stream);
 
 	set_camera_widgets(viewer);
 	pixel_format = arv_camera_get_pixel_format (viewer->camera, NULL);
