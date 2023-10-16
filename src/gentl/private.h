@@ -28,7 +28,7 @@ extern int gentl_GCInitLib;
 Almost all functions are supposed to return GC_ERROR_NOT_INITIALIZED without preceding GCInitLib call.
 Wrap that into a macro.
 */
-#define GENTL_ENSURE_INIT if(gentl_GCInitLib == 0) return GC_ERR_NOT_INITIALIZED
+#define GENTL_ENSURE_INIT if (gentl_GCInitLib == 0) return GC_ERR_NOT_INITIALIZED;
 
 
 /*
@@ -42,15 +42,15 @@ GQuark gentl_error_quark (void);
 /*
 Stubs for unimplemented functions.
 */
-#define GENTL_NYI \
+#define GENTL_NYI { \
 	arv_warning_gentl("%s not yet implemented.",__FUNCTION__); \
 	gentl_err = g_error_new (GENTL_ERROR, GC_ERR_NOT_IMPLEMENTED, "%s not yet implemented in Aravis GenTL", __FUNCTION__); \
-	return GC_ERR_NOT_IMPLEMENTED
+	return GC_ERR_NOT_IMPLEMENTED; }
 
-#define GENTL_NYI_DETAIL(fmt,...) \
+#define GENTL_NYI_DETAIL(fmt,...) { \
 	arv_warning_gentl("%s: not yet implemented: " fmt,__FUNCTION__,__VA_ARGS__); \
 	gentl_err = g_error_new (GENTL_ERROR, GC_ERR_NOT_IMPLEMENTED, "%s (Aravis GenTL) not yet implemented: " fmt,__FUNCTION__,__VA_ARGS__); \
-	return GC_ERR_NOT_IMPLEMENTED
+	return GC_ERR_NOT_IMPLEMENTED; }
 
 
 /*
@@ -58,6 +58,7 @@ Routine for copying anything into buffer.
 */
 size_t gentl_buf_size(INFO_DATATYPE,const void*);
 GC_ERROR gentl_to_buf(INFO_DATATYPE type, void* dst, const void* src, size_t* sz, INFO_DATATYPE *piType) G_GNUC_WARN_UNUSED_RESULT;
+
 
 /*
 Handle type for the transport layer (for the rest, we use corresponding Aravis types)
