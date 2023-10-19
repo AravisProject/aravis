@@ -40,6 +40,7 @@ enum
 };
 
 typedef struct {
+	char *id;
 	char *name;
 	IF_HANDLE handle;
 	grefcount ref_count;
@@ -67,8 +68,23 @@ struct _ArvGenTLSystemClass {
 
 G_DEFINE_TYPE_WITH_CODE (ArvGenTLSystem, arv_gentl_system, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvGenTLSystem))
 
+static char *
+_gentl_get_info_str(GC_ERROR(*func)(void*, const char *, int32_t, int32_t*, void*, size_t*), void *handle, const char *id, BUFFER_INFO_CMD info_cmd)
+{
+	GC_ERROR error;
+	INFO_DATATYPE type;
+	size_t size;
+	char *value = NULL;
+	error = func(handle, id, info_cmd, &type, NULL, &size);
+	if (error == GC_ERR_SUCCESS) {
+		value = g_malloc0(size);
+		func(handle, id, info_cmd, &type, value, &size);
+	}
+	return value;
+}
+
 static Interface *
-interface_new(ArvGenTLSystem *system, const char *name)
+interface_new(ArvGenTLSystem *system, const char *id)
 {
 	ArvGenTLSystemPrivate *priv = arv_gentl_system_get_instance_private (system);
 	IF_HANDLE handle = NULL;
@@ -76,20 +92,21 @@ interface_new(ArvGenTLSystem *system, const char *name)
 	GC_ERROR error;
 
 	g_return_val_if_fail (system != NULL, NULL);
-	g_return_val_if_fail (name != NULL, NULL);
+	g_return_val_if_fail (id != NULL, NULL);
 
 	arv_gentl_system_open_system_handle(system);
 
-	arv_info_interface("Open interface '%s'", name);
+	arv_info_interface("TLOpenInterface '%s'", id);
 
-	error = priv->gentl.TLOpenInterface(priv->system_handle, name, &handle);
+	error = priv->gentl.TLOpenInterface(priv->system_handle, id, &handle);
 	if (error != GC_ERR_SUCCESS) {
-		arv_warning_interface("TLOpenInterface('%s'): %d", name, error);
+		arv_warning_interface("TLOpenInterface('%s'): %d", id, error);
 		return NULL;
 	}
 
 	interface = g_new (Interface, 1);
-	interface->name = g_strdup(name);
+	interface->id = g_strdup(id);
+	interface->name = _gentl_get_info_str(priv->gentl.TLGetInterfaceInfo, handle, id, INTERFACE_INFO_DISPLAYNAME);
 	interface->handle = handle;
 	interface->system = system;
 	interface->ref_count = 1;
@@ -118,11 +135,12 @@ interface_unref(Interface *interface)
 
 	if (g_atomic_int_dec_and_test (&interface->ref_count)) {
 		ArvGenTLSystemPrivate *priv = arv_gentl_system_get_instance_private (interface->system);
-		arv_info_interface("Close interface %s", interface->name);
+		arv_info_interface("IFClose '%s'", interface->id);
 		error = priv->gentl.IFClose(interface->handle);
 		if (error != GC_ERR_SUCCESS)
 			arv_warning_interface("IFClose: %d", error);
 		arv_gentl_system_close_system_handle(interface->system);
+		g_clear_pointer (&interface->id, g_free);
 		g_clear_pointer (&interface->name, g_free);
 		g_clear_pointer (&interface, g_free);
 	}
@@ -265,12 +283,12 @@ arv_gentl_system_open_system_handle(ArvGenTLSystem *system)
 	GC_ERROR error;
 
 	if (!priv->system_handle) {
-		TL_HANDLE handle;
+		TL_HANDLE handle = NULL;
+		arv_info_interface("TLOpen: %s", priv->filename);
 		error = gentl->TLOpen(&handle);
 		if (error != GC_ERR_SUCCESS)
 			arv_warning_interface("TLOpen: %d", error);
 		priv->system_handle = handle;
-		arv_info_interface("TLOpen: %s", priv->filename);
 	}
 	g_atomic_int_inc(&priv->ref_count);
 	return priv->system_handle;
@@ -293,17 +311,13 @@ arv_gentl_system_close_system_handle(ArvGenTLSystem *system)
 	}
 }
 
-DEV_HANDLE
-arv_gentl_system_open_device_handle(ArvGenTLSystem *system, const char *interface_id, const char *device_id)
+IF_HANDLE
+arv_gentl_system_open_interface_handle(ArvGenTLSystem *system, const char *interface_id)
 {
 	ArvGenTLSystemPrivate *priv = arv_gentl_system_get_instance_private (system);
-	ArvGenTLModule *gentl = &priv->gentl;
 	Interface *interface = NULL;
-	DEV_HANDLE device_handle = NULL;
-	GC_ERROR error;
 
-	/* Check whether interface is open */
-	interface= g_hash_table_lookup(priv->interfaces, interface_id);
+	interface = g_hash_table_lookup(priv->interfaces, interface_id);
 	if (interface == NULL) {
 		interface = interface_new(system, interface_id);
 		if (interface == NULL)
@@ -313,8 +327,40 @@ arv_gentl_system_open_device_handle(ArvGenTLSystem *system, const char *interfac
 		interface_ref(interface);
 	}
 
+	return interface->handle;
+}
+
+void
+arv_gentl_system_close_interface_handle(ArvGenTLSystem *system, const char *interface_id)
+{
+	ArvGenTLSystemPrivate *priv = arv_gentl_system_get_instance_private (system);
+	Interface *interface = NULL;
+
+	interface = g_hash_table_lookup(priv->interfaces, interface_id);
+	if (interface) {
+		/* If this is the last reference to this interface,
+		   removing it from hashtable triggers the destruction. */
+		if (interface->ref_count == 1)
+			g_hash_table_remove(priv->interfaces, interface_id);
+		else
+			interface_unref(interface);
+	}
+}
+
+DEV_HANDLE
+arv_gentl_system_open_device_handle(ArvGenTLSystem *system, const char *interface_id, const char *device_id)
+{
+	ArvGenTLSystemPrivate *priv = arv_gentl_system_get_instance_private (system);
+	ArvGenTLModule *gentl = &priv->gentl;
+	IF_HANDLE interface_handle = NULL;
+	DEV_HANDLE device_handle = NULL;
+	GC_ERROR error;
+
+	/* Get interface handle */
+	interface_handle = arv_gentl_system_open_interface_handle(system, interface_id);
+
 	arv_info_interface("IFOpenDevice: '%s'", device_id);
-	error = gentl->IFOpenDevice(interface->handle, device_id, DEVICE_ACCESS_CONTROL, &device_handle);
+	error = gentl->IFOpenDevice(interface_handle, device_id, DEVICE_ACCESS_CONTROL, &device_handle);
 	if (error != GC_ERR_SUCCESS) {
 		arv_warning_interface("IFOpenDevice: error %d", error);
 		return NULL;
@@ -327,21 +373,13 @@ arv_gentl_system_close_device_handle(ArvGenTLSystem *system, const char *interfa
 {
 	ArvGenTLSystemPrivate *priv = arv_gentl_system_get_instance_private (system);
 	ArvGenTLModule *gentl = &priv->gentl;
-	Interface *interface = NULL;
 	GC_ERROR error;
 
 	error = gentl->DevClose(device_handle);
 	if (error != GC_ERR_SUCCESS)
 		arv_warning_interface("DevClose error %d", error);
 
-	/* Check whether interface is open */
-	interface = g_hash_table_lookup(priv->interfaces, interface_id);
-	if (interface) {
-		interface_unref(interface);
-		/* If this is the last reference to this interface,  */
-		if (interface->ref_count == 0)
-			g_hash_table_remove(priv->interfaces, interface_id);
-	}
+	arv_gentl_system_close_interface_handle(system, interface_id);
 }
 
 static void
@@ -355,7 +393,7 @@ arv_gentl_system_init (ArvGenTLSystem *system)
 	priv->filename = NULL;
 	priv->module = NULL;
 	priv->is_valid = FALSE;
-	priv->interfaces = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+	priv->interfaces = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)interface_unref);
 	memset(&priv->gentl, 0, sizeof(ArvGenTLModule));
 }
 
@@ -375,7 +413,7 @@ arv_gentl_system_constructed (GObject *object)
 
 	G_OBJECT_CLASS (arv_gentl_system_parent_class)->constructed (object);
 
-	arv_info_interface("Open %s", priv->filename);
+	arv_info_interface("Open module %s", priv->filename);
 	module = g_module_open(priv->filename, G_MODULE_BIND_LOCAL | G_MODULE_BIND_LAZY);
 	if (module == NULL) {
 		arv_warning_interface("Failed to load GenTL: %s\n", g_module_error());

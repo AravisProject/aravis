@@ -132,20 +132,55 @@ struct _ArvGenTLInterfaceClass {
 
 G_DEFINE_TYPE_WITH_CODE (ArvGenTLInterface, arv_gentl_interface, ARV_TYPE_INTERFACE, G_ADD_PRIVATE (ArvGenTLInterface))
 
-static gboolean
-_gentl_get_info_4(void(*func)(void *handle, int32_t, int32_t*, void*, size_t*), void* handle, int32_t cmd, void*value)
+static char *
+_gentl_get_info_str(GC_ERROR(*func)(void*, const char *, int32_t, int32_t*, void*, size_t*), void *interface, const char *device, BUFFER_INFO_CMD info_cmd)
 {
-	int32_t type;
+	GC_ERROR error;
+	INFO_DATATYPE type;
 	size_t size;
-	func(handle, cmd, &type, value, &size);
+	char *value = NULL;
+	error = func(interface, device, info_cmd, &type, NULL, &size);
+	if (error == GC_ERR_SUCCESS) {
+		value = g_malloc0(size);
+		func(interface, device, info_cmd, &type, value, &size);
+	}
+	return value;
 }
 
-#define _gentl_cnt(_1,_2,_3,_4,_5,_6,_7,_8,_9,_N, ...) _N
-#define _gentl_argn(...) _gentl_cnt(dummy, ## __VA_ARGS__, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
+static char *
+_gentl_get_id(GC_ERROR(*func)(void*, uint32_t, char*, size_t*), void *handle, uint32_t index)
+{
+	GC_ERROR error;
+	size_t size;
+	char *value = NULL;
+	error = func(handle, index, NULL, &size);
+	if (error == GC_ERR_SUCCESS) {
+		value = g_malloc0(size);
+		func(handle, index, value, &size);
+	}
+	return value;
+}
 
-#define _gentl_get_info(FUNC, CMD, VALUE, ...) _gentl_get_info_##_gentl_argn(__VAR_ARGS__)
-#define _gentl_get_info_1(FUNC, CMD, VALUE, HANDLE) FUNC(HANDLE, CMD, VALUE)
-#define _gentl_get_info_2(FUNC, CMD, VALUE, HANDLE, INDEX) FUNC(HANDLE, INDEX, CMD, VALUE)
+static uint32_t
+_gentl_refresh(GC_ERROR(*update)(void*, bool8_t *, uint64_t), GC_ERROR(*get)(void*, uint32_t*), void *handle)
+{
+	GC_ERROR error;
+	uint32_t num = 0;
+
+	error = update(handle, NULL, 100);
+	if (error != GC_ERR_SUCCESS) {
+		arv_warning_interface("_gentl_refresh: update %d", error);
+		return 0;
+	}
+
+	error = get(handle, &num);
+	if (error != GC_ERR_SUCCESS) {
+		arv_warning_interface("_gentl_refresh: get %d", error);
+		return 0;
+	}
+
+	return num;
+}
 
 static void
 arv_gentl_interface_update_device_list (ArvInterface *interface, GArray *device_ids)
@@ -153,64 +188,75 @@ arv_gentl_interface_update_device_list (ArvInterface *interface, GArray *device_
 	ArvGenTLInterfacePrivate *priv = arv_gentl_interface_get_instance_private(ARV_GENTL_INTERFACE (interface));
 	GList *gentl_systems = arv_gentl_get_systems();
 	GList *gentl_systems_iter;
-	ArvGenTLInterfaceDeviceInfos *device;
-	ArvInterfaceDeviceIds *ids;
 
 	g_assert (device_ids->len == 0);
 
 	g_hash_table_remove_all (priv->devices);
 
+	/* Iterate over all discovered GenTL systems */
 	for ( gentl_systems_iter = gentl_systems; gentl_systems_iter; gentl_systems_iter = g_list_next(gentl_systems_iter) ) {
 		ArvGenTLSystem *gentl_system = gentl_systems_iter->data;
-
 		ArvGenTLModule * gentl = arv_gentl_system_get_gentl(gentl_system);
-	
 		TL_HANDLE system_handle = arv_gentl_system_open_system_handle(gentl_system);
+		uint32_t num_interfaces = _gentl_refresh(gentl->TLUpdateInterfaceList, gentl->TLGetNumInterfaces, system_handle);
 
-		IF_HANDLE interface_handle;
-		uint32_t i, j, num_interfaces, num_devices;
-		size_t size;
+		/* Iterate over all interfaces of a GenTL system */
+		for (uint32_t i=0; i<num_interfaces; i++) {
+			char *interface_id, *interface_type;
+			uint32_t num_devices = 0;
+			IF_HANDLE interface_handle;
 
-		gentl->TLUpdateInterfaceList(system_handle, NULL, 100);
-		gentl->TLGetNumInterfaces(system_handle, &num_interfaces);
+			interface_id = _gentl_get_id(gentl->TLGetInterfaceID, system_handle, i);
+			if (interface_id == NULL)
+				continue;
 
-		for (i=0; i<num_interfaces; i++) {
-			char interface_id[1024], interface_type[1024];
-			INTERFACE_INFO_CMD info_datatype;
-			size=1024;gentl->TLGetInterfaceID(system_handle, i, interface_id, &size);
-			size=1024;gentl->TLGetInterfaceInfo(system_handle, interface_id, INTERFACE_INFO_TLTYPE, &info_datatype, interface_type, &size);
+			interface_type = _gentl_get_info_str(gentl->TLGetInterfaceInfo, system_handle, interface_id, INTERFACE_INFO_TLTYPE);
 
-			gentl->TLOpenInterface(system_handle, interface_id, &interface_handle);
-			gentl->IFUpdateDeviceList(interface_handle, NULL, 100);
-			gentl->IFGetNumDevices(interface_handle, &num_devices);
-			arv_info_interface ("Interface: %s (%s)", interface_id, interface_type);
-		
-			for (j=0; j<num_devices; j++) {
-				char device_id[1024], id[1024], model[1024], vendor[1024], serial_nbr[1024];
-				size_t size = 1024;
-				INFO_DATATYPE info_datatype;
-				gentl->IFGetDeviceID(interface_handle, j, device_id, &size);
-				arv_info_interface ("  Device: %s", device_id);
+			interface_handle = arv_gentl_system_open_interface_handle(gentl_system, interface_id);
+			if (interface_handle == NULL) {
+				g_clear_pointer(&interface_id, g_free);
+				g_clear_pointer(&interface_type, g_free);
+				continue;
+			}
 
-				size=1024;gentl->IFGetDeviceInfo(interface_handle, device_id, DEVICE_INFO_ID, &info_datatype, id, &size);
-				size=1024;gentl->IFGetDeviceInfo(interface_handle, device_id, DEVICE_INFO_VENDOR, &info_datatype, vendor, &size);
-				size=1024;gentl->IFGetDeviceInfo(interface_handle, device_id, DEVICE_INFO_MODEL, &info_datatype, model, &size);
-				size=1024;gentl->IFGetDeviceInfo(interface_handle, device_id, DEVICE_INFO_SERIAL_NUMBER, &info_datatype, serial_nbr, &size);
+			num_devices = _gentl_refresh(gentl->IFUpdateDeviceList, gentl->IFGetNumDevices, interface_handle);
 
-				device =  arv_gentl_interface_device_infos_new(gentl_system, interface_id, id, vendor, model, serial_nbr);
-				g_hash_table_replace(priv->devices, device->id, arv_gentl_interface_device_infos_ref(device));
+			/* Iterate over all devices of a GenTL interface */
+			for (uint32_t j=0; j<num_devices; j++) {
+				char *device_id, *id, *model, *vendor, *serial_nbr;
+				ArvGenTLInterfaceDeviceInfos *device_info;
+				ArvInterfaceDeviceIds *ids;
+
+				device_id = _gentl_get_id(gentl->IFGetDeviceID, interface_handle, j);
+
+				id = _gentl_get_info_str(gentl->IFGetDeviceInfo, interface_handle, device_id, DEVICE_INFO_ID);
+				model = _gentl_get_info_str(gentl->IFGetDeviceInfo, interface_handle, device_id, DEVICE_INFO_MODEL);
+				vendor = _gentl_get_info_str(gentl->IFGetDeviceInfo, interface_handle, device_id, DEVICE_INFO_VENDOR);
+				serial_nbr =  _gentl_get_info_str(gentl->IFGetDeviceInfo, interface_handle, device_id, DEVICE_INFO_SERIAL_NUMBER);
+
+				arv_info_interface ("Device: %s", device_id);
+				arv_info_interface ("  ID: %s", id);
+				arv_info_interface ("  VENDOR: %s", vendor);
+				arv_info_interface ("  MODEL: %s", model);
+				arv_info_interface ("  S/N: %s", serial_nbr);
+
+				device_info =  arv_gentl_interface_device_infos_new(gentl_system, interface_id, id, vendor, model, serial_nbr);
+				g_hash_table_replace(priv->devices, device_info->id, arv_gentl_interface_device_infos_ref(device_info));
 
 				ids = g_new0 (ArvInterfaceDeviceIds, 1);
-				ids->device = g_strdup(id);
-				ids->model = g_strdup (model);
-				ids->vendor = g_strdup (vendor);
-				ids->physical = g_strdup(interface_type);
-				ids->serial_nbr = g_strdup (serial_nbr);
+				ids->device = id;
+				ids->model = model;
+				ids->vendor = vendor;
+				ids->serial_nbr = serial_nbr;
+				ids->address = g_strdup(interface_type);
 				g_array_append_val (device_ids, ids);
 
-				arv_gentl_interface_device_infos_unref(device);
+				arv_gentl_interface_device_infos_unref(device_info);
 			}
-			gentl->IFClose(interface_handle);
+			arv_gentl_system_close_interface_handle(gentl_system, interface_id);
+
+			g_clear_pointer(&interface_id, g_free);
+			g_clear_pointer(&interface_type, g_free);
 		}
 		arv_gentl_system_close_system_handle(gentl_system);
 	}

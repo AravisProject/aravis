@@ -31,8 +31,8 @@
 
 G_BEGIN_DECLS
 
-void *arv_gentl_device_open_stream(ArvGenTLDevice *device);
-ArvGenTLSystem *arv_gentl_device_get_system(ArvGenTLDevice *device);
+DS_HANDLE	arv_gentl_device_open_stream(ArvGenTLDevice *device);
+ArvGenTLSystem 	*arv_gentl_device_get_system(ArvGenTLDevice *device);
 
 G_END_DECLS
 

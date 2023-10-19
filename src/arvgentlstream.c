@@ -120,7 +120,7 @@ _gentl_buffer_to_arv_buffer(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_
 {
 	size_t payload_type = PAYLOAD_TYPE_UNKNOWN;
 	size_t data_size, actual_size, image_offset, width, height, x_offset, y_offset, x_padding, y_padding;
-	uint64_t pixel_format, timestamp = 0;
+	uint64_t pixel_format, frame_id, timestamp = 0;
 	void *data;
 
 	_gentl_buffer_info_sizet(gentl, datastream, gentl_buffer, BUFFER_INFO_PAYLOADTYPE, &payload_type);
@@ -132,7 +132,8 @@ _gentl_buffer_to_arv_buffer(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_
 		return;
 	}
 
-	_gentl_buffer_info_uint64(gentl, datastream, gentl_buffer, BUFFER_INFO_FRAMEID, &arv_buffer->priv->frame_id);
+	_gentl_buffer_info_uint64(gentl, datastream, gentl_buffer, BUFFER_INFO_FRAMEID, &frame_id);
+	arv_buffer->priv->frame_id = frame_id;
 	
 	if (!_gentl_buffer_info_uint64(gentl, datastream, gentl_buffer, BUFFER_INFO_TIMESTAMP_NS, &timestamp))
 		_gentl_buffer_info_uint64(gentl, datastream, gentl_buffer, BUFFER_INFO_TIMESTAMP, &timestamp);

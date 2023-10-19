@@ -103,15 +103,24 @@ typedef struct {
     PEventKill                 EventKill;
 } ArvGenTLModule;
 
-ArvGenTLModule *arv_gentl_system_get_gentl(ArvGenTLSystem *system);
+GList *			arv_gentl_get_systems(void);
 
-GList *arv_gentl_get_systems(void);
+ArvGenTLModule *	arv_gentl_system_get_gentl(ArvGenTLSystem *system);
 
-TL_HANDLE arv_gentl_system_open_system_handle(ArvGenTLSystem *system);
-void arv_gentl_system_close_system_handle(ArvGenTLSystem *system);
+TL_HANDLE 		arv_gentl_system_open_system_handle(ArvGenTLSystem *system);
+void 			arv_gentl_system_close_system_handle(ArvGenTLSystem *system);
 
-DEV_HANDLE arv_gentl_system_open_device_handle(ArvGenTLSystem *system, const char *interface_id, const char *device_id);
-void arv_gentl_system_close_device_handle(ArvGenTLSystem *system, const char *interface_id, DEV_HANDLE *device_handle);
+IF_HANDLE		arv_gentl_system_open_interface_handle(ArvGenTLSystem *system,
+							       const char *interface_id);
+void 			arv_gentl_system_close_interface_handle(ArvGenTLSystem *system,
+							       const char *interface_id);
+
+DEV_HANDLE 		arv_gentl_system_open_device_handle(ArvGenTLSystem *system,
+							    const char *interface_id,
+							    const char *device_id);
+void 			arv_gentl_system_close_device_handle(ArvGenTLSystem *system,
+							     const char *interface_id,
+							     DEV_HANDLE *device_handle);
 
 G_END_DECLS
 
