@@ -65,8 +65,10 @@ typedef struct {
 
 typedef struct {
 	ArvGenTLDevice *gentl_device;
-	DS_HANDLE gentl_stream;
-	EVENT_HANDLE gentl_event;
+	DS_HANDLE stream_handle;
+	EVENT_HANDLE event_handle;
+	uint64_t timestamp_tick_frequency;
+
 	guint n_buffers;
 
 	GThread *thread;
@@ -109,14 +111,14 @@ static gboolean
 _gentl_buffer_info_uint64(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_HANDLE buffer, BUFFER_INFO_CMD info_cmd, uint64_t *value)
 {
 	GC_ERROR error;
-	INFO_DATATYPE type = INFO_DATATYPE_UINT64;
+	INFO_DATATYPE type;
 	size_t size = sizeof(uint64_t);
 	error = gentl->DSGetBufferInfo(datastream, buffer, info_cmd, &type, value, &size);
 	return error == GC_ERR_SUCCESS;
 }
 
 static void
-_gentl_buffer_to_arv_buffer(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_HANDLE gentl_buffer, ArvBuffer *arv_buffer)
+_gentl_buffer_to_arv_buffer(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_HANDLE gentl_buffer, ArvBuffer *arv_buffer, uint64_t timestamp_tick_frequency)
 {
 	size_t payload_type = PAYLOAD_TYPE_UNKNOWN;
 	size_t data_size, actual_size, image_offset, width, height, x_offset, y_offset, x_padding, y_padding;
@@ -135,8 +137,16 @@ _gentl_buffer_to_arv_buffer(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_
 	_gentl_buffer_info_uint64(gentl, datastream, gentl_buffer, BUFFER_INFO_FRAMEID, &frame_id);
 	arv_buffer->priv->frame_id = frame_id;
 	
-	if (!_gentl_buffer_info_uint64(gentl, datastream, gentl_buffer, BUFFER_INFO_TIMESTAMP_NS, &timestamp))
-		_gentl_buffer_info_uint64(gentl, datastream, gentl_buffer, BUFFER_INFO_TIMESTAMP, &timestamp);
+	if (!_gentl_buffer_info_uint64(gentl, datastream, gentl_buffer, BUFFER_INFO_TIMESTAMP_NS, &timestamp)) {
+		uint64_t timestamp_ticks = 0;
+		if (timestamp_tick_frequency &&
+		    _gentl_buffer_info_uint64(gentl, datastream, gentl_buffer, BUFFER_INFO_TIMESTAMP, &timestamp_ticks)) {
+			timestamp = timestamp_ticks / timestamp_tick_frequency * 1000000000
+				  + ((timestamp_ticks % timestamp_tick_frequency) * 1000000000) / timestamp_tick_frequency;
+		} else {
+			timestamp = g_get_real_time() * 1000LL;
+		}
+	}
 	arv_buffer->priv->timestamp_ns = timestamp;
 
 	_gentl_buffer_info_sizet(gentl, datastream, gentl_buffer, BUFFER_INFO_DATA_SIZE, &data_size);
@@ -197,7 +207,7 @@ _loop (ArvGenTLStreamThreadData *thread_data)
 	g_mutex_unlock (&thread_data->thread_started_mutex);
 
  
-	error = gentl->GCRegisterEvent(priv->gentl_stream, EVENT_NEW_BUFFER, &priv->gentl_event);
+	error = gentl->GCRegisterEvent(priv->stream_handle, EVENT_NEW_BUFFER, &priv->event_handle);
 	if (error != GC_ERR_SUCCESS) {
 		arv_warning_stream("GCRegisterEvent[NEW_BUFFER]: %d\n", error);
 		g_cancellable_cancel(thread_data->cancellable);
@@ -206,7 +216,7 @@ _loop (ArvGenTLStreamThreadData *thread_data)
 	do {
 		EVENT_NEW_BUFFER_DATA NewImageEventData = {NULL, NULL};
 		size_t size = sizeof(EVENT_NEW_BUFFER_DATA);
-		error = gentl->EventGetData(priv->gentl_event, &NewImageEventData, &size, SIZE_MAX);
+		error = gentl->EventGetData(priv->event_handle, &NewImageEventData, &size, GENTL_INFINITE);
 		if (error != GC_ERR_SUCCESS) {
 			arv_warning_stream("EventGetData[NEW_BUFFER]: %d\n", error);
 			break;
@@ -217,7 +227,7 @@ _loop (ArvGenTLStreamThreadData *thread_data)
 		thread_data->n_completed_buffers += 1;
 		thread_data->n_transferred_bytes += arv_buffer->priv->allocated_size;
 
-		_gentl_buffer_to_arv_buffer(gentl, priv->gentl_stream, gentl_buffer, arv_buffer);
+		_gentl_buffer_to_arv_buffer(gentl, priv->stream_handle, gentl_buffer, arv_buffer, priv->timestamp_tick_frequency);
 
 		arv_stream_push_output_buffer(thread_data->stream, arv_buffer);
 		if (thread_data->callback != NULL)
@@ -225,10 +235,10 @@ _loop (ArvGenTLStreamThreadData *thread_data)
 				ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
 				arv_buffer);
 
-		gentl->DSQueueBuffer(priv->gentl_stream, gentl_buffer);
+		gentl->DSQueueBuffer(priv->stream_handle, gentl_buffer);
 	} while (!g_cancellable_is_cancelled (thread_data->cancellable));
 
-	gentl->GCUnregisterEvent(priv->gentl_event, EVENT_NEW_BUFFER);
+	gentl->GCUnregisterEvent(priv->event_handle, EVENT_NEW_BUFFER);
 }
 
 static void *
@@ -312,12 +322,12 @@ arv_gentl_stream_start_acquisition (ArvStream *stream)
 
 	/* Allocate, announce and queue buffers */
 	for (guint i=0; i<priv->n_buffers; i++) {
-		error = gentl->DSAllocAndAnnounceBuffer(priv->gentl_stream, payload_size, NULL, &gentl_buffer);
+		error = gentl->DSAllocAndAnnounceBuffer(priv->stream_handle, payload_size, NULL, &gentl_buffer);
 		if (error != GC_ERR_SUCCESS) {
 			arv_warning_stream("[DSAllocaAndAnnounceBuffer]: %d", error);
 			break;
 		}
-		error = gentl->DSQueueBuffer(priv->gentl_stream, gentl_buffer);
+		error = gentl->DSQueueBuffer(priv->stream_handle, gentl_buffer);
 		if (error != GC_ERR_SUCCESS) {
 			arv_warning_stream("[DSQueueBuffer]: %d", error);
 			break;
@@ -325,7 +335,7 @@ arv_gentl_stream_start_acquisition (ArvStream *stream)
 	}
 
 	/* Start acquisition */
-	error = gentl->DSStartAcquisition(priv->gentl_stream, ACQ_START_FLAGS_DEFAULT, GENTL_INFINITE);
+	error = gentl->DSStartAcquisition(priv->stream_handle, ACQ_START_FLAGS_DEFAULT, GENTL_INFINITE);
 	if (error != GC_ERR_SUCCESS) {
 		arv_warning_stream("[DSStartAcquisition]: %d", error);
 	}
@@ -339,15 +349,15 @@ arv_gentl_stream_stop_acquisition(ArvStream *stream)
 	ArvGenTLModule *gentl = arv_gentl_system_get_gentl(gentl_system);
 	GC_ERROR error;
 
-	error = gentl->EventKill(priv->gentl_event);
-	error = gentl->DSStopAcquisition(priv->gentl_stream, ACQ_STOP_FLAGS_DEFAULT);
-	error = gentl->DSFlushQueue(priv->gentl_stream, ACQ_QUEUE_ALL_DISCARD);
+	error = gentl->EventKill(priv->event_handle);
+	error = gentl->DSStopAcquisition(priv->stream_handle, ACQ_STOP_FLAGS_DEFAULT);
+	error = gentl->DSFlushQueue(priv->stream_handle, ACQ_QUEUE_ALL_DISCARD);
 	do {
 		BUFFER_HANDLE gentl_buffer;
-		error = gentl->DSGetBufferID(priv->gentl_stream, 0, &gentl_buffer);
+		error = gentl->DSGetBufferID(priv->stream_handle, 0, &gentl_buffer);
 		if (error != GC_ERR_SUCCESS)
 			break;
-		gentl->DSRevokeBuffer(priv->gentl_stream, gentl_buffer, NULL, NULL);
+		gentl->DSRevokeBuffer(priv->stream_handle, gentl_buffer, NULL, NULL);
 	} while (1);
 }
 
@@ -379,6 +389,8 @@ arv_gentl_stream_init (ArvGenTLStream *gentl_stream)
 	ArvGenTLStreamPrivate *priv = arv_gentl_stream_get_instance_private (gentl_stream);
 
 	priv->thread_data = g_new0 (ArvGenTLStreamThreadData, 1);
+	priv->event_handle = NULL;
+	priv->stream_handle = NULL;
 	priv->n_buffers = ARV_GENTL_STREAM_DEFAULT_N_BUFFERS;
 }
 
@@ -429,7 +441,8 @@ arv_gentl_stream_constructed (GObject *object)
 		"callback-data", &priv->thread_data->callback_data,
 		NULL);
 
-	priv->gentl_stream = arv_gentl_device_open_stream(priv->gentl_device);
+	priv->stream_handle = arv_gentl_device_open_stream_handle(priv->gentl_device);
+	priv->timestamp_tick_frequency = arv_gentl_device_get_timestamp_tick_frequency(priv->gentl_device);
 	priv->thread_data->stream = stream;
 
 	arv_stream_declare_info (stream, "n_completed_buffers",
@@ -454,7 +467,7 @@ arv_gentl_stream_finalize (GObject *object)
 
 	/* Close the data stream. */
 	arv_info_stream("Close stream");
-	error = gentl->DSClose(priv->gentl_stream);
+	error = gentl->DSClose(priv->stream_handle);
 	if (error != GC_ERR_SUCCESS) {
 		arv_warning_stream ("DSClose: %d", error);
 	}

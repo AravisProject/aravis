@@ -68,8 +68,24 @@ struct _ArvGenTLDeviceClass {
 
 G_DEFINE_TYPE_WITH_CODE (ArvGenTLDevice, arv_gentl_device, ARV_TYPE_DEVICE, G_ADD_PRIVATE (ArvGenTLDevice))
 
+uint64_t
+arv_gentl_device_get_timestamp_tick_frequency(ArvGenTLDevice *device)
+{
+	ArvGenTLDevicePrivate *priv = arv_gentl_device_get_instance_private (device);
+	ArvGenTLModule *gentl = arv_gentl_system_get_gentl(priv->gentl_system);
+
+	uint64_t timestamp_tick_frequency = 0;
+	INFO_DATATYPE type;
+	size_t size;
+	GC_ERROR error;
+
+	error = gentl->DevGetInfo(priv->device_handle, DEVICE_INFO_TIMESTAMP_FREQUENCY, &type, &timestamp_tick_frequency, &size);
+
+	return error == GC_ERR_SUCCESS ? timestamp_tick_frequency : 0;
+}
+
 DS_HANDLE
-arv_gentl_device_open_stream(ArvGenTLDevice *device)
+arv_gentl_device_open_stream_handle(ArvGenTLDevice *device)
 {
 	ArvGenTLDevicePrivate *priv = arv_gentl_device_get_instance_private (device);
 	ArvGenTLModule *gentl = arv_gentl_system_get_gentl(priv->gentl_system);
