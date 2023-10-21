@@ -221,7 +221,7 @@ _loop (ArvGenTLStreamThreadData *thread_data)
 		error = gentl->EventGetData(priv->event_handle, &NewImageEventData, &size, GENTL_INFINITE);
 		if (error != GC_ERR_SUCCESS) {
 			arv_warning_stream("EventGetData[NEW_BUFFER]: %d\n", error);
-			break;
+			continue;
 		}
 
 		gentl_buffer = NewImageEventData.BufferHandle;
@@ -365,7 +365,7 @@ arv_gentl_stream_stop_acquisition(ArvStream *stream)
 		arv_warning_stream("EventKill: %d", error);
 
 	error = gentl->DSStopAcquisition(priv->stream_handle, ACQ_STOP_FLAGS_DEFAULT);
-	if (error != GC_ERR_SUCCESS)
+	if (error != GC_ERR_SUCCESS && error != GC_ERR_RESOURCE_IN_USE)
 		arv_warning_stream("DSStopAcquisition: %d", error);
 
 	error = gentl->DSFlushQueue(priv->stream_handle, ACQ_QUEUE_ALL_DISCARD);
