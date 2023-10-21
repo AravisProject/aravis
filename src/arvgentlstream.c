@@ -297,6 +297,8 @@ static void
 arv_gentl_stream_stop_thread (ArvStream *stream)
 {
 	ArvGenTLStreamPrivate *priv = arv_gentl_stream_get_instance_private (ARV_GENTL_STREAM (stream));
+	ArvGenTLSystem *gentl_system = arv_gentl_device_get_system(priv->gentl_device);
+	ArvGenTLModule *gentl = arv_gentl_system_get_gentl(gentl_system);
 	ArvGenTLStreamThreadData *thread_data;
 
 	g_return_if_fail (priv->thread != NULL);
@@ -305,6 +307,7 @@ arv_gentl_stream_stop_thread (ArvStream *stream)
 	thread_data = priv->thread_data;
 
 	g_cancellable_cancel (thread_data->cancellable);
+	gentl->EventKill(priv->event_handle);
 	g_thread_join (priv->thread);
 	g_clear_object (&thread_data->cancellable);
 
