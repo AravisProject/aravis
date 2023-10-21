@@ -1284,18 +1284,18 @@ stop_video (ArvViewer *viewer)
 	if (ARV_IS_STREAM (viewer->stream))
 		arv_stream_set_emit_signals (viewer->stream, FALSE);
 
+	if (ARV_IS_CAMERA (viewer->camera))
+		arv_camera_stop_acquisition (viewer->camera, NULL);
+
+	if (ARV_IS_STREAM (viewer->stream))
+		arv_stream_stop_acquisition (viewer->stream);
+
 	g_clear_object (&viewer->stream);
 	g_clear_object (&viewer->pipeline);
 
 	viewer->appsrc = NULL;
 
 	g_clear_object (&viewer->last_buffer);
-
-	if (ARV_IS_CAMERA (viewer->camera))
-		arv_camera_stop_acquisition (viewer->camera, NULL);
-
-	if (ARV_IS_STREAM (viewer->stream))
-		arv_stream_stop_acquisition (viewer->stream);
 
 	gtk_container_foreach (GTK_CONTAINER (viewer->video_frame), remove_widget, viewer->video_frame);
 
