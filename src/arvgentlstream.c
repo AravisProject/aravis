@@ -56,6 +56,8 @@ typedef struct {
 	/* Statistics */
 	guint64 n_completed_buffers;
 	guint64 n_failures;
+	guint64 n_underruns;
+
 	guint64 n_transferred_bytes;
 
 	/* Notification for completed transfers and cancellation */
@@ -221,19 +223,28 @@ _loop (ArvGenTLStreamThreadData *thread_data)
 			arv_warning_stream("EventGetData[NEW_BUFFER]: %d\n", error);
 			break;
 		}
-	
-		arv_buffer = arv_stream_pop_input_buffer (thread_data->stream);
+
 		gentl_buffer = NewImageEventData.BufferHandle;
-		thread_data->n_completed_buffers += 1;
-		thread_data->n_transferred_bytes += arv_buffer->priv->allocated_size;
 
-		_gentl_buffer_to_arv_buffer(gentl, priv->stream_handle, gentl_buffer, arv_buffer, priv->timestamp_tick_frequency);
+		arv_buffer = arv_stream_pop_input_buffer (thread_data->stream);
+		if (arv_buffer) {
+			_gentl_buffer_to_arv_buffer(gentl, priv->stream_handle, gentl_buffer, arv_buffer, priv->timestamp_tick_frequency);
 
-		arv_stream_push_output_buffer(thread_data->stream, arv_buffer);
-		if (thread_data->callback != NULL)
-			thread_data->callback (thread_data->callback_data,
-				ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
-				arv_buffer);
+			if (arv_buffer->priv->status == ARV_BUFFER_STATUS_SUCCESS)
+				thread_data->n_completed_buffers += 1;
+			else
+				thread_data->n_failures += 1;
+
+			thread_data->n_transferred_bytes += arv_buffer->priv->allocated_size;
+
+			arv_stream_push_output_buffer(thread_data->stream, arv_buffer);
+			if (thread_data->callback != NULL)
+				thread_data->callback (thread_data->callback_data,
+					ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
+					arv_buffer);
+		} else {
+			thread_data->n_underruns += 1;
+		}
 
 		gentl->DSQueueBuffer(priv->stream_handle, gentl_buffer);
 	} while (!g_cancellable_is_cancelled (thread_data->cancellable));
@@ -350,8 +361,17 @@ arv_gentl_stream_stop_acquisition(ArvStream *stream)
 	GC_ERROR error;
 
 	error = gentl->EventKill(priv->event_handle);
+	if (error != GC_ERR_SUCCESS)
+		arv_warning_stream("EventKill: %d", error);
+
 	error = gentl->DSStopAcquisition(priv->stream_handle, ACQ_STOP_FLAGS_DEFAULT);
+	if (error != GC_ERR_SUCCESS)
+		arv_warning_stream("DSStopAcquisition: %d", error);
+
 	error = gentl->DSFlushQueue(priv->stream_handle, ACQ_QUEUE_ALL_DISCARD);
+	if (error != GC_ERR_SUCCESS)
+		arv_warning_stream("DSFlushQueue: %d", error);
+
 	do {
 		BUFFER_HANDLE gentl_buffer;
 		error = gentl->DSGetBufferID(priv->stream_handle, 0, &gentl_buffer);
@@ -449,6 +469,8 @@ arv_gentl_stream_constructed (GObject *object)
 				 G_TYPE_UINT64, &priv->thread_data->n_completed_buffers);
 	arv_stream_declare_info (stream, "n_failures",
 				 G_TYPE_UINT64, &priv->thread_data->n_failures);
+	arv_stream_declare_info (stream, "n_underruns",
+				 G_TYPE_UINT64, &priv->thread_data->n_underruns);
 	arv_stream_declare_info (stream, "n_transferred_bytes",
 				 G_TYPE_UINT64, &priv->thread_data->n_transferred_bytes);
 
