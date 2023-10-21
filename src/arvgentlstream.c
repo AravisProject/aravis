@@ -463,6 +463,7 @@ arv_gentl_stream_finalize (GObject *object)
 	ArvGenTLModule *gentl = arv_gentl_system_get_gentl(gentl_system);
 	GC_ERROR error;
 
+	arv_gentl_stream_stop_acquisition (ARV_STREAM (object));
 	arv_gentl_stream_stop_thread (ARV_STREAM (object));
 
 	/* Close the data stream. */
