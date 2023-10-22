@@ -88,6 +88,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #  if defined(_WIN32)
 #    if defined(_MSC_VER) && _MSC_VER >= 1600 /* VS2010 provides stdint.h */
 #      include <stdint.h>
+#    elif defined(__MINGW32__) || defined(__MINGW64__)
+#      include <stdint.h>
 #    elif !defined _STDINT_H && !defined _STDINT
        /* stdint.h is usually not available under Windows */
        typedef unsigned char uint8_t;
