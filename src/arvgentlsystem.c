@@ -497,6 +497,7 @@ arv_gentl_system_constructed (GObject *object)
 	return;
 	} while (0);
 
+	g_module_close(module);
 	memset(&priv->gentl, 0, sizeof(ArvGenTLModule));
 }
 
@@ -511,14 +512,16 @@ arv_gentl_system_finalize (GObject *object)
 
 	g_hash_table_unref (priv->interfaces);
 
-	error = priv->gentl.GCCloseLib();
-	if (error)
-		arv_warning_interface("GCCloseLib %d\n", error);
+	if (priv->is_valid) {
+		error = priv->gentl.GCCloseLib();
+		if (error)
+			arv_warning_interface("GCCloseLib %d\n", error);
 
-	priv->is_valid = FALSE;
-	if (!g_module_close(priv->module))
-		arv_warning_interface("Error in close modules \"%s\"", priv->filename);
+		priv->is_valid = FALSE;
+		if (!g_module_close(priv->module))
+			arv_warning_interface("Error in close modules \"%s\"", priv->filename);
 
+	}
 	g_free(priv->filename);
 
 	G_OBJECT_CLASS (arv_gentl_system_parent_class)->finalize (object);
