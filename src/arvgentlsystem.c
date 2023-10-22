@@ -106,7 +106,7 @@ interface_new(ArvGenTLSystem *system, const char *id)
 
 	interface = g_new (Interface, 1);
 	interface->id = g_strdup(id);
-	interface->name = _gentl_get_info_str(priv->gentl.TLGetInterfaceInfo, handle, id, INTERFACE_INFO_DISPLAYNAME);
+	interface->name = _gentl_get_info_str(priv->gentl.TLGetInterfaceInfo, priv->system_handle, id, INTERFACE_INFO_DISPLAYNAME);
 	interface->handle = handle;
 	interface->system = system;
 	interface->ref_count = 1;
