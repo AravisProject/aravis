@@ -241,14 +241,14 @@ _load_genicam (ArvGenTLDevice *gentl_device, size_t  *size)
 	ArvGenTLDevicePrivate *priv = arv_gentl_device_get_instance_private (gentl_device);
 	ArvGenTLModule *gentl = arv_gentl_system_get_gentl(priv->gentl_system);
 
-	char filename[PATH_MAX];
+	char filename[1024];
+	size_t filename_size = 1024;
 	char *genicam = NULL;
 	char *scheme = NULL;
 	char *path = NULL;
 	guint64 file_address;
 	guint64 file_size;
 	INFO_DATATYPE info_data_type;
-	size_t filename_size;
         GC_ERROR error;
 
 	g_return_val_if_fail (size != NULL, NULL);
@@ -263,7 +263,7 @@ _load_genicam (ArvGenTLDevice *gentl_device, size_t  *size)
 
 	arv_info_device ("[GenTLDevice::load_genicam] xml url = '%s'", filename);
 
-	arv_parse_genicam_url (filename, filename_size, &scheme, NULL, &path, NULL, NULL, &file_address, &file_size);
+	arv_parse_genicam_url (filename, -1, &scheme, NULL, &path, NULL, NULL, &file_address, &file_size);
 
 	if (g_ascii_strcasecmp (scheme, "file") == 0) {
 		gsize len;
