@@ -255,7 +255,7 @@ _discover (ArvGenTLInterface *gentl_interface, GArray *device_ids)
 					g_free(vendor);
 					g_free(serial_nbr);
 				}
-
+				g_clear_pointer(&device_id, g_free);
 				arv_gentl_interface_device_infos_unref(device_info);
 			}
 			arv_gentl_system_close_interface_handle(gentl_system, interface_id);
