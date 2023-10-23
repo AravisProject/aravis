@@ -100,6 +100,16 @@ _gentl_buffer_info_ptr(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_HANDL
 }
 
 static gboolean
+_gentl_buffer_info_bool8(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_HANDLE buffer, BUFFER_INFO_CMD info_cmd, bool8_t *value)
+{
+	GC_ERROR error;
+	INFO_DATATYPE type;
+	size_t size = sizeof(bool8_t);
+	error = gentl->DSGetBufferInfo(datastream, buffer, info_cmd, &type, value, &size);
+	return error == GC_ERR_SUCCESS;
+}
+
+static gboolean
 _gentl_buffer_info_sizet(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_HANDLE buffer, BUFFER_INFO_CMD info_cmd, size_t *value)
 {
 	GC_ERROR error;
@@ -123,6 +133,7 @@ static void
 _gentl_buffer_to_arv_buffer(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_HANDLE gentl_buffer, ArvBuffer *arv_buffer, uint64_t timestamp_tick_frequency)
 {
 	size_t payload_type = PAYLOAD_TYPE_UNKNOWN;
+	bool8_t has_chunks = FALSE;
 	size_t data_size, actual_size, image_offset, width, height, x_offset, y_offset, x_padding, y_padding;
 	uint64_t pixel_format, frame_id, timestamp = 0;
 	void *data;
@@ -160,6 +171,9 @@ _gentl_buffer_to_arv_buffer(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_
 			arv_buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_UNKNOWN;
 			break;
 	}
+
+	_gentl_buffer_info_bool8(gentl, datastream, gentl_buffer, BUFFER_INFO_CONTAINS_CHUNKDATA, &has_chunks);
+	arv_buffer->priv->has_chunks = has_chunks || payload_type == PAYLOAD_TYPE_CHUNK_DATA;
 
 	if (payload_type == PAYLOAD_TYPE_MULTI_PART) {
 		arv_warning_stream_thread("Multi-Part payload not supported");
