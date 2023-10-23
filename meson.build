@@ -1,4 +1,4 @@
-project ('aravis', 'c', 'cpp', version: '0.8.30', meson_version: '>=0.57.0')
+project ('aravis', 'c', 'cpp', version: '0.8.31', meson_version: '>=0.57.0')
 
 gnome = import('gnome')
 pkg = import ('pkgconfig')
