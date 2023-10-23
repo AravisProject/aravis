@@ -95,6 +95,7 @@ _gentl_buffer_info_ptr(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_HANDL
 	GC_ERROR error;
 	INFO_DATATYPE type;
 	size_t size = sizeof(void*);
+	*value = NULL;
 	error = gentl->DSGetBufferInfo(datastream, buffer, info_cmd, &type, value, &size);
 	return error == GC_ERR_SUCCESS;
 }
@@ -105,6 +106,7 @@ _gentl_buffer_info_bool8(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_HAN
 	GC_ERROR error;
 	INFO_DATATYPE type;
 	size_t size = sizeof(bool8_t);
+	*value = 0;
 	error = gentl->DSGetBufferInfo(datastream, buffer, info_cmd, &type, value, &size);
 	return error == GC_ERR_SUCCESS;
 }
@@ -115,6 +117,7 @@ _gentl_buffer_info_sizet(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_HAN
 	GC_ERROR error;
 	INFO_DATATYPE type;
 	size_t size = sizeof(size_t);
+	*value = 0;
 	error = gentl->DSGetBufferInfo(datastream, buffer, info_cmd, &type, value, &size);
 	return error == GC_ERR_SUCCESS;
 }
@@ -125,7 +128,41 @@ _gentl_buffer_info_uint64(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_HA
 	GC_ERROR error;
 	INFO_DATATYPE type;
 	size_t size = sizeof(uint64_t);
+	*value = 0;
 	error = gentl->DSGetBufferInfo(datastream, buffer, info_cmd, &type, value, &size);
+	return error == GC_ERR_SUCCESS;
+}
+
+static gboolean
+_gentl_buffer_part_info_ptr(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_HANDLE buffer, uint32_t index, BUFFER_INFO_CMD info_cmd, void** value)
+{
+	GC_ERROR error;
+	INFO_DATATYPE type;
+	size_t size = sizeof(void*);
+	*value = NULL;
+	error = gentl->DSGetBufferPartInfo(datastream, buffer, index, info_cmd, &type, value, &size);
+	return error == GC_ERR_SUCCESS;
+}
+
+static gboolean
+_gentl_buffer_part_info_sizet(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_HANDLE buffer, uint32_t index, BUFFER_INFO_CMD info_cmd, size_t *value)
+{
+	GC_ERROR error;
+	INFO_DATATYPE type;
+	size_t size = sizeof(size_t);
+	*value = 0;
+	error = gentl->DSGetBufferPartInfo(datastream, buffer, index, info_cmd, &type, value, &size);
+	return error == GC_ERR_SUCCESS;
+}
+
+static gboolean
+_gentl_buffer_part_info_uint64(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_HANDLE buffer, uint32_t index, BUFFER_INFO_CMD info_cmd, uint64_t *value)
+{
+	GC_ERROR error;
+	INFO_DATATYPE type;
+	size_t size = sizeof(uint64_t);
+	*value = 0;
+	error = gentl->DSGetBufferPartInfo(datastream, buffer, index, info_cmd, &type, value, &size);
 	return error == GC_ERR_SUCCESS;
 }
 
@@ -134,8 +171,9 @@ _gentl_buffer_to_arv_buffer(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_
 {
 	size_t payload_type = PAYLOAD_TYPE_UNKNOWN;
 	bool8_t has_chunks = FALSE;
-	size_t data_size, actual_size, image_offset, width, height, x_offset, y_offset, x_padding, y_padding;
-	uint64_t pixel_format, frame_id, timestamp = 0;
+	uint32_t num_parts;
+	size_t data_size, data_type, actual_size, image_offset, width, height, x_offset, y_offset, x_padding, y_padding;
+	uint64_t source_id, pixel_format, frame_id, timestamp = 0;
 	void *data;
 
 	_gentl_buffer_info_sizet(gentl, datastream, gentl_buffer, BUFFER_INFO_PAYLOADTYPE, &payload_type);
@@ -155,6 +193,9 @@ _gentl_buffer_to_arv_buffer(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_
 		case PAYLOAD_TYPE_CHUNK_DATA:
 			arv_buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA;
 			break;
+		case PAYLOAD_TYPE_CHUNK_ONLY:
+			arv_buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA;
+			break;
 		case PAYLOAD_TYPE_JPEG:
 			arv_buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_JPEG;
 			break;
@@ -169,21 +210,16 @@ _gentl_buffer_to_arv_buffer(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_
 			break;
 		default:
 			arv_buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_UNKNOWN;
-			break;
+			arv_buffer->priv->status = ARV_BUFFER_STATUS_PAYLOAD_NOT_SUPPORTED;
+			return;
 	}
 
 	_gentl_buffer_info_bool8(gentl, datastream, gentl_buffer, BUFFER_INFO_CONTAINS_CHUNKDATA, &has_chunks);
-	arv_buffer->priv->has_chunks = has_chunks || payload_type == PAYLOAD_TYPE_CHUNK_DATA;
-
-	if (payload_type == PAYLOAD_TYPE_MULTI_PART) {
-		arv_warning_stream_thread("Multi-Part payload not supported");
-		arv_buffer->priv->status = ARV_BUFFER_STATUS_PAYLOAD_NOT_SUPPORTED;
-		return;
-	}
+	arv_buffer->priv->has_chunks = has_chunks || payload_type == PAYLOAD_TYPE_CHUNK_DATA || payload_type == PAYLOAD_TYPE_CHUNK_ONLY;
 
 	_gentl_buffer_info_uint64(gentl, datastream, gentl_buffer, BUFFER_INFO_FRAMEID, &frame_id);
 	arv_buffer->priv->frame_id = frame_id;
-	
+
 	if (!_gentl_buffer_info_uint64(gentl, datastream, gentl_buffer, BUFFER_INFO_TIMESTAMP_NS, &timestamp)) {
 		uint64_t timestamp_ticks = 0;
 		if (timestamp_tick_frequency &&
@@ -204,35 +240,75 @@ _gentl_buffer_to_arv_buffer(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_
 	_gentl_buffer_info_ptr(gentl, datastream, gentl_buffer, BUFFER_INFO_BASE, &data);
 	memcpy(arv_buffer->priv->data, data, data_size);
 
-	arv_buffer_set_n_parts(arv_buffer, 1);
+	if (payload_type == PAYLOAD_TYPE_CHUNK_ONLY) {
+		arv_buffer_set_n_parts(arv_buffer, 0);
+	} else if (gentl->DSGetNumBufferParts(datastream, gentl_buffer, &num_parts) == GC_ERR_SUCCESS) {
+		arv_buffer_set_n_parts(arv_buffer, num_parts);
+		for (uint32_t i=0; i<num_parts; i++) {
+			void *part_data;
+			size_t part_data_size;
+
+			_gentl_buffer_part_info_uint64(gentl, datastream, gentl_buffer, i, BUFFER_PART_INFO_SOURCE_ID, &source_id);
+			arv_buffer->priv->parts[i].component_id = source_id;
+
+			_gentl_buffer_part_info_sizet(gentl, datastream, gentl_buffer, i, BUFFER_PART_INFO_DATA_TYPE, &data_type);
+			arv_buffer->priv->parts[i].data_type = data_type;
+
+			_gentl_buffer_part_info_sizet(gentl, datastream, gentl_buffer, i, BUFFER_PART_INFO_DATA_SIZE, &part_data_size);
+			arv_buffer->priv->parts[i].size = part_data_size;
+
+			_gentl_buffer_part_info_ptr(gentl, datastream, gentl_buffer, i, BUFFER_PART_INFO_BASE, &part_data);
+			arv_buffer->priv->parts[i].data_offset = (char*)part_data - (char*)data;
+
+			_gentl_buffer_part_info_uint64(gentl, datastream, gentl_buffer, i, BUFFER_PART_INFO_DATA_FORMAT, &pixel_format);
+			arv_buffer->priv->parts[i].pixel_format = pixel_format;
+
+			_gentl_buffer_part_info_sizet(gentl, datastream, gentl_buffer, i, BUFFER_PART_INFO_WIDTH, &width);
+			arv_buffer->priv->parts[i].width = width;
+
+			_gentl_buffer_part_info_sizet(gentl, datastream, gentl_buffer, i, BUFFER_PART_INFO_HEIGHT, &height);
+			arv_buffer->priv->parts[i].height = height;
+
+			_gentl_buffer_part_info_sizet(gentl, datastream, gentl_buffer, i, BUFFER_PART_INFO_XOFFSET, &x_offset);
+			arv_buffer->priv->parts[i].x_offset = x_offset;
+
+			_gentl_buffer_part_info_sizet(gentl, datastream, gentl_buffer, i, BUFFER_PART_INFO_YOFFSET, &y_offset);
+			arv_buffer->priv->parts[i].y_offset = y_offset;
+
+			_gentl_buffer_part_info_sizet(gentl, datastream, gentl_buffer, i, BUFFER_PART_INFO_XPADDING, &x_padding);
+			arv_buffer->priv->parts[i].x_padding = x_padding;
+		}
+	} else {
+		arv_buffer_set_n_parts(arv_buffer, 1);
 	
-	arv_buffer->priv->parts[0].component_id = 0;
-	arv_buffer->priv->parts[0].data_type = ARV_BUFFER_PART_DATA_TYPE_2D_IMAGE;
-	arv_buffer->priv->parts[0].size = data_size;
+		arv_buffer->priv->parts[0].component_id = 0;
+		arv_buffer->priv->parts[0].data_type = ARV_BUFFER_PART_DATA_TYPE_2D_IMAGE;
+		arv_buffer->priv->parts[0].size = data_size;
 
-	_gentl_buffer_info_sizet(gentl, datastream, gentl_buffer, BUFFER_INFO_IMAGEOFFSET, &image_offset);
-	arv_buffer->priv->parts[0].data_offset = image_offset;
+		_gentl_buffer_info_sizet(gentl, datastream, gentl_buffer, BUFFER_INFO_IMAGEOFFSET, &image_offset);
+		arv_buffer->priv->parts[0].data_offset = image_offset;
 
-	_gentl_buffer_info_uint64(gentl, datastream, gentl_buffer, BUFFER_INFO_PIXELFORMAT, &pixel_format);
-	arv_buffer->priv->parts[0].pixel_format = pixel_format;
+		_gentl_buffer_info_uint64(gentl, datastream, gentl_buffer, BUFFER_INFO_PIXELFORMAT, &pixel_format);
+		arv_buffer->priv->parts[0].pixel_format = pixel_format;
 
-	_gentl_buffer_info_sizet(gentl, datastream, gentl_buffer, BUFFER_INFO_WIDTH, &width);
-	arv_buffer->priv->parts[0].width = width;
+		_gentl_buffer_info_sizet(gentl, datastream, gentl_buffer, BUFFER_INFO_WIDTH, &width);
+		arv_buffer->priv->parts[0].width = width;
 
-	_gentl_buffer_info_sizet(gentl, datastream, gentl_buffer, BUFFER_INFO_HEIGHT, &height);
-	arv_buffer->priv->parts[0].height = height;
+		_gentl_buffer_info_sizet(gentl, datastream, gentl_buffer, BUFFER_INFO_HEIGHT, &height);
+		arv_buffer->priv->parts[0].height = height;
 
-	_gentl_buffer_info_sizet(gentl, datastream, gentl_buffer, BUFFER_INFO_XOFFSET, &x_offset);
-	arv_buffer->priv->parts[0].x_offset = x_offset;
+		_gentl_buffer_info_sizet(gentl, datastream, gentl_buffer, BUFFER_INFO_XOFFSET, &x_offset);
+		arv_buffer->priv->parts[0].x_offset = x_offset;
 
-	_gentl_buffer_info_sizet(gentl, datastream, gentl_buffer, BUFFER_INFO_YOFFSET, &y_offset);
-	arv_buffer->priv->parts[0].y_offset = y_offset;
+		_gentl_buffer_info_sizet(gentl, datastream, gentl_buffer, BUFFER_INFO_YOFFSET, &y_offset);
+		arv_buffer->priv->parts[0].y_offset = y_offset;
 
-	_gentl_buffer_info_sizet(gentl, datastream, gentl_buffer, BUFFER_INFO_XPADDING, &x_padding);
-	arv_buffer->priv->parts[0].x_padding = x_padding;
+		_gentl_buffer_info_sizet(gentl, datastream, gentl_buffer, BUFFER_INFO_XPADDING, &x_padding);
+		arv_buffer->priv->parts[0].x_padding = x_padding;
 
-	_gentl_buffer_info_sizet(gentl, datastream, gentl_buffer, BUFFER_INFO_YPADDING, &y_padding);
-	arv_buffer->priv->parts[0].y_padding = y_padding;
+		_gentl_buffer_info_sizet(gentl, datastream, gentl_buffer, BUFFER_INFO_YPADDING, &y_padding);
+		arv_buffer->priv->parts[0].y_padding = y_padding;
+	}
 
 	arv_buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
 }
