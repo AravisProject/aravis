@@ -128,7 +128,38 @@ _gentl_buffer_to_arv_buffer(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_
 	void *data;
 
 	_gentl_buffer_info_sizet(gentl, datastream, gentl_buffer, BUFFER_INFO_PAYLOADTYPE, &payload_type);
-	arv_buffer->priv->payload_type = payload_type;
+	switch(payload_type) {
+		case PAYLOAD_TYPE_UNKNOWN:
+			arv_buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_UNKNOWN;
+			break;
+		case PAYLOAD_TYPE_IMAGE:
+			arv_buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_IMAGE;
+			break;
+		case PAYLOAD_TYPE_RAW_DATA:
+			arv_buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_RAWDATA;
+			break;
+		case PAYLOAD_TYPE_FILE:
+			arv_buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_FILE;
+			break;
+		case PAYLOAD_TYPE_CHUNK_DATA:
+			arv_buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA;
+			break;
+		case PAYLOAD_TYPE_JPEG:
+			arv_buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_JPEG;
+			break;
+		case PAYLOAD_TYPE_JPEG2000:
+			arv_buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_JPEG2000;
+			break;
+		case PAYLOAD_TYPE_H264:
+			arv_buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_H264;
+			break;
+		case PAYLOAD_TYPE_MULTI_PART:
+			arv_buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_MULTIPART;
+			break;
+		default:
+			arv_buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_UNKNOWN;
+			break;
+	}
 
 	if (payload_type == PAYLOAD_TYPE_MULTI_PART) {
 		arv_warning_stream_thread("Multi-Part payload not supported");
