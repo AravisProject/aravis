@@ -183,13 +183,11 @@ _gentl_refresh(GC_ERROR(*update)(void*, bool8_t *, uint64_t), GC_ERROR(*get)(voi
 }
 
 static void
-arv_gentl_interface_update_device_list (ArvInterface *interface, GArray *device_ids)
+_discover (ArvGenTLInterface *gentl_interface, GArray *device_ids)
 {
-	ArvGenTLInterfacePrivate *priv = arv_gentl_interface_get_instance_private(ARV_GENTL_INTERFACE (interface));
+	ArvGenTLInterfacePrivate *priv = arv_gentl_interface_get_instance_private(gentl_interface);
 	GList *gentl_systems = arv_gentl_get_systems();
 	GList *gentl_systems_iter;
-
-	g_assert (device_ids->len == 0);
 
 	g_hash_table_remove_all (priv->devices);
 
@@ -243,13 +241,20 @@ arv_gentl_interface_update_device_list (ArvInterface *interface, GArray *device_
 				device_info =  arv_gentl_interface_device_infos_new(gentl_system, interface_id, id, vendor, model, serial_nbr);
 				g_hash_table_replace(priv->devices, device_info->id, arv_gentl_interface_device_infos_ref(device_info));
 
-				ids = g_new0 (ArvInterfaceDeviceIds, 1);
-				ids->device = id;
-				ids->model = model;
-				ids->vendor = vendor;
-				ids->serial_nbr = serial_nbr;
-				ids->address = g_strdup(interface_type);
-				g_array_append_val (device_ids, ids);
+				if (device_ids) {
+					ids = g_new0 (ArvInterfaceDeviceIds, 1);
+					ids->device = id;
+					ids->model = model;
+					ids->vendor = vendor;
+					ids->serial_nbr = serial_nbr;
+					ids->address = g_strdup(interface_type);
+					g_array_append_val (device_ids, ids);
+				} else {
+					g_free(id);
+					g_free(model);
+					g_free(vendor);
+					g_free(serial_nbr);
+				}
 
 				arv_gentl_interface_device_infos_unref(device_info);
 			}
@@ -262,12 +267,28 @@ arv_gentl_interface_update_device_list (ArvInterface *interface, GArray *device_
 	}
 }
 
+static void
+arv_gentl_interface_update_device_list (ArvInterface *interface, GArray *device_ids)
+{
+	ArvGenTLInterface *gentl_interface = ARV_GENTL_INTERFACE (interface);
+
+	g_assert (device_ids->len == 0);
+
+	_discover(gentl_interface, device_ids);
+}
+
 static ArvDevice *
 arv_gentl_interface_open_device (ArvInterface *interface, const char *device_id, GError **error)
 {
 	ArvGenTLInterfacePrivate *priv = arv_gentl_interface_get_instance_private(ARV_GENTL_INTERFACE (interface));
 	ArvDevice *device = NULL;
 	ArvGenTLInterfaceDeviceInfos *device_info = g_hash_table_lookup(priv->devices, device_id);
+
+	/* Refresh devices if the requested device is in the cache. */
+	if (device_info == NULL) {
+		_discover(ARV_GENTL_INTERFACE(interface), NULL);
+		device_info = g_hash_table_lookup(priv->devices, device_id);
+	}
 
 	if (device_info) {
 		device = arv_gentl_device_new(device_info->system, device_info->interface, device_id, error);
