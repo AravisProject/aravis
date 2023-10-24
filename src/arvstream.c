@@ -340,48 +340,6 @@ arv_stream_stop_thread (ArvStream *stream, gboolean delete_buffers)
 }
 
 /**
- * arv_stream_start_acquisition:
- * @stream: a #ArvStream
- *
- * Start the stream acquisition.*
- *
- * Since: 0.9.0
- */
-
-void
-arv_stream_start_acquisition (ArvStream *stream)
-{
-	ArvStreamClass *stream_class;
-
-	g_return_if_fail (ARV_IS_STREAM (stream));
-
-	stream_class = ARV_STREAM_GET_CLASS (stream);
-	if (stream_class->start_acquisition != NULL)
-		stream_class->start_acquisition (stream);
-}
-
-/**
- * arv_stream_stop_acquisition:
- * @stream: a #ArvStream
- *
- * Stop the stream acquisition.*
- *
- * Since: 0.9.0
- */
-
-void
-arv_stream_stop_acquisition (ArvStream *stream)
-{
-	ArvStreamClass *stream_class;
-
-	g_return_if_fail (ARV_IS_STREAM (stream));
-
-	stream_class = ARV_STREAM_GET_CLASS (stream);
-	if (stream_class->stop_acquisition != NULL)
-		stream_class->stop_acquisition (stream);
-}
-
-/**
  * arv_stream_get_statistics:
  * @stream: a #ArvStream
  * @n_completed_buffers: (out) (allow-none): number of complete received buffers

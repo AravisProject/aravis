@@ -58,8 +58,6 @@ struct _ArvStreamClass {
 
 	void		(*start_thread)		(ArvStream *stream);
 	void		(*stop_thread)		(ArvStream *stream);
-	void		(*start_acquisition)	(ArvStream *stream);
-	void		(*stop_acquisition)	(ArvStream *stream);
 
 	/* signals */
 	void        	(*new_buffer)   	(ArvStream *stream);
@@ -95,9 +93,6 @@ ARV_API void		arv_stream_get_n_buffers		(ArvStream *stream,
 								 gint *n_output_buffers);
 ARV_API void		arv_stream_start_thread			(ArvStream *stream);
 ARV_API unsigned int	arv_stream_stop_thread			(ArvStream *stream, gboolean delete_buffers);
-
-ARV_API void		arv_stream_start_acquisition	        (ArvStream *stream);
-ARV_API void		arv_stream_stop_acquisition	        (ArvStream *stream);
 
 ARV_API void		arv_stream_get_statistics		(ArvStream *stream,
 								 guint64 *n_completed_buffers,

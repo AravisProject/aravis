@@ -47,7 +47,7 @@
 #if ARAVIS_HAS_USB
 #include <arvuvdevice.h>
 #endif
-#include <arvgentldevice.h>
+#include <arvgentldeviceprivate.h>
 #include <arvenums.h>
 #include <arvstr.h>
 
@@ -805,6 +805,11 @@ arv_camera_dup_available_pixel_formats_as_display_names (ArvCamera *camera, guin
 void
 arv_camera_start_acquisition (ArvCamera *camera, GError **error)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	if (arv_camera_is_gentl_device(camera))
+		arv_gentl_device_start_acquisition( ARV_GENTL_DEVICE(priv->device) );
+
 	arv_camera_execute_command (camera, "AcquisitionStart", error);
 }
 
@@ -821,7 +826,13 @@ arv_camera_start_acquisition (ArvCamera *camera, GError **error)
 void
 arv_camera_stop_acquisition (ArvCamera *camera, GError **error)
 {
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
 	arv_camera_execute_command (camera, "AcquisitionStop", error);
+
+	if (arv_camera_is_gentl_device(camera))
+		arv_gentl_device_stop_acquisition( ARV_GENTL_DEVICE(priv->device) );
+
 }
 
 /**
@@ -881,17 +892,14 @@ arv_camera_acquisition (ArvCamera *camera, guint64 timeout, GError **error)
                                 arv_camera_set_acquisition_mode (camera, ARV_ACQUISITION_MODE_CONTINUOUS, &local_error);
                         }
 		}
-		if (local_error == NULL) {
-			arv_stream_start_acquisition (stream);
+		if (local_error == NULL)
 			arv_camera_start_acquisition (camera, &local_error);
-		}
 		if (local_error == NULL) {
 			if (timeout > 0)
 				buffer = arv_stream_timeout_pop_buffer (stream, timeout);
 			else
 				buffer = arv_stream_pop_buffer (stream);
 			arv_camera_stop_acquisition (camera, &local_error);
-			arv_stream_stop_acquisition (stream);
 		}
 
 		g_object_unref (stream);

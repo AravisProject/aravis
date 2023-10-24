@@ -375,7 +375,9 @@ _loop (ArvGenTLStreamThreadData *thread_data)
 		gentl->DSQueueBuffer(priv->stream_handle, gentl_buffer);
 	} while (!g_cancellable_is_cancelled (thread_data->cancellable));
 
-	gentl->GCUnregisterEvent(priv->event_handle, EVENT_NEW_BUFFER);
+	error = gentl->GCUnregisterEvent(priv->stream_handle, EVENT_NEW_BUFFER);
+	if (error != GC_ERR_SUCCESS)
+		arv_warning_stream("GCUnregisterEvent: %d\n", error);
 }
 
 static void *
@@ -440,7 +442,7 @@ arv_gentl_stream_stop_thread (ArvStream *stream)
 	priv->thread = NULL;
 }
 
-static void
+void
 arv_gentl_stream_start_acquisition (ArvStream *stream)
 {
 	ArvGenTLStreamPrivate *priv = arv_gentl_stream_get_instance_private (ARV_GENTL_STREAM (stream));
@@ -481,7 +483,7 @@ arv_gentl_stream_start_acquisition (ArvStream *stream)
 	}
 }
 
-static void
+void
 arv_gentl_stream_stop_acquisition(ArvStream *stream)
 {
 	ArvGenTLStreamPrivate *priv = arv_gentl_stream_get_instance_private (ARV_GENTL_STREAM (stream));
@@ -628,7 +630,19 @@ arv_gentl_stream_finalize (GObject *object)
 		ArvGenTLStreamThreadData *thread_data;
 
 		thread_data = priv->thread_data;
-		g_clear_pointer (&thread_data, g_free);
+
+		arv_info_stream ("[GenTLStream::finalize] n_completed_buffers    = %" G_GUINT64_FORMAT,
+				  thread_data->n_completed_buffers);
+		arv_info_stream ("[GenTLStream::finalize] n_failures             = %" G_GUINT64_FORMAT,
+				  thread_data->n_failures);
+		arv_info_stream ("[GenTLStream::finalize] n_underruns            = %" G_GUINT64_FORMAT,
+				  thread_data->n_underruns);
+		arv_info_stream ("[GenTLStream::finalize] n_transferred_bytes    = %" G_GUINT64_FORMAT,
+				  thread_data->n_transferred_bytes);
+
+		g_mutex_clear (&thread_data->stream_mtx);
+		g_cond_clear (&thread_data->stream_event);
+		g_clear_pointer (&priv->thread_data, g_free);
 	}
 
 	g_clear_object (&priv->gentl_device);
@@ -649,9 +663,6 @@ arv_gentl_stream_class_init (ArvGenTLStreamClass *gentl_stream_class)
 
 	stream_class->start_thread = arv_gentl_stream_start_thread;
 	stream_class->stop_thread = arv_gentl_stream_stop_thread;
-
-	stream_class->start_acquisition = arv_gentl_stream_start_acquisition;
-	stream_class->stop_acquisition = arv_gentl_stream_stop_acquisition;
 
 	g_object_class_install_property
 		(object_class,

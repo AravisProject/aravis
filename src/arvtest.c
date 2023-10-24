@@ -720,10 +720,8 @@ _multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test
                 for (i = 0 ; i < 2; i++)
                         arv_stream_push_buffer (stream, arv_buffer_new (payload_size, FALSE));
         }
-        if (error == NULL) {
-                arv_stream_start_acquisition (stream);
+        if (error == NULL)
                 arv_camera_start_acquisition (test_camera->camera, &error);
-        }
         if (error == NULL) {
                 for (i = 0 ; i < n_expected_buffers; i++) {
                         ArvBuffer *buffer;
@@ -749,10 +747,8 @@ _multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test
                         }
                 }
         }
-        if (error == NULL) {
+        if (error == NULL)
                 arv_camera_stop_acquisition (test_camera->camera, &error);
-                arv_stream_stop_acquisition (stream);
-        }
 
         g_clear_object (&stream);
 
@@ -873,10 +869,8 @@ arv_test_software_trigger (ArvTest *test, const char *test_name, ArvTestCamera *
                 for (i = 0 ; i < 2; i++)
                         arv_stream_push_buffer (stream, arv_buffer_new (payload_size, FALSE));
         }
-        if (error == NULL) {
-                arv_stream_start_acquisition (stream);
+        if (error == NULL)
                 arv_camera_start_acquisition (test_camera->camera, &error);
-        }
 
         for (i = 0 ; i < n_expected_buffers && error == NULL && success; i++) {
                 ArvBuffer *buffer;
@@ -902,10 +896,8 @@ arv_test_software_trigger (ArvTest *test, const char *test_name, ArvTestCamera *
                 }
         }
 
-        if (error == NULL) {
+        if (error == NULL)
                 arv_camera_stop_acquisition (test_camera->camera, &error);
-                arv_stream_stop_acquisition (stream);
-        }
 
         g_clear_object (&stream);
 
