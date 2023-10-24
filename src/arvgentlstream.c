@@ -349,6 +349,11 @@ _loop (ArvGenTLStreamThreadData *thread_data)
 
 		arv_buffer = arv_stream_pop_input_buffer (thread_data->stream);
 		if (arv_buffer) {
+			if (thread_data->callback != NULL)
+				thread_data->callback (thread_data->callback_data,
+					ARV_STREAM_CALLBACK_TYPE_START_BUFFER,
+					NULL);
+
 			_gentl_buffer_to_arv_buffer(gentl, priv->stream_handle, gentl_buffer, arv_buffer, priv->timestamp_tick_frequency);
 
 			if (arv_buffer->priv->status == ARV_BUFFER_STATUS_SUCCESS)
