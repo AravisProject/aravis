@@ -341,7 +341,8 @@ _loop (ArvGenTLStreamThreadData *thread_data)
 		size_t size = sizeof(EVENT_NEW_BUFFER_DATA);
 		error = gentl->EventGetData(priv->event_handle, &NewImageEventData, &size, GENTL_INFINITE);
 		if (error != GC_ERR_SUCCESS) {
-			arv_warning_stream("EventGetData[NEW_BUFFER]: %d\n", error);
+			if (error != GC_ERR_ABORT)
+				arv_warning_stream("EventGetData[NEW_BUFFER]: %d\n", error);
 			continue;
 		}
 
@@ -443,15 +444,18 @@ arv_gentl_stream_stop_thread (ArvStream *stream)
 }
 
 void
-arv_gentl_stream_start_acquisition (ArvStream *stream)
+arv_gentl_stream_start_acquisition (ArvGenTLStream *gentl_stream)
 {
-	ArvGenTLStreamPrivate *priv = arv_gentl_stream_get_instance_private (ARV_GENTL_STREAM (stream));
+	ArvStream *stream = ARV_STREAM(gentl_stream);
+	ArvGenTLStreamPrivate *priv = arv_gentl_stream_get_instance_private (gentl_stream);
 	ArvGenTLSystem *gentl_system = arv_gentl_device_get_system(priv->gentl_device);
 	ArvGenTLModule *gentl = arv_gentl_system_get_gentl(gentl_system);
 	ArvBuffer *arv_buffer;
 	BUFFER_HANDLE gentl_buffer;
 	size_t payload_size;
 	GC_ERROR error;
+
+	arv_info_stream("Start acquisition");
 
 	/* Get payload size from an input buffer */
 	arv_buffer = arv_stream_pop_input_buffer (stream);
@@ -460,7 +464,7 @@ arv_gentl_stream_start_acquisition (ArvStream *stream)
 		return;
 	}
 	payload_size = arv_buffer->priv->allocated_size;
-	arv_stream_push_buffer(stream, arv_buffer);
+	arv_stream_push_buffer( ARV_STREAM(stream), arv_buffer);
 
 	/* Allocate, announce and queue buffers */
 	for (guint i=0; i<priv->n_buffers; i++) {
@@ -484,16 +488,14 @@ arv_gentl_stream_start_acquisition (ArvStream *stream)
 }
 
 void
-arv_gentl_stream_stop_acquisition(ArvStream *stream)
+arv_gentl_stream_stop_acquisition(ArvGenTLStream *gentl_stream)
 {
-	ArvGenTLStreamPrivate *priv = arv_gentl_stream_get_instance_private (ARV_GENTL_STREAM (stream));
+	ArvGenTLStreamPrivate *priv = arv_gentl_stream_get_instance_private (gentl_stream);
 	ArvGenTLSystem *gentl_system = arv_gentl_device_get_system(priv->gentl_device);
 	ArvGenTLModule *gentl = arv_gentl_system_get_gentl(gentl_system);
 	GC_ERROR error;
 
-	error = gentl->EventKill(priv->event_handle);
-	if (error != GC_ERR_SUCCESS)
-		arv_warning_stream("EventKill: %d", error);
+	arv_info_stream("Stop acquisition");
 
 	error = gentl->DSStopAcquisition(priv->stream_handle, ACQ_STOP_FLAGS_DEFAULT);
 	if (error != GC_ERR_SUCCESS && error != GC_ERR_RESOURCE_IN_USE)
@@ -611,13 +613,14 @@ arv_gentl_stream_constructed (GObject *object)
 static void
 arv_gentl_stream_finalize (GObject *object)
 {
-	ArvGenTLStreamPrivate *priv = arv_gentl_stream_get_instance_private (ARV_GENTL_STREAM (object));
+	ArvGenTLStream *gentl_stream = ARV_GENTL_STREAM (object);
+	ArvGenTLStreamPrivate *priv = arv_gentl_stream_get_instance_private (gentl_stream);
 	ArvGenTLSystem *gentl_system = arv_gentl_device_get_system(priv->gentl_device);
 	ArvGenTLModule *gentl = arv_gentl_system_get_gentl(gentl_system);
 	GC_ERROR error;
 
-	arv_gentl_stream_stop_acquisition (ARV_STREAM (object));
-	arv_gentl_stream_stop_thread (ARV_STREAM (object));
+	arv_gentl_stream_stop_acquisition (gentl_stream);
+	arv_gentl_stream_stop_thread (ARV_STREAM (gentl_stream));
 
 	/* Close the data stream. */
 	arv_info_stream("Close stream");

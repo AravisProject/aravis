@@ -139,7 +139,7 @@ arv_gentl_device_start_acquisition(ArvGenTLDevice *device)
 		iter = g_list_next(iter);
 
 		if (gentl_stream) {
-			arv_gentl_stream_start_acquisition( ARV_STREAM(gentl_stream) );
+			arv_gentl_stream_start_acquisition(gentl_stream);
 			g_object_unref(gentl_stream);
 		} else {
 			priv->gentl_streams = g_list_remove(priv->gentl_streams, stream_weak_ref);
@@ -162,7 +162,7 @@ arv_gentl_device_stop_acquisition(ArvGenTLDevice *device)
 		iter = g_list_next(iter);
 
 		if (gentl_stream) {
-			arv_gentl_stream_start_acquisition( ARV_STREAM(gentl_stream) );
+			arv_gentl_stream_stop_acquisition(gentl_stream);
 			g_object_unref(gentl_stream);
 		} else {
 			priv->gentl_streams = g_list_remove(priv->gentl_streams, stream_weak_ref);
