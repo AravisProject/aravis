@@ -57,6 +57,9 @@ typedef struct {
 	GList *gentl_streams;
 	void *device_handle;
 	void *port_handle;
+
+	int event_thread_run;
+	GThread* event_thread;
 } ArvGenTLDevicePrivate;
 
 struct _ArvGenTLDevice {
@@ -172,6 +175,57 @@ arv_gentl_device_stop_acquisition(ArvGenTLDevice *device)
 	}
 }
 
+static gpointer
+event_thread_func(void *p)
+{
+	ArvGenTLDevicePrivate *priv = (ArvGenTLDevicePrivate *)p;
+	ArvGenTLModule *gentl = arv_gentl_system_get_gentl(priv->gentl_system);
+	EVENT_HANDLE event_handle;
+	INFO_DATATYPE type;
+	size_t size, event_data_size_max;
+	char *event_data, *event_data_info;
+	GC_ERROR error;
+
+	error = gentl->GCRegisterEvent(priv->device_handle, EVENT_REMOTE_DEVICE, &event_handle);
+	if (error != GC_ERR_SUCCESS) {
+		arv_warning_device("GCRegisterEvent[REMOTE_DEVICE]: %d\n", error);
+	}
+
+	size = sizeof(event_data_size_max);
+	error = gentl->EventGetInfo(event_handle, EVENT_SIZE_MAX, &type, &event_data_size_max, &size);
+	event_data = g_malloc0(event_data_size_max);
+	event_data_info = g_malloc0(event_data_size_max);
+
+        while (priv->event_thread_run)
+        {
+		size_t event_data_size = event_data_size_max;
+		error = gentl->EventGetData(event_handle, event_data, &event_data_size, 100);
+		if (error != GC_ERR_SUCCESS) {
+			if (error != GC_ERR_ABORT && error != GC_ERR_TIMEOUT)
+				arv_warning_device("EventGetData[REMOTE_DEVICE]: %d\n", error);
+			continue;
+		}
+		/* Get event id and value */
+		size = event_data_size;
+		error = gentl->EventGetDataInfo(event_handle, event_data, event_data_size, EVENT_DATA_ID, &type, event_data_info, &size);
+		if (error == GC_ERR_SUCCESS) {
+		}
+		size = event_data_size;
+		error = gentl->EventGetDataInfo(event_handle, event_data, event_data_size, EVENT_DATA_VALUE, &type, event_data_info, &size);
+		if (error == GC_ERR_SUCCESS) {
+		}
+        }
+
+	error = gentl->GCUnregisterEvent(priv->device_handle, EVENT_REMOTE_DEVICE);
+	if (error != GC_ERR_SUCCESS)
+		arv_warning_device("GCUnregisterEvent[REMOTE_DEVICE]: %d\n", error);
+
+	g_free(event_data);
+	g_free(event_data_info);
+
+        return NULL;
+}
+
 /* ArvGenTLDevice implemenation */
 
 /* ArvDevice implemenation */
@@ -278,6 +332,10 @@ static void
 arv_gentl_device_finalize (GObject *object)
 {
 	ArvGenTLDevicePrivate *priv = arv_gentl_device_get_instance_private (ARV_GENTL_DEVICE (object));
+
+	priv->event_thread_run = 0;
+        if (priv->event_thread)
+                g_thread_join (priv->event_thread);
 
 	arv_gentl_system_close_device_handle(priv->gentl_system, priv->interface_id, priv->device_handle);
 
@@ -451,6 +509,9 @@ arv_gentl_device_constructed (GObject *self)
 	}
 
 	priv->genicam = arv_gc_new (ARV_DEVICE(self), priv->genicam_xml, priv->genicam_xml_size);
+
+	priv->event_thread_run = 1;
+	priv->event_thread = g_thread_new ( "arv_gentl_device_event", event_thread_func, priv);
 }
 
 static void
