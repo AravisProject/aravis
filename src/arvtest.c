@@ -490,8 +490,16 @@ arv_test_device_properties (ArvTest *test, const char *test_name, ArvTestCamera 
 }
 
 static void
+_device_event_handler(ArvDevice *device, int event_id, gpointer data)
+{
+	int *event_counter = (int*)data;
+	if (event_id == event_counter[0])
+		event_counter[1] += 1;
+}
+
+static void
 _single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_camera,
-                     gboolean chunk_test, gboolean multipart_test)
+                     gboolean chunk_test, gboolean multipart_test, gboolean event_test)
 {
         GError *error = NULL;
         ArvBuffer *buffer = NULL;
@@ -499,10 +507,79 @@ _single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_c
         ArvChunkParser *parser = NULL;
         char *component = NULL;
         guint n_parts = 1;
+	char *event_name = NULL;
+	gint64 event_id = 0, event_handler_id = 0;
+	int event_counter[2] = {0, 0};
 
         g_return_if_fail (ARV_IS_TEST (test));
 
-        g_assert (!(multipart_test & chunk_test));
+        g_assert (!(multipart_test & chunk_test & event_test));
+
+	if (event_test) {
+		ArvDevice *device;
+		gboolean event_supported = FALSE;
+
+		device = arv_camera_get_device (test_camera->camera);
+
+		do {
+			ArvGcNode *node;
+			const GSList *entries, *iter;;
+
+			node = arv_device_get_feature(device, "EventSelector");
+			if (node == NULL)
+				break;
+
+			/* Look through acquisition related events defined by SFNC */
+			entries = arv_gc_enumeration_get_entries (ARV_GC_ENUMERATION(node));
+			for (iter=entries; iter; iter=g_slist_next(iter)) {
+				const char *string = arv_gc_feature_node_get_name(iter->data);
+				if (g_strcmp0(string, "ExposureStart") == 0 ||
+				    g_strcmp0(string, "ExposureEnd") == 0 ||
+				    g_strcmp0(string, "FrameStart") == 0||
+				    g_strcmp0(string, "FrameEnd") == 0 ||
+				    g_strcmp0(string, "AcquisitionStart") == 0||
+				    g_strcmp0(string, "AcquisitionEnd") == 0) {
+					event_name = g_strdup(string);
+					event_id = arv_gc_enum_entry_get_value(iter->data, &error);
+					break;
+				}
+			}
+			if (iter == NULL)
+				break;
+
+			event_supported = TRUE;
+		} while (0);
+
+                arv_test_camera_add_result (test_camera, test_name, "NoSupport",
+						error == NULL && event_supported ?
+						ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
+						error != NULL ? error->message : NULL);
+                if (error != NULL || !event_supported) {
+		        g_clear_error (&error);
+                        return;
+                }
+
+		do {
+			arv_camera_set_integer(test_camera->camera, "EventSelector", event_id, &error);
+			if (error != NULL)
+				break;
+			arv_camera_set_integer(test_camera->camera, "EventNotification", 1, &error);
+			if (error != NULL)
+				break;
+		} while (0);
+
+		arv_test_camera_add_result (test_camera, test_name, "Enable",
+					    error == NULL ? ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
+					    error != NULL ? error->message : NULL);
+
+		if (error != NULL) {
+			g_clear_error (&error);
+			return;
+		}
+
+		event_counter[0] = (int) event_id;
+		event_handler_id = g_signal_connect (device, "device-event", G_CALLBACK(_device_event_handler), &event_counter);
+	}
 
         if (multipart_test) {
                 char  *multiparts = arv_test_camera_get_key_file_string (test_camera, test, "Multipart", NULL);
@@ -615,6 +692,41 @@ _single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_c
                 g_free (component);
         }
 
+	if (error == NULL && event_test) {
+		char *event_timestamp_name = g_strdup_printf("Event%sTimestamp", event_name);
+		char *message = NULL;
+
+		do {
+			gint64 event_timestamp;
+			event_timestamp = arv_camera_get_integer(test_camera->camera, event_timestamp_name, &error);
+			if (error != NULL)
+				break;
+			if (event_counter[1] != 1)
+		                g_set_error (&error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_UNKNOWN,
+					     "Event counter (%d) != 1", event_counter[1]);
+
+			message = g_strdup_printf ("Event=%s[0x%lx] Timestamp=%ld", event_name, event_id, event_timestamp);
+		} while (0);
+
+		arv_test_camera_add_result (test_camera, test_name, "EventCheck",
+					    error == NULL?
+					    ARV_TEST_STATUS_SUCCESS :
+					    ARV_TEST_STATUS_FAILURE,
+					    error != NULL ? error->message : message);
+
+		g_clear_error (&error);
+
+		g_clear_pointer (&event_timestamp_name, g_free);
+	        g_clear_pointer (&message, g_free);
+	}
+
+	if (event_test) {
+		ArvDevice *device = arv_camera_get_device (test_camera->camera);
+		g_signal_handler_disconnect(device, event_handler_id);
+		arv_camera_set_integer(test_camera->camera, "EventNotification", 0, NULL);
+		g_clear_pointer (&event_name, g_free);
+	}
+
         arv_test_camera_add_result (test_camera, test_name, "BufferCheck",
                                     ARV_IS_BUFFER (buffer) &&
                                     arv_buffer_get_status (buffer) == ARV_BUFFER_STATUS_SUCCESS &&
@@ -629,7 +741,7 @@ _single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_c
 static void
 arv_test_single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_camera)
 {
-        _single_acquisition (test, test_name, test_camera, FALSE, FALSE);
+        _single_acquisition (test, test_name, test_camera, FALSE, FALSE, FALSE);
 }
 
 static void
@@ -638,13 +750,19 @@ arv_test_multipart (ArvTest *test, const char  *test_name, ArvTestCamera *test_c
         if (!arv_camera_is_gv_device (test_camera->camera))
                 return;
 
-        _single_acquisition (test, test_name, test_camera, FALSE, TRUE);
+        _single_acquisition (test, test_name, test_camera, FALSE, TRUE, FALSE);
 }
 
 static void
 arv_test_chunks (ArvTest *test, const char *test_name, ArvTestCamera *test_camera)
 {
-        _single_acquisition (test, test_name, test_camera, TRUE, FALSE);
+        _single_acquisition (test, test_name, test_camera, TRUE, FALSE, FALSE);
+}
+
+static void
+arv_test_event (ArvTest *test, const char *test_name, ArvTestCamera *test_camera)
+{
+        _single_acquisition (test, test_name, test_camera, FALSE, FALSE, TRUE);
 }
 
 typedef struct {
@@ -994,6 +1112,7 @@ const struct {
         {"MultipleAcquisitionB",        arv_test_multiple_acquisition_b,FALSE},
         {"Multipart",                   arv_test_multipart,             FALSE},
         {"Chunks",                      arv_test_chunks,                FALSE},
+        {"Event",                       arv_test_event,                 FALSE},
         {"GigEVision",                  arv_test_gige_vision,           FALSE},
         {"USB3Vision",                  arv_test_usb3_vision,           FALSE}
 };
