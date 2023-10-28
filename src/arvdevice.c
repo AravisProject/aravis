@@ -44,6 +44,7 @@
 
 enum {
 	ARV_DEVICE_SIGNAL_CONTROL_LOST,
+	ARV_DEVICE_SIGNAL_DEVICE_EVENT,
 	ARV_DEVICE_SIGNAL_LAST
 } ArvDeviceSignals;
 
@@ -207,6 +208,38 @@ arv_device_write_register (ArvDevice *device, guint64 address, guint32 value, GE
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	return ARV_DEVICE_GET_CLASS (device)->write_register (device, address, value, error);
+}
+
+/**
+ * arv_device_read_event_data:
+ * @device: a #ArvDevice
+ * @event_id: event id
+ * @address: memory address
+ * @size: number of bytes to read
+ * @buffer: a buffer for the storage of the read data
+ * @error: (out) (allow-none): a #GError placeholder
+ *
+ * Reads the data of a device event.
+ *
+ * Return value: (skip): TRUE on success.
+ *
+ * Since: 0.9.0
+ **/
+
+gboolean
+arv_device_read_event_data (ArvDevice *device, int event_id, guint64 address, guint32 size, void *buffer, GError **error)
+{
+	g_return_val_if_fail (ARV_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (buffer != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	if (ARV_DEVICE_GET_CLASS (device)->read_event_data == NULL) {
+		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_NO_EVENT_IMPLEMENTATION,
+				"Events not implemented");
+		return FALSE;
+	} else {
+		return ARV_DEVICE_GET_CLASS (device)->read_event_data (device, event_id, address, size, buffer, error);
+	}
 }
 
 /**
@@ -1114,6 +1147,13 @@ arv_device_emit_control_lost_signal (ArvDevice *device)
 	g_signal_emit (device, arv_device_signals[ARV_DEVICE_SIGNAL_CONTROL_LOST], 0);
 }
 
+void
+arv_device_emit_device_event_signal (ArvDevice *device, int event_id)
+{
+	g_return_if_fail (ARV_IS_DEVICE (device));
+
+	g_signal_emit (device, arv_device_signals[ARV_DEVICE_SIGNAL_DEVICE_EVENT], 0, event_id);
+}
 
 void arv_device_take_init_error (ArvDevice *device, GError *error)
 {
@@ -1166,6 +1206,27 @@ arv_device_class_init (ArvDeviceClass *device_class)
 			      G_STRUCT_OFFSET (ArvDeviceClass, control_lost),
 			      NULL, NULL,
 			      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
+
+	/**
+	 * ArvDevice::device-event:
+	 * @device:a #ArvDevice
+	 * @event_id: #int
+	 *
+	 * Signal an event notification from the device.
+	 *
+	 * This signal may be emited from a thread different than the main one,
+	 * so please take care to shared data access from the callback.
+	 *
+	 * Since: 0.9.0
+	 */
+
+	arv_device_signals[ARV_DEVICE_SIGNAL_DEVICE_EVENT] =
+		g_signal_new ("device-event",
+			      G_TYPE_FROM_CLASS (device_class),
+			      G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (ArvDeviceClass, device_event),
+			      NULL, NULL,
+			      g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
 }
 
 static gboolean
