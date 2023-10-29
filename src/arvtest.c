@@ -646,6 +646,15 @@ _single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_c
                 arv_camera_set_chunks (test_camera->camera, chunks, &error);
 
                 g_free (chunks);
+
+		if (error != NULL) {
+                        arv_test_camera_add_result (test_camera, test_name, "NoSupport",
+                                                    error == NULL ?
+                                                    ARV_TEST_STATUS_SUCCESS : ARV_TEST_STATUS_FAILURE,
+                                                    error != NULL ? error->message : NULL);
+			g_clear_error(&error);
+			return;
+		}
         }
 
         if (error == NULL)
