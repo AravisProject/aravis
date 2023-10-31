@@ -2854,9 +2854,9 @@ arv_camera_get_register (ArvCamera *camera, const char *feature,guint64 length, 
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
-	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0.0);
+	g_return_val_if_fail (ARV_IS_CAMERA (camera));
 
-	return arv_device_get_register_feature_value (priv->device, feature, length, value, error);
+	arv_device_get_register_feature_value (priv->device, feature, length, value, error);
 }
 
 /**
