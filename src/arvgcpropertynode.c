@@ -33,6 +33,7 @@
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
 #include <arvgcboolean.h>
+#include <arvgcregister.h>
 #include <arvgcstring.h>
 #include <arvgc.h>
 #include <arvdomtext.h>

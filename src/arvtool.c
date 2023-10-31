@@ -169,6 +169,12 @@ arv_tool_show_feature (ArvGcFeatureNode *node, ArvToolListMode list_mode, int le
                                         value = g_strdup_printf ("%s",
                                                                  arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node),
                                                                                            &error) ?  "true" : "false");
+                                } else if (ARV_IS_GC_REGISTER (node)) {
+                                        void* buffer;
+                                        guint64 length = arv_gc_register_get_length(ARV_GC_REGISTER (node), &error);
+                                        arv_gc_register_get (ARV_GC_REGISTER (node), buffer, length, &error);
+
+                                        value = g_strdup_printf ("%" G_GUINT64_FORMAT, (char *)buffer ?  length : 0);
                                 }
                         }
 
@@ -364,7 +370,28 @@ arv_tool_control (int argc, char **argv, ArvDevice *device)
 
                                                 if (error == NULL)
                                                         printf ("%s = %s\n", tokens[0], value ?  "true" : "false");
-                                        } else {
+                                        } else if (ARV_IS_GC_REGISTER (feature)) {
+                                                unsigned char* buffer;
+
+                                                guint64 length = arv_gc_register_get_length(ARV_GC_REGISTER (feature), &error);    
+                                                if (error == NULL)
+                                                        printf ("Length of %s = %"G_GUINT64_FORMAT"\n", tokens[0], length);        
+
+                                                buffer = (unsigned char*) malloc(length);
+                                                arv_gc_register_get (ARV_GC_REGISTER (feature), (void*)buffer, length, &error);    
+
+                                                if (error == NULL){
+                                                        printf("Content of %s =", tokens[0]);
+                                                        for( int i = 0; i < length; i++){
+                                                                if ( i%8 == 0){
+                                                                        printf("\n\t");
+                                                                }
+                                                                printf("0x%02x ", *((buffer)+i));
+                                                        }
+                                                }
+                                                printf("\n");
+                                                free(buffer);
+                                        }else {
                                                 const char *value =  arv_gc_feature_node_get_value_as_string
                                                         (ARV_GC_FEATURE_NODE (feature), &error);
 

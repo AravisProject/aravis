@@ -38,6 +38,7 @@
 #include <arvgcfeaturenode.h>
 #include <arvgcboolean.h>
 #include <arvgcenumeration.h>
+#include <arvgcregister.h>
 #include <arvgcstring.h>
 #include <arvstream.h>
 #include <arvdebug.h>
@@ -796,6 +797,72 @@ arv_device_get_float_feature_increment (ArvDevice *device, const char *feature, 
 	}
 
 	return G_MINDOUBLE;
+}
+
+/**
+ * arv_device_set_register_feature_value:
+ * @device: a #ArvDevice
+ * @feature: feature name
+ * @value: new feature value
+ * @error: a #GError placeholder
+ *
+ * Set the register feature value.
+ * 
+ * Since:
+ */
+
+void
+arv_device_set_register_feature_value (ArvDevice *device, const char *feature, guint64 length, void* value, GError **error)        
+{
+	ArvGcNode *node;
+
+	node = _get_feature (device, ARV_TYPE_GC_REGISTER, feature, error);
+	if (node != NULL)
+		arv_gc_register_set (ARV_GC_REGISTER (node), value, length, error);
+}
+
+/**
+ * arv_device_get_register_feature_value:
+ * @device: a #ArvDevice
+ * @feature: feature name
+ * @value: (out): the register feature value
+ * @error: a #GError placeholder
+ *
+ * Retrive the register feature value.
+ * 
+ * Since:
+ */
+
+void
+arv_device_get_register_feature_value (ArvDevice *device, const char *feature, guint64 length, void* value, GError **error)        
+{
+	ArvGcNode *node;
+
+	node = _get_feature (device, ARV_TYPE_GC_REGISTER, feature, error);
+	if (node != NULL)
+		arv_gc_register_get (ARV_GC_REGISTER (node), value, length, error);
+}
+
+/**
+ * arv_device_get_register_feature_length:
+ * @device: a #ArvDevice
+ * @feature: feature name
+ * @error: a #GError placeholder
+ *
+ * Returns: the length of register value.
+ * 
+ * Since:
+ */
+
+guint64
+arv_device_get_register_feature_length (ArvDevice *device, const char *feature, GError **error)
+{
+	ArvGcNode *node;
+	node = _get_feature (device, ARV_TYPE_GC_REGISTER, feature, error);
+	if (node != NULL)
+		return arv_gc_register_get_length(ARV_GC_REGISTER (node), error);
+
+	return 0;
 }
 
 /**

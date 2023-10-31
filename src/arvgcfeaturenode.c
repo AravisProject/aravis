@@ -34,6 +34,7 @@
 #include <arvgcboolean.h>
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
+#include <arvgcregister.h>
 #include <arvgcstring.h>
 #include <arvgcenumeration.h>
 #include <arvgcenums.h>

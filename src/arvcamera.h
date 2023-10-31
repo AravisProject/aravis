@@ -196,6 +196,10 @@ ARV_API double		arv_camera_get_float			(ArvCamera *camera, const char *feature, 
 ARV_API void		arv_camera_get_float_bounds		(ArvCamera *camera, const char *feature, double *min, double *max, GError **error);
 ARV_API double		arv_camera_get_float_increment		(ArvCamera *camera, const char *feature, GError **error);
 
+ARV_API void            arv_camera_set_register                 (ArvCamera *camera, const char *feature, guint64 length, void* value, GError **error);
+ARV_API void            arv_camera_get_register                 (ArvCamera *camera, const char *feature, guint64 length, void* value, GError **error);
+ARV_API guint64         arv_camera_get_register_length          (ArvCamera *camera, const char *feature, GError **error);   
+
 ARV_API gint64 *	arv_camera_dup_available_enumerations			(ArvCamera *camera, const char *feature,
 										 guint *n_values, GError **error);
 ARV_API const char **	arv_camera_dup_available_enumerations_as_strings	(ArvCamera *camera, const char *feature,
