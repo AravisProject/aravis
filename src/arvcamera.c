@@ -2445,14 +2445,14 @@ arv_camera_get_representation_gain (ArvCamera *camera, GError **error)
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
 	if (priv->has_gain)
-		return arv_device_get_representation (camera, "Gain", error);
+		return arv_device_get_representation (priv->device, "Gain", error);
 
 	if (priv->gain_raw_as_float)
-		return arv_device_get_representation (camera, "GainRaw", error);
+		return arv_device_get_representation (priv->device, "GainRaw", error);
 	if (priv->gain_abs_as_float)
-		return arv_device_get_representation (camera, "GainAbs", error);
+		return arv_device_get_representation (priv->device, "GainAbs", error);
 
-	return arv_device_get_representation (camera, "GainRaw", error);
+	return arv_device_get_representation (priv->device, "GainRaw", error);
 }
 
 /**
@@ -2474,13 +2474,13 @@ arv_camera_get_representation_exposure_time (ArvCamera *camera, GError **error)
 
 	switch (priv->series) {
 		case ARV_CAMERA_SERIES_XIMEA:
-			return arv_device_get_representation (camera, "ExposureTime", error);
+			return arv_device_get_representation (priv->device, "ExposureTime", error);
 		case ARV_CAMERA_SERIES_RICOH:
-			return arv_device_get_representation (camera, "ExposureTimeRaw", error);
+			return arv_device_get_representation (priv->device, "ExposureTimeRaw", error);
 		case ARV_CAMERA_SERIES_IMPERX_CHEETAH:
-			return arv_device_get_representation (camera, "ExposureMode", error);
+			return arv_device_get_representation (priv->device, "ExposureMode", error);
 		default:
-			return arv_device_get_representation (camera,
+			return arv_device_get_representation (priv->device,
 								priv->has_exposure_time ?  "ExposureTime" : "ExposureTimeAbs",
 								error);
 	}

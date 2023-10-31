@@ -208,7 +208,7 @@ arv_gc_float_get_representation (ArvGcFloat *gc_float)
 
 	if (float_interface->get_representation != NULL)
 		return float_interface->get_representation (gc_float);
-
+		
 	return ARV_GC_REPRESENTATION_UNDEFINED;
 }
 
