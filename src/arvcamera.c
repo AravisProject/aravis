@@ -2965,6 +2965,27 @@ arv_camera_is_feature_implemented (ArvCamera *camera, const char *feature, GErro
 }
 
 /**
+ * arv_camera_get_representation:
+ * @camera: a #ArvCamera
+ * @feature: feature name
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Return: enum ArvGcRepresentation, -1 if not available.
+ *
+ * Since: 
+ */
+
+ArvGcRepresentation
+arv_camera_get_representation (ArvCamera *camera, const char *feature, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
+
+	return arv_device_get_representation (priv->device, feature, error);
+}
+
+/**
  * arv_camera_set_register_cache_policy:
  * @camera: a #ArvCamera
  * @policy: cache policy

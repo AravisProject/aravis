@@ -208,6 +208,9 @@ ARV_API gboolean        arv_camera_is_enumeration_entry_available               
 ARV_API gboolean	arv_camera_is_feature_available			(ArvCamera *camera, const char *feature, GError **error);
 ARV_API gboolean        arv_camera_is_feature_implemented               (ArvCamera *camera, const char *feature, GError **error);
 
+ARV_API ArvGcRepresentation	arv_camera_get_representation		(ArvCamera *camera, const char *feature, GError **error);
+
+
 /* Runtime policies */
 
 ARV_API void		arv_camera_set_register_cache_policy		(ArvCamera *camera, ArvRegisterCachePolicy policy);
