@@ -717,7 +717,8 @@ set_camera_widgets(ArvViewer *viewer)
 	gboolean is_black_level_available;
 	gboolean auto_black_level;
 	gboolean is_exposure_available;
-        gboolean auto_exposure;
+	gboolean auto_exposure;
+	gint gain_rep, expo_rep;
 
 	g_signal_handler_block (viewer->gain_hscale, viewer->gain_hscale_changed);
 	g_signal_handler_block (viewer->gain_spin_button, viewer->gain_spin_changed);
@@ -749,17 +750,56 @@ set_camera_widgets(ArvViewer *viewer)
 	string = g_strdup_printf ("%g", arv_camera_get_frame_rate (viewer->camera, NULL));
 	gtk_entry_set_text (GTK_ENTRY (viewer->frame_rate_entry), string);
 
+	// enables gtk widget based on feature representation
 	is_gain_available = arv_camera_is_gain_available (viewer->camera, NULL);
-	gtk_widget_set_sensitive (viewer->gain_hscale, is_gain_available);
-	gtk_widget_set_sensitive (viewer->gain_spin_button, is_gain_available);
+	if (is_gain_available){
+		gain_rep = (gint)(arv_camera_get_representation_gain(viewer->camera, NULL));
+		printf("gain %i", gain_rep);
+		switch(gain_rep){
+			case ARV_GC_REPRESENTATION_LINEAR:
+			case ARV_GC_REPRESENTATION_LOGARITHMIC:
+				gtk_widget_set_sensitive (viewer->gain_hscale, is_gain_available);
+				gtk_widget_set_sensitive (viewer->gain_spin_button, is_gain_available);
+				break;
+			case ARV_GC_REPRESENTATION_PURE_NUMBER:
+				gtk_widget_set_sensitive (viewer->gain_hscale, FALSE);
+				gtk_widget_set_sensitive (viewer->gain_spin_button, is_gain_available);
+				break;
+			default:
+				gtk_widget_set_sensitive (viewer->gain_hscale, FALSE);
+				gtk_widget_set_sensitive (viewer->gain_spin_button, FALSE);
+		}
+	}else{
+		gtk_widget_set_sensitive (viewer->gain_hscale, FALSE);
+		gtk_widget_set_sensitive (viewer->gain_spin_button, FALSE);
+	}
 
 	is_black_level_available = arv_camera_is_black_level_available (viewer->camera, NULL);
 	gtk_widget_set_sensitive (viewer->black_level_hscale, is_black_level_available);
 	gtk_widget_set_sensitive (viewer->black_level_spin_button, is_black_level_available);
 
 	is_exposure_available = arv_camera_is_exposure_time_available (viewer->camera, NULL);
-	gtk_widget_set_sensitive (viewer->exposure_hscale, is_exposure_available);
-	gtk_widget_set_sensitive (viewer->exposure_spin_button, is_exposure_available);
+	if (is_exposure_available){
+		expo_rep = (gint)(arv_camera_get_representation_exposure_time(viewer->camera, NULL));
+		printf("expot %i", expo_rep);
+		switch(expo_rep){
+			case ARV_GC_REPRESENTATION_LINEAR:
+			case ARV_GC_REPRESENTATION_LOGARITHMIC:
+				gtk_widget_set_sensitive (viewer->exposure_hscale, is_gain_available);
+				gtk_widget_set_sensitive (viewer->exposure_spin_button, is_gain_available);
+				break;
+			case ARV_GC_REPRESENTATION_PURE_NUMBER:
+				gtk_widget_set_sensitive (viewer->exposure_hscale, FALSE);
+				gtk_widget_set_sensitive (viewer->exposure_spin_button, is_gain_available);
+				break;
+			default:
+				gtk_widget_set_sensitive (viewer->exposure_hscale, FALSE);
+				gtk_widget_set_sensitive (viewer->exposure_spin_button, FALSE);
+		}
+	}else{
+		gtk_widget_set_sensitive (viewer->exposure_hscale, FALSE);
+		gtk_widget_set_sensitive (viewer->exposure_spin_button, FALSE);
+	}
 
 	g_signal_handler_unblock (viewer->gain_hscale, viewer->gain_hscale_changed);
 	g_signal_handler_unblock (viewer->gain_spin_button, viewer->gain_spin_changed);
