@@ -546,7 +546,6 @@ exposure_scale_cb (GtkRange *range, ArvViewer *viewer)
 	double scaled_exposure = gtk_range_get_value (range);
 	double exposure = viewer->exposure_time_representation == ARV_GC_REPRESENTATION_LOGARITHMIC ?
 		arv_viewer_value_from_log (scaled_exposure, viewer->exposure_min, viewer->exposure_max) : scaled_exposure;
-	printf("scaled_exposure=%f exposure=%f\n", scaled_exposure, exposure);
 
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (viewer->auto_exposure_toggle), FALSE);
 
@@ -757,8 +756,6 @@ set_camera_widgets(ArvViewer *viewer)
 	gtk_spin_button_set_range (GTK_SPIN_BUTTON (viewer->black_level_spin_button), black_level_min, black_level_max);
 	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->black_level_spin_button), 1, 10);
 
-	// gtk_range_set_range (GTK_RANGE (viewer->exposure_hscale), 0.0, 1.0);
-	// gtk_range_set_range (GTK_RANGE (viewer->gain_hscale), viewer->gain_min, viewer->gain_max);
 	gtk_range_set_range (GTK_RANGE (viewer->black_level_hscale), black_level_min, black_level_max);
 
 	is_frame_rate_available = arv_camera_is_frame_rate_available (viewer->camera, NULL);
@@ -767,7 +764,6 @@ set_camera_widgets(ArvViewer *viewer)
 	string = g_strdup_printf ("%g", arv_camera_get_frame_rate (viewer->camera, NULL));
 	gtk_entry_set_text (GTK_ENTRY (viewer->frame_rate_entry), string);
 
-	// enables gtk widget based on feature representation
 	is_gain_available = arv_camera_is_gain_available (viewer->camera, NULL);
 	if (is_gain_available){
 		viewer->gain_representation = (gint)(arv_camera_get_gain_representation(viewer->camera));
