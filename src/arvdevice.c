@@ -849,7 +849,7 @@ arv_device_get_register_feature_value (ArvDevice *device, const char *feature, g
  * @feature: feature name
  * @error: a #GError placeholder
  *
- * Returns: the length of register value.
+ * Returns: the length of register value, 0 if not available
  * 
  * Since:
  */

@@ -2863,9 +2863,9 @@ arv_camera_get_register (ArvCamera *camera, const char *feature,guint64 length, 
  * arv_camera_get_register_length:
  * @camera: a #ArvCamera
  * @feature: feature name
- * @error: a #GError placeholder, %NULL to ignore
+ * @error: a #GError placeholder
  *
- * Returns: the length of register value.
+ * Returns: the length of register value, 0 if not available
  *
  * Since:
  */
@@ -2875,7 +2875,7 @@ arv_camera_get_register_length (ArvCamera *camera, const char *feature, GError *
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
-	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0.0);
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0);
 
 	return arv_device_get_register_feature_length (priv->device, feature, error);
 }
