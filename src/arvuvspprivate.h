@@ -47,6 +47,15 @@ typedef enum {
 	ARV_UVSP_PACKET_TYPE_DATA
 } ArvUvspPacketType;
 
+typedef enum {
+	ARV_UVSP_PAYLOAD_TYPE_UNKNOWN =					0x0000,
+	ARV_UVSP_PAYLOAD_TYPE_IMAGE =					0x0001,
+	ARV_UVSP_PAYLOAD_TYPE_IMAGE_EXTENDED_CHUNK =	0x4001,
+	ARV_UVSP_PAYLOAD_TYPE_CHUNK =					0x4000,
+	ARV_UVSP_PAYLOAD_TYPE_GENDC_CONTAINER =			0x1001,
+	ARV_UVSP_PAYLOAD_TYPE_GENDC_COMPONENT_DATA =	0x1002
+} ArvUvspPayloadType;
+
 #pragma pack(push,1)
 
 typedef struct {
@@ -89,6 +98,54 @@ typedef struct {
 	ArvUvspTrailerInfos infos;
 } ArvUvspTrailer;
 
+typedef struct {
+	guint32 signature;
+	guint32 version_with_0;
+	guint16 header_type;
+	guint16 flags;
+	guint32 header_size;
+	guint64 id;
+	guint64 variable_field_with_0;
+	guint64 datasize;
+	guint64 dataoffset;
+	guint32 descriptorsize;
+	guint32 component_count;
+} ArvUvspGenDCContainerHeader;
+
+typedef struct {
+	guint16 header_type;
+	guint16 flags;
+	guint32 header_size;
+	guint16 reserved;
+	guint16 groupid;
+	guint16 sourceid;
+	guint16 regionid;
+	guint32 region_offset_x;
+	guint32 region_offset_y;
+	guint64 timestamp;
+	guint64 typeid;
+	guint32 format;
+	guint16 reserved2;
+	guint16 part_count;
+} ArvUvspGenDCComponentHeader;
+
+typedef struct {
+	guint16 header_type;
+	guint16 flags;
+	guint32 header_size;    
+	guint32 format;
+	guint16 reserved;
+	guint16 flow_id;
+	guint64 flowoffset;
+	guint64 datasize;
+	guint64 dataoffset;
+	guint32 dimension_x;
+	guint32 dimension_y;
+	guint16 padding_x;
+	guint16 padding_y;
+	guint32 info_reserved;
+} ArvUvspGenDCPartHeader;
+
 #pragma pack(pop)
 
 char * 			arv_uvsp_packet_to_string 		(const ArvUvspPacket *packet);
@@ -123,7 +180,11 @@ arv_uvsp_packet_get_buffer_payload_type (ArvUvspPacket *packet, gboolean *has_ch
         if (has_chunks != NULL)
                 *has_chunks = (payload_type & 0x4000) != 0;
 
-        return (ArvBufferPayloadType) (payload_type & 0x3fff);
+	if (payload_type == ARV_UVSP_PAYLOAD_TYPE_GENDC_CONTAINER){
+		return ARV_BUFFER_PAYLOAD_TYPE_GENDC_CONTAINER;
+	}
+	
+	return (ArvBufferPayloadType) (payload_type & 0x3fff);
 }
 
 static inline guint64
@@ -179,6 +240,171 @@ arv_uvsp_packet_get_timestamp (ArvUvspPacket *packet)
 	return GUINT64_FROM_LE (leader->infos.timestamp);
 }
 
+static inline gboolean
+arv_uvsp_packet_is_gendc(unsigned char *packet)
+{
+	ArvUvspGenDCContainerHeader *gendc_container_header;
+
+	if (packet == NULL)
+		return FALSE;
+
+	gendc_container_header = (ArvUvspGenDCContainerHeader*)packet;
+	return gendc_container_header->signature == 0x43444E47;
+}
+
+static inline guint64
+arv_uvsp_packet_get_gendc_dataoffset(unsigned char *packet)
+{
+	ArvUvspGenDCContainerHeader *gendc_container_header;
+	if (packet == NULL)
+		return 0;
+
+	gendc_container_header = (ArvUvspGenDCContainerHeader*)packet;
+	return gendc_container_header->dataoffset;
+}
+
+static inline guint32
+arv_uvsp_packet_get_gendc_descriptorsize(unsigned char *packet)
+{
+	ArvUvspGenDCContainerHeader *gendc_container_header;
+	if (packet == NULL)
+		return 0;
+
+	gendc_container_header = (ArvUvspGenDCContainerHeader*)packet;
+	return gendc_container_header->descriptorsize;
+}
+
+static inline guint64
+arv_uvsp_packet_get_gendc_datasize(unsigned char *packet)
+{
+	ArvUvspGenDCContainerHeader *gendc_container_header;
+	if (packet == NULL)
+		return 0;
+	
+	gendc_container_header = (ArvUvspGenDCContainerHeader*)packet;
+	return gendc_container_header->datasize;
+}
+
+static inline guint32
+arv_uvsp_packet_get_gendc_componentcount(unsigned char *packet)
+{
+	ArvUvspGenDCContainerHeader *gendc_container_header;
+	if (packet == NULL)
+		return 0;
+
+	gendc_container_header = (ArvUvspGenDCContainerHeader*)packet;
+	return gendc_container_header->component_count;
+}
+
+static inline guint64
+arv_uvsp_packet_get_gendc_componentoffset(unsigned char *packet, int ith)
+{
+	guint64 ith_component_offset = 0;
+
+	if ( !(ith < arv_uvsp_packet_get_gendc_componentcount(packet)))
+		return 0;
+	
+	memcpy (&ith_component_offset, ((char *) packet + 56 + 8 * ith), 8);
+	return ith_component_offset;
+}
+
+static inline gboolean
+arv_uvsp_packet_get_gendc_iscomponentvalid(unsigned char *packet)
+{
+	ArvUvspGenDCComponentHeader *gendc_component_header;
+
+	if (packet == NULL)
+		return 0;
+
+	gendc_component_header = (ArvUvspGenDCComponentHeader*)packet;
+	return gendc_component_header->flags == 0;
+}
+
+static inline guint64
+arv_uvsp_packet_get_gendc_componenttypeid(unsigned char *packet)
+{
+	ArvUvspGenDCComponentHeader* gendc_component_header;
+	if (packet == NULL)
+		return 0;
+
+	gendc_component_header = (ArvUvspGenDCComponentHeader*)packet;
+	return gendc_component_header->typeid;
+}
+
+static inline guint64
+arv_uvsp_packet_get_gendc_partoffset(unsigned char *packet, int jth)
+{
+	guint64 jth_part_offset = 0;
+	memcpy (&jth_part_offset, ((char *) packet + 48 + 8 * jth), 8);
+	return jth_part_offset;
+}
+
+static inline guint64
+arv_uvsp_packet_get_gendc_partdatapffset(unsigned char *packet){
+	ArvUvspGenDCPartHeader *gendc_part_header;
+	if (packet == NULL){
+	        return 0;
+	}
+
+	gendc_part_header = (ArvUvspGenDCPartHeader*)packet;
+	return gendc_part_header->dataoffset;
+}
+
+static inline guint64
+arv_uvsp_packet_get_gendc_componentpixelformat(unsigned char *packet){
+	ArvUvspGenDCComponentHeader* gendc_component_header;
+
+	if (packet == NULL){
+	        return 0;
+	}
+
+	gendc_component_header = (ArvUvspGenDCComponentHeader*)packet;
+	return gendc_component_header->format;
+}
+
+static inline guint32
+arv_uvsp_packet_get_gendc_partdimension_x(unsigned char *packet){
+	ArvUvspGenDCPartHeader *gendc_part_header;
+	if (packet == NULL){
+	        return 0;
+	}
+
+	gendc_part_header = (ArvUvspGenDCPartHeader*)packet;
+	return gendc_part_header->dimension_x;
+}
+
+static inline guint32
+arv_uvsp_packet_get_gendc_partdimension_y(unsigned char *packet){
+	ArvUvspGenDCPartHeader *gendc_part_header;
+	if (packet == NULL){
+	        return 0;
+	}
+
+	gendc_part_header = (ArvUvspGenDCPartHeader*)packet;
+	return gendc_part_header->dimension_y;
+}
+
+static inline guint16
+arv_uvsp_packet_get_gendc_partpadding_x(unsigned char *packet){
+	ArvUvspGenDCPartHeader *gendc_part_header;
+	if (packet == NULL){
+	        return 0;
+	}
+
+	gendc_part_header = (ArvUvspGenDCPartHeader*)packet;
+	return gendc_part_header->padding_x;
+}
+
+static inline guint16
+arv_uvsp_packet_get_gendc_partpadding_y(unsigned char *packet){
+	ArvUvspGenDCPartHeader *gendc_part_header;
+	if (packet == NULL){
+	        return 0;
+	}
+
+	gendc_part_header = (ArvUvspGenDCPartHeader*)packet;
+	return gendc_part_header->padding_y;
+}
 G_END_DECLS
 
 #endif
