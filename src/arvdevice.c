@@ -414,9 +414,9 @@ arv_device_get_representation (ArvDevice *device, const char *feature)
 	node = arv_device_get_feature (device, feature);
 
 	if (ARV_IS_GC_FLOAT(node)) {
-		return arv_gc_float_get_representation(node);
+		return arv_gc_float_get_representation(ARV_GC_FLOAT(node));
 	}else if (ARV_IS_GC_INTEGER(node)){
-		return arv_gc_integer_get_representation(node);
+		return arv_gc_integer_get_representation(ARV_GC_INTEGER (node));
 	}
 	return ARV_GC_REPRESENTATION_UNDEFINED;
 }
