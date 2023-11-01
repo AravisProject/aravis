@@ -770,7 +770,7 @@ set_camera_widgets(ArvViewer *viewer)
 	// enables gtk widget based on feature representation
 	is_gain_available = arv_camera_is_gain_available (viewer->camera, NULL);
 	if (is_gain_available){
-		viewer->gain_representation = (gint)(arv_camera_get_representation_gain(viewer->camera, NULL));
+		viewer->gain_representation = (gint)(arv_camera_get_gain_representation(viewer->camera));
 		switch(viewer->gain_representation){
 			case ARV_GC_REPRESENTATION_UNDEFINED:
 			case ARV_GC_REPRESENTATION_LINEAR:
@@ -802,7 +802,7 @@ set_camera_widgets(ArvViewer *viewer)
 
 	is_exposure_available = arv_camera_is_exposure_time_available (viewer->camera, NULL);
 	if (is_exposure_available){
-		viewer->exposure_time_representation = (gint)(arv_camera_get_representation_exposure_time(viewer->camera, NULL));
+		viewer->exposure_time_representation = (gint)(arv_camera_get_exposure_time_representation(viewer->camera));
 		switch(viewer->exposure_time_representation){
 			case ARV_GC_REPRESENTATION_UNDEFINED:
 			case ARV_GC_REPRESENTATION_LINEAR:

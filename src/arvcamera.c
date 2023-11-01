@@ -2428,9 +2428,8 @@ arv_camera_is_binning_available (ArvCamera *camera, GError **error)
 }
 
 /**
- * arv_camera_get_representation_gain:
+ * arv_camera_get_gain_representation:
  * @camera: a #ArvCamera
- * @error: a #GError placeholder, %NULL to ignore
  *
  * Return: enum ArvGcRepresentation, -1 if not available.
  *
@@ -2438,27 +2437,26 @@ arv_camera_is_binning_available (ArvCamera *camera, GError **error)
  */
 
 ArvGcRepresentation
-arv_camera_get_representation_gain (ArvCamera *camera, GError **error)
+arv_camera_get_gain_representation (ArvCamera *camera)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
 	if (priv->has_gain)
-		return arv_device_get_representation (priv->device, "Gain", error);
+		return arv_device_get_representation (priv->device, "Gain");
 
 	if (priv->gain_raw_as_float)
-		return arv_device_get_representation (priv->device, "GainRaw", error);
+		return arv_device_get_representation (priv->device, "GainRaw");
 	if (priv->gain_abs_as_float)
-		return arv_device_get_representation (priv->device, "GainAbs", error);
+		return arv_device_get_representation (priv->device, "GainAbs");
 
-	return arv_device_get_representation (priv->device, "GainRaw", error);
+	return arv_device_get_representation (priv->device, "GainRaw");
 }
 
 /**
- * arv_camera_get_representation_exposure_time:
+ * arv_camera_get_exposure_time_representation:
  * @camera: a #ArvCamera
- * @error: a #GError placeholder, %NULL to ignore
  *
  * Return: enum ArvGcRepresentation, -1 if not available.
  *
@@ -2466,7 +2464,7 @@ arv_camera_get_representation_gain (ArvCamera *camera, GError **error)
  */
 
 ArvGcRepresentation
-arv_camera_get_representation_exposure_time (ArvCamera *camera, GError **error)
+arv_camera_get_exposure_time_representation (ArvCamera *camera)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
@@ -2474,15 +2472,14 @@ arv_camera_get_representation_exposure_time (ArvCamera *camera, GError **error)
 
 	switch (priv->series) {
 		case ARV_CAMERA_SERIES_XIMEA:
-			return arv_device_get_representation (priv->device, "ExposureTime", error);
+			return arv_device_get_representation (priv->device, "ExposureTime");
 		case ARV_CAMERA_SERIES_RICOH:
-			return arv_device_get_representation (priv->device, "ExposureTimeRaw", error);
+			return arv_device_get_representation (priv->device, "ExposureTimeRaw");
 		case ARV_CAMERA_SERIES_IMPERX_CHEETAH:
-			return arv_device_get_representation (priv->device, "ExposureMode", error);
+			return arv_device_get_representation (priv->device, "ExposureMode");
 		default:
 			return arv_device_get_representation (priv->device,
-								priv->has_exposure_time ?  "ExposureTime" : "ExposureTimeAbs",
-								error);
+								priv->has_exposure_time ?  "ExposureTime" : "ExposureTimeAbs");
 	}
 }
 
@@ -3027,7 +3024,6 @@ arv_camera_is_feature_implemented (ArvCamera *camera, const char *feature, GErro
  * arv_camera_get_representation:
  * @camera: a #ArvCamera
  * @feature: feature name
- * @error: a #GError placeholder, %NULL to ignore
  *
  * Return: enum ArvGcRepresentation, -1 if not available.
  *
@@ -3035,13 +3031,13 @@ arv_camera_is_feature_implemented (ArvCamera *camera, const char *feature, GErro
  */
 
 ArvGcRepresentation
-arv_camera_get_representation (ArvCamera *camera, const char *feature, GError **error)
+arv_camera_get_representation (ArvCamera *camera, const char *feature)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
-	return arv_device_get_representation (priv->device, feature, error);
+	return arv_device_get_representation (priv->device, feature);
 }
 
 /**

@@ -397,7 +397,6 @@ _get_feature (ArvDevice *device, GType node_type, const char *feature, GError **
  * arv_device_get_representation:
  * @device: a #ArvDevice
  * @feature: feature name
- * @error: a #GError placeholder, %NULL to ignore
  *
  * Return: enum ArvGcRepresentation, -1 if not available.
  *
@@ -405,7 +404,7 @@ _get_feature (ArvDevice *device, GType node_type, const char *feature, GError **
  */
 
 ArvGcRepresentation
-arv_device_get_representation (ArvDevice *device, const char *feature, GError **error)
+arv_device_get_representation (ArvDevice *device, const char *feature)
 {
 	ArvGcNode* node;
 

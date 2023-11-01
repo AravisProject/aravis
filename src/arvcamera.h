@@ -134,7 +134,7 @@ ARV_API double		arv_camera_get_exposure_time		(ArvCamera *camera, GError **error
 ARV_API void		arv_camera_get_exposure_time_bounds	(ArvCamera *camera, double *min, double *max, GError **error);
 ARV_API void		arv_camera_set_exposure_time_auto	(ArvCamera *camera, ArvAuto auto_mode, GError **error);
 ARV_API ArvAuto		arv_camera_get_exposure_time_auto	(ArvCamera *camera, GError **error);
-ARV_API ArvGcRepresentation arv_camera_get_representation_exposure_time(ArvCamera *camera, GError **error);
+ARV_API ArvGcRepresentation arv_camera_get_exposure_time_representation(ArvCamera *camera);
 
 ARV_API void		arv_camera_set_exposure_mode		(ArvCamera *camera, ArvExposureMode mode, GError **error);
 
@@ -150,7 +150,7 @@ ARV_API double		arv_camera_get_gain			(ArvCamera *camera, GError **error);
 ARV_API void		arv_camera_get_gain_bounds		(ArvCamera *camera, double *min, double *max, GError **error);
 ARV_API void		arv_camera_set_gain_auto		(ArvCamera *camera, ArvAuto auto_mode, GError **error);
 ARV_API ArvAuto		arv_camera_get_gain_auto		(ArvCamera *camera, GError **error);
-ARV_API ArvGcRepresentation arv_camera_get_representation_gain  (ArvCamera *camera, GError **error);
+ARV_API ArvGcRepresentation arv_camera_get_gain_representation  (ArvCamera *camera);
 
 ARV_API gboolean	arv_camera_is_black_level_available	(ArvCamera *camera, GError **error);
 ARV_API gboolean	arv_camera_is_black_level_auto_available(ArvCamera *camera, GError **error);
@@ -210,7 +210,7 @@ ARV_API gboolean        arv_camera_is_enumeration_entry_available               
 ARV_API gboolean	arv_camera_is_feature_available			(ArvCamera *camera, const char *feature, GError **error);
 ARV_API gboolean        arv_camera_is_feature_implemented               (ArvCamera *camera, const char *feature, GError **error);
 
-ARV_API ArvGcRepresentation	arv_camera_get_representation		(ArvCamera *camera, const char *feature, GError **error);
+ARV_API ArvGcRepresentation	arv_camera_get_representation		(ArvCamera *camera, const char *feature);
 
 
 /* Runtime policies */
