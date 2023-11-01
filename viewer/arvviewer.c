@@ -145,8 +145,8 @@ struct  _ArvViewer {
 	double gain_min, gain_max;
 	double exposure_min, exposure_max;
 
-	gint gain_representation;
-	gint exposure_time_representation;
+	ArvGcRepresentation gain_representation;
+	ArvGcRepresentation exposure_time_representation;
 
 	GtkWidget *main_window;
 	GtkWidget *main_stack;
@@ -766,7 +766,7 @@ set_camera_widgets(ArvViewer *viewer)
 
 	is_gain_available = arv_camera_is_gain_available (viewer->camera, NULL);
 	if (is_gain_available){
-		viewer->gain_representation = (gint)(arv_camera_get_gain_representation(viewer->camera));
+		viewer->gain_representation = arv_camera_get_gain_representation(viewer->camera);
 		switch(viewer->gain_representation){
 			case ARV_GC_REPRESENTATION_UNDEFINED:
 			case ARV_GC_REPRESENTATION_LINEAR:
@@ -798,7 +798,7 @@ set_camera_widgets(ArvViewer *viewer)
 
 	is_exposure_available = arv_camera_is_exposure_time_available (viewer->camera, NULL);
 	if (is_exposure_available){
-		viewer->exposure_time_representation = (gint)(arv_camera_get_exposure_time_representation(viewer->camera));
+		viewer->exposure_time_representation = arv_camera_get_exposure_time_representation(viewer->camera);
 		switch(viewer->exposure_time_representation){
 			case ARV_GC_REPRESENTATION_UNDEFINED:
 			case ARV_GC_REPRESENTATION_LINEAR:
