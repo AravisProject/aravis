@@ -1,3 +1,10 @@
+Stable release 0.8.30
+=====================
+
+  * gv: add EVK Helios and Automation Technology C6 devices to the legacy mode list (Václav, anathesys)
+  * gv: don't ignore POINTTOPOINT interfaces, allows for direct connection to
+    devices through VPNs (James)
+
 Stable release 0.8.29
 =====================
 
