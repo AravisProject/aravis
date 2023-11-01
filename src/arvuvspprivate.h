@@ -98,6 +98,54 @@ typedef struct {
 	ArvUvspTrailerInfos infos;
 } ArvUvspTrailer;
 
+typedef struct {
+	guint32 signature;
+	guint32 version_with_0;
+	guint16 header_type;
+	guint16 flags;
+	guint32 header_size;
+	guint64 id;
+	guint64 variable_field_with_0;
+	guint64 datasize;
+	guint64 dataoffset;
+	guint32 descriptorsize;
+	guint32 component_count;
+} ArvUvspGenDCContainerHeader;
+
+typedef struct {
+	guint16 header_type;
+	guint16 flags;
+	guint32 header_size;
+	guint16 reserved;
+	guint16 groupid;
+	guint16 sourceid;
+	guint16 regionid;
+	guint32 region_offset_x;
+	guint32 region_offset_y;
+	guint64 timestamp;
+	guint64 typeid;
+	guint32 format;
+	guint16 reserved2;
+	guint16 part_count;
+} ArvUvspGenDCComponentHeader;
+
+typedef struct {
+	guint16 header_type;
+	guint16 flags;
+	guint32 header_size;    
+	guint32 format;
+	guint16 reserved;
+	guint16 flow_id;
+	guint64 flowoffset;
+	guint64 datasize;
+	guint64 dataoffset;
+	guint32 dimension_x;
+	guint32 dimension_y;
+	guint16 padding_x;
+	guint16 padding_y;
+	guint32 info_reserved;
+} ArvUvspGenDCPartHeader;
+
 #pragma pack(pop)
 
 char * 			arv_uvsp_packet_to_string 		(const ArvUvspPacket *packet);
@@ -132,7 +180,11 @@ arv_uvsp_packet_get_buffer_payload_type (ArvUvspPacket *packet, gboolean *has_ch
         if (has_chunks != NULL)
                 *has_chunks = (payload_type & 0x4000) != 0;
 
-        return (ArvBufferPayloadType) (payload_type & 0x3fff);
+	if (payload_type == ARV_UVSP_PAYLOAD_TYPE_GENDC_CONTAINER){
+		return ARV_BUFFER_PAYLOAD_TYPE_GENDC_CONTAINER;
+	}
+	
+	return (ArvBufferPayloadType) (payload_type & 0x3fff);
 }
 
 static inline guint64
@@ -186,6 +238,18 @@ arv_uvsp_packet_get_timestamp (ArvUvspPacket *packet)
 
 	leader = (ArvUvspLeader *)packet;
 	return GUINT64_FROM_LE (leader->infos.timestamp);
+}
+
+static inline gboolean
+arv_uvsp_packet_is_gendc(char *packet)
+{
+	ArvUvspGenDCContainerHeader *gendc_container_header;
+	
+	if (packet == NULL)
+		return FALSE;
+
+	gendc_container_header = (ArvUvspGenDCContainerHeader*)packet;
+	return gendc_container_header->signature == 0x43444E47;
 }
 
 G_END_DECLS
