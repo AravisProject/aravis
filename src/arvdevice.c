@@ -398,7 +398,7 @@ _get_feature (ArvDevice *device, GType node_type, const char *feature, GError **
  * @device: a #ArvDevice
  * @feature: feature name
  *
- * Return: enum ArvGcRepresentation, -1 if not available.
+ * Return: enum ArvGcRepresentation, ARV_GC_REPRESENTATION_UNDEFINED if not available.
  *
  * Since: 
  */
@@ -408,8 +408,8 @@ arv_device_get_representation (ArvDevice *device, const char *feature)
 {
 	ArvGcNode* node;
 
-	g_return_val_if_fail (ARV_IS_DEVICE (device), FALSE);
-	g_return_val_if_fail (feature != NULL, FALSE);
+	g_return_val_if_fail (ARV_IS_DEVICE (device), ARV_GC_REPRESENTATION_UNDEFINED);
+	g_return_val_if_fail (feature != NULL, ARV_GC_REPRESENTATION_UNDEFINED);
 
 	node = arv_device_get_feature (device, feature);
 
@@ -418,7 +418,7 @@ arv_device_get_representation (ArvDevice *device, const char *feature)
 	}else if (ARV_IS_GC_INTEGER(node)){
 		return arv_gc_integer_get_representation(node);
 	}
-	return -1;
+	return ARV_GC_REPRESENTATION_UNDEFINED;
 }
 
 /**
