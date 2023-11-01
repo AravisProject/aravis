@@ -2431,7 +2431,7 @@ arv_camera_is_binning_available (ArvCamera *camera, GError **error)
  * arv_camera_get_gain_representation:
  * @camera: a #ArvCamera
  *
- * Return: enum ArvGcRepresentation, -1 if not available.
+ * Return: enum ArvGcRepresentation, ARV_GC_REPRESENTATION_UNDEFINED if not available.
  *
  * Since: 
  */
@@ -2441,7 +2441,7 @@ arv_camera_get_gain_representation (ArvCamera *camera)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
-	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), ARV_GC_REPRESENTATION_UNDEFINED);
 
 	if (priv->has_gain)
 		return arv_device_get_representation (priv->device, "Gain");
@@ -2458,7 +2458,7 @@ arv_camera_get_gain_representation (ArvCamera *camera)
  * arv_camera_get_exposure_time_representation:
  * @camera: a #ArvCamera
  *
- * Return: enum ArvGcRepresentation, -1 if not available.
+ * Return: enum ArvGcRepresentation, ARV_GC_REPRESENTATION_UNDEFINED if not available.
  *
  * Since: 
  */
@@ -2468,7 +2468,7 @@ arv_camera_get_exposure_time_representation (ArvCamera *camera)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
-	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), ARV_GC_REPRESENTATION_UNDEFINED);
 
 	switch (priv->series) {
 		case ARV_CAMERA_SERIES_XIMEA:
