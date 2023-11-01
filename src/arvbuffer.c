@@ -42,7 +42,8 @@ arv_buffer_part_is_image (ArvBuffer *buffer, guint part_id)
                 part_id < buffer->priv->n_parts &&
                 (buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
                  buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA ||
-                 buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_MULTIPART) &&
+                 buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_MULTIPART ||
+				 buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_GENDC_CONTAINER ) &&
                 (buffer->priv->parts[part_id].data_type == ARV_BUFFER_PART_DATA_TYPE_2D_IMAGE ||
                  buffer->priv->parts[part_id].data_type == ARV_BUFFER_PART_DATA_TYPE_2D_PLANE_BIPLANAR ||
                  buffer->priv->parts[part_id].data_type == ARV_BUFFER_PART_DATA_TYPE_2D_PLANE_TRIPLANAR ||
@@ -244,6 +245,77 @@ arv_buffer_get_chunk_data (ArvBuffer *buffer, guint64 chunk_id, size_t *size)
 	};
 
 	return NULL;
+}
+
+/**
+ * arv_buffer_has_gendc:
+ * @buffer: a #ArvBuffer
+ *
+ * Returns: %TRUE if @buffer has a payload type that contains GenDC Data.
+ *
+ * Since:
+ */
+
+gboolean
+arv_buffer_has_gendc (ArvBuffer *buffer)
+{
+	return ARV_IS_BUFFER (buffer) &&
+		buffer->priv->status == ARV_BUFFER_STATUS_SUCCESS &&
+		buffer->priv->has_gendc;
+}
+
+/**
+ * arv_buffer_get_gendc_data:
+ * @buffer: a #ArvBuffer
+ * @size: (allow-none): location to store chunk data size, or %NULL
+ *
+ * GenDC Data accessor.
+ *
+ * Returns: (array length=size) (element-type guint8): a pointer to the GenDC Data .
+ *
+ * Since:
+ **/
+
+const void *
+arv_buffer_get_gendc_data (ArvBuffer *buffer, size_t *size)
+{
+	g_return_val_if_fail (arv_buffer_has_gendc (buffer), NULL);
+	g_return_val_if_fail (buffer->priv->data != NULL, NULL);
+
+	if (size != NULL)
+		*size = buffer->priv->gendc_data_size;
+
+	if (*size == 0)
+		return NULL;
+
+	return buffer->priv->data + buffer->priv->gendc_data_offset;
+}
+
+/**
+ * arv_buffer_get_gendc_descriptor:
+ * @buffer: a #ArvBuffer
+ * @size: (allow-none): location to store chunk data size, or %NULL
+ *
+ * GenDC Descriptor accessor.
+ *
+ * Returns: (array length=size) (element-type guint8): a pointer to the GenDC Descriptor.
+ *
+ * Since:
+ **/
+
+const void *
+arv_buffer_get_gendc_descriptor (ArvBuffer *buffer, size_t *size)
+{
+	g_return_val_if_fail (arv_buffer_has_gendc (buffer), NULL);
+	g_return_val_if_fail (buffer->priv->data != NULL, NULL);
+
+	if (size != NULL)
+		*size = buffer->priv->gendc_descriptor_size;
+		
+	if (*size == 0)
+		return NULL;
+
+	return buffer->priv->data;
 }
 
 /**
