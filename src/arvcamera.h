@@ -134,6 +134,7 @@ ARV_API double		arv_camera_get_exposure_time		(ArvCamera *camera, GError **error
 ARV_API void		arv_camera_get_exposure_time_bounds	(ArvCamera *camera, double *min, double *max, GError **error);
 ARV_API void		arv_camera_set_exposure_time_auto	(ArvCamera *camera, ArvAuto auto_mode, GError **error);
 ARV_API ArvAuto		arv_camera_get_exposure_time_auto	(ArvCamera *camera, GError **error);
+ARV_API ArvGcRepresentation arv_camera_get_exposure_time_representation (ArvCamera *camera);
 
 ARV_API void		arv_camera_set_exposure_mode		(ArvCamera *camera, ArvExposureMode mode, GError **error);
 
@@ -149,6 +150,7 @@ ARV_API double		arv_camera_get_gain			(ArvCamera *camera, GError **error);
 ARV_API void		arv_camera_get_gain_bounds		(ArvCamera *camera, double *min, double *max, GError **error);
 ARV_API void		arv_camera_set_gain_auto		(ArvCamera *camera, ArvAuto auto_mode, GError **error);
 ARV_API ArvAuto		arv_camera_get_gain_auto		(ArvCamera *camera, GError **error);
+ARV_API ArvGcRepresentation arv_camera_get_gain_representation  (ArvCamera *camera);
 
 ARV_API gboolean	arv_camera_is_black_level_available	(ArvCamera *camera, GError **error);
 ARV_API gboolean	arv_camera_is_black_level_auto_available(ArvCamera *camera, GError **error);
@@ -208,6 +210,9 @@ ARV_API gboolean        arv_camera_is_enumeration_entry_available               
 ARV_API gboolean	arv_camera_is_feature_available			(ArvCamera *camera, const char *feature, GError **error);
 ARV_API gboolean        arv_camera_is_feature_implemented               (ArvCamera *camera, const char *feature, GError **error);
 
+ARV_API ArvGcRepresentation	arv_camera_get_feature_representation	(ArvCamera *camera, const char *feature);
+
+
 /* Runtime policies */
 
 ARV_API void		arv_camera_set_register_cache_policy		(ArvCamera *camera, ArvRegisterCachePolicy policy);
@@ -237,11 +242,18 @@ ARV_API void		arv_camera_gv_set_packet_size_adjustment	(ArvCamera *camera,
 
 ARV_API void		arv_camera_gv_set_stream_options		(ArvCamera *camera, ArvGvStreamOption options);
 
-ARV_API void		arv_camera_gv_get_persistent_ip			(ArvCamera *camera, GInetAddress **ip, GInetAddressMask **mask, GInetAddress **gateway, GError **error);
-ARV_API void		arv_camera_gv_set_persistent_ip_from_string	(ArvCamera *camera, const char *ip, const char *mask, const char *gateway, GError **error);
-ARV_API void		arv_camera_gv_set_persistent_ip			(ArvCamera *camera, GInetAddress *ip, GInetAddressMask *mask, GInetAddress *gateway, GError **error);
+ARV_API void		arv_camera_gv_get_persistent_ip			(ArvCamera *camera, GInetAddress **ip,
+                                                                         GInetAddressMask **mask, GInetAddress **gateway,
+                                                                         GError **error);
+ARV_API void		arv_camera_gv_set_persistent_ip_from_string	(ArvCamera *camera, const char *ip,
+                                                                         const char *mask, const char *gateway,
+                                                                         GError **error);
+ARV_API void		arv_camera_gv_set_persistent_ip			(ArvCamera *camera, GInetAddress *ip,
+                                                                         GInetAddressMask *mask, GInetAddress *gateway,
+                                                                         GError **error);
 ARV_API ArvGvIpConfigurationMode	arv_camera_gv_get_ip_configuration_mode	(ArvCamera *camera, GError **error);
-ARV_API void		arv_camera_gv_set_ip_configuration_mode		(ArvCamera *camera, ArvGvIpConfigurationMode mode, GError **error);
+ARV_API void		arv_camera_gv_set_ip_configuration_mode		(ArvCamera *camera,
+                                                                         ArvGvIpConfigurationMode mode, GError **error);
 
 ARV_API gboolean	arv_camera_is_uv_device				(ArvCamera *camera);
 ARV_API gboolean	arv_camera_uv_is_bandwidth_control_available	(ArvCamera *camera, GError **error);
