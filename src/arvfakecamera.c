@@ -69,6 +69,7 @@ typedef struct {
 
 	char *genicam_xml;
 	size_t genicam_xml_size;
+        char *genicam_xml_url;
 
 	guint32 frame_id;
 	double trigger_frequency;
@@ -939,6 +940,13 @@ arv_fake_camera_get_heartbeat_timeout (ArvFakeCamera *camera)
 	return value;
 }
 
+const char *
+arv_fake_camera_get_genicam_xml_url (ArvFakeCamera *camera){
+	g_return_val_if_fail (ARV_IS_FAKE_CAMERA (camera), NULL);
+
+        return camera->priv->genicam_xml_url;
+}
+
 /**
  * arv_fake_camera_get_genicam_xml:
  * @camera: a #ArvFakeCamera
@@ -970,7 +978,6 @@ arv_fake_camera_new_full (const char *serial_number, const char *genicam_filenam
 	GError *error = NULL;
 	char *filename;
 	void *memory;
-	char *xml_url;
 
 	g_return_val_if_fail (serial_number != NULL, NULL);
 	g_return_val_if_fail (*serial_number != '\0', NULL);
@@ -1027,11 +1034,10 @@ arv_fake_camera_new_full (const char *serial_number, const char *genicam_filenam
 	strcpy (((char *) memory) + ARV_GVBS_DEVICE_VERSION_OFFSET, ARAVIS_VERSION);
 	strcpy (((char *) memory) + ARV_GVBS_SERIAL_NUMBER_OFFSET, serial_number);
 
-	xml_url = g_strdup_printf ("Local:arv-fake-camera.xml;%x;%x",
-				   ARV_FAKE_CAMERA_MEMORY_SIZE,
-				   (unsigned int) fake_camera->priv->genicam_xml_size);
-	strcpy (((char *) memory) + ARV_GVBS_XML_URL_0_OFFSET, xml_url);
-	g_free (xml_url);
+        fake_camera->priv->genicam_xml_url = g_strdup_printf ("Local:///arv-fake-camera.xml;%x;%x",
+                                                              ARV_FAKE_CAMERA_MEMORY_SIZE,
+                                                              (unsigned int) fake_camera->priv->genicam_xml_size);
+        strcpy (((char *) memory) + ARV_GVBS_XML_URL_0_OFFSET, fake_camera->priv->genicam_xml_url);
 
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_SENSOR_WIDTH,
 					ARV_FAKE_CAMERA_SENSOR_WIDTH);
@@ -1103,6 +1109,7 @@ arv_fake_camera_finalize (GObject *object)
 	g_mutex_clear (&fake_camera->priv->fill_pattern_mutex);
 	g_clear_pointer (&fake_camera->priv->memory, g_free);
 	g_clear_pointer (&fake_camera->priv->genicam_xml, g_free);
+        g_clear_pointer (&fake_camera->priv->genicam_xml_url, g_free);
 
 	G_OBJECT_CLASS (arv_fake_camera_parent_class)->finalize (object);
 }
