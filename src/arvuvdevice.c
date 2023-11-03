@@ -492,6 +492,7 @@ _bootstrap (ArvUvDevice *uv_device)
 	void *data;
 	char manufacturer[64];
 	gboolean success = TRUE;
+        char *genicam_url = NULL;
 
 	arv_info_device ("Get genicam");
 
@@ -632,9 +633,9 @@ _bootstrap (ArvUvDevice *uv_device)
 					const char *zip_filename;
 
 					zip_filename = arv_zip_file_get_name (zip_files->data);
-					priv->genicam_xml = arv_zip_get_file (zip,
-											 zip_filename,
-											 &priv->genicam_xml_size);
+                                        priv->genicam_xml = arv_zip_get_file (zip,
+                                                                              zip_filename,
+                                                                              &priv->genicam_xml_size);
 
 					arv_info_device ("zip file =                 %s", zip_filename);
 
@@ -649,6 +650,11 @@ _bootstrap (ArvUvDevice *uv_device)
 					priv->genicam = arv_gc_new (ARV_DEVICE (uv_device),
 								    priv->genicam_xml,
 								    priv->genicam_xml_size);
+
+                                        genicam_url = g_strdup_printf("local:///DeviceU3V.zip;%lx;%lx",
+                                                                      entry.address, entry.size);
+                                        arv_dom_document_set_url(ARV_DOM_DOCUMENT(priv->genicam), genicam_url);
+                                        g_free (genicam_url);
 				}
 
 				arv_zip_free (zip);
@@ -662,11 +668,15 @@ _bootstrap (ArvUvDevice *uv_device)
 				priv->genicam = arv_gc_new (ARV_DEVICE (uv_device),
 							    priv->genicam_xml,
 							    priv->genicam_xml_size);
-			}
-			break;
-		default:
-			arv_warning_device ("Unknown USB3Vision manifest schema type (%d)", schema_type);
-	}
+                                genicam_url = g_strdup_printf("local:///DeviceU3V.xml;%lx;%lx",
+                                                              entry.address, entry.size);
+                                arv_dom_document_set_url(ARV_DOM_DOCUMENT(priv->genicam), genicam_url);
+                                g_free (genicam_url);
+                        }
+                        break;
+                default:
+                        arv_warning_device ("Unknown USB3Vision manifest schema type (%d)", schema_type);
+        }
 
 #if 0
 	arv_info_device("GENICAM\n:%s", priv->genicam_xml);
