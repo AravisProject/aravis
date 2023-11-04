@@ -140,14 +140,15 @@ GC_API GCGetPortInfo           ( PORT_HANDLE hPort, PORT_INFO_CMD iInfoCmd, INFO
 	GENTL_NYI_DETAIL("only TL/IF/DEV ports implemented (hPort=%s[%p])",G_OBJECT_TYPE_NAME(hPort),hPort);
 }
 GC_API GCRegisterEvent         ( EVENTSRC_HANDLE hEventSrc, EVENT_TYPE iEventID, EVENT_HANDLE *phEvent ){
-	//gentl_err = g_error_new (GENTL_ERROR, GC_ERR_NOT_AVAILABLE, "%s: events not supported.", __FUNCTION__);
 	//return GC_ERR_NOT_AVAILABLE;
-	GENTL_NYI;
+	arv_trace_gentl("%s (hEventSrc=%s[%p],iEventID=%d,phEvent=%p)",__FUNCTION__,G_OBJECT_TYPE_NAME(hEventSrc),hEventSrc,phEvent);
+	GENTL_NYI_DETAIL("hEventSrc=%s[%p]",G_OBJECT_TYPE_NAME(hEventSrc),hEventSrc);
 }
 GC_API GCUnregisterEvent       ( EVENTSRC_HANDLE hEventSrc, EVENT_TYPE iEventID ){ GENTL_NYI; }
 
 /* GenTL v1.1 */
 GC_API GCGetNumPortURLs        ( PORT_HANDLE hPort, uint32_t *piNumURLs ){
+	if(hPort==NULL) return GC_ERR_INVALID_HANDLE; // this apparently sometimes happens?!
 	arv_trace_gentl("%s (hPort=%s[%p])",__FUNCTION__,G_OBJECT_TYPE_NAME(hPort),hPort);
 	_GC_CHECK_HANDLE;
 	if(piNumURLs==NULL) return GC_ERR_INVALID_PARAMETER;
@@ -177,12 +178,10 @@ GC_API GCGetPortURLInfo        ( PORT_HANDLE hPort, uint32_t iURLIndex, URL_INFO
 	if(ARV_IS_CAMERA(hPort)){
 		switch(iInfoCmd){
 			case URL_INFO_URL: {
-				char url[ARV_GVBS_XML_URL_SIZE];
-				/* FIXME: this won't work for USB cams for sure */
-				// if(!ARV_IS_DEVICE(hPort)) GENTL_NYI_DETAIL("hPort=%s[%p]: not a ArvDevice, URL not implemented",G_OBJECT_TYPE_NAME(hPort),hPort);
-				/* arv_dom_document_get_url won't work, see https://github.com/AravisProject/aravis/issues/829 */
-				/* copied from arvgvdevice.c, _load_genicam */
-				if (!arv_device_read_memory( arv_camera_get_device(ARV_CAMERA(hPort)), ARV_GVBS_XML_URL_0_OFFSET, ARV_GVBS_XML_URL_SIZE, url, &gentl_err)) return GC_ERR_IO;
+				ArvDevice* dev;
+				const char *url;
+				dev=arv_camera_get_device(ARV_CAMERA(hPort));
+				url=arv_dom_document_get_url(ARV_DOM_DOCUMENT(arv_device_get_genicam(dev)));
 				return gentl_to_buf(INFO_DATATYPE_STRING,pBuffer,url,piSize,piType);
 			}
 			default: GENTL_NYI_DETAIL("DEV port, iInfoCmd=%d",iInfoCmd);
@@ -191,8 +190,8 @@ GC_API GCGetPortURLInfo        ( PORT_HANDLE hPort, uint32_t iURLIndex, URL_INFO
 	if(ARV_IS_DEVICE(hPort)){
 		switch(iInfoCmd){
 			case URL_INFO_URL: {
-				char url[ARV_GVBS_XML_URL_SIZE];
-				if (!arv_device_read_memory(ARV_DEVICE(hPort), ARV_GVBS_XML_URL_0_OFFSET, ARV_GVBS_XML_URL_SIZE, url, &gentl_err)) return GC_ERR_IO;
+				const char* url;
+				url=arv_dom_document_get_url(ARV_DOM_DOCUMENT(arv_device_get_genicam(ARV_DEVICE(hPort))));
 				return gentl_to_buf(INFO_DATATYPE_STRING,pBuffer,url,piSize,piType);
 			}
 			default: GENTL_NYI_DETAIL("PORT port, iInfoCmd=%d",iInfoCmd);
