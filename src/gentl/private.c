@@ -7,7 +7,13 @@ static void arv_transport_layer_init(ArvTransportLayer*){}
 
 int gentl_GCInitLib = 0;
 ArvTransportLayer* gentl_transport_layer = NULL;
-__thread GError* gentl_err = NULL;
+/* thread-local storage */
+#  if defined(_WIN32) && defined(_MSC_VER)
+	declspec(thread)
+#else
+	__thread
+#endif
+	GError* gentl_err = NULL;
 
 GQuark
 gentl_error_quark (void)
