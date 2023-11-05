@@ -7,7 +7,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Aravis.FakeCamera.set_trigger_frequency</title>
+  <title>Aravis.FakeCamera.get_genicam_xml_url</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <meta charset="utf-8" />
@@ -23,10 +23,10 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
 
   
-  <meta priority="og:title" content="Aravis.FakeCamera.set_trigger_frequency"/>
-  <meta priority="og:description" content="Reference for Aravis.FakeCamera.set_trigger_frequency"/>
-  <meta name="twitter:title" content="Aravis.FakeCamera.set_trigger_frequency"/>
-  <meta name="twitter:description" content="Reference for Aravis.FakeCamera.set_trigger_frequency"/>
+  <meta priority="og:title" content="Aravis.FakeCamera.get_genicam_xml_url"/>
+  <meta priority="og:description" content="Reference for Aravis.FakeCamera.get_genicam_xml_url"/>
+  <meta name="twitter:title" content="Aravis.FakeCamera.get_genicam_xml_url"/>
+  <meta name="twitter:description" content="Reference for Aravis.FakeCamera.get_genicam_xml_url"/>
 
 
   
@@ -97,7 +97,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.FakeCamera.get_genicam_xml.html">get_genicam_xml</a>
   
-    <a class="method" href="method.FakeCamera.get_genicam_xml_url.html">get_genicam_xml_url</a>
+    <a class="method current" href="method.FakeCamera.get_genicam_xml_url.html">get_genicam_xml_url</a>
   
     <a class="method" href="method.FakeCamera.get_heartbeat_timeout.html">get_heartbeat_timeout</a>
   
@@ -121,7 +121,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.FakeCamera.set_inet_address.html">set_inet_address</a>
   
-    <a class="method current" href="method.FakeCamera.set_trigger_frequency.html">set_trigger_frequency</a>
+    <a class="method" href="method.FakeCamera.set_trigger_frequency.html">set_trigger_frequency</a>
   
     <a class="method" href="method.FakeCamera.wait_for_next_frame.html">wait_for_next_frame</a>
   
@@ -143,7 +143,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <section id="main" class="content">
   <header>
     <h3>Method</h3>
-    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.FakeCamera.html">FakeCamera</a><span class="sep"></span>set_trigger_frequency</h1>
+    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.FakeCamera.html">FakeCamera</a><span class="sep"></span>get_genicam_xml_url</h1>
   </header>
 
   <section>
@@ -156,15 +156,14 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Declaration
         <a class="anchor" href="#declaration"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvfakecamera.h#L121">[src]</a>
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvfakecamera.h#L127">[src]</a>
         
       </h4>
 
       <div class="docblock c-decl">
-        <pre><code><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"></span>
-<span class="n">arv_fake_camera_set_trigger_frequency</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
-<span class="w">  </span><span class="n">ArvFakeCamera</span><span class="o">*</span><span class="w"> </span><span class="n">camera</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="kt">double</span><span class="w"> </span><span class="n">frequency</span><span class="w"></span>
+        <pre><code><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"></span>
+<span class="n">arv_fake_camera_get_genicam_xml_url</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
+<span class="w">  </span><span class="n">ArvFakeCamera</span><span class="o">*</span><span class="w"> </span><span class="n">camera</span><span class="w"></span>
 <span class="p">)</span><span class="w"></span>
 </pre></div>
 </code></pre>
@@ -195,39 +194,33 @@ SPDX-License-Identifier: LGPL-2.1-or-later
     </div>
 
     
-    <div class="parameters toggle-wrapper">
-      <h4 id="parameters">
-        Parameters
-        <a href="#parameters" class="anchor"></a>
+
+    
+    <div class="return-value toggle-wrapper">
+      <h4 id="return-value">
+        Return value
+        <a href="#return-value" class="anchor"></a>
       </h4>
 
       <div class="docblock">
-        <dl class="arguments">
-          
-          <dt class="arg-name"><code>frequency</code></dt>
-          <dd class="arg-description">
-            <p><em>Type:</em>&nbsp;<code>double</code></p>
+        <div class="returns">
+          <div class="arg-description">
+            <p><em>Type:</em>&nbsp;<code>const char*</code></p>
             <p>No description available.</p>
+          </div>
+          <div>
             <table>
             
             
             
+            <tr><td title="transfer: none">The data is owned by the instance.</td></tr>
             
-            
-            
-            
-            
-            
+            <tr><td>The value is a NUL terminated UTF-8 string.</td></tr>
             </table>
-          </dd>
-          
-
-          
-        </dl>
+          </div>
+        </div>
       </div>
     </div>
-    
-
     
 
   </section>
