@@ -92,9 +92,16 @@ struct _ArvDeviceClass {
 	gboolean	(*write_memory)		(ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error);
 	gboolean	(*read_register)	(ArvDevice *device, guint64 address, guint32 *value, GError **error);
 	gboolean	(*write_register)	(ArvDevice *device, guint64 address, guint32 value, GError **error);
+#if ARAVIS_HAS_EVENT
+	gboolean	(*read_event_data)	(ArvDevice *device, int event_id, guint64 address, guint32 size,
+                                                 void *buffer, GError **error);
+#endif
 
 	/* signals */
 	void		(*control_lost)		(ArvDevice *device);
+#if ARAVIS_HAS_EVENT
+	void		(*device_event)		(ArvDevice *device);
+#endif
 };
 
 ARV_API ArvStream *	arv_device_create_stream		(ArvDevice *device, ArvStreamCallback callback, void *user_data, GError **error);
@@ -104,6 +111,11 @@ ARV_API gboolean	arv_device_read_memory			(ArvDevice *device, guint64 address, g
 ARV_API gboolean	arv_device_write_memory			(ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error);
 ARV_API gboolean	arv_device_read_register		(ArvDevice *device, guint64 address, guint32 *value, GError **error);
 ARV_API gboolean	arv_device_write_register		(ArvDevice *device, guint64 address, guint32 value, GError **error);
+#if ARAVIS_HAS_EVENT
+ARV_API gboolean	arv_device_read_event_data		(ArvDevice *device, int event_id,
+                                                                 guint64 address, guint32 size, void *buffer,
+                                                                 GError **error);
+#endif
 
 ARV_API const char *	arv_device_get_genicam_xml		(ArvDevice *device, size_t *size);
 ARV_API ArvGc *		arv_device_get_genicam			(ArvDevice *device);

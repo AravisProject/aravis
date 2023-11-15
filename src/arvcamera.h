@@ -262,6 +262,8 @@ ARV_API guint		arv_camera_uv_get_bandwidth			(ArvCamera *camera, GError **error)
 ARV_API void		arv_camera_uv_get_bandwidth_bounds		(ArvCamera *camera, guint *min, guint *max, GError **error);
 ARV_API void            arv_camera_uv_set_usb_mode			(ArvCamera *camera, ArvUvUsbMode usb_mode);
 
+ARV_API gboolean	arv_camera_is_gentl_device			(ArvCamera *camera);
+
 /* Chunk data */
 
 ARV_API gboolean		arv_camera_are_chunks_available		(ArvCamera *camera, GError **error);

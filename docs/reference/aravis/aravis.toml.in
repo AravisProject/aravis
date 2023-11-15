@@ -44,6 +44,7 @@ content_files = [
 	'utilities.md',
 	'ethernet.md',
 	'usb.md',
+	'gentl.md',
 	'thread-safety.md',
 	'porting-0.8.md',
 	'tests.md'
