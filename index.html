@@ -248,6 +248,8 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         
           <li><a href="usb.html">USB Devices</a></li>
         
+          <li><a href="gentl.html">GenTL Devices</a></li>
+        
           <li><a href="thread-safety.html">Thread Safety</a></li>
         
           <li><a href="porting-0.8.html">Porting to Aravis 0.8</a></li>
@@ -773,6 +775,46 @@ types of Genicam property nodes (Value, pValue,&nbsp;Endianness&#8230;).</p>
             
             <td class="docblock-summary">
             
+            <p></p>
+            </td>
+            
+          </tr>
+          
+          <tr class="section-item">
+            <td><a title="GenTLDevice" class="symbol" href="class.GenTLDevice.html">GenTLDevice</a></td>
+            
+            <td class="docblock-summary">
+            
+            <p></p>
+            </td>
+            
+          </tr>
+          
+          <tr class="section-item">
+            <td><a title="GenTLInterface" class="symbol" href="class.GenTLInterface.html">GenTLInterface</a></td>
+            
+            <td class="docblock-summary">
+            
+            <p></p>
+            </td>
+            
+          </tr>
+          
+          <tr class="section-item">
+            <td><a title="GenTLStream" class="symbol" href="class.GenTLStream.html">GenTLStream</a></td>
+            
+            <td class="docblock-summary">
+            
+            <p></p>
+            </td>
+            
+          </tr>
+          
+          <tr class="section-item">
+            <td><a title="GenTLSystem" class="symbol" href="class.GenTLSystem.html">GenTLSystem</a></td>
+            
+            <td class="docblock-summary">
+            <p><code>ArvGenTLSystem</code> represents a GenTL&nbsp;module.</p>
             <p></p>
             </td>
             
@@ -1625,9 +1667,20 @@ as the <span class="caps">MAC</span> address for Ethernet based devices, bus id 
             <td><a title="get_interface_id" class="symbol" href="func.get_interface_id.html">get_interface_id</a></td>
             
             <td class="docblock-summary">
-            <p>Retrieves the interface identifier. Possible values are &#8216;Fake&#8217;, &#8216;USB3Vision&#8217;
-and&nbsp;&#8216;GigEVision&#8217;.</p>
+            <p>Retrieves the interface identifier. Possible values are &#8216;Fake&#8217;, &#8216;USB3Vision&#8217;,
+&#8216;GigEVision&#8217; and&nbsp;&#8216;GenTL&#8217;.</p>
             <p></p>
+            </td>
+            
+          </tr>
+          
+          <tr class="section-item">
+            <td><a title="get_interface_protocol" class="symbol" href="func.get_interface_protocol.html">get_interface_protocol</a></td>
+            
+            <td class="docblock-summary">
+            <p>Retrieves the interface protocol. Possible values are &#8216;Fake&#8217;, &#8216;USB3Vision&#8217;,
+&#8216;GigEVision&#8217; and&nbsp;&#8216;Mixed&#8217;.</p>
+            <p><span class="emblem available-next" title="This symbol will be available in the next stable release">unstable</span>&nbsp;<span class="emblem available">since: 0.9.0</span></p>
             </td>
             
           </tr>
