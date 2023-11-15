@@ -27,6 +27,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <zlib.h>
+#include <GenTL_v1_5.h>
 
 #ifdef G_OS_WIN32
 	 #include <windows.h>
@@ -931,6 +932,53 @@ arv_vendor_alias_lookup	(const char *vendor)
 			return vendor_aliases[i].alias;
 
 	return vendor;
+}
+
+static struct {
+	const char *protocol;
+	const char *transport_layer_type;
+} arv_protocols[] = {
+        { "GigEVision",         TLTypeGEVName},
+        { "USB3Vision",         TLTypeU3VName},
+        { "CameraLink",         TLTypeCLName},
+        { "IIDC1394",           TLTypeIIDCName},
+        { "USBVideoClass",      TLTypeUVCName},
+        { "CoaXPress",          TLTypeCXPName},
+        { "CameraLinkHS",       TLTypeCLHSName},
+        { "GenericEthernet",    TLTypeETHERNETName},
+        { "PCIExpress",         TLTypePCIName},
+        { "Mixed",              TLTypeMixedName},
+        { "Custom",             TLTypeCustomName},
+};
+
+const char *
+arv_protocol_from_transport_layer_type	(const char *transport_layer_type)
+{
+	int i;
+
+	if (transport_layer_type == NULL)
+		return NULL;
+
+	for (i = 0; i < G_N_ELEMENTS (arv_protocols); i++)
+		if (g_strcmp0 (arv_protocols[i].transport_layer_type, transport_layer_type) == 0)
+			return arv_protocols[i].protocol;
+
+	return "Unknown";
+}
+
+const char *
+arv_protocol_to_transport_layer_type	(const char *protocol)
+{
+	int i;
+
+	if (protocol == NULL)
+		return NULL;
+
+	for (i = 0; i < G_N_ELEMENTS (arv_protocols); i++)
+		if (g_strcmp0 (arv_protocols[i].protocol, protocol) == 0)
+			return arv_protocols[i].transport_layer_type;
+
+	return "Custom";
 }
 
 /**

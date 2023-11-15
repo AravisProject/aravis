@@ -511,6 +511,7 @@ arv_gv_interface_update_device_list (ArvInterface *interface, GArray *device_ids
                         ids->manufacturer_info = g_strdup (infos->manufacturer_info);
 			ids->model = g_strdup (infos->model);
 			ids->serial_nbr = g_strdup (infos->serial);
+                        ids->protocol = "GigEVision";
 
 			g_array_append_val (device_ids, ids);
 
@@ -800,6 +801,4 @@ arv_gv_interface_class_init (ArvGvInterfaceClass *gv_interface_class)
 
 	interface_class->update_device_list = arv_gv_interface_update_device_list;
 	interface_class->open_device = arv_gv_interface_open_device;
-
-	interface_class->protocol = "GigEVision";
 }

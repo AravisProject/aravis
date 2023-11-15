@@ -257,6 +257,7 @@ _discover (ArvGenTLInterface *gentl_interface, GArray *device_ids)
 					ids->vendor = vendor;
 					ids->serial_nbr = serial_nbr;
 					ids->address = g_strdup(interface_type);
+                                        ids->protocol = arv_protocol_from_transport_layer_type (interface_type);
 					g_array_append_val (device_ids, ids);
 				} else {
 					g_free(id);
@@ -375,6 +376,4 @@ arv_gentl_interface_class_init (ArvGenTLInterfaceClass *gentl_interface_class)
 
 	interface_class->update_device_list = arv_gentl_interface_update_device_list;
 	interface_class->open_device = arv_gentl_interface_open_device;
-
-	interface_class->protocol = "GenTL";
 }
