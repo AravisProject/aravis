@@ -310,8 +310,14 @@ arv_gentl_device_read_memory (ArvDevice *device, guint64 address, guint32 size, 
 
 	size_t sizet = size;
 	GC_ERROR error_code = gentl->GCReadPort(priv->port_handle, address, buffer, &sizet);
-	size = (guint32) sizet;
-	return error_code == GC_ERR_SUCCESS;
+
+        if (error_code != GC_ERR_SUCCESS) {
+                g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
+                             "Read memory error (%s)", arv_gentl_gc_error_to_string (error_code));
+                return FALSE;
+        }
+
+	return TRUE;
 }
 
 static gboolean
@@ -322,8 +328,14 @@ arv_gentl_device_write_memory (ArvDevice *device, guint64 address, guint32 size,
 
 	size_t sizet = size;
 	GC_ERROR error_code =  gentl->GCWritePort(priv->port_handle, address, buffer, &sizet);
-	size = (guint32) sizet;
-	return error_code == GC_ERR_SUCCESS;
+
+        if (error_code != GC_ERR_SUCCESS) {
+                g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
+                             "Write memory error (%s)", arv_gentl_gc_error_to_string (error_code));
+                return FALSE;
+        }
+
+	return TRUE;
 }
 
 static gboolean
