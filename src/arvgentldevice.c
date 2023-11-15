@@ -387,11 +387,11 @@ arv_gentl_device_init (ArvGenTLDevice *gentl_device)
 }
 
 static char *
-_load_genicam (ArvGenTLDevice *gentl_device, size_t  *size)
+_load_genicam (ArvGenTLDevice *gentl_device, size_t  *size, char **url, GError **error)
 {
 	ArvGenTLDevicePrivate *priv = arv_gentl_device_get_instance_private (gentl_device);
 	ArvGenTLModule *gentl = arv_gentl_system_get_gentl(priv->gentl_system);
-
+        GError *local_error = NULL;
 	char filename[1024];
 	size_t filename_size = 1024;
 	char *genicam = NULL;
@@ -400,15 +400,19 @@ _load_genicam (ArvGenTLDevice *gentl_device, size_t  *size)
 	guint64 file_address;
 	guint64 file_size;
 	INFO_DATATYPE info_data_type;
-        GC_ERROR error;
+        GC_ERROR gc_error;
 
 	g_return_val_if_fail (size != NULL, NULL);
+        g_return_val_if_fail (url != NULL, NULL);
 
 	*size = 0;
+        *url = NULL;
 
-	error = gentl->GCGetPortURLInfo(priv->port_handle, 0, URL_INFO_URL, &info_data_type, filename, &filename_size);
-	if (error != GC_ERR_SUCCESS) {
-		arv_warning_device("GCGetPortURLInfo: %d", error);
+	gc_error = gentl->GCGetPortURLInfo(priv->port_handle, 0, URL_INFO_URL, &info_data_type, filename, &filename_size);
+	if (gc_error != GC_ERR_SUCCESS) {
+		arv_warning_device("GCGetPortURLInfo: %d", gc_error);
+                g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
+                             "Failed to get PortURLInfo (%s)", arv_gentl_gc_error_to_string (gc_error));
 		return NULL;
         }
 
@@ -420,8 +424,10 @@ _load_genicam (ArvGenTLDevice *gentl_device, size_t  *size)
 		gsize len;
 
 		g_file_get_contents (path, &genicam, &len, NULL);
-		if (genicam)
+		if (genicam) {
 			*size = len;
+                        *url = g_strdup (filename);
+                }
 	} else if (g_ascii_strcasecmp (scheme, "local") == 0) {
 		arv_info_device ("[GenTLDevice::load_genicam] Xml address = 0x%" G_GINT64_MODIFIER "x - "
 				  "size = 0x%" G_GINT64_MODIFIER "x - %s", file_address, file_size, path);
@@ -429,7 +435,7 @@ _load_genicam (ArvGenTLDevice *gentl_device, size_t  *size)
 		if (file_size > 0) {
 			genicam = g_malloc (file_size);
 			if (arv_gentl_device_read_memory (ARV_DEVICE (gentl_device), file_address, file_size,
-						    genicam, NULL)) {
+						    genicam, &local_error)) {
 
 				if (arv_debug_check (ARV_DEBUG_CATEGORY_MISC, ARV_DEBUG_LEVEL_DEBUG)) {
 					GString *string = g_string_new ("");
@@ -463,22 +469,27 @@ _load_genicam (ArvGenTLDevice *gentl_device, size_t  *size)
 									       &tmp_buffer_size);
 
 						g_free (genicam);
-						file_size = tmp_buffer_size;
+                                                *size = tmp_buffer_size;
 						genicam = tmp_buffer;
-					} else
+					} else {
 						arv_warning_device ("[GenTLDevice::load_genicam] Invalid format");
+                                                g_clear_pointer (&genicam, g_free);
+                                        }
 					arv_zip_free (zip);
-				}
-				*size = file_size;
-			} else {
-				g_free (genicam);
-				genicam = NULL;
-				*size = 0;
-			}
-		}
-	} else if (g_ascii_strcasecmp (scheme, "http")) {
-		GFile *file;
-		GFileInputStream *stream;
+				} else {
+                                        *size = file_size;
+                                }
+
+                                if (genicam != NULL)
+                                        *url = g_strdup_printf ("%s:///%s;%lx;%lx", scheme, path,
+                                                                file_address, file_size);
+                        } else {
+                                g_clear_pointer (&genicam, g_free);
+                        }
+                }
+        } else if (g_ascii_strcasecmp (scheme, "http")) {
+                GFile *file;
+                GFileInputStream *stream;
 
 		file = g_file_new_for_uri (filename);
 		stream = g_file_read (file, NULL, NULL);
@@ -489,8 +500,10 @@ _load_genicam (ArvGenTLDevice *gentl_device, size_t  *size)
 			data_stream = g_data_input_stream_new (G_INPUT_STREAM (stream));
 			genicam = g_data_input_stream_read_upto (data_stream, "", 0, &len, NULL, NULL);
 
-			if (genicam)
+			if (genicam) {
 				*size = len;
+                                *url = g_strdup (filename);
+                        }
 
 			g_object_unref (data_stream);
 			g_object_unref (stream);
@@ -499,6 +512,11 @@ _load_genicam (ArvGenTLDevice *gentl_device, size_t  *size)
 	} else {
 		g_critical ("Unkown GENICAM url scheme: '%s'", filename);
 	}
+
+        if (local_error != NULL) {
+                arv_warning_device("Failed to load GENICAM data: %s", local_error->message);
+                g_propagate_error (error, local_error);
+        }
 
 	g_free (scheme);
 	g_free (path);
@@ -558,6 +576,7 @@ arv_gentl_device_constructed (GObject *self)
 	ArvGenTLDevice *gentl_device = ARV_GENTL_DEVICE (self);
 	ArvGenTLDevicePrivate *priv = arv_gentl_device_get_instance_private (gentl_device);
 	ArvGenTLModule *gentl = arv_gentl_system_get_gentl(priv->gentl_system);
+        char *url = NULL;
 
 	G_OBJECT_CLASS (arv_gentl_device_parent_class)->constructed (self);
 
@@ -579,7 +598,7 @@ arv_gentl_device_constructed (GObject *self)
 		return;
 	}
 
-	priv->genicam_xml = _load_genicam(gentl_device, &priv->genicam_xml_size);
+	priv->genicam_xml = _load_genicam (gentl_device, &priv->genicam_xml_size, &url, NULL);
 	if (priv->genicam_xml == NULL) {
 		arv_device_take_init_error (ARV_DEVICE (gentl_device),
                                             g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_GENICAM_NOT_FOUND,
@@ -589,6 +608,8 @@ arv_gentl_device_constructed (GObject *self)
 	}
 
 	priv->genicam = arv_gc_new (ARV_DEVICE(self), priv->genicam_xml, priv->genicam_xml_size);
+        arv_dom_document_set_url (ARV_DOM_DOCUMENT(priv->genicam), url);
+        g_free (url);
 
 #if ARAVIS_HAS_EVENT
 	priv->event_thread_run = 1;
