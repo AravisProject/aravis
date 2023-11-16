@@ -28,6 +28,7 @@
 #endif
 
 #include <arvgentldevice.h>
+#include <arvgentlsystemprivate.h>
 
 G_BEGIN_DECLS
 

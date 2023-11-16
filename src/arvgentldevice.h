@@ -30,7 +30,7 @@
 #include <arvapi.h>
 #include <arvtypes.h>
 #include <arvdevice.h>
-#include <arvgentlsystemprivate.h>
+#include <arvgentlsystem.h>
 
 G_BEGIN_DECLS
 
