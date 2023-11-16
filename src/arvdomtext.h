@@ -38,6 +38,9 @@ ARV_API G_DECLARE_DERIVABLE_TYPE (ArvDomText, arv_dom_text, ARV, DOM_TEXT, ArvDo
 
 struct _ArvDomTextClass {
 	ArvDomCharacterDataClass  parent_class;
+
+        /* Padding for future expansion */
+        gpointer padding[10];
 };
 
 ARV_API ArvDomNode *		arv_dom_text_new		(const char *data);

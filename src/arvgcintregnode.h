@@ -37,6 +37,9 @@ ARV_API G_DECLARE_DERIVABLE_TYPE (ArvGcIntRegNode, arv_gc_int_reg_node, ARV, GC_
 
 struct _ArvGcIntRegNodeClass {
 	ArvGcRegisterNodeClass parent_class;
+
+        /* Padding for future expansion */
+        gpointer padding[10];
 };
 
 ARV_API ArvGcNode *		arv_gc_int_reg_node_new			(void);

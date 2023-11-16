@@ -61,6 +61,9 @@ struct _ArvStreamClass {
 
 	/* signals */
 	void        	(*new_buffer)   	(ArvStream *stream);
+
+        /* Padding for future expansion */
+        gpointer padding[10];
 };
 
 /**

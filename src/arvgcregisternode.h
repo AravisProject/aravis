@@ -40,6 +40,9 @@ struct _ArvGcRegisterNodeClass {
 	ArvGcFeatureNodeClass parent_class;
 
 	ArvGcCachable default_cachable;
+
+        /* Padding for future expansion */
+        gpointer padding[10];
 };
 
 ARV_API ArvGcNode *		arv_gc_register_node_new		(void);

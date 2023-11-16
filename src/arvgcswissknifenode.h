@@ -37,6 +37,9 @@ ARV_API G_DECLARE_DERIVABLE_TYPE (ArvGcSwissKnifeNode, arv_gc_swiss_knife_node, 
 
 struct _ArvGcSwissKnifeNodeClass {
 	ArvGcSwissKnifeClass parent_class;
+
+        /* Padding for future expansion */
+        gpointer padding[10];
 };
 
 ARV_API ArvGcNode *		arv_gc_swiss_knife_node_new		(void);

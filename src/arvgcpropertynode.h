@@ -104,6 +104,9 @@ ARV_API G_DECLARE_DERIVABLE_TYPE (ArvGcPropertyNode, arv_gc_property_node, ARV, 
 
 struct _ArvGcPropertyNodeClass {
 	ArvGcNodeClass parent_class;
+
+        /* Padding for future expansion */
+        gpointer padding[10];
 };
 
 ARV_API ArvGcNode *		arv_gc_property_node_new_p_feature 		(void);

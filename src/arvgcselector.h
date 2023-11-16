@@ -39,6 +39,9 @@ struct _ArvGcSelectorInterface {
 	GTypeInterface parent;
 
 	const GSList *	(*get_selected_features)	(ArvGcSelector *gc_selector);
+
+        /* Padding for future expansion */
+        gpointer padding[10];
 };
 
 ARV_API gboolean		arv_gc_selector_is_selector		(ArvGcSelector *gc_selector);
