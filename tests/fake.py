@@ -1,7 +1,7 @@
 import gi
 import os
 
-gi.require_version ('Aravis', '0.8')
+gi.require_version ('Aravis', '0.10')
 
 from gi.repository import Aravis
 

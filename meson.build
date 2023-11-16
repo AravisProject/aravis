@@ -1,10 +1,10 @@
-project ('aravis', 'c', 'cpp', version: '0.8.31', meson_version: '>=0.57.0')
+project ('aravis', 'c', 'cpp', version: '0.9.0', meson_version: '>=0.57.0')
 
 gnome = import('gnome')
 pkg = import ('pkgconfig')
 
 aravis_version = meson.project_version ()
-aravis_api_version = '0.8'
+aravis_api_version = '0.10'
 
 versions = aravis_version.split ('.')
 aravis_major_version = versions[0].to_int ()
