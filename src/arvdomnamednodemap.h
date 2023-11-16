@@ -44,6 +44,9 @@ struct _ArvDomNamedNodeMapClass {
 	ArvDomNode *	(*remove) 		(ArvDomNamedNodeMap *map, const char *name);
 	ArvDomNode *	(*get_item) 		(ArvDomNamedNodeMap *map, unsigned int index);
 	unsigned int	(*get_length)		(ArvDomNamedNodeMap *map);
+
+        /* Padding for future expansion */
+        gpointer padding[10];
 };
 
 ARV_API ArvDomNode *		arv_dom_named_node_map_get_named_item		(ArvDomNamedNodeMap *map, const char *name);

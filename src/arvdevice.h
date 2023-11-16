@@ -102,6 +102,9 @@ struct _ArvDeviceClass {
 #if ARAVIS_HAS_EVENT
 	void		(*device_event)		(ArvDevice *device);
 #endif
+
+        /* Padding for future expansion */
+        gpointer padding[10];
 };
 
 ARV_API ArvStream *	arv_device_create_stream		(ArvDevice *device, ArvStreamCallback callback, void *user_data, GError **error);

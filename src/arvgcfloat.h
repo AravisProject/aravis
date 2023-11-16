@@ -50,6 +50,9 @@ struct _ArvGcFloatInterface {
 	const char *		(*get_unit)		(ArvGcFloat *gc_float);
 	void			(*impose_min)		(ArvGcFloat *gc_float, double minimum, GError **error);
 	void			(*impose_max)		(ArvGcFloat *gc_float, double maximum, GError **error);
+
+        /* Padding for future expansion */
+        gpointer padding[10];
 };
 
 ARV_API double			arv_gc_float_get_value			(ArvGcFloat *gc_float, GError **error);

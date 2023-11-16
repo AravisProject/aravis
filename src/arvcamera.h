@@ -48,6 +48,9 @@ ARV_API G_DECLARE_DERIVABLE_TYPE (ArvCamera, arv_camera, ARV, CAMERA, GObject)
 
 struct _ArvCameraClass {
 	GObjectClass parent_class;
+
+        /* Padding for future expansion */
+        gpointer padding[10];
 };
 
 ARV_API ArvCamera *	arv_camera_new			(const char *name, GError **error);

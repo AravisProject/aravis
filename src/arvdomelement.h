@@ -41,6 +41,9 @@ struct _ArvDomElementClass {
 
 	const char* 	(*get_attribute) (ArvDomElement *self, const char *name);
 	void 		(*set_attribute) (ArvDomElement *self, const char *name, const char *attribute_value);
+
+        /* Padding for future expansion */
+        gpointer padding[10];
 };
 
 ARV_API const char *	arv_dom_element_get_tag_name	(ArvDomElement *self);

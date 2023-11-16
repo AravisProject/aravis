@@ -41,6 +41,9 @@ struct _ArvGcStringInterface {
 	const char *	(*get_value)		(ArvGcString *gc_string, GError **error);
 	void		(*set_value)		(ArvGcString *gc_string, const char *value, GError **error);
 	gint64		(*get_max_length)	(ArvGcString *gc_string, GError **error);
+
+        /* Padding for future expansion */
+        gpointer padding[10];
 };
 
 ARV_API const char *	arv_gc_string_get_value		(ArvGcString *gc_string, GError **error);

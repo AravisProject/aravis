@@ -43,6 +43,9 @@ struct _ArvDomDocumentClass {
 	ArvDomElement *	(*get_document_element) (ArvDomDocument* self);
 	ArvDomElement *	(*create_element) 	(ArvDomDocument* self, const char *tag_name);
 	ArvDomText * 	(*create_text_node) 	(ArvDomDocument* self, const char *data);
+
+        /* Padding for future expansion */
+        gpointer padding[10];
 };
 
 ARV_API ArvDomElement*		arv_dom_document_get_document_element	(ArvDomDocument *self);

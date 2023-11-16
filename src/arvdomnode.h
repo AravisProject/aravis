@@ -72,6 +72,9 @@ struct _ArvDomNodeClass {
 	void			(*pre_remove_child) 	(ArvDomNode *parent, ArvDomNode *child);
 	void			(*changed)		(ArvDomNode *self);
 	gboolean		(*child_changed)	(ArvDomNode *self, ArvDomNode *child);
+
+        /* Padding for future expansion */
+        gpointer padding[10];
 };
 
 ARV_API const char *		arv_dom_node_get_node_name		(ArvDomNode *self);

@@ -44,6 +44,9 @@ struct _ArvGcRegisterInterface {
                                                  GError **error);
 	guint64		(*get_address) 		(ArvGcRegister *gc_register, GError **error);
 	guint64 	(*get_length)		(ArvGcRegister *gc_register, GError **error);
+
+        /* Padding for future expansion */
+        gpointer padding[10];
 };
 
 ARV_API void		arv_gc_register_get		(ArvGcRegister *gc_register, void *buffer, guint64 length,

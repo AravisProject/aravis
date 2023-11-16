@@ -48,6 +48,9 @@ struct _ArvGcIntegerInterface {
 	const char *		(*get_unit)		(ArvGcInteger *gc_integer);
 	void			(*impose_min)		(ArvGcInteger *gc_integer, gint64 minimum, GError **error);
 	void			(*impose_max)		(ArvGcInteger *gc_integer, gint64 maximum, GError **error);
+
+        /* Padding for future expansion */
+        gpointer padding[10];
 };
 
 ARV_API gint64			arv_gc_integer_get_value		(ArvGcInteger *gc_integer, GError **error);
