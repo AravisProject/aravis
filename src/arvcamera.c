@@ -800,18 +800,23 @@ arv_camera_dup_available_pixel_formats_as_display_names (ArvCamera *camera, guin
  *
  * Starts video stream acquisition.
  *
+ * Returns: %TRUE on success
+ *
  * Since: 0.8.0
  */
 
-void
+gboolean
 arv_camera_start_acquisition (ArvCamera *camera, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+        gboolean success;
 
-	if (arv_camera_is_gentl_device(camera))
-		arv_gentl_device_start_acquisition( ARV_GENTL_DEVICE(priv->device) );
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
-	arv_camera_execute_command (camera, "AcquisitionStart", error);
+        success = arv_device_start_acquisition (priv->device, error);
+        success = success && arv_camera_execute_command (camera, "AcquisitionStart", error);
+
+        return success;
 }
 
 /**
@@ -821,19 +826,23 @@ arv_camera_start_acquisition (ArvCamera *camera, GError **error)
  *
  * Stops video stream acquisition.
  *
+ * Returns: %TRUE on success
+ *
  * Since: 0.8.0
  */
 
-void
+gboolean
 arv_camera_stop_acquisition (ArvCamera *camera, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+        gboolean success;
 
-	arv_camera_execute_command (camera, "AcquisitionStop", error);
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
-	if (arv_camera_is_gentl_device(camera))
-		arv_gentl_device_stop_acquisition( ARV_GENTL_DEVICE(priv->device) );
+	success = arv_camera_execute_command (camera, "AcquisitionStop", error);
+        success = success && arv_device_stop_acquisition (priv->device, error);
 
+        return success;
 }
 
 /**
@@ -843,13 +852,23 @@ arv_camera_stop_acquisition (ArvCamera *camera, GError **error)
  *
  * Aborts video stream acquisition.
  *
+ * Returns: %TRUE on success
+ *
  * Since: 0.8.0
  */
 
-void
+gboolean
 arv_camera_abort_acquisition (ArvCamera *camera, GError **error)
 {
-	arv_camera_execute_command (camera, "AcquisitionAbort", error);
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+        gboolean success;
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
+
+	success = arv_camera_execute_command (camera, "AcquisitionAbort", error);
+        success = success && arv_device_stop_acquisition (priv->device, error);
+
+        return success;
 }
 
 /**
@@ -2504,17 +2523,19 @@ arv_camera_get_exposure_time_representation (ArvCamera *camera)
  *
  * Execute a Genicam command.
  *
+ * Returns: %TRUE on success
+ *
  * Since: 0.8.0
  */
 
-void
+gboolean
 arv_camera_execute_command (ArvCamera *camera, const char *feature, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
-	g_return_if_fail (ARV_IS_CAMERA (camera));
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
-	arv_device_execute_command (priv->device, feature, error);
+	return arv_device_execute_command (priv->device, feature, error);
 }
 
 /**

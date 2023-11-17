@@ -101,9 +101,9 @@ ARV_API const char **	arv_camera_dup_available_pixel_formats_as_display_names	(A
 
 /* Acquisition control */
 
-ARV_API void		arv_camera_start_acquisition		(ArvCamera *camera, GError **error);
-ARV_API void		arv_camera_stop_acquisition		(ArvCamera *camera, GError **error);
-ARV_API void		arv_camera_abort_acquisition		(ArvCamera *camera, GError **error);
+ARV_API gboolean	arv_camera_start_acquisition		(ArvCamera *camera, GError **error);
+ARV_API gboolean	arv_camera_stop_acquisition		(ArvCamera *camera, GError **error);
+ARV_API gboolean	arv_camera_abort_acquisition		(ArvCamera *camera, GError **error);
 
 ARV_API ArvBuffer *	arv_camera_acquisition			(ArvCamera *camera, guint64 timeout, GError **error);
 
@@ -182,7 +182,7 @@ ARV_API guint		arv_camera_get_payload			(ArvCamera *camera, GError **error);
 
 /* Generic feature control */
 
-ARV_API void		arv_camera_execute_command		(ArvCamera *camera, const char *feature, GError **error);
+ARV_API gboolean	arv_camera_execute_command		(ArvCamera *camera, const char *feature, GError **error);
 
 ARV_API void		arv_camera_set_boolean			(ArvCamera *camera, const char *feature, gboolean value, GError **error);
 ARV_API gboolean	arv_camera_get_boolean			(ArvCamera *camera, const char *feature, GError **error);

@@ -56,8 +56,8 @@ ARV_API G_DECLARE_DERIVABLE_TYPE (ArvStream, arv_stream, ARV, STREAM, GObject)
 struct _ArvStreamClass {
 	GObjectClass parent_class;
 
-	void		(*start_thread)		(ArvStream *stream);
-	void		(*stop_thread)		(ArvStream *stream);
+	gboolean	(*start_acquisition)	(ArvStream *stream, GError **error);
+	gboolean	(*stop_acquisition)	(ArvStream *stream, GError **error);
 
 	/* signals */
 	void        	(*new_buffer)   	(ArvStream *stream);
@@ -94,8 +94,9 @@ ARV_API ArvBuffer *	arv_stream_timeout_pop_buffer		(ArvStream *stream, guint64 t
 ARV_API void		arv_stream_get_n_buffers		(ArvStream *stream,
 								 gint *n_input_buffers,
 								 gint *n_output_buffers);
-ARV_API void		arv_stream_start_thread			(ArvStream *stream);
-ARV_API unsigned int	arv_stream_stop_thread			(ArvStream *stream, gboolean delete_buffers);
+ARV_API gboolean	arv_stream_start_acquisition		(ArvStream *stream, GError **error);
+ARV_API gboolean	arv_stream_stop_acquisition		(ArvStream *stream, GError **error);
+ARV_API guint           arv_stream_delete_buffers               (ArvStream *stream);
 
 ARV_API void		arv_stream_get_statistics		(ArvStream *stream,
 								 guint64 *n_completed_buffers,

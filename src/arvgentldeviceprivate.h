@@ -35,8 +35,6 @@ G_BEGIN_DECLS
 ArvGenTLSystem *	arv_gentl_device_get_system                     (ArvGenTLDevice *device);
 DS_HANDLE       	arv_gentl_device_open_stream_handle             (ArvGenTLDevice *device);
 uint64_t	        arv_gentl_device_get_timestamp_tick_frequency   (ArvGenTLDevice *device);
-void	        	arv_gentl_device_start_acquisition              (ArvGenTLDevice *device);
-void		        arv_gentl_device_stop_acquisition               (ArvGenTLDevice *device);
 
 G_END_DECLS
 

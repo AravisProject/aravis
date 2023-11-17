@@ -66,6 +66,7 @@ typedef enum {
 	ARV_DEVICE_ERROR_INVALID_PARAMETER,
 	ARV_DEVICE_ERROR_GENICAM_NOT_FOUND,
 	ARV_DEVICE_ERROR_NO_STREAM_CHANNEL,
+        ARV_DEVICE_ERROR_STREAM_ERROR,
 	ARV_DEVICE_ERROR_NOT_CONTROLLER,
 	ARV_DEVICE_ERROR_UNKNOWN,
         ARV_DEVICE_ERROR_PROTOCOL_ERROR_NOT_IMPLEMENTED,
@@ -110,6 +111,9 @@ struct _ArvDeviceClass {
 ARV_API ArvStream *	arv_device_create_stream		(ArvDevice *device, ArvStreamCallback callback, void *user_data, GError **error);
 ARV_API ArvStream *	arv_device_create_stream_full		(ArvDevice *device, ArvStreamCallback callback, void *user_data, GDestroyNotify destroy, GError **error);
 
+ARV_API gboolean        arv_device_start_acquisition            (ArvDevice *device, GError **error);
+ARV_API gboolean        arv_device_stop_acquisition             (ArvDevice *device, GError **error);
+
 ARV_API gboolean	arv_device_read_memory			(ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error);
 ARV_API gboolean	arv_device_write_memory			(ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error);
 ARV_API gboolean	arv_device_read_register		(ArvDevice *device, guint64 address, guint32 *value, GError **error);
@@ -132,7 +136,7 @@ ARV_API ArvGcRepresentation	arv_device_get_feature_representation	(ArvDevice *de
 
 ARV_API ArvChunkParser *arv_device_create_chunk_parser		(ArvDevice *device);
 
-ARV_API void		arv_device_execute_command		(ArvDevice *device, const char *feature, GError **error);
+ARV_API gboolean	arv_device_execute_command		(ArvDevice *device, const char *feature, GError **error);
 
 ARV_API void		arv_device_set_boolean_feature_value	(ArvDevice *device, const char *feature, gboolean value, GError **error);
 ARV_API gboolean	arv_device_get_boolean_feature_value	(ArvDevice *device, const char *feature, GError **error);

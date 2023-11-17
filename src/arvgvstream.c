@@ -1405,14 +1405,14 @@ arv_gv_stream_get_port (ArvGvStream *gv_stream)
 	return priv->thread_data->stream_port;
 }
 
-static void
-arv_gv_stream_start_thread (ArvStream *stream)
+static gboolean
+arv_gv_stream_start_acquisition (ArvStream *stream, GError **error)
 {
 	ArvGvStreamPrivate *priv = arv_gv_stream_get_instance_private (ARV_GV_STREAM (stream));
 	ArvGvStreamThreadData *thread_data;
 
-	g_return_if_fail (priv->thread == NULL);
-	g_return_if_fail (priv->thread_data != NULL);
+	g_return_val_if_fail (priv->thread == NULL, FALSE);
+	g_return_val_if_fail (priv->thread_data != NULL, FALSE);
 
 	thread_data = priv->thread_data;
 
@@ -1425,16 +1425,18 @@ arv_gv_stream_start_thread (ArvStream *stream)
                 g_cond_wait (&thread_data->thread_started_cond,
                              &thread_data->thread_started_mutex);
         g_mutex_unlock (&thread_data->thread_started_mutex);
+
+        return TRUE;
 }
 
-static void
-arv_gv_stream_stop_thread (ArvStream *stream)
+static gboolean
+arv_gv_stream_stop_acquisition (ArvStream *stream, GError **error)
 {
 	ArvGvStreamPrivate *priv = arv_gv_stream_get_instance_private (ARV_GV_STREAM (stream));
 	ArvGvStreamThreadData *thread_data;
 
-	g_return_if_fail (priv->thread != NULL);
-	g_return_if_fail (priv->thread_data != NULL);
+	g_return_val_if_fail (priv->thread != NULL, FALSE);
+	g_return_val_if_fail (priv->thread_data != NULL, FALSE);
 
 	thread_data = priv->thread_data;
 
@@ -1443,6 +1445,8 @@ arv_gv_stream_stop_thread (ArvStream *stream)
 	g_clear_object (&thread_data->cancellable);
 
 	priv->thread = NULL;
+
+        return TRUE;
 }
 
 /**
@@ -1707,8 +1711,6 @@ arv_gv_stream_constructed (GObject *object)
                                  G_TYPE_UINT64, &priv->thread_data->n_transferred_bytes);
         arv_stream_declare_info (ARV_STREAM (gv_stream), "n_ignored_bytes",
                                  G_TYPE_UINT64, &priv->thread_data->n_ignored_bytes);
-
-	arv_gv_stream_start_thread (ARV_STREAM (gv_stream));
 }
 
 static void
@@ -1717,7 +1719,8 @@ arv_gv_stream_finalize (GObject *object)
 	ArvGvStreamPrivate *priv = arv_gv_stream_get_instance_private (ARV_GV_STREAM (object));
         GError *error = NULL;
 
-	arv_gv_stream_stop_thread (ARV_STREAM (object));
+        if (priv->thread != NULL)
+                arv_gv_stream_stop_acquisition (ARV_STREAM (object), NULL);
 
         /* Stop the stream channel. We use a raw register write here, as the Genicam based access rely on
          * ArvGevStreamSelector state, and we don't want to change it here. */
@@ -1805,8 +1808,8 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 	object_class->set_property = arv_gv_stream_set_property;
 	object_class->get_property = arv_gv_stream_get_property;
 
-	stream_class->start_thread = arv_gv_stream_start_thread;
-	stream_class->stop_thread = arv_gv_stream_stop_thread;
+	stream_class->start_acquisition = arv_gv_stream_start_acquisition;
+	stream_class->stop_acquisition = arv_gv_stream_stop_acquisition;
 
         /**
          * ArvGvStream:socket-buffer:

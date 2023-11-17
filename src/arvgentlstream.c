@@ -420,14 +420,30 @@ arv_gentl_stream_thread (void *data)
 
 /* ArvGenTLStream implementation */
 
-static void
-arv_gentl_stream_start_thread (ArvStream *stream)
+static gboolean
+arv_gentl_stream_start_acquisition (ArvStream *stream, GError **error)
 {
-	ArvGenTLStreamPrivate *priv = arv_gentl_stream_get_instance_private (ARV_GENTL_STREAM (stream));
+	ArvGenTLStream *gentl_stream = ARV_GENTL_STREAM(stream);
+	ArvGenTLStreamPrivate *priv = arv_gentl_stream_get_instance_private (gentl_stream);
 	ArvGenTLStreamThreadData *thread_data;
+	ArvGenTLSystem *gentl_system = arv_gentl_device_get_system(priv->gentl_device);
+	ArvGenTLModule *gentl = arv_gentl_system_get_gentl(gentl_system);
+	ArvBuffer *arv_buffer;
+	BUFFER_HANDLE gentl_buffer;
+	size_t payload_size;
+	GC_ERROR gc_error;
 
-	g_return_if_fail (priv->thread == NULL);
-	g_return_if_fail (priv->thread_data != NULL);
+	g_return_val_if_fail (priv->thread == NULL, FALSE);
+	g_return_val_if_fail (priv->thread_data != NULL, FALSE);
+
+	/* Get payload size from an input buffer */
+	arv_buffer = arv_stream_pop_input_buffer (stream);
+	if (arv_buffer == NULL) {
+		arv_warning_stream("Input buffer empty");
+                g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,
+                             "No buffer found in input queue, can not start GenTL acquisition");
+		return FALSE;
+	}
 
 	thread_data = priv->thread_data;
 
@@ -441,18 +457,65 @@ arv_gentl_stream_start_thread (ArvStream *stream)
 		g_cond_wait (&thread_data->thread_started_cond,
 				&thread_data->thread_started_mutex);
 	g_mutex_unlock (&thread_data->thread_started_mutex);
+
+	arv_info_stream("Start GenTL acquisition");
+
+	payload_size = arv_buffer->priv->allocated_size;
+	arv_stream_push_buffer( ARV_STREAM(stream), arv_buffer);
+
+	/* Allocate, announce and queue buffers */
+	for (guint i=0; i<priv->n_buffers; i++) {
+		gc_error = gentl->DSAllocAndAnnounceBuffer(priv->stream_handle, payload_size, NULL, &gentl_buffer);
+		if (gc_error != GC_ERR_SUCCESS) {
+			arv_warning_stream("[DSAllocaAndAnnounceBuffer]: %d", gc_error);
+			break;
+		}
+		gc_error = gentl->DSQueueBuffer(priv->stream_handle, gentl_buffer);
+		if (gc_error != GC_ERR_SUCCESS) {
+			arv_warning_stream("[DSQueueBuffer]: %d", gc_error);
+			break;
+		}
+	}
+
+	/* Start acquisition */
+	gc_error = gentl->DSStartAcquisition(priv->stream_handle, ACQ_START_FLAGS_DEFAULT, GENTL_INFINITE);
+	if (gc_error != GC_ERR_SUCCESS) {
+		arv_warning_stream("[DSStartAcquisition]: %d", gc_error);
+	}
+
+        return TRUE;
 }
 
-static void
-arv_gentl_stream_stop_thread (ArvStream *stream)
+static gboolean
+arv_gentl_stream_stop_acquisition(ArvStream *stream, GError **error)
 {
-	ArvGenTLStreamPrivate *priv = arv_gentl_stream_get_instance_private (ARV_GENTL_STREAM (stream));
+	ArvGenTLStream *gentl_stream = ARV_GENTL_STREAM(stream);
+	ArvGenTLStreamPrivate *priv = arv_gentl_stream_get_instance_private (gentl_stream);
+	ArvGenTLStreamThreadData *thread_data;
 	ArvGenTLSystem *gentl_system = arv_gentl_device_get_system(priv->gentl_device);
 	ArvGenTLModule *gentl = arv_gentl_system_get_gentl(gentl_system);
-	ArvGenTLStreamThreadData *thread_data;
+	GC_ERROR gc_error;
 
-	g_return_if_fail (priv->thread != NULL);
-	g_return_if_fail (priv->thread_data != NULL);
+	g_return_val_if_fail (priv->thread != NULL, FALSE);
+	g_return_val_if_fail (priv->thread_data != NULL, FALSE);
+
+	arv_info_stream("Stop acquisition");
+
+	gc_error = gentl->DSStopAcquisition(priv->stream_handle, ACQ_STOP_FLAGS_DEFAULT);
+	if (gc_error != GC_ERR_SUCCESS && gc_error != GC_ERR_RESOURCE_IN_USE)
+		arv_warning_stream("DSStopAcquisition: %d", gc_error);
+
+	gc_error = gentl->DSFlushQueue(priv->stream_handle, ACQ_QUEUE_ALL_DISCARD);
+	if (gc_error != GC_ERR_SUCCESS)
+		arv_warning_stream("DSFlushQueue: %d", gc_error);
+
+	do {
+		BUFFER_HANDLE gentl_buffer;
+		gc_error = gentl->DSGetBufferID(priv->stream_handle, 0, &gentl_buffer);
+		if (gc_error != GC_ERR_SUCCESS)
+			break;
+		gentl->DSRevokeBuffer(priv->stream_handle, gentl_buffer, NULL, NULL);
+	} while (1);
 
 	thread_data = priv->thread_data;
 
@@ -462,77 +525,8 @@ arv_gentl_stream_stop_thread (ArvStream *stream)
 	g_clear_object (&thread_data->cancellable);
 
 	priv->thread = NULL;
-}
 
-void
-arv_gentl_stream_start_acquisition (ArvGenTLStream *gentl_stream)
-{
-	ArvStream *stream = ARV_STREAM(gentl_stream);
-	ArvGenTLStreamPrivate *priv = arv_gentl_stream_get_instance_private (gentl_stream);
-	ArvGenTLSystem *gentl_system = arv_gentl_device_get_system(priv->gentl_device);
-	ArvGenTLModule *gentl = arv_gentl_system_get_gentl(gentl_system);
-	ArvBuffer *arv_buffer;
-	BUFFER_HANDLE gentl_buffer;
-	size_t payload_size;
-	GC_ERROR error;
-
-	arv_info_stream("Start acquisition");
-
-	/* Get payload size from an input buffer */
-	arv_buffer = arv_stream_pop_input_buffer (stream);
-	if (arv_buffer == NULL) {
-		arv_warning_stream("Input buffer empty");
-		return;
-	}
-	payload_size = arv_buffer->priv->allocated_size;
-	arv_stream_push_buffer( ARV_STREAM(stream), arv_buffer);
-
-	/* Allocate, announce and queue buffers */
-	for (guint i=0; i<priv->n_buffers; i++) {
-		error = gentl->DSAllocAndAnnounceBuffer(priv->stream_handle, payload_size, NULL, &gentl_buffer);
-		if (error != GC_ERR_SUCCESS) {
-			arv_warning_stream("[DSAllocaAndAnnounceBuffer]: %d", error);
-			break;
-		}
-		error = gentl->DSQueueBuffer(priv->stream_handle, gentl_buffer);
-		if (error != GC_ERR_SUCCESS) {
-			arv_warning_stream("[DSQueueBuffer]: %d", error);
-			break;
-		}
-	}
-
-	/* Start acquisition */
-	error = gentl->DSStartAcquisition(priv->stream_handle, ACQ_START_FLAGS_DEFAULT, GENTL_INFINITE);
-	if (error != GC_ERR_SUCCESS) {
-		arv_warning_stream("[DSStartAcquisition]: %d", error);
-	}
-}
-
-void
-arv_gentl_stream_stop_acquisition(ArvGenTLStream *gentl_stream)
-{
-	ArvGenTLStreamPrivate *priv = arv_gentl_stream_get_instance_private (gentl_stream);
-	ArvGenTLSystem *gentl_system = arv_gentl_device_get_system(priv->gentl_device);
-	ArvGenTLModule *gentl = arv_gentl_system_get_gentl(gentl_system);
-	GC_ERROR error;
-
-	arv_info_stream("Stop acquisition");
-
-	error = gentl->DSStopAcquisition(priv->stream_handle, ACQ_STOP_FLAGS_DEFAULT);
-	if (error != GC_ERR_SUCCESS && error != GC_ERR_RESOURCE_IN_USE)
-		arv_warning_stream("DSStopAcquisition: %d", error);
-
-	error = gentl->DSFlushQueue(priv->stream_handle, ACQ_QUEUE_ALL_DISCARD);
-	if (error != GC_ERR_SUCCESS)
-		arv_warning_stream("DSFlushQueue: %d", error);
-
-	do {
-		BUFFER_HANDLE gentl_buffer;
-		error = gentl->DSGetBufferID(priv->stream_handle, 0, &gentl_buffer);
-		if (error != GC_ERR_SUCCESS)
-			break;
-		gentl->DSRevokeBuffer(priv->stream_handle, gentl_buffer, NULL, NULL);
-	} while (1);
+        return TRUE;
 }
 
 /**
@@ -629,8 +623,6 @@ arv_gentl_stream_constructed (GObject *object)
 				 G_TYPE_UINT64, &priv->thread_data->n_underruns);
 	arv_stream_declare_info (stream, "n_transferred_bytes",
 				 G_TYPE_UINT64, &priv->thread_data->n_transferred_bytes);
-
-	arv_gentl_stream_start_thread (stream);
 }
 
 static void
@@ -642,8 +634,8 @@ arv_gentl_stream_finalize (GObject *object)
 	ArvGenTLModule *gentl = arv_gentl_system_get_gentl(gentl_system);
 	GC_ERROR error;
 
-	arv_gentl_stream_stop_acquisition (gentl_stream);
-	arv_gentl_stream_stop_thread (ARV_STREAM (gentl_stream));
+        if (priv->thread != NULL)
+                arv_gentl_stream_stop_acquisition (ARV_STREAM(gentl_stream), NULL);
 
 	/* Close the data stream. */
 	arv_info_stream("Close stream");
@@ -687,8 +679,8 @@ arv_gentl_stream_class_init (ArvGenTLStreamClass *gentl_stream_class)
 	object_class->get_property = arv_gentl_stream_get_property;
 	object_class->set_property = arv_gentl_stream_set_property;
 
-	stream_class->start_thread = arv_gentl_stream_start_thread;
-	stream_class->stop_thread = arv_gentl_stream_stop_thread;
+	stream_class->start_acquisition = arv_gentl_stream_start_acquisition;
+	stream_class->stop_acquisition = arv_gentl_stream_stop_acquisition;
 
 	g_object_class_install_property
 		(object_class,
