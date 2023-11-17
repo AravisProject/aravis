@@ -258,61 +258,80 @@ arv_stream_get_n_buffers (ArvStream *stream, gint *n_input_buffers, gint *n_outp
 }
 
 /**
- * arv_stream_start_thread:
+ * arv_stream_start_acquisition:
  * @stream: a #ArvStream
  *
- * Start the stream receiving thread. The thread is automatically started when
- * the #ArvStream object is instantiated, so this function is only useful if
- * the thread was stopped using @arv_stream_stop_thread.
+ * Start the stream acquisition. This has to be done before the `AcquisitionStart` feature is executed.
+ * [method@Aravis.Camera.start_acquisition] does this for you.
  *
- * Since: 0.6.2
+ * Since: 0.9.0
+ *
+ * Returns: %TRUE on success
  */
 
-void
-arv_stream_start_thread (ArvStream *stream)
+gboolean
+arv_stream_start_acquisition (ArvStream *stream, GError **error)
 {
 	ArvStreamClass *stream_class;
 
-	g_return_if_fail (ARV_IS_STREAM (stream));
+	g_return_val_if_fail (ARV_IS_STREAM (stream), FALSE);
 
 	stream_class = ARV_STREAM_GET_CLASS (stream);
-	g_return_if_fail (stream_class->start_thread != NULL);
+	g_return_val_if_fail (stream_class->start_acquisition != NULL, FALSE);
 
-	stream_class->start_thread (stream);
+	return stream_class->start_acquisition (stream, error);
 }
 
 /**
- * arv_stream_stop_thread:
+ * arv_stream_stop_acquisition:
  * @stream: a #ArvStream
- * @delete_buffers: enable buffer deletion
  *
- * Stop the stream receiving thread, and optionally delete all the #ArvBuffer
- * stored in the stream object queues. Main use of this function is to be able
- * to quickly change an acquisition parameter that changes the payload size,
- * without deleting/recreating the stream object.
+ * Stop the stream acquisition. This is optional, as the acquisition will always be stopped on stream object
+ * destruction. [method@Aravis.Camera.stop_acquisition] calls this function.
  *
- * Returns: the number of deleted buffers if @delete_buffers == %TRUE, 0 otherwise.
+ * Returns: %TRUE on success
  *
- * Since: 0.6.2
+ * Since: 0.9.0
  */
 
-unsigned int
-arv_stream_stop_thread (ArvStream *stream, gboolean delete_buffers)
+gboolean
+arv_stream_stop_acquisition (ArvStream *stream, GError **error)
+{
+	ArvStreamClass *stream_class;
+        gboolean success;
+
+	g_return_val_if_fail (ARV_IS_STREAM (stream), FALSE);
+
+	stream_class = ARV_STREAM_GET_CLASS (stream);
+	g_return_val_if_fail (stream_class->stop_acquisition != NULL, FALSE);
+
+	success = stream_class->stop_acquisition (stream, error);
+
+        return success;
+}
+
+/**
+ * arv_stream_delete_buffers:
+ * @stream: a #ArvStream
+ *
+ * Remove all the buffers still in the input and output queues. If the stream is still in acquisition mode, some buffers
+ * may be in use by the receiving thread, and not removed. Main use of the buffer deletion is to be able to quickly
+ * change an acquisition parameter that changes the payload size, then restart the acquisition without
+ * deleting/recreating the stream object.
+ *
+ * Returns: the number of deleted buffers.
+ *
+ * Since: 0.9.0
+ */
+
+guint
+arv_stream_delete_buffers (ArvStream *stream)
 {
 	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
-	ArvStreamClass *stream_class;
 	ArvBuffer *buffer;
 	unsigned int n_deleted = 0;
 
-	g_return_val_if_fail (ARV_IS_STREAM (stream), 0);
-
-	stream_class = ARV_STREAM_GET_CLASS (stream);
-	g_return_val_if_fail (stream_class->stop_thread != NULL, 0);
-
-	stream_class->stop_thread (stream);
-
-	if (!delete_buffers)
-		return 0;
+        g_return_val_if_fail (ARV_IS_STREAM(stream), 0);
 
 	g_async_queue_lock (priv->input_queue);
 	do {
@@ -334,7 +353,7 @@ arv_stream_stop_thread (ArvStream *stream, gboolean delete_buffers)
 	} while (buffer != NULL);
 	g_async_queue_unlock (priv->output_queue);
 
-	arv_info_stream ("[Stream::reset] Deleted %u buffers\n", n_deleted);
+	arv_info_stream ("[Stream::delete_buffers] Deleted %u buffers\n", n_deleted);
 
 	return n_deleted;
 }

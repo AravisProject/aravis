@@ -117,31 +117,33 @@ arv_fake_stream_thread (void *data)
 
 /* ArvFakeStream implemenation */
 
-static void
-arv_fake_stream_start_thread (ArvStream *stream)
+static gboolean
+arv_fake_stream_start_acquisition (ArvStream *stream, GError **error)
 {
 	ArvFakeStream *fake_stream = ARV_FAKE_STREAM (stream);
 	ArvFakeStreamPrivate *priv = arv_fake_stream_get_instance_private (fake_stream);
 	ArvFakeStreamThreadData *thread_data;
 
-	g_return_if_fail (priv->thread == NULL);
-	g_return_if_fail (priv->thread_data != NULL);
+	g_return_val_if_fail (priv->thread == NULL, FALSE);
+	g_return_val_if_fail (priv->thread_data != NULL, FALSE);
 
 	thread_data = priv->thread_data;
 	thread_data->cancel = FALSE;
 
 	priv->thread = g_thread_new ("arv_fake_stream", arv_fake_stream_thread, priv->thread_data);
+
+        return TRUE;
 }
 
-static void
-arv_fake_stream_stop_thread (ArvStream *stream)
+static gboolean
+arv_fake_stream_stop_acquisition (ArvStream *stream, GError **error)
 {
 	ArvFakeStream *fake_stream = ARV_FAKE_STREAM (stream);
 	ArvFakeStreamPrivate *priv = arv_fake_stream_get_instance_private (fake_stream);
 	ArvFakeStreamThreadData *thread_data;
 
-	g_return_if_fail (priv->thread != NULL);
-	g_return_if_fail (priv->thread_data != NULL);
+	g_return_val_if_fail (priv->thread != NULL, FALSE);
+	g_return_val_if_fail (priv->thread_data != NULL, FALSE);
 
 	thread_data = priv->thread_data;
 
@@ -149,6 +151,8 @@ arv_fake_stream_stop_thread (ArvStream *stream)
 	g_thread_join (priv->thread);
 
 	priv->thread = NULL;
+
+        return TRUE;
 }
 
 /**
@@ -207,8 +211,6 @@ arv_fake_stream_constructed (GObject *object)
 
 	priv->thread_data = thread_data;
 
-	arv_fake_stream_start_thread (ARV_STREAM (fake_stream));
-
         G_OBJECT_CLASS (arv_fake_stream_parent_class)->constructed (object);
 
         g_clear_object (&fake_device);
@@ -227,9 +229,22 @@ arv_fake_stream_finalize (GObject *object)
 	ArvFakeStream *fake_stream = ARV_FAKE_STREAM (object);
 	ArvFakeStreamPrivate *priv = arv_fake_stream_get_instance_private (fake_stream);
 
-	arv_fake_stream_stop_thread (ARV_STREAM (fake_stream));
+        if (priv->thread != NULL)
+                arv_fake_stream_stop_acquisition (ARV_STREAM (fake_stream), NULL);
 
 	if (priv->thread_data != NULL) {
+                arv_info_stream ("[GvStream::finalize] n_completed_buffers    = %" G_GUINT64_FORMAT,
+                                 priv->thread_data->n_completed_buffers);
+                arv_info_stream ("[GvStream::finalize] n_failures             = %" G_GUINT64_FORMAT,
+                                 priv->thread_data->n_failures);
+                arv_info_stream ("[GvStream::finalize] n_underruns            = %" G_GUINT64_FORMAT,
+                                 priv->thread_data->n_underruns);
+
+                arv_info_stream ("[GvStream::finalize] n_transferred_bytes    = %" G_GUINT64_FORMAT,
+                                 priv->thread_data->n_transferred_bytes);
+                arv_info_stream ("[GvStream::finalize] n_ignored_bytes        = %" G_GUINT64_FORMAT,
+                                 priv->thread_data->n_ignored_bytes);
+
 		g_clear_pointer (&priv->thread_data, g_free);
 	}
 
@@ -245,6 +260,6 @@ arv_fake_stream_class_init (ArvFakeStreamClass *fake_stream_class)
 	object_class->constructed = arv_fake_stream_constructed;
 	object_class->finalize = arv_fake_stream_finalize;
 
-	stream_class->start_thread = arv_fake_stream_start_thread;
-	stream_class->stop_thread = arv_fake_stream_stop_thread;
+	stream_class->start_acquisition = arv_fake_stream_start_acquisition;
+	stream_class->stop_acquisition = arv_fake_stream_stop_acquisition;
 }

@@ -46,6 +46,7 @@ content_files = [
 	'usb.md',
 	'gentl.md',
 	'thread-safety.md',
+	'porting-0.10.md',
 	'porting-0.8.md',
 	'tests.md'
 ]

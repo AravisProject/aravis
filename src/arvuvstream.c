@@ -755,14 +755,14 @@ align (guint32 val, guint32 alignment)
 	return (val + (alignment - 1)) & ~(alignment - 1);
 }
 
-static void
-arv_uv_stream_start_thread (ArvStream *stream)
+static gboolean
+arv_uv_stream_start_acquisition (ArvStream *stream, GError **error)
 {
 	ArvUvStream *uv_stream = ARV_UV_STREAM (stream);
 	ArvUvStreamPrivate *priv = arv_uv_stream_get_instance_private (uv_stream);
 	ArvUvStreamThreadData *thread_data;
 	ArvDevice *device;
-        GError *error = NULL;
+        GError *local_error = NULL;
         guint64 sbrm_address;
 	guint32 si_info;
 	guint64 si_req_payload_size;
@@ -778,8 +778,8 @@ arv_uv_stream_start_thread (ArvStream *stream)
 	guint32 alignment;
 	guint32 aligned_maximum_transfer_size;
 
-	g_return_if_fail (priv->thread == NULL);
-	g_return_if_fail (priv->thread_data != NULL);
+	g_return_val_if_fail (priv->thread == NULL, FALSE);
+	g_return_val_if_fail (priv->thread_data != NULL, FALSE);
 
 	thread_data = priv->thread_data;
 
@@ -858,6 +858,18 @@ arv_uv_stream_start_thread (ArvStream *stream)
         thread_data->n_buffer_in_use = 0;
 	thread_data->cancel = FALSE;
 
+        arv_uv_device_reset_stream_endpoint (thread_data->uv_device);
+
+        si_control = ARV_SIRM_CONTROL_STREAM_ENABLE;
+        arv_device_write_memory (device, priv->sirm_address + ARV_SIRM_CONTROL, sizeof (si_control), &si_control,
+                                 &local_error);
+        if (local_error != NULL) {
+                arv_warning_stream ("Failed to enable stream (%s)",
+                                    local_error->message);
+                g_propagate_error (error, local_error);
+                return FALSE;
+        }
+
         switch (priv->usb_mode) {
                 case ARV_UV_USB_MODE_SYNC:
                         priv->thread = g_thread_new ("arv_uv_stream", arv_uv_stream_thread_sync, priv->thread_data);
@@ -875,28 +887,20 @@ arv_uv_stream_start_thread (ArvStream *stream)
                              &thread_data->thread_started_mutex);
         g_mutex_unlock (&thread_data->thread_started_mutex);
 
-        arv_uv_device_reset_stream_endpoint (thread_data->uv_device);
-
-        si_control = ARV_SIRM_CONTROL_STREAM_ENABLE;
-        arv_device_write_memory (device, priv->sirm_address + ARV_SIRM_CONTROL, sizeof (si_control), &si_control, &error);
-        if (error != NULL) {
-                arv_warning_stream ("Failed to enable stream (%s)",
-                                    error->message);
-                g_clear_error(&error);
-        }
+        return TRUE;
 }
 
-static void
-arv_uv_stream_stop_thread (ArvStream *stream)
+static gboolean
+arv_uv_stream_stop_acquisition (ArvStream *stream, GError **error)
 {
 	ArvUvStream *uv_stream = ARV_UV_STREAM (stream);
 	ArvUvStreamPrivate *priv = arv_uv_stream_get_instance_private (uv_stream);
 	ArvUvStreamThreadData *thread_data;
 	guint32 si_control;
-        GError *error = NULL;
+        GError *local_error = NULL;
 
-	g_return_if_fail (priv->thread != NULL);
-	g_return_if_fail (priv->thread_data != NULL);
+	g_return_val_if_fail (priv->thread != NULL, FALSE);
+	g_return_val_if_fail (priv->thread_data != NULL, FALSE);
 
 	thread_data = priv->thread_data;
 
@@ -908,12 +912,15 @@ arv_uv_stream_stop_thread (ArvStream *stream)
 
 	si_control = 0x0;
 	arv_device_write_memory (ARV_DEVICE (thread_data->uv_device),
-				 priv->sirm_address + ARV_SIRM_CONTROL, sizeof (si_control), &si_control, &error);
-        if (error != NULL) {
+				 priv->sirm_address + ARV_SIRM_CONTROL, sizeof (si_control), &si_control, &local_error);
+        if (local_error != NULL) {
                 arv_warning_stream ("Failed to disable stream (%s)",
-                                    error->message);
-                g_clear_error(&error);
+                                    local_error->message);
+                g_propagate_error (error, local_error);
+                return FALSE;
         }
+
+        return TRUE;
 }
 
 /**
@@ -982,8 +989,6 @@ arv_uv_stream_constructed (GObject *object)
                                  G_TYPE_UINT64, &thread_data->statistics.n_transferred_bytes);
         arv_stream_declare_info (ARV_STREAM (uv_stream), "n_ignored_bytes",
                                  G_TYPE_UINT64, &thread_data->statistics.n_ignored_bytes);
-
-        arv_uv_stream_start_thread (ARV_STREAM (uv_stream));
 }
 
 /* ArvStream implementation */
@@ -1016,7 +1021,8 @@ arv_uv_stream_finalize (GObject *object)
 	ArvUvStream *uv_stream = ARV_UV_STREAM (object);
 	ArvUvStreamPrivate *priv = arv_uv_stream_get_instance_private (uv_stream);
 
-	arv_uv_stream_stop_thread (ARV_STREAM (uv_stream));
+        if (priv->thread != NULL)
+                arv_uv_stream_stop_acquisition (ARV_STREAM (uv_stream), NULL);
 
 	if (priv->thread_data != NULL) {
 		ArvUvStreamThreadData *thread_data;
@@ -1057,8 +1063,8 @@ arv_uv_stream_class_init (ArvUvStreamClass *uv_stream_class)
 	object_class->finalize = arv_uv_stream_finalize;
 	object_class->set_property = arv_uv_stream_set_property;
 
-	stream_class->start_thread = arv_uv_stream_start_thread;
-	stream_class->stop_thread = arv_uv_stream_stop_thread;
+	stream_class->start_acquisition = arv_uv_stream_start_acquisition;
+	stream_class->stop_acquisition = arv_uv_stream_stop_acquisition;
 
          /**
           * ArvUvStream:usb-mode:
@@ -1073,5 +1079,4 @@ arv_uv_stream_class_init (ArvUvStreamClass *uv_stream_class)
                                    ARV_UV_USB_MODE_DEFAULT,
 				   G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)
 		);
-
 }
