@@ -702,6 +702,36 @@ arv_stream_get_info_double_by_name (ArvStream *stream, const char *name)
         return *((double *) (info->data));
 }
 
+gboolean
+arv_stream_create_buffers (ArvStream *stream, unsigned int n_buffers,
+                           void *user_data, GDestroyNotify user_data_destroy_func,
+                           GError **error)
+{
+	ArvStreamClass *stream_class;
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+        size_t payload_size;
+        unsigned int i;
+
+	g_return_val_if_fail (ARV_IS_STREAM (stream), FALSE);
+	g_return_val_if_fail (n_buffers > 0, FALSE);
+        g_return_val_if_fail (ARV_IS_DEVICE (priv->device), FALSE);
+
+        payload_size = arv_device_get_integer_feature_value (priv->device, "PayloadSize", error);
+        if (payload_size < 1)
+                return FALSE;
+
+	stream_class = ARV_STREAM_GET_CLASS (stream);
+        if (stream_class->create_buffers != NULL)
+                return stream_class->create_buffers (stream, n_buffers, payload_size,
+                                                     user_data, user_data_destroy_func, error);
+
+        for (i = 0; i < n_buffers; i++)
+                arv_stream_push_buffer (stream, arv_buffer_new_full (payload_size, NULL,
+                                                                     user_data, user_data_destroy_func));
+
+        return TRUE;
+}
+
 static void
 arv_stream_set_property (GObject * object, guint prop_id,
 			 const GValue * value, GParamSpec * pspec)
