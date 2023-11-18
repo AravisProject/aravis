@@ -31,14 +31,79 @@
 #include <arvgentldeviceprivate.h>
 #include <arvstreamprivate.h>
 #include <arvbufferprivate.h>
+#include <arvmiscprivate.h>
 #include <arvdebug.h>
 #include <stdio.h>
+
+/* This structure allows to Revoke a GenTL buffer even after ArvStream object is finalized, which may happen if a buffer
+ * is poped and never returned to the stream queues. We keep a DataStream handle and a reference to the parent device,
+ * and attach a referenced pointer of this data to each buffer as "gentl-buffer-data", to be used in the buffer data
+ * destroy callback. Once the stream and every buffer have been destroyed, the reference to the parent device will be
+ * also released. */
+
+typedef struct {
+        gatomicrefcount ref_count;
+	DS_HANDLE data_stream;
+        ArvGenTLDevice *device;
+} ArvGenTLDataStream;
+
+static ArvGenTLDataStream *
+arv_gentl_data_stream_new (ArvGenTLDevice *device)
+{
+        ArvGenTLDataStream *gentl_data_stream;
+
+        g_return_val_if_fail(ARV_IS_GENTL_DEVICE(device), NULL);
+
+        gentl_data_stream = g_new0 (ArvGenTLDataStream, 1);
+        gentl_data_stream->data_stream = arv_gentl_device_open_stream_handle(device);
+        gentl_data_stream->device = g_object_ref (device);
+        g_atomic_ref_count_init (&gentl_data_stream->ref_count);
+
+        return gentl_data_stream;
+}
+
+static ArvGenTLDataStream *
+arv_gentl_data_stream_ref (ArvGenTLDataStream *gentl_data_stream)
+{
+        g_return_val_if_fail (gentl_data_stream != NULL, NULL);
+
+        g_atomic_ref_count_inc (&gentl_data_stream->ref_count);
+
+        return gentl_data_stream;
+}
+
+static void
+arv_gentl_data_stream_unref (ArvGenTLDataStream *gentl_data_stream)
+{
+        g_return_if_fail(gentl_data_stream != NULL);
+
+        if (g_atomic_ref_count_dec (&gentl_data_stream->ref_count)) {
+                ArvGenTLSystem *gentl_system = arv_gentl_device_get_system(gentl_data_stream->device);
+                ArvGenTLModule *gentl = arv_gentl_system_get_gentl(gentl_system);
+                GC_ERROR error;
+
+                arv_info_stream ("[GenTLDataStream::unref] close data stream");
+                error = gentl->DSClose (gentl_data_stream->data_stream);
+                if (error != GC_ERR_SUCCESS) {
+                        arv_warning_stream ("[GenTLDataStream::unref] DSClose error (%s)",
+                                            arv_gentl_gc_error_to_string(error));
+                }
+
+                g_clear_object (&gentl_data_stream->device);
+                g_free (gentl_data_stream);
+        }
+}
 
 enum
 {
 	PROP_0,
 	PROP_STREAM_N_BUFFERS
 };
+
+typedef struct {
+        ArvGenTLDataStream *gentl_data_stream;
+        BUFFER_HANDLE gentl_buffer;
+} ArvGenTLStreamBufferData;
 
 typedef struct {
 	ArvStream *stream;
@@ -67,7 +132,7 @@ typedef struct {
 
 typedef struct {
 	ArvGenTLDevice *gentl_device;
-	DS_HANDLE stream_handle;
+        ArvGenTLDataStream *gentl_data_stream;
 	EVENT_HANDLE event_handle;
 	uint64_t timestamp_tick_frequency;
 
@@ -249,7 +314,8 @@ _gentl_buffer_to_arv_buffer(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_
 	arv_buffer->priv->received_size = actual_size;
 
 	_gentl_buffer_info_ptr(gentl, datastream, gentl_buffer, BUFFER_INFO_BASE, &data);
-	memcpy(arv_buffer->priv->data, data, data_size);
+        if (data != arv_buffer->priv->data)
+                memcpy(arv_buffer->priv->data, data, data_size);
 
 	if (payload_type == PAYLOAD_TYPE_CHUNK_ONLY) {
 		arv_buffer_set_n_parts(arv_buffer, 0);
@@ -340,42 +406,74 @@ _loop (ArvGenTLStreamThreadData *thread_data)
 	ArvGenTLStreamPrivate *priv = arv_gentl_stream_get_instance_private (ARV_GENTL_STREAM (thread_data->stream));
 	ArvGenTLSystem *gentl_system = arv_gentl_device_get_system(priv->gentl_device);
 	ArvGenTLModule *gentl = arv_gentl_system_get_gentl(gentl_system);
-
+        GHashTable *buffers;
+        GHashTableIter iter;
+        gpointer key, value;
 	ArvBuffer *arv_buffer;
 	BUFFER_HANDLE gentl_buffer;
 	GC_ERROR error;
+
+        buffers = g_hash_table_new (g_direct_hash, g_direct_equal);
 
 	g_mutex_lock (&thread_data->thread_started_mutex);
 	thread_data->thread_started = TRUE;
 	g_cond_signal (&thread_data->thread_started_cond);
 	g_mutex_unlock (&thread_data->thread_started_mutex);
 
-	error = gentl->GCRegisterEvent(priv->stream_handle, EVENT_NEW_BUFFER, &priv->event_handle);
+	error = gentl->GCRegisterEvent(priv->gentl_data_stream->data_stream, EVENT_NEW_BUFFER, &priv->event_handle);
 	if (error != GC_ERR_SUCCESS) {
-		arv_warning_stream("GCRegisterEvent[NEW_BUFFER]: %d\n", error);
+		arv_warning_stream("[GenTLStream::_loop] GCRegisterEvent[NEW_BUFFER] error (%s)",
+                                   arv_gentl_gc_error_to_string(error));
 		g_cancellable_cancel(thread_data->cancellable);
 	}
 
 	do {
 		EVENT_NEW_BUFFER_DATA NewImageEventData = {NULL, NULL};
 		size_t size = sizeof(EVENT_NEW_BUFFER_DATA);
+
+                do {
+                        arv_buffer = arv_stream_pop_input_buffer (thread_data->stream);
+                        if (ARV_IS_BUFFER (arv_buffer)) {
+                                ArvGenTLStreamBufferData *buffer_data;
+
+                                buffer_data = g_object_get_data (G_OBJECT(arv_buffer), "gentl-buffer-data");
+                                if (buffer_data != NULL) {
+                                        error = gentl->DSQueueBuffer(priv->gentl_data_stream->data_stream,
+                                                                     buffer_data->gentl_buffer);
+                                        if (error != GC_ERR_SUCCESS) {
+                                                arv_warning_stream("[GenTLStream::loop] failed to queue buffer (%s)",
+                                                                   arv_gentl_gc_error_to_string(error));
+                                                arv_stream_push_output_buffer(thread_data->stream, arv_buffer);
+                                        } else {
+                                                g_hash_table_replace (buffers, buffer_data->gentl_buffer, arv_buffer);
+                                        }
+                                } else {
+                                        arv_warning_stream ("[GenTLStream::loop] buffer without gentl metadata, ignoring");
+                                        arv_stream_push_buffer (thread_data->stream, arv_buffer);
+                                }
+                        }
+                } while (arv_buffer != NULL);
+
 		error = gentl->EventGetData(priv->event_handle, &NewImageEventData, &size, GENTL_INFINITE);
 		if (error != GC_ERR_SUCCESS) {
-			if (error != GC_ERR_ABORT)
-				arv_warning_stream("EventGetData[NEW_BUFFER]: %d\n", error);
+			if (error != GC_ERR_ABORT &&
+                            !g_cancellable_is_cancelled (thread_data->cancellable))
+				arv_warning_stream("[GenTLStream::loop] new buffer error (%s)",
+                                                   arv_gentl_gc_error_to_string(error));
 			continue;
 		}
 
 		gentl_buffer = NewImageEventData.BufferHandle;
 
-		arv_buffer = arv_stream_pop_input_buffer (thread_data->stream);
+		arv_buffer = g_hash_table_lookup (buffers, gentl_buffer);
 		if (arv_buffer) {
 			if (thread_data->callback != NULL)
 				thread_data->callback (thread_data->callback_data,
 					ARV_STREAM_CALLBACK_TYPE_START_BUFFER,
 					NULL);
 
-			_gentl_buffer_to_arv_buffer(gentl, priv->stream_handle, gentl_buffer,
+                        g_hash_table_remove (buffers, gentl_buffer);
+			_gentl_buffer_to_arv_buffer(gentl, priv->gentl_data_stream->data_stream, gentl_buffer,
                                                     arv_buffer, priv->timestamp_tick_frequency);
 
 			if (arv_buffer->priv->status == ARV_BUFFER_STATUS_SUCCESS)
@@ -391,15 +489,28 @@ _loop (ArvGenTLStreamThreadData *thread_data)
 					ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
 					arv_buffer);
 		} else {
-			thread_data->n_underruns += 1;
+                        g_critical ("[GenTL::loop] error retrieving buffer");
 		}
-
-		gentl->DSQueueBuffer(priv->stream_handle, gentl_buffer);
 	} while (!g_cancellable_is_cancelled (thread_data->cancellable));
 
-	error = gentl->GCUnregisterEvent(priv->stream_handle, EVENT_NEW_BUFFER);
+	error = gentl->GCUnregisterEvent(priv->gentl_data_stream->data_stream, EVENT_NEW_BUFFER);
 	if (error != GC_ERR_SUCCESS)
-		arv_warning_stream("GCUnregisterEvent: %d\n", error);
+		arv_warning_stream("[GenTLStream::_loop] GCUnregisterEvent error (%s)",
+                                   arv_gentl_gc_error_to_string(error));
+
+        error = gentl->DSFlushQueue(priv->gentl_data_stream->data_stream, ACQ_QUEUE_ALL_DISCARD);
+        if (error != GC_ERR_SUCCESS) {
+		arv_warning_stream("[GenTLStream::_loop] DSFlushQueue error (%s)",
+                                   arv_gentl_gc_error_to_string(error));
+        }
+
+        g_hash_table_iter_init (&iter, buffers);
+        while (g_hash_table_iter_next (&iter, &key, &value))
+        {
+                arv_stream_push_output_buffer (thread_data->stream, value);
+        }
+
+        g_hash_table_unref (buffers);
 }
 
 static void *
@@ -420,6 +531,20 @@ arv_gentl_stream_thread (void *data)
 
 /* ArvGenTLStream implementation */
 
+static void
+_buffer_data_destroy_func (gpointer data)
+{
+        ArvGenTLStreamBufferData *buffer_data = data;
+        ArvGenTLSystem *gentl_system = arv_gentl_device_get_system(buffer_data->gentl_data_stream->device);
+        ArvGenTLModule *gentl = arv_gentl_system_get_gentl(gentl_system);
+
+        gentl->DSRevokeBuffer(buffer_data->gentl_data_stream->data_stream, buffer_data->gentl_buffer, NULL, NULL);
+
+        arv_gentl_data_stream_unref(buffer_data->gentl_data_stream);
+
+        g_free (buffer_data);
+}
+
 static gboolean
 arv_gentl_stream_start_acquisition (ArvStream *stream, GError **error)
 {
@@ -428,22 +553,48 @@ arv_gentl_stream_start_acquisition (ArvStream *stream, GError **error)
 	ArvGenTLStreamThreadData *thread_data;
 	ArvGenTLSystem *gentl_system = arv_gentl_device_get_system(priv->gentl_device);
 	ArvGenTLModule *gentl = arv_gentl_system_get_gentl(gentl_system);
-	ArvBuffer *arv_buffer;
-	BUFFER_HANDLE gentl_buffer;
-	size_t payload_size;
+        ArvBuffer *buffer;
 	GC_ERROR gc_error;
 
 	g_return_val_if_fail (priv->thread == NULL, FALSE);
 	g_return_val_if_fail (priv->thread_data != NULL, FALSE);
 
-	/* Get payload size from an input buffer */
-	arv_buffer = arv_stream_pop_input_buffer (stream);
-	if (arv_buffer == NULL) {
-		arv_warning_stream("Input buffer empty");
-                g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,
-                             "No buffer found in input queue, can not start GenTL acquisition");
-		return FALSE;
-	}
+        /* Ensure every buffer has a gentl_buffer attached, for those not pushed using arv_stream_create_buffers() */
+	do {
+		buffer = arv_stream_pop_input_buffer (stream);
+		if (buffer != NULL) {
+                        ArvGenTLStreamBufferData *buffer_data;
+
+                        buffer_data = g_object_get_data (G_OBJECT(buffer), "gentl-buffer-data");
+                        if (buffer_data == NULL) {
+                                GC_ERROR gc_error;
+                                BUFFER_HANDLE gentl_buffer;
+
+                                gc_error = gentl->DSAnnounceBuffer(priv->gentl_data_stream->data_stream,
+                                                                   buffer->priv->data, buffer->priv->allocated_size,
+                                                                   NULL, &gentl_buffer);
+
+                                if (gc_error == GC_ERR_SUCCESS) {
+                                        buffer_data = g_new0 (ArvGenTLStreamBufferData, 1);
+                                        buffer_data->gentl_buffer = gentl_buffer;
+                                        buffer_data->gentl_data_stream = arv_gentl_data_stream_ref (priv->gentl_data_stream);
+
+                                        g_object_set_data_full (G_OBJECT (buffer), "gentl-buffer-data",
+                                                                buffer_data, _buffer_data_destroy_func);
+                                } else {
+                                        arv_warning_stream("[GenTLStream::start_acquisition] DSAnnounceBuffer error (%s)",
+                                                           arv_gentl_gc_error_to_string(gc_error));
+                                }
+                        }
+                        arv_stream_push_output_buffer (stream, buffer);
+                }
+        } while (buffer != NULL);
+
+        do {
+                buffer = arv_stream_try_pop_buffer (stream);
+                if (buffer != NULL)
+                        arv_stream_push_buffer (stream, buffer);
+        } while (buffer != NULL);
 
 	thread_data = priv->thread_data;
 
@@ -458,29 +609,14 @@ arv_gentl_stream_start_acquisition (ArvStream *stream, GError **error)
 				&thread_data->thread_started_mutex);
 	g_mutex_unlock (&thread_data->thread_started_mutex);
 
-	arv_info_stream("Start GenTL acquisition");
-
-	payload_size = arv_buffer->priv->allocated_size;
-	arv_stream_push_buffer( ARV_STREAM(stream), arv_buffer);
-
-	/* Allocate, announce and queue buffers */
-	for (guint i=0; i<priv->n_buffers; i++) {
-		gc_error = gentl->DSAllocAndAnnounceBuffer(priv->stream_handle, payload_size, NULL, &gentl_buffer);
-		if (gc_error != GC_ERR_SUCCESS) {
-			arv_warning_stream("[DSAllocaAndAnnounceBuffer]: %d", gc_error);
-			break;
-		}
-		gc_error = gentl->DSQueueBuffer(priv->stream_handle, gentl_buffer);
-		if (gc_error != GC_ERR_SUCCESS) {
-			arv_warning_stream("[DSQueueBuffer]: %d", gc_error);
-			break;
-		}
-	}
+	arv_info_stream("[GenTLStream::start_acquisition]");
 
 	/* Start acquisition */
-	gc_error = gentl->DSStartAcquisition(priv->stream_handle, ACQ_START_FLAGS_DEFAULT, GENTL_INFINITE);
+	gc_error = gentl->DSStartAcquisition(priv->gentl_data_stream->data_stream,
+                                             ACQ_START_FLAGS_DEFAULT, GENTL_INFINITE);
 	if (gc_error != GC_ERR_SUCCESS) {
-		arv_warning_stream("[DSStartAcquisition]: %d", gc_error);
+		arv_warning_stream("[GenTLStream::start_acquisition] DSStartAcquisition error (%s)",
+                                   arv_gentl_gc_error_to_string(gc_error));
 	}
 
         return TRUE;
@@ -499,25 +635,14 @@ arv_gentl_stream_stop_acquisition(ArvStream *stream, GError **error)
 	g_return_val_if_fail (priv->thread != NULL, FALSE);
 	g_return_val_if_fail (priv->thread_data != NULL, FALSE);
 
-	arv_info_stream("Stop acquisition");
-
-	gc_error = gentl->DSStopAcquisition(priv->stream_handle, ACQ_STOP_FLAGS_DEFAULT);
-	if (gc_error != GC_ERR_SUCCESS && gc_error != GC_ERR_RESOURCE_IN_USE)
-		arv_warning_stream("DSStopAcquisition: %d", gc_error);
-
-	gc_error = gentl->DSFlushQueue(priv->stream_handle, ACQ_QUEUE_ALL_DISCARD);
-	if (gc_error != GC_ERR_SUCCESS)
-		arv_warning_stream("DSFlushQueue: %d", gc_error);
-
-	do {
-		BUFFER_HANDLE gentl_buffer;
-		gc_error = gentl->DSGetBufferID(priv->stream_handle, 0, &gentl_buffer);
-		if (gc_error != GC_ERR_SUCCESS)
-			break;
-		gentl->DSRevokeBuffer(priv->stream_handle, gentl_buffer, NULL, NULL);
-	} while (1);
+	arv_info_stream("[GenTLStream::stop_acquisition]");
 
 	thread_data = priv->thread_data;
+
+	gc_error = gentl->DSStopAcquisition(priv->gentl_data_stream->data_stream, ACQ_STOP_FLAGS_DEFAULT);
+	if (gc_error != GC_ERR_SUCCESS && gc_error != GC_ERR_RESOURCE_IN_USE)
+		arv_warning_stream("[GenTLStream::start_acquisition] DSStopAcquisition error (%s)",
+                                   arv_gentl_gc_error_to_string(gc_error));
 
 	g_cancellable_cancel (thread_data->cancellable);
 	gentl->EventKill(priv->event_handle);
@@ -527,6 +652,48 @@ arv_gentl_stream_stop_acquisition(ArvStream *stream, GError **error)
 	priv->thread = NULL;
 
         return TRUE;
+}
+
+static gboolean
+arv_gentl_stream_create_buffers (ArvStream *stream, guint n_buffers, size_t size,
+                                 void *user_data, GDestroyNotify user_data_destroy_func,
+                                 GError **error)
+{
+	ArvGenTLStream *gentl_stream = ARV_GENTL_STREAM(stream);
+	ArvGenTLStreamPrivate *priv = arv_gentl_stream_get_instance_private (gentl_stream);
+	ArvGenTLSystem *gentl_system = arv_gentl_device_get_system(priv->gentl_device);
+	ArvGenTLModule *gentl = arv_gentl_system_get_gentl(gentl_system);
+        GC_ERROR gc_error = GC_ERR_SUCCESS;
+        guint i;
+
+        for (i = 0; i < n_buffers; i++) {
+                ArvBuffer *buffer;
+                ArvGenTLStreamBufferData *buffer_data;
+                BUFFER_HANDLE gentl_buffer;
+                void *data;
+
+		gc_error = gentl->DSAllocAndAnnounceBuffer(priv->gentl_data_stream->data_stream,
+                                                           size, NULL, &gentl_buffer);
+		if (gc_error != GC_ERR_SUCCESS) {
+			arv_warning_stream("[GenTLStream::create_buffers] DSAllocAndAnnounceBuffer (%s)",
+                                           arv_gentl_gc_error_to_string(gc_error));
+			break;
+		}
+
+                /* FIXME handler error */
+                _gentl_buffer_info_ptr(gentl, priv->gentl_data_stream->data_stream,
+                                       gentl_buffer, BUFFER_INFO_BASE, &data);
+
+                buffer_data = g_new0 (ArvGenTLStreamBufferData, 1);
+                buffer_data->gentl_buffer = gentl_buffer;
+                buffer_data->gentl_data_stream = arv_gentl_data_stream_ref (priv->gentl_data_stream);
+
+                buffer = arv_buffer_new_full(size, data, user_data, user_data_destroy_func);
+                g_object_set_data_full (G_OBJECT (buffer), "gentl-buffer-data", buffer_data, _buffer_data_destroy_func);
+                arv_stream_push_buffer (stream, buffer);
+        }
+
+        return gc_error = GC_ERR_SUCCESS;
 }
 
 /**
@@ -560,7 +727,7 @@ arv_gentl_stream_init (ArvGenTLStream *gentl_stream)
 
 	priv->thread_data = g_new0 (ArvGenTLStreamThreadData, 1);
 	priv->event_handle = NULL;
-	priv->stream_handle = NULL;
+	priv->gentl_data_stream = NULL;
 	priv->n_buffers = ARV_GENTL_STREAM_DEFAULT_N_BUFFERS;
 }
 
@@ -605,13 +772,13 @@ arv_gentl_stream_constructed (GObject *object)
 
 	G_OBJECT_CLASS (arv_gentl_stream_parent_class)->constructed (object);
 
-	g_object_get (object,
-		"device",&priv->gentl_device,
-		"callback", &priv->thread_data->callback,
-		"callback-data", &priv->thread_data->callback_data,
-		NULL);
+        g_object_get (object,
+                      "device",&priv->gentl_device,
+                      "callback", &priv->thread_data->callback,
+                      "callback-data", &priv->thread_data->callback_data,
+                      NULL);
 
-	priv->stream_handle = arv_gentl_device_open_stream_handle(priv->gentl_device);
+	priv->gentl_data_stream = arv_gentl_data_stream_new (priv->gentl_device);
 	priv->timestamp_tick_frequency = arv_gentl_device_get_timestamp_tick_frequency(priv->gentl_device);
 	priv->thread_data->stream = stream;
 
@@ -630,19 +797,9 @@ arv_gentl_stream_finalize (GObject *object)
 {
 	ArvGenTLStream *gentl_stream = ARV_GENTL_STREAM (object);
 	ArvGenTLStreamPrivate *priv = arv_gentl_stream_get_instance_private (gentl_stream);
-	ArvGenTLSystem *gentl_system = arv_gentl_device_get_system(priv->gentl_device);
-	ArvGenTLModule *gentl = arv_gentl_system_get_gentl(gentl_system);
-	GC_ERROR error;
 
         if (priv->thread != NULL)
                 arv_gentl_stream_stop_acquisition (ARV_STREAM(gentl_stream), NULL);
-
-	/* Close the data stream. */
-	arv_info_stream("Close stream");
-	error = gentl->DSClose(priv->stream_handle);
-	if (error != GC_ERR_SUCCESS) {
-		arv_warning_stream ("DSClose: %d", error);
-	}
 
 	if (priv->thread_data != NULL) {
 		ArvGenTLStreamThreadData *thread_data;
@@ -666,6 +823,8 @@ arv_gentl_stream_finalize (GObject *object)
 	g_clear_object (&priv->gentl_device);
 
 	G_OBJECT_CLASS (arv_gentl_stream_parent_class)->finalize (object);
+
+        arv_gentl_data_stream_unref (priv->gentl_data_stream);
 }
 
 static void
@@ -681,6 +840,7 @@ arv_gentl_stream_class_init (ArvGenTLStreamClass *gentl_stream_class)
 
 	stream_class->start_acquisition = arv_gentl_stream_start_acquisition;
 	stream_class->stop_acquisition = arv_gentl_stream_stop_acquisition;
+        stream_class->create_buffers = arv_gentl_stream_create_buffers;
 
 	g_object_class_install_property
 		(object_class,

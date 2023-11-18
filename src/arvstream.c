@@ -250,7 +250,7 @@ arv_stream_push_output_buffer (ArvStream *stream, ArvBuffer *buffer)
  * @stream: a #ArvStream
  * @n_input_buffers: (out) (allow-none): input queue length
  * @n_output_buffers: (out) (allow-none): output queue length
- * @n_filling_buffer: (out) (allow-none): number of buffer owned by the stream receiving thread
+ * @n_buffer_filling: (out) (allow-none): number of buffer owned by the stream receiving thread
  *
  * An accessor to the number of buffer owned by the stream instance.
  *
@@ -336,7 +336,7 @@ arv_stream_stop_acquisition (ArvStream *stream, GError **error)
 	success = stream_class->stop_acquisition (stream, error);
 
         if (success && priv->n_buffer_filling != 0) {
-                g_critical ("Buffer filling count must be 0 after acquisition stop");
+                g_critical ("Buffer filling count must be 0 after acquisition stop (was %d)", priv->n_buffer_filling);
         }
 
         return success;
@@ -366,6 +366,13 @@ arv_stream_delete_buffers (ArvStream *stream)
         g_return_val_if_fail (ARV_IS_STREAM(stream), 0);
 
 	g_async_queue_lock (priv->input_queue);
+	g_async_queue_lock (priv->output_queue);
+
+	arv_info_stream ("[Stream::delete_buffers] Delete %d buffer[s] in input queue",
+                         g_async_queue_length_unlocked(priv->input_queue));
+	arv_info_stream ("[Stream::delete_buffers] Delete %d buffer[s] in output queue",
+                         g_async_queue_length_unlocked(priv->output_queue));
+
 	do {
 		buffer = g_async_queue_try_pop_unlocked (priv->input_queue);
 		if (buffer != NULL) {
@@ -373,9 +380,7 @@ arv_stream_delete_buffers (ArvStream *stream)
 			n_deleted++;
 		}
 	} while (buffer != NULL);
-	g_async_queue_unlock (priv->input_queue);
 
-	g_async_queue_lock (priv->output_queue);
 	do {
 		buffer = g_async_queue_try_pop_unlocked (priv->output_queue);
 		if (buffer != NULL) {
@@ -383,9 +388,9 @@ arv_stream_delete_buffers (ArvStream *stream)
 			n_deleted++;
 		}
 	} while (buffer != NULL);
-	g_async_queue_unlock (priv->output_queue);
 
-	arv_info_stream ("[Stream::delete_buffers] Deleted %u buffers\n", n_deleted);
+	g_async_queue_unlock (priv->output_queue);
+	g_async_queue_unlock (priv->input_queue);
 
 	return n_deleted;
 }
@@ -819,29 +824,13 @@ arv_stream_finalize (GObject *object)
 {
 	ArvStream *stream = ARV_STREAM (object);
 	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
-	ArvBuffer *buffer;
-
-	arv_info_stream ("[Stream::finalize] Flush %d buffer[s] in input queue",
-			  g_async_queue_length (priv->input_queue));
-	arv_info_stream ("[Stream::finalize] Flush %d buffer[s] in output queue",
-			  g_async_queue_length (priv->output_queue));
 
 	if (priv->emit_signals) {
 		g_warning ("Stream finalized with 'new-buffer' signal enabled");
 		g_warning ("Please call arv_stream_set_emit_signals (stream, FALSE) before ArvStream object finalization");
 	}
 
-	do {
-		buffer = g_async_queue_try_pop (priv->output_queue);
-		if (buffer != NULL)
-			g_object_unref (buffer);
-	} while (buffer != NULL);
-
-	do {
-		buffer = g_async_queue_try_pop (priv->input_queue);
-		if (buffer != NULL)
-			g_object_unref (buffer);
-	} while (buffer != NULL);
+        arv_stream_delete_buffers (stream);
 
 	g_async_queue_unref (priv->input_queue);
 	g_async_queue_unref (priv->output_queue);
