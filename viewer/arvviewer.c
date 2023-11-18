@@ -499,7 +499,7 @@ static void
 exposure_spin_cb (GtkSpinButton *spin_button, ArvViewer *viewer)
 {
 	double exposure = gtk_spin_button_get_value (spin_button);
-	double scaled_exposure = viewer->exposure_time_representation == ARV_GC_REPRESENTATION_LOGARITHMIC ? 
+	double scaled_exposure = viewer->exposure_time_representation == ARV_GC_REPRESENTATION_LOGARITHMIC ?
 		arv_viewer_value_to_log (exposure, viewer->exposure_min, viewer->exposure_max) : exposure;
 
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (viewer->auto_exposure_toggle), FALSE);
@@ -516,7 +516,7 @@ static void
 gain_spin_cb (GtkSpinButton *spin_button, ArvViewer *viewer)
 {
 	double gain = gtk_spin_button_get_value (spin_button);
-	double scaled_gain = viewer->gain_representation == ARV_GC_REPRESENTATION_LOGARITHMIC ? 
+	double scaled_gain = viewer->gain_representation == ARV_GC_REPRESENTATION_LOGARITHMIC ?
 		arv_viewer_value_to_log (gain, viewer->gain_min, viewer->gain_max) : gain;
 
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (viewer->auto_gain_toggle), FALSE);
@@ -593,7 +593,7 @@ update_exposure_cb (void *data)
 	double scaled_exposure;
 
 	exposure = arv_camera_get_exposure_time (viewer->camera, NULL);
-	scaled_exposure = viewer->exposure_time_representation == ARV_GC_REPRESENTATION_LOGARITHMIC ? 
+	scaled_exposure = viewer->exposure_time_representation == ARV_GC_REPRESENTATION_LOGARITHMIC ?
 		arv_viewer_value_to_log (exposure, viewer->exposure_min, viewer->exposure_max) : exposure;
 
 	g_signal_handler_block (viewer->exposure_hscale, viewer->exposure_hscale_changed);
@@ -639,7 +639,7 @@ update_gain_cb (void *data)
 	double scaled_gain;
 
 	gain = arv_camera_get_gain (viewer->camera, NULL);
-	scaled_gain = viewer->gain_representation == ARV_GC_REPRESENTATION_LOGARITHMIC ? 
+	scaled_gain = viewer->gain_representation == ARV_GC_REPRESENTATION_LOGARITHMIC ?
 		arv_viewer_value_to_log (gain, viewer->gain_min, viewer->gain_max) : gain;
 
 	g_signal_handler_block (viewer->gain_hscale, viewer->gain_hscale_changed);
@@ -1410,8 +1410,6 @@ start_video (ArvViewer *viewer)
 	GstElement *videoconvert;
 	GstCaps *caps;
 	ArvPixelFormat pixel_format;
-	unsigned payload;
-	unsigned i;
 	gint width, height;
 	const char *caps_string;
         char *component;
@@ -1454,9 +1452,7 @@ start_video (ArvViewer *viewer)
 	}
 
 	arv_stream_set_emit_signals (viewer->stream, TRUE);
-	payload = arv_camera_get_payload (viewer->camera, NULL);
-	for (i = 0; i < ARV_VIEWER_N_BUFFERS; i++)
-		arv_stream_push_buffer (viewer->stream, arv_buffer_new (payload, NULL));
+        arv_stream_create_buffers(viewer->stream, ARV_VIEWER_N_BUFFERS, NULL, NULL, NULL);
 
 	set_camera_widgets(viewer);
 	pixel_format = arv_camera_get_pixel_format (viewer->camera, NULL);
