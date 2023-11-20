@@ -17,3 +17,10 @@ functions.
 
 The optional `delete_buffers` parameter of `arv_stream_stop_thread()` is
 replaced by a separate [method@Aravis.Stream.delete_buffers] function.
+
+#### arv_stream_get_n_owned_buffers
+
+`arv_stream_get_n_buffers` has bee renamed
+[method@Aravis.Stream.get_n_owned_buffers] to better reflect what it does, and
+has a third out parameter returning the number of buffer owned by the stream
+receiving thread.

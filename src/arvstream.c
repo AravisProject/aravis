@@ -62,6 +62,7 @@ enum {
 typedef struct {
 	GAsyncQueue *input_queue;
 	GAsyncQueue *output_queue;
+        gint n_buffer_filling;
 	GRecMutex mutex;
 	gboolean emit_signals;
 
@@ -193,20 +194,34 @@ ArvBuffer *
 arv_stream_pop_input_buffer (ArvStream *stream)
 {
 	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+        void *data;
 
 	g_return_val_if_fail (ARV_IS_STREAM (stream), NULL);
 
-	return g_async_queue_try_pop (priv->input_queue);
+        g_async_queue_lock(priv->input_queue);
+	data = g_async_queue_try_pop_unlocked (priv->input_queue);
+        if (data != NULL)
+                priv->n_buffer_filling++;
+        g_async_queue_unlock(priv->input_queue);
+
+        return data;
 }
 
 ArvBuffer *
 arv_stream_timeout_pop_input_buffer (ArvStream *stream, guint64 timeout)
 {
 	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+        void *data;
 
 	g_return_val_if_fail (ARV_IS_STREAM (stream), NULL);
 
-	return g_async_queue_timeout_pop (priv->input_queue, timeout);
+        g_async_queue_lock(priv->input_queue);
+	data = g_async_queue_timeout_pop_unlocked (priv->input_queue, timeout);
+        if (data != NULL)
+                priv->n_buffer_filling++;
+        g_async_queue_unlock(priv->input_queue);
+
+        return data;
 }
 
 void
@@ -217,7 +232,10 @@ arv_stream_push_output_buffer (ArvStream *stream, ArvBuffer *buffer)
 	g_return_if_fail (ARV_IS_STREAM (stream));
 	g_return_if_fail (ARV_IS_BUFFER (buffer));
 
-	g_async_queue_push (priv->output_queue, buffer);
+        g_async_queue_lock (priv->output_queue);
+	g_async_queue_push_unlocked (priv->output_queue, buffer);
+        priv->n_buffer_filling--;
+        g_async_queue_unlock(priv->output_queue);
 
 	g_rec_mutex_lock (&priv->mutex);
 
@@ -228,18 +246,19 @@ arv_stream_push_output_buffer (ArvStream *stream, ArvBuffer *buffer)
 }
 
 /**
- * arv_stream_get_n_buffers:
+ * arv_stream_get_n_owned_buffers:
  * @stream: a #ArvStream
  * @n_input_buffers: (out) (allow-none): input queue length
  * @n_output_buffers: (out) (allow-none): output queue length
+ * @n_filling_buffer: (out) (allow-none): number of buffer owned by the stream receiving thread
  *
- * An accessor to the stream buffer queue lengths.
+ * An accessor to the number of buffer owned by the stream instance.
  *
- * Since: 0.2.0
+ * Since: 0.9.0
  */
 
 void
-arv_stream_get_n_buffers (ArvStream *stream, gint *n_input_buffers, gint *n_output_buffers)
+arv_stream_get_n_owned_buffers (ArvStream *stream, gint *n_input_buffers, gint *n_output_buffers, gint *n_buffer_filling)
 {
 	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
 
@@ -248,13 +267,21 @@ arv_stream_get_n_buffers (ArvStream *stream, gint *n_input_buffers, gint *n_outp
 			*n_input_buffers = 0;
 		if (n_output_buffers != NULL)
 			*n_output_buffers = 0;
+                if (n_buffer_filling != NULL)
+                        *n_buffer_filling = 0;
 		return;
 	}
 
+        g_async_queue_lock (priv->input_queue);
+        g_async_queue_lock (priv->output_queue);
 	if (n_input_buffers != NULL)
-		*n_input_buffers = g_async_queue_length (priv->input_queue);
+		*n_input_buffers = g_async_queue_length_unlocked (priv->input_queue);
 	if (n_output_buffers != NULL)
-		*n_output_buffers = g_async_queue_length (priv->output_queue);
+		*n_output_buffers = g_async_queue_length_unlocked (priv->output_queue);
+        if (n_buffer_filling != NULL)
+                *n_buffer_filling = priv->n_buffer_filling;
+        g_async_queue_unlock (priv->output_queue);
+        g_async_queue_unlock (priv->input_queue);
 }
 
 /**
@@ -298,6 +325,7 @@ gboolean
 arv_stream_stop_acquisition (ArvStream *stream, GError **error)
 {
 	ArvStreamClass *stream_class;
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
         gboolean success;
 
 	g_return_val_if_fail (ARV_IS_STREAM (stream), FALSE);
@@ -306,6 +334,10 @@ arv_stream_stop_acquisition (ArvStream *stream, GError **error)
 	g_return_val_if_fail (stream_class->stop_acquisition != NULL, FALSE);
 
 	success = stream_class->stop_acquisition (stream, error);
+
+        if (success && priv->n_buffer_filling != 0) {
+                g_critical ("Buffer filling count must be 0 after acquisition stop");
+        }
 
         return success;
 }

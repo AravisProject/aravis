@@ -329,6 +329,7 @@ fake_stream_test (void)
 	guint64 n_underruns;
 	gint n_input_buffers;
 	gint n_output_buffers;
+        gint n_buffer_filling;
 	gint payload;
 	gint counter = 0;
         guint n_infos;
@@ -369,9 +370,10 @@ fake_stream_test (void)
 	g_assert_cmpint (n_failures, ==, 0);
 	g_assert_cmpint (n_underruns, ==, 0);
 
-	arv_stream_get_n_buffers (stream, &n_input_buffers, &n_output_buffers);
+	arv_stream_get_n_owned_buffers (stream, &n_input_buffers, &n_output_buffers, &n_buffer_filling);
 	g_assert_cmpint (n_input_buffers, ==, 0);
 	g_assert_cmpint (n_output_buffers, ==, 0);
+        g_assert_cmpint (n_buffer_filling, == , 0);
 
         n_infos = arv_stream_get_n_infos (stream);
         g_assert_cmpint (n_infos, ==, 5);
