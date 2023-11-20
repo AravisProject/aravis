@@ -191,6 +191,22 @@ arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, ArvUvEndpointType endpoint_
 	return success;
 }
 
+void *
+arv_uv_device_usb_mem_alloc (ArvUvDevice *uv_device, size_t size)
+{
+	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (uv_device);
+
+        return libusb_dev_mem_alloc (priv->usb_device, size);
+}
+
+void
+arv_uv_device_usb_mem_free (ArvUvDevice *uv_device, void *data, size_t size)
+{
+	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (uv_device);
+
+        libusb_dev_mem_free (priv->usb_device, data, size);
+}
+
 static ArvStream *
 arv_uv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data, GDestroyNotify destroy, GError **error)
 {

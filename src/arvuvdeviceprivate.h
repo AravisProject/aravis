@@ -49,6 +49,9 @@ void            arv_uv_device_fill_bulk_transfer        (struct libusb_transfer*
                                                          libusb_transfer_cb_fn callback, void* callback_data,
                                                          unsigned int timeout);
 
+void *          arv_uv_device_usb_mem_alloc             (ArvUvDevice *uv_device, size_t size);
+void            arv_uv_device_usb_mem_free              (ArvUvDevice *uv_device, void *data, size_t size);
+
 gboolean        arv_uv_device_is_connected              (ArvUvDevice *uv_device);
 
 gboolean        arv_uv_device_reset_stream_endpoint     (ArvUvDevice *device);
