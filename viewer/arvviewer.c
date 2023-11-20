@@ -364,10 +364,11 @@ gst_buffer_release_cb (void *user_data)
 	g_free (release_data->data);
 
 	if (stream) {
-		gint n_input_buffers, n_output_buffers;
+		gint n_input_buffers, n_output_buffers, n_buffer_filling;
 
-		arv_stream_get_n_buffers (stream, &n_input_buffers, &n_output_buffers);
-		arv_debug_viewer ("push buffer (%d,%d)", n_input_buffers, n_output_buffers);
+		arv_stream_get_n_owned_buffers (stream, &n_input_buffers, &n_output_buffers, &n_buffer_filling);
+		arv_debug_viewer ("push buffer (input:%d,output:%d,filling:%d)",
+                                  n_input_buffers, n_output_buffers, n_buffer_filling);
 
 		arv_stream_push_buffer (stream, release_data->arv_buffer);
 		g_object_unref (stream);
@@ -429,18 +430,19 @@ static void
 new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 {
 	ArvBuffer *arv_buffer;
-	gint n_input_buffers, n_output_buffers;
+	gint n_input_buffers, n_output_buffers, n_buffer_filling;
 
 	arv_buffer = arv_stream_pop_buffer (stream);
 	if (arv_buffer == NULL)
 		return;
 
-	arv_stream_get_n_buffers (stream, &n_input_buffers, &n_output_buffers);
-	arv_debug_viewer ("pop buffer (%d,%d)", n_input_buffers, n_output_buffers);
+	arv_stream_get_n_owned_buffers (stream, &n_input_buffers, &n_output_buffers, &n_buffer_filling);
+	arv_debug_viewer ("pop buffer (input:%d,output:%d,filling:%d)",
+                          n_input_buffers, n_output_buffers, n_buffer_filling);
 
 	if (arv_buffer_get_status (arv_buffer) == ARV_BUFFER_STATUS_SUCCESS &&
             /* Ensure there is still available buffers for the stream thread */
-            n_input_buffers + n_output_buffers > 0) {
+            n_input_buffers + n_output_buffers + n_buffer_filling > 0) {
 		size_t size;
                 gint part_id;
 
