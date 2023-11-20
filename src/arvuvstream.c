@@ -923,6 +923,52 @@ arv_uv_stream_stop_acquisition (ArvStream *stream, GError **error)
         return TRUE;
 }
 
+static void
+_uv_buffer_destroy_func (gpointer data)
+{
+        ArvBuffer *buffer = data;
+        ArvUvDevice *uv_device;
+        GDestroyNotify user_data_destroy_func;
+
+        uv_device = g_object_get_data (G_OBJECT (buffer), "device");
+        if (ARV_IS_DEVICE (uv_device)) {
+                arv_uv_device_usb_mem_free (uv_device, buffer->priv->data, buffer->priv->allocated_size);
+                g_object_unref (uv_device);
+        }
+
+        user_data_destroy_func = g_object_get_data (G_OBJECT(buffer), "destroy-func");
+        if (user_data_destroy_func != NULL)
+                user_data_destroy_func (buffer->priv->user_data);
+}
+
+static gboolean
+arv_uv_stream_create_buffers (ArvStream *stream, guint n_buffers, size_t size,
+                                 void *user_data, GDestroyNotify user_data_destroy_func,
+                                 GError **error)
+{
+	ArvUvStream *uv_stream = ARV_UV_STREAM (stream);
+	ArvUvStreamPrivate *priv = arv_uv_stream_get_instance_private (uv_stream);
+        ArvUvDevice *uv_device = priv->thread_data->uv_device;
+        unsigned char *usb_buffer;
+        guint i;
+
+        for (i = 0; i < n_buffers; i++) {
+                ArvBuffer *buffer;
+
+                usb_buffer = arv_uv_device_usb_mem_alloc (uv_device, size);
+                if (usb_buffer != NULL) {
+                        buffer = arv_buffer_new_full (size, usb_buffer, user_data, _uv_buffer_destroy_func);
+                        g_object_set_data (G_OBJECT (buffer), "device", g_object_ref (uv_device));
+                        g_object_set_data (G_OBJECT (buffer), "destroy-func", user_data_destroy_func);
+                } else {
+                        buffer = arv_buffer_new_full (size, NULL, user_data, user_data_destroy_func);
+                }
+                arv_stream_push_buffer (stream, buffer);
+        }
+
+        return TRUE;
+}
+
 /**
  * arv_uv_stream_new: (skip)
  * @uv_device: a #ArvUvDevice
@@ -1065,6 +1111,7 @@ arv_uv_stream_class_init (ArvUvStreamClass *uv_stream_class)
 
 	stream_class->start_acquisition = arv_uv_stream_start_acquisition;
 	stream_class->stop_acquisition = arv_uv_stream_stop_acquisition;
+        stream_class->create_buffers = arv_uv_stream_create_buffers;
 
          /**
           * ArvUvStream:usb-mode:
