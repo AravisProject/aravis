@@ -356,7 +356,8 @@ arv_device_get_feature_access_mode (ArvDevice *device, const char *feature)
 	g_return_val_if_fail (feature != NULL, ARV_GC_ACCESS_MODE_UNDEFINED);
 
 	node = arv_device_get_feature (device, feature);
-	return ARV_IS_GC_FEATURE_NODE (node) && arv_gc_feature_node_get_actual_access_mode (ARV_GC_FEATURE_NODE (node));
+	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (node), ARV_GC_ACCESS_MODE_UNDEFINED);
+	return arv_gc_feature_node_get_actual_access_mode (ARV_GC_FEATURE_NODE (node));
 }
 
 /**
