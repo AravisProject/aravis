@@ -38,6 +38,7 @@
 #include <arvgcfeaturenode.h>
 #include <arvgcboolean.h>
 #include <arvgcenumeration.h>
+#include <arvgcregister.h>
 #include <arvgcstring.h>
 #include <arvstream.h>
 #include <arvdebug.h>
@@ -863,6 +864,55 @@ arv_device_get_float_feature_increment (ArvDevice *device, const char *feature, 
 	}
 
 	return G_MINDOUBLE;
+}
+
+/**
+ * arv_device_set_register_feature_value:
+ * @device: a #ArvDevice
+ * @feature: feature name
+ * @value: new feature value
+ * @error: a #GError placeholder
+ *
+ * Set the register feature value.
+ *
+ * Since:
+ */
+
+void
+arv_device_set_register_feature_value (ArvDevice *device, const char *feature, guint64 length, void* value, GError **error)
+{
+	ArvGcNode *node;
+
+	node = _get_feature (device, ARV_TYPE_GC_REGISTER, feature, error);
+	if (node != NULL)
+		arv_gc_register_set (ARV_GC_REGISTER (node), value, length, error);
+}
+
+/**
+ * arv_device_dup_register_feature_value:
+ * @device: a #ArvDevice
+ * @feature: feature name
+ * @length: (out) (allow-none): register length
+ * @error: a #GError placeholder
+ *
+ * Returns: the register feature content, must be freed using [method@GLib.free].
+ *
+ * Since: 0.9.0
+ */
+
+void *
+arv_device_dup_register_feature_value (ArvDevice *device, const char *feature, guint64 *length, GError **error)
+{
+	ArvGcNode *node;
+
+        if (length != NULL)
+                *length = 0;
+
+	node = _get_feature (device, ARV_TYPE_GC_REGISTER, feature, error);
+        if (node != NULL)
+                return arv_gc_register_dup (ARV_GC_REGISTER(node), length, error);
+
+        return NULL;
 }
 
 /**
