@@ -198,6 +198,11 @@ ARV_API double		arv_camera_get_float			(ArvCamera *camera, const char *feature, 
 ARV_API void		arv_camera_get_float_bounds		(ArvCamera *camera, const char *feature, double *min, double *max, GError **error);
 ARV_API double		arv_camera_get_float_increment		(ArvCamera *camera, const char *feature, GError **error);
 
+ARV_API void            arv_camera_set_register                 (ArvCamera *camera, const char *feature, guint64 length,
+                                                                 void* value, GError **error);
+ARV_API void *          arv_camera_dup_register                 (ArvCamera *camera, const char *feature, guint64 *length,
+                                                                 GError **error);
+
 ARV_API gint64 *	arv_camera_dup_available_enumerations			(ArvCamera *camera, const char *feature,
 										 guint *n_values, GError **error);
 ARV_API const char **	arv_camera_dup_available_enumerations_as_strings	(ArvCamera *camera, const char *feature,
@@ -261,6 +266,8 @@ ARV_API void		arv_camera_uv_set_bandwidth			(ArvCamera *camera, guint bandwidth,
 ARV_API guint		arv_camera_uv_get_bandwidth			(ArvCamera *camera, GError **error);
 ARV_API void		arv_camera_uv_get_bandwidth_bounds		(ArvCamera *camera, guint *min, guint *max, GError **error);
 ARV_API void            arv_camera_uv_set_usb_mode			(ArvCamera *camera, ArvUvUsbMode usb_mode);
+
+ARV_API gboolean	arv_camera_is_gentl_device			(ArvCamera *camera);
 
 /* Chunk data */
 

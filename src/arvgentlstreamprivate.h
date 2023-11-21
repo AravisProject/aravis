@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2022 Emmanuel Pacaud
+ * Copyright © 2023 Xiaoqiang Wang
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,25 +17,30 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  *
- * Author: Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+ * Author: Xiaoqiang Wang <xiaoqiang.wang@psi.ch>
  */
 
-#ifndef ARV_DEVICE_PRIVATE_H
-#define ARV_DEVICE_PRIVATE_H
+#ifndef ARV_GENTL_STREAM_PRIVATE_H
+#define ARV_GENTL_STREAM_PRIVATE_H
 
-#if !defined (ARV_H_INSIDE) && !defined (ARAVIS_COMPILATION)
-#error "Only <arv.h> can be included directly."
-#endif
+#include <arvgentldeviceprivate.h>
+#include <arvgentlstream.h>
+#include <arvstream.h>
 
-#include <arvdevice.h>
 
 G_BEGIN_DECLS
 
-void 		arv_device_emit_control_lost_signal 	(ArvDevice *device);
-#if ARAVIS_HAS_EVENT
-void 		arv_device_emit_device_event_signal 	(ArvDevice *device, int event_id);
-#endif
-void		arv_device_take_init_error		(ArvDevice *device, GError *error);
+#define ARV_GENTL_STREAM_MIN_N_BUFFERS 3
+#define ARV_GENTL_STREAM_MAX_N_BUFFERS 1000
+#define ARV_GENTL_STREAM_DEFAULT_N_BUFFERS 10
+
+
+ArvStream * 	arv_gentl_stream_new		        (ArvGenTLDevice *gentl_device,
+                                                         ArvStreamCallback callback, void *callback_data,
+                                                         GDestroyNotify destroy, GError **error);
+
+void		arv_gentl_stream_start_acquisition      (ArvGenTLStream *gentl_stream);
+void		arv_gentl_stream_stop_acquisition       (ArvGenTLStream *gentl_stream);
 
 G_END_DECLS
 

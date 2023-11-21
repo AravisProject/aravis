@@ -98,6 +98,11 @@
 #include <arvgvinterface.h>
 #include <arvgvstream.h>
 
+#include <arvgentlsystem.h>
+#include <arvgentlinterface.h>
+#include <arvgentldevice.h>
+#include <arvgentlstream.h>
+
 #include <arvinterface.h>
 #include <arvmisc.h>
 #include <arvrealtime.h>

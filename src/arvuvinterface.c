@@ -261,6 +261,7 @@ _usb_device_to_device_ids (ArvUvInterface *uv_interface, libusb_device *device)
                 device_ids->manufacturer_info = g_strdup ("none");
 		device_ids->model = g_strdup (device_infos->product);
 		device_ids->serial_nbr = g_strdup (device_infos->serial_nbr);
+                device_ids->protocol = "USB3Vision";
 
 		g_free (manufacturer);
 		g_free (product);
@@ -449,6 +450,4 @@ arv_uv_interface_class_init (ArvUvInterfaceClass *uv_interface_class)
 
 	interface_class->update_device_list = arv_uv_interface_update_device_list;
 	interface_class->open_device = arv_uv_interface_open_device;
-
-	interface_class->protocol = "USB3Vision";
 }

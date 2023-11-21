@@ -30,6 +30,7 @@
 #include <arvgcfeaturenodeprivate.h>
 #include <arvdevice.h>
 #include <arvgvdevice.h>
+#include <arvgentldeviceprivate.h>
 #include <arvchunkparserprivate.h>
 #include <arvbuffer.h>
 #include <arvgcpropertynode.h>
@@ -200,11 +201,26 @@ arv_gc_port_read (ArvGcPort *port, void *buffer, guint64 address, guint64 length
 			}
 		}
 	} else if (port->priv->event_id != NULL) {
-		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_NO_EVENT_IMPLEMENTATION,
-			     "[%s] Events not implemented",
-                             arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (port)));
-	} else {
+#if ARAVIS_HAS_EVENT
 		ArvDevice *device;
+
+		device = arv_gc_get_device (genicam);
+		if (ARV_IS_DEVICE (device)) {
+			int event_id = (int) g_ascii_strtoll
+                                (arv_gc_property_node_get_string (port->priv->event_id, NULL), NULL, 16);
+			arv_device_read_event_data (device, event_id, address, length, buffer, error);
+		} else {
+			g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_NO_DEVICE_SET,
+				     "[%s] No device set",
+                                     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (port)));
+		}
+#else
+                g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_NO_EVENT_IMPLEMENTATION,
+                             "[%s] Events not implemented",
+                             arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (port)));
+#endif
+        } else {
+                ArvDevice *device;
 
 		device = arv_gc_get_device (genicam);
 		if (ARV_IS_DEVICE (device)) {

@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2022 Emmanuel Pacaud
+ * Copyright © 2023 Xiaoqiang Wang
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,25 +17,26 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  *
- * Author: Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+ * Author: Xiaoqiang Wang <xiaoqiang.wang@psi.ch>
  */
 
-#ifndef ARV_DEVICE_PRIVATE_H
-#define ARV_DEVICE_PRIVATE_H
+#ifndef ARV_GENTL_DEVICE_PRIVATE_H
+#define ARV_GENTL_DEVICE_PRIVATE_H
 
 #if !defined (ARV_H_INSIDE) && !defined (ARAVIS_COMPILATION)
 #error "Only <arv.h> can be included directly."
 #endif
 
-#include <arvdevice.h>
+#include <arvgentldevice.h>
+#include <arvgentlsystemprivate.h>
 
 G_BEGIN_DECLS
 
-void 		arv_device_emit_control_lost_signal 	(ArvDevice *device);
-#if ARAVIS_HAS_EVENT
-void 		arv_device_emit_device_event_signal 	(ArvDevice *device, int event_id);
-#endif
-void		arv_device_take_init_error		(ArvDevice *device, GError *error);
+ArvGenTLSystem *	arv_gentl_device_get_system                     (ArvGenTLDevice *device);
+DS_HANDLE       	arv_gentl_device_open_stream_handle             (ArvGenTLDevice *device);
+uint64_t	        arv_gentl_device_get_timestamp_tick_frequency   (ArvGenTLDevice *device);
+void	        	arv_gentl_device_start_acquisition              (ArvGenTLDevice *device);
+void		        arv_gentl_device_stop_acquisition               (ArvGenTLDevice *device);
 
 G_END_DECLS
 

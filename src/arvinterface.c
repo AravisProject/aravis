@@ -358,9 +358,15 @@ arv_interface_get_device_serial_nbr (ArvInterface *iface, unsigned int index)
 const char *
 arv_interface_get_device_protocol (ArvInterface *iface, unsigned int index)
 {
-	g_return_val_if_fail (ARV_IS_INTERFACE (iface), NULL);
+	ArvInterfacePrivate *priv = arv_interface_get_instance_private (iface);
 
-	return ARV_INTERFACE_GET_CLASS (iface)->protocol;
+	g_return_val_if_fail (ARV_IS_INTERFACE (iface), NULL);
+	g_return_val_if_fail (priv->device_ids != NULL, 0);
+
+	if (index >= priv->device_ids->len)
+		return NULL;
+
+	return g_array_index (priv->device_ids, ArvInterfaceDeviceIds *, index)->protocol;
 }
 
 /**

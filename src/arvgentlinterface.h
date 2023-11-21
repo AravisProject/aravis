@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2022 Emmanuel Pacaud
+ * Copyright © 2023 Xiaoqiang Wang
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,25 +17,26 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  *
- * Author: Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+ * Author: Xiaoqiang Wang <xiaoqiang.wang@psi.ch>
  */
 
-#ifndef ARV_DEVICE_PRIVATE_H
-#define ARV_DEVICE_PRIVATE_H
+#ifndef ARV_GENTL_INTERFACE_H
+#define ARV_GENTL_INTERFACE_H
 
 #if !defined (ARV_H_INSIDE) && !defined (ARAVIS_COMPILATION)
 #error "Only <arv.h> can be included directly."
 #endif
 
-#include <arvdevice.h>
+#include <arvapi.h>
+#include <arvtypes.h>
+#include <arvinterface.h>
 
 G_BEGIN_DECLS
 
-void 		arv_device_emit_control_lost_signal 	(ArvDevice *device);
-#if ARAVIS_HAS_EVENT
-void 		arv_device_emit_device_event_signal 	(ArvDevice *device, int event_id);
-#endif
-void		arv_device_take_init_error		(ArvDevice *device, GError *error);
+#define ARV_TYPE_GENTL_INTERFACE             (arv_gentl_interface_get_type ())
+ARV_API G_DECLARE_FINAL_TYPE (ArvGenTLInterface, arv_gentl_interface, ARV, GENTL_INTERFACE, ArvInterface)
+
+ARV_API ArvInterface *		arv_gentl_interface_get_instance		(void);
 
 G_END_DECLS
 

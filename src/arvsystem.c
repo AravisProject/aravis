@@ -27,6 +27,7 @@
 #include <arvuvinterfaceprivate.h>
 #endif
 #include <arvfakeinterfaceprivate.h>
+#include <arvgentlinterfaceprivate.h>
 #include <arvdevice.h>
 #include <arvdebugprivate.h>
 #include <string.h>
@@ -45,6 +46,7 @@ static GMutex arv_system_mutex;
 
 typedef struct {
 	const char *interface_id;
+        const char *protocol;
 	gboolean is_available;
 	ArvInterface * 	(*get_interface_instance) 	(void);
 	void 		(*destroy_interface_instance) 	(void);
@@ -53,21 +55,30 @@ typedef struct {
 ArvInterfaceInfos interfaces[] = {
 	{
 		.interface_id = "Fake",
+                .protocol = "Fake",
 		.is_available = FALSE,
 		.get_interface_instance = arv_fake_interface_get_instance,
 		.destroy_interface_instance =  arv_fake_interface_destroy_instance
 	},
 #if ARAVIS_HAS_USB
 	{	.interface_id = "USB3Vision",
+                .protocol = "USB3Vision",
 		.is_available = TRUE,
 		.get_interface_instance = arv_uv_interface_get_instance,
 		.destroy_interface_instance = arv_uv_interface_destroy_instance
 	},
 #endif
 	{	.interface_id = "GigEVision",
+                .protocol = "GigEVision",
 		.is_available = TRUE,
 		.get_interface_instance = arv_gv_interface_get_instance,
 		.destroy_interface_instance = arv_gv_interface_destroy_instance
+	},
+	{	.interface_id = "GenTL",
+                .protocol = "Mixed",
+		.is_available = TRUE,
+		.get_interface_instance = arv_gentl_interface_get_instance,
+		.destroy_interface_instance = arv_gentl_interface_destroy_instance
 	}
 };
 
@@ -128,10 +139,10 @@ arv_get_interface_by_id (const char* interface_id)
  * arv_get_interface_id:
  * @index: interface index
  *
- * Retrieves the interface identifier. Possible values are 'Fake', 'USB3Vision'
- * and 'GigEVision'.
+ * Retrieves the interface identifier. Possible values are 'Fake', 'USB3Vision',
+ * 'GigEVision' and 'GenTL'.
  *
- * Returns: The interfae identifier string.
+ * Returns: The interface identifier string.
  */
 
 const char *
@@ -141,6 +152,27 @@ arv_get_interface_id (unsigned int index)
 		return NULL;
 
 	return interfaces[index].interface_id;
+}
+
+/**
+ * arv_get_interface_protocol:
+ * @index: interface index
+ *
+ * Retrieves the interface protocol. Possible values are 'Fake', 'USB3Vision',
+ * 'GigEVision' and 'Mixed'.
+ *
+ * Returns: The interface protocol string.
+ *
+ * Since: 0.9.0
+ */
+
+const char *
+arv_get_interface_protocol (unsigned int index)
+{
+	if (index >= G_N_ELEMENTS (interfaces))
+		return NULL;
+
+	return interfaces[index].protocol;
 }
 
 /**
