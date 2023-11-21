@@ -1399,8 +1399,10 @@ arv_device_finalize (GObject *object)
 
 	g_clear_error (&priv->init_error);
 
-        for (iter = priv->streams; iter != NULL; iter= iter->next)
+        for (iter = priv->streams; iter != NULL; iter= iter->next) {
                 g_weak_ref_clear(iter->data);
+                g_free (iter->data);
+        }
         g_slist_free(priv->streams);
 
 	G_OBJECT_CLASS (arv_device_parent_class)->finalize (object);
