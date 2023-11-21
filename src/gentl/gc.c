@@ -69,16 +69,12 @@ GC_API GCGetLastError          ( GC_ERROR *piErrorCode, char *sErrText, size_t *
 
 GC_API GCInitLib               ( void ){
 	arv_trace_gentl(__FUNCTION__);
-	if(gentl_GCInitLib != 0) return GC_ERR_RESOURCE_IN_USE;
-	gentl_GCInitLib = 1;
-	return GC_ERR_SUCCESS;
+	return gentl_init();
 }
 
 GC_API GCCloseLib              ( void ){
 	arv_trace_gentl(__FUNCTION__);
-	GENTL_ENSURE_INIT;
-	gentl_GCInitLib = 0;
-	return GC_ERR_SUCCESS;
+	return gentl_fini();
 }
 
 
@@ -140,8 +136,7 @@ GC_API GCGetPortInfo           ( PORT_HANDLE hPort, PORT_INFO_CMD iInfoCmd, INFO
 	GENTL_NYI_DETAIL("only TL/IF/DEV ports implemented (hPort=%s[%p])",G_OBJECT_TYPE_NAME(hPort),hPort);
 }
 GC_API GCRegisterEvent         ( EVENTSRC_HANDLE hEventSrc, EVENT_TYPE iEventID, EVENT_HANDLE *phEvent ){
-	//return GC_ERR_NOT_AVAILABLE;
-	arv_trace_gentl("%s (hEventSrc=%s[%p],iEventID=%d,phEvent=%p)",__FUNCTION__,G_OBJECT_TYPE_NAME(hEventSrc),hEventSrc,phEvent);
+	arv_trace_gentl("%s (hEventSrc=%s[%p],iEventID=%d,phEvent=%p)",__FUNCTION__,G_OBJECT_TYPE_NAME(hEventSrc),hEventSrc,iEventID,phEvent);
 	GENTL_NYI_DETAIL("hEventSrc=%s[%p]",G_OBJECT_TYPE_NAME(hEventSrc),hEventSrc);
 }
 GC_API GCUnregisterEvent       ( EVENTSRC_HANDLE hEventSrc, EVENT_TYPE iEventID ){ GENTL_NYI; }

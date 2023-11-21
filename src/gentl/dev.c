@@ -27,14 +27,39 @@ GC_API DevGetPort              ( DEV_HANDLE hDevice, PORT_HANDLE *phRemoteDevice
 }
 
 GC_API DevGetNumDataStreams    ( DEV_HANDLE hDevice, uint32_t *piNumDataStreams ){
+	GError* err;
 	_DEV_CHECK_HANDLE
 	arv_trace_gentl("%s (hDevice=%s[%p])",__FUNCTION__,G_OBJECT_TYPE_NAME(hDevice),hDevice);
-	*piNumDataStreams=arv_camera_gv_get_n_stream_channels(hDevice,&gentl_err);
-	if(*piNumDataStreams==0) return GC_ERR_IO;
+	if(piNumDataStreams==NULL) return GC_ERR_INVALID_PARAMETER;
+	if(!arv_camera_is_gv_device(hDevice)) arv_warning_gentl("%s: not a GV device: expect trouble.",__FUNCTION__);
+	/*
+	GenTL provides no way to clear last error; so there would be a warning here "CRTITICAL **: arv_gc_integer_get_value: assertion 'error == NULL || *error == NULL' failed" — which only means that a previous error is stored in gentl_error (as required by the specification). In this case, arv_camera_gv_get_n_stream_channels will report failure, that's why we use a separate error pointer just for the call, and store it in gentl_err if it fails.
+	*/
+	err=NULL;
+	*piNumDataStreams=arv_camera_gv_get_n_stream_channels(hDevice,&err);
+	if(err!=NULL){ *gentl_err=*err; return GC_ERR_IO; }
+	arv_trace_gentl("   (returning %d)",*piNumDataStreams);
 	return GC_ERR_SUCCESS;
 }
-GC_API DevGetDataStreamID      ( DEV_HANDLE hDevice, uint32_t iIndex, char *sDataStreamID, size_t *piSize ){ GENTL_NYI; }
-GC_API DevOpenDataStream       ( DEV_HANDLE hDevice, const char *sDataStreamID, DS_HANDLE *phDataStream ){ GENTL_NYI; }
+GC_API DevGetDataStreamID      ( DEV_HANDLE hDevice, uint32_t iIndex, char *sDataStreamID, size_t *piSize ){
+	GError* err;
+	gint chan;
+	char buf[4];
+	_DEV_CHECK_HANDLE
+	arv_trace_gentl("%s (hDevice=%s[%p], iIndex=%d)",__FUNCTION__,G_OBJECT_TYPE_NAME(hDevice),hDevice,iIndex);
+	err=NULL;
+	chan=arv_camera_gv_get_n_stream_channels(hDevice,&err);
+	if(err!=NULL){ *gentl_err=*err; return GC_ERR_IO; }
+	if(chan==0) return GC_ERR_NOT_IMPLEMENTED;
+	if(iIndex>=chan) return GC_ERR_INVALID_INDEX;
+	g_snprintf(buf,sizeof(buf),"%d",iIndex);
+	/* GenTL identifies streams by strings, so we just use 0-based channel index */
+	return gentl_to_buf(INFO_DATATYPE_STRING,sDataStreamID,buf,piSize,NULL);
+}
+GC_API DevOpenDataStream       ( DEV_HANDLE hDevice, const char *sDataStreamID, DS_HANDLE *phDataStream ){
+	
+	GENTL_NYI;
+}
 
 GC_API DevGetInfo              ( DEV_HANDLE hDevice, DEVICE_INFO_CMD iInfoCmd, INFO_DATATYPE *piType, void *pBuffer, size_t *piSize ){
 	_DEV_CHECK_HANDLE;
