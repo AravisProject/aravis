@@ -40,6 +40,7 @@
 #include <arvgcfloat.h>
 #include <arvgcenumeration.h>
 #include <arvgcenumentry.h>
+#include <arvgcregister.h>
 #include <arvgcstring.h>
 #include <arvbuffer.h>
 #include <arvgc.h>
@@ -2870,6 +2871,54 @@ arv_camera_get_float_increment (ArvCamera *camera, const char *feature, GError *
 	g_return_val_if_fail (feature != NULL, 1);
 
 	return arv_device_get_float_feature_increment (priv->device, feature, error);
+}
+
+/**
+ * arv_camera_set_register:
+ * @camera: a #ArvCamera
+ * @feature: feature name
+ * @length: buffer length
+ * @value: new feature value
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Set a register content.
+ *
+ * Since: 0.9.0
+ */
+
+void
+arv_camera_set_register (ArvCamera *camera, const char *feature, guint64 length, void *value, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_device_set_register_feature_value (priv->device, feature, length, value, error);
+}
+
+/**
+ * arv_camera_dup_register:
+ * @camera: a #ArvCamera
+ * @feature: feature name
+ * @length: (out) (allow-none): register length
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: register content, must be freed using [method@GLib.free].
+ *
+ * Since: 0.9.0
+ */
+
+void *
+arv_camera_dup_register (ArvCamera *camera, const char *feature, guint64 *length, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+        if (length != NULL)
+                *length = 0;
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+
+	return arv_device_dup_register_feature_value (priv->device, feature, length, error);
 }
 
 /**
