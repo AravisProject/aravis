@@ -30,6 +30,7 @@
 #include <arvgcfeaturenodeprivate.h>
 #include <arvdevice.h>
 #include <arvgvdevice.h>
+#include <arvgentldeviceprivate.h>
 #include <arvchunkparserprivate.h>
 #include <arvbuffer.h>
 #include <arvgcpropertynode.h>
@@ -41,12 +42,35 @@ typedef struct {
 	const char *model_selection;
 } ArvGvLegacyInfos;
 
+/*
+ * Some GigEVision devices incorrectly report a Genicam schema version greater or equal to 1.1, while implementing the
+ * legacy behavior for register access. This list allows to force the use of the legacy endianness mechanism. Vendor and
+ * model listed below are those found in the Genicam XML data, which can be obtained using the `genicam` command of
+ * `arv-tool`.  They are stored in the ModelName and VendorName attributes of the RegisterDescription element.
+ *
+ * The documentation about the legacy endianness mechanism is in the 3.1 appendix ('Endianess of GigE Vision Cameras')
+ * of the GenICam Standard.
+ *
+ * There is a chance this part of Aravis is due to a misunderstanding of how a GigEVision device is supposed to behave
+ * (Remember we can not use the GigEVision specification documentation).  But until now, there was no evidence in the
+ * issue reports it is the case. If you think this should be implemented differently, don't hesitate to explain your
+ * thoughts on Aravis issue report system, or even better, to open a pull request. The related Aravis issues are
+ * available here:
+ *
+ * https://github.com/AravisProject/aravis/labels/5.%20Genicam%201.0%20legacy%20mode
+ */
+
 static ArvGvLegacyInfos arv_gc_port_legacy_infos[] = {
-   { .vendor_selection = "Imperx",                      .model_selection = "IpxGEVCamera"},
-   { .vendor_selection = "KowaOptronics",               .model_selection = "SC130ET3"},
-   { .vendor_selection = "PleoraTechnologiesInc",       .model_selection = "iPORTCLGigE"},
-   { .vendor_selection = "PleoraTechnologiesInc",       .model_selection = "NTxGigE"},
-   { .vendor_selection = "Sony",                        .model_selection = "XCG_CGSeries"},
+   { .vendor_selection = "Imperx",                              .model_selection = "IpxGEVCamera"},
+   { .vendor_selection = "KowaOptronics",                       .model_selection = "SC130ET3"},
+   { .vendor_selection = "NIT",                                 .model_selection = "Tachyon16k"},
+   { .vendor_selection = "PleoraTechnologiesInc",               .model_selection = "iPORTCLGigE"},
+   { .vendor_selection = "PleoraTechnologiesInc",               .model_selection = "NTxGigE"},
+   { .vendor_selection = "TeledyneDALSA",                       .model_selection = "ICE"},
+   { .vendor_selection = "Sony",                                .model_selection = "XCG_CGSeries"},
+   { .vendor_selection = "Sony",                                .model_selection = "XCG_CPSeries"},
+   { .vendor_selection = "EVK",                                 .model_selection = "HELIOS"},
+   { .vendor_selection = "AT_Automation_Technology_GmbH",       .model_selection = "C6_X_GigE"},
 };
 
 typedef struct {
@@ -177,11 +201,26 @@ arv_gc_port_read (ArvGcPort *port, void *buffer, guint64 address, guint64 length
 			}
 		}
 	} else if (port->priv->event_id != NULL) {
-		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_NO_EVENT_IMPLEMENTATION,
-			     "[%s] Events not implemented",
-                             arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (port)));
-	} else {
+#if ARAVIS_HAS_EVENT
 		ArvDevice *device;
+
+		device = arv_gc_get_device (genicam);
+		if (ARV_IS_DEVICE (device)) {
+			int event_id = (int) g_ascii_strtoll
+                                (arv_gc_property_node_get_string (port->priv->event_id, NULL), NULL, 16);
+			arv_device_read_event_data (device, event_id, address, length, buffer, error);
+		} else {
+			g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_NO_DEVICE_SET,
+				     "[%s] No device set",
+                                     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (port)));
+		}
+#else
+                g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_NO_EVENT_IMPLEMENTATION,
+                             "[%s] Events not implemented",
+                             arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (port)));
+#endif
+        } else {
+                ArvDevice *device;
 
 		device = arv_gc_get_device (genicam);
 		if (ARV_IS_DEVICE (device)) {

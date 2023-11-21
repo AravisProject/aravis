@@ -325,30 +325,39 @@ _send_cmd_and_receive_ack (ArvUvDevice *uv_device, ArvUvcpCommand command,
 
 						timeout_stop_ms = g_get_monotonic_time () / 1000 + pending_ack_timeout_ms;
 
-						arv_debug_device ("[UvDevice::%s] Pending ack timeout = %" G_GINT64_FORMAT,
-								operation, pending_ack_timeout_ms);
+						arv_debug_device ("[UvDevice::%s] Try %d/%d: "
+                                                                  "pending ack timeout = %" G_GINT64_FORMAT,
+                                                                  operation, n_tries + 1, ARV_UV_DEVICE_N_TRIES_MAX,
+                                                                  pending_ack_timeout_ms);
 					} if (status != ARV_UVCP_STATUS_SUCCESS) {
 						expected_answer = ack_command == expected_ack_command &&
 							packet_id == priv->packet_id;
 						if (!expected_answer) {
-							arv_info_device ("[[UvDevice::%s] Unexpected answer (0x%04x)",
-									  operation, status);
+							arv_info_device ("[[UvDevice::%s] Try %d/%d: "
+                                                                         "unexpected answer (0x%04x)",
+                                                                         operation, n_tries + 1,
+                                                                         ARV_UV_DEVICE_N_TRIES_MAX,
+									 status);
 						}
 					} else {
 						expected_answer = status == ARV_UVCP_STATUS_SUCCESS &&
 							ack_command == expected_ack_command &&
 							packet_id == priv->packet_id;
 						if (!expected_answer)
-							arv_info_device ("[[UvDevice::%s] Unexpected answer (0x%04x)",
-									  operation, status);
+							arv_info_device ("[[UvDevice::%s] Try %d/%d: "
+                                                                         "unexpected answer (0x%04x)",
+                                                                         operation, n_tries + 1,
+                                                                         ARV_UV_DEVICE_N_TRIES_MAX,
+									 status);
 					}
 				} else {
 					expected_answer = FALSE;
 					if (local_error != NULL)
-						arv_warning_device ("[UvDevice::%s] Ack reception error: %s",
-								    operation, local_error->message);
-					g_clear_error (&local_error);
-				}
+                                                arv_warning_device ("[UvDevice::%s] Try %d/%d: ack reception error: %s",
+                                                                    operation, n_tries + 1, ARV_UV_DEVICE_N_TRIES_MAX,
+                                                                    local_error->message);
+                                        g_clear_error (&local_error);
+                                }
 
 			} while (pending_ack || (!expected_answer && timeout_ms));
 
@@ -367,10 +376,11 @@ _send_cmd_and_receive_ack (ArvUvDevice *uv_device, ArvUvcpCommand command,
 			}
 		} else {
 			if (local_error != NULL)
-				arv_warning_device ("[UvDevice::%s] Command sending error: %s",
-						    operation, local_error->message);
-			g_clear_error (&local_error);
-		}
+				arv_warning_device ("[UvDevice::%s] Try %d/%d: command sending error: %s",
+                                                    operation, n_tries + 1, ARV_UV_DEVICE_N_TRIES_MAX,
+                                                    local_error->message);
+                        g_clear_error (&local_error);
+                }
 
 		n_tries++;
 	} while (!success && n_tries < ARV_UV_DEVICE_N_TRIES_MAX);
@@ -482,6 +492,7 @@ _bootstrap (ArvUvDevice *uv_device)
 	void *data;
 	char manufacturer[64];
 	gboolean success = TRUE;
+        char *genicam_url = NULL;
 
 	arv_info_device ("Get genicam");
 
@@ -561,17 +572,17 @@ _bootstrap (ArvUvDevice *uv_device)
 		return FALSE;
 	}
 
-	arv_info_device ("SIRM_INFO =                  0x%08x", si_info);
-	arv_info_device ("SIRM_CONTROL =               0x%08x", si_control);
-	arv_info_device ("SIRM_REQ_PAYLOAD_SIZE =      0x%016" G_GINT64_MODIFIER "x", si_req_payload_size);
-	arv_info_device ("SIRM_REQ_LEADER_SIZE =       0x%08x", si_req_leader_size);
-	arv_info_device ("SIRM_REQ_TRAILER_SIZE =      0x%08x", si_req_trailer_size);
-	arv_info_device ("SIRM_MAX_LEADER_SIZE =       0x%08x", si_max_leader_size);
-	arv_info_device ("SIRM_PAYLOAD_SIZE =          0x%08x", si_payload_size);
-	arv_info_device ("SIRM_PAYLOAD_COUNT =         0x%08x", si_payload_count);
-	arv_info_device ("SIRM_TRANSFER1_SIZE =        0x%08x", si_transfer1_size);
-	arv_info_device ("SIRM_TRANSFER2_SIZE =        0x%08x", si_transfer2_size);
-	arv_info_device ("SIRM_MAX_TRAILER_SIZE =      0x%08x", si_max_trailer_size);
+	arv_info_device ("SIRM_INFO =                0x%08x", si_info);
+	arv_info_device ("SIRM_CONTROL =             0x%08x", si_control);
+	arv_info_device ("SIRM_REQ_PAYLOAD_SIZE =    0x%016" G_GINT64_MODIFIER "x", si_req_payload_size);
+	arv_info_device ("SIRM_REQ_LEADER_SIZE =     0x%08x", si_req_leader_size);
+	arv_info_device ("SIRM_REQ_TRAILER_SIZE =    0x%08x", si_req_trailer_size);
+	arv_info_device ("SIRM_MAX_LEADER_SIZE =     0x%08x", si_max_leader_size);
+	arv_info_device ("SIRM_PAYLOAD_SIZE =        0x%08x", si_payload_size);
+	arv_info_device ("SIRM_PAYLOAD_COUNT =       0x%08x", si_payload_count);
+	arv_info_device ("SIRM_TRANSFER1_SIZE =      0x%08x", si_transfer1_size);
+	arv_info_device ("SIRM_TRANSFER2_SIZE =      0x%08x", si_transfer2_size);
+	arv_info_device ("SIRM_MAX_TRAILER_SIZE =    0x%08x", si_max_trailer_size);
 
 	success = success && arv_device_read_memory (device, manifest_table_address,
                                                      sizeof (manifest_n_entries), &manifest_n_entries, NULL);
@@ -622,9 +633,9 @@ _bootstrap (ArvUvDevice *uv_device)
 					const char *zip_filename;
 
 					zip_filename = arv_zip_file_get_name (zip_files->data);
-					priv->genicam_xml = arv_zip_get_file (zip,
-											 zip_filename,
-											 &priv->genicam_xml_size);
+                                        priv->genicam_xml = arv_zip_get_file (zip,
+                                                                              zip_filename,
+                                                                              &priv->genicam_xml_size);
 
 					arv_info_device ("zip file =                 %s", zip_filename);
 
@@ -639,6 +650,11 @@ _bootstrap (ArvUvDevice *uv_device)
 					priv->genicam = arv_gc_new (ARV_DEVICE (uv_device),
 								    priv->genicam_xml,
 								    priv->genicam_xml_size);
+
+                                        genicam_url = g_strdup_printf("local:///DeviceU3V.zip;%lx;%lx",
+                                                                      entry.address, entry.size);
+                                        arv_dom_document_set_url(ARV_DOM_DOCUMENT(priv->genicam), genicam_url);
+                                        g_free (genicam_url);
 				}
 
 				arv_zip_free (zip);
@@ -652,11 +668,15 @@ _bootstrap (ArvUvDevice *uv_device)
 				priv->genicam = arv_gc_new (ARV_DEVICE (uv_device),
 							    priv->genicam_xml,
 							    priv->genicam_xml_size);
-			}
-			break;
-		default:
-			arv_warning_device ("Unknown USB3Vision manifest schema type (%d)", schema_type);
-	}
+                                genicam_url = g_strdup_printf("local:///DeviceU3V.xml;%lx;%lx",
+                                                              entry.address, entry.size);
+                                arv_dom_document_set_url(ARV_DOM_DOCUMENT(priv->genicam), genicam_url);
+                                g_free (genicam_url);
+                        }
+                        break;
+                default:
+                        arv_warning_device ("Unknown USB3Vision manifest schema type (%d)", schema_type);
+        }
 
 #if 0
 	arv_info_device("GENICAM\n:%s", priv->genicam_xml);
@@ -710,6 +730,18 @@ reset_endpoint (libusb_device_handle *usb_device, guint8 endpoint, guint8 endpoi
 				   libusb_error_name (errcode));
 		return;
 	}
+}
+
+gboolean
+arv_uv_device_reset_stream_endpoint (ArvUvDevice *device)
+{
+	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (ARV_UV_DEVICE (device));
+
+        g_return_val_if_fail(ARV_IS_UV_DEVICE(device), FALSE);
+
+        reset_endpoint (priv->usb_device, priv->data_endpoint, LIBUSB_ENDPOINT_IN);
+
+        return TRUE;
 }
 
 static int
@@ -929,7 +961,7 @@ arv_uv_device_new_from_guid (const char *guid, GError **error)
 			       NULL);
 }
 
-static int _disconnect_event (libusb_context *ctx,
+static int LIBUSB_CALL _disconnect_event (libusb_context *ctx,
                               libusb_device *device,
                               libusb_hotplug_event event,
                               void *user_data)
@@ -993,7 +1025,7 @@ arv_uv_device_constructed (GObject *object)
         if (result != 0) {
                 arv_device_take_init_error (ARV_DEVICE (uv_device),
                                             g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
-                                                         "Failed to claim USB interface to '%s-%s-%s-%s': %s",
+                                                         "Failed to claim USB control interface to '%s-%s-%s-%s': %s",
                                                          priv->vendor, priv->product, priv->serial_number, priv->guid,
                                                          libusb_error_name (result)));
                 return;
@@ -1003,7 +1035,7 @@ arv_uv_device_constructed (GObject *object)
         if (result != 0) {
                 arv_device_take_init_error (ARV_DEVICE (uv_device),
                                             g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
-                                                         "Failed to claim USB interface to '%s-%s-%s-%s': %s",
+                                                         "Failed to claim USB data interface to '%s-%s-%s-%s': %s",
                                                          priv->vendor, priv->product, priv->serial_number, priv->guid,
                                                          libusb_error_name (result)));
                 return;
@@ -1024,8 +1056,6 @@ arv_uv_device_constructed (GObject *object)
                                                          priv->vendor, priv->product, priv->serial_number, priv->guid));
                 return;
         }
-
-        reset_endpoint (priv->usb_device, priv->data_endpoint, LIBUSB_ENDPOINT_IN);
 
         libusb_hotplug_register_callback (priv->usb, LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT, 0,
                                           LIBUSB_HOTPLUG_MATCH_ANY,

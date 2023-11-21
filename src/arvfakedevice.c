@@ -199,6 +199,7 @@ arv_fake_device_constructed (GObject *self)
 	}
 
         arv_gc_set_default_gv_features(priv->genicam);
+        arv_dom_document_set_url(ARV_DOM_DOCUMENT(priv->genicam), arv_fake_camera_get_genicam_xml_url(priv->camera));
 }
 
 static void

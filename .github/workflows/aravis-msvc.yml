@@ -26,16 +26,15 @@ jobs:
       run: |
         rm -r C:\Strawberry\perl
     - name: checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: conan
       env:
         INPUT_CONANFILE: |
           [requires]
           libiconv/1.17
-          glib/2.76.2
           #gobject-introspection/1.69.0
-          gstreamer/1.19.2
-          gst-plugins-base/1.19.2
+          gstreamer/1.22.3
+          #gst-plugins-base/1.22.3      Disable gstreamer for now, latest gst-plugins-base is 1.19.2
           #gtk/4.4.0
           libxml2/2.10.3
           zlib/1.2.13
@@ -64,7 +63,7 @@ jobs:
         .\build\activate_build.ps1
         .\build\activate_run.ps1
         echo "::group::configure"
-        meson --prefix ${{ github.workspace }}\install --buildtype ${{ matrix.build_type_meson }} --pkg-config-path ${{ github.workspace }}\build -Ddocumentation=disabled -Dgst-plugin=enabled -Dintrospection=disabled -Dusb=enabled -Dviewer=disabled -Dgv-n-buffers=1 . .\build
+        meson --prefix ${{ github.workspace }}\install --buildtype ${{ matrix.build_type_meson }} --pkg-config-path ${{ github.workspace }}\build -Ddocumentation=disabled -Dgst-plugin=disabled -Dintrospection=disabled -Dusb=enabled -Dviewer=disabled -Dgv-n-buffers=1 . .\build
         echo "::endgroup::"
         echo "::group::compile"
         meson compile -C .\build -v
@@ -79,7 +78,7 @@ jobs:
         .\build\activate_run.ps1
         meson test -C .\build
     - name: logs
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       if: failure()
       with:
         name: msvc_${{ matrix.version }}_${{ matrix.arch }}_${{ matrix.build_type_meson }}_Meson_Testlog

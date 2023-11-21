@@ -1,3 +1,39 @@
+Stable release 0.8.30
+=====================
+
+  * gv: add EVK Helios and Automation Technology C6 devices to the legacy mode list (Václav, anathesys)
+  * gv: don't ignore POINTTOPOINT interfaces, allows for direct connection to
+    devices through VPNs (James)
+
+Stable release 0.8.29
+=====================
+
+  * usb3vision: fix callbacks triggering in async mode (Emmanuel)
+  * usb3vision: fix underrun counting (Emmanuel)
+
+Stable release 0.8.28
+=====================
+
+  * usb3vision: make async libusb default (Emmanuel)
+  * usb3vision: improve CPU use when no buffer is available for the stream thread (Emmanuel)
+  * usb3vision: don't wait forever for USB transfer completion (Emmanuel)
+  * usb3vision: enable stream after the receiving stream thread is started (Emmanuel)
+  * viewer: avoid buffer exhaustion if GStreamer pipeline is late (Emmanuel)
+  * build: fix clang 32 bits compilation (Nath)
+
+Stable release 0.8.27
+=====================
+
+  * camera: add vendor specific quirks to frame rate (durnezj)
+  * camera: multiple tap helpers #745 (Brian)
+  * gv: start packet timeout after the first non leader packet #746 (Brian)
+  * gv: auto packet size fix (Emmanuel)
+  * gv: add more camera to the legacy endianness mechanism exception list (Emmanuel)
+  * u3v: fix u3vcp_capability register size (Emmanuel)
+  * chore: compilation warning fixes (Marco, Emmanuel)
+  * ci: pipeline babysitting (Emmanuel)
+  * doc: link fix (Henrique)
+
 Stable release 0.8.26
 =====================
 

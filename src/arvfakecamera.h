@@ -124,6 +124,7 @@ ARV_API gboolean		arv_fake_camera_is_in_software_trigger_mode (ArvFakeCamera *ca
 ARV_API gboolean		arv_fake_camera_check_and_acknowledge_software_trigger (ArvFakeCamera *camera);
 
 ARV_API const char *		arv_fake_camera_get_genicam_xml		(ArvFakeCamera *camera, size_t *size);
+ARV_API const char *            arv_fake_camera_get_genicam_xml_url     (ArvFakeCamera *camera);
 
 G_END_DECLS
 

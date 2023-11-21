@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Aravis
-X-GNOME-FullName=Aravis Simple Viewer
-Comment=Display the video stream from your cameras
+X-GNOME-FullName=Aravis Viewer
+Comment=Display video stream from industrial cameras
 Exec=arv-viewer-@ARAVIS_API_VERSION@
 Terminal=false
 Type=Application
@@ -10,4 +10,4 @@ StartupNotify=false
 Icon=aravis-@ARAVIS_API_VERSION@
 Categories=GNOME;AudioVideo;Video;
 # Translators: Search terms to find this application. Do NOT translate or localize the semicolons! The list MUST also end with a semicolon!
-Keywords=gigevision;usb3vision;vision;display;viewer;
+Keywords=gigevision;usb3vision;vision;display;viewer;genicam;

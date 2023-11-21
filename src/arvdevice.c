@@ -38,12 +38,16 @@
 #include <arvgcfeaturenode.h>
 #include <arvgcboolean.h>
 #include <arvgcenumeration.h>
+#include <arvgcregister.h>
 #include <arvgcstring.h>
 #include <arvstream.h>
 #include <arvdebug.h>
 
 enum {
 	ARV_DEVICE_SIGNAL_CONTROL_LOST,
+#if ARAVIS_HAS_EVENT
+	ARV_DEVICE_SIGNAL_DEVICE_EVENT,
+#endif
 	ARV_DEVICE_SIGNAL_LAST
 } ArvDeviceSignals;
 
@@ -209,6 +213,40 @@ arv_device_write_register (ArvDevice *device, guint64 address, guint32 value, GE
 	return ARV_DEVICE_GET_CLASS (device)->write_register (device, address, value, error);
 }
 
+#if ARAVIS_HAS_EVENT
+/**
+ * arv_device_read_event_data:
+ * @device: a #ArvDevice
+ * @event_id: event id
+ * @address: memory address
+ * @size: number of bytes to read
+ * @buffer: a buffer for the storage of the read data
+ * @error: (out) (allow-none): a #GError placeholder
+ *
+ * Reads the data of a device event.
+ *
+ * Return value: (skip): TRUE on success.
+ *
+ * Since: 0.9.0
+ **/
+
+gboolean
+arv_device_read_event_data (ArvDevice *device, int event_id, guint64 address, guint32 size, void *buffer, GError **error)
+{
+	g_return_val_if_fail (ARV_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (buffer != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	if (ARV_DEVICE_GET_CLASS (device)->read_event_data == NULL) {
+		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_NO_EVENT_IMPLEMENTATION,
+				"Events not implemented");
+		return FALSE;
+	} else {
+		return ARV_DEVICE_GET_CLASS (device)->read_event_data (device, event_id, address, size, buffer, error);
+	}
+}
+#endif
+
 /**
  * arv_device_get_genicam:
  * @device: a #ArvDevice
@@ -319,7 +357,8 @@ arv_device_get_feature_access_mode (ArvDevice *device, const char *feature)
 	g_return_val_if_fail (feature != NULL, ARV_GC_ACCESS_MODE_UNDEFINED);
 
 	node = arv_device_get_feature (device, feature);
-	return ARV_IS_GC_FEATURE_NODE (node) && arv_gc_feature_node_get_actual_access_mode (ARV_GC_FEATURE_NODE (node));
+	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (node), ARV_GC_ACCESS_MODE_UNDEFINED);
+	return arv_gc_feature_node_get_actual_access_mode (ARV_GC_FEATURE_NODE (node));
 }
 
 /**
@@ -391,6 +430,35 @@ _get_feature (ArvDevice *device, GType node_type, const char *feature, GError **
 	}
 
 	return node;
+}
+
+/**
+ * arv_device_get_feature_representation:
+ * @device: a #ArvDevice
+ * @feature: feature name
+ *
+ * Return: enum ArvGcRepresentation, ARV_GC_REPRESENTATION_UNDEFINED if not available.
+ *
+ * Since: 0.8.31
+ */
+
+ArvGcRepresentation
+arv_device_get_feature_representation (ArvDevice *device, const char *feature)
+{
+	ArvGcNode* node;
+
+	g_return_val_if_fail (ARV_IS_DEVICE (device), ARV_GC_REPRESENTATION_UNDEFINED);
+	g_return_val_if_fail (feature != NULL, ARV_GC_REPRESENTATION_UNDEFINED);
+
+	node = arv_device_get_feature (device, feature);
+
+	if (ARV_IS_GC_FLOAT(node)) {
+		return arv_gc_float_get_representation(ARV_GC_FLOAT(node));
+	}else if (ARV_IS_GC_INTEGER(node)){
+		return arv_gc_integer_get_representation(ARV_GC_INTEGER (node));
+	}
+
+	return ARV_GC_REPRESENTATION_UNDEFINED;
 }
 
 /**
@@ -799,6 +867,55 @@ arv_device_get_float_feature_increment (ArvDevice *device, const char *feature, 
 }
 
 /**
+ * arv_device_set_register_feature_value:
+ * @device: a #ArvDevice
+ * @feature: feature name
+ * @value: new feature value
+ * @error: a #GError placeholder
+ *
+ * Set the register feature value.
+ *
+ * Since:
+ */
+
+void
+arv_device_set_register_feature_value (ArvDevice *device, const char *feature, guint64 length, void* value, GError **error)
+{
+	ArvGcNode *node;
+
+	node = _get_feature (device, ARV_TYPE_GC_REGISTER, feature, error);
+	if (node != NULL)
+		arv_gc_register_set (ARV_GC_REGISTER (node), value, length, error);
+}
+
+/**
+ * arv_device_dup_register_feature_value:
+ * @device: a #ArvDevice
+ * @feature: feature name
+ * @length: (out) (allow-none): register length
+ * @error: a #GError placeholder
+ *
+ * Returns: the register feature content, must be freed using [method@GLib.free].
+ *
+ * Since: 0.9.0
+ */
+
+void *
+arv_device_dup_register_feature_value (ArvDevice *device, const char *feature, guint64 *length, GError **error)
+{
+	ArvGcNode *node;
+
+        if (length != NULL)
+                *length = 0;
+
+	node = _get_feature (device, ARV_TYPE_GC_REGISTER, feature, error);
+        if (node != NULL)
+                return arv_gc_register_dup (ARV_GC_REGISTER(node), length, error);
+
+        return NULL;
+}
+
+/**
  * arv_device_dup_available_enumeration_feature_values:
  * @device: an #ArvDevice
  * @feature: feature name
@@ -1114,6 +1231,15 @@ arv_device_emit_control_lost_signal (ArvDevice *device)
 	g_signal_emit (device, arv_device_signals[ARV_DEVICE_SIGNAL_CONTROL_LOST], 0);
 }
 
+#if ARAVIS_HAS_EVENT
+void
+arv_device_emit_device_event_signal (ArvDevice *device, int event_id)
+{
+	g_return_if_fail (ARV_IS_DEVICE (device));
+
+	g_signal_emit (device, arv_device_signals[ARV_DEVICE_SIGNAL_DEVICE_EVENT], 0, event_id);
+}
+#endif
 
 void arv_device_take_init_error (ArvDevice *device, GError *error)
 {
@@ -1166,6 +1292,29 @@ arv_device_class_init (ArvDeviceClass *device_class)
 			      G_STRUCT_OFFSET (ArvDeviceClass, control_lost),
 			      NULL, NULL,
 			      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
+
+#if ARAVIS_HAS_EVENT
+	/**
+	 * ArvDevice::device-event:
+	 * @device:a #ArvDevice
+	 * @event_id: #int
+	 *
+	 * Signal an event notification from the device.
+	 *
+	 * This signal may be emited from a thread different than the main one,
+	 * so please take care to shared data access from the callback.
+	 *
+	 * Since: 0.9.0
+	 */
+
+	arv_device_signals[ARV_DEVICE_SIGNAL_DEVICE_EVENT] =
+		g_signal_new ("device-event",
+			      G_TYPE_FROM_CLASS (device_class),
+			      G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (ArvDeviceClass, device_event),
+			      NULL, NULL,
+			      g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+#endif
 }
 
 static gboolean

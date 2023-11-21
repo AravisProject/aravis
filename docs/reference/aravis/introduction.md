@@ -12,7 +12,9 @@ the GenAPI GenICam document. Nevertheless, a good knowledge of the
 how Aravis operates.
 
 Aravis currently provides an implementation of the gigabit ethernet and USB3
-protocols found in a lot of ethernet industrial cameras.
+protocols found in a lot of industrial cameras. In addition, Aravis can act as a
+GenTL consumer and connect to any GenICam cameras supported by vendor's GenTL
+producers.
 
 [class@Aravis.Camera] is a simple API for easy access of standard camera features.
 

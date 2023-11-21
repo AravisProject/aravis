@@ -13,7 +13,7 @@ NULL parameter to most of the modified functions. But you are advised to take
 this opportunity to correctly handle errors.
 
 There is a page explaining Glib errors and how to manage them in the [Glib
-documentation](https://developer.gnome.org/glib/stable/glib-Error-Reporting.html).
+documentation](https://docs.gtk.org/glib/error-reporting.html).
 
 During the camera configuration, in C language it can be somehow cumbersome to
 check for errors at each function call. A convenient way to deal with this issue

@@ -43,6 +43,7 @@ G_BEGIN_DECLS
  * @ARV_BUFFER_STATUS_SIZE_MISMATCH: the received image didn't fit in the buffer data space
  * @ARV_BUFFER_STATUS_FILLING: the image is currently being filled
  * @ARV_BUFFER_STATUS_ABORTED: the filling was aborted before completion
+ * @ARV_BUFFER_STATUS_PAYLOAD_NOT_SUPPORTED: payload not yet supported
  */
 
 typedef enum {
@@ -54,7 +55,8 @@ typedef enum {
 	ARV_BUFFER_STATUS_WRONG_PACKET_ID,
 	ARV_BUFFER_STATUS_SIZE_MISMATCH,
 	ARV_BUFFER_STATUS_FILLING,
-	ARV_BUFFER_STATUS_ABORTED
+	ARV_BUFFER_STATUS_ABORTED,
+        ARV_BUFFER_STATUS_PAYLOAD_NOT_SUPPORTED
 } ArvBufferStatus;
 
 /**

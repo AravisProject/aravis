@@ -199,6 +199,16 @@ arv_stream_pop_input_buffer (ArvStream *stream)
 	return g_async_queue_try_pop (priv->input_queue);
 }
 
+ArvBuffer *
+arv_stream_timeout_pop_input_buffer (ArvStream *stream, guint64 timeout)
+{
+	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+
+	g_return_val_if_fail (ARV_IS_STREAM (stream), NULL);
+
+	return g_async_queue_timeout_pop (priv->input_queue, timeout);
+}
+
 void
 arv_stream_push_output_buffer (ArvStream *stream, ArvBuffer *buffer)
 {

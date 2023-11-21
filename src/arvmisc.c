@@ -933,6 +933,110 @@ arv_vendor_alias_lookup	(const char *vendor)
 	return vendor;
 }
 
+static struct {
+	const char *protocol;
+	const char *transport_layer_type;
+} arv_protocols[] = {
+        { "GigEVision",         TLTypeGEVName},
+        { "USB3Vision",         TLTypeU3VName},
+        { "CameraLink",         TLTypeCLName},
+        { "IIDC1394",           TLTypeIIDCName},
+        { "USBVideoClass",      TLTypeUVCName},
+        { "CoaXPress",          TLTypeCXPName},
+        { "CameraLinkHS",       TLTypeCLHSName},
+        { "GenericEthernet",    TLTypeETHERNETName},
+        { "PCIExpress",         TLTypePCIName},
+        { "Mixed",              TLTypeMixedName},
+        { "Custom",             TLTypeCustomName},
+};
+
+const char *
+arv_protocol_from_transport_layer_type	(const char *transport_layer_type)
+{
+	int i;
+
+	if (transport_layer_type == NULL)
+		return NULL;
+
+	for (i = 0; i < G_N_ELEMENTS (arv_protocols); i++)
+		if (g_strcmp0 (arv_protocols[i].transport_layer_type, transport_layer_type) == 0)
+			return arv_protocols[i].protocol;
+
+	return "Unknown";
+}
+
+const char *
+arv_protocol_to_transport_layer_type	(const char *protocol)
+{
+	int i;
+
+	if (protocol == NULL)
+		return NULL;
+
+	for (i = 0; i < G_N_ELEMENTS (arv_protocols); i++)
+		if (g_strcmp0 (arv_protocols[i].protocol, protocol) == 0)
+			return arv_protocols[i].transport_layer_type;
+
+	return "Custom";
+}
+
+const char *
+arv_gentl_gc_error_to_string (GC_ERROR error)
+{
+        switch (error) {
+                case GC_ERR_SUCCESS:
+                        return "Success";
+                case GC_ERR_ERROR:
+                        return "Unspecified runtime error";
+                case GC_ERR_NOT_INITIALIZED:
+                        return "Module or resource not initialized";
+                case GC_ERR_NOT_IMPLEMENTED:
+                        return "Requested operation not implemented";
+                case GC_ERR_RESOURCE_IN_USE:
+                        return "Requested resource is already in use";
+                case GC_ERR_ACCESS_DENIED:
+                        return "Requested operation is not allowed";
+                case GC_ERR_INVALID_HANDLE:
+                        return "Given handle does not support the operation";
+                case GC_ERR_INVALID_ID:
+                        return "ID could not be connected to a resource";
+                case GC_ERR_NO_DATA:
+                        return "The function has no data to work on";
+                case GC_ERR_INVALID_PARAMETER:
+                        return "One of the parameter given was not valid or out of range";
+                case GC_ERR_IO:
+                        return "Communication error has occurred";
+                case GC_ERR_TIMEOUT:
+                        return "An operation’s timeout time expired before it could be completed";
+                case GC_ERR_ABORT:
+                        return "An operation has been aborted before it could be completed";
+                case GC_ERR_INVALID_BUFFER:
+                        return "The GenTL Consumer has not announced enough buffers to start the acquisition";
+                case GC_ERR_NOT_AVAILABLE:
+                        return "Resource or information is not available at a given time in a current state";
+                case GC_ERR_INVALID_ADDRESS:
+                        return "A given address is out of range or invalid for internal reasons";
+                case GC_ERR_BUFFER_TOO_SMALL:
+                        return "A provided buffer is too small to receive the expected amount of data";
+                case GC_ERR_INVALID_INDEX:
+                        return "A provided index referencing a Producer internal object is out of bounds";
+                case GC_ERR_PARSING_CHUNK_DATA:
+                        return "An error occurred parsing a buffer containing chunk data";
+                case GC_ERR_INVALID_VALUE:
+                        return "A register write function was trying to write an invalid value";
+                case GC_ERR_RESOURCE_EXHAUSTED:
+                        return "A requested resource is exhausted";
+                case GC_ERR_OUT_OF_MEMORY:
+                        return "The system and/or other hardware in the system (frame grabber) ran out of memory";
+                case GC_ERR_BUSY:
+                        return "The required operation cannot be executed because the responsible module/entity is busy";
+                case GC_ERR_CUSTOM_ID:
+                        return "Unknown reason";
+        }
+
+        return "Unknown reason";
+}
+
 /**
  * arv_parse_genicam_url:
  * @url: a genicam data URL

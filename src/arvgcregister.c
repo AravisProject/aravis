@@ -74,3 +74,46 @@ arv_gc_register_get_length (ArvGcRegister *gc_register, GError **error)
 
 	return ARV_GC_REGISTER_GET_IFACE (gc_register)->get_length (gc_register, error);
 }
+
+/**
+ * arv_gc_register_dup:
+ * @gc_register: a #ArvGcRegister
+ * @length: (out) (allow-none): register length
+ * @error: a #GError placeholder
+ *
+ * Returns: the register feature content, must be freed using [method@GLib.free].
+ *
+ * Since: 0.9.0
+ */
+
+void *
+arv_gc_register_dup (ArvGcRegister *gc_register, guint64 *length, GError **error)
+{
+        GError *local_error = NULL;
+        void *buffer = NULL;
+        guint64 register_length = 0;
+
+        if (length != NULL)
+                *length = 0;
+
+        g_return_val_if_fail (ARV_IS_GC_REGISTER(gc_register), NULL);
+
+        register_length = arv_gc_register_get_length(gc_register, &local_error);
+        if (register_length < 65536 && local_error == NULL) {
+                buffer = g_malloc (register_length);
+                if (buffer != NULL)
+                        arv_gc_register_get (gc_register, buffer, register_length, &local_error);
+        }
+
+        if (local_error != NULL) {
+                g_clear_pointer (&buffer, g_free);
+                register_length = 0;
+                g_propagate_error (error, local_error);
+        }
+
+        if (length != NULL)
+                *length = register_length;
+
+        return buffer;
+}
+

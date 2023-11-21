@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2014-2023 Emmanuel Pacaud <emmanuel.pacaud@free.fr> -->
+<component type="desktop-application">
+  <id>org.aravis.viewer</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>LGPL-2.0-or-later</project_license>
+  <name>Aravis Viewer</name>
+  <summary>Viewer for industial camera video stream</summary>
+  <description>
+    Aravis Viewer is a simple viewer displaying video streams from USB3 and ethernet industrial cameras supporting the
+    GENICAM specification. It allows to control basic acquisition parameters (like framerate, exposure and gain), and to
+    save raw still images.
+  </description>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/AravisProject/aravis/main/viewer/data/aravis.png</image>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/AravisProject/aravis/main/viewer/data/aravis-video.png</image>
+    </screenshot>
+  </screenshots>
+  <url type="homepage">https://github.com/AravisProject/aravis</url>
+  <url type="bugtracker">https://github.com/AravisProject/aravis/issues</url>
+  <url type="donation">https://opencollective.com/aravis-project</url>
+  <update_contact>emmanuel.pacaud@free.fr</update_contact>
+  <content_rating type="oars-1.1" />
+  <project_group>GNOME</project_group>
+  <launchable type="desktop-id">org.aravis.viewer-@ARAVIS_API_VERSION@.desktop</launchable>
+</component>
