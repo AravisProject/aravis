@@ -53,7 +53,7 @@ This is to allow verbatim copy of the function signature into the implementation
 #define GC_API GC_ERROR
 
 #if defined(_WIN32) && defined(_MSC_VER)
-	#define GENTL_THREAD_LOCAL_STORAGE declspec(thread)
+	#define GENTL_THREAD_LOCAL_STORAGE __declspec(thread)
 #else
 	#define GENTL_THREAD_LOCAL_STORAGE __thread
 #endif
