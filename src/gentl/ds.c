@@ -1,4 +1,5 @@
-#include"private.h"
+#include "private.h"
+
 GC_API DSAnnounceBuffer        ( DS_HANDLE hDataStream, void *pBuffer, size_t iSize, void *pPrivate, BUFFER_HANDLE *phBuffer ){ GENTL_NYI; }
 GC_API DSAllocAndAnnounceBuffer( DS_HANDLE hDataStream, size_t iSize, void *pPrivate, BUFFER_HANDLE *phBuffer ){ GENTL_NYI; }
 GC_API DSFlushQueue            ( DS_HANDLE hDataStream, ACQ_QUEUE_TYPE iOperation ){ GENTL_NYI; }

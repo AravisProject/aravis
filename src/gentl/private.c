@@ -1,21 +1,40 @@
 #include"private.h"
 
-G_DEFINE_TYPE(ArvGentlEvent,arv_gentl_event,G_TYPE_OBJECT);
-static void arv_gentl_event_class_init(ArvGentlEventClass*){}
-static void arv_gentl_event_init(ArvGentlEvent*){}
+G_DEFINE_TYPE (ArvGentlEvent,arv_gentl_event,G_TYPE_OBJECT);
+
+static void
+arv_gentl_event_class_init(ArvGentlEventClass*)
+{
+}
+
+static void
+arv_gentl_event_init(ArvGentlEvent*)
+{
+}
 
 
-G_DEFINE_TYPE(ArvTransportLayer,arv_transport_layer,G_TYPE_OBJECT);
-static void arv_transport_layer_class_init(ArvTransportLayerClass*){}
-static void arv_transport_layer_init(ArvTransportLayer*){}
+G_DEFINE_TYPE (ArvTransportLayer,arv_transport_layer,G_TYPE_OBJECT);
+
+static void
+arv_transport_layer_class_init(ArvTransportLayerClass*)
+{
+}
+
+static void arv_transport_layer_init(ArvTransportLayer*)
+{
+}
 
 /* global variables */
 int gentl_GCInitLib = 0;
+
 /* singleton for the transport layer */
 ArvTransportLayer* gentl_transport_layer = NULL;
+
 /* error data must be thread-local as per GenTL spec */
 GENTL_THREAD_LOCAL_STORAGE GError* gentl_err = NULL;
-/* Map handle (pointer) to ArvGentlHandleEvents containing all events associated to this handle. This is not yet implemented, someone knowledgeable of both Aravis and GenTL could propose a clean way of handling this. */
+
+/* Map handle (pointer) to ArvGentlHandleEvents containing all events associated to this handle. This is not yet
+ * implemented, someone knowledgeable of both Aravis and GenTL could propose a clean way of handling this. */
 GHashTable* gentl_events=NULL;
 
 GQuark
@@ -24,21 +43,34 @@ gentl_error_quark (void)
   return g_quark_from_static_string ("gentl-error-quark");
 }
 
-GC_API gentl_init(){
-	if(gentl_GCInitLib != 0) return GC_ERR_RESOURCE_IN_USE;
+GC_API
+gentl_init()
+{
+	if (gentl_GCInitLib != 0)
+                return GC_ERR_RESOURCE_IN_USE;
+
 	gentl_GCInitLib = 1;
 	gentl_events = g_hash_table_new(g_direct_hash,g_direct_equal);
+
 	return GC_ERR_SUCCESS;
 }
 
-GC_API gentl_fini(){
+GC_API
+gentl_fini()
+{
 	GENTL_ENSURE_INIT;
 	gentl_GCInitLib = 0;
+
 	g_hash_table_destroy(gentl_events);
+
 	gentl_events = NULL;
+
 	return GC_ERR_SUCCESS;
 }
-gboolean gentl_is_initialized(){
+
+gboolean
+gentl_is_initialized (void)
+{
 	return gentl_GCInitLib == 1;
 }
 
