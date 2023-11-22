@@ -7,7 +7,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Aravis.get_device_id</title>
+  <title>Aravis.get_interface_by_id</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <meta charset="utf-8" />
@@ -23,10 +23,10 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
 
   
-  <meta property="og:title" content="Aravis.get_device_id"/>
-  <meta property="og:description" content="Reference for Aravis.get_device_id"/>
-  <meta name="twitter:title" content="Aravis.get_device_id"/>
-  <meta name="twitter:description" content="Reference for Aravis.get_device_id"/>
+  <meta property="og:title" content="Aravis.get_interface_by_id"/>
+  <meta property="og:description" content="Reference for Aravis.get_interface_by_id"/>
+  <meta name="twitter:title" content="Aravis.get_interface_by_id"/>
+  <meta name="twitter:description" content="Reference for Aravis.get_interface_by_id"/>
 
 
   
@@ -97,26 +97,26 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <section id="main" class="content">
   <header>
     <h3>Function </h3>
-    <h1><a href="index.html">Aravis</a><span class="sep"></span>get_device_id</h1>
+    <h1><a href="index.html">Aravis</a><span class="sep"></span>get_interface_by_id</h1>
   </header>
 
   <section>
     <div class="docblock">
-      <p><span class="emblem available">since: 0.2.0</span></p>
+      <p></p>
     </div>
     <div class="declaration toggle-wrapper">
       <h4 id="declaration" style="display:flex;">
         Declaration
         <a href="#declaration" class="anchor"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvsystem.h#L46">[src]</a>
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvsystem.h#L37">[src]</a>
         
       </h4>
 
       <div class="docblock">
-        <pre><code><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"></span>
-<span class="n">arv_get_device_id</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
-<span class="w">  </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">index</span><span class="w"></span>
+        <pre><code><div class="highlight"><pre><span></span><span class="n">ArvInterface</span><span class="o">*</span><span class="w"></span>
+<span class="n">arv_get_interface_by_id</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">interface_id</span><span class="w"></span>
 <span class="p">)</span><span class="w"></span>
 </pre></div>
 </code></pre>
@@ -128,18 +128,17 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Description
         <a href="#description" class="anchor"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvsystem.c#L343">[src]</a>
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvsystem.c#L116">[src]</a>
         
       </h4>
 
       <div class="docblock">
-        <p>Queries the unique device id corresponding to index.  Prior to this
-call the <code>arv_update_device_list()</code> function must be&nbsp;called.</p>
+        <p>Gets an interface by&nbsp;id.</p>
       </div>
 
       <div class="docblock">
         
-        <p>Available since: 0.2.0</p>
+        
         
         
         
@@ -159,10 +158,10 @@ call the <code>arv_update_device_list()</code> function must be&nbsp;called.</p>
       <div class="docblock">
         <dl class="arguments">
           
-          <dt class="arg-name"><code>index</code></dt>
+          <dt class="arg-name"><code>interface_id</code></dt>
           <dd class="arg-description">
-            <p><em>Type:</em>&nbsp;<code>unsigned int</code></p>
-            <p><p>Device&nbsp;index.</p></p>
+            <p><em>Type:</em>&nbsp;<code>const char*</code></p>
+            <p>No description available.</p>
             <table>
             
             
@@ -171,8 +170,8 @@ call the <code>arv_update_device_list()</code> function must be&nbsp;called.</p>
             
             
             
-            
-            
+            <tr><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
+            <tr><td>The value is a NUL terminated UTF-8 string.</td></tr>
             </table>
           </dd>
           
@@ -193,8 +192,8 @@ call the <code>arv_update_device_list()</code> function must be&nbsp;called.</p>
       <div class="docblock">
         <div class="returns">
           <div class="arg-description">
-            <p><em>Type:</em>&nbsp;<code>const char*</code></p>
-            <p><p>A unique device&nbsp;id.</p></td>
+            <p><em>Type:</em>&nbsp;<a href="class.Interface.html"><code>ArvInterface</code></a></p>
+            <p><p>An <code>ArvInterface</code> instance.</p></td>
           </div>
           <div>
             <table>
@@ -203,7 +202,7 @@ call the <code>arv_update_device_list()</code> function must be&nbsp;called.</p>
             
             <tr><td title="transfer: none">The data is owned by the called function.</td></tr>
             
-            <tr><td>The value is a NUL terminated UTF-8 string.</td></tr>
+            
             </table>
           </div>
         </div>
