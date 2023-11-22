@@ -612,7 +612,7 @@ static guint32 arv_last_port_offset = 0;
  *
  * Returns: %TRUE% if the operation was successful
  *
- * Sinces: 0.8.23
+ * Sinces: 0.10.0
  */
 
 gboolean
@@ -655,7 +655,7 @@ arv_set_gv_port_range_from_string (const char *range)
  *
  * Returns: %TRUE% if the operation was successful
  *
- * Sinces: 0.8.23
+ * Sinces: 0.10.0
  */
 
 gboolean
