@@ -2465,7 +2465,7 @@ arv_camera_is_binning_available (ArvCamera *camera, GError **error)
  *
  * Return: gain representation, %ARV_GC_REPRESENTATION_UNDEFINED if not available.
  *
- * Since: 0.8.31
+ * Since: 0.10.0
  */
 
 ArvGcRepresentation
@@ -2492,7 +2492,7 @@ arv_camera_get_gain_representation (ArvCamera *camera)
  *
  * Return: exposure time representation, %ARV_GC_REPRESENTATION_UNDEFINED if not available.
  *
- * Since: 0.8.31
+ * Since: 0.10.0
  */
 
 ArvGcRepresentation
@@ -2916,7 +2916,7 @@ arv_camera_get_float_increment (ArvCamera *camera, const char *feature, GError *
  *
  * Set a register content.
  *
- * Since: 0.9.0
+ * Since: 0.10.0
  */
 
 void
@@ -2938,7 +2938,7 @@ arv_camera_set_register (ArvCamera *camera, const char *feature, guint64 length,
  *
  * Returns: register content, must be freed using [method@GLib.free].
  *
- * Since: 0.9.0
+ * Since: 0.10.0
  */
 
 void *
@@ -3109,7 +3109,7 @@ arv_camera_is_feature_implemented (ArvCamera *camera, const char *feature, GErro
  *
  * Return: the feature representation, %ARV_GC_REPRESENTATION_UNDEFINED if not available.
  *
- * Since: 0.8.31
+ * Since: 0.10.0
  */
 
 ArvGcRepresentation
@@ -3840,7 +3840,7 @@ arv_camera_uv_set_usb_mode (ArvCamera *camera, ArvUvUsbMode usb_mode)
  *
  * Returns: %TRUE if @camera is a GenTL device.
  *
- * Since: 0.9.0
+ * Since: 0.10.0
  */
 
 gboolean

@@ -245,7 +245,7 @@ arv_device_write_register (ArvDevice *device, guint64 address, guint32 value, GE
  *
  * Return value: (skip): TRUE on success.
  *
- * Since: 0.9.0
+ * Since: 0.10.0
  **/
 
 gboolean
@@ -457,7 +457,7 @@ _get_feature (ArvDevice *device, GType node_type, const char *feature, GError **
  *
  * Return: enum ArvGcRepresentation, ARV_GC_REPRESENTATION_UNDEFINED if not available.
  *
- * Since: 0.8.31
+ * Since: 0.10.0
  */
 
 ArvGcRepresentation
@@ -925,7 +925,7 @@ arv_device_set_register_feature_value (ArvDevice *device, const char *feature, g
  *
  * Returns: the register feature content, must be freed using [method@GLib.free].
  *
- * Since: 0.9.0
+ * Since: 0.10.0
  */
 
 void *
@@ -1261,7 +1261,7 @@ arv_device_set_access_check_policy (ArvDevice *device, ArvAccessCheckPolicy poli
  *
  * Returns: %FALSE if on of the stream failed to start.
  *
- * Since: 0.9.0
+ * Since: 0.10.0
  */
 
 gboolean
@@ -1315,7 +1315,7 @@ arv_device_start_acquisition (ArvDevice *device, GError **error)
  *
  * Returns: %FALSE if on of the stream failed to stop.
  *
- * Since: 0.9.0
+ * Since: 0.10.0
  */
 
 gboolean
@@ -1446,7 +1446,7 @@ arv_device_class_init (ArvDeviceClass *device_class)
 	 * This signal may be emited from a thread different than the main one,
 	 * so please take care to shared data access from the callback.
 	 *
-	 * Since: 0.9.0
+	 * Since: 0.10.0
 	 */
 
 	arv_device_signals[ARV_DEVICE_SIGNAL_DEVICE_EVENT] =
