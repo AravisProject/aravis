@@ -1346,7 +1346,9 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size, char **ur
                                         }
 
                                         if (genicam != NULL)
-                                                *url = g_strdup_printf ("%s:///%s;%lx;%lx", scheme, path,
+                                                *url = g_strdup_printf ("%s:///%s;%" G_GINT64_MODIFIER "x;%"
+                                                                        G_GINT64_MODIFIER "x",
+                                                                        scheme, path,
                                                                         file_address, file_size);
                                 } else {
                                         g_clear_pointer (&genicam, g_free);
