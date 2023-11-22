@@ -45,21 +45,21 @@ size_t gentl_buf_size(INFO_DATATYPE,const void*);
 GC_ERROR gentl_to_buf(INFO_DATATYPE type, void* dst, const void* src, size_t* sz, INFO_DATATYPE *piType) G_GNUC_WARN_UNUSED_RESULT;
 
 
-/*
-In our code, GC_API is used in implementation, so only specifies return type.
-This is to allow verbatim copy of the function signature into the implementation file.
-*/
-#undef GC_API
-#define GC_API GC_ERROR
-
 #if defined(_WIN32) && defined(_MSC_VER)
-	#define GENTL_THREAD_LOCAL_STORAGE declspec(thread)
+	#define GENTL_THREAD_LOCAL_STORAGE __declspec(thread)
+	/*
+	MSVC compiler does not allow dllimport spec in the implementation file (but mingw w32 requires it);
+	so we replace all GC_API (which is return type GC_ERROR plus dllimport declspec) by plain GC_ERROR.
+	This is to allow verbatim copy of function signature from GenTL header into the implementation files.
+	*/
+	#undef GC_API
+	#define GC_API GC_ERROR
 #else
 	#define GENTL_THREAD_LOCAL_STORAGE __thread
 #endif
 
-GC_API gentl_init (void);
-GC_API gentl_fini (void);
+GC_ERROR gentl_init (void);
+GC_ERROR gentl_fini (void);
 gboolean gentl_is_initialized (void);
 
 /*
