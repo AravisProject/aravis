@@ -25,12 +25,12 @@
 G_DEFINE_TYPE (ArvGentlEvent,arv_gentl_event,G_TYPE_OBJECT);
 
 static void
-arv_gentl_event_class_init(ArvGentlEventClass*)
+arv_gentl_event_class_init(ArvGentlEventClass* self)
 {
 }
 
 static void
-arv_gentl_event_init(ArvGentlEvent*)
+arv_gentl_event_init(ArvGentlEvent* self)
 {
 }
 
@@ -38,11 +38,11 @@ arv_gentl_event_init(ArvGentlEvent*)
 G_DEFINE_TYPE (ArvTransportLayer,arv_transport_layer,G_TYPE_OBJECT);
 
 static void
-arv_transport_layer_class_init(ArvTransportLayerClass*)
+arv_transport_layer_class_init(ArvTransportLayerClass* self)
 {
 }
 
-static void arv_transport_layer_init(ArvTransportLayer*)
+static void arv_transport_layer_init(ArvTransportLayer* self)
 {
 }
 
@@ -65,7 +65,7 @@ gentl_error_quark (void)
   return g_quark_from_static_string ("gentl-error-quark");
 }
 
-GC_API
+GC_ERROR
 gentl_init()
 {
 	if (gentl_GCInitLib != 0)
@@ -77,7 +77,7 @@ gentl_init()
 	return GC_ERR_SUCCESS;
 }
 
-GC_API
+GC_ERROR
 gentl_fini()
 {
 	GENTL_ENSURE_INIT;
