@@ -193,7 +193,7 @@ arv_gc_struct_entry_node_set (ArvGcRegister *gc_register, const void *buffer, gu
 	g_return_if_fail (ARV_IS_GC_REGISTER (struct_register));
 
 	arv_gc_feature_node_increment_change_count (ARV_GC_FEATURE_NODE (gc_register));
-	return arv_gc_register_set (ARV_GC_REGISTER (struct_register), buffer, length, error);
+	arv_gc_register_set (ARV_GC_REGISTER (struct_register), buffer, length, error);
 }
 
 static guint64
