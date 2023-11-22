@@ -8,9 +8,10 @@ option('packet-socket', type: 'feature', value: 'auto', description : 'Enable pa
 option('tests', type: 'boolean', value: true, description: 'Build tests')
 option('fast-heartbeat', type: 'boolean', value: false, description: 'Enable faster heartbeat rate')
 
-# experimental or incomplete features
+# Experimental or incomplete features
 
 option('gentl-producer', type: 'boolean', value: 'false', description : 'Enable experimental GenTL producer')
+option('event', type: 'boolean', value: 'false', description: 'Enable event support')
 
 # Parameters
 

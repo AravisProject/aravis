@@ -242,6 +242,7 @@ configure_file (input: 'arvapi.h.in', output: 'arvapi.h',
 
 features_library_config_data = configuration_data ()
 features_library_config_data.set10 ('ARAVIS_HAS_USB', usb_dep.found())
+features_library_config_data.set10 ('ARAVIS_HAS_EVENT', get_option('event'))
 features_library_config_data.set10 ('ARAVIS_HAS_PACKET_SOCKET', packet_socket_enabled)
 features_library_config_data.set10 ('ARAVIS_HAS_FAST_HEARTBEAT', get_option ('fast-heartbeat'))
 configure_file (input: 'arvfeatures.h.in', output: 'arvfeatures.h',

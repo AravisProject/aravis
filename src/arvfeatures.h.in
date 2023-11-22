@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2016 Emmanuel Pacaud
+ * Copyright © 2009-2023 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -46,6 +46,16 @@
  */
 
 #define ARAVIS_HAS_PACKET_SOCKET @ARAVIS_HAS_PACKET_SOCKET@
+
+/**
+ * ARAVIS_HAS_EVENT
+ *
+ * ARAVIS_HAS_EVENT is defined as 1 if aravis is compiled with event support, 0 if not.
+ *
+ * Since: 0.10.0
+ */
+
+#define ARAVIS_HAS_EVENT @ARAVIS_HAS_EVENT@
 
 /**
  * ARAVIS_HAS_FAST_HEARTBEAT
