@@ -39,6 +39,17 @@ if get_option('tests')
 		test (t[0], exe, suite: t[1])
 	endforeach
 
+        py_script_config_data = configuration_data ()
+        py_script_config_data.set ('GI_TYPELIB_PATH', meson.project_build_root() / 'src')
+        py_script_config_data.set ('LD_LIBRARY_PATH', meson.project_build_root() / 'src')
+        py_script_config_data.set ('FAKE_GENICAM_PATH', meson.project_source_root() / 'src' / 'arv-fake-camera.xml')
+        py_script_config_data.set ('ARV_PRODUCER_PATH', gentl_producer_library.full_path())
+
+        configure_file (input: 'pylaunch.in', output: 'pylaunch', configuration: py_script_config_data)
+        configure_file (input: 'pylaunch-dbg.in', output: 'pylaunch-dbg', configuration: py_script_config_data)
+        configure_file (input: 'jslaunch.in', output: 'jslaunch', configuration: py_script_config_data)
+        configure_file (input: 'jslaunch-dbg.in', output: 'jslaunch-dbg', configuration: py_script_config_data)
+
 	if introspection_enabled
 		pymod = import ('python')
 
@@ -61,15 +72,6 @@ if get_option('tests')
 			endforeach
 		endif
 
-		py_script_config_data = configuration_data ()
-	        py_script_config_data.set ('GI_TYPELIB_PATH', meson.project_build_root() / 'src')
-	        py_script_config_data.set ('LD_LIBRARY_PATH', meson.project_build_root() / 'src')
-		py_script_config_data.set ('FAKE_GENICAM_PATH', meson.project_source_root() / 'src' / 'arv-fake-camera.xml')
-
-		configure_file (input: 'pylaunch.in', output: 'pylaunch', configuration: py_script_config_data)
-		configure_file (input: 'pylaunch-dbg.in', output: 'pylaunch-dbg', configuration: py_script_config_data)
-		configure_file (input: 'jslaunch.in', output: 'jslaunch', configuration: py_script_config_data)
-		configure_file (input: 'jslaunch-dbg.in', output: 'jslaunch-dbg', configuration: py_script_config_data)
 	endif
 
 	examples = [
