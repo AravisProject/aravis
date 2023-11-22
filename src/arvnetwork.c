@@ -219,7 +219,11 @@ arv_enumerate_network_interfaces (void)
 							}
 						}
 						if (!match){
-							arv_warning_interface ("Failed to obtain netmask for %08lx (secondary address?), using 255.255.0.0.",((struct sockaddr_in*)a->addr)->sin_addr.s_addr);
+							arv_warning_interface
+                                                                ("Failed to obtain netmask for %08"
+                                                                 G_GINT64_MODIFIER
+                                                                 "x (secondary address?), using 255.255.0.0.",
+                                                                 ((struct sockaddr_in*)a->addr)->sin_addr.s_addr);
 							mask->sin_addr.s_addr = htonl(0xffff0000U);
 						}
 					}
