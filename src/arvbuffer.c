@@ -773,7 +773,7 @@ arv_buffer_get_image_region (ArvBuffer *buffer, gint *x, gint *y, gint *width, g
 void
 arv_buffer_get_image_padding (ArvBuffer *buffer, gint *x_padding, gint *y_padding)
 {
-        return arv_buffer_get_part_padding (buffer, 0, x_padding, y_padding);
+        arv_buffer_get_part_padding (buffer, 0, x_padding, y_padding);
 }
 
 /**
