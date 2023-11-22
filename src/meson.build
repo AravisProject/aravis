@@ -331,4 +331,6 @@ if introspection_option.auto() or introspection_option.enabled()
   endif
 endif
 
-subdir('gentl')
+if get_option('gentl-producer')
+  subdir('gentl')
+endif
