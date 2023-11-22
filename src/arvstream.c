@@ -254,7 +254,7 @@ arv_stream_push_output_buffer (ArvStream *stream, ArvBuffer *buffer)
  *
  * An accessor to the number of buffer owned by the stream instance.
  *
- * Since: 0.9.0
+ * Since: 0.10.0
  */
 
 void
@@ -291,7 +291,7 @@ arv_stream_get_n_owned_buffers (ArvStream *stream, gint *n_input_buffers, gint *
  * Start the stream acquisition. This has to be done before the `AcquisitionStart` feature is executed.
  * [method@Aravis.Camera.start_acquisition] does this for you.
  *
- * Since: 0.9.0
+ * Since: 0.10.0
  *
  * Returns: %TRUE on success
  */
@@ -318,7 +318,7 @@ arv_stream_start_acquisition (ArvStream *stream, GError **error)
  *
  * Returns: %TRUE on success
  *
- * Since: 0.9.0
+ * Since: 0.10.0
  */
 
 gboolean
@@ -353,7 +353,7 @@ arv_stream_stop_acquisition (ArvStream *stream, GError **error)
  *
  * Returns: the number of deleted buffers.
  *
- * Since: 0.9.0
+ * Since: 0.10.0
  */
 
 guint

@@ -131,7 +131,7 @@ arv_get_interface_by_id (const char* interface_id)
 		if (strcmp (interface_id, interfaces[i].interface_id) == 0) {
 			return interfaces[i].get_interface_instance ();
 		}
-	
+
 	return NULL;
 }
 
@@ -163,7 +163,7 @@ arv_get_interface_id (unsigned int index)
  *
  * Returns: The interface protocol string.
  *
- * Since: 0.9.0
+ * Since: 0.10.0
  */
 
 const char *

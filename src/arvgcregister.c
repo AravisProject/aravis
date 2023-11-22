@@ -83,7 +83,7 @@ arv_gc_register_get_length (ArvGcRegister *gc_register, GError **error)
  *
  * Returns: the register feature content, must be freed using [method@GLib.free].
  *
- * Since: 0.9.0
+ * Since: 0.10.0
  */
 
 void *
