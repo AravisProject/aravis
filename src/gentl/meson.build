@@ -19,9 +19,10 @@ gentl_producer_library = shared_module (
   name_prefix: '',
   name_suffix: 'cti',
   install: true,
+  install_dir: get_option('libdir') / 'gentlproducer',
   sources: gentl_producer_sources,
   link_with: aravis_library,
   include_directories: library_inc,
   c_args: library_c_args,
-  dependencies: aravis_library_dependencies
+  dependencies: aravis_library_dependencies,
 )
