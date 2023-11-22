@@ -124,3 +124,9 @@ TLUpdateInterfaceList (TL_HANDLE hTL, bool8_t *pbChanged, uint64_t iTimeout)
 
 	return GC_ERR_SUCCESS;
 }
+
+static __attribute__((constructor)) void
+gentl_producer_init (void)
+{
+        arv_disable_interface ("GenTL");
+}
