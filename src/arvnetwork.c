@@ -325,10 +325,9 @@ arv_gpollfd_prepare_all (GPollFD *fds, guint nfds){
 void
 arv_gpollfd_clear_one (GPollFD *fd, GSocket* socket){
 	WSANETWORKEVENTS wsaNetEvents;
-	int wsaRes;
 
-	wsaRes = WSAEnumNetworkEvents (g_socket_get_fd(socket), (WSAEVENT) fd->fd, &wsaNetEvents);
 	/* TODO: check return value, check wsaNetEvents for errors */
+	WSAEnumNetworkEvents (g_socket_get_fd(socket), (WSAEVENT) fd->fd, &wsaNetEvents);
 }
 
 void
