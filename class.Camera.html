@@ -1,0 +1,2284 @@
+<!--
+SPDX-FileCopyrightText: Aravis Project Team
+
+SPDX-License-Identifier: LGPL-2.1-or-later
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Aravis.Camera</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta charset="utf-8" />
+
+  
+  <meta property="og:type" content="website"/>
+
+  
+  <meta property="og:image:width" content="256"/>
+  <meta property="og:image:height" content="256"/>
+  <meta property="og:image:secure_url" content="aravis.svg"/>
+  <meta property="og:image:alt" content="Aravis-0.10"/>
+  
+
+  
+  <meta property="og:title" content="Aravis.Camera"/>
+  <meta property="og:description" content="Reference for Aravis.Camera"/>
+  <meta name="twitter:title" content="Aravis.Camera"/>
+  <meta name="twitter:description" content="Reference for Aravis.Camera"/>
+
+
+  
+  <meta name="twitter:card" content="summary"/>
+
+  
+  
+  
+  <link rel="search" type="application/opensearchdescription+xml" title="Aravis" href="opensearch.xml">
+  
+  
+
+  <link rel="stylesheet" href="style.css" type="text/css" />
+
+  
+
+  
+  <script src="urlmap.js"></script>
+  
+  
+  <script src="fzy.js"></script>
+  <script src="search.js"></script>
+  
+  <script src="main.js"></script>
+</head>
+
+<body>
+  <div id="body-wrapper" tabindex="-1">
+
+    <nav class="sidebar devhelp-hidden">
+      
+      <div class="section">
+        <img src="aravis.svg" class="logo"/>
+      </div>
+      
+      
+      <div class="search section">
+        <form id="search-form" autocomplete="off">
+          <input id="search-input" type="text" name="do-not-autocomplete" placeholder="Click, or press 's' to search" autocomplete="off"/>
+        </form>
+      </div>
+      
+      <div class="section namespace">
+        <h3><a href="index.html">Aravis</a></h3>
+        <p>API Version: 0.10</p>
+        
+        <p>Library Version: 0.9.0</p>
+        
+      </div>
+      
+<div class="section">
+  <h5>Type</h5>
+  <div class="links">
+    <a class="current" href="class.Camera.html#description">Camera</a>
+  </div>
+</div>
+
+
+  
+<div class="section">
+  <h5>Constructors</h5>
+  <div class="links">
+  
+    <a class="ctor" href="ctor.Camera.new.html">new</a>
+  
+    <a class="ctor" href="ctor.Camera.new_with_device.html">new_with_device</a>
+  
+  </div>
+</div>
+
+
+
+  
+
+
+  
+<div class="section">
+  <h5>Instance methods</h5>
+  <div class="links">
+  
+    <a class="method" href="method.Camera.abort_acquisition.html">abort_acquisition</a>
+  
+    <a class="method" href="method.Camera.acquisition.html">acquisition</a>
+  
+    <a class="method" href="method.Camera.are_chunks_available.html">are_chunks_available</a>
+  
+    <a class="method" href="method.Camera.clear_triggers.html">clear_triggers</a>
+  
+    <a class="method" href="method.Camera.create_chunk_parser.html">create_chunk_parser</a>
+  
+    <a class="method" href="method.Camera.create_stream.html">create_stream</a>
+  
+    <a class="method" href="method.Camera.create_stream_full.html">create_stream_full</a>
+  
+    <a class="method" href="method.Camera.dup_available_black_levels.html">dup_available_black_levels</a>
+  
+    <a class="method" href="method.Camera.dup_available_components.html">dup_available_components</a>
+  
+    <a class="method" href="method.Camera.dup_available_enumerations.html">dup_available_enumerations</a>
+  
+    <a class="method" href="method.Camera.dup_available_enumerations_as_display_names.html">dup_available_enumerations_as_display_names</a>
+  
+    <a class="method" href="method.Camera.dup_available_enumerations_as_strings.html">dup_available_enumerations_as_strings</a>
+  
+    <a class="method" href="method.Camera.dup_available_gains.html">dup_available_gains</a>
+  
+    <a class="method" href="method.Camera.dup_available_pixel_formats.html">dup_available_pixel_formats</a>
+  
+    <a class="method" href="method.Camera.dup_available_pixel_formats_as_display_names.html">dup_available_pixel_formats_as_display_names</a>
+  
+    <a class="method" href="method.Camera.dup_available_pixel_formats_as_strings.html">dup_available_pixel_formats_as_strings</a>
+  
+    <a class="method" href="method.Camera.dup_available_trigger_sources.html">dup_available_trigger_sources</a>
+  
+    <a class="method" href="method.Camera.dup_available_triggers.html">dup_available_triggers</a>
+  
+    <a class="method" href="method.Camera.dup_register.html">dup_register</a>
+  
+    <a class="method" href="method.Camera.execute_command.html">execute_command</a>
+  
+    <a class="method" href="method.Camera.get_acquisition_mode.html">get_acquisition_mode</a>
+  
+    <a class="method" href="method.Camera.get_binning.html">get_binning</a>
+  
+    <a class="method" href="method.Camera.get_black_level.html">get_black_level</a>
+  
+    <a class="method" href="method.Camera.get_black_level_auto.html">get_black_level_auto</a>
+  
+    <a class="method" href="method.Camera.get_black_level_bounds.html">get_black_level_bounds</a>
+  
+    <a class="method" href="method.Camera.get_boolean.html">get_boolean</a>
+  
+    <a class="method" href="method.Camera.get_boolean_gi.html">get_boolean_gi</a>
+  
+    <a class="method" href="method.Camera.get_chunk_mode.html">get_chunk_mode</a>
+  
+    <a class="method" href="method.Camera.get_chunk_state.html">get_chunk_state</a>
+  
+    <a class="method" href="method.Camera.get_device.html">get_device</a>
+  
+    <a class="method" href="method.Camera.get_device_id.html">get_device_id</a>
+  
+    <a class="method" href="method.Camera.get_device_serial_number.html">get_device_serial_number</a>
+  
+    <a class="method" href="method.Camera.get_exposure_time.html">get_exposure_time</a>
+  
+    <a class="method" href="method.Camera.get_exposure_time_auto.html">get_exposure_time_auto</a>
+  
+    <a class="method" href="method.Camera.get_exposure_time_bounds.html">get_exposure_time_bounds</a>
+  
+    <a class="method" href="method.Camera.get_exposure_time_representation.html">get_exposure_time_representation</a>
+  
+    <a class="method" href="method.Camera.get_feature_representation.html">get_feature_representation</a>
+  
+    <a class="method" href="method.Camera.get_float.html">get_float</a>
+  
+    <a class="method" href="method.Camera.get_float_bounds.html">get_float_bounds</a>
+  
+    <a class="method" href="method.Camera.get_float_increment.html">get_float_increment</a>
+  
+    <a class="method" href="method.Camera.get_frame_count.html">get_frame_count</a>
+  
+    <a class="method" href="method.Camera.get_frame_count_bounds.html">get_frame_count_bounds</a>
+  
+    <a class="method" href="method.Camera.get_frame_rate.html">get_frame_rate</a>
+  
+    <a class="method" href="method.Camera.get_frame_rate_bounds.html">get_frame_rate_bounds</a>
+  
+    <a class="method" href="method.Camera.get_gain.html">get_gain</a>
+  
+    <a class="method" href="method.Camera.get_gain_auto.html">get_gain_auto</a>
+  
+    <a class="method" href="method.Camera.get_gain_bounds.html">get_gain_bounds</a>
+  
+    <a class="method" href="method.Camera.get_gain_representation.html">get_gain_representation</a>
+  
+    <a class="method" href="method.Camera.get_height_bounds.html">get_height_bounds</a>
+  
+    <a class="method" href="method.Camera.get_height_increment.html">get_height_increment</a>
+  
+    <a class="method" href="method.Camera.get_integer.html">get_integer</a>
+  
+    <a class="method" href="method.Camera.get_integer_bounds.html">get_integer_bounds</a>
+  
+    <a class="method" href="method.Camera.get_integer_increment.html">get_integer_increment</a>
+  
+    <a class="method" href="method.Camera.get_model_name.html">get_model_name</a>
+  
+    <a class="method" href="method.Camera.get_payload.html">get_payload</a>
+  
+    <a class="method" href="method.Camera.get_pixel_format.html">get_pixel_format</a>
+  
+    <a class="method" href="method.Camera.get_pixel_format_as_string.html">get_pixel_format_as_string</a>
+  
+    <a class="method" href="method.Camera.get_region.html">get_region</a>
+  
+    <a class="method" href="method.Camera.get_sensor_size.html">get_sensor_size</a>
+  
+    <a class="method" href="method.Camera.get_string.html">get_string</a>
+  
+    <a class="method" href="method.Camera.get_trigger_source.html">get_trigger_source</a>
+  
+    <a class="method" href="method.Camera.get_vendor_name.html">get_vendor_name</a>
+  
+    <a class="method" href="method.Camera.get_width_bounds.html">get_width_bounds</a>
+  
+    <a class="method" href="method.Camera.get_width_increment.html">get_width_increment</a>
+  
+    <a class="method" href="method.Camera.get_x_binning_bounds.html">get_x_binning_bounds</a>
+  
+    <a class="method" href="method.Camera.get_x_binning_increment.html">get_x_binning_increment</a>
+  
+    <a class="method" href="method.Camera.get_x_offset_bounds.html">get_x_offset_bounds</a>
+  
+    <a class="method" href="method.Camera.get_x_offset_increment.html">get_x_offset_increment</a>
+  
+    <a class="method" href="method.Camera.get_y_binning_bounds.html">get_y_binning_bounds</a>
+  
+    <a class="method" href="method.Camera.get_y_binning_increment.html">get_y_binning_increment</a>
+  
+    <a class="method" href="method.Camera.get_y_offset_bounds.html">get_y_offset_bounds</a>
+  
+    <a class="method" href="method.Camera.get_y_offset_increment.html">get_y_offset_increment</a>
+  
+    <a class="method" href="method.Camera.gv_auto_packet_size.html">gv_auto_packet_size</a>
+  
+    <a class="method" href="method.Camera.gv_get_current_stream_channel.html">gv_get_current_stream_channel</a>
+  
+    <a class="method" href="method.Camera.gv_get_ip_configuration_mode.html">gv_get_ip_configuration_mode</a>
+  
+    <a class="method" href="method.Camera.gv_get_multipart.html">gv_get_multipart</a>
+  
+    <a class="method" href="method.Camera.gv_get_n_network_interfaces.html">gv_get_n_network_interfaces</a>
+  
+    <a class="method" href="method.Camera.gv_get_n_stream_channels.html">gv_get_n_stream_channels</a>
+  
+    <a class="method" href="method.Camera.gv_get_packet_delay.html">gv_get_packet_delay</a>
+  
+    <a class="method" href="method.Camera.gv_get_packet_size.html">gv_get_packet_size</a>
+  
+    <a class="method" href="method.Camera.gv_get_persistent_ip.html">gv_get_persistent_ip</a>
+  
+    <a class="method" href="method.Camera.gv_is_multipart_supported.html">gv_is_multipart_supported</a>
+  
+    <a class="method" href="method.Camera.gv_select_stream_channel.html">gv_select_stream_channel</a>
+  
+    <a class="method" href="method.Camera.gv_set_ip_configuration_mode.html">gv_set_ip_configuration_mode</a>
+  
+    <a class="method" href="method.Camera.gv_set_multipart.html">gv_set_multipart</a>
+  
+    <a class="method" href="method.Camera.gv_set_packet_delay.html">gv_set_packet_delay</a>
+  
+    <a class="method" href="method.Camera.gv_set_packet_size.html">gv_set_packet_size</a>
+  
+    <a class="method" href="method.Camera.gv_set_packet_size_adjustment.html">gv_set_packet_size_adjustment</a>
+  
+    <a class="method" href="method.Camera.gv_set_persistent_ip.html">gv_set_persistent_ip</a>
+  
+    <a class="method" href="method.Camera.gv_set_persistent_ip_from_string.html">gv_set_persistent_ip_from_string</a>
+  
+    <a class="method" href="method.Camera.gv_set_stream_options.html">gv_set_stream_options</a>
+  
+    <a class="method" href="method.Camera.is_binning_available.html">is_binning_available</a>
+  
+    <a class="method" href="method.Camera.is_black_level_auto_available.html">is_black_level_auto_available</a>
+  
+    <a class="method" href="method.Camera.is_black_level_available.html">is_black_level_available</a>
+  
+    <a class="method" href="method.Camera.is_component_available.html">is_component_available</a>
+  
+    <a class="method" href="method.Camera.is_enumeration_entry_available.html">is_enumeration_entry_available</a>
+  
+    <a class="method" href="method.Camera.is_exposure_auto_available.html">is_exposure_auto_available</a>
+  
+    <a class="method" href="method.Camera.is_exposure_time_available.html">is_exposure_time_available</a>
+  
+    <a class="method" href="method.Camera.is_feature_available.html">is_feature_available</a>
+  
+    <a class="method" href="method.Camera.is_feature_implemented.html">is_feature_implemented</a>
+  
+    <a class="method" href="method.Camera.is_frame_rate_available.html">is_frame_rate_available</a>
+  
+    <a class="method" href="method.Camera.is_gain_auto_available.html">is_gain_auto_available</a>
+  
+    <a class="method" href="method.Camera.is_gain_available.html">is_gain_available</a>
+  
+    <a class="method" href="method.Camera.is_gentl_device.html">is_gentl_device</a>
+  
+    <a class="method" href="method.Camera.is_gv_device.html">is_gv_device</a>
+  
+    <a class="method" href="method.Camera.is_region_offset_available.html">is_region_offset_available</a>
+  
+    <a class="method" href="method.Camera.is_software_trigger_supported.html">is_software_trigger_supported</a>
+  
+    <a class="method" href="method.Camera.is_uv_device.html">is_uv_device</a>
+  
+    <a class="method" href="method.Camera.select_and_enable_component.html">select_and_enable_component</a>
+  
+    <a class="method" href="method.Camera.select_black_level.html">select_black_level</a>
+  
+    <a class="method" href="method.Camera.select_component.html">select_component</a>
+  
+    <a class="method" href="method.Camera.select_gain.html">select_gain</a>
+  
+    <a class="method" href="method.Camera.set_access_check_policy.html">set_access_check_policy</a>
+  
+    <a class="method" href="method.Camera.set_acquisition_mode.html">set_acquisition_mode</a>
+  
+    <a class="method" href="method.Camera.set_binning.html">set_binning</a>
+  
+    <a class="method" href="method.Camera.set_black_level.html">set_black_level</a>
+  
+    <a class="method" href="method.Camera.set_black_level_auto.html">set_black_level_auto</a>
+  
+    <a class="method" href="method.Camera.set_boolean.html">set_boolean</a>
+  
+    <a class="method" href="method.Camera.set_chunk_mode.html">set_chunk_mode</a>
+  
+    <a class="method" href="method.Camera.set_chunk_state.html">set_chunk_state</a>
+  
+    <a class="method" href="method.Camera.set_chunks.html">set_chunks</a>
+  
+    <a class="method" href="method.Camera.set_exposure_mode.html">set_exposure_mode</a>
+  
+    <a class="method" href="method.Camera.set_exposure_time.html">set_exposure_time</a>
+  
+    <a class="method" href="method.Camera.set_exposure_time_auto.html">set_exposure_time_auto</a>
+  
+    <a class="method" href="method.Camera.set_float.html">set_float</a>
+  
+    <a class="method" href="method.Camera.set_frame_count.html">set_frame_count</a>
+  
+    <a class="method" href="method.Camera.set_frame_rate.html">set_frame_rate</a>
+  
+    <a class="method" href="method.Camera.set_frame_rate_enable.html">set_frame_rate_enable</a>
+  
+    <a class="method" href="method.Camera.set_gain.html">set_gain</a>
+  
+    <a class="method" href="method.Camera.set_gain_auto.html">set_gain_auto</a>
+  
+    <a class="method" href="method.Camera.set_integer.html">set_integer</a>
+  
+    <a class="method" href="method.Camera.set_pixel_format.html">set_pixel_format</a>
+  
+    <a class="method" href="method.Camera.set_pixel_format_from_string.html">set_pixel_format_from_string</a>
+  
+    <a class="method" href="method.Camera.set_range_check_policy.html">set_range_check_policy</a>
+  
+    <a class="method" href="method.Camera.set_region.html">set_region</a>
+  
+    <a class="method" href="method.Camera.set_register.html">set_register</a>
+  
+    <a class="method" href="method.Camera.set_register_cache_policy.html">set_register_cache_policy</a>
+  
+    <a class="method" href="method.Camera.set_string.html">set_string</a>
+  
+    <a class="method" href="method.Camera.set_trigger.html">set_trigger</a>
+  
+    <a class="method" href="method.Camera.set_trigger_source.html">set_trigger_source</a>
+  
+    <a class="method" href="method.Camera.software_trigger.html">software_trigger</a>
+  
+    <a class="method" href="method.Camera.start_acquisition.html">start_acquisition</a>
+  
+    <a class="method" href="method.Camera.stop_acquisition.html">stop_acquisition</a>
+  
+    <a class="method" href="method.Camera.uv_get_bandwidth.html">uv_get_bandwidth</a>
+  
+    <a class="method" href="method.Camera.uv_get_bandwidth_bounds.html">uv_get_bandwidth_bounds</a>
+  
+    <a class="method" href="method.Camera.uv_is_bandwidth_control_available.html">uv_is_bandwidth_control_available</a>
+  
+    <a class="method" href="method.Camera.uv_set_bandwidth.html">uv_set_bandwidth</a>
+  
+    <a class="method" href="method.Camera.uv_set_usb_mode.html">uv_set_usb_mode</a>
+  
+  </div>
+</div>
+
+
+
+  
+<div class="section">
+  <h5>Properties</h5>
+  <div class="links">
+  
+    <a class="property" href="property.Camera.device.html">device</a>
+  
+    <a class="property" href="property.Camera.name.html">name</a>
+  
+  </div>
+</div>
+
+
+
+  
+
+
+  
+
+
+  
+
+
+
+      <div class="section generator">
+        <p>Generated by <a href="https://gitlab.gnome.org/GNOME/gi-docgen">gi-docgen</a> 2023.2</p>
+      </div>
+    </nav>
+
+    <button id="btn-to-top" class="hidden"><span class="up-arrow"></span></button>
+
+    
+<section id="main" class="content">
+  <header>
+    <h3>Class</h3>
+    <h1 aria-label="Name"><a href="index.html">Aravis</a><span class="sep" role="presentation"></span>Camera</h1>
+  </header>
+
+  <section>
+    <summary>
+      <div class="docblock">
+        <p></p>
+      </div>
+
+      <div class="toggle-wrapper">
+        <h4 id="description" style="display:flex;">
+          Description
+          <a href="#description" class="anchor"></a>
+          
+          <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvcamera.c#L23">[src]</a>
+          
+        </h4>
+
+        <pre><code>class Aravis.Camera : GObject.Object
+  implements Gio.Initable {
+  /* No available fields */
+}</pre></code>
+
+        <div class="docblock">
+          <p><a href="class.Camera.html"><code>ArvCamera</code></a> is a class for the generic control of cameras. It hides the complexity of the genicam interface
+by providing a simple <span class="caps">API</span>, with the drawback of not exposing all the available features. See <a href="class.Device.html"><code>ArvDevice</code></a>
+and <a href="class.Gc.html"><code>ArvGc</code></a> for a more advanced use of the Aravis&nbsp;library.</p>
+        </div>
+
+        <div class="docblock">
+          
+          
+          
+        </div>
+
+        
+      </div>
+    </summary>
+
+    
+
+    
+    <div class="toggle-wrapper ancestors">
+      <h4 id="ancestors">
+        Ancestors
+        <a href="#ancestors" class="anchor"></a>
+      </h4>
+
+      <div class="docblock">
+        <ul>
+        
+          
+          <li class="class"><a class="external" href="javascript:void(0)" data-link="class.Object.html" data-namespace="GObject">GObject</a></li>
+          
+        
+        </ul>
+      </div>
+    </div>
+    
+
+    
+
+    
+    <div class="toggle-wrapper implements">
+      <h4 id="implements">
+        Implements
+        <a href="#implements" class="anchor"></a>
+      </h4>
+
+      <div class="docblock">
+        <ul>
+        
+          
+          <li class="interface"><a class="external" href="javascript:void(0)" data-link="iface.Initable.html" data-namespace="Gio">GInitable</a></li>
+          
+        
+        </ul>
+      </div>
+    </div>
+    
+
+    
+    <div class="toggle-wrapper constructors">
+      <h4 id="constructors">
+        Constructors
+        <a href="#constructors" class="anchor"></a>
+      </h4>
+
+      <div class="docblock">
+      
+        <div class="">
+          <h6><a href="ctor.Camera.new.html">arv_camera_new</a></h6>
+          <div class="docblock">
+            <p>Creates a new <code>ArvCamera</code>. If <code>name</code> is null, it will instantiate the
+first available&nbsp;camera.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="ctor.Camera.new_with_device.html">arv_camera_new_with_device</a></h6>
+          <div class="docblock">
+            <p>Creates a new <code>ArvCamera</code>, using <code>device</code> as its internal device&nbsp;object.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.6</span></p>
+          </div>
+        </div>
+      
+      </div>
+    </div>
+    
+
+    
+
+    
+    <div class="toggle-wrapper methods">
+      <h4 id="methods">
+        Instance methods
+        <a href="#methods" class="anchor"></a>
+      </h4>
+
+      <div class="docblock">
+      
+        <div class="">
+          <h6><a href="method.Camera.abort_acquisition.html">arv_camera_abort_acquisition</a></h6>
+          <div class="docblock">
+            <p>Aborts video stream&nbsp;acquisition.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.acquisition.html">arv_camera_acquisition</a></h6>
+          <div class="docblock">
+            <p>Acquire one image&nbsp;buffer.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.are_chunks_available.html">arv_camera_are_chunks_available</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.8</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.clear_triggers.html">arv_camera_clear_triggers</a></h6>
+          <div class="docblock">
+            <p>Disables all&nbsp;triggers.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.create_chunk_parser.html">arv_camera_create_chunk_parser</a></h6>
+          <div class="docblock">
+            <p>Creates a new <code>ArvChunkParser</code> object, used for the extraction of chunk data from <code>ArvBuffer</code>.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.4.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.create_stream.html">arv_camera_create_stream</a></h6>
+          <div class="docblock">
+            <p>Creates a new <code>ArvStream</code> for video stream reception. See
+<code>ArvStreamCallback</code> for details regarding the callback&nbsp;function.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.2.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.create_stream_full.html">arv_camera_create_stream_full</a></h6>
+          <div class="docblock">
+            <p>Creates a new <code>ArvStream</code> for video stream reception. See
+<code>ArvStreamCallback</code> for details regarding the callback&nbsp;function.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.dup_available_black_levels.html">arv_camera_dup_available_black_levels</a></h6>
+          <div class="docblock">
+            <p>Retrieves the list of all available black level selectors as&nbsp;strings.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.27</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.dup_available_components.html">arv_camera_dup_available_components</a></h6>
+          <div class="docblock">
+            <p>Retrieves the list of available&nbsp;components.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.dup_available_enumerations.html">arv_camera_dup_available_enumerations</a></h6>
+          <div class="docblock">
+            <p>Get all the available values of <code>feature</code>, as 64 bit&nbsp;integers.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.dup_available_enumerations_as_display_names.html">arv_camera_dup_available_enumerations_as_display_names</a></h6>
+          <div class="docblock">
+            <p>Get display names of all the available entries of <code>feature</code>.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.dup_available_enumerations_as_strings.html">arv_camera_dup_available_enumerations_as_strings</a></h6>
+          <div class="docblock">
+            <p>Get all the available values of <code>feature</code>, as&nbsp;strings.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.dup_available_gains.html">arv_camera_dup_available_gains</a></h6>
+          <div class="docblock">
+            <p>Retrieves the list of all available gain selectors as&nbsp;strings.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.27</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.dup_available_pixel_formats.html">arv_camera_dup_available_pixel_formats</a></h6>
+          <div class="docblock">
+            <p>Retrieves the list of all available pixel&nbsp;formats.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.dup_available_pixel_formats_as_display_names.html">arv_camera_dup_available_pixel_formats_as_display_names</a></h6>
+          <div class="docblock">
+            <p>Retrieves the list of all available pixel formats as display names.
+In general, these human-readable strings cannot be used as&nbsp;settings.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.dup_available_pixel_formats_as_strings.html">arv_camera_dup_available_pixel_formats_as_strings</a></h6>
+          <div class="docblock">
+            <p>Retrieves the list of all available pixel formats as&nbsp;strings.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.dup_available_trigger_sources.html">arv_camera_dup_available_trigger_sources</a></h6>
+          <div class="docblock">
+            <p>Gets the list of all available trigger&nbsp;sources.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.dup_available_triggers.html">arv_camera_dup_available_triggers</a></h6>
+          <div class="docblock">
+            <p>Gets a list of all available triggers: FrameStart, ExposureActive,&nbsp;etc&#8230;</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.dup_register.html">arv_camera_dup_register</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available-next" title="This method will be available in the next stable release">unstable</span>&nbsp;<span class="emblem available">since: 0.10.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.execute_command.html">arv_camera_execute_command</a></h6>
+          <div class="docblock">
+            <p>Execute a Genicam&nbsp;command.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_acquisition_mode.html">arv_camera_get_acquisition_mode</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_binning.html">arv_camera_get_binning</a></h6>
+          <div class="docblock">
+            <p>Retrieves binning in both&nbsp;directions.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_black_level.html">arv_camera_get_black_level</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.19</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_black_level_auto.html">arv_camera_get_black_level_auto</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.19</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_black_level_bounds.html">arv_camera_get_black_level_bounds</a></h6>
+          <div class="docblock">
+            <p>Retrieves blacklevel&nbsp;bounds.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.19</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_boolean.html">arv_camera_get_boolean</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_boolean_gi.html">arv_camera_get_boolean_gi</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_chunk_mode.html">arv_camera_get_chunk_mode</a></h6>
+          <div class="docblock">
+            <p>Check wether chunk data mode is active. Please see&nbsp;arv_camera_set_chunk_mode().</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_chunk_state.html">arv_camera_get_chunk_state</a></h6>
+          <div class="docblock">
+            <p>Gets state of chunk data. Chunk data are be embedded in <code>ArvBuffer</code> only
+if chunk mode is active. Please see&nbsp;arv_camera_set_chunk_mode().</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_device.html">arv_camera_get_device</a></h6>
+          <div class="docblock">
+            <p>Retrieves the <code>ArvDevice</code> object for more complete access to camera&nbsp;features.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.2.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_device_id.html">arv_camera_get_device_id</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_device_serial_number.html">arv_camera_get_device_serial_number</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.8</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_exposure_time.html">arv_camera_get_exposure_time</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_exposure_time_auto.html">arv_camera_get_exposure_time_auto</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_exposure_time_bounds.html">arv_camera_get_exposure_time_bounds</a></h6>
+          <div class="docblock">
+            <p>Retrieves exposure time bounds, in&nbsp;µs.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_exposure_time_representation.html">arv_camera_get_exposure_time_representation</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available-next" title="This method will be available in the next stable release">unstable</span>&nbsp;<span class="emblem available">since: 0.10.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_feature_representation.html">arv_camera_get_feature_representation</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available-next" title="This method will be available in the next stable release">unstable</span>&nbsp;<span class="emblem available">since: 0.10.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_float.html">arv_camera_get_float</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_float_bounds.html">arv_camera_get_float_bounds</a></h6>
+          <div class="docblock">
+            <p>Retrieves float feature&nbsp;bounds.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_float_increment.html">arv_camera_get_float_increment</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.16</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_frame_count.html">arv_camera_get_frame_count</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_frame_count_bounds.html">arv_camera_get_frame_count_bounds</a></h6>
+          <div class="docblock">
+            <p>Retrieves allowed range for frame&nbsp;count.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_frame_rate.html">arv_camera_get_frame_rate</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_frame_rate_bounds.html">arv_camera_get_frame_rate_bounds</a></h6>
+          <div class="docblock">
+            <p>Retrieves allowed range for&nbsp;framerate.</p>
+          </div>
+          <div class="docblock">
+            <p></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_gain.html">arv_camera_get_gain</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_gain_auto.html">arv_camera_get_gain_auto</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_gain_bounds.html">arv_camera_get_gain_bounds</a></h6>
+          <div class="docblock">
+            <p>Retrieves gain&nbsp;bounds.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_gain_representation.html">arv_camera_get_gain_representation</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available-next" title="This method will be available in the next stable release">unstable</span>&nbsp;<span class="emblem available">since: 0.10.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_height_bounds.html">arv_camera_get_height_bounds</a></h6>
+          <div class="docblock">
+            <p>Retrieves the valid range for image&nbsp;height.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_height_increment.html">arv_camera_get_height_increment</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_integer.html">arv_camera_get_integer</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_integer_bounds.html">arv_camera_get_integer_bounds</a></h6>
+          <div class="docblock">
+            <p>Retrieves integer feature&nbsp;bounds.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_integer_increment.html">arv_camera_get_integer_increment</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_model_name.html">arv_camera_get_model_name</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_payload.html">arv_camera_get_payload</a></h6>
+          <div class="docblock">
+            <p>Retrieves the size needed for the storage of an image. This value is used
+for the creation of the stream&nbsp;buffers.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_pixel_format.html">arv_camera_get_pixel_format</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_pixel_format_as_string.html">arv_camera_get_pixel_format_as_string</a></h6>
+          <div class="docblock">
+            
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_region.html">arv_camera_get_region</a></h6>
+          <div class="docblock">
+            <p>Retrieves the current region of&nbsp;interest.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_sensor_size.html">arv_camera_get_sensor_size</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_string.html">arv_camera_get_string</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_trigger_source.html">arv_camera_get_trigger_source</a></h6>
+          <div class="docblock">
+            <p>Gets the trigger source. This function doesn&#8217;t check if the camera is configured
+to actually use this source as a&nbsp;trigger.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_vendor_name.html">arv_camera_get_vendor_name</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_width_bounds.html">arv_camera_get_width_bounds</a></h6>
+          <div class="docblock">
+            <p>Retrieves the valid range for image&nbsp;width.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_width_increment.html">arv_camera_get_width_increment</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_x_binning_bounds.html">arv_camera_get_x_binning_bounds</a></h6>
+          <div class="docblock">
+            <p>Retrieves the valid range for image horizontal&nbsp;binning.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_x_binning_increment.html">arv_camera_get_x_binning_increment</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_x_offset_bounds.html">arv_camera_get_x_offset_bounds</a></h6>
+          <div class="docblock">
+            <p>Retrieves the valid range for image horizontal&nbsp;offset.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_x_offset_increment.html">arv_camera_get_x_offset_increment</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_y_binning_bounds.html">arv_camera_get_y_binning_bounds</a></h6>
+          <div class="docblock">
+            <p>Retrieves the valid range for image vertical&nbsp;binning.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_y_binning_increment.html">arv_camera_get_y_binning_increment</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_y_offset_bounds.html">arv_camera_get_y_offset_bounds</a></h6>
+          <div class="docblock">
+            <p>Retrieves the valid range for image vertical&nbsp;offset.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.get_y_offset_increment.html">arv_camera_get_y_offset_increment</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.gv_auto_packet_size.html">arv_camera_gv_auto_packet_size</a></h6>
+          <div class="docblock">
+            <p>Automatically determine the biggest packet size that can be used data
+streaming, and set GevSCPSPacketSize value accordingly. This function relies
+on the GevSCPSFireTestPacket feature. If this feature is not available, the
+packet size will be set to a default value (1500&nbsp;bytes).</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.gv_get_current_stream_channel.html">arv_camera_gv_get_current_stream_channel</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.gv_get_ip_configuration_mode.html">arv_camera_gv_get_ip_configuration_mode</a></h6>
+          <div class="docblock">
+            <p>Get the <span class="caps">IP</span> address configuration&nbsp;mode.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.22</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.gv_get_multipart.html">arv_camera_gv_get_multipart</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.gv_get_n_network_interfaces.html">arv_camera_gv_get_n_network_interfaces</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.25</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.gv_get_n_stream_channels.html">arv_camera_gv_get_n_stream_channels</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.gv_get_packet_delay.html">arv_camera_gv_get_packet_delay</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.gv_get_packet_size.html">arv_camera_gv_get_packet_size</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.gv_get_persistent_ip.html">arv_camera_gv_get_persistent_ip</a></h6>
+          <div class="docblock">
+            <p>Get the persistent <span class="caps">IP</span> address setting of&nbsp;camera.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.22</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.gv_is_multipart_supported.html">arv_camera_gv_is_multipart_supported</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.gv_select_stream_channel.html">arv_camera_gv_select_stream_channel</a></h6>
+          <div class="docblock">
+            <p>Select the current stream channel. Negative <code>channel_id</code> is&nbsp;ignored.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.gv_set_ip_configuration_mode.html">arv_camera_gv_set_ip_configuration_mode</a></h6>
+          <div class="docblock">
+            <p>Sets the <span class="caps">IP</span> address configuration mode.
+Available modes are ARV_GV_IP_CONFIGURATION_MODE_DHCP, ARV_GV_IP_CONFIGURATION_MODE_PERSISTENT_IP,&nbsp;ARV_GV_IP_CONFIGURATION_MODE_LLA.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.22</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.gv_set_multipart.html">arv_camera_gv_set_multipart</a></h6>
+          <div class="docblock">
+            <p>Control multipart payload&nbsp;support.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.gv_set_packet_delay.html">arv_camera_gv_set_packet_delay</a></h6>
+          <div class="docblock">
+            <p>Configure the inter packet delay to insert between each packet for the current stream
+channel. This can be used as a crude flow-control mechanism if the application or the network
+infrastructure cannot keep up with the packets coming from the device. Negative <code>delay_ns</code> is&nbsp;ignored.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.gv_set_packet_size.html">arv_camera_gv_set_packet_size</a></h6>
+          <div class="docblock">
+            <p>Specifies the stream packet size, in bytes, to send on the selected channel for a <span class="caps">GVSP</span> transmitter
+or specifies the maximum packet size supported by a <span class="caps">GVSP</span>&nbsp;receiver.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.gv_set_packet_size_adjustment.html">arv_camera_gv_set_packet_size_adjustment</a></h6>
+          <div class="docblock">
+            <p>Sets the option for packet size adjustment that happens at stream object&nbsp;creation.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.3</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.gv_set_persistent_ip.html">arv_camera_gv_set_persistent_ip</a></h6>
+          <div class="docblock">
+            <p>Sets the persistent <span class="caps">IP</span> address to&nbsp;camera.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.22</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.gv_set_persistent_ip_from_string.html">arv_camera_gv_set_persistent_ip_from_string</a></h6>
+          <div class="docblock">
+            <p>Sets the persistent <span class="caps">IP</span> address to&nbsp;camera.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.22</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.gv_set_stream_options.html">arv_camera_gv_set_stream_options</a></h6>
+          <div class="docblock">
+            <p>Sets the options used during stream object creation. These options mus be
+set before the call to&nbsp;arv_camera_create_stream().</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.6.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.is_binning_available.html">arv_camera_is_binning_available</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.is_black_level_auto_available.html">arv_camera_is_black_level_auto_available</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.19</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.is_black_level_available.html">arv_camera_is_black_level_available</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.19</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.is_component_available.html">arv_camera_is_component_available</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.25</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.is_enumeration_entry_available.html">arv_camera_is_enumeration_entry_available</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.17</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.is_exposure_auto_available.html">arv_camera_is_exposure_auto_available</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.is_exposure_time_available.html">arv_camera_is_exposure_time_available</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.is_feature_available.html">arv_camera_is_feature_available</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.is_feature_implemented.html">arv_camera_is_feature_implemented</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.is_frame_rate_available.html">arv_camera_is_frame_rate_available</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.is_gain_auto_available.html">arv_camera_is_gain_auto_available</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.is_gain_available.html">arv_camera_is_gain_available</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.is_gentl_device.html">arv_camera_is_gentl_device</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available-next" title="This method will be available in the next stable release">unstable</span>&nbsp;<span class="emblem available">since: 0.10.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.is_gv_device.html">arv_camera_is_gv_device</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.4.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.is_region_offset_available.html">arv_camera_is_region_offset_available</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.22</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.is_software_trigger_supported.html">arv_camera_is_software_trigger_supported</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.17</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.is_uv_device.html">arv_camera_is_uv_device</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.6.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.select_and_enable_component.html">arv_camera_select_and_enable_component</a></h6>
+          <div class="docblock">
+            <p>Select and enable the given&nbsp;component.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.select_black_level.html">arv_camera_select_black_level</a></h6>
+          <div class="docblock">
+            <p>Configures Black Level Selector&nbsp;feature.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.27</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.select_component.html">arv_camera_select_component</a></h6>
+          <div class="docblock">
+            <p>Select and enable or disable the given <code>component</code>.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.25</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.select_gain.html">arv_camera_select_gain</a></h6>
+          <div class="docblock">
+            <p>Configures Gain Selector&nbsp;feature.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.27</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.set_access_check_policy.html">arv_camera_set_access_check_policy</a></h6>
+          <div class="docblock">
+            <p>Sets the feature access check policy. When enabled, before being accessed, the actual read/write access of register
+is checked using AccessMode properties. On some devices, it helps to avoid forbidden writes to registers that may put
+the device in a bad&nbsp;state.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.22</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.set_acquisition_mode.html">arv_camera_set_acquisition_mode</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.set_binning.html">arv_camera_set_binning</a></h6>
+          <div class="docblock">
+            <p>Defines binning in both directions. Not all cameras support this
+feature. Negative <code>dx</code> or <code>dy</code> values are&nbsp;ignored.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.set_black_level.html">arv_camera_set_black_level</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.19</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.set_black_level_auto.html">arv_camera_set_black_level_auto</a></h6>
+          <div class="docblock">
+            <p>Configures automatic black level&nbsp;feature.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.19</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.set_boolean.html">arv_camera_set_boolean</a></h6>
+          <div class="docblock">
+            <p>Set a boolean feature&nbsp;value.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.set_chunk_mode.html">arv_camera_set_chunk_mode</a></h6>
+          <div class="docblock">
+            <p>Controls wether chunk data mode is active. When active, chunk data
+are appended to image data in <code>ArvBuffer</code>. A <code>ArvChunkParser</code> must be used in
+order to extract chunk&nbsp;data.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.set_chunk_state.html">arv_camera_set_chunk_state</a></h6>
+          <div class="docblock">
+            <p>Sets state of a chunk data. Chunk data are be embedded in <code>ArvBuffer</code> only
+if chunk mode is active. Please see&nbsp;arv_camera_set_chunk_mode().</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.set_chunks.html">arv_camera_set_chunks</a></h6>
+          <div class="docblock">
+            <p>Convenience function for enabling a set of chunk data. Chunk mode is activated, or deactivated
+if <code>chunk_list</code> is <code>NULL</code> or empty. All chunk data not listed are&nbsp;disabled.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.set_exposure_mode.html">arv_camera_set_exposure_mode</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.set_exposure_time.html">arv_camera_set_exposure_time</a></h6>
+          <div class="docblock">
+            <p>Sets exposure time. User should take care to set a value compatible with
+the desired frame rate. Negative <code>exposure_time_us</code> is&nbsp;ignored.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.set_exposure_time_auto.html">arv_camera_set_exposure_time_auto</a></h6>
+          <div class="docblock">
+            <p>Configures automatic exposure&nbsp;feature.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.set_float.html">arv_camera_set_float</a></h6>
+          <div class="docblock">
+            <p>Set a float feature&nbsp;value.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.set_frame_count.html">arv_camera_set_frame_count</a></h6>
+          <div class="docblock">
+            <p>Sets the number of frames to capture in MultiFrame&nbsp;mode.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.set_frame_rate.html">arv_camera_set_frame_rate</a></h6>
+          <div class="docblock">
+            <p>Configures a fixed frame rate mode. Once acquisition start is triggered, the video stream will be acquired with the
+given frame rate. A negative or zero <code>frame_rate</code> value disables the frame rate&nbsp;limit.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.set_frame_rate_enable.html">arv_camera_set_frame_rate_enable</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.set_gain.html">arv_camera_set_gain</a></h6>
+          <div class="docblock">
+            <p>Sets the gain of the <span class="caps">ADC</span> converter. Negative <code>gain</code> is&nbsp;ignored.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.set_gain_auto.html">arv_camera_set_gain_auto</a></h6>
+          <div class="docblock">
+            <p>Configures automatic gain&nbsp;feature.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.set_integer.html">arv_camera_set_integer</a></h6>
+          <div class="docblock">
+            <p>Set an integer feature&nbsp;value.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.set_pixel_format.html">arv_camera_set_pixel_format</a></h6>
+          <div class="docblock">
+            <p>Defines pixel&nbsp;format.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.set_pixel_format_from_string.html">arv_camera_set_pixel_format_from_string</a></h6>
+          <div class="docblock">
+            <p>Defines pixel format described by a&nbsp;string.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.set_range_check_policy.html">arv_camera_set_range_check_policy</a></h6>
+          <div class="docblock">
+            <p>Sets the feature range check policy. When enabled, before being set, the value of all nodes with an <code>ArvGcFloat</code> or
+<code>ArvGcInteger</code> interface will be checked against their Min and Max&nbsp;properties.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.8</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.set_region.html">arv_camera_set_region</a></h6>
+          <div class="docblock">
+            <p>Defines the region of interest which will be transmitted in the video
+stream. Negative <code>x</code> or <code>y</code> values, or not strictly positive <code>width</code> or <code>height</code> values are&nbsp;ignored.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.set_register.html">arv_camera_set_register</a></h6>
+          <div class="docblock">
+            <p>Set a register&nbsp;content.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available-next" title="This method will be available in the next stable release">unstable</span>&nbsp;<span class="emblem available">since: 0.10.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.set_register_cache_policy.html">arv_camera_set_register_cache_policy</a></h6>
+          <div class="docblock">
+            <p>Sets the Genicam register cache&nbsp;policy.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.8</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.set_string.html">arv_camera_set_string</a></h6>
+          <div class="docblock">
+            <p>Set an string feature&nbsp;value.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.set_trigger.html">arv_camera_set_trigger</a></h6>
+          <div class="docblock">
+            <p>Configures the camera in trigger mode. Typical values for source are &#8220;Line1&#8221; or &#8220;Line2&#8221;. See the camera documentation
+for the allowed values.  Source can also be &#8220;Software&#8221;. In this case, an acquisition is triggered by a call to&nbsp;arv_camera_software_trigger().</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.set_trigger_source.html">arv_camera_set_trigger_source</a></h6>
+          <div class="docblock">
+            <p>Sets the trigger source. This function doesn&#8217;t check if the camera is configured
+to actually use this source as a&nbsp;trigger.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.software_trigger.html">arv_camera_software_trigger</a></h6>
+          <div class="docblock">
+            <p>Sends a software trigger command to <code>camera</code>. The camera must be previously
+configured to use a software trigger, using <code>arv_camera_set_trigger</code>().</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.start_acquisition.html">arv_camera_start_acquisition</a></h6>
+          <div class="docblock">
+            <p>Starts video stream&nbsp;acquisition.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.stop_acquisition.html">arv_camera_stop_acquisition</a></h6>
+          <div class="docblock">
+            <p>Stops video stream&nbsp;acquisition.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.uv_get_bandwidth.html">arv_camera_uv_get_bandwidth</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.uv_get_bandwidth_bounds.html">arv_camera_uv_get_bandwidth_bounds</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.uv_is_bandwidth_control_available.html">arv_camera_uv_is_bandwidth_control_available</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.uv_set_bandwidth.html">arv_camera_uv_set_bandwidth</a></h6>
+          <div class="docblock">
+            <p>Set the bandwith limit or, if <code>bandwith</code> is not strictly positive, disable the&nbsp;limit.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Camera.uv_set_usb_mode.html">arv_camera_uv_set_usb_mode</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.17</span></p>
+          </div>
+        </div>
+      
+      </div>
+
+      
+        
+        <div class="toggle-wrapper default-hide ancestor-methods"><h5 style="display:block;">Methods inherited from <a class="external" href="javascript:void(0)" data-link="class.Object.html" data-namespace="GObject">GObject</a> (43)</h5>
+          <div class="docblock">
+          
+            <div class="docblock">
+              <p>Please see&nbsp;<a class="external" href="javascript:void(0)" data-link="class.Object.html#methods" data-namespace="GObject">GObject</a>&nbsp;for a full list of methods.</em></p>
+            </div>
+          
+          </div>
+        </div>
+        
+      
+
+      
+        
+        <div class="toggle-wrapper default-hide ancestor-methods"><h5 style="display:block;">Methods inherited from <a class="external" href="javascript:void(0)" data-link="iface.Initable.html" data-namespace="Gio">GInitable</a> (1)</h5>
+          <div class="docblock">
+          <h6><a class="external" href="javascript:void(0)" data-namespace="Gio" data-link="method.Initable.init.html">g_initable_init</a></h6>
+            <div class="docblock">
+              <p>Initializes the object implementing the&nbsp;interface.</p>
+            </div>
+            <div class="docblock">
+              <p><span class="emblem available-next" title="This method will be available in the next stable release">unstable</span>&nbsp;<span class="emblem available">since: 2.22</span></p>
+            </div>
+          
+          </div>
+        </div>
+        
+      
+    </div>
+    
+
+    
+    <div class="toggle-wrapper properties">
+      <h4 id="properties">
+        Properties
+        <a href="#properties" class="anchor"></a>
+      </h4>
+
+      
+      <div class="docblock">
+      
+        <div class="">
+          <h6><a href="property.Camera.device.html">Aravis.Camera:device</a></h6>
+          <div class="docblock">
+            <p>Internal device&nbsp;object.</p>
+          </div>
+          <div class="docblock">
+            <p></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="property.Camera.name.html">Aravis.Camera:name</a></h6>
+          <div class="docblock">
+            <p>Internal device name for object&nbsp;construction.</p>
+          </div>
+          <div class="docblock">
+            <p></p>
+          </div>
+        </div>
+      
+      </div>
+      
+
+      
+        
+      
+
+      
+        
+      
+
+    </div>
+    
+
+    
+    <div class="signals toggle-wrapper">
+      <h4 id="signals">
+        Signals
+        <a href="#signals" class="anchor"></a>
+      </h4>
+
+      
+
+      
+        
+        <div class="toggle-wrapper default-hide ancestor-signals"><h5 style="display:block;">Signals inherited from <a class="external" href="javascript:void(0)" data-link="class.Object.html" data-namespace="GObject">GObject</a> (1)</h5>
+          <div class="docblock">
+          <h6><a class="external" href="javascript:void(0)" data-namespace="GObject" data-link="signal.Object.notify.html">GObject::notify</a></h6>
+            <div class="docblock">
+              <p>The notify signal is emitted on an object when one of its properties has
+its value set through g_object_set_property(), g_object_set(), et&nbsp;al.</p>
+            </div>
+            <div class="docblock">
+              <p></p>
+            </div>
+          
+          </div>
+        </div>
+        
+      
+
+      
+        
+      
+
+    </div>
+    
+
+    
+    <div class="class toggle-wrapper default-hide">
+      <h4 id="class-struct">
+        Class structure
+        <a href="#class-struct" class="anchor"></a>
+      </h4>
+
+      <div class="docblock">
+        <pre><code>struct AravisCameraClass {
+  GObjectClass parent_class;
+  None padding;
+  
+}</code></pre>
+      </div>
+
+      <div class="docblock">
+        No description available.
+      </div>
+
+      
+      <div class="docblock">
+        <h6>Class members</h6>
+
+        <dl class="members">
+        
+          <dt><code>parent_class: GObjectClass</code></dt>
+          <dd>No description available.</dd>
+        
+          <dt><code>padding: None</code></dt>
+          <dd>No description available.</dd>
+        
+        </dd>
+      </div>
+      
+    </div>
+    
+
+    
+
+    
+
+  </section>
+</section>
+
+
+    
+<div id="toc" class="toc">
+  <nav aria-labelledby="toc-title">
+    <p id="toc-title">Content</p>
+    <ul class="toc-list">
+      <li class="toc-list-item"><a href="#description"><span class="link-text">Description</span></a></li>
+      
+      
+      
+      <li class="toc-list-item"><a href="#ancestors"><span class="link-text">Ancestors</span></a></li>
+      
+      
+      <li class="toc-list-item"><a href="#implements"><span class="link-text">Implements</span></a></li>
+      
+      
+<li class="toc-list-item"><a href="#constructors"><span class="link-text">Constructors</span></a></li>
+
+
+      
+
+      
+<li class="toc-list-item"><a href="#methods"><span class="link-text">Methods</span></a></li>
+
+
+      
+<li class="toc-list-item"><a href="#properties"><span class="link-text">Properties</span></a></li>
+
+
+      
+
+      
+
+      
+
+    </ul>
+  </nav>
+</div>
+
+
+    <section id="search" class="content hidden"></section>
+
+    <footer>
+    
+    </footer>
+  </div>
+</body>
+</html>
