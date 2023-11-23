@@ -38,6 +38,8 @@ TLOpen (TL_HANDLE *phTL)
 	if (gentl_transport_layer!=NULL)
                 return GC_ERR_RESOURCE_IN_USE;
 
+        arv_disable_interface ("GenTL");
+
 	gentl_transport_layer= g_object_new (ARV_TYPE_TRANSPORT_LAYER,NULL);
 	*phTL=(void*)gentl_transport_layer;
 
@@ -145,10 +147,4 @@ TLUpdateInterfaceList (TL_HANDLE hTL, bool8_t *pbChanged, uint64_t iTimeout)
                 pbChanged=0;
 
 	return GC_ERR_SUCCESS;
-}
-
-static __attribute__((constructor)) void
-gentl_producer_init (void)
-{
-        arv_disable_interface ("GenTL");
 }
