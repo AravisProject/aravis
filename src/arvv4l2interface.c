@@ -34,7 +34,6 @@
 #include <libv4l2.h>
 #include <linux/videodev2.h>
 #include <fcntl.h>
-#include <errno.h>
 #include <arvmisc.h>
 
 struct _ArvV4l2Interface {
