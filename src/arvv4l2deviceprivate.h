@@ -31,6 +31,15 @@
 
 G_BEGIN_DECLS
 
+ArvPixelFormat  arv_pixel_format_from_v4l2              (guint32 v4l2_pixel_format);
+
+int             arv_v4l2_device_get_fd                  (ArvV4l2Device *v4l2_device);
+int             arv_v4l2_device_ioctl                   (ArvV4l2Device *device, int request, void *arg);
+gboolean        arv_v4l2_device_set_image_format        (ArvV4l2Device *device);
+gboolean        arv_v4l2_device_get_image_format        (ArvV4l2Device *device,
+                                                         guint32 *payload_size, ArvPixelFormat *pixel_format,
+                                                         guint32 *width, guint32 *height, guint32 *bytes_per_line);
+
 G_END_DECLS
 
 #endif
