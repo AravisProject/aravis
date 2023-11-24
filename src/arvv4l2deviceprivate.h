@@ -31,6 +31,9 @@
 
 G_BEGIN_DECLS
 
+guint32         arv_v4l2_device_get_payload_size        (ArvV4l2Device *device);
+int             arv_v4l2_device_get_fd                  (ArvV4l2Device *v4l2_device);
+
 G_END_DECLS
 
 #endif

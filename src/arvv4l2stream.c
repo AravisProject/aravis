@@ -26,20 +26,32 @@
  */
 
 #include <arvv4l2streamprivate.h>
-#include <arvv4l2device.h>
+#include <arvv4l2deviceprivate.h>
 #include <arvstreamprivate.h>
 #include <arvbufferprivate.h>
 #include <arvdebug.h>
 #include <arvmisc.h>
+#include <libv4l2.h>
+#include <linux/videodev2.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+
+#define ARV_V4L2_STREAM_N_BUFFERS       3
 
 typedef struct {
 	ArvStream *stream;
+
+        gboolean thread_started;
+        GMutex thread_started_mutex;
+        GCond thread_started_cond;
 
 	ArvV4l2Device *v4l2_device;
 	ArvStreamCallback callback;
 	void *callback_data;
 
 	gboolean cancel;
+
+        int device_fd;
 
 	/* Statistics */
 
@@ -70,33 +82,76 @@ static void *
 arv_v4l2_stream_thread (void *data)
 {
 	ArvV4l2StreamThreadData *thread_data = data;
-	ArvBuffer *buffer;
+        GHashTable *buffers;
+        GHashTableIter iter;
+        gpointer key, value;
+	ArvBuffer *arv_buffer;
 
 	arv_info_stream_thread ("[V4l2Stream::thread] Start");
 
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->callback_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
 
+	arv_info_stream_thread ("[V4l2Stream::thread] Start 2");
+
+        buffers = g_hash_table_new (g_direct_hash, g_direct_equal);
+
+        g_mutex_lock (&thread_data->thread_started_mutex);
+        thread_data->thread_started = TRUE;
+        g_cond_signal (&thread_data->thread_started_cond);
+        g_mutex_unlock (&thread_data->thread_started_mutex);
+
+	arv_info_stream_thread ("[V4l2Stream::thread] Started");
+
 	while (!g_atomic_int_get (&thread_data->cancel)) {
-		sleep(1);
-		buffer = arv_stream_pop_input_buffer (thread_data->stream);
-		if (buffer != NULL) {
-			if (thread_data->callback != NULL)
-				thread_data->callback (thread_data->callback_data, ARV_STREAM_CALLBACK_TYPE_START_BUFFER,
-						       NULL);
+                struct v4l2_buffer bufd = {0};
+                fd_set fds;
+                struct timeval tv = {0};
+                int result;
 
-			if (buffer->priv->status == ARV_BUFFER_STATUS_SUCCESS)
-				thread_data->n_completed_buffers++;
-			else
-				thread_data->n_failures++;
-			arv_stream_push_output_buffer (thread_data->stream, buffer);
+                do {
+                        arv_buffer = arv_stream_pop_input_buffer (thread_data->stream);
+                        if (ARV_IS_BUFFER (arv_buffer)) {
 
-			if (thread_data->callback != NULL)
-				thread_data->callback (thread_data->callback_data, ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
-						       buffer);
-		} else
-			thread_data->n_underruns++;
-	}
+                                bufd.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+                                bufd.memory = V4L2_MEMORY_MMAP;
+                                bufd.index = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (arv_buffer), "v4l2-index"));
+
+                                if (v4l2_ioctl (thread_data->device_fd, VIDIOC_QBUF, &bufd) == -1) {
+                                        arv_warning_stream_thread ("Failed to queue v4l2 buffer");
+                                        arv_stream_push_output_buffer(thread_data->stream, arv_buffer);
+                                } else {
+                                                g_hash_table_replace (buffers, GINT_TO_POINTER (bufd.index), arv_buffer);
+                                }
+                        }
+                } while (arv_buffer != NULL);
+
+                FD_ZERO(&fds);
+                FD_SET(thread_data->device_fd, &fds);
+                tv.tv_sec = 2;
+                result = select(thread_data->device_fd + 1, &fds, NULL, NULL, &tv);
+                if(result == -1){
+                        perror("Waiting for Frame");
+                }
+
+                bufd.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+                bufd.memory = V4L2_MEMORY_MMAP;
+                bufd.index = 0;
+
+                if(v4l2_ioctl(thread_data->device_fd, VIDIOC_DQBUF, &bufd) == -1) {
+                        perror("DeQueue Buffer");
+                }
+
+                arv_buffer = g_hash_table_lookup (buffers, GINT_TO_POINTER (bufd.index));
+                arv_stream_push_output_buffer (thread_data->stream, arv_buffer);
+        }
+
+        g_hash_table_iter_init (&iter, buffers);
+        while (g_hash_table_iter_next (&iter, &key, &value))
+        {
+                arv_stream_push_output_buffer (thread_data->stream, value);
+        }
+        g_hash_table_unref (buffers);
 
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->callback_data, ARV_STREAM_CALLBACK_TYPE_EXIT, NULL);
@@ -118,10 +173,19 @@ arv_v4l2_stream_start_acquisition (ArvStream *stream, GError **error)
 	g_return_val_if_fail (priv->thread == NULL, FALSE);
 	g_return_val_if_fail (priv->thread_data != NULL, FALSE);
 
+        arv_v4l2_device_get_payload_size (priv->thread_data->v4l2_device);
+
 	thread_data = priv->thread_data;
 	thread_data->cancel = FALSE;
+        thread_data->thread_started = FALSE;
 
 	priv->thread = g_thread_new ("arv_v4l2_stream", arv_v4l2_stream_thread, priv->thread_data);
+
+        g_mutex_lock (&thread_data->thread_started_mutex);
+        while (!thread_data->thread_started)
+                g_cond_wait (&thread_data->thread_started_cond,
+                             &thread_data->thread_started_mutex);
+        g_mutex_unlock (&thread_data->thread_started_mutex);
 
         return TRUE;
 }
@@ -146,6 +210,70 @@ arv_v4l2_stream_stop_acquisition (ArvStream *stream, GError **error)
         return TRUE;
 }
 
+static void
+_v4l2_buffer_destroy_func (gpointer data)
+{
+        ArvBuffer *buffer = data;
+        GDestroyNotify user_data_destroy_func;
+
+        free (buffer->priv->data);
+
+        user_data_destroy_func = g_object_get_data (G_OBJECT(buffer), "destroy-func");
+        if (user_data_destroy_func != NULL)
+                user_data_destroy_func (buffer->priv->user_data);
+}
+
+static gboolean
+arv_v4l2_stream_create_buffers (ArvStream *stream, guint n_buffers, size_t size,
+                                void *user_data, GDestroyNotify user_data_destroy_func,
+                                GError **error)
+{
+	ArvV4l2Stream *v4l2_stream = ARV_V4L2_STREAM (stream);
+	ArvV4l2StreamPrivate *priv = arv_v4l2_stream_get_instance_private (v4l2_stream);
+        struct v4l2_requestbuffers req = {0};
+        guint i;
+
+        req.count = n_buffers;
+        req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        req.memory = V4L2_MEMORY_MMAP;
+        if (v4l2_ioctl(priv->thread_data->device_fd, VIDIOC_REQBUFS, &req) == -1) {
+                g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
+                             "Failed to request v4l2 buffer");
+                return FALSE;
+        }
+
+        for (i = 0; i < n_buffers; i++) {
+                ArvBuffer *buffer;
+                struct v4l2_buffer buf = {0};
+                unsigned char *v4l2_buffer = NULL;
+
+                arv_debug_stream ("Create buffer %d", i);
+
+                buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+                buf.memory = V4L2_MEMORY_MMAP;
+                buf.index = i;
+
+                if (v4l2_ioctl(priv->thread_data->device_fd, VIDIOC_QUERYBUF, &buf) == -1) {
+                        g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
+                                     "Failed to request v4l2 buffer");
+                        return FALSE;
+                }
+
+                v4l2_buffer = (u_int8_t *) mmap (NULL, buf.length, PROT_READ | PROT_WRITE, MAP_SHARED,
+                                          priv->thread_data->device_fd, buf.m.offset);
+
+                size = buf.length;
+
+                buffer = arv_buffer_new_full (size, v4l2_buffer, user_data, _v4l2_buffer_destroy_func);
+                g_object_set_data (G_OBJECT (buffer), "v4l2-index", GINT_TO_POINTER(i));
+                g_object_set_data (G_OBJECT (buffer), "destroy-func", user_data_destroy_func);
+
+                arv_stream_push_buffer (stream, buffer);
+        }
+
+        return TRUE;
+}
+
 /**
  * arv_v4l2_stream_new: (skip)
  * @camera: a #ArvV4l2Device
@@ -154,6 +282,8 @@ arv_v4l2_stream_stop_acquisition (ArvStream *stream, GError **error)
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Return Value: (transfer full): a new #ArvStream.
+ *
+ * Since: 0.10.0
  */
 
 ArvStream *
@@ -201,6 +331,8 @@ arv_v4l2_stream_constructed (GObject *object)
                                  G_TYPE_UINT64, &priv->thread_data->n_failures);
         arv_stream_declare_info (ARV_STREAM (v4l2_stream), "n_underruns",
                                  G_TYPE_UINT64, &priv->thread_data->n_underruns);
+
+        thread_data->device_fd = arv_v4l2_device_get_fd (ARV_V4L2_DEVICE(thread_data->v4l2_device));
 }
 
 /* ArvStream implementation */
@@ -238,4 +370,5 @@ arv_v4l2_stream_class_init (ArvV4l2StreamClass *v4l2_stream_class)
 
 	stream_class->start_acquisition = arv_v4l2_stream_start_acquisition;
 	stream_class->stop_acquisition = arv_v4l2_stream_stop_acquisition;
+        stream_class->create_buffers =  arv_v4l2_stream_create_buffers;
 }
