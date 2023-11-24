@@ -300,13 +300,26 @@ gboolean
 arv_stream_start_acquisition (ArvStream *stream, GError **error)
 {
 	ArvStreamClass *stream_class;
+        GError *local_error = NULL;
+        gboolean success;
 
 	g_return_val_if_fail (ARV_IS_STREAM (stream), FALSE);
 
 	stream_class = ARV_STREAM_GET_CLASS (stream);
 	g_return_val_if_fail (stream_class->start_acquisition != NULL, FALSE);
 
-	return stream_class->start_acquisition (stream, error);
+	success = stream_class->start_acquisition (stream, &local_error);
+        if (!success) {
+                if (local_error != NULL)
+                        arv_warning_stream ("Failed to start stream acquisition (%s)", local_error->message);
+                else
+                        arv_warning_stream ("Failed to start stream acquisition");
+        }
+
+        if (local_error != NULL)
+                g_propagate_error(error, local_error);
+
+        return success;
 }
 
 /**
@@ -338,6 +351,8 @@ arv_stream_stop_acquisition (ArvStream *stream, GError **error)
         if (success && priv->n_buffer_filling != 0) {
                 g_critical ("Buffer filling count must be 0 after acquisition stop (was %d)", priv->n_buffer_filling);
         }
+        if (!success)
+                arv_warning_stream ("Failed to stop stream acquisition ");
 
         return success;
 }
@@ -375,15 +390,15 @@ arv_stream_delete_buffers (ArvStream *stream)
 
 	do {
 		buffer = g_async_queue_try_pop_unlocked (priv->input_queue);
-		if (buffer != NULL) {
+		if (ARV_IS_BUFFER(buffer)) {
 			g_object_unref (buffer);
 			n_deleted++;
-		}
+                }
 	} while (buffer != NULL);
 
 	do {
 		buffer = g_async_queue_try_pop_unlocked (priv->output_queue);
-		if (buffer != NULL) {
+		if (ARV_IS_BUFFER(buffer)) {
 			g_object_unref (buffer);
 			n_deleted++;
 		}
@@ -714,6 +729,7 @@ arv_stream_create_buffers (ArvStream *stream, unsigned int n_buffers,
 {
 	ArvStreamClass *stream_class;
 	ArvStreamPrivate *priv = arv_stream_get_instance_private (stream);
+        gboolean success;
         size_t payload_size;
         unsigned int i;
 
@@ -726,9 +742,24 @@ arv_stream_create_buffers (ArvStream *stream, unsigned int n_buffers,
                 return FALSE;
 
 	stream_class = ARV_STREAM_GET_CLASS (stream);
-        if (stream_class->create_buffers != NULL)
-                return stream_class->create_buffers (stream, n_buffers, payload_size,
-                                                     user_data, user_data_destroy_func, error);
+        if (stream_class->create_buffers != NULL) {
+                GError *local_error = NULL;
+
+                success = stream_class->create_buffers (stream, n_buffers, payload_size,
+                                                        user_data, user_data_destroy_func, &local_error);
+                if (!success) {
+                        if (local_error != NULL) {
+                                arv_warning_stream ("Failed to create native buffers: %s",
+                                                    local_error->message);
+                                g_propagate_error(error, local_error);
+                        } else  {
+                                arv_warning_stream ("Failed to create native buffers");
+                        }
+                }
+
+
+                return success;
+        }
 
         for (i = 0; i < n_buffers; i++)
                 arv_stream_push_buffer (stream, arv_buffer_new_full (payload_size, NULL,
