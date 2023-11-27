@@ -121,8 +121,12 @@ arv_v4l2_device_get_genicam (ArvDevice *device)
 	return priv->genicam;
 }
 
-guint32
-arv_v4l2_device_get_payload_size (ArvV4l2Device *device)
+gboolean
+arv_v4l2_device_get_image_infos (ArvV4l2Device *device,
+                                 guint32 *payload_size,
+                                 guint32 *pixel_format,
+                                 guint32 *width,
+                                 guint32 *height)
 {
         ArvV4l2DevicePrivate *priv = arv_v4l2_device_get_instance_private (ARV_V4L2_DEVICE (device));
         struct v4l2_format format = {0};
@@ -144,16 +148,25 @@ arv_v4l2_device_get_payload_size (ArvV4l2Device *device)
         format.fmt.pix.field = V4L2_FIELD_NONE;
 
         if (v4l2_ioctl(priv->device_fd, VIDIOC_S_FMT, &format) == -1) {
-                arv_warning_device ("Failed to select v4l2 format");
-                return 0;
+                arv_warning_device ("Failed to select v4l2 format (%s)", strerror(errno));
+                return FALSE;
         }
 
         if (v4l2_ioctl(priv->device_fd, VIDIOC_G_FMT, &format) == -1) {
-                arv_warning_device ("Failed to retrieve v4l2 format");
-                return 0;
+                arv_warning_device ("Failed to retrieve v4l2 format (%s)", strerror(errno));
+                return FALSE;
         }
 
-        return format.fmt.pix.sizeimage;
+        if (payload_size != NULL)
+                *payload_size = format.fmt.pix.sizeimage;
+        if (pixel_format != NULL)
+                *pixel_format = g_array_index (priv->pixel_formats, guint32, priv->pixel_format_idx);
+        if (width != NULL)
+                *width = format.fmt.pix.width;
+        if (height != NULL)
+                *height = format.fmt.pix.height;
+
+        return TRUE;
 }
 
 static void
@@ -163,7 +176,9 @@ _control_stream (ArvV4l2Device *device, gboolean enable)
         unsigned int type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
         if (v4l2_ioctl(priv->device_fd, enable ? VIDIOC_STREAMON : VIDIOC_STREAMOFF, &type) == -1) {
-                arv_warning_device ("v4l2 stream %s failed", enable ? "start" : "stop");
+                arv_warning_device ("v4l2 stream %s failed (%s)",
+                                    enable ? "start" : "stop",
+                                    strerror (errno));
         }
 }
 
@@ -215,7 +230,8 @@ arv_v4l2_device_read_memory (ArvDevice *device, guint64 address, guint32 size, v
                                                         frame_size->stepwise.max_height;
                                                 break;
                                         case ARV_V4L2_ADDRESS_PAYLOAD_SIZE:
-                                                value = arv_v4l2_device_get_payload_size (v4l2_device);
+                                                arv_v4l2_device_get_image_infos(v4l2_device, (guint32 *) &value,
+                                                                                NULL, NULL, NULL);
                                                 break;
                                         case ARV_V4L2_ADDRESS_PIXEL_FORMAT:
                                                 value = g_array_index (priv->pixel_formats, guint32,

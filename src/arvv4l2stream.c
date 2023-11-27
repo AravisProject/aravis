@@ -53,11 +53,18 @@ typedef struct {
 
         int device_fd;
 
+        guint32 pixel_format;
+        guint32 image_width;
+        guint32 image_height;
+
+        guint32 frame_id;
+
 	/* Statistics */
 
 	guint n_completed_buffers;
 	guint n_failures;
 	guint n_underruns;
+        guint n_transferred_bytes;
 } ArvV4l2StreamThreadData;
 
 typedef struct {
@@ -92,16 +99,12 @@ arv_v4l2_stream_thread (void *data)
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->callback_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
 
-	arv_info_stream_thread ("[V4l2Stream::thread] Start 2");
-
         buffers = g_hash_table_new (g_direct_hash, g_direct_equal);
 
         g_mutex_lock (&thread_data->thread_started_mutex);
         thread_data->thread_started = TRUE;
         g_cond_signal (&thread_data->thread_started_cond);
         g_mutex_unlock (&thread_data->thread_started_mutex);
-
-	arv_info_stream_thread ("[V4l2Stream::thread] Started");
 
 	while (!g_atomic_int_get (&thread_data->cancel)) {
                 struct v4l2_buffer bufd = {0};
@@ -143,7 +146,37 @@ arv_v4l2_stream_thread (void *data)
                 }
 
                 arv_buffer = g_hash_table_lookup (buffers, GINT_TO_POINTER (bufd.index));
-                arv_stream_push_output_buffer (thread_data->stream, arv_buffer);
+                if (ARV_IS_BUFFER (arv_buffer)) {
+                        arv_buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_IMAGE;
+                        arv_buffer->priv->chunk_endianness = G_BIG_ENDIAN;
+                        arv_buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
+                        arv_buffer->priv->timestamp_ns = 1000000000000L * bufd.timestamp.tv_sec +
+                                1000L * bufd.timestamp.tv_usec;
+                        arv_buffer->priv->system_timestamp_ns = g_get_real_time () * 1000;
+                        arv_buffer->priv->frame_id = thread_data->frame_id++;
+                        arv_buffer->priv->received_size = bufd.length;
+
+                        arv_buffer_set_n_parts(arv_buffer, 1);
+                        arv_buffer->priv->parts[0].data_offset = 0;
+                        arv_buffer->priv->parts[0].component_id = 0;
+                        arv_buffer->priv->parts[0].data_type = ARV_BUFFER_PART_DATA_TYPE_2D_IMAGE;
+                        arv_buffer->priv->parts[0].pixel_format = thread_data->pixel_format;
+                        arv_buffer->priv->parts[0].width = thread_data->image_width;
+                        arv_buffer->priv->parts[0].height = thread_data->image_height;
+                        arv_buffer->priv->parts[0].x_offset = 0;
+                        arv_buffer->priv->parts[0].y_offset = 0;
+                        arv_buffer->priv->parts[0].x_padding = 0;
+                        arv_buffer->priv->parts[0].y_padding = 0;
+
+                        thread_data->n_completed_buffers++;
+                        thread_data->n_transferred_bytes += bufd.length;
+                        arv_stream_push_output_buffer (thread_data->stream, arv_buffer);
+                        if (thread_data->callback != NULL)
+                                thread_data->callback (thread_data->callback_data,
+                                                       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
+                                                       arv_buffer);
+                } else
+                        arv_warning_stream_thread("buffer for index %d not found", bufd.index);
         }
 
         g_hash_table_iter_init (&iter, buffers);
@@ -173,11 +206,20 @@ arv_v4l2_stream_start_acquisition (ArvStream *stream, GError **error)
 	g_return_val_if_fail (priv->thread == NULL, FALSE);
 	g_return_val_if_fail (priv->thread_data != NULL, FALSE);
 
-        arv_v4l2_device_get_payload_size (priv->thread_data->v4l2_device);
-
 	thread_data = priv->thread_data;
 	thread_data->cancel = FALSE;
         thread_data->thread_started = FALSE;
+
+        if (!arv_v4l2_device_get_image_infos(priv->thread_data->v4l2_device, NULL,
+                                             &thread_data->pixel_format,
+                                             &thread_data->image_width,
+                                             &thread_data->image_height)) {
+                g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
+                             "Failed to query v4l2 image format");
+                return FALSE;
+        }
+
+        thread_data->frame_id = 0;
 
 	priv->thread = g_thread_new ("arv_v4l2_stream", arv_v4l2_stream_thread, priv->thread_data);
 
@@ -247,8 +289,6 @@ arv_v4l2_stream_create_buffers (ArvStream *stream, guint n_buffers, size_t size,
                 struct v4l2_buffer buf = {0};
                 unsigned char *v4l2_buffer = NULL;
 
-                arv_debug_stream ("Create buffer %d", i);
-
                 buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
                 buf.memory = V4L2_MEMORY_MMAP;
                 buf.index = i;
@@ -270,6 +310,8 @@ arv_v4l2_stream_create_buffers (ArvStream *stream, guint n_buffers, size_t size,
 
                 arv_stream_push_buffer (stream, buffer);
         }
+
+        arv_info_stream ("Created %d v4l2 native buffers", i);
 
         return TRUE;
 }
@@ -308,7 +350,7 @@ arv_v4l2_stream_constructed (GObject *object)
 	ArvV4l2StreamThreadData *thread_data;
 	g_autoptr (ArvV4l2Device) v4l2_device = NULL;
 
-	thread_data = g_new (ArvV4l2StreamThreadData, 1);
+	thread_data = g_new0 (ArvV4l2StreamThreadData, 1);
 	thread_data->stream = stream;
 
 	g_object_get (object,
@@ -331,6 +373,8 @@ arv_v4l2_stream_constructed (GObject *object)
                                  G_TYPE_UINT64, &priv->thread_data->n_failures);
         arv_stream_declare_info (ARV_STREAM (v4l2_stream), "n_underruns",
                                  G_TYPE_UINT64, &priv->thread_data->n_underruns);
+        arv_stream_declare_info (ARV_STREAM (v4l2_stream), "n_transferred_bytes",
+                                 G_TYPE_UINT64, &priv->thread_data->n_transferred_bytes);
 
         thread_data->device_fd = arv_v4l2_device_get_fd (ARV_V4L2_DEVICE(thread_data->v4l2_device));
 }
