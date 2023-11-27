@@ -31,11 +31,17 @@
 #include <arvgentlsystemprivate.h>
 
 G_BEGIN_DECLS
+#ifdef G_CXX_STD_VERSION
+namespace GenTL {
+#endif
 
 ArvGenTLSystem *	arv_gentl_device_get_system                     (ArvGenTLDevice *device);
 DS_HANDLE       	arv_gentl_device_open_stream_handle             (ArvGenTLDevice *device);
 uint64_t	        arv_gentl_device_get_timestamp_tick_frequency   (ArvGenTLDevice *device);
 
+#ifdef G_CXX_STD_VERSION
+} /* end of namespace GenTL */
+#endif
 G_END_DECLS
 
 #endif

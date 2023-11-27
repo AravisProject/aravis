@@ -31,6 +31,9 @@
 #include <GenTL_v1_5.h>
 
 G_BEGIN_DECLS
+#ifdef G_CXX_STD_VERSION
+namespace GenTL {
+#endif
 
 typedef struct {
     /* Global functions */
@@ -122,6 +125,9 @@ void 			arv_gentl_system_close_device_handle    (ArvGenTLSystem *system,
                                                                  const char *interface_id,
                                                                  DEV_HANDLE *device_handle);
 
+#ifdef G_CXX_STD_VERSION
+} /* end of namespace GenTL */
+#endif
 G_END_DECLS
 
 #endif
