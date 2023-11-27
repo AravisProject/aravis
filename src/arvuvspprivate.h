@@ -123,7 +123,7 @@ typedef struct {
 	guint32 region_offset_x;
 	guint32 region_offset_y;
 	guint64 timestamp;
-	guint64 typeid;
+	guint64 type_id;
 	guint32 format;
 	guint16 reserved2;
 	guint16 part_count;
@@ -328,7 +328,7 @@ arv_uvsp_packet_get_gendc_componenttypeid(unsigned char *packet)
 		return 0;
 
 	gendc_component_header = (ArvUvspGenDCComponentHeader*)packet;
-	return gendc_component_header->typeid;
+	return gendc_component_header->type_id;
 }
 
 static inline guint64
