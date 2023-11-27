@@ -88,13 +88,7 @@ ARV_API const char *	arv_vendor_alias_lookup	                (const char *vendor
 const char *            arv_protocol_from_transport_layer_type	(const char *transport_layer_type);
 const char *            arv_protocol_to_transport_layer_type	(const char *protocol);
 
-#ifdef G_CXX_STD_VERSION
-namespace GenTL {
-#endif
 const char *            arv_gentl_gc_error_to_string            (GC_ERROR error);
-#ifdef G_CXX_STD_VERSION
-} /* end of namespace GenTL */
-#endif
 
 /* this only wraps g_get_monotonic_time on non-windows platforms */
 gint64 arv_monotonic_time_us (void);
