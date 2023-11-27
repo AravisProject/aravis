@@ -779,29 +779,12 @@ kbd {
   padding-right: 0;
 }
 
-table.enum-members {
-  border-radius: var(--box-radius);
-  border: 1px solid var(--text-color-muted);
-  border-spacing: 0 0 !important;
+dl.enum-members {
   font-size: 80%;
 }
 
-table.enum-members tr th {
-  border-top-color: var(--body-bg);
-  background-color: var(--box-bg);
-  border-bottom: 1px solid var(--text-color-muted);
-}
-
-table.enum-members tr th:first-child,
-table.enum-members tr td:first-child {
-  min-width: 25em;
-  padding-left: .5em;
-}
-
-table.enum-members tr th:last-child,
-table.enum-members tr td:last-child {
-  max-width: 35em;
-  padding-right: .5em;
+dl.enum-members dt {
+  padding-top: 1em;
 }
 
 table.arguments tr td {
