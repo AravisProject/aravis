@@ -280,7 +280,8 @@ arv_v4l2_stream_create_buffers (ArvStream *stream, guint n_buffers, size_t size,
         req.memory = V4L2_MEMORY_MMAP;
         if (v4l2_ioctl(priv->thread_data->device_fd, VIDIOC_REQBUFS, &req) == -1) {
                 g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
-                             "Failed to request v4l2 buffer");
+                             "Failed to request v4l2 buffer (%s)",
+                             strerror(errno));
                 return FALSE;
         }
 
@@ -295,12 +296,13 @@ arv_v4l2_stream_create_buffers (ArvStream *stream, guint n_buffers, size_t size,
 
                 if (v4l2_ioctl(priv->thread_data->device_fd, VIDIOC_QUERYBUF, &buf) == -1) {
                         g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
-                                     "Failed to request v4l2 buffer");
+                                     "Failed to request v4l2 buffer (%s)",
+                                     strerror(errno));
                         return FALSE;
                 }
 
                 v4l2_buffer = (u_int8_t *) mmap (NULL, buf.length, PROT_READ | PROT_WRITE, MAP_SHARED,
-                                          priv->thread_data->device_fd, buf.m.offset);
+                                                 priv->thread_data->device_fd, buf.m.offset);
 
                 size = buf.length;
 
