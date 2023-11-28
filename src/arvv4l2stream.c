@@ -39,6 +39,12 @@
 #define ARV_V4L2_STREAM_N_BUFFERS       3
 
 typedef struct {
+        ArvV4l2Device *v4l2_device;
+        void *data;
+        int index;
+} ArvV4l2StreamBufferData;
+
+typedef struct {
 	ArvStream *stream;
 
         gboolean thread_started;
@@ -115,7 +121,6 @@ arv_v4l2_stream_thread (void *data)
                 do {
                         arv_buffer = arv_stream_pop_input_buffer (thread_data->stream);
                         if (ARV_IS_BUFFER (arv_buffer)) {
-
                                 bufd.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
                                 bufd.memory = V4L2_MEMORY_MMAP;
                                 bufd.index = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (arv_buffer), "v4l2-index"));
@@ -253,16 +258,14 @@ arv_v4l2_stream_stop_acquisition (ArvStream *stream, GError **error)
 }
 
 static void
-_v4l2_buffer_destroy_func (gpointer data)
+_buffer_data_destroy_func (gpointer data)
 {
-        ArvBuffer *buffer = data;
-        GDestroyNotify user_data_destroy_func;
+        ArvV4l2StreamBufferData *buffer_data = data;
 
-        free (buffer->priv->data);
+        free (buffer_data->data);
 
-        user_data_destroy_func = g_object_get_data (G_OBJECT(buffer), "destroy-func");
-        if (user_data_destroy_func != NULL)
-                user_data_destroy_func (buffer->priv->user_data);
+        g_object_unref (buffer_data->v4l2_device);
+        g_free (buffer_data);
 }
 
 static gboolean
@@ -297,6 +300,7 @@ arv_v4l2_stream_create_buffers (ArvStream *stream, guint n_buffers, size_t size,
 
         for (i = 0; i < req.count; i++) {
                 ArvBuffer *buffer;
+                ArvV4l2StreamBufferData *buffer_data;
                 struct v4l2_buffer buf = {0};
                 unsigned char *v4l2_buffer = NULL;
 
@@ -318,9 +322,15 @@ arv_v4l2_stream_create_buffers (ArvStream *stream, guint n_buffers, size_t size,
 
                 size = buf.length;
 
-                buffer = arv_buffer_new_full (size, v4l2_buffer, user_data, _v4l2_buffer_destroy_func);
-                g_object_set_data (G_OBJECT (buffer), "v4l2-index", GINT_TO_POINTER(i));
-                g_object_set_data (G_OBJECT (buffer), "destroy-func", user_data_destroy_func);
+                buffer = arv_buffer_new_full (size, v4l2_buffer, user_data,user_data_destroy_func);
+
+                buffer_data = g_new0 (ArvV4l2StreamBufferData, 1);
+                buffer_data->v4l2_device = g_object_ref(priv->thread_data->v4l2_device);
+                buffer_data->data = buffer->priv->data;
+
+                g_object_set_data_full (G_OBJECT (buffer), "v4l2-buffer-data",
+                                        buffer_data, _buffer_data_destroy_func);
+                g_object_set_data (G_OBJECT(buffer), "v4l2-index", GINT_TO_POINTER(i));
 
                 arv_stream_push_buffer (stream, buffer);
         }
