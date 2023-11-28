@@ -375,8 +375,6 @@ arv_v4l2_device_constructed (GObject *self)
 	GError *error = NULL;
         int i;
 
-	/* TODO errors */
-
 	priv->device_fd = v4l2_open (priv->device_file, O_RDWR);
 	if (priv->device_fd == -1) {
 		arv_device_take_init_error (ARV_DEVICE (self),
@@ -396,6 +394,22 @@ arv_v4l2_device_constructed (GObject *self)
 		arv_device_take_init_error (ARV_DEVICE (self),
 					    g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
 							 "Device '%s' is not video capture device",
+                                                         priv->device_file));
+		return;
+        }
+
+        if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
+		arv_device_take_init_error (ARV_DEVICE (self),
+					    g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
+							 "Device '%s' does not support streaming",
+                                                         priv->device_file));
+		return;
+        }
+
+        if (!(cap.capabilities & V4L2_CAP_READWRITE)) {
+		arv_device_take_init_error (ARV_DEVICE (self),
+					    g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
+							 "Device '%s' does not support read",
                                                          priv->device_file));
 		return;
         }

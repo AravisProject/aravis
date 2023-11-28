@@ -285,7 +285,17 @@ arv_v4l2_stream_create_buffers (ArvStream *stream, guint n_buffers, size_t size,
                 return FALSE;
         }
 
-        for (i = 0; i < n_buffers; i++) {
+        if (req.count < 2) {
+                g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
+                             "Failed to request enough v4l2 buffer (%s)",
+                             strerror(errno));
+                return FALSE;
+        }
+
+        if (req.count != n_buffers)
+               arv_warning_stream ("Could only create %d buffers, while %d were requested", req.count, n_buffers);
+
+        for (i = 0; i < req.count; i++) {
                 ArvBuffer *buffer;
                 struct v4l2_buffer buf = {0};
                 unsigned char *v4l2_buffer = NULL;
@@ -301,7 +311,9 @@ arv_v4l2_stream_create_buffers (ArvStream *stream, guint n_buffers, size_t size,
                         return FALSE;
                 }
 
-                v4l2_buffer = (u_int8_t *) mmap (NULL, buf.length, PROT_READ | PROT_WRITE, MAP_SHARED,
+                v4l2_buffer = (u_int8_t *) mmap (NULL, buf.length,
+                                                 PROT_READ | PROT_WRITE,
+                                                 MAP_SHARED,
                                                  priv->thread_data->device_fd, buf.m.offset);
 
                 size = buf.length;
