@@ -735,10 +735,21 @@ arv_stream_create_buffers (ArvStream *stream, unsigned int n_buffers,
 
 	stream_class = ARV_STREAM_GET_CLASS (stream);
         if (stream_class->create_buffers != NULL) {
+                GError *local_error = NULL;
+
                 success = stream_class->create_buffers (stream, n_buffers, payload_size,
-                                                        user_data, user_data_destroy_func, error);
-                if (!success)
-                        arv_warning_stream ("Failed to create native buffers");
+                                                        user_data, user_data_destroy_func, &local_error);
+                if (!success) {
+                        if (local_error != NULL) {
+                                arv_warning_stream ("Failed to create native buffers: %s",
+                                                    local_error->message);
+                                g_propagate_error(error, local_error);
+                        } else  {
+                                arv_warning_stream ("Failed to create native buffers");
+                        }
+                }
+
+
                 return success;
         }
 
