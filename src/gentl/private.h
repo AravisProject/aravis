@@ -47,6 +47,13 @@ GC_ERROR gentl_to_buf(INFO_DATATYPE type, void* dst, const void* src, size_t* sz
 
 #if defined(_WIN32) && defined(_MSC_VER)
 	#define GENTL_THREAD_LOCAL_STORAGE __declspec(thread)
+	/*
+	MSVC compiler does not allow dllimport spec in the implementation file (but mingw w32 requires it);
+	so we replace all GC_API (which is return type GC_ERROR plus dllimport declspec) by plain GC_ERROR.
+	This is to allow verbatim copy of function signature from GenTL header into the implementation files.
+	*/
+	#undef GC_API
+	#define GC_API GC_ERROR
 #else
 	#define GENTL_THREAD_LOCAL_STORAGE __thread
 #endif
