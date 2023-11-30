@@ -65,7 +65,7 @@ gentl_error_quark (void)
   return g_quark_from_static_string ("gentl-error-quark");
 }
 
-GC_API
+GC_ERROR
 gentl_init()
 {
 	if (gentl_GCInitLib != 0)
@@ -77,7 +77,7 @@ gentl_init()
 	return GC_ERR_SUCCESS;
 }
 
-GC_API
+GC_ERROR
 gentl_fini()
 {
 	GENTL_ENSURE_INIT;
