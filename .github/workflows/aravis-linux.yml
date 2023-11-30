@@ -40,5 +40,5 @@ jobs:
       if: ${{ github.ref == 'refs/heads/main' }}
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./build/docs/reference/aravis/aravis-0.8
+        publish_dir: ./build/docs/reference/aravis/aravis-0.10
 

@@ -60,6 +60,12 @@ typedef struct {
 } ArvStreamStatistics;
 
 typedef struct {
+        ArvUvDevice *uv_device;
+        void *data;
+        size_t allocated_size;
+} ArvUvStreamBufferData;
+
+typedef struct {
 	ArvStream *stream;
 
         gboolean thread_started;
@@ -219,8 +225,8 @@ void LIBUSB_CALL arv_uv_stream_leader_cb (struct libusb_transfer *transfer)
 	arv_uv_stream_buffer_context_notify_transfer_completed (ctx);
 }
 
-static
-void LIBUSB_CALL arv_uv_stream_payload_cb (struct libusb_transfer *transfer)
+static void LIBUSB_CALL
+arv_uv_stream_payload_cb (struct libusb_transfer *transfer)
 {
 	ArvUvStreamBufferContext *ctx = transfer->user_data;
 	int component_count;
@@ -233,40 +239,55 @@ void LIBUSB_CALL arv_uv_stream_payload_cb (struct libusb_transfer *transfer)
                                 case LIBUSB_TRANSFER_COMPLETED:
                                         ctx->total_payload_transferred += transfer->actual_length;
 
-										if (ctx->buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_GENDC_CONTAINER){
-											if(!arv_uvsp_packet_is_gendc (ctx->buffer->priv->data)){
-												arv_warning_sp ("Invalid GenDC Container: Signature shows %.4s which is supposed to be GNDC", ctx->buffer->priv->data);
-											}else{
-												ctx->buffer->priv->has_gendc = TRUE;
-												ctx->buffer->priv->gendc_data_offset = arv_uvsp_packet_get_gendc_dataoffset(ctx->buffer->priv->data);
-												ctx->buffer->priv->gendc_descriptor_size = arv_uvsp_packet_get_gendc_descriptorsize(ctx->buffer->priv->data);
-												ctx->buffer->priv->gendc_data_size = arv_uvsp_packet_get_gendc_datasize(ctx->buffer->priv->data);
-												component_count = (int) arv_uvsp_packet_get_gendc_componentcount(ctx->buffer->priv->data);
-												
-												for(int ith_component = 0; ith_component < component_count; ++ith_component){
-													int64_t ith_component_offset = arv_uvsp_packet_get_gendc_componentoffset(ctx->buffer->priv->data, ith_component);
+                                        if (ctx->buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_GENDC_CONTAINER){
+                                                if(!arv_uvsp_packet_is_gendc (ctx->buffer->priv->data)){
+                                                        arv_warning_sp ("Invalid GenDC Container: Signature shows %.4s "
+                                                                        "which is supposed to be GNDC",
+                                                                        ctx->buffer->priv->data);
+                                                } else {
+                                                        ctx->buffer->priv->has_gendc = TRUE;
+                                                        ctx->buffer->priv->gendc_data_offset =
+                                                                arv_uvsp_packet_get_gendc_dataoffset(ctx->buffer->priv->data);
+                                                        ctx->buffer->priv->gendc_descriptor_size =
+                                                                arv_uvsp_packet_get_gendc_descriptorsize(ctx->buffer->priv->data);
+                                                        ctx->buffer->priv->gendc_data_size =
+                                                                arv_uvsp_packet_get_gendc_datasize(ctx->buffer->priv->data);
+                                                        component_count =
+                                                                (int) arv_uvsp_packet_get_gendc_componentcount (ctx->buffer->priv->data);
 
-													if (arv_uvsp_packet_get_gendc_iscomponentvalid(ctx->buffer->priv->data + ith_component_offset)
-														&& arv_uvsp_packet_get_gendc_componenttypeid(ctx->buffer->priv->data + ith_component_offset) == 0x1 ){
+                                                        for(int ith_component = 0; ith_component < component_count; ++ith_component){
+                                                                int64_t ith_component_offset =
+                                                                        arv_uvsp_packet_get_gendc_componentoffset(ctx->buffer->priv->data, ith_component);
 
-														guint64 partoffset = arv_uvsp_packet_get_gendc_partoffset(ctx->buffer->priv->data + ith_component_offset, 0);
+                                                                if (arv_uvsp_packet_get_gendc_iscomponentvalid(ctx->buffer->priv->data + ith_component_offset)
+                                                                    && arv_uvsp_packet_get_gendc_componenttypeid(ctx->buffer->priv->data + ith_component_offset) == 0x1 ){
 
-														ctx->buffer->priv->parts[0].data_offset = arv_uvsp_packet_get_gendc_partdatapffset(ctx->buffer->priv->data + partoffset);
-														ctx->buffer->priv->parts[0].component_id = ith_component;
-														ctx->buffer->priv->parts[0].data_type = ARV_BUFFER_PART_DATA_TYPE_2D_IMAGE;
-														ctx->buffer->priv->parts[0].pixel_format = arv_uvsp_packet_get_gendc_componentpixelformat(ctx->buffer->priv->data + ith_component_offset);
-														ctx->buffer->priv->parts[0].width = arv_uvsp_packet_get_gendc_partdimension_x(ctx->buffer->priv->data + partoffset);
-														ctx->buffer->priv->parts[0].width = arv_uvsp_packet_get_gendc_partdimension_y(ctx->buffer->priv->data + partoffset);
-														ctx->buffer->priv->parts[0].x_offset = 0;
-														ctx->buffer->priv->parts[0].y_offset = 0;
-														ctx->buffer->priv->parts[0].x_padding = arv_uvsp_packet_get_gendc_partpadding_x(ctx->buffer->priv->data + partoffset);
-														ctx->buffer->priv->parts[0].y_padding = arv_uvsp_packet_get_gendc_partpadding_y(ctx->buffer->priv->data + partoffset);
+                                                                        guint64 partoffset = arv_uvsp_packet_get_gendc_partoffset(ctx->buffer->priv->data + ith_component_offset, 0);
 
-														break;
-													}
-												}
-											}
-										}
+                                                                        ctx->buffer->priv->parts[0].data_offset =
+                                                                                arv_uvsp_packet_get_gendc_partdatapffset(ctx->buffer->priv->data + partoffset);
+                                                                        ctx->buffer->priv->parts[0].component_id =
+                                                                                ith_component;
+                                                                        ctx->buffer->priv->parts[0].data_type =
+                                                                                ARV_BUFFER_PART_DATA_TYPE_2D_IMAGE;
+                                                                        ctx->buffer->priv->parts[0].pixel_format =
+                                                                                arv_uvsp_packet_get_gendc_componentpixelformat(ctx->buffer->priv->data + ith_component_offset);
+                                                                        ctx->buffer->priv->parts[0].width =
+                                                                                arv_uvsp_packet_get_gendc_partdimension_x(ctx->buffer->priv->data + partoffset);
+                                                                        ctx->buffer->priv->parts[0].width =
+                                                                                arv_uvsp_packet_get_gendc_partdimension_y(ctx->buffer->priv->data + partoffset);
+                                                                        ctx->buffer->priv->parts[0].x_offset = 0;
+                                                                        ctx->buffer->priv->parts[0].y_offset = 0;
+                                                                        ctx->buffer->priv->parts[0].x_padding =
+                                                                                arv_uvsp_packet_get_gendc_partpadding_x(ctx->buffer->priv->data + partoffset);
+                                                                        ctx->buffer->priv->parts[0].y_padding =
+                                                                                arv_uvsp_packet_get_gendc_partpadding_y(ctx->buffer->priv->data + partoffset);
+
+                                                                        break;
+                                                                }
+                                                        }
+                                                }
+                                        }
                                         break;
                                 default:
                                         arv_warning_stream_thread ("Payload transfer failed (%s)",
@@ -748,40 +769,39 @@ arv_uv_stream_thread_sync (void *data)
                                                         offset += transferred;
                                                         thread_data->statistics.n_transferred_bytes += transferred;
 
-														if (buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_GENDC_CONTAINER){
-															if(!arv_uvsp_packet_is_gendc (buffer->priv->data)){
-																arv_warning_sp ("Invalid GenDC Container: Signature shows %.4s which is supposed to be GNDC", buffer->priv->data);      
-															}else{
-																buffer->priv->has_gendc = TRUE;
-																buffer->priv->gendc_data_offset = arv_uvsp_packet_get_gendc_dataoffset(buffer->priv->data);
-																buffer->priv->gendc_descriptor_size = arv_uvsp_packet_get_gendc_descriptorsize(buffer->priv->data);
-																buffer->priv->gendc_data_size = arv_uvsp_packet_get_gendc_datasize(buffer->priv->data);
+                                                        if (buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_GENDC_CONTAINER){
+                                                                if(!arv_uvsp_packet_is_gendc (buffer->priv->data)){
+                                                                        arv_warning_sp ("Invalid GenDC Container: Signature shows %.4s which is supposed to be GNDC", buffer->priv->data);
+                                                                } else {
+                                                                        buffer->priv->has_gendc = TRUE;
+                                                                        buffer->priv->gendc_data_offset = arv_uvsp_packet_get_gendc_dataoffset(buffer->priv->data);
+                                                                        buffer->priv->gendc_descriptor_size = arv_uvsp_packet_get_gendc_descriptorsize(buffer->priv->data);
+                                                                        buffer->priv->gendc_data_size = arv_uvsp_packet_get_gendc_datasize(buffer->priv->data);
 
-																component_count = (int) arv_uvsp_packet_get_gendc_componentcount(buffer->priv->data);
-																for(int ith_component = 0; ith_component < component_count; ++ith_component){
-																	int64_t ith_component_offset = arv_uvsp_packet_get_gendc_componentoffset(buffer->priv->data, ith_component);    
+                                                                        component_count = (int) arv_uvsp_packet_get_gendc_componentcount(buffer->priv->data);
+                                                                        for(int ith_component = 0; ith_component < component_count; ++ith_component){
+                                                                                int64_t ith_component_offset = arv_uvsp_packet_get_gendc_componentoffset(buffer->priv->data, ith_component);
 
-																	// only if the component is valid and have an image data (GDC_INTENSITY from SFNC)
-																	if (arv_uvsp_packet_get_gendc_iscomponentvalid(buffer->priv->data + ith_component_offset)
-																	&& arv_uvsp_packet_get_gendc_componenttypeid(buffer->priv->data + ith_component_offset) == 0x1 ){       
-																		guint64 partoffset = arv_uvsp_packet_get_gendc_partoffset(buffer->priv->data + ith_component_offset, 0);
-																		buffer->priv->parts[0].data_offset = arv_uvsp_packet_get_gendc_partdatapffset(buffer->priv->data + partoffset);
-																		buffer->priv->parts[0].component_id = ith_component;
-																		buffer->priv->parts[0].data_type = ARV_BUFFER_PART_DATA_TYPE_2D_IMAGE;
-																		buffer->priv->parts[0].pixel_format = arv_uvsp_packet_get_gendc_componentpixelformat(buffer->priv->data + ith_component_offset);
-																		buffer->priv->parts[0].width = arv_uvsp_packet_get_gendc_partdimension_x(buffer->priv->data + partoffset);
-																		buffer->priv->parts[0].width = arv_uvsp_packet_get_gendc_partdimension_y(buffer->priv->data + partoffset);
-																		buffer->priv->parts[0].x_offset = 0;
-																		buffer->priv->parts[0].y_offset = 0;
-																		buffer->priv->parts[0].x_padding = arv_uvsp_packet_get_gendc_partpadding_x(buffer->priv->data + partoffset);
-																		buffer->priv->parts[0].y_padding = arv_uvsp_packet_get_gendc_partpadding_y(buffer->priv->data + partoffset);
+                                                                                // only if the component is valid and have an image data (GDC_INTENSITY from SFNC)
+                                                                                if (arv_uvsp_packet_get_gendc_iscomponentvalid(buffer->priv->data + ith_component_offset)
+                                                                                    && arv_uvsp_packet_get_gendc_componenttypeid(buffer->priv->data + ith_component_offset) == 0x1 ){
+                                                                                        guint64 partoffset = arv_uvsp_packet_get_gendc_partoffset(buffer->priv->data + ith_component_offset, 0);
+                                                                                        buffer->priv->parts[0].data_offset = arv_uvsp_packet_get_gendc_partdatapffset(buffer->priv->data + partoffset);
+                                                                                        buffer->priv->parts[0].component_id = ith_component;
+                                                                                        buffer->priv->parts[0].data_type = ARV_BUFFER_PART_DATA_TYPE_2D_IMAGE;
+                                                                                        buffer->priv->parts[0].pixel_format = arv_uvsp_packet_get_gendc_componentpixelformat(buffer->priv->data + ith_component_offset);
+                                                                                        buffer->priv->parts[0].width = arv_uvsp_packet_get_gendc_partdimension_x(buffer->priv->data + partoffset);
+                                                                                        buffer->priv->parts[0].width = arv_uvsp_packet_get_gendc_partdimension_y(buffer->priv->data + partoffset);
+                                                                                        buffer->priv->parts[0].x_offset = 0;
+                                                                                        buffer->priv->parts[0].y_offset = 0;
+                                                                                        buffer->priv->parts[0].x_padding = arv_uvsp_packet_get_gendc_partpadding_x(buffer->priv->data + partoffset);
+                                                                                        buffer->priv->parts[0].y_padding = arv_uvsp_packet_get_gendc_partpadding_y(buffer->priv->data + partoffset);
 
-																		break;
-																	}
-																}
-															}
-														}
-
+                                                                                        break;
+                                                                                }
+                                                                        }
+                                                                }
+                                                        }
                                                 } else {
                                                         buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
                                                         thread_data->statistics.n_ignored_bytes += transferred;
@@ -998,21 +1018,13 @@ arv_uv_stream_stop_acquisition (ArvStream *stream, GError **error)
 }
 
 static void
-_uv_buffer_destroy_func (gpointer data)
+_buffer_data_destroy_func (gpointer data)
 {
-        ArvBuffer *buffer = data;
-        ArvUvDevice *uv_device;
-        GDestroyNotify user_data_destroy_func;
+        ArvUvStreamBufferData *buffer_data = data;
 
-        uv_device = g_object_get_data (G_OBJECT (buffer), "device");
-        if (ARV_IS_DEVICE (uv_device)) {
-                arv_uv_device_usb_mem_free (uv_device, buffer->priv->data, buffer->priv->allocated_size);
-                g_object_unref (uv_device);
-        }
-
-        user_data_destroy_func = g_object_get_data (G_OBJECT(buffer), "destroy-func");
-        if (user_data_destroy_func != NULL)
-                user_data_destroy_func (buffer->priv->user_data);
+        arv_uv_device_usb_mem_free (buffer_data->uv_device, buffer_data->data, buffer_data->allocated_size);
+        g_object_unref (buffer_data->uv_device);
+        g_free (buffer_data);
 }
 
 static gboolean
@@ -1031,9 +1043,17 @@ arv_uv_stream_create_buffers (ArvStream *stream, guint n_buffers, size_t size,
 
                 usb_buffer = arv_uv_device_usb_mem_alloc (uv_device, size);
                 if (usb_buffer != NULL) {
-                        buffer = arv_buffer_new_full (size, usb_buffer, user_data, _uv_buffer_destroy_func);
-                        g_object_set_data (G_OBJECT (buffer), "device", g_object_ref (uv_device));
-                        g_object_set_data (G_OBJECT (buffer), "destroy-func", user_data_destroy_func);
+                        ArvUvStreamBufferData *buffer_data;
+
+                        buffer = arv_buffer_new_full (size, usb_buffer, user_data, user_data_destroy_func);
+
+                        buffer_data = g_new0 (ArvUvStreamBufferData, 1);
+                        buffer_data->uv_device = g_object_ref(uv_device);
+                        buffer_data->data = buffer->priv->data;
+                        buffer_data->allocated_size = buffer->priv->allocated_size;
+
+                        g_object_set_data_full (G_OBJECT (buffer), "uv-buffer-data",
+                                                buffer_data, _buffer_data_destroy_func);
                 } else {
                         buffer = arv_buffer_new_full (size, NULL, user_data, user_data_destroy_func);
                 }
