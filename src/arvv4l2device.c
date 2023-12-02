@@ -398,6 +398,16 @@ arv_v4l2_device_constructed (GObject *self)
 		return;
         }
 
+#if 0
+        if ((cap.capabilities & V4L2_CAP_VIDEO_CAPTURE_MPLANE) != 0) {
+		arv_device_take_init_error (ARV_DEVICE (self),
+					    g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
+							 "Multiplanar capture of device '%s' is not supported",
+                                                         priv->device_file));
+		return;
+        }
+#endif
+
         if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
 		arv_device_take_init_error (ARV_DEVICE (self),
 					    g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
@@ -406,6 +416,7 @@ arv_v4l2_device_constructed (GObject *self)
 		return;
         }
 
+#if 0
         if (!(cap.capabilities & V4L2_CAP_READWRITE)) {
 		arv_device_take_init_error (ARV_DEVICE (self),
 					    g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
@@ -413,6 +424,7 @@ arv_v4l2_device_constructed (GObject *self)
                                                          priv->device_file));
 		return;
         }
+#endif
 
 	priv->device_card = g_strdup ((char *) cap.card);
 	priv->device_driver = g_strdup ((char *) cap.driver);
@@ -463,7 +475,7 @@ arv_v4l2_device_constructed (GObject *self)
                 if (v4l2_ioctl(priv->device_fd, VIDIOC_ENUM_FMT, &format) == -1)
                         break;
 
-                arv_debug_device ("Found format %s", format.description);
+                arv_info_device ("Found format %s", format.description);
 
                 for (k = 0; k < G_N_ELEMENTS(pixel_format_map); k++) {
                         if (format.pixelformat == pixel_format_map[k].v4l2)
