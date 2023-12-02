@@ -29,6 +29,7 @@
 #include <arvv4l2deviceprivate.h>
 #include <arvv4l2streamprivate.h>
 #include <arvdebugprivate.h>
+#include <arvmisc.h>
 #include <libv4l2.h>
 #include <linux/videodev2.h>
 #include <fcntl.h>
@@ -122,15 +123,20 @@ arv_v4l2_device_get_genicam (ArvDevice *device)
 }
 
 gboolean
-arv_v4l2_device_get_image_infos (ArvV4l2Device *device,
-                                 guint32 *payload_size,
-                                 guint32 *pixel_format,
-                                 guint32 *width,
-                                 guint32 *height)
+arv_v4l2_device_set_image_format (ArvV4l2Device *device)
 {
         ArvV4l2DevicePrivate *priv = arv_v4l2_device_get_instance_private (ARV_V4L2_DEVICE (device));
         struct v4l2_format format = {0};
+        struct v4l2_requestbuffers req = {0};
         struct v4l2_frmsizeenum *frame_size;
+
+        req.count = 0;
+        req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        req.memory = V4L2_MEMORY_MMAP;
+        if (v4l2_ioctl(priv->device_fd, VIDIOC_REQBUFS, &req) == -1) {
+                arv_warning_device ("Failed to release all v4l2 buffers (%s)", strerror(errno));
+                return FALSE;
+        }
 
         frame_size = &g_array_index (priv->frame_sizes,
                                      struct v4l2_frmsizeenum,
@@ -152,6 +158,21 @@ arv_v4l2_device_get_image_infos (ArvV4l2Device *device,
                 return FALSE;
         }
 
+        return TRUE;
+}
+
+gboolean
+arv_v4l2_device_get_image_format (ArvV4l2Device *device,
+                                  guint32 *payload_size,
+                                  guint32 *pixel_format,
+                                  guint32 *width,
+                                  guint32 *height)
+{
+        ArvV4l2DevicePrivate *priv = arv_v4l2_device_get_instance_private (ARV_V4L2_DEVICE (device));
+        struct v4l2_format format = {0};
+
+        format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
         if (v4l2_ioctl(priv->device_fd, VIDIOC_G_FMT, &format) == -1) {
                 arv_warning_device ("Failed to retrieve v4l2 format (%s)", strerror(errno));
                 return FALSE;
@@ -166,6 +187,12 @@ arv_v4l2_device_get_image_infos (ArvV4l2Device *device,
         if (height != NULL)
                 *height = format.fmt.pix.height;
 
+        arv_info_device ("Current format %d×%d %s %d bytes",
+                         format.fmt.pix.width,
+                         format.fmt.pix.height,
+                         arv_pixel_format_to_gst_caps_string(g_array_index (priv->pixel_formats, guint32, priv->pixel_format_idx)),
+                         format.fmt.pix.sizeimage);
+
         return TRUE;
 }
 
@@ -173,12 +200,14 @@ static void
 _control_stream (ArvV4l2Device *device, gboolean enable)
 {
         ArvV4l2DevicePrivate *priv = arv_v4l2_device_get_instance_private (ARV_V4L2_DEVICE (device));
-        unsigned int type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        enum v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
         if (v4l2_ioctl(priv->device_fd, enable ? VIDIOC_STREAMON : VIDIOC_STREAMOFF, &type) == -1) {
                 arv_warning_device ("v4l2 stream %s failed (%s)",
                                     enable ? "start" : "stop",
                                     strerror (errno));
+        } else {
+                arv_info_device ("Stream %s for device '%s'", enable ? "started" : "stopped", priv->device_file);
         }
 }
 
@@ -230,8 +259,9 @@ arv_v4l2_device_read_memory (ArvDevice *device, guint64 address, guint32 size, v
                                                         frame_size->stepwise.max_height;
                                                 break;
                                         case ARV_V4L2_ADDRESS_PAYLOAD_SIZE:
-                                                arv_v4l2_device_get_image_infos(v4l2_device, (guint32 *) &value,
-                                                                                NULL, NULL, NULL);
+                                                arv_v4l2_device_set_image_format (v4l2_device);
+                                                arv_v4l2_device_get_image_format (v4l2_device, (guint32 *) &value,
+                                                                                  NULL, NULL, NULL);
                                                 break;
                                         case ARV_V4L2_ADDRESS_PIXEL_FORMAT:
                                                 value = g_array_index (priv->pixel_formats, guint32,
@@ -370,7 +400,8 @@ arv_v4l2_device_constructed (GObject *self)
 	ArvV4l2DevicePrivate *priv = arv_v4l2_device_get_instance_private (ARV_V4L2_DEVICE (self));
         GString *format_feature;
         char *feature;
-	struct v4l2_capability cap;
+	struct v4l2_capability cap = {0};
+        struct v4l2_cropcap crop_cap = {0};
 	GBytes *bytes;
 	GError *error = NULL;
         int i;
@@ -426,6 +457,18 @@ arv_v4l2_device_constructed (GObject *self)
         }
 #endif
 
+        crop_cap.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
+        if (v4l2_ioctl (priv->device_fd, VIDIOC_CROPCAP, &crop_cap) == 0) {
+                struct v4l2_crop crop =  {0};
+
+                crop.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+                crop.c = crop_cap.defrect; /* reset to default */
+
+                v4l2_ioctl (priv->device_fd, VIDIOC_S_CROP, &crop);
+        }
+
+
 	priv->device_card = g_strdup ((char *) cap.card);
 	priv->device_driver = g_strdup ((char *) cap.driver);
 	priv->device_version = g_strdup_printf ("%d.%d.%d",
@@ -467,7 +510,7 @@ arv_v4l2_device_constructed (GObject *self)
 
         for (i = 0; TRUE; i++) {
                 int j, k;
-                struct v4l2_fmtdesc format;
+                struct v4l2_fmtdesc format = {0};
                 guint32 genicam_pixel_format = 0;
 
                 format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -499,7 +542,7 @@ arv_v4l2_device_constructed (GObject *self)
                 priv->pixel_format_idx = i;
 
                 for (j = 0; TRUE; j++) {
-                        struct v4l2_frmsizeenum frame_size;
+                        struct v4l2_frmsizeenum frame_size = {0};
 
                         frame_size.index = j;
                         frame_size.pixel_format = format.pixelformat;

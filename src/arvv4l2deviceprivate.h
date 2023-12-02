@@ -31,9 +31,10 @@
 
 G_BEGIN_DECLS
 
-gboolean        arv_v4l2_device_get_image_infos (ArvV4l2Device *device,
-                                                 guint32 *payload_size, guint32 *pixel_format,
-                                                 guint32 *width, guint32 *height);
+gboolean        arv_v4l2_device_set_image_format        (ArvV4l2Device *device);
+gboolean        arv_v4l2_device_get_image_format        (ArvV4l2Device *device,
+                                                         guint32 *payload_size, guint32 *pixel_format,
+                                                         guint32 *width, guint32 *height);
 int             arv_v4l2_device_get_fd                  (ArvV4l2Device *v4l2_device);
 
 G_END_DECLS
