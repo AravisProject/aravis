@@ -59,7 +59,7 @@ typedef struct {
 } ArvV4l2InterfaceDeviceInfos;
 
 static ArvV4l2InterfaceDeviceInfos *
-arv_v4l2_interface_device_infos_new (const char *device_file)
+arv_v4l2_interface_device_infos_new (const char *device_file, const char *name)
 {
 	ArvV4l2InterfaceDeviceInfos *infos;
 
@@ -74,12 +74,11 @@ arv_v4l2_interface_device_infos_new (const char *device_file)
 
 			if (v4l2_ioctl (fd, VIDIOC_QUERYCAP, &cap) != -1 &&
 			    ((cap.capabilities & V4L2_CAP_VIDEO_CAPTURE) != 0) &&
-			    ((cap.capabilities & V4L2_CAP_VIDEO_CAPTURE_MPLANE) == 0) &&
-			    ((cap.capabilities & V4L2_CAP_READWRITE) != 0)) {
+			    ((cap.capabilities & V4L2_CAP_STREAMING) != 0)) {
 				infos = g_new0 (ArvV4l2InterfaceDeviceInfos, 1);
 
 				infos->ref_count = 1;
-				infos->id = g_strdup ((char *) cap.card);
+				infos->id = g_strdup_printf ("%s-%s", (char *) cap.card, name);
 				infos->bus = g_strdup ((char *) cap.bus_info);
 				infos->device_file = g_strdup (device_file);
 				infos->version = g_strdup_printf ("%d.%d.%d",
@@ -134,7 +133,8 @@ _discover (ArvV4l2Interface *v4l2_interface, GArray *device_ids)
 	for (elem = g_list_first (devices); elem; elem = g_list_next (elem)) {
 		ArvV4l2InterfaceDeviceInfos *device_infos;
 
-		device_infos = arv_v4l2_interface_device_infos_new (g_udev_device_get_device_file (elem->data));
+		device_infos = arv_v4l2_interface_device_infos_new (g_udev_device_get_device_file (elem->data),
+                                                                    g_udev_device_get_name(elem->data));
 		if (device_infos != NULL) {
 			ArvInterfaceDeviceIds *ids;
 
@@ -156,7 +156,7 @@ _discover (ArvV4l2Interface *v4l2_interface, GArray *device_ids)
 				ids->address = g_strdup (device_infos->device_file);
 				ids->vendor = g_strdup ("Aravis");
 				ids->model = g_strdup (device_infos->id);
-				ids->serial_nbr = g_strdup ("1");
+				ids->serial_nbr = g_strdup_printf ("%s", g_udev_device_get_number(elem->data));
                                 ids->protocol = "V4L2";
 
 				g_array_append_val (device_ids, ids);
