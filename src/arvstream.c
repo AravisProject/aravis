@@ -382,15 +382,15 @@ arv_stream_delete_buffers (ArvStream *stream)
 
 	do {
 		buffer = g_async_queue_try_pop_unlocked (priv->input_queue);
-		if (buffer != NULL) {
+		if (ARV_IS_BUFFER(buffer)) {
 			g_object_unref (buffer);
 			n_deleted++;
-		}
+                }
 	} while (buffer != NULL);
 
 	do {
 		buffer = g_async_queue_try_pop_unlocked (priv->output_queue);
-		if (buffer != NULL) {
+		if (ARV_IS_BUFFER(buffer)) {
 			g_object_unref (buffer);
 			n_deleted++;
 		}
