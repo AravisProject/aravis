@@ -91,7 +91,8 @@ if get_option('tests')
 		['arv-roi-test',		'arvroitest.c'],
 		['time-test',			'timetest.c'],
 		['load-http-test',		'loadhttptest.c'],
-		['cpp-test',			'cpp.cc']
+		['cpp-test',			'cpp.cc'],
+		['v4l2-test',			'v4l2test.c']
 	]
 
 	if host_machine.system()=='linux'
