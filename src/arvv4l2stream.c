@@ -38,6 +38,13 @@
 
 #define ARV_V4L2_STREAM_N_BUFFERS       3
 
+typedef enum {
+        ARV_V4L2_STREAM_IO_METHOD_UNKNOWN = -1,
+        ARV_V4L2_STREAM_IO_METHOD_READ,
+        ARV_V4L2_STREAM_IO_METHOD_MMAP,
+        ARV_V4L2_STREAM_IO_METHOD_USER_POINTER
+} ArvV4l2StreamIOMethod;
+
 typedef struct {
         ArvV4l2Device *v4l2_device;
         void *data;
@@ -59,6 +66,8 @@ typedef struct {
 	gboolean cancel;
 
         int device_fd;
+
+        ArvV4l2StreamIOMethod io_method;
 
         guint32 pixel_format;
         guint32 image_width;
@@ -221,6 +230,8 @@ arv_v4l2_stream_start_acquisition (ArvStream *stream, GError **error)
 	ArvV4l2Stream *v4l2_stream = ARV_V4L2_STREAM (stream);
 	ArvV4l2StreamPrivate *priv = arv_v4l2_stream_get_instance_private (v4l2_stream);
 	ArvV4l2StreamThreadData *thread_data;
+        ArvBuffer *buffer;
+        gboolean mixed_io_method = FALSE;
 
 	g_return_val_if_fail (priv->thread == NULL, FALSE);
 	g_return_val_if_fail (priv->thread_data != NULL, FALSE);
@@ -228,6 +239,40 @@ arv_v4l2_stream_start_acquisition (ArvStream *stream, GError **error)
 	thread_data = priv->thread_data;
 	thread_data->cancel = FALSE;
         thread_data->thread_started = FALSE;
+
+	do {
+		buffer = arv_stream_pop_input_buffer(stream);
+		if (ARV_IS_BUFFER(buffer))
+                        arv_stream_push_output_buffer(stream, buffer);
+	} while (buffer != NULL);
+
+	do {
+		buffer = arv_stream_pop_buffer (stream);
+		if (ARV_IS_BUFFER(buffer)) {
+                        ArvV4l2StreamBufferData *buffer_data;
+
+                        buffer_data = g_object_get_data (G_OBJECT(buffer), "v4l2-buffer-data");
+                        if (buffer_data != NULL) {
+                                if (thread_data->io_method != ARV_V4L2_STREAM_IO_METHOD_UNKNOWN &&
+                                    thread_data->io_method != ARV_V4L2_STREAM_IO_METHOD_MMAP)
+                                        mixed_io_method = TRUE;
+                                thread_data->io_method = ARV_V4L2_STREAM_IO_METHOD_MMAP;
+                        } else {
+                                if (thread_data->io_method != ARV_V4L2_STREAM_IO_METHOD_UNKNOWN &&
+                                    thread_data->io_method != ARV_V4L2_STREAM_IO_METHOD_READ)
+                                        mixed_io_method = TRUE;
+                                thread_data->io_method = ARV_V4L2_STREAM_IO_METHOD_READ;
+                        }
+
+                        arv_stream_push_buffer(stream, buffer);
+		}
+	} while (buffer != NULL);
+
+        if (mixed_io_method) {
+                g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
+                             "V4l2 mixed IO method not allowed (mmap and read)");
+                return FALSE;
+        }
 
         if (!arv_v4l2_device_get_image_format (priv->thread_data->v4l2_device, NULL,
                                                &thread_data->pixel_format,
