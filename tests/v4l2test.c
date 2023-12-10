@@ -71,11 +71,13 @@ static int xioctl(int fh, int request, void *arg)
 
 static void process_image(const void *p, int size)
 {
-        frame_number++;
         char filename[15];
+        FILE *fp;
+
+        frame_number++;
         sprintf(filename, "frame-%d.raw", frame_number);
-        FILE *fp=fopen(filename,"wb");
-        
+        fp=fopen(filename,"wb");
+
         if (out_buf)
                 fwrite(p, size, 1, fp);
 
