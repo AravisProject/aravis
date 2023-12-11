@@ -129,6 +129,8 @@ arv_v4l2_device_set_image_format (ArvV4l2Device *device)
         struct v4l2_format format = {0};
         struct v4l2_requestbuffers req = {0};
         struct v4l2_frmsizeenum *frame_size;
+        int i;
+        ArvPixelFormat arv_pixel_format;
 
         req.count = 0;
         req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -150,8 +152,26 @@ arv_v4l2_device_set_image_format (ArvV4l2Device *device)
                 frame_size->discrete.height :
                 frame_size->stepwise.max_height;
 
-        format.fmt.pix.pixelformat = g_array_index (priv->pixel_formats, guint32, priv->pixel_format_idx);
+        arv_pixel_format = g_array_index (priv->pixel_formats, guint32, priv->pixel_format_idx);
+
+        for (i = 0; i < G_N_ELEMENTS (pixel_format_map); i++) {
+                if (pixel_format_map[i].genicam == arv_pixel_format) {
+                        format.fmt.pix.pixelformat = pixel_format_map[i].v4l2;
+                        break;
+                }
+        }
+        if (i >= G_N_ELEMENTS(pixel_format_map)) {
+                arv_warning_device ("Uknown v4l2 pixel format (%d)", format.fmt.pix.pixelformat);
+                return FALSE;
+        }
+
         format.fmt.pix.field = V4L2_FIELD_NONE;
+
+        arv_info_device ("Set format to %d×%d %s %d bytes",
+                         format.fmt.pix.width,
+                         format.fmt.pix.height,
+                         arv_pixel_format_to_gst_caps_string(arv_pixel_format),
+                         format.fmt.pix.sizeimage);
 
         if (v4l2_ioctl(priv->device_fd, VIDIOC_S_FMT, &format) == -1) {
                 arv_warning_device ("Failed to select v4l2 format (%s)", strerror(errno));
@@ -164,12 +184,14 @@ arv_v4l2_device_set_image_format (ArvV4l2Device *device)
 gboolean
 arv_v4l2_device_get_image_format (ArvV4l2Device *device,
                                   guint32 *payload_size,
-                                  guint32 *pixel_format,
+                                  ArvPixelFormat *pixel_format,
                                   guint32 *width,
                                   guint32 *height)
 {
         ArvV4l2DevicePrivate *priv = arv_v4l2_device_get_instance_private (ARV_V4L2_DEVICE (device));
         struct v4l2_format format = {0};
+        int i;
+        ArvPixelFormat arv_pixel_format;
 
         format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
@@ -178,10 +200,21 @@ arv_v4l2_device_get_image_format (ArvV4l2Device *device,
                 return FALSE;
         }
 
+        for (i = 0; i < G_N_ELEMENTS (pixel_format_map); i++) {
+                if (pixel_format_map[i].v4l2 == format.fmt.pix.pixelformat) {
+                        arv_pixel_format = pixel_format_map[i].genicam;
+                        break;
+                }
+        }
+        if (i >= G_N_ELEMENTS(pixel_format_map)) {
+                arv_warning_device ("Uknown v4l2 pixel format (%d)", format.fmt.pix.pixelformat);
+                return FALSE;
+        }
+
         if (payload_size != NULL)
                 *payload_size = format.fmt.pix.sizeimage;
         if (pixel_format != NULL)
-                *pixel_format = g_array_index (priv->pixel_formats, guint32, priv->pixel_format_idx);
+                *pixel_format = arv_pixel_format;
         if (width != NULL)
                 *width = format.fmt.pix.width;
         if (height != NULL)
@@ -190,7 +223,7 @@ arv_v4l2_device_get_image_format (ArvV4l2Device *device,
         arv_info_device ("Current format %d×%d %s %d bytes",
                          format.fmt.pix.width,
                          format.fmt.pix.height,
-                         arv_pixel_format_to_gst_caps_string(g_array_index (priv->pixel_formats, guint32, priv->pixel_format_idx)),
+                         arv_pixel_format_to_gst_caps_string(arv_pixel_format),
                          format.fmt.pix.sizeimage);
 
         return TRUE;

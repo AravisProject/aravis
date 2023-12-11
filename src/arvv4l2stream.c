@@ -31,6 +31,7 @@
 #include <arvbufferprivate.h>
 #include <arvdebug.h>
 #include <arvmisc.h>
+#include <arvstr.h>
 #include <libv4l2.h>
 #include <linux/videodev2.h>
 #include <fcntl.h>
@@ -69,7 +70,7 @@ typedef struct {
 
         ArvV4l2StreamIOMethod io_method;
 
-        guint32 pixel_format;
+        ArvPixelFormat pixel_format;
         guint32 image_width;
         guint32 image_height;
 
@@ -173,6 +174,7 @@ arv_v4l2_stream_thread (void *data)
 
                 arv_buffer = g_hash_table_lookup (buffers, GINT_TO_POINTER (bufd.index));
                 if (ARV_IS_BUFFER (arv_buffer)) {
+
                         g_hash_table_remove (buffers, GINT_TO_POINTER(bufd.index));
                         arv_buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_IMAGE;
                         arv_buffer->priv->chunk_endianness = G_BIG_ENDIAN;
@@ -195,6 +197,8 @@ arv_v4l2_stream_thread (void *data)
                         arv_buffer->priv->parts[0].x_padding = 0;
                         arv_buffer->priv->parts[0].y_padding = 0;
                         arv_buffer->priv->parts[0].size = arv_buffer->priv->received_size;
+
+                        arv_trace_stream_thread("size = %zu", arv_buffer->priv->received_size);
 
                         thread_data->n_completed_buffers++;
                         thread_data->n_transferred_bytes += bufd.length;
