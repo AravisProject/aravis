@@ -243,6 +243,7 @@ arv_v4l2_stream_start_acquisition (ArvStream *stream, GError **error)
 	thread_data = priv->thread_data;
 	thread_data->cancel = FALSE;
         thread_data->thread_started = FALSE;
+        thread_data->io_method = ARV_V4L2_STREAM_IO_METHOD_UNKNOWN;
 
 	do {
 		buffer = arv_stream_pop_input_buffer(stream);
@@ -251,7 +252,7 @@ arv_v4l2_stream_start_acquisition (ArvStream *stream, GError **error)
 	} while (buffer != NULL);
 
 	do {
-		buffer = arv_stream_pop_buffer (stream);
+		buffer = arv_stream_try_pop_buffer (stream);
 		if (ARV_IS_BUFFER(buffer)) {
                         ArvV4l2StreamBufferData *buffer_data;
 
