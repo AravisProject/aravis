@@ -73,6 +73,7 @@ typedef struct {
         ArvPixelFormat pixel_format;
         guint32 image_width;
         guint32 image_height;
+        guint32 image_x_padding;
 
         guint32 frame_id;
 
@@ -194,7 +195,7 @@ arv_v4l2_stream_thread (void *data)
                         arv_buffer->priv->parts[0].height = thread_data->image_height;
                         arv_buffer->priv->parts[0].x_offset = 0;
                         arv_buffer->priv->parts[0].y_offset = 0;
-                        arv_buffer->priv->parts[0].x_padding = 0;
+                        arv_buffer->priv->parts[0].x_padding = thread_data->image_x_padding;
                         arv_buffer->priv->parts[0].y_padding = 0;
                         arv_buffer->priv->parts[0].size = arv_buffer->priv->received_size;
 
@@ -236,6 +237,10 @@ arv_v4l2_stream_start_acquisition (ArvStream *stream, GError **error)
 	ArvV4l2StreamThreadData *thread_data;
         ArvBuffer *buffer;
         gboolean mixed_io_method = FALSE;
+        guint32 bit_per_pixel;
+        guint32 bytes_per_line;
+        guint32 payload_size;
+        guint32 width_pixels;
 
 	g_return_val_if_fail (priv->thread == NULL, FALSE);
 	g_return_val_if_fail (priv->thread_data != NULL, FALSE);
@@ -279,15 +284,33 @@ arv_v4l2_stream_start_acquisition (ArvStream *stream, GError **error)
                 return FALSE;
         }
 
-        if (!arv_v4l2_device_get_image_format (priv->thread_data->v4l2_device, NULL,
+        if (!arv_v4l2_device_get_image_format (priv->thread_data->v4l2_device,
+                                               &payload_size,
                                                &thread_data->pixel_format,
                                                &thread_data->image_width,
-                                               &thread_data->image_height)) {
+                                               &thread_data->image_height,
+                                               &bytes_per_line)) {
                 g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
                              "Failed to query v4l2 image format");
                 return FALSE;
         }
 
+        bit_per_pixel = ARV_PIXEL_FORMAT_BIT_PER_PIXEL (thread_data->pixel_format);
+        if ( bit_per_pixel < 1 ||
+             thread_data->image_height * bytes_per_line > payload_size) {
+                g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
+                             "Invalid v4l2 pixel format");
+                return FALSE;
+        }
+
+        width_pixels = (thread_data->image_width  / bit_per_pixel + 7) * 8;
+        if (bytes_per_line < width_pixels) {
+                g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
+                             "Invalid v4l2 pixel format");
+                return FALSE;
+        }
+
+        thread_data->image_x_padding = bytes_per_line - width_pixels;
         thread_data->frame_id = 0;
 
 	priv->thread = g_thread_new ("arv_v4l2_stream", arv_v4l2_stream_thread, priv->thread_data);

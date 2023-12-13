@@ -53,9 +53,11 @@ typedef struct {
 } ArvV4l2GenicamPixelFormat;
 
 static ArvV4l2GenicamPixelFormat pixel_format_map[] = {
+        {V4L2_PIX_FMT_YUYV,             ARV_PIXEL_FORMAT_YUV_422_YUYV_PACKED},
+/* Disable these formats for now, makes gstreamer crash:
         {V4L2_PIX_FMT_RGB24,            ARV_PIXEL_FORMAT_RGB_8_PACKED},
         {V4L2_PIX_FMT_BGR24,            ARV_PIXEL_FORMAT_BGR_8_PACKED},
-        {V4L2_PIX_FMT_YUYV,             ARV_PIXEL_FORMAT_YUV_422_YUYV_PACKED},
+*/
 };
 
 enum
@@ -167,11 +169,10 @@ arv_v4l2_device_set_image_format (ArvV4l2Device *device)
 
         format.fmt.pix.field = V4L2_FIELD_NONE;
 
-        arv_info_device ("Set format to %d×%d %s %d bytes",
+        arv_info_device ("Set format to %d×%d %s",
                          format.fmt.pix.width,
                          format.fmt.pix.height,
-                         arv_pixel_format_to_gst_caps_string(arv_pixel_format),
-                         format.fmt.pix.sizeimage);
+                         arv_pixel_format_to_gst_caps_string(arv_pixel_format));
 
         if (v4l2_ioctl(priv->device_fd, VIDIOC_S_FMT, &format) == -1) {
                 arv_warning_device ("Failed to select v4l2 format (%s)", strerror(errno));
@@ -186,7 +187,8 @@ arv_v4l2_device_get_image_format (ArvV4l2Device *device,
                                   guint32 *payload_size,
                                   ArvPixelFormat *pixel_format,
                                   guint32 *width,
-                                  guint32 *height)
+                                  guint32 *height,
+                                  guint32 *bytes_per_line)
 {
         ArvV4l2DevicePrivate *priv = arv_v4l2_device_get_instance_private (ARV_V4L2_DEVICE (device));
         struct v4l2_format format = {0};
@@ -219,12 +221,15 @@ arv_v4l2_device_get_image_format (ArvV4l2Device *device,
                 *width = format.fmt.pix.width;
         if (height != NULL)
                 *height = format.fmt.pix.height;
+        if (bytes_per_line != NULL)
+                *bytes_per_line = format.fmt.pix.bytesperline;
 
-        arv_info_device ("Current format %d×%d %s %d bytes",
+        arv_info_device ("Current format %d×%d %s %d bytes, %d bytes per line",
                          format.fmt.pix.width,
                          format.fmt.pix.height,
                          arv_pixel_format_to_gst_caps_string(arv_pixel_format),
-                         format.fmt.pix.sizeimage);
+                         format.fmt.pix.sizeimage,
+                         format.fmt.pix.bytesperline);
 
         return TRUE;
 }
@@ -294,7 +299,7 @@ arv_v4l2_device_read_memory (ArvDevice *device, guint64 address, guint32 size, v
                                         case ARV_V4L2_ADDRESS_PAYLOAD_SIZE:
                                                 arv_v4l2_device_set_image_format (v4l2_device);
                                                 arv_v4l2_device_get_image_format (v4l2_device, (guint32 *) &value,
-                                                                                  NULL, NULL, NULL);
+                                                                                  NULL, NULL, NULL, NULL);
                                                 break;
                                         case ARV_V4L2_ADDRESS_PIXEL_FORMAT:
                                                 value = g_array_index (priv->pixel_formats, guint32,
