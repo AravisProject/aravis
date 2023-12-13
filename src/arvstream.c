@@ -300,6 +300,7 @@ gboolean
 arv_stream_start_acquisition (ArvStream *stream, GError **error)
 {
 	ArvStreamClass *stream_class;
+        GError *local_error = NULL;
         gboolean success;
 
 	g_return_val_if_fail (ARV_IS_STREAM (stream), FALSE);
@@ -307,9 +308,16 @@ arv_stream_start_acquisition (ArvStream *stream, GError **error)
 	stream_class = ARV_STREAM_GET_CLASS (stream);
 	g_return_val_if_fail (stream_class->start_acquisition != NULL, FALSE);
 
-	success = stream_class->start_acquisition (stream, error);
-        if (!success)
-                arv_warning_stream ("Failed to start stream acquisition ");
+	success = stream_class->start_acquisition (stream, &local_error);
+        if (!success) {
+                if (local_error != NULL)
+                        arv_warning_stream ("Failed to start stream acquisition (%s)", local_error->message);
+                else
+                        arv_warning_stream ("Failed to start stream acquisition");
+        }
+
+        if (local_error != NULL)
+                g_propagate_error(error, local_error);
 
         return success;
 }
