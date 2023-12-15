@@ -29,7 +29,7 @@
 #include <arvv4l2deviceprivate.h>
 #include <arvinterfaceprivate.h>
 #include <arvv4l2device.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 #include <gudev/gudev.h>
 #include <libv4l2.h>
 #include <linux/videodev2.h>
@@ -75,22 +75,46 @@ arv_v4l2_interface_device_infos_new (const char *device_file, const char *name)
 			if (v4l2_ioctl (fd, VIDIOC_QUERYCAP, &cap) != -1 &&
 			    ((cap.capabilities & V4L2_CAP_VIDEO_CAPTURE) != 0) &&
 			    ((cap.capabilities & V4L2_CAP_STREAMING) != 0)) {
-				infos = g_new0 (ArvV4l2InterfaceDeviceInfos, 1);
+                                unsigned int i;
+                                gboolean found = FALSE;
 
-				infos->ref_count = 1;
-				infos->id = g_strdup_printf ("%s-%s", (char *) cap.card, name);
-				infos->bus = g_strdup ((char *) cap.bus_info);
-				infos->device_file = g_strdup (device_file);
-				infos->version = g_strdup_printf ("%d.%d.%d",
-								  (cap.version >> 16) & 0xff,
-								  (cap.version >>  8) & 0xff,
-								  (cap.version >>  0) & 0xff);
+                                for (i = 0; TRUE; i++) {
+                                        struct v4l2_fmtdesc format = {0};
 
-				return infos;
-			}
-			v4l2_close (fd);
-		}
-	}
+                                        format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+                                        format.index = i;
+                                        if (v4l2_ioctl(fd, VIDIOC_ENUM_FMT, &format) == -1)
+                                                break;
+
+                                        if (arv_pixel_format_from_v4l2(format.pixelformat) != 0) {
+                                                found = TRUE;
+                                                break;
+                                        }
+                                }
+
+                                if (found) {
+                                        infos = g_new0 (ArvV4l2InterfaceDeviceInfos, 1);
+
+                                        infos->ref_count = 1;
+                                        infos->id = g_strdup_printf ("%s-%s", (char *) cap.card, name);
+                                        infos->bus = g_strdup ((char *) cap.bus_info);
+                                        infos->device_file = g_strdup (device_file);
+                                        infos->version = g_strdup_printf ("%d.%d.%d",
+                                                                          (cap.version >> 16) & 0xff,
+                                                                          (cap.version >>  8) & 0xff,
+                                                                          (cap.version >>  0) & 0xff);
+
+                                        v4l2_close (fd);
+
+                                        return infos;
+                                }
+
+                                arv_warning_interface ("No suitable pixel format found for v4l2 device '%s'",
+                                                       device_file);
+                        }
+                        v4l2_close (fd);
+                }
+        }
 
 	return NULL;
 }
