@@ -99,6 +99,19 @@ G_DEFINE_TYPE_WITH_CODE (ArvV4l2Device, arv_v4l2_device, ARV_TYPE_DEVICE, G_ADD_
 
 /* ArvV4l2Device implemenation */
 
+ArvPixelFormat
+arv_pixel_format_from_v4l2 (guint32 v4l2_pixel_format)
+{
+        unsigned int i;
+
+        for (i = 0; i < G_N_ELEMENTS(pixel_format_map); i++) {
+                if (v4l2_pixel_format == pixel_format_map[i].v4l2)
+                        return pixel_format_map[i].genicam;
+        }
+
+        return 0;
+}
+
 /* ArvDevice implemenation */
 
 static ArvStream *
@@ -547,7 +560,7 @@ arv_v4l2_device_constructed (GObject *self)
                                        "  <DisplayName>Pixel format</DisplayName>\n");
 
         for (i = 0; TRUE; i++) {
-                int j, k;
+                int j;
                 struct v4l2_fmtdesc format = {0};
                 guint32 genicam_pixel_format = 0;
 
@@ -558,10 +571,7 @@ arv_v4l2_device_constructed (GObject *self)
 
                 arv_info_device ("Found format %s", format.description);
 
-                for (k = 0; k < G_N_ELEMENTS(pixel_format_map); k++) {
-                        if (format.pixelformat == pixel_format_map[k].v4l2)
-                                genicam_pixel_format = pixel_format_map[k].genicam;
-                }
+                genicam_pixel_format = arv_pixel_format_from_v4l2(format.pixelformat);
 
                 g_array_insert_val (priv->pixel_formats, i, genicam_pixel_format);
 
