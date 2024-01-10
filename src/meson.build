@@ -162,6 +162,7 @@ library_headers = [
 	'arvgentlstream.h',
 
 	'arvinterface.h',
+	'arvnetwork.h',
 	'arvsystem.h',
 	'arvrealtime.h',
 	'arvstream.h',
