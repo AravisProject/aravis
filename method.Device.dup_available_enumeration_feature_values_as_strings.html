@@ -249,7 +249,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
           <dt class="arg-name"><code>feature</code></dt>
           <dd class="arg-description">
             <p><em>Type:</em>&nbsp;<code>const char*</code></p>
-            <p><p>Feature&nbsp;name.</p></p>
+            <p>Feature&nbsp;name.</p>
             <table>
             
             
@@ -266,7 +266,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
           <dt class="arg-name"><code>n_values</code></dt>
           <dd class="arg-description">
             <p><em>Type:</em>&nbsp;<code>guint*</code></p>
-            <p><p>Placeholder for the number of returned&nbsp;values.</p></p>
+            <p>Placeholder for the number of returned&nbsp;values.</p>
             <table>
             <tr><td title="direction: out">The argument will be set by the function.</td></tr>
             
@@ -310,15 +310,15 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         <div class="returns">
           <div class="arg-description">
             <p><em>Type:</em>&nbsp;An array of&nbsp;<code>utf8</code></p>
-            <p><p>A newly created array of const strings, which must freed after use using g_free,
-or <span class="caps">NULL</span> on&nbsp;error.</p></p>
+            <p>A newly created array of const strings, which must freed after use using g_free,
+or <span class="caps">NULL</span> on&nbsp;error.</p>
           </div>
           <div>
             <table>
             
             
             <tr><td>The length of the array is in the <code>n_values</code> argument.</td></tr>
-            <tr><td title="transfer: container">The caller of the method takes ownership of the data container, but not the data inside it.</td></tr>
+            <tr><td title="transfer: container">The caller of the method takes ownership of the returned data container, but not the data inside it.</td></tr>
             
             <tr><td>Each element is a NUL terminated UTF-8 string.</td></tr>
             </table>

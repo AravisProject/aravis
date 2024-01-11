@@ -172,7 +172,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 }</pre></code>
 
         <div class="docblock">
-          No description available.
+          <p>No description available.</p>
         </div>
 
         <div class="docblock">
@@ -279,7 +279,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
             <div class="docblock">
               <p><span class="emblem available-next" title="This method will be available in the next stable release">unstable</span>&nbsp;<span class="emblem available">since: 0.10</span></p>
             </div>
-          
+            
             <h6><a href="method.Stream.delete_buffers.html">arv_stream_delete_buffers</a></h6><div class="docblock">
               <p>Remove all the buffers still in the input and output queues. If the stream is still in acquisition mode, some buffers
 may be in use by the receiving thread, and not removed. Main use of the buffer deletion is to be able to quickly
@@ -289,77 +289,77 @@ deleting/recreating the stream&nbsp;object.</p>
             <div class="docblock">
               <p><span class="emblem available-next" title="This method will be available in the next stable release">unstable</span>&nbsp;<span class="emblem available">since: 0.10.0</span></p>
             </div>
-          
+            
             <h6><a href="method.Stream.get_emit_signals.html">arv_stream_get_emit_signals</a></h6><div class="docblock">
               <p>Check if stream will emit its&nbsp;signals.</p>
             </div>
             <div class="docblock">
               <p><span class="emblem available">since: 0.2.0</span></p>
             </div>
-          
+            
             <h6><a href="method.Stream.get_info_double.html">arv_stream_get_info_double</a></h6><div class="docblock">
               No description available.
             </div>
             <div class="docblock">
               <p><span class="emblem available">since: 0.8.11</span></p>
             </div>
-          
+            
             <h6><a href="method.Stream.get_info_double_by_name.html">arv_stream_get_info_double_by_name</a></h6><div class="docblock">
               No description available.
             </div>
             <div class="docblock">
               <p><span class="emblem available">since: 0.8.11</span></p>
             </div>
-          
+            
             <h6><a href="method.Stream.get_info_name.html">arv_stream_get_info_name</a></h6><div class="docblock">
               No description available.
             </div>
             <div class="docblock">
               <p><span class="emblem available">since: 0.8.11</span></p>
             </div>
-          
+            
             <h6><a href="method.Stream.get_info_type.html">arv_stream_get_info_type</a></h6><div class="docblock">
               No description available.
             </div>
             <div class="docblock">
               <p><span class="emblem available">since: 0.8.11</span></p>
             </div>
-          
+            
             <h6><a href="method.Stream.get_info_uint64.html">arv_stream_get_info_uint64</a></h6><div class="docblock">
               No description available.
             </div>
             <div class="docblock">
               <p><span class="emblem available">since: 0.8.11</span></p>
             </div>
-          
+            
             <h6><a href="method.Stream.get_info_uint64_by_name.html">arv_stream_get_info_uint64_by_name</a></h6><div class="docblock">
               No description available.
             </div>
             <div class="docblock">
               <p><span class="emblem available">since: 0.8.11</span></p>
             </div>
-          
+            
             <h6><a href="method.Stream.get_n_infos.html">arv_stream_get_n_infos</a></h6><div class="docblock">
               No description available.
             </div>
             <div class="docblock">
               <p><span class="emblem available">since: 0.8.11</span></p>
             </div>
-          
+            
             <h6><a href="method.Stream.get_n_owned_buffers.html">arv_stream_get_n_owned_buffers</a></h6><div class="docblock">
               <p>An accessor to the number of buffer owned by the stream&nbsp;instance.</p>
             </div>
             <div class="docblock">
               <p><span class="emblem available-next" title="This method will be available in the next stable release">unstable</span>&nbsp;<span class="emblem available">since: 0.10.0</span></p>
             </div>
-          
+            
             <h6><a href="method.Stream.get_statistics.html">arv_stream_get_statistics</a></h6><div class="docblock">
               <p>An accessor to the stream&nbsp;statistics.</p>
             </div>
             <div class="docblock">
               <p><span class="emblem available">since: 0.2.0</span></p>
             </div>
-          
+            
             <h6><a href="method.Stream.pop_buffer.html">arv_stream_pop_buffer</a></h6><div class="docblock">
               <p>Pops a buffer from the output queue of <code>stream</code>. The retrieved buffer
 may contain an invalid image. Caller should check the buffer status before using it.
@@ -368,7 +368,7 @@ This function blocks until a buffer is&nbsp;available.</p>
             <div class="docblock">
               <p><span class="emblem available">since: 0.2.0</span></p>
             </div>
-          
+            
             <h6><a href="method.Stream.push_buffer.html">arv_stream_push_buffer</a></h6><div class="docblock">
               <p>Pushes a <code>ArvBuffer</code> to the <code>stream</code> thread. The <code>stream</code> takes ownership of <code>buffer</code>,
 and will free all the buffers still in its queues when&nbsp;destroyed.</p>
@@ -376,7 +376,7 @@ and will free all the buffers still in its queues when&nbsp;destroyed.</p>
             <div class="docblock">
               <p><span class="emblem available">since: 0.2.0</span></p>
             </div>
-          
+            
             <h6><a href="method.Stream.set_emit_signals.html">arv_stream_set_emit_signals</a></h6><div class="docblock">
               <p>Make <code>stream</code> emit signals. This option is
 by default disabled because signal emission is expensive and unneeded when
@@ -385,7 +385,7 @@ the application prefers to operate in pull&nbsp;mode.</p>
             <div class="docblock">
               <p><span class="emblem available">since: 0.2.0</span></p>
             </div>
-          
+            
             <h6><a href="method.Stream.start_acquisition.html">arv_stream_start_acquisition</a></h6><div class="docblock">
               <p>Start the stream acquisition. This has to be done before the <code>AcquisitionStart</code> feature is executed.
 <code>arv_camera_start_acquisition()</code> does this for&nbsp;you.</p>
@@ -393,7 +393,7 @@ the application prefers to operate in pull&nbsp;mode.</p>
             <div class="docblock">
               <p><span class="emblem available-next" title="This method will be available in the next stable release">unstable</span>&nbsp;<span class="emblem available">since: 0.10.0</span></p>
             </div>
-          
+            
             <h6><a href="method.Stream.stop_acquisition.html">arv_stream_stop_acquisition</a></h6><div class="docblock">
               <p>Stop the stream acquisition. This is optional, as the acquisition will always be stopped on stream object
 destruction. <code>arv_camera_stop_acquisition()</code> calls this&nbsp;function.</p>
@@ -401,7 +401,7 @@ destruction. <code>arv_camera_stop_acquisition()</code> calls this&nbsp;function
             <div class="docblock">
               <p><span class="emblem available-next" title="This method will be available in the next stable release">unstable</span>&nbsp;<span class="emblem available">since: 0.10.0</span></p>
             </div>
-          
+            
             <h6><a href="method.Stream.timeout_pop_buffer.html">arv_stream_timeout_pop_buffer</a></h6><div class="docblock">
               <p>Pops a buffer from the output queue of <code>stream</code>, waiting no more than <code>timeout</code>. The retrieved buffer
 may contain an invalid image. Caller should check the buffer status before using&nbsp;it.</p>
@@ -409,7 +409,7 @@ may contain an invalid image. Caller should check the buffer status before using
             <div class="docblock">
               <p><span class="emblem available">since: 0.2.0</span></p>
             </div>
-          
+            
             <h6><a href="method.Stream.try_pop_buffer.html">arv_stream_try_pop_buffer</a></h6><div class="docblock">
               <p>Pops a buffer from the output queue of <code>stream</code>. The retrieved buffer
 may contain an invalid image. Caller should check the buffer status before using it.
@@ -418,7 +418,7 @@ This is the non blocking version of&nbsp;pop_buffer.</p>
             <div class="docblock">
               <p><span class="emblem available">since: 0.2.0</span></p>
             </div>
-          
+            
           </div>
         </div>
         
@@ -444,10 +444,6 @@ This is the non blocking version of&nbsp;pop_buffer.</p>
             <div class="docblock">
               <p>Initializes the object implementing the&nbsp;interface.</p>
             </div>
-            <div class="docblock">
-              <p><span class="emblem available-next" title="This method will be available in the next stable release">unstable</span>&nbsp;<span class="emblem available">since: 2.22</span></p>
-            </div>
-          
           </div>
         </div>
         
@@ -554,35 +550,35 @@ as the expense of an increased memory&nbsp;usage.</p>
             <div class="docblock">
               <p><span class="emblem available-next" title="This property will be available in the next stable release">unstable</span>&nbsp;<span class="emblem available">since: 0.10</span></p>
             </div>
-          
+            
             <h6><a href="property.Stream.callback-data.html">Aravis.Stream:callback-data</a></h6><div class="docblock">
               No description available.
             </div>
             <div class="docblock">
               <p><span class="emblem available-next" title="This property will be available in the next stable release">unstable</span>&nbsp;<span class="emblem available">since: 0.10</span></p>
             </div>
-          
+            
             <h6><a href="property.Stream.destroy-notify.html">Aravis.Stream:destroy-notify</a></h6><div class="docblock">
               No description available.
             </div>
             <div class="docblock">
               <p><span class="emblem available-next" title="This property will be available in the next stable release">unstable</span>&nbsp;<span class="emblem available">since: 0.10</span></p>
             </div>
-          
+            
             <h6><a href="property.Stream.device.html">Aravis.Stream:device</a></h6><div class="docblock">
               No description available.
             </div>
             <div class="docblock">
               <p><span class="emblem available-next" title="This property will be available in the next stable release">unstable</span>&nbsp;<span class="emblem available">since: 0.10</span></p>
             </div>
-          
+            
             <h6><a href="property.Stream.emit-signals.html">Aravis.Stream:emit-signals</a></h6><div class="docblock">
               No description available.
             </div>
             <div class="docblock">
               <p><span class="emblem available-next" title="This property will be available in the next stable release">unstable</span>&nbsp;<span class="emblem available">since: 0.10</span></p>
             </div>
-          
+            
           </div>
         </div>
         
@@ -617,7 +613,7 @@ as the expense of an increased memory&nbsp;usage.</p>
             <div class="docblock">
               <p><span class="emblem available">since: 0.2.0</span></p>
             </div>
-          
+            
           </div>
         </div>
         
@@ -630,10 +626,6 @@ as the expense of an increased memory&nbsp;usage.</p>
               <p>The notify signal is emitted on an object when one of its properties has
 its value set through g_object_set_property(), g_object_set(), et&nbsp;al.</p>
             </div>
-            <div class="docblock">
-              <p><span class="emblem available-next" title="This signal will be available in the next stable release">unstable</span>&nbsp;<span class="emblem available">since: 2.0</span></p>
-            </div>
-          
           </div>
         </div>
         
@@ -661,7 +653,7 @@ its value set through g_object_set_property(), g_object_set(), et&nbsp;al.</p>
       </div>
 
       <div class="docblock">
-        No description available.
+        <p>No description available.</p>
       </div>
 
       
@@ -671,7 +663,7 @@ its value set through g_object_set_property(), g_object_set(), et&nbsp;al.</p>
         <dl class="members">
         
           <dt><code>parent_class: ArvStreamClass</code></dt>
-          <dd>No description available.</dd>
+          <dd><p>No description available.</p></dd>
         
         </dd>
       </div>

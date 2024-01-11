@@ -465,7 +465,7 @@ In general, these human-readable strings cannot be used as&nbsp;settings.</p>
           <dt class="arg-name"><code>n_pixel_formats</code></dt>
           <dd class="arg-description">
             <p><em>Type:</em>&nbsp;<code>guint*</code></p>
-            <p><p>Number of different pixel&nbsp;formats.</p></p>
+            <p>Number of different pixel&nbsp;formats.</p>
             <table>
             <tr><td title="direction: out">The argument will be set by the function.</td></tr>
             
@@ -509,14 +509,14 @@ In general, these human-readable strings cannot be used as&nbsp;settings.</p>
         <div class="returns">
           <div class="arg-description">
             <p><em>Type:</em>&nbsp;An array of&nbsp;<code>utf8</code></p>
-            <p><p>A newly allocated array of string constants, to be freed after use with&nbsp;g_free().</p></p>
+            <p>A newly allocated array of string constants, to be freed after use with&nbsp;g_free().</p>
           </div>
           <div>
             <table>
             
             
             <tr><td>The length of the array is in the <code>n_pixel_formats</code> argument.</td></tr>
-            <tr><td title="transfer: container">The caller of the method takes ownership of the data container, but not the data inside it.</td></tr>
+            <tr><td title="transfer: container">The caller of the method takes ownership of the returned data container, but not the data inside it.</td></tr>
             
             <tr><td>Each element is a NUL terminated UTF-8 string.</td></tr>
             </table>

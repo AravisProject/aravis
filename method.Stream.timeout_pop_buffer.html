@@ -207,7 +207,7 @@ may contain an invalid image. Caller should check the buffer status before using
           <dt class="arg-name"><code>timeout</code></dt>
           <dd class="arg-description">
             <p><em>Type:</em>&nbsp;<code>guint64</code></p>
-            <p><p>Timeout, in&nbsp;µs.</p></p>
+            <p>Timeout, in&nbsp;µs.</p>
             <table>
             
             
@@ -239,14 +239,14 @@ may contain an invalid image. Caller should check the buffer status before using
         <div class="returns">
           <div class="arg-description">
             <p><em>Type:</em>&nbsp;<a href="class.Buffer.html"><code>ArvBuffer</code></a></p>
-            <p><p>A <code>ArvBuffer</code>, <span class="caps">NULL</span> if no buffer is available until the timeout&nbsp;occurs.</p></p>
+            <p>A <code>ArvBuffer</code>, <span class="caps">NULL</span> if no buffer is available until the timeout&nbsp;occurs.</p>
           </div>
           <div>
             <table>
             
             
             
-            <tr><td title="transfer: full">The caller of the method takes ownership of the data, and is responsible for freeing it.</td></tr>
+            <tr><td title="transfer: full">The caller of the method takes ownership of the returned data, and is responsible for freeing it.</td></tr>
             
             
             </table>
