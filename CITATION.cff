@@ -1,0 +1,18 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: Aravis
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - name: Aravis Project
+    website: 'https://github.com/AravisProject'
+repository-code: 'https://github.com/AravisProject/aravis'
+url: 'https://aravisproject.github.io/aravis/'
+abstract: >-
+  Aravis is a GObject based library for the control and the
+  video stream acquisition of digital cameras.
+license: LGPL-2.1+
