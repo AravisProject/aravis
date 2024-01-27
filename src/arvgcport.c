@@ -64,6 +64,7 @@ static ArvGvLegacyInfos arv_gc_port_legacy_infos[] = {
    { .vendor_selection = "Imperx",                              .model_selection = "IpxGEVCamera"},
    { .vendor_selection = "KowaOptronics",                       .model_selection = "SC130ET3"},
    { .vendor_selection = "NIT",                                 .model_selection = "Tachyon16k"},
+   { .vendor_selection = "NIT",                                 .model_selection = "NSC1601GIGE"},
    { .vendor_selection = "PleoraTechnologiesInc",               .model_selection = "iPORTCLGigE"},
    { .vendor_selection = "PleoraTechnologiesInc",               .model_selection = "NTxGigE"},
    { .vendor_selection = "TeledyneDALSA",                       .model_selection = "ICE"},
