@@ -109,7 +109,7 @@ arv_v4l2_interface_device_infos_new (const char *device_file, const char *name)
                                         return infos;
                                 }
 
-                                arv_warning_interface ("No suitable pixel format found for v4l2 device '%s'",
+                                arv_info_interface ("No suitable pixel format found for v4l2 device '%s'",
                                                        device_file);
                         }
                         v4l2_close (fd);
