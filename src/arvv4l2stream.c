@@ -103,6 +103,38 @@ G_DEFINE_TYPE_WITH_CODE (ArvV4l2Stream, arv_v4l2_stream, ARV_TYPE_STREAM, G_ADD_
 
 /* Acquisition thread */
 
+static void
+_queue_buffers (ArvV4l2StreamThreadData *thread_data, GHashTable *buffers)
+{
+	ArvBuffer *arv_buffer;
+        struct v4l2_buffer bufd = {0};
+
+        do {
+                arv_buffer = arv_stream_pop_input_buffer (thread_data->stream);
+                if (ARV_IS_BUFFER (arv_buffer)) {
+                        memset (&bufd, 0, sizeof bufd);
+                        bufd.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+                        bufd.index = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (arv_buffer), "v4l2-index"));
+                        if (thread_data->io_method == ARV_V4L2_STREAM_IO_METHOD_MMAP) {
+                                bufd.memory = V4L2_MEMORY_MMAP;
+                        } else {
+                                bufd.memory = V4L2_MEMORY_USERPTR;
+                                bufd.m.userptr = (unsigned long) arv_buffer->priv->data;
+                                bufd.length = arv_buffer->priv->allocated_size;
+                        }
+
+                        if (v4l2_ioctl (thread_data->device_fd, VIDIOC_QBUF, &bufd) == -1) {
+                                arv_warning_stream_thread ("Failed to queue v4l2 buffer (%s)",
+                                                           strerror (errno));
+                                arv_stream_push_output_buffer(thread_data->stream, arv_buffer);
+                        } else {
+                                arv_trace_stream_thread ("Queue buffer %d\n", bufd.index);
+                                g_hash_table_replace (buffers, GINT_TO_POINTER (bufd.index), arv_buffer);
+                        }
+                }
+        } while (arv_buffer != NULL);
+}
+
 static void *
 arv_v4l2_stream_thread (void *data)
 {
@@ -118,13 +150,12 @@ arv_v4l2_stream_thread (void *data)
 		thread_data->callback (thread_data->callback_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
 
         buffers = g_hash_table_new (g_direct_hash, g_direct_equal);
+        _queue_buffers(thread_data, buffers);
 
         g_mutex_lock (&thread_data->thread_started_mutex);
         thread_data->thread_started = TRUE;
         g_cond_signal (&thread_data->thread_started_cond);
         g_mutex_unlock (&thread_data->thread_started_mutex);
-
-        g_usleep (100000);
 
 	while (!g_atomic_int_get (&thread_data->cancel)) {
                 struct v4l2_buffer bufd = {0};
@@ -132,22 +163,7 @@ arv_v4l2_stream_thread (void *data)
                 struct timeval tv;
                 int result;
 
-                do {
-                        arv_buffer = arv_stream_pop_input_buffer (thread_data->stream);
-                        if (ARV_IS_BUFFER (arv_buffer)) {
-                                bufd.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-                                bufd.memory = V4L2_MEMORY_MMAP;
-                                bufd.index = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (arv_buffer), "v4l2-index"));
-
-                                if (v4l2_ioctl (thread_data->device_fd, VIDIOC_QBUF, &bufd) == -1) {
-                                        arv_warning_stream_thread ("Failed to queue v4l2 buffer");
-                                        arv_stream_push_output_buffer(thread_data->stream, arv_buffer);
-                                } else {
-                                        arv_trace_stream_thread ("Queue buffer %d\n", bufd.index);
-                                        g_hash_table_replace (buffers, GINT_TO_POINTER (bufd.index), arv_buffer);
-                                }
-                        }
-                } while (arv_buffer != NULL);
+                _queue_buffers(thread_data, buffers);
 
                 FD_ZERO(&fds);
                 FD_SET(thread_data->device_fd, &fds);
@@ -164,13 +180,19 @@ arv_v4l2_stream_thread (void *data)
                 if (result == 0)
                         continue;
 
+                memset (&bufd, 0, sizeof bufd);
                 bufd.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-                bufd.memory = V4L2_MEMORY_MMAP;
+                bufd.memory = thread_data->io_method == ARV_V4L2_STREAM_IO_METHOD_MMAP ?
+                        V4L2_MEMORY_MMAP : V4L2_MEMORY_USERPTR;
                 bufd.index = 0;
 
-                if(v4l2_ioctl(thread_data->device_fd, VIDIOC_DQBUF, &bufd) == -1)
+                if(v4l2_ioctl(thread_data->device_fd, VIDIOC_DQBUF, &bufd) == -1) {
                         arv_warning_stream_thread("DeQueue buffer error (%s)", strerror(errno));
-                else
+                        switch (errno) {
+                                case EAGAIN:
+                                        continue;
+                        }
+                } else
                         arv_trace_stream_thread ("Dequeued buffer %d\n", bufd.index);
 
                 arv_buffer = g_hash_table_lookup (buffers, GINT_TO_POINTER (bufd.index));
@@ -227,7 +249,7 @@ arv_v4l2_stream_thread (void *data)
 	return NULL;
 }
 
-/* ArvV4l2Stream implemenation */
+/* ArvV4l2Stream implementation */
 
 static gboolean
 arv_v4l2_stream_start_acquisition (ArvStream *stream, GError **error)
@@ -241,6 +263,7 @@ arv_v4l2_stream_start_acquisition (ArvStream *stream, GError **error)
         guint32 bytes_per_line;
         guint32 payload_size;
         guint32 width_pixels;
+        guint32 index = 0;
 
 	g_return_val_if_fail (priv->thread == NULL, FALSE);
 	g_return_val_if_fail (priv->thread_data != NULL, FALSE);
@@ -269,9 +292,11 @@ arv_v4l2_stream_start_acquisition (ArvStream *stream, GError **error)
                                 thread_data->io_method = ARV_V4L2_STREAM_IO_METHOD_MMAP;
                         } else {
                                 if (thread_data->io_method != ARV_V4L2_STREAM_IO_METHOD_UNKNOWN &&
-                                    thread_data->io_method != ARV_V4L2_STREAM_IO_METHOD_READ)
+                                    thread_data->io_method != ARV_V4L2_STREAM_IO_METHOD_USER_POINTER)
                                         mixed_io_method = TRUE;
-                                thread_data->io_method = ARV_V4L2_STREAM_IO_METHOD_READ;
+                                thread_data->io_method = ARV_V4L2_STREAM_IO_METHOD_USER_POINTER;
+                                g_object_set_data (G_OBJECT(buffer), "v4l2-index", GINT_TO_POINTER(index));
+                                index++;
                         }
 
                         arv_stream_push_buffer(stream, buffer);
@@ -282,6 +307,21 @@ arv_v4l2_stream_start_acquisition (ArvStream *stream, GError **error)
                 g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
                              "V4l2 mixed IO method not allowed (mmap and read)");
                 return FALSE;
+        }
+
+        if (thread_data->io_method == ARV_V4L2_STREAM_IO_METHOD_USER_POINTER) {
+                struct v4l2_requestbuffers req = {0};
+
+                req.count  = index;
+                req.type   = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+                req.memory = V4L2_MEMORY_USERPTR;
+
+                if (v4l2_ioctl(priv->thread_data->device_fd, VIDIOC_REQBUFS, &req) == -1) {
+                        g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
+                                     "V4l2 user pointer method not supported (%s)",
+                                     strerror (errno));
+                        return FALSE;
+                }
         }
 
         if (!arv_v4l2_device_get_image_format (priv->thread_data->v4l2_device,
