@@ -59,6 +59,8 @@
 #endif
 
 #define ARV_GV_STREAM_DISCARD_LATE_FRAME_THRESHOLD	100
+#define ARV_GV_STREAM_BUFFER_SIZE_PROTOCOL_OVERHEAD     1024 /* Some room for protocol overhead (IP + UDP + GV) */
+#define ARV_GV_STREAM_MIN_BUFFER_SIZE                   20 * 1024
 
 enum {
 	ARV_GV_STREAM_PROPERTY_0,
@@ -237,11 +239,15 @@ _update_socket (ArvGvStreamThreadData *thread_data, ArvBuffer *buffer)
 			break;
 		case ARV_GV_STREAM_SOCKET_BUFFER_AUTO:
 			if (thread_data->socket_buffer_size <= 0)
-				buffer_size = buffer->priv->allocated_size;
+				buffer_size = buffer->priv->allocated_size + ARV_GV_STREAM_BUFFER_SIZE_PROTOCOL_OVERHEAD;
 			else
-				buffer_size = MIN (buffer->priv->allocated_size, thread_data->socket_buffer_size);
+				buffer_size = MIN (buffer->priv->allocated_size +
+                                                   ARV_GV_STREAM_BUFFER_SIZE_PROTOCOL_OVERHEAD,
+                                                   thread_data->socket_buffer_size);
 			break;
 	}
+
+        buffer_size = MAX (buffer_size, ARV_GV_STREAM_MIN_BUFFER_SIZE);
 
 	if (buffer_size != thread_data->current_socket_buffer_size) {
 		gboolean result;

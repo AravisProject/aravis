@@ -1875,14 +1875,14 @@ arv_gv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void
 	      priv->packet_size_adjustment != ARV_GV_PACKET_SIZE_ADJUSTMENT_ON_FAILURE_ONCE) ||
 	     !priv->first_stream_created)) {
 		auto_packet_size (gv_device,
-				  priv->packet_size_adjustment == ARV_GV_PACKET_SIZE_ADJUSTMENT_ON_FAILURE ||
-				      priv->packet_size_adjustment == ARV_GV_PACKET_SIZE_ADJUSTMENT_ON_FAILURE_ONCE,
-				  &local_error);
-		if (local_error != NULL) {
-			g_propagate_error (error, local_error);
-			return NULL;
-		}
-	}
+                                  priv->packet_size_adjustment == ARV_GV_PACKET_SIZE_ADJUSTMENT_ON_FAILURE ||
+                                  priv->packet_size_adjustment == ARV_GV_PACKET_SIZE_ADJUSTMENT_ON_FAILURE_ONCE,
+                                  &local_error);
+                if (local_error != NULL) {
+                        g_propagate_error (error, local_error);
+                        return NULL;
+                }
+        }
 
 	stream = arv_gv_stream_new (gv_device, callback, user_data, destroy, error);
 	if (!ARV_IS_STREAM (stream))
