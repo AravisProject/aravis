@@ -1327,11 +1327,9 @@ arv_device_stop_acquisition (ArvDevice *device, GError **error)
 
         g_return_val_if_fail (ARV_IS_DEVICE(device), FALSE);
 
-        if (priv->streams == NULL) {
-                g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NO_STREAM_CHANNEL,
-                             "No stream to stop");
-                return FALSE;
-        }
+        /* Nothing to stop -> success */
+        if (priv->streams == NULL)
+                return TRUE;
 
         while (iter != NULL) {
                 GWeakRef *stream_weak_ref = iter->data;
