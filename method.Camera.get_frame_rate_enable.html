@@ -7,7 +7,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Aravis.Camera.execute_command</title>
+  <title>Aravis.Camera.get_frame_rate_enable</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <meta charset="utf-8" />
@@ -23,10 +23,10 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
 
   
-  <meta priority="og:title" content="Aravis.Camera.execute_command"/>
-  <meta priority="og:description" content="Reference for Aravis.Camera.execute_command"/>
-  <meta name="twitter:title" content="Aravis.Camera.execute_command"/>
-  <meta name="twitter:description" content="Reference for Aravis.Camera.execute_command"/>
+  <meta priority="og:title" content="Aravis.Camera.get_frame_rate_enable"/>
+  <meta priority="og:description" content="Reference for Aravis.Camera.get_frame_rate_enable"/>
+  <meta name="twitter:title" content="Aravis.Camera.get_frame_rate_enable"/>
+  <meta name="twitter:description" content="Reference for Aravis.Camera.get_frame_rate_enable"/>
 
 
   
@@ -127,7 +127,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.Camera.dup_register.html">dup_register</a>
   
-    <a class="method current" href="method.Camera.execute_command.html">execute_command</a>
+    <a class="method" href="method.Camera.execute_command.html">execute_command</a>
   
     <a class="method" href="method.Camera.get_acquisition_mode.html">get_acquisition_mode</a>
   
@@ -177,7 +177,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.Camera.get_frame_rate_bounds.html">get_frame_rate_bounds</a>
   
-    <a class="method" href="method.Camera.get_frame_rate_enable.html">get_frame_rate_enable</a>
+    <a class="method current" href="method.Camera.get_frame_rate_enable.html">get_frame_rate_enable</a>
   
     <a class="method" href="method.Camera.get_gain.html">get_gain</a>
   
@@ -401,12 +401,12 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <section id="main" class="content">
   <header>
     <h3>Method</h3>
-    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.Camera.html">Camera</a><span class="sep"></span>execute_command</h1>
+    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.Camera.html">Camera</a><span class="sep"></span>get_frame_rate_enable</h1>
   </header>
 
   <section>
     <div class="docblock">
-      <p><span class="emblem available">since: 0.8.0</span></p>
+      <p><span class="emblem available">since: 0.8.31</span></p>
     </div>
 
     <div class="declaration toggle-wrapper">
@@ -414,15 +414,14 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Declaration
         <a class="anchor" href="#declaration"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvcamera.h#L186">[src]</a>
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvcamera.h#L116">[src]</a>
         
       </h4>
 
       <div class="docblock c-decl">
         <pre><code><div class="highlight"><pre><span></span><span class="n">gboolean</span><span class="w"></span>
-<span class="n">arv_camera_execute_command</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
-<span class="w">  </span><span class="n">ArvCamera</span><span class="o">*</span><span class="w"> </span><span class="n">camera</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">feature</span><span class="p">,</span><span class="w"></span>
+<span class="n">arv_camera_get_frame_rate_enable</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
+<span class="w">  </span><span class="n">ArvCamera</span><span class="o">*</span><span class="w"> </span><span class="n">camera</span><span class="w"></span>
 <span class="w">  </span><span class="n">GError</span><span class="o">**</span><span class="w"> </span><span class="n">error</span><span class="w"></span>
 <span class="p">)</span><span class="w"></span>
 </pre></div>
@@ -435,17 +434,15 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Description
         <a class="anchor" href="#description"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvcamera.c#L2560">[src]</a>
-        
       </h4>
 
       <div class="docblock">
-        <p>Execute a Genicam&nbsp;command.</p>
+        <p>No description available.</p>
       </div>
 
       <div class="docblock">
         
-        <p>Available since: 0.8.0</p>
+        <p>Available since: 0.8.31</p>
         
         
         
@@ -455,50 +452,6 @@ SPDX-License-Identifier: LGPL-2.1-or-later
       
     </div>
 
-    
-    <div class="parameters toggle-wrapper">
-      <h4 id="parameters">
-        Parameters
-        <a href="#parameters" class="anchor"></a>
-      </h4>
-
-      <div class="docblock">
-        <dl class="arguments">
-          
-          <dt class="arg-name"><code>feature</code></dt>
-          <dd class="arg-description">
-            <p><em>Type:</em>&nbsp;<code>const char*</code></p>
-            <p>Feature&nbsp;name.</p>
-            <table>
-            
-            
-            
-            
-            
-            
-            
-            <tr><td title="transfer: none">The data is owned by the caller of the method.</td></tr>
-            <tr><td>The value is a NUL terminated UTF-8 string.</td></tr>
-            </table>
-          </dd>
-          
-
-          
-          <dt class="arg-name"><code>error</code></dt>
-          <dd class="arg-description">
-            <p><em>Type:</em>&nbsp;<a href="javascript:void(0)" data-namespace="GLib" data-link="struct.Error.html" class="external"><code>GError **</code></a></p>
-            <p>The return location for <a href="https://docs.gtk.org/glib/error-reporting.html#rules-for-use-of-gerror">a recoverable error</a>.</p>
-            <table>
-              <tr><td>The argument can be <code>NULL</code>.</td></tr>
-              <tr><td>If the return location is not <code>NULL</code>, then you must initialize it to a <code>NULL</code> <code>GError*</code>.</td></tr>
-              <tr><td>The argument will be left initialized to <code>NULL</code> by the method if there are no errors.</td></tr>
-              <tr><td>In case of error, the argument will be set to a newly allocated <code>GError</code>; the caller will take ownership of the data, and be responsible for freeing it.</td></tr>
-            </table>
-          </dd>
-          
-        </dl>
-      </div>
-    </div>
     
 
     
@@ -512,7 +465,8 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         <div class="returns">
           <div class="arg-description">
             <p><em>Type:</em>&nbsp;<code>gboolean</code></p>
-            <p><code>TRUE</code> on&nbsp;success.</p>
+            <p>Whether the upper frame rate limit is&nbsp;enabled.</p>
+<p>Implements vendor specific quirks if&nbsp;needed.</p>
           </div>
           <div>
             <table>
