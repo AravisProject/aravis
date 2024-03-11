@@ -1312,15 +1312,6 @@ arv_camera_set_frame_rate_enable(ArvCamera *camera, gboolean enable, GError **er
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
   switch (priv->vendor) {
-		case ARV_CAMERA_VENDOR_BASLER:
-			if (local_error == NULL){
-				if (arv_camera_is_feature_available (camera, "AcquisitionFrameRateEnable", &local_error)){
-					/* enable is optional on some devices */
-					if (local_error == NULL)
-						arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", enable, &local_error);
-				}
-			}
-			break;
 		case ARV_CAMERA_VENDOR_POINT_GREY_FLIR:
 			if (local_error == NULL) {
 				if (priv->has_acquisition_frame_rate_enabled)
@@ -1329,6 +1320,7 @@ arv_camera_set_frame_rate_enable(ArvCamera *camera, gboolean enable, GError **er
 					arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", enable, &local_error);
 			}
 			break;
+		case ARV_CAMERA_VENDOR_BASLER:
 		case ARV_CAMERA_VENDOR_DALSA:
 		case ARV_CAMERA_VENDOR_RICOH:
 		case ARV_CAMERA_VENDOR_XIMEA:
@@ -1338,7 +1330,7 @@ arv_camera_set_frame_rate_enable(ArvCamera *camera, gboolean enable, GError **er
 			if (local_error == NULL) {
 				if (arv_camera_is_feature_available (camera, "AcquisitionFrameRateEnable", &local_error)) {
 					if (local_error == NULL)
-						arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", TRUE, &local_error);
+						arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", enable, &local_error);
 					}
 			}
 			break;
