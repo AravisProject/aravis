@@ -1381,6 +1381,7 @@ gboolean arv_camera_get_frame_rate_enable(ArvCamera* camera, GError** error)
 			{
 				return arv_camera_get_boolean(camera, "AcquisitionFrameRateEnable", error);
 			}
+			break;
 		case ARV_CAMERA_VENDOR_PROSILICA:
 		case ARV_CAMERA_VENDOR_TIS:
 		default:
