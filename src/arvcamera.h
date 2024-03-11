@@ -113,7 +113,8 @@ ARV_API ArvAcquisitionMode	arv_camera_get_acquisition_mode (ArvCamera *camera, G
 ARV_API void		arv_camera_set_frame_count		(ArvCamera *camera, gint64 frame_count, GError **error);
 ARV_API gint64		arv_camera_get_frame_count		(ArvCamera *camera, GError **error);
 ARV_API void		arv_camera_get_frame_count_bounds	(ArvCamera *camera, gint64 *min, gint64 *max, GError **error);
-ARV_API void            arv_camera_set_frame_rate_enable       (ArvCamera *camera, gboolean enable, GError **error);
+ARV_API gboolean        arv_camera_get_frame_rate_enable        (ArvCamera *camera, GError **error);
+ARV_API void            arv_camera_set_frame_rate_enable        (ArvCamera *camera, gboolean enable, GError **error);
 
 ARV_API gboolean	arv_camera_is_frame_rate_available	(ArvCamera *camera, GError **error);
 
