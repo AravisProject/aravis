@@ -1383,8 +1383,8 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source, GError **error)
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 	g_return_if_fail (source != NULL);
 
-	if (arv_camera_is_feature_available (camera, "AcquisitionFrameRateEnable", NULL))
-                arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", FALSE, &local_error);
+	arv_camera_set_frame_rate_enable (camera, FALSE, &local_error);
+	if (local_error == NULL);
 
         has_trigger_selector = arv_camera_is_feature_available(camera, "TriggerSelector", &local_error);
 
