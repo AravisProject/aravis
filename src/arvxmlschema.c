@@ -69,7 +69,7 @@ typedef struct {
 } XmlSchemaError;
 
 static void
-_structured_error_handler (void *ctx, xmlErrorPtr error)
+_structured_error_handler (void *ctx, const xmlError* error)
 {
 	XmlSchemaError *schema_error = ctx;
 
