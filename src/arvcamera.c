@@ -1346,6 +1346,55 @@ arv_camera_set_frame_rate_enable(ArvCamera *camera, gboolean enable, GError **er
 }
 
 /**
+ * arv_camera_get_frame_rate_enable:
+ * @camera: an #ArvCamera
+ * @error: a #GError placeholer, %NULL to ignore
+ *
+ * Returns: whether the upper frame rate limit is enabled.
+ *
+ * Implements vendor specific quirks if needed.
+ * Since: 0.8.31
+ */
+
+gboolean arv_camera_get_frame_rate_enable(ArvCamera* camera, GError** error)
+{
+	ArvCameraPrivate* priv = arv_camera_get_instance_private(camera);
+
+	g_return_val_if_fail(ARV_IS_CAMERA(camera), TRUE);
+
+	switch (priv->vendor)
+	{
+		case ARV_CAMERA_VENDOR_POINT_GREY_FLIR:
+			return arv_camera_get_boolean(camera,
+										  priv->has_acquisition_frame_rate_enabled
+											  ? "AcquisitionFrameRateEnabled"
+											  : "AcquisitionFrameRateEnable",
+										  error);
+		case ARV_CAMERA_VENDOR_BASLER:
+		case ARV_CAMERA_VENDOR_DALSA:
+		case ARV_CAMERA_VENDOR_RICOH:
+		case ARV_CAMERA_VENDOR_XIMEA:
+		case ARV_CAMERA_VENDOR_MATRIX_VISION:
+		case ARV_CAMERA_VENDOR_IMPERX:
+		case ARV_CAMERA_VENDOR_UNKNOWN:
+			if (arv_camera_is_feature_available(camera, "AcquisitionFrameRateEnable", error))
+			{
+				if (error != NULL)
+				{
+					return TRUE;
+				}
+				return arv_camera_get_boolean(camera, "AcquisitionFrameRateEnable", error);
+			}
+		case ARV_CAMERA_VENDOR_PROSILICA:
+		case ARV_CAMERA_VENDOR_TIS:
+		default:
+			break; /* No specific frame rate enable code */
+	}
+
+	return TRUE;
+}
+
+/**
  * arv_camera_set_trigger:
  * @camera: a #ArvCamera
  * @source: trigger source as string
