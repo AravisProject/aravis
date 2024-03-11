@@ -1377,12 +1377,8 @@ gboolean arv_camera_get_frame_rate_enable(ArvCamera* camera, GError** error)
 		case ARV_CAMERA_VENDOR_MATRIX_VISION:
 		case ARV_CAMERA_VENDOR_IMPERX:
 		case ARV_CAMERA_VENDOR_UNKNOWN:
-			if (arv_camera_is_feature_available(camera, "AcquisitionFrameRateEnable", error))
+			if (arv_camera_is_feature_available(camera, "AcquisitionFrameRateEnable", NULL))
 			{
-				if (error != NULL)
-				{
-					return TRUE;
-				}
 				return arv_camera_get_boolean(camera, "AcquisitionFrameRateEnable", error);
 			}
 		case ARV_CAMERA_VENDOR_PROSILICA:
@@ -1424,7 +1420,11 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source, GError **error)
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 	g_return_if_fail (source != NULL);
 
-	arv_camera_set_frame_rate_enable (camera, FALSE, &local_error);
+	if (arv_camera_get_frame_rate_enable(camera, &local_error)) {
+		if (local_error == NULL) {
+			arv_camera_set_frame_rate_enable (camera, FALSE, &local_error);
+		}
+	}
 
 	if (local_error == NULL) {
 			has_trigger_selector = arv_camera_is_feature_available(camera, "TriggerSelector", &local_error);
