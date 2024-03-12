@@ -88,7 +88,7 @@ typedef enum {
 	ARV_BUFFER_PAYLOAD_TYPE_H264 = 			0x0008,
 	ARV_BUFFER_PAYLOAD_TYPE_MULTIZONE_IMAGE = 	0x0009,
 	ARV_BUFFER_PAYLOAD_TYPE_MULTIPART =             0x000a,
-	ARV_BUFFER_PAYLOAD_TYPE_GENDC_CONTAINER =       0x000b, 
+	ARV_BUFFER_PAYLOAD_TYPE_GENDC_CONTAINER =       0x000b,
 	ARV_BUFFER_PAYLOAD_TYPE_GENDC_COMPONENT_DATA =  0x000c
 } ArvBufferPayloadType;
 
@@ -162,8 +162,8 @@ ARV_API gboolean		arv_buffer_has_chunks		(ArvBuffer *buffer);
 ARV_API const void *		arv_buffer_get_chunk_data	(ArvBuffer *buffer, guint64 chunk_id, size_t *size);
 
 ARV_API gboolean		arv_buffer_has_gendc			(ArvBuffer *buffer);
-ARV_API const void *	arv_buffer_get_gendc_data		(ArvBuffer *buffer, size_t *size);
-ARV_API const void *	arv_buffer_get_gendc_descriptor (ArvBuffer *buffer, size_t *size);
+ARV_API const void *	        arv_buffer_get_gendc_data		(ArvBuffer *buffer, size_t *size);
+ARV_API const void *	        arv_buffer_get_gendc_descriptor         (ArvBuffer *buffer, size_t *size);
 
 G_END_DECLS
 

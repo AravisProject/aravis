@@ -253,7 +253,7 @@ arv_buffer_get_chunk_data (ArvBuffer *buffer, guint64 chunk_id, size_t *size)
  *
  * Returns: %TRUE if @buffer has a payload type that contains GenDC Data.
  *
- * Since: 0.10.0
+ * Since: 0.8.31
  */
 
 gboolean
@@ -273,7 +273,7 @@ arv_buffer_has_gendc (ArvBuffer *buffer)
  *
  * Returns: (array length=size) (element-type guint8): a pointer to the GenDC Data .
  *
- * Since: 0.10.0
+ * Since: 0.8.31
  **/
 
 const void *
@@ -300,7 +300,7 @@ arv_buffer_get_gendc_data (ArvBuffer *buffer, size_t *size)
  *
  * Returns: (array length=size) (element-type guint8): a pointer to the GenDC Descriptor.
  *
- * Since: 0.10.0
+ * Since: 0.8.31
  **/
 
 const void *
