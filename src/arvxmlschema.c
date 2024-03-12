@@ -30,6 +30,7 @@
 #include <libxml/parser.h>
 #include <libxml/valid.h>
 #include <libxml/xmlschemas.h>
+#include <libxml/xmlversion.h>
 #include <gio/gio.h>
 #include <arvdebugprivate.h>
 #include <arvmiscprivate.h>
@@ -69,7 +70,11 @@ typedef struct {
 } XmlSchemaError;
 
 static void
+#if LIBXML_VERSION >= 21200
 _structured_error_handler (void *ctx, const xmlError* error)
+#else
+_structured_error_handler (void *ctx, xmlErrorPtr error)
+#endif
 {
 	XmlSchemaError *schema_error = ctx;
 
