@@ -497,7 +497,7 @@ static void
 exposure_spin_cb (GtkSpinButton *spin_button, ArvViewer *viewer)
 {
 	double exposure = gtk_spin_button_get_value (spin_button);
-	double scaled_exposure = viewer->exposure_time_representation == ARV_GC_REPRESENTATION_LOGARITHMIC ? 
+	double scaled_exposure = viewer->exposure_time_representation == ARV_GC_REPRESENTATION_LOGARITHMIC ?
 		arv_viewer_value_to_log (exposure, viewer->exposure_min, viewer->exposure_max) : exposure;
 
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (viewer->auto_exposure_toggle), FALSE);
@@ -514,7 +514,7 @@ static void
 gain_spin_cb (GtkSpinButton *spin_button, ArvViewer *viewer)
 {
 	double gain = gtk_spin_button_get_value (spin_button);
-	double scaled_gain = viewer->gain_representation == ARV_GC_REPRESENTATION_LOGARITHMIC ? 
+	double scaled_gain = viewer->gain_representation == ARV_GC_REPRESENTATION_LOGARITHMIC ?
 		arv_viewer_value_to_log (gain, viewer->gain_min, viewer->gain_max) : gain;
 
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (viewer->auto_gain_toggle), FALSE);
@@ -591,7 +591,7 @@ update_exposure_cb (void *data)
 	double scaled_exposure;
 
 	exposure = arv_camera_get_exposure_time (viewer->camera, NULL);
-	scaled_exposure = viewer->exposure_time_representation == ARV_GC_REPRESENTATION_LOGARITHMIC ? 
+	scaled_exposure = viewer->exposure_time_representation == ARV_GC_REPRESENTATION_LOGARITHMIC ?
 		arv_viewer_value_to_log (exposure, viewer->exposure_min, viewer->exposure_max) : exposure;
 
 	g_signal_handler_block (viewer->exposure_hscale, viewer->exposure_hscale_changed);
@@ -637,7 +637,7 @@ update_gain_cb (void *data)
 	double scaled_gain;
 
 	gain = arv_camera_get_gain (viewer->camera, NULL);
-	scaled_gain = viewer->gain_representation == ARV_GC_REPRESENTATION_LOGARITHMIC ? 
+	scaled_gain = viewer->gain_representation == ARV_GC_REPRESENTATION_LOGARITHMIC ?
 		arv_viewer_value_to_log (gain, viewer->gain_min, viewer->gain_max) : gain;
 
 	g_signal_handler_block (viewer->gain_hscale, viewer->gain_hscale_changed);
@@ -765,17 +765,26 @@ set_camera_widgets(ArvViewer *viewer)
 	gtk_entry_set_text (GTK_ENTRY (viewer->frame_rate_entry), string);
 
 	is_gain_available = arv_camera_is_gain_available (viewer->camera, NULL);
-	if (is_gain_available){
+	if (is_gain_available) {
 		viewer->gain_representation = arv_camera_get_gain_representation(viewer->camera);
+
+                if (viewer->gain_representation == ARV_GC_REPRESENTATION_UNDEFINED) {
+                        if (viewer->gain_min < viewer->gain_max)
+                                viewer->gain_representation = ARV_GC_REPRESENTATION_LINEAR;
+                        else
+                                viewer->gain_representation = ARV_GC_REPRESENTATION_PURE_NUMBER;
+                }
+
 		switch(viewer->gain_representation){
 			case ARV_GC_REPRESENTATION_UNDEFINED:
 			case ARV_GC_REPRESENTATION_LINEAR:
-				gtk_range_set_range (GTK_RANGE (viewer->exposure_hscale), viewer->exposure_min, viewer->exposure_max);
+				gtk_range_set_range (GTK_RANGE (viewer->gain_hscale),
+                                                     viewer->gain_min, viewer->gain_max);
 				gtk_widget_set_sensitive (viewer->gain_hscale, is_gain_available);
 				gtk_widget_set_sensitive (viewer->gain_spin_button, is_gain_available);
 				break;
 			case ARV_GC_REPRESENTATION_LOGARITHMIC:
-				gtk_range_set_range (GTK_RANGE (viewer->exposure_hscale), 0.0, 1.0);
+				gtk_range_set_range (GTK_RANGE (viewer->gain_hscale), 0.0, 1.0);
 				gtk_widget_set_sensitive (viewer->gain_hscale, is_gain_available);
 				gtk_widget_set_sensitive (viewer->gain_spin_button, is_gain_available);
 				break;
@@ -787,7 +796,7 @@ set_camera_widgets(ArvViewer *viewer)
 				gtk_widget_set_sensitive (viewer->gain_hscale, FALSE);
 				gtk_widget_set_sensitive (viewer->gain_spin_button, FALSE);
 		}
-	}else{
+	} else {
 		gtk_widget_set_sensitive (viewer->gain_hscale, FALSE);
 		gtk_widget_set_sensitive (viewer->gain_spin_button, FALSE);
 	}
@@ -799,21 +808,32 @@ set_camera_widgets(ArvViewer *viewer)
 	is_exposure_available = arv_camera_is_exposure_time_available (viewer->camera, NULL);
 	if (is_exposure_available){
 		viewer->exposure_time_representation = arv_camera_get_exposure_time_representation(viewer->camera);
-		switch(viewer->exposure_time_representation){
+
+                if (viewer->exposure_time_representation == ARV_GC_REPRESENTATION_UNDEFINED) {
+                        if (viewer->exposure_min < viewer->exposure_max) {
+                                if (viewer->exposure_min > 0)
+                                        viewer->exposure_time_representation = ARV_GC_REPRESENTATION_LOGARITHMIC;
+                                else
+                                        viewer->exposure_time_representation = ARV_GC_REPRESENTATION_LINEAR;
+                        } else {
+                                viewer->exposure_time_representation = ARV_GC_REPRESENTATION_PURE_NUMBER;
+                        }
+                }
+
+		switch (viewer->exposure_time_representation) {
 			case ARV_GC_REPRESENTATION_UNDEFINED:
 			case ARV_GC_REPRESENTATION_LINEAR:
-				gtk_range_set_range (GTK_RANGE (viewer->gain_hscale), viewer->gain_min, viewer->gain_max);
-				gtk_widget_set_sensitive (viewer->exposure_hscale, is_gain_available);
-				gtk_widget_set_sensitive (viewer->exposure_spin_button, is_gain_available);
+				gtk_range_set_range (GTK_RANGE (viewer->exposure_hscale),
+                                                     viewer->exposure_min, viewer->exposure_max);
 				break;
 			case ARV_GC_REPRESENTATION_LOGARITHMIC:
-				gtk_range_set_range (GTK_RANGE (viewer->gain_hscale), 0.0, 1.0);
-				gtk_widget_set_sensitive (viewer->exposure_hscale, is_gain_available);
-				gtk_widget_set_sensitive (viewer->exposure_spin_button, is_gain_available);
+				gtk_range_set_range (GTK_RANGE (viewer->exposure_hscale), 0.0, 1.0);
+				gtk_widget_set_sensitive (viewer->exposure_hscale, TRUE);
+				gtk_widget_set_sensitive (viewer->exposure_spin_button, TRUE);
 				break;
 			case ARV_GC_REPRESENTATION_PURE_NUMBER:
 				gtk_widget_set_sensitive (viewer->exposure_hscale, FALSE);
-				gtk_widget_set_sensitive (viewer->exposure_spin_button, is_gain_available);
+				gtk_widget_set_sensitive (viewer->exposure_spin_button, TRUE);
 				break;
 			default:
 				gtk_widget_set_sensitive (viewer->exposure_hscale, FALSE);
