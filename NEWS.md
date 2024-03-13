@@ -1,3 +1,15 @@
+Stable release 0.8.31
+=====================
+
+  * viewer: better handling of exposure and gain setting (Momoko)
+  * genicam: genicam URL stored as DomDocument URL property (Emmanuel)
+  * genicam: fix arv_device_get_feature_access_mode return value (Marco)
+  * camera: set/dup_register helper (Emmanuel)
+  * camera: frame_rate setting improvements (Marco)
+  * usb3vision: handle GenDC payload (Momoko)
+  * gigevision: set a lower boundary to minimum socket size in auto mode (Emmanuel)
+  * build: fix a libxml2 API breakage (Russel, Marco)
+
 Stable release 0.8.30
 =====================
 
