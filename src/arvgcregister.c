@@ -81,9 +81,9 @@ arv_gc_register_get_length (ArvGcRegister *gc_register, GError **error)
  * @length: (out) (allow-none): register length
  * @error: a #GError placeholder
  *
- * Returns: the register feature content, must be freed using [method@GLib.free].
+ * Returns: the register feature content, must be freed using [func@GLib.free].
  *
- * Since: 0.10.0
+ * Since: 0.8.31
  */
 
 void *
