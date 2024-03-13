@@ -853,7 +853,8 @@ arv_camera_abort_acquisition (ArvCamera *camera, GError **error)
  *   Continuous acquisition mode for later operations, using arv_camera_set_acquisition_mode().</para>
  * </warning>
  *
- * Returns: (transfer full): A new #ArvBuffer, NULL on error. The returned buffer must be freed using g_object_unref().
+ * Returns: (transfer full): A new #ArvBuffer, NULL on error. The returned buffer must be freed using
+ * [method@GObject.Object.unref].
  *
  * Since: 0.8.0
  */
@@ -1499,7 +1500,8 @@ arv_camera_get_trigger_source (ArvCamera *camera, GError **error)
  *
  * Gets the list of all available trigger sources.
  *
- * Returns: (array length=n_sources) (transfer container): a newly allocated array of strings, which must be freed using g_free().
+ * Returns: (array length=n_sources) (transfer container): a newly allocated array of strings, which must be freed using
+ * [func@GLib.free].
  *
  * Since: 0.8.0
  */
@@ -1518,7 +1520,8 @@ arv_camera_dup_available_trigger_sources (ArvCamera *camera, guint *n_sources, G
  *
  * Gets a list of all available triggers: FrameStart, ExposureActive, etc...
  *
- * Returns: (array length=n_triggers) (transfer container): a newly allocated array of strings, which must be freed using g_free().
+ * Returns: (array length=n_triggers) (transfer container): a newly allocated array of strings, which must be freed
+ * using [func@GLib.free].
  *
  * Since: 0.8.0
  */
@@ -2926,7 +2929,7 @@ arv_camera_get_float_increment (ArvCamera *camera, const char *feature, GError *
  *
  * Set a register content.
  *
- * Since: 0.9.0
+ * Since: 0.8.31
  */
 
 void
@@ -2946,9 +2949,9 @@ arv_camera_set_register (ArvCamera *camera, const char *feature, guint64 length,
  * @length: (out) (allow-none): register length
  * @error: a #GError placeholder, %NULL to ignore
  *
- * Returns: register content, must be freed using [method@GLib.free].
+ * Returns: register content, must be freed using [func@GLib.free].
  *
- * Since: 0.9.0
+ * Since: 0.8.31
  */
 
 void *
