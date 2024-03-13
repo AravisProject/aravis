@@ -2,7 +2,7 @@ name: Aravis-Linux
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, aravis-0-8 ]
   pull_request:
     branches: [ main ]
   release:
@@ -35,10 +35,17 @@ jobs:
       with:
         name: Linux_Meson_Testlog
         path: build/meson-logs/testlog*.txt
-    - name: Documentation
+    - name: Development Documentation
       uses: peaceiris/actions-gh-pages@v3
       if: ${{ github.ref == 'refs/heads/main' }}
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./build/docs/reference/aravis/aravis-0.10
+        destination_dir: aravis-0.10
+    - name: Stable Documentation
+      uses: peaceiris/actions-gh-pages@v3
+      if: ${{ github.ref == 'refs/heads/aravis-0-8' }}
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./build/docs/reference/aravis/aravis-0.8
-
+        destination_dir: aravis-0.8
