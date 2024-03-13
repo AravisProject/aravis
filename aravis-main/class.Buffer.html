@@ -1,0 +1,827 @@
+<!--
+SPDX-FileCopyrightText: Aravis Project Team
+
+SPDX-License-Identifier: LGPL-2.1-or-later
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Aravis.Buffer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta charset="utf-8" />
+
+  
+  <meta property="og:type" content="website"/>
+
+  
+  <meta property="og:image:width" content="256"/>
+  <meta property="og:image:height" content="256"/>
+  <meta property="og:image:secure_url" content="aravis.svg"/>
+  <meta property="og:image:alt" content="Aravis-0.10"/>
+  
+
+  
+  <meta property="og:title" content="Aravis.Buffer"/>
+  <meta property="og:description" content="Reference for Aravis.Buffer"/>
+  <meta name="twitter:title" content="Aravis.Buffer"/>
+  <meta name="twitter:description" content="Reference for Aravis.Buffer"/>
+
+
+  
+  <meta name="twitter:card" content="summary"/>
+
+  
+  
+  
+  <link rel="search" type="application/opensearchdescription+xml" title="Aravis" href="opensearch.xml">
+  
+  
+
+  <link rel="stylesheet" href="style.css" type="text/css" />
+
+  
+
+  
+  <script src="urlmap.js"></script>
+  
+  
+  <script src="fzy.js"></script>
+  <script src="search.js"></script>
+  
+  <script src="main.js"></script>
+
+  
+</head>
+
+<body>
+  <div id="body-wrapper" tabindex="-1">
+
+    <nav class="sidebar devhelp-hidden">
+      
+      <div class="section">
+        <img src="aravis.svg" class="logo"/>
+      </div>
+      
+      
+      <div class="search section">
+        <form id="search-form" autocomplete="off">
+          <input id="search-input" type="text" name="do-not-autocomplete" placeholder="Click, or press 's' to search" autocomplete="off"/>
+        </form>
+      </div>
+      
+      <div class="section namespace">
+        <h3><a href="index.html">Aravis</a></h3>
+        <p>API Version: 0.10</p>
+        
+        <p>Library Version: 0.9.0</p>
+        
+      </div>
+      
+<div class="section">
+  <h5>Type</h5>
+  <div class="links">
+    <a class="current" href="class.Buffer.html#description">Buffer</a>
+  </div>
+</div>
+
+
+  
+<div class="section">
+  <h5>Constructors</h5>
+  <div class="links">
+  
+    <a class="ctor" href="ctor.Buffer.new.html">new</a>
+  
+    <a class="ctor" href="ctor.Buffer.new_allocate.html">new_allocate</a>
+  
+    <a class="ctor" href="ctor.Buffer.new_full.html">new_full</a>
+  
+  </div>
+</div>
+
+
+
+  
+
+
+  
+<div class="section">
+  <h5>Instance methods</h5>
+  <div class="links">
+  
+    <a class="method" href="method.Buffer.find_component.html">find_component</a>
+  
+    <a class="method" href="method.Buffer.get_chunk_data.html">get_chunk_data</a>
+  
+    <a class="method" href="method.Buffer.get_data.html">get_data</a>
+  
+    <a class="method" href="method.Buffer.get_frame_id.html">get_frame_id</a>
+  
+    <a class="method" href="method.Buffer.get_gendc_data.html">get_gendc_data</a>
+  
+    <a class="method" href="method.Buffer.get_gendc_descriptor.html">get_gendc_descriptor</a>
+  
+    <a class="method" href="method.Buffer.get_image_data.html">get_image_data</a>
+  
+    <a class="method" href="method.Buffer.get_image_height.html">get_image_height</a>
+  
+    <a class="method" href="method.Buffer.get_image_padding.html">get_image_padding</a>
+  
+    <a class="method" href="method.Buffer.get_image_pixel_format.html">get_image_pixel_format</a>
+  
+    <a class="method" href="method.Buffer.get_image_region.html">get_image_region</a>
+  
+    <a class="method" href="method.Buffer.get_image_width.html">get_image_width</a>
+  
+    <a class="method" href="method.Buffer.get_image_x.html">get_image_x</a>
+  
+    <a class="method" href="method.Buffer.get_image_y.html">get_image_y</a>
+  
+    <a class="method" href="method.Buffer.get_n_parts.html">get_n_parts</a>
+  
+    <a class="method" href="method.Buffer.get_part_component_id.html">get_part_component_id</a>
+  
+    <a class="method" href="method.Buffer.get_part_data.html">get_part_data</a>
+  
+    <a class="method" href="method.Buffer.get_part_data_type.html">get_part_data_type</a>
+  
+    <a class="method" href="method.Buffer.get_part_height.html">get_part_height</a>
+  
+    <a class="method" href="method.Buffer.get_part_padding.html">get_part_padding</a>
+  
+    <a class="method" href="method.Buffer.get_part_pixel_format.html">get_part_pixel_format</a>
+  
+    <a class="method" href="method.Buffer.get_part_region.html">get_part_region</a>
+  
+    <a class="method" href="method.Buffer.get_part_width.html">get_part_width</a>
+  
+    <a class="method" href="method.Buffer.get_part_x.html">get_part_x</a>
+  
+    <a class="method" href="method.Buffer.get_part_y.html">get_part_y</a>
+  
+    <a class="method" href="method.Buffer.get_payload_type.html">get_payload_type</a>
+  
+    <a class="method" href="method.Buffer.get_status.html">get_status</a>
+  
+    <a class="method" href="method.Buffer.get_system_timestamp.html">get_system_timestamp</a>
+  
+    <a class="method" href="method.Buffer.get_timestamp.html">get_timestamp</a>
+  
+    <a class="method" href="method.Buffer.get_user_data.html">get_user_data</a>
+  
+    <a class="method" href="method.Buffer.has_chunks.html">has_chunks</a>
+  
+    <a class="method" href="method.Buffer.has_gendc.html">has_gendc</a>
+  
+    <a class="method" href="method.Buffer.set_frame_id.html">set_frame_id</a>
+  
+    <a class="method" href="method.Buffer.set_system_timestamp.html">set_system_timestamp</a>
+  
+    <a class="method" href="method.Buffer.set_timestamp.html">set_timestamp</a>
+  
+  </div>
+</div>
+
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+
+      <div class="section generator">
+        <p>Generated by <a href="https://gitlab.gnome.org/GNOME/gi-docgen">gi-docgen</a> 2023.4</p>
+      </div>
+    </nav>
+
+    <button id="btn-to-top" class="hidden"><span class="up-arrow"></span></button>
+
+    
+<section id="main" class="content">
+  <header>
+    <h3>Class</h3>
+    <h1 aria-label="Name"><a href="index.html">Aravis</a><span class="sep" role="presentation"></span>Buffer</h1>
+  </header>
+
+  <section>
+    <summary>
+      <div class="docblock">
+        <p></p>
+      </div>
+
+      <div class="toggle-wrapper">
+        <h4 id="description" style="display:flex;">
+          Description
+          <a href="#description" class="anchor"></a>
+          
+          <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvbuffer.c#L23">[src]</a>
+          
+        </h4>
+
+        <pre><code>final class Aravis.Buffer : GObject.Object
+{
+  /* No available fields */
+}</pre></code>
+
+        <div class="docblock">
+          <p><a href="class.Buffer.html"><code>ArvBuffer</code></a> provides a class for the instantiation of buffers used for the storage of the separate images of
+the video&nbsp;stream.</p>
+<p>The actual data space may either be allocated by <a href="class.Buffer.html"><code>ArvBuffer</code></a> during an object instantiation, of pre-allocated.
+<a href="class.Buffer.html"><code>ArvBuffer</code></a> also allows the transmission of image metadata, such as offsets and size of the transmitted region of
+interest, pixel format and time&nbsp;stamp.</p>
+        </div>
+
+        <div class="docblock">
+          
+          
+          
+        </div>
+
+        
+      </div>
+    </summary>
+
+    
+
+    
+    <div class="toggle-wrapper ancestors">
+      <h4 id="ancestors">
+        Ancestors
+        <a href="#ancestors" class="anchor"></a>
+      </h4>
+
+      <div class="docblock">
+        <ul>
+        
+          
+          <li class="class"><a class="external" href="javascript:void(0)" data-link="class.Object.html" data-namespace="GObject">GObject</a></li>
+          
+        
+        </ul>
+      </div>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="toggle-wrapper constructors">
+      <h4 id="constructors">
+        Constructors
+        <a href="#constructors" class="anchor"></a>
+      </h4>
+
+      <div class="docblock">
+      
+        <div class="">
+          <h6><a href="ctor.Buffer.new.html">arv_buffer_new</a></h6>
+          <div class="docblock">
+            <p>Creates a new buffer for the storage of the video stream images.
+The data space can be either preallocated, and the caller is responsible
+for it&#8217;s deallocation, or allocated by this function. If it is the case,
+data memory will be freed when the buffer is&nbsp;destroyed.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.2.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="ctor.Buffer.new_allocate.html">arv_buffer_new_allocate</a></h6>
+          <div class="docblock">
+            <p>Creates a new buffer for the storage of the video stream images.
+The data space is allocated by this function, and will
+be freed when the buffer is&nbsp;destroyed.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.2.3</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="ctor.Buffer.new_full.html">arv_buffer_new_full</a></h6>
+          <div class="docblock">
+            <p>Creates a new buffer for the storage of the video stream images.
+The data space can be either preallocated, and the caller is responsible
+for it&#8217;s deallocation, or allocated by this function. If it is the case,
+data memory will be freed when the buffer is&nbsp;destroyed.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.2.0</span></p>
+          </div>
+        </div>
+      
+      </div>
+    </div>
+    
+
+    
+
+    
+    <div class="toggle-wrapper methods">
+      <h4 id="methods">
+        Instance methods
+        <a href="#methods" class="anchor"></a>
+      </h4>
+
+      <div class="docblock">
+      
+        <div class="">
+          <h6><a href="method.Buffer.find_component.html">arv_buffer_find_component</a></h6>
+          <div class="docblock">
+            <p>Search for the part corresponding to <code>component_id</code>.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.25</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_chunk_data.html">arv_buffer_get_chunk_data</a></h6>
+          <div class="docblock">
+            <p>Chunk data&nbsp;accessor.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.4.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_data.html">arv_buffer_get_data</a></h6>
+          <div class="docblock">
+            <p>Buffer data&nbsp;accessor.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.4.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_frame_id.html">arv_buffer_get_frame_id</a></h6>
+          <div class="docblock">
+            <p>Gets the buffer frame id. For GigEVision devices, 0 is an invalid&nbsp;value.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_gendc_data.html">arv_buffer_get_gendc_data</a></h6>
+          <div class="docblock">
+            <p>GenDC Data&nbsp;accessor.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.31</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_gendc_descriptor.html">arv_buffer_get_gendc_descriptor</a></h6>
+          <div class="docblock">
+            <p>GenDC Descriptor&nbsp;accessor.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.31</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_image_data.html">arv_buffer_get_image_data</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.25</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_image_height.html">arv_buffer_get_image_height</a></h6>
+          <div class="docblock">
+            <p>Gets the image&nbsp;width.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.4.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_image_padding.html">arv_buffer_get_image_padding</a></h6>
+          <div class="docblock">
+            <p>Gets the image&nbsp;padding.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_image_pixel_format.html">arv_buffer_get_image_pixel_format</a></h6>
+          <div class="docblock">
+            <p>Gets the image pixel&nbsp;format.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.4.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_image_region.html">arv_buffer_get_image_region</a></h6>
+          <div class="docblock">
+            <p>Gets the image&nbsp;region.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.4.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_image_width.html">arv_buffer_get_image_width</a></h6>
+          <div class="docblock">
+            <p>Gets the image&nbsp;width.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.4.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_image_x.html">arv_buffer_get_image_x</a></h6>
+          <div class="docblock">
+            <p>Gets the image x&nbsp;offset.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.4.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_image_y.html">arv_buffer_get_image_y</a></h6>
+          <div class="docblock">
+            <p>Gets the image y&nbsp;offset.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.4.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_n_parts.html">arv_buffer_get_n_parts</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_part_component_id.html">arv_buffer_get_part_component_id</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.25</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_part_data.html">arv_buffer_get_part_data</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_part_data_type.html">arv_buffer_get_part_data_type</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_part_height.html">arv_buffer_get_part_height</a></h6>
+          <div class="docblock">
+            <p>Gets the part&nbsp;height.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_part_padding.html">arv_buffer_get_part_padding</a></h6>
+          <div class="docblock">
+            <p>Gets the part&nbsp;padding.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_part_pixel_format.html">arv_buffer_get_part_pixel_format</a></h6>
+          <div class="docblock">
+            <p>Gets the part pixel&nbsp;format.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_part_region.html">arv_buffer_get_part_region</a></h6>
+          <div class="docblock">
+            <p>Gets the part&nbsp;region.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_part_width.html">arv_buffer_get_part_width</a></h6>
+          <div class="docblock">
+            <p>Gets the part&nbsp;width.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_part_x.html">arv_buffer_get_part_x</a></h6>
+          <div class="docblock">
+            <p>Gets the part x&nbsp;offset.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_part_y.html">arv_buffer_get_part_y</a></h6>
+          <div class="docblock">
+            <p>Gets the part&nbsp;y_offset.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.23</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_payload_type.html">arv_buffer_get_payload_type</a></h6>
+          <div class="docblock">
+            <p>Gets the buffer payload&nbsp;type.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.4.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_status.html">arv_buffer_get_status</a></h6>
+          <div class="docblock">
+            <p>Gets the buffer acquisition&nbsp;status.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.4.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_system_timestamp.html">arv_buffer_get_system_timestamp</a></h6>
+          <div class="docblock">
+            <p>Gets the system timestamp for when the frame was received. Expressed in&nbsp;nanoseconds.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.6.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_timestamp.html">arv_buffer_get_timestamp</a></h6>
+          <div class="docblock">
+            <p>Gets the buffer camera timestamp, expressed as nanoseconds. Not all devices
+provide reliable timestamp, which means sometimes its better to rely on the
+buffer completion host local time, or to use&nbsp;arv_buffer_get_system_timestamp().</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.4.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.get_user_data.html">arv_buffer_get_user_data</a></h6>
+          <div class="docblock">
+            <p>Gets a pointer to user data set by&nbsp;arv_buffer_new_full.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.4.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.has_chunks.html">arv_buffer_has_chunks</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.has_gendc.html">arv_buffer_has_gendc</a></h6>
+          <div class="docblock">
+            No description available.
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.31</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.set_frame_id.html">arv_buffer_set_frame_id</a></h6>
+          <div class="docblock">
+            <p>Sets the buffer frame id.  For GigEVision devices, 0 is an invalid&nbsp;value.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.3</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.set_system_timestamp.html">arv_buffer_set_system_timestamp</a></h6>
+          <div class="docblock">
+            <p>Sets the system timestamp for when the frame was received. Expressed in&nbsp;nanoseconds.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.6.0</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.Buffer.set_timestamp.html">arv_buffer_set_timestamp</a></h6>
+          <div class="docblock">
+            <p>Sets the buffer timestamp, which allows to override the timpestamp set by
+the camera, which in some case is&nbsp;incorrect.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.4.0</span></p>
+          </div>
+        </div>
+      
+      </div>
+
+      
+        
+        <div class="toggle-wrapper default-hide ancestor-methods"><h5 style="display:block;">Methods inherited from <a class="external" href="javascript:void(0)" data-link="class.Object.html" data-namespace="GObject">GObject</a> (43)</h5>
+          <div class="docblock">
+          
+            <div class="docblock">
+              <p>Please see&nbsp;<a class="external" href="javascript:void(0)" data-link="class.Object.html#methods" data-namespace="GObject">GObject</a>&nbsp;for a full list of methods.</em></p>
+            </div>
+          
+          </div>
+        </div>
+        
+      
+
+      
+    </div>
+    
+
+    
+
+    
+    <div class="signals toggle-wrapper">
+      <h4 id="signals">
+        Signals
+        <a href="#signals" class="anchor"></a>
+      </h4>
+
+      
+
+      
+        
+        <div class="toggle-wrapper default-hide ancestor-signals"><h5 style="display:block;">Signals inherited from <a class="external" href="javascript:void(0)" data-link="class.Object.html" data-namespace="GObject">GObject</a> (1)</h5>
+          <div class="docblock">
+          <h6><a class="external" href="javascript:void(0)" data-namespace="GObject" data-link="signal.Object.notify.html">GObject::notify</a></h6>
+            <div class="docblock">
+              <p>The notify signal is emitted on an object when one of its properties has
+its value set through g_object_set_property(), g_object_set(), et&nbsp;al.</p>
+            </div>
+          </div>
+        </div>
+        
+      
+
+      
+
+    </div>
+    
+
+    
+    <div class="class toggle-wrapper default-hide">
+      <h4 id="class-struct">
+        Class structure
+        <a href="#class-struct" class="anchor"></a>
+      </h4>
+
+      <div class="docblock">
+        <pre><code>struct AravisBufferClass {
+  GObjectClass parent_class;
+  
+}</code></pre>
+      </div>
+
+      <div class="docblock">
+        <p>No description available.</p>
+      </div>
+
+      
+      <div class="docblock">
+        <h6>Class members</h6>
+
+        <dl class="members">
+        
+          <dt><code>parent_class: GObjectClass</code></dt>
+          <dd><p>No description available.</p></dd>
+        
+        </dd>
+      </div>
+      
+    </div>
+    
+
+    
+
+    
+
+  </section>
+</section>
+
+
+    
+<div id="toc" class="toc">
+  <nav aria-labelledby="toc-title">
+    <p id="toc-title">Content</p>
+    <ul class="toc-list">
+      <li class="toc-list-item"><a href="#description"><span class="link-text">Description</span></a></li>
+      
+      
+      
+      <li class="toc-list-item"><a href="#ancestors"><span class="link-text">Ancestors</span></a></li>
+      
+      
+      
+<li class="toc-list-item"><a href="#constructors"><span class="link-text">Constructors</span></a></li>
+
+
+      
+
+      
+<li class="toc-list-item"><a href="#methods"><span class="link-text">Methods</span></a></li>
+
+
+      
+
+      
+
+      
+
+      
+
+    </ul>
+  </nav>
+</div>
+
+
+    <section id="search" class="content hidden"></section>
+
+    <footer>
+    
+    </footer>
+  </div>
+</body>
+</html>
