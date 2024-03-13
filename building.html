@@ -119,6 +119,13 @@ as root in order to update ld&nbsp;cache.</p>
 <div class="codehilite"><pre><span></span><code>sudo ldconfig
 </code></pre></div>
 
+<h2 id="release-versions">Release versions<a class="md-anchor" href="#release-versions" title="Permanent link"></a></h2>
+<p>Please use the released versions of Aravis and not a git checkout, unless you
+want to work on Aravis itself or test a&nbsp;commit.</p>
+<p>The current version naming follows a major.minor.micro scheme. Odd minor values
+indicates development releases, and even minor values stable releases. Prior to
+1.0.0, stable releases with different minor are not compatible, and are parallel
+installable, with executables suffixed with <code>-major.minor</code>.</p>
 <h2 id="install-dependencies-on-ubuntu-2004">Install dependencies on Ubuntu 20.04<a class="md-anchor" href="#install-dependencies-on-ubuntu-2004" title="Permanent link"></a></h2>
 <p>Prior to running <code>meson</code> and <code>ninja</code>, dependencies can be installed using the
 following(tested on Ubuntu&nbsp;20.04):</p>
@@ -233,6 +240,8 @@ Debug levels:
         <li class="toc-list-item"><a href="#installing-aravis"><span class="link-text">Installing Aravis</span></a></li>
           
           <ul class="toc-list">
+          
+            <li class="toc-list-item"><a href="#release-versions"><span class="link-text">Release versions</span></a></li>
           
             <li class="toc-list-item"><a href="#install-dependencies-on-ubuntu-2004"><span class="link-text">Install dependencies on Ubuntu 20.04</span></a></li>
           
