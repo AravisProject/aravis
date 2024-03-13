@@ -41,11 +41,11 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./build/docs/reference/aravis/aravis-0.10
-        destination_dir: aravis-0.10
+        destination_dir: aravis-main
     - name: Stable Documentation
       uses: peaceiris/actions-gh-pages@v3
       if: ${{ github.ref == 'refs/heads/aravis-0-8' }}
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./build/docs/reference/aravis/aravis-0.8
-        destination_dir: aravis-0.8
+        destination_dir: aravis-stable
