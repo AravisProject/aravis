@@ -380,7 +380,8 @@ arv_tool_control (int argc, char **argv, ArvDevice *device)
                                                         GString *dump;
 
                                                         dump = g_string_new("");
-                                                        printf ("%s = %"G_GUINT64_FORMAT" byte(s)@0x%08lx\n",
+                                                        printf ("%s = %" G_GUINT64_FORMAT " byte(s)@0x%08"
+                                                                G_GINT64_MODIFIER "x\n",
                                                                 tokens[0], length,
                                                                 arv_gc_register_get_address (ARV_GC_REGISTER(feature),
                                                                                              NULL));
