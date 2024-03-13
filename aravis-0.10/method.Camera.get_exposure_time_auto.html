@@ -1,0 +1,498 @@
+<!--
+SPDX-FileCopyrightText: Aravis Project Team
+
+SPDX-License-Identifier: LGPL-2.1-or-later
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Aravis.Camera.get_exposure_time_auto</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta charset="utf-8" />
+
+  
+  <meta property="og:type" content="website"/>
+
+  
+  <meta property="og:image:width" content="256"/>
+  <meta property="og:image:height" content="256"/>
+  <meta property="og:image:secure_url" content="aravis.svg"/>
+  <meta property="og:image:alt" content="Aravis-0.10"/>
+  
+
+  
+  <meta priority="og:title" content="Aravis.Camera.get_exposure_time_auto"/>
+  <meta priority="og:description" content="Reference for Aravis.Camera.get_exposure_time_auto"/>
+  <meta name="twitter:title" content="Aravis.Camera.get_exposure_time_auto"/>
+  <meta name="twitter:description" content="Reference for Aravis.Camera.get_exposure_time_auto"/>
+
+
+  
+  <meta name="twitter:card" content="summary"/>
+
+  
+  
+  
+  <link rel="search" type="application/opensearchdescription+xml" title="Aravis" href="opensearch.xml">
+  
+  
+
+  <link rel="stylesheet" href="style.css" type="text/css" />
+
+  
+
+  
+  <script src="urlmap.js"></script>
+  
+  
+  <script src="fzy.js"></script>
+  <script src="search.js"></script>
+  
+  <script src="main.js"></script>
+
+  
+</head>
+
+<body>
+  <div id="body-wrapper" tabindex="-1">
+
+    <nav class="sidebar devhelp-hidden">
+      
+      <div class="section">
+        <img src="aravis.svg" class="logo"/>
+      </div>
+      
+      
+      <div class="search section">
+        <form id="search-form" autocomplete="off">
+          <input id="search-input" type="text" name="do-not-autocomplete" placeholder="Click, or press 's' to search" autocomplete="off"/>
+        </form>
+      </div>
+      
+      <div class="section namespace">
+        <h3><a href="index.html">Aravis</a></h3>
+        <p>API Version: 0.10</p>
+        
+        <p>Library Version: 0.9.0</p>
+        
+      </div>
+      
+<div class="section">
+  <h5>Type</h5>
+  <div class="links">
+    <a href="class.Camera.html">Camera</a>
+  </div>
+</div>
+<div class="section">
+  <h5>Methods</h5>
+  <div class="links">
+  
+    <a class="method" href="method.Camera.abort_acquisition.html">abort_acquisition</a>
+  
+    <a class="method" href="method.Camera.acquisition.html">acquisition</a>
+  
+    <a class="method" href="method.Camera.are_chunks_available.html">are_chunks_available</a>
+  
+    <a class="method" href="method.Camera.clear_triggers.html">clear_triggers</a>
+  
+    <a class="method" href="method.Camera.create_chunk_parser.html">create_chunk_parser</a>
+  
+    <a class="method" href="method.Camera.create_stream.html">create_stream</a>
+  
+    <a class="method" href="method.Camera.create_stream_full.html">create_stream_full</a>
+  
+    <a class="method" href="method.Camera.dup_available_black_levels.html">dup_available_black_levels</a>
+  
+    <a class="method" href="method.Camera.dup_available_components.html">dup_available_components</a>
+  
+    <a class="method" href="method.Camera.dup_available_enumerations.html">dup_available_enumerations</a>
+  
+    <a class="method" href="method.Camera.dup_available_enumerations_as_display_names.html">dup_available_enumerations_as_display_names</a>
+  
+    <a class="method" href="method.Camera.dup_available_enumerations_as_strings.html">dup_available_enumerations_as_strings</a>
+  
+    <a class="method" href="method.Camera.dup_available_gains.html">dup_available_gains</a>
+  
+    <a class="method" href="method.Camera.dup_available_pixel_formats.html">dup_available_pixel_formats</a>
+  
+    <a class="method" href="method.Camera.dup_available_pixel_formats_as_display_names.html">dup_available_pixel_formats_as_display_names</a>
+  
+    <a class="method" href="method.Camera.dup_available_pixel_formats_as_strings.html">dup_available_pixel_formats_as_strings</a>
+  
+    <a class="method" href="method.Camera.dup_available_trigger_sources.html">dup_available_trigger_sources</a>
+  
+    <a class="method" href="method.Camera.dup_available_triggers.html">dup_available_triggers</a>
+  
+    <a class="method" href="method.Camera.dup_register.html">dup_register</a>
+  
+    <a class="method" href="method.Camera.execute_command.html">execute_command</a>
+  
+    <a class="method" href="method.Camera.get_acquisition_mode.html">get_acquisition_mode</a>
+  
+    <a class="method" href="method.Camera.get_binning.html">get_binning</a>
+  
+    <a class="method" href="method.Camera.get_black_level.html">get_black_level</a>
+  
+    <a class="method" href="method.Camera.get_black_level_auto.html">get_black_level_auto</a>
+  
+    <a class="method" href="method.Camera.get_black_level_bounds.html">get_black_level_bounds</a>
+  
+    <a class="method" href="method.Camera.get_boolean.html">get_boolean</a>
+  
+    <a class="method" href="method.Camera.get_boolean_gi.html">get_boolean_gi</a>
+  
+    <a class="method" href="method.Camera.get_chunk_mode.html">get_chunk_mode</a>
+  
+    <a class="method" href="method.Camera.get_chunk_state.html">get_chunk_state</a>
+  
+    <a class="method" href="method.Camera.get_device.html">get_device</a>
+  
+    <a class="method" href="method.Camera.get_device_id.html">get_device_id</a>
+  
+    <a class="method" href="method.Camera.get_device_serial_number.html">get_device_serial_number</a>
+  
+    <a class="method" href="method.Camera.get_exposure_time.html">get_exposure_time</a>
+  
+    <a class="method current" href="method.Camera.get_exposure_time_auto.html">get_exposure_time_auto</a>
+  
+    <a class="method" href="method.Camera.get_exposure_time_bounds.html">get_exposure_time_bounds</a>
+  
+    <a class="method" href="method.Camera.get_exposure_time_representation.html">get_exposure_time_representation</a>
+  
+    <a class="method" href="method.Camera.get_feature_representation.html">get_feature_representation</a>
+  
+    <a class="method" href="method.Camera.get_float.html">get_float</a>
+  
+    <a class="method" href="method.Camera.get_float_bounds.html">get_float_bounds</a>
+  
+    <a class="method" href="method.Camera.get_float_increment.html">get_float_increment</a>
+  
+    <a class="method" href="method.Camera.get_frame_count.html">get_frame_count</a>
+  
+    <a class="method" href="method.Camera.get_frame_count_bounds.html">get_frame_count_bounds</a>
+  
+    <a class="method" href="method.Camera.get_frame_rate.html">get_frame_rate</a>
+  
+    <a class="method" href="method.Camera.get_frame_rate_bounds.html">get_frame_rate_bounds</a>
+  
+    <a class="method" href="method.Camera.get_frame_rate_enable.html">get_frame_rate_enable</a>
+  
+    <a class="method" href="method.Camera.get_gain.html">get_gain</a>
+  
+    <a class="method" href="method.Camera.get_gain_auto.html">get_gain_auto</a>
+  
+    <a class="method" href="method.Camera.get_gain_bounds.html">get_gain_bounds</a>
+  
+    <a class="method" href="method.Camera.get_gain_representation.html">get_gain_representation</a>
+  
+    <a class="method" href="method.Camera.get_height_bounds.html">get_height_bounds</a>
+  
+    <a class="method" href="method.Camera.get_height_increment.html">get_height_increment</a>
+  
+    <a class="method" href="method.Camera.get_integer.html">get_integer</a>
+  
+    <a class="method" href="method.Camera.get_integer_bounds.html">get_integer_bounds</a>
+  
+    <a class="method" href="method.Camera.get_integer_increment.html">get_integer_increment</a>
+  
+    <a class="method" href="method.Camera.get_model_name.html">get_model_name</a>
+  
+    <a class="method" href="method.Camera.get_payload.html">get_payload</a>
+  
+    <a class="method" href="method.Camera.get_pixel_format.html">get_pixel_format</a>
+  
+    <a class="method" href="method.Camera.get_pixel_format_as_string.html">get_pixel_format_as_string</a>
+  
+    <a class="method" href="method.Camera.get_region.html">get_region</a>
+  
+    <a class="method" href="method.Camera.get_sensor_size.html">get_sensor_size</a>
+  
+    <a class="method" href="method.Camera.get_string.html">get_string</a>
+  
+    <a class="method" href="method.Camera.get_trigger_source.html">get_trigger_source</a>
+  
+    <a class="method" href="method.Camera.get_vendor_name.html">get_vendor_name</a>
+  
+    <a class="method" href="method.Camera.get_width_bounds.html">get_width_bounds</a>
+  
+    <a class="method" href="method.Camera.get_width_increment.html">get_width_increment</a>
+  
+    <a class="method" href="method.Camera.get_x_binning_bounds.html">get_x_binning_bounds</a>
+  
+    <a class="method" href="method.Camera.get_x_binning_increment.html">get_x_binning_increment</a>
+  
+    <a class="method" href="method.Camera.get_x_offset_bounds.html">get_x_offset_bounds</a>
+  
+    <a class="method" href="method.Camera.get_x_offset_increment.html">get_x_offset_increment</a>
+  
+    <a class="method" href="method.Camera.get_y_binning_bounds.html">get_y_binning_bounds</a>
+  
+    <a class="method" href="method.Camera.get_y_binning_increment.html">get_y_binning_increment</a>
+  
+    <a class="method" href="method.Camera.get_y_offset_bounds.html">get_y_offset_bounds</a>
+  
+    <a class="method" href="method.Camera.get_y_offset_increment.html">get_y_offset_increment</a>
+  
+    <a class="method" href="method.Camera.gv_auto_packet_size.html">gv_auto_packet_size</a>
+  
+    <a class="method" href="method.Camera.gv_get_current_stream_channel.html">gv_get_current_stream_channel</a>
+  
+    <a class="method" href="method.Camera.gv_get_ip_configuration_mode.html">gv_get_ip_configuration_mode</a>
+  
+    <a class="method" href="method.Camera.gv_get_multipart.html">gv_get_multipart</a>
+  
+    <a class="method" href="method.Camera.gv_get_n_network_interfaces.html">gv_get_n_network_interfaces</a>
+  
+    <a class="method" href="method.Camera.gv_get_n_stream_channels.html">gv_get_n_stream_channels</a>
+  
+    <a class="method" href="method.Camera.gv_get_packet_delay.html">gv_get_packet_delay</a>
+  
+    <a class="method" href="method.Camera.gv_get_packet_size.html">gv_get_packet_size</a>
+  
+    <a class="method" href="method.Camera.gv_get_persistent_ip.html">gv_get_persistent_ip</a>
+  
+    <a class="method" href="method.Camera.gv_is_multipart_supported.html">gv_is_multipart_supported</a>
+  
+    <a class="method" href="method.Camera.gv_select_stream_channel.html">gv_select_stream_channel</a>
+  
+    <a class="method" href="method.Camera.gv_set_ip_configuration_mode.html">gv_set_ip_configuration_mode</a>
+  
+    <a class="method" href="method.Camera.gv_set_multipart.html">gv_set_multipart</a>
+  
+    <a class="method" href="method.Camera.gv_set_packet_delay.html">gv_set_packet_delay</a>
+  
+    <a class="method" href="method.Camera.gv_set_packet_size.html">gv_set_packet_size</a>
+  
+    <a class="method" href="method.Camera.gv_set_packet_size_adjustment.html">gv_set_packet_size_adjustment</a>
+  
+    <a class="method" href="method.Camera.gv_set_persistent_ip.html">gv_set_persistent_ip</a>
+  
+    <a class="method" href="method.Camera.gv_set_persistent_ip_from_string.html">gv_set_persistent_ip_from_string</a>
+  
+    <a class="method" href="method.Camera.gv_set_stream_options.html">gv_set_stream_options</a>
+  
+    <a class="method" href="method.Camera.is_binning_available.html">is_binning_available</a>
+  
+    <a class="method" href="method.Camera.is_black_level_auto_available.html">is_black_level_auto_available</a>
+  
+    <a class="method" href="method.Camera.is_black_level_available.html">is_black_level_available</a>
+  
+    <a class="method" href="method.Camera.is_component_available.html">is_component_available</a>
+  
+    <a class="method" href="method.Camera.is_enumeration_entry_available.html">is_enumeration_entry_available</a>
+  
+    <a class="method" href="method.Camera.is_exposure_auto_available.html">is_exposure_auto_available</a>
+  
+    <a class="method" href="method.Camera.is_exposure_time_available.html">is_exposure_time_available</a>
+  
+    <a class="method" href="method.Camera.is_feature_available.html">is_feature_available</a>
+  
+    <a class="method" href="method.Camera.is_feature_implemented.html">is_feature_implemented</a>
+  
+    <a class="method" href="method.Camera.is_frame_rate_available.html">is_frame_rate_available</a>
+  
+    <a class="method" href="method.Camera.is_gain_auto_available.html">is_gain_auto_available</a>
+  
+    <a class="method" href="method.Camera.is_gain_available.html">is_gain_available</a>
+  
+    <a class="method" href="method.Camera.is_gentl_device.html">is_gentl_device</a>
+  
+    <a class="method" href="method.Camera.is_gv_device.html">is_gv_device</a>
+  
+    <a class="method" href="method.Camera.is_region_offset_available.html">is_region_offset_available</a>
+  
+    <a class="method" href="method.Camera.is_software_trigger_supported.html">is_software_trigger_supported</a>
+  
+    <a class="method" href="method.Camera.is_uv_device.html">is_uv_device</a>
+  
+    <a class="method" href="method.Camera.select_and_enable_component.html">select_and_enable_component</a>
+  
+    <a class="method" href="method.Camera.select_black_level.html">select_black_level</a>
+  
+    <a class="method" href="method.Camera.select_component.html">select_component</a>
+  
+    <a class="method" href="method.Camera.select_gain.html">select_gain</a>
+  
+    <a class="method" href="method.Camera.set_access_check_policy.html">set_access_check_policy</a>
+  
+    <a class="method" href="method.Camera.set_acquisition_mode.html">set_acquisition_mode</a>
+  
+    <a class="method" href="method.Camera.set_binning.html">set_binning</a>
+  
+    <a class="method" href="method.Camera.set_black_level.html">set_black_level</a>
+  
+    <a class="method" href="method.Camera.set_black_level_auto.html">set_black_level_auto</a>
+  
+    <a class="method" href="method.Camera.set_boolean.html">set_boolean</a>
+  
+    <a class="method" href="method.Camera.set_chunk_mode.html">set_chunk_mode</a>
+  
+    <a class="method" href="method.Camera.set_chunk_state.html">set_chunk_state</a>
+  
+    <a class="method" href="method.Camera.set_chunks.html">set_chunks</a>
+  
+    <a class="method" href="method.Camera.set_exposure_mode.html">set_exposure_mode</a>
+  
+    <a class="method" href="method.Camera.set_exposure_time.html">set_exposure_time</a>
+  
+    <a class="method" href="method.Camera.set_exposure_time_auto.html">set_exposure_time_auto</a>
+  
+    <a class="method" href="method.Camera.set_float.html">set_float</a>
+  
+    <a class="method" href="method.Camera.set_frame_count.html">set_frame_count</a>
+  
+    <a class="method" href="method.Camera.set_frame_rate.html">set_frame_rate</a>
+  
+    <a class="method" href="method.Camera.set_frame_rate_enable.html">set_frame_rate_enable</a>
+  
+    <a class="method" href="method.Camera.set_gain.html">set_gain</a>
+  
+    <a class="method" href="method.Camera.set_gain_auto.html">set_gain_auto</a>
+  
+    <a class="method" href="method.Camera.set_integer.html">set_integer</a>
+  
+    <a class="method" href="method.Camera.set_pixel_format.html">set_pixel_format</a>
+  
+    <a class="method" href="method.Camera.set_pixel_format_from_string.html">set_pixel_format_from_string</a>
+  
+    <a class="method" href="method.Camera.set_range_check_policy.html">set_range_check_policy</a>
+  
+    <a class="method" href="method.Camera.set_region.html">set_region</a>
+  
+    <a class="method" href="method.Camera.set_register.html">set_register</a>
+  
+    <a class="method" href="method.Camera.set_register_cache_policy.html">set_register_cache_policy</a>
+  
+    <a class="method" href="method.Camera.set_string.html">set_string</a>
+  
+    <a class="method" href="method.Camera.set_trigger.html">set_trigger</a>
+  
+    <a class="method" href="method.Camera.set_trigger_source.html">set_trigger_source</a>
+  
+    <a class="method" href="method.Camera.software_trigger.html">software_trigger</a>
+  
+    <a class="method" href="method.Camera.start_acquisition.html">start_acquisition</a>
+  
+    <a class="method" href="method.Camera.stop_acquisition.html">stop_acquisition</a>
+  
+    <a class="method" href="method.Camera.uv_get_bandwidth.html">uv_get_bandwidth</a>
+  
+    <a class="method" href="method.Camera.uv_get_bandwidth_bounds.html">uv_get_bandwidth_bounds</a>
+  
+    <a class="method" href="method.Camera.uv_is_bandwidth_control_available.html">uv_is_bandwidth_control_available</a>
+  
+    <a class="method" href="method.Camera.uv_set_bandwidth.html">uv_set_bandwidth</a>
+  
+    <a class="method" href="method.Camera.uv_set_usb_mode.html">uv_set_usb_mode</a>
+  
+  </div>
+</div>
+
+      <div class="section generator">
+        <p>Generated by <a href="https://gitlab.gnome.org/GNOME/gi-docgen">gi-docgen</a> 2023.4</p>
+      </div>
+    </nav>
+
+    <button id="btn-to-top" class="hidden"><span class="up-arrow"></span></button>
+
+    
+<section id="main" class="content">
+  <header>
+    <h3>Method</h3>
+    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.Camera.html">Camera</a><span class="sep"></span>get_exposure_time_auto</h1>
+  </header>
+
+  <section>
+    <div class="docblock">
+      <p><span class="emblem available">since: 0.8.0</span></p>
+    </div>
+
+    <div class="declaration toggle-wrapper">
+      <h4 style="display:flex;" id="declaration">
+        Declaration
+        <a class="anchor" href="#declaration"></a>
+        
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvcamera.h#L140">[src]</a>
+        
+      </h4>
+
+      <div class="docblock c-decl">
+        <pre><code><div class="highlight"><pre><span></span><span class="n">ArvAuto</span><span class="w"></span>
+<span class="n">arv_camera_get_exposure_time_auto</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
+<span class="w">  </span><span class="n">ArvCamera</span><span class="o">*</span><span class="w"> </span><span class="n">camera</span><span class="w"></span>
+<span class="w">  </span><span class="n">GError</span><span class="o">**</span><span class="w"> </span><span class="n">error</span><span class="w"></span>
+<span class="p">)</span><span class="w"></span>
+</pre></div>
+</code></pre>
+      </div>
+    </div>
+
+    <div class="description toggle-wrapper">
+      <h4 style="display:flex;" id="description">
+        Description
+        <a class="anchor" href="#description"></a>
+        
+      </h4>
+
+      <div class="docblock">
+        <p>No description available.</p>
+      </div>
+
+      <div class="docblock">
+        
+        <p>Available since: 0.8.0</p>
+        
+        
+        
+        
+      </div>
+
+      
+    </div>
+
+    
+
+    
+    <div class="return-value toggle-wrapper">
+      <h4 id="return-value">
+        Return value
+        <a href="#return-value" class="anchor"></a>
+      </h4>
+
+      <div class="docblock">
+        <div class="returns">
+          <div class="arg-description">
+            <p><em>Type:</em>&nbsp;<a href="enum.Auto.html"><code>ArvAuto</code></a></p>
+            <p>Auto exposure mode&nbsp;selection.</p>
+          </div>
+          <div>
+            <table>
+            
+            
+            
+            
+            
+            
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+
+  </section>
+</section>
+
+
+    
+
+    <section id="search" class="content hidden"></section>
+
+    <footer>
+    
+    </footer>
+  </div>
+</body>
+</html>
