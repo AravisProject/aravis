@@ -27,6 +27,16 @@ as root in order to update ld cache.
 sudo ldconfig
 ```
 
+## Release versions
+
+Please use the released versions of Aravis and not a git checkout, unless you
+want to work on Aravis itself or test a commit.
+
+The current version naming follows a major.minor.micro scheme. Odd minor values
+indicates development releases, and even minor values stable releases. Prior to
+1.0.0, stable releases with different minor are not compatible, and are parallel
+installable, with executables suffixed with `-major.minor`.
+
 ## Install dependencies on Ubuntu 20.04
 
 Prior to running `meson` and `ninja`, dependencies can be installed using the
