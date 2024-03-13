@@ -2,7 +2,7 @@ name: Aravis-Linux
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, aravis-0-8 ]
   pull_request:
     branches: [ main ]
   release:
