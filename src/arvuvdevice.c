@@ -667,8 +667,8 @@ _bootstrap (ArvUvDevice *uv_device)
 								    priv->genicam_xml,
 								    priv->genicam_xml_size);
 
-                                        genicam_url = g_strdup_printf("local:///DeviceU3V.zip;%" G_GINT64_MODIFIER
-                                                                      "x;%" G_GINT64_MODIFIER "x",
+                                        genicam_url = g_strdup_printf("local:///DeviceU3V.zip;%"
+                                                                      G_GINT64_MODIFIER "x;%" G_GINT64_MODIFIER "x",
                                                                       entry.address, entry.size);
                                         arv_dom_document_set_url(ARV_DOM_DOCUMENT(priv->genicam), genicam_url);
                                         g_free (genicam_url);
@@ -685,9 +685,10 @@ _bootstrap (ArvUvDevice *uv_device)
 				priv->genicam = arv_gc_new (ARV_DEVICE (uv_device),
 							    priv->genicam_xml,
 							    priv->genicam_xml_size);
-                                genicam_url = g_strdup_printf("local:///DeviceU3V.xml;%" G_GINT64_MODIFIER "x;%"
-                                                              G_GINT64_MODIFIER "x",
-                                                              entry.address, entry.size);
+                                genicam_url =
+                                        g_strdup_printf("local:///DeviceU3V.xml;%" G_GINT64_MODIFIER "x;%"
+                                                        G_GINT64_MODIFIER "x",
+                                                        entry.address, entry.size);
                                 arv_dom_document_set_url(ARV_DOM_DOCUMENT(priv->genicam), genicam_url);
                                 g_free (genicam_url);
                         }
