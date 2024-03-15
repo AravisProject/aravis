@@ -647,6 +647,7 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
 	ArvDevice *device = ARV_DEVICE (gv_device);
         ArvGcNode *node;
+	gboolean has_test_packet = 0;
 	GSocket *socket;
 	GInetAddress *interface_address;
 	GSocketAddress *interface_socket_address;
@@ -664,9 +665,12 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 
 	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), 1500);
 
-        node = arv_device_get_feature (device, "GevSCPSFireTestPacket");
-	if (!ARV_IS_GC_COMMAND (node) && !ARV_IS_GC_BOOLEAN (node)) {
-		arv_info_device ("[GvDevice::auto_packet_size] No GevSCPSFireTestPacket feature found");
+	node = arv_device_get_feature (device, "GevSCPSFireTestPacket");
+	has_test_packet |= ARV_IS_GC_COMMAND (node) | ARV_IS_GC_BOOLEAN (node);
+	node = arv_device_get_feature (device, "ArvGevSCPSFireTestPacket");
+	has_test_packet |= ARV_IS_GC_COMMAND (node) | ARV_IS_GC_BOOLEAN (node);
+	if (!has_test_packet) {
+		arv_info_device ("[GvDevice::auto_packet_size] No GevSCPSFireTestPacket or ArvGevSCPSFireTestPacket feature found");
 		return arv_device_get_integer_feature_value (device, "ArvGevSCPSPacketSize", error);
 	}
 
