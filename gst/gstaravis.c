@@ -550,15 +550,48 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 	gst_aravis = GST_ARAVIS (push_src);
 	base_src_does_timestamp = gst_base_src_get_do_timestamp(GST_BASE_SRC(push_src));
 
+	// get trigger mode
+	GError *error = NULL;
+
+	gboolean triggerModeEnabled = FALSE;
+	gboolean triggerModeAvail = arv_device_is_feature_available (arv_camera_get_device (gst_aravis->camera), "TriggerMode", &error);
+
+	if (error != NULL) {
+		GST_ERROR_OBJECT (gst_aravis, "Check TriggerMode avail failed: %d %s", error->code, error->message);
+		return GST_FLOW_ERROR;
+	}
+
+	if (triggerModeAvail) {
+
+		ArvGcNode *feature = arv_device_get_feature (arv_camera_get_device (gst_aravis->camera), "TriggerMode");
+		const char *value = arv_gc_string_get_value (ARV_GC_STRING (feature), &error);
+
+		if (error != NULL) {
+			GST_ERROR_OBJECT (gst_aravis, "Read TriggerMode failed: %d %s", error->code, error->message);
+			return GST_FLOW_ERROR;
+		}
+
+		triggerModeEnabled = strcmp(value, "On") == 0;
+	}
+
 	GST_OBJECT_LOCK (gst_aravis);
 
 	do {
 		if (arv_buffer) arv_stream_push_buffer (gst_aravis->stream, arv_buffer);
 		arv_buffer = arv_stream_timeout_pop_buffer (gst_aravis->stream, gst_aravis->buffer_timeout_us);
-	} while (arv_buffer != NULL && arv_buffer_get_status (arv_buffer) != ARV_BUFFER_STATUS_SUCCESS);
 
-	if (arv_buffer == NULL)
+		if (arv_buffer == NULL && triggerModeEnabled) {
+			GST_DEBUG_OBJECT (gst_aravis, "Waiting for buffer");
+		}
+
+	} while (
+		(arv_buffer == NULL && triggerModeEnabled) ||
+			(arv_buffer != NULL && arv_buffer_get_status (arv_buffer) != ARV_BUFFER_STATUS_SUCCESS)
+	);
+
+	if (arv_buffer == NULL) {
 		goto error;
+	}
 
 	buffer_data = (char *) arv_buffer_get_data (arv_buffer, &buffer_size);
 	arv_buffer_get_image_region (arv_buffer, NULL, NULL, &width, &height);
