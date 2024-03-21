@@ -61,6 +61,7 @@ gobject_dep = dependency ('gobject-2.0', required: true)
 gio_dep = dependency ('gio-2.0', required: true)
 xml2_dep = dependency ('libxml-2.0', required: true)
 libz_dep = dependency ('zlib', required: true)
+tiff_dep = dependency ('libtiff-4', required: get_option ('tiff'))
 usb_dep = dependency ('libusb-1.0', required: get_option ('usb'))
 gmodule_dep = dependency ('gmodule-2.0', required: true)
 v4l2_dep = dependency('libv4l2', required: get_option('v4l2'))
@@ -115,8 +116,13 @@ viewer_deps = aravis_dependencies + [dependency ('gtk+-3.0', version: '>=3.12', 
 				     dependency ('gstreamer-base-1.0', required: viewer_option),
 				     dependency ('gstreamer-app-1.0', required: viewer_option),
 				     dependency ('gstreamer-video-1.0', required: viewer_option)]
+if tiff_dep.found()
+  viewer_deps += tiff_dep
+endif
 subdir ('po', if_found: viewer_deps)
 subdir ('viewer', if_found: viewer_deps)
+
+
 
 gst_enabled = false
 gst_option = get_option ('gst-plugin')
@@ -144,6 +150,7 @@ summary (
   'Viewer': viewer_enabled,
   'GStreamer plugin': gst_enabled,
   'USB support': usb_dep.found(),
+  'TIFF viewer support': tiff_dep.found(),
   },
   section: 'Options'
 )

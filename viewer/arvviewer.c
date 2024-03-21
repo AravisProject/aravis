@@ -29,8 +29,12 @@
 #include <arv.h>
 #include <arvdebugprivate.h>
 #include <arvviewer.h>
+#include <arvviewerfeatures.h>
 #include <math.h>
 #include <memory.h>
+#ifdef ARAVIS_HAS_TIFF
+#include <tiffio.h>
+#endif
 #ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>  // for GDK_WINDOW_XID
 #endif
@@ -908,6 +912,183 @@ _save_gst_sample_to_file (GstSample *sample, const char *path, const char *mime_
         return success;
 }
 
+#ifdef ARAVIS_HAS_TIFF
+static gboolean
+_save_arv_buffer_to_dng_file (ArvBuffer *buffer, GstSample *sample, const char *path, GError **error)
+{
+
+	TIFF *tif;
+	GstSample *converted = NULL;
+	GstSample *scaled = NULL;
+	GstCaps *caps = NULL;
+	GstBuffer *scaled_buffer;
+	size_t size;
+	int width, height, bpp;
+	char *vendor, *model;
+	const char *data;
+	const char *caps_string;
+	static int white_level;
+	const static int black_level = 0;
+	guint32 pixel_format;
+	GstVideoScaler *h_scale = NULL;
+	GstVideoScaler *v_scale = NULL;
+	// TODO: implement camera/sensor specific color conversion matrix
+        const float cc_matrix[] = { 1.0, 0.0, 0.0, 
+                                        0.0, 1.0, 0.0, 
+                                        0.0, 0.0, 1.0 };
+        // TODO: implement white balance
+	const float neutral[] = { 1.0, 1.0, 1.0 };
+	const unsigned short cfa_dimensions[] = { 2, 2 };
+	const char dng_version[] = { 1, 1, 0, 0 };
+	const char dng_compatversion[] = { 1, 0, 0, 0 };
+	char cfa_pattern[4];
+	static const long sub_offset = 0;
+	gboolean success = FALSE;
+	
+	tif = TIFFOpen (path, "w");
+	if (!tif) return FALSE;
+	
+	arv_buffer_get_image_region (buffer, NULL, NULL, &width, &height);
+	data = arv_buffer_get_image_data (buffer, &size);
+	pixel_format = arv_buffer_get_image_pixel_format (buffer);
+	
+	switch (pixel_format) {
+	        case ARV_PIXEL_FORMAT_BAYER_GR_8:
+	                bpp = 8;
+	                cfa_pattern[0] = 1;
+	                cfa_pattern[1] = 0;
+	                cfa_pattern[2] = 2;
+	                cfa_pattern[3] = 1;
+	                break;
+                case ARV_PIXEL_FORMAT_BAYER_RG_8:
+	                bpp = 8;
+	                cfa_pattern[0] = 0;
+	                cfa_pattern[1] = 1;
+	                cfa_pattern[2] = 1;
+	                cfa_pattern[3] = 2;
+	                break;
+                case ARV_PIXEL_FORMAT_BAYER_GB_8:
+	                bpp = 8;
+	                cfa_pattern[0] = 1;
+	                cfa_pattern[1] = 2;
+	                cfa_pattern[2] = 0;
+	                cfa_pattern[3] = 1;
+	                break;
+                case ARV_PIXEL_FORMAT_BAYER_BG_8:
+	                bpp = 8;
+	                cfa_pattern[0] = 2;
+	                cfa_pattern[1] = 1;
+	                cfa_pattern[2] = 1;
+	                cfa_pattern[3] = 0;
+	                break;
+                case ARV_PIXEL_FORMAT_BAYER_GR_16:
+	                bpp = 16;
+	                cfa_pattern[0] = 1;
+	                cfa_pattern[1] = 0;
+	                cfa_pattern[2] = 2;
+	                cfa_pattern[3] = 1;
+	                break;
+                case ARV_PIXEL_FORMAT_BAYER_RG_16:
+	                bpp = 16;
+	                cfa_pattern[0] = 0;
+	                cfa_pattern[1] = 1;
+	                cfa_pattern[2] = 1;
+	                cfa_pattern[3] = 2;
+	                break;
+                case ARV_PIXEL_FORMAT_BAYER_GB_16:
+	                bpp = 16;
+	                cfa_pattern[0] = 1;
+	                cfa_pattern[1] = 2;
+	                cfa_pattern[2] = 0;
+	                cfa_pattern[3] = 1;
+	                break;
+                case ARV_PIXEL_FORMAT_BAYER_BG_16:
+	                bpp = 16;
+	                cfa_pattern[0] = 2;
+	                cfa_pattern[1] = 1;
+	                cfa_pattern[2] = 1;
+	                cfa_pattern[3] = 0;
+	                break;
+                default:
+                        bpp = 8;
+	                cfa_pattern[0] = 1;
+	                cfa_pattern[1] = 0;
+	                cfa_pattern[2] = 2;
+	                cfa_pattern[3] = 1;
+	}
+	
+	white_level = pow(2, bpp) - 1;
+	
+	caps = gst_caps_from_string ("video/x-raw-gray, bpp=(int)8, depth=(int)8");
+	converted = gst_video_convert_sample (sample, caps, GST_CLOCK_TIME_NONE, NULL);
+	
+	h_scale = gst_video_scaler_new (GST_VIDEO_RESAMPLER_METHOD_NEAREST, GST_VIDEO_SCALER_FLAG_NONE, 1, 1, 1, NULL);
+	v_scale = gst_video_scaler_new (GST_VIDEO_RESAMPLER_METHOD_NEAREST, GST_VIDEO_SCALER_FLAG_NONE, 1, 1, 1, NULL);
+	
+	gst_video_scaler_2d (h_scale, v_scale, GST_VIDEO_FORMAT_GRAY8, converted, 1, scaled, 1, 0, 0, (width >> 2), (height >> 2));
+	
+	TIFFSetField (tif, TIFFTAG_SUBFILETYPE, 1); // Reduced resolution preview image
+	TIFFSetField (tif, TIFFTAG_IMAGEWIDTH, (width >> 2)); 
+	TIFFSetField (tif, TIFFTAG_IMAGELENGTH, (height >> 2));
+	TIFFSetField (tif, TIFFTAG_BITSPERSAMPLE, 8);
+	TIFFSetField (tif, TIFFTAG_COMPRESSION, COMPRESSION_NONE);
+	TIFFSetField (tif, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK);
+	//TIFFSetField (tif, TIFFTAG_MAKE, vendor);
+	//TIFFSetField (tif, TIFFTAG_MODEL, model);
+	TIFFSetField (tif, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT);
+	TIFFSetField (tif, TIFFTAG_SAMPLESPERPIXEL, 1);
+	TIFFSetField (tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
+	TIFFSetField (tif, TIFFTAG_SOFTWARE, "arv-viewer-0.8");
+	//TIFFSetField (tif, TIFFTAG_DATETIME, datetime);
+	TIFFSetField (tif, TIFFTAG_SUBIFD, 1, &sub_offset);
+	TIFFSetField (tif, TIFFTAG_DNGVERSION, dng_version);
+	TIFFSetField (tif, TIFFTAG_DNGBACKWARDVERSION, dng_compatversion);
+	//TIFFSetField (tif, TIFFTAG_UNIQUECAMERAMODEL, model);
+	TIFFSetField (tif, TIFFTAG_COLORMATRIX1, 9, cc_matrix);
+	TIFFSetField (tif, TIFFTAG_ASSHOTNEUTRAL, 3, neutral);
+	//TIFFSetField (tif, TIFFTAG_CAMERASERIALNUMBER, serial);
+	TIFFSetField (tif, TIFFTAG_CALIBRATIONILLUMINANT1, 21);
+	
+	scaled_buffer = gst_sample_get_buffer (scaled);
+	if (scaled_buffer) {
+                GstMapInfo map;
+
+                gst_buffer_map (scaled_buffer, &map, GST_MAP_READ);
+                for (int row = 0; row < (height >> 2); row ++)
+	                TIFFWriteScanline (tif, map.data[row * (width >> 2)], row, 0);
+                gst_buffer_unmap (scaled_buffer, &map);
+        } else {
+                gst_sample_unref (converted);
+                gst_sample_unref (scaled);
+                gst_caps_unref (caps);
+                gst_video_scaler_free (h_scale);
+                gst_video_scaler_free (v_scale);
+        }
+        
+        TIFFWriteDirectory (tif);
+        
+        TIFFSetField (tif, TIFFTAG_SUBFILETYPE, 0); // Full size image
+        TIFFSetField (tif, TIFFTAG_IMAGEWIDTH, width);
+        TIFFSetField (tif, TIFFTAG_IMAGELENGTH, height);
+        TIFFSetField (tif, TIFFTAG_BITSPERSAMPLE, bpp);
+        TIFFSetField (tif, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_CFA);
+        TIFFSetField (tif, TIFFTAG_SAMPLESPERPIXEL, 1);
+        TIFFSetField (tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
+        TIFFSetField (tif, TIFFTAG_CFAREPEATPATTERNDIM, cfa_dimensions);
+        TIFFSetField (tif, TIFFTAG_CFAPATTERN, 4, cfa_pattern); 
+        TIFFSetField (tif, TIFFTAG_WHITELEVEL, 1, &white_level);
+        TIFFSetField (tif, TIFFTAG_WHITELEVEL, 1, &black_level);
+        
+	for (int row = 0; row < height; row ++)
+                TIFFWriteScanline (tif, &data[row * width * (bpp >> 3)], row, 0);
+	
+	TIFFClose (tif);
+	success = TRUE;
+	
+        return success;
+}
+#endif
+
 static void
 snapshot_cb (GtkButton *button, ArvViewer *viewer)
 {
@@ -990,6 +1171,14 @@ snapshot_cb (GtkButton *button, ArvViewer *viewer)
                 gtk_file_filter_add_pattern (filter_all, "*.raw");
                 gtk_file_filter_set_name (filter, "Raw images (*.raw)");
                 gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (dialog), filter);
+                
+                #ifdef ARAVIS_HAS_TIFF
+                filter = gtk_file_filter_new ();
+                gtk_file_filter_add_mime_type (filter, "image/x-adobe-dng");
+                gtk_file_filter_add_mime_type (filter_all, "image/x-adobe-dng");
+                gtk_file_filter_set_name (filter, "DNG raw image (*.dng)");
+                gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (dialog), filter);
+                #endif
         }
 
         gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (dialog), filter_all);
@@ -1012,7 +1201,15 @@ snapshot_cb (GtkButton *button, ArvViewer *viewer)
                         success = _save_gst_sample_to_file (sample, filename, "image/png", NULL);
                 } else if (GST_IS_SAMPLE (sample) && g_content_type_is_mime_type (content_type, "image/jpeg")) {
                         success = _save_gst_sample_to_file (sample, filename, "image/jpeg", NULL);
-                } else if (ARV_IS_BUFFER (buffer)) {
+                } 
+                #ifdef ARAVIS_HAS_TIFF 
+                else if (ARV_IS_BUFFER (buffer) && g_content_type_is_mime_type (content_type, "image/x-adobe-dng")) {
+                	success = _save_arv_buffer_to_dng_file (buffer, sample, filename, &error); 
+                	g_free (filename);
+                } 
+                #endif
+                else if (ARV_IS_BUFFER (buffer) && g_content_type_is_mime_type (content_type, "image/x-panasonic-rw")) {
+                	// GIO guesses that MIME type for ".raw" files, so this is what we look for when writing unformatted raw files
                         success = g_file_set_contents (filename, data, size, &error);
                         g_free (filename);
                 }
