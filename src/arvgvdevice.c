@@ -646,7 +646,6 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 {
 	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
 	ArvDevice *device = ARV_DEVICE (gv_device);
-        ArvGcNode *node;
 	GSocket *socket;
 	GInetAddress *interface_address;
 	GSocketAddress *interface_socket_address;
@@ -661,14 +660,9 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 	char *buffer;
 	guint last_size = 0;
 	gboolean success;
+	GTimer* timer;
 
 	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), 1500);
-
-        node = arv_device_get_feature (device, "GevSCPSFireTestPacket");
-	if (!ARV_IS_GC_COMMAND (node) && !ARV_IS_GC_BOOLEAN (node)) {
-		arv_info_device ("[GvDevice::auto_packet_size] No GevSCPSFireTestPacket feature found");
-		return arv_device_get_integer_feature_value (device, "ArvGevSCPSPacketSize", error);
-	}
 
 	packet_size = arv_device_get_integer_feature_value (device, "ArvGevSCPSPacketSize", NULL);
 
@@ -713,6 +707,9 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 
 	buffer = g_malloc (max_size);
 
+	timer = g_timer_new ();
+	g_timer_start (timer);
+
 	success = test_packet_check (device, &poll_fd, socket, buffer, max_size, packet_size);
 
 	/* When exit_early is set, the function only checks the current packet size is working.
@@ -726,6 +723,11 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 		guint current_size = packet_size;
 
 		do {
+			if (g_timer_elapsed (timer, NULL) > 1.0) {
+				g_set_error (&local_error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_TIMEOUT, "Could not finish sending test packets within 1s.");
+				break;
+			}
+
 			if (current_size == last_size ||
                             min_size + inc > max_size)
 				break;
@@ -766,6 +768,8 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
                 }
         }
 
+	g_timer_destroy (timer);
+
 	g_clear_pointer (&buffer, g_free);
 	g_clear_object (&socket);
 
@@ -781,10 +785,10 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
  * @gv_device: a #ArvGvDevice
  * @error: a #GError placeholder, %NULL to ignore
  *
- * Automatically determine the biggest packet size that can be used data streaming, and set ArvGevSCPSPacketSize value
- * accordingly. This function relies on the GevSCPSFireTestPacket feature.
+ * Automatically determine the biggest packet size that can be used for data streaming, and set ArvGevSCPSPacketSize value
+ * accordingly. This function times out after 1 second.
  *
- * Returns: The automatic packet size, in bytes, or the current one if GevSCPSFireTestPacket is not supported.
+ * Returns: The automatic packet size, in bytes, which could be determined within 1 second.
  *
  * Since: 0.6.0
  */
