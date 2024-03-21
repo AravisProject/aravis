@@ -724,7 +724,8 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 
 		do {
 			if (g_timer_elapsed (timer, NULL) > 1.0) {
-				g_set_error (&local_error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_TIMEOUT, "Could not finish sending test packets within 1s.");
+				arv_info_device ("[GvDevice::auto_packet_size] Could not finish sending test packets within 1s");
+				packet_size = arv_device_get_integer_feature_value (device, "ArvGevSCPSPacketSize", &local_error);
 				break;
 			}
 
@@ -788,7 +789,7 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
  * Automatically determine the biggest packet size that can be used for data streaming, and set ArvGevSCPSPacketSize value
  * accordingly. This function times out after 1 second.
  *
- * Returns: The automatic packet size, in bytes, which could be determined within 1 second.
+ * Returns: The automatic packet size, in bytes, or the current one if it could not be determined within 1 second.
  *
  * Since: 0.6.0
  */
