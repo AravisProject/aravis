@@ -444,7 +444,7 @@ arv_uv_device_read_memory (ArvDevice *device, guint64 address, guint32 size, voi
 }
 
 static gboolean
-arv_uv_device_write_memory (ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error)
+arv_uv_device_write_memory (ArvDevice *device, guint64 address, guint32 size, const void *buffer, GError **error)
 {
 	ArvUvDevice *uv_device = ARV_UV_DEVICE (device);
 	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (uv_device);

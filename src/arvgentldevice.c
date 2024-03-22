@@ -267,7 +267,7 @@ arv_gentl_device_read_memory (ArvDevice *device, guint64 address, guint32 size, 
 }
 
 static gboolean
-arv_gentl_device_write_memory (ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error)
+arv_gentl_device_write_memory (ArvDevice *device, guint64 address, guint32 size, const void *buffer, GError **error)
 {
 	ArvGenTLDevicePrivate *priv = arv_gentl_device_get_instance_private (ARV_GENTL_DEVICE (device));
 	ArvGenTLModule *gentl = arv_gentl_system_get_gentl(priv->gentl_system);

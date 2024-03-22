@@ -128,7 +128,7 @@ arv_v4l2_device_read_memory (ArvDevice *device, guint64 address, guint32 size, v
 }
 
 static gboolean
-arv_v4l2_device_write_memory (ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error)
+arv_v4l2_device_write_memory (ArvDevice *device, guint64 address, guint32 size, const void *buffer, GError **error)
 {
 	/* TODO set error */
 	return FALSE;
