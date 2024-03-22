@@ -89,7 +89,7 @@ struct _ArvDeviceClass {
 	ArvGc *		(*get_genicam)		(ArvDevice *device);
 
 	gboolean	(*read_memory)		(ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error);
-	gboolean	(*write_memory)		(ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error);
+	gboolean	(*write_memory)		(ArvDevice *device, guint64 address, guint32 size, const void *buffer, GError **error);
 	gboolean	(*read_register)	(ArvDevice *device, guint64 address, guint32 *value, GError **error);
 	gboolean	(*write_register)	(ArvDevice *device, guint64 address, guint32 value, GError **error);
 
@@ -101,7 +101,7 @@ ARV_API ArvStream *	arv_device_create_stream		(ArvDevice *device, ArvStreamCallb
 ARV_API ArvStream *	arv_device_create_stream_full		(ArvDevice *device, ArvStreamCallback callback, void *user_data, GDestroyNotify destroy, GError **error);
 
 ARV_API gboolean	arv_device_read_memory			(ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error);
-ARV_API gboolean	arv_device_write_memory			(ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error);
+ARV_API gboolean	arv_device_write_memory			(ArvDevice *device, guint64 address, guint32 size, const void *buffer, GError **error);
 ARV_API gboolean	arv_device_read_register		(ArvDevice *device, guint64 address, guint32 *value, GError **error);
 ARV_API gboolean	arv_device_write_register		(ArvDevice *device, guint64 address, guint32 value, GError **error);
 

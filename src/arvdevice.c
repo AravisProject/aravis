@@ -153,7 +153,7 @@ arv_device_read_memory (ArvDevice *device, guint64 address, guint32 size, void *
  **/
 
 gboolean
-arv_device_write_memory (ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error)
+arv_device_write_memory (ArvDevice *device, guint64 address, guint32 size, const void *buffer, GError **error)
 {
 	g_return_val_if_fail (ARV_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (buffer != NULL, FALSE);
