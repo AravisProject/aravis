@@ -746,6 +746,13 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 		"video/x-raw-rgb",	24,	24,	0
 	},
 	{
+		ARV_PIXEL_FORMAT_BGR_8_PACKED,
+		"video/x-raw, format=(string)BGR",
+		"video/x-raw",		"BGR",
+		"video/x-raw-rgb, format=(string)BGR, bpp=(int)24, depth=(int)8",
+		"video/x-raw-rgb",	24,	24,	0
+        },
+	{
 		ARV_PIXEL_FORMAT_RGBA_8_PACKED,
 		"video/x-raw, format=(string)RGBA",
 		"video/x-raw",		"RGBA",

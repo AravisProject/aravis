@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   sodipodi:docname="aravis-v4l2-symbolic.svg"
+   inkscape:export-filename="/home/sam/dev/RESOURCES/gnome-icon-theme-symbolic/src/gnome-stencils.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90"
+   height="16.000002"
+   id="svg7384"
+   version="1.1"
+   inkscape:version="1.3.2 (091e20ef0f, 2023-11-25)"
+   width="16"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <title
+     id="title2719">Aravis USB3 icon</title>
+  <metadata
+     id="metadata90">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title>Aravis USB3 icon</dc:title>
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>Emmanuel Pacaud</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <cc:license
+           rdf:resource="http://creativecommons.org/licenses/by-sa/4.0/" />
+      </cc:Work>
+      <cc:License
+         rdf:about="http://creativecommons.org/licenses/by-sa/4.0/">
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Reproduction" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Distribution" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Notice" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Attribution" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#DerivativeWorks" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#ShareAlike" />
+      </cc:License>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     inkscape:bbox-nodes="true"
+     inkscape:bbox-paths="true"
+     bordercolor="#666666"
+     borderopacity="1"
+     inkscape:current-layer="layer10"
+     inkscape:cx="11.291954"
+     inkscape:cy="3.4617472"
+     gridtolerance="10"
+     inkscape:guide-bbox="true"
+     guidetolerance="10"
+     id="namedview88"
+     inkscape:object-nodes="true"
+     inkscape:object-paths="false"
+     objecttolerance="10"
+     pagecolor="#3a3b39"
+     inkscape:pageopacity="1"
+     inkscape:pageshadow="2"
+     showborder="true"
+     showgrid="true"
+     showguides="true"
+     inkscape:snap-bbox="true"
+     inkscape:snap-bbox-midpoints="false"
+     inkscape:snap-global="true"
+     inkscape:snap-grids="true"
+     inkscape:snap-nodes="false"
+     inkscape:snap-others="false"
+     inkscape:snap-to-guides="true"
+     inkscape:window-height="1011"
+     inkscape:window-maximized="1"
+     inkscape:window-width="1920"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:zoom="184.7333"
+     inkscape:document-rotation="0"
+     inkscape:showpageshadow="2"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1">
+    <inkscape:grid
+       dotted="false"
+       empspacing="2"
+       enabled="true"
+       id="grid4866"
+       originx="180"
+       originy="350"
+       snapvisiblegridlinesonly="true"
+       spacingx="1"
+       spacingy="1"
+       type="xygrid"
+       visible="true"
+       units="px" />
+  </sodipodi:namedview>
+  <defs
+     id="defs7386">
+    <linearGradient
+       gradientTransform="matrix(-2.7365795,0.28202934,-0.18908311,-0.99988321,239.54008,-879.45557)"
+       id="linearGradient19282"
+       inkscape:swatch="solid">
+      <stop
+         id="stop19284"
+         offset="0"
+         style="stop-color:#666666;stop-opacity:1;" />
+    </linearGradient>
+  </defs>
+  <g
+     inkscape:groupmode="layer"
+     id="layer9"
+     inkscape:label="status"
+     style="display:inline"
+     transform="translate(-61.000198,-567)" />
+  <g
+     inkscape:groupmode="layer"
+     id="layer10"
+     inkscape:label="devices"
+     style="display:inline"
+     transform="translate(-61.000198,-567)">
+    <path
+       id="circle4330"
+       style="font-variation-settings:normal;opacity:1;vector-effect:none;fill:#bebebe;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;-inkscape-stroke:none;stop-color:#000000;stop-opacity:1"
+       d="m 68.192241,571.52093 c 2e-6,0.38707 -0.302647,0.70085 -0.675986,0.70085 -0.373343,1e-5 -0.675996,-0.31378 -0.675993,-0.70085 2e-6,-0.38706 0.302654,-0.70084 0.675993,-0.70084 0.373335,10e-6 0.675983,0.31378 0.675986,0.70084 z m 2.849885,-0.0346 c -10e-7,0.31404 -0.245548,0.56861 -0.548446,0.56861 -0.302898,0 -0.548445,-0.25457 -0.548446,-0.56861 10e-7,-0.31403 0.245548,-0.56861 0.548446,-0.56861 0.302898,0 0.548445,0.25458 0.548446,0.56861 z m -2.212292,-4.48188 c -2.265403,0 -3.997878,1.16303 -4.101855,4.25273 -0.02558,0.75922 -0.0109,1.42039 -0.02174,2.04271 -5.38e-4,0.0311 -0.0014,0.0617 -0.0021,0.0925 -0.0028,0.12148 -0.0063,0.24171 -0.01182,0.36074 -6.98e-4,0.0196 -0.0014,0.0394 -0.0021,0.0589 -0.0063,0.13111 -0.01615,0.26083 -0.02761,0.39023 -0.0028,0.0298 -0.0049,0.0596 -0.008,0.0892 -0.148329,1.50334 -0.691685,2.94785 -2.701833,5.24544 -0.354032,0.40466 -0.68719,0.82176 -0.949359,1.24131 l -0.0018,2.21639 16.008096,-3.2e-4 -0.0045,-2.50479 c -0.218739,-0.3178 -0.527871,-0.63917 -0.800636,-0.9526 -2.078343,-2.38814 -2.830262,-3.79719 -3.10634,-5.24703 -0.0074,-0.0391 -0.01552,-0.078 -0.0223,-0.11716 -0.02237,-0.12937 -0.04187,-0.25917 -0.0576,-0.39034 -0.0035,-0.0305 -0.0063,-0.0618 -0.0094,-0.0924 -0.01139,-0.1047 -0.02132,-0.21021 -0.02943,-0.31708 -0.0041,-0.0513 -0.0072,-0.1031 -0.01048,-0.15503 -0.03662,-0.59148 -0.03355,-1.22441 -0.03718,-1.96083 -0.01531,-3.09915 -1.836515,-4.25272 -4.101911,-4.25272 z m -1.296297,2.53766 c 0.720887,-2e-5 1.305287,0.80443 1.305286,1.79677 -4e-5,0.51043 -0.219033,0.99675 -0.495101,1.33752 -0.573225,0.0153 -1.073087,0.0504 -1.584702,0.10607 -0.333204,-0.33812 -0.530143,-0.87376 -0.530761,-1.44359 -10e-7,-0.99234 0.584394,-1.79678 1.305278,-1.79677 z m 2.807041,0.0783 c 0.707314,0 1.280706,0.76786 1.280709,1.71507 -0.0029,0.57175 -0.218287,1.10399 -0.574463,1.41928 -0.470961,-0.0435 -0.976614,-0.0713 -1.49624,-0.0816 -0.307244,-0.32244 -0.487908,-0.81491 -0.490708,-1.33764 3e-6,-0.9472 0.573391,-1.71506 1.280702,-1.71507 z m -1.303175,3.7041 c 1.656193,0 3.290003,0.22121 3.334446,0.66365 0.08888,0.8849 -2.775096,2.92634 -3.401585,2.95261 -0.626497,0.0262 -3.669472,-2.06771 -3.401586,-2.95261 0.133937,-0.44244 1.812533,-0.66365 3.468725,-0.66365 z m 2.402429,2.74737 c 2.123429,1.00203 3.551934,3.45327 3.572523,5.91815 l -12.019544,0.009 c -0.01091,-2.12842 1.363345,-4.86931 3.447594,-5.88489 1.026774,0.77623 2.138079,1.39057 2.532331,1.37404 0.396755,-0.0167 1.465994,-0.64071 2.467122,-1.41651 z"
+       sodipodi:nodetypes="ssssssscssccccccccscccccccccccccccccccccccccccscccsccccccc" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer11"
+     inkscape:label="apps"
+     transform="translate(-61.000198,-567)" />
+  <g
+     inkscape:groupmode="layer"
+     id="layer13"
+     inkscape:label="places"
+     style="display:inline"
+     transform="translate(-61.000198,-567)" />
+  <g
+     inkscape:groupmode="layer"
+     id="layer14"
+     inkscape:label="mimetypes"
+     transform="translate(-61.000198,-567)" />
+  <g
+     inkscape:groupmode="layer"
+     id="layer15"
+     inkscape:label="emblems"
+     style="display:inline"
+     transform="translate(-61.000198,-567)" />
+  <g
+     inkscape:groupmode="layer"
+     id="g71291"
+     inkscape:label="emotes"
+     style="display:inline"
+     transform="translate(-61.000198,-567)" />
+  <g
+     inkscape:groupmode="layer"
+     id="g4953"
+     inkscape:label="categories"
+     style="display:inline"
+     transform="translate(-61.000198,-567)" />
+  <g
+     inkscape:groupmode="layer"
+     id="layer12"
+     inkscape:label="actions"
+     style="display:inline"
+     transform="translate(-61.000198,-567)" />
+</svg>
