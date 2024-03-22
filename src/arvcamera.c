@@ -3555,9 +3555,9 @@ arv_camera_gv_get_packet_size (ArvCamera *camera, GError **error)
  * @camera: a #ArvCamera
  * @error: a #GError placeholder, %NULL to ignore
  *
- * Automatically determine the biggest packet size that can be used data
- * streaming, and set GevSCPSPacketSize value accordingly. This function relies
- * on the GevSCPSFireTestPacket feature. If this feature is not available, the
+ * Automatically determine the biggest packet size that can be used for data
+ * streaming, and set GevSCPSPacketSize value accordingly. This function times
+ * out after 1 second. If this feature is not available, the
  * packet size will be set to a default value (1500 bytes).
  *
  * Returns: The packet size, in bytes.
