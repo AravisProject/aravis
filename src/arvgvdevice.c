@@ -655,7 +655,7 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 	guint16 port;
 	gboolean do_not_fragment;
 	guint max_size, min_size;
-	gint64 minimum, maximum, packet_size;
+	gint64 minimum, maximum, packet_size, initial_size;
 	guint inc;
 	char *buffer;
 	guint last_size = 0;
@@ -665,6 +665,7 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), 1500);
 
 	packet_size = arv_device_get_integer_feature_value (device, "ArvGevSCPSPacketSize", NULL);
+	initial_size = packet_size;
 
         /* PacketSize boundaries registers are device specific. Use the standard feature name for finding boundaries. If
          * this feature is not present in the device Genicam data, it will fallback to the default definition inserted
@@ -725,7 +726,7 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 		do {
 			if (g_timer_elapsed (timer, NULL) > 1.0) {
 				arv_info_device ("[GvDevice::auto_packet_size] Could not finish sending test packets within 1s");
-				packet_size = arv_device_get_integer_feature_value (device, "ArvGevSCPSPacketSize", &local_error);
+				packet_size = initial_size;
 				break;
 			}
 
