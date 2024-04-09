@@ -377,7 +377,8 @@ arv_gvsp_leader_packet_get_buffer_payload_type (const ArvGvspPacket *packet, gbo
 
                 if (has_chunks != NULL)
                         *has_chunks = ((payload_type & 0x4000) != 0 ||
-                                       (payload_type == 0x0004));
+                                       (payload_type == ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA) ||
+                                       (payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA));
 
                 return (ArvBufferPayloadType) (payload_type & 0x3fff);
         }
