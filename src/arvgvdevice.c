@@ -2108,15 +2108,17 @@ arv_gv_device_finalize (GObject *object)
 		arv_gv_device_leave_control (gv_device, NULL);
 
 	io_data = priv->io_data;
-	g_clear_object (&io_data->device_address);
-	g_clear_object (&io_data->interface_address);
-	g_clear_object (&io_data->socket);
-	g_clear_pointer (&io_data->buffer, g_free);
-	g_mutex_clear (&io_data->mutex);
+	if (io_data != NULL) {
+		g_clear_object (&io_data->device_address);
+		g_clear_object (&io_data->interface_address);
+		g_clear_object (&io_data->socket);
+		g_clear_pointer (&io_data->buffer, g_free);
+		g_mutex_clear (&io_data->mutex);
 
-	arv_gpollfd_finish_all (&io_data->poll_in_event, 1);
+		arv_gpollfd_finish_all (&io_data->poll_in_event, 1);
 
-	g_clear_pointer (&priv->io_data, g_free);
+		g_clear_pointer (&io_data, g_free);
+	}
 
 	g_clear_object (&priv->genicam);
 	g_clear_pointer (&priv->genicam_xml, g_free);
