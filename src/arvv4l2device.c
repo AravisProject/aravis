@@ -366,10 +366,6 @@ arv_v4l2_device_write_memory (ArvDevice *device, guint64 address, guint32 size, 
                         default:
                                 found = FALSE;
                 }
-
-                if (found) {
-                        memcpy (buffer, &value, sizeof (value));
-                }
         }
 
         if (!found) {
