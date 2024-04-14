@@ -222,6 +222,52 @@ typedef enum {
 	ARV_DOM_DOCUMENT_ERROR_INVALID_XML
 } ArvDomDocumentError;
 
+#if LIBXML_VERSION >= 21100
+static ArvDomDocument *
+_parse_memory (ArvDomDocument *document, ArvDomNode *node,
+	       const void *buffer, int size, GError **error)
+{
+	static ArvDomSaxParserState state;
+        xmlParserCtxt *xml_parser_ctxt;
+
+	state.document = document;
+	if (node != NULL)
+		state.current_node = node;
+	else
+		state.current_node = ARV_DOM_NODE (document);
+
+	if (size < 0)
+		size = strlen (buffer);
+
+        xml_parser_ctxt = xmlNewSAXParserCtxt (&sax_handler, &state);
+        if (xml_parser_ctxt == NULL) {
+                g_set_error (error,
+                             ARV_DOM_DOCUMENT_ERROR,
+                             ARV_DOM_DOCUMENT_ERROR_INVALID_XML,
+                             "Failed to create parser context");
+                return NULL;
+        }
+
+        xmlCtxtReadMemory (xml_parser_ctxt, buffer, size, NULL, NULL, 0);
+
+        if (!xml_parser_ctxt->wellFormed) {
+                if (state.document !=  NULL)
+                        g_object_unref (state.document);
+                state.document = NULL;
+
+                arv_warning_dom ("[DomParser::parse] Invalid document");
+
+                g_set_error (error,
+                             ARV_DOM_DOCUMENT_ERROR,
+                             ARV_DOM_DOCUMENT_ERROR_INVALID_XML,
+                             "Invalid document");
+        }
+
+        xmlFreeParserCtxt(xml_parser_ctxt);
+
+	return state.document;
+}
+#else
 static ArvDomDocument *
 _parse_memory (ArvDomDocument *document, ArvDomNode *node,
 	       const void *buffer, int size, GError **error)
@@ -252,6 +298,7 @@ _parse_memory (ArvDomDocument *document, ArvDomNode *node,
 
 	return state.document;
 }
+#endif
 
 /**
  * arv_dom_document_append_from_memory:
