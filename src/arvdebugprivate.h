@@ -85,6 +85,7 @@ extern ArvDebugCategoryInfos arv_debug_category_infos[];
 #define arv_warning_stream_thread(...)	arv_warning (ARV_DEBUG_CATEGORY_STREAM_THREAD, __VA_ARGS__)
 #define arv_info_stream_thread(...) 	arv_info (ARV_DEBUG_CATEGORY_STREAM_THREAD, __VA_ARGS__)
 #define arv_debug_stream_thread(...)	arv_debug (ARV_DEBUG_CATEGORY_STREAM_THREAD, __VA_ARGS__)
+#define arv_trace_stream_thread(...)	arv_trace (ARV_DEBUG_CATEGORY_STREAM_THREAD, __VA_ARGS__)
 
 #define arv_warning_cp(...)		arv_warning (ARV_DEBUG_CATEGORY_CP, __VA_ARGS__)
 #define arv_info_cp(...) 		arv_info (ARV_DEBUG_CATEGORY_CP, __VA_ARGS__)

@@ -91,8 +91,14 @@ if get_option('tests')
 		['arv-roi-test',		'arvroitest.c'],
 		['time-test',			'timetest.c'],
 		['load-http-test',		'loadhttptest.c'],
-		['cpp-test',			'cpp.cc']
+		['cpp-test',			'cpp.cc'],
 	]
+
+        if v4l2_dep.found()
+          examples += [
+		['v4l2-test',			'v4l2test.c'],
+            ]
+        endif
 
 	if host_machine.system()=='linux'
 		examples+=[['realtime-test','realtimetest.c']] # uses Linux RT API unavailable on other platforms
