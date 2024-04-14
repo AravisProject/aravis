@@ -156,7 +156,6 @@ arv_dom_parser_characters (void *user_data, const xmlChar *ch, int len)
 	}
 }
 
-#if 1
 static void arv_dom_parser_warning (void *user_data, const char *msg, ...) G_GNUC_PRINTF(2,3);
 static void arv_dom_parser_error (void *user_data, const char *msg, ...) G_GNUC_PRINTF(2,3);
 static void arv_dom_parser_fatal_error (void *user_data, const char *msg, ...) G_GNUC_PRINTF(2,3);
@@ -165,9 +164,12 @@ static void
 arv_dom_parser_warning (void *user_data, const char *msg, ...)
 {
 	va_list args;
+        char *message;
 
 	va_start(args, msg);
-	g_logv("XML", G_LOG_LEVEL_WARNING, msg, args);
+        message = g_strdup_vprintf (msg, args);
+        arv_warning (ARV_DEBUG_CATEGORY_DOM, "[DomParser::parse] %s", message);
+        g_free (message);
 	va_end(args);
 }
 
@@ -175,9 +177,12 @@ static void
 arv_dom_parser_error (void *user_data, const char *msg, ...)
 {
 	va_list args;
+        char *message;
 
 	va_start(args, msg);
-	g_logv("XML", G_LOG_LEVEL_CRITICAL, msg, args);
+        message = g_strdup_vprintf (msg, args);
+        arv_warning (ARV_DEBUG_CATEGORY_DOM, "[DomParser::parse] %s", message);
+        g_free (message);
 	va_end(args);
 }
 
@@ -185,19 +190,19 @@ static void
 arv_dom_parser_fatal_error (void *user_data, const char *msg, ...)
 {
 	va_list args;
+        char *message;
 
 	va_start(args, msg);
-	g_logv("XML", G_LOG_LEVEL_ERROR, msg, args);
+        message = g_strdup_vprintf (msg, args);
+        arv_warning (ARV_DEBUG_CATEGORY_DOM, "[DomParser::parse] %s", message);
+        g_free (message);
 	va_end(args);
 }
-#endif
 
 static xmlSAXHandler sax_handler = {
-#if 1
 	.warning = arv_dom_parser_warning,
 	.error = arv_dom_parser_error,
 	.fatalError = arv_dom_parser_fatal_error,
-#endif
 	.startDocument = arv_dom_parser_start_document,
 	.endDocument = arv_dom_parser_end_document,
 	.startElement = arv_dom_parser_start_element,
