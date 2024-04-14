@@ -1838,6 +1838,13 @@ arv_gv_device_load_genicam (ArvGvDevice *gv_device, GError **error)
 	priv->genicam_xml = xml;
 	priv->genicam_xml_size = size;
         priv->genicam = arv_gc_new (ARV_DEVICE (gv_device), xml, size);
+        if (priv->genicam == NULL) {
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_GENICAM_NOT_FOUND,
+			     "Invalid Genicam data");
+                g_free (url);
+                return;
+        }
+
         arv_gc_set_default_gv_features(priv->genicam);
         arv_dom_document_set_url (ARV_DOM_DOCUMENT(priv->genicam), url);
 
