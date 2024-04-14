@@ -217,5 +217,7 @@ arv_xml_schema_class_init (ArvXmlSchemaClass *this_class)
 
 	gobject_class->finalize = _finalize;
 
+#if LIBXML_VERSION < 21200
 	xmlLineNumbersDefault (1);
+#endif
 }
