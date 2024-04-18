@@ -460,21 +460,52 @@ arv_network_interface_free(ArvNetworkInterface *a)
 gboolean
 arv_socket_set_recv_buffer_size (int socket_fd, gint buffer_size)
 {
-	int result;
-
 #ifndef G_OS_WIN32
 	#define T gint
 #else
 	#define T DWORD
 #endif
 
-	T _buffer_size=buffer_size;
+	int	  result;
+	T	  _buffer_size = buffer_size;
+
+	T	  buffer_size_reported;
+	socklen_t optlen = sizeof(buffer_size_reported);
+
+
+	arv_info_interface("setsockopt(..., SO_RCVBUF, %d)", _buffer_size);
 	result = setsockopt (socket_fd, SOL_SOCKET, SO_RCVBUF,
 			     (const char*) &_buffer_size, sizeof (_buffer_size));
+	if(result != 0) {
+	    arv_warning_interface("setsockopt(..., SO_RCVBUF, ...) failed: %s)",
+				  strerror(errno));
+	    return FALSE;
+	}
+
+	// setsockopt() succeeded. Sometimes I see it report success, but the
+	// requested size not actually be set. I ask to see the new setting to
+	// confirm
+	result = getsockopt (socket_fd, SOL_SOCKET, SO_RCVBUF, &buffer_size_reported, &optlen);
+	if(result != 0) {
+	    arv_warning_interface("getsockopt(..., SO_RCVBUF, ...) failed: %s)",
+				  strerror(errno));
+	    return FALSE;
+	}
+	if(optlen != sizeof(buffer_size_reported)) {
+	    arv_warning_interface("getsockopt() returned unexpected sizeof(buffer_size)");
+	    return FALSE;
+	}
+
+	if(buffer_size_reported < buffer_size)
+	{
+	    arv_warning_interface("setsockopt(..., SO_RCVBUF, %d, ...) succeeded, but getsockopt(..., SO_RCVBUF, ...) reported only %d bytes. Most likely /proc/sys/net/core/rmem_max is too low. You might see missing packets and timeouts. See the socket(7) manpage",
+				  buffer_size, buffer_size_reported);
+	    return FALSE;
+	}
+
+	return TRUE;
 
 #undef T
-
-	return result == 0;
 }
 
 
