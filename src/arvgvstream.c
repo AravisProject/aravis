@@ -1821,21 +1821,25 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
         /**
          * ArvGvStream:socket-buffer:
          *
-         * Incoming socket buffer policy.
+         * Incoming socket buffer policy. Controls the buffer size we try to with setsockopt(..., SO_RCVBUF, ...).
+         * ARV_GV_STREAM_SOCKET_BUFFER_FIXED means "use a buffer of the size given by the socket-buffer-size property,
+         * if given; if socket-buffer-size is not given or <=0, don't set anything". ARV_GV_STREAM_SOCKET_BUFFER_AUTO
+         * means "use a buffer that fits one-frame-worth of data or socket-buffer-size, whichever is smaller"
          */
 	g_object_class_install_property (
 		object_class, ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER,
 		g_param_spec_enum ("socket-buffer", "Socket buffer",
 				   "Socket buffer behaviour",
 				   ARV_TYPE_GV_STREAM_SOCKET_BUFFER,
-				   ARV_GV_STREAM_SOCKET_BUFFER_FIXED,
+				   ARV_GV_STREAM_SOCKET_BUFFER_AUTO,
 				  G_PARAM_CONSTRUCT |  G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
 		);
         /**
          * ArvGvStream:socket-buffer-size:
          *
          * Size in bytes of the incoming socket buffer. A greater value helps to lower the number of missings packets,
-         * as the expense of an increased memory usage.
+         * as the expense of an increased memory usage. See the documentation for the "socket-buffer" property above for
+         * details
          */
 	g_object_class_install_property (
 		object_class, ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER_SIZE,
