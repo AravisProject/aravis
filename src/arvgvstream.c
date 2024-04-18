@@ -1831,7 +1831,7 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
 		g_param_spec_enum ("socket-buffer", "Socket buffer",
 				   "Socket buffer behaviour",
 				   ARV_TYPE_GV_STREAM_SOCKET_BUFFER,
-				   ARV_GV_STREAM_SOCKET_BUFFER_FIXED,
+				   ARV_GV_STREAM_SOCKET_BUFFER_AUTO,
 				  G_PARAM_CONSTRUCT |  G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
 		);
         /**
