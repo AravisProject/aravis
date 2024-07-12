@@ -228,6 +228,64 @@ arv_chunk_parser_get_float_value (ArvChunkParser *parser, ArvBuffer *buffer, con
 	return value;
 }
 
+static ArvGcNode *
+arv_chunk_parser_get_feature (ArvChunkParser *parser, const char *feature)
+{
+        g_return_val_if_fail (ARV_IS_CHUNK_PARSER(parser), NULL);
+	g_return_val_if_fail (parser->priv->genicam, NULL);
+
+	return arv_gc_get_node (parser->priv->genicam, feature);
+}
+
+static void *
+_get_feature (ArvChunkParser *parser, GType node_type, const char *feature, GError **error)
+{
+	void *node;
+
+	g_return_val_if_fail (ARV_IS_CHUNK_PARSER (parser), NULL);
+	g_return_val_if_fail (feature != NULL, NULL);
+
+	node = arv_chunk_parser_get_feature (parser, feature);
+
+	if (node == NULL) {
+		g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_FEATURE_NOT_FOUND,
+			     "[%s] Not found", feature);
+		return NULL;
+	}
+
+	if (!(G_TYPE_CHECK_INSTANCE_TYPE ((node), node_type))) {
+		g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_INVALID_FEATURE_TYPE,
+			     "[%s:%s] Not a %s", feature, G_OBJECT_TYPE_NAME (node), g_type_name (node_type));
+		return NULL;
+	}
+
+	return node;
+}
+
+void
+arv_chunk_parser_set_string_feature_value (ArvChunkParser *parser,
+                                           const char *feature, const char *value,
+                                           GError **error)
+{
+	ArvGcNode *node;
+
+	node = _get_feature (parser, ARV_TYPE_GC_STRING, feature, error);
+	if (node != NULL)
+		arv_gc_string_set_value (ARV_GC_STRING (node), value, error);
+}
+
+void
+arv_chunk_parser_set_integer_feature_value (ArvChunkParser *parser,
+                                            const char *feature, gint64 value,
+                                            GError **error)
+{
+	ArvGcNode *node;
+
+	node = _get_feature (parser, ARV_TYPE_GC_INTEGER, feature, error);
+	if (node != NULL)
+		arv_gc_integer_set_value (ARV_GC_INTEGER (node), value, error);
+}
+
 /**
  * arv_chunk_parser_new:
  * @xml: XML genicam data
