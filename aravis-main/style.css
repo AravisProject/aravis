@@ -1028,6 +1028,7 @@ p.admonition-title::before {
 /**************************
  RESPONSIVENESS
 **************************/
+
 @media (max-width: 700px) {
   body {
     padding-top: 0px;
@@ -1050,6 +1051,16 @@ p.admonition-title::before {
   }
 
   .toc {
-    display: hidden;
+    display: none;
+  }
+}
+
+@media (max-width: 1024px) {
+  .sidebar {
+    min-width: 30ch;
+  }
+
+  .toc {
+    display: none;
   }
 }

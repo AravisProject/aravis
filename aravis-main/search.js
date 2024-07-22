@@ -86,6 +86,7 @@ let searchResults = [];
 
 // Exports
 window.onInitSearch = onInitSearch;
+window.hideResults = hideResults;
 
 /* Event handlers */
 
@@ -224,6 +225,13 @@ function showResults(query, results) {
     showSearchResults(search);
 }
 
+function hideResults() {
+    if (window.history && typeof window.history.pushState === "function") {
+        let baseUrl = getNakedUrl();
+        window.history.replaceState(refs.input.value, "", baseUrl + window.location.hash);
+    }
+    hideSearchResults();
+}
 
 /* Search data instance */
 
