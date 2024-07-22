@@ -238,7 +238,6 @@ arv_uv_stream_payload_cb (struct libusb_transfer *transfer)
                         switch (transfer->status) {
                                 case LIBUSB_TRANSFER_COMPLETED:
                                         ctx->total_payload_transferred += transfer->actual_length;
-
                                         if (ctx->buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_GENDC_CONTAINER){
                                                 if(!arv_uvsp_packet_is_gendc (ctx->buffer->priv->data)){
                                                         arv_warning_sp ("Invalid GenDC Container: Signature shows %.4s "
@@ -796,7 +795,6 @@ arv_uv_stream_thread_sync (void *data)
                                                                                         buffer->priv->parts[0].y_offset = 0;
                                                                                         buffer->priv->parts[0].x_padding = arv_uvsp_packet_get_gendc_partpadding_x(buffer->priv->data + partoffset);
                                                                                         buffer->priv->parts[0].y_padding = arv_uvsp_packet_get_gendc_partpadding_y(buffer->priv->data + partoffset);
-
                                                                                         break;
                                                                                 }
                                                                         }
