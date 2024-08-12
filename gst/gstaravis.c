@@ -218,11 +218,9 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 	gint current_height, current_width;
 	int depth = 0, bpp = 0;
 	const GValue *frame_rate = NULL;
-	const char *caps_string;
 	const char *format_string;
 	unsigned int i;
 	ArvStream *orig_stream = NULL;
-	GstCaps *orig_fixed_caps = NULL;
 	gboolean result = FALSE;
 	gboolean is_frame_rate_available;
 	gboolean is_gain_available;
@@ -345,29 +343,6 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 		GST_DEBUG_OBJECT (gst_aravis, "Actual exposure = %g µs", arv_camera_get_exposure_time (gst_aravis->camera, NULL));
 	}
 
-	orig_fixed_caps = g_steal_pointer (&gst_aravis->fixed_caps);
-
-	caps_string = arv_pixel_format_to_gst_caps_string (pixel_format);
-	if (caps_string != NULL) {
-		GstStructure *structure;
-		GstCaps *caps;
-
-		caps = gst_caps_new_empty ();
-		structure = gst_structure_from_string (caps_string, NULL);
-		gst_structure_set (structure,
-				   "width", G_TYPE_INT, width,
-				   "height", G_TYPE_INT, height,
-				   NULL);
-
-		if (frame_rate != NULL)
-			gst_structure_set_value (structure, "framerate", frame_rate);
-
-		gst_caps_append_structure (caps, structure);
-
-		gst_aravis->fixed_caps = caps;
-	} else
-		gst_aravis->fixed_caps = NULL;
-
 	if (!error) arv_device_set_features_from_string (arv_camera_get_device (gst_aravis->camera), gst_aravis->features, &error);
 
 	if (!error) gst_aravis->payload = arv_camera_get_payload (gst_aravis->camera, &error);
@@ -417,8 +392,6 @@ failed:
 unref:
 	if (orig_stream != NULL)
 		g_object_unref (orig_stream);
-	if (orig_fixed_caps != NULL)
-		gst_caps_unref (orig_fixed_caps);
 	return result;
 }
 
@@ -703,7 +676,6 @@ gst_aravis_init (GstAravis *gst_aravis)
 	gst_aravis->stream = NULL;
 
 	gst_aravis->all_caps = NULL;
-	gst_aravis->fixed_caps = NULL;
 }
 
 static void
@@ -713,13 +685,11 @@ gst_aravis_finalize (GObject * object)
 	ArvCamera *camera;
 	ArvStream *stream;
 	GstCaps *all_caps;
-	GstCaps *fixed_caps;
 
 	GST_OBJECT_LOCK (gst_aravis);
 	camera = g_steal_pointer (&gst_aravis->camera);
 	stream = g_steal_pointer (&gst_aravis->stream);
 	all_caps = g_steal_pointer (&gst_aravis->all_caps);
-	fixed_caps = g_steal_pointer (&gst_aravis->fixed_caps);
 	g_clear_pointer (&gst_aravis->camera_name, g_free);
 	g_clear_pointer (&gst_aravis->features, g_free);
 	GST_OBJECT_UNLOCK (gst_aravis);
@@ -730,8 +700,6 @@ gst_aravis_finalize (GObject * object)
 		g_object_unref (stream);
 	if (all_caps != NULL)
 		gst_caps_unref (all_caps);
-	if (fixed_caps != NULL)
-		gst_caps_unref (fixed_caps);
 
 	G_OBJECT_CLASS (gst_aravis_parent_class)->finalize (object);
 }
