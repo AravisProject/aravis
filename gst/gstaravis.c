@@ -462,17 +462,21 @@ gst_aravis_stop( GstBaseSrc * src )
 {
 	GError *error = NULL;
 	GstAravis* gst_aravis = GST_ARAVIS(src);
+	ArvCamera *camera;
 	ArvStream *stream;
 	GstCaps *all_caps;
 
 	GST_OBJECT_LOCK (gst_aravis);
 	arv_camera_stop_acquisition (gst_aravis->camera, &error);
+	camera = g_steal_pointer (&gst_aravis->camera);
 	stream = g_steal_pointer (&gst_aravis->stream);
 	all_caps = g_steal_pointer (&gst_aravis->all_caps);
 	GST_OBJECT_UNLOCK (gst_aravis);
 
 	if (stream != NULL)
 		g_object_unref (stream);
+	if (camera != NULL)
+		g_object_unref (camera);
 	if (all_caps != NULL)
 		gst_caps_unref (all_caps);
 
