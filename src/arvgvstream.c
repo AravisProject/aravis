@@ -1830,8 +1830,8 @@ arv_gv_stream_class_init (ArvGvStreamClass *gv_stream_class)
         /**
          * ArvGvStream:socket-buffer-size:
          *
-         * Size in bytes of the incoming socket buffer. A greater value helps to lower the number of missings packets,
-         * as the expense of an increased memory usage.
+         * Size in bytes of the incoming socket buffer. A greater value helps to lower the number of missing packets,
+         * as the expense of an increased memory usage. If the value is not strictly positive, this setting is ignored.
          */
 	g_object_class_install_property (
 		object_class, ARV_GV_STREAM_PROPERTY_SOCKET_BUFFER_SIZE,
