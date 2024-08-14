@@ -154,7 +154,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
             <a class="anchor" href="#fixed"></a>
           </dt>
           <dd>
-            <div><p>Socket buffer is set to a given fixed&nbsp;value.</p></div>
+            <div><p>Socket buffer is set using <a href="property.GvStream.socket-buffer-size.html"><code>ArvGvStream:socket-buffer-size</code></a>&nbsp;value.</p></div>
             <ul>
               <li>Value: <code>0</code></li>
               
@@ -167,7 +167,8 @@ SPDX-License-Identifier: LGPL-2.1-or-later
             <a class="anchor" href="#auto"></a>
           </dt>
           <dd>
-            <div><p>Socket buffer size is set to the payload&nbsp;size.</p></div>
+            <div><p>Socket buffer size is set to the payload size if
+Aravis:socket-buffer-size is not strictly positive, or the minimum of both&nbsp;values.</p></div>
             <ul>
               <li>Value: <code>1</code></li>
               
