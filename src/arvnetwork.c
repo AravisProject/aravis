@@ -456,23 +456,55 @@ arv_network_interface_free(ArvNetworkInterface *a)
 	g_free (a);
 }
 
-
 gboolean
 arv_socket_set_recv_buffer_size (int socket_fd, gint buffer_size)
 {
-	int result;
-
-#ifndef G_OS_WIN32
-	result = setsockopt (socket_fd, SOL_SOCKET, SO_RCVBUF, &buffer_size, sizeof (buffer_size));
+#ifdef G_OS_WIN32
+	DWORD _buffer_size;
+	DWORD buffer_size_reported;
 #else
-	{
-		DWORD _buffer_size=buffer_size;
-		result = setsockopt (socket_fd, SOL_SOCKET, SO_RCVBUF,
-				     (const char*) &_buffer_size, sizeof (_buffer_size));
-	}
+	gint _buffer_size;
+	gint buffer_size_reported;
 #endif
+	int result;
+	socklen_t optlen;
 
-	return result == 0;
+        _buffer_size = buffer_size;
+        optlen = sizeof(buffer_size_reported);
+
+	result = setsockopt (socket_fd, SOL_SOCKET, SO_RCVBUF,
+			     (const char*) &_buffer_size, sizeof (_buffer_size));
+	if(result != 0) {
+	    arv_warning_interface ("[set_recv_buffer_size] Setting socket buffer to %d bytes failed (%s)",
+                                  _buffer_size, strerror(errno));
+	    return FALSE;
+	}
+
+        /* setsockopt() succeeded, but sometimes the requested size is not actually be set. Ask
+         * to see the new setting to confirm. */
+        result = getsockopt (socket_fd, SOL_SOCKET, SO_RCVBUF, &buffer_size_reported, &optlen);
+        if (result != 0) {
+                arv_warning_interface ("[set_recv_buffer_size] Read of socket buffer size (SO_RCVBUF) failed (%s)",
+                                       strerror(errno));
+                return FALSE;
+        }
+        g_assert (optlen == sizeof (buffer_size_reported));
+
+	if(buffer_size_reported < buffer_size)
+        {
+                arv_warning_interface ("[set_recv_buffer_size] Unexpected socket buffer size (SO_RCVBUF):"
+                                       " actual %d < expected %d bytes"
+                                       "\nYou might see missing packets and timeouts"
+#ifndef G_OS_WIN32
+                                       "\nMost likely /proc/sys/net/core/rmem_max is too low"
+                                       "\nSee the socket(7) manpage\n"
+#endif
+                                      , buffer_size_reported, buffer_size);
+
+                return FALSE;
+        }
+
+	return TRUE;
 }
 
 
