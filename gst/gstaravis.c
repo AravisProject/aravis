@@ -773,6 +773,8 @@ gst_aravis_set_property (GObject * object, guint prop_id,
 			GST_OBJECT_LOCK (gst_aravis);
 			g_free (gst_aravis->features);
                         gst_aravis->features = g_value_dup_string (value);
+						if (gst_aravis->camera != NULL)
+							arv_device_set_features_from_string (arv_camera_get_device (gst_aravis->camera), gst_aravis->features, NULL);
 			GST_OBJECT_UNLOCK (gst_aravis);
                         break;
 		case PROP_NUM_ARV_BUFFERS:
