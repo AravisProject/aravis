@@ -826,27 +826,30 @@ table.arguments tr.arg-description td {
 }
 .docblock .codehilite > .copy-button {
   position: absolute;
+
   top: 0;
   right: 0;
 
   border: none;
   background: none;
 
-  margin: var(--box-padding);
   cursor: pointer;
-}
 
-.docblock .codehilite > .copy-button {
   transition: background-color 150ms ease;
-  color: var(--primary);
+
+  color: var(--text-color);
+  background-color: var(--sidebar-hover-bg);
+
   border-radius: var(--box-radius);
   padding: 0.2rem 0.5rem;
   margin: var(--box-padding);
+
+  visibility: hidden;
+  z-index: 1;
 }
 
-.docblock .codehilite > .copy-button:hover {
-  background-color: var(--sidebar-hover-bg);
-  color: var(--text-color);
+.docblock .codehilite:hover > .copy-button {
+  visibility: visible;
 }
 
 .docblock .codehilite > .copy-button:active {
@@ -1028,6 +1031,7 @@ p.admonition-title::before {
 /**************************
  RESPONSIVENESS
 **************************/
+
 @media (max-width: 700px) {
   body {
     padding-top: 0px;
@@ -1050,6 +1054,16 @@ p.admonition-title::before {
   }
 
   .toc {
-    display: hidden;
+    display: none;
+  }
+}
+
+@media (max-width: 1024px) {
+  .sidebar {
+    min-width: 30ch;
+  }
+
+  .toc {
+    display: none;
   }
 }

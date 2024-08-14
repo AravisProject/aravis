@@ -148,11 +148,18 @@ function onKeyDown(event) {
     // we avoid the preventDefault(), hence allowing devhelp to use S as mnemonic.
     let potentially_hidden_parent = search_input.closest('.hidden, .devhelp-hidden');
 
-    if (window.getComputedStyle(potentially_hidden_parent).display !== 'none' &&
-        (event.key === "s" || event.key === "S") &&
-        document.activeElement !== search_input) {
-        event.preventDefault();
-        search_input.focus();
+    if (window.getComputedStyle(potentially_hidden_parent).display !== 'none') {
+        if ((event.key === "s" || event.key === "S") &&
+            document.activeElement !== search_input) {
+            event.preventDefault();
+            search_input.focus();
+        } else if (event.key === "Escape" && document.activeElement === search_input) {
+            if (window.hideResults) {
+                window.hideResults();
+            }
+            search_input.value = "";
+            search_input.blur();
+        }
     }
 }
 
