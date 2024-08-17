@@ -1,0 +1,23 @@
+# https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+# Glib has formatting at https://wiki.apertis.org/Guidelines/Coding_conventions#Code_formatting
+# https://gitlab.gnome.org/GNOME/glib/-/blob/main/.clang-format
+# But we do not follow it fully
+BasedOnStyle: GNU
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse
+AllowShortLoopsOnASingleLine: true
+BinPackParameters: false
+BreakBeforeBinaryOperators: None
+BreakBeforeBraces: Linux
+BreakBeforeTernaryOperators: false
+ColumnLimit: 0
+ContinuationIndentWidth: 8
+Cpp11BracedListStyle: false
+FixNamespaceComments: false
+IndentCaseLabels: true
+IndentGotoLabels: false
+IndentWidth: 8
+SeparateDefinitionBlocks: Always
+SortIncludes: Never
+SpaceAfterCStyleCast: true
+SpaceBeforeParens: Always
+UseTab: Always
