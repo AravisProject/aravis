@@ -138,6 +138,9 @@ ARV_API ArvChunkParser *arv_device_create_chunk_parser		(ArvDevice *device);
 
 ARV_API gboolean	arv_device_execute_command		(ArvDevice *device, const char *feature, GError **error);
 
+ARV_API void		arv_device_get_feature_value		(ArvDevice *device, const char *feature, GValue *value, GError **error);
+ARV_API void		arv_device_set_feature_value		(ArvDevice *device, const char *feature, const GValue *value, GError **error);
+
 ARV_API void		arv_device_set_boolean_feature_value	(ArvDevice *device, const char *feature, gboolean value, GError **error);
 ARV_API gboolean	arv_device_get_boolean_feature_value	(ArvDevice *device, const char *feature, GError **error);
 ARV_API void		arv_device_get_boolean_feature_value_gi	(ArvDevice *device, const char *feature, gboolean *value, GError **error);
