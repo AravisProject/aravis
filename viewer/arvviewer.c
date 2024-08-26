@@ -382,19 +382,28 @@ gst_buffer_release_cb (void *user_data)
 }
 
 static GstBuffer *
-arv_to_gst_buffer (ArvBuffer *arv_buffer, guint part_id, ArvStream *stream)
+arv_to_gst_buffer (ArvBuffer *arv_buffer, guint part_id, ArvStream *stream, gboolean incorrect_endianness)
 {
 	ArvGstBufferReleaseData* release_data;
 	int arv_row_stride;
+	int bpp;
 	int width, height;
 	char *buffer_data;
 	size_t buffer_size;
 	size_t size;
 	void *data;
+	ArvPixelFormat format;
+	gboolean copy_needed;
+	gboolean align_rows;
+	gboolean fix_endianness;
+	int i;
+	int gst_row_stride;
 
 	buffer_data = (char *) arv_buffer_get_part_data (arv_buffer, part_id, &buffer_size);
 	arv_buffer_get_part_region (arv_buffer, part_id, NULL, NULL, &width, &height);
-	arv_row_stride = width * ARV_PIXEL_FORMAT_BIT_PER_PIXEL (arv_buffer_get_part_pixel_format (arv_buffer, part_id)) / 8;
+	format = arv_buffer_get_part_pixel_format (arv_buffer, part_id);
+	bpp = ARV_PIXEL_FORMAT_BIT_PER_PIXEL (format);
+	arv_row_stride = (width * bpp) / 8;
 
 	release_data = g_new0 (ArvGstBufferReleaseData, 1);
 
@@ -402,23 +411,45 @@ arv_to_gst_buffer (ArvBuffer *arv_buffer, guint part_id, ArvStream *stream)
 	release_data->arv_buffer = arv_buffer;
 
 	/* Gstreamer requires row stride to be a multiple of 4 */
-	if ((arv_row_stride & 0x3) != 0) {
-		int gst_row_stride;
-		int i;
+	align_rows = (arv_row_stride & 0x3) != 0;
+	fix_endianness = incorrect_endianness && (format == ARV_PIXEL_FORMAT_MONO_16);
+	copy_needed = align_rows || fix_endianness;
 
+	if (align_rows) {
 		gst_row_stride = (arv_row_stride & ~(0x3)) + 4;
-
 		size = height * gst_row_stride;
+	} else {
+		size = buffer_size;
+	}
+
+	if (copy_needed) {
 		data = g_malloc (size);
-
-		for (i = 0; i < height; i++)
-			memcpy (((char *) data) + i * gst_row_stride, buffer_data + i * arv_row_stride, arv_row_stride);
-
 		release_data->data = data;
 
+		if (align_rows) {
+			for (i = 0; i < height; i++)
+				memcpy (((char *) data) + i * gst_row_stride, buffer_data + i * arv_row_stride, arv_row_stride);
+		} else {
+			memcpy (data, buffer_data, buffer_size);
+		}
+
+		if (fix_endianness) {
+			uint8_t a,b;
+			uint8_t *p;
+			uint8_t *q;
+
+			p = (uint8_t *) data;
+			q = p + buffer_size;
+			
+			while (p < q) {
+				a = p[0];
+				b = p[1];
+				*(p ++) = b;
+				*(p ++) = a;
+			}
+		}
 	} else {
 		data = buffer_data;
-		size = buffer_size;
 	}
 
 	return gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
@@ -431,10 +462,13 @@ new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 {
 	ArvBuffer *arv_buffer;
 	gint n_input_buffers, n_output_buffers, n_buffer_filling;
+	gboolean incorrect_endianness;
 
 	arv_buffer = arv_stream_pop_buffer (stream);
 	if (arv_buffer == NULL)
 		return;
+
+	incorrect_endianness = arv_camera_has_incorrect_pixel_endianness(viewer->camera);
 
 	arv_stream_get_n_owned_buffers (stream, &n_input_buffers, &n_output_buffers, &n_buffer_filling);
 	arv_debug_viewer ("pop buffer (input:%d,output:%d,filling:%d)",
@@ -455,7 +489,8 @@ new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 		g_clear_object( &viewer->last_buffer );
 		viewer->last_buffer = g_object_ref( arv_buffer );
 
-		gst_app_src_push_buffer (GST_APP_SRC (viewer->appsrc), arv_to_gst_buffer (arv_buffer, part_id, stream));
+		gst_app_src_push_buffer (GST_APP_SRC (viewer->appsrc),
+					 arv_to_gst_buffer (arv_buffer, part_id, stream, incorrect_endianness));
 	} else {
 		arv_debug_viewer ("push discarded buffer");
 		arv_stream_push_buffer (stream, arv_buffer);

@@ -122,6 +122,8 @@ typedef struct {
 
         gboolean has_region_offset;
 
+        gboolean has_incorrect_pixel_endianness;
+
 	GError *init_error;
 } ArvCameraPrivate;
 
@@ -136,6 +138,18 @@ enum
 	PROP_0,
 	PROP_CAMERA_NAME,
 	PROP_CAMERA_DEVICE
+};
+
+typedef struct {
+	const char *vendor;
+	const char *model;
+} ArvCameraModelVendor;
+
+static const ArvCameraModelVendor arv_camera_incorrect_pixel_endianness_table[] = {
+	{ .vendor = "Point Grey Research",
+	  .model = "Blackfly BFLY-PGE-31S4M" },
+	{ .vendor = "Point Grey Research",
+	  .model = "Blackfly BFLY-PGE-14S2C" }
 };
 
 /**
@@ -4127,6 +4141,14 @@ arv_camera_create_chunk_parser (ArvCamera *camera)
 	return arv_device_create_chunk_parser (priv->device);
 }
 
+gboolean
+arv_camera_has_incorrect_pixel_endianness(ArvCamera *camera)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	return priv->has_incorrect_pixel_endianness;
+}
+
 /**
  * arv_camera_new:
  * @name: (allow-none): name of the camera.
@@ -4213,6 +4235,25 @@ arv_camera_finalize (GObject *object)
 	g_clear_error (&priv->init_error);
 
 	G_OBJECT_CLASS (arv_camera_parent_class)->finalize (object);
+}
+
+static gboolean
+arv_camera_model_known_to_have_incorrect_pixel_endianness(const char *vendor_name,
+							  const char *model_name)
+{
+	guint i;
+	const ArvCameraModelVendor *p;
+
+	for (i = 0,p = arv_camera_incorrect_pixel_endianness_table;
+	     i < G_N_ELEMENTS (arv_camera_incorrect_pixel_endianness_table);
+	     i ++, p ++) {
+		if ((g_strcmp0 (vendor_name, p->vendor) == 0) &&
+		    (g_strcmp0 (model_name, p->model) == 0)) {
+			return TRUE;
+		}
+	}
+
+	return FALSE;
 }
 
 static void
@@ -4317,6 +4358,9 @@ arv_camera_constructed (GObject *object)
 
         priv->has_region_offset = ARV_IS_GC_INTEGER(arv_device_get_feature(priv->device, "OffsetX")) &&
                 ARV_IS_GC_INTEGER(arv_device_get_feature(priv->device, "OffsetY"));
+
+	priv->has_incorrect_pixel_endianness =
+		arv_camera_model_known_to_have_incorrect_pixel_endianness(vendor_name, model_name);
 }
 
 static void

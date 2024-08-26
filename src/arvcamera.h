@@ -98,6 +98,7 @@ ARV_API const char *	arv_camera_get_pixel_format_as_string			(ArvCamera *camera,
 ARV_API gint64 *	arv_camera_dup_available_pixel_formats			(ArvCamera *camera, guint *n_pixel_formats, GError **error);
 ARV_API const char **	arv_camera_dup_available_pixel_formats_as_strings	(ArvCamera *camera, guint *n_pixel_formats, GError **error);
 ARV_API const char **	arv_camera_dup_available_pixel_formats_as_display_names	(ArvCamera *camera, guint *n_pixel_formats, GError **error);
+ARV_API gboolean	arv_camera_has_incorrect_pixel_endianness(ArvCamera *camera);
 
 /* Acquisition control */
 
