@@ -1477,7 +1477,11 @@ start_video (ArvViewer *viewer)
 	set_camera_widgets(viewer);
 	pixel_format = arv_camera_get_pixel_format (viewer->camera, NULL);
 
-	caps_string = arv_pixel_format_to_gst_caps_string (pixel_format);
+	caps_string = arv_pixel_format_and_vendor_model_to_gst_caps_string
+		(pixel_format,
+		 arv_camera_get_vendor_name (viewer->camera, NULL),
+		 arv_camera_get_model_name (viewer->camera, NULL));
+									    
 	if (caps_string == NULL) {
 		g_message ("GStreamer cannot understand this camera pixel format: 0x%x!", (int) pixel_format);
 		stop_video (viewer);

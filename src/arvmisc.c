@@ -804,30 +804,113 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 	},
 };
 
+ArvGstCapsInfos arv_gst_caps_infos_incorrect_pixel_endianness[] = {
+	{
+		ARV_PIXEL_FORMAT_MONO_16,
+		"video/x-raw, format=(string)GRAY16_BE",
+		"video/x-raw",		"GRAY16_BE",
+		"video/x-raw-gray, bpp=(int)16, depth=(int)16",
+		"video/x-raw-gray",	16,	16,	0
+	},
+};
+
+typedef struct {
+	const char *vendor;
+	const char *model;
+} ArvCameraModelVendor;
+
+static const ArvCameraModelVendor arv_camera_incorrect_pixel_endianness_table[] = {
+	{ .vendor = "Point Grey Research",
+	  .model = "Blackfly BFLY-PGE-31S4M" },
+	{ .vendor = "Point Grey Research",
+	  .model = "Blackfly BFLY-PGE-14S2C" }
+};
+
 /**
  * arv_pixel_format_to_gst_caps_string:
  * @pixel_format: a pixel format
  * Return value: a gstreamer caps string describing the given @pixel_format.
  */
 
-const char *
-arv_pixel_format_to_gst_caps_string (ArvPixelFormat pixel_format)
+static const char *
+pixel_format_to_gst_caps_string (ArvPixelFormat pixel_format,
+				 const ArvGstCapsInfos *infos,
+				 guint n_elements)
 {
-	int i;
-
-	for (i = 0; i < G_N_ELEMENTS (arv_gst_caps_infos); i++)
-		if (arv_gst_caps_infos[i].pixel_format == pixel_format)
+	while (n_elements > 0) {
+		if (infos->pixel_format == pixel_format)
 			break;
+		infos ++;
+		n_elements --;
+	}
 
-	if (i == G_N_ELEMENTS (arv_gst_caps_infos)) {
-		arv_warning_misc ("[PixelFormat::to_gst_caps_string] 0x%08x not found", pixel_format);
+	if (n_elements == 0) {
 		return NULL;
 	}
 
 	arv_debug_misc ("[PixelFormat::to_gst_caps_string] 0x%08x -> %s",
-		      pixel_format, arv_gst_caps_infos[i].gst_caps_string);
+		      pixel_format, infos->gst_caps_string);
 
-	return arv_gst_caps_infos[i].gst_caps_string;
+	return infos->gst_caps_string;
+}
+
+const char *
+arv_pixel_format_to_gst_caps_string (ArvPixelFormat pixel_format)
+{
+	const char *caps_string;
+
+	caps_string = pixel_format_to_gst_caps_string(pixel_format,
+						      arv_gst_caps_infos,
+						      G_N_ELEMENTS (arv_gst_caps_infos));
+
+	if (caps_string == NULL) {
+		arv_warning_misc ("[PixelFormat::to_gst_caps_string] 0x%08x not found", pixel_format);
+	}
+
+	return caps_string;
+}
+
+static gboolean
+camera_model_known_to_have_incorrect_pixel_endianness(const char *vendor_name,
+						      const char *model_name)
+{
+	guint i;
+	const ArvCameraModelVendor *p;
+
+	for (i = 0,p = arv_camera_incorrect_pixel_endianness_table;
+	     i < G_N_ELEMENTS (arv_camera_incorrect_pixel_endianness_table);
+	     i ++, p ++) {
+		if ((g_strcmp0 (vendor_name, p->vendor) == 0) &&
+		    (g_strcmp0 (model_name, p->model) == 0)) {
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+#include <stdio.h>
+
+const char *
+arv_pixel_format_and_vendor_model_to_gst_caps_string (ArvPixelFormat pixel_format,
+						      const char *vendor_name,
+						      const char *model_name) {
+	const char *caps_string;
+
+	caps_string = NULL;
+
+	if (camera_model_known_to_have_incorrect_pixel_endianness(vendor_name, model_name)) {
+		caps_string = pixel_format_to_gst_caps_string
+			(pixel_format,
+			 arv_gst_caps_infos_incorrect_pixel_endianness,
+			 G_N_ELEMENTS (arv_gst_caps_infos_incorrect_pixel_endianness));
+	}
+
+	if (caps_string) {
+		return caps_string;
+	}
+
+	return arv_pixel_format_to_gst_caps_string (pixel_format);
 }
 
 ArvPixelFormat
