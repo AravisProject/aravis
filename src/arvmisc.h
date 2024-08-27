@@ -37,6 +37,9 @@ ARV_API guint                   arv_get_minor_version           (void);
 ARV_API guint                   arv_get_micro_version           (void);
 
 ARV_API const char *		arv_pixel_format_to_gst_caps_string		(ArvPixelFormat pixel_format);
+ARV_API const char *		arv_pixel_format_to_gst_caps_string_full        (ArvPixelFormat pixel_format,
+                                                                                 const char *vendor_name,
+                                                                                 const char *model_name);
 ARV_API ArvPixelFormat		arv_pixel_format_from_gst_caps			(const char *name, const char *format,
                                                                                  int bpp, int depth);
 ARV_API const char *		arv_pixel_format_to_gst_0_10_caps_string	(ArvPixelFormat pixel_format);
