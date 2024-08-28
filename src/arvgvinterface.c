@@ -95,7 +95,6 @@ arv_gv_discover_socket_list_new (void)
 		ArvGvDiscoverSocket *discover_socket = g_new0 (ArvGvDiscoverSocket, 1);
 		GSocketAddress *socket_address;
 		GSocketAddress *socket_broadcast;
-		GSocketAddress *any_socket_address;
 		GInetAddress *any_address;
 		GInetAddress *inet_address;
 		GInetAddress *inet_broadcast;
@@ -127,10 +126,8 @@ arv_gv_discover_socket_list_new (void)
 		socket_fd = g_socket_get_fd(discover_socket->socket);
 		if (setsockopt (socket_fd, SOL_SOCKET, SO_BINDTODEVICE, interface_name, strlen (interface_name)) == 0) {
 			any_address = g_inet_address_new_any (G_SOCKET_FAMILY_IPV4);
-			any_socket_address = g_inet_socket_address_new (any_address, 0);
-			discover_socket->interface_address = arv_socket_bind_with_range (discover_socket->socket, any_socket_address,
+			discover_socket->interface_address = arv_socket_bind_with_range (discover_socket->socket, any_address,
 																				0, FALSE, &error);
-			g_object_unref (any_socket_address);
 			g_object_unref (any_address);
 		} else {
 			discover_socket->interface_address = arv_socket_bind_with_range (discover_socket->socket, inet_address,
