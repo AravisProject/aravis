@@ -156,7 +156,6 @@ arv_dom_parser_characters (void *user_data, const xmlChar *ch, int len)
 	}
 }
 
-#if 1
 static void arv_dom_parser_warning (void *user_data, const char *msg, ...) G_GNUC_PRINTF(2,3);
 static void arv_dom_parser_error (void *user_data, const char *msg, ...) G_GNUC_PRINTF(2,3);
 static void arv_dom_parser_fatal_error (void *user_data, const char *msg, ...) G_GNUC_PRINTF(2,3);
@@ -165,9 +164,12 @@ static void
 arv_dom_parser_warning (void *user_data, const char *msg, ...)
 {
 	va_list args;
+        char *message;
 
 	va_start(args, msg);
-	g_logv("XML", G_LOG_LEVEL_WARNING, msg, args);
+        message = g_strdup_vprintf (msg, args);
+        arv_warning (ARV_DEBUG_CATEGORY_DOM, "[DomParser::parse] %s", message);
+        g_free (message);
 	va_end(args);
 }
 
@@ -175,9 +177,12 @@ static void
 arv_dom_parser_error (void *user_data, const char *msg, ...)
 {
 	va_list args;
+        char *message;
 
 	va_start(args, msg);
-	g_logv("XML", G_LOG_LEVEL_CRITICAL, msg, args);
+        message = g_strdup_vprintf (msg, args);
+        arv_warning (ARV_DEBUG_CATEGORY_DOM, "[DomParser::parse] %s", message);
+        g_free (message);
 	va_end(args);
 }
 
@@ -185,19 +190,19 @@ static void
 arv_dom_parser_fatal_error (void *user_data, const char *msg, ...)
 {
 	va_list args;
+        char *message;
 
 	va_start(args, msg);
-	g_logv("XML", G_LOG_LEVEL_ERROR, msg, args);
+        message = g_strdup_vprintf (msg, args);
+        arv_warning (ARV_DEBUG_CATEGORY_DOM, "[DomParser::parse] %s", message);
+        g_free (message);
 	va_end(args);
 }
-#endif
 
 static xmlSAXHandler sax_handler = {
-#if 1
 	.warning = arv_dom_parser_warning,
 	.error = arv_dom_parser_error,
 	.fatalError = arv_dom_parser_fatal_error,
-#endif
 	.startDocument = arv_dom_parser_start_document,
 	.endDocument = arv_dom_parser_end_document,
 	.startElement = arv_dom_parser_start_element,
@@ -217,6 +222,52 @@ typedef enum {
 	ARV_DOM_DOCUMENT_ERROR_INVALID_XML
 } ArvDomDocumentError;
 
+#if LIBXML_VERSION >= 21100
+static ArvDomDocument *
+_parse_memory (ArvDomDocument *document, ArvDomNode *node,
+	       const void *buffer, int size, GError **error)
+{
+	static ArvDomSaxParserState state;
+        xmlParserCtxt *xml_parser_ctxt;
+
+	state.document = document;
+	if (node != NULL)
+		state.current_node = node;
+	else
+		state.current_node = ARV_DOM_NODE (document);
+
+	if (size < 0)
+		size = strlen (buffer);
+
+        xml_parser_ctxt = xmlNewSAXParserCtxt (&sax_handler, &state);
+        if (xml_parser_ctxt == NULL) {
+                g_set_error (error,
+                             ARV_DOM_DOCUMENT_ERROR,
+                             ARV_DOM_DOCUMENT_ERROR_INVALID_XML,
+                             "Failed to create parser context");
+                return NULL;
+        }
+
+        xmlCtxtReadMemory (xml_parser_ctxt, buffer, size, NULL, NULL, 0);
+
+        if (!xml_parser_ctxt->wellFormed) {
+                if (state.document !=  NULL)
+                        g_object_unref (state.document);
+                state.document = NULL;
+
+                arv_warning_dom ("[DomParser::parse] Invalid document");
+
+                g_set_error (error,
+                             ARV_DOM_DOCUMENT_ERROR,
+                             ARV_DOM_DOCUMENT_ERROR_INVALID_XML,
+                             "Invalid document");
+        }
+
+        xmlFreeParserCtxt(xml_parser_ctxt);
+
+	return state.document;
+}
+#else
 static ArvDomDocument *
 _parse_memory (ArvDomDocument *document, ArvDomNode *node,
 	       const void *buffer, int size, GError **error)
@@ -247,6 +298,7 @@ _parse_memory (ArvDomDocument *document, ArvDomNode *node,
 
 	return state.document;
 }
+#endif
 
 /**
  * arv_dom_document_append_from_memory:

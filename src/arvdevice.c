@@ -38,12 +38,16 @@
 #include <arvgcfeaturenode.h>
 #include <arvgcboolean.h>
 #include <arvgcenumeration.h>
+#include <arvgcregister.h>
 #include <arvgcstring.h>
 #include <arvstream.h>
 #include <arvdebug.h>
 
 enum {
 	ARV_DEVICE_SIGNAL_CONTROL_LOST,
+#if ARAVIS_HAS_EVENT
+	ARV_DEVICE_SIGNAL_DEVICE_EVENT,
+#endif
 	ARV_DEVICE_SIGNAL_LAST
 } ArvDeviceSignals;
 
@@ -57,6 +61,7 @@ arv_device_error_quark (void)
 
 typedef struct {
 	GError *init_error;
+        GSList *streams;
 } ArvDevicePrivate;
 
 static void arv_device_initable_iface_init (GInitableIface *iface);
@@ -81,9 +86,11 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvDevice, arv_device, G_TYPE_OBJECT,
  */
 
 ArvStream *
-arv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data, GError **error)
+arv_device_create_stream (ArvDevice *device,
+                          ArvStreamCallback callback, void *user_data,
+                          GError **error)
 {
-	return arv_device_create_stream_full(device, callback, user_data, NULL, error);
+	return  arv_device_create_stream_full(device, callback, user_data, NULL, error);
 }
 
 /**
@@ -103,11 +110,26 @@ arv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *u
  */
 
 ArvStream *
-arv_device_create_stream_full (ArvDevice *device, ArvStreamCallback callback, void *user_data, GDestroyNotify destroy, GError **error)
+arv_device_create_stream_full (ArvDevice *device,
+                               ArvStreamCallback callback, void *user_data, GDestroyNotify destroy,
+                               GError **error)
 {
+	ArvDevicePrivate *priv = arv_device_get_instance_private (device);
+        ArvStream *stream;
+        GWeakRef *stream_weak_ref;
+
 	g_return_val_if_fail (ARV_IS_DEVICE (device), NULL);
 
-	return ARV_DEVICE_GET_CLASS (device)->create_stream (device, callback, user_data, destroy, error);
+	stream = ARV_DEVICE_GET_CLASS (device)->create_stream (device, callback, user_data, destroy, error);
+
+        if (!ARV_IS_STREAM (stream))
+                return NULL;
+
+        stream_weak_ref = g_new (GWeakRef, 1);
+        g_weak_ref_init (stream_weak_ref, stream);
+        priv->streams = g_slist_append (priv->streams, stream_weak_ref);
+
+        return stream;
 }
 
 /**
@@ -152,7 +174,7 @@ arv_device_read_memory (ArvDevice *device, guint64 address, guint32 size, void *
  **/
 
 gboolean
-arv_device_write_memory (ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error)
+arv_device_write_memory (ArvDevice *device, guint64 address, guint32 size, const void *buffer, GError **error)
 {
 	g_return_val_if_fail (ARV_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (buffer != NULL, FALSE);
@@ -208,6 +230,40 @@ arv_device_write_register (ArvDevice *device, guint64 address, guint32 value, GE
 
 	return ARV_DEVICE_GET_CLASS (device)->write_register (device, address, value, error);
 }
+
+#if ARAVIS_HAS_EVENT
+/**
+ * arv_device_read_event_data:
+ * @device: a #ArvDevice
+ * @event_id: event id
+ * @address: memory address
+ * @size: number of bytes to read
+ * @buffer: a buffer for the storage of the read data
+ * @error: (out) (allow-none): a #GError placeholder
+ *
+ * Reads the data of a device event.
+ *
+ * Return value: (skip): TRUE on success.
+ *
+ * Since: 0.10.0
+ **/
+
+gboolean
+arv_device_read_event_data (ArvDevice *device, int event_id, guint64 address, guint32 size, void *buffer, GError **error)
+{
+	g_return_val_if_fail (ARV_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (buffer != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	if (ARV_DEVICE_GET_CLASS (device)->read_event_data == NULL) {
+		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_NO_EVENT_IMPLEMENTATION,
+				"Events not implemented");
+		return FALSE;
+	} else {
+		return ARV_DEVICE_GET_CLASS (device)->read_event_data (device, event_id, address, size, buffer, error);
+	}
+}
+#endif
 
 /**
  * arv_device_get_genicam:
@@ -319,7 +375,8 @@ arv_device_get_feature_access_mode (ArvDevice *device, const char *feature)
 	g_return_val_if_fail (feature != NULL, ARV_GC_ACCESS_MODE_UNDEFINED);
 
 	node = arv_device_get_feature (device, feature);
-	return ARV_IS_GC_FEATURE_NODE (node) && arv_gc_feature_node_get_actual_access_mode (ARV_GC_FEATURE_NODE (node));
+	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (node), ARV_GC_ACCESS_MODE_UNDEFINED);
+	return arv_gc_feature_node_get_actual_access_mode (ARV_GC_FEATURE_NODE (node));
 }
 
 /**
@@ -400,7 +457,7 @@ _get_feature (ArvDevice *device, GType node_type, const char *feature, GError **
  *
  * Return: enum ArvGcRepresentation, ARV_GC_REPRESENTATION_UNDEFINED if not available.
  *
- * Since: 0.8.31
+ * Since: 0.10.0
  */
 
 ArvGcRepresentation
@@ -430,17 +487,27 @@ arv_device_get_feature_representation (ArvDevice *device, const char *feature)
  *
  * Execute a genicam command.
  *
+ * Returns: %TRUE on success
+ *
  * Since: 0.8.0
  */
 
-void
+gboolean
 arv_device_execute_command (ArvDevice *device, const char *feature, GError **error)
 {
 	ArvGcNode *node;
+        GError *local_error = NULL;
 
-	node = _get_feature (device, ARV_TYPE_GC_COMMAND, feature, error);
+	node = _get_feature (device, ARV_TYPE_GC_COMMAND, feature, &local_error);
 	if (node != NULL)
-		arv_gc_command_execute (ARV_GC_COMMAND (node), error);
+		arv_gc_command_execute (ARV_GC_COMMAND (node), &local_error);
+
+        if (local_error != NULL) {
+                g_propagate_error (error, local_error);
+                return FALSE;
+        }
+
+        return TRUE;
 }
 
 /**
@@ -828,6 +895,55 @@ arv_device_get_float_feature_increment (ArvDevice *device, const char *feature, 
 }
 
 /**
+ * arv_device_set_register_feature_value:
+ * @device: a #ArvDevice
+ * @feature: feature name
+ * @value: new feature value
+ * @error: a #GError placeholder
+ *
+ * Set the register feature value.
+ *
+ * Since:
+ */
+
+void
+arv_device_set_register_feature_value (ArvDevice *device, const char *feature, guint64 length, void* value, GError **error)
+{
+	ArvGcNode *node;
+
+	node = _get_feature (device, ARV_TYPE_GC_REGISTER, feature, error);
+	if (node != NULL)
+		arv_gc_register_set (ARV_GC_REGISTER (node), value, length, error);
+}
+
+/**
+ * arv_device_dup_register_feature_value:
+ * @device: a #ArvDevice
+ * @feature: feature name
+ * @length: (out) (allow-none): register length
+ * @error: a #GError placeholder
+ *
+ * Returns: the register feature content, must be freed using [func@GLib.free].
+ *
+ * Since: 0.8.31
+ */
+
+void *
+arv_device_dup_register_feature_value (ArvDevice *device, const char *feature, guint64 *length, GError **error)
+{
+	ArvGcNode *node;
+
+        if (length != NULL)
+                *length = 0;
+
+	node = _get_feature (device, ARV_TYPE_GC_REGISTER, feature, error);
+        if (node != NULL)
+                return arv_gc_register_dup (ARV_GC_REGISTER(node), length, error);
+
+        return NULL;
+}
+
+/**
  * arv_device_dup_available_enumeration_feature_values:
  * @device: an #ArvDevice
  * @feature: feature name
@@ -1135,6 +1251,111 @@ arv_device_set_access_check_policy (ArvDevice *device, ArvAccessCheckPolicy poli
 	arv_gc_set_access_check_policy (genicam, policy);
 }
 
+/**
+ * arv_device_start_acquisition:
+ * @device: a #ArvDevice
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * An helper that starts all the streams tied to this device created by arv_device_create_stream() or
+ * arv_device_create_stream_full().
+ *
+ * Returns: %FALSE if on of the stream failed to start.
+ *
+ * Since: 0.10.0
+ */
+
+gboolean
+arv_device_start_acquisition (ArvDevice *device, GError **error)
+{
+        ArvDevicePrivate *priv = arv_device_get_instance_private (device);
+        GSList *iter = priv->streams;
+        gboolean success = TRUE;
+
+        g_return_val_if_fail (ARV_IS_DEVICE(device), FALSE);
+
+        if (priv->streams == NULL) {
+                g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NO_STREAM_CHANNEL,
+                             "No stream to start");
+                return FALSE;
+        }
+
+        iter = priv->streams;
+        while (iter != NULL) {
+                GWeakRef *stream_weak_ref = iter->data;
+                ArvStream *stream = g_weak_ref_get(stream_weak_ref);
+
+                iter = g_slist_next(iter);
+
+                if (stream) {
+                        if (!arv_stream_start_acquisition (stream, NULL)) {
+                                success = FALSE;
+                        }
+                        g_object_unref(stream);
+                } else {
+                        priv->streams = g_slist_remove(priv->streams, stream_weak_ref);
+                        g_weak_ref_clear(stream_weak_ref);
+                        g_free(stream_weak_ref);
+                }
+        }
+
+        if (!success)
+                g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_STREAM_ERROR,
+                             "Failed to start one of the device streams");
+
+        return success;
+}
+
+/**
+ * arv_device_stop_acquisition:
+ * @device: a #ArvDevice
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * An helper that stops all the stream tied to this device created by arv_device_create_stream() or
+ * arv_device_create_stream_full().
+ *
+ * Returns: %FALSE if on of the stream failed to stop.
+ *
+ * Since: 0.10.0
+ */
+
+gboolean
+arv_device_stop_acquisition (ArvDevice *device, GError **error)
+{
+        ArvDevicePrivate *priv = arv_device_get_instance_private (device);
+        GSList *iter = priv->streams;
+        gboolean success = TRUE;
+
+        g_return_val_if_fail (ARV_IS_DEVICE(device), FALSE);
+
+        /* Nothing to stop -> success */
+        if (priv->streams == NULL)
+                return TRUE;
+
+        while (iter != NULL) {
+                GWeakRef *stream_weak_ref = iter->data;
+                ArvStream *stream = g_weak_ref_get(stream_weak_ref);
+
+                iter = g_slist_next(iter);
+
+                if (stream) {
+                        if (!arv_stream_stop_acquisition (stream, error)) {
+                                success = FALSE;
+                        }
+                        g_object_unref(stream);
+                } else {
+                        priv->streams = g_slist_remove (priv->streams, stream_weak_ref);
+                        g_weak_ref_clear (stream_weak_ref);
+                        g_free (stream_weak_ref);
+                }
+        }
+
+        if (!success)
+                g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_STREAM_ERROR,
+                             "Failed to stop one of the device streams");
+
+        return success;
+}
+
 void
 arv_device_emit_control_lost_signal (ArvDevice *device)
 {
@@ -1143,6 +1364,15 @@ arv_device_emit_control_lost_signal (ArvDevice *device)
 	g_signal_emit (device, arv_device_signals[ARV_DEVICE_SIGNAL_CONTROL_LOST], 0);
 }
 
+#if ARAVIS_HAS_EVENT
+void
+arv_device_emit_device_event_signal (ArvDevice *device, int event_id)
+{
+	g_return_if_fail (ARV_IS_DEVICE (device));
+
+	g_signal_emit (device, arv_device_signals[ARV_DEVICE_SIGNAL_DEVICE_EVENT], 0, event_id);
+}
+#endif
 
 void arv_device_take_init_error (ArvDevice *device, GError *error)
 {
@@ -1163,8 +1393,15 @@ static void
 arv_device_finalize (GObject *object)
 {
 	ArvDevicePrivate *priv = arv_device_get_instance_private (ARV_DEVICE (object));
+        GSList *iter;
 
 	g_clear_error (&priv->init_error);
+
+        for (iter = priv->streams; iter != NULL; iter= iter->next) {
+                g_weak_ref_clear(iter->data);
+                g_free (iter->data);
+        }
+        g_slist_free(priv->streams);
 
 	G_OBJECT_CLASS (arv_device_parent_class)->finalize (object);
 }
@@ -1195,6 +1432,29 @@ arv_device_class_init (ArvDeviceClass *device_class)
 			      G_STRUCT_OFFSET (ArvDeviceClass, control_lost),
 			      NULL, NULL,
 			      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
+
+#if ARAVIS_HAS_EVENT
+	/**
+	 * ArvDevice::device-event:
+	 * @device:a #ArvDevice
+	 * @event_id: #int
+	 *
+	 * Signal an event notification from the device.
+	 *
+	 * This signal may be emited from a thread different than the main one,
+	 * so please take care to shared data access from the callback.
+	 *
+	 * Since: 0.10.0
+	 */
+
+	arv_device_signals[ARV_DEVICE_SIGNAL_DEVICE_EVENT] =
+		g_signal_new ("device-event",
+			      G_TYPE_FROM_CLASS (device_class),
+			      G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (ArvDeviceClass, device_event),
+			      NULL, NULL,
+			      g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+#endif
 }
 
 static gboolean

@@ -804,6 +804,70 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 	},
 };
 
+typedef struct {
+	const char *vendor_selection;
+	const char *model_selection;
+} ArvBigEndianPixelFormatInfos;
+
+/* Some cameras seem to incorrectly transmit multi bytes image data in big endian order, even if GevSCPSBigEndian is not
+ * set. In this case, we need to convert the pixel format to a big endian GstCaps. We maintain a list of such cameras
+ * here. */
+
+static const ArvBigEndianPixelFormatInfos arv_big_endian_pixel_format_infos[] = {
+	{ .vendor_selection = "Point Grey Research", .model_selection = "Blackfly BFLY-PGE-31S4M" },
+	{ .vendor_selection = "Point Grey Research", .model_selection = "Blackfly BFLY-PGE-14S2C" }
+};
+
+/* Only Mono16 is handled here, as we did not seen other cases of misbehaving devices with other pixel format for now. */
+
+ArvGstCapsInfos big_endian_gst_caps_infos[] = {
+	{
+		ARV_PIXEL_FORMAT_MONO_16,
+		"video/x-raw, format=(string)GRAY16_BE",
+		"video/x-raw",		"GRAY16_BE",
+		"video/x-raw-gray, bpp=(int)16, depth=(int)16",
+		"video/x-raw-gray",	16,	16,	0
+	},
+};
+
+static gboolean
+_use_big_endian_pixel_format (const char *vendor_name,
+                              const char *model_name)
+{
+        guint i;
+
+	for (i = 0; i < G_N_ELEMENTS (arv_big_endian_pixel_format_infos); i++) {
+		if ((g_pattern_match_simple (arv_big_endian_pixel_format_infos[i].vendor_selection, vendor_name) == TRUE) &&
+		    (g_pattern_match_simple (arv_big_endian_pixel_format_infos[i].model_selection, model_name) == TRUE)) {
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+static const char *
+pixel_format_to_gst_caps_string (ArvPixelFormat pixel_format,
+				 const ArvGstCapsInfos *infos,
+				 guint n_elements)
+{
+	while (n_elements > 0) {
+		if (infos->pixel_format == pixel_format)
+			break;
+		infos ++;
+		n_elements --;
+	}
+
+	if (n_elements == 0) {
+		return NULL;
+	}
+
+	arv_debug_misc ("[PixelFormat::to_gst_caps_string] 0x%08x -> %s",
+		      pixel_format, infos->gst_caps_string);
+
+	return infos->gst_caps_string;
+}
+
 /**
  * arv_pixel_format_to_gst_caps_string:
  * @pixel_format: a pixel format
@@ -813,21 +877,53 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 const char *
 arv_pixel_format_to_gst_caps_string (ArvPixelFormat pixel_format)
 {
-	int i;
+	const char *caps_string;
 
-	for (i = 0; i < G_N_ELEMENTS (arv_gst_caps_infos); i++)
-		if (arv_gst_caps_infos[i].pixel_format == pixel_format)
-			break;
+	caps_string = pixel_format_to_gst_caps_string(pixel_format,
+						      arv_gst_caps_infos,
+						      G_N_ELEMENTS (arv_gst_caps_infos));
 
-	if (i == G_N_ELEMENTS (arv_gst_caps_infos)) {
+	if (caps_string == NULL) {
 		arv_warning_misc ("[PixelFormat::to_gst_caps_string] 0x%08x not found", pixel_format);
-		return NULL;
 	}
 
-	arv_debug_misc ("[PixelFormat::to_gst_caps_string] 0x%08x -> %s",
-		      pixel_format, arv_gst_caps_infos[i].gst_caps_string);
+	return caps_string;
+}
 
-	return arv_gst_caps_infos[i].gst_caps_string;
+#include <stdio.h>
+
+/**
+ * arv_pixel_format_to_gst_caps_string_full:
+ * @pixel_format: a pixel format
+ * @vendor_name: vendor name
+ * @model_name: model name
+ * Return value: (nullable): a gstreamer caps string describing the given @pixel_format, NULL if not found.
+ *
+ * The returned caps string defines a little endian pixel format, unless an exception has been detected. In this case, a
+ * big endian caps is returned.
+ *
+ * Since: 0.8.32
+ */
+
+const char *
+arv_pixel_format_to_gst_caps_string_full (ArvPixelFormat pixel_format,
+                                          const char *vendor_name,
+                                          const char *model_name)
+{
+        const char *caps_string;
+
+	caps_string = NULL;
+
+	if (_use_big_endian_pixel_format (vendor_name, model_name))
+                caps_string = pixel_format_to_gst_caps_string (pixel_format,
+                                                               big_endian_gst_caps_infos,
+                                                               G_N_ELEMENTS (big_endian_gst_caps_infos));
+
+	if (caps_string != NULL) {
+		return caps_string;
+	}
+
+	return arv_pixel_format_to_gst_caps_string (pixel_format);
 }
 
 ArvPixelFormat
@@ -931,6 +1027,110 @@ arv_vendor_alias_lookup	(const char *vendor)
 			return vendor_aliases[i].alias;
 
 	return vendor;
+}
+
+static struct {
+	const char *protocol;
+	const char *transport_layer_type;
+} arv_protocols[] = {
+        { "GigEVision",         TLTypeGEVName},
+        { "USB3Vision",         TLTypeU3VName},
+        { "CameraLink",         TLTypeCLName},
+        { "IIDC1394",           TLTypeIIDCName},
+        { "USBVideoClass",      TLTypeUVCName},
+        { "CoaXPress",          TLTypeCXPName},
+        { "CameraLinkHS",       TLTypeCLHSName},
+        { "GenericEthernet",    TLTypeETHERNETName},
+        { "PCIExpress",         TLTypePCIName},
+        { "Mixed",              TLTypeMixedName},
+        { "Custom",             TLTypeCustomName},
+};
+
+const char *
+arv_protocol_from_transport_layer_type	(const char *transport_layer_type)
+{
+	int i;
+
+	if (transport_layer_type == NULL)
+		return NULL;
+
+	for (i = 0; i < G_N_ELEMENTS (arv_protocols); i++)
+		if (g_strcmp0 (arv_protocols[i].transport_layer_type, transport_layer_type) == 0)
+			return arv_protocols[i].protocol;
+
+	return "Unknown";
+}
+
+const char *
+arv_protocol_to_transport_layer_type	(const char *protocol)
+{
+	int i;
+
+	if (protocol == NULL)
+		return NULL;
+
+	for (i = 0; i < G_N_ELEMENTS (arv_protocols); i++)
+		if (g_strcmp0 (arv_protocols[i].protocol, protocol) == 0)
+			return arv_protocols[i].transport_layer_type;
+
+	return "Custom";
+}
+
+const char *
+arv_gentl_gc_error_to_string (GC_ERROR error)
+{
+        switch (error) {
+                case GC_ERR_SUCCESS:
+                        return "Success";
+                case GC_ERR_ERROR:
+                        return "Unspecified runtime error";
+                case GC_ERR_NOT_INITIALIZED:
+                        return "Module or resource not initialized";
+                case GC_ERR_NOT_IMPLEMENTED:
+                        return "Requested operation not implemented";
+                case GC_ERR_RESOURCE_IN_USE:
+                        return "Requested resource is already in use";
+                case GC_ERR_ACCESS_DENIED:
+                        return "Requested operation is not allowed";
+                case GC_ERR_INVALID_HANDLE:
+                        return "Given handle does not support the operation";
+                case GC_ERR_INVALID_ID:
+                        return "ID could not be connected to a resource";
+                case GC_ERR_NO_DATA:
+                        return "The function has no data to work on";
+                case GC_ERR_INVALID_PARAMETER:
+                        return "One of the parameter given was not valid or out of range";
+                case GC_ERR_IO:
+                        return "Communication error has occurred";
+                case GC_ERR_TIMEOUT:
+                        return "An operation’s timeout time expired before it could be completed";
+                case GC_ERR_ABORT:
+                        return "An operation has been aborted before it could be completed";
+                case GC_ERR_INVALID_BUFFER:
+                        return "The GenTL Consumer has not announced enough buffers to start the acquisition";
+                case GC_ERR_NOT_AVAILABLE:
+                        return "Resource or information is not available at a given time in a current state";
+                case GC_ERR_INVALID_ADDRESS:
+                        return "A given address is out of range or invalid for internal reasons";
+                case GC_ERR_BUFFER_TOO_SMALL:
+                        return "A provided buffer is too small to receive the expected amount of data";
+                case GC_ERR_INVALID_INDEX:
+                        return "A provided index referencing a Producer internal object is out of bounds";
+                case GC_ERR_PARSING_CHUNK_DATA:
+                        return "An error occurred parsing a buffer containing chunk data";
+                case GC_ERR_INVALID_VALUE:
+                        return "A register write function was trying to write an invalid value";
+                case GC_ERR_RESOURCE_EXHAUSTED:
+                        return "A requested resource is exhausted";
+                case GC_ERR_OUT_OF_MEMORY:
+                        return "The system and/or other hardware in the system (frame grabber) ran out of memory";
+                case GC_ERR_BUSY:
+                        return "The required operation cannot be executed because the responsible module/entity is busy";
+                case GC_ERR_CUSTOM_ID:
+                        return "Unknown reason";
+        }
+
+        return "Unknown reason";
 }
 
 /**

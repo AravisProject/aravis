@@ -66,6 +66,7 @@ arv_fake_interface_update_device_list (ArvInterface *interface, GArray *device_i
         ids->manufacturer_info = g_strdup (ARV_FAKE_MANUFACTURER_INFO);
 	ids->model = g_strdup (ARV_FAKE_MODEL);
 	ids->serial_nbr = g_strdup (ARV_FAKE_SERIAL);
+        ids->protocol = "Fake";
 
 	g_array_append_val (device_ids, ids);
 }
@@ -138,6 +139,4 @@ arv_fake_interface_class_init (ArvFakeInterfaceClass *fake_interface_class)
 
 	interface_class->update_device_list = arv_fake_interface_update_device_list;
 	interface_class->open_device = arv_fake_interface_open_device;
-
-	interface_class->protocol = "Fake";
 }

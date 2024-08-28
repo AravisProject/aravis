@@ -41,8 +41,6 @@ struct _ArvInterfaceClass {
 
 	void 		(*update_device_list)		(ArvInterface *iface, GArray *device_ids);
 	ArvDevice *	(*open_device)			(ArvInterface *iface, const char *device_id, GError **error);
-
-	const char *	protocol;
 };
 
 ARV_API void		arv_interface_update_device_list	        (ArvInterface *iface);

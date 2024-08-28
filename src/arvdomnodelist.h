@@ -41,6 +41,9 @@ struct _ArvDomNodeListClass {
 
 	ArvDomNode *	(*get_item) 		(ArvDomNodeList *list, unsigned int index);
 	unsigned int	(*get_length)		(ArvDomNodeList *list);
+
+        /* Padding for future expansion */
+        gpointer padding[10];
 };
 
 ARV_API ArvDomNode *		arv_dom_node_list_get_item		(ArvDomNodeList *list, unsigned int index);

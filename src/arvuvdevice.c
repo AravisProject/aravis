@@ -191,6 +191,22 @@ arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, ArvUvEndpointType endpoint_
 	return success;
 }
 
+void *
+arv_uv_device_usb_mem_alloc (ArvUvDevice *uv_device, size_t size)
+{
+	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (uv_device);
+
+        return libusb_dev_mem_alloc (priv->usb_device, size);
+}
+
+void
+arv_uv_device_usb_mem_free (ArvUvDevice *uv_device, void *data, size_t size)
+{
+	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (uv_device);
+
+        libusb_dev_mem_free (priv->usb_device, data, size);
+}
+
 static ArvStream *
 arv_uv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data, GDestroyNotify destroy, GError **error)
 {
@@ -428,7 +444,7 @@ arv_uv_device_read_memory (ArvDevice *device, guint64 address, guint32 size, voi
 }
 
 static gboolean
-arv_uv_device_write_memory (ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error)
+arv_uv_device_write_memory (ArvDevice *device, guint64 address, guint32 size, const void *buffer, GError **error)
 {
 	ArvUvDevice *uv_device = ARV_UV_DEVICE (device);
 	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (uv_device);
@@ -492,6 +508,7 @@ _bootstrap (ArvUvDevice *uv_device)
 	void *data;
 	char manufacturer[64];
 	gboolean success = TRUE;
+        char *genicam_url = NULL;
 
 	arv_info_device ("Get genicam");
 
@@ -632,9 +649,9 @@ _bootstrap (ArvUvDevice *uv_device)
 					const char *zip_filename;
 
 					zip_filename = arv_zip_file_get_name (zip_files->data);
-					priv->genicam_xml = arv_zip_get_file (zip,
-											 zip_filename,
-											 &priv->genicam_xml_size);
+                                        priv->genicam_xml = arv_zip_get_file (zip,
+                                                                              zip_filename,
+                                                                              &priv->genicam_xml_size);
 
 					arv_info_device ("zip file =                 %s", zip_filename);
 
@@ -649,6 +666,12 @@ _bootstrap (ArvUvDevice *uv_device)
 					priv->genicam = arv_gc_new (ARV_DEVICE (uv_device),
 								    priv->genicam_xml,
 								    priv->genicam_xml_size);
+
+                                        genicam_url = g_strdup_printf("local:///DeviceU3V.zip;%"
+                                                                      G_GINT64_MODIFIER "x;%" G_GINT64_MODIFIER "x",
+                                                                      entry.address, entry.size);
+                                        arv_dom_document_set_url(ARV_DOM_DOCUMENT(priv->genicam), genicam_url);
+                                        g_free (genicam_url);
 				}
 
 				arv_zip_free (zip);
@@ -662,11 +685,17 @@ _bootstrap (ArvUvDevice *uv_device)
 				priv->genicam = arv_gc_new (ARV_DEVICE (uv_device),
 							    priv->genicam_xml,
 							    priv->genicam_xml_size);
-			}
-			break;
-		default:
-			arv_warning_device ("Unknown USB3Vision manifest schema type (%d)", schema_type);
-	}
+                                genicam_url =
+                                        g_strdup_printf("local:///DeviceU3V.xml;%" G_GINT64_MODIFIER "x;%"
+                                                        G_GINT64_MODIFIER "x",
+                                                        entry.address, entry.size);
+                                arv_dom_document_set_url(ARV_DOM_DOCUMENT(priv->genicam), genicam_url);
+                                g_free (genicam_url);
+                        }
+                        break;
+                default:
+                        arv_warning_device ("Unknown USB3Vision manifest schema type (%d)", schema_type);
+        }
 
 #if 0
 	arv_info_device("GENICAM\n:%s", priv->genicam_xml);

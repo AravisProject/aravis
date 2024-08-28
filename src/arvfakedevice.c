@@ -90,7 +90,7 @@ arv_fake_device_read_memory (ArvDevice *device, guint64 address, guint32 size, v
 }
 
 static gboolean
-arv_fake_device_write_memory (ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error)
+arv_fake_device_write_memory (ArvDevice *device, guint64 address, guint32 size, const void *buffer, GError **error)
 {
 	ArvFakeDevicePrivate *priv = arv_fake_device_get_instance_private (ARV_FAKE_DEVICE (device));
 
@@ -199,6 +199,7 @@ arv_fake_device_constructed (GObject *self)
 	}
 
         arv_gc_set_default_gv_features(priv->genicam);
+        arv_dom_document_set_url(ARV_DOM_DOCUMENT(priv->genicam), arv_fake_camera_get_genicam_xml_url(priv->camera));
 }
 
 static void

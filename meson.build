@@ -1,10 +1,10 @@
-project ('aravis', 'c', 'cpp', version: '0.8.31', meson_version: '>=0.57.0')
+project ('aravis', 'c', 'cpp', version: '0.9.0', meson_version: '>=0.57.0')
 
 gnome = import('gnome')
 pkg = import ('pkgconfig')
 
 aravis_version = meson.project_version ()
-aravis_api_version = '0.8'
+aravis_api_version = '0.10'
 
 versions = aravis_version.split ('.')
 aravis_major_version = versions[0].to_int ()
@@ -56,21 +56,29 @@ else
   cc_export_define = 'extern'
 endif
 
-glib_dep = dependency ('glib-2.0', version: '>=2.52', required: true)
+glib_dep = dependency ('glib-2.0', version: '>=2.58', required: true)
 gobject_dep = dependency ('gobject-2.0', required: true)
 gio_dep = dependency ('gio-2.0', required: true)
 xml2_dep = dependency ('libxml-2.0', required: true)
 libz_dep = dependency ('zlib', required: true)
 usb_dep = dependency ('libusb-1.0', required: get_option ('usb'))
+gmodule_dep = dependency ('gmodule-2.0', required: true)
+v4l2_dep = dependency('libv4l2', required: get_option('v4l2'))
+gudev_dep = dependency('gudev-1.0', required: get_option('v4l2'))
 
 aravis_public_dependencies = [glib_dep, gobject_dep, gio_dep]
-aravis_dependencies = [aravis_public_dependencies, xml2_dep, libz_dep]
+aravis_dependencies = [aravis_public_dependencies, xml2_dep, libz_dep, gmodule_dep]
 if cc.get_id()!='msvc'
 	libm = cc.find_library ('m', required: true)
 	aravis_dependencies += libm
 endif
+
 if usb_dep.found()
   aravis_dependencies += usb_dep
+endif
+
+if v4l2_dep.found()
+  aravis_dependencies += [v4l2_dep, gudev_dep]
 endif
 
 if host_machine.system()=='windows'

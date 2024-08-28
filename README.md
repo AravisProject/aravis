@@ -26,7 +26,7 @@ Aravis is released under the LGPL v2+.
 ### Documentation
 
 The latest documentation is available
-[here](https://aravisproject.github.io/aravis). You will find how to install
+[here](https://aravisproject.github.io/aravis/aravis-stable). You will find how to install
 Aravis on Linux, macOS and Windows, how to tweak your system in order to get the
 best performances, and the API documentation.
 
@@ -67,5 +67,4 @@ pull request your work is not based on them.
 * Github repository: https://github.com/AravisProject/aravis
 * Releases: https://github.com/AravisProject/aravis/releases
 * Release notes: https://github.com/AravisProject/aravis/blob/master/NEWS.md
-* Aravis 0.8 documentation: https://aravisproject.github.io/docs/aravis-0.8/
 * Genicam standard : http://www.genicam.org

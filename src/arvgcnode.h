@@ -38,6 +38,9 @@ ARV_API G_DECLARE_DERIVABLE_TYPE (ArvGcNode, arv_gc_node, ARV, GC_NODE, ArvDomEl
 
 struct _ArvGcNodeClass {
 	ArvDomElementClass parent_class;
+
+        /* Padding for future expansion */
+        gpointer padding[10];
 };
 
 ARV_API ArvGc *			arv_gc_node_get_genicam			(ArvGcNode *gc_node);

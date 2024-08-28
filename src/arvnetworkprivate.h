@@ -24,7 +24,7 @@
 #ifndef ARV_NETWORK_PRIVATE_H
 #define ARV_NETWORK_PRIVATE_H
 
-#include <arvapi.h>
+#include <arvnetwork.h>
 
 #include <gio/gnetworking.h>
 #include <gio/gio.h>
@@ -121,5 +121,10 @@ gboolean			arv_socket_set_recv_buffer_size		(int socket_fd, gint buffer_size);
 void			arv_gpollfd_prepare_all			(GPollFD *fds, guint nfds);
 void			arv_gpollfd_clear_one			(GPollFD *fd, GSocket* socket);
 void 			arv_gpollfd_finish_all			(GPollFD *fds, guint nfds);
+
+/* Port range constrained socket binding */
+
+GSocketAddress *        arv_socket_bind_with_range              (GSocket *socket, GInetAddress *address, guint16 port,
+                                                                 gboolean allow_reuse, GError **error);
 
 #endif

@@ -44,6 +44,9 @@ struct _ArvGcFeatureNodeClass {
 	ArvGcAccessMode		(*get_access_mode)	(ArvGcFeatureNode *gc_feature_node);
 
         ArvGcAccessMode        default_access_mode;
+
+        /* Padding for future expansion */
+        gpointer padding[10];
 };
 
 ARV_API const char *		arv_gc_feature_node_get_name			(ArvGcFeatureNode *gc_feature_node);

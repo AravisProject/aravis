@@ -39,6 +39,9 @@ ARV_API G_DECLARE_DERIVABLE_TYPE (ArvDomDocumentFragment, arv_dom_document_fragm
 
 struct _ArvDomDocumentFragmentClass {
 	ArvDomNodeClass parent_class;
+
+        /* Padding for future expansion */
+        gpointer padding[10];
 };
 
 ARV_API ArvDomDocumentFragment *	arv_dom_document_fragment_new		(void);

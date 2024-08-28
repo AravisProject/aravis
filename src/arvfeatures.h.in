@@ -1,6 +1,6 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2016 Emmanuel Pacaud
+ * Copyright © 2009-2023 Emmanuel Pacaud
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,7 +17,7 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  *
- * Author: Emmanuel Pacaud <emmanuel@gnome.org>
+ * Author: Emmanuel Pacaud <emmanuel.pacaud@free.fr>
  */
 
 #ifndef ARV_FEATURES_H
@@ -38,14 +38,34 @@
 #define ARAVIS_HAS_USB @ARAVIS_HAS_USB@
 
 /**
+ * ARAVIS_HAS_V4L2
+ *
+ * ARAVIS_HAS_V4L2 is defined as 1 if aravis is compiled with V4L2 support, 0 if not.
+ *
+ * Since: 0.8.7
+ */
+
+#define ARAVIS_HAS_V4L2 @ARAVIS_HAS_V4L2@
+
+/**
  * ARAVIS_HAS_PACKET_SOCKET
  *
  * ARAVIS_HAS_PACKET_SOCKET is defined as 1 if aravis is compiled with packet socket support, 0 if not.
  *
- * Since: 0.6.0
+ * Since: 0.8.0
  */
 
 #define ARAVIS_HAS_PACKET_SOCKET @ARAVIS_HAS_PACKET_SOCKET@
+
+/**
+ * ARAVIS_HAS_EVENT
+ *
+ * ARAVIS_HAS_EVENT is defined as 1 if aravis is compiled with event support, 0 if not.
+ *
+ * Since: 0.10.0
+ */
+
+#define ARAVIS_HAS_EVENT @ARAVIS_HAS_EVENT@
 
 /**
  * ARAVIS_HAS_FAST_HEARTBEAT

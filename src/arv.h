@@ -98,8 +98,14 @@
 #include <arvgvinterface.h>
 #include <arvgvstream.h>
 
+#include <arvgentlsystem.h>
+#include <arvgentlinterface.h>
+#include <arvgentldevice.h>
+#include <arvgentlstream.h>
+
 #include <arvinterface.h>
 #include <arvmisc.h>
+#include <arvnetwork.h>
 #include <arvrealtime.h>
 #include <arvstream.h>
 #include <arvstr.h>
@@ -109,6 +115,12 @@
 #include <arvuvinterface.h>
 #include <arvuvdevice.h>
 #include <arvuvstream.h>
+#endif
+
+#if ARAVIS_HAS_V4L2
+#include <arvv4l2interface.h>
+#include <arvv4l2device.h>
+#include <arvv4l2stream.h>
 #endif
 
 #include <arvversion.h>

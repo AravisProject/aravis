@@ -48,6 +48,9 @@ ARV_API G_DECLARE_DERIVABLE_TYPE (ArvCamera, arv_camera, ARV, CAMERA, GObject)
 
 struct _ArvCameraClass {
 	GObjectClass parent_class;
+
+        /* Padding for future expansion */
+        gpointer padding[10];
 };
 
 ARV_API ArvCamera *	arv_camera_new			(const char *name, GError **error);
@@ -98,9 +101,9 @@ ARV_API const char **	arv_camera_dup_available_pixel_formats_as_display_names	(A
 
 /* Acquisition control */
 
-ARV_API void		arv_camera_start_acquisition		(ArvCamera *camera, GError **error);
-ARV_API void		arv_camera_stop_acquisition		(ArvCamera *camera, GError **error);
-ARV_API void		arv_camera_abort_acquisition		(ArvCamera *camera, GError **error);
+ARV_API gboolean	arv_camera_start_acquisition		(ArvCamera *camera, GError **error);
+ARV_API gboolean	arv_camera_stop_acquisition		(ArvCamera *camera, GError **error);
+ARV_API gboolean	arv_camera_abort_acquisition		(ArvCamera *camera, GError **error);
 
 ARV_API ArvBuffer *	arv_camera_acquisition			(ArvCamera *camera, guint64 timeout, GError **error);
 
@@ -110,7 +113,8 @@ ARV_API ArvAcquisitionMode	arv_camera_get_acquisition_mode (ArvCamera *camera, G
 ARV_API void		arv_camera_set_frame_count		(ArvCamera *camera, gint64 frame_count, GError **error);
 ARV_API gint64		arv_camera_get_frame_count		(ArvCamera *camera, GError **error);
 ARV_API void		arv_camera_get_frame_count_bounds	(ArvCamera *camera, gint64 *min, gint64 *max, GError **error);
-ARV_API void            arv_camera_set_frame_rate_enable       (ArvCamera *camera, gboolean enable, GError **error);
+ARV_API gboolean        arv_camera_get_frame_rate_enable        (ArvCamera *camera, GError **error);
+ARV_API void            arv_camera_set_frame_rate_enable        (ArvCamera *camera, gboolean enable, GError **error);
 
 ARV_API gboolean	arv_camera_is_frame_rate_available	(ArvCamera *camera, GError **error);
 
@@ -179,7 +183,7 @@ ARV_API guint		arv_camera_get_payload			(ArvCamera *camera, GError **error);
 
 /* Generic feature control */
 
-ARV_API void		arv_camera_execute_command		(ArvCamera *camera, const char *feature, GError **error);
+ARV_API gboolean	arv_camera_execute_command		(ArvCamera *camera, const char *feature, GError **error);
 
 ARV_API void		arv_camera_set_boolean			(ArvCamera *camera, const char *feature, gboolean value, GError **error);
 ARV_API gboolean	arv_camera_get_boolean			(ArvCamera *camera, const char *feature, GError **error);
@@ -197,6 +201,11 @@ ARV_API void		arv_camera_set_float			(ArvCamera *camera, const char *feature, do
 ARV_API double		arv_camera_get_float			(ArvCamera *camera, const char *feature, GError **error);
 ARV_API void		arv_camera_get_float_bounds		(ArvCamera *camera, const char *feature, double *min, double *max, GError **error);
 ARV_API double		arv_camera_get_float_increment		(ArvCamera *camera, const char *feature, GError **error);
+
+ARV_API void            arv_camera_set_register                 (ArvCamera *camera, const char *feature, guint64 length,
+                                                                 void* value, GError **error);
+ARV_API void *          arv_camera_dup_register                 (ArvCamera *camera, const char *feature, guint64 *length,
+                                                                 GError **error);
 
 ARV_API gint64 *	arv_camera_dup_available_enumerations			(ArvCamera *camera, const char *feature,
 										 guint *n_values, GError **error);
@@ -261,6 +270,8 @@ ARV_API void		arv_camera_uv_set_bandwidth			(ArvCamera *camera, guint bandwidth,
 ARV_API guint		arv_camera_uv_get_bandwidth			(ArvCamera *camera, GError **error);
 ARV_API void		arv_camera_uv_get_bandwidth_bounds		(ArvCamera *camera, guint *min, guint *max, GError **error);
 ARV_API void            arv_camera_uv_set_usb_mode			(ArvCamera *camera, ArvUvUsbMode usb_mode);
+
+ARV_API gboolean	arv_camera_is_gentl_device			(ArvCamera *camera);
 
 /* Chunk data */
 

@@ -8,6 +8,12 @@ option('packet-socket', type: 'feature', value: 'auto', description : 'Enable pa
 option('tests', type: 'boolean', value: true, description: 'Build tests')
 option('fast-heartbeat', type: 'boolean', value: false, description: 'Enable faster heartbeat rate')
 
+# Experimental/incomplete features
+
+option('gentl-producer', type: 'boolean', value: 'false', description : 'Enable experimental GenTL producer')
+option('event', type: 'boolean', value: 'false', description: 'Enable experimental event support')
+option('v4l2', type: 'feature', value: 'disabled', description : 'Enable experimental V4L2 support')
+
 # Parameters
 
 option('gv-n-buffers', type: 'integer', min: 1, value: 16, description: 'Number of buffers used to receive GVSP packets')

@@ -25,6 +25,7 @@
 
 #include <arvapi.h>
 #include <arvmisc.h>
+#include <GenTL_v1_5.h>
 
 typedef struct _ArvHistogram ArvHistogram;
 
@@ -82,7 +83,12 @@ void 		arv_copy_memory_with_endianness	(void *to, size_t to_size, guint to_endia
 void * 		arv_decompress 			(void *input_buffer, size_t input_size, size_t *output_size);
 
 /* private, but used by tests */
-ARV_API const char *	arv_vendor_alias_lookup	(const char *vendor);
+ARV_API const char *	arv_vendor_alias_lookup	                (const char *vendor);
+
+const char *            arv_protocol_from_transport_layer_type	(const char *transport_layer_type);
+const char *            arv_protocol_to_transport_layer_type	(const char *protocol);
+
+const char *            arv_gentl_gc_error_to_string            (GC_ERROR error);
 
 /* this only wraps g_get_monotonic_time on non-windows platforms */
 gint64 arv_monotonic_time_us (void);

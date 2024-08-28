@@ -40,6 +40,7 @@
 #include <arvgcfloat.h>
 #include <arvgcenumeration.h>
 #include <arvgcenumentry.h>
+#include <arvgcregister.h>
 #include <arvgcstring.h>
 #include <arvbuffer.h>
 #include <arvgc.h>
@@ -47,6 +48,7 @@
 #if ARAVIS_HAS_USB
 #include <arvuvdevice.h>
 #endif
+#include <arvgentldeviceprivate.h>
 #include <arvenums.h>
 #include <arvstr.h>
 
@@ -798,13 +800,23 @@ arv_camera_dup_available_pixel_formats_as_display_names (ArvCamera *camera, guin
  *
  * Starts video stream acquisition.
  *
+ * Returns: %TRUE on success
+ *
  * Since: 0.8.0
  */
 
-void
+gboolean
 arv_camera_start_acquisition (ArvCamera *camera, GError **error)
 {
-	arv_camera_execute_command (camera, "AcquisitionStart", error);
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+        gboolean success;
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
+
+        success = arv_device_start_acquisition (priv->device, error);
+        success = success && arv_camera_execute_command (camera, "AcquisitionStart", error);
+
+        return success;
 }
 
 /**
@@ -814,13 +826,23 @@ arv_camera_start_acquisition (ArvCamera *camera, GError **error)
  *
  * Stops video stream acquisition.
  *
+ * Returns: %TRUE on success
+ *
  * Since: 0.8.0
  */
 
-void
+gboolean
 arv_camera_stop_acquisition (ArvCamera *camera, GError **error)
 {
-	arv_camera_execute_command (camera, "AcquisitionStop", error);
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+        gboolean success;
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
+
+	success = arv_camera_execute_command (camera, "AcquisitionStop", error);
+        success = success && arv_device_stop_acquisition (priv->device, error);
+
+        return success;
 }
 
 /**
@@ -830,13 +852,23 @@ arv_camera_stop_acquisition (ArvCamera *camera, GError **error)
  *
  * Aborts video stream acquisition.
  *
+ * Returns: %TRUE on success
+ *
  * Since: 0.8.0
  */
 
-void
+gboolean
 arv_camera_abort_acquisition (ArvCamera *camera, GError **error)
 {
-	arv_camera_execute_command (camera, "AcquisitionAbort", error);
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+        gboolean success;
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
+
+	success = arv_camera_execute_command (camera, "AcquisitionAbort", error);
+        success = success && arv_device_stop_acquisition (priv->device, error);
+
+        return success;
 }
 
 /**
@@ -852,7 +884,8 @@ arv_camera_abort_acquisition (ArvCamera *camera, GError **error)
  *   Continuous acquisition mode for later operations, using arv_camera_set_acquisition_mode().</para>
  * </warning>
  *
- * Returns: (transfer full): A new #ArvBuffer, NULL on error. The returned buffer must be freed using g_object_unref().
+ * Returns: (transfer full): A new #ArvBuffer, NULL on error. The returned buffer must be freed using
+ * [method@GObject.Object.unref].
  *
  * Since: 0.8.0
  */
@@ -1280,15 +1313,6 @@ arv_camera_set_frame_rate_enable(ArvCamera *camera, gboolean enable, GError **er
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
   switch (priv->vendor) {
-		case ARV_CAMERA_VENDOR_BASLER:
-			if (local_error == NULL){
-				if (arv_camera_is_feature_available (camera, "AcquisitionFrameRateEnable", &local_error)){
-					/* enable is optional on some devices */
-					if (local_error == NULL)
-						arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", enable, &local_error);
-				}
-			}
-			break;
 		case ARV_CAMERA_VENDOR_POINT_GREY_FLIR:
 			if (local_error == NULL) {
 				if (priv->has_acquisition_frame_rate_enabled)
@@ -1297,6 +1321,7 @@ arv_camera_set_frame_rate_enable(ArvCamera *camera, gboolean enable, GError **er
 					arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", enable, &local_error);
 			}
 			break;
+		case ARV_CAMERA_VENDOR_BASLER:
 		case ARV_CAMERA_VENDOR_DALSA:
 		case ARV_CAMERA_VENDOR_RICOH:
 		case ARV_CAMERA_VENDOR_XIMEA:
@@ -1306,7 +1331,7 @@ arv_camera_set_frame_rate_enable(ArvCamera *camera, gboolean enable, GError **er
 			if (local_error == NULL) {
 				if (arv_camera_is_feature_available (camera, "AcquisitionFrameRateEnable", &local_error)) {
 					if (local_error == NULL)
-						arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", TRUE, &local_error);
+						arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", enable, &local_error);
 					}
 			}
 			break;
@@ -1319,6 +1344,52 @@ arv_camera_set_frame_rate_enable(ArvCamera *camera, gboolean enable, GError **er
 	if (local_error != NULL) {
 		g_propagate_error (error, local_error);
 	}
+}
+
+/**
+ * arv_camera_get_frame_rate_enable:
+ * @camera: an #ArvCamera
+ * @error: a #GError placeholer, %NULL to ignore
+ *
+ * Returns: whether the upper frame rate limit is enabled.
+ *
+ * Implements vendor specific quirks if needed.
+ * Since: 0.8.31
+ */
+
+gboolean arv_camera_get_frame_rate_enable(ArvCamera* camera, GError** error)
+{
+	ArvCameraPrivate* priv = arv_camera_get_instance_private(camera);
+
+	g_return_val_if_fail(ARV_IS_CAMERA(camera), TRUE);
+
+	switch (priv->vendor)
+	{
+		case ARV_CAMERA_VENDOR_POINT_GREY_FLIR:
+			return arv_camera_get_boolean(camera,
+										  priv->has_acquisition_frame_rate_enabled
+											  ? "AcquisitionFrameRateEnabled"
+											  : "AcquisitionFrameRateEnable",
+										  error);
+		case ARV_CAMERA_VENDOR_BASLER:
+		case ARV_CAMERA_VENDOR_DALSA:
+		case ARV_CAMERA_VENDOR_RICOH:
+		case ARV_CAMERA_VENDOR_XIMEA:
+		case ARV_CAMERA_VENDOR_MATRIX_VISION:
+		case ARV_CAMERA_VENDOR_IMPERX:
+		case ARV_CAMERA_VENDOR_UNKNOWN:
+			if (arv_camera_is_feature_available(camera, "AcquisitionFrameRateEnable", NULL))
+			{
+				return arv_camera_get_boolean(camera, "AcquisitionFrameRateEnable", error);
+			}
+			break;
+		case ARV_CAMERA_VENDOR_PROSILICA:
+		case ARV_CAMERA_VENDOR_TIS:
+		default:
+			break; /* No specific frame rate enable code */
+	}
+
+	return TRUE;
 }
 
 /**
@@ -1351,60 +1422,65 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source, GError **error)
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 	g_return_if_fail (source != NULL);
 
-	if (arv_camera_is_feature_available (camera, "AcquisitionFrameRateEnable", NULL))
-                arv_camera_set_boolean (camera, "AcquisitionFrameRateEnable", FALSE, &local_error);
+	if (arv_camera_get_frame_rate_enable(camera, &local_error)) {
+		if (local_error == NULL) {
+			arv_camera_set_frame_rate_enable (camera, FALSE, &local_error);
+		}
+	}
 
-        has_trigger_selector = arv_camera_is_feature_available(camera, "TriggerSelector", &local_error);
+	if (local_error == NULL) {
+			has_trigger_selector = arv_camera_is_feature_available(camera, "TriggerSelector", &local_error);
 
-        if (has_trigger_selector == TRUE) {
-                const char **triggers = NULL;
-                guint n_triggers = 0;
-                unsigned int i;
+			if (has_trigger_selector == TRUE) {
+					const char **triggers = NULL;
+					guint n_triggers = 0;
+					unsigned int i;
 
-                triggers = arv_camera_dup_available_enumerations_as_strings (camera, "TriggerSelector", &n_triggers,
-                                                                        &local_error);
+					triggers = arv_camera_dup_available_enumerations_as_strings (camera, "TriggerSelector", &n_triggers,
+																			&local_error);
 
-                for (i = 0; i < n_triggers && local_error == NULL; i++) {
-                        arv_camera_set_string (camera, "TriggerSelector", triggers[i], &local_error);
-                        if (local_error == NULL) {
-                                if (g_strcmp0 (triggers[i], "FrameStart") == 0)
-                                        has_frame_start = TRUE;
-                                else if (g_strcmp0 (triggers[i], "FrameBurstStart") == 0)
-                                        has_frame_burst_start = TRUE;
-                                else if (g_strcmp0 (triggers[i], "AcquisitionStart") == 0)
-                                        has_acquisition_start = TRUE;
-                                arv_camera_set_string (camera, "TriggerMode", "Off", &local_error);
-                        }
-                }
+					for (i = 0; i < n_triggers && local_error == NULL; i++) {
+							arv_camera_set_string (camera, "TriggerSelector", triggers[i], &local_error);
+							if (local_error == NULL) {
+									if (g_strcmp0 (triggers[i], "FrameStart") == 0)
+											has_frame_start = TRUE;
+									else if (g_strcmp0 (triggers[i], "FrameBurstStart") == 0)
+											has_frame_burst_start = TRUE;
+									else if (g_strcmp0 (triggers[i], "AcquisitionStart") == 0)
+											has_acquisition_start = TRUE;
+									arv_camera_set_string (camera, "TriggerMode", "Off", &local_error);
+							}
+					}
 
-                g_free (triggers);
-        }
+					g_free (triggers);
+			}
+	}
 
-        if (local_error == NULL) {
-                if (has_trigger_selector == TRUE) {
-                        if (has_frame_start) {
-                                arv_camera_set_string (camera, "TriggerSelector", "FrameStart", &local_error);
-                        } else if (has_frame_burst_start) {
-                                arv_camera_set_string (camera, "TriggerSelector", "FrameBurstStart", &local_error);
-                        } else if (has_acquisition_start) {
-                                arv_camera_set_string (camera, "TriggerSelector", "AcquisitionStart", &local_error);
-                        } else {
-                                local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_FEATURE_NOT_FOUND,
-                                                        "<FrameStart> or <AcquisisitonStart> feature missing "
-                                                        "for trigger setting");
-                        }
-                }
-                if (local_error == NULL)
-                        arv_camera_set_string (camera, "TriggerMode", "On", &local_error);
+	if (local_error == NULL) {
+			if (has_trigger_selector == TRUE) {
+					if (has_frame_start) {
+							arv_camera_set_string (camera, "TriggerSelector", "FrameStart", &local_error);
+					} else if (has_frame_burst_start) {
+							arv_camera_set_string (camera, "TriggerSelector", "FrameBurstStart", &local_error);
+					} else if (has_acquisition_start) {
+							arv_camera_set_string (camera, "TriggerSelector", "AcquisitionStart", &local_error);
+					} else {
+							local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_FEATURE_NOT_FOUND,
+													"<FrameStart> or <AcquisisitonStart> feature missing "
+													"for trigger setting");
+					}
+			}
+			if (local_error == NULL)
+					arv_camera_set_string (camera, "TriggerMode", "On", &local_error);
 
-                if (local_error == NULL &&
-                    arv_camera_is_enumeration_entry_available (camera, "TriggerActivation",
-                                                               "RisingEdge", NULL))
-                        arv_camera_set_string (camera, "TriggerActivation", "RisingEdge", &local_error);
+			if (local_error == NULL &&
+				arv_camera_is_enumeration_entry_available (camera, "TriggerActivation",
+															"RisingEdge", NULL))
+					arv_camera_set_string (camera, "TriggerActivation", "RisingEdge", &local_error);
 
-                if (local_error == NULL)
-                        arv_camera_set_string (camera, "TriggerSource", source, &local_error);
-        }
+			if (local_error == NULL)
+					arv_camera_set_string (camera, "TriggerSource", source, &local_error);
+	}
 
 	if (local_error != NULL)
 		g_propagate_error (error, local_error);
@@ -1455,7 +1531,8 @@ arv_camera_get_trigger_source (ArvCamera *camera, GError **error)
  *
  * Gets the list of all available trigger sources.
  *
- * Returns: (array length=n_sources) (transfer container): a newly allocated array of strings, which must be freed using g_free().
+ * Returns: (array length=n_sources) (transfer container): a newly allocated array of strings, which must be freed using
+ * [func@GLib.free].
  *
  * Since: 0.8.0
  */
@@ -1474,7 +1551,8 @@ arv_camera_dup_available_trigger_sources (ArvCamera *camera, guint *n_sources, G
  *
  * Gets a list of all available triggers: FrameStart, ExposureActive, etc...
  *
- * Returns: (array length=n_triggers) (transfer container): a newly allocated array of strings, which must be freed using g_free().
+ * Returns: (array length=n_triggers) (transfer container): a newly allocated array of strings, which must be freed
+ * using [func@GLib.free].
  *
  * Since: 0.8.0
  */
@@ -2433,7 +2511,7 @@ arv_camera_is_binning_available (ArvCamera *camera, GError **error)
  *
  * Return: gain representation, %ARV_GC_REPRESENTATION_UNDEFINED if not available.
  *
- * Since: 0.8.31
+ * Since: 0.10.0
  */
 
 ArvGcRepresentation
@@ -2460,7 +2538,7 @@ arv_camera_get_gain_representation (ArvCamera *camera)
  *
  * Return: exposure time representation, %ARV_GC_REPRESENTATION_UNDEFINED if not available.
  *
- * Since: 0.8.31
+ * Since: 0.10.0
  */
 
 ArvGcRepresentation
@@ -2491,17 +2569,19 @@ arv_camera_get_exposure_time_representation (ArvCamera *camera)
  *
  * Execute a Genicam command.
  *
+ * Returns: %TRUE on success
+ *
  * Since: 0.8.0
  */
 
-void
+gboolean
 arv_camera_execute_command (ArvCamera *camera, const char *feature, GError **error)
 {
 	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
 
-	g_return_if_fail (ARV_IS_CAMERA (camera));
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
-	arv_device_execute_command (priv->device, feature, error);
+	return arv_device_execute_command (priv->device, feature, error);
 }
 
 /**
@@ -2873,6 +2953,54 @@ arv_camera_get_float_increment (ArvCamera *camera, const char *feature, GError *
 }
 
 /**
+ * arv_camera_set_register:
+ * @camera: a #ArvCamera
+ * @feature: feature name
+ * @length: buffer length
+ * @value: new feature value
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Set a register content.
+ *
+ * Since: 0.8.31
+ */
+
+void
+arv_camera_set_register (ArvCamera *camera, const char *feature, guint64 length, void *value, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_device_set_register_feature_value (priv->device, feature, length, value, error);
+}
+
+/**
+ * arv_camera_dup_register:
+ * @camera: a #ArvCamera
+ * @feature: feature name
+ * @length: (out) (allow-none): register length
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: register content, must be freed using [func@GLib.free].
+ *
+ * Since: 0.8.31
+ */
+
+void *
+arv_camera_dup_register (ArvCamera *camera, const char *feature, guint64 *length, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+        if (length != NULL)
+                *length = 0;
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+
+	return arv_device_dup_register_feature_value (priv->device, feature, length, error);
+}
+
+/**
  * arv_camera_dup_available_enumerations:
  * @camera: a #ArvCamera
  * @feature: feature name
@@ -3027,7 +3155,7 @@ arv_camera_is_feature_implemented (ArvCamera *camera, const char *feature, GErro
  *
  * Return: the feature representation, %ARV_GC_REPRESENTATION_UNDEFINED if not available.
  *
- * Since: 0.8.31
+ * Since: 0.10.0
  */
 
 ArvGcRepresentation
@@ -3750,6 +3878,25 @@ arv_camera_uv_set_usb_mode (ArvCamera *camera, ArvUvUsbMode usb_mode)
 #if ARAVIS_HAS_USB
 	arv_uv_device_set_usb_mode (ARV_UV_DEVICE (priv->device), usb_mode);
 #endif
+}
+
+/**
+ * arv_camera_is_gentl_device:
+ * @camera: a #ArvCamera
+ *
+ * Returns: %TRUE if @camera is a GenTL device.
+ *
+ * Since: 0.10.0
+ */
+
+gboolean
+arv_camera_is_gentl_device	(ArvCamera *camera)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
+
+	return ARV_IS_GENTL_DEVICE (priv->device);
 }
 
 /**

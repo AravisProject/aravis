@@ -32,6 +32,9 @@
 G_BEGIN_DECLS
 
 void 		arv_device_emit_control_lost_signal 	(ArvDevice *device);
+#if ARAVIS_HAS_EVENT
+void 		arv_device_emit_device_event_signal 	(ArvDevice *device, int event_id);
+#endif
 void		arv_device_take_init_error		(ArvDevice *device, GError *error);
 
 G_END_DECLS

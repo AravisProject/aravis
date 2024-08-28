@@ -18,6 +18,7 @@ expand_content_md_files = [
   'ethernet.md',
   'usb.md',
   'thread-safety.md',
+  'porting-0.10.md',
   'porting-0.8.md',
   'tests.md'
 ]

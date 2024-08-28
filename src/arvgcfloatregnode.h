@@ -37,6 +37,9 @@ ARV_API G_DECLARE_DERIVABLE_TYPE (ArvGcFloatRegNode, arv_gc_float_reg_node, ARV,
 
 struct _ArvGcFloatRegNodeClass {
 	ArvGcRegisterNodeClass parent_class;
+
+        /* Padding for future expansion */
+        gpointer padding[10];
 };
 
 ARV_API ArvGcNode *		arv_gc_float_reg_node_new		(void);
