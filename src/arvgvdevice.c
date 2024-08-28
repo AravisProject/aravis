@@ -1983,7 +1983,6 @@ arv_gv_device_constructed (GObject *object)
 	char *address_string;
 	guint32 capabilities;
 	guint32 device_mode;
-	GSocketAddress *socket_address;
 	GInetAddress *any_address;
 	int socket_fd;
 	struct ifaddrs *addrs, *iap;
@@ -2044,24 +2043,22 @@ arv_gv_device_constructed (GObject *object)
 	socket_fd = g_socket_get_fd(io_data->socket);
 	if (setsockopt (socket_fd, SOL_SOCKET, SO_BINDTODEVICE, interface_name, strlen (interface_name)) == 0) {
 		any_address = g_inet_address_new_any (G_SOCKET_FAMILY_IPV4);
-		socket_address = g_inet_socket_address_new (any_address, 0);
+		io_data->interface_address = arv_socket_bind_with_range (io_data->socket, any_address, 0,
+                                                                 FALSE, &local_error);
 		g_object_unref (any_address);
 	} else {
-		socket_address = g_inet_socket_address_new (priv->interface_address, 0);
+		io_data->interface_address = arv_socket_bind_with_range (io_data->socket, priv->interface_address, 0,
+                                                                 FALSE, &local_error);
 	}
 
-	io_data->interface_address = arv_socket_bind_with_range (io_data->socket, socket_address, 0,
-                                                                 FALSE, &local_error);
+	
 	if (io_data->interface_address == NULL) {
 		if (local_error == NULL)
 			local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_UNKNOWN,
 							"Unknown error trying to bind device interface");
 		arv_device_take_init_error (ARV_DEVICE (gv_device), local_error);
-		g_object_unref (socket_address);
-
 		return;
 	}
-	g_object_unref (socket_address);
 
 
 	io_data->buffer = g_malloc (ARV_GV_DEVICE_BUFFER_SIZE);
