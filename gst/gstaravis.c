@@ -397,6 +397,8 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 
 	GST_OBJECT_UNLOCK (gst_aravis);
 
+	g_object_notify_by_pspec (G_OBJECT (gst_aravis), properties[PROP_STREAM]);
+
 	result = TRUE;
 	goto unref;
 
