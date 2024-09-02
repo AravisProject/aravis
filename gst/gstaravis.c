@@ -828,13 +828,19 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 
 	switch (prop_id) {
 		case PROP_CAMERA_NAME:
+			GST_OBJECT_LOCK (gst_aravis);
 			g_value_set_string (value, gst_aravis->camera_name);
+			GST_OBJECT_UNLOCK (gst_aravis);
 			break;
 		case PROP_CAMERA:
+			GST_OBJECT_LOCK (gst_aravis);
 			g_value_set_object (value, gst_aravis->camera);
+			GST_OBJECT_UNLOCK (gst_aravis);
 			break;
 		case PROP_GAIN:
+			GST_OBJECT_LOCK (gst_aravis);
 			g_value_set_double (value, gst_aravis->gain);
+			GST_OBJECT_UNLOCK (gst_aravis);
 			break;
 		case PROP_GAIN_AUTO:
 			GST_OBJECT_LOCK (gst_aravis);
@@ -846,7 +852,9 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 			GST_OBJECT_UNLOCK (gst_aravis);
 			break;
 		case PROP_EXPOSURE:
+			GST_OBJECT_LOCK (gst_aravis);
 			g_value_set_double (value, gst_aravis->exposure_time_us);
+			GST_OBJECT_UNLOCK (gst_aravis);
 			break;
 		case PROP_EXPOSURE_AUTO:
 			GST_OBJECT_LOCK (gst_aravis);
