@@ -37,6 +37,7 @@
 #include <arvgvspprivate.h>
 #include <time.h>
 #include <string.h>
+#include <stdio.h>
 
 /* TODO: Add l10n */
 #define _(x) (x)
@@ -67,7 +68,8 @@ enum
   PROP_FEATURES,
   PROP_NUM_ARV_BUFFERS,
   PROP_USB_MODE,
-  PROP_SET_TRIGGER,
+  PROP_TRIGGER,
+  PROP_TRIGGER_MODE,
 };
 
 enum
@@ -428,7 +430,7 @@ unref:
 }
 
 static void 
-gst_aravis_trigger (GstAravis *src) {
+gst_aravis_software_trigger (GstAravis *src) {
     if (src->camera)
  		arv_camera_software_trigger(src->camera, NULL);
 }
@@ -448,8 +450,8 @@ gst_aravis_init_camera (GstAravis *gst_aravis, GError **error)
 	if (!local_error) gst_aravis->payload = 0;
 	if (!local_error && arv_camera_is_uv_device (gst_aravis->camera))
                 arv_camera_uv_set_usb_mode (gst_aravis->camera, gst_aravis->usb_mode);
-	if (!local_error && gst_aravis->set_trigger)
-		arv_camera_set_trigger (gst_aravis->camera, "Software", &local_error);
+	if (!local_error && gst_aravis->trigger_mode)
+		arv_camera_set_trigger (gst_aravis->camera, gst_aravis->trigger_source, &local_error);	
 
 	if (local_error) {
 		g_clear_object (&gst_aravis->camera);
@@ -696,7 +698,8 @@ gst_aravis_init (GstAravis *gst_aravis)
 	gst_aravis->buffer_timeout_us = GST_ARAVIS_BUFFER_TIMEOUT_DEFAULT;
 	gst_aravis->frame_rate = 0.0;
 
-	gst_aravis->set_trigger = FALSE;
+	gst_aravis->trigger_source = "Software";
+	gst_aravis->trigger_mode = FALSE;
 
 	gst_aravis->camera = NULL;
 	gst_aravis->stream = NULL;
@@ -829,8 +832,11 @@ gst_aravis_set_property (GObject * object, guint prop_id,
 		case PROP_USB_MODE:
 			gst_aravis->usb_mode = g_value_get_enum (value);
 			break;
-		case PROP_SET_TRIGGER:
-			gst_aravis->set_trigger = g_value_get_boolean (value);
+		case PROP_TRIGGER:
+			gst_aravis->trigger_source = g_strdup (g_value_get_string (value));
+			break;
+		case PROP_TRIGGER_MODE:
+			gst_aravis->trigger_mode = g_value_get_boolean (value);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -922,8 +928,11 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 		case PROP_USB_MODE:
 			g_value_set_enum(value, gst_aravis->usb_mode);
 			break;
-		case PROP_SET_TRIGGER:
-			g_value_set_boolean (value, gst_aravis->set_trigger);
+		case PROP_TRIGGER:
+			g_value_set_string (value, gst_aravis->trigger_source);
+			break;
+		case PROP_TRIGGER_MODE:
+			g_value_set_boolean (value, gst_aravis->trigger_mode);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1138,17 +1147,25 @@ gst_aravis_class_init (GstAravisClass * klass)
 			       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 	g_object_class_install_property
-	    (gobject_class, PROP_SET_TRIGGER,
-	     g_param_spec_boolean("set-trigger",
+	    (gobject_class, PROP_TRIGGER,
+	     g_param_spec_string("trigger",
 			       "Set trigger",
 			       "Configures the camera in trigger mode",
+			       "Software",
+			       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+	g_object_class_install_property
+	    (gobject_class, PROP_TRIGGER_MODE,
+	     g_param_spec_boolean("trigger-mode",
+			       "Trigger mode",
+			       "Controls if the selected trigger is active",
 			       FALSE,
 			       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 	gst_aravis_signals[SIGNAL_SOFTWARE_TRIGGER] =
 		g_signal_new ("software-trigger", G_TYPE_FROM_CLASS (klass),
 		G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstAravisClass,
-			trigger), NULL, NULL, NULL,
+			software_trigger), NULL, NULL, NULL,
 		G_TYPE_NONE, 0);
         GST_DEBUG_CATEGORY_INIT (aravis_debug, "aravissrc", 0, "Aravis interface");
 
@@ -1171,7 +1188,7 @@ gst_aravis_class_init (GstAravisClass * klass)
 
 	gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_aravis_create);
 
-    klass->trigger = gst_aravis_trigger;
+    klass->software_trigger = gst_aravis_software_trigger;
 }
 
 static gboolean
