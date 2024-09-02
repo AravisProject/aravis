@@ -43,7 +43,9 @@
 
 #define ARV_V4L2_ADDRESS_WIDTH                          0x0100
 #define ARV_V4L2_ADDRESS_HEIGHT                         0x0104
+#define ARV_V4L2_ADDRESS_GAIN                           0x0110
 #define ARV_V4L2_ADDRESS_PAYLOAD_SIZE                   0x0118
+#define ARV_V4L2_ADDRESS_EXPOSURE_TIME                  0x0120
 #define ARV_V4L2_ADDRESS_ACQUISITION_COMMAND            0x0124
 #define ARV_V4L2_ADDRESS_PIXEL_FORMAT                   0x0128
 
@@ -308,6 +310,12 @@ arv_v4l2_device_read_memory (ArvDevice *device, guint64 address, guint32 size, v
                                                 value = frame_size->type == V4L2_FRMSIZE_TYPE_DISCRETE ?
                                                         frame_size->discrete.height :
                                                         frame_size->stepwise.max_height;
+                                                break;
+                                        case ARV_V4L2_ADDRESS_GAIN:
+                                                value = 0;
+                                                break;
+                                        case ARV_V4L2_ADDRESS_EXPOSURE_TIME:
+                                                value = 10;
                                                 break;
                                         case ARV_V4L2_ADDRESS_PAYLOAD_SIZE:
                                                 arv_v4l2_device_set_image_format (v4l2_device);
