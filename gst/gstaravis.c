@@ -66,6 +66,7 @@ enum
   PROP_FEATURES,
   PROP_NUM_ARV_BUFFERS,
   PROP_USB_MODE,
+  PROP_STREAM,
   N_PROPERTIES
 };
 
@@ -901,6 +902,11 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 		case PROP_USB_MODE:
 			g_value_set_enum(value, gst_aravis->usb_mode);
 			break;
+		case PROP_STREAM:
+			GST_OBJECT_LOCK (gst_aravis);
+			g_value_set_object (value, gst_aravis->stream);
+			GST_OBJECT_UNLOCK (gst_aravis);
+			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 			break;
@@ -1077,6 +1083,12 @@ gst_aravis_class_init (GstAravisClass * klass)
 				   "USB mode (synchronous/asynchronous)",
 				   GST_TYPE_ARV_USB_MODE, ARV_UV_USB_MODE_DEFAULT,
 				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	properties[PROP_STREAM] =
+		g_param_spec_object ("stream",
+				     "Stream Object",
+				     "Stream instance to retrieve additional information",
+				     ARV_TYPE_STREAM,
+				     G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
 	g_object_class_install_properties (gobject_class,
 					   G_N_ELEMENTS (properties),
