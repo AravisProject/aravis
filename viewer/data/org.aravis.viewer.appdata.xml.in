@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Copyright 2014-2023 Emmanuel Pacaud <emmanuel.pacaud@free.fr> -->
 <component type="desktop-application">
-  <id>org.aravis.viewer</id>
+  <id>org.aravis.viewer-@ARAVIS_API_VERSION@</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>LGPL-2.0-or-later</project_license>
   <name>Aravis Viewer</name>
