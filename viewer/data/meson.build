@@ -4,7 +4,7 @@ appdata_conf = configuration_data()
 appdata_conf.set ('ARAVIS_API_VERSION', aravis_api_version)
 
 configure_file (input: files('org.aravis.viewer.appdata.xml.in'),
-		output: 'org.aravis.viewer-@0@.appdata.xml'.format (aravis_api_version),
+		output: 'org.aravis.viewer.metainfo.xml'.format (aravis_api_version),
 		configuration: appdata_conf,
 		install_dir: aravis_app_data_dir)
 
