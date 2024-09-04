@@ -68,22 +68,25 @@ struct _GstAravis {
 	gint payload;
 
 	guint64 buffer_timeout_us;
-    gdouble frame_rate;
+        gdouble frame_rate;
 
 	ArvCamera *camera;
 	ArvStream *stream;
 
 	GstCaps *all_caps;
-	GstCaps *fixed_caps;
 
 	guint64 timestamp_offset;
 	guint64 last_timestamp;
+
+	char *trigger_source;
 
 	char *features;
 };
 
 struct _GstAravisClass {
 	GstPushSrcClass parent_class;
+
+    void (*software_trigger) (GstAravis *src);
 };
 
 GType gst_aravis_get_type (void);

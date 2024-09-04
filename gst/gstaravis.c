@@ -37,6 +37,7 @@
 #include <arvgvspprivate.h>
 #include <time.h>
 #include <string.h>
+#include <stdio.h>
 
 /* TODO: Add l10n */
 #define _(x) (x)
@@ -49,8 +50,7 @@ GST_DEBUG_CATEGORY_STATIC (aravis_debug);
 
 enum
 {
-  PROP_0,
-  PROP_CAMERA_NAME,
+  PROP_CAMERA_NAME = 1,
   PROP_CAMERA,
   PROP_GAIN,
   PROP_GAIN_AUTO,
@@ -66,8 +66,22 @@ enum
   PROP_PACKET_RESEND,
   PROP_FEATURES,
   PROP_NUM_ARV_BUFFERS,
-  PROP_USB_MODE
+  PROP_USB_MODE,
+  PROP_STREAM,
+  PROP_TRIGGER,
+  N_PROPERTIES
 };
+
+static GParamSpec *properties[N_PROPERTIES];
+
+enum
+{
+  /* actions */
+  SIGNAL_SOFTWARE_TRIGGER,
+  LAST_SIGNAL
+};
+
+static guint gst_aravis_signals[LAST_SIGNAL] = { 0 };
 
 #define GST_TYPE_ARV_AUTO (gst_arv_auto_get_type())
 static GType
@@ -130,7 +144,7 @@ gst_aravis_get_all_camera_caps (GstAravis *gst_aravis, GError **error)
 	int min_frame_rate_denominator;
 	int max_frame_rate_numerator;
 	int max_frame_rate_denominator;
-	gboolean is_frame_rate_available;
+	gboolean use_frame_rate;
 
 	g_return_val_if_fail (GST_IS_ARAVIS (gst_aravis), NULL);
 
@@ -143,8 +157,10 @@ gst_aravis_get_all_camera_caps (GstAravis *gst_aravis, GError **error)
 	if (!local_error) arv_camera_get_height_bounds (gst_aravis->camera, &min_height, &max_height, &local_error);
 	if (!local_error) pixel_formats = arv_camera_dup_available_pixel_formats (gst_aravis->camera, &n_pixel_formats,
 										  &local_error);
-	is_frame_rate_available = arv_camera_is_frame_rate_available (gst_aravis->camera, NULL);
-	if (is_frame_rate_available) {
+	use_frame_rate = arv_camera_is_frame_rate_available (gst_aravis->camera, NULL) &&
+                gst_aravis->trigger_source == NULL;
+
+	if (use_frame_rate) {
 		if (!local_error) arv_camera_get_frame_rate_bounds (gst_aravis->camera,
 								    &min_frame_rate, &max_frame_rate, &local_error);
 		if (!local_error) {
@@ -171,7 +187,7 @@ gst_aravis_get_all_camera_caps (GstAravis *gst_aravis, GError **error)
 					   "width", GST_TYPE_INT_RANGE, min_width, max_width,
 					   "height", GST_TYPE_INT_RANGE, min_height, max_height,
 					   NULL);
-			if (is_frame_rate_available)
+			if (use_frame_rate)
 				gst_structure_set (structure,
 						   "framerate", GST_TYPE_FRACTION_RANGE,
 						   min_frame_rate_numerator, min_frame_rate_denominator,
@@ -215,11 +231,9 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 	gint current_height, current_width;
 	int depth = 0, bpp = 0;
 	const GValue *frame_rate = NULL;
-	const char *caps_string;
 	const char *format_string;
 	unsigned int i;
 	ArvStream *orig_stream = NULL;
-	GstCaps *orig_fixed_caps = NULL;
 	gboolean result = FALSE;
 	gboolean is_frame_rate_available;
 	gboolean is_gain_available;
@@ -342,29 +356,6 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 		GST_DEBUG_OBJECT (gst_aravis, "Actual exposure = %g µs", arv_camera_get_exposure_time (gst_aravis->camera, NULL));
 	}
 
-	orig_fixed_caps = g_steal_pointer (&gst_aravis->fixed_caps);
-
-	caps_string = arv_pixel_format_to_gst_caps_string (pixel_format);
-	if (caps_string != NULL) {
-		GstStructure *structure;
-		GstCaps *caps;
-
-		caps = gst_caps_new_empty ();
-		structure = gst_structure_from_string (caps_string, NULL);
-		gst_structure_set (structure,
-				   "width", G_TYPE_INT, width,
-				   "height", G_TYPE_INT, height,
-				   NULL);
-
-		if (frame_rate != NULL)
-			gst_structure_set_value (structure, "framerate", frame_rate);
-
-		gst_caps_append_structure (caps, structure);
-
-		gst_aravis->fixed_caps = caps;
-	} else
-		gst_aravis->fixed_caps = NULL;
-
 	if (!error) arv_device_set_features_from_string (arv_camera_get_device (gst_aravis->camera), gst_aravis->features, &error);
 
 	if (!error) gst_aravis->payload = arv_camera_get_payload (gst_aravis->camera, &error);
@@ -394,6 +385,8 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 
 	GST_OBJECT_UNLOCK (gst_aravis);
 
+	g_object_notify_by_pspec (G_OBJECT (gst_aravis), properties[PROP_STREAM]);
+
 	result = TRUE;
 	goto unref;
 
@@ -412,18 +405,28 @@ failed:
 unref:
 	if (orig_stream != NULL)
 		g_object_unref (orig_stream);
-	if (orig_fixed_caps != NULL)
-		gst_caps_unref (orig_fixed_caps);
 	return result;
 }
 
+static void
+gst_aravis_software_trigger (GstAravis *src) {
+        if (ARV_IS_CAMERA (src->camera)) {
+                arv_camera_software_trigger(src->camera, NULL);
+        }
+}
+
 static gboolean
-gst_aravis_init_camera (GstAravis *gst_aravis, GError **error)
+gst_aravis_init_camera (GstAravis *gst_aravis, gboolean *notify, GError **error)
 {
 	GError *local_error = NULL;
 
-	if (gst_aravis->camera != NULL)
+	if (gst_aravis->camera != NULL) {
 		g_object_unref (gst_aravis->camera);
+		if (notify != NULL)
+                        *notify = TRUE;
+        } else
+                if (notify != NULL)
+                        *notify = FALSE;
 
 	gst_aravis->camera = arv_camera_new (gst_aravis->camera_name, &local_error);
 
@@ -432,12 +435,17 @@ gst_aravis_init_camera (GstAravis *gst_aravis, GError **error)
 	if (!local_error) gst_aravis->payload = 0;
 	if (!local_error && arv_camera_is_uv_device (gst_aravis->camera))
                 arv_camera_uv_set_usb_mode (gst_aravis->camera, gst_aravis->usb_mode);
+	if (!local_error && gst_aravis->trigger_source != NULL)
+		arv_camera_set_trigger (gst_aravis->camera, gst_aravis->trigger_source, &local_error);
 
 	if (local_error) {
 		g_clear_object (&gst_aravis->camera);
 		g_propagate_error (error, local_error);
 		return FALSE;
 	}
+
+        if (notify != NULL)
+                *notify = TRUE;
 
 	return TRUE;
 }
@@ -467,18 +475,26 @@ gst_aravis_start (GstBaseSrc *src)
 {
 	GError *error = NULL;
 	gboolean result = TRUE;
+	gboolean notify = FALSE;
 	GstAravis* gst_aravis = GST_ARAVIS(src);
 
-	GST_LOG_OBJECT (gst_aravis, "Open camera '%s'", gst_aravis->camera_name);
+        if (gst_aravis->camera_name != NULL)
+                GST_LOG_OBJECT (gst_aravis, "Open camera '%s'", gst_aravis->camera_name);
+        else
+                GST_LOG_OBJECT (gst_aravis, "Open first available camera");
 
 	GST_OBJECT_LOCK (gst_aravis);
 	if (gst_aravis->camera == NULL)
-		result = gst_aravis_init_camera (gst_aravis, &error);
+		result = gst_aravis_init_camera (gst_aravis, &notify, &error);
 
 	if (result) gst_aravis->all_caps = gst_aravis_get_all_camera_caps (gst_aravis, &error);
 	GST_OBJECT_UNLOCK (gst_aravis);
 
-	if (error) gst_aravis_init_error (gst_aravis, error);
+	if (notify)
+                g_object_notify_by_pspec (G_OBJECT (gst_aravis), properties[PROP_CAMERA]);
+
+	if (error)
+                gst_aravis_init_error (gst_aravis, error);
 
 	return result;
 }
@@ -489,17 +505,21 @@ gst_aravis_stop( GstBaseSrc * src )
 {
 	GError *error = NULL;
 	GstAravis* gst_aravis = GST_ARAVIS(src);
+	ArvCamera *camera;
 	ArvStream *stream;
 	GstCaps *all_caps;
 
 	GST_OBJECT_LOCK (gst_aravis);
 	arv_camera_stop_acquisition (gst_aravis->camera, &error);
+	camera = g_steal_pointer (&gst_aravis->camera);
 	stream = g_steal_pointer (&gst_aravis->stream);
 	all_caps = g_steal_pointer (&gst_aravis->all_caps);
 	GST_OBJECT_UNLOCK (gst_aravis);
 
 	if (stream != NULL)
 		g_object_unref (stream);
+	if (camera != NULL)
+		g_object_unref (camera);
 	if (all_caps != NULL)
 		gst_caps_unref (all_caps);
 
@@ -617,15 +637,19 @@ gst_aravis_fixate_caps (GstBaseSrc * bsrc, GstCaps * caps)
 	gint width;
 	gint height;
 	double frame_rate = 0.0;
-	gboolean is_frame_rate_available;
+	gboolean use_frame_rate;
 
 	g_return_val_if_fail (GST_IS_ARAVIS (bsrc), NULL);
 
 	GST_OBJECT_LOCK (gst_aravis);
+
 	arv_camera_get_region (gst_aravis->camera, NULL, NULL, &width, &height, &error);
-	is_frame_rate_available = arv_camera_is_frame_rate_available (gst_aravis->camera, NULL);
-	if (is_frame_rate_available)
+	use_frame_rate = arv_camera_is_frame_rate_available (gst_aravis->camera, NULL) &&
+                gst_aravis->trigger_source == NULL;
+
+	if (use_frame_rate)
 		if (!error) frame_rate = arv_camera_get_frame_rate (gst_aravis->camera, &error);
+
 	GST_OBJECT_UNLOCK (gst_aravis);
 	if (error) {
 		GST_ELEMENT_ERROR (gst_aravis, RESOURCE, READ,
@@ -639,7 +663,7 @@ gst_aravis_fixate_caps (GstBaseSrc * bsrc, GstCaps * caps)
 
 		gst_structure_fixate_field_nearest_int (structure, "width", width);
 		gst_structure_fixate_field_nearest_int (structure, "height", height);
-		if (is_frame_rate_available)
+		if (use_frame_rate)
 			gst_structure_fixate_field_nearest_fraction (structure, "framerate",
 								     (double) (0.5 + frame_rate), 1);
 
@@ -678,11 +702,12 @@ gst_aravis_init (GstAravis *gst_aravis)
 	gst_aravis->buffer_timeout_us = GST_ARAVIS_BUFFER_TIMEOUT_DEFAULT;
 	gst_aravis->frame_rate = 0.0;
 
+	gst_aravis->trigger_source = NULL;
+
 	gst_aravis->camera = NULL;
 	gst_aravis->stream = NULL;
 
 	gst_aravis->all_caps = NULL;
-	gst_aravis->fixed_caps = NULL;
 }
 
 static void
@@ -692,15 +717,14 @@ gst_aravis_finalize (GObject * object)
 	ArvCamera *camera;
 	ArvStream *stream;
 	GstCaps *all_caps;
-	GstCaps *fixed_caps;
 
 	GST_OBJECT_LOCK (gst_aravis);
 	camera = g_steal_pointer (&gst_aravis->camera);
 	stream = g_steal_pointer (&gst_aravis->stream);
 	all_caps = g_steal_pointer (&gst_aravis->all_caps);
-	fixed_caps = g_steal_pointer (&gst_aravis->fixed_caps);
 	g_clear_pointer (&gst_aravis->camera_name, g_free);
 	g_clear_pointer (&gst_aravis->features, g_free);
+        g_clear_pointer (&gst_aravis->trigger_source, g_free);
 	GST_OBJECT_UNLOCK (gst_aravis);
 
 	if (camera != NULL)
@@ -709,8 +733,6 @@ gst_aravis_finalize (GObject * object)
 		g_object_unref (stream);
 	if (all_caps != NULL)
 		gst_caps_unref (all_caps);
-	if (fixed_caps != NULL)
-		gst_caps_unref (fixed_caps);
 
 	G_OBJECT_CLASS (gst_aravis_parent_class)->finalize (object);
 }
@@ -725,19 +747,24 @@ gst_aravis_set_property (GObject * object, guint prop_id,
 	GST_DEBUG_OBJECT (gst_aravis, "setting property %s", pspec->name);
 
 	switch (prop_id) {
+		gboolean notify;
 		case PROP_CAMERA_NAME:
+                        notify= FALSE;
 			GST_OBJECT_LOCK (gst_aravis);
-			g_free (gst_aravis->camera_name);
 			/* check if we are currently active
 			   prevent setting camera and other values to something not representing the active camera */
 			if (gst_aravis->stream == NULL) {
+				g_free (gst_aravis->camera_name);
 				gst_aravis->camera_name = g_strdup (g_value_get_string (value));
-				gst_aravis_init_camera (gst_aravis, &error);
+				gst_aravis_init_camera (gst_aravis, &notify, &error);
 			}
 
 			GST_LOG_OBJECT (gst_aravis, "Set camera name to %s", gst_aravis->camera_name);
 			GST_OBJECT_UNLOCK (gst_aravis);
-			if (error) gst_aravis_init_error (gst_aravis, error);
+			if (error)
+                                gst_aravis_init_error (gst_aravis, error);
+			if (notify)
+				g_object_notify_by_pspec (G_OBJECT (gst_aravis), properties[PROP_CAMERA]);
 			break;
 		case PROP_GAIN:
 			GST_OBJECT_LOCK (gst_aravis);
@@ -809,6 +836,12 @@ gst_aravis_set_property (GObject * object, guint prop_id,
 		case PROP_USB_MODE:
 			gst_aravis->usb_mode = g_value_get_enum (value);
 			break;
+		case PROP_TRIGGER:
+			GST_OBJECT_LOCK (gst_aravis);
+                        g_free (gst_aravis->trigger_source);
+			gst_aravis->trigger_source = g_strdup (g_value_get_string (value));
+			GST_OBJECT_UNLOCK (gst_aravis);
+			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 			break;
@@ -825,13 +858,19 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 
 	switch (prop_id) {
 		case PROP_CAMERA_NAME:
+			GST_OBJECT_LOCK (gst_aravis);
 			g_value_set_string (value, gst_aravis->camera_name);
+			GST_OBJECT_UNLOCK (gst_aravis);
 			break;
 		case PROP_CAMERA:
+			GST_OBJECT_LOCK (gst_aravis);
 			g_value_set_object (value, gst_aravis->camera);
+			GST_OBJECT_UNLOCK (gst_aravis);
 			break;
 		case PROP_GAIN:
+			GST_OBJECT_LOCK (gst_aravis);
 			g_value_set_double (value, gst_aravis->gain);
+			GST_OBJECT_UNLOCK (gst_aravis);
 			break;
 		case PROP_GAIN_AUTO:
 			GST_OBJECT_LOCK (gst_aravis);
@@ -843,7 +882,9 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 			GST_OBJECT_UNLOCK (gst_aravis);
 			break;
 		case PROP_EXPOSURE:
+			GST_OBJECT_LOCK (gst_aravis);
 			g_value_set_double (value, gst_aravis->exposure_time_us);
+			GST_OBJECT_UNLOCK (gst_aravis);
 			break;
 		case PROP_EXPOSURE_AUTO:
 			GST_OBJECT_LOCK (gst_aravis);
@@ -899,6 +940,16 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 		case PROP_USB_MODE:
 			g_value_set_enum(value, gst_aravis->usb_mode);
 			break;
+		case PROP_STREAM:
+			GST_OBJECT_LOCK (gst_aravis);
+			g_value_set_object (value, gst_aravis->stream);
+			GST_OBJECT_UNLOCK (gst_aravis);
+                        break;
+		case PROP_TRIGGER:
+			GST_OBJECT_LOCK (gst_aravis);
+			g_value_set_string (value, gst_aravis->trigger_source);
+			GST_OBJECT_UNLOCK (gst_aravis);
+			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 			break;
@@ -926,7 +977,7 @@ gst_aravis_query (GstBaseSrc *bsrc, GstQuery *query)
 			}
 
 			/* we must have a framerate */
-			if (src->frame_rate <= 0.0)
+			if (src->frame_rate <= 0.0 || src->trigger_source != NULL)
 			{
 				GST_WARNING_OBJECT (src, "Can't give latency since framerate isn't fixated !");
 				goto done;
@@ -973,143 +1024,131 @@ gst_aravis_class_init (GstAravisClass * klass)
 	gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_aravis_set_property);
 	gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_aravis_get_property);
 
-	g_object_class_install_property
-		(gobject_class,
-		 PROP_CAMERA_NAME,
-		 g_param_spec_string ("camera-name",
-				      "Camera name",
-				      "Name of the camera",
-				      NULL,
-				      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-	g_object_class_install_property
-		(gobject_class,
-		 PROP_CAMERA,
-		 g_param_spec_object ("camera",
-				      "Camera Object",
-				      "Camera instance to retrieve additional information",
-				              ARV_TYPE_CAMERA,
-				      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-	g_object_class_install_property
-		(gobject_class,
-		 PROP_GAIN,
-		 g_param_spec_double ("gain",
-				   "Gain",
-				   "Gain (dB)",
-				   -1.0, 500.0, 0.0,
-				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-	g_object_class_install_property
-		(gobject_class,
-		 PROP_GAIN_AUTO,
-		 g_param_spec_enum ("gain-auto",
-				    "Auto Gain",
-				    "Auto Gain Mode",
-				    GST_TYPE_ARV_AUTO, ARV_AUTO_OFF,
-				    G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-	g_object_class_install_property
-		(gobject_class,
-		 PROP_EXPOSURE,
-		 g_param_spec_double ("exposure",
-				      "Exposure",
-				      "Exposure time (µs)",
-				      -1, 100000000.0, 500.0,
-				      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-	g_object_class_install_property
-		(gobject_class,
-		 PROP_EXPOSURE_AUTO,
-		 g_param_spec_enum ("exposure-auto",
-				    "Auto Exposure",
-				    "Auto Exposure Mode",
-				    GST_TYPE_ARV_AUTO, ARV_AUTO_OFF,
-				    G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-	g_object_class_install_property
-		(gobject_class,
-		 PROP_OFFSET_X,
-		 g_param_spec_int ("offset-x",
-				   "x Offset",
-				   "Offset in x direction",
-				   0, G_MAXINT, 0,
-				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-	g_object_class_install_property
-		(gobject_class,
-		 PROP_OFFSET_Y,
-		 g_param_spec_int ("offset-y",
-				   "y Offset",
-				   "Offset in y direction",
-				   0, G_MAXINT, 0,
-				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-	g_object_class_install_property
-		(gobject_class,
-		 PROP_H_BINNING,
-		 g_param_spec_int ("h-binning",
-				   "Horizontal binning",
-				   "CCD horizontal binning",
-				   1, G_MAXINT, 1,
-				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-	g_object_class_install_property
-		(gobject_class,
-		 PROP_V_BINNING,
-		 g_param_spec_int ("v-binning",
-				   "Vertical binning",
-				   "CCD vertical binning",
-				   1, G_MAXINT, 1,
-				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-	g_object_class_install_property
-		(gobject_class,
-		 PROP_PACKET_DELAY,
-		 g_param_spec_int64 ("packet-delay",
-				   "Packet delay",
-				   "GigEVision streaming inter packet delay (in ns, -1 = default)",
-				   0, G_MAXINT64/1000000000LL, 0,
-				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-	g_object_class_install_property
-		(gobject_class,
-		 PROP_PACKET_SIZE,
-		 g_param_spec_int ("packet-size",
-				   "Packet size",
-				   "GigEVision streaming packet size",
-				   ARV_GVSP_PACKET_PROTOCOL_OVERHEAD(FALSE), 65500, 1500,
-				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-	g_object_class_install_property
-		(gobject_class,
-		 PROP_AUTO_PACKET_SIZE,
-		 g_param_spec_boolean ("auto-packet-size",
-				       "Auto Packet Size",
-				       "Negotiate GigEVision streaming packet size",
-				       FALSE,
-				       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-	g_object_class_install_property
-		(gobject_class,
-		 PROP_PACKET_RESEND,
-		 g_param_spec_boolean ("packet-resend",
-				       "Packet Resend",
-				       "Request dropped packets to be reissued by the camera",
-				       TRUE,
-				       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-	g_object_class_install_property
-		(gobject_class,
-		 PROP_FEATURES,
-		 g_param_spec_string ("features",
-				      "String of feature values",
-				      "Additional configuration parameters as a space separated list of feature assignations",
-				      NULL,
-				      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+	properties[PROP_CAMERA_NAME] =
+		g_param_spec_string ("camera-name",
+				     "Camera name",
+				     "Name of the camera",
+				     NULL,
+				     G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	properties[PROP_CAMERA] =
+		g_param_spec_object ("camera",
+				     "Camera Object",
+				     "Camera instance to retrieve additional information",
+				     ARV_TYPE_CAMERA,
+				     G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+	properties[PROP_GAIN] =
+		g_param_spec_double ("gain",
+				     "Gain",
+				     "Gain (dB)",
+				     -1.0, 500.0, 0.0,
+				     G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	properties[PROP_GAIN_AUTO] =
+		g_param_spec_enum ("gain-auto",
+				   "Auto Gain",
+				   "Auto Gain Mode",
+				   GST_TYPE_ARV_AUTO, ARV_AUTO_OFF,
+				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	properties[PROP_EXPOSURE] =
+		g_param_spec_double ("exposure",
+				     "Exposure",
+				     "Exposure time (µs)",
+				     -1, 100000000.0, 500.0,
+				     G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	properties[PROP_EXPOSURE_AUTO] =
+		g_param_spec_enum ("exposure-auto",
+				   "Auto Exposure",
+				   "Auto Exposure Mode",
+				   GST_TYPE_ARV_AUTO, ARV_AUTO_OFF,
+				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	properties[PROP_OFFSET_X] =
+		g_param_spec_int ("offset-x",
+				  "x Offset",
+				  "Offset in x direction",
+				  0, G_MAXINT, 0,
+				  G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	properties[PROP_OFFSET_Y] =
+		g_param_spec_int ("offset-y",
+				  "y Offset",
+				  "Offset in y direction",
+				  0, G_MAXINT, 0,
+				  G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	properties[PROP_H_BINNING] =
+		g_param_spec_int ("h-binning",
+				  "Horizontal binning",
+				  "CCD horizontal binning",
+				  1, G_MAXINT, 1,
+				  G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	properties[PROP_V_BINNING] =
+		g_param_spec_int ("v-binning",
+				  "Vertical binning",
+				  "CCD vertical binning",
+				  1, G_MAXINT, 1,
+				  G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	properties[PROP_PACKET_DELAY] =
+		g_param_spec_int64 ("packet-delay",
+				    "Packet delay",
+				    "GigEVision streaming inter packet delay (in ns, -1 = default)",
+				    0, G_MAXINT64 / 1000000000LL, 0,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	properties[PROP_PACKET_SIZE] =
+		g_param_spec_int ("packet-size",
+				  "Packet size",
+				  "GigEVision streaming packet size",
+				  ARV_GVSP_PACKET_PROTOCOL_OVERHEAD (FALSE), 65500, 1500,
+				  G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	properties[PROP_AUTO_PACKET_SIZE] =
+		g_param_spec_boolean ("auto-packet-size",
+				      "Auto Packet Size",
+				      "Negotiate GigEVision streaming packet size",
+				      FALSE,
+				      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	properties[PROP_PACKET_RESEND] =
+		g_param_spec_boolean ("packet-resend",
+				      "Packet Resend",
+				      "Request dropped packets to be reissued by the camera",
+				      TRUE,
+				      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	properties[PROP_FEATURES] =
+		g_param_spec_string ("features",
+				     "String of feature values",
+				     "Additional configuration parameters as a space separated list of feature assignations",
+				     NULL,
+				     G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	properties[PROP_NUM_ARV_BUFFERS] =
+		g_param_spec_int ("num-arv-buffers",
+				  "Number of Buffers allocated",
+				  "Number of video buffers to allocate for video frames",
+				  1, G_MAXINT, GST_ARAVIS_DEFAULT_N_BUFFERS,
+				  G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	properties[PROP_USB_MODE] =
+		g_param_spec_enum ("usb-mode",
+				   "USB mode",
+				   "USB mode (synchronous/asynchronous)",
+				   GST_TYPE_ARV_USB_MODE, ARV_UV_USB_MODE_DEFAULT,
+				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	properties[PROP_STREAM] =
+		g_param_spec_object ("stream",
+				     "Stream Object",
+				     "Stream instance to retrieve additional information",
+				     ARV_TYPE_STREAM,
+				     G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+	properties[PROP_TRIGGER] =
+                g_param_spec_string("trigger",
+                                    "Configure the trigger mode",
+                                    "Enable the trigger mode using the given source",
+                                    NULL,
+                                    G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
-	g_object_class_install_property
-		(gobject_class,
-		 PROP_NUM_ARV_BUFFERS,
-		 g_param_spec_int ("num-arv-buffers",
-				   "Number of Buffers allocated",
-				   "Number of video buffers to allocate for video frames",
-				   1, G_MAXINT, GST_ARAVIS_DEFAULT_N_BUFFERS,
-				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+	g_object_class_install_properties (gobject_class,
+					   G_N_ELEMENTS (properties),
+					   properties);
 
-	g_object_class_install_property
-	    (gobject_class, PROP_USB_MODE,
-	     g_param_spec_enum("usb-mode",
-			       "USB mode",
-			       "USB mode (synchronous/asynchronous)",
-			       GST_TYPE_ARV_USB_MODE, ARV_UV_USB_MODE_DEFAULT,
-			       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+        gst_aravis_signals[SIGNAL_SOFTWARE_TRIGGER] =
+                g_signal_new ("software-trigger", G_TYPE_FROM_CLASS (klass),
+                              G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+                              G_STRUCT_OFFSET (GstAravisClass,
+                                               software_trigger), NULL, NULL, NULL,
+                              G_TYPE_NONE, 0);
 
         GST_DEBUG_CATEGORY_INIT (aravis_debug, "aravissrc", 0, "Aravis interface");
 
@@ -1131,6 +1170,8 @@ gst_aravis_class_init (GstAravisClass * klass)
 	gstbasesrc_class->get_times = GST_DEBUG_FUNCPTR (gst_aravis_get_times);
 
 	gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_aravis_create);
+
+        klass->software_trigger = gst_aravis_software_trigger;
 }
 
 static gboolean

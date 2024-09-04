@@ -425,10 +425,10 @@ arv_device_is_feature_implemented (ArvDevice *device, const char *feature, GErro
 	return ARV_IS_GC_FEATURE_NODE (node) && arv_gc_feature_node_is_implemented (ARV_GC_FEATURE_NODE (node), error);
 }
 
-static void *
+static ArvGcNode *
 _get_feature (ArvDevice *device, GType node_type, const char *feature, GError **error)
 {
-	void *node;
+	ArvGcNode *node;
 
 	g_return_val_if_fail (ARV_IS_DEVICE (device), NULL);
 	g_return_val_if_fail (feature != NULL, NULL);
@@ -508,6 +508,126 @@ arv_device_execute_command (ArvDevice *device, const char *feature, GError **err
         }
 
         return TRUE;
+}
+
+/**
+ * arv_device_get_feature_value:
+ * @device: a #ArvDevice object
+ * @feature: feature name
+ * @value: (out): a uninitialized #GValue placeholder
+ * @error: a #GError placeholder
+ *
+ * Get the value of a feature. Enumeration values are returned as strings.
+ *
+ * Since: 0.8.32
+ */
+
+void
+arv_device_get_feature_value (ArvDevice *device, const char *feature, GValue *value, GError **error)
+{
+	ArvGcNode *node;
+	GError *local_error = NULL;
+
+	node = arv_device_get_feature (device, feature);
+
+	if (node == NULL) {
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_FEATURE_NOT_FOUND,
+			     "[%s] Not found", feature);
+		return;
+	}
+
+	if (ARV_IS_GC_FLOAT (node)) {
+		g_value_init (value, G_TYPE_DOUBLE);
+		g_value_set_double (value, arv_gc_float_get_value (ARV_GC_FLOAT (node), &local_error));
+	} else if (ARV_IS_GC_ENUMERATION (node)) {
+		// ARV_IS_GC_INTEGER is true for an enum, so keep this before the int
+		g_value_init (value, G_TYPE_STRING);
+		g_value_set_string (value, arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (node), &local_error));
+	} else if (ARV_IS_GC_INTEGER (node)) {
+		g_value_init (value, G_TYPE_INT64);
+		g_value_set_int64 (value, arv_gc_integer_get_value (ARV_GC_INTEGER (node), &local_error));
+	} else if (ARV_IS_GC_BOOLEAN (node)) {
+		g_value_init (value, G_TYPE_BOOLEAN);
+		g_value_set_boolean (value, arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node), &local_error));
+	} else if (ARV_IS_GC_STRING (node)) {
+		g_value_init (value, G_TYPE_STRING);
+		g_value_set_string (value, arv_gc_string_get_value (ARV_GC_STRING (node), &local_error));
+	} else {
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_WRONG_FEATURE,
+			     "[%s:%s] Not a feature", feature, G_OBJECT_TYPE_NAME (node));
+	}
+}
+
+/**
+ * arv_device_set_feature_value:
+ * @device: a #ArvDevice object
+ * @feature: feature name
+ * @value: a #GValue
+ * @error: a #GError placeholder
+ *
+ * Set value of a feature.
+ *
+ * Since: 0.8.32
+ */
+
+void
+arv_device_set_feature_value (ArvDevice *device, const char *feature, const GValue *value, GError **error)
+{
+	ArvGcNode *node;
+	GValue value_copy = G_VALUE_INIT;
+	GError *local_error = NULL;
+
+	node = arv_device_get_feature (device, feature);
+
+	if (node == NULL) {
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_FEATURE_NOT_FOUND,
+			     "[%s] Not found", feature);
+		return;
+	}
+
+	if (ARV_IS_GC_FLOAT (node)) {
+		g_value_init(&value_copy, G_TYPE_DOUBLE);
+		if (g_value_transform(value, &value_copy))
+			arv_gc_float_set_value (ARV_GC_FLOAT (node), g_value_get_double (&value_copy), &local_error);
+		else
+			g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_WRONG_FEATURE,
+				     "[%s:%s] Not a double", feature, G_OBJECT_TYPE_NAME (node));
+	} else if (ARV_IS_GC_INTEGER (node)) {
+		g_value_init(&value_copy, G_TYPE_INT64);
+		if (g_value_transform(value, &value_copy))
+			arv_gc_integer_set_value (ARV_GC_INTEGER (node), g_value_get_int64 (&value_copy), &local_error);
+		else
+			g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_WRONG_FEATURE,
+				     "[%s:%s] Not an int64", feature, G_OBJECT_TYPE_NAME (node));
+	} else if (ARV_IS_GC_BOOLEAN (node)) {
+		g_value_init(&value_copy, G_TYPE_BOOLEAN);
+		if (g_value_transform(value, &value_copy))
+			arv_gc_boolean_set_value (ARV_GC_BOOLEAN (node), g_value_get_boolean (&value_copy), &local_error);
+		else
+			g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_WRONG_FEATURE,
+				     "[%s:%s] Not a boolean", feature, G_OBJECT_TYPE_NAME (node));
+	} else if (ARV_IS_GC_STRING (node)) {
+		g_value_init(&value_copy, G_TYPE_STRING);
+		if (g_value_transform(value, &value_copy))
+			arv_gc_string_set_value (ARV_GC_STRING (node), g_value_get_string (&value_copy), &local_error);
+		else
+			g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_WRONG_FEATURE,
+				     "[%s:%s] Not a string", feature, G_OBJECT_TYPE_NAME (node));
+	} else if (ARV_IS_GC_ENUMERATION (node)) {
+		if (G_VALUE_HOLDS_STRING (value))
+			arv_gc_enumeration_set_string_value (ARV_GC_ENUMERATION (node), g_value_get_string (value), &local_error);
+		else {
+			g_value_init(&value_copy, G_TYPE_INT64);
+			if (g_value_transform(value, &value_copy))
+				arv_gc_enumeration_set_int_value (ARV_GC_ENUMERATION (node), g_value_get_int64 (&value_copy), &local_error);
+			else
+				g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_WRONG_FEATURE,
+					"[%s:%s] Not a string or int64", feature, G_OBJECT_TYPE_NAME (node));
+		}
+	} else {
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_WRONG_FEATURE,
+			     "[%s:%s] Not a feature", feature, G_OBJECT_TYPE_NAME (node));
+	}
 }
 
 /**
@@ -1487,4 +1607,3 @@ arv_device_initable_iface_init (GInitableIface *iface)
 {
 	iface->init = arv_device_initable_init;
 }
-
