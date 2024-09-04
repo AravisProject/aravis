@@ -14,6 +14,15 @@ declarations for a couple of vendors. If you want to add an entry with the
 vendor of your camera, the output of `lsusb` command will give you the vendor
 id, which is the first 4 digits of the ID field.
 
+Alternatively, you can give read/write access to all USB3Vision devices using
+the following rule:
+
+```
+# Read write access for all USB3Vision devices
+SUBSYSTEM=="usb", ATTRS{bDeviceClass}=="ef", ATTRS{bDeviceSubClass}=="02", ATTRS{bDeviceProtocol}=="01",
+        ENV{ID_USB_INTERFACES}=="*:ef0500:*", MODE="0666"
+```
+
 ## Performance
 
 Aravis uses by default the synchronous libusb API. But it can be told to use the
