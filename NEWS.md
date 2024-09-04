@@ -1,3 +1,8 @@
+Stable release 0.8.33
+=====================
+
+  * viewer: ignore exposure time feature representation (Emmanuel)
+
 Stable release 0.8.32
 =====================
 
