@@ -78,11 +78,15 @@ struct _GstAravis {
 	guint64 timestamp_offset;
 	guint64 last_timestamp;
 
+	char *trigger_source;
+
 	char *features;
 };
 
 struct _GstAravisClass {
 	GstPushSrcClass parent_class;
+
+    void (*software_trigger) (GstAravis *src);
 };
 
 GType gst_aravis_get_type (void);

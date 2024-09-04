@@ -37,6 +37,7 @@
 #include <arvgvspprivate.h>
 #include <time.h>
 #include <string.h>
+#include <stdio.h>
 
 /* TODO: Add l10n */
 #define _(x) (x)
@@ -67,10 +68,20 @@ enum
   PROP_NUM_ARV_BUFFERS,
   PROP_USB_MODE,
   PROP_STREAM,
+  PROP_TRIGGER,
   N_PROPERTIES
 };
 
 static GParamSpec *properties[N_PROPERTIES];
+
+enum
+{
+  /* actions */
+  SIGNAL_SOFTWARE_TRIGGER,
+  LAST_SIGNAL
+};
+
+static guint gst_aravis_signals[LAST_SIGNAL] = { 0 };
 
 #define GST_TYPE_ARV_AUTO (gst_arv_auto_get_type())
 static GType
@@ -133,7 +144,7 @@ gst_aravis_get_all_camera_caps (GstAravis *gst_aravis, GError **error)
 	int min_frame_rate_denominator;
 	int max_frame_rate_numerator;
 	int max_frame_rate_denominator;
-	gboolean is_frame_rate_available;
+	gboolean use_frame_rate;
 
 	g_return_val_if_fail (GST_IS_ARAVIS (gst_aravis), NULL);
 
@@ -146,8 +157,10 @@ gst_aravis_get_all_camera_caps (GstAravis *gst_aravis, GError **error)
 	if (!local_error) arv_camera_get_height_bounds (gst_aravis->camera, &min_height, &max_height, &local_error);
 	if (!local_error) pixel_formats = arv_camera_dup_available_pixel_formats (gst_aravis->camera, &n_pixel_formats,
 										  &local_error);
-	is_frame_rate_available = arv_camera_is_frame_rate_available (gst_aravis->camera, NULL);
-	if (is_frame_rate_available) {
+	use_frame_rate = arv_camera_is_frame_rate_available (gst_aravis->camera, NULL) &&
+                gst_aravis->trigger_source == NULL;
+
+	if (use_frame_rate) {
 		if (!local_error) arv_camera_get_frame_rate_bounds (gst_aravis->camera,
 								    &min_frame_rate, &max_frame_rate, &local_error);
 		if (!local_error) {
@@ -174,7 +187,7 @@ gst_aravis_get_all_camera_caps (GstAravis *gst_aravis, GError **error)
 					   "width", GST_TYPE_INT_RANGE, min_width, max_width,
 					   "height", GST_TYPE_INT_RANGE, min_height, max_height,
 					   NULL);
-			if (is_frame_rate_available)
+			if (use_frame_rate)
 				gst_structure_set (structure,
 						   "framerate", GST_TYPE_FRACTION_RANGE,
 						   min_frame_rate_numerator, min_frame_rate_denominator,
@@ -395,6 +408,13 @@ unref:
 	return result;
 }
 
+static void
+gst_aravis_software_trigger (GstAravis *src) {
+        if (ARV_IS_CAMERA (src->camera)) {
+                arv_camera_software_trigger(src->camera, NULL);
+        }
+}
+
 static gboolean
 gst_aravis_init_camera (GstAravis *gst_aravis, gboolean *notify, GError **error)
 {
@@ -415,6 +435,8 @@ gst_aravis_init_camera (GstAravis *gst_aravis, gboolean *notify, GError **error)
 	if (!local_error) gst_aravis->payload = 0;
 	if (!local_error && arv_camera_is_uv_device (gst_aravis->camera))
                 arv_camera_uv_set_usb_mode (gst_aravis->camera, gst_aravis->usb_mode);
+	if (!local_error && gst_aravis->trigger_source != NULL)
+		arv_camera_set_trigger (gst_aravis->camera, gst_aravis->trigger_source, &local_error);
 
 	if (local_error) {
 		g_clear_object (&gst_aravis->camera);
@@ -615,15 +637,19 @@ gst_aravis_fixate_caps (GstBaseSrc * bsrc, GstCaps * caps)
 	gint width;
 	gint height;
 	double frame_rate = 0.0;
-	gboolean is_frame_rate_available;
+	gboolean use_frame_rate;
 
 	g_return_val_if_fail (GST_IS_ARAVIS (bsrc), NULL);
 
 	GST_OBJECT_LOCK (gst_aravis);
+
 	arv_camera_get_region (gst_aravis->camera, NULL, NULL, &width, &height, &error);
-	is_frame_rate_available = arv_camera_is_frame_rate_available (gst_aravis->camera, NULL);
-	if (is_frame_rate_available)
+	use_frame_rate = arv_camera_is_frame_rate_available (gst_aravis->camera, NULL) &&
+                gst_aravis->trigger_source == NULL;
+
+	if (use_frame_rate)
 		if (!error) frame_rate = arv_camera_get_frame_rate (gst_aravis->camera, &error);
+
 	GST_OBJECT_UNLOCK (gst_aravis);
 	if (error) {
 		GST_ELEMENT_ERROR (gst_aravis, RESOURCE, READ,
@@ -637,7 +663,7 @@ gst_aravis_fixate_caps (GstBaseSrc * bsrc, GstCaps * caps)
 
 		gst_structure_fixate_field_nearest_int (structure, "width", width);
 		gst_structure_fixate_field_nearest_int (structure, "height", height);
-		if (is_frame_rate_available)
+		if (use_frame_rate)
 			gst_structure_fixate_field_nearest_fraction (structure, "framerate",
 								     (double) (0.5 + frame_rate), 1);
 
@@ -675,6 +701,8 @@ gst_aravis_init (GstAravis *gst_aravis)
 
 	gst_aravis->buffer_timeout_us = GST_ARAVIS_BUFFER_TIMEOUT_DEFAULT;
 	gst_aravis->frame_rate = 0.0;
+
+	gst_aravis->trigger_source = NULL;
 
 	gst_aravis->camera = NULL;
 	gst_aravis->stream = NULL;
@@ -807,6 +835,12 @@ gst_aravis_set_property (GObject * object, guint prop_id,
 		case PROP_USB_MODE:
 			gst_aravis->usb_mode = g_value_get_enum (value);
 			break;
+		case PROP_TRIGGER:
+			GST_OBJECT_LOCK (gst_aravis);
+                        g_free (gst_aravis->trigger_source);
+			gst_aravis->trigger_source = g_strdup (g_value_get_string (value));
+			GST_OBJECT_UNLOCK (gst_aravis);
+			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 			break;
@@ -909,6 +943,11 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 			GST_OBJECT_LOCK (gst_aravis);
 			g_value_set_object (value, gst_aravis->stream);
 			GST_OBJECT_UNLOCK (gst_aravis);
+                        break;
+		case PROP_TRIGGER:
+			GST_OBJECT_LOCK (gst_aravis);
+			g_value_set_string (value, gst_aravis->trigger_source);
+			GST_OBJECT_UNLOCK (gst_aravis);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -937,7 +976,7 @@ gst_aravis_query (GstBaseSrc *bsrc, GstQuery *query)
 			}
 
 			/* we must have a framerate */
-			if (src->frame_rate <= 0.0)
+			if (src->frame_rate <= 0.0 || src->trigger_source != NULL)
 			{
 				GST_WARNING_OBJECT (src, "Can't give latency since framerate isn't fixated !");
 				goto done;
@@ -1092,12 +1131,25 @@ gst_aravis_class_init (GstAravisClass * klass)
 				     "Stream instance to retrieve additional information",
 				     ARV_TYPE_STREAM,
 				     G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+	properties[PROP_TRIGGER] =
+                g_param_spec_string("trigger",
+                                    "Configure the trigger mode",
+                                    "Enable the trigger mode using the given source",
+                                    NULL,
+                                    G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
 	g_object_class_install_properties (gobject_class,
 					   G_N_ELEMENTS (properties),
 					   properties);
 
-	GST_DEBUG_CATEGORY_INIT (aravis_debug, "aravissrc", 0, "Aravis interface");
+        gst_aravis_signals[SIGNAL_SOFTWARE_TRIGGER] =
+                g_signal_new ("software-trigger", G_TYPE_FROM_CLASS (klass),
+                              G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+                              G_STRUCT_OFFSET (GstAravisClass,
+                                               software_trigger), NULL, NULL, NULL,
+                              G_TYPE_NONE, 0);
+
+        GST_DEBUG_CATEGORY_INIT (aravis_debug, "aravissrc", 0, "Aravis interface");
 
 	gst_element_class_set_details_simple (element_class,
 					      "Aravis Video Source",
@@ -1117,6 +1169,8 @@ gst_aravis_class_init (GstAravisClass * klass)
 	gstbasesrc_class->get_times = GST_DEBUG_FUNCPTR (gst_aravis_get_times);
 
 	gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_aravis_create);
+
+        klass->software_trigger = gst_aravis_software_trigger;
 }
 
 static gboolean
