@@ -396,6 +396,12 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 					arv_buffer_new (gst_aravis->payload, NULL));
 
 	GST_LOG_OBJECT (gst_aravis, "Start acquisition");
+
+	if (gst_aravis->trigger_mode) {
+		arv_camera_set_string (gst_aravis->camera, "TriggerMode", "On", &error);
+		arv_stream_set_emit_signals (gst_aravis->stream, TRUE);			
+	}
+
 	arv_camera_start_acquisition (gst_aravis->camera, &error);
 
 	gst_aravis->timestamp_offset = 0;
@@ -430,9 +436,20 @@ unref:
 }
 
 static void 
-gst_aravis_software_trigger (GstAravis *src) {
-    if (src->camera)
- 		arv_camera_software_trigger(src->camera, NULL);
+gst_aravis_software_trigger (GstAravis *src) 
+{
+	GError *local_error = NULL;
+    
+	if (src->camera) arv_camera_software_trigger(src->camera, &local_error);
+
+	if (local_error) {
+		GST_ELEMENT_ERROR (src, RESOURCE, WRITE,
+			(_("Could not trigger camera \"%s\": %s"),
+				src->camera_name ? src->camera_name : "",
+				local_error->message),
+			(NULL));
+		g_error_free (local_error);
+	}
 }
 
 static gboolean
@@ -445,13 +462,14 @@ gst_aravis_init_camera (GstAravis *gst_aravis, GError **error)
 
 	gst_aravis->camera = arv_camera_new (gst_aravis->camera_name, &local_error);
 
+	// Not working
+	// if (!local_error && gst_aravis->trigger_mode) arv_camera_set_string (gst_aravis->camera, "TriggerMode", "On", &local_error);
+
 	if (!local_error) arv_camera_get_region (gst_aravis->camera, &gst_aravis->offset_x,
                                                  &gst_aravis->offset_y, NULL, NULL, &local_error);
 	if (!local_error) gst_aravis->payload = 0;
 	if (!local_error && arv_camera_is_uv_device (gst_aravis->camera))
                 arv_camera_uv_set_usb_mode (gst_aravis->camera, gst_aravis->usb_mode);
-	if (!local_error && gst_aravis->trigger_mode)
-		arv_camera_set_trigger (gst_aravis->camera, gst_aravis->trigger_source, &local_error);	
 
 	if (local_error) {
 		g_clear_object (&gst_aravis->camera);
