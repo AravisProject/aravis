@@ -724,6 +724,7 @@ gst_aravis_finalize (GObject * object)
 	all_caps = g_steal_pointer (&gst_aravis->all_caps);
 	g_clear_pointer (&gst_aravis->camera_name, g_free);
 	g_clear_pointer (&gst_aravis->features, g_free);
+        g_clear_pointer (&gst_aravis->trigger_source, g_free);
 	GST_OBJECT_UNLOCK (gst_aravis);
 
 	if (camera != NULL)
