@@ -37,6 +37,7 @@
 #include <arvgvspprivate.h>
 #include <time.h>
 #include <string.h>
+#include <stdio.h>
 
 /* TODO: Add l10n */
 #define _(x) (x)
@@ -67,10 +68,20 @@ enum
   PROP_NUM_ARV_BUFFERS,
   PROP_USB_MODE,
   PROP_STREAM,
+  PROP_TRIGGER,
   N_PROPERTIES
 };
 
 static GParamSpec *properties[N_PROPERTIES];
+
+enum
+{
+  /* actions */
+  SIGNAL_SOFTWARE_TRIGGER,
+  LAST_SIGNAL
+};
+
+static guint gst_aravis_signals[LAST_SIGNAL] = { 0 };
 
 #define GST_TYPE_ARV_AUTO (gst_arv_auto_get_type())
 static GType
@@ -395,6 +406,12 @@ unref:
 	return result;
 }
 
+static void
+gst_aravis_software_trigger (GstAravis *src) {
+    if (src->camera)
+ 		arv_camera_software_trigger(src->camera, NULL);
+}
+
 static gboolean
 gst_aravis_init_camera (GstAravis *gst_aravis, gboolean *notify, GError **error)
 {
@@ -415,6 +432,8 @@ gst_aravis_init_camera (GstAravis *gst_aravis, gboolean *notify, GError **error)
 	if (!local_error) gst_aravis->payload = 0;
 	if (!local_error && arv_camera_is_uv_device (gst_aravis->camera))
                 arv_camera_uv_set_usb_mode (gst_aravis->camera, gst_aravis->usb_mode);
+	if (!local_error && gst_aravis->trigger_mode)
+		arv_camera_set_trigger (gst_aravis->camera, gst_aravis->trigger_source, &local_error);
 
 	if (local_error) {
 		g_clear_object (&gst_aravis->camera);
@@ -676,6 +695,8 @@ gst_aravis_init (GstAravis *gst_aravis)
 	gst_aravis->buffer_timeout_us = GST_ARAVIS_BUFFER_TIMEOUT_DEFAULT;
 	gst_aravis->frame_rate = 0.0;
 
+	gst_aravis->trigger_source = NULL;
+
 	gst_aravis->camera = NULL;
 	gst_aravis->stream = NULL;
 
@@ -807,6 +828,12 @@ gst_aravis_set_property (GObject * object, guint prop_id,
 		case PROP_USB_MODE:
 			gst_aravis->usb_mode = g_value_get_enum (value);
 			break;
+		case PROP_TRIGGER:
+			GST_OBJECT_LOCK (gst_aravis);
+                        g_free (gst_aravis->trigger_source);
+			gst_aravis->trigger_source = g_strdup (g_value_get_string (value));
+			GST_OBJECT_UNLOCK (gst_aravis);
+			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 			break;
@@ -908,6 +935,11 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 		case PROP_STREAM:
 			GST_OBJECT_LOCK (gst_aravis);
 			g_value_set_object (value, gst_aravis->stream);
+			GST_OBJECT_UNLOCK (gst_aravis);
+                        break;
+		case PROP_TRIGGER:
+			GST_OBJECT_LOCK (gst_aravis);
+			g_value_set_string (value, gst_aravis->trigger_source);
 			GST_OBJECT_UNLOCK (gst_aravis);
 			break;
 		default:
@@ -1092,12 +1124,18 @@ gst_aravis_class_init (GstAravisClass * klass)
 				     "Stream instance to retrieve additional information",
 				     ARV_TYPE_STREAM,
 				     G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+	properties[PROP_TRIGGER] =
+                g_param_spec_string("trigger",
+                                    "Set trigger",
+                                    "Configures the camera in trigger mode",
+                                    NULL,
+                                    G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
 	g_object_class_install_properties (gobject_class,
 					   G_N_ELEMENTS (properties),
 					   properties);
 
-	GST_DEBUG_CATEGORY_INIT (aravis_debug, "aravissrc", 0, "Aravis interface");
+        GST_DEBUG_CATEGORY_INIT (aravis_debug, "aravissrc", 0, "Aravis interface");
 
 	gst_element_class_set_details_simple (element_class,
 					      "Aravis Video Source",
@@ -1117,6 +1155,8 @@ gst_aravis_class_init (GstAravisClass * klass)
 	gstbasesrc_class->get_times = GST_DEBUG_FUNCPTR (gst_aravis_get_times);
 
 	gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_aravis_create);
+
+    klass->software_trigger = gst_aravis_software_trigger;
 }
 
 static gboolean
