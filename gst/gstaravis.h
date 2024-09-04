@@ -79,7 +79,6 @@ struct _GstAravis {
 	guint64 last_timestamp;
 
 	char *trigger_source;
-	gboolean trigger_mode;
 
 	char *features;
 };
