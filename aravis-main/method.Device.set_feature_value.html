@@ -7,7 +7,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Aravis.Device.get_feature_representation</title>
+  <title>Aravis.Device.set_feature_value</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <meta charset="utf-8" />
@@ -23,10 +23,10 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
 
   
-  <meta priority="og:title" content="Aravis.Device.get_feature_representation"/>
-  <meta priority="og:description" content="Reference for Aravis.Device.get_feature_representation"/>
-  <meta name="twitter:title" content="Aravis.Device.get_feature_representation"/>
-  <meta name="twitter:description" content="Reference for Aravis.Device.get_feature_representation"/>
+  <meta priority="og:title" content="Aravis.Device.set_feature_value"/>
+  <meta priority="og:description" content="Reference for Aravis.Device.set_feature_value"/>
+  <meta name="twitter:title" content="Aravis.Device.set_feature_value"/>
+  <meta name="twitter:description" content="Reference for Aravis.Device.set_feature_value"/>
 
 
   
@@ -113,7 +113,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.Device.get_feature_access_mode.html">get_feature_access_mode</a>
   
-    <a class="method current" href="method.Device.get_feature_representation.html">get_feature_representation</a>
+    <a class="method" href="method.Device.get_feature_representation.html">get_feature_representation</a>
   
     <a class="method" href="method.Device.get_feature_value.html">get_feature_value</a>
   
@@ -149,7 +149,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.Device.set_boolean_feature_value.html">set_boolean_feature_value</a>
   
-    <a class="method" href="method.Device.set_feature_value.html">set_feature_value</a>
+    <a class="method current" href="method.Device.set_feature_value.html">set_feature_value</a>
   
     <a class="method" href="method.Device.set_features_from_string.html">set_features_from_string</a>
   
@@ -187,12 +187,12 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <section id="main" class="content">
   <header>
     <h3>Method</h3>
-    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.Device.html">Device</a><span class="sep"></span>get_feature_representation</h1>
+    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.Device.html">Device</a><span class="sep"></span>set_feature_value</h1>
   </header>
 
   <section>
     <div class="docblock">
-      <p><span class="emblem available-next" title="This method will be available in the next stable release">unstable</span>&nbsp;<span class="emblem available">since: 0.10.0</span></p>
+      <p><span class="emblem available">since: 0.8.32</span></p>
     </div>
 
     <div class="declaration toggle-wrapper">
@@ -200,15 +200,17 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Declaration
         <a class="anchor" href="#declaration"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvdevice.h#L135">[src]</a>
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvdevice.h#L142">[src]</a>
         
       </h4>
 
       <div class="docblock c-decl">
-        <pre><code><div class="highlight"><pre><span></span><span class="n">ArvGcRepresentation</span><span class="w"></span>
-<span class="n">arv_device_get_feature_representation</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
+        <pre><code><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"></span>
+<span class="n">arv_device_set_feature_value</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
 <span class="w">  </span><span class="n">ArvDevice</span><span class="o">*</span><span class="w"> </span><span class="n">device</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">feature</span><span class="w"></span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">feature</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">GValue</span><span class="o">*</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="n">GError</span><span class="o">**</span><span class="w"> </span><span class="n">error</span><span class="w"></span>
 <span class="p">)</span><span class="w"></span>
 </pre></div>
 </code></pre>
@@ -220,15 +222,17 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Description
         <a class="anchor" href="#description"></a>
         
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvdevice.c#L561">[src]</a>
+        
       </h4>
 
       <div class="docblock">
-        <p>No description available.</p>
+        <p>Set value of a&nbsp;feature.</p>
       </div>
 
       <div class="docblock">
         
-        <p>Available since: 0.10.0</p>
+        <p>Available since: 0.8.32</p>
         
         
         
@@ -268,27 +272,10 @@ SPDX-License-Identifier: LGPL-2.1-or-later
             </table>
           </dd>
           
-
-          
-        </dl>
-      </div>
-    </div>
-    
-
-    
-    <div class="return-value toggle-wrapper">
-      <h4 id="return-value">
-        Return value
-        <a href="#return-value" class="anchor"></a>
-      </h4>
-
-      <div class="docblock">
-        <div class="returns">
-          <div class="arg-description">
-            <p><em>Type:</em>&nbsp;<a href="enum.GcRepresentation.html"><code>ArvGcRepresentation</code></a></p>
-            <p>Enum ArvGcRepresentation, ARV_GC_REPRESENTATION_UNDEFINED if not&nbsp;available.</p>
-          </div>
-          <div>
+          <dt class="arg-name"><code>value</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<a href="javascript:void(0)" data-link="struct.Value.html" data-namespace="GObject" class="external"><code>GValue</code></a></p>
+            <p>A <code>GValue</code>.</p>
             <table>
             
             
@@ -296,11 +283,31 @@ SPDX-License-Identifier: LGPL-2.1-or-later
             
             
             
+            
+            <tr><td title="transfer: none">The data is owned by the caller of the method.</td></tr>
+            
             </table>
-          </div>
-        </div>
+          </dd>
+          
+
+          
+          <dt class="arg-name"><code>error</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<a href="javascript:void(0)" data-namespace="GLib" data-link="struct.Error.html" class="external"><code>GError **</code></a></p>
+            <p>The return location for <a href="https://docs.gtk.org/glib/error-reporting.html#rules-for-use-of-gerror">a recoverable error</a>.</p>
+            <table>
+              <tr><td>The argument can be <code>NULL</code>.</td></tr>
+              <tr><td>If the return location is not <code>NULL</code>, then you must initialize it to a <code>NULL</code> <code>GError*</code>.</td></tr>
+              <tr><td>The argument will be left initialized to <code>NULL</code> by the method if there are no errors.</td></tr>
+              <tr><td>In case of error, the argument will be set to a newly allocated <code>GError</code>; the caller will take ownership of the data, and be responsible for freeing it.</td></tr>
+            </table>
+          </dd>
+          
+        </dl>
       </div>
     </div>
+    
+
     
 
   </section>
