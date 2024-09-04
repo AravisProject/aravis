@@ -463,7 +463,7 @@ arv_socket_set_recv_buffer_size (int socket_fd, gint buffer_size)
         optlen = sizeof(buffer_size_reported);
 
 	result = setsockopt (socket_fd, SOL_SOCKET, SO_RCVBUF,
-			     (const char*) &_buffer_size, sizeof (_buffer_size));
+			     (const char *) &_buffer_size, sizeof (_buffer_size));
 	if(result != 0) {
 	    arv_warning_interface ("[set_recv_buffer_size] Setting socket buffer to %d bytes failed (%s)",
                                   _buffer_size, strerror(errno));
@@ -472,7 +472,7 @@ arv_socket_set_recv_buffer_size (int socket_fd, gint buffer_size)
 
         /* setsockopt() succeeded, but sometimes the requested size is not actually be set. Ask
          * to see the new setting to confirm. */
-        result = getsockopt (socket_fd, SOL_SOCKET, SO_RCVBUF, &buffer_size_reported, &optlen);
+        result = getsockopt (socket_fd, SOL_SOCKET, SO_RCVBUF, (char *) &buffer_size_reported, &optlen);
         if (result != 0) {
                 arv_warning_interface ("[set_recv_buffer_size] Read of socket buffer size (SO_RCVBUF) failed (%s)",
                                        strerror(errno));
@@ -482,14 +482,19 @@ arv_socket_set_recv_buffer_size (int socket_fd, gint buffer_size)
 
 	if(buffer_size_reported < buffer_size)
         {
+#ifndef G_OS_WIN32
                 arv_warning_interface ("[set_recv_buffer_size] Unexpected socket buffer size (SO_RCVBUF):"
                                        " actual %d < expected %d bytes"
                                        "\nYou might see missing packets and timeouts"
-#ifndef G_OS_WIN32
                                        "\nMost likely /proc/sys/net/core/rmem_max is too low"
-                                       "\nSee the socket(7) manpage\n"
+                                       "\nSee the socket(7) manpage\n",
+                                       buffer_size_reported, buffer_size);
+#else
+                arv_warning_interface ("[set_recv_buffer_size] Unexpected socket buffer size (SO_RCVBUF):"
+                                       " actual %d < expected %d bytes"
+                                       "\nYou might see missing packets and timeouts",
+                                       buffer_size_reported, buffer_size);
 #endif
-                                      , buffer_size_reported, buffer_size);
 
                 return FALSE;
         }
