@@ -807,18 +807,13 @@ set_camera_widgets(ArvViewer *viewer)
 
 	is_exposure_available = arv_camera_is_exposure_time_available (viewer->camera, NULL);
 	if (is_exposure_available){
-		viewer->exposure_time_representation = arv_camera_get_exposure_time_representation(viewer->camera);
-
-                if (viewer->exposure_time_representation == ARV_GC_REPRESENTATION_UNDEFINED) {
-                        if (viewer->exposure_min < viewer->exposure_max) {
-                                if (viewer->exposure_min > 0)
-                                        viewer->exposure_time_representation = ARV_GC_REPRESENTATION_LOGARITHMIC;
-                                else
-                                        viewer->exposure_time_representation = ARV_GC_REPRESENTATION_LINEAR;
-                        } else {
-                                viewer->exposure_time_representation = ARV_GC_REPRESENTATION_PURE_NUMBER;
-                        }
-                }
+                if (viewer->exposure_min < viewer->exposure_max)
+                        if (viewer->exposure_min > 0)
+                                viewer->exposure_time_representation = ARV_GC_REPRESENTATION_LOGARITHMIC;
+                        else
+                                viewer->exposure_time_representation = ARV_GC_REPRESENTATION_LINEAR;
+                else
+                        viewer->exposure_time_representation = ARV_GC_REPRESENTATION_PURE_NUMBER;
 
 		switch (viewer->exposure_time_representation) {
 			case ARV_GC_REPRESENTATION_UNDEFINED:
