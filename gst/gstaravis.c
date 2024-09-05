@@ -56,6 +56,7 @@ enum
   PROP_GAIN_AUTO,
   PROP_EXPOSURE,
   PROP_EXPOSURE_AUTO,
+  PROP_GAMMA,
   PROP_H_BINNING,
   PROP_V_BINNING,
   PROP_OFFSET_X,
@@ -687,6 +688,7 @@ gst_aravis_init (GstAravis *gst_aravis)
 	gst_aravis->exposure_time_us = -1;
 	gst_aravis->exposure_auto = ARV_AUTO_OFF;
 	gst_aravis->exposure_auto_set = FALSE;
+	gst_aravis->gamma = 1;
 	gst_aravis->offset_x = 0;
 	gst_aravis->offset_y = 0;
 	gst_aravis->h_binning = -1;
@@ -798,23 +800,38 @@ gst_aravis_set_property (GObject * object, guint prop_id,
 				arv_camera_set_exposure_time_auto (gst_aravis->camera, gst_aravis->exposure_auto, NULL);
 			GST_OBJECT_UNLOCK (gst_aravis);
 			break;
-		case PROP_OFFSET_X:
-			gst_aravis->offset_x = g_value_get_int (value);
-			break;
-		case PROP_OFFSET_Y:
-			gst_aravis->offset_y = g_value_get_int (value);
-			break;
-		case PROP_H_BINNING:
-			gst_aravis->h_binning = g_value_get_int (value);
-			break;
-		case PROP_V_BINNING:
-			gst_aravis->v_binning = g_value_get_int (value);
-			break;
-		case PROP_PACKET_DELAY:
+		case PROP_GAMMA:
 			GST_OBJECT_LOCK (gst_aravis);
-			gst_aravis->packet_delay = g_value_get_int64 (value);
-			GST_OBJECT_UNLOCK (gst_aravis);
-			break;
+			gst_aravis->gamma = g_value_get_double (value);
+			if (gst_aravis->camera != NULL &&
+                            arv_camera_is_feature_available (gst_aravis->camera, "Gamma", NULL)) {
+                                double gamma_max, gamma_min;
+
+                                arv_camera_get_float_bounds(gst_aravis->camera, "Gamma", &gamma_min, &gamma_max, NULL);
+                                if (gamma_min <= gst_aravis->gamma && gst_aravis->gamma <= gamma_max) {
+                                        arv_camera_set_float (gst_aravis->camera, "Gamma",
+                                                              gst_aravis->gamma, NULL);
+                                }
+                        }
+                        GST_OBJECT_UNLOCK (gst_aravis);
+                        break;
+                case PROP_OFFSET_X:
+                        gst_aravis->offset_x = g_value_get_int (value);
+                        break;
+                case PROP_OFFSET_Y:
+                        gst_aravis->offset_y = g_value_get_int (value);
+                        break;
+                case PROP_H_BINNING:
+                        gst_aravis->h_binning = g_value_get_int (value);
+                        break;
+                case PROP_V_BINNING:
+                        gst_aravis->v_binning = g_value_get_int (value);
+                        break;
+                case PROP_PACKET_DELAY:
+                        GST_OBJECT_LOCK (gst_aravis);
+                        gst_aravis->packet_delay = g_value_get_int64 (value);
+                        GST_OBJECT_UNLOCK (gst_aravis);
+                        break;
                 case PROP_PACKET_SIZE:
                         gst_aravis->packet_size = g_value_get_int (value);
                         break;
@@ -825,27 +842,27 @@ gst_aravis_set_property (GObject * object, guint prop_id,
                         gst_aravis->packet_resend = g_value_get_boolean (value);
                         break;
                 case PROP_FEATURES:
-			GST_OBJECT_LOCK (gst_aravis);
-			g_free (gst_aravis->features);
+                        GST_OBJECT_LOCK (gst_aravis);
+                        g_free (gst_aravis->features);
                         gst_aravis->features = g_value_dup_string (value);
-			GST_OBJECT_UNLOCK (gst_aravis);
+                        GST_OBJECT_UNLOCK (gst_aravis);
                         break;
-		case PROP_NUM_ARV_BUFFERS:
-			gst_aravis->num_arv_buffers = g_value_get_int (value);
-			break;
-		case PROP_USB_MODE:
-			gst_aravis->usb_mode = g_value_get_enum (value);
-			break;
-		case PROP_TRIGGER:
-			GST_OBJECT_LOCK (gst_aravis);
+                case PROP_NUM_ARV_BUFFERS:
+                        gst_aravis->num_arv_buffers = g_value_get_int (value);
+                        break;
+                case PROP_USB_MODE:
+                        gst_aravis->usb_mode = g_value_get_enum (value);
+                        break;
+                case PROP_TRIGGER:
+                        GST_OBJECT_LOCK (gst_aravis);
                         g_free (gst_aravis->trigger_source);
-			gst_aravis->trigger_source = g_strdup (g_value_get_string (value));
-			GST_OBJECT_UNLOCK (gst_aravis);
-			break;
-		default:
-			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-			break;
-	}
+                        gst_aravis->trigger_source = g_strdup (g_value_get_string (value));
+                        GST_OBJECT_UNLOCK (gst_aravis);
+                        break;
+                default:
+                        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+                        break;
+        }
 }
 
 static void
@@ -893,6 +910,11 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 				gst_aravis->exposure_auto = arv_camera_get_exposure_time_auto(gst_aravis->camera, NULL);
 			}
 			g_value_set_enum (value, gst_aravis->exposure_auto);
+			GST_OBJECT_UNLOCK (gst_aravis);
+			break;
+		case PROP_GAMMA:
+			GST_OBJECT_LOCK (gst_aravis);
+			g_value_set_double (value, gst_aravis->gamma);
 			GST_OBJECT_UNLOCK (gst_aravis);
 			break;
 		case PROP_OFFSET_X:
@@ -1060,6 +1082,12 @@ gst_aravis_class_init (GstAravisClass * klass)
 				   "Auto Exposure Mode",
 				   GST_TYPE_ARV_AUTO, ARV_AUTO_OFF,
 				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	properties[PROP_GAMMA] =
+		g_param_spec_double ("gamma",
+				     "Gamma",
+				     "Gamma",
+				     0.0, 3.9, 1.0,
+				     G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 	properties[PROP_OFFSET_X] =
 		g_param_spec_int ("offset-x",
 				  "x Offset",
