@@ -56,6 +56,7 @@ enum
   PROP_GAIN_AUTO,
   PROP_EXPOSURE,
   PROP_EXPOSURE_AUTO,
+  PROP_GAMMA,
   PROP_H_BINNING,
   PROP_V_BINNING,
   PROP_OFFSET_X,
@@ -687,6 +688,7 @@ gst_aravis_init (GstAravis *gst_aravis)
 	gst_aravis->exposure_time_us = -1;
 	gst_aravis->exposure_auto = ARV_AUTO_OFF;
 	gst_aravis->exposure_auto_set = FALSE;
+	gst_aravis->gamma = 1;
 	gst_aravis->offset_x = 0;
 	gst_aravis->offset_y = 0;
 	gst_aravis->h_binning = -1;
@@ -798,6 +800,25 @@ gst_aravis_set_property (GObject * object, guint prop_id,
 				arv_camera_set_exposure_time_auto (gst_aravis->camera, gst_aravis->exposure_auto, NULL);
 			GST_OBJECT_UNLOCK (gst_aravis);
 			break;
+		case PROP_GAMMA:
+			GST_OBJECT_LOCK (gst_aravis);
+			gst_aravis->gamma = g_value_get_double (value);
+			if (gst_aravis->camera != NULL &&
+				arv_camera_is_feature_available (gst_aravis->camera, "Gamma", NULL)) {
+					// Not working
+					// arv_device_set_float_feature_value(gst_aravis->camera, "Gamma", gst_aravis->gamma, NULL);			
+
+					double gamma_max, gamma_min;
+					arv_camera_get_float_bounds(gst_aravis->camera, "Gamma", &gamma_min, &gamma_max, NULL);
+
+					if (gamma_min <= gst_aravis->gamma && gst_aravis->gamma <= gamma_max) {
+						ArvDevice *device = arv_camera_get_device(gst_aravis->camera);
+						ArvGcNode *gamma_node = arv_device_get_feature(device, "Gamma");
+						arv_gc_float_set_value(ARV_GC_FLOAT(gamma_node), gst_aravis->gamma, NULL);
+					}
+				}
+			GST_OBJECT_UNLOCK (gst_aravis);
+			break;
 		case PROP_OFFSET_X:
 			gst_aravis->offset_x = g_value_get_int (value);
 			break;
@@ -895,6 +916,11 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 			g_value_set_enum (value, gst_aravis->exposure_auto);
 			GST_OBJECT_UNLOCK (gst_aravis);
 			break;
+		case PROP_GAMMA:
+			GST_OBJECT_LOCK (gst_aravis);
+			g_value_set_double (value, gst_aravis->gamma);
+			GST_OBJECT_UNLOCK (gst_aravis);
+			break;			
 		case PROP_OFFSET_X:
 			g_value_set_int (value, gst_aravis->offset_x);
 			break;
@@ -1060,6 +1086,12 @@ gst_aravis_class_init (GstAravisClass * klass)
 				   "Auto Exposure Mode",
 				   GST_TYPE_ARV_AUTO, ARV_AUTO_OFF,
 				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	properties[PROP_GAMMA] =
+		g_param_spec_double ("gamma",
+				     "Gamma",
+				     "Gamma",
+				     0.0, 3.9, 1.0,
+				     G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 	properties[PROP_OFFSET_X] =
 		g_param_spec_int ("offset-x",
 				  "x Offset",

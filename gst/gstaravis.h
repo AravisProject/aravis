@@ -49,6 +49,7 @@ struct _GstAravis {
 	double exposure_time_us;
 	ArvAuto exposure_auto;
 	gboolean exposure_auto_set;
+	double gamma;
 
 	gint offset_x;
 	gint offset_y;
