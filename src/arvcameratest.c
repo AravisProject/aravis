@@ -5,6 +5,8 @@
 #include <signal.h>
 #include <stdio.h>
 
+#define N_BUFFERS       5
+
 static char *arv_option_camera_name = NULL;
 static char *arv_option_debug_domains = NULL;
 static char *arv_option_trigger = NULL;
@@ -41,6 +43,7 @@ static char *arv_option_uv_usb_mode = NULL;
 static gboolean arv_option_show_version = FALSE;
 static gboolean arv_option_gv_allow_broadcast_discovery_ack = FALSE;
 static char *arv_option_gv_port_range = NULL;
+static gboolean arv_option_native_buffers = FALSE;
 
 /* clang-format off */
 static const GOptionEntry arv_option_entries[] =
@@ -178,7 +181,7 @@ static const GOptionEntry arv_option_entries[] =
 	},
 	{
 		"multipart",    			'\0', 0, G_OPTION_ARG_NONE,
-		&arv_option_multipart,		"Enable multipart payload",
+		&arv_option_multipart,		        "Enable multipart payload",
 		NULL
 	},
 	{
@@ -216,6 +219,11 @@ static const GOptionEntry arv_option_entries[] =
 		"gv-port-range",		        '\0', 0, G_OPTION_ARG_STRING,
 		&arv_option_gv_port_range,	        "GV port range",
 		"<min>-<max>"
+	},
+	{
+		"native-buffers", 			'\0', 0, G_OPTION_ARG_NONE,
+		&arv_option_native_buffers, 		"Enable native buffers",
+                NULL
 	},
 	{
 		"debug", 				'd', 0, G_OPTION_ARG_STRING,
@@ -684,7 +692,12 @@ main (int argc, char **argv)
 						  NULL);
 			    }
 
-                            arv_stream_create_buffers(stream, 50, NULL, NULL, NULL);
+                            if (arv_option_native_buffers)
+                                    arv_stream_create_buffers(stream, N_BUFFERS, NULL, NULL, NULL);
+                            else {
+                                    for (i = 0; i < N_BUFFERS; i++)
+                                            arv_stream_push_buffer (stream, arv_buffer_new_allocate (payload));
+                            }
 
 			    arv_camera_set_acquisition_mode (camera, ARV_ACQUISITION_MODE_CONTINUOUS, NULL);
 
