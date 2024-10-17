@@ -24,6 +24,7 @@
 #include <arvnetworkprivate.h>
 #include <arvdebugprivate.h>
 #include <arvmiscprivate.h>
+#include <errno.h>
 
 GQuark
 arv_network_error_quark (void)
