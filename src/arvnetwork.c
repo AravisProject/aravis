@@ -24,6 +24,7 @@
 #include <arvnetworkprivate.h>
 #include <arvdebugprivate.h>
 #include <arvmiscprivate.h>
+#include <errno.h>
 
 #ifndef G_OS_WIN32
 	#include <ifaddrs.h>
