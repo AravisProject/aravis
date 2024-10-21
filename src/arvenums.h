@@ -58,7 +58,8 @@ ARV_API ArvAuto 		arv_auto_from_string		(const char *string);
 typedef enum {
 	ARV_ACQUISITION_MODE_CONTINUOUS,
 	ARV_ACQUISITION_MODE_SINGLE_FRAME,
-	ARV_ACQUISITION_MODE_MULTI_FRAME
+	ARV_ACQUISITION_MODE_MULTI_FRAME,
+        ARV_ACQUISITION_MODE_MULTI_FRAME_ASYNC
 } ArvAcquisitionMode;
 
 ARV_API const char *		arv_acquisition_mode_to_string		(ArvAcquisitionMode value);

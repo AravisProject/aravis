@@ -59,7 +59,8 @@ arv_auto_from_string (const char *string)
 static const char *arv_acquisition_mode_strings[] = {
 	"Continuous",
 	"SingleFrame",
-	"MultiFrame"
+	"MultiFrame",
+        "MultiFrameAsync"
 };
 
 const char *
