@@ -54,6 +54,8 @@ G_DEFINE_TYPE (ArvV4l2Interface, arv_v4l2_interface, ARV_TYPE_INTERFACE)
 
 typedef struct {
 	char *id;
+        char *model;
+        char *driver;
 	char *bus;
 	char *device_file;
 	char *version;
@@ -111,7 +113,9 @@ arv_v4l2_interface_device_infos_new (const char *device_file, const char *name)
 
                                         infos->ref_count = 1;
                                         infos->bus = g_strdup ((char *) cap.bus_info);
+                                        infos->driver = g_strdup ((char *) cap.driver);
                                         infos->device_file = g_strdup (device_file);
+                                        infos->model = g_strdup ((char *) cap.card);
                                         infos->version = g_strdup_printf ("%d.%d.%d",
                                                                           (cap.version >> 16) & 0xff,
                                                                           (cap.version >>  8) & 0xff,
@@ -119,11 +123,16 @@ arv_v4l2_interface_device_infos_new (const char *device_file, const char *name)
 
                                         if (media_fd != -1 &&
                                             ioctl (media_fd, MEDIA_IOC_DEVICE_INFO, &mdinfo) != -1) {
-                                                infos->id = g_strdup_printf ("%s-%s", (char *) cap.card,
-                                                                            mdinfo.serial);
+                                                infos->id = g_strdup_printf ("%s-%s-%s",
+                                                                             (char *) cap.driver,
+                                                                             (char *) cap.card,
+                                                                             mdinfo.serial);
                                                 infos->serial_nbr = g_strdup (mdinfo.serial);
                                         } else {
-                                                infos->id = g_strdup_printf ("%s-%s", (char *) cap.card, name);
+                                                infos->id = g_strdup_printf ("%s-%s-%s",
+                                                                             (char *) cap.driver,
+                                                                             (char *) cap.card,
+                                                                             name);
                                                 infos->serial_nbr = g_strdup (device_file);
                                         }
 
@@ -164,6 +173,8 @@ arv_v4l2_interface_device_infos_unref (ArvV4l2InterfaceDeviceInfos *infos)
 
 	if (g_atomic_int_dec_and_test (&infos->ref_count)) {
 		g_free (infos->id);
+                g_free (infos->model);
+                g_free (infos->driver);
 		g_free (infos->bus);
 		g_free (infos->device_file);
 		g_free (infos->version);
@@ -205,8 +216,8 @@ _discover (ArvV4l2Interface *v4l2_interface, GArray *device_ids)
 				ids->device = g_strdup (device_infos->id);
 				ids->physical = g_strdup (device_infos->bus);
 				ids->address = g_strdup (device_infos->device_file);
-				ids->vendor = g_strdup ("Aravis");
-				ids->model = g_strdup (device_infos->id);
+				ids->vendor = g_strdup (device_infos->driver);
+				ids->model = g_strdup (device_infos->model);
 				ids->serial_nbr = g_strdup (device_infos->serial_nbr);
                                 ids->protocol = "V4L2";
 
