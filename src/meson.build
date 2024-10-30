@@ -234,19 +234,21 @@ if v4l2_enabled
   library_sources += [
     'arvv4l2interface.c',
     'arvv4l2device.c',
-    'arvv4l2stream.c'
+    'arvv4l2stream.c',
+    'arvv4l2misc.c',
   ]
   library_no_introspection_sources += [
   ]
   library_headers += [
     'arvv4l2interface.h',
     'arvv4l2device.h',
-    'arvv4l2stream.h'
+    'arvv4l2stream.h',
   ]
   library_private_headers += [
     'arvv4l2deviceprivate.h',
     'arvv4l2interfaceprivate.h',
     'arvv4l2streamprivate.h',
+    'arvv4l2miscprivate.h',
   ]
 endif
 
