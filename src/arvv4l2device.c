@@ -28,6 +28,7 @@
 #include <arvdeviceprivate.h>
 #include <arvv4l2deviceprivate.h>
 #include <arvv4l2streamprivate.h>
+#include <arvv4l2miscprivate.h>
 #include <arvdebugprivate.h>
 #include <arvmisc.h>
 #include <linux/videodev2.h>
@@ -49,19 +50,6 @@
 #define ARV_V4L2_ADDRESS_EXPOSURE_TIME                  0x0120
 #define ARV_V4L2_ADDRESS_ACQUISITION_COMMAND            0x0124
 #define ARV_V4L2_ADDRESS_PIXEL_FORMAT                   0x0128
-
-typedef struct {
-        guint32 v4l2;
-        guint32 genicam;
-} ArvV4l2GenicamPixelFormat;
-
-static ArvV4l2GenicamPixelFormat pixel_format_map[] = {
-        {V4L2_PIX_FMT_YUYV,             ARV_PIXEL_FORMAT_YUV_422_YUYV_PACKED},
-/* Disable these formats for now, makes gstreamer crash:
-        {V4L2_PIX_FMT_RGB24,            ARV_PIXEL_FORMAT_RGB_8_PACKED},
-        {V4L2_PIX_FMT_BGR24,            ARV_PIXEL_FORMAT_BGR_8_PACKED},
-*/
-};
 
 enum
 {
@@ -102,35 +90,7 @@ G_DEFINE_TYPE_WITH_CODE (ArvV4l2Device, arv_v4l2_device, ARV_TYPE_DEVICE, G_ADD_
 
 /* ArvV4l2Device implemenation */
 
-ArvPixelFormat
-arv_pixel_format_from_v4l2 (guint32 v4l2_pixel_format)
-{
-        unsigned int i;
-
-        for (i = 0; i < G_N_ELEMENTS(pixel_format_map); i++) {
-                if (v4l2_pixel_format == pixel_format_map[i].v4l2)
-                        return pixel_format_map[i].genicam;
-        }
-
-        return 0;
-}
-
 /* ArvDevice implemenation */
-
-int
-arv_v4l2_device_ioctl (ArvV4l2Device *device, int request, void *arg)
-{
-	ArvV4l2DevicePrivate *priv = arv_v4l2_device_get_instance_private (ARV_V4L2_DEVICE (device));
-        int result;
-
-        g_return_val_if_fail (ARV_IS_DEVICE (device), -1);
-
-        do {
-                result = ioctl (priv->device_fd, request, arg);
-        } while (-1 == result && EINTR == errno);
-
-        return result;
-}
 
 static ArvStream *
 arv_v4l2_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data, GDestroyNotify destroy,
@@ -162,13 +122,12 @@ arv_v4l2_device_set_image_format (ArvV4l2Device *device)
         struct v4l2_format format = {0};
         struct v4l2_requestbuffers req = {0};
         struct v4l2_frmsizeenum *frame_size;
-        int i;
         ArvPixelFormat arv_pixel_format;
 
         req.count = 0;
         req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         req.memory = V4L2_MEMORY_MMAP;
-        if (arv_v4l2_device_ioctl(device, VIDIOC_REQBUFS, &req) == -1) {
+        if (arv_v4l2_ioctl(priv->device_fd, VIDIOC_REQBUFS, &req) == -1) {
                 arv_warning_device ("Failed to release all v4l2 buffers (%s)", strerror(errno));
                 return FALSE;
         }
@@ -187,14 +146,9 @@ arv_v4l2_device_set_image_format (ArvV4l2Device *device)
 
         arv_pixel_format = g_array_index (priv->pixel_formats, guint32, priv->pixel_format_idx);
 
-        for (i = 0; i < G_N_ELEMENTS (pixel_format_map); i++) {
-                if (pixel_format_map[i].genicam == arv_pixel_format) {
-                        format.fmt.pix.pixelformat = pixel_format_map[i].v4l2;
-                        break;
-                }
-        }
-        if (i >= G_N_ELEMENTS(pixel_format_map)) {
-                arv_warning_device ("Unknown v4l2 pixel format (%d)", format.fmt.pix.pixelformat);
+        format.fmt.pix.pixelformat = arv_pixel_format_to_v4l2(arv_pixel_format);
+        if (format.fmt.pix.pixelformat == 0) {
+                arv_warning_device ("Unknown 0x%08x pixel format", arv_pixel_format);
                 return FALSE;
         }
 
@@ -205,7 +159,7 @@ arv_v4l2_device_set_image_format (ArvV4l2Device *device)
                          format.fmt.pix.height,
                          arv_pixel_format_to_gst_caps_string(arv_pixel_format));
 
-        if (arv_v4l2_device_ioctl(device, VIDIOC_S_FMT, &format) == -1) {
+        if (arv_v4l2_ioctl(priv->device_fd, VIDIOC_S_FMT, &format) == -1) {
                 arv_warning_device ("Failed to select v4l2 format (%s)", strerror(errno));
                 return FALSE;
         }
@@ -221,24 +175,19 @@ arv_v4l2_device_get_image_format (ArvV4l2Device *device,
                                   guint32 *height,
                                   guint32 *bytes_per_line)
 {
+        ArvV4l2DevicePrivate *priv = arv_v4l2_device_get_instance_private (ARV_V4L2_DEVICE (device));
         struct v4l2_format format = {0};
-        int i;
         ArvPixelFormat arv_pixel_format;
 
         format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
-        if (arv_v4l2_device_ioctl (device, VIDIOC_G_FMT, &format) == -1) {
+        if (arv_v4l2_ioctl (priv->device_fd, VIDIOC_G_FMT, &format) == -1) {
                 arv_warning_device ("Failed to retrieve v4l2 format (%s)", strerror(errno));
                 return FALSE;
         }
 
-        for (i = 0; i < G_N_ELEMENTS (pixel_format_map); i++) {
-                if (pixel_format_map[i].v4l2 == format.fmt.pix.pixelformat) {
-                        arv_pixel_format = pixel_format_map[i].genicam;
-                        break;
-                }
-        }
-        if (i >= G_N_ELEMENTS(pixel_format_map)) {
+        arv_pixel_format = arv_pixel_format_from_v4l2(format.fmt.pix.pixelformat);
+        if (arv_pixel_format == 0) {
                 arv_warning_device ("Uknown v4l2 pixel format (%d)", format.fmt.pix.pixelformat);
                 return FALSE;
         }
@@ -270,7 +219,7 @@ _control_stream (ArvV4l2Device *device, gboolean enable)
         ArvV4l2DevicePrivate *priv = arv_v4l2_device_get_instance_private (ARV_V4L2_DEVICE (device));
         enum v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
-        if (arv_v4l2_device_ioctl (device, enable ? VIDIOC_STREAMON : VIDIOC_STREAMOFF, &type) == -1) {
+        if (arv_v4l2_ioctl (priv->device_fd, enable ? VIDIOC_STREAMON : VIDIOC_STREAMOFF, &type) == -1) {
                 arv_warning_device ("v4l2 stream %s failed (%s)",
                                     enable ? "start" : "stop",
                                     strerror (errno));
@@ -468,7 +417,6 @@ static void
 arv_v4l2_device_constructed (GObject *self)
 {
 	ArvV4l2DevicePrivate *priv = arv_v4l2_device_get_instance_private (ARV_V4L2_DEVICE (self));
-        ArvV4l2Device *device = ARV_V4L2_DEVICE (self);
         GString *format_feature;
         char *feature;
 	struct v4l2_capability cap = {0};
@@ -501,7 +449,7 @@ arv_v4l2_device_constructed (GObject *self)
 		return;
 	}
 
-	if (arv_v4l2_device_ioctl (device, VIDIOC_QUERYCAP, &cap) == -1) {
+	if (arv_v4l2_ioctl (priv->device_fd, VIDIOC_QUERYCAP, &cap) == -1) {
 		arv_device_take_init_error (ARV_DEVICE (self),
 					    g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
 							 "Device '%s' is not a V4L2 device", priv->device_file));
@@ -547,13 +495,13 @@ arv_v4l2_device_constructed (GObject *self)
         crop_cap.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
         /* Reset cropping region */
-        if (arv_v4l2_device_ioctl (device, VIDIOC_CROPCAP, &crop_cap) == 0) {
+        if (arv_v4l2_ioctl (priv->device_fd, VIDIOC_CROPCAP, &crop_cap) == 0) {
                 struct v4l2_crop crop =  {0};
 
                 crop.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
                 crop.c = crop_cap.defrect; /* reset to default */
 
-                arv_v4l2_device_ioctl (device, VIDIOC_S_CROP, &crop);
+                arv_v4l2_ioctl (priv->device_fd, VIDIOC_S_CROP, &crop);
         }
 
 	priv->device_card = g_strdup ((char *) cap.card);
@@ -602,7 +550,7 @@ arv_v4l2_device_constructed (GObject *self)
 
                 format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
                 format.index = i;
-                if (arv_v4l2_device_ioctl(device, VIDIOC_ENUM_FMT, &format) == -1)
+                if (arv_v4l2_ioctl (priv->device_fd, VIDIOC_ENUM_FMT, &format) == -1)
                         break;
 
                 genicam_pixel_format = arv_pixel_format_from_v4l2(format.pixelformat);
@@ -631,7 +579,7 @@ arv_v4l2_device_constructed (GObject *self)
                         frame_size.index = j;
                         frame_size.pixel_format = format.pixelformat;
 
-                        if (arv_v4l2_device_ioctl(device, VIDIOC_ENUM_FRAMESIZES, &frame_size) == -1)
+                        if (arv_v4l2_ioctl(priv->device_fd, VIDIOC_ENUM_FRAMESIZES, &frame_size) == -1)
                                 break;
 
                         if (frame_size.type == V4L2_FRMSIZE_TYPE_DISCRETE) {

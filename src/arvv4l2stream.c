@@ -27,6 +27,7 @@
 
 #include <arvv4l2streamprivate.h>
 #include <arvv4l2deviceprivate.h>
+#include <arvv4l2miscprivate.h>
 #include <arvstreamprivate.h>
 #include <arvbufferprivate.h>
 #include <arvdebug.h>
@@ -65,7 +66,7 @@ typedef struct {
 
 	gboolean cancel;
 
-        int device_fd;
+        int v4l2_fd;
 
         ArvV4l2StreamIOMethod io_method;
 
@@ -122,7 +123,7 @@ _queue_buffers (ArvV4l2StreamThreadData *thread_data, GHashTable *buffers)
                                 bufd.length = arv_buffer->priv->allocated_size;
                         }
 
-                        if (arv_v4l2_device_ioctl (thread_data->v4l2_device, VIDIOC_QBUF, &bufd) == -1) {
+                        if (arv_v4l2_ioctl (thread_data->v4l2_fd, VIDIOC_QBUF, &bufd) == -1) {
                                 arv_warning_stream_thread ("Failed to queue v4l2 buffer (%s)",
                                                            strerror (errno));
                                 arv_stream_push_output_buffer(thread_data->stream, arv_buffer);
@@ -165,11 +166,11 @@ arv_v4l2_stream_thread (void *data)
                 _queue_buffers(thread_data, buffers);
 
                 FD_ZERO(&fds);
-                FD_SET(thread_data->device_fd, &fds);
+                FD_SET(thread_data->v4l2_fd, &fds);
 
                 tv.tv_sec = 1;
                 tv.tv_usec = 0;
-                result = select(thread_data->device_fd + 1, &fds, NULL, NULL, &tv);
+                result = select(thread_data->v4l2_fd + 1, &fds, NULL, NULL, &tv);
                 if(result == -1){
                         if (errno != EINTR)
                                 arv_warning_stream_thread ("Error while waiting for frame (%s)", strerror(errno));
@@ -185,7 +186,7 @@ arv_v4l2_stream_thread (void *data)
                         V4L2_MEMORY_MMAP : V4L2_MEMORY_USERPTR;
                 bufd.index = 0;
 
-                if(arv_v4l2_device_ioctl(thread_data->v4l2_device, VIDIOC_DQBUF, &bufd) == -1) {
+                if(arv_v4l2_ioctl(thread_data->v4l2_fd, VIDIOC_DQBUF, &bufd) == -1) {
                         arv_warning_stream_thread("DeQueue buffer error (%s)", strerror(errno));
                         switch (errno) {
                                 case EAGAIN:
@@ -321,7 +322,7 @@ arv_v4l2_stream_start_acquisition (ArvStream *stream, GError **error)
                 req.type   = V4L2_BUF_TYPE_VIDEO_CAPTURE;
                 req.memory = V4L2_MEMORY_USERPTR;
 
-                if (arv_v4l2_device_ioctl(priv->thread_data->v4l2_device, VIDIOC_REQBUFS, &req) == -1) {
+                if (arv_v4l2_ioctl(priv->thread_data->v4l2_fd, VIDIOC_REQBUFS, &req) == -1) {
                         g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
                                      "V4l2 user pointer method not supported (%s)",
                                      strerror (errno));
@@ -424,7 +425,7 @@ arv_v4l2_stream_create_buffers (ArvStream *stream, guint n_buffers, size_t size,
         req.count = n_buffers;
         req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         req.memory = V4L2_MEMORY_MMAP;
-        if (arv_v4l2_device_ioctl(priv->thread_data->v4l2_device, VIDIOC_REQBUFS, &req) == -1) {
+        if (arv_v4l2_ioctl(priv->thread_data->v4l2_fd, VIDIOC_REQBUFS, &req) == -1) {
                 g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
                              "Failed to request v4l2 buffer (%s)",
                              strerror(errno));
@@ -451,7 +452,7 @@ arv_v4l2_stream_create_buffers (ArvStream *stream, guint n_buffers, size_t size,
                 buf.memory = V4L2_MEMORY_MMAP;
                 buf.index = i;
 
-                if (arv_v4l2_device_ioctl(priv->thread_data->v4l2_device, VIDIOC_QUERYBUF, &buf) == -1) {
+                if (arv_v4l2_ioctl(priv->thread_data->v4l2_fd, VIDIOC_QUERYBUF, &buf) == -1) {
                         g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
                                      "Failed to request v4l2 buffer (%s)",
                                      strerror(errno));
@@ -461,7 +462,7 @@ arv_v4l2_stream_create_buffers (ArvStream *stream, guint n_buffers, size_t size,
                 v4l2_buffer = (u_int8_t *) mmap (NULL, buf.length,
                                                  PROT_READ | PROT_WRITE,
                                                  MAP_SHARED,
-                                                 priv->thread_data->device_fd, buf.m.offset);
+                                                 priv->thread_data->v4l2_fd, buf.m.offset);
 
                 size = buf.length;
 
@@ -546,7 +547,7 @@ arv_v4l2_stream_constructed (GObject *object)
         arv_stream_declare_info (ARV_STREAM (v4l2_stream), "n_transferred_bytes",
                                  G_TYPE_UINT64, &priv->thread_data->n_transferred_bytes);
 
-        thread_data->device_fd = arv_v4l2_device_get_fd (ARV_V4L2_DEVICE(thread_data->v4l2_device));
+        thread_data->v4l2_fd = arv_v4l2_device_get_fd (ARV_V4L2_DEVICE(thread_data->v4l2_device));
 }
 
 /* ArvStream implementation */
