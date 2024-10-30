@@ -37,6 +37,9 @@ guint32         arv_pixel_format_to_v4l2        (ArvPixelFormat pixel_format);
 int             arv_v4l2_ioctl                  (int fd, int request, void *arg);
 int             arv_v4l2_get_media_fd           (int fd, const char *bus_info);
 
+gboolean        arv_v4l2_set_ctrl               (int fd, int ctrl_id, gint32 value);
+gint32          arv_v4l2_get_ctrl               (int fd, int ctrl_id);
+
 G_END_DECLS
 
 #endif

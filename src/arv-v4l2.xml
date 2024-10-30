@@ -20,6 +20,7 @@
 <Category Name="Root" NameSpace="Standard">
   <pFeature>DeviceControl</pFeature>
   <pFeature>ImageFormatControl</pFeature>
+  <pFeature>AnalogControl</pFeature>
   <pFeature>AcquisitionControl</pFeature>
   <pFeature>TransportLayerControl</pFeature>
 </Category>
@@ -302,19 +303,19 @@
 <!-- Analog control -->
 
 <Category Name="AnalogControl" NameSpace="Custom">
-  <pFeature>GainRaw</pFeature>
-  <pFeature>GainAuto</pFeature>
+  <pFeature>Gain</pFeature>
 </Category>
 
-<Integer Name="GainRaw" NameSpace="Standard">
-  <Description>Raw gain.</Description>
-  <pValue>GainRawRegister</pValue>
-  <Min>0</Min>
-  <Max>10</Max>
-</Integer>
+<Float Name="Gain" NameSpace="Standard">
+  <Description>Gain</Description>
+  <pValue>GainRegister</pValue>
+  <pMin>GainMinRegister</pMin>
+  <pMax>GainMaxRegister</pMax>
+  <pIsAvailable>GainAvailable</pIsAvailable>
+</Float>
 
-<IntReg Name="GainRawRegister" NameSpace="Custom">
-  <Address>0x110</Address>
+<IntReg Name="GainRegister" NameSpace="Custom">
+  <Address>0x200</Address>
   <Length>4</Length>
   <AccessMode>RW</AccessMode>
   <pPort>Device</pPort>
@@ -322,24 +323,19 @@
   <Endianess>LittleEndian</Endianess>
 </IntReg>
 
-<Enumeration Name="GainAuto" NameSpace="Standard">
-  <Description>Automatic gain mode.</Description>
-  <EnumEntry Name="Off" NameSpace="Standard">
-    <Value>1</Value>
-  </EnumEntry>
-  <EnumEntry Name="Once" NameSpace="Standard">
-    <Value>3</Value>
-  </EnumEntry>
-  <EnumEntry Name="Continuous" NameSpace="Standard">
-    <Value>2</Value>
-  </EnumEntry>
-  <pValue>GainAutoRegister</pValue>
-</Enumeration>
-
-<IntReg Name="GainAutoRegister" NameSpace="Custom">
-  <Address>0x114</Address>
+<IntReg Name="GainMinRegister" NameSpace="Custom">
+  <Address>0x204</Address>
   <Length>4</Length>
-  <AccessMode>RW</AccessMode>
+  <AccessMode>RO</AccessMode>
+  <pPort>Device</pPort>
+  <Sign>Unsigned</Sign>
+  <Endianess>LittleEndian</Endianess>
+</IntReg>
+
+<IntReg Name="GainMaxRegister" NameSpace="Custom">
+  <Address>0x208</Address>
+  <Length>4</Length>
+  <AccessMode>RO</AccessMode>
   <pPort>Device</pPort>
   <Sign>Unsigned</Sign>
   <Endianess>LittleEndian</Endianess>
