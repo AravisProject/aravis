@@ -111,3 +111,26 @@ arv_v4l2_get_media_fd (int fd, const char *bus_info)
 	return media_fd;
 }
 
+gboolean
+arv_v4l2_set_ctrl (int fd, int ctrl_id, gint32 value)
+{
+        struct v4l2_control control = {0};
+
+        control.id = ctrl_id;
+        control.value = value;
+
+        return ioctl (fd, VIDIOC_S_CTRL, &control) == 0;
+}
+
+gint32
+arv_v4l2_get_ctrl (int fd, int ctrl_id)
+{
+        struct v4l2_control control = {0};
+
+        control.id = ctrl_id;
+
+        if (ioctl (fd, VIDIOC_G_CTRL, &control) == 0)
+                return control.value;
+
+        return 0;
+}

@@ -33,6 +33,7 @@
 #include <arvmisc.h>
 #include <linux/videodev2.h>
 #include <fcntl.h>
+#include <stdio.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
@@ -45,11 +46,14 @@
 
 #define ARV_V4L2_ADDRESS_WIDTH                          0x0100
 #define ARV_V4L2_ADDRESS_HEIGHT                         0x0104
-#define ARV_V4L2_ADDRESS_GAIN                           0x0110
 #define ARV_V4L2_ADDRESS_PAYLOAD_SIZE                   0x0118
 #define ARV_V4L2_ADDRESS_EXPOSURE_TIME                  0x0120
 #define ARV_V4L2_ADDRESS_ACQUISITION_COMMAND            0x0124
 #define ARV_V4L2_ADDRESS_PIXEL_FORMAT                   0x0128
+
+#define ARV_V4L2_ADDRESS_GAIN                           0x0200
+#define ARV_V4L2_ADDRESS_GAIN_MIN                       0x0204
+#define ARV_V4L2_ADDRESS_GAIN_MAX                       0x0208
 
 enum
 {
@@ -67,6 +71,10 @@ typedef struct {
 
         guint sensor_width;
         guint sensor_height;
+
+        gboolean gain_available;
+        gint32 gain_min;
+        gint32 gain_max;
 
         gint pixel_format_idx;
         GArray *pixel_formats;
@@ -276,7 +284,13 @@ arv_v4l2_device_read_memory (ArvDevice *device, guint64 address, guint32 size, v
                                                         frame_size->stepwise.max_height;
                                                 break;
                                         case ARV_V4L2_ADDRESS_GAIN:
-                                                value = 0;
+                                                value = arv_v4l2_get_ctrl (priv->device_fd, V4L2_CID_GAIN);
+                                                break;
+                                        case ARV_V4L2_ADDRESS_GAIN_MIN:
+                                                value = priv->gain_min;
+                                                break;
+                                        case ARV_V4L2_ADDRESS_GAIN_MAX:
+                                                value = priv->gain_max;
                                                 break;
                                         case ARV_V4L2_ADDRESS_EXPOSURE_TIME:
                                                 value = 10;
@@ -326,6 +340,9 @@ arv_v4l2_device_write_memory (ArvDevice *device, guint64 address, guint32 size, 
                 switch (address) {
                         case ARV_V4L2_ADDRESS_ACQUISITION_COMMAND:
                                 _control_stream (v4l2_device, value != 0);
+                                break;
+                        case ARV_V4L2_ADDRESS_GAIN:
+                                arv_v4l2_set_ctrl (priv->device_fd, V4L2_CID_GAIN, value);
                                 break;
                         case ARV_V4L2_ADDRESS_PIXEL_FORMAT:
                                 for (i = 0; i < priv->pixel_formats->len; i++) {
@@ -504,6 +521,9 @@ arv_v4l2_device_constructed (GObject *self)
                 arv_v4l2_ioctl (priv->device_fd, VIDIOC_S_CROP, &crop);
         }
 
+        priv->sensor_width = crop_cap.bounds.width;
+        priv->sensor_height = crop_cap.bounds.height;
+
 	priv->device_card = g_strdup ((char *) cap.card);
 	priv->device_driver = g_strdup ((char *) cap.driver);
 	priv->device_version = g_strdup_printf ("%d.%d.%d",
@@ -534,8 +554,22 @@ arv_v4l2_device_constructed (GObject *self)
 		return;
 	}
 
-        priv->sensor_width = 0;
-        priv->sensor_height = 0;
+        /* Get gain infos */
+
+        {
+                struct v4l2_queryctrl queryctrl = {0};
+
+                queryctrl.id = V4L2_CID_GAIN;
+                if (ioctl (priv->device_fd, VIDIOC_QUERYCTRL, &queryctrl) != -1) {
+                        priv->gain_available = TRUE;
+                        priv->gain_min = queryctrl.minimum;
+                        priv->gain_max = queryctrl.maximum;
+                } else {
+                        priv->gain_available = FALSE;
+                }
+        }
+
+        /* Enumerate pixel formats */
 
         priv->pixel_formats = g_array_new (FALSE, TRUE, sizeof (guint32));
         priv->frame_sizes = g_array_new(FALSE, TRUE, sizeof (struct v4l2_frmsizeenum));
@@ -584,18 +618,12 @@ arv_v4l2_device_constructed (GObject *self)
 
                         if (frame_size.type == V4L2_FRMSIZE_TYPE_DISCRETE) {
                                 arv_debug_device ("  %d×%d", frame_size.discrete.width, frame_size.discrete.height);
-
-                                priv->sensor_width = MAX (priv->sensor_width, frame_size.discrete.width);
-                                priv->sensor_height = MAX (priv->sensor_height, frame_size.discrete.height);
                         } else {
                                 arv_debug_device ("  (%d to %d)×(%d to %d) ",
                                                   frame_size.stepwise.min_width,
                                                   frame_size.stepwise.max_width,
                                                   frame_size.stepwise.min_height,
                                                   frame_size.stepwise.max_height);
-
-                                priv->sensor_width = MAX (priv->sensor_width, frame_size.stepwise.max_width);
-                                priv->sensor_height = MAX (priv->sensor_height, frame_size.stepwise.max_height);
                         }
 
                         if (j == 0)
@@ -624,6 +652,13 @@ arv_v4l2_device_constructed (GObject *self)
                                    "  <AccessMode>RO</AccessMode>\n"
                                    "</Integer>", priv->sensor_width);
         arv_gc_set_default_node_data (priv->genicam, "SensorWidth", feature, NULL);
+        g_free (feature);
+
+        feature = g_strdup_printf ("<Integer Name=\"GainAvailable\">\n"
+                                   "  <Value>%d</Value>\n"
+                                   "  <AccessMode>RO</AccessMode>\n"
+                                   "</Integer>", priv->gain_available ? 1 : 0);
+        arv_gc_set_default_node_data (priv->genicam, "GainAvailable", feature, NULL);
         g_free (feature);
 
         arv_gc_set_default_node_data (priv->genicam, "PixelFormat", format_feature->str, NULL);
