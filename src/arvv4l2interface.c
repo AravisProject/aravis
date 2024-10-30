@@ -27,15 +27,17 @@
 
 #include <arvv4l2interfaceprivate.h>
 #include <arvv4l2deviceprivate.h>
+#include <arvv4l2miscprivate.h>
 #include <arvinterfaceprivate.h>
 #include <arvv4l2device.h>
 #include <arvdebugprivate.h>
+#include <arvmisc.h>
+#include <fcntl.h>
 #include <gudev/gudev.h>
-#include <linux/videodev2.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
-#include <fcntl.h>
-#include <arvmisc.h>
+#include <linux/videodev2.h>
+#include <linux/media.h>
 
 struct _ArvV4l2Interface {
 	ArvInterface	interface;
@@ -55,6 +57,7 @@ typedef struct {
 	char *bus;
 	char *device_file;
 	char *version;
+        char *serial_nbr;
 
 	volatile gint ref_count;
 } ArvV4l2InterfaceDeviceInfos;
@@ -62,7 +65,7 @@ typedef struct {
 static ArvV4l2InterfaceDeviceInfos *
 arv_v4l2_interface_device_infos_new (const char *device_file, const char *name)
 {
-	ArvV4l2InterfaceDeviceInfos *infos;
+	ArvV4l2InterfaceDeviceInfos *infos = NULL;
 
 	g_return_val_if_fail (device_file != NULL, NULL);
 
@@ -85,6 +88,7 @@ arv_v4l2_interface_device_infos_new (const char *device_file, const char *name)
 			    ((cap.capabilities & V4L2_CAP_STREAMING) != 0)) {
                                 unsigned int i;
                                 gboolean found = FALSE;
+                                struct media_device_info mdinfo = {0};
 
                                 for (i = 0; TRUE; i++) {
                                         struct v4l2_fmtdesc format = {0};
@@ -101,16 +105,31 @@ arv_v4l2_interface_device_infos_new (const char *device_file, const char *name)
                                 }
 
                                 if (found) {
+                                        int media_fd = arv_v4l2_get_media_fd(fd, (char *) cap.bus_info);
+
                                         infos = g_new0 (ArvV4l2InterfaceDeviceInfos, 1);
 
                                         infos->ref_count = 1;
-                                        infos->id = g_strdup_printf ("%s-%s", (char *) cap.card, name);
                                         infos->bus = g_strdup ((char *) cap.bus_info);
                                         infos->device_file = g_strdup (device_file);
+                                        infos->serial_nbr = g_strdup (mdinfo.serial);
                                         infos->version = g_strdup_printf ("%d.%d.%d",
                                                                           (cap.version >> 16) & 0xff,
                                                                           (cap.version >>  8) & 0xff,
                                                                           (cap.version >>  0) & 0xff);
+
+                                        if (media_fd != -1 &&
+                                            ioctl (media_fd, MEDIA_IOC_DEVICE_INFO, &mdinfo) != -1) {
+                                                infos->id = g_strdup_printf ("%s-%s", (char *) cap.card,
+                                                                            mdinfo.serial);
+                                                infos->serial_nbr = g_strdup (mdinfo.serial);
+                                        } else {
+                                                infos->id = g_strdup_printf ("%s-%s", (char *) cap.card, name);
+                                                infos->serial_nbr = g_strdup (device_file);
+                                        }
+
+                                        if (media_fd != -1)
+                                                close (media_fd);
 
                                         close (fd);
 
@@ -149,6 +168,7 @@ arv_v4l2_interface_device_infos_unref (ArvV4l2InterfaceDeviceInfos *infos)
 		g_free (infos->bus);
 		g_free (infos->device_file);
 		g_free (infos->version);
+                g_free (infos->serial_nbr);
 		g_free (infos);
 	}
 }
@@ -188,7 +208,7 @@ _discover (ArvV4l2Interface *v4l2_interface, GArray *device_ids)
 				ids->address = g_strdup (device_infos->device_file);
 				ids->vendor = g_strdup ("Aravis");
 				ids->model = g_strdup (device_infos->id);
-				ids->serial_nbr = g_strdup_printf ("%s", g_udev_device_get_number(elem->data));
+				ids->serial_nbr = g_strdup (device_infos->serial_nbr);
                                 ids->protocol = "V4L2";
 
 				g_array_append_val (device_ids, ids);
