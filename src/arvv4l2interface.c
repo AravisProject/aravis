@@ -112,7 +112,6 @@ arv_v4l2_interface_device_infos_new (const char *device_file, const char *name)
                                         infos->ref_count = 1;
                                         infos->bus = g_strdup ((char *) cap.bus_info);
                                         infos->device_file = g_strdup (device_file);
-                                        infos->serial_nbr = g_strdup (mdinfo.serial);
                                         infos->version = g_strdup_printf ("%d.%d.%d",
                                                                           (cap.version >> 16) & 0xff,
                                                                           (cap.version >>  8) & 0xff,
