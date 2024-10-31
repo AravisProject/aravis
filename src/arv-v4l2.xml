@@ -149,6 +149,7 @@
   <pFeature>AcquisitionMode</pFeature>
   <pFeature>AcquisitionStart</pFeature>
   <pFeature>AcquisitionStop</pFeature>
+  <pFeature>AcquisitionFrameRate</pFeature>
   <pFeature>ExposureTimeAbs</pFeature>
 </Category>
 
@@ -182,30 +183,35 @@
 </Enumeration>
 
 <Float Name="AcquisitionFrameRate">
-  <pValue>AcquisitionFrameRateConverter</pValue>
+  <pValue>AcquisitionFrameRateRegister</pValue>
+  <pMin>AcquisitionFrameRateMinRegister</pMin>
+  <pMax>AcquisitionFrameRateMaxRegister</pMax>
+  <Unit>Hz</Unit>
 </Float>
 
-<Converter Name="AcquisitionFrameRateConverter">
-  <Description>Frame rate, in frames per second.</Description>
-  <FormulaTo>(1000000 / FROM)</FormulaTo>
-  <FormulaFrom>(1000000 / TO)</FormulaFrom>
-  <pValue>AcquisitionFramePeriod</pValue>
-</Converter>
-
-<Integer Name="AcquisitionFramePeriod" NameSpace="Custom">
-  <pValue>AcquisitionFramePeriodRegister</pValue>
-  <Min>1000</Min>
-  <Max>10000000</Max>
-</Integer>
-
-<IntReg Name="AcquisitionFramePeriodRegister" NameSpace="Custom">
-  <Address>0x138</Address>
-  <Length>4</Length>
+<FloatReg Name="AcquisitionFrameRateRegister" NameSpace="Custom">
+  <Address>0x300</Address>
+  <Length>8</Length>
   <AccessMode>RW</AccessMode>
   <pPort>Device</pPort>
-  <Sign>Unsigned</Sign>
   <Endianess>LittleEndian</Endianess>
-</IntReg>
+</FloatReg>
+
+<FloatReg Name="AcquisitionFrameRateMinRegister" NameSpace="Custom">
+  <Address>0x308</Address>
+  <Length>8</Length>
+  <AccessMode>RW</AccessMode>
+  <pPort>Device</pPort>
+  <Endianess>LittleEndian</Endianess>
+</FloatReg>
+
+<FloatReg Name="AcquisitionFrameRateMaxRegister" NameSpace="Custom">
+  <Address>0x310</Address>
+  <Length>8</Length>
+  <AccessMode>RW</AccessMode>
+  <pPort>Device</pPort>
+  <Endianess>LittleEndian</Endianess>
+</FloatReg>
 
 <Enumeration Name="TriggerSelector" NameSpace="Standard">
   <EnumEntry Name="FrameStart" NameSpace="Standard">

@@ -55,6 +55,10 @@
 #define ARV_V4L2_ADDRESS_GAIN_MIN                       0x0204
 #define ARV_V4L2_ADDRESS_GAIN_MAX                       0x0208
 
+#define ARV_V4L2_ADDRESS_FRAME_RATE                     0x0300
+#define ARV_V4L2_ADDRESS_FRAME_RATE_MIN                 0x0308
+#define ARV_V4L2_ADDRESS_FRAME_RATE_MAX                 0x0310
+
 enum
 {
 	PROP_0,
@@ -221,6 +225,123 @@ arv_v4l2_device_get_image_format (ArvV4l2Device *device,
         return TRUE;
 }
 
+static gboolean
+arv_v4l2_device_get_frame_rate_bounds (ArvV4l2Device *device, double *framerate_min, double *framerate_max)
+{
+        ArvV4l2DevicePrivate *priv = arv_v4l2_device_get_instance_private (ARV_V4L2_DEVICE (device));
+        ArvPixelFormat arv_pixel_format;
+        double fr_min = 0, fr_max = 0;
+        struct v4l2_format format = {0};
+        unsigned int i;
+
+        if (framerate_min != NULL)
+                *framerate_min = 0.0;
+        if (framerate_max != NULL)
+                *framerate_max = 0.0;
+
+        format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
+        if (arv_v4l2_ioctl (priv->device_fd, VIDIOC_G_FMT, &format) == -1) {
+                arv_warning_device ("Failed to retrieve v4l2 format (%s)", strerror(errno));
+                return FALSE;
+        }
+
+        arv_pixel_format = arv_pixel_format_from_v4l2(format.fmt.pix.pixelformat);
+        if (arv_pixel_format == 0) {
+                arv_warning_device ("Uknown v4l2 pixel format (%d)", format.fmt.pix.pixelformat);
+                return FALSE;
+        }
+
+        for (i = 0; TRUE; i++) {
+                struct v4l2_frmivalenum frmivalenum = {0};
+
+                frmivalenum.index = i;
+                frmivalenum.pixel_format = format.fmt.pix.pixelformat;
+                frmivalenum.width = format.fmt.pix.width;
+                frmivalenum.height = format.fmt.pix.height;
+                if (arv_v4l2_ioctl (priv->device_fd, VIDIOC_ENUM_FRAMEINTERVALS, &frmivalenum) == -1) {
+                        if (i == 0) {
+                                arv_warning_device ("Can't find frame rate");
+                                return FALSE;
+                        }
+                        break;
+                }
+
+                if (frmivalenum.type == V4L2_FRMIVAL_TYPE_DISCRETE) {
+                        double value =
+                                (double) frmivalenum.discrete.denominator /
+                                (double) frmivalenum.discrete.numerator;
+
+                        if (i == 0) {
+                                fr_max = fr_min = value;
+                        } else {
+                                if (value < fr_min)
+                                        fr_min = value;
+                                if (value > fr_max)
+                                        fr_max = value;
+                        }
+                } else if (frmivalenum.type == V4L2_FRMIVAL_TYPE_CONTINUOUS ||
+                           frmivalenum.type == V4L2_FRMIVAL_TYPE_STEPWISE) {
+                        fr_min =
+                                (double) frmivalenum.stepwise.min.denominator /
+                                (double) frmivalenum.stepwise.min.numerator;
+                        fr_min =
+                                (double) frmivalenum.stepwise.min.denominator /
+                                (double) frmivalenum.stepwise.min.numerator;
+                        break;
+                } else {
+                        if (i == 0) {
+                                arv_warning_device ("Can't find frame rate");
+                                return FALSE;
+                        }
+                        break;
+                }
+        }
+
+        if (framerate_min != NULL)
+                *framerate_min = fr_min;
+        if (framerate_max != NULL)
+                *framerate_max = fr_max;
+
+        return TRUE;
+}
+
+static double
+_get_frame_rate (ArvV4l2Device *device)
+{
+        ArvV4l2DevicePrivate *priv = arv_v4l2_device_get_instance_private (ARV_V4L2_DEVICE (device));
+        struct v4l2_streamparm streamparm = {0};
+
+        streamparm.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
+        if (ioctl (priv->device_fd, VIDIOC_G_PARM, &streamparm) == -1) {
+                arv_warning_device ("Failed to set frame rate");
+                return 0.0;
+        }
+
+        return
+                (double) streamparm.parm.capture.timeperframe.denominator /
+                (double) streamparm.parm.capture.timeperframe.numerator;
+}
+
+static gboolean
+_set_frame_rate (ArvV4l2Device *device, double frame_rate)
+{
+        ArvV4l2DevicePrivate *priv = arv_v4l2_device_get_instance_private (ARV_V4L2_DEVICE (device));
+        struct v4l2_streamparm streamparm = {0};
+
+        streamparm.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        streamparm.parm.capture.timeperframe.numerator = 1000000.0;
+        streamparm.parm.capture.timeperframe.denominator = 1000000.0 * frame_rate;
+
+        if (ioctl (priv->device_fd, VIDIOC_S_PARM, &streamparm) == -1) {
+                arv_warning_device ("Failed to set frame rate");
+                return FALSE;
+        }
+
+        return TRUE;
+}
+
 static void
 _control_stream (ArvV4l2Device *device, gboolean enable)
 {
@@ -241,7 +362,6 @@ arv_v4l2_device_read_memory (ArvDevice *device, guint64 address, guint32 size, v
 {
         ArvV4l2Device *v4l2_device = ARV_V4L2_DEVICE(device);
         ArvV4l2DevicePrivate *priv = arv_v4l2_device_get_instance_private (ARV_V4L2_DEVICE (device));
-        gint32 value;
         gboolean found = TRUE;
 
         if (size < 1 || buffer == NULL)
@@ -263,37 +383,45 @@ arv_v4l2_device_read_memory (ArvDevice *device, guint64 address, guint32 size, v
                 strncpy (buffer, priv->device_file, size - 1);
                 ((char *) buffer)[size - 1] = '\0';
         } else {
-                if (size == sizeof (value)) {
+                if (priv->pixel_format_idx < priv->frame_sizes->len &&
+                    priv->pixel_format_idx < priv->pixel_formats->len) {
                         struct v4l2_frmsizeenum *frame_size;
 
-                        if (priv->pixel_format_idx < priv->frame_sizes->len &&
-                            priv->pixel_format_idx < priv->pixel_formats->len) {
-                                frame_size = &g_array_index (priv->frame_sizes,
-                                                             struct v4l2_frmsizeenum,
-                                                             priv->pixel_format_idx);
+                        frame_size = &g_array_index (priv->frame_sizes,
+                                                     struct v4l2_frmsizeenum,
+                                                     priv->pixel_format_idx);
+
+                        if (size == 4) {
+                                union {
+                                        gint32 i32;
+                                        float f;
+                                } value;
+
+                                g_assert (sizeof (value.i32) == 4);
+                                g_assert (sizeof (value.f) == 4);
 
                                 switch (address) {
                                         case ARV_V4L2_ADDRESS_WIDTH:
-                                                value = frame_size->type == V4L2_FRMSIZE_TYPE_DISCRETE ?
+                                                value.i32 = frame_size->type == V4L2_FRMSIZE_TYPE_DISCRETE ?
                                                         frame_size->discrete.width :
                                                         frame_size->stepwise.max_width;
                                                 break;
                                         case ARV_V4L2_ADDRESS_HEIGHT:
-                                                value = frame_size->type == V4L2_FRMSIZE_TYPE_DISCRETE ?
+                                                value.i32 = frame_size->type == V4L2_FRMSIZE_TYPE_DISCRETE ?
                                                         frame_size->discrete.height :
                                                         frame_size->stepwise.max_height;
                                                 break;
                                         case ARV_V4L2_ADDRESS_GAIN:
-                                                value = arv_v4l2_get_ctrl (priv->device_fd, V4L2_CID_GAIN);
+                                                value.i32 = arv_v4l2_get_ctrl (priv->device_fd, V4L2_CID_GAIN);
                                                 break;
                                         case ARV_V4L2_ADDRESS_GAIN_MIN:
-                                                value = priv->gain_min;
+                                                value.i32 = priv->gain_min;
                                                 break;
                                         case ARV_V4L2_ADDRESS_GAIN_MAX:
-                                                value = priv->gain_max;
+                                                value.i32 = priv->gain_max;
                                                 break;
                                         case ARV_V4L2_ADDRESS_EXPOSURE_TIME:
-                                                value = 10;
+                                                value.i32 = 10;
                                                 break;
                                         case ARV_V4L2_ADDRESS_PAYLOAD_SIZE:
                                                 arv_v4l2_device_set_image_format (v4l2_device);
@@ -301,19 +429,47 @@ arv_v4l2_device_read_memory (ArvDevice *device, guint64 address, guint32 size, v
                                                                                   NULL, NULL, NULL, NULL);
                                                 break;
                                         case ARV_V4L2_ADDRESS_PIXEL_FORMAT:
-                                                value = g_array_index (priv->pixel_formats, guint32,
-                                                                       priv->pixel_format_idx);
+                                                value.i32 = g_array_index (priv->pixel_formats, guint32,
+                                                                           priv->pixel_format_idx);
                                                 break;
                                         default:
                                                 found = FALSE;
                                 }
+
+                                if (found) {
+                                        memcpy (buffer, &value, sizeof (value));
+                                }
+                        } else if (size == 8) {
+                                union {
+                                        gint64 i64;
+                                        double d;
+                                } value;
+
+                                g_assert (sizeof (value.i64) == 8);
+                                g_assert (sizeof (value.d) == 8);
+
+                                switch (address) {
+                                        case ARV_V4L2_ADDRESS_FRAME_RATE:
+                                                value.d = _get_frame_rate(v4l2_device);
+                                                break;
+                                        case ARV_V4L2_ADDRESS_FRAME_RATE_MIN:
+                                                arv_v4l2_device_get_frame_rate_bounds(v4l2_device, &value.d, NULL);
+                                                break;
+                                        case ARV_V4L2_ADDRESS_FRAME_RATE_MAX:
+                                                arv_v4l2_device_get_frame_rate_bounds(v4l2_device, NULL, &value.d);
+                                                break;
+                                        default:
+                                                found = FALSE;
+                                }
+
+                                if (found) {
+                                        memcpy (buffer, &value, sizeof (value));
+                                }
                         } else {
                                 found = FALSE;
                         }
-
-                        if (found) {
-                                memcpy (buffer, &value, sizeof (value));
-                        }
+                } else {
+                        found = FALSE;
                 }
         }
 
@@ -331,22 +487,29 @@ arv_v4l2_device_write_memory (ArvDevice *device, guint64 address, guint32 size, 
 {
         ArvV4l2Device *v4l2_device = ARV_V4L2_DEVICE(device);
         ArvV4l2DevicePrivate *priv = arv_v4l2_device_get_instance_private (ARV_V4L2_DEVICE (device));
-        gint32 value;
         gboolean found = TRUE;
         gint i;
 
-        if (size == sizeof (value)) {
+        if (size == 4) {
+                union {
+                        gint32 i32;
+                        float f;
+                } value;
+
+                g_assert (sizeof (value.i32) == 4);
+                g_assert (sizeof (value.f) == 4);
+
                 memcpy (&value, buffer, sizeof (value));
                 switch (address) {
                         case ARV_V4L2_ADDRESS_ACQUISITION_COMMAND:
-                                _control_stream (v4l2_device, value != 0);
+                                _control_stream (v4l2_device, value.i32 != 0);
                                 break;
                         case ARV_V4L2_ADDRESS_GAIN:
-                                arv_v4l2_set_ctrl (priv->device_fd, V4L2_CID_GAIN, value);
+                                arv_v4l2_set_ctrl (priv->device_fd, V4L2_CID_GAIN, value.i32);
                                 break;
                         case ARV_V4L2_ADDRESS_PIXEL_FORMAT:
                                 for (i = 0; i < priv->pixel_formats->len; i++) {
-                                        if (g_array_index(priv->pixel_formats, guint32, i) == value)
+                                        if (g_array_index(priv->pixel_formats, guint32, i) == value.i32)
                                                 priv->pixel_format_idx = i;
                                 }
                                 if (i == priv->pixel_formats->len)
@@ -355,6 +518,25 @@ arv_v4l2_device_write_memory (ArvDevice *device, guint64 address, guint32 size, 
                         default:
                                 found = FALSE;
                 }
+        } else if (size == 8) {
+                union {
+                        gint64 i64;
+                        double d;
+                } value;
+
+                g_assert (sizeof (value.i64) == 8);
+                g_assert (sizeof (value.d) == 8);
+
+                memcpy (&value, buffer, sizeof (value));
+                switch (address) {
+                        case ARV_V4L2_ADDRESS_FRAME_RATE:
+                                _set_frame_rate(v4l2_device, value.d);
+                                break;
+                        default:
+                                found = FALSE;
+                }
+        } else {
+                found = FALSE;
         }
 
         if (!found) {
