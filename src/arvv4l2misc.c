@@ -134,3 +134,77 @@ arv_v4l2_get_ctrl (int fd, int ctrl_id)
 
         return 0;
 }
+
+gint64
+arv_v4l2_get_int64_ext_ctrl (int fd, int ext_ctrl_class, int ext_ctrl_id)
+{
+        struct v4l2_ext_controls ext_controls = {0};
+        struct v4l2_ext_control ext_control = {0};
+
+        ext_controls.ctrl_class = ext_ctrl_class;
+        ext_controls.which = V4L2_CTRL_WHICH_CUR_VAL;
+        ext_controls.count = 1;
+        ext_controls.controls = &ext_control;
+        ext_control.id = ext_ctrl_id;
+
+        if (ioctl (fd, VIDIOC_G_EXT_CTRLS, &ext_controls) == -1)
+               return 0;
+
+        return ext_control.value64;
+}
+
+gboolean
+arv_v4l2_set_int64_ext_ctrl (int fd, int ext_ctrl_class, int ext_ctrl_id, gint64 value)
+{
+        struct v4l2_ext_controls ext_controls = {0};
+        struct v4l2_ext_control ext_control = {0};
+
+        ext_controls.ctrl_class = ext_ctrl_class;
+        ext_controls.which = V4L2_CTRL_WHICH_CUR_VAL;
+        ext_controls.count = 1;
+        ext_controls.controls = &ext_control;
+        ext_control.id = ext_ctrl_id;
+        ext_control.value64 = value;
+
+        if (ioctl (fd, VIDIOC_S_EXT_CTRLS, &ext_controls) == -1)
+               return FALSE;
+
+        return TRUE;
+}
+
+gint32
+arv_v4l2_get_int32_ext_ctrl (int fd, int ext_ctrl_class, int ext_ctrl_id)
+{
+        struct v4l2_ext_controls ext_controls = {0};
+        struct v4l2_ext_control ext_control = {0};
+
+        ext_controls.ctrl_class = ext_ctrl_class;
+        ext_controls.which = V4L2_CTRL_WHICH_CUR_VAL;
+        ext_controls.count = 1;
+        ext_controls.controls = &ext_control;
+        ext_control.id = ext_ctrl_id;
+
+        if (ioctl (fd, VIDIOC_G_EXT_CTRLS, &ext_controls) == -1)
+               return 0;
+
+        return ext_control.value;
+}
+
+gboolean
+arv_v4l2_set_int32_ext_ctrl (int fd, int ext_ctrl_class, int ext_ctrl_id, gint32 value)
+{
+        struct v4l2_ext_controls ext_controls = {0};
+        struct v4l2_ext_control ext_control = {0};
+
+        ext_controls.ctrl_class = ext_ctrl_class;
+        ext_controls.which = V4L2_CTRL_WHICH_CUR_VAL;
+        ext_controls.count = 1;
+        ext_controls.controls = &ext_control;
+        ext_control.id = ext_ctrl_id;
+        ext_control.value = value;
+
+        if (ioctl (fd, VIDIOC_S_EXT_CTRLS, &ext_controls) == -1)
+               return FALSE;
+
+        return TRUE;
+}

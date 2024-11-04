@@ -40,6 +40,12 @@ int             arv_v4l2_get_media_fd           (int fd, const char *bus_info);
 gboolean        arv_v4l2_set_ctrl               (int fd, int ctrl_id, gint32 value);
 gint32          arv_v4l2_get_ctrl               (int fd, int ctrl_id);
 
+gint64          arv_v4l2_get_int64_ext_ctrl     (int fd, int ext_ctrl_class, int ext_ctrl_id);
+gboolean        arv_v4l2_set_int64_ext_ctrl     (int fd, int ext_ctrl_class, int ext_ctrl_id, gint64 value);
+
+gint32          arv_v4l2_get_int32_ext_ctrl     (int fd, int ext_ctrl_class, int ext_ctrl_id);
+gboolean        arv_v4l2_set_int32_ext_ctrl     (int fd, int ext_ctrl_class, int ext_ctrl_id, gint32 value);
+
 G_END_DECLS
 
 #endif

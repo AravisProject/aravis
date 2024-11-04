@@ -151,6 +151,7 @@
   <pFeature>AcquisitionStop</pFeature>
   <pFeature>AcquisitionFrameRate</pFeature>
   <pFeature>ExposureTimeAbs</pFeature>
+  <pFeature>ExposureAuto</pFeature>
 </Category>
 
 <Command Name="AcquisitionStart" NameSpace="Standard">
@@ -287,18 +288,57 @@
 <Float Name="ExposureTimeAbs" NameSpace="Standard">
   <Description>Exposure duration, in microseconds.</Description>
   <pValue>ExposureTimeAbsConverter</pValue>
-  <Min>10.0</Min>
-  <Max>10000000.0</Max>
+  <pMin>ExposureMinRegister</pMin>
+  <pMax>ExposureMaxRegister</pMax>
+  <pIsAvailable>ExposureAvailable</pIsAvailable>
 </Float>
 
 <Converter Name="ExposureTimeAbsConverter" NameSpace="Custom">
-  <FormulaTo>FROM</FormulaTo>
-  <FormulaFrom>TO</FormulaFrom>
+  <FormulaTo>FROM/100</FormulaTo>
+  <FormulaFrom>TO*100</FormulaFrom>
   <pValue>ExposureTimeAbsRegister</pValue>
 </Converter>
 
 <IntReg Name="ExposureTimeAbsRegister" NameSpace="Custom">
-  <Address>0x120</Address>
+  <Address>0x400</Address>
+  <Length>4</Length>
+  <AccessMode>RW</AccessMode>
+  <pPort>Device</pPort>
+  <Sign>Unsigned</Sign>
+  <Endianess>LittleEndian</Endianess>
+</IntReg>
+
+<IntReg Name="ExposureMinRegister" NameSpace="Custom">
+  <Address>0x404</Address>
+  <Length>4</Length>
+  <AccessMode>RO</AccessMode>
+  <pPort>Device</pPort>
+  <Sign>Unsigned</Sign>
+  <Endianess>LittleEndian</Endianess>
+</IntReg>
+
+<IntReg Name="ExposureMaxRegister" NameSpace="Custom">
+  <Address>0x408</Address>
+  <Length>4</Length>
+  <AccessMode>RO</AccessMode>
+  <pPort>Device</pPort>
+  <Sign>Unsigned</Sign>
+  <Endianess>LittleEndian</Endianess>
+</IntReg>
+
+<Enumeration Name="ExposureAuto" NameSpace="Standard">
+  <Description>Automatic exposure</Description>
+  <EnumEntry Name="Off">
+    <Value>0</Value>
+  </EnumEntry>
+  <EnumEntry Name="Continuous">
+    <Value>2</Value>
+  </EnumEntry>
+  <pValue>ExposureAutoRegister</pValue>
+</Enumeration>
+
+<IntReg Name="ExposureAutoRegister" NameSpace="Custom">
+  <Address>0x40C</Address>
   <Length>4</Length>
   <AccessMode>RW</AccessMode>
   <pPort>Device</pPort>

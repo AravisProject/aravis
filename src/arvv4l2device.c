@@ -47,7 +47,6 @@
 #define ARV_V4L2_ADDRESS_WIDTH                          0x0100
 #define ARV_V4L2_ADDRESS_HEIGHT                         0x0104
 #define ARV_V4L2_ADDRESS_PAYLOAD_SIZE                   0x0118
-#define ARV_V4L2_ADDRESS_EXPOSURE_TIME                  0x0120
 #define ARV_V4L2_ADDRESS_ACQUISITION_COMMAND            0x0124
 #define ARV_V4L2_ADDRESS_PIXEL_FORMAT                   0x0128
 
@@ -58,6 +57,11 @@
 #define ARV_V4L2_ADDRESS_FRAME_RATE                     0x0300
 #define ARV_V4L2_ADDRESS_FRAME_RATE_MIN                 0x0308
 #define ARV_V4L2_ADDRESS_FRAME_RATE_MAX                 0x0310
+
+#define ARV_V4L2_ADDRESS_EXPOSURE_TIME                  0x0400
+#define ARV_V4L2_ADDRESS_EXPOSURE_MIN                   0x0404
+#define ARV_V4L2_ADDRESS_EXPOSURE_MAX                   0x0408
+#define ARV_V4L2_ADDRESS_EXPOSURE_AUTO                  0x040C
 
 enum
 {
@@ -79,6 +83,12 @@ typedef struct {
         gboolean gain_available;
         gint32 gain_min;
         gint32 gain_max;
+
+        gboolean exposure_available;
+        gint32 exposure_min;
+        gint32 exposure_max;
+        gint32 exposure_manual_index;
+        gint32 exposure_auto_index;
 
         gint pixel_format_idx;
         GArray *pixel_formats;
@@ -421,7 +431,22 @@ arv_v4l2_device_read_memory (ArvDevice *device, guint64 address, guint32 size, v
                                                 value.i32 = priv->gain_max;
                                                 break;
                                         case ARV_V4L2_ADDRESS_EXPOSURE_TIME:
-                                                value.i32 = 10;
+                                                value.i32 = arv_v4l2_get_int32_ext_ctrl(priv->device_fd,
+                                                                                        V4L2_CTRL_CLASS_CAMERA,
+                                                                                        V4L2_CID_EXPOSURE_ABSOLUTE);
+                                                break;
+                                        case ARV_V4L2_ADDRESS_EXPOSURE_MIN:
+                                                value.i32 = priv->exposure_min;
+                                                break;
+                                        case ARV_V4L2_ADDRESS_EXPOSURE_MAX:
+                                                value.i32 = priv->exposure_max;
+                                                break;
+                                        case ARV_V4L2_ADDRESS_EXPOSURE_AUTO:
+                                                value.i32 = arv_v4l2_get_int32_ext_ctrl
+                                                        (priv->device_fd,
+                                                         V4L2_CTRL_CLASS_CAMERA,
+                                                         V4L2_CID_EXPOSURE_AUTO) == priv->exposure_auto_index ?
+                                                        ARV_AUTO_CONTINUOUS : ARV_AUTO_OFF;
                                                 break;
                                         case ARV_V4L2_ADDRESS_PAYLOAD_SIZE:
                                                 arv_v4l2_device_set_image_format (v4l2_device);
@@ -506,6 +531,18 @@ arv_v4l2_device_write_memory (ArvDevice *device, guint64 address, guint32 size, 
                                 break;
                         case ARV_V4L2_ADDRESS_GAIN:
                                 arv_v4l2_set_ctrl (priv->device_fd, V4L2_CID_GAIN, value.i32);
+                                break;
+                        case ARV_V4L2_ADDRESS_EXPOSURE_TIME:
+                                arv_v4l2_set_int32_ext_ctrl (priv->device_fd,
+                                                             V4L2_CTRL_CLASS_CAMERA,
+                                                             V4L2_CID_EXPOSURE_ABSOLUTE,
+                                                             value.i32);
+                                break;
+                        case ARV_V4L2_ADDRESS_EXPOSURE_AUTO:
+                                arv_v4l2_set_int32_ext_ctrl (priv->device_fd, V4L2_CTRL_CLASS_CAMERA,
+                                                             V4L2_CID_EXPOSURE_AUTO, value.i32 == ARV_AUTO_OFF ?
+                                                             priv->exposure_manual_index :
+                                                             priv->exposure_auto_index);
                                 break;
                         case ARV_V4L2_ADDRESS_PIXEL_FORMAT:
                                 for (i = 0; i < priv->pixel_formats->len; i++) {
@@ -751,6 +788,41 @@ arv_v4l2_device_constructed (GObject *self)
                 }
         }
 
+        /* Get Exposure infos */
+
+        {
+                struct v4l2_query_ext_ctrl query = {0};
+
+                query.id = V4L2_CID_EXPOSURE_ABSOLUTE;
+                if (ioctl (priv->device_fd, VIDIOC_QUERY_EXT_CTRL, &query) != -1) {
+                        priv->exposure_available = TRUE;
+                        priv->exposure_min = query.minimum * 100;
+                        priv->exposure_max = query.maximum * 100;
+                } else {
+                        priv->exposure_available = FALSE;
+                }
+
+                query.id = V4L2_CID_EXPOSURE_AUTO;
+                if (ioctl (priv->device_fd, VIDIOC_QUERY_EXT_CTRL, &query) != -1) {
+                        priv->exposure_auto_index = -1;
+                        priv->exposure_manual_index = -1;
+
+                        for (i = query.minimum; i <= query.maximum; i++) {
+                                struct v4l2_querymenu querymenu = {0};
+
+                                querymenu.id = V4L2_CID_EXPOSURE_AUTO;
+                                querymenu.index = i;
+
+                                if (ioctl (priv->device_fd, VIDIOC_QUERYMENU, &querymenu) != -1) {
+                                        if (i == V4L2_EXPOSURE_MANUAL)
+                                                priv->exposure_manual_index = i;
+                                        else
+                                                priv->exposure_auto_index = i;
+                                }
+                        }
+                }
+        }
+
         /* Enumerate pixel formats */
 
         priv->pixel_formats = g_array_new (FALSE, TRUE, sizeof (guint32));
@@ -841,6 +913,13 @@ arv_v4l2_device_constructed (GObject *self)
                                    "  <AccessMode>RO</AccessMode>\n"
                                    "</Integer>", priv->gain_available ? 1 : 0);
         arv_gc_set_default_node_data (priv->genicam, "GainAvailable", feature, NULL);
+        g_free (feature);
+
+        feature = g_strdup_printf ("<Integer Name=\"ExposureAvailable\">\n"
+                                   "  <Value>%d</Value>\n"
+                                   "  <AccessMode>RO</AccessMode>\n"
+                                   "</Integer>", priv->exposure_available ? 1 : 0);
+        arv_gc_set_default_node_data (priv->genicam, "ExposureAvailable", feature, NULL);
         g_free (feature);
 
         arv_gc_set_default_node_data (priv->genicam, "PixelFormat", format_feature->str, NULL);
