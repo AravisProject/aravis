@@ -35,6 +35,7 @@
 #include <arvstr.h>
 #include <linux/videodev2.h>
 #include <fcntl.h>
+#include <stdio.h>
 #include <sys/mman.h>
 
 #define ARV_V4L2_STREAM_N_BUFFERS       3
@@ -206,7 +207,10 @@ arv_v4l2_stream_thread (void *data)
                         arv_buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_IMAGE;
                         arv_buffer->priv->chunk_endianness = G_BIG_ENDIAN;
                         arv_buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
-                        arv_buffer->priv->timestamp_ns = 1000000000000L * bufd.timestamp.tv_sec +
+                        /* TODO: sometime bufd->timestamp is set to 0, and bufd.flags is also 0. When timestamp is
+                         * correct, flags are set to 0x00012000
+                         * (V4L2_BUF_FLAG_TSTAMP_SRC_SOE | V4L2_BUF_FLAG_TIMESTAMP_MONOTONIC ) */
+                        arv_buffer->priv->timestamp_ns = 1000000000L * bufd.timestamp.tv_sec +
                                 1000L * bufd.timestamp.tv_usec;
                         arv_buffer->priv->system_timestamp_ns = g_get_real_time () * 1000;
                         arv_buffer->priv->frame_id = thread_data->frame_id++;
