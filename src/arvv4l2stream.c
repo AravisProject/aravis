@@ -197,6 +197,10 @@ arv_v4l2_stream_thread (void *data)
 
                 arv_buffer = g_hash_table_lookup (buffers, GINT_TO_POINTER (bufd.index));
                 if (ARV_IS_BUFFER (arv_buffer)) {
+                        if (thread_data->callback != NULL)
+                                thread_data->callback (thread_data->callback_data,
+                                                       ARV_STREAM_CALLBACK_TYPE_START_BUFFER,
+                                                       arv_buffer);
 
                         g_hash_table_remove (buffers, GINT_TO_POINTER(bufd.index));
                         arv_buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_IMAGE;
