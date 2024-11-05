@@ -21,11 +21,11 @@ replaced by a separate [method@Aravis.Stream.delete_buffers] function.
 ### arv_stream_create_buffers
 
 You should preferably use the new [method@Aravis.Stream.create_buffers]
-function, has in some cases it enables zero copy operations.
+function, which creates interface native buffers if possible.
 
 #### arv_stream_get_n_owned_buffers
 
-`arv_stream_get_n_buffers` has bee renamed
+`arv_stream_get_n_buffers` has been renamed
 [method@Aravis.Stream.get_n_owned_buffers] to better reflect what it does, and
 has a third out parameter returning the number of buffer owned by the stream
 receiving thread.
