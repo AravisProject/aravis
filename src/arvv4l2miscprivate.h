@@ -20,22 +20,31 @@
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
 
-#ifndef ARV_V4L2_DEVICE_PRIVATE_H
-#define ARV_V4L2_DEVICE_PRIVATE_H
+#ifndef ARV_V4L2_MISC_PRIVATE_H
+#define ARV_V4L2_MISC_PRIVATE_H
 
 #if !defined (ARV_H_INSIDE) && !defined (ARAVIS_COMPILATION)
 #error "Only <arv.h> can be included directly."
 #endif
 
-#include <arvv4l2device.h>
+#include <arvtypes.h>
 
 G_BEGIN_DECLS
 
-int             arv_v4l2_device_get_fd                  (ArvV4l2Device *v4l2_device);
-gboolean        arv_v4l2_device_set_image_format        (ArvV4l2Device *device);
-gboolean        arv_v4l2_device_get_image_format        (ArvV4l2Device *device,
-                                                         guint32 *payload_size, ArvPixelFormat *pixel_format,
-                                                         guint32 *width, guint32 *height, guint32 *bytes_per_line);
+ArvPixelFormat  arv_pixel_format_from_v4l2      (guint32 v4l2_pixel_format);
+guint32         arv_pixel_format_to_v4l2        (ArvPixelFormat pixel_format);
+
+int             arv_v4l2_ioctl                  (int fd, int request, void *arg);
+int             arv_v4l2_get_media_fd           (int fd, const char *bus_info);
+
+gboolean        arv_v4l2_set_ctrl               (int fd, int ctrl_id, gint32 value);
+gint32          arv_v4l2_get_ctrl               (int fd, int ctrl_id);
+
+gint64          arv_v4l2_get_int64_ext_ctrl     (int fd, int ext_ctrl_class, int ext_ctrl_id);
+gboolean        arv_v4l2_set_int64_ext_ctrl     (int fd, int ext_ctrl_class, int ext_ctrl_id, gint64 value);
+
+gint32          arv_v4l2_get_int32_ext_ctrl     (int fd, int ext_ctrl_class, int ext_ctrl_id);
+gboolean        arv_v4l2_set_int32_ext_ctrl     (int fd, int ext_ctrl_class, int ext_ctrl_id, gint32 value);
 
 G_END_DECLS
 

@@ -20,6 +20,7 @@
 <Category Name="Root" NameSpace="Standard">
   <pFeature>DeviceControl</pFeature>
   <pFeature>ImageFormatControl</pFeature>
+  <pFeature>AnalogControl</pFeature>
   <pFeature>AcquisitionControl</pFeature>
   <pFeature>TransportLayerControl</pFeature>
 </Category>
@@ -77,8 +78,8 @@
 <!-- Image format control -->
 
 <Category Name="ImageFormatControl" NameSpace="Standard">
-  <pFeature>SensorHeight</pFeature>
   <pFeature>SensorWidth</pFeature>
+  <pFeature>SensorHeight</pFeature>
   <pFeature>OffsetX</pFeature>
   <pFeature>OffsetY</pFeature>
   <pFeature>Width</pFeature>
@@ -88,74 +89,23 @@
   <pFeature>PixelFormat</pFeature>
 </Category>
 
-<Integer Name="SensorHeight" NameSpace="Standard">
-  <Description>Full height of image sensor.</Description>
-  <pValue>SensorHeightRegister</pValue>
-</Integer>
-
-<IntReg Name="SensorHeightRegister" NameSpace="Custom">
-  <Address>0x118</Address>
-  <Length>4</Length>
-  <AccessMode>RO</AccessMode>
-  <pPort>Device</pPort>
-  <Sign>Unsigned</Sign>
-  <Endianess>BigEndian</Endianess>
-</IntReg>
-
-<Integer Name="SensorWidth" NameSpace="Standard">
-  <Description>Full height of image sensor.</Description>
-  <pValue>SensorWidthRegister</pValue>
-</Integer>
-
-<IntReg Name="SensorWidthRegister" NameSpace="Custom">
-  <Address>0x11c</Address>
-  <Length>4</Length>
-  <AccessMode>RO</AccessMode>
-  <pPort>Device</pPort>
-  <Sign>Unsigned</Sign>
-  <Endianess>BigEndian</Endianess>
-</IntReg>
-
 <Integer Name="OffsetX" NameSpace="Standard">
   <Description>X offset of image, in pixels.</Description>
-  <pValue>OffsetXRegister</pValue>
-  <Min>0</Min>
-  <pMax>SensorWidth</pMax>
-  <Inc>1</Inc>
+  <Value>0</Value>
+  <AccessMode>RO</AccessMode>
 </Integer>
-
-<IntReg Name="OffsetXRegister" NameSpace="Custom">
-  <Address>0x130</Address>
-  <Length>4</Length>
-  <AccessMode>RW</AccessMode>
-  <pPort>Device</pPort>
-  <Sign>Unsigned</Sign>
-  <Endianess>BigEndian</Endianess>
-</IntReg>
 
 <Integer Name="OffsetY" NameSpace="Standard">
   <Description>Y offset of image, in pixels.</Description>
-  <pValue>OffsetYRegister</pValue>
-  <Min>0</Min>
-  <pMax>SensorHeight</pMax>
-  <Inc>1</Inc>
+  <Value>0</Value>
+  <AccessMode>RO</AccessMode>
 </Integer>
-
-<IntReg Name="OffsetYRegister" NameSpace="Custom">
-  <Address>0x134</Address>
-  <Length>4</Length>
-  <AccessMode>RW</AccessMode>
-  <pPort>Device</pPort>
-  <Sign>Unsigned</Sign>
-  <Endianess>BigEndian</Endianess>
-</IntReg>
 
 <Integer Name="Width" NameSpace="Standard">
   <Description>Width of image, in pixels.</Description>
   <pValue>WidthRegister</pValue>
-  <Min>1</Min>
-  <pMax>SensorWidth</pMax>
-  <Inc>1</Inc>
+  <pMin>WidthRegister</pMin>
+  <pMax>WidthRegister</pMax>
 </Integer>
 
 <IntReg Name="WidthRegister" NameSpace="Custom">
@@ -164,15 +114,14 @@
   <AccessMode>RW</AccessMode>
   <pPort>Device</pPort>
   <Sign>Unsigned</Sign>
-  <Endianess>BigEndian</Endianess>
+  <Endianess>LittleEndian</Endianess>
 </IntReg>
 
 <Integer Name="Height" NameSpace="Standard">
   <Description>Height of image, in pixels.</Description>
   <pValue>HeightRegister</pValue>
-  <Min>1</Min>
-  <pMax>SensorHeight</pMax>
-  <Inc>1</Inc>
+  <pMin>HeightRegister</pMin>
+  <pMax>HeightRegister</pMax>
 </Integer>
 
 <IntReg Name="HeightRegister" NameSpace="Custom">
@@ -181,34 +130,8 @@
   <AccessMode>RW</AccessMode>
   <pPort>Device</pPort>
   <Sign>Unsigned</Sign>
-  <Endianess>BigEndian</Endianess>
+  <Endianess>LittleEndian</Endianess>
 </IntReg>
-
-<Enumeration Name="PixelFormat" NameSpace="Standard">
-  <DisplayName>Pixel format</DisplayName>
-  <EnumEntry Name="BayerBG8" NameSpace="Standard">
-    <Value>17301515</Value>
-  </EnumEntry>
-  <EnumEntry Name="BayerGB8" NameSpace="Standard">
-    <Value>17301514</Value>
-  </EnumEntry>
-  <EnumEntry Name="BayerGR8" NameSpace="Standard">
-    <Value>17301512</Value>
-  </EnumEntry>
-  <EnumEntry Name="BayerRG8" NameSpace="Standard">
-    <Value>17301513</Value>
-  </EnumEntry>
-  <EnumEntry Name="Mono8" NameSpace="Standard">
-    <Value>17301505</Value>
-  </EnumEntry>
-  <EnumEntry Name="RGB8" NameSpace="Standard">
-    <Value>35127316</Value>
-  </EnumEntry>
-  <EnumEntry Name="Mono16" NameSpace="Standard">
-    <Value>17825799</Value>
-  </EnumEntry>
-  <pValue>PixelFormatRegister</pValue>
-</Enumeration>
 
 <IntReg Name="PixelFormatRegister" NameSpace="Custom">
   <Address>0x128</Address>
@@ -216,7 +139,8 @@
   <AccessMode>RW</AccessMode>
   <pPort>Device</pPort>
   <Sign>Unsigned</Sign>
-  <Endianess>BigEndian</Endianess>
+  <Endianess>LittleEndian</Endianess>
+  <Representation>HexNumber</Representation>
 </IntReg>
 
 <!-- Acquisition control -->
@@ -225,7 +149,9 @@
   <pFeature>AcquisitionMode</pFeature>
   <pFeature>AcquisitionStart</pFeature>
   <pFeature>AcquisitionStop</pFeature>
+  <pFeature>AcquisitionFrameRate</pFeature>
   <pFeature>ExposureTimeAbs</pFeature>
+  <pFeature>ExposureAuto</pFeature>
 </Category>
 
 <Command Name="AcquisitionStart" NameSpace="Standard">
@@ -246,7 +172,7 @@
   <AccessMode>WO</AccessMode>
   <pPort>Device</pPort>
   <Sign>Unsigned</Sign>
-  <Endianess>BigEndian</Endianess>
+  <Endianess>LittleEndian</Endianess>
 </IntReg>
 
 <Enumeration Name="AcquisitionMode" NameSpace="Standard">
@@ -254,49 +180,39 @@
   <EnumEntry Name="Continuous" NameSpace="Standard">
     <Value>1</Value>
   </EnumEntry>
-  <EnumEntry Name="SingleFrame" NameSpace="Standard">
-    <Value>2</Value>
-  </EnumEntry>
-  <EnumEntry Name="MultiFrame" NameSpace="Standard">
-    <Value>3</Value>
-  </EnumEntry>
-  <pValue>AcquisitionModeRegister</pValue>
+  <Value>1</Value>
 </Enumeration>
 
-<IntReg Name="AcquisitionModeRegister" NameSpace="Custom">
-  <Address>0x12c</Address>
-  <Length>4</Length>
-  <AccessMode>RW</AccessMode>
-  <pPort>Device</pPort>
-  <Sign>Unsigned</Sign>
-  <Endianess>BigEndian</Endianess>
-</IntReg>
-
 <Float Name="AcquisitionFrameRate">
-  <pValue>AcquisitionFrameRateConverter</pValue>
+  <pValue>AcquisitionFrameRateRegister</pValue>
+  <pMin>AcquisitionFrameRateMinRegister</pMin>
+  <pMax>AcquisitionFrameRateMaxRegister</pMax>
+  <Unit>Hz</Unit>
 </Float>
 
-<Converter Name="AcquisitionFrameRateConverter">
-  <Description>Frame rate, in frames per second.</Description>
-  <FormulaTo>(1000000 / FROM)</FormulaTo>
-  <FormulaFrom>(1000000 / TO)</FormulaFrom>
-  <pValue>AcquisitionFramePeriod</pValue>
-</Converter>
-
-<Integer Name="AcquisitionFramePeriod" NameSpace="Custom">
-  <pValue>AcquisitionFramePeriodRegister</pValue>
-  <Min>1000</Min>
-  <Max>10000000</Max>
-</Integer>
-
-<IntReg Name="AcquisitionFramePeriodRegister" NameSpace="Custom">
-  <Address>0x138</Address>
-  <Length>4</Length>
+<FloatReg Name="AcquisitionFrameRateRegister" NameSpace="Custom">
+  <Address>0x300</Address>
+  <Length>8</Length>
   <AccessMode>RW</AccessMode>
   <pPort>Device</pPort>
-  <Sign>Unsigned</Sign>
-  <Endianess>BigEndian</Endianess>
-</IntReg>
+  <Endianess>LittleEndian</Endianess>
+</FloatReg>
+
+<FloatReg Name="AcquisitionFrameRateMinRegister" NameSpace="Custom">
+  <Address>0x308</Address>
+  <Length>8</Length>
+  <AccessMode>RW</AccessMode>
+  <pPort>Device</pPort>
+  <Endianess>LittleEndian</Endianess>
+</FloatReg>
+
+<FloatReg Name="AcquisitionFrameRateMaxRegister" NameSpace="Custom">
+  <Address>0x310</Address>
+  <Length>8</Length>
+  <AccessMode>RW</AccessMode>
+  <pPort>Device</pPort>
+  <Endianess>LittleEndian</Endianess>
+</FloatReg>
 
 <Enumeration Name="TriggerSelector" NameSpace="Standard">
   <EnumEntry Name="FrameStart" NameSpace="Standard">
@@ -330,7 +246,7 @@
   <AccessMode>RW</AccessMode>
   <pPort>Device</pPort>
   <Sign>Unsigned</Sign>
-  <Endianess>BigEndian</Endianess>
+  <Endianess>LittleEndian</Endianess>
 </IntReg>
 
 <Enumeration Name="TriggerSource" NameSpace="Standard">
@@ -348,7 +264,7 @@
   <AccessMode>RW</AccessMode>
   <pPort>Device</pPort>
   <Sign>Unsigned</Sign>
-  <Endianess>BigEndian</Endianess>
+  <Endianess>LittleEndian</Endianess>
 </IntReg>
 
 <Enumeration Name="TriggerActivation" NameSpace="Standard">
@@ -366,75 +282,109 @@
   <AccessMode>RW</AccessMode>
   <pPort>Device</pPort>
   <Sign>Unsigned</Sign>
-  <Endianess>BigEndian</Endianess>
+  <Endianess>LittleEndian</Endianess>
 </IntReg>
 
 <Float Name="ExposureTimeAbs" NameSpace="Standard">
   <Description>Exposure duration, in microseconds.</Description>
   <pValue>ExposureTimeAbsConverter</pValue>
-  <Min>10.0</Min>
-  <Max>10000000.0</Max>
+  <pMin>ExposureMinRegister</pMin>
+  <pMax>ExposureMaxRegister</pMax>
+  <pIsAvailable>ExposureAvailable</pIsAvailable>
 </Float>
 
 <Converter Name="ExposureTimeAbsConverter" NameSpace="Custom">
-  <FormulaTo>FROM</FormulaTo>
-  <FormulaFrom>TO</FormulaFrom>
+  <FormulaTo>FROM/100</FormulaTo>
+  <FormulaFrom>TO*100</FormulaFrom>
   <pValue>ExposureTimeAbsRegister</pValue>
 </Converter>
 
 <IntReg Name="ExposureTimeAbsRegister" NameSpace="Custom">
-  <Address>0x120</Address>
+  <Address>0x400</Address>
   <Length>4</Length>
   <AccessMode>RW</AccessMode>
   <pPort>Device</pPort>
   <Sign>Unsigned</Sign>
-  <Endianess>BigEndian</Endianess>
+  <Endianess>LittleEndian</Endianess>
+</IntReg>
+
+<IntReg Name="ExposureMinRegister" NameSpace="Custom">
+  <Address>0x404</Address>
+  <Length>4</Length>
+  <AccessMode>RO</AccessMode>
+  <pPort>Device</pPort>
+  <Sign>Unsigned</Sign>
+  <Endianess>LittleEndian</Endianess>
+</IntReg>
+
+<IntReg Name="ExposureMaxRegister" NameSpace="Custom">
+  <Address>0x408</Address>
+  <Length>4</Length>
+  <AccessMode>RO</AccessMode>
+  <pPort>Device</pPort>
+  <Sign>Unsigned</Sign>
+  <Endianess>LittleEndian</Endianess>
+</IntReg>
+
+<Enumeration Name="ExposureAuto" NameSpace="Standard">
+  <Description>Automatic exposure</Description>
+  <EnumEntry Name="Off">
+    <Value>0</Value>
+  </EnumEntry>
+  <EnumEntry Name="Continuous">
+    <Value>2</Value>
+  </EnumEntry>
+  <pValue>ExposureAutoRegister</pValue>
+</Enumeration>
+
+<IntReg Name="ExposureAutoRegister" NameSpace="Custom">
+  <Address>0x40C</Address>
+  <Length>4</Length>
+  <AccessMode>RW</AccessMode>
+  <pPort>Device</pPort>
+  <Sign>Unsigned</Sign>
+  <Endianess>LittleEndian</Endianess>
 </IntReg>
 
 <!-- Analog control -->
 
 <Category Name="AnalogControl" NameSpace="Custom">
-  <pFeature>GainRaw</pFeature>
-  <pFeature>GainAuto</pFeature>
+  <pFeature>Gain</pFeature>
 </Category>
 
-<Integer Name="GainRaw" NameSpace="Standard">
-  <Description>Raw gain.</Description>
-  <pValue>GainRawRegister</pValue>
-  <Min>0</Min>
-  <Max>10</Max>
-</Integer>
+<Float Name="Gain" NameSpace="Standard">
+  <Description>Gain</Description>
+  <pValue>GainRegister</pValue>
+  <pMin>GainMinRegister</pMin>
+  <pMax>GainMaxRegister</pMax>
+  <pIsAvailable>GainAvailable</pIsAvailable>
+</Float>
 
-<IntReg Name="GainRawRegister" NameSpace="Custom">
-  <Address>0x110</Address>
+<IntReg Name="GainRegister" NameSpace="Custom">
+  <Address>0x200</Address>
   <Length>4</Length>
   <AccessMode>RW</AccessMode>
   <pPort>Device</pPort>
   <Sign>Unsigned</Sign>
-  <Endianess>BigEndian</Endianess>
+  <Endianess>LittleEndian</Endianess>
 </IntReg>
 
-<Enumeration Name="GainAuto" NameSpace="Standard">
-  <Description>Automatic gain mode.</Description>
-  <EnumEntry Name="Off" NameSpace="Standard">
-    <Value>1</Value>
-  </EnumEntry>
-  <EnumEntry Name="Once" NameSpace="Standard">
-    <Value>3</Value>
-  </EnumEntry>
-  <EnumEntry Name="Continuous" NameSpace="Standard">
-    <Value>2</Value>
-  </EnumEntry>
-  <pValue>GainAutoRegister</pValue>
-</Enumeration>
-
-<IntReg Name="GainAutoRegister" NameSpace="Custom">
-  <Address>0x114</Address>
+<IntReg Name="GainMinRegister" NameSpace="Custom">
+  <Address>0x204</Address>
   <Length>4</Length>
-  <AccessMode>RW</AccessMode>
+  <AccessMode>RO</AccessMode>
   <pPort>Device</pPort>
   <Sign>Unsigned</Sign>
-  <Endianess>BigEndian</Endianess>
+  <Endianess>LittleEndian</Endianess>
+</IntReg>
+
+<IntReg Name="GainMaxRegister" NameSpace="Custom">
+  <Address>0x208</Address>
+  <Length>4</Length>
+  <AccessMode>RO</AccessMode>
+  <pPort>Device</pPort>
+  <Sign>Unsigned</Sign>
+  <Endianess>LittleEndian</Endianess>
 </IntReg>
 
 <!-- Transport layer control -->
@@ -443,12 +393,14 @@
   <pFeature>PayloadSize</pFeature>
 </Category>
 
-<IntSwissKnife Name="PayloadSize" NameSpace="Standard">
-  <pVariable Name="WIDTH">Width</pVariable>
-  <pVariable Name="HEIGHT">Height</pVariable>
-  <pVariable Name="PIXELFORMAT">PixelFormat</pVariable>
-  <Formula>WIDTH * HEIGHT * ((PIXELFORMAT>>16)&amp;0xFF) / 8</Formula>
-</IntSwissKnife>
+<IntReg Name="PayloadSize" NameSpace="Standard">
+  <Address>0x118</Address>
+  <Length>4</Length>
+  <AccessMode>RO</AccessMode>
+  <pPort>Device</pPort>
+  <Sign>Unsigned</Sign>
+  <Endianess>LittleEndian</Endianess>
+</IntReg>
 
 <Integer Name="TLParamsLocked">
   <ToolTip> Indicates whether a live grab is under way</ToolTip>
