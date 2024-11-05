@@ -207,6 +207,13 @@ caps_string_test (void)
                 caps_string = arv_pixel_format_to_gst_caps_string (caps_data[i].pixel_format);
                 g_assert (caps_string != NULL);
         }
+
+        for (i = 0; i < G_N_ELEMENTS (caps_data); i++) {
+                const char *caps_string;
+
+                caps_string = arv_pixel_format_to_gst_caps_string_full (caps_data[i].pixel_format, "Vendor", "Model");
+                g_assert (caps_string != NULL);
+        }
 }
 
 struct {

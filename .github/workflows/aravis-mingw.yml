@@ -5,9 +5,9 @@ name: Aravis-MinGW
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, aravis-0-8 ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, aravis-0-8 ]
   workflow_dispatch:
 
 jobs:
@@ -18,7 +18,7 @@ jobs:
       matrix:
         include:
           - { sys: mingw64, env: x86_64 }
-          - { sys: mingw32, env: i686 }
+          # - { sys: mingw32, env: i686 } # mingw32 is missing gst-plugins-good package, disabled for now
           - { sys: ucrt64,  env: ucrt-x86_64 }
           # - { sys: clang64, env: clang-x86_64 } # clang64 is missing several packages, disabled for now
     defaults:
