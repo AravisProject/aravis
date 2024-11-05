@@ -292,17 +292,34 @@ arv_gentl_interface_open_device (ArvInterface *interface, const char *device_id,
 {
 	ArvGenTLInterfacePrivate *priv = arv_gentl_interface_get_instance_private(ARV_GENTL_INTERFACE (interface));
 	ArvDevice *device = NULL;
-	ArvGenTLInterfaceDeviceInfos *device_info = g_hash_table_lookup(priv->devices, device_id);
+	ArvGenTLInterfaceDeviceInfos *device_infos = NULL;
+
+        if (device_id == NULL) {
+		GList *device_list;
+
+		device_list = g_hash_table_get_values (priv->devices);
+		device_infos = device_list != NULL ? device_list->data : NULL;
+		g_list_free (device_list);
+	} else
+		device_infos = g_hash_table_lookup (priv->devices, device_id);
 
 	/* Refresh devices if the requested device is in the cache. */
-	if (device_info == NULL) {
-		_discover(ARV_GENTL_INTERFACE(interface), NULL);
-		device_info = g_hash_table_lookup(priv->devices, device_id);
-	}
+	if (device_infos == NULL) {
+		GList *device_list;
 
-	if (device_info) {
-		device = arv_gentl_device_new(device_info->system, device_info->interface, device_id, error);
-	}
+		_discover(ARV_GENTL_INTERFACE(interface), NULL);
+
+                if (device_id == NULL) {
+                        device_list = g_hash_table_get_values (priv->devices);
+                        device_infos = device_list != NULL ? device_list->data : NULL;
+                        g_list_free (device_list);
+                } else
+                        device_infos = g_hash_table_lookup (priv->devices, device_id);
+        }
+
+	if (device_infos)
+		device = arv_gentl_device_new (device_infos->system, device_infos->interface,
+                                               device_infos->id, error);
 
 	return device;
 }

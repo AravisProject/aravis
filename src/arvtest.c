@@ -694,6 +694,9 @@ _multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test
         gint64 start_time = -1;
         gint64 end_time = -1;
         gboolean frame_rate_success;
+        gboolean callback_init_success;
+        gboolean callback_buffer_success;
+        gboolean callback_exit_success;
         guint n_completed_buffers = 0;
         guint n_expected_buffers = 10;
 
@@ -752,13 +755,18 @@ _multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test
 
         g_clear_object (&stream);
 
-        success = success &&
-                callback_data.n_init == 1 &&
+        callback_init_success = callback_data.n_init == 1;
+        callback_buffer_success =
                 callback_data.n_start == callback_data.n_done &&
-                callback_data.n_success >= n_expected_buffers &&
-                callback_data.n_exit == 1;
+                callback_data.n_success >= n_expected_buffers;
+        callback_exit_success = callback_data.n_exit == 1;
 
-        message = g_strdup_printf ("%u/%u%s%s", n_completed_buffers, n_expected_buffers,
+        success = success && callback_init_success && callback_buffer_success && callback_exit_success;
+
+        message = g_strdup_printf ("%u/%u%s%s%s%s%s", n_completed_buffers, n_expected_buffers,
+                                   callback_init_success ? "" : " cb_init_err",
+                                   callback_buffer_success ? "" : " cb_buffer_err",
+                                   callback_exit_success ? "" : " cb_exit_err",
                                    error != NULL ? " " : "",
                                    error != NULL ? error->message : "");
         arv_test_camera_add_result (test_camera, test_name, "BufferCheck",
@@ -777,6 +785,8 @@ _multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test
                         message = g_strdup_printf ("%.2f Hz", actual_frame_rate);
                 } else
                         message = g_strdup_printf ("%.2f Hz (expected:%.2f Hz)", actual_frame_rate, frame_rate);
+        } else {
+                message = g_strdup_printf ("Missing timestamp information");
         }
 
         arv_test_camera_add_result (test_camera, test_name, "FrameRate",

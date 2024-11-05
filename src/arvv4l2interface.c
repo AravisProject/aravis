@@ -27,15 +27,17 @@
 
 #include <arvv4l2interfaceprivate.h>
 #include <arvv4l2deviceprivate.h>
+#include <arvv4l2miscprivate.h>
 #include <arvinterfaceprivate.h>
 #include <arvv4l2device.h>
-#include <arvdebug.h>
-#include <gudev/gudev.h>
-#include <libv4l2.h>
-#include <linux/videodev2.h>
-#include <fcntl.h>
-#include <errno.h>
+#include <arvdebugprivate.h>
 #include <arvmisc.h>
+#include <fcntl.h>
+#include <gudev/gudev.h>
+#include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <linux/videodev2.h>
+#include <linux/media.h>
 
 struct _ArvV4l2Interface {
 	ArvInterface	interface;
@@ -52,47 +54,102 @@ G_DEFINE_TYPE (ArvV4l2Interface, arv_v4l2_interface, ARV_TYPE_INTERFACE)
 
 typedef struct {
 	char *id;
+        char *model;
+        char *driver;
 	char *bus;
 	char *device_file;
 	char *version;
+        char *serial_nbr;
 
 	volatile gint ref_count;
 } ArvV4l2InterfaceDeviceInfos;
 
 static ArvV4l2InterfaceDeviceInfos *
-arv_v4l2_interface_device_infos_new (const char *device_file)
+arv_v4l2_interface_device_infos_new (const char *device_file, const char *name)
 {
-	ArvV4l2InterfaceDeviceInfos *infos;
+	ArvV4l2InterfaceDeviceInfos *infos = NULL;
 
 	g_return_val_if_fail (device_file != NULL, NULL);
 
 	if (strncmp ("/dev/vbi", device_file,  8) != 0) {
 		int fd;
+                struct stat st;
 
-		fd = v4l2_open (device_file, O_RDWR);
-		if (fd != -1) {
-			struct v4l2_capability cap;
+                if (stat(device_file, &st) == -1)
+                        return NULL;
 
-			if (v4l2_ioctl (fd, VIDIOC_QUERYCAP, &cap) != -1 &&
+                if (!S_ISCHR(st.st_mode))
+                        return NULL;
+
+                fd = open (device_file, O_RDWR, 0);
+                if (fd != -1) {
+                        struct v4l2_capability cap;
+
+			if (ioctl (fd, VIDIOC_QUERYCAP, &cap) != -1 &&
 			    ((cap.capabilities & V4L2_CAP_VIDEO_CAPTURE) != 0) &&
-			    ((cap.capabilities & V4L2_CAP_VIDEO_CAPTURE_MPLANE) == 0) &&
-			    ((cap.capabilities & V4L2_CAP_READWRITE) != 0)) {
-				infos = g_new0 (ArvV4l2InterfaceDeviceInfos, 1);
+			    ((cap.capabilities & V4L2_CAP_STREAMING) != 0)) {
+                                unsigned int i;
+                                gboolean found = FALSE;
+                                struct media_device_info mdinfo = {0};
 
-				infos->ref_count = 1;
-				infos->id = g_strdup ((char *) cap.card);
-				infos->bus = g_strdup ((char *) cap.bus_info);
-				infos->device_file = g_strdup (device_file);
-				infos->version = g_strdup_printf ("%d.%d.%d",
-								  (cap.version >> 16) & 0xff,
-								  (cap.version >>  8) & 0xff,
-								  (cap.version >>  0) & 0xff);
+                                for (i = 0; TRUE; i++) {
+                                        struct v4l2_fmtdesc format = {0};
 
-				return infos;
-			}
-			v4l2_close (fd);
-		}
-	}
+                                        format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+                                        format.index = i;
+                                        if (ioctl(fd, VIDIOC_ENUM_FMT, &format) == -1)
+                                                break;
+
+                                        if (arv_pixel_format_from_v4l2(format.pixelformat) != 0) {
+                                                found = TRUE;
+                                                break;
+                                        }
+                                }
+
+                                if (found) {
+                                        int media_fd = arv_v4l2_get_media_fd(fd, (char *) cap.bus_info);
+
+                                        infos = g_new0 (ArvV4l2InterfaceDeviceInfos, 1);
+
+                                        infos->ref_count = 1;
+                                        infos->bus = g_strdup ((char *) cap.bus_info);
+                                        infos->driver = g_strdup ((char *) cap.driver);
+                                        infos->device_file = g_strdup (device_file);
+                                        infos->model = g_strdup ((char *) cap.card);
+                                        infos->version = g_strdup_printf ("%d.%d.%d",
+                                                                          (cap.version >> 16) & 0xff,
+                                                                          (cap.version >>  8) & 0xff,
+                                                                          (cap.version >>  0) & 0xff);
+
+                                        if (media_fd != -1 &&
+                                            ioctl (media_fd, MEDIA_IOC_DEVICE_INFO, &mdinfo) != -1) {
+                                                infos->id = g_strdup_printf ("%s-%s-%s",
+                                                                             (char *) cap.driver,
+                                                                             (char *) cap.card,
+                                                                             mdinfo.serial);
+                                                infos->serial_nbr = g_strdup (mdinfo.serial);
+                                        } else {
+                                                infos->id = g_strdup_printf ("%s-%s-%s",
+                                                                             (char *) cap.driver,
+                                                                             (char *) cap.card,
+                                                                             name);
+                                                infos->serial_nbr = g_strdup (device_file);
+                                        }
+
+                                        if (media_fd != -1)
+                                                close (media_fd);
+
+                                        close (fd);
+
+                                        return infos;
+                                }
+
+                                arv_info_interface ("No suitable pixel format found for v4l2 device '%s'",
+                                                       device_file);
+                        }
+                        close (fd);
+                }
+        }
 
 	return NULL;
 }
@@ -116,9 +173,12 @@ arv_v4l2_interface_device_infos_unref (ArvV4l2InterfaceDeviceInfos *infos)
 
 	if (g_atomic_int_dec_and_test (&infos->ref_count)) {
 		g_free (infos->id);
+                g_free (infos->model);
+                g_free (infos->driver);
 		g_free (infos->bus);
 		g_free (infos->device_file);
 		g_free (infos->version);
+                g_free (infos->serial_nbr);
 		g_free (infos);
 	}
 }
@@ -135,7 +195,8 @@ _discover (ArvV4l2Interface *v4l2_interface, GArray *device_ids)
 	for (elem = g_list_first (devices); elem; elem = g_list_next (elem)) {
 		ArvV4l2InterfaceDeviceInfos *device_infos;
 
-		device_infos = arv_v4l2_interface_device_infos_new (g_udev_device_get_device_file (elem->data));
+		device_infos = arv_v4l2_interface_device_infos_new (g_udev_device_get_device_file (elem->data),
+                                                                    g_udev_device_get_name(elem->data));
 		if (device_infos != NULL) {
 			ArvInterfaceDeviceIds *ids;
 
@@ -155,9 +216,9 @@ _discover (ArvV4l2Interface *v4l2_interface, GArray *device_ids)
 				ids->device = g_strdup (device_infos->id);
 				ids->physical = g_strdup (device_infos->bus);
 				ids->address = g_strdup (device_infos->device_file);
-				ids->vendor = g_strdup ("Aravis");
-				ids->model = g_strdup (device_infos->id);
-				ids->serial_nbr = g_strdup ("1");
+				ids->vendor = g_strdup (device_infos->driver);
+				ids->model = g_strdup (device_infos->model);
+				ids->serial_nbr = g_strdup (device_infos->serial_nbr);
                                 ids->protocol = "V4L2";
 
 				g_array_append_val (device_ids, ids);
