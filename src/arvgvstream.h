@@ -48,7 +48,7 @@ typedef enum {
  * ArvGvStreamSocketBuffer:
  * @ARV_GV_STREAM_SOCKET_BUFFER_FIXED: socket buffer is set using [property@Aravis.GvStream:socket-buffer-size] value
  * @ARV_GV_STREAM_SOCKET_BUFFER_AUTO: socket buffer size is set to the payload size if
- * [property@Aravis:socket-buffer-size] is not strictly positive, or the minimum of both values
+ * [property@Aravis.GvStream:socket-buffer-size] is not strictly positive, or the minimum of both values
  */
 
 typedef enum {

@@ -807,18 +807,13 @@ set_camera_widgets(ArvViewer *viewer)
 
 	is_exposure_available = arv_camera_is_exposure_time_available (viewer->camera, NULL);
 	if (is_exposure_available){
-		viewer->exposure_time_representation = arv_camera_get_exposure_time_representation(viewer->camera);
-
-                if (viewer->exposure_time_representation == ARV_GC_REPRESENTATION_UNDEFINED) {
-                        if (viewer->exposure_min < viewer->exposure_max) {
-                                if (viewer->exposure_min > 0)
-                                        viewer->exposure_time_representation = ARV_GC_REPRESENTATION_LOGARITHMIC;
-                                else
-                                        viewer->exposure_time_representation = ARV_GC_REPRESENTATION_LINEAR;
-                        } else {
-                                viewer->exposure_time_representation = ARV_GC_REPRESENTATION_PURE_NUMBER;
-                        }
-                }
+                if (viewer->exposure_min < viewer->exposure_max)
+                        if (viewer->exposure_min > 0)
+                                viewer->exposure_time_representation = ARV_GC_REPRESENTATION_LOGARITHMIC;
+                        else
+                                viewer->exposure_time_representation = ARV_GC_REPRESENTATION_LINEAR;
+                else
+                        viewer->exposure_time_representation = ARV_GC_REPRESENTATION_PURE_NUMBER;
 
 		switch (viewer->exposure_time_representation) {
 			case ARV_GC_REPRESENTATION_UNDEFINED:
@@ -1479,16 +1474,20 @@ start_video (ArvViewer *viewer)
 	set_camera_widgets(viewer);
 	pixel_format = arv_camera_get_pixel_format (viewer->camera, NULL);
 
-	caps_string = arv_pixel_format_to_gst_caps_string (pixel_format);
-	if (caps_string == NULL) {
-		g_message ("GStreamer cannot understand this camera pixel format: 0x%x!", (int) pixel_format);
-		stop_video (viewer);
-		return FALSE;
+        caps_string = arv_pixel_format_to_gst_caps_string_full
+                (pixel_format,
+                 arv_camera_get_vendor_name (viewer->camera, NULL),
+                 arv_camera_get_model_name (viewer->camera, NULL));
+
+        if (caps_string == NULL) {
+                g_message ("GStreamer cannot understand this camera pixel format: 0x%x!", (int) pixel_format);
+                stop_video (viewer);
+                return FALSE;
         } else if (g_str_has_prefix (caps_string, "video/x-bayer") && !has_bayer2rgb) {
-		g_message ("GStreamer bayer plugin is required for pixel format: 0x%x!", (int) pixel_format);
-		stop_video (viewer);
-		return FALSE;
-	}
+                g_message ("GStreamer bayer plugin is required for pixel format: 0x%x!", (int) pixel_format);
+                stop_video (viewer);
+                return FALSE;
+        }
 
         arv_camera_set_acquisition_mode (viewer->camera, ARV_ACQUISITION_MODE_CONTINUOUS, NULL);
 	arv_camera_start_acquisition (viewer->camera, NULL);
