@@ -113,9 +113,9 @@ using the <code>ArvDevice</code> <span class="caps">API</span> directly, you hav
 replaced by a separate <a href="method.Stream.delete_buffers.html"><code>arv_stream_delete_buffers()</code></a>&nbsp;function.</p>
 <h3 id="arv_stream_create_buffers">arv_stream_create_buffers<a class="md-anchor" href="#arv_stream_create_buffers" title="Permanent link"></a></h3>
 <p>You should preferably use the new <a href="method.Stream.create_buffers.html"><code>arv_stream_create_buffers()</code></a>
-function, has in some cases it enables zero copy&nbsp;operations.</p>
+function, which creates interface native buffers if&nbsp;possible.</p>
 <h4 id="arv_stream_get_n_owned_buffers">arv_stream_get_n_owned_buffers<a class="md-anchor" href="#arv_stream_get_n_owned_buffers" title="Permanent link"></a></h4>
-<p><code>arv_stream_get_n_buffers</code> has bee renamed
+<p><code>arv_stream_get_n_buffers</code> has been renamed
 <a href="method.Stream.get_n_owned_buffers.html"><code>arv_stream_get_n_owned_buffers()</code></a> to better reflect what it does, and
 has a third out parameter returning the number of buffer owned by the stream
 receiving&nbsp;thread.</p>
