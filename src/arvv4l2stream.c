@@ -189,6 +189,7 @@ arv_v4l2_stream_thread (void *data)
                 if(arv_v4l2_ioctl(thread_data->v4l2_fd, VIDIOC_DQBUF, &bufd) == -1) {
                         switch (errno) {
                                 case EAGAIN:
+                                case EINVAL: /* Is this really expected ? */
                                         continue;
                                 default:
                                         arv_warning_stream_thread("Dequeue buffer error (%s)", strerror(errno));
