@@ -144,6 +144,7 @@ arv_v4l2_stream_thread (void *data)
         GHashTableIter iter;
         gpointer key, value;
 	ArvBuffer *arv_buffer;
+        GPollFD poll_fd[1];
 
 	arv_info_stream_thread ("[V4l2Stream::thread] Start");
 
@@ -158,27 +159,24 @@ arv_v4l2_stream_thread (void *data)
         g_cond_signal (&thread_data->thread_started_cond);
         g_mutex_unlock (&thread_data->thread_started_mutex);
 
+        poll_fd[0].fd = thread_data->v4l2_fd;
+        poll_fd[0].events = G_IO_IN;
+
 	while (!g_atomic_int_get (&thread_data->cancel)) {
                 struct v4l2_buffer bufd = {0};
-                fd_set fds;
-                struct timeval tv;
-                int result;
+                int n_events;
 
                 _queue_buffers(thread_data, buffers);
 
-                FD_ZERO(&fds);
-                FD_SET(thread_data->v4l2_fd, &fds);
-
-                tv.tv_sec = 1;
-                tv.tv_usec = 0;
-                result = select(thread_data->v4l2_fd + 1, &fds, NULL, NULL, &tv);
-                if(result == -1){
+                poll_fd[0].revents = 0;
+                n_events = g_poll (poll_fd, 1, 1000);
+                if (n_events < 1){
                         if (errno != EINTR)
                                 arv_warning_stream_thread ("Error while waiting for frame (%s)", strerror(errno));
                         continue;
                 }
 
-                if (result == 0)
+                if (poll_fd[0].revents == 0)
                         continue;
 
                 memset (&bufd, 0, sizeof bufd);
