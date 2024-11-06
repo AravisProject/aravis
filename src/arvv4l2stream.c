@@ -183,14 +183,17 @@ arv_v4l2_stream_thread (void *data)
 
                 memset (&bufd, 0, sizeof bufd);
                 bufd.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-                bufd.memory = thread_data->io_method == ARV_V4L2_STREAM_IO_METHOD_MMAP ?
+                bufd.memory =
+                        thread_data->io_method == ARV_V4L2_STREAM_IO_METHOD_MMAP ?
                         V4L2_MEMORY_MMAP : V4L2_MEMORY_USERPTR;
                 bufd.index = 0;
 
                 if(arv_v4l2_ioctl(thread_data->v4l2_fd, VIDIOC_DQBUF, &bufd) == -1) {
-                        arv_warning_stream_thread("DeQueue buffer error (%s)", strerror(errno));
                         switch (errno) {
                                 case EAGAIN:
+                                        continue;
+                                default:
+                                        arv_warning_stream_thread("Dequeue buffer error (%s)", strerror(errno));
                                         continue;
                         }
                 } else
