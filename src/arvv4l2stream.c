@@ -198,6 +198,8 @@ arv_v4l2_stream_thread (void *data)
                 } else
                         arv_trace_stream_thread ("Dequeued buffer %d\n", bufd.index);
 
+                arv_trace_stream_thread("flags = 0x%08d\n", bufd.flags);
+
                 arv_buffer = g_hash_table_lookup (buffers, GINT_TO_POINTER (bufd.index));
                 if (ARV_IS_BUFFER (arv_buffer)) {
                         if (thread_data->callback != NULL)
