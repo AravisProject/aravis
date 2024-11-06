@@ -80,10 +80,10 @@ typedef struct {
 
 	/* Statistics */
 
-	guint n_completed_buffers;
-	guint n_failures;
-	guint n_underruns;
-        guint n_transferred_bytes;
+	guint64 n_completed_buffers;
+	guint64 n_failures;
+	guint64 n_underruns;
+        guint64 n_transferred_bytes;
 } ArvV4l2StreamThreadData;
 
 typedef struct {
