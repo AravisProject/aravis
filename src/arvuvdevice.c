@@ -77,6 +77,7 @@ typedef struct {
 	gboolean disconnected;
 
 	ArvUvUsbMode usb_mode;
+        guint64 maximum_transfer_size;
 
 	int event_thread_run;
 	GThread* event_thread;
@@ -211,7 +212,8 @@ static ArvStream *
 arv_uv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data, GDestroyNotify destroy, GError **error)
 {
 	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (ARV_UV_DEVICE (device));
-	return arv_uv_stream_new (ARV_UV_DEVICE (device), callback, user_data, destroy, priv->usb_mode, error);
+	return arv_uv_stream_new (ARV_UV_DEVICE (device), callback, user_data, destroy,
+                                  priv->usb_mode, priv->maximum_transfer_size, error);
 }
 
 static gboolean
@@ -941,6 +943,25 @@ arv_uv_device_set_usb_mode (ArvUvDevice *uv_device, ArvUvUsbMode usb_mode)
 }
 
 /**
+ * arv_uv_device_set_maximum_transfer_size:
+ * @uv_device: a #ArvUvDevice
+ * @size: maximum transfer size, in bytes
+ *
+ * Set the maximum transfer size for a USB bulk transfer.
+ *
+ * Since: 0.10.0
+ */
+
+void
+arv_uv_device_set_maximum_transfer_size (ArvUvDevice *uv_device, guint64 size)
+{
+	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (uv_device);
+
+	g_return_if_fail (ARV_IS_UV_DEVICE (uv_device));
+
+	priv->maximum_transfer_size = size;
+}
+/**
  * arv_uv_device_new:
  * @vendor: USB3 vendor string
  * @product: USB3 product string
@@ -1085,6 +1106,7 @@ arv_uv_device_constructed (GObject *object)
                                           &priv->hotplug_cb_handle);
 
 	priv->usb_mode = ARV_UV_USB_MODE_DEFAULT;
+        priv->maximum_transfer_size = ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE_DEFAULT;
 
 	priv->event_thread_run = 1;
 	priv->event_thread = g_thread_new ( "arv_libusb", event_thread_func, priv);

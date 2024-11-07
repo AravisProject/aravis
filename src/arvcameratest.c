@@ -40,6 +40,7 @@ static char *arv_option_range_check = NULL;
 static char *arv_option_access_check = NULL;
 static int arv_option_duration_s = -1;
 static char *arv_option_uv_usb_mode = NULL;
+static guint arv_option_uv_usb_maximum_transfer_size = 0;
 static gboolean arv_option_show_version = FALSE;
 static gboolean arv_option_gv_allow_broadcast_discovery_ack = FALSE;
 static char *arv_option_gv_port_range = NULL;
@@ -158,6 +159,12 @@ static const GOptionEntry arv_option_entries[] =
 		"usb-mode",				's', 0, G_OPTION_ARG_STRING,
 		&arv_option_uv_usb_mode,		"USB device I/O mode",
 		"{sync|async}"
+	},
+	{
+		"usb-maximum-transfer-size",		'\0', 0, G_OPTION_ARG_INT,
+		&arv_option_uv_usb_maximum_transfer_size,
+                "USB maximum transfer size",
+		"<n_bytes>}"
 	},
 	{
 		"chunks", 				'u', 0, G_OPTION_ARG_STRING,
@@ -570,8 +577,10 @@ main (int argc, char **argv)
 		if (arv_camera_is_uv_device (camera)) {
 			if (error == NULL)
                                 arv_camera_uv_set_usb_mode (camera, usb_mode);
+                        if (error == NULL && arv_option_uv_usb_maximum_transfer_size > 0)
+                                arv_camera_uv_set_maximum_transfer_size (camera, arv_option_uv_usb_maximum_transfer_size);
 			if (error == NULL && arv_option_bandwidth_limit >= 0)
-                                        arv_camera_uv_set_bandwidth (camera, arv_option_bandwidth_limit, &error);
+                                arv_camera_uv_set_bandwidth (camera, arv_option_bandwidth_limit, &error);
 		}
 
 		if (arv_camera_is_gv_device (camera)) {
