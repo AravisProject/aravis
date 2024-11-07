@@ -33,8 +33,12 @@
 
 G_BEGIN_DECLS
 
-ArvStream * 	arv_uv_stream_new	(ArvUvDevice *uv_device, ArvStreamCallback callback, void *user_data, GDestroyNotify destroy,
-                                         ArvUvUsbMode usb_mode, GError **error);
+#define ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE_DEFAULT	(1*1024*1024)
+#define ARV_UV_STREAM_N_MAXIMUM_SUBMITS                 8
+
+ArvStream * 	arv_uv_stream_new	(ArvUvDevice *uv_device,
+                                         ArvStreamCallback callback, void *user_data, GDestroyNotify destroy,
+                                         ArvUvUsbMode usb_mode, guint64 maximum_transfer_size, GError **error);
 
 G_END_DECLS
 

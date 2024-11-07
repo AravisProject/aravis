@@ -36,9 +36,6 @@
 #include <libusb.h>
 #include <string.h>
 
-#define ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE_DEFAULT	(1*1024*1024)
-#define ARV_UV_STREAM_N_MAXIMUM_SUBMITS                 8
-
 #define ARV_UV_STREAM_POP_INPUT_BUFFER_TIMEOUT_MS       10
 #define ARV_UV_STREAM_TRANSFER_WAIT_TIMEOUT_MS          10
 
@@ -1096,6 +1093,9 @@ arv_uv_stream_create_buffers (ArvStream *stream, guint n_buffers, size_t size,
  * @uv_device: a #ArvUvDevice
  * @callback: (scope call): image processing callback
  * @callback_data: (closure): user data for @callback
+ * @destroy: callback data destroy function
+ * @usb_mode: USB mode selection
+ * @maximum_transfer_size: maximum transfer size, in bytes
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Return Value: (transfer full): a new #ArvStream.
@@ -1103,14 +1103,15 @@ arv_uv_stream_create_buffers (ArvStream *stream, guint n_buffers, size_t size,
 
 ArvStream *
 arv_uv_stream_new (ArvUvDevice *uv_device, ArvStreamCallback callback, void *callback_data, GDestroyNotify destroy,
-                   ArvUvUsbMode usb_mode, GError **error)
+                   ArvUvUsbMode usb_mode, guint64 maximum_transfer_size, GError **error)
 {
 	return g_initable_new (ARV_TYPE_UV_STREAM, NULL, error,
 			       "device", uv_device,
 			       "callback", callback,
 			       "callback-data", callback_data,
-						 "destroy-notify", destroy,
+                               "destroy-notify", destroy,
 			       "usb-mode", usb_mode,
+                               "maximum-transfer-size", maximum_transfer_size,
 			       NULL);
 }
 
@@ -1255,25 +1256,14 @@ arv_uv_stream_class_init (ArvUvStreamClass *uv_stream_class)
         /**
          * ArvUvStream:maximum-transfer-size:
          *
-         * Maximum size when asking for a USB bulk transfer. The default value should work most of the time, but you may
-         * have to tweak this setting in order to get reliable transfers. This property can be changed at any time, but
-         * it will only have effect the next acquisition start.
-         *
-         * ::: note "Help needed"
-         *     It would be nice to be able to compute a working value for any OS/driver combination aravis is
-         *     running on. If someone knows how to do that, please open an issue (or event better, a merge request) on
-         *     the aravis [issue tracker]<https://github.com/AravisProject/aravis/issues>.
-         *
-         *     On linux, there seems to be this kernel parameter that could be used:
-         *     `/sys/module/usbcore/parameters/usbfs_memory_mb`.
-         *
+         * Maximum size when asking for a USB bulk transfer.
          */
         g_object_class_install_property (
-                                         object_class, ARV_UV_STREAM_PROPERTY_MAXIMUM_TRANSFER_SIZE,
-                                         g_param_spec_uint64 ("maximum-transfer-size", "Maximum transfer size",
-                                                              "USB maximum transfer size",
-                                                              1024, 1024 * 1024 * 1024,
-                                                              ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE_DEFAULT,
-                                                              G_PARAM_CONSTRUCT | G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)
-                                        );
+                object_class, ARV_UV_STREAM_PROPERTY_MAXIMUM_TRANSFER_SIZE,
+                g_param_spec_uint64 ("maximum-transfer-size", "Maximum transfer size",
+                                     "USB maximum transfer size",
+                                     1024, 1024 * 1024 * 1024,
+                                     ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE_DEFAULT,
+                                     G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)
+                );
 }

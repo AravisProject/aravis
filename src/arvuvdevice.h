@@ -40,7 +40,8 @@ ARV_API ArvDevice * 	arv_uv_device_new 		(const char *vendor, const char *produc
                                                          const char *serial_number, GError **error);
 ARV_API ArvDevice * 	arv_uv_device_new_from_guid	(const char *guid, GError **error);
 
-ARV_API void 		arv_uv_device_set_usb_mode	(ArvUvDevice *uv_device, ArvUvUsbMode usb_mode);
+ARV_API void 		arv_uv_device_set_usb_mode	        (ArvUvDevice *uv_device, ArvUvUsbMode usb_mode);
+ARV_API void            arv_uv_device_set_maximum_transfer_size (ArvUvDevice *uv_device, guint64 size);
 
 G_END_DECLS
 

@@ -3881,6 +3881,39 @@ arv_camera_uv_set_usb_mode (ArvCamera *camera, ArvUvUsbMode usb_mode)
 }
 
 /**
+ * arv_camera_uv_set_maximum_transfer_size:
+ * @camera: a #ArvCamera
+ * @size: maximum bulk transfer size, in bytes
+ *
+ * Set the maximum size when asking for a USB bulk transfer. The default value should work most of the time, but you may
+ * have to tweak this setting in order to get reliable transfers.
+ *
+ * ::: note "Help needed"
+ *     It would be nice to be able to compute a working value for any OS/driver combination aravis is
+ *     running on. If someone knows how to do that, please open an issue (or event better, a merge request) on
+ *     the aravis [issue tracker]<https://github.com/AravisProject/aravis/issues>.
+ *
+ *     On linux, there seems to be this kernel parameter that could be used:
+ *     `/sys/module/usbcore/parameters/usbfs_memory_mb`.
+ *
+ * Since: 0.10.0
+ */
+
+void
+arv_camera_uv_set_maximum_transfer_size (ArvCamera *camera, guint64 size)
+{
+#if ARAVIS_HAS_USB
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+#endif
+
+	g_return_if_fail (arv_camera_is_uv_device (camera));
+
+#if ARAVIS_HAS_USB
+	arv_uv_device_set_maximum_transfer_size (ARV_UV_DEVICE (priv->device), size);
+#endif
+}
+
+/**
  * arv_camera_is_gentl_device:
  * @camera: a #ArvCamera
  *
