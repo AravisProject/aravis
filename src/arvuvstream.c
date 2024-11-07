@@ -36,15 +36,16 @@
 #include <libusb.h>
 #include <string.h>
 
-#define ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE	(1024*1024*1)
-#define ARV_UV_STREAM_MAXIMUM_SUBMIT_TOTAL	(8*1024*1024)
+#define ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE_DEFAULT	(1*1024*1024)
+#define ARV_UV_STREAM_N_MAXIMUM_SUBMITS                 8
 
 #define ARV_UV_STREAM_POP_INPUT_BUFFER_TIMEOUT_MS       10
 #define ARV_UV_STREAM_TRANSFER_WAIT_TIMEOUT_MS          10
 
 enum {
        ARV_UV_STREAM_PROPERTY_0,
-       ARV_UV_STREAM_PROPERTY_USB_MODE
+       ARV_UV_STREAM_PROPERTY_USB_MODE,
+       ARV_UV_STREAM_PROPERTY_MAXIMUM_TRANSFER_SIZE,
 } ArvUvStreamProperties;
 
 /* Acquisition thread */
@@ -82,6 +83,7 @@ typedef struct {
         guint32 payload_count;
         size_t transfer1_size;
 	size_t trailer_size;
+        guint64 maximum_transfer_size;
 
 	gboolean cancel;
 
@@ -99,6 +101,7 @@ typedef struct {
 	GThread *thread;
 	ArvUvStreamThreadData *thread_data;
 	ArvUvUsbMode usb_mode;
+        guint64 maximum_transfer_size;
 
         guint64 sirm_address;
 } ArvUvStreamPrivate;
@@ -123,6 +126,8 @@ typedef struct {
 
 	size_t total_payload_transferred;
         size_t expected_size;
+
+        guint64 maximum_submit_total;
 
 	guint8 *leader_buffer, *trailer_buffer;
 
@@ -381,6 +386,8 @@ arv_uv_stream_buffer_context_new (ArvBuffer *buffer, ArvUvStreamThreadData *thre
 	int i;
 	size_t offset = 0;
 
+        ctx = g_new0 (ArvUvStreamBufferContext, 1);
+
 	ctx->buffer = NULL;
 	ctx->stream = thread_data->stream;
         ctx->callback = thread_data->callback;
@@ -388,6 +395,7 @@ arv_uv_stream_buffer_context_new (ArvBuffer *buffer, ArvUvStreamThreadData *thre
 	ctx->transfer_completed_mtx = &thread_data->stream_mtx;
 	ctx->transfer_completed_event = &thread_data->stream_event;
         ctx->n_buffer_in_use = &thread_data->n_buffer_in_use;
+        ctx->maximum_submit_total = thread_data->maximum_transfer_size * ARV_UV_STREAM_N_MAXIMUM_SUBMITS;
 
 	ctx->leader_buffer = g_malloc (thread_data->leader_size);
 	ctx->leader_transfer = libusb_alloc_transfer (0);
@@ -465,7 +473,7 @@ static void
 _submit_transfer (ArvUvStreamBufferContext* ctx, struct libusb_transfer* transfer, gboolean* cancel)
 {
 	while (!g_atomic_int_get (cancel) &&
-               ((g_atomic_int_get(ctx->total_submitted_bytes) + transfer->length) > ARV_UV_STREAM_MAXIMUM_SUBMIT_TOTAL)) {
+               ((g_atomic_int_get(ctx->total_submitted_bytes) + transfer->length) > ctx->maximum_submit_total)) {
 		arv_uv_stream_buffer_context_wait_transfer_completed (ctx, ARV_UV_STREAM_TRANSFER_WAIT_TIMEOUT_MS);
 	}
 
@@ -666,7 +674,7 @@ arv_uv_stream_thread_sync (void *data)
 
 	arv_info_stream_thread ("Start sync USB3Vision stream thread");
 
-	incoming_buffer = g_malloc (ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE);
+	incoming_buffer = g_malloc (thread_data->maximum_transfer_size);
 
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->callback_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
@@ -684,7 +692,7 @@ arv_uv_stream_thread_sync (void *data)
 		transferred = 0;
 
 		if (buffer == NULL)
-			size = ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE;
+			size = thread_data->maximum_transfer_size;
 		else {
 			if (offset < buffer->priv->allocated_size)
 				size = MIN (thread_data->payload_size, buffer->priv->allocated_size - offset);
@@ -919,7 +927,10 @@ arv_uv_stream_start_acquisition (ArvStream *stream, GError **error)
 
 	arv_info_stream ("Required alignment    = %d", alignment);
 
-	aligned_maximum_transfer_size = ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE / alignment * alignment;
+        /* keep a non mutated copy of maximum_transfer_size during the thread lifetime */
+        thread_data->maximum_transfer_size = priv->maximum_transfer_size;
+
+	aligned_maximum_transfer_size = thread_data->maximum_transfer_size / alignment * alignment;
 
 	if (si_req_leader_size < 1) {
 		arv_warning_stream ("Wrong SI_REQ_LEADER_SIZE value, using %d instead", aligned_maximum_transfer_size);
@@ -1160,6 +1171,9 @@ arv_uv_stream_set_property (GObject * object, guint prop_id,
                case ARV_UV_STREAM_PROPERTY_USB_MODE:
                        priv->usb_mode = g_value_get_enum(value);
                        break;
+               case ARV_UV_STREAM_PROPERTY_MAXIMUM_TRANSFER_SIZE:
+                       priv->maximum_transfer_size = g_value_get_uint64(value);
+                       break;
                default:
                        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
                        break;
@@ -1237,4 +1251,29 @@ arv_uv_stream_class_init (ArvUvStreamClass *uv_stream_class)
                                    ARV_UV_USB_MODE_DEFAULT,
 				   G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)
 		);
+
+        /**
+         * ArvUvStream:maximum-transfer-size:
+         *
+         * Maximum size when asking for a USB bulk transfer. The default value should work most of the time, but you may
+         * have to tweak this setting in order to get reliable transfers. This property can be changed at any time, but
+         * it will only have effect the next acquisition start.
+         *
+         * ::: note "Help needed"
+         *     It would be nice to be able to compute a working value for any OS/driver combination aravis is
+         *     running on. If someone knows how to do that, please open an issue (or event better, a merge request) on
+         *     the aravis [issue tracker]<https://github.com/AravisProject/aravis/issues>.
+         *
+         *     On linux, there seems to be this kernel parameter that could be used:
+         *     `/sys/module/usbcore/parameters/usbfs_memory_mb`.
+         *
+         */
+        g_object_class_install_property (
+                                         object_class, ARV_UV_STREAM_PROPERTY_MAXIMUM_TRANSFER_SIZE,
+                                         g_param_spec_uint64 ("maximum-transfer-size", "Maximum transfer size",
+                                                              "USB maximum transfer size",
+                                                              1024, 1024 * 1024 * 1024,
+                                                              ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE_DEFAULT,
+                                                              G_PARAM_CONSTRUCT | G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)
+                                        );
 }
