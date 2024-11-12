@@ -7,7 +7,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Aravis.Camera:device</title>
+  <title>Aravis.UvStream:maximum-transfer-size</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <meta charset="utf-8" />
@@ -23,10 +23,10 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
 
   
-  <meta property="og:title" content="Aravis.Camera:device"/>
-  <meta property="og:description" content="Reference for property Aravis.Camera:device"/>
-  <meta name="twitter:title" content="Aravis.Camera:device"/>
-  <meta name="twitter:description" content="Reference for property Aravis.Camera:device"/>
+  <meta property="og:title" content="Aravis.UvStream:maximum-transfer-size"/>
+  <meta property="og:description" content="Reference for property Aravis.UvStream:maximum-transfer-size"/>
+  <meta name="twitter:title" content="Aravis.UvStream:maximum-transfer-size"/>
+  <meta name="twitter:description" content="Reference for property Aravis.UvStream:maximum-transfer-size"/>
 
 
   
@@ -82,16 +82,16 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <div class="section">
   <h5>Type</h5>
   <div class="links">
-    <a href="class.Camera.html">Camera</a>
+    <a href="class.UvStream.html">UvStream</a>
   </div>
 </div>
 <div class="section">
   <h5>Properties</h5>
   <div class="links">
   
-    <a class="property current"href="property.Camera.device.html">device</a>
+    <a class="property current"href="property.UvStream.maximum-transfer-size.html">maximum-transfer-size</a>
   
-    <a class="property"href="property.Camera.name.html">name</a>
+    <a class="property"href="property.UvStream.usb-mode.html">usb-mode</a>
   
   </div>
 </div>
@@ -107,7 +107,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <section id="main" class="content">
   <header>
     <h3>Property</h3>
-    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.Camera.html">Camera</a>:device</h1>
+    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.UvStream.html">UvStream</a>:maximum-transfer-size</h1>
   </header>
 
   <section>
@@ -121,7 +121,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
       </h4>
 
       <div class="docblock">
-        <pre><code>property device: Aravis.Device [ read, write, construct-only ]</code></pre>
+        <pre><code>property maximum-transfer-size: guint64 [ write, construct-only ]</code></pre>
       </div>
     </div>
 
@@ -130,30 +130,22 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Description
         <a href="#description" class="anchor"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvcamera.c#L4418">[src]</a>
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvuvstream.c#L1256">[src]</a>
         
       </h4>
 
       <div class="docblock">
-        <p>Internal device&nbsp;object.</p>
+        <p>Maximum size when asking for a <span class="caps">USB</span> bulk&nbsp;transfer.</p>
       </div>
 
       <div class="docblock">
         <p>
-          Type:<a href="class.Device.html"><code>ArvDevice</code></a></p>
-        <p>Stability: Private</p>
+          Type:<code>guint64</code></p>
+        
         
         
       </div>
 
-      
-      <div class="docblock">
-        <table>
-        
-          <tr><td>Getter method</td><td><a href="method.Camera.get_device.html"><code>arv_camera_get_device()</code></a></td></tr>
-        
-        </table>
-      </div>
       
     </div>
 
@@ -165,7 +157,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 
       <div class="docblock">
       <table>
-        <tr><td>Readable</td><td><b>yes</b></td></tr>
+        <tr><td>Readable</td><td><b>no</b></td></tr>
         <tr><td>Writable</td><td><b>yes</b></td></tr>
         <tr><td>Construct</td><td><b>no</b></td></tr>
         <tr><td>Construct only</td><td><b>yes</b></td></tr>
