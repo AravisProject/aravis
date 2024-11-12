@@ -924,6 +924,19 @@ arv_uv_stream_start_acquisition (ArvStream *stream, GError **error)
 
 	arv_info_stream ("Required alignment    = %d", alignment);
 
+        if (alignment == 0) {
+                g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
+                             "Device returned an invalid USB alignment");
+                return FALSE;
+        }
+
+        if (alignment > priv->maximum_transfer_size) {
+                g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,
+                             "Invalid USB maximum transfer size (%" G_GINT64_MODIFIER "u)",
+                             priv->maximum_transfer_size);
+                return FALSE;
+        }
+
         /* keep a non mutated copy of maximum_transfer_size during the thread lifetime */
         thread_data->maximum_transfer_size = priv->maximum_transfer_size;
 
