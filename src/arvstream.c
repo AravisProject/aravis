@@ -757,7 +757,6 @@ arv_stream_create_buffers (ArvStream *stream, unsigned int n_buffers,
                         }
                 }
 
-
                 return success;
         }
 

@@ -693,7 +693,7 @@ arv_gentl_stream_create_buffers (ArvStream *stream, guint n_buffers, size_t size
                 arv_stream_push_buffer (stream, buffer);
         }
 
-        return gc_error = GC_ERR_SUCCESS;
+        return gc_error == GC_ERR_SUCCESS;
 }
 
 /**
