@@ -723,44 +723,51 @@ main (int argc, char **argv)
 									     emit_software_trigger, camera);
 			    }
 
-			    arv_camera_start_acquisition (camera, NULL);
+                            g_clear_error (&error);
+			    arv_camera_start_acquisition (camera, &error);
+                            if (error == NULL) {
 
-			    g_signal_connect (stream, "new-buffer", G_CALLBACK (new_buffer_cb), &data);
-			    arv_stream_set_emit_signals (stream, TRUE);
+                                    g_signal_connect (stream, "new-buffer", G_CALLBACK (new_buffer_cb), &data);
+                                    arv_stream_set_emit_signals (stream, TRUE);
 
-			    g_signal_connect (arv_camera_get_device (camera), "control-lost",
-					      G_CALLBACK (control_lost_cb), NULL);
+                                    g_signal_connect (arv_camera_get_device (camera), "control-lost",
+                                                      G_CALLBACK (control_lost_cb), NULL);
 
-                            data.start_time = g_get_monotonic_time();
+                                    data.start_time = g_get_monotonic_time();
 
-			    g_timeout_add (1000, periodic_task_cb, &data);
+                                    g_timeout_add (1000, periodic_task_cb, &data);
 
-			    data.main_loop = g_main_loop_new (NULL, FALSE);
+                                    data.main_loop = g_main_loop_new (NULL, FALSE);
 
-			    old_sigint_handler = signal (SIGINT, set_cancel);
+                                    old_sigint_handler = signal (SIGINT, set_cancel);
 
-			    g_main_loop_run (data.main_loop);
+                                    g_main_loop_run (data.main_loop);
 
-			    if (software_trigger_source > 0)
-				    g_source_remove (software_trigger_source);
+                                    if (software_trigger_source > 0)
+                                            g_source_remove (software_trigger_source);
 
-			    signal (SIGINT, old_sigint_handler);
+                                    signal (SIGINT, old_sigint_handler);
 
-			    g_main_loop_unref (data.main_loop);
+                                    g_main_loop_unref (data.main_loop);
 
-			    arv_stream_get_statistics (stream, &n_completed_buffers, &n_failures, &n_underruns);
+                                    arv_stream_get_statistics (stream, &n_completed_buffers, &n_failures, &n_underruns);
 
-                            for (i = 0; i < arv_stream_get_n_infos (stream); i++) {
-                                    if (arv_stream_get_info_type (stream, i) == G_TYPE_UINT64) {
-                                            g_print ("%-22s = %" G_GUINT64_FORMAT "\n",
-                                                     arv_stream_get_info_name (stream, i),
-                                                     arv_stream_get_info_uint64 (stream, i));
+                                    for (i = 0; i < arv_stream_get_n_infos (stream); i++) {
+                                            if (arv_stream_get_info_type (stream, i) == G_TYPE_UINT64) {
+                                                    g_print ("%-22s = %" G_GUINT64_FORMAT "\n",
+                                                             arv_stream_get_info_name (stream, i),
+                                                             arv_stream_get_info_uint64 (stream, i));
+                                            }
                                     }
+
+                                    arv_camera_stop_acquisition (camera, NULL);
+
+                                    arv_stream_set_emit_signals (stream, FALSE);
+                            } else {
+                                    printf ("Failed to start acquisition (%s)\n",
+                                            error->message);
+                                    g_clear_error (&error);
                             }
-
-			    arv_camera_stop_acquisition (camera, NULL);
-
-			    arv_stream_set_emit_signals (stream, FALSE);
 
 			    g_object_unref (stream);
 		    } else {
