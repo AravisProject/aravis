@@ -1,3 +1,34 @@
+Development release 0.9.0
+=========================
+
+  * v4l2, USB3Vision: native buffer allocation (Emmanuel)
+  * GenTL producer: experimental implementation (Václav)
+  * GenTL consumer: experimental implementation (Xiaoqiang)
+  * v4l2 interface: experimental implementation (Emmanuel)
+  * USB3Vision: make maximum transfer size configurable (Emmanuel)
+  * gst: add gamma property (WhaSukGO)
+
+Stable release 0.8.33
+=====================
+
+  * viewer: ignore exposure time feature representation (Emmanuel)
+
+Stable release 0.8.32
+=====================
+
+  * viewer: workaround for Blackfly Mono16 pixel endianness issue (Berke)
+  * gst: disconnect camera in stop method #907 (Emmanuel)
+  * gst: stream object accessor (Marko)
+  * gst: camera change signal (Marko)
+  * gst: stream change signal (Marko)
+  * gst: allow software trigger (WhaSukGo)
+  * gvsp: fix chunk detection (Marco)
+  * gv_device: crach fix on finalization (Marco)
+  * Fix device_write_memory rust binding (Jacob)
+  * introspection: add generic feature value accessors (Marko)
+  * chore: fix libxml2 deprecation warnings (Emmanuel)
+  * chore: appstream fixes (Chiara)
+
 Stable release 0.8.31
 =====================
 
