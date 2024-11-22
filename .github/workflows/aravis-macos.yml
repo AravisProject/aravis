@@ -27,7 +27,7 @@ jobs:
         brew install meson ninja gcc gettext intltool libxml2 libusb gstreamer gnome-icon-theme gobject-introspection glib
     - name: Build
       run: |
-        meson --buildtype=plain -Ddocumentation=disabled -Dgst-plugin=enabled -Dintrospection=disabled -Dusb=enabled -Dviewer=enabled -Dgentl-producer=true . ./build
+        meson setup --buildtype=plain -Ddocumentation=disabled -Dgst-plugin=enabled -Dintrospection=disabled -Dusb=enabled -Dviewer=enabled -Dgentl-producer=true . ./build
         ninja -C ./build
       env:
         CC: gcc
