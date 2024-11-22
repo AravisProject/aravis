@@ -146,8 +146,8 @@ _handle_control_packet (ArvGvFakeCamera *gv_fake_camera, GSocket *socket,
 
 	arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_DEBUG);
 
-	packet_id = arv_gvcp_packet_get_packet_id (packet);
-	packet_type = arv_gvcp_packet_get_packet_type (packet);
+	packet_id = arv_gvcp_packet_get_packet_id (packet, size);
+	packet_type = arv_gvcp_packet_get_packet_type (packet, size);
 
 	if (packet_type != ARV_GVCP_PACKET_TYPE_CMD) {
 		arv_warning_device ("[GvFakeCamera::handle_control_packet] Unknown packet type");
@@ -162,7 +162,7 @@ _handle_control_packet (ArvGvFakeCamera *gv_fake_camera, GSocket *socket,
 						     &ack_packet->data);
 			break;
 		case ARV_GVCP_COMMAND_READ_MEMORY_CMD:
-			arv_gvcp_packet_get_read_memory_cmd_infos (packet, &block_address, &block_size);
+			arv_gvcp_packet_get_read_memory_cmd_infos (packet, size, &block_address, &block_size);
 			arv_info_device ("[GvFakeCamera::handle_control_packet] Read memory command %d (%d)",
 					  block_address, block_size);
 			ack_packet = arv_gvcp_packet_new_read_memory_ack (block_address, block_size,
@@ -171,9 +171,10 @@ _handle_control_packet (ArvGvFakeCamera *gv_fake_camera, GSocket *socket,
 						     arv_gvcp_packet_get_read_memory_ack_data (ack_packet));
 			break;
 		case ARV_GVCP_COMMAND_WRITE_MEMORY_CMD:
-			arv_gvcp_packet_get_write_memory_cmd_infos (packet, &block_address, &block_size);
+			arv_gvcp_packet_get_write_memory_cmd_infos (packet, size, &block_address, &block_size);
 			if (!write_access) {
-				arv_warning_device("[GvFakeCamera::handle_control_packet] Ignore Write memory command %d (%d) not controller",
+				arv_warning_device("[GvFakeCamera::handle_control_packet]"
+                                                   " Ignore Write memory command %d (%d) not controller",
 					block_address, block_size);
 				break;
 			}
@@ -186,7 +187,7 @@ _handle_control_packet (ArvGvFakeCamera *gv_fake_camera, GSocket *socket,
 									   &ack_packet_size);
 			break;
 		case ARV_GVCP_COMMAND_READ_REGISTER_CMD:
-			arv_gvcp_packet_get_read_register_cmd_infos (packet, &register_address);
+			arv_gvcp_packet_get_read_register_cmd_infos (packet, size, &register_address);
 			arv_fake_camera_read_register (gv_fake_camera->priv->camera, register_address, &register_value);
 			arv_info_device ("[GvFakeCamera::handle_control_packet] Read register command %d -> %d",
 					  register_address, register_value);
@@ -198,9 +199,10 @@ _handle_control_packet (ArvGvFakeCamera *gv_fake_camera, GSocket *socket,
 
 			break;
 		case ARV_GVCP_COMMAND_WRITE_REGISTER_CMD:
-			arv_gvcp_packet_get_write_register_cmd_infos (packet, &register_address, &register_value);
+			arv_gvcp_packet_get_write_register_cmd_infos (packet, size, &register_address, &register_value);
 			if (!write_access) {
-				arv_warning_device("[GvFakeCamera::handle_control_packet] Ignore Write register command %d (%d) not controller",
+				arv_warning_device("[GvFakeCamera::handle_control_packet]"
+                                                   " Ignore Write register command %d (%d) not controller",
 					register_address, register_value);
 				break;
 			}
