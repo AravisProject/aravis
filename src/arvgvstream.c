@@ -387,7 +387,7 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
                 if (thread_data->callback != NULL)
                         thread_data->callback (thread_data->callback_data,
                                                ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
-                                               frame->buffer);
+                                               buffer);
                 return NULL;
         }
 
