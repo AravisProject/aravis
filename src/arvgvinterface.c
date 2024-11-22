@@ -244,12 +244,16 @@ typedef struct {
 
 static ArvGvInterfaceDeviceInfos *
 arv_gv_interface_device_infos_new (GInetAddress *interface_address,
-				   void *discovery_data)
+				   ArvGvcpPacket *packet, size_t packet_size)
 {
 	ArvGvInterfaceDeviceInfos *infos;
+        char *discovery_data = (char *) ((char *) packet) + sizeof (ArvGvcpHeader);
 
 	g_return_val_if_fail (G_IS_INET_ADDRESS (interface_address), NULL);
-	g_return_val_if_fail (discovery_data != NULL, NULL);
+	g_return_val_if_fail (packet != NULL, NULL);
+
+        if (packet_size < sizeof (ArvGvcpPacket) + ARV_GVBS_DISCOVERY_DATA_SIZE)
+                return NULL;
 
 	g_object_ref (interface_address);
 
@@ -399,71 +403,76 @@ _discover (GHashTable *devices, const char *device_id, gboolean allow_broadcast_
 							  NULL, NULL);
 				g_socket_set_blocking (discover_socket->socket, TRUE);
 
-				if (count > 0) {
+				if G_LIKELY (count >= (int) sizeof (ArvGvcpPacket)) {
 					ArvGvcpPacket *packet = (ArvGvcpPacket *) buffer;
+                                        ArvGvcpCommand command = arv_gvcp_packet_get_command (packet, count);
+                                        guint16 packet_id = arv_gvcp_packet_get_packet_id(packet, count);
 
-					if (g_ntohs (packet->header.command) == ARV_GVCP_COMMAND_DISCOVERY_ACK &&
-					    g_ntohs (packet->header.id) == 0xffff) {
+					if (command == ARV_GVCP_COMMAND_DISCOVERY_ACK &&
+					    packet_id == 0xffff) {
 						ArvGvInterfaceDeviceInfos *device_infos;
 						GInetAddress *interface_address;
 						char *address_string;
-						char *data = buffer + sizeof (ArvGvcpHeader);
 
 						arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_DEBUG);
 
 						interface_address = g_inet_socket_address_get_address
 							(G_INET_SOCKET_ADDRESS (discover_socket->interface_address));
 						device_infos = arv_gv_interface_device_infos_new (interface_address,
-												  data);
-						address_string = g_inet_address_to_string (interface_address);
+												  packet, count);
 
-						arv_info_interface ("[GvInterface::discovery] Device '%s' found "
-								     "(interface %s) user_id '%s' - MAC '%s'",
-								     device_infos->id,
-								     address_string,
-								     device_infos->user_id,
-								     device_infos->mac);
+                                                if (device_infos != NULL) {
+                                                        address_string = g_inet_address_to_string (interface_address);
+                                                        arv_info_interface ("[GvInterface::discovery] Device '%s' found "
+                                                                            "(interface %s) user_id '%s' - MAC '%s'",
+                                                                            device_infos->id,
+                                                                            address_string,
+                                                                            device_infos->user_id,
+                                                                            device_infos->mac);
 
-						g_free (address_string);
+                                                        g_free (address_string);
 
-						if (devices != NULL) {
-							if (device_infos->id != NULL &&
-                                                            device_infos->id[0] != '\0')
-								g_hash_table_replace
-                                                                        (devices, device_infos->id,
-                                                                         arv_gv_interface_device_infos_ref (device_infos));
-                                                        if (device_infos->user_id != NULL &&
-                                                            device_infos->user_id[0] != '\0')
+                                                        if (devices != NULL) {
+                                                                if (device_infos->id != NULL &&
+                                                                    device_infos->id[0] != '\0')
+                                                                        g_hash_table_replace
+                                                                                (devices, device_infos->id,
+                                                                                 arv_gv_interface_device_infos_ref (device_infos));
+                                                                if (device_infos->user_id != NULL &&
+                                                                    device_infos->user_id[0] != '\0')
+                                                                        g_hash_table_replace
+                                                                                (devices, device_infos->user_id,
+                                                                                 arv_gv_interface_device_infos_ref (device_infos));
+                                                                if (device_infos->vendor_serial != NULL &&
+                                                                    device_infos->vendor_serial[0] != '\0')
+                                                                        g_hash_table_replace
+                                                                                (devices, device_infos->vendor_serial,
+                                                                                 arv_gv_interface_device_infos_ref (device_infos));
+                                                                if (device_infos->vendor_alias_serial != NULL &&
+                                                                    device_infos->vendor_alias_serial[0] != '\0')
+                                                                        g_hash_table_replace
+                                                                                (devices, device_infos->vendor_alias_serial,
+                                                                                 arv_gv_interface_device_infos_ref (device_infos));
                                                                 g_hash_table_replace
-                                                                        (devices, device_infos->user_id,
+                                                                        (devices, device_infos->mac,
                                                                          arv_gv_interface_device_infos_ref (device_infos));
-                                                        if (device_infos->vendor_serial != NULL &&
-                                                            device_infos->vendor_serial[0] != '\0')
-                                                                g_hash_table_replace
-                                                                        (devices, device_infos->vendor_serial,
-                                                                         arv_gv_interface_device_infos_ref (device_infos));
-                                                        if (device_infos->vendor_alias_serial != NULL &&
-                                                            device_infos->vendor_alias_serial[0] != '\0')
-                                                                g_hash_table_replace
-                                                                        (devices, device_infos->vendor_alias_serial,
-                                                                         arv_gv_interface_device_infos_ref (device_infos));
-                                                        g_hash_table_replace
-                                                                (devices, device_infos->mac,
-                                                                 arv_gv_interface_device_infos_ref (device_infos));
+                                                        } else {
+                                                                if (device_id == NULL ||
+                                                                    g_strcmp0 (device_infos->id, device_id) == 0 ||
+                                                                    g_strcmp0 (device_infos->user_id, device_id) == 0 ||
+                                                                    g_strcmp0 (device_infos->vendor_serial, device_id) == 0 ||
+                                                                    g_strcmp0 (device_infos->vendor_alias_serial, device_id) == 0 ||
+                                                                    g_strcmp0 (device_infos->mac, device_id) == 0) {
+                                                                        arv_gv_discover_socket_list_free (socket_list);
+
+                                                                        return device_infos;
+                                                                }
+                                                        }
+
+                                                        arv_gv_interface_device_infos_unref (device_infos);
                                                 } else {
-                                                        if (device_id == NULL ||
-                                                            g_strcmp0 (device_infos->id, device_id) == 0 ||
-                                                            g_strcmp0 (device_infos->user_id, device_id) == 0 ||
-                                                            g_strcmp0 (device_infos->vendor_serial, device_id) == 0 ||
-                                                            g_strcmp0 (device_infos->vendor_alias_serial, device_id) == 0 ||
-                                                            g_strcmp0 (device_infos->mac, device_id) == 0) {
-                                                                arv_gv_discover_socket_list_free (socket_list);
-
-								return device_infos;
-							}
-						}
-
-						arv_gv_interface_device_infos_unref (device_infos);
+                                                        arv_warning_interface ("Received invalid discovery ack packet");
+                                                }
 					}
 				}
 			} while (count > 0);
@@ -621,9 +630,10 @@ arv_gv_interface_camera_locate (ArvGvInterface *gv_interface, GInetAddress *devi
 
 				if (count > 0) {
 					ArvGvcpPacket *packet = (ArvGvcpPacket *) buffer;
+                                        ArvGvcpCommand command = arv_gvcp_packet_get_command (packet, count);
 
-					if (g_ntohs (packet->header.command) == ARV_GVCP_COMMAND_READ_REGISTER_CMD ||
-							g_ntohs (packet->header.command) == ARV_GVCP_COMMAND_READ_REGISTER_ACK) {
+					if (command == ARV_GVCP_COMMAND_READ_REGISTER_CMD ||
+                                            command == ARV_GVCP_COMMAND_READ_REGISTER_ACK) {
 						GInetAddress *interface_address = g_inet_socket_address_get_address(
 								G_INET_SOCKET_ADDRESS (socket->interface_address));
 

@@ -357,9 +357,9 @@ void 			arv_gvcp_packet_debug 			(const ArvGvcpPacket *packet, ArvDebugLevel lev
  */
 
 static inline ArvGvcpPacketType
-arv_gvcp_packet_get_packet_type (ArvGvcpPacket *packet)
+arv_gvcp_packet_get_packet_type (ArvGvcpPacket *packet, size_t size)
 {
-	if (packet == NULL)
+	if G_UNLIKELY(packet == NULL || size < sizeof (ArvGvcpPacket))
 		return ARV_GVCP_PACKET_TYPE_ERROR;
 
 	return (ArvGvcpPacketType) packet->header.packet_type;
@@ -373,9 +373,9 @@ arv_gvcp_packet_get_packet_type (ArvGvcpPacket *packet)
  */
 
 static inline guint8
-arv_gvcp_packet_get_packet_flags (ArvGvcpPacket *packet)
+arv_gvcp_packet_get_packet_flags (ArvGvcpPacket *packet, size_t size)
 {
-	if (packet == NULL)
+	if G_UNLIKELY(packet == NULL || size < sizeof (ArvGvcpPacket))
 		return 0;
 
 	return (ArvGvcpPacketType) packet->header.packet_flags;
@@ -389,40 +389,42 @@ arv_gvcp_packet_get_packet_flags (ArvGvcpPacket *packet)
  */
 
 static inline ArvGvcpCommand
-arv_gvcp_packet_get_command (ArvGvcpPacket *packet)
+arv_gvcp_packet_get_command (ArvGvcpPacket *packet, size_t size)
 {
-	if (packet == NULL)
+	if G_UNLIKELY(packet == NULL || size < sizeof (ArvGvcpPacket))
 		return (ArvGvcpCommand) 0;
 
 	return (ArvGvcpCommand) g_ntohs (packet->header.command);
 }
 
 static inline void
-arv_gvcp_packet_set_packet_id (ArvGvcpPacket *packet, guint16 id)
+arv_gvcp_packet_set_packet_id (ArvGvcpPacket *packet, guint16 id, size_t size)
 {
-	if (packet != NULL)
+	if G_UNLIKELY(packet != NULL && size >= sizeof (ArvGvcpPacket))
 		packet->header.id = g_htons (id);
 }
 
 static inline guint16
-arv_gvcp_packet_get_packet_id (ArvGvcpPacket *packet)
+arv_gvcp_packet_get_packet_id (ArvGvcpPacket *packet, size_t size)
 {
-	if (packet == NULL)
+	if G_UNLIKELY(packet == NULL || size < sizeof (ArvGvcpPacket))
 		return 0;
 
 	return g_ntohs (packet->header.id);
 }
 
 static inline void
-arv_gvcp_packet_get_read_memory_cmd_infos (const ArvGvcpPacket *packet, guint32 *address, guint32 *size)
+arv_gvcp_packet_get_read_memory_cmd_infos (const ArvGvcpPacket *packet, size_t packet_size,
+                                           guint32 *address, guint32 *size)
 {
-	if (packet == NULL) {
+	if G_UNLIKELY(packet == NULL || packet_size < sizeof (ArvGvcpPacket) + 2 * sizeof (guint32)) {
 		if (address != NULL)
 			*address = 0;
 		if (size != NULL)
 			*size = 0;
 		return;
 	}
+
 	if (address != NULL)
 		*address = g_ntohl (*((guint32 *) ((char *) packet + sizeof (ArvGvcpPacket))));
 	if (size != NULL)
@@ -443,25 +445,21 @@ arv_gvcp_packet_get_read_memory_ack_data (const ArvGvcpPacket *packet)
 }
 
 static inline void
-arv_gvcp_packet_get_write_memory_cmd_infos (const ArvGvcpPacket *packet, guint32 *address, guint32 *size)
+arv_gvcp_packet_get_write_memory_cmd_infos (const ArvGvcpPacket *packet, size_t packet_size,
+                                            guint32 *address, guint32 *size)
 {
-	if (packet == NULL) {
+	if G_UNLIKELY(packet == NULL || packet_size < sizeof (ArvGvcpPacket) + sizeof (guint32)) {
 		if (address != NULL)
 			*address = 0;
 		if (size != NULL)
 			*size = 0;
 		return;
 	}
+
 	if (address != NULL)
 		*address = g_ntohl (*((guint32 *) ((char *) packet + sizeof (ArvGvcpPacket))));
 	if (size != NULL)
 		*size = g_ntohs (packet->header.size) - sizeof (guint32);
-}
-
-static inline void *
-arv_gvcp_packet_get_write_memory_cmd_data (const ArvGvcpPacket *packet)
-{
-	return (char *) packet + sizeof (ArvGvcpPacket) + sizeof (guint32);
 }
 
 static inline size_t
@@ -470,24 +468,24 @@ arv_gvcp_packet_get_write_memory_ack_size (void)
 	return sizeof (ArvGvcpPacket) + sizeof (guint32);
 }
 
-static inline void
-arv_gvcp_packet_get_read_register_cmd_infos (const ArvGvcpPacket *packet, guint32 *address)
+static inline void *
+arv_gvcp_packet_get_write_memory_cmd_data (const ArvGvcpPacket *packet)
 {
-	if (packet == NULL) {
+	return (char *) packet + sizeof (ArvGvcpPacket) + sizeof (guint32);
+}
+
+static inline void
+arv_gvcp_packet_get_read_register_cmd_infos (const ArvGvcpPacket *packet, size_t packet_size,
+                                             guint32 *address)
+{
+	if G_UNLIKELY(packet == NULL || packet_size < sizeof (ArvGvcpPacket) + sizeof (guint32)) {
 		if (address != NULL)
 			*address = 0;
 		return;
 	}
+
 	if (address != NULL)
 		*address = g_ntohl (*((guint32 *) ((char *) packet + sizeof (ArvGvcpPacket))));
-}
-
-static inline guint32
-arv_gvcp_packet_get_read_register_ack_value (const ArvGvcpPacket *packet)
-{
-	if (packet == NULL)
-		return 0;
-	return g_ntohl (*((guint32 *) ((char *) packet + sizeof (ArvGvcpPacket))));
 }
 
 static inline size_t
@@ -496,16 +494,27 @@ arv_gvcp_packet_get_read_register_ack_size (void)
 	return sizeof (ArvGvcpHeader) + sizeof (guint32);
 }
 
-static inline void
-arv_gvcp_packet_get_write_register_cmd_infos (const ArvGvcpPacket *packet, guint32 *address, guint32 *value)
+static inline guint32
+arv_gvcp_packet_get_read_register_ack_value (const ArvGvcpPacket *packet, size_t packet_size)
 {
-	if (packet == NULL) {
+	if G_UNLIKELY(packet == NULL || packet_size < arv_gvcp_packet_get_read_register_ack_size())
+		return 0;
+
+	return g_ntohl (*((guint32 *) ((char *) packet + sizeof (ArvGvcpPacket))));
+}
+
+static inline void
+arv_gvcp_packet_get_write_register_cmd_infos (const ArvGvcpPacket *packet, size_t packet_size,
+                                              guint32 *address, guint32 *value)
+{
+	if G_UNLIKELY(packet == NULL || packet_size < sizeof (ArvGvcpPacket) + 2 * sizeof (guint32)) {
 		if (address != NULL)
 			*address = 0;
 		if (value != NULL)
 			*value = 0;
 		return;
 	}
+
 	if (address != NULL)
 		*address = g_ntohl (*((guint32 *) ((char *) packet + sizeof (ArvGvcpPacket))));
 	if (value != NULL)
@@ -543,9 +552,12 @@ arv_gvcp_packet_get_pending_ack_size (void)
  */
 
 static inline guint32
-arv_gvcp_packet_get_pending_ack_timeout (const ArvGvcpPacket *packet)
+arv_gvcp_packet_get_pending_ack_timeout (const ArvGvcpPacket *packet, size_t packet_size)
 {
-	return packet != NULL ? g_ntohl (*((guint32 *) ((char *) packet + sizeof (ArvGvcpPacket)))) : 0;
+	if G_UNLIKELY(packet == NULL || packet_size < sizeof (ArvGvcpPacket) + sizeof (guint32))
+                return 0;
+
+	return g_ntohl (*((guint32 *) ((char *) packet + sizeof (ArvGvcpPacket))));
 }
 
 G_END_DECLS
