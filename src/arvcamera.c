@@ -884,7 +884,7 @@ arv_camera_abort_acquisition (ArvCamera *camera, GError **error)
  *   Continuous acquisition mode for later operations, using arv_camera_set_acquisition_mode().</para>
  * </warning>
  *
- * Returns: (transfer full): A new #ArvBuffer, NULL on error. The returned buffer must be freed using
+ * Returns: (transfer full) (nullable): A new #ArvBuffer, NULL on error or if timed out. The returned buffer must be freed using
  * [method@GObject.Object.unref].
  *
  * Since: 0.8.0
