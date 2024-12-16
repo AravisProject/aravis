@@ -141,7 +141,7 @@ arv_stream_pop_buffer (ArvStream *stream)
  *
  * This method is thread safe.
  *
- * Returns: (transfer full): a #ArvBuffer, NULL if no buffer is available.
+ * Returns: (transfer full) (nullable): a #ArvBuffer, NULL if no buffer is available.
  *
  * Since: 0.2.0
  */
@@ -166,7 +166,7 @@ arv_stream_try_pop_buffer (ArvStream *stream)
  *
  * This method is thread safe.
  *
- * Returns: (transfer full): a #ArvBuffer, NULL if no buffer is available until the timeout occurs.
+ * Returns: (transfer full) (nullable): a #ArvBuffer, NULL if no buffer is available until the timeout occurs.
  *
  * Since: 0.2.0
  */
