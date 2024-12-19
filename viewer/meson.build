@@ -19,6 +19,13 @@ viewer_c_args = [
 	'-DARAVIS_GETTEXT="aravis-@0@"'.format (aravis_api_version)
 ]
 
+viewer_include_dir = get_option ('includedir') / 'aravis-@0@'.format (aravis_api_version)
+
+features_viewer_config_data = configuration_data ()
+features_viewer_config_data.set10 ('ARAVIS_HAS_TIFF', tiff_dep.found())
+configure_file (input: 'arvviewerfeatures.h.in', output: 'arvviewerfeatures.h',
+		configuration: features_viewer_config_data, install_dir: viewer_include_dir)
+		
 viewer_resources = gnome.compile_resources (
 	'arvviewerresources', 'arvviewerresources.xml'
 	)
