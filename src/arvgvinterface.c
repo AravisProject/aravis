@@ -95,18 +95,22 @@ arv_gv_discover_socket_list_new (void)
 		ArvGvDiscoverSocket *discover_socket = g_new0 (ArvGvDiscoverSocket, 1);
 		GSocketAddress *socket_address;
 		GSocketAddress *socket_broadcast;
+		GInetAddress *any_address;
 		GInetAddress *inet_address;
 		GInetAddress *inet_broadcast;
 		char *inet_address_string;
 		char *inet_broadcast_string;
 		GError *error = NULL;
 		gint buffer_size = ARV_GV_INTERFACE_DISCOVERY_SOCKET_BUFFER_SIZE;
+		int socket_fd;
+		const char *interface_name;
+
 		socket_address = g_socket_address_new_from_native (arv_network_interface_get_addr(iface_iter->data),
 									sizeof (struct sockaddr));
 		socket_broadcast = g_socket_address_new_from_native (arv_network_interface_get_broadaddr(iface_iter->data),
 									sizeof (struct sockaddr));
 		inet_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_address));
-                inet_broadcast = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_broadcast));
+		inet_broadcast = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (socket_broadcast));
 		inet_address_string = g_inet_address_to_string (inet_address);
 		inet_broadcast_string = g_inet_address_to_string (inet_broadcast);
 		arv_info_interface ("[GvDiscoverSocket::new] Add interface %s (%s)", inet_address_string, inet_broadcast_string);
@@ -118,23 +122,31 @@ arv_gv_discover_socket_list_new (void)
 							G_SOCKET_TYPE_DATAGRAM,
 							G_SOCKET_PROTOCOL_UDP, NULL);
 		arv_socket_set_recv_buffer_size (g_socket_get_fd (discover_socket->socket), buffer_size);
+		interface_name = arv_network_interface_get_name (iface_iter->data);
+		socket_fd = g_socket_get_fd(discover_socket->socket);
+		if (setsockopt (socket_fd, SOL_SOCKET, SO_BINDTODEVICE, interface_name, strlen (interface_name)) == 0) {
+			any_address = g_inet_address_new_any (G_SOCKET_FAMILY_IPV4);
+			discover_socket->interface_address = arv_socket_bind_with_range (discover_socket->socket, any_address,
+																				0, FALSE, &error);
+			g_object_unref (any_address);
+		} else {
+			discover_socket->interface_address = arv_socket_bind_with_range (discover_socket->socket, inet_address,
+																				0, FALSE, &error);
 
-                discover_socket->interface_address = arv_socket_bind_with_range (discover_socket->socket, inet_address,
-                                                                                 0, FALSE, &error);
+			g_object_unref (socket_address);
+			g_object_unref (socket_broadcast);
 
-		g_object_unref (socket_address);
-		g_object_unref (socket_broadcast);
-
-                if (G_IS_INET_SOCKET_ADDRESS (discover_socket->interface_address)) {
-                        socket_list->sockets = g_slist_prepend (socket_list->sockets, discover_socket);
-                        socket_list->n_sockets++;
-                } else {
-                        arv_warning_interface ("Failed to bind discovery socket: %s",
-                                               error != NULL ? error->message : "Unknown reason");
-                        arv_gv_discover_socket_free (discover_socket);
-                }
-        }
-        g_list_free_full (ifaces, (GDestroyNotify) arv_network_interface_free);
+			if (G_IS_INET_SOCKET_ADDRESS (discover_socket->interface_address)) {
+				socket_list->sockets = g_slist_prepend (socket_list->sockets, discover_socket);
+				socket_list->n_sockets++;
+			} else {
+				arv_warning_interface ("Failed to bind discovery socket: %s",
+										error != NULL ? error->message : "Unknown reason");
+				arv_gv_discover_socket_free (discover_socket);
+			}
+		}
+	}
+	g_list_free_full (ifaces, (GDestroyNotify) arv_network_interface_free);
 
 	socket_list->poll_fds = g_new (GPollFD, socket_list->n_sockets);
 	for (i = 0, iter = socket_list->sockets; iter != NULL; i++, iter = iter->next) {
