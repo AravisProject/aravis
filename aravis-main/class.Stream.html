@@ -232,7 +232,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         <div class="docblock">
           <p><code>ArvStream</code> provides an abstract base class for the implementation of video
 stream reception threads. The interface between the reception thread and the
-main thread is done using asynchronous queues, containing <code>ArvBuffer</code>
+main thread is done using asynchronous queues,&nbsp;containing <code>ArvBuffer</code>
 objects.</p>
         </div>
 
@@ -442,7 +442,7 @@ deleting/recreating the stream&nbsp;object.</p>
         <div class="">
           <h6><a href="method.Stream.pop_buffer.html">arv_stream_pop_buffer</a></h6>
           <div class="docblock">
-            <p>Pops a buffer from the output queue of <code>stream</code>. The retrieved buffer
+            <p>Pops a buffer from the output queue&nbsp;of <code>stream</code>. The retrieved buffer
 may contain an invalid image. Caller should check the buffer status before using it.
 This function blocks until a buffer is&nbsp;available.</p>
           </div>
@@ -454,7 +454,7 @@ This function blocks until a buffer is&nbsp;available.</p>
         <div class="">
           <h6><a href="method.Stream.push_buffer.html">arv_stream_push_buffer</a></h6>
           <div class="docblock">
-            <p>Pushes a <code>ArvBuffer</code> to the <code>stream</code> thread. The <code>stream</code> takes ownership of <code>buffer</code>,
+            <p>Pushes&nbsp;a <code>ArvBuffer</code> to&nbsp;the <code>stream</code> thread.&nbsp;The <code>stream</code> takes ownership&nbsp;of <code>buffer</code>,
 and will free all the buffers still in its queues when&nbsp;destroyed.</p>
           </div>
           <div class="docblock">
@@ -477,7 +477,7 @@ the application prefers to operate in pull&nbsp;mode.</p>
         <div class="">
           <h6><a href="method.Stream.start_acquisition.html">arv_stream_start_acquisition</a></h6>
           <div class="docblock">
-            <p>Start the stream acquisition. This has to be done before the <code>AcquisitionStart</code> feature is executed.
+            <p>Start the stream acquisition. This has to be done before&nbsp;the <code>AcquisitionStart</code> feature is&nbsp;executed.
 <code>arv_camera_start_acquisition()</code> does this for&nbsp;you.</p>
           </div>
           <div class="docblock">
@@ -488,8 +488,7 @@ the application prefers to operate in pull&nbsp;mode.</p>
         <div class="">
           <h6><a href="method.Stream.stop_acquisition.html">arv_stream_stop_acquisition</a></h6>
           <div class="docblock">
-            <p>Stop the stream acquisition. This is optional, as the acquisition will always be stopped on stream object
-destruction. <code>arv_camera_stop_acquisition()</code> calls this&nbsp;function.</p>
+            <p>Stop the stream acquisition. This is optional, as the acquisition will always be stopped on stream object&nbsp;destruction. <code>arv_camera_stop_acquisition()</code> calls this&nbsp;function.</p>
           </div>
           <div class="docblock">
             <p><span class="emblem available-next" title="This method will be available in the next stable release">unstable</span>&nbsp;<span class="emblem available">since: 0.10.0</span></p>
@@ -499,7 +498,7 @@ destruction. <code>arv_camera_stop_acquisition()</code> calls this&nbsp;function
         <div class="">
           <h6><a href="method.Stream.timeout_pop_buffer.html">arv_stream_timeout_pop_buffer</a></h6>
           <div class="docblock">
-            <p>Pops a buffer from the output queue of <code>stream</code>, waiting no more than <code>timeout</code>. The retrieved buffer
+            <p>Pops a buffer from the output queue&nbsp;of <code>stream</code>, waiting no more&nbsp;than <code>timeout</code>. The retrieved buffer
 may contain an invalid image. Caller should check the buffer status before using&nbsp;it.</p>
           </div>
           <div class="docblock">
@@ -510,7 +509,7 @@ may contain an invalid image. Caller should check the buffer status before using
         <div class="">
           <h6><a href="method.Stream.try_pop_buffer.html">arv_stream_try_pop_buffer</a></h6>
           <div class="docblock">
-            <p>Pops a buffer from the output queue of <code>stream</code>. The retrieved buffer
+            <p>Pops a buffer from the output queue&nbsp;of <code>stream</code>. The retrieved buffer
 may contain an invalid image. Caller should check the buffer status before using it.
 This is the non blocking version of&nbsp;pop_buffer.</p>
           </div>
@@ -783,7 +782,7 @@ its value set through g_object_set_property(), g_object_set(), et&nbsp;al.</p>
       <div class="">
         <h6 id="vfunc-start_acquisition"><a href="vfunc.Stream.start_acquisition.html">Aravis.StreamClass.start_acquisition</a></h6>
         <div class="docblock">
-          <p>Start the stream acquisition. This has to be done before the <code>AcquisitionStart</code> feature is executed.
+          <p>Start the stream acquisition. This has to be done before&nbsp;the <code>AcquisitionStart</code> feature is&nbsp;executed.
 <code>arv_camera_start_acquisition()</code> does this for&nbsp;you.</p>
         </div>
         <div class="docblock">
@@ -794,8 +793,7 @@ its value set through g_object_set_property(), g_object_set(), et&nbsp;al.</p>
       <div class="">
         <h6 id="vfunc-stop_acquisition"><a href="vfunc.Stream.stop_acquisition.html">Aravis.StreamClass.stop_acquisition</a></h6>
         <div class="docblock">
-          <p>Stop the stream acquisition. This is optional, as the acquisition will always be stopped on stream object
-destruction. <code>arv_camera_stop_acquisition()</code> calls this&nbsp;function.</p>
+          <p>Stop the stream acquisition. This is optional, as the acquisition will always be stopped on stream object&nbsp;destruction. <code>arv_camera_stop_acquisition()</code> calls this&nbsp;function.</p>
         </div>
         <div class="docblock">
           <p><span class="emblem available-next" title="This virtual method will be available in the next stable release">unstable</span>&nbsp;<span class="emblem available">since: 0.10.0</span></p>

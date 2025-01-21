@@ -143,12 +143,12 @@ SPDX-License-Identifier: LGPL-2.1-or-later
       </h4>
 
       <div class="docblock c-decl">
-        <pre><code><div class="highlight"><pre><span></span><span class="n">ArvDevice</span><span class="o">*</span><span class="w"></span>
-<span class="n">arv_interface_open_device</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
-<span class="w">  </span><span class="n">ArvInterface</span><span class="o">*</span><span class="w"> </span><span class="n">iface</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">device_id</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="n">GError</span><span class="o">**</span><span class="w"> </span><span class="n">error</span><span class="w"></span>
-<span class="p">)</span><span class="w"></span>
+        <pre><code><div class="highlight"><pre><span></span><span class="n">ArvDevice</span><span class="o">*</span>
+<span class="n">arv_interface_open_device</span><span class="w"> </span><span class="p">(</span>
+<span class="w">  </span><span class="n">ArvInterface</span><span class="o">*</span><span class="w"> </span><span class="n">iface</span><span class="p">,</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">device_id</span><span class="p">,</span>
+<span class="w">  </span><span class="n">GError</span><span class="o">**</span><span class="w"> </span><span class="n">error</span>
+<span class="p">)</span>
 </pre></div>
 </code></pre>
       </div>
@@ -164,8 +164,8 @@ SPDX-License-Identifier: LGPL-2.1-or-later
       </h4>
 
       <div class="docblock">
-        <p>Creates a new <code>ArvDevice</code> object corresponding to the given device id string.
-The first available device is returned if <code>device_id</code> is <code>NULL</code>.</p>
+        <p>Creates a&nbsp;new <code>ArvDevice</code> object corresponding to the given device id string.
+The first available device is returned&nbsp;if <code>device_id</code> is <code>NULL</code>.</p>
       </div>
 
       <div class="docblock">
@@ -240,7 +240,7 @@ The first available device is returned if <code>device_id</code> is <code>NULL</
         <div class="returns">
           <div class="arg-description">
             <p><em>Type:</em>&nbsp;<a href="class.Device.html"><code>ArvDevice</code></a></p>
-            <p>A new <code>ArvDevice</code>.</p>
+            <p>A&nbsp;new <code>ArvDevice</code>.</p>
           </div>
           <div>
             <table>

@@ -119,11 +119,11 @@ SPDX-License-Identifier: LGPL-2.1-or-later
       </h4>
 
       <div class="docblock">
-        <pre><code><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"></span>
-<span class="n">new_buffer</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
-<span class="w">  </span><span class="n">ArvStream</span><span class="o">*</span><span class="w"> </span><span class="n">self</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="n">gpointer</span><span class="w"> </span><span class="n">user_data</span><span class="w"></span>
-<span class="p">)</span><span class="w"></span>
+        <pre><code><div class="highlight"><pre><span></span><span class="kt">void</span>
+<span class="n">new_buffer</span><span class="w"> </span><span class="p">(</span>
+<span class="w">  </span><span class="n">ArvStream</span><span class="o">*</span><span class="w"> </span><span class="n">self</span><span class="p">,</span>
+<span class="w">  </span><span class="n">gpointer</span><span class="w"> </span><span class="n">user_data</span>
+<span class="p">)</span>
 </pre></div>
 </code></pre>
       </div>
@@ -141,15 +141,15 @@ SPDX-License-Identifier: LGPL-2.1-or-later
       <div class="docblock">
         <p>Signal that a new buffer is&nbsp;available.</p>
 <p>This signal is emited from the stream receive thread and only when the
-&#8220;emit-signals&#8221; property is <code>TRUE</code>.</p>
+&#8220;emit-signals&#8221; property&nbsp;is <code>TRUE</code>.</p>
 <p>The new buffer can be retrieved with&nbsp;arv_stream_pop_buffer().</p>
 <p>Note that this signal is only emited when the &#8220;emit-signals&#8221; property is
-set to <code>TRUE</code>, which it is not by default for performance&nbsp;reasons.</p>
+set&nbsp;to <code>TRUE</code>, which it is not by default for performance&nbsp;reasons.</p>
       </div>
 
       <div class="docblock">
         <table>
-          <tr><td>Default handler: <p>The default handler is called after the handlers added via <code>g_signal_connect()</code>.</p></td></tr>
+          <tr><td>Default handler: <p>The default handler is called after the handlers added&nbsp;via <code>g_signal_connect()</code>.</p></td></tr>
           
           
           

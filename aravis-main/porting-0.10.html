@@ -108,8 +108,8 @@ maps better with GenAPI, where buffers must be pushed to DataStream objects
 before DataStream acquisition is started.
 <a href="method.Camera.start_acquisition.html"><code>arv_camera_start_acquisition()</code></a> and
 <a href="method.Camera.stop_acquisition.html"><code>arv_camera_stop_acquisition()</code></a> do the calls for you, but if you are
-using the <code>ArvDevice</code> <span class="caps">API</span> directly, you have to call the start/stop acquisition&nbsp;functions.</p>
-<p>The optional <code>delete_buffers</code> parameter of <code>arv_stream_stop_thread()</code> is
+using&nbsp;the <code>ArvDevice</code> <span class="caps">API</span> directly, you have to call the start/stop acquisition&nbsp;functions.</p>
+<p>The&nbsp;optional <code>delete_buffers</code> parameter&nbsp;of <code>arv_stream_stop_thread()</code> is
 replaced by a separate <a href="method.Stream.delete_buffers.html"><code>arv_stream_delete_buffers()</code></a>&nbsp;function.</p>
 <h3 id="arv_stream_create_buffers">arv_stream_create_buffers<a class="md-anchor" href="#arv_stream_create_buffers" title="Permanent link"></a></h3>
 <p>You should preferably use the new <a href="method.Stream.create_buffers.html"><code>arv_stream_create_buffers()</code></a>
