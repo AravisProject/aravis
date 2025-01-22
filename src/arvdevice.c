@@ -71,50 +71,27 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvDevice, arv_device, G_TYPE_OBJECT,
 				  G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, arv_device_initable_iface_init))
 
 /**
- * arv_device_create_stream: (skip)
+ * arv_device_create_stream:
  * @device: a #ArvDevice
- * @callback: (scope call) (closure user_data) : a frame processing callback
+ * @callback: (scope notified) (nullable) (closure user_data) (destroy destroy): a frame processing callback
  * @user_data: (allow-none) : user data for @callback
- * @error: a #GError placeholder, %NULL to ignore
+ * @destroy: (nullable): destroy notifier of @user_data
+ * @error: return location for a [type@GLib.Error]
  *
- * Creates a new #ArvStream for video stream handling. See
- * @ArvStreamCallback for details regarding the callback function.
+ * Creates a new [class@ArvStream] for video stream handling. See
+ * [callback@ArvStreamCallback] for details regarding the callback function.
  *
- * Return value: (transfer full): a new #ArvStream.
+ * Return value: (transfer full): a new [class@ArvStream].
  *
- * Since: 0.2.0
+ * Since: 0.10.0
  */
 
 ArvStream *
 arv_device_create_stream (ArvDevice *device,
-                          ArvStreamCallback callback, void *user_data,
+                          ArvStreamCallback callback, void *user_data, GDestroyNotify destroy,
                           GError **error)
 {
-	return  arv_device_create_stream_full(device, callback, user_data, NULL, error);
-}
-
-/**
- * arv_device_create_stream_full: (rename-to arv_device_create_stream)
- * @device: a #ArvDevice
- * @callback: (scope notified) (closure user_data) : a frame processing callback
- * @user_data: (allow-none) : user data for @callback
- * @destroy: a #GDestroyNotify placeholder, %NULL to ignore
- * @error: a #GError placeholder, %NULL to ignore
- *
- * Creates a new #ArvStream for video stream handling. See
- * @ArvStreamCallback for details regarding the callback function.
- *
- * Return value: (transfer full): a new #ArvStream.
- *
- * Since: 0.8.23
- */
-
-ArvStream *
-arv_device_create_stream_full (ArvDevice *device,
-                               ArvStreamCallback callback, void *user_data, GDestroyNotify destroy,
-                               GError **error)
-{
-	ArvDevicePrivate *priv = arv_device_get_instance_private (device);
+        ArvDevicePrivate *priv = arv_device_get_instance_private (device);
         ArvStream *stream;
         GWeakRef *stream_weak_ref;
 
