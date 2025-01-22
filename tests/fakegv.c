@@ -148,7 +148,7 @@ stream_test (void)
 	unsigned buffer_count = 0;
 	unsigned i;
 
-	stream = arv_camera_create_stream (camera, NULL, NULL, &error);
+	stream = arv_camera_create_stream (camera, NULL, NULL, NULL, &error);
 	g_assert (ARV_IS_STREAM (stream));
 	g_assert (error == NULL);
 
@@ -195,7 +195,7 @@ dynamic_roi_test (void)
 	unsigned buffer_count = 0;
 	unsigned i, j;
 
-	stream = arv_camera_create_stream (camera, NULL, NULL, &error);
+	stream = arv_camera_create_stream (camera, NULL, NULL, NULL, &error);
 	g_assert (ARV_IS_STREAM (stream));
 	g_assert (error == NULL);
 

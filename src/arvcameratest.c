@@ -669,7 +669,7 @@ main (int argc, char **argv)
 		}
 
 		if (success) {
-		    stream = arv_camera_create_stream (camera, stream_cb, NULL, &error);
+		    stream = arv_camera_create_stream (camera, stream_cb, NULL, NULL, &error);
 
                     if (arv_camera_is_gv_device (camera)) {
                             guint gv_packet_size;

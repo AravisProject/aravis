@@ -72,7 +72,7 @@ struct _ArvStreamClass {
 
 /**
  * ArvStreamCallback:
- * @user_data: a pointer to user data associated to this callback
+ * @user_data: (closure): a pointer to user data associated to this callback
  * @type: reason of the callback call
  * @buffer: a [class@ArvBuffer] object
  *

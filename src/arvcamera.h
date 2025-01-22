@@ -57,8 +57,8 @@ ARV_API ArvCamera *	arv_camera_new			(const char *name, GError **error);
 ARV_API ArvCamera *	arv_camera_new_with_device	(ArvDevice *device, GError **error);
 ARV_API ArvDevice *	arv_camera_get_device		(ArvCamera *camera);
 
-ARV_API ArvStream *	arv_camera_create_stream	(ArvCamera *camera, ArvStreamCallback callback, void *user_data, GError **error);
-ARV_API ArvStream *	arv_camera_create_stream_full	(ArvCamera *camera, ArvStreamCallback callback, void *user_data, GDestroyNotify destroy, GError **error);
+ARV_API ArvStream *	arv_camera_create_stream	(ArvCamera *camera, ArvStreamCallback callback, void *user_data,
+                                                         GDestroyNotify destroy, GError **error);
 
 /* Device informations */
 

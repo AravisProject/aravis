@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 
     device = arv_camera_get_device (camera);
 
-    stream = arv_camera_create_stream (camera, NULL, NULL, &error);
+    stream = arv_camera_create_stream (camera, NULL, NULL, NULL, &error);
     if (!ARV_IS_STREAM (stream)) {
 	    printf ("Invalid device%s%s\n",
 		    error != NULL ? ": " : "",

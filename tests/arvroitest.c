@@ -160,7 +160,7 @@ main (int argc, char **argv)
 		printf ("image width           = %d\n", width);
 		printf ("image height          = %d\n", height);
 
-		data.stream = arv_camera_create_stream (data.camera, NULL, NULL, &error);
+		data.stream = arv_camera_create_stream (data.camera, NULL, NULL, NULL, &error);
 
 		if (ARV_IS_STREAM (data.stream)) {
 			g_signal_connect (data.stream, "new-buffer", G_CALLBACK (new_buffer_cb), &data);

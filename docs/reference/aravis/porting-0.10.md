@@ -2,6 +2,24 @@ Title: Porting to Aravis 0.10
 
 ### Porting to Aravis 0.10
 
+The 0.10 stable series breaks some APIs. Like every stable series, it is
+parallel installable with the previous ones.
+
+In most case it is possible to make your code compilable against different
+stable versions, by using version checks. For example:
+
+```C
+#if ARAVIS_CHECK_VERSION(0,10,0)
+    stream = arv_camera_create_stream (test_camera->camera,
+                                       stream_calback, &callback_data, NULL,
+                                       &error);
+#else
+    stream = arv_camera_create_stream (test_camera->camera,
+                                       stream_calback, &callback_data,
+                                       &error);
+#endif
+```
+
 #### Acquisition control
 
 `arv_stream_start_thread()` and `arv_stream_stop_thread()` functions have been
@@ -29,3 +47,9 @@ function, which creates interface native buffers if possible.
 [method@Aravis.Stream.get_n_owned_buffers] to better reflect what it does, and
 has a third out parameter returning the number of buffer owned by the stream
 receiving thread.
+
+#### arv_camera_create_stream
+
+[method@Aravis.Camera.create_stream] takes an additional GDestroyNotify
+parameter, that will be called when the callback closure data are not useful
+anymore, and can be destroyed.

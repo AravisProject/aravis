@@ -716,7 +716,7 @@ _multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test
         callback_data.n_done = 0;
         callback_data.n_success = 0;
         callback_data.n_exit = 0;
-        stream = arv_camera_create_stream (test_camera->camera, _stream_calback, &callback_data, &error);
+        stream = arv_camera_create_stream (test_camera->camera, _stream_calback, &callback_data, NULL, &error);
         if (error == NULL)
                 payload_size = arv_camera_get_payload (test_camera->camera, &error);
         if (error == NULL) {
@@ -872,7 +872,7 @@ arv_test_software_trigger (ArvTest *test, const char *test_name, ArvTestCamera *
         callback_data.n_done = 0;
         callback_data.n_success = 0;
         callback_data.n_exit = 0;
-        stream = arv_camera_create_stream (test_camera->camera, _stream_calback, &callback_data, &error);
+        stream = arv_camera_create_stream (test_camera->camera, _stream_calback, &callback_data, NULL, &error);
         if (error == NULL)
                 payload_size = arv_camera_get_payload (test_camera->camera, &error);
         if (error == NULL) {
