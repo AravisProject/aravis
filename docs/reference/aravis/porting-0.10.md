@@ -48,8 +48,9 @@ function, which creates interface native buffers if possible.
 has a third out parameter returning the number of buffer owned by the stream
 receiving thread.
 
-#### arv_camera_create_stream and arv_device_create_stream
+#### arv_camera_create_stream, arv_device_create_stream and arv_fake_camera_set_fill_pattern
 
-[method@Aravis.Camera.create_stream] and [method@Aravis.Device.create_stream]
-take an additional GDestroyNotify parameter, that will be called when the
-callback closure data are not useful anymore, and can be destroyed.
+[method@Aravis.Camera.create_stream], [method@Aravis.Device.create_stream] and
+[method@Aravis.FakeCamera.set_fill_pattern] take an additional GDestroyNotify
+parameter, that will be called when the callback closure data are not useful
+anymore, and can be destroyed.
