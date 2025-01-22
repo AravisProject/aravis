@@ -25,7 +25,7 @@ main (int argc, char **argv)
 		payload = arv_camera_get_payload (camera, NULL);
 
 		/* Create a new stream object */
-		stream = arv_camera_create_stream (camera, NULL, NULL, &error);
+		stream = arv_camera_create_stream (camera, NULL, NULL, NULL, &error);
 
 		if (ARV_IS_STREAM (stream)) {
 			ArvBuffer *buffer;

@@ -360,7 +360,7 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 	if (!error) arv_device_set_features_from_string (arv_camera_get_device (gst_aravis->camera), gst_aravis->features, &error);
 
 	if (!error) gst_aravis->payload = arv_camera_get_payload (gst_aravis->camera, &error);
-	if (!error) gst_aravis->stream = arv_camera_create_stream (gst_aravis->camera, NULL, NULL, &error);
+	if (!error) gst_aravis->stream = arv_camera_create_stream (gst_aravis->camera, NULL, NULL, NULL, &error);
 	if (error)
 		goto errored;
 

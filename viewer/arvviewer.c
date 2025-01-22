@@ -1442,7 +1442,7 @@ start_video (ArvViewer *viewer)
         }
 
 	viewer->rotation = 0;
-	viewer->stream = arv_camera_create_stream (viewer->camera, stream_cb, NULL, NULL);
+	viewer->stream = arv_camera_create_stream (viewer->camera, stream_cb, NULL, NULL, NULL);
 	if (!ARV_IS_STREAM (viewer->stream)) {
 		g_object_unref (viewer->camera);
 		viewer->camera = NULL;
