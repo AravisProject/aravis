@@ -78,6 +78,7 @@ typedef struct {
 
 	ArvFakeCameraFillPattern fill_pattern_callback;
 	void *fill_pattern_data;
+        GDestroyNotify fill_pattern_destroy;
 } ArvFakeCameraPrivate;
 
 struct _ArvFakeCamera {
@@ -716,8 +717,9 @@ arv_fake_camera_diagonal_ramp (ArvBuffer *buffer, void *fill_pattern_data,
 /**
  * arv_fake_camera_set_fill_pattern:
  * @camera: a #ArvFakeCamera
- * @fill_pattern_callback: (scope call) (closure fill_pattern_data) : callback for image filling
- * @fill_pattern_data: image filling user data
+ * @fill_pattern_callback: (nullable) (scope call) (closure fill_pattern_data) (destroy destroy): callback for image filling
+ * @fill_pattern_data: (allow-none): image filling user data
+ * @destroy: (nullable): destroy notifier of @fill_pattern_data
  *
  * Sets the fill pattern callback for custom test images.
  */
@@ -725,18 +727,25 @@ arv_fake_camera_diagonal_ramp (ArvBuffer *buffer, void *fill_pattern_data,
 void
 arv_fake_camera_set_fill_pattern (ArvFakeCamera *camera,
 				  ArvFakeCameraFillPattern fill_pattern_callback,
-				  void *fill_pattern_data)
+				  void *fill_pattern_data,
+                                  GDestroyNotify destroy)
 {
 	g_return_if_fail (ARV_IS_FAKE_CAMERA (camera));
 
 	g_mutex_lock (&camera->priv->fill_pattern_mutex);
 
+        if (camera->priv->fill_pattern_data != NULL &&
+            camera->priv->fill_pattern_destroy != NULL)
+                camera->priv->fill_pattern_destroy (camera->priv->fill_pattern_data);
+
 	if (fill_pattern_callback != NULL) {
 		camera->priv->fill_pattern_callback = fill_pattern_callback;
 		camera->priv->fill_pattern_data = fill_pattern_data;
+                camera->priv->fill_pattern_destroy = destroy;
 	} else {
 		camera->priv->fill_pattern_callback = arv_fake_camera_diagonal_ramp;
 		camera->priv->fill_pattern_data = NULL;
+                camera->priv->fill_pattern_destroy = NULL;
 	}
 
 	g_mutex_unlock (&camera->priv->fill_pattern_mutex);
@@ -1105,6 +1114,14 @@ static void
 arv_fake_camera_finalize (GObject *object)
 {
 	ArvFakeCamera *fake_camera = ARV_FAKE_CAMERA (object);
+
+	g_mutex_lock (&fake_camera->priv->fill_pattern_mutex);
+
+        if (fake_camera->priv->fill_pattern_data != NULL &&
+            fake_camera->priv->fill_pattern_destroy != NULL)
+                fake_camera->priv->fill_pattern_destroy (fake_camera->priv->fill_pattern_data);
+
+	g_mutex_unlock (&fake_camera->priv->fill_pattern_mutex);
 
 	g_mutex_clear (&fake_camera->priv->fill_pattern_mutex);
 	g_clear_pointer (&fake_camera->priv->memory, g_free);

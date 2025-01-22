@@ -117,7 +117,8 @@ ARV_API guint32			arv_fake_camera_get_heartbeat_timeout		(ArvFakeCamera *camera)
 
 ARV_API void			arv_fake_camera_set_fill_pattern	(ArvFakeCamera *camera,
 									 ArvFakeCameraFillPattern fill_pattern_callback,
-									 void *fill_pattern_data);
+									 void *fill_pattern_data,
+                                                                         GDestroyNotify destroy);
 ARV_API void			arv_fake_camera_set_trigger_frequency	(ArvFakeCamera *camera, double frequency);
 ARV_API gboolean		arv_fake_camera_is_in_free_running_mode (ArvFakeCamera *camera);
 ARV_API gboolean		arv_fake_camera_is_in_software_trigger_mode (ArvFakeCamera *camera);

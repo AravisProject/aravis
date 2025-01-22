@@ -350,7 +350,7 @@ fake_stream_test (void)
 	g_assert (ARV_IS_STREAM (stream));
 	g_assert (error == NULL);
 
-	arv_fake_camera_set_fill_pattern (fake_camera, fill_pattern_cb, &counter);
+	arv_fake_camera_set_fill_pattern (fake_camera, fill_pattern_cb, &counter, NULL);
 
 	payload = arv_camera_get_payload (camera, NULL);
 	arv_stream_push_buffer (stream,  arv_buffer_new (payload, NULL));
@@ -359,7 +359,7 @@ fake_stream_test (void)
 	buffer = arv_stream_pop_buffer (stream);
 	arv_camera_stop_acquisition (camera, NULL);
 
-	arv_fake_camera_set_fill_pattern (fake_camera, NULL, NULL);
+	arv_fake_camera_set_fill_pattern (fake_camera, NULL, NULL, NULL);
 
 	g_assert_cmpint (counter, ==, 1);
 
