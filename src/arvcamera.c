@@ -141,8 +141,8 @@ enum
 /**
  * arv_camera_create_stream: (skip)
  * @camera: a #ArvCamera
- * @callback: (scope call) (allow-none): a frame processing callback
- * @user_data: (closure) (allow-none): user data for @callback
+ * @callback: (scope call) (allow-none) (closure user_data): a frame processing callback
+ * @user_data: (allow-none): user data for @callback
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Creates a new [class@ArvStream] for video stream reception. See
@@ -162,8 +162,8 @@ arv_camera_create_stream (ArvCamera *camera, ArvStreamCallback callback, gpointe
 /**
  * arv_camera_create_stream_full: (rename-to arv_camera_create_stream)
  * @camera: a #ArvCamera
- * @callback: (scope notified) (allow-none): a frame processing callback
- * @user_data: (closure) (allow-none): user data for @callback
+ * @callback: (scope notified) (allow-none) (closure user_data): a frame processing callback
+ * @user_data: (allow-none): user data for @callback
  * @destroy: a #GDestroyNotify placeholder, %NULL to ignore
  * @error: a #GError placeholder, %NULL to ignore
  *
