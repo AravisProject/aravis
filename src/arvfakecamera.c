@@ -716,8 +716,8 @@ arv_fake_camera_diagonal_ramp (ArvBuffer *buffer, void *fill_pattern_data,
 /**
  * arv_fake_camera_set_fill_pattern:
  * @camera: a #ArvFakeCamera
- * @fill_pattern_callback: (scope call): callback for image filling
- * @fill_pattern_data: (closure): image filling user data
+ * @fill_pattern_callback: (scope call) (closure fill_pattern_data) : callback for image filling
+ * @fill_pattern_data: image filling user data
  *
  * Sets the fill pattern callback for custom test images.
  */
