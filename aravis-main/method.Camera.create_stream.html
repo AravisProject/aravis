@@ -101,8 +101,6 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method current" href="method.Camera.create_stream.html">create_stream</a>
   
-    <a class="method" href="method.Camera.create_stream_full.html">create_stream_full</a>
-  
     <a class="method" href="method.Camera.dup_available_black_levels.html">dup_available_black_levels</a>
   
     <a class="method" href="method.Camera.dup_available_components.html">dup_available_components</a>
@@ -408,7 +406,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 
   <section>
     <div class="docblock">
-      <p><span class="emblem available">since: 0.2.0</span></p>
+      <p><span class="emblem available-next" title="This method will be available in the next stable release">unstable</span>&nbsp;<span class="emblem available">since: 0.10.0</span></p>
     </div>
 
     <div class="declaration toggle-wrapper">
@@ -426,6 +424,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <span class="w">  </span><span class="n">ArvCamera</span><span class="o">*</span><span class="w"> </span><span class="n">camera</span><span class="p">,</span>
 <span class="w">  </span><span class="n">ArvStreamCallback</span><span class="w"> </span><span class="n">callback</span><span class="p">,</span>
 <span class="w">  </span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">user_data</span><span class="p">,</span>
+<span class="w">  </span><span class="n">GDestroyNotify</span><span class="w"> </span><span class="n">destroy</span><span class="p">,</span>
 <span class="w">  </span><span class="n">GError</span><span class="o">**</span><span class="w"> </span><span class="n">error</span>
 <span class="p">)</span>
 </pre></div>
@@ -449,12 +448,12 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 
       <div class="docblock">
         
-        <p>Available since: 0.2.0</p>
+        <p>Available since: 0.10.0</p>
         
         
-        <p>This method is not directly available to language bindings.</p>
         
-        <p>The implementation of this method is provided by <a href="method.Camera.create_stream_full.html"><code>arv_camera_create_stream_full()</code></a> in language bindings.</p>
+        
+        
       </div>
 
       
@@ -502,6 +501,23 @@ SPDX-License-Identifier: LGPL-2.1-or-later
             
             
             <tr><td title="transfer: none">The data is owned by the caller of the method.</td></tr>
+            
+            </table>
+          </dd>
+          
+          <dt class="arg-name"><code>destroy</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<a href="javascript:void(0)" data-link="callback.DestroyNotify.html" data-namespace="GLib" class="external"><code>GDestroyNotify</code></a></p>
+            <p>Destroy notifier&nbsp;of <code>user_data</code>.</p>
+            <table>
+            
+            <tr><td>The argument can be <code>NULL</code>.</td></tr>
+            
+            
+            
+            
+            
+            
             
             </table>
           </dd>

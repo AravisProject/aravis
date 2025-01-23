@@ -167,7 +167,8 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <span class="n">arv_fake_camera_set_fill_pattern</span><span class="w"> </span><span class="p">(</span>
 <span class="w">  </span><span class="n">ArvFakeCamera</span><span class="o">*</span><span class="w"> </span><span class="n">camera</span><span class="p">,</span>
 <span class="w">  </span><span class="n">ArvFakeCameraFillPattern</span><span class="w"> </span><span class="n">fill_pattern_callback</span><span class="p">,</span>
-<span class="w">  </span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">fill_pattern_data</span>
+<span class="w">  </span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">fill_pattern_data</span><span class="p">,</span>
+<span class="w">  </span><span class="n">GDestroyNotify</span><span class="w"> </span><span class="n">destroy</span>
 <span class="p">)</span>
 </pre></div>
 </code></pre>
@@ -179,7 +180,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Description
         <a class="anchor" href="#description"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvfakecamera.c#L716">[src]</a>
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvfakecamera.c#L717">[src]</a>
         
       </h4>
 
@@ -218,7 +219,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
             <p>Callback for image&nbsp;filling.</p>
             <table>
             
-            
+            <tr><td>The argument can be <code>NULL</code>.</td></tr>
             
             
             
@@ -242,6 +243,23 @@ SPDX-License-Identifier: LGPL-2.1-or-later
             
             
             <tr><td title="transfer: none">The data is owned by the caller of the method.</td></tr>
+            
+            </table>
+          </dd>
+          
+          <dt class="arg-name"><code>destroy</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<a href="javascript:void(0)" data-link="callback.DestroyNotify.html" data-namespace="GLib" class="external"><code>GDestroyNotify</code></a></p>
+            <p>Destroy notifier&nbsp;of <code>fill_pattern_data</code>.</p>
+            <table>
+            
+            <tr><td>The argument can be <code>NULL</code>.</td></tr>
+            
+            
+            
+            
+            
+            
             
             </table>
           </dd>

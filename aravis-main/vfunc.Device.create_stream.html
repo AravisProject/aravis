@@ -124,7 +124,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 
   <section>
     <div class="docblock">
-      <p></p>
+      <p><span class="emblem available-next" title="This virtual functionwill be available in the next stable release">unstable</span>&nbsp;<span class="emblem available">since: 0.10.0</span></p>
     </div>
 
     <div class="declaration toggle-wrapper">
@@ -155,15 +155,18 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Description
         <a href="#description" class="anchor"></a>
         
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvdevice.c#L73">[src]</a>
+        
       </h4>
 
       <div class="docblock">
-        <p>No description available.</p>
+        <p>Creates a new <a href="class.Stream.html"><code>ArvStream</code></a> for video stream handling. See
+<a href="callback.StreamCallback.html"><code>ArvStreamCallback</code></a> for details regarding the callback&nbsp;function.</p>
       </div>
 
       <div class="docblock">
         
-        
+        <p>Available since: 0.10.0</p>
         
       </div>
 
@@ -183,7 +186,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
           <dt class="arg-name"><code>callback</code></dt>
           <dd class="arg-description">
             <p><em>Type:</em>&nbsp;<a href="callback.StreamCallback.html"><code>ArvStreamCallback</code></a></p>
-            <p>No description available.</p>
+            <p>A frame processing&nbsp;callback.</p>
             <table>
             
             
@@ -200,7 +203,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
           <dt class="arg-name"><code>user_data</code></dt>
           <dd class="arg-description">
             <p><em>Type:</em>&nbsp;<code>void*</code></p>
-            <p>No description available.</p>
+            <p>User data&nbsp;for <code>callback</code>.</p>
             <table>
             
             <tr><td>The argument can be <code>NULL</code>.</td></tr>
@@ -217,7 +220,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
           <dt class="arg-name"><code>destroy</code></dt>
           <dd class="arg-description">
             <p><em>Type:</em>&nbsp;<a href="javascript:void(0)" data-link="callback.DestroyNotify.html" data-namespace="GLib" class="external"><code>GDestroyNotify</code></a></p>
-            <p>No description available.</p>
+            <p>Destroy notifier&nbsp;of <code>user_data</code>.</p>
             <table>
             
             
@@ -261,14 +264,14 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         <div class="returns">
           <div>
             <p><em>Type:</em>&nbsp;<a href="class.Stream.html"><code>ArvStream</code></a></p>
-            <p>No description available.</p>
+            <p>A new <a href="class.Stream.html"><code>ArvStream</code></a>.</p>
           </div>
           <div>
             <table>
             
             
             
-            <tr><td title="transfer: none">The returned data is owned by the instance.</td></tr>
+            <tr><td title="transfer: full">The caller of the method takes ownership of the returned data, and is responsible for freeing it.</td></tr>
             
             
             </table>

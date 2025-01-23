@@ -99,6 +99,21 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   <section>
     <div class="docblock">
     <h3 id="porting-to-aravis-010">Porting to Aravis 0.10<a class="md-anchor" href="#porting-to-aravis-010" title="Permanent link"></a></h3>
+<p>The 0.10 stable series breaks some APIs. Like every stable series, it is
+parallel installable with the previous&nbsp;ones.</p>
+<p>In most case it is possible to make your code compilable against different
+stable versions, by using version checks. For&nbsp;example:</p>
+<div class="codehilite"><pre><span></span><code><span class="cp">#if ARAVIS_CHECK_VERSION(0,10,0)</span>
+<span class="w">    </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">arv_camera_create_stream</span><span class="w"> </span><span class="p">(</span><span class="n">test_camera</span><span class="o">-&gt;</span><span class="n">camera</span><span class="p">,</span>
+<span class="w">                                       </span><span class="n">stream_calback</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">callback_data</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span>
+<span class="w">                                       </span><span class="o">&amp;</span><span class="n">error</span><span class="p">);</span>
+<span class="cp">#else</span>
+<span class="w">    </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">arv_camera_create_stream</span><span class="w"> </span><span class="p">(</span><span class="n">test_camera</span><span class="o">-&gt;</span><span class="n">camera</span><span class="p">,</span>
+<span class="w">                                       </span><span class="n">stream_calback</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">callback_data</span><span class="p">,</span>
+<span class="w">                                       </span><span class="o">&amp;</span><span class="n">error</span><span class="p">);</span>
+<span class="cp">#endif</span>
+</code></pre></div>
+
 <h4 id="acquisition-control">Acquisition control<a class="md-anchor" href="#acquisition-control" title="Permanent link"></a></h4>
 <p><code>arv_stream_start_thread()</code> and <code>arv_stream_stop_thread()</code> functions have been
 removed in favor of <a href="method.Stream.start_acquisition.html"><code>arv_stream_start_acquisition()</code></a> and
@@ -119,6 +134,11 @@ function, which creates interface native buffers if&nbsp;possible.</p>
 <a href="method.Stream.get_n_owned_buffers.html"><code>arv_stream_get_n_owned_buffers()</code></a> to better reflect what it does, and
 has a third out parameter returning the number of buffer owned by the stream
 receiving&nbsp;thread.</p>
+<h4 id="arv_camera_create_stream-arv_device_create_stream-and-arv_fake_camera_set_fill_pattern">arv_camera_create_stream, arv_device_create_stream and arv_fake_camera_set_fill_pattern<a class="md-anchor" href="#arv_camera_create_stream-arv_device_create_stream-and-arv_fake_camera_set_fill_pattern" title="Permanent link"></a></h4>
+<p><a href="method.Camera.create_stream.html"><code>arv_camera_create_stream()</code></a>, <a href="method.Device.create_stream.html"><code>arv_device_create_stream()</code></a> and
+<a href="method.FakeCamera.set_fill_pattern.html"><code>arv_fake_camera_set_fill_pattern()</code></a> take an additional GDestroyNotify
+parameter, that will be called when the callback closure data are not useful
+anymore, and can be&nbsp;destroyed.</p>
     </div>
   </section>
 </section>
@@ -145,6 +165,8 @@ receiving&nbsp;thread.</p>
           <ul class="toc-list">
           
             <li class="toc-list-item"><a href="#arv_stream_get_n_owned_buffers"><span class="link-text">arv_stream_get_n_owned_buffers</span></a></li>
+          
+            <li class="toc-list-item"><a href="#arv_camera_create_stream-arv_device_create_stream-and-arv_fake_camera_set_fill_pattern"><span class="link-text">arv_camera_create_stream, arv_device_create_stream and arv_fake_camera_set_fill_pattern</span></a></li>
           
           </ul>
           
