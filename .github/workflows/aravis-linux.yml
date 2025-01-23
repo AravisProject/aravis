@@ -30,7 +30,7 @@ jobs:
       run: meson test -C build/ -v
     - name: Valgrind
       run: meson test -C build/ -v --setup=valgrind
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: failure()
       with:
         name: Linux_Meson_Testlog
