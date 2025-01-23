@@ -33,7 +33,7 @@ jobs:
         CC: gcc
     - name: Tests
       run: meson test -C build/ -v
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: failure()
       with:
         name: MacOS_Meson_Testlog
