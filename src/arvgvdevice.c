@@ -1989,11 +1989,17 @@ arv_gv_device_constructed (GObject *object)
 	char *address_string;
 	guint32 capabilities;
 	guint32 device_mode;
+	GInetAddress *any_address;
+	int socket_fd;
+	struct ifaddrs *addrs, *iap;
+	struct sockaddr_in *sa;
+	char buf[32];
+	char interface_name[32];
 
-        G_OBJECT_CLASS (arv_gv_device_parent_class)->constructed (object);
+	G_OBJECT_CLASS (arv_gv_device_parent_class)->constructed (object);
 
 	if (!G_IS_INET_ADDRESS (priv->interface_address) ||
-	    !G_IS_INET_ADDRESS (priv->device_address)) {
+		!G_IS_INET_ADDRESS (priv->device_address)) {
 		arv_device_take_init_error (ARV_DEVICE (object), g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,
 									     "Invalid interface or device address"));
 		return;
@@ -2016,17 +2022,50 @@ arv_gv_device_constructed (GObject *object)
 	io_data->socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
 					G_SOCKET_TYPE_DATAGRAM,
 					G_SOCKET_PROTOCOL_UDP, NULL);
-        io_data->interface_address = arv_socket_bind_with_range (io_data->socket, priv->interface_address, 0,
-                                                                 FALSE, &local_error);
+	// we have to grab the interface name
+	if (getifaddrs (&addrs) <0) {
+		arv_device_take_init_error (ARV_DEVICE (object),
+							g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_CONNECTED,
+							 "Couldn't get available interfaces"));
+		return;
+	}
 
+	for (iap = addrs; iap != NULL; iap = iap->ifa_next) {
+		if ((iap->ifa_flags & IFF_UP) != 0 &&
+			(iap->ifa_flags & IFF_POINTOPOINT) == 0 &&
+			(iap->ifa_addr != NULL) &&
+			(iap->ifa_addr->sa_family == AF_INET)) {
+
+			sa = (struct sockaddr_in *)(iap->ifa_addr);
+			inet_ntop(iap->ifa_addr->sa_family, (void *)&(sa->sin_addr), buf, sizeof(buf));
+			if (!strcmp(g_inet_address_to_string (priv->interface_address), buf)) {
+				sprintf(interface_name, "%s", iap->ifa_name);
+			}
+		}
+	}
+
+	freeifaddrs (addrs);
+
+	socket_fd = g_socket_get_fd(io_data->socket);
+	if (setsockopt (socket_fd, SOL_SOCKET, SO_BINDTODEVICE, interface_name, strlen (interface_name)) == 0) {
+		any_address = g_inet_address_new_any (G_SOCKET_FAMILY_IPV4);
+		io_data->interface_address = arv_socket_bind_with_range (io_data->socket, any_address, 0,
+                                                                 FALSE, &local_error);
+		g_object_unref (any_address);
+	} else {
+		io_data->interface_address = arv_socket_bind_with_range (io_data->socket, priv->interface_address, 0,
+                                                                 FALSE, &local_error);
+	}
+
+	
 	if (io_data->interface_address == NULL) {
 		if (local_error == NULL)
 			local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_UNKNOWN,
-						   "Unknown error trying to bind device interface");
+							"Unknown error trying to bind device interface");
 		arv_device_take_init_error (ARV_DEVICE (gv_device), local_error);
-
 		return;
 	}
+
 
 	io_data->buffer = g_malloc (ARV_GV_DEVICE_BUFFER_SIZE);
 	io_data->gvcp_n_retries = ARV_GV_DEVICE_GVCP_N_RETRIES_DEFAULT;
