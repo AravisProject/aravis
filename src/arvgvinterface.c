@@ -77,7 +77,7 @@ arv_gv_discover_socket_free (ArvGvDiscoverSocket *discover_socket)
 }
 
 static ArvGvDiscoverSocketList *
-arv_gv_discover_socket_list_new (void)
+arv_gv_discover_socket_list_new (const char *discovery_interface)
 {
 	ArvGvDiscoverSocketList *socket_list;
 	GSList *iter;
@@ -92,7 +92,7 @@ arv_gv_discover_socket_list_new (void)
 		return socket_list;
 
 	for (iface_iter = ifaces; iface_iter != NULL; iface_iter = iface_iter->next) {
-		ArvGvDiscoverSocket *discover_socket = g_new0 (ArvGvDiscoverSocket, 1);
+		ArvGvDiscoverSocket *discover_socket;
 		GSocketAddress *socket_address;
 		GSocketAddress *socket_broadcast;
 		GInetAddress *inet_address;
@@ -101,6 +101,12 @@ arv_gv_discover_socket_list_new (void)
 		char *inet_broadcast_string;
 		GError *error = NULL;
 		gint buffer_size = ARV_GV_INTERFACE_DISCOVERY_SOCKET_BUFFER_SIZE;
+
+		if (discovery_interface != NULL)
+			if (g_strcmp0 (discovery_interface, arv_network_interface_get_name (iface_iter->data)) != 0)
+				continue;
+
+		discover_socket = g_new0 (ArvGvDiscoverSocket, 1);
 		socket_address = g_socket_address_new_from_native (arv_network_interface_get_addr(iface_iter->data),
 									sizeof (struct sockaddr));
 		socket_broadcast = g_socket_address_new_from_native (arv_network_interface_get_broadaddr(iface_iter->data),
@@ -354,7 +360,7 @@ struct _ArvGvInterfaceClass {
 G_DEFINE_TYPE_WITH_CODE (ArvGvInterface, arv_gv_interface, ARV_TYPE_INTERFACE, G_ADD_PRIVATE (ArvGvInterface))
 
 static ArvGvInterfaceDeviceInfos *
-_discover (GHashTable *devices, const char *device_id, gboolean allow_broadcast_discovery_ack)
+_discover (GHashTable *devices, const char *device_id, gboolean allow_broadcast_discovery_ack, const char *discovery_interface)
 {
 	ArvGvDiscoverSocketList *socket_list;
 	GSList *iter;
@@ -367,7 +373,7 @@ _discover (GHashTable *devices, const char *device_id, gboolean allow_broadcast_
 	if (devices != NULL)
 		g_hash_table_remove_all (devices);
 
-	socket_list = arv_gv_discover_socket_list_new ();
+	socket_list = arv_gv_discover_socket_list_new (discovery_interface);
 
 	if (socket_list->n_sockets < 1) {
 		arv_gv_discover_socket_list_free (socket_list);
@@ -484,8 +490,9 @@ static void
 arv_gv_interface_discover (ArvGvInterface *gv_interface)
 {
         int flags = arv_interface_get_flags (ARV_INTERFACE(gv_interface));
+	const char *discovery_interface = arv_interface_get_discovery_option (ARV_INTERFACE (gv_interface));
 
-	_discover (gv_interface->priv->devices, NULL, flags & ARV_GV_INTERFACE_FLAGS_ALLOW_BROADCAST_DISCOVERY_ACK);
+	_discover (gv_interface->priv->devices, NULL, flags & ARV_GV_INTERFACE_FLAGS_ALLOW_BROADCAST_DISCOVERY_ACK, discovery_interface);
 }
 
 static GInetAddress *
@@ -553,6 +560,7 @@ arv_gv_interface_camera_locate (ArvGvInterface *gv_interface, GInetAddress *devi
 	GList *ifaces;
 	GList *iface_iter;
 	struct sockaddr_in device_sockaddr;
+	const char *discovery_interface;
 
 	device_socket_address = g_inet_socket_address_new(device_address, ARV_GVCP_PORT);
 
@@ -580,7 +588,8 @@ arv_gv_interface_camera_locate (ArvGvInterface *gv_interface, GInetAddress *devi
 		g_list_free_full (ifaces, (GDestroyNotify) arv_network_interface_free);
 	}
 
-	socket_list = arv_gv_discover_socket_list_new();
+	discovery_interface = arv_interface_get_discovery_option (ARV_INTERFACE (gv_interface));
+	socket_list = arv_gv_discover_socket_list_new (discovery_interface);
 
 	if (socket_list->n_sockets < 1) {
 		arv_gv_discover_socket_list_free (socket_list);
@@ -730,6 +739,7 @@ arv_gv_interface_open_device (ArvInterface *interface, const char *device_id, GE
 	ArvGvInterfaceDeviceInfos *device_infos;
 	GError *local_error = NULL;
         int flags;
+	const char *discovery_interface;
 
 	device = _open_device (interface, ARV_GV_INTERFACE (interface)->priv->devices, device_id, &local_error);
 	if (ARV_IS_DEVICE (device) || local_error != NULL) {
@@ -739,7 +749,8 @@ arv_gv_interface_open_device (ArvInterface *interface, const char *device_id, GE
 	}
 
         flags = arv_interface_get_flags (interface);
-	device_infos = _discover (NULL, device_id, flags & ARV_GVCP_DISCOVERY_PACKET_FLAGS_ALLOW_BROADCAST_ACK);
+	discovery_interface = arv_interface_get_discovery_option (interface);
+	device_infos = _discover (NULL, device_id, flags & ARV_GVCP_DISCOVERY_PACKET_FLAGS_ALLOW_BROADCAST_ACK, discovery_interface);
 	if (device_infos != NULL) {
 		GInetAddress *device_address;
 

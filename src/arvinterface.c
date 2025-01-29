@@ -36,6 +36,7 @@
 typedef struct {
 	GArray *device_ids;
         int flags;
+	char *discovery_interface;
 } ArvInterfacePrivate;
 
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvInterface, arv_interface, G_TYPE_OBJECT, G_ADD_PRIVATE (ArvInterface))
@@ -109,6 +110,24 @@ arv_interface_get_flags (ArvInterface *iface)
 	g_return_val_if_fail (ARV_IS_INTERFACE (iface), 0);
 
         return priv->flags;
+}
+
+void
+arv_interface_set_discovery_option (ArvInterface *iface, const char *discovery_interface)
+{
+	ArvInterfacePrivate *priv = arv_interface_get_instance_private (iface);
+	g_return_if_fail (ARV_IS_INTERFACE (iface));
+
+	priv->discovery_interface = strdup (discovery_interface);
+}
+
+const char *
+arv_interface_get_discovery_option (ArvInterface *iface)
+{
+	ArvInterfacePrivate *priv = arv_interface_get_instance_private (iface);
+	g_return_val_if_fail (ARV_IS_INTERFACE (iface), 0);
+
+	return priv->discovery_interface;
 }
 
 /**
@@ -397,6 +416,7 @@ arv_interface_init (ArvInterface *iface)
 	ArvInterfacePrivate *priv = arv_interface_get_instance_private (iface);
 
 	priv->device_ids = g_array_new (FALSE, TRUE, sizeof (ArvInterfaceDeviceIds *));
+	priv->discovery_interface = NULL;
 }
 
 static void
@@ -410,6 +430,8 @@ arv_interface_finalize (GObject *object)
 	arv_interface_clear_device_ids (iface);
 	g_array_free (priv->device_ids, TRUE);
 	priv->device_ids = NULL;
+	g_free (priv->discovery_interface);
+	priv->discovery_interface = NULL;
 }
 
 static void

@@ -48,6 +48,8 @@ typedef struct {
 
 void            arv_interface_set_flags         (ArvInterface *iface, int flags);
 int             arv_interface_get_flags         (ArvInterface *iface);
+void		arv_interface_set_discovery_option	(ArvInterface *iface, const char *discovery_interface);
+const char *	arv_interface_get_discovery_option	(ArvInterface *iface);
 
 G_END_DECLS
 
