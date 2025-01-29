@@ -905,11 +905,9 @@ _process_packet (ArvGvStreamThreadData *thread_data, const ArvGvspPacket *packet
 	frame = _find_frame_data (thread_data, packet, packet_size, frame_id, packet_id, packet_size, time_us);
 
 	if (frame != NULL) {
-		ArvGvspPacketType packet_type = arv_gvsp_packet_get_packet_type (packet);
+		ArvGvspPacketStatus packet_status = arv_gvsp_packet_get_status (packet, packet_size);
 
-		if (arv_gvsp_packet_type_is_error (packet_type)) {
-                        ArvGvcpError error = packet_type & 0xff;
-
+		if (arv_gvsp_packet_status_is_error (packet_status)) {
 			arv_info_stream_thread ("[GvStream::process_packet]"
 						 " Error packet at dt = %" G_GINT64_FORMAT ", packet id = %u"
 						 " frame id = %" G_GUINT64_FORMAT,
@@ -917,9 +915,9 @@ _process_packet (ArvGvStreamThreadData *thread_data, const ArvGvspPacket *packet
 						 packet_id, frame->frame_id);
 			arv_gvsp_packet_debug (packet, packet_size, ARV_DEBUG_LEVEL_INFO);
 
-                        if (error == ARV_GVCP_ERROR_PACKET_AND_PREVIOUS_REMOVED_FROM_MEMORY ||
-                            error == ARV_GVCP_ERROR_PACKET_REMOVED_FROM_MEMORY ||
-                            error == ARV_GVCP_ERROR_PACKET_UNAVAILABLE) {
+                        if (packet_status == ARV_GVSP_PACKET_STATUS_PACKET_AND_PREV_REMOVED_FROM_MEMORY ||
+                            packet_status == ARV_GVSP_PACKET_STATUS_PACKET_REMOVED_FROM_MEMORY ||
+                            packet_status == ARV_GVSP_PACKET_STATUS_PACKET_UNAVAILABLE) {
                                 frame->disable_resend_request = TRUE;
                                 thread_data->n_resend_disabled++;
                         }

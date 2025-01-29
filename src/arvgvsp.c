@@ -53,7 +53,7 @@ arv_gvsp_packet_new (ArvGvspContentType content_type,
 	else
 		packet = g_malloc (packet_size);
 
-	packet->packet_type = 0;
+	packet->status = ARV_GVSP_PACKET_STATUS_SUCCESS;
 
 	header = (void *) &packet->header;
 	header->frame_id = g_htons (frame_id);
@@ -153,9 +153,9 @@ arv_enum_to_string (GType type,
 }
 
 static const char *
-arv_gvsp_packet_type_to_string (ArvGvspPacketType value)
+arv_gvsp_packet_status_to_string (ArvGvspPacketStatus value)
 {
-	return arv_enum_to_string (ARV_TYPE_GVSP_PACKET_TYPE, value);
+	return arv_enum_to_string (ARV_TYPE_GVSP_PACKET_STATUS, value);
 }
 
 static const char *
@@ -167,7 +167,7 @@ arv_gvsp_content_type_to_string (ArvGvspContentType value)
 char *
 arv_gvsp_packet_to_string (const ArvGvspPacket *packet, size_t packet_size)
 {
-	ArvGvspPacketType packet_type;
+	ArvGvspPacketStatus packet_status;
         ArvBufferPayloadType payload_type;
 	ArvGvspContentType content_type;
         guint part_id;
@@ -176,11 +176,11 @@ arv_gvsp_packet_to_string (const ArvGvspPacket *packet, size_t packet_size)
 
 	string = g_string_new ("");
 
-	packet_type = arv_gvsp_packet_get_packet_type (packet);
+	packet_status = arv_gvsp_packet_get_status (packet, packet_size);
 	content_type = arv_gvsp_packet_get_content_type (packet);
 
 	g_string_append_printf (string, "packet_type  = %8s (0x%04x)\n",
-                                arv_gvsp_packet_type_to_string (packet_type), packet_type);
+                                arv_gvsp_packet_status_to_string (packet_status), packet_status);
 	g_string_append_printf (string, "content_type = %8s (0x%04x)\n",
                                 arv_gvsp_content_type_to_string (content_type), content_type);
 	g_string_append_printf (string, "frame_id     = %8" G_GUINT64_FORMAT " %s\n",
