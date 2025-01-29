@@ -36,17 +36,63 @@ G_BEGIN_DECLS
 #define ARV_GVSP_PACKET_INFOS_N_PARTS_MASK   	0x000000ff
 
 /**
- * ArvGvspPacketType:
- * @ARV_GVSP_PACKET_TYPE_OK: valid packet
- * @ARV_GVSP_PACKET_TYPE_RESEND: resent packet (BlackFly PointGrey camera support)
- * @ARV_GVSP_PACKET_TYPE_PACKET_UNAVAILABLE: error packet, indicating invalid resend request
+ * ArvGvspPacketStatus:
+ * @ARV_GVSP_PACKET_STATUS_SUCCESS: valid packet
+ * @ARV_GVSP_PACKET_STATUS_PACKET_RESEND: resent packet (BlackFly PointGrey camera support)
+ * @ARV_GVSP_PACKET_STATUS_NOT_IMPLEMENTED:
+ * @ARV_GVSP_PACKET_STATUS_INVALID_PARAMETER:
+ * @ARV_GVSP_PACKET_STATUS_INVALID_ADDRESS:
+ * @ARV_GVSP_PACKET_STATUS_WRITE_PROTECT:
+ * @ARV_GVSP_PACKET_STATUS_BAD_ALIGNMENT:
+ * @ARV_GVSP_PACKET_STATUS_ACCESS_DENIED:
+ * @ARV_GVSP_PACKET_STATUS_BUSY:
+ * @ARV_GVSP_PACKET_STATUS_LOCAL_PROBLEM:
+ * @ARV_GVSP_PACKET_STATUS_MSG_MISMATCH:
+ * @ARV_GVSP_PACKET_STATUS_INVALID_PROTOCOL:
+ * @ARV_GVSP_PACKET_STATUS_NO_MSG:
+ * @ARV_GVSP_PACKET_STATUS_PACKET_UNAVAILABLE: error packet, indicating invalid resend request
+ * @ARV_GVSP_PACKET_STATUS_DATA_OVERRUN:
+ * @ARV_GVSP_PACKET_STATUS_INVALID_HEADER:
+ * @ARV_GVSP_PACKET_STATUS_WRONG_CONFIG:
+ * @ARV_GVSP_PACKET_STATUS_PACKET_NOT_YET_AVAILABLE:
+ * @ARV_GVSP_PACKET_STATUS_PACKET_AND_PREV_REMOVED_FROM_MEMORY:
+ * @ARV_GVSP_PACKET_STATUS_PACKET_REMOVED_FROM_MEMORY:
+ * @ARV_GVSP_PACKET_STATUS_NO_REF_TIME:
+ * @ARV_GVSP_PACKET_STATUS_PACKET_TEMPORARILY_UNAVAILABLE:
+ * @ARV_GVSP_PACKET_STATUS_OVERFLOW:
+ * @ARV_GVSP_PACKET_STATUS_ACTION_LATE:
+ * @ARV_GVSP_PACKET_STATUS_LEADER_TRAILER_OVERFLOW:
+ * @ARV_GVSP_PACKET_STATUS_ERROR: generic error
  */
 
 typedef enum {
-	ARV_GVSP_PACKET_TYPE_OK =			0x0000,
-	ARV_GVSP_PACKET_TYPE_RESEND =			0x0100,
-	ARV_GVSP_PACKET_TYPE_PACKET_UNAVAILABLE =	0x800c
-} ArvGvspPacketType;
+	ARV_GVSP_PACKET_STATUS_SUCCESS =	                        0x0000,
+	ARV_GVSP_PACKET_STATUS_PACKET_RESEND =		                0x0100,
+        ARV_GVSP_PACKET_STATUS_NOT_IMPLEMENTED =                        0x8001,
+        ARV_GVSP_PACKET_STATUS_INVALID_PARAMETER =                      0x8002,
+        ARV_GVSP_PACKET_STATUS_INVALID_ADDRESS =                        0x8003,
+        ARV_GVSP_PACKET_STATUS_WRITE_PROTECT =                          0x8004,
+        ARV_GVSP_PACKET_STATUS_BAD_ALIGNMENT =                          0x8005,
+        ARV_GVSP_PACKET_STATUS_ACCESS_DENIED =                          0x8006,
+        ARV_GVSP_PACKET_STATUS_BUSY =                                   0x8007,
+        ARV_GVSP_PACKET_STATUS_LOCAL_PROBLEM =                          0x8008, /* deprecated */
+        ARV_GVSP_PACKET_STATUS_MSG_MISMATCH =                           0x8009, /* deprecated */
+        ARV_GVSP_PACKET_STATUS_INVALID_PROTOCOL =                       0x800A, /* deprecated */
+        ARV_GVSP_PACKET_STATUS_NO_MSG =                                 0x800B, /* deprecated */
+        ARV_GVSP_PACKET_STATUS_PACKET_UNAVAILABLE =                     0x800C,
+        ARV_GVSP_PACKET_STATUS_DATA_OVERRUN =                           0x800D,
+        ARV_GVSP_PACKET_STATUS_INVALID_HEADER =                         0x800E,
+        ARV_GVSP_PACKET_STATUS_WRONG_CONFIG =                           0x800F, /* deprecated */
+        ARV_GVSP_PACKET_STATUS_PACKET_NOT_YET_AVAILABLE =               0x8010,
+        ARV_GVSP_PACKET_STATUS_PACKET_AND_PREV_REMOVED_FROM_MEMORY =    0x8011,
+        ARV_GVSP_PACKET_STATUS_PACKET_REMOVED_FROM_MEMORY =             0x8012,
+        ARV_GVSP_PACKET_STATUS_NO_REF_TIME =                            0x8013, /* GEV 2.0 */
+        ARV_GVSP_PACKET_STATUS_PACKET_TEMPORARILY_UNAVAILABLE =         0x8014, /* GEV 2.0 */
+        ARV_GVSP_PACKET_STATUS_OVERFLOW =                               0x8015, /* GEV 2.0 */
+        ARV_GVSP_PACKET_STATUS_ACTION_LATE =                            0x8016, /* GEV 2.0 */
+        ARV_GVSP_PACKET_STATUS_LEADER_TRAILER_OVERFLOW =                0x8017, /* GEV 2.1 */
+        ARV_GVSP_PACKET_STATUS_ERROR =                                  0x8fff
+} ArvGvspPacketStatus;
 
 /**
  * ArvGvspContentType:
@@ -196,14 +242,14 @@ typedef struct {
 
 /**
  * ArvGvspPacket:
- * @packet_type: packet type, also known as status in wireshark dissector
+ * @status: status
  * @header: common GVSP packet header
  *
  * GVSP packet structure.
  */
 
 typedef struct {
-	guint16 packet_type;
+	guint16 status;
 	guint8 header[];
 } ArvGvspPacket;
 
@@ -248,16 +294,19 @@ ArvGvspPacket *		arv_gvsp_packet_new_payload		(guint16 frame_id, guint32 packet_
 char * 			arv_gvsp_packet_to_string 		(const ArvGvspPacket *packet, size_t packet_size);
 void 			arv_gvsp_packet_debug 			(const ArvGvspPacket *packet, size_t packet_size,
 								 ArvDebugLevel level);
-static inline ArvGvspPacketType
-arv_gvsp_packet_get_packet_type (const ArvGvspPacket *packet)
+static inline ArvGvspPacketStatus
+arv_gvsp_packet_get_status (const ArvGvspPacket *packet, size_t size)
 {
-	return (ArvGvspPacketType) g_ntohs (packet->packet_type);
+        if (G_UNLIKELY(packet == NULL || size < sizeof (ArvGvspPacket)))
+                return ARV_GVSP_PACKET_STATUS_ERROR;
+
+	return (ArvGvspPacketStatus) g_ntohs (packet->status);
 }
 
 static inline gboolean
-arv_gvsp_packet_type_is_error (const ArvGvspPacketType packet_type)
+arv_gvsp_packet_status_is_error (const ArvGvspPacketStatus status)
 {
-	return (packet_type & 0x8000) != 0;
+	return (status & 0x8000) != 0;
 }
 
 static inline gboolean
