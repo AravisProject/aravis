@@ -35,23 +35,27 @@
 
 static ArvGvspPacket *
 arv_gvsp_packet_new (ArvGvspContentType content_type,
-		     guint16 frame_id, guint32 packet_id, size_t data_size, void *buffer, size_t *buffer_size)
+		     guint16 frame_id, guint32 packet_id, size_t data_size, void *buffer, size_t buffer_size,
+                     size_t *packet_size)
 {
 	ArvGvspPacket *packet;
 	ArvGvspHeader *header;
-	size_t packet_size;
+	size_t size;
 
-	packet_size = sizeof (ArvGvspPacket) + sizeof (ArvGvspHeader) + data_size;
-	if (packet_size == 0 || (buffer != NULL && (buffer_size == NULL || packet_size > *buffer_size)))
+	size = sizeof (ArvGvspPacket) + sizeof (ArvGvspHeader) + data_size;
+	if (buffer != NULL && size > buffer_size) {
+                if (packet_size != NULL)
+                        *packet_size = 0;
 		return NULL;
+        }
 
-	if (buffer_size != NULL)
-		*buffer_size = packet_size;
+	if (packet_size != NULL)
+		*packet_size = size;
 
 	if (buffer != NULL)
 		packet = buffer;
 	else
-		packet = g_malloc (packet_size);
+		packet = g_malloc (size);
 
 	packet->status = ARV_GVSP_PACKET_STATUS_SUCCESS;
 
@@ -70,17 +74,22 @@ arv_gvsp_packet_new_image_leader (guint16 frame_id, guint32 packet_id,
                                   guint32 width, guint32 height,
                                   guint32 x_offset, guint32 y_offset,
                                   guint32 x_padding, guint32 y_padding,
-                                  void *buffer, size_t *buffer_size)
+                                  void *buffer, size_t buffer_size,
+                                  size_t *packet_size)
 {
         ArvGvspPacket *packet;
+        size_t size;
 
 	packet = arv_gvsp_packet_new (ARV_GVSP_CONTENT_TYPE_LEADER,
-				      frame_id, packet_id, sizeof (ArvGvspImageLeader), buffer, buffer_size);
+				      frame_id, packet_id, sizeof (ArvGvspImageLeader), buffer, buffer_size, &size);
+
+        if (packet_size != NULL)
+                *packet_size = size;
 
 	if (packet != NULL) {
 		ArvGvspImageLeader *leader;
 
-		leader = arv_gvsp_packet_get_data (packet);
+		leader = arv_gvsp_packet_get_data (packet, size);
 		leader->flags = 0;
 		leader->payload_type = g_htons (ARV_BUFFER_PAYLOAD_TYPE_IMAGE);
 		leader->timestamp_high = g_htonl (((guint64) timestamp >> 32));
@@ -99,17 +108,22 @@ arv_gvsp_packet_new_image_leader (guint16 frame_id, guint32 packet_id,
 
 ArvGvspPacket *
 arv_gvsp_packet_new_data_trailer (guint16 frame_id, guint32 packet_id,
-				  void *buffer, size_t *buffer_size)
+				  void *buffer, size_t buffer_size,
+                                  size_t *packet_size)
 {
 	ArvGvspPacket *packet;
+        size_t size;
 
 	packet = arv_gvsp_packet_new (ARV_GVSP_CONTENT_TYPE_TRAILER,
-				      frame_id, packet_id, sizeof (ArvGvspTrailer), buffer, buffer_size);
+				      frame_id, packet_id, sizeof (ArvGvspTrailer), buffer, buffer_size, &size);
+
+        if (packet_size != NULL)
+                *packet_size = size;
 
 	if (packet != NULL) {
 		ArvGvspTrailer *trailer;
 
-		trailer = arv_gvsp_packet_get_data (packet);
+		trailer = arv_gvsp_packet_get_data (packet, size);
 		trailer->payload_type = g_htonl (ARV_BUFFER_PAYLOAD_TYPE_IMAGE);
 		trailer->data0 = 0;
 	}
@@ -119,16 +133,21 @@ arv_gvsp_packet_new_data_trailer (guint16 frame_id, guint32 packet_id,
 
 ArvGvspPacket *
 arv_gvsp_packet_new_payload (guint16 frame_id, guint32 packet_id,
-                             size_t size, void *data,
-                             void *buffer, size_t *buffer_size)
+                             size_t payload_size, void *data,
+                             void *buffer, size_t buffer_size,
+                             size_t *packet_size)
 {
         ArvGvspPacket *packet;
+        size_t size;
 
 	packet = arv_gvsp_packet_new (ARV_GVSP_CONTENT_TYPE_PAYLOAD,
-				      frame_id, packet_id, size, buffer, buffer_size);
+				      frame_id, packet_id, payload_size, buffer, buffer_size, &size);
+
+        if (packet_size != NULL)
+                *packet_size = size;
 
 	if (packet != NULL)
-		memcpy (arv_gvsp_packet_get_data (packet), data, size);
+		memcpy (arv_gvsp_packet_get_data (packet, size), data, payload_size);
 
 	return packet;
 }
@@ -177,23 +196,23 @@ arv_gvsp_packet_to_string (const ArvGvspPacket *packet, size_t packet_size)
 	string = g_string_new ("");
 
 	packet_status = arv_gvsp_packet_get_status (packet, packet_size);
-	content_type = arv_gvsp_packet_get_content_type (packet);
+	content_type = arv_gvsp_packet_get_content_type (packet, packet_size);
 
 	g_string_append_printf (string, "packet_type  = %8s (0x%04x)\n",
                                 arv_gvsp_packet_status_to_string (packet_status), packet_status);
 	g_string_append_printf (string, "content_type = %8s (0x%04x)\n",
                                 arv_gvsp_content_type_to_string (content_type), content_type);
 	g_string_append_printf (string, "frame_id     = %8" G_GUINT64_FORMAT " %s\n",
-				arv_gvsp_packet_get_frame_id (packet),
-				arv_gvsp_packet_has_extended_ids (packet) ? " extended" : "");
+				arv_gvsp_packet_get_frame_id (packet, packet_size),
+				arv_gvsp_packet_has_extended_ids (packet, packet_size) ? " extended" : "");
 	g_string_append_printf (string, "packet_id    = %8u\n",
-                                arv_gvsp_packet_get_packet_id (packet));
+                                arv_gvsp_packet_get_packet_id (packet, packet_size));
 	g_string_append_printf (string, "data_size    = %8" G_GSIZE_FORMAT "\n",
                                 arv_gvsp_packet_get_data_size (packet, packet_size));
 
 	switch (content_type) {
 		case ARV_GVSP_CONTENT_TYPE_LEADER:
-                        payload_type = arv_gvsp_leader_packet_get_buffer_payload_type (packet, NULL);
+                        payload_type = arv_gvsp_leader_packet_get_buffer_payload_type (packet, packet_size, NULL);
 			switch (payload_type) {
 				case ARV_BUFFER_PAYLOAD_TYPE_IMAGE:
 					g_string_append (string, "payload_type = image\n");
@@ -236,7 +255,7 @@ arv_gvsp_packet_to_string (const ArvGvspPacket *packet, size_t packet_size)
                                 ArvPixelFormat pixel_format;
                                 guint32 width, height, x_offset, y_offset, x_padding, y_padding;
 
-                                if (arv_gvsp_leader_packet_get_image_infos (packet,
+                                if (arv_gvsp_leader_packet_get_image_infos (packet, packet_size,
                                                                             &pixel_format,
                                                                             &width, &height, &x_offset, &y_offset,
                                                                             &x_padding, &y_padding)) {
@@ -251,7 +270,8 @@ arv_gvsp_packet_to_string (const ArvGvspPacket *packet, size_t packet_size)
                                 }
                         } else if (payload_type == ARV_BUFFER_PAYLOAD_TYPE_MULTIPART) {
                                 g_string_append_printf (string, "n_parts      = %8u\n",
-                                                        arv_gvsp_leader_packet_get_multipart_n_parts (packet));
+                                                        arv_gvsp_leader_packet_get_multipart_n_parts (packet,
+                                                                                                      packet_size));
                         }
                         break;
                 case ARV_GVSP_CONTENT_TYPE_TRAILER:
@@ -263,7 +283,7 @@ arv_gvsp_packet_to_string (const ArvGvspPacket *packet, size_t packet_size)
                 case ARV_GVSP_CONTENT_TYPE_MULTIZONE:
                         break;
                 case ARV_GVSP_CONTENT_TYPE_MULTIPART:
-                        if (arv_gvsp_multipart_packet_get_infos (packet, &part_id, &offset)) {
+                        if (arv_gvsp_multipart_packet_get_infos (packet, packet_size, &part_id, &offset)) {
                                 g_string_append_printf (string, "part_id      = %8d\n", part_id);
                                 g_string_append_printf (string, "offset       = %8zu\n", offset);
                         }
