@@ -113,7 +113,7 @@ arv_interface_get_flags (ArvInterface *iface)
 }
 
 void
-arv_interface_set_discovery_option (ArvInterface *iface, const char *discovery_interface)
+arv_interface_set_discovery_interface_name (ArvInterface *iface, const char *discovery_interface)
 {
 	ArvInterfacePrivate *priv = arv_interface_get_instance_private (iface);
 	g_return_if_fail (ARV_IS_INTERFACE (iface));
@@ -122,7 +122,7 @@ arv_interface_set_discovery_option (ArvInterface *iface, const char *discovery_i
 }
 
 const char *
-arv_interface_get_discovery_option (ArvInterface *iface)
+arv_interface_get_discovery_interface_name (ArvInterface *iface)
 {
 	ArvInterfacePrivate *priv = arv_interface_get_instance_private (iface);
 	g_return_val_if_fail (ARV_IS_INTERFACE (iface), 0);
