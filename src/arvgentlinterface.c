@@ -52,13 +52,13 @@ typedef struct {
 
 static ArvGenTLInterfaceDeviceInfos *
 arv_gentl_interface_device_infos_new (ArvGenTLSystem *system,
-				const char *interface,
-				const char *id,
-				const char *vendor,
-				const char *model,
-				const char *serial_nbr)
+                                      const char *interface,
+                                      const char *id,
+                                      const char *vendor,
+                                      const char *model,
+                                      const char *serial_nbr)
 {
-	ArvGenTLInterfaceDeviceInfos *infos;
+        ArvGenTLInterfaceDeviceInfos *infos;
 
 	g_return_val_if_fail (system != NULL, NULL);
 	g_return_val_if_fail (interface != NULL, NULL);
@@ -363,7 +363,8 @@ arv_gentl_interface_init (ArvGenTLInterface *gentl_interface)
 {
 	ArvGenTLInterfacePrivate *priv = arv_gentl_interface_get_instance_private (gentl_interface);
 
-	priv->devices = g_hash_table_new (g_str_hash, g_str_equal);
+        priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal, NULL,
+                                               (GDestroyNotify) arv_gentl_interface_device_infos_unref);
 }
 
 static void
