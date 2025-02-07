@@ -40,7 +40,6 @@ ARV_API const char *    arv_get_interface_protocol              (unsigned int in
 ARV_API void		arv_enable_interface		        (const char *interface_id);
 ARV_API void		arv_disable_interface		        (const char *interface_id);
 ARV_API void		arv_set_interface_flags                 (const char *interface_id, int flags);
-ARV_API void		arv_set_interface_discovery_option      (const char *interface_id, const char *discovery_interface);
 
 ARV_API void		arv_update_device_list		        (void);
 ARV_API unsigned int	arv_get_n_devices		        (void);

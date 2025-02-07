@@ -48,6 +48,8 @@ typedef enum {
 ARV_API G_DECLARE_FINAL_TYPE (ArvGvInterface, arv_gv_interface, ARV, GV_INTERFACE, ArvInterface)
 
 ARV_API ArvInterface *		arv_gv_interface_get_instance		(void);
+ARV_API void                    arv_gv_interface_set_discovery_interface_name      (const char *discovery_interface);
+ARV_API const char *            arv_gv_interface_get_discovery_interface_name      (void);
 
 G_END_DECLS
 

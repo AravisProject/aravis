@@ -809,7 +809,7 @@ main (int argc, char **argv)
                 arv_set_interface_flags ("GigEVision", ARV_GV_INTERFACE_FLAGS_ALLOW_BROADCAST_DISCOVERY_ACK);
 
 	if (arv_option_gv_discovery_interface)
-		arv_set_interface_discovery_option ("GigEVision", arv_option_gv_discovery_interface);
+		arv_gv_interface_set_discovery_interface_name (arv_option_gv_discovery_interface);
 
 	device_id = arv_option_device_address != NULL ?
                 arv_option_device_address :

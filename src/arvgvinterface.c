@@ -346,6 +346,7 @@ arv_gv_interface_device_infos_unref (ArvGvInterfaceDeviceInfos *infos)
 typedef struct {
 	GHashTable *devices;
 	char *discovery_interface;
+	GMutex mutex;
 } ArvGvInterfacePrivate;
 
 struct _ArvGvInterface {
@@ -361,15 +362,35 @@ struct _ArvGvInterfaceClass {
 G_DEFINE_TYPE_WITH_CODE (ArvGvInterface, arv_gv_interface, ARV_TYPE_INTERFACE, G_ADD_PRIVATE (ArvGvInterface))
 
 void
-arv_gv_interface_set_discovery_interface_name (ArvInterface *interface, const char *discovery_interface)
+arv_gv_interface_set_discovery_interface_name (const char *discovery_interface)
 {
-	ARV_GV_INTERFACE (interface)->priv->discovery_interface = strdup (discovery_interface);
+	ArvInterface *interface;
+	ArvGvInterfacePrivate *priv;
+
+	interface = arv_gv_interface_get_instance();
+	priv = ARV_GV_INTERFACE (interface)->priv;
+
+	g_mutex_lock(&priv->mutex);
+	g_clear_pointer (&priv->discovery_interface, g_free);
+	priv->discovery_interface = g_strdup (discovery_interface);
+	g_mutex_unlock(&priv->mutex);
 }
 
 const char *
-arv_gv_interface_get_discovery_interface_name (ArvInterface *interface)
+arv_gv_interface_get_discovery_interface_name (void)
 {
-	return ARV_GV_INTERFACE (interface)->priv->discovery_interface;
+	ArvInterface *interface;
+	ArvGvInterfacePrivate *priv;
+	const char *discovery_interface;
+
+	interface = arv_gv_interface_get_instance();
+	priv = ARV_GV_INTERFACE (interface)->priv;
+
+	g_mutex_lock(&priv->mutex);
+	discovery_interface = priv->discovery_interface;
+	g_mutex_unlock(&priv->mutex);
+
+	return discovery_interface;
 }
 
 static ArvGvInterfaceDeviceInfos *
@@ -503,7 +524,7 @@ static void
 arv_gv_interface_discover (ArvGvInterface *gv_interface)
 {
         int flags = arv_interface_get_flags (ARV_INTERFACE(gv_interface));
-	const char *discovery_interface = arv_gv_interface_get_discovery_interface_name (ARV_INTERFACE (gv_interface));
+	const char *discovery_interface = arv_gv_interface_get_discovery_interface_name ();
 
 	_discover (gv_interface->priv->devices, NULL, flags & ARV_GV_INTERFACE_FLAGS_ALLOW_BROADCAST_DISCOVERY_ACK, discovery_interface);
 }
@@ -601,7 +622,7 @@ arv_gv_interface_camera_locate (ArvGvInterface *gv_interface, GInetAddress *devi
 		g_list_free_full (ifaces, (GDestroyNotify) arv_network_interface_free);
 	}
 
-	discovery_interface = arv_gv_interface_get_discovery_interface_name (ARV_INTERFACE (gv_interface));
+	discovery_interface = arv_gv_interface_get_discovery_interface_name ();
 	socket_list = arv_gv_discover_socket_list_new (discovery_interface);
 
 	if (socket_list->n_sockets < 1) {
@@ -762,7 +783,7 @@ arv_gv_interface_open_device (ArvInterface *interface, const char *device_id, GE
 	}
 
         flags = arv_interface_get_flags (interface);
-	discovery_interface = arv_gv_interface_get_discovery_interface_name (interface);
+	discovery_interface = arv_gv_interface_get_discovery_interface_name ();
 	device_infos = _discover (NULL, device_id, flags & ARV_GVCP_DISCOVERY_PACKET_FLAGS_ALLOW_BROADCAST_ACK, discovery_interface);
 	if (device_infos != NULL) {
 		GInetAddress *device_address;
@@ -824,6 +845,7 @@ arv_gv_interface_init (ArvGvInterface *gv_interface)
 	gv_interface->priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal, NULL,
 							     (GDestroyNotify) arv_gv_interface_device_infos_unref);
 	gv_interface->priv->discovery_interface = NULL;
+	g_mutex_init(&gv_interface->priv->mutex);
 }
 
 static void
@@ -835,6 +857,7 @@ arv_gv_interface_finalize (GObject *object)
 	gv_interface->priv->devices = NULL;
 	g_free (gv_interface->priv->discovery_interface);
 	gv_interface->priv->discovery_interface = NULL;
+	g_mutex_clear(&gv_interface->priv->mutex);
 
 	G_OBJECT_CLASS (arv_gv_interface_parent_class)->finalize (object);
 }
