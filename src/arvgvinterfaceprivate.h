@@ -37,6 +37,8 @@ G_BEGIN_DECLS
 #define ARV_GV_INTERFACE_DISCOVERY_SOCKET_BUFFER_SIZE	(256*1024)
 
 void 			arv_gv_interface_destroy_instance 	(void);
+void            	arv_gv_interface_set_discovery_interface_name      (ArvInterface *interface, const char *discovery_interface);
+const char *    	arv_gv_interface_get_discovery_interface_name      (ArvInterface *interface);
 
 G_END_DECLS
 

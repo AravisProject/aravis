@@ -277,7 +277,7 @@ arv_set_interface_discovery_option (const char *interface_id, const char *discov
 		if (strcmp (interface_id, interfaces[i].interface_id) == 0) {
 			ArvInterface *iface;
 			iface = interfaces[i].get_interface_instance ();
-			arv_interface_set_discovery_interface_name (iface, discovery_interface);
+			arv_gv_interface_set_discovery_interface_name (iface, discovery_interface);
 			return;
 		}
 	g_warning ("[Arv::enable_interface] Unknown interface '%s'", interface_id);
