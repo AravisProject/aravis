@@ -93,6 +93,16 @@
 		fun:g_type_class_ref
 }
 
+{
+	g_bus_get_sync
+		Memcheck:Leak
+		fun:calloc
+		...
+		fun:g_thread_new
+		...
+		fun:g_bus_get_sync
+}
+
 # libusb
 
 {
