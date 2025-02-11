@@ -90,7 +90,7 @@ arv_v4l2_get_media_fd (int fd, const char *bus_info)
 
 	while ((ep = readdir(dp))) {
 		if (!memcmp(ep->d_name, "media", 5) && isdigit(ep->d_name[5])) {
-			struct media_device_info mdinfo;
+			struct media_device_info mdinfo = {0};
                         char *devname;
 
                         devname = g_strdup_printf ("/dev/%s", ep->d_name);
@@ -99,7 +99,7 @@ arv_v4l2_get_media_fd (int fd, const char *bus_info)
 
 			if (bus_info &&
 			    (ioctl(media_fd, MEDIA_IOC_DEVICE_INFO, &mdinfo) ||
-			     strcmp(mdinfo.bus_info, bus_info))) {
+			     g_strcmp0 (mdinfo.bus_info, bus_info))) {
 				close(media_fd);
 				continue;
 			}
