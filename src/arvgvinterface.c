@@ -776,6 +776,8 @@ _get_instance (void)
  *
  * A call to [func@Aravis.update_device_list] may be necessary after the discovery interface has changed, in order to
  * forget the previously discovered devices.
+ *
+ * Since: 0.8.34
  */
 
 void
@@ -803,6 +805,8 @@ arv_gv_interface_set_discovery_interface_name (const char *discovery_interface)
  *
  * Returns: the name of the interface used for device discovery, %NULL if discovery is performed on all the available
  * interfaces.
+ *
+ * Since: 0.8.34
  */
 
 char *
