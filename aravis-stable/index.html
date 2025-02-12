@@ -135,6 +135,8 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     
   
+    
+  
   </div>
 </div>
 
@@ -219,6 +221,8 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         
           
         
+          
+        
         </table>
       </div>
     </div>
@@ -294,7 +298,7 @@ the video&nbsp;stream.</p>
             
             <td class="docblock-summary">
             <p><code>ArvCamera</code> is a class for the generic control of cameras. It hides the complexity of the genicam interface
-by providing a simple <span class="caps">API</span>, with the drawback of not exposing all the available features. See <code>ArvDevice</code>
+by providing a simple <span class="caps">API</span>, with the drawback of not exposing all the available features.&nbsp;See <code>ArvDevice</code>
 and <code>ArvGc</code> for a more advanced use of the Aravis&nbsp;library.</p>
             <p></p>
             </td>
@@ -429,7 +433,7 @@ advanced&nbsp;uses.</p>
             
             <td class="docblock-summary">
             <p><code>ArvFakeCamera</code> is a class that simulate a real camera, which provides
-methods for the implementation of <code>ArvFakeDevice</code> and <code>ArvFakeStream</code>.</p>
+methods for the implementation&nbsp;of <code>ArvFakeDevice</code> and <code>ArvFakeStream</code>.</p>
             <p></p>
             </td>
             
@@ -825,9 +829,9 @@ types of Genicam property nodes (Value, pValue,&nbsp;Endianness&#8230;).</p>
             
             <td class="docblock-summary">
             <p><code>ArvInterface</code> is an abstract base class for camera discovery. It maintains a
-list of the available devices and helps to instantiate the corresponding
+list of the available devices and helps to instantiate the&nbsp;corresponding
 <code>ArvDevice</code> objects. If the user already knows the device id of the device, he should
-not worry about this class and just use <code>arv_camera_new()</code> or&nbsp;arv_open_device().</p>
+not worry about this class and just&nbsp;use <code>arv_camera_new()</code> or&nbsp;arv_open_device().</p>
             <p></p>
             </td>
             
@@ -839,7 +843,7 @@ not worry about this class and just use <code>arv_camera_new()</code> or&nbsp;ar
             <td class="docblock-summary">
             <p><code>ArvStream</code> provides an abstract base class for the implementation of video
 stream reception threads. The interface between the reception thread and the
-main thread is done using asynchronous queues, containing <code>ArvBuffer</code>
+main thread is done using asynchronous queues,&nbsp;containing <code>ArvBuffer</code>
 objects.</p>
             <p></p>
             </td>
@@ -1298,7 +1302,7 @@ writing those features back to the node&nbsp;tree.</p>
             <td><a title="StreamCallbackType" class="symbol" href="enum.StreamCallbackType.html">StreamCallbackType</a></td>
             
             <td class="docblock-summary">
-            <p>Describes when the reason the stream callback is called. You are probably more interested in
+            <p>Describes when the reason the stream callback is called. You are probably more interested&nbsp;in
 <code>ARV_STREAM_CALLBACK_TYPE_INIT</code> and <code>ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE</code>.</p>
             <p></p>
             </td>
@@ -1453,7 +1457,7 @@ writing those features back to the node&nbsp;tree.</p>
             <td><a title="StreamCallback" class="symbol" href="callback.StreamCallback.html">StreamCallback</a></td>
             
             <td class="docblock-summary">
-            <p>This is the signature of the callback passed on an <code>ArvStream</code> instantiation, which will be called on the stream
+            <p>This is the signature of the callback passed on&nbsp;an <code>ArvStream</code> instantiation, which will be called on the stream
 receiving thread initialization and finalization, and on every received buffer, once when the buffer is pulled from
 the buffer queue, and one more when the buffer is done (successfully or&nbsp;not).</p>
             <p></p>
@@ -1524,7 +1528,7 @@ category/debug level&nbsp;pair.</p>
             <td><a title="dom_implementation_create_document" class="symbol" href="func.dom_implementation_create_document.html">dom_implementation_create_document</a></td>
             
             <td class="docblock-summary">
-            <p>Create a new <span class="caps">DOM</span> document. Currently, only <code>qualified_name</code> is&nbsp;used.</p>
+            <p>Create a new <span class="caps">DOM</span> document. Currently,&nbsp;only <code>qualified_name</code> is&nbsp;used.</p>
             <p></p>
             </td>
             
@@ -1555,7 +1559,7 @@ category/debug level&nbsp;pair.</p>
             
             <td class="docblock-summary">
             <p>Queries the unique device id corresponding to index.  Prior to this
-call the <code>arv_update_device_list()</code> function must be&nbsp;called.</p>
+call&nbsp;the <code>arv_update_device_list()</code> function must be&nbsp;called.</p>
             <p><span class="emblem available">since: 0.2.0</span></p>
             </td>
             
@@ -1679,7 +1683,7 @@ the next call to&nbsp;arv_update_device_list().</p>
             <td><a title="open_device" class="symbol" href="func.open_device.html">open_device</a></td>
             
             <td class="docblock-summary">
-            <p>Open a device corresponding to the given identifier. A <code>NULL</code> string makes
+            <p>Open a device corresponding to the given identifier.&nbsp;A <code>NULL</code> string makes
 this function return the first available&nbsp;device.</p>
             <p><span class="emblem available">since: 0.8.0</span></p>
             </td>

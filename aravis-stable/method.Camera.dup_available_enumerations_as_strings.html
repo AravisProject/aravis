@@ -417,13 +417,13 @@ SPDX-License-Identifier: LGPL-2.1-or-later
       </h4>
 
       <div class="docblock c-decl">
-        <pre><code><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">**</span><span class="w"></span>
-<span class="n">arv_camera_dup_available_enumerations_as_strings</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
-<span class="w">  </span><span class="n">ArvCamera</span><span class="o">*</span><span class="w"> </span><span class="n">camera</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">feature</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="n">guint</span><span class="o">*</span><span class="w"> </span><span class="n">n_values</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="n">GError</span><span class="o">**</span><span class="w"> </span><span class="n">error</span><span class="w"></span>
-<span class="p">)</span><span class="w"></span>
+        <pre><code><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">**</span>
+<span class="n">arv_camera_dup_available_enumerations_as_strings</span><span class="w"> </span><span class="p">(</span>
+<span class="w">  </span><span class="n">ArvCamera</span><span class="o">*</span><span class="w"> </span><span class="n">camera</span><span class="p">,</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">feature</span><span class="p">,</span>
+<span class="w">  </span><span class="n">guint</span><span class="o">*</span><span class="w"> </span><span class="n">n_values</span><span class="p">,</span>
+<span class="w">  </span><span class="n">GError</span><span class="o">**</span><span class="w"> </span><span class="n">error</span>
+<span class="p">)</span>
 </pre></div>
 </code></pre>
       </div>
@@ -439,7 +439,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
       </h4>
 
       <div class="docblock">
-        <p>Get all the available values of <code>feature</code>, as&nbsp;strings.</p>
+        <p>Get all the available values&nbsp;of <code>feature</code>, as&nbsp;strings.</p>
       </div>
 
       <div class="docblock">
@@ -531,8 +531,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         <div class="returns">
           <div class="arg-description">
             <p><em>Type:</em>&nbsp;An array of&nbsp;<code>utf8</code></p>
-            <p>A newly created array of const strings, which must freed after use using g_free,
-or <code>NULL</code> on&nbsp;error.</p>
+            <p>A newly created array of const strings, which must freed after use using g_free,&nbsp;or <code>NULL</code> on&nbsp;error.</p>
           </div>
           <div>
             <table>

@@ -141,12 +141,12 @@ SPDX-License-Identifier: LGPL-2.1-or-later
       </h4>
 
       <div class="docblock c-decl">
-        <pre><code><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"></span>
-<span class="n">arv_evaluator_set_sub_expression</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
-<span class="w">  </span><span class="n">ArvEvaluator</span><span class="o">*</span><span class="w"> </span><span class="n">evaluator</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">name</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">expression</span><span class="w"></span>
-<span class="p">)</span><span class="w"></span>
+        <pre><code><div class="highlight"><pre><span></span><span class="kt">void</span>
+<span class="n">arv_evaluator_set_sub_expression</span><span class="w"> </span><span class="p">(</span>
+<span class="w">  </span><span class="n">ArvEvaluator</span><span class="o">*</span><span class="w"> </span><span class="n">evaluator</span><span class="p">,</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">name</span><span class="p">,</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">expression</span>
+<span class="p">)</span>
 </pre></div>
 </code></pre>
       </div>
@@ -162,7 +162,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
       </h4>
 
       <div class="docblock">
-        <p>Assign a formula to a sub-expression. If <code>expression</code> == <code>NULL</code>, the sub-expression previously assigned to <code>name</code> will be removed.
+        <p>Assign a formula to a sub-expression.&nbsp;If <code>expression</code> == <code>NULL</code>, the sub-expression previously assigned&nbsp;to <code>name</code> will be removed.
 A sub-expression may not reference another&nbsp;sub-expression.</p>
       </div>
 

@@ -201,13 +201,13 @@ SPDX-License-Identifier: LGPL-2.1-or-later
       </h4>
 
       <div class="docblock c-decl">
-        <pre><code><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">**</span><span class="w"></span>
-<span class="n">arv_device_dup_available_enumeration_feature_values_as_display_names</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
-<span class="w">  </span><span class="n">ArvDevice</span><span class="o">*</span><span class="w"> </span><span class="n">device</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">feature</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="n">guint</span><span class="o">*</span><span class="w"> </span><span class="n">n_values</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="n">GError</span><span class="o">**</span><span class="w"> </span><span class="n">error</span><span class="w"></span>
-<span class="p">)</span><span class="w"></span>
+        <pre><code><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">**</span>
+<span class="n">arv_device_dup_available_enumeration_feature_values_as_display_names</span><span class="w"> </span><span class="p">(</span>
+<span class="w">  </span><span class="n">ArvDevice</span><span class="o">*</span><span class="w"> </span><span class="n">device</span><span class="p">,</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">feature</span><span class="p">,</span>
+<span class="w">  </span><span class="n">guint</span><span class="o">*</span><span class="w"> </span><span class="n">n_values</span><span class="p">,</span>
+<span class="w">  </span><span class="n">GError</span><span class="o">**</span><span class="w"> </span><span class="n">error</span>
+<span class="p">)</span>
 </pre></div>
 </code></pre>
       </div>
@@ -223,7 +223,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
       </h4>
 
       <div class="docblock">
-        <p>Get display names of all the available entries of <code>feature</code>.</p>
+        <p>Get display names of all the available entries&nbsp;of <code>feature</code>.</p>
       </div>
 
       <div class="docblock">
@@ -315,7 +315,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         <div class="returns">
           <div class="arg-description">
             <p><em>Type:</em>&nbsp;An array of&nbsp;<code>utf8</code></p>
-            <p>A newly created array of const strings, to be freed after use using g_free, or
+            <p>A newly created array of const strings, to be freed after use using g_free,&nbsp;or
 <code>NULL</code> on&nbsp;error.</p>
           </div>
           <div>

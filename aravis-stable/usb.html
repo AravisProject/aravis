@@ -104,10 +104,10 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 access the <span class="caps">USB3</span> cameras. These permissions can be changed by using an udev rule
 file. There is a file example in <a href="https://github.com/AravisProject/aravis/blob/main/src/aravis.rules">Aravis
 sources</a>.
-This file must be placed in <code>/etc/udev/rules.d</code> directory (The exact location
+This file must be placed&nbsp;in <code>/etc/udev/rules.d</code> directory (The exact location
 may depend on the distribution you are using). This file only contains
 declarations for a couple of vendors. If you want to add an entry with the
-vendor of your camera, the output of <code>lsusb</code> command will give you the vendor
+vendor of your camera, the output&nbsp;of <code>lsusb</code> command will give you the vendor
 id, which is the first 4 digits of the <span class="caps">ID</span>&nbsp;field.</p>
 <p>Alternatively, you can give read/write access to all USB3Vision devices using
 the following&nbsp;rule:</p>
@@ -121,9 +121,9 @@ SUBSYSTEM==&quot;usb&quot;, ATTRS{bDeviceClass}==&quot;ef&quot;, ATTRS{bDeviceSu
 asynchronous <span class="caps">API</span> for better performances, especially on embedded platform like
 RapsberryPi or Nvidia Jetson boards. The function to use is
 <a href="method.Camera.uv_set_usb_mode.html"><code>arv_camera_uv_set_usb_mode()</code></a>.</p>
-<p><code>arv-viewer</code> and <code>arv-camera-test</code> can use the asynchronous <span class="caps">API</span> if <code>usb-mode</code>
-option is set to <code>async</code>. Similarly, the GStreamer plugin is using the
-asynchronous <span class="caps">API</span> if <code>usb-mode</code> property is set to <code>async</code>.</p>
+<p><code>arv-viewer</code> and <code>arv-camera-test</code> can use the asynchronous <span class="caps">API</span>&nbsp;if <code>usb-mode</code>
+option is set&nbsp;to <code>async</code>. Similarly, the GStreamer plugin is using the
+asynchronous <span class="caps">API</span>&nbsp;if <code>usb-mode</code> property is set&nbsp;to <code>async</code>.</p>
     </div>
   </section>
 </section>
