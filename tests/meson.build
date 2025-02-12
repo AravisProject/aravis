@@ -13,7 +13,7 @@ if get_option('tests')
     ],
     env:['DEBUGINFOD_URLS=', 'ARV_TEST_IGNORE_BUFFER='],
     exclude_suites:['python'],
-    timeout_multiplier:10
+    timeout_multiplier:5
   )
 
 	tests = [
@@ -36,7 +36,7 @@ if get_option('tests')
 				  link_with: aravis_library,
 				  dependencies: aravis_dependencies,
 				  include_directories: [library_inc])
-		test (t[0], exe, suite: t[1])
+		test (t[0], exe, suite: t[1], timeout: 60)
 	endforeach
 
 	if introspection_enabled
