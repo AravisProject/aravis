@@ -7,7 +7,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Aravis.GvInterface.get_instance</title>
+  <title>Aravis.GvInterface.set_discovery_interface_name</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <meta charset="utf-8" />
@@ -23,10 +23,10 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
 
   
-  <meta property="og:title" content="Aravis.GvInterface.get_instance"/>
-  <meta property="og:description" content="Reference for Aravis.GvInterface.get_instance"/>
-  <meta name="twitter:title" content="Aravis.GvInterface.get_instance"/>
-  <meta name="twitter:description" content="Reference for Aravis.GvInterface.get_instance"/>
+  <meta property="og:title" content="Aravis.GvInterface.set_discovery_interface_name"/>
+  <meta property="og:description" content="Reference for Aravis.GvInterface.set_discovery_interface_name"/>
+  <meta name="twitter:title" content="Aravis.GvInterface.set_discovery_interface_name"/>
+  <meta name="twitter:description" content="Reference for Aravis.GvInterface.set_discovery_interface_name"/>
 
 
   
@@ -91,9 +91,9 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="type_func.GvInterface.dup_discovery_interface_name.html">dup_discovery_interface_name</a>
   
-    <a class="method current" href="type_func.GvInterface.get_instance.html">get_instance</a>
+    <a class="method" href="type_func.GvInterface.get_instance.html">get_instance</a>
   
-    <a class="method" href="type_func.GvInterface.set_discovery_interface_name.html">set_discovery_interface_name</a>
+    <a class="method current" href="type_func.GvInterface.set_discovery_interface_name.html">set_discovery_interface_name</a>
   
   </div>
 </div>
@@ -109,7 +109,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <section id="main" class="content">
   <header>
     <h3>Function</h3>
-    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.GvInterface.html">GvInterface</a><span class="sep"></span>get_instance</h1>
+    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.GvInterface.html">GvInterface</a><span class="sep"></span>set_discovery_interface_name</h1>
   </header>
 
   <section>
@@ -121,14 +121,14 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Declaration
         <a href="#declaration" class="anchor"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvgvinterface.h#L50">[src]</a>
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvgvinterface.h#L51">[src]</a>
         
       </h4>
 
       <div class="docblock">
-        <pre><code><div class="highlight"><pre><span></span><span class="n">ArvInterface</span><span class="o">*</span>
-<span class="n">arv_gv_interface_get_instance</span><span class="w"> </span><span class="p">(</span>
-<span class="w">  </span><span class="kt">void</span>
+        <pre><code><div class="highlight"><pre><span></span><span class="kt">void</span>
+<span class="n">arv_gv_interface_set_discovery_interface_name</span><span class="w"> </span><span class="p">(</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">discovery_interface</span>
 <span class="p">)</span>
 </pre></div>
 </code></pre>
@@ -140,12 +140,10 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Description
         <a href="#description" class="anchor"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvgvinterface.c#L852">[src]</a>
-        
       </h4>
 
       <div class="docblock">
-        <p>Gets the unique instance of the <span class="caps">GV</span>&nbsp;interface.</p>
+        <p>No description available.</p>
       </div>
 
       <div class="docblock">
@@ -162,33 +160,39 @@ SPDX-License-Identifier: LGPL-2.1-or-later
     </div>
 
     
-
-    
-    <div class="return-value toggle-wrapper">
-      <h4 id="return-value">
-        Return value
-        <a href="#return-value" class="anchor"></a>
+    <div class="parameters toggle-wrapper">
+      <h4 id="parameters">
+        Parameters
+        <a href="#parameters" class="anchor"></a>
       </h4>
 
       <div class="docblock">
-        <div class="returns">
-          <div class="arg-description">
-            <p><em>Type:</em>&nbsp;<a href="class.Interface.html"><code>ArvInterface</code></a></p>
-            <p>A <code>ArvInterface</code> singleton.</p>
-          </div>
-          <div>
+        <dl class="arguments">
+          
+          <dt class="arg-name"><code>discovery_interface</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<code>const char*</code></p>
+            <p>No description available.</p>
             <table>
             
             
             
-            <tr><td title="transfer: none">The data is owned by the called function.</td></tr>
             
             
+            
+            
+            <tr><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
+            <tr><td>The value is a NUL terminated UTF-8 string.</td></tr>
             </table>
-          </div>
-        </div>
+          </dd>
+          
+
+          
+        </dl>
       </div>
     </div>
+    
+
     
   </section>
 </section>
