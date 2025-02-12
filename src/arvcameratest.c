@@ -45,6 +45,7 @@ static gboolean arv_option_show_version = FALSE;
 static gboolean arv_option_gv_allow_broadcast_discovery_ack = FALSE;
 static char *arv_option_gv_port_range = NULL;
 static gboolean arv_option_native_buffers = FALSE;
+static char *arv_option_gv_discovery_interface = NULL;
 
 /* clang-format off */
 static const GOptionEntry arv_option_entries[] =
@@ -227,6 +228,11 @@ static const GOptionEntry arv_option_entries[] =
 		&arv_option_gv_port_range,	        "GV port range",
 		"<min>-<max>"
 	},
+	{
+		"gv-discovery-interface",               '\0', 0, G_OPTION_ARG_STRING,
+		&arv_option_gv_discovery_interface,     "Discovery using the interface",
+		"<interface>"
+        },
 	{
 		"native-buffers", 			'\0', 0, G_OPTION_ARG_NONE,
 		&arv_option_native_buffers, 		"Enable native buffers",
@@ -505,6 +511,9 @@ main (int argc, char **argv)
 
         if (arv_option_gv_allow_broadcast_discovery_ack)
                 arv_set_interface_flags ("GigEVision", ARV_GV_INTERFACE_FLAGS_ALLOW_BROADCAST_DISCOVERY_ACK);
+
+	if (arv_option_gv_discovery_interface)
+		arv_gv_interface_set_discovery_interface_name (arv_option_gv_discovery_interface);
 
 	arv_enable_interface ("Fake");
 

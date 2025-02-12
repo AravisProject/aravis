@@ -6,8 +6,33 @@ static ArvCamera *camera = NULL;
 static void
 discovery_test (void)
 {
+        ArvCamera *test_camera;
+        char *discovery_iface;
         int n_devices;
         int i;
+
+        arv_gv_interface_set_discovery_interface_name("not-an-iface");
+
+        arv_update_device_list();
+
+        discovery_iface = arv_gv_interface_dup_discovery_interface_name();
+        g_assert (discovery_iface != NULL);
+        g_assert_cmpstr("not-an-iface", ==, discovery_iface);
+        g_free (discovery_iface);
+
+        test_camera = arv_camera_new ("Aravis-GVTest", NULL);
+        g_assert (test_camera == NULL);
+
+        arv_gv_interface_set_discovery_interface_name(NULL);
+
+        arv_update_device_list();
+
+        discovery_iface = arv_gv_interface_dup_discovery_interface_name();
+        g_assert (discovery_iface == NULL);
+
+        test_camera = arv_camera_new ("Aravis-GVTest", NULL);
+        g_assert (ARV_IS_CAMERA(test_camera));
+        g_clear_object (&test_camera);
 
         n_devices = arv_get_n_devices ();
 
