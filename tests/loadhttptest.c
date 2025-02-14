@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier:Unlicense */
+
 #include <glib.h>
 #include <gio/gio.h>
 #include <stdlib.h>
