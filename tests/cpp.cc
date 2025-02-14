@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier:Unlicense */
+
 #include <arv.h>
 
 /* Dumb test program, just to make sure aravis headers are c++ compatible */
