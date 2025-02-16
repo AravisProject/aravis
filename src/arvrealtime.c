@@ -1,7 +1,7 @@
 /*
   Copyright 2009 Lennart Poettering
   Copyright 2010 David Henningsson <diwic@ubuntu.com>
- * Copyright © 2009-2025 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+  Copyright © 2009-2025 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
 
   Permission is hereby granted, free of charge, to any person
   obtaining a copy of this software and associated documentation files

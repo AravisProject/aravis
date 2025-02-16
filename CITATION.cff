@@ -15,4 +15,4 @@ url: 'https://aravisproject.github.io/aravis/'
 abstract: >-
   Aravis is a GObject based library for the control and the
   video stream acquisition of digital cameras.
-license: LGPL-2.0-or-later
+license: LGPL-2.1-or-later

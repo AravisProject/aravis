@@ -21,7 +21,7 @@ simple video viewer.
   <img src="viewer/data/aravis-video.png"/>
 </p>
 
-Aravis is released under [LGPL-2.0-or-later](https://spdx.org/licenses/LGPL-2.0-or-later.html).
+Aravis is released under [LGPL-2.1-or-later](https://spdx.org/licenses/LGPL-2.1-or-later.html).
 
 ### Documentation
 
