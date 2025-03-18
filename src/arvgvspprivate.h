@@ -240,7 +240,7 @@ ArvGvspPacket *		arv_gvsp_packet_new_image_leader	(guint16 frame_id, guint32 pac
 								 guint32 x_offset, guint32 y_offset,
 								 guint32 x_padding, guint32 y_padding,
 								 void *buffer, size_t *buffer_size);
-ArvGvspPacket *		arv_gvsp_packet_new_data_trailer	(guint16 frame_id, guint32 packet_id,
+ArvGvspPacket *		arv_gvsp_packet_new_data_trailer	(guint16 frame_id, guint32 packet_id, guint32 height,
 								 void *buffer, size_t *buffer_size);
 ArvGvspPacket *		arv_gvsp_packet_new_payload		(guint16 frame_id, guint32 packet_id,
 								 size_t size, void *data,

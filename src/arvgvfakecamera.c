@@ -405,8 +405,9 @@ _thread (void *user_data)
 				}
 
 				packet_size = ARV_GV_FAKE_CAMERA_BUFFER_SIZE;
-				arv_gvsp_packet_new_data_trailer (image_buffer->priv->frame_id, block_id,
-								packet_buffer, &packet_size);
+                                arv_gvsp_packet_new_data_trailer (image_buffer->priv->frame_id, block_id,
+                                                                  arv_buffer_get_image_height(image_buffer) ,
+                                                                  packet_buffer, &packet_size);
 
 				if (g_random_double () >= gv_fake_camera->priv->gvsp_lost_packet_ratio)
 					g_socket_send_to (gv_fake_camera->priv->gvsp_socket, stream_address,
