@@ -107,7 +107,7 @@ arv_gvsp_packet_new_image_leader (guint16 frame_id, guint32 packet_id,
 }
 
 ArvGvspPacket *
-arv_gvsp_packet_new_data_trailer (guint16 frame_id, guint32 packet_id,
+arv_gvsp_packet_new_data_trailer (guint16 frame_id, guint32 packet_id, guint32 height,
 				  void *buffer, size_t buffer_size,
                                   size_t *packet_size)
 {
@@ -125,7 +125,7 @@ arv_gvsp_packet_new_data_trailer (guint16 frame_id, guint32 packet_id,
 
 		trailer = arv_gvsp_packet_get_data (packet, size);
 		trailer->payload_type = g_htonl (ARV_BUFFER_PAYLOAD_TYPE_IMAGE);
-		trailer->data0 = 0;
+		trailer->data0 = g_htonl (height);
 	}
 
 	return packet;

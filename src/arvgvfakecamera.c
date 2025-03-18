@@ -417,7 +417,7 @@ _thread (void *user_data)
 					block_id++;
 				}
 
-                                arv_gvsp_packet_new_data_trailer (image_buffer->priv->frame_id, block_id,
+                                arv_gvsp_packet_new_data_trailer (image_buffer->priv->frame_id, block_id, arv_buffer_get_image_height(image_buffer) ,
                                                                   packet_buffer, ARV_GV_FAKE_CAMERA_BUFFER_SIZE,
                                                                   &packet_size);
 
