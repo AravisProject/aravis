@@ -112,7 +112,7 @@ documentation</a>.</p>
 <p>During the camera configuration, in C language it can be somehow cumbersome to
 check for errors at each function call. A convenient way to deal with this issue
 is the following&nbsp;construction:</p>
-<div class="codehilite"><pre><span></span><code><span class="n">GError</span><span class="w"> </span><span class="o">**</span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<div class="codehilite"><pre><span></span><code><span class="n">GError</span><span class="w"> </span><span class="o">*</span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">error</span><span class="p">)</span><span class="w"> </span><span class="n">arv_camera_</span><span class="p">...</span><span class="w"> </span><span class="p">(...,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">error</span><span class="p">);</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">error</span><span class="p">)</span><span class="w"> </span><span class="n">arv_camera_</span><span class="p">...</span><span class="w"> </span><span class="p">(...,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">error</span><span class="p">);</span>
