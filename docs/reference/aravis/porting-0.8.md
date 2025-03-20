@@ -20,7 +20,7 @@ check for errors at each function call. A convenient way to deal with this issue
 is the following construction:
 
 ```c
-GError **error = NULL;
+GError *error = NULL;
 
 if (!error) arv_camera_... (..., &error);
 if (!error) arv_camera_... (..., &error);
