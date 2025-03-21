@@ -502,7 +502,7 @@
 	<IntSwissKnife Name="PayloadSize" NameSpace="Standard">
 		<pVariable Name="WIDTH">Width</pVariable>
 		<pVariable Name="HEIGHT">Height</pVariable>
-		<pVariable Name="PIXELFORMAT">PixelFormat</pVariable>
+		<pVariable Name="PIXELFORMAT">PixelFormatRegister</pVariable>
 		<Formula>WIDTH * HEIGHT * ((PIXELFORMAT>>16)&amp;0xFF) / 8</Formula>
 	</IntSwissKnife>
 
