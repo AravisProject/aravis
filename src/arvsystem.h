@@ -38,6 +38,7 @@ ARV_API ArvInterface*	arv_get_interface_by_id                 (const char* inter
 ARV_API const char *	arv_get_interface_id		        (unsigned int index);
 ARV_API const char *    arv_get_interface_protocol              (unsigned int index);
 ARV_API void		arv_enable_interface		        (const char *interface_id);
+ARV_API void            arv_select_interface                    (const char *interface_id);
 ARV_API void		arv_disable_interface		        (const char *interface_id);
 ARV_API void		arv_set_interface_flags                 (const char *interface_id, int flags);
 
