@@ -90,6 +90,7 @@ if get_option('tests')
 		['arv-auto-packet-size-test',	'arvautopacketsizetest.c'],
 		['arv-device-scan-test',	'arvdevicescantest.c'],
 		['arv-roi-test',		'arvroitest.c'],
+		['arv-multi-uv-test',		'arvmultiuvtest.c'],
 		['time-test',			'timetest.c'],
 		['load-http-test',		'loadhttptest.c'],
 		['cpp-test',			'cpp.cc'],
