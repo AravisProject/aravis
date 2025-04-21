@@ -129,6 +129,26 @@ arv_enable_interface (const char *interface_id)
 }
 
 /**
+ * arv_select_interface:
+ * @interface_id: name of the interface
+ *
+ * Enable an interface by name and disable all the others.
+ *
+ * Since: 0.8.35
+ */
+
+void
+arv_select_interface (const char *interface_id)
+{
+	guint i;
+
+	g_return_if_fail (interface_id != NULL);
+
+	for (i = 0; i < G_N_ELEMENTS (interfaces) ; i++)
+                interfaces[i].is_available = g_strcmp0 (interface_id, interfaces[i].interface_id) == 0;
+}
+
+/**
  * arv_disable_interface:
  * @interface_id: name of the interface
  *
