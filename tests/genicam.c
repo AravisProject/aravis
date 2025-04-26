@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier:Unlicense */
+
 #include <glib.h>
 #include <arv.h>
 #include <string.h>
@@ -1086,10 +1088,10 @@ create_buffer_with_chunk_data (void)
 	ArvChunkInfos *chunk_infos;
 	char *data;
 	size_t size;
-	guint32 *int_value;
+	guint32 int_value;
 	guint8 *boolean_value;
 	guint offset;
-	guint64 *float_value;
+	guint64 float_value;
 
 	size = 64 + 8 + 64 + 8 + 1 + 5 * sizeof (ArvChunkInfos);
 
@@ -1107,8 +1109,8 @@ create_buffer_with_chunk_data (void)
 	chunk_infos->id = GUINT32_TO_BE (0x12345678);
 	chunk_infos->size = GUINT32_TO_BE (8);
 
-	int_value = (guint32 *) &data[offset - 8];
-	*int_value = GUINT32_TO_BE (0x11223344);
+	int_value = GUINT32_TO_BE (0x11223344);
+	memcpy ((char *) &data[offset - 8], (char *)&int_value, sizeof(int_value));
 
 	offset -= 8 + sizeof (ArvChunkInfos);
 	chunk_infos = (ArvChunkInfos *) &data[offset];
@@ -1122,8 +1124,8 @@ create_buffer_with_chunk_data (void)
 	chunk_infos->id = GUINT32_TO_BE (0x12345679);
 	chunk_infos->size = GUINT32_TO_BE (8);
 
-        float_value = (guint64 *) &data[offset - 8];
-	*float_value = GUINT64_TO_BE (0x3FF199999999999A); /* Hexadecimal representation of 1.1 as double */
+	float_value = GUINT64_TO_BE (0x3FF199999999999A); /* Hexadecimal representation of 1.1 as double */
+	memcpy ((char *) &data[offset - 8], (char *)&float_value, sizeof(float_value));
 
 	offset -= 8 + sizeof (ArvChunkInfos);
 	chunk_infos = (ArvChunkInfos *) &data[offset];

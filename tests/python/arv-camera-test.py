@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+
+# SPDX-License-Identifier:Unlicense
 
 #  If you have installed aravis in a non standard location, you may need
 #   to make GI_TYPELIB_PATH point to the correct location. For example:

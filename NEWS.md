@@ -1,3 +1,11 @@
+Stable release 0.8.34
+=====================
+
+  * gigevision: allow to select discovery interface (Yuto)
+  * genicam: fix unaligned memory access (Matwey)
+  * gigevision: fix uninitialized memory access (Emmanuel)
+  * build: add missing include (Emmanuel)
+
 Stable release 0.8.33
 =====================
 
