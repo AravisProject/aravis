@@ -1051,12 +1051,20 @@ arv_uv_device_constructed (GObject *object)
 
         if (priv->vendor != NULL)
                 arv_info_device ("[UvDevice::new] Vendor  = %s", priv->vendor);
+        else
+                arv_info_device ("[UvDevice::new] Vendor  = NULL");
         if (priv->product != NULL)
                 arv_info_device ("[UvDevice::new] Product = %s", priv->product);
+        else
+                arv_info_device ("[UvDevice::new] Product = NULL");
         if (priv->serial_number != NULL)
                 arv_info_device ("[UvDevice::new] S/N     = %s", priv->serial_number);
+        else
+                arv_info_device ("[UvDevice::new] S/N     = NULL");
         if (priv->guid != NULL)
                 arv_info_device ("[UvDevice::new] GUID    = %s", priv->guid);
+        else
+                arv_info_device ("[UvDevice::new] GUID    = NULL");
 
 	priv->packet_id = 65300; /* Start near the end of the circular counter */
 	priv->timeout_ms = 32;
