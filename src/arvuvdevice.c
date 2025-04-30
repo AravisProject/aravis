@@ -1022,7 +1022,17 @@ static void
 arv_uv_device_constructed (GObject *object)
 {
 	ArvUvDevice *uv_device = ARV_UV_DEVICE (object);
+    if (uv_device != 0) {
+        arv_device_take_init_error (ARV_DEVICE (uv_device),
+            g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
+                "Failed to ARV_UV_DEVICE"));
+    }
 	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (uv_device);
+    if (priv != 0) {
+        arv_device_take_init_error (ARV_DEVICE (uv_device),
+            g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
+                "Failed to arv_uv_device_get_instance_private()"));
+    }
 	GError *error = NULL;
         int result;
 
