@@ -47,7 +47,8 @@ ARV_API GQuark		arv_chunk_parser_error_quark		(void);
 typedef enum {
 	ARV_CHUNK_PARSER_ERROR_INVALID_FEATURE_TYPE,
 	ARV_CHUNK_PARSER_ERROR_BUFFER_NOT_FOUND,
-	ARV_CHUNK_PARSER_ERROR_CHUNK_NOT_FOUND
+	ARV_CHUNK_PARSER_ERROR_CHUNK_NOT_FOUND,
+        ARV_CHUNK_PARSER_ERROR_FEATURE_NOT_FOUND
 } ArvChunkParserError;
 
 #define ARV_TYPE_CHUNK_PARSER             (arv_chunk_parser_get_type ())
@@ -62,6 +63,13 @@ ARV_API gint64			arv_chunk_parser_get_integer_value	(ArvChunkParser *parser, Arv
 									 const char *chunk, GError **error);
 ARV_API double			arv_chunk_parser_get_float_value	(ArvChunkParser *parser, ArvBuffer *buffer,
 									 const char *chunk, GError **error);
+
+ARV_API void		        arv_chunk_parser_set_string_feature_value	(ArvChunkParser *parser,
+                                                                                 const char *feature, const char *value,
+                                                                                 GError **error);
+ARV_API void		        arv_chunk_parser_set_integer_feature_value	(ArvChunkParser *parser,
+                                                                                 const char *feature, gint64 value,
+                                                                                 GError **error);
 
 G_END_DECLS
 
