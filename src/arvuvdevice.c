@@ -55,6 +55,9 @@ typedef struct {
 	char *serial_number;
 	char *guid;
 
+        unsigned int usb_major_version;
+        unsigned int usb_minor_version;
+
 	libusb_context *usb;
 	libusb_device_handle *usb_device;
 
@@ -863,6 +866,9 @@ _open_usb_device (ArvUvDevice *uv_device, GError **error)
                                 if (priv->guid == NULL)
                                         priv->guid = g_strdup ((char *) guid);
 
+                                priv->usb_major_version = ((desc.bcdUSB >> 12) & 0xf) * 10 + ((desc.bcdUSB >> 8) & 0xf);
+                                priv->usb_minor_version = ((desc.bcdUSB >> 4) & 0xf) * 10 + (desc.bcdUSB & 0xf);
+
                                 result = libusb_set_auto_detach_kernel_driver (usb_device, 1);
                                 if (result != 0) {
                                         arv_warning_device ("Failed to set auto kernel detach feature "
@@ -1068,6 +1074,13 @@ arv_uv_device_constructed (GObject *object)
 		arv_device_take_init_error (ARV_DEVICE (uv_device), error);
                 return;
 	}
+
+        if (priv->usb_major_version < 3)
+                arv_warning_device ("[UvDevice::new] USB %d.%d (Low bandwidth)",
+                                    priv->usb_major_version, priv->usb_minor_version);
+        else
+                arv_info_device ("[UvDevice::new] USB %d.%d",
+                                 priv->usb_major_version, priv->usb_minor_version);
 
 	arv_info_device("[UvDevice::new] Using control endpoint %d, interface %d",
 			 priv->control_endpoint, priv->control_interface);
