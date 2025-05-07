@@ -115,6 +115,10 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.ChunkParser.get_string_value.html">get_string_value</a>
   
+    <a class="method" href="method.ChunkParser.set_integer_feature_value.html">set_integer_feature_value</a>
+  
+    <a class="method" href="method.ChunkParser.set_string_feature_value.html">set_string_feature_value</a>
+  
   </div>
 </div>
 
@@ -293,6 +297,30 @@ functions are simple convenience wrappers that handle the setting of ChunkModeAc
           </div>
           <div class="docblock">
             <p></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.ChunkParser.set_integer_feature_value.html">arv_chunk_parser_set_integer_feature_value</a></h6>
+          <div class="docblock">
+            <p>Set a feature value using a 64 bit value. The main use for this function is to set a Selector feature, in order to
+access the corresponding chunk value. As the Genicam data owned by the parser is not shared with the device, this
+function is limited to features that don&#8217;t trigger device&nbsp;access.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.35</span></p>
+          </div>
+        </div>
+      
+        <div class="">
+          <h6><a href="method.ChunkParser.set_string_feature_value.html">arv_chunk_parser_set_string_feature_value</a></h6>
+          <div class="docblock">
+            <p>Set a feature value using a string. The main use for this function is to set a Selector feature, in order to access
+the corresponding chunk value. As the Genicam data owned by the parser is not shared with the device, this function
+is limited to features that don&#8217;t trigger device&nbsp;access.</p>
+          </div>
+          <div class="docblock">
+            <p><span class="emblem available">since: 0.8.35</span></p>
           </div>
         </div>
       

@@ -7,7 +7,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Aravis.ChunkParser.get_integer_value</title>
+  <title>Aravis.ChunkParser.set_integer_feature_value</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <meta charset="utf-8" />
@@ -23,10 +23,10 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
 
   
-  <meta priority="og:title" content="Aravis.ChunkParser.get_integer_value"/>
-  <meta priority="og:description" content="Reference for Aravis.ChunkParser.get_integer_value"/>
-  <meta name="twitter:title" content="Aravis.ChunkParser.get_integer_value"/>
-  <meta name="twitter:description" content="Reference for Aravis.ChunkParser.get_integer_value"/>
+  <meta priority="og:title" content="Aravis.ChunkParser.set_integer_feature_value"/>
+  <meta priority="og:description" content="Reference for Aravis.ChunkParser.set_integer_feature_value"/>
+  <meta name="twitter:title" content="Aravis.ChunkParser.set_integer_feature_value"/>
+  <meta name="twitter:description" content="Reference for Aravis.ChunkParser.set_integer_feature_value"/>
 
 
   
@@ -93,11 +93,11 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.ChunkParser.get_float_value.html">get_float_value</a>
   
-    <a class="method current" href="method.ChunkParser.get_integer_value.html">get_integer_value</a>
+    <a class="method" href="method.ChunkParser.get_integer_value.html">get_integer_value</a>
   
     <a class="method" href="method.ChunkParser.get_string_value.html">get_string_value</a>
   
-    <a class="method" href="method.ChunkParser.set_integer_feature_value.html">set_integer_feature_value</a>
+    <a class="method current" href="method.ChunkParser.set_integer_feature_value.html">set_integer_feature_value</a>
   
     <a class="method" href="method.ChunkParser.set_string_feature_value.html">set_string_feature_value</a>
   
@@ -115,12 +115,12 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <section id="main" class="content">
   <header>
     <h3>Method</h3>
-    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.ChunkParser.html">ChunkParser</a><span class="sep"></span>get_integer_value</h1>
+    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.ChunkParser.html">ChunkParser</a><span class="sep"></span>set_integer_feature_value</h1>
   </header>
 
   <section>
     <div class="docblock">
-      <p></p>
+      <p><span class="emblem available">since: 0.8.35</span></p>
     </div>
 
     <div class="declaration toggle-wrapper">
@@ -128,16 +128,16 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Declaration
         <a class="anchor" href="#declaration"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvchunkparser.h#L62">[src]</a>
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvchunkparser.h#L70">[src]</a>
         
       </h4>
 
       <div class="docblock c-decl">
-        <pre><code><div class="highlight"><pre><span></span><span class="n">gint64</span>
-<span class="n">arv_chunk_parser_get_integer_value</span><span class="w"> </span><span class="p">(</span>
+        <pre><code><div class="highlight"><pre><span></span><span class="kt">void</span>
+<span class="n">arv_chunk_parser_set_integer_feature_value</span><span class="w"> </span><span class="p">(</span>
 <span class="w">  </span><span class="n">ArvChunkParser</span><span class="o">*</span><span class="w"> </span><span class="n">parser</span><span class="p">,</span>
-<span class="w">  </span><span class="n">ArvBuffer</span><span class="o">*</span><span class="w"> </span><span class="n">buffer</span><span class="p">,</span>
-<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">chunk</span><span class="p">,</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">feature</span><span class="p">,</span>
+<span class="w">  </span><span class="n">gint64</span><span class="w"> </span><span class="n">value</span><span class="p">,</span>
 <span class="w">  </span><span class="n">GError</span><span class="o">**</span><span class="w"> </span><span class="n">error</span>
 <span class="p">)</span>
 </pre></div>
@@ -150,15 +150,19 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Description
         <a class="anchor" href="#description"></a>
         
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvchunkparser.c#L291">[src]</a>
+        
       </h4>
 
       <div class="docblock">
-        <p>No description available.</p>
+        <p>Set a feature value using a 64 bit value. The main use for this function is to set a Selector feature, in order to
+access the corresponding chunk value. As the Genicam data owned by the parser is not shared with the device, this
+function is limited to features that don&#8217;t trigger device&nbsp;access.</p>
       </div>
 
       <div class="docblock">
         
-        
+        <p>Available since: 0.8.35</p>
         
         
         
@@ -181,27 +185,10 @@ SPDX-License-Identifier: LGPL-2.1-or-later
           
 
           
-          <dt class="arg-name"><code>buffer</code></dt>
-          <dd class="arg-description">
-            <p><em>Type:</em>&nbsp;<a href="class.Buffer.html"><code>ArvBuffer</code></a></p>
-            <p>A <code>ArvBuffer</code> with a #ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA&nbsp;payload.</p>
-            <table>
-            
-            
-            
-            
-            
-            
-            
-            <tr><td title="transfer: none">The data is owned by the caller of the method.</td></tr>
-            
-            </table>
-          </dd>
-          
-          <dt class="arg-name"><code>chunk</code></dt>
+          <dt class="arg-name"><code>feature</code></dt>
           <dd class="arg-description">
             <p><em>Type:</em>&nbsp;<code>const char*</code></p>
-            <p>Chunk data&nbsp;name.</p>
+            <p>Feature&nbsp;name.</p>
             <table>
             
             
@@ -212,6 +199,23 @@ SPDX-License-Identifier: LGPL-2.1-or-later
             
             <tr><td title="transfer: none">The data is owned by the caller of the method.</td></tr>
             <tr><td>The value is a NUL terminated UTF-8 string.</td></tr>
+            </table>
+          </dd>
+          
+          <dt class="arg-name"><code>value</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<code>gint64</code></p>
+            <p>Feature&nbsp;value.</p>
+            <table>
+            
+            
+            
+            
+            
+            
+            
+            
+            
             </table>
           </dd>
           
@@ -234,32 +238,6 @@ SPDX-License-Identifier: LGPL-2.1-or-later
     </div>
     
 
-    
-    <div class="return-value toggle-wrapper">
-      <h4 id="return-value">
-        Return value
-        <a href="#return-value" class="anchor"></a>
-      </h4>
-
-      <div class="docblock">
-        <div class="returns">
-          <div class="arg-description">
-            <p><em>Type:</em>&nbsp;<code>gint64</code></p>
-            <p>The integer chunk data&nbsp;integer.</p>
-          </div>
-          <div>
-            <table>
-            
-            
-            
-            
-            
-            
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
     
 
   </section>
