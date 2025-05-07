@@ -7,7 +7,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Aravis.get_device_serial_nbr</title>
+  <title>Aravis.select_interface</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <meta charset="utf-8" />
@@ -23,10 +23,10 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
 
   
-  <meta property="og:title" content="Aravis.get_device_serial_nbr"/>
-  <meta property="og:description" content="Reference for Aravis.get_device_serial_nbr"/>
-  <meta name="twitter:title" content="Aravis.get_device_serial_nbr"/>
-  <meta name="twitter:description" content="Reference for Aravis.get_device_serial_nbr"/>
+  <meta property="og:title" content="Aravis.select_interface"/>
+  <meta property="og:description" content="Reference for Aravis.select_interface"/>
+  <meta name="twitter:title" content="Aravis.select_interface"/>
+  <meta name="twitter:description" content="Reference for Aravis.select_interface"/>
 
 
   
@@ -99,26 +99,26 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <section id="main" class="content">
   <header>
     <h3>Function </h3>
-    <h1><a href="index.html">Aravis</a><span class="sep"></span>get_device_serial_nbr</h1>
+    <h1><a href="index.html">Aravis</a><span class="sep"></span>select_interface</h1>
   </header>
 
   <section>
     <div class="docblock">
-      <p><span class="emblem available">since: 0.6.0</span></p>
+      <p><span class="emblem available">since: 0.8.35</span></p>
     </div>
     <div class="declaration toggle-wrapper">
       <h4 id="declaration" style="display:flex;">
         Declaration
         <a href="#declaration" class="anchor"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvsystem.h#L50">[src]</a>
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvsystem.h#L38">[src]</a>
         
       </h4>
 
       <div class="docblock">
-        <pre><code><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span>
-<span class="n">arv_get_device_serial_nbr</span><span class="w"> </span><span class="p">(</span>
-<span class="w">  </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">index</span>
+        <pre><code><div class="highlight"><pre><span></span><span class="kt">void</span>
+<span class="n">arv_select_interface</span><span class="w"> </span><span class="p">(</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">interface_id</span>
 <span class="p">)</span>
 </pre></div>
 </code></pre>
@@ -130,19 +130,17 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Description
         <a href="#description" class="anchor"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvsystem.c#L393">[src]</a>
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvsystem.c#L131">[src]</a>
         
       </h4>
 
       <div class="docblock">
-        <p>Queries the device&nbsp;serial.</p>
-<p>Prior to this call&nbsp;the <code>arv_update_device_list()</code>
-function must be&nbsp;called.</p>
+        <p>Enable an interface by name and disable all the&nbsp;others.</p>
       </div>
 
       <div class="docblock">
         
-        <p>Available since: 0.6.0</p>
+        <p>Available since: 0.8.35</p>
         
         
         
@@ -163,10 +161,10 @@ function must be&nbsp;called.</p>
       <div class="docblock">
         <dl class="arguments">
           
-          <dt class="arg-name"><code>index</code></dt>
+          <dt class="arg-name"><code>interface_id</code></dt>
           <dd class="arg-description">
-            <p><em>Type:</em>&nbsp;<code>unsigned int</code></p>
-            <p>Device&nbsp;index.</p>
+            <p><em>Type:</em>&nbsp;<code>const char*</code></p>
+            <p>Name of the&nbsp;interface.</p>
             <table>
             
             
@@ -175,8 +173,8 @@ function must be&nbsp;called.</p>
             
             
             
-            
-            
+            <tr><td title="transfer: none">The data is owned by the caller of the function.</td></tr>
+            <tr><td>The value is a NUL terminated UTF-8 string.</td></tr>
             </table>
           </dd>
           
@@ -187,32 +185,6 @@ function must be&nbsp;called.</p>
     </div>
     
 
-    
-    <div class="return-value toggle-wrapper">
-      <h4 id="return-value">
-        Return value
-        <a href="#return-value" class="anchor"></a>
-      </h4>
-
-      <div class="docblock">
-        <div class="returns">
-          <div class="arg-description">
-            <p><em>Type:</em>&nbsp;<code>const char*</code></p>
-            <p>The device serial, <span class="caps">NULL</span> on&nbsp;error.</p>
-          </div>
-          <div>
-            <table>
-            
-            
-            
-            <tr><td title="transfer: none">The data is owned by the called function.</td></tr>
-            
-            <tr><td>The value is a NUL terminated UTF-8 string.</td></tr>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
     
   </section>
 </section>
