@@ -1,21 +1,21 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2022 Emmanuel Pacaud
+ * Copyright © 2009-2025 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Emmanuel Pacaud <emmanuel.pacaud@free.fr>
  */
@@ -836,6 +836,15 @@ _open_usb_device (ArvUvDevice *uv_device, GError **error)
 
 				priv->usb_device = usb_device;
 
+                                if (priv->vendor == NULL)
+                                        priv->vendor = g_strdup ((char *) manufacturer);
+                                if (priv->product == NULL)
+                                        priv->product = g_strdup ((char *) product);
+                                if (priv->serial_number == NULL)
+                                        priv->serial_number = g_strdup ((char *) serial_number);
+                                if (priv->guid == NULL)
+                                        priv->guid = g_strdup ((char *) guid);
+
                                 result = libusb_set_auto_detach_kernel_driver (usb_device, 1);
                                 if (result != 0) {
                                         arv_warning_device ("Failed to set auto kernel detach feature "
@@ -878,10 +887,14 @@ _open_usb_device (ArvUvDevice *uv_device, GError **error)
 	libusb_free_device_list (devices, 1);
 
 	if (priv->usb_device == NULL) {
-		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
-			     "USB device '%s:%s:%s' not found", priv->vendor, priv->product, priv->serial_number);
-		return FALSE;
-	}
+                if (priv->vendor != NULL && priv->product != NULL && priv->serial_number != NULL)
+                        g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
+                                     "USB device '%s:%s:%s' not found", priv->vendor, priv->product, priv->serial_number);
+                else
+                        g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
+                                     "USB device with GUID %s not found", priv->guid);
+                return FALSE;
+        }
 
 	return TRUE;
 }

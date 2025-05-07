@@ -1,21 +1,21 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2022 Emmanuel Pacaud
+ * Copyright © 2009-2025 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Emmanuel Pacaud <emmanuel.pacaud@free.fr>
  */
@@ -140,8 +140,8 @@ enum
 /**
  * arv_camera_create_stream: (skip)
  * @camera: a #ArvCamera
- * @callback: (scope call) (allow-none): a frame processing callback
- * @user_data: (closure) (allow-none): user data for @callback
+ * @callback: (scope call) (allow-none) (closure user_data): a frame processing callback
+ * @user_data: (allow-none): user data for @callback
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Creates a new [class@ArvStream] for video stream reception. See
@@ -161,8 +161,8 @@ arv_camera_create_stream (ArvCamera *camera, ArvStreamCallback callback, gpointe
 /**
  * arv_camera_create_stream_full: (rename-to arv_camera_create_stream)
  * @camera: a #ArvCamera
- * @callback: (scope notified) (allow-none): a frame processing callback
- * @user_data: (closure) (allow-none): user data for @callback
+ * @callback: (scope notified) (allow-none) (closure user_data): a frame processing callback
+ * @user_data: (allow-none): user data for @callback
  * @destroy: a #GDestroyNotify placeholder, %NULL to ignore
  * @error: a #GError placeholder, %NULL to ignore
  *

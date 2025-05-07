@@ -1,21 +1,21 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2022 Emmanuel Pacaud
+ * Copyright © 2009-2025 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Emmanuel Pacaud <emmanuel.pacaud@free.fr>
  */
@@ -226,6 +226,92 @@ arv_chunk_parser_get_float_value (ArvChunkParser *parser, ArvBuffer *buffer, con
 	}
 
 	return value;
+}
+
+static ArvGcNode *
+arv_chunk_parser_get_feature (ArvChunkParser *parser, const char *feature)
+{
+        g_return_val_if_fail (ARV_IS_CHUNK_PARSER(parser), NULL);
+	g_return_val_if_fail (parser->priv->genicam, NULL);
+
+	return arv_gc_get_node (parser->priv->genicam, feature);
+}
+
+static void *
+_get_feature (ArvChunkParser *parser, GType node_type, const char *feature, GError **error)
+{
+	void *node;
+
+	g_return_val_if_fail (ARV_IS_CHUNK_PARSER (parser), NULL);
+	g_return_val_if_fail (feature != NULL, NULL);
+
+	node = arv_chunk_parser_get_feature (parser, feature);
+
+	if (node == NULL) {
+		g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_FEATURE_NOT_FOUND,
+			     "[%s] Not found", feature);
+		return NULL;
+	}
+
+	if (!(G_TYPE_CHECK_INSTANCE_TYPE ((node), node_type))) {
+		g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_INVALID_FEATURE_TYPE,
+			     "[%s:%s] Not a %s", feature, G_OBJECT_TYPE_NAME (node), g_type_name (node_type));
+		return NULL;
+	}
+
+	return node;
+}
+
+/**
+ * arv_chunk_parser_set_string_feature_value:
+ * @parser: a #ArvChunkParser
+ * @feature: feature name
+ * @value: feature value
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Set a feature value using a string. The main use for this function is to set a Selector feature, in order to access
+ * the corresponding chunk value. As the Genicam data owned by the parser is not shared with the device, this function
+ * is limited to features that don't trigger device access.
+ *
+ * Since: 0.8.35
+ */
+
+void
+arv_chunk_parser_set_string_feature_value (ArvChunkParser *parser,
+                                           const char *feature, const char *value,
+                                           GError **error)
+{
+	ArvGcNode *node;
+
+	node = _get_feature (parser, ARV_TYPE_GC_STRING, feature, error);
+	if (node != NULL)
+		arv_gc_string_set_value (ARV_GC_STRING (node), value, error);
+}
+
+/**
+ * arv_chunk_parser_set_integer_feature_value:
+ * @parser: a #ArvChunkParser
+ * @feature: feature name
+ * @value: feature value
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Set a feature value using a 64 bit value. The main use for this function is to set a Selector feature, in order to
+ * access the corresponding chunk value. As the Genicam data owned by the parser is not shared with the device, this
+ * function is limited to features that don't trigger device access.
+ *
+ * Since: 0.8.35
+ */
+
+void
+arv_chunk_parser_set_integer_feature_value (ArvChunkParser *parser,
+                                            const char *feature, gint64 value,
+                                            GError **error)
+{
+	ArvGcNode *node;
+
+	node = _get_feature (parser, ARV_TYPE_GC_INTEGER, feature, error);
+	if (node != NULL)
+		arv_gc_integer_set_value (ARV_GC_INTEGER (node), value, error);
 }
 
 /**

@@ -1,21 +1,21 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2022 Emmanuel Pacaud
+ * Copyright © 2009-2025 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Emmanuel Pacaud <emmanuel.pacaud@free.fr>
  */
@@ -405,8 +405,9 @@ _thread (void *user_data)
 				}
 
 				packet_size = ARV_GV_FAKE_CAMERA_BUFFER_SIZE;
-				arv_gvsp_packet_new_data_trailer (image_buffer->priv->frame_id, block_id,
-								packet_buffer, &packet_size);
+                                arv_gvsp_packet_new_data_trailer (image_buffer->priv->frame_id, block_id,
+                                                                  arv_buffer_get_image_height(image_buffer) ,
+                                                                  packet_buffer, &packet_size);
 
 				if (g_random_double () >= gv_fake_camera->priv->gvsp_lost_packet_ratio)
 					g_socket_send_to (gv_fake_camera->priv->gvsp_socket, stream_address,
