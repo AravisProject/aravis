@@ -214,7 +214,7 @@ arv_enable_interface (const char *interface_id)
  *
  * Enable an interface by name and disable all the others.
  *
- * Since: 0.10.0
+ * Since: 0.8.35
  */
 
 void
