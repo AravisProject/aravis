@@ -500,6 +500,7 @@ _single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_c
         ArvChunkParser *parser = NULL;
         char *component = NULL;
         guint n_parts = 1;
+        GString *message;
 
         g_return_if_fail (ARV_IS_TEST (test));
 
@@ -563,7 +564,7 @@ _single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_c
                         return;
                 }
 
-                chunks = arv_test_camera_get_key_file_string (test_camera, test, "ChunkList", "OffsetX OffsetY");
+                chunks = arv_test_camera_get_key_file_string (test_camera, test, "ChunkList", "Width Height");
                 chunk_list = g_strsplit_set (chunks, " ", -1);
 
                 chunk_selector = arv_test_camera_get_key_file_string(test_camera, test,
@@ -577,6 +578,8 @@ _single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_c
                 g_free (chunks);
                 g_free (chunk_selector);
         }
+
+        message = g_string_new ("");
 
         if (error == NULL)
                 buffer = arv_camera_acquisition (test_camera->camera, 1000000, &error);
@@ -611,12 +614,28 @@ _single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_c
                                                                  &error);
                                                 }
                                                 if (error == NULL) {
-                                                        arv_chunk_parser_get_integer_value (parser, buffer,
+                                                        gint64 int_value;
+
+                                                        int_value = arv_chunk_parser_get_integer_value (parser, buffer,
                                                                                             chunk_name, &error);
                                                         if (error != NULL) {
+                                                                double float_value;
+
                                                                 g_clear_error (&error);
-                                                                arv_chunk_parser_get_float_value (parser, buffer,
-                                                                                                  chunk_name, &error);
+                                                                float_value = arv_chunk_parser_get_float_value
+                                                                        (parser, buffer, chunk_name, &error);
+                                                                if (error == NULL) {
+                                                                        g_string_append_printf
+                                                                                (message,
+                                                                                 "%s%g",
+                                                                                 message->len > 0 ?  " ": "",
+                                                                                 float_value);
+                                                                }
+                                                        } else {
+                                                                g_string_append_printf (message, "%s%"
+                                                                                        G_GINT64_MODIFIER "d",
+                                                                                        message->len > 0 ? " ": "",
+                                                                                        int_value);
                                                         }
                                                 }
                                         }
@@ -649,7 +668,9 @@ _single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_c
                                     error == NULL ?
                                     ARV_TEST_STATUS_SUCCESS :
                                     ARV_TEST_STATUS_FAILURE,
-                                    error != NULL ? error->message : NULL);
+                                    error != NULL ? error->message : message->str);
+
+        g_string_free (message, TRUE);
         g_clear_error (&error);
         g_clear_object (&buffer);
 }
