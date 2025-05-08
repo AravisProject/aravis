@@ -1,3 +1,16 @@
+Development release 0.9.1
+=========================
+
+  * gv_interface: discovery interface selection (Yuto)
+  * system: add a way to select an interface (Emmanuel)
+  * chunk_parser: support for value selector (Emmanuel)
+  * camera: replace ctrea_strem_full by stream_create, break API (Emmanuel)
+  * gvcp, gvsp: make packet parsing more robust (Emmanue)
+  * gv_stream: fix uninitialized data access (Emmanuel)
+  * tests: fix unaligned memory access (Matwey)
+  * introspection: annotation fixes (Jared, Emmanuel)
+  * fake_camera: fix trailer packet content (Michail)
+
 Development release 0.9.0
 =========================
 
