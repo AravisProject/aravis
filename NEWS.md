@@ -1,3 +1,11 @@
+Stable release 0.8.35
+=====================
+
+  * chunk_parser: support for chunk selectors (Emmanuel)
+  * fake: fix trailer packet content (Michail)
+  * fake: fix schema validation (Michail)
+  * system: API to select only one interface (Emmanuel)
+
 Stable release 0.8.34
 =====================
 
