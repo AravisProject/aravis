@@ -44,9 +44,7 @@ if get_option('tests')
         py_script_config_data.set ('LD_LIBRARY_PATH', meson.project_build_root() / 'src')
         py_script_config_data.set ('GST_PLUGIN_PATH', meson.project_build_root() / 'gst')
         py_script_config_data.set ('FAKE_GENICAM_PATH', meson.project_source_root() / 'src' / 'arv-fake-camera.xml')
-        if get_option('gentl-producer')
-          py_script_config_data.set ('ARV_PRODUCER_PATH', gentl_producer_library.full_path())
-        endif
+        py_script_config_data.set ('ARV_PRODUCER_PATH', get_option('gentl-producer') ? gentl_producer_library.full_path() : '')
 
         configure_file (input: 'pylaunch.in', output: 'pylaunch', configuration: py_script_config_data)
         configure_file (input: 'pylaunch-dbg.in', output: 'pylaunch-dbg', configuration: py_script_config_data)
