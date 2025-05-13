@@ -162,6 +162,8 @@ struct _ArvGvStreamThreadData {
 
 	gboolean use_packet_socket;
 
+        guint64 underrun_frame_id;
+
 	/* Statistics */
 
 	guint64 n_completed_buffers;
@@ -373,10 +375,13 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 
 	buffer = arv_stream_pop_input_buffer (thread_data->stream);
 	if (buffer == NULL) {
-		thread_data->n_underruns++;
-
+                if (thread_data->underrun_frame_id != frame_id) {
+                        thread_data->n_underruns++;
+                        thread_data->underrun_frame_id = frame_id;
+                }
 		return NULL;
 	}
+        thread_data->underrun_frame_id = 0;
 
 	n_packets = _compute_n_expected_packets (packet,
                                                  buffer->priv->allocated_size,
