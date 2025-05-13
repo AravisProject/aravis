@@ -123,6 +123,7 @@ typedef struct {
 	gboolean resend_ratio_reached;
 
 	gboolean extended_ids;
+        gboolean underrun;
 } ArvGvStreamFrameData;
 
 struct _ArvGvStreamThreadData {
@@ -381,7 +382,6 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
                 }
 		return NULL;
 	}
-        thread_data->underrun_frame_id = 0;
 
 	n_packets = _compute_n_expected_packets (packet,
                                                  buffer->priv->allocated_size,
@@ -393,11 +393,13 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
                         thread_data->callback (thread_data->callback_data,
                                                ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
                                                buffer);
+                thread_data->underrun_frame_id = 0;
                 return NULL;
         }
 
 	frame = g_new0 (ArvGvStreamFrameData, 1);
 
+        frame->underrun = thread_data->underrun_frame_id == frame_id;
 	frame->disable_resend_request = FALSE;
 
 	frame->frame_id = frame_id;
@@ -435,6 +437,8 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 	frame->extended_ids = extended_ids;
 
         arv_histogram_fill (thread_data->histogram, 1, 0);
+
+        thread_data->underrun_frame_id = 0;
 
 	return frame;
 }
@@ -838,7 +842,9 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
                      * acquisition start. */
                     (frame->frame_id != thread_data->last_frame_id || frame->last_valid_packet != 0) &&
 		    time_us - frame->last_packet_time_us >= thread_data->frame_retention_us) {
-			frame->buffer->priv->status = ARV_BUFFER_STATUS_TIMEOUT;
+			frame->buffer->priv->status = frame->underrun ?
+                                ARV_BUFFER_STATUS_UNDERRUN :
+                                ARV_BUFFER_STATUS_TIMEOUT;
 			arv_warning_stream_thread ("[GvStream::check_frame_completion] Timeout for frame %"
 						   G_GUINT64_FORMAT " at dt = %" G_GUINT64_FORMAT,
 						   frame->frame_id, time_us - frame->first_packet_time_us);
