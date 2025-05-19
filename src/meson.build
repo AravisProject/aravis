@@ -315,7 +315,7 @@ pkg.generate (aravis_library,
 	      subdirs: 'aravis-@0@'.format (aravis_api_version),
 	      name: 'Aravis',
 	      description: 'Camera control and image acquisition library',
-	      requires: aravis_public_dependencies)
+	      libraries: aravis_public_dependencies)
 
 arv_test_resources = gnome.compile_resources('arvtestresources','arvtestresources.xml')
 
