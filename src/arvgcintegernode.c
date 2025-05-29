@@ -233,7 +233,7 @@ arv_gc_integer_node_get_integer_value (ArvGcInteger *gc_integer, GError **error)
 	GError *local_error = NULL;
 	gint64 value;
 
-	value_node = _get_value_node (gc_integer_node, error);
+	value_node = _get_value_node (gc_integer_node, &local_error);
 	if (value_node == NULL) {
                 if (local_error != NULL)
                         g_propagate_prefixed_error (error, local_error, "[%s] ",
