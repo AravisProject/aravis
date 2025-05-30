@@ -9,12 +9,12 @@ on:
 
 jobs:
   msvc:
-    runs-on: windows-2019
+    runs-on: windows-2025
     strategy:
       fail-fast: false
       matrix:
         include:
-        - version: 16
+        - version: 17
           arch: x86_64
           build_type_conan: Release
           build_type_meson: release
@@ -33,7 +33,7 @@ jobs:
           [requires]
           libiconv/1.17
           #gobject-introspection/1.69.0
-          gstreamer/1.22.3
+          gstreamer/1.24.7
           #gst-plugins-base/1.22.3      Disable gstreamer for now, latest gst-plugins-base is 1.19.2
           #gtk/4.4.0
           libxml2/2.10.3

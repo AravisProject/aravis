@@ -12,7 +12,7 @@ on:
 
 jobs:
   mingw:
-    runs-on: windows-latest
+    runs-on: windows-2025
     strategy:
       fail-fast: false # see all failures, not just the first one
       matrix:
