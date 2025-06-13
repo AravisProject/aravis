@@ -1,4 +1,4 @@
-project ('aravis', 'c', 'cpp', version: '0.9.2', meson_version: '>=0.57.0')
+project ('aravis', 'c', 'cpp', version: '0.9.2', meson_version: '>=0.57.0', default_options: ['default_library=shared'])
 
 gnome = import('gnome')
 pkg = import ('pkgconfig')
@@ -47,11 +47,21 @@ elif cc.get_id()=='msvc'
   add_project_arguments(cc.get_supported_arguments(warning_c_args), language: 'c')
 endif
 
+build_shared = get_option('default_library') == 'shared'
+
 if cc.get_id() == 'msvc'
-  cc_export_define = '__declspec(dllexport) extern'
+  if build_shared
+    cc_export_define = '__declspec(dllexport) extern'
+  else
+    cc_export_define = 'extern'  # static build: no export
+  endif
 elif cc.has_argument('-fvisibility=hidden')
-  add_project_arguments('-fvisibility=hidden', language: 'c')
-  cc_export_define = 'extern __attribute__ ((visibility ("default")))'
+  if build_shared
+    add_project_arguments('-fvisibility=hidden', language: 'c')
+    cc_export_define = 'extern __attribute__ ((visibility ("default")))'
+  else
+    cc_export_define = 'extern'
+  endif
 else
   cc_export_define = 'extern'
 endif
