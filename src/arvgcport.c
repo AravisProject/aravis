@@ -60,6 +60,7 @@ typedef struct {
  */
 
 static ArvGvLegacyInfos arv_gc_port_legacy_infos[] = {
+   { .vendor_selection = "DO3THINK",                            .model_selection = "MGV518"},
    { .vendor_selection = "Imperx",                              .model_selection = "IpxGEVCamera"},
    { .vendor_selection = "KowaOptronics",                       .model_selection = "SC130ET3"},
    { .vendor_selection = "NIT",                                 .model_selection = "Tachyon16k"},
