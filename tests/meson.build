@@ -1,4 +1,3 @@
-doc_examples = files (['arvexample.c', 'arvchunkparsertest.c'])
 
 if get_option('tests')
 
@@ -105,10 +104,10 @@ if get_option('tests')
 	endif
 
 	foreach example: examples
-		exe = executable (example[0], example[1],
-						  link_with: aravis_library,
-						  dependencies: aravis_dependencies,
-						  include_directories: [library_inc])
+		executable (example[0], example[1],
+			link_with: aravis_library,
+			dependencies: aravis_dependencies,
+			include_directories: [library_inc])
 	endforeach
 
 endif
