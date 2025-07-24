@@ -292,6 +292,8 @@ arv_gvsp_packet_to_string (const ArvGvspPacket *packet, size_t packet_size)
                         break;
                 case ARV_GVSP_CONTENT_TYPE_ALL_IN:
                         break;
+                case ARV_GVSP_CONTENT_TYPE_UNKNOWN:
+                        break;
         }
 
         return arv_g_string_free_and_steal(string);
