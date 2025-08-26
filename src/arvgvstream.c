@@ -316,6 +316,7 @@ _compute_n_expected_packets (const ArvGvspPacket *packet, size_t allocated_size,
                 case ARV_GVSP_CONTENT_TYPE_H264:
                 case ARV_GVSP_CONTENT_TYPE_GENDC:
                 case ARV_GVSP_CONTENT_TYPE_MULTIZONE:
+                case ARV_GVSP_CONTENT_TYPE_UNKNOWN:
                         break;
         }
 

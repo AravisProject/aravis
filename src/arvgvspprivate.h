@@ -107,6 +107,7 @@ typedef enum {
  */
 
 typedef enum {
+        ARV_GVSP_CONTENT_TYPE_UNKNOWN =         0x00,
 	ARV_GVSP_CONTENT_TYPE_LEADER = 	        0x01,
 	ARV_GVSP_CONTENT_TYPE_TRAILER = 	0x02,
 	ARV_GVSP_CONTENT_TYPE_PAYLOAD =	        0x03,
@@ -344,7 +345,7 @@ arv_gvsp_packet_get_content_type (const ArvGvspPacket *packet, size_t packet_siz
                 }
         }
 
-        return 0;
+        return ARV_GVSP_CONTENT_TYPE_UNKNOWN;
 }
 
 static inline guint32
@@ -540,7 +541,7 @@ arv_gvsp_leader_packet_get_multipart_infos (const ArvGvspPacket *packet,
         }
 
         *purpose_id = 0;
-        *data_type = 0;
+        *data_type = ARV_BUFFER_PART_DATA_TYPE_UNKNOWN;
         *size = 0;
         *pixel_format = 0;
         *width = 0;
