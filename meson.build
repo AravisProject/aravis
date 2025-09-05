@@ -99,7 +99,6 @@ else # not Linux
 endif
 
 subdir ('src')
-subdir ('tests')
 
 viewer_enabled = false
 viewer_option = get_option ('viewer')
@@ -115,6 +114,8 @@ gst_option = get_option ('gst-plugin')
 gst_deps = aravis_dependencies + [dependency ('gstreamer-base-1.0', required: gst_option),
                                   dependency ('gstreamer-app-1.0', required: gst_option)]
 subdir('gst', if_found: gst_deps)
+
+subdir ('tests')
 
 doc_deps = dependency ('gi-docgen', version:'>= 2021.1', fallback: ['gi-docgen', 'dummy_dep'], required:get_option('documentation'))
 subdir('docs', if_found: doc_deps)
