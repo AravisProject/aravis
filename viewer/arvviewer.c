@@ -1341,6 +1341,7 @@ update_device_list_cb (GtkToolButton *button, ArvViewer *viewer)
 				    2, arv_get_device_vendor (i),
 				    3, arv_get_device_model (i),
 				    4, arv_get_device_serial_nbr (i),
+					5, arv_get_device_address (i),
 				    -1);
 
 		g_string_free (protocol, TRUE);
