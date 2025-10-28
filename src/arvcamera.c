@@ -1752,7 +1752,7 @@ arv_camera_get_exposure_time_bounds (ArvCamera *camera, double *min, double *max
  *
  * Returns: exposure time increment, in µs.
  *
- * Since: 0.9.2
+ * Since: 0.10.0
  */
 
 double
@@ -1943,7 +1943,7 @@ arv_camera_get_gain_bounds (ArvCamera *camera, double *min, double *max, GError 
  *
  * Returns: gain increment.
  *
- * Since: 0.9.2
+ * Since: 0.10.0
  */
 
 double
