@@ -1746,6 +1746,48 @@ arv_camera_get_exposure_time_bounds (ArvCamera *camera, double *min, double *max
 }
 
 /**
+ * arv_camera_get_exposure_time_increment:
+ * @camera: a #ArvCamera
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: exposure time increment, in µs.
+ *
+ * Since: 0.9.2
+ */
+
+double
+arv_camera_get_exposure_time_increment (ArvCamera *camera, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), 1);
+
+	switch (priv->series) {
+		case ARV_CAMERA_SERIES_BASLER_SCOUT:
+			return arv_camera_get_float_increment (camera,
+						     priv->has_exposure_time ?
+						     "ExposureTime" :
+						     "ExposureTimeBaseAbs",
+						     error);
+		case ARV_CAMERA_SERIES_BASLER_ACE:
+			if (priv->has_exposure_time)
+				return arv_camera_get_float_increment (camera, "ExposureTime", error);
+			else
+				return arv_camera_get_integer_increment (camera, "ExposureTimeRaw", error);
+		case ARV_CAMERA_SERIES_XIMEA:
+			return arv_camera_get_integer_increment (camera, "ExposureTime", error);
+		case ARV_CAMERA_SERIES_RICOH:
+			return arv_camera_get_integer_increment (camera, "ExposureTimeRaw", error);
+		default:
+			return arv_camera_get_float_increment (camera,
+						     priv->has_exposure_time ?
+						     "ExposureTime" :
+						     "ExposureTimeAbs",
+						     error);
+	}
+}
+
+/**
  * arv_camera_set_exposure_time_auto:
  * @camera: a #ArvCamera
  * @auto_mode: auto exposure mode selection
@@ -1892,6 +1934,34 @@ arv_camera_get_gain_bounds (ArvCamera *camera, double *min, double *max, GError 
 	arv_camera_get_integer_bounds_as_double (camera, "GainRaw", min, max, error);
 
 	return;
+}
+
+/**
+ * arv_camera_get_gain_increment:
+ * @camera: a #ArvCamera
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: gain increment.
+ *
+ * Since: 0.9.2
+ */
+
+double
+arv_camera_get_gain_increment (ArvCamera *camera, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), 1);
+
+	if (priv->has_gain) {
+		return arv_camera_get_float_increment (camera, "Gain", error);
+  } else if (priv->gain_abs_as_float) {
+    return arv_camera_get_float_increment (camera, "GainAbs", error);
+	} else if (priv->gain_raw_as_float) {
+		return arv_camera_get_float_increment (camera, "GainRaw", error);
+	}
+
+	return arv_camera_get_integer_increment (camera, "GainRaw", error);
 }
 
 /**
