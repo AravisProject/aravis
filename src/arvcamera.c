@@ -1955,8 +1955,8 @@ arv_camera_get_gain_increment (ArvCamera *camera, GError **error)
 
 	if (priv->has_gain) {
 		return arv_camera_get_float_increment (camera, "Gain", error);
-  } else if (priv->gain_abs_as_float) {
-    return arv_camera_get_float_increment (camera, "GainAbs", error);
+	} else if (priv->gain_abs_as_float) {
+		return arv_camera_get_float_increment (camera, "GainAbs", error);
 	} else if (priv->gain_raw_as_float) {
 		return arv_camera_get_float_increment (camera, "GainRaw", error);
 	}
