@@ -293,7 +293,6 @@ static double
 arv_viewer_value_from_log (double value, double min, double max, double inc)
 {
 	double result;
-	double mod;
 
 	if (min <= 0.0 || max <= 0)
 		return 0.0;
@@ -304,12 +303,7 @@ arv_viewer_value_from_log (double value, double min, double max, double inc)
 		return min;
 
 	result = pow (10.0, (value * (log10 (max) - log10 (min)) + log10 (min)));
-	mod = fmod (result - min, inc);
-	result -= mod;
-	if (mod > 0.5 * inc) {
-		result += inc;
-	}
-	return result;
+	return min + (gint64) ((result - min + 0.5 * inc) / inc) * inc;
 }
 
 static void
