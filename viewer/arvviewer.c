@@ -750,12 +750,18 @@ set_camera_widgets(ArvViewer *viewer)
 
 	arv_camera_get_exposure_time_bounds (viewer->camera, &viewer->exposure_min, &viewer->exposure_max, NULL);
 	viewer->exposure_inc = arv_camera_get_exposure_time_increment (viewer->camera, NULL);
+	if (viewer->exposure_inc <= G_MINDOUBLE) {
+		viewer->exposure_inc = 1.0;
+	}
 	gtk_spin_button_set_range (GTK_SPIN_BUTTON (viewer->exposure_spin_button),
 				   viewer->exposure_min, viewer->exposure_max);
 	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->exposure_spin_button), ceil (200.0 / viewer->exposure_inc) * viewer->exposure_inc, ceil (1000.0 / viewer->exposure_inc) * viewer->exposure_inc);
 
 	arv_camera_get_gain_bounds (viewer->camera, &viewer->gain_min, &viewer->gain_max, NULL);
 	viewer->gain_inc = arv_camera_get_gain_increment (viewer->camera, NULL);
+	if (viewer->gain_inc <= G_MINDOUBLE) {
+		viewer->gain_inc = 1.0;
+	}
 	gtk_spin_button_set_range (GTK_SPIN_BUTTON (viewer->gain_spin_button), viewer->gain_min, viewer->gain_max);
 	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->gain_spin_button), ceil (1.0 / viewer->gain_inc) * viewer->gain_inc, ceil (10.0 / viewer->gain_inc) * viewer->gain_inc);
 
