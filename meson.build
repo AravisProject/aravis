@@ -1,4 +1,4 @@
-project ('aravis', 'c', 'cpp', version: '0.9.2', meson_version: '>=0.57.0', default_options: ['default_library=shared'])
+project ('aravis', 'c', 'cpp', version: '0.9.2', meson_version: '>=0.57.0')
 
 gnome = import('gnome')
 pkg = import ('pkgconfig')
