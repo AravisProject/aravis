@@ -755,7 +755,8 @@ set_camera_widgets(ArvViewer *viewer)
 	}
 	gtk_spin_button_set_range (GTK_SPIN_BUTTON (viewer->exposure_spin_button),
 				   viewer->exposure_min, viewer->exposure_max);
-	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->exposure_spin_button), ceil (200.0 / viewer->exposure_inc) * viewer->exposure_inc, ceil (1000.0 / viewer->exposure_inc) * viewer->exposure_inc);
+	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->exposure_spin_button), viewer->exposure_inc, ceil (1000.0 / viewer->exposure_inc) * viewer->exposure_inc);
+	gtk_spin_button_set_snap_to_ticks (GTK_SPIN_BUTTON (viewer->exposure_spin_button), TRUE);
 
 	arv_camera_get_gain_bounds (viewer->camera, &viewer->gain_min, &viewer->gain_max, NULL);
 	viewer->gain_inc = arv_camera_get_gain_increment (viewer->camera, NULL);
@@ -763,7 +764,8 @@ set_camera_widgets(ArvViewer *viewer)
 		viewer->gain_inc = 1.0;
 	}
 	gtk_spin_button_set_range (GTK_SPIN_BUTTON (viewer->gain_spin_button), viewer->gain_min, viewer->gain_max);
-	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->gain_spin_button), ceil (1.0 / viewer->gain_inc) * viewer->gain_inc, ceil (10.0 / viewer->gain_inc) * viewer->gain_inc);
+	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->gain_spin_button), viewer->gain_inc, ceil (10.0 / viewer->gain_inc) * viewer->gain_inc);
+	gtk_spin_button_set_snap_to_ticks (GTK_SPIN_BUTTON (viewer->gain_spin_button), TRUE);
 
 	arv_camera_get_black_level_bounds (viewer->camera, &black_level_min, &black_level_max, NULL);
 	gtk_spin_button_set_range (GTK_SPIN_BUTTON (viewer->black_level_spin_button), black_level_min, black_level_max);
