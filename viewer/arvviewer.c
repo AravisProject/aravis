@@ -142,8 +142,8 @@ struct  _ArvViewer {
 	gboolean flip_vertical;
 	gboolean flip_horizontal;
 
-	double gain_min, gain_max;
-	double exposure_min, exposure_max;
+	double gain_min, gain_max, gain_inc;
+	double exposure_min, exposure_max, exposure_inc;
 
 	ArvGcRepresentation gain_representation;
 	ArvGcRepresentation exposure_time_representation;
@@ -290,8 +290,10 @@ arv_viewer_value_to_log (double value, double min, double max)
 }
 
 static double
-arv_viewer_value_from_log (double value, double min, double max)
+arv_viewer_value_from_log (double value, double min, double max, double inc)
 {
+	double power, mod, result;
+
 	if (min <= 0.0 || max <= 0)
 		return 0.0;
 
@@ -300,7 +302,13 @@ arv_viewer_value_from_log (double value, double min, double max)
 	if (value < 0.0)
 		return min;
 
-	return pow (10.0, (value * (log10 (max) - log10 (min)) + log10 (min)));
+	power = pow (10.0, (value * (log10 (max) - log10 (min)) + log10 (min)));
+	mod = fmod (power - min, inc);
+	result = power - mod;
+	if (mod > 0.5 * inc) {
+		result += inc;
+	}
+	return result;
 }
 
 static void
@@ -547,7 +555,7 @@ exposure_scale_cb (GtkRange *range, ArvViewer *viewer)
 {
 	double scaled_exposure = gtk_range_get_value (range);
 	double exposure = viewer->exposure_time_representation == ARV_GC_REPRESENTATION_LOGARITHMIC ?
-		arv_viewer_value_from_log (scaled_exposure, viewer->exposure_min, viewer->exposure_max) : scaled_exposure;
+		arv_viewer_value_from_log (scaled_exposure, viewer->exposure_min, viewer->exposure_max, viewer->exposure_inc) : scaled_exposure;
 
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (viewer->auto_exposure_toggle), FALSE);
 
@@ -563,7 +571,7 @@ gain_scale_cb (GtkRange *range, ArvViewer *viewer)
 {
 	double scaled_gain = gtk_range_get_value (range);
 	double gain = viewer->gain_representation == ARV_GC_REPRESENTATION_LOGARITHMIC ?
-		arv_viewer_value_from_log (scaled_gain, viewer->gain_min, viewer->gain_max) : scaled_gain;
+		arv_viewer_value_from_log (scaled_gain, viewer->gain_min, viewer->gain_max, viewer->gain_inc) : scaled_gain;
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (viewer->auto_gain_toggle), FALSE);
 
 	arv_camera_set_gain (viewer->camera, gain, NULL);
@@ -746,13 +754,23 @@ set_camera_widgets(ArvViewer *viewer)
 	g_signal_handler_block (viewer->exposure_spin_button, viewer->exposure_spin_changed);
 
 	arv_camera_get_exposure_time_bounds (viewer->camera, &viewer->exposure_min, &viewer->exposure_max, NULL);
+	viewer->exposure_inc = arv_camera_get_exposure_time_increment (viewer->camera, NULL);
+	if (viewer->exposure_inc <= G_MINDOUBLE) {
+		viewer->exposure_inc = 1.0;
+	}
 	gtk_spin_button_set_range (GTK_SPIN_BUTTON (viewer->exposure_spin_button),
 				   viewer->exposure_min, viewer->exposure_max);
-	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->exposure_spin_button), 200.0, 1000.0);
+	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->exposure_spin_button), viewer->exposure_inc, ceil (1000.0 / viewer->exposure_inc) * viewer->exposure_inc);
+	gtk_spin_button_set_snap_to_ticks (GTK_SPIN_BUTTON (viewer->exposure_spin_button), TRUE);
 
 	arv_camera_get_gain_bounds (viewer->camera, &viewer->gain_min, &viewer->gain_max, NULL);
+	viewer->gain_inc = arv_camera_get_gain_increment (viewer->camera, NULL);
+	if (viewer->gain_inc <= G_MINDOUBLE) {
+		viewer->gain_inc = 1.0;
+	}
 	gtk_spin_button_set_range (GTK_SPIN_BUTTON (viewer->gain_spin_button), viewer->gain_min, viewer->gain_max);
-	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->gain_spin_button), 1, 10);
+	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->gain_spin_button), viewer->gain_inc, ceil (10.0 / viewer->gain_inc) * viewer->gain_inc);
+	gtk_spin_button_set_snap_to_ticks (GTK_SPIN_BUTTON (viewer->gain_spin_button), TRUE);
 
 	arv_camera_get_black_level_bounds (viewer->camera, &black_level_min, &black_level_max, NULL);
 	gtk_spin_button_set_range (GTK_SPIN_BUTTON (viewer->black_level_spin_button), black_level_min, black_level_max);
@@ -782,6 +800,7 @@ set_camera_widgets(ArvViewer *viewer)
 			case ARV_GC_REPRESENTATION_LINEAR:
 				gtk_range_set_range (GTK_RANGE (viewer->gain_hscale),
                                                      viewer->gain_min, viewer->gain_max);
+				gtk_range_set_increments (GTK_RANGE (viewer->gain_hscale), viewer->gain_inc, viewer->gain_inc);
 				gtk_widget_set_sensitive (viewer->gain_hscale, is_gain_available);
 				gtk_widget_set_sensitive (viewer->gain_spin_button, is_gain_available);
 				break;
@@ -822,6 +841,7 @@ set_camera_widgets(ArvViewer *viewer)
 			case ARV_GC_REPRESENTATION_LINEAR:
 				gtk_range_set_range (GTK_RANGE (viewer->exposure_hscale),
                                                      viewer->exposure_min, viewer->exposure_max);
+				gtk_range_set_increments (GTK_RANGE (viewer->exposure_hscale), viewer->exposure_inc, viewer->exposure_inc);
 				break;
 			case ARV_GC_REPRESENTATION_LOGARITHMIC:
 				gtk_range_set_range (GTK_RANGE (viewer->exposure_hscale), 0.0, 1.0);

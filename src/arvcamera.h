@@ -136,6 +136,7 @@ ARV_API gboolean	arv_camera_is_exposure_auto_available	(ArvCamera *camera, GErro
 ARV_API void		arv_camera_set_exposure_time		(ArvCamera *camera, double exposure_time_us, GError **error);
 ARV_API double		arv_camera_get_exposure_time		(ArvCamera *camera, GError **error);
 ARV_API void		arv_camera_get_exposure_time_bounds	(ArvCamera *camera, double *min, double *max, GError **error);
+ARV_API double		arv_camera_get_exposure_time_increment	(ArvCamera *camera, GError **error);
 ARV_API void		arv_camera_set_exposure_time_auto	(ArvCamera *camera, ArvAuto auto_mode, GError **error);
 ARV_API ArvAuto		arv_camera_get_exposure_time_auto	(ArvCamera *camera, GError **error);
 ARV_API ArvGcRepresentation arv_camera_get_exposure_time_representation (ArvCamera *camera);
@@ -152,6 +153,7 @@ ARV_API const char **	arv_camera_dup_available_gains	        (ArvCamera *camera,
 ARV_API void		arv_camera_set_gain			(ArvCamera *camera, double gain, GError **error);
 ARV_API double		arv_camera_get_gain			(ArvCamera *camera, GError **error);
 ARV_API void		arv_camera_get_gain_bounds		(ArvCamera *camera, double *min, double *max, GError **error);
+ARV_API double		arv_camera_get_gain_increment		(ArvCamera *camera, GError **error);
 ARV_API void		arv_camera_set_gain_auto		(ArvCamera *camera, ArvAuto auto_mode, GError **error);
 ARV_API ArvAuto		arv_camera_get_gain_auto		(ArvCamera *camera, GError **error);
 ARV_API ArvGcRepresentation arv_camera_get_gain_representation  (ArvCamera *camera);

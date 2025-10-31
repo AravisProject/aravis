@@ -55,6 +55,7 @@
 static void arv_camera_get_integer_bounds_as_gint (ArvCamera *camera, const char *feature, gint *min, gint *max, GError **error);
 static void arv_camera_get_integer_bounds_as_guint (ArvCamera *camera, const char *feature, guint *min, guint *max, GError **error);
 static void arv_camera_get_integer_bounds_as_double (ArvCamera *camera, const char *feature, double *min, double *max, GError **error);
+static double arv_camera_get_integer_increment_as_double (ArvCamera *camera, const char *feature, GError **error);
 
 /**
  * ArvCameraVendor:
@@ -1699,8 +1700,8 @@ arv_camera_get_exposure_time (ArvCamera *camera, GError **error)
 /**
  * arv_camera_get_exposure_time_bounds:
  * @camera: a #ArvCamera
- * @min: (out): minimum exposure time
- * @max: (out): maximum exposure time
+ * @min: (out): minimum exposure time, or -#G_MAXDOUBLE on error
+ * @max: (out): maximum exposure time, or #G_MAXDOUBLE on error
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Retrieves exposure time bounds, in µs.
@@ -1742,6 +1743,48 @@ arv_camera_get_exposure_time_bounds (ArvCamera *camera, double *min, double *max
 						     "ExposureTimeAbs",
 						     min, max, error);
 			break;
+	}
+}
+
+/**
+ * arv_camera_get_exposure_time_increment:
+ * @camera: a #ArvCamera
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: exposure time increment, in µs, or #G_MINDOUBLE on error.
+ *
+ * Since: 0.10.0
+ */
+
+double
+arv_camera_get_exposure_time_increment (ArvCamera *camera, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), 1);
+
+	switch (priv->series) {
+		case ARV_CAMERA_SERIES_BASLER_SCOUT:
+			return arv_camera_get_float_increment (camera,
+						     priv->has_exposure_time ?
+						     "ExposureTime" :
+						     "ExposureTimeBaseAbs",
+						     error);
+		case ARV_CAMERA_SERIES_BASLER_ACE:
+			if (priv->has_exposure_time)
+				return arv_camera_get_float_increment (camera, "ExposureTime", error);
+			else
+				return arv_camera_get_integer_increment_as_double (camera, "ExposureTimeRaw", error);
+		case ARV_CAMERA_SERIES_XIMEA:
+			return arv_camera_get_integer_increment_as_double (camera, "ExposureTime", error);
+		case ARV_CAMERA_SERIES_RICOH:
+			return arv_camera_get_integer_increment_as_double (camera, "ExposureTimeRaw", error);
+		default:
+			return arv_camera_get_float_increment (camera,
+						     priv->has_exposure_time ?
+						     "ExposureTime" :
+						     "ExposureTimeAbs",
+						     error);
 	}
 }
 
@@ -1862,8 +1905,8 @@ arv_camera_get_gain (ArvCamera *camera, GError **error)
 /**
  * arv_camera_get_gain_bounds:
  * @camera: a #ArvCamera
- * @min: (out): minimum gain
- * @max: (out): maximum gain
+ * @min: (out): minimum gain, or -#G_MAXDOUBLE on error
+ * @max: (out): maximum gain, or #G_MAXDOUBLE on error
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Retrieves gain bounds.
@@ -1892,6 +1935,34 @@ arv_camera_get_gain_bounds (ArvCamera *camera, double *min, double *max, GError 
 	arv_camera_get_integer_bounds_as_double (camera, "GainRaw", min, max, error);
 
 	return;
+}
+
+/**
+ * arv_camera_get_gain_increment:
+ * @camera: a #ArvCamera
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: gain increment, or #G_MINDOUBLE on error.
+ *
+ * Since: 0.10.0
+ */
+
+double
+arv_camera_get_gain_increment (ArvCamera *camera, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), 1);
+
+	if (priv->has_gain) {
+		return arv_camera_get_float_increment (camera, "Gain", error);
+	} else if (priv->gain_abs_as_float) {
+		return arv_camera_get_float_increment (camera, "GainAbs", error);
+	} else if (priv->gain_raw_as_float) {
+		return arv_camera_get_float_increment (camera, "GainRaw", error);
+	}
+
+	return arv_camera_get_integer_increment_as_double (camera, "GainRaw", error);
 }
 
 /**
@@ -2837,6 +2908,20 @@ arv_camera_get_integer_bounds_as_double (ArvCamera *camera, const char *feature,
 		if (max != NULL)
 			*max = max64;
 	}
+}
+
+static double
+arv_camera_get_integer_increment_as_double (ArvCamera *camera, const char *feature, GError **error)
+{
+	GError *local_error = NULL;
+	gint64 inc64;
+
+	inc64 = arv_camera_get_integer_increment (camera, feature, &local_error);
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return G_MINDOUBLE;
+	}
+	return inc64;
 }
 
 /**
