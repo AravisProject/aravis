@@ -720,10 +720,205 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 		"video/x-raw-bayer, format=(string)bggr, bpp=(int)8, depth=(int)8",
 		"video/x-raw-bayer",	8,	8,	ARV_MAKE_FOURCC ('b','g','g','r')
 	},
-
 /* Non 8bit bayer formats are not supported by gstreamer bayer plugin.
- * This feature is discussed in bug https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/issues/86 .*/
-
+ * This feature is discussed in bug https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/issues/86 .
+ * This is a fallback for these bayer formats, displaying a grayscale image. */
+	{
+		ARV_PIXEL_FORMAT_BAYER_GR_10,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-bayer, format=(string)grbg, bpp=(int)16, depth=(int)10",
+		"video/x-raw-gray",	16,	10,	ARV_MAKE_FOURCC ('g','r','b','g')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_RG_10,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-bayer, format=(string)rggb, bpp=(int)16, depth=(int)10",
+		"video/x-raw-gray",	16,	10,	ARV_MAKE_FOURCC ('r','g','g','b')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GB_10,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-bayer, format=(string)gbrg, bpp=(int)16, depth=(int)10",
+		"video/x-raw-gray",	16,	10,	ARV_MAKE_FOURCC ('g','b','r','g')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_BG_10,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-gray, format=(string)bggr, bpp=(int)16, depth=(int)10",
+		"video/x-raw-gray",	16,	10,	ARV_MAKE_FOURCC ('b','g','g','r')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GR_12,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-bayer, format=(string)grbg, bpp=(int)16, depth=(int)12",
+		"video/x-raw-gray",	16,	12,	ARV_MAKE_FOURCC ('g','r','b','g')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_RG_12,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-bayer, format=(string)rggb, bpp=(int)16, depth=(int)12",
+		"video/x-raw-gray",	16,	12,	ARV_MAKE_FOURCC ('r','g','g','b')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GB_12,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-bayer, format=(string)gbrg, bpp=(int)16, depth=(int)12",
+		"video/x-raw-gray",	16,	12,	ARV_MAKE_FOURCC ('g','b','r','g')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_BG_12,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-gray, format=(string)bggr, bpp=(int)16, depth=(int)12",
+		"video/x-raw-gray",	16,	12,	ARV_MAKE_FOURCC ('b','g','g','r')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GR_16,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-bayer, format=(string)grbg, bpp=(int)16, depth=(int)16",
+		"video/x-raw-gray",	16,	16,	ARV_MAKE_FOURCC ('g','r','b','g')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_RG_16,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-bayer, format=(string)rggb, bpp=(int)16, depth=(int)16",
+		"video/x-raw-gray",	16,	16,	ARV_MAKE_FOURCC ('r','g','g','b')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GB_16,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-bayer, format=(string)gbrg, bpp=(int)16, depth=(int)16",
+		"video/x-raw-gray",	16,	16,	ARV_MAKE_FOURCC ('g','b','r','g')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_BG_16,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-gray, format=(string)bggr, bpp=(int)16, depth=(int)16",
+		"video/x-raw-gray",	16,	16,	ARV_MAKE_FOURCC ('b','g','g','r')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GR_10P,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-bayer, format=(string)grbg, bpp=(int)10, depth=(int)10",
+		"video/x-raw-gray",	10,	10,	ARV_MAKE_FOURCC ('g','r','b','g')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_RG_10P,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-bayer, format=(string)rggb, bpp=(int)10, depth=(int)10",
+		"video/x-raw-gray",	10,	10,	ARV_MAKE_FOURCC ('r','g','g','b')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GB_10P,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-bayer, format=(string)gbrg, bpp=(int)10, depth=(int)10",
+		"video/x-raw-gray",	10,	10,	ARV_MAKE_FOURCC ('g','b','r','g')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_BG_10P,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-gray, format=(string)bggr, bpp=(int)10, depth=(int)10",
+		"video/x-raw-gray",	10,	10,	ARV_MAKE_FOURCC ('b','g','g','r')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GR_12P,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-bayer, format=(string)grbg, bpp=(int)12, depth=(int)12",
+		"video/x-raw-gray",	12,	12,	ARV_MAKE_FOURCC ('g','r','b','g')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_RG_12P,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-bayer, format=(string)rggb, bpp=(int)12, depth=(int)12",
+		"video/x-raw-gray",	12,	12,	ARV_MAKE_FOURCC ('r','g','g','b')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GB_12P,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-bayer, format=(string)gbrg, bpp=(int)12, depth=(int)12",
+		"video/x-raw-gray",	12,	12,	ARV_MAKE_FOURCC ('g','b','r','g')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_BG_12P,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-gray, format=(string)bggr, bpp=(int)12, depth=(int)12",
+		"video/x-raw-gray",	12,	12,	ARV_MAKE_FOURCC ('b','g','g','r')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GR_10_PACKED,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-bayer, format=(string)grbg, bpp=(int)10, depth=(int)10",
+		"video/x-raw-gray",	10,	10,	ARV_MAKE_FOURCC ('g','r','b','g')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_RG_10_PACKED,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-bayer, format=(string)rggb, bpp=(int)10, depth=(int)10",
+		"video/x-raw-gray",	10,	10,	ARV_MAKE_FOURCC ('r','g','g','b')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GB_10_PACKED,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-bayer, format=(string)gbrg, bpp=(int)10, depth=(int)10",
+		"video/x-raw-gray",	10,	10,	ARV_MAKE_FOURCC ('g','b','r','g')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_BG_10_PACKED,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-gray, format=(string)bggr, bpp=(int)10, depth=(int)10",
+		"video/x-raw-gray",	10,	10,	ARV_MAKE_FOURCC ('b','g','g','r')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GR_12_PACKED,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-bayer, format=(string)grbg, bpp=(int)12, depth=(int)12",
+		"video/x-raw-gray",	12,	12,	ARV_MAKE_FOURCC ('g','r','b','g')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_RG_12_PACKED,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-bayer, format=(string)rggb, bpp=(int)12, depth=(int)12",
+		"video/x-raw-gray",	12,	12,	ARV_MAKE_FOURCC ('r','g','g','b')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GB_12_PACKED,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-bayer, format=(string)gbrg, bpp=(int)12, depth=(int)12",
+		"video/x-raw-gray",	12,	12,	ARV_MAKE_FOURCC ('g','b','r','g')
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_BG_12_PACKED,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",	"GRAY16_LE",
+		"video/x-raw-gray, format=(string)bggr, bpp=(int)12, depth=(int)12",
+		"video/x-raw-gray",	12,	12,	ARV_MAKE_FOURCC ('b','g','g','r')
+	},
 	{
 		ARV_PIXEL_FORMAT_YUV_422_PACKED,
 		"video/x-raw, format=(string)UYVY",
