@@ -41,7 +41,6 @@
 #define ARV_VIEWER_NOTIFICATION_TIMEOUT 10
 #define ARV_VIEWER_N_BUFFERS 10
 
-static gboolean has_autovideo_sink = FALSE;
 static gboolean has_gtksink = FALSE;
 static gboolean has_gtkglsink = FALSE;
 static gboolean has_bayer2rgb = FALSE;
@@ -77,12 +76,6 @@ gstreamer_plugin_check (void)
 				g_object_unref (feature);
 		}
 
-		feature = gst_registry_lookup_feature (registry, "autovideosink");
-		if (GST_IS_PLUGIN_FEATURE (feature)) {
-			has_autovideo_sink = TRUE;
-			g_object_unref (feature);
-		}
-
 		feature = gst_registry_lookup_feature (registry, "gtksink");
 		if (GST_IS_PLUGIN_FEATURE (feature)) {
 			has_gtksink = TRUE;
@@ -101,7 +94,7 @@ gstreamer_plugin_check (void)
 			g_object_unref (feature);
 		}
 
-		if (!has_autovideo_sink && !has_gtkglsink && !has_gtksink) {
+		if (!has_gtkglsink && !has_gtksink) {
 			g_print ("Missing GStreamer video output plugin (autovideosink, gtksink or gtkglsink)\n");
 			success = FALSE;
 		}
@@ -1417,31 +1410,10 @@ stop_video (ArvViewer *viewer)
 	}
 }
 
-static GstBusSyncReply
-bus_sync_handler (GstBus *bus, GstMessage *message, gpointer user_data)
-{
-	ArvViewer *viewer = user_data;
-
-	if (!gst_is_video_overlay_prepare_window_handle_message(message))
-		return GST_BUS_PASS;
-
-	if (viewer->video_window_xid != 0) {
-		GstVideoOverlay *videooverlay;
-
-		videooverlay = GST_VIDEO_OVERLAY (GST_MESSAGE_SRC (message));
-		gst_video_overlay_set_window_handle (videooverlay, viewer->video_window_xid);
-	} else {
-		g_warning ("Should have obtained video_window_xid by now!");
-	}
-
-	gst_message_unref (message);
-
-	return GST_BUS_DROP;
-}
-
 static gboolean
 start_video (ArvViewer *viewer)
 {
+        GtkWidget *video_widget;
 	GstElement *videoconvert;
 	GstCaps *caps;
 	ArvPixelFormat pixel_format;
@@ -1528,9 +1500,6 @@ start_video (ArvViewer *viewer)
 		gst_element_link_many (viewer->appsrc, videoconvert, viewer->transform, NULL);
 	}
 
-	if (has_gtksink || has_gtkglsink) {
-		GtkWidget *video_widget;
-
 #if 0 /* Disable glsink for now, it crashes when we come back to camera list with:
 	(lt-arv-viewer:29151): Gdk-WARNING **: eglMakeCurrent failed
 	(lt-arv-viewer:29151): Gdk-WARNING **: eglMakeCurrent failed
@@ -1538,33 +1507,30 @@ start_video (ArvViewer *viewer)
 	Erreur de segmentation (core dumped)
 	*/
 
-		videosink = gst_element_factory_make ("gtkglsink", NULL);
+        printf ("Use gtkglsink\n");
 
-		if (GST_IS_ELEMENT (videosink)) {
-			GstElement *glupload;
+        viewer->videosink = gst_element_factory_make ("gtkglsink", NULL);
+
+        if (GST_IS_ELEMENT (viewer->videosink)) {
+                GstElement *glupload;
 
 			glupload = gst_element_factory_make ("glupload", NULL);
-			gst_bin_add_many (GST_BIN (viewer->pipeline), glupload, videosink, NULL);
-			gst_element_link_many (viewer->transform, glupload, videosink, NULL);
-		} else {
+			gst_bin_add_many (GST_BIN (viewer->pipeline), glupload, viewer->videosink, NULL);
+			gst_element_link_many (viewer->transform, glupload, viewer->videosink, NULL);
+        } else {
 #else
-		{
+        {
 #endif
-			viewer->videosink = gst_element_factory_make ("gtksink", NULL);
-			gst_bin_add_many (GST_BIN (viewer->pipeline), viewer->videosink, NULL);
-			gst_element_link_many (viewer->transform, viewer->videosink, NULL);
-		}
+                viewer->videosink = gst_element_factory_make ("gtksink", NULL);
+                gst_bin_add_many (GST_BIN (viewer->pipeline), viewer->videosink, NULL);
+                gst_element_link_many (viewer->transform, viewer->videosink, NULL);
+        }
 
-		g_object_get (viewer->videosink, "widget", &video_widget, NULL);
-		gtk_container_add (GTK_CONTAINER (viewer->video_frame), video_widget);
-		gtk_widget_show (video_widget);
-		g_object_set(G_OBJECT (video_widget), "force-aspect-ratio", TRUE, NULL);
-		gtk_widget_set_size_request (video_widget, 640, 480);
-	} else {
-		viewer->videosink = gst_element_factory_make ("autovideosink", NULL);
-		gst_bin_add (GST_BIN (viewer->pipeline), viewer->videosink);
-		gst_element_link_many (viewer->transform, viewer->videosink, NULL);
-	}
+        g_object_get (viewer->videosink, "widget", &video_widget, NULL);
+        gtk_container_add (GTK_CONTAINER (viewer->video_frame), video_widget);
+        gtk_widget_show (video_widget);
+        g_object_set(G_OBJECT (video_widget), "force-aspect-ratio", TRUE, NULL);
+        gtk_widget_set_size_request (video_widget, 640, 480);
 
 	g_object_set(G_OBJECT (viewer->videosink), "sync", FALSE, NULL);
 
@@ -1579,14 +1545,6 @@ start_video (ArvViewer *viewer)
 	gst_caps_unref (caps);
 
 	g_object_set(G_OBJECT (viewer->appsrc), "format", GST_FORMAT_TIME, "is-live", TRUE, "do-timestamp", TRUE, NULL);
-
-	if (!has_gtkglsink && !has_gtksink) {
-		GstBus *bus;
-
-		bus = gst_pipeline_get_bus (GST_PIPELINE (viewer->pipeline));
-		gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bus_sync_handler, viewer, NULL);
-		gst_object_unref (bus);
-	}
 
 	gst_element_set_state (viewer->pipeline, GST_STATE_PLAYING);
 
