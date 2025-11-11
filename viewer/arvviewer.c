@@ -31,18 +31,10 @@
 #include <arvviewer.h>
 #include <math.h>
 #include <memory.h>
-#ifdef GDK_WINDOWING_X11
-#include <gdk/gdkx.h>  // for GDK_WINDOW_XID
-#endif
-#ifdef GDK_WINDOWING_WIN32
-#include <gdk/gdkwin32.h>  // for GDK_WINDOW_HWND
-#endif
 
 #define ARV_VIEWER_NOTIFICATION_TIMEOUT 10
 #define ARV_VIEWER_N_BUFFERS 10
 
-static gboolean has_gtksink = FALSE;
-static gboolean has_gtkglsink = FALSE;
 static gboolean has_bayer2rgb = FALSE;
 
 static gboolean
@@ -60,7 +52,8 @@ gstreamer_plugin_check (void)
 		static char *plugins[] = {
 			"appsrc",
 			"videoconvert",
-			"videoflip"
+			"videoflip",
+                        "gtksink"
 		};
 
 		registry = gst_registry_get ();
@@ -68,24 +61,12 @@ gstreamer_plugin_check (void)
 		for (i = 0; i < G_N_ELEMENTS (plugins); i++) {
 			feature = gst_registry_lookup_feature (registry, plugins[i]);
 			if (!GST_IS_PLUGIN_FEATURE (feature)) {
-				g_print ("Gstreamer plugin '%s' is missing.\n", plugins[i]);
+				g_print ("Gstreamer plugin '%s' is missing\n", plugins[i]);
 				success = FALSE;
 			}
 			else
 
 				g_object_unref (feature);
-		}
-
-		feature = gst_registry_lookup_feature (registry, "gtksink");
-		if (GST_IS_PLUGIN_FEATURE (feature)) {
-			has_gtksink = TRUE;
-			g_object_unref (feature);
-		}
-
-		feature = gst_registry_lookup_feature (registry, "gtkglsink");
-		if (GST_IS_PLUGIN_FEATURE (feature)) {
-			has_gtkglsink = TRUE;
-			g_object_unref (feature);
 		}
 
 		feature = gst_registry_lookup_feature (registry, "bayer2rgb");
@@ -94,13 +75,8 @@ gstreamer_plugin_check (void)
 			g_object_unref (feature);
 		}
 
-		if (!has_gtkglsink && !has_gtksink) {
-			g_print ("Missing GStreamer video output plugin (autovideosink, gtksink or gtkglsink)\n");
-			success = FALSE;
-		}
-
 		if (!success)
-			g_print ("Check your gstreamer installation.\n");
+			g_print ("Check your gstreamer installation\n");
 
 		/* Kludge, prevent autoloading of coglsink, which doesn't seem to work for us */
 		feature = gst_registry_lookup_feature (registry, "coglsink");
@@ -1500,31 +1476,9 @@ start_video (ArvViewer *viewer)
 		gst_element_link_many (viewer->appsrc, videoconvert, viewer->transform, NULL);
 	}
 
-#if 0 /* Disable glsink for now, it crashes when we come back to camera list with:
-	(lt-arv-viewer:29151): Gdk-WARNING **: eglMakeCurrent failed
-	(lt-arv-viewer:29151): Gdk-WARNING **: eglMakeCurrent failed
-	(lt-arv-viewer:29151): Gdk-WARNING **: eglMakeCurrent failed
-	Erreur de segmentation (core dumped)
-	*/
-
-        printf ("Use gtkglsink\n");
-
-        viewer->videosink = gst_element_factory_make ("gtkglsink", NULL);
-
-        if (GST_IS_ELEMENT (viewer->videosink)) {
-                GstElement *glupload;
-
-			glupload = gst_element_factory_make ("glupload", NULL);
-			gst_bin_add_many (GST_BIN (viewer->pipeline), glupload, viewer->videosink, NULL);
-			gst_element_link_many (viewer->transform, glupload, viewer->videosink, NULL);
-        } else {
-#else
-        {
-#endif
-                viewer->videosink = gst_element_factory_make ("gtksink", NULL);
-                gst_bin_add_many (GST_BIN (viewer->pipeline), viewer->videosink, NULL);
-                gst_element_link_many (viewer->transform, viewer->videosink, NULL);
-        }
+        viewer->videosink = gst_element_factory_make ("gtksink", NULL);
+        gst_bin_add_many (GST_BIN (viewer->pipeline), viewer->videosink, NULL);
+        gst_element_link_many (viewer->transform, viewer->videosink, NULL);
 
         g_object_get (viewer->videosink, "widget", &video_widget, NULL);
         gtk_container_add (GTK_CONTAINER (viewer->video_frame), video_widget);
@@ -1786,17 +1740,6 @@ arv_viewer_quit_cb (GtkApplicationWindow *window, ArvViewer *viewer)
 }
 
 static void
-video_frame_realize_cb (GtkWidget * widget, ArvViewer *viewer)
-{
-#ifdef GDK_WINDOWING_X11
-	viewer->video_window_xid = GDK_WINDOW_XID (gtk_widget_get_window (widget));
-#endif
-#ifdef GDK_WINDOWING_WIN32
-	viewer->video_window_xid = (guintptr) GDK_WINDOW_HWND (gtk_widget_get_window (widget));
-#endif
-}
-
-static void
 activate (GApplication *application)
 {
 	ArvViewer *viewer = (ArvViewer *) application;
@@ -1894,10 +1837,6 @@ activate (GApplication *application)
                                                           G_CALLBACK (flip_vertical_cb), viewer);
 	g_signal_connect (viewer->frame_rate_entry, "activate", G_CALLBACK (frame_rate_entry_cb), viewer);
 	g_signal_connect (viewer->frame_rate_entry, "focus-out-event", G_CALLBACK (frame_rate_entry_focus_cb), viewer);
-
-	if (!has_gtksink && !has_gtkglsink) {
-		g_signal_connect (viewer->video_frame, "realize", G_CALLBACK (video_frame_realize_cb), viewer);
-	}
 
 	viewer->camera_selected = g_signal_connect (gtk_tree_view_get_selection (GTK_TREE_VIEW (viewer->camera_tree)), "changed",
 						    G_CALLBACK (camera_selection_changed_cb), viewer);
