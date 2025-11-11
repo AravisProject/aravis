@@ -7,7 +7,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Aravis.Camera.get_chunk_mode</title>
+  <title>Aravis.Camera.get_exposure_time_increment</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <meta charset="utf-8" />
@@ -23,10 +23,10 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
 
   
-  <meta priority="og:title" content="Aravis.Camera.get_chunk_mode"/>
-  <meta priority="og:description" content="Reference for Aravis.Camera.get_chunk_mode"/>
-  <meta name="twitter:title" content="Aravis.Camera.get_chunk_mode"/>
-  <meta name="twitter:description" content="Reference for Aravis.Camera.get_chunk_mode"/>
+  <meta priority="og:title" content="Aravis.Camera.get_exposure_time_increment"/>
+  <meta priority="og:description" content="Reference for Aravis.Camera.get_exposure_time_increment"/>
+  <meta name="twitter:title" content="Aravis.Camera.get_exposure_time_increment"/>
+  <meta name="twitter:description" content="Reference for Aravis.Camera.get_exposure_time_increment"/>
 
 
   
@@ -141,7 +141,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.Camera.get_boolean_gi.html">get_boolean_gi</a>
   
-    <a class="method current" href="method.Camera.get_chunk_mode.html">get_chunk_mode</a>
+    <a class="method" href="method.Camera.get_chunk_mode.html">get_chunk_mode</a>
   
     <a class="method" href="method.Camera.get_chunk_state.html">get_chunk_state</a>
   
@@ -157,7 +157,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.Camera.get_exposure_time_bounds.html">get_exposure_time_bounds</a>
   
-    <a class="method" href="method.Camera.get_exposure_time_increment.html">get_exposure_time_increment</a>
+    <a class="method current" href="method.Camera.get_exposure_time_increment.html">get_exposure_time_increment</a>
   
     <a class="method" href="method.Camera.get_exposure_time_representation.html">get_exposure_time_representation</a>
   
@@ -405,12 +405,12 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <section id="main" class="content">
   <header>
     <h3>Method</h3>
-    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.Camera.html">Camera</a><span class="sep"></span>get_chunk_mode</h1>
+    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.Camera.html">Camera</a><span class="sep"></span>get_exposure_time_increment</h1>
   </header>
 
   <section>
     <div class="docblock">
-      <p><span class="emblem available">since: 0.8.0</span></p>
+      <p><span class="emblem available-next" title="This method will be available in the next stable release">unstable</span>&nbsp;<span class="emblem available">since: 0.10.0</span></p>
     </div>
 
     <div class="declaration toggle-wrapper">
@@ -418,13 +418,13 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Declaration
         <a class="anchor" href="#declaration"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvcamera.h#L284">[src]</a>
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvcamera.h#L139">[src]</a>
         
       </h4>
 
       <div class="docblock c-decl">
-        <pre><code><div class="highlight"><pre><span></span><span class="n">gboolean</span>
-<span class="n">arv_camera_get_chunk_mode</span><span class="w"> </span><span class="p">(</span>
+        <pre><code><div class="highlight"><pre><span></span><span class="kt">double</span>
+<span class="n">arv_camera_get_exposure_time_increment</span><span class="w"> </span><span class="p">(</span>
 <span class="w">  </span><span class="n">ArvCamera</span><span class="o">*</span><span class="w"> </span><span class="n">camera</span>
 <span class="w">  </span><span class="n">GError</span><span class="o">**</span><span class="w"> </span><span class="n">error</span>
 <span class="p">)</span>
@@ -438,17 +438,15 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Description
         <a class="anchor" href="#description"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvcamera.c#L4041">[src]</a>
-        
       </h4>
 
       <div class="docblock">
-        <p>Check wether chunk data mode is active. Please see&nbsp;arv_camera_set_chunk_mode().</p>
+        <p>No description available.</p>
       </div>
 
       <div class="docblock">
         
-        <p>Available since: 0.8.0</p>
+        <p>Available since: 0.10.0</p>
         
         
         
@@ -471,8 +469,8 @@ SPDX-License-Identifier: LGPL-2.1-or-later
       <div class="docblock">
         <div class="returns">
           <div class="arg-description">
-            <p><em>Type:</em>&nbsp;<code>gboolean</code></p>
-            <p><code>TRUE</code> if chunk data mode is&nbsp;active.</p>
+            <p><em>Type:</em>&nbsp;<code>double</code></p>
+            <p>Exposure time increment, in µs, or #G_MINDOUBLE on&nbsp;error.</p>
           </div>
           <div>
             <table>
