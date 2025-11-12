@@ -120,6 +120,10 @@ crossroad meson setup build
 ninja -C build install
 ```
 
+## Building using Bazel
+
+The core functionality of Aravis can also be built using the externally maintained [Bazel module from the Bazel Central Registry](https://registry.bazel.build/modules/aravis).
+
 # Debugging Aravis
 
 The `ARV_DEBUG` environment variable can be set to a comma separated list of
