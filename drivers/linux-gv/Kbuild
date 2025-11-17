@@ -1,0 +1,3 @@
+ccflags-y := $(MODULE_CFLAGS)
+obj-m := aravis_gv.o
+aravis_gv-y := $(patsubst $(src)/%.c,%.o,$(wildcard $(src)/*.c))
