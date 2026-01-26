@@ -1224,14 +1224,22 @@ arv_device_set_features_from_string (ArvDevice *device, const char *string, GErr
                                                      ARV_DEVICE_ERROR_INVALID_PARAMETER,
                                                      "Invalid address in %s", key);
                                 } else {
-                                        int_value = g_ascii_strtoll (value, &end, 0);
-                                        if (end == NULL || end[0] != '\0') {
+                                        if (value == NULL || strlen (value) == 0) {
                                                 g_set_error (&local_error,
                                                              ARV_DEVICE_ERROR,
                                                              ARV_DEVICE_ERROR_INVALID_PARAMETER,
-                                                             "Invalid %s value for %s", value, key);
+                                                             "Value not found for %s", key);
                                         } else {
-                                                arv_device_write_register (device, address, int_value, &local_error);
+                                                int_value = g_ascii_strtoll (value, &end, 0);
+                                                if (end == NULL || end[0] != '\0') {
+                                                        g_set_error (&local_error,
+                                                                     ARV_DEVICE_ERROR,
+                                                                     ARV_DEVICE_ERROR_INVALID_PARAMETER,
+                                                                     "Invalid %s value for %s", value, key);
+                                                } else {
+                                                        arv_device_write_register (device, address, int_value,
+                                                                                   &local_error);
+                                                }
                                         }
                                 }
                         } else {

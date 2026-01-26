@@ -726,6 +726,18 @@ set_features_from_string_test (void)
 	g_assert (success);
 	g_assert (error == NULL);
 
+	success = arv_device_set_features_from_string (device, "R[0x1f0]", &error);
+	g_assert (!success);
+	g_assert (error != NULL);
+	g_clear_error (&error);
+
+	success = arv_device_set_features_from_string (device, "R[0x1f0]=10", &error);
+	g_assert (success);
+	g_assert (error == NULL);
+        int_value = arv_device_get_integer_feature_value (device, "TestRegister", &error);
+	g_assert (error == NULL);
+        g_assert_cmpint(int_value, ==, 10);
+
 	success = arv_device_set_features_from_string (device, NULL, NULL);
 	g_assert (success);
 
