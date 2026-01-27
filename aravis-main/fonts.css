@@ -25,8 +25,8 @@
 @font-face {
   font-family: "Red Hat Display";
   src: local('RedHatDisplayWeb'),
-       url("RedHatDisplay-RegularItalic.woff2") format("woff2"),
-       url("RedHatDisplay-RegularItalic.woff") format("woff");
+       url("RedHatDisplay-Italic.woff2") format("woff2"),
+       url("RedHatDisplay-Italic.woff") format("woff");
   font-style: italic;
   font-weight: 400;
   font-display: fallback;
