@@ -1096,9 +1096,9 @@ arv_uv_device_constructed (GObject *object)
                 arv_info_device ("[UvDevice::new] USB %d.%d",
                                  priv->usb_major_version, priv->usb_minor_version);
 
-	arv_info_device("[UvDevice::new] Using control endpoint OUT=%02x IN=%02x, interface %d",
+	arv_info_device("[UvDevice::new] Using control endpoint OUT=0x%02x IN=0x%02x, interface %d",
 			 priv->control_endpoint_out, priv->control_endpoint_in, priv->control_interface);
-	arv_info_device("[UvDevice::new] Using data endpoint %02x, interface %d",
+	arv_info_device("[UvDevice::new] Using data endpoint 0x%02x, interface %d",
 			 priv->data_endpoint, priv->data_interface);
 
         result = libusb_claim_interface (priv->usb_device, priv->control_interface);
