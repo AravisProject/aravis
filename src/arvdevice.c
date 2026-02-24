@@ -115,13 +115,13 @@ arv_device_create_stream_full (ArvDevice *device, ArvStreamCallback callback, vo
  * arv_device_read_memory:
  * @device: a #ArvDevice
  * @address: memory address
- * @size: number of bytes to read
- * @buffer: a buffer for the storage of the read data
- * @error: (out) (allow-none): a #GError placeholder
+ * @size: (in): number of bytes to read
+ * @buffer: (array length=size) (element-type guint8) (out caller-allocates) : a buffer for the storage of the read data
+ * @error: a #GError placeholder
  *
  * Reads @size bytes from the device memory.
  *
- * Return value: (skip): TRUE on success.
+ * Return value: %TRUE on success, %FALSE if an error occurred
  *
  * Since: 0.2.0
  **/
@@ -141,13 +141,13 @@ arv_device_read_memory (ArvDevice *device, guint64 address, guint32 size, void *
  * arv_device_write_memory:
  * @device: a #ArvDevice
  * @address: memory address
- * @size: size of the returned buffer
- * @buffer: (transfer full): the buffer read from memory
- * @error: (out) (allow-none): a #GError placeholder
+ * @size: size of the content to write buffer
+ * @buffer: (array length=size) (element-type guint8): the content to write
+ * @error: a #GError placeholder
  *
  * Writes @size bytes to the device memory.
  *
- * Return value: (skip): TRUE on success.
+ * Return value: %TRUE on success, %FALSE if an error occurred
  *
  * Since: 0.2.0
  **/
@@ -161,6 +161,65 @@ arv_device_write_memory (ArvDevice *device, guint64 address, guint32 size, const
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	return ARV_DEVICE_GET_CLASS (device)->write_memory (device, address, size, buffer, error);
+}
+
+/**
+ * arv_device_read_bytes: (rename-to arv_device_read_memory):
+ * @device: a #ArvDevice
+ * @address: memory address
+ * @size: number of bytes to read
+ * @error: a #GError placeholder
+ *
+ * Reads @size bytes from the device memory.
+ *
+ * Return value: (transfer full): a new [class@Glib.ByteArray), %NULL on error
+ *
+ * Since: 0.8.36
+ **/
+
+GByteArray *
+arv_device_read_bytes (ArvDevice *device, guint64 address, guint32 size, GError **error)
+{
+        void *buffer;
+        gboolean success;
+
+	g_return_val_if_fail (ARV_IS_DEVICE (device), NULL);
+	g_return_val_if_fail (size > 0, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+        buffer = g_new (guint8, size);
+
+	success = ARV_DEVICE_GET_CLASS (device)->read_memory (device, address, size, buffer, error);
+
+        if (success)
+                return g_byte_array_new_take (buffer, size);
+
+        g_free (buffer);
+        return NULL;
+}
+
+/**
+ * arv_device_write_bytes: (rename-to arv_device_write_memory):
+ * @device: a #ArvDevice
+ * @address: memory address
+ * @bytes: (transfer none): the content to write
+ * @error: a #GError placeholder
+ *
+ * Writes bytes to the device memory.
+ *
+ * Return value: %TRUE on success, %FALSE if an error occurred
+ *
+ * Since: 0.8.36
+ **/
+
+gboolean
+arv_device_write_bytes (ArvDevice *device, guint64 address, GByteArray *bytes, GError **error)
+{
+	g_return_val_if_fail (ARV_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (bytes != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	return ARV_DEVICE_GET_CLASS (device)->write_memory (device, address, bytes->len, bytes->data, error);
 }
 
 /**
