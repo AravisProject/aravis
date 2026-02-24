@@ -72,6 +72,7 @@ extern ArvDebugCategoryInfos arv_debug_category_infos[];
 #define arv_warning_device(...)		arv_warning (ARV_DEBUG_CATEGORY_DEVICE, __VA_ARGS__)
 #define arv_info_device(...) 		arv_info (ARV_DEBUG_CATEGORY_DEVICE, __VA_ARGS__)
 #define arv_debug_device(...)		arv_debug (ARV_DEBUG_CATEGORY_DEVICE, __VA_ARGS__)
+#define arv_trace_device(...)           arv_trace (ARV_DEBUG_CATEGORY_DEVICE, __VA_ARGS__)
 
 #define arv_warning_chunk(...)		arv_warning (ARV_DEBUG_CATEGORY_CHUNK, __VA_ARGS__)
 #define arv_info_chunk(...) 		arv_info (ARV_DEBUG_CATEGORY_CHUNK, __VA_ARGS__)
