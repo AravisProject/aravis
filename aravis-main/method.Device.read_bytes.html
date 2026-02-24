@@ -7,7 +7,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Aravis.Device.set_features_from_string</title>
+  <title>Aravis.Device.read_bytes</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <meta charset="utf-8" />
@@ -23,10 +23,10 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
 
   
-  <meta priority="og:title" content="Aravis.Device.set_features_from_string"/>
-  <meta priority="og:description" content="Reference for Aravis.Device.set_features_from_string"/>
-  <meta name="twitter:title" content="Aravis.Device.set_features_from_string"/>
-  <meta name="twitter:description" content="Reference for Aravis.Device.set_features_from_string"/>
+  <meta priority="og:title" content="Aravis.Device.read_bytes"/>
+  <meta priority="og:description" content="Reference for Aravis.Device.read_bytes"/>
+  <meta name="twitter:title" content="Aravis.Device.read_bytes"/>
+  <meta name="twitter:description" content="Reference for Aravis.Device.read_bytes"/>
 
 
   
@@ -139,7 +139,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.Device.is_feature_implemented.html">is_feature_implemented</a>
   
-    <a class="method" href="method.Device.read_bytes.html">read_bytes</a>
+    <a class="method current" href="method.Device.read_bytes.html">read_bytes</a>
   
     <a class="method" href="method.Device.read_memory.html">read_memory</a>
   
@@ -151,7 +151,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.Device.set_feature_value.html">set_feature_value</a>
   
-    <a class="method current" href="method.Device.set_features_from_string.html">set_features_from_string</a>
+    <a class="method" href="method.Device.set_features_from_string.html">set_features_from_string</a>
   
     <a class="method" href="method.Device.set_float_feature_value.html">set_float_feature_value</a>
   
@@ -189,12 +189,12 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <section id="main" class="content">
   <header>
     <h3>Method</h3>
-    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.Device.html">Device</a><span class="sep"></span>set_features_from_string</h1>
+    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.Device.html">Device</a><span class="sep"></span>read_bytes</h1>
   </header>
 
   <section>
     <div class="docblock">
-      <p><span class="emblem available">since: 0.8.0</span></p>
+      <p><span class="emblem available">since: 0.8.36</span></p>
     </div>
 
     <div class="declaration toggle-wrapper">
@@ -202,15 +202,16 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Declaration
         <a class="anchor" href="#declaration"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvdevice.h#L179">[src]</a>
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvdevice.h#L121">[src]</a>
         
       </h4>
 
       <div class="docblock c-decl">
-        <pre><code><div class="highlight"><pre><span></span><span class="n">gboolean</span>
-<span class="n">arv_device_set_features_from_string</span><span class="w"> </span><span class="p">(</span>
+        <pre><code><div class="highlight"><pre><span></span><span class="n">GByteArray</span><span class="o">*</span>
+<span class="n">arv_device_read_bytes</span><span class="w"> </span><span class="p">(</span>
 <span class="w">  </span><span class="n">ArvDevice</span><span class="o">*</span><span class="w"> </span><span class="n">device</span><span class="p">,</span>
-<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">string</span><span class="p">,</span>
+<span class="w">  </span><span class="n">guint64</span><span class="w"> </span><span class="n">address</span><span class="p">,</span>
+<span class="w">  </span><span class="n">guint32</span><span class="w"> </span><span class="n">size</span><span class="p">,</span>
 <span class="w">  </span><span class="n">GError</span><span class="o">**</span><span class="w"> </span><span class="n">error</span>
 <span class="p">)</span>
 </pre></div>
@@ -223,23 +224,21 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Description
         <a class="anchor" href="#description"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvdevice.c#L1236">[src]</a>
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvdevice.c#L164">[src]</a>
         
       </h4>
 
       <div class="docblock">
-        <p>Set features from a string containing a list of space separated feature assignments or command names. For&nbsp;example:</p>
-<div class="highlight"><pre><span></span><span class="n">arv_device_set_features_from_string</span><span class="w"> </span><span class="p">(</span><span class="n">device</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Width=256 Height=256 PixelFormat=&#39;Mono8&#39; TriggerStart&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">error</span><span class="p">);</span>
-</pre></div>
+        <p>Reads <code>size</code> bytes from the device&nbsp;memory.</p>
       </div>
 
       <div class="docblock">
         
-        <p>Available since: 0.8.0</p>
+        <p>Available since: 0.8.36</p>
         
         
         
-        
+        <p>This method is renamed to <a href="method.Device.read_memory.html"><code>arv_device_read_memory()</code></a> in language bindings.</p>
         
       </div>
 
@@ -258,10 +257,10 @@ SPDX-License-Identifier: LGPL-2.1-or-later
           
 
           
-          <dt class="arg-name"><code>string</code></dt>
+          <dt class="arg-name"><code>address</code></dt>
           <dd class="arg-description">
-            <p><em>Type:</em>&nbsp;<code>const char*</code></p>
-            <p>A space separated list of features&nbsp;assignments.</p>
+            <p><em>Type:</em>&nbsp;<code>guint64</code></p>
+            <p>Memory&nbsp;address.</p>
             <table>
             
             
@@ -270,8 +269,25 @@ SPDX-License-Identifier: LGPL-2.1-or-later
             
             
             
-            <tr><td title="transfer: none">The data is owned by the caller of the method.</td></tr>
-            <tr><td>The value is a NUL terminated UTF-8 string.</td></tr>
+            
+            
+            </table>
+          </dd>
+          
+          <dt class="arg-name"><code>size</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;<code>guint32</code></p>
+            <p>Number of bytes to&nbsp;read.</p>
+            <table>
+            
+            
+            
+            
+            
+            
+            
+            
+            
             </table>
           </dd>
           
@@ -304,15 +320,15 @@ SPDX-License-Identifier: LGPL-2.1-or-later
       <div class="docblock">
         <div class="returns">
           <div class="arg-description">
-            <p><em>Type:</em>&nbsp;<code>gboolean</code></p>
-            <p>No description available.</p>
+            <p><em>Type:</em>&nbsp;An array of&nbsp;<code>guint8</code></p>
+            <p>A new&nbsp;[class@Glib.ByteArray), <code>NULL</code> on&nbsp;error.</p>
           </div>
           <div>
             <table>
             
             
             
-            
+            <tr><td title="transfer: full">The caller of the method takes ownership of the returned data, and is responsible for freeing it.</td></tr>
             
             
             </table>

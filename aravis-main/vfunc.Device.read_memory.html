@@ -204,7 +204,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
             <p><em>Type:</em>&nbsp;<code>guint32</code></p>
             <p>Number of bytes to&nbsp;read.</p>
             <table>
-            
+            <tr><td title="direction: out">The argument will be set by the function.</td></tr>
             
             
             
@@ -218,17 +218,17 @@ SPDX-License-Identifier: LGPL-2.1-or-later
           
           <dt class="arg-name"><code>buffer</code></dt>
           <dd class="arg-description">
-            <p><em>Type:</em>&nbsp;<code>void*</code></p>
+            <p><em>Type:</em>&nbsp;An array of&nbsp;<code>guint8</code></p>
             <p>A buffer for the storage of the read&nbsp;data.</p>
             <table>
+            <tr><td title="direction: out">The argument will be set by the function.</td></tr>
             
-            <tr><td>The argument can be <code>NULL</code>.</td></tr>
-            
-            
-            
+            <tr><td>The argument can be set to <code>NULL</code> by the virtual function.</td></tr>
             
             
-            <tr><td title="transfer: none">The data is owned by the caller of the method.</td></tr>
+            
+            <tr><td>The length of the array is specified in the <code>size</code> argument.</td></tr>
+            <tr><td title="transfer: none">The returned data is owned by the instance.</td></tr>
             
             </table>
           </dd>
@@ -263,7 +263,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         <div class="returns">
           <div>
             <p><em>Type:</em>&nbsp;<code>gboolean</code></p>
-            <p><span class="caps">TRUE</span> on&nbsp;success.</p>
+            <p><code>TRUE</code> on&nbsp;success, <code>FALSE</code> if an error&nbsp;occurred.</p>
           </div>
           <div>
             <table>
