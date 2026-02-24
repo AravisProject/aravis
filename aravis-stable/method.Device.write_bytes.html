@@ -7,7 +7,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Aravis.Device.get_integer_feature_value</title>
+  <title>Aravis.Device.write_bytes</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <meta charset="utf-8" />
@@ -23,10 +23,10 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
 
   
-  <meta priority="og:title" content="Aravis.Device.get_integer_feature_value"/>
-  <meta priority="og:description" content="Reference for Aravis.Device.get_integer_feature_value"/>
-  <meta name="twitter:title" content="Aravis.Device.get_integer_feature_value"/>
-  <meta name="twitter:description" content="Reference for Aravis.Device.get_integer_feature_value"/>
+  <meta priority="og:title" content="Aravis.Device.write_bytes"/>
+  <meta priority="og:description" content="Reference for Aravis.Device.write_bytes"/>
+  <meta name="twitter:title" content="Aravis.Device.write_bytes"/>
+  <meta name="twitter:description" content="Reference for Aravis.Device.write_bytes"/>
 
 
   
@@ -131,7 +131,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.Device.get_integer_feature_increment.html">get_integer_feature_increment</a>
   
-    <a class="method current" href="method.Device.get_integer_feature_value.html">get_integer_feature_value</a>
+    <a class="method" href="method.Device.get_integer_feature_value.html">get_integer_feature_value</a>
   
     <a class="method" href="method.Device.get_string_feature_value.html">get_string_feature_value</a>
   
@@ -167,7 +167,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.Device.set_string_feature_value.html">set_string_feature_value</a>
   
-    <a class="method" href="method.Device.write_bytes.html">write_bytes</a>
+    <a class="method current" href="method.Device.write_bytes.html">write_bytes</a>
   
     <a class="method" href="method.Device.write_memory.html">write_memory</a>
   
@@ -187,12 +187,12 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 <section id="main" class="content">
   <header>
     <h3>Method</h3>
-    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.Device.html">Device</a><span class="sep"></span>get_integer_feature_value</h1>
+    <h1><a href="index.html">Aravis</a><span class="sep"></span><a href="class.Device.html">Device</a><span class="sep"></span>write_bytes</h1>
   </header>
 
   <section>
     <div class="docblock">
-      <p><span class="emblem available">since: 0.8.0</span></p>
+      <p><span class="emblem available">since: 0.8.36</span></p>
     </div>
 
     <div class="declaration toggle-wrapper">
@@ -200,15 +200,16 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Declaration
         <a class="anchor" href="#declaration"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvdevice.h#L135">[src]</a>
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvdevice.h#L106">[src]</a>
         
       </h4>
 
       <div class="docblock c-decl">
-        <pre><code><div class="highlight"><pre><span></span><span class="n">gint64</span>
-<span class="n">arv_device_get_integer_feature_value</span><span class="w"> </span><span class="p">(</span>
+        <pre><code><div class="highlight"><pre><span></span><span class="n">gboolean</span>
+<span class="n">arv_device_write_bytes</span><span class="w"> </span><span class="p">(</span>
 <span class="w">  </span><span class="n">ArvDevice</span><span class="o">*</span><span class="w"> </span><span class="n">device</span><span class="p">,</span>
-<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">feature</span><span class="p">,</span>
+<span class="w">  </span><span class="n">guint64</span><span class="w"> </span><span class="n">address</span><span class="p">,</span>
+<span class="w">  </span><span class="n">GByteArray</span><span class="o">*</span><span class="w"> </span><span class="n">bytes</span><span class="p">,</span>
 <span class="w">  </span><span class="n">GError</span><span class="o">**</span><span class="w"> </span><span class="n">error</span>
 <span class="p">)</span>
 </pre></div>
@@ -221,19 +222,21 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Description
         <a class="anchor" href="#description"></a>
         
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvdevice.c#L201">[src]</a>
+        
       </h4>
 
       <div class="docblock">
-        <p>No description available.</p>
+        <p>Writes bytes to the device&nbsp;memory.</p>
       </div>
 
       <div class="docblock">
         
-        <p>Available since: 0.8.0</p>
+        <p>Available since: 0.8.36</p>
         
         
         
-        
+        <p>This method is renamed to <a href="method.Device.write_memory.html"><code>arv_device_write_memory()</code></a> in language bindings.</p>
         
       </div>
 
@@ -252,10 +255,27 @@ SPDX-License-Identifier: LGPL-2.1-or-later
           
 
           
-          <dt class="arg-name"><code>feature</code></dt>
+          <dt class="arg-name"><code>address</code></dt>
           <dd class="arg-description">
-            <p><em>Type:</em>&nbsp;<code>const char*</code></p>
-            <p>Feature&nbsp;name.</p>
+            <p><em>Type:</em>&nbsp;<code>guint64</code></p>
+            <p>Memory&nbsp;address.</p>
+            <table>
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            </table>
+          </dd>
+          
+          <dt class="arg-name"><code>bytes</code></dt>
+          <dd class="arg-description">
+            <p><em>Type:</em>&nbsp;An array of&nbsp;<code>guint8</code></p>
+            <p>The content to&nbsp;write.</p>
             <table>
             
             
@@ -265,7 +285,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
             
             
             <tr><td title="transfer: none">The data is owned by the caller of the method.</td></tr>
-            <tr><td>The value is a NUL terminated UTF-8 string.</td></tr>
+            
             </table>
           </dd>
           
@@ -298,8 +318,8 @@ SPDX-License-Identifier: LGPL-2.1-or-later
       <div class="docblock">
         <div class="returns">
           <div class="arg-description">
-            <p><em>Type:</em>&nbsp;<code>gint64</code></p>
-            <p>The integer feature value, 0 on&nbsp;error.</p>
+            <p><em>Type:</em>&nbsp;<code>gboolean</code></p>
+            <p><code>TRUE</code> on&nbsp;success, <code>FALSE</code> if an error&nbsp;occurred.</p>
           </div>
           <div>
             <table>

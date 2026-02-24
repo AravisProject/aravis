@@ -141,6 +141,8 @@ SPDX-License-Identifier: LGPL-2.1-or-later
   
     <a class="method" href="method.Device.is_feature_implemented.html">is_feature_implemented</a>
   
+    <a class="method" href="method.Device.read_bytes.html">read_bytes</a>
+  
     <a class="method current" href="method.Device.read_memory.html">read_memory</a>
   
     <a class="method" href="method.Device.read_register.html">read_register</a>
@@ -164,6 +166,8 @@ SPDX-License-Identifier: LGPL-2.1-or-later
     <a class="method" href="method.Device.set_register_feature_value.html">set_register_feature_value</a>
   
     <a class="method" href="method.Device.set_string_feature_value.html">set_string_feature_value</a>
+  
+    <a class="method" href="method.Device.write_bytes.html">write_bytes</a>
   
     <a class="method" href="method.Device.write_memory.html">write_memory</a>
   
@@ -234,7 +238,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         
         
         
-        
+        <p>The implementation of this method is provided by <a href="method.Device.read_bytes.html"><code>arv_device_read_bytes()</code></a> in language bindings.</p>
       </div>
 
       
@@ -274,7 +278,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
             <p><em>Type:</em>&nbsp;<code>guint32</code></p>
             <p>Number of bytes to&nbsp;read.</p>
             <table>
-            
+            <tr><td title="direction: out">The argument will be set by the function.</td></tr>
             
             
             
@@ -288,17 +292,17 @@ SPDX-License-Identifier: LGPL-2.1-or-later
           
           <dt class="arg-name"><code>buffer</code></dt>
           <dd class="arg-description">
-            <p><em>Type:</em>&nbsp;<code>void*</code></p>
+            <p><em>Type:</em>&nbsp;An array of&nbsp;<code>guint8</code></p>
             <p>A buffer for the storage of the read&nbsp;data.</p>
             <table>
-            
-            <tr><td>The argument can be <code>NULL</code>.</td></tr>
-            
+            <tr><td title="direction: out">The argument will be set by the function.</td></tr>
             
             
             
             
-            <tr><td title="transfer: none">The data is owned by the caller of the method.</td></tr>
+            
+            <tr><td>The length of the array is specified in the <code>size</code> argument.</td></tr>
+            <tr><td title="transfer: none">The returned data is owned by the instance.</td></tr>
             
             </table>
           </dd>
@@ -333,7 +337,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         <div class="returns">
           <div class="arg-description">
             <p><em>Type:</em>&nbsp;<code>gboolean</code></p>
-            <p><span class="caps">TRUE</span> on&nbsp;success.</p>
+            <p><code>TRUE</code> on&nbsp;success, <code>FALSE</code> if an error&nbsp;occurred.</p>
           </div>
           <div>
             <table>
