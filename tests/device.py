@@ -19,6 +19,12 @@ bytes = device.read_memory(0x48, 5)
 
 assert bytes == b'0123\x00'
 
+try:
+    bytes = device.write_memory (0x10000, b'test')
+
+except GLib.Error as err:
+    assert err.matches (Aravis.device_error_quark(), Aravis.DeviceError.INVALID_PARAMETER)
+
 device.write_register (0x48, 123)
 value = device.read_register (0x48)
 
