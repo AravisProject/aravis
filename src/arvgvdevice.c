@@ -36,6 +36,7 @@
 #include <arvgvcpprivate.h>
 #include <arvgvspprivate.h>
 #include <arvnetworkprivate.h>
+#include <arvgvinterface.h>
 #include <arvzip.h>
 #include <arvstr.h>
 #include <arvmiscprivate.h>
@@ -667,6 +668,7 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 	char *buffer;
 	guint last_size = 0;
 	gboolean success;
+	char *bindtodevice_name = NULL;
 
 	g_return_val_if_fail (ARV_IS_GV_DEVICE (gv_device), 1500);
 
@@ -697,6 +699,21 @@ auto_packet_size (ArvGvDevice *gv_device, gboolean exit_early, GError **error)
 
 	interface_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (priv->io_data->interface_address));
 	socket = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, NULL);
+#ifdef SO_BINDTODEVICE
+	bindtodevice_name = arv_gv_interface_dup_discovery_bindtodevice_name();
+        if (bindtodevice_name != NULL) {
+                if (setsockopt (g_socket_get_fd (socket), SOL_SOCKET, SO_BINDTODEVICE,
+                                bindtodevice_name, strlen (bindtodevice_name)) != 0) {
+                        arv_warning_interface ("[GvDevice::new] "
+                                                "Failed to bind socket to device %s: %s",
+                                                bindtodevice_name, g_strerror (errno));
+                } else {
+                        arv_info_interface ("[GvDevice::new] "
+                                             "Socket bound to device %s", bindtodevice_name);
+                }
+		g_free(bindtodevice_name);
+        }
+#endif
 	interface_socket_address = arv_socket_bind_with_range (socket, interface_address, 0, FALSE, NULL);
 	local_address = G_INET_SOCKET_ADDRESS (g_socket_get_local_address (socket, NULL));
 	port = g_inet_socket_address_get_port (local_address);
@@ -1989,6 +2006,7 @@ arv_gv_device_constructed (GObject *object)
 	char *address_string;
 	guint32 capabilities;
 	guint32 device_mode;
+	char *bindtodevice_name;
 
         G_OBJECT_CLASS (arv_gv_device_parent_class)->constructed (object);
 
@@ -2016,6 +2034,21 @@ arv_gv_device_constructed (GObject *object)
 	io_data->socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
 					G_SOCKET_TYPE_DATAGRAM,
 					G_SOCKET_PROTOCOL_UDP, NULL);
+#ifdef SO_BINDTODEVICE
+	bindtodevice_name = arv_gv_interface_dup_discovery_bindtodevice_name();
+        if (bindtodevice_name != NULL) {
+                if (setsockopt (g_socket_get_fd (io_data->socket), SOL_SOCKET, SO_BINDTODEVICE,
+                                bindtodevice_name, strlen (bindtodevice_name)) != 0) {
+                        arv_warning_interface ("[GvDevice::new] "
+                                                "Failed to bind socket to device %s: %s",
+                                                bindtodevice_name, g_strerror (errno));
+                } else {
+                        arv_info_interface ("[GvDevice::new] "
+                                                "Socket bound to device %s", bindtodevice_name);
+                }
+                g_free(bindtodevice_name);
+        }
+#endif
         io_data->interface_address = arv_socket_bind_with_range (io_data->socket, priv->interface_address, 0,
                                                                  FALSE, &local_error);
 

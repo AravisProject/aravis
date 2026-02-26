@@ -77,7 +77,7 @@ arv_gv_discover_socket_free (ArvGvDiscoverSocket *discover_socket)
 }
 
 static ArvGvDiscoverSocketList *
-arv_gv_discover_socket_list_new (const char *discovery_interface)
+arv_gv_discover_socket_list_new (const char *discovery_interface, const char* discovery_bindtodevice)
 {
 	ArvGvDiscoverSocketList *socket_list;
 	GSList *iter;
@@ -123,6 +123,22 @@ arv_gv_discover_socket_list_new (const char *discovery_interface)
 		discover_socket->socket = g_socket_new (g_inet_address_get_family (inet_address),
 							G_SOCKET_TYPE_DATAGRAM,
 							G_SOCKET_PROTOCOL_UDP, NULL);
+
+#ifdef SO_BINDTODEVICE
+		if (discovery_bindtodevice != NULL) {
+			if (setsockopt (g_socket_get_fd (discover_socket->socket), SOL_SOCKET, SO_BINDTODEVICE,
+					discovery_bindtodevice, strlen (discovery_bindtodevice)) != 0) {
+				arv_warning_interface ("[ArvGVInterface::discover_socket_list_new] "
+						       "Failed to bind socket to device %s: %s",
+						       discovery_bindtodevice, g_strerror (errno));
+			} else {
+				arv_info_interface ("[ArvGVInterface::discover_socket_list_new] "
+						    "Socket bound to device %s", discovery_bindtodevice);
+			}
+		}
+#endif
+
+
 		arv_socket_set_recv_buffer_size (g_socket_get_fd (discover_socket->socket), buffer_size);
 
                 discover_socket->interface_address = arv_socket_bind_with_range (discover_socket->socket, inet_address,
@@ -348,6 +364,7 @@ typedef struct {
 
         GMutex mutex;
 	char *discovery_interface;
+	char *discovery_bindtodevice;
 } ArvGvInterfacePrivate;
 
 struct _ArvGvInterface {
@@ -363,7 +380,7 @@ struct _ArvGvInterfaceClass {
 G_DEFINE_TYPE_WITH_CODE (ArvGvInterface, arv_gv_interface, ARV_TYPE_INTERFACE, G_ADD_PRIVATE (ArvGvInterface))
 
 static ArvGvInterfaceDeviceInfos *
-_discover (GHashTable *devices, const char *device_id, gboolean allow_broadcast_discovery_ack, const char *discovery_interface)
+_discover (GHashTable *devices, const char *device_id, gboolean allow_broadcast_discovery_ack, const char *discovery_interface, const char* discovery_bindtodevice)
 {
 	ArvGvDiscoverSocketList *socket_list;
 	GSList *iter;
@@ -376,7 +393,7 @@ _discover (GHashTable *devices, const char *device_id, gboolean allow_broadcast_
 	if (devices != NULL)
 		g_hash_table_remove_all (devices);
 
-	socket_list = arv_gv_discover_socket_list_new (discovery_interface);
+	socket_list = arv_gv_discover_socket_list_new (discovery_interface, discovery_bindtodevice);
 
 	if (socket_list->n_sockets < 1) {
 		arv_gv_discover_socket_list_free (socket_list);
@@ -494,10 +511,12 @@ arv_gv_interface_discover (ArvGvInterface *gv_interface)
 {
         int flags = arv_interface_get_flags (ARV_INTERFACE(gv_interface));
         char *discovery_interface;
+		char *discovery_bindtodevice;
 
         discovery_interface = arv_gv_interface_dup_discovery_interface_name();
+        discovery_bindtodevice = arv_gv_interface_dup_discovery_bindtodevice_name();
 	_discover (gv_interface->priv->devices, NULL, flags & ARV_GV_INTERFACE_FLAGS_ALLOW_BROADCAST_DISCOVERY_ACK,
-                   discovery_interface);
+                   discovery_interface, discovery_bindtodevice);
         g_free (discovery_interface);
 }
 
@@ -567,6 +586,7 @@ arv_gv_interface_camera_locate (ArvGvInterface *gv_interface, GInetAddress *devi
 	GList *iface_iter;
 	struct sockaddr_in device_sockaddr;
         char *discovery_interface;
+        char *discovery_bindtodevice;
 
 	device_socket_address = g_inet_socket_address_new(device_address, ARV_GVCP_PORT);
 
@@ -596,7 +616,8 @@ arv_gv_interface_camera_locate (ArvGvInterface *gv_interface, GInetAddress *devi
 	}
 
         discovery_interface = arv_gv_interface_dup_discovery_interface_name();
-	socket_list = arv_gv_discover_socket_list_new (discovery_interface);
+	discovery_bindtodevice = arv_gv_interface_dup_discovery_bindtodevice_name();
+	socket_list = arv_gv_discover_socket_list_new (discovery_interface, discovery_bindtodevice);
         g_free (discovery_interface);
 
 	if (socket_list->n_sockets < 1) {
@@ -686,6 +707,7 @@ _open_device (ArvInterface *interface, GHashTable *devices, const char *device_i
 		device_infos = g_hash_table_lookup (devices, device_id);
 
 	if (device_infos == NULL) {
+		arv_info_interface ("[GvDevice::_open device] Device info not found, seeing if ID (%s) is an address", device_id);
 		struct addrinfo hints;
 		struct addrinfo *servinfo, *endpoint;
 
@@ -746,6 +768,7 @@ arv_gv_interface_open_device (ArvInterface *interface, const char *device_id, GE
 	ArvDevice *device;
 	ArvGvInterfaceDeviceInfos *device_infos;
         char *discovery_interface;
+        char *discovery_bindtodevice;
 	GError *local_error = NULL;
         int flags;
 
@@ -758,8 +781,9 @@ arv_gv_interface_open_device (ArvInterface *interface, const char *device_id, GE
 
         flags = arv_interface_get_flags (interface);
         discovery_interface = arv_gv_interface_dup_discovery_interface_name();
+        discovery_bindtodevice = arv_gv_interface_dup_discovery_bindtodevice_name();
 	device_infos = _discover (NULL, device_id, flags & ARV_GVCP_DISCOVERY_PACKET_FLAGS_ALLOW_BROADCAST_ACK,
-                                  discovery_interface);
+                                  discovery_interface, discovery_bindtodevice);
         g_free (discovery_interface);
 
 	if (device_infos != NULL) {
@@ -853,6 +877,70 @@ arv_gv_interface_dup_discovery_interface_name (void)
 	return discovery_interface;
 }
 
+/*
+ * arv_gv_interface_set_discovery_bindtodevice_name:
+ * @bindtodevice_name: (nullable): name of the device to bind the discovery to
+ *
+ * Set the name of the device to bind the discovery to. If bindtodevice_name is %NULL, a discovery will be performed on every
+ * interfaces, which is the default behaviour.
+ *
+ * A call to [func@Aravis.update_device_list] may be necessary after the discovery interface has changed, in order to
+ * forget the previously discovered devices.
+ *
+ * Since: 0.8.34
+ */
+
+void
+arv_gv_interface_set_discovery_bindtodevice_name (const char *bindtodevice_name)
+{
+	ArvInterface *interface;
+
+	g_mutex_lock (&arv_gv_interface_mutex);
+
+	interface = _get_instance();
+        if (interface != NULL) {
+                ArvGvInterfacePrivate *priv = ARV_GV_INTERFACE (interface)->priv;
+
+                g_mutex_lock (&priv->mutex);
+                g_clear_pointer (&priv->discovery_bindtodevice, g_free);
+                priv->discovery_bindtodevice = g_strdup (bindtodevice_name);
+                g_mutex_unlock (&priv->mutex);
+        }
+
+	g_mutex_unlock (&arv_gv_interface_mutex);
+}
+
+/*
+ * arv_gv_interface_dup_discovery_bindtodevice_name:
+ *
+ * Returns: the name of the device used for device discovery, %NULL if discovery is performed on all the available
+ * interfaces.
+ *
+ * Since: 0.8.34
+ */
+
+char *
+arv_gv_interface_dup_discovery_bindtodevice_name (void)
+{
+	ArvInterface *interface;
+	char *discovery_bindtodevice = NULL;
+
+	g_mutex_lock (&arv_gv_interface_mutex);
+
+	interface = _get_instance();
+        if (interface != NULL) {
+                ArvGvInterfacePrivate *priv = ARV_GV_INTERFACE (interface)->priv;
+
+                g_mutex_lock (&priv->mutex);
+                discovery_bindtodevice = g_strdup (priv->discovery_bindtodevice);
+                g_mutex_unlock (&priv->mutex);
+        }
+
+	g_mutex_unlock (&arv_gv_interface_mutex);
+
+	return discovery_bindtodevice;
+}
+
 /**
  * arv_gv_interface_get_instance:
  *
@@ -897,7 +985,7 @@ arv_gv_interface_init (ArvGvInterface *gv_interface)
 							     (GDestroyNotify) arv_gv_interface_device_infos_unref);
         g_mutex_init(&gv_interface->priv->mutex);
 	gv_interface->priv->discovery_interface = NULL;
-
+	gv_interface->priv->discovery_bindtodevice = NULL;
 }
 
 static void
@@ -908,6 +996,7 @@ arv_gv_interface_finalize (GObject *object)
 	g_hash_table_unref (gv_interface->priv->devices);
 	gv_interface->priv->devices = NULL;
 	g_clear_pointer (&gv_interface->priv->discovery_interface, g_free);
+	g_clear_pointer (&gv_interface->priv->discovery_bindtodevice, g_free);
         g_mutex_clear (&gv_interface->priv->mutex);
 
 	G_OBJECT_CLASS (arv_gv_interface_parent_class)->finalize (object);
