@@ -59,31 +59,18 @@ Create a `.env` file to customize build parameters:
 
 ```env
 USERNAME=your-username
-DISTRO_NAME=trixie
+BASE_IMAGE="debian:trixie"
 ARAVIS_VERSION=0.9.1
 ARAVIS_SOURCE_MODE=release
-CONTAINER_DISPLAY=:10
 ```
 
 `ARAVIS_SOURCE_MODE` accepts:
 - `release` (default): downloads and builds from `ARAVIS_VERSION`
 - `workspace`: builds from the current local repository source copied into the image
 
-## Testing with Fake Camera
-
-To test without physical hardware:
-
-```bash
-# In one terminal, start the fake camera
-docker compose exec dev /opt/aravis/build/src/arv-fake-gv-camera-0.10
-
-# In another terminal, run the viewer Inside the dev container
-/opt/aravis/build/viewer/arv-viewer-0.10
-```
-
 ## X11 Display
 
-The container is configured for X11 forwarding. Ensure your host allows X11 connections:
+The container is configured for X11 forwarding. If using wayland, ensure your host allows X11 connections:
 
 ```bash
 xhost +local:docker
