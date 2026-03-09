@@ -1,6 +1,7 @@
 ARG DISTRO_NAME=trixie
+ARG BASE_IMAGE=debian:${DISTRO_NAME}
 
-FROM debian:${DISTRO_NAME} AS zsh-builder
+FROM ${BASE_IMAGE} AS zsh-builder
 
 # Install only what is required to prepare oh-my-zsh assets.
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -20,12 +21,12 @@ RUN set -eux; \
     git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git /root/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting; \
     sed -i 's/^plugins=(.*)$/plugins=(git ssh-agent zsh-autosuggestions zsh-syntax-highlighting)/' /root/.zshrc
 
-FROM debian:${DISTRO_NAME} AS aravis-workspace
+FROM ${BASE_IMAGE} AS aravis-workspace
 
 # Keep a copy of the current workspace so the builder can compile local sources.
 COPY . /opt/aravis-workspace
 
-FROM debian:${DISTRO_NAME} AS aravis-builder
+FROM ${BASE_IMAGE} AS aravis-builder
 
 ARG ARAVIS_VERSION=0.9.1
 ARG ARAVIS_SRC_DIR=/opt/aravis
@@ -69,7 +70,7 @@ RUN set -eux; \
     meson setup build; \
     meson compile -C build
 
-FROM debian:${DISTRO_NAME} AS development
+FROM ${BASE_IMAGE} AS development
 
 ARG USERNAME=vscode
 ARG USER_UID=1000
@@ -152,7 +153,7 @@ RUN set -eux; \
 CMD ["/bin/zsh"]
 
 # Viewer-only stage - minimal runtime for just running arv-viewer
-FROM debian:${DISTRO_NAME} AS viewer
+FROM ${BASE_IMAGE} AS viewer
 
 ARG ARAVIS_SRC_DIR=/opt/aravis
 

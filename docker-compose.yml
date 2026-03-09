@@ -7,6 +7,7 @@ services:
       args:
         USERNAME: ${USERNAME:-aravis}
         DISTRO_NAME: ${DISTRO_NAME:-trixie}
+        BASE_IMAGE: ${BASE_IMAGE:-debian:trixie}
         ARAVIS_VERSION: ${ARAVIS_VERSION:-0.9.1}
         ARAVIS_SOURCE_MODE: ${ARAVIS_SOURCE_MODE:-release}
     environment:
@@ -34,6 +35,7 @@ services:
       target: viewer
       args:
         DISTRO_NAME: ${DISTRO_NAME:-trixie}
+        BASE_IMAGE: ${BASE_IMAGE:-debian:trixie}
         ARAVIS_VERSION: ${ARAVIS_VERSION:-0.9.1}
         ARAVIS_SOURCE_MODE: ${ARAVIS_SOURCE_MODE:-release}
     environment:
