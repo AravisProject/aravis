@@ -1,0 +1,51 @@
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+      args:
+        USERNAME: ${USERNAME:-aravis}
+        DISTRO_NAME: ${DISTRO_NAME:-trixie}
+        ARAVIS_VERSION: ${ARAVIS_VERSION:-0.9.1}
+        ARAVIS_SOURCE_MODE: ${ARAVIS_SOURCE_MODE:-release}
+    environment:
+      USERNAME: ${USERNAME:-aravis}
+      DISPLAY: ${DISPLAY:-:0}
+    network_mode: host
+    pid: host
+    ipc: host
+    privileged: true # Required for USB camera access
+    volumes:
+      - .:/workspace
+      - /tmp/.X11-unix:/tmp/.X11-unix:cached
+      - /dev/dri:/dev/dri:cached
+      - $HOME/.Xauthority:/root/.Xauthority:ro
+      # Mount USB devices for camera access
+      - /dev/bus/usb:/dev/bus/usb
+      # Share udev rules from host (host device needs to be pre-configured with appropriate udev rules)
+      - /etc/udev/rules.d:/etc/udev/rules.d:ro
+    command: sleep infinity
+
+  viewer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: viewer
+      args:
+        DISTRO_NAME: ${DISTRO_NAME:-trixie}
+        ARAVIS_VERSION: ${ARAVIS_VERSION:-0.9.1}
+        ARAVIS_SOURCE_MODE: ${ARAVIS_SOURCE_MODE:-release}
+    environment:
+      DISPLAY: ${DISPLAY:-:0}
+    network_mode: host
+    pid: host
+    ipc: host
+    privileged: true # Required for USB camera access
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:cached
+      - /dev/dri:/dev/dri:cached
+      - $HOME/.Xauthority:/root/.Xauthority:ro
+      # Mount USB devices for camera access
+      - /dev/bus/usb:/dev/bus/usb
+      - /etc/udev/rules.d:/etc/udev/rules.d:ro
