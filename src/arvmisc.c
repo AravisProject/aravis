@@ -720,9 +720,89 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 		"video/x-raw-bayer, format=(string)bggr, bpp=(int)8, depth=(int)8",
 		"video/x-raw-bayer",	8,	8,	ARV_MAKE_FOURCC ('b','g','g','r')
 	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GR_10,
+		"video/x-bayer, format=(string)grbg10le",
+		"video/x-bayer",	"grbg10le",
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_RG_10,
+		"video/x-bayer, format=(string)rggb10le",
+		"video/x-bayer",	"rggb10le",
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GB_10,
+		"video/x-bayer, format=(string)gbrg10le",
+		"video/x-bayer",	"gbrg10le",
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_BG_10,
+		"video/x-bayer, format=(string)bggr10le",
+		"video/x-bayer",	"bggr10le",
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GR_12,
+		"video/x-bayer, format=(string)grbg12le",
+		"video/x-bayer",	"grbg12le",
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_RG_12,
+		"video/x-bayer, format=(string)rggb12le",
+		"video/x-bayer",	"rggb12le",
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GB_12,
+		"video/x-bayer, format=(string)gbrg12le",
+		"video/x-bayer",	"gbrg12le",
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_BG_12,
+		"video/x-bayer, format=(string)bggr12le",
+		"video/x-bayer",	"bggr12le",
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GR_14,
+		"video/x-bayer, format=(string)grbg14le",
+		"video/x-bayer",	"grbg14le",
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_RG_14,
+		"video/x-bayer, format=(string)rggb14le",
+		"video/x-bayer",	"rggb14le",
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GB_14,
+		"video/x-bayer, format=(string)gbrg14le",
+		"video/x-bayer",	"gbrg14le",
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_BG_14,
+		"video/x-bayer, format=(string)bggr14le",
+		"video/x-bayer",	"bggr14le",
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GR_16,
+		"video/x-bayer, format=(string)grbg16le",
+		"video/x-bayer",	"grbg16le",
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_RG_16,
+		"video/x-bayer, format=(string)rggb16le",
+		"video/x-bayer",	"rggb16le",
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GB_16,
+		"video/x-bayer, format=(string)gbrg16le",
+		"video/x-bayer",	"gbrg16le",
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_BG_16,
+		"video/x-bayer, format=(string)bggr16le",
+		"video/x-bayer",	"bggr16le",
+	},
 
-/* Non 8bit bayer formats are not supported by gstreamer bayer plugin.
- * This feature is discussed in bug https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/issues/86 .*/
+/* The packed non 8bit bayer formats are not supported by gstreamer bayer plugin.
+ * They were discussed in bug https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/issues/86, but not implemented. */
 
 	{
 		ARV_PIXEL_FORMAT_YUV_422_PACKED,
@@ -955,20 +1035,22 @@ const char *
 arv_pixel_format_to_gst_0_10_caps_string (ArvPixelFormat pixel_format)
 {
 	int i;
+	const char *caps_string;
 
 	for (i = 0; i < G_N_ELEMENTS (arv_gst_caps_infos); i++)
 		if (arv_gst_caps_infos[i].pixel_format == pixel_format)
 			break;
 
-	if (i == G_N_ELEMENTS (arv_gst_caps_infos)) {
+	if (i == G_N_ELEMENTS (arv_gst_caps_infos) || arv_gst_caps_infos[i].gst_0_10_caps_string == NULL) {
 		arv_warning_misc ("[PixelFormat::to_gst_0_10_caps_string] 0x%08x not found", pixel_format);
 		return NULL;
 	}
 
+	caps_string = arv_gst_caps_infos[i].gst_0_10_caps_string;
 	arv_debug_misc ("[PixelFormat::to_gst_0_10_caps_string] 0x%08x -> %s",
-		      pixel_format, arv_gst_caps_infos[i].gst_0_10_caps_string);
+			pixel_format, caps_string);
 
-	return arv_gst_caps_infos[i].gst_0_10_caps_string;
+	return caps_string;
 }
 
 ArvPixelFormat
@@ -979,7 +1061,7 @@ arv_pixel_format_from_gst_0_10_caps (const char *name, int bpp, int depth, guint
 	g_return_val_if_fail (name != NULL, 0);
 
 	for (i = 0; i < G_N_ELEMENTS (arv_gst_caps_infos); i++) {
-		if (strcmp (name, arv_gst_caps_infos[i].name_0_10) != 0)
+		if (g_strcmp0 (name, arv_gst_caps_infos[i].name_0_10) != 0)
 			continue;
 
 		if (strcmp (name, "video/x-raw-yuv") == 0 &&
