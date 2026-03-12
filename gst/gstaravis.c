@@ -173,6 +173,7 @@ gst_aravis_get_all_camera_caps (GstAravis *gst_aravis, GError **error)
 	}
 	if (local_error) {
 		g_propagate_error (error, local_error);
+		g_free (pixel_formats);
 		return NULL;
 	}
 
