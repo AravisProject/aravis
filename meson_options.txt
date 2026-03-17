@@ -6,7 +6,7 @@ option('usb', type: 'feature', value: 'auto', description : 'Enable USB support'
 option('packet-socket', type: 'feature', value: 'auto', description : 'Enable packet socket support')
 
 option('tests', type: 'boolean', value: true, description: 'Build tests')
-option('fast-heartbeat', type: 'boolean', value: false, description: 'Enable faster heartbeat rate')
+option('fast-heartbeat', type: 'boolean', value: true, description: 'Enable faster heartbeat rate')
 
 # Experimental/incomplete features
 
