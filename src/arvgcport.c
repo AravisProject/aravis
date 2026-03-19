@@ -76,6 +76,7 @@ static ArvGvLegacyInfos arv_gc_port_legacy_infos[] = {
    { .vendor_selection = "Sony",                                .model_selection = "XCG_CPSeries"},
    { .vendor_selection = "TeledyneDALSA",                       .model_selection = "ICE"},
    { .vendor_selection = "Xenics",                              .model_selection = "Wildcat"},
+   { .vendor_selection = "FLIR",                                .model_selection = "XscSeries"},
 };
 
 typedef struct {
