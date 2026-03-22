@@ -173,6 +173,11 @@ typedef guint32 ArvPixelFormat;
 #define ARV_PIXEL_FORMAT_BAYER_GR_12P		((ArvPixelFormat) 0x010c0057u)
 #define ARV_PIXEL_FORMAT_BAYER_RG_12P		((ArvPixelFormat) 0x010c0059u)
 
+#define ARV_PIXEL_FORMAT_BAYER_GR_12_PACKED	((ArvPixelFormat) 0x010c002au)
+#define ARV_PIXEL_FORMAT_BAYER_RG_12_PACKED	((ArvPixelFormat) 0x010c002bu)
+#define ARV_PIXEL_FORMAT_BAYER_GB_12_PACKED	((ArvPixelFormat) 0x010c002cu)
+#define ARV_PIXEL_FORMAT_BAYER_BG_12_PACKED	((ArvPixelFormat) 0x010c002du)
+
 #define ARV_PIXEL_FORMAT_BAYER_GR_14P		((ArvPixelFormat) 0x010e0105u)
 #define ARV_PIXEL_FORMAT_BAYER_RG_14P		((ArvPixelFormat) 0x010e0106u)
 #define ARV_PIXEL_FORMAT_BAYER_GB_14P		((ArvPixelFormat) 0x010e0107u)

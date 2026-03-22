@@ -672,6 +672,13 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 		"video/x-raw-gray",	16,	12,	0
 	},
 	{
+		ARV_PIXEL_FORMAT_MONO_12P,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",		"GRAY16_LE",
+		"video/x-raw-gray, bpp=(int)16, depth=(int)12",
+		"video/x-raw-gray",	12,	12,	0
+	},
+	{
 		ARV_PIXEL_FORMAT_MONO_12_PACKED,
 		"video/x-raw, format=(string)GRAY16_LE",
 		"video/x-raw",		"GRAY16_LE",
@@ -691,6 +698,20 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 		"video/x-raw", 		"GRAY16_LE",
 		"video/x-raw-gray, bpp=(int)16, depth=(int)10",
 		"video/x-raw-gray",	16,	10,	0
+	},
+	{
+		ARV_PIXEL_FORMAT_MONO_10P,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",		"GRAY16_LE",
+		"video/x-raw-gray, bpp=(int)10, depth=(int)10",
+		"video/x-raw-gray",	10,	10,	0
+	},
+	{
+		ARV_PIXEL_FORMAT_MONO_10_PACKED,
+		"video/x-raw, format=(string)GRAY16_LE",
+		"video/x-raw",		"GRAY16_LE",
+		"video/x-raw-gray, bpp=(int)10, depth=(int)10",
+		"video/x-raw-gray",	10,	10,	0
 	},
 	{
 		ARV_PIXEL_FORMAT_BAYER_GR_8,
@@ -740,6 +761,49 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 		"video/x-bayer, format=(string)bggr10le",
 		"video/x-bayer",	"bggr10le",
 	},
+	
+/* 10-bit Bayer packed (legacy and PFNC — viewer unpacks to 16-bit) */
+	{
+		ARV_PIXEL_FORMAT_BAYER_GR_10_PACKED,
+		"video/x-bayer, format=(string)grbg10le",
+		"video/x-bayer",	"grbg10le",
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_RG_10_PACKED,
+		"video/x-bayer, format=(string)rggb10le",
+		"video/x-bayer",	"rggb10le",
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GB_10_PACKED,
+		"video/x-bayer, format=(string)gbrg10le",
+		"video/x-bayer",	"gbrg10le",
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_BG_10_PACKED,
+		"video/x-bayer, format=(string)bggr10le",
+		"video/x-bayer",	"bggr10le",
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GR_10P,
+		"video/x-bayer, format=(string)grbg10le",
+		"video/x-bayer",	"grbg10le",
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_RG_10P,
+		"video/x-bayer, format=(string)rggb10le",
+		"video/x-bayer",	"rggb10le",
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GB_10P,
+		"video/x-bayer, format=(string)gbrg10le",
+		"video/x-bayer",	"gbrg10le",
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_BG_10P,
+		"video/x-bayer, format=(string)bggr10le",
+		"video/x-bayer",	"bggr10le",
+	},
+	/* 12-bit Bayer */
 	{
 		ARV_PIXEL_FORMAT_BAYER_GR_12,
 		"video/x-bayer, format=(string)grbg12le",
@@ -760,6 +824,52 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 		"video/x-bayer, format=(string)bggr12le",
 		"video/x-bayer",	"bggr12le",
 	},
+		/* 12-bit Bayer packed (mapped to same 12le caps - camera typically sends unpacked anyway) */
+	{
+		ARV_PIXEL_FORMAT_BAYER_GR_12_PACKED,
+		"video/x-bayer, format=(string)grbg12le",
+		"video/x-bayer",	"grbg12le",
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_RG_12_PACKED,
+		"video/x-bayer, format=(string)rggb12le",
+		"video/x-bayer",	"rggb12le",
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GB_12_PACKED,
+		"video/x-bayer, format=(string)gbrg12le",
+		"video/x-bayer",	"gbrg12le",
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_BG_12_PACKED,
+		"video/x-bayer, format=(string)bggr12le",
+		"video/x-bayer",	"bggr12le",
+	},
+	/* 12-bit Bayer packed (PFNC "p" naming) */
+	{
+		ARV_PIXEL_FORMAT_BAYER_GR_12P,
+		"video/x-bayer, format=(string)grbg12le",
+		"video/x-bayer",	"grbg12le",
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_RG_12P,
+		"video/x-bayer, format=(string)rggb12le",
+		"video/x-bayer",	"rggb12le",
+		NULL, NULL, 0, 0, 0
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GB_12P,
+		"video/x-bayer, format=(string)gbrg12le",
+		"video/x-bayer",	"gbrg12le",
+		NULL, NULL, 0, 0, 0
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_BG_12P,
+		"video/x-bayer, format=(string)bggr12le",
+		"video/x-bayer",	"bggr12le",
+		NULL, NULL, 0, 0, 0
+	},
+	/* 14-bit Bayer */
 	{
 		ARV_PIXEL_FORMAT_BAYER_GR_14,
 		"video/x-bayer, format=(string)grbg14le",
