@@ -358,20 +358,303 @@ gst_buffer_release_cb (void *user_data)
 	g_free (release_data);
 }
 
+/* ============================================================================
+ * 12-bit and 10-bit packed format detection and unpacking.
+ *
+ * Two different packed layouts exist for each bit depth:
+ *
+ *   Legacy "Packed" (GigE Vision 1.x, MSB-first):
+ *     12Packed: 3 bytes per 2 pixels
+ *       byte0 = pixel0[11:4], byte1 = pixel1[3:0]<<4 | pixel0[3:0], byte2 = pixel1[11:4]
+ *       pixel0 = (b0 << 4) | (b1 & 0x0F)
+ *     10Packed: 3 bytes per 2 pixels (2 bits padding per pixel)
+ *       byte0 = pixel0[9:2], byte1 = pixel1[1:0]<<4 | pixel0[1:0], byte2 = pixel1[9:2]
+ *       pixel0 = (b0 << 2) | (b1 & 0x03)
+ *
+ *   PFNC "p" (GenICam PFNC 2.x, LSB-first):
+ *     12p: 3 bytes per 2 pixels
+ *       byte0 = pixel0[7:0], byte1 = pixel1[3:0]<<4 | pixel0[11:8], byte2 = pixel1[11:4]
+ *       pixel0 = ((b1 & 0x0F) << 8) | b0
+ *     10p: 5 bytes per 4 pixels (tightly packed, no padding)
+ *       pixel0 = ((b1 & 0x03) << 8) | b0
+ *       pixel1 = ((b2 & 0x0F) << 6) | (b1 >> 2)
+ *       pixel2 = ((b3 & 0x3F) << 4) | (b2 >> 4)
+ *       pixel3 = (b4 << 2) | (b3 >> 6)
+ *
+ * Mono and Bayer use the same byte packing — only debayering differs.
+ * ============================================================================ */
+
+/* --- 12-bit format checks --- */
+
+static gboolean
+arv_pixel_format_is_12_packed_legacy (ArvPixelFormat pixel_format)
+{
+	switch (pixel_format) {
+		case ARV_PIXEL_FORMAT_MONO_12_PACKED:
+		case ARV_PIXEL_FORMAT_BAYER_GR_12_PACKED:
+		case ARV_PIXEL_FORMAT_BAYER_RG_12_PACKED:
+		case ARV_PIXEL_FORMAT_BAYER_GB_12_PACKED:
+		case ARV_PIXEL_FORMAT_BAYER_BG_12_PACKED:
+			return TRUE;
+		default:
+			return FALSE;
+	}
+}
+
+static gboolean
+arv_pixel_format_is_12p_pfnc (ArvPixelFormat pixel_format)
+{
+	switch (pixel_format) {
+		case ARV_PIXEL_FORMAT_MONO_12P:
+		case ARV_PIXEL_FORMAT_BAYER_GR_12P:
+		case ARV_PIXEL_FORMAT_BAYER_RG_12P:
+		case ARV_PIXEL_FORMAT_BAYER_GB_12P:
+		case ARV_PIXEL_FORMAT_BAYER_BG_12P:
+			return TRUE;
+		default:
+			return FALSE;
+	}
+}
+
+/* --- 10-bit format checks --- */
+
+static gboolean
+arv_pixel_format_is_10_packed_legacy (ArvPixelFormat pixel_format)
+{
+	switch (pixel_format) {
+		case ARV_PIXEL_FORMAT_MONO_10_PACKED:
+		case ARV_PIXEL_FORMAT_BAYER_GR_10_PACKED:
+		case ARV_PIXEL_FORMAT_BAYER_RG_10_PACKED:
+		case ARV_PIXEL_FORMAT_BAYER_GB_10_PACKED:
+		case ARV_PIXEL_FORMAT_BAYER_BG_10_PACKED:
+			return TRUE;
+		default:
+			return FALSE;
+	}
+}
+
+static gboolean
+arv_pixel_format_is_10p_pfnc (ArvPixelFormat pixel_format)
+{
+	switch (pixel_format) {
+		case ARV_PIXEL_FORMAT_MONO_10P:
+		case ARV_PIXEL_FORMAT_BAYER_GR_10P:
+		case ARV_PIXEL_FORMAT_BAYER_RG_10P:
+		case ARV_PIXEL_FORMAT_BAYER_GB_10P:
+		case ARV_PIXEL_FORMAT_BAYER_BG_10P:
+			return TRUE;
+		default:
+			return FALSE;
+	}
+}
+
+/* --- Mono bit-depth checks (for <<N shift to fill GRAY16_LE range) --- */
+
+static gboolean
+arv_pixel_format_is_mono_12 (ArvPixelFormat pixel_format)
+{
+	return pixel_format == ARV_PIXEL_FORMAT_MONO_12 ||
+	       pixel_format == ARV_PIXEL_FORMAT_MONO_12_PACKED ||
+	       pixel_format == ARV_PIXEL_FORMAT_MONO_12P;
+}
+
+static gboolean
+arv_pixel_format_is_mono_10 (ArvPixelFormat pixel_format)
+{
+	return pixel_format == ARV_PIXEL_FORMAT_MONO_10 ||
+	       pixel_format == ARV_PIXEL_FORMAT_MONO_10_PACKED ||
+	       pixel_format == ARV_PIXEL_FORMAT_MONO_10P;
+}
+
+/* --- 12-bit unpackers --- */
+
+/* Legacy 12Packed (MSB-first): 3 bytes per 2 pixels */
+static void *
+unpack_12_packed_legacy (const char *packed_data, int width, int height, size_t *out_size)
+{
+	int n_pixels = width * height;
+	int n_pairs = n_pixels / 2;
+	guint16 *unpacked;
+	int i;
+
+	*out_size = n_pixels * 2;
+	unpacked = (guint16 *) g_malloc (*out_size);
+
+	for (i = 0; i < n_pairs; i++) {
+		guint8 b0 = (guint8) packed_data[i * 3 + 0];
+		guint8 b1 = (guint8) packed_data[i * 3 + 1];
+		guint8 b2 = (guint8) packed_data[i * 3 + 2];
+
+		unpacked[i * 2 + 0] = ((guint16) b0 << 4) | (b1 & 0x0F);
+		unpacked[i * 2 + 1] = ((guint16) b2 << 4) | ((b1 >> 4) & 0x0F);
+	}
+
+	return unpacked;
+}
+
+/* PFNC 12p (LSB-first): 3 bytes per 2 pixels */
+static void *
+unpack_12p_pfnc (const char *packed_data, int width, int height, size_t *out_size)
+{
+	int n_pixels = width * height;
+	int n_pairs = n_pixels / 2;
+	guint16 *unpacked;
+	int i;
+
+	*out_size = n_pixels * 2;
+	unpacked = (guint16 *) g_malloc (*out_size);
+
+	for (i = 0; i < n_pairs; i++) {
+		guint8 b0 = (guint8) packed_data[i * 3 + 0];
+		guint8 b1 = (guint8) packed_data[i * 3 + 1];
+		guint8 b2 = (guint8) packed_data[i * 3 + 2];
+
+		unpacked[i * 2 + 0] = ((guint16)(b1 & 0x0F) << 8) | b0;
+		unpacked[i * 2 + 1] = ((guint16) b2 << 4) | ((b1 >> 4) & 0x0F);
+	}
+
+	return unpacked;
+}
+
+/* --- 10-bit unpackers --- */
+
+/* Legacy 10Packed (MSB-first): 3 bytes per 2 pixels (2 bits padding per pixel)
+ * byte0 = pixel0[9:2], byte1 = pixel1[1:0]<<4 | pixel0[1:0], byte2 = pixel1[9:2] */
+static void *
+unpack_10_packed_legacy (const char *packed_data, int width, int height, size_t *out_size)
+{
+	int n_pixels = width * height;
+	int n_pairs = n_pixels / 2;
+	guint16 *unpacked;
+	int i;
+
+	*out_size = n_pixels * 2;
+	unpacked = (guint16 *) g_malloc (*out_size);
+
+	for (i = 0; i < n_pairs; i++) {
+		guint8 b0 = (guint8) packed_data[i * 3 + 0];
+		guint8 b1 = (guint8) packed_data[i * 3 + 1];
+		guint8 b2 = (guint8) packed_data[i * 3 + 2];
+
+		unpacked[i * 2 + 0] = ((guint16) b0 << 2) | (b1 & 0x03);
+		unpacked[i * 2 + 1] = ((guint16) b2 << 2) | ((b1 >> 4) & 0x03);
+	}
+
+	return unpacked;
+}
+
+/* PFNC 10p (LSB-first): 5 bytes per 4 pixels (tightly packed, no padding)
+ * pixel0 = ((b1 & 0x03) << 8) | b0
+ * pixel1 = ((b2 & 0x0F) << 6) | (b1 >> 2)
+ * pixel2 = ((b3 & 0x3F) << 4) | (b2 >> 4)
+ * pixel3 = (b4 << 2) | (b3 >> 6) */
+static void *
+unpack_10p_pfnc (const char *packed_data, int width, int height, size_t *out_size)
+{
+	int n_pixels = width * height;
+	int n_quads = n_pixels / 4;
+	guint16 *unpacked;
+	int i;
+
+	*out_size = n_pixels * 2;
+	unpacked = (guint16 *) g_malloc (*out_size);
+
+	for (i = 0; i < n_quads; i++) {
+		guint8 b0 = (guint8) packed_data[i * 5 + 0];
+		guint8 b1 = (guint8) packed_data[i * 5 + 1];
+		guint8 b2 = (guint8) packed_data[i * 5 + 2];
+		guint8 b3 = (guint8) packed_data[i * 5 + 3];
+		guint8 b4 = (guint8) packed_data[i * 5 + 4];
+
+		unpacked[i * 4 + 0] = ((guint16)(b1 & 0x03) << 8) | b0;
+		unpacked[i * 4 + 1] = ((guint16)(b2 & 0x0F) << 6) | (b1 >> 2);
+		unpacked[i * 4 + 2] = ((guint16)(b3 & 0x3F) << 4) | (b2 >> 4);
+		unpacked[i * 4 + 3] = ((guint16) b4 << 2) | (b3 >> 6);
+	}
+
+	return unpacked;
+}
+
 static GstBuffer *
 arv_to_gst_buffer (ArvBuffer *arv_buffer, guint part_id, ArvStream *stream)
 {
 	ArvGstBufferReleaseData* release_data;
+	ArvPixelFormat pixel_format;
 	int arv_row_stride;
 	int width, height;
 	char *buffer_data;
 	size_t buffer_size;
 	size_t size;
 	void *data;
+	gboolean did_unpack = FALSE;
 
 	buffer_data = (char *) arv_buffer_get_part_data (arv_buffer, part_id, &buffer_size);
 	arv_buffer_get_part_region (arv_buffer, part_id, NULL, NULL, &width, &height);
-	arv_row_stride = width * ARV_PIXEL_FORMAT_BIT_PER_PIXEL (arv_buffer_get_part_pixel_format (arv_buffer, part_id)) / 8;
+	pixel_format = arv_buffer_get_part_pixel_format (arv_buffer, part_id);
+
+	/* --- Unpack 12-bit packed formats --- */
+	if (arv_pixel_format_is_12_packed_legacy (pixel_format)) {
+		size_t unpacked_size;
+		buffer_data = (char *) unpack_12_packed_legacy (buffer_data, width, height, &unpacked_size);
+		buffer_size = unpacked_size;
+		did_unpack = TRUE;
+	} else if (arv_pixel_format_is_12p_pfnc (pixel_format)) {
+		size_t unpacked_size;
+		buffer_data = (char *) unpack_12p_pfnc (buffer_data, width, height, &unpacked_size);
+		buffer_size = unpacked_size;
+		did_unpack = TRUE;
+	}
+	/* --- Unpack 10-bit packed formats --- */
+	else if (arv_pixel_format_is_10_packed_legacy (pixel_format)) {
+		size_t unpacked_size;
+		buffer_data = (char *) unpack_10_packed_legacy (buffer_data, width, height, &unpacked_size);
+		buffer_size = unpacked_size;
+		did_unpack = TRUE;
+	} else if (arv_pixel_format_is_10p_pfnc (pixel_format)) {
+		size_t unpacked_size;
+		buffer_data = (char *) unpack_10p_pfnc (buffer_data, width, height, &unpacked_size);
+		buffer_size = unpacked_size;
+		did_unpack = TRUE;
+	}
+
+	/* Mono12: scale 0-4095 to 0-65535 for GRAY16_LE display (shift <<4) */
+	if (arv_pixel_format_is_mono_12 (pixel_format)) {
+		guint16 *pixels;
+		int i, n_pix = width * height;
+
+		if (!did_unpack) {
+			char *copy = (char *) g_malloc (buffer_size);
+			memcpy (copy, buffer_data, buffer_size);
+			buffer_data = copy;
+			did_unpack = TRUE;
+		}
+
+		pixels = (guint16 *) buffer_data;
+		for (i = 0; i < n_pix; i++)
+			pixels[i] <<= 4;
+	}
+
+	/* Mono10: scale 0-1023 to 0-65535 for GRAY16_LE display (shift <<6) */
+	if (arv_pixel_format_is_mono_10 (pixel_format)) {
+		guint16 *pixels;
+		int i, n_pix = width * height;
+
+		if (!did_unpack) {
+			char *copy = (char *) g_malloc (buffer_size);
+			memcpy (copy, buffer_data, buffer_size);
+			buffer_data = copy;
+			did_unpack = TRUE;
+		}
+
+		pixels = (guint16 *) buffer_data;
+		for (i = 0; i < n_pix; i++)
+			pixels[i] <<= 6;
+	}
+
+	if (did_unpack)
+		arv_row_stride = width * 2;
+	else
+		arv_row_stride = width * ARV_PIXEL_FORMAT_BIT_PER_PIXEL (pixel_format) / 8;
 
 	release_data = g_new0 (ArvGstBufferReleaseData, 1);
 
@@ -390,12 +673,19 @@ arv_to_gst_buffer (ArvBuffer *arv_buffer, guint part_id, ArvStream *stream)
 
 		for (i = 0; i < height; i++)
 			memcpy (((char *) data) + i * gst_row_stride, buffer_data + i * arv_row_stride, arv_row_stride);
-
+		if (did_unpack)
+			g_free (buffer_data);
 		release_data->data = data;
 
 	} else {
-		data = buffer_data;
-		size = buffer_size;
+		if (did_unpack) {
+			data = buffer_data;
+			size = buffer_size;
+			release_data->data = data;
+		} else {
+			data = buffer_data;
+			size = buffer_size;
+		}
 	}
 
 	return gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
