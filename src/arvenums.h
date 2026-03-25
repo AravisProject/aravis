@@ -266,6 +266,10 @@ typedef guint32 ArvPixelFormat;
 
 #define ARV_PIXEL_FORMAT_YUV_422_YUYV_PACKED 	((ArvPixelFormat) 0x02100032u)
 
+#define ARV_PIXEL_FORMAT_RGB_565P		((ArvPixelFormat) 0x02100035u)
+
+#define ARV_PIXEL_FORMAT_YCBCR_422_8_PACKED 	((ArvPixelFormat) 0x0210003Bu)
+
 /* Custom */
 
 /**
