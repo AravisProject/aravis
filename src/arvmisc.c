@@ -929,6 +929,13 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 		"video/x-raw-yuv",	0,	0,	ARV_MAKE_FOURCC ('Y','U','Y','2')
 	},
 	{
+		ARV_PIXEL_FORMAT_YCBCR_422_8_PACKED,
+		"video/x-raw, format=(string)YUY2",
+		"video/x-raw", 		"YUY2",
+		"video/x-raw-yuv, format=(fourcc)YUYU2",
+		"video/x-raw-yuv",	0,	0,	ARV_MAKE_FOURCC ('Y','U','Y','2')
+	},
+	{
 		ARV_PIXEL_FORMAT_RGB_8_PACKED,
 		"video/x-raw, format=(string)RGB",
 		"video/x-raw",		"RGB",
@@ -948,6 +955,12 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 		"video/x-raw",		"RGBA",
 		"video/x-raw-rgba, format=(string)RGBA, bpp=(int)32, depth=(int)8",
 		"video/x-raw-rgba",	32,	8,	0
+	},
+	{
+		ARV_PIXEL_FORMAT_RGB_565P,
+		"video/x-raw, format=(string)RGB16",
+		"video/x-raw",		"RGB16",
+		NULL, NULL, 16, 16, 0
 	},
 	{
 		ARV_PIXEL_FORMAT_CUSTOM_YUV_422_YUYV_PACKED,
