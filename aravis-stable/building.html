@@ -143,6 +143,12 @@ installed on  Fedora (tested on 34 and 35)&nbsp;with:</p>
 <span class="w">                 </span>g++<span class="w"> </span>meson<span class="w"> </span>gettext
 </code></pre></div>
 
+<h2 id="nixos-development-shell">NixOS development shell<a class="md-anchor" href="#nixos-development-shell" title="Permanent link"></a></h2>
+<p>Use the following command to enter a development shell with
+all required&nbsp;dependencies:</p>
+<div class="codehilite"><pre><span></span><code>nix-shell<span class="w"> </span>-p<span class="w"> </span>aravis.buildInputs<span class="w"> </span>aravis.nativeBuildInputs
+</code></pre></div>
+
 <h2 id="building-on-macos">Building on macOS<a class="md-anchor" href="#building-on-macos" title="Permanent link"></a></h2>
 <p>Using the <span class="caps">GNU</span> build system on macOS is not directly supported, but can be
 mimicked by augmenting the install procedure above with some environment
@@ -245,6 +251,8 @@ Debug levels:
             <li class="toc-list-item"><a href="#install-dependencies-on-ubuntu-2004"><span class="link-text">Install dependencies on Ubuntu 20.04</span></a></li>
           
             <li class="toc-list-item"><a href="#install-dependencies-on-fedora-3435"><span class="link-text">Install dependencies on Fedora 34/35</span></a></li>
+          
+            <li class="toc-list-item"><a href="#nixos-development-shell"><span class="link-text">NixOS development shell</span></a></li>
           
             <li class="toc-list-item"><a href="#building-on-macos"><span class="link-text">Building on macOS</span></a></li>
           
