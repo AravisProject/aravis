@@ -547,7 +547,10 @@ arv_v4l2_device_write_memory (ArvDevice *device, guint64 address, guint32 size, 
                         case ARV_V4L2_ADDRESS_PIXEL_FORMAT:
                                 for (i = 0; i < priv->pixel_formats->len; i++) {
                                         if (g_array_index(priv->pixel_formats, guint32, i) == value.i32)
+                                        {
                                                 priv->pixel_format_idx = i;
+                                                break;
+                                        }
                                 }
                                 if (i == priv->pixel_formats->len)
                                         found = FALSE;
