@@ -274,7 +274,7 @@ arv_v4l2_stream_start_acquisition (ArvStream *stream, GError **error)
         guint32 bit_per_pixel;
         guint32 bytes_per_line;
         guint32 payload_size;
-        guint32 width_pixels;
+        guint32 bytes_per_line_data;
         guint32 index = 0;
         guint32 n_buffers = 0;
 
@@ -361,14 +361,14 @@ arv_v4l2_stream_start_acquisition (ArvStream *stream, GError **error)
                 return FALSE;
         }
 
-        width_pixels = (thread_data->image_width  / bit_per_pixel + 7) * 8;
-        if (bytes_per_line < width_pixels) {
+        bytes_per_line_data = (thread_data->image_width  / bit_per_pixel + 7) * 8;
+        if (bytes_per_line < bytes_per_line_data) {
                 g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
                              "Invalid v4l2 pixel format");
                 return FALSE;
         }
 
-        thread_data->image_x_padding = bytes_per_line - width_pixels;
+        thread_data->image_x_padding = bytes_per_line - bytes_per_line_data;
         thread_data->frame_id = 0;
 
 	priv->thread = g_thread_new ("arv_v4l2_stream", arv_v4l2_stream_thread, priv->thread_data);
