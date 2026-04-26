@@ -361,7 +361,7 @@ arv_v4l2_stream_start_acquisition (ArvStream *stream, GError **error)
                 return FALSE;
         }
 
-        bytes_per_line_data = (thread_data->image_width  / bit_per_pixel + 7) * 8;
+        bytes_per_line_data = thread_data->image_width * bit_per_pixel / 8;
         if (bytes_per_line < bytes_per_line_data) {
                 g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
                              "Invalid v4l2 pixel format");
