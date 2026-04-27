@@ -126,6 +126,9 @@ arv_v4l2_device_get_genicam_xml (ArvDevice *device, size_t *size)
 {
 	ArvV4l2DevicePrivate *priv = arv_v4l2_device_get_instance_private (ARV_V4L2_DEVICE (device));
 
+        if (size != NULL)
+                *size = priv->genicam_xml_size;
+
 	return priv->genicam_xml;
 }
 
