@@ -147,6 +147,21 @@ arv_dom_parser_characters (void *user_data, const xmlChar *ch, int len)
 		ArvDomNode *node;
 		char *text;
 
+                // Skip leading whitespace
+                while(len > 0 &&
+                      (*ch == '\n' ||
+                       *ch == '\r' ||
+                       *ch == '\t' ||
+                       *ch == ' '))
+                {
+                        ch++;
+                        len--;
+                }
+                // If nothing is left, we're done
+                if(len == 0)
+                        return;
+            
+
 		text = g_strndup ((char *) ch, len);
 		node = ARV_DOM_NODE (arv_dom_document_create_text_node (ARV_DOM_DOCUMENT (state->document), text));
 
