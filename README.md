@@ -28,7 +28,7 @@ Aravis is released under [LGPL-2.1-or-later](https://spdx.org/licenses/LGPL-2.1-
 The latest documentation is available
 [here](https://aravisproject.github.io/aravis/aravis-stable). You will find how to install
 Aravis on Linux, macOS and Windows, how to tweak your system in order to get the
-best performances, and the API documentation.
+best performances, and the API documentation. Also, see [the docker documentation](docker.md) for instructions on how to get started with Aravis using Docker.
 
 ### Dependencies
 
