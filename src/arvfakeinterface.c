@@ -72,10 +72,10 @@ arv_fake_interface_update_device_list (ArvInterface *interface, GArray *device_i
 }
 
 static ArvDevice *
-arv_fake_interface_open_device (ArvInterface *interface, const char *device_id, GError **error)
+arv_fake_interface_open_device (ArvInterface *interface, const char *key, GError **error)
 {
-	if (g_strcmp0 (device_id, ARV_FAKE_DEVICE_ID) == 0 ||
-	    g_strcmp0 (device_id, ARV_FAKE_PHYSICAL_ID) == 0)
+	if (g_strcmp0 (key, ARV_FAKE_DEVICE_ID) == 0 ||
+	    g_strcmp0 (key, ARV_FAKE_PHYSICAL_ID) == 0)
 		return arv_fake_device_new ("1", error);
 
 	return NULL;
