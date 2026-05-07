@@ -38,22 +38,25 @@
 /* ArvGenTLnterface implementation */
 
 typedef struct {
+	ArvGenTLSystem *system;
+	char *interface;
+
+	char *guid;
 	char *id;
-	char *name;
-	char *full_name;
+	char *vendor_serial;
+	char *vendor_alias_serial;
 	char *vendor;
 	char *model;
 	char *serial_nbr;
 
-	ArvGenTLSystem *system;
-	char *interface;
 	volatile gint ref_count;
 } ArvGenTLInterfaceDeviceInfos;
 
 static ArvGenTLInterfaceDeviceInfos *
 arv_gentl_interface_device_infos_new (ArvGenTLSystem *system,
+                                      const char *tl_vendor,
                                       const char *interface,
-                                      const char *id,
+                                      const char *guid,
                                       const char *vendor,
                                       const char *model,
                                       const char *serial_nbr)
@@ -62,7 +65,7 @@ arv_gentl_interface_device_infos_new (ArvGenTLSystem *system,
 
 	g_return_val_if_fail (system != NULL, NULL);
 	g_return_val_if_fail (interface != NULL, NULL);
-	g_return_val_if_fail (id != NULL, NULL);
+	g_return_val_if_fail (guid != NULL, NULL);
 	g_return_val_if_fail (vendor != NULL, NULL);
 	g_return_val_if_fail (model != NULL, NULL);
 	g_return_val_if_fail (serial_nbr != NULL, NULL);
@@ -70,17 +73,18 @@ arv_gentl_interface_device_infos_new (ArvGenTLSystem *system,
 	infos = g_new (ArvGenTLInterfaceDeviceInfos, 1);
 	infos->system  = system;
 	infos->interface = g_strdup(interface);
-	infos->id = g_strdup(id);
-	infos->name = g_strdup_printf ("%s-%s", arv_vendor_alias_lookup (vendor), serial_nbr);
-	infos->full_name = g_strdup_printf ("%s-%s", vendor, serial_nbr);
+        infos->guid = g_strdup (guid);
+	infos->id = g_strdup_printf ("%s-%s-%s-%s", tl_vendor, vendor, model, serial_nbr);
+	infos->vendor_alias_serial = g_strdup_printf ("%s-%s-%s", tl_vendor, arv_vendor_alias_lookup (vendor), serial_nbr);
+	infos->vendor_serial = g_strdup_printf ("%s-%s-%s", tl_vendor, vendor, serial_nbr);
 	infos->vendor = g_strdup (vendor);
 	infos->model = g_strdup (model);
 	infos->serial_nbr = g_strdup (serial_nbr);
 	infos->ref_count = 1;
 
 	arv_str_strip (infos->id, ARV_DEVICE_NAME_ILLEGAL_CHARACTERS, ARV_DEVICE_NAME_REPLACEMENT_CHARACTER);
-	arv_str_strip (infos->name, ARV_DEVICE_NAME_ILLEGAL_CHARACTERS, ARV_DEVICE_NAME_REPLACEMENT_CHARACTER);
-	arv_str_strip (infos->full_name, ARV_DEVICE_NAME_ILLEGAL_CHARACTERS, ARV_DEVICE_NAME_REPLACEMENT_CHARACTER);
+	arv_str_strip (infos->vendor_serial, ARV_DEVICE_NAME_ILLEGAL_CHARACTERS, ARV_DEVICE_NAME_REPLACEMENT_CHARACTER);
+	arv_str_strip (infos->vendor_alias_serial, ARV_DEVICE_NAME_ILLEGAL_CHARACTERS, ARV_DEVICE_NAME_REPLACEMENT_CHARACTER);
 
 	return infos;
 }
@@ -105,9 +109,10 @@ arv_gentl_interface_device_infos_unref (ArvGenTLInterfaceDeviceInfos *infos)
 	if (g_atomic_int_dec_and_test (&infos->ref_count)) {
 		infos->system = NULL;
 		g_clear_pointer (&infos->interface, g_free);
+		g_clear_pointer (&infos->guid, g_free);
 		g_clear_pointer (&infos->id, g_free);
-		g_clear_pointer (&infos->name, g_free);
-		g_clear_pointer (&infos->full_name, g_free);
+		g_clear_pointer (&infos->vendor_serial, g_free);
+		g_clear_pointer (&infos->vendor_alias_serial, g_free);
 		g_clear_pointer (&infos->vendor, g_free);
 		g_clear_pointer (&infos->model, g_free);
 		g_clear_pointer (&infos->serial_nbr, g_free);
@@ -131,6 +136,24 @@ struct _ArvGenTLInterfaceClass {
 
 
 G_DEFINE_TYPE_WITH_CODE (ArvGenTLInterface, arv_gentl_interface, ARV_TYPE_INTERFACE, G_ADD_PRIVATE (ArvGenTLInterface))
+
+static char *
+_gentl_get_tl_info_str (ArvGenTLModule *gentl, TL_HANDLE handle, TL_INFO_CMD info_cmd)
+{
+	GC_ERROR error;
+	INFO_DATATYPE type;
+	size_t size;
+	char *value = NULL;
+
+	error = gentl->TLGetInfo (handle, info_cmd, &type, NULL, &size);
+	if (error == GC_ERR_SUCCESS) {
+		value = g_malloc0(size);
+		gentl->TLGetInfo (handle, info_cmd, &type, value, &size);
+	} else {
+		arv_warning_interface("_gentl_get_tl_info_str: error %d", error);
+        }
+	return value;
+}
 
 static char *
 _gentl_get_info_str(GC_ERROR(*func)(void*, const char *, int32_t, int32_t*, void*, size_t*),
@@ -224,11 +247,13 @@ _discover (ArvGenTLInterface *gentl_interface, GArray *device_ids)
 
 			/* Iterate over all devices of a GenTL interface */
 			for (uint32_t j=0; j<num_devices; j++) {
-				char *device_id, *id, *model, *vendor, *serial_nbr;
-				ArvGenTLInterfaceDeviceInfos *device_info;
+				char *tl_vendor, *device_id, *id, *model, *vendor, *serial_nbr;
+				ArvGenTLInterfaceDeviceInfos *device_infos;
 				ArvInterfaceDeviceIds *ids;
 
 				device_id = _gentl_get_id(gentl->IFGetDeviceID, interface_handle, j);
+
+                                tl_vendor = _gentl_get_tl_info_str(gentl, system_handle, TL_INFO_VENDOR);
 
 				id = _gentl_get_info_str(gentl->IFGetDeviceInfo,
                                                          interface_handle, device_id, DEVICE_INFO_ID);
@@ -239,26 +264,34 @@ _discover (ArvGenTLInterface *gentl_interface, GArray *device_ids)
 				serial_nbr =  _gentl_get_info_str(gentl->IFGetDeviceInfo,
                                                                   interface_handle, device_id, DEVICE_INFO_SERIAL_NUMBER);
 
-				arv_info_interface ("Device: %s", device_id);
-				arv_info_interface ("  ID: %s", id);
-				arv_info_interface ("  VENDOR: %s", vendor);
-				arv_info_interface ("  MODEL: %s", model);
-				arv_info_interface ("  S/N: %s", serial_nbr);
-
-				device_info =  arv_gentl_interface_device_infos_new(gentl_system, interface_id, id,
+				device_infos =  arv_gentl_interface_device_infos_new(gentl_system, tl_vendor, interface_id, id,
                                                                                     vendor, model, serial_nbr);
-				g_hash_table_replace(priv->devices, device_info->id,
-                                                     arv_gentl_interface_device_infos_ref(device_info));
+                                arv_info_interface ("[GentTLInterface::discovery] Device '%s' found",
+                                                    device_infos->id);
+
+                                g_hash_table_replace(priv->devices, device_infos->id,
+                                                     arv_gentl_interface_device_infos_ref(device_infos));
+                                arv_info_interface ("  %s", device_infos->id);
+                                g_hash_table_replace (priv->devices, device_infos->vendor_serial,
+                                                      arv_gentl_interface_device_infos_ref (device_infos));
+                                arv_info_interface ("  %s", device_infos->vendor_serial);
+                                g_hash_table_replace (priv->devices, device_infos->vendor_alias_serial,
+                                                      arv_gentl_interface_device_infos_ref (device_infos));
+                                arv_info_interface ("  %s", device_infos->vendor_alias_serial);
+                                g_hash_table_replace (priv->devices, device_infos->guid,
+                                                      arv_gentl_interface_device_infos_ref (device_infos));
+                                arv_info_interface ("  %s", device_infos->guid);
 
 				if (device_ids) {
 					ids = g_new0 (ArvInterfaceDeviceIds, 1);
-					ids->device = id;
+					ids->device = g_strdup (device_infos->id);
 					ids->model = model;
 					ids->vendor = vendor;
 					ids->serial_nbr = serial_nbr;
 					ids->address = g_strdup(interface_type);
                                         ids->protocol = arv_protocol_from_transport_layer_type (interface_type);
 					g_array_append_val (device_ids, ids);
+                                        g_free (id);
 				} else {
 					g_free(id);
 					g_free(model);
@@ -266,7 +299,8 @@ _discover (ArvGenTLInterface *gentl_interface, GArray *device_ids)
 					g_free(serial_nbr);
 				}
 				g_clear_pointer(&device_id, g_free);
-				arv_gentl_interface_device_infos_unref(device_info);
+
+				arv_gentl_interface_device_infos_unref(device_infos);
 			}
 			arv_gentl_system_close_interface_handle(gentl_system, interface_id);
 
@@ -288,20 +322,20 @@ arv_gentl_interface_update_device_list (ArvInterface *interface, GArray *device_
 }
 
 static ArvDevice *
-arv_gentl_interface_open_device (ArvInterface *interface, const char *device_id, GError **error)
+arv_gentl_interface_open_device (ArvInterface *interface, const char *key, GError **error)
 {
 	ArvGenTLInterfacePrivate *priv = arv_gentl_interface_get_instance_private(ARV_GENTL_INTERFACE (interface));
 	ArvDevice *device = NULL;
 	ArvGenTLInterfaceDeviceInfos *device_infos = NULL;
 
-        if (device_id == NULL) {
+        if (key == NULL) {
 		GList *device_list;
 
 		device_list = g_hash_table_get_values (priv->devices);
 		device_infos = device_list != NULL ? device_list->data : NULL;
 		g_list_free (device_list);
 	} else
-		device_infos = g_hash_table_lookup (priv->devices, device_id);
+		device_infos = g_hash_table_lookup (priv->devices, key);
 
 	/* Refresh devices if the requested device is in the cache. */
 	if (device_infos == NULL) {
@@ -309,17 +343,16 @@ arv_gentl_interface_open_device (ArvInterface *interface, const char *device_id,
 
 		_discover(ARV_GENTL_INTERFACE(interface), NULL);
 
-                if (device_id == NULL) {
+                if (key == NULL) {
                         device_list = g_hash_table_get_values (priv->devices);
                         device_infos = device_list != NULL ? device_list->data : NULL;
                         g_list_free (device_list);
                 } else
-                        device_infos = g_hash_table_lookup (priv->devices, device_id);
+                        device_infos = g_hash_table_lookup (priv->devices, key);
         }
 
 	if (device_infos)
-		device = arv_gentl_device_new (device_infos->system, device_infos->interface,
-                                               device_infos->id, error);
+		device = arv_gentl_device_new (device_infos->system, device_infos->interface, device_infos->guid, error);
 
 	return device;
 }
