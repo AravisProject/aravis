@@ -302,3 +302,33 @@ arv_g_string_append_hex_dump (GString *string, const void *data, size_t size)
 			g_string_append (string, "\n");
 	}
 }
+
+/**
+ * arv_ascii_has_suffix_case_insensitive:
+ * @str: a string to check
+ * @suffix: the suffix to look for
+ *
+ * Checks whether @str ends with @suffix, ignoring ASCII case.
+ *
+ * Returns: %TRUE if @str has @suffix as a case-insensitive suffix
+ *
+ * Since: 0.10
+ */
+
+gboolean
+arv_ascii_has_suffix_case_insensitive (const char *str, const char *suffix)
+{
+        size_t str_len;
+        size_t suffix_len;
+
+        g_return_val_if_fail (str != NULL, FALSE);
+        g_return_val_if_fail (suffix != NULL, FALSE);
+
+        str_len = strlen (str);
+        suffix_len = strlen (suffix);
+
+        if (str_len < suffix_len)
+                return FALSE;
+
+        return g_ascii_strcasecmp (str + str_len - suffix_len, suffix) == 0;
+}
