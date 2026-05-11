@@ -24,7 +24,7 @@
  * SECTION: arvgentlinterface
  * @short_description: GenTL interface
  */
-#include <GenTL_v1_5.h>
+#include <arvgentlprivate.h>
 #include <arvgentlsystemprivate.h>
 #include <arvgentlinterfaceprivate.h>
 #include <arvgentldeviceprivate.h>

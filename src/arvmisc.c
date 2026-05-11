@@ -761,7 +761,7 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 		"video/x-bayer, format=(string)bggr10le",
 		"video/x-bayer",	"bggr10le",
 	},
-	
+
 /* 10-bit Bayer packed (legacy and PFNC — viewer unpacks to 16-bit) */
 	{
 		ARV_PIXEL_FORMAT_BAYER_GR_10_PACKED,
@@ -1245,17 +1245,17 @@ static struct {
 	const char *protocol;
 	const char *transport_layer_type;
 } arv_protocols[] = {
-        { "GigEVision",         TLTypeGEVName},
-        { "USB3Vision",         TLTypeU3VName},
-        { "CameraLink",         TLTypeCLName},
-        { "IIDC1394",           TLTypeIIDCName},
-        { "USBVideoClass",      TLTypeUVCName},
-        { "CoaXPress",          TLTypeCXPName},
-        { "CameraLinkHS",       TLTypeCLHSName},
-        { "GenericEthernet",    TLTypeETHERNETName},
-        { "PCIExpress",         TLTypePCIName},
-        { "Mixed",              TLTypeMixedName},
-        { "Custom",             TLTypeCustomName},
+        { "GigEVision",         "GEV"},
+        { "USB3Vision",         "U3V"},
+        { "CameraLink",         "CL"},
+        { "IIDC1394",           "IIDC"},
+        { "USBVideoClass",      "UVC"},
+        { "CoaXPress",          "CXP"},
+        { "CameraLinkHS",       "CLHS"},
+        { "GenericEthernet",    "Ethernet"},
+        { "PCIExpress",         "PCI"},
+        { "Mixed",              "Mixed"},
+        { "Custom",             "Custom"},
 };
 
 const char *
