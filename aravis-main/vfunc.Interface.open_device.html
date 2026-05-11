@@ -128,7 +128,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         <pre><code><div class="highlight"><pre><span></span><span class="n">ArvDevice</span><span class="o">*</span>
 <span class="n">open_device</span><span class="w"> </span><span class="p">(</span>
 <span class="w">  </span><span class="n">ArvInterface</span><span class="o">*</span><span class="w"> </span><span class="n">iface</span><span class="p">,</span>
-<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">device_id</span><span class="p">,</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">key</span><span class="p">,</span>
 <span class="w">  </span><span class="n">GError</span><span class="o">**</span><span class="w"> </span><span class="n">error</span>
 <span class="p">)</span>
 </pre></div>
@@ -147,7 +147,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 
       <div class="docblock">
         <p>Creates a&nbsp;new <code>ArvDevice</code> object corresponding to the given device id string.
-The first available device is returned&nbsp;if <code>device_id</code> is <code>NULL</code>.</p>
+The first available device is returned&nbsp;if <code>key</code> is <code>NULL</code>.</p>
       </div>
 
       <div class="docblock">
@@ -169,10 +169,10 @@ The first available device is returned&nbsp;if <code>device_id</code> is <code>N
       <div class="docblock">
         <dl class="arguments">
           
-          <dt class="arg-name"><code>device_id</code></dt>
+          <dt class="arg-name"><code>key</code></dt>
           <dd class="arg-description">
             <p><em>Type:</em>&nbsp;<code>const char*</code></p>
-            <p>Device unique&nbsp;id.</p>
+            <p>Device search&nbsp;key.</p>
             <table>
             
             <tr><td>The argument can be <code>NULL</code>.</td></tr>

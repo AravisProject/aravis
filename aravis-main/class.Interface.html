@@ -354,7 +354,7 @@ change until the next call of the update&nbsp;function.</p>
           <h6><a href="method.Interface.open_device.html">arv_interface_open_device</a></h6>
           <div class="docblock">
             <p>Creates a&nbsp;new <code>ArvDevice</code> object corresponding to the given device id string.
-The first available device is returned&nbsp;if <code>device_id</code> is <code>NULL</code>.</p>
+The first available device is returned&nbsp;if <code>key</code> is <code>NULL</code>.</p>
           </div>
           <div class="docblock">
             <p><span class="emblem available">since: 0.2.0</span></p>
@@ -438,7 +438,7 @@ its value set through g_object_set_property(), g_object_set(), et&nbsp;al.</p>
   );
   ArvDevice* (* open_device) (
     ArvInterface* iface,
-    const char* device_id,
+    const char* key,
     GError** error
   );
   
@@ -466,7 +466,7 @@ its value set through g_object_set_property(), g_object_set(), et&nbsp;al.</p>
         
           <dt><code>open_device: ArvDevice* (* open_device) (
     ArvInterface* iface,
-    const char* device_id,
+    const char* key,
     GError** error
   )</code></dt>
           <dd><p>No description available.</p></dd>
@@ -490,7 +490,7 @@ its value set through g_object_set_property(), g_object_set(), et&nbsp;al.</p>
         <h6 id="vfunc-open_device"><a href="vfunc.Interface.open_device.html">Aravis.InterfaceClass.open_device</a></h6>
         <div class="docblock">
           <p>Creates a&nbsp;new <code>ArvDevice</code> object corresponding to the given device id string.
-The first available device is returned&nbsp;if <code>device_id</code> is <code>NULL</code>.</p>
+The first available device is returned&nbsp;if <code>key</code> is <code>NULL</code>.</p>
         </div>
         <div class="docblock">
           <p><span class="emblem available">since: 0.2.0</span></p>
