@@ -20,7 +20,6 @@
  * Author: Emmanuel Pacaud <emmanuel.pacaud@free.fr>
  */
 
-#include "libxml/parser.h"
 #include <gtk/gtk.h>
 #include <gst/gst.h>
 #include <gst/app/gstappsrc.h>
