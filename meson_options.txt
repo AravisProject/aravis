@@ -13,6 +13,7 @@ option('fast-heartbeat', type: 'boolean', value: false, description: 'Enable fas
 option('gentl-producer', type: 'boolean', value: false, description : 'Enable experimental GenTL producer')
 option('event', type: 'boolean', value: false, description: 'Enable experimental event support')
 option('v4l2', type: 'feature', value: 'disabled', description : 'Enable experimental V4L2 support')
+option('drivers', type: 'boolean', value: false, description: 'Build linux driver')
 
 # Parameters
 
