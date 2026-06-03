@@ -21,6 +21,10 @@ function onDidLoad() {
 }
 
 function onDidHashChange() {
+    if (window.clearSearch) {
+        window.clearSearch();
+    }
+
     // When URL fragment changes to ID of a collapsible section,
     // expand it when it is collapsed.
     // This is useful for clicking section links in the sidebar on the index page.
@@ -154,10 +158,9 @@ function onKeyDown(event) {
             event.preventDefault();
             search_input.focus();
         } else if (event.key === "Escape" && document.activeElement === search_input) {
-            if (window.hideResults) {
-                window.hideResults();
+            if (window.clearSearch) {
+                window.clearSearch();
             }
-            search_input.value = "";
             search_input.blur();
         }
     }
