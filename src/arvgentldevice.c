@@ -395,7 +395,7 @@ _load_genicam (ArvGenTLDevice *gentl_device, size_t  *size, char **url, GError *
 					g_string_free (string, TRUE);
 				}
 
-				if (g_str_has_suffix (path, ".zip")) {
+				if (arv_ascii_has_suffix_case_insensitive (path, ".zip")) {
 					ArvZip *zip;
 					const GSList *zip_files;
 

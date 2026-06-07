@@ -37,13 +37,13 @@
 /* ArvUvInterface implementation */
 
 typedef struct {
+	char *guid;
 	char *id;
-	char *name;
-	char *full_name;
+	char *vendor_serial;
+	char *vendor_alias_serial;
 	char *manufacturer;
 	char *product;
 	char *serial_nbr;
-	char *guid;
 
 	volatile gint ref_count;
 } ArvUvInterfaceDeviceInfos;
@@ -62,18 +62,18 @@ arv_uv_interface_device_infos_new (const char *manufacturer,
 	g_return_val_if_fail (guid != NULL, NULL);
 
 	infos = g_new (ArvUvInterfaceDeviceInfos, 1);
-	infos->id = g_strdup_printf ("%s-%s-%s", manufacturer, guid, serial_nbr);
+	infos->id = g_strdup_printf ("%s-%s-%s", manufacturer, product, serial_nbr);
 	infos->manufacturer = g_strdup (manufacturer);
-	infos->name = g_strdup_printf ("%s-%s", arv_vendor_alias_lookup (manufacturer), serial_nbr);
-	infos->full_name = g_strdup_printf ("%s-%s", manufacturer, serial_nbr);
+	infos->vendor_alias_serial = g_strdup_printf ("%s-%s", arv_vendor_alias_lookup (manufacturer), serial_nbr);
+	infos->vendor_serial = g_strdup_printf ("%s-%s", manufacturer, serial_nbr);
 	infos->product = g_strdup (product);
 	infos->serial_nbr = g_strdup (serial_nbr);
 	infos->guid = g_strdup (guid);
 	infos->ref_count = 1;
 
 	arv_str_strip (infos->id, ARV_DEVICE_NAME_ILLEGAL_CHARACTERS, ARV_DEVICE_NAME_REPLACEMENT_CHARACTER);
-	arv_str_strip (infos->name, ARV_DEVICE_NAME_ILLEGAL_CHARACTERS, ARV_DEVICE_NAME_REPLACEMENT_CHARACTER);
-	arv_str_strip (infos->full_name, ARV_DEVICE_NAME_ILLEGAL_CHARACTERS, ARV_DEVICE_NAME_REPLACEMENT_CHARACTER);
+	arv_str_strip (infos->vendor_serial, ARV_DEVICE_NAME_ILLEGAL_CHARACTERS, ARV_DEVICE_NAME_REPLACEMENT_CHARACTER);
+	arv_str_strip (infos->vendor_alias_serial, ARV_DEVICE_NAME_ILLEGAL_CHARACTERS, ARV_DEVICE_NAME_REPLACEMENT_CHARACTER);
 
 	return infos;
 }
@@ -97,8 +97,8 @@ arv_uv_interface_device_infos_unref (ArvUvInterfaceDeviceInfos *infos)
 
 	if (g_atomic_int_dec_and_test (&infos->ref_count)) {
 		g_clear_pointer (&infos->id, g_free);
-		g_clear_pointer (&infos->name, g_free);
-		g_clear_pointer (&infos->full_name, g_free);
+		g_clear_pointer (&infos->vendor_serial, g_free);
+		g_clear_pointer (&infos->vendor_alias_serial, g_free);
 		g_clear_pointer (&infos->manufacturer, g_free);
 		g_clear_pointer (&infos->product, g_free);
 		g_clear_pointer (&infos->serial_nbr, g_free);
@@ -173,6 +173,9 @@ _usb_device_to_device_ids (ArvUvInterface *uv_interface, libusb_device *device)
 	gboolean control_protocol_found;
 	gboolean data_protocol_found;
 	int guid_index = -1;
+	int vendor_name_index = -1;
+	int model_name_index = -1;
+	int serial_number_index = -1;
 	int result, i, j;
 
 	result = libusb_get_device_descriptor (device, &desc);
@@ -198,17 +201,31 @@ _usb_device_to_device_ids (ArvUvInterface *uv_interface, libusb_device *device)
 			    interdesc->bInterfaceSubClass == ARV_UV_INTERFACE_INTERFACE_SUBCLASS) {
 				if (interdesc->bInterfaceProtocol == ARV_UV_INTERFACE_CONTROL_PROTOCOL) {
 					control_protocol_found = TRUE;
-					if (interdesc->extra &&
-					    interdesc->extra_length >= ARV_UV_INTERFACE_GUID_INDEX_OFFSET + sizeof(unsigned char)) {
-						guid_index = (int) (*(interdesc->extra + ARV_UV_INTERFACE_GUID_INDEX_OFFSET));
-					}
-				}
-				if (interdesc->bInterfaceProtocol == ARV_UV_INTERFACE_DATA_PROTOCOL)
-					data_protocol_found = TRUE;
-			}
-		}
-	}
-	libusb_free_config_descriptor (config);
+					if (interdesc->extra) {
+                                               if (interdesc->extra_length >=
+                                                   ARV_UV_INTERFACE_GUID_INDEX_OFFSET + sizeof(unsigned char))
+                                                       guid_index = (int) (*(interdesc->extra +
+                                                                             ARV_UV_INTERFACE_GUID_INDEX_OFFSET));
+                                               if (interdesc->extra_length >=
+                                                   ARV_UV_INTERFACE_VENDOR_NAME_INDEX_OFFSET + sizeof(unsigned char))
+                                                       vendor_name_index = (int) (*(interdesc->extra +
+                                                                                    ARV_UV_INTERFACE_VENDOR_NAME_INDEX_OFFSET));
+                                               if (interdesc->extra_length >=
+                                                   ARV_UV_INTERFACE_MODEL_NAME_INDEX_OFFSET + sizeof(unsigned char))
+                                                       model_name_index = (int) (*(interdesc->extra +
+                                                                                    ARV_UV_INTERFACE_MODEL_NAME_INDEX_OFFSET));
+                                               if (interdesc->extra_length >=
+                                                   ARV_UV_INTERFACE_SERIAL_NUMBER_INDEX_OFFSET + sizeof(unsigned char))
+                                                       serial_number_index = (int) (*(interdesc->extra +
+                                                                                      ARV_UV_INTERFACE_SERIAL_NUMBER_INDEX_OFFSET));
+                                        }
+                                }
+                                if (interdesc->bInterfaceProtocol == ARV_UV_INTERFACE_DATA_PROTOCOL)
+                                        data_protocol_found = TRUE;
+                        }
+                }
+        }
+        libusb_free_config_descriptor (config);
 
 	if (!control_protocol_found || !data_protocol_found)
 		return NULL;
@@ -229,30 +246,50 @@ _usb_device_to_device_ids (ArvUvInterface *uv_interface, libusb_device *device)
 		serial_nbr = g_malloc0 (256);
 		guid = g_malloc0 (256);
 
-		index = desc.iManufacturer;
-		if (index > 0)
-			libusb_get_string_descriptor_ascii (device_handle, index, manufacturer, 256);
-		index = desc.iProduct;
-		if (index > 0)
-			libusb_get_string_descriptor_ascii (device_handle, index, product, 256);
-		index = desc.iSerialNumber;
-		if (index > 0)
-			libusb_get_string_descriptor_ascii (device_handle, index, serial_nbr, 256);
 		index = guid_index;
 		if (index > 0)
 			libusb_get_string_descriptor_ascii (device_handle, index, guid, 256);
+		index = vendor_name_index;
+		if (index > 0)
+			libusb_get_string_descriptor_ascii (device_handle, index, manufacturer, 256);
+                else {
+                        index = desc.iManufacturer;
+			libusb_get_string_descriptor_ascii (device_handle, index, manufacturer, 256);
+                }
+                index = model_name_index;
+                if (index > 0)
+			libusb_get_string_descriptor_ascii (device_handle, index, product, 256);
+                else {
+                        index = desc.iProduct;
+                        if (index > 0)
+                                libusb_get_string_descriptor_ascii (device_handle, index, product, 256);
+                }
+                index = serial_number_index;
+                if (index > 0)
+			libusb_get_string_descriptor_ascii (device_handle, index, serial_nbr, 256);
+                else {
+                        index = desc.iSerialNumber;
+                        if (index > 0)
+                                libusb_get_string_descriptor_ascii (device_handle, index, serial_nbr, 256);
+                }
 
 		device_infos = arv_uv_interface_device_infos_new ((char *) manufacturer, (char *) product,
                                                                   (char *) serial_nbr, (char *) guid);
-		g_hash_table_replace (uv_interface->priv->devices, device_infos->id,
-				      arv_uv_interface_device_infos_ref (device_infos));
-		g_hash_table_replace (uv_interface->priv->devices, device_infos->name,
-				      arv_uv_interface_device_infos_ref (device_infos));
-		g_hash_table_replace (uv_interface->priv->devices, device_infos->full_name,
-				      arv_uv_interface_device_infos_ref (device_infos));
-		g_hash_table_replace (uv_interface->priv->devices, device_infos->guid,
-				      arv_uv_interface_device_infos_ref (device_infos));
-		arv_uv_interface_device_infos_unref (device_infos);
+                arv_info_interface ("[UvInterface::discovery] Device '%s' found",
+                                    device_infos->id);
+                g_hash_table_replace (uv_interface->priv->devices, device_infos->id,
+                                      arv_uv_interface_device_infos_ref (device_infos));
+                arv_info_interface ("  %s", device_infos->id);
+                g_hash_table_replace (uv_interface->priv->devices, device_infos->vendor_serial,
+                                      arv_uv_interface_device_infos_ref (device_infos));
+                arv_info_interface ("  %s", device_infos->vendor_serial);
+                g_hash_table_replace (uv_interface->priv->devices, device_infos->vendor_alias_serial,
+                                      arv_uv_interface_device_infos_ref (device_infos));
+                arv_info_interface ("  %s", device_infos->vendor_alias_serial);
+                g_hash_table_replace (uv_interface->priv->devices, device_infos->guid,
+                                      arv_uv_interface_device_infos_ref (device_infos));
+                arv_info_interface ("  %s", device_infos->guid);
+                arv_uv_interface_device_infos_unref (device_infos);
 
 		device_ids->device = g_strdup (device_infos->id);
 		device_ids->physical = g_strdup (device_infos->guid);
@@ -335,21 +372,21 @@ arv_uv_interface_update_device_list (ArvInterface *interface, GArray *device_ids
 }
 
 static ArvDevice *
-_open_device (ArvInterface *interface, const char *device_id, GError **error)
+_open_device (ArvInterface *interface, const char *key, GError **error)
 {
 	ArvUvInterface *uv_interface;
 	ArvUvInterfaceDeviceInfos *device_infos;
 
 	uv_interface = ARV_UV_INTERFACE (interface);
 
-	if (device_id == NULL) {
+	if (key == NULL) {
 		GList *device_list;
 
 		device_list = g_hash_table_get_values (uv_interface->priv->devices);
 		device_infos = device_list != NULL ? device_list->data : NULL;
 		g_list_free (device_list);
 	} else
-		device_infos = g_hash_table_lookup (uv_interface->priv->devices, device_id);
+		device_infos = g_hash_table_lookup (uv_interface->priv->devices, key);
 
 	if (device_infos == NULL)
 		return NULL;
@@ -358,12 +395,12 @@ _open_device (ArvInterface *interface, const char *device_id, GError **error)
 }
 
 static ArvDevice *
-arv_uv_interface_open_device (ArvInterface *interface, const char *device_id, GError **error)
+arv_uv_interface_open_device (ArvInterface *interface, const char *key, GError **error)
 {
 	ArvDevice *device;
 	GError *local_error = NULL;
 
-	device = _open_device (interface, device_id, error);
+	device = _open_device (interface, key, error);
 	if (ARV_IS_DEVICE (device) || local_error != NULL) {
 		if (local_error != NULL)
 			g_propagate_error (error, local_error);
@@ -372,7 +409,7 @@ arv_uv_interface_open_device (ArvInterface *interface, const char *device_id, GE
 
 	_discover (ARV_UV_INTERFACE (interface), NULL);
 
-	return _open_device (interface, device_id, error);
+	return _open_device (interface, key, error);
 }
 
 static ArvInterface *arv_uv_interface = NULL;

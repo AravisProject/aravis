@@ -60,6 +60,16 @@ sudo dnf install libxml2-devel glib2-devel cmake libusb1-devel gobject-introspec
                  g++ meson gettext
 ```
 
+
+## NixOS development shell
+
+Use the following command to enter a development shell with
+all required dependencies:
+
+```sh
+nix-shell -p aravis.buildInputs aravis.nativeBuildInputs
+```
+
 ## Building on macOS
 
 Using the GNU build system on macOS is not directly supported, but can be

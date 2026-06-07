@@ -66,5 +66,5 @@ pull request your work is not based on them.
 * Forum: https://aravis-project.discourse.group
 * Github repository: https://github.com/AravisProject/aravis
 * Releases: https://github.com/AravisProject/aravis/releases
-* Release notes: https://github.com/AravisProject/aravis/blob/master/NEWS.md
+* Release notes: https://github.com/AravisProject/aravis/blob/main/NEWS.md
 * Genicam standard : http://www.genicam.org
