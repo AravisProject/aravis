@@ -23,20 +23,13 @@
 #ifndef ARV_GENTL_PRIVATE_H
 #define ARV_GENTL_PRIVATE_H
 
-/*
-MinGW needs <stdint.h> prior to GenTL_v1_6.h for uint64_t and others;
-since GenTL_v1_6.h may not be modified as per license, include here instead.
-*/
-#include<stdint.h>
-
-#include"GenTL_v1_6.h"
-
-#include<glib-object.h>
+#include <arvgentlprivate.h>
+#include <glib-object.h>
 
 /*
 logging macros
 */
-#include<arvdebugprivate.h>
+#include <arvdebugprivate.h>
 
 /*
 Routine for copying anything into buffer. Implementation in private-buf.c

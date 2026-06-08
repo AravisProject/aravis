@@ -26,7 +26,7 @@
 
 #define _IF_CHECK_HANDLE GENTL_ENSURE_INIT; if(hIface==NULL || !(ARV_IS_INTERFACE(hIface))) return GC_ERR_INVALID_HANDLE;
 
-GC_API
+GC_ERROR
 IFClose (IF_HANDLE hIface)
 {
 	_IF_CHECK_HANDLE;
@@ -36,7 +36,7 @@ IFClose (IF_HANDLE hIface)
 	return GC_ERR_SUCCESS;
 }
 
-GC_API
+GC_ERROR
 IFGetInfo (IF_HANDLE hIface, INTERFACE_INFO_CMD iInfoCmd, INFO_DATATYPE *piType, void *pBuffer, size_t *piSize)
 {
 	_IF_CHECK_HANDLE;
@@ -53,7 +53,7 @@ IFGetInfo (IF_HANDLE hIface, INTERFACE_INFO_CMD iInfoCmd, INFO_DATATYPE *piType,
 	}
 }
 
-GC_API
+GC_ERROR
 IFGetNumDevices (IF_HANDLE hIface, uint32_t *piNumDevices)
 {
 	_IF_CHECK_HANDLE;
@@ -69,7 +69,7 @@ IFGetNumDevices (IF_HANDLE hIface, uint32_t *piNumDevices)
 	return GC_ERR_SUCCESS;
 }
 
-GC_API
+GC_ERROR
 IFGetDeviceID (IF_HANDLE hIface, uint32_t iIndex, char *sIDeviceID, size_t *piSize)
 {
 	_IF_CHECK_HANDLE;
@@ -79,7 +79,7 @@ IFGetDeviceID (IF_HANDLE hIface, uint32_t iIndex, char *sIDeviceID, size_t *piSi
 	return gentl_to_buf(INFO_DATATYPE_STRING,sIDeviceID,arv_interface_get_device_id(hIface,iIndex),piSize,NULL);
 }
 
-GC_API
+GC_ERROR
 IFUpdateDeviceList (IF_HANDLE hIface, bool8_t *pbChanged, uint64_t iTimeout)
 {
 	_IF_CHECK_HANDLE;
@@ -94,7 +94,7 @@ IFUpdateDeviceList (IF_HANDLE hIface, bool8_t *pbChanged, uint64_t iTimeout)
 	return GC_ERR_SUCCESS;
 }
 
-GC_API
+GC_ERROR
 IFGetDeviceInfo (IF_HANDLE hIface, const char *sDeviceID, DEVICE_INFO_CMD iInfoCmd, INFO_DATATYPE *piType,
                  void *pBuffer, size_t *piSize)
 {
@@ -156,7 +156,7 @@ IFGetDeviceInfo (IF_HANDLE hIface, const char *sDeviceID, DEVICE_INFO_CMD iInfoC
 	}
 }
 
-GC_API
+GC_ERROR
 IFOpenDevice (IF_HANDLE hIface, const char *sDeviceID, DEVICE_ACCESS_FLAGS iOpenFlag, DEV_HANDLE *phDevice)
 {
 	ArvCamera* cam;
@@ -174,7 +174,7 @@ IFOpenDevice (IF_HANDLE hIface, const char *sDeviceID, DEVICE_ACCESS_FLAGS iOpen
 }
 
 /* GenTL v1.4 */
-GC_API
+GC_ERROR
 IFGetParentTL (IF_HANDLE hIface, TL_HANDLE *phSystem)
 {
         GENTL_NYI;

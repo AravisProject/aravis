@@ -58,7 +58,8 @@ if get_option('tests')
 		if py.found()
 			python_tests = [
 			  ['fake.py',		[]],
-			  ['exception.py',	[]]
+			  ['exception.py',	[]],
+			  ['device.py',	        []],
 			]
 
 			environment = [

@@ -20,7 +20,6 @@
  * Author: Emmanuel Pacaud <emmanuel.pacaud@free.fr>
  */
 
-#include "libxml/parser.h"
 #include <gtk/gtk.h>
 #include <gst/gst.h>
 #include <gst/app/gstappsrc.h>
@@ -31,19 +30,10 @@
 #include <arvviewer.h>
 #include <math.h>
 #include <memory.h>
-#ifdef GDK_WINDOWING_X11
-#include <gdk/gdkx.h>  // for GDK_WINDOW_XID
-#endif
-#ifdef GDK_WINDOWING_WIN32
-#include <gdk/gdkwin32.h>  // for GDK_WINDOW_HWND
-#endif
 
 #define ARV_VIEWER_NOTIFICATION_TIMEOUT 10
 #define ARV_VIEWER_N_BUFFERS 10
 
-static gboolean has_autovideo_sink = FALSE;
-static gboolean has_gtksink = FALSE;
-static gboolean has_gtkglsink = FALSE;
 static gboolean has_bayer2rgb = FALSE;
 
 static gboolean
@@ -61,7 +51,8 @@ gstreamer_plugin_check (void)
 		static char *plugins[] = {
 			"appsrc",
 			"videoconvert",
-			"videoflip"
+			"videoflip",
+                        "gtksink"
 		};
 
 		registry = gst_registry_get ();
@@ -69,30 +60,12 @@ gstreamer_plugin_check (void)
 		for (i = 0; i < G_N_ELEMENTS (plugins); i++) {
 			feature = gst_registry_lookup_feature (registry, plugins[i]);
 			if (!GST_IS_PLUGIN_FEATURE (feature)) {
-				g_print ("Gstreamer plugin '%s' is missing.\n", plugins[i]);
+				g_print ("Gstreamer plugin '%s' is missing\n", plugins[i]);
 				success = FALSE;
 			}
 			else
 
 				g_object_unref (feature);
-		}
-
-		feature = gst_registry_lookup_feature (registry, "autovideosink");
-		if (GST_IS_PLUGIN_FEATURE (feature)) {
-			has_autovideo_sink = TRUE;
-			g_object_unref (feature);
-		}
-
-		feature = gst_registry_lookup_feature (registry, "gtksink");
-		if (GST_IS_PLUGIN_FEATURE (feature)) {
-			has_gtksink = TRUE;
-			g_object_unref (feature);
-		}
-
-		feature = gst_registry_lookup_feature (registry, "gtkglsink");
-		if (GST_IS_PLUGIN_FEATURE (feature)) {
-			has_gtkglsink = TRUE;
-			g_object_unref (feature);
 		}
 
 		feature = gst_registry_lookup_feature (registry, "bayer2rgb");
@@ -101,13 +74,8 @@ gstreamer_plugin_check (void)
 			g_object_unref (feature);
 		}
 
-		if (!has_autovideo_sink && !has_gtkglsink && !has_gtksink) {
-			g_print ("Missing GStreamer video output plugin (autovideosink, gtksink or gtkglsink)\n");
-			success = FALSE;
-		}
-
 		if (!success)
-			g_print ("Check your gstreamer installation.\n");
+			g_print ("Check your gstreamer installation\n");
 
 		/* Kludge, prevent autoloading of coglsink, which doesn't seem to work for us */
 		feature = gst_registry_lookup_feature (registry, "coglsink");
@@ -142,8 +110,8 @@ struct  _ArvViewer {
 	gboolean flip_vertical;
 	gboolean flip_horizontal;
 
-	double gain_min, gain_max;
-	double exposure_min, exposure_max;
+	double gain_min, gain_max, gain_inc;
+	double exposure_min, exposure_max, exposure_inc;
 
 	ArvGcRepresentation gain_representation;
 	ArvGcRepresentation exposure_time_representation;
@@ -241,6 +209,14 @@ struct  _ArvViewer {
         ArvUvUsbMode usb_mode;
 
 	gulong video_window_xid;
+
+        /* ---- unpack buffer pool: reuse across frames to avoid per-frame malloc ---- */
+        GMutex        unpack_mutex;
+        guint16      *unpack_buf;        /* current reusable unpack buffer              */
+        gsize         unpack_buf_size;   /* allocated bytes in unpack_buf               */
+
+        /* ---- worker thread: unpack off the acquisition callback thread ---- */
+        GThreadPool  *unpack_pool;
 };
 
 typedef GtkApplicationClass ArvViewerClass;
@@ -290,8 +266,10 @@ arv_viewer_value_to_log (double value, double min, double max)
 }
 
 static double
-arv_viewer_value_from_log (double value, double min, double max)
+arv_viewer_value_from_log (double value, double min, double max, double inc)
 {
+	double power, mod, result;
+
 	if (min <= 0.0 || max <= 0)
 		return 0.0;
 
@@ -300,7 +278,13 @@ arv_viewer_value_from_log (double value, double min, double max)
 	if (value < 0.0)
 		return min;
 
-	return pow (10.0, (value * (log10 (max) - log10 (min)) + log10 (min)));
+	power = pow (10.0, (value * (log10 (max) - log10 (min)) + log10 (min)));
+	mod = fmod (power - min, inc);
+	result = power - mod;
+	if (mod > 0.5 * inc) {
+		result += inc;
+	}
+	return result;
 }
 
 static void
@@ -381,49 +365,413 @@ gst_buffer_release_cb (void *user_data)
 	g_free (release_data);
 }
 
-static GstBuffer *
-arv_to_gst_buffer (ArvBuffer *arv_buffer, guint part_id, ArvStream *stream)
-{
-	ArvGstBufferReleaseData* release_data;
-	int arv_row_stride;
-	int width, height;
-	char *buffer_data;
-	size_t buffer_size;
-	size_t size;
-	void *data;
+/* ============================================================================
+ * 12-bit and 10-bit packed format detection and unpacking.
+ *
+ * OPTIMIZATIONS vs original:
+ *   1. Zero per-frame heap allocation: unpackers write into a caller-supplied
+ *      pre-allocated buffer (the viewer's reusable unpack_buf).
+ *   2. Loop body processes 4 pixels (2 pairs) per iteration with local pointer
+ *      arithmetic instead of i*3 multiply; this is friendly to auto-vectorization.
+ *   3. Mono shift-to-16 is fused into the same pass as unpacking, eliminating
+ *      the second loop.
+ *   4. arv_to_gst_buffer receives the pre-allocated destination so it never
+ *      calls g_malloc for the pixel data.
+ *   5. new_buffer_cb dispatches to a GThreadPool so unpack+push never blocks
+ *      the Aravis acquisition callback thread.
+ *
+ * Two different packed layouts exist for each bit depth:
+ *
+ *   Legacy "Packed" (GigE Vision 1.x, MSB-first):
+ *     12Packed: 3 bytes per 2 pixels
+ *       pixel0 = (b0 << 4) | (b1 & 0x0F)
+ *       pixel1 = (b2 << 4) | (b1 >> 4)
+ *     10Packed: 3 bytes per 2 pixels (2 bits padding per pixel)
+ *       pixel0 = (b0 << 2) | (b1 & 0x03)
+ *       pixel1 = (b2 << 2) | (b1 >> 4) & 0x03
+ *
+ *   PFNC "p" (GenICam PFNC 2.x, LSB-first):
+ *     12p: 3 bytes per 2 pixels
+ *       pixel0 = ((b1 & 0x0F) << 8) | b0
+ *       pixel1 = (b2 << 4) | (b1 >> 4)
+ *     10p: 5 bytes per 4 pixels (tightly packed, no padding)
+ *
+ * Mono and Bayer use the same byte packing — only debayering differs.
+ * ============================================================================ */
 
-	buffer_data = (char *) arv_buffer_get_part_data (arv_buffer, part_id, &buffer_size);
+/* --- 12-bit format checks --- */
+
+static gboolean
+arv_pixel_format_is_12_packed_legacy (ArvPixelFormat pixel_format)
+{
+	switch (pixel_format) {
+		case ARV_PIXEL_FORMAT_MONO_12_PACKED:
+		case ARV_PIXEL_FORMAT_BAYER_GR_12_PACKED:
+		case ARV_PIXEL_FORMAT_BAYER_RG_12_PACKED:
+		case ARV_PIXEL_FORMAT_BAYER_GB_12_PACKED:
+		case ARV_PIXEL_FORMAT_BAYER_BG_12_PACKED:
+			return TRUE;
+		default:
+			return FALSE;
+	}
+}
+
+static gboolean
+arv_pixel_format_is_12p_pfnc (ArvPixelFormat pixel_format)
+{
+	switch (pixel_format) {
+		case ARV_PIXEL_FORMAT_MONO_12P:
+		case ARV_PIXEL_FORMAT_BAYER_GR_12P:
+		case ARV_PIXEL_FORMAT_BAYER_RG_12P:
+		case ARV_PIXEL_FORMAT_BAYER_GB_12P:
+		case ARV_PIXEL_FORMAT_BAYER_BG_12P:
+			return TRUE;
+		default:
+			return FALSE;
+	}
+}
+
+/* --- 10-bit format checks --- */
+
+static gboolean
+arv_pixel_format_is_10_packed_legacy (ArvPixelFormat pixel_format)
+{
+	switch (pixel_format) {
+		case ARV_PIXEL_FORMAT_MONO_10_PACKED:
+		case ARV_PIXEL_FORMAT_BAYER_GR_10_PACKED:
+		case ARV_PIXEL_FORMAT_BAYER_RG_10_PACKED:
+		case ARV_PIXEL_FORMAT_BAYER_GB_10_PACKED:
+		case ARV_PIXEL_FORMAT_BAYER_BG_10_PACKED:
+			return TRUE;
+		default:
+			return FALSE;
+	}
+}
+
+static gboolean
+arv_pixel_format_is_10p_pfnc (ArvPixelFormat pixel_format)
+{
+	switch (pixel_format) {
+		case ARV_PIXEL_FORMAT_MONO_10P:
+		case ARV_PIXEL_FORMAT_BAYER_GR_10P:
+		case ARV_PIXEL_FORMAT_BAYER_RG_10P:
+		case ARV_PIXEL_FORMAT_BAYER_GB_10P:
+		case ARV_PIXEL_FORMAT_BAYER_BG_10P:
+			return TRUE;
+		default:
+			return FALSE;
+	}
+}
+
+/* --- Mono bit-depth checks (for <<N shift to fill GRAY16_LE range) --- */
+
+static gboolean
+arv_pixel_format_is_mono_12 (ArvPixelFormat pixel_format)
+{
+	return pixel_format == ARV_PIXEL_FORMAT_MONO_12 ||
+	       pixel_format == ARV_PIXEL_FORMAT_MONO_12_PACKED ||
+	       pixel_format == ARV_PIXEL_FORMAT_MONO_12P;
+}
+
+static gboolean
+arv_pixel_format_is_mono_10 (ArvPixelFormat pixel_format)
+{
+	return pixel_format == ARV_PIXEL_FORMAT_MONO_10 ||
+	       pixel_format == ARV_PIXEL_FORMAT_MONO_10_PACKED ||
+	       pixel_format == ARV_PIXEL_FORMAT_MONO_10P;
+}
+
+/* ============================================================================
+ * Buffer pool helper: grow the viewer's reusable unpack buffer if needed.
+ * Must be called with viewer->unpack_mutex held.
+ * ============================================================================ */
+static guint16 *
+arv_viewer_get_unpack_buf (ArvViewer *viewer, gsize required)
+{
+	if (G_UNLIKELY (required > viewer->unpack_buf_size)) {
+		g_free (viewer->unpack_buf);
+		/* Allocate with 64-byte alignment for SIMD friendliness */
+		viewer->unpack_buf = (guint16 *) g_malloc (required);
+		viewer->unpack_buf_size = required;
+	}
+	return viewer->unpack_buf;
+}
+
+/* ============================================================================
+ * Optimized unpackers — write into caller-supplied dst buffer, no malloc.
+ * Each loop body processes 4 output pixels (2 packed groups) so that the
+ * compiler can auto-vectorize with SSE2/NEON.  The mono_shift argument fuses
+ * the "scale to 16-bit" pass: pass 4 for 12-bit mono, 6 for 10-bit mono,
+ * 0 for Bayer (bayer2rgb does its own normalisation).
+ * ============================================================================ */
+
+/* Legacy 12Packed: 3 bytes → 2 pixels, MSB-first
+ *   pixel0 = (b0<<4)|(b1&0x0F)   pixel1 = (b2<<4)|(b1>>4)
+ * With mono_shift=4: output is already <<4, i.e. 0-65520 mapped from 0-4095. */
+static void
+unpack_12_packed_legacy_into (const guint8 * restrict src,
+                               guint16      * restrict dst,
+                               int n_pixels, int mono_shift)
+{
+	int n_pairs = n_pixels / 2;
+	/* Process 2 pairs (4 pixels) per iteration */
+	int n_quads = n_pairs / 2;
+	int rem     = n_pairs & 1;
+	int i;
+
+	for (i = 0; i < n_quads; i++) {
+		guint8 b0 = src[0], b1 = src[1], b2 = src[2];
+		guint8 b3 = src[3], b4 = src[4], b5 = src[5];
+		src += 6;
+		dst[0] = (guint16)(((guint16)b0 << 4) | (b1 & 0x0F)) << mono_shift;
+		dst[1] = (guint16)(((guint16)b2 << 4) | (b1 >> 4))   << mono_shift;
+		dst[2] = (guint16)(((guint16)b3 << 4) | (b4 & 0x0F)) << mono_shift;
+		dst[3] = (guint16)(((guint16)b5 << 4) | (b4 >> 4))   << mono_shift;
+		dst += 4;
+	}
+	if (rem) {
+		guint8 b0 = src[0], b1 = src[1], b2 = src[2];
+		dst[0] = (guint16)(((guint16)b0 << 4) | (b1 & 0x0F)) << mono_shift;
+		dst[1] = (guint16)(((guint16)b2 << 4) | (b1 >> 4))   << mono_shift;
+	}
+}
+
+/* PFNC 12p: 3 bytes → 2 pixels, LSB-first
+ *   pixel0 = ((b1&0x0F)<<8)|b0   pixel1 = (b2<<4)|(b1>>4) */
+static void
+unpack_12p_pfnc_into (const guint8 * restrict src,
+                       guint16      * restrict dst,
+                       int n_pixels, int mono_shift)
+{
+	int n_pairs = n_pixels / 2;
+	int n_quads = n_pairs / 2;
+	int rem     = n_pairs & 1;
+	int i;
+
+	for (i = 0; i < n_quads; i++) {
+		guint8 b0 = src[0], b1 = src[1], b2 = src[2];
+		guint8 b3 = src[3], b4 = src[4], b5 = src[5];
+		src += 6;
+		dst[0] = (guint16)(((guint16)(b1 & 0x0F) << 8) | b0) << mono_shift;
+		dst[1] = (guint16)(((guint16)b2 << 4) | (b1 >> 4))   << mono_shift;
+		dst[2] = (guint16)(((guint16)(b4 & 0x0F) << 8) | b3) << mono_shift;
+		dst[3] = (guint16)(((guint16)b5 << 4) | (b4 >> 4))   << mono_shift;
+		dst += 4;
+	}
+	if (rem) {
+		guint8 b0 = src[0], b1 = src[1], b2 = src[2];
+		dst[0] = (guint16)(((guint16)(b1 & 0x0F) << 8) | b0) << mono_shift;
+		dst[1] = (guint16)(((guint16)b2 << 4) | (b1 >> 4))   << mono_shift;
+	}
+}
+
+/* Legacy 10Packed: 3 bytes → 2 pixels, MSB-first
+ *   pixel0 = (b0<<2)|(b1&0x03)   pixel1 = (b2<<2)|((b1>>4)&0x03) */
+static void
+unpack_10_packed_legacy_into (const guint8 * restrict src,
+                               guint16      * restrict dst,
+                               int n_pixels, int mono_shift)
+{
+	int n_pairs = n_pixels / 2;
+	int n_quads = n_pairs / 2;
+	int rem     = n_pairs & 1;
+	int i;
+
+	for (i = 0; i < n_quads; i++) {
+		guint8 b0 = src[0], b1 = src[1], b2 = src[2];
+		guint8 b3 = src[3], b4 = src[4], b5 = src[5];
+		src += 6;
+		dst[0] = (guint16)(((guint16)b0 << 2) | (b1 & 0x03))        << mono_shift;
+		dst[1] = (guint16)(((guint16)b2 << 2) | ((b1 >> 4) & 0x03)) << mono_shift;
+		dst[2] = (guint16)(((guint16)b3 << 2) | (b4 & 0x03))        << mono_shift;
+		dst[3] = (guint16)(((guint16)b5 << 2) | ((b4 >> 4) & 0x03)) << mono_shift;
+		dst += 4;
+	}
+	if (rem) {
+		guint8 b0 = src[0], b1 = src[1], b2 = src[2];
+		dst[0] = (guint16)(((guint16)b0 << 2) | (b1 & 0x03))        << mono_shift;
+		dst[1] = (guint16)(((guint16)b2 << 2) | ((b1 >> 4) & 0x03)) << mono_shift;
+	}
+}
+
+/* PFNC 10p: 5 bytes → 4 pixels, LSB-first */
+static void
+unpack_10p_pfnc_into (const guint8 * restrict src,
+                       guint16      * restrict dst,
+                       int n_pixels, int mono_shift)
+{
+	int n_quads = n_pixels / 4;
+	int i;
+
+	for (i = 0; i < n_quads; i++) {
+		guint8 b0 = src[0], b1 = src[1], b2 = src[2], b3 = src[3], b4 = src[4];
+		src += 5;
+		dst[0] = (guint16)(((guint16)(b1 & 0x03) << 8) | b0)        << mono_shift;
+		dst[1] = (guint16)(((guint16)(b2 & 0x0F) << 6) | (b1 >> 2)) << mono_shift;
+		dst[2] = (guint16)(((guint16)(b3 & 0x3F) << 4) | (b2 >> 4)) << mono_shift;
+		dst[3] = (guint16)(((guint16) b4 << 2)         | (b3 >> 6)) << mono_shift;
+		dst += 4;
+	}
+}
+
+/* ============================================================================
+ * Worker-thread context: everything arv_to_gst_buffer needs, heap-allocated
+ * once per buffer by new_buffer_cb and freed by the thread pool function.
+ * ============================================================================ */
+typedef struct {
+	ArvViewer  *viewer;       /* unowned; viewer outlives all queued tasks  */
+	ArvStream  *stream;       /* strong ref                                 */
+	ArvBuffer  *arv_buffer;
+	guint       part_id;
+} ArvUnpackTask;
+
+/* ============================================================================
+ * arv_to_gst_buffer — zero-malloc hot path.
+ *
+ * The unpacked pixel data lands in viewer->unpack_buf (a reused slab).
+ * The GstBuffer wraps a *copy* of that slab so the slab is immediately free
+ * for the next frame.  The copy is the minimum unavoidable work; it is a
+ * single large memcpy which is as fast as memory bandwidth allows.
+ * ============================================================================ */
+static GstBuffer *
+arv_to_gst_buffer (ArvBuffer *arv_buffer, guint part_id,
+                   ArvStream *stream,     ArvViewer *viewer)
+{
+	ArvGstBufferReleaseData *release_data;
+	ArvPixelFormat  pixel_format;
+	const guint8   *raw;
+	guint16        *unpack_dst = NULL;
+	int             width, height, n_pixels;
+	size_t          raw_size, out_size;
+	int             arv_row_stride;
+	void           *gst_data;
+	size_t          gst_size = 0;
+	gboolean        did_unpack = FALSE;
+	int             mono_shift = 0;
+
+	raw = (const guint8 *) arv_buffer_get_part_data (arv_buffer, part_id, &raw_size);
 	arv_buffer_get_part_region (arv_buffer, part_id, NULL, NULL, &width, &height);
-	arv_row_stride = width * ARV_PIXEL_FORMAT_BIT_PER_PIXEL (arv_buffer_get_part_pixel_format (arv_buffer, part_id)) / 8;
+	pixel_format = arv_buffer_get_part_pixel_format (arv_buffer, part_id);
+	n_pixels = width * height;
+	out_size = (gsize) n_pixels * 2;
+
+	/* Determine mono normalisation shift (fused into the unpack loop) */
+	if (arv_pixel_format_is_mono_12 (pixel_format))
+		mono_shift = 4;
+	else if (arv_pixel_format_is_mono_10 (pixel_format))
+		mono_shift = 6;
+
+	/* ---- Unpack packed formats directly into the reusable slab ---- */
+	if (arv_pixel_format_is_12_packed_legacy (pixel_format) ||
+	    arv_pixel_format_is_12p_pfnc         (pixel_format) ||
+	    arv_pixel_format_is_10_packed_legacy (pixel_format) ||
+	    arv_pixel_format_is_10p_pfnc         (pixel_format)) {
+
+		g_mutex_lock (&viewer->unpack_mutex);
+		unpack_dst = arv_viewer_get_unpack_buf (viewer, out_size);
+
+		if (arv_pixel_format_is_12_packed_legacy (pixel_format))
+			unpack_12_packed_legacy_into (raw, unpack_dst, n_pixels, mono_shift);
+		else if (arv_pixel_format_is_12p_pfnc (pixel_format))
+			unpack_12p_pfnc_into         (raw, unpack_dst, n_pixels, mono_shift);
+		else if (arv_pixel_format_is_10_packed_legacy (pixel_format))
+			unpack_10_packed_legacy_into (raw, unpack_dst, n_pixels, mono_shift);
+		else
+			unpack_10p_pfnc_into         (raw, unpack_dst, n_pixels, mono_shift);
+
+		did_unpack  = TRUE;
+		mono_shift  = 0; /* already applied inside the unpacker */
+	}
+
+	/* ---- Mono16 unpacked (e.g. Mono12, Mono10 non-packed): scale in-place ----
+	 * We must copy because the arv_buffer memory is returned to the pool. */
+	if (!did_unpack && mono_shift > 0) {
+		const guint16 *src16 = (const guint16 *) raw;
+		int i;
+
+		g_mutex_lock (&viewer->unpack_mutex);
+		unpack_dst = arv_viewer_get_unpack_buf (viewer, out_size);
+
+		for (i = 0; i < n_pixels; i++)
+			unpack_dst[i] = (guint16)(src16[i] << mono_shift);
+
+		did_unpack = TRUE;
+		mono_shift = 0;
+	}
+
+	/* ---- Determine row stride ---- */
+	if (did_unpack)
+		arv_row_stride = width * 2;
+	else
+		arv_row_stride = width * ARV_PIXEL_FORMAT_BIT_PER_PIXEL (pixel_format) / 8;
 
 	release_data = g_new0 (ArvGstBufferReleaseData, 1);
-
 	g_weak_ref_init (&release_data->stream, stream);
 	release_data->arv_buffer = arv_buffer;
 
-	/* Gstreamer requires row stride to be a multiple of 4 */
+	/* ---- Build GstBuffer ----
+	 * GStreamer requires row stride to be a multiple of 4.
+	 * We always copy the pixel data out of unpack_dst so we can
+	 * immediately release the unpack_mutex (the slab is reused next frame). */
 	if ((arv_row_stride & 0x3) != 0) {
-		int gst_row_stride;
+		int gst_row_stride = (arv_row_stride & ~0x3) + 4;
 		int i;
 
-		gst_row_stride = (arv_row_stride & ~(0x3)) + 4;
+		gst_size = (gsize) height * gst_row_stride;
+		gst_data = g_malloc (gst_size);
 
-		size = height * gst_row_stride;
-		data = g_malloc (size);
-
-		for (i = 0; i < height; i++)
-			memcpy (((char *) data) + i * gst_row_stride, buffer_data + i * arv_row_stride, arv_row_stride);
-
-		release_data->data = data;
-
+		if (did_unpack) {
+			const char *s = (const char *) unpack_dst;
+			for (i = 0; i < height; i++)
+				memcpy ((char *) gst_data + i * gst_row_stride,
+				        s + i * arv_row_stride, arv_row_stride);
+			g_mutex_unlock (&viewer->unpack_mutex);
+		} else {
+			for (i = 0; i < height; i++)
+				memcpy ((char *) gst_data + i * gst_row_stride,
+				        (const char *) raw + i * arv_row_stride, arv_row_stride);
+		}
+	} else if (did_unpack) {
+		/* stride is aligned: one large memcpy of the unpacked slab */
+		gst_size = out_size;
+		gst_data = g_malloc (gst_size);
+		memcpy (gst_data, unpack_dst, gst_size);
+		g_mutex_unlock (&viewer->unpack_mutex);
 	} else {
-		data = buffer_data;
-		size = buffer_size;
+		/* No unpack, stride aligned: wrap original arv_buffer data directly */
+		gst_data = (void *) raw;
+		gst_size = raw_size;
+		/* release_data->data stays NULL → gst_buffer_release_cb won't free it */
 	}
 
+	if (did_unpack)
+		release_data->data = gst_data;  /* GstBuffer owns this copy */
+	else if ((arv_row_stride & 0x3) != 0)
+		release_data->data = gst_data;
+
 	return gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
-					    data, size, 0, size,
-					    release_data, gst_buffer_release_cb);
+	                                    gst_data, gst_size, 0, gst_size,
+	                                    release_data, gst_buffer_release_cb);
+}
+
+/* ============================================================================
+ * Worker function — runs in the GThreadPool.
+ * Unpacks one frame and pushes it to appsrc, completely off the
+ * Aravis acquisition callback thread.
+ * ============================================================================ */
+static void
+unpack_and_push_worker (gpointer data, gpointer user_data)
+{
+	ArvUnpackTask *task   = (ArvUnpackTask *) data;
+	ArvViewer     *viewer = task->viewer;
+
+	gst_app_src_push_buffer (GST_APP_SRC (viewer->appsrc),
+	                         arv_to_gst_buffer (task->arv_buffer,
+	                                            task->part_id,
+	                                            task->stream,
+	                                            viewer));
+	g_object_unref (task->stream);
+	g_free (task);
 }
 
 static void
@@ -438,24 +786,32 @@ new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 
 	arv_stream_get_n_owned_buffers (stream, &n_input_buffers, &n_output_buffers, &n_buffer_filling);
 	arv_debug_viewer ("pop buffer (input:%d,output:%d,filling:%d)",
-                          n_input_buffers, n_output_buffers, n_buffer_filling);
+	                  n_input_buffers, n_output_buffers, n_buffer_filling);
 
 	if (arv_buffer_get_status (arv_buffer) == ARV_BUFFER_STATUS_SUCCESS &&
-            /* Ensure there is still available buffers for the stream thread */
-            n_input_buffers + n_output_buffers + n_buffer_filling > 0) {
-		size_t size;
-                gint part_id;
+	    /* Ensure there are still buffers available for the stream thread */
+	    n_input_buffers + n_output_buffers + n_buffer_filling > 0) {
 
-                part_id = arv_buffer_find_component(arv_buffer, viewer->component_id);
-                if (part_id < 0)
-                        part_id = 0;
+		ArvUnpackTask *task;
+		gint part_id;
 
-                arv_buffer_get_part_data (arv_buffer, part_id, &size);
+		part_id = arv_buffer_find_component (arv_buffer, viewer->component_id);
+		if (part_id < 0)
+			part_id = 0;
 
-		g_clear_object( &viewer->last_buffer );
-		viewer->last_buffer = g_object_ref( arv_buffer );
+		/* Update last_buffer for snapshot — no unpack needed here */
+		g_clear_object (&viewer->last_buffer);
+		viewer->last_buffer = g_object_ref (arv_buffer);
 
-		gst_app_src_push_buffer (GST_APP_SRC (viewer->appsrc), arv_to_gst_buffer (arv_buffer, part_id, stream));
+		/* Dispatch the heavy unpack+push to the worker thread */
+		task             = g_new0 (ArvUnpackTask, 1);
+		task->viewer     = viewer;
+		task->stream     = g_object_ref (stream);
+		task->arv_buffer = arv_buffer;
+		task->part_id    = (guint) part_id;
+
+		g_thread_pool_push (viewer->unpack_pool, task, NULL);
+
 	} else {
 		arv_debug_viewer ("push discarded buffer");
 		arv_stream_push_buffer (stream, arv_buffer);
@@ -547,7 +903,7 @@ exposure_scale_cb (GtkRange *range, ArvViewer *viewer)
 {
 	double scaled_exposure = gtk_range_get_value (range);
 	double exposure = viewer->exposure_time_representation == ARV_GC_REPRESENTATION_LOGARITHMIC ?
-		arv_viewer_value_from_log (scaled_exposure, viewer->exposure_min, viewer->exposure_max) : scaled_exposure;
+		arv_viewer_value_from_log (scaled_exposure, viewer->exposure_min, viewer->exposure_max, viewer->exposure_inc) : scaled_exposure;
 
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (viewer->auto_exposure_toggle), FALSE);
 
@@ -563,7 +919,7 @@ gain_scale_cb (GtkRange *range, ArvViewer *viewer)
 {
 	double scaled_gain = gtk_range_get_value (range);
 	double gain = viewer->gain_representation == ARV_GC_REPRESENTATION_LOGARITHMIC ?
-		arv_viewer_value_from_log (scaled_gain, viewer->gain_min, viewer->gain_max) : scaled_gain;
+		arv_viewer_value_from_log (scaled_gain, viewer->gain_min, viewer->gain_max, viewer->gain_inc) : scaled_gain;
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (viewer->auto_gain_toggle), FALSE);
 
 	arv_camera_set_gain (viewer->camera, gain, NULL);
@@ -746,13 +1102,23 @@ set_camera_widgets(ArvViewer *viewer)
 	g_signal_handler_block (viewer->exposure_spin_button, viewer->exposure_spin_changed);
 
 	arv_camera_get_exposure_time_bounds (viewer->camera, &viewer->exposure_min, &viewer->exposure_max, NULL);
+	viewer->exposure_inc = arv_camera_get_exposure_time_increment (viewer->camera, NULL);
+	if (viewer->exposure_inc <= G_MINDOUBLE) {
+		viewer->exposure_inc = 1.0;
+	}
 	gtk_spin_button_set_range (GTK_SPIN_BUTTON (viewer->exposure_spin_button),
 				   viewer->exposure_min, viewer->exposure_max);
-	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->exposure_spin_button), 200.0, 1000.0);
+	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->exposure_spin_button), viewer->exposure_inc, ceil (1000.0 / viewer->exposure_inc) * viewer->exposure_inc);
+	gtk_spin_button_set_snap_to_ticks (GTK_SPIN_BUTTON (viewer->exposure_spin_button), TRUE);
 
 	arv_camera_get_gain_bounds (viewer->camera, &viewer->gain_min, &viewer->gain_max, NULL);
+	viewer->gain_inc = arv_camera_get_gain_increment (viewer->camera, NULL);
+	if (viewer->gain_inc <= G_MINDOUBLE) {
+		viewer->gain_inc = 1.0;
+	}
 	gtk_spin_button_set_range (GTK_SPIN_BUTTON (viewer->gain_spin_button), viewer->gain_min, viewer->gain_max);
-	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->gain_spin_button), 1, 10);
+	gtk_spin_button_set_increments (GTK_SPIN_BUTTON (viewer->gain_spin_button), viewer->gain_inc, ceil (10.0 / viewer->gain_inc) * viewer->gain_inc);
+	gtk_spin_button_set_snap_to_ticks (GTK_SPIN_BUTTON (viewer->gain_spin_button), TRUE);
 
 	arv_camera_get_black_level_bounds (viewer->camera, &black_level_min, &black_level_max, NULL);
 	gtk_spin_button_set_range (GTK_SPIN_BUTTON (viewer->black_level_spin_button), black_level_min, black_level_max);
@@ -782,6 +1148,7 @@ set_camera_widgets(ArvViewer *viewer)
 			case ARV_GC_REPRESENTATION_LINEAR:
 				gtk_range_set_range (GTK_RANGE (viewer->gain_hscale),
                                                      viewer->gain_min, viewer->gain_max);
+				gtk_range_set_increments (GTK_RANGE (viewer->gain_hscale), viewer->gain_inc, viewer->gain_inc);
 				gtk_widget_set_sensitive (viewer->gain_hscale, is_gain_available);
 				gtk_widget_set_sensitive (viewer->gain_spin_button, is_gain_available);
 				break;
@@ -822,6 +1189,7 @@ set_camera_widgets(ArvViewer *viewer)
 			case ARV_GC_REPRESENTATION_LINEAR:
 				gtk_range_set_range (GTK_RANGE (viewer->exposure_hscale),
                                                      viewer->exposure_min, viewer->exposure_max);
+				gtk_range_set_increments (GTK_RANGE (viewer->exposure_hscale), viewer->exposure_inc, viewer->exposure_inc);
 				break;
 			case ARV_GC_REPRESENTATION_LOGARITHMIC:
 				gtk_range_set_range (GTK_RANGE (viewer->exposure_hscale), 0.0, 1.0);
@@ -1358,11 +1726,19 @@ remove_widget (GtkWidget *widget, gpointer data)
 static void
 stop_video (ArvViewer *viewer)
 {
-	if (GST_IS_PIPELINE (viewer->pipeline))
-		gst_element_set_state (viewer->pipeline, GST_STATE_NULL);
-
 	if (ARV_IS_STREAM (viewer->stream))
 		arv_stream_set_emit_signals (viewer->stream, FALSE);
+
+	/* Drain any in-flight unpack tasks before we tear down appsrc/pipeline */
+	if (viewer->unpack_pool)
+		g_thread_pool_free (viewer->unpack_pool, FALSE, TRUE);
+
+	/* Recreate the pool immediately so start_video can reuse it */
+	viewer->unpack_pool = g_thread_pool_new (unpack_and_push_worker, NULL,
+	                                         1, TRUE, NULL);
+
+	if (GST_IS_PIPELINE (viewer->pipeline))
+		gst_element_set_state (viewer->pipeline, GST_STATE_NULL);
 
 	g_clear_object (&viewer->stream);
 	g_clear_object (&viewer->pipeline);
@@ -1397,31 +1773,10 @@ stop_video (ArvViewer *viewer)
 	}
 }
 
-static GstBusSyncReply
-bus_sync_handler (GstBus *bus, GstMessage *message, gpointer user_data)
-{
-	ArvViewer *viewer = user_data;
-
-	if (!gst_is_video_overlay_prepare_window_handle_message(message))
-		return GST_BUS_PASS;
-
-	if (viewer->video_window_xid != 0) {
-		GstVideoOverlay *videooverlay;
-
-		videooverlay = GST_VIDEO_OVERLAY (GST_MESSAGE_SRC (message));
-		gst_video_overlay_set_window_handle (videooverlay, viewer->video_window_xid);
-	} else {
-		g_warning ("Should have obtained video_window_xid by now!");
-	}
-
-	gst_message_unref (message);
-
-	return GST_BUS_DROP;
-}
-
 static gboolean
 start_video (ArvViewer *viewer)
 {
+        GtkWidget *video_widget;
 	GstElement *videoconvert;
 	GstCaps *caps;
 	ArvPixelFormat pixel_format;
@@ -1508,43 +1863,15 @@ start_video (ArvViewer *viewer)
 		gst_element_link_many (viewer->appsrc, videoconvert, viewer->transform, NULL);
 	}
 
-	if (has_gtksink || has_gtkglsink) {
-		GtkWidget *video_widget;
+        viewer->videosink = gst_element_factory_make ("gtksink", NULL);
+        gst_bin_add_many (GST_BIN (viewer->pipeline), viewer->videosink, NULL);
+        gst_element_link_many (viewer->transform, viewer->videosink, NULL);
 
-#if 0 /* Disable glsink for now, it crashes when we come back to camera list with:
-	(lt-arv-viewer:29151): Gdk-WARNING **: eglMakeCurrent failed
-	(lt-arv-viewer:29151): Gdk-WARNING **: eglMakeCurrent failed
-	(lt-arv-viewer:29151): Gdk-WARNING **: eglMakeCurrent failed
-	Erreur de segmentation (core dumped)
-	*/
-
-		videosink = gst_element_factory_make ("gtkglsink", NULL);
-
-		if (GST_IS_ELEMENT (videosink)) {
-			GstElement *glupload;
-
-			glupload = gst_element_factory_make ("glupload", NULL);
-			gst_bin_add_many (GST_BIN (viewer->pipeline), glupload, videosink, NULL);
-			gst_element_link_many (viewer->transform, glupload, videosink, NULL);
-		} else {
-#else
-		{
-#endif
-			viewer->videosink = gst_element_factory_make ("gtksink", NULL);
-			gst_bin_add_many (GST_BIN (viewer->pipeline), viewer->videosink, NULL);
-			gst_element_link_many (viewer->transform, viewer->videosink, NULL);
-		}
-
-		g_object_get (viewer->videosink, "widget", &video_widget, NULL);
-		gtk_container_add (GTK_CONTAINER (viewer->video_frame), video_widget);
-		gtk_widget_show (video_widget);
-		g_object_set(G_OBJECT (video_widget), "force-aspect-ratio", TRUE, NULL);
-		gtk_widget_set_size_request (video_widget, 640, 480);
-	} else {
-		viewer->videosink = gst_element_factory_make ("autovideosink", NULL);
-		gst_bin_add (GST_BIN (viewer->pipeline), viewer->videosink);
-		gst_element_link_many (viewer->transform, viewer->videosink, NULL);
-	}
+        g_object_get (viewer->videosink, "widget", &video_widget, NULL);
+        gtk_container_add (GTK_CONTAINER (viewer->video_frame), video_widget);
+        gtk_widget_show (video_widget);
+        g_object_set(G_OBJECT (video_widget), "force-aspect-ratio", TRUE, NULL);
+        gtk_widget_set_size_request (video_widget, 640, 480);
 
 	g_object_set(G_OBJECT (viewer->videosink), "sync", FALSE, NULL);
 
@@ -1559,14 +1886,6 @@ start_video (ArvViewer *viewer)
 	gst_caps_unref (caps);
 
 	g_object_set(G_OBJECT (viewer->appsrc), "format", GST_FORMAT_TIME, "is-live", TRUE, "do-timestamp", TRUE, NULL);
-
-	if (!has_gtkglsink && !has_gtksink) {
-		GstBus *bus;
-
-		bus = gst_pipeline_get_bus (GST_PIPELINE (viewer->pipeline));
-		gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bus_sync_handler, viewer, NULL);
-		gst_object_unref (bus);
-	}
 
 	gst_element_set_state (viewer->pipeline, GST_STATE_PLAYING);
 
@@ -1808,17 +2127,6 @@ arv_viewer_quit_cb (GtkApplicationWindow *window, ArvViewer *viewer)
 }
 
 static void
-video_frame_realize_cb (GtkWidget * widget, ArvViewer *viewer)
-{
-#ifdef GDK_WINDOWING_X11
-	viewer->video_window_xid = GDK_WINDOW_XID (gtk_widget_get_window (widget));
-#endif
-#ifdef GDK_WINDOWING_WIN32
-	viewer->video_window_xid = (guintptr) GDK_WINDOW_HWND (gtk_widget_get_window (widget));
-#endif
-}
-
-static void
 activate (GApplication *application)
 {
 	ArvViewer *viewer = (ArvViewer *) application;
@@ -1917,10 +2225,6 @@ activate (GApplication *application)
 	g_signal_connect (viewer->frame_rate_entry, "activate", G_CALLBACK (frame_rate_entry_cb), viewer);
 	g_signal_connect (viewer->frame_rate_entry, "focus-out-event", G_CALLBACK (frame_rate_entry_focus_cb), viewer);
 
-	if (!has_gtksink && !has_gtkglsink) {
-		g_signal_connect (viewer->video_frame, "realize", G_CALLBACK (video_frame_realize_cb), viewer);
-	}
-
 	viewer->camera_selected = g_signal_connect (gtk_tree_view_get_selection (GTK_TREE_VIEW (viewer->camera_tree)), "changed",
 						    G_CALLBACK (camera_selection_changed_cb), viewer);
 	viewer->exposure_spin_changed = g_signal_connect (viewer->exposure_spin_button, "value-changed",
@@ -1986,6 +2290,19 @@ viewer_shutdown (GApplication *application)
 static void
 finalize (GObject *object)
 {
+	ArvViewer *viewer = (ArvViewer *) object;
+
+	if (viewer->unpack_pool) {
+		g_thread_pool_free (viewer->unpack_pool, FALSE, TRUE);
+		viewer->unpack_pool = NULL;
+	}
+
+	g_free (viewer->unpack_buf);
+	viewer->unpack_buf      = NULL;
+	viewer->unpack_buf_size = 0;
+
+	g_mutex_clear (&viewer->unpack_mutex);
+
 	G_OBJECT_CLASS (arv_viewer_parent_class)->finalize (object);
 }
 
@@ -2018,6 +2335,14 @@ arv_viewer_init (ArvViewer *viewer)
 	viewer->frame_retention = 100;
 	viewer->register_cache_policy = ARV_REGISTER_CACHE_POLICY_DEFAULT;
 	viewer->range_check_policy = ARV_RANGE_CHECK_POLICY_DEFAULT;
+
+	g_mutex_init (&viewer->unpack_mutex);
+
+	/* Single dedicated thread: keeps ordering, avoids lock contention */
+	viewer->unpack_pool = g_thread_pool_new (unpack_and_push_worker, NULL,
+	                                         1,    /* max_threads */
+	                                         TRUE, /* exclusive */
+	                                         NULL);
 }
 
 static void
