@@ -369,9 +369,9 @@ typedef struct {
 typedef struct {
         BUFFER_INFO_CMD iInfoCmd;
         INFO_DATATYPE iType;
-        void *puffer;
-        size_t iSize;
-        GC_ERROR iResult;
+	void *pBuffer;
+	size_t iSize;
+	GC_ERROR iResult;
 } DS_BUFFER_INFO_STACKED;
 
 typedef struct {

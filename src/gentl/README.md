@@ -1,7 +1,7 @@
 # GenTL producer
 
-Function signatures are defined by EMVA; the header `GenTL_v1_6.h` is included
-as distributed by EMVA (BSD-license + prohibition of modification).
+The internal `arvgentlprivate.h` header declares the types and function
+signatures implemented by the producer.
 
 Implementation of those functions is split into modules indicated by function
 prefixes:
