@@ -1,0 +1,25 @@
+#!/bin/bash
+# Wrapper to run commands with the MVS SDK library paths.
+# Usage: mvs-env <command> [args...]
+#
+# This replaces the old global LD_LIBRARY_PATH injection in /etc/profile,
+# ~/.bashrc and ~/.profile so only MVS tools see the MVS libraries.
+#
+# Example:  mvs-env /opt/MVS/bin/MVS_Viewer
+#           mvs-env python my_script_using_mvs.py
+
+if [ $# -eq 0 ]; then
+	echo "Usage: mvs-env <command> [args...]"
+	exit 1
+fi
+
+export MVCAM_SDK_PATH=/opt/MVS
+export MVCAM_SDK_VERSION=4.8.0
+export MVCAM_COMMON_RUNENV=/opt/MVS/lib
+export MVCAM_GENICAM_CLPROTOCOL=/opt/MVS/lib/CLProtocol
+export ALLUSERSPROFILE=/opt/MVS/MVFG
+
+# Prepend MVS libs to LD_LIBRARY_PATH — scoped to this process tree only
+export LD_LIBRARY_PATH=/opt/MVS/lib/64:/opt/MVS/lib/32${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+
+exec "$@"
