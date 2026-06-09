@@ -38,6 +38,36 @@
 #include <arvzip.h>
 #include <arvmisc.h>
 
+#define LIBUSB_WITH_DEV_MEM_ALLOC_VERSION 0x01000105
+
+/* A vendor SDK may put an older libusb in LD_LIBRARY_PATH while Aravis was
+ * compiled against newer system headers. Weak references let the library load
+ * and select the portable fallback when those optional symbols are absent. */
+
+#if \
+        defined(__GNUC__) && \
+        !defined(_WIN32) && \
+        defined(LIBUSB_API_VERSION) && \
+        (LIBUSB_API_VERSION >= LIBUSB_WITH_DEV_MEM_ALLOC_VERSION)
+extern unsigned char *  LIBUSB_CALL libusb_dev_mem_alloc        (libusb_device_handle *dev_handle,
+                                                                 size_t length) __attribute__ ((weak));
+extern int              LIBUSB_CALL libusb_dev_mem_free         (libusb_device_handle *dev_handle,
+                                                                 unsigned char *buffer,
+                                                                 size_t length) __attribute__ ((weak));
+#endif
+
+#if defined(LIBUSB_API_VERSION) && (LIBUSB_API_VERSION >= LIBUSB_WITH_DEV_MEM_ALLOC_VERSION)
+static gboolean
+arv_uv_device_has_libusb_dev_mem (void)
+{
+#if defined(__GNUC__) && !defined(_WIN32)
+	return libusb_dev_mem_alloc != NULL && libusb_dev_mem_free != NULL;
+#else
+	return TRUE;
+#endif
+}
+#endif
+
 enum
 {
 	PROP_0,
@@ -206,17 +236,27 @@ arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, ArvUvEndpointType endpoint_
 void *
 arv_uv_device_usb_mem_alloc (ArvUvDevice *uv_device, size_t size)
 {
+#if defined(LIBUSB_API_VERSION) && (LIBUSB_API_VERSION >= LIBUSB_WITH_DEV_MEM_ALLOC_VERSION)
 	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (uv_device);
 
-        return libusb_dev_mem_alloc (priv->usb_device, size);
+	if (arv_uv_device_has_libusb_dev_mem ())
+		return libusb_dev_mem_alloc (priv->usb_device, size);
+#endif
+	return g_try_malloc (size);
 }
 
 void
 arv_uv_device_usb_mem_free (ArvUvDevice *uv_device, void *data, size_t size)
 {
+#if defined(LIBUSB_API_VERSION) && (LIBUSB_API_VERSION >= LIBUSB_WITH_DEV_MEM_ALLOC_VERSION)
 	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (uv_device);
 
-        libusb_dev_mem_free (priv->usb_device, data, size);
+	if (arv_uv_device_has_libusb_dev_mem ()) {
+		libusb_dev_mem_free (priv->usb_device, data, size);
+		return;
+	}
+#endif
+	g_free (data);
 }
 
 static ArvStream *
