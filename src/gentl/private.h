@@ -158,8 +158,11 @@ struct _ArvGentlDataStream {
 	GQueue *output_queue;	   /* buffers filled with data, waiting for EventGetData */
 
 	/* Acquisition state */
+	/* Session remains started until DSStopAcquisition. */
 	gboolean acquiring;
+	/* Worker stop requested or no longer active. */
 	gboolean stop_thread;
+	/* Finite acquisition quota reached. */
 	gboolean acquisition_complete;
 	guint64 num_to_acquire;
 	guint64 acquisition_delivered_count;

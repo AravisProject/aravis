@@ -350,8 +350,14 @@ test_buffer_info_stacked (void)
 	g_assert_cmpuint (part_width, ==, 0);
 
 	g_assert_cmpint (gentl_ds_get_buffer_chunk_data (data_stream, buffer, NULL, &num_chunks), ==,
-			 GC_ERR_SUCCESS);
+			 GC_ERR_NO_DATA);
 	g_assert_cmpuint (num_chunks, ==, 0);
+	g_assert_cmpint (gentl_ds_get_buffer_chunk_data (data_stream, buffer, NULL, NULL), ==,
+			 GC_ERR_INVALID_PARAMETER);
+	g_assert_cmpint (gentl_ds_get_buffer_chunk_data (data_stream, NULL, NULL, &num_chunks), ==,
+			 GC_ERR_INVALID_HANDLE);
+	g_assert_cmpint (gentl_ds_get_buffer_chunk_data (NULL, buffer, NULL, &num_chunks), ==,
+			 GC_ERR_INVALID_HANDLE);
 
 	g_assert_cmpint (gentl_ds_get_num_flows (data_stream, &num_flows), ==, GC_ERR_NO_DATA);
 	g_assert_cmpuint (num_flows, ==, 0);
@@ -471,6 +477,17 @@ test_finite_acquisition (void)
 
 	g_assert_cmpint (gentl_ds_stop_acquisition (data_stream, ACQ_STOP_FLAGS_DEFAULT), ==,
 			 GC_ERR_SUCCESS);
+
+	g_assert_cmpint (gentl_ds_queue_buffer (data_stream, buffers[0]), ==, GC_ERR_SUCCESS);
+	g_assert_cmpint (gentl_ds_start_acquisition (data_stream, ACQ_START_FLAGS_DEFAULT, 3), ==,
+			 GC_ERR_SUCCESS);
+	info_size = sizeof event_data;
+	g_assert_cmpint (gentl_event_get_data (event, &event_data, &info_size, 2000), ==,
+			 GC_ERR_SUCCESS);
+	g_assert_nonnull (event_data.BufferHandle);
+	g_assert_cmpint (gentl_ds_stop_acquisition (data_stream, ACQ_STOP_FLAGS_DEFAULT), ==,
+			 GC_ERR_SUCCESS);
+
 	g_assert_cmpint (gentl_unregister_event (data_stream, EVENT_NEW_BUFFER), ==, GC_ERR_SUCCESS);
 
 	for (i = 0; i < G_N_ELEMENTS (buffers); i++)

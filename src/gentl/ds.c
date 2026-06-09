@@ -987,7 +987,7 @@ DSGetBufferChunkData (DS_HANDLE hDataStream, BUFFER_HANDLE hBuffer, SINGLE_CHUNK
 	(void) pChunkData;
 	*piNumChunks = 0;
 
-	return GC_ERR_SUCCESS;
+	return GC_ERR_NO_DATA;
 }
 
 /* ========================================================================== */

@@ -369,6 +369,8 @@ typedef struct {
 typedef struct {
         BUFFER_INFO_CMD iInfoCmd;
         INFO_DATATYPE iType;
+	/* Standard GenTL member name. This was previously misspelled "puffer";
+	 * correcting the identifier does not change the packed ABI layout. */
 	void *pBuffer;
 	size_t iSize;
 	GC_ERROR iResult;
