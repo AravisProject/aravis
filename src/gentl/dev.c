@@ -22,6 +22,7 @@
 
 #include"private.h"
 #include<arvcamera.h>
+#include <arvgvdevice.h>
 
 /*
 GenTL's Device is Aravis' Camera. GenTL's Device port is Aravis' Device.
@@ -38,47 +39,62 @@ gentl_to_buf__cam_string (DEV_HANDLE hDevice, const char* (*func)(ArvCamera*,GEr
 {
 	const char* n;
 
+	/* Aravis requires a clean GError**; clear the stored GenTL last-error. */
+	g_clear_error (&gentl_err);
 	n=func(hDevice,&gentl_err);
 	if(n==NULL)
-                return GC_ERR_IO;
+		return GC_ERR_IO;
 
 	return gentl_to_buf(INFO_DATATYPE_STRING,pBuffer,n,piSize,piType);
 };
 
+/* Identify the device with the most stable string available. Not every camera
+ * exposes a live "DeviceID" feature (some USB3 Vision cameras do not), so fall
+ * back to the serial number and then the model name. */
+static const char *
+arv_gentl_camera_best_id (ArvCamera *camera)
+{
+	const char *s;
+	GError *err = NULL;
+
+	s = arv_camera_get_device_id (camera, &err);
+	if (s == NULL || err != NULL) {
+		g_clear_error (&err);
+		s = arv_camera_get_device_serial_number (camera, &err);
+	}
+	if (s == NULL || err != NULL) {
+		g_clear_error (&err);
+		s = arv_camera_get_model_name (camera, &err);
+	}
+	g_clear_error (&err);
+
+	return s;
+}
+
 GC_ERROR
 DevGetPort (DEV_HANDLE hDevice, PORT_HANDLE *phRemoteDevice)
 {
-        _DEV_CHECK_HANDLE;
-        arv_trace_gentl("%s (hDevice=%s[%p])",__FUNCTION__,G_OBJECT_TYPE_NAME(hDevice),hDevice);
+	_DEV_CHECK_HANDLE;
+	if (phRemoteDevice == NULL)
+		return GC_ERR_INVALID_PARAMETER;
+	arv_trace_gentl ("%s (hDevice=%s[%p])", __FUNCTION__, G_OBJECT_TYPE_NAME (hDevice), hDevice);
 
-        *phRemoteDevice=arv_camera_get_device(hDevice);
+	*phRemoteDevice = arv_camera_get_device (hDevice);
 
-        return GC_ERR_SUCCESS;
+	return GC_ERR_SUCCESS;
 }
 
 GC_ERROR
 DevGetNumDataStreams (DEV_HANDLE hDevice, uint32_t *piNumDataStreams)
 {
-	GError* err;
-
 	_DEV_CHECK_HANDLE
 	arv_trace_gentl("%s (hDevice=%s[%p])",__FUNCTION__,G_OBJECT_TYPE_NAME(hDevice),hDevice);
 
 	if(piNumDataStreams==NULL)
-                return GC_ERR_INVALID_PARAMETER;
-	if(!arv_camera_is_gv_device(hDevice))
-                arv_warning_gentl("%s: not a GV device: expect trouble.",__FUNCTION__);
+		return GC_ERR_INVALID_PARAMETER;
 
-        /* GenTL provides no way to clear last error; so there would be a warning here "CRTITICAL **:
-         * arv_gc_integer_get_value: assertion 'error == NULL || *error == NULL' failed" — which only means that a
-         * previous error is stored in gentl_error (as required by the specification). In this case,
-         * arv_camera_gv_get_n_stream_channels will report failure, that's why we use a separate error pointer just for
-         * the call, and store it in gentl_err if it fails.  */
-	err=NULL;
-	*piNumDataStreams=arv_camera_gv_get_n_stream_channels(hDevice,&err);
-	if(err!=NULL) {
-                *gentl_err=*err; return GC_ERR_IO;
-        }
+	/* Aravis currently exposes one stream through this producer. */
+	*piNumDataStreams = 1;
 	arv_trace_gentl("   (returning %d)",*piNumDataStreams);
 
 	return GC_ERR_SUCCESS;
@@ -87,23 +103,13 @@ DevGetNumDataStreams (DEV_HANDLE hDevice, uint32_t *piNumDataStreams)
 GC_ERROR
 DevGetDataStreamID (DEV_HANDLE hDevice, uint32_t iIndex, char *sDataStreamID, size_t *piSize)
 {
-	GError* err = NULL;
-	gint chan;
 	char buf[4];
 
 	_DEV_CHECK_HANDLE
 	arv_trace_gentl("%s (hDevice=%s[%p], iIndex=%d)",__FUNCTION__,G_OBJECT_TYPE_NAME(hDevice),hDevice,iIndex);
 
-	chan = arv_camera_gv_get_n_stream_channels(hDevice,&err);
-
-	if (err != NULL) {
-                *gentl_err=*err;
-                return GC_ERR_IO;
-        }
-	if(chan==0)
-                return GC_ERR_NOT_IMPLEMENTED;
-	if (iIndex >= chan)
-                return GC_ERR_INVALID_INDEX;
+	if (iIndex >= 1)
+		return GC_ERR_INVALID_INDEX;
 
 	g_snprintf(buf, sizeof(buf), "%d", iIndex);
 
@@ -114,7 +120,38 @@ DevGetDataStreamID (DEV_HANDLE hDevice, uint32_t iIndex, char *sDataStreamID, si
 GC_ERROR
 DevOpenDataStream (DEV_HANDLE hDevice, const char *sDataStreamID, DS_HANDLE *phDataStream)
 {
-	GENTL_NYI;
+	ArvGentlDataStream *ds;
+
+	_DEV_CHECK_HANDLE;
+
+	arv_trace_gentl ("%s (hDevice=%s[%p], sDataStreamID=%s)",
+			 __FUNCTION__, G_OBJECT_TYPE_NAME (hDevice), hDevice,
+			 sDataStreamID ? sDataStreamID : "(null)");
+
+	if (phDataStream == NULL)
+		return GC_ERR_INVALID_PARAMETER;
+	*phDataStream = NULL;
+
+	/* "0" is currently the only supported stream ID. */
+	if (sDataStreamID == NULL || sDataStreamID[0] == '\0')
+		return GC_ERR_INVALID_PARAMETER;
+	if (g_strcmp0 (sDataStreamID, "0") != 0)
+		return GC_ERR_INVALID_ID;
+
+	/* Create the DataStream */
+	ds = arv_gentl_data_stream_new (hDevice, sDataStreamID);
+	if (ds == NULL) {
+		g_clear_error (&gentl_err);
+		gentl_err = g_error_new (GENTL_ERROR, GC_ERR_IO,
+					 "%s: failed to create DataStream", __FUNCTION__);
+		return GC_ERR_IO;
+	}
+
+	*phDataStream = (DS_HANDLE) ds;
+
+	arv_trace_gentl ("   (returning DS_HANDLE=%p)", ds);
+
+	return GC_ERR_SUCCESS;
 }
 
 GC_ERROR
@@ -125,7 +162,43 @@ DevGetInfo ( DEV_HANDLE hDevice, DEVICE_INFO_CMD iInfoCmd, INFO_DATATYPE *piType
 
 	switch(iInfoCmd){
 		case DEVICE_INFO_ID:
-			return gentl_to_buf__cam_string(hDevice,arv_camera_get_device_id,piType,pBuffer,piSize);
+		case DEVICE_INFO_DISPLAYNAME:
+		case DEVICE_INFO_USER_DEFINED_NAME: {
+			const char *id = arv_gentl_camera_best_id (hDevice);
+			if (id == NULL)
+				return GC_ERR_IO;
+			return gentl_to_buf (INFO_DATATYPE_STRING, pBuffer, id, piSize, piType);
+		}
+		case DEVICE_INFO_VENDOR:
+			return gentl_to_buf__cam_string (hDevice, arv_camera_get_vendor_name, piType, pBuffer, piSize);
+		case DEVICE_INFO_MODEL:
+			return gentl_to_buf__cam_string (hDevice, arv_camera_get_model_name, piType, pBuffer, piSize);
+		case DEVICE_INFO_SERIAL_NUMBER:
+			return gentl_to_buf__cam_string (hDevice, arv_camera_get_device_serial_number, piType, pBuffer, piSize);
+		case DEVICE_INFO_TLTYPE: {
+			const char *tltype = arv_camera_is_uv_device (hDevice) ? "U3V" : "GEV";
+			return gentl_to_buf (INFO_DATATYPE_STRING, pBuffer, tltype, piSize, piType);
+		}
+		case DEVICE_INFO_VERSION:
+			return gentl_to_buf (INFO_DATATYPE_STRING, pBuffer, "1.0", piSize, piType);
+		case DEVICE_INFO_ACCESS_STATUS: {
+			int32_t rw = DEVICE_ACCESS_STATUS_READWRITE;
+			return gentl_to_buf (INFO_DATATYPE_INT32, pBuffer, &rw, piSize, piType);
+		}
+		case DEVICE_INFO_TIMESTAMP_FREQUENCY: {
+			ArvDevice *device = arv_camera_get_device (hDevice);
+			guint64 frequency;
+
+			if (!ARV_IS_GV_DEVICE (device))
+				return GC_ERR_NOT_AVAILABLE;
+			g_clear_error (&gentl_err);
+			frequency = arv_gv_device_get_timestamp_tick_frequency (
+				ARV_GV_DEVICE (device), &gentl_err);
+			if (gentl_err != NULL)
+				return GC_ERR_IO;
+			return gentl_to_buf (INFO_DATATYPE_UINT64, pBuffer, &frequency,
+					     piSize, piType);
+		}
 		default:
 			GENTL_NYI_DETAIL("iInfoCmd=%d",iInfoCmd);
 	}
@@ -134,7 +207,18 @@ DevGetInfo ( DEV_HANDLE hDevice, DEVICE_INFO_CMD iInfoCmd, INFO_DATATYPE *piType
 GC_ERROR
 DevClose (DEV_HANDLE hDevice)
 {
-        GENTL_NYI;
+	_DEV_CHECK_HANDLE;
+
+	arv_trace_gentl ("%s (hDevice=%s[%p])", __FUNCTION__,
+			 G_OBJECT_TYPE_NAME (hDevice), hDevice);
+
+	/* Close the camera. The DataStream handle should be closed
+	 * before calling DevClose. If there's still an active DataStream, the
+	 * consumer should have called DSClose first. */
+
+	g_object_unref (hDevice);
+
+	return GC_ERR_SUCCESS;
 }
 
 /* GenTL v1.4 */
@@ -142,5 +226,16 @@ DevClose (DEV_HANDLE hDevice)
 GC_ERROR
 DevGetParentIF (DEV_HANDLE hDevice, IF_HANDLE *phIface)
 {
-        GENTL_NYI;
+	IF_HANDLE parent;
+
+	_DEV_CHECK_HANDLE;
+	if (phIface == NULL)
+		return GC_ERR_INVALID_PARAMETER;
+
+	parent = g_object_get_data (G_OBJECT (hDevice), "arv-gentl-parent-interface");
+	if (parent == NULL)
+		return GC_ERR_NOT_AVAILABLE;
+
+	*phIface = parent;
+	return GC_ERR_SUCCESS;
 }

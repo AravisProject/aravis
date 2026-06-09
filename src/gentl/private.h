@@ -72,16 +72,21 @@ GQuark gentl_error_quark (void);
 /*
 Stubs for unimplemented functions.
 */
-#define GENTL_NYI { \
-	arv_warning_gentl("%s not yet implemented.",__FUNCTION__); \
-	gentl_err = g_error_new (GENTL_ERROR, GC_ERR_NOT_IMPLEMENTED, "%s not yet implemented in Aravis GenTL", __FUNCTION__); \
-	return GC_ERR_NOT_IMPLEMENTED; }
+#define GENTL_NYI                                                                                                                      \
+	{                                                                                                                              \
+		arv_warning_gentl ("%s not yet implemented.", __FUNCTION__);                                                           \
+		g_clear_error (&gentl_err);                                                                                            \
+		gentl_err = g_error_new (GENTL_ERROR, GC_ERR_NOT_IMPLEMENTED, "%s not yet implemented in Aravis GenTL", __FUNCTION__); \
+		return GC_ERR_NOT_IMPLEMENTED;                                                                                         \
+	}
 
-#define GENTL_NYI_DETAIL(fmt,...) { \
-	arv_warning_gentl("%s: not yet implemented: " fmt,__FUNCTION__,__VA_ARGS__); \
-	gentl_err = g_error_new (GENTL_ERROR, GC_ERR_NOT_IMPLEMENTED, "%s (Aravis GenTL) not yet implemented: " fmt,__FUNCTION__,__VA_ARGS__); \
-	return GC_ERR_NOT_IMPLEMENTED; }
-
+#define GENTL_NYI_DETAIL(fmt, ...)                                                                                                                       \
+	{                                                                                                                                                \
+		arv_warning_gentl ("%s: not yet implemented: " fmt, __FUNCTION__, __VA_ARGS__);                                                          \
+		g_clear_error (&gentl_err);                                                                                                              \
+		gentl_err = g_error_new (GENTL_ERROR, GC_ERR_NOT_IMPLEMENTED, "%s (Aravis GenTL) not yet implemented: " fmt, __FUNCTION__, __VA_ARGS__); \
+		return GC_ERR_NOT_IMPLEMENTED;                                                                                                           \
+	}
 
 /*
 Handle type for the transport layer (for the rest, we use corresponding Aravis types)
@@ -92,16 +97,159 @@ G_DECLARE_FINAL_TYPE(ArvTransportLayer, arv_transport_layer, ARV, TRANSPORT_LAYE
 /* global instance */
 extern ArvTransportLayer* gentl_transport_layer;
 
+/* ========================================================================== */
+/* GenTL Buffer — plain struct (not GObject)                                  */
+/* ========================================================================== */
+
+typedef enum {
+	ARV_GENTL_BUFFER_ANNOUNCED,
+	ARV_GENTL_BUFFER_QUEUED,
+	ARV_GENTL_BUFFER_FILLING,
+	ARV_GENTL_BUFFER_FILLED,
+	ARV_GENTL_BUFFER_REVOKED
+} ArvGentlBufferState;
+
+typedef struct _ArvGentlBuffer {
+	void *base;
+	size_t size;
+	void *user_ptr;
+
+	gboolean owns_memory;
+
+	ArvGentlBufferState state;
+
+	size_t size_filled;
+	size_t data_size;
+	guint64 frame_id;
+	guint64 timestamp_ns;
+
+	guint width;
+	guint height;
+	guint64 pixel_format;
+
+	gboolean is_incomplete;
+} ArvGentlBuffer;
+
+/* ========================================================================== */
+/* GenTL DataStream — GObject wrapping ArvStream                              */
+/* ========================================================================== */
+
+#define ARV_TYPE_GENTL_DATA_STREAM (arv_gentl_data_stream_get_type ())
+G_DECLARE_FINAL_TYPE (ArvGentlDataStream, arv_gentl_data_stream, ARV, GENTL_DATA_STREAM, GObject)
+
+struct _ArvGentlDataStream {
+	GObject parent_instance;
+
+	/* Camera reference */
+	ArvCamera *camera;
+
+	/* The Aravis stream created during start acquisition */
+	ArvStream *stream;
+
+	/* Stream ID string */
+	char *stream_id;
+
+	/* Buffer queues */
+	GMutex lock; /* protects all queues and state below */
+	GCond cond;  /* signalled when a buffer becomes available in output_queue */
+
+	GQueue *announced_buffers; /* all buffers ever announced (ArvGentlBuffer*) */
+	GQueue *input_queue;	   /* buffers queued by consumer, waiting for data */
+	GQueue *output_queue;	   /* buffers filled with data, waiting for EventGetData */
+
+	/* Acquisition state */
+	gboolean acquiring;
+	gboolean stop_thread;
+	gboolean acquisition_complete;
+	guint64 num_to_acquire;
+	guint64 acquisition_delivered_count;
+
+	/* Worker thread */
+	GThread *worker_thread;
+
+	/* Statistics */
+	guint64 frame_id_counter;
+	guint64 started_count;
+	guint64 delivered_count;
+	guint64 lost_count;
+
+	/* Image info (set after first buffer) */
+	size_t payload_size;
+	guint width;
+	guint height;
+	guint64 pixel_format;
+
+	/* Number of internal buffers */
+	guint n_internal_buffers;
+};
+
+/* Handle validation macros */
+#define _DS_CHECK_HANDLE                                                    \
+	GENTL_ENSURE_INIT;                                                  \
+	if (hDataStream == NULL || !ARV_IS_GENTL_DATA_STREAM (hDataStream)) \
+		return GC_ERR_INVALID_HANDLE;
+
+#define _BUF_CHECK_HANDLE \
+	if (hBuffer == NULL) return GC_ERR_INVALID_HANDLE;
+
+/* ========================================================================== */
+/* GenTL Event — extended with event-specific data                            */
+/* ========================================================================== */
+
+typedef enum {
+	ARV_GENTL_EVENT_STATE_IDLE,
+	ARV_GENTL_EVENT_STATE_WAITING,
+	ARV_GENTL_EVENT_STATE_KILLED
+} ArvGentlEventState;
+
 /*
-Handle type for events; this is a stub class; it should include event data as necessary.
+Handle type for events.
 */
-struct _ArvGentlEvent{ GObject parent_instance; };
-#define ARV_TYPE_TRANSPORT_LAYER (arv_transport_layer_get_type ())
+struct _ArvGentlEvent {
+	GObject parent_instance;
+
+	/* Event type */
+	EVENT_TYPE event_type;
+
+	/* Handle that this event is registered on (DS_HANDLE, DEV_HANDLE, etc.) */
+	void *event_src;
+
+	/* For EVENT_NEW_BUFFER: reference to the DataStream */
+	ArvGentlDataStream *data_stream;
+
+	/* State */
+	ArvGentlEventState state;
+
+	guint num_fired;
+};
+
+#define ARV_TYPE_GENTL_EVENT (arv_gentl_event_get_type ())
 G_DECLARE_FINAL_TYPE(ArvGentlEvent, arv_gentl_event, ARV, GENTL_EVENT, GObject)
 
+/* ========================================================================== */
+/* Utility functions                                                          */
+/* ========================================================================== */
 
+ArvGentlDataStream *arv_gentl_data_stream_new (ArvCamera *camera, const char *stream_id);
+void arv_gentl_data_stream_attach_buffer (ArvGentlDataStream *ds, ArvGentlBuffer *buf);
+void arv_gentl_data_stream_detach_buffer (ArvGentlDataStream *ds, ArvGentlBuffer *buf);
 
+/* Pixel format mapping */
+uint64_t arv_gentl_pixel_format_from_aravis (guint32 aravis_pixel_format);
 
+/* Interface helpers */
+const char *arv_gentl_interface_get_id (ArvInterface *iface);
+const char *arv_gentl_tltype_from_protocol (const char *protocol);
 
+/*
+Map handle to ArvGentlHandleEvents (extended).
+*/
+struct ArvGentlHandleEvents {
+	/* EVENT_MODULE is the last one in EVENT_TYPE_LIST */
+	ArvGentlEvent *ev[EVENT_MODULE + 1];
+};
+
+extern GHashTable *gentl_events;
+extern GMutex gentl_mutex;
 
 #endif

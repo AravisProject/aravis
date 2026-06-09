@@ -26,6 +26,34 @@
 
 #define _IF_CHECK_HANDLE GENTL_ENSURE_INIT; if(hIface==NULL || !(ARV_IS_INTERFACE(hIface))) return GC_ERR_INVALID_HANDLE;
 
+static char **
+gentl_copy_device_ids (ArvInterface *iface)
+{
+	unsigned int n_devices;
+	char **ids;
+	unsigned int i;
+
+	n_devices = arv_interface_get_n_devices (iface);
+	ids = g_new0 (char *, n_devices + 1);
+	for (i = 0; i < n_devices; i++)
+		ids[i] = g_strdup (arv_interface_get_device_id (iface, i));
+
+	return ids;
+}
+
+static gboolean
+gentl_device_ids_equal (char **first, char **second)
+{
+	unsigned int i;
+
+	for (i = 0; first[i] != NULL && second[i] != NULL; i++) {
+		if (g_strcmp0 (first[i], second[i]) != 0)
+			return FALSE;
+	}
+
+	return first[i] == NULL && second[i] == NULL;
+}
+
 GC_ERROR
 IFClose (IF_HANDLE hIface)
 {
@@ -45,9 +73,12 @@ IFGetInfo (IF_HANDLE hIface, INTERFACE_INFO_CMD iInfoCmd, INFO_DATATYPE *piType,
 	switch (iInfoCmd) {
 		case INTERFACE_INFO_ID:
 		case INTERFACE_INFO_DISPLAYNAME:
+			return gentl_to_buf (INFO_DATATYPE_STRING, pBuffer,
+					     arv_gentl_interface_get_id (hIface), piSize, piType);
 		case INTERFACE_INFO_TLTYPE:
-			return gentl_to_buf(INFO_DATATYPE_STRING,pBuffer,
-                                            arv_interface_get_device_protocol(hIface,/*unused*/0),piSize,piType);
+			return gentl_to_buf (INFO_DATATYPE_STRING, pBuffer,
+					     arv_gentl_tltype_from_protocol (arv_gentl_interface_get_id (hIface)),
+					     piSize, piType);
 		default:
 			return GC_ERR_INVALID_PARAMETER;
 	}
@@ -76,20 +107,31 @@ IFGetDeviceID (IF_HANDLE hIface, uint32_t iIndex, char *sIDeviceID, size_t *piSi
 	arv_trace_gentl("%s (hIface=%s[%p], iIndex=%d, sIDeviceId=%p, piSize=%p)",
                         __FUNCTION__,G_OBJECT_TYPE_NAME(hIface),hIface,iIndex,sIDeviceID,piSize);
 
+	if (iIndex >= arv_interface_get_n_devices (hIface))
+		return GC_ERR_INVALID_INDEX;
+
 	return gentl_to_buf(INFO_DATATYPE_STRING,sIDeviceID,arv_interface_get_device_id(hIface,iIndex),piSize,NULL);
 }
 
 GC_ERROR
 IFUpdateDeviceList (IF_HANDLE hIface, bool8_t *pbChanged, uint64_t iTimeout)
 {
-	_IF_CHECK_HANDLE;
-	arv_trace_gentl("%s (hIface=%s[%p], pbChanged=%p, iTimeout=%ld)",
-                        __FUNCTION__,G_OBJECT_TYPE_NAME(hIface),hIface,pbChanged,iTimeout);
+	char **previous_ids = NULL;
+	char **current_ids = NULL;
 
-	/* TODO: should say whether the list changed */
-	if(pbChanged)
-                pbChanged=0;
-	arv_interface_update_device_list(hIface);
+	_IF_CHECK_HANDLE;
+	arv_trace_gentl ("%s (hIface=%s[%p], pbChanged=%p, iTimeout=%" G_GUINT64_FORMAT ")",
+			 __FUNCTION__, G_OBJECT_TYPE_NAME (hIface), hIface, pbChanged, (guint64) iTimeout);
+
+	previous_ids = gentl_copy_device_ids (hIface);
+	arv_interface_update_device_list (hIface);
+	current_ids = gentl_copy_device_ids (hIface);
+
+	if (pbChanged != NULL)
+		*pbChanged = gentl_device_ids_equal (previous_ids, current_ids) ? 0 : 1;
+
+        g_strfreev (previous_ids);
+        g_strfreev (current_ids);
 
 	return GC_ERR_SUCCESS;
 }
@@ -131,8 +173,10 @@ IFGetDeviceInfo (IF_HANDLE hIface, const char *sDeviceID, DEVICE_INFO_CMD iInfoC
                         return gentl_to_buf(INFO_DATATYPE_STRING,pBuffer,
                                             arv_interface_get_device_model(hIface,iDev),piSize,piType);
 		case DEVICE_INFO_TLTYPE:
-                        return gentl_to_buf(INFO_DATATYPE_STRING,pBuffer,
-                                            arv_interface_get_device_protocol(hIface,iDev),piSize,piType);
+			return gentl_to_buf (INFO_DATATYPE_STRING, pBuffer,
+					     arv_gentl_tltype_from_protocol (
+						     arv_interface_get_device_protocol (hIface, iDev)),
+					     piSize, piType);
 		case DEVICE_INFO_DISPLAYNAME:
                         return gentl_to_buf(INFO_DATATYPE_STRING,pBuffer,
                                             /* ?? */arv_interface_get_device_id(hIface,iDev),piSize,piType);
@@ -162,13 +206,21 @@ IFOpenDevice (IF_HANDLE hIface, const char *sDeviceID, DEVICE_ACCESS_FLAGS iOpen
 	ArvCamera* cam;
 
 	_IF_CHECK_HANDLE;
+	if (sDeviceID == NULL || phDevice == NULL)
+		return GC_ERR_INVALID_PARAMETER;
+	*phDevice = NULL;
+	if (iOpenFlag != DEVICE_ACCESS_CONTROL &&
+	    iOpenFlag != DEVICE_ACCESS_EXCLUSIVE)
+		return GC_ERR_ACCESS_DENIED;
 	arv_trace_gentl("%s (hIface=%s[%p], sDeviceID=%s, iOpenFlag=%d)",
                         __FUNCTION__,G_OBJECT_TYPE_NAME(hIface),hIface,sDeviceID,iOpenFlag);
 
+	g_clear_error (&gentl_err);
 	cam=arv_camera_new(sDeviceID,&gentl_err);
 	if(!cam)
                 return GC_ERR_IO;
 
+	g_object_set_data (G_OBJECT (cam), "arv-gentl-parent-interface", hIface);
 	*phDevice=cam;
 	return GC_ERR_SUCCESS;
 }
@@ -177,6 +229,12 @@ IFOpenDevice (IF_HANDLE hIface, const char *sDeviceID, DEVICE_ACCESS_FLAGS iOpen
 GC_ERROR
 IFGetParentTL (IF_HANDLE hIface, TL_HANDLE *phSystem)
 {
-        GENTL_NYI;
-}
+	_IF_CHECK_HANDLE;
+	if (phSystem == NULL)
+		return GC_ERR_INVALID_PARAMETER;
+	if (gentl_transport_layer == NULL)
+		return GC_ERR_NOT_INITIALIZED;
 
+	*phSystem = (TL_HANDLE) gentl_transport_layer;
+	return GC_ERR_SUCCESS;
+}

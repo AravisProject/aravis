@@ -34,7 +34,8 @@ TLOpen (TL_HANDLE *phTL)
 	GENTL_ENSURE_INIT;
 
 	if(phTL==NULL)
-                return GC_ERR_INVALID_PARAMETER;
+		return GC_ERR_INVALID_PARAMETER;
+	*phTL = NULL;
 	if (gentl_transport_layer!=NULL)
                 return GC_ERR_RESOURCE_IN_USE;
 
@@ -49,8 +50,8 @@ TLOpen (TL_HANDLE *phTL)
 GC_ERROR
 TLClose (TL_HANDLE hTL)
 {
-	arv_trace_gentl("%s (phTL=%s[%p])",__FUNCTION__,G_OBJECT_TYPE_NAME(hTL),hTL);
 	_TL_CHECK_HANDLE;
+	arv_trace_gentl ("%s (phTL=%s[%p])", __FUNCTION__, G_OBJECT_TYPE_NAME (hTL), hTL);
 
 	g_object_unref(gentl_transport_layer);
 	gentl_transport_layer=NULL;
@@ -61,14 +62,19 @@ TLClose (TL_HANDLE hTL)
 GC_ERROR
 TLGetInfo (TL_HANDLE hTL, TL_INFO_CMD iInfoCmd, INFO_DATATYPE *piType, void *pBuffer, size_t *piSize)
 {
-        GENTL_NYI;
+	_TL_CHECK_HANDLE;
+	arv_trace_gentl ("%s (hTL=%s[%p], iInfoCmd=%d)",
+			 __FUNCTION__, G_OBJECT_TYPE_NAME (hTL), hTL, iInfoCmd);
+
+	/* GenTL requires GCGetInfo and TLGetInfo to report the same values. */
+	return GCGetInfo (iInfoCmd, piType, pBuffer, piSize);
 }
 
 GC_ERROR
 TLGetNumInterfaces (TL_HANDLE hTL, uint32_t *piNumIfaces)
 {
-	arv_trace_gentl("%s (hTL=%s[%p])",__FUNCTION__,G_OBJECT_TYPE_NAME(hTL),hTL);
 	_TL_CHECK_HANDLE;
+	arv_trace_gentl ("%s (hTL=%s[%p])", __FUNCTION__, G_OBJECT_TYPE_NAME (hTL), hTL);
 
 	if(!piNumIfaces)
                 return GC_ERR_INVALID_PARAMETER;
@@ -82,8 +88,8 @@ TLGetNumInterfaces (TL_HANDLE hTL, uint32_t *piNumIfaces)
 GC_ERROR
 TLGetInterfaceID (TL_HANDLE hTL, uint32_t iIndex,  char *sID, size_t *piSize)
 {
-	arv_trace_gentl("%s (hTL=%s[%p],iIndex=%d,sID=%p,piSize=%p)",__FUNCTION__,G_OBJECT_TYPE_NAME(hTL),hTL,iIndex,sID,piSize);
 	_TL_CHECK_HANDLE;
+	arv_trace_gentl ("%s (hTL=%s[%p],iIndex=%d,sID=%p,piSize=%p)", __FUNCTION__, G_OBJECT_TYPE_NAME (hTL), hTL, iIndex, sID, piSize);
 
 	if(iIndex>=arv_get_n_interfaces())
                 return GC_ERR_INVALID_INDEX;
@@ -97,8 +103,10 @@ TLGetInterfaceInfo (TL_HANDLE hTL, const char *sIfaceID, INTERFACE_INFO_CMD iInf
 {
 	ArvInterface *iface;
 
-	arv_trace_gentl("%s (hTL=%s[%p], sIfaceID=%s, iInfoCmd=%d)",__FUNCTION__,G_OBJECT_TYPE_NAME(hTL),hTL,sIfaceID,iInfoCmd);
 	_TL_CHECK_HANDLE;
+	if (sIfaceID == NULL)
+		return GC_ERR_INVALID_PARAMETER;
+	arv_trace_gentl ("%s (hTL=%s[%p], sIfaceID=%s, iInfoCmd=%d)", __FUNCTION__, G_OBJECT_TYPE_NAME (hTL), hTL, sIfaceID, iInfoCmd);
 
 	iface=arv_get_interface_by_id(sIfaceID);
 	if (!iface)
@@ -107,9 +115,10 @@ TLGetInterfaceInfo (TL_HANDLE hTL, const char *sIfaceID, INTERFACE_INFO_CMD iInf
 	switch (iInfoCmd) {
 		case INTERFACE_INFO_ID:
 		case INTERFACE_INFO_DISPLAYNAME:
+			return gentl_to_buf (INFO_DATATYPE_STRING, pBuffer, sIfaceID, piSize, piType);
 		case INTERFACE_INFO_TLTYPE:
-			return gentl_to_buf(INFO_DATATYPE_STRING,pBuffer,
-                                            arv_interface_get_device_protocol(iface,/*unused*/0),piSize,piType);
+			return gentl_to_buf (INFO_DATATYPE_STRING, pBuffer,
+					     arv_gentl_tltype_from_protocol (sIfaceID), piSize, piType);
 		default:
 			return GC_ERR_INVALID_PARAMETER;
 	}
@@ -121,11 +130,12 @@ TLOpenInterface (TL_HANDLE hTL, const char *sIfaceID, IF_HANDLE *phIface)
 	ArvInterface* iface;
 
 	/* TODO: return GC_ERR_RESOURCE_IN_USE if the iface was already open via TLOpenInterface */
-	arv_trace_gentl("%s (hTL=%s[%p], sIfaceID=%p, phIface=%p)",__FUNCTION__,G_OBJECT_TYPE_NAME(hTL),hTL,sIfaceID,phIface);
 	_TL_CHECK_HANDLE;
 
 	if (sIfaceID==NULL || phIface==NULL)
-                return GC_ERR_INVALID_PARAMETER;
+		return GC_ERR_INVALID_PARAMETER;
+	*phIface = NULL;
+	arv_trace_gentl ("%s (hTL=%s[%p], sIfaceID=%p, phIface=%p)", __FUNCTION__, G_OBJECT_TYPE_NAME (hTL), hTL, sIfaceID, phIface);
 
 	iface=arv_get_interface_by_id(sIfaceID);
 	if (!iface)
@@ -140,11 +150,14 @@ TLOpenInterface (TL_HANDLE hTL, const char *sIfaceID, IF_HANDLE *phIface)
 GC_ERROR
 TLUpdateInterfaceList (TL_HANDLE hTL, bool8_t *pbChanged, uint64_t iTimeout)
 {
-	arv_trace_gentl("%s (hTL=%s[%p], pbChanged=%p, iTimeout=%ld)",__FUNCTION__,G_OBJECT_TYPE_NAME(hTL),hTL,pbChanged,iTimeout);
 	_TL_CHECK_HANDLE;
+	arv_trace_gentl ("%s (hTL=%s[%p], pbChanged=%p, iTimeout=%" G_GUINT64_FORMAT ")",
+			 __FUNCTION__, G_OBJECT_TYPE_NAME (hTL), hTL, pbChanged, (guint64) iTimeout);
 
-	if(pbChanged)
-                pbChanged=0;
+	/* Aravis registers its transport interfaces statically; there is no
+	 * runtime interface discovery update to perform here. */
+	if (pbChanged != NULL)
+		*pbChanged = 0;
 
 	return GC_ERR_SUCCESS;
 }
