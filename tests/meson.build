@@ -39,6 +39,37 @@ if get_option('tests')
 		test (t[0], exe, suite: t[1], timeout: 60)
 	endforeach
 
+	if get_option ('gentl-producer')
+		gentl_buffer_test = executable (
+			'gentl-buffer',
+			['gentl-buffer.c', '../src/gentl/private-buf.c'],
+			c_args: library_c_args,
+			link_with: aravis_library,
+			dependencies: aravis_dependencies,
+			include_directories: [library_inc, include_directories ('../src/gentl')]
+		)
+		test ('gentl-buffer', gentl_buffer_test, suite: 'main')
+
+		gentl_module_test = executable (
+			'gentl-module',
+			'gentl-module.c',
+			c_args: library_c_args,
+			link_with: aravis_library,
+			dependencies: aravis_dependencies,
+			include_directories: [library_inc]
+		)
+		test (
+			'gentl-module',
+			gentl_module_test,
+			suite: 'main',
+			env: [
+				'ARV_PRODUCER_PATH=' + gentl_producer_library.full_path (),
+				'FAKE_GENICAM_PATH=' + meson.project_source_root() / 'src' / 'arv-fake-camera.xml'
+			],
+			depends: gentl_producer_library
+		)
+	endif
+
         py_script_config_data = configuration_data ()
         py_script_config_data.set ('GI_TYPELIB_PATH', meson.project_build_root() / 'src')
         py_script_config_data.set ('LD_LIBRARY_PATH', meson.project_build_root() / 'src')
