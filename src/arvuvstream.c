@@ -957,7 +957,13 @@ arv_uv_stream_start_acquisition (ArvStream *stream, GError **error)
 	}
 
 	si_payload_size = MIN(si_req_payload_size , aligned_maximum_transfer_size);
-	si_payload_count=  si_req_payload_size / si_payload_size;
+	if (si_payload_size < 1) {
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,
+		             "Device reported an invalid USB payload size (SI_REQ_PAYLOAD_SIZE = 0x%016"
+		             G_GINT64_MODIFIER "x)", si_req_payload_size);
+		return FALSE;
+	}
+	si_payload_count = si_req_payload_size / si_payload_size;
 	si_transfer1_size = align(si_req_payload_size % si_payload_size, alignment);
 	si_transfer2_size = 0;
 
