@@ -31,7 +31,6 @@ jobs:
       env:
         INPUT_CONANFILE: |
           [requires]
-          libgettext/0.26
           #gobject-introspection/1.69.0
           gstreamer/1.28.1
           #gst-plugins-base/1.22.3      Disable gstreamer for now, latest gst-plugins-base is 1.19.2
