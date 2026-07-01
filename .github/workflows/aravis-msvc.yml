@@ -56,7 +56,7 @@ jobs:
       run: |
         $Env:INPUT_CONANFILE | Out-File -FilePath ${{ github.workspace }}\conanfile.txt -Encoding utf8
         conan profile detect --force
-        conan install -s:h os="Windows" -s:h compiler="msvc" -s:h compiler.version=193 -s:h compiler.runtime=dynamic -s:h compiler.runtime_type=${{ matrix.build_type_conan }} -s:h arch=${{ matrix.arch }} -s:h build_type=${{ matrix.build_type_conan }} --build=missing -of build --build=never .
+        conan install -s:h os="Windows" -s:h compiler="msvc" -s:h compiler.version=193 -s:h compiler.runtime=dynamic -s:h compiler.runtime_type=${{ matrix.build_type_conan }} -s:h arch=${{ matrix.arch }} -s:h build_type=${{ matrix.build_type_conan }} --build=missing -of build .
     - name: meson
       run: |
         .\build\conanbuild.ps1
