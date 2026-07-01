@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0 OR GPL-3.0-or-later
  */
 
-@import url("solarized-light.css") (prefers-color-scheme: light);
-@import url("solarized-dark.css") (prefers-color-scheme: dark);
+@import url("contrastized-light.css") (prefers-color-scheme: light);
+@import url("contrastized-dark.css") (prefers-color-scheme: dark);
 
 @import url("fonts.css");
 
