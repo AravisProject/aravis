@@ -41,7 +41,7 @@ jobs:
           libusb/1.0.26
 
           [tool_requires]
-          meson/0.59.2
+          meson/1.10.2
           pkgconf/1.9.3
 
           [generators]
