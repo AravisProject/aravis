@@ -31,18 +31,18 @@ jobs:
       env:
         INPUT_CONANFILE: |
           [requires]
-          libiconv/1.17
+          libiconv/1.18
           #gobject-introspection/1.69.0
-          gstreamer/1.24.7
+          gstreamer/1.28.1
           #gst-plugins-base/1.22.3      Disable gstreamer for now, latest gst-plugins-base is 1.19.2
           #gtk/4.4.0
-          libxml2/2.10.3
-          zlib/1.2.13
-          libusb/1.0.26
+          libxml2/2.15.3
+          zlib/1.3.2
+          libusb/1.0.29
 
           [tool_requires]
           meson/1.10.2
-          pkgconf/1.9.3
+          pkgconf/2.5.1
 
           [generators]
           PkgConfigDeps
