@@ -31,7 +31,6 @@ jobs:
       env:
         INPUT_CONANFILE: |
           [requires]
-          libiconv/1.18
           libgettext/0.26
           #gobject-introspection/1.69.0
           gstreamer/1.28.1
