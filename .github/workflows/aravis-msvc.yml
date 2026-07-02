@@ -21,7 +21,7 @@ jobs:
     steps:
     - name: pip
       run: |
-        pip install "conan<3.0.0"
+        pip install "conan==2.3.2"
     - name: disable-perl
       run: |
         rm -r C:\Strawberry\perl
@@ -58,6 +58,10 @@ jobs:
       run: |
         $Env:INPUT_CONANFILE | Out-File -FilePath ${{ github.workspace }}\conanfile.txt -Encoding utf8
         conan profile detect --force
+        conan profile update settings.compiler=msvc default
+        conan profile update settings.compiler.version=194 default
+        conan profile update settings.compiler.cppstd=17 default
+        conan profile update settings.compiler.runtime=dynamic default
         conan install . --output-folder=build --build=missing -s os=Windows -s compiler=msvc -s compiler.version=${{ matrix.version }} -s arch=${{ matrix.arch }} -s build_type=${{ matrix.build_type_conan }}
     - name: meson
       run: |
