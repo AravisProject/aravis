@@ -14,14 +14,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-        - version: 18
+        - version: 195
           arch: x86_64
           build_type_conan: Release
           build_type_meson: release
     steps:
     - name: pip
       run: |
-        pip install "conan<2.0.0" "cmake<4"
+        pip install "conan<3.0.0" "cmake<4"
     - name: disable-perl
       run: |
         rm -r C:\Strawberry\perl
@@ -40,15 +40,14 @@ jobs:
           zlib/1.2.13
           libusb/1.0.26
 
-          [build_requires]
+          [tool_requires]
           meson/0.59.2
           pkgconf/1.9.3
 
           [generators]
-          pkg_config
-          virtualenv
-          virtualbuildenv
-          virtualrunenv
+          PkgConfigDeps
+          VirtualBuildEnv
+          VirtualRunEnv
 
           [options]
           glib:shared=True
@@ -56,12 +55,12 @@ jobs:
           gst-plugins-base:shared=True
       run: |
         $Env:INPUT_CONANFILE | Out-File -FilePath ${{ github.workspace }}\conanfile.txt -Encoding utf8
-        conan install -s os="Windows" -s compiler="Visual Studio" -s compiler.version=${{ matrix.version }} -s arch=${{ matrix.arch }} -s build_type=${{ matrix.build_type_conan }} -b pcre -b missing -b cascade -if build .
+        conan profile detect --force
+        conan install . -of build --build=missing -s os=Windows -s compiler=msvc -s compiler.version=${{ matrix.version }} -s arch=${{ matrix.arch }} -s build_type=${{ matrix.build_type_conan }}
     - name: meson
       run: |
-        .\build\activate.ps1
-        .\build\activate_build.ps1
-        .\build\activate_run.ps1
+        . .\build\conanbuild.ps1
+        . .\build\conanrun.ps1
         echo "::group::configure"
         meson setup --prefix ${{ github.workspace }}\install --buildtype ${{ matrix.build_type_meson }} --pkg-config-path ${{ github.workspace }}\build -Ddocumentation=disabled -Dgst-plugin=disabled -Dintrospection=disabled -Dusb=enabled -Dviewer=disabled -Dgv-n-buffers=1 -Dgentl-producer=true . .\build
         echo "::endgroup::"
@@ -73,9 +72,8 @@ jobs:
         echo "::endgroup::"
     - name: test
       run: |
-        .\build\activate.ps1
-        .\build\activate_build.ps1
-        .\build\activate_run.ps1
+        . .\build\conanbuild.ps1
+        . .\build\conanrun.ps1
         meson test -C .\build
     - name: logs
       uses: actions/upload-artifact@v4
