@@ -50,9 +50,9 @@ jobs:
           VirtualRunEnv
 
           [options]
-          glib:shared=True
-          gstreamer:shared=True
-          gst-plugins-base:shared=True
+          glib/*:shared=True
+          gstreamer/*:shared=True
+          gst-plugins-base/*:shared=True
       run: |
         $Env:INPUT_CONANFILE | Out-File -FilePath ${{ github.workspace }}\conanfile.txt -Encoding utf8
         conan profile detect --force
