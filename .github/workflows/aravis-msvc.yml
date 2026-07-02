@@ -27,6 +27,8 @@ jobs:
         rm -r C:\Strawberry\perl
     - name: checkout
       uses: actions/checkout@v3
+    - name: Setup Ninja
+      uses: seanmiddleditch/gha-setup-ninja@v5
     - name: conan
       env:
         INPUT_CONANFILE: |
