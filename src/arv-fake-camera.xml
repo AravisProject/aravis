@@ -104,7 +104,7 @@
 	</IntReg>
 
 	<Integer Name="SensorWidth" NameSpace="Standard">
-		<Description>Full height of image sensor.</Description>
+		<Description>Full width of image sensor.</Description>
 		<pValue>SensorWidthRegister</pValue>
 	</Integer>
 
