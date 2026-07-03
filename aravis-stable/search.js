@@ -79,14 +79,16 @@ const refs = {
     search: null,
     main: null,
     toc: null,
+    clear: null,
 };
 
 let searchIndex = undefined;
 let searchResults = [];
+let activeTypeFilter = null;
 
 // Exports
 window.onInitSearch = onInitSearch;
-window.hideResults = hideResults;
+window.clearSearch = clearSearch;
 
 /* Event handlers */
 
@@ -102,11 +104,15 @@ function onDidLoadSearchIndex(data) {
     refs.search = document.querySelector("#search");
     refs.main   = document.querySelector("#main");
     refs.toc    = document.querySelector("#toc");
+    refs.clear  = document.querySelector("#search-clear");
+    refs.help   = document.querySelector("#search-help");
 
     attachInputHandlers();
 
     if (searchParams.q) {
-        search(searchParams.q);
+        removeClass(refs.clear, "hidden");
+        addClass(refs.help, "hidden");
+        search(searchParams.q, searchParams.type || null);
     }
 }
 
@@ -117,10 +123,12 @@ function getNakedUrl() {
 function onDidSearch() {
     const query = refs.input.value;
     if (query) {
+        removeClass(refs.clear, "hidden");
+        addClass(refs.help, "hidden");
         search(query);
     }
     else {
-        hideSearchResults();
+        clearSearch();
     }
 }
 
@@ -133,11 +141,16 @@ function onDidSubmit(ev) {
 
 function attachInputHandlers() {
     if (refs.input.value === "") {
-        refs.input.value === searchParams.q || "";
+        refs.input.value = searchParams.q || "";
     }
 
-    refs.input.addEventListener('keyup', debounce(500, onDidSearch))
+    refs.input.addEventListener('keyup', debounce(200, onDidSearch))
     refs.form.addEventListener('submit', onDidSubmit)
+
+    refs.clear.addEventListener('click', function() {
+        clearSearch();
+        refs.input.focus();
+    });
 }
 
 /* Searching */
@@ -146,11 +159,11 @@ function searchQuery(query) {
     const q = matchQuery(query);
     const docs = searchIndex.searchDocs(q.term, q.type);
 
-    const results = docs.map(function(doc) {
+    const results = docs.map(function({ doc, positions }) {
         return {
             name: doc.name,
             type: doc.type,
-            text: getLabelForDocument(doc, searchIndex.meta),
+            text: getLabelForDocument(doc, searchIndex.meta, positions),
             href: getLinkForDocument(doc),
             summary: doc.summary,
             deprecated: doc.deprecated,
@@ -160,9 +173,9 @@ function searchQuery(query) {
     return results;
 }
 
-function search(query) {
-    searchResults = searchQuery(query)
-    showResults(query, searchResults);
+function search(query, typeFilter = null) {
+    activeTypeFilter = typeFilter;
+    showResults(query, searchQuery(query));
 }
 
 /* Rendering */
@@ -186,10 +199,25 @@ function hideSearchResults() {
 function createResultsTitle(query, n_results) {
     // Ensure we're returning an escaped query string, to ensure we
     // prevent XSS vulnerabilities
+    let header = document.createElement("div");
+    header.className = "search-results-header";
+
     let h1 = document.createElement("h1");
     let text = document.createTextNode("Results for “" + query + "” (" + n_results + ")");
-    h1.appendChild(text)
-    return h1;
+    h1.appendChild(text);
+    header.appendChild(h1);
+
+    let btn = document.createElement("button");
+    btn.className = "search-clear-btn";
+    btn.setAttribute("aria-label", "Clear search");
+    btn.textContent = "✕";
+    btn.addEventListener("click", function() {
+        clearSearch();
+        refs.input.focus();
+    });
+    header.appendChild(btn);
+
+    return header;
 }
 
 function createResultsContent(results) {
@@ -219,21 +247,87 @@ function createResultsContent(results) {
     return search_results;
 }
 
-function showResults(query, results) {
+function showResults(query, allResults) {
     if (window.history && typeof window.history.pushState === "function") {
         let baseUrl = getNakedUrl();
         let extra = "?q=" + encodeURIComponent(refs.input.value);
+        if (activeTypeFilter) {
+            extra += "&type=" + encodeURIComponent(activeTypeFilter);
+        }
         window.history.replaceState(refs.input.value, "", baseUrl + extra + window.location.hash);
     }
 
-    window.title = "Results for “" + query + "” (" + results.length + ")";
-    window.scroll({ top: 0 })
-    refs.search.appendChild(createResultsTitle(query, results.length));
-    refs.search.appendChild(createResultsContent(results));
-    showSearchResults(search);
+    const filteredResults = activeTypeFilter
+        ? allResults.filter(r => r.type === activeTypeFilter)
+        : allResults;
+
+    searchResults = filteredResults;
+
+    window.title = "Results for “" + query + "” (" + filteredResults.length + ")";
+    window.scroll({ top: 0 });
+    const children = [createResultsTitle(query, filteredResults.length)];
+    const filterBar = createTypeFilter(query, allResults);
+    if (filterBar) children.push(filterBar);
+    children.push(createResultsContent(filteredResults));
+    refs.search.replaceChildren(...children);
+    showSearchResults();
 }
 
-function hideResults() {
+function createTypeFilter(query, allResults) {
+    if (allResults.length === 0) return null;
+
+    const counts = {};
+    allResults.forEach(function(item) {
+        counts[item.type] = (counts[item.type] || 0) + 1;
+    });
+
+    const types = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+    if (types.length <= 1) return null;
+
+    const filterBar = document.createElement("div");
+    filterBar.setAttribute("id", "search-type-filter");
+
+    const ul = document.createElement("ul");
+
+    function makeItem(label, count, typeKey) {
+        const li = document.createElement("li");
+        const btn = document.createElement("button");
+        btn.className = "type-filter-btn" + (activeTypeFilter === typeKey ? " active" : "");
+
+        const labelSpan = document.createElement("span");
+        labelSpan.className = "type-filter-label";
+        labelSpan.textContent = label;
+
+        const countSpan = document.createElement("span");
+        countSpan.className = "type-filter-count";
+        countSpan.textContent = count;
+
+        btn.appendChild(labelSpan);
+        btn.appendChild(countSpan);
+
+        btn.addEventListener("click", function() {
+            activeTypeFilter = typeKey;
+            showResults(query, allResults);
+        });
+
+        li.appendChild(btn);
+        ul.appendChild(li);
+    }
+
+    makeItem("all", allResults.length, null);
+    types.forEach(function(type) {
+        makeItem(TYPE_NAMES[type] || type, counts[type], type);
+    });
+
+    filterBar.appendChild(ul);
+    return filterBar;
+}
+
+function clearSearch() {
+    refs.input.value = "";
+    activeTypeFilter = null;
+    addClass(refs.clear, "hidden");
+    removeClass(refs.help, "hidden");
     if (window.history && typeof window.history.pushState === "function") {
         let baseUrl = getNakedUrl();
         window.history.replaceState(refs.input.value, "", baseUrl + window.location.hash);
@@ -251,8 +345,14 @@ SearchIndex.prototype.searchDocs = function searchDocs(term, type) {
     const filteredSymbols = !type ?
         this.symbols :
         this.symbols.filter(s => s.type === type);
-    const results = fzy.filter(term, filteredSymbols, doc => getTextForDocument(doc, this.meta))
-    return results.map(i => i.item)
+    const results = fzy.filter(term, filteredSymbols, doc => getTextForDocument(doc, this.meta));
+    return results.map(i => {
+        const text = getTextForDocument(i.item, this.meta);
+        return {
+            doc: i.item,
+            positions: fzy.positions(term.toLowerCase(), text.toLowerCase()),
+        };
+    });
 }
 
 
@@ -284,7 +384,21 @@ function getLinkForDocument(doc) {
     return null;
 }
 
-function getLabelForDocument(doc, meta) {
+function highlightPositions(text, positions) {
+    const posSet = new Set(positions);
+    let html = '';
+    let inMark = false;
+    for (let i = 0; i < text.length; i++) {
+        const isMatch = posSet.has(i);
+        if (isMatch && !inMark) { html += '<mark>'; inMark = true; }
+        else if (!isMatch && inMark) { html += '</mark>'; inMark = false; }
+        html += text[i];
+    }
+    if (inMark) html += '</mark>';
+    return html;
+}
+
+function getLabelForDocument(doc, meta, positions) {
     switch (doc.type) {
         case "alias":
         case "bitfield":
@@ -295,7 +409,7 @@ function getLabelForDocument(doc, meta) {
         case "interface":
         case "record":
         case "union":
-            return "<code>" + doc.ctype + "</code>";
+            return "<code>" + highlightPositions(doc.ctype, positions) + "</code>";
 
         case "class_method":
         case "constant":
@@ -304,7 +418,7 @@ function getLabelForDocument(doc, meta) {
         case "function_macro":
         case "method":
         case "type_func":
-            return "<code>" + doc.ident + "</code>";
+            return "<code>" + highlightPositions(doc.ident, positions) + "</code>";
 
         // NOTE: meta.ns added for more consistent results, otherwise
         // searching for "Button" would return all signals, properties
@@ -312,14 +426,14 @@ function getLabelForDocument(doc, meta) {
         // (eg "GtkButton") because "Button" matches higher with starting
         // sequences.
         case "property":
-            return "<code>" + meta.ns + doc.type_name + ":" + doc.name + "</code>";
+            return "<code>" + highlightPositions(meta.ns + doc.type_name + ":" + doc.name, positions) + "</code>";
         case "signal":
-            return "<code>" + meta.ns + doc.type_name + "::" + doc.name + "</code>";
+            return "<code>" + highlightPositions(meta.ns + doc.type_name + "::" + doc.name, positions) + "</code>";
         case "vfunc":
-            return "<code>" + meta.ns + doc.type_name + "." + doc.name + "</code>";
+            return "<code>" + highlightPositions(meta.ns + doc.type_name + "." + doc.name, positions) + "</code>";
 
         case "content":
-            return doc.name;
+            return highlightPositions(doc.name, positions);
     }
 
     return null;
