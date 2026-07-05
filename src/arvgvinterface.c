@@ -293,7 +293,12 @@ arv_gv_interface_device_infos_new (GInetAddress *interface_address,
                 infos->serial = g_strdup (infos->mac);
         }
 
-	infos->id = g_strdup_printf ("%s-%s-%s", infos->vendor, infos->model, infos->serial);
+	/* Append the transport tag so a device that reports the same
+	 * vendor/model/serial over both GigE and USB3 gets a DISTINCT id per
+	 * interface -- otherwise the two collide and arv_open_device() returns
+	 * the first-matching interface (USB3Vision precedes GigEVision), so a
+	 * GigE selection silently opens the USB device. */
+	infos->id = g_strdup_printf ("%s-%s-%s-eth", infos->vendor, infos->model, infos->serial);
 	arv_str_strip (infos->id, ARV_DEVICE_NAME_ILLEGAL_CHARACTERS, ARV_DEVICE_NAME_REPLACEMENT_CHARACTER);
 
 	infos->vendor_alias_serial = g_strdup_printf ("%s-%s", arv_vendor_alias_lookup (infos->vendor), infos->serial);

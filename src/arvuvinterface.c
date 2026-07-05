@@ -62,7 +62,10 @@ arv_uv_interface_device_infos_new (const char *manufacturer,
 	g_return_val_if_fail (guid != NULL, NULL);
 
 	infos = g_new (ArvUvInterfaceDeviceInfos, 1);
-	infos->id = g_strdup_printf ("%s-%s-%s", manufacturer, product, serial_nbr);
+	/* Transport tag: see arvgvinterface.c -- keep GigE ("-eth") and USB3
+	 * ("-usb") ids distinct so a dual-transport camera with identical
+	 * vendor/model/serial no longer collides into one ambiguous id. */
+	infos->id = g_strdup_printf ("%s-%s-%s-usb", manufacturer, product, serial_nbr);
 	infos->manufacturer = g_strdup (manufacturer);
 	infos->vendor_alias_serial = g_strdup_printf ("%s-%s", arv_vendor_alias_lookup (manufacturer), serial_nbr);
 	infos->vendor_serial = g_strdup_printf ("%s-%s", manufacturer, serial_nbr);
