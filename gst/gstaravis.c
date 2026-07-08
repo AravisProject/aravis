@@ -59,6 +59,7 @@ enum
   PROP_GAIN_AUTO,
   PROP_EXPOSURE,
   PROP_EXPOSURE_AUTO,
+  PROP_USER_OUTPUT_VALUE,
   PROP_GAMMA,
   PROP_H_BINNING,
   PROP_V_BINNING,
@@ -692,6 +693,7 @@ gst_aravis_init (GstAravis *gst_aravis)
 	gst_aravis->exposure_time_us = -1;
 	gst_aravis->exposure_auto = ARV_AUTO_OFF;
 	gst_aravis->exposure_auto_set = FALSE;
+	gst_aravis->user_output_value = 0;
 	gst_aravis->gamma = 1;
 	gst_aravis->offset_x = 0;
 	gst_aravis->offset_y = 0;
@@ -804,6 +806,20 @@ gst_aravis_set_property (GObject * object, guint prop_id,
 				arv_camera_set_exposure_time_auto (gst_aravis->camera, gst_aravis->exposure_auto, NULL);
 			GST_OBJECT_UNLOCK (gst_aravis);
 			break;
+		case PROP_USER_OUTPUT_VALUE:
+			GST_OBJECT_LOCK (gst_aravis);
+			gst_aravis->user_output_value = g_value_get_int (value);
+
+			GError *error = NULL;
+			if (gst_aravis->camera != NULL)
+				arv_camera_set_integer (gst_aravis->camera, "UserOutputValue", gst_aravis->user_output_value, &error);
+
+			if (error) {
+				GST_ERROR_OBJECT (gst_aravis, "Error setting UserOutputValue: %s", error->message);
+				g_error_free (error);
+			}
+			GST_OBJECT_UNLOCK (gst_aravis);
+			break;
 		case PROP_GAMMA:
 			GST_OBJECT_LOCK (gst_aravis);
 			gst_aravis->gamma = g_value_get_double (value);
@@ -914,6 +930,11 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 				gst_aravis->exposure_auto = arv_camera_get_exposure_time_auto(gst_aravis->camera, NULL);
 			}
 			g_value_set_enum (value, gst_aravis->exposure_auto);
+			GST_OBJECT_UNLOCK (gst_aravis);
+			break;
+		case PROP_USER_OUTPUT_VALUE:
+			GST_OBJECT_LOCK (gst_aravis);
+			g_value_set_int (value, gst_aravis->user_output_value);
 			GST_OBJECT_UNLOCK (gst_aravis);
 			break;
 		case PROP_GAMMA:
@@ -1086,6 +1107,12 @@ gst_aravis_class_init (GstAravisClass * klass)
 				   "Auto Exposure Mode",
 				   GST_TYPE_ARV_AUTO, ARV_AUTO_OFF,
 				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	properties[PROP_USER_OUTPUT_VALUE] =
+		g_param_spec_int ("user-output-value",
+				  "User output value",
+				  "User output value (GPIO)",
+				  0, 1, 0,
+				  G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 	properties[PROP_GAMMA] =
 		g_param_spec_double ("gamma",
 				     "Gamma",
