@@ -21,6 +21,7 @@
 		<pFeature>DeviceControl</pFeature>
 		<pFeature>ImageFormatControl</pFeature>
 		<pFeature>AcquisitionControl</pFeature>
+		<pFeature>AnalogControl</pFeature>
 		<pFeature>TransportLayerControl</pFeature>
 		<pFeature>Debug</pFeature>
 	</Category>
