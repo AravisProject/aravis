@@ -915,6 +915,13 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
  * They were discussed in bug https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/issues/86, but not implemented. */
 
 	{
+		ARV_PIXEL_FORMAT_NV12,
+		"video/x-raw, format=(string)NV12",
+		"video/x-raw", 		"NV12",
+		"video/x-raw-yuv, bpp=(int)12, depth=(int)8",
+		"video/x-raw-yuv",	0,	0,	ARV_MAKE_FOURCC ('N','V','1','2')
+	},
+	{
 		ARV_PIXEL_FORMAT_YUV_422_PACKED,
 		"video/x-raw, format=(string)UYVY",
 		"video/x-raw",		"UYVY",
