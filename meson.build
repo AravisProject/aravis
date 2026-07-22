@@ -119,6 +119,14 @@ else # not Linux
 endif
 
 subdir ('src')
+
+gst_enabled = false
+gst_option = get_option ('gst-plugin')
+gst_deps = aravis_dependencies + [dependency ('gstreamer-base-1.0', required: gst_option),
+                                  dependency ('gstreamer-app-1.0', required: gst_option)]
+subdir('gst', if_found: gst_deps)
+
+# built after gst so the test suite can exercise the GStreamer plugin
 subdir ('tests')
 
 viewer_enabled = false
@@ -129,12 +137,6 @@ viewer_deps = aravis_dependencies + [dependency ('gtk+-3.0', version: '>=3.12', 
 				     dependency ('gstreamer-video-1.0', required: viewer_option)]
 subdir ('po', if_found: viewer_deps)
 subdir ('viewer', if_found: viewer_deps)
-
-gst_enabled = false
-gst_option = get_option ('gst-plugin')
-gst_deps = aravis_dependencies + [dependency ('gstreamer-base-1.0', required: gst_option),
-                                  dependency ('gstreamer-app-1.0', required: gst_option)]
-subdir('gst', if_found: gst_deps)
 
 doc_deps = dependency ('gi-docgen', version:'>= 2021.1', fallback: ['gi-docgen', 'dummy_dep'], required:get_option('documentation'))
 subdir('docs', if_found: doc_deps)

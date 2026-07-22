@@ -11,7 +11,8 @@ if get_option('tests')
       '--error-exitcode=1'
     ],
     env:['DEBUGINFOD_URLS=', 'ARV_TEST_IGNORE_BUFFER='],
-    exclude_suites:['python'],
+    # 'gstreamer' excluded like 'python': GStreamer's global allocations aren't worth suppressing
+    exclude_suites:['python', 'gstreamer'],
     timeout_multiplier:5
   )
 
@@ -37,6 +38,19 @@ if get_option('tests')
 				  include_directories: [library_inc])
 		test (t[0], exe, suite: t[1], timeout: 60)
 	endforeach
+
+	# Regression test for the aravissrc teardown deadlock.
+	if gst_enabled
+		gst_teardown_test = executable ('arv-gst-teardown-test', 'arvgstteardowntest.c',
+			c_args: ['-DGENICAM_FILENAME="@0@/src/arv-fake-camera.xml"'.format (meson.project_source_root ())],
+			link_with: aravis_library,
+			dependencies: gst_deps + [dependency ('gstreamer-1.0')],
+			include_directories: [library_inc])
+		test ('gst-teardown', gst_teardown_test,
+			suite: 'gstreamer',
+			env: ['GST_PLUGIN_PATH=' + meson.project_build_root() / 'gst'],
+			timeout: 30)
+	endif
 
         py_script_config_data = configuration_data ()
         py_script_config_data.set ('GI_TYPELIB_PATH', meson.project_build_root() / 'src')

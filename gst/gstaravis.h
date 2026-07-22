@@ -85,6 +85,8 @@ struct _GstAravis {
 	char *trigger_source;
 
 	char *features;
+
+	volatile gint flushing;	/* atomic; set by unlock() to break create()'s buffer wait */
 };
 
 struct _GstAravisClass {
