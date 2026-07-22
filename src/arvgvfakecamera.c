@@ -277,7 +277,10 @@ _thread (void *user_data)
 		do {
 			gint timeout_ms;
 
-			timeout_ms =  (next_timestamp_us - g_get_real_time ()) / 1000LL;
+			/* Signed arithmetic: if next_timestamp_us is already in the past, an
+			 * unsigned subtraction underflows and is clamped to a spurious 100 ms
+			 * timeout, stalling the frame pacing. */
+			timeout_ms = ((gint64) next_timestamp_us - g_get_real_time ()) / 1000LL;
 			if (timeout_ms < 0)
 				timeout_ms = 0;
 			else if (timeout_ms > 100)
