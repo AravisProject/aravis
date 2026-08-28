@@ -4,7 +4,7 @@
 #include <arv.h>
 #include <arvstr.h>
 #include <string.h>
-#include "../src/arvmiscprivate.h"
+#include "arvmiscprivate.h"
 
 #if !ARAVIS_CHECK_VERSION (ARAVIS_MAJOR_VERSION, ARAVIS_MINOR_VERSION, ARAVIS_MICRO_VERSION)
 #error

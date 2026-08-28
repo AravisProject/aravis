@@ -33,7 +33,7 @@ if get_option('tests')
 		exe = executable (t[0], '@0@.c'.format (t[0]),
 				  c_args: [t[2]],
 				  link_with: aravis_library,
-				  dependencies: aravis_dependencies,
+				  dependencies: aravis_library_dependencies,
 				  include_directories: [library_inc])
 		test (t[0], exe, suite: t[1], timeout: 60)
 	endforeach
@@ -107,7 +107,7 @@ if get_option('tests')
 	foreach example: examples
 		executable (example[0], example[1],
 			link_with: aravis_library,
-			dependencies: aravis_dependencies,
+			dependencies: aravis_library_dependencies,
 			include_directories: [library_inc])
 	endforeach
 
