@@ -1,3 +1,43 @@
+api_config_data = configuration_data ()
+api_config_data.set ('ARV_API', cc_export_define)
+arvapi_h = configure_file (
+  input: 'arvapi.h.in',
+  output: 'arvapi.h',
+  configuration: api_config_data
+)
+
+version_config_data = configuration_data ()
+version_config_data.set ('ARAVIS_VERSION', aravis_version)
+version_config_data.set ('ARAVIS_API_VERSION', aravis_api_version)
+version_config_data.set ('ARAVIS_MAJOR_VERSION', aravis_major_version)
+version_config_data.set ('ARAVIS_MINOR_VERSION', aravis_minor_version)
+version_config_data.set ('ARAVIS_MICRO_VERSION', aravis_micro_version)
+arvversion_h = configure_file (
+  input: 'arvversion.h.in',
+  output: 'arvversion.h',
+  configuration: version_config_data
+)
+
+features_library_config_data = configuration_data ()
+features_library_config_data.set10 ('ARAVIS_HAS_USB', usb_dep.found())
+features_library_config_data.set10 ('ARAVIS_HAS_EVENT', get_option('event'))
+features_library_config_data.set10 ('ARAVIS_HAS_V4L2', v4l2_enabled)
+features_library_config_data.set10 ('ARAVIS_HAS_PACKET_SOCKET', packet_socket_enabled)
+features_library_config_data.set10 ('ARAVIS_HAS_FAST_HEARTBEAT', get_option ('fast-heartbeat'))
+arvfeatures_h = configure_file (
+  input: 'arvfeatures.h.in',
+  output: 'arvfeatures.h',
+  configuration: features_library_config_data
+)
+
+params_library_config_data = configuration_data ()
+params_library_config_data.set ('ARV_GV_STREAM_NUM_BUFFERS', get_option ('gv-n-buffers'))
+arvparamsprivate_h = configure_file (
+  input: 'arvparamsprivate.h.in',
+  output: 'arvparamsprivate.h',
+  configuration: params_library_config_data
+)
+
 library_sources = [
 	'arvenums.c',
 	'arvdebug.c',
@@ -166,7 +206,9 @@ library_headers = [
 	'arvsystem.h',
 	'arvrealtime.h',
 	'arvstream.h',
-	'arvxmlschema.h'
+	'arvxmlschema.h',
+
+        arvapi_h,
 ]
 
 library_private_headers = [
@@ -198,13 +240,18 @@ library_private_headers = [
 	'arvnetworkprivate.h',
 	'arvrealtimeprivate.h',
 	'arvstreamprivate.h',
-	'arvwakeupprivate.h'
+	'arvwakeupprivate.h',
+
+        arvparamsprivate_h
 ]
 
 library_no_introspection_headers = [
 	'arvmisc.h',
 	'arvzip.h',
-	'arvstr.h'
+	'arvstr.h',
+
+        arvversion_h,
+        arvfeatures_h,
 ]
 
 if usb_dep.found()
@@ -259,34 +306,6 @@ library_private_enums = gnome.mkenums_simple ('arvenumtypesprivate', sources: li
 library_resources = gnome.compile_resources('arvresources','arvresources.xml')
 
 library_include_dir = get_option ('includedir') / 'aravis-@0@'.format (aravis_api_version)
-
-api_config_data = configuration_data ()
-api_config_data.set ('ARV_API', cc_export_define)
-configure_file (input: 'arvapi.h.in', output: 'arvapi.h',
-		configuration: api_config_data, install_dir: library_include_dir)
-
-features_library_config_data = configuration_data ()
-features_library_config_data.set10 ('ARAVIS_HAS_USB', usb_dep.found())
-features_library_config_data.set10 ('ARAVIS_HAS_EVENT', get_option('event'))
-features_library_config_data.set10 ('ARAVIS_HAS_V4L2', v4l2_enabled)
-features_library_config_data.set10 ('ARAVIS_HAS_PACKET_SOCKET', packet_socket_enabled)
-features_library_config_data.set10 ('ARAVIS_HAS_FAST_HEARTBEAT', get_option ('fast-heartbeat'))
-configure_file (input: 'arvfeatures.h.in', output: 'arvfeatures.h',
-		configuration: features_library_config_data, install_dir: library_include_dir)
-
-params_library_config_data = configuration_data ()
-params_library_config_data.set ('ARV_GV_STREAM_NUM_BUFFERS', get_option ('gv-n-buffers'))
-configure_file (input: 'arvparamsprivate.h.in', output: 'arvparamsprivate.h',
-		configuration: params_library_config_data)
-
-version_config_data = configuration_data ()
-version_config_data.set ('ARAVIS_VERSION', aravis_version)
-version_config_data.set ('ARAVIS_API_VERSION', aravis_api_version)
-version_config_data.set ('ARAVIS_MAJOR_VERSION', aravis_major_version)
-version_config_data.set ('ARAVIS_MINOR_VERSION', aravis_minor_version)
-version_config_data.set ('ARAVIS_MICRO_VERSION', aravis_micro_version)
-configure_file (input: 'arvversion.h.in', output: 'arvversion.h',
-		configuration: version_config_data, install_dir: library_include_dir)
 
 library_inc = include_directories ('.')
 
