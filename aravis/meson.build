@@ -310,11 +310,7 @@ library_inc = include_directories (['../', '.'])
 install_headers (library_main_header, install_dir: library_include_dir)
 install_headers (library_headers + library_no_introspection_headers, install_dir: library_include_dir / 'aravis')
 
-library_c_args = [
-	'-DARAVIS_COMPILATION',
-        '-I../',
-        '-I' + meson.current_build_dir() / '..'
-	]
+library_c_args = [ '-DARAVIS_COMPILATION' ]
 
 aravis_library = library ('aravis-@0@'.format (aravis_api_version),
 	library_sources, library_main_header, library_headers,
@@ -324,6 +320,7 @@ aravis_library = library ('aravis-@0@'.format (aravis_api_version),
 	version: aravis_version,
 	soversion: '0',
 	dependencies: aravis_dependencies,
+        include_directories: library_inc,
 	c_args: library_c_args,
 	install: true)
 
@@ -352,7 +349,7 @@ foreach p: progs
 		p[1],
 		link_with: aravis_library,
 		c_args: library_c_args,
-		dependencies: aravis_dependencies,
+		dependencies: aravis_library_dependencies,
 		install: true)
 endforeach
 
@@ -372,7 +369,7 @@ if introspection_option.auto() or introspection_option.enabled()
       header: 'arv.h',
       export_packages : 'aravis-@0@'.format(aravis_api_version),
       includes : ['GObject-2.0', 'Gio-2.0'],
-      extra_args: ['-DARAVIS_COMPILATION', '-I../'],
+      extra_args: ['-DARAVIS_COMPILATION'],
       install : true)
     introspection_enabled = true
   endif
