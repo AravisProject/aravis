@@ -133,9 +133,8 @@ printdev (libusb_device *device)
 	int r, i, j;
 
 	r = libusb_get_device_descriptor (device, &desc);
-
-	if (r < 0) {
-		printf ("Failed to get device descriptor\n");
+        if (r != 0) {
+		printf ("Failed to get device descriptor: %s\n", libusb_error_name (r));
 		return;
 	}
 
@@ -145,7 +144,12 @@ printdev (libusb_device *device)
 	printf ("Device SubClass:   0x%02x\n", (int) desc.bDeviceSubClass);
 	printf ("Protocol:          0x%02x\n", (int) desc.bDeviceProtocol);
 
-	libusb_get_config_descriptor (device, 0, &config);
+
+	r = libusb_get_config_descriptor (device, 0, &config);
+        if (r != 0) {
+		printf ("Failed to get config descriptor: %s\n", libusb_error_name (r));
+		return;
+	}
 
 	printf ("Nbr of Interfaces: %d\n", (int)config->bNumInterfaces);
 	for (i = 0; i< (int) config->bNumInterfaces; i++) {
@@ -179,8 +183,8 @@ _usb_device_to_device_ids (ArvUvInterface *uv_interface, libusb_device *device)
 	int result, i, j;
 
 	result = libusb_get_device_descriptor (device, &desc);
-	if (result < 0) {
-		arv_warning_interface ("Failed to get device descriptor: %s",
+	if (result != 0) {
+		arv_warning_interface ("Failed to get USB device descriptor: %s",
 				       libusb_error_name (result));
 		return NULL;
 	}
@@ -192,7 +196,14 @@ _usb_device_to_device_ids (ArvUvInterface *uv_interface, libusb_device *device)
 
 	control_protocol_found = FALSE;
 	data_protocol_found = FALSE;
-	libusb_get_config_descriptor (device, 0, &config);
+
+	result = libusb_get_config_descriptor (device, 0, &config);
+	if (result != 0) {
+		arv_warning_interface ("Failed to get USB config descriptor: %s",
+				       libusb_error_name (result));
+		return NULL;
+	}
+
 	for (i = 0; i< (int) config->bNumInterfaces; i++) {
 		inter = &config->interface[i];
 		for (j = 0; j < inter->num_altsetting; j++) {
@@ -208,16 +219,19 @@ _usb_device_to_device_ids (ArvUvInterface *uv_interface, libusb_device *device)
                                                                              ARV_UV_INTERFACE_GUID_INDEX_OFFSET));
                                                if (interdesc->extra_length >=
                                                    ARV_UV_INTERFACE_VENDOR_NAME_INDEX_OFFSET + sizeof(unsigned char))
-                                                       vendor_name_index = (int) (*(interdesc->extra +
-                                                                                    ARV_UV_INTERFACE_VENDOR_NAME_INDEX_OFFSET));
+                                                       vendor_name_index =
+                                                               (int) (*(interdesc->extra +
+                                                                        ARV_UV_INTERFACE_VENDOR_NAME_INDEX_OFFSET));
                                                if (interdesc->extra_length >=
                                                    ARV_UV_INTERFACE_MODEL_NAME_INDEX_OFFSET + sizeof(unsigned char))
-                                                       model_name_index = (int) (*(interdesc->extra +
-                                                                                    ARV_UV_INTERFACE_MODEL_NAME_INDEX_OFFSET));
+                                                       model_name_index =
+                                                               (int) (*(interdesc->extra +
+                                                                        ARV_UV_INTERFACE_MODEL_NAME_INDEX_OFFSET));
                                                if (interdesc->extra_length >=
                                                    ARV_UV_INTERFACE_SERIAL_NUMBER_INDEX_OFFSET + sizeof(unsigned char))
-                                                       serial_number_index = (int) (*(interdesc->extra +
-                                                                                      ARV_UV_INTERFACE_SERIAL_NUMBER_INDEX_OFFSET));
+                                                       serial_number_index =
+                                                               (int) (*(interdesc->extra +
+                                                                        ARV_UV_INTERFACE_SERIAL_NUMBER_INDEX_OFFSET));
                                         }
                                 }
                                 if (interdesc->bInterfaceProtocol == ARV_UV_INTERFACE_DATA_PROTOCOL)
@@ -250,24 +264,24 @@ _usb_device_to_device_ids (ArvUvInterface *uv_interface, libusb_device *device)
 		if (index > 0)
 			libusb_get_string_descriptor_ascii (device_handle, index, guid, 256);
 		index = vendor_name_index;
-		if (index > 0)
+		if (index > 0) {
 			libusb_get_string_descriptor_ascii (device_handle, index, manufacturer, 256);
-                else {
+                } else {
                         index = desc.iManufacturer;
 			libusb_get_string_descriptor_ascii (device_handle, index, manufacturer, 256);
                 }
                 index = model_name_index;
-                if (index > 0)
+                if (index > 0) {
 			libusb_get_string_descriptor_ascii (device_handle, index, product, 256);
-                else {
+                } else {
                         index = desc.iProduct;
                         if (index > 0)
                                 libusb_get_string_descriptor_ascii (device_handle, index, product, 256);
                 }
                 index = serial_number_index;
-                if (index > 0)
+                if (index > 0) {
 			libusb_get_string_descriptor_ascii (device_handle, index, serial_nbr, 256);
-                else {
+                } else {
                         index = desc.iSerialNumber;
                         if (index > 0)
                                 libusb_get_string_descriptor_ascii (device_handle, index, serial_nbr, 256);
