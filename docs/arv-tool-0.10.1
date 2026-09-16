@@ -58,6 +58,9 @@ read/write device features
 .TP
 network <setting>[=<value>]...:
 read/write network settings
+.TP
+force\-ip ip=<address> [mask=<mask>] [gateway=<address>]:
+configures cameras with otherwise-inaccessible subnets
 .PP
 If no command is given, this utility will list all the available devices.
 For the control command, direct access to device registers is provided using a R[address] syntax in place of a feature name.
@@ -67,4 +70,5 @@ arv\-tool\-0.10 features
 arv\-tool\-0.10 description Width Height
 arv\-tool\-0.10 network mode=PersistentIP
 arv\-tool\-0.10 network ip=192.168.0.1 mask=255.255.255.0 gateway=192.168.0.254
+arv\-tool\-0.10 \-n 'Daheng*' force\-ip ip=192.168.0.1
 arv\-tool\-0.10 \-n Basler\-210ab4 genicam
