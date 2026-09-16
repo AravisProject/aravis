@@ -393,13 +393,20 @@ arv_gvcp_packet_new_force_ip_cmd (const guint8 *mac, const guint8 *ip, const gui
 				  const guint8 *gateway, guint16 packet_id, size_t *packet_size)
 {
 	ArvGvcpPacket *packet;
+	const size_t payload_size = 56;
 
-	*packet_size = sizeof (ArvGvcpHeader) + 56;
+	g_return_val_if_fail (mac != NULL, NULL);
+	g_return_val_if_fail (ip != NULL, NULL);
+	g_return_val_if_fail (mask != NULL, NULL);
+	g_return_val_if_fail (gateway != NULL, NULL);
+	g_return_val_if_fail (packet_size != NULL, NULL);
+
+	*packet_size = sizeof (ArvGvcpHeader) + payload_size;
 	packet = g_malloc0 (*packet_size);
 	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_CMD;
 	packet->header.packet_flags = ARV_GVCP_CMD_PACKET_FLAGS_ACK_REQUIRED;
 	packet->header.command = g_htons (ARV_GVCP_COMMAND_FORCE_IP_CMD);
-	packet->header.size = g_htons (56);
+	packet->header.size = g_htons (payload_size);
 	packet->header.id = g_htons (packet_id);
 	memcpy (packet->data + 2, mac, 6);
 	memcpy (packet->data + 20, ip, 4);

@@ -336,9 +336,9 @@ ArvGvcpPacket * 	arv_gvcp_packet_new_write_register_ack 	(guint32 data_index,
 								 guint16 packet_id, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_discovery_cmd 	(gboolean allow_broadcast_discovery_ack, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_discovery_ack 	(guint16 packet_id, size_t *packet_size);
-ArvGvcpPacket *	arv_gvcp_packet_new_force_ip_cmd	(const guint8 *mac, const guint8 *ip,
-							 const guint8 *mask, const guint8 *gateway,
-							 guint16 packet_id, size_t *packet_size);
+ARV_API ArvGvcpPacket *	arv_gvcp_packet_new_force_ip_cmd	(const guint8 *mac, const guint8 *ip,
+								 const guint8 *mask, const guint8 *gateway,
+								 guint16 packet_id, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_packet_resend_cmd 	(guint64 frame_id,
 								 guint32 first_block, guint32 last_block,
 								 gboolean extended_ids,
