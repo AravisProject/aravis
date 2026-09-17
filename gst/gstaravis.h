@@ -41,6 +41,16 @@ G_BEGIN_DECLS
 typedef struct _GstAravis GstAravis;
 typedef struct _GstAravisClass GstAravisClass;
 
+typedef enum {
+	GST_ARAVIS_TIMEOUT_POLICY_ERROR,
+	GST_ARAVIS_TIMEOUT_POLICY_WAIT
+} GstAravisTimeoutPolicy;
+
+typedef enum {
+	GST_ARAVIS_TIMING_MODE_FIXED,
+	GST_ARAVIS_TIMING_MODE_SPARSE
+} GstAravisTimingMode;
+
 struct _GstAravis {
 	GstPushSrc element;
 
@@ -72,7 +82,10 @@ struct _GstAravis {
 	gint payload;
 
 	guint64 buffer_timeout_us;
-        gdouble frame_rate;
+	gdouble frame_rate;
+	GstAravisTimeoutPolicy timeout_policy;
+	GstAravisTimingMode timing_mode;
+	gint unlock_requested;
 
 	ArvCamera *camera;
 	ArvStream *stream;
