@@ -891,6 +891,30 @@ ArvGstCapsInfos arv_gst_caps_infos[] = {
 		"video/x-bayer",	"bggr14le",
 	},
 	{
+		ARV_PIXEL_FORMAT_BAYER_GR_14P,
+		"video/x-bayer, format=(string)grbg14le",
+		"video/x-bayer",	"grbg14le",
+		NULL, NULL, 0, 0, 0
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_RG_14P,
+		"video/x-bayer, format=(string)rggb14le",
+		"video/x-bayer",	"rggb14le",
+		NULL, NULL, 0, 0, 0
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_GB_14P,
+		"video/x-bayer, format=(string)gbrg14le",
+		"video/x-bayer",	"gbrg14le",
+		NULL, NULL, 0, 0, 0
+	},
+	{
+		ARV_PIXEL_FORMAT_BAYER_BG_14P,
+		"video/x-bayer, format=(string)bggr14le",
+		"video/x-bayer",	"bggr14le",
+		NULL, NULL, 0, 0, 0
+	},
+	{
 		ARV_PIXEL_FORMAT_BAYER_GR_16,
 		"video/x-bayer, format=(string)grbg16le",
 		"video/x-bayer",	"grbg16le",
