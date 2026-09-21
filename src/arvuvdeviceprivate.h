@@ -43,6 +43,8 @@ gboolean        arv_uv_device_bulk_transfer             (ArvUvDevice *uv_device,
 							 void *data, size_t size, size_t *transferred_size,
 							 guint32 timeout_ms, GError **error);
 
+gboolean        arv_uv_device_stream_recover            (ArvUvDevice *uv_device);
+gboolean        arv_uv_device_usb_reset                 (ArvUvDevice *uv_device);
 void            arv_uv_device_fill_bulk_transfer        (struct libusb_transfer* transfer, ArvUvDevice *uv_device,
                                                          ArvUvEndpointType endpoint_type, unsigned char endpoint_flags,
                                                          void *data, size_t size,
