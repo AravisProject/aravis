@@ -32,7 +32,7 @@
 #include <memory.h>
 
 #define ARV_VIEWER_NOTIFICATION_TIMEOUT 10
-#define ARV_VIEWER_N_BUFFERS 10
+#define ARV_VIEWER_N_BUFFERS 20
 
 static gboolean has_bayer2rgb = FALSE;
 
