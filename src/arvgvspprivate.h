@@ -433,7 +433,8 @@ arv_gvsp_leader_packet_get_buffer_payload_type (const ArvGvspPacket *packet, siz
 
                 leader = (ArvGvspLeader *) arv_gvsp_packet_get_data (packet, packet_size);
 
-                if (G_LIKELY (leader != NULL)) {
+                if (G_LIKELY (leader != NULL &&
+                              arv_gvsp_packet_get_data_size (packet, packet_size) >= sizeof (*leader))) {
                         payload_type = g_ntohs (leader->payload_type);
 
                         if (has_chunks != NULL)
@@ -456,7 +457,8 @@ arv_gvsp_leader_packet_get_timestamp (const ArvGvspPacket *packet, size_t packet
 
                 leader = (ArvGvspLeader *) arv_gvsp_packet_get_data (packet, packet_size);
 
-                if (G_LIKELY(leader) != NULL)
+                if (G_LIKELY (leader != NULL &&
+                              arv_gvsp_packet_get_data_size (packet, packet_size) >= sizeof (*leader)))
                         return ((guint64) g_ntohl (leader->timestamp_high) << 32) | g_ntohl (leader->timestamp_low);
         }
 
@@ -466,19 +468,25 @@ arv_gvsp_leader_packet_get_timestamp (const ArvGvspPacket *packet, size_t packet
 static inline guint8
 arv_gvsp_leader_packet_get_multipart_n_parts (const ArvGvspPacket *packet, size_t packet_size)
 {
+        guint8 n_parts = 0;
+
         if (G_LIKELY (arv_gvsp_leader_packet_get_buffer_payload_type (packet, packet_size, NULL) ==
                        ARV_BUFFER_PAYLOAD_TYPE_MULTIPART)) {
                 if (arv_gvsp_packet_has_extended_ids (packet, packet_size)) {
                         ArvGvspExtendedHeader *header = (ArvGvspExtendedHeader *) &packet->header;
 
                         if (G_LIKELY(packet_size >= sizeof (ArvGvspPacket) + sizeof (ArvGvspExtendedHeader)))
-                                return (g_ntohl (header->packet_infos) & ARV_GVSP_PACKET_INFOS_N_PARTS_MASK);
+                                n_parts = g_ntohl (header->packet_infos) & ARV_GVSP_PACKET_INFOS_N_PARTS_MASK;
                 } else {
                         ArvGvspHeader *header = (ArvGvspHeader *) &packet->header;
 
                         if (G_LIKELY(packet_size >= sizeof (ArvGvspPacket) + sizeof (ArvGvspHeader)))
-                                return (g_ntohl (header->packet_infos) & ARV_GVSP_PACKET_INFOS_N_PARTS_MASK);
+                                n_parts = g_ntohl (header->packet_infos) & ARV_GVSP_PACKET_INFOS_N_PARTS_MASK;
                 }
+
+                if (G_LIKELY (arv_gvsp_packet_get_data_size (packet, packet_size) >=
+                              sizeof (ArvGvspMultipartLeader) + n_parts * sizeof (ArvGvspPartInfos)))
+                        return n_parts;
         }
 
         return 0;
@@ -608,7 +616,8 @@ arv_gvsp_leader_packet_get_image_infos (const ArvGvspPacket *packet,
 
                 leader = (ArvGvspImageLeader *) arv_gvsp_packet_get_data (packet, packet_size);
 
-                if (G_LIKELY (leader != NULL)) {
+                if (G_LIKELY (leader != NULL &&
+                              arv_gvsp_packet_get_data_size (packet, packet_size) >= sizeof (*leader))) {
                         *pixel_format = g_ntohl (leader->infos.pixel_format);
                         *width = g_ntohl (leader->infos.width);
                         *height = g_ntohl (leader->infos.height);

@@ -609,6 +609,9 @@ _process_multipart_block (ArvGvStreamThreadData *thread_data,
 
                 block_size = arv_gvsp_multipart_packet_get_data_size (packet, packet_size);
 
+                if (block_size == 0)
+                        return;
+
                 block_end = block_offset + block_size;
 
                 if (block_end > frame->buffer->priv->allocated_size) {
