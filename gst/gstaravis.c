@@ -47,6 +47,8 @@
 
 #define GST_ARAVIS_DEFAULT_N_BUFFERS		50
 #define GST_ARAVIS_BUFFER_TIMEOUT_DEFAULT	2000000
+/* Poll the buffer wait in slices this size so unlock() is noticed promptly. */
+#define GST_ARAVIS_BUFFER_POLL_SLICE_US		100000
 
 GST_DEBUG_CATEGORY_STATIC (aravis_debug);
 #define GST_CAT_DEFAULT aravis_debug
@@ -488,6 +490,10 @@ gst_aravis_start (GstBaseSrc *src)
         else
                 GST_LOG_OBJECT (gst_aravis, "Open first available camera");
 
+	/* Clear a stale flush from a previous cycle (unlock_stop is not guaranteed
+	 * on the way to NULL) so a reused element streams again. */
+	g_atomic_int_set (&gst_aravis->flushing, 0);
+
 	GST_OBJECT_LOCK (gst_aravis);
 	if (gst_aravis->camera == NULL)
 		result = gst_aravis_init_camera (gst_aravis, &notify, &error);
@@ -560,6 +566,28 @@ gst_aravis_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
 	}
 }
 
+/* Without unlock(), a create() blocked waiting for a buffer (no complete frames
+ * arriving) can't be interrupted, deadlocking the state change to NULL. */
+static gboolean
+gst_aravis_unlock (GstBaseSrc *src)
+{
+	GstAravis *gst_aravis = GST_ARAVIS (src);
+
+	g_atomic_int_set (&gst_aravis->flushing, 1);
+
+	return TRUE;
+}
+
+static gboolean
+gst_aravis_unlock_stop (GstBaseSrc *src)
+{
+	GstAravis *gst_aravis = GST_ARAVIS (src);
+
+	g_atomic_int_set (&gst_aravis->flushing, 0);
+
+	return TRUE;
+}
+
 static GstFlowReturn
 gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 {
@@ -571,18 +599,47 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 	guint64 timestamp_ns;
 	gboolean base_src_does_timestamp;
 	ArvBuffer *arv_buffer = NULL;
+	ArvStream *stream;
+	guint64 timeout_us;
+	gint64 deadline;
 
 	gst_aravis = GST_ARAVIS (push_src);
 	base_src_does_timestamp = gst_base_src_get_do_timestamp(GST_BASE_SRC(push_src));
 
+	/* Ref the stream and drop GST_OBJECT_LOCK: holding it across the buffer
+	 * wait would deadlock the state change that tears the element down. */
 	GST_OBJECT_LOCK (gst_aravis);
+	stream = gst_aravis->stream != NULL ? g_object_ref (gst_aravis->stream) : NULL;
+	timeout_us = gst_aravis->buffer_timeout_us;
+	GST_OBJECT_UNLOCK (gst_aravis);
 
+	if (stream == NULL)
+		return GST_FLOW_FLUSHING;
+
+	/* Poll for a complete buffer until the deadline, recycling the non-SUCCESS
+	 * buffers that incomplete frames produce instead of spinning on them. */
+	deadline = g_get_monotonic_time () + timeout_us;
 	do {
-		if (arv_buffer) arv_stream_push_buffer (gst_aravis->stream, arv_buffer);
-		arv_buffer = arv_stream_timeout_pop_buffer (gst_aravis->stream, gst_aravis->buffer_timeout_us);
-	} while (arv_buffer != NULL && arv_buffer_get_status (arv_buffer) != ARV_BUFFER_STATUS_SUCCESS);
+		gint64 now = g_get_monotonic_time ();
+		guint64 remaining = now < deadline ? (guint64) (deadline - now) : 0;
 
-	if (arv_buffer == NULL)
+		if (g_atomic_int_get (&gst_aravis->flushing)) {
+			if (arv_buffer != NULL)
+				arv_stream_push_buffer (stream, arv_buffer);
+			g_object_unref (stream);
+			return GST_FLOW_FLUSHING;
+		}
+
+		if (arv_buffer != NULL)
+			arv_stream_push_buffer (stream, arv_buffer);
+
+		arv_buffer = arv_stream_timeout_pop_buffer (stream, MIN (remaining, GST_ARAVIS_BUFFER_POLL_SLICE_US));
+
+		if (arv_buffer != NULL && arv_buffer_get_status (arv_buffer) == ARV_BUFFER_STATUS_SUCCESS)
+			break;
+	} while (g_get_monotonic_time () < deadline);
+
+	if (arv_buffer == NULL || arv_buffer_get_status (arv_buffer) != ARV_BUFFER_STATUS_SUCCESS)
 		goto error;
 
 	buffer_data = (char *) arv_buffer_get_data (arv_buffer, &buffer_size);
@@ -612,6 +669,7 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 	}
 
 	if (!base_src_does_timestamp) {
+		GST_OBJECT_LOCK (gst_aravis);
 		if (gst_aravis->timestamp_offset == 0) {
 			gst_aravis->timestamp_offset = timestamp_ns;
 			gst_aravis->last_timestamp = timestamp_ns;
@@ -621,15 +679,18 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 		GST_BUFFER_DURATION (*buffer) = timestamp_ns - gst_aravis->last_timestamp;
 
 		gst_aravis->last_timestamp = timestamp_ns;
+		GST_OBJECT_UNLOCK (gst_aravis);
 	}
 
-	arv_stream_push_buffer (gst_aravis->stream, arv_buffer);
-	GST_OBJECT_UNLOCK (gst_aravis);
+	arv_stream_push_buffer (stream, arv_buffer);
+	g_object_unref (stream);
 
 	return GST_FLOW_OK;
 
 error:
-	GST_OBJECT_UNLOCK (gst_aravis);
+	if (arv_buffer != NULL)
+		arv_stream_push_buffer (stream, arv_buffer);
+	g_object_unref (stream);
 	return GST_FLOW_ERROR;
 }
 
@@ -1197,6 +1258,8 @@ gst_aravis_class_init (GstAravisClass * klass)
 	gstbasesrc_class->fixate = GST_DEBUG_FUNCPTR (gst_aravis_fixate_caps);
 	gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_aravis_start);
 	gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_aravis_stop);
+	gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_aravis_unlock);
+	gstbasesrc_class->unlock_stop = GST_DEBUG_FUNCPTR (gst_aravis_unlock_stop);
 	gstbasesrc_class->query = GST_DEBUG_FUNCPTR (gst_aravis_query);
 
 	gstbasesrc_class->get_times = GST_DEBUG_FUNCPTR (gst_aravis_get_times);
