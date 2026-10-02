@@ -247,7 +247,9 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 					ack_command = arv_gvcp_packet_get_command (ack_packet, count);
 					packet_id = arv_gvcp_packet_get_packet_id (ack_packet, count);
 
-					if (ack_command == ARV_GVCP_COMMAND_PENDING_ACK &&
+					if (packet_type == ARV_GVCP_PACKET_TYPE_ACK &&
+					    packet_id == io_data->packet_id &&
+					    ack_command == ARV_GVCP_COMMAND_PENDING_ACK &&
 					    count >= arv_gvcp_packet_get_pending_ack_size ()) {
 						gint64 pending_ack_timeout_ms =
                                                         arv_gvcp_packet_get_pending_ack_timeout (ack_packet, count);
