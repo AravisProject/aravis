@@ -211,8 +211,9 @@ for list of dependencies (such&nbsp;as <code>mingw-w64-x86_64-libxml2</code> and
 must be installed prior to building&nbsp;via <code>pacman -S ...</code>. The build process
 itself is the same as on other platforms&nbsp;(meson/ninja).</p>
 <p>Alternatively, you can build Aravis using Microsoft Visual C++ (<span class="caps">MSVC</span>) and Conan
-package manager. Have a look at the <a href="https://github.com/AravisProject/aravis/blob/main/.github/workflows/aravis-msvc.yml">msvc <span class="caps">CI</span> configuration
-file</a>.</p>
+package manager. Have a look at the msvc <span class="caps">CI</span> configuration files for
+<a href="https://github.com/AravisProject/aravis/blob/main/.github/workflows/aravis-msvc-conan2.yml">Conan 2</a>
+or <a href="https://github.com/AravisProject/aravis/blob/main/.github/workflows/aravis-msvc.yml">Conan 1</a>.</p>
 <h3 id="cross-compilation-for-windows">Cross-compilation for Windows<a class="md-anchor" href="#cross-compilation-for-windows" title="Permanent link"></a></h3>
 <p>Aravis for Windows can be also cross-compiled on Linux (and used in Wine) using
 <a href="https://pypi.org/project/crossroad/">crossroad</a>, provided that cross-compiler
