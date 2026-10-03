@@ -38,6 +38,13 @@ if get_option('tests')
 		test (t[0], exe, suite: t[1], timeout: 60)
 	endforeach
 
+        gvcp_test = executable ('gvcp', 'gvcp.c',
+                                c_args: ['-DARAVIS_COMPILATION'],
+                                link_with: aravis_library,
+                                dependencies: aravis_dependencies,
+                                include_directories: [library_inc])
+        test ('gvcp', gvcp_test, suite: 'network', timeout: 60, is_parallel: false)
+
         py_script_config_data = configuration_data ()
         py_script_config_data.set ('GI_TYPELIB_PATH', meson.project_build_root() / 'src')
         py_script_config_data.set ('LD_LIBRARY_PATH', meson.project_build_root() / 'src')
