@@ -8,6 +8,9 @@
 #define TEST_REGISTER 0x1f0
 #define TEST_VALUE 0x12345678
 
+/* g_socket_condition_timed_wait() takes microseconds: poll every 2 ms so the delayed ACK leaves on time. */
+#define SERVER_POLL_US 2000
+
 typedef enum {
         REPLY_NORMAL,
         REPLY_PENDING,
@@ -45,11 +48,12 @@ write_uint32 (guint8 *data, guint32 value)
 }
 
 static void
-write_header (guint8 *data, guint8 type, guint16 command, guint16 size, guint16 id)
+write_header (guint8 *data, guint8 type, guint8 flags, guint16 command, guint16 size, guint16 id)
 {
         ArvGvcpHeader header = {0};
 
         header.packet_type = type;
+        header.packet_flags = flags;
         header.command = GUINT16_TO_BE (command);
         header.size = GUINT16_TO_BE (size);
         header.id = GUINT16_TO_BE (id);
@@ -79,9 +83,11 @@ server_thread (gpointer data)
                 GSocketAddress *peer = NULL;
                 GError *error = NULL;
                 gssize count;
-                guint32 address, value, size;
+                guint32 address = 0, value, size;
                 guint16 command, id;
                 gsize reply_size;
+                guint8 reply_type = ARV_GVCP_PACKET_TYPE_ACK;
+                guint8 reply_flags = 0;
 
                 if (server->delayed_peer != NULL &&
                     g_get_monotonic_time () >= server->delayed_ack_time) {
@@ -90,7 +96,7 @@ server_thread (gpointer data)
                         g_clear_object (&server->delayed_peer);
                 }
 
-                if (!g_socket_condition_timed_wait (server->socket, G_IO_IN, 2000, NULL, &error)) {
+                if (!g_socket_condition_timed_wait (server->socket, G_IO_IN, SERVER_POLL_US, NULL, &error)) {
                         g_assert_error (error, G_IO_ERROR, G_IO_ERROR_TIMED_OUT);
                         g_clear_error (&error);
                         continue;
@@ -99,14 +105,16 @@ server_thread (gpointer data)
                 count = g_socket_receive_from (server->socket, &peer, (char *) request,
                                                sizeof (request), NULL, &error);
                 g_assert_no_error (error);
-                g_assert_cmpint (count, >=, sizeof (header) + sizeof (guint32));
+                g_assert_cmpint (count, >=, sizeof (header));
                 memcpy (&header, request, sizeof (header));
                 command = GUINT16_FROM_BE (header.command);
                 id = GUINT16_FROM_BE (header.id);
-                address = read_uint32 (request + sizeof (header));
+                if (count >= sizeof (header) + sizeof (guint32))
+                        address = read_uint32 (request + sizeof (header));
 
                 switch (command) {
                         case ARV_GVCP_COMMAND_READ_REGISTER_CMD:
+                                g_assert_cmpint (count, >=, sizeof (header) + sizeof (guint32));
                                 g_assert_true (arv_fake_camera_read_register (server->camera, address, &value));
                                 write_uint32 (reply + sizeof (header), value);
                                 reply_size = sizeof (header) + sizeof (guint32);
@@ -128,9 +136,13 @@ server_thread (gpointer data)
                                 reply_size = sizeof (header) + sizeof (guint32) + size;
                                 break;
                         default:
-                                g_assert_not_reached ();
+                                /* Answer like a camera lacking the command, so device setup changes fail cleanly. */
+                                reply_type = ARV_GVCP_PACKET_TYPE_ERROR;
+                                reply_flags = ARV_GVCP_ERROR_NOT_IMPLEMENTED;
+                                reply_size = sizeof (header);
+                                break;
                 }
-                write_header (reply, ARV_GVCP_PACKET_TYPE_ACK, command + 1,
+                write_header (reply, reply_type, reply_flags, command + 1,
                               reply_size - sizeof (header), id);
 
                 if (command == ARV_GVCP_COMMAND_READ_REGISTER_CMD && address == TEST_REGISTER &&
@@ -146,7 +158,7 @@ server_thread (gpointer data)
                         write_header (pending,
                                       mode == REPLY_WRONG_TYPE_PENDING ? ARV_GVCP_PACKET_TYPE_CMD :
                                                                          ARV_GVCP_PACKET_TYPE_ACK,
-                                      ARV_GVCP_COMMAND_PENDING_ACK, sizeof (guint32),
+                                      0, ARV_GVCP_COMMAND_PENDING_ACK, sizeof (guint32),
                                       mode == REPLY_STALE_PENDING ? arv_gvcp_next_packet_id (id) : id);
                         write_uint32 (pending + sizeof (header), delay_ms + 500);
                         send_reply (server, peer, pending,
@@ -173,18 +185,28 @@ pending_ack_test (gconstpointer data)
         gboolean success;
         gint requests;
 
-        server.camera = arv_fake_camera_new ("GvcpTest");
-        g_assert_nonnull (server.camera);
-        g_assert_true (arv_fake_camera_write_register (server.camera, TEST_REGISTER, TEST_VALUE));
         server.socket = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM,
                                       G_SOCKET_PROTOCOL_UDP, &error);
         g_assert_no_error (error);
         loopback = g_inet_address_new_loopback (G_SOCKET_FAMILY_IPV4);
         address = g_inet_socket_address_new (loopback, ARV_GVCP_PORT);
         success = g_socket_bind (server.socket, address, FALSE, &error);
+        g_object_unref (address);
+
+        /* arv_gv_device_new() always targets the GVCP port; a running fake camera may hold it. */
+        if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_ADDRESS_IN_USE)) {
+                g_test_skip ("GVCP port already in use on loopback");
+                g_clear_error (&error);
+                g_object_unref (loopback);
+                g_object_unref (server.socket);
+                return;
+        }
         g_assert_no_error (error);
         g_assert_true (success);
-        g_object_unref (address);
+
+        server.camera = arv_fake_camera_new ("GvcpTest");
+        g_assert_nonnull (server.camera);
+        g_assert_true (arv_fake_camera_write_register (server.camera, TEST_REGISTER, TEST_VALUE));
         server.thread = g_thread_new ("gvcp-test", server_thread, &server);
 
         /* Direct construction only contacts loopback; no discovery broadcasts or real camera. */
