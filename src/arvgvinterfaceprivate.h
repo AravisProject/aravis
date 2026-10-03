@@ -37,6 +37,9 @@ G_BEGIN_DECLS
 #define ARV_GV_INTERFACE_DISCOVERY_SOCKET_BUFFER_SIZE	(256*1024)
 
 void 			arv_gv_interface_destroy_instance 	(void);
+ARV_API char *	arv_gv_interface_force_ip		(const char *selection, GInetAddress *ip,
+							 GInetAddressMask *mask, GInetAddress *gateway,
+							 char **interface_address, GError **error);
 
 G_END_DECLS
 
