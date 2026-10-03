@@ -72,6 +72,8 @@ enum
   PROP_USB_MODE,
   PROP_STREAM,
   PROP_TRIGGER,
+  PROP_TIMEOUT_POLICY,
+  PROP_TIMING_MODE,
   N_PROPERTIES
 };
 
@@ -85,6 +87,8 @@ enum
 };
 
 static guint gst_aravis_signals[LAST_SIGNAL] = { 0 };
+
+#define GST_ARAVIS_WAIT_TIMEOUT_CHUNK_US 200000
 
 #define GST_TYPE_ARV_AUTO (gst_arv_auto_get_type())
 static GType
@@ -126,12 +130,50 @@ gst_arv_usb_mode_get_type (void)
 	return arv_usb_mode_type;
 }
 
+#define GST_TYPE_ARV_TIMEOUT_POLICY (gst_aravis_timeout_policy_get_type())
+static GType
+gst_aravis_timeout_policy_get_type (void)
+{
+	static GType timeout_policy_type = 0;
+
+	static const GEnumValue timeout_policies[] = {
+		{GST_ARAVIS_TIMEOUT_POLICY_ERROR, "Error", "error"},
+		{GST_ARAVIS_TIMEOUT_POLICY_WAIT, "Wait", "wait"},
+		{0, NULL, NULL},
+	};
+
+	if (!timeout_policy_type)
+		timeout_policy_type = g_enum_register_static ("GstAravisTimeoutPolicy", timeout_policies);
+
+	return timeout_policy_type;
+}
+
+#define GST_TYPE_ARV_TIMING_MODE (gst_aravis_timing_mode_get_type())
+static GType
+gst_aravis_timing_mode_get_type (void)
+{
+	static GType timing_mode_type = 0;
+
+	static const GEnumValue timing_modes[] = {
+		{GST_ARAVIS_TIMING_MODE_FIXED, "Fixed", "fixed"},
+		{GST_ARAVIS_TIMING_MODE_SPARSE, "Sparse", "sparse"},
+		{0, NULL, NULL},
+	};
+
+	if (!timing_mode_type)
+		timing_mode_type = g_enum_register_static ("GstAravisTimingMode", timing_modes);
+
+	return timing_mode_type;
+}
+
 G_DEFINE_TYPE (GstAravis, gst_aravis, GST_TYPE_PUSH_SRC);
 
 static GstStaticPadTemplate aravis_src_template = GST_STATIC_PAD_TEMPLATE ("src",
 									   GST_PAD_SRC,
 									   GST_PAD_ALWAYS,
 									   GST_STATIC_CAPS ("ANY"));
+
+static gboolean gst_aravis_uses_fixed_timing (GstAravis *gst_aravis);
 
 static GstCaps *
 gst_aravis_get_all_camera_caps (GstAravis *gst_aravis, GError **error)
@@ -160,8 +202,8 @@ gst_aravis_get_all_camera_caps (GstAravis *gst_aravis, GError **error)
 	if (!local_error) arv_camera_get_height_bounds (gst_aravis->camera, &min_height, &max_height, &local_error);
 	if (!local_error) pixel_formats = arv_camera_dup_available_pixel_formats (gst_aravis->camera, &n_pixel_formats,
 										  &local_error);
-	use_frame_rate = arv_camera_is_frame_rate_available (gst_aravis->camera, NULL) &&
-                gst_aravis->trigger_source == NULL;
+	use_frame_rate = gst_aravis_uses_fixed_timing (gst_aravis) &&
+			 arv_camera_is_frame_rate_available (gst_aravis->camera, NULL);
 
 	if (use_frame_rate) {
 		if (!local_error) arv_camera_get_frame_rate_bounds (gst_aravis->camera,
@@ -225,6 +267,18 @@ gst_aravis_get_caps (GstBaseSrc * src, GstCaps * filter)
 }
 
 static gboolean
+gst_aravis_uses_fixed_timing (GstAravis *gst_aravis)
+{
+	g_return_val_if_fail (GST_IS_ARAVIS (gst_aravis), FALSE);
+
+	/* Preserve legacy behavior: configuring an external trigger means
+	 * timing is effectively sparse unless the implementation grows an
+	 * explicit override model later. */
+	return gst_aravis->timing_mode == GST_ARAVIS_TIMING_MODE_FIXED &&
+	       gst_aravis->trigger_source == NULL;
+}
+
+static gboolean
 gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 {
 	GError *error = NULL;
@@ -257,7 +311,8 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
         width = current_width;
         height = current_height;
 
-	is_frame_rate_available = arv_camera_is_frame_rate_available (gst_aravis->camera, NULL);
+	is_frame_rate_available = gst_aravis_uses_fixed_timing (gst_aravis) &&
+				  arv_camera_is_frame_rate_available (gst_aravis->camera, NULL);
 	is_gain_available = arv_camera_is_gain_available (gst_aravis->camera, NULL);
 	is_gain_auto_available = arv_camera_is_gain_auto_available (gst_aravis->camera, NULL);
 	is_exposure_time_available = arv_camera_is_exposure_time_available (gst_aravis->camera, NULL);
@@ -563,23 +618,70 @@ static GstFlowReturn
 gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 {
 	GstAravis *gst_aravis;
+	ArvStream *stream;
 	int arv_row_stride;
 	int width, height;
 	char *buffer_data;
 	size_t buffer_size;
 	guint64 timestamp_ns;
+	guint64 timestamp_offset;
+	guint64 last_timestamp;
+	guint64 buffer_timeout_us;
+	guint64 remaining_timeout_us;
 	gboolean base_src_does_timestamp;
+	GstAravisTimeoutPolicy timeout_policy;
+	GstAravisTimingMode timing_mode;
 	ArvBuffer *arv_buffer = NULL;
 
 	gst_aravis = GST_ARAVIS (push_src);
-	base_src_does_timestamp = gst_base_src_get_do_timestamp(GST_BASE_SRC(push_src));
+	base_src_does_timestamp = gst_base_src_get_do_timestamp (GST_BASE_SRC (push_src));
 
 	GST_OBJECT_LOCK (gst_aravis);
+	stream = gst_aravis->stream != NULL ? g_object_ref (gst_aravis->stream) : NULL;
+	timeout_policy = gst_aravis->timeout_policy;
+	timing_mode = gst_aravis->timing_mode;
+	buffer_timeout_us = gst_aravis->buffer_timeout_us;
+	GST_OBJECT_UNLOCK (gst_aravis);
 
-	do {
-		if (arv_buffer) arv_stream_push_buffer (gst_aravis->stream, arv_buffer);
-		arv_buffer = arv_stream_timeout_pop_buffer (gst_aravis->stream, gst_aravis->buffer_timeout_us);
-	} while (arv_buffer != NULL && arv_buffer_get_status (arv_buffer) != ARV_BUFFER_STATUS_SUCCESS);
+	if (stream == NULL)
+		goto error;
+
+	remaining_timeout_us = buffer_timeout_us;
+
+	while (TRUE) {
+		guint64 timeout_us;
+		ArvBufferStatus status;
+
+		if (arv_buffer) {
+			arv_stream_push_buffer (stream, arv_buffer);
+			arv_buffer = NULL;
+		}
+
+		if (g_atomic_int_get (&gst_aravis->unlock_requested))
+			goto flushing;
+
+		timeout_us = MIN (remaining_timeout_us, (guint64) GST_ARAVIS_WAIT_TIMEOUT_CHUNK_US);
+		arv_buffer = arv_stream_timeout_pop_buffer (stream, timeout_us);
+
+		if (arv_buffer == NULL) {
+			if (timeout_policy == GST_ARAVIS_TIMEOUT_POLICY_WAIT)
+				continue;
+
+			if (remaining_timeout_us <= timeout_us)
+				break;
+
+			remaining_timeout_us -= timeout_us;
+			continue;
+		}
+
+		remaining_timeout_us = buffer_timeout_us;
+
+		status = arv_buffer_get_status (arv_buffer);
+		if (status != ARV_BUFFER_STATUS_SUCCESS)
+			continue;
+
+		break;
+	}
 
 	if (arv_buffer == NULL)
 		goto error;
@@ -611,25 +713,65 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 	}
 
 	if (!base_src_does_timestamp) {
-		if (gst_aravis->timestamp_offset == 0) {
-			gst_aravis->timestamp_offset = timestamp_ns;
-			gst_aravis->last_timestamp = timestamp_ns;
+		GST_OBJECT_LOCK (gst_aravis);
+		timestamp_offset = gst_aravis->timestamp_offset;
+		last_timestamp = gst_aravis->last_timestamp;
+		if (timestamp_offset == 0) {
+			timestamp_offset = timestamp_ns;
+			last_timestamp = timestamp_ns;
+			gst_aravis->timestamp_offset = timestamp_offset;
+			gst_aravis->last_timestamp = last_timestamp;
 		}
+		GST_OBJECT_UNLOCK (gst_aravis);
 
-		GST_BUFFER_PTS (*buffer) = timestamp_ns - gst_aravis->timestamp_offset;
-		GST_BUFFER_DURATION (*buffer) = timestamp_ns - gst_aravis->last_timestamp;
+		GST_BUFFER_PTS (*buffer) = timestamp_ns - timestamp_offset;
+		GST_BUFFER_DURATION (*buffer) = timestamp_ns - last_timestamp;
 
+		GST_OBJECT_LOCK (gst_aravis);
 		gst_aravis->last_timestamp = timestamp_ns;
+		GST_OBJECT_UNLOCK (gst_aravis);
 	}
 
-	arv_stream_push_buffer (gst_aravis->stream, arv_buffer);
-	GST_OBJECT_UNLOCK (gst_aravis);
+	arv_stream_push_buffer (stream, arv_buffer);
+	g_object_unref (stream);
 
 	return GST_FLOW_OK;
 
+flushing:
+	if (arv_buffer)
+		arv_stream_push_buffer (stream, arv_buffer);
+	g_object_unref (stream);
+	return GST_FLOW_FLUSHING;
+
 error:
-	GST_OBJECT_UNLOCK (gst_aravis);
+	GST_ERROR_OBJECT (gst_aravis,
+			  "Failed to retrieve a valid buffer: timeout-policy=%d timing-mode=%d buffer-timeout=%" G_GUINT64_FORMAT,
+			  timeout_policy,
+			  timing_mode,
+			  buffer_timeout_us);
+	if (stream != NULL)
+		g_object_unref (stream);
 	return GST_FLOW_ERROR;
+}
+
+static gboolean
+gst_aravis_unlock (GstBaseSrc *src)
+{
+	GstAravis *gst_aravis = GST_ARAVIS (src);
+
+	g_atomic_int_set (&gst_aravis->unlock_requested, TRUE);
+
+	return TRUE;
+}
+
+static gboolean
+gst_aravis_unlock_stop (GstBaseSrc *src)
+{
+	GstAravis *gst_aravis = GST_ARAVIS (src);
+
+	g_atomic_int_set (&gst_aravis->unlock_requested, FALSE);
+
+	return TRUE;
 }
 
 static GstCaps *
@@ -648,8 +790,8 @@ gst_aravis_fixate_caps (GstBaseSrc * bsrc, GstCaps * caps)
 	GST_OBJECT_LOCK (gst_aravis);
 
 	arv_camera_get_region (gst_aravis->camera, NULL, NULL, &width, &height, &error);
-	use_frame_rate = arv_camera_is_frame_rate_available (gst_aravis->camera, NULL) &&
-                gst_aravis->trigger_source == NULL;
+	use_frame_rate = gst_aravis_uses_fixed_timing (gst_aravis) &&
+			 arv_camera_is_frame_rate_available (gst_aravis->camera, NULL);
 
 	if (use_frame_rate)
 		if (!error) frame_rate = arv_camera_get_frame_rate (gst_aravis->camera, &error);
@@ -705,6 +847,9 @@ gst_aravis_init (GstAravis *gst_aravis)
 
 	gst_aravis->buffer_timeout_us = GST_ARAVIS_BUFFER_TIMEOUT_DEFAULT;
 	gst_aravis->frame_rate = 0.0;
+	gst_aravis->timeout_policy = GST_ARAVIS_TIMEOUT_POLICY_ERROR;
+	gst_aravis->timing_mode = GST_ARAVIS_TIMING_MODE_FIXED;
+	gst_aravis->unlock_requested = FALSE;
 
 	gst_aravis->trigger_source = NULL;
 
@@ -846,6 +991,16 @@ gst_aravis_set_property (GObject * object, guint prop_id,
 			gst_aravis->trigger_source = g_strdup (g_value_get_string (value));
 			GST_OBJECT_UNLOCK (gst_aravis);
 			break;
+		case PROP_TIMEOUT_POLICY:
+			GST_OBJECT_LOCK (gst_aravis);
+			gst_aravis->timeout_policy = g_value_get_enum (value);
+			GST_OBJECT_UNLOCK (gst_aravis);
+			break;
+		case PROP_TIMING_MODE:
+			GST_OBJECT_LOCK (gst_aravis);
+			gst_aravis->timing_mode = g_value_get_enum (value);
+			GST_OBJECT_UNLOCK (gst_aravis);
+			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 			break;
@@ -954,6 +1109,16 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 			g_value_set_string (value, gst_aravis->trigger_source);
 			GST_OBJECT_UNLOCK (gst_aravis);
 			break;
+		case PROP_TIMEOUT_POLICY:
+			GST_OBJECT_LOCK (gst_aravis);
+			g_value_set_enum (value, gst_aravis->timeout_policy);
+			GST_OBJECT_UNLOCK (gst_aravis);
+			break;
+		case PROP_TIMING_MODE:
+			GST_OBJECT_LOCK (gst_aravis);
+			g_value_set_enum (value, gst_aravis->timing_mode);
+			GST_OBJECT_UNLOCK (gst_aravis);
+			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 			break;
@@ -981,14 +1146,14 @@ gst_aravis_query (GstBaseSrc *bsrc, GstQuery *query)
 			}
 
 			/* we must have a framerate */
-			if (src->frame_rate <= 0.0 || src->trigger_source != NULL)
+			if (!gst_aravis_uses_fixed_timing (src) || src->frame_rate <= 0.0)
 			{
 				GST_WARNING_OBJECT (src, "Can't give latency since framerate isn't fixated !");
 				goto done;
 			}
 
 			/* min latency is the time to capture one frame/field */
-			min_latency = gst_util_gdouble_to_guint64 (src->frame_rate);
+			min_latency = gst_util_gdouble_to_guint64 ((gdouble) GST_SECOND / src->frame_rate);
 
 			/* max latency is set to NONE because cameras may enter trigger mode
 			   and not deliver images for an unspecified amount of time */
@@ -1142,6 +1307,20 @@ gst_aravis_class_init (GstAravisClass * klass)
                                     "Enable the trigger mode using the given source",
                                     NULL,
                                     G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	properties[PROP_TIMEOUT_POLICY] =
+		g_param_spec_enum ("timeout-policy",
+				   "Timeout policy",
+				   "How empty buffer waits are handled: error or wait",
+				   GST_TYPE_ARV_TIMEOUT_POLICY,
+				   GST_ARAVIS_TIMEOUT_POLICY_ERROR,
+				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	properties[PROP_TIMING_MODE] =
+		g_param_spec_enum ("timing-mode",
+				   "Timing mode",
+				   "Whether the source timing is fixed-rate or sparse/irregular",
+				   GST_TYPE_ARV_TIMING_MODE,
+				   GST_ARAVIS_TIMING_MODE_FIXED,
+				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
 	g_object_class_install_properties (gobject_class,
 					   G_N_ELEMENTS (properties),
@@ -1169,6 +1348,8 @@ gst_aravis_class_init (GstAravisClass * klass)
 	gstbasesrc_class->fixate = GST_DEBUG_FUNCPTR (gst_aravis_fixate_caps);
 	gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_aravis_start);
 	gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_aravis_stop);
+	gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_aravis_unlock);
+	gstbasesrc_class->unlock_stop = GST_DEBUG_FUNCPTR (gst_aravis_unlock_stop);
 	gstbasesrc_class->query = GST_DEBUG_FUNCPTR (gst_aravis_query);
 
 	gstbasesrc_class->get_times = GST_DEBUG_FUNCPTR (gst_aravis_get_times);
