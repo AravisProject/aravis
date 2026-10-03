@@ -1,0 +1,95 @@
+name: Aravis-MSVC-Conan2
+
+on:
+  push:
+    branches: [ main, aravis-0-8 ]
+  pull_request:
+    branches: [ main, aravis-0-8 ]
+  workflow_dispatch:
+
+jobs:
+  msvc:
+    runs-on: windows-2025
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        # msvc 194 is the v143 toolset, which the windows-2025 image installs
+        # as a Visual Studio 2026 component. ConanCenter publishes binaries for
+        # it, whereas with 195 every dependency is built from source.
+        - version: 194
+          arch: x86_64
+          build_type_conan: Release
+          build_type_meson: release
+    steps:
+    - name: pip
+      run: |
+        pip install "conan>=2.0.0,<3.0.0"
+    - name: disable-perl
+      run: |
+        rm -r C:\Strawberry\perl
+    - name: checkout
+      uses: actions/checkout@v3
+    - name: conan
+      env:
+        INPUT_CONANFILE: |
+          [requires]
+          glib/2.86.5
+          libxml2/2.15.4
+          zlib/1.3.2
+          libusb/1.0.29
+
+          [tool_requires]
+          meson/1.10.2
+          pkgconf/2.5.1
+
+          [generators]
+          PkgConfigDeps
+          VirtualBuildEnv
+          VirtualRunEnv
+          VCVars
+
+          [options]
+          glib/*:shared=True
+        INPUT_PROFILE: |
+          [settings]
+          os=Windows
+          arch=${{ matrix.arch }}
+          build_type=${{ matrix.build_type_conan }}
+          compiler=msvc
+          compiler.version=${{ matrix.version }}
+          compiler.runtime=dynamic
+          compiler.runtime_type=${{ matrix.build_type_conan }}
+          compiler.cppstd=14
+
+          [conf]
+          tools.microsoft.msbuild:vs_version=18
+          &:tools.env.virtualenv:powershell=pwsh
+      run: |
+        $Env:INPUT_CONANFILE | Out-File -FilePath ${{ github.workspace }}\conanfile.txt -Encoding utf8
+        $Env:INPUT_PROFILE | Out-File -FilePath ${{ github.workspace }}\conanprofile.txt -Encoding utf8
+        conan install -pr:a conanprofile.txt --build=missing -of build .
+    - name: meson
+      run: |
+        .\build\conanbuild.ps1
+        .\build\conanrun.ps1
+        echo "::group::configure"
+        meson setup --prefix ${{ github.workspace }}\install --buildtype ${{ matrix.build_type_meson }} --pkg-config-path ${{ github.workspace }}\build -Ddocumentation=disabled -Dgst-plugin=disabled -Dintrospection=disabled -Dusb=enabled -Dviewer=disabled -Dgv-n-buffers=1 -Dgentl-producer=true . .\build
+        echo "::endgroup::"
+        echo "::group::compile"
+        meson compile -C .\build -v
+        echo "::endgroup::"
+        echo "::group::install"
+        meson install -C .\build
+        echo "::endgroup::"
+    - name: test
+      run: |
+        .\build\conanbuild.ps1
+        .\build\conanrun.ps1
+        meson test -C .\build
+    - name: logs
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: msvc_${{ matrix.version }}_${{ matrix.arch }}_${{ matrix.build_type_meson }}_Meson_Testlog
+        path: build/meson-logs/testlog.txt
