@@ -29,6 +29,9 @@ jobs:
       uses: actions/checkout@v3
     - name: conan
       env:
+        # CMake 4 rejects projects declaring a minimum version below 3.5, which
+        # includes some Conan 1.x recipes built from source (e.g. bzip2/1.0.8).
+        CMAKE_POLICY_VERSION_MINIMUM: "3.5"
         INPUT_CONANFILE: |
           [requires]
           libiconv/1.17
