@@ -118,7 +118,7 @@ else # not Linux
 	packet_socket_enabled = false
 endif
 
-subdir ('src')
+subdir ('aravis')
 subdir ('tests')
 
 viewer_enabled = false

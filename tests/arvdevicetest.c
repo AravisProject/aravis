@@ -3,8 +3,8 @@
 #include <arv.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "../src/arvgvspprivate.h"
-#include "../src/arvgvcpprivate.h"
+#include "arvgvspprivate.h"
+#include "arvgvcpprivate.h"
 
 static gboolean cancel = FALSE;
 

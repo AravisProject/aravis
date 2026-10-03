@@ -3,7 +3,7 @@
 #include <arv.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "../src/arvnetworkprivate.h"
+#include "arvnetworkprivate.h"
 
 #define _ALEN 16
 #define _ALENS "16"

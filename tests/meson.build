@@ -24,25 +24,25 @@ if get_option('tests')
 		['genicam',	['main'],
                 ['-DGENICAM_FILENAME="@0@/tests/data/genicam.xml"'.format (meson.project_source_root ())]],
 		['fake',	['main'],
-                ['-DGENICAM_FILENAME="@0@/src/arv-fake-camera.xml"'.format (meson.project_source_root ())]],
+                ['-DGENICAM_FILENAME="@0@/aravis/arv-fake-camera.xml"'.format (meson.project_source_root ())]],
 		['fakegv',	['network'],
-                ['-DGENICAM_FILENAME="@0@/src/arv-fake-camera.xml"'.format (meson.project_source_root ())]]
+                ['-DGENICAM_FILENAME="@0@/aravis/arv-fake-camera.xml"'.format (meson.project_source_root ())]]
 	]
 
 	foreach t: tests
 		exe = executable (t[0], '@0@.c'.format (t[0]),
 				  c_args: [t[2]],
 				  link_with: aravis_library,
-				  dependencies: aravis_dependencies,
+				  dependencies: aravis_library_dependencies,
 				  include_directories: [library_inc])
 		test (t[0], exe, suite: t[1], timeout: 60)
 	endforeach
 
         py_script_config_data = configuration_data ()
-        py_script_config_data.set ('GI_TYPELIB_PATH', meson.project_build_root() / 'src')
-        py_script_config_data.set ('LD_LIBRARY_PATH', meson.project_build_root() / 'src')
+        py_script_config_data.set ('GI_TYPELIB_PATH', meson.project_build_root() / 'aravis')
+        py_script_config_data.set ('LD_LIBRARY_PATH', meson.project_build_root() / 'aravis')
         py_script_config_data.set ('GST_PLUGIN_PATH', meson.project_build_root() / 'gst')
-        py_script_config_data.set ('FAKE_GENICAM_PATH', meson.project_source_root() / 'src' / 'arv-fake-camera.xml')
+        py_script_config_data.set ('FAKE_GENICAM_PATH', meson.project_source_root() / 'aravis' / 'arv-fake-camera.xml')
         py_script_config_data.set ('ARV_PRODUCER_PATH', get_option('gentl-producer') ? gentl_producer_library.full_path() : '')
 
         configure_file (input: 'pylaunch.in', output: 'pylaunch', configuration: py_script_config_data)
@@ -63,9 +63,9 @@ if get_option('tests')
 			]
 
 			environment = [
-				'GI_TYPELIB_PATH=' + meson.project_build_root() / 'src',
-				'LD_LIBRARY_PATH=' + meson.project_build_root() / 'src',
-				'FAKE_GENICAM_PATH=' + meson.project_source_root() / 'src' / 'arv-fake-camera.xml'
+				'GI_TYPELIB_PATH=' + meson.project_build_root() / 'aravis',
+				'LD_LIBRARY_PATH=' + meson.project_build_root() / 'aravis',
+				'FAKE_GENICAM_PATH=' + meson.project_source_root() / 'aravis' / 'arv-fake-camera.xml'
 			]
 
 			foreach t: python_tests
@@ -107,7 +107,7 @@ if get_option('tests')
 	foreach example: examples
 		executable (example[0], example[1],
 			link_with: aravis_library,
-			dependencies: aravis_dependencies,
+			dependencies: aravis_library_dependencies,
 			include_directories: [library_inc])
 	endforeach
 
