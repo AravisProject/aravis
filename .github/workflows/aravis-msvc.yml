@@ -9,7 +9,8 @@ on:
 
 jobs:
   msvc:
-    runs-on: windows-2025
+    # Conan 1.x only knows Visual Studio up to 2022 (version 17)
+    runs-on: windows-2022
     strategy:
       fail-fast: false
       matrix:
