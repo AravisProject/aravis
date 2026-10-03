@@ -64,6 +64,7 @@ static ArvGvLegacyInfos arv_gc_port_legacy_infos[] = {
    { .vendor_selection = "AT_Automation_Technology_GmbH",       .model_selection = "C6_X_GigE"},
    { .vendor_selection = "DO3THINK",                            .model_selection = "MGV518"},
    { .vendor_selection = "EVK",                                 .model_selection = "HELIOS"},
+   { .vendor_selection = "IDS_Imaging_Development_Systems_GmbH",.model_selection = "GV_53FxLE_M"},
    { .vendor_selection = "IDS_Imaging_Development_Systems_GmbH",.model_selection = "GV_58CxLE_M"},
    { .vendor_selection = "IDS_Imaging_Development_Systems_GmbH",.model_selection = "GV_524xCP_NIR"},
    { .vendor_selection = "IDS_Imaging_Development_Systems_GmbH",.model_selection = "GV_599xCP_C"},

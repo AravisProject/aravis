@@ -372,11 +372,11 @@ arv_interface_get_device_protocol (ArvInterface *iface, unsigned int index)
 /**
  * arv_interface_open_device:
  * @iface: a #ArvInterface
- * @device_id: (allow-none): device unique id
+ * @key: (allow-none): device search key
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Creates a new #ArvDevice object corresponding to the given device id string.
- * The first available device is returned if @device_id is %NULL.
+ * The first available device is returned if @key is %NULL.
  *
  * Returns: (transfer full): a new #ArvDevice
  *
@@ -384,11 +384,11 @@ arv_interface_get_device_protocol (ArvInterface *iface, unsigned int index)
  */
 
 ArvDevice *
-arv_interface_open_device (ArvInterface *iface, const char *device_id, GError **error)
+arv_interface_open_device (ArvInterface *iface, const char *key, GError **error)
 {
 	g_return_val_if_fail (ARV_IS_INTERFACE (iface), NULL);
 
-	return ARV_INTERFACE_GET_CLASS (iface)->open_device (iface, device_id, error);
+	return ARV_INTERFACE_GET_CLASS (iface)->open_device (iface, key, error);
 }
 
 static void

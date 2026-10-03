@@ -443,28 +443,41 @@ _discover (GHashTable *devices, const char *device_id, gboolean allow_broadcast_
 
                                                         if (devices != NULL) {
                                                                 if (device_infos->id != NULL &&
-                                                                    device_infos->id[0] != '\0')
+                                                                    device_infos->id[0] != '\0') {
                                                                         g_hash_table_replace
                                                                                 (devices, device_infos->id,
                                                                                  arv_gv_interface_device_infos_ref (device_infos));
+                                                                        arv_info_interface ("  %s", device_infos->id);
+                                                                }
                                                                 if (device_infos->user_id != NULL &&
-                                                                    device_infos->user_id[0] != '\0')
+                                                                    device_infos->user_id[0] != '\0') {
                                                                         g_hash_table_replace
                                                                                 (devices, device_infos->user_id,
                                                                                  arv_gv_interface_device_infos_ref (device_infos));
+                                                                        arv_info_interface ("  %s",
+                                                                                            device_infos->user_id);
+                                                                }
                                                                 if (device_infos->vendor_serial != NULL &&
-                                                                    device_infos->vendor_serial[0] != '\0')
+                                                                    device_infos->vendor_serial[0] != '\0') {
                                                                         g_hash_table_replace
                                                                                 (devices, device_infos->vendor_serial,
                                                                                  arv_gv_interface_device_infos_ref (device_infos));
+                                                                        arv_info_interface ("  %s",
+                                                                                            device_infos->vendor_serial);
+                                                                }
                                                                 if (device_infos->vendor_alias_serial != NULL &&
-                                                                    device_infos->vendor_alias_serial[0] != '\0')
+                                                                    device_infos->vendor_alias_serial[0] != '\0') {
                                                                         g_hash_table_replace
                                                                                 (devices, device_infos->vendor_alias_serial,
                                                                                  arv_gv_interface_device_infos_ref (device_infos));
+                                                                        arv_info_interface ("  %s",
+                                                                                            device_infos->vendor_alias_serial);
+                                                                }
                                                                 g_hash_table_replace
                                                                         (devices, device_infos->mac,
                                                                          arv_gv_interface_device_infos_ref (device_infos));
+                                                                arv_info_interface ("  %s",
+                                                                                    device_infos->mac);
                                                         } else {
                                                                 if (device_id == NULL ||
                                                                     g_strcmp0 (device_infos->id, device_id) == 0 ||
@@ -667,7 +680,7 @@ arv_gv_interface_camera_locate (ArvGvInterface *gv_interface, GInetAddress *devi
 }
 
 static ArvDevice *
-_open_device (ArvInterface *interface, GHashTable *devices, const char *device_id, GError **error)
+_open_device (ArvInterface *interface, GHashTable *devices, const char *key, GError **error)
 {
 	ArvGvInterface *gv_interface;
 	ArvDevice *device = NULL;
@@ -676,29 +689,29 @@ _open_device (ArvInterface *interface, GHashTable *devices, const char *device_i
 
 	gv_interface = ARV_GV_INTERFACE (interface);
 
-	if (device_id == NULL) {
+	if (key == NULL) {
 		GList *device_list;
 
 		device_list = g_hash_table_get_values (devices);
 		device_infos = device_list != NULL ? device_list->data : NULL;
 		g_list_free (device_list);
 	} else
-		device_infos = g_hash_table_lookup (devices, device_id);
+		device_infos = g_hash_table_lookup (devices, key);
 
 	if (device_infos == NULL) {
 		struct addrinfo hints;
 		struct addrinfo *servinfo, *endpoint;
 
-		if (device_id == NULL)
+		if (key == NULL)
 			return NULL;
 
-		/* Try if device_id is a hostname/IP address */
+		/* Try if key is a hostname/IP address */
 
 		memset(&hints, 0, sizeof (hints));
 		hints.ai_family = AF_INET;
 		hints.ai_socktype = SOCK_DGRAM;
 
-		if (getaddrinfo(device_id, "3956", &hints, &servinfo) != 0) {
+		if (getaddrinfo(key, "3956", &hints, &servinfo) != 0) {
 			return NULL;
 		}
 
@@ -728,7 +741,7 @@ _open_device (ArvInterface *interface, GHashTable *devices, const char *device_i
 
 		if (device == NULL)
 			g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
-				     "Can't connect to device at address '%s'", device_id);
+				     "Can't connect to device at address '%s'", key);
 
 		return device;
 	}
@@ -741,7 +754,7 @@ _open_device (ArvInterface *interface, GHashTable *devices, const char *device_i
 }
 
 static ArvDevice *
-arv_gv_interface_open_device (ArvInterface *interface, const char *device_id, GError **error)
+arv_gv_interface_open_device (ArvInterface *interface, const char *key, GError **error)
 {
 	ArvDevice *device;
 	ArvGvInterfaceDeviceInfos *device_infos;
@@ -749,7 +762,7 @@ arv_gv_interface_open_device (ArvInterface *interface, const char *device_id, GE
 	GError *local_error = NULL;
         int flags;
 
-	device = _open_device (interface, ARV_GV_INTERFACE (interface)->priv->devices, device_id, &local_error);
+	device = _open_device (interface, ARV_GV_INTERFACE (interface)->priv->devices, key, &local_error);
 	if (ARV_IS_DEVICE (device) || local_error != NULL) {
 		if (local_error != NULL)
 			g_propagate_error (error, local_error);
@@ -758,7 +771,7 @@ arv_gv_interface_open_device (ArvInterface *interface, const char *device_id, GE
 
         flags = arv_interface_get_flags (interface);
         discovery_interface = arv_gv_interface_dup_discovery_interface_name();
-	device_infos = _discover (NULL, device_id, flags & ARV_GVCP_DISCOVERY_PACKET_FLAGS_ALLOW_BROADCAST_ACK,
+	device_infos = _discover (NULL, key, flags & ARV_GVCP_DISCOVERY_PACKET_FLAGS_ALLOW_BROADCAST_ACK,
                                   discovery_interface);
         g_free (discovery_interface);
 
