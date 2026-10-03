@@ -1,4 +1,4 @@
-name: Aravis-MSVC
+name: Aravis-MSVC-Conan2
 
 on:
   push:
@@ -9,20 +9,22 @@ on:
 
 jobs:
   msvc:
-    # Conan 1.x only knows Visual Studio up to 2022 (version 17)
-    runs-on: windows-2022
+    runs-on: windows-2025
     strategy:
       fail-fast: false
       matrix:
         include:
-        - version: 17
+        # msvc 194 is the v143 toolset, which the windows-2025 image installs
+        # as a Visual Studio 2026 component. ConanCenter publishes binaries for
+        # it, whereas with 195 every dependency is built from source.
+        - version: 194
           arch: x86_64
           build_type_conan: Release
           build_type_meson: release
     steps:
     - name: pip
       run: |
-        pip install "conan<2.0.0"
+        pip install "conan>=2.0.0,<3.0.0"
     - name: disable-perl
       run: |
         rm -r C:\Strawberry\perl
@@ -30,42 +32,47 @@ jobs:
       uses: actions/checkout@v3
     - name: conan
       env:
-        # CMake 4 rejects projects declaring a minimum version below 3.5, which
-        # includes some Conan 1.x recipes built from source (e.g. bzip2/1.0.8).
-        CMAKE_POLICY_VERSION_MINIMUM: "3.5"
         INPUT_CONANFILE: |
           [requires]
-          libiconv/1.17
-          #gobject-introspection/1.69.0
-          gstreamer/1.24.7
-          #gst-plugins-base/1.22.3      Disable gstreamer for now, latest gst-plugins-base is 1.19.2
-          #gtk/4.4.0
-          libxml2/2.10.3
-          zlib/1.2.13
-          libusb/1.0.26
+          glib/2.86.5
+          libxml2/2.15.4
+          zlib/1.3.2
+          libusb/1.0.29
 
-          [build_requires]
-          meson/0.59.2
-          pkgconf/1.9.3
+          [tool_requires]
+          meson/1.10.2
+          pkgconf/2.5.1
 
           [generators]
-          pkg_config
-          virtualenv
-          virtualbuildenv
-          virtualrunenv
+          PkgConfigDeps
+          VirtualBuildEnv
+          VirtualRunEnv
+          VCVars
 
           [options]
-          glib:shared=True
-          gstreamer:shared=True
-          gst-plugins-base:shared=True
+          glib/*:shared=True
+        INPUT_PROFILE: |
+          [settings]
+          os=Windows
+          arch=${{ matrix.arch }}
+          build_type=${{ matrix.build_type_conan }}
+          compiler=msvc
+          compiler.version=${{ matrix.version }}
+          compiler.runtime=dynamic
+          compiler.runtime_type=${{ matrix.build_type_conan }}
+          compiler.cppstd=14
+
+          [conf]
+          tools.microsoft.msbuild:vs_version=18
+          &:tools.env.virtualenv:powershell=pwsh
       run: |
         $Env:INPUT_CONANFILE | Out-File -FilePath ${{ github.workspace }}\conanfile.txt -Encoding utf8
-        conan install -s os="Windows" -s compiler="Visual Studio" -s compiler.version=${{ matrix.version }} -s arch=${{ matrix.arch }} -s build_type=${{ matrix.build_type_conan }} -b pcre -b missing -b cascade -if build .
+        $Env:INPUT_PROFILE | Out-File -FilePath ${{ github.workspace }}\conanprofile.txt -Encoding utf8
+        conan install -pr:a conanprofile.txt --build=missing -of build .
     - name: meson
       run: |
-        .\build\activate.ps1
-        .\build\activate_build.ps1
-        .\build\activate_run.ps1
+        .\build\conanbuild.ps1
+        .\build\conanrun.ps1
         echo "::group::configure"
         meson setup --prefix ${{ github.workspace }}\install --buildtype ${{ matrix.build_type_meson }} --pkg-config-path ${{ github.workspace }}\build -Ddocumentation=disabled -Dgst-plugin=disabled -Dintrospection=disabled -Dusb=enabled -Dviewer=disabled -Dgv-n-buffers=1 -Dgentl-producer=true . .\build
         echo "::endgroup::"
@@ -77,9 +84,8 @@ jobs:
         echo "::endgroup::"
     - name: test
       run: |
-        .\build\activate.ps1
-        .\build\activate_build.ps1
-        .\build\activate_run.ps1
+        .\build\conanbuild.ps1
+        .\build\conanrun.ps1
         meson test -C .\build
     - name: logs
       uses: actions/upload-artifact@v4
