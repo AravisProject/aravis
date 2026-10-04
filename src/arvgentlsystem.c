@@ -363,6 +363,13 @@ arv_gentl_system_open_device_handle(ArvGenTLSystem *system, const char *interfac
 	/* Get interface handle */
 	interface_handle = arv_gentl_system_open_interface_handle(system, interface_id);
 
+	arv_info_interface("IFUpdateDeviceList");
+	error = gentl->IFUpdateDeviceList(interface_handle, NULL, 100);
+	if (error != GC_ERR_SUCCESS) {
+		arv_warning_interface("IFUpdateDeviceList: error %d", error);
+		return NULL;
+	}
+
 	arv_info_interface("IFOpenDevice: '%s'", device_id);
 	error = gentl->IFOpenDevice(interface_handle, device_id, DEVICE_ACCESS_CONTROL, &device_handle);
 	if (error != GC_ERR_SUCCESS) {
