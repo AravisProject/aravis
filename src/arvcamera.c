@@ -52,6 +52,7 @@
 #include <arvenums.h>
 #include <arvstr.h>
 
+static void arv_camera_set_string_if_different (ArvCamera *camera, const char *feature, const char *value, GError **error);
 static void arv_camera_get_integer_bounds_as_gint (ArvCamera *camera, const char *feature, gint *min, gint *max, GError **error);
 static void arv_camera_get_integer_bounds_as_guint (ArvCamera *camera, const char *feature, guint *min, guint *max, GError **error);
 static void arv_camera_get_integer_bounds_as_double (ArvCamera *camera, const char *feature, double *min, double *max, GError **error);
@@ -1412,25 +1413,51 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source, GError **error)
         if (local_error == NULL) {
                 has_trigger_selector = arv_camera_is_feature_available(camera, "TriggerSelector", &local_error);
 
-                if (has_trigger_selector == TRUE) {
+                if (has_trigger_selector == TRUE && local_error == NULL) {
                         const char **triggers = NULL;
+                        const char *target_selector = NULL;
                         guint n_triggers = 0;
                         unsigned int i;
 
                         triggers = arv_camera_dup_available_enumerations_as_strings (camera, "TriggerSelector",
                                                                                      &n_triggers, &local_error);
 
-                        for (i = 0; i < n_triggers && local_error == NULL; i++) {
-                                arv_camera_set_string (camera, "TriggerSelector", triggers[i], &local_error);
-                                if (local_error == NULL) {
+                        if (local_error == NULL) {
+                                for (i = 0; i < n_triggers; i++) {
                                         if (g_strcmp0 (triggers[i], "FrameStart") == 0)
                                                 has_frame_start = TRUE;
                                         else if (g_strcmp0 (triggers[i], "FrameBurstStart") == 0)
                                                 has_frame_burst_start = TRUE;
                                         else if (g_strcmp0 (triggers[i], "AcquisitionStart") == 0)
                                                 has_acquisition_start = TRUE;
-                                        arv_camera_set_string (camera, "TriggerMode", "Off", &local_error);
                                 }
+
+                                if (has_frame_start) {
+                                        target_selector = "FrameStart";
+                                } else if (has_frame_burst_start) {
+                                        target_selector = "FrameBurstStart";
+                                } else if (has_acquisition_start) {
+                                        target_selector = "AcquisitionStart";
+                                } else {
+                                        local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_FEATURE_NOT_FOUND,
+                                                                   "<FrameStart> or <AcquisisitonStart> feature missing "
+                                                                   "for trigger setting");
+                                }
+
+                                for (i = 0; i < n_triggers && local_error == NULL; i++) {
+                                        if (g_strcmp0 (triggers[i], target_selector) == 0)
+                                                continue;
+
+                                        arv_camera_set_string_if_different (camera, "TriggerSelector", triggers[i],
+                                                                            &local_error);
+                                        if (local_error == NULL)
+                                                arv_camera_set_string_if_different (camera, "TriggerMode", "Off",
+                                                                                    &local_error);
+                                }
+
+                                if (local_error == NULL)
+                                        arv_camera_set_string_if_different (camera, "TriggerSelector", target_selector,
+                                                                            &local_error);
                         }
 
                         g_free (triggers);
@@ -1438,29 +1465,15 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source, GError **error)
         }
 
         if (local_error == NULL) {
-                if (has_trigger_selector == TRUE) {
-                        if (has_frame_start) {
-                                arv_camera_set_string (camera, "TriggerSelector", "FrameStart", &local_error);
-                        } else if (has_frame_burst_start) {
-                                arv_camera_set_string (camera, "TriggerSelector", "FrameBurstStart", &local_error);
-                        } else if (has_acquisition_start) {
-                                arv_camera_set_string (camera, "TriggerSelector", "AcquisitionStart", &local_error);
-                        } else {
-                                local_error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_FEATURE_NOT_FOUND,
-                                                           "<FrameStart> or <AcquisisitonStart> feature missing "
-                                                           "for trigger setting");
-                        }
-                }
-                if (local_error == NULL)
-                        arv_camera_set_string (camera, "TriggerMode", "On", &local_error);
+                arv_camera_set_string_if_different (camera, "TriggerMode", "On", &local_error);
 
                 if (local_error == NULL &&
                     arv_camera_is_enumeration_entry_available (camera, "TriggerActivation",
                                                                "RisingEdge", NULL))
-                        arv_camera_set_string (camera, "TriggerActivation", "RisingEdge", &local_error);
+                        arv_camera_set_string_if_different (camera, "TriggerActivation", "RisingEdge", &local_error);
 
                 if (local_error == NULL)
-                        arv_camera_set_string (camera, "TriggerSource", source, &local_error);
+                        arv_camera_set_string_if_different (camera, "TriggerSource", source, &local_error);
         }
 
         if (local_error != NULL)
@@ -1567,14 +1580,14 @@ arv_camera_clear_triggers (ArvCamera* camera, GError **error)
                 unsigned i;
                 triggers = arv_camera_dup_available_triggers (camera, &n_triggers, &local_error);
                 for (i = 0; i < n_triggers && local_error == NULL; i++) {
-                        arv_camera_set_string (camera, "TriggerSelector", triggers[i], &local_error);
+                        arv_camera_set_string_if_different (camera, "TriggerSelector", triggers[i], &local_error);
                         if (local_error == NULL)
-                                arv_camera_set_string (camera, "TriggerMode", "Off", &local_error);
+                                arv_camera_set_string_if_different (camera, "TriggerMode", "Off", &local_error);
                 }
 
                 g_free (triggers);
         } else
-                arv_camera_set_string (camera, "TriggerMode", "Off", &local_error);
+                arv_camera_set_string_if_different (camera, "TriggerMode", "Off", &local_error);
 
 	if (local_error != NULL)
 		g_propagate_error (error, local_error);
@@ -2737,6 +2750,22 @@ arv_camera_get_string (ArvCamera *camera, const char *feature, GError **error)
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 
 	return arv_device_get_string_feature_value (priv->device, feature, error);
+}
+
+static void
+arv_camera_set_string_if_different (ArvCamera *camera, const char *feature, const char *value, GError **error)
+{
+	GError *local_error = NULL;
+	const char *current;
+
+	current = arv_camera_get_string (camera, feature, &local_error);
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return;
+	}
+
+	if (g_strcmp0 (current, value) != 0)
+		arv_camera_set_string (camera, feature, value, error);
 }
 
 /**
