@@ -643,6 +643,9 @@ static void
 camera_trigger_selector_test (void)
 {
 	ArvCamera *camera;
+	ArvDevice *device;
+	ArvGc *genicam;
+	ArvGcNode *invalidator;
 	GError *error = NULL;
 	const char *string;
 
@@ -674,6 +677,70 @@ camera_trigger_selector_test (void)
 	string = arv_camera_get_string(camera, "TriggerMode", &error);
 	g_assert (error == NULL);
 	g_assert_cmpstr (string, ==, "On");
+
+	/* Enable TriggerMode on AcquisitionStart and configure via arv_camera_set_trigger */
+	arv_camera_set_string (camera, "TriggerSelector", "AcquisitionStart", &error);
+	g_assert (error == NULL);
+	arv_camera_set_string (camera, "TriggerMode", "On", &error);
+	g_assert (error == NULL);
+
+	device = arv_camera_get_device (camera);
+	genicam = arv_device_get_genicam (device);
+	invalidator = arv_gc_invalidator_node_new ();
+	arv_dom_node_append_child (ARV_DOM_NODE (invalidator),
+				   ARV_DOM_NODE (arv_dom_document_create_text_node (ARV_DOM_DOCUMENT (genicam),
+										    "TriggerMode")));
+	arv_dom_node_append_child (ARV_DOM_NODE (genicam), ARV_DOM_NODE (invalidator));
+	arv_gc_invalidator_has_changed (ARV_GC_INVALIDATOR_NODE (invalidator));
+
+	arv_camera_set_trigger (camera, "Software", &error);
+	g_assert (error == NULL);
+	g_assert (arv_gc_invalidator_has_changed (ARV_GC_INVALIDATOR_NODE (invalidator)));
+	string = arv_camera_get_string (camera, "TriggerSelector", &error);
+	g_assert (error == NULL);
+	g_assert_cmpstr (string, ==, "FrameStart");
+	string = arv_camera_get_string (camera, "TriggerMode", &error);
+	g_assert (error == NULL);
+	g_assert_cmpstr (string, ==, "On");
+	string = arv_camera_get_string (camera, "TriggerSource", &error);
+	g_assert (error == NULL);
+	g_assert_cmpstr (string, ==, "Software");
+	string = arv_camera_get_string (camera, "TriggerActivation", &error);
+	g_assert (error == NULL);
+	g_assert_cmpstr (string, ==, "RisingEdge");
+
+	/* Verify AcquisitionStart was disabled while FrameStart remains On */
+	arv_camera_set_string (camera, "TriggerSelector", "AcquisitionStart", &error);
+	g_assert (error == NULL);
+	string = arv_camera_get_string (camera, "TriggerMode", &error);
+	g_assert (error == NULL);
+	g_assert_cmpstr (string, ==, "Off");
+
+	/* Calling arv_camera_set_trigger again when FrameStart is already On and AcquisitionStart is Off
+	 * should not write TriggerMode again and should restore TriggerSelector to FrameStart */
+	arv_camera_set_trigger (camera, "Software", &error);
+	g_assert (error == NULL);
+	g_assert (!arv_gc_invalidator_has_changed (ARV_GC_INVALIDATOR_NODE (invalidator)));
+	string = arv_camera_get_string (camera, "TriggerSelector", &error);
+	g_assert (error == NULL);
+	g_assert_cmpstr (string, ==, "FrameStart");
+	string = arv_camera_get_string (camera, "TriggerMode", &error);
+	g_assert (error == NULL);
+	g_assert_cmpstr (string, ==, "On");
+
+	/* Clearing triggers should disable FrameStart, and a second call should not rewrite TriggerMode */
+	arv_camera_clear_triggers (camera, &error);
+	g_assert (error == NULL);
+	g_assert (arv_gc_invalidator_has_changed (ARV_GC_INVALIDATOR_NODE (invalidator)));
+	arv_camera_set_string (camera, "TriggerSelector", "FrameStart", &error);
+	g_assert (error == NULL);
+	string = arv_camera_get_string (camera, "TriggerMode", &error);
+	g_assert (error == NULL);
+	g_assert_cmpstr (string, ==, "Off");
+
+	arv_camera_clear_triggers (camera, &error);
+	g_assert (error == NULL);
+	g_assert (!arv_gc_invalidator_has_changed (ARV_GC_INVALIDATOR_NODE (invalidator)));
 
 	g_object_unref (camera);
 }
