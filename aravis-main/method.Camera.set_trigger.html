@@ -476,15 +476,15 @@ SPDX-License-Identifier: LGPL-2.1-or-later
         Description
         <a class="anchor" href="#description"></a>
         
-        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvcamera.c#L1376">[src]</a>
+        <a class="srclink" title="go to source location" href="https://github.com/AravisProject/aravis/blob/main/src/arvcamera.c#L1377">[src]</a>
         
       </h4>
 
       <div class="docblock">
         <p>Configures the camera in trigger mode. Typical values for source are &#8220;Line1&#8221; or &#8220;Line2&#8221;. See the camera documentation
 for the allowed values.  Source can also be &#8220;Software&#8221;. In this case, an acquisition is triggered by a call to&nbsp;arv_camera_software_trigger().</p>
-<p>The trigger set is &#8220;FrameStart&#8221;. &#8220;AcquisitionStart&#8221; is used as a fallback if &#8220;FrameStart&#8221; is not present.
-All other triggers are disabled. &#8220;TriggerActivation&#8221; is set to rising&nbsp;edge.</p>
+<p>The trigger set is &#8220;FrameStart&#8221;. &#8220;FrameBurstStart&#8221; and &#8220;AcquisitionStart&#8221; are used as fallbacks if &#8220;FrameStart&#8221; is
+not present. All other triggers are disabled. &#8220;TriggerActivation&#8221; is set to rising&nbsp;edge.</p>
 <p>For an advanced trigger configuration, use the&nbsp;underlying <code>ArvDevice</code> object returned by&nbsp;arv_camera_get_device().</p>
       </div>
 
