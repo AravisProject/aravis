@@ -1,3 +1,20 @@
+Development release 0.9.2
+=========================
+
+  * viewer: exposure time and increment support (Marco)
+  * viewer: more pixel format support (Gaurav)
+  * viewer: require gtksink (Emmanuel)
+  * gstplugin: memory leak fix (Marko)
+  * usb3vision: fix handling of control endpoints (Takumi)
+  * gigevision: more cameras to the legacy endianness lists (Benjamin, Jagan,
+    Dima, sorki)
+  * gigevision: undefined behaviour fixes (Marco)
+  * gigevision: replace magic 0 with explicit constant (wey)
+  * genicam: local error propagation fixes (vladislav)
+  * msvc: avoid symbol export in static builds (Leonardo)
+  * python: read write memory binding fixes (Emmanuel)
+  * readme: link fix (Jamal)
+
 Development release 0.9.1
 =========================
 

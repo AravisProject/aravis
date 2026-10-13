@@ -188,6 +188,7 @@ library_private_headers = [
 	'arvgvinterfaceprivate.h',
 	'arvgvspprivate.h',
 	'arvgvstreamprivate.h',
+	'arvgentlprivate.h',
 	'arvgentlsystemprivate.h',
 	'arvgentlinterfaceprivate.h',
 	'arvgentldeviceprivate.h',

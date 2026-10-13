@@ -16,6 +16,7 @@ typedef struct {
 
 static ArvV4l2GenicamPixelFormat pixel_format_map[] = {
         {V4L2_PIX_FMT_YUYV,             ARV_PIXEL_FORMAT_YUV_422_YUYV_PACKED},
+        {V4L2_PIX_FMT_GREY,             ARV_PIXEL_FORMAT_MONO_8},
 /* Disable these formats for now, makes gstreamer crash:
         {V4L2_PIX_FMT_RGB24,            ARV_PIXEL_FORMAT_RGB_8_PACKED},
         {V4L2_PIX_FMT_BGR24,            ARV_PIXEL_FORMAT_BGR_8_PACKED},

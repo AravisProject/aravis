@@ -60,6 +60,16 @@ sudo dnf install libxml2-devel glib2-devel cmake libusb1-devel gobject-introspec
                  g++ meson gettext
 ```
 
+
+## NixOS development shell
+
+Use the following command to enter a development shell with
+all required dependencies:
+
+```sh
+nix-shell -p aravis.buildInputs aravis.nativeBuildInputs
+```
+
 ## Building on macOS
 
 Using the GNU build system on macOS is not directly supported, but can be
@@ -94,8 +104,9 @@ must be installed prior to building via `pacman -S ...`. The build process
 itself is the same as on other platforms (meson/ninja).
 
 Alternatively, you can build Aravis using Microsoft Visual C++ (MSVC) and Conan
-package manager. Have a look at the [msvc CI configuration
-file](https://github.com/AravisProject/aravis/blob/main/.github/workflows/aravis-msvc.yml).
+package manager. Have a look at the msvc CI configuration files for
+[Conan 2](https://github.com/AravisProject/aravis/blob/main/.github/workflows/aravis-msvc-conan2.yml)
+or [Conan 1](https://github.com/AravisProject/aravis/blob/main/.github/workflows/aravis-msvc.yml).
 
 ### Cross-compilation for Windows
 
