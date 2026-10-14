@@ -502,6 +502,113 @@ _discover (GHashTable *devices, const char *device_id, gboolean allow_broadcast_
 	} while (1);
 }
 
+char *
+arv_gv_interface_force_ip (const char *selection, GInetAddress *ip, GInetAddressMask *mask,
+			   GInetAddress *gateway, char **interface_address, GError **error)
+{
+	ArvGvInterface *gv_interface = ARV_GV_INTERFACE (arv_gv_interface_get_instance ());
+	ArvGvInterfaceDeviceInfos *infos, *match = NULL, *verified;
+	GHashTableIter iter;
+	GRegex *regex = NULL;
+	GSocket *socket = NULL;
+	GSocketAddress *local = NULL, *broadcast = NULL;
+	GInetAddress *broadcast_ip = NULL;
+	ArvGvcpPacket *packet = NULL;
+	const guint8 *ip_bytes;
+	guint8 mask_bytes[4];
+	guint matches = 0;
+	gint64 verification_deadline;
+	size_t packet_size;
+	char *discovery_interface, *id = NULL, *mac = NULL;
+	gpointer key, value;
+
+	discovery_interface = arv_gv_interface_dup_discovery_interface_name ();
+	_discover (gv_interface->priv->devices, NULL, FALSE, discovery_interface);
+	if (selection != NULL && strpbrk (selection, "*?|") != NULL)
+		regex = arv_regex_new_from_glob_pattern (selection, TRUE);
+
+	g_hash_table_iter_init (&iter, gv_interface->priv->devices);
+	while (g_hash_table_iter_next (&iter, &key, &value)) {
+		infos = value;
+		if (g_strcmp0 (key, infos->id) != 0)
+			continue; /* Skip alias entries for the same physical device. */
+		if (selection == NULL ||
+		    (regex != NULL && g_regex_match (regex, infos->id, 0, NULL)) ||
+		    (regex == NULL && (g_strcmp0 (selection, infos->id) == 0 ||
+				       g_strcmp0 (selection, infos->user_id) == 0 ||
+				       g_strcmp0 (selection, infos->vendor_serial) == 0 ||
+				       g_strcmp0 (selection, infos->vendor_alias_serial) == 0 ||
+				       g_strcmp0 (selection, infos->mac) == 0))) {
+			match = infos;
+			matches++;
+		}
+	}
+	g_clear_pointer (&regex, g_regex_unref);
+	if (matches != 1) {
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
+			     "ForceIP selection matched %u devices; exactly one is required", matches);
+		goto out;
+	}
+
+	ip_bytes = g_inet_address_to_bytes (ip);
+	if (g_inet_address_mask_get_length (mask) == 32)
+		memcpy (mask_bytes, g_inet_address_to_bytes (g_inet_address_mask_get_address (mask)), 4);
+	else {
+		guint32 value = GUINT32_TO_BE (~(~(guint32) 0 >> g_inet_address_mask_get_length (mask)));
+		memcpy (mask_bytes, &value, 4);
+	}
+	packet = arv_gvcp_packet_new_force_ip_cmd
+		(match->discovery_data + ARV_GVBS_DEVICE_MAC_ADDRESS_HIGH_OFFSET + 2, ip_bytes,
+		 mask_bytes, g_inet_address_to_bytes (gateway), 1, &packet_size);
+	socket = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, error);
+	if (socket == NULL)
+		goto out;
+	local = arv_socket_bind_with_range (socket, match->interface_address, 0, FALSE, error);
+	if (local == NULL || !arv_gv_discover_socket_set_broadcast (&(ArvGvDiscoverSocket) { .socket = socket }, TRUE)) {
+		if (error != NULL && *error == NULL)
+			g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_TRANSFER_ERROR,
+				     "Failed to enable ForceIP broadcast");
+		goto out;
+	}
+	broadcast_ip = g_inet_address_new_from_string ("255.255.255.255");
+	broadcast = g_inet_socket_address_new (broadcast_ip, ARV_GVCP_PORT);
+	if (g_socket_send_to (socket, broadcast, (const char *) packet, packet_size, NULL, error) < 0)
+		goto out;
+
+	id = g_strdup (match->id);
+	mac = g_strdup (match->mac);
+	if (interface_address != NULL)
+		*interface_address = g_inet_address_to_string (match->interface_address);
+	verification_deadline = g_get_monotonic_time () + 15 * G_TIME_SPAN_SECOND;
+	do {
+		verified = _discover (NULL, mac, FALSE, discovery_interface);
+		if (verified != NULL && memcmp (verified->discovery_data + ARV_GVBS_CURRENT_IP_ADDRESS_OFFSET, ip_bytes, 4) == 0)
+			break;
+		if (verified != NULL)
+			arv_gv_interface_device_infos_unref (verified);
+		verified = NULL;
+	} while (g_get_monotonic_time () < verification_deadline);
+	if (verified == NULL) {
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_TIMEOUT,
+			     "ForceIP verification failed for %s", mac);
+		g_clear_pointer (&id, g_free);
+		if (interface_address != NULL)
+			g_clear_pointer (interface_address, g_free);
+	}
+	if (verified != NULL)
+		arv_gv_interface_device_infos_unref (verified);
+
+out:
+	g_free (mac);
+	g_free (discovery_interface);
+	g_clear_object (&broadcast);
+	g_clear_object (&broadcast_ip);
+	g_clear_object (&local);
+	g_clear_object (&socket);
+	arv_gvcp_packet_free (packet);
+	return id;
+}
+
 static void
 arv_gv_interface_discover (ArvGvInterface *gv_interface)
 {
