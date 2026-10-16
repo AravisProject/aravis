@@ -37,6 +37,9 @@
 #include <string.h>
 
 #define ARV_UV_STREAM_POP_INPUT_BUFFER_TIMEOUT_MS       10
+#define ARV_UV_STREAM_URB_TIMEOUT_MS                    1000
+#define ARV_UV_STREAM_RECOVERY_RESET_THRESHOLD          2
+#define ARV_UV_STREAM_RECOVERY_WINDOW_US                (10 * G_USEC_PER_SEC)
 #define ARV_UV_STREAM_TRANSFER_WAIT_TIMEOUT_MS          10
 
 enum {
@@ -81,8 +84,12 @@ typedef struct {
         size_t transfer1_size;
 	size_t trailer_size;
         guint64 maximum_transfer_size;
+        guint64 sirm_address;
+
+	gint expect_frames;
 
 	gboolean cancel;
+	gint need_recovery;
 
 	/* Notification for completed transfers and cancellation */
 	GMutex stream_mtx;
@@ -136,6 +143,9 @@ typedef struct {
 	gint *total_submitted_bytes;
 
         gboolean is_aborting;
+        gboolean leader_seen;
+
+	ArvUvStreamThreadData *thread_data;
 
 	ArvStreamStatistics *statistics;
 
@@ -169,6 +179,35 @@ arv_uv_stream_buffer_context_notify_transfer_completed (ArvUvStreamBufferContext
 	g_mutex_unlock( ctx->transfer_completed_mtx );
 }
 
+static void
+_flag_recovery (ArvUvStreamBufferContext *ctx, enum libusb_transfer_status status)
+{
+	switch (status) {
+		case LIBUSB_TRANSFER_TIMED_OUT:
+		case LIBUSB_TRANSFER_ERROR:
+		case LIBUSB_TRANSFER_STALL:
+		case LIBUSB_TRANSFER_OVERFLOW:
+			if (ctx->thread_data != NULL)
+				g_atomic_int_set (&ctx->thread_data->need_recovery, 1);
+			break;
+		default:
+			break;
+	}
+}
+
+static gboolean
+_is_idle_timeout (ArvUvStreamBufferContext *ctx, struct libusb_transfer *transfer)
+{
+	if (ctx->thread_data != NULL &&
+	    g_atomic_int_get (&ctx->thread_data->expect_frames))
+		return FALSE;
+
+	return transfer->status == LIBUSB_TRANSFER_TIMED_OUT &&
+	       transfer->actual_length == 0 &&
+	       !ctx->leader_seen &&
+	       ctx->total_payload_transferred == 0;
+}
+
 static
 void LIBUSB_CALL arv_uv_stream_leader_cb (struct libusb_transfer *transfer)
 {
@@ -189,6 +228,7 @@ void LIBUSB_CALL arv_uv_stream_leader_cb (struct libusb_transfer *transfer)
                                         break;
                                 }
 
+                                ctx->leader_seen = TRUE;
                                 ctx->buffer->priv->system_timestamp_ns = g_get_real_time () * 1000LL;
                                 ctx->buffer->priv->payload_type = arv_uvsp_packet_get_buffer_payload_type
                                         (packet, &ctx->buffer->priv->has_chunks);
@@ -213,9 +253,14 @@ void LIBUSB_CALL arv_uv_stream_leader_cb (struct libusb_transfer *transfer)
                                 ctx->buffer->priv->timestamp_ns = arv_uvsp_packet_get_timestamp (packet);
                                 break;
                         default:
-                                arv_warning_stream_thread ("Leader transfer failed (%s)",
-                                                           libusb_error_name (transfer->status));
-                                ctx->buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
+                                if (_is_idle_timeout (ctx, transfer)) {
+                                        arv_debug_stream_thread ("Idle stream: no frame within URB timeout");
+                                } else {
+                                        arv_warning_stream_thread ("Leader transfer failed (%s)",
+                                                                   libusb_error_name (transfer->status));
+                                        _flag_recovery (ctx, transfer->status);
+                                        ctx->buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
+                                }
                                 break;
                         }
                 }
@@ -296,9 +341,10 @@ arv_uv_stream_payload_cb (struct libusb_transfer *transfer)
                                 if (ctx->buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_GENDC_CONTAINER){
                                         _gendc_payload(ctx);
                                 }
-                        } else {
+                        } else if (!_is_idle_timeout (ctx, transfer)) {
                                 arv_warning_stream_thread ("Payload transfer failed (%s)",
                                                            libusb_error_name (transfer->status));
+                                _flag_recovery (ctx, transfer->status);
                                 ctx->buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
                         }
                 }
@@ -342,14 +388,27 @@ void LIBUSB_CALL arv_uv_stream_trailer_cb (struct libusb_transfer *transfer)
 
                                         break;
                                 default:
-                                        arv_warning_stream_thread ("Trailer transfer failed (%s)",
-                                                                   libusb_error_name(transfer->status));
-                                        ctx->buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
+                                        if (_is_idle_timeout (ctx, transfer)) {
+                                                arv_debug_stream_thread ("Idle stream: trailer timeout");
+                                        } else {
+                                                arv_warning_stream_thread ("Trailer transfer failed (%s)",
+                                                                           libusb_error_name(transfer->status));
+                                                _flag_recovery (ctx, transfer->status);
+                                                ctx->buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
+                                        }
                                         break;
                         }
 
+                        if (ctx->buffer->priv->status == ARV_BUFFER_STATUS_FILLING &&
+                            !ctx->leader_seen && ctx->total_payload_transferred == 0) {
+                                arv_stream_push_buffer (ctx->stream, ctx->buffer);
+                                g_atomic_int_dec_and_test (ctx->n_buffer_in_use);
+                                ctx->buffer = NULL;
+                        } else
                         switch (ctx->buffer->priv->status) {
                                 case ARV_BUFFER_STATUS_FILLING:
+                                        if (ctx->thread_data != NULL)
+                                                g_atomic_int_set (&ctx->thread_data->expect_frames, 0);
                                         ctx->buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
                                         ctx->buffer->priv->received_size = ctx->total_payload_transferred;
                                         ctx->buffer->priv->parts[0].size = ctx->total_payload_transferred;
@@ -361,13 +420,15 @@ void LIBUSB_CALL arv_uv_stream_trailer_cb (struct libusb_transfer *transfer)
                         }
                 }
 
-                arv_stream_push_output_buffer (ctx->stream, ctx->buffer);
-                if (ctx->callback != NULL)
-                        ctx->callback (ctx->callback_data,
-                                       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
-                                       ctx->buffer);
-                g_atomic_int_dec_and_test(ctx->n_buffer_in_use);
-                ctx->buffer = NULL;
+                if (ctx->buffer != NULL) {
+                        arv_stream_push_output_buffer (ctx->stream, ctx->buffer);
+                        if (ctx->callback != NULL)
+                                ctx->callback (ctx->callback_data,
+                                               ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
+                                               ctx->buffer);
+                        g_atomic_int_dec_and_test(ctx->n_buffer_in_use);
+                        ctx->buffer = NULL;
+                }
         }
 
 	g_atomic_int_dec_and_test( &ctx->num_submitted );
@@ -392,6 +453,7 @@ arv_uv_stream_buffer_context_new (ArvBuffer *buffer, ArvUvStreamThreadData *thre
 	ctx->transfer_completed_mtx = &thread_data->stream_mtx;
 	ctx->transfer_completed_event = &thread_data->stream_event;
         ctx->n_buffer_in_use = &thread_data->n_buffer_in_use;
+        ctx->thread_data = thread_data;
         ctx->maximum_submit_total = thread_data->maximum_transfer_size * ARV_UV_STREAM_N_MAXIMUM_SUBMITS;
 
 	ctx->leader_buffer = g_malloc (thread_data->leader_size);
@@ -400,7 +462,7 @@ arv_uv_stream_buffer_context_new (ArvBuffer *buffer, ArvUvStreamThreadData *thre
 		ARV_UV_ENDPOINT_DATA, LIBUSB_ENDPOINT_IN,
 		ctx->leader_buffer, thread_data->leader_size,
 		arv_uv_stream_leader_cb, ctx,
-		0);
+		ARV_UV_STREAM_URB_TIMEOUT_MS);
 
 	ctx->num_payload_transfers = (buffer->priv->allocated_size - 1) / thread_data->payload_size + 1;
 	ctx->payload_transfers = g_malloc (ctx->num_payload_transfers * sizeof(struct libusb_transfer*));
@@ -414,7 +476,7 @@ arv_uv_stream_buffer_context_new (ArvBuffer *buffer, ArvUvStreamThreadData *thre
 			ARV_UV_ENDPOINT_DATA, LIBUSB_ENDPOINT_IN,
 			buffer->priv->data + offset, size,
 			arv_uv_stream_payload_cb, ctx,
-			0);
+			ARV_UV_STREAM_URB_TIMEOUT_MS);
 
 		offset += size;
 	}
@@ -425,7 +487,7 @@ arv_uv_stream_buffer_context_new (ArvBuffer *buffer, ArvUvStreamThreadData *thre
 		ARV_UV_ENDPOINT_DATA, LIBUSB_ENDPOINT_IN,
 		ctx->trailer_buffer, thread_data->trailer_size,
 		arv_uv_stream_trailer_cb, ctx,
-		0);
+		ARV_UV_STREAM_URB_TIMEOUT_MS);
 
 	ctx->num_submitted = 0;
 	ctx->total_submitted_bytes = total_submitted_bytes;
@@ -515,6 +577,7 @@ arv_uv_stream_buffer_context_submit (ArvUvStreamBufferContext* ctx, ArvBuffer *b
 
         ctx->buffer = buffer;
         ctx->total_payload_transferred = 0;
+        ctx->leader_seen = FALSE;
         buffer->priv->status = ARV_BUFFER_STATUS_FILLING;
 
         ctx->expected_size = thread_data->expected_size;
@@ -550,6 +613,46 @@ arv_uv_stream_buffer_context_cancel (gpointer key, gpointer value, gpointer user
 	}
 }
 
+static void
+arv_uv_stream_buffer_context_recover_reset (gpointer key, gpointer value, gpointer user_data)
+{
+	ArvUvStreamBufferContext *ctx = value;
+
+	(void) key; (void) user_data;
+
+	if (ctx->buffer != NULL) {
+		if (ctx->buffer->priv->status == ARV_BUFFER_STATUS_FILLING)
+			ctx->buffer->priv->status = ARV_BUFFER_STATUS_ABORTED;
+		ctx->statistics->n_failures += 1;
+		arv_stream_push_output_buffer (ctx->stream, ctx->buffer);
+		if (ctx->callback != NULL)
+			ctx->callback (ctx->callback_data, ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE, ctx->buffer);
+		g_atomic_int_dec_and_test (ctx->n_buffer_in_use);
+		ctx->buffer = NULL;
+	}
+	ctx->total_payload_transferred = 0;
+	ctx->is_aborting = FALSE;
+}
+
+static void
+_si_set_stream_enable (ArvUvStreamThreadData *thread_data, gboolean enable)
+{
+	guint32 si_control = enable ? ARV_SIRM_CONTROL_STREAM_ENABLE : 0;
+	GError *local_error = NULL;
+
+	if (thread_data->sirm_address == 0)
+		return;
+
+	arv_device_write_memory (ARV_DEVICE (thread_data->uv_device),
+				 thread_data->sirm_address + ARV_SIRM_CONTROL,
+				 sizeof (si_control), &si_control, &local_error);
+	if (local_error != NULL) {
+		arv_warning_stream_thread ("SI %s failed (%s)",
+					   enable ? "enable" : "disable", local_error->message);
+		g_clear_error (&local_error);
+	}
+}
+
 static void *
 arv_uv_stream_thread_async (void *data)
 {
@@ -557,6 +660,8 @@ arv_uv_stream_thread_async (void *data)
 	ArvBuffer *buffer = NULL;
 	GHashTable *ctx_lookup;
 	gint total_submitted_bytes = 0;
+	gint recovery_count = 0;
+	gint64 recovery_window_start = 0;
 
 	arv_info_stream_thread ("Start async USB3Vision stream thread");
 
@@ -577,6 +682,36 @@ arv_uv_stream_thread_async (void *data)
 	while (!g_atomic_int_get (&thread_data->cancel) &&
                arv_uv_device_is_connected (thread_data->uv_device)) {
 		ArvUvStreamBufferContext* ctx;
+
+                if (g_atomic_int_compare_and_exchange (&thread_data->need_recovery, 1, 0)) {
+                        gint64 now = g_get_monotonic_time ();
+
+                        if (now - recovery_window_start > ARV_UV_STREAM_RECOVERY_WINDOW_US) {
+                                recovery_window_start = now;
+                                recovery_count = 0;
+                        }
+                        recovery_count++;
+                        arv_warning_stream_thread ("Stream failure detected, recovering (%d in window)",
+                                                   recovery_count);
+                        _si_set_stream_enable (thread_data, FALSE);
+                        g_hash_table_foreach (ctx_lookup, arv_uv_stream_buffer_context_cancel, NULL);
+                        g_hash_table_foreach (ctx_lookup, arv_uv_stream_buffer_context_recover_reset, NULL);
+                        if (recovery_count > ARV_UV_STREAM_RECOVERY_RESET_THRESHOLD) {
+                                arv_warning_stream_thread ("No frames after device reset, standing down");
+                                g_atomic_int_set (&thread_data->expect_frames, 0);
+                                arv_uv_device_stream_recover (thread_data->uv_device);
+                                recovery_count = 0;
+                        } else if (recovery_count == ARV_UV_STREAM_RECOVERY_RESET_THRESHOLD) {
+                                arv_warning_stream_thread ("Repeated stream failures, resetting USB device");
+                                arv_uv_device_usb_reset (thread_data->uv_device);
+                                g_atomic_int_set (&thread_data->expect_frames, 1);
+                        } else {
+                                arv_uv_device_stream_recover (thread_data->uv_device);
+                                g_atomic_int_set (&thread_data->expect_frames, 1);
+                        }
+                        _si_set_stream_enable (thread_data, TRUE);
+                        g_atomic_int_set (&thread_data->need_recovery, 0);
+                }
 
                 buffer = arv_stream_timeout_pop_input_buffer (thread_data->stream,
                                                               ARV_UV_STREAM_POP_INPUT_BUFFER_TIMEOUT_MS * 1000);
@@ -657,6 +792,337 @@ _gendc_packet (ArvBuffer *buffer)
                         }
                 }
         }
+}
+
+#define ARV_UV_STREAM_ROLLING_N_URBS            12
+
+typedef struct {
+	ArvUvStreamThreadData *thread_data;
+	struct libusb_transfer *xfers[ARV_UV_STREAM_ROLLING_N_URBS];
+	guint8 *bufs[ARV_UV_STREAM_ROLLING_N_URBS];
+	size_t urb_size;
+	gint num_submitted;
+	gint stop;
+	gint need_recovery;
+	ArvBuffer *buffer;
+	size_t offset;
+	gboolean skipping;
+} ArvUvStreamRolling;
+
+static void
+_rolling_notify (ArvUvStreamRolling *r)
+{
+	g_mutex_lock (&r->thread_data->stream_mtx);
+	g_cond_broadcast (&r->thread_data->stream_event);
+	g_mutex_unlock (&r->thread_data->stream_mtx);
+}
+
+static void
+_rolling_finish_buffer (ArvUvStreamRolling *r)
+{
+	ArvUvStreamThreadData *td = r->thread_data;
+
+	arv_stream_push_output_buffer (td->stream, r->buffer);
+	if (td->callback != NULL)
+		td->callback (td->callback_data, ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE, r->buffer);
+	g_atomic_int_dec_and_test (&td->n_buffer_in_use);
+	r->buffer = NULL;
+	r->offset = 0;
+}
+
+static void
+_rolling_fail_buffer (ArvUvStreamRolling *r, ArvBufferStatus status)
+{
+	r->buffer->priv->status = status;
+	r->thread_data->statistics.n_failures += 1;
+	_rolling_finish_buffer (r);
+}
+
+/* SIRM leader/trailer sizes are maximums, use the packet's own size */
+static size_t
+_rolling_packet_size (const guint8 *p, size_t declared)
+{
+	guint16 size = GUINT16_FROM_LE (((const ArvUvspHeader *) p)->size);
+
+	return size >= sizeof (ArvUvspHeader) ? (size_t) size : declared;
+}
+
+static void
+_rolling_open_buffer (ArvUvStreamRolling *r, ArvUvspPacket *pkt)
+{
+	ArvUvStreamThreadData *td = r->thread_data;
+	ArvBuffer *b;
+
+	b = arv_stream_timeout_pop_input_buffer (td->stream, 0);
+	if (b == NULL) {
+		td->statistics.n_underruns += 1;
+		r->skipping = TRUE;
+		return;
+	}
+
+	g_atomic_int_inc (&td->n_buffer_in_use);
+	r->buffer = b;
+	r->offset = 0;
+	r->skipping = FALSE;
+	b->priv->status = ARV_BUFFER_STATUS_FILLING;
+	b->priv->received_size = 0;
+	b->priv->system_timestamp_ns = g_get_real_time () * 1000LL;
+	b->priv->payload_type = arv_uvsp_packet_get_buffer_payload_type (pkt, &b->priv->has_chunks);
+	b->priv->chunk_endianness = G_LITTLE_ENDIAN;
+	if (b->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
+	    b->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA ||
+	    b->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_GENDC_CONTAINER) {
+		arv_buffer_set_n_parts (b, 1);
+		b->priv->parts[0].data_offset = 0;
+		b->priv->parts[0].component_id = 0;
+		b->priv->parts[0].data_type = ARV_BUFFER_PART_DATA_TYPE_2D_IMAGE;
+		b->priv->parts[0].pixel_format = arv_uvsp_packet_get_pixel_format (pkt);
+		arv_uvsp_packet_get_region (pkt,
+					    &b->priv->parts[0].width,
+					    &b->priv->parts[0].height,
+					    &b->priv->parts[0].x_offset,
+					    &b->priv->parts[0].y_offset,
+					    &b->priv->parts[0].x_padding,
+					    &b->priv->parts[0].y_padding);
+	}
+	b->priv->frame_id = arv_uvsp_packet_get_frame_id (pkt);
+	b->priv->timestamp_ns = arv_uvsp_packet_get_timestamp (pkt);
+	if (td->callback != NULL)
+		td->callback (td->callback_data, ARV_STREAM_CALLBACK_TYPE_START_BUFFER, b);
+}
+
+static void LIBUSB_CALL
+_rolling_cb (struct libusb_transfer *t)
+{
+	ArvUvStreamRolling *r = t->user_data;
+	ArvUvStreamThreadData *td = r->thread_data;
+
+	switch (t->status) {
+		case LIBUSB_TRANSFER_COMPLETED: {
+			guint8 *p = t->buffer;
+			size_t remaining;
+			size_t leader_size = td->leader_size > 0 ? td->leader_size : 52;
+			size_t trailer_size = td->trailer_size > 0 ? td->trailer_size : 32;
+
+			if (t->actual_length <= 0)
+				break;
+			remaining = t->actual_length;
+			td->statistics.n_transferred_bytes += remaining;
+
+			/* Frames are parsed by byte count, the trailer may share a URB with payload */
+			while (remaining > 0) {
+				if (r->buffer == NULL) {
+					size_t lsize;
+
+					if (remaining < sizeof (ArvUvspHeader) ||
+					    arv_uvsp_packet_get_packet_type ((ArvUvspPacket *) p) !=
+					    ARV_UVSP_PACKET_TYPE_LEADER) {
+						td->statistics.n_ignored_bytes += remaining;
+						break;
+					}
+					lsize = _rolling_packet_size (p, leader_size);
+					if (lsize > remaining) {
+						td->statistics.n_ignored_bytes += remaining;
+						break;
+					}
+					_rolling_open_buffer (r, (ArvUvspPacket *) p);
+					p += lsize;
+					remaining -= lsize;
+					continue;
+				}
+
+				if (r->offset < td->expected_size) {
+					size_t take = MIN (td->expected_size - r->offset, remaining);
+
+					if (r->offset + take > r->buffer->priv->allocated_size) {
+						arv_warning_stream_thread ("Rolling: payload overflow");
+						_rolling_fail_buffer (r, ARV_BUFFER_STATUS_SIZE_MISMATCH);
+						r->skipping = TRUE;
+						break;
+					}
+					memcpy ((char *) r->buffer->priv->data + r->offset, p, take);
+					r->offset += take;
+					p += take;
+					remaining -= take;
+					continue;
+				}
+
+				if (remaining >= sizeof (ArvUvspHeader) &&
+				    arv_uvsp_packet_get_packet_type ((ArvUvspPacket *) p) ==
+				    ARV_UVSP_PACKET_TYPE_TRAILER) {
+					size_t consumed = MIN (_rolling_packet_size (p, trailer_size), remaining);
+
+					r->buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
+					r->buffer->priv->received_size = r->offset;
+					r->buffer->priv->parts[0].size = r->offset;
+					td->statistics.n_completed_buffers += 1;
+					g_atomic_int_set (&td->expect_frames, 0);
+					_rolling_finish_buffer (r);
+					p += consumed;
+					remaining -= consumed;
+					continue;
+				}
+
+				arv_warning_stream_thread ("Rolling: trailer expected, resynchronising");
+				_rolling_fail_buffer (r, ARV_BUFFER_STATUS_MISSING_PACKETS);
+			}
+			break;
+		}
+		case LIBUSB_TRANSFER_TIMED_OUT:
+			if (g_atomic_int_get (&td->expect_frames))
+				g_atomic_int_set (&r->need_recovery, 1);
+			break;
+		case LIBUSB_TRANSFER_CANCELLED:
+			break;
+		default:
+			arv_warning_stream_thread ("Rolling URB failed (%s)", libusb_error_name (t->status));
+			g_atomic_int_set (&r->need_recovery, 1);
+			break;
+	}
+
+	if (t->status != LIBUSB_TRANSFER_CANCELLED &&
+	    !g_atomic_int_get (&r->stop) &&
+	    !g_atomic_int_get (&r->need_recovery)) {
+		if (libusb_submit_transfer (t) == 0)
+			return;
+		arv_warning_stream_thread ("Rolling resubmit failed");
+		g_atomic_int_set (&r->need_recovery, 1);
+	}
+
+	g_atomic_int_add (&r->num_submitted, -1);
+	_rolling_notify (r);
+}
+
+static void
+_rolling_cancel_and_drain (ArvUvStreamRolling *r)
+{
+	int i;
+	gint64 end;
+
+	for (i = 0; i < ARV_UV_STREAM_ROLLING_N_URBS; i++)
+		libusb_cancel_transfer (r->xfers[i]);
+	end = g_get_monotonic_time () + 2 * G_TIME_SPAN_SECOND;
+	g_mutex_lock (&r->thread_data->stream_mtx);
+	while (g_atomic_int_get (&r->num_submitted) > 0 &&
+	       g_get_monotonic_time () < end)
+		g_cond_wait_until (&r->thread_data->stream_event, &r->thread_data->stream_mtx,
+				   g_get_monotonic_time () + 10 * G_TIME_SPAN_MILLISECOND);
+	g_mutex_unlock (&r->thread_data->stream_mtx);
+}
+
+static void
+_rolling_submit_all (ArvUvStreamRolling *r)
+{
+	int i;
+
+	for (i = 0; i < ARV_UV_STREAM_ROLLING_N_URBS; i++) {
+		if (libusb_submit_transfer (r->xfers[i]) == 0)
+			g_atomic_int_add (&r->num_submitted, 1);
+		else
+			arv_warning_stream_thread ("Rolling: initial submit %d failed", i);
+	}
+}
+
+static void *
+arv_uv_stream_thread_rolling (void *data)
+{
+	ArvUvStreamThreadData *thread_data = data;
+	ArvUvStreamRolling roll;
+	gint recovery_count = 0;
+	gint64 recovery_window_start = 0;
+	int i;
+
+	memset (&roll, 0, sizeof roll);
+	roll.thread_data = thread_data;
+	roll.urb_size = thread_data->payload_size > 0 ? thread_data->payload_size : 1024 * 1024;
+
+	arv_info_stream_thread ("Start rolling USB3Vision stream thread (%d x %zu byte URBs)",
+				ARV_UV_STREAM_ROLLING_N_URBS, roll.urb_size);
+
+	if (thread_data->callback != NULL)
+		thread_data->callback (thread_data->callback_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
+
+	for (i = 0; i < ARV_UV_STREAM_ROLLING_N_URBS; i++) {
+		roll.bufs[i] = g_malloc (roll.urb_size);
+		roll.xfers[i] = libusb_alloc_transfer (0);
+		arv_uv_device_fill_bulk_transfer (roll.xfers[i], thread_data->uv_device,
+						  ARV_UV_ENDPOINT_DATA, LIBUSB_ENDPOINT_IN,
+						  roll.bufs[i], roll.urb_size,
+						  _rolling_cb, &roll,
+						  ARV_UV_STREAM_URB_TIMEOUT_MS);
+	}
+
+	g_mutex_lock (&thread_data->thread_started_mutex);
+	thread_data->thread_started = TRUE;
+	g_cond_signal (&thread_data->thread_started_cond);
+	g_mutex_unlock (&thread_data->thread_started_mutex);
+
+	_rolling_submit_all (&roll);
+
+	while (!g_atomic_int_get (&thread_data->cancel) &&
+	       arv_uv_device_is_connected (thread_data->uv_device)) {
+
+		if (g_atomic_int_compare_and_exchange (&roll.need_recovery, 1, 0)) {
+			gint64 now = g_get_monotonic_time ();
+
+			if (now - recovery_window_start > ARV_UV_STREAM_RECOVERY_WINDOW_US) {
+				recovery_window_start = now;
+				recovery_count = 0;
+			}
+			recovery_count++;
+			arv_warning_stream_thread ("Rolling: stream failure, recovering (%d in window)",
+						   recovery_count);
+			g_atomic_int_set (&roll.stop, 1);
+			_si_set_stream_enable (thread_data, FALSE);
+			_rolling_cancel_and_drain (&roll);
+			if (roll.buffer != NULL)
+				_rolling_fail_buffer (&roll, ARV_BUFFER_STATUS_ABORTED);
+			roll.skipping = FALSE;
+			if (recovery_count > ARV_UV_STREAM_RECOVERY_RESET_THRESHOLD) {
+				arv_warning_stream_thread ("Rolling: no frames after reset, standing down");
+				g_atomic_int_set (&thread_data->expect_frames, 0);
+				arv_uv_device_stream_recover (thread_data->uv_device);
+				recovery_count = 0;
+			} else if (recovery_count == ARV_UV_STREAM_RECOVERY_RESET_THRESHOLD) {
+				arv_warning_stream_thread ("Rolling: repeated failures, resetting USB device");
+				arv_uv_device_usb_reset (thread_data->uv_device);
+				g_atomic_int_set (&thread_data->expect_frames, 1);
+			} else {
+				arv_uv_device_stream_recover (thread_data->uv_device);
+				g_atomic_int_set (&thread_data->expect_frames, 1);
+			}
+			_si_set_stream_enable (thread_data, TRUE);
+			g_atomic_int_set (&roll.need_recovery, 0);
+			g_atomic_int_set (&roll.stop, 0);
+			_rolling_submit_all (&roll);
+		}
+
+		g_mutex_lock (&thread_data->stream_mtx);
+		g_cond_wait_until (&thread_data->stream_event, &thread_data->stream_mtx,
+				   g_get_monotonic_time () + 100 * G_TIME_SPAN_MILLISECOND);
+		g_mutex_unlock (&thread_data->stream_mtx);
+	}
+
+	g_atomic_int_set (&roll.stop, 1);
+	_rolling_cancel_and_drain (&roll);
+
+	if (roll.buffer != NULL) {
+		roll.buffer->priv->status = ARV_BUFFER_STATUS_ABORTED;
+		thread_data->statistics.n_aborted += 1;
+		_rolling_finish_buffer (&roll);
+	}
+
+	for (i = 0; i < ARV_UV_STREAM_ROLLING_N_URBS; i++) {
+		libusb_free_transfer (roll.xfers[i]);
+		g_free (roll.bufs[i]);
+	}
+
+	if (thread_data->callback != NULL)
+		thread_data->callback (thread_data->callback_data, ARV_STREAM_CALLBACK_TYPE_EXIT, NULL);
+
+	arv_info_stream_thread ("Stop rolling USB3Vision stream thread");
+
+	return NULL;
 }
 
 static void *
@@ -994,6 +1460,7 @@ arv_uv_stream_start_acquisition (ArvStream *stream, GError **error)
         thread_data->transfer1_size = si_transfer1_size;
 	thread_data->trailer_size = si_trailer_size;
         thread_data->n_buffer_in_use = 0;
+        thread_data->sirm_address = priv->sirm_address;
 	thread_data->cancel = FALSE;
 
         arv_uv_device_reset_stream_endpoint (thread_data->uv_device);
@@ -1014,6 +1481,9 @@ arv_uv_stream_start_acquisition (ArvStream *stream, GError **error)
                         break;
                 case ARV_UV_USB_MODE_ASYNC:
                         priv->thread = g_thread_new ("arv_uv_stream", arv_uv_stream_thread_async, priv->thread_data);
+                        break;
+                case ARV_UV_USB_MODE_ASYNC_ROLLING:
+                        priv->thread = g_thread_new ("arv_uv_stream", arv_uv_stream_thread_rolling, priv->thread_data);
                         break;
                 default:
                         g_assert_not_reached ();

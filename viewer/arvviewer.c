@@ -32,7 +32,7 @@
 #include <memory.h>
 
 #define ARV_VIEWER_NOTIFICATION_TIMEOUT 10
-#define ARV_VIEWER_N_BUFFERS 10
+#define ARV_VIEWER_N_BUFFERS 20
 
 static gboolean has_bayer2rgb = FALSE;
 
@@ -431,6 +431,20 @@ arv_pixel_format_is_12p_pfnc (ArvPixelFormat pixel_format)
 	}
 }
 
+static gboolean
+arv_pixel_format_is_14p_pfnc (ArvPixelFormat pixel_format)
+{
+	switch (pixel_format) {
+		case ARV_PIXEL_FORMAT_BAYER_GR_14P:
+		case ARV_PIXEL_FORMAT_BAYER_RG_14P:
+		case ARV_PIXEL_FORMAT_BAYER_GB_14P:
+		case ARV_PIXEL_FORMAT_BAYER_BG_14P:
+			return TRUE;
+		default:
+			return FALSE;
+	}
+}
+
 /* --- 10-bit format checks --- */
 
 static gboolean
@@ -614,6 +628,26 @@ unpack_10p_pfnc_into (const guint8 * restrict src,
 	}
 }
 
+static void
+unpack_14p_pfnc_into (const guint8 * restrict src,
+                       guint16      * restrict dst,
+                       int n_pixels, int mono_shift)
+{
+	int n_quads = n_pixels / 4;
+	int i;
+
+	for (i = 0; i < n_quads; i++) {
+		guint8 b0 = src[0], b1 = src[1], b2 = src[2], b3 = src[3];
+		guint8 b4 = src[4], b5 = src[5], b6 = src[6];
+		src += 7;
+		dst[0] = (guint16)( (guint16) b0        | ((guint16)(b1 & 0x3F) << 8))                        << mono_shift;
+		dst[1] = (guint16)(((guint16)(b1 >> 6)) | ((guint16) b2 << 2) | ((guint16)(b3 & 0x0F) << 10)) << mono_shift;
+		dst[2] = (guint16)(((guint16)(b3 >> 4)) | ((guint16) b4 << 4) | ((guint16)(b5 & 0x03) << 12)) << mono_shift;
+		dst[3] = (guint16)(((guint16)(b5 >> 2)) | ((guint16) b6 << 6))                                << mono_shift;
+		dst += 4;
+	}
+}
+
 /* ============================================================================
  * Worker-thread context: everything arv_to_gst_buffer needs, heap-allocated
  * once per buffer by new_buffer_cb and freed by the thread pool function.
@@ -665,7 +699,8 @@ arv_to_gst_buffer (ArvBuffer *arv_buffer, guint part_id,
 	if (arv_pixel_format_is_12_packed_legacy (pixel_format) ||
 	    arv_pixel_format_is_12p_pfnc         (pixel_format) ||
 	    arv_pixel_format_is_10_packed_legacy (pixel_format) ||
-	    arv_pixel_format_is_10p_pfnc         (pixel_format)) {
+	    arv_pixel_format_is_10p_pfnc         (pixel_format) ||
+	    arv_pixel_format_is_14p_pfnc         (pixel_format)) {
 
 		g_mutex_lock (&viewer->unpack_mutex);
 		unpack_dst = arv_viewer_get_unpack_buf (viewer, out_size);
@@ -676,8 +711,10 @@ arv_to_gst_buffer (ArvBuffer *arv_buffer, guint part_id,
 			unpack_12p_pfnc_into         (raw, unpack_dst, n_pixels, mono_shift);
 		else if (arv_pixel_format_is_10_packed_legacy (pixel_format))
 			unpack_10_packed_legacy_into (raw, unpack_dst, n_pixels, mono_shift);
-		else
+		else if (arv_pixel_format_is_10p_pfnc (pixel_format))
 			unpack_10p_pfnc_into         (raw, unpack_dst, n_pixels, mono_shift);
+		else
+			unpack_14p_pfnc_into         (raw, unpack_dst, n_pixels, mono_shift);
 
 		did_unpack  = TRUE;
 		mono_shift  = 0; /* already applied inside the unpacker */
