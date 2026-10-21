@@ -13,7 +13,6 @@ main (int argc, char **argv)
 	ArvStream **streams = NULL;
 	GError *error = NULL;
 	unsigned n_stream_channels = 0;
-	unsigned payload;
 	unsigned i;
 	int status = EXIT_SUCCESS;
 
@@ -24,9 +23,6 @@ main (int argc, char **argv)
 		goto camera_error;
 
 	device = arv_camera_get_device (camera);
-	payload = arv_camera_get_payload (camera, &error);
-	if (error != NULL)
-		goto camera_error;
 
 	n_stream_channels = arv_device_get_integer_feature_value (device, "ArvUvStreamChannelCount", &error);
 	if (error != NULL)
@@ -37,8 +33,6 @@ main (int argc, char **argv)
 	streams = g_new0 (ArvStream *, n_stream_channels);
 
 	for (i = 0; i < n_stream_channels; i++) {
-		unsigned j;
-
 		arv_device_set_integer_feature_value (device, "ArvUvStreamChannelSelector", i, &error);
 		if (error != NULL)
 			goto camera_error;
@@ -47,8 +41,8 @@ main (int argc, char **argv)
 		if (error != NULL)
 			goto camera_error;
 
-		for (j = 0; j < N_BUFFERS; j++)
-			arv_stream_push_buffer (streams[i], arv_buffer_new (payload, NULL));
+		if (!arv_stream_create_buffers (streams[i], N_BUFFERS, NULL, NULL, &error))
+			goto camera_error;
 	}
 
 	arv_camera_start_acquisition (camera, &error);
@@ -66,7 +60,8 @@ main (int argc, char **argv)
 			printf ("Stream channel %u: image successfully acquired (%" G_GSIZE_FORMAT " bytes)\n",
 				i, size);
 		} else {
-			printf ("Stream channel %u: failed to acquire image\n", i);
+			printf ("Stream channel %u: failed to acquire image (status %d)\n", i,
+				ARV_IS_BUFFER (buffer) ? arv_buffer_get_status (buffer) : -1);
 			status = EXIT_FAILURE;
 		}
 		g_clear_object (&buffer);

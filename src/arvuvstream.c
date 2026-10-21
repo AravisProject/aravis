@@ -1070,6 +1070,20 @@ _buffer_data_destroy_func (gpointer data)
         g_free (buffer_data);
 }
 
+static size_t
+arv_uv_stream_get_payload_size (ArvStream *stream)
+{
+	ArvUvStreamPrivate *priv = arv_uv_stream_get_instance_private (ARV_UV_STREAM (stream));
+	guint64 si_req_payload_size;
+
+	if (!arv_device_read_memory (ARV_DEVICE (priv->thread_data->uv_device),
+                                     priv->sirm_address + ARV_SIRM_REQ_PAYLOAD_SIZE,
+                                     sizeof (si_req_payload_size), &si_req_payload_size, NULL))
+		return 0;
+
+	return si_req_payload_size;
+}
+
 static gboolean
 arv_uv_stream_create_buffers (ArvStream *stream, guint n_buffers, size_t size,
                                  void *user_data, GDestroyNotify user_data_destroy_func,
@@ -1277,6 +1291,7 @@ arv_uv_stream_class_init (ArvUvStreamClass *uv_stream_class)
 	stream_class->start_acquisition = arv_uv_stream_start_acquisition;
 	stream_class->stop_acquisition = arv_uv_stream_stop_acquisition;
         stream_class->create_buffers = arv_uv_stream_create_buffers;
+        stream_class->get_payload_size = arv_uv_stream_get_payload_size;
 
          /**
           * ArvUvStream:usb-mode:
