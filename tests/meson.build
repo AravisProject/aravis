@@ -89,6 +89,7 @@ if get_option('tests')
 		['arv-device-scan-test',	'arvdevicescantest.c'],
 		['arv-roi-test',		'arvroitest.c'],
 		['arv-multi-uv-test',		'arvmultiuvtest.c'],
+		['arv-uv-stream-channel-test',	'arvuvstreamchanneltest.c'],
 		['time-test',			'timetest.c'],
 		['load-http-test',		'loadhttptest.c'],
 		['cpp-test',			'cpp.cc'],

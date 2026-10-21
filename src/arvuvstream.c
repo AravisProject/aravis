@@ -71,6 +71,7 @@ typedef struct {
         GCond thread_started_cond;
 
 	ArvUvDevice *uv_device;
+        guint stream_channel_id;
 	ArvStreamCallback callback;
 	void *callback_data;
 
@@ -97,6 +98,7 @@ typedef struct {
 typedef struct {
 	GThread *thread;
 	ArvUvStreamThreadData *thread_data;
+        guint stream_channel_id;
 	ArvUvUsbMode usb_mode;
         guint64 maximum_transfer_size;
 
@@ -397,7 +399,7 @@ arv_uv_stream_buffer_context_new (ArvBuffer *buffer, ArvUvStreamThreadData *thre
 	ctx->leader_buffer = g_malloc (thread_data->leader_size);
 	ctx->leader_transfer = libusb_alloc_transfer (0);
 	arv_uv_device_fill_bulk_transfer (ctx->leader_transfer, thread_data->uv_device,
-		ARV_UV_ENDPOINT_DATA, LIBUSB_ENDPOINT_IN,
+		ARV_UV_ENDPOINT_DATA, thread_data->stream_channel_id, LIBUSB_ENDPOINT_IN,
 		ctx->leader_buffer, thread_data->leader_size,
 		arv_uv_stream_leader_cb, ctx,
 		0);
@@ -411,7 +413,7 @@ arv_uv_stream_buffer_context_new (ArvBuffer *buffer, ArvUvStreamThreadData *thre
 		ctx->payload_transfers[i] = libusb_alloc_transfer(0);
 
 		arv_uv_device_fill_bulk_transfer (ctx->payload_transfers[i], thread_data->uv_device,
-			ARV_UV_ENDPOINT_DATA, LIBUSB_ENDPOINT_IN,
+			ARV_UV_ENDPOINT_DATA, thread_data->stream_channel_id, LIBUSB_ENDPOINT_IN,
 			buffer->priv->data + offset, size,
 			arv_uv_stream_payload_cb, ctx,
 			0);
@@ -422,7 +424,7 @@ arv_uv_stream_buffer_context_new (ArvBuffer *buffer, ArvUvStreamThreadData *thre
 	ctx->trailer_buffer = g_malloc (thread_data->trailer_size);
 	ctx->trailer_transfer = libusb_alloc_transfer (0);
 	arv_uv_device_fill_bulk_transfer (ctx->trailer_transfer, thread_data->uv_device,
-		ARV_UV_ENDPOINT_DATA, LIBUSB_ENDPOINT_IN,
+		ARV_UV_ENDPOINT_DATA, thread_data->stream_channel_id, LIBUSB_ENDPOINT_IN,
 		ctx->trailer_buffer, thread_data->trailer_size,
 		arv_uv_stream_trailer_cb, ctx,
 		0);
@@ -706,7 +708,8 @@ arv_uv_stream_thread_sync (void *data)
 			packet = incoming_buffer;
 
 		arv_debug_sp ("Asking for %" G_GSIZE_FORMAT " bytes", size);
-		arv_uv_device_bulk_transfer (thread_data->uv_device,  ARV_UV_ENDPOINT_DATA, LIBUSB_ENDPOINT_IN,
+		arv_uv_device_bulk_transfer (thread_data->uv_device, ARV_UV_ENDPOINT_DATA,
+					     thread_data->stream_channel_id, LIBUSB_ENDPOINT_IN,
 					     packet, size, &transferred, 0, &error);
 
 		if (error != NULL) {
@@ -879,7 +882,6 @@ arv_uv_stream_start_acquisition (ArvStream *stream, GError **error)
 	ArvUvStreamThreadData *thread_data;
 	ArvDevice *device;
         GError *local_error = NULL;
-        guint64 sbrm_address;
 	guint32 si_info;
 	guint64 si_req_payload_size;
 	guint32 si_req_leader_size;
@@ -901,11 +903,6 @@ arv_uv_stream_start_acquisition (ArvStream *stream, GError **error)
 
 	device = ARV_DEVICE (thread_data->uv_device);
 
-	arv_device_read_memory (device, ARV_ABRM_SBRM_ADDRESS,
-                                sizeof (guint64), &sbrm_address, NULL);
-	arv_device_read_memory (device, sbrm_address + ARV_SBRM_SIRM_ADDRESS,
-                                sizeof (guint64), &priv->sirm_address, NULL);
-
 	arv_device_read_memory (device, priv->sirm_address + ARV_SIRM_INFO,
                                 sizeof (si_info), &si_info, NULL);
 	arv_device_read_memory (device, priv->sirm_address + ARV_SIRM_REQ_PAYLOAD_SIZE,
@@ -917,6 +914,8 @@ arv_uv_stream_start_acquisition (ArvStream *stream, GError **error)
 
 	alignment = 1 << ((si_info & ARV_SIRM_INFO_ALIGNMENT_MASK) >> ARV_SIRM_INFO_ALIGNMENT_SHIFT);
 
+	arv_info_stream ("STREAM_CHANNEL_ID     = %u", priv->stream_channel_id);
+	arv_info_stream ("SIRM_ADDRESS          = 0x%016" G_GINT64_MODIFIER "x", priv->sirm_address);
 	arv_info_stream ("SIRM_INFO             = 0x%08x", si_info);
 	arv_info_stream ("SIRM_REQ_PAYLOAD_SIZE = 0x%016" G_GINT64_MODIFIER "x", si_req_payload_size);
 	arv_info_stream ("SIRM_REQ_LEADER_SIZE  = 0x%08x", si_req_leader_size);
@@ -996,7 +995,7 @@ arv_uv_stream_start_acquisition (ArvStream *stream, GError **error)
         thread_data->n_buffer_in_use = 0;
 	thread_data->cancel = FALSE;
 
-        arv_uv_device_reset_stream_endpoint (thread_data->uv_device);
+        arv_uv_device_reset_stream_endpoint (thread_data->uv_device, priv->stream_channel_id);
 
         si_control = ARV_SIRM_CONTROL_STREAM_ENABLE;
         arv_device_write_memory (device, priv->sirm_address + ARV_SIRM_CONTROL, sizeof (si_control), &si_control,
@@ -1141,6 +1140,9 @@ arv_uv_stream_constructed (GObject *object)
 	ArvStream *stream = ARV_STREAM (uv_stream);
 	ArvUvStreamPrivate *priv = arv_uv_stream_get_instance_private (uv_stream);
 	ArvUvStreamThreadData *thread_data;
+	GError *error = NULL;
+	gint64 stream_channel_id;
+	gint64 n_stream_channels = 0;
 
         G_OBJECT_CLASS (arv_uv_stream_parent_class)->constructed (object);
 
@@ -1164,6 +1166,24 @@ arv_uv_stream_constructed (GObject *object)
 		      NULL);
 
 	priv->thread_data = thread_data;
+
+	stream_channel_id = arv_device_get_integer_feature_value (ARV_DEVICE (thread_data->uv_device),
+								  "ArvUvStreamChannelSelector", &error);
+	if (error == NULL)
+		n_stream_channels = arv_device_get_integer_feature_value (ARV_DEVICE (thread_data->uv_device),
+									  "ArvUvStreamChannelCount", &error);
+	if (error == NULL && (stream_channel_id < 0 || stream_channel_id >= n_stream_channels))
+		error = g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NO_STREAM_CHANNEL,
+				     "Stream channel %" G_GINT64_FORMAT " not found", stream_channel_id);
+	if (error != NULL) {
+		arv_stream_take_init_error (stream, error);
+		return;
+	}
+
+	priv->stream_channel_id = stream_channel_id;
+	thread_data->stream_channel_id = stream_channel_id;
+
+	priv->sirm_address = arv_uv_device_get_sirm_address (thread_data->uv_device, priv->stream_channel_id);
 
         arv_stream_declare_info (ARV_STREAM (uv_stream), "n_completed_buffers",
                                  G_TYPE_UINT64, &thread_data->statistics.n_completed_buffers);
