@@ -904,9 +904,24 @@ _open_usb_device (ArvUvDevice *uv_device, GError **error)
 								priv->control_interface = interdesc->bInterfaceNumber;
 							}
 							if (interdesc->bInterfaceProtocol == ARV_UV_INTERFACE_DATA_PROTOCOL) {
-								endpoint = interdesc->endpoint[0];
-								priv->data_endpoint = endpoint.bEndpointAddress;
-								priv->data_interface = interdesc->bInterfaceNumber;
+								guint8 data_endpoint = 0;
+
+								for (int edx = 0; edx < interdesc->bNumEndpoints; edx++) {
+									endpoint = interdesc->endpoint[edx];
+									if ((endpoint.bEndpointAddress & LIBUSB_ENDPOINT_IN) != 0 &&
+									    (endpoint.bmAttributes & LIBUSB_TRANSFER_TYPE_MASK) ==
+									    LIBUSB_TRANSFER_TYPE_BULK) {
+										data_endpoint = endpoint.bEndpointAddress;
+										break;
+									}
+								}
+
+								/* First alternate setting with a bulk IN endpoint */
+								if (data_endpoint != 0) {
+									priv->data_endpoint = data_endpoint;
+									priv->data_interface = interdesc->bInterfaceNumber;
+									break;
+								}
 							}
 						}
 					}
