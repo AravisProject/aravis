@@ -737,11 +737,15 @@ arv_stream_create_buffers (ArvStream *stream, unsigned int n_buffers,
 	g_return_val_if_fail (n_buffers > 0, FALSE);
         g_return_val_if_fail (ARV_IS_DEVICE (priv->device), FALSE);
 
-        payload_size = arv_device_get_integer_feature_value (priv->device, "PayloadSize", error);
-        if (payload_size < 1)
-                return FALSE;
-
 	stream_class = ARV_STREAM_GET_CLASS (stream);
+
+        payload_size = stream_class->get_payload_size != NULL ? stream_class->get_payload_size (stream) : 0;
+        if (payload_size < 1) {
+                payload_size = arv_device_get_integer_feature_value (priv->device, "PayloadSize", error);
+                if (payload_size < 1)
+                        return FALSE;
+        }
+
         if (stream_class->create_buffers != NULL) {
                 GError *local_error = NULL;
 
