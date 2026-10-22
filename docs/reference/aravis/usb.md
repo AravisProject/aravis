@@ -24,3 +24,14 @@ RapsberryPi or Nvidia Jetson boards. The function to use is
 `arv-viewer` and `arv-camera-test` can use the asynchronous API if `usb-mode`
 option is set to `async`. Similarly, the GStreamer plugin is using the
 asynchronous API if `usb-mode` property is set to `async`.
+
+## Stream channels
+
+On devices with more than one stream channel, the `ArvUvStreamChannelSelector`
+feature selects the channel of the next created stream, and
+`ArvUvStreamChannelCount` gives the number of channels:
+
+```c
+arv_device_set_integer_feature_value (device, "ArvUvStreamChannelSelector", 1, NULL);
+stream = arv_device_create_stream (device, NULL, NULL, NULL, NULL);
+```

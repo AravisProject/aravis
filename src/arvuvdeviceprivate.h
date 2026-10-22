@@ -39,22 +39,26 @@ typedef enum {
 } ArvUvEndpointType;
 
 gboolean        arv_uv_device_bulk_transfer             (ArvUvDevice *uv_device,
-							 ArvUvEndpointType endpoint_type, unsigned char endpoint_flags,
+							 ArvUvEndpointType endpoint_type, guint channel_id,
+                                                         unsigned char endpoint_flags,
 							 void *data, size_t size, size_t *transferred_size,
 							 guint32 timeout_ms, GError **error);
 
 void            arv_uv_device_fill_bulk_transfer        (struct libusb_transfer* transfer, ArvUvDevice *uv_device,
-                                                         ArvUvEndpointType endpoint_type, unsigned char endpoint_flags,
+                                                         ArvUvEndpointType endpoint_type, guint channel_id,
+                                                         unsigned char endpoint_flags,
                                                          void *data, size_t size,
                                                          libusb_transfer_cb_fn callback, void* callback_data,
                                                          unsigned int timeout);
+
+guint64         arv_uv_device_get_sirm_address          (ArvUvDevice *uv_device, guint channel_id);
 
 void *          arv_uv_device_usb_mem_alloc             (ArvUvDevice *uv_device, size_t size);
 void            arv_uv_device_usb_mem_free              (ArvUvDevice *uv_device, void *data, size_t size);
 
 gboolean        arv_uv_device_is_connected              (ArvUvDevice *uv_device);
 
-gboolean        arv_uv_device_reset_stream_endpoint     (ArvUvDevice *device);
+gboolean        arv_uv_device_reset_stream_endpoint     (ArvUvDevice *device, guint channel_id);
 
 G_END_DECLS
 
