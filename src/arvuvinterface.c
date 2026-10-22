@@ -145,11 +145,17 @@ printdev (libusb_device *device)
 	printf ("Device SubClass:   0x%02x\n", (int) desc.bDeviceSubClass);
 	printf ("Protocol:          0x%02x\n", (int) desc.bDeviceProtocol);
 
-	libusb_get_config_descriptor (device, 0, &config);
+	r = libusb_get_config_descriptor (device, 0, &config);
+	if (r < 0 || config == NULL) {
+		printf ("Failed to get config descriptor: %s\n", libusb_error_name (r));
+		return;
+	}
 
 	printf ("Nbr of Interfaces: %d\n", (int)config->bNumInterfaces);
 	for (i = 0; i< (int) config->bNumInterfaces; i++) {
 		inter = &config->interface[i];
+		if (inter->altsetting == NULL)
+			continue;
 		for (j = 0; j < inter->num_altsetting; j++) {
 			interdesc = &inter->altsetting[j];
 			printf ("  Interface Class:    0x%02x\n", (int) interdesc->bInterfaceClass);
@@ -192,9 +198,17 @@ _usb_device_to_device_ids (ArvUvInterface *uv_interface, libusb_device *device)
 
 	control_protocol_found = FALSE;
 	data_protocol_found = FALSE;
-	libusb_get_config_descriptor (device, 0, &config);
+	/* libusb leaves *config undefined on failure — must check the return. */
+	result = libusb_get_config_descriptor (device, 0, &config);
+	if (result < 0 || config == NULL) {
+		arv_warning_interface ("Failed to get config descriptor: %s",
+				       libusb_error_name (result));
+		return NULL;
+	}
 	for (i = 0; i< (int) config->bNumInterfaces; i++) {
 		inter = &config->interface[i];
+		if (inter->altsetting == NULL)
+			continue;
 		for (j = 0; j < inter->num_altsetting; j++) {
 			interdesc = &inter->altsetting[j];
 			if (interdesc->bInterfaceClass == ARV_UV_INTERFACE_INTERFACE_CLASS &&
