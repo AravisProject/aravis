@@ -74,7 +74,7 @@ jobs:
         .\build\conanbuild.ps1
         .\build\conanrun.ps1
         echo "::group::configure"
-        meson setup --prefix ${{ github.workspace }}\install --buildtype ${{ matrix.build_type_meson }} --pkg-config-path ${{ github.workspace }}\build -Ddocumentation=disabled -Dgst-plugin=disabled -Dintrospection=disabled -Dusb=enabled -Dviewer=disabled -Dgv-n-buffers=1 -Dgentl-producer=true . .\build
+        meson setup --prefix ${{ github.workspace }}\install --buildtype ${{ matrix.build_type_meson }} --pkg-config-path ${{ github.workspace }}\build -Ddocumentation=disabled -Dgst-plugin=disabled -Dintrospection=disabled -Dusb=enabled -Dviewer=disabled -Dgv-n-buffers=1 . .\build
         echo "::endgroup::"
         echo "::group::compile"
         meson compile -C .\build -v
