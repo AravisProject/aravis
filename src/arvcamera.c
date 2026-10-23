@@ -2349,7 +2349,7 @@ arv_camera_get_payload (ArvCamera *camera, GError **error)
 }
 
 /**
- * arv_camera_get_device:
+ * arv_camera_get_device: (get-property device)
  * @camera: a #ArvCamera
  *
  * Retrieves the #ArvDevice object for more complete access to camera features.

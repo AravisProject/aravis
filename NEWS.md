@@ -1,3 +1,17 @@
+Stable release 0.8.36
+=====================
+
+  * viewer: exposure time and increment support (Marco)
+  * viewer: more pixel format support (Gaurav)
+  * gstplugin: memory leak fix (Marko)
+  * usb3vision: fix handling of control endpoints (Takumi)
+  * gigevision: more cameras to the legacy endianness lists (Benjamin, Jagan,
+    Dima, sorki)
+  * gigevision: undefined behaviour fixes (Marco)
+  * genicam: local error propagation fixes (vladislav)
+  * msvc: avoid symbol export in static builds (Leonardo)
+  * python: read write memory binding fixes (Emmanuel)
+
 Stable release 0.8.35
 =====================
 

@@ -31,7 +31,7 @@
 #include <arvfakestreamprivate.h>
 #include <arvfakecamera.h>
 #include <arvgc.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 
 enum
 {
@@ -85,16 +85,34 @@ static gboolean
 arv_fake_device_read_memory (ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error)
 {
 	ArvFakeDevicePrivate *priv = arv_fake_device_get_instance_private (ARV_FAKE_DEVICE (device));
+        gboolean success;
 
-	return arv_fake_camera_read_memory (priv->camera, address, size, buffer);
+	success = arv_fake_camera_read_memory (priv->camera, address, size, buffer);
+
+        arv_trace_device ("[FakeDevice::read_memory] address 0x%" G_GINT64_MODIFIER "x, size = %d", address, size);
+
+        if (!success)
+                g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,
+                            "Invalid read at 0x%" G_GINT64_MODIFIER "x, size %d", address, size);
+
+        return success;
 }
 
 static gboolean
 arv_fake_device_write_memory (ArvDevice *device, guint64 address, guint32 size, const void *buffer, GError **error)
 {
 	ArvFakeDevicePrivate *priv = arv_fake_device_get_instance_private (ARV_FAKE_DEVICE (device));
+        gboolean success;
 
-	return arv_fake_camera_write_memory (priv->camera, address, size, buffer);
+        arv_trace_device ("[FakeDevice::write_memory] address 0x%" G_GINT64_MODIFIER "x, size = %d", address, size);
+
+	success = arv_fake_camera_write_memory (priv->camera, address, size, buffer);
+
+        if (!success)
+                g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,
+                             "Invalid write at 0x%" G_GINT64_MODIFIER "x, size %d", address, size);
+
+        return success;
 }
 
 static gboolean
