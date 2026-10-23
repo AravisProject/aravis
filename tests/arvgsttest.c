@@ -52,16 +52,20 @@ main (int argc, char *argv[])
         printf ("Wait for a few frames\n");
         sleep (1);
 
-        printf ("Stop the source\n");
-        g_assert_cmpint (gst_element_set_state(source, GST_STATE_NULL), ==, GST_STATE_CHANGE_SUCCESS);
+        printf ("Pause the pipeline\n");
+        g_assert_cmpint (gst_element_set_state (pipeline, GST_STATE_PAUSED), !=, GST_STATE_CHANGE_FAILURE);
+        g_assert_cmpint (gst_element_get_state (pipeline, &current_state, &pending_state, 5 * GST_SECOND), !=, GST_STATE_CHANGE_FAILURE);
+        g_assert_cmpint (current_state, ==, GST_STATE_PAUSED);
 
-        gst_element_get_state (source, &current_state, &pending_state, 0);
+        printf ("Stop the source\n");
+        g_assert_cmpint (gst_element_set_state (source, GST_STATE_NULL), !=, GST_STATE_CHANGE_FAILURE);
+
+        g_assert_cmpint (gst_element_get_state (source, &current_state, &pending_state, 5 * GST_SECOND), !=, GST_STATE_CHANGE_FAILURE);
+        g_assert_cmpint (current_state, ==, GST_STATE_NULL);
         printf ("source current state:%d - pending state:%d\n", current_state, pending_state);
 
-        sleep (1);
-
-        gst_element_unlink(source, sink);
-        g_assert (gst_bin_remove(GST_BIN(pipeline), source));
+        gst_element_unlink (source, sink);
+        g_assert (gst_bin_remove (GST_BIN (pipeline), source));
 
         printf ("Create a new source\n");
         new_source = gst_element_factory_make ("aravissrc", "new_source");
@@ -81,13 +85,15 @@ main (int argc, char *argv[])
         g_assert (gst_element_link(new_source, sink));
         g_assert (gst_element_sync_state_with_parent(new_source));
 
-        gst_element_get_state (source, &current_state, &pending_state, 0);
+        gst_element_get_state (new_source, &current_state, &pending_state, 0);
         printf ("new source current state:%d - pending state:%d\n", current_state, pending_state);
 
         printf ("Start the new source\n");
-        g_assert_cmpint (gst_element_set_state(source, GST_STATE_PLAYING), ==, GST_STATE_CHANGE_SUCCESS);
+        g_assert_cmpint (gst_element_set_state (pipeline, GST_STATE_PLAYING), !=, GST_STATE_CHANGE_FAILURE);
+        g_assert_cmpint (gst_element_get_state (pipeline, &current_state, &pending_state, 5 * GST_SECOND), !=, GST_STATE_CHANGE_FAILURE);
+        g_assert_cmpint (current_state, ==, GST_STATE_PLAYING);
 
-        gst_element_get_state (source, &current_state, &pending_state, 0);
+        gst_element_get_state (new_source, &current_state, &pending_state, 0);
         printf ("new source current state:%d - pending state:%d\n", current_state, pending_state);
 
         printf ("Wait for a few frames\n");
