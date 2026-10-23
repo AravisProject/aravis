@@ -66,6 +66,7 @@ main (int argc, char *argv[])
 
         gst_element_unlink (source, sink);
         g_assert (gst_bin_remove (GST_BIN (pipeline), source));
+        gst_object_unref (source);
 
         printf ("Create a new source\n");
         new_source = gst_element_factory_make ("aravissrc", "new_source");
@@ -104,7 +105,6 @@ main (int argc, char *argv[])
         printf ("Free the pipeline\n");
         gst_object_unref (new_source);
         gst_object_unref (sink);
-        gst_object_unref (source);
         gst_object_unref (pipeline);
 
         return EXIT_SUCCESS;
