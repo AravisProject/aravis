@@ -102,6 +102,9 @@ main (int argc, char *argv[])
         g_assert_cmpint (gst_element_set_state (pipeline, GST_STATE_NULL), ==, GST_STATE_CHANGE_SUCCESS);
 
         printf ("Free the pipeline\n");
+        gst_object_unref (new_source);
+        gst_object_unref (sink);
+        gst_object_unref (source);
         gst_object_unref (pipeline);
 
         return EXIT_SUCCESS;
