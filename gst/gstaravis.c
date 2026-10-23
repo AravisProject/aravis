@@ -73,6 +73,7 @@ enum
   PROP_USB_MODE,
   PROP_STREAM,
   PROP_TRIGGER,
+  PROP_ADD_REFERENCE_TIMESTAMP_META,
   N_PROPERTIES
 };
 
@@ -560,6 +561,11 @@ gst_aravis_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
 	}
 }
 
+/* Reference caps for the optional capture-time meta. The device timestamp is
+ * nanoseconds on the PTP timescale when the device is PTP-synchronized (IEEE
+ * 1588), matching the timestamp/x-ptp convention of rtpjitterbuffer. */
+static GstStaticCaps ptp_reference_timestamp_caps = GST_STATIC_CAPS ("timestamp/x-ptp");
+
 static GstFlowReturn
 gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 {
@@ -621,6 +627,17 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 		GST_BUFFER_DURATION (*buffer) = timestamp_ns - gst_aravis->last_timestamp;
 
 		gst_aravis->last_timestamp = timestamp_ns;
+	}
+
+	/* Optionally expose the absolute device timestamp, which is otherwise lost
+	 * when it is folded into the first-frame-relative GST_BUFFER_PTS. A zero
+	 * timestamp means the device did not provide one. */
+	if (gst_aravis->add_reference_timestamp_meta && timestamp_ns != 0) {
+		GstCaps *reference = gst_static_caps_get (&ptp_reference_timestamp_caps);
+
+		gst_buffer_add_reference_timestamp_meta (*buffer, reference,
+				timestamp_ns, GST_CLOCK_TIME_NONE);
+		gst_caps_unref (reference);
 	}
 
 	arv_stream_push_buffer (gst_aravis->stream, arv_buffer);
@@ -709,6 +726,7 @@ gst_aravis_init (GstAravis *gst_aravis)
 	gst_aravis->frame_rate = 0.0;
 
 	gst_aravis->trigger_source = NULL;
+	gst_aravis->add_reference_timestamp_meta = FALSE;
 
 	gst_aravis->camera = NULL;
 	gst_aravis->stream = NULL;
@@ -863,6 +881,11 @@ gst_aravis_set_property (GObject * object, guint prop_id,
                         gst_aravis->trigger_source = g_strdup (g_value_get_string (value));
                         GST_OBJECT_UNLOCK (gst_aravis);
                         break;
+                case PROP_ADD_REFERENCE_TIMESTAMP_META:
+                        GST_OBJECT_LOCK (gst_aravis);
+                        gst_aravis->add_reference_timestamp_meta = g_value_get_boolean (value);
+                        GST_OBJECT_UNLOCK (gst_aravis);
+                        break;
                 default:
                         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
                         break;
@@ -974,6 +997,11 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 		case PROP_TRIGGER:
 			GST_OBJECT_LOCK (gst_aravis);
 			g_value_set_string (value, gst_aravis->trigger_source);
+			GST_OBJECT_UNLOCK (gst_aravis);
+			break;
+		case PROP_ADD_REFERENCE_TIMESTAMP_META:
+			GST_OBJECT_LOCK (gst_aravis);
+			g_value_set_boolean (value, gst_aravis->add_reference_timestamp_meta);
 			GST_OBJECT_UNLOCK (gst_aravis);
 			break;
 		default:
@@ -1170,6 +1198,15 @@ gst_aravis_class_init (GstAravisClass * klass)
                                     "Enable the trigger mode using the given source",
                                     NULL,
                                     G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+	properties[PROP_ADD_REFERENCE_TIMESTAMP_META] =
+                g_param_spec_boolean("add-reference-timestamp-meta",
+                                     "Add reference timestamp meta",
+                                     "Add a GstReferenceTimestampMeta with timestamp/x-ptp reference"
+                                     " caps to buffers, carrying the device timestamp. Only an"
+                                     " absolute time if the device clock is PTP-synchronized",
+                                     FALSE,
+                                     G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
 	g_object_class_install_properties (gobject_class,
 					   G_N_ELEMENTS (properties),

@@ -924,6 +924,12 @@ arv_uv_stream_start_acquisition (ArvStream *stream, GError **error)
 
 	arv_info_stream ("Required alignment    = %d", alignment);
 
+	if (si_req_payload_size < 1) {
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,
+		             "Device reported an invalid USB payload size (SIRM_REQ_PAYLOAD_SIZE)");
+		return FALSE;
+	}
+
         if (alignment == 0) {
                 g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
                              "Device returned an invalid USB alignment");
@@ -957,7 +963,7 @@ arv_uv_stream_start_acquisition (ArvStream *stream, GError **error)
 	}
 
 	si_payload_size = MIN(si_req_payload_size , aligned_maximum_transfer_size);
-	si_payload_count=  si_req_payload_size / si_payload_size;
+	si_payload_count = si_req_payload_size / si_payload_size;
 	si_transfer1_size = align(si_req_payload_size % si_payload_size, alignment);
 	si_transfer2_size = 0;
 

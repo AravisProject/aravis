@@ -1,0 +1,146 @@
+# Georgian translation for aravis.
+# Copyright (C) 2026 aravis's authors.
+# This file is distributed under the same license as the aravis package.
+# Ekaterine Papava <papava.e@gtu.ge>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: aravis-0.10\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-08-01 09:56+0200\n"
+"PO-Revision-Date: 2026-09-15 17:07+0200\n"
+"Last-Translator: Ekaterine Papava <papava.e@gtu.ge>\n"
+"Language-Team: Georgian <(nothing)>\n"
+"Language: ka\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.9\n"
+
+#: viewer/arv-viewer.ui:72
+msgid "Frame rate:"
+msgstr "კადრების სიხშირე:"
+
+#: viewer/arv-viewer.ui:98
+msgid "Hz"
+msgstr "ჰც"
+
+#: viewer/arv-viewer.ui:109 viewer/arv-viewer.ui:134 viewer/arv-viewer.ui:246
+msgid "Auto"
+msgstr "ავტო"
+
+#: viewer/arv-viewer.ui:124
+msgid "Exposure:"
+msgstr "ექსპოზიცია:"
+
+#: viewer/arv-viewer.ui:149
+msgid "Gain:"
+msgstr "გაძლიერება:"
+
+#: viewer/arv-viewer.ui:193
+msgid "µs"
+msgstr "მკწმ"
+
+#: viewer/arv-viewer.ui:228
+msgid "dB"
+msgstr "დბ"
+
+#: viewer/arv-viewer.ui:261
+msgid "Black level:"
+msgstr "შავის დონე:"
+
+#: viewer/arv-viewer.ui:345
+msgid "Vendor"
+msgstr "მომწოდებელი"
+
+#: viewer/arv-viewer.ui:356
+msgid "Model"
+msgstr "მოდელი"
+
+#: viewer/arv-viewer.ui:375
+msgid "Serial"
+msgstr "სერიული"
+
+#: viewer/arv-viewer.ui:402
+msgid "Refresh camera list"
+msgstr "კამერების სიის განახლება"
+
+#: viewer/arv-viewer.ui:416
+msgid "Start video acquisition"
+msgstr "ვიდეოს მიღების დაწყება"
+
+#: viewer/arv-viewer.ui:457
+msgid "Pixel format:"
+msgstr "პიქსელის ფორმატი:"
+
+#: viewer/arv-viewer.ui:470
+msgid "Region size:"
+msgstr "რეგიონის ზომა:"
+
+#: viewer/arv-viewer.ui:483
+msgid "x"
+msgstr "x"
+
+#: viewer/arv-viewer.ui:494 viewer/arv-viewer.ui:518 viewer/arv-viewer.ui:627
+msgid "pixels"
+msgstr "პიქსელი"
+
+#: viewer/arv-viewer.ui:505
+msgid "Region position:"
+msgstr "რეგიონის მდებარეობა:"
+
+#: viewer/arv-viewer.ui:588
+msgid "Binning:"
+msgstr "ბინინგი:"
+
+#: viewer/arv-viewer.ui:638
+msgid "Component:"
+msgstr "კომპონენტი:"
+
+#: viewer/arv-viewer.ui:659
+msgid "Enable"
+msgstr "ჩართვა"
+
+#: viewer/arv-viewer.ui:742
+msgid "fps (MB/s)"
+msgstr "კადრ/წმ (მბ/წმ)"
+
+#: viewer/arv-viewer.ui:756
+msgid "Images / Errors"
+msgstr "გამოსახულებები / შეცდომები"
+
+#: viewer/arv-viewer.ui:891
+msgid "Return to camera list"
+msgstr "დაბრუნება კამერების სიაზე"
+
+#: viewer/arv-viewer.ui:911
+msgid "Save a snapshot into image folder"
+msgstr "სწრაფი ასლის შენახვა გამოსახულებების საქაღალდეში"
+
+#: viewer/arv-viewer.ui:930
+msgid "Rotate image to the right"
+msgstr "გამოსახულების მარჯვნივ შებრუნება"
+
+#: viewer/arv-viewer.ui:949
+msgid "Flip image horizontally"
+msgstr "გამოსახულების ჰორიზონტალურად გადაბრუნება"
+
+#: viewer/arv-viewer.ui:967
+msgid "Acquisition settings"
+msgstr "მიღების მორგება"
+
+#: viewer/arv-viewer.ui:988
+msgid "Flip image vertically"
+msgstr "გამოსახულების გადაბრუნება"
+
+#: viewer/data/arv-viewer.desktop.in.in:2
+msgid "Aravis"
+msgstr "Aravis"
+
+#: viewer/data/arv-viewer.desktop.in.in:4
+msgid "Display video stream from industrial cameras"
+msgstr "ვიდეონაკადის ჩვენება ინდივიდუალური კამერებიდან"
+
+#: viewer/data/arv-viewer.desktop.in.in:13
+msgid "gigevision;usb3vision;vision;display;viewer;genicam;"
+msgstr "gigevision;usb3vision;vision;display;viewer;genicam;ჩვენება;"
