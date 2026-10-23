@@ -45,7 +45,9 @@ main (int argc, char *argv[])
         }
 
         printf ("Start the pipeline\n");
-        g_assert_cmpint (gst_element_set_state(pipeline, GST_STATE_PLAYING), ==, GST_STATE_CHANGE_ASYNC);
+        g_assert_cmpint (gst_element_set_state (pipeline, GST_STATE_PLAYING), !=, GST_STATE_CHANGE_FAILURE);
+        g_assert_cmpint (gst_element_get_state (pipeline, &current_state, &pending_state, 5 * GST_SECOND), !=, GST_STATE_CHANGE_FAILURE);
+        g_assert_cmpint (current_state, ==, GST_STATE_PLAYING);
 
         printf ("Wait for a few frames\n");
         sleep (1);
