@@ -12,7 +12,7 @@ on:
 
 jobs:
   mingw:
-    runs-on: windows-latest
+    runs-on: windows-2025
     strategy:
       fail-fast: false # see all failures, not just the first one
       matrix:
@@ -49,14 +49,14 @@ jobs:
     - name: meson
       run: |
         mkdir build
-        meson --buildtype=plain -Ddocumentation=disabled -Dgst-plugin=enabled -Dintrospection=enabled -Dusb=enabled -Dviewer=enabled -Dgv-n-buffers=1 -Dgentl-producer=true . ./build
+        meson setup --buildtype=plain -Ddocumentation=disabled -Dgst-plugin=enabled -Dintrospection=enabled -Dusb=enabled -Dviewer=enabled -Dgv-n-buffers=1 -Dgentl-producer=true . ./build
     - name: ninja install
       run: |
         ninja -C ./build --verbose install
     - name: meson test
       run: |
         meson test -C ./build
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: failure()
       with:
         name: ${{matrix.sys}}_Meson_Testlog

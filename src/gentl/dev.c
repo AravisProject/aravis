@@ -2,20 +2,20 @@
  *
  * Copyright © 2023 Václav Šmilauer
  *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  *
  * Authors: Václav Šmilauer <eu@doxos.eu>
  */
@@ -45,7 +45,7 @@ gentl_to_buf__cam_string (DEV_HANDLE hDevice, const char* (*func)(ArvCamera*,GEr
 	return gentl_to_buf(INFO_DATATYPE_STRING,pBuffer,n,piSize,piType);
 };
 
-GC_API
+GC_ERROR
 DevGetPort (DEV_HANDLE hDevice, PORT_HANDLE *phRemoteDevice)
 {
         _DEV_CHECK_HANDLE;
@@ -56,7 +56,7 @@ DevGetPort (DEV_HANDLE hDevice, PORT_HANDLE *phRemoteDevice)
         return GC_ERR_SUCCESS;
 }
 
-GC_API
+GC_ERROR
 DevGetNumDataStreams (DEV_HANDLE hDevice, uint32_t *piNumDataStreams)
 {
 	GError* err;
@@ -84,7 +84,7 @@ DevGetNumDataStreams (DEV_HANDLE hDevice, uint32_t *piNumDataStreams)
 	return GC_ERR_SUCCESS;
 }
 
-GC_API
+GC_ERROR
 DevGetDataStreamID (DEV_HANDLE hDevice, uint32_t iIndex, char *sDataStreamID, size_t *piSize)
 {
 	GError* err = NULL;
@@ -111,13 +111,13 @@ DevGetDataStreamID (DEV_HANDLE hDevice, uint32_t iIndex, char *sDataStreamID, si
 	return gentl_to_buf(INFO_DATATYPE_STRING,sDataStreamID,buf,piSize,NULL);
 }
 
-GC_API
+GC_ERROR
 DevOpenDataStream (DEV_HANDLE hDevice, const char *sDataStreamID, DS_HANDLE *phDataStream)
 {
 	GENTL_NYI;
 }
 
-GC_API
+GC_ERROR
 DevGetInfo ( DEV_HANDLE hDevice, DEVICE_INFO_CMD iInfoCmd, INFO_DATATYPE *piType, void *pBuffer, size_t *piSize )
 {
 	_DEV_CHECK_HANDLE;
@@ -131,7 +131,7 @@ DevGetInfo ( DEV_HANDLE hDevice, DEVICE_INFO_CMD iInfoCmd, INFO_DATATYPE *piType
 	}
 }
 
-GC_API
+GC_ERROR
 DevClose (DEV_HANDLE hDevice)
 {
         GENTL_NYI;
@@ -139,7 +139,7 @@ DevClose (DEV_HANDLE hDevice)
 
 /* GenTL v1.4 */
 
-GC_API
+GC_ERROR
 DevGetParentIF (DEV_HANDLE hDevice, IF_HANDLE *phIface)
 {
         GENTL_NYI;

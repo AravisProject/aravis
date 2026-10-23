@@ -1,21 +1,21 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2022 Emmanuel Pacaud
+ * Copyright © 2009-2025 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Emmanuel Pacaud <emmanuel.pacaud@free.fr>
  */
@@ -146,8 +146,8 @@ _handle_control_packet (ArvGvFakeCamera *gv_fake_camera, GSocket *socket,
 
 	arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_DEBUG);
 
-	packet_id = arv_gvcp_packet_get_packet_id (packet);
-	packet_type = arv_gvcp_packet_get_packet_type (packet);
+	packet_id = arv_gvcp_packet_get_packet_id (packet, size);
+	packet_type = arv_gvcp_packet_get_packet_type (packet, size);
 
 	if (packet_type != ARV_GVCP_PACKET_TYPE_CMD) {
 		arv_warning_device ("[GvFakeCamera::handle_control_packet] Unknown packet type");
@@ -162,7 +162,7 @@ _handle_control_packet (ArvGvFakeCamera *gv_fake_camera, GSocket *socket,
 						     &ack_packet->data);
 			break;
 		case ARV_GVCP_COMMAND_READ_MEMORY_CMD:
-			arv_gvcp_packet_get_read_memory_cmd_infos (packet, &block_address, &block_size);
+			arv_gvcp_packet_get_read_memory_cmd_infos (packet, size, &block_address, &block_size);
 			arv_info_device ("[GvFakeCamera::handle_control_packet] Read memory command %d (%d)",
 					  block_address, block_size);
 			ack_packet = arv_gvcp_packet_new_read_memory_ack (block_address, block_size,
@@ -171,9 +171,10 @@ _handle_control_packet (ArvGvFakeCamera *gv_fake_camera, GSocket *socket,
 						     arv_gvcp_packet_get_read_memory_ack_data (ack_packet));
 			break;
 		case ARV_GVCP_COMMAND_WRITE_MEMORY_CMD:
-			arv_gvcp_packet_get_write_memory_cmd_infos (packet, &block_address, &block_size);
+			arv_gvcp_packet_get_write_memory_cmd_infos (packet, size, &block_address, &block_size);
 			if (!write_access) {
-				arv_warning_device("[GvFakeCamera::handle_control_packet] Ignore Write memory command %d (%d) not controller",
+				arv_warning_device("[GvFakeCamera::handle_control_packet]"
+                                                   " Ignore Write memory command %d (%d) not controller",
 					block_address, block_size);
 				break;
 			}
@@ -186,7 +187,7 @@ _handle_control_packet (ArvGvFakeCamera *gv_fake_camera, GSocket *socket,
 									   &ack_packet_size);
 			break;
 		case ARV_GVCP_COMMAND_READ_REGISTER_CMD:
-			arv_gvcp_packet_get_read_register_cmd_infos (packet, &register_address);
+			arv_gvcp_packet_get_read_register_cmd_infos (packet, size, &register_address);
 			arv_fake_camera_read_register (gv_fake_camera->priv->camera, register_address, &register_value);
 			arv_info_device ("[GvFakeCamera::handle_control_packet] Read register command %d -> %d",
 					  register_address, register_value);
@@ -198,9 +199,10 @@ _handle_control_packet (ArvGvFakeCamera *gv_fake_camera, GSocket *socket,
 
 			break;
 		case ARV_GVCP_COMMAND_WRITE_REGISTER_CMD:
-			arv_gvcp_packet_get_write_register_cmd_infos (packet, &register_address, &register_value);
+			arv_gvcp_packet_get_write_register_cmd_infos (packet, size, &register_address, &register_value);
 			if (!write_access) {
-				arv_warning_device("[GvFakeCamera::handle_control_packet] Ignore Write register command %d (%d) not controller",
+				arv_warning_device("[GvFakeCamera::handle_control_packet]"
+                                                   " Ignore Write register command %d (%d) not controller",
 					register_address, register_value);
 				break;
 			}
@@ -294,12 +296,15 @@ _thread (void *user_data)
 
 						arv_gpollfd_clear_one (&gv_fake_camera->priv->socket_fds[i], socket);
 
-						count = g_socket_receive_message (socket, &remote_address, &input_vector, 1, NULL, NULL,
+						count = g_socket_receive_message (socket, &remote_address,
+                                                                                  &input_vector, 1, NULL, NULL,
 										  NULL, NULL, NULL);
 						if (count > 0) {
 							if (_handle_control_packet (gv_fake_camera, socket,
-										    remote_address, input_vector.buffer, count))
-								arv_info_device ("[GvFakeCamera::thread] Control packet received");
+										    remote_address, input_vector.buffer,
+                                                                                    count))
+								arv_info_device
+                                                                        ("[GvFakeCamera::thread] Control packet received");
 						}
 						g_clear_object (&remote_address);
 					}
@@ -342,13 +347,14 @@ _thread (void *user_data)
 			if (arv_fake_camera_is_in_free_running_mode (gv_fake_camera->priv->camera) ||
 			    (arv_fake_camera_is_in_software_trigger_mode (gv_fake_camera->priv->camera) &&
 			     arv_fake_camera_check_and_acknowledge_software_trigger (gv_fake_camera->priv->camera))) {
-				arv_fake_camera_fill_buffer (gv_fake_camera->priv->camera, image_buffer, &gv_packet_size);
+				arv_fake_camera_fill_buffer (gv_fake_camera->priv->camera, image_buffer,
+                                                             &gv_packet_size);
 
-				arv_info_stream_thread ("[GvFakeCamera::thread] Send frame %" G_GUINT64_FORMAT, image_buffer->priv->frame_id);
+				arv_info_stream_thread ("[GvFakeCamera::thread] Send frame %" G_GUINT64_FORMAT,
+                                                        image_buffer->priv->frame_id);
 
 				block_id = 0;
 
-				packet_size = ARV_GV_FAKE_CAMERA_BUFFER_SIZE;
                                 arv_gvsp_packet_new_image_leader (image_buffer->priv->frame_id,
                                                                   block_id,
                                                                   arv_buffer_get_timestamp(image_buffer),
@@ -358,19 +364,23 @@ _thread (void *user_data)
                                                                   arv_buffer_get_image_x(image_buffer),
                                                                   arv_buffer_get_image_y(image_buffer),
                                                                   0, 0,
-                                                                  packet_buffer, &packet_size);
+                                                                  packet_buffer, ARV_GV_FAKE_CAMERA_BUFFER_SIZE,
+                                                                  &packet_size);
 
 				if (g_random_double () >= gv_fake_camera->priv->gvsp_lost_packet_ratio)
 					g_socket_send_to (gv_fake_camera->priv->gvsp_socket, stream_address,
 							packet_buffer, packet_size, NULL, &error);
 				else
-					arv_info_stream_thread ("Drop GVSP leader packet frame: %" G_GUINT64_FORMAT, image_buffer->priv->frame_id);
+					arv_info_stream_thread
+                                                ("Drop GVSP leader packet frame: %" G_GUINT64_FORMAT,
+                                                 image_buffer->priv->frame_id);
 
 				if (error != NULL) {
-					arv_warning_stream_thread ("[GvFakeCamera::thread] Failed to send leader for frame %" G_GUINT64_FORMAT
-								": %s", image_buffer->priv->frame_id, error->message);
-					g_clear_error (&error);
-				}
+					arv_warning_stream_thread
+                                                ("[GvFakeCamera::thread] Failed to send leader for frame %"
+                                                 G_GUINT64_FORMAT ": %s", image_buffer->priv->frame_id, error->message);
+                                        g_clear_error (&error);
+                                }
 
 				block_id++;
 
@@ -381,32 +391,35 @@ _thread (void *user_data)
 					data_size = MIN (gv_packet_size - ARV_GVSP_PACKET_PROTOCOL_OVERHEAD (FALSE),
 							payload - offset);
 
-					packet_size = ARV_GV_FAKE_CAMERA_BUFFER_SIZE;
                                         arv_gvsp_packet_new_payload (image_buffer->priv->frame_id, block_id,
-                                                                     data_size, ((char *) image_buffer->priv->data) + offset,
-                                                                     packet_buffer, &packet_size);
+                                                                     data_size,
+                                                                     ((char *) image_buffer->priv->data) + offset,
+                                                                     packet_buffer, ARV_GV_FAKE_CAMERA_BUFFER_SIZE,
+                                                                     &packet_size);
 
 					if (g_random_double () >= gv_fake_camera->priv->gvsp_lost_packet_ratio)
 						g_socket_send_to (gv_fake_camera->priv->gvsp_socket, stream_address,
 								packet_buffer, packet_size, NULL, &error);
 					else
-						arv_info_stream_thread ("Drop GVSP data packet frame:%" G_GUINT64_FORMAT
-									", block:%u", image_buffer->priv->frame_id, block_id);
+						arv_info_stream_thread
+                                                        ("Drop GVSP data packet frame:%" G_GUINT64_FORMAT
+                                                         ", block:%u", image_buffer->priv->frame_id, block_id);
 
 					if (error != NULL) {
-						arv_info_stream_thread ("[GvFakeCamera::thread] Failed to send frame block %d for frame"
-									" %" G_GUINT64_FORMAT ": %s",
-									block_id, image_buffer->priv->frame_id, error->message);
-						g_clear_error (&error);
-					}
+						arv_info_stream_thread
+                                                        ("[GvFakeCamera::thread] Failed to send frame block %d for frame"
+                                                         " %" G_GUINT64_FORMAT ": %s",
+                                                         block_id, image_buffer->priv->frame_id, error->message);
+                                                g_clear_error (&error);
+                                        }
 
 					offset += data_size;
 					block_id++;
 				}
 
-				packet_size = ARV_GV_FAKE_CAMERA_BUFFER_SIZE;
-				arv_gvsp_packet_new_data_trailer (image_buffer->priv->frame_id, block_id,
-								packet_buffer, &packet_size);
+                                arv_gvsp_packet_new_data_trailer (image_buffer->priv->frame_id, block_id, arv_buffer_get_image_height(image_buffer) ,
+                                                                  packet_buffer, ARV_GV_FAKE_CAMERA_BUFFER_SIZE,
+                                                                  &packet_size);
 
 				if (g_random_double () >= gv_fake_camera->priv->gvsp_lost_packet_ratio)
 					g_socket_send_to (gv_fake_camera->priv->gvsp_socket, stream_address,
@@ -416,10 +429,11 @@ _thread (void *user_data)
 								image_buffer->priv->frame_id);
 
 				if (error != NULL) {
-					arv_info_stream_thread ("[GvFakeCamera::thread] Failed to send trailer for frame %" G_GUINT64_FORMAT
-								": %s", image_buffer->priv->frame_id, error->message);
-					g_clear_error (&error);
-				}
+					arv_info_stream_thread
+                                                ("[GvFakeCamera::thread] Failed to send trailer for frame %"
+                                                 G_GUINT64_FORMAT ": %s", image_buffer->priv->frame_id, error->message);
+                                        g_clear_error (&error);
+                                }
 
 				is_streaming = TRUE;
 			}

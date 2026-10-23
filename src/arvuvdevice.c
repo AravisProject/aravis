@@ -1,21 +1,21 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2022 Emmanuel Pacaud
+ * Copyright © 2009-2025 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Emmanuel Pacaud <emmanuel.pacaud@free.fr>
  */
@@ -55,6 +55,9 @@ typedef struct {
 	char *serial_number;
 	char *guid;
 
+        unsigned int usb_major_version;
+        unsigned int usb_minor_version;
+
 	libusb_context *usb;
 	libusb_device_handle *usb_device;
 
@@ -72,11 +75,13 @@ typedef struct {
 	guint ack_packet_size_max;
 	guint control_interface;
 	guint data_interface;
-        guint8 control_endpoint;
-        guint8 data_endpoint;
+	guint8 control_endpoint_out;
+	guint8 control_endpoint_in;
+	guint8 data_endpoint;
 	gboolean disconnected;
 
 	ArvUvUsbMode usb_mode;
+        guint64 maximum_transfer_size;
 
 	int event_thread_run;
 	GThread* event_thread;
@@ -141,9 +146,13 @@ arv_uv_device_fill_bulk_transfer (struct libusb_transfer* transfer, ArvUvDevice 
         ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (uv_device);
         guint8 endpoint;
 
-	endpoint = (endpoint_type == ARV_UV_ENDPOINT_CONTROL) ? priv->control_endpoint : priv->data_endpoint;
+        if (endpoint_type == ARV_UV_ENDPOINT_CONTROL) {
+                endpoint = (endpoint_flags == LIBUSB_ENDPOINT_IN) ? priv->control_endpoint_in : priv->control_endpoint_out;
+        } else {
+                endpoint = priv->data_endpoint;
+        }
 
-        libusb_fill_bulk_transfer (transfer, priv->usb_device, endpoint | endpoint_flags, data, size,
+        libusb_fill_bulk_transfer (transfer, priv->usb_device, endpoint, data, size,
                                    callback, callback_data, timeout );
 }
 
@@ -167,9 +176,12 @@ arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, ArvUvEndpointType endpoint_
 		return FALSE;
 	}
 
-
-	endpoint = (endpoint_type == ARV_UV_ENDPOINT_CONTROL) ? priv->control_endpoint : priv->data_endpoint;
-	result = libusb_bulk_transfer (priv->usb_device, endpoint | endpoint_flags, data, size, &transferred,
+	if (endpoint_type == ARV_UV_ENDPOINT_CONTROL) {
+		endpoint = (endpoint_flags == LIBUSB_ENDPOINT_IN) ? priv->control_endpoint_in : priv->control_endpoint_out;
+	} else {
+		endpoint = priv->data_endpoint;
+	}
+	result = libusb_bulk_transfer (priv->usb_device, endpoint, data, size, &transferred,
 				       timeout_ms > 0 ? timeout_ms : priv->timeout_ms);
 
 	success = result >= 0;
@@ -211,7 +223,8 @@ static ArvStream *
 arv_uv_device_create_stream (ArvDevice *device, ArvStreamCallback callback, void *user_data, GDestroyNotify destroy, GError **error)
 {
 	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (ARV_UV_DEVICE (device));
-	return arv_uv_stream_new (ARV_UV_DEVICE (device), callback, user_data, destroy, priv->usb_mode, error);
+	return arv_uv_stream_new (ARV_UV_DEVICE (device), callback, user_data, destroy,
+                                  priv->usb_mode, priv->maximum_transfer_size, error);
 }
 
 static gboolean
@@ -724,7 +737,7 @@ arv_uv_device_get_genicam_xml (ArvDevice *device, size_t *size)
 }
 
 static void
-reset_endpoint (libusb_device_handle *usb_device, guint8 endpoint, guint8 endpoint_flags)
+reset_endpoint (libusb_device_handle *usb_device, guint8 endpoint)
 {
 	int errcode;
 
@@ -733,17 +746,17 @@ reset_endpoint (libusb_device_handle *usb_device, guint8 endpoint, guint8 endpoi
 					      LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_ENDPOINT,
 					      LIBUSB_REQUEST_SET_FEATURE,
 					      0, /* Value: 0=endpoint_halt */
-					      endpoint | endpoint_flags,
+					      endpoint,
 					      0, 0,
 					      1000);
 	if (errcode < 0) {
 		arv_warning_device("Failed to set endpoint %x in halt condition: %s",
-				   endpoint|endpoint_flags, libusb_error_name (errcode));
+				   endpoint, libusb_error_name (errcode));
 		return;
 	}
 
 	/* Clear halt condtion on the endpoint, effectivelly resetting the pipe */
-	errcode = libusb_clear_halt(usb_device, endpoint | endpoint_flags);
+	errcode = libusb_clear_halt(usb_device, endpoint);
 	if (errcode < 0) {
 		arv_warning_device("Failed to clear halt contidion on endpoint: %s",
 				   libusb_error_name (errcode));
@@ -758,7 +771,7 @@ arv_uv_device_reset_stream_endpoint (ArvUvDevice *device)
 
         g_return_val_if_fail(ARV_IS_UV_DEVICE(device), FALSE);
 
-        reset_endpoint (priv->usb_device, priv->data_endpoint, LIBUSB_ENDPOINT_IN);
+        reset_endpoint (priv->usb_device, priv->data_endpoint);
 
         return TRUE;
 }
@@ -852,6 +865,18 @@ _open_usb_device (ArvUvDevice *uv_device, GError **error)
 
 				priv->usb_device = usb_device;
 
+                                if (priv->vendor == NULL)
+                                        priv->vendor = g_strdup ((char *) manufacturer);
+                                if (priv->product == NULL)
+                                        priv->product = g_strdup ((char *) product);
+                                if (priv->serial_number == NULL)
+                                        priv->serial_number = g_strdup ((char *) serial_number);
+                                if (priv->guid == NULL)
+                                        priv->guid = g_strdup ((char *) guid);
+
+                                priv->usb_major_version = ((desc.bcdUSB >> 12) & 0xf) * 10 + ((desc.bcdUSB >> 8) & 0xf);
+                                priv->usb_minor_version = ((desc.bcdUSB >> 4) & 0xf) * 10 + (desc.bcdUSB & 0xf);
+
                                 result = libusb_set_auto_detach_kernel_driver (usb_device, 1);
                                 if (result != 0) {
                                         arv_warning_device ("Failed to set auto kernel detach feature "
@@ -868,13 +893,19 @@ _open_usb_device (ArvUvDevice *uv_device, GError **error)
 						if (interdesc->bInterfaceClass == ARV_UV_INTERFACE_INTERFACE_CLASS &&
 						    interdesc->bInterfaceSubClass == ARV_UV_INTERFACE_INTERFACE_SUBCLASS) {
 							if (interdesc->bInterfaceProtocol == ARV_UV_INTERFACE_CONTROL_PROTOCOL) {
-								endpoint = interdesc->endpoint[0];
-								priv->control_endpoint = endpoint.bEndpointAddress & 0x0f;
+								for (int edx = 0; edx < interdesc->bNumEndpoints; edx++) {
+									endpoint = interdesc->endpoint[edx];
+									if ((endpoint.bEndpointAddress & LIBUSB_ENDPOINT_IN) != 0) {
+										priv->control_endpoint_in = endpoint.bEndpointAddress;
+									} else {
+										priv->control_endpoint_out = endpoint.bEndpointAddress;
+									}
+								}
 								priv->control_interface = interdesc->bInterfaceNumber;
 							}
 							if (interdesc->bInterfaceProtocol == ARV_UV_INTERFACE_DATA_PROTOCOL) {
 								endpoint = interdesc->endpoint[0];
-								priv->data_endpoint = endpoint.bEndpointAddress & 0x0f;
+								priv->data_endpoint = endpoint.bEndpointAddress;
 								priv->data_interface = interdesc->bInterfaceNumber;
 							}
 						}
@@ -894,10 +925,14 @@ _open_usb_device (ArvUvDevice *uv_device, GError **error)
 	libusb_free_device_list (devices, 1);
 
 	if (priv->usb_device == NULL) {
-		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
-			     "USB device '%s:%s:%s' not found", priv->vendor, priv->product, priv->serial_number);
-		return FALSE;
-	}
+                if (priv->vendor != NULL && priv->product != NULL && priv->serial_number != NULL)
+                        g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
+                                     "USB device '%s:%s:%s' not found", priv->vendor, priv->product, priv->serial_number);
+                else
+                        g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
+                                     "USB device with GUID %s not found", priv->guid);
+                return FALSE;
+        }
 
 	return TRUE;
 }
@@ -940,6 +975,25 @@ arv_uv_device_set_usb_mode (ArvUvDevice *uv_device, ArvUvUsbMode usb_mode)
 	priv->usb_mode = usb_mode;
 }
 
+/**
+ * arv_uv_device_set_maximum_transfer_size:
+ * @uv_device: a #ArvUvDevice
+ * @size: maximum transfer size, in bytes
+ *
+ * Set the maximum transfer size for a USB bulk transfer.
+ *
+ * Since: 0.10.0
+ */
+
+void
+arv_uv_device_set_maximum_transfer_size (ArvUvDevice *uv_device, guint64 size)
+{
+	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (uv_device);
+
+	g_return_if_fail (ARV_IS_UV_DEVICE (uv_device));
+
+	priv->maximum_transfer_size = size;
+}
 /**
  * arv_uv_device_new:
  * @vendor: USB3 vendor string
@@ -1035,9 +1089,16 @@ arv_uv_device_constructed (GObject *object)
                 return;
 	}
 
-	arv_info_device("[UvDevice::new] Using control endpoint %d, interface %d",
-			 priv->control_endpoint, priv->control_interface);
-	arv_info_device("[UvDevice::new] Using data endpoint %d, interface %d",
+        if (priv->usb_major_version < 3)
+                arv_warning_device ("[UvDevice::new] USB %d.%d (Low bandwidth)",
+                                    priv->usb_major_version, priv->usb_minor_version);
+        else
+                arv_info_device ("[UvDevice::new] USB %d.%d",
+                                 priv->usb_major_version, priv->usb_minor_version);
+
+	arv_info_device("[UvDevice::new] Using control endpoint OUT=0x%02x IN=0x%02x, interface %d",
+			 priv->control_endpoint_out, priv->control_endpoint_in, priv->control_interface);
+	arv_info_device("[UvDevice::new] Using data endpoint 0x%02x, interface %d",
 			 priv->data_endpoint, priv->data_interface);
 
         result = libusb_claim_interface (priv->usb_device, priv->control_interface);
@@ -1085,6 +1146,7 @@ arv_uv_device_constructed (GObject *object)
                                           &priv->hotplug_cb_handle);
 
 	priv->usb_mode = ARV_UV_USB_MODE_DEFAULT;
+        priv->maximum_transfer_size = ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE_DEFAULT;
 
 	priv->event_thread_run = 1;
 	priv->event_thread = g_thread_new ( "arv_libusb", event_thread_func, priv);

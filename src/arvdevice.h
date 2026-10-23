@@ -1,21 +1,21 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2022 Emmanuel Pacaud
+ * Copyright © 2009-2025 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Emmanuel Pacaud <emmanuel.pacaud@free.fr>
  */
@@ -84,7 +84,8 @@ ARV_API G_DECLARE_DERIVABLE_TYPE (ArvDevice, arv_device, ARV, DEVICE, GObject)
 struct _ArvDeviceClass {
 	GObjectClass parent_class;
 
-	ArvStream *	(*create_stream)	(ArvDevice *device, ArvStreamCallback callback, void *user_data, GDestroyNotify destroy, GError **error);
+	ArvStream *	(*create_stream)	(ArvDevice *device, ArvStreamCallback callback, void *user_data,
+                                                 GDestroyNotify destroy, GError **error);
 
 	const char *	(*get_genicam_xml)	(ArvDevice *device, size_t *size);
 	ArvGc *		(*get_genicam)		(ArvDevice *device);
@@ -108,14 +109,17 @@ struct _ArvDeviceClass {
         gpointer padding[10];
 };
 
-ARV_API ArvStream *	arv_device_create_stream		(ArvDevice *device, ArvStreamCallback callback, void *user_data, GError **error);
-ARV_API ArvStream *	arv_device_create_stream_full		(ArvDevice *device, ArvStreamCallback callback, void *user_data, GDestroyNotify destroy, GError **error);
+ARV_API ArvStream *	arv_device_create_stream        	(ArvDevice *device,
+                                                                 ArvStreamCallback callback, void *user_data,
+                                                                 GDestroyNotify destroy, GError **error);
 
 ARV_API gboolean        arv_device_start_acquisition            (ArvDevice *device, GError **error);
 ARV_API gboolean        arv_device_stop_acquisition             (ArvDevice *device, GError **error);
 
 ARV_API gboolean	arv_device_read_memory			(ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error);
 ARV_API gboolean	arv_device_write_memory			(ArvDevice *device, guint64 address, guint32 size, const void *buffer, GError **error);
+ARV_API GByteArray *    arv_device_read_bytes                   (ArvDevice *device, guint64 address, guint32 size, GError **error);
+ARV_API gboolean	arv_device_write_bytes			(ArvDevice *device, guint64 address, GByteArray *bytes, GError **error);
 ARV_API gboolean	arv_device_read_register		(ArvDevice *device, guint64 address, guint32 *value, GError **error);
 ARV_API gboolean	arv_device_write_register		(ArvDevice *device, guint64 address, guint32 value, GError **error);
 #if ARAVIS_HAS_EVENT

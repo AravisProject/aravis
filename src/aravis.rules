@@ -1,16 +1,3 @@
-# Basler
-SUBSYSTEM=="usb", ATTRS{idVendor}=="2676", MODE:="0666", TAG+="uaccess", TAG+="udev-acl"
-# The Imaging Source
-SUBSYSTEM=="usb", ATTRS{idVendor}=="199e", MODE:="0666", TAG+="uaccess", TAG+="udev-acl"
-# Point Grey Research
-SUBSYSTEM=="usb", ATTRS{idVendor}=="1e10", MODE:="0666", TAG+="uaccess", TAG+="udev-acl"
-# Daheng Imaging
-SUBSYSTEM=="usb", ATTRS{idVendor}=="2ba2", MODE:="0666", TAG+="uaccess", TAG+="udev-acl"
-# Dahua Technology
-SUBSYSTEM=="usb", ATTRS{idVendor}=="2e03", MODE:="0666", TAG+="uaccess", TAG+="udev-acl"
-# Omron Sentech
-SUBSYSTEM=="usb", ATTRS{idVendor}=="1421", MODE:="0666", TAG+="uaccess", TAG+="udev-acl"
-# IDS Imaging Development Systems GmbH
-SUBSYSTEM=="usb", ATTRS{idVendor}=="1409", MODE:="0666", TAG+="uaccess", TAG+="udev-acl"
-# Hikrobot
-SUBSYSTEM=="usb", ATTRS{idVendor}=="2bdf", MODE:="0666", TAG+="uaccess", TAG+="udev-acl"
+# Give USB3Vision device access to everyone, and create a symlink in /dev/u3v
+SUBSYSTEM=="usb", ATTRS{bDeviceClass}=="ef", ATTRS{bDeviceSubClass}=="02", ATTRS{bDeviceProtocol}=="01",
+        ENV{ID_USB_INTERFACES}=="*:ef0500:*", MODE="0666", SYMLINK+="u3v/by-id/$env{ID_SERIAL}"

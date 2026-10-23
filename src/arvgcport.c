@@ -1,21 +1,21 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2022 Emmanuel Pacaud
+ * Copyright © 2009-2025 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Emmanuel Pacaud <emmanuel.pacaud@free.fr>
  */
@@ -61,17 +61,25 @@ typedef struct {
  */
 
 static ArvGvLegacyInfos arv_gc_port_legacy_infos[] = {
+   { .vendor_selection = "AT_Automation_Technology_GmbH",       .model_selection = "C6_X_GigE"},
+   { .vendor_selection = "DO3THINK",                            .model_selection = "MGV518"},
+   { .vendor_selection = "EVK",                                 .model_selection = "HELIOS"},
+   { .vendor_selection = "IDS_Imaging_Development_Systems_GmbH",.model_selection = "GV_53FxLE_M"},
+   { .vendor_selection = "IDS_Imaging_Development_Systems_GmbH",.model_selection = "GV_58CxLE_M"},
+   { .vendor_selection = "IDS_Imaging_Development_Systems_GmbH",.model_selection = "GV_524xCP_NIR"},
+   { .vendor_selection = "IDS_Imaging_Development_Systems_GmbH",.model_selection = "GV_599xCP_C"},
    { .vendor_selection = "Imperx",                              .model_selection = "IpxGEVCamera"},
    { .vendor_selection = "KowaOptronics",                       .model_selection = "SC130ET3"},
    { .vendor_selection = "NIT",                                 .model_selection = "Tachyon16k"},
    { .vendor_selection = "NIT",                                 .model_selection = "NSC1601GIGE"},
+   { .vendor_selection = "PleoraTechnologiesInc",               .model_selection = "CLTenFull"},
    { .vendor_selection = "PleoraTechnologiesInc",               .model_selection = "iPORTCLGigE"},
    { .vendor_selection = "PleoraTechnologiesInc",               .model_selection = "NTxGigE"},
-   { .vendor_selection = "TeledyneDALSA",                       .model_selection = "ICE"},
    { .vendor_selection = "Sony",                                .model_selection = "XCG_CGSeries"},
    { .vendor_selection = "Sony",                                .model_selection = "XCG_CPSeries"},
-   { .vendor_selection = "EVK",                                 .model_selection = "HELIOS"},
-   { .vendor_selection = "AT_Automation_Technology_GmbH",       .model_selection = "C6_X_GigE"},
+   { .vendor_selection = "TeledyneDALSA",                       .model_selection = "ICE"},
+   { .vendor_selection = "Xenics",                              .model_selection = "Wildcat"},
+   { .vendor_selection = "FLIR",                                .model_selection = "XscSeries"},
 };
 
 typedef struct {

@@ -1,21 +1,21 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2023 Emmanuel Pacaud
+ * Copyright © 2009-2025 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
@@ -125,6 +125,9 @@ static const char *
 arv_v4l2_device_get_genicam_xml (ArvDevice *device, size_t *size)
 {
 	ArvV4l2DevicePrivate *priv = arv_v4l2_device_get_instance_private (ARV_V4L2_DEVICE (device));
+
+        if (size != NULL)
+                *size = priv->genicam_xml_size;
 
 	return priv->genicam_xml;
 }
@@ -351,20 +354,17 @@ _set_frame_rate (ArvV4l2Device *device, double frame_rate)
 
         return TRUE;
 }
-
-static void
+static gboolean
 _control_stream (ArvV4l2Device *device, gboolean enable)
 {
         ArvV4l2DevicePrivate *priv = arv_v4l2_device_get_instance_private (ARV_V4L2_DEVICE (device));
         enum v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
-        if (arv_v4l2_ioctl (priv->device_fd, enable ? VIDIOC_STREAMON : VIDIOC_STREAMOFF, &type) == -1) {
-                arv_warning_device ("v4l2 stream %s failed (%s)",
-                                    enable ? "start" : "stop",
-                                    strerror (errno));
-        } else {
-                arv_info_device ("Stream %s for device '%s'", enable ? "started" : "stopped", priv->device_file);
-        }
+        if (arv_v4l2_ioctl (priv->device_fd, enable ? VIDIOC_STREAMON : VIDIOC_STREAMOFF, &type) == -1)
+                return FALSE;
+
+        arv_info_device ("Stream %s for device '%s'", enable ? "started" : "stopped", priv->device_file);
+        return TRUE;
 }
 
 static gboolean
@@ -527,7 +527,14 @@ arv_v4l2_device_write_memory (ArvDevice *device, guint64 address, guint32 size, 
                 memcpy (&value, buffer, sizeof (value));
                 switch (address) {
                         case ARV_V4L2_ADDRESS_ACQUISITION_COMMAND:
-                                _control_stream (v4l2_device, value.i32 != 0);
+                                if( !_control_stream (v4l2_device, value.i32 != 0) ) {
+                                        g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
+                                                     "v4l2 stream %s failed (%s)",
+                                                     value.i32 != 0 ? "start" : "stop",
+                                                     strerror (errno));
+                                        return FALSE;
+                                }
+
                                 break;
                         case ARV_V4L2_ADDRESS_GAIN:
                                 arv_v4l2_set_ctrl (priv->device_fd, V4L2_CID_GAIN, value.i32);
@@ -547,7 +554,10 @@ arv_v4l2_device_write_memory (ArvDevice *device, guint64 address, guint32 size, 
                         case ARV_V4L2_ADDRESS_PIXEL_FORMAT:
                                 for (i = 0; i < priv->pixel_formats->len; i++) {
                                         if (g_array_index(priv->pixel_formats, guint32, i) == value.i32)
+                                        {
                                                 priv->pixel_format_idx = i;
+                                                break;
+                                        }
                                 }
                                 if (i == priv->pixel_formats->len)
                                         found = FALSE;

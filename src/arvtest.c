@@ -1,21 +1,21 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2022 Emmanuel Pacaud
+ * Copyright © 2009-2025 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Emmanuel Pacaud <emmanuel.pacaud@free.fr>
  */
@@ -496,9 +496,11 @@ _single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_c
         GError *error = NULL;
         ArvBuffer *buffer = NULL;
         char **chunk_list = NULL;
+        char **chunk_selector_list = NULL;
         ArvChunkParser *parser = NULL;
         char *component = NULL;
         guint n_parts = 1;
+        GString *message;
 
         g_return_if_fail (ARV_IS_TEST (test));
 
@@ -547,6 +549,7 @@ _single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_c
 
         if (chunk_test) {
                 char *chunks;
+                char *chunk_selector;
                 gboolean chunks_support = arv_test_camera_get_key_file_boolean (test_camera, test,
                                                                                 "ChunksSupport", TRUE);
                 n_parts = arv_test_camera_get_key_file_int64 (test_camera, test,
@@ -561,15 +564,22 @@ _single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_c
                         return;
                 }
 
-                chunks = arv_test_camera_get_key_file_string (test_camera, test, "ChunkList", "OffsetX OffsetY");
+                chunks = arv_test_camera_get_key_file_string (test_camera, test, "ChunkList", "Width Height");
                 chunk_list = g_strsplit_set (chunks, " ", -1);
+
+                chunk_selector = arv_test_camera_get_key_file_string(test_camera, test,
+                                                                     "ChunkSelector", "Ignore Ignore");
+                chunk_selector_list = g_strsplit_set(chunk_selector, " ", -1);
 
                 parser = arv_camera_create_chunk_parser (test_camera->camera);
 
                 arv_camera_set_chunks (test_camera->camera, chunks, &error);
 
                 g_free (chunks);
+                g_free (chunk_selector);
         }
+
+        message = g_string_new ("");
 
         if (error == NULL)
                 buffer = arv_camera_acquisition (test_camera->camera, 1000000, &error);
@@ -586,23 +596,60 @@ _single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_c
                                      arv_buffer_get_n_parts(buffer), n_parts);
         }
 
-        if (error == NULL && chunk_test) {
-                int n_chunks = g_strv_length (chunk_list);
-                int i;
+        if (chunk_test) {
+                if (error == NULL) {
+                        int n_chunks = g_strv_length (chunk_list);
+                        int n_elements = g_strv_length (chunk_selector_list) - 1;
+                        int i, j;
 
-                if (arv_buffer_has_chunks(buffer)) {
-                        for (i = 0; i < n_chunks && error == NULL; i++) {
-                                char *chunk_name = g_strdup_printf ("Chunk%s", chunk_list[i]);
-                                arv_chunk_parser_get_integer_value (parser, buffer, chunk_name, &error);
-                                g_clear_pointer (&chunk_name, g_free);
+                        if (arv_buffer_has_chunks(buffer)) {
+                                for (i = 0; i < n_chunks && error == NULL; i++) {
+                                        char *chunk_name = g_strdup_printf ("Chunk%s", chunk_list[i]);
+                                        for (j = 0; j < n_elements && error == NULL; j++) {
+                                                if (g_strcmp0 (chunk_selector_list[0], "Ignore") != 0) {
+                                                        arv_chunk_parser_set_string_feature_value
+                                                                (parser,
+                                                                 chunk_selector_list[0],
+                                                                 chunk_selector_list[j+1],
+                                                                 &error);
+                                                }
+                                                if (error == NULL) {
+                                                        gint64 int_value;
+
+                                                        int_value = arv_chunk_parser_get_integer_value (parser, buffer,
+                                                                                            chunk_name, &error);
+                                                        if (error != NULL) {
+                                                                double float_value;
+
+                                                                g_clear_error (&error);
+                                                                float_value = arv_chunk_parser_get_float_value
+                                                                        (parser, buffer, chunk_name, &error);
+                                                                if (error == NULL) {
+                                                                        g_string_append_printf
+                                                                                (message,
+                                                                                 "%s%g",
+                                                                                 message->len > 0 ?  " ": "",
+                                                                                 float_value);
+                                                                }
+                                                        } else {
+                                                                g_string_append_printf (message, "%s%"
+                                                                                        G_GINT64_MODIFIER "d",
+                                                                                        message->len > 0 ? " ": "",
+                                                                                        int_value);
+                                                        }
+                                                }
+                                        }
+                                        g_clear_pointer (&chunk_name, g_free);
+                                }
+                        } else {
+                                g_set_error (&error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_TRANSFER_ERROR,
+                                             "No chunk found in buffer");
                         }
-                } else {
-                        g_set_error (&error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_TRANSFER_ERROR,
-                                     "No chunk found in buffer");
-                }
 
-                g_clear_object (&parser);
+                        g_clear_object (&parser);
+                }
                 g_strfreev (chunk_list);
+                g_strfreev (chunk_selector_list);
         }
 
         if (chunk_test)
@@ -621,7 +668,9 @@ _single_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test_c
                                     error == NULL ?
                                     ARV_TEST_STATUS_SUCCESS :
                                     ARV_TEST_STATUS_FAILURE,
-                                    error != NULL ? error->message : NULL);
+                                    error != NULL ? error->message : message->str);
+
+        g_string_free (message, TRUE);
         g_clear_error (&error);
         g_clear_object (&buffer);
 }
@@ -716,7 +765,7 @@ _multiple_acquisition (ArvTest *test, const char *test_name, ArvTestCamera *test
         callback_data.n_done = 0;
         callback_data.n_success = 0;
         callback_data.n_exit = 0;
-        stream = arv_camera_create_stream (test_camera->camera, _stream_calback, &callback_data, &error);
+        stream = arv_camera_create_stream (test_camera->camera, _stream_calback, &callback_data, NULL, &error);
         if (error == NULL)
                 payload_size = arv_camera_get_payload (test_camera->camera, &error);
         if (error == NULL) {
@@ -872,7 +921,7 @@ arv_test_software_trigger (ArvTest *test, const char *test_name, ArvTestCamera *
         callback_data.n_done = 0;
         callback_data.n_success = 0;
         callback_data.n_exit = 0;
-        stream = arv_camera_create_stream (test_camera->camera, _stream_calback, &callback_data, &error);
+        stream = arv_camera_create_stream (test_camera->camera, _stream_calback, &callback_data, NULL, &error);
         if (error == NULL)
                 payload_size = arv_camera_get_payload (test_camera->camera, &error);
         if (error == NULL) {

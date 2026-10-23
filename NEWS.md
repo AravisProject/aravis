@@ -1,3 +1,64 @@
+Development release 0.9.2
+=========================
+
+  * viewer: exposure time and increment support (Marco)
+  * viewer: more pixel format support (Gaurav)
+  * viewer: require gtksink (Emmanuel)
+  * gstplugin: memory leak fix (Marko)
+  * usb3vision: fix handling of control endpoints (Takumi)
+  * gigevision: more cameras to the legacy endianness lists (Benjamin, Jagan,
+    Dima, sorki)
+  * gigevision: undefined behaviour fixes (Marco)
+  * gigevision: replace magic 0 with explicit constant (wey)
+  * genicam: local error propagation fixes (vladislav)
+  * msvc: avoid symbol export in static builds (Leonardo)
+  * python: read write memory binding fixes (Emmanuel)
+  * readme: link fix (Jamal)
+
+Development release 0.9.1
+=========================
+
+  * gv_interface: discovery interface selection (Yuto)
+  * system: add a way to select an interface (Emmanuel)
+  * chunk_parser: support for value selector (Emmanuel)
+  * camera: replace ctrea_strem_full by stream_create, break API (Emmanuel)
+  * gvcp, gvsp: make packet parsing more robust (Emmanue)
+  * gv_stream: fix uninitialized data access (Emmanuel)
+  * tests: fix unaligned memory access (Matwey)
+  * introspection: annotation fixes (Jared, Emmanuel)
+  * fake_camera: fix trailer packet content (Michail)
+
+Development release 0.9.0
+=========================
+
+  * v4l2, USB3Vision: native buffer allocation (Emmanuel)
+  * GenTL producer: experimental implementation (Václav)
+  * GenTL consumer: experimental implementation (Xiaoqiang)
+  * v4l2 interface: experimental implementation (Emmanuel)
+  * USB3Vision: make maximum transfer size configurable (Emmanuel)
+  * gst: add gamma property (WhaSukGO)
+
+Stable release 0.8.33
+=====================
+
+  * viewer: ignore exposure time feature representation (Emmanuel)
+
+Stable release 0.8.32
+=====================
+
+  * viewer: workaround for Blackfly Mono16 pixel endianness issue (Berke)
+  * gst: disconnect camera in stop method #907 (Emmanuel)
+  * gst: stream object accessor (Marko)
+  * gst: camera change signal (Marko)
+  * gst: stream change signal (Marko)
+  * gst: allow software trigger (WhaSukGo)
+  * gvsp: fix chunk detection (Marco)
+  * gv_device: crach fix on finalization (Marco)
+  * Fix device_write_memory rust binding (Jacob)
+  * introspection: add generic feature value accessors (Marko)
+  * chore: fix libxml2 deprecation warnings (Emmanuel)
+  * chore: appstream fixes (Chiara)
+
 Stable release 0.8.31
 =====================
 

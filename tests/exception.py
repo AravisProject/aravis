@@ -1,3 +1,5 @@
+# SPDX-License-Identifier:Unlicense
+
 import gi
 import os
 

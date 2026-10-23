@@ -1,21 +1,21 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2022 Emmanuel Pacaud
+ * Copyright © 2009-2025 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Emmanuel Pacaud <emmanuel.pacaud@free.fr>
  */
@@ -301,4 +301,34 @@ arv_g_string_append_hex_dump (GString *string, const void *data, size_t size)
 		if (index < size)
 			g_string_append (string, "\n");
 	}
+}
+
+/**
+ * arv_ascii_has_suffix_case_insensitive:
+ * @str: a string to check
+ * @suffix: the suffix to look for
+ *
+ * Checks whether @str ends with @suffix, ignoring ASCII case.
+ *
+ * Returns: %TRUE if @str has @suffix as a case-insensitive suffix
+ *
+ * Since: 0.10
+ */
+
+gboolean
+arv_ascii_has_suffix_case_insensitive (const char *str, const char *suffix)
+{
+        size_t str_len;
+        size_t suffix_len;
+
+        g_return_val_if_fail (str != NULL, FALSE);
+        g_return_val_if_fail (suffix != NULL, FALSE);
+
+        str_len = strlen (str);
+        suffix_len = strlen (suffix);
+
+        if (str_len < suffix_len)
+                return FALSE;
+
+        return g_ascii_strcasecmp (str + str_len - suffix_len, suffix) == 0;
 }

@@ -1,21 +1,21 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2022 Emmanuel Pacaud
+ * Copyright © 2009-2025 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Emmanuel Pacaud <emmanuel.pacaud@free.fr>
  */
@@ -71,50 +71,27 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvDevice, arv_device, G_TYPE_OBJECT,
 				  G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, arv_device_initable_iface_init))
 
 /**
- * arv_device_create_stream: (skip)
+ * arv_device_create_stream:
  * @device: a #ArvDevice
- * @callback: (scope call): a frame processing callback
- * @user_data: (allow-none) (closure): user data for @callback
- * @error: a #GError placeholder, %NULL to ignore
+ * @callback: (scope notified) (nullable) (closure user_data) (destroy destroy): a frame processing callback
+ * @user_data: (allow-none) : user data for @callback
+ * @destroy: (nullable): destroy notifier of @user_data
+ * @error: return location for a [type@GLib.Error]
  *
- * Creates a new #ArvStream for video stream handling. See
- * @ArvStreamCallback for details regarding the callback function.
+ * Creates a new [class@ArvStream] for video stream handling. See
+ * [callback@ArvStreamCallback] for details regarding the callback function.
  *
- * Return value: (transfer full): a new #ArvStream.
+ * Return value: (transfer full): a new [class@ArvStream].
  *
- * Since: 0.2.0
+ * Since: 0.10.0
  */
 
 ArvStream *
 arv_device_create_stream (ArvDevice *device,
-                          ArvStreamCallback callback, void *user_data,
+                          ArvStreamCallback callback, void *user_data, GDestroyNotify destroy,
                           GError **error)
 {
-	return  arv_device_create_stream_full(device, callback, user_data, NULL, error);
-}
-
-/**
- * arv_device_create_stream_full: (rename-to arv_device_create_stream)
- * @device: a #ArvDevice
- * @callback: (scope notified): a frame processing callback
- * @user_data: (allow-none) (closure): user data for @callback
- * @destroy: a #GDestroyNotify placeholder, %NULL to ignore
- * @error: a #GError placeholder, %NULL to ignore
- *
- * Creates a new #ArvStream for video stream handling. See
- * @ArvStreamCallback for details regarding the callback function.
- *
- * Return value: (transfer full): a new #ArvStream.
- *
- * Since: 0.8.23
- */
-
-ArvStream *
-arv_device_create_stream_full (ArvDevice *device,
-                               ArvStreamCallback callback, void *user_data, GDestroyNotify destroy,
-                               GError **error)
-{
-	ArvDevicePrivate *priv = arv_device_get_instance_private (device);
+        ArvDevicePrivate *priv = arv_device_get_instance_private (device);
         ArvStream *stream;
         GWeakRef *stream_weak_ref;
 
@@ -136,13 +113,13 @@ arv_device_create_stream_full (ArvDevice *device,
  * arv_device_read_memory:
  * @device: a #ArvDevice
  * @address: memory address
- * @size: number of bytes to read
- * @buffer: a buffer for the storage of the read data
- * @error: (out) (allow-none): a #GError placeholder
+ * @size: (in): number of bytes to read
+ * @buffer: (array length=size) (element-type guint8) (out caller-allocates) : a buffer for the storage of the read data
+ * @error: a #GError placeholder
  *
  * Reads @size bytes from the device memory.
  *
- * Return value: (skip): TRUE on success.
+ * Return value: %TRUE on success, %FALSE if an error occurred
  *
  * Since: 0.2.0
  **/
@@ -162,13 +139,13 @@ arv_device_read_memory (ArvDevice *device, guint64 address, guint32 size, void *
  * arv_device_write_memory:
  * @device: a #ArvDevice
  * @address: memory address
- * @size: size of the returned buffer
- * @buffer: (transfer full): the buffer read from memory
- * @error: (out) (allow-none): a #GError placeholder
+ * @size: size of the content to write buffer
+ * @buffer: (array length=size) (element-type guint8): the content to write
+ * @error: a #GError placeholder
  *
  * Writes @size bytes to the device memory.
  *
- * Return value: (skip): TRUE on success.
+ * Return value: %TRUE on success, %FALSE if an error occurred
  *
  * Since: 0.2.0
  **/
@@ -182,6 +159,65 @@ arv_device_write_memory (ArvDevice *device, guint64 address, guint32 size, const
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	return ARV_DEVICE_GET_CLASS (device)->write_memory (device, address, size, buffer, error);
+}
+
+/**
+ * arv_device_read_bytes: (rename-to arv_device_read_memory):
+ * @device: a #ArvDevice
+ * @address: memory address
+ * @size: number of bytes to read
+ * @error: a #GError placeholder
+ *
+ * Reads @size bytes from the device memory.
+ *
+ * Return value: (transfer full): a new [class@Glib.ByteArray), %NULL on error
+ *
+ * Since: 0.8.36
+ **/
+
+GByteArray *
+arv_device_read_bytes (ArvDevice *device, guint64 address, guint32 size, GError **error)
+{
+        void *buffer;
+        gboolean success;
+
+	g_return_val_if_fail (ARV_IS_DEVICE (device), NULL);
+	g_return_val_if_fail (size > 0, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+        buffer = g_new (guint8, size);
+
+	success = ARV_DEVICE_GET_CLASS (device)->read_memory (device, address, size, buffer, error);
+
+        if (success)
+                return g_byte_array_new_take (buffer, size);
+
+        g_free (buffer);
+        return NULL;
+}
+
+/**
+ * arv_device_write_bytes: (rename-to arv_device_write_memory):
+ * @device: a #ArvDevice
+ * @address: memory address
+ * @bytes: (transfer none): the content to write
+ * @error: a #GError placeholder
+ *
+ * Writes bytes to the device memory.
+ *
+ * Return value: %TRUE on success, %FALSE if an error occurred
+ *
+ * Since: 0.8.36
+ **/
+
+gboolean
+arv_device_write_bytes (ArvDevice *device, guint64 address, GByteArray *bytes, GError **error)
+{
+	g_return_val_if_fail (ARV_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (bytes != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	return ARV_DEVICE_GET_CLASS (device)->write_memory (device, address, bytes->len, bytes->data, error);
 }
 
 /**
@@ -1247,14 +1283,22 @@ arv_device_set_features_from_string (ArvDevice *device, const char *string, GErr
                                                      ARV_DEVICE_ERROR_INVALID_PARAMETER,
                                                      "Invalid address in %s", key);
                                 } else {
-                                        int_value = g_ascii_strtoll (value, &end, 0);
-                                        if (end == NULL || end[0] != '\0') {
+                                        if (value == NULL || strlen (value) == 0) {
                                                 g_set_error (&local_error,
                                                              ARV_DEVICE_ERROR,
                                                              ARV_DEVICE_ERROR_INVALID_PARAMETER,
-                                                             "Invalid %s value for %s", value, key);
+                                                             "Value not found for %s", key);
                                         } else {
-                                                arv_device_write_register (device, address, int_value, &local_error);
+                                                int_value = g_ascii_strtoll (value, &end, 0);
+                                                if (end == NULL || end[0] != '\0') {
+                                                        g_set_error (&local_error,
+                                                                     ARV_DEVICE_ERROR,
+                                                                     ARV_DEVICE_ERROR_INVALID_PARAMETER,
+                                                                     "Invalid %s value for %s", value, key);
+                                                } else {
+                                                        arv_device_write_register (device, address, int_value,
+                                                                                   &local_error);
+                                                }
                                         }
                                 }
                         } else {

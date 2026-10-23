@@ -1,21 +1,21 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2022 Emmanuel Pacaud
+ * Copyright © 2009-2025 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Emmanuel Pacaud <emmanuel.pacaud@free.fr>
  */
@@ -31,7 +31,7 @@
 #include <arvfakestreamprivate.h>
 #include <arvfakecamera.h>
 #include <arvgc.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
 
 enum
 {
@@ -85,16 +85,34 @@ static gboolean
 arv_fake_device_read_memory (ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error)
 {
 	ArvFakeDevicePrivate *priv = arv_fake_device_get_instance_private (ARV_FAKE_DEVICE (device));
+        gboolean success;
 
-	return arv_fake_camera_read_memory (priv->camera, address, size, buffer);
+	success = arv_fake_camera_read_memory (priv->camera, address, size, buffer);
+
+        arv_trace_device ("[FakeDevice::read_memory] address 0x%" G_GINT64_MODIFIER "x, size = %d", address, size);
+
+        if (!success)
+                g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,
+                            "Invalid read at 0x%" G_GINT64_MODIFIER "x, size %d", address, size);
+
+        return success;
 }
 
 static gboolean
 arv_fake_device_write_memory (ArvDevice *device, guint64 address, guint32 size, const void *buffer, GError **error)
 {
 	ArvFakeDevicePrivate *priv = arv_fake_device_get_instance_private (ARV_FAKE_DEVICE (device));
+        gboolean success;
 
-	return arv_fake_camera_write_memory (priv->camera, address, size, buffer);
+        arv_trace_device ("[FakeDevice::write_memory] address 0x%" G_GINT64_MODIFIER "x, size = %d", address, size);
+
+	success = arv_fake_camera_write_memory (priv->camera, address, size, buffer);
+
+        if (!success)
+                g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,
+                             "Invalid write at 0x%" G_GINT64_MODIFIER "x, size %d", address, size);
+
+        return success;
 }
 
 static gboolean

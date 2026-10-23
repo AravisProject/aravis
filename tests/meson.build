@@ -1,4 +1,3 @@
-doc_examples = files (['arvexample.c', 'arvchunkparsertest.c'])
 
 if get_option('tests')
 
@@ -13,7 +12,7 @@ if get_option('tests')
     ],
     env:['DEBUGINFOD_URLS=', 'ARV_TEST_IGNORE_BUFFER='],
     exclude_suites:['python'],
-    timeout_multiplier:10
+    timeout_multiplier:5
   )
 
 	tests = [
@@ -36,7 +35,7 @@ if get_option('tests')
 				  link_with: aravis_library,
 				  dependencies: aravis_dependencies,
 				  include_directories: [library_inc])
-		test (t[0], exe, suite: t[1])
+		test (t[0], exe, suite: t[1], timeout: 60)
 	endforeach
 
         py_script_config_data = configuration_data ()
@@ -44,9 +43,7 @@ if get_option('tests')
         py_script_config_data.set ('LD_LIBRARY_PATH', meson.project_build_root() / 'src')
         py_script_config_data.set ('GST_PLUGIN_PATH', meson.project_build_root() / 'gst')
         py_script_config_data.set ('FAKE_GENICAM_PATH', meson.project_source_root() / 'src' / 'arv-fake-camera.xml')
-        if get_option('gentl-producer')
-          py_script_config_data.set ('ARV_PRODUCER_PATH', gentl_producer_library.full_path())
-        endif
+        py_script_config_data.set ('ARV_PRODUCER_PATH', get_option('gentl-producer') ? gentl_producer_library.full_path() : '')
 
         configure_file (input: 'pylaunch.in', output: 'pylaunch', configuration: py_script_config_data)
         configure_file (input: 'pylaunch-dbg.in', output: 'pylaunch-dbg', configuration: py_script_config_data)
@@ -61,7 +58,8 @@ if get_option('tests')
 		if py.found()
 			python_tests = [
 			  ['fake.py',		[]],
-			  ['exception.py',	[]]
+			  ['exception.py',	[]],
+			  ['device.py',	        []],
 			]
 
 			environment = [
@@ -90,6 +88,7 @@ if get_option('tests')
 		['arv-auto-packet-size-test',	'arvautopacketsizetest.c'],
 		['arv-device-scan-test',	'arvdevicescantest.c'],
 		['arv-roi-test',		'arvroitest.c'],
+		['arv-multi-uv-test',		'arvmultiuvtest.c'],
 		['time-test',			'timetest.c'],
 		['load-http-test',		'loadhttptest.c'],
 		['cpp-test',			'cpp.cc'],
@@ -106,10 +105,10 @@ if get_option('tests')
 	endif
 
 	foreach example: examples
-		exe = executable (example[0], example[1],
-						  link_with: aravis_library,
-						  dependencies: aravis_dependencies,
-						  include_directories: [library_inc])
+		executable (example[0], example[1],
+			link_with: aravis_library,
+			dependencies: aravis_dependencies,
+			include_directories: [library_inc])
 	endforeach
 
 endif

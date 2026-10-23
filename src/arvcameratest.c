@@ -40,10 +40,12 @@ static char *arv_option_range_check = NULL;
 static char *arv_option_access_check = NULL;
 static int arv_option_duration_s = -1;
 static char *arv_option_uv_usb_mode = NULL;
+static guint arv_option_uv_usb_maximum_transfer_size = 0;
 static gboolean arv_option_show_version = FALSE;
 static gboolean arv_option_gv_allow_broadcast_discovery_ack = FALSE;
 static char *arv_option_gv_port_range = NULL;
 static gboolean arv_option_native_buffers = FALSE;
+static char *arv_option_gv_discovery_interface = NULL;
 
 /* clang-format off */
 static const GOptionEntry arv_option_entries[] =
@@ -160,6 +162,12 @@ static const GOptionEntry arv_option_entries[] =
 		"{sync|async}"
 	},
 	{
+		"usb-maximum-transfer-size",		'\0', 0, G_OPTION_ARG_INT,
+		&arv_option_uv_usb_maximum_transfer_size,
+                "USB maximum transfer size",
+		"<n_bytes>}"
+	},
+	{
 		"chunks", 				'u', 0, G_OPTION_ARG_STRING,
 		&arv_option_chunks,	 		"Chunks",
 		"<chunk_id>[,<chunk_id>[...]]"
@@ -220,6 +228,11 @@ static const GOptionEntry arv_option_entries[] =
 		&arv_option_gv_port_range,	        "GV port range",
 		"<min>-<max>"
 	},
+	{
+		"gv-discovery-interface",               '\0', 0, G_OPTION_ARG_STRING,
+		&arv_option_gv_discovery_interface,     "Discovery using the interface",
+		"<interface>"
+        },
 	{
 		"native-buffers", 			'\0', 0, G_OPTION_ARG_NONE,
 		&arv_option_native_buffers, 		"Enable native buffers",
@@ -499,6 +512,9 @@ main (int argc, char **argv)
         if (arv_option_gv_allow_broadcast_discovery_ack)
                 arv_set_interface_flags ("GigEVision", ARV_GV_INTERFACE_FLAGS_ALLOW_BROADCAST_DISCOVERY_ACK);
 
+	if (arv_option_gv_discovery_interface)
+		arv_gv_interface_set_discovery_interface_name (arv_option_gv_discovery_interface);
+
 	arv_enable_interface ("Fake");
 
 	arv_debug_enable (arv_option_debug_domains);
@@ -570,8 +586,10 @@ main (int argc, char **argv)
 		if (arv_camera_is_uv_device (camera)) {
 			if (error == NULL)
                                 arv_camera_uv_set_usb_mode (camera, usb_mode);
+                        if (error == NULL && arv_option_uv_usb_maximum_transfer_size > 0)
+                                arv_camera_uv_set_maximum_transfer_size (camera, arv_option_uv_usb_maximum_transfer_size);
 			if (error == NULL && arv_option_bandwidth_limit >= 0)
-                                        arv_camera_uv_set_bandwidth (camera, arv_option_bandwidth_limit, &error);
+                                arv_camera_uv_set_bandwidth (camera, arv_option_bandwidth_limit, &error);
 		}
 
 		if (arv_camera_is_gv_device (camera)) {
@@ -660,7 +678,7 @@ main (int argc, char **argv)
 		}
 
 		if (success) {
-		    stream = arv_camera_create_stream (camera, stream_cb, NULL, &error);
+		    stream = arv_camera_create_stream (camera, stream_cb, NULL, NULL, &error);
 
                     if (arv_camera_is_gv_device (camera)) {
                             guint gv_packet_size;
@@ -714,44 +732,51 @@ main (int argc, char **argv)
 									     emit_software_trigger, camera);
 			    }
 
-			    arv_camera_start_acquisition (camera, NULL);
+                            g_clear_error (&error);
+			    arv_camera_start_acquisition (camera, &error);
+                            if (error == NULL) {
 
-			    g_signal_connect (stream, "new-buffer", G_CALLBACK (new_buffer_cb), &data);
-			    arv_stream_set_emit_signals (stream, TRUE);
+                                    g_signal_connect (stream, "new-buffer", G_CALLBACK (new_buffer_cb), &data);
+                                    arv_stream_set_emit_signals (stream, TRUE);
 
-			    g_signal_connect (arv_camera_get_device (camera), "control-lost",
-					      G_CALLBACK (control_lost_cb), NULL);
+                                    g_signal_connect (arv_camera_get_device (camera), "control-lost",
+                                                      G_CALLBACK (control_lost_cb), NULL);
 
-                            data.start_time = g_get_monotonic_time();
+                                    data.start_time = g_get_monotonic_time();
 
-			    g_timeout_add (1000, periodic_task_cb, &data);
+                                    g_timeout_add (1000, periodic_task_cb, &data);
 
-			    data.main_loop = g_main_loop_new (NULL, FALSE);
+                                    data.main_loop = g_main_loop_new (NULL, FALSE);
 
-			    old_sigint_handler = signal (SIGINT, set_cancel);
+                                    old_sigint_handler = signal (SIGINT, set_cancel);
 
-			    g_main_loop_run (data.main_loop);
+                                    g_main_loop_run (data.main_loop);
 
-			    if (software_trigger_source > 0)
-				    g_source_remove (software_trigger_source);
+                                    if (software_trigger_source > 0)
+                                            g_source_remove (software_trigger_source);
 
-			    signal (SIGINT, old_sigint_handler);
+                                    signal (SIGINT, old_sigint_handler);
 
-			    g_main_loop_unref (data.main_loop);
+                                    g_main_loop_unref (data.main_loop);
 
-			    arv_stream_get_statistics (stream, &n_completed_buffers, &n_failures, &n_underruns);
+                                    arv_stream_get_statistics (stream, &n_completed_buffers, &n_failures, &n_underruns);
 
-                            for (i = 0; i < arv_stream_get_n_infos (stream); i++) {
-                                    if (arv_stream_get_info_type (stream, i) == G_TYPE_UINT64) {
-                                            g_print ("%-22s = %" G_GUINT64_FORMAT "\n",
-                                                     arv_stream_get_info_name (stream, i),
-                                                     arv_stream_get_info_uint64 (stream, i));
+                                    for (i = 0; i < arv_stream_get_n_infos (stream); i++) {
+                                            if (arv_stream_get_info_type (stream, i) == G_TYPE_UINT64) {
+                                                    g_print ("%-22s = %" G_GUINT64_FORMAT "\n",
+                                                             arv_stream_get_info_name (stream, i),
+                                                             arv_stream_get_info_uint64 (stream, i));
+                                            }
                                     }
+
+                                    arv_camera_stop_acquisition (camera, NULL);
+
+                                    arv_stream_set_emit_signals (stream, FALSE);
+                            } else {
+                                    printf ("Failed to start acquisition (%s)\n",
+                                            error->message);
+                                    g_clear_error (&error);
                             }
-
-			    arv_camera_stop_acquisition (camera, NULL);
-
-			    arv_stream_set_emit_signals (stream, FALSE);
 
 			    g_object_unref (stream);
 		    } else {

@@ -1,21 +1,21 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2021 Emmanuel Pacaud
+ * Copyright © 2009-2025 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Emmanuel Pacaud <emmanuel@gnome.org>
  */
@@ -80,10 +80,10 @@ typedef struct {
 
 	/* Statistics */
 
-	guint n_completed_buffers;
-	guint n_failures;
-	guint n_underruns;
-        guint n_transferred_bytes;
+	guint64 n_completed_buffers;
+	guint64 n_failures;
+	guint64 n_underruns;
+        guint64 n_transferred_bytes;
 } ArvV4l2StreamThreadData;
 
 typedef struct {
@@ -144,6 +144,7 @@ arv_v4l2_stream_thread (void *data)
         GHashTableIter iter;
         gpointer key, value;
 	ArvBuffer *arv_buffer;
+        GPollFD poll_fd[1];
 
 	arv_info_stream_thread ("[V4l2Stream::thread] Start");
 
@@ -158,43 +159,46 @@ arv_v4l2_stream_thread (void *data)
         g_cond_signal (&thread_data->thread_started_cond);
         g_mutex_unlock (&thread_data->thread_started_mutex);
 
+        poll_fd[0].fd = thread_data->v4l2_fd;
+        poll_fd[0].events = G_IO_IN;
+
 	while (!g_atomic_int_get (&thread_data->cancel)) {
                 struct v4l2_buffer bufd = {0};
-                fd_set fds;
-                struct timeval tv;
-                int result;
+                int n_events;
 
                 _queue_buffers(thread_data, buffers);
 
-                FD_ZERO(&fds);
-                FD_SET(thread_data->v4l2_fd, &fds);
-
-                tv.tv_sec = 1;
-                tv.tv_usec = 0;
-                result = select(thread_data->v4l2_fd + 1, &fds, NULL, NULL, &tv);
-                if(result == -1){
+                poll_fd[0].revents = 0;
+                n_events = g_poll (poll_fd, 1, 1000);
+                if (n_events < 1){
                         if (errno != EINTR)
                                 arv_warning_stream_thread ("Error while waiting for frame (%s)", strerror(errno));
                         continue;
                 }
 
-                if (result == 0)
+                if (poll_fd[0].revents == 0)
                         continue;
 
                 memset (&bufd, 0, sizeof bufd);
                 bufd.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-                bufd.memory = thread_data->io_method == ARV_V4L2_STREAM_IO_METHOD_MMAP ?
+                bufd.memory =
+                        thread_data->io_method == ARV_V4L2_STREAM_IO_METHOD_MMAP ?
                         V4L2_MEMORY_MMAP : V4L2_MEMORY_USERPTR;
                 bufd.index = 0;
 
                 if(arv_v4l2_ioctl(thread_data->v4l2_fd, VIDIOC_DQBUF, &bufd) == -1) {
-                        arv_warning_stream_thread("DeQueue buffer error (%s)", strerror(errno));
                         switch (errno) {
                                 case EAGAIN:
+                                case EINVAL: /* Is this really expected ? */
+                                        continue;
+                                default:
+                                        arv_warning_stream_thread("Dequeue buffer error (%s)", strerror(errno));
                                         continue;
                         }
                 } else
                         arv_trace_stream_thread ("Dequeued buffer %d\n", bufd.index);
+
+                arv_trace_stream_thread("flags = 0x%08d\n", bufd.flags);
 
                 arv_buffer = g_hash_table_lookup (buffers, GINT_TO_POINTER (bufd.index));
                 if (ARV_IS_BUFFER (arv_buffer)) {
@@ -270,7 +274,7 @@ arv_v4l2_stream_start_acquisition (ArvStream *stream, GError **error)
         guint32 bit_per_pixel;
         guint32 bytes_per_line;
         guint32 payload_size;
-        guint32 width_pixels;
+        guint32 bytes_per_line_data;
         guint32 index = 0;
         guint32 n_buffers = 0;
 
@@ -357,14 +361,15 @@ arv_v4l2_stream_start_acquisition (ArvStream *stream, GError **error)
                 return FALSE;
         }
 
-        width_pixels = (thread_data->image_width  / bit_per_pixel + 7) * 8;
-        if (bytes_per_line < width_pixels) {
+        // round each line up to the next byte
+        bytes_per_line_data = (thread_data->image_width * bit_per_pixel + 7) / 8;
+        if (bytes_per_line < bytes_per_line_data) {
                 g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
                              "Invalid v4l2 pixel format");
                 return FALSE;
         }
 
-        thread_data->image_x_padding = bytes_per_line - width_pixels;
+        thread_data->image_x_padding = bytes_per_line - bytes_per_line_data;
         thread_data->frame_id = 0;
 
 	priv->thread = g_thread_new ("arv_v4l2_stream", arv_v4l2_stream_thread, priv->thread_data);

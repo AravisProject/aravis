@@ -1,21 +1,21 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2023 Emmanuel Pacaud
+ * Copyright © 2009-2025 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Emmanuel Pacaud <emmanuel.pacaud@free.fr>
  */
@@ -126,9 +126,11 @@ typedef guint32 ArvPixelFormat;
 #define	ARV_PIXEL_FORMAT_MONO_8_SIGNED		((ArvPixelFormat) 0x01080002u)
 
 #define	ARV_PIXEL_FORMAT_MONO_10		((ArvPixelFormat) 0x01100003u)
+#define ARV_PIXEL_FORMAT_MONO_10P		((ArvPixelFormat) 0x010a0046u)
 #define ARV_PIXEL_FORMAT_MONO_10_PACKED		((ArvPixelFormat) 0x010c0004u)
 
 #define ARV_PIXEL_FORMAT_MONO_12		((ArvPixelFormat) 0x01100005u)
+#define ARV_PIXEL_FORMAT_MONO_12P		((ArvPixelFormat) 0x010c0047u)
 #define ARV_PIXEL_FORMAT_MONO_12_PACKED		((ArvPixelFormat) 0x010c0006u)
 
 #define ARV_PIXEL_FORMAT_MONO_14		((ArvPixelFormat) 0x01100025u)
@@ -150,11 +152,17 @@ typedef guint32 ArvPixelFormat;
 #define ARV_PIXEL_FORMAT_BAYER_GB_12		((ArvPixelFormat) 0x01100012u)
 #define ARV_PIXEL_FORMAT_BAYER_BG_12		((ArvPixelFormat) 0x01100013u)
 
+#define ARV_PIXEL_FORMAT_BAYER_GR_14		((ArvPixelFormat) 0x01100109u)
+#define ARV_PIXEL_FORMAT_BAYER_RG_14		((ArvPixelFormat) 0x0110010au)
+#define ARV_PIXEL_FORMAT_BAYER_GB_14		((ArvPixelFormat) 0x0110010bu)
+#define ARV_PIXEL_FORMAT_BAYER_BG_14		((ArvPixelFormat) 0x0110010cu)
+
 #define ARV_PIXEL_FORMAT_BAYER_GR_16		((ArvPixelFormat) 0x0110002eu)
 #define ARV_PIXEL_FORMAT_BAYER_RG_16		((ArvPixelFormat) 0x0110002fu)
 #define ARV_PIXEL_FORMAT_BAYER_GB_16		((ArvPixelFormat) 0x01100030u)
 #define ARV_PIXEL_FORMAT_BAYER_BG_16		((ArvPixelFormat) 0x01100031u)
 
+/* PFNC */
 #define ARV_PIXEL_FORMAT_BAYER_BG_10P		((ArvPixelFormat) 0x010a0052u)
 #define ARV_PIXEL_FORMAT_BAYER_GB_10P		((ArvPixelFormat) 0x010a0054u)
 #define ARV_PIXEL_FORMAT_BAYER_GR_10P		((ArvPixelFormat) 0x010a0056u)
@@ -170,10 +178,21 @@ typedef guint32 ArvPixelFormat;
 #define ARV_PIXEL_FORMAT_BAYER_GB_12_PACKED	((ArvPixelFormat) 0x010c002cu)
 #define ARV_PIXEL_FORMAT_BAYER_BG_12_PACKED	((ArvPixelFormat) 0x010c002du)
 
+#define ARV_PIXEL_FORMAT_BAYER_GR_14P		((ArvPixelFormat) 0x010e0105u)
+#define ARV_PIXEL_FORMAT_BAYER_RG_14P		((ArvPixelFormat) 0x010e0106u)
+#define ARV_PIXEL_FORMAT_BAYER_GB_14P		((ArvPixelFormat) 0x010e0107u)
+#define ARV_PIXEL_FORMAT_BAYER_BG_14P		((ArvPixelFormat) 0x010e0108u)
+
+/* GigE Vision 2.0 */
 #define ARV_PIXEL_FORMAT_BAYER_GR_10_PACKED	((ArvPixelFormat) 0x010c0026u)
 #define ARV_PIXEL_FORMAT_BAYER_RG_10_PACKED	((ArvPixelFormat) 0x010c0027u)
 #define ARV_PIXEL_FORMAT_BAYER_GB_10_PACKED	((ArvPixelFormat) 0x010c0028u)
 #define ARV_PIXEL_FORMAT_BAYER_BG_10_PACKED	((ArvPixelFormat) 0x010c0029u)
+
+#define ARV_PIXEL_FORMAT_BAYER_GR_12_PACKED	((ArvPixelFormat) 0x010c002au)
+#define ARV_PIXEL_FORMAT_BAYER_RG_12_PACKED	((ArvPixelFormat) 0x010c002bu)
+#define ARV_PIXEL_FORMAT_BAYER_GB_12_PACKED	((ArvPixelFormat) 0x010c002cu)
+#define ARV_PIXEL_FORMAT_BAYER_BG_12_PACKED	((ArvPixelFormat) 0x010c002du)
 
 #define ARV_PIXEL_FORMAT_COORD3D_ABC_8          ((ArvPixelFormat) 0x021800B2u)
 #define ARV_PIXEL_FORMAT_COORD3D_ABC_8_PLANAR   ((ArvPixelFormat) 0x021800B3u)
@@ -246,6 +265,10 @@ typedef guint32 ArvPixelFormat;
 #define ARV_PIXEL_FORMAT_RGB_16_PLANAR		((ArvPixelFormat) 0x02300024u)
 
 #define ARV_PIXEL_FORMAT_YUV_422_YUYV_PACKED 	((ArvPixelFormat) 0x02100032u)
+
+#define ARV_PIXEL_FORMAT_RGB_565P		((ArvPixelFormat) 0x02100035u)
+
+#define ARV_PIXEL_FORMAT_YCBCR_422_8_PACKED 	((ArvPixelFormat) 0x0210003Bu)
 
 /* Custom */
 

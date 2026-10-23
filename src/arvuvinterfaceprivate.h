@@ -1,21 +1,21 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2022 Emmanuel Pacaud
+ * Copyright © 2009-2025 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Emmanuel Pacaud <emmanuel.pacaud@free.fr>
  */
@@ -39,6 +39,10 @@
 #define ARV_UV_INTERFACE_EVENT_PROTOCOL			0x01
 #define ARV_UV_INTERFACE_DATA_PROTOCOL			0x02
 #define ARV_UV_INTERFACE_GUID_INDEX_OFFSET		11
+#define ARV_UV_INTERFACE_VENDOR_NAME_INDEX_OFFSET	12
+#define ARV_UV_INTERFACE_MODEL_NAME_INDEX_OFFSET	13
+#define ARV_UV_INTERFACE_FAMILY_NAME_INDEX_OFFSET	14
+#define ARV_UV_INTERFACE_SERIAL_NUMBER_INDEX_OFFSET	17
 
 G_BEGIN_DECLS
 

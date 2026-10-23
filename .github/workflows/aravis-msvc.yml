@@ -9,12 +9,13 @@ on:
 
 jobs:
   msvc:
-    runs-on: windows-2019
+    # Conan 1.x only knows Visual Studio up to 2022 (version 17)
+    runs-on: windows-2022
     strategy:
       fail-fast: false
       matrix:
         include:
-        - version: 16
+        - version: 17
           arch: x86_64
           build_type_conan: Release
           build_type_meson: release
@@ -29,11 +30,14 @@ jobs:
       uses: actions/checkout@v3
     - name: conan
       env:
+        # CMake 4 rejects projects declaring a minimum version below 3.5, which
+        # includes some Conan 1.x recipes built from source (e.g. bzip2/1.0.8).
+        CMAKE_POLICY_VERSION_MINIMUM: "3.5"
         INPUT_CONANFILE: |
           [requires]
           libiconv/1.17
           #gobject-introspection/1.69.0
-          gstreamer/1.22.3
+          gstreamer/1.24.7
           #gst-plugins-base/1.22.3      Disable gstreamer for now, latest gst-plugins-base is 1.19.2
           #gtk/4.4.0
           libxml2/2.10.3
@@ -63,7 +67,7 @@ jobs:
         .\build\activate_build.ps1
         .\build\activate_run.ps1
         echo "::group::configure"
-        meson --prefix ${{ github.workspace }}\install --buildtype ${{ matrix.build_type_meson }} --pkg-config-path ${{ github.workspace }}\build -Ddocumentation=disabled -Dgst-plugin=disabled -Dintrospection=disabled -Dusb=enabled -Dviewer=disabled -Dgv-n-buffers=1 -Dgentl-producer=true . .\build
+        meson setup --prefix ${{ github.workspace }}\install --buildtype ${{ matrix.build_type_meson }} --pkg-config-path ${{ github.workspace }}\build -Ddocumentation=disabled -Dgst-plugin=disabled -Dintrospection=disabled -Dusb=enabled -Dviewer=disabled -Dgv-n-buffers=1 -Dgentl-producer=true . .\build
         echo "::endgroup::"
         echo "::group::compile"
         meson compile -C .\build -v
@@ -78,7 +82,7 @@ jobs:
         .\build\activate_run.ps1
         meson test -C .\build
     - name: logs
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: failure()
       with:
         name: msvc_${{ matrix.version }}_${{ matrix.arch }}_${{ matrix.build_type_meson }}_Meson_Testlog

@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier:Unlicense */
+
 #include <glib.h>
 #include <arv.h>
 #include <math.h>

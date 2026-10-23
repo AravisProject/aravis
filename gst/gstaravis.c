@@ -1,23 +1,26 @@
-/*
+/* Aravis - Digital camera library
+ *
  * Copyright © 2006 Eric Jonas <jonas@mit.edu>
  * Copyright © 2006 Antoine Tremblay <hexa00@gmail.com>
  * Copyright © 2010 United States Government, Joshua M. Doe <joshua.doe@us.army.mil>
- * Copyright © 2010-2019 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+ * Copyright © 2009-2025 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
+ * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <http://www.gnu.org/licenses/>.
+ *
+ * Author: Emmanuel Pacaud <emmanuel.pacaud@free.fr>
  */
 
 /**
@@ -56,6 +59,7 @@ enum
   PROP_GAIN_AUTO,
   PROP_EXPOSURE,
   PROP_EXPOSURE_AUTO,
+  PROP_GAMMA,
   PROP_H_BINNING,
   PROP_V_BINNING,
   PROP_OFFSET_X,
@@ -69,6 +73,7 @@ enum
   PROP_USB_MODE,
   PROP_STREAM,
   PROP_TRIGGER,
+  PROP_ADD_REFERENCE_TIMESTAMP_META,
   N_PROPERTIES
 };
 
@@ -170,6 +175,7 @@ gst_aravis_get_all_camera_caps (GstAravis *gst_aravis, GError **error)
 	}
 	if (local_error) {
 		g_propagate_error (error, local_error);
+		g_free (pixel_formats);
 		return NULL;
 	}
 
@@ -359,7 +365,7 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 	if (!error) arv_device_set_features_from_string (arv_camera_get_device (gst_aravis->camera), gst_aravis->features, &error);
 
 	if (!error) gst_aravis->payload = arv_camera_get_payload (gst_aravis->camera, &error);
-	if (!error) gst_aravis->stream = arv_camera_create_stream (gst_aravis->camera, NULL, NULL, &error);
+	if (!error) gst_aravis->stream = arv_camera_create_stream (gst_aravis->camera, NULL, NULL, NULL, &error);
 	if (error)
 		goto errored;
 
@@ -555,6 +561,11 @@ gst_aravis_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
 	}
 }
 
+/* Reference caps for the optional capture-time meta. The device timestamp is
+ * nanoseconds on the PTP timescale when the device is PTP-synchronized (IEEE
+ * 1588), matching the timestamp/x-ptp convention of rtpjitterbuffer. */
+static GstStaticCaps ptp_reference_timestamp_caps = GST_STATIC_CAPS ("timestamp/x-ptp");
+
 static GstFlowReturn
 gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 {
@@ -651,6 +662,17 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 		gst_aravis->last_timestamp = timestamp_ns;
 	}
 
+	/* Optionally expose the absolute device timestamp, which is otherwise lost
+	 * when it is folded into the first-frame-relative GST_BUFFER_PTS. A zero
+	 * timestamp means the device did not provide one. */
+	if (gst_aravis->add_reference_timestamp_meta && timestamp_ns != 0) {
+		GstCaps *reference = gst_static_caps_get (&ptp_reference_timestamp_caps);
+
+		gst_buffer_add_reference_timestamp_meta (*buffer, reference,
+				timestamp_ns, GST_CLOCK_TIME_NONE);
+		gst_caps_unref (reference);
+	}
+
 	arv_stream_push_buffer (gst_aravis->stream, arv_buffer);
 	GST_OBJECT_UNLOCK (gst_aravis);
 
@@ -720,6 +742,7 @@ gst_aravis_init (GstAravis *gst_aravis)
 	gst_aravis->exposure_time_us = -1;
 	gst_aravis->exposure_auto = ARV_AUTO_OFF;
 	gst_aravis->exposure_auto_set = FALSE;
+	gst_aravis->gamma = 1;
 	gst_aravis->offset_x = 0;
 	gst_aravis->offset_y = 0;
 	gst_aravis->h_binning = -1;
@@ -736,6 +759,7 @@ gst_aravis_init (GstAravis *gst_aravis)
 	gst_aravis->frame_rate = 0.0;
 
 	gst_aravis->trigger_source = NULL;
+	gst_aravis->add_reference_timestamp_meta = FALSE;
 
 	gst_aravis->camera = NULL;
 	gst_aravis->stream = NULL;
@@ -831,23 +855,38 @@ gst_aravis_set_property (GObject * object, guint prop_id,
 				arv_camera_set_exposure_time_auto (gst_aravis->camera, gst_aravis->exposure_auto, NULL);
 			GST_OBJECT_UNLOCK (gst_aravis);
 			break;
-		case PROP_OFFSET_X:
-			gst_aravis->offset_x = g_value_get_int (value);
-			break;
-		case PROP_OFFSET_Y:
-			gst_aravis->offset_y = g_value_get_int (value);
-			break;
-		case PROP_H_BINNING:
-			gst_aravis->h_binning = g_value_get_int (value);
-			break;
-		case PROP_V_BINNING:
-			gst_aravis->v_binning = g_value_get_int (value);
-			break;
-		case PROP_PACKET_DELAY:
+		case PROP_GAMMA:
 			GST_OBJECT_LOCK (gst_aravis);
-			gst_aravis->packet_delay = g_value_get_int64 (value);
-			GST_OBJECT_UNLOCK (gst_aravis);
-			break;
+			gst_aravis->gamma = g_value_get_double (value);
+			if (gst_aravis->camera != NULL &&
+                            arv_camera_is_feature_available (gst_aravis->camera, "Gamma", NULL)) {
+                                double gamma_max, gamma_min;
+
+                                arv_camera_get_float_bounds(gst_aravis->camera, "Gamma", &gamma_min, &gamma_max, NULL);
+                                if (gamma_min <= gst_aravis->gamma && gst_aravis->gamma <= gamma_max) {
+                                        arv_camera_set_float (gst_aravis->camera, "Gamma",
+                                                              gst_aravis->gamma, NULL);
+                                }
+                        }
+                        GST_OBJECT_UNLOCK (gst_aravis);
+                        break;
+                case PROP_OFFSET_X:
+                        gst_aravis->offset_x = g_value_get_int (value);
+                        break;
+                case PROP_OFFSET_Y:
+                        gst_aravis->offset_y = g_value_get_int (value);
+                        break;
+                case PROP_H_BINNING:
+                        gst_aravis->h_binning = g_value_get_int (value);
+                        break;
+                case PROP_V_BINNING:
+                        gst_aravis->v_binning = g_value_get_int (value);
+                        break;
+                case PROP_PACKET_DELAY:
+                        GST_OBJECT_LOCK (gst_aravis);
+                        gst_aravis->packet_delay = g_value_get_int64 (value);
+                        GST_OBJECT_UNLOCK (gst_aravis);
+                        break;
                 case PROP_PACKET_SIZE:
                         gst_aravis->packet_size = g_value_get_int (value);
                         break;
@@ -858,27 +897,32 @@ gst_aravis_set_property (GObject * object, guint prop_id,
                         gst_aravis->packet_resend = g_value_get_boolean (value);
                         break;
                 case PROP_FEATURES:
-			GST_OBJECT_LOCK (gst_aravis);
-			g_free (gst_aravis->features);
+                        GST_OBJECT_LOCK (gst_aravis);
+                        g_free (gst_aravis->features);
                         gst_aravis->features = g_value_dup_string (value);
-			GST_OBJECT_UNLOCK (gst_aravis);
+                        GST_OBJECT_UNLOCK (gst_aravis);
                         break;
-		case PROP_NUM_ARV_BUFFERS:
-			gst_aravis->num_arv_buffers = g_value_get_int (value);
-			break;
-		case PROP_USB_MODE:
-			gst_aravis->usb_mode = g_value_get_enum (value);
-			break;
-		case PROP_TRIGGER:
-			GST_OBJECT_LOCK (gst_aravis);
+                case PROP_NUM_ARV_BUFFERS:
+                        gst_aravis->num_arv_buffers = g_value_get_int (value);
+                        break;
+                case PROP_USB_MODE:
+                        gst_aravis->usb_mode = g_value_get_enum (value);
+                        break;
+                case PROP_TRIGGER:
+                        GST_OBJECT_LOCK (gst_aravis);
                         g_free (gst_aravis->trigger_source);
-			gst_aravis->trigger_source = g_strdup (g_value_get_string (value));
-			GST_OBJECT_UNLOCK (gst_aravis);
-			break;
-		default:
-			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-			break;
-	}
+                        gst_aravis->trigger_source = g_strdup (g_value_get_string (value));
+                        GST_OBJECT_UNLOCK (gst_aravis);
+                        break;
+                case PROP_ADD_REFERENCE_TIMESTAMP_META:
+                        GST_OBJECT_LOCK (gst_aravis);
+                        gst_aravis->add_reference_timestamp_meta = g_value_get_boolean (value);
+                        GST_OBJECT_UNLOCK (gst_aravis);
+                        break;
+                default:
+                        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+                        break;
+        }
 }
 
 static void
@@ -926,6 +970,11 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 				gst_aravis->exposure_auto = arv_camera_get_exposure_time_auto(gst_aravis->camera, NULL);
 			}
 			g_value_set_enum (value, gst_aravis->exposure_auto);
+			GST_OBJECT_UNLOCK (gst_aravis);
+			break;
+		case PROP_GAMMA:
+			GST_OBJECT_LOCK (gst_aravis);
+			g_value_set_double (value, gst_aravis->gamma);
 			GST_OBJECT_UNLOCK (gst_aravis);
 			break;
 		case PROP_OFFSET_X:
@@ -981,6 +1030,11 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 		case PROP_TRIGGER:
 			GST_OBJECT_LOCK (gst_aravis);
 			g_value_set_string (value, gst_aravis->trigger_source);
+			GST_OBJECT_UNLOCK (gst_aravis);
+			break;
+		case PROP_ADD_REFERENCE_TIMESTAMP_META:
+			GST_OBJECT_LOCK (gst_aravis);
+			g_value_set_boolean (value, gst_aravis->add_reference_timestamp_meta);
 			GST_OBJECT_UNLOCK (gst_aravis);
 			break;
 		default:
@@ -1093,6 +1147,12 @@ gst_aravis_class_init (GstAravisClass * klass)
 				   "Auto Exposure Mode",
 				   GST_TYPE_ARV_AUTO, ARV_AUTO_OFF,
 				   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	properties[PROP_GAMMA] =
+		g_param_spec_double ("gamma",
+				     "Gamma",
+				     "Gamma",
+				     0.0, 3.9, 1.0,
+				     G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 	properties[PROP_OFFSET_X] =
 		g_param_spec_int ("offset-x",
 				  "x Offset",
@@ -1171,6 +1231,15 @@ gst_aravis_class_init (GstAravisClass * klass)
                                     "Enable the trigger mode using the given source",
                                     NULL,
                                     G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+	properties[PROP_ADD_REFERENCE_TIMESTAMP_META] =
+                g_param_spec_boolean("add-reference-timestamp-meta",
+                                     "Add reference timestamp meta",
+                                     "Add a GstReferenceTimestampMeta with timestamp/x-ptp reference"
+                                     " caps to buffers, carrying the device timestamp. Only an"
+                                     " absolute time if the device clock is PTP-synchronized",
+                                     FALSE,
+                                     G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
 	g_object_class_install_properties (gobject_class,
 					   G_N_ELEMENTS (properties),

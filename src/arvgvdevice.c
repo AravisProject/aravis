@@ -1,21 +1,21 @@
 /* Aravis - Digital camera library
  *
- * Copyright © 2009-2022 Emmanuel Pacaud
+ * Copyright © 2009-2025 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Emmanuel Pacaud <emmanuel.pacaud@free.fr>
  */
@@ -243,61 +243,67 @@ _send_cmd_and_receive_ack (ArvGvDeviceIOData *io_data, ArvGvcpCommand command,
 
 					arv_gvcp_packet_debug (ack_packet, ARV_DEBUG_LEVEL_TRACE);
 
-					packet_type = arv_gvcp_packet_get_packet_type (ack_packet);
-					ack_command = arv_gvcp_packet_get_command (ack_packet);
-					packet_id = arv_gvcp_packet_get_packet_id (ack_packet);
+					packet_type = arv_gvcp_packet_get_packet_type (ack_packet, count);
+					ack_command = arv_gvcp_packet_get_command (ack_packet, count);
+					packet_id = arv_gvcp_packet_get_packet_id (ack_packet, count);
 
 					if (ack_command == ARV_GVCP_COMMAND_PENDING_ACK &&
 					    count >= arv_gvcp_packet_get_pending_ack_size ()) {
-						gint64 pending_ack_timeout_ms = arv_gvcp_packet_get_pending_ack_timeout (ack_packet);
+						gint64 pending_ack_timeout_ms =
+                                                        arv_gvcp_packet_get_pending_ack_timeout (ack_packet, count);
 						pending_ack = TRUE;
 						expected_answer = FALSE;
 
 						timeout_stop_ms = g_get_monotonic_time () / 1000 + pending_ack_timeout_ms;
 
-						arv_debug_device ("[GvDevice::%s] Pending ack timeout = %" G_GINT64_FORMAT,
-								operation, pending_ack_timeout_ms);
-					} else if (packet_type == ARV_GVCP_PACKET_TYPE_ERROR ||
+						arv_debug_device ("[GvDevice::%s] Pending ack timeout = %"
+                                                                  G_GINT64_FORMAT,
+                                                                  operation, pending_ack_timeout_ms);
+                                        } else if (packet_type == ARV_GVCP_PACKET_TYPE_ERROR ||
                                                    packet_type == ARV_GVCP_PACKET_TYPE_UNKNOWN_ERROR) {
-						expected_answer = ack_command == expected_ack_command &&
-							packet_id == io_data->packet_id;
-						if (!expected_answer) {
-							arv_info_device ("[GvDevice::%s] Unexpected answer (0x%02x)", operation,
-									  packet_type);
-						} else
-							command_error = arv_gvcp_packet_get_packet_flags (ack_packet);
-					} else  {
-						expected_answer = packet_type == ARV_GVCP_PACKET_TYPE_ACK &&
-							ack_command == expected_ack_command &&
-							packet_id == io_data->packet_id &&
-							count >= ack_size;
-						if (!expected_answer) {
-							arv_info_device ("[GvDevice::%s] Unexpected answer (0x%02x)", operation,
-									  packet_type);
-						}
-					}
-				} else {
-					expected_answer = FALSE;
-					if (local_error != NULL)
-						arv_warning_device ("[GvDevice::%s] Ack reception error: %s", operation,
-								    local_error->message);
-					else
-						arv_warning_device ("[GvDevice::%s] Ack reception timeout", operation);
-					g_clear_error (&local_error);
-				}
-			} while (pending_ack || (!expected_answer && timeout_ms > 0));
+                                                expected_answer = ack_command == expected_ack_command &&
+                                                        packet_id == io_data->packet_id;
+                                                if (!expected_answer) {
+                                                        arv_info_device ("[GvDevice::%s] Unexpected answer (0x%02x)",
+                                                                         operation, packet_type);
+                                                } else
+                                                        command_error = arv_gvcp_packet_get_packet_flags (ack_packet,
+                                                                                                          count);
+                                        } else  {
+                                                expected_answer = packet_type == ARV_GVCP_PACKET_TYPE_ACK &&
+                                                        ack_command == expected_ack_command &&
+                                                        packet_id == io_data->packet_id &&
+                                                        count >= ack_size;
+                                                if (!expected_answer) {
+                                                        arv_info_device ("[GvDevice::%s] Unexpected answer (0x%02x)",
+                                                                         operation, packet_type);
+                                                }
+                                        }
+                                } else {
+                                        expected_answer = FALSE;
+                                        if (local_error != NULL)
+                                                arv_warning_device ("[GvDevice::%s] Ack reception error: %s", operation,
+                                                                    local_error->message);
+                                        else
+                                                arv_warning_device ("[GvDevice::%s] Ack reception timeout", operation);
+                                        g_clear_error (&local_error);
+                                }
+                        } while (pending_ack || (!expected_answer && timeout_ms > 0));
 
 			success = success && expected_answer;
 
 			if (success && command_error == ARV_GVCP_ERROR_NONE) {
 				switch (command) {
 					case ARV_GVCP_COMMAND_READ_MEMORY_CMD:
-						memcpy (buffer, arv_gvcp_packet_get_read_memory_ack_data (ack_packet), size);
+						memcpy (buffer,
+                                                        arv_gvcp_packet_get_read_memory_ack_data (ack_packet),
+                                                        size);
 						break;
 					case ARV_GVCP_COMMAND_WRITE_MEMORY_CMD:
 						break;
 					case ARV_GVCP_COMMAND_READ_REGISTER_CMD:
-						*((gint32 *) buffer) = arv_gvcp_packet_get_read_register_ack_value (ack_packet);
+						*((gint32 *) buffer) =
+                                                        arv_gvcp_packet_get_read_register_ack_value (ack_packet, count);
 						break;
 					case ARV_GVCP_COMMAND_WRITE_REGISTER_CMD:
 						break;
@@ -1314,7 +1320,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size, char **ur
                                                 g_string_free (string, TRUE);
                                         }
 
-                                        if (g_str_has_suffix (path, ".zip")) {
+                                        if (arv_ascii_has_suffix_case_insensitive (path, ".zip")) {
                                                 ArvZip *zip;
                                                 const GSList *zip_files;
 
