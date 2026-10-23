@@ -27,6 +27,7 @@
 
 #include <arvuvstreamprivate.h>
 #include <arvuvdeviceprivate.h>
+#include <arvrealtime.h>
 #include <arvuvinterfaceprivate.h>
 #include <arvuvcpprivate.h>
 #include <arvgc.h>
@@ -60,6 +61,9 @@ typedef struct {
 
 	libusb_context *usb;
 	libusb_device_handle *usb_device;
+
+	libusb_context *usb_ctrl;
+	libusb_device_handle *usb_ctrl_device;
 
        	libusb_hotplug_callback_handle hotplug_cb_handle;
 
@@ -129,6 +133,52 @@ arv_uvcp_status_to_device_error (ArvUvcpStatus status)
 /* ArvUvDevice implementation */
 
 gboolean
+arv_uv_device_stream_recover (ArvUvDevice *uv_device)
+{
+	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (uv_device);
+
+	if (priv->usb_device == NULL || priv->disconnected)
+		return FALSE;
+
+	arv_warning_device ("[UvDevice] stream recover: resetting data endpoint 0x%02x",
+			    priv->data_endpoint);
+	return arv_uv_device_reset_stream_endpoint (uv_device);
+}
+
+gboolean
+arv_uv_device_usb_reset (ArvUvDevice *uv_device)
+{
+	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (uv_device);
+	int rc;
+
+	if (priv->usb_device == NULL || priv->disconnected)
+		return FALSE;
+
+	rc = libusb_reset_device (priv->usb_device);
+	arv_warning_device ("[UvDevice] usb reset = %s", libusb_error_name (rc));
+	if (rc != 0) {
+		priv->disconnected = TRUE;
+		arv_device_emit_control_lost_signal (ARV_DEVICE (uv_device));
+		return FALSE;
+	}
+
+	rc = libusb_claim_interface (priv->usb_device, priv->data_interface);
+	if (rc != 0)
+		arv_warning_device ("[UvDevice] post-reset data re-claim failed: %s",
+				    libusb_error_name (rc));
+	rc = libusb_claim_interface (priv->usb_ctrl_device != NULL ?
+				     priv->usb_ctrl_device : priv->usb_device,
+				     priv->control_interface);
+	if (rc != 0)
+		arv_warning_device ("[UvDevice] post-reset control re-claim failed: %s",
+				    libusb_error_name (rc));
+
+	arv_uv_device_reset_stream_endpoint (uv_device);
+
+	return TRUE;
+}
+
+gboolean
 arv_uv_device_is_connected (ArvUvDevice *uv_device)
 {
         ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (uv_device);
@@ -162,6 +212,7 @@ arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, ArvUvEndpointType endpoint_
 {
 	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (uv_device);
 	gboolean success;
+	libusb_device_handle *handle;
 	guint8 endpoint;
 	int transferred = 0;
 	int result;
@@ -181,7 +232,9 @@ arv_uv_device_bulk_transfer (ArvUvDevice *uv_device, ArvUvEndpointType endpoint_
 	} else {
 		endpoint = priv->data_endpoint;
 	}
-	result = libusb_bulk_transfer (priv->usb_device, endpoint, data, size, &transferred,
+	handle = (endpoint_type == ARV_UV_ENDPOINT_CONTROL && priv->usb_ctrl_device != NULL) ?
+		priv->usb_ctrl_device : priv->usb_device;
+	result = libusb_bulk_transfer (handle, endpoint, data, size, &transferred,
 				       timeout_ms > 0 ? timeout_ms : priv->timeout_ms);
 
 	success = result >= 0;
@@ -944,6 +997,10 @@ event_thread_func(void *p)
 
 	struct timeval tv = { 0, 100000 };
 
+	if (!arv_make_thread_realtime (10) &&
+	    !arv_make_thread_high_priority (-10))
+		arv_info_device ("USB event thread priority could not be elevated");
+
         while (priv->event_thread_run)
         {
                 libusb_handle_events_timeout(priv->usb, &tv);
@@ -1101,7 +1158,33 @@ arv_uv_device_constructed (GObject *object)
 	arv_info_device("[UvDevice::new] Using data endpoint 0x%02x, interface %d",
 			 priv->data_endpoint, priv->data_interface);
 
-        result = libusb_claim_interface (priv->usb_device, priv->control_interface);
+        if (libusb_init (&priv->usb_ctrl) == 0) {
+                libusb_device *main_dev = libusb_get_device (priv->usb_device);
+                guint8 bus = libusb_get_bus_number (main_dev);
+                guint8 addr = libusb_get_device_address (main_dev);
+                libusb_device **ctrl_list;
+                ssize_t n_ctrl = libusb_get_device_list (priv->usb_ctrl, &ctrl_list);
+                ssize_t ci;
+
+                for (ci = 0; ci < n_ctrl; ci++) {
+                        if (libusb_get_bus_number (ctrl_list[ci]) == bus &&
+                            libusb_get_device_address (ctrl_list[ci]) == addr) {
+                                if (libusb_open (ctrl_list[ci], &priv->usb_ctrl_device) != LIBUSB_SUCCESS)
+                                        priv->usb_ctrl_device = NULL;
+                                break;
+                        }
+                }
+                if (n_ctrl >= 0)
+                        libusb_free_device_list (ctrl_list, 1);
+        }
+        if (priv->usb_ctrl_device != NULL)
+                arv_info_device ("[UvDevice::new] Dedicated control handle opened");
+        else
+                arv_warning_device ("[UvDevice::new] No dedicated control handle, using shared handle");
+
+        result = libusb_claim_interface (priv->usb_ctrl_device != NULL ?
+                                         priv->usb_ctrl_device : priv->usb_device,
+                                         priv->control_interface);
         if (result != 0) {
                 arv_device_take_init_error (ARV_DEVICE (uv_device),
                                             g_error_new (ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_PROTOCOL_ERROR,
@@ -1182,11 +1265,18 @@ arv_uv_device_finalize (GObject *object)
 	g_clear_pointer (&priv->serial_number, g_free);
         g_clear_pointer (&priv->guid, g_free);
 	g_clear_pointer (&priv->genicam_xml, g_free);
+	if (priv->usb_ctrl_device != NULL) {
+		libusb_release_interface (priv->usb_ctrl_device, priv->control_interface);
+		libusb_close (priv->usb_ctrl_device);
+	}
 	if (priv->usb_device != NULL) {
-		libusb_release_interface (priv->usb_device, priv->control_interface);
+		if (priv->usb_ctrl_device == NULL)
+			libusb_release_interface (priv->usb_device, priv->control_interface);
 		libusb_release_interface (priv->usb_device, priv->data_interface);
 		libusb_close (priv->usb_device);
 	}
+        if (priv->usb_ctrl != NULL)
+                libusb_exit (priv->usb_ctrl);
         if (priv->usb != NULL)
                 libusb_exit (priv->usb);
         g_mutex_clear (&priv->transfer_mutex);
