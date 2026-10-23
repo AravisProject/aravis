@@ -50,6 +50,8 @@ ARV_API G_DECLARE_FINAL_TYPE (ArvGvInterface, arv_gv_interface, ARV, GV_INTERFAC
 ARV_API ArvInterface *		arv_gv_interface_get_instance		        (void);
 ARV_API void                    arv_gv_interface_set_discovery_interface_name   (const char *discovery_interface);
 ARV_API char *                  arv_gv_interface_dup_discovery_interface_name   (void);
+ARV_API void                    arv_gv_interface_set_discovery_bindtodevice_name(const char *bindtodevice_name);
+ARV_API char *                  arv_gv_interface_dup_discovery_bindtodevice_name(void);
 
 G_END_DECLS
 
