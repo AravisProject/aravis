@@ -106,7 +106,7 @@ if get_option('tests')
         if gst_enabled
           executable ('arv-gst-test', 'arvgsttest.c',
           link_with: aravis_library,
-          dependencies: aravis_dependencies + gst_deps,
+          dependencies: gst_deps,
           include_directories: [library_inc])
 
         endif
