@@ -163,9 +163,14 @@ event_thread_func(void *p)
 
 	error = gentl->GCRegisterEvent(priv->device_handle, EVENT_REMOTE_DEVICE, &event_handle);
 	if (error != GC_ERR_SUCCESS) {
-		arv_warning_device("GCRegisterEvent[REMOTE_DEVICE]: %d\n", error);
+		if (error == GC_ERR_NOT_IMPLEMENTED)
+			arv_info_device("GCRegisterEvent[REMOTE_DEVICE]: %d\n", error);
+		else
+			arv_warning_device("GCRegisterEvent[REMOTE_DEVICE]: %d\n", error);
+		return NULL;
 	}
 
+	event_data_size_max = 0;
 	size = sizeof(event_data_size_max);
 	error = gentl->EventGetInfo(event_handle, EVENT_SIZE_MAX, &type, &event_data_size_max, &size);
 	event_data = g_malloc0(event_data_size_max);
