@@ -319,53 +319,56 @@ _gentl_buffer_to_arv_buffer(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_
 
 	if (payload_type == PAYLOAD_TYPE_CHUNK_ONLY) {
 		arv_buffer_set_n_parts(arv_buffer, 0);
-	} else if (gentl->DSGetNumBufferParts(datastream, gentl_buffer, &num_parts) == GC_ERR_SUCCESS) {
-		arv_buffer_set_n_parts(arv_buffer, num_parts);
-		for (uint32_t i=0; i<num_parts; i++) {
+	} else if (payload_type == PAYLOAD_TYPE_MULTI_PART) {
+		if (gentl->DSGetNumBufferParts(datastream, gentl_buffer, &num_parts) == GC_ERR_SUCCESS) {
+                    arv_buffer_set_n_parts(arv_buffer, num_parts);
+                    for (uint32_t i=0; i<num_parts; i++) {
 			void *part_data;
 			size_t part_data_size;
 
 			_gentl_buffer_part_info_uint64(gentl, datastream, gentl_buffer, i,
-                                                       BUFFER_PART_INFO_SOURCE_ID, &source_id);
+			                               BUFFER_PART_INFO_SOURCE_ID, &source_id);
 			arv_buffer->priv->parts[i].component_id = source_id;
 
 			_gentl_buffer_part_info_sizet(gentl, datastream, gentl_buffer, i,
-                                                      BUFFER_PART_INFO_DATA_TYPE, &data_type);
+			                              BUFFER_PART_INFO_DATA_TYPE, &data_type);
 			arv_buffer->priv->parts[i].data_type = data_type;
 
 			_gentl_buffer_part_info_sizet(gentl, datastream, gentl_buffer, i,
-                                                      BUFFER_PART_INFO_DATA_SIZE, &part_data_size);
+			                              BUFFER_PART_INFO_DATA_SIZE, &part_data_size);
 			arv_buffer->priv->parts[i].size = part_data_size;
 
 			_gentl_buffer_part_info_ptr(gentl, datastream, gentl_buffer, i,
-                                                    BUFFER_PART_INFO_BASE, &part_data);
+			                            BUFFER_PART_INFO_BASE, &part_data);
 			arv_buffer->priv->parts[i].data_offset = (char*)part_data - (char*)data;
 
 			_gentl_buffer_part_info_uint64(gentl, datastream, gentl_buffer, i,
-                                                       BUFFER_PART_INFO_DATA_FORMAT, &pixel_format);
+			                               BUFFER_PART_INFO_DATA_FORMAT, &pixel_format);
 			arv_buffer->priv->parts[i].pixel_format = pixel_format;
 
 			_gentl_buffer_part_info_sizet(gentl, datastream, gentl_buffer, i,
-                                                      BUFFER_PART_INFO_WIDTH, &width);
+			                              BUFFER_PART_INFO_WIDTH, &width);
 			arv_buffer->priv->parts[i].width = width;
 
 			_gentl_buffer_part_info_sizet(gentl, datastream, gentl_buffer, i,
-                                                      BUFFER_PART_INFO_HEIGHT, &height);
+			                              BUFFER_PART_INFO_HEIGHT, &height);
 			arv_buffer->priv->parts[i].height = height;
 
 			_gentl_buffer_part_info_sizet(gentl, datastream, gentl_buffer, i,
-                                                      BUFFER_PART_INFO_XOFFSET, &x_offset);
+			                              BUFFER_PART_INFO_XOFFSET, &x_offset);
 			arv_buffer->priv->parts[i].x_offset = x_offset;
 
 			_gentl_buffer_part_info_sizet(gentl, datastream, gentl_buffer, i,
-                                                      BUFFER_PART_INFO_YOFFSET, &y_offset);
+			                              BUFFER_PART_INFO_YOFFSET, &y_offset);
 			arv_buffer->priv->parts[i].y_offset = y_offset;
 
 			_gentl_buffer_part_info_sizet(gentl, datastream, gentl_buffer, i,
-                                                      BUFFER_PART_INFO_XPADDING, &x_padding);
+			                              BUFFER_PART_INFO_XPADDING, &x_padding);
 			arv_buffer->priv->parts[i].x_padding = x_padding;
+		    }
 		}
-	} else {
+	} else if (payload_type == PAYLOAD_TYPE_IMAGE ||
+		   payload_type == PAYLOAD_TYPE_CHUNK_DATA) {
 		arv_buffer_set_n_parts(arv_buffer, 1);
 
 		arv_buffer->priv->parts[0].component_id = 0;
