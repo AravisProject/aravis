@@ -554,12 +554,17 @@ arv_gentl_stream_start_acquisition (ArvStream *stream, GError **error)
 	ArvGenTLSystem *gentl_system = arv_gentl_device_get_system(priv->gentl_device);
 	ArvGenTLModule *gentl = arv_gentl_system_get_gentl(gentl_system);
         ArvBuffer *buffer;
+	gboolean emit_signals;
 	GC_ERROR gc_error;
 
 	g_return_val_if_fail (priv->thread == NULL, FALSE);
 	g_return_val_if_fail (priv->thread_data != NULL, FALSE);
 
-        /* Ensure every buffer has a gentl_buffer attached, for those not pushed using arv_stream_create_buffers() */
+        /* Ensure every buffer has a gentl_buffer attached, for those not pushed using arv_stream_create_buffers().
+	   Disable and later restore new-buffer signal emission state, so that registered callbacks are not invoked.
+	 */
+	emit_signals = arv_stream_get_emit_signals(stream);
+	arv_stream_set_emit_signals(stream, FALSE);
 	do {
 		buffer = arv_stream_pop_input_buffer (stream);
 		if (buffer != NULL) {
@@ -595,6 +600,8 @@ arv_gentl_stream_start_acquisition (ArvStream *stream, GError **error)
                 if (buffer != NULL)
                         arv_stream_push_buffer (stream, buffer);
         } while (buffer != NULL);
+
+	arv_stream_set_emit_signals(stream, emit_signals);
 
 	thread_data = priv->thread_data;
 
