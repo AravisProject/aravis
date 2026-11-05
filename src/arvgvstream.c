@@ -1217,6 +1217,22 @@ _interface_index_from_address (guint32 ip)
     return index;
 }
 
+/* Packets sent between two addresses of the host go through the loopback interface, which is not the interface the
+ * packet socket is bound to. */
+
+static gboolean
+_is_local_address (GInetAddress *address)
+{
+	const guint8 *bytes;
+
+	if (g_inet_address_get_is_loopback (address))
+		return TRUE;
+
+	bytes = g_inet_address_to_bytes (address);
+
+	return _interface_index_from_address (g_ntohl (*((guint32 *) bytes))) != 0;
+}
+
 typedef struct {
 	guint32 version;
 	guint32 offset_to_priv;
@@ -1384,6 +1400,11 @@ arv_gv_stream_thread (void *data)
 		thread_data->callback (thread_data->callback_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
 
 #if ARAVIS_HAS_PACKET_SOCKET
+	if (thread_data->use_packet_socket && _is_local_address (thread_data->device_address)) {
+		arv_info_stream ("[GvStream::thread] Device address is local, packet socket disabled");
+		thread_data->use_packet_socket = FALSE;
+	}
+
 	if (thread_data->use_packet_socket && (fd = socket (PF_PACKET, SOCK_RAW, g_htons (ETH_P_ALL))) >= 0) {
 		close (fd);
 		_ring_buffer_loop (thread_data);
