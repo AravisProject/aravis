@@ -248,8 +248,8 @@ typedef enum {
  * ArvGvcpCommand:
  * @ARV_GVCP_COMMAND_DISCOVERY_CMD: discovery command
  * @ARV_GVCP_COMMAND_DISCOVERY_ACK: discovery acknowledge
- * @ARV_GVCP_COMMAND_BYE_CMD: goodbye command, for connection termination
- * @ARV_GVCP_COMMAND_BYE_ACK: goodbye acknowledge
+ * @ARV_GVCP_COMMAND_FORCE_IP_CMD: force IP command
+ * @ARV_GVCP_COMMAND_FORCE_IP_ACK: force IP acknowledge
  * @ARV_GVCP_COMMAND_PACKET_RESEND_CMD: packet resend request
  * @ARV_GVCP_COMMAND_PACKET_RESEND_ACK: packet resend acknowledge (not used ?)
  * @ARV_GVCP_COMMAND_READ_REGISTER_CMD: read register command
@@ -266,8 +266,8 @@ typedef enum {
 typedef enum {
 	ARV_GVCP_COMMAND_DISCOVERY_CMD =	0x0002,
 	ARV_GVCP_COMMAND_DISCOVERY_ACK =	0x0003,
-	ARV_GVCP_COMMAND_BYE_CMD = 		0x0004,
-	ARV_GVCP_COMMAND_BYE_ACK = 		0x0005,
+	ARV_GVCP_COMMAND_FORCE_IP_CMD = 	0x0004,
+	ARV_GVCP_COMMAND_FORCE_IP_ACK = 	0x0005,
 	ARV_GVCP_COMMAND_PACKET_RESEND_CMD =	0x0040,
 	ARV_GVCP_COMMAND_PACKET_RESEND_ACK =	0x0041,
 	ARV_GVCP_COMMAND_READ_REGISTER_CMD =	0x0080,
@@ -336,6 +336,9 @@ ArvGvcpPacket * 	arv_gvcp_packet_new_write_register_ack 	(guint32 data_index,
 								 guint16 packet_id, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_discovery_cmd 	(gboolean allow_broadcast_discovery_ack, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_discovery_ack 	(guint16 packet_id, size_t *packet_size);
+ARV_API ArvGvcpPacket *	arv_gvcp_packet_new_force_ip_cmd	(const guint8 *mac, const guint8 *ip,
+								 const guint8 *mask, const guint8 *gateway,
+								 guint16 packet_id, size_t *packet_size);
 ArvGvcpPacket * 	arv_gvcp_packet_new_packet_resend_cmd 	(guint64 frame_id,
 								 guint32 first_block, guint32 last_block,
 								 gboolean extended_ids,

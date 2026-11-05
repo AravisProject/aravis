@@ -4,6 +4,7 @@
 #include <arv.h>
 #include <arvstr.h>
 #include <string.h>
+#include "../src/arvgvcpprivate.h"
 #include "../src/arvmiscprivate.h"
 
 #if !ARAVIS_CHECK_VERSION (ARAVIS_MAJOR_VERSION, ARAVIS_MINOR_VERSION, ARAVIS_MICRO_VERSION)
@@ -278,6 +279,35 @@ match_test (void)
 	}
 }
 
+static void
+gvcp_force_ip_packet_test (void)
+{
+	static const guint8 mac[] = { 0x00, 0x21, 0x49, 0x02, 0xa4, 0xd9 };
+	static const guint8 ip[] = { 192, 168, 0, 11 };
+	static const guint8 mask[] = { 255, 255, 255, 0 };
+	static const guint8 gateway[] = { 0, 0, 0, 0 };
+	static const guint8 expected[] = {
+		0x42, 0x01, 0x00, 0x04, 0x00, 0x38, 0x00, 0x01,
+		0x00, 0x00, 0x00, 0x21, 0x49, 0x02, 0xa4, 0xd9,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 192, 168, 0, 11,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 255, 255, 255, 0,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+	};
+	ArvGvcpPacket *packet;
+	size_t packet_size;
+
+	packet = arv_gvcp_packet_new_force_ip_cmd (mac, ip, mask, gateway, 1, &packet_size);
+
+	g_assert_nonnull (packet);
+	g_assert_cmpuint (packet_size, ==, sizeof expected);
+	g_assert_cmpmem (packet, packet_size, expected, sizeof expected);
+
+	g_free (packet);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -294,6 +324,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/gstreamer/caps-string", caps_string_test);
 	g_test_add_func ("/misc/globs", glob_test);
 	g_test_add_func ("/misc/matches", match_test);
+	g_test_add_func ("/gvcp/force-ip-packet", gvcp_force_ip_packet_test);
 
 
 	result = g_test_run();
