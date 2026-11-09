@@ -783,10 +783,15 @@ get_guid_index(libusb_device * device) {
 	const struct libusb_interface_descriptor *interdesc;
 	int guid_index = -1;
 	int i, j;
+	int result;
 
-	libusb_get_config_descriptor (device, 0, &config);
+	result = libusb_get_config_descriptor (device, 0, &config);
+	if (result < 0 || config == NULL)
+		return -1;
 	for (i = 0; i < (int) config->bNumInterfaces; i++) {
 		inter = &config->interface[i];
+		if (inter->altsetting == NULL)
+			continue;
 		for (j = 0; j < inter->num_altsetting; j++) {
 			interdesc = &inter->altsetting[j];
 			if (interdesc->bInterfaceClass == ARV_UV_INTERFACE_INTERFACE_CLASS &&
@@ -885,33 +890,44 @@ _open_usb_device (ArvUvDevice *uv_device, GError **error)
                                                             libusb_error_name (result));
                                 }
 
-				libusb_get_config_descriptor (devices[i], 0, &config);
-				for (j = 0; j < (int) config->bNumInterfaces; j++) {
-					inter = &config->interface[j];
-					for (k = 0; k < inter->num_altsetting; k++) {
-						interdesc = &inter->altsetting[k];
-						if (interdesc->bInterfaceClass == ARV_UV_INTERFACE_INTERFACE_CLASS &&
-						    interdesc->bInterfaceSubClass == ARV_UV_INTERFACE_INTERFACE_SUBCLASS) {
-							if (interdesc->bInterfaceProtocol == ARV_UV_INTERFACE_CONTROL_PROTOCOL) {
-								for (int edx = 0; edx < interdesc->bNumEndpoints; edx++) {
-									endpoint = interdesc->endpoint[edx];
-									if ((endpoint.bEndpointAddress & LIBUSB_ENDPOINT_IN) != 0) {
-										priv->control_endpoint_in = endpoint.bEndpointAddress;
-									} else {
-										priv->control_endpoint_out = endpoint.bEndpointAddress;
+				result = libusb_get_config_descriptor (devices[i], 0, &config);
+				if (result < 0 || config == NULL) {
+					arv_warning_device ("Failed to get config descriptor "
+							    "for USB device '%s-%s-%s': %s",
+							    priv->vendor, priv->product, priv->serial_number,
+							    libusb_error_name (result));
+					libusb_close (usb_device);
+					priv->usb_device = NULL;
+				} else {
+					for (j = 0; j < (int) config->bNumInterfaces; j++) {
+						inter = &config->interface[j];
+						if (inter->altsetting == NULL)
+							continue;
+						for (k = 0; k < inter->num_altsetting; k++) {
+							interdesc = &inter->altsetting[k];
+							if (interdesc->bInterfaceClass == ARV_UV_INTERFACE_INTERFACE_CLASS &&
+							    interdesc->bInterfaceSubClass == ARV_UV_INTERFACE_INTERFACE_SUBCLASS) {
+								if (interdesc->bInterfaceProtocol == ARV_UV_INTERFACE_CONTROL_PROTOCOL) {
+									for (int edx = 0; edx < interdesc->bNumEndpoints; edx++) {
+										endpoint = interdesc->endpoint[edx];
+										if ((endpoint.bEndpointAddress & LIBUSB_ENDPOINT_IN) != 0) {
+											priv->control_endpoint_in = endpoint.bEndpointAddress;
+										} else {
+											priv->control_endpoint_out = endpoint.bEndpointAddress;
+										}
 									}
+									priv->control_interface = interdesc->bInterfaceNumber;
 								}
-								priv->control_interface = interdesc->bInterfaceNumber;
-							}
-							if (interdesc->bInterfaceProtocol == ARV_UV_INTERFACE_DATA_PROTOCOL) {
-								endpoint = interdesc->endpoint[0];
-								priv->data_endpoint = endpoint.bEndpointAddress;
-								priv->data_interface = interdesc->bInterfaceNumber;
+								if (interdesc->bInterfaceProtocol == ARV_UV_INTERFACE_DATA_PROTOCOL) {
+									endpoint = interdesc->endpoint[0];
+									priv->data_endpoint = endpoint.bEndpointAddress;
+									priv->data_interface = interdesc->bInterfaceNumber;
+								}
 							}
 						}
 					}
+					libusb_free_config_descriptor (config);
 				}
-				libusb_free_config_descriptor (config);
 			} else
 				libusb_close (usb_device);
 
