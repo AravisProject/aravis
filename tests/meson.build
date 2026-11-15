@@ -105,14 +105,17 @@ if get_option('tests')
 	endforeach
 
         if gst_enabled
-          executable ('arv-gst-swap-source-test', 'arvgstswapsourcetest.c',
-          link_with: aravis_library,
-          dependencies: [aravis_dependencies, gst_deps],
-          c_args: [
-            '-DGENICAM_FILENAME="@0@/src/arv-fake-camera.xml"'.format (meson.project_source_root ()),
-            '-DGST_ARAVIS_PLUGIN="@0@/gst/libgstaravis.@1@.so"'.format(meson.project_build_root(), aravis_api_version)
-          ],
-          include_directories: [library_inc])
+          exe = executable (
+            'gst', 'gst.c',
+            link_with: aravis_library,
+            dependencies: [aravis_dependencies, gst_deps],
+            c_args: [
+              '-DGENICAM_FILENAME="@0@/src/arv-fake-camera.xml"'.format (meson.project_source_root ()),
+              '-DGST_PLUGIN_PATH="@0@"'.format(meson.project_build_root() / 'gst')
+            ],
+            include_directories: [library_inc]
+          )
+          test ('gst', exe, suite: 'main', timeout: 60)
         endif
 
 endif
