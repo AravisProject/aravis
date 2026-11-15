@@ -2103,6 +2103,8 @@ arv_gv_device_finalize (GObject *object)
 	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
 	ArvGvDeviceIOData *io_data;
 
+        arv_info_device ("[GVDevice::finalize]");
+
 	if (priv->heartbeat_thread != NULL) {
 		ArvGvDeviceHeartbeatData *heartbeat_data;
 
