@@ -7,6 +7,7 @@ if get_option('tests')
     exe_wrapper:[
       'valgrind',
       '--tool=memcheck',
+      '--num-callers=50',
       '--leak-check=yes',
       '--suppressions=' + meson.project_source_root() / 'tests' / 'aravis.supp',
       '--error-exitcode=1'
