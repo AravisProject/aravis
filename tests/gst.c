@@ -198,7 +198,6 @@ swap_source_test (void)
 int
 main (int argc, char *argv[])
 {
-        GError *error = NULL;
 	int result;
 
         g_setenv ("GST_PLUGIN_PATH", GST_PLUGIN_PATH, TRUE);
