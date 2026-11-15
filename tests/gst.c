@@ -102,27 +102,12 @@ wait_for_state (GstElement *pipeline, GstState target)
         return ret != GST_STATE_CHANGE_FAILURE && state == target;
 }
 
-int
-main (int argc, char *argv[])
+static void
+swap_source_test (void)
 {
         GstElement *pipeline;
         GstElement *source;
         GstElement *sink;
-        GstPlugin *plugin;
-        GError *error = NULL;
-
-        gst_init (&argc, &argv);
-
-        plugin = gst_plugin_load_file (GST_ARAVIS_PLUGIN, &error);
-        if (!plugin) {
-                g_printerr ("Failed to load plugin: %s\n", error->message);
-                g_clear_error (&error);
-                return EXIT_FAILURE;
-        }
-        gst_object_unref (plugin);
-
-	arv_set_fake_camera_genicam_filename (GENICAM_FILENAME);
-	arv_enable_interface ("Fake");
 
         /* Create the initial pipeline */
 
@@ -139,14 +124,14 @@ main (int argc, char *argv[])
 
         if (!pipeline || !source || !sink) {
                 g_printerr ("Not all elements could be created.\n");
-                return EXIT_FAILURE;
+                g_assert_not_reached();
         }
 
         gst_bin_add_many (GST_BIN (pipeline), source, sink, NULL);
         if (!gst_element_link (source, sink)) {
                 g_printerr ("Elements could not be linked.\n");
                 gst_object_unref (pipeline);
-                return EXIT_FAILURE;
+                g_assert_not_reached();
         }
 
         /* Start it */
@@ -156,7 +141,7 @@ main (int argc, char *argv[])
             == GST_STATE_CHANGE_FAILURE || !wait_for_state (pipeline, GST_STATE_PLAYING)) {
                 g_printerr ("Failed to start pipeline\n");
                 gst_object_unref (pipeline);
-                return EXIT_FAILURE;
+                g_assert_not_reached();
         }
 
         g_print ("Wait for a few frames\n");
@@ -188,14 +173,14 @@ main (int argc, char *argv[])
                 g_printerr ("Could not link new source to sink\n");
                 gst_element_set_state (pipeline, GST_STATE_NULL);
                 gst_object_unref (pipeline);
-                return EXIT_FAILURE;
+                g_assert_not_reached();
         }
 
         if (!gst_element_sync_state_with_parent (source)) {
                 g_printerr ("Could not sync new source state with pipeline\n");
                 gst_element_set_state (pipeline, GST_STATE_NULL);
                 gst_object_unref (pipeline);
-                return EXIT_FAILURE;
+                g_assert_not_reached();
         }
 
         g_print ("Wait for a few frames\n");
@@ -208,6 +193,29 @@ main (int argc, char *argv[])
 
         g_print ("Free the pipeline\n");
         gst_object_unref (pipeline);
-
-        return EXIT_SUCCESS;
 }
+
+int
+main (int argc, char *argv[])
+{
+        GError *error = NULL;
+	int result;
+
+        g_setenv ("GST_PLUGIN_PATH", GST_PLUGIN_PATH, TRUE);
+	g_test_init (&argc, &argv, NULL);
+
+        gst_init (&argc, &argv);
+
+	arv_set_fake_camera_genicam_filename (GENICAM_FILENAME);
+	arv_enable_interface ("Fake");
+
+	g_test_add_func ("/gst/swap-source-test", swap_source_test);
+
+	result = g_test_run();
+
+	arv_shutdown ();
+        gst_deinit();
+
+	return result;
+}
+
