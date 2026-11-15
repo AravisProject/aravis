@@ -1128,8 +1128,9 @@ static void
 arv_uv_device_finalize (GObject *object)
 {
 	ArvUvDevice *uv_device = ARV_UV_DEVICE (object);
-
 	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (uv_device);
+
+        arv_info_device ("[UVDevice::finalize]");
 
         libusb_hotplug_deregister_callback (priv->usb, priv->hotplug_cb_handle);
 
