@@ -3,6 +3,30 @@
 #
 
 {
+	glib-thread-pool-worker-thread
+		Memcheck:Leak
+		match-leak-kinds: possible
+		fun:calloc
+		fun:calloc
+		fun:allocate_dtv
+		fun:_dl_allocate_tls
+		...
+		fun:pthread_create*
+}
+
+{
+	glib_init_constructor
+		Memcheck:Leak
+		match-leak-kinds: definite,possible,reachable
+		fun:malloc
+		fun:g_malloc
+		obj:*/libglib-2.0.so*
+		...
+		fun:call_init
+		fun:_dl_init
+}
+
+{
 	g_match_info_fetch_named_glib_2.74.1_issue_2881
 		Memcheck:Addr4
 		...
@@ -154,27 +178,4 @@
 		fun:gst_system_clock_obtain
 }
 
-{
-	_dl_allocate_tls
-		Memcheck:Leak
-		fun:calloc
-		...
-		fun:_dl_allocate_tls
-}
-
-{
-	_dl_allocate
-		Memcheck:Leak
-		fun:calloc
-		...
-		fun:_dl_allocate
-}
-
-{
-	_dl_init
-		Memcheck:Leak
-		fun:malloc
-		...
-		fun:_dl_init
-}
 
