@@ -55,7 +55,7 @@ jobs:
         ninja -C ./build --verbose install
     - name: meson test
       run: |
-        meson test -C ./build
+        meson test -C ./build -v
     - uses: actions/upload-artifact@v4
       if: failure()
       with:
