@@ -144,3 +144,37 @@
 		...
 		fun:arv_open_device
 }
+
+# gstreamer
+
+{
+	gst_system_clock_obtain
+		Memcheck:Leak
+		...
+		fun:gst_system_clock_obtain
+}
+
+{
+	_dl_allocate_tls
+		Memcheck:Leak
+		fun:calloc
+		...
+		fun:_dl_allocate_tls
+}
+
+{
+	_dl_allocate
+		Memcheck:Leak
+		fun:calloc
+		...
+		fun:_dl_allocate
+}
+
+{
+	_dl_init
+		Memcheck:Leak
+		fun:malloc
+		...
+		fun:_dl_init
+}
+
