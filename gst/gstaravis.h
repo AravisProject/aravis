@@ -99,6 +99,13 @@ struct _GstAravis {
 
 	char *features;
 
+	char *chunks;
+	gboolean chunks_configure;
+	ArvChunkParser *chunk_parser;
+	char **chunk_names;
+	char **chunk_features;
+	GType *chunk_types;
+
 	gboolean add_reference_timestamp_meta;
 };
 

@@ -1,7 +1,6 @@
-/* The goal of this example is to create a pipeline with an aravis source, and while keeping the pipeline alive, remove
- * the source and replace it with a newly created  aravis source. */
-
 #include <gst/gst.h>
+#include <gst/app/gstappsink.h>
+#include <unistd.h>
 #include <arv.h>
 
 #define USE_FAKE_SOURCE 0
@@ -100,6 +99,9 @@ wait_for_state (GstElement *pipeline, GstState target)
 
         return ret != GST_STATE_CHANGE_FAILURE && state == target;
 }
+
+/* The goal of this example is to create a pipeline with an aravis source, and while keeping the pipeline alive, remove
+ * the source and replace it with a newly created  aravis source. */
 
 static void
 swap_source_test (void)
@@ -301,6 +303,67 @@ teardown_under_packet_loss_test (void)
 	g_cond_clear (&data.cond);
 }
 
+/* chunks on a camera without chunk support (the fake camera): a clean
+ * element error naming the problem, no crash. */
+
+static void
+chunks_unsupported_test (void)
+{
+        GstElement *pipeline = gst_pipeline_new ("chunks");
+        GstElement *source = make_source ("chunks-source");
+        GstElement *sink = gst_element_factory_make ("fakesink", NULL);
+        GstMessage *msg;
+        GError *error = NULL;
+
+        g_object_set (source, "chunks", "ExposureTime,FrameID", NULL);
+        gst_bin_add_many (GST_BIN (pipeline), source, sink, NULL);
+        g_assert_true (gst_element_link (source, sink));
+        gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+        msg = gst_bus_timed_pop_filtered (GST_ELEMENT_BUS (pipeline), 5 * GST_SECOND,
+                                          GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
+        g_assert_nonnull (msg);
+        g_assert_cmpint (GST_MESSAGE_TYPE (msg), ==, GST_MESSAGE_ERROR);
+        gst_message_parse_error (msg, &error, NULL);
+        g_print ("expected error: %s\n", error->message);
+        g_clear_error (&error);
+        gst_message_unref (msg);
+
+        g_assert_cmpint (gst_element_set_state (pipeline, GST_STATE_NULL), ==, GST_STATE_CHANGE_SUCCESS);
+        gst_object_unref (pipeline);
+}
+
+/* chunks-configure=false: aravissrc leaves the camera's chunk configuration
+ * alone and only reads the listed chunks. On a camera without chunks this is
+ * no error; frames flow without a chunk meta. */
+static void
+chunks_read_only_test (void)
+{
+        GstElement *pipeline = gst_pipeline_new ("chunks-read");
+        GstElement *source = make_source ("chunks-read-source");
+        GstElement *sink = gst_element_factory_make ("appsink", "sink");
+        int i;
+
+        g_object_set (source, "chunks", "ExposureTime,FrameID", "chunks-configure", FALSE, NULL);
+        g_object_set (sink, "sync", FALSE, NULL);
+        gst_bin_add_many (GST_BIN (pipeline), source, sink, NULL);
+        g_assert_true (gst_element_link (source, sink));
+        g_assert_cmpint (gst_element_set_state (pipeline, GST_STATE_PLAYING), !=, GST_STATE_CHANGE_FAILURE);
+
+        for (i = 0; i < 5; i++) {
+                GstSample *sample = gst_app_sink_try_pull_sample (GST_APP_SINK (sink), 3 * GST_SECOND);
+
+                g_assert_nonnull (sample);
+#if GST_CHECK_VERSION(1, 20, 0)
+                g_assert_null (gst_buffer_get_custom_meta (gst_sample_get_buffer (sample), "GstAravisChunkMeta"));
+#endif
+                gst_sample_unref (sample);
+        }
+
+        g_assert_cmpint (gst_element_set_state (pipeline, GST_STATE_NULL), ==, GST_STATE_CHANGE_SUCCESS);
+        gst_object_unref (pipeline);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -322,6 +385,11 @@ main (int argc, char *argv[])
 	g_test_add_func ("/gst/swap-source-test", swap_source_test);
 	g_test_add_func ("/gst/signals-test", signals_test);
 	g_test_add_func ("/gst/teardown-under-packet-loss-test", teardown_under_packet_loss_test);
+#if GST_CHECK_VERSION(1, 20, 0)
+	/* Before 1.20 "chunks" is ignored (no GstCustomMeta): no error to expect */
+	g_test_add_func ("/gst/chunks-unsupported", chunks_unsupported_test);
+#endif
+	g_test_add_func ("/gst/chunks-read-only", chunks_read_only_test);
 
 	result = g_test_run();
 
