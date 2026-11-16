@@ -108,13 +108,14 @@ swap_source_test (void)
         GstElement *pipeline;
         GstElement *source;
         GstElement *sink;
+        int i;
 
         /* Create the initial pipeline */
 
         g_print ("Pipeline creation\n");
 
         pipeline = gst_pipeline_new ("aravis-pipeline");
-        source   = make_source ("source-1");
+        source   = make_source ("source-0");
         sink = gst_element_factory_make ("fakesink", "fake_sink");
         g_object_set (sink,
                       "sync", TRUE,
@@ -147,44 +148,49 @@ swap_source_test (void)
         g_print ("Wait for a few frames\n");
         sleep (1);
 
-        /* Now we are trying to swap the source of the pipeline. First, we stop the source */
+        for (i = 1; i <= 5; i++) {
+                char *name;
 
-        g_print ("Remove the source\n");
-        g_assert_cmpint (gst_element_set_state (source, GST_STATE_NULL), !=, GST_STATE_CHANGE_FAILURE);
-        gst_element_unlink (source, sink);
-        g_assert (gst_bin_remove (GST_BIN (pipeline), source));
-        source = NULL;
+                /* Now we are trying to swap the source of the pipeline. First, we stop the source */
 
-        drain_bus (pipeline);
+                g_print ("Remove the source\n");
+                g_assert_cmpint (gst_element_set_state (source, GST_STATE_NULL), !=, GST_STATE_CHANGE_FAILURE);
+                gst_element_unlink (source, sink);
+                g_assert (gst_bin_remove (GST_BIN (pipeline), source));
+                source = NULL;
 
-        g_print ("Wait 1s while pipeline is running without data\n");
-        sleep (1);
+                /* Allow the destuction of the removed source */
 
-        /* Then we create a new source */
+                drain_bus (pipeline);
 
-        g_print ("Create a new source\n");
+                /* Then we create a new source */
 
-        source   = make_source ("source-2");
+                g_print ("Create a new source\n");
 
-        /* Add it to the pipeline */
+                name = g_strdup_printf ("source-%i", i);
+                source   = make_source (name);
+                g_free (name);
 
-        g_assert (gst_bin_add(GST_BIN(pipeline), source));
-        if (!gst_element_link (source, sink)) {
-                g_printerr ("Could not link new source to sink\n");
-                gst_element_set_state (pipeline, GST_STATE_NULL);
-                gst_object_unref (pipeline);
-                g_assert_not_reached();
+                /* Add it to the pipeline */
+
+                g_assert (gst_bin_add(GST_BIN(pipeline), source));
+                if (!gst_element_link (source, sink)) {
+                        g_printerr ("Could not link new source to sink\n");
+                        gst_element_set_state (pipeline, GST_STATE_NULL);
+                        gst_object_unref (pipeline);
+                        g_assert_not_reached();
+                }
+
+                if (!gst_element_sync_state_with_parent (source)) {
+                        g_printerr ("Could not sync new source state with pipeline\n");
+                        gst_element_set_state (pipeline, GST_STATE_NULL);
+                        gst_object_unref (pipeline);
+                        g_assert_not_reached();
+                }
+
+                g_print ("Wait for a few frames\n");
+                sleep (1);
         }
-
-        if (!gst_element_sync_state_with_parent (source)) {
-                g_printerr ("Could not sync new source state with pipeline\n");
-                gst_element_set_state (pipeline, GST_STATE_NULL);
-                gst_object_unref (pipeline);
-                g_assert_not_reached();
-        }
-
-        g_print ("Wait for a few frames\n");
-        sleep (1);
 
         /* Free everything now */
 
