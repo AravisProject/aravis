@@ -1320,7 +1320,7 @@ _load_genicam (ArvGvDevice *gv_device, guint32 address, size_t  *size, char **ur
                                                 g_string_free (string, TRUE);
                                         }
 
-                                        if (g_str_has_suffix (path, ".zip")) {
+                                        if (arv_ascii_has_suffix_case_insensitive (path, ".zip")) {
                                                 ArvZip *zip;
                                                 const GSList *zip_files;
 
@@ -2102,6 +2102,8 @@ arv_gv_device_finalize (GObject *object)
 	ArvGvDevice *gv_device = ARV_GV_DEVICE (object);
 	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
 	ArvGvDeviceIOData *io_data;
+
+        arv_info_device ("[GVDevice::finalize]");
 
 	if (priv->heartbeat_thread != NULL) {
 		ArvGvDeviceHeartbeatData *heartbeat_data;

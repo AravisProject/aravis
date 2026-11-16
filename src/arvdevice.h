@@ -118,6 +118,8 @@ ARV_API gboolean        arv_device_stop_acquisition             (ArvDevice *devi
 
 ARV_API gboolean	arv_device_read_memory			(ArvDevice *device, guint64 address, guint32 size, void *buffer, GError **error);
 ARV_API gboolean	arv_device_write_memory			(ArvDevice *device, guint64 address, guint32 size, const void *buffer, GError **error);
+ARV_API GByteArray *    arv_device_read_bytes                   (ArvDevice *device, guint64 address, guint32 size, GError **error);
+ARV_API gboolean	arv_device_write_bytes			(ArvDevice *device, guint64 address, GByteArray *bytes, GError **error);
 ARV_API gboolean	arv_device_read_register		(ArvDevice *device, guint64 address, guint32 *value, GError **error);
 ARV_API gboolean	arv_device_write_register		(ArvDevice *device, guint64 address, guint32 value, GError **error);
 #if ARAVIS_HAS_EVENT

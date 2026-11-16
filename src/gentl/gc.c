@@ -51,7 +51,7 @@ const char _XML_IF[]=
 
 #define _GC_CHECK_HANDLE { GENTL_ENSURE_INIT; if(hPort==NULL) return GC_ERR_INVALID_HANDLE; }
 
-GC_API
+GC_ERROR
 GCGetInfo (TL_INFO_CMD iInfoCmd, INFO_DATATYPE *piType, void *pBuffer, size_t *piSize)
 {
 	arv_trace_gentl("%s (iInfoCmd=%d)",__FUNCTION__,iInfoCmd);
@@ -95,7 +95,7 @@ GCGetInfo (TL_INFO_CMD iInfoCmd, INFO_DATATYPE *piType, void *pBuffer, size_t *p
 	}
 }
 
-GC_API
+GC_ERROR
 GCGetLastError (GC_ERROR *piErrorCode, char *sErrText, size_t *piSize)
 {
 	if(piSize == NULL)
@@ -115,14 +115,14 @@ GCGetLastError (GC_ERROR *piErrorCode, char *sErrText, size_t *piSize)
 	return gentl_to_buf(INFO_DATATYPE_STRING,sErrText,gentl_err->message,piSize,NULL);
 }
 
-GC_API
+GC_ERROR
 GCInitLib (void)
 {
 	arv_trace_gentl(__FUNCTION__);
 	return gentl_init();
 }
 
-GC_API
+GC_ERROR
 GCCloseLib (void)
 {
 	arv_trace_gentl(__FUNCTION__);
@@ -130,7 +130,7 @@ GCCloseLib (void)
 }
 
 
-GC_API
+GC_ERROR
 GCReadPort (PORT_HANDLE hPort, uint64_t iAddress, void *pBuffer, size_t *piSize )
 {
 	arv_trace_gentl ("%s (hPort=%s[%p],iAddress=%#lx,pBuffer=%p,piSize=%ld)",
@@ -159,19 +159,19 @@ GCReadPort (PORT_HANDLE hPort, uint64_t iAddress, void *pBuffer, size_t *piSize 
 	#endif
 }
 
-GC_API
+GC_ERROR
 GCWritePort (PORT_HANDLE hPort, uint64_t iAddress, const void *pBuffer, size_t *piSize )
 {
         GENTL_NYI;
 }
 
-GC_API
+GC_ERROR
 GCGetPortURL ( PORT_HANDLE hPort, char *sURL, size_t *piSize )
 {
         GENTL_NYI;
 }
 
-GC_API
+GC_ERROR
 GCGetPortInfo (PORT_HANDLE hPort, PORT_INFO_CMD iInfoCmd, INFO_DATATYPE *piType, void *pBuffer, size_t *piSize)
 {
 	arv_trace_gentl("%s (hPort=%s[%p],iInfoCmd=%d,pBuffer=%p)",__FUNCTION__,G_OBJECT_TYPE_NAME(hPort),hPort,iInfoCmd,pBuffer);
@@ -224,7 +224,7 @@ GCGetPortInfo (PORT_HANDLE hPort, PORT_INFO_CMD iInfoCmd, INFO_DATATYPE *piType,
         GENTL_NYI_DETAIL("only TL/IF/DEV ports implemented (hPort=%s[%p])",G_OBJECT_TYPE_NAME(hPort),hPort);
 }
 
-GC_API
+GC_ERROR
 GCRegisterEvent (EVENTSRC_HANDLE hEventSrc, EVENT_TYPE iEventID, EVENT_HANDLE *phEvent)
 {
         arv_trace_gentl("%s (hEventSrc=%s[%p],iEventID=%d,phEvent=%p)",
@@ -232,14 +232,14 @@ GCRegisterEvent (EVENTSRC_HANDLE hEventSrc, EVENT_TYPE iEventID, EVENT_HANDLE *p
         GENTL_NYI_DETAIL("hEventSrc=%s[%p]",G_OBJECT_TYPE_NAME(hEventSrc),hEventSrc);
 }
 
-GC_API
+GC_ERROR
 GCUnregisterEvent (EVENTSRC_HANDLE hEventSrc, EVENT_TYPE iEventID)
 {
         GENTL_NYI;
 }
 
 /* GenTL v1.1 */
-GC_API
+GC_ERROR
 GCGetNumPortURLs (PORT_HANDLE hPort, uint32_t *piNumURLs)
 {
 	if(hPort==NULL)
@@ -269,7 +269,7 @@ GCGetNumPortURLs (PORT_HANDLE hPort, uint32_t *piNumURLs)
 	return GC_ERR_SUCCESS;
 }
 
-GC_API
+GC_ERROR
 GCGetPortURLInfo (PORT_HANDLE hPort, uint32_t iURLIndex, URL_INFO_CMD iInfoCmd, INFO_DATATYPE *piType,
                   void *pBuffer, size_t *piSize)
 {
@@ -392,13 +392,13 @@ GCGetPortURLInfo (PORT_HANDLE hPort, uint32_t iURLIndex, URL_INFO_CMD iInfoCmd, 
 
 }
 
-GC_API
+GC_ERROR
 GCReadPortStacked (PORT_HANDLE hPort, PORT_REGISTER_STACK_ENTRY *pEntries, size_t *piNumEntries)
 {
         GENTL_NYI;
 }
 
-GC_API
+GC_ERROR
 GCWritePortStacked ( PORT_HANDLE hPort, PORT_REGISTER_STACK_ENTRY *pEntries, size_t *piNumEntries)
 {
         GENTL_NYI;

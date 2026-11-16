@@ -85,6 +85,8 @@ struct _GstAravis {
 	char *trigger_source;
 
 	char *features;
+
+	gboolean add_reference_timestamp_meta;
 };
 
 struct _GstAravisClass {

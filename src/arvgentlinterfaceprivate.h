@@ -29,8 +29,7 @@
 
 #include <arvgentlinterface.h>
 #include <arvinterfaceprivate.h>
-
-#include <GenTL_v1_5.h>
+#include <arvgentlprivate.h>
 
 G_BEGIN_DECLS
 

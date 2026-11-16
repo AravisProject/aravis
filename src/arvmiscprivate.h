@@ -25,7 +25,7 @@
 
 #include <arvapi.h>
 #include <arvmisc.h>
-#include <GenTL_v1_5.h>
+#include <arvgentlprivate.h>
 
 typedef struct _ArvHistogram ArvHistogram;
 

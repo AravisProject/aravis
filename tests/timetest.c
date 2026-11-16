@@ -7,11 +7,10 @@ static gint64
 time_wait (gint64 usec )
 {
 	gint64 wt, st, tt;
-	gint64 i;
 
 	st = g_get_real_time ();
 	wt = st + usec;
-	for (i = 0, tt = g_get_real_time(); tt < wt; i++ )
+	for (tt = g_get_real_time(); tt < wt; )
 		tt = g_get_real_time ();
 
   return tt-st;

@@ -6,6 +6,7 @@ if get_option('tests')
     exe_wrapper:[
       'valgrind',
       '--tool=memcheck',
+      '--num-callers=50',
       '--leak-check=yes',
       '--suppressions=' + meson.project_source_root() / 'tests' / 'aravis.supp',
       '--error-exitcode=1'
@@ -58,7 +59,8 @@ if get_option('tests')
 		if py.found()
 			python_tests = [
 			  ['fake.py',		[]],
-			  ['exception.py',	[]]
+			  ['exception.py',	[]],
+			  ['device.py',	        []],
 			]
 
 			environment = [
@@ -109,5 +111,19 @@ if get_option('tests')
 			dependencies: aravis_dependencies,
 			include_directories: [library_inc])
 	endforeach
+
+        if gst_enabled
+          exe = executable (
+            'gst', 'gst.c',
+            link_with: aravis_library,
+            dependencies: [aravis_dependencies, gst_deps],
+            c_args: [
+              '-DGENICAM_FILENAME="@0@/src/arv-fake-camera.xml"'.format (meson.project_source_root ()),
+              '-DGST_PLUGIN_PATH="@0@"'.format(meson.project_build_root() / 'gst')
+            ],
+            include_directories: [library_inc]
+          )
+          test ('gst', exe, suite: 'main', timeout: 60)
+        endif
 
 endif
