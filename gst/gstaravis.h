@@ -86,6 +86,14 @@ struct _GstAravis {
 
 	char *features;
 
+	/* Chunk data as a GstCustomMeta (property "chunks") */
+	char *chunks;
+	gboolean chunks_configure;	/* enable the chunks on the camera (else: only read them) */
+	ArvChunkParser *chunk_parser;
+	char **chunk_names;		/* as given: ChunkSelector entries */
+	char **chunk_features;		/* "Chunk<name>" */
+	GType *chunk_types;		/* G_TYPE_DOUBLE / INT64 / BOOLEAN / STRING, INVALID: skip */
+
 	gboolean add_reference_timestamp_meta;
 };
 

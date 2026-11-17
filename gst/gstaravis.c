@@ -70,6 +70,11 @@ gst_aravis_buffer_data_free (gpointer user_data)
 	g_free (data);
 }
 
+/* Name of the GstCustomMeta carrying the chunk values (GStreamer >= 1.20):
+ *   GstCustomMeta *meta = gst_buffer_get_custom_meta (buffer, GST_ARAVIS_CHUNK_META_NAME);
+ *   GstStructure *chunks = gst_custom_meta_get_structure (meta); */
+#define GST_ARAVIS_CHUNK_META_NAME "GstAravisChunkMeta"
+
 GST_DEBUG_CATEGORY_STATIC (aravis_debug);
 #define GST_CAT_DEFAULT aravis_debug
 
@@ -96,6 +101,8 @@ enum
   PROP_STREAM,
   PROP_TRIGGER,
   PROP_ADD_REFERENCE_TIMESTAMP_META,
+  PROP_CHUNKS,
+  PROP_CHUNKS_CONFIGURE,
   N_PROPERTIES
 };
 
@@ -248,6 +255,143 @@ gst_aravis_get_caps (GstBaseSrc * src, GstCaps * filter)
 	return caps;
 }
 
+static void
+gst_aravis_clear_chunks (GstAravis *gst_aravis)
+{
+	g_clear_object (&gst_aravis->chunk_parser);
+	g_clear_pointer (&gst_aravis->chunk_names, g_strfreev);
+	g_clear_pointer (&gst_aravis->chunk_features, g_strfreev);
+	g_clear_pointer (&gst_aravis->chunk_types, g_free);
+}
+
+/* "chunks", step 1, before "features": enable the chunks on the camera
+ * (chunks-configure). arv_camera_set_chunks also disables every other chunk;
+ * "features" is applied afterwards, so a camera that needs a special
+ * sequence can complete or override it there. Called with the object lock
+ * held. */
+static void
+gst_aravis_enable_chunks (GstAravis *gst_aravis, GError **error)
+{
+#if GST_CHECK_VERSION(1, 20, 0)
+	if (gst_aravis->chunks == NULL || gst_aravis->chunks[0] == '\0' || !gst_aravis->chunks_configure)
+		return;	/* chunk mode left as configured (camera, "features") */
+	arv_camera_set_chunks (gst_aravis->camera, gst_aravis->chunks, error);
+#endif
+}
+
+/* "chunks", step 2, after "features": the parser and the value type of each
+ * chunk, from the camera's GenICam nodes. Called with the object lock held,
+ * before the payload size is read (chunks enlarge it). */
+static void
+gst_aravis_prepare_chunks (GstAravis *gst_aravis)
+{
+	ArvDevice *device = arv_camera_get_device (gst_aravis->camera);
+	guint i, n;
+
+	gst_aravis_clear_chunks (gst_aravis);
+	if (gst_aravis->chunks == NULL || gst_aravis->chunks[0] == '\0')
+		return;
+
+#if GST_CHECK_VERSION(1, 20, 0)
+	gst_aravis->chunk_parser = arv_camera_create_chunk_parser (gst_aravis->camera);
+	gst_aravis->chunk_names = g_strsplit_set (gst_aravis->chunks, " ,:;", -1);
+	n = g_strv_length (gst_aravis->chunk_names);
+	gst_aravis->chunk_features = g_new0 (char *, n + 1);
+	gst_aravis->chunk_types = g_new0 (GType, n);
+
+	for (i = 0; i < n; i++) {
+		const char *name = gst_aravis->chunk_names[i];
+		ArvGcNode *node;
+
+		gst_aravis->chunk_features[i] = g_strconcat ("Chunk", name, NULL);
+		node = name[0] != '\0' ? arv_device_get_feature (device, gst_aravis->chunk_features[i]) : NULL;
+		/* Enumerations also implement the integer interface: their entry
+		 * name is more useful than the value. */
+		if (ARV_IS_GC_ENUMERATION (node))
+			gst_aravis->chunk_types[i] = G_TYPE_STRING;
+		else if (ARV_IS_GC_BOOLEAN (node))
+			gst_aravis->chunk_types[i] = G_TYPE_BOOLEAN;
+		else if (ARV_IS_GC_FLOAT (node))
+			gst_aravis->chunk_types[i] = G_TYPE_DOUBLE;
+		else if (ARV_IS_GC_INTEGER (node))
+			gst_aravis->chunk_types[i] = G_TYPE_INT64;
+		else if (ARV_IS_GC_STRING (node))
+			gst_aravis->chunk_types[i] = G_TYPE_STRING;
+		else
+			gst_aravis->chunk_types[i] = G_TYPE_INVALID;
+
+		if (name[0] != '\0' && gst_aravis->chunk_types[i] == G_TYPE_INVALID)
+			GST_WARNING_OBJECT (gst_aravis, "Chunk '%s': no feature '%s' of a supported type, not attached",
+					    name, gst_aravis->chunk_features[i]);
+		else if (name[0] != '\0')
+			GST_DEBUG_OBJECT (gst_aravis, "Chunk '%s' as %s", name,
+					  g_type_name (gst_aravis->chunk_types[i]));
+	}
+#else
+	GST_WARNING_OBJECT (gst_aravis, "chunks needs GStreamer >= 1.20 (GstCustomMeta): ignored");
+#endif
+}
+
+/* The chunk values of arv_buffer as a GstCustomMeta on buffer. Called with the
+ * object lock held. */
+static void
+gst_aravis_add_chunk_meta (GstAravis *gst_aravis, ArvBuffer *arv_buffer, GstBuffer *buffer)
+{
+#if GST_CHECK_VERSION(1, 20, 0)
+	GstCustomMeta *meta;
+	GstStructure *values;
+	guint i;
+
+	if (gst_aravis->chunk_parser == NULL || !arv_buffer_has_chunks (arv_buffer))
+		return;
+
+	meta = gst_buffer_add_custom_meta (buffer, GST_ARAVIS_CHUNK_META_NAME);
+	if (meta == NULL)
+		return;
+	values = gst_custom_meta_get_structure (meta);
+
+	for (i = 0; gst_aravis->chunk_features[i] != NULL; i++) {
+		const char *name = gst_aravis->chunk_names[i];
+		const char *feature = gst_aravis->chunk_features[i];
+		ArvChunkParser *parser = gst_aravis->chunk_parser;
+		GError *error = NULL;
+
+		switch (gst_aravis->chunk_types[i]) {
+			case G_TYPE_DOUBLE: {
+				double v = arv_chunk_parser_get_float_value (parser, arv_buffer, feature, &error);
+				if (error == NULL)
+					gst_structure_set (values, name, G_TYPE_DOUBLE, v, NULL);
+				break;
+			}
+			case G_TYPE_INT64: {
+				gint64 v = arv_chunk_parser_get_integer_value (parser, arv_buffer, feature, &error);
+				if (error == NULL)
+					gst_structure_set (values, name, G_TYPE_INT64, v, NULL);
+				break;
+			}
+			case G_TYPE_BOOLEAN: {
+				gboolean v = arv_chunk_parser_get_boolean_value (parser, arv_buffer, feature, &error);
+				if (error == NULL)
+					gst_structure_set (values, name, G_TYPE_BOOLEAN, v, NULL);
+				break;
+			}
+			case G_TYPE_STRING: {
+				const char *v = arv_chunk_parser_get_string_value (parser, arv_buffer, feature, &error);
+				if (error == NULL && v != NULL)
+					gst_structure_set (values, name, G_TYPE_STRING, v, NULL);
+				break;
+			}
+			default:
+				break;
+		}
+		if (error != NULL) {
+			GST_DEBUG_OBJECT (gst_aravis, "Chunk '%s': %s", name, error->message);
+			g_clear_error (&error);
+		}
+	}
+#endif
+}
+
 static gboolean
 gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 {
@@ -384,7 +528,9 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 		GST_DEBUG_OBJECT (gst_aravis, "Actual exposure = %g µs", arv_camera_get_exposure_time (gst_aravis->camera, NULL));
 	}
 
+	if (!error) gst_aravis_enable_chunks (gst_aravis, &error);
 	if (!error) arv_device_set_features_from_string (arv_camera_get_device (gst_aravis->camera), gst_aravis->features, &error);
+	if (!error) gst_aravis_prepare_chunks (gst_aravis);
 
 	if (!error) gst_aravis->payload = arv_camera_get_payload (gst_aravis->camera, &error);
 	if (!error) gst_aravis->stream = arv_camera_create_stream (gst_aravis->camera, NULL, NULL, NULL, &error);
@@ -542,6 +688,7 @@ gst_aravis_stop( GstBaseSrc * src )
 	camera = g_steal_pointer (&gst_aravis->camera);
 	stream = g_steal_pointer (&gst_aravis->stream);
 	all_caps = g_steal_pointer (&gst_aravis->all_caps);
+	gst_aravis_clear_chunks (gst_aravis);
 	GST_OBJECT_UNLOCK (gst_aravis);
 
 	if (stream != NULL)
@@ -599,6 +746,7 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 	guint64 timestamp_ns;
 	gboolean base_src_does_timestamp;
 	ArvBuffer *arv_buffer = NULL;
+	ArvBuffer *chunk_source;
 
 	gst_aravis = GST_ARAVIS (push_src);
 	base_src_does_timestamp = gst_base_src_get_do_timestamp(GST_BASE_SRC(push_src));
@@ -612,6 +760,7 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 
 	if (arv_buffer == NULL)
 		goto error;
+	chunk_source = arv_buffer;	/* alive until the end of create: held downstream or pushed back last */
 
 	buffer_data = (char *) arv_buffer_get_data (arv_buffer, &buffer_size);
 	arv_buffer_get_image_region (arv_buffer, NULL, NULL, &width, &height);
@@ -667,6 +816,8 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 				timestamp_ns, GST_CLOCK_TIME_NONE);
 		gst_caps_unref (reference);
 	}
+
+	gst_aravis_add_chunk_meta (gst_aravis, chunk_source, *buffer);
 
         if (arv_buffer != NULL)
                 arv_stream_push_buffer (gst_aravis->stream, arv_buffer);
@@ -748,6 +899,7 @@ gst_aravis_init (GstAravis *gst_aravis)
 	gst_aravis->auto_packet_size = FALSE;
         gst_aravis->packet_resend = TRUE;
 	gst_aravis->num_arv_buffers = GST_ARAVIS_DEFAULT_N_BUFFERS;
+	gst_aravis->chunks_configure = TRUE;
 	gst_aravis->payload = 0;
 	gst_aravis->usb_mode = ARV_UV_USB_MODE_DEFAULT;
 
@@ -777,6 +929,8 @@ gst_aravis_finalize (GObject * object)
 	all_caps = g_steal_pointer (&gst_aravis->all_caps);
 	g_clear_pointer (&gst_aravis->camera_name, g_free);
 	g_clear_pointer (&gst_aravis->features, g_free);
+	g_clear_pointer (&gst_aravis->chunks, g_free);
+	gst_aravis_clear_chunks (gst_aravis);
         g_clear_pointer (&gst_aravis->trigger_source, g_free);
 	GST_OBJECT_UNLOCK (gst_aravis);
 
@@ -915,6 +1069,17 @@ gst_aravis_set_property (GObject * object, guint prop_id,
                         gst_aravis->add_reference_timestamp_meta = g_value_get_boolean (value);
                         GST_OBJECT_UNLOCK (gst_aravis);
                         break;
+                case PROP_CHUNKS:
+                        GST_OBJECT_LOCK (gst_aravis);
+                        g_free (gst_aravis->chunks);
+                        gst_aravis->chunks = g_value_dup_string (value);
+                        GST_OBJECT_UNLOCK (gst_aravis);
+                        break;
+                case PROP_CHUNKS_CONFIGURE:
+                        GST_OBJECT_LOCK (gst_aravis);
+                        gst_aravis->chunks_configure = g_value_get_boolean (value);
+                        GST_OBJECT_UNLOCK (gst_aravis);
+                        break;
                 default:
                         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
                         break;
@@ -1031,6 +1196,16 @@ gst_aravis_get_property (GObject * object, guint prop_id, GValue * value,
 		case PROP_ADD_REFERENCE_TIMESTAMP_META:
 			GST_OBJECT_LOCK (gst_aravis);
 			g_value_set_boolean (value, gst_aravis->add_reference_timestamp_meta);
+			GST_OBJECT_UNLOCK (gst_aravis);
+			break;
+		case PROP_CHUNKS:
+			GST_OBJECT_LOCK (gst_aravis);
+			g_value_set_string (value, gst_aravis->chunks);
+			GST_OBJECT_UNLOCK (gst_aravis);
+			break;
+		case PROP_CHUNKS_CONFIGURE:
+			GST_OBJECT_LOCK (gst_aravis);
+			g_value_set_boolean (value, gst_aravis->chunks_configure);
 			GST_OBJECT_UNLOCK (gst_aravis);
 			break;
 		default:
@@ -1237,6 +1412,27 @@ gst_aravis_class_init (GstAravisClass * klass)
                                      FALSE,
                                      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
+	properties[PROP_CHUNKS] =
+		g_param_spec_string ("chunks",
+				     "Chunks",
+				     "Chunks to enable on the camera and attach to each buffer, as a comma separated list"
+				     " of ChunkSelector entries, e.g. \"ExposureTime,Gain,FrameID\". The values are"
+				     " attached as a GstCustomMeta named \"" GST_ARAVIS_CHUNK_META_NAME "\": a"
+				     " GstStructure with one field per chunk (float: gdouble, integer: gint64, boolean,"
+				     " enumeration and string: string). Empty (default): chunk mode is left as"
+				     " configured and nothing is attached. Needs GStreamer >= 1.20",
+				     NULL,
+				     G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	properties[PROP_CHUNKS_CONFIGURE] =
+		g_param_spec_boolean ("chunks-configure",
+				      "Configure chunks",
+				      "Enable the listed chunks on the camera (chunk mode on, these chunks on, all"
+				      " others off), before \"features\" is applied, so \"features\" can"
+				      " complete or override it. false: leave the chunk configuration to"
+				      " \"features\" or the camera and only read the listed chunks",
+				      TRUE,
+				      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
 	g_object_class_install_properties (gobject_class,
 					   G_N_ELEMENTS (properties),
 					   properties);
@@ -1275,6 +1471,11 @@ gst_aravis_class_init (GstAravisClass * klass)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+#if GST_CHECK_VERSION(1, 20, 0)
+	/* No tags: elements copy it along with the buffer's other metadata. */
+	if (gst_meta_get_info (GST_ARAVIS_CHUNK_META_NAME) == NULL)
+		gst_meta_register_custom_simple (GST_ARAVIS_CHUNK_META_NAME);
+#endif
         return gst_element_register (plugin, "aravissrc", GST_RANK_NONE, GST_TYPE_ARAVIS);
 }
 
