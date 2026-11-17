@@ -62,12 +62,13 @@ struct _ArvStreamClass {
         gboolean        (*create_buffers)       (ArvStream *stream, guint n_buffers, size_t size,
                                                  void *user_data, GDestroyNotify user_data_destroy_func,
                                                  GError **error);
+        size_t          (*get_payload_size)     (ArvStream *stream);
 
 	/* signals */
 	void        	(*new_buffer)   	(ArvStream *stream);
 
         /* Padding for future expansion */
-        gpointer padding[10];
+        gpointer padding[9];
 };
 
 /**
