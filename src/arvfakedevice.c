@@ -176,6 +176,8 @@ arv_fake_device_finalize (GObject *object)
 {
 	ArvFakeDevicePrivate *priv = arv_fake_device_get_instance_private (ARV_FAKE_DEVICE (object));
 
+        arv_info_device ("[FakeDevice::finalize]");
+
 	g_clear_pointer (&priv->serial_number, g_free);
 	g_clear_object (&priv->genicam);
 	g_clear_object (&priv->camera);
