@@ -201,6 +201,36 @@ swap_source_test (void)
         gst_object_unref (pipeline);
 }
 
+static void
+signals_test (void)
+{
+        GstElement *pipeline, *src;
+        GError *error = NULL;
+        gboolean success = TRUE;
+
+        pipeline = gst_parse_launch ("aravissrc name=src camera-name=Fake_1 ! fakesink",
+                                     &error);
+        g_assert (GST_IS_PIPELINE (pipeline));
+
+        src = gst_bin_get_by_name (GST_BIN (pipeline), "src");
+
+        g_assert_cmpint (gst_element_set_state (pipeline, GST_STATE_PLAYING), !=, GST_STATE_CHANGE_FAILURE);
+
+        sleep (1);
+
+        g_signal_emit_by_name (src, "software-trigger");
+
+        g_signal_emit_by_name (src, "set-float-feature", "ExposureTimeAbs", 5000.0, &success);
+        g_assert (success);
+
+        g_signal_emit_by_name (src, "set-integer-feature", "NonExistentFeature", 5000, &success);
+        g_assert (!success);
+
+        gst_element_set_state (pipeline, GST_STATE_NULL);
+        gst_object_unref (src);
+        gst_object_unref (pipeline);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -215,6 +245,7 @@ main (int argc, char *argv[])
 	arv_enable_interface ("Fake");
 
 	g_test_add_func ("/gst/swap-source-test", swap_source_test);
+	g_test_add_func ("/gst/signals-test", signals_test);
 
 	result = g_test_run();
 

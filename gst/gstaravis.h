@@ -105,7 +105,11 @@ struct _GstAravis {
 struct _GstAravisClass {
 	GstPushSrcClass parent_class;
 
-    void (*software_trigger) (GstAravis *src);
+        void        (*software_trigger)         (GstAravis *src);
+        gboolean    (*set_features)             (GstAravis *src, const char *features);
+        gboolean    (*set_boolean_feature)      (GstAravis *src, const char *feature, gboolean value);
+        gboolean    (*set_integer_feature)      (GstAravis *src, const char *feature, gint64 value);
+        gboolean    (*set_float_feature)        (GstAravis *src, const char *feature, double value);
 };
 
 GType gst_aravis_get_type (void);
