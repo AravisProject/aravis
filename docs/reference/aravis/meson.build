@@ -15,6 +15,7 @@ expand_content_md_files = [
   'building.md',
   'examples.md',
   'utilities.md',
+  'gst.md',
   'ethernet.md',
   'usb.md',
   'thread-safety.md',
