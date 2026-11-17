@@ -52,10 +52,17 @@ if get_option('tests')
 			  ['device.py',	        []],
 			]
 
+                        if gst_enabled
+                          python_tests += [['gst.py', []]]
+                        endif
+
+                        message(python_tests)
+
 			environment = [
 				'GI_TYPELIB_PATH=' + meson.project_build_root() / 'src',
 				'LD_LIBRARY_PATH=' + meson.project_build_root() / 'src',
-				'FAKE_GENICAM_PATH=' + meson.project_source_root() / 'src' / 'arv-fake-camera.xml'
+				'FAKE_GENICAM_PATH=' + meson.project_source_root() / 'src' / 'arv-fake-camera.xml',
+                                'GST_PLUGIN_PATH=' + meson.project_build_root() / 'gst'
 			]
 
 			foreach t: python_tests
