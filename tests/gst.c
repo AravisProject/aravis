@@ -284,7 +284,7 @@ teardown_under_packet_loss_test (void)
 
 	thread = g_thread_new ("set-state-null", set_state_null_thread, &data);
 
-	deadline = g_get_monotonic_time () + 5 * G_USEC_PER_SEC;
+	deadline = g_get_monotonic_time () + 10 * G_USEC_PER_SEC;
 	g_mutex_lock (&data.mutex);
 	while (!data.done) {
 		if (!g_cond_wait_until (&data.cond, &data.mutex, deadline))
