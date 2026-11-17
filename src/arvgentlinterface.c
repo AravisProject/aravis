@@ -269,6 +269,8 @@ _discover (ArvGenTLInterface *gentl_interface, GArray *device_ids)
                                 arv_info_interface ("[GentTLInterface::discovery] Device '%s' found",
                                                     device_infos->id);
 
+                                g_clear_pointer (&tl_vendor, g_free);
+
                                 g_hash_table_replace(priv->devices, device_infos->id,
                                                      arv_gentl_interface_device_infos_ref(device_infos));
                                 arv_info_interface ("  %s", device_infos->id);
