@@ -493,9 +493,11 @@ unref:
 
 static void
 gst_aravis_software_trigger (GstAravis *src) {
+	GST_OBJECT_LOCK (src);
         if (ARV_IS_CAMERA (src->camera)) {
                 arv_camera_software_trigger(src->camera, NULL);
         }
+	GST_OBJECT_UNLOCK (src);
 }
 
 static gboolean
