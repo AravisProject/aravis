@@ -105,9 +105,13 @@ static GParamSpec *properties[N_PROPERTIES];
 
 enum
 {
-  /* actions */
-  SIGNAL_SOFTWARE_TRIGGER,
-  LAST_SIGNAL
+        /* actions */
+        SIGNAL_SOFTWARE_TRIGGER,
+        SIGNAL_SET_FEATURES,
+        SIGNAL_SET_BOOLEAN_FEATURE,
+        SIGNAL_SET_INTEGER_FEATURE,
+        SIGNAL_SET_FLOAT_FEATURE,
+        LAST_SIGNAL
 };
 
 static guint gst_aravis_signals[LAST_SIGNAL] = { 0 };
@@ -492,6 +496,98 @@ gst_aravis_software_trigger (GstAravis *src) {
         if (ARV_IS_CAMERA (src->camera)) {
                 arv_camera_software_trigger(src->camera, NULL);
         }
+}
+
+static gboolean
+gst_aravis_set_features (GstAravis *src, const char *features)
+{
+	GError *error = NULL;
+	gboolean success = FALSE;
+
+	g_return_val_if_fail (features != NULL, FALSE);
+
+	GST_OBJECT_LOCK (src);
+	if (ARV_IS_CAMERA (src->camera)) {
+		arv_device_set_features_from_string (arv_camera_get_device (src->camera), features, &error);
+		success = (error == NULL);
+	}
+	GST_OBJECT_UNLOCK (src);
+
+	if (error != NULL) {
+		GST_WARNING_OBJECT (src, "Could not set features '%s' (%s)", features, error->message);
+                g_clear_error (&error);
+        }
+
+	return success;
+}
+
+static gboolean
+gst_aravis_set_boolean_feature (GstAravis *src, const char *feature, gboolean value)
+{
+	GError *error = NULL;
+	gboolean success = FALSE;
+
+	g_return_val_if_fail (feature != NULL, FALSE);
+
+	GST_OBJECT_LOCK (src);
+	if (ARV_IS_CAMERA (src->camera)) {
+		arv_device_set_boolean_feature_value (arv_camera_get_device (src->camera), feature, value, &error);
+		success = (error == NULL);
+	}
+	GST_OBJECT_UNLOCK (src);
+
+	if (error != NULL) {
+		GST_WARNING_OBJECT (src, "Could not set boolean feature '%s' (%s)", feature, error->message);
+                g_clear_error (&error);
+        }
+
+	return success;
+}
+
+static gboolean
+gst_aravis_set_integer_feature (GstAravis *src, const char *feature, gint64 value)
+{
+	GError *error = NULL;
+	gboolean success = FALSE;
+
+	g_return_val_if_fail (feature != NULL, FALSE);
+
+	GST_OBJECT_LOCK (src);
+	if (ARV_IS_CAMERA (src->camera)) {
+		arv_device_set_integer_feature_value (arv_camera_get_device (src->camera), feature, value, &error);
+		success = (error == NULL);
+	}
+	GST_OBJECT_UNLOCK (src);
+
+	if (error != NULL) {
+		GST_WARNING_OBJECT (src, "Could not set integer feature '%s' (%s)", feature, error->message);
+                g_clear_error (&error);
+        }
+
+	return success;
+}
+
+static gboolean
+gst_aravis_set_float_feature (GstAravis *src, const char *feature, double value)
+{
+	GError *error = NULL;
+	gboolean success = FALSE;
+
+	g_return_val_if_fail (feature != NULL, FALSE);
+
+	GST_OBJECT_LOCK (src);
+	if (ARV_IS_CAMERA (src->camera)) {
+		arv_device_set_float_feature_value (arv_camera_get_device (src->camera), feature, value, &error);
+		success = (error == NULL);
+	}
+	GST_OBJECT_UNLOCK (src);
+
+	if (error != NULL) {
+		GST_WARNING_OBJECT (src, "Could not set float feature '%s' (%s)", feature, error->message);
+                g_clear_error (&error);
+        }
+
+	return success;
 }
 
 static gboolean
@@ -1395,6 +1491,30 @@ gst_aravis_class_init (GstAravisClass * klass)
                               G_STRUCT_OFFSET (GstAravisClass,
                                                software_trigger), NULL, NULL, NULL,
                               G_TYPE_NONE, 0);
+        gst_aravis_signals[SIGNAL_SET_FEATURES] =
+                g_signal_new ("set-features", G_TYPE_FROM_CLASS (klass),
+                              G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+                              G_STRUCT_OFFSET (GstAravisClass,
+                                               set_features), NULL, NULL, NULL,
+                              G_TYPE_BOOLEAN, 1, G_TYPE_STRING);
+        gst_aravis_signals[SIGNAL_SET_BOOLEAN_FEATURE] =
+                g_signal_new ("set-boolean-feature", G_TYPE_FROM_CLASS (klass),
+                              G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+                              G_STRUCT_OFFSET (GstAravisClass,
+                                               set_boolean_feature), NULL, NULL, NULL,
+                              G_TYPE_BOOLEAN, 2, G_TYPE_STRING,G_TYPE_BOOLEAN);
+        gst_aravis_signals[SIGNAL_SET_INTEGER_FEATURE] =
+                g_signal_new ("set-integer-feature", G_TYPE_FROM_CLASS (klass),
+                              G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+                              G_STRUCT_OFFSET (GstAravisClass,
+                                               set_integer_feature), NULL, NULL, NULL,
+                              G_TYPE_BOOLEAN, 2, G_TYPE_STRING, G_TYPE_INT64);
+        gst_aravis_signals[SIGNAL_SET_FLOAT_FEATURE] =
+                g_signal_new ("set-float-feature", G_TYPE_FROM_CLASS (klass),
+                              G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+                              G_STRUCT_OFFSET (GstAravisClass,
+                                               set_float_feature), NULL, NULL, NULL,
+                              G_TYPE_BOOLEAN, 2, G_TYPE_STRING, G_TYPE_DOUBLE);
 
         GST_DEBUG_CATEGORY_INIT (aravis_debug, "aravissrc", 0, "Aravis interface");
 
@@ -1420,6 +1540,10 @@ gst_aravis_class_init (GstAravisClass * klass)
 	gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_aravis_create);
 
         klass->software_trigger = gst_aravis_software_trigger;
+        klass->set_features = gst_aravis_set_features;
+        klass->set_boolean_feature = gst_aravis_set_boolean_feature;
+        klass->set_integer_feature = gst_aravis_set_integer_feature;
+        klass->set_float_feature = gst_aravis_set_float_feature;
 }
 
 static gboolean
