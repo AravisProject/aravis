@@ -4,7 +4,7 @@ import gi
 import time
 import os
 
-gi.require_version ('Aravis', '0.10')
+gi.require_version ('Aravis', '0.8')
 gi.require_version("Gst", "1.0")
 
 from gi.repository import Aravis,GLib
