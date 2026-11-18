@@ -49,7 +49,7 @@ endif
 
 build_shared = get_option('default_library') == 'shared'
 
-if cc.get_id() == 'msvc'
+if cc.get_argument_syntax() == 'msvc'
   if build_shared
     cc_export_define = '__declspec(dllexport) extern'
   else
@@ -77,7 +77,7 @@ gudev_dep = dependency ('gudev-1.0', required: get_option('v4l2'))
 
 aravis_public_dependencies = [glib_dep, gobject_dep, gio_dep]
 aravis_dependencies = [aravis_public_dependencies, xml2_dep, libz_dep, gmodule_dep]
-if cc.get_id()!='msvc'
+if cc.get_argument_syntax()!='msvc'
 	libm = cc.find_library ('m', required: true)
 	aravis_dependencies += libm
 endif
@@ -119,7 +119,6 @@ else # not Linux
 endif
 
 subdir ('src')
-subdir ('tests')
 
 viewer_enabled = false
 viewer_option = get_option ('viewer')
@@ -135,6 +134,8 @@ gst_option = get_option ('gst-plugin')
 gst_deps = aravis_dependencies + [dependency ('gstreamer-base-1.0', required: gst_option),
                                   dependency ('gstreamer-app-1.0', required: gst_option)]
 subdir('gst', if_found: gst_deps)
+
+subdir ('tests')
 
 doc_deps = dependency ('gi-docgen', version:'>= 2021.1', fallback: ['gi-docgen', 'dummy_dep'], required:get_option('documentation'))
 subdir('docs', if_found: doc_deps)
