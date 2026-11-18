@@ -6,14 +6,13 @@ Aravis has a set of unit tests that helps to catch regressions and memory leaks
 during the development. The test suite is run using the following commands:
 
 ```sh
-ninja test
+meson test
 ```
 
-The is a small helper script that run the same tests under valgrind memmory
-checker
+There is a meson test setup for running tests under valgrind memmory checker:
 
 ```sh
-../tests/valgrind-memcheck
+meson test --setup=valgrind
 ```
 
 All the code is not covered yet by the tests. Code coverage can be obtained
