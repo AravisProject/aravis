@@ -830,7 +830,7 @@ _open_usb_device (ArvUvDevice *uv_device, GError **error)
 		libusb_device_handle *usb_device;
 		struct libusb_device_descriptor desc;
 
-		if (libusb_get_device_descriptor (devices[i], &desc) != 0 &&
+		if (libusb_get_device_descriptor (devices[i], &desc) == 0 &&
 		    libusb_open (devices[i], &usb_device) == LIBUSB_SUCCESS) {
 			unsigned char *manufacturer;
 			unsigned char *product;
