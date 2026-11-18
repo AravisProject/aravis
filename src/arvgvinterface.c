@@ -502,9 +502,10 @@ _discover (GHashTable *devices, const char *device_id, gboolean allow_broadcast_
 	} while (1);
 }
 
-char *
-arv_gv_interface_force_ip (const char *selection, GInetAddress *ip, GInetAddressMask *mask,
-			   GInetAddress *gateway, char **interface_address, GError **error)
+gboolean
+arv_gv_interface_force_ip (const char *selection,
+                           GInetAddress *ip, GInetAddressMask *mask, GInetAddress *gateway,
+                           char **device_id, char **interface_address, GError **error)
 {
 	ArvGvInterface *gv_interface = ARV_GV_INTERFACE (arv_gv_interface_get_instance ());
 	ArvGvInterfaceDeviceInfos *infos, *match = NULL, *verified;
@@ -521,6 +522,12 @@ arv_gv_interface_force_ip (const char *selection, GInetAddress *ip, GInetAddress
 	size_t packet_size;
 	char *discovery_interface, *id = NULL, *mac = NULL;
 	gpointer key, value;
+        gboolean success = FALSE;
+
+        g_return_val_if_fail (selection != NULL, FALSE);
+        g_return_val_if_fail (ip != NULL, FALSE);
+        g_return_val_if_fail (mask != NULL, FALSE);
+        g_return_val_if_fail (gateway != NULL, FALSE);
 
 	discovery_interface = arv_gv_interface_dup_discovery_interface_name ();
 	_discover (gv_interface->priv->devices, NULL, FALSE, discovery_interface);
@@ -546,7 +553,7 @@ arv_gv_interface_force_ip (const char *selection, GInetAddress *ip, GInetAddress
 	g_clear_pointer (&regex, g_regex_unref);
 	if (matches != 1) {
 		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
-			     "ForceIP selection matched %u devices; exactly one is required", matches);
+			     "Device selection matched %u devices, while exactly one is required", matches);
 		goto out;
 	}
 
@@ -567,7 +574,7 @@ arv_gv_interface_force_ip (const char *selection, GInetAddress *ip, GInetAddress
 	if (local == NULL || !arv_gv_discover_socket_set_broadcast (&(ArvGvDiscoverSocket) { .socket = socket }, TRUE)) {
 		if (error != NULL && *error == NULL)
 			g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_TRANSFER_ERROR,
-				     "Failed to enable ForceIP broadcast");
+				     "Failed to enable broadcast for ForceIP packet");
 		goto out;
 	}
 	broadcast_ip = g_inet_address_new_from_string ("255.255.255.255");
@@ -577,26 +584,31 @@ arv_gv_interface_force_ip (const char *selection, GInetAddress *ip, GInetAddress
 
 	id = g_strdup (match->id);
 	mac = g_strdup (match->mac);
-	if (interface_address != NULL)
-		*interface_address = g_inet_address_to_string (match->interface_address);
-	verification_deadline = g_get_monotonic_time () + 15 * G_TIME_SPAN_SECOND;
+	verification_deadline = g_get_monotonic_time () + 5 * G_TIME_SPAN_SECOND;
 	do {
 		verified = _discover (NULL, mac, FALSE, discovery_interface);
-		if (verified != NULL && memcmp (verified->discovery_data + ARV_GVBS_CURRENT_IP_ADDRESS_OFFSET, ip_bytes, 4) == 0)
+		if (verified != NULL &&
+                    memcmp (verified->discovery_data + ARV_GVBS_CURRENT_IP_ADDRESS_OFFSET, ip_bytes, 4) == 0)
 			break;
 		if (verified != NULL)
 			arv_gv_interface_device_infos_unref (verified);
 		verified = NULL;
 	} while (g_get_monotonic_time () < verification_deadline);
+
 	if (verified == NULL) {
 		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_TIMEOUT,
-			     "ForceIP verification failed for %s", mac);
+			     "Verification of forced IP failed for %s", mac);
 		g_clear_pointer (&id, g_free);
-		if (interface_address != NULL)
-			g_clear_pointer (interface_address, g_free);
-	}
-	if (verified != NULL)
+        } else {
 		arv_gv_interface_device_infos_unref (verified);
+                if (device_id != NULL)
+                        *device_id = id;
+                else
+                        g_clear_pointer (&id, g_free);
+                if (interface_address != NULL)
+                        *interface_address = g_inet_address_to_string (match->interface_address);
+                success = TRUE;
+        }
 
 out:
 	g_free (mac);
@@ -606,7 +618,8 @@ out:
 	g_clear_object (&local);
 	g_clear_object (&socket);
 	arv_gvcp_packet_free (packet);
-	return id;
+
+        return success;
 }
 
 static void

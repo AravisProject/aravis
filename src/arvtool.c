@@ -112,7 +112,7 @@ description_content[] =
 "  description [<feature>] ...:      show the full feature description\n"
 "  control <feature>[=<value>] ...:  read/write device features\n"
 "  network <setting>[=<value>]...:   read/write network settings\n"
-"  force-ip ip=<address>...:         configures cameras with otherwise-inaccessible subnets\n"
+"  force-ip ip=<address>...:         configure cameras with otherwise inaccessible subnets\n"
 "\n"
 "If no command is given, this utility will list all the available devices.\n"
 "For the control command, direct access to device registers is provided using a R[address] syntax"
@@ -639,6 +639,70 @@ arv_tool_network (int argc, char **argv, ArvDevice *device)
         }
 }
 
+static int
+arv_tool_force_ip (int argc, char **argv)
+{
+        const char *ip_string = NULL, *mask_string = "255.255.255.0", *gateway_string = "0.0.0.0";
+        GInetAddress *ip = NULL, *gateway = NULL;
+        GInetAddressMask *mask = NULL;
+        char *device_id = NULL, *interface_address = NULL;
+        GError *error = NULL;
+        int i, status = EXIT_FAILURE;
+
+        if (arv_option_device_address != NULL) {
+                fprintf (stderr, "force-ip does not accept --address; use --name instead\n");
+                return status;
+        }
+
+        for (i = 2; i < argc; i++) {
+                char *separator = strchr (argv[i], '=');
+                if (separator == NULL || separator[1] == '\0')
+                        return status;
+                if (g_str_has_prefix (argv[i], "ip=") && separator == argv[i] + 2)
+                        ip_string = separator + 1;
+                else if (g_str_has_prefix (argv[i], "mask=") && separator == argv[i] + 4)
+                        mask_string = separator + 1;
+                else if (g_str_has_prefix (argv[i], "gateway=") && separator == argv[i] + 7)
+                        gateway_string = separator + 1;
+                else {
+                        fprintf (stderr, "Unknown force-ip parameter '%s'\n", argv[i]);
+                        return status;
+                }
+        }
+
+        if (ip_string == NULL ||
+            (ip = g_inet_address_new_from_string (ip_string)) == NULL ||
+            (mask = g_inet_address_mask_new_from_string (mask_string, NULL)) == NULL ||
+            (gateway = g_inet_address_new_from_string (gateway_string)) == NULL ||
+            g_inet_address_get_family (ip) != G_SOCKET_FAMILY_IPV4 ||
+            g_inet_address_mask_get_family (mask) != G_SOCKET_FAMILY_IPV4 ||
+            g_inet_address_get_family (gateway) != G_SOCKET_FAMILY_IPV4) {
+                fprintf (stderr, "force-ip requires valid IPv4 ip, mask and gateway values\n");
+                goto out;
+        }
+
+        if (!arv_gv_interface_force_ip (arv_option_device_selection, ip, mask, gateway,
+                                        &device_id, &interface_address, &error)) {
+                fprintf (stderr, "IP forcing failed (%s)\n", error != NULL ? error->message : "unknown error");
+                g_clear_error (&error);
+                goto out;
+        }
+
+        printf ("IP forced and verified for %s at %s via %s\n", device_id, ip_string, interface_address);
+        printf ("The IP address is temporary; use the network command for persistent configuration.\n");
+
+        status = EXIT_SUCCESS;
+out:
+        g_free (device_id);
+        g_free (interface_address);
+        g_clear_error (&error);
+        g_clear_object (&ip);
+        g_clear_object (&mask);
+        g_clear_object (&gateway);
+
+        return status;
+}
+
 static void
 arv_tool_execute_command (int argc, char **argv, ArvDevice *device,
 			  ArvRegisterCachePolicy register_cache_policy,
@@ -707,64 +771,6 @@ arv_tool_execute_command (int argc, char **argv, ArvDevice *device,
 
 	if (arv_option_show_time)
 		printf ("Executed in %g s\n", (g_get_monotonic_time () - start) / 1000000.0);
-}
-
-static int
-arv_tool_force_ip (int argc, char **argv)
-{
-	const char *ip_string = NULL, *mask_string = "255.255.255.0", *gateway_string = "0.0.0.0";
-	GInetAddress *ip = NULL, *gateway = NULL;
-	GInetAddressMask *mask = NULL;
-	char *device_id = NULL, *interface_address = NULL;
-	GError *error = NULL;
-	int i, status = EXIT_FAILURE;
-
-	if (arv_option_device_address != NULL) {
-		fprintf (stderr, "ForceIP does not accept --address; use --name instead\n");
-		return status;
-	}
-	for (i = 2; i < argc; i++) {
-		char *separator = strchr (argv[i], '=');
-		if (separator == NULL || separator[1] == '\0')
-			return status;
-		if (g_str_has_prefix (argv[i], "ip=") && separator == argv[i] + 2)
-			ip_string = separator + 1;
-		else if (g_str_has_prefix (argv[i], "mask=") && separator == argv[i] + 4)
-			mask_string = separator + 1;
-		else if (g_str_has_prefix (argv[i], "gateway=") && separator == argv[i] + 7)
-			gateway_string = separator + 1;
-		else {
-			fprintf (stderr, "Unknown ForceIP parameter '%s'\n", argv[i]);
-			return status;
-		}
-	}
-	if (ip_string == NULL ||
-	    (ip = g_inet_address_new_from_string (ip_string)) == NULL ||
-	    (mask = g_inet_address_mask_new_from_string (mask_string, NULL)) == NULL ||
-	    (gateway = g_inet_address_new_from_string (gateway_string)) == NULL ||
-	    g_inet_address_get_family (ip) != G_SOCKET_FAMILY_IPV4 ||
-	    g_inet_address_mask_get_family (mask) != G_SOCKET_FAMILY_IPV4 ||
-	    g_inet_address_get_family (gateway) != G_SOCKET_FAMILY_IPV4) {
-		fprintf (stderr, "ForceIP requires valid IPv4 ip, mask and gateway values\n");
-		goto out;
-	}
-	device_id = arv_gv_interface_force_ip (arv_option_device_selection, ip, mask, gateway,
-					      &interface_address, &error);
-	if (device_id == NULL) {
-		fprintf (stderr, "ForceIP failed: %s\n", error != NULL ? error->message : "unknown error");
-		goto out;
-	}
-	printf ("ForceIP verified for %s at %s via %s\n", device_id, ip_string, interface_address);
-	printf ("The forced address is temporary; use the network command for persistent configuration.\n");
-	status = EXIT_SUCCESS;
-out:
-	g_free (device_id);
-	g_free (interface_address);
-	g_clear_error (&error);
-	g_clear_object (&ip);
-	g_clear_object (&mask);
-	g_clear_object (&gateway);
-	return status;
 }
 
 int
@@ -871,6 +877,8 @@ main (int argc, char **argv)
 
 	if (arv_option_gv_discovery_interface)
 		arv_gv_interface_set_discovery_interface_name (arv_option_gv_discovery_interface);
+
+        /* force-ip must be handled separately, as it is a way to connect to an unreachable device */
 	if (argc >= 2 && g_strcmp0 (argv[1], "force-ip") == 0) {
 		int status = arv_tool_force_ip (argc, argv);
 		arv_shutdown ();
@@ -921,15 +929,14 @@ main (int argc, char **argv)
                         device_id = arv_get_device_id (i);
 
                         if (g_regex_match (regex, device_id, 0, NULL)) {
-                                n_found_devices++;
-
                                 printf ("%s (%s)\n", device_id, arv_get_device_address (i));
 
                                 if (argc >= 2) {
                                         device = arv_open_device (device_id, &error);
 
                                         if (ARV_IS_DEVICE (device)) {
-                                                arv_tool_execute_command (argc, argv, device,
+                                                arv_tool_execute_command (argc, argv,
+                                                                          device,
                                                                           register_cache_policy,
                                                                           range_check_policy,
                                                                           access_check_policy);
@@ -942,6 +949,7 @@ main (int argc, char **argv)
                                                 g_clear_error (&error);
                                         }
                                 }
+                                n_found_devices++;
                         }
                 }
         }
