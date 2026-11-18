@@ -74,9 +74,9 @@ arv_gentl_interface_device_infos_new (ArvGenTLSystem *system,
 	infos->system  = system;
 	infos->interface = g_strdup(interface);
         infos->guid = g_strdup (guid);
-	infos->id = g_strdup_printf ("%s-%s-%s-%s", tl_vendor, vendor, model, serial_nbr);
-	infos->vendor_alias_serial = g_strdup_printf ("%s-%s-%s", tl_vendor, arv_vendor_alias_lookup (vendor), serial_nbr);
-	infos->vendor_serial = g_strdup_printf ("%s-%s-%s", tl_vendor, vendor, serial_nbr);
+	infos->id = g_strdup_printf ("%sTL-%s-%s-%s", tl_vendor, vendor, model, serial_nbr);
+	infos->vendor_alias_serial = g_strdup_printf ("%sTL-%s-%s", tl_vendor, arv_vendor_alias_lookup (vendor), serial_nbr);
+	infos->vendor_serial = g_strdup_printf ("%sTL-%s-%s", tl_vendor, vendor, serial_nbr);
 	infos->vendor = g_strdup (vendor);
 	infos->model = g_strdup (model);
 	infos->serial_nbr = g_strdup (serial_nbr);
@@ -268,6 +268,8 @@ _discover (ArvGenTLInterface *gentl_interface, GArray *device_ids)
                                                                                     vendor, model, serial_nbr);
                                 arv_info_interface ("[GentTLInterface::discovery] Device '%s' found",
                                                     device_infos->id);
+
+                                g_clear_pointer (&tl_vendor, g_free);
 
                                 g_hash_table_replace(priv->devices, device_infos->id,
                                                      arv_gentl_interface_device_infos_ref(device_infos));
