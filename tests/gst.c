@@ -2,7 +2,6 @@
  * the source and replace it with a newly created  aravis source. */
 
 #include <gst/gst.h>
-#include <unistd.h>
 #include <arv.h>
 
 #define USE_FAKE_SOURCE 0
@@ -146,7 +145,7 @@ swap_source_test (void)
         }
 
         g_print ("Wait for a few frames\n");
-        sleep (1);
+        g_usleep (G_USEC_PER_SEC);
 
         for (i = 1; i <= 5; i++) {
                 char *name;
@@ -189,7 +188,7 @@ swap_source_test (void)
                 }
 
                 g_print ("Wait for a few frames\n");
-                sleep (1);
+                g_usleep (G_USEC_PER_SEC);
         }
 
         /* Free everything now */
@@ -216,7 +215,7 @@ signals_test (void)
 
         g_assert_cmpint (gst_element_set_state (pipeline, GST_STATE_PLAYING), !=, GST_STATE_CHANGE_FAILURE);
 
-        sleep (1);
+        g_usleep (G_USEC_PER_SEC);
 
         g_signal_emit_by_name (src, "software-trigger");
 
