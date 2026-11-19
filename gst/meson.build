@@ -19,7 +19,6 @@ gst_plugin_filename = 'gstaravis.@0@'.format (aravis_api_version)
 
 gst_plugin = shared_library (gst_plugin_filename,
 			     gst_sources, gst_headers,
-			     name_suffix: [],
 			     link_with: aravis_library,
 			     c_args: gst_c_args,
 			     include_directories: [library_inc],
