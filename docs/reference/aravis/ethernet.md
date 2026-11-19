@@ -102,6 +102,16 @@ example, the following command gives this capability to the Aravis viewer:
 sudo setcap cap_net_raw+ep arv-viewer
 ```
 
+Packet sockets are used automatically when the application has this capability,
+which is the case of any process running as root in a Docker container, as
+`NET_RAW` is part of the default Docker capabilities. They can be disabled using
+`arv_camera_gv_set_stream_options()` with
+`ARV_GV_STREAM_OPTION_PACKET_SOCKET_DISABLED`, or `docker run --cap-drop NET_RAW`.
+The standard socket is always used for a device whose address is local to the
+host, like a fake camera, as the packets go through the loopback interface,
+which is not the one the packet socket is bound to. The stream debug output
+(`ARV_DEBUG=stream`) tells which method is used.
+
 # Legacy endianess mechanism
 
 Some GigEVision devices incorrectly report a Genicam schema version greater or
