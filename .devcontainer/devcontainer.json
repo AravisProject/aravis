@@ -1,0 +1,29 @@
+{
+	"name": "Aravis Container",
+	"dockerComposeFile": "../docker-compose.yml",
+	"service": "dev",
+	"workspaceFolder": "/workspace",
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"html.format.templating": true,
+				"terminal.integrated.defaultProfile.linux": "zsh",
+				"editor.tabSize": 4,
+				"editor.insertSpaces": true,
+				"terminal.integrated.profiles.linux": {
+					"bash": {
+						"path": "bash",
+						"icon": "terminal-bash"
+					},
+					"zsh": {
+						"path": "zsh"
+					}
+				}
+			},
+			"extensions": [
+			
+			]
+		}
+	},
+	"postCreateCommand": "sudo chown -R $(whoami) /workspace"
+}
