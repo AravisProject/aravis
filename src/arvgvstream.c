@@ -1093,7 +1093,9 @@ _loop (ArvGvStreamThreadData *thread_data)
 #if ARAVIS_HAS_PACKET_SOCKET
 
 static void
-_set_socket_filter (int socket, guint32 source_ip, guint32 source_port, guint32 destination_ip, guint32 destination_port)
+_set_socket_filter (int socket,
+                    guint32 source_ip, guint32 source_port, guint32 destination_ip, guint32 destination_port,
+                    gboolean skip_outgoing)
 {
 
 #if 0
@@ -1166,7 +1168,7 @@ _set_socket_filter (int socket, guint32 source_ip, guint32 source_port, guint32 
  * (016) ret      #0
  */
 
-        struct sock_filter bpf[] = {
+        struct sock_filter bpf_skip_outgoing[] = {
                 /*  0 */ BPF_STMT (BPF_LD  | BPF_H   | BPF_ABS, SKF_AD_OFF + SKF_AD_PKTTYPE),
                 /*  1 */ BPF_JUMP (BPF_JMP | BPF_JEQ | BPF_K,   PACKET_OUTGOING, 14, 0),
                 /*  2 */ BPF_STMT (BPF_LD  | BPF_H   | BPF_ABS, 12),
@@ -1185,9 +1187,35 @@ _set_socket_filter (int socket, guint32 source_ip, guint32 source_port, guint32 
                 /* 15 */ BPF_STMT (BPF_RET | BPF_K, 262144),
                 /* 16 */ BPF_STMT (BPF_RET | BPF_K, 0)
         };
+
+        struct sock_filter bpf[] = {
+                /*  0 */ BPF_STMT (BPF_LD  | BPF_H   | BPF_ABS, 12),
+                /*  1 */ BPF_JUMP (BPF_JMP | BPF_JEQ | BPF_K,   ETH_P_IP, 0, 12),
+                /*  2 */ BPF_STMT (BPF_LD  | BPF_B   | BPF_ABS, 23),
+                /*  3 */ BPF_JUMP (BPF_JMP | BPF_JEQ | BPF_K,   IPPROTO_UDP, 0, 10),
+                /*  4 */ BPF_STMT (BPF_LD  | BPF_W   | BPF_ABS, 26),
+                /*  5 */ BPF_JUMP (BPF_JMP | BPF_JEQ | BPF_K,   source_ip, 0, 8),
+                /*  6 */ BPF_STMT (BPF_LD  | BPF_W   | BPF_ABS, 30),
+                /*  7 */ BPF_JUMP (BPF_JMP | BPF_JEQ | BPF_K,   destination_ip, 0, 6),
+                /*  8 */ BPF_STMT (BPF_LD  | BPF_H   | BPF_ABS, 20),
+                /*  9 */ BPF_JUMP (BPF_JMP | BPF_JSET | BPF_K,  0x1fff, 4, 0),
+                /* 10 */ BPF_STMT (BPF_LDX | BPF_B   | BPF_MSH, 14),
+                /* 11 */ BPF_STMT (BPF_LD  | BPF_H   | BPF_IND, 16),
+                /* 12 */ BPF_JUMP (BPF_JMP | BPF_JEQ | BPF_K,   destination_port, 0, 1),
+                /* 13 */ BPF_STMT (BPF_RET | BPF_K, 262144),
+                /* 14 */ BPF_STMT (BPF_RET | BPF_K, 0)
+        };
 #endif
 
-	struct sock_fprog bpf_prog = {G_N_ELEMENTS (bpf), bpf};
+	struct sock_fprog bpf_prog;
+
+       if (skip_outgoing) {
+              bpf_prog.len = G_N_ELEMENTS (bpf_skip_outgoing);
+              bpf_prog.filter = bpf_skip_outgoing;
+       } else {
+              bpf_prog.len = G_N_ELEMENTS (bpf);
+              bpf_prog.filter = bpf;
+       }
 
 	arv_info_stream_thread ("[GvStream::set_socket_filter] source ip = 0x%08x - port = %d -"
                                 " dest ip = 0x%08x - port %d",
@@ -1248,6 +1276,7 @@ _ring_buffer_loop (ArvGvStreamThreadData *thread_data)
 	guint32 interface_address;
 	guint32 device_address;
 	gboolean use_poll;
+        gboolean skip_outgoing;
 
 	arv_info_stream ("[GvStream::loop] Packet socket method");
 
@@ -1288,11 +1317,14 @@ _ring_buffer_loop (ArvGvStreamThreadData *thread_data)
 
         /* If the camera address is one of our own addresses, traffic goes through lo */
         if (_interface_index_from_address (device_address) != 0 ||
-            (device_address >> 24) == 127)
+            (device_address >> 24) == 127) {
                 ifindex = if_nametoindex ("lo");
-        else
+                skip_outgoing = TRUE;
+                arv_info_device ("[GvStream::_ring_buffer_loop] Local or loopback address detected, bind socket to lo");
+        } else {
                 ifindex = _interface_index_from_address (interface_address);
-
+                skip_outgoing = FALSE;
+        }
 
 	local_address.sll_family   = AF_PACKET;
 	local_address.sll_protocol = g_htons(ETH_P_IP);
@@ -1301,11 +1333,14 @@ _ring_buffer_loop (ArvGvStreamThreadData *thread_data)
 	local_address.sll_pkttype  = 0;
 	local_address.sll_halen    = 0;
 	if (bind (fd, (struct sockaddr *) &local_address, sizeof(local_address)) == -1) {
-		arv_warning_stream_thread ("[GvStream::loop] Failed to bind packet socket");
+		arv_warning_stream_thread ("[GvStream::_ring_buffer_loop] Failed to bind packet socket");
 		goto bind_error;
 	}
 
-	_set_socket_filter (fd, device_address, thread_data->source_stream_port, interface_address, thread_data->stream_port);
+	_set_socket_filter (fd,
+                            device_address, thread_data->source_stream_port,
+                            interface_address, thread_data->stream_port,
+                            skip_outgoing);
 
 	poll_fd[0].fd = fd;
 	poll_fd[0].events =  G_IO_IN;
