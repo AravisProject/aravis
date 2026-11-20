@@ -1095,97 +1095,104 @@ _set_socket_filter (int socket, guint32 source_ip, guint32 source_port, guint32 
 
 #if 0
 /*
- * sudo tcpdump -i lo -e -nn  "udp and src host 192.168.0.1 and src port 10 and dst host 192.168.0.2 and dst port 20" -d
+ * sudo tcpdump -i lo -d "inbound and udp and src host 192.168.0.1 and src port 10 and dst host 192.168.0.2 and dst port 20"
  *
- * (000) ldh      [12]
- * (001) jeq      #0x86dd          jt 17	jf 2
- * (002) jeq      #0x800           jt 3	        jf 17
- * (003) ldb      [23]
- * (004) jeq      #0x11            jt 5	        jf 17
- * (005) ld       [26]
- * (006) jeq      #0xc0a80001      jt 7	        jf 17           Source host
- * (007) ldh      [20]
- * (008) jset     #0x1fff          jt 17	jf 9
- * (009) ldxb     4*([14]&0xf)
- * (010) ldh      [x + 14]
- * (011) jeq      #0xa             jt 12	jf 17           Source port
- * (012) ld       [30]
- * (013) jeq      #0xc0a80002      jt 14	jf 17           Destination host
- * (014) ldh      [x + 16]
- * (015) jeq      #0x14            jt 16	jf 17           Destination port
- * (016) ret      #262144
- * (017) ret      #0
+ * (000) ldh      [type]
+ * (001) jeq      #0x4             jt 18	jf 2
+ * (002) ldh      [12]
+ * (003) jeq      #0x800           jt 4	jf 18
+ * (004) ldb      [23]
+ * (005) jeq      #0x11            jt 6	jf 18
+ * (006) ld       [26]
+ * (007) jeq      #0xc0a80001      jt 8	jf 18
+ * (008) ldh      [20]
+ * (009) jset     #0x1fff          jt 18	jf 10
+ * (010) ldxb     4*([14]&0xf)
+ * (011) ldh      [x + 14]
+ * (012) jeq      #0xa             jt 13	jf 18
+ * (013) ld       [30]
+ * (014) jeq      #0xc0a80002      jt 15	jf 18
+ * (015) ldh      [x + 16]
+ * (016) jeq      #0x14            jt 17	jf 18
+ * (017) ret      #262144
+ * (018) ret      #0
  */
 
 	struct sock_filter bpf[] = {
-		{ 0x28, 0, 0, 0x0000000c },
-		{ 0x15, 15, 0, 0x000086dd },
-		{ 0x15, 0, 14, 0x00000800 },
-		{ 0x30, 0, 0, 0x00000017 },
-		{ 0x15, 0, 12, 0x00000011 },
-		{ 0x20, 0, 0, 0x0000001a },
-		{ 0x15, 0, 10, source_ip },
-		{ 0x28, 0, 0, 0x00000014 },
-		{ 0x45, 8, 0, 0x00001fff },
-		{ 0xb1, 0, 0, 0x0000000e },
-		{ 0x48, 0, 0, 0x0000000e },
-		{ 0x15, 0, 5, source_port },
-		{ 0x20, 0, 0, 0x0000001e },
-		{ 0x15, 0, 3, destination_ip },
-		{ 0x48, 0, 0, 0x00000010 },
-		{ 0x15, 0, 1, destination_port },
-		{ 0x6, 0, 0, 0x00040000 },
-		{ 0x6, 0, 0, 0x00000000 }
+		/*  0 */ BPF_STMT (BPF_LD  | BPF_H   | BPF_ABS, SKF_AD_OFF + SKF_AD_PKTTYPE),
+		/*  1 */ BPF_JUMP (BPF_JMP | BPF_JEQ | BPF_K,   PACKET_OUTGOING, 16, 0),
+		/*  2 */ BPF_STMT (BPF_LD  | BPF_H   | BPF_ABS, 12),
+		/*  3 */ BPF_JUMP (BPF_JMP | BPF_JEQ | BPF_K,   ETH_P_IP, 0, 14),
+		/*  4 */ BPF_STMT (BPF_LD  | BPF_B   | BPF_ABS, 23),
+		/*  5 */ BPF_JUMP (BPF_JMP | BPF_JEQ | BPF_K,   IPPROTO_UDP, 0, 12),
+		/*  6 */ BPF_STMT (BPF_LD  | BPF_W   | BPF_ABS, 26),
+		/*  7 */ BPF_JUMP (BPF_JMP | BPF_JEQ | BPF_K,   source_ip, 0, 10),
+		/*  8 */ BPF_STMT (BPF_LD  | BPF_H   | BPF_ABS, 20),
+		/*  9 */ BPF_JUMP (BPF_JMP | BPF_JSET | BPF_K,  0x1fff, 8, 0),
+		/* 10 */ BPF_STMT (BPF_LDX | BPF_B   | BPF_MSH, 14),
+		/* 11 */ BPF_STMT (BPF_LD  | BPF_H   | BPF_IND, 14),
+		/* 12 */ BPF_JUMP (BPF_JMP | BPF_JEQ | BPF_K,   source_port, 0, 5),
+		/* 13 */ BPF_STMT (BPF_LD  | BPF_W   | BPF_ABS, 30),
+		/* 14 */ BPF_JUMP (BPF_JMP | BPF_JEQ | BPF_K,   destination_ip, 0, 3),
+		/* 15 */ BPF_STMT (BPF_LD  | BPF_H   | BPF_IND, 16),
+		/* 16 */ BPF_JUMP (BPF_JMP | BPF_JEQ | BPF_K,   destination_port, 0, 1),
+		/* 17 */ BPF_STMT (BPF_RET | BPF_K, 262144),
+		/* 18 */ BPF_STMT (BPF_RET | BPF_K, 0)
 	};
+
 #else /* Variant without source port check. */
 /*
- * sudo tcpdump -i lo -e -nn  "udp and src host 192.168.0.1 and dst host 192.168.0.2 and dst port 20" -d
+ * sudo tcpdump -i lo -d "inbound and udp and src host 192.168.0.1 and dst host 192.168.0.2 and dst port 20"
  *
- * (000) ldh      [12]
- * (001) jeq      #0x86dd          jt 15	jf 2
- * (002) jeq      #0x800           jt 3	jf 15
- * (003) ldb      [23]
- * (004) jeq      #0x11            jt 5	jf 15
- * (005) ld       [26]
- * (006) jeq      #0xc0a80001      jt 7	jf 15
- * (007) ld       [30]
- * (008) jeq      #0xc0a80002      jt 9	jf 15
- * (009) ldh      [20]
- * (010) jset     #0x1fff          jt 15	jf 11
- * (011) ldxb     4*([14]&0xf)
- * (012) ldh      [x + 16]
- * (013) jeq      #0x14            jt 14	jf 15
- * (014) ret      #262144
- * (015) ret      #0
+ * (000) ldh      [type]
+ * (001) jeq      #0x4             jt 16	jf 2
+ * (002) ldh      [12]
+ * (003) jeq      #0x800           jt 4	jf 16
+ * (004) ldb      [23]
+ * (005) jeq      #0x11            jt 6	jf 16
+ * (006) ld       [26]
+ * (007) jeq      #0xc0a80001      jt 8	jf 16
+ * (008) ld       [30]
+ * (009) jeq      #0xc0a80002      jt 10	jf 16
+ * (010) ldh      [20]
+ * (011) jset     #0x1fff          jt 16	jf 12
+ * (012) ldxb     4*([14]&0xf)
+ * (013) ldh      [x + 16]
+ * (014) jeq      #0x14            jt 15	jf 16
+ * (015) ret      #262144
+ * (016) ret      #0
  */
 
-	struct sock_filter bpf[] = {
-		{ 0x28, 0, 0, 0x0000000c },
-		{ 0x15, 13, 0, 0x000086dd },
-		{ 0x15, 0, 12, 0x00000800 },
-		{ 0x30, 0, 0, 0x00000017 },
-		{ 0x15, 0, 10, 0x00000011 },
-		{ 0x20, 0, 0, 0x0000001a },
-		{ 0x15, 0, 8, source_ip },
-		{ 0x20, 0, 0, 0x0000001e },
-		{ 0x15, 0, 6, destination_ip },
-                { 0x28, 0, 0, 0x00000014},
-		{ 0x45, 4, 0, 0x00001fff },
-		{ 0xb1, 0, 0, 0x0000000e },
-		{ 0x48, 0, 0, 0x00000010 },
-		{ 0x15, 0, 1, destination_port },
-		{ 0x6, 0, 0, 0x00040000 },
-		{ 0x6, 0, 0, 0x00000000 }
-	};
+        struct sock_filter bpf[] = {
+                /*  0 */ BPF_STMT (BPF_LD  | BPF_H   | BPF_ABS, SKF_AD_OFF + SKF_AD_PKTTYPE),
+                /*  1 */ BPF_JUMP (BPF_JMP | BPF_JEQ | BPF_K,   PACKET_OUTGOING, 14, 0),
+                /*  2 */ BPF_STMT (BPF_LD  | BPF_H   | BPF_ABS, 12),
+                /*  3 */ BPF_JUMP (BPF_JMP | BPF_JEQ | BPF_K,   ETH_P_IP, 0, 12),
+                /*  4 */ BPF_STMT (BPF_LD  | BPF_B   | BPF_ABS, 23),
+                /*  5 */ BPF_JUMP (BPF_JMP | BPF_JEQ | BPF_K,   IPPROTO_UDP, 0, 10),
+                /*  6 */ BPF_STMT (BPF_LD  | BPF_W   | BPF_ABS, 26),
+                /*  7 */ BPF_JUMP (BPF_JMP | BPF_JEQ | BPF_K,   source_ip, 0, 8),
+                /*  8 */ BPF_STMT (BPF_LD  | BPF_W   | BPF_ABS, 30),
+                /*  9 */ BPF_JUMP (BPF_JMP | BPF_JEQ | BPF_K,   destination_ip, 0, 6),
+                /* 10 */ BPF_STMT (BPF_LD  | BPF_H   | BPF_ABS, 20),
+                /* 11 */ BPF_JUMP (BPF_JMP | BPF_JSET | BPF_K,  0x1fff, 4, 0),
+                /* 12 */ BPF_STMT (BPF_LDX | BPF_B   | BPF_MSH, 14),
+                /* 13 */ BPF_STMT (BPF_LD  | BPF_H   | BPF_IND, 16),
+                /* 14 */ BPF_JUMP (BPF_JMP | BPF_JEQ | BPF_K,   destination_port, 0, 1),
+                /* 15 */ BPF_STMT (BPF_RET | BPF_K, 262144),
+                /* 16 */ BPF_STMT (BPF_RET | BPF_K, 0)
+        };
 #endif
 
 	struct sock_fprog bpf_prog = {G_N_ELEMENTS (bpf), bpf};
 
-	arv_info_stream_thread ("[GvStream::set_socket_filter] source ip = 0x%08x - port = %d - dest ip = 0x%08x - port %d",
+	arv_info_stream_thread ("[GvStream::set_socket_filter] source ip = 0x%08x - port = %d -"
+                                " dest ip = 0x%08x - port %d",
 				 source_ip, source_port, destination_ip, destination_port);
 
 	if (setsockopt(socket, SOL_SOCKET, SO_ATTACH_FILTER, &bpf_prog, sizeof(bpf_prog)) != 0)
-		arv_warning_stream_thread ("[GvStream::set_socket_filter] Failed to attach Beckerley Packet Filter to stream socket");
+		arv_warning_stream_thread ("[GvStream::set_socket_filter] Failed to attach Beckerley Packet Filter"
+                                           " to stream socket");
 }
 
 static unsigned
@@ -1232,6 +1239,7 @@ _ring_buffer_loop (ArvGvStreamThreadData *thread_data)
 	struct sockaddr_ll local_address = {0};
 	enum tpacket_versions version;
 	int fd;
+        unsigned ifindex;
 	unsigned block_id;
 	const guint8 *bytes;
 	guint32 interface_address;
@@ -1275,9 +1283,17 @@ _ring_buffer_loop (ArvGvStreamThreadData *thread_data)
 	bytes = g_inet_address_to_bytes (thread_data->device_address);
 	device_address = g_ntohl (*((guint32 *) bytes));
 
+        /* If the camera address is one of our own addresses, traffic goes through lo */
+        if (_interface_index_from_address (device_address) != 0 ||
+            (device_address >> 24) == 127)
+                ifindex = if_nametoindex ("lo");
+        else
+                ifindex = _interface_index_from_address (interface_address);
+
+
 	local_address.sll_family   = AF_PACKET;
 	local_address.sll_protocol = g_htons(ETH_P_IP);
-	local_address.sll_ifindex  = _interface_index_from_address (interface_address);
+	local_address.sll_ifindex  = ifindex;
 	local_address.sll_hatype   = 0;
 	local_address.sll_pkttype  = 0;
 	local_address.sll_halen    = 0;
