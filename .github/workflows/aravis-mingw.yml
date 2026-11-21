@@ -17,10 +17,10 @@ jobs:
       fail-fast: false # see all failures, not just the first one
       matrix:
         include:
-          - { sys: mingw64, env: x86_64 }
-          # - { sys: mingw32, env: i686 } # mingw32 is missing gst-plugins-good package, disabled for now
+          # - { sys: mingw64, env: x86_64 } # MSYS2 is phasing out MINGW64
+          # - { sys: mingw32, env: i686 }   # mingw32 is missing gst-plugins-good package, disabled for now
           - { sys: ucrt64,  env: ucrt-x86_64 }
-          # - { sys: clang64, env: clang-x86_64 } # clang64 is missing several packages, disabled for now
+          - { sys: clang64, env: clang-x86_64 }
     defaults:
       run:
         shell: msys2 {0}
@@ -45,7 +45,7 @@ jobs:
           mingw-w64-${{matrix.env}}-libusb
           mingw-w64-${{matrix.env}}-gobject-introspection-runtime
           mingw-w64-${{matrix.env}}-python-gobject
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v7
     - name: meson
       run: |
         mkdir build

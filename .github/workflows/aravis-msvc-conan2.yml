@@ -29,7 +29,7 @@ jobs:
       run: |
         rm -r C:\Strawberry\perl
     - name: checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v7
     - name: conan
       env:
         INPUT_CONANFILE: |

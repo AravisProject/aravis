@@ -27,7 +27,7 @@ jobs:
       run: |
         rm -r C:\Strawberry\perl
     - name: checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v7
     - name: conan
       env:
         # CMake 4 rejects projects declaring a minimum version below 3.5, which
