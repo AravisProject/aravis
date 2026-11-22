@@ -141,6 +141,15 @@ cameras. It also provides a set of utilities that help to debug the library,&nbs
 <code>arv-fake-gv-camera-0.8</code>. The version suffix corresponds to the <span class="caps">API</span> version, as
 several stable series of Aravis can be installed at the same&nbsp;time.</p>
 <p>The options for each utility is obtained&nbsp;using <code>--help</code> argument.</p>
+<h2 id="forceip">ForceIP<a class="md-anchor" href="#forceip" title="Permanent link"></a></h2>
+<p>An GigE Vision camera can be given a temporary address even if its <span class="caps">IP</span> address
+doesn&#8217;t match the interface it&#8217;s connected to with&nbsp;the <code>force-ip</code> command:</p>
+<div class="codehilite"><pre><span></span><code>arv-tool-0.10<span class="w"> </span>-n<span class="w"> </span><span class="s1">&#39;Daheng*&#39;</span><span class="w"> </span>force-ip<span class="w"> </span><span class="nv">ip</span><span class="o">=</span><span class="m">192</span>.168.0.11
+</code></pre></div>
+
+<p>The selection must match exactly one camera. The mask defaults&nbsp;to
+<code>255.255.255.0</code> and the gateway&nbsp;to <code>0.0.0.0</code>.&nbsp;Use <code>network</code> after the camera is
+reachable to configure its persistent&nbsp;address.</p>
     </div>
   </section>
 </section>
@@ -152,6 +161,8 @@ several stable series of Aravis can be installed at the same&nbsp;time.</p>
     <p id="toc-title">Content</p>
     <ul class="toc-list">
       
+        
+        <li class="toc-list-item"><a href="#forceip"><span class="link-text">ForceIP</span></a></li>
         
       
     </ul>
