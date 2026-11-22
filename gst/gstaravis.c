@@ -1776,8 +1776,10 @@ plugin_init (GstPlugin * plugin)
 {
 #if GST_CHECK_VERSION(1, 20, 0)
 	/* No tags: elements copy it along with the buffer's other metadata. */
-	if (gst_meta_get_info (GST_ARAVIS_CHUNK_META_NAME) == NULL)
-		gst_meta_register_custom_simple (GST_ARAVIS_CHUNK_META_NAME);
+	if (gst_meta_get_info (GST_ARAVIS_CHUNK_META_NAME) == NULL) {
+                const gchar *tags[] = { NULL };
+		gst_meta_register_custom (GST_ARAVIS_CHUNK_META_NAME, tags, NULL, NULL, NULL);
+        }
 #endif
         return gst_element_register (plugin, "aravissrc", GST_RANK_NONE, GST_TYPE_ARAVIS);
 }
