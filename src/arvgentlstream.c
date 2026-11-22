@@ -303,7 +303,7 @@ _gentl_buffer_to_arv_buffer(ArvGenTLModule *gentl, DS_HANDLE datastream, BUFFER_
 			timestamp = timestamp_ticks / timestamp_tick_frequency * 1000000000
 				  + ((timestamp_ticks % timestamp_tick_frequency) * 1000000000) / timestamp_tick_frequency;
 		} else {
-			timestamp = g_get_real_time() * 1000LL;
+			timestamp = g_get_monotonic_time () * 1000LL;
 		}
 	}
 	arv_buffer->priv->timestamp_ns = timestamp;
