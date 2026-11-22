@@ -126,7 +126,7 @@ _handle_control_packet (ArvGvFakeCamera *gv_fake_camera, GSocket *socket,
 		gint64 time;
 		guint64 elapsed_ms;
 
-		time = g_get_real_time ();
+		time = g_get_monotonic_time ();
 
 		elapsed_ms = (time - gv_fake_camera->priv->controller_time) / 1000;
 
@@ -194,7 +194,7 @@ _handle_control_packet (ArvGvFakeCamera *gv_fake_camera, GSocket *socket,
 									    &ack_packet_size);
 
 			if (register_address == ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_OFFSET)
-				gv_fake_camera->priv->controller_time = g_get_real_time ();
+				gv_fake_camera->priv->controller_time = g_get_monotonic_time ();
 
 			break;
 		case ARV_GVCP_COMMAND_WRITE_REGISTER_CMD:
@@ -228,14 +228,14 @@ _handle_control_packet (ArvGvFakeCamera *gv_fake_camera, GSocket *socket,
 		g_object_ref (remote_address);
 		arv_info_device("[GvFakeCamera::handle_control_packet] New controller");
 		gv_fake_camera->priv->controller_address = remote_address;
-		gv_fake_camera->priv->controller_time = g_get_real_time ();
+		gv_fake_camera->priv->controller_time = g_get_monotonic_time ();
 	}
 	else if (gv_fake_camera->priv->controller_address != NULL &&
 	    arv_fake_camera_get_control_channel_privilege (gv_fake_camera->priv->camera) == 0) {
 		g_object_unref (gv_fake_camera->priv->controller_address);
 		arv_info_device("[GvFakeCamera::handle_control_packet] Controller releases");
 		gv_fake_camera->priv->controller_address = NULL;
-		gv_fake_camera->priv->controller_time = g_get_real_time ();
+		gv_fake_camera->priv->controller_time = g_get_monotonic_time ();
 	}
 
 	return success;
@@ -269,7 +269,7 @@ _thread (void *user_data)
 		if (is_streaming) {
 			arv_fake_camera_get_sleep_time_for_next_frame (gv_fake_camera->priv->camera, &next_timestamp_us);
 		} else {
-			next_timestamp_us = g_get_real_time () + 100000;
+			next_timestamp_us = g_get_monotonic_time () + 100000;
 		}
 
 		do {
@@ -278,7 +278,7 @@ _thread (void *user_data)
 			/* Signed arithmetic: if next_timestamp_us is already in the past, an
 			 * unsigned subtraction underflows and is clamped to a spurious 100 ms
 			 * timeout, stalling the frame pacing. */
-			timeout_ms = ((gint64) next_timestamp_us - g_get_real_time ()) / 1000LL;
+			timeout_ms = ((gint64) next_timestamp_us - g_get_monotonic_time ()) / 1000LL;
 			if (timeout_ms < 0)
 				timeout_ms = 0;
 			else if (timeout_ms > 100)
@@ -320,7 +320,7 @@ _thread (void *user_data)
 					is_streaming = FALSE;
 				}
 			}
-		} while (!g_atomic_int_get (&gv_fake_camera->priv->cancel) && g_get_real_time () < next_timestamp_us);
+		} while (!g_atomic_int_get (&gv_fake_camera->priv->cancel) && g_get_monotonic_time () < next_timestamp_us);
 
 		if (arv_fake_camera_get_control_channel_privilege (gv_fake_camera->priv->camera) != 0 &&
 		    arv_fake_camera_get_acquisition_status (gv_fake_camera->priv->camera) != 0) {

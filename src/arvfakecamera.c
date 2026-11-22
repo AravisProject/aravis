@@ -229,7 +229,7 @@ arv_fake_camera_get_sleep_time_for_next_frame (ArvFakeCamera *camera, guint64 *n
 		frame_period_time_us = 1000000L;
 	}
 
-	time_us = g_get_real_time ();
+	time_us = g_get_monotonic_time ();
 	sleep_time_us = frame_period_time_us - (time_us % frame_period_time_us);
 
 	if (next_timestamp_us != NULL)
@@ -783,7 +783,7 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer, guint32 *
 	buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_IMAGE;
 	buffer->priv->chunk_endianness = G_BIG_ENDIAN;
 	buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
-	buffer->priv->timestamp_ns = g_get_real_time () * 1000;
+	buffer->priv->timestamp_ns = g_get_monotonic_time () * 1000;
 	buffer->priv->system_timestamp_ns = buffer->priv->timestamp_ns;
 	buffer->priv->frame_id = camera->priv->frame_id;
 

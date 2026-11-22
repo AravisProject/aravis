@@ -181,7 +181,7 @@ void LIBUSB_CALL arv_uv_stream_leader_cb (struct libusb_transfer *transfer)
                                         break;
                                 }
 
-                                ctx->buffer->priv->system_timestamp_ns = g_get_real_time () * 1000LL;
+                                ctx->buffer->priv->system_timestamp_ns = g_get_monotonic_time () * 1000LL;
                                 ctx->buffer->priv->payload_type = arv_uvsp_packet_get_buffer_payload_type
                                         (packet, &ctx->buffer->priv->has_chunks);
                                 ctx->buffer->priv->chunk_endianness = G_LITTLE_ENDIAN;
@@ -665,7 +665,7 @@ arv_uv_stream_thread_sync (void *data)
 					buffer = arv_stream_pop_input_buffer (thread_data->stream);
 					if (buffer != NULL) {
                                                 g_atomic_int_inc(&thread_data->n_buffer_in_use);
-						buffer->priv->system_timestamp_ns = g_get_real_time () * 1000LL;
+						buffer->priv->system_timestamp_ns = g_get_monotonic_time () * 1000LL;
 						buffer->priv->status = ARV_BUFFER_STATUS_FILLING;
                                                 buffer->priv->received_size = 0;
 						buffer->priv->payload_type = arv_uvsp_packet_get_buffer_payload_type
