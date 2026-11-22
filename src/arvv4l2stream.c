@@ -216,7 +216,7 @@ arv_v4l2_stream_thread (void *data)
                          * (V4L2_BUF_FLAG_TSTAMP_SRC_SOE | V4L2_BUF_FLAG_TIMESTAMP_MONOTONIC ) */
                         arv_buffer->priv->timestamp_ns = 1000000000L * bufd.timestamp.tv_sec +
                                 1000L * bufd.timestamp.tv_usec;
-                        arv_buffer->priv->system_timestamp_ns = g_get_real_time () * 1000;
+                        arv_buffer->priv->system_timestamp_ns = g_get_monotonic_time () * 1000;
                         arv_buffer->priv->frame_id = thread_data->frame_id++;
                         arv_buffer->priv->received_size = bufd.bytesused;
 

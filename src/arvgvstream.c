@@ -457,7 +457,7 @@ _process_data_leader (ArvGvStreamThreadData *thread_data,
 	frame->buffer->priv->frame_id = frame->frame_id;
 	frame->buffer->priv->chunk_endianness = G_BIG_ENDIAN;
 
-	frame->buffer->priv->system_timestamp_ns = g_get_real_time() * 1000LL;
+	frame->buffer->priv->system_timestamp_ns = g_get_monotonic_time() * 1000LL;
 
         if (frame->buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
             frame->buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA) {
