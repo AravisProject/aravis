@@ -309,6 +309,20 @@ dynamic_roi_test (void)
 #define LOSS_FRAME_RATE		50.0
 #define LOSS_SOCKET_BUFFER_SIZE	(4 * 1024 * 1024)
 
+/* A test machine (a shared CI runner, valgrind, a loaded laptop) can stop the whole process, or only one of its
+ * threads, for hundreds of milliseconds. Where a case is not about a timeout, the timeouts are made long enough that
+ * such a stall only delays the outcome:
+ * - the receiver's frame-retention (default 100 ms): a frame that waits for a resend must not be given up because
+ *   the receiver did not run while the resend was due;
+ * - the simulator's retention, in frames: with static-image every retained frame shares one buffer, so a long one
+ *   costs nothing;
+ * - waits for an expected frame or counter: they return as soon as it comes, so a long deadline costs nothing
+ *   unless the case fails. */
+#define LOSS_RELAXED_FRAME_RETENTION_US		2000000
+#define LOSS_RELAXED_SIMULATOR_RETENTION	64
+#define LOSS_POP_TIMEOUT_US			5000000
+#define LOSS_WAIT_TIMEOUT_US			20000000
+
 static gint n_pattern_fills = 0;
 
 static guint8
@@ -354,6 +368,20 @@ next_frame_id (guint frame_id)
 {
 	/* 16 bit GVSP frame ids, 0 is skipped */
 	return frame_id >= 65535 ? 1 : frame_id + 1;
+}
+
+/* Frame ids from last_frame_id to frame_id: 1 for the next frame, 0 if it is not ahead within 1000 */
+static guint
+frame_id_steps (guint last_frame_id, guint frame_id)
+{
+	guint n_steps = 0;
+
+	while (last_frame_id != frame_id && n_steps < 1000) {
+		last_frame_id = next_frame_id (last_frame_id);
+		n_steps++;
+	}
+
+	return last_frame_id == frame_id ? n_steps : 0;
 }
 
 static void
@@ -450,6 +478,56 @@ stream_fast_fail (ArvStream *stream)
 }
 
 static void
+relax_frame_retention (ArvStream *stream)
+{
+	g_object_set (stream, "frame-retention", LOSS_RELAXED_FRAME_RETENTION_US, NULL);
+}
+
+/* An expected frame: NULL only after LOSS_POP_TIMEOUT_US, with what the receiver and the simulator did */
+static ArvBuffer *
+pop_buffer (ArvStream *stream)
+{
+	ArvBuffer *buffer = arv_stream_timeout_pop_buffer (stream, LOSS_POP_TIMEOUT_US);
+
+	if (buffer == NULL)
+		g_test_message ("no buffer in %d s: stream: %" G_GUINT64_FORMAT " received packets, %" G_GUINT64_FORMAT
+				" completed, %" G_GUINT64_FORMAT " failures, %" G_GUINT64_FORMAT " skipped, %"
+				G_GUINT64_FORMAT " underruns in %" G_GUINT64_FORMAT " frames, connected %" G_GUINT64_FORMAT
+				", %" G_GUINT64_FORMAT " reconnects; simulator: %" G_GUINT64_FORMAT " sent frames, %"
+				G_GUINT64_FORMAT " send errors",
+				LOSS_POP_TIMEOUT_US / 1000000,
+				arv_stream_get_info_uint64_by_name (stream, "n_received_packets"),
+				arv_stream_get_info_uint64_by_name (stream, "n_completed_buffers"),
+				arv_stream_get_info_uint64_by_name (stream, "n_failures"),
+				arv_stream_get_info_uint64_by_name (stream, "n_skipped_frames"),
+				arv_stream_get_info_uint64_by_name (stream, "n_underruns"),
+				arv_stream_get_info_uint64_by_name (stream, "n_underrun_frames"),
+				arv_stream_get_info_uint64_by_name (stream, "socket_connected"),
+				arv_stream_get_info_uint64_by_name (stream, "n_socket_reconnects"),
+				simulator_counter ("n-sent-frames"),
+				simulator_counter ("n-send-errors"));
+
+	return buffer;
+}
+
+/* Hands back to the stream every buffer already in its output queue */
+static guint
+drain_output_queue (ArvStream *stream)
+{
+	ArvBuffer *buffer;
+	guint n_buffers = 0;
+
+	while ((buffer = arv_stream_try_pop_buffer (stream)) != NULL) {
+		g_test_message ("drained frame %" G_GUINT64_FORMAT " status %d", arv_buffer_get_frame_id (buffer),
+				arv_buffer_get_status (buffer));
+		arv_stream_push_buffer (stream, buffer);
+		n_buffers++;
+	}
+
+	return n_buffers;
+}
+
+static void
 resend_test (void)
 {
 	ArvStream *stream;
@@ -457,22 +535,32 @@ resend_test (void)
 	guint64 n_resent_before = simulator_counter ("n-resent-packets");
 	guint64 n_dropped_before = simulator_counter ("n-dropped-packets");
 	guint n_frames = 0;
+	guint n_missing_ids = 0;
 	guint last_frame_id = 0;
 
 	/* Every 97 frames (195 * 97 packets) the dropped packet is a trailer. Without fast fail the receiver only
 	 * notices a lost trailer by timeout: 20 ms of silence for that frame, then the 1 ms initial timeout,
 	 * evaluated on the next packet or poll, so the request comes up to about three frame periods (~60 ms at
-	 * 50 fps) late. 16 retained frames keep that request answerable; with the default 4 (80 ms) it is
-	 * borderline and the camera sometimes answers PACKET_UNAVAILABLE. With fast fail the trailer is requested
-	 * once the next frame's packets arrive, and the simulator's default retention of 4 frames is enough. */
+	 * 50 fps) late. How late a request may be is the subject of /fakegv/resend-trailer, not of this case: the
+	 * simulator keeps 64 frames (1.3 s), and the receiver gives a frame 2 s, so that a stalled test machine
+	 * delays a resend instead of losing it (macOS under background QoS, where timers fire up to ~200 ms late: a
+	 * frame given up after the 100 ms default with its request still due).
+	 *
+	 * A loaded machine also loses packets of its own on the loopback interface, sometimes many in one frame
+	 * (macOS CI: 171 missing for 98 dropped, ~75 of them in one frame, over the default budget of 0.25 * 195).
+	 * Those are lost packets as well: a request ratio of 1 lets resend recover them too. */
 	g_object_set (simulator,
 		      "packet-resend", TRUE,
 		      "static-image", TRUE,
+		      "frame-retention", LOSS_RELAXED_SIMULATOR_RETENTION,
 		      "drop-every-nth-packet", 97,
 		      NULL);
 
-	stream = create_loss_stream (8);
-	g_object_set (simulator, "frame-retention", stream_fast_fail (stream) ? 4 : 16, NULL);
+	/* Enough buffers that a stalled consumer does not make the receiver drop a frame for lack of one, which
+	 * the n_skipped_frames check below would see */
+	stream = create_loss_stream (32);
+	relax_frame_retention (stream);
+	g_object_set (stream, "packet-request-ratio", 1.0, NULL);
 
 	arv_camera_start_acquisition (camera, &error);
 	g_assert_no_error (error);
@@ -481,7 +569,7 @@ resend_test (void)
 	while (n_frames < 100) {
 		ArvBuffer *buffer;
 
-		buffer = arv_stream_timeout_pop_buffer (stream, 1000000);
+		buffer = pop_buffer (stream);
 		g_assert (ARV_IS_BUFFER (buffer));
 
 		if (arv_buffer_get_status (buffer) != ARV_BUFFER_STATUS_SUCCESS)
@@ -503,15 +591,33 @@ resend_test (void)
 					arv_stream_get_info_uint64_by_name (stream, "n_error_packets"));
 		g_assert_cmpint (arv_buffer_get_status (buffer), ==, ARV_BUFFER_STATUS_SUCCESS);
 		g_assert (buffer_has_expected_content (buffer));
-		if (n_frames > 0)
-			g_assert_cmpuint (arv_buffer_get_frame_id (buffer), ==, next_frame_id (last_frame_id));
+		/* In order. A frame the receiver never saw (the kernel dropped all of it: Linux, 1 CPU, a 208 kB socket
+		 * buffer, 1 run of 40) cannot be requested, and is missing here; one it gave up is caught below. */
+		if (n_frames > 0) {
+			guint n_steps = frame_id_steps (last_frame_id, arv_buffer_get_frame_id (buffer));
+
+			g_assert_cmpuint (n_steps, >, 0);
+			n_missing_ids += n_steps - 1;
+		}
 		last_frame_id = arv_buffer_get_frame_id (buffer);
 
 		n_frames++;
 		arv_stream_push_buffer (stream, buffer);
 	}
 
+	g_test_message ("resend: %u frames, %u frame ids missing; stream: %" G_GUINT64_FORMAT " resend requests, %"
+			G_GUINT64_FORMAT " resent, %" G_GUINT64_FORMAT " skipped; simulator: %" G_GUINT64_FORMAT
+			" dropped, %" G_GUINT64_FORMAT " resent",
+			n_frames, n_missing_ids,
+			arv_stream_get_info_uint64_by_name (stream, "n_resend_requests"),
+			arv_stream_get_info_uint64_by_name (stream, "n_resent_packets"),
+			arv_stream_get_info_uint64_by_name (stream, "n_skipped_frames"),
+			simulator_counter ("n-dropped-packets") - n_dropped_before,
+			simulator_counter ("n-resent-packets") - n_resent_before);
+
 	g_assert_cmpint (g_atomic_int_get (&n_pattern_fills), ==, 1);
+	/* No frame dropped by the receiver: with fast fail, for lack of a buffer or a head beyond the budget */
+	g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "n_skipped_frames"), ==, 0);
 	g_assert_cmpuint (simulator_counter ("n-dropped-packets") - n_dropped_before, >, 0);
 	g_assert_cmpuint (simulator_counter ("n-resent-packets") - n_resent_before, >, 0);
 	g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "n_resent_packets"), >, 0);
@@ -523,9 +629,13 @@ resend_test (void)
 /* 512x512 Mono8 in 1400 byte packets: leader, 193 data packets, trailer */
 #define LOSS_N_BLOCKS	195
 
-#define TRAILER_FRAME_RATE	100.0
-#define TRAILER_PACKET_RATE	40000
-#define TRAILER_N_FRAMES	100
+#define TRAILER_FRAME_RATE		20.0
+#define TRAILER_PACKET_RATE		40000
+#define TRAILER_SIMULATOR_RETENTION	3
+#define TRAILER_PACKET_TIMEOUT_US	500000
+#define TRAILER_FRAME_RETENTION_US	1000000
+#define TRAILER_N_FRAMES		30
+#define TRAILER_N_BUFFERS		48
 
 static void
 resend_trailer_test (void)
@@ -538,21 +648,35 @@ resend_trailer_test (void)
 	guint last_frame_id = 0;
 	gboolean fast_fail;
 
-	/* Every trailer is lost, and the simulator keeps only 2 frames: frame N can be resent while frame N + 1 is
-	 * being sent, not once N + 2 has started. At 100 fps, with the packets of a frame paced over ~5 ms, fast fail
-	 * requests the trailer of N 1 ms after the first packet of N + 1, in time. Without fast fail the request
-	 * waits for 20 ms of silence for N, by which time N + 2 has replaced it, and it is answered
-	 * PACKET_UNAVAILABLE. */
+	/* Every trailer is lost, and the simulator keeps 3 frames: frame N can be resent until N + 3 is prepared,
+	 * 100 to 150 ms after N at 20 fps. With fast fail the trailer of N is requested 1 ms after the first packet
+	 * of N + 1 arrives (the packets of a frame are paced over ~5 ms, so that later packets of N + 1 trigger the
+	 * check), ~50 ms after N: in time, with at least 50 ms to spare for a receiver that runs late. Without, the
+	 * request waits for packet-timeout of silence for N, here 500 ms, by which time N has been replaced, and it
+	 * is answered PACKET_UNAVAILABLE.
+	 *
+	 * The two sides are 50 ms against 500 ms, around a window of 100 to 150 ms, so that a slow machine does not
+	 * move one to the other side. They used to be 6 ms against 21 ms around a 10 to 20 ms window (100 fps, 2
+	 * frames, the 20 ms default packet-timeout): on macOS CI the simulator fell behind its frame rate, which
+	 * stretched its window, and 60 of 100 frames completed without fast fail. The frame-retention is longer than
+	 * the packet-timeout, so that without fast fail the late request is made, and answered, before the frame is
+	 * given up. */
 	g_object_set (simulator,
 		      "packet-resend", TRUE,
 		      "static-image", TRUE,
-		      "frame-retention", 2,
+		      "frame-retention", TRAILER_SIMULATOR_RETENTION,
 		      "packet-rate", TRAILER_PACKET_RATE,
 		      "drop-every-nth-packet", LOSS_N_BLOCKS,
 		      NULL);
 
-	stream = create_loss_stream (16);
+	/* Without fast fail each frame is held ~1.5 s (packet-timeout, then frame-retention after the status
+	 * packet): 30 frames at 20 fps, and as many buffers again for a consumer that runs late */
+	stream = create_loss_stream (TRAILER_N_BUFFERS);
 	fast_fail = stream_fast_fail (stream) != 0;
+	g_object_set (stream,
+		      "packet-timeout", TRAILER_PACKET_TIMEOUT_US,
+		      "frame-retention", TRAILER_FRAME_RETENTION_US,
+		      NULL);
 	arv_camera_set_frame_rate (camera, TRAILER_FRAME_RATE, &error);
 	g_assert_no_error (error);
 
@@ -562,7 +686,7 @@ resend_trailer_test (void)
 	while (n_frames < TRAILER_N_FRAMES) {
 		ArvBuffer *buffer;
 
-		buffer = arv_stream_timeout_pop_buffer (stream, 1000000);
+		buffer = pop_buffer (stream);
 		if (buffer == NULL)
 			g_test_message ("resend trailer: no buffer after %u frames; received %" G_GUINT64_FORMAT
 					", sent frames %" G_GUINT64_FORMAT ", connected %" G_GUINT64_FORMAT
@@ -579,7 +703,8 @@ resend_trailer_test (void)
 
 		if (arv_buffer_get_status (buffer) == ARV_BUFFER_STATUS_SUCCESS) {
 			g_assert (buffer_has_expected_content (buffer));
-			if (fast_fail && n_frames > 0)
+			/* Against the previous complete frame: a failed one is caught by the count below */
+			if (fast_fail && n_success > 0)
 				g_assert_cmpuint (arv_buffer_get_frame_id (buffer), ==, next_frame_id (last_frame_id));
 			last_frame_id = arv_buffer_get_frame_id (buffer);
 			n_success++;
@@ -600,10 +725,10 @@ resend_trailer_test (void)
 		g_assert_cmpuint (n_success, ==, n_frames);
 		g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "n_resent_packets"), >=, n_frames);
 	} else {
-		/* Upstream: the trailer is asked for after 20 ms of silence, too late for a 2 frame retention at
-		 * 100 fps, and the simulator answers PACKET_UNAVAILABLE (measured: 0 of 100 complete, ~110 unavailable).
-		 * The bounds leave room for a loaded machine. */
-		g_assert_cmpuint (simulator_counter ("n-resend-unavailable") - n_unavailable_before, >=, n_frames / 2);
+		/* Upstream: the trailer is asked for after packet-timeout of silence, too late for the simulator's
+		 * retention, and the simulator answers PACKET_UNAVAILABLE. A frame can only complete if the simulator
+		 * stalled for most of the 500 ms; most of them cannot. */
+		g_assert_cmpuint (simulator_counter ("n-resend-unavailable") - n_unavailable_before, >, 0);
 		g_assert_cmpuint (n_success, <, n_frames / 2);
 	}
 
@@ -635,8 +760,13 @@ resend_unavailable_test (void)
 	arv_camera_start_acquisition (camera, &error);
 	g_assert_no_error (error);
 
-	end_us = g_get_monotonic_time () + 1000000;
-	while (g_get_monotonic_time () < end_us) {
+	/* Until the receiver has seen a status packet, rather than for a fixed time: on a loaded machine the
+	 * simulator may send only a few frames a second */
+	end_us = g_get_monotonic_time () + LOSS_WAIT_TIMEOUT_US;
+	while (g_get_monotonic_time () < end_us &&
+	       (simulator_counter ("n-resend-unavailable") - n_unavailable_before == 0 ||
+		arv_stream_get_info_uint64_by_name (stream, "n_error_packets") == 0 ||
+		arv_stream_get_info_uint64_by_name (stream, "n_resend_disabled") == 0)) {
 		ArvBuffer *buffer;
 
 		buffer = arv_stream_timeout_pop_buffer (stream, 200000);
@@ -661,7 +791,7 @@ resend_unavailable_test (void)
 #define UNRECOVERABLE_FRAME_INTERVAL	5
 #define UNRECOVERABLE_HEAD_LENGTH	30
 #define UNRECOVERABLE_N_FRAMES		60
-#define UNRECOVERABLE_FRAME_RETENTION_US	200000
+#define UNRECOVERABLE_FRAME_RETENTION_US	2000000
 /* ArvGvStream:packet-request-ratio default */
 #define LOSS_REQUEST_RATIO		0.25
 
@@ -682,9 +812,12 @@ typedef struct {
 } UnrecoverableResult;
 
 /* Leader and the first head_length data packets of every 5th frame are lost, and so is every resend: those frames
- * cannot be completed, every other one must be. */
+ * cannot be completed, every other one must be. fast_fail_frame_retention_us, if not 0, is the frame-retention with
+ * fast fail; without, a lost frame holds the frames behind it for the whole frame-retention, and a long one would run
+ * the stream out of buffers, so the default (100 ms) is kept. */
 static void
-run_unrecoverable (guint head_length, guint frame_retention_us, ArvStream **stream_out, UnrecoverableResult *result)
+run_unrecoverable (guint head_length, guint fast_fail_frame_retention_us, ArvStream **stream_out,
+		   UnrecoverableResult *result)
 {
 	ArvStream *stream;
 	GError *error = NULL;
@@ -708,8 +841,8 @@ run_unrecoverable (guint head_length, guint frame_retention_us, ArvStream **stre
 		      NULL);
 
 	stream = create_loss_stream (16);
-	if (frame_retention_us > 0)
-		g_object_set (stream, "frame-retention", frame_retention_us, NULL);
+	if (fast_fail_frame_retention_us > 0 && stream_fast_fail (stream))
+		g_object_set (stream, "frame-retention", fast_fail_frame_retention_us, NULL);
 
 	arv_camera_start_acquisition (camera, &error);
 	g_assert_no_error (error);
@@ -719,7 +852,7 @@ run_unrecoverable (guint head_length, guint frame_retention_us, ArvStream **stre
 	       result->n_frames < UNRECOVERABLE_N_FRAMES + 2 * UNRECOVERABLE_FRAME_INTERVAL) {
 		ArvBuffer *buffer;
 
-		buffer = arv_stream_timeout_pop_buffer (stream, 1000000);
+		buffer = pop_buffer (stream);
 		g_assert (ARV_IS_BUFFER (buffer));
 
 		if (arv_buffer_get_status (buffer) == ARV_BUFFER_STATUS_SUCCESS) {
@@ -816,9 +949,10 @@ unrecoverable_test (void)
 
 	/* The lost frame is requested once; the second request, a packet-timeout (20 ms) later, exceeds the budget.
 	 * With fast fail the frame is closed then, because newer frames exist, and the complete frames behind it are
-	 * delivered without waiting out the frame-retention, here 200 ms so that the bound has room on a loaded
-	 * machine. Without, the lost frame holds its buffer and the four frames behind it until frame-retention has
-	 * passed since its last packet: ~200 ms for the next frame, measured from its leader to its delivery. */
+	 * delivered without waiting out the frame-retention, here 2 s: measured 5 to 45 ms, against a bound of 1 s
+	 * that a loaded machine does not reach and a frame held for the retention cannot meet (it was 200 ms, with a
+	 * bound of 100 ms). Without, the lost frame holds its buffer and the four frames behind it until
+	 * frame-retention (the default, 100 ms) has passed since its last packet. */
 	if (stream_fast_fail (stream)) {
 		g_assert_cmpint (result.max_delay_after_gap_us, <, UNRECOVERABLE_FRAME_RETENTION_US / 2);
 		g_assert_cmpint (result.max_delay_clean_us, <, UNRECOVERABLE_FRAME_RETENTION_US / 2);
@@ -949,6 +1083,36 @@ wait_for_info (ArvStream *stream, const char *name, guint64 value, gint64 timeou
 	return current;
 }
 
+static guint64
+n_closed_frames (ArvStream *stream)
+{
+	return arv_stream_get_info_uint64_by_name (stream, "n_completed_buffers") +
+		arv_stream_get_info_uint64_by_name (stream, "n_failures") +
+		arv_stream_get_info_uint64_by_name (stream, "n_aborted") +
+		arv_stream_get_info_uint64_by_name (stream, "n_skipped_frames");
+}
+
+/* Stops the camera, not the stream thread, and waits until the receiver has closed every frame the simulator sent
+ * since n_sent_before, handing queued buffers back meanwhile. The simulator finishes the frame it is sending when
+ * the stop arrives; a stream thread stopped at once would leave that frame's tail in the socket for the next
+ * thread, which would start a frame from it. */
+static void
+stop_camera_and_wait (ArvStream *stream, guint64 n_sent_before)
+{
+	GError *error = NULL;
+	gint64 end_us;
+
+	arv_camera_execute_command (camera, "AcquisitionStop", &error);
+	g_assert_no_error (error);
+
+	end_us = g_get_monotonic_time () + LOSS_WAIT_TIMEOUT_US;
+	do {
+		drain_output_queue (stream);
+		g_usleep (1000);
+	} while (n_closed_frames (stream) < simulator_counter ("n-sent-frames") - n_sent_before &&
+		 g_get_monotonic_time () < end_us);
+}
+
 #define N_SHORT_DATAGRAMS	5
 
 static void
@@ -981,11 +1145,13 @@ run_short_datagrams (ArvGvStreamOption options)
 	g_object_set (simulator,
 		      "packet-resend", TRUE,
 		      "static-image", TRUE,
+		      "frame-retention", LOSS_RELAXED_SIMULATOR_RETENTION,
 		      NULL);
 
 	arv_camera_gv_set_stream_options (camera, options);
 	stream = create_loss_stream (8);
 	arv_camera_gv_set_stream_options (camera, ARV_GV_STREAM_OPTION_NONE);
+	relax_frame_retention (stream);
 	socket = create_injection_socket (stream, &destination);
 
 	/* The stream thread runs from the stream's acquisition start: start it alone, the camera later */
@@ -1004,7 +1170,7 @@ run_short_datagrams (ArvGvStreamOption options)
 	n_expected = arv_stream_get_info_uint64_by_name (stream, "rx_mode") != 0 ?
 		N_SHORT_DATAGRAMS : N_SHORT_DATAGRAMS - 1;
 #endif
-	g_assert_cmpuint (wait_for_info (stream, "n_short_packets", n_expected, 1000000), ==, n_expected);
+	g_assert_cmpuint (wait_for_info (stream, "n_short_packets", n_expected, LOSS_WAIT_TIMEOUT_US), ==, n_expected);
 	g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "n_received_packets"), ==, 0);
 	g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "socket_connected"), ==, 0);
 
@@ -1019,7 +1185,7 @@ run_short_datagrams (ArvGvStreamOption options)
 		if (n_frames % 5 == 0)
 			send_short_datagrams (socket, destination);
 
-		buffer = arv_stream_timeout_pop_buffer (stream, 1000000);
+		buffer = pop_buffer (stream);
 		g_assert (ARV_IS_BUFFER (buffer));
 		g_assert_cmpint (arv_buffer_get_status (buffer), ==, ARV_BUFFER_STATUS_SUCCESS);
 		g_assert (buffer_has_expected_content (buffer));
@@ -1141,7 +1307,7 @@ small_packet_count_test (void)
 	inject_trailer (socket, destination, 102, 3);
 
 	for (i = 0; i < 3; i++) {
-		ArvBuffer *buffer = arv_stream_timeout_pop_buffer (stream, 1000000);
+		ArvBuffer *buffer = pop_buffer (stream);
 
 		if (buffer == NULL)
 			break;
@@ -1171,19 +1337,18 @@ small_packet_count_test (void)
 }
 
 static void
-pop_complete_frames (ArvStream *stream, guint n_frames, guint64 timeout_us, const char *phase)
+pop_complete_frames (ArvStream *stream, guint n_frames, const char *phase)
 {
 	guint i;
 
 	for (i = 0; i < n_frames; i++) {
-		ArvBuffer *buffer = arv_stream_timeout_pop_buffer (stream, timeout_us);
+		ArvBuffer *buffer = pop_buffer (stream);
 
 		if (buffer == NULL)
-			g_test_message ("source relearn: no frame %u %s; %" G_GUINT64_FORMAT " received packets, %"
-					G_GUINT64_FORMAT " reconnects, connected %" G_GUINT64_FORMAT, i, phase,
-					arv_stream_get_info_uint64_by_name (stream, "n_received_packets"),
-					arv_stream_get_info_uint64_by_name (stream, "n_socket_reconnects"),
-					arv_stream_get_info_uint64_by_name (stream, "socket_connected"));
+			g_test_message ("no frame %u %s", i, phase);
+		else if (arv_buffer_get_status (buffer) != ARV_BUFFER_STATUS_SUCCESS)
+			g_test_message ("frame %u %s: frame id %" G_GUINT64_FORMAT " status %d", i, phase,
+					arv_buffer_get_frame_id (buffer), arv_buffer_get_status (buffer));
 		g_assert (ARV_IS_BUFFER (buffer));
 		g_assert_cmpint (arv_buffer_get_status (buffer), ==, ARV_BUFFER_STATUS_SUCCESS);
 		g_assert (buffer_has_expected_content (buffer));
@@ -1198,42 +1363,64 @@ source_relearn_test (void)
 	GError *error = NULL;
 	gboolean connected;
 	guint64 n_reconnects;
+	guint64 n_sent_before;
 
 	/* Every acquisition comes from a new source port, as from a device that rebooted. A stream socket connected
 	 * to the first one would see nothing of the second. */
 	g_object_set (simulator,
 		      "packet-resend", TRUE,
 		      "static-image", TRUE,
+		      "frame-retention", LOSS_RELAXED_SIMULATOR_RETENTION,
 		      "new-source-port-per-stream", TRUE,
 		      NULL);
 
 	stream = create_loss_stream (8);
+	relax_frame_retention (stream);
+	n_sent_before = simulator_counter ("n-sent-frames");
 
 	arv_camera_start_acquisition (camera, &error);
 	g_assert_no_error (error);
-	pop_complete_frames (stream, 5, 1000000, "at the start");
+	pop_complete_frames (stream, 5, "at the start");
 	connected = arv_stream_get_info_uint64_by_name (stream, "socket_connected") != 0;
-	/* The camera only: arv_camera_stop_acquisition would also end the stream thread */
-	arv_camera_execute_command (camera, "AcquisitionStop", &error);
-	g_assert_no_error (error);
+	/* The camera only: arv_camera_stop_acquisition would also end the stream thread. The simulator does not
+	 * answer resends once stopped, so a packet lost from its last frame fails that frame, frame-retention (2 s)
+	 * after its last packet: it is waited for, and handed back with the other frames of this acquisition (Linux,
+	 * 1 CPU, a 208 kB socket buffer: popped as TIMEOUT after the restart, 2 runs of 40). */
+	stop_camera_and_wait (stream, n_sent_before);
 
 	/* An idle connected socket learns the sender again after 1 s */
 	if (connected)
-		g_assert_cmpuint (wait_for_info (stream, "n_socket_reconnects", 1, 3000000), ==, 1);
+		g_assert_cmpuint (wait_for_info (stream, "n_socket_reconnects", 1, LOSS_WAIT_TIMEOUT_US), ==, 1);
 	else
 		g_usleep (1200000);
 
+	/* The frames still queued from the first acquisition are not the ones the next phase is waiting for */
+	drain_output_queue (stream);
+
 	arv_camera_execute_command (camera, "AcquisitionStart", &error);
 	g_assert_no_error (error);
-	pop_complete_frames (stream, 5, 1000000, "after the idle gap");
+	pop_complete_frames (stream, 5, "after the idle gap");
 
-	/* A stream thread restart (arv_camera_stop_acquisition ends it, arv_camera_start_acquisition starts a new
-	 * one) learns it again at once: 0.5 s is less than the idle threshold */
+	/* A stream thread restart (arv_camera_stop_acquisition ends it, arv_device_start_acquisition starts a new
+	 * one) learns it again at once, before any datagram and so before the 1 s idle threshold could: the
+	 * reconnect is counted by the time the new thread has started. This used to be checked by the time the first
+	 * frame took, under 0.5 s against the 1 s threshold, which a slow machine can blur.
+	 *
+	 * The stream thread is stopped once the frame in flight is received, and the frames completed behind the 5
+	 * popped above are handed back: stopped at once, it aborted that frame, which was then popped as the first
+	 * frame after the restart (Linux CI, valgrind: ABORTED), or left its tail to the new thread (macOS,
+	 * background QoS: MISSING_PACKETS). */
+	stop_camera_and_wait (stream, n_sent_before);
 	arv_camera_stop_acquisition (camera, &error);
 	g_assert_no_error (error);
-	arv_camera_start_acquisition (camera, &error);
+	drain_output_queue (stream);
+	arv_device_start_acquisition (arv_camera_get_device (camera), &error);
 	g_assert_no_error (error);
-	pop_complete_frames (stream, 5, 500000, "after the thread restart");
+	if (connected)
+		g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "n_socket_reconnects"), ==, 2);
+	arv_camera_execute_command (camera, "AcquisitionStart", &error);
+	g_assert_no_error (error);
+	pop_complete_frames (stream, 5, "after the thread restart");
 
 	n_reconnects = arv_stream_get_info_uint64_by_name (stream, "n_socket_reconnects");
 	g_test_message ("source relearn: connected %d, %" G_GUINT64_FORMAT " reconnects, %" G_GUINT64_FORMAT
@@ -1262,9 +1449,11 @@ rx_errors_test (void)
 	g_object_set (simulator,
 		      "packet-resend", TRUE,
 		      "static-image", TRUE,
+		      "frame-retention", LOSS_RELAXED_SIMULATOR_RETENTION,
 		      NULL);
 
 	stream = create_loss_stream (8);
+	relax_frame_retention (stream);
 
 	/* The stream thread, and with it rx_mode, starts with the acquisition */
 	arv_camera_start_acquisition (camera, &error);
@@ -1275,7 +1464,7 @@ rx_errors_test (void)
 		return;
 	}
 
-	pop_complete_frames (stream, 5, 1000000, "before the errors");
+	pop_complete_frames (stream, 5, "before the errors");
 
 	/* recvmsg_x fails from now on, with data queued: the loop must neither spin nor stop receiving */
 	g_atomic_int_set (&n_injected_rx_errors, 0);
@@ -1283,7 +1472,7 @@ rx_errors_test (void)
 	g_atomic_int_set (&inject_rx_errors, 1);
 
 	while (arv_stream_get_info_uint64_by_name (stream, "rx_mode") != 0 &&
-	       g_get_monotonic_time () < start_us + 3000000)
+	       g_get_monotonic_time () < start_us + LOSS_WAIT_TIMEOUT_US)
 		g_usleep (1000);
 	fallback_us = g_get_monotonic_time () - start_us;
 	n_injected = g_atomic_int_get (&n_injected_rx_errors);
@@ -1293,13 +1482,14 @@ rx_errors_test (void)
 			n_injected, fallback_us);
 
 	g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "rx_mode"), ==, 0);
-	/* 100 failures, each followed by the active wait (1 ms): not a spin */
+	/* 100 failures, each followed by the active wait (1 ms): not a spin. The 3 s this was given were not enough
+	 * on a loaded machine, where each wait took ~60 ms (macOS, background QoS: 50 failures in 3 s). */
 	g_assert_cmpuint (n_injected, ==, 100);
 	g_assert_cmpint (fallback_us, >=, 90000);
 
 	/* The standard loop carries on with the same socket. The frames in flight at the switch may fail. */
 	while (TRUE) {
-		ArvBuffer *buffer = arv_stream_timeout_pop_buffer (stream, 1000000);
+		ArvBuffer *buffer = pop_buffer (stream);
 
 		g_assert (ARV_IS_BUFFER (buffer));
 		if (arv_buffer_get_status (buffer) == ARV_BUFFER_STATUS_SUCCESS &&
@@ -1309,7 +1499,7 @@ rx_errors_test (void)
 		}
 		arv_stream_push_buffer (stream, buffer);
 	}
-	pop_complete_frames (stream, 5, 1000000, "in the standard loop");
+	pop_complete_frames (stream, 5, "in the standard loop");
 
 	finish_loss_stream (stream);
 #else
@@ -1339,7 +1529,7 @@ short_packet_timeout_test (void)
 
 	/* A leader alone: the newest frame, with only its leader, never times out, so a frame stays open */
 	inject_leader (socket, destination, 7);
-	g_assert_cmpuint (wait_for_info (stream, "n_received_packets", 1, 1000000), ==, 1);
+	g_assert_cmpuint (wait_for_info (stream, "n_received_packets", 1, LOSS_WAIT_TIMEOUT_US), ==, 1);
 	g_usleep (100000);
 
 	cpu_before_us = arv_stream_get_info_uint64_by_name (stream, "stream_thread_cpu_us");
@@ -1373,17 +1563,27 @@ resend_beyond_trailer_test (void)
 
 	/* Every trailer is lost, and the buffers are 10 packets larger than the payload, so the receiver asks for the
 	 * tail up to its buffer size estimate, 10 packets past the real trailer. The simulator answers
-	 * PACKET_UNAVAILABLE for those first, then resends the trailer. The status packet must not close the frame
-	 * the resent trailer is about to complete. */
+	 * PACKET_UNAVAILABLE for those first, then, 2 ms later, resends the trailer. The status packet must not close
+	 * the frame the resent trailer is about to complete.
+	 *
+	 * With fast fail the receiver gives the trailer packet-timeout after the status packet. On a loaded machine the
+	 * simulator's 2 ms took more than the 20 ms default (macOS, background QoS: 2 to 5 frames of 50 complete; macOS
+	 * CI: 49), so packet-timeout is 500 ms here: a receiver that closes the frame on the status packet still fails
+	 * every frame. Without fast fail the trailer is requested after packet-timeout of silence: the simulator keeps
+	 * 64 frames (1.3 s), the receiver gives a frame 2 s (MinGW CI, defaults: one frame of 50 failed with no answer
+	 * to a tail request, as a frame given up by the 100 ms default before its request was due), and with ~25
+	 * frames held at a time there are 48 buffers. */
 	g_object_set (simulator,
 		      "packet-resend", TRUE,
 		      "static-image", TRUE,
-		      "frame-retention", 16,
+		      "frame-retention", LOSS_RELAXED_SIMULATOR_RETENTION,
 		      "drop-every-nth-packet", LOSS_N_BLOCKS,
 		      "unavailable-beyond-trailer", TRUE,
 		      NULL);
 
-	stream = create_loss_stream_full (16, 10 * 1392);
+	stream = create_loss_stream_full (48, 10 * 1392);
+	relax_frame_retention (stream);
+	g_object_set (stream, "packet-timeout", 500000, NULL);
 
 	arv_camera_start_acquisition (camera, &error);
 	g_assert_no_error (error);
@@ -1391,7 +1591,7 @@ resend_beyond_trailer_test (void)
 	while (n_frames < 50) {
 		ArvBuffer *buffer;
 
-		buffer = arv_stream_timeout_pop_buffer (stream, 1000000);
+		buffer = pop_buffer (stream);
 		g_assert (ARV_IS_BUFFER (buffer));
 
 		if (arv_buffer_get_status (buffer) == ARV_BUFFER_STATUS_SUCCESS) {
@@ -1446,7 +1646,7 @@ reordered_leader_test (void)
 	inject_leader_full (socket, destination, 10, 16, 16);
 	inject_trailer (socket, destination, 10, 2);
 
-	buffer = arv_stream_timeout_pop_buffer (stream, 1000000);
+	buffer = pop_buffer (stream);
 	g_assert (ARV_IS_BUFFER (buffer));
 	g_test_message ("reordered leader: frame %" G_GUINT64_FORMAT " status %d, %" G_GUINT64_FORMAT " skipped",
 			arv_buffer_get_frame_id (buffer), arv_buffer_get_status (buffer),
@@ -1495,7 +1695,7 @@ repeated_frame_id_test (void)
 		      "resend-lost-ratio", 1.0,
 		      NULL);
 
-	stream = create_loss_stream (16);
+	stream = create_loss_stream (64);
 	if (!stream_fast_fail (stream)) {
 		/* Without fast fail no frame is skipped, and an open frame with a lost head would collect the packets
 		 * of the frame that reuses its id three frames later: the scenario only exists with fast fail. */
@@ -1510,7 +1710,7 @@ repeated_frame_id_test (void)
 	arv_camera_start_acquisition (camera, &error);
 	g_assert_no_error (error);
 
-	end_us = g_get_monotonic_time () + 5000000;
+	end_us = g_get_monotonic_time () + LOSS_WAIT_TIMEOUT_US;
 	while (n_success + n_failed < REPEATED_ID_N_FRAMES && g_get_monotonic_time () < end_us) {
 		ArvBuffer *buffer;
 
@@ -1527,18 +1727,38 @@ repeated_frame_id_test (void)
 		arv_stream_push_buffer (stream, buffer);
 	}
 
+	/* The camera only, then wait until the receiver has accounted for every frame sent, before the stream
+	 * thread stops: a loaded receiver may be several frames behind, and stopping it at once (with a fixed
+	 * 100 ms after) cut those frames short. The consumer keeps returning buffers meanwhile. */
+	arv_camera_execute_command (camera, "AcquisitionStop", &error);
+	g_assert_no_error (error);
+	end_us = g_get_monotonic_time () + LOSS_WAIT_TIMEOUT_US;
+	do {
+		ArvBuffer *buffer = arv_stream_timeout_pop_buffer (stream, 10000);
+
+		if (buffer != NULL) {
+			if (arv_buffer_get_status (buffer) == ARV_BUFFER_STATUS_SUCCESS)
+				g_assert (buffer_has_expected_content (buffer));
+			else
+				n_failed++;
+			arv_stream_push_buffer (stream, buffer);
+		}
+
+		n_sent = simulator_counter ("n-sent-frames") - n_sent_before;
+	} while (n_closed_frames (stream) < n_sent && g_get_monotonic_time () < end_us);
 	arv_camera_stop_acquisition (camera, &error);
 	g_assert_no_error (error);
-	/* Let the last frame in flight be processed */
-	g_usleep (100000);
 
 	n_sent = simulator_counter ("n-sent-frames") - n_sent_before;
-	n_skipped = arv_stream_get_info_uint64_by_name (stream, "n_skipped_frames");
+	/* The frames skipped for their lost head, not those that found no buffer */
+	n_skipped = arv_stream_get_info_uint64_by_name (stream, "n_skipped_frames") -
+		arv_stream_get_info_uint64_by_name (stream, "n_underrun_frames");
 
 	g_test_message ("repeated frame id: %" G_GUINT64_FORMAT " frames sent, %u complete, %u failed, %"
-			G_GUINT64_FORMAT " skipped, %" G_GUINT64_FORMAT " completed, %" G_GUINT64_FORMAT
-			" ignored packets",
+			G_GUINT64_FORMAT " skipped for their head, %" G_GUINT64_FORMAT " for lack of a buffer, %"
+			G_GUINT64_FORMAT " completed, %" G_GUINT64_FORMAT " ignored packets",
 			n_sent, n_success, n_failed, n_skipped,
+			arv_stream_get_info_uint64_by_name (stream, "n_underrun_frames"),
 			arv_stream_get_info_uint64_by_name (stream, "n_completed_buffers"),
 			arv_stream_get_info_uint64_by_name (stream, "n_ignored_packets"));
 
@@ -1547,8 +1767,8 @@ repeated_frame_id_test (void)
 	/* Only the frames that lost their head are missing: one in four, give or take the frames in flight when the
 	 * acquisition stopped. Swallowing the frames that reuse a skipped id would lose one more in four. */
 	g_assert_cmpuint (n_skipped, <=, n_sent / REPEATED_ID_DROP_INTERVAL + 1);
-	g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "n_completed_buffers") + n_skipped + 2, >=,
-			  n_sent);
+	g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "n_completed_buffers") + n_skipped +
+			  arv_stream_get_info_uint64_by_name (stream, "n_underrun_frames") + 2, >=, n_sent);
 	g_assert_cmpuint (n_failed, ==, 0);
 
 	g_object_unref (stream);
@@ -1556,8 +1776,9 @@ repeated_frame_id_test (void)
 }
 
 #define SLOW_CONSUMER_N_BUFFERS		4
-#define SLOW_CONSUMER_STALL_US		300000
-#define SLOW_CONSUMER_RECOVERY_US	1000000
+#define SLOW_CONSUMER_N_UNDERRUN_FRAMES	2
+#define SLOW_CONSUMER_RECOVERY_US	2000000
+#define SLOW_CONSUMER_N_AFTER_RECOVERY	25
 
 static void
 slow_consumer_test (void)
@@ -1572,37 +1793,52 @@ slow_consumer_test (void)
 	guint n_after_stall = 0;
 	guint n_failed_after_stall = 0;
 	guint64 n_skipped_frames;
+	guint64 n_underrun_frames_before;
 
 	g_object_set (simulator,
 		      "packet-resend", TRUE,
 		      "static-image", TRUE,
+		      "frame-retention", LOSS_RELAXED_SIMULATOR_RETENTION,
 		      NULL);
 
 	stream = create_loss_stream (SLOW_CONSUMER_N_BUFFERS);
+	/* A budget of the whole frame, so that the frames dropped are those that found no buffer at their first packet
+	 * (the subject here), not those whose first packet seen is beyond the budget (/fakegv/unrecoverable-head).
+	 * With the default budget the second rule also drops an underrun frame, at its 49th packet: n_skipped_frames
+	 * then equalled n_underrun_frames, and this case passed, with the first rule removed. */
+	g_object_set (stream, "packet-request-ratio", 1.0, NULL);
 
 	arv_camera_start_acquisition (camera, &error);
 	g_assert_no_error (error);
 
-	/* Steady state first */
+	/* Steady state first. With 4 buffers, a test thread that runs late is already a slow consumer: without fast
+	 * fail a frame may then start mid-way and fail, which is what this case is about, not a fault here. With fast
+	 * fail, n_failures below still covers these frames. */
 	while (n_frames < 10) {
 		ArvBuffer *buffer;
 
-		buffer = arv_stream_timeout_pop_buffer (stream, 1000000);
+		buffer = pop_buffer (stream);
 		g_assert (ARV_IS_BUFFER (buffer));
-		g_assert_cmpint (arv_buffer_get_status (buffer), ==, ARV_BUFFER_STATUS_SUCCESS);
 		n_frames++;
 		arv_stream_push_buffer (stream, buffer);
 	}
 
-	/* Stall once: every buffer ends up in the output queue and the receiver has nowhere to put the next frames */
-	g_usleep (SLOW_CONSUMER_STALL_US);
+	/* Stall once: every buffer ends up in the output queue and the receiver has nowhere to put the next frames.
+	 * The stall lasts until the receiver has found no buffer for two frames, rather than a fixed 300 ms: on a
+	 * loaded machine the simulator sent fewer frames than there are buffers in 300 ms (macOS, background QoS:
+	 * 0 underruns, 5 runs of 5). */
+	n_underrun_frames_before = arv_stream_get_info_uint64_by_name (stream, "n_underrun_frames");
+	wait_for_info (stream, "n_underrun_frames", n_underrun_frames_before + SLOW_CONSUMER_N_UNDERRUN_FRAMES,
+		       LOSS_WAIT_TIMEOUT_US);
 	stall_end_us = g_get_monotonic_time ();
 
-	while (g_get_monotonic_time () < stall_end_us + 2 * SLOW_CONSUMER_RECOVERY_US) {
+	/* Until 25 frames after the recovery, rather than for 2 s (in which the same machine sent 11) */
+	while ((recovered_us == 0 || n_after_recovery < SLOW_CONSUMER_N_AFTER_RECOVERY) &&
+	       g_get_monotonic_time () < stall_end_us + LOSS_WAIT_TIMEOUT_US) {
 		ArvBuffer *buffer;
 		gboolean is_new;
 
-		buffer = arv_stream_timeout_pop_buffer (stream, 1000000);
+		buffer = pop_buffer (stream);
 		g_assert (ARV_IS_BUFFER (buffer));
 
 		n_after_stall++;
@@ -1657,10 +1893,13 @@ slow_consumer_test (void)
 	} else
 		g_assert_cmpuint (n_skipped_frames, ==, 0);
 
+	g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "n_underrun_frames"), >=,
+			  n_underrun_frames_before + SLOW_CONSUMER_N_UNDERRUN_FRAMES);
+	/* The first frame received after the stall is complete within a few frame periods (measured: 9 to 130 ms) */
 	g_assert_cmpint (recovered_us, >, 0);
 	g_assert_cmpint (recovered_us - stall_end_us, <=, SLOW_CONSUMER_RECOVERY_US);
-	/* Once recovered, it stays recovered: about 50 frames in the remaining second, all complete */
-	g_assert_cmpuint (n_after_recovery, >=, 25);
+	/* Once recovered, it stays recovered: every frame after it is complete */
+	g_assert_cmpuint (n_after_recovery, >=, SLOW_CONSUMER_N_AFTER_RECOVERY);
 	g_assert_cmpuint (n_failed_after_recovery, ==, 0);
 
 	finish_loss_stream (stream);
