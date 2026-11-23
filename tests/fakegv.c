@@ -821,6 +821,150 @@ resend_budget_test (void)
 	finish_loss_stream (stream);
 }
 
+/* Datagrams sent to the stream port from a socket of the test, as any host on the link could */
+
+static GSocket *
+create_injection_socket (ArvStream *stream, GSocketAddress **destination)
+{
+	GInetAddress *loopback;
+	GSocketAddress *local;
+	GSocket *socket;
+	GError *error = NULL;
+
+	loopback = g_inet_address_new_from_string ("127.0.0.1");
+	socket = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, &error);
+	g_assert_no_error (error);
+	local = g_inet_socket_address_new (loopback, 0);
+	g_socket_bind (socket, local, FALSE, &error);
+	g_assert_no_error (error);
+	*destination = g_inet_socket_address_new (loopback, arv_gv_stream_get_port (ARV_GV_STREAM (stream)));
+	g_object_unref (local);
+	g_object_unref (loopback);
+
+	return socket;
+}
+
+static void
+inject (GSocket *socket, GSocketAddress *destination, const guint8 *data, gsize size)
+{
+	GError *error = NULL;
+
+	g_assert_cmpint (g_socket_send_to (socket, destination, (const char *) data, size, NULL, &error), ==, size);
+	g_assert_no_error (error);
+}
+
+/* A GVSP packet with the standard header: status, 16 bit frame id, content type and 24 bit packet id */
+static gsize
+gvsp_header (guint8 *data, guint16 status, guint16 frame_id, guint8 content_type, guint32 packet_id)
+{
+	data[0] = status >> 8;
+	data[1] = status & 0xff;
+	data[2] = frame_id >> 8;
+	data[3] = frame_id & 0xff;
+	data[4] = content_type;
+	data[5] = (packet_id >> 16) & 0xff;
+	data[6] = (packet_id >> 8) & 0xff;
+	data[7] = packet_id & 0xff;
+
+	return 8;
+}
+
+static guint64
+wait_for_info (ArvStream *stream, const char *name, guint64 value, gint64 timeout_us)
+{
+	gint64 end_us = g_get_monotonic_time () + timeout_us;
+	guint64 current;
+
+	while ((current = arv_stream_get_info_uint64_by_name (stream, name)) < value &&
+	       g_get_monotonic_time () < end_us)
+		g_usleep (1000);
+
+	return current;
+}
+
+#define N_SHORT_DATAGRAMS	5
+
+static void
+send_short_datagrams (GSocket *socket, GSocketAddress *destination)
+{
+	guint8 data[64] = { 0 };
+
+	/* 0, 1 and 7 bytes: less than the 8 byte standard header */
+	inject (socket, destination, data, 0);
+	inject (socket, destination, data, 1);
+	gvsp_header (data, 0, 1, 0x03, 5);
+	inject (socket, destination, data, 7);
+	/* A leader header with no leader after it */
+	inject (socket, destination, data, gvsp_header (data, 0, 1, 0x01, 0));
+	/* The extended id flag set, in 12 bytes of a 20 byte header */
+	gvsp_header (data, 0, 0, 0x81, 0);
+	inject (socket, destination, data, 12);
+}
+
+static void
+short_datagrams_test (void)
+{
+	ArvStream *stream;
+	GSocket *socket;
+	GSocketAddress *destination;
+	GError *error = NULL;
+	guint n_frames = 0;
+	guint64 n_expected;
+
+	g_object_set (simulator,
+		      "packet-resend", TRUE,
+		      "static-image", TRUE,
+		      NULL);
+
+	stream = create_loss_stream (8);
+	socket = create_injection_socket (stream, &destination);
+
+	/* The stream thread runs from the stream's acquisition start: start it alone, the camera later */
+	arv_stream_start_acquisition (stream, &error);
+	g_assert_no_error (error);
+
+	/* Before the acquisition: the stream socket is not connected to the camera yet (and none of these may
+	 * become the sender it connects to), so all of them reach the receiver */
+	send_short_datagrams (socket, destination);
+	/* recvmsg_x hands the receiver every datagram; GLib's g_socket_receive_messages (the standard loop) consumes
+	 * a 0 byte datagram without returning it, so that one never reaches the receiver there */
+	n_expected = arv_stream_get_info_uint64_by_name (stream, "rx_mode") == 1 ?
+		N_SHORT_DATAGRAMS : N_SHORT_DATAGRAMS - 1;
+	g_assert_cmpuint (wait_for_info (stream, "n_short_packets", n_expected, 1000000), ==, n_expected);
+	g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "n_received_packets"), ==, 0);
+	g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "socket_connected"), ==, 0);
+
+	/* The stream is already started: only the camera */
+	arv_camera_execute_command (camera, "AcquisitionStart", &error);
+	g_assert_no_error (error);
+
+	while (n_frames < 20) {
+		ArvBuffer *buffer;
+
+		/* During the stream: they reach the receiver unless its socket is connected to the camera */
+		if (n_frames % 5 == 0)
+			send_short_datagrams (socket, destination);
+
+		buffer = arv_stream_timeout_pop_buffer (stream, 1000000);
+		g_assert (ARV_IS_BUFFER (buffer));
+		g_assert_cmpint (arv_buffer_get_status (buffer), ==, ARV_BUFFER_STATUS_SUCCESS);
+		g_assert (buffer_has_expected_content (buffer));
+		n_frames++;
+		arv_stream_push_buffer (stream, buffer);
+	}
+
+	g_test_message ("short datagrams: %" G_GUINT64_FORMAT " rejected, socket connected %" G_GUINT64_FORMAT,
+			arv_stream_get_info_uint64_by_name (stream, "n_short_packets"),
+			arv_stream_get_info_uint64_by_name (stream, "socket_connected"));
+
+	g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "n_short_packets"), >=, n_expected);
+	g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "n_failures"), ==, 0);
+
+	g_object_unref (destination);
+	g_object_unref (socket);
+	finish_loss_stream (stream);
+}
+
 /* 65535 / 3: the simulator's frame ids repeat every third frame */
 #define REPEATED_ID_STEP		21845
 #define REPEATED_ID_DROP_INTERVAL	4
@@ -1052,6 +1196,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/fakegv/unrecoverable-head", unrecoverable_head_test);
 	g_test_add_func ("/fakegv/slow-consumer", slow_consumer_test);
 	g_test_add_func ("/fakegv/repeated-frame-id", repeated_frame_id_test);
+	g_test_add_func ("/fakegv/short-datagrams", short_datagrams_test);
 
 	result = g_test_run();
 
