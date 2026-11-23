@@ -73,6 +73,7 @@ enum
   PROP_DROP_HEAD_FRAME_INTERVAL,
   PROP_RESEND_LOST_RATIO,
   PROP_FRAME_ID_STEP,
+  PROP_NEW_SOURCE_PORT_PER_STREAM,
   PROP_SENSOR_WIDTH,
   PROP_SENSOR_HEIGHT,
   PROP_N_SENT_FRAMES,
@@ -157,6 +158,7 @@ typedef struct {
 	guint drop_head_frame_interval;
 	double resend_lost_ratio;
 	guint frame_id_step;
+	gboolean new_source_port_per_stream;
 	guint sensor_width;
 	guint sensor_height;
 
@@ -625,6 +627,36 @@ _next_static_frame_id (ArvGvFakeCamera *gv_fake_camera, guint16 frame_id)
 	return (guint16) (((guint) frame_id + 65534 + step) % 65535 + 1);
 }
 
+static gboolean _create_and_bind_input_socket (GSocket **socket_out, const char *socket_name,
+					       GInetAddress *inet_address, unsigned int port,
+					       gboolean allow_reuse, gboolean blocking);
+
+/* new-source-port-per-stream: the GVSP socket is replaced by one on a new ephemeral port, as a device does after a
+ * reboot, or on every acquisition for some. The new socket is bound before the old one is closed, so that the port
+ * differs. */
+
+static void
+_renew_gvsp_socket (ArvGvFakeCamera *gv_fake_camera)
+{
+	ArvGvFakeCameraPrivate *priv = gv_fake_camera->priv;
+	GSocketAddress *local_address;
+	GInetAddress *inet_address;
+	GSocket *socket = NULL;
+
+	local_address = g_socket_get_local_address (priv->gvsp_socket, NULL);
+	if (local_address == NULL)
+		return;
+	inet_address = g_object_ref (g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (local_address)));
+
+	if (_create_and_bind_input_socket (&socket, "GVSP", inet_address, 0, FALSE, TRUE)) {
+		g_object_unref (priv->gvsp_socket);
+		priv->gvsp_socket = socket;
+	}
+
+	g_object_unref (inet_address);
+	g_object_unref (local_address);
+}
+
 static void
 _stream_start (ArvGvFakeCamera *gv_fake_camera)
 {
@@ -642,6 +674,9 @@ _stream_start (ArvGvFakeCamera *gv_fake_camera)
 				inet_address_string,
 				g_inet_socket_address_get_port (G_INET_SOCKET_ADDRESS (priv->stream_address)));
 	g_free (inet_address_string);
+
+	if (g_atomic_int_get (&priv->new_source_port_per_stream))
+		_renew_gvsp_socket (gv_fake_camera);
 
 	/* A connected datagram socket skips the per packet address handling in the kernel, which roughly doubles the
 	 * achievable packet rate on macOS loopback. Fall back to unconnected sends if it fails. */
@@ -1159,6 +1194,10 @@ _set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *
 		case PROP_FRAME_ID_STEP:
 			g_atomic_int_set ((gint *) &gv_fake_camera->priv->frame_id_step, g_value_get_uint (value));
 			break;
+		case PROP_NEW_SOURCE_PORT_PER_STREAM:
+			g_atomic_int_set (&gv_fake_camera->priv->new_source_port_per_stream,
+					  g_value_get_boolean (value));
+			break;
 		case PROP_SENSOR_WIDTH:
 			gv_fake_camera->priv->sensor_width = g_value_get_uint (value);
 			_apply_device_settings (gv_fake_camera);
@@ -1224,6 +1263,9 @@ _get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 			break;
 		case PROP_FRAME_ID_STEP:
 			g_value_set_uint (value, g_atomic_int_get ((gint *) &priv->frame_id_step));
+			break;
+		case PROP_NEW_SOURCE_PORT_PER_STREAM:
+			g_value_set_boolean (value, g_atomic_int_get (&priv->new_source_port_per_stream));
 			break;
 		case PROP_SENSOR_WIDTH:
 			g_value_set_uint (value, priv->sensor_width);
@@ -1505,6 +1547,15 @@ arv_gv_fake_camera_class_init (ArvGvFakeCameraClass *this_class)
 							      G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
 							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
 							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_NEW_SOURCE_PORT_PER_STREAM,
+					 g_param_spec_boolean ("new-source-port-per-stream",
+							       "New source port per stream",
+							       "Send every stream (acquisition) from a new UDP source port",
+							       FALSE,
+							       G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+							       G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							       G_PARAM_STATIC_BLURB));
 	g_object_class_install_property (object_class,
 					 PROP_SENSOR_WIDTH,
 					 g_param_spec_uint ("sensor-width",

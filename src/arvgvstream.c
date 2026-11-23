@@ -82,6 +82,8 @@
 #define ARV_GV_STREAM_RX_LOWAT_PACKETS_DEFAULT          16
 #define ARV_GV_STREAM_RX_ACTIVE_WAIT_US                 1000 /* longest wait while a stream is active */
 #define ARV_GV_STREAM_RX_ACTIVE_US                      100000 /* active: frames open or a packet this recently */
+#define ARV_GV_STREAM_RELEARN_IDLE_US                   1000000 /* connected socket silent this long: learn again */
+#define ARV_GV_STREAM_MAX_FOREIGN_SOURCES               64     /* unqualified senders before connecting is given up */
 
 enum {
 	ARV_GV_STREAM_PROPERTY_0,
@@ -247,8 +249,12 @@ struct _ArvGvStreamThreadData {
 
 	/* Connected stream socket (ARV_GV_STREAM_CONNECT, see _connect_to_source) */
 	gboolean connect_socket;		/* connect once the sender is known from traffic */
-	guint64 socket_connected;		/* 1 once the stream socket is connected to the sender */
+	guint64 socket_connected;		/* 1 while the stream socket is connected to the sender */
 	guint64 n_rx_foreign_source;		/* datagrams seen unconnected from another address, or the GVCP port */
+	guint n_learn_foreign_sources;		/* the same, since learning last (re)started */
+	guint64 n_socket_reconnects;		/* connections dissolved to learn the sender again */
+	guint64 last_datagram_us;		/* time of the last datagram received */
+	guint32 device_address_be;		/* device IPv4 address, network order, for the raw source check */
 	guint64 n_resend_send_errors;		/* PACKETRESEND commands the socket refused to send */
 	GSocket *resend_socket;			/* sends PACKETRESEND while the stream socket is connected */
 
@@ -306,76 +312,160 @@ _send_packet_request (ArvGvStreamThreadData *thread_data,
  * per datagram for an unconnected UDP socket receiving from a non-loopback address than for a connected one
  * (standalone benchmark, 8968-byte datagrams, recvmsg_x batches of 64: 8.4 to 11.8 us against 1.4 to 2.0 us
  * per datagram, and the unconnected receiver lost packets). The stream socket is therefore connected to the
- * sender, which is learnt from the first datagram received from the device address, not from the
+ * sender, which is learnt from the first valid datagram received from the device address, not from the
  * ArvGevSCSP register: a device that reports a wrong source port there would otherwise see every packet
  * filtered out. Datagrams queued before connect() stay readable (checked on macOS 26, loopback and
- * bridge101). After connect(), the kernel drops datagrams from any other address or port, so a stream
- * coming from another source port would show as a stalled n_received_packets with rising
- * n_missing_packets and timeouts. A datagram from another address, or from the device's GVCP port, seen
- * while unconnected is counted in n_rx_foreign_source, processed as before, and the socket stays
- * unconnected.
+ * bridge101). After connect(), the kernel drops datagrams from any other address or port.
  *
- * Returns TRUE when no further source address is needed: the socket is connected, or connecting failed
- * and is not retried. */
+ * The sender is learnt again (_disconnect_from_source) at every stream thread start, and when the connected
+ * socket has received nothing for ARV_GV_STREAM_RELEARN_IDLE_US (1 s): a device that comes back from a reboot,
+ * or picks a new source port for an acquisition, would otherwise be filtered out by the kernel for the life of
+ * the stream, showing only as "no packets". A normal stream is never silent for 1 s; a slow triggered one can
+ * be, and then pays one learning step (a few datagrams received unconnected) per gap, losing nothing.
+ * n_socket_reconnects counts these.
+ *
+ * While unconnected, a valid datagram from another address, or from the device's GVCP port, is counted in
+ * n_rx_foreign_source and processed as before. After ARV_GV_STREAM_MAX_FOREIGN_SOURCES (64) of them in one
+ * learning phase, connecting is given up for this stream (one warning), so that a sender that never qualifies
+ * does not make every datagram pay for its source address. The check compares the raw sockaddr_in, without
+ * allocating.
+ *
+ * Returns TRUE when no further source address is needed: the socket is connected, or connecting failed or was
+ * given up and is not retried. */
 
 static gboolean
-_connect_to_source (ArvGvStreamThreadData *thread_data, GSocketAddress *source)
+_connect_to_source (ArvGvStreamThreadData *thread_data, const struct sockaddr *native, gsize native_size)
 {
-	GInetSocketAddress *inet_source;
+	const struct sockaddr_in *source;
+	GSocketAddress *source_address;
 	GError *error = NULL;
-	GSocket *resend_socket;
 
-	if (source == NULL || !G_IS_INET_SOCKET_ADDRESS (source))
+	if (native == NULL || native_size < sizeof (struct sockaddr_in) || native->sa_family != AF_INET)
 		return FALSE;
 
-	inet_source = G_INET_SOCKET_ADDRESS (source);
+	source = (const struct sockaddr_in *) native;
+
 	/* GVSP never comes from the GVCP port: a reply from there (a device answering a resend request sent
 	 * from this socket before the connection) must not become the only accepted source */
-	if (!g_inet_address_equal (g_inet_socket_address_get_address (inet_source), thread_data->device_address) ||
-	    g_inet_socket_address_get_port (inet_source) == ARV_GVCP_PORT) {
+	if (source->sin_addr.s_addr != thread_data->device_address_be ||
+	    source->sin_port == g_htons (ARV_GVCP_PORT)) {
 		thread_data->n_rx_foreign_source++;
+		thread_data->n_learn_foreign_sources++;
+		if (thread_data->n_learn_foreign_sources >= ARV_GV_STREAM_MAX_FOREIGN_SOURCES) {
+			arv_warning_stream_thread ("[GvStream::connect_to_source] %u datagrams from a source other"
+						   " than the device's stream port, the stream socket stays"
+						   " unconnected", thread_data->n_learn_foreign_sources);
+			thread_data->connect_socket = FALSE;
+			return TRUE;
+		}
 		return FALSE;
 	}
 
-	/* The resend socket first: without it, a connected stream socket could not send resend requests */
-	resend_socket = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, &error);
-	if (resend_socket != NULL) {
-		GSocketAddress *resend_address;
+	/* The resend socket first: without it, a connected stream socket could not send resend requests. It is
+	 * kept when the socket is disconnected, and reused when it connects again. */
+	if (thread_data->resend_socket == NULL) {
+		GSocket *resend_socket;
 
-		g_socket_set_blocking (resend_socket, FALSE);
-		/* Same interface address as the stream socket, any port of the configured GV port range */
-		resend_address = arv_socket_bind_with_range (resend_socket, thread_data->interface_address, 0, FALSE,
-							     &error);
-		if (resend_address == NULL)
-			g_clear_object (&resend_socket);
-		g_clear_object (&resend_address);
-	}
-	if (resend_socket == NULL) {
-		arv_warning_stream_thread ("[GvStream::connect_to_source] Can't create the resend socket (%s),"
-					   " the stream socket stays unconnected",
-					   error != NULL ? error->message : "unknown");
-		g_clear_error (&error);
-		thread_data->connect_socket = FALSE;
-		return TRUE;
+		resend_socket = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP,
+					      &error);
+		if (resend_socket != NULL) {
+			GSocketAddress *resend_address;
+
+			g_socket_set_blocking (resend_socket, FALSE);
+			/* Same interface address as the stream socket, any port of the configured GV port range */
+			resend_address = arv_socket_bind_with_range (resend_socket, thread_data->interface_address, 0,
+								     FALSE, &error);
+			if (resend_address == NULL)
+				g_clear_object (&resend_socket);
+			g_clear_object (&resend_address);
+		}
+		if (resend_socket == NULL) {
+			arv_warning_stream_thread ("[GvStream::connect_to_source] Can't create the resend socket"
+						   " (%s), the stream socket stays unconnected",
+						   error != NULL ? error->message : "unknown");
+			g_clear_error (&error);
+			thread_data->connect_socket = FALSE;
+			return TRUE;
+		}
+		thread_data->resend_socket = resend_socket;
 	}
 
-	if (!g_socket_connect (thread_data->socket, source, NULL, &error)) {
+	source_address = g_socket_address_new_from_native ((gpointer) native, native_size);
+	if (source_address == NULL || !g_socket_connect (thread_data->socket, source_address, NULL, &error)) {
 		arv_warning_stream_thread ("[GvStream::connect_to_source] Can't connect the stream socket (%s),"
 					   " it stays unconnected", error != NULL ? error->message : "unknown");
 		g_clear_error (&error);
-		g_object_unref (resend_socket);
+		g_clear_object (&source_address);
 		thread_data->connect_socket = FALSE;
 		return TRUE;
 	}
+	g_object_unref (source_address);
 
-	thread_data->resend_socket = resend_socket;
 	thread_data->socket_connected = 1;
 
 	arv_info_stream_thread ("[GvStream::connect_to_source] Stream socket connected to the sender port %u"
-				" (ArvGevSCSP reads %u)", g_inet_socket_address_get_port (inet_source),
-				thread_data->source_stream_port);
+				" (ArvGevSCSP reads %u)", g_ntohs (source->sin_port), thread_data->source_stream_port);
 
 	return TRUE;
+}
+
+/* Dissolves the association made by _connect_to_source, so that the next valid datagram from the device teaches
+ * the sender again. BSD: connect() to an AF_UNSPEC address disconnects a UDP socket; Darwin then fails the
+ * reconnection to that address with EAFNOSUPPORT, which is the documented success, Linux returns 0. Winsock
+ * disconnects on a connect() to the any address. The local port is kept (Darwin widens the local address to
+ * INADDR_ANY until the next connect(), checked on macOS 26), so the device's datagrams still arrive. */
+
+static void
+_disconnect_from_source (ArvGvStreamThreadData *thread_data, const char *reason)
+{
+	int fd = g_socket_get_fd (thread_data->socket);
+	int result;
+	int errsv;
+#ifdef G_OS_WIN32
+	struct sockaddr_in any;
+
+	memset (&any, 0, sizeof (any));
+	any.sin_family = AF_INET;
+	result = connect (fd, (struct sockaddr *) &any, sizeof (any));
+	errsv = result == 0 ? 0 : WSAGetLastError ();
+#else
+	struct sockaddr unspecified;
+
+	memset (&unspecified, 0, sizeof (unspecified));
+	unspecified.sa_family = AF_UNSPEC;
+#ifdef __APPLE__
+	unspecified.sa_len = sizeof (unspecified);
+#endif
+	result = connect (fd, &unspecified, sizeof (unspecified));
+	errsv = result == 0 ? 0 : errno;
+	if (result != 0 && errsv == EAFNOSUPPORT)
+		result = 0;
+#endif
+
+	if (result != 0) {
+		/* Still connected to the old sender: never retried, and nothing more is learnt */
+		arv_warning_stream_thread ("[GvStream::disconnect_from_source] Can't disconnect the stream socket"
+					   " (%s): it stays connected to the sender it learnt", g_strerror (errsv));
+		thread_data->connect_socket = FALSE;
+		return;
+	}
+
+	thread_data->socket_connected = 0;
+	thread_data->n_learn_foreign_sources = 0;
+	thread_data->n_socket_reconnects++;
+
+	arv_info_stream_thread ("[GvStream::disconnect_from_source] Stream socket disconnected (%s), learning the"
+				" sender again", reason);
+}
+
+/* Called when the receive loop wakes without data */
+
+static inline void
+_check_source_idle (ArvGvStreamThreadData *thread_data, guint64 time_us)
+{
+	if (G_UNLIKELY (thread_data->socket_connected && thread_data->connect_socket &&
+			time_us - thread_data->last_datagram_us >= ARV_GV_STREAM_RELEARN_IDLE_US))
+		_disconnect_from_source (thread_data, "no datagram for 1 s");
 }
 
 static guint64
@@ -1602,15 +1692,25 @@ _loop (ArvGvStreamThreadData *thread_data)
 
                         if (G_LIKELY(n_msgs > 0)) {
                                 time_us = g_get_monotonic_time ();
+                                thread_data->last_datagram_us = time_us;
                                 thread_data->n_rx_batches++;
                                 if ((guint64) n_msgs > thread_data->n_rx_max_batch)
                                         thread_data->n_rx_max_batch = n_msgs;
                                 for (i = 0; i < n_msgs; i++) {
-                                        if (G_UNLIKELY (want_source) &&
+                                        /* GLib allocates the source addresses: _loop is the fallback path */
+                                        if (G_UNLIKELY (want_source) && packet_addresses[i] != NULL &&
                                             _gvsp_packet_size_is_valid (packet_iv[i].buffer,
-                                                                        packet_im[i].bytes_received) &&
-                                            _connect_to_source (thread_data, packet_addresses[i]))
-                                                want_source = FALSE;
+                                                                        packet_im[i].bytes_received)) {
+                                                struct sockaddr_storage native;
+
+                                                if (g_socket_address_to_native (packet_addresses[i], &native,
+                                                                                sizeof (native), NULL) &&
+                                                    _connect_to_source (thread_data,
+                                                                        (struct sockaddr *) &native,
+                                                                        g_socket_address_get_native_size
+                                                                        (packet_addresses[i])))
+                                                        want_source = FALSE;
+                                        }
                                         frame = _process_packet (thread_data,
                                                                  packet_iv[i].buffer,
                                                                  packet_im[i].bytes_received,
@@ -1628,6 +1728,7 @@ _loop (ArvGvStreamThreadData *thread_data)
                 } else {
                         time_us = g_get_monotonic_time ();
                         _check_frame_completion (thread_data, time_us, NULL);
+                        _check_source_idle (thread_data, time_us);
                 }
 
 		_sample_thread_stats (thread_data, time_us, FALSE);
@@ -1715,7 +1816,6 @@ _loop_darwin (ArvGvStreamThreadData *thread_data, ArvGvStreamRecvmsgX recvmsg_x_
 	char *slots;
 	gsize slot_size;
 	guint64 time_us;
-	guint64 last_rx_us = 0;
 	guint lowat_packets;
 	int lowat_bytes;
 	int current_lowat = -1;
@@ -1800,7 +1900,8 @@ _loop_darwin (ArvGvStreamThreadData *thread_data, ArvGvStreamRecvmsgX recvmsg_x_
 		int n_events;
 		int errsv;
 
-		active = thread_data->frames != NULL || time_us - last_rx_us < ARV_GV_STREAM_RX_ACTIVE_US;
+		active = thread_data->frames != NULL ||
+			time_us - thread_data->last_datagram_us < ARV_GV_STREAM_RX_ACTIVE_US;
 
 		/* When idle, wake on the first datagram */
 		wanted_lowat = active ? lowat_bytes : 1;
@@ -1869,7 +1970,7 @@ _loop_darwin (ArvGvStreamThreadData *thread_data, ArvGvStreamRecvmsgX recvmsg_x_
 			}
 
 			time_us = g_get_monotonic_time ();
-			last_rx_us = time_us;
+			thread_data->last_datagram_us = time_us;
 			n_drained += n_msgs;
 
 			thread_data->n_rx_batches++;
@@ -1884,14 +1985,10 @@ _loop_darwin (ArvGvStreamThreadData *thread_data, ArvGvStreamRecvmsgX recvmsg_x_
 				}
 
 				if (G_UNLIKELY (want_source) && hdrs[i].msg_namelen > 0 &&
-				    _gvsp_packet_size_is_valid (iovs[i].iov_base, hdrs[i].msg_datalen)) {
-					GSocketAddress *source;
-
-					source = g_socket_address_new_from_native (&names[i], hdrs[i].msg_namelen);
-					if (_connect_to_source (thread_data, source))
-						want_source = FALSE;
-					g_clear_object (&source);
-				}
+				    _gvsp_packet_size_is_valid (iovs[i].iov_base, hdrs[i].msg_datalen) &&
+				    _connect_to_source (thread_data, (struct sockaddr *) &names[i],
+							hdrs[i].msg_namelen))
+					want_source = FALSE;
 
 				frame = _process_packet (thread_data, iovs[i].iov_base, hdrs[i].msg_datalen, time_us);
 
@@ -1913,6 +2010,7 @@ _loop_darwin (ArvGvStreamThreadData *thread_data, ArvGvStreamRecvmsgX recvmsg_x_
 		if (n_drained == 0) {
 			time_us = g_get_monotonic_time ();
 			_check_frame_completion (thread_data, time_us, NULL);
+			_check_source_idle (thread_data, time_us);
 			_sample_thread_stats (thread_data, time_us, FALSE);
 		}
 
@@ -2408,6 +2506,11 @@ arv_gv_stream_thread (void *data)
 	thread_data->has_dropped_frame = FALSE;
 	thread_data->has_underrun_frame = FALSE;
 
+	/* The sender may have changed while the thread was stopped (device reboot, new source port) */
+	thread_data->last_datagram_us = g_get_monotonic_time ();
+	if (thread_data->socket_connected && thread_data->connect_socket)
+		_disconnect_from_source (thread_data, "stream thread start");
+
 	_configure_socket_buffer (thread_data);
 	/* Before the INIT callback, so that an application's own handler has the last word */
 	_configure_thread_priority (thread_data);
@@ -2802,6 +2905,8 @@ arv_gv_stream_constructed (GObject *object)
 
 	priv->thread_data->socket = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, NULL);
 	priv->thread_data->device_address = g_object_ref (device_address);
+	if (g_inet_address_get_family (device_address) == G_SOCKET_FAMILY_IPV4)
+		memcpy (&priv->thread_data->device_address_be, g_inet_address_to_bytes (device_address), 4);
 	priv->thread_data->interface_address = g_object_ref (interface_address);
 	priv->thread_data->device_socket_address = g_inet_socket_address_new (device_address, ARV_GVCP_PORT);
 	g_socket_set_blocking (priv->thread_data->socket, FALSE);
@@ -2890,6 +2995,8 @@ arv_gv_stream_constructed (GObject *object)
                                  G_TYPE_UINT64, &priv->thread_data->socket_connected);
         arv_stream_declare_info (ARV_STREAM (gv_stream), "n_rx_foreign_source",
                                  G_TYPE_UINT64, &priv->thread_data->n_rx_foreign_source);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_socket_reconnects",
+                                 G_TYPE_UINT64, &priv->thread_data->n_socket_reconnects);
         arv_stream_declare_info (ARV_STREAM (gv_stream), "n_resend_send_errors",
                                  G_TYPE_UINT64, &priv->thread_data->n_resend_send_errors);
 }
@@ -2972,6 +3079,8 @@ arv_gv_stream_finalize (GObject *object)
 				  thread_data->socket_connected);
 		arv_info_stream ("[GvStream::finalize] n_rx_foreign_source    = %" G_GUINT64_FORMAT,
 				  thread_data->n_rx_foreign_source);
+		arv_info_stream ("[GvStream::finalize] n_socket_reconnects    = %" G_GUINT64_FORMAT,
+				  thread_data->n_socket_reconnects);
 		arv_info_stream ("[GvStream::finalize] n_resend_send_errors   = %" G_GUINT64_FORMAT,
 				  thread_data->n_resend_send_errors);
 

@@ -339,6 +339,7 @@ reset_simulator (void)
 		      "drop-head-frame-interval", 0,
 		      "resend-lost-ratio", 0.0,
 		      "frame-id-step", 1,
+		      "new-source-port-per-stream", FALSE,
 		      NULL);
 	arv_fake_camera_set_fill_pattern (arv_gv_fake_camera_get_fake_camera (simulator), NULL, NULL, NULL);
 }
@@ -1072,6 +1073,85 @@ small_packet_count_test (void)
 	reset_simulator ();
 }
 
+static void
+pop_complete_frames (ArvStream *stream, guint n_frames, guint64 timeout_us, const char *phase)
+{
+	guint i;
+
+	for (i = 0; i < n_frames; i++) {
+		ArvBuffer *buffer = arv_stream_timeout_pop_buffer (stream, timeout_us);
+
+		if (buffer == NULL)
+			g_test_message ("source relearn: no frame %u %s; %" G_GUINT64_FORMAT " received packets, %"
+					G_GUINT64_FORMAT " reconnects, connected %" G_GUINT64_FORMAT, i, phase,
+					arv_stream_get_info_uint64_by_name (stream, "n_received_packets"),
+					arv_stream_get_info_uint64_by_name (stream, "n_socket_reconnects"),
+					arv_stream_get_info_uint64_by_name (stream, "socket_connected"));
+		g_assert (ARV_IS_BUFFER (buffer));
+		g_assert_cmpint (arv_buffer_get_status (buffer), ==, ARV_BUFFER_STATUS_SUCCESS);
+		g_assert (buffer_has_expected_content (buffer));
+		arv_stream_push_buffer (stream, buffer);
+	}
+}
+
+static void
+source_relearn_test (void)
+{
+	ArvStream *stream;
+	GError *error = NULL;
+	gboolean connected;
+	guint64 n_reconnects;
+
+	/* Every acquisition comes from a new source port, as from a device that rebooted. A stream socket connected
+	 * to the first one would see nothing of the second. */
+	g_object_set (simulator,
+		      "packet-resend", TRUE,
+		      "static-image", TRUE,
+		      "new-source-port-per-stream", TRUE,
+		      NULL);
+
+	stream = create_loss_stream (8);
+
+	arv_camera_start_acquisition (camera, &error);
+	g_assert_no_error (error);
+	pop_complete_frames (stream, 5, 1000000, "at the start");
+	connected = arv_stream_get_info_uint64_by_name (stream, "socket_connected") != 0;
+	/* The camera only: arv_camera_stop_acquisition would also end the stream thread */
+	arv_camera_execute_command (camera, "AcquisitionStop", &error);
+	g_assert_no_error (error);
+
+	/* An idle connected socket learns the sender again after 1 s */
+	if (connected)
+		g_assert_cmpuint (wait_for_info (stream, "n_socket_reconnects", 1, 3000000), ==, 1);
+	else
+		g_usleep (1200000);
+
+	arv_camera_execute_command (camera, "AcquisitionStart", &error);
+	g_assert_no_error (error);
+	pop_complete_frames (stream, 5, 1000000, "after the idle gap");
+
+	/* A stream thread restart (arv_camera_stop_acquisition ends it, arv_camera_start_acquisition starts a new
+	 * one) learns it again at once: 0.5 s is less than the idle threshold */
+	arv_camera_stop_acquisition (camera, &error);
+	g_assert_no_error (error);
+	arv_camera_start_acquisition (camera, &error);
+	g_assert_no_error (error);
+	pop_complete_frames (stream, 5, 500000, "after the thread restart");
+
+	n_reconnects = arv_stream_get_info_uint64_by_name (stream, "n_socket_reconnects");
+	g_test_message ("source relearn: connected %d, %" G_GUINT64_FORMAT " reconnects, %" G_GUINT64_FORMAT
+			" foreign sources", connected, n_reconnects,
+			arv_stream_get_info_uint64_by_name (stream, "n_rx_foreign_source"));
+
+	if (connected) {
+		g_assert_cmpuint (n_reconnects, ==, 2);
+		g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "socket_connected"), ==, 1);
+	} else
+		g_assert_cmpuint (n_reconnects, ==, 0);
+
+	finish_loss_stream (stream);
+}
+
 /* 65535 / 3: the simulator's frame ids repeat every third frame */
 #define REPEATED_ID_STEP		21845
 #define REPEATED_ID_DROP_INTERVAL	4
@@ -1305,6 +1385,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/fakegv/repeated-frame-id", repeated_frame_id_test);
 	g_test_add_func ("/fakegv/short-datagrams", short_datagrams_test);
 	g_test_add_func ("/fakegv/small-packet-count", small_packet_count_test);
+	g_test_add_func ("/fakegv/source-relearn", source_relearn_test);
 
 	result = g_test_run();
 
