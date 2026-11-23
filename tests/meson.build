@@ -12,9 +12,12 @@ if get_option('tests')
       '--error-exitcode=1'
     ],
     env:['DEBUGINFOD_URLS=', 'ARV_TEST_IGNORE_BUFFER='],
-    exclude_suites:['python'],
+    exclude_suites:['python', 'bench'],
     timeout_multiplier:5
   )
+
+  # The stream bench is a measurement, not a test: run it with 'meson test --suite bench' or directly.
+  add_test_setup ('default', exclude_suites: ['bench'], is_default: true)
 
 	tests = [
 		['evaluator',	['main'],    []],
@@ -81,6 +84,18 @@ if get_option('tests')
         configure_file (input: 'pylaunch-dbg.in', output: 'pylaunch-dbg', configuration: py_script_config_data)
         configure_file (input: 'jslaunch.in', output: 'jslaunch', configuration: py_script_config_data)
         configure_file (input: 'jslaunch-dbg.in', output: 'jslaunch-dbg', configuration: py_script_config_data)
+
+	if host_machine.system() != 'windows'
+		# POSIX only: getrusage, getloadavg and SIGINT to the child sender
+		bench = executable ('arv-gv-stream-bench', 'arvgvstreambench.c',
+				    c_args: ['-DARV_FAKE_GV_CAMERA_PATH="@0@"'.format (meson.project_build_root () / 'src' /
+										    'arv-fake-gv-camera-@0@'.format (aravis_api_version))],
+				    link_with: aravis_library,
+				    dependencies: aravis_dependencies,
+				    include_directories: [library_inc])
+		test ('gvstreambench', bench, suite: 'bench', args: ['--duration', '3', '--frame-rate', '50'],
+		      timeout: 300, is_parallel: false)
+	endif
 
 	if introspection_enabled
 		pymod = import ('python')
