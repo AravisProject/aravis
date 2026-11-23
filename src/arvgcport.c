@@ -67,6 +67,7 @@ static ArvGvLegacyInfos arv_gc_port_legacy_infos[] = {
    { .vendor_selection = "IDS_Imaging_Development_Systems_GmbH",.model_selection = "GV_58CxLE_M"},
    { .vendor_selection = "IDS_Imaging_Development_Systems_GmbH",.model_selection = "GV_524xCP_NIR"},
    { .vendor_selection = "IDS_Imaging_Development_Systems_GmbH",.model_selection = "GV_599xCP_C"},
+   { .vendor_selection = "IDS_Imaging_Development_Systems_GmbH",.model_selection = "GV_79FxWP_M"},
    { .vendor_selection = "Imperx",                              .model_selection = "IpxGEVCamera"},
    { .vendor_selection = "KowaOptronics",                       .model_selection = "SC130ET3"},
    { .vendor_selection = "NIT",                                 .model_selection = "Tachyon16k"},
