@@ -22,6 +22,14 @@ The GigE Vision tests (`fakegv`) run against `ArvGvFakeCamera` on
 `ARV_GV_STREAM_CONNECT=0` (see the Ethernet devices page). They never run in
 parallel, and they fail if another fake camera holds that port.
 
+On Linux the receive path depends on privileges: with `CAP_NET_RAW` (root) the
+stream uses the packet socket loop, otherwise the standard socket loop; there
+`/fakegv/short-datagrams-standard-socket` also runs the short datagram case on
+the standard loop. Fast fail and the connected socket are off by default outside
+Apple, so `fakegv-no-fast-fail` and `fakegv-no-connect` repeat the defaults
+there, `/fakegv/repeated-frame-id` is skipped (it is about fast fail) and
+`/fakegv/rx-errors` is skipped (`recvmsg_x` is Apple only).
+
 `arv-gv-stream-bench` measures the stream receiver on the loopback interface
 against an `arv-fake-gv-camera-0.10` it launches from the build tree, and prints
 one tab separated row of frame counts, stream infos, sender counters and CPU

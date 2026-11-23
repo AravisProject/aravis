@@ -250,7 +250,7 @@ struct _ArvGvStreamThreadData {
 	guint64 thread_priority_mode;		/* 0 default, 1 high (QoS), 2 realtime: what was achieved */
 	guint64 stream_thread_min_priority;	/* lowest scheduler priority observed (Apple only) */
 	guint64 last_thread_stats_us;
-	guint64 rx_mode;			/* 0 legacy _loop (or packet socket), 1 recvmsg_x (Apple only) */
+	guint64 rx_mode;			/* 0 legacy _loop, 1 recvmsg_x (Apple only), 2 packet socket (Linux) */
 	guint64 n_rx_truncated;			/* recvmsg_x slots that came back full, not processed */
 	guint64 n_short_packets;		/* datagrams too short for their GVSP headers, not processed */
 
@@ -2402,6 +2402,8 @@ _ring_buffer_loop (ArvGvStreamThreadData *thread_data)
 
 	use_poll = g_cancellable_make_pollfd (thread_data->cancellable, &poll_fd[1]);
 
+	thread_data->rx_mode = 2;
+
         _signal_thread_started (thread_data);
 
 	block_id = 0;
@@ -3051,8 +3053,8 @@ arv_gv_stream_constructed (GObject *object)
          * thread_priority_mode  state, 0 to 2     achieved stream thread priority: default, high, realtime.
          * stream_thread_min_priority state        lowest scheduler priority observed (Apple only): a drop shows a
          *                                         real-time thread demoted by the kernel.
-         * rx_mode               state, 0 or 1     1 while the recvmsg_x loop runs; 0 for _loop, the packet socket,
-         *                                         or after recvmsg_x failed 100 times in a row.
+         * rx_mode               state, 0 to 2     1 while the recvmsg_x loop runs; 2 while the packet socket loop
+         *                                         runs; 0 for _loop, or after recvmsg_x failed 100 times in a row.
          * n_rx_truncated        counter, datagrams recvmsg_x datagrams that filled their slot or came back with
          *                                         MSG_TRUNC; not processed.
          * n_short_packets       counter, datagrams datagrams too short for their GVSP headers (or a leader for its

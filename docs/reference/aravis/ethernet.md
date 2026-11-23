@@ -95,8 +95,8 @@ What the receiver did is reported in the stream infos
 ([method@Aravis.Stream.get_info_uint64_by_name]), which `arv-camera-test-0.10`
 prints at the end of its run: among others `socket_buffer_size`,
 `thread_priority_mode` (0 default, 1 high, 2 realtime), `rx_mode` (0 standard
-loop, 1 `recvmsg_x`), `socket_connected`, `fast_fail`, `n_skipped_frames`,
-`n_short_packets` and `stream_thread_cpu_us`. The ones this receiver added are
+loop, 1 `recvmsg_x`, 2 packet socket), `socket_connected`, `fast_fail`,
+`n_skipped_frames`, `n_short_packets` and `stream_thread_cpu_us`. The ones this receiver added are
 described in a comment above their declaration in `src/arvgvstream.c`.
 
 ## Stream Packet Size

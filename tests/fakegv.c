@@ -889,16 +889,22 @@ create_injection_socket (ArvStream *stream, GSocketAddress **destination)
 {
 	GInetAddress *loopback;
 	GSocketAddress *local;
+	GSocketAddress *interface;
 	GSocket *socket;
 	GError *error = NULL;
 
+	/* From the simulator's address, to the address the stream socket is bound to: the interface the device was
+	 * discovered on, which is not 127.0.0.1 everywhere (a Linux host answers discovery from the loopback camera on
+	 * its other interfaces too). The packet socket loop also filters on both addresses. */
 	loopback = g_inet_address_new_from_string ("127.0.0.1");
 	socket = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, &error);
 	g_assert_no_error (error);
 	local = g_inet_socket_address_new (loopback, 0);
 	g_socket_bind (socket, local, FALSE, &error);
 	g_assert_no_error (error);
-	*destination = g_inet_socket_address_new (loopback, arv_gv_stream_get_port (ARV_GV_STREAM (stream)));
+	interface = arv_gv_device_get_interface_address (ARV_GV_DEVICE (arv_camera_get_device (camera)));
+	*destination = g_inet_socket_address_new (g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (interface)),
+						  arv_gv_stream_get_port (ARV_GV_STREAM (stream)));
 	g_object_unref (local);
 	g_object_unref (loopback);
 
@@ -963,7 +969,7 @@ send_short_datagrams (GSocket *socket, GSocketAddress *destination)
 }
 
 static void
-short_datagrams_test (void)
+run_short_datagrams (ArvGvStreamOption options)
 {
 	ArvStream *stream;
 	GSocket *socket;
@@ -977,7 +983,9 @@ short_datagrams_test (void)
 		      "static-image", TRUE,
 		      NULL);
 
+	arv_camera_gv_set_stream_options (camera, options);
 	stream = create_loss_stream (8);
+	arv_camera_gv_set_stream_options (camera, ARV_GV_STREAM_OPTION_NONE);
 	socket = create_injection_socket (stream, &destination);
 
 	/* The stream thread runs from the stream's acquisition start: start it alone, the camera later */
@@ -987,10 +995,15 @@ short_datagrams_test (void)
 	/* Before the acquisition: the stream socket is not connected to the camera yet (and none of these may
 	 * become the sender it connects to), so all of them reach the receiver */
 	send_short_datagrams (socket, destination);
-	/* recvmsg_x hands the receiver every datagram; GLib's g_socket_receive_messages (the standard loop) consumes
-	 * a 0 byte datagram without returning it, so that one never reaches the receiver there */
-	n_expected = arv_stream_get_info_uint64_by_name (stream, "rx_mode") == 1 ?
+	/* recvmsg_x and the packet socket hand the receiver every datagram. So does GLib's g_socket_receive_messages
+	 * (the standard loop) on Linux, where it is recvmmsg; on Apple it consumes a 0 byte datagram without returning
+	 * it, so that one never reaches the receiver there (measured: 5 on Linux, 4 on macOS) */
+#ifdef __linux__
+	n_expected = N_SHORT_DATAGRAMS;
+#else
+	n_expected = arv_stream_get_info_uint64_by_name (stream, "rx_mode") != 0 ?
 		N_SHORT_DATAGRAMS : N_SHORT_DATAGRAMS - 1;
+#endif
 	g_assert_cmpuint (wait_for_info (stream, "n_short_packets", n_expected, 1000000), ==, n_expected);
 	g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "n_received_packets"), ==, 0);
 	g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "socket_connected"), ==, 0);
@@ -1025,6 +1038,22 @@ short_datagrams_test (void)
 	g_object_unref (socket);
 	finish_loss_stream (stream);
 }
+
+static void
+short_datagrams_test (void)
+{
+	run_short_datagrams (ARV_GV_STREAM_OPTION_NONE);
+}
+
+#ifdef __linux__
+/* Where the default is the packet socket loop (Linux, with CAP_NET_RAW), the standard socket loop parses the same
+ * datagrams through another path */
+static void
+short_datagrams_standard_socket_test (void)
+{
+	run_short_datagrams (ARV_GV_STREAM_OPTION_PACKET_SOCKET_DISABLED);
+}
+#endif
 
 static void
 inject_leader_full (GSocket *socket, GSocketAddress *destination, guint16 frame_id, guint32 width, guint32 height)
@@ -1668,6 +1697,9 @@ main (int argc, char *argv[])
 	g_test_add_func ("/fakegv/slow-consumer", slow_consumer_test);
 	g_test_add_func ("/fakegv/repeated-frame-id", repeated_frame_id_test);
 	g_test_add_func ("/fakegv/short-datagrams", short_datagrams_test);
+#ifdef __linux__
+	g_test_add_func ("/fakegv/short-datagrams-standard-socket", short_datagrams_standard_socket_test);
+#endif
 	g_test_add_func ("/fakegv/small-packet-count", small_packet_count_test);
 	g_test_add_func ("/fakegv/source-relearn", source_relearn_test);
 	g_test_add_func ("/fakegv/rx-errors", rx_errors_test);
