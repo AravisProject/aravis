@@ -20,7 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 -->
 <interface>
-  <requires lib="gtk+" version="3.16"/>
+  <requires lib="gtk" version="4.0"/>
   <!-- interface-license-type lgplv2 -->
   <object class="GtkSizeGroup"/>
   <object class="GtkListStore" id="camera_liststore">
@@ -52,7 +52,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
   </object>
   <object class="GtkPopover" id="acquisition_popover">
     <property name="can-focus">False</property>
-    <property name="relative-to">acquisition_button</property>
     <child>
       <!-- n-columns=5 n-rows=4 -->
       <object class="GtkGrid" id="grid2">
@@ -71,11 +70,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
             <property name="can-focus">False</property>
             <property name="label" translatable="yes">Frame rate:</property>
             <property name="xalign">1</property>
+            <layout>
+              <property name="column">1</property>
+              <property name="row">0</property>
+            </layout>
           </object>
-          <packing>
-            <property name="left-attach">1</property>
-            <property name="top-attach">0</property>
-          </packing>
         </child>
         <child>
           <object class="GtkEntry" id="frame_rate_entry">
@@ -85,11 +84,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
             <property name="width-chars">10</property>
             <property name="primary-icon-activatable">False</property>
             <property name="secondary-icon-activatable">False</property>
+            <layout>
+              <property name="column">2</property>
+              <property name="row">0</property>
+            </layout>
           </object>
-          <packing>
-            <property name="left-attach">2</property>
-            <property name="top-attach">0</property>
-          </packing>
         </child>
         <child>
           <object class="GtkLabel" id="label5">
@@ -97,25 +96,24 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
             <property name="can-focus">False</property>
             <property name="label" translatable="yes">Hz</property>
             <property name="xalign">0</property>
+            <layout>
+              <property name="column">3</property>
+              <property name="row">0</property>
+              <property name="column-span">2</property>
+            </layout>
           </object>
-          <packing>
-            <property name="left-attach">3</property>
-            <property name="top-attach">0</property>
-            <property name="width">2</property>
-          </packing>
         </child>
         <child>
           <object class="GtkToggleButton" id="auto_exposure_togglebutton">
             <property name="label" translatable="yes">Auto</property>
-            <property name="use-action-appearance">False</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="receives-default">True</property>
+            <layout>
+              <property name="column">0</property>
+              <property name="row">1</property>
+            </layout>
           </object>
-          <packing>
-            <property name="left-attach">0</property>
-            <property name="top-attach">1</property>
-          </packing>
         </child>
         <child>
           <object class="GtkLabel" id="label3">
@@ -123,24 +121,23 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
             <property name="can-focus">False</property>
             <property name="label" translatable="yes">Exposure:</property>
             <property name="xalign">1</property>
+            <layout>
+              <property name="column">1</property>
+              <property name="row">1</property>
+            </layout>
           </object>
-          <packing>
-            <property name="left-attach">1</property>
-            <property name="top-attach">1</property>
-          </packing>
         </child>
         <child>
           <object class="GtkToggleButton" id="auto_gain_togglebutton">
             <property name="label" translatable="yes">Auto</property>
-            <property name="use-action-appearance">False</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="receives-default">True</property>
+            <layout>
+              <property name="column">0</property>
+              <property name="row">2</property>
+            </layout>
           </object>
-          <packing>
-            <property name="left-attach">0</property>
-            <property name="top-attach">2</property>
-          </packing>
         </child>
         <child>
           <object class="GtkLabel" id="label4">
@@ -148,43 +145,36 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
             <property name="can-focus">False</property>
             <property name="label" translatable="yes">Gain:</property>
             <property name="xalign">1</property>
+            <layout>
+              <property name="column">1</property>
+              <property name="row">2</property>
+            </layout>
           </object>
-          <packing>
-            <property name="left-attach">1</property>
-            <property name="top-attach">2</property>
-          </packing>
         </child>
         <child>
           <object class="GtkSpinButton" id="exposure_spinbutton">
             <property name="visible">True</property>
             <property name="can-focus">True</property>
-            <property name="invisible-char">•</property>
             <property name="width-chars">11</property>
-            <property name="primary-icon-activatable">False</property>
-            <property name="secondary-icon-activatable">False</property>
             <property name="numeric">True</property>
+            <layout>
+              <property name="column">2</property>
+              <property name="row">1</property>
+            </layout>
           </object>
-          <packing>
-            <property name="left-attach">2</property>
-            <property name="top-attach">1</property>
-          </packing>
         </child>
         <child>
           <object class="GtkSpinButton" id="gain_spinbutton">
             <property name="visible">True</property>
             <property name="can-focus">True</property>
-            <property name="invisible-char">•</property>
             <property name="width-chars">11</property>
-            <property name="primary-icon-activatable">False</property>
-            <property name="secondary-icon-activatable">False</property>
-            <property name="input-purpose">digits</property>
             <property name="digits">2</property>
             <property name="numeric">True</property>
+            <layout>
+              <property name="column">2</property>
+              <property name="row">2</property>
+            </layout>
           </object>
-          <packing>
-            <property name="left-attach">2</property>
-            <property name="top-attach">2</property>
-          </packing>
         </child>
         <child>
           <object class="GtkLabel" id="label6">
@@ -192,67 +182,68 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
             <property name="can-focus">False</property>
             <property name="label" translatable="yes">µs</property>
             <property name="xalign">0</property>
+            <layout>
+              <property name="column">3</property>
+              <property name="row">1</property>
+            </layout>
           </object>
-          <packing>
-            <property name="left-attach">3</property>
-            <property name="top-attach">1</property>
-          </packing>
         </child>
         <child>
-          <object class="GtkHScale" id="exposure_hscale">
+          <object class="GtkScale" id="exposure_hscale">
+            <property name="orientation">horizontal</property>
             <property name="width-request">200</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="draw-value">False</property>
+            <layout>
+              <property name="column">4</property>
+              <property name="row">1</property>
+            </layout>
           </object>
-          <packing>
-            <property name="left-attach">4</property>
-            <property name="top-attach">1</property>
-          </packing>
         </child>
         <child>
-          <object class="GtkHScale" id="gain_hscale">
+          <object class="GtkScale" id="gain_hscale">
+            <property name="orientation">horizontal</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="draw-value">False</property>
+            <layout>
+              <property name="column">4</property>
+              <property name="row">2</property>
+            </layout>
           </object>
-          <packing>
-            <property name="left-attach">4</property>
-            <property name="top-attach">2</property>
-          </packing>
         </child>
         <child>
           <object class="GtkLabel" id="label7">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <property name="label" translatable="yes">dB</property>
+            <layout>
+              <property name="column">3</property>
+              <property name="row">2</property>
+            </layout>
           </object>
-          <packing>
-            <property name="left-attach">3</property>
-            <property name="top-attach">2</property>
-          </packing>
         </child>
         <child>
           <object class="GtkComboBox" id="trigger_combobox">
             <property name="can-focus">False</property>
+            <layout>
+              <property name="column">0</property>
+              <property name="row">0</property>
+            </layout>
           </object>
-          <packing>
-            <property name="left-attach">0</property>
-            <property name="top-attach">0</property>
-          </packing>
         </child>
         <child>
           <object class="GtkToggleButton" id="auto_black_level_togglebutton">
             <property name="label" translatable="yes">Auto</property>
-            <property name="use-action-appearance">False</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="receives-default">True</property>
+            <layout>
+              <property name="column">0</property>
+              <property name="row">3</property>
+            </layout>
           </object>
-          <packing>
-            <property name="left-attach">0</property>
-            <property name="top-attach">3</property>
-          </packing>
         </child>
         <child>
           <object class="GtkLabel" id="label1">
@@ -260,39 +251,36 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
             <property name="can-focus">False</property>
             <property name="label" translatable="yes">Black level:</property>
             <property name="xalign">1</property>
+            <layout>
+              <property name="column">1</property>
+              <property name="row">3</property>
+            </layout>
           </object>
-          <packing>
-            <property name="left-attach">1</property>
-            <property name="top-attach">3</property>
-          </packing>
         </child>
         <child>
           <object class="GtkSpinButton" id="black_level_spinbutton">
             <property name="visible">True</property>
             <property name="can-focus">True</property>
-            <property name="invisible-char">•</property>
             <property name="width-chars">11</property>
-            <property name="primary-icon-activatable">False</property>
-            <property name="secondary-icon-activatable">False</property>
-            <property name="input-purpose">digits</property>
             <property name="digits">2</property>
             <property name="numeric">True</property>
+            <layout>
+              <property name="column">2</property>
+              <property name="row">3</property>
+            </layout>
           </object>
-          <packing>
-            <property name="left-attach">2</property>
-            <property name="top-attach">3</property>
-          </packing>
         </child>
         <child>
-          <object class="GtkHScale" id="black_level_hscale">
+          <object class="GtkScale" id="black_level_hscale">
+            <property name="orientation">horizontal</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="draw-value">False</property>
+            <layout>
+              <property name="column">4</property>
+              <property name="row">3</property>
+            </layout>
           </object>
-          <packing>
-            <property name="left-attach">4</property>
-            <property name="top-attach">3</property>
-          </packing>
         </child>
         <child>
           <placeholder/>
@@ -300,11 +288,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
       </object>
     </child>
   </object>
-  <object class="GtkApplicationWindow" id="main_window">
+  <object class="AdwApplicationWindow" id="main_window">
     <property name="height-request">400</property>
     <property name="can-focus">False</property>
     <property name="show-menubar">False</property>
-    <child>
+    <property name="content">
+      <object class="AdwToolbarView" id="main_toolbar_view">
+        <property name="content">
       <object class="GtkOverlay" id="main_overlay">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
@@ -328,7 +318,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                     <property name="margin-top">6</property>
                     <property name="vexpand">True</property>
                     <property name="vscrollbar-policy">always</property>
-                    <property name="shadow-type">out</property>
                     <child>
                       <object class="GtkTreeView" id="camera_tree">
                         <property name="visible">True</property>
@@ -384,32 +373,25 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                       </object>
                     </child>
                   </object>
-                  <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
-                    <property name="position">0</property>
-                  </packing>
                 </child>
                 <child>
-                  <object class="GtkToolbar">
+                  <object class="GtkBox">
+                    <property name="orientation">horizontal</property>
+                    <property name="spacing">6</property>
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="margin-bottom">6</property>
                     <child>
-                      <object class="GtkToolButton" id="refresh_button">
+                      <object class="GtkButton" id="refresh_button">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="tooltip-text" translatable="yes">Refresh camera list</property>
                         <property name="use-underline">True</property>
                         <property name="icon-name">view-refresh-symbolic</property>
                       </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
                     </child>
                     <child>
-                      <object class="GtkToolButton" id="video_mode_button">
+                      <object class="GtkButton" id="video_mode_button">
                         <property name="visible">True</property>
                         <property name="sensitive">False</property>
                         <property name="can-focus">False</property>
@@ -417,21 +399,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                         <property name="use-underline">True</property>
                         <property name="icon-name">media-playback-start-symbolic</property>
                       </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
                     </child>
                     <style>
                       <class name="inline-toolbar"/>
                       <class name="horizontal"/>
                     </style>
                   </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">1</property>
-                  </packing>
                 </child>
                 <child>
                   <object class="GtkRevealer" id="camera_parameters">
@@ -457,11 +430,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                             <property name="label" translatable="yes">Pixel format:</property>
                             <property name="justify">right</property>
                             <property name="xalign">1</property>
+                            <layout>
+                              <property name="column">0</property>
+                              <property name="row">1</property>
+                            </layout>
                           </object>
-                          <packing>
-                            <property name="left-attach">0</property>
-                            <property name="top-attach">1</property>
-                          </packing>
                         </child>
                         <child>
                           <object class="GtkLabel">
@@ -470,33 +443,33 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                             <property name="label" translatable="yes">Region size:</property>
                             <property name="justify">right</property>
                             <property name="xalign">1</property>
+                            <layout>
+                              <property name="column">0</property>
+                              <property name="row">4</property>
+                            </layout>
                           </object>
-                          <packing>
-                            <property name="left-attach">0</property>
-                            <property name="top-attach">4</property>
-                          </packing>
                         </child>
                         <child>
                           <object class="GtkLabel">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="label" translatable="yes">x</property>
+                            <layout>
+                              <property name="column">2</property>
+                              <property name="row">4</property>
+                            </layout>
                           </object>
-                          <packing>
-                            <property name="left-attach">2</property>
-                            <property name="top-attach">4</property>
-                          </packing>
                         </child>
                         <child>
                           <object class="GtkLabel">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="label" translatable="yes">pixels</property>
+                            <layout>
+                              <property name="column">4</property>
+                              <property name="row">4</property>
+                            </layout>
                           </object>
-                          <packing>
-                            <property name="left-attach">4</property>
-                            <property name="top-attach">4</property>
-                          </packing>
                         </child>
                         <child>
                           <object class="GtkLabel" id="camera_position_label">
@@ -505,22 +478,22 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                             <property name="label" translatable="yes">Region position:</property>
                             <property name="justify">right</property>
                             <property name="xalign">1</property>
+                            <layout>
+                              <property name="column">0</property>
+                              <property name="row">2</property>
+                            </layout>
                           </object>
-                          <packing>
-                            <property name="left-attach">0</property>
-                            <property name="top-attach">2</property>
-                          </packing>
                         </child>
                         <child>
                           <object class="GtkLabel" id="camera_position_units">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="label" translatable="yes">pixels</property>
+                            <layout>
+                              <property name="column">4</property>
+                              <property name="row">2</property>
+                            </layout>
                           </object>
-                          <packing>
-                            <property name="left-attach">4</property>
-                            <property name="top-attach">2</property>
-                          </packing>
                         </child>
                         <child>
                           <object class="GtkSpinButton" id="camera_x">
@@ -528,11 +501,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                             <property name="can-focus">True</property>
                             <property name="width-chars">10</property>
                             <property name="max-width-chars">10</property>
+                            <layout>
+                              <property name="column">1</property>
+                              <property name="row">2</property>
+                            </layout>
                           </object>
-                          <packing>
-                            <property name="left-attach">1</property>
-                            <property name="top-attach">2</property>
-                          </packing>
                         </child>
                         <child>
                           <object class="GtkSpinButton" id="camera_y">
@@ -540,11 +513,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                             <property name="can-focus">True</property>
                             <property name="width-chars">10</property>
                             <property name="max-width-chars">10</property>
+                            <layout>
+                              <property name="column">3</property>
+                              <property name="row">2</property>
+                            </layout>
                           </object>
-                          <packing>
-                            <property name="left-attach">3</property>
-                            <property name="top-attach">2</property>
-                          </packing>
                         </child>
                         <child>
                           <object class="GtkSpinButton" id="camera_height">
@@ -552,11 +525,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                             <property name="can-focus">True</property>
                             <property name="width-chars">10</property>
                             <property name="max-width-chars">10</property>
+                            <layout>
+                              <property name="column">3</property>
+                              <property name="row">4</property>
+                            </layout>
                           </object>
-                          <packing>
-                            <property name="left-attach">3</property>
-                            <property name="top-attach">4</property>
-                          </packing>
                         </child>
                         <child>
                           <object class="GtkSpinButton" id="camera_width">
@@ -564,22 +537,21 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                             <property name="can-focus">True</property>
                             <property name="width-chars">10</property>
                             <property name="max-width-chars">10</property>
-                            <property name="secondary-icon-activatable">False</property>
+                            <layout>
+                              <property name="column">1</property>
+                              <property name="row">4</property>
+                            </layout>
                           </object>
-                          <packing>
-                            <property name="left-attach">1</property>
-                            <property name="top-attach">4</property>
-                          </packing>
                         </child>
                         <child>
                           <object class="GtkComboBoxText" id="pixel_format_combo">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
+                            <layout>
+                              <property name="column">1</property>
+                              <property name="row">1</property>
+                            </layout>
                           </object>
-                          <packing>
-                            <property name="left-attach">1</property>
-                            <property name="top-attach">1</property>
-                          </packing>
                         </child>
                         <child>
                           <object class="GtkLabel" id="camera_binning_label">
@@ -588,11 +560,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                             <property name="label" translatable="yes">Binning:</property>
                             <property name="justify">right</property>
                             <property name="xalign">1</property>
+                            <layout>
+                              <property name="column">0</property>
+                              <property name="row">3</property>
+                            </layout>
                           </object>
-                          <packing>
-                            <property name="left-attach">0</property>
-                            <property name="top-attach">3</property>
-                          </packing>
                         </child>
                         <child>
                           <object class="GtkSpinButton" id="camera_binning_x">
@@ -600,12 +572,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                             <property name="can-focus">True</property>
                             <property name="width-chars">10</property>
                             <property name="max-width-chars">10</property>
-                            <property name="secondary-icon-activatable">False</property>
+                            <layout>
+                              <property name="column">1</property>
+                              <property name="row">3</property>
+                            </layout>
                           </object>
-                          <packing>
-                            <property name="left-attach">1</property>
-                            <property name="top-attach">3</property>
-                          </packing>
                         </child>
                         <child>
                           <object class="GtkSpinButton" id="camera_binning_y">
@@ -613,23 +584,22 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                             <property name="can-focus">True</property>
                             <property name="width-chars">10</property>
                             <property name="max-width-chars">10</property>
-                            <property name="secondary-icon-activatable">False</property>
+                            <layout>
+                              <property name="column">3</property>
+                              <property name="row">3</property>
+                            </layout>
                           </object>
-                          <packing>
-                            <property name="left-attach">3</property>
-                            <property name="top-attach">3</property>
-                          </packing>
                         </child>
                         <child>
                           <object class="GtkLabel" id="camera_binning_units">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="label" translatable="yes">pixels</property>
+                            <layout>
+                              <property name="column">4</property>
+                              <property name="row">3</property>
+                            </layout>
                           </object>
-                          <packing>
-                            <property name="left-attach">4</property>
-                            <property name="top-attach">3</property>
-                          </packing>
                         </child>
                         <child>
                           <object class="GtkLabel" id="component_label">
@@ -638,21 +608,21 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                             <property name="label" translatable="yes">Component:</property>
                             <property name="justify">right</property>
                             <property name="xalign">1</property>
+                            <layout>
+                              <property name="column">0</property>
+                              <property name="row">0</property>
+                            </layout>
                           </object>
-                          <packing>
-                            <property name="left-attach">0</property>
-                            <property name="top-attach">0</property>
-                          </packing>
                         </child>
                         <child>
                           <object class="GtkComboBoxText" id="component_combo">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
+                            <layout>
+                              <property name="column">1</property>
+                              <property name="row">0</property>
+                            </layout>
                           </object>
-                          <packing>
-                            <property name="left-attach">1</property>
-                            <property name="top-attach">0</property>
-                          </packing>
                         </child>
                         <child>
                           <object class="GtkCheckButton" id="component_check">
@@ -660,12 +630,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">False</property>
-                            <property name="draw-indicator">True</property>
+                            <layout>
+                              <property name="column">3</property>
+                              <property name="row">0</property>
+                            </layout>
                           </object>
-                          <packing>
-                            <property name="left-attach">3</property>
-                            <property name="top-attach">0</property>
-                          </packing>
                         </child>
                         <child>
                           <placeholder/>
@@ -691,16 +660,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                       </object>
                     </child>
                   </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">2</property>
-                  </packing>
                 </child>
               </object>
-              <packing>
-                <property name="name">page0</property>
-              </packing>
             </child>
             <child>
               <object class="GtkBox" id="video_box">
@@ -712,8 +673,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="label-xalign">0</property>
-                    <property name="label-yalign">0</property>
-                    <property name="shadow-type">none</property>
+                    <property name="vexpand">True</property>
                     <child>
                       <placeholder/>
                     </child>
@@ -721,11 +681,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                       <placeholder/>
                     </child>
                   </object>
-                  <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
-                    <property name="position">0</property>
-                  </packing>
                 </child>
                 <child>
                   <object class="GtkBox">
@@ -741,11 +696,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                         <property name="margin-bottom">4</property>
                         <property name="label" translatable="yes">fps (MB/s)</property>
                       </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">0</property>
-                      </packing>
                     </child>
                     <child>
                       <object class="GtkLabel" id="image_label">
@@ -755,29 +705,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                         <property name="margin-bottom">4</property>
                         <property name="label" translatable="yes">Images / Errors</property>
                       </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">1</property>
-                      </packing>
                     </child>
                   </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">1</property>
-                  </packing>
                 </child>
               </object>
-              <packing>
-                <property name="name">page1</property>
-                <property name="position">1</property>
-              </packing>
             </child>
           </object>
-          <packing>
-            <property name="index">-1</property>
-          </packing>
         </child>
         <child type="overlay">
           <object class="GtkRevealer" id="notification_revealer">
@@ -790,8 +723,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="label-xalign">0</property>
-                <property name="label-yalign">0</property>
-                <property name="shadow-type">none</property>
                 <child>
                   <object class="GtkBox" id="notification_box">
                     <property name="visible">True</property>
@@ -812,11 +743,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                               <class name="horizontal"/>
                             </style>
                           </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">0</property>
-                          </packing>
                         </child>
                         <child>
                           <object class="GtkLabel" id="notification_details">
@@ -825,18 +751,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                             <property name="use-markup">True</property>
                             <property name="wrap">True</property>
                           </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">1</property>
-                          </packing>
                         </child>
                       </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">0</property>
-                      </packing>
                     </child>
                     <child>
                       <object class="GtkButton" id="notification_dismiss">
@@ -855,11 +771,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                           <class name="image-button"/>
                         </style>
                       </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">1</property>
-                      </packing>
                     </child>
                   </object>
                 </child>
@@ -877,19 +788,21 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
           </object>
         </child>
       </object>
-    </child>
-    <child type="titlebar">
-      <object class="GtkHeaderBar" id="main_headerbar">
+        </property>
+    <child type="top">
+      <object class="AdwHeaderBar" id="main_headerbar">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
-        <property name="title">Aravis Viewer</property>
-        <property name="show-close-button">True</property>
+        <property name="title-widget">
+          <object class="AdwWindowTitle">
+            <property name="title">Aravis Viewer</property>
+          </object>
+        </property>
         <child>
           <object class="GtkButton" id="back_button">
             <property name="can-focus">True</property>
             <property name="receives-default">True</property>
             <property name="tooltip-text" translatable="yes">Return to camera list</property>
-            <property name="always-show-image">True</property>
             <child>
               <object class="GtkImage">
                 <property name="visible">True</property>
@@ -898,13 +811,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
               </object>
             </child>
           </object>
-          <packing>
-            <property name="position">1</property>
-          </packing>
         </child>
         <child>
           <object class="GtkButton" id="snapshot_button">
-            <property name="use-action-appearance">False</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="receives-default">True</property>
@@ -917,13 +826,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
               </object>
             </child>
           </object>
-          <packing>
-            <property name="position">2</property>
-          </packing>
         </child>
         <child>
           <object class="GtkButton" id="rotate_cw_button">
-            <property name="use-action-appearance">False</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="receives-default">True</property>
@@ -936,13 +841,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
               </object>
             </child>
           </object>
-          <packing>
-            <property name="position">3</property>
-          </packing>
         </child>
         <child>
           <object class="GtkToggleButton" id="flip_horizontal_togglebutton">
-            <property name="use-action-appearance">False</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="receives-default">True</property>
@@ -955,11 +856,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
               </object>
             </child>
           </object>
-          <packing>
-            <property name="position">4</property>
-          </packing>
         </child>
-        <child>
+        <child type="end">
           <object class="GtkMenuButton" id="acquisition_button">
             <property name="visible">True</property>
             <property name="can-focus">True</property>
@@ -974,14 +872,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
               </object>
             </child>
           </object>
-          <packing>
-            <property name="pack-type">end</property>
-            <property name="position">5</property>
-          </packing>
         </child>
         <child>
           <object class="GtkToggleButton" id="flip_vertical_togglebutton">
-            <property name="use-action-appearance">False</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="receives-default">True</property>
@@ -994,11 +887,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
               </object>
             </child>
           </object>
-          <packing>
-            <property name="position">5</property>
-          </packing>
         </child>
       </object>
     </child>
+      </object>
+    </property>
   </object>
 </interface>

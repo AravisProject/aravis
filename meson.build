@@ -122,7 +122,8 @@ subdir ('src')
 
 viewer_enabled = false
 viewer_option = get_option ('viewer')
-viewer_deps = aravis_dependencies + [dependency ('gtk+-3.0', version: '>=3.12', required: viewer_option),
+viewer_deps = aravis_dependencies + [dependency ('libadwaita-1', version: '>=1.4', required: viewer_option),
+				     dependency ('gtk4', version: '>=4.12', required: viewer_option),
 				     dependency ('gstreamer-base-1.0', required: viewer_option),
 				     dependency ('gstreamer-app-1.0', required: viewer_option),
 				     dependency ('gstreamer-video-1.0', required: viewer_option)]

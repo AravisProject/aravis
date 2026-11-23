@@ -20,7 +20,7 @@
  * Author: Emmanuel Pacaud <emmanuel.pacaud@free.fr>
  */
 
-#include <gtk/gtk.h>
+#include <adwaita.h>
 #include <gst/gst.h>
 #include <gst/app/gstappsrc.h>
 #include <gst/video/videooverlay.h>
@@ -93,7 +93,7 @@ gstreamer_plugin_check (void)
 }
 
 struct  _ArvViewer {
-	GtkApplication parent_instance;
+	AdwApplication parent_instance;
 
 	ArvCamera *camera;
 	char *camera_name;
@@ -219,9 +219,9 @@ struct  _ArvViewer {
         GThreadPool  *unpack_pool;
 };
 
-typedef GtkApplicationClass ArvViewerClass;
+typedef AdwApplicationClass ArvViewerClass;
 
-G_DEFINE_TYPE (ArvViewer, arv_viewer, GTK_TYPE_APPLICATION)
+G_DEFINE_TYPE (ArvViewer, arv_viewer, ADW_TYPE_APPLICATION)
 
 typedef enum {
 	ARV_VIEWER_MODE_CAMERA_LIST,

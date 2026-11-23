@@ -23,15 +23,11 @@
 #include <arvviewer.h>
 #include <arvdebugprivate.h>
 #include <arvgvstreamprivate.h>
-#include <gtk/gtk.h>
+#include <adwaita.h>
 #include <gst/gst.h>
 #include <arv.h>
 #include <stdlib.h>
 #include <libintl.h>
-
-#if GST_GL_HAVE_WINDOW_X11 && defined (GDK_WINDOWING_X11)
-#include <gst/gl/x11/gstgldisplay_x11.h>
-#endif
 
 static char *arv_viewer_option_debug_domains = NULL;
 static char *arv_option_register_cache = NULL;
@@ -106,23 +102,18 @@ main (int argc, char **argv)
 	ArvRangeCheckPolicy range_check_policy;
 	ArvUvUsbMode usb_mode;
 
-#if GST_GL_HAVE_WINDOW_X11 && defined(GDK_WINDOWING_X11)
-	XInitThreads ();
-#endif
-
 	bindtextdomain (ARAVIS_GETTEXT, ARAVIS_LOCALE_DIR);
 	bind_textdomain_codeset (ARAVIS_GETTEXT, "UTF-8");
 	textdomain (ARAVIS_GETTEXT);
 
-	gtk_init (&argc, &argv);
+	adw_init ();
 	gst_init (&argc, &argv);
 
-	icon_theme = gtk_icon_theme_get_default ();
+	icon_theme = gtk_icon_theme_get_for_display (gdk_display_get_default ());
 	gtk_icon_theme_add_resource_path (icon_theme, "/org/aravis/viewer/icons/gnome/");
 
 	context = g_option_context_new (NULL);
 	g_option_context_add_main_entries (context, arv_viewer_option_entries, NULL);
-	g_option_context_add_group (context, gtk_get_option_group (TRUE));
 	g_option_context_add_group (context, gst_init_get_option_group ());
 	if (!g_option_context_parse (context, &argc, &argv, &error)) {
 		g_option_context_free (context);
