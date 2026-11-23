@@ -58,7 +58,13 @@
 #include <sys/mman.h>
 #endif
 
+#ifdef __APPLE__
+#include <mach/mach.h>
+#include <pthread.h>
+#endif
+
 #define ARV_GV_STREAM_DISCARD_LATE_FRAME_THRESHOLD	100
+#define ARV_GV_STREAM_THREAD_STATS_PERIOD_US		100000
 #define ARV_GV_STREAM_BUFFER_SIZE_PROTOCOL_OVERHEAD     1024 /* Some room for protocol overhead (IP + UDP + GV) */
 #define ARV_GV_STREAM_MIN_BUFFER_SIZE                   20 * 1024
 
@@ -186,6 +192,20 @@ struct _ArvGvStreamThreadData {
         guint64 n_transferred_bytes;
         guint64 n_ignored_bytes;
 
+	/* Receive path diagnostics */
+
+	guint64 socket_buffer_size_granted;	/* "socket_buffer_size": SO_RCVBUF read back, 0 if never set */
+	guint64 n_underrun_frames;		/* distinct frames that found no input buffer */
+	guint64 last_underrun_frame_id;
+	gboolean has_underrun_frame;
+	guint64 n_rx_wakeups;			/* poll returned with the socket readable */
+	guint64 n_rx_batches;			/* receive calls returning at least one packet */
+	guint64 n_rx_max_batch;			/* most packets returned by one receive call */
+	guint64 stream_thread_cpu_us;		/* user + system CPU time of the stream thread (Apple only) */
+	guint64 thread_priority_mode;		/* 0 default, 1 high (QoS), 2 realtime: what was achieved */
+	guint64 stream_thread_min_priority;	/* lowest scheduler priority observed (Apple only) */
+	guint64 last_thread_stats_us;
+
 	ArvHistogram *histogram;
 	guint32 statistic_count;
 
@@ -219,6 +239,60 @@ _send_packet_request (ArvGvStreamThreadData *thread_data,
 			  NULL, NULL);
 
 	arv_gvcp_packet_free (packet);
+}
+
+static guint64
+_read_socket_buffer_size (int fd)
+{
+#ifdef G_OS_WIN32
+	DWORD size = 0;
+#else
+	gint size = 0;
+#endif
+	socklen_t optlen = sizeof (size);
+
+	if (getsockopt (fd, SOL_SOCKET, SO_RCVBUF, (char *) &size, &optlen) != 0 || size < 0)
+		return 0;
+
+	return size;
+}
+
+/* Samples the stream thread's CPU time and scheduler priority, at most every
+ * ARV_GV_STREAM_THREAD_STATS_PERIOD_US unless forced. Only implemented on Apple,
+ * where a real-time thread demoted by the kernel's fail-safe shows up as a drop
+ * of the observed priority. Must be called from the stream thread. */
+
+static void
+_sample_thread_stats (ArvGvStreamThreadData *thread_data, guint64 time_us, gboolean force)
+{
+#ifdef __APPLE__
+	thread_basic_info_data_t basic_info;
+	thread_extended_info_data_t extended_info;
+	mach_msg_type_number_t count;
+	thread_act_t thread;
+
+	if (!force && time_us - thread_data->last_thread_stats_us < ARV_GV_STREAM_THREAD_STATS_PERIOD_US)
+		return;
+
+	thread_data->last_thread_stats_us = time_us;
+
+	/* pthread_mach_thread_np does not add a port reference, unlike mach_thread_self */
+	thread = pthread_mach_thread_np (pthread_self ());
+
+	count = THREAD_BASIC_INFO_COUNT;
+	if (thread_info (thread, THREAD_BASIC_INFO, (thread_info_t) &basic_info, &count) == KERN_SUCCESS)
+		thread_data->stream_thread_cpu_us =
+			(guint64) basic_info.user_time.seconds * 1000000 + basic_info.user_time.microseconds +
+			(guint64) basic_info.system_time.seconds * 1000000 + basic_info.system_time.microseconds;
+
+	count = THREAD_EXTENDED_INFO_COUNT;
+	if (thread_info (thread, THREAD_EXTENDED_INFO, (thread_info_t) &extended_info, &count) == KERN_SUCCESS &&
+	    extended_info.pth_curpri >= 0) {
+		if (thread_data->stream_thread_min_priority == 0 ||
+		    (guint64) extended_info.pth_curpri < thread_data->stream_thread_min_priority)
+			thread_data->stream_thread_min_priority = extended_info.pth_curpri;
+	}
+#endif
 }
 
 static void
@@ -255,6 +329,7 @@ _update_socket (ArvGvStreamThreadData *thread_data, ArvBuffer *buffer)
 		result = arv_socket_set_recv_buffer_size (fd, buffer_size);
 		if (result) {
 			thread_data->current_socket_buffer_size = buffer_size;
+			thread_data->socket_buffer_size_granted = _read_socket_buffer_size (fd);
 			arv_info_stream_thread ("[GvStream::update_socket] Socket buffer size set to %d", buffer_size);
 		} else {
 			arv_warning_stream_thread ("[GvStream::update_socket] Failed to set socket buffer size to %d (%d)",
@@ -374,7 +449,13 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 
 	buffer = arv_stream_pop_input_buffer (thread_data->stream);
 	if (buffer == NULL) {
+		/* Counts every packet of a frame that found no input buffer */
 		thread_data->n_underruns++;
+		if (!thread_data->has_underrun_frame || thread_data->last_underrun_frame_id != frame_id) {
+			thread_data->n_underrun_frames++;
+			thread_data->last_underrun_frame_id = frame_id;
+			thread_data->has_underrun_frame = TRUE;
+		}
 
 		return NULL;
 	}
@@ -1000,7 +1081,7 @@ _loop (ArvGvStreamThreadData *thread_data)
 	ArvGvStreamFrameData *frame;
 	ArvGvspPacket *packet_buffers;
 	GPollFD poll_fd[2];
-	guint64 time_us;
+	guint64 time_us = 0;
 	gboolean use_poll;
 	int i;
 	GInputVector packet_iv[ARV_GV_STREAM_NUM_BUFFERS] = { {NULL, 0}, };
@@ -1053,6 +1134,8 @@ _loop (ArvGvStreamThreadData *thread_data)
                         GError *error = NULL;
                         int n_msgs;
 
+			thread_data->n_rx_wakeups++;
+
 			arv_gpollfd_clear_one (&poll_fd[0], thread_data->socket);
 			n_msgs = g_socket_receive_messages (thread_data->socket,
 		 					    packet_im,
@@ -1063,6 +1146,9 @@ _loop (ArvGvStreamThreadData *thread_data)
 
                         if (G_LIKELY(n_msgs > 0)) {
                                 time_us = g_get_monotonic_time ();
+                                thread_data->n_rx_batches++;
+                                if ((guint64) n_msgs > thread_data->n_rx_max_batch)
+                                        thread_data->n_rx_max_batch = n_msgs;
                                 for (i = 0; i < n_msgs; i++) {
                                         frame = _process_packet (thread_data,
                                                                  packet_iv[i].buffer,
@@ -1079,6 +1165,8 @@ _loop (ArvGvStreamThreadData *thread_data)
                         time_us = g_get_monotonic_time ();
                         _check_frame_completion (thread_data, time_us, NULL);
                 }
+
+		_sample_thread_stats (thread_data, time_us, FALSE);
 
 	} while (!g_cancellable_is_cancelled (thread_data->cancellable));
 
@@ -1447,6 +1535,8 @@ arv_gv_stream_thread (void *data)
 
 	_flush_frames (thread_data, g_get_monotonic_time ());
 
+	_sample_thread_stats (thread_data, g_get_monotonic_time (), TRUE);
+
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->callback_data, ARV_STREAM_CALLBACK_TYPE_EXIT, NULL);
 
@@ -1772,6 +1862,22 @@ arv_gv_stream_constructed (GObject *object)
                                  G_TYPE_UINT64, &priv->thread_data->n_transferred_bytes);
         arv_stream_declare_info (ARV_STREAM (gv_stream), "n_ignored_bytes",
                                  G_TYPE_UINT64, &priv->thread_data->n_ignored_bytes);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "socket_buffer_size",
+                                 G_TYPE_UINT64, &priv->thread_data->socket_buffer_size_granted);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_underrun_frames",
+                                 G_TYPE_UINT64, &priv->thread_data->n_underrun_frames);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_rx_wakeups",
+                                 G_TYPE_UINT64, &priv->thread_data->n_rx_wakeups);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_rx_batches",
+                                 G_TYPE_UINT64, &priv->thread_data->n_rx_batches);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_rx_max_batch",
+                                 G_TYPE_UINT64, &priv->thread_data->n_rx_max_batch);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "stream_thread_cpu_us",
+                                 G_TYPE_UINT64, &priv->thread_data->stream_thread_cpu_us);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "thread_priority_mode",
+                                 G_TYPE_UINT64, &priv->thread_data->thread_priority_mode);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "stream_thread_min_priority",
+                                 G_TYPE_UINT64, &priv->thread_data->stream_thread_min_priority);
 }
 
 static void
