@@ -525,31 +525,54 @@ resend_unavailable_test (void)
 #define UNRECOVERABLE_FRAME_INTERVAL	5
 #define UNRECOVERABLE_HEAD_LENGTH	30
 #define UNRECOVERABLE_N_FRAMES		60
+/* ArvGvStream:packet-request-ratio default */
+#define LOSS_REQUEST_RATIO		0.25
 
+typedef struct {
+	guint n_frames;
+	guint n_success;
+	guint n_failed;
+	guint n_gaps;
+	gint64 max_delay_after_gap_us;	/* pop time - leader time, complete frames right after a lost one */
+	gint64 max_delay_clean_us;	/* the same, for the other complete frames */
+	guint64 n_requested_packets;	/* resend requested packets, counted by the simulator */
+	guint64 n_requests;
+	guint64 n_resend_dropped;
+	guint64 n_skipped_frames;
+	guint64 n_failures;
+	guint64 n_timeouts;
+	guint64 n_ratio_reached;
+} UnrecoverableResult;
+
+static guint64
+stream_fast_fail (ArvStream *stream)
+{
+	return arv_stream_get_info_uint64_by_name (stream, "fast_fail");
+}
+
+/* Leader and the first head_length data packets of every 5th frame are lost, and so is every resend: those frames
+ * cannot be completed, every other one must be. */
 static void
-unrecoverable_test (void)
+run_unrecoverable (guint head_length, ArvStream **stream_out, UnrecoverableResult *result)
 {
 	ArvStream *stream;
 	GError *error = NULL;
-	guint n_frames = 0;
-	guint n_success = 0;
-	guint n_failed = 0;
-	guint n_gaps = 0;
 	guint last_success_id = 0;
 	guint last_missing_id = 0;
 	gboolean has_missing_id = FALSE;
+	gboolean after_gap = FALSE;
 	guint n_success_after_last_failure = 0;
 	guint64 n_requests_before = simulator_counter ("n-resend-requests");
+	guint64 n_requested_packets_before = simulator_counter ("n-resend-requested-packets");
 	guint64 n_resend_dropped_before = simulator_counter ("n-resend-dropped-packets");
 
-	/* Leader and the first 30 of 193 data packets of every 5th frame are lost, and so is every resend: those
-	 * frames cannot be completed, every other one must be. 31 packets is under the stream's default request
-	 * ratio (0.25 * 195), so the receiver does request them, and the resend loss is exercised. */
+	*result = (UnrecoverableResult) { 0 };
+
 	g_object_set (simulator,
 		      "packet-resend", TRUE,
 		      "static-image", TRUE,
 		      "drop-head-frame-interval", UNRECOVERABLE_FRAME_INTERVAL,
-		      "drop-head-length", UNRECOVERABLE_HEAD_LENGTH,
+		      "drop-head-length", head_length,
 		      "resend-lost-ratio", 1.0,
 		      NULL);
 
@@ -559,8 +582,8 @@ unrecoverable_test (void)
 	g_assert_no_error (error);
 
 	/* Stop on complete frames, to tell "still delivering" from "the last frame was a dropped one" */
-	while ((n_frames < UNRECOVERABLE_N_FRAMES || n_success_after_last_failure < 2) &&
-	       n_frames < UNRECOVERABLE_N_FRAMES + 2 * UNRECOVERABLE_FRAME_INTERVAL) {
+	while ((result->n_frames < UNRECOVERABLE_N_FRAMES || n_success_after_last_failure < 2) &&
+	       result->n_frames < UNRECOVERABLE_N_FRAMES + 2 * UNRECOVERABLE_FRAME_INTERVAL) {
 		ArvBuffer *buffer;
 
 		buffer = arv_stream_timeout_pop_buffer (stream, 1000000);
@@ -568,10 +591,12 @@ unrecoverable_test (void)
 
 		if (arv_buffer_get_status (buffer) == ARV_BUFFER_STATUS_SUCCESS) {
 			guint frame_id = arv_buffer_get_frame_id (buffer);
+			gint64 delay_us = g_get_monotonic_time () -
+				(gint64) (arv_buffer_get_system_timestamp (buffer) / 1000);
 
 			g_assert (buffer_has_expected_content (buffer));
 
-			if (n_success > 0 && frame_id != next_frame_id (last_success_id)) {
+			if (result->n_success > 0 && frame_id != next_frame_id (last_success_id)) {
 				guint missing_id = next_frame_id (last_success_id);
 				guint k;
 
@@ -588,41 +613,97 @@ unrecoverable_test (void)
 				}
 				last_missing_id = missing_id;
 				has_missing_id = TRUE;
-				n_gaps++;
+				result->n_gaps++;
+				after_gap = TRUE;
 			}
 
+			if (after_gap)
+				result->max_delay_after_gap_us = MAX (result->max_delay_after_gap_us, delay_us);
+			else if (result->n_success > 0)
+				result->max_delay_clean_us = MAX (result->max_delay_clean_us, delay_us);
+			after_gap = FALSE;
+
 			last_success_id = frame_id;
-			n_success++;
+			result->n_success++;
 			n_success_after_last_failure++;
 		} else {
-			n_failed++;
+			result->n_failed++;
 			n_success_after_last_failure = 0;
 		}
 
-		n_frames++;
+		result->n_frames++;
 		arv_stream_push_buffer (stream, buffer);
 	}
 
-	g_test_message ("unrecoverable: %u frames, %u complete, %u failed, %u gaps, "
-			"%" G_GUINT64_FORMAT " failures, %" G_GUINT64_FORMAT " timeouts, %" G_GUINT64_FORMAT
-			" resend requests, %" G_GUINT64_FORMAT " ratio reached, %" G_GUINT64_FORMAT " underruns",
-			n_frames, n_success, n_failed, n_gaps,
-			arv_stream_get_info_uint64_by_name (stream, "n_failures"),
-			arv_stream_get_info_uint64_by_name (stream, "n_timeouts"),
-			arv_stream_get_info_uint64_by_name (stream, "n_resend_requests"),
-			arv_stream_get_info_uint64_by_name (stream, "n_resend_ratio_reached"),
-			arv_stream_get_info_uint64_by_name (stream, "n_underruns"));
+	result->n_requests = simulator_counter ("n-resend-requests") - n_requests_before;
+	result->n_requested_packets = simulator_counter ("n-resend-requested-packets") - n_requested_packets_before;
+	result->n_resend_dropped = simulator_counter ("n-resend-dropped-packets") - n_resend_dropped_before;
+	result->n_skipped_frames = arv_stream_get_info_uint64_by_name (stream, "n_skipped_frames");
+	result->n_failures = arv_stream_get_info_uint64_by_name (stream, "n_failures");
+	result->n_timeouts = arv_stream_get_info_uint64_by_name (stream, "n_timeouts");
+	result->n_ratio_reached = arv_stream_get_info_uint64_by_name (stream, "n_resend_ratio_reached");
+
+	g_test_message ("unrecoverable (head %u, fast-fail %" G_GUINT64_FORMAT "): %u frames, %u complete, %u failed,"
+			" %u gaps, %" G_GUINT64_FORMAT " skipped, %" G_GUINT64_FORMAT " failures, %" G_GUINT64_FORMAT
+			" timeouts, %" G_GUINT64_FORMAT " requests for %" G_GUINT64_FORMAT " packets, %" G_GUINT64_FORMAT
+			" ratio reached; delivery delay: %" G_GINT64_FORMAT " us max after a lost frame, %" G_GINT64_FORMAT
+			" us max otherwise",
+			head_length, stream_fast_fail (stream),
+			result->n_frames, result->n_success, result->n_failed, result->n_gaps,
+			result->n_skipped_frames, result->n_failures, result->n_timeouts,
+			result->n_requests, result->n_requested_packets, result->n_ratio_reached,
+			result->max_delay_after_gap_us, result->max_delay_clean_us);
+
+	/* Every lost frame is one of the gaps; the first loss may precede the first complete frame */
+	g_assert_cmpuint (result->n_gaps, >=, result->n_frames / UNRECOVERABLE_FRAME_INTERVAL - 2);
+	/* The stream keeps delivering after the losses */
+	g_assert_cmpuint (n_success_after_last_failure, >=, 2);
+
+	*stream_out = stream;
+}
+
+static void
+unrecoverable_test (void)
+{
+	ArvStream *stream;
+	UnrecoverableResult result;
+
+	/* 31 packets is under the stream's default request ratio (0.25 * 195), so the receiver does request them, and
+	 * the resend loss is exercised. */
+	run_unrecoverable (UNRECOVERABLE_HEAD_LENGTH, &stream, &result);
 
 	/* One frame in 5 fails, the first failure may come before the first complete frame */
-	g_assert_cmpuint (n_failed, >=, n_frames / UNRECOVERABLE_FRAME_INTERVAL - 1);
-	g_assert_cmpuint (n_failed, <=, n_frames / UNRECOVERABLE_FRAME_INTERVAL + 1);
+	g_assert_cmpuint (result.n_failed, >=, result.n_frames / UNRECOVERABLE_FRAME_INTERVAL - 1);
+	g_assert_cmpuint (result.n_failed, <=, result.n_frames / UNRECOVERABLE_FRAME_INTERVAL + 1);
 	/* Every failed frame is one of the gaps; the first failure may precede the first complete frame */
-	g_assert_cmpuint (n_gaps, <=, n_failed);
-	g_assert_cmpuint (n_gaps + 1, >=, n_failed);
-	/* The stream keeps delivering after the failures */
-	g_assert_cmpuint (n_success_after_last_failure, >=, 2);
-	g_assert_cmpuint (simulator_counter ("n-resend-requests") - n_requests_before, >, 0);
-	g_assert_cmpuint (simulator_counter ("n-resend-dropped-packets") - n_resend_dropped_before, >, 0);
+	g_assert_cmpuint (result.n_gaps, <=, result.n_failed);
+	g_assert_cmpuint (result.n_gaps + 1, >=, result.n_failed);
+	g_assert_cmpuint (result.n_requests, >, 0);
+	g_assert_cmpuint (result.n_resend_dropped, >, 0);
+
+	finish_loss_stream (stream);
+}
+
+static void
+resend_budget_test (void)
+{
+	ArvStream *stream;
+	UnrecoverableResult result;
+	double budget = LOSS_REQUEST_RATIO * LOSS_N_BLOCKS;
+
+	/* Each lost frame misses 31 packets and no resend ever arrives. The budget (0.25 * 195 = 48.75 packets) allows
+	 * one request for the 31, not a second one; before the budget was cumulative every request was checked alone
+	 * and each lost frame cost ~3 x 31 = 93 requested packets. Up to two lost frames may still be open when the
+	 * count is read. */
+	run_unrecoverable (UNRECOVERABLE_HEAD_LENGTH, &stream, &result);
+
+	g_test_message ("resend budget: %" G_GUINT64_FORMAT " requested packets for %u failed frames (%.1f per frame,"
+			" budget %.2f)", result.n_requested_packets, result.n_failed,
+			result.n_failed > 0 ? (double) result.n_requested_packets / result.n_failed : 0.0, budget);
+
+	g_assert_cmpuint (result.n_failed, >, 5);
+	g_assert_cmpuint (result.n_requested_packets, >, 0);
+	g_assert_cmpfloat ((double) result.n_requested_packets, <=, budget * (result.n_failed + 2));
 
 	finish_loss_stream (stream);
 }
@@ -735,6 +816,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/fakegv/resend", resend_test);
 	g_test_add_func ("/fakegv/resend-unavailable", resend_unavailable_test);
 	g_test_add_func ("/fakegv/unrecoverable", unrecoverable_test);
+	g_test_add_func ("/fakegv/resend-budget", resend_budget_test);
 	g_test_add_func ("/fakegv/slow-consumer", slow_consumer_test);
 
 	result = g_test_run();

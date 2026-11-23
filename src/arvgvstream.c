@@ -960,6 +960,10 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
                                                 frame->packet_data[j].resend_requested = TRUE;
                                         }
 
+					/* The budget is cumulative: every requested packet counts, a repeated request
+					 * for the same packet included, so that packet-request-ratio bounds the resend
+					 * traffic a frame can cause. */
+					frame->n_packet_resend_requests += n_missing_packets;
 					thread_data->n_resend_requests += n_missing_packets;
 
 					first_missing = -1;
