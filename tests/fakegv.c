@@ -681,6 +681,16 @@ unrecoverable_test (void)
 	g_assert_cmpuint (result.n_requests, >, 0);
 	g_assert_cmpuint (result.n_resend_dropped, >, 0);
 
+	/* The lost frame is requested once; the second request, a packet-timeout (20 ms) later, exceeds the budget.
+	 * With fast fail the frame is closed then, because newer frames exist, and the complete frames behind it are
+	 * delivered without waiting out the stream's frame-retention (100 ms). Without, the lost frame holds its
+	 * buffer and the four frames behind it until frame-retention has passed since its last packet: ~100 ms for
+	 * the next frame (measured from its leader to its delivery). */
+	if (stream_fast_fail (stream)) {
+		g_assert_cmpint (result.max_delay_after_gap_us, <, 75000);
+		g_assert_cmpint (result.max_delay_clean_us, <, 75000);
+	}
+
 	finish_loss_stream (stream);
 }
 

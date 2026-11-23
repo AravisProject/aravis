@@ -1214,9 +1214,16 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 	for (iter = thread_data->frames; iter != NULL;) {
 		frame = iter->data;
 
+		/* An incomplete frame that nothing will be requested for any more cannot complete once a newer
+		 * frame exists. Upstream closes it only under resend NEVER; fast fail also when its resend budget is
+		 * spent or the device said a packet is gone, instead of holding its buffer, and every frame behind
+		 * it, for frame-retention. */
 		if (can_close_frame &&
-		    thread_data->packet_resend == ARV_GV_STREAM_PACKET_RESEND_NEVER &&
-		    iter->next != NULL) {
+		    iter->next != NULL &&
+		    (thread_data->packet_resend == ARV_GV_STREAM_PACKET_RESEND_NEVER ||
+		     (thread_data->fast_fail &&
+		      frame->last_valid_packet != frame->n_packets - 1 &&
+		      (frame->resend_ratio_reached || frame->disable_resend_request)))) {
 			frame->buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
 			arv_info_stream_thread ("[GvStream::check_frame_completion] Incomplete frame %" G_GUINT64_FORMAT,
 						 frame->frame_id);
