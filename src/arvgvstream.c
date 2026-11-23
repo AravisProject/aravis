@@ -191,6 +191,14 @@ struct _ArvGvStreamThreadData {
 	gboolean first_packet;
 	guint64 last_frame_id;
 
+	/* Fast fail: the frame dropped without a buffer (skipped, or no input buffer at its first packet), whose
+	 * remaining packets are ignored without looking for a buffer again, and the packet count of the latest frame,
+	 * the estimate of the next one's. */
+	gboolean has_dropped_frame;
+	guint64 dropped_frame_id;
+	gboolean dropped_frame_underrun;
+	guint last_n_packets;
+
 	gboolean use_packet_socket;
 
 	/* Statistics */
@@ -543,6 +551,22 @@ _compute_n_expected_packets (const ArvGvspPacket *packet, size_t allocated_size,
         return 0;
 }
 
+/* Fast fail: a new frame is dropped without a buffer. It counts as seen (last_frame_id), so that its stragglers are
+ * late packets and the next frame is not reported as following missing ones. */
+
+static void
+_drop_frame (ArvGvStreamThreadData *thread_data, guint64 frame_id, gint64 frame_id_inc, gboolean underrun)
+{
+	if (frame_id_inc > 1)
+		thread_data->n_missing_frames++;
+
+	thread_data->last_frame_id = frame_id;
+	thread_data->dropped_frame_id = frame_id;
+	thread_data->dropped_frame_underrun = underrun;
+	thread_data->has_dropped_frame = TRUE;
+	thread_data->n_skipped_frames++;
+}
+
 static ArvGvStreamFrameData *
 _find_frame_data (ArvGvStreamThreadData *thread_data,
 		  const ArvGvspPacket *packet,
@@ -584,11 +608,34 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 			frame_id_inc--;
 	}
 
+	/* Fast fail: the rest of a frame already dropped returns here, without looking for a buffer */
+	if (thread_data->fast_fail &&
+	    thread_data->has_dropped_frame &&
+	    thread_data->dropped_frame_id == frame_id) {
+		if (thread_data->dropped_frame_underrun)
+			thread_data->n_underruns++;
+		return NULL;
+	}
+
 	if (frame_id_inc < 1  && frame_id_inc > -ARV_GV_STREAM_DISCARD_LATE_FRAME_THRESHOLD) {
 		arv_info_stream_thread ("[GvStream::find_frame_data] Discard late frame %" G_GUINT64_FORMAT
 					 " (last: %" G_GUINT64_FORMAT ")",
 					 frame_id, thread_data->last_frame_id);
 		arv_gvsp_packet_debug (packet, packet_size, ARV_DEBUG_LEVEL_INFO);
+		return NULL;
+	}
+
+	/* Fast fail: the first packet of a new frame is not its leader, and the missing head cannot be requested
+	 * (resend NEVER, or more packets than the resend budget, estimated from the latest frame's size, which is
+	 * what _missing_packet_check would refuse). Such a frame can only fail, so it does not take a buffer. */
+	if (thread_data->fast_fail && packet_id > 0 &&
+	    (thread_data->packet_resend == ARV_GV_STREAM_PACKET_RESEND_NEVER ||
+	     (thread_data->last_n_packets > 0 &&
+	      ((int) (thread_data->last_n_packets * thread_data->packet_request_ratio) <= 0 ||
+	       packet_id > thread_data->last_n_packets * thread_data->packet_request_ratio)))) {
+		arv_info_stream_thread ("[GvStream::find_frame_data] Skip frame %" G_GUINT64_FORMAT
+					" (first packet %u, head not recoverable)", frame_id, packet_id);
+		_drop_frame (thread_data, frame_id, frame_id_inc, FALSE);
 		return NULL;
 	}
 
@@ -601,6 +648,11 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 			thread_data->last_underrun_frame_id = frame_id;
 			thread_data->has_underrun_frame = TRUE;
 		}
+
+		/* Fast fail: no buffer at the first packet seen of this frame. Do not retry for every later packet,
+		 * and do not start the frame mid-way if a buffer is returned while it is being received. */
+		if (thread_data->fast_fail)
+			_drop_frame (thread_data, frame_id, frame_id_inc, TRUE);
 
 		return NULL;
 	}
@@ -636,6 +688,7 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 
 	frame->packet_data = g_new0 (ArvGvStreamPacketData, n_packets);
 	frame->n_packets = n_packets;
+	thread_data->last_n_packets = n_packets;
 
 	if (thread_data->callback != NULL &&
 	    frame->buffer != NULL)
@@ -1017,9 +1070,11 @@ _close_frame (ArvGvStreamThreadData *thread_data,
               guint64 time_us,
               ArvGvStreamFrameData *frame)
 {
-	if (frame->buffer->priv->status == ARV_BUFFER_STATUS_SUCCESS)
+	if (frame->buffer->priv->status == ARV_BUFFER_STATUS_SUCCESS) {
 		thread_data->n_completed_buffers++;
-	else
+		/* A complete frame's packet count is the trailer's, not the buffer size estimate */
+		thread_data->last_n_packets = frame->n_packets;
+	} else
 		if (frame->buffer->priv->status != ARV_BUFFER_STATUS_ABORTED)
 			thread_data->n_failures++;
 

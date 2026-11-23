@@ -684,6 +684,34 @@ unrecoverable_test (void)
 	finish_loss_stream (stream);
 }
 
+/* More than the resend budget (0.25 * 195 = 48.75 packets) */
+#define UNRECOVERABLE_LONG_HEAD_LENGTH	60
+
+static void
+unrecoverable_head_test (void)
+{
+	ArvStream *stream;
+	UnrecoverableResult result;
+
+	/* Leader and 60 data packets of every 5th frame are lost: the first packet the receiver sees of such a frame
+	 * is packet 61, and requesting the head would exceed the budget. With fast fail the frame is skipped without
+	 * taking a buffer (only the very first frame of the stream, before any frame size is known, may be started);
+	 * without, it takes a buffer, requests nothing and times out. */
+	run_unrecoverable (UNRECOVERABLE_LONG_HEAD_LENGTH, &stream, &result);
+
+	if (stream_fast_fail (stream)) {
+		g_assert_cmpuint (result.n_skipped_frames, >=, result.n_gaps);
+		g_assert_cmpuint (result.n_failed, <=, 1);
+		g_assert_cmpuint (result.n_failures, <=, 1);
+		g_assert_cmpuint (result.n_requests, ==, 0);
+	} else {
+		g_assert_cmpuint (result.n_skipped_frames, ==, 0);
+		g_assert_cmpuint (result.n_failed, >=, result.n_frames / UNRECOVERABLE_FRAME_INTERVAL - 1);
+	}
+
+	finish_loss_stream (stream);
+}
+
 static void
 resend_budget_test (void)
 {
@@ -722,6 +750,9 @@ slow_consumer_test (void)
 	gint64 recovered_us = 0;
 	guint n_after_recovery = 0;
 	guint n_failed_after_recovery = 0;
+	guint n_after_stall = 0;
+	guint n_failed_after_stall = 0;
+	guint64 n_skipped_frames;
 
 	g_object_set (simulator,
 		      "packet-resend", TRUE,
@@ -755,6 +786,10 @@ slow_consumer_test (void)
 		buffer = arv_stream_timeout_pop_buffer (stream, 1000000);
 		g_assert (ARV_IS_BUFFER (buffer));
 
+		n_after_stall++;
+		if (arv_buffer_get_status (buffer) != ARV_BUFFER_STATUS_SUCCESS)
+			n_failed_after_stall++;
+
 		/* A frame whose leader was processed after the stall ended */
 		is_new = arv_buffer_get_status (buffer) == ARV_BUFFER_STATUS_SUCCESS &&
 			arv_buffer_get_system_timestamp (buffer) / 1000 > (guint64) stall_end_us;
@@ -775,12 +810,32 @@ slow_consumer_test (void)
 		arv_stream_push_buffer (stream, buffer);
 	}
 
-	g_test_message ("slow consumer: recovered %" G_GINT64_FORMAT " us after the stall, %u frames after recovery,"
-			" %u failed, %" G_GUINT64_FORMAT " underruns, %" G_GUINT64_FORMAT " failures",
+	n_skipped_frames = arv_stream_get_info_uint64_by_name (stream, "n_skipped_frames");
+
+	g_test_message ("slow consumer (fast-fail %" G_GUINT64_FORMAT "): recovered %" G_GINT64_FORMAT " us after the"
+			" stall, %u frames after recovery, %u failed; %u frames after the stall, %u failed; %"
+			G_GUINT64_FORMAT " underruns in %" G_GUINT64_FORMAT " frames, %" G_GUINT64_FORMAT " skipped, %"
+			G_GUINT64_FORMAT " failures",
+			stream_fast_fail (stream),
 			recovered_us > 0 ? recovered_us - stall_end_us : -1,
 			n_after_recovery, n_failed_after_recovery,
+			n_after_stall, n_failed_after_stall,
 			arv_stream_get_info_uint64_by_name (stream, "n_underruns"),
+			arv_stream_get_info_uint64_by_name (stream, "n_underrun_frames"),
+			n_skipped_frames,
 			arv_stream_get_info_uint64_by_name (stream, "n_failures"));
+
+	if (stream_fast_fail (stream)) {
+		/* The frames that found no buffer during the stall are dropped whole: none is started mid-way when
+		 * the consumer returns buffers, so every frame delivered after the stall, the first ones included, is
+		 * complete. */
+		g_assert_cmpuint (n_skipped_frames, >, 0);
+		g_assert_cmpuint (n_skipped_frames, ==,
+				  arv_stream_get_info_uint64_by_name (stream, "n_underrun_frames"));
+		g_assert_cmpuint (n_failed_after_stall, ==, 0);
+		g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "n_failures"), ==, 0);
+	} else
+		g_assert_cmpuint (n_skipped_frames, ==, 0);
 
 	g_assert_cmpint (recovered_us, >, 0);
 	g_assert_cmpint (recovered_us - stall_end_us, <=, SLOW_CONSUMER_RECOVERY_US);
@@ -817,6 +872,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/fakegv/resend-unavailable", resend_unavailable_test);
 	g_test_add_func ("/fakegv/unrecoverable", unrecoverable_test);
 	g_test_add_func ("/fakegv/resend-budget", resend_budget_test);
+	g_test_add_func ("/fakegv/unrecoverable-head", unrecoverable_head_test);
 	g_test_add_func ("/fakegv/slow-consumer", slow_consumer_test);
 
 	result = g_test_run();
