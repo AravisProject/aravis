@@ -172,6 +172,11 @@ struct _ArvGvStreamThreadData {
 	guint packet_timeout_us;
 	guint frame_retention_us;
 
+	/* ARV_GV_STREAM_FAST_FAIL, read once at construction: once packets are lost, do not start frames that cannot
+	 * complete, release hopeless ones promptly, bound the missing packet scans and ask for a lost tail as soon as
+	 * the next frame shows the sender is done. Exposed as the "fast_fail" info (0 or 1). */
+	guint64 fast_fail;
+
 	guint64 timestamp_tick_frequency;
 	guint scps_packet_size;
 
@@ -211,6 +216,7 @@ struct _ArvGvStreamThreadData {
 
 	guint64 socket_buffer_size_granted;	/* "socket_buffer_size": SO_RCVBUF read back, 0 if never set */
 	guint64 n_underrun_frames;		/* distinct frames that found no input buffer */
+	guint64 n_skipped_frames;		/* fast-fail: frames dropped without taking a buffer */
 	guint64 last_underrun_frame_id;
 	gboolean has_underrun_frame;
 	guint64 n_rx_wakeups;			/* poll returned with the socket readable */
@@ -2261,6 +2267,75 @@ arv_gv_stream_init (ArvGvStream *gv_stream)
 }
 
 static void
+_read_env_uint (const char *name, guint *value)
+{
+	const char *env = g_getenv (name);
+	guint64 parsed;
+	char *end = NULL;
+
+	if (env == NULL || env[0] == '\0')
+		return;
+
+	parsed = g_ascii_strtoull (env, &end, 10);
+	if (end == env || *end != '\0' || parsed > G_MAXUINT) {
+		arv_warning_stream ("[GvStream::constructed] Ignoring %s '%s' (expected a duration in µs)", name, env);
+		return;
+	}
+
+	*value = parsed;
+	arv_info_stream ("[GvStream::constructed] %s = %u", name, *value);
+}
+
+static void
+_read_env_ratio (const char *name, double *value)
+{
+	const char *env = g_getenv (name);
+	double parsed;
+	char *end = NULL;
+
+	if (env == NULL || env[0] == '\0')
+		return;
+
+	parsed = g_ascii_strtod (env, &end);
+	if (end == env || *end != '\0' || !(parsed >= 0.0 && parsed <= 2.0)) {
+		arv_warning_stream ("[GvStream::constructed] Ignoring %s '%s' (expected a ratio between 0 and 2)",
+				    name, env);
+		return;
+	}
+
+	*value = parsed;
+	arv_info_stream ("[GvStream::constructed] %s = %g", name, *value);
+}
+
+/* ARV_GV_STREAM_FAST_FAIL = 1 | 0. When unset it is on for Apple and off elsewhere, so that other platforms keep the
+ * upstream frame logic. */
+
+static gboolean
+_read_fast_fail (void)
+{
+	const char *env = g_getenv ("ARV_GV_STREAM_FAST_FAIL");
+#ifdef __APPLE__
+	gboolean fast_fail = TRUE;
+#else
+	gboolean fast_fail = FALSE;
+#endif
+
+	if (env != NULL && env[0] != '\0') {
+		if (g_strcmp0 (env, "1") == 0)
+			fast_fail = TRUE;
+		else if (g_strcmp0 (env, "0") == 0)
+			fast_fail = FALSE;
+		else
+			arv_warning_stream ("[GvStream::constructed] Ignoring ARV_GV_STREAM_FAST_FAIL '%s'"
+					    " (expected 1 or 0)", env);
+	}
+
+	arv_info_stream ("[GvStream::constructed] Fast fail %s", fast_fail ? "on" : "off");
+
+	return fast_fail;
+}
+
+static void
 arv_gv_stream_constructed (GObject *object)
 {
 	ArvStream *stream = ARV_STREAM (object);
@@ -2321,6 +2396,14 @@ arv_gv_stream_constructed (GObject *object)
 	priv->thread_data->use_packet_socket = (options & ARV_GV_STREAM_OPTION_PACKET_SOCKET_DISABLED) == 0;
 
 	priv->thread_data->packet_id = 65300;
+
+	/* The construct properties already hold their defaults (or the caller's values); the environment overrides
+	 * them only where it is set. A later g_object_set still wins. */
+	priv->thread_data->fast_fail = _read_fast_fail ();
+	_read_env_uint ("ARV_GV_STREAM_INITIAL_PACKET_TIMEOUT_US", &priv->thread_data->initial_packet_timeout_us);
+	_read_env_uint ("ARV_GV_STREAM_PACKET_TIMEOUT_US", &priv->thread_data->packet_timeout_us);
+	_read_env_uint ("ARV_GV_STREAM_FRAME_RETENTION_US", &priv->thread_data->frame_retention_us);
+	_read_env_ratio ("ARV_GV_STREAM_PACKET_REQUEST_RATIO", &priv->thread_data->packet_request_ratio);
 
 	priv->thread_data->histogram = arv_histogram_new (3, 100, 2000, 0);
 
@@ -2397,6 +2480,10 @@ arv_gv_stream_constructed (GObject *object)
                                  G_TYPE_UINT64, &priv->thread_data->socket_buffer_size_granted);
         arv_stream_declare_info (ARV_STREAM (gv_stream), "n_underrun_frames",
                                  G_TYPE_UINT64, &priv->thread_data->n_underrun_frames);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_skipped_frames",
+                                 G_TYPE_UINT64, &priv->thread_data->n_skipped_frames);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "fast_fail",
+                                 G_TYPE_UINT64, &priv->thread_data->fast_fail);
         arv_stream_declare_info (ARV_STREAM (gv_stream), "n_rx_wakeups",
                                  G_TYPE_UINT64, &priv->thread_data->n_rx_wakeups);
         arv_stream_declare_info (ARV_STREAM (gv_stream), "n_rx_batches",
