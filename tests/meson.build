@@ -28,8 +28,6 @@ if get_option('tests')
 		['genicam',	['main'],
                 ['-DGENICAM_FILENAME="@0@/tests/data/genicam.xml"'.format (meson.project_source_root ())]],
 		['fake',	['main'],
-                ['-DGENICAM_FILENAME="@0@/src/arv-fake-camera.xml"'.format (meson.project_source_root ())]],
-		['fakegv',	['network'],
                 ['-DGENICAM_FILENAME="@0@/src/arv-fake-camera.xml"'.format (meson.project_source_root ())]]
 	]
 
@@ -40,6 +38,21 @@ if get_option('tests')
 				  dependencies: aravis_dependencies,
 				  include_directories: [library_inc])
 		test (t[0], exe, suite: t[1], timeout: 60)
+	endforeach
+
+	# The GigE Vision fake camera tests, once per receive path: the default (on Apple the recvmsg_x loop, fast
+	# fail and a connected stream socket), the standard loop, upstream frame logic, and an unconnected socket.
+	# Every instance binds 127.0.0.1:3956, so none may run in parallel with another.
+	fakegv = executable ('fakegv', 'fakegv.c',
+			     c_args: ['-DGENICAM_FILENAME="@0@/src/arv-fake-camera.xml"'.format (meson.project_source_root ())],
+			     link_with: aravis_library,
+			     dependencies: aravis_dependencies,
+			     include_directories: [library_inc])
+	foreach t: [['fakegv', []],
+		    ['fakegv-rx-batch-0', ['ARV_GV_STREAM_RX_BATCH=0']],
+		    ['fakegv-no-fast-fail', ['ARV_GV_STREAM_FAST_FAIL=0']],
+		    ['fakegv-no-connect', ['ARV_GV_STREAM_CONNECT=0']]]
+		test (t[0], fakegv, suite: 'network', env: t[1], timeout: 180, is_parallel: false)
 	endforeach
 
 	if get_option ('gentl-producer')

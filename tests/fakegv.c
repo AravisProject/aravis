@@ -563,6 +563,18 @@ resend_trailer_test (void)
 		ArvBuffer *buffer;
 
 		buffer = arv_stream_timeout_pop_buffer (stream, 1000000);
+		if (buffer == NULL)
+			g_test_message ("resend trailer: no buffer after %u frames; received %" G_GUINT64_FORMAT
+					", sent frames %" G_GUINT64_FORMAT ", connected %" G_GUINT64_FORMAT
+					", short %" G_GUINT64_FORMAT ", ignored %" G_GUINT64_FORMAT
+					", underruns %" G_GUINT64_FORMAT ", reconnects %" G_GUINT64_FORMAT,
+					n_frames, arv_stream_get_info_uint64_by_name (stream, "n_received_packets"),
+					simulator_counter ("n-sent-frames"),
+					arv_stream_get_info_uint64_by_name (stream, "socket_connected"),
+					arv_stream_get_info_uint64_by_name (stream, "n_short_packets"),
+					arv_stream_get_info_uint64_by_name (stream, "n_ignored_packets"),
+					arv_stream_get_info_uint64_by_name (stream, "n_underruns"),
+					arv_stream_get_info_uint64_by_name (stream, "n_socket_reconnects"));
 		g_assert (ARV_IS_BUFFER (buffer));
 
 		if (arv_buffer_get_status (buffer) == ARV_BUFFER_STATUS_SUCCESS) {
@@ -587,6 +599,12 @@ resend_trailer_test (void)
 	if (fast_fail) {
 		g_assert_cmpuint (n_success, ==, n_frames);
 		g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "n_resent_packets"), >=, n_frames);
+	} else {
+		/* Upstream: the trailer is asked for after 20 ms of silence, too late for a 2 frame retention at
+		 * 100 fps, and the simulator answers PACKET_UNAVAILABLE (measured: 0 of 100 complete, ~110 unavailable).
+		 * The bounds leave room for a loaded machine. */
+		g_assert_cmpuint (simulator_counter ("n-resend-unavailable") - n_unavailable_before, >=, n_frames / 2);
+		g_assert_cmpuint (n_success, <, n_frames / 2);
 	}
 
 	finish_loss_stream (stream);
