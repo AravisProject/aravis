@@ -645,7 +645,8 @@ _get_max_socket_buffer_size (void)
  *
  * ARV_GV_STREAM_SOCKET_BUFFER_SIZE: a byte count, "max" (as large as the kernel grants), or "0" /
  * "default" to leave the OS default. Unset: "max" on Apple, where the default (786,896 bytes,
- * under a millisecond of a 10GigE stream) loses most packets of a fast camera; nothing elsewhere.
+ * under a millisecond of a 10GigE stream) loses most packets of a fast camera; elsewhere the
+ * socket-buffer-size property if socket-buffer is FIXED, otherwise nothing.
  *
  * On macOS a request above kern.ipc.maxsockbuf is clamped silently the first time and refused with
  * ENOBUFS when the buffer is already at the maximum, so the granted size is always read back. */
@@ -654,6 +655,7 @@ static void
 _configure_socket_buffer (ArvGvStreamThreadData *thread_data)
 {
 	const char *env;
+	const char *source = "ARV_GV_STREAM_SOCKET_BUFFER_SIZE";
 	gboolean use_max = FALSE;
 	gint64 request = 0;
 	int granted_size = 0;
@@ -667,7 +669,13 @@ _configure_socket_buffer (ArvGvStreamThreadData *thread_data)
 #ifdef __APPLE__
 		use_max = TRUE;
 #else
-		return;
+		/* A fixed socket-buffer-size is known now. Left to _update_socket, it would only be applied when the
+		 * first frame starts, after that frame's first burst has met the OS default buffer. */
+		if (thread_data->socket_buffer_option != ARV_GV_STREAM_SOCKET_BUFFER_FIXED ||
+		    thread_data->socket_buffer_size <= 0)
+			return;
+		request = thread_data->socket_buffer_size;
+		source = "socket-buffer-size";
 #endif
 	} else if (g_ascii_strcasecmp (env, "max") == 0) {
 		use_max = TRUE;
@@ -712,7 +720,7 @@ _configure_socket_buffer (ArvGvStreamThreadData *thread_data)
 		thread_data->current_socket_buffer_size = thread_data->configured_socket_buffer_size;
 		arv_info_stream_thread ("[GvStream::configure_socket_buffer] Socket buffer: requested %" G_GINT64_FORMAT
 					" bytes (%s), granted %d bytes",
-					request, use_max ? "max" : "ARV_GV_STREAM_SOCKET_BUFFER_SIZE", granted_size);
+					request, use_max ? "max" : source, granted_size);
 	} else {
 		arv_warning_stream_thread ("[GvStream::configure_socket_buffer] Failed to set socket buffer to %"
 					   G_GINT64_FORMAT " bytes (%s), current size %d bytes",

@@ -77,7 +77,7 @@ An invalid value is reported with a warning and ignored.
 
 | Variable | Values | Default |
 |---|---|---|
-| `ARV_GV_STREAM_SOCKET_BUFFER_SIZE` | a byte count, `max` (as large as the kernel grants), `0` or `default` (leave the OS default) | `max` on Apple, unset elsewhere |
+| `ARV_GV_STREAM_SOCKET_BUFFER_SIZE` | a byte count, `max` (as large as the kernel grants), `0` or `default` (leave the OS default) | `max` on Apple; unset elsewhere, where a FIXED `socket-buffer-size` is then applied when the stream thread starts rather than when the first frame does |
 | `ARV_GV_STREAM_THREAD_PRIORITY` | `default`, `high` or `realtime`, applied before the `ARV_STREAM_CALLBACK_TYPE_INIT` callback | `realtime` on Apple, `default` elsewhere |
 | `ARV_GV_STREAM_RX_BATCH` | datagrams per `recvmsg_x` call, 1 to 256; `0` selects the standard receive loop (Apple only) | 64 |
 | `ARV_GV_STREAM_RX_LOWAT_PACKETS` | packets' worth of data the receive loop waits for while a stream is active (Apple only) | 16 |
