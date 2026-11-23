@@ -1669,8 +1669,10 @@ _loop (ArvGvStreamThreadData *thread_data)
 		int n_events;
 		int errsv;
 
+		/* At least 1 ms: a packet timeout under 1 ms (ARV_GV_STREAM_PACKET_TIMEOUT_US) would make g_poll
+		 * return at once while frames are open, a busy loop */
 		if (thread_data->frames != NULL)
-			timeout_ms = thread_data->packet_timeout_us / 1000;
+			timeout_ms = MAX (1, thread_data->packet_timeout_us / 1000);
 		else
 			timeout_ms = ARV_GV_STREAM_POLL_TIMEOUT_US / 1000;
 
@@ -2375,7 +2377,7 @@ _ring_buffer_loop (ArvGvStreamThreadData *thread_data)
 			_check_frame_completion (thread_data, time_us, NULL);
 
                         if (thread_data->frames != NULL)
-                                timeout_ms = thread_data->packet_timeout_us / 1000;
+                                timeout_ms = MAX (1, thread_data->packet_timeout_us / 1000);
                         else
                                 timeout_ms = ARV_GV_STREAM_POLL_TIMEOUT_US / 1000;
 

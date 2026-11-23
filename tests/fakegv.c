@@ -1252,6 +1252,51 @@ rx_errors_test (void)
 #endif
 }
 
+static void
+short_packet_timeout_test (void)
+{
+	ArvStream *stream;
+	GSocket *socket;
+	GSocketAddress *destination;
+	GError *error = NULL;
+	guint64 cpu_before_us;
+	guint64 cpu_us;
+
+	g_object_set (simulator, "packet-resend", TRUE, NULL);
+	stream = create_loss_stream (8);
+	/* Under 1 ms, as ARV_GV_STREAM_PACKET_TIMEOUT_US allows */
+	g_object_set (stream, "packet-timeout", 500, NULL);
+	socket = create_injection_socket (stream, &destination);
+
+	/* The stream thread runs from the stream's acquisition start; the camera is not started */
+	arv_stream_start_acquisition (stream, &error);
+	g_assert_no_error (error);
+
+	/* A leader alone: the newest frame, with only its leader, never times out, so a frame stays open */
+	inject_leader (socket, destination, 7);
+	g_assert_cmpuint (wait_for_info (stream, "n_received_packets", 1, 1000000), ==, 1);
+	g_usleep (100000);
+
+	cpu_before_us = arv_stream_get_info_uint64_by_name (stream, "stream_thread_cpu_us");
+	g_usleep (500000);
+	cpu_us = arv_stream_get_info_uint64_by_name (stream, "stream_thread_cpu_us") - cpu_before_us;
+
+	g_test_message ("short packet timeout: rx_mode %" G_GUINT64_FORMAT ", stream thread CPU %" G_GUINT64_FORMAT
+			" us in 500 ms with a frame open", arv_stream_get_info_uint64_by_name (stream, "rx_mode"),
+			cpu_us);
+
+	/* stream_thread_cpu_us is sampled on Apple only (0 elsewhere). A loop polling with a 0 ms timeout uses
+	 * the whole 500 ms. */
+	g_assert_cmpuint (cpu_us, <, 100000);
+
+	arv_stream_stop_acquisition (stream, &error);
+	g_assert_no_error (error);
+	g_object_unref (destination);
+	g_object_unref (socket);
+	g_object_unref (stream);
+	reset_simulator ();
+}
+
 /* 65535 / 3: the simulator's frame ids repeat every third frame */
 #define REPEATED_ID_STEP		21845
 #define REPEATED_ID_DROP_INTERVAL	4
@@ -1487,6 +1532,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/fakegv/small-packet-count", small_packet_count_test);
 	g_test_add_func ("/fakegv/source-relearn", source_relearn_test);
 	g_test_add_func ("/fakegv/rx-errors", rx_errors_test);
+	g_test_add_func ("/fakegv/short-packet-timeout", short_packet_timeout_test);
 
 	result = g_test_run();
 
