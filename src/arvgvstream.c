@@ -193,7 +193,9 @@ struct _ArvGvStreamThreadData {
 
 	/* Fast fail: the frame dropped without a buffer (skipped, or no input buffer at its first packet), whose
 	 * remaining packets are ignored without looking for a buffer again, and the packet count of the latest frame,
-	 * the estimate of the next one's. */
+	 * the estimate of the next one's. The record lasts until the next frame starts (or the thread restarts):
+	 * from then on the dropped frame's stragglers are late packets, and the same frame id coming round again
+	 * (a 16 bit id wraps every 65535 frames, and a device may restart its ids) is a new frame. */
 	gboolean has_dropped_frame;
 	guint64 dropped_frame_id;
 	gboolean dropped_frame_underrun;
@@ -793,6 +795,7 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 				       NULL);
 
 	thread_data->last_frame_id = frame_id;
+	thread_data->has_dropped_frame = FALSE;
 
 	if (frame_id_inc > 1) {
 		thread_data->n_missing_frames++;
@@ -2291,6 +2294,9 @@ arv_gv_stream_thread (void *data)
 	thread_data->frames = NULL;
 	thread_data->last_frame_id = 0;
 	thread_data->first_packet = TRUE;
+	/* Frame ids seen before a restart say nothing about the frames after it */
+	thread_data->has_dropped_frame = FALSE;
+	thread_data->has_underrun_frame = FALSE;
 
 	_configure_socket_buffer (thread_data);
 	/* Before the INIT callback, so that an application's own handler has the last word */

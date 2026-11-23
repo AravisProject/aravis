@@ -338,6 +338,7 @@ reset_simulator (void)
 		      "drop-head-length", 0,
 		      "drop-head-frame-interval", 0,
 		      "resend-lost-ratio", 0.0,
+		      "frame-id-step", 1,
 		      NULL);
 	arv_fake_camera_set_fill_pattern (arv_gv_fake_camera_get_fake_camera (simulator), NULL, NULL, NULL);
 }
@@ -820,6 +821,97 @@ resend_budget_test (void)
 	finish_loss_stream (stream);
 }
 
+/* 65535 / 3: the simulator's frame ids repeat every third frame */
+#define REPEATED_ID_STEP		21845
+#define REPEATED_ID_DROP_INTERVAL	4
+#define REPEATED_ID_N_FRAMES		60
+
+static void
+repeated_frame_id_test (void)
+{
+	ArvStream *stream;
+	GError *error = NULL;
+	guint64 n_sent_before;
+	guint64 n_sent;
+	guint64 n_skipped;
+	guint n_success = 0;
+	guint n_failed = 0;
+	gint64 end_us;
+
+	/* Every 4th frame loses its leader and 60 data packets, more than the resend budget, so fast fail skips it,
+	 * and the frame ids repeat every third frame. A skipped frame's id therefore comes round again three frames
+	 * later, in a frame that is sent whole: the same thing happens on a real stream once its 16 bit ids wrap
+	 * (every 65535 frames, 298 s at 220 fps) after a skip, or when a device restarts its ids. That frame must be
+	 * received, not taken for the rest of the skipped one. */
+	g_object_set (simulator,
+		      "packet-resend", TRUE,
+		      "static-image", TRUE,
+		      "frame-id-step", REPEATED_ID_STEP,
+		      "drop-head-frame-interval", REPEATED_ID_DROP_INTERVAL,
+		      "drop-head-length", UNRECOVERABLE_LONG_HEAD_LENGTH,
+		      "resend-lost-ratio", 1.0,
+		      NULL);
+
+	stream = create_loss_stream (16);
+	if (!stream_fast_fail (stream)) {
+		/* Without fast fail no frame is skipped, and an open frame with a lost head would collect the packets
+		 * of the frame that reuses its id three frames later: the scenario only exists with fast fail. */
+		g_object_unref (stream);
+		reset_simulator ();
+		g_test_skip ("fast fail is off");
+		return;
+	}
+
+	n_sent_before = simulator_counter ("n-sent-frames");
+
+	arv_camera_start_acquisition (camera, &error);
+	g_assert_no_error (error);
+
+	end_us = g_get_monotonic_time () + 5000000;
+	while (n_success + n_failed < REPEATED_ID_N_FRAMES && g_get_monotonic_time () < end_us) {
+		ArvBuffer *buffer;
+
+		buffer = arv_stream_timeout_pop_buffer (stream, 200000);
+		if (buffer == NULL)
+			continue;
+
+		if (arv_buffer_get_status (buffer) == ARV_BUFFER_STATUS_SUCCESS) {
+			g_assert (buffer_has_expected_content (buffer));
+			n_success++;
+		} else
+			n_failed++;
+
+		arv_stream_push_buffer (stream, buffer);
+	}
+
+	arv_camera_stop_acquisition (camera, &error);
+	g_assert_no_error (error);
+	/* Let the last frame in flight be processed */
+	g_usleep (100000);
+
+	n_sent = simulator_counter ("n-sent-frames") - n_sent_before;
+	n_skipped = arv_stream_get_info_uint64_by_name (stream, "n_skipped_frames");
+
+	g_test_message ("repeated frame id: %" G_GUINT64_FORMAT " frames sent, %u complete, %u failed, %"
+			G_GUINT64_FORMAT " skipped, %" G_GUINT64_FORMAT " completed, %" G_GUINT64_FORMAT
+			" ignored packets",
+			n_sent, n_success, n_failed, n_skipped,
+			arv_stream_get_info_uint64_by_name (stream, "n_completed_buffers"),
+			arv_stream_get_info_uint64_by_name (stream, "n_ignored_packets"));
+
+	g_assert_cmpuint (n_sent, >=, 2 * REPEATED_ID_DROP_INTERVAL);
+	g_assert_cmpuint (n_skipped, >, 0);
+	/* Only the frames that lost their head are missing: one in four, give or take the frames in flight when the
+	 * acquisition stopped. Swallowing the frames that reuse a skipped id would lose one more in four. */
+	g_assert_cmpuint (n_skipped, <=, n_sent / REPEATED_ID_DROP_INTERVAL + 1);
+	g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "n_completed_buffers") + n_skipped + 2, >=,
+			  n_sent);
+	g_assert_cmpuint (n_failed, ==, 0);
+
+	g_object_unref (stream);
+	reset_simulator ();
+}
+
 #define SLOW_CONSUMER_N_BUFFERS		4
 #define SLOW_CONSUMER_STALL_US		300000
 #define SLOW_CONSUMER_RECOVERY_US	1000000
@@ -959,6 +1051,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/fakegv/resend-budget", resend_budget_test);
 	g_test_add_func ("/fakegv/unrecoverable-head", unrecoverable_head_test);
 	g_test_add_func ("/fakegv/slow-consumer", slow_consumer_test);
+	g_test_add_func ("/fakegv/repeated-frame-id", repeated_frame_id_test);
 
 	result = g_test_run();
 

@@ -72,6 +72,7 @@ enum
   PROP_DROP_HEAD_LENGTH,
   PROP_DROP_HEAD_FRAME_INTERVAL,
   PROP_RESEND_LOST_RATIO,
+  PROP_FRAME_ID_STEP,
   PROP_SENSOR_WIDTH,
   PROP_SENSOR_HEIGHT,
   PROP_N_SENT_FRAMES,
@@ -155,6 +156,7 @@ typedef struct {
 	guint drop_head_length;
 	guint drop_head_frame_interval;
 	double resend_lost_ratio;
+	guint frame_id_step;
 	guint sensor_width;
 	guint sensor_height;
 
@@ -610,6 +612,19 @@ _stream_stop (ArvGvFakeCamera *gv_fake_camera)
 	arv_info_stream_thread ("[GvFakeCamera::thread] Stop stream");
 }
 
+/* Static image mode: the frame id after @frame_id, frame-id-step further in the 16 bit id space, where 0 is not a valid
+ * id. A step of 21845 (65535 / 3) makes every third frame reuse an id, which is how a test reaches, in a few frames,
+ * what a real stream reaches when its ids wrap every 65535 frames. */
+
+static guint16
+_next_static_frame_id (ArvGvFakeCamera *gv_fake_camera, guint16 frame_id)
+{
+	guint step = MAX (1, (guint) g_atomic_int_get ((gint *) &gv_fake_camera->priv->frame_id_step));
+
+	/* frame_id - 1 + step, modulo 65535, without going below 0 for frame_id 0 */
+	return (guint16) (((guint) frame_id + 65534 + step) % 65535 + 1);
+}
+
 static void
 _stream_start (ArvGvFakeCamera *gv_fake_camera)
 {
@@ -651,11 +666,8 @@ _stream_start (ArvGvFakeCamera *gv_fake_camera)
 		if (!priv->has_static_frame_id) {
 			priv->static_frame_id = priv->static_buffer->priv->frame_id;
 			priv->has_static_frame_id = TRUE;
-		} else {
-			priv->static_frame_id = (priv->static_frame_id + 1) % 65536;
-			if (priv->static_frame_id == 0)
-				priv->static_frame_id = 1;
-		}
+		} else
+			priv->static_frame_id = _next_static_frame_id (gv_fake_camera, priv->static_frame_id);
 		for (i = 0; i < priv->n_frames; i++)
 			priv->frames[i].buffer = g_object_ref (priv->static_buffer);
 	} else {
@@ -685,11 +697,8 @@ _prepare_frame (ArvGvFakeCamera *gv_fake_camera)
 	if (priv->static_image) {
 		guint32 value = 0;
 
-		if (priv->stream_frame_count > 0) {
-			priv->static_frame_id = (priv->static_frame_id + 1) % 65536;
-			if (priv->static_frame_id == 0)
-				priv->static_frame_id = 1;
-		}
+		if (priv->stream_frame_count > 0)
+			priv->static_frame_id = _next_static_frame_id (gv_fake_camera, priv->static_frame_id);
 
 		arv_fake_camera_read_register (priv->camera, ARV_GVBS_STREAM_CHANNEL_0_PACKET_SIZE_OFFSET, &value);
 		gv_packet_size = (value >> ARV_GVBS_STREAM_CHANNEL_0_PACKET_SIZE_POS) &
@@ -1147,6 +1156,9 @@ _set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *
 		case PROP_RESEND_LOST_RATIO:
 			gv_fake_camera->priv->resend_lost_ratio = g_value_get_double (value);
 			break;
+		case PROP_FRAME_ID_STEP:
+			g_atomic_int_set ((gint *) &gv_fake_camera->priv->frame_id_step, g_value_get_uint (value));
+			break;
 		case PROP_SENSOR_WIDTH:
 			gv_fake_camera->priv->sensor_width = g_value_get_uint (value);
 			_apply_device_settings (gv_fake_camera);
@@ -1209,6 +1221,9 @@ _get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 			break;
 		case PROP_RESEND_LOST_RATIO:
 			g_value_set_double (value, priv->resend_lost_ratio);
+			break;
+		case PROP_FRAME_ID_STEP:
+			g_value_set_uint (value, g_atomic_int_get ((gint *) &priv->frame_id_step));
 			break;
 		case PROP_SENSOR_WIDTH:
 			g_value_set_uint (value, priv->sensor_width);
@@ -1476,6 +1491,17 @@ arv_gv_fake_camera_class_init (ArvGvFakeCameraClass *this_class)
 							      "Resend lost ratio",
 							      "Probability of dropping a resent packet",
 							      0.0, 1.0, 0.0,
+							      G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_FRAME_ID_STEP,
+					 g_param_spec_uint ("frame-id-step",
+							      "Frame id step",
+							      "Static image mode: increment between consecutive frame ids, in the"
+							      " 16 bit id space without 0 (65535 values); 21845 repeats an id"
+							      " every third frame, a fast stand-in for a frame id wrap",
+							      1, 65534, 1,
 							      G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
 							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
 							      G_PARAM_STATIC_BLURB));
