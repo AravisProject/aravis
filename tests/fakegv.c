@@ -330,6 +330,7 @@ reset_simulator (void)
 	g_object_set (simulator,
 		      "packet-resend", FALSE,
 		      "static-image", FALSE,
+		      "frame-retention", 4,
 		      "drop-every-nth-packet", 0,
 		      "drop-burst-length", 0,
 		      "drop-burst-frame-interval", 0,
@@ -410,9 +411,15 @@ resend_test (void)
 	guint n_frames = 0;
 	guint last_frame_id = 0;
 
+	/* Every 97 frames (195 * 97 packets) the dropped packet is a trailer. The receiver only notices a lost
+	 * trailer by timeout: 20 ms of silence for that frame, then the 1 ms initial timeout, evaluated on the next
+	 * packet or poll, so the request comes about three frame periods (~60 ms at 50 fps) late. 16 retained
+	 * frames keep that request answerable; with the default 4 (80 ms) it is borderline and the camera
+	 * sometimes answers PACKET_UNAVAILABLE. */
 	g_object_set (simulator,
 		      "packet-resend", TRUE,
 		      "static-image", TRUE,
+		      "frame-retention", 16,
 		      "drop-every-nth-packet", 97,
 		      NULL);
 
@@ -428,6 +435,23 @@ resend_test (void)
 		buffer = arv_stream_timeout_pop_buffer (stream, 1000000);
 		g_assert (ARV_IS_BUFFER (buffer));
 
+		if (arv_buffer_get_status (buffer) != ARV_BUFFER_STATUS_SUCCESS)
+			g_test_message ("resend: frame %u status %d; stream: %" G_GUINT64_FORMAT " missing packets, %"
+					G_GUINT64_FORMAT " resend requests, %" G_GUINT64_FORMAT " resent, %"
+					G_GUINT64_FORMAT " ratio reached, %" G_GUINT64_FORMAT " timeouts; simulator: %"
+					G_GUINT64_FORMAT " dropped, %" G_GUINT64_FORMAT " resent, %" G_GUINT64_FORMAT
+					" send errors, %" G_GUINT64_FORMAT " unavailable; stream error packets %" G_GUINT64_FORMAT,
+					n_frames, arv_buffer_get_status (buffer),
+					arv_stream_get_info_uint64_by_name (stream, "n_missing_packets"),
+					arv_stream_get_info_uint64_by_name (stream, "n_resend_requests"),
+					arv_stream_get_info_uint64_by_name (stream, "n_resent_packets"),
+					arv_stream_get_info_uint64_by_name (stream, "n_resend_ratio_reached"),
+					arv_stream_get_info_uint64_by_name (stream, "n_timeouts"),
+					simulator_counter ("n-dropped-packets") - n_dropped_before,
+					simulator_counter ("n-resent-packets") - n_resent_before,
+					simulator_counter ("n-send-errors"),
+					simulator_counter ("n-resend-unavailable"),
+					arv_stream_get_info_uint64_by_name (stream, "n_error_packets"));
 		g_assert_cmpint (arv_buffer_get_status (buffer), ==, ARV_BUFFER_STATUS_SUCCESS);
 		g_assert (buffer_has_expected_content (buffer));
 		if (n_frames > 0)
@@ -495,7 +519,6 @@ resend_unavailable_test (void)
 	g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "n_error_packets"), >, 0);
 	g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "n_resend_disabled"), >, 0);
 
-	g_object_set (simulator, "frame-retention", 4, NULL);
 	finish_loss_stream (stream);
 }
 
