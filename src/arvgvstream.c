@@ -38,6 +38,7 @@
 #include <arvmisc.h>
 #include <arvmiscprivate.h>
 #include <arvnetworkprivate.h>
+#include <arvrealtime.h>
 #include <arvstr.h>
 #include <arvenumtypes.h>
 #include <stddef.h>
@@ -1630,6 +1631,98 @@ af_packet_error:
 
 #endif /* ARAVIS_HAS_PACKET_SOCKET */
 
+typedef enum {
+	ARV_GV_STREAM_THREAD_PRIORITY_DEFAULT = 0,
+	ARV_GV_STREAM_THREAD_PRIORITY_HIGH = 1,
+	ARV_GV_STREAM_THREAD_PRIORITY_REALTIME = 2
+} ArvGvStreamThreadPriority;
+
+static const char *
+_thread_priority_to_string (ArvGvStreamThreadPriority mode)
+{
+	switch (mode) {
+		case ARV_GV_STREAM_THREAD_PRIORITY_HIGH:
+			return "high";
+		case ARV_GV_STREAM_THREAD_PRIORITY_REALTIME:
+			return "realtime";
+		default:
+			return "default";
+	}
+}
+
+/* Raises the priority of the calling stream thread, from ARV_GV_STREAM_THREAD_PRIORITY = default |
+ * high | realtime. Unset: realtime on Apple, default elsewhere. A refused realtime request falls
+ * back to high, and a refused high request leaves the thread as it is. What was achieved is
+ * exported as thread_priority_mode.
+ *
+ * On Apple, realtime is the Mach time constraint policy (see arv_make_thread_realtime). The kernel
+ * demotes a real-time thread that computes for about 100 quanta without blocking; _loop blocks in
+ * g_poll whenever the socket is empty, which resets that counter. A receive loop that never blocks
+ * (busy polling) would be demoted, which stream_thread_min_priority makes visible. */
+
+static void
+_configure_thread_priority (ArvGvStreamThreadData *thread_data)
+{
+	ArvGvStreamThreadPriority requested;
+	ArvGvStreamThreadPriority achieved = ARV_GV_STREAM_THREAD_PRIORITY_DEFAULT;
+	const char *env;
+
+#ifdef __APPLE__
+	{
+		char name[64] = "";
+
+		/* GLib names its threads on Apple, but not every build does */
+		if (pthread_getname_np (pthread_self (), name, sizeof (name)) != 0 || name[0] == '\0') {
+			pthread_setname_np ("arv_gv_stream");
+			arv_debug_stream_thread ("[GvStream::configure_thread_priority] Thread named arv_gv_stream");
+		} else {
+			arv_debug_stream_thread ("[GvStream::configure_thread_priority] Thread already named '%s'",
+						 name);
+		}
+	}
+	requested = ARV_GV_STREAM_THREAD_PRIORITY_REALTIME;
+#else
+	requested = ARV_GV_STREAM_THREAD_PRIORITY_DEFAULT;
+#endif
+
+	env = g_getenv ("ARV_GV_STREAM_THREAD_PRIORITY");
+	if (env != NULL) {
+		if (g_ascii_strcasecmp (env, "default") == 0)
+			requested = ARV_GV_STREAM_THREAD_PRIORITY_DEFAULT;
+		else if (g_ascii_strcasecmp (env, "high") == 0)
+			requested = ARV_GV_STREAM_THREAD_PRIORITY_HIGH;
+		else if (g_ascii_strcasecmp (env, "realtime") == 0)
+			requested = ARV_GV_STREAM_THREAD_PRIORITY_REALTIME;
+		else
+			arv_warning_stream_thread ("[GvStream::configure_thread_priority] Invalid"
+						   " ARV_GV_STREAM_THREAD_PRIORITY '%s' (expected default, high or"
+						   " realtime), using %s", env, _thread_priority_to_string (requested));
+	}
+
+	if (requested == ARV_GV_STREAM_THREAD_PRIORITY_REALTIME) {
+		/* The priority argument is used by the Linux implementation; Mach has no equivalent */
+		if (arv_make_thread_realtime (10))
+			achieved = ARV_GV_STREAM_THREAD_PRIORITY_REALTIME;
+		else
+			requested = ARV_GV_STREAM_THREAD_PRIORITY_HIGH;
+	}
+
+	if (requested == ARV_GV_STREAM_THREAD_PRIORITY_HIGH) {
+		if (arv_make_thread_high_priority (-10))
+			achieved = ARV_GV_STREAM_THREAD_PRIORITY_HIGH;
+	}
+
+	thread_data->thread_priority_mode = achieved;
+
+	if (env != NULL)
+		arv_info_stream_thread ("[GvStream::configure_thread_priority] Stream thread priority: %s"
+					" (ARV_GV_STREAM_THREAD_PRIORITY=%s)",
+					_thread_priority_to_string (achieved), env);
+	else
+		arv_info_stream_thread ("[GvStream::configure_thread_priority] Stream thread priority: %s"
+					" (platform default)", _thread_priority_to_string (achieved));
+}
+
 static void *
 arv_gv_stream_thread (void *data)
 {
@@ -1643,6 +1736,8 @@ arv_gv_stream_thread (void *data)
 	thread_data->first_packet = TRUE;
 
 	_configure_socket_buffer (thread_data);
+	/* Before the INIT callback, so that an application's own handler has the last word */
+	_configure_thread_priority (thread_data);
 
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->callback_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
