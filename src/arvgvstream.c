@@ -766,13 +766,16 @@ _compute_n_expected_packets (const ArvGvspPacket *packet, size_t allocated_size,
 }
 
 /* Fast fail: a new frame is dropped without a buffer. It counts as seen (last_frame_id), so that its stragglers are
- * late packets and the next frame is not reported as following missing ones. */
+ * late packets and the next frame is not reported as following missing ones. From the client's side it is a
+ * missing frame: it is counted in n_missing_frames, besides the gap before it if there is one, and in
+ * n_skipped_frames. It never reaches n_failures or n_timeouts, which count buffers. */
 
 static void
 _drop_frame (ArvGvStreamThreadData *thread_data, guint64 frame_id, gint64 frame_id_inc, gboolean underrun)
 {
 	if (frame_id_inc > 1)
 		thread_data->n_missing_frames++;
+	thread_data->n_missing_frames++;
 
 	thread_data->last_frame_id = frame_id;
 	thread_data->dropped_frame_id = frame_id;
@@ -2971,6 +2974,56 @@ arv_gv_stream_constructed (GObject *object)
 	arv_info_stream ("[GvStream::stream_new] Destination stream port = %d", priv->thread_data->stream_port);
 	arv_info_stream ("[GvStream::stream_new] Source stream port = %d", priv->thread_data->source_stream_port);
 
+        /* Stream infos. Every one is a guint64; "counter" means it only grows for the life of the stream object,
+         * "state" that it is a current value. The upstream ones keep their meaning except where noted.
+         *
+         * n_completed_buffers   counter, buffers  buffers returned with status SUCCESS.
+         * n_failures            counter, buffers  buffers returned with any other status but ABORTED; with fast fail
+         *                                         this includes frames closed early (MISSING_PACKETS) because they
+         *                                         could not complete once a newer frame existed.
+         * n_underruns           counter, packets  packets that found no input buffer: with fast fail, every packet of
+         *                                         a frame dropped for that reason (until the next frame starts).
+         * n_timeouts            counter, buffers  buffers returned with status TIMEOUT.
+         * n_aborted             counter, buffers  buffers returned ABORTED (stream thread stop).
+         * n_missing_frames      counter, frames   gaps in the frame id sequence, one per gap whatever its length
+         *                                         (upstream), plus, with fast fail, one per frame skipped without a
+         *                                         buffer (n_skipped_frames): a skipped frame is missing for the
+         *                                         client although no gap precedes it.
+         * n_missing_packets     counter, packets  packets missing from failed buffers; never negative (a trailer
+         *                                         below packets already received used to wrap it).
+         * n_ignored_packets     counter, packets  valid packets not used: late frames, the rest of a skipped frame,
+         *                                         unknown content types, status packets for frames not open.
+         * n_resend_requests     counter, packets  packets asked for in PACKETRESEND commands.
+         *
+         * Added by this receiver:
+         * socket_buffer_size    state, bytes      SO_RCVBUF as read back after the last change, 0 if never set.
+         * n_underrun_frames     counter, frames   distinct frames that found no input buffer.
+         * n_skipped_frames      counter, frames   fast fail: frames dropped without taking a buffer, because no
+         *                                         buffer was free at their first packet or their head could not be
+         *                                         recovered. Also counted in n_missing_frames.
+         * fast_fail             state, 0 or 1     ARV_GV_STREAM_FAST_FAIL as read at construction.
+         * n_rx_wakeups          counter, wakeups  waits that returned with the socket readable.
+         * n_rx_batches          counter, calls    receive calls that returned at least one datagram.
+         * n_rx_max_batch        state, datagrams  most datagrams returned by one receive call.
+         * stream_thread_cpu_us  state, us         user + system CPU time of the stream thread (Apple only, 0
+         *                                         elsewhere), sampled at most every 100 ms.
+         * thread_priority_mode  state, 0 to 2     achieved stream thread priority: default, high, realtime.
+         * stream_thread_min_priority state        lowest scheduler priority observed (Apple only): a drop shows a
+         *                                         real-time thread demoted by the kernel.
+         * rx_mode               state, 0 or 1     1 while the recvmsg_x loop runs; 0 for _loop, the packet socket,
+         *                                         or after recvmsg_x failed 100 times in a row.
+         * n_rx_truncated        counter, datagrams recvmsg_x datagrams that filled their slot or came back with
+         *                                         MSG_TRUNC; not processed.
+         * n_short_packets       counter, datagrams datagrams too short for their GVSP headers (or a leader for its
+         *                                         leader); not processed, not in n_received_packets.
+         * socket_connected      state, 0 or 1     the stream socket is connected to the sender learnt from traffic.
+         * n_rx_foreign_source   counter, datagrams valid datagrams seen while learning, from an address other than
+         *                                         the device's or from its GVCP port; 64 in one learning phase
+         *                                         give up connecting.
+         * n_socket_reconnects   counter, events   connections dissolved to learn the sender again: at stream thread
+         *                                         start, or after 1 s without a datagram.
+         * n_resend_send_errors  counter, commands PACKETRESEND commands the socket refused to send.
+         */
         arv_stream_declare_info (ARV_STREAM (gv_stream), "n_completed_buffers",
                                  G_TYPE_UINT64, &priv->thread_data->n_completed_buffers);
         arv_stream_declare_info (ARV_STREAM (gv_stream), "n_failures",

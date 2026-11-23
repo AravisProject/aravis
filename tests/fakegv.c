@@ -819,6 +819,9 @@ unrecoverable_head_test (void)
 
 	if (stream_fast_fail (stream)) {
 		g_assert_cmpuint (result.n_skipped_frames, >=, result.n_gaps);
+		/* A skipped frame is missing for the client: the stream says so */
+		g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "n_missing_frames"), >=,
+				  result.n_skipped_frames);
 		g_assert_cmpuint (result.n_failed, <=, 1);
 		g_assert_cmpuint (result.n_failures, <=, 1);
 		g_assert_cmpuint (result.n_requests, ==, 0);
@@ -1484,6 +1487,7 @@ slow_consumer_test (void)
 		g_assert_cmpuint (n_skipped_frames, >, 0);
 		g_assert_cmpuint (n_skipped_frames, ==,
 				  arv_stream_get_info_uint64_by_name (stream, "n_underrun_frames"));
+		g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "n_missing_frames"), >=, n_skipped_frames);
 		g_assert_cmpuint (n_failed_after_stall, ==, 0);
 		g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "n_failures"), ==, 0);
 	} else
