@@ -508,7 +508,7 @@ arv_socket_set_recv_buffer_size_full (int socket_fd, gint buffer_size, gint *gra
 	if (set_result != 0) {
 		arv_info_interface ("[set_recv_buffer_size] Setting socket buffer to %d bytes failed (%s),"
 				    " current size %d bytes",
-				    _buffer_size, strerror (set_errno), result == 0 ? (gint) buffer_size_reported : -1);
+				    (gint) _buffer_size, strerror (set_errno), result == 0 ? (gint) buffer_size_reported : -1);
 		errno = set_errno;
 		return FALSE;
 	}
