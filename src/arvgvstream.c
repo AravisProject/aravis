@@ -84,6 +84,7 @@
 #define ARV_GV_STREAM_RX_ACTIVE_US                      100000 /* active: frames open or a packet this recently */
 #define ARV_GV_STREAM_RELEARN_IDLE_US                   1000000 /* connected socket silent this long: learn again */
 #define ARV_GV_STREAM_MAX_FOREIGN_SOURCES               64     /* unqualified senders before connecting is given up */
+#define ARV_GV_STREAM_RX_MAX_ERRORS                     100    /* consecutive recvmsg_x failures before _loop */
 
 enum {
 	ARV_GV_STREAM_PROPERTY_0,
@@ -267,6 +268,20 @@ struct _ArvGvStreamThreadData {
 	int last_attempted_socket_buffer_size;	/* never retried: a refused size is refused every time */
 	int configured_socket_buffer_size;	/* obtained by _configure_socket_buffer, the floor for _update_socket */
 };
+
+/* Tells arv_gv_stream_start_thread that the receive loop is running. Once per thread start: a receive loop that
+ * gives up and hands over to another (_loop_darwin to _loop) does not signal again. */
+
+static void
+_signal_thread_started (ArvGvStreamThreadData *thread_data)
+{
+	g_mutex_lock (&thread_data->thread_started_mutex);
+	if (!thread_data->thread_started) {
+		thread_data->thread_started = TRUE;
+		g_cond_signal (&thread_data->thread_started_cond);
+	}
+	g_mutex_unlock (&thread_data->thread_started_mutex);
+}
 
 static void
 _send_packet_request (ArvGvStreamThreadData *thread_data,
@@ -1624,6 +1639,7 @@ _loop (ArvGvStreamThreadData *thread_data)
 	GInputVector packet_iv[ARV_GV_STREAM_NUM_BUFFERS] = { {NULL, 0}, };
 	GInputMessage packet_im[ARV_GV_STREAM_NUM_BUFFERS] = { {NULL, NULL, 0, 0, 0, NULL, NULL}, };
 	GSocketAddress *packet_addresses[ARV_GV_STREAM_NUM_BUFFERS] = { NULL, };
+	guint n_rx_errors = 0;
 	// we don't need to consider the IP and UDP header size
 	guint packet_buffer_size = thread_data->scps_packet_size - 20 - 8;
 
@@ -1646,10 +1662,7 @@ _loop (ArvGvStreamThreadData *thread_data)
 
 	use_poll = g_cancellable_make_pollfd (thread_data->cancellable, &poll_fd[1]);
 
-        g_mutex_lock (&thread_data->thread_started_mutex);
-        thread_data->thread_started = TRUE;
-        g_cond_signal (&thread_data->thread_started_cond);
-        g_mutex_unlock (&thread_data->thread_started_mutex);
+        _signal_thread_started (thread_data);
 
 	do {
                 int timeout_ms;
@@ -1691,6 +1704,7 @@ _loop (ArvGvStreamThreadData *thread_data)
 		 					    &error);
 
                         if (G_LIKELY(n_msgs > 0)) {
+                                n_rx_errors = 0;
                                 time_us = g_get_monotonic_time ();
                                 thread_data->last_datagram_us = time_us;
                                 thread_data->n_rx_batches++;
@@ -1718,9 +1732,16 @@ _loop (ArvGvStreamThreadData *thread_data)
                                         _check_frame_completion (thread_data, time_us, frame);
                                 }
                         } else {
-                                arv_warning_stream_thread ("[GvStream::loop] receive_messages failed: %s",
-                                                           error != NULL ? error->message : "Unknown reason");
+                                /* Readable but failing: never spin (the thread may be real-time), and warn
+                                 * on the first failure of a run and every 1000th */
+                                if (n_rx_errors % 1000 == 0)
+                                        arv_warning_stream_thread ("[GvStream::loop] receive_messages failed: %s"
+                                                                   " (%u in a row)",
+                                                                   error != NULL ? error->message :
+                                                                   "Unknown reason", n_rx_errors + 1);
+                                n_rx_errors++;
                                 g_clear_error (&error);
+                                g_usleep (1000);
                         }
 
 			for (i = 0; i < ARV_GV_STREAM_NUM_BUFFERS; i++)
@@ -1799,8 +1820,13 @@ _get_env_uint (const char *name, guint default_value, guint max_value)
  * resend deadline is not delayed by more than that. When idle, the low-water mark is one datagram and
  * the wait is ARV_GV_STREAM_POLL_TIMEOUT_US, as in _loop.
  *
- * Returns FALSE, before signalling the thread start, when it can't be set up; the caller then runs
- * _loop. */
+ * A recvmsg_x that keeps failing (any error but EAGAIN / EINTR) would make kevent return at once, as the data is
+ * still queued, and the loop would spin: after a failure the loop waits the active wait before trying again,
+ * and after ARV_GV_STREAM_RX_MAX_ERRORS (100) consecutive failures it gives up, and the caller continues in
+ * _loop, whose receive call is a different one.
+ *
+ * Returns FALSE when it can't be set up (before signalling the thread start) or gave up after errors (after
+ * signalling it); the caller then runs _loop. */
 
 static gboolean
 _loop_darwin (ArvGvStreamThreadData *thread_data, ArvGvStreamRecvmsgX recvmsg_x_func, guint batch_size)
@@ -1820,6 +1846,8 @@ _loop_darwin (ArvGvStreamThreadData *thread_data, ArvGvStreamRecvmsgX recvmsg_x_
 	int lowat_bytes;
 	int current_lowat = -1;
 	gboolean kevent_error_reported = FALSE;
+	guint n_rx_errors = 0;
+	gboolean give_up = FALSE;
 	guint active_wait_us;
 	int socket_fd;
 	int kq;
@@ -1882,10 +1910,7 @@ _loop_darwin (ArvGvStreamThreadData *thread_data, ArvGvStreamRecvmsgX recvmsg_x_
 			 " bytes, low-water mark %u packets (%d bytes), active wait %u us",
 			 batch_size, slot_size, lowat_packets, lowat_bytes, active_wait_us);
 
-        g_mutex_lock (&thread_data->thread_started_mutex);
-        thread_data->thread_started = TRUE;
-        g_cond_signal (&thread_data->thread_started_cond);
-        g_mutex_unlock (&thread_data->thread_started_mutex);
+        _signal_thread_started (thread_data);
 
 	time_us = g_get_monotonic_time ();
 
@@ -1963,11 +1988,27 @@ _loop_darwin (ArvGvStreamThreadData *thread_data, ArvGvStreamRecvmsgX recvmsg_x_
 
 			n_msgs = recvmsg_x_func (socket_fd, hdrs, batch_size, MSG_DONTWAIT);
 			if (n_msgs <= 0) {
-				if (n_msgs < 0 && errno != EWOULDBLOCK && errno != EAGAIN && errno != EINTR)
-					arv_warning_stream_thread ("[GvStream::loop_darwin] recvmsg_x failed: %s",
-								   g_strerror (errno));
+				int errsv = errno;
+
+				if (n_msgs < 0 && errsv != EWOULDBLOCK && errsv != EAGAIN && errsv != EINTR) {
+					n_rx_errors++;
+					if (n_rx_errors == 1)
+						arv_warning_stream_thread ("[GvStream::loop_darwin] recvmsg_x failed: %s",
+									   g_strerror (errsv));
+					if (n_rx_errors >= ARV_GV_STREAM_RX_MAX_ERRORS) {
+						arv_warning_stream_thread ("[GvStream::loop_darwin] recvmsg_x failed %u"
+									   " times in a row (%s), using the standard"
+									   " loop", n_rx_errors, g_strerror (errsv));
+						give_up = TRUE;
+					} else
+						/* The data is still queued: kevent would return at once */
+						g_usleep (active_wait_us);
+				} else
+					n_rx_errors = 0;
 				break;
 			}
+
+			n_rx_errors = 0;
 
 			time_us = g_get_monotonic_time ();
 			thread_data->last_datagram_us = time_us;
@@ -1978,8 +2019,8 @@ _loop_darwin (ArvGvStreamThreadData *thread_data, ArvGvStreamRecvmsgX recvmsg_x_
 				thread_data->n_rx_max_batch = n_msgs;
 
 			for (i = 0; i < (guint) n_msgs; i++) {
-				if (G_UNLIKELY (hdrs[i].msg_datalen >= slot_size)) {
-					/* Possibly truncated: never larger than scps_packet_size in a valid stream */
+				if (G_UNLIKELY (hdrs[i].msg_datalen >= slot_size || (hdrs[i].msg_flags & MSG_TRUNC) != 0)) {
+					/* Truncated, or possibly: never larger than scps_packet_size in a valid stream */
 					thread_data->n_rx_truncated++;
 					continue;
 				}
@@ -2014,7 +2055,7 @@ _loop_darwin (ArvGvStreamThreadData *thread_data, ArvGvStreamRecvmsgX recvmsg_x_
 			_sample_thread_stats (thread_data, time_us, FALSE);
 		}
 
-	} while (!g_cancellable_is_cancelled (thread_data->cancellable));
+	} while (!give_up && !g_cancellable_is_cancelled (thread_data->cancellable));
 
 	if (use_cancel_fd)
 		g_cancellable_release_fd (thread_data->cancellable);
@@ -2024,6 +2065,11 @@ _loop_darwin (ArvGvStreamThreadData *thread_data, ArvGvStreamRecvmsgX recvmsg_x_
 	g_free (iovs);
 	g_free (hdrs);
 	free (slots);
+
+	if (give_up) {
+		thread_data->rx_mode = 0;
+		return FALSE;
+	}
 
 	return TRUE;
 }
@@ -2311,10 +2357,7 @@ _ring_buffer_loop (ArvGvStreamThreadData *thread_data)
 
 	use_poll = g_cancellable_make_pollfd (thread_data->cancellable, &poll_fd[1]);
 
-        g_mutex_lock (&thread_data->thread_started_mutex);
-        thread_data->thread_started = TRUE;
-        g_cond_signal (&thread_data->thread_started_cond);
-        g_mutex_unlock (&thread_data->thread_started_mutex);
+        _signal_thread_started (thread_data);
 
 	block_id = 0;
 	do {
@@ -2386,10 +2429,7 @@ socket_option_error:
 map_error:
 	close (fd);
 af_packet_error:
-        g_mutex_lock (&thread_data->thread_started_mutex);
-        thread_data->thread_started = TRUE;
-        g_cond_signal (&thread_data->thread_started_cond);
-        g_mutex_unlock (&thread_data->thread_started_mutex);
+        _signal_thread_started (thread_data);
 }
 
 #endif /* ARAVIS_HAS_PACKET_SOCKET */

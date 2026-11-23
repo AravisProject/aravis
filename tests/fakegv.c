@@ -3,6 +3,38 @@
 #include <glib.h>
 #include <arv.h>
 
+#ifdef __APPLE__
+#include <dlfcn.h>
+#include <errno.h>
+#include <sys/types.h>
+
+/* ArvGvStream's Apple receive loop resolves recvmsg_x with dlsym (RTLD_DEFAULT), which finds this definition in
+ * the test executable before the system's: /fakegv/rx-errors makes it fail on demand. */
+
+static gint inject_rx_errors = 0;
+static gint n_injected_rx_errors = 0;
+
+/* Exported: the build hides symbols by default */
+__attribute__ ((visibility ("default"))) ssize_t recvmsg_x (int s, const void *msgp, unsigned int cnt, int flags);
+
+ssize_t
+recvmsg_x (int s, const void *msgp, unsigned int cnt, int flags)
+{
+	static ssize_t (*system_recvmsg_x) (int s, const void *msgp, unsigned int cnt, int flags) = NULL;
+
+	if (g_atomic_int_get (&inject_rx_errors)) {
+		g_atomic_int_inc (&n_injected_rx_errors);
+		errno = EIO;
+		return -1;
+	}
+
+	if (system_recvmsg_x == NULL)
+		system_recvmsg_x = dlsym (RTLD_NEXT, "recvmsg_x");
+
+	return system_recvmsg_x (s, msgp, cnt, flags);
+}
+#endif
+
 static ArvCamera *camera = NULL;
 static ArvGvFakeCamera *simulator = NULL;
 
@@ -1152,6 +1184,74 @@ source_relearn_test (void)
 	finish_loss_stream (stream);
 }
 
+static void
+rx_errors_test (void)
+{
+#ifdef __APPLE__
+	ArvStream *stream;
+	GError *error = NULL;
+	gint64 start_us;
+	gint64 fallback_us;
+	guint n_injected;
+
+	g_object_set (simulator,
+		      "packet-resend", TRUE,
+		      "static-image", TRUE,
+		      NULL);
+
+	stream = create_loss_stream (8);
+
+	/* The stream thread, and with it rx_mode, starts with the acquisition */
+	arv_camera_start_acquisition (camera, &error);
+	g_assert_no_error (error);
+	if (arv_stream_get_info_uint64_by_name (stream, "rx_mode") != 1) {
+		finish_loss_stream (stream);
+		g_test_skip ("the recvmsg_x loop is not in use");
+		return;
+	}
+
+	pop_complete_frames (stream, 5, 1000000, "before the errors");
+
+	/* recvmsg_x fails from now on, with data queued: the loop must neither spin nor stop receiving */
+	g_atomic_int_set (&n_injected_rx_errors, 0);
+	start_us = g_get_monotonic_time ();
+	g_atomic_int_set (&inject_rx_errors, 1);
+
+	while (arv_stream_get_info_uint64_by_name (stream, "rx_mode") != 0 &&
+	       g_get_monotonic_time () < start_us + 3000000)
+		g_usleep (1000);
+	fallback_us = g_get_monotonic_time () - start_us;
+	n_injected = g_atomic_int_get (&n_injected_rx_errors);
+	g_atomic_int_set (&inject_rx_errors, 0);
+
+	g_test_message ("rx errors: %u failed recvmsg_x calls, standard loop after %" G_GINT64_FORMAT " us",
+			n_injected, fallback_us);
+
+	g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "rx_mode"), ==, 0);
+	/* 100 failures, each followed by the active wait (1 ms): not a spin */
+	g_assert_cmpuint (n_injected, ==, 100);
+	g_assert_cmpint (fallback_us, >=, 90000);
+
+	/* The standard loop carries on with the same socket. The frames in flight at the switch may fail. */
+	while (TRUE) {
+		ArvBuffer *buffer = arv_stream_timeout_pop_buffer (stream, 1000000);
+
+		g_assert (ARV_IS_BUFFER (buffer));
+		if (arv_buffer_get_status (buffer) == ARV_BUFFER_STATUS_SUCCESS &&
+		    arv_buffer_get_system_timestamp (buffer) / 1000 > (guint64) (start_us + fallback_us)) {
+			arv_stream_push_buffer (stream, buffer);
+			break;
+		}
+		arv_stream_push_buffer (stream, buffer);
+	}
+	pop_complete_frames (stream, 5, 1000000, "in the standard loop");
+
+	finish_loss_stream (stream);
+#else
+	g_test_skip ("recvmsg_x is Apple only");
+#endif
+}
+
 /* 65535 / 3: the simulator's frame ids repeat every third frame */
 #define REPEATED_ID_STEP		21845
 #define REPEATED_ID_DROP_INTERVAL	4
@@ -1386,6 +1486,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/fakegv/short-datagrams", short_datagrams_test);
 	g_test_add_func ("/fakegv/small-packet-count", small_packet_count_test);
 	g_test_add_func ("/fakegv/source-relearn", source_relearn_test);
+	g_test_add_func ("/fakegv/rx-errors", rx_errors_test);
 
 	result = g_test_run();
 
