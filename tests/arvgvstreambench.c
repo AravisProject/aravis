@@ -121,18 +121,19 @@ table_add (Table *table, const char *name, const char *format, ...)
 	va_end (args);
 }
 
+#ifdef __APPLE__
+/* Datagrams the kernel dropped on a full UDP socket buffer, system wide: Apple only */
 static guint64
 udp_fullsock (void)
 {
-#ifdef __APPLE__
 	struct udpstat stats;
 	size_t size = sizeof (stats);
 
 	if (sysctlbyname ("net.inet.udp.stats", &stats, &size, NULL, 0) == 0)
 		return stats.udps_fullsock;
-#endif
 	return 0;
 }
+#endif
 
 static double
 rusage_cpu_s (int who)
@@ -278,7 +279,9 @@ main (int argc, char **argv)
 	size_t payload;
 	char *sender_counters = NULL;
 	char *line;
+#ifdef __APPLE__
 	guint64 fullsock_start, fullsock_end;
+#endif
 	double cpu_self_start, cpu_self_end;
 	double cpu_children_start, cpu_children_end;
 	double load_start, load_end;
@@ -355,7 +358,9 @@ main (int argc, char **argv)
 	for (i = 0; i < (guint) option_n_buffers; i++)
 		arv_stream_push_buffer (stream, arv_buffer_new (payload, NULL));
 
+#ifdef __APPLE__
 	fullsock_start = udp_fullsock ();
+#endif
 	cpu_self_start = rusage_cpu_s (RUSAGE_SELF);
 
 	arv_camera_start_acquisition (camera, &error);
@@ -408,7 +413,9 @@ main (int argc, char **argv)
 	arv_camera_stop_acquisition (camera, NULL);
 
 	cpu_self_end = rusage_cpu_s (RUSAGE_SELF);
+#ifdef __APPLE__
 	fullsock_end = udp_fullsock ();
+#endif
 
 	table_add (&table, "label", "%s", option_label != NULL ? option_label : "-");
 	table_add (&table, "width", "%d", option_width);
