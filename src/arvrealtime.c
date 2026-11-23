@@ -392,6 +392,9 @@ _us_to_mach_absolute_time (guint64 us, const mach_timebase_info_data_t *timebase
 {
 	guint64 ticks;
 
+	/* An ARV_RT_*_US of "-1" parses as G_MAXUINT64, and us * 1000 * denom would wrap to anything. No policy
+	 * value above 1 s makes sense (the kernel refuses a computation above 50 ms). */
+	us = MIN (us, G_USEC_PER_SEC);
 	ticks = us * 1000 * timebase->denom / timebase->numer;
 
 	return ticks > G_MAXUINT32 ? G_MAXUINT32 : (uint32_t) ticks;

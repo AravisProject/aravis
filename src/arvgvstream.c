@@ -499,10 +499,29 @@ _read_socket_buffer_size (int fd)
 #endif
 	socklen_t optlen = sizeof (size);
 
-	if (getsockopt (fd, SOL_SOCKET, SO_RCVBUF, (char *) &size, &optlen) != 0 || size < 0)
+	if (getsockopt (fd, SOL_SOCKET, SO_RCVBUF, (char *) &size, &optlen) != 0)
 		return 0;
+#ifndef G_OS_WIN32
+	/* DWORD is unsigned */
+	if (size < 0)
+		return 0;
+#endif
 
 	return size;
+}
+
+/* SO_RCVBUF as read back, in the units of a request: Linux stores and reports twice the size it was asked for (the
+ * other half is its bookkeeping overhead), and clamps the request to net.core.rmem_max before doubling it. Compared
+ * with requested sizes, the raw value would make a clamped request look granted. */
+
+static int
+_granted_in_request_units (int granted_size)
+{
+#ifdef __linux__
+	return granted_size / 2;
+#else
+	return granted_size;
+#endif
 }
 
 /* Samples the stream thread's CPU time and scheduler priority, at most every
@@ -591,7 +610,7 @@ _update_socket (ArvGvStreamThreadData *thread_data, ArvBuffer *buffer)
 
 	if (result) {
 		thread_data->current_socket_buffer_size = buffer_size;
-		if (granted_size < buffer_size)
+		if (_granted_in_request_units (granted_size) < buffer_size)
 			arv_warning_stream_thread ("[GvStream::update_socket] Socket buffer size %d requested,"
 						   " the kernel granted %d; you might see missing packets",
 						   buffer_size, granted_size);
@@ -674,7 +693,7 @@ _configure_socket_buffer (ArvGvStreamThreadData *thread_data)
 
 		for (;;) {
 			result = arv_socket_set_recv_buffer_size_full (fd, request, &granted_size);
-			if (result && granted_size >= ARV_GV_STREAM_SOCKET_BUFFER_FLOOR)
+			if (result && _granted_in_request_units (granted_size) >= ARV_GV_STREAM_SOCKET_BUFFER_FLOOR)
 				break;
 			if (request <= ARV_GV_STREAM_SOCKET_BUFFER_FLOOR)
 				break;
@@ -688,8 +707,8 @@ _configure_socket_buffer (ArvGvStreamThreadData *thread_data)
 		thread_data->socket_buffer_size_granted = granted_size;
 
 	if (result) {
-		/* Linux reports twice the size it was asked for; the floor is what was asked and granted */
-		thread_data->configured_socket_buffer_size = MIN (request, granted_size);
+		/* The floor is what was asked and granted, in request units (Linux reports twice the size it stores) */
+		thread_data->configured_socket_buffer_size = MIN (request, _granted_in_request_units (granted_size));
 		thread_data->current_socket_buffer_size = thread_data->configured_socket_buffer_size;
 		arv_info_stream_thread ("[GvStream::configure_socket_buffer] Socket buffer: requested %" G_GINT64_FORMAT
 					" bytes (%s), granted %d bytes",
