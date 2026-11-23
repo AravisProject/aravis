@@ -457,33 +457,62 @@ arv_network_interface_free(ArvNetworkInterface *a)
 	g_free (a);
 }
 
+/*
+ * arv_socket_set_recv_buffer_size_full:
+ * @socket_fd: a socket file descriptor
+ * @buffer_size: requested SO_RCVBUF size, in bytes
+ * @granted_size: (out) (optional): SO_RCVBUF as read back after the request, or 0 if it could not be read
+ *
+ * Kernels clamp the request silently: Linux to net.core.rmem_max (and reports twice the value it
+ * stores), macOS to kern.ipc.maxsockbuf. macOS also refuses with ENOBUFS a request above the
+ * maximum when the buffer is already at the maximum. A clamped request is therefore not a failure:
+ * the kernel granted a usable buffer, and its size is returned in @granted_size.
+ *
+ * Returns: %TRUE if setsockopt() accepted the request and the granted size could be read back,
+ * even if it is smaller than requested. On %FALSE, @granted_size still holds the current size
+ * when it can be read.
+ */
+
 gboolean
-arv_socket_set_recv_buffer_size (int socket_fd, gint buffer_size)
+arv_socket_set_recv_buffer_size_full (int socket_fd, gint buffer_size, gint *granted_size)
 {
 #ifdef G_OS_WIN32
 	DWORD _buffer_size;
-	DWORD buffer_size_reported;
+	DWORD buffer_size_reported = 0;
 #else
 	gint _buffer_size;
-	gint buffer_size_reported;
+	gint buffer_size_reported = 0;
 #endif
+	int set_result;
+	int set_errno = 0;
 	int result;
 	socklen_t optlen;
 
         _buffer_size = buffer_size;
         optlen = sizeof(buffer_size_reported);
 
-	result = setsockopt (socket_fd, SOL_SOCKET, SO_RCVBUF,
-			     (const char *) &_buffer_size, sizeof (_buffer_size));
-	if(result != 0) {
-	    arv_warning_interface ("[set_recv_buffer_size] Setting socket buffer to %d bytes failed (%s)",
-                                  _buffer_size, strerror(errno));
-	    return FALSE;
+	if (granted_size != NULL)
+		*granted_size = 0;
+
+	set_result = setsockopt (socket_fd, SOL_SOCKET, SO_RCVBUF,
+				 (const char *) &_buffer_size, sizeof (_buffer_size));
+	if (set_result != 0)
+		set_errno = errno;
+
+        /* Even when setsockopt() succeeded, the requested size may not actually be set. Ask to see
+         * the new setting to confirm. */
+        result = getsockopt (socket_fd, SOL_SOCKET, SO_RCVBUF, (char *) &buffer_size_reported, &optlen);
+        if (result == 0 && granted_size != NULL)
+                *granted_size = buffer_size_reported;
+
+	if (set_result != 0) {
+		arv_info_interface ("[set_recv_buffer_size] Setting socket buffer to %d bytes failed (%s),"
+				    " current size %d bytes",
+				    _buffer_size, strerror (set_errno), result == 0 ? (gint) buffer_size_reported : -1);
+		errno = set_errno;
+		return FALSE;
 	}
 
-        /* setsockopt() succeeded, but sometimes the requested size is not actually be set. Ask
-         * to see the new setting to confirm. */
-        result = getsockopt (socket_fd, SOL_SOCKET, SO_RCVBUF, (char *) &buffer_size_reported, &optlen);
         if (result != 0) {
                 arv_warning_interface ("[set_recv_buffer_size] Read of socket buffer size (SO_RCVBUF) failed (%s)",
                                        strerror(errno));
@@ -491,26 +520,30 @@ arv_socket_set_recv_buffer_size (int socket_fd, gint buffer_size)
         }
         g_assert (optlen == sizeof (buffer_size_reported));
 
-	if(buffer_size_reported < buffer_size)
-        {
-#ifndef G_OS_WIN32
-                arv_warning_interface ("[set_recv_buffer_size] Unexpected socket buffer size (SO_RCVBUF):"
-                                       " actual %d < expected %d bytes"
-                                       "\nYou might see missing packets and timeouts"
-                                       "\nMost likely /proc/sys/net/core/rmem_max is too low"
-                                       "\nSee the socket(7) manpage\n",
-                                       buffer_size_reported, buffer_size);
+	if ((gint) buffer_size_reported < buffer_size) {
+#if defined(__APPLE__)
+		arv_info_interface ("[set_recv_buffer_size] Socket buffer size (SO_RCVBUF) clamped by the kernel:"
+				    " granted %d < requested %d bytes (limit: sysctl kern.ipc.maxsockbuf)",
+				    (gint) buffer_size_reported, buffer_size);
+#elif !defined(G_OS_WIN32)
+		arv_info_interface ("[set_recv_buffer_size] Socket buffer size (SO_RCVBUF) clamped by the kernel:"
+				    " granted %d < requested %d bytes (limit: /proc/sys/net/core/rmem_max,"
+				    " see the socket(7) manpage)",
+				    (gint) buffer_size_reported, buffer_size);
 #else
-                arv_warning_interface ("[set_recv_buffer_size] Unexpected socket buffer size (SO_RCVBUF):"
-                                       " actual %d < expected %d bytes"
-                                       "\nYou might see missing packets and timeouts",
-                                       buffer_size_reported, buffer_size);
+		arv_info_interface ("[set_recv_buffer_size] Socket buffer size (SO_RCVBUF) clamped:"
+				    " granted %d < requested %d bytes",
+				    (gint) buffer_size_reported, buffer_size);
 #endif
-
-                return FALSE;
-        }
+	}
 
 	return TRUE;
+}
+
+gboolean
+arv_socket_set_recv_buffer_size (int socket_fd, gint buffer_size)
+{
+	return arv_socket_set_recv_buffer_size_full (socket_fd, buffer_size, NULL);
 }
 
 

@@ -107,6 +107,8 @@ ARV_API const char *		arv_network_interface_get_name		(ArvNetworkInterface *a);
 ARV_API gboolean		arv_network_interface_is_loopback	(ArvNetworkInterface *a);
 
 gboolean			arv_socket_set_recv_buffer_size		(int socket_fd, gint buffer_size);
+gboolean			arv_socket_set_recv_buffer_size_full	(int socket_fd, gint buffer_size,
+									 gint *granted_size);
 
 #ifdef G_OS_WIN32
 	/* mingw only defines with _WIN32_WINNT>=0x0600, see

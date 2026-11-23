@@ -61,12 +61,15 @@
 #ifdef __APPLE__
 #include <mach/mach.h>
 #include <pthread.h>
+#include <sys/sysctl.h>
 #endif
 
 #define ARV_GV_STREAM_DISCARD_LATE_FRAME_THRESHOLD	100
 #define ARV_GV_STREAM_THREAD_STATS_PERIOD_US		100000
 #define ARV_GV_STREAM_BUFFER_SIZE_PROTOCOL_OVERHEAD     1024 /* Some room for protocol overhead (IP + UDP + GV) */
 #define ARV_GV_STREAM_MIN_BUFFER_SIZE                   20 * 1024
+#define ARV_GV_STREAM_SOCKET_BUFFER_FLOOR               (1024 * 1024)
+#define ARV_GV_STREAM_SOCKET_BUFFER_MAX_REQUEST         (64 * 1024 * 1024) /* "max" where the limit can't be read */
 
 enum {
 	ARV_GV_STREAM_PROPERTY_0,
@@ -212,6 +215,8 @@ struct _ArvGvStreamThreadData {
 	ArvGvStreamSocketBuffer socket_buffer_option;
 	int socket_buffer_size;
 	int current_socket_buffer_size;
+	int last_attempted_socket_buffer_size;	/* never retried: a refused size is refused every time */
+	int configured_socket_buffer_size;	/* obtained by _configure_socket_buffer, the floor for _update_socket */
 };
 
 static void
@@ -299,6 +304,8 @@ static void
 _update_socket (ArvGvStreamThreadData *thread_data, ArvBuffer *buffer)
 {
 	int buffer_size = thread_data->current_socket_buffer_size;
+	int granted_size = 0;
+	gboolean result;
 	int fd;
 
 	if (thread_data->socket_buffer_option == ARV_GV_STREAM_SOCKET_BUFFER_FIXED &&
@@ -323,18 +330,131 @@ _update_socket (ArvGvStreamThreadData *thread_data, ArvBuffer *buffer)
 
         buffer_size = MAX (buffer_size, ARV_GV_STREAM_MIN_BUFFER_SIZE);
 
-	if (buffer_size != thread_data->current_socket_buffer_size) {
-		gboolean result;
+	/* Never shrink the buffer obtained at thread start */
+	if (buffer_size <= thread_data->configured_socket_buffer_size)
+		return;
 
-		result = arv_socket_set_recv_buffer_size (fd, buffer_size);
-		if (result) {
-			thread_data->current_socket_buffer_size = buffer_size;
-			thread_data->socket_buffer_size_granted = _read_socket_buffer_size (fd);
-			arv_info_stream_thread ("[GvStream::update_socket] Socket buffer size set to %d", buffer_size);
-		} else {
-			arv_warning_stream_thread ("[GvStream::update_socket] Failed to set socket buffer size to %d (%d)",
-						   buffer_size, errno);
+	/* This runs for every new frame: a size that was already tried, whether it was granted or not,
+	 * is not tried again. */
+	if (buffer_size == thread_data->current_socket_buffer_size ||
+	    buffer_size == thread_data->last_attempted_socket_buffer_size)
+		return;
+
+	thread_data->last_attempted_socket_buffer_size = buffer_size;
+
+	result = arv_socket_set_recv_buffer_size_full (fd, buffer_size, &granted_size);
+	if (granted_size > 0)
+		thread_data->socket_buffer_size_granted = granted_size;
+
+	if (result) {
+		thread_data->current_socket_buffer_size = buffer_size;
+		if (granted_size < buffer_size)
+			arv_warning_stream_thread ("[GvStream::update_socket] Socket buffer size %d requested,"
+						   " the kernel granted %d; you might see missing packets",
+						   buffer_size, granted_size);
+		else
+			arv_info_stream_thread ("[GvStream::update_socket] Socket buffer size set to %d (granted %d)",
+						buffer_size, granted_size);
+	} else {
+		arv_warning_stream_thread ("[GvStream::update_socket] Failed to set socket buffer size to %d (%s),"
+					   " current size %d",
+					   buffer_size, g_strerror (errno), granted_size);
+	}
+}
+
+static int
+_get_max_socket_buffer_size (void)
+{
+#ifdef __APPLE__
+	int max_size = 0;
+	size_t length = sizeof (max_size);
+
+	if (sysctlbyname ("kern.ipc.maxsockbuf", &max_size, &length, NULL, 0) == 0 && max_size > 0)
+		return max_size;
+
+	arv_warning_stream_thread ("[GvStream::configure_socket_buffer] Can't read kern.ipc.maxsockbuf (%s)",
+				   g_strerror (errno));
+#endif
+	/* Linux clamps silently to net.core.rmem_max; the granted size is read back */
+	return ARV_GV_STREAM_SOCKET_BUFFER_MAX_REQUEST;
+}
+
+/* Sizes the socket receive buffer once, before any receive loop runs.
+ *
+ * ARV_GV_STREAM_SOCKET_BUFFER_SIZE: a byte count, "max" (as large as the kernel grants), or "0" /
+ * "default" to leave the OS default. Unset: "max" on Apple, where the default (786,896 bytes,
+ * under a millisecond of a 10GigE stream) loses most packets of a fast camera; nothing elsewhere.
+ *
+ * On macOS a request above kern.ipc.maxsockbuf is clamped silently the first time and refused with
+ * ENOBUFS when the buffer is already at the maximum, so the granted size is always read back. */
+
+static void
+_configure_socket_buffer (ArvGvStreamThreadData *thread_data)
+{
+	const char *env;
+	gboolean use_max = FALSE;
+	gint64 request = 0;
+	int granted_size = 0;
+	gboolean result = FALSE;
+	int fd;
+
+	fd = g_socket_get_fd (thread_data->socket);
+	env = g_getenv ("ARV_GV_STREAM_SOCKET_BUFFER_SIZE");
+
+	if (env == NULL) {
+#ifdef __APPLE__
+		use_max = TRUE;
+#else
+		return;
+#endif
+	} else if (g_ascii_strcasecmp (env, "max") == 0) {
+		use_max = TRUE;
+	} else if (g_ascii_strcasecmp (env, "default") == 0 || g_strcmp0 (env, "0") == 0) {
+		arv_info_stream_thread ("[GvStream::configure_socket_buffer] Socket buffer left at the OS default"
+					" (%" G_GUINT64_FORMAT " bytes)", _read_socket_buffer_size (fd));
+		return;
+	} else {
+		char *end = NULL;
+
+		request = g_ascii_strtoll (env, &end, 10);
+		if (end == env || *end != '\0' || request <= 0 || request > G_MAXINT) {
+			arv_warning_stream_thread ("[GvStream::configure_socket_buffer] Invalid"
+						   " ARV_GV_STREAM_SOCKET_BUFFER_SIZE '%s' (expected a byte count,"
+						   " 'max', '0' or 'default'); socket buffer left at the OS default",
+						   env);
+			return;
 		}
+	}
+
+	if (use_max) {
+		request = _get_max_socket_buffer_size ();
+
+		for (;;) {
+			result = arv_socket_set_recv_buffer_size_full (fd, request, &granted_size);
+			if (result && granted_size >= ARV_GV_STREAM_SOCKET_BUFFER_FLOOR)
+				break;
+			if (request <= ARV_GV_STREAM_SOCKET_BUFFER_FLOOR)
+				break;
+			request = MAX (request * 7 / 8, ARV_GV_STREAM_SOCKET_BUFFER_FLOOR);
+		}
+	} else {
+		result = arv_socket_set_recv_buffer_size_full (fd, request, &granted_size);
+	}
+
+	if (granted_size > 0)
+		thread_data->socket_buffer_size_granted = granted_size;
+
+	if (result) {
+		/* Linux reports twice the size it was asked for; the floor is what was asked and granted */
+		thread_data->configured_socket_buffer_size = MIN (request, granted_size);
+		thread_data->current_socket_buffer_size = thread_data->configured_socket_buffer_size;
+		arv_info_stream_thread ("[GvStream::configure_socket_buffer] Socket buffer: requested %" G_GINT64_FORMAT
+					" bytes (%s), granted %d bytes",
+					request, use_max ? "max" : "ARV_GV_STREAM_SOCKET_BUFFER_SIZE", granted_size);
+	} else {
+		arv_warning_stream_thread ("[GvStream::configure_socket_buffer] Failed to set socket buffer to %"
+					   G_GINT64_FORMAT " bytes (%s), current size %d bytes",
+					   request, g_strerror (errno), granted_size);
 	}
 }
 
@@ -1521,6 +1641,8 @@ arv_gv_stream_thread (void *data)
 	thread_data->frames = NULL;
 	thread_data->last_frame_id = 0;
 	thread_data->first_packet = TRUE;
+
+	_configure_socket_buffer (thread_data);
 
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->callback_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
