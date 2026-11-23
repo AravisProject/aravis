@@ -589,19 +589,24 @@ _poll_control (ArvGvFakeCamera *gv_fake_camera, gint timeout_ms)
 					if (_handle_control_packet (gv_fake_camera, socket,
 								    remote_address, priv->input_vector.buffer, count))
 						arv_info_device ("[GvFakeCamera::thread] Control packet received");
+
+					/* A stop seen here, possibly from inside _send_frame, must not be lost if a start
+					 * follows before the sender thread looks again: the stream would carry on to the
+					 * previous destination port. It is looked for after each packet, not once after
+					 * the queue is drained: the controller waits for each acknowledge, but where the
+					 * acknowledge wakes it in place of this thread, its next command is already
+					 * queued when this loop reads again, and a stop, the next stream's destination
+					 * and its start can all be handled in one call, after which the acquisition
+					 * reads as running. */
+					if (arv_fake_camera_get_control_channel_privilege (priv->camera) == 0 ||
+					    arv_fake_camera_get_acquisition_status (priv->camera) == 0)
+						priv->stream_stop_pending = TRUE;
 				}
 				g_clear_object (&remote_address);
 				n_packets++;
 			} while (count > 0 && n_packets < ARV_GV_FAKE_CAMERA_MAX_CONTROL_PACKETS_PER_POLL);
 		}
 	}
-
-	/* A stop seen here, possibly from inside _send_frame, must not be lost if a start follows before the sender
-	 * thread looks again: the stream would carry on to the previous destination port */
-	if (n_events > 0 &&
-	    (arv_fake_camera_get_control_channel_privilege (priv->camera) == 0 ||
-	     arv_fake_camera_get_acquisition_status (priv->camera) == 0))
-		priv->stream_stop_pending = TRUE;
 
 	_publish_counters (gv_fake_camera);
 
