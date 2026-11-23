@@ -433,8 +433,10 @@ _connect_to_source (ArvGvStreamThreadData *thread_data, const struct sockaddr *n
 /* Dissolves the association made by _connect_to_source, so that the next valid datagram from the device teaches
  * the sender again. BSD: connect() to an AF_UNSPEC address disconnects a UDP socket; Darwin then fails the
  * reconnection to that address with EAFNOSUPPORT, which is the documented success, Linux returns 0. Winsock
- * disconnects on a connect() to the any address. The local port is kept (Darwin widens the local address to
- * INADDR_ANY until the next connect(), checked on macOS 26), so the device's datagrams still arrive. */
+ * disconnects on a connect() to the any address. Darwin keeps the local port (and widens the local address to
+ * INADDR_ANY until the next connect(), checked on macOS 26). Linux does not: a socket whose port the kernel picked,
+ * as the stream socket's (bound to port 0), is unhashed and its port becomes 0, so that it receives nothing more
+ * (checked on Linux 7.2); the socket is then bound again to the port the device sends to. */
 
 static void
 _disconnect_from_source (ArvGvStreamThreadData *thread_data, const char *reason)
@@ -461,6 +463,23 @@ _disconnect_from_source (ArvGvStreamThreadData *thread_data, const char *reason)
 	errsv = result == 0 ? 0 : errno;
 	if (result != 0 && errsv == EAFNOSUPPORT)
 		result = 0;
+
+	if (result == 0) {
+		struct sockaddr_in local;
+		socklen_t local_size = sizeof (local);
+
+		if (getsockname (fd, (struct sockaddr *) &local, &local_size) == 0 &&
+		    local.sin_family == AF_INET && g_ntohs (local.sin_port) != thread_data->stream_port) {
+			local.sin_port = g_htons (thread_data->stream_port);
+			if (bind (fd, (struct sockaddr *) &local, sizeof (local)) != 0) {
+				arv_warning_stream_thread ("[GvStream::disconnect_from_source] The stream socket lost"
+							   " its port %u when disconnected and can't bind it again (%s)",
+							   thread_data->stream_port, g_strerror (errno));
+				thread_data->connect_socket = FALSE;
+				return;
+			}
+		}
+	}
 #endif
 
 	if (result != 0) {
