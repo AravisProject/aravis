@@ -170,6 +170,7 @@ typedef struct {
 
 	GSocketAddress *stream_address;
 	gboolean is_gvsp_connected;
+	gboolean stream_stop_pending;	/* an acquisition stop was seen while a frame was being sent */
 	gboolean send_error_reported;
 
 	ArvGvFakeCameraFrame *frames;
@@ -595,6 +596,13 @@ _poll_control (ArvGvFakeCamera *gv_fake_camera, gint timeout_ms)
 		}
 	}
 
+	/* A stop seen here, possibly from inside _send_frame, must not be lost if a start follows before the sender
+	 * thread looks again: the stream would carry on to the previous destination port */
+	if (n_events > 0 &&
+	    (arv_fake_camera_get_control_channel_privilege (priv->camera) == 0 ||
+	     arv_fake_camera_get_acquisition_status (priv->camera) == 0))
+		priv->stream_stop_pending = TRUE;
+
 	_publish_counters (gv_fake_camera);
 
 	return n_events;
@@ -866,7 +874,6 @@ _thread (void *user_data)
 {
 	ArvGvFakeCamera *gv_fake_camera = user_data;
 	ArvGvFakeCameraPrivate *priv = gv_fake_camera->priv;
-	int n_events;
 	gboolean is_streaming = FALSE;
 
 	priv->input_vector.buffer = g_malloc0 (ARV_GV_FAKE_CAMERA_BUFFER_SIZE);
@@ -893,13 +900,11 @@ _thread (void *user_data)
 			else if (timeout_ms > 100)
 				timeout_ms = 100;
 
-			n_events = _poll_control (gv_fake_camera, timeout_ms);
-			if (n_events > 0) {
-				if (arv_fake_camera_get_control_channel_privilege (priv->camera) == 0 ||
-				    arv_fake_camera_get_acquisition_status (priv->camera) == 0) {
-					_stream_stop (gv_fake_camera);
-					is_streaming = FALSE;
-				}
+			_poll_control (gv_fake_camera, timeout_ms);
+			if (priv->stream_stop_pending) {
+				priv->stream_stop_pending = FALSE;
+				_stream_stop (gv_fake_camera);
+				is_streaming = FALSE;
 			}
 		} while (!g_atomic_int_get (&priv->cancel) && g_get_monotonic_time () < next_timestamp_us);
 
