@@ -1092,18 +1092,36 @@ n_closed_frames (ArvStream *stream)
 		arv_stream_get_info_uint64_by_name (stream, "n_skipped_frames");
 }
 
-/* Stops the camera, not the stream thread, and waits until the receiver has closed every frame the simulator sent
- * since n_sent_before, handing queued buffers back meanwhile. The simulator finishes the frame it is sending when
- * the stop arrives; a stream thread stopped at once would leave that frame's tail in the socket for the next
- * thread, which would start a frame from it. */
+/* Stops the camera only, not the stream thread, and returns once the simulator has ended its stream. The simulator
+ * finishes the frame it is sending when the stop arrives, and counts that frame as sent only at its last packet:
+ * the stop is acknowledged before, so n-sent-frames read after the acknowledge can be one short. */
 static void
-stop_camera_and_wait (ArvStream *stream, guint64 n_sent_before)
+stop_camera (void)
 {
 	GError *error = NULL;
+	guint64 n_stops_before = simulator_counter ("n-stream-stops");
 	gint64 end_us;
 
 	arv_camera_execute_command (camera, "AcquisitionStop", &error);
 	g_assert_no_error (error);
+
+	end_us = g_get_monotonic_time () + LOSS_WAIT_TIMEOUT_US;
+	while (simulator_counter ("n-stream-stops") == n_stops_before && g_get_monotonic_time () < end_us)
+		g_usleep (1000);
+	g_assert_cmpuint (simulator_counter ("n-stream-stops"), >, n_stops_before);
+}
+
+/* Stops the camera, not the stream thread, and waits until the receiver has closed every frame the simulator sent
+ * since n_sent_before, handing queued buffers back meanwhile. A stream thread stopped at once, or with the last
+ * frame still being sent, would leave that frame's tail in the socket for the next thread, which would start a
+ * frame from it (Linux CI, valgrind: popped as TIMEOUT after the restart, with the frame id its buffer had before,
+ * as a frame started without its leader does not set one). */
+static void
+stop_camera_and_wait (ArvStream *stream, guint64 n_sent_before)
+{
+	gint64 end_us;
+
+	stop_camera ();
 
 	end_us = g_get_monotonic_time () + LOSS_WAIT_TIMEOUT_US;
 	do {
@@ -1730,8 +1748,7 @@ repeated_frame_id_test (void)
 	/* The camera only, then wait until the receiver has accounted for every frame sent, before the stream
 	 * thread stops: a loaded receiver may be several frames behind, and stopping it at once (with a fixed
 	 * 100 ms after) cut those frames short. The consumer keeps returning buffers meanwhile. */
-	arv_camera_execute_command (camera, "AcquisitionStop", &error);
-	g_assert_no_error (error);
+	stop_camera ();
 	end_us = g_get_monotonic_time () + LOSS_WAIT_TIMEOUT_US;
 	do {
 		ArvBuffer *buffer = arv_stream_timeout_pop_buffer (stream, 10000);

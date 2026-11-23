@@ -87,6 +87,7 @@ enum
   PROP_N_RESENT_PACKETS,
   PROP_N_RESEND_DROPPED_PACKETS,
   PROP_N_RESEND_UNAVAILABLE,
+  PROP_N_STREAM_STOPS,
   PROP_SENDING_TIME_US,
   PROP_STREAMING_TIME_US
 };
@@ -105,6 +106,7 @@ typedef struct {
 	guint64 n_resent_packets;
 	guint64 n_resend_dropped_packets;	/* resent packets dropped by resend-lost-ratio */
 	guint64 n_resend_unavailable;		/* PACKET_UNAVAILABLE error packets sent */
+	guint64 n_stream_stops;			/* streams ended, each after the last packet of its last frame */
 	guint64 sending_time_us;		/* time spent inside frames, from leader to trailer */
 	guint64 streaming_time_us;		/* time spent with an open stream */
 } ArvGvFakeCameraCounters;
@@ -623,6 +625,7 @@ _stream_stop (ArvGvFakeCamera *gv_fake_camera)
 		return;
 
 	priv->counters.streaming_time_us += g_get_monotonic_time () - priv->stream_start_us;
+	priv->counters.n_stream_stops++;
 
 	for (i = 0; i < priv->n_frames; i++)
 		g_clear_object (&priv->frames[i].buffer);
@@ -1330,6 +1333,9 @@ _get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 		case PROP_N_RESEND_UNAVAILABLE:
 			g_value_set_uint64 (value, counters.n_resend_unavailable);
 			break;
+		case PROP_N_STREAM_STOPS:
+			g_value_set_uint64 (value, counters.n_stream_stops);
+			break;
 		case PROP_SENDING_TIME_US:
 			g_value_set_uint64 (value, counters.sending_time_us);
 			break;
@@ -1698,6 +1704,15 @@ arv_gv_fake_camera_class_init (ArvGvFakeCameraClass *this_class)
 					 g_param_spec_uint64 ("n-resend-unavailable",
 							      "n-resend-unavailable",
 							      "PACKET_UNAVAILABLE error packets sent",
+							      0, G_MAXUINT64, 0,
+							      G_PARAM_READABLE |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_N_STREAM_STOPS,
+					 g_param_spec_uint64 ("n-stream-stops",
+							      "n-stream-stops",
+							      "Streams ended, each counted after the last packet of its last frame",
 							      0, G_MAXUINT64, 0,
 							      G_PARAM_READABLE |
 							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
