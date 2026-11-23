@@ -143,6 +143,11 @@ typedef struct {
 	guint n_packet_resend_requests;
 	gboolean resend_ratio_reached;
 
+	/* Fast-fail bookkeeping of _missing_packet_check: every missing packet up to max_checked_packet has its
+	 * deadline, and next_check_us is the earliest of them (G_MAXUINT64 when none is pending). */
+	gint32 max_checked_packet;
+	guint64 next_check_us;
+
 	gboolean extended_ids;
 } ArvGvStreamFrameData;
 
@@ -619,6 +624,8 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 
 	frame->frame_id = frame_id;
 	frame->last_valid_packet = -1;
+	frame->max_checked_packet = -1;
+	frame->next_check_us = G_MAXUINT64;
 
 	frame->buffer = buffer;
 	_update_socket (thread_data, frame->buffer);
@@ -895,6 +902,28 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 	if ((int) (frame->n_packets * thread_data->packet_request_ratio) <= 0)
 		return;
 
+	/* Fast fail: the scan below runs only once the earliest pending deadline has passed. Packets seen missing
+	 * for the first time (above every packet id checked before) get their initial deadline here, at the same time
+	 * and with the same value the scan would give them; below max_checked_packet every missing packet already has
+	 * one. A scan that would request nothing is skipped, so the requests and their deadlines are unchanged. */
+	if (thread_data->fast_fail && packet_id < frame->n_packets) {
+		if ((gint32) packet_id > frame->max_checked_packet) {
+			for (i = MAX (frame->max_checked_packet, frame->last_valid_packet) + 1; i <= (int) packet_id; i++) {
+				if (!frame->packet_data[i].received && frame->packet_data[i].abs_timeout_us == 0) {
+					frame->packet_data[i].abs_timeout_us = time_us +
+						thread_data->initial_packet_timeout_us;
+					frame->next_check_us = MIN (frame->next_check_us,
+								    frame->packet_data[i].abs_timeout_us);
+				}
+			}
+			frame->max_checked_packet = packet_id;
+		}
+
+		/* need_resend is time_us > abs_timeout_us */
+		if (time_us <= frame->next_check_us)
+			return;
+	}
+
 	if (packet_id < frame->n_packets) {
 		int first_missing = -1;
 
@@ -969,6 +998,16 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 					first_missing = -1;
 				}
 			}
+		}
+
+		if (thread_data->fast_fail) {
+			gint32 last = MIN (frame->max_checked_packet, (gint32) frame->n_packets - 1);
+
+			frame->next_check_us = G_MAXUINT64;
+			for (i = frame->last_valid_packet + 1; i <= last; i++)
+				if (!frame->packet_data[i].received && frame->packet_data[i].abs_timeout_us != 0)
+					frame->next_check_us = MIN (frame->next_check_us,
+								    frame->packet_data[i].abs_timeout_us);
 		}
 	}
 }
