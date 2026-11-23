@@ -607,6 +607,8 @@ _compute_n_expected_packets (const ArvGvspPacket *packet, size_t allocated_size,
                         if (payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
                             payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA ||
                             payload_type == ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA) {
+                                if (packet_size <= ARV_GVSP_PAYLOAD_PACKET_PROTOCOL_OVERHEAD (extended_ids))
+                                        return 0;
                                 block_size = packet_size - ARV_GVSP_PAYLOAD_PACKET_PROTOCOL_OVERHEAD (extended_ids);
                                 return (allocated_size + block_size - 1) / block_size + (2 /* leader + trailer */);
                         } else if (payload_type == ARV_BUFFER_PAYLOAD_TYPE_MULTIPART) {
@@ -615,6 +617,8 @@ _compute_n_expected_packets (const ArvGvspPacket *packet, size_t allocated_size,
                                 unsigned int i;
 
                                 n_parts = arv_gvsp_leader_packet_get_multipart_n_parts(packet, packet_size);
+                                if (packet_size <= ARV_GVSP_MULTIPART_PACKET_PROTOCOL_OVERHEAD (extended_ids))
+                                        return 0;
                                 block_size = packet_size - ARV_GVSP_MULTIPART_PACKET_PROTOCOL_OVERHEAD (extended_ids);
 
                                 for (i = 0; i < n_parts; i++) {
@@ -628,9 +632,15 @@ _compute_n_expected_packets (const ArvGvspPacket *packet, size_t allocated_size,
                         }
                         break;
                 case ARV_GVSP_CONTENT_TYPE_PAYLOAD:
+                        /* Only the standard header's overhead is checked at construction: an extended id stream with
+                         * a packet size at or below the extended overhead would underflow, or divide by zero */
+                        if (packet_size <= ARV_GVSP_PAYLOAD_PACKET_PROTOCOL_OVERHEAD (extended_ids))
+                                return 0;
                         block_size = packet_size - ARV_GVSP_PAYLOAD_PACKET_PROTOCOL_OVERHEAD (extended_ids);
                         return (allocated_size + block_size - 1) / block_size + (2 /* leader + trailer */);
                 case ARV_GVSP_CONTENT_TYPE_MULTIPART:
+                        if (packet_size <= ARV_GVSP_MULTIPART_PACKET_PROTOCOL_OVERHEAD (extended_ids))
+                                return 0;
                         block_size = packet_size - ARV_GVSP_MULTIPART_PACKET_PROTOCOL_OVERHEAD (extended_ids);
                         return (allocated_size + block_size - 1) / block_size +
                                 (2 /* leader + trailer */) + (255 /* n_parts_max) */);
@@ -938,7 +948,9 @@ _process_payload_block (ArvGvStreamThreadData *thread_data,
 	if (frame->buffer->priv->status != ARV_BUFFER_STATUS_FILLING)
 		return;
 
-	if (packet_id > frame->n_packets - 2 || packet_id < 1) {
+	/* Data packets are 1 to n_packets - 2. n_packets can be 1 or 2 (an ALL_IN first packet, a trailer at packet
+	 * id 0 or 1 starting or shrinking the frame), where n_packets - 2 would wrap and accept any packet id. */
+	if (frame->n_packets < 3 || packet_id > frame->n_packets - 2 || packet_id < 1) {
 		arv_gvsp_packet_debug (packet, packet_size, ARV_DEBUG_LEVEL_INFO);
 		frame->buffer->priv->status = ARV_BUFFER_STATUS_WRONG_PACKET_ID;
 		return;
@@ -950,6 +962,15 @@ _process_payload_block (ArvGvStreamThreadData *thread_data,
 	block_offset = (packet_id - 1) * (thread_data->scps_packet_size -
                                          ARV_GVSP_PAYLOAD_PACKET_PROTOCOL_OVERHEAD (extended_ids));
 	block_end = block_size + block_offset;
+
+	/* A frame started by its trailer takes n_packets from the trailer's packet id, not from the buffer size, so a
+	 * valid packet id can still point past the buffer: clamping block_end below would make block_size negative */
+	if (block_offset >= (ptrdiff_t) frame->buffer->priv->allocated_size) {
+		arv_info_stream_thread ("[GvStream::process_data_block] Packet %u of frame %" G_GUINT64_FORMAT
+					" starts beyond the buffer", packet_id, frame->frame_id);
+		thread_data->n_size_mismatch_errors++;
+		return;
+	}
 
 	if (block_end > frame->buffer->priv->allocated_size) {
 		arv_info_stream_thread ("[GvStream::process_data_block] %" G_GINTPTR_FORMAT " unexpected bytes in packet %u "
@@ -1189,9 +1210,12 @@ _close_frame (ArvGvStreamThreadData *thread_data,
 	if (frame->buffer->priv->status == ARV_BUFFER_STATUS_ABORTED)
 		thread_data->n_aborted++;
 
+	/* last_valid_packet can be beyond the end when a trailer arrived after packets above its id: n_packets
+	 * shrank under it. Adding the negative difference would wrap the counter. */
 	if (frame->buffer->priv->status != ARV_BUFFER_STATUS_SUCCESS &&
-	    frame->buffer->priv->status != ARV_BUFFER_STATUS_ABORTED)
-		thread_data->n_missing_packets += (int) frame->n_packets - (frame->last_valid_packet + 1);
+	    frame->buffer->priv->status != ARV_BUFFER_STATUS_ABORTED &&
+	    (gint64) frame->n_packets > (gint64) frame->last_valid_packet + 1)
+		thread_data->n_missing_packets += (gint64) frame->n_packets - ((gint64) frame->last_valid_packet + 1);
 
 	arv_stream_push_output_buffer (thread_data->stream, frame->buffer);
 	if (thread_data->callback != NULL)

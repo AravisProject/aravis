@@ -965,6 +965,113 @@ short_datagrams_test (void)
 	finish_loss_stream (stream);
 }
 
+static void
+inject_leader (GSocket *socket, GSocketAddress *destination, guint16 frame_id)
+{
+	guint8 data[64] = { 0 };
+	gsize size = gvsp_header (data, 0, frame_id, 0x01, 0);
+
+	/* flags, payload type (image), 64 bit timestamp, pixel format, width, height, x, y, x and y padding */
+	data[size + 3] = 0x01;
+	size += 12;
+	data[size + 0] = 0x01; data[size + 1] = 0x08; data[size + 2] = 0x00; data[size + 3] = 0x01; /* Mono8 */
+	data[size + 6] = LOSS_WIDTH >> 8;
+	data[size + 10] = LOSS_HEIGHT >> 8;
+	size += 24;
+
+	inject (socket, destination, data, size);
+}
+
+static void
+inject_trailer (GSocket *socket, GSocketAddress *destination, guint16 frame_id, guint32 packet_id)
+{
+	guint8 data[64] = { 0 };
+	gsize size = gvsp_header (data, 0, frame_id, 0x02, packet_id);
+
+	/* payload type (image), size y */
+	data[size + 3] = 0x01;
+	size += 8;
+
+	inject (socket, destination, data, size);
+}
+
+static void
+inject_payload (GSocket *socket, GSocketAddress *destination, guint16 frame_id, guint32 packet_id)
+{
+	guint8 data[8 + 100] = { 0 };
+
+	gvsp_header (data, 0, frame_id, 0x03, packet_id);
+	inject (socket, destination, data, sizeof (data));
+}
+
+static void
+small_packet_count_test (void)
+{
+	ArvStream *stream;
+	GSocket *socket;
+	GSocketAddress *destination;
+	GError *error = NULL;
+	guint n_buffers = 0;
+	guint i;
+
+	g_object_set (simulator, "packet-resend", TRUE, NULL);
+	stream = create_loss_stream (8);
+	socket = create_injection_socket (stream, &destination);
+
+	/* The stream thread runs from the stream's acquisition start; the camera is not started */
+	arv_stream_start_acquisition (stream, &error);
+	g_assert_no_error (error);
+
+	/* No acquisition: every packet comes from the test. Frame 100 is a leader alone; it holds the frames behind
+	 * it open until it times out (frame-retention, 100 ms). */
+	inject_leader (socket, destination, 100);
+
+	/* Frame 101 starts with a trailer at packet id 0, which makes it a one packet frame. Its n_packets - 2 used
+	 * to wrap, so that a data packet at any id passed the range check, and packet 1000 was copied 1.4 MB into a
+	 * 256 kB buffer with a negative length. */
+	inject_trailer (socket, destination, 101, 0);
+	inject_payload (socket, destination, 101, 1000);
+
+	/* Frame 102: packets 0, 1, 2, 4 and 5, then a trailer at 3. The contiguous block ends at 5, above the
+	 * trailer's n_packets of 4: the frame cannot complete, and when it fails its missing packet count,
+	 * n_packets - (last_valid_packet + 1) = -2, used to wrap n_missing_packets. */
+	inject_leader (socket, destination, 102);
+	inject_payload (socket, destination, 102, 1);
+	inject_payload (socket, destination, 102, 2);
+	inject_payload (socket, destination, 102, 4);
+	inject_payload (socket, destination, 102, 5);
+	inject_trailer (socket, destination, 102, 3);
+
+	for (i = 0; i < 3; i++) {
+		ArvBuffer *buffer = arv_stream_timeout_pop_buffer (stream, 1000000);
+
+		if (buffer == NULL)
+			break;
+		g_test_message ("small packet count: frame %" G_GUINT64_FORMAT " status %d",
+				arv_buffer_get_frame_id (buffer), arv_buffer_get_status (buffer));
+		n_buffers++;
+		arv_stream_push_buffer (stream, buffer);
+	}
+
+	g_test_message ("small packet count: %u buffers, %" G_GUINT64_FORMAT " received, %" G_GUINT64_FORMAT
+			" missing packets, %" G_GUINT64_FORMAT " failures",
+			n_buffers, arv_stream_get_info_uint64_by_name (stream, "n_received_packets"),
+			arv_stream_get_info_uint64_by_name (stream, "n_missing_packets"),
+			arv_stream_get_info_uint64_by_name (stream, "n_failures"));
+
+	g_assert_cmpuint (n_buffers, ==, 3);
+	g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "n_received_packets"), ==, 9);
+	/* Frame 100 misses 194 of its 195 packets, frame 102 none below its trailer */
+	g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "n_missing_packets"), ==, LOSS_N_BLOCKS - 1);
+
+	arv_stream_stop_acquisition (stream, &error);
+	g_assert_no_error (error);
+	g_object_unref (destination);
+	g_object_unref (socket);
+	g_object_unref (stream);
+	reset_simulator ();
+}
+
 /* 65535 / 3: the simulator's frame ids repeat every third frame */
 #define REPEATED_ID_STEP		21845
 #define REPEATED_ID_DROP_INTERVAL	4
@@ -1197,6 +1304,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/fakegv/slow-consumer", slow_consumer_test);
 	g_test_add_func ("/fakegv/repeated-frame-id", repeated_frame_id_test);
 	g_test_add_func ("/fakegv/short-datagrams", short_datagrams_test);
+	g_test_add_func ("/fakegv/small-packet-count", small_packet_count_test);
 
 	result = g_test_run();
 
