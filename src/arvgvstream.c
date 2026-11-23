@@ -85,6 +85,7 @@
 #define ARV_GV_STREAM_RELEARN_IDLE_US                   1000000 /* connected socket silent this long: learn again */
 #define ARV_GV_STREAM_MAX_FOREIGN_SOURCES               64     /* unqualified senders before connecting is given up */
 #define ARV_GV_STREAM_RX_MAX_ERRORS                     100    /* consecutive recvmsg_x failures before _loop */
+#define ARV_GV_STREAM_FAST_FAIL_REORDER_PACKETS         16     /* first packet ids that may still see their leader */
 
 enum {
 	ARV_GV_STREAM_PROPERTY_0,
@@ -145,6 +146,11 @@ typedef struct {
 
 	guint n_packet_resend_requests;
 	gboolean resend_ratio_reached;
+
+	/* The trailer was processed: n_packets is the device's count, not the buffer size estimate */
+	gboolean trailer_received;
+	/* When the device first answered a resend request with a status packet (disable_resend_request) */
+	guint64 disable_resend_us;
 
 	/* Fast-fail bookkeeping of _missing_packet_check: every missing packet up to max_checked_packet has its
 	 * deadline, and next_check_us is the earliest of them (G_MAXUINT64 when none is pending). */
@@ -843,9 +849,13 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 	}
 
 	/* Fast fail: the first packet of a new frame is not its leader, and the missing head cannot be requested
-	 * (resend NEVER, or more packets than the resend budget, estimated from the latest frame's size, which is
-	 * what _missing_packet_check would refuse). Such a frame can only fail, so it does not take a buffer. */
-	if (thread_data->fast_fail && packet_id > 0 &&
+	 * (resend NEVER, or more packets than the resend budget, which is what _missing_packet_check would refuse).
+	 * Such a frame can only fail, so it does not take a buffer. A first packet within
+	 * ARV_GV_STREAM_FAST_FAIL_REORDER_PACKETS (16) of the leader may only have overtaken it, and the frame is
+	 * started: under resend NEVER it completes if the head arrives late, as upstream. The budget is computed
+	 * from last_n_packets, the n_packets the latest frame was started with (its buffer size estimate), which is
+	 * the n_packets _missing_packet_check sees when it asks for a head: the trailer has not arrived then. */
+	if (thread_data->fast_fail && packet_id > ARV_GV_STREAM_FAST_FAIL_REORDER_PACKETS &&
 	    (thread_data->packet_resend == ARV_GV_STREAM_PACKET_RESEND_NEVER ||
 	     (thread_data->last_n_packets > 0 &&
 	      ((int) (thread_data->last_n_packets * thread_data->packet_request_ratio) <= 0 ||
@@ -1165,6 +1175,8 @@ _process_data_trailer (ArvGvStreamThreadData *thread_data,
                 frame->n_packets = packet_id + 1;
         }
 
+	frame->trailer_received = TRUE;
+
 	if (frame->packet_data[packet_id].resend_requested) {
 		thread_data->n_resent_packets++;
 		arv_debug_stream_thread ("[GvStream::process_data_trailer] Received resent packet %u for frame %"
@@ -1306,8 +1318,6 @@ _close_frame (ArvGvStreamThreadData *thread_data,
 {
 	if (frame->buffer->priv->status == ARV_BUFFER_STATUS_SUCCESS) {
 		thread_data->n_completed_buffers++;
-		/* A complete frame's packet count is the trailer's, not the buffer size estimate */
-		thread_data->last_n_packets = frame->n_packets;
 	} else
 		if (frame->buffer->priv->status != ARV_BUFFER_STATUS_ABORTED)
 			thread_data->n_failures++;
@@ -1358,13 +1368,22 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 		/* An incomplete frame that nothing will be requested for any more cannot complete once a newer
 		 * frame exists. Upstream closes it only under resend NEVER; fast fail also when its resend budget is
 		 * spent or the device said a packet is gone, instead of holding its buffer, and every frame behind
-		 * it, for frame-retention. */
+		 * it, for frame-retention.
+		 *
+		 * "Gone" is only final once the trailer has been seen. Without it, the tail request runs to the end
+		 * of the buffer size estimate, and a device may answer PACKET_UNAVAILABLE for the ids beyond its real
+		 * trailer before it resends the trailer that completes the frame. So, until the trailer is seen, the
+		 * frame waits packet-timeout after the first status packet: every packet requested before it has a
+		 * deadline earlier than that. */
 		if (can_close_frame &&
 		    iter->next != NULL &&
 		    (thread_data->packet_resend == ARV_GV_STREAM_PACKET_RESEND_NEVER ||
 		     (thread_data->fast_fail &&
 		      frame->last_valid_packet != frame->n_packets - 1 &&
-		      (frame->resend_ratio_reached || frame->disable_resend_request)))) {
+		      (frame->resend_ratio_reached ||
+		       (frame->disable_resend_request &&
+			(frame->trailer_received ||
+			 time_us - frame->disable_resend_us >= thread_data->packet_timeout_us)))))) {
 			frame->buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
 			arv_info_stream_thread ("[GvStream::check_frame_completion] Incomplete frame %" G_GUINT64_FORMAT,
 						 frame->frame_id);
@@ -1561,6 +1580,8 @@ _process_packet (ArvGvStreamThreadData *thread_data, const ArvGvspPacket *packet
                         if (packet_status == ARV_GVSP_PACKET_STATUS_PACKET_AND_PREV_REMOVED_FROM_MEMORY ||
                             packet_status == ARV_GVSP_PACKET_STATUS_PACKET_REMOVED_FROM_MEMORY ||
                             packet_status == ARV_GVSP_PACKET_STATUS_PACKET_UNAVAILABLE) {
+                                if (!frame->disable_resend_request)
+                                        frame->disable_resend_us = time_us;
                                 frame->disable_resend_request = TRUE;
                                 thread_data->n_resend_disabled++;
                         }
@@ -2547,9 +2568,10 @@ arv_gv_stream_thread (void *data)
 	thread_data->frames = NULL;
 	thread_data->last_frame_id = 0;
 	thread_data->first_packet = TRUE;
-	/* Frame ids seen before a restart say nothing about the frames after it */
+	/* Frame ids and sizes seen before a restart say nothing about the frames after it */
 	thread_data->has_dropped_frame = FALSE;
 	thread_data->has_underrun_frame = FALSE;
+	thread_data->last_n_packets = 0;
 
 	/* The sender may have changed while the thread was stopped (device reboot, new source port) */
 	thread_data->last_datagram_us = g_get_monotonic_time ();

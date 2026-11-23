@@ -74,6 +74,7 @@ enum
   PROP_RESEND_LOST_RATIO,
   PROP_FRAME_ID_STEP,
   PROP_NEW_SOURCE_PORT_PER_STREAM,
+  PROP_UNAVAILABLE_BEYOND_TRAILER,
   PROP_SENSOR_WIDTH,
   PROP_SENSOR_HEIGHT,
   PROP_N_SENT_FRAMES,
@@ -159,6 +160,7 @@ typedef struct {
 	double resend_lost_ratio;
 	guint frame_id_step;
 	gboolean new_source_port_per_stream;
+	gboolean unavailable_beyond_trailer;
 	guint sensor_width;
 	guint sensor_height;
 
@@ -382,6 +384,14 @@ _handle_packet_resend (ArvGvFakeCamera *gv_fake_camera, ArvGvcpPacket *packet, s
 					" block %u unavailable", frame_id, first_block);
 		_send_packet_unavailable (gv_fake_camera, frame_id, first_block);
 		return;
+	}
+
+	/* Some devices answer a request that runs past the trailer with PACKET_UNAVAILABLE for the blocks that do not
+	 * exist, before resending the ones that do; the 2 ms gap stands for the time a device takes to fetch them, and
+	 * puts the status packet and the resent ones in separate receive batches */
+	if (last_block >= frame->n_blocks && g_atomic_int_get (&priv->unavailable_beyond_trailer)) {
+		_send_packet_unavailable (gv_fake_camera, frame_id, frame->n_blocks);
+		g_usleep (2000);
 	}
 
 	last_block = MIN (last_block, frame->n_blocks - 1);
@@ -1198,6 +1208,10 @@ _set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *
 			g_atomic_int_set (&gv_fake_camera->priv->new_source_port_per_stream,
 					  g_value_get_boolean (value));
 			break;
+		case PROP_UNAVAILABLE_BEYOND_TRAILER:
+			g_atomic_int_set (&gv_fake_camera->priv->unavailable_beyond_trailer,
+					  g_value_get_boolean (value));
+			break;
 		case PROP_SENSOR_WIDTH:
 			gv_fake_camera->priv->sensor_width = g_value_get_uint (value);
 			_apply_device_settings (gv_fake_camera);
@@ -1266,6 +1280,9 @@ _get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 			break;
 		case PROP_NEW_SOURCE_PORT_PER_STREAM:
 			g_value_set_boolean (value, g_atomic_int_get (&priv->new_source_port_per_stream));
+			break;
+		case PROP_UNAVAILABLE_BEYOND_TRAILER:
+			g_value_set_boolean (value, g_atomic_int_get (&priv->unavailable_beyond_trailer));
 			break;
 		case PROP_SENSOR_WIDTH:
 			g_value_set_uint (value, priv->sensor_width);
@@ -1552,6 +1569,17 @@ arv_gv_fake_camera_class_init (ArvGvFakeCameraClass *this_class)
 					 g_param_spec_boolean ("new-source-port-per-stream",
 							       "New source port per stream",
 							       "Send every stream (acquisition) from a new UDP source port",
+							       FALSE,
+							       G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+							       G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							       G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_UNAVAILABLE_BEYOND_TRAILER,
+					 g_param_spec_boolean ("unavailable-beyond-trailer",
+							       "Unavailable beyond trailer",
+							       "Answer a resend request that runs past the trailer with"
+							       " PACKET_UNAVAILABLE for the first missing block, before the"
+							       " resent blocks",
 							       FALSE,
 							       G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
 							       G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |

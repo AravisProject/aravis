@@ -372,12 +372,13 @@ reset_simulator (void)
 		      "resend-lost-ratio", 0.0,
 		      "frame-id-step", 1,
 		      "new-source-port-per-stream", FALSE,
+		      "unavailable-beyond-trailer", FALSE,
 		      NULL);
 	arv_fake_camera_set_fill_pattern (arv_gv_fake_camera_get_fake_camera (simulator), NULL, NULL, NULL);
 }
 
 static ArvStream *
-create_loss_stream (unsigned n_buffers)
+create_loss_stream_full (unsigned n_buffers, size_t extra_bytes)
 {
 	ArvStream *stream;
 	GError *error = NULL;
@@ -409,9 +410,15 @@ create_loss_stream (unsigned n_buffers)
 	g_assert_cmpint (payload, ==, LOSS_WIDTH * LOSS_HEIGHT);
 
 	for (i = 0; i < n_buffers; i++)
-		arv_stream_push_buffer (stream, arv_buffer_new (payload, NULL));
+		arv_stream_push_buffer (stream, arv_buffer_new (payload + extra_bytes, NULL));
 
 	return stream;
+}
+
+static ArvStream *
+create_loss_stream (unsigned n_buffers)
+{
+	return create_loss_stream_full (n_buffers, 0);
 }
 
 static void
@@ -1002,7 +1009,7 @@ short_datagrams_test (void)
 }
 
 static void
-inject_leader (GSocket *socket, GSocketAddress *destination, guint16 frame_id)
+inject_leader_full (GSocket *socket, GSocketAddress *destination, guint16 frame_id, guint32 width, guint32 height)
 {
 	guint8 data[64] = { 0 };
 	gsize size = gvsp_header (data, 0, frame_id, 0x01, 0);
@@ -1011,11 +1018,19 @@ inject_leader (GSocket *socket, GSocketAddress *destination, guint16 frame_id)
 	data[size + 3] = 0x01;
 	size += 12;
 	data[size + 0] = 0x01; data[size + 1] = 0x08; data[size + 2] = 0x00; data[size + 3] = 0x01; /* Mono8 */
-	data[size + 6] = LOSS_WIDTH >> 8;
-	data[size + 10] = LOSS_HEIGHT >> 8;
+	data[size + 6] = width >> 8;
+	data[size + 7] = width & 0xff;
+	data[size + 10] = height >> 8;
+	data[size + 11] = height & 0xff;
 	size += 24;
 
 	inject (socket, destination, data, size);
+}
+
+static void
+inject_leader (GSocket *socket, GSocketAddress *destination, guint16 frame_id)
+{
+	inject_leader_full (socket, destination, frame_id, LOSS_WIDTH, LOSS_HEIGHT);
 }
 
 static void
@@ -1300,6 +1315,108 @@ short_packet_timeout_test (void)
 	reset_simulator ();
 }
 
+static void
+resend_beyond_trailer_test (void)
+{
+	ArvStream *stream;
+	GError *error = NULL;
+	guint64 n_unavailable_before = simulator_counter ("n-resend-unavailable");
+	guint n_frames = 0;
+	guint n_success = 0;
+
+	/* Every trailer is lost, and the buffers are 10 packets larger than the payload, so the receiver asks for the
+	 * tail up to its buffer size estimate, 10 packets past the real trailer. The simulator answers
+	 * PACKET_UNAVAILABLE for those first, then resends the trailer. The status packet must not close the frame
+	 * the resent trailer is about to complete. */
+	g_object_set (simulator,
+		      "packet-resend", TRUE,
+		      "static-image", TRUE,
+		      "frame-retention", 16,
+		      "drop-every-nth-packet", LOSS_N_BLOCKS,
+		      "unavailable-beyond-trailer", TRUE,
+		      NULL);
+
+	stream = create_loss_stream_full (16, 10 * 1392);
+
+	arv_camera_start_acquisition (camera, &error);
+	g_assert_no_error (error);
+
+	while (n_frames < 50) {
+		ArvBuffer *buffer;
+
+		buffer = arv_stream_timeout_pop_buffer (stream, 1000000);
+		g_assert (ARV_IS_BUFFER (buffer));
+
+		if (arv_buffer_get_status (buffer) == ARV_BUFFER_STATUS_SUCCESS) {
+			g_assert (buffer_has_expected_content (buffer));
+			n_success++;
+		}
+
+		n_frames++;
+		arv_stream_push_buffer (stream, buffer);
+	}
+
+	g_test_message ("resend beyond trailer (fast-fail %" G_GUINT64_FORMAT "): %u frames, %u complete; %"
+			G_GUINT64_FORMAT " unavailable, %" G_GUINT64_FORMAT " resend disabled, %" G_GUINT64_FORMAT
+			" resent packets", stream_fast_fail (stream), n_frames, n_success,
+			simulator_counter ("n-resend-unavailable") - n_unavailable_before,
+			arv_stream_get_info_uint64_by_name (stream, "n_resend_disabled"),
+			arv_stream_get_info_uint64_by_name (stream, "n_resent_packets"));
+
+	g_assert_cmpuint (simulator_counter ("n-resend-unavailable") - n_unavailable_before, >, 0);
+	g_assert_cmpuint (n_success, ==, n_frames);
+
+	finish_loss_stream (stream);
+}
+
+static void
+reordered_leader_test (void)
+{
+	ArvStream *stream;
+	GSocket *socket;
+	GSocketAddress *destination;
+	GError *error = NULL;
+	ArvBuffer *buffer;
+	guint i;
+
+	/* A 16 x 16 frame is a leader, one data packet and a trailer */
+	arv_camera_set_region (camera, 0, 0, 16, 16, &error);
+	g_assert_no_error (error);
+	stream = arv_camera_create_stream (camera, NULL, NULL, NULL, &error);
+	g_assert_no_error (error);
+	g_object_set (stream, "packet-resend", ARV_GV_STREAM_PACKET_RESEND_NEVER, NULL);
+	for (i = 0; i < 4; i++)
+		arv_stream_push_buffer (stream, arv_buffer_new (16 * 16, NULL));
+	socket = create_injection_socket (stream, &destination);
+
+	/* The stream thread runs from the stream's acquisition start; the camera is not started */
+	arv_stream_start_acquisition (stream, &error);
+	g_assert_no_error (error);
+
+	/* Under resend NEVER, the data packet overtakes the leader: the frame still completes, as upstream, rather
+	 * than being skipped by fast fail as a frame whose head cannot be requested */
+	inject_payload (socket, destination, 10, 1);
+	inject_leader_full (socket, destination, 10, 16, 16);
+	inject_trailer (socket, destination, 10, 2);
+
+	buffer = arv_stream_timeout_pop_buffer (stream, 1000000);
+	g_assert (ARV_IS_BUFFER (buffer));
+	g_test_message ("reordered leader: frame %" G_GUINT64_FORMAT " status %d, %" G_GUINT64_FORMAT " skipped",
+			arv_buffer_get_frame_id (buffer), arv_buffer_get_status (buffer),
+			arv_stream_get_info_uint64_by_name (stream, "n_skipped_frames"));
+	g_assert_cmpint (arv_buffer_get_status (buffer), ==, ARV_BUFFER_STATUS_SUCCESS);
+	g_assert_cmpuint (arv_buffer_get_frame_id (buffer), ==, 10);
+	g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "n_skipped_frames"), ==, 0);
+	g_object_unref (buffer);
+
+	arv_stream_stop_acquisition (stream, &error);
+	g_assert_no_error (error);
+	g_object_unref (destination);
+	g_object_unref (socket);
+	g_object_unref (stream);
+	reset_simulator ();
+}
+
 /* 65535 / 3: the simulator's frame ids repeat every third frame */
 #define REPEATED_ID_STEP		21845
 #define REPEATED_ID_DROP_INTERVAL	4
@@ -1537,6 +1654,8 @@ main (int argc, char *argv[])
 	g_test_add_func ("/fakegv/source-relearn", source_relearn_test);
 	g_test_add_func ("/fakegv/rx-errors", rx_errors_test);
 	g_test_add_func ("/fakegv/short-packet-timeout", short_packet_timeout_test);
+	g_test_add_func ("/fakegv/resend-beyond-trailer", resend_beyond_trailer_test);
+	g_test_add_func ("/fakegv/reordered-leader", reordered_leader_test);
 
 	result = g_test_run();
 
