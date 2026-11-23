@@ -331,6 +331,7 @@ reset_simulator (void)
 		      "packet-resend", FALSE,
 		      "static-image", FALSE,
 		      "frame-retention", 4,
+		      "packet-rate", 0,
 		      "drop-every-nth-packet", 0,
 		      "drop-burst-length", 0,
 		      "drop-burst-frame-interval", 0,
@@ -401,6 +402,12 @@ simulator_counter (const char *name)
 	return value;
 }
 
+static guint64
+stream_fast_fail (ArvStream *stream)
+{
+	return arv_stream_get_info_uint64_by_name (stream, "fast_fail");
+}
+
 static void
 resend_test (void)
 {
@@ -411,19 +418,20 @@ resend_test (void)
 	guint n_frames = 0;
 	guint last_frame_id = 0;
 
-	/* Every 97 frames (195 * 97 packets) the dropped packet is a trailer. The receiver only notices a lost
-	 * trailer by timeout: 20 ms of silence for that frame, then the 1 ms initial timeout, evaluated on the next
-	 * packet or poll, so the request comes about three frame periods (~60 ms at 50 fps) late. 16 retained
-	 * frames keep that request answerable; with the default 4 (80 ms) it is borderline and the camera
-	 * sometimes answers PACKET_UNAVAILABLE. */
+	/* Every 97 frames (195 * 97 packets) the dropped packet is a trailer. Without fast fail the receiver only
+	 * notices a lost trailer by timeout: 20 ms of silence for that frame, then the 1 ms initial timeout,
+	 * evaluated on the next packet or poll, so the request comes up to about three frame periods (~60 ms at
+	 * 50 fps) late. 16 retained frames keep that request answerable; with the default 4 (80 ms) it is
+	 * borderline and the camera sometimes answers PACKET_UNAVAILABLE. With fast fail the trailer is requested
+	 * once the next frame's packets arrive, and the simulator's default retention of 4 frames is enough. */
 	g_object_set (simulator,
 		      "packet-resend", TRUE,
 		      "static-image", TRUE,
-		      "frame-retention", 16,
 		      "drop-every-nth-packet", 97,
 		      NULL);
 
 	stream = create_loss_stream (8);
+	g_object_set (simulator, "frame-retention", stream_fast_fail (stream) ? 4 : 16, NULL);
 
 	arv_camera_start_acquisition (camera, &error);
 	g_assert_no_error (error);
@@ -473,6 +481,75 @@ resend_test (void)
 
 /* 512x512 Mono8 in 1400 byte packets: leader, 193 data packets, trailer */
 #define LOSS_N_BLOCKS	195
+
+#define TRAILER_FRAME_RATE	100.0
+#define TRAILER_PACKET_RATE	40000
+#define TRAILER_N_FRAMES	100
+
+static void
+resend_trailer_test (void)
+{
+	ArvStream *stream;
+	GError *error = NULL;
+	guint64 n_unavailable_before = simulator_counter ("n-resend-unavailable");
+	guint n_frames = 0;
+	guint n_success = 0;
+	guint last_frame_id = 0;
+	gboolean fast_fail;
+
+	/* Every trailer is lost, and the simulator keeps only 2 frames: frame N can be resent while frame N + 1 is
+	 * being sent, not once N + 2 has started. At 100 fps, with the packets of a frame paced over ~5 ms, fast fail
+	 * requests the trailer of N 1 ms after the first packet of N + 1, in time. Without fast fail the request
+	 * waits for 20 ms of silence for N, by which time N + 2 has replaced it, and it is answered
+	 * PACKET_UNAVAILABLE. */
+	g_object_set (simulator,
+		      "packet-resend", TRUE,
+		      "static-image", TRUE,
+		      "frame-retention", 2,
+		      "packet-rate", TRAILER_PACKET_RATE,
+		      "drop-every-nth-packet", LOSS_N_BLOCKS,
+		      NULL);
+
+	stream = create_loss_stream (16);
+	fast_fail = stream_fast_fail (stream) != 0;
+	arv_camera_set_frame_rate (camera, TRAILER_FRAME_RATE, &error);
+	g_assert_no_error (error);
+
+	arv_camera_start_acquisition (camera, &error);
+	g_assert_no_error (error);
+
+	while (n_frames < TRAILER_N_FRAMES) {
+		ArvBuffer *buffer;
+
+		buffer = arv_stream_timeout_pop_buffer (stream, 1000000);
+		g_assert (ARV_IS_BUFFER (buffer));
+
+		if (arv_buffer_get_status (buffer) == ARV_BUFFER_STATUS_SUCCESS) {
+			g_assert (buffer_has_expected_content (buffer));
+			if (fast_fail && n_frames > 0)
+				g_assert_cmpuint (arv_buffer_get_frame_id (buffer), ==, next_frame_id (last_frame_id));
+			last_frame_id = arv_buffer_get_frame_id (buffer);
+			n_success++;
+		}
+
+		n_frames++;
+		arv_stream_push_buffer (stream, buffer);
+	}
+
+	g_test_message ("resend trailer (fast-fail %d): %u frames, %u complete; %" G_GUINT64_FORMAT " resent packets, %"
+			G_GUINT64_FORMAT " unavailable, %" G_GUINT64_FORMAT " failures",
+			fast_fail, n_frames, n_success,
+			arv_stream_get_info_uint64_by_name (stream, "n_resent_packets"),
+			simulator_counter ("n-resend-unavailable") - n_unavailable_before,
+			arv_stream_get_info_uint64_by_name (stream, "n_failures"));
+
+	if (fast_fail) {
+		g_assert_cmpuint (n_success, ==, n_frames);
+		g_assert_cmpuint (arv_stream_get_info_uint64_by_name (stream, "n_resent_packets"), >=, n_frames);
+	}
+
+	finish_loss_stream (stream);
+}
 
 static void
 resend_unavailable_test (void)
@@ -525,6 +602,7 @@ resend_unavailable_test (void)
 #define UNRECOVERABLE_FRAME_INTERVAL	5
 #define UNRECOVERABLE_HEAD_LENGTH	30
 #define UNRECOVERABLE_N_FRAMES		60
+#define UNRECOVERABLE_FRAME_RETENTION_US	200000
 /* ArvGvStream:packet-request-ratio default */
 #define LOSS_REQUEST_RATIO		0.25
 
@@ -544,16 +622,10 @@ typedef struct {
 	guint64 n_ratio_reached;
 } UnrecoverableResult;
 
-static guint64
-stream_fast_fail (ArvStream *stream)
-{
-	return arv_stream_get_info_uint64_by_name (stream, "fast_fail");
-}
-
 /* Leader and the first head_length data packets of every 5th frame are lost, and so is every resend: those frames
  * cannot be completed, every other one must be. */
 static void
-run_unrecoverable (guint head_length, ArvStream **stream_out, UnrecoverableResult *result)
+run_unrecoverable (guint head_length, guint frame_retention_us, ArvStream **stream_out, UnrecoverableResult *result)
 {
 	ArvStream *stream;
 	GError *error = NULL;
@@ -577,6 +649,8 @@ run_unrecoverable (guint head_length, ArvStream **stream_out, UnrecoverableResul
 		      NULL);
 
 	stream = create_loss_stream (16);
+	if (frame_retention_us > 0)
+		g_object_set (stream, "frame-retention", frame_retention_us, NULL);
 
 	arv_camera_start_acquisition (camera, &error);
 	g_assert_no_error (error);
@@ -670,7 +744,7 @@ unrecoverable_test (void)
 
 	/* 31 packets is under the stream's default request ratio (0.25 * 195), so the receiver does request them, and
 	 * the resend loss is exercised. */
-	run_unrecoverable (UNRECOVERABLE_HEAD_LENGTH, &stream, &result);
+	run_unrecoverable (UNRECOVERABLE_HEAD_LENGTH, UNRECOVERABLE_FRAME_RETENTION_US, &stream, &result);
 
 	/* One frame in 5 fails, the first failure may come before the first complete frame */
 	g_assert_cmpuint (result.n_failed, >=, result.n_frames / UNRECOVERABLE_FRAME_INTERVAL - 1);
@@ -683,12 +757,12 @@ unrecoverable_test (void)
 
 	/* The lost frame is requested once; the second request, a packet-timeout (20 ms) later, exceeds the budget.
 	 * With fast fail the frame is closed then, because newer frames exist, and the complete frames behind it are
-	 * delivered without waiting out the stream's frame-retention (100 ms). Without, the lost frame holds its
-	 * buffer and the four frames behind it until frame-retention has passed since its last packet: ~100 ms for
-	 * the next frame (measured from its leader to its delivery). */
+	 * delivered without waiting out the frame-retention, here 200 ms so that the bound has room on a loaded
+	 * machine. Without, the lost frame holds its buffer and the four frames behind it until frame-retention has
+	 * passed since its last packet: ~200 ms for the next frame, measured from its leader to its delivery. */
 	if (stream_fast_fail (stream)) {
-		g_assert_cmpint (result.max_delay_after_gap_us, <, 75000);
-		g_assert_cmpint (result.max_delay_clean_us, <, 75000);
+		g_assert_cmpint (result.max_delay_after_gap_us, <, UNRECOVERABLE_FRAME_RETENTION_US / 2);
+		g_assert_cmpint (result.max_delay_clean_us, <, UNRECOVERABLE_FRAME_RETENTION_US / 2);
 	}
 
 	finish_loss_stream (stream);
@@ -707,7 +781,7 @@ unrecoverable_head_test (void)
 	 * is packet 61, and requesting the head would exceed the budget. With fast fail the frame is skipped without
 	 * taking a buffer (only the very first frame of the stream, before any frame size is known, may be started);
 	 * without, it takes a buffer, requests nothing and times out. */
-	run_unrecoverable (UNRECOVERABLE_LONG_HEAD_LENGTH, &stream, &result);
+	run_unrecoverable (UNRECOVERABLE_LONG_HEAD_LENGTH, 0, &stream, &result);
 
 	if (stream_fast_fail (stream)) {
 		g_assert_cmpuint (result.n_skipped_frames, >=, result.n_gaps);
@@ -733,7 +807,7 @@ resend_budget_test (void)
 	 * one request for the 31, not a second one; before the budget was cumulative every request was checked alone
 	 * and each lost frame cost ~3 x 31 = 93 requested packets. Up to two lost frames may still be open when the
 	 * count is read. */
-	run_unrecoverable (UNRECOVERABLE_HEAD_LENGTH, &stream, &result);
+	run_unrecoverable (UNRECOVERABLE_HEAD_LENGTH, 0, &stream, &result);
 
 	g_test_message ("resend budget: %" G_GUINT64_FORMAT " requested packets for %u failed frames (%.1f per frame,"
 			" budget %.2f)", result.n_requested_packets, result.n_failed,
@@ -879,6 +953,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/fakegv/stream", stream_test);
 	g_test_add_func ("/fakegv/dynamic_roi", dynamic_roi_test);
 	g_test_add_func ("/fakegv/resend", resend_test);
+	g_test_add_func ("/fakegv/resend-trailer", resend_trailer_test);
 	g_test_add_func ("/fakegv/resend-unavailable", resend_unavailable_test);
 	g_test_add_func ("/fakegv/unrecoverable", unrecoverable_test);
 	g_test_add_func ("/fakegv/resend-budget", resend_budget_test);

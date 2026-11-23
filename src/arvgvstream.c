@@ -1284,8 +1284,15 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 
 		can_close_frame = FALSE;
 
+		/* Upstream checks a frame's missing tail (trailer included) only after packet-timeout of silence for
+		 * it, so a lost trailer is requested ~21 ms late. With fast fail, a packet of a newer frame (or a
+		 * newer frame dropped without a buffer) means the sender is done with this one: its missing tail gets
+		 * the initial-packet-timeout deadline now. The newest frame is never checked this way, so a frame that
+		 * is still being sent is not; within a frame, reordering is covered by the same initial timeout. The
+		 * call is cheap while nothing is due (next_check_us). */
 		if (frame != current_frame &&
-		    time_us - frame->last_packet_time_us >= thread_data->packet_timeout_us) {
+		    (time_us - frame->last_packet_time_us >= thread_data->packet_timeout_us ||
+		     (thread_data->fast_fail && frame->frame_id != thread_data->last_frame_id))) {
 			_missing_packet_check (thread_data, frame, frame->n_packets - 1, time_us);
 			iter = iter->next;
 			continue;
