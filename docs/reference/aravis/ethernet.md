@@ -62,6 +62,43 @@ stream_cb (void *user_data, ArvStreamCallbackType type, ArvBuffer *buffer)
 }
 ```
 
+On Apple, the stream thread asks for the real-time policy itself before the
+`ARV_STREAM_CALLBACK_TYPE_INIT` callback runs (see `ARV_GV_STREAM_THREAD_PRIORITY`
+below), so such a callback has the last word.
+
+## Stream Receiver Environment Variables
+
+The GigE Vision stream receiver reads a few environment variables, which make
+it possible to tune it, or to compare its receive paths, without changing the
+application. `ARV_GV_STREAM_CONNECT`, `ARV_GV_STREAM_FAST_FAIL` and the timing
+variables are read when the stream is created, the others each time its
+receiving thread starts, that is on each [method@Aravis.Stream.start_acquisition].
+An invalid value is reported with a warning and ignored.
+
+| Variable | Values | Default |
+|---|---|---|
+| `ARV_GV_STREAM_SOCKET_BUFFER_SIZE` | a byte count, `max` (as large as the kernel grants), `0` or `default` (leave the OS default) | `max` on Apple, unset elsewhere |
+| `ARV_GV_STREAM_THREAD_PRIORITY` | `default`, `high` or `realtime`, applied before the `ARV_STREAM_CALLBACK_TYPE_INIT` callback | `realtime` on Apple, `default` elsewhere |
+| `ARV_GV_STREAM_RX_BATCH` | datagrams per `recvmsg_x` call, 1 to 256; `0` selects the standard receive loop (Apple only) | 64 |
+| `ARV_GV_STREAM_RX_LOWAT_PACKETS` | packets' worth of data the receive loop waits for while a stream is active (Apple only) | 16 |
+| `ARV_GV_STREAM_CONNECT` | `1` or `0`: connect the stream socket to the sender learnt from the stream; resend requests then go out on a socket of their own | `1` on Apple, `0` elsewhere |
+| `ARV_GV_STREAM_FAST_FAIL` | `1` or `0`: do not start frames that cannot complete, release hopeless frames early, request a lost tail as soon as the next frame arrives | `1` on Apple, `0` elsewhere |
+| `ARV_GV_STREAM_INITIAL_PACKET_TIMEOUT_US`, `ARV_GV_STREAM_PACKET_TIMEOUT_US`, `ARV_GV_STREAM_FRAME_RETENTION_US` | durations in µs, replacing the `initial-packet-timeout`, `packet-timeout` and `frame-retention` property defaults (a later `g_object_set()` still wins) | unset |
+| `ARV_GV_STREAM_PACKET_REQUEST_RATIO` | 0 to 2, replacing the `packet-request-ratio` property default | unset |
+
+On Apple, the real-time policy of [func@Aravis.make_thread_realtime] is the Mach
+time constraint policy. Its period, computation and constraint can be set in µs
+with `ARV_RT_PERIOD_US`, `ARV_RT_COMPUTATION_US` and `ARV_RT_CONSTRAINT_US`
+(defaults 0, 500 and 1000).
+
+What the receiver did is reported in the stream infos
+([method@Aravis.Stream.get_info_uint64_by_name]), which `arv-camera-test-0.10`
+prints at the end of its run: among others `socket_buffer_size`,
+`thread_priority_mode` (0 default, 1 high, 2 realtime), `rx_mode` (0 standard
+loop, 1 `recvmsg_x`), `socket_connected`, `fast_fail`, `n_skipped_frames`,
+`n_short_packets` and `stream_thread_cpu_us`. The ones this receiver added are
+described in a comment above their declaration in `src/arvgvstream.c`.
+
 ## Stream Packet Size
 
 One way to increase streaming performance and lower the CPU use is to increase
