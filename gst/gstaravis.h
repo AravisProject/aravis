@@ -92,8 +92,8 @@ struct _GstAravis {
 
 	GstCaps *all_caps;
 
-	guint64 timestamp_offset;
-	guint64 last_timestamp;
+	GstClockTime last_pts;		/* running time of the last frame (kept monotonic) */
+	guint64 last_timestamp;		/* device timestamp of the last frame (duration) */
 
 	char *trigger_source;
 

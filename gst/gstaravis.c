@@ -607,7 +607,7 @@ gst_aravis_set_caps (GstBaseSrc *src, GstCaps *caps)
 	GST_LOG_OBJECT (gst_aravis, "Start acquisition");
 	arv_camera_start_acquisition (gst_aravis->camera, &error);
 
-	gst_aravis->timestamp_offset = 0;
+	gst_aravis->last_pts = GST_CLOCK_TIME_NONE;
 	gst_aravis->last_timestamp = 0;
 
 	if (error)
@@ -859,27 +859,6 @@ gst_aravis_stop( GstBaseSrc * src )
 	return TRUE;
 }
 
-static void
-gst_aravis_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
-		      GstClockTime * start, GstClockTime * end)
-{
-	if (gst_base_src_is_live (basesrc)) {
-		GstClockTime timestamp = GST_BUFFER_PTS (buffer);
-
-		if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
-			GstClockTime duration = GST_BUFFER_DURATION (buffer);
-
-			if (GST_CLOCK_TIME_IS_VALID (duration)) {
-				*end = timestamp + duration;
-			}
-			*start = timestamp;
-		}
-	} else {
-		*start = -1;
-		*end = -1;
-	}
-}
-
 /* Reference caps for the optional capture-time meta. The device timestamp is
  * nanoseconds on the PTP timescale when the device is PTP-synchronized (IEEE
  * 1588), matching the timestamp/x-ptp convention of rtpjitterbuffer. */
@@ -895,8 +874,12 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 	char *buffer_data;
 	size_t buffer_size;
 	guint64 timestamp_ns;
-        guint64 timestamp_offset;
-        guint64 last_timestamp;
+        guint64 received_ns;
+        GstClock *clock;
+        GstClockTime base_time;
+        GstClockTime now;
+        GstClockTime pts = GST_CLOCK_TIME_NONE;
+        gint64 delay;
         guint64 buffer_timeout_us;
         guint64 remaining_timeout_us;
 	gboolean base_src_does_timestamp;
@@ -965,6 +948,7 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
 	arv_buffer_get_image_region (arv_buffer, NULL, NULL, &width, &height);
 	arv_row_stride = width * ARV_PIXEL_FORMAT_BIT_PER_PIXEL (arv_buffer_get_image_pixel_format (arv_buffer)) / 8;
 	timestamp_ns = arv_buffer_get_timestamp (arv_buffer);
+	received_ns = arv_buffer_get_system_timestamp (arv_buffer);
 
 	/* Gstreamer requires row stride to be a multiple of 4 */
 	if ((arv_row_stride & 0x3) != 0) {
@@ -994,28 +978,43 @@ gst_aravis_create (GstPushSrc * push_src, GstBuffer ** buffer)
         }
 
 	if (!base_src_does_timestamp) {
-                GST_OBJECT_LOCK (gst_aravis);
-                timestamp_offset = gst_aravis->timestamp_offset;
-                last_timestamp = gst_aravis->last_timestamp;
-                if (timestamp_offset == 0) {
-                        timestamp_offset = timestamp_ns;
-                        last_timestamp = timestamp_ns;
-                        gst_aravis->timestamp_offset = timestamp_offset;
-                        gst_aravis->last_timestamp = last_timestamp;
-                }
-                GST_OBJECT_UNLOCK (gst_aravis);
+		/* The PTS is the running time when the frame's first packet arrived
+		 * (the buffer's system timestamp, host monotonic time): the clock's
+		 * running time now minus how long ago that was, as v4l2src does with
+		 * its driver timestamps. This works with any pipeline clock. Without a
+		 * usable receive time: now. */
+		clock = gst_element_get_clock (GST_ELEMENT_CAST (gst_aravis));
+		if (clock != NULL) {
+			base_time = gst_element_get_base_time (GST_ELEMENT_CAST (gst_aravis));
+			now = gst_clock_get_time (clock);
+			delay = 0;
 
-                GST_BUFFER_PTS (*buffer) = timestamp_ns - timestamp_offset;
-                GST_BUFFER_DURATION (*buffer) = timestamp_ns - last_timestamp;
+			if (received_ns != 0) {
+				delay = g_get_monotonic_time () * 1000 - (gint64) received_ns;
+				if (delay < 0 || delay > 10 * (gint64) GST_SECOND)
+					delay = 0;	/* not on the host's monotonic time */
+			}
+			pts = now > base_time ? now - base_time : 0;
+			pts = pts > (GstClockTime) delay ? pts - delay : 0;
+			gst_object_unref (clock);
+		}
 
-                GST_OBJECT_LOCK (gst_aravis);
-                gst_aravis->last_timestamp = timestamp_ns;
-                GST_OBJECT_UNLOCK (gst_aravis);
+		GST_OBJECT_LOCK (gst_aravis);
+		if (GST_CLOCK_TIME_IS_VALID (pts)) {
+			if (GST_CLOCK_TIME_IS_VALID (gst_aravis->last_pts) && pts < gst_aravis->last_pts)
+				pts = gst_aravis->last_pts;
+			gst_aravis->last_pts = pts;
+		}
+		GST_BUFFER_PTS (*buffer) = pts;
+		if (gst_aravis->last_timestamp != 0 && timestamp_ns > gst_aravis->last_timestamp)
+			GST_BUFFER_DURATION (*buffer) = timestamp_ns - gst_aravis->last_timestamp;
+		gst_aravis->last_timestamp = timestamp_ns;
+		GST_OBJECT_UNLOCK (gst_aravis);
 	}
 
-	/* Optionally expose the absolute device timestamp, which is otherwise lost
-	 * when it is folded into the first-frame-relative GST_BUFFER_PTS. A zero
-	 * timestamp means the device did not provide one. */
+	/* Optionally expose the device timestamp, which the PTS (host receive
+	 * time in running time) does not carry. A zero timestamp means the device
+	 * did not provide one. */
         GST_OBJECT_LOCK (gst_aravis);
 	if (gst_aravis->add_reference_timestamp_meta && timestamp_ns != 0) {
 		GstCaps *reference = gst_static_caps_get (&ptp_reference_timestamp_caps);
@@ -1760,7 +1759,12 @@ gst_aravis_class_init (GstAravisClass * klass)
 	gstbasesrc_class->unlock_stop = GST_DEBUG_FUNCPTR (gst_aravis_unlock_stop);
         gstbasesrc_class->query = GST_DEBUG_FUNCPTR (gst_aravis_query);
 
-	gstbasesrc_class->get_times = GST_DEBUG_FUNCPTR (gst_aravis_get_times);
+	/* No get_times: a capture source must not wait on the clock for its own
+	 * timestamps (GstBaseSrc would sync live buffers to their PTS, anchored at
+	 * the first buffer pushed, so a late first buffer held every frame back
+	 * for good while it waited in the stream's output queue). The camera
+	 * paces the frames; like v4l2src, the PTS is the capture moment in
+	 * running time, always in the past. */
 
 	gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_aravis_create);
 
