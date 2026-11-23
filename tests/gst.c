@@ -371,6 +371,89 @@ chunks_read_only_test (void)
         gst_object_unref (pipeline);
 }
 
+/* A slow downstream start (here: the caps event takes LATE_START_DELAY_MS
+ * while the acquisition already runs) must not hold back the frames that
+ * follow: once the backlog is pushed, a frame leaves aravissrc shortly after
+ * its capture. The fake camera's device timestamp is the host's monotonic
+ * time at capture, so its age at the sink is measured independently of the
+ * PTS. */
+
+#define LATE_START_DELAY_MS	500
+#define LATE_START_MAX_AGE_MS	(LATE_START_DELAY_MS / 2)
+
+static GstPadProbeReturn
+late_start_on_caps (GstPad *pad, GstPadProbeInfo *info, gpointer user_data)
+{
+        if (GST_EVENT_TYPE (GST_PAD_PROBE_INFO_EVENT (info)) == GST_EVENT_CAPS)
+                g_usleep (LATE_START_DELAY_MS * 1000);
+
+        return GST_PAD_PROBE_OK;
+}
+
+static void
+late_start_test (void)
+{
+        GstElement *pipeline = gst_pipeline_new ("late-start");
+        GstElement *source = make_source ("late-start-source");
+        GstElement *sink = gst_element_factory_make ("appsink", "sink");
+        GstCaps *reference = gst_caps_new_empty_simple ("timestamp/x-ptp");
+        GstCaps *caps;
+        GstPad *pad;
+        GstClockTime last_pts = GST_CLOCK_TIME_NONE;
+        gint64 first_us = 0;
+        gint64 max_age_ns = 0;
+        unsigned n_checked = 0;
+
+        g_object_set (source, "add-reference-timestamp-meta", TRUE, NULL);
+        g_object_set (sink, "sync", FALSE, NULL);
+        gst_bin_add_many (GST_BIN (pipeline), source, sink, NULL);
+        caps = gst_caps_from_string (TIMING_CAPS);
+        g_assert_true (gst_element_link_filtered (source, sink, caps));
+        gst_caps_unref (caps);
+
+        pad = gst_element_get_static_pad (source, "src");
+        gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, late_start_on_caps, NULL, NULL);
+        gst_object_unref (pad);
+
+        g_assert_cmpint (gst_element_set_state (pipeline, GST_STATE_PLAYING), !=, GST_STATE_CHANGE_FAILURE);
+
+        while (first_us == 0 || g_get_monotonic_time () - first_us < 2 * G_USEC_PER_SEC) {
+                GstSample *sample = gst_app_sink_try_pull_sample (GST_APP_SINK (sink), 3 * GST_SECOND);
+                GstBuffer *buffer;
+                GstReferenceTimestampMeta *meta;
+                gint64 age_ns;
+
+                g_assert_nonnull (sample);
+                buffer = gst_sample_get_buffer (sample);
+                meta = gst_buffer_get_reference_timestamp_meta (buffer, reference);
+                g_assert_nonnull (meta);
+                age_ns = g_get_monotonic_time () * 1000 - (gint64) meta->timestamp;
+
+                g_assert_true (GST_BUFFER_PTS_IS_VALID (buffer));
+                if (GST_CLOCK_TIME_IS_VALID (last_pts))
+                        g_assert_cmpuint (GST_BUFFER_PTS (buffer), >=, last_pts);
+                last_pts = GST_BUFFER_PTS (buffer);
+
+                if (first_us == 0)
+                        first_us = g_get_monotonic_time ();
+                else if (g_get_monotonic_time () - first_us > G_USEC_PER_SEC) {
+                        /* backlog of the late start pushed by now */
+                        max_age_ns = MAX (max_age_ns, age_ns);
+                        n_checked++;
+                }
+                gst_sample_unref (sample);
+        }
+
+        g_print ("late start: %u frames checked, max age %" G_GINT64_FORMAT " ms\n",
+                 n_checked, max_age_ns / 1000000);
+        g_assert_cmpuint (n_checked, >, 0);
+        g_assert_cmpint (max_age_ns, <, LATE_START_MAX_AGE_MS * (gint64) 1000000);
+
+        gst_caps_unref (reference);
+        g_assert_cmpint (gst_element_set_state (pipeline, GST_STATE_NULL), ==, GST_STATE_CHANGE_SUCCESS);
+        gst_object_unref (pipeline);
+}
+
 /* Sparse (triggered) stream: each software trigger gives exactly one frame, a
  * pause longer than the buffer timeout is not an error with
  * timeout-policy=wait, and the PTS spacing follows the spacing of the
@@ -663,6 +746,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/gst/chunks-unsupported", chunks_unsupported_test);
 #endif
 	g_test_add_func ("/gst/chunks-read-only", chunks_read_only_test);
+	g_test_add_func ("/gst/late-start", late_start_test);
 	g_test_add_func ("/gst/sparse-trigger", sparse_trigger_test);
 	g_test_add_func ("/gst/fixed-rate", fixed_rate_test);
 
