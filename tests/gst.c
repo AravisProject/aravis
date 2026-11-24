@@ -720,6 +720,196 @@ fixed_rate_test (void)
         gst_object_unref (pipeline);
 }
 
+/* A device clock that is not the host clock (drift, steps) must not hold the
+ * frames back nor make them late: the frame age at the sink (host time minus
+ * capture time) and the lateness (running time minus PTS) stay small, no
+ * stall, PTS never decreases. Fake_1 with a simulated device clock; the
+ * capture time follows from the device timestamp (reference timestamp meta)
+ * and the known clock model. */
+
+typedef struct {
+        GstElement *pipeline;
+        GstElement *source;
+        GstElement *sink;
+        ArvFakeCamera *fake_camera;
+        GstClockTime last_pts;
+} ClockTest;
+
+static void
+clock_test_setup (ClockTest *test)
+{
+        GError *error = NULL;
+        ArvCamera *camera = NULL;
+        ArvDevice *device;
+
+        test->pipeline = gst_parse_launch ("aravissrc name=src camera-name=Fake_1 add-reference-timestamp-meta=true "
+                                           "! " TIMING_CAPS ",framerate=25/1 ! appsink name=sink sync=false", &error);
+        g_assert_no_error (error);
+        test->source = gst_bin_get_by_name (GST_BIN (test->pipeline), "src");
+        test->sink = gst_bin_get_by_name (GST_BIN (test->pipeline), "sink");
+        test->last_pts = GST_CLOCK_TIME_NONE;
+
+        g_object_get (test->source, "camera", &camera, NULL);
+        g_assert_true (ARV_IS_CAMERA (camera));
+        device = arv_camera_get_device (camera);
+        test->fake_camera = g_object_ref (arv_fake_device_get_fake_camera (ARV_FAKE_DEVICE (device)));
+        g_object_unref (camera);
+}
+
+static void
+clock_test_teardown (ClockTest *test)
+{
+        g_assert_cmpint (gst_element_set_state (test->pipeline, GST_STATE_NULL), ==, GST_STATE_CHANGE_SUCCESS);
+        g_object_unref (test->fake_camera);
+        gst_object_unref (test->source);
+        gst_object_unref (test->sink);
+        gst_object_unref (test->pipeline);
+}
+
+/* Pulls one frame (no stall: within timeout), checks the PTS does not
+ * decrease, returns its device timestamp and lateness. */
+static void
+clock_test_pull (ClockTest *test, GstClockTime timeout, gint64 *device_ns, gint64 *lateness_ns)
+{
+        GstCaps *reference = gst_caps_new_empty_simple ("timestamp/x-ptp");
+        GstSample *sample = gst_app_sink_try_pull_sample (GST_APP_SINK (test->sink), timeout);
+        GstReferenceTimestampMeta *meta;
+        GstBuffer *buffer;
+        GstClock *clock;
+
+        g_assert_nonnull (sample);
+        buffer = gst_sample_get_buffer (sample);
+        g_assert_true (GST_BUFFER_PTS_IS_VALID (buffer));
+        if (GST_CLOCK_TIME_IS_VALID (test->last_pts))
+                g_assert_cmpuint (GST_BUFFER_PTS (buffer), >=, test->last_pts);
+        test->last_pts = GST_BUFFER_PTS (buffer);
+
+        meta = gst_buffer_get_reference_timestamp_meta (buffer, reference);
+        g_assert_nonnull (meta);
+        *device_ns = meta->timestamp;
+
+        clock = gst_element_get_clock (test->pipeline);
+        *lateness_ns = (gint64) (gst_clock_get_time (clock) - gst_element_get_base_time (test->pipeline)) -
+                (gint64) GST_BUFFER_PTS (buffer);
+        gst_object_unref (clock);
+
+        gst_sample_unref (sample);
+        gst_caps_unref (reference);
+}
+
+/* Large, so that the effect shows within seconds (real clocks: 10-50 ppm) */
+#define CLOCK_DRIFT_PPM		20000.0
+#define CLOCK_DRIFT_MAX_MS	50
+
+static void
+device_clock_drift (double drift_ppm)
+{
+        ClockTest test;
+        gint64 anchor_ns;
+        gint64 start_us;
+        gint64 max_age_ns = 0;
+        gint64 max_lateness_ns = 0;
+        unsigned n_checked = 0;
+
+        clock_test_setup (&test);
+        anchor_ns = g_get_monotonic_time () * 1000;
+        arv_fake_camera_set_timestamp_clock (test.fake_camera, ARV_FAKE_CAMERA_TIMESTAMP_CLOCK_MONOTONIC,
+                                             0, drift_ppm);
+        g_assert_cmpint (gst_element_set_state (test.pipeline, GST_STATE_PLAYING), !=, GST_STATE_CHANGE_FAILURE);
+
+        start_us = g_get_monotonic_time ();
+        while (g_get_monotonic_time () - start_us < 5 * G_USEC_PER_SEC) {
+                gint64 device_ns;
+                gint64 lateness_ns;
+                gint64 capture_ns;
+
+                clock_test_pull (&test, GST_SECOND, &device_ns, &lateness_ns);
+                capture_ns = anchor_ns + (gint64) ((double) (device_ns - anchor_ns) / (1.0 + drift_ppm / 1e6));
+                if (g_get_monotonic_time () - start_us > G_USEC_PER_SEC) {
+                        max_age_ns = MAX (max_age_ns, g_get_monotonic_time () * 1000 - capture_ns);
+                        max_lateness_ns = MAX (max_lateness_ns, lateness_ns);
+                        n_checked++;
+                }
+        }
+
+        g_print ("device clock drift %+.0f ppm: %u frames checked, max age %" G_GINT64_FORMAT
+                 " ms, max lateness %" G_GINT64_FORMAT " ms\n",
+                 drift_ppm, n_checked, max_age_ns / 1000000, max_lateness_ns / 1000000);
+        g_assert_cmpuint (n_checked, >, 0);
+        g_assert_cmpint (max_age_ns, <, CLOCK_DRIFT_MAX_MS * (gint64) 1000000);
+        g_assert_cmpint (max_lateness_ns, <, CLOCK_DRIFT_MAX_MS * (gint64) 1000000);
+
+        clock_test_teardown (&test);
+}
+
+static void
+device_clock_drift_test (void)
+{
+        device_clock_drift (CLOCK_DRIFT_PPM);	/* device clock fast: frames held back */
+        device_clock_drift (-CLOCK_DRIFT_PPM);	/* device clock slow: frames late */
+}
+
+#define CLOCK_STEP_MAX_MS	250
+#define CLOCK_STEP_SETTLE_US	(300 * 1000)	/* frames stamped before the step */
+/* no stall: a frame within 1 s, the fake camera captures late on a loaded
+ * host; the stall this catches (stock, forward step) lasts the step size */
+#define CLOCK_STEP_PULL_TIMEOUT	GST_SECOND
+
+/* Steps the device clock to the host clock plus offset_ns, then pulls frames
+ * for duration_us. */
+static void
+device_clock_step (ClockTest *test, const char *name, gint64 offset_ns, gint64 duration_us)
+{
+        gint64 start_us;
+        gint64 max_age_ns = 0;
+        gint64 max_lateness_ns = 0;
+        unsigned n_checked = 0;
+
+        arv_fake_camera_set_timestamp_clock (test->fake_camera, ARV_FAKE_CAMERA_TIMESTAMP_CLOCK_MONOTONIC,
+                                             offset_ns, 0.0);
+
+        start_us = g_get_monotonic_time ();
+        while (g_get_monotonic_time () - start_us < duration_us) {
+                gint64 device_ns;
+                gint64 lateness_ns;
+
+                clock_test_pull (test, CLOCK_STEP_PULL_TIMEOUT, &device_ns, &lateness_ns);
+                if (g_get_monotonic_time () - start_us > CLOCK_STEP_SETTLE_US) {
+                        max_age_ns = MAX (max_age_ns, g_get_monotonic_time () * 1000 - (device_ns - offset_ns));
+                        max_lateness_ns = MAX (max_lateness_ns, lateness_ns);
+                        n_checked++;
+                }
+        }
+
+        g_print ("device clock step (%s): %u frames checked, max age %" G_GINT64_FORMAT
+                 " ms, max lateness %" G_GINT64_FORMAT " ms\n",
+                 name, n_checked, max_age_ns / 1000000, max_lateness_ns / 1000000);
+        g_assert_cmpuint (n_checked, >, 0);
+        g_assert_cmpint (max_age_ns, <, CLOCK_STEP_MAX_MS * (gint64) 1000000);
+        g_assert_cmpint (max_lateness_ns, <, CLOCK_STEP_MAX_MS * (gint64) 1000000);
+}
+
+static void
+device_clock_step_test (void)
+{
+        ClockTest test;
+        gint64 start_ns;
+
+        clock_test_setup (&test);
+        start_ns = g_get_monotonic_time () * 1000;
+        g_assert_cmpint (gst_element_set_state (test.pipeline, GST_STATE_PLAYING), !=, GST_STATE_CHANGE_FAILURE);
+
+        device_clock_step (&test, "none", 0, G_USEC_PER_SEC);
+        device_clock_step (&test, "forward 2 s", 2 * (gint64) GST_SECOND, 3 * G_USEC_PER_SEC / 2);
+        device_clock_step (&test, "back 1 s", -1 * (gint64) GST_SECOND, 3 * G_USEC_PER_SEC / 2);
+        /* before the first frame: device time since the first frame negative */
+        device_clock_step (&test, "before the first frame",
+                           start_ns - g_get_monotonic_time () * 1000 - 10 * (gint64) GST_SECOND,
+                           3 * G_USEC_PER_SEC / 2);
+
+        clock_test_teardown (&test);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -749,6 +939,8 @@ main (int argc, char *argv[])
 	g_test_add_func ("/gst/late-start", late_start_test);
 	g_test_add_func ("/gst/sparse-trigger", sparse_trigger_test);
 	g_test_add_func ("/gst/fixed-rate", fixed_rate_test);
+	g_test_add_func ("/gst/device-clock-drift", device_clock_drift_test);
+	g_test_add_func ("/gst/device-clock-step", device_clock_step_test);
 
 	result = g_test_run();
 
