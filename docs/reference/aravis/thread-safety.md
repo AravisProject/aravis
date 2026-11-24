@@ -16,3 +16,8 @@ receiving thread, which is an internal thread created by
 exceptions are [method@Aravis.Stream.push_buffer],
 [method@Aravis.Stream.pop_buffer], [method@Aravis.Stream.try_pop_buffer] and
 [method@Aravis.Stream.timeout_pop_buffer].
+
+The [signal@Aravis.Device::device-event] signal and the event callback are an
+exception to this rule: they are invoked from a main context of the thread
+using the device, which makes event features safe to read. See
+[Event Notifications](events.html).

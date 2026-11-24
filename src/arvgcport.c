@@ -25,7 +25,7 @@
  * @short_description: Class for Port nodes
  */
 
-#include <arvgcport.h>
+#include <arvgcportprivate.h>
 #include <arvgcregisterdescriptionnode.h>
 #include <arvgcfeaturenodeprivate.h>
 #include <arvdevice.h>
@@ -87,6 +87,8 @@ static ArvGvLegacyInfos arv_gc_port_legacy_infos[] = {
 typedef struct {
 	ArvGcPropertyNode *chunk_id;
 	ArvGcPropertyNode *event_id;
+	gboolean has_parsed_event_id;
+	guint event_id_value;
 	gboolean has_done_legacy_check;
 	gboolean has_legacy_infos;
 } ArvGcPortPrivate;
@@ -141,6 +143,40 @@ _pre_remove_child (ArvDomNode *self, ArvDomNode *child)
 }
 
 /* ArvGcPort implementation */
+
+/*
+ * arv_gc_port_get_event_id:
+ * @port: a #ArvGcPort
+ * @event_id: (out) (optional): event id placeholder
+ *
+ * Returns: %TRUE if @port gives access to event data, in which case @event_id is set to the value of the EventID
+ * element.
+ */
+
+gboolean
+arv_gc_port_get_event_id (ArvGcPort *port, guint *event_id)
+{
+	g_return_val_if_fail (ARV_IS_GC_PORT (port), FALSE);
+
+	if (port->priv->event_id == NULL) {
+		if (event_id != NULL)
+			*event_id = 0;
+		return FALSE;
+	}
+
+	if (!port->priv->has_parsed_event_id) {
+		const char *string;
+
+		string = arv_gc_property_node_get_string (port->priv->event_id, NULL);
+		port->priv->event_id_value = string != NULL ? (guint) g_ascii_strtoull (string, NULL, 16) : 0;
+		port->priv->has_parsed_event_id = TRUE;
+	}
+
+	if (event_id != NULL)
+		*event_id = port->priv->event_id_value;
+
+	return TRUE;
+}
 
 static gboolean
 _use_legacy_endianness_mechanism (ArvGcPort *port, guint64 length)
@@ -217,8 +253,9 @@ arv_gc_port_read (ArvGcPort *port, void *buffer, guint64 address, guint64 length
 
 		device = arv_gc_get_device (genicam);
 		if (ARV_IS_DEVICE (device)) {
-			int event_id = (int) g_ascii_strtoll
-                                (arv_gc_property_node_get_string (port->priv->event_id, NULL), NULL, 16);
+			guint event_id;
+
+			arv_gc_port_get_event_id (port, &event_id);
 			arv_device_read_event_data (device, event_id, address, length, buffer, error);
 		} else {
 			g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_NO_DEVICE_SET,

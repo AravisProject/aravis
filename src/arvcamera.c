@@ -4255,6 +4255,153 @@ arv_camera_create_chunk_parser (ArvCamera *camera)
 	return arv_device_create_chunk_parser (priv->device);
 }
 
+#if ARAVIS_HAS_EVENT
+
+/**
+ * arv_camera_are_events_available:
+ * @camera: a #ArvCamera
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: %TRUE if event notifications are available.
+ *
+ * Since: 0.10.0
+ */
+
+gboolean
+arv_camera_are_events_available (ArvCamera *camera, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
+
+        if (!arv_camera_is_feature_available (camera, "EventNotification", error))
+                return FALSE;
+        return ARV_IS_GC_ENUMERATION (arv_device_get_feature (priv->device, "EventSelector"));
+}
+
+/**
+ * arv_camera_set_event_notification:
+ * @camera: a #ArvCamera
+ * @event: event name, as listed by the EventSelector feature
+ * @is_enabled: wether to enable the notification of this event
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Enables or disables the notification of an event. Notifications are delivered by the
+ * [signal@ArvDevice::device-event] signal and the callback set using [method@ArvDevice.set_event_callback].
+ *
+ * Since: 0.10.0
+ */
+
+void
+arv_camera_set_event_notification (ArvCamera *camera, const char *event, gboolean is_enabled, GError **error)
+{
+	GError *local_error = NULL;
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+	g_return_if_fail (event != NULL && event[0] != '\0');
+
+	arv_camera_set_string (camera, "EventSelector", event, &local_error);
+	if (local_error == NULL)
+		arv_camera_set_string (camera, "EventNotification", is_enabled ? "On" : "Off", &local_error);
+
+	if (local_error != NULL)
+		g_propagate_error (error, local_error);
+}
+
+/**
+ * arv_camera_get_event_notification:
+ * @camera: a #ArvCamera
+ * @event: event name, as listed by the EventSelector feature
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: %TRUE if the notification of @event is enabled.
+ *
+ * Since: 0.10.0
+ */
+
+gboolean
+arv_camera_get_event_notification (ArvCamera *camera, const char *event, GError **error)
+{
+	GError *local_error = NULL;
+	const char *notification;
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
+	g_return_val_if_fail (event != NULL && event[0] != '\0', FALSE);
+
+	arv_camera_set_string (camera, "EventSelector", event, &local_error);
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return FALSE;
+	}
+
+	notification = arv_camera_get_string (camera, "EventNotification", error);
+
+	return notification != NULL && g_strcmp0 (notification, "Off") != 0;
+}
+
+/**
+ * arv_camera_set_events:
+ * @camera: a #ArvCamera
+ * @event_list: (nullable): event names, as a comma or space separated list
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Convenience function for enabling the notification of a set of events. The notification of the events not listed
+ * is disabled. If @event_list is %NULL or empty, all event notifications are disabled.
+ *
+ * Since: 0.10.0
+ */
+
+void
+arv_camera_set_events (ArvCamera *camera, const char *event_list, GError **error)
+{
+	GError *local_error = NULL;
+	const char **available_events;
+	char **events = NULL;
+	guint i, j;
+	guint n_values = 0;
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	if (event_list != NULL) {
+		char *striped_event_list;
+
+		striped_event_list = g_strdup (event_list);
+		arv_str_strip (striped_event_list, " ,:;", ',');
+		events = g_strsplit_set (striped_event_list, " ,:;", -1);
+		g_free (striped_event_list);
+	}
+
+	available_events = arv_camera_dup_available_enumerations_as_strings (camera, "EventSelector",
+									     &n_values, &local_error);
+
+	for (j = 0; events != NULL && events[j] != NULL && local_error == NULL; j++) {
+		gboolean found = FALSE;
+
+		if (events[j][0] == '\0')
+			continue;
+		for (i = 0; i < n_values && !found; i++)
+			found = g_strcmp0 (available_events[i], events[j]) == 0;
+		if (!found)
+			g_set_error (&local_error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_FEATURE_NOT_FOUND,
+				     "%s not found in available events", events[j]);
+	}
+
+	for (i = 0; i < n_values && local_error == NULL; i++) {
+		gboolean found;
+
+		found = events != NULL && g_strv_contains ((const char * const *) events, available_events[i]);
+		arv_camera_set_event_notification (camera, available_events[i], found, &local_error);
+	}
+
+	g_free (available_events);
+	g_strfreev (events);
+
+	if (local_error != NULL)
+		g_propagate_error (error, local_error);
+}
+
+#endif
+
 /**
  * arv_camera_new:
  * @name: (allow-none): name of the camera.

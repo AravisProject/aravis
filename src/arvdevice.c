@@ -31,6 +31,7 @@
 
 #include <arvdevice.h>
 #include <arvdeviceprivate.h>
+#include <arveventprivate.h>
 #include <arvgc.h>
 #include <arvgccommand.h>
 #include <arvgcinteger.h>
@@ -41,7 +42,8 @@
 #include <arvgcregister.h>
 #include <arvgcstring.h>
 #include <arvstream.h>
-#include <arvdebug.h>
+#include <arvdebugprivate.h>
+#include <string.h>
 
 enum {
 	ARV_DEVICE_SIGNAL_CONTROL_LOST,
@@ -59,9 +61,29 @@ arv_device_error_quark (void)
 	return g_quark_from_static_string ("arv-device-error-quark");
 }
 
+#define ARV_DEVICE_EVENT_QUEUE_LENGTH_MAX	256
+
+typedef struct {
+	GSource source;
+	ArvDevice *device;
+} ArvDeviceEventSource;
+
 typedef struct {
 	GError *init_error;
         GSList *streams;
+
+#if ARAVIS_HAS_EVENT
+	GMutex event_mutex;
+	GQueue event_queue;
+	guint64 n_dropped_events;
+	GSource *event_source;
+	ArvDeviceEventCallback event_callback;
+	void *event_callback_data;
+	GDestroyNotify event_callback_destroy;
+
+	/* Latest event data, indexed by event id. Only accessed from the event delivery context. */
+	GHashTable *event_data;
+#endif
 } ArvDevicePrivate;
 
 static void arv_device_initable_iface_init (GInitableIface *iface);
@@ -268,6 +290,259 @@ arv_device_write_register (ArvDevice *device, guint64 address, guint32 value, GE
 }
 
 #if ARAVIS_HAS_EVENT
+
+static gboolean
+_read_event_data (ArvDevice *device, int event_id, guint64 address, guint32 size, void *buffer, GError **error)
+{
+	ArvDevicePrivate *priv = arv_device_get_instance_private (device);
+	const guint8 *data;
+	GBytes *bytes;
+	gsize data_size;
+	gsize copy_size;
+
+	bytes = g_hash_table_lookup (priv->event_data, GINT_TO_POINTER (event_id));
+	if (bytes == NULL) {
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND,
+			     "No data received for event 0x%04x", event_id);
+		return FALSE;
+	}
+
+	data = g_bytes_get_data (bytes, &data_size);
+	if (address >= data_size) {
+		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER,
+			     "Address 0x%" G_GINT64_MODIFIER "x out of event 0x%04x data (size %" G_GSIZE_FORMAT ")",
+			     address, event_id, data_size);
+		return FALSE;
+	}
+
+	/* Missing data at the end of the payload are read as 0 */
+	copy_size = MIN (data_size - address, size);
+	memcpy (buffer, data + address, copy_size);
+	if (copy_size < size)
+		memset ((char *) buffer + copy_size, 0, size - copy_size);
+
+	return TRUE;
+}
+
+static gboolean
+_event_source_dispatch (GSource *source, GSourceFunc callback, gpointer user_data)
+{
+	ArvDevice *device = ((ArvDeviceEventSource *) source)->device;
+	ArvDevicePrivate *priv = arv_device_get_instance_private (device);
+	ArvEvent *event;
+
+	/* Reset the ready time before draining the queue, events pushed in the meantime will trigger a new dispatch */
+	g_source_set_ready_time (source, -1);
+
+	g_object_ref (device);
+
+	do {
+		ArvDeviceEventCallback event_callback;
+		void *event_callback_data;
+
+		g_mutex_lock (&priv->event_mutex);
+		event = g_queue_pop_head (&priv->event_queue);
+		event_callback = priv->event_callback;
+		event_callback_data = priv->event_callback_data;
+		g_mutex_unlock (&priv->event_mutex);
+
+		if (event != NULL) {
+			g_hash_table_replace (priv->event_data,
+					      GINT_TO_POINTER (arv_event_get_id (event)),
+					      arv_event_get_data (event));
+
+			if (event_callback != NULL)
+				event_callback (event_callback_data, event);
+
+			g_signal_emit (device, arv_device_signals[ARV_DEVICE_SIGNAL_DEVICE_EVENT], 0, event);
+
+			g_object_unref (event);
+		}
+	} while (event != NULL);
+
+	g_object_unref (device);
+
+	return G_SOURCE_CONTINUE;
+}
+
+static GSourceFuncs _event_source_funcs = {
+	NULL,
+	NULL,
+	_event_source_dispatch,
+	NULL,
+	NULL,
+	NULL
+};
+
+/* Must be called with event_mutex locked */
+
+static void
+_event_source_attach (ArvDevice *device, GMainContext *context)
+{
+	ArvDevicePrivate *priv = arv_device_get_instance_private (device);
+	GSource *source;
+
+	if (priv->event_source != NULL) {
+		if (g_source_get_context (priv->event_source) == context)
+			return;
+
+		g_source_destroy (priv->event_source);
+		g_clear_pointer (&priv->event_source, g_source_unref);
+	}
+
+	source = g_source_new (&_event_source_funcs, sizeof (ArvDeviceEventSource));
+	((ArvDeviceEventSource *) source)->device = device;
+	g_source_set_name (source, "ArvDeviceEvent");
+	g_source_set_priority (source, G_PRIORITY_DEFAULT);
+	if (!g_queue_is_empty (&priv->event_queue))
+		g_source_set_ready_time (source, 0);
+	else
+		g_source_set_ready_time (source, -1);
+	g_source_attach (source, context);
+
+	priv->event_source = source;
+}
+
+/*
+ * arv_device_is_event_wanted:
+ * @device: a #ArvDevice
+ *
+ * Returns: %TRUE if an event callback is set, or if a handler is connected to the device-event signal. Can be called
+ * from any thread.
+ */
+
+gboolean
+arv_device_is_event_wanted (ArvDevice *device)
+{
+	ArvDevicePrivate *priv = arv_device_get_instance_private (device);
+	gboolean has_callback;
+
+	g_return_val_if_fail (ARV_IS_DEVICE (device), FALSE);
+
+	g_mutex_lock (&priv->event_mutex);
+	has_callback = priv->event_callback != NULL;
+	g_mutex_unlock (&priv->event_mutex);
+
+	return has_callback ||
+		g_signal_has_handler_pending (device, arv_device_signals[ARV_DEVICE_SIGNAL_DEVICE_EVENT], 0, TRUE);
+}
+
+/*
+ * arv_device_queue_event:
+ * @device: a #ArvDevice
+ * @event: (transfer none): a received event
+ *
+ * Queue an event for delivery in the event context. This function is meant to be called by the device implementations,
+ * from their receiving thread. It doesn't access the Genicam data.
+ */
+
+void
+arv_device_queue_event (ArvDevice *device, ArvEvent *event)
+{
+	ArvDevicePrivate *priv = arv_device_get_instance_private (device);
+
+	g_return_if_fail (ARV_IS_DEVICE (device));
+	g_return_if_fail (ARV_IS_EVENT (event));
+
+	if (!arv_device_is_event_wanted (device))
+		return;
+
+	g_mutex_lock (&priv->event_mutex);
+
+	if (g_queue_get_length (&priv->event_queue) >= ARV_DEVICE_EVENT_QUEUE_LENGTH_MAX) {
+		g_object_unref (g_queue_pop_head (&priv->event_queue));
+		priv->n_dropped_events++;
+		arv_debug_device ("[Device::queue_event] Event queue full, oldest event dropped (%" G_GUINT64_FORMAT
+				  " dropped)", priv->n_dropped_events);
+	}
+
+	g_queue_push_tail (&priv->event_queue, g_object_ref (event));
+
+	if (priv->event_source != NULL)
+		g_source_set_ready_time (priv->event_source, 0);
+
+	g_mutex_unlock (&priv->event_mutex);
+}
+
+/**
+ * arv_device_set_event_callback:
+ * @device: a #ArvDevice
+ * @callback: (scope notified) (nullable) (closure user_data) (destroy destroy): an event callback
+ * @user_data: (nullable): user data for @callback
+ * @destroy: (nullable): destroy notifier of @user_data
+ *
+ * Sets a callback invoked for each event notification sent by the device.
+ *
+ * Events are received in an internal thread, but the callback, and the [signal@ArvDevice::device-event] signal, are
+ * always invoked from the thread default main context of the thread calling this function. Genicam event features
+ * (for example `EventExposureEndTimestamp`) can then be safely read from the callback, as long as the device is only
+ * used from this thread. This main context must be iterated, either by a running [struct@GLib.MainLoop], or by calling
+ * [method@GLib.MainContext.iteration] regularly, for example in the acquisition loop.
+ *
+ * If the main context is not iterated, the oldest events are dropped once the internal queue is full. See
+ * [method@ArvDevice.get_n_dropped_events].
+ *
+ * Event notifications must also be enabled on the device, see [method@ArvCamera.set_event_notification].
+ *
+ * Since: 0.10.0
+ */
+
+void
+arv_device_set_event_callback (ArvDevice *device, ArvDeviceEventCallback callback,
+			       void *user_data, GDestroyNotify destroy)
+{
+	ArvDevicePrivate *priv = arv_device_get_instance_private (device);
+	GDestroyNotify old_destroy;
+	void *old_user_data;
+	GMainContext *context;
+
+	g_return_if_fail (ARV_IS_DEVICE (device));
+
+	context = g_main_context_ref_thread_default ();
+
+	g_mutex_lock (&priv->event_mutex);
+
+	old_destroy = priv->event_callback_destroy;
+	old_user_data = priv->event_callback_data;
+
+	priv->event_callback = callback;
+	priv->event_callback_data = user_data;
+	priv->event_callback_destroy = destroy;
+
+	_event_source_attach (device, context);
+
+	g_mutex_unlock (&priv->event_mutex);
+
+	g_main_context_unref (context);
+
+	if (old_destroy != NULL)
+		old_destroy (old_user_data);
+}
+
+/**
+ * arv_device_get_n_dropped_events:
+ * @device: a #ArvDevice
+ *
+ * Returns: the number of events dropped because the event main context was not iterated fast enough.
+ *
+ * Since: 0.10.0
+ */
+
+guint64
+arv_device_get_n_dropped_events (ArvDevice *device)
+{
+	ArvDevicePrivate *priv = arv_device_get_instance_private (device);
+	guint64 n_dropped_events;
+
+	g_return_val_if_fail (ARV_IS_DEVICE (device), 0);
+
+	g_mutex_lock (&priv->event_mutex);
+	n_dropped_events = priv->n_dropped_events;
+	g_mutex_unlock (&priv->event_mutex);
+
+	return n_dropped_events;
+}
+
 /**
  * arv_device_read_event_data:
  * @device: a #ArvDevice
@@ -1528,16 +1803,6 @@ arv_device_emit_control_lost_signal (ArvDevice *device)
 	g_signal_emit (device, arv_device_signals[ARV_DEVICE_SIGNAL_CONTROL_LOST], 0);
 }
 
-#if ARAVIS_HAS_EVENT
-void
-arv_device_emit_device_event_signal (ArvDevice *device, int event_id)
-{
-	g_return_if_fail (ARV_IS_DEVICE (device));
-
-	g_signal_emit (device, arv_device_signals[ARV_DEVICE_SIGNAL_DEVICE_EVENT], 0, event_id);
-}
-#endif
-
 void arv_device_take_init_error (ArvDevice *device, GError *error)
 {
 	ArvDevicePrivate *priv = arv_device_get_instance_private (device);
@@ -1551,6 +1816,49 @@ void arv_device_take_init_error (ArvDevice *device, GError *error)
 static void
 arv_device_init (ArvDevice *device)
 {
+#if ARAVIS_HAS_EVENT
+	ArvDevicePrivate *priv = arv_device_get_instance_private (device);
+	GMainContext *context;
+
+	g_mutex_init (&priv->event_mutex);
+	g_queue_init (&priv->event_queue);
+	priv->event_data = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL,
+						  (GDestroyNotify) g_bytes_unref);
+
+	/* By default, events are delivered in the thread default context of the thread creating the device */
+	context = g_main_context_ref_thread_default ();
+	g_mutex_lock (&priv->event_mutex);
+	_event_source_attach (device, context);
+	g_mutex_unlock (&priv->event_mutex);
+	g_main_context_unref (context);
+#endif
+}
+
+static void
+arv_device_dispose (GObject *object)
+{
+#if ARAVIS_HAS_EVENT
+	ArvDevicePrivate *priv = arv_device_get_instance_private (ARV_DEVICE (object));
+	GDestroyNotify destroy;
+	void *user_data;
+
+	g_mutex_lock (&priv->event_mutex);
+	if (priv->event_source != NULL) {
+		g_source_destroy (priv->event_source);
+		g_clear_pointer (&priv->event_source, g_source_unref);
+	}
+	destroy = priv->event_callback_destroy;
+	user_data = priv->event_callback_data;
+	priv->event_callback = NULL;
+	priv->event_callback_data = NULL;
+	priv->event_callback_destroy = NULL;
+	g_mutex_unlock (&priv->event_mutex);
+
+	if (destroy != NULL)
+		destroy (user_data);
+#endif
+
+	G_OBJECT_CLASS (arv_device_parent_class)->dispose (object);
 }
 
 static void
@@ -1560,6 +1868,12 @@ arv_device_finalize (GObject *object)
         GSList *iter;
 
 	g_clear_error (&priv->init_error);
+
+#if ARAVIS_HAS_EVENT
+	g_queue_clear_full (&priv->event_queue, g_object_unref);
+	g_clear_pointer (&priv->event_data, g_hash_table_unref);
+	g_mutex_clear (&priv->event_mutex);
+#endif
 
         for (iter = priv->streams; iter != NULL; iter= iter->next) {
                 g_weak_ref_clear(iter->data);
@@ -1575,7 +1889,12 @@ arv_device_class_init (ArvDeviceClass *device_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (device_class);
 
+	object_class->dispose = arv_device_dispose;
 	object_class->finalize = arv_device_finalize;
+
+#if ARAVIS_HAS_EVENT
+	device_class->read_event_data = _read_event_data;
+#endif
 
 	/**
 	 * ArvDevice::control-lost:
@@ -1600,13 +1919,15 @@ arv_device_class_init (ArvDeviceClass *device_class)
 #if ARAVIS_HAS_EVENT
 	/**
 	 * ArvDevice::device-event:
-	 * @device:a #ArvDevice
-	 * @event_id: #int
+	 * @device: a #ArvDevice
+	 * @event: the received #ArvEvent
 	 *
 	 * Signal an event notification from the device.
 	 *
-	 * This signal may be emited from a thread different than the main one,
-	 * so please take care to shared data access from the callback.
+	 * Unlike [signal@ArvDevice::control-lost], this signal is always emitted from the thread default main context
+	 * of the thread which created the device, or from the one of the thread which called
+	 * [method@ArvDevice.set_event_callback] if it was called. Genicam event features can then be safely read from
+	 * the signal handlers. This main context must be iterated for the signal to be emitted.
 	 *
 	 * Since: 0.10.0
 	 */
@@ -1617,7 +1938,7 @@ arv_device_class_init (ArvDeviceClass *device_class)
 			      G_SIGNAL_RUN_LAST,
 			      G_STRUCT_OFFSET (ArvDeviceClass, device_event),
 			      NULL, NULL,
-			      g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+			      g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, ARV_TYPE_EVENT);
 #endif
 }
 

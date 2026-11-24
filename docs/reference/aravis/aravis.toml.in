@@ -46,6 +46,7 @@ content_files = [
 	'ethernet.md',
 	'usb.md',
 	'gentl.md',
+	'events.md',
 	'thread-safety.md',
 	'porting-0.10.md',
 	'porting-0.8.md',

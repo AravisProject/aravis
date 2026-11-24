@@ -26,6 +26,7 @@
  */
 
 #include <arvdeviceprivate.h>
+#include <arveventprivate.h>
 #include <arvgentldeviceprivate.h>
 #include <arvgentlsystemprivate.h>
 #include <arvgentlinterfaceprivate.h>
@@ -194,7 +195,13 @@ event_thread_func(void *p)
 			event_data_id_number = (int) g_ascii_strtoll(event_data_id, NULL, 16);
 			g_hash_table_replace(priv->event_data, GINT_TO_POINTER(event_data_id_number), event_data_value);
 			/* Emit the device-event signal */
-			arv_device_emit_device_event_signal( ARV_DEVICE(gentl_device), event_data_id_number);
+			{
+				ArvEvent *event;
+
+				event = arv_event_new (event_data_id_number, 0, 0, ARV_EVENT_STREAM_CHANNEL_NONE, NULL, 0);
+				arv_device_queue_event (ARV_DEVICE (gentl_device), event);
+				g_object_unref (event);
+			}
 		}
         }
 
