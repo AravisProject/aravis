@@ -85,8 +85,9 @@ typedef enum {
  * @user_data: user data, as passed to [method@ArvDevice.set_event_callback]
  * @event: (transfer none): the received event
  *
- * Callback for event notifications. It is always invoked from the thread default main context of the thread which
- * called [method@ArvDevice.set_event_callback]. Event features can be read safely from this callback.
+ * Callback for event notifications. It is invoked from an internal thread dedicated to the event delivery, one event
+ * at a time. Event features can be read safely from this callback, as feature accesses are protected by the Genicam
+ * data lock.
  *
  * Since: 0.10.0
  */

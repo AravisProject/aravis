@@ -82,8 +82,6 @@ assert len (data) == 20000
 # Events, if aravis was built with event support
 
 if hasattr (Aravis.Camera, 'set_events'):
-    from gi.repository import GLib
-
     assert camera.are_events_available ()
 
     device = camera.get_device ()
@@ -107,18 +105,18 @@ if hasattr (Aravis.Camera, 'set_events'):
     for i in range (0, 5):
         stream.push_buffer (Aravis.Buffer.new_allocate (payload))
 
-    context = GLib.MainContext.default ()
+    import time
 
     camera.start_acquisition ()
     for i in range (0, 10):
         buffer = stream.pop_buffer ()
         stream.push_buffer (buffer)
-        while context.iteration (False):
-            pass
     camera.stop_acquisition ()
 
-    while context.iteration (False):
-        pass
+    # Events are delivered from an internal thread
+    time.sleep (0.1)
+    device.disconnect (handler_id)
+    device.set_event_callback (None, None)
 
     assert len (signal_events) > 0
     assert len (callback_events) == len (signal_events)
@@ -127,8 +125,6 @@ if hasattr (Aravis.Camera, 'set_events'):
     for i in range (1, len (signal_events)):
         assert signal_events[i][1] != signal_events[i - 1][1]
 
-    device.disconnect (handler_id)
-    device.set_event_callback (None, None)
     camera.set_events (None)
 
     del stream

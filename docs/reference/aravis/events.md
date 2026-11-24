@@ -39,48 +39,44 @@ arv_device_set_event_callback (arv_camera_get_device (camera), event_cb, camera,
 
 ## Threading
 
-Events are received in an internal thread. However, reading an event feature
-may require accesses to device registers, and the [class@Aravis.Device]
-Genicam data are not thread safe. That's why the callback and the signal are
-never invoked from the receiving thread. They are invoked from the thread
-default [struct@GLib.MainContext] of the thread which called
-[method@Aravis.Device.set_event_callback], or of the thread which created the
-device if no callback is set. Event features can then be safely read from
-the callback, as long as the device is only used from that thread.
+Events are received by an internal thread of the device implementation, which
+only acknowledges them and queues them. They are then delivered, one at a
+time, by another internal thread dedicated to the event delivery, which
+invokes the callback and emits the signal. This keeps the protocol handling
+responsive while the callback is running.
 
-This main context must be iterated. In an application using a
-[struct@GLib.MainLoop], nothing more is needed. An acquisition loop running
-in a worker thread must use its own main context, and iterate it:
+Feature accesses are protected by a lock owned by the Genicam data (see
+[Thread Safety](thread-safety.html)), which makes the event features safe to
+read from the callback, even if the device is also used from another thread.
+When the callback, or another thread, uses a selector, the feature access
+sequence must be protected by [method@Aravis.Camera.lock] and
+[method@Aravis.Camera.unlock]:
 
 ```c
-GMainContext *context = g_main_context_new ();
+static void
+event_cb (void *user_data, ArvEvent *event)
+{
+	ArvCamera *camera = user_data;
 
-g_main_context_push_thread_default (context);
-
-camera = arv_camera_new (NULL, &error);
-arv_device_set_event_callback (arv_camera_get_device (camera), event_cb, camera, NULL);
-
-...
-
-while (running) {
-	buffer = arv_stream_timeout_pop_buffer (stream, 100000);
-
-	/* Dispatch the pending events */
-	while (g_main_context_iteration (context, FALSE));
-
-	...
+	arv_camera_lock (camera);
+	arv_camera_set_string (camera, "TimerSelector", "Timer0", NULL);
+	printf ("Timer0 duration %g\n", arv_camera_get_float (camera, "TimerDuration", NULL));
+	arv_camera_unlock (camera);
 }
-
-g_main_context_pop_thread_default (context);
-g_main_context_unref (context);
 ```
 
-Note that a thread which didn't push its own main context uses the global
-default one, which means events would be delivered in the main thread.
+An application wanting to handle events in its main thread can forward them
+from the callback, for example using [method@GLib.MainContext.invoke] with a
+reference on the [class@Aravis.Event].
 
-If the main context is not iterated, events are queued up to an internal
-limit, after which the oldest events are dropped. The number of dropped events
-is returned by [method@Aravis.Device.get_n_dropped_events].
+The callback must not destroy the device, and
+[method@Aravis.Device.set_event_callback] must not be called while holding the
+Genicam lock. When [method@Aravis.Device.set_event_callback] returns, the
+previous callback is not running anymore.
+
+If the callback is too slow, events are queued up to an internal limit, after
+which the oldest events are dropped. The number of dropped events is returned
+by [method@Aravis.Device.get_n_dropped_events].
 
 The `arv-camera-test` utility has an `--events` option, which prints the
 received events and their associated feature values.

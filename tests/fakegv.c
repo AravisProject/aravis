@@ -272,8 +272,9 @@ dynamic_roi_test (void)
 #define EVENT_TEST_TIMEOUT_US	10000000
 
 typedef struct {
-	GThread *thread;
-	guint n_events;
+	GThread *main_thread;
+	GThread *event_thread;
+	gint n_events;
 	gint64 last_frame_id;
 	gboolean is_duplicated;
 	gboolean is_wrong_thread;
@@ -288,7 +289,10 @@ event_test_callback (void *user_data, ArvEvent *event)
 	gint64 frame_id;
 	gint64 timestamp;
 
-	if (g_thread_self () != data->thread)
+	/* Events are delivered from an internal thread, always the same one */
+	if (data->event_thread == NULL)
+		data->event_thread = g_thread_self ();
+	if (g_thread_self () == data->main_thread || g_thread_self () != data->event_thread)
 		data->is_wrong_thread = TRUE;
 
 	g_assert_cmpuint (arv_event_get_id (event), ==, ARV_FAKE_CAMERA_EVENT_EXPOSURE_END);
@@ -306,7 +310,7 @@ event_test_callback (void *user_data, ArvEvent *event)
 		data->is_duplicated = TRUE;
 
 	data->last_frame_id = frame_id;
-	data->n_events++;
+	g_atomic_int_inc (&data->n_events);
 }
 
 static void
@@ -331,7 +335,7 @@ event_test_run (double lost_ack_ratio)
 
 	g_object_set (simulator, "gvcp-event-lost-ack-ratio", lost_ack_ratio, NULL);
 
-	data.thread = g_thread_self ();
+	data.main_thread = g_thread_self ();
 
 	arv_camera_set_event_notification (camera, "ExposureEnd", TRUE, &error);
 	g_assert_no_error (error);
@@ -350,15 +354,13 @@ event_test_run (double lost_ack_ratio)
 	g_assert_no_error (error);
 
 	start_time = g_get_monotonic_time ();
-	while (data.n_events < EVENT_TEST_N_EVENTS &&
+	while (g_atomic_int_get (&data.n_events) < EVENT_TEST_N_EVENTS &&
 	       g_get_monotonic_time () - start_time < EVENT_TEST_TIMEOUT_US) {
 		ArvBuffer *buffer;
 
 		buffer = arv_stream_timeout_pop_buffer (stream, 100000);
 		if (buffer != NULL)
 			arv_stream_push_buffer (stream, buffer);
-
-		while (g_main_context_iteration (NULL, FALSE));
 	}
 
 	arv_camera_stop_acquisition (camera, &error);
@@ -371,12 +373,12 @@ event_test_run (double lost_ack_ratio)
 
 	/* Late events */
 	g_usleep (100000);
-	while (g_main_context_iteration (NULL, FALSE));
 
+	/* Waits for the end of a running delivery */
 	arv_device_set_event_callback (device, NULL, NULL, NULL);
 	g_object_set (simulator, "gvcp-event-lost-ack-ratio", 0.0, NULL);
 
-	g_assert_cmpuint (data.n_events, >=, EVENT_TEST_N_EVENTS);
+	g_assert_cmpint (data.n_events, >=, EVENT_TEST_N_EVENTS);
 	g_assert_false (data.is_wrong_thread);
 	g_assert_false (data.is_wrong_data);
 	g_assert_false (data.is_duplicated);

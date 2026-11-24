@@ -355,7 +355,7 @@ event_cb (void *user_data, ArvEvent *event)
 	if (event_name == NULL)
 		return;
 
-	/* The device is only used from the main thread, where events are delivered, event features can be read here */
+	/* Called from the event thread. Feature accesses are protected by the Genicam lock. */
 	for (i = 0; i < G_N_ELEMENTS (suffixes); i++) {
 		char *feature;
 		GError *error = NULL;
