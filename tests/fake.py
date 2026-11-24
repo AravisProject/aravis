@@ -78,3 +78,57 @@ buffer = camera.acquisition (0)
 data = buffer.get_data ()
 
 assert len (data) == 20000
+
+# Events, if aravis was built with event support
+
+if hasattr (Aravis.Camera, 'set_events'):
+    from gi.repository import GLib
+
+    assert camera.are_events_available ()
+
+    device = camera.get_device ()
+    signal_events = []
+    callback_events = []
+
+    def device_event_cb (device, event):
+        signal_events.append ((event.get_id (), camera.get_integer ("EventExposureEndFrameID")))
+
+    def event_cb (user_data, event):
+        assert user_data == test_user_data
+        callback_events.append (event.get_id ())
+
+    handler_id = device.connect ("device-event", device_event_cb)
+    device.set_event_callback (event_cb, test_user_data)
+
+    camera.set_events ("ExposureEnd")
+    assert camera.get_event_notification ("ExposureEnd")
+
+    stream = camera.create_stream (None, None)
+    for i in range (0, 5):
+        stream.push_buffer (Aravis.Buffer.new_allocate (payload))
+
+    context = GLib.MainContext.default ()
+
+    camera.start_acquisition ()
+    for i in range (0, 10):
+        buffer = stream.pop_buffer ()
+        stream.push_buffer (buffer)
+        while context.iteration (False):
+            pass
+    camera.stop_acquisition ()
+
+    while context.iteration (False):
+        pass
+
+    assert len (signal_events) > 0
+    assert len (callback_events) == len (signal_events)
+    for (event_id, frame_id) in signal_events:
+        assert event_id == 0x9001
+    for i in range (1, len (signal_events)):
+        assert signal_events[i][1] != signal_events[i - 1][1]
+
+    device.disconnect (handler_id)
+    device.set_event_callback (None, None)
+    camera.set_events (None)
+
+    del stream
