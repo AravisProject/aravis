@@ -161,7 +161,8 @@ if get_option('tests')
             ],
             include_directories: [library_inc]
           )
-          test ('gst', exe, suite: 'main', timeout: 60)
+          # not in parallel with fakegv: both run the GV fake camera on 127.0.0.1
+          test ('gst', exe, suite: 'main', timeout: 60, is_parallel: false)
         endif
 
 endif
