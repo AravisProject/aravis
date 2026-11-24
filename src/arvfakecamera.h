@@ -86,6 +86,13 @@ ARV_API void			arv_set_fake_camera_genicam_filename (const char *filename);
 #define ARV_FAKE_CAMERA_REGISTER_GAIN_RAW		0x110
 #define ARV_FAKE_CAMERA_REGISTER_GAIN_MODE		0x114
 
+/* EventControl */
+
+#define ARV_FAKE_CAMERA_REGISTER_EVENT_SELECTOR		0x340
+#define ARV_FAKE_CAMERA_REGISTER_EVENT_NOTIFICATION	0x344
+
+#define ARV_FAKE_CAMERA_EVENT_EXPOSURE_END		0x9001
+
 #define ARV_TYPE_FAKE_CAMERA             (arv_fake_camera_get_type ())
 ARV_API G_DECLARE_FINAL_TYPE (ArvFakeCamera, arv_fake_camera, ARV, FAKE_CAMERA, GObject)
 
@@ -108,6 +115,7 @@ ARV_API void			arv_fake_camera_fill_buffer			(ArvFakeCamera *camera, ArvBuffer *
 										 guint32 *packet_size);
 
 ARV_API guint32 		arv_fake_camera_get_acquisition_status	(ArvFakeCamera *camera);
+ARV_API gboolean		arv_fake_camera_get_event_notification	(ArvFakeCamera *camera, guint event_id);
 ARV_API GSocketAddress *	arv_fake_camera_get_stream_address	(ArvFakeCamera *camera);
 ARV_API void			arv_fake_camera_set_inet_address	(ArvFakeCamera *camera, GInetAddress *address);
 
